@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+    <PropertyGroup Label="UserMacros">
+      <SkiaDef>_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;NOMINMAX;SK_GAMMA_APPLY_TO_A8;SK_ALLOW_STATIC_GLOBAL_INITIALIZERS=0;SK_ENABLE_DISCRETE_GPU;SK_HAS_JPEG_LIBRARY;SK_SUPPORT_PDF;SK_HAS_PNG_LIBRARY;SK_XML;SK_RASTER_PIPELINE_HAS_JIT;SK_XML</SkiaDef>
+      <SkiaDir>$(SolutionDir)</SkiaDir>
+      <SkiaInclude>$(SkiaDir)include\</SkiaInclude>
+      <SkiaSrc>$(SkiaDir)src\</SkiaSrc>
+      <SkiaThirdParty>$(SkiaDir)third_party\etc1; $(SkiaDir)third_party\gif; $(SkiaDir)third_party\ktx; $(SkiaDir)third_party\libpng; $(SkiaDir)third_party\externals\jsoncpp\include; $(SkiaDir)third_party\externals\libjpeg-turbo</SkiaThirdParty>
+      <SkiaToolsIncludeDir>$(SkiaDir)tools; $(SkiaDir)tools\debugger; $(SkiaDir)tools\flags; $(SkiaDir)tools\gpu; $(SkiaDir)tools\timer</SkiaToolsIncludeDir>
+      <SkiaIncludeDir>$(SkiaInclude)android; $(SkiaInclude)c; $(SkiaInclude)codec; $(SkiaInclude)config; $(SkiaInclude)core; $(SkiaInclude)effects; $(SkiaInclude)gpu; $(SkiaInclude)gpu/gl; $(SkiaInclude)images; $(SkiaInclude)pathops; $(SkiaInclude)ports; $(SkiaInclude)private;  $(SkiaInclude)svg; $(SkiaInclude)utils; $(SkiaInclude)utils/mac; $(SkiaInclude)utils/win; $(SkiaInclude)views; $(SkiaInclude)xml; $(SkiaSrc)c; $(SkiaSrc)codec; $(SkiaSrc)core; $(SkiaSrc)effects; $(SkiaSrc)effects/gradients; $(SkiaSrc)fonts; $(SkiaSrc)gpu; $(SkiaSrc)image; $(SkiaSrc)images; $(SkiaSrc)lazy; $(SkiaSrc)opts; $(SkiaSrc)pathops; $(SkiaSrc)pdf; $(SkiaSrc)ports; $(SkiaSrc)sfnt; $(SkiaSrc)sksl; $(SkiaSrc)utils; $(SkiaSrc)utils/win; $(SkiaDir)third_party/etc1; $(SkiaDir)third_party/gif; $(SkiaDir)third_party/ktx</SkiaIncludeDir>
+    </PropertyGroup>
+  <PropertyGroup />
+  <ItemDefinitionGroup />
+  <ItemGroup>
+    <BuildMacro Include="SkiaDef">
+      <Value>$(SkiaDef)</Value>
+    </BuildMacro>
+    <BuildMacro Include="SkiaSrc">
+      <Value>$(SkiaSrc)</Value>
+    </BuildMacro>
+    <BuildMacro Include="SkiaInclude">
+      <Value>$(SkiaInclude)</Value>
+    </BuildMacro>
+    <BuildMacro Include="SkiaDir">
+      <Value>$(SkiaDir)</Value>
+    </BuildMacro>
+    <BuildMacro Include="SkiaThirdParty">
+      <Value>$(SkiaThirdParty)</Value>
+    </BuildMacro>
+    <BuildMacro Include="SkiaToolsIncludeDir">
+      <Value>$(SkiaToolsIncludeDir)</Value>
+    </BuildMacro>
+    <BuildMacro Include="SkiaIncludeDir">
+      <Value>$(SkiaIncludeDir)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>

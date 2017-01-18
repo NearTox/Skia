@@ -1,0 +1,304 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{4F736C7B-31CF-4048-827E-E7B189ABB7BD}</ProjectGuid>
+    <RootNamespace>samplecode</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>NotSet</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>NotSet</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>NotSet</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>NotSet</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\Skia.props" />
+    <Import Project="..\..\NearTox\NearTox.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\Skia.props" />
+    <Import Project="..\..\NearTox\NearTox.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\Skia.props" />
+    <Import Project="..\..\NearTox\NearTox.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\Skia.props" />
+    <Import Project="..\..\NearTox\NearTox.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(MyOutDir)</OutDir>
+    <IntDir>$(MyTempDir)</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(MyOutDir)</OutDir>
+    <IntDir>$(MyTempDir)</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(MyOutDir)</OutDir>
+    <IntDir>$(MyTempDir)</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(MyOutDir)</OutDir>
+    <IntDir>$(MyTempDir)</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <AdditionalIncludeDirectories>$(SkiaDir)experimental;$(SkiaDir)experimental/svg/model;$(SkiaDir)gm;$(SkiaIncludeDir);$(SkiaToolsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PreprocessorDefinitions>$(SkiaDef);WIN32_LEAN_AND_MEAN;NDEBUG;SK_INTERNAL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <AdditionalIncludeDirectories>$(SkiaDir)experimental;$(SkiaDir)experimental/svg/model;$(SkiaDir)gm;$(SkiaIncludeDir);$(SkiaToolsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <OmitFramePointers>false</OmitFramePointers>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PreprocessorDefinitions>$(SkiaDef);WIN32_LEAN_AND_MEAN;NDEBUG;SK_INTERNAL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <AdditionalIncludeDirectories>$(SkiaDir)experimental;$(SkiaDir)experimental/svg/model;$(SkiaDir)gm;$(SkiaIncludeDir);$(SkiaToolsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <PreprocessorDefinitions>$(SkiaDef);WIN32_LEAN_AND_MEAN;NDEBUG;SK_INTERNAL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <AdditionalIncludeDirectories>$(SkiaDir)experimental;$(SkiaDir)experimental/svg/model;$(SkiaDir)gm;$(SkiaIncludeDir);$(SkiaToolsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <OmitFramePointers>false</OmitFramePointers>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <PreprocessorDefinitions>$(SkiaDef);WIN32_LEAN_AND_MEAN;NDEBUG;SK_INTERNAL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\experimental\SkPerlinNoiseShader2\SkPerlinNoiseShader2.cpp" />
+    <ClCompile Include="..\experimental\SkSetPoly3To3.cpp" />
+    <ClCompile Include="..\experimental\SkSetPoly3To3_A.cpp" />
+    <ClCompile Include="..\experimental\SkSetPoly3To3_D.cpp" />
+    <ClCompile Include="..\experimental\svg\model\SkSVGAttribute.cpp" />
+    <ClCompile Include="..\experimental\svg\model\SkSVGAttributeParser.cpp" />
+    <ClCompile Include="..\experimental\svg\model\SkSVGCircle.cpp" />
+    <ClCompile Include="..\experimental\svg\model\SkSVGClipPath.cpp" />
+    <ClCompile Include="..\experimental\svg\model\SkSVGContainer.cpp" />
+    <ClCompile Include="..\experimental\svg\model\SkSVGDOM.cpp" />
+    <ClCompile Include="..\experimental\svg\model\SkSVGEllipse.cpp" />
+    <ClCompile Include="..\experimental\svg\model\SkSVGLine.cpp" />
+    <ClCompile Include="..\experimental\svg\model\SkSVGLinearGradient.cpp" />
+    <ClCompile Include="..\experimental\svg\model\SkSVGNode.cpp" />
+    <ClCompile Include="..\experimental\svg\model\SkSVGPath.cpp" />
+    <ClCompile Include="..\experimental\svg\model\SkSVGPoly.cpp" />
+    <ClCompile Include="..\experimental\svg\model\SkSVGRect.cpp" />
+    <ClCompile Include="..\experimental\svg\model\SkSVGRenderContext.cpp" />
+    <ClCompile Include="..\experimental\svg\model\SkSVGShape.cpp" />
+    <ClCompile Include="..\experimental\svg\model\SkSVGStop.cpp" />
+    <ClCompile Include="..\experimental\svg\model\SkSVGSVG.cpp" />
+    <ClCompile Include="..\experimental\svg\model\SkSVGTransformableNode.cpp" />
+    <ClCompile Include="..\experimental\svg\model\SkSVGValue.cpp" />
+    <ClCompile Include="ClockFaceView.cpp" />
+    <ClCompile Include="GMSampleView.cpp" />
+    <ClCompile Include="OverView.cpp" />
+    <ClCompile Include="PerlinPatch.cpp" />
+    <ClCompile Include="Sample2PtRadial.cpp" />
+    <ClCompile Include="SampleAAClip.cpp" />
+    <ClCompile Include="SampleAAGeometry.cpp" />
+    <ClCompile Include="SampleAARectModes.cpp" />
+    <ClCompile Include="SampleAARects.cpp" />
+    <ClCompile Include="SampleAll.cpp" />
+    <ClCompile Include="SampleAndroidShadows.cpp" />
+    <ClCompile Include="SampleAnimatedText.cpp" />
+    <ClCompile Include="SampleAnimBlur.cpp" />
+    <ClCompile Include="SampleArc.cpp" />
+    <ClCompile Include="SampleAtlas.cpp" />
+    <ClCompile Include="SampleBevel.cpp" />
+    <ClCompile Include="SampleBigBlur.cpp" />
+    <ClCompile Include="SampleBigGradient.cpp" />
+    <ClCompile Include="SampleBitmapRect.cpp" />
+    <ClCompile Include="SampleBlur.cpp" />
+    <ClCompile Include="SampleCamera.cpp" />
+    <ClCompile Include="SampleChart.cpp" />
+    <ClCompile Include="SampleCircle.cpp" />
+    <ClCompile Include="SampleClip.cpp" />
+    <ClCompile Include="SampleClipDrawMatch.cpp" />
+    <ClCompile Include="SampleClock.cpp" />
+    <ClCompile Include="SampleCode.cpp" />
+    <ClCompile Include="SampleColorFilter.cpp" />
+    <ClCompile Include="SampleComplexClip.cpp" />
+    <ClCompile Include="SampleConcavePaths.cpp" />
+    <ClCompile Include="SampleDegenerateTwoPtRadials.cpp" />
+    <ClCompile Include="SampleDither.cpp" />
+    <ClCompile Include="SampleDitherBitmap.cpp" />
+    <ClCompile Include="SampleEffects.cpp" />
+    <ClCompile Include="SampleEmboss.cpp" />
+    <ClCompile Include="SampleFatBits.cpp" />
+    <ClCompile Include="SampleFillType.cpp" />
+    <ClCompile Include="SampleFilter.cpp" />
+    <ClCompile Include="SampleFilter2.cpp" />
+    <ClCompile Include="SampleFilterFuzz.cpp" />
+    <ClCompile Include="SampleFilterQuality.cpp" />
+    <ClCompile Include="SampleFontScalerTest.cpp" />
+    <ClCompile Include="SampleFuzz.cpp" />
+    <ClCompile Include="SampleGradients.cpp" />
+    <ClCompile Include="SampleHairCurves.cpp" />
+    <ClCompile Include="SampleHairline.cpp" />
+    <ClCompile Include="SampleHairModes.cpp" />
+    <ClCompile Include="SampleHT.cpp" />
+    <ClCompile Include="SampleIdentityScale.cpp" />
+    <ClCompile Include="SampleLayerMask.cpp" />
+    <ClCompile Include="SampleLayers.cpp" />
+    <ClCompile Include="SampleLCD.cpp" />
+    <ClCompile Include="SampleLighting.cpp" />
+    <ClCompile Include="SampleLines.cpp" />
+    <ClCompile Include="SampleManyRects.cpp" />
+    <ClCompile Include="SampleMeasure.cpp" />
+    <ClCompile Include="SampleMegaStroke.cpp" />
+    <ClCompile Include="SamplePatch.cpp" />
+    <ClCompile Include="SamplePath.cpp" />
+    <ClCompile Include="SamplePathClip.cpp" />
+    <ClCompile Include="SamplePathEffects.cpp" />
+    <ClCompile Include="SamplePathFuzz.cpp" />
+    <ClCompile Include="SamplePathOverstroke.cpp" />
+    <ClCompile Include="SamplePdfFileViewer.cpp" />
+    <ClCompile Include="SamplePoints.cpp" />
+    <ClCompile Include="SamplePolyToPoly.cpp" />
+    <ClCompile Include="SampleQuadStroker.cpp" />
+    <ClCompile Include="SampleRectanizer.cpp" />
+    <ClCompile Include="SampleRegion.cpp" />
+    <ClCompile Include="SampleRepeatTile.cpp" />
+    <ClCompile Include="SampleShaders.cpp" />
+    <ClCompile Include="SampleShaderText.cpp" />
+    <ClCompile Include="SampleShadowing.cpp" />
+    <ClCompile Include="SampleShip.cpp" />
+    <ClCompile Include="SampleSlides.cpp" />
+    <ClCompile Include="SampleStringArt.cpp" />
+    <ClCompile Include="SampleStrokePath.cpp" />
+    <ClCompile Include="SampleStrokeRect.cpp" />
+    <ClCompile Include="SampleSubpixelTranslate.cpp" />
+    <ClCompile Include="SampleSVGFile.cpp" />
+    <ClCompile Include="SampleSVGPong.cpp" />
+    <ClCompile Include="SampleText.cpp" />
+    <ClCompile Include="SampleTextAlpha.cpp" />
+    <ClCompile Include="SampleTextBox.cpp" />
+    <ClCompile Include="SampleTextOnPath.cpp" />
+    <ClCompile Include="SampleTextureDomain.cpp" />
+    <ClCompile Include="SampleTiling.cpp" />
+    <ClCompile Include="SampleTinyBitmap.cpp" />
+    <ClCompile Include="SampleUnpremul.cpp" />
+    <ClCompile Include="SampleVertices.cpp" />
+    <ClCompile Include="SampleWritePixels.cpp" />
+    <ClCompile Include="SampleXfer.cpp" />
+    <ClCompile Include="SampleXfermodesBlur.cpp" />
+    <ClCompile Include="vertexdump.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\experimental\SkPerlinNoiseShader2\SkPerlinNoiseShader2.h" />
+    <ClInclude Include="..\experimental\svg\model\SkPEG.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGAttribute.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGAttributeParser.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGCircle.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGClipPath.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGContainer.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGDefs.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGDOM.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGEllipse.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGG.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGHiddenContainer.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGIDMapper.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGLine.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGLinearGradient.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGNode.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGPath.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGPoly.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGRect.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGRenderContext.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGShape.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGStop.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGSVG.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGTransformableNode.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGTypes.h" />
+    <ClInclude Include="..\experimental\svg\model\SkSVGValue.h" />
+    <ClInclude Include="DecodeFile.h" />
+    <ClInclude Include="GMSampleView.h" />
+    <ClInclude Include="OverView.h" />
+    <ClInclude Include="SampleApp.h" />
+    <ClInclude Include="SampleCode.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

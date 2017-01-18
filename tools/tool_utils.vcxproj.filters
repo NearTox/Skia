@@ -1,0 +1,282 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{76a02744-b360-4eee-8ab3-f25b66922f42}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\utils">
+      <UniqueIdentifier>{9e6ccaf6-9769-449c-b5d1-94fec22ff810}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tools">
+      <UniqueIdentifier>{d775cb00-162c-4ba8-907b-67dc4ac1a046}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tools\debugger">
+      <UniqueIdentifier>{b6dbd7fc-f306-418a-afcf-ade6e1af079c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tools\timer">
+      <UniqueIdentifier>{e9bbce42-eff3-44d9-88be-b5557a4b156a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tools\flags">
+      <UniqueIdentifier>{1c936474-bcc2-44bd-b339-b147739c34ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tools\gpu">
+      <UniqueIdentifier>{7e96229b-6d10-42b0-8bdc-dbf35d3c9d70}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tools\gpu\vk">
+      <UniqueIdentifier>{cee4404e-d09c-4424-9619-27e95a2b474a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tools\gpu\gl">
+      <UniqueIdentifier>{2071302d-6288-468b-ab73-9faf55a42e21}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tools\gpu\gl\win">
+      <UniqueIdentifier>{0a46843a-9068-4ecb-8e0c-7c327a16e886}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tools\gpu\gl\null">
+      <UniqueIdentifier>{af6d714a-a79b-47a6-b43e-0dbafdb4085f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tools\gpu\gl\command_buffer">
+      <UniqueIdentifier>{9834a338-8071-4a24-8a8a-756496bc84f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tools\gpu\gl\debug">
+      <UniqueIdentifier>{d37bc703-1b57-4122-a7b8-0f77e135ffa1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\utils\SkMultiPictureDocumentReader.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="LsanSuppressions.cpp">
+      <Filter>tools</Filter>
+    </ClCompile>
+    <ClCompile Include="picture_utils.cpp">
+      <Filter>tools</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcStats.cpp">
+      <Filter>tools</Filter>
+    </ClCompile>
+    <ClCompile Include="random_parse_path.cpp">
+      <Filter>tools</Filter>
+    </ClCompile>
+    <ClCompile Include="Resources.cpp">
+      <Filter>tools</Filter>
+    </ClCompile>
+    <ClCompile Include="sk_tool_utils.cpp">
+      <Filter>tools</Filter>
+    </ClCompile>
+    <ClCompile Include="sk_tool_utils_font.cpp">
+      <Filter>tools</Filter>
+    </ClCompile>
+    <ClCompile Include="ThermalManager.cpp">
+      <Filter>tools</Filter>
+    </ClCompile>
+    <ClCompile Include="UrlDataManager.cpp">
+      <Filter>tools</Filter>
+    </ClCompile>
+    <ClCompile Include="AndroidSkDebugToStdOut.cpp">
+      <Filter>tools</Filter>
+    </ClCompile>
+    <ClCompile Include="CrashHandler.cpp">
+      <Filter>tools</Filter>
+    </ClCompile>
+    <ClCompile Include="debugger\SkObjectParser.cpp">
+      <Filter>tools\debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="debugger\SkDebugCanvas.cpp">
+      <Filter>tools\debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="debugger\SkDrawCommand.cpp">
+      <Filter>tools\debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="debugger\SkJsonWriteBuffer.cpp">
+      <Filter>tools\debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="timer\Timer.cpp">
+      <Filter>tools\timer</Filter>
+    </ClCompile>
+    <ClCompile Include="flags\SkCommandLineFlags.cpp">
+      <Filter>tools\flags</Filter>
+    </ClCompile>
+    <ClCompile Include="flags\SkCommonFlags.cpp">
+      <Filter>tools\flags</Filter>
+    </ClCompile>
+    <ClCompile Include="flags\SkCommonFlagsConfig.cpp">
+      <Filter>tools\flags</Filter>
+    </ClCompile>
+    <ClCompile Include="gpu\GrContextFactory.cpp">
+      <Filter>tools\gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="gpu\GrTest.cpp">
+      <Filter>tools\gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="gpu\TestContext.cpp">
+      <Filter>tools\gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="gpu\gl\GLTestContext.cpp">
+      <Filter>tools\gpu\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="gpu\gl\win\CreatePlatformGLTestContext_win.cpp">
+      <Filter>tools\gpu\gl\win</Filter>
+    </ClCompile>
+    <ClCompile Include="gpu\gl\null\NullGLTestContext.cpp">
+      <Filter>tools\gpu\gl\null</Filter>
+    </ClCompile>
+    <ClCompile Include="gpu\gl\command_buffer\GLTestContext_command_buffer.cpp">
+      <Filter>tools\gpu\gl\command_buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="gpu\gl\debug\DebugGLTestContext.cpp">
+      <Filter>tools\gpu\gl\debug</Filter>
+    </ClCompile>
+    <ClCompile Include="gpu\gl\debug\GrBufferObj.cpp">
+      <Filter>tools\gpu\gl\debug</Filter>
+    </ClCompile>
+    <ClCompile Include="gpu\gl\debug\GrFrameBufferObj.cpp">
+      <Filter>tools\gpu\gl\debug</Filter>
+    </ClCompile>
+    <ClCompile Include="gpu\gl\debug\GrProgramObj.cpp">
+      <Filter>tools\gpu\gl\debug</Filter>
+    </ClCompile>
+    <ClCompile Include="gpu\gl\debug\GrShaderObj.cpp">
+      <Filter>tools\gpu\gl\debug</Filter>
+    </ClCompile>
+    <ClCompile Include="gpu\gl\debug\GrTextureObj.cpp">
+      <Filter>tools\gpu\gl\debug</Filter>
+    </ClCompile>
+    <ClCompile Include="gpu\gl\debug\GrTextureUnitObj.cpp">
+      <Filter>tools\gpu\gl\debug</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DumpRecord.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="iOSShell.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="OverwriteLine.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="picture_utils.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcStats.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="random_parse_path.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Resources.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="sk_tool_utils.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="sk_tool_utils_flags.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="SkJSONCPP.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="SkShaper.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Stats.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="ThermalManager.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="UrlDataManager.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="win_dbghelp.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="CrashHandler.h">
+      <Filter>tools</Filter>
+    </ClInclude>
+    <ClInclude Include="debugger\SkJsonWriteBuffer.h">
+      <Filter>tools\debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="debugger\SkObjectParser.h">
+      <Filter>tools\debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="debugger\SkDebugCanvas.h">
+      <Filter>tools\debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="debugger\SkDrawCommand.h">
+      <Filter>tools\debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="timer\Timer.h">
+      <Filter>tools\timer</Filter>
+    </ClInclude>
+    <ClInclude Include="flags\SkCommonFlags.h">
+      <Filter>tools\flags</Filter>
+    </ClInclude>
+    <ClInclude Include="flags\SkCommonFlagsConfig.h">
+      <Filter>tools\flags</Filter>
+    </ClInclude>
+    <ClInclude Include="flags\SkCommandLineFlags.h">
+      <Filter>tools\flags</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\FenceSync.h">
+      <Filter>tools\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\GpuTimer.h">
+      <Filter>tools\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\GrContextFactory.h">
+      <Filter>tools\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\GrTest.h">
+      <Filter>tools\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\TestContext.h">
+      <Filter>tools\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\vk\VkTestContext.h">
+      <Filter>tools\gpu\vk</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\gl\GLTestContext.h">
+      <Filter>tools\gpu\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\gl\null\NullGLTestContext.h">
+      <Filter>tools\gpu\gl\null</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\gl\command_buffer\GLTestContext_command_buffer.h">
+      <Filter>tools\gpu\gl\command_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\gl\debug\DebugGLTestContext.h">
+      <Filter>tools\gpu\gl\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\gl\debug\GrBufferObj.h">
+      <Filter>tools\gpu\gl\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\gl\debug\GrFakeRefObj.h">
+      <Filter>tools\gpu\gl\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\gl\debug\GrFBBindableObj.h">
+      <Filter>tools\gpu\gl\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\gl\debug\GrFrameBufferObj.h">
+      <Filter>tools\gpu\gl\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\gl\debug\GrProgramObj.h">
+      <Filter>tools\gpu\gl\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\gl\debug\GrRenderBufferObj.h">
+      <Filter>tools\gpu\gl\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\gl\debug\GrShaderObj.h">
+      <Filter>tools\gpu\gl\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\gl\debug\GrTextureObj.h">
+      <Filter>tools\gpu\gl\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\gl\debug\GrTextureUnitObj.h">
+      <Filter>tools\gpu\gl\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\gl\debug\GrVertexArrayObj.h">
+      <Filter>tools\gpu\gl\debug</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,468 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="ClockFaceView.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="GMSampleView.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="OverView.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="PerlinPatch.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="Sample2PtRadial.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleAAClip.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleAAGeometry.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleAARectModes.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleAARects.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleAll.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleAndroidShadows.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleAnimatedText.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleAnimBlur.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleArc.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleAtlas.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleBevel.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleBigBlur.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleBigGradient.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleBitmapRect.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleBlur.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleCamera.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleChart.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleCircle.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleClip.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleClipDrawMatch.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleClock.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleCode.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleColorFilter.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleComplexClip.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleConcavePaths.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleDegenerateTwoPtRadials.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleDither.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleDitherBitmap.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleEffects.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleEmboss.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleFatBits.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleFillType.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleFilter.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleFilter2.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleFilterFuzz.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleFilterQuality.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleFontScalerTest.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleFuzz.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleGradients.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleHairCurves.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleHairline.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleHairModes.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleHT.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleIdentityScale.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleLayerMask.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleLayers.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleLCD.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleLighting.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleLines.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleManyRects.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleMeasure.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleMegaStroke.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SamplePatch.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SamplePath.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SamplePathClip.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SamplePathEffects.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SamplePathFuzz.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SamplePathOverstroke.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SamplePdfFileViewer.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SamplePoints.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SamplePolyToPoly.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleQuadStroker.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleRectanizer.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleRegion.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleRepeatTile.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleShaders.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleShaderText.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleShadowing.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleShip.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleSlides.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleStringArt.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleStrokePath.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleStrokeRect.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleSubpixelTranslate.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleSVGFile.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleSVGPong.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleText.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleTextAlpha.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleTextBox.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleTextOnPath.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleTextureDomain.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleTiling.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleTinyBitmap.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleUnpremul.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleVertices.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleWritePixels.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleXfer.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="SampleXfermodesBlur.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="vertexdump.cpp">
+      <Filter>samplecode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\SkSetPoly3To3.cpp">
+      <Filter>experimental</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\SkSetPoly3To3_A.cpp">
+      <Filter>experimental</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\SkSetPoly3To3_D.cpp">
+      <Filter>experimental</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\SkPerlinNoiseShader2\SkPerlinNoiseShader2.cpp">
+      <Filter>experimental\SkPerlinNoiseShader2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\svg\model\SkSVGClipPath.cpp">
+      <Filter>experimental\svg\model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\svg\model\SkSVGContainer.cpp">
+      <Filter>experimental\svg\model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\svg\model\SkSVGDOM.cpp">
+      <Filter>experimental\svg\model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\svg\model\SkSVGEllipse.cpp">
+      <Filter>experimental\svg\model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\svg\model\SkSVGLine.cpp">
+      <Filter>experimental\svg\model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\svg\model\SkSVGLinearGradient.cpp">
+      <Filter>experimental\svg\model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\svg\model\SkSVGNode.cpp">
+      <Filter>experimental\svg\model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\svg\model\SkSVGPath.cpp">
+      <Filter>experimental\svg\model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\svg\model\SkSVGPoly.cpp">
+      <Filter>experimental\svg\model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\svg\model\SkSVGRect.cpp">
+      <Filter>experimental\svg\model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\svg\model\SkSVGRenderContext.cpp">
+      <Filter>experimental\svg\model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\svg\model\SkSVGShape.cpp">
+      <Filter>experimental\svg\model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\svg\model\SkSVGStop.cpp">
+      <Filter>experimental\svg\model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\svg\model\SkSVGSVG.cpp">
+      <Filter>experimental\svg\model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\svg\model\SkSVGTransformableNode.cpp">
+      <Filter>experimental\svg\model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\svg\model\SkSVGValue.cpp">
+      <Filter>experimental\svg\model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\svg\model\SkSVGAttribute.cpp">
+      <Filter>experimental\svg\model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\svg\model\SkSVGAttributeParser.cpp">
+      <Filter>experimental\svg\model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\experimental\svg\model\SkSVGCircle.cpp">
+      <Filter>experimental\svg\model</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DecodeFile.h">
+      <Filter>samplecode</Filter>
+    </ClInclude>
+    <ClInclude Include="GMSampleView.h">
+      <Filter>samplecode</Filter>
+    </ClInclude>
+    <ClInclude Include="OverView.h">
+      <Filter>samplecode</Filter>
+    </ClInclude>
+    <ClInclude Include="SampleApp.h">
+      <Filter>samplecode</Filter>
+    </ClInclude>
+    <ClInclude Include="SampleCode.h">
+      <Filter>samplecode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\SkPerlinNoiseShader2\SkPerlinNoiseShader2.h">
+      <Filter>experimental\SkPerlinNoiseShader2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGCircle.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGClipPath.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGContainer.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGDefs.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGDOM.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGEllipse.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGG.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGHiddenContainer.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGIDMapper.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGLine.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGLinearGradient.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGNode.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGPath.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGPoly.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGRect.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGRenderContext.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGShape.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGStop.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGSVG.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGTransformableNode.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGTypes.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGValue.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkPEG.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGAttribute.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\experimental\svg\model\SkSVGAttributeParser.h">
+      <Filter>experimental\svg\model</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="experimental">
+      <UniqueIdentifier>{4c1fa4a2-663d-4695-b349-8fdce02ef7ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="samplecode">
+      <UniqueIdentifier>{9b45e8aa-e77f-4b39-8798-f7aab3edc9cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="experimental\svg">
+      <UniqueIdentifier>{d37169e1-3c09-48eb-a037-91a19990adab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="experimental\SkPerlinNoiseShader2">
+      <UniqueIdentifier>{ebdbc160-f36b-4f3f-b0aa-575e4fc8db14}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="experimental\svg\model">
+      <UniqueIdentifier>{5934059f-ba21-40a4-a5a2-543775f71d0c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
