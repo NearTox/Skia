@@ -24,7 +24,7 @@ static void set_array(SkPaint* paint, const SkScalar array[]) {
 class ColorMatrixGM : public skiagm::GM {
 public:
     ColorMatrixGM() {
-        this->setBGColor(sk_tool_utils::color_to_565(0xFF808080));
+        this->setBGColor(0xFF808080);
     }
 
 protected:

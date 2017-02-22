@@ -34,7 +34,7 @@ public:
 
 protected:
     void onOnceBeforeDraw() override {
-        this->setBGColor(sk_tool_utils::color_to_565(0xFFDDDDDD));
+        this->setBGColor(0xFFDDDDDD);
         fCirclePath.addCircle(SkIntToScalar(20), SkIntToScalar(20), SkIntToScalar(10) );
         fRect.set(SkIntToScalar(10), SkIntToScalar(10),
                   SkIntToScalar(30), SkIntToScalar(30));
@@ -59,32 +59,19 @@ protected:
         sk_sp<SkDrawLooper> shadowLoopers[] = {
               SkBlurDrawLooper::Make(SK_ColorBLUE,
                                      SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(10)),
-                                     SkIntToScalar(5), SkIntToScalar(10),
-                                     SkBlurDrawLooper::kIgnoreTransform_BlurFlag |
-                                     SkBlurDrawLooper::kOverrideColor_BlurFlag |
-                                     SkBlurDrawLooper::kHighQuality_BlurFlag),
+                                     SkIntToScalar(5), SkIntToScalar(10)),
               SkBlurDrawLooper::Make(SK_ColorBLUE,
                                      SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(10)),
-                                     SkIntToScalar(5), SkIntToScalar(10),
-                                     SkBlurDrawLooper::kIgnoreTransform_BlurFlag |
-                                     SkBlurDrawLooper::kOverrideColor_BlurFlag),
+                                     SkIntToScalar(5), SkIntToScalar(10)),
               SkBlurDrawLooper::Make(SK_ColorBLACK,
                                      SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(5)),
                                      SkIntToScalar(5),
-                                     SkIntToScalar(10),
-                                     SkBlurDrawLooper::kIgnoreTransform_BlurFlag |
-                                     SkBlurDrawLooper::kHighQuality_BlurFlag),
+                                     SkIntToScalar(10)),
               SkBlurDrawLooper::Make(0x7FFF0000,
                                      SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(5)),
-                                     SkIntToScalar(-5), SkIntToScalar(-10),
-                                     SkBlurDrawLooper::kIgnoreTransform_BlurFlag |
-                                     SkBlurDrawLooper::kOverrideColor_BlurFlag |
-                                     SkBlurDrawLooper::kHighQuality_BlurFlag),
+                                     SkIntToScalar(-5), SkIntToScalar(-10)),
             SkBlurDrawLooper::Make(SK_ColorBLACK, SkIntToScalar(0),
-                                     SkIntToScalar(5), SkIntToScalar(5),
-                                     SkBlurDrawLooper::kIgnoreTransform_BlurFlag |
-                                     SkBlurDrawLooper::kOverrideColor_BlurFlag |
-                                     SkBlurDrawLooper::kHighQuality_BlurFlag),
+                                     SkIntToScalar(5), SkIntToScalar(5)),
         };
 
         constexpr struct {

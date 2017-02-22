@@ -6,24 +6,29 @@
  */
 
 #include "GrDashLinePathRenderer.h"
-
 #include "GrAuditTrail.h"
 #include "GrGpu.h"
-#include "GrPipelineBuilder.h"
+#include "GrRenderTargetContext.h"
+#include "GrShape.h"
 #include "ops/GrDashOp.h"
+#include "ops/GrMeshDrawOp.h"
 
-bool GrDashLinePathRenderer::onCanDrawPath(const CanDrawPathArgs& args) const {
+GrPathRenderer::CanDrawPath
+GrDashLinePathRenderer::onCanDrawPath(const CanDrawPathArgs& args) const {
     SkPoint pts[2];
     bool inverted;
     if (args.fShape->style().isDashed() && args.fShape->asLine(pts, &inverted)) {
         if (args.fAAType == GrAAType::kMixedSamples) {
-            return false;
+            return CanDrawPath::kNo;
         }
         // We should never have an inverse dashed case.
         SkASSERT(!inverted);
-        return GrDashOp::CanDrawDashLine(pts, args.fShape->style(), *args.fViewMatrix);
+        if (!GrDashOp::CanDrawDashLine(pts, args.fShape->style(), *args.fViewMatrix)) {
+            return CanDrawPath::kNo;
+        }
+        return CanDrawPath::kYes;
     }
-    return false;
+    return CanDrawPath::kNo;
 }
 
 bool GrDashLinePathRenderer::onDrawPath(const DrawPathArgs& args) {
@@ -45,15 +50,12 @@ bool GrDashLinePathRenderer::onDrawPath(const DrawPathArgs& args) {
     }
     SkPoint pts[2];
     SkAssertResult(args.fShape->asLine(pts, nullptr));
-    std::unique_ptr<GrDrawOp> op = GrDashOp::MakeDashLineOp(
-            args.fPaint.getColor(), *args.fViewMatrix, pts, aaMode, args.fShape->style());
+    std::unique_ptr<GrDrawOp> op =
+            GrDashOp::MakeDashLineOp(args.fContext, std::move(args.fPaint), *args.fViewMatrix, pts,
+                                     aaMode, args.fShape->style(), args.fUserStencilSettings);
     if (!op) {
         return false;
     }
-
-    GrPipelineBuilder pipelineBuilder(std::move(args.fPaint), args.fAAType);
-    pipelineBuilder.setUserStencil(args.fUserStencilSettings);
-
-    args.fRenderTargetContext->addDrawOp(pipelineBuilder, *args.fClip, std::move(op));
+    args.fRenderTargetContext->addDrawOp(*args.fClip, std::move(op));
     return true;
 }

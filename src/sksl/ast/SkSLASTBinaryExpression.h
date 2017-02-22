@@ -9,23 +9,24 @@
 #define SKSL_ASTBINARYEXPRESSION
 
 #include "SkSLASTExpression.h"
-#include "../SkSLToken.h"
+#include "../SkSLCompiler.h"
+#include "../SkSLLexer.h"
 
 namespace SkSL {
 
 /**
- * Represents a binary operation, with the operator represented by the token's type. 
+ * Represents a binary operation, with the operator represented by the token's type.
  */
 struct ASTBinaryExpression : public ASTExpression {
     ASTBinaryExpression(std::unique_ptr<ASTExpression> left, Token op,
                         std::unique_ptr<ASTExpression> right)
-    : INHERITED(op.fPosition, kBinary_Kind)
+    : INHERITED(op.fOffset, kBinary_Kind)
     , fLeft(std::move(left))
     , fOperator(op.fKind)
     , fRight(std::move(right)) {}
 
-    SkString description() const override {
-        return "(" + fLeft->description() + " " + Token::OperatorName(fOperator) + " " +
+    String description() const override {
+        return "(" + fLeft->description() + " " + Compiler::OperatorName(fOperator) + " " +
                fRight->description() + ")";
     }
 

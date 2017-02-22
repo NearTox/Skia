@@ -13,7 +13,7 @@
 
 class SkSVGContainer : public SkSVGTransformableNode {
 public:
-    virtual ~SkSVGContainer() = default;
+    ~SkSVGContainer() override = default;
 
     void appendChild(sk_sp<SkSVGNode>) override;
 
@@ -33,4 +33,4 @@ private:
     typedef SkSVGTransformableNode INHERITED;
 };
 
-#endif // SkSVGSVG_DEFINED
+#endif // SkSVGContainer_DEFINED

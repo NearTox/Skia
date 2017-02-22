@@ -16,40 +16,50 @@ namespace SkSL {
 /**
  * An interface block, as in:
  *
- * out gl_PerVertex {
- *   layout(builtin=0) vec4 gl_Position;
- *   layout(builtin=1) float gl_PointSize;
+ * out sk_PerVertex {
+ *   layout(builtin=0) float4 sk_Position;
+ *   layout(builtin=1) float sk_PointSize;
  * };
  */
 struct ASTInterfaceBlock : public ASTDeclaration {
     // valueName is empty when it was not present in the source
-    ASTInterfaceBlock(Position position,
+    ASTInterfaceBlock(int offset,
                       Modifiers modifiers,
-                      SkString interfaceName,
-                      SkString valueName,
-                      std::vector<std::unique_ptr<ASTVarDeclarations>> declarations)
-    : INHERITED(position, kInterfaceBlock_Kind)
+                      StringFragment typeName,
+                      std::vector<std::unique_ptr<ASTVarDeclarations>> declarations,
+                      StringFragment instanceName,
+                      std::vector<std::unique_ptr<ASTExpression>> sizes)
+    : INHERITED(offset, kInterfaceBlock_Kind)
     , fModifiers(modifiers)
-    , fInterfaceName(std::move(interfaceName))
-    , fValueName(std::move(valueName))
-    , fDeclarations(std::move(declarations)) {}
+    , fTypeName(typeName)
+    , fDeclarations(std::move(declarations))
+    , fInstanceName(instanceName)
+    , fSizes(std::move(sizes)) {}
 
-    SkString description() const override {
-        SkString result = fModifiers.description() + fInterfaceName + " {\n";
+    String description() const override {
+        String result = fModifiers.description() + fTypeName + " {\n";
         for (size_t i = 0; i < fDeclarations.size(); i++) {
             result += fDeclarations[i]->description() + "\n";
         }
         result += "}";
-        if (fValueName.size()) {
-            result += " " + fValueName;
+        if (fInstanceName.fLength) {
+            result += " " + fInstanceName;
+            for (const auto& size : fSizes) {
+                result += "[";
+                if (size) {
+                    result += size->description();
+                }
+                result += "]";
+            }
         }
         return result + ";";
     }
 
     const Modifiers fModifiers;
-    const SkString fInterfaceName;
-    const SkString fValueName;
+    const StringFragment fTypeName;
     const std::vector<std::unique_ptr<ASTVarDeclarations>> fDeclarations;
+    const StringFragment fInstanceName;
+    const std::vector<std::unique_ptr<ASTExpression>> fSizes;
 
     typedef ASTDeclaration INHERITED;
 };

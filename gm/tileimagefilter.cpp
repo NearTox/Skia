@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "sk_tool_utils.h"
 #include "SkColorFilterImageFilter.h"
 #include "SkColorMatrixFilter.h"
 #include "SkImage.h"
 #include "SkImageSource.h"
 #include "SkTileImageFilter.h"
 #include "gm.h"
+#include "sk_tool_utils.h"
 
 #define WIDTH 400
 #define HEIGHT 200
@@ -40,8 +40,8 @@ protected:
 
         fCheckerboard = SkImage::MakeFromBitmap(
             sk_tool_utils::create_checkerboard_bitmap(80, 80,
-                                                      sk_tool_utils::color_to_565(0xFFA0A0A0),
-                                                      sk_tool_utils::color_to_565(0xFF404040),
+                                                      0xFFA0A0A0,
+                                                      0xFF404040,
                                                       8));
     }
 

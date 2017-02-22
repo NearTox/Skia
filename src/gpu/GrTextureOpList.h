@@ -10,6 +10,7 @@
 
 #include "GrGpuResource.h"
 #include "GrOpList.h"
+#include "GrSurfaceProxy.h"
 
 #include "SkTArray.h"
 
@@ -22,24 +23,20 @@ struct SkIRect;
 
 class GrTextureOpList final : public GrOpList {
 public:
-    GrTextureOpList(GrTextureProxy*, GrGpu*, GrAuditTrail*);
-
+    GrTextureOpList(GrResourceProvider*, sk_sp<GrOpMemoryPool>, GrTextureProxy*, GrAuditTrail*);
     ~GrTextureOpList() override;
 
     /**
      * Empties the draw buffer of any queued ops.
      */
-    void reset() override;
-
-    void abandonGpuResources() override {}
-    void freeGpuResources() override {}
+    void endFlush() override;
 
     /**
      * Together these two functions flush all queued ops to GrGpuCommandBuffer. The return value
      * of executeOps() indicates whether any commands were actually issued to the GPU.
      */
-    void prepareOps(GrOpFlushState* flushState) override;
-    bool executeOps(GrOpFlushState* flushState) override;
+    void onPrepare(GrOpFlushState* flushState) override;
+    bool onExecute(GrOpFlushState* flushState) override;
 
     /**
      * Copies a pixel rectangle from one surface to another. This call may finalize
@@ -51,21 +48,30 @@ public:
      * depending on the type of surface, configs, etc, and the backend-specific
      * limitations.
      */
-    bool copySurface(GrSurface* dst,
-                     GrSurface* src,
+    bool copySurface(GrContext*,
+                     GrSurfaceProxy* dst,
+                     GrSurfaceProxy* src,
                      const SkIRect& srcRect,
-                     const SkIPoint& dstPoint);
+                     const SkIPoint& dstPoint) override;
 
     GrTextureOpList* asTextureOpList() override { return this; }
 
-    SkDEBUGCODE(void dump() const override;)
+    SkDEBUGCODE(void dump(bool printDependencies) const override;)
+
+    SkDEBUGCODE(int numOps() const override { return fRecordedOps.count(); })
 
 private:
-    // The unique ID is only needed for the audit trail. This should be removed with MDB.
-    void recordOp(std::unique_ptr<GrOp>, GrGpuResource::UniqueID renderTargetID);
+    void deleteOp(int index);
+    void deleteOps();
 
+    void purgeOpsWithUninstantiatedProxies() override;
+
+    void gatherProxyIntervals(GrResourceAllocator*) const override;
+
+    void recordOp(std::unique_ptr<GrOp>);
+
+    // The memory for the ops in 'fRecordedOps' is actually stored in 'fOpMemoryPool'
     SkSTArray<2, std::unique_ptr<GrOp>, true> fRecordedOps;
-    GrGpu*                          fGpu;
 
     typedef GrOpList INHERITED;
 };

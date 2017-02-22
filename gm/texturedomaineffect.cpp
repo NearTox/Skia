@@ -9,9 +9,9 @@
 
 #include "gm.h"
 
-#if SK_SUPPORT_GPU
-
 #include "GrContext.h"
+#include "GrContextPriv.h"
+#include "GrProxyProvider.h"
 #include "GrRenderTargetContextPriv.h"
 #include "SkBitmap.h"
 #include "SkGr.h"
@@ -43,7 +43,10 @@ protected:
     }
 
     void onOnceBeforeDraw() override {
-        fBmp.allocN32Pixels(kTargetWidth, kTargetHeight);
+        // TODO: do this with surfaces & images and gpu backend
+        SkImageInfo ii = SkImageInfo::Make(kTargetWidth, kTargetHeight, kN32_SkColorType,
+                                           kPremul_SkAlphaType);
+        fBmp.allocPixels(ii);
         SkCanvas canvas(fBmp);
         canvas.clear(0x00000000);
         SkPaint paint;
@@ -82,25 +85,29 @@ protected:
             return;
         }
 
-        sk_sp<GrTexture> texture(
-            GrRefCachedBitmapTexture(context, fBmp, GrSamplerParams::ClampNoFilter()));
-        if (!texture) {
+        GrProxyProvider* proxyProvider = context->contextPriv().proxyProvider();
+        GrSurfaceDesc desc;
+        desc.fWidth = fBmp.width();
+        desc.fHeight = fBmp.height();
+        desc.fConfig = SkColorType2GrPixelConfig(fBmp.colorType());
+        SkASSERT(kUnknown_GrPixelConfig != desc.fConfig);
+
+        sk_sp<GrTextureProxy> proxy = proxyProvider->createTextureProxy(
+                desc, SkBudgeted::kYes, fBmp.getPixels(), fBmp.rowBytes());
+        if (!proxy) {
             return;
         }
 
         SkTArray<SkMatrix> textureMatrices;
-        textureMatrices.push_back().setIDiv(texture->width(), texture->height());
-        textureMatrices.push_back() = textureMatrices[0];
-        textureMatrices.back().postScale(1.5f, 0.85f);
-        textureMatrices.push_back() = textureMatrices[0];
-        textureMatrices.back().preRotate(45.f, texture->width() / 2.f, texture->height() / 2.f);
+        textureMatrices.push_back() = SkMatrix::I();
+        textureMatrices.push_back() = SkMatrix::MakeScale(1.5f, 0.85f);
+        textureMatrices.push_back();
+        textureMatrices.back().setRotate(45.f, proxy->width() / 2.f, proxy->height() / 2.f);
 
         const SkIRect texelDomains[] = {
             fBmp.bounds(),
-            SkIRect::MakeXYWH(fBmp.width() / 4,
-                              fBmp.height() / 4,
-                              fBmp.width() / 2,
-                              fBmp.height() / 2),
+            SkIRect::MakeXYWH(fBmp.width() / 4, fBmp.height() / 4,
+                              fBmp.width() / 2, fBmp.height() / 2),
         };
 
         SkRect renderRect = SkRect::Make(fBmp.bounds());
@@ -114,22 +121,19 @@ protected:
                     GrTextureDomain::Mode mode = (GrTextureDomain::Mode) m;
                     GrPaint grPaint;
                     grPaint.setXPFactory(GrPorterDuffXPFactory::Get(SkBlendMode::kSrc));
-                    sk_sp<GrFragmentProcessor> fp(
-                        GrTextureDomainEffect::Make(
-                                   texture.get(), nullptr, textureMatrices[tm],
-                                   GrTextureDomain::MakeTexelDomainForMode(texelDomains[d], mode),
-                                   mode, GrSamplerParams::kNone_FilterMode));
+                    auto fp = GrTextureDomainEffect::Make(
+                            proxy, textureMatrices[tm],
+                            GrTextureDomain::MakeTexelDomainForMode(texelDomains[d], mode), mode,
+                            GrSamplerState::Filter::kNearest);
 
                     if (!fp) {
                         continue;
                     }
                     const SkMatrix viewMatrix = SkMatrix::MakeTrans(x, y);
                     grPaint.addColorFragmentProcessor(std::move(fp));
-
-                    std::unique_ptr<GrDrawOp> op(GrRectOpFactory::MakeNonAAFill(
-                            GrColor_WHITE, viewMatrix, renderRect, nullptr, nullptr));
                     renderTargetContext->priv().testingOnly_addDrawOp(
-                            std::move(grPaint), GrAAType::kNone, std::move(op));
+                            GrRectOpFactory::MakeNonAAFill(context, std::move(grPaint), viewMatrix,
+                                                           renderRect, GrAAType::kNone));
                     x += renderRect.width() + kTestPad;
                 }
                 y += renderRect.height() + kTestPad;
@@ -149,5 +153,3 @@ private:
 
 DEF_GM(return new TextureDomainEffect;)
 }
-
-#endif

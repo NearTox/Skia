@@ -10,9 +10,11 @@
 
 #include <vector>
 #include <memory>
+#include <unordered_map>
 #include <unordered_set>
 #include "SkSLErrorReporter.h"
-#include "SkSLToken.h"
+#include "ir/SkSLLayout.h"
+#include "SkSLLexer.h"
 
 struct yy_buffer_state;
 #define YY_TYPEDEF_YY_BUFFER_STATE
@@ -36,10 +38,11 @@ struct ASTPrecision;
 struct ASTReturnStatement;
 struct ASTStatement;
 struct ASTSuffix;
+struct ASTSwitchCase;
+struct ASTSwitchStatement;
 struct ASTType;
 struct ASTWhileStatement;
 struct ASTVarDeclarations;
-struct Layout;
 struct Modifiers;
 class SymbolTable;
 
@@ -48,9 +51,48 @@ class SymbolTable;
  */
 class Parser {
 public:
-    Parser(SkString text, SymbolTable& types, ErrorReporter& errors);
+    enum class LayoutToken {
+        LOCATION,
+        OFFSET,
+        BINDING,
+        INDEX,
+        SET,
+        BUILTIN,
+        INPUT_ATTACHMENT_INDEX,
+        ORIGIN_UPPER_LEFT,
+        OVERRIDE_COVERAGE,
+        BLEND_SUPPORT_ALL_EQUATIONS,
+        BLEND_SUPPORT_MULTIPLY,
+        BLEND_SUPPORT_SCREEN,
+        BLEND_SUPPORT_OVERLAY,
+        BLEND_SUPPORT_DARKEN,
+        BLEND_SUPPORT_LIGHTEN,
+        BLEND_SUPPORT_COLORDODGE,
+        BLEND_SUPPORT_COLORBURN,
+        BLEND_SUPPORT_HARDLIGHT,
+        BLEND_SUPPORT_SOFTLIGHT,
+        BLEND_SUPPORT_DIFFERENCE,
+        BLEND_SUPPORT_EXCLUSION,
+        BLEND_SUPPORT_HSL_HUE,
+        BLEND_SUPPORT_HSL_SATURATION,
+        BLEND_SUPPORT_HSL_COLOR,
+        BLEND_SUPPORT_HSL_LUMINOSITY,
+        PUSH_CONSTANT,
+        POINTS,
+        LINES,
+        LINE_STRIP,
+        LINES_ADJACENCY,
+        TRIANGLES,
+        TRIANGLE_STRIP,
+        TRIANGLES_ADJACENCY,
+        MAX_VERTICES,
+        INVOCATIONS,
+        WHEN,
+        KEY,
+        CTYPE
+    };
 
-    ~Parser();
+    Parser(const char* text, size_t length, SymbolTable& types, ErrorReporter& errors);
 
     /**
      * Consumes a complete .sksl file and produces a list of declarations. Errors are reported via
@@ -59,9 +101,20 @@ public:
      */
     std::vector<std::unique_ptr<ASTDeclaration>> file();
 
+    StringFragment text(Token token);
+
+    Position position(Token token);
+
 private:
+    static void InitLayoutMap();
+
     /**
-     * Return the next token from the parse stream.
+     * Return the next token, including whitespace tokens, from the parse stream.
+     */
+    Token nextRawToken();
+
+    /**
+     * Return the next non-whitespace token from the parse stream.
      */
     Token nextToken();
 
@@ -73,13 +126,19 @@ private:
     void pushback(Token t);
 
     /**
-     * Returns the next token without consuming it from the stream.
+     * Returns the next non-whitespace token without consuming it from the stream.
      */
     Token peek();
 
     /**
-     * Reads the next token and generates an error if it is not the expected type. The 'expected'
-     * string is part of the error message, which reads:
+     * Checks to see if the next token is of the specified type. If so, stores it in result (if
+     * result is non-null) and returns true. Otherwise, pushes it back and returns false.
+     */
+    bool checkNext(Token::Kind kind, Token* result = nullptr);
+
+    /**
+     * Reads the next non-whitespace token and generates an error if it is not the expected type.
+     * The 'expected' string is part of the error message, which reads:
      *
      * "expected <expected>, but found '<actual text>'"
      *
@@ -87,16 +146,15 @@ private:
      * Returns true if the read token was as expected, false otherwise.
      */
     bool expect(Token::Kind kind, const char* expected, Token* result = nullptr);
-    bool expect(Token::Kind kind, SkString expected, Token* result = nullptr);
+    bool expect(Token::Kind kind, String expected, Token* result = nullptr);
 
-    void error(Position p, const char* msg);
-    void error(Position p, SkString msg);
-   
+    void error(Token token, String msg);
+    void error(int offset, String msg);
     /**
      * Returns true if the 'name' identifier refers to a type name. For instance, isType("int") will
      * always return true.
      */
-    bool isType(SkString name);
+    bool isType(StringFragment name);
 
     // these functions parse individual grammar rules from the current parse position; you probably
     // don't need to call any of these outside of the parser. The function declarations in the .cpp
@@ -105,6 +163,10 @@ private:
     std::unique_ptr<ASTDeclaration> precision();
 
     std::unique_ptr<ASTDeclaration> directive();
+
+    std::unique_ptr<ASTDeclaration> section();
+
+    std::unique_ptr<ASTDeclaration> enumDeclaration();
 
     std::unique_ptr<ASTDeclaration> declaration();
 
@@ -116,12 +178,18 @@ private:
 
     std::unique_ptr<ASTVarDeclarations> varDeclarationEnd(Modifiers modifiers,
                                                           std::unique_ptr<ASTType> type,
-                                                          SkString name);
+                                                          StringFragment name);
 
     std::unique_ptr<ASTParameter> parameter();
 
     int layoutInt();
-   
+
+    StringFragment layoutIdentifier();
+
+    String layoutCode();
+
+    Layout::Key layoutKey();
+
     Layout layout();
 
     Modifiers modifiers();
@@ -142,6 +210,10 @@ private:
 
     std::unique_ptr<ASTForStatement> forStatement();
 
+    std::unique_ptr<ASTSwitchCase> switchCase();
+
+    std::unique_ptr<ASTStatement> switchStatement();
+
     std::unique_ptr<ASTReturnStatement> returnStatement();
 
     std::unique_ptr<ASTBreakStatement> breakStatement();
@@ -156,8 +228,10 @@ private:
 
     std::unique_ptr<ASTExpression> expression();
 
+    std::unique_ptr<ASTExpression> commaExpression();
+
     std::unique_ptr<ASTExpression> assignmentExpression();
-   
+
     std::unique_ptr<ASTExpression> ternaryExpression();
 
     std::unique_ptr<ASTExpression> logicalOrExpression();
@@ -196,9 +270,12 @@ private:
 
     bool boolLiteral(bool* dest);
 
-    bool identifier(SkString* dest);
+    bool identifier(StringFragment* dest);
 
-    void* fScanner;
+    static std::unordered_map<String, LayoutToken>* layoutTokens;
+
+    const char* fText;
+    Lexer fLexer;
     YY_BUFFER_STATE fBuffer;
     // current parse depth, used to enforce a recursion limit to try to keep us from overflowing the
     // stack on pathological inputs
@@ -208,6 +285,7 @@ private:
     ErrorReporter& fErrors;
 
     friend class AutoDepth;
+    friend class HCodeGenerator;
 };
 
 } // namespace

@@ -5,8 +5,11 @@
  * found in the LICENSE file.
  */
 #include "gm.h"
+#include "sk_tool_utils.h"
 #include "SkCanvas.h"
 #include "SkPath.h"
+
+#include <utility>
 
 namespace skiagm {
 
@@ -16,7 +19,7 @@ class ComplexClip3GM : public GM {
 public:
     ComplexClip3GM(bool doSimpleClipFirst)
         : fDoSimpleClipFirst(doSimpleClipFirst) {
-        this->setBGColor(sk_tool_utils::color_to_565(0xFFDDDDDD));
+        this->setBGColor(0xFFDDDDDD);
     }
 
 protected:
@@ -43,7 +46,8 @@ protected:
         SkPath* secondClip = &clipComplex;
 
         if (!fDoSimpleClipFirst) {
-            SkTSwap<SkPath*>(firstClip, secondClip);
+            using std::swap;
+            swap(firstClip, secondClip);
         }
 
         SkPaint paint;
@@ -102,8 +106,7 @@ protected:
                                                    doAAB ? "A" : "B",
                                                    doInvB ? "I" : "N");
 
-                        canvas->drawText(str.c_str(), strlen(str.c_str()), txtX, SkIntToScalar(130),
-                                         paint);
+                        canvas->drawString(str.c_str(), txtX, SkIntToScalar(130), paint);
                         if (doInvB) {
                             canvas->translate(SkIntToScalar(150),0);
                         } else {

@@ -1,7 +1,8 @@
 ﻿.vs/
 *.VC.db
 *.VC.opendb
-/copy.json
+#/copy.json
+#/copy-angle.json
 
 [Bb]in/
 [Oo]bj/
@@ -38,7 +39,7 @@ platform_tools/android/apps/*/build
 platform_tools/android/apps/*/src/main/libs
 sampleapp_prefs.txt
 /skps
-third_party/externals
+third_party/externals/*/
 tools/skp/page_sets/data/*.json
 tools/skp/page_sets/data/*.wpr
 xcodebuild

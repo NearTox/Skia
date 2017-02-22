@@ -35,8 +35,10 @@ protected:
         paint.setLCDRenderText(true);
         sk_sp<SkFontMgr> fontMgr(SkFontMgr::RefDefault());
 
-        std::unique_ptr<SkStreamAsset> distortable(GetResourceAsStream("/fonts/Distortable.ttf"));
-        if (!distortable) {
+        std::unique_ptr<SkStreamAsset> distortableStream(GetResourceAsStream("fonts/Distortable.ttf"));
+        sk_sp<SkTypeface> distortable(MakeResourceAsTypeface("fonts/Distortable.ttf"));
+
+        if (!distortableStream) {
             return;
         }
         const char* text = "abc";
@@ -48,10 +50,19 @@ protected:
                 SkScalar y = SkIntToScalar(20);
 
                 SkFourByteTag tag = SkSetFourByteTag('w','g','h','t');
-                SkScalar styleValue = SkDoubleToScalar(0.5 + (5*j + i) * ((2.0 - 0.5) / (2 * 5)));
-                SkFontMgr::FontParameters::Axis axes[] = { { tag, styleValue } };
-                paint.setTypeface(sk_sp<SkTypeface>(fontMgr->createFromStream(
-                        distortable->duplicate(), SkFontMgr::FontParameters().setAxes(axes, 1))));
+                SkScalar styleValue = SkDoubleToScalar(0.5 + (5 * j + i) * ((2.0 - 0.5) / (2 * 5)));
+                SkFontArguments::VariationPosition::Coordinate coordinates[] = {{tag, styleValue}};
+                SkFontArguments::VariationPosition position =
+                        { coordinates, SK_ARRAY_COUNT(coordinates) };
+                if (j == 0 && distortable) {
+                    paint.setTypeface(sk_sp<SkTypeface>(
+                        distortable->makeClone(
+                            SkFontArguments().setVariationDesignPosition(position))));
+                } else {
+                    paint.setTypeface(sk_sp<SkTypeface>(fontMgr->makeFromStream(
+                        distortableStream->duplicate(),
+                        SkFontArguments().setVariationDesignPosition(position))));
+                }
 
                 SkAutoCanvasRestore acr(canvas, true);
                 canvas->translate(SkIntToScalar(30 + i * 100), SkIntToScalar(20));

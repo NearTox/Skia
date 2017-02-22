@@ -8,19 +8,17 @@
 #include "gm.h"
 #include "SkCanvas.h"
 #include "SkImage.h"
-#include "SkImageCacherator.h"
+#include "SkImageGenerator.h"
+#include "SkImage_Base.h"
+#include "SkMakeUnique.h"
 #include "SkPictureRecorder.h"
 #include "SkSurface.h"
 
-#if SK_SUPPORT_GPU
 #include "GrContext.h"
 #include "GrContextPriv.h"
 #include "GrSurfaceContext.h"
-#include "GrSurfaceProxy.h"
-#include "GrTexture.h"
 #include "GrTextureProxy.h"
 #include "../src/image/SkImage_Gpu.h"
-#endif
 
 static void draw_something(SkCanvas* canvas, const SkRect& bounds) {
     SkPaint paint;
@@ -62,7 +60,7 @@ protected:
 
         // extract enough just for the oval.
         const SkISize size = SkISize::Make(100, 100);
-        auto srgbColorSpace = SkColorSpace::MakeNamed(SkColorSpace::kSRGB_Named);
+        auto srgbColorSpace = SkColorSpace::MakeSRGB();
 
         SkMatrix matrix;
         matrix.setTranslate(-100, -100);
@@ -107,105 +105,37 @@ DEF_GM( return new ImagePictGM; )
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-static SkImageGenerator* make_pic_generator(GrContext*, SkPicture* pic) {
+static std::unique_ptr<SkImageGenerator> make_pic_generator(GrContext*, sk_sp<SkPicture> pic) {
     SkMatrix matrix;
     matrix.setTranslate(-100, -100);
-    return SkImageGenerator::NewFromPicture(SkISize::Make(100, 100), pic, &matrix, nullptr,
+    return SkImageGenerator::MakeFromPicture({ 100, 100 }, std::move(pic), &matrix, nullptr,
                                             SkImage::BitDepth::kU8,
-                                            SkColorSpace::MakeNamed(SkColorSpace::kSRGB_Named));
+                                            SkColorSpace::MakeSRGB());
 }
 
 class RasterGenerator : public SkImageGenerator {
 public:
-    RasterGenerator(const SkBitmap& bm) : SkImageGenerator(bm.info()), fBM(bm) {
-        fBM.lockPixels();
-    }
+    RasterGenerator(const SkBitmap& bm) : SkImageGenerator(bm.info()), fBM(bm)
+    {}
+
 protected:
     bool onGetPixels(const SkImageInfo& info, void* pixels, size_t rowBytes,
-                     SkPMColor* ctable, int* ctableCount) override {
+                     const Options&) override {
         SkASSERT(fBM.width() == info.width());
         SkASSERT(fBM.height() == info.height());
-
-        if (info.colorType() == kIndex_8_SkColorType) {
-            if (SkColorTable* ct = fBM.getColorTable()) {
-                if (ctable) {
-                    memcpy(ctable, ct->readColors(), ct->count() * sizeof(SkPMColor));
-                }
-                if (ctableCount) {
-                    *ctableCount = ct->count();
-                }
-
-                for (int y = 0; y < info.height(); ++y) {
-                    memcpy(pixels, fBM.getAddr8(0, y), fBM.width());
-                    pixels = (char*)pixels + rowBytes;
-                }
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            return fBM.readPixels(info, pixels, rowBytes, 0, 0);
-        }
+        return fBM.readPixels(info, pixels, rowBytes, 0, 0);
     }
 private:
     SkBitmap fBM;
 };
-static SkImageGenerator* make_ras_generator(GrContext*, SkPicture* pic) {
+static std::unique_ptr<SkImageGenerator> make_ras_generator(GrContext*, sk_sp<SkPicture> pic) {
     SkBitmap bm;
     bm.allocN32Pixels(100, 100);
     SkCanvas canvas(bm);
     canvas.clear(0);
     canvas.translate(-100, -100);
     canvas.drawPicture(pic);
-    return new RasterGenerator(bm);
-}
-
-// so we can create a color-table
-static int find_closest(SkPMColor c, const SkPMColor table[], int count) {
-    const int cr = SkGetPackedR32(c);
-    const int cg = SkGetPackedG32(c);
-    const int cb = SkGetPackedB32(c);
-
-    int minDist = 999999999;
-    int index = 0;
-    for (int i = 0; i < count; ++i) {
-        int dr = SkAbs32((int)SkGetPackedR32(table[i]) - cr);
-        int dg = SkAbs32((int)SkGetPackedG32(table[i]) - cg);
-        int db = SkAbs32((int)SkGetPackedB32(table[i]) - cb);
-        int dist = dr + dg + db;
-        if (dist < minDist) {
-            minDist = dist;
-            index = i;
-        }
-    }
-    return index;
-}
-
-static SkImageGenerator* make_ctable_generator(GrContext*, SkPicture* pic) {
-    SkBitmap bm;
-    bm.allocN32Pixels(100, 100);
-    SkCanvas canvas(bm);
-    canvas.clear(0);
-    canvas.translate(-100, -100);
-    canvas.drawPicture(pic);
-
-    const SkPMColor colors[] = {
-        SkPreMultiplyColor(SK_ColorRED),
-        SkPreMultiplyColor(0),
-        SkPreMultiplyColor(SK_ColorBLUE),
-    };
-    const int count = SK_ARRAY_COUNT(colors);
-    SkImageInfo info = SkImageInfo::Make(100, 100, kIndex_8_SkColorType, kPremul_SkAlphaType);
-
-    SkBitmap bm2;
-    sk_sp<SkColorTable> ct(new SkColorTable(colors, count));
-    bm2.allocPixels(info, nullptr, ct.get());
-    for (int y = 0; y < info.height(); ++y) {
-        for (int x = 0; x < info.width(); ++x) {
-            *bm2.getAddr8(x, y) = find_closest(*bm.getAddr32(x, y), colors, count);
-        }
-    }
-    return new RasterGenerator(bm2);
+    return skstd::make_unique<RasterGenerator>(bm);
 }
 
 class EmptyGenerator : public SkImageGenerator {
@@ -213,28 +143,28 @@ public:
     EmptyGenerator(const SkImageInfo& info) : SkImageGenerator(info) {}
 };
 
-#if SK_SUPPORT_GPU
 class TextureGenerator : public SkImageGenerator {
 public:
-    TextureGenerator(GrContext* ctx, const SkImageInfo& info, SkPicture* pic)
+    TextureGenerator(GrContext* ctx, const SkImageInfo& info, sk_sp<SkPicture> pic)
         : SkImageGenerator(info)
         , fCtx(SkRef(ctx)) {
 
-        sk_sp<SkSurface> surface(SkSurface::MakeRenderTarget(ctx, SkBudgeted::kNo, info));
+        sk_sp<SkSurface> surface(SkSurface::MakeRenderTarget(ctx, SkBudgeted::kYes, info, 0,
+                                                             kTopLeft_GrSurfaceOrigin, nullptr));
         if (surface) {
             surface->getCanvas()->clear(0);
             surface->getCanvas()->translate(-100, -100);
             surface->getCanvas()->drawPicture(pic);
             sk_sp<SkImage> image(surface->makeImageSnapshot());
-            fProxy = GrSurfaceProxy::MakeWrapped(sk_ref_sp(as_IB(image)->peekTexture()));
+            fProxy = as_IB(image)->asTextureProxyRef();
         }
     }
 protected:
-    GrTexture* onGenerateTexture(GrContext* ctx, const SkImageInfo& info,
-                                 const SkIPoint& origin) override {
-        if (ctx) {
-            SkASSERT(ctx == fCtx.get());
-        }
+    sk_sp<GrTextureProxy> onGenerateTexture(GrContext* ctx, const SkImageInfo& info,
+                                            const SkIPoint& origin,
+                                            bool willBeMipped) override {
+        SkASSERT(ctx);
+        SkASSERT(ctx == fCtx.get());
 
         if (!fProxy) {
             return nullptr;
@@ -242,18 +172,19 @@ protected:
 
         if (origin.fX == 0 && origin.fY == 0 &&
             info.width() == fProxy->width() && info.height() == fProxy->height()) {
-            return SkSafeRef(fProxy->instantiate(fCtx->textureProvider())->asTexture());
+            return fProxy;
         }
 
         // need to copy the subset into a new texture
-        GrSurfaceDesc desc = fProxy->desc();
+        GrSurfaceDesc desc;
         desc.fWidth = info.width();
         desc.fHeight = info.height();
+        desc.fConfig = fProxy->config();
+
+        GrMipMapped mipMapped = willBeMipped ? GrMipMapped::kYes : GrMipMapped::kNo;
 
         sk_sp<GrSurfaceContext> dstContext(fCtx->contextPriv().makeDeferredSurfaceContext(
-                                                                            desc,
-                                                                            SkBackingFit::kExact,
-                                                                            SkBudgeted::kNo));
+                desc, fProxy->origin(), mipMapped, SkBackingFit::kExact, SkBudgeted::kYes));
         if (!dstContext) {
             return nullptr;
         }
@@ -265,36 +196,33 @@ protected:
             return nullptr;
         }
 
-        GrSurface* dstSurf = dstContext->asDeferredSurface()->instantiate(fCtx->textureProvider());
-        if (!dstSurf) {
-            return nullptr;
-        }
-
-        return SkRef(dstSurf->asTexture());
+        return dstContext->asTextureProxyRef();
     }
+
 private:
     sk_sp<GrContext>      fCtx;
-    sk_sp<GrSurfaceProxy> fProxy;
+    sk_sp<GrTextureProxy> fProxy;
 };
-static SkImageGenerator* make_tex_generator(GrContext* ctx, SkPicture* pic) {
+
+static std::unique_ptr<SkImageGenerator> make_tex_generator(GrContext* ctx, sk_sp<SkPicture> pic) {
     const SkImageInfo info = SkImageInfo::MakeN32Premul(100, 100);
 
     if (!ctx) {
-        return new EmptyGenerator(info);
+        return skstd::make_unique<EmptyGenerator>(info);
     }
-    return new TextureGenerator(ctx, info, pic);
+    return skstd::make_unique<TextureGenerator>(ctx, info, pic);
 }
-#endif
 
 class ImageCacheratorGM : public skiagm::GM {
     SkString                         fName;
-    SkImageGenerator*                (*fFactory)(GrContext*, SkPicture*);
+    std::unique_ptr<SkImageGenerator> (*fFactory)(GrContext*, sk_sp<SkPicture>);
     sk_sp<SkPicture>                 fPicture;
-    std::unique_ptr<SkImageCacherator> fCache;
-    std::unique_ptr<SkImageCacherator> fCacheSubset;
+    sk_sp<SkImage>                   fImage;
+    sk_sp<SkImage>                   fImageSubset;
 
 public:
-    ImageCacheratorGM(const char suffix[], SkImageGenerator* (*factory)(GrContext*, SkPicture*))
+    ImageCacheratorGM(const char suffix[],
+                      std::unique_ptr<SkImageGenerator> (*factory)(GrContext*, sk_sp<SkPicture>))
         : fFactory(factory)
     {
         fName.printf("image-cacherator-from-%s", suffix);
@@ -317,55 +245,46 @@ protected:
     }
 
     void makeCaches(GrContext* ctx) {
-        auto gen = fFactory(ctx, fPicture.get());
-        SkDEBUGCODE(const uint32_t genID = gen->uniqueID();)
-        fCache.reset(SkImageCacherator::NewFromGenerator(gen));
+        auto gen = fFactory(ctx, fPicture);
+        fImage = SkImage::MakeFromGenerator(std::move(gen));
 
         const SkIRect subset = SkIRect::MakeLTRB(50, 50, 100, 100);
 
-        gen = fFactory(ctx, fPicture.get());
-        SkDEBUGCODE(const uint32_t genSubsetID = gen->uniqueID();)
-        fCacheSubset.reset(SkImageCacherator::NewFromGenerator(gen, &subset));
+        gen = fFactory(ctx, fPicture);
+        fImageSubset = SkImage::MakeFromGenerator(std::move(gen), &subset);
 
-        // whole caches should have the same ID as the generator. Subsets should be diff
-        SkASSERT(fCache->uniqueID() == genID);
-        SkASSERT(fCacheSubset->uniqueID() != genID);
-        SkASSERT(fCacheSubset->uniqueID() != genSubsetID);
-
-        SkASSERT(fCache->info().dimensions() == SkISize::Make(100, 100));
-        SkASSERT(fCacheSubset->info().dimensions() == SkISize::Make(50, 50));
+        SkASSERT(fImage->dimensions() == SkISize::Make(100, 100));
+        SkASSERT(fImageSubset->dimensions() == SkISize::Make(50, 50));
     }
 
-    static void draw_as_bitmap(SkCanvas* canvas, SkImageCacherator* cache, SkScalar x, SkScalar y) {
+    static void draw_as_bitmap(SkCanvas* canvas, SkImage* image, SkScalar x, SkScalar y) {
         SkBitmap bitmap;
-        cache->lockAsBitmap(&bitmap, nullptr, canvas->imageInfo().colorSpace());
+        as_IB(image)->getROPixels(&bitmap, canvas->imageInfo().colorSpace());
         canvas->drawBitmap(bitmap, x, y);
     }
 
-    static void draw_as_tex(SkCanvas* canvas, SkImageCacherator* cache, SkScalar x, SkScalar y) {
-#if SK_SUPPORT_GPU
+    static void draw_as_tex(SkCanvas* canvas, SkImage* image, SkScalar x, SkScalar y) {
         sk_sp<SkColorSpace> texColorSpace;
-        sk_sp<GrTexture> texture(
-            cache->lockAsTexture(canvas->getGrContext(), GrSamplerParams::ClampBilerp(),
-                                 canvas->imageInfo().colorSpace(), &texColorSpace, nullptr));
-        if (!texture) {
+        sk_sp<GrTextureProxy> proxy(as_IB(image)->asTextureProxyRef(
+                canvas->getGrContext(), GrSamplerState::ClampBilerp(),
+                canvas->imageInfo().colorSpace(), &texColorSpace, nullptr));
+        if (!proxy) {
             // show placeholder if we have no texture
             SkPaint paint;
             paint.setStyle(SkPaint::kStroke_Style);
-            SkRect r = SkRect::MakeXYWH(x, y, SkIntToScalar(cache->info().width()),
-                                        SkIntToScalar(cache->info().width()));
+            SkRect r = SkRect::MakeXYWH(x, y, SkIntToScalar(image->width()),
+                                        SkIntToScalar(image->width()));
             canvas->drawRect(r, paint);
             canvas->drawLine(r.left(), r.top(), r.right(), r.bottom(), paint);
             canvas->drawLine(r.left(), r.bottom(), r.right(), r.top(), paint);
             return;
         }
+
         // No API to draw a GrTexture directly, so we cheat and create a private image subclass
-        sk_sp<SkImage> image(new SkImage_Gpu(cache->info().width(), cache->info().height(),
-                                             cache->uniqueID(), kPremul_SkAlphaType,
-                                             std::move(texture), std::move(texColorSpace),
-                                             SkBudgeted::kNo));
-        canvas->drawImage(image.get(), x, y);
-#endif
+        sk_sp<SkImage> texImage(new SkImage_Gpu(
+                sk_ref_sp(canvas->getGrContext()), image->uniqueID(), kPremul_SkAlphaType,
+                std::move(proxy), std::move(texColorSpace), SkBudgeted::kNo));
+        canvas->drawImage(texImage.get(), x, y);
     }
 
     void drawSet(SkCanvas* canvas) const {
@@ -375,11 +294,11 @@ protected:
         // Draw the tex first, so it doesn't hit a lucky cache from the raster version. This
         // way we also can force the generateTexture call.
 
-        draw_as_tex(canvas, fCache.get(), 310, 0);
-        draw_as_tex(canvas, fCacheSubset.get(), 310+101, 0);
+        draw_as_tex(canvas, fImage.get(), 310, 0);
+        draw_as_tex(canvas, fImageSubset.get(), 310+101, 0);
 
-        draw_as_bitmap(canvas, fCache.get(), 150, 0);
-        draw_as_bitmap(canvas, fCacheSubset.get(), 150+101, 0);
+        draw_as_bitmap(canvas, fImage.get(), 150, 0);
+        draw_as_bitmap(canvas, fImageSubset.get(), 150+101, 0);
     }
 
     void onDraw(SkCanvas* canvas) override {
@@ -407,7 +326,4 @@ private:
 };
 DEF_GM( return new ImageCacheratorGM("picture", make_pic_generator); )
 DEF_GM( return new ImageCacheratorGM("raster", make_ras_generator); )
-DEF_GM( return new ImageCacheratorGM("ctable", make_ctable_generator); )
-#if SK_SUPPORT_GPU
-    DEF_GM( return new ImageCacheratorGM("texture", make_tex_generator); )
-#endif
+DEF_GM( return new ImageCacheratorGM("texture", make_tex_generator); )

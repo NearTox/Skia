@@ -6,7 +6,9 @@
  */
 
 #include "gm.h"
-#include "SkBlendModePriv.h"
+#include "GrColor.h"
+#include "sk_tool_utils.h"
+#include "SkColorPriv.h"
 #include "SkPath.h"
 #include "SkShader.h"
 
@@ -106,10 +108,10 @@ protected:
 
             if (kShape_Pass == drawingPass) {
                 fLabelPaint.setTextAlign(SkPaint::kCenter_Align);
-                canvas->drawText("Src Unknown", sizeof("Src Unknown") - 1,
+                canvas->drawString("Src Unknown",
                         kLabelSpacing + kShapeTypeSpacing * 1.5f + kShapeSpacing / 2,
                         kSubtitleSpacing / 2 + fLabelPaint.getTextSize() / 3, fLabelPaint);
-                canvas->drawText("Src Opaque", sizeof("Src Opaque") - 1,
+                canvas->drawString("Src Opaque",
                         kLabelSpacing + kShapeTypeSpacing * 1.5f + kShapeSpacing / 2 +
                         kPaintSpacing, kSubtitleSpacing / 2 + fLabelPaint.getTextSize() / 3,
                         fLabelPaint);
@@ -179,10 +181,10 @@ protected:
         titlePaint.setTextSize(9 * titlePaint.getTextSize() / 8);
         titlePaint.setFakeBoldText(true);
         titlePaint.setTextAlign(SkPaint::kCenter_Align);
-        canvas->drawText("Porter Duff", sizeof("Porter Duff") - 1,
+        canvas->drawString("Porter Duff",
                          kLabelSpacing + 4 * kShapeTypeSpacing,
                          kTitleSpacing / 2 + titlePaint.getTextSize() / 3, titlePaint);
-        canvas->drawText("Advanced", sizeof("Advanced") - 1,
+        canvas->drawString("Advanced",
                          kXfermodeTypeSpacing + kLabelSpacing + 4 * kShapeTypeSpacing,
                          kTitleSpacing / 2 + titlePaint.getTextSize() / 3, titlePaint);
 
@@ -193,7 +195,7 @@ protected:
     void drawModeName(SkCanvas* canvas, SkBlendMode mode) {
         const char* modeName = SkBlendMode_Name(mode);
         fLabelPaint.setTextAlign(SkPaint::kRight_Align);
-        canvas->drawText(modeName, strlen(modeName), kLabelSpacing - kShapeSize / 4,
+        canvas->drawString(modeName, kLabelSpacing - kShapeSize / 4,
                          fLabelPaint.getTextSize() / 4, fLabelPaint);
     }
 
@@ -219,9 +221,9 @@ protected:
                     // Just clear the dst, we need to preserve the paint's opacity.
                     dimPaint.setARGB(0, 0, 0, 0);
                 }
-                canvas->drawRectCoords(-kShapeSpacing/2, -kShapeSpacing/2,
-                                       kShapeSpacing/2 + 3 * kShapeTypeSpacing,
-                                       kShapeSpacing/2, dimPaint);
+                canvas->drawRect({ -kShapeSpacing/2, -kShapeSpacing/2,
+                                   kShapeSpacing/2 + 3 * kShapeTypeSpacing, kShapeSpacing/2 },
+                                 dimPaint);
             }
         }
     }
@@ -234,15 +236,15 @@ protected:
 
         switch (shape) {
             case kSquare_Shape:
-                canvas->drawRectCoords(-kShapeSize/2, -kShapeSize/2, kShapeSize/2, kShapeSize/2,
-                                       shapePaint);
+                canvas->drawRect({ -kShapeSize/2, -kShapeSize/2, kShapeSize/2, kShapeSize/2 },
+                                 shapePaint);
                 break;
 
             case kDiamond_Shape:
                 canvas->save();
                 canvas->rotate(45);
-                canvas->drawRectCoords(-kShapeSize/2, -kShapeSize/2, kShapeSize/2, kShapeSize/2,
-                                       shapePaint);
+                canvas->drawRect({ -kShapeSize/2, -kShapeSize/2, kShapeSize/2, kShapeSize/2 },
+                                 shapePaint);
                 canvas->restore();
                 break;
 
@@ -258,7 +260,7 @@ protected:
                 break;
 
             default:
-                SkFAIL("Invalid shape.");
+                SK_ABORT("Invalid shape.");
         }
     }
 

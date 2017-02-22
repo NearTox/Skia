@@ -47,7 +47,7 @@
     here.
  */
 //#define SK_DEBUG
-//#define SK_RELEASE
+#define SK_RELEASE
 
 /*  Skia has certain debug-only code that is extremely intensive even for debug
     builds.  This code is useful for diagnosing specific issues, but is not
@@ -93,24 +93,12 @@
  */
 //#define SK_DEFAULT_IMAGE_CACHE_LIMIT (1024 * 1024)
 
-/*  Define this to provide font subsetter in PDF generation.
- */
-//#define SK_SFNTLY_SUBSETTER "sample/chromium/font_subsetter.h"
-
 /*  Define this to set the upper limit for text to support LCD. Values that
     are very large increase the cost in the font cache and draw slower, without
     improving readability. If this is undefined, Skia will use its default
     value (e.g. 48)
  */
 //#define SK_MAX_SIZE_FOR_LCDTEXT     48
-
-/*  If SK_DEBUG is defined, then you can optionally define SK_SUPPORT_UNITTEST
-    which will run additional self-tests at startup. These can take a long time,
-    so this flag is optional.
- */
-#ifdef SK_DEBUG
-//#define SK_SUPPORT_UNITTEST
-#endif
 
 /*  Change the ordering to work in X windows.
  */
@@ -129,7 +117,7 @@
    directories from your include search path when you're not building the GPU
    backend. Defaults to 1 (build the GPU code).
  */
-//#define SK_SUPPORT_GPU 1
+#define SK_SUPPORT_GPU 1
 
 /* Skia makes use of histogram logging macros to trace the frequency of
  * events. By default, Skia provides no-op versions of these macros.

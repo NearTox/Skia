@@ -5,6 +5,12 @@
  * found in the LICENSE file.
  */
 
+#ifndef SkICCPriv_DEFINED
+#define SkICCPriv_DEFINED
+
+#include "SkColorSpace.h"
+#include "SkTypes.h"
+
 // This is equal to the header size according to the ICC specification (128)
 // plus the size of the tag count (4).  We include the tag count since we
 // always require it to be present anyway.
@@ -44,3 +50,5 @@ enum ParaCurveType {
     kGABDE_ParaCurveType       = 3,
     kGABCDEF_ParaCurveType     = 4,
 };
+
+#endif  // SkICCPriv_DEFINED

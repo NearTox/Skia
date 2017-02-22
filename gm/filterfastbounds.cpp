@@ -10,6 +10,7 @@
 #include "SkDropShadowImageFilter.h"
 #include "SkImageSource.h"
 #include "SkOffsetImageFilter.h"
+#include "SkPath.h"
 #include "SkPictureImageFilter.h"
 #include "SkPictureRecorder.h"
 #include "SkRandom.h"
@@ -150,7 +151,7 @@ static void create_paints(SkTArray<SkPaint>* paints, sk_sp<SkImageFilter> source
 class ImageFilterFastBoundGM : public GM {
 public:
     ImageFilterFastBoundGM() {
-        this->setBGColor(sk_tool_utils::color_to_565(0xFFCCCCCC));
+        this->setBGColor(0xFFCCCCCC);
     }
 
 protected:

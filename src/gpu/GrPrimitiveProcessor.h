@@ -9,8 +9,12 @@
 #define GrPrimitiveProcessor_DEFINED
 
 #include "GrColor.h"
+#include "GrNonAtomicRef.h"
 #include "GrProcessor.h"
+#include "GrProxyRef.h"
 #include "GrShaderVar.h"
+
+class GrCoordTransform;
 
 /*
  * The GrPrimitiveProcessor represents some kind of geometric primitive.  This includes the shape
@@ -21,10 +25,11 @@
  * functionality.
  *
  * There are two feedback loops between the GrFragmentProcessors, the GrXferProcessor, and the
- * GrPrimitiveProcessor.  These loops run on the CPU and compute any invariant components which
- * might be useful for correctness / optimization decisions.  The GrPrimitiveProcessor seeds these
- * loops, one with initial color and one with initial coverage, in its
- * onComputeInvariantColor / Coverage calls.  These seed values are processed by the subsequent
+ * GrPrimitiveProcessor. These loops run on the CPU and to determine known properties of the final
+ * color and coverage inputs to the GrXferProcessor in order to perform optimizations that preserve
+ * correctness. The GrDrawOp seeds these loops with initial color and coverage, in its
+ * getProcessorAnalysisInputs implementation. These seed values are processed by the
+ * subsequent
  * stages of the rendering pipeline and the output is then fed back into the GrDrawOp in
  * the applyPipelineOptimizations call, where the op can use the information to inform decisions
  * about GrPrimitiveProcessor creation.
@@ -32,122 +37,76 @@
 
 class GrGLSLPrimitiveProcessor;
 
-struct GrInitInvariantOutput;
-
-// Describes the state of pixel local storage with respect to the current draw.
-enum GrPixelLocalStorageState {
-    // The draw is actively updating PLS.
-    kDraw_GrPixelLocalStorageState,
-    // The draw is a "finish" operation which is reading from PLS and writing color.
-    kFinish_GrPixelLocalStorageState,
-    // The draw does not use PLS.
-    kDisabled_GrPixelLocalStorageState
-};
-
-/*
- * This class allows the GrPipeline to communicate information about the pipeline to a GrOp which
- * inform its decisions for GrPrimitiveProcessor setup. These are not properly part of the pipeline
- * because they reflect the specific inputs that the op provided to perform the analysis (e.g. that
- * the GrGeometryProcessor would output an opaque color).
- *
- * The pipeline analysis that produced this may have decided to elide some GrProcessors. However,
- * those elisions may depend upon changing the color output by the GrGeometryProcessor used by the
- * GrDrawOp. The op must check getOverrideColorIfSet() for this.
- */
-class GrPipelineOptimizations {
-public:
-    /** Does the pipeline require access to (implicit or explicit) local coordinates? */
-    bool readsLocalCoords() const {
-        return SkToBool(kReadsLocalCoords_Flag & fFlags);
-    }
-
-    /** Does the pipeline allow the GrPrimitiveProcessor to combine color and coverage into one
-        color output ? */
-    bool canTweakAlphaForCoverage() const {
-        return SkToBool(kCanTweakAlphaForCoverage_Flag & fFlags);
-    }
-
-    /** Does the pipeline require the GrPrimitiveProcessor to specify a specific color (and if
-        so get the color)? */
-    bool getOverrideColorIfSet(GrColor* overrideColor) const {
-        if (SkToBool(kUseOverrideColor_Flag & fFlags)) {
-            if (overrideColor) {
-                *overrideColor = fOverrideColor;
-            }
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Returns true if the pipeline's color output will be affected by the existing render target
-     * destination pixel values (meaning we need to be careful with overlapping draws). Note that we
-     * can conflate coverage and color, so the destination color may still bleed into pixels that
-     * have partial coverage, even if this function returns false.
-     *
-     * The above comment seems incorrect for the use case. This function is used to turn two
-     * overlapping draws into a single draw (really to stencil multiple paths and do a single
-     * cover). It seems that what really matters is whether the dst is read for color OR for
-     * coverage.
-     */
-    bool willColorBlendWithDst() const { return SkToBool(kWillColorBlendWithDst_Flag & fFlags); }
-
-private:
-    enum {
-        // If this is not set the primitive processor need not produce local coordinates
-        kReadsLocalCoords_Flag = 0x1,
-
-        // If this flag is set then the primitive processor may produce color*coverage as
-        // its color output (and not output a separate coverage).
-        kCanTweakAlphaForCoverage_Flag = 0x2,
-
-        // If this flag is set the GrPrimitiveProcessor must produce fOverrideColor as its
-        // output color. If not set fOverrideColor is to be ignored.
-        kUseOverrideColor_Flag = 0x4,
-
-        kWillColorBlendWithDst_Flag = 0x8,
-    };
-
-    uint32_t    fFlags;
-    GrColor     fOverrideColor;
-
-    friend class GrPipeline; // To initialize this
-};
-
-/*
+/**
  * GrPrimitiveProcessor defines an interface which all subclasses must implement.  All
  * GrPrimitiveProcessors must proivide seed color and coverage for the Ganesh color / coverage
  * pipelines, and they must provide some notion of equality
+ *
+ * TODO: This class does not really need to be ref counted. Instances should be allocated using
+ * GrOpFlushState's arena and destroyed when the arena is torn down.
  */
-class GrPrimitiveProcessor : public GrProcessor {
+class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimitiveProcessor> {
 public:
+    class TextureSampler;
+
+    /** Describes a vertex or instance attribute. */
+    class Attribute {
+    public:
+        constexpr Attribute() = default;
+        constexpr Attribute(const char* name, GrVertexAttribType type) : fName(name), fType(type) {}
+        constexpr Attribute(const Attribute&) = default;
+
+        Attribute& operator=(const Attribute&) = default;
+
+        constexpr bool isInitialized() const { return SkToBool(fName); }
+
+        constexpr const char* name() const { return fName; }
+        constexpr GrVertexAttribType type() const { return fType; }
+
+        inline constexpr size_t size() const;
+        constexpr size_t sizeAlign4() const { return SkAlign4(this->size()); }
+
+        GrShaderVar asShaderVar() const {
+            return {fName, GrVertexAttribTypeToSLType(fType), GrShaderVar::kIn_TypeModifier};
+        }
+
+    private:
+        const char* fName = nullptr;
+        GrVertexAttribType fType = kFloat_GrVertexAttribType;
+    };
+
+    GrPrimitiveProcessor(ClassID);
+
+    int numTextureSamplers() const { return fTextureSamplerCnt; }
+    const TextureSampler& textureSampler(int index) const;
+    int numVertexAttributes() const { return fVertexAttributeCnt; }
+    const Attribute& vertexAttribute(int i) const;
+    int numInstanceAttributes() const { return fInstanceAttributeCnt; }
+    const Attribute& instanceAttribute(int i) const;
+
+    bool hasVertexAttributes() const { return SkToBool(fVertexAttributeCnt); }
+    bool hasInstanceAttributes() const { return SkToBool(fInstanceAttributeCnt); }
+
+#ifdef SK_DEBUG
+    /**
+     * A common practice is to populate the the vertex/instance's memory using an implicit array of
+     * structs. In this case, it is best to assert that:
+     *     debugOnly_stride == sizeof(struct) and
+     *     offsetof(struct, field[i]) == debugOnly_AttributeOffset(i)
+     * In general having Op subclasses assert that attribute offsets and strides agree with their
+     * tessellation code's expectations is good practice.
+     * However, these functions walk the attributes to compute offsets and call virtual functions
+     * to access the attributes. Thus, they are only available in debug builds.
+     */
+    size_t debugOnly_vertexStride() const;
+    size_t debugOnly_instanceStride() const;
+    size_t debugOnly_vertexAttributeOffset(int) const;
+    size_t debugOnly_instanceAttributeOffset(int) const;
+#endif
+
     // Only the GrGeometryProcessor subclass actually has a geo shader or vertex attributes, but
     // we put these calls on the base class to prevent having to cast
     virtual bool willUseGeoShader() const = 0;
-
-    struct Attribute {
-        Attribute()
-            : fName(nullptr)
-            , fType(kFloat_GrVertexAttribType)
-            , fOffset(0) {}
-        Attribute(const char* name, GrVertexAttribType type, GrSLPrecision precision)
-            : fName(name)
-            , fType(type)
-            , fOffset(SkAlign4(GrVertexAttribTypeSize(type)))
-            , fPrecision(precision) {}
-        const char* fName;
-        GrVertexAttribType fType;
-        size_t fOffset;
-        GrSLPrecision fPrecision;
-    };
-
-    int numAttribs() const { return fAttribs.count(); }
-    const Attribute& getAttrib(int index) const { return fAttribs[index]; }
-
-    // Returns the vertex stride of the GP.  A common use case is to request geometry from a
-    // GrOpList based off of the stride, and to populate this memory using an implicit array of
-    // structs.  In this case, it is best to assert the vertexstride == sizeof(VertexStruct).
-    size_t getVertexStride() const { return fVertexStride; }
 
     /**
      * Computes a transformKey from an array of coord transforms. Will only look at the first
@@ -174,35 +133,169 @@ public:
 
     virtual bool isPathRendering() const { return false; }
 
-    virtual GrPixelLocalStorageState getPixelLocalStorageState() const {
-        return kDisabled_GrPixelLocalStorageState;
-    }
-
     /**
      * If non-null, overrides the dest color returned by GrGLSLFragmentShaderBuilder::dstColor().
      */
     virtual const char* getDestColorOverride() const { return nullptr; }
 
-    virtual float getSampleShading() const {
-        return 0.0;
-    }
-
-    /* Sub-class should override and return true if this primitive processor implements the distance
-     * vector field, a field of vectors to the nearest point in the edge of the shape.  */
-    virtual bool implementsDistanceVector() const { return false; }
+    virtual float getSampleShading() const { return 0.0; }
 
 protected:
-    GrPrimitiveProcessor() : fVertexStride(0) {}
+    void setVertexAttributeCnt(int cnt) {
+        SkASSERT(cnt >= 0);
+        fVertexAttributeCnt = cnt;
+    }
+    void setInstanceAttributeCnt(int cnt) {
+        SkASSERT(cnt >= 0);
+        fInstanceAttributeCnt = cnt;
+    }
+    void setTextureSamplerCnt(int cnt) {
+        SkASSERT(cnt >= 0);
+        fTextureSamplerCnt = cnt;
+    }
 
-    enum { kPreallocAttribCnt = 8 };
-    SkSTArray<kPreallocAttribCnt, Attribute> fAttribs;
-    size_t fVertexStride;
+    /**
+     * Helper for implementing onTextureSampler(). E.g.:
+     * return IthTexureSampler(i, fMyFirstSampler, fMySecondSampler, fMyThirdSampler);
+     */
+    template <typename... Args>
+    static const TextureSampler& IthTextureSampler(int i, const TextureSampler& samp0,
+                                                   const Args&... samps) {
+        return (0 == i) ? samp0 : IthTextureSampler(i - 1, samps...);
+    }
+    inline static const TextureSampler& IthTextureSampler(int i);
 
 private:
-    void notifyRefCntIsZero() const final {}
-    virtual bool hasExplicitLocalCoords() const = 0;
+    virtual const Attribute& onVertexAttribute(int) const = 0;
+    virtual const Attribute& onInstanceAttribute(int) const = 0;
+    virtual const TextureSampler& onTextureSampler(int) const { return IthTextureSampler(0); }
 
+    int fVertexAttributeCnt = 0;
+    int fInstanceAttributeCnt = 0;
+    int fTextureSamplerCnt = 0;
     typedef GrProcessor INHERITED;
 };
+
+//////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Used to represent a texture that is required by a GrPrimitiveProcessor. It holds a GrTextureProxy
+ * along with an associated GrSamplerState. TextureSamplers don't perform any coord manipulation to
+ * account for texture origin.
+ */
+class GrPrimitiveProcessor::TextureSampler {
+public:
+    TextureSampler() = default;
+
+    TextureSampler(GrTextureType, GrPixelConfig, const GrSamplerState&, GrShaderFlags visibility);
+
+    explicit TextureSampler(GrTextureType, GrPixelConfig,
+                            GrSamplerState::Filter = GrSamplerState::Filter::kNearest,
+                            GrSamplerState::WrapMode wrapXAndY = GrSamplerState::WrapMode::kClamp,
+                            GrShaderFlags visibility = kFragment_GrShaderFlag);
+
+    TextureSampler(const TextureSampler&) = delete;
+    TextureSampler& operator=(const TextureSampler&) = delete;
+
+    void reset(GrTextureType, GrPixelConfig, const GrSamplerState&,
+               GrShaderFlags visibility = kFragment_GrShaderFlag);
+    void reset(GrTextureType, GrPixelConfig,
+               GrSamplerState::Filter = GrSamplerState::Filter::kNearest,
+               GrSamplerState::WrapMode wrapXAndY = GrSamplerState::WrapMode::kClamp,
+               GrShaderFlags visibility = kFragment_GrShaderFlag);
+
+    GrTextureType textureType() const { return fTextureType; }
+    GrPixelConfig config() const { return fConfig; }
+
+    GrShaderFlags visibility() const { return fVisibility; }
+    const GrSamplerState& samplerState() const { return fSamplerState; }
+
+    bool isInitialized() const { return fConfig != kUnknown_GrPixelConfig; }
+
+private:
+    GrSamplerState fSamplerState;
+    GrTextureType fTextureType = GrTextureType::k2D;
+    GrPixelConfig fConfig = kUnknown_GrPixelConfig;
+    GrShaderFlags fVisibility = kNone_GrShaderFlags;
+};
+
+const GrPrimitiveProcessor::TextureSampler& GrPrimitiveProcessor::IthTextureSampler(int i) {
+    SK_ABORT("Illegal texture sampler index");
+    static const TextureSampler kBogus;
+    return kBogus;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Returns the size of the attrib type in bytes.
+ * This was moved from include/private/GrTypesPriv.h in service of Skia dependents that build
+ * with C++11.
+ */
+static constexpr inline size_t GrVertexAttribTypeSize(GrVertexAttribType type) {
+    switch (type) {
+        case kFloat_GrVertexAttribType:
+            return sizeof(float);
+        case kFloat2_GrVertexAttribType:
+            return 2 * sizeof(float);
+        case kFloat3_GrVertexAttribType:
+            return 3 * sizeof(float);
+        case kFloat4_GrVertexAttribType:
+            return 4 * sizeof(float);
+        case kHalf_GrVertexAttribType:
+            return sizeof(float);
+        case kHalf2_GrVertexAttribType:
+            return 2 * sizeof(float);
+        case kHalf3_GrVertexAttribType:
+            return 3 * sizeof(float);
+        case kHalf4_GrVertexAttribType:
+            return 4 * sizeof(float);
+        case kInt2_GrVertexAttribType:
+            return 2 * sizeof(int32_t);
+        case kInt3_GrVertexAttribType:
+            return 3 * sizeof(int32_t);
+        case kInt4_GrVertexAttribType:
+            return 4 * sizeof(int32_t);
+        case kByte_GrVertexAttribType:
+            return 1 * sizeof(char);
+        case kByte2_GrVertexAttribType:
+            return 2 * sizeof(char);
+        case kByte3_GrVertexAttribType:
+            return 3 * sizeof(char);
+        case kByte4_GrVertexAttribType:
+            return 4 * sizeof(char);
+        case kUByte_GrVertexAttribType:
+            return 1 * sizeof(char);
+        case kUByte2_GrVertexAttribType:
+            return 2 * sizeof(char);
+        case kUByte3_GrVertexAttribType:
+            return 3 * sizeof(char);
+        case kUByte4_GrVertexAttribType:
+            return 4 * sizeof(char);
+        case kUByte_norm_GrVertexAttribType:
+            return 1 * sizeof(char);
+        case kUByte4_norm_GrVertexAttribType:
+            return 4 * sizeof(char);
+        case kShort2_GrVertexAttribType:
+            return 2 * sizeof(int16_t);
+        case kUShort2_GrVertexAttribType: // fall through
+        case kUShort2_norm_GrVertexAttribType:
+            return 2 * sizeof(uint16_t);
+        case kInt_GrVertexAttribType:
+            return sizeof(int32_t);
+        case kUint_GrVertexAttribType:
+            return sizeof(uint32_t);
+    }
+    // GCC fails because SK_ABORT evaluates to non constexpr. clang and cl.exe think this is
+    // unreachable and don't complain.
+#if defined(__clang__) || !defined(__GNUC__)
+    SK_ABORT("Unsupported type conversion");
+#endif
+    return 0;
+}
+
+constexpr size_t GrPrimitiveProcessor::Attribute::size() const {
+    return GrVertexAttribTypeSize(fType);
+}
 
 #endif

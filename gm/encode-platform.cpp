@@ -10,20 +10,23 @@
 #include "Resources.h"
 #include "SkCanvas.h"
 #include "SkData.h"
+#include "SkImage.h"
 #include "SkImageEncoderPriv.h"
+#include "SkJpegEncoder.h"
+#include "SkPngEncoder.h"
 #include "SkUnPreMultiply.h"
+#include "SkWebpEncoder.h"
 
 namespace skiagm {
 
 static void make_opaque_256(SkBitmap* bitmap) {
-    GetResourceAsBitmap("mandrill_256.png", bitmap);
+    GetResourceAsBitmap("images/mandrill_256.png", bitmap);
 }
 
 static void make_premul_256(SkBitmap* bitmap) {
     SkBitmap tmp;
-    GetResourceAsBitmap("yellow_rose.png", &tmp);
+    GetResourceAsBitmap("images/yellow_rose.png", &tmp);
     tmp.extractSubset(bitmap, SkIRect::MakeWH(256, 256));
-    bitmap->lockPixels();
 }
 
 static void make_unpremul_256(SkBitmap* bitmap) {
@@ -57,7 +60,6 @@ static SkEncodedImageFormat kTypes[] {
 #endif
 
 static sk_sp<SkData> encode_data(SkEncodedImageFormat type, const SkBitmap& bitmap) {
-    SkAutoLockPixels autoLockPixels(bitmap);
     SkPixmap src;
     if (!bitmap.peekPixels(&src)) {
         return nullptr;
@@ -69,13 +71,18 @@ static sk_sp<SkData> encode_data(SkEncodedImageFormat type, const SkBitmap& bitm
         return SkEncodeImageWithWIC(&buf, src, type, 100) ? buf.detachAsData() : nullptr;
     #else
         switch (type) {
-            case SkEncodedImageFormat::kPNG:
-                return SkEncodeImageAsPNG(&buf, src, SkEncodeOptions()) ? buf.detachAsData()
-                                                                        : nullptr;
-            case SkEncodedImageFormat::kJPEG:
-                return SkEncodeImageAsJPEG(&buf, src, 100) ? buf.detachAsData() : nullptr;
-            case SkEncodedImageFormat::kWEBP:
-                return SkEncodeImageAsWEBP(&buf, src, 100) ? buf.detachAsData() : nullptr;
+            case SkEncodedImageFormat::kPNG: {
+                bool success = SkPngEncoder::Encode(&buf, src, SkPngEncoder::Options());
+                return success ? buf.detachAsData() : nullptr;
+            }
+            case SkEncodedImageFormat::kJPEG: {
+                bool success = SkJpegEncoder::Encode(&buf, src, SkJpegEncoder::Options());
+                return success ? buf.detachAsData() : nullptr;
+            }
+            case SkEncodedImageFormat::kWEBP: {
+                bool success = SkWebpEncoder::Encode(&buf, src, SkWebpEncoder::Options());
+                return success ? buf.detachAsData() : nullptr;
+            }
             default:
                 SkASSERT(false);
                 return nullptr;

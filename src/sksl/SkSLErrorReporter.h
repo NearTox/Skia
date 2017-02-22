@@ -4,7 +4,7 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
- 
+
 #ifndef SKSL_ERRORREPORTER
 #define SKSL_ERRORREPORTER
 
@@ -19,11 +19,11 @@ class ErrorReporter {
 public:
     virtual ~ErrorReporter() {}
 
-    void error(Position position, const char* msg) {
-        this->error(position, SkString(msg));
+    void error(int offset, const char* msg) {
+        this->error(offset, String(msg));
     }
 
-    virtual void error(Position position, SkString msg) = 0;
+    virtual void error(int offset, String msg) = 0;
 
     virtual int errorCount() = 0;
 };

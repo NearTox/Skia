@@ -6,10 +6,8 @@
  */
 
 #include "DecodeFile.h"
-#include "gm.h"
-
 #include "Resources.h"
-#include "SampleCode.h"
+#include "Sample.h"
 #include "SkBlurMaskFilter.h"
 #include "SkCanvas.h"
 #include "SkColorPriv.h"
@@ -22,23 +20,21 @@
 // Intended to exercise pixel snapping observed with scaled images (and
 // with non-scaled images, but for a different reason):  Bug 1145
 
-class IdentityScaleView : public SampleView {
+class IdentityScaleView : public Sample {
 public:
     IdentityScaleView(const char imageFilename[]) {
-      SkString resourcePath = GetResourcePath(imageFilename);
-      if (!decode_file(resourcePath.c_str(), &fBM)) {
-          fBM.allocN32Pixels(1, 1);
-          *(fBM.getAddr32(0,0)) = 0xFF0000FF; // red == bad
-      }
+        if (!DecodeDataToBitmap(GetResourceAsData(imageFilename), &fBM)) {
+            fBM.allocN32Pixels(1, 1);
+            *(fBM.getAddr32(0,0)) = 0xFF0000FF; // red == bad
+        }
     }
 
 protected:
     SkBitmap fBM;
 
-    // overrides from SkEventSink
-    bool onQuery(SkEvent* evt) override {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "IdentityScale");
+    bool onQuery(Sample::Event* evt) override {
+        if (Sample::TitleQ(*evt)) {
+            Sample::TitleR(evt, "IdentityScale");
             return true;
         }
         return this->INHERITED::onQuery(evt);
@@ -71,15 +67,13 @@ protected:
         }
         canvas->drawBitmap( fBM, 100, 100, &paint );
         canvas->restore();
-        canvas->drawText( text, strlen(text), 100, 400, paint );
-        this->inval(nullptr);
+        canvas->drawString(text, 100, 400, paint );
     }
 
 private:
-    typedef SampleView INHERITED;
+    typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() { return new IdentityScaleView("mandrill_256.png"); }
-static SkViewRegister reg(MyFactory);
+DEF_SAMPLE( return new IdentityScaleView("images/mandrill_256.png"); )

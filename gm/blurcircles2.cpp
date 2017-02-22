@@ -13,6 +13,7 @@
 #include "SkPaint.h"
 #include "SkPath.h"
 #include "SkString.h"
+#include "SkRandom.h"
 
 /**
  * In GM mode this draws an array of circles with different radii and different blur radii. Below
@@ -54,9 +55,8 @@ protected:
         };
 
         auto blurMaker = [] (SkScalar radius) ->sk_sp<SkMaskFilter> {
-            return SkBlurMaskFilter::Make(kNormal_SkBlurStyle,
-                                          SkBlurMask::ConvertRadiusToSigma(radius),
-                                          SkBlurMaskFilter::kHighQuality_BlurFlag);
+            return SkMaskFilter::MakeBlur(kNormal_SkBlurStyle,
+                                          SkBlurMask::ConvertRadiusToSigma(radius));
         };
 
         SkPaint paint;

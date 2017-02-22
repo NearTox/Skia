@@ -5,105 +5,91 @@
  * found in the LICENSE file.
  */
 
+#include "GrGpuCommandBuffer.h"
 #include "GrMeshDrawOp.h"
 #include "GrOpFlushState.h"
 #include "GrResourceProvider.h"
 
-GrMeshDrawOp::GrMeshDrawOp(uint32_t classID)
-    : INHERITED(classID), fBaseDrawToken(GrDrawOpUploadToken::AlreadyFlushedToken()) {}
+GrMeshDrawOp::GrMeshDrawOp(uint32_t classID) : INHERITED(classID) {}
 
-void GrMeshDrawOp::onPrepare(GrOpFlushState* state) {
-    Target target(state, this);
-    this->onPrepareDraws(&target);
-}
+void GrMeshDrawOp::onPrepare(GrOpFlushState* state) { this->onPrepareDraws(state); }
 
-void* GrMeshDrawOp::InstancedHelper::init(Target* target, GrPrimitiveType primType,
-                                          size_t vertexStride, const GrBuffer* indexBuffer,
-                                          int verticesPerInstance, int indicesPerInstance,
-                                          int instancesToDraw) {
-    SkASSERT(target);
-    if (!indexBuffer) {
-        return nullptr;
-    }
-    const GrBuffer* vertexBuffer;
-    int firstVertex;
-    int vertexCount = verticesPerInstance * instancesToDraw;
-    void* vertices =
-            target->makeVertexSpace(vertexStride, vertexCount, &vertexBuffer, &firstVertex);
-    if (!vertices) {
-        SkDebugf("Vertices could not be allocated for instanced rendering.");
-        return nullptr;
-    }
-    SkASSERT(vertexBuffer);
-    size_t ibSize = indexBuffer->gpuMemorySize();
-    int maxInstancesPerDraw = static_cast<int>(ibSize / (sizeof(uint16_t) * indicesPerInstance));
-
-    fMesh.initInstanced(primType, vertexBuffer, indexBuffer, firstVertex, verticesPerInstance,
-                        indicesPerInstance, instancesToDraw, maxInstancesPerDraw);
-    return vertices;
-}
-
-void GrMeshDrawOp::InstancedHelper::recordDraw(Target* target, const GrGeometryProcessor* gp) {
-    SkASSERT(fMesh.instanceCount());
-    target->draw(gp, fMesh);
-}
-
-void* GrMeshDrawOp::QuadHelper::init(Target* target, size_t vertexStride, int quadsToDraw) {
-    sk_sp<const GrBuffer> quadIndexBuffer(target->resourceProvider()->refQuadIndexBuffer());
-    if (!quadIndexBuffer) {
-        SkDebugf("Could not get quad index buffer.");
-        return nullptr;
-    }
-    return this->INHERITED::init(target, kTriangles_GrPrimitiveType, vertexStride,
-                                 quadIndexBuffer.get(), kVerticesPerQuad, kIndicesPerQuad,
-                                 quadsToDraw);
-}
-
-void GrMeshDrawOp::onExecute(GrOpFlushState* state, const SkRect& bounds) {
-    int currUploadIdx = 0;
-    int currMeshIdx = 0;
-
-    SkASSERT(fQueuedDraws.empty() || fBaseDrawToken == state->nextTokenToFlush());
-
-    for (int currDrawIdx = 0; currDrawIdx < fQueuedDraws.count(); ++currDrawIdx) {
-        GrDrawOpUploadToken drawToken = state->nextTokenToFlush();
-        while (currUploadIdx < fInlineUploads.count() &&
-               fInlineUploads[currUploadIdx].fUploadBeforeToken == drawToken) {
-            state->commandBuffer()->inlineUpload(state, fInlineUploads[currUploadIdx++].fUpload);
-        }
-        const QueuedDraw& draw = fQueuedDraws[currDrawIdx];
-        state->commandBuffer()->draw(*this->pipeline(), *draw.fGeometryProcessor.get(),
-                                     fMeshes.begin() + currMeshIdx, draw.fMeshCnt, bounds);
-        currMeshIdx += draw.fMeshCnt;
-        state->flushToken();
-    }
-    SkASSERT(currUploadIdx == fInlineUploads.count());
-    SkASSERT(currMeshIdx == fMeshes.count());
-    fQueuedDraws.reset();
-    fInlineUploads.reset();
+void GrMeshDrawOp::onExecute(GrOpFlushState* state) {
+    state->executeDrawsAndUploadsForMeshDrawOp(this->uniqueID(), this->bounds());
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
-void GrMeshDrawOp::Target::draw(const GrGeometryProcessor* gp, const GrMesh& mesh) {
-    GrMeshDrawOp* op = this->meshDrawOp();
-    op->fMeshes.push_back(mesh);
-    if (!op->fQueuedDraws.empty()) {
-        // If the last draw shares a geometry processor and there are no intervening uploads,
-        // add this mesh to it.
-        GrMeshDrawOp::QueuedDraw& lastDraw = op->fQueuedDraws.back();
-        if (lastDraw.fGeometryProcessor == gp &&
-            (op->fInlineUploads.empty() ||
-             op->fInlineUploads.back().fUploadBeforeToken != this->nextDrawToken())) {
-            ++lastDraw.fMeshCnt;
-            return;
+GrMeshDrawOp::PatternHelper::PatternHelper(Target* target, GrPrimitiveType primitiveType,
+                                           size_t vertexStride, const GrBuffer* indexBuffer,
+                                           int verticesPerRepetition, int indicesPerRepetition,
+                                           int repeatCount) {
+    this->init(target, primitiveType, vertexStride, indexBuffer, verticesPerRepetition,
+               indicesPerRepetition, repeatCount);
+}
+
+void GrMeshDrawOp::PatternHelper::init(Target* target, GrPrimitiveType primitiveType,
+                                       size_t vertexStride, const GrBuffer* indexBuffer,
+                                       int verticesPerRepetition, int indicesPerRepetition,
+                                       int repeatCount) {
+    SkASSERT(target);
+    if (!indexBuffer) {
+        return;
+    }
+    const GrBuffer* vertexBuffer;
+    int firstVertex;
+    int vertexCount = verticesPerRepetition * repeatCount;
+    fVertices = target->makeVertexSpace(vertexStride, vertexCount, &vertexBuffer, &firstVertex);
+    if (!fVertices) {
+        SkDebugf("Vertices could not be allocated for patterned rendering.");
+        return;
+    }
+    SkASSERT(vertexBuffer);
+    size_t ibSize = indexBuffer->gpuMemorySize();
+    int maxRepetitions = static_cast<int>(ibSize / (sizeof(uint16_t) * indicesPerRepetition));
+    fMesh = target->allocMesh(primitiveType);
+    fMesh->setIndexedPatterned(indexBuffer, indicesPerRepetition, verticesPerRepetition,
+                               repeatCount, maxRepetitions);
+    fMesh->setVertexData(vertexBuffer, firstVertex);
+}
+
+void GrMeshDrawOp::PatternHelper::recordDraw(
+        Target* target, sk_sp<const GrGeometryProcessor> gp, const GrPipeline* pipeline,
+        const GrPipeline::FixedDynamicState* fixedDynamicState) const {
+    target->draw(std::move(gp), pipeline, fixedDynamicState, fMesh);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+GrMeshDrawOp::QuadHelper::QuadHelper(Target* target, size_t vertexStride, int quadsToDraw) {
+    sk_sp<const GrBuffer> quadIndexBuffer = target->resourceProvider()->refQuadIndexBuffer();
+    if (!quadIndexBuffer) {
+        SkDebugf("Could not get quad index buffer.");
+        return;
+    }
+    this->init(target, GrPrimitiveType::kTriangles, vertexStride, quadIndexBuffer.get(),
+               kVerticesPerQuad, kIndicesPerQuad, quadsToDraw);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+GrMeshDrawOp::Target::PipelineAndFixedDynamicState GrMeshDrawOp::Target::makePipeline(
+        uint32_t pipelineFlags, GrProcessorSet&& processorSet, GrAppliedClip&& clip,
+        int numPrimProcTextures) {
+    GrPipeline::InitArgs pipelineArgs;
+    pipelineArgs.fFlags = pipelineFlags;
+    pipelineArgs.fProxy = this->proxy();
+    pipelineArgs.fDstProxy = this->dstProxy();
+    pipelineArgs.fCaps = &this->caps();
+    pipelineArgs.fResourceProvider = this->resourceProvider();
+    GrPipeline::FixedDynamicState* fixedDynamicState = nullptr;
+    if (clip.scissorState().enabled() || numPrimProcTextures) {
+        fixedDynamicState = this->allocFixedDynamicState(clip.scissorState().rect());
+        if (numPrimProcTextures) {
+            fixedDynamicState->fPrimitiveProcessorTextures =
+                    this->allocPrimitiveProcessorTextureArray(numPrimProcTextures);
         }
     }
-    GrMeshDrawOp::QueuedDraw& draw = op->fQueuedDraws.push_back();
-    GrDrawOpUploadToken token = this->state()->issueDrawToken();
-    draw.fGeometryProcessor.reset(gp);
-    draw.fMeshCnt = 1;
-    if (op->fQueuedDraws.count() == 1) {
-        op->fBaseDrawToken = token;
-    }
+    return {this->allocPipeline(pipelineArgs, std::move(processorSet), std::move(clip)),
+            fixedDynamicState};
 }

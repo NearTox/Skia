@@ -5,12 +5,24 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-
 #include "SkCanvas.h"
+#include "SkColor.h"
+#include "SkFontStyle.h"
+#include "SkPaint.h"
 #include "SkPoint.h"
-#include "SkTextBlob.h"
+#include "SkRect.h"
+#include "SkRefCnt.h"
+#include "SkScalar.h"
+#include "SkSize.h"
+#include "SkString.h"
 #include "SkTDArray.h"
+#include "SkTextBlob.h"
+#include "SkTypeface.h"
+#include "SkTypes.h"
+#include "gm.h"
+#include "sk_tool_utils.h"
+
+#include <cstring>
 
 namespace  {
 

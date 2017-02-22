@@ -6,9 +6,10 @@
  */
 
 #include "gm.h"
-#include "SkBlurMaskFilter.h"
+#include "sk_tool_utils.h"
 #include "SkDashPathEffect.h"
 #include "SkGradientShader.h"
+#include "SkMaskFilter.h"
 #include "SkPaint.h"
 #include "SkPath.h"
 #include "SkPoint3.h"
@@ -162,8 +163,7 @@ protected:
             // blur
             SkPaint p;
             p.setColor(SK_ColorWHITE);
-            p.setMaskFilter(SkBlurMaskFilter::Make(kOuter_SkBlurStyle, 3.0f,
-                                                   SkBlurMaskFilter::kHighQuality_BlurFlag));
+            p.setMaskFilter(SkMaskFilter::MakeBlur(kOuter_SkBlurStyle, 3.0f));
             fPaints.push_back(p);
         }
 

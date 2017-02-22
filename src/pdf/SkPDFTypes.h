@@ -5,13 +5,16 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkPDFTypes_DEFINED
 #define SkPDFTypes_DEFINED
+
+#include <new>
+#include <type_traits>
 
 #include "SkRefCnt.h"
 #include "SkScalar.h"
 #include "SkTHash.h"
+#include "SkTo.h"
 #include "SkTypes.h"
 
 class SkData;
@@ -22,7 +25,7 @@ class SkString;
 class SkWStream;
 
 #ifdef SK_PDF_IMAGE_STATS
-#include "SkAtomics.h"
+    #include <atomic>
 #endif
 
 /** \class SkPDFObject
@@ -62,6 +65,20 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+
+template <class T>
+class SkStorageFor {
+public:
+    const T& get() const { return *reinterpret_cast<const T*>(&fStore); }
+    T& get() { return *reinterpret_cast<T*>(&fStore); }
+    // Up to caller to keep track of status.
+    template<class... Args> void init(Args&&... args) {
+        new (&this->get()) T(std::forward<Args>(args)...);
+    }
+    void destroy() { this->get().~T(); }
+private:
+    typename std::aligned_storage<sizeof(T), alignof(T)>::type fStore;
+};
 
 /**
    A SkPDFUnion is a non-virtualized implementation of the
@@ -129,7 +146,7 @@ private:
         bool fBoolValue;
         SkScalar fScalarValue;
         const char* fStaticString;
-        char fSkString[sizeof(SkString)];
+        SkStorageFor<SkString> fSkString;
         SkPDFObject* fObject;
     };
     enum class Type : char {
@@ -187,7 +204,7 @@ public:
     /** Create a PDF array. Maximum length is 8191.
      */
     SkPDFArray();
-    virtual ~SkPDFArray();
+    ~SkPDFArray() override;
 
     // The SkPDFObject interface.
     void emitObject(SkWStream* stream,
@@ -235,7 +252,7 @@ public:
      */
     explicit SkPDFDict(const char type[] = nullptr);
 
-    virtual ~SkPDFDict();
+    ~SkPDFDict() override;
 
     // The SkPDFObject interface.
     void emitObject(SkWStream* stream,
@@ -246,6 +263,9 @@ public:
     /** The size of the dictionary.
      */
     int size() const;
+
+    /** Preallocate space for n key-value pairs */
+    void reserve(int n);
 
     /** Add the value to the dictionary with the given key.
      *  @param key   The text of the key for this dictionary entry.
@@ -278,11 +298,6 @@ private:
     struct Record {
         SkPDFUnion fKey;
         SkPDFUnion fValue;
-        Record(SkPDFUnion&&, SkPDFUnion&&);
-        Record(Record&&) = default;
-        Record& operator=(Record&&) = default;
-        Record(const Record&) = delete;
-        Record& operator=(const Record&) = delete;
     };
     SkTArray<Record> fRecords;
     SkDEBUGCODE(bool fDumped;)
@@ -298,7 +313,7 @@ private:
 class SkPDFSharedStream final : public SkPDFObject {
 public:
     SkPDFSharedStream(std::unique_ptr<SkStreamAsset> data);
-    ~SkPDFSharedStream();
+    ~SkPDFSharedStream() override;
     SkPDFDict* dict() { return &fDict; }
     void emitObject(SkWStream*,
                     const SkPDFObjNumMap&) const override;
@@ -327,7 +342,7 @@ public:
      *  @param stream The data part of the stream. */
     explicit SkPDFStream(sk_sp<SkData> data);
     explicit SkPDFStream(std::unique_ptr<SkStreamAsset> stream);
-    virtual ~SkPDFStream();
+    ~SkPDFStream() override;
 
     SkPDFDict* dict() { return &fDict; }
 
@@ -361,12 +376,6 @@ private:
 */
 class SkPDFObjNumMap : SkNoncopyable {
 public:
-    /** Add the passed object to the catalog.
-     *  @param obj         The object to add.
-     *  @return True iff the object was not already added to the catalog.
-     */
-    bool addObject(SkPDFObject* obj);
-
     /** Add the passed object to the catalog, as well as all its dependencies.
      *  @param obj   The object to add.  If nullptr, this is a noop.
      */
@@ -387,9 +396,9 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef SK_PDF_IMAGE_STATS
-extern SkAtomic<int> gDrawImageCalls;
-extern SkAtomic<int> gJpegImageObjects;
-extern SkAtomic<int> gRegularImageObjects;
+extern std::atomic<int> gDrawImageCalls;
+extern std::atomic<int> gJpegImageObjects;
+extern std::atomic<int> gRegularImageObjects;
 extern void SkPDFImageDumpStats();
 #endif // SK_PDF_IMAGE_STATS
 

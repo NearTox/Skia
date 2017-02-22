@@ -5,7 +5,6 @@
 * found in the LICENSE file.
 */
 #include "SkOpContour.h"
-#include "SkOpTAllocator.h"
 #include "SkPathWriter.h"
 #include "SkReduceOrder.h"
 #include "SkTSort.h"
@@ -33,17 +32,13 @@ void SkOpContour::toReversePath(SkPathWriter* path) const {
 
 SkOpSpan* SkOpContour::undoneSpan() {
     SkOpSegment* testSegment = &fHead;
-    bool allDone = true;
     do {
         if (testSegment->done()) {
             continue;
         }
-        allDone = false;
         return testSegment->undoneSpan();
     } while ((testSegment = testSegment->next()));
-    if (allDone) {
-      fDone = true;
-    }
+    fDone = true;
     return nullptr;
 }
 
@@ -62,20 +57,20 @@ void SkOpContourBuilder::addCurve(SkPath::Verb verb, const SkPoint pts[4], SkSca
         this->addLine(pts);
         return;
     }
-    SkChunkAlloc* allocator = fContour->globalState()->allocator();
+    SkArenaAlloc* allocator = fContour->globalState()->allocator();
     switch (verb) {
         case SkPath::kQuad_Verb: {
-            SkPoint* ptStorage = SkOpTAllocator<SkPoint>::AllocateArray(allocator, 3);
+            SkPoint* ptStorage = allocator->makeArrayDefault<SkPoint>(3);
             memcpy(ptStorage, pts, sizeof(SkPoint) * 3);
             this->addQuad(ptStorage);
         } break;
         case SkPath::kConic_Verb: {
-            SkPoint* ptStorage = SkOpTAllocator<SkPoint>::AllocateArray(allocator, 3);
+            SkPoint* ptStorage = allocator->makeArrayDefault<SkPoint>(3);
             memcpy(ptStorage, pts, sizeof(SkPoint) * 3);
             this->addConic(ptStorage, weight);
         } break;
         case SkPath::kCubic_Verb: {
-            SkPoint* ptStorage = SkOpTAllocator<SkPoint>::AllocateArray(allocator, 4);
+            SkPoint* ptStorage = allocator->makeArrayDefault<SkPoint>(4);
             memcpy(ptStorage, pts, sizeof(SkPoint) * 4);
             this->addCubic(ptStorage);
         } break;
@@ -106,8 +101,8 @@ void SkOpContourBuilder::addQuad(SkPoint pts[3]) {
 void SkOpContourBuilder::flush() {
     if (!fLastIsLine)
         return;
-    SkChunkAlloc* allocator = fContour->globalState()->allocator();
-    SkPoint* ptStorage = SkOpTAllocator<SkPoint>::AllocateArray(allocator, 2);
+    SkArenaAlloc* allocator = fContour->globalState()->allocator();
+    SkPoint* ptStorage = allocator->makeArrayDefault<SkPoint>(2);
     memcpy(ptStorage, fLastLine, sizeof(fLastLine));
     (void) fContour->addLine(ptStorage);
     fLastIsLine = false;

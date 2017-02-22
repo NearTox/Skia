@@ -5,24 +5,23 @@
  * found in the LICENSE file.
  */
 
-#include "SampleCode.h"
+#include "Sample.h"
 #include "SkAnimTimer.h"
-#include "SkView.h"
 #include "SkCanvas.h"
+#include "SkColorFilter.h"
+#include "SkColorPriv.h"
+#include "SkCornerPathEffect.h"
 #include "SkDrawable.h"
 #include "SkGradientShader.h"
 #include "SkPath.h"
-#include "SkRegion.h"
-#include "SkShader.h"
-#include "SkUtils.h"
-#include "Sk1DPathEffect.h"
-#include "SkCornerPathEffect.h"
 #include "SkPathMeasure.h"
 #include "SkPictureRecorder.h"
 #include "SkRandom.h"
-#include "SkColorPriv.h"
-#include "SkColorFilter.h"
-#include "SkLayerRasterizer.h"
+#include "SkRegion.h"
+#include "SkShader.h"
+#include "SkString.h"
+#include "SkUTF.h"
+#include "Sk1DPathEffect.h"
 
 #include "SkParsePath.h"
 static void testparse() {
@@ -37,7 +36,7 @@ static void testparse() {
     SkParsePath::ToSVGString(p2, &str2);
 }
 
-class ArcsView : public SampleView {
+class ArcsView : public Sample {
     class MyDrawable : public SkDrawable {
         SkRect   fR;
         SkScalar fSweep;
@@ -99,10 +98,9 @@ public:
     }
 
 protected:
-    // overrides from SkEventSink
-    bool onQuery(SkEvent* evt) override {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "Arcs");
+    bool onQuery(Sample::Event* evt) override {
+        if (Sample::TitleQ(*evt)) {
+            Sample::TitleR(evt, "Arcs");
             return true;
         }
         return this->INHERITED::onQuery(evt);
@@ -127,7 +125,7 @@ protected:
         str.appendScalar(start);
         str.append(", ");
         str.appendScalar(sweep);
-        canvas->drawText(str.c_str(), str.size(), rect.centerX(),
+        canvas->drawString(str, rect.centerX(),
                          rect.fBottom + paint.getTextSize() * 5/4, paint);
     }
 
@@ -196,19 +194,12 @@ protected:
         return true;
     }
 
-    SkView::Click* onFindClickHandler(SkScalar x, SkScalar y, unsigned modi) override {
-     //   fSweep += SK_Scalar1;
-        this->inval(nullptr);
-        return this->INHERITED::onFindClickHandler(x, y, modi);
-    }
-
 private:
     SkScalar fSweep;
 
-    typedef SampleView INHERITED;
+    typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() { return new ArcsView; }
-static SkViewRegister reg(MyFactory);
+DEF_SAMPLE( return new ArcsView(); )

@@ -5,23 +5,21 @@
  * found in the LICENSE file.
  */
 
-#include "SampleCode.h"
+#include "Sample.h"
 #include "SkCanvas.h"
 #include "SkPath.h"
-#include "SkView.h"
 #include "SkClipOpPriv.h"
 
-class ComplexClipView : public SampleView {
+class ComplexClipView : public Sample {
 public:
     ComplexClipView() {
         this->setBGColor(0xFFA0DDA0);
     }
 
 protected:
-    // overrides from SkEventSink
-    virtual bool onQuery(SkEvent* evt) {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "ComplexClip");
+    virtual bool onQuery(Sample::Event* evt) {
+        if (Sample::TitleQ(*evt)) {
+            Sample::TitleR(evt, "ComplexClip");
             return true;
         }
         return this->INHERITED::onQuery(evt);
@@ -129,14 +127,14 @@ protected:
                 SkScalar txtX = SkIntToScalar(55);
                 paint.setColor(colorA);
                 const char* aTxt = invA ? "InverseA " : "A ";
-                canvas->drawText(aTxt, strlen(aTxt), txtX, SkIntToScalar(220), paint);
+                canvas->drawString(aTxt, txtX, SkIntToScalar(220), paint);
                 txtX += paint.measureText(aTxt, strlen(aTxt));
                 paint.setColor(SK_ColorBLACK);
-                canvas->drawText(gOps[op].fName, strlen(gOps[op].fName),
+                canvas->drawString(gOps[op].fName,
                                     txtX, SkIntToScalar(220), paint);
                 txtX += paint.measureText(gOps[op].fName, strlen(gOps[op].fName));
                 paint.setColor(colorB);
-                canvas->drawText("B", 1, txtX, SkIntToScalar(220), paint);
+                canvas->drawString("B", txtX, SkIntToScalar(220), paint);
 
                 canvas->translate(SkIntToScalar(250),0);
             }
@@ -145,10 +143,9 @@ protected:
     }
 
 private:
-    typedef SampleView INHERITED;
+    typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() { return new ComplexClipView; }
-static SkViewRegister reg(MyFactory);
+DEF_SAMPLE( return new ComplexClipView(); )

@@ -4,7 +4,7 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
- 
+
 #ifndef SKIASL_MEMORYLAYOUT
 #define SKIASL_MEMORYLAYOUT
 
@@ -16,17 +16,18 @@ class MemoryLayout {
 public:
     enum Standard {
         k140_Standard,
-        k430_Standard
+        k430_Standard,
+        kMetal_Standard
     };
 
-    MemoryLayout(Standard std) 
+    MemoryLayout(Standard std)
     : fStd(std) {}
 
     static size_t vector_alignment(size_t componentSize, int columns) {
         return componentSize * (columns + columns % 2);
     }
 
-    /** 
+    /**
      * Rounds up to the nearest multiple of 16 if in std140, otherwise returns the parameter
      * unchanged (std140 requires various things to be rounded up to the nearest multiple of 16,
      * std430 does not).
@@ -35,6 +36,7 @@ public:
         switch (fStd) {
             case k140_Standard: return (raw + 15) & ~15;
             case k430_Standard: return raw;
+            case kMetal_Standard: return raw;
         }
         ABORT("unreachable");
     }
@@ -50,7 +52,7 @@ public:
             case Type::kVector_Kind:
                 return vector_alignment(this->size(type.componentType()), type.columns());
             case Type::kMatrix_Kind:
-                return this->roundUpIfNeeded(vector_alignment(this->size(type.componentType()), 
+                return this->roundUpIfNeeded(vector_alignment(this->size(type.componentType()),
                                                               type.rows()));
             case Type::kArray_Kind:
                 return this->roundUpIfNeeded(this->alignment(type.componentType()));
@@ -65,7 +67,7 @@ public:
                 return this->roundUpIfNeeded(result);
             }
             default:
-                ABORT(("cannot determine size of type " + type.name()).c_str());
+                ABORT("cannot determine size of type %s", type.name().c_str());
         }
     }
 
@@ -75,9 +77,16 @@ public:
      */
     size_t stride(const Type& type) const {
         switch (type.kind()) {
-            case Type::kMatrix_Kind: // fall through
-            case Type::kArray_Kind:
-                return this->alignment(type);
+            case Type::kMatrix_Kind: {
+                size_t base = vector_alignment(this->size(type.componentType()), type.rows());
+                return this->roundUpIfNeeded(base);
+            }
+            case Type::kArray_Kind: {
+                int align = this->alignment(type.componentType());
+                int stride = this->size(type.componentType()) + align - 1;
+                stride -= stride % align;
+                return this->roundUpIfNeeded(stride);
+            }
             default:
                 ABORT("type does not have a stride");
         }
@@ -96,6 +105,9 @@ public:
                 // handle it...
                 return 4;
             case Type::kVector_Kind:
+                if (fStd == kMetal_Standard && type.columns() == 3) {
+                    return 4 * this->size(type.componentType());
+                }
                 return type.columns() * this->size(type.componentType());
             case Type::kMatrix_Kind: // fall through
             case Type::kArray_Kind:
@@ -107,16 +119,16 @@ public:
                     if (total % alignment != 0) {
                         total += alignment - total % alignment;
                     }
-                    ASSERT(total % alignment == 0);
+                    SkASSERT(total % alignment == 0);
                     total += this->size(*f.fType);
                 }
                 size_t alignment = this->alignment(type);
-                ASSERT(!type.fields().size() || 
+                SkASSERT(!type.fields().size() ||
                        (0 == alignment % this->alignment(*type.fields()[0].fType)));
                 return (total + alignment - 1) & ~(alignment - 1);
             }
             default:
-                ABORT(("cannot determine size of type " + type.name()).c_str());
+                ABORT("cannot determine size of type %s", type.name().c_str());
         }
     }
 

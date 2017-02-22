@@ -17,57 +17,44 @@
     implemented privately in GrTexture with a inline public method here). */
 class GrTexturePriv {
 public:
-    void setFlag(GrSurfaceFlags flags) {
-        fTexture->fDesc.fFlags = fTexture->fDesc.fFlags | flags;
+    void markMipMapsDirty() {
+        fTexture->markMipMapsDirty();
     }
 
-    void resetFlag(GrSurfaceFlags flags) {
-        fTexture->fDesc.fFlags = fTexture->fDesc.fFlags & ~flags;
-    }
-
-    bool isSetFlag(GrSurfaceFlags flags) const {
-        return 0 != (fTexture->fDesc.fFlags & flags);
-    }
-
-    void dirtyMipMaps(bool mipMapsDirty) {
-        fTexture->dirtyMipMaps(mipMapsDirty);
+    void markMipMapsClean() {
+        fTexture->markMipMapsClean();
     }
 
     bool mipMapsAreDirty() const {
-        return GrTexture::kValid_MipMapsStatus != fTexture->fMipMapsStatus;
+        return GrMipMapsStatus::kValid != fTexture->fMipMapsStatus;
     }
 
-    bool hasMipMaps() const {
-        return GrTexture::kNotAllocated_MipMapsStatus != fTexture->fMipMapsStatus;
-    }
-
-    void setMaxMipMapLevel(int maxMipMapLevel) const {
-        fTexture->fMaxMipMapLevel = maxMipMapLevel;
+    GrMipMapped mipMapped() const {
+        if (GrMipMapsStatus::kNotAllocated != fTexture->fMipMapsStatus) {
+            return GrMipMapped::kYes;
+        }
+        return GrMipMapped::kNo;
     }
 
     int maxMipMapLevel() const {
         return fTexture->fMaxMipMapLevel;
     }
 
-    GrSLType imageStorageType() const {
-        if (GrPixelConfigIsSint(fTexture->config())) {
-            return kIImageStorage2D_GrSLType;
-        } else {
-            return kImageStorage2D_GrSLType;
-        }
+    GrTextureType textureType() const { return fTexture->fTextureType; }
+    bool hasRestrictedSampling() const {
+        return GrTextureTypeHasRestrictedSampling(this->textureType());
     }
-
-    GrSLType samplerType() const { return fTexture->fSamplerType; }
-
-    /** The filter used is clamped to this value in GrProcessor::TextureSampler. */
-    GrSamplerParams::FilterMode highestFilterMode() const { return fTexture->fHighestFilterMode; }
-
-    void setMipColorMode(SkDestinationSurfaceColorMode colorMode) const {
-        fTexture->fMipColorMode = colorMode;
+    /** Filtering is clamped to this value. */
+    GrSamplerState::Filter highestFilterMode() const {
+        return this->hasRestrictedSampling() ? GrSamplerState::Filter::kBilerp
+                                             : GrSamplerState::Filter::kMipMap;
     }
-    SkDestinationSurfaceColorMode mipColorMode() const { return fTexture->fMipColorMode; }
 
     static void ComputeScratchKey(const GrSurfaceDesc&, GrScratchKey*);
+    static void ComputeScratchKey(GrPixelConfig config, int width, int height,
+                                  bool isRenderTarget, int sampleCnt,
+                                  GrMipMapped, GrScratchKey* key);
+
 
 private:
     GrTexturePriv(GrTexture* texture) : fTexture(texture) { }

@@ -65,10 +65,9 @@ protected:
             SkPaint p;
             p.setColor(SK_ColorWHITE);
             p.setAntiAlias(true);
-            p.setMaskFilter(SkBlurMaskFilter::Make(
+            p.setMaskFilter(SkMaskFilter::MakeBlur(
                                    kNormal_SkBlurStyle,
-                                   SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(5)),
-                                   SkBlurMaskFilter::kHighQuality_BlurFlag));
+                                   SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(5))));
             fPaints.push_back(p);
         }
 
@@ -93,10 +92,7 @@ protected:
             p.setAntiAlias(true);
             p.setLooper(SkBlurDrawLooper::Make(SK_ColorWHITE,
                                          SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(10)),
-                                         SkIntToScalar(5), SkIntToScalar(10),
-                                         SkBlurDrawLooper::kIgnoreTransform_BlurFlag |
-                                         SkBlurDrawLooper::kOverrideColor_BlurFlag |
-                                         SkBlurDrawLooper::kHighQuality_BlurFlag));
+                                         SkIntToScalar(5), SkIntToScalar(10)));
             fPaints.push_back(p);
         }
 

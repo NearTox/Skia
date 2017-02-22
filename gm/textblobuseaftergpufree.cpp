@@ -6,8 +6,7 @@
  */
 
 #include "gm.h"
-
-#if SK_SUPPORT_GPU
+#include "sk_tool_utils.h"
 
 #include "SkCanvas.h"
 #include "SkSurface.h"
@@ -72,4 +71,3 @@ private:
 
 DEF_GM(return new TextBlobUseAfterGpuFree;)
 }
-#endif

@@ -21,10 +21,9 @@
  */
 class SkRawAdapterCodec : public SkAndroidCodec {
 public:
+    explicit SkRawAdapterCodec(SkRawCodec*, ExifOrientationBehavior);
 
-    explicit SkRawAdapterCodec(SkRawCodec*);
-
-    virtual ~SkRawAdapterCodec() {}
+    ~SkRawAdapterCodec() override {}
 
 protected:
 

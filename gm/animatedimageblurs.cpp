@@ -21,7 +21,7 @@ static const SkScalar kBlurAnimationDuration = 4.0f; // in secs
 class AnimatedImageBlurs : public skiagm::GM {
 public:
     AnimatedImageBlurs() : fLastTime(0.0f) {
-        this->setBGColor(sk_tool_utils::color_to_565(0xFFCCCCCC));
+        this->setBGColor(0xFFCCCCCC);
     }
 
 protected:

@@ -5,24 +5,24 @@
  * found in the LICENSE file.
  */
 
-#include "SampleCode.h"
+#include "Sample.h"
 #include "SkAnimTimer.h"
 #include "SkCanvas.h"
 #include "SkGradientShader.h"
 #include "SkPatchUtils.h"
-#include "SkPerlinNoiseShader2/SkPerlinNoiseShader2.h"
+#include "SkPerlinNoiseShader.h"
 
 static void draw_control_points(SkCanvas* canvas, const SkPoint cubics[12]) {
     //draw control points
     SkPaint paint;
     SkPoint bottom[SkPatchUtils::kNumPtsCubic];
-    SkPatchUtils::getBottomCubic(cubics, bottom);
+    SkPatchUtils::GetBottomCubic(cubics, bottom);
     SkPoint top[SkPatchUtils::kNumPtsCubic];
-    SkPatchUtils::getTopCubic(cubics, top);
+    SkPatchUtils::GetTopCubic(cubics, top);
     SkPoint left[SkPatchUtils::kNumPtsCubic];
-    SkPatchUtils::getLeftCubic(cubics, left);
+    SkPatchUtils::GetLeftCubic(cubics, left);
     SkPoint right[SkPatchUtils::kNumPtsCubic];
-    SkPatchUtils::getRightCubic(cubics, right);
+    SkPatchUtils::GetRightCubic(cubics, right);
 
     paint.setColor(SK_ColorBLACK);
     paint.setStrokeWidth(0.5f);
@@ -59,7 +59,7 @@ static void draw_control_points(SkCanvas* canvas, const SkPoint cubics[12]) {
 const SkScalar TexWidth = 100.0f;
 const SkScalar TexHeight = 100.0f;
 
-class PerlinPatchView : public SampleView {
+class PerlinPatchView : public Sample {
     sk_sp<SkShader> fShader0;
     sk_sp<SkShader> fShader1;
     sk_sp<SkShader> fShaderCompose;
@@ -102,24 +102,23 @@ public:
                                     SkPoint::Make(100.0f, 100.0f) };
         fShader0 = SkGradientShader::MakeLinear(points,
                                                   colors,
-                                                  NULL,
+                                                  nullptr,
                                                   3,
                                                   SkShader::kMirror_TileMode,
                                                   0,
-                                                  NULL);
+                                                  nullptr);
     }
 
 protected:
-    // overrides from SkEventSink
-    bool onQuery(SkEvent* evt)  override {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "PerlinPatch");
+    bool onQuery(Sample::Event* evt)  override {
+        if (Sample::TitleQ(*evt)) {
+            Sample::TitleR(evt, "PerlinPatch");
             return true;
         }
         SkUnichar uni;
-        if (SampleCode::CharQ(*evt, &uni)) {
+        if (Sample::CharQ(*evt, &uni)) {
             switch (uni) {
-                case 'g': fShowGrid = !fShowGrid; this->inval(nullptr); return true;
+                case 'g': fShowGrid = !fShowGrid; return true;
                 default: break;
             }
         }
@@ -147,9 +146,9 @@ protected:
             { fTexX + texWidth, fTexY + texHeight},
             { fTexX - texWidth, fTexY + texHeight}}
         ;
-        
+
         SkScalar scaleFreq = 2.0;
-        fShader1 = SkPerlinNoiseShader2::MakeImprovedNoise(fXFreq/scaleFreq, fYFreq/scaleFreq, 4,
+        fShader1 = SkPerlinNoiseShader::MakeImprovedNoise(fXFreq/scaleFreq, fYFreq/scaleFreq, 4,
                                                              fSeed);
         fShaderCompose = SkShader::MakeComposeShader(fShader0, fShader1, SkBlendMode::kSrcOver);
 
@@ -167,14 +166,14 @@ protected:
     class PtClick : public Click {
     public:
         int fIndex;
-        PtClick(SkView* view, int index) : Click(view), fIndex(index) {}
+        PtClick(Sample* view, int index) : Click(view), fIndex(index) {}
     };
 
     static bool hittest(const SkPoint& pt, SkScalar x, SkScalar y) {
         return SkPoint::Length(pt.fX - x, pt.fY - y) < SkIntToScalar(5);
     }
 
-    SkView::Click* onFindClickHandler(SkScalar x, SkScalar y, unsigned modi) override {
+    Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, unsigned modi) override {
         // holding down shift
         if (1 == modi) {
             return new PtClick(this, -1);
@@ -207,12 +206,11 @@ protected:
             fTexScale += yDiff / 10.0f;
             fTexScale = SkTMax(0.1f, SkTMin(20.f, fTexScale));
         }
-        this->inval(nullptr);
         return true;
     }
 
 private:
-    typedef SampleView INHERITED;
+    typedef Sample INHERITED;
 };
 
 DEF_SAMPLE( return new PerlinPatchView(); )

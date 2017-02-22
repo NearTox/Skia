@@ -6,12 +6,11 @@
  */
 
 #include "gm.h"
+#include "sk_tool_utils.h"
 #include "SkCanvas.h"
 #include "SkPaint.h"
 #include "SkRandom.h"
 #include "SkSurface.h"
-
-#if SK_SUPPORT_GPU
 
 namespace skiagm {
 
@@ -86,5 +85,3 @@ private:
 DEF_GM(return new DiscardGM;)
 
 } // end namespace
-
-#endif

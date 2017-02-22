@@ -6,6 +6,7 @@
  */
 
 #include "gm.h"
+#include "sk_tool_utils.h"
 #include "SkAAClip.h"
 #include "SkCanvas.h"
 #include "SkPath.h"
@@ -26,7 +27,7 @@ static void paint_rgn(SkCanvas* canvas, const SkAAClip& clip,
     // need to copy for deferred drawing test to work
     SkBitmap bm2;
 
-    bm.deepCopyTo(&bm2);
+    sk_tool_utils::copy_to(&bm2, bm.colorType(), bm);
 
     canvas->drawBitmap(bm2,
                        SK_Scalar1 * mask.fBounds.fLeft,
@@ -64,7 +65,7 @@ protected:
 
         fBasePath.addRoundRect(fBase, SkIntToScalar(5), SkIntToScalar(5));
         fRectPath.addRoundRect(fRect, SkIntToScalar(5), SkIntToScalar(5));
-        INHERITED::setBGColor(sk_tool_utils::color_to_565(0xFFDDDDDD));
+        INHERITED::setBGColor(0xFFDDDDDD);
     }
 
     void buildRgn(SkAAClip* clip, SkClipOp op) {
@@ -161,7 +162,7 @@ protected:
         int xOff = 0;
 
         for (size_t op = 0; op < SK_ARRAY_COUNT(gOps); op++) {
-            canvas->drawText(gOps[op].fName, strlen(gOps[op].fName),
+            canvas->drawString(gOps[op].fName,
                              SkIntToScalar(75), SkIntToScalar(50),
                              textPaint);
 

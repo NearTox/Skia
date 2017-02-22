@@ -5,9 +5,11 @@
  * found in the LICENSE file.
  */
 #include "gm.h"
+#include "sk_tool_utils.h"
 #include "SkCanvas.h"
 #include "SkGradientShader.h"
 #include "SkPath.h"
+#include "SkTextOnPath.h"
 
 static void makebm(SkBitmap* bm, int w, int h) {
     bm->allocN32Pixels(w, h);
@@ -39,8 +41,7 @@ struct LabeledMatrix {
     const char* fLabel;
 };
 
-DEF_SIMPLE_GM_BG(shadertext2, canvas, 1800, 900,
-                 sk_tool_utils::color_to_565(0xFFDDDDDD)) {
+DEF_SIMPLE_GM_BG(shadertext2, canvas, 1800, 900, 0xFFDDDDDD) {
         constexpr char kText[] = "SKIA";
         constexpr int kTextLen = SK_ARRAY_COUNT(kText) - 1;
         constexpr int kPointSize = 55;
@@ -106,14 +107,14 @@ DEF_SIMPLE_GM_BG(shadertext2, canvas, 1800, 900,
         canvas->translate(0, bmp.height() + labelPaint.getTextSize() + 15.f);
 
         constexpr char kLabelLabel[] = "localM / canvasM";
-        canvas->drawText(kLabelLabel, strlen(kLabelLabel), 0, 0, labelPaint);
+        canvas->drawString(kLabelLabel, 0, 0, labelPaint);
         canvas->translate(0, 15.f);
 
         canvas->save();
         SkScalar maxLabelW = 0;
         canvas->translate(0, kPadY / 2 + kPointSize);
         for (int lm = 0; lm < localMatrices.count(); ++lm) {
-            canvas->drawText(matrices[lm].fLabel, strlen(matrices[lm].fLabel),
+            canvas->drawString(matrices[lm].fLabel,
                              0, labelPaint.getTextSize() - 1, labelPaint);
             SkScalar labelW = labelPaint.measureText(matrices[lm].fLabel,
                                                      strlen(matrices[lm].fLabel));
@@ -131,7 +132,7 @@ DEF_SIMPLE_GM_BG(shadertext2, canvas, 1800, 900,
             for (int m = 0; m < matrices.count(); ++m) {
                 columnH = 0;
                 canvas->save();
-                canvas->drawText(matrices[m].fLabel, strlen(matrices[m].fLabel),
+                canvas->drawString(matrices[m].fLabel,
                                  0, labelPaint.getTextSize() - 1, labelPaint);
                 canvas->translate(0, kPadY / 2 + kPointSize);
                 columnH += kPadY / 2 + kPointSize;
@@ -158,8 +159,8 @@ DEF_SIMPLE_GM_BG(shadertext2, canvas, 1800, 900,
 
                     canvas->save();
                         canvas->concat(matrices[m].fMatrix);
-                        canvas->drawTextOnPath(kText, kTextLen, path, nullptr, paint);
-                        canvas->drawTextOnPath(kText, kTextLen, path, nullptr, outlinePaint);
+                        SkDrawTextOnPath(kText, kTextLen, paint, path, nullptr, canvas);
+                        SkDrawTextOnPath(kText, kTextLen, outlinePaint, path, nullptr, canvas);
                     canvas->restore();
                     SkPaint stroke;
                     stroke.setStyle(SkPaint::kStroke_Style);
@@ -177,8 +178,8 @@ DEF_SIMPLE_GM_BG(shadertext2, canvas, 1800, 900,
                 SkScalar y = columnH + kPadY / 2;
                 SkScalar fillX = -outlinePaint.measureText(kFillLabel, strlen(kFillLabel)) - kPadX;
                 SkScalar strokeX = kPadX;
-                canvas->drawText(kFillLabel, strlen(kFillLabel), fillX, y, labelPaint);
-                canvas->drawText(kStrokeLabel, strlen(kStrokeLabel), strokeX, y, labelPaint);
+                canvas->drawString(kFillLabel, fillX, y, labelPaint);
+                canvas->drawString(kStrokeLabel, strokeX, y, labelPaint);
             }
         }
 }

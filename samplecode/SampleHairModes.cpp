@@ -5,28 +5,25 @@
  * found in the LICENSE file.
  */
 
-#include "SampleCode.h"
-#include "SkView.h"
+#include "Sample.h"
+#include "SkBitmap.h"
 #include "SkCanvas.h"
 #include "SkColorPriv.h"
 #include "SkShader.h"
 
-static const struct {
-    SkBlendMode fMode;
-    const char* fLabel;
-} gModes[] = {
-    { SkBlendMode::kClear,    "Clear"     },
-    { SkBlendMode::kSrc,      "Src"       },
-    { SkBlendMode::kDst,      "Dst"       },
-    { SkBlendMode::kSrcOver,  "SrcOver"   },
-    { SkBlendMode::kDstOver,  "DstOver"   },
-    { SkBlendMode::kSrcIn,    "SrcIn"     },
-    { SkBlendMode::kDstIn,    "DstIn"     },
-    { SkBlendMode::kSrcOut,   "SrcOut"    },
-    { SkBlendMode::kDstOut,   "DstOut"    },
-    { SkBlendMode::kSrcATop,  "SrcATop"   },
-    { SkBlendMode::kDstATop,  "DstATop"   },
-    { SkBlendMode::kXor,      "Xor"       },
+static const SkBlendMode gModes[] = {
+    SkBlendMode::kClear,
+    SkBlendMode::kSrc,
+    SkBlendMode::kDst,
+    SkBlendMode::kSrcOver,
+    SkBlendMode::kDstOver,
+    SkBlendMode::kSrcIn,
+    SkBlendMode::kDstIn,
+    SkBlendMode::kSrcOut,
+    SkBlendMode::kDstOut,
+    SkBlendMode::kSrcATop,
+    SkBlendMode::kDstATop,
+    SkBlendMode::kXor,
 };
 
 const int gWidth = 64;
@@ -71,7 +68,7 @@ static sk_sp<SkShader> make_bg_shader() {
                                       SkShader::kRepeat_TileMode, &m);
 }
 
-class HairModesView : public SampleView {
+class HairModesView : public Sample {
     SkPaint fBGPaint;
 public:
     HairModesView() {
@@ -79,10 +76,9 @@ public:
     }
 
 protected:
-    // overrides from SkEventSink
-    virtual bool onQuery(SkEvent* evt) {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "HairlineModes");
+    virtual bool onQuery(Sample::Event* evt) {
+        if (Sample::TitleQ(*evt)) {
+            Sample::TitleR(evt, "HairlineModes");
             return true;
         }
         return this->INHERITED::onQuery(evt);
@@ -105,7 +101,7 @@ protected:
                 }
                 canvas->drawRect(bounds, fBGPaint);
                 canvas->saveLayer(&bounds, nullptr);
-                SkScalar dy = drawCell(canvas, gModes[i].fMode,
+                SkScalar dy = drawCell(canvas, gModes[i],
                                        gAlphaValue[alpha & 1],
                                        gAlphaValue[alpha & 2]);
                 canvas->restore();
@@ -119,10 +115,9 @@ protected:
     }
 
 private:
-    typedef SampleView INHERITED;
+    typedef Sample INHERITED;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() { return new HairModesView; }
-static SkViewRegister reg(MyFactory);
+DEF_SAMPLE( return new HairModesView(); )

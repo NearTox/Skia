@@ -9,9 +9,12 @@
 #include "Resources.h"
 #include "SkCodec.h"
 #include "SkColorSpace.h"
-#include "SkColorSpace_Base.h"
+#include "SkColorSpacePriv.h"
+#include "SkColorSpaceXform.h"
+#include "SkColorSpaceXformPriv.h"
 #include "SkHalf.h"
 #include "SkImage.h"
+#include "SkImageInfoPriv.h"
 #include "SkPictureRecorder.h"
 
 static void clamp_if_necessary(const SkImageInfo& info, void* pixels) {
@@ -37,26 +40,17 @@ static void clamp_if_necessary(const SkImageInfo& info, void* pixels) {
     }
 }
 
-sk_sp<SkColorSpace> fix_for_colortype(SkColorSpace* colorSpace, SkColorType colorType) {
-    if (kRGBA_F16_SkColorType == colorType) {
-        return as_CSB(colorSpace)->makeLinearGamma();
-    }
-
-    return sk_ref_sp(colorSpace);
-}
-
 static const int kWidth = 64;
 static const int kHeight = 64;
 
-static sk_sp<SkImage> make_raster_image(SkColorType colorType, SkAlphaType alphaType) {
-    std::unique_ptr<SkStream> stream(GetResourceAsStream("google_chrome.ico"));
-    std::unique_ptr<SkCodec> codec(SkCodec::NewFromStream(stream.release()));
+static sk_sp<SkImage> make_raster_image(SkColorType colorType) {
+    std::unique_ptr<SkStream> stream(GetResourceAsStream("images/google_chrome.ico"));
+    std::unique_ptr<SkCodec> codec = SkCodec::MakeFromStream(std::move(stream));
 
     SkBitmap bitmap;
     SkImageInfo info = codec->getInfo().makeWH(kWidth, kHeight)
                                        .makeColorType(colorType)
-                                       .makeAlphaType(alphaType)
-            .makeColorSpace(fix_for_colortype(codec->getInfo().colorSpace(), colorType));
+                                       .makeAlphaType(kPremul_SkAlphaType);
     bitmap.allocPixels(info);
     codec->getPixels(info, bitmap.getPixels(), bitmap.rowBytes());
     bitmap.setImmutable();
@@ -64,7 +58,7 @@ static sk_sp<SkImage> make_raster_image(SkColorType colorType, SkAlphaType alpha
 }
 
 static sk_sp<SkImage> make_codec_image() {
-    sk_sp<SkData> encoded = GetResourceAsData("randPixels.png");
+    sk_sp<SkData> encoded = GetResourceAsData("images/randPixels.png");
     return SkImage::MakeFromEncoded(encoded);
 }
 
@@ -80,26 +74,21 @@ static void draw_contents(SkCanvas* canvas) {
     canvas->drawCircle(60, 60, 35, paint);
 }
 
-static sk_sp<SkImage> make_tagged_picture_image() {
+static sk_sp<SkImage> make_picture_image() {
     SkPictureRecorder recorder;
     draw_contents(recorder.beginRecording(SkRect::MakeIWH(kWidth, kHeight)));
     return SkImage::MakeFromPicture(recorder.finishRecordingAsPicture(),
                                     SkISize::Make(kWidth, kHeight), nullptr, nullptr,
                                     SkImage::BitDepth::kU8,
-                                    SkColorSpace::MakeNamed(SkColorSpace::kSRGB_Named));
+                                    SkColorSpace::MakeSRGB());
 }
 
-static sk_sp<SkImage> make_untagged_picture_image() {
-    SkPictureRecorder recorder;
-    draw_contents(recorder.beginRecording(SkRect::MakeIWH(kWidth, kHeight)));
-    return SkImage::MakeFromPicture(recorder.finishRecordingAsPicture(),
-                                    SkISize::Make(kWidth, kHeight), nullptr, nullptr);
-}
-
-static sk_sp<SkColorSpace> make_srgb_transfer_fn(const SkColorSpacePrimaries& primaries) {
+static sk_sp<SkColorSpace> make_parametric_transfer_fn(const SkColorSpacePrimaries& primaries) {
     SkMatrix44 toXYZD50(SkMatrix44::kUninitialized_Constructor);
     SkAssertResult(primaries.toXYZD50(&toXYZD50));
-    return SkColorSpace::MakeRGB(SkColorSpace::kSRGB_RenderTargetGamma, toXYZD50);
+    SkColorSpaceTransferFn fn;
+    fn.fA = 1.f; fn.fB = 0.f; fn.fC = 0.f; fn.fD = 0.f; fn.fE = 0.f; fn.fF = 0.f; fn.fG = 1.8f;
+    return SkColorSpace::MakeRGB(fn, toXYZD50);
 }
 
 static sk_sp<SkColorSpace> make_wide_gamut() {
@@ -113,7 +102,7 @@ static sk_sp<SkColorSpace> make_wide_gamut() {
     primaries.fBY = 0.0001f;
     primaries.fWX = 0.34567f;
     primaries.fWY = 0.35850f;
-    return make_srgb_transfer_fn(primaries);
+    return make_parametric_transfer_fn(primaries);
 }
 
 static sk_sp<SkColorSpace> make_small_gamut() {
@@ -126,7 +115,7 @@ static sk_sp<SkColorSpace> make_small_gamut() {
     primaries.fBY = 0.16f;
     primaries.fWX = 0.3127f;
     primaries.fWY = 0.3290f;
-    return make_srgb_transfer_fn(primaries);
+    return make_parametric_transfer_fn(primaries);
 }
 
 static void draw_image(SkCanvas* canvas, SkImage* image, SkColorType dstColorType,
@@ -134,17 +123,28 @@ static void draw_image(SkCanvas* canvas, SkImage* image, SkColorType dstColorTyp
                        SkImage::CachingHint hint) {
     size_t rowBytes = image->width() * SkColorTypeBytesPerPixel(dstColorType);
     sk_sp<SkData> data = SkData::MakeUninitialized(rowBytes * image->height());
-    dstColorSpace = fix_for_colortype(dstColorSpace.get(), dstColorType);
     SkImageInfo dstInfo = SkImageInfo::Make(image->width(), image->height(), dstColorType,
                                             dstAlphaType, dstColorSpace);
-    image->readPixels(dstInfo, data->writable_data(), rowBytes, 0, 0, hint);
+    if (!image->readPixels(dstInfo, data->writable_data(), rowBytes, 0, 0, hint)) {
+        memset(data->writable_data(), 0, rowBytes * image->height());
+    }
+
+    // SkImage must be premul, so manually premul the data if we unpremul'd during readPixels
+    if (kUnpremul_SkAlphaType == dstAlphaType) {
+        auto xform = SkColorSpaceXform::New(dstColorSpace.get(), dstColorSpace.get());
+        if (!xform->apply(select_xform_format(dstColorType), data->writable_data(),
+                          select_xform_format(dstColorType), data->data(),
+                          image->width() * image->height(), kPremul_SkAlphaType)) {
+            memset(data->writable_data(), 0, rowBytes * image->height());
+        }
+        dstInfo = dstInfo.makeAlphaType(kPremul_SkAlphaType);
+    }
 
     // readPixels() does not always clamp F16.  The drawing code expects pixels in the 0-1 range.
     clamp_if_necessary(dstInfo, data->writable_data());
 
     // Now that we have called readPixels(), dump the raw pixels into an srgb image.
-    sk_sp<SkColorSpace> srgb = fix_for_colortype(
-            SkColorSpace::MakeNamed(SkColorSpace::kSRGB_Named).get(), dstColorType);
+    sk_sp<SkColorSpace> srgb = SkColorSpace::MakeSRGB();
     sk_sp<SkImage> raw = SkImage::MakeRasterData(dstInfo.makeColorSpace(srgb), data, rowBytes);
     canvas->drawImage(raw.get(), 0.0f, 0.0f, nullptr);
 }
@@ -159,7 +159,7 @@ protected:
     }
 
     SkISize onISize() override {
-        return SkISize::Make(6 * kWidth, 18 * kHeight);
+        return SkISize::Make(6 * kWidth, 9 * kHeight);
     }
 
     void onDraw(SkCanvas* canvas) override {
@@ -179,25 +179,28 @@ protected:
         };
         const sk_sp<SkColorSpace> colorSpaces[] = {
                 make_wide_gamut(),
-                SkColorSpace::MakeNamed(SkColorSpace::kSRGB_Named),
+                SkColorSpace::MakeSRGB(),
                 make_small_gamut(),
         };
 
         for (sk_sp<SkColorSpace> dstColorSpace : colorSpaces) {
             for (SkColorType srcColorType : colorTypes) {
-                for (SkAlphaType srcAlphaType : alphaTypes) {
-                    canvas->save();
-                    sk_sp<SkImage> image = make_raster_image(srcColorType, srcAlphaType);
+                canvas->save();
+                sk_sp<SkImage> image = make_raster_image(srcColorType);
+                if (GrContext* context = canvas->getGrContext()) {
+                    image = image->makeTextureImage(context, canvas->imageInfo().colorSpace());
+                }
+                if (image) {
                     for (SkColorType dstColorType : colorTypes) {
                         for (SkAlphaType dstAlphaType : alphaTypes) {
                             draw_image(canvas, image.get(), dstColorType, dstAlphaType,
                                        dstColorSpace, SkImage::kAllow_CachingHint);
-                            canvas->translate((float) kWidth, 0.0f);
+                            canvas->translate((float)kWidth, 0.0f);
                         }
                     }
-                    canvas->restore();
-                    canvas->translate(0.0f, (float) kHeight);
                 }
+                canvas->restore();
+                canvas->translate(0.0f, (float) kHeight);
             }
         }
     }
@@ -237,7 +240,7 @@ protected:
         };
         const sk_sp<SkColorSpace> colorSpaces[] = {
                 make_wide_gamut(),
-                SkColorSpace::MakeNamed(SkColorSpace::kSRGB_Named),
+                SkColorSpace::MakeSRGB(),
                 make_small_gamut(),
         };
         const SkImage::CachingHint hints[] = {
@@ -290,8 +293,7 @@ protected:
         }
 
         const sk_sp<SkImage> images[] = {
-                make_tagged_picture_image(),
-                make_untagged_picture_image(),
+                make_picture_image(),
         };
         const SkAlphaType alphaTypes[] = {
                 kUnpremul_SkAlphaType,
@@ -304,7 +306,7 @@ protected:
         };
         const sk_sp<SkColorSpace> colorSpaces[] = {
                 make_wide_gamut(),
-                SkColorSpace::MakeNamed(SkColorSpace::kSRGB_Named),
+                SkColorSpace::MakeSRGB(),
                 make_small_gamut(),
         };
         const SkImage::CachingHint hints[] = {

@@ -6,11 +6,13 @@
  */
 
 #include "gm.h"
+#include "sk_tool_utils.h"
 
-#include "SkColorSpace_Base.h"
 #include "SkGradientShader.h"
+#include "SkImagePriv.h"
 #include "SkPM4fPriv.h"
 #include "SkSurface.h"
+#include "SkVertices.h"
 
 static const int gRectSize = 50;
 static const SkScalar gScalarSize = SkIntToScalar(gRectSize);
@@ -38,9 +40,10 @@ protected:
 struct BitmapCellRenderer : public CellRenderer {
     BitmapCellRenderer(SkColor color, SkFilterQuality quality, float scale = 1.0f)
         : fQuality(quality) {
-        int scaledSize = SkFloatToIntRound(scale * gRectSize);
+        int scaledSize = sk_float_round2int(scale * gRectSize);
         fBitmap.allocPixels(SkImageInfo::MakeS32(scaledSize, scaledSize, kPremul_SkAlphaType));
         fBitmap.eraseColor(color);
+        fBitmap.setImmutable();
         const char* qualityNames[] = { "None", "Low", "Medium", "High" };
         fLabel = SkStringPrintf("Bitmap (%s)", qualityNames[quality]);
     }
@@ -103,8 +106,9 @@ struct VerticesCellRenderer : public CellRenderer {
             SkPoint::Make(gScalarSize, gScalarSize),
             SkPoint::Make(0, gScalarSize)
         };
-        canvas->drawVertices(SkCanvas::kTriangleFan_VertexMode, 4, vertices, nullptr, fColors,
-                             SkBlendMode::kModulate, nullptr, 0, paint);
+        canvas->drawVertices(SkVertices::MakeCopy(SkVertices::kTriangleFan_VertexMode, 4, vertices,
+                                                  nullptr, fColors),
+                             SkBlendMode::kModulate, paint);
     }
     const char* label() override {
         return "Vertices";
@@ -132,12 +136,13 @@ static void draw_gamut_grid(SkCanvas* canvas, SkTArray<std::unique_ptr<CellRende
     switch (origInfo.colorType()) {
         case kRGBA_8888_SkColorType:
         case kBGRA_8888_SkColorType:
-            srgbCS = SkColorSpace::MakeNamed(SkColorSpace::kSRGB_Named);
+            srgbCS = SkColorSpace::MakeSRGB();
             wideCS = SkColorSpace::MakeRGB(SkColorSpace::kSRGB_RenderTargetGamma,
                                           wideGamutRGB_toXYZD50);
             break;
         case kRGBA_F16_SkColorType:
-            srgbCS = SkColorSpace::MakeNamed(SkColorSpace::kSRGBLinear_Named);
+        case kRGBA_F32_SkColorType:
+            srgbCS = SkColorSpace::MakeSRGBLinear();
             wideCS = SkColorSpace::MakeRGB(SkColorSpace::kLinear_RenderTargetGamma,
                                           wideGamutRGB_toXYZD50);
             break;
@@ -147,13 +152,12 @@ static void draw_gamut_grid(SkCanvas* canvas, SkTArray<std::unique_ptr<CellRende
     SkASSERT(srgbCS);
     SkASSERT(wideCS);
 
-    // Make our two working surfaces (one sRGB, one Adobe)
+    // Make our two working surfaces (one sRGB, one Wide)
     SkImageInfo srgbGamutInfo = SkImageInfo::Make(gRectSize, gRectSize, origInfo.colorType(),
                                                   kPremul_SkAlphaType, srgbCS);
     SkImageInfo wideGamutInfo = SkImageInfo::Make(gRectSize, gRectSize, origInfo.colorType(),
                                                   kPremul_SkAlphaType, wideCS);
-    // readPixels doesn't do color conversion (yet), so we can use it to see the raw (wide) data
-    SkImageInfo dstInfo = srgbGamutInfo.makeColorSpace(nullptr);
+
     sk_sp<SkSurface> srgbGamutSurface = canvas->makeSurface(srgbGamutInfo);
     sk_sp<SkSurface> wideGamutSurface = canvas->makeSurface(wideGamutInfo);
     if (!srgbGamutSurface || !wideGamutSurface) {
@@ -176,19 +180,20 @@ static void draw_gamut_grid(SkCanvas* canvas, SkTArray<std::unique_ptr<CellRende
         wideGamutCanvas->clear(SK_ColorBLACK);
         renderer->draw(wideGamutCanvas);
 
-        canvas->drawText(renderer->label(), strlen(renderer->label()), x, y + textHeight,
-                         textPaint);
+        canvas->drawString(renderer->label(), x, y + textHeight, textPaint);
 
-        SkBitmap srgbBitmap;
-        srgbBitmap.setInfo(dstInfo);
-        srgbGamutCanvas->readPixels(&srgbBitmap, 0, 0);
-        canvas->drawBitmap(srgbBitmap, x, y + textHeight + 5);
+        // Re-interpret the off-screen images, so we can see the raw data (eg, Wide gamut squares
+        // will look desaturated, relative to sRGB).
+        auto srgbImage = srgbGamutSurface->makeImageSnapshot();
+        srgbImage = SkImageMakeRasterCopyAndAssignColorSpace(srgbImage.get(),
+                                                             origInfo.colorSpace());
+        canvas->drawImage(srgbImage, x, y + textHeight + 5);
         x += (gScalarSize + 1);
 
-        SkBitmap wideBitmap;
-        wideBitmap.setInfo(dstInfo);
-        wideGamutCanvas->readPixels(&wideBitmap, 0, 0);
-        canvas->drawBitmap(wideBitmap, x, y + textHeight + 5);
+        auto wideImage = wideGamutSurface->makeImageSnapshot();
+        wideImage = SkImageMakeRasterCopyAndAssignColorSpace(wideImage.get(),
+                                                             origInfo.colorSpace());
+        canvas->drawImage(wideImage, x, y + textHeight + 5);
         x += (gScalarSize + 10);
 
         if (x + (2 * gScalarSize + 1) > gTestWidth) {

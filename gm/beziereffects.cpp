@@ -8,79 +8,104 @@
 // This test only works with the GPU backend.
 
 #include "gm.h"
+#include "sk_tool_utils.h"
 
-#if SK_SUPPORT_GPU
-
-#include "GrRenderTargetContextPriv.h"
 #include "GrContext.h"
+#include "GrMemoryPool.h"
+#include "GrOpFlushState.h"
 #include "GrPathUtils.h"
+#include "GrRenderTargetContextPriv.h"
 #include "GrTest.h"
 #include "SkColorPriv.h"
 #include "SkGeometry.h"
-
-#include "ops/GrTestMeshDrawOp.h"
-
+#include "SkPoint3.h"
+#include "SkPointPriv.h"
 #include "effects/GrBezierEffect.h"
-
-static inline SkScalar eval_line(const SkPoint& p, const SkScalar lineEq[3], SkScalar sign) {
-    return sign * (lineEq[0] * p.fX + lineEq[1] * p.fY + lineEq[2]);
-}
+#include "ops/GrMeshDrawOp.h"
 
 namespace skiagm {
 
-class BezierCubicOrConicTestOp : public GrTestMeshDrawOp {
+class BezierTestOp : public GrMeshDrawOp {
+public:
+    FixedFunctionFlags fixedFunctionFlags() const override { return FixedFunctionFlags::kNone; }
+
+    RequiresDstTexture finalize(const GrCaps& caps, const GrAppliedClip* clip) override {
+        auto analysis = fProcessorSet.finalize(fColor, GrProcessorAnalysisCoverage::kSingleChannel,
+                                               clip, false, caps, &fColor);
+        return analysis.requiresDstTexture() ? RequiresDstTexture::kYes : RequiresDstTexture::kNo;
+    }
+
+    void visitProxies(const VisitProxyFunc& func) const override {
+        fProcessorSet.visitProxies(func);
+    }
+
+protected:
+    BezierTestOp(sk_sp<const GrGeometryProcessor> gp, const SkRect& rect, GrColor color,
+                 int32_t classID)
+            : INHERITED(classID)
+            , fRect(rect)
+            , fColor(color)
+            , fGeometryProcessor(std::move(gp))
+            , fProcessorSet(SkBlendMode::kSrc) {
+        this->setBounds(rect, HasAABloat::kYes, IsZeroArea::kNo);
+    }
+
+    Target::PipelineAndFixedDynamicState makePipeline(Target* target) {
+        return target->makePipeline(0, std::move(fProcessorSet), target->detachAppliedClip());
+    }
+
+    sk_sp<const GrGeometryProcessor> gp() const { return fGeometryProcessor; }
+
+    const SkRect& rect() const { return fRect; }
+    GrColor color() const { return fColor; }
+
+private:
+    SkRect fRect;
+    GrColor fColor;
+    sk_sp<const GrGeometryProcessor> fGeometryProcessor;
+    GrProcessorSet fProcessorSet;
+
+    typedef GrMeshDrawOp INHERITED;
+};
+
+class BezierCubicTestOp : public BezierTestOp {
 public:
     DEFINE_OP_CLASS_ID
 
-    const char* name() const override { return "BezierCubicOrConicTestOp"; }
+    const char* name() const override { return "BezierCubicTestOp"; }
 
-    static std::unique_ptr<GrDrawOp> Make(sk_sp<GrGeometryProcessor> gp, const SkRect& bounds,
-                                          GrColor color, const SkScalar klmEqs[9], SkScalar sign) {
-        return std::unique_ptr<GrDrawOp>(
-                new BezierCubicOrConicTestOp(gp, bounds, color, klmEqs, sign));
+    static std::unique_ptr<GrDrawOp> Make(GrContext* context,
+                                          sk_sp<const GrGeometryProcessor> gp,
+                                          const SkRect& rect,
+                                          GrColor color) {
+        GrOpMemoryPool* pool = context->contextPriv().opMemoryPool();
+
+        return pool->allocate<BezierCubicTestOp>(std::move(gp), rect, color);
     }
 
 private:
-    BezierCubicOrConicTestOp(sk_sp<GrGeometryProcessor> gp, const SkRect& bounds, GrColor color,
-                             const SkScalar klmEqs[9], SkScalar sign)
-            : INHERITED(ClassID(), bounds, color), fGeometryProcessor(std::move(gp)) {
-        for (int i = 0; i < 9; i++) {
-            fKlmEqs[i] = klmEqs[i];
-        }
-        fSign = sign;
-    }
-    struct Vertex {
-        SkPoint fPosition;
-        float   fKLM[4]; // The last value is ignored. The effect expects a vec4f.
-    };
+    friend class ::GrOpMemoryPool; // for ctor
 
-    void onPrepareDraws(Target* target) const override {
-        QuadHelper helper;
-        size_t vertexStride = fGeometryProcessor->getVertexStride();
-        SkASSERT(vertexStride == sizeof(Vertex));
-        Vertex* verts = reinterpret_cast<Vertex*>(helper.init(target, vertexStride, 1));
-        if (!verts) {
+    BezierCubicTestOp(sk_sp<const GrGeometryProcessor> gp, const SkRect& rect, GrColor color)
+            : INHERITED(std::move(gp), rect, color, ClassID()) {}
+
+    void onPrepareDraws(Target* target) override {
+        SkASSERT(this->gp()->debugOnly_vertexStride() == sizeof(SkPoint));
+        QuadHelper helper(target, sizeof(SkPoint), 1);
+        SkPoint* pts = reinterpret_cast<SkPoint*>(helper.vertices());
+        if (!pts) {
             return;
         }
-        const SkRect& bounds = this->bounds();
-        verts[0].fPosition.setRectFan(bounds.fLeft, bounds.fTop, bounds.fRight, bounds.fBottom,
-                                      sizeof(Vertex));
-        for (int v = 0; v < 4; ++v) {
-            verts[v].fKLM[0] = eval_line(verts[v].fPosition, fKlmEqs + 0, fSign);
-            verts[v].fKLM[1] = eval_line(verts[v].fPosition, fKlmEqs + 3, fSign);
-            verts[v].fKLM[2] = eval_line(verts[v].fPosition, fKlmEqs + 6, 1.f);
-        }
-        helper.recordDraw(target, fGeometryProcessor.get());
+        SkRect rect = this->rect();
+        SkPointPriv::SetRectTriStrip(pts, rect, sizeof(SkPoint));
+        auto pipe = this->makePipeline(target);
+        helper.recordDraw(target, this->gp(), pipe.fPipeline, pipe.fFixedDynamicState);
     }
-
-    SkScalar                   fKlmEqs[9];
-    SkScalar                   fSign;
-    sk_sp<GrGeometryProcessor> fGeometryProcessor;
 
     static constexpr int kVertsPerCubic = 4;
     static constexpr int kIndicesPerCubic = 6;
 
-    typedef GrTestMeshDrawOp INHERITED;
+    typedef BezierTestOp INHERITED;
 };
 
 /**
@@ -114,6 +139,17 @@ protected:
             return;
         }
 
+        if (!context->contextPriv().caps()->shaderCaps()->floatIs32Bits()) {
+            SkPaint paint;
+            sk_tool_utils::set_portable_typeface(&paint);
+            paint.setAntiAlias(true);
+            paint.setTextSize(20);
+
+            canvas->clear(SK_ColorWHITE);
+            canvas->drawString("float != fp32", 20, 40, paint);
+            return;
+        }
+
         struct Vertex {
             SkPoint fPosition;
             float   fKLM[4]; // The last value is ignored. The effect expects a vec4f.
@@ -138,15 +174,11 @@ protected:
                 {rand.nextRangeF(0.f, w), rand.nextRangeF(0.f, h)},
                 {rand.nextRangeF(0.f, w), rand.nextRangeF(0.f, h)}
             };
-            for(int edgeType = 0; edgeType < kGrProcessorEdgeTypeCnt; ++edgeType) {
-                sk_sp<GrGeometryProcessor> gp;
-                GrPrimitiveEdgeType et = (GrPrimitiveEdgeType)edgeType;
-                gp = GrCubicEffect::Make(color, SkMatrix::I(), et, *context->caps());
-                if (!gp) {
-                    continue;
-                }
-                SkScalar x = SkScalarMul(col, w);
-                SkScalar y = SkScalarMul(row, h);
+            for(GrClipEdgeType edgeType : {GrClipEdgeType::kFillBW,
+                                           GrClipEdgeType::kFillAA,
+                                           GrClipEdgeType::kHairlineAA}) {
+                SkScalar x = col * w;
+                SkScalar y = row * h;
                 SkPoint controlPts[] = {
                     {x + baseControlPts[0].fX, y + baseControlPts[0].fY},
                     {x + baseControlPts[1].fX, y + baseControlPts[1].fY},
@@ -154,17 +186,18 @@ protected:
                     {x + baseControlPts[3].fX, y + baseControlPts[3].fY}
                 };
                 SkPoint chopped[10];
-                SkScalar klmEqs[9];
-                SkScalar klmSigns[3];
+                SkMatrix klm;
+                int loopIndex;
                 int cnt = GrPathUtils::chopCubicAtLoopIntersection(controlPts,
                                                                    chopped,
-                                                                   klmEqs,
-                                                                   klmSigns);
+                                                                   &klm,
+                                                                   &loopIndex);
 
                 SkPaint ctrlPtPaint;
                 ctrlPtPaint.setColor(rand.nextU() | 0xFF000000);
-                for (int i = 0; i < 4; ++i) {
-                    canvas->drawCircle(controlPts[i].fX, controlPts[i].fY, 6.f, ctrlPtPaint);
+                canvas->drawCircle(controlPts[0], 8.f, ctrlPtPaint);
+                for (int i = 1; i < 4; ++i) {
+                    canvas->drawCircle(controlPts[i], 6.f, ctrlPtPaint);
                 }
 
                 SkPaint polyPaint;
@@ -180,7 +213,7 @@ protected:
                     SkPoint* pts = chopped + 3 * c;
 
                     for (int i = 0; i < 4; ++i) {
-                        canvas->drawCircle(pts[i].fX, pts[i].fY, 3.f, choppedPtPaint);
+                        canvas->drawCircle(pts[i], 3.f, choppedPtPaint);
                     }
 
                     SkRect bounds;
@@ -192,14 +225,18 @@ protected:
                     boundsPaint.setStyle(SkPaint::kStroke_Style);
                     canvas->drawRect(bounds, boundsPaint);
 
-                    GrPaint grPaint;
-                    grPaint.setXPFactory(GrPorterDuffXPFactory::Get(SkBlendMode::kSrc));
+
+                    bool flipKL = (c == loopIndex && cnt != 3);
+                    sk_sp<GrGeometryProcessor> gp =
+                            GrCubicEffect::Make(color, SkMatrix::I(), klm, flipKL, edgeType,
+                                                *context->contextPriv().caps());
+                    if (!gp) {
+                        break;
+                    }
 
                     std::unique_ptr<GrDrawOp> op =
-                            BezierCubicOrConicTestOp::Make(gp, bounds, color, klmEqs, klmSigns[c]);
-
-                    renderTargetContext->priv().testingOnly_addDrawOp(
-                            std::move(grPaint), GrAAType::kNone, std::move(op));
+                            BezierCubicTestOp::Make(context, std::move(gp), bounds, color);
+                    renderTargetContext->priv().testingOnly_addDrawOp(std::move(op));
                 }
                 ++col;
                 if (numCols == col) {
@@ -215,6 +252,61 @@ private:
 };
 
 //////////////////////////////////////////////////////////////////////////////
+
+class BezierConicTestOp : public BezierTestOp {
+public:
+    DEFINE_OP_CLASS_ID
+
+    const char* name() const override { return "BezierConicTestOp"; }
+
+    static std::unique_ptr<GrDrawOp> Make(GrContext* context,
+                                          sk_sp<const GrGeometryProcessor> gp,
+                                          const SkRect& rect,
+                                          GrColor color,
+                                          const SkMatrix& klm) {
+        GrOpMemoryPool* pool = context->contextPriv().opMemoryPool();
+
+        return pool->allocate<BezierConicTestOp>(std::move(gp), rect, color, klm);
+    }
+
+private:
+    friend class ::GrOpMemoryPool; // for ctor
+
+    BezierConicTestOp(sk_sp<const GrGeometryProcessor> gp, const SkRect& rect, GrColor color,
+                      const SkMatrix& klm)
+            : INHERITED(std::move(gp), rect, color, ClassID()), fKLM(klm) {}
+
+    struct Vertex {
+        SkPoint fPosition;
+        float   fKLM[4]; // The last value is ignored. The effect expects a vec4f.
+    };
+
+    void onPrepareDraws(Target* target) override {
+        SkASSERT(this->gp()->debugOnly_vertexStride() == sizeof(Vertex));
+        QuadHelper helper(target, sizeof(Vertex), 1);
+        Vertex* verts = reinterpret_cast<Vertex*>(helper.vertices());
+        if (!verts) {
+            return;
+        }
+        SkRect rect = this->rect();
+        SkPointPriv::SetRectTriStrip(&verts[0].fPosition, rect.fLeft, rect.fTop, rect.fRight,
+                                     rect.fBottom, sizeof(Vertex));
+        for (int v = 0; v < 4; ++v) {
+            SkPoint3 pt3 = {verts[v].fPosition.x(), verts[v].fPosition.y(), 1.f};
+            fKLM.mapHomogeneousPoints((SkPoint3* ) verts[v].fKLM, &pt3, 1);
+        }
+        auto pipe = this->makePipeline(target);
+        helper.recordDraw(target, this->gp(), pipe.fPipeline, pipe.fFixedDynamicState);
+    }
+
+    SkMatrix fKLM;
+
+    static constexpr int kVertsPerCubic = 4;
+    static constexpr int kIndicesPerCubic = 6;
+
+    typedef BezierTestOp INHERITED;
+};
+
 
 /**
  * This GM directly exercises effects that draw Bezier curves in the GPU backend.
@@ -272,31 +364,31 @@ protected:
                 {rand.nextRangeF(0.f, w), rand.nextRangeF(0.f, h)}
             };
             SkScalar weight = rand.nextRangeF(0.f, 2.f);
-            for(int edgeType = 0; edgeType < kGrProcessorEdgeTypeCnt; ++edgeType) {
+            for(int edgeType = 0; edgeType < kGrClipEdgeTypeCnt; ++edgeType) {
                 sk_sp<GrGeometryProcessor> gp;
-                GrPrimitiveEdgeType et = (GrPrimitiveEdgeType)edgeType;
-                gp = GrConicEffect::Make(color, SkMatrix::I(), et,
-                                         *context->caps(), SkMatrix::I(), false);
+                GrClipEdgeType et = (GrClipEdgeType)edgeType;
+                gp = GrConicEffect::Make(color, SkMatrix::I(), et, *context->contextPriv().caps(),
+                                         SkMatrix::I(), false);
                 if (!gp) {
                     continue;
                 }
 
-                SkScalar x = SkScalarMul(col, w);
-                SkScalar y = SkScalarMul(row, h);
+                SkScalar x = col * w;
+                SkScalar y = row * h;
                 SkPoint controlPts[] = {
                     {x + baseControlPts[0].fX, y + baseControlPts[0].fY},
                     {x + baseControlPts[1].fX, y + baseControlPts[1].fY},
                     {x + baseControlPts[2].fX, y + baseControlPts[2].fY}
                 };
                 SkConic dst[4];
-                SkScalar klmEqs[9];
+                SkMatrix klm;
                 int cnt = chop_conic(controlPts, dst, weight);
-                GrPathUtils::getConicKLM(controlPts, weight, klmEqs);
+                GrPathUtils::getConicKLM(controlPts, weight, &klm);
 
                 SkPaint ctrlPtPaint;
                 ctrlPtPaint.setColor(rand.nextU() | 0xFF000000);
                 for (int i = 0; i < 3; ++i) {
-                    canvas->drawCircle(controlPts[i].fX, controlPts[i].fY, 6.f, ctrlPtPaint);
+                    canvas->drawCircle(controlPts[i], 6.f, ctrlPtPaint);
                 }
 
                 SkPaint polyPaint;
@@ -311,7 +403,7 @@ protected:
                 for (int c = 0; c < cnt; ++c) {
                     SkPoint* pts = dst[c].fPts;
                     for (int i = 0; i < 3; ++i) {
-                        canvas->drawCircle(pts[i].fX, pts[i].fY, 3.f, choppedPtPaint);
+                        canvas->drawCircle(pts[i], 3.f, choppedPtPaint);
                     }
 
                     SkRect bounds;
@@ -325,14 +417,9 @@ protected:
                     boundsPaint.setStyle(SkPaint::kStroke_Style);
                     canvas->drawRect(bounds, boundsPaint);
 
-                    GrPaint grPaint;
-                    grPaint.setXPFactory(GrPorterDuffXPFactory::Get(SkBlendMode::kSrc));
-
-                    std::unique_ptr<GrDrawOp> op =
-                            BezierCubicOrConicTestOp::Make(gp, bounds, color, klmEqs, 1.f);
-
-                    renderTargetContext->priv().testingOnly_addDrawOp(
-                            std::move(grPaint), GrAAType::kNone, std::move(op));
+                    std::unique_ptr<GrDrawOp> op = BezierConicTestOp::Make(context, gp, bounds,
+                                                                           color, klm);
+                    renderTargetContext->priv().testingOnly_addDrawOp(std::move(op));
                 }
                 ++col;
                 if (numCols == col) {
@@ -351,7 +438,7 @@ private:
     // and dst[1] are the two new conics.
     int split_conic(const SkPoint src[3], SkConic dst[2], const SkScalar weight) {
         SkScalar t = SkFindQuadMaxCurvature(src);
-        if (t == 0) {
+        if (t == 0 || t == 1) {
             if (dst) {
                 dst[0].set(src, weight);
             }
@@ -389,50 +476,53 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-class BezierQuadTestOp : public GrTestMeshDrawOp {
+class BezierQuadTestOp : public BezierTestOp {
 public:
     DEFINE_OP_CLASS_ID
     const char* name() const override { return "BezierQuadTestOp"; }
 
-    static std::unique_ptr<GrDrawOp> Make(sk_sp<GrGeometryProcessor> gp, const SkRect& bounds,
-                                          GrColor color, const GrPathUtils::QuadUVMatrix& devToUV) {
-        return std::unique_ptr<GrDrawOp>(new BezierQuadTestOp(gp, bounds, color, devToUV));
+    static std::unique_ptr<GrDrawOp> Make(GrContext* context,
+                                          sk_sp<const GrGeometryProcessor> gp,
+                                          const SkRect& rect,
+                                          GrColor color,
+                                          const GrPathUtils::QuadUVMatrix& devToUV) {
+        GrOpMemoryPool* pool = context->contextPriv().opMemoryPool();
+
+        return pool->allocate<BezierQuadTestOp>(std::move(gp), rect, color, devToUV);
     }
 
 private:
-    BezierQuadTestOp(sk_sp<GrGeometryProcessor> gp, const SkRect& bounds, GrColor color,
+    friend class ::GrOpMemoryPool; // for ctor
+
+    BezierQuadTestOp(sk_sp<const GrGeometryProcessor> gp, const SkRect& rect, GrColor color,
                      const GrPathUtils::QuadUVMatrix& devToUV)
-            : INHERITED(ClassID(), bounds, color)
-            , fDevToUV(devToUV)
-            , fGeometryProcessor(std::move(gp)) {}
+            : INHERITED(std::move(gp), rect, color, ClassID()), fDevToUV(devToUV) {}
 
     struct Vertex {
         SkPoint fPosition;
         float   fKLM[4]; // The last value is ignored. The effect expects a vec4f.
     };
 
-    void onPrepareDraws(Target* target) const override {
-        QuadHelper helper;
-        size_t vertexStride = fGeometryProcessor->getVertexStride();
-        SkASSERT(vertexStride == sizeof(Vertex));
-        Vertex* verts = reinterpret_cast<Vertex*>(helper.init(target, vertexStride, 1));
+    void onPrepareDraws(Target* target) override {
+        SkASSERT(this->gp()->debugOnly_vertexStride() == sizeof(Vertex));
+        QuadHelper helper(target, sizeof(Vertex), 1);
+        Vertex* verts = reinterpret_cast<Vertex*>(helper.vertices());
         if (!verts) {
             return;
         }
-        const SkRect& bounds = this->bounds();
-        verts[0].fPosition.setRectFan(bounds.fLeft, bounds.fTop, bounds.fRight, bounds.fBottom,
-                                      sizeof(Vertex));
+        SkRect rect = this->rect();
+        SkPointPriv::SetRectTriStrip(&verts[0].fPosition, rect, sizeof(Vertex));
         fDevToUV.apply<4, sizeof(Vertex), sizeof(SkPoint)>(verts);
-        helper.recordDraw(target, fGeometryProcessor.get());
+        auto pipe = this->makePipeline(target);
+        helper.recordDraw(target, this->gp(), pipe.fPipeline, pipe.fFixedDynamicState);
     }
 
-    GrPathUtils::QuadUVMatrix  fDevToUV;
-    sk_sp<GrGeometryProcessor> fGeometryProcessor;
+    GrPathUtils::QuadUVMatrix fDevToUV;
 
     static constexpr int kVertsPerCubic = 4;
     static constexpr int kIndicesPerCubic = 6;
 
-    typedef GrTestMeshDrawOp INHERITED;
+    typedef BezierTestOp INHERITED;
 };
 
 /**
@@ -489,17 +579,17 @@ protected:
                 {rand.nextRangeF(0.f, w), rand.nextRangeF(0.f, h)},
                 {rand.nextRangeF(0.f, w), rand.nextRangeF(0.f, h)}
             };
-            for(int edgeType = 0; edgeType < kGrProcessorEdgeTypeCnt; ++edgeType) {
+            for(int edgeType = 0; edgeType < kGrClipEdgeTypeCnt; ++edgeType) {
                 sk_sp<GrGeometryProcessor> gp;
-                GrPrimitiveEdgeType et = (GrPrimitiveEdgeType)edgeType;
-                gp = GrQuadEffect::Make(color, SkMatrix::I(), et,
-                                        *context->caps(), SkMatrix::I(), false);
+                GrClipEdgeType et = (GrClipEdgeType)edgeType;
+                gp = GrQuadEffect::Make(color, SkMatrix::I(), et, *context->contextPriv().caps(),
+                                        SkMatrix::I(), false);
                 if (!gp) {
                     continue;
                 }
 
-                SkScalar x = SkScalarMul(col, w);
-                SkScalar y = SkScalarMul(row, h);
+                SkScalar x = col * w;
+                SkScalar y = row * h;
                 SkPoint controlPts[] = {
                     {x + baseControlPts[0].fX, y + baseControlPts[0].fY},
                     {x + baseControlPts[1].fX, y + baseControlPts[1].fY},
@@ -511,7 +601,7 @@ protected:
                 SkPaint ctrlPtPaint;
                 ctrlPtPaint.setColor(rand.nextU() | 0xFF000000);
                 for (int i = 0; i < 3; ++i) {
-                    canvas->drawCircle(controlPts[i].fX, controlPts[i].fY, 6.f, ctrlPtPaint);
+                    canvas->drawCircle(controlPts[i], 6.f, ctrlPtPaint);
                 }
 
                 SkPaint polyPaint;
@@ -527,7 +617,7 @@ protected:
                     SkPoint* pts = chopped + 2 * c;
 
                     for (int i = 0; i < 3; ++i) {
-                        canvas->drawCircle(pts[i].fX, pts[i].fY, 3.f, choppedPtPaint);
+                        canvas->drawCircle(pts[i], 3.f, choppedPtPaint);
                     }
 
                     SkRect bounds;
@@ -544,11 +634,9 @@ protected:
 
                     GrPathUtils::QuadUVMatrix DevToUV(pts);
 
-                    std::unique_ptr<GrDrawOp> op =
-                            BezierQuadTestOp::Make(gp, bounds, color, DevToUV);
-
-                    renderTargetContext->priv().testingOnly_addDrawOp(
-                            std::move(grPaint), GrAAType::kNone, std::move(op));
+                    std::unique_ptr<GrDrawOp> op = BezierQuadTestOp::Make(context, gp,
+                                                                          bounds, color, DevToUV);
+                    renderTargetContext->priv().testingOnly_addDrawOp(std::move(op));
                 }
                 ++col;
                 if (numCols == col) {
@@ -567,5 +655,3 @@ DEF_GM(return new BezierCubicEffects;)
 DEF_GM(return new BezierConicEffects;)
 DEF_GM(return new BezierQuadEffects;)
 }
-
-#endif

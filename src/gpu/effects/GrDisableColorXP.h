@@ -12,41 +12,43 @@
 #include "GrXferProcessor.h"
 #include "SkRefCnt.h"
 
-class GrProcOptInfo;
-
 // See the comment above GrXPFactory's definition about this warning suppression.
-#if defined(__GNUC__) || defined(__clang)
+#if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
+#endif
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wnon-virtual-dtor"
 #endif
 class GrDisableColorXPFactory : public GrXPFactory {
 public:
     static const GrXPFactory* Get();
 
-    void getInvariantBlendedColor(const GrProcOptInfo& colorPOI,
-                                  GrXPFactory::InvariantBlendedColor* blendedColor) const override {
-        blendedColor->fKnownColorFlags = kNone_GrColorComponentFlags;
-        blendedColor->fWillBlendWithDst = false;
-    }
-
 private:
     constexpr GrDisableColorXPFactory() {}
 
-    GrXferProcessor* onCreateXferProcessor(const GrCaps& caps,
-                                           const GrPipelineAnalysis&,
-                                           bool hasMixedSamples,
-                                           const DstTexture* dstTexture) const override;
-
-    bool onWillReadDstColor(const GrCaps&, const GrPipelineAnalysis&) const override {
-        return false;
+    AnalysisProperties analysisProperties(const GrProcessorAnalysisColor&,
+                                          const GrProcessorAnalysisCoverage&,
+                                          const GrCaps&) const override {
+        return AnalysisProperties::kCompatibleWithAlphaAsCoverage |
+               AnalysisProperties::kIgnoresInputColor;
     }
 
-    GR_DECLARE_XP_FACTORY_TEST;
+    sk_sp<const GrXferProcessor> makeXferProcessor(const GrProcessorAnalysisColor&,
+                                                   GrProcessorAnalysisCoverage,
+                                                   bool hasMixedSamples,
+                                                   const GrCaps&) const override;
+
+    GR_DECLARE_XP_FACTORY_TEST
 
     typedef GrXPFactory INHERITED;
 };
-#if defined(__GNUC__) || defined(__clang)
+#if defined(__GNUC__)
 #pragma GCC diagnostic pop
+#endif
+#if defined(__clang__)
+#pragma clang diagnostic pop
 #endif
 
 inline const GrXPFactory* GrDisableColorXPFactory::Get() {

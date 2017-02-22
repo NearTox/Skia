@@ -8,10 +8,12 @@
 #ifndef SkGlyph_DEFINED
 #define SkGlyph_DEFINED
 
+#include "SkArenaAlloc.h"
 #include "SkChecksum.h"
-#include "SkTypes.h"
 #include "SkFixed.h"
 #include "SkMask.h"
+#include "SkTo.h"
+#include "SkTypes.h"
 
 class SkPath;
 class SkGlyphCache;
@@ -60,9 +62,16 @@ struct SkPackedID {
     bool operator!=(const SkPackedID& that) const {
         return !(*this == that);
     }
+    bool operator<(SkPackedID that) const {
+        return this->fID < that.fID;
+    }
 
     uint32_t code() const {
         return fID & kCodeMask;
+    }
+
+    uint32_t getPackedID() const {
+        return fID;
     }
 
     SkFixed getSubXFixed() const {
@@ -77,11 +86,11 @@ struct SkPackedID {
         return SkChecksum::CheapMix(fID);
     }
 
-// FIXME - This is needed because the Android framework directly accesses fID.
-// Remove when fID accesses are cleaned up.
-#ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
-    operator uint32_t() const { return fID; }
-#endif
+    SkString dump() const {
+        SkString str;
+        str.appendf("code: %d, x: %d, y:%d", code(), getSubXFixed(), getSubYFixed());
+        return str;
+    }
 
 private:
     static unsigned ID2SubX(uint32_t id) {
@@ -107,6 +116,7 @@ private:
 struct SkPackedGlyphID : public SkPackedID {
     SkPackedGlyphID(SkGlyphID code) : SkPackedID(code) { }
     SkPackedGlyphID(SkGlyphID code, SkFixed x, SkFixed y) : SkPackedID(code, x, y) { }
+    SkPackedGlyphID(SkGlyphID code, SkIPoint pt) : SkPackedID(code, pt.x(), pt.y()) { }
     SkPackedGlyphID() : SkPackedID() { }
     SkGlyphID code() const {
         return SkTo<SkGlyphID>(SkPackedID::code());
@@ -122,7 +132,6 @@ struct SkPackedUnicharID : public SkPackedID {
     }
 };
 
-SK_BEGIN_REQUIRE_DENSE
 class SkGlyph {
     // Support horizontal and vertical skipping strike-through / underlines.
     // The caller walks the linked list looking for a match. For a horizontal underline,
@@ -142,45 +151,27 @@ class SkGlyph {
 
 public:
     static const SkFixed kSubpixelRound = SK_FixedHalf >> SkPackedID::kSubBits;
-    void*       fImage;
-    PathData*   fPathData;
+    void* fImage;
+    PathData* fPathData;
     float       fAdvanceX, fAdvanceY;
 
     uint16_t    fWidth, fHeight;
     int16_t     fTop, fLeft;
-
-    uint8_t     fMaskFormat;
-    int8_t      fRsbDelta, fLsbDelta;  // used by auto-kerning
     int8_t      fForceBW;
 
-    void initWithGlyphID(SkPackedGlyphID glyph_id) {
-        fID             = glyph_id;
-        fImage          = nullptr;
-        fPathData       = nullptr;
-        fMaskFormat     = MASK_FORMAT_UNKNOWN;
-        fForceBW        = 0;
+    uint8_t     fMaskFormat;
+
+    void initWithGlyphID(SkPackedGlyphID glyph_id);
+
+    bool isEmpty() const {
+        return fWidth == 0 || fHeight == 0;
     }
 
-    /**
-     *  Compute the rowbytes for the specified width and mask-format.
-     */
-    static unsigned ComputeRowBytes(unsigned width, SkMask::Format format) {
-        unsigned rb = width;
-        if (SkMask::kBW_Format == format) {
-            rb = (rb + 7) >> 3;
-        } else if (SkMask::kARGB32_Format == format) {
-            rb <<= 2;
-        } else if (SkMask::kLCD16_Format == format) {
-            rb = SkAlign4(rb << 1);
-        } else {
-            rb = SkAlign4(rb);
-        }
-        return rb;
-    }
+    size_t formatAlignment() const;
+    size_t allocImage(SkArenaAlloc* alloc);
 
-    unsigned rowBytes() const {
-        return ComputeRowBytes(fWidth, (SkMask::Format)fMaskFormat);
-    }
+    size_t rowBytes() const;
+    size_t rowBytesUsingFormat(SkMask::Format format) const;
 
     bool isJustAdvance() const {
         return MASK_FORMAT_JUST_ADVANCE == fMaskFormat;
@@ -216,6 +207,27 @@ public:
 
     void toMask(SkMask* mask) const;
 
+    /** Returns the size allocated on the arena.
+     */
+    size_t copyImageData(const SkGlyph& from, SkArenaAlloc* alloc) {
+        fMaskFormat = from.fMaskFormat;
+        fWidth = from.fWidth;
+        fHeight = from.fHeight;
+        fLeft = from.fLeft;
+        fTop = from.fTop;
+        fForceBW = from.fForceBW;
+
+        if (from.fImage != nullptr) {
+            auto imageSize = this->allocImage(alloc);
+            SkASSERT(imageSize == from.computeImageSize());
+
+            memcpy(fImage, from.fImage, imageSize);
+            return imageSize;
+        }
+
+        return 0u;
+    }
+
     class HashTraits {
     public:
         static SkPackedGlyphID GetKey(const SkGlyph& glyph) {
@@ -229,14 +241,7 @@ public:
  private:
     // TODO(herb) remove friend statement after SkGlyphCache cleanup.
     friend class SkGlyphCache;
-
-// FIXME - This is needed because the Android frame work directly accesses fID.
-// Remove when fID accesses are cleaned up.
-#ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
-  public:
-#endif
     SkPackedGlyphID fID;
 };
-SK_END_REQUIRE_DENSE
 
 #endif

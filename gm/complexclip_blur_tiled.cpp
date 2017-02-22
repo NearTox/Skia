@@ -10,6 +10,7 @@
 #include "SkRRect.h"
 #include "SkSurface.h"
 #include "SkClipOpPriv.h"
+#include "sk_tool_utils.h"
 
 #define WIDTH 512
 #define HEIGHT 512
@@ -34,16 +35,10 @@ protected:
         SkPaint blurPaint;
         blurPaint.setImageFilter(SkBlurImageFilter::Make(5.0f, 5.0f, nullptr));
         const SkScalar tileSize = SkIntToScalar(128);
-        SkRect bounds;
-        if (!canvas->getClipBounds(&bounds)) {
-            bounds.setEmpty();
-        }
+        SkRect bounds = canvas->getLocalClipBounds();
         int ts = SkScalarCeilToInt(tileSize);
         SkImageInfo info = SkImageInfo::MakeN32Premul(ts, ts);
-        auto tileSurface(canvas->makeSurface(info));
-        if (!tileSurface) {
-            tileSurface = SkSurface::MakeRaster(info);
-        }
+        auto tileSurface(sk_tool_utils::makeSurface(canvas, info));
         SkCanvas* tileCanvas = tileSurface->getCanvas();
         for (SkScalar y = bounds.top(); y < bounds.bottom(); y += tileSize) {
             for (SkScalar x = bounds.left(); x < bounds.right(); x += tileSize) {

@@ -5,9 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "SampleCode.h"
+#include "Sample.h"
 #include "SkAnimTimer.h"
-#include "SkView.h"
 #include "SkCanvas.h"
 #include "SkGradientShader.h"
 #include "SkString.h"
@@ -35,7 +34,7 @@ static void draw_gradient2(SkCanvas* canvas, const SkRect& rect, SkScalar delta)
 }
 
 
-class DegenerateTwoPtRadialsView : public SampleView {
+class DegenerateTwoPtRadialsView : public Sample {
 public:
     DegenerateTwoPtRadialsView() {
         fTime = 0;
@@ -43,9 +42,9 @@ public:
     }
 
 protected:
-    bool onQuery(SkEvent* evt) override {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "DegenerateTwoPtRadials");
+    bool onQuery(Sample::Event* evt) override {
+        if (Sample::TitleQ(*evt)) {
+            Sample::TitleR(evt, "DegenerateTwoPtRadials");
             return true;
         }
         return this->INHERITED::onQuery(evt);
@@ -72,7 +71,7 @@ protected:
         SkPaint paint;
         paint.setAntiAlias(true);
         paint.setColor(SK_ColorBLACK);
-        canvas->drawText(txt.c_str(), txt.size(), l + w/2 + w*DELTA_SCALE*delta, t + h + SK_Scalar1 * 10, paint);
+        canvas->drawString(txt, l + w/2 + w*DELTA_SCALE*delta, t + h + SK_Scalar1 * 10, paint);
     }
 
     bool onAnimate(const SkAnimTimer& timer) override {
@@ -82,10 +81,9 @@ protected:
 
 private:
     SkScalar           fTime;
-    typedef SampleView INHERITED;
+    typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() { return new DegenerateTwoPtRadialsView; }
-static SkViewRegister reg(MyFactory);
+DEF_SAMPLE( return new DegenerateTwoPtRadialsView(); )

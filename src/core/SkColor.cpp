@@ -6,7 +6,7 @@
  */
 
 #include "SkColor.h"
-#include "SkColorPriv.h"
+#include "SkColorData.h"
 #include "SkFixed.h"
 
 SkPMColor SkPreMultiplyARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b) {
@@ -153,21 +153,12 @@ void SkPM4f::assertIsUnit() const {
 
 SkColor4f SkColor4f::FromColor(SkColor bgra) {
     SkColor4f rgba;
-    swizzle_rb(Sk4f_fromS32(bgra)).store(rgba.vec());
-    return rgba;
-}
-
-SkColor4f SkColor4f::FromColor3f(SkColor3f color3f, float a) {
-    SkColor4f rgba;
-    rgba.fR = color3f.fX;
-    rgba.fG = color3f.fY;
-    rgba.fB = color3f.fZ;
-    rgba.fA = a;
+    swizzle_rb(Sk4f_fromL32(bgra)).store(rgba.vec());
     return rgba;
 }
 
 SkColor SkColor4f::toSkColor() const {
-    return Sk4f_toS32(swizzle_rb(Sk4f::Load(this->vec())));
+    return Sk4f_toL32(swizzle_rb(Sk4f::Load(this->vec())));
 }
 
 SkColor4f SkColor4f::Pin(float r, float g, float b, float a) {

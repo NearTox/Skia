@@ -5,19 +5,23 @@
  * found in the LICENSE file.
  */
 
+#include "SkPipeCanvas.h"
+
 #include "SkAutoMalloc.h"
+#include "SkCanvasPriv.h"
 #include "SkColorFilter.h"
 #include "SkDrawLooper.h"
+#include "SkDrawShadowInfo.h"
+#include "SkDrawable.h"
 #include "SkImageFilter.h"
 #include "SkMaskFilter.h"
 #include "SkPathEffect.h"
-#include "SkPipeCanvas.h"
 #include "SkPipeFormat.h"
 #include "SkRSXform.h"
-#include "SkRasterizer.h"
 #include "SkShader.h"
 #include "SkStream.h"
-#include "SkTextBlob.h"
+#include "SkTextBlobPriv.h"
+#include "SkTo.h"
 #include "SkTypeface.h"
 
 template <typename T> void write_rrect(T* writer, const SkRRect& rrect) {
@@ -68,7 +72,6 @@ static uint16_t compute_nondef(const SkPaint& paint, PaintUsage usage) {
 
     if (usage & (kText_PaintUsage | kGeometry_PaintUsage | kTextBlob_PaintUsage)) {
         bits |= (paint.getPathEffect()  ? kPathEffect_NonDef : 0);
-        bits |= (paint.getRasterizer()  ? kRasterizer_NonDef : 0);
 
         if (paint.getStyle() != SkPaint::kFill_Style || (usage & kRespectsStroke_PaintUsage)) {
             bits |= (paint.getStrokeWidth() != kStrokeWidth_Default ? kStrokeWidth_NonDef : 0);
@@ -174,7 +177,6 @@ static void write_paint(SkWriteBuffer& writer, const SkPaint& paint, unsigned us
     CHECK_WRITE_FLATTENABLE(writer, nondef, paint, Shader);
     CHECK_WRITE_FLATTENABLE(writer, nondef, paint, MaskFilter);
     CHECK_WRITE_FLATTENABLE(writer, nondef, paint, ColorFilter);
-    CHECK_WRITE_FLATTENABLE(writer, nondef, paint, Rasterizer);
     CHECK_WRITE_FLATTENABLE(writer, nondef, paint, ImageFilter);
     CHECK_WRITE_FLATTENABLE(writer, nondef, paint, DrawLooper);
 }
@@ -226,8 +228,8 @@ SkCanvas::SaveLayerStrategy SkPipeCanvas::getSaveLayerStrategy(const SaveLayerRe
     uint32_t extra = rec.fSaveLayerFlags;
 
     // remap this wacky flag
-    if (extra & (1 << 31)/*SkCanvas::kDontClipToLayer_PrivateSaveLayerFlag*/) {
-        extra &= ~(1 << 31);
+    if (extra & SkCanvasPriv::kDontClipToLayer_SaveLayerFlag) {
+        extra &= ~SkCanvasPriv::kDontClipToLayer_SaveLayerFlag;
         extra |= kDontClipToLayer_SaveLayerMask;
     }
 
@@ -240,7 +242,13 @@ SkCanvas::SaveLayerStrategy SkPipeCanvas::getSaveLayerStrategy(const SaveLayerRe
     if (rec.fBackdrop) {
         extra |= kHasBackdrop_SaveLayerMask;
     }
-    
+    if (rec.fClipMask) {
+        extra |= kHasClipMask_SaveLayerMask;
+    }
+    if (rec.fClipMatrix) {
+        extra |= kHasClipMatrix_SaveLayerMask;
+    }
+
     writer.write32(pack_verb(SkPipeVerb::kSaveLayer, extra));
     if (rec.fBounds) {
         writer.writeRect(*rec.fBounds);
@@ -251,6 +259,13 @@ SkCanvas::SaveLayerStrategy SkPipeCanvas::getSaveLayerStrategy(const SaveLayerRe
     if (rec.fBackdrop) {
         writer.writeFlattenable(rec.fBackdrop);
     }
+    if (rec.fClipMask) {
+        writer.writeImage(rec.fClipMask);
+    }
+    if (rec.fClipMatrix) {
+        writer.writeMatrix(*rec.fClipMatrix);
+    }
+
     return kNoLayer_SaveLayerStrategy;
 }
 
@@ -435,6 +450,13 @@ void SkPipeCanvas::onDrawPath(const SkPath& path, const SkPaint& paint) {
     write_paint(writer, paint, kGeometry_PaintUsage);
 }
 
+void SkPipeCanvas::onDrawShadowRec(const SkPath& path, const SkDrawShadowRec& rec) {
+    SkPipeWriter writer(this);
+    writer.write32(pack_verb(SkPipeVerb::kDrawShadowRec));
+    writer.writePath(path);
+    writer.write(&rec, sizeof(rec));
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 static sk_sp<SkImage> make_from_bitmap(const SkBitmap& bitmap) {
@@ -480,7 +502,7 @@ void SkPipeCanvas::onDrawBitmapLattice(const SkBitmap& bitmap, const Lattice& la
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-    
+
 void SkPipeCanvas::onDrawImage(const SkImage* image, SkScalar left, SkScalar top,
                                const SkPaint* paint) {
     unsigned extra = 0;
@@ -542,40 +564,10 @@ void SkPipeCanvas::onDrawImageLattice(const SkImage* image, const Lattice& latti
     if (paint) {
         extra |= kHasPaint_DrawImageLatticeMask;
     }
-    if (lattice.fFlags) {
-        extra |= kHasFlags_DrawImageLatticeMask;
-    }
-    if (lattice.fXCount >= kCount_DrawImageLatticeMask) {
-        extra |= kCount_DrawImageLatticeMask << kXCount_DrawImageLatticeShift;
-    } else {
-        extra |= lattice.fXCount << kXCount_DrawImageLatticeShift;
-    }
-    if (lattice.fYCount >= kCount_DrawImageLatticeMask) {
-        extra |= kCount_DrawImageLatticeMask << kYCount_DrawImageLatticeShift;
-    } else {
-        extra |= lattice.fYCount << kYCount_DrawImageLatticeShift;
-    }
-
     SkPipeWriter writer(this);
     writer.write32(pack_verb(SkPipeVerb::kDrawImageLattice, extra));
     writer.writeImage(image);
-    if (lattice.fXCount >= kCount_DrawImageLatticeMask) {
-        writer.write32(lattice.fXCount);
-    }
-    if (lattice.fYCount >= kCount_DrawImageLatticeMask) {
-        writer.write32(lattice.fYCount);
-    }
-    // Often these divs will be small (8 or 16 bits). Consider sniffing that and writing a flag
-    // so we can store them smaller.
-    writer.write(lattice.fXDivs, lattice.fXCount * sizeof(int32_t));
-    writer.write(lattice.fYDivs, lattice.fYCount * sizeof(int32_t));
-    if (lattice.fFlags) {
-        int32_t count = (lattice.fXCount + 1) * (lattice.fYCount + 1);
-        SkASSERT(count > 0);
-        write_pad(&writer, lattice.fFlags, count);
-    }
-    SkASSERT(lattice.fBounds);
-    writer.write(&lattice.fBounds, sizeof(*lattice.fBounds));
+    SkCanvasPriv::WriteLattice(writer, lattice);
     writer.write(&dst, sizeof(dst));
     if (paint) {
         write_paint(writer, *paint, kImage_PaintUsage);
@@ -604,9 +596,9 @@ void SkPipeCanvas::onDrawText(const void* text, size_t byteLength, SkScalar x, S
 void SkPipeCanvas::onDrawPosText(const void* text, size_t byteLength, const SkPoint pos[],
                                  const SkPaint& paint) {
     SkASSERT(byteLength);
-    
+
     bool compact = fits_in(byteLength, 24);
-    
+
     SkPipeWriter writer(this);
     writer.write32(pack_verb(SkPipeVerb::kDrawPosText, compact ? (unsigned)byteLength : 0));
     if (!compact) {
@@ -620,9 +612,9 @@ void SkPipeCanvas::onDrawPosText(const void* text, size_t byteLength, const SkPo
 void SkPipeCanvas::onDrawPosTextH(const void* text, size_t byteLength, const SkScalar xpos[],
                                   SkScalar constY, const SkPaint& paint) {
     SkASSERT(byteLength);
-    
+
     bool compact = fits_in(byteLength, 24);
-    
+
     SkPipeWriter writer(this);
     writer.write32(pack_verb(SkPipeVerb::kDrawPosTextH, compact ? (unsigned)byteLength : 0));
     if (!compact) {
@@ -634,40 +626,16 @@ void SkPipeCanvas::onDrawPosTextH(const void* text, size_t byteLength, const SkS
     write_paint(writer, paint, kText_PaintUsage);
 }
 
-void SkPipeCanvas::onDrawTextOnPath(const void* text, size_t byteLength, const SkPath& path,
-                                    const SkMatrix* matrix, const SkPaint& paint) {
-    SkASSERT(byteLength > 0);
-
-    unsigned extra = 0;
-    if (byteLength <= kTextLength_DrawTextOnPathMask) {
-        extra |= byteLength;
-    } // else we will write the length after the packedverb
-    SkMatrix::TypeMask tm = matrix ? matrix->getType() : SkMatrix::kIdentity_Mask;
-    extra |= (unsigned)tm << kMatrixType_DrawTextOnPathShift;
-
-    SkPipeWriter writer(this);
-    writer.write32(pack_verb(SkPipeVerb::kDrawTextOnPath, extra));
-    if (byteLength > kTextLength_DrawTextOnPathMask) {
-        writer.write32(byteLength);
-    }
-    write_pad(&writer, text, byteLength);
-    writer.writePath(path);
-    if (matrix) {
-        write_sparse_matrix(&writer, *matrix);
-    }
-    write_paint(writer, paint, kText_PaintUsage);
-}
-
 void SkPipeCanvas::onDrawTextRSXform(const void* text, size_t byteLength, const SkRSXform xform[],
                                      const SkRect* cull, const SkPaint& paint) {
     SkASSERT(byteLength);
-    
+
     bool compact = fits_in(byteLength, 23);
     unsigned extra = compact ? (byteLength << 1) : 0;
     if (cull) {
         extra |= 1;
     }
-    
+
     SkPipeWriter writer(this);
     writer.write32(pack_verb(SkPipeVerb::kDrawTextRSXform, extra));
     if (!compact) {
@@ -688,7 +656,7 @@ void SkPipeCanvas::onDrawTextBlob(const SkTextBlob* blob, SkScalar x, SkScalar y
                                   const SkPaint &paint) {
     SkPipeWriter writer(this);
     writer.write32(pack_verb(SkPipeVerb::kDrawTextBlob, 0));
-    blob->flatten(writer);
+    SkTextBlobPriv::Flatten(*blob, writer);
     writer.writeScalar(x);
     writer.writeScalar(y);
     write_paint(writer, paint, kTextBlob_PaintUsage);
@@ -713,6 +681,11 @@ void SkPipeCanvas::onDrawPicture(const SkPicture* picture, const SkMatrix* matri
     }
 }
 
+void SkPipeCanvas::onDrawDrawable(SkDrawable* drawable, const SkMatrix* matrix) {
+    // TODO: Is there a better solution than just exploding the drawable?
+    drawable->draw(this, matrix);
+}
+
 void SkPipeCanvas::onDrawRegion(const SkRegion& region, const SkPaint& paint) {
     size_t size = region.writeToMemory(nullptr);
     unsigned extra = 0;
@@ -731,47 +704,16 @@ void SkPipeCanvas::onDrawRegion(const SkRegion& region, const SkPaint& paint) {
     write_paint(writer, paint, kGeometry_PaintUsage);
 }
 
-void SkPipeCanvas::onDrawVertices(VertexMode vmode, int vertexCount,
-                                  const SkPoint vertices[], const SkPoint texs[],
-                                  const SkColor colors[], SkBlendMode bmode,
-                                  const uint16_t indices[], int indexCount,
-                                  const SkPaint& paint) {
-    SkASSERT(vertexCount > 0);
-
-    unsigned extra = 0;
-    if (vertexCount <= kVCount_DrawVerticesMask) {
-        extra |= vertexCount;
-    }
-    extra |= (unsigned)vmode << kVMode_DrawVerticesShift;
-    extra |= (unsigned)bmode << kXMode_DrawVerticesShift;
-
-    if (texs) {
-        extra |= kHasTex_DrawVerticesMask;
-    }
-    if (colors) {
-        extra |= kHasColors_DrawVerticesMask;
-    }
-    if (indexCount > 0) {
-        extra |= kHasIndices_DrawVerticesMask;
-    }
+void SkPipeCanvas::onDrawVerticesObject(const SkVertices* vertices, const SkVertices::Bone bones[],
+                                        int boneCount, SkBlendMode bmode, const SkPaint& paint) {
+    unsigned extra = static_cast<unsigned>(bmode);
 
     SkPipeWriter writer(this);
     writer.write32(pack_verb(SkPipeVerb::kDrawVertices, extra));
-    if (vertexCount > kVCount_DrawVerticesMask) {
-        writer.write32(vertexCount);
-    }
-    writer.write(vertices, vertexCount * sizeof(SkPoint));
-    if (texs) {
-        writer.write(texs, vertexCount * sizeof(SkPoint));
-    }
-    if (colors) {
-        writer.write(colors, vertexCount * sizeof(SkColor));
-    }
-    if (indexCount > 0) {
-        writer.write32(indexCount);
-        SkASSERT(SkIsAlign2(indexCount));
-        writer.write(indices, indexCount * sizeof(uint16_t));
-    }
+    // TODO: dedup vertices?
+    writer.writeDataAsByteArray(vertices->encode().get());
+    writer.write32(boneCount);
+    writer.write(bones, sizeof(SkVertices::Bone) * boneCount);
     write_paint(writer, paint, kVertices_PaintUsage);
 }
 
@@ -822,37 +764,13 @@ void SkPipeCanvas::onDrawAnnotation(const SkRect& rect, const char key[], SkData
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-class A8Serializer : public SkPixelSerializer {
-protected:
-    bool onUseEncodedData(const void* data, size_t len) {
-        return true;
-    }
-
-    SkData* onEncode(const SkPixmap& pmap) {
-        if (kAlpha_8_SkColorType == pmap.colorType()) {
-            SkDynamicMemoryWStream stream;
-            stream.write("skiaimgf", 8);
-            stream.write32(pmap.width());
-            stream.write32(pmap.height());
-            stream.write16(pmap.colorType());
-            stream.write16(pmap.alphaType());
-            stream.write32(0);  // no colorspace for now
-            for (int y = 0; y < pmap.height(); ++y) {
-                stream.write(pmap.addr8(0, y), pmap.width());
-            }
-            return stream.detachAsData().release();
+static sk_sp<SkData> encode(SkImage* img, SkSerialImageProc proc, void* ctx) {
+    if (proc) {
+        if (auto data = proc(img, ctx)) {
+            return data;
         }
-        return nullptr;
     }
-};
-
-static sk_sp<SkData> default_image_serializer(SkImage* image) {
-    A8Serializer serial;
-    sk_sp<SkData> data(image->encode(&serial));
-    if (!data) {
-        data.reset(image->encode());
-    }
-    return data;
+    return img->encodeToData();
 }
 
 static bool show_deduper_traffic = false;
@@ -867,8 +785,7 @@ int SkPipeDeduper::findOrDefineImage(SkImage* image) {
         return index;
     }
 
-    sk_sp<SkData> data = fIMSerializer ? fIMSerializer->serialize(image)
-                                       : default_image_serializer(image);
+    sk_sp<SkData> data = encode(image, fProcs.fImageProc, fProcs.fImageCtx);
     if (data) {
         index = fImages.add(image->uniqueID());
         SkASSERT(index > 0);
@@ -911,12 +828,20 @@ int SkPipeDeduper::findOrDefinePicture(SkPicture* picture) {
     ASSERT_FITS_IN(index, kObjectDefinitionBits);
     fStream->write32(pack_verb(SkPipeVerb::kEndPicture, index));
 
-    SkDebugf("  definePicture(%d) %d\n",
-             index - 1, SkToU32(fStream->bytesWritten() - prevWritten));
+    if (show_deduper_traffic) {
+        SkDebugf("  definePicture(%d) %d\n",
+                 index - 1, SkToU32(fStream->bytesWritten() - prevWritten));
+    }
     return index;
 }
 
-static sk_sp<SkData> encode(SkTypeface* tf) {
+static sk_sp<SkData> encode(const SkSerialProcs& procs, SkTypeface* tf) {
+    if (procs.fTypefaceProc) {
+        auto data = procs.fTypefaceProc(tf, procs.fTypefaceCtx);
+        if (data) {
+            return data;
+        }
+    }
     SkDynamicMemoryWStream stream;
     tf->serialize(&stream);
     return sk_sp<SkData>(stream.detachAsData());
@@ -936,7 +861,7 @@ int SkPipeDeduper::findOrDefineTypeface(SkTypeface* typeface) {
         return index;
     }
 
-    sk_sp<SkData> data = fTFSerializer ? fTFSerializer->serialize(typeface) : encode(typeface);
+    sk_sp<SkData> data = encode(fProcs, typeface);
     if (data) {
         index = fTypefaces.add(typeface->uniqueID());
         SkASSERT(index > 0);
@@ -1001,14 +926,6 @@ SkPipeSerializer::~SkPipeSerializer() {
     if (fImpl->fCanvas) {
         this->endWrite();
     }
-}
-
-void SkPipeSerializer::setTypefaceSerializer(SkTypefaceSerializer* tfs) {
-    fImpl->fDeduper.setTypefaceSerializer(tfs);
-}
-
-void SkPipeSerializer::setImageSerializer(SkImageSerializer* ims) {
-    fImpl->fDeduper.setImageSerializer(ims);
 }
 
 void SkPipeSerializer::resetCache() {

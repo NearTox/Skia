@@ -11,68 +11,26 @@
 #include "SkGr.h"
 #include "SkRSXform.h"
 #include "SkRandom.h"
+#include "SkRectPriv.h"
 
-void GrDrawAtlasOp::applyPipelineOptimizations(const GrPipelineOptimizations& optimizations) {
-    SkASSERT(fGeoData.count() == 1);
-    if (optimizations.getOverrideColorIfSet(&fGeoData[0].fColor) && fHasColors) {
-        size_t vertexStride =
-                sizeof(SkPoint) + sizeof(SkPoint) + (this->hasColors() ? sizeof(GrColor) : 0);
-        uint8_t* currVertex = fGeoData[0].fVerts.begin();
-        for (int i = 0; i < 4 * fQuadCount; ++i) {
-            *(reinterpret_cast<GrColor*>(currVertex + sizeof(SkPoint))) = fGeoData[0].fColor;
-            currVertex += vertexStride;
-        }
-    }
-
-    fColor = fGeoData[0].fColor;
-    // We'd like to assert this, but we can't because of GLPrograms test
-    // SkASSERT(init.readsLocalCoords());
-}
-
-static sk_sp<GrGeometryProcessor> make_gp(bool hasColors,
+static sk_sp<GrGeometryProcessor> make_gp(const GrShaderCaps* shaderCaps,
+                                          bool hasColors,
                                           GrColor color,
                                           const SkMatrix& viewMatrix) {
     using namespace GrDefaultGeoProcFactory;
     Color gpColor(color);
     if (hasColors) {
-        gpColor.fType = Color::kAttribute_Type;
+        gpColor.fType = Color::kPremulGrColorAttribute_Type;
     }
 
-    return GrDefaultGeoProcFactory::Make(gpColor, Coverage::kSolid_Type,
+    return GrDefaultGeoProcFactory::Make(shaderCaps, gpColor, Coverage::kSolid_Type,
                                          LocalCoords::kHasExplicit_Type, viewMatrix);
 }
 
-void GrDrawAtlasOp::onPrepareDraws(Target* target) const {
-    // Setup geometry processor
-    sk_sp<GrGeometryProcessor> gp(make_gp(this->hasColors(), this->color(), this->viewMatrix()));
-
-    int instanceCount = fGeoData.count();
-    size_t vertexStride = gp->getVertexStride();
-    SkASSERT(vertexStride ==
-             sizeof(SkPoint) + sizeof(SkPoint) + (this->hasColors() ? sizeof(GrColor) : 0));
-
-    QuadHelper helper;
-    int numQuads = this->quadCount();
-    void* verts = helper.init(target, vertexStride, numQuads);
-    if (!verts) {
-        SkDebugf("Could not allocate vertices\n");
-        return;
-    }
-
-    uint8_t* vertPtr = reinterpret_cast<uint8_t*>(verts);
-    for (int i = 0; i < instanceCount; i++) {
-        const Geometry& args = fGeoData[i];
-
-        size_t allocSize = args.fVerts.count();
-        memcpy(vertPtr, args.fVerts.begin(), allocSize);
-        vertPtr += allocSize;
-    }
-    helper.recordDraw(target, gp.get());
-}
-
-GrDrawAtlasOp::GrDrawAtlasOp(GrColor color, const SkMatrix& viewMatrix, int spriteCount,
+GrDrawAtlasOp::GrDrawAtlasOp(const Helper::MakeArgs& helperArgs, GrColor color,
+                             const SkMatrix& viewMatrix, GrAAType aaType, int spriteCount,
                              const SkRSXform* xforms, const SkRect* rects, const SkColor* colors)
-        : INHERITED(ClassID()) {
+        : INHERITED(ClassID()), fHelper(helperArgs, aaType), fColor(color) {
     SkASSERT(xforms);
     SkASSERT(rects);
 
@@ -96,14 +54,13 @@ GrDrawAtlasOp::GrDrawAtlasOp(GrColor color, const SkMatrix& viewMatrix, int spri
     installedGeo.fVerts.reset(allocSize);
     uint8_t* currVertex = installedGeo.fVerts.begin();
 
-    SkRect bounds;
-    bounds.setLargestInverted();
+    SkRect bounds = SkRectPriv::MakeLargestInverted();
     int paintAlpha = GrColorUnpackA(installedGeo.fColor);
     for (int spriteIndex = 0; spriteIndex < spriteCount; ++spriteIndex) {
         // Transform rect
-        SkPoint quad[4];
+        SkPoint strip[4];
         const SkRect& currRect = rects[spriteIndex];
-        xforms[spriteIndex].toQuad(currRect.width(), currRect.height(), quad);
+        xforms[spriteIndex].toTriStrip(currRect.width(), currRect.height(), strip);
 
         // Copy colors if necessary
         if (colors) {
@@ -123,63 +80,124 @@ GrDrawAtlasOp::GrDrawAtlasOp(GrColor color, const SkMatrix& viewMatrix, int spri
         }
 
         // Copy position and uv to verts
-        *(reinterpret_cast<SkPoint*>(currVertex)) = quad[0];
+        *(reinterpret_cast<SkPoint*>(currVertex)) = strip[0];
         *(reinterpret_cast<SkPoint*>(currVertex + texOffset)) =
                 SkPoint::Make(currRect.fLeft, currRect.fTop);
-        bounds.growToInclude(quad[0].fX, quad[0].fY);
+        SkRectPriv::GrowToInclude(&bounds, strip[0]);
         currVertex += vertexStride;
 
-        *(reinterpret_cast<SkPoint*>(currVertex)) = quad[1];
-        *(reinterpret_cast<SkPoint*>(currVertex + texOffset)) =
-                SkPoint::Make(currRect.fRight, currRect.fTop);
-        bounds.growToInclude(quad[1].fX, quad[1].fY);
-        currVertex += vertexStride;
-
-        *(reinterpret_cast<SkPoint*>(currVertex)) = quad[2];
-        *(reinterpret_cast<SkPoint*>(currVertex + texOffset)) =
-                SkPoint::Make(currRect.fRight, currRect.fBottom);
-        bounds.growToInclude(quad[2].fX, quad[2].fY);
-        currVertex += vertexStride;
-
-        *(reinterpret_cast<SkPoint*>(currVertex)) = quad[3];
+        *(reinterpret_cast<SkPoint*>(currVertex)) = strip[1];
         *(reinterpret_cast<SkPoint*>(currVertex + texOffset)) =
                 SkPoint::Make(currRect.fLeft, currRect.fBottom);
-        bounds.growToInclude(quad[3].fX, quad[3].fY);
+        SkRectPriv::GrowToInclude(&bounds, strip[1]);
+        currVertex += vertexStride;
+
+        *(reinterpret_cast<SkPoint*>(currVertex)) = strip[2];
+        *(reinterpret_cast<SkPoint*>(currVertex + texOffset)) =
+                SkPoint::Make(currRect.fRight, currRect.fTop);
+        SkRectPriv::GrowToInclude(&bounds, strip[2]);
+        currVertex += vertexStride;
+
+        *(reinterpret_cast<SkPoint*>(currVertex)) = strip[3];
+        *(reinterpret_cast<SkPoint*>(currVertex + texOffset)) =
+                SkPoint::Make(currRect.fRight, currRect.fBottom);
+        SkRectPriv::GrowToInclude(&bounds, strip[3]);
         currVertex += vertexStride;
     }
 
     this->setTransformedBounds(bounds, viewMatrix, HasAABloat::kNo, IsZeroArea::kNo);
 }
 
-bool GrDrawAtlasOp::onCombineIfPossible(GrOp* t, const GrCaps& caps) {
+SkString GrDrawAtlasOp::dumpInfo() const {
+    SkString string;
+    for (const auto& geo : fGeoData) {
+        string.appendf("Color: 0x%08x, Quads: %d\n", geo.fColor, geo.fVerts.count() / 4);
+    }
+    string += fHelper.dumpInfo();
+    string += INHERITED::dumpInfo();
+    return string;
+}
+
+void GrDrawAtlasOp::onPrepareDraws(Target* target) {
+    // Setup geometry processor
+    sk_sp<GrGeometryProcessor> gp(make_gp(target->caps().shaderCaps(),
+                                          this->hasColors(),
+                                          this->color(),
+                                          this->viewMatrix()));
+
+    int instanceCount = fGeoData.count();
+    size_t vertexStride =
+            sizeof(SkPoint) + sizeof(SkPoint) + (this->hasColors() ? sizeof(GrColor) : 0);
+    SkASSERT(vertexStride == gp->debugOnly_vertexStride());
+
+    int numQuads = this->quadCount();
+    QuadHelper helper(target, vertexStride, numQuads);
+    void* verts = helper.vertices();
+    if (!verts) {
+        SkDebugf("Could not allocate vertices\n");
+        return;
+    }
+
+    uint8_t* vertPtr = reinterpret_cast<uint8_t*>(verts);
+    for (int i = 0; i < instanceCount; i++) {
+        const Geometry& args = fGeoData[i];
+
+        size_t allocSize = args.fVerts.count();
+        memcpy(vertPtr, args.fVerts.begin(), allocSize);
+        vertPtr += allocSize;
+    }
+    auto pipe = fHelper.makePipeline(target);
+    helper.recordDraw(target, std::move(gp), pipe.fPipeline, pipe.fFixedDynamicState);
+}
+
+GrOp::CombineResult GrDrawAtlasOp::onCombineIfPossible(GrOp* t, const GrCaps& caps) {
     GrDrawAtlasOp* that = t->cast<GrDrawAtlasOp>();
 
-    if (!GrPipeline::CanCombine(*this->pipeline(), this->bounds(), *that->pipeline(),
-                                that->bounds(), caps)) {
-        return false;
+    if (!fHelper.isCompatible(that->fHelper, caps, this->bounds(), that->bounds())) {
+        return CombineResult::kCannotCombine;
     }
 
     // We currently use a uniform viewmatrix for this op.
     if (!this->viewMatrix().cheapEqualTo(that->viewMatrix())) {
-        return false;
+        return CombineResult::kCannotCombine;
     }
 
     if (this->hasColors() != that->hasColors()) {
-        return false;
+        return CombineResult::kCannotCombine;
     }
 
     if (!this->hasColors() && this->color() != that->color()) {
-        return false;
+        return CombineResult::kCannotCombine;
     }
 
     fGeoData.push_back_n(that->fGeoData.count(), that->fGeoData.begin());
     fQuadCount += that->quadCount();
 
     this->joinBounds(*that);
-    return true;
+    return CombineResult::kMerged;
 }
 
-#ifdef GR_TEST_UTILS
+GrDrawOp::FixedFunctionFlags GrDrawAtlasOp::fixedFunctionFlags() const {
+    return fHelper.fixedFunctionFlags();
+}
+
+GrDrawOp::RequiresDstTexture GrDrawAtlasOp::finalize(const GrCaps& caps,
+                                                     const GrAppliedClip* clip) {
+    GrProcessorAnalysisColor gpColor;
+    if (this->hasColors()) {
+        gpColor.setToUnknown();
+    } else {
+        gpColor.setToConstant(fColor);
+    }
+    auto result = fHelper.xpRequiresDstTexture(caps, clip, GrProcessorAnalysisCoverage::kNone,
+                                               &gpColor);
+    if (gpColor.isConstant(&fColor)) {
+        fHasColors = false;
+    }
+    return result;
+}
+
+#if GR_TEST_UTILS
 
 static SkRSXform random_xform(SkRandom* random) {
     static const SkScalar kMinExtent = -100.f;
@@ -222,7 +240,7 @@ static void randomize_params(uint32_t count, SkRandom* random, SkTArray<SkRSXfor
     }
 }
 
-DRAW_OP_TEST_DEFINE(GrDrawAtlasOp) {
+GR_DRAW_OP_TEST_DEFINE(GrDrawAtlasOp) {
     uint32_t spriteCount = random->nextRangeU(1, 100);
 
     SkTArray<SkRSXform> xforms(spriteCount);
@@ -234,9 +252,13 @@ DRAW_OP_TEST_DEFINE(GrDrawAtlasOp) {
     randomize_params(spriteCount, random, &xforms, &texRects, &colors, hasColors);
 
     SkMatrix viewMatrix = GrTest::TestMatrix(random);
+    GrAAType aaType = GrAAType::kNone;
+    if (GrFSAAType::kUnifiedMSAA == fsaaType && random->nextBool()) {
+        aaType = GrAAType::kMSAA;
+    }
 
-    GrColor color = GrRandomColor(random);
-    return GrDrawAtlasOp::Make(color, viewMatrix, spriteCount, xforms.begin(), texRects.begin(),
+    return GrDrawAtlasOp::Make(context, std::move(paint), viewMatrix, aaType, spriteCount,
+                               xforms.begin(), texRects.begin(),
                                hasColors ? colors.begin() : nullptr);
 }
 

@@ -7,14 +7,11 @@
 
 #include "gm.h"
 #include "SkSurface.h"
+#include "sk_tool_utils.h"
 
 static sk_sp<SkSurface> make_surface(SkCanvas* root, int N) {
     SkImageInfo info = SkImageInfo::MakeN32Premul(N, N);
-    auto surface = root->makeSurface(info);
-    if (!surface) {
-        surface = SkSurface::MakeRaster(info);
-    }
-    return surface;
+    return sk_tool_utils::makeSurface(root, info);
 }
 
 static sk_sp<SkImage> make_image(SkCanvas* root, SkIRect* center) {
@@ -70,7 +67,7 @@ protected:
     }
 
     void onDraw(SkCanvas* canvas) override {
-        if (nullptr == fBitmap.pixelRef()) {
+        if (nullptr == fBitmap.pixelRef() || !fImage->isValid(canvas->getGrContext())) {
             fImage = make_image(canvas, &fCenter);
             image_to_bitmap(fImage.get(), &fBitmap);
         }
@@ -78,7 +75,7 @@ protected:
         // amount of bm that should not be stretched (unless we have to)
         const SkScalar fixed = SkIntToScalar(fBitmap.width() - fCenter.width());
 
-        const SkTSize<SkScalar> size[] = {
+        const SkSize size[] = {
             { fixed * 4 / 5, fixed * 4 / 5 },   // shrink in both axes
             { fixed * 4 / 5, fixed * 4 },       // shrink in X
             { fixed * 4,     fixed * 4 / 5 },   // shrink in Y

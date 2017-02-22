@@ -5,10 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-
 #include "Resources.h"
-#include "SampleCode.h"
+#include "Sample.h"
 #include "SkAnimTimer.h"
 #include "SkCanvas.h"
 #include "SkInterpolator.h"
@@ -28,11 +26,8 @@ static sk_sp<SkSurface> make_surface(SkCanvas* canvas, const SkImageInfo& info) 
 }
 
 static sk_sp<SkShader> make_shader(const SkRect& bounds) {
-    sk_sp<SkImage> image(GetResourceAsImage("mandrill_128.png"));
-    if (!image) {
-        return nullptr;
-    }
-    return image->makeShader(SkShader::kClamp_TileMode, SkShader::kClamp_TileMode);
+    sk_sp<SkImage> image(GetResourceAsImage("images/mandrill_128.png"));
+    return image ? image->makeShader() : nullptr;
 }
 
 #define N   128
@@ -141,7 +136,7 @@ static void draw_box_frame(SkCanvas* canvas, int width, int height) {
     canvas->drawLine(r.left(), r.bottom(), r.right(), r.top(), p);
 }
 
-class FilterQualityView : public SampleView {
+class FilterQualityView : public Sample {
     sk_sp<SkImage>  fImage;
     AnimValue       fScale, fAngle;
     SkSize          fCell;
@@ -150,7 +145,7 @@ class FilterQualityView : public SampleView {
     bool            fShowFatBits;
 
 public:
-    FilterQualityView() : fImage(make_image()), fTrans(2, 2), fShowFatBits(true) {
+    FilterQualityView() : fTrans(2, 2), fShowFatBits(true) {
         fCell.set(256, 256);
 
         fScale.set(1, SK_Scalar1 / 8, 1);
@@ -170,19 +165,19 @@ public:
     }
 
 protected:
-    bool onQuery(SkEvent* evt) override {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "FilterQuality");
+    bool onQuery(Sample::Event* evt) override {
+        if (Sample::TitleQ(*evt)) {
+            Sample::TitleR(evt, "FilterQuality");
             return true;
         }
         SkUnichar uni;
-        if (SampleCode::CharQ(*evt, &uni)) {
+        if (Sample::CharQ(*evt, &uni)) {
             switch (uni) {
-                case '1': fAngle.inc(-ANGLE_DELTA); this->inval(nullptr); return true;
-                case '2': fAngle.inc( ANGLE_DELTA); this->inval(nullptr); return true;
-                case '3': fScale.inc(-SCALE_DELTA); this->inval(nullptr); return true;
-                case '4': fScale.inc( SCALE_DELTA); this->inval(nullptr); return true;
-                case '5': fShowFatBits = !fShowFatBits; this->inval(nullptr); return true;
+                case '1': fAngle.inc(-ANGLE_DELTA); return true;
+                case '2': fAngle.inc( ANGLE_DELTA); return true;
+                case '3': fScale.inc(-SCALE_DELTA); return true;
+                case '4': fScale.inc( SCALE_DELTA); return true;
+                case '5': fShowFatBits = !fShowFatBits; return true;
                 default: break;
             }
         }
@@ -253,6 +248,10 @@ protected:
         canvas->drawLine(r.centerX(), r.top(), r.centerX(), r.bottom(), p);
     }
 
+    void onOnceBeforeDraw() override {
+        fImage = make_image();
+    }
+
     void onDrawContent(SkCanvas* canvas) override {
         fCell.set(this->height() / 2, this->height() / 2);
 
@@ -280,14 +279,14 @@ protected:
         paint.setTextSize(36);
         SkString str;
         str.appendScalar(fScale);
-        canvas->drawText(str.c_str(), str.size(), textX, 100, paint);
+        canvas->drawString(str, textX, 100, paint);
         str.reset(); str.appendScalar(fAngle);
-        canvas->drawText(str.c_str(), str.size(), textX, 150, paint);
+        canvas->drawString(str, textX, 150, paint);
 
         str.reset(); str.appendScalar(trans[0]);
-        canvas->drawText(str.c_str(), str.size(), textX, 200, paint);
+        canvas->drawString(str, textX, 200, paint);
         str.reset(); str.appendScalar(trans[1]);
-        canvas->drawText(str.c_str(), str.size(), textX, 250, paint);
+        canvas->drawString(str, textX, 250, paint);
     }
 
     bool onAnimate(const SkAnimTimer& timer) override {
@@ -295,16 +294,10 @@ protected:
         return true;
     }
 
-    virtual bool handleKey(SkKey key) {
-        this->inval(nullptr);
-        return true;
-    }
-
 private:
-    typedef SampleView INHERITED;
+    typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() { return new FilterQualityView; }
-static SkViewRegister reg(MyFactory);
+DEF_SAMPLE( return new FilterQualityView(); )

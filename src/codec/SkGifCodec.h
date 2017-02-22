@@ -4,6 +4,8 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
+#ifndef SkGifCodec_DEFINED
+#define SkGifCodec_DEFINED
 
 #include "SkCodec.h"
 #include "SkCodecAnimation.h"
@@ -25,20 +27,19 @@ public:
 
     /*
      * Assumes IsGif was called and returned true
-     * Creates a gif decoder
      * Reads enough of the stream to determine the image format
      */
-    static SkCodec* NewFromStream(SkStream*);
+    static std::unique_ptr<SkCodec> MakeFromStream(std::unique_ptr<SkStream>, Result*);
 
     // Callback for SkGifImageReader when a row is available.
-    bool haveDecodedRow(size_t frameIndex, const unsigned char* rowBegin,
-                        size_t rowNumber, unsigned repeatCount, bool writeTransparentPixels);
+    void haveDecodedRow(int frameIndex, const unsigned char* rowBegin,
+                        int rowNumber, int repeatCount, bool writeTransparentPixels);
 protected:
     /*
      * Performs the full gif decode
      */
     Result onGetPixels(const SkImageInfo&, void*, size_t, const Options&,
-            SkPMColor*, int*, int*) override;
+            int*) override;
 
     SkEncodedImageFormat onGetEncodedFormat() const override {
         return SkEncodedImageFormat::kGIF;
@@ -46,15 +47,18 @@ protected:
 
     bool onRewind() override;
 
-    uint64_t onGetFillValue(const SkImageInfo&) const override;
-
-    std::vector<FrameInfo> onGetFrameInfo() override;
+    int onGetFrameCount() override;
+    bool onGetFrameInfo(int, FrameInfo*) const override;
     int onGetRepetitionCount() override;
 
     Result onStartIncrementalDecode(const SkImageInfo& /*dstInfo*/, void*, size_t,
-            const SkCodec::Options&, SkPMColor*, int*) override;
+            const SkCodec::Options&) override;
 
     Result onIncrementalDecode(int*) override;
+
+    const SkFrameHolder* getFrameHolder() const override {
+        return fReader.get();
+    }
 
 private:
 
@@ -64,14 +68,12 @@ private:
      * @param dstInfo         Contains the requested dst color type.
      * @param frameIndex      Frame whose color table to use.
      */
-    void initializeColorTable(const SkImageInfo& dstInfo, size_t frameIndex);
+    void initializeColorTable(const SkImageInfo& dstInfo, int frameIndex);
 
    /*
-    * Does necessary setup, including setting up the color table and swizzler,
-    * and reports color info to the client.
+    * Does necessary setup, including setting up the color table and swizzler.
     */
-    Result prepareToDecode(const SkImageInfo& dstInfo, SkPMColor* inputColorPtr,
-            int* inputColorCount, const Options& opts);
+    Result prepareToDecode(const SkImageInfo& dstInfo, const Options& opts);
 
     /*
      * Initializes the swizzler.
@@ -82,7 +84,7 @@ private:
      * @param frameIndex Which frame we are decoding. This determines the frameRect
      *                   to use.
      */
-    void initializeSwizzler(const SkImageInfo& dstInfo, size_t frameIndex);
+    void initializeSwizzler(const SkImageInfo& dstInfo, int frameIndex);
 
     SkSampler* getSampler(bool createIfNecessary) override {
         SkASSERT(fSwizzler);
@@ -124,7 +126,7 @@ private:
      * Called only by NewFromStream
      * Takes ownership of the SkGifImageReader
      */
-    SkGifCodec(const SkEncodedInfo&, const SkImageInfo&, SkGifImageReader*);
+    SkGifCodec(SkEncodedInfo&&, SkGifImageReader*);
 
     std::unique_ptr<SkGifImageReader>   fReader;
     std::unique_ptr<uint8_t[]>          fTmpBuffer;
@@ -148,7 +150,7 @@ private:
     // the background, in which case it is set once and left alone.
     int                                 fRowsDecoded;
     std::unique_ptr<uint32_t[]>         fXformBuffer;
-    bool                                fXformOnDecode;
 
     typedef SkCodec INHERITED;
 };
+#endif  // SkGifCodec_DEFINED

@@ -18,23 +18,14 @@
  */
 class DisableColorXP : public GrXferProcessor {
 public:
-    static GrXferProcessor* Create() { return new DisableColorXP; }
-
-    ~DisableColorXP() override {}
+    DisableColorXP()
+    : INHERITED(kDisableColorXP_ClassID) {}
 
     const char* name() const override { return "Disable Color"; }
 
     GrGLSLXferProcessor* createGLSLInstance() const override;
 
 private:
-    DisableColorXP();
-
-    GrXferProcessor::OptFlags onGetOptimizations(const GrPipelineAnalysis&,
-                                                 bool doesStencilWrite,
-                                                 GrColor* color,
-                                                 const GrCaps& caps) const override {
-        return GrXferProcessor::kIgnoreColor_OptFlag;
-    }
 
     void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
 
@@ -63,7 +54,7 @@ private:
         // you do not give gl_FragColor a value, the gl context is lost and we end up drawing
         // nothing. So this fix just sets the gl_FragColor arbitrarily to 0.
         GrGLSLXPFragmentBuilder* fragBuilder = args.fXPFragBuilder;
-        fragBuilder->codeAppendf("%s = vec4(0);", args.fOutputPrimary);
+        fragBuilder->codeAppendf("%s = half4(0);", args.fOutputPrimary);
     }
 
     void onSetData(const GrGLSLProgramDataManager&, const GrXferProcessor&) override {}
@@ -72,10 +63,6 @@ private:
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-
-DisableColorXP::DisableColorXP() {
-    this->initClassID<DisableColorXP>();
-}
 
 void DisableColorXP::onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
     GLDisableColorXP::GenKey(*this, caps, b);
@@ -88,16 +75,18 @@ void DisableColorXP::onGetBlendInfo(GrXferProcessor::BlendInfo* blendInfo) const
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-GrXferProcessor* GrDisableColorXPFactory::onCreateXferProcessor(const GrCaps& caps,
-                                                                const GrPipelineAnalysis& analysis,
-                                                                bool hasMixedSamples,
-                                                                const DstTexture* dst) const {
-    SkASSERT(!analysis.fUsesPLSDstRead);
-    return DisableColorXP::Create();
+sk_sp<const GrXferProcessor> GrDisableColorXPFactory::makeXferProcessor(
+        const GrProcessorAnalysisColor&,
+        GrProcessorAnalysisCoverage,
+        bool hasMixedSamples,
+        const GrCaps& caps) const {
+    return sk_sp<const GrXferProcessor>(new DisableColorXP);
 }
 
 GR_DEFINE_XP_FACTORY_TEST(GrDisableColorXPFactory);
 
+#if GR_TEST_UTILS
 const GrXPFactory* GrDisableColorXPFactory::TestGet(GrProcessorTestData*) {
     return GrDisableColorXPFactory::Get();
 }
+#endif

@@ -6,55 +6,43 @@
  */
 
 #include "GrImageTextureMaker.h"
-
 #include "GrContext.h"
+#include "GrContextPriv.h"
 #include "GrGpuResourcePriv.h"
-#include "SkGrPriv.h"
-#include "SkImage_Base.h"
+#include "SkGr.h"
 #include "SkImageCacherator.h"
+#include "SkImage_Base.h"
 #include "SkPixelRef.h"
 
-static bool cacher_is_alpha_only(const SkImageCacherator& cacher) {
-    return kAlpha_8_SkColorType == cacher.info().colorType();
+GrImageTextureMaker::GrImageTextureMaker(GrContext* context, const SkImage* client,
+                                         SkImage::CachingHint chint)
+        : INHERITED(context, client->width(), client->height(), client->isAlphaOnly())
+        , fCacher(as_IB(client)->peekCacherator())
+        , fClient(client)
+        , fCachingHint(chint) {
+    SkASSERT(fCacher);
+    GrMakeKeyFromImageID(&fOriginalKey, client->uniqueID(),
+                         SkIRect::MakeWH(this->width(), this->height()));
 }
 
-GrImageTextureMaker::GrImageTextureMaker(GrContext* context, SkImageCacherator* cacher,
-                                         const SkImage* client, SkImage::CachingHint chint)
-    : INHERITED(context, cacher->info().width(), cacher->info().height(),
-                cacher_is_alpha_only(*cacher))
-    , fCacher(cacher)
-    , fClient(client)
-    , fCachingHint(chint) {
-    if (client) {
-        GrMakeKeyFromImageID(&fOriginalKey, client->uniqueID(),
-                             SkIRect::MakeWH(this->width(), this->height()));
-    }
-}
-
-GrTexture* GrImageTextureMaker::refOriginalTexture(bool willBeMipped, SkColorSpace* dstColorSpace) {
-    return fCacher->lockTexture(this->context(), fOriginalKey, fClient, fCachingHint, willBeMipped,
-                                dstColorSpace);
+sk_sp<GrTextureProxy> GrImageTextureMaker::refOriginalTextureProxy(bool willBeMipped,
+                                                                   SkColorSpace* dstColorSpace,
+                                                                   AllowedTexGenType onlyIfFast) {
+    return fCacher->lockTextureProxy(this->context(), fOriginalKey, fCachingHint,
+                                     willBeMipped, dstColorSpace, onlyIfFast);
 }
 
 void GrImageTextureMaker::makeCopyKey(const CopyParams& stretch, GrUniqueKey* paramsCopyKey,
                                       SkColorSpace* dstColorSpace) {
     if (fOriginalKey.isValid() && SkImage::kAllow_CachingHint == fCachingHint) {
-        SkImageCacherator::CachedFormat cacheFormat =
-            fCacher->chooseCacheFormat(dstColorSpace, this->context()->caps());
         GrUniqueKey cacheKey;
-        fCacher->makeCacheKeyFromOrigKey(fOriginalKey, cacheFormat, &cacheKey);
+        fCacher->makeCacheKeyFromOrigKey(fOriginalKey, &cacheKey);
         MakeCopyKeyFromOrigKey(cacheKey, stretch, paramsCopyKey);
     }
 }
 
-void GrImageTextureMaker::didCacheCopy(const GrUniqueKey& copyKey) {
-    if (fClient) {
-        as_IB(fClient)->notifyAddedToCache();
-    }
-}
-
 SkAlphaType GrImageTextureMaker::alphaType() const {
-    return fCacher->info().alphaType();
+    return fClient->alphaType();
 }
 sk_sp<SkColorSpace> GrImageTextureMaker::getColorSpace(SkColorSpace* dstColorSpace) {
     return fCacher->getColorSpace(this->context(), dstColorSpace);

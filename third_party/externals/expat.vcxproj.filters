@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="expat\lib\xmlrole.c" />
+    <ClCompile Include="expat\lib\xmltok.c" />
+    <ClCompile Include="expat\lib\xmlparse.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="expat\lib\ascii.h" />
+    <ClInclude Include="expat\lib\asciitab.h" />
+    <ClInclude Include="expat\lib\expat.h" />
+    <ClInclude Include="expat\lib\expat_external.h" />
+    <ClInclude Include="expat\lib\iasciitab.h" />
+    <ClInclude Include="expat\lib\internal.h" />
+    <ClInclude Include="expat\lib\latin1tab.h" />
+    <ClInclude Include="expat\lib\nametab.h" />
+    <ClInclude Include="expat\lib\utf8tab.h" />
+    <ClInclude Include="expat\lib\xmlrole.h" />
+    <ClInclude Include="expat\lib\xmltok.h" />
+    <ClInclude Include="expat\lib\xmltok_impl.h" />
+  </ItemGroup>
+</Project>

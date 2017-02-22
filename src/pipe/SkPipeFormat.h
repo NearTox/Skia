@@ -17,7 +17,7 @@ enum class SkPipeVerb : uint8_t {
     kSaveLayer,
     kRestore,           // extra == 0
     kConcat,            // extra == SkMatrix::MaskType
-    
+
     kClipRect,          // extra == (SkRegion::Op << 1) | isAntiAlias:1
     kClipRRect,         // extra == (SkRegion::Op << 1) | isAntiAlias:1
     kClipPath,          // extra == (SkRegion::Op << 1) | isAntiAlias:1
@@ -30,7 +30,6 @@ enum class SkPipeVerb : uint8_t {
     kDrawPosText,       // extra == byteLength:24 else next 32
     kDrawPosTextH,      // extra == byteLength:24 else next 32
     kDrawRegion,        // extra == size:24 of region, or 0 means next 32
-    kDrawTextOnPath,
     kDrawTextBlob,
     kDrawTextRSXform,   // extra == (byteLength:23 << 1) else next 32 | has_cull_rect:1
     kDrawPatch,
@@ -38,16 +37,17 @@ enum class SkPipeVerb : uint8_t {
     kDrawPoints,        // extra == PointMode
     kDrawRect,          // extra == 0
     kDrawPath,          // extra == 0
+    kDrawShadowRec,     // extra == 0
     kDrawOval,          // extra == 0
     kDrawRRect,         // extra == 0
-    
+
     kDrawImage,         // extra == has_paint:1
     kDrawImageRect,     // extra == constraint | has_src_rect | has_paint
     kDrawImageNine,     // extra == has_paint:1
-    kDrawImageLattice,  // extra == x_count:8 | y_count:8 | has_paint:1
-    
+    kDrawImageLattice,  // extra == has_paint:1
+
     kDrawVertices,
-    
+
     kDrawPicture,       // extra == picture_index
     kDrawAnnotation,    // extra == (key_len_plus_1:23 << 1) else next 32 | has_data:1
 
@@ -107,6 +107,8 @@ enum {
     kHasPaint_SaveLayerMask         = 1 << 9,
     kHasBackdrop_SaveLayerMask      = 1 << 10,
     kDontClipToLayer_SaveLayerMask  = 1 << 11,
+    kHasClipMask_SaveLayerMask      = 1 << 12,
+    kHasClipMatrix_SaveLayerMask    = 1 << 13,
 };
 
 enum {
@@ -175,12 +177,6 @@ enum {
     kHasTex_DrawVerticesMask            = 1 << 21,
     kHasColors_DrawVerticesMask         = 1 << 22,
     kHasIndices_DrawVerticesMask        = 1 << 23,
-};
-
-enum {
-    kTextLength_DrawTextOnPathMask      = (1 << 16) - 1,
-    kMatrixType_DrawTextOnPathShift     = 16,
-    kMatrixType_DrawTextOnPathMask      = 0xF << kMatrixType_DrawTextOnPathShift,
 };
 
 enum {

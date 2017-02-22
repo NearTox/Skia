@@ -8,25 +8,26 @@
 #ifndef GrPathRenderer_DEFINED
 #define GrPathRenderer_DEFINED
 
-#include "GrCaps.h"
-#include "GrRenderTargetContext.h"
-#include "GrPaint.h"
-#include "GrResourceProvider.h"
-#include "GrShape.h"
-
-#include "SkDrawProcs.h"
+#include "GrTypesPriv.h"
 #include "SkTArray.h"
+#include "SkRefCnt.h"
 
-class SkPath;
+class GrCaps;
+class GrClip;
+class GrContext;
 class GrFixedClip;
-struct GrPoint;
+class GrHardClip;
+class GrPaint;
+class GrRenderTargetContext;
+class GrShape;
+class GrStyle;
+struct GrUserStencilSettings;
+struct SkIRect;
+class SkMatrix;
+class SkPath;
 
 /**
  *  Base class for drawing paths into a GrOpList.
- *
- *  Derived classes can use stages GrPaint::kTotalStages through GrPipelineBuilder::kNumStages-1.
- *  The stages before GrPaint::kTotalStages are reserved for setting up the draw (i.e., textures and
- *  filter masks).
  */
 class SK_API GrPathRenderer : public SkRefCnt {
 public:
@@ -40,11 +41,10 @@ public:
      * rendered into the stencil.
      *
      * A GrPathRenderer can provide three levels of support for stenciling paths:
-     * 1) kNoRestriction: This is the most general. The caller sets up the GrPipelineBuilder on the
-     *                    target and calls drawPath(). The path is rendered exactly as the draw
-     *                    state indicates including support for simultaneous color and stenciling
-     *                    with arbitrary stenciling rules. Pixels partially covered by AA paths are
-     *                    affected by the stencil settings.
+     * 1) kNoRestriction: This is the most general. The caller passes a GrPaint and calls drawPath().
+     *                    The path is rendered exactly as the draw state indicates including support
+     *                    for simultaneous color and stenciling with arbitrary stenciling rules.
+     *                    Pixels partially covered by AA paths are affected by the stencil settings.
      * 2) kStencilOnly: The path renderer cannot apply arbitrary stencil rules nor shade and stencil
      *                  simultaneously. The path renderer does support the stencilPath() function
      *                  which performs no color writes and writes a non-zero stencil value to pixels
@@ -64,24 +64,19 @@ public:
      * @param shape   the shape that will be drawn. Must be simple fill styled and non-inverse
      *                filled.
      */
-    StencilSupport getStencilSupport(const GrShape& shape) const {
-        SkDEBUGCODE(SkPath path;)
-        SkDEBUGCODE(shape.asPath(&path);)
-        SkASSERT(shape.style().isSimpleFill());
-        SkASSERT(!path.isInverseFillType());
-        return this->onGetStencilSupport(shape);
-    }
+    StencilSupport getStencilSupport(const GrShape& shape) const;
 
-    /** Args to canDrawPath()
-     *
-     * fShaderCaps       The shader caps
-     * fPipelineBuilder  The pipelineBuilder
-     * fViewMatrix       The viewMatrix
-     * fShape            The shape to draw
-     * fAntiAlias        The type of anti aliasing required.
-     */
+    enum class CanDrawPath {
+        kNo,
+        kAsBackup, // i.e. This renderer is better than SW fallback if no others can draw the path.
+        kYes
+    };
+
     struct CanDrawPathArgs {
-        const GrShaderCaps*         fShaderCaps;
+        SkDEBUGCODE(CanDrawPathArgs() { memset(this, 0, sizeof(*this)); }) // For validation.
+
+        const GrCaps*               fCaps;
+        const SkIRect*              fClipConservativeBounds;
         const SkMatrix*             fViewMatrix;
         const GrShape*              fShape;
         GrAAType                    fAAType;
@@ -91,7 +86,8 @@ public:
 
 #ifdef SK_DEBUG
         void validate() const {
-            SkASSERT(fShaderCaps);
+            SkASSERT(fCaps);
+            SkASSERT(fClipConservativeBounds);
             SkASSERT(fViewMatrix);
             SkASSERT(fShape);
         }
@@ -99,46 +95,33 @@ public:
     };
 
     /**
-     * Returns true if this path renderer is able to render the path. Returning false allows the
-     * caller to fallback to another path renderer This function is called when searching for a path
-     * renderer capable of rendering a path.
-     *
-     * @return  true if the path can be drawn by this object, false otherwise.
+     * Returns how well this path renderer is able to render the given path. Returning kNo or
+     * kAsBackup allows the caller to keep searching for a better path renderer. This function is
+     * called when searching for the best path renderer to draw a path.
      */
-    bool canDrawPath(const CanDrawPathArgs& args) const {
+    CanDrawPath canDrawPath(const CanDrawPathArgs& args) const {
         SkDEBUGCODE(args.validate();)
         return this->onCanDrawPath(args);
     }
 
-    /**
-     * Args to drawPath()
-     *
-     * fTarget                The target that the path will be rendered to
-     * fResourceProvider      The resource provider for creating gpu resources to render the path
-     * fPipelineBuilder       The pipelineBuilder
-     * fClip                  The clip
-     * fColor                 Color to render with
-     * fViewMatrix            The viewMatrix
-     * fShape                 The shape to draw
-     * fAAtype                true if anti-aliasing is required.
-     * fGammaCorrect          true if gamma-correct rendering is to be used.
-     */
     struct DrawPathArgs {
-        GrResourceProvider*          fResourceProvider;
+        GrContext*                   fContext;
         GrPaint&&                    fPaint;
         const GrUserStencilSettings* fUserStencilSettings;
         GrRenderTargetContext*       fRenderTargetContext;
         const GrClip*                fClip;
+        const SkIRect*               fClipConservativeBounds;
         const SkMatrix*              fViewMatrix;
         const GrShape*               fShape;
         GrAAType                     fAAType;
         bool                         fGammaCorrect;
 #ifdef SK_DEBUG
         void validate() const {
-            SkASSERT(fResourceProvider);
+            SkASSERT(fContext);
             SkASSERT(fUserStencilSettings);
             SkASSERT(fRenderTargetContext);
             SkASSERT(fClip);
+            SkASSERT(fClipConservativeBounds);
             SkASSERT(fViewMatrix);
             SkASSERT(fShape);
         }
@@ -147,62 +130,24 @@ public:
 
     /**
      * Draws the path into the draw target. If getStencilSupport() would return kNoRestriction then
-     * the subclass must respect the stencil settings of the GrPipelineBuilder.
+     * the subclass must respect the stencil settings.
      */
-    bool drawPath(const DrawPathArgs& args) {
-        SkDEBUGCODE(args.validate();)
-#ifdef SK_DEBUG
-        CanDrawPathArgs canArgs;
-        canArgs.fShaderCaps = args.fResourceProvider->caps()->shaderCaps();
-        canArgs.fViewMatrix = args.fViewMatrix;
-        canArgs.fShape = args.fShape;
-        canArgs.fAAType = args.fAAType;
-
-        canArgs.fHasUserStencilSettings = !args.fUserStencilSettings->isUnused();
-        SkASSERT(!(canArgs.fAAType == GrAAType::kMSAA &&
-                   !args.fRenderTargetContext->isUnifiedMultisampled()));
-        SkASSERT(!(canArgs.fAAType == GrAAType::kMixedSamples &&
-                   !args.fRenderTargetContext->isStencilBufferMultisampled()));
-        SkASSERT(this->canDrawPath(canArgs));
-        if (!args.fUserStencilSettings->isUnused()) {
-            SkPath path;
-            args.fShape->asPath(&path);
-            SkASSERT(args.fShape->style().isSimpleFill());
-            SkASSERT(kNoRestriction_StencilSupport == this->getStencilSupport(*args.fShape));
-        }
-#endif
-        return this->onDrawPath(args);
-    }
-
-    /* Args to stencilPath().
-     *
-     * fResourceProvider      The resource provider for creating gpu resources to render the path
-     * fRenderTargetContext   The target of the draws
-     * fViewMatrix            Matrix applied to the path.
-     * fPath                  The path to draw.
-     * fAAType                The type of AA, cannot be kCoverage.
+    bool drawPath(const DrawPathArgs& args);
+    /**
+     * Args to stencilPath(). fAAType cannot be kCoverage.
      */
     struct StencilPathArgs {
-        GrResourceProvider*    fResourceProvider;
+        SkDEBUGCODE(StencilPathArgs() { memset(this, 0, sizeof(*this)); }) // For validation.
+
+        GrContext*             fContext;
         GrRenderTargetContext* fRenderTargetContext;
-        const GrClip*          fClip;
+        const GrHardClip*      fClip;
+        const SkIRect*         fClipConservativeBounds;
         const SkMatrix*        fViewMatrix;
         GrAAType               fAAType;
         const GrShape*         fShape;
 
-#ifdef SK_DEBUG
-        void validate() const {
-            SkASSERT(fResourceProvider);
-            SkASSERT(fRenderTargetContext);
-            SkASSERT(fViewMatrix);
-            SkASSERT(fShape);
-            SkASSERT(fShape->style().isSimpleFill());
-            SkASSERT(GrAAType::kCoverage != fAAType);
-            SkPath path;
-            fShape->asPath(&path);
-            SkASSERT(!path.isInverseFillType());
-        }
-#endif
+        SkDEBUGCODE(void validate() const);
     };
 
     /**
@@ -217,21 +162,8 @@ public:
 
     // Helper for determining if we can treat a thin stroke as a hairline w/ coverage.
     // If we can, we draw lots faster (raster device does this same test).
-    static bool IsStrokeHairlineOrEquivalent(const GrStyle& style, const SkMatrix& matrix,
-                                             SkScalar* outCoverage) {
-        if (style.pathEffect()) {
-            return false;
-        }
-        const SkStrokeRec& stroke = style.strokeRec();
-        if (stroke.isHairlineStyle()) {
-            if (outCoverage) {
-                *outCoverage = SK_Scalar1;
-            }
-            return true;
-        }
-        return stroke.getStyle() == SkStrokeRec::kStroke_Style &&
-            SkDrawTreatAAStrokeAsHairline(stroke.getWidth(), matrix, outCoverage);
-    }
+    static bool IsStrokeHairlineOrEquivalent(const GrStyle&, const SkMatrix&,
+                                             SkScalar* outCoverage);
 
 protected:
     // Helper for getting the device bounds of a path. Inverse filled paths will have bounds set
@@ -258,36 +190,13 @@ private:
     /**
      * Subclass implementation of canDrawPath()
      */
-    virtual bool onCanDrawPath(const CanDrawPathArgs& args) const = 0;
+    virtual CanDrawPath onCanDrawPath(const CanDrawPathArgs& args) const = 0;
 
     /**
      * Subclass implementation of stencilPath(). Subclass must override iff it ever returns
      * kStencilOnly in onGetStencilSupport().
      */
-    virtual void onStencilPath(const StencilPathArgs& args) {
-        static constexpr GrUserStencilSettings kIncrementStencil(
-            GrUserStencilSettings::StaticInit<
-                 0xffff,
-                 GrUserStencilTest::kAlways,
-                 0xffff,
-                 GrUserStencilOp::kReplace,
-                 GrUserStencilOp::kReplace,
-                 0xffff>()
-        );
-
-        GrPaint paint;
-
-        DrawPathArgs drawArgs{args.fResourceProvider,
-                              std::move(paint),
-                              &kIncrementStencil,
-                              args.fRenderTargetContext,
-                              nullptr,  // clip
-                              args.fViewMatrix,
-                              args.fShape,
-                              args.fAAType,
-                              false};
-        this->drawPath(drawArgs);
-    }
+    virtual void onStencilPath(const StencilPathArgs&);
 
     typedef SkRefCnt INHERITED;
 };

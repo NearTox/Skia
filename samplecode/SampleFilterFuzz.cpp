@@ -4,15 +4,12 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SampleCode.h"
+#include "Sample.h"
 #include "Sk1DPathEffect.h"
 #include "Sk2DPathEffect.h"
 #include "SkAlphaThresholdFilter.h"
-#include "SkArcToPathEffect.h"
 #include "SkBlurImageFilter.h"
-#include "SkBlurMaskFilter.h"
 #include "SkCanvas.h"
-#include "SkColorCubeFilter.h"
 #include "SkColorFilter.h"
 #include "SkColorFilterImageFilter.h"
 #include "SkColorMatrixFilter.h"
@@ -24,9 +21,7 @@
 #include "SkDisplacementMapEffect.h"
 #include "SkDropShadowImageFilter.h"
 #include "SkEmbossMaskFilter.h"
-#include "SkFlattenableSerialization.h"
 #include "SkImageSource.h"
-#include "SkLayerRasterizer.h"
 #include "SkLightingImageFilter.h"
 #include "SkLumaColorFilter.h"
 #include "SkMagnifierImageFilter.h"
@@ -40,11 +35,14 @@
 #include "SkPictureRecorder.h"
 #include "SkPoint3.h"
 #include "SkRandom.h"
+#include "SkRegion.h"
 #include "SkTableColorFilter.h"
 #include "SkTileImageFilter.h"
 #include "SkTypeface.h"
-#include "SkView.h"
 #include "SkXfermodeImageFilter.h"
+#if SK_SUPPORT_GPU
+#include "text/GrSDFMaskFilter.h"
+#endif
 #include <stdio.h>
 #include <time.h>
 
@@ -189,8 +187,8 @@ static SkBlurStyle make_blur_style() {
     return static_cast<SkBlurStyle>(R(kLastEnum_SkBlurStyle+1));
 }
 
-static SkBlurMaskFilter::BlurFlags make_blur_mask_filter_flag() {
-    return static_cast<SkBlurMaskFilter::BlurFlags>(R(SkBlurMaskFilter::kAll_BlurFlag+1));
+static bool make_blur_mask_filter_respectctm() {
+    return static_cast<bool>(R(2));
 }
 
 static SkFilterQuality make_filter_quality() {
@@ -198,7 +196,7 @@ static SkFilterQuality make_filter_quality() {
 }
 
 static SkFontStyle make_typeface_style() {
-    return SkFontStyle::FromOldStyle(SkTypeface::kBoldItalic+1);
+    return SkFontStyle::Normal();
 }
 
 static SkPath1DPathEffect::Style make_path_1d_path_effect_style() {
@@ -258,7 +256,7 @@ static void make_g_bitmap(SkBitmap& bitmap) {
     paint.setColor(0xFF884422);
     paint.setTextSize(SkIntToScalar(kBitmapSize/2));
     const char* str = "g";
-    canvas.drawText(str, strlen(str), SkIntToScalar(kBitmapSize/8),
+    canvas.drawString(str, SkIntToScalar(kBitmapSize/8),
                     SkIntToScalar(kBitmapSize/4), paint);
 }
 
@@ -340,7 +338,7 @@ static void drawSomething(SkCanvas* canvas) {
     canvas->drawCircle(SkIntToScalar(kBitmapSize/2), SkIntToScalar(kBitmapSize/2), SkIntToScalar(kBitmapSize/3), paint);
     paint.setColor(SK_ColorBLACK);
     paint.setTextSize(SkIntToScalar(kBitmapSize/3));
-    canvas->drawText("Picture", 7, SkIntToScalar(kBitmapSize/2), SkIntToScalar(kBitmapSize/4), paint);
+    canvas->drawString("Picture", SkIntToScalar(kBitmapSize/2), SkIntToScalar(kBitmapSize/4), paint);
 }
 
 static void rand_color_table(uint8_t* table) {
@@ -418,12 +416,12 @@ static sk_sp<SkPathEffect> make_path_effect(bool canBeNull = true) {
     sk_sp<SkPathEffect> pathEffect;
     if (canBeNull && (R(3) == 1)) { return pathEffect; }
 
-    switch (R(9)) {
+    switch (R(8)) {
         case 0:
-            pathEffect = SkArcToPathEffect::Make(make_scalar(true));
+            pathEffect = SkPath2DPathEffect::Make(make_matrix(), make_path());
             break;
         case 1:
-            pathEffect = SkComposePathEffect::Make(make_path_effect(false),
+            pathEffect = SkPathEffect::MakeCompose(make_path_effect(false),
                                                    make_path_effect(false));
             break;
         case 2:
@@ -449,11 +447,8 @@ static sk_sp<SkPathEffect> make_path_effect(bool canBeNull = true) {
             pathEffect = SkLine2DPathEffect::Make(make_scalar(), make_matrix());
             break;
         case 7:
-            pathEffect = SkPath2DPathEffect::Make(make_matrix(), make_path());
-            break;
-        case 8:
         default:
-            pathEffect = SkSumPathEffect::Make(make_path_effect(false),
+            pathEffect = SkPathEffect::MakeSum(make_path_effect(false),
                                                make_path_effect(false));
             break;
     }
@@ -462,10 +457,14 @@ static sk_sp<SkPathEffect> make_path_effect(bool canBeNull = true) {
 
 static sk_sp<SkMaskFilter> make_mask_filter() {
     sk_sp<SkMaskFilter> maskFilter;
+#if SK_SUPPORT_GPU
+    switch (R(4)) {
+#else
     switch (R(3)) {
+#endif
         case 0:
-            maskFilter = SkBlurMaskFilter::Make(make_blur_style(), make_scalar(),
-                                                make_blur_mask_filter_flag());
+            maskFilter = SkMaskFilter::MakeBlur(make_blur_style(), make_scalar(),
+                                                make_blur_mask_filter_respectctm());
         case 1: {
             SkEmbossMaskFilter::Light light;
             for (int i = 0; i < 3; ++i) {
@@ -476,7 +475,13 @@ static sk_sp<SkMaskFilter> make_mask_filter() {
             light.fSpecular = R(256);
             maskFilter = SkEmbossMaskFilter::Make(make_scalar(), light);
         }
+#if SK_SUPPORT_GPU
         case 2:
+            maskFilter = GrSDFMaskFilter::Make();
+        case 3:
+#else
+        case 2:
+#endif
         default:
             break;
     }
@@ -496,8 +501,6 @@ static SkPaint make_paint() {
     paint.setEmbeddedBitmapText(make_bool());
     paint.setAutohinted(make_bool());
     paint.setVerticalText(make_bool());
-    paint.setUnderlineText(make_bool());
-    paint.setStrikeThruText(make_bool());
     paint.setFakeBoldText(make_bool());
     paint.setDevKernText(make_bool());
     paint.setFilterQuality(make_filter_quality());
@@ -518,13 +521,6 @@ static SkPaint make_paint() {
                                                    make_typeface_style()));
     }
 
-    SkLayerRasterizer::Builder rasterizerBuilder;
-    SkPaint paintForRasterizer;
-    if (R(2) == 1) {
-        paintForRasterizer = make_paint();
-    }
-    rasterizerBuilder.addLayer(paintForRasterizer);
-    paint.setRasterizer(rasterizerBuilder.detach());
     paint.setImageFilter(make_image_filter());
     sk_sp<SkData> data(make_3Dlut(nullptr, make_bool(), make_bool(), make_bool()));
     paint.setTextAlign(make_paint_align());
@@ -543,7 +539,7 @@ static sk_sp<SkImageFilter> make_image_filter(bool canBeNull) {
         return filter;
     }
 
-    enum { ALPHA_THRESHOLD, MERGE, COLOR, LUT3D, BLUR, MAGNIFIER,
+    enum { ALPHA_THRESHOLD, MERGE, COLOR, BLUR, MAGNIFIER,
            XFERMODE, OFFSET, MATRIX, MATRIX_CONVOLUTION, COMPOSE,
            DISTANT_LIGHT, POINT_LIGHT, SPOT_LIGHT, NOISE, DROP_SHADOW,
            MORPHOLOGY, BITMAP, DISPLACE, TILE, PICTURE, PAINT, NUM_FILTERS };
@@ -557,19 +553,10 @@ static sk_sp<SkImageFilter> make_image_filter(bool canBeNull) {
         break;
     case MERGE:
         filter = SkMergeImageFilter::Make(make_image_filter(),
-                                          make_image_filter(),
-                                          make_xfermode());
+                                          make_image_filter());
         break;
     case COLOR: {
         sk_sp<SkColorFilter> cf(make_color_filter());
-        filter = cf ? SkColorFilterImageFilter::Make(std::move(cf), make_image_filter())
-                    : nullptr;
-        break;
-    }
-    case LUT3D: {
-        int cubeDimension;
-        sk_sp<SkData> lut3D(make_3Dlut(&cubeDimension, (R(2) == 1), (R(2) == 1), (R(2) == 1)));
-        sk_sp<SkColorFilter> cf(SkColorCubeFilter::Make(std::move(lut3D), cubeDimension));
         filter = cf ? SkColorFilterImageFilter::Make(std::move(cf), make_image_filter())
                     : nullptr;
         break;
@@ -653,7 +640,7 @@ static sk_sp<SkImageFilter> make_image_filter(bool canBeNull) {
                                                              make_image_filter())
                  : SkLightingImageFilter::MakeSpotLitSpecular(SkPoint3::Make(0, 0, 0),
                                                               make_point(), make_scalar(),
-                                                              make_scalar(), make_color(), 
+                                                              make_scalar(), make_color(),
                                                               make_scalar(), make_scalar(),
                                                               SkIntToScalar(R(10)),
                                                               make_image_filter());
@@ -738,7 +725,7 @@ static sk_sp<SkImageFilter> make_image_filter(bool canBeNull) {
 
 static sk_sp<SkImageFilter> make_serialized_image_filter() {
     sk_sp<SkImageFilter> filter(make_image_filter(false));
-    sk_sp<SkData> data(SkValidatingSerializeFlattenable(filter.get()));
+    sk_sp<SkData> data(filter->serialize());
     const unsigned char* ptr = static_cast<const unsigned char*>(data->data());
     size_t len = data->size();
 #ifdef SK_ADD_RANDOM_BIT_FLIPS
@@ -763,7 +750,7 @@ static sk_sp<SkImageFilter> make_serialized_image_filter() {
         }
     }
 #endif // SK_ADD_RANDOM_BIT_FLIPS
-    return SkValidatingDeserializeImageFilter(ptr, len);
+    return SkImageFilter::Deserialize(ptr, len);
 }
 
 static void drawClippedBitmap(SkCanvas* canvas, int x, int y, const SkPaint& paint) {
@@ -798,17 +785,16 @@ static void do_fuzz(SkCanvas* canvas) {
 
 //////////////////////////////////////////////////////////////////////////////
 
-class ImageFilterFuzzView : public SampleView {
+class ImageFilterFuzzView : public Sample {
 public:
     ImageFilterFuzzView() {
         this->setBGColor(0xFFDDDDDD);
     }
 
 protected:
-    // overrides from SkEventSink
-    virtual bool onQuery(SkEvent* evt) {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "ImageFilterFuzzer");
+    virtual bool onQuery(Sample::Event* evt) {
+        if (Sample::TitleQ(*evt)) {
+            Sample::TitleR(evt, "ImageFilterFuzzer");
             return true;
         }
         return this->INHERITED::onQuery(evt);
@@ -820,14 +806,12 @@ protected:
 
     virtual void onDrawContent(SkCanvas* canvas) {
         do_fuzz(canvas);
-        this->inval(0);
     }
 
 private:
-    typedef SkView INHERITED;
+    typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() { return new ImageFilterFuzzView; }
-static SkViewRegister reg(MyFactory);
+DEF_SAMPLE( return new ImageFilterFuzzView(); )

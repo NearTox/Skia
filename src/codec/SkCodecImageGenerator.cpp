@@ -6,70 +6,57 @@
  */
 
 #include "SkCodecImageGenerator.h"
+#include "SkMakeUnique.h"
+#include "SkPixmapPriv.h"
 
-SkImageGenerator* SkCodecImageGenerator::NewFromEncodedCodec(sk_sp<SkData> data) {
-    SkCodec* codec = SkCodec::NewFromData(data);
+std::unique_ptr<SkImageGenerator> SkCodecImageGenerator::MakeFromEncodedCodec(sk_sp<SkData> data) {
+    auto codec = SkCodec::MakeFromData(data);
     if (nullptr == codec) {
         return nullptr;
     }
 
-    return new SkCodecImageGenerator(codec, data);
+    return std::unique_ptr<SkImageGenerator>(new SkCodecImageGenerator(std::move(codec), data));
 }
 
-static SkImageInfo make_premul(const SkImageInfo& info) {
+static SkImageInfo adjust_info(SkCodec* codec) {
+    SkImageInfo info = codec->getInfo();
     if (kUnpremul_SkAlphaType == info.alphaType()) {
-        return info.makeAlphaType(kPremul_SkAlphaType);
+        info = info.makeAlphaType(kPremul_SkAlphaType);
     }
-
+    if (SkPixmapPriv::ShouldSwapWidthHeight(codec->getOrigin())) {
+        info = SkPixmapPriv::SwapWidthHeight(info);
+    }
     return info;
 }
 
-SkCodecImageGenerator::SkCodecImageGenerator(SkCodec* codec, sk_sp<SkData> data)
-    : INHERITED(make_premul(codec->getInfo()))
-    , fCodec(codec)
+SkCodecImageGenerator::SkCodecImageGenerator(std::unique_ptr<SkCodec> codec, sk_sp<SkData> data)
+    : INHERITED(adjust_info(codec.get()))
+    , fCodec(std::move(codec))
     , fData(std::move(data))
 {}
 
-SkData* SkCodecImageGenerator::onRefEncodedData(GrContext* ctx) {
-    return SkRef(fData.get());
+sk_sp<SkData> SkCodecImageGenerator::onRefEncodedData() {
+    return fData;
 }
 
-bool SkCodecImageGenerator::onGetPixels(const SkImageInfo& info, void* pixels, size_t rowBytes,
-        SkPMColor ctable[], int* ctableCount) {
-    SkCodec::Result result = fCodec->getPixels(info, pixels, rowBytes, nullptr, ctable,
-            ctableCount);
-    switch (result) {
-        case SkCodec::kSuccess:
-        case SkCodec::kIncompleteInput:
-            return true;
-        default:
-            return false;
-    }
+bool SkCodecImageGenerator::onGetPixels(const SkImageInfo& requestInfo, void* requestPixels,
+                                        size_t requestRowBytes, const Options&) {
+    SkPixmap dst(requestInfo, requestPixels, requestRowBytes);
+
+    auto decode = [this](const SkPixmap& pm) {
+        SkCodec::Result result = fCodec->getPixels(pm);
+        switch (result) {
+            case SkCodec::kSuccess:
+            case SkCodec::kIncompleteInput:
+            case SkCodec::kErrorInInput:
+                return true;
+            default:
+                return false;
+        }
+    };
+
+    return SkPixmapPriv::Orient(dst, fCodec->getOrigin(), decode);
 }
-
-bool SkCodecImageGenerator::onComputeScaledDimensions(SkScalar scale, SupportedSizes* sizes) {
-    SkASSERT(scale > 0 && scale <= 1);
-    const auto size = fCodec->getScaledDimensions(SkScalarToFloat(scale));
-    if (size == this->getInfo().dimensions()) {
-        return false;
-    }
-
-    // FIXME: Make SkCodec's API return two potential sizes, like this one. For now, set them both
-    // to be the same.
-    sizes->fSizes[0] = sizes->fSizes[1] = size;
-    return true;
-}
-
-bool SkCodecImageGenerator::onGenerateScaledPixels(const SkPixmap& pixmap) {
-    if (pixmap.colorType() == kIndex_8_SkColorType) {
-        // There is no way to tell the client about the color table with this API.
-        return false;
-    }
-
-    return this->onGetPixels(pixmap.info(), pixmap.writable_addr(), pixmap.rowBytes(),
-                             nullptr, nullptr);
-}
-
 
 bool SkCodecImageGenerator::onQueryYUV8(SkYUVSizeInfo* sizeInfo, SkYUVColorSpace* colorSpace) const
 {
@@ -82,6 +69,7 @@ bool SkCodecImageGenerator::onGetYUV8Planes(const SkYUVSizeInfo& sizeInfo, void*
     switch (result) {
         case SkCodec::kSuccess:
         case SkCodec::kIncompleteInput:
+        case SkCodec::kErrorInInput:
             return true;
         default:
             return false;

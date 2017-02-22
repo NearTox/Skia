@@ -4,14 +4,13 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SampleCode.h"
-#include "SkView.h"
+#include "Sample.h"
 #include "SkCanvas.h"
 #include "SkGradientShader.h"
 #include "SkPath.h"
 #include "SkRegion.h"
 #include "SkShader.h"
-#include "SkUtils.h"
+#include "SkUTF.h"
 #include "Sk1DPathEffect.h"
 #include "SkCornerPathEffect.h"
 #include "SkPathMeasure.h"
@@ -19,6 +18,7 @@
 #include "SkColorPriv.h"
 #include "SkColorFilter.h"
 #include "SkDither.h"
+#include "sk_tool_utils.h"
 
 static void draw_sweep(SkCanvas* c, int width, int height, SkScalar angle) {
     SkRect  r;
@@ -73,8 +73,6 @@ static void make_bm(SkBitmap* bm) {
 }
 
 static void pre_dither(const SkBitmap& bm) {
-    SkAutoLockPixels alp(bm);
-
     for (int y = 0; y < bm.height(); y++) {
         DITHER_4444_SCAN(y);
 
@@ -104,33 +102,32 @@ static void pre_dither(const SkBitmap& bm) {
     }
 }
 
-class DitherView : public SampleView {
+class DitherView : public Sample {
 public:
     SkBitmap    fBM, fBMPreDither, fBM16;
     SkScalar fAngle;
 
-    DitherView() {
+protected:
+    void onOnceBeforeDraw() override {
         make_bm(&fBM);
         make_bm(&fBMPreDither);
         pre_dither(fBMPreDither);
-        fBM.copyTo(&fBM16, kARGB_4444_SkColorType);
+        sk_tool_utils::copy_to(&fBM16, kARGB_4444_SkColorType, fBM);
 
         fAngle = 0;
 
         this->setBGColor(0xFF181818);
     }
 
-protected:
-    // overrides from SkEventSink
-    virtual bool onQuery(SkEvent* evt) {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "Dither");
+    bool onQuery(Sample::Event* evt) override {
+        if (Sample::TitleQ(*evt)) {
+            Sample::TitleR(evt, "Dither");
             return true;
         }
         return this->INHERITED::onQuery(evt);
     }
 
-    virtual void onDrawContent(SkCanvas* canvas) {
+    void onDrawContent(SkCanvas* canvas) override {
         SkPaint paint;
         SkScalar x = SkIntToScalar(10);
         SkScalar y = SkIntToScalar(10);
@@ -160,14 +157,12 @@ protected:
         draw_sweep(canvas, fBM.width()>>2, fBM.height()>>2, fAngle);
 
         fAngle += SK_Scalar1/2;
-        this->inval(nullptr);
     }
 
 private:
-    typedef SampleView INHERITED;
+    typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() { return new DitherView; }
-static SkViewRegister reg(MyFactory);
+DEF_SAMPLE( return new DitherView(); )

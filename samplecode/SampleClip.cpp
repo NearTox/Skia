@@ -5,9 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "SampleCode.h"
+#include "Sample.h"
 #include "SkAAClip.h"
-#include "SkView.h"
 #include "SkCanvas.h"
 #include "SkColorPriv.h"
 #include "SkPaint.h"
@@ -27,7 +26,7 @@ static void show_text(SkCanvas* canvas, bool doAA) {
 
     for (int i = 0; i < 200; ++i) {
         paint.setColor((SK_A32_MASK << SK_A32_SHIFT) | rand.nextU());
-        canvas->drawText("Hamburgefons", 12,
+        canvas->drawString("Hamburgefons",
                          rand.nextSScalar1() * W, rand.nextSScalar1() * H + 20,
                          paint);
     }
@@ -57,7 +56,7 @@ static void show_fill(SkCanvas* canvas, bool doAA) {
 
 static SkScalar randRange(SkRandom& rand, SkScalar min, SkScalar max) {
     SkASSERT(min <= max);
-    return min + SkScalarMul(rand.nextUScalar1(), max - min);
+    return min + rand.nextUScalar1() * (max - min);
 }
 
 static void show_stroke(SkCanvas* canvas, bool doAA, SkScalar strokeWidth, int n) {
@@ -103,7 +102,7 @@ static void show_thick(SkCanvas* canvas, bool doAA) {
 
 typedef void (*CanvasProc)(SkCanvas*, bool);
 
-class ClipView : public SampleView {
+class ClipView : public Sample {
 public:
     ClipView() {
         SkAAClip clip;
@@ -115,10 +114,9 @@ public:
     }
 
 protected:
-    // overrides from SkEventSink
-    virtual bool onQuery(SkEvent* evt) {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "Clip");
+    virtual bool onQuery(Sample::Event* evt) {
+        if (Sample::TitleQ(*evt)) {
+            Sample::TitleR(evt, "Clip");
             return true;
         }
         return this->INHERITED::onQuery(evt);
@@ -155,10 +153,9 @@ protected:
     }
 
 private:
-    typedef SampleView INHERITED;
+    typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() { return new ClipView; }
-static SkViewRegister reg(MyFactory);
+DEF_SAMPLE( return new ClipView(); )

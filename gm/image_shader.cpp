@@ -49,7 +49,7 @@ static sk_sp<SkImage> make_texture(GrContext* ctx, SkPicture* pic, const SkImage
 static sk_sp<SkImage> make_pict_gen(GrContext*, SkPicture* pic, const SkImageInfo& info) {
     return SkImage::MakeFromPicture(sk_ref_sp(pic), info.dimensions(), nullptr, nullptr,
                                     SkImage::BitDepth::kU8,
-                                    SkColorSpace::MakeNamed(SkColorSpace::kSRGB_Named));
+                                    SkColorSpace::MakeSRGB());
 }
 
 static sk_sp<SkImage> make_encode_gen(GrContext* ctx, SkPicture* pic, const SkImageInfo& info) {
@@ -57,7 +57,7 @@ static sk_sp<SkImage> make_encode_gen(GrContext* ctx, SkPicture* pic, const SkIm
     if (!src) {
         return nullptr;
     }
-    sk_sp<SkData> encoded(src->encode(SkEncodedImageFormat::kPNG, 100));
+    sk_sp<SkData> encoded = src->encodeToData(SkEncodedImageFormat::kPNG, 100);
     if (!encoded) {
         return nullptr;
     }

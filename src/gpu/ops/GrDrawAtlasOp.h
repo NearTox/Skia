@@ -11,53 +11,52 @@
 #include "GrColor.h"
 #include "GrDefaultGeoProcFactory.h"
 #include "GrMeshDrawOp.h"
+#include "GrSimpleMeshDrawOpHelper.h"
 
 class GrDrawAtlasOp final : public GrMeshDrawOp {
+private:
+    using Helper = GrSimpleMeshDrawOpHelper;
+
 public:
     DEFINE_OP_CLASS_ID
 
-    static std::unique_ptr<GrDrawOp> Make(GrColor color, const SkMatrix& viewMatrix,
-                                          int spriteCount, const SkRSXform* xforms,
-                                          const SkRect* rects, const SkColor* colors) {
-        return std::unique_ptr<GrDrawOp>(
-                new GrDrawAtlasOp(color, viewMatrix, spriteCount, xforms, rects, colors));
+    static std::unique_ptr<GrDrawOp> Make(GrContext* context,
+                                          GrPaint&& paint,
+                                          const SkMatrix& viewMatrix,
+                                          GrAAType aaType,
+                                          int spriteCount,
+                                          const SkRSXform* xforms,
+                                          const SkRect* rects,
+                                          const SkColor* colors) {
+        return Helper::FactoryHelper<GrDrawAtlasOp>(context, std::move(paint), viewMatrix, aaType,
+                                                    spriteCount, xforms, rects, colors);
     }
+
+    GrDrawAtlasOp(const Helper::MakeArgs& helperArgs, GrColor color, const SkMatrix& viewMatrix,
+                  GrAAType, int spriteCount, const SkRSXform* xforms, const SkRect* rects,
+                  const SkColor* colors);
 
     const char* name() const override { return "DrawAtlasOp"; }
 
-    SkString dumpInfo() const override {
-        SkString string;
-        for (const auto& geo : fGeoData) {
-            string.appendf("Color: 0x%08x, Quads: %d\n", geo.fColor, geo.fVerts.count() / 4);
-        }
-        string.append(DumpPipelineInfo(*this->pipeline()));
-        string.append(INHERITED::dumpInfo());
-        return string;
+    void visitProxies(const VisitProxyFunc& func) const override {
+        fHelper.visitProxies(func);
     }
+
+    SkString dumpInfo() const override;
+
+    FixedFunctionFlags fixedFunctionFlags() const override;
+
+    RequiresDstTexture finalize(const GrCaps& caps, const GrAppliedClip* clip) override;
 
 private:
-    GrDrawAtlasOp(GrColor color, const SkMatrix& viewMatrix, int spriteCount,
-                  const SkRSXform* xforms, const SkRect* rects, const SkColor* colors);
-
-    void getPipelineAnalysisInput(GrPipelineAnalysisDrawOpInput* input) const override {
-        if (this->hasColors()) {
-            input->pipelineColorInput()->setUnknownFourComponents();
-        } else {
-            input->pipelineColorInput()->setKnownFourComponents(fGeoData[0].fColor);
-        }
-        input->pipelineCoverageInput()->setKnownSingleComponent(0xff);
-    }
-
-    void onPrepareDraws(Target*) const override;
-
-    void applyPipelineOptimizations(const GrPipelineOptimizations&) override;
+    void onPrepareDraws(Target*) override;
 
     GrColor color() const { return fColor; }
     const SkMatrix& viewMatrix() const { return fViewMatrix; }
     bool hasColors() const { return fHasColors; }
     int quadCount() const { return fQuadCount; }
 
-    bool onCombineIfPossible(GrOp* t, const GrCaps&) override;
+    CombineResult onCombineIfPossible(GrOp* t, const GrCaps&) override;
 
     struct Geometry {
         GrColor fColor;
@@ -65,7 +64,7 @@ private:
     };
 
     SkSTArray<1, Geometry, true> fGeoData;
-
+    Helper fHelper;
     SkMatrix fViewMatrix;
     GrColor fColor;
     int fQuadCount;

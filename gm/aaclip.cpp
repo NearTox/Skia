@@ -6,7 +6,8 @@
  */
 
 #include "gm.h"
-#include "SkCanvas.h"
+#include "sk_tool_utils.h"
+#include "SkCanvasPriv.h"
 #include "SkPath.h"
 #include "SkMakeUnique.h"
 
@@ -18,7 +19,7 @@ static void do_draw(SkCanvas* canvas, const SkRect& r) {
 }
 
 /**
- *  Exercise kDontClipToLayer_Legacy_SaveLayerFlag flag, which does not limit the clip to the
+ *  Exercise SkCanvasPriv::kDontClipToLayer_SaveLayerFlag flag, which does not limit the clip to the
  *  layer's bounds. Thus when a draw occurs, it can (depending on "where" it is) draw into the layer
  *  and/or draw onto the surrounding portions of the canvas, or both.
  *
@@ -51,15 +52,19 @@ DEF_SIMPLE_GM(dont_clip_to_layer, canvas, 120, 120) {
     canvas->saveLayer(&r, nullptr);
     canvas->drawColor(SK_ColorRED);
 
-    SkRect r0 = SkRect::MakeXYWH(r.left(), r.top(), r.width(), r.height()/2);
+    SkRect r0 = { 20, 20, 100, 55 };
+    SkRect r1 = { 20, 65, 100, 100 };
 
     SkCanvas::SaveLayerRec rec;
     rec.fPaint = nullptr;
     rec.fBounds = &r0;
     rec.fBackdrop = nullptr;
-    rec.fSaveLayerFlags = 1 << 31;//SkCanvas::kDontClipToLayer_Legacy_SaveLayerFlag;
+    rec.fSaveLayerFlags = SkCanvasPriv::kDontClipToLayer_SaveLayerFlag;
+    canvas->saveLayer(rec);
+    rec.fBounds = &r1;
     canvas->saveLayer(rec);
     do_draw(canvas, r);
+    canvas->restore();
     canvas->restore();
 
     canvas->restore();  // red-layer
@@ -278,7 +283,7 @@ protected:
         SkPaint paint;
         paint.setAntiAlias(true);
 
-        paint.setColor(sk_tool_utils::color_to_565(0xFFCCCCCC));
+        paint.setColor(0xFFCCCCCC);
         canvas->drawPath(path, paint);
 
         paint.setColor(SK_ColorRED);

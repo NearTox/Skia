@@ -10,9 +10,18 @@
 #include "gl/GrGLCaps.h"
 #include "gl/GrGLGpu.h"
 #include "gl/builders/GrGLProgramBuilder.h"
+#include "SkSLCompiler.h"
 
 #define GL_CALL(X) GR_GL_CALL(this->glGpu()->glInterface(), X)
 #define GL_CALL_RET(R, X) GR_GL_CALL_RET(this->glGpu()->glInterface(), R, X)
+
+bool valid_name(const char* name) {
+    // disallow unknown names that start with "sk_"
+    if (!strncmp(name, GR_NO_MANGLE_PREFIX, strlen(GR_NO_MANGLE_PREFIX))) {
+        return !strcmp(name, SkSL::Compiler::RTADJUST_NAME);
+    }
+    return true;
+}
 
 GrGLSLUniformHandler::UniformHandle GrGLUniformHandler::internalAddUniformArray(
                                                                             uint32_t visibility,
@@ -23,10 +32,9 @@ GrGLSLUniformHandler::UniformHandle GrGLUniformHandler::internalAddUniformArray(
                                                                             int arrayCount,
                                                                             const char** outName) {
     SkASSERT(name && strlen(name));
-    SkDEBUGCODE(static const uint32_t kVisMask = kVertex_GrShaderFlag | kFragment_GrShaderFlag);
-    SkASSERT(0 == (~kVisMask & visibility));
+    SkASSERT(valid_name(name));
     SkASSERT(0 != visibility);
-    SkASSERT(kDefault_GrSLPrecision == precision || GrSLTypeAcceptsPrecision(type));
+    SkASSERT(kDefault_GrSLPrecision == precision || GrSLTypeTemporarilyAcceptsPrecision(type));
 
     UniformInfo& uni = fUniforms.push_back();
     uni.fVariable.setType(type);
@@ -38,7 +46,7 @@ GrGLSLUniformHandler::UniformHandle GrGLUniformHandler::internalAddUniformArray(
     // uniform view matrix, they should upload the view matrix in their setData along with regular
     // uniforms.
     char prefix = 'u';
-    if ('u' == name[0]) {
+    if ('u' == name[0] || !strncmp(name, GR_NO_MANGLE_PREFIX, strlen(GR_NO_MANGLE_PREFIX))) {
         prefix = '\0';
     }
     fProgramBuilder->nameVariable(uni.fVariable.accessName(), prefix, name, mangleName);
@@ -55,12 +63,10 @@ GrGLSLUniformHandler::UniformHandle GrGLUniformHandler::internalAddUniformArray(
 
 GrGLSLUniformHandler::SamplerHandle GrGLUniformHandler::addSampler(uint32_t visibility,
                                                                    GrSwizzle swizzle,
-                                                                   GrSLType type,
+                                                                   GrTextureType type,
                                                                    GrSLPrecision precision,
                                                                    const char* name) {
     SkASSERT(name && strlen(name));
-    SkDEBUGCODE(static const uint32_t kVisMask = kVertex_GrShaderFlag | kFragment_GrShaderFlag);
-    SkASSERT(0 == (~kVisMask & visibility));
     SkASSERT(0 != visibility);
 
     SkString mangleName;
@@ -68,8 +74,7 @@ GrGLSLUniformHandler::SamplerHandle GrGLUniformHandler::addSampler(uint32_t visi
     fProgramBuilder->nameVariable(&mangleName, prefix, name, true);
 
     UniformInfo& sampler = fSamplers.push_back();
-    SkASSERT(GrSLTypeIsCombinedSamplerType(type));
-    sampler.fVariable.setType(type);
+    sampler.fVariable.setType(GrSLCombinedSamplerTypeForTextureType(type));
     sampler.fVariable.setTypeModifier(GrShaderVar::kUniform_TypeModifier);
     sampler.fVariable.setPrecision(precision);
     sampler.fVariable.setName(mangleName);
@@ -78,33 +83,6 @@ GrGLSLUniformHandler::SamplerHandle GrGLUniformHandler::addSampler(uint32_t visi
     fSamplerSwizzles.push_back(swizzle);
     SkASSERT(fSamplers.count() == fSamplerSwizzles.count());
     return GrGLSLUniformHandler::SamplerHandle(fSamplers.count() - 1);
-}
-
-GrGLSLUniformHandler::ImageStorageHandle GrGLUniformHandler::addImageStorage(
-        uint32_t visibility, GrSLType type, GrImageStorageFormat format, GrSLMemoryModel model,
-        GrSLRestrict restrict, GrIOType ioType, const char* name) {
-    SkASSERT(name && strlen(name));
-    SkDEBUGCODE(static const uint32_t kVisMask = kVertex_GrShaderFlag | kFragment_GrShaderFlag);
-    SkASSERT(0 == (~kVisMask & visibility));
-    SkASSERT(0 != visibility);
-    SkString mangleName;
-    char prefix = 'u';
-    fProgramBuilder->nameVariable(&mangleName, prefix, name, true);
-
-    UniformInfo& imageStorage = fImageStorages.push_back();
-    imageStorage.fVariable.setName(mangleName);
-
-    SkASSERT(GrSLTypeIsImageStorage(type));
-    imageStorage.fVariable.setType(type);
-    imageStorage.fVariable.setTypeModifier(GrShaderVar::kUniform_TypeModifier);
-    imageStorage.fVariable.setImageStorageFormat(format);
-    imageStorage.fVariable.setMemoryModel(model);
-    imageStorage.fVariable.setRestrict(restrict);
-    imageStorage.fVariable.setIOType(ioType);
-    imageStorage.fVariable.setPrecision(kHigh_GrSLPrecision);
-    imageStorage.fLocation = -1;
-    imageStorage.fVisibility = visibility;
-    return GrGLSLUniformHandler::ImageStorageHandle(fImageStorages.count() - 1);
 }
 
 void GrGLUniformHandler::appendUniformDecls(GrShaderFlags visibility, SkString* out) const {
@@ -120,12 +98,6 @@ void GrGLUniformHandler::appendUniformDecls(GrShaderFlags visibility, SkString* 
             out->append(";\n");
         }
     }
-    for (int i = 0; i < fImageStorages.count(); ++i) {
-        if (fImageStorages[i].fVisibility & visibility) {
-            fImageStorages[i].fVariable.appendDecl(fProgramBuilder->shaderCaps(), out);
-            out->append(";");
-        }
-    }
 }
 
 void GrGLUniformHandler::bindUniformLocations(GrGLuint programID, const GrGLCaps& caps) {
@@ -138,11 +110,6 @@ void GrGLUniformHandler::bindUniformLocations(GrGLuint programID, const GrGLCaps
         for (int i = 0; i < fSamplers.count(); ++i, ++currUniform) {
             GL_CALL(BindUniformLocation(programID, currUniform, fSamplers[i].fVariable.c_str()));
             fSamplers[i].fLocation = currUniform;
-        }
-        for (int i = 0; i < fImageStorages.count(); ++i) {
-            GL_CALL(BindUniformLocation(programID, currUniform,
-                                        fImageStorages[i].fVariable.c_str()));
-            fImageStorages[i].fLocation = currUniform;
         }
     }
 }
@@ -159,12 +126,6 @@ void GrGLUniformHandler::getUniformLocations(GrGLuint programID, const GrGLCaps&
             GrGLint location;
             GL_CALL_RET(location, GetUniformLocation(programID, fSamplers[i].fVariable.c_str()));
             fSamplers[i].fLocation = location;
-        }
-        for (int i = 0; i < fImageStorages.count(); ++i) {
-            GrGLint location;
-            GL_CALL_RET(location, GetUniformLocation(programID,
-                                                     fImageStorages[i].fVariable.c_str()));
-            fImageStorages[i].fLocation = location;
         }
     }
 }

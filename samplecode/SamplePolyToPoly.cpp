@@ -4,17 +4,15 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SampleCode.h"
-#include "SkView.h"
+#include "Sample.h"
 #include "SkCanvas.h"
 #include "SkGraphics.h"
 #include "SkPath.h"
 #include "SkRandom.h"
+#include "SkString.h"
 #include "SkTime.h"
 
-extern bool SkSetPoly3To3(SkMatrix* matrix, const SkPoint src[3], const SkPoint dst[3]);
-
-class PolyToPolyView : public SampleView {
+class PolyToPolyView : public Sample {
 public:
     PolyToPolyView() {
         // tests
@@ -63,19 +61,14 @@ public:
 
                 SkMatrix m0;
                 m0.setPolyToPoly(src, dst, 3);
-              //  SkMatrix m1;
-              //  SkSetPoly3To3(&m1, src, dst);
-              //  m0.dump();
-              //  m1.dump();
             }
         }
     }
 
 protected:
-    // overrides from SkEventSink
-    virtual bool onQuery(SkEvent* evt)  {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "PolyToPolyView");
+    virtual bool onQuery(Sample::Event* evt)  {
+        if (Sample::TitleQ(*evt)) {
+            Sample::TitleR(evt, "PolyToPolyView");
             return true;
         }
         return this->INHERITED::onQuery(evt);
@@ -98,7 +91,7 @@ protected:
         paint->setColor(SK_ColorGRAY);
         paint->setStyle(SkPaint::kStroke_Style);
         const SkScalar D = SkIntToScalar(64);
-        canvas->drawRectCoords(0, 0, D, D, *paint);
+        canvas->drawRect(SkRect::MakeWH(D, D), *paint);
         canvas->drawLine(0, 0, D, D, *paint);
         canvas->drawLine(0, D, D, 0, *paint);
 
@@ -110,7 +103,7 @@ protected:
         float y = D/2 - (fm.fAscent + fm.fDescent)/2;
         SkString str;
         str.appendS32(count);
-        canvas->drawText(str.c_str(), str.size(),
+        canvas->drawString(str,
                          x, y,
                          *paint);
 
@@ -158,10 +151,9 @@ protected:
     }
 
 private:
-    typedef SampleView INHERITED;
+    typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() { return new PolyToPolyView; }
-static SkViewRegister reg(MyFactory);
+DEF_SAMPLE( return new PolyToPolyView(); )

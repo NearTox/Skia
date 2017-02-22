@@ -6,6 +6,7 @@
  */
 
 #include "gm.h"
+#include "sk_tool_utils.h"
 #include "SkAnimTimer.h"
 #include "SkLightingImageFilter.h"
 #include "SkOffsetImageFilter.h"
@@ -47,9 +48,9 @@ protected:
     }
 
     void onDraw(SkCanvas* canvas) override {
-        canvas->clear(sk_tool_utils::color_to_565(0xFF101010));
+        canvas->clear(0xFF101010);
         SkPaint checkPaint;
-        checkPaint.setColor(sk_tool_utils::color_to_565(0xFF202020));
+        checkPaint.setColor(0xFF202020);
         for (int y = 0; y < HEIGHT; y += 16) {
           for (int x = 0; x < WIDTH; x += 16) {
             canvas->save();
@@ -73,10 +74,8 @@ protected:
                                                 SkIntToScalar(10));
         SkScalar elevationRad = SkDegreesToRadians(SkIntToScalar(5));
 
-        SkPoint3 distantDirection = SkPoint3::Make(SkScalarMul(cosAzimuth,
-                                                               SkScalarCos(elevationRad)),
-                                                   SkScalarMul(sinAzimuth,
-                                                               SkScalarCos(elevationRad)),
+        SkPoint3 distantDirection = SkPoint3::Make(cosAzimuth * SkScalarCos(elevationRad),
+                                                   sinAzimuth * SkScalarCos(elevationRad),
                                                    SkScalarSin(elevationRad));
         SkScalar cutoffAngle = SkIntToScalar(15);
         SkScalar kd = SkIntToScalar(2);

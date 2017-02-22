@@ -5,10 +5,13 @@
  * found in the LICENSE file.
  */
 
+#include "SkTime.h"
+
 #include "SkLeanWindows.h"
 #include "SkString.h"
-#include "SkTime.h"
+#include "SkTo.h"
 #include "SkTypes.h"
+
 #include <chrono>
 
 void SkTime::DateTime::toISO8601(SkString* dst) const {
@@ -26,7 +29,7 @@ void SkTime::DateTime::toISO8601(SkString* dst) const {
     }
 }
 
-#ifdef SK_BUILD_FOR_WIN32
+#ifdef SK_BUILD_FOR_WIN
 
 void SkTime::GetDateTime(DateTime* dt) {
     if (dt) {
@@ -43,7 +46,7 @@ void SkTime::GetDateTime(DateTime* dt) {
     }
 }
 
-#else // SK_BUILD_FOR_WIN32
+#else // SK_BUILD_FOR_WIN
 
 #include <time.h>
 void SkTime::GetDateTime(DateTime* dt) {
@@ -62,10 +65,21 @@ void SkTime::GetDateTime(DateTime* dt) {
         dt->fSecond     = SkToU8(tstruct.tm_sec);
     }
 }
-#endif // SK_BUILD_FOR_WIN32
+#endif // SK_BUILD_FOR_WIN
+
+#if !defined(__has_feature)
+    #define  __has_feature(x) 0
+#endif
 
 double SkTime::GetNSecs() {
+#if __has_feature(memory_sanitizer)
+    // See skia:6504
+    struct timespec tp;
+    clock_gettime(CLOCK_MONOTONIC, &tp);
+    return tp.tv_sec * 1e9 + tp.tv_nsec;
+#else
     auto now = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::nano> ns = now.time_since_epoch();
     return ns.count();
+#endif
 }

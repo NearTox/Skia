@@ -5,6 +5,7 @@
  * found in the LICENSE file.
  */
 #include "gm.h"
+#include "sk_tool_utils.h"
 #include "SkTypeface.h"
 
 namespace skiagm {
@@ -19,7 +20,7 @@ protected:
 
     SkString onShortName() override {
         SkString name("fontscaler");
-        name.append(sk_tool_utils::major_platform_os_name());
+        name.append(sk_tool_utils::platform_font_manager());
         return name;
     }
 

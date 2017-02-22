@@ -6,9 +6,8 @@
  */
 
 #include "DecodeFile.h"
-#include "SampleCode.h"
+#include "Sample.h"
 #include "SkAnimTimer.h"
-#include "SkView.h"
 #include "SkCanvas.h"
 #include "SkGradientShader.h"
 #include "SkGraphics.h"
@@ -16,11 +15,12 @@
 #include "SkRandom.h"
 #include "SkRegion.h"
 #include "SkShader.h"
-#include "SkUtils.h"
+#include "SkUTF.h"
 #include "SkColorPriv.h"
 #include "SkColorFilter.h"
 #include "SkTime.h"
 #include "SkTypeface.h"
+#include "SkVertices.h"
 
 #include "SkOSFile.h"
 #include "SkStream.h"
@@ -87,24 +87,18 @@ static void eval_sheet(const SkPoint edge[], int nu, int nv, int iu, int iv,
     SkScalar u = SkIntToScalar(iu) / nu;
     SkScalar v = SkIntToScalar(iv) / nv;
 
-    SkScalar uv = SkScalarMul(u, v);
-    SkScalar Uv = SkScalarMul(SK_Scalar1 - u, v);
-    SkScalar uV = SkScalarMul(u, SK_Scalar1 - v);
-    SkScalar UV = SkScalarMul(SK_Scalar1 - u, SK_Scalar1 - v);
+    SkScalar uv = u * v;
+    SkScalar Uv = (1 - u) * v;
+    SkScalar uV = u * (1 - v);
+    SkScalar UV = (1 - u) * (1 - v);
 
-    SkScalar x0 = SkScalarMul(UV, edge[TL].fX) + SkScalarMul(uV, edge[TR].fX) +
-                  SkScalarMul(Uv, edge[BL].fX) + SkScalarMul(uv, edge[BR].fX);
-    SkScalar y0 = SkScalarMul(UV, edge[TL].fY) + SkScalarMul(uV, edge[TR].fY) +
-                  SkScalarMul(Uv, edge[BL].fY) + SkScalarMul(uv, edge[BR].fY);
+    SkScalar x0 = UV * edge[TL].fX + uV * edge[TR].fX + Uv * edge[BL].fX + uv * edge[BR].fX;
+    SkScalar y0 = UV * edge[TL].fY + uV * edge[TR].fY + Uv * edge[BL].fY + uv * edge[BR].fY;
 
-    SkScalar x =    SkScalarMul(SK_Scalar1 - v, edge[TL+iu].fX) +
-                    SkScalarMul(u, edge[TR+iv].fX) +
-                    SkScalarMul(v, edge[BR+nu-iu].fX) +
-                    SkScalarMul(SK_Scalar1 - u, edge[BL+nv-iv].fX) - x0;
-    SkScalar y =    SkScalarMul(SK_Scalar1 - v, edge[TL+iu].fY) +
-                    SkScalarMul(u, edge[TR+iv].fY) +
-                    SkScalarMul(v, edge[BR+nu-iu].fY) +
-                    SkScalarMul(SK_Scalar1 - u, edge[BL+nv-iv].fY) - y0;
+    SkScalar x = (1 - v) * edge[TL+iu].fX + u * edge[TR+iv].fX +
+                 v * edge[BR+nu-iu].fX + (1 - u) * edge[BL+nv-iv].fX - x0;
+    SkScalar y = (1 - v) * edge[TL+iu].fY + u * edge[TR+iv].fY +
+                 v * edge[BR+nu-iu].fY + (1 - u) * edge[BL+nv-iv].fY - y0;
     pt->set(x, y);
 }
 
@@ -185,9 +179,10 @@ void Patch::draw(SkCanvas* canvas, const SkPaint& paint, int nu, int nv,
             s += ds;
         }
         t += dt;
-        canvas->drawVertices(SkCanvas::kTriangleStrip_VertexMode, stripCount,
-                             strip, doTextures ? tex : nullptr,
-                             doColors ? colors : nullptr, nullptr, 0, paint);
+        canvas->drawVertices(SkVertices::MakeCopy(SkVertices::kTriangleStrip_VertexMode, stripCount,
+                                                  strip, doTextures ? tex : nullptr,
+                                                  doColors ? colors : nullptr),
+                             SkBlendMode::kModulate, paint);
     }
 }
 
@@ -207,7 +202,7 @@ static void drawpatches(SkCanvas* canvas, const SkPaint& paint, int nu, int nv,
 const SkScalar DX = 20;
 const SkScalar DY = 0;
 
-class PatchView : public SampleView {
+class PatchView : public Sample {
     SkScalar    fAngle;
     sk_sp<SkShader> fShader0;
     sk_sp<SkShader> fShader1;
@@ -242,10 +237,9 @@ public:
     }
 
 protected:
-    // overrides from SkEventSink
-    bool onQuery(SkEvent* evt)  override {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "Patch");
+    bool onQuery(Sample::Event* evt)  override {
+        if (Sample::TitleQ(*evt)) {
+            Sample::TitleR(evt, "Patch");
             return true;
         }
         return this->INHERITED::onQuery(evt);
@@ -306,14 +300,14 @@ protected:
     class PtClick : public Click {
     public:
         int fIndex;
-        PtClick(SkView* view, int index) : Click(view), fIndex(index) {}
+        PtClick(Sample* view, int index) : Click(view), fIndex(index) {}
     };
 
     static bool hittest(const SkPoint& pt, SkScalar x, SkScalar y) {
         return SkPoint::Length(pt.fX - x, pt.fY - y) < SkIntToScalar(5);
     }
 
-    SkView::Click* onFindClickHandler(SkScalar x, SkScalar y, unsigned modi) override {
+    Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, unsigned modi) override {
         x -= DX;
         y -= DY;
         for (size_t i = 0; i < SK_ARRAY_COUNT(fPts); i++) {
@@ -326,15 +320,13 @@ protected:
 
     bool onClick(Click* click) override {
         fPts[((PtClick*)click)->fIndex].set(click->fCurr.fX - DX, click->fCurr.fY - DY);
-        this->inval(nullptr);
         return true;
     }
 
 private:
-    typedef SampleView INHERITED;
+    typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() { return new PatchView; }
-static SkViewRegister reg(MyFactory);
+DEF_SAMPLE( return new PatchView(); )

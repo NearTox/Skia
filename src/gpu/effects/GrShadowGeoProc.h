@@ -19,34 +19,35 @@ class GrGLRRectShadowGeoProc;
  */
 class GrRRectShadowGeoProc : public GrGeometryProcessor {
 public:
-    static sk_sp<GrGeometryProcessor> Make(const SkMatrix& localMatrix) {
-        return sk_sp<GrGeometryProcessor>(new GrRRectShadowGeoProc(localMatrix));
+    static sk_sp<GrGeometryProcessor> Make() {
+        return sk_sp<GrGeometryProcessor>(new GrRRectShadowGeoProc());
     }
-
-    ~GrRRectShadowGeoProc() override {}
 
     const char* name() const override { return "RRectShadow"; }
 
-    const Attribute* inPosition() const { return fInPosition; }
-    const Attribute* inColor() const { return fInColor; }
-    const Attribute* inShadowParams() const { return fInShadowParams; }
+    const Attribute& inPosition() const { return kInPosition; }
+    const Attribute& inColor() const { return kInColor; }
+    const Attribute& inShadowParams() const { return kInShadowParams; }
     GrColor color() const { return fColor; }
-    const SkMatrix& localMatrix() const { return fLocalMatrix; }
 
-    void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
+    void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {}
 
     GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
 
 private:
-    GrRRectShadowGeoProc(const SkMatrix& localMatrix);
+    GrRRectShadowGeoProc();
+
+    const Attribute& onVertexAttribute(int i) const override {
+        return IthAttribute(i, kInPosition, kInColor, kInShadowParams);
+    }
 
     GrColor          fColor;
-    SkMatrix         fLocalMatrix;
-    const Attribute* fInPosition;
-    const Attribute* fInColor;
-    const Attribute* fInShadowParams;
 
-    GR_DECLARE_GEOMETRY_PROCESSOR_TEST;
+    static constexpr Attribute kInPosition = {"inPosition", kFloat2_GrVertexAttribType};
+    static constexpr Attribute kInColor = {"inColor", kUByte4_norm_GrVertexAttribType};
+    static constexpr Attribute kInShadowParams = {"inShadowParams", kHalf4_GrVertexAttribType};
+
+    GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 
     typedef GrGeometryProcessor INHERITED;
 };

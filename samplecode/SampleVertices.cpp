@@ -4,8 +4,8 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SampleCode.h"
-#include "SkView.h"
+#include "Sample.h"
+#include "SkBitmap.h"
 #include "SkCanvas.h"
 #include "SkGradientShader.h"
 #include "SkGraphics.h"
@@ -13,11 +13,12 @@
 #include "SkRandom.h"
 #include "SkRegion.h"
 #include "SkShader.h"
-#include "SkUtils.h"
+#include "SkUTF.h"
 #include "SkColorPriv.h"
 #include "SkColorFilter.h"
 #include "SkTime.h"
 #include "SkTypeface.h"
+#include "SkVertices.h"
 
 #include "SkOSFile.h"
 #include "SkStream.h"
@@ -29,11 +30,9 @@ static sk_sp<SkShader> make_shader0(SkIPoint* size) {
     SkPMColor color1 = SkPreMultiplyARGB(0x40, 0xff, 0x00, 0xff);
     bm.allocN32Pixels(size->fX, size->fY);
     bm.eraseColor(color0);
-    bm.lockPixels();
     uint32_t* pixels = (uint32_t*) bm.getPixels();
     pixels[0] = pixels[2] = color0;
     pixels[1] = pixels[3] = color1;
-    bm.unlockPixels();
 
     return SkShader::MakeBitmapShader(bm, SkShader::kRepeat_TileMode, SkShader::kRepeat_TileMode);
 }
@@ -46,7 +45,7 @@ static sk_sp<SkShader> make_shader1(const SkIPoint& size) {
                     SK_ARRAY_COUNT(colors), SkShader::kMirror_TileMode);
 }
 
-class VerticesView : public SampleView {
+class VerticesView : public Sample {
     sk_sp<SkShader> fShader0;
     sk_sp<SkShader> fShader1;
 
@@ -67,10 +66,9 @@ public:
     }
 
 protected:
-    // overrides from SkEventSink
-    bool onQuery(SkEvent* evt) override {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "Vertices");
+    bool onQuery(Sample::Event* evt) override {
+        if (Sample::TitleQ(*evt)) {
+            Sample::TitleR(evt, "Vertices");
             return true;
         }
         return this->INHERITED::onQuery(evt);
@@ -84,46 +82,42 @@ protected:
         paint.setFilterQuality(kLow_SkFilterQuality);
 
         for (size_t i = 0; i < SK_ARRAY_COUNT(fRecs); i++) {
+            auto verts = SkVertices::MakeCopy(fRecs[i].fMode, fRecs[i].fCount,
+                                              fRecs[i].fVerts, fRecs[i].fTexs,
+                                              nullptr);
             canvas->save();
 
             paint.setShader(nullptr);
-            canvas->drawVertices(fRecs[i].fMode, fRecs[i].fCount,
-                                 fRecs[i].fVerts, fRecs[i].fTexs,
-                                 nullptr, nullptr, 0, paint);
+            canvas->drawVertices(verts, SkBlendMode::kModulate, paint);
 
             canvas->translate(SkIntToScalar(250), 0);
 
             paint.setShader(fShader0);
-            canvas->drawVertices(fRecs[i].fMode, fRecs[i].fCount,
-                                 fRecs[i].fVerts, fRecs[i].fTexs,
-                                 nullptr, nullptr, 0, paint);
+            canvas->drawVertices(verts, SkBlendMode::kModulate, paint);
 
             canvas->translate(SkIntToScalar(250), 0);
 
             paint.setShader(fShader1);
-            canvas->drawVertices(fRecs[i].fMode, fRecs[i].fCount,
-                                 fRecs[i].fVerts, fRecs[i].fTexs,
-                                 nullptr, nullptr, 0, paint);
+            canvas->drawVertices(verts, SkBlendMode::kModulate, paint);
             canvas->restore();
 
             canvas->translate(0, SkIntToScalar(250));
         }
     }
 
-    SkView::Click* onFindClickHandler(SkScalar x, SkScalar y, unsigned) override {
+    Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, unsigned) override {
         return new Click(this);
     }
 
     bool onClick(Click* click) override {
     //    fCurrX = click->fICurr.fX;
     //    fCurrY = click->fICurr.fY;
-        this->inval(nullptr);
         return true;
     }
 
 private:
     struct Rec {
-        SkCanvas::VertexMode    fMode;
+        SkVertices::VertexMode  fMode;
         int                     fCount;
         SkPoint*                fVerts;
         SkPoint*                fTexs;
@@ -136,7 +130,7 @@ private:
         int n = 10;
         SkRandom    rand;
 
-        rec->fMode = SkCanvas::kTriangles_VertexMode;
+        rec->fMode = SkVertices::kTriangles_VertexMode;
         rec->fCount = n * 3;
         rec->fVerts = new SkPoint[rec->fCount];
 
@@ -153,7 +147,7 @@ private:
         const SkScalar ty = SkIntToScalar(texHeight);
         const int n = 24;
 
-        rec->fMode = SkCanvas::kTriangleFan_VertexMode;
+        rec->fMode = SkVertices::kTriangleFan_VertexMode;
         rec->fCount = n + 2;
         rec->fVerts = new SkPoint[rec->fCount];
         rec->fTexs  = new SkPoint[rec->fCount];
@@ -183,7 +177,7 @@ private:
         const SkScalar ty = SkIntToScalar(texHeight);
         const int n = 24;
 
-        rec->fMode = SkCanvas::kTriangleStrip_VertexMode;
+        rec->fMode = SkVertices::kTriangleStrip_VertexMode;
         rec->fCount = 2 * (n + 1);
         rec->fVerts = new SkPoint[rec->fCount];
         rec->fTexs  = new SkPoint[rec->fCount];
@@ -214,10 +208,9 @@ private:
 
     Rec fRecs[3];
 
-    typedef SampleView INHERITED;
+    typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() { return new VerticesView; }
-static SkViewRegister reg(MyFactory);
+DEF_SAMPLE( return new VerticesView(); )

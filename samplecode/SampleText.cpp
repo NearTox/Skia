@@ -5,8 +5,7 @@
  * found in the LICENSE file.
  */
 
-#include "SampleCode.h"
-#include "SkView.h"
+#include "Sample.h"
 #include "SkCanvas.h"
 #include "SkReadBuffer.h"
 #include "SkWriteBuffer.h"
@@ -16,7 +15,7 @@
 #include "SkRandom.h"
 #include "SkRegion.h"
 #include "SkShader.h"
-#include "SkUtils.h"
+#include "SkUTF.h"
 #include "SkColorPriv.h"
 #include "SkColorFilter.h"
 #include "SkTime.h"
@@ -66,7 +65,7 @@ static void DrawTheText(SkCanvas* canvas, const char text[], size_t length, SkSc
 #endif
 }
 
-class TextSpeedView : public SampleView {
+class TextSpeedView : public Sample {
 public:
     TextSpeedView() {
         fHints = 0;
@@ -74,10 +73,9 @@ public:
     }
 
 protected:
-    // overrides from SkEventSink
-    bool onQuery(SkEvent* evt) override {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "Text");
+    bool onQuery(Sample::Event* evt) override {
+        if (Sample::TitleQ(*evt)) {
+            Sample::TitleR(evt, "Text");
             return true;
         }
         return this->INHERITED::onQuery(evt);
@@ -92,10 +90,9 @@ protected:
         SkPaint     paint;
         const char* s = "Lorem ipsum dolor sit amet, consectetuer adipiscing elit";
 
-        paint.setFlags(paint.getFlags() | SkPaint::kAntiAlias_Flag
-                                        | SkPaint::kDevKernText_Flag);
+        paint.setFlags(paint.getFlags() | SkPaint::kAntiAlias_Flag);
         paint.setTextSize(SkIntToScalar(14));
-        canvas.drawText(s, strlen(s), SkIntToScalar(8), SkIntToScalar(14), paint);
+        canvas.drawString(s, SkIntToScalar(8), SkIntToScalar(14), paint);
     }
 
     static void fill_pts(SkPoint pts[], size_t n, SkRandom* rand) {
@@ -119,7 +116,7 @@ protected:
 
 //        canvas->translate(0, SkIntToScalar(50));
 
-  //      canvas->drawText(style, strlen(style), SkIntToScalar(20), SkIntToScalar(20), paint);
+  //      canvas->drawString(style, SkIntToScalar(20), SkIntToScalar(20), paint);
 
         paint.setTypeface(SkTypeface::MakeFromFile("/skimages/samplefont.ttf"));
         paint.setAntiAlias(true);
@@ -145,10 +142,9 @@ protected:
         }
     }
 
-    virtual SkView::Click* onFindClickHandler(SkScalar x, SkScalar y,
+    virtual Sample::Click* onFindClickHandler(SkScalar x, SkScalar y,
                                               unsigned modi) override {
         fClickX = x;
-        this->inval(nullptr);
         return this->INHERITED::onFindClickHandler(x, y, modi);
     }
 
@@ -160,10 +156,9 @@ private:
     int fHints;
     SkScalar fClickX;
 
-    typedef SampleView INHERITED;
+    typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() { return new TextSpeedView; }
-static SkViewRegister reg(MyFactory);
+DEF_SAMPLE( return new TextSpeedView(); )

@@ -16,7 +16,7 @@ class SkPaint;
 
 class SkSVGShape : public SkSVGTransformableNode {
 public:
-    virtual ~SkSVGShape() = default;
+    ~SkSVGShape() override = default;
 
     void appendChild(sk_sp<SkSVGNode>) override;
 
@@ -27,8 +27,6 @@ protected:
 
     virtual void onDraw(SkCanvas*, const SkSVGLengthContext&, const SkPaint&,
                         SkPath::FillType) const = 0;
-
-    static SkPath::FillType FillRuleToFillType(const SkSVGFillRule&);
 
 private:
     typedef SkSVGTransformableNode INHERITED;

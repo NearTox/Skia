@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkFDot6_DEFINED
 #define SkFDot6_DEFINED
 
 #include "SkFixed.h"
-#include "SkScalar.h"
 #include "SkMath.h"
+#include "SkScalar.h"
+#include "SkTo.h"
 
 typedef int32_t SkFDot6;
 
@@ -78,12 +78,10 @@ inline SkFixed SkFDot6Div(SkFDot6 a, SkFDot6 b) {
 #include "SkFDot6Constants.h"
 
 class QuickFDot6Inverse {
-private:
-    static constexpr const SkFDot6* table = gFDot6INVERSE + kInverseTableSize;
 public:
     inline static SkFixed Lookup(SkFDot6 x) {
         SkASSERT(SkAbs32(x) < kInverseTableSize);
-        return table[x];
+        return gFDot6INVERSE[kInverseTableSize + x];
     }
 };
 

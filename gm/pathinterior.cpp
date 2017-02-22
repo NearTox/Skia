@@ -6,6 +6,7 @@
  */
 
 #include "gm.h"
+#include "sk_tool_utils.h"
 #include "SkBlurMaskFilter.h"
 #include "SkCanvas.h"
 #include "SkGraphics.h"
@@ -22,7 +23,7 @@ static SkRect inset(const SkRect& r) {
 class PathInteriorGM : public skiagm::GM {
 public:
     PathInteriorGM() {
-        this->setBGColor(sk_tool_utils::color_to_565(0xFFDDDDDD));
+        this->setBGColor(0xFFDDDDDD);
     }
 
 protected:
@@ -45,7 +46,7 @@ protected:
         bool hasInterior = false;
 #endif
 
-        paint.setColor(sk_tool_utils::color_to_565(hasInterior ? 0xFF8888FF : SK_ColorGRAY));
+        paint.setColor(hasInterior ? sk_tool_utils::color_to_565(0xFF8888FF) : SK_ColorGRAY);
         canvas->drawPath(path, paint);
         paint.setStyle(SkPaint::kStroke_Style);
         paint.setColor(SK_ColorRED);

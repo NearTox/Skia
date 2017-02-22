@@ -6,6 +6,7 @@
  */
 
 #include "gm.h"
+#include "sk_tool_utils.h"
 
 #include "Resources.h"
 #include "SkCanvas.h"
@@ -41,7 +42,7 @@ protected:
     void onOnceBeforeDraw() override {
         fEmojiTypeface = sk_tool_utils::emoji_typeface();
         fEmojiText = sk_tool_utils::emoji_sample_text();
-        fReallyBigATypeface = MakeResourceAsTypeface("/fonts/ReallyBigA.ttf");
+        fReallyBigATypeface = MakeResourceAsTypeface("fonts/ReallyBigA.ttf");
 
         SkTextBlobBuilder builder;
 
@@ -98,9 +99,8 @@ protected:
     }
 
     SkString onShortName() override {
-        SkString name("mixedtextblobs");
-        name.append(sk_tool_utils::platform_os_emoji());
-        return name;
+        return SkStringPrintf("mixedtextblobs%s",
+                              sk_tool_utils::platform_font_manager());
     }
 
     SkISize onISize() override {
@@ -109,7 +109,7 @@ protected:
 
     void onDraw(SkCanvas* canvas) override {
 
-        canvas->drawColor(sk_tool_utils::color_to_565(SK_ColorGRAY));
+        canvas->drawColor(SK_ColorGRAY);
 
         SkPaint paint;
 

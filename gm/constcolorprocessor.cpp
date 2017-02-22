@@ -8,12 +8,11 @@
 // This test only works with the GPU backend.
 
 #include "gm.h"
-
-#if SK_SUPPORT_GPU
+#include "sk_tool_utils.h"
 
 #include "GrContext.h"
 #include "GrRenderTargetContextPriv.h"
-#include "SkGrPriv.h"
+#include "SkGr.h"
 #include "SkGradientShader.h"
 #include "effects/GrConstColorProcessor.h"
 #include "ops/GrDrawOp.h"
@@ -26,7 +25,7 @@ namespace skiagm {
 class ConstColorProcessor : public GM {
 public:
     ConstColorProcessor() {
-        this->setBGColor(sk_tool_utils::color_to_565(0xFFDDDDDD));
+        this->setBGColor(0xFFDDDDDD);
     }
 
 protected:
@@ -100,19 +99,17 @@ protected:
                     } else {
                         skPaint.setColor(kPaintColors[paintType]);
                     }
-                    SkAssertResult(SkPaintToGrPaint(context, renderTargetContext, skPaint,
-                                                    viewMatrix, &grPaint));
+                    SkAssertResult(SkPaintToGrPaint(context, renderTargetContext->colorSpaceInfo(),
+                                                    skPaint, viewMatrix, &grPaint));
 
                     GrConstColorProcessor::InputMode mode = (GrConstColorProcessor::InputMode) m;
                     GrColor4f color = GrColor4f::FromGrColor(kColors[procColor]);
-                    sk_sp<GrFragmentProcessor> fp(GrConstColorProcessor::Make(color, mode));
+                    auto fp = GrConstColorProcessor::Make(color, mode);
 
                     grPaint.addColorFragmentProcessor(std::move(fp));
-
-                    std::unique_ptr<GrDrawOp> op(GrRectOpFactory::MakeNonAAFill(
-                            grPaint.getColor(), viewMatrix, renderRect, nullptr, nullptr));
                     renderTargetContext->priv().testingOnly_addDrawOp(
-                            std::move(grPaint), GrAAType::kNone, std::move(op));
+                            GrRectOpFactory::MakeNonAAFill(context, std::move(grPaint), viewMatrix,
+                                                           renderRect, GrAAType::kNone));
 
                     // Draw labels for the input to the processor and the processor to the right of
                     // the test rect. The input label appears above the processor label.
@@ -134,7 +131,7 @@ protected:
                     // get the bounds of the text in order to position it
                     labelPaint.measureText(inputLabel.c_str(), inputLabel.size(),
                                            &inputLabelBounds);
-                    canvas->drawText(inputLabel.c_str(), inputLabel.size(),
+                    canvas->drawString(inputLabel,
                                      renderRect.fRight + kPad,
                                      -inputLabelBounds.fTop, labelPaint);
                     // update the bounds to reflect the offset we used to draw it.
@@ -143,7 +140,7 @@ protected:
                     SkRect procLabelBounds;
                     labelPaint.measureText(procLabel.c_str(), procLabel.size(),
                                            &procLabelBounds);
-                    canvas->drawText(procLabel.c_str(), procLabel.size(),
+                    canvas->drawString(procLabel,
                                      renderRect.fRight + kPad,
                                      inputLabelBounds.fBottom + 2.f - procLabelBounds.fTop,
                                      labelPaint);
@@ -185,5 +182,3 @@ private:
 
 DEF_GM(return new ConstColorProcessor;)
 }
-
-#endif

@@ -14,10 +14,10 @@ namespace {
 void test_concave(SkCanvas* canvas, const SkPaint& paint) {
     SkPath path;
     canvas->translate(0, 0);
-    path.moveTo(SkIntToScalar(20), SkIntToScalar(20));
-    path.lineTo(SkIntToScalar(80), SkIntToScalar(20));
-    path.lineTo(SkIntToScalar(30), SkIntToScalar(30));
-    path.lineTo(SkIntToScalar(20), SkIntToScalar(80));
+    path.moveTo(SkIntToScalar(20), SkIntToScalar(20))
+        .lineTo(SkIntToScalar(80), SkIntToScalar(20))
+        .lineTo(SkIntToScalar(30), SkIntToScalar(30))
+        .lineTo(SkIntToScalar(20), SkIntToScalar(80));
     canvas->drawPath(path, paint);
 }
 
@@ -26,10 +26,10 @@ void test_reverse_concave(SkCanvas* canvas, const SkPaint& paint) {
     SkPath path;
     canvas->save();
     canvas->translate(100, 0);
-    path.moveTo(SkIntToScalar(20), SkIntToScalar(20));
-    path.lineTo(SkIntToScalar(20), SkIntToScalar(80));
-    path.lineTo(SkIntToScalar(30), SkIntToScalar(30));
-    path.lineTo(SkIntToScalar(80), SkIntToScalar(20));
+    path.moveTo(SkIntToScalar(20), SkIntToScalar(20))
+        .lineTo(SkIntToScalar(20), SkIntToScalar(80))
+        .lineTo(SkIntToScalar(30), SkIntToScalar(30))
+        .lineTo(SkIntToScalar(80), SkIntToScalar(20));
     canvas->drawPath(path, paint);
     canvas->restore();
 }
@@ -39,10 +39,10 @@ void test_bowtie(SkCanvas* canvas, const SkPaint& paint) {
     SkPath path;
     canvas->save();
     canvas->translate(200, 0);
-    path.moveTo(SkIntToScalar(20), SkIntToScalar(20));
-    path.lineTo(SkIntToScalar(80), SkIntToScalar(80));
-    path.lineTo(SkIntToScalar(80), SkIntToScalar(20));
-    path.lineTo(SkIntToScalar(20), SkIntToScalar(80));
+    path.moveTo(SkIntToScalar(20), SkIntToScalar(20))
+        .lineTo(SkIntToScalar(80), SkIntToScalar(80))
+        .lineTo(SkIntToScalar(80), SkIntToScalar(20))
+        .lineTo(SkIntToScalar(20), SkIntToScalar(80));
     canvas->drawPath(path, paint);
     canvas->restore();
 }
@@ -52,12 +52,46 @@ void test_fake_bowtie(SkCanvas* canvas, const SkPaint& paint) {
     SkPath path;
     canvas->save();
     canvas->translate(300, 0);
-    path.moveTo(SkIntToScalar(20), SkIntToScalar(20));
-    path.lineTo(SkIntToScalar(50), SkIntToScalar(40));
-    path.lineTo(SkIntToScalar(80), SkIntToScalar(20));
-    path.lineTo(SkIntToScalar(80), SkIntToScalar(80));
-    path.lineTo(SkIntToScalar(50), SkIntToScalar(60));
-    path.lineTo(SkIntToScalar(20), SkIntToScalar(80));
+    path.moveTo(SkIntToScalar(20), SkIntToScalar(20))
+        .lineTo(SkIntToScalar(50), SkIntToScalar(40))
+        .lineTo(SkIntToScalar(80), SkIntToScalar(20))
+        .lineTo(SkIntToScalar(80), SkIntToScalar(80))
+        .lineTo(SkIntToScalar(50), SkIntToScalar(60))
+        .lineTo(SkIntToScalar(20), SkIntToScalar(80));
+    canvas->drawPath(path, paint);
+    canvas->restore();
+}
+
+// Bowtie with a smaller right hand lobe. The outer vertex of the left hand
+// lobe intrudes into the interior of the right hand lobe.
+void test_intruding_vertex(SkCanvas* canvas, const SkPaint& paint) {
+    SkPath path;
+    canvas->save();
+    canvas->translate(400, 0);
+    path.setIsVolatile(true);
+    path.moveTo(20, 20)
+        .lineTo(50, 50)
+        .lineTo(68, 20)
+        .lineTo(68, 80)
+        .lineTo(50, 50)
+        .lineTo(20, 80);
+    canvas->drawPath(path, paint);
+    canvas->restore();
+}
+
+// A shape with an edge that becomes inverted on AA stroking and that also contains
+// a repeated start/end vertex.
+void test_inversion_repeat_vertex(SkCanvas* canvas, const SkPaint& paint) {
+    SkPath path;
+    canvas->save();
+    canvas->translate(400, 100);
+    path.setIsVolatile(true);
+    path.moveTo(80,     50)
+        .lineTo(40,     80)
+        .lineTo(60,     20)
+        .lineTo(20,     20)
+        .lineTo(39.99f, 80)
+        .lineTo(80,     50);
     canvas->drawPath(path, paint);
     canvas->restore();
 }
@@ -67,12 +101,12 @@ void test_fish(SkCanvas* canvas, const SkPaint& paint) {
     SkPath path;
     canvas->save();
     canvas->translate(0, 100);
-    path.moveTo(SkIntToScalar(20), SkIntToScalar(20));
-    path.lineTo(SkIntToScalar(80), SkIntToScalar(80));
-    path.lineTo(SkIntToScalar(70), SkIntToScalar(50));
-    path.lineTo(SkIntToScalar(80), SkIntToScalar(20));
-    path.lineTo(SkIntToScalar(20), SkIntToScalar(80));
-    path.lineTo(SkIntToScalar(0), SkIntToScalar(50));
+    path.moveTo(SkIntToScalar(20), SkIntToScalar(20))
+        .lineTo(SkIntToScalar(80), SkIntToScalar(80))
+        .lineTo(SkIntToScalar(70), SkIntToScalar(50))
+        .lineTo(SkIntToScalar(80), SkIntToScalar(20))
+        .lineTo(SkIntToScalar(20), SkIntToScalar(80))
+        .lineTo(SkIntToScalar(0), SkIntToScalar(50));
     canvas->drawPath(path, paint);
     canvas->restore();
 }
@@ -83,12 +117,12 @@ void test_fast_forward(SkCanvas* canvas, const SkPaint& paint) {
     SkPath path;
     canvas->save();
     canvas->translate(100, 100);
-    path.moveTo(SkIntToScalar(20), SkIntToScalar(20));
-    path.lineTo(SkIntToScalar(60), SkIntToScalar(50));
-    path.lineTo(SkIntToScalar(20), SkIntToScalar(80));
-    path.moveTo(SkIntToScalar(40), SkIntToScalar(20));
-    path.lineTo(SkIntToScalar(40), SkIntToScalar(80));
-    path.lineTo(SkIntToScalar(80), SkIntToScalar(50));
+    path.moveTo(SkIntToScalar(20), SkIntToScalar(20))
+        .lineTo(SkIntToScalar(60), SkIntToScalar(50))
+        .lineTo(SkIntToScalar(20), SkIntToScalar(80))
+        .moveTo(SkIntToScalar(40), SkIntToScalar(20))
+        .lineTo(SkIntToScalar(40), SkIntToScalar(80))
+        .lineTo(SkIntToScalar(80), SkIntToScalar(50));
     canvas->drawPath(path, paint);
     canvas->restore();
 }
@@ -98,29 +132,31 @@ void test_hole(SkCanvas* canvas, const SkPaint& paint) {
     SkPath path;
     canvas->save();
     canvas->translate(200, 100);
-    path.moveTo(SkIntToScalar(20), SkIntToScalar(20));
-    path.lineTo(SkIntToScalar(80), SkIntToScalar(20));
-    path.lineTo(SkIntToScalar(80), SkIntToScalar(80));
-    path.lineTo(SkIntToScalar(20), SkIntToScalar(80));
-    path.moveTo(SkIntToScalar(30), SkIntToScalar(30));
-    path.lineTo(SkIntToScalar(30), SkIntToScalar(70));
-    path.lineTo(SkIntToScalar(70), SkIntToScalar(70));
-    path.lineTo(SkIntToScalar(70), SkIntToScalar(30));
+    path.addPoly({{20,20}, {80,20}, {80,80}, {20,80}}, false)
+        .addPoly({{30,30}, {30,70}, {70,70}, {70,30}}, false);
     canvas->drawPath(path, paint);
     canvas->restore();
 }
 
 // Star test (self-intersecting)
 void test_star(SkCanvas* canvas, const SkPaint& paint) {
-    SkPath path;
     canvas->save();
     canvas->translate(300, 100);
-    path.moveTo(30, 20);
-    path.lineTo(50, 80);
-    path.lineTo(70, 20);
-    path.lineTo(20, 57);
-    path.lineTo(80, 57);
-    path.close();
+    canvas->drawPath(SkPath().addPoly({{30,20}, {50,80}, {70,20}, {20,57}, {80,57}}, false),
+                     paint);
+    canvas->restore();
+}
+
+// Exercise a case where the intersection is below a bottom edge.
+void test_twist(SkCanvas* canvas, const SkPaint& paint) {
+    SkPath path;
+    canvas->save();
+    path.moveTo(                 0.5,                    6);
+    path.lineTo(5.8070392608642578125, 6.4612660408020019531);
+    path.lineTo(-2.9186885356903076172, 2.811046600341796875);
+    path.lineTo(0.49999994039535522461, -1.4124038219451904297);
+    canvas->translate(420, 220);
+    canvas->scale(10, 10);
     canvas->drawPath(path, paint);
     canvas->restore();
 }
@@ -182,6 +218,24 @@ void test_partners(SkCanvas* canvas, const SkPaint& paint) {
     path.moveTo(70, 30);
     path.lineTo(70, 70);
     path.lineTo(55, 50);
+    canvas->drawPath(path, paint);
+    canvas->restore();
+}
+
+// A split edge causes one half to be merged to zero winding (destroyed).
+// Test that the other half of the split doesn't also get zero winding.
+void test_winding_merged_to_zero(SkCanvas* canvas, const SkPaint& paint) {
+    SkPath path;
+    canvas->save();
+    canvas->translate(400, 350);
+    path.moveTo(20, 80);
+    path.moveTo(70,  -0.000001f);
+    path.lineTo(70,   0.0);
+    path.lineTo(60, -30.0);
+    path.lineTo(40,  20.0);
+    path.moveTo(50,  50.0);
+    path.lineTo(50, -50.0);
+    path.lineTo(10,  50.0);
     canvas->drawPath(path, paint);
     canvas->restore();
 }
@@ -301,6 +355,22 @@ void test_bowtie_coincident_triangle(SkCanvas* canvas, const SkPaint& paint) {
     canvas->restore();
 }
 
+// Collinear outer boundary edges. In the edge-AA codepath, this creates an overlap region
+// which contains a boundary edge. It can't be removed, but it must have the correct winding.
+void test_collinear_outer_boundary_edge(SkCanvas* canvas, const SkPaint& paint) {
+    SkPath path;
+    canvas->save();
+    canvas->translate(400, 400);
+    path.moveTo(20, 20);
+    path.lineTo(20, 50);
+    path.lineTo(50, 50);
+    path.moveTo(80, 50);
+    path.lineTo(50, 50);
+    path.lineTo(80, 20);
+    canvas->drawPath(path, paint);
+    canvas->restore();
+}
+
 // Coincident edges (big ones first, coincident vert on top).
 void test_coincident_edges_1(SkCanvas* canvas, const SkPaint& paint) {
     SkPath path;
@@ -360,7 +430,7 @@ void test_coincident_edges_4(SkCanvas* canvas, const SkPaint& paint) {
 
 };
 
-DEF_SIMPLE_GM(concavepaths, canvas, 400, 600) {
+DEF_SIMPLE_GM(concavepaths, canvas, 500, 600) {
     SkPaint paint;
 
     paint.setAntiAlias(true);
@@ -370,14 +440,18 @@ DEF_SIMPLE_GM(concavepaths, canvas, 400, 600) {
     test_reverse_concave(canvas, paint);
     test_bowtie(canvas, paint);
     test_fake_bowtie(canvas, paint);
+    test_intruding_vertex(canvas, paint);
     test_fish(canvas, paint);
     test_fast_forward(canvas, paint);
     test_hole(canvas, paint);
     test_star(canvas, paint);
+    test_twist(canvas, paint);
+    test_inversion_repeat_vertex(canvas, paint);
     test_stairstep(canvas, paint);
     test_stairstep2(canvas, paint);
     test_overlapping(canvas, paint);
     test_partners(canvas, paint);
+    test_winding_merged_to_zero(canvas, paint);
     test_monotone_1(canvas, paint);
     test_monotone_2(canvas, paint);
     test_monotone_3(canvas, paint);
@@ -386,6 +460,7 @@ DEF_SIMPLE_GM(concavepaths, canvas, 400, 600) {
     test_degenerate(canvas, paint);
     test_coincident_edge(canvas, paint);
     test_bowtie_coincident_triangle(canvas, paint);
+    test_collinear_outer_boundary_edge(canvas, paint);
     test_coincident_edges_1(canvas, paint);
     test_coincident_edges_2(canvas, paint);
     test_coincident_edges_3(canvas, paint);

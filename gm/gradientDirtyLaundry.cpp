@@ -60,7 +60,7 @@ constexpr GradMaker gGradMakers[] = {
 class GradientsGM : public GM {
 public:
     GradientsGM() {
-        this->setBGColor(sk_tool_utils::color_to_565(0xFFDDDDDD));
+        this->setBGColor(0xFFDDDDDD);
     }
 
 protected:

@@ -4,53 +4,51 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SampleCode.h"
-#include "SkView.h"
-#include "SkCanvas.h"
-#include "SkTypeface.h"
-#include "SkPath.h"
-#include "SkRegion.h"
-#include "SkShader.h"
-#include "SkUtils.h"
+#include "Sample.h"
 #include "Sk1DPathEffect.h"
+#include "SkCanvas.h"
+#include "SkColorFilter.h"
+#include "SkColorPriv.h"
 #include "SkCornerPathEffect.h"
+#include "SkDither.h"
+#include "SkFontStyle.h"
+#include "SkPath.h"
 #include "SkPathMeasure.h"
 #include "SkRandom.h"
-#include "SkColorPriv.h"
-#include "SkColorFilter.h"
-#include "SkDither.h"
+#include "SkRegion.h"
+#include "SkShader.h"
+#include "SkTypeface.h"
+#include "SkUTF.h"
 
-static const struct {
+static constexpr struct {
     const char* fName;
-    SkTypeface::Style   fStyle;
+    SkFontStyle fStyle;
 } gFaces[] = {
-    { nullptr, SkTypeface::kNormal },
-    { nullptr, SkTypeface::kBold },
-    { "serif", SkTypeface::kNormal },
-    { "serif", SkTypeface::kBold },
-    { "serif", SkTypeface::kItalic },
-    { "serif", SkTypeface::kBoldItalic },
-    { "monospace", SkTypeface::kNormal }
+    { nullptr, SkFontStyle::Normal() },
+    { nullptr, SkFontStyle::Bold() },
+    { "serif", SkFontStyle::Normal() },
+    { "serif", SkFontStyle::Bold() },
+    { "serif", SkFontStyle::Italic() },
+    { "serif", SkFontStyle::BoldItalic() },
+    { "monospace", SkFontStyle::Normal() }
 };
 
 static const int gFaceCount = SK_ARRAY_COUNT(gFaces);
 
-class FontScalerTestView : public SampleView {
+class FontScalerTestView : public Sample {
     sk_sp<SkTypeface> fFaces[gFaceCount];
 
 public:
     FontScalerTestView() {
         for (int i = 0; i < gFaceCount; i++) {
-            fFaces[i] = SkTypeface::MakeFromName(
-                gFaces[i].fName, SkFontStyle::FromOldStyle(gFaces[i].fStyle));
+            fFaces[i] = SkTypeface::MakeFromName(gFaces[i].fName, gFaces[i].fStyle);
         }
     }
 
 protected:
-    // overrides from SkEventSink
-    virtual bool onQuery(SkEvent* evt) {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "FontScaler Test");
+    virtual bool onQuery(Sample::Event* evt) {
+        if (Sample::TitleQ(*evt)) {
+            Sample::TitleR(evt, "FontScaler Test");
             return true;
         }
         return this->INHERITED::onQuery(evt);
@@ -117,10 +115,9 @@ protected:
     }
 
 private:
-    typedef SkView INHERITED;
+    typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() { return new FontScalerTestView; }
-static SkViewRegister reg(MyFactory);
+DEF_SAMPLE( return new FontScalerTestView(); )

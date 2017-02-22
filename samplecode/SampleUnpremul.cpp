@@ -5,12 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-
 #include "sk_tool_utils.h"
 #include "DecodeFile.h"
 #include "Resources.h"
-#include "SampleCode.h"
+#include "Sample.h"
 #include "SkBlurMask.h"
 #include "SkBlurDrawLooper.h"
 #include "SkCanvas.h"
@@ -19,10 +17,8 @@
 #include "SkOSPath.h"
 #include "SkStream.h"
 #include "SkString.h"
-#include "SkSystemEventTypes.h"
 #include "SkTypes.h"
-#include "SkUtils.h"
-#include "SkView.h"
+#include "SkUTF.h"
 
 /**
  *  Interprets c as an unpremultiplied color, and returns the
@@ -36,7 +32,7 @@ static SkPMColor premultiply_unpmcolor(SkPMColor c) {
     return SkPreMultiplyARGB(a, r, g, b);
 }
 
-class UnpremulView : public SampleView {
+class UnpremulView : public Sample {
 public:
     UnpremulView(SkString res)
     : fResPath(res)
@@ -46,16 +42,15 @@ public:
     }
 
 protected:
-    // overrides from SkEventSink
-    bool onQuery(SkEvent* evt) override {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "unpremul");
+    bool onQuery(Sample::Event* evt) override {
+        if (Sample::TitleQ(*evt)) {
+            Sample::TitleR(evt, "unpremul");
             return true;
         }
         SkUnichar uni;
-        if (SampleCode::CharQ(*evt, &uni)) {
-            char utf8[kMaxBytesInUTF8Sequence];
-            size_t size = SkUTF8_FromUnichar(uni, utf8);
+        if (Sample::CharQ(*evt, &uni)) {
+            char utf8[SkUTF::kMaxBytesInUTF8Sequence];
+            size_t size = SkUTF::ToUTF8(uni, utf8);
             // Only consider events for single char keys
             if (1 == size) {
                 switch (utf8[0]) {
@@ -93,7 +88,7 @@ protected:
             } else {
                 failure.printf("Failed to decode %s", fCurrFile.c_str());
             }
-            canvas->drawText(failure.c_str(), failure.size(), 0, height, paint);
+            canvas->drawString(failure, 0, height, paint);
             return;
         }
 
@@ -101,22 +96,21 @@ protected:
         SkString header(SkOSPath::Basename(fCurrFile.c_str()));
         header.appendf("     [%dx%d]     %s", fBitmap.width(), fBitmap.height(),
                        (fPremul ? "premultiplied" : "unpremultiplied"));
-        canvas->drawText(header.c_str(), header.size(), 0, height, paint);
+        canvas->drawString(header, 0, height, paint);
         canvas->translate(0, height);
 
         // Help messages
         header.printf("Press '%c' to move to the next image.'", fNextImageChar);
-        canvas->drawText(header.c_str(), header.size(), 0, height, paint);
+        canvas->drawString(header, 0, height, paint);
         canvas->translate(0, height);
 
         header.printf("Press '%c' to toggle premultiplied decode.", fTogglePremulChar);
-        canvas->drawText(header.c_str(), header.size(), 0, height, paint);
+        canvas->drawString(header, 0, height, paint);
 
         // Now draw the image itself.
         canvas->translate(height * 2, height * 2);
         if (!fPremul) {
             // A premultiplied bitmap cannot currently be drawn.
-            SkAutoLockPixels alp(fBitmap);
             // Copy it to a bitmap which can be drawn, converting
             // to premultiplied:
             SkBitmap bm;
@@ -165,7 +159,6 @@ private:
             return;
         }
         fDecodeSucceeded = decode_file(fCurrFile.c_str(), &fBitmap, kN32_SkColorType, !fPremul);
-        this->inval(nullptr);
     }
 
     void togglePremul() {
@@ -173,12 +166,9 @@ private:
         this->decodeCurrFile();
     }
 
-    typedef SampleView INHERITED;
+    typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() {
-    return new UnpremulView(GetResourcePath());
-}
-static SkViewRegister reg(MyFactory);
+DEF_SAMPLE( return new UnpremulView(GetResourcePath("images")); )

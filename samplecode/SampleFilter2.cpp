@@ -6,24 +6,24 @@
  */
 
 #include "DecodeFile.h"
-#include "SampleCode.h"
-#include "SkView.h"
+#include "Sample.h"
 #include "SkCanvas.h"
+#include "SkColorFilter.h"
+#include "SkColorPriv.h"
 #include "SkGradientShader.h"
 #include "SkGraphics.h"
 #include "SkPath.h"
 #include "SkRegion.h"
 #include "SkShader.h"
-#include "SkUtils.h"
-#include "SkColorPriv.h"
-#include "SkColorFilter.h"
+#include "SkString.h"
 #include "SkTime.h"
+#include "SkUTF.h"
 
 static const char* gNames[] = {
     "/skimages/background_01.png"
 };
 
-class Filter2View : public SampleView {
+class Filter2View : public Sample {
 public:
     SkBitmap*   fBitmaps;
     int         fBitmapCount;
@@ -49,12 +49,11 @@ public:
     }
 
 protected:
-    // overrides from SkEventSink
-    virtual bool onQuery(SkEvent* evt) {
-        if (SampleCode::TitleQ(*evt)) {
+    virtual bool onQuery(Sample::Event* evt) {
+        if (Sample::TitleQ(*evt)) {
             SkString str("Filter/Dither ");
             str.append(gNames[fCurrIndex]);
-            SampleCode::TitleR(evt, str.c_str());
+            Sample::TitleR(evt, str.c_str());
             return true;
         }
         return this->INHERITED::onQuery(evt);
@@ -89,7 +88,7 @@ protected:
                         s.appendS32(paint.isDither());
                         s.append(" filter=");
                         s.appendS32(paint.getFilterQuality() != kNone_SkFilterQuality);
-                        canvas->drawText(s.c_str(), s.size(), x + W/2,
+                        canvas->drawString(s, x + W/2,
                                          y - p.getTextSize(), p);
                     }
                     if (k+j == 2) {
@@ -99,7 +98,7 @@ protected:
                         SkString s;
                         s.append(" depth=");
                         s.appendS32(fBitmaps[i].colorType() == kRGB_565_SkColorType ? 16 : 32);
-                        canvas->drawText(s.c_str(), s.size(), x + W + SkIntToScalar(4),
+                        canvas->drawString(s, x + W + SkIntToScalar(4),
                                          y + H/2, p);
                     }
                 }
@@ -108,10 +107,9 @@ protected:
     }
 
 private:
-    typedef SampleView INHERITED;
+    typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() { return new Filter2View; }
-static SkViewRegister reg(MyFactory);
+DEF_SAMPLE( return new Filter2View(); )

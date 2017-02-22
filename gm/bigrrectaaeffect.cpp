@@ -6,7 +6,8 @@
  */
 
 #include "gm.h"
-#if SK_SUPPORT_GPU
+#include "sk_tool_utils.h"
+#include "GrCaps.h"
 #include "GrContext.h"
 #include "GrRenderTargetContextPriv.h"
 #include "SkRRect.h"
@@ -55,17 +56,22 @@ protected:
             return;
         }
 
+        GrContext* context = canvas->getGrContext();
+        if (!context) {
+            return;
+        }
+
         SkPaint paint;
 
         int y = kPad;
         int x = kPad;
-        constexpr GrPrimitiveEdgeType kEdgeTypes[] = {
-            kFillAA_GrProcessorEdgeType,
-            kInverseFillAA_GrProcessorEdgeType,
+        constexpr GrClipEdgeType kEdgeTypes[] = {
+            GrClipEdgeType::kFillAA,
+            GrClipEdgeType::kInverseFillAA,
         };
         SkRect testBounds = SkRect::MakeIWH(fTestWidth, fTestHeight);
         for (size_t et = 0; et < SK_ARRAY_COUNT(kEdgeTypes); ++et) {
-            GrPrimitiveEdgeType edgeType = kEdgeTypes[et];
+            GrClipEdgeType edgeType = kEdgeTypes[et];
             canvas->save();
                 canvas->translate(SkIntToScalar(x), SkIntToScalar(y));
 
@@ -76,20 +82,22 @@ protected:
 
                 SkRRect rrect = fRRect;
                 rrect.offset(SkIntToScalar(x + kGap), SkIntToScalar(y + kGap));
-                sk_sp<GrFragmentProcessor> fp(GrRRectEffect::Make(edgeType, rrect));
+                const auto& caps = *renderTargetContext->caps()->shaderCaps();
+                auto fp = GrRRectEffect::Make(edgeType, rrect, caps);
                 SkASSERT(fp);
                 if (fp) {
                     GrPaint grPaint;
+                    grPaint.setColor4f(GrColor4f(0, 0, 0, 1.f));
                     grPaint.setXPFactory(GrPorterDuffXPFactory::Get(SkBlendMode::kSrc));
                     grPaint.addCoverageFragmentProcessor(std::move(fp));
 
                     SkRect bounds = testBounds;
                     bounds.offset(SkIntToScalar(x), SkIntToScalar(y));
 
-                    std::unique_ptr<GrDrawOp> op(GrRectOpFactory::MakeNonAAFill(
-                            0xff000000, SkMatrix::I(), bounds, nullptr, nullptr));
                     renderTargetContext->priv().testingOnly_addDrawOp(
-                            std::move(grPaint), GrAAType::kNone, std::move(op));
+                            GrRectOpFactory::MakeNonAAFill(context, std::move(grPaint),
+                                                           SkMatrix::I(),
+                                                           bounds, GrAAType::kNone));
                 }
             canvas->restore();
             x = x + fTestOffsetX;
@@ -126,4 +134,3 @@ DEF_GM( return new BigRRectAAEffectGM (SkRRect::MakeRectXY(SkRect::MakeIWH(kSize
 DEF_GM( return new BigRRectAAEffectGM (SkRRect::MakeRectXY(SkRect::MakeIWH(kSize - 1, kSize - 10), kSize/2.f - 10.f, kSize/2.f - 15.f), "elliptical_corner"); )
 
 }
-#endif

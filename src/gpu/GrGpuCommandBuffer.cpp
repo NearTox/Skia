@@ -7,43 +7,57 @@
 
 #include "GrGpuCommandBuffer.h"
 
+#include "GrContext.h"
 #include "GrCaps.h"
 #include "GrFixedClip.h"
 #include "GrGpu.h"
+#include "GrMesh.h"
 #include "GrPrimitiveProcessor.h"
 #include "GrRenderTarget.h"
 #include "SkRect.h"
 
-void GrGpuCommandBuffer::submit() {
-    this->gpu()->handleDirtyContext();
-    this->onSubmit();
+void GrGpuRTCommandBuffer::clear(const GrFixedClip& clip, GrColor color) {
+    SkASSERT(fRenderTarget);
+
+    this->onClear(clip, color);
 }
 
-void GrGpuCommandBuffer::clear(GrRenderTarget* rt, const GrFixedClip& clip, GrColor color) {
+void GrGpuRTCommandBuffer::clearStencilClip(const GrFixedClip& clip, bool insideStencilMask) {
+    this->onClearStencilClip(clip, insideStencilMask);
+}
+
+bool GrGpuRTCommandBuffer::draw(const GrPrimitiveProcessor& primProc, const GrPipeline& pipeline,
+                                const GrPipeline::FixedDynamicState* fixedDynamicState,
+                                const GrPipeline::DynamicStateArrays* dynamicStateArrays,
+                                const GrMesh meshes[], int meshCount, const SkRect& bounds) {
 #ifdef SK_DEBUG
-    SkASSERT(rt);
-    SkASSERT(!clip.scissorEnabled() ||
-             (SkIRect::MakeWH(rt->width(), rt->height()).contains(clip.scissorRect()) &&
-              SkIRect::MakeWH(rt->width(), rt->height()) != clip.scissorRect()));
+    SkASSERT(!primProc.hasInstanceAttributes() || this->gpu()->caps()->instanceAttribSupport());
+    for (int i = 0; i < meshCount; ++i) {
+        SkASSERT(!GrPrimTypeRequiresGeometryShaderSupport(meshes[i].primitiveType()) ||
+                 this->gpu()->caps()->shaderCaps()->geometryShaderSupport());
+        SkASSERT(primProc.hasVertexAttributes() == meshes[i].hasVertexData());
+        SkASSERT(primProc.hasInstanceAttributes() == meshes[i].isInstanced());
+    }
 #endif
-    this->onClear(rt, clip, color);
-}
+    SkASSERT(!pipeline.isScissorEnabled() || fixedDynamicState ||
+             (dynamicStateArrays && dynamicStateArrays->fScissorRects));
 
-void GrGpuCommandBuffer::clearStencilClip(GrRenderTarget* rt, const GrFixedClip& clip,
-                                          bool insideStencilMask) {
-    this->onClearStencilClip(rt, clip, insideStencilMask);
-}
+    auto resourceProvider = this->gpu()->getContext()->contextPriv().resourceProvider();
 
-bool GrGpuCommandBuffer::draw(const GrPipeline& pipeline,
-                              const GrPrimitiveProcessor& primProc,
-                              const GrMesh* mesh,
-                              int meshCount,
-                              const SkRect& bounds) {
-    if (primProc.numAttribs() > this->gpu()->caps()->maxVertexAttributes()) {
+    if (pipeline.isBad()) {
+        return false;
+    }
+    for (int i = 0; i < primProc.numTextureSamplers(); ++i) {
+        if (!fixedDynamicState->fPrimitiveProcessorTextures[i]->instantiate(resourceProvider)) {
+            return false;
+        }
+    }
+
+    if (primProc.numVertexAttributes() > this->gpu()->caps()->maxVertexAttributes()) {
         this->gpu()->stats()->incNumFailedDraws();
         return false;
     }
-    this->onDraw(pipeline, primProc, mesh, meshCount, bounds);
+    this->onDraw(primProc, pipeline, fixedDynamicState, dynamicStateArrays, meshes, meshCount,
+                 bounds);
     return true;
 }
-

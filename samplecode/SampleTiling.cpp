@@ -4,15 +4,16 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SampleCode.h"
-#include "SkView.h"
+
+#include "Sample.h"
+#include "SkBitmap.h"
 #include "SkCanvas.h"
 #include "SkPaint.h"
 #include "SkPath.h"
 #include "SkPictureRecorder.h"
 #include "SkRegion.h"
 #include "SkShader.h"
-#include "SkUtils.h"
+#include "SkUTF.h"
 #include "SkColorPriv.h"
 #include "SkColorFilter.h"
 #include "SkPicture.h"
@@ -52,7 +53,7 @@ static const SkColorType gColorTypes[] = {
 static const int gWidth = 32;
 static const int gHeight = 32;
 
-class TilingView : public SampleView {
+class TilingView : public Sample {
     sk_sp<SkPicture>     fTextPicture;
     sk_sp<SkDrawLooper>  fLooper;
 public:
@@ -71,10 +72,9 @@ public:
     SkBitmap    fTexture[SK_ARRAY_COUNT(gColorTypes)];
 
 protected:
-    // overrides from SkEventSink
-    virtual bool onQuery(SkEvent* evt) {
-        if (SampleCode::TitleQ(*evt)) {
-            SampleCode::TitleR(evt, "Tiling");
+    virtual bool onQuery(Sample::Event* evt) {
+        if (Sample::TitleQ(*evt)) {
+            Sample::TitleR(evt, "Tiling");
             return true;
         }
         return this->INHERITED::onQuery(evt);
@@ -111,7 +111,7 @@ protected:
                     str.printf("[%s,%s]", gModeNames[kx], gModeNames[ky]);
 
                     p.setTextAlign(SkPaint::kCenter_Align);
-                    textCanvas->drawText(str.c_str(), str.size(), x + r.width()/2, y, p);
+                    textCanvas->drawString(str, x + r.width()/2, y, p);
 
                     x += r.width() * 4 / 3;
                 }
@@ -143,7 +143,7 @@ protected:
                     p.setAntiAlias(true);
                     p.setLooper(fLooper);
                     str.printf("%s, %s", gConfigNames[i], gFilterNames[j]);
-                    textCanvas->drawText(str.c_str(), str.size(), x, y + r.height() * 2 / 3, p);
+                    textCanvas->drawString(str, x, y + r.height() * 2 / 3, p);
                 }
 
                 y += r.height() * 4 / 3;
@@ -160,10 +160,9 @@ protected:
     }
 
 private:
-    typedef SampleView INHERITED;
+    typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-static SkView* MyFactory() { return new TilingView; }
-static SkViewRegister reg(MyFactory);
+DEF_SAMPLE( return new TilingView(); )
