@@ -34,6 +34,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libEGL", "third_party\exter
 		{4ADCA9CF-1774-40F8-B5BD-5CBBD9A68F4A} = {4ADCA9CF-1774-40F8-B5BD-5CBBD9A68F4A}
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "modules", "modules", "{193A0569-4926-4EFD-9331-62DA97CE53ED}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64

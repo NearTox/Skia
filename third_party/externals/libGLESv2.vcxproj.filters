@@ -71,7 +71,6 @@
     <ClCompile Include="angle2\src\compiler\translator\TextureFunctionHLSL.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\ImageFunctionHLSL.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\TranslatorHLSL.cpp" />
-    <ClCompile Include="angle2\src\compiler\translator\UniformHLSL.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\UtilsHLSL.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\emulated_builtin_functions_hlsl_autogen.cpp" />
     <ClCompile Include="angle2\src\common\event_tracer.cpp" />
@@ -120,7 +119,6 @@
     <ClCompile Include="angle2\src\libANGLE\es3_copy_conversion_table_autogen.cpp" />
     <ClCompile Include="angle2\src\libANGLE\format_map_autogen.cpp" />
     <ClCompile Include="angle2\src\libANGLE\formatutils.cpp" />
-    <ClCompile Include="angle2\src\libANGLE\params.cpp" />
     <ClCompile Include="angle2\src\libANGLE\queryconversions.cpp" />
     <ClCompile Include="angle2\src\libANGLE\queryutils.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\ContextImpl.cpp" />
@@ -341,5 +339,14 @@
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\Program11.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\ImageGL.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteAtomicFunctionExpressions.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\tree_ops\EmulateGLDrawID.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\AtomicCounterFunctionHLSL.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\ResourcesHLSL.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\ShaderStorageBlockFunctionHLSL.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\ShaderStorageBlockOutputHLSL.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\BlobCache.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\renderer\QueryImpl.cpp" />
+    <ClCompile Include="angle2\src\common\third_party\xxhash\xxhash.c" />
+    <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\converged\CompositorNativeWindow11.cpp" />
   </ItemGroup>
 </Project>

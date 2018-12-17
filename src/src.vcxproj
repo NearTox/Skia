@@ -52,6 +52,8 @@
     <ClCompile Include="codec\SkStreamBuffer.cpp" />
     <ClCompile Include="codec\SkSwizzler.cpp" />
     <ClCompile Include="codec\SkWbmpCodec.cpp" />
+    <ClCompile Include="codec\SkWebpAdapterCodec.cpp" />
+    <ClCompile Include="codec\SkWebpCodec.cpp" />
     <ClCompile Include="core\SkAAClip.cpp" />
     <ClCompile Include="core\SkAlphaRuns.cpp" />
     <ClCompile Include="core\SkAnalyticEdge.cpp" />
@@ -86,14 +88,11 @@
     <ClCompile Include="core\SkClipStackDevice.cpp" />
     <ClCompile Include="core\SkColor.cpp" />
     <ClCompile Include="core\SkColorFilter.cpp" />
-    <ClCompile Include="core\SkColorLookUpTable.cpp" />
     <ClCompile Include="core\SkColorMatrixFilterRowMajor255.cpp" />
     <ClCompile Include="core\SkColorSpace.cpp" />
-    <ClCompile Include="core\SkColorSpaceXform.cpp" />
     <ClCompile Include="core\SkColorSpaceXformCanvas.cpp" />
     <ClCompile Include="core\SkColorSpaceXformer.cpp" />
     <ClCompile Include="core\SkColorSpaceXformSteps.cpp" />
-    <ClCompile Include="core\SkColorSpace_XYZ.cpp" />
     <ClCompile Include="core\SkConvertPixels.cpp" />
     <ClCompile Include="core\SkCoverageDelta.cpp" />
     <ClCompile Include="core\SkCpu.cpp" />
@@ -107,12 +106,12 @@
     <ClCompile Include="core\SkDeque.cpp" />
     <ClCompile Include="core\SkDevice.cpp" />
     <ClCompile Include="core\SkDistanceFieldGen.cpp" />
-    <ClCompile Include="core\SkDither.cpp" />
     <ClCompile Include="core\SkDocument.cpp" />
     <ClCompile Include="core\SkDraw.cpp" />
     <ClCompile Include="core\SkDrawable.cpp" />
     <ClCompile Include="core\SkDrawLooper.cpp" />
     <ClCompile Include="core\SkDrawShadowInfo.cpp" />
+    <ClCompile Include="core\SkDraw_text.cpp" />
     <ClCompile Include="core\SkDraw_vertices.cpp" />
     <ClCompile Include="core\SkEdge.cpp" />
     <ClCompile Include="core\SkEdgeBuilder.cpp" />
@@ -131,6 +130,7 @@
     <ClCompile Include="core\SkGlyph.cpp" />
     <ClCompile Include="core\SkGlyphCache.cpp" />
     <ClCompile Include="core\SkGlyphRun.cpp" />
+    <ClCompile Include="core\SkGlyphRunPainter.cpp" />
     <ClCompile Include="core\SkGpuBlurUtils.cpp" />
     <ClCompile Include="core\SkGraphics.cpp" />
     <ClCompile Include="core\SkHalf.cpp" />
@@ -168,6 +168,7 @@
     <ClCompile Include="core\SkOverdrawCanvas.cpp" />
     <ClCompile Include="core\SkPaint.cpp" />
     <ClCompile Include="core\SkPaintPriv.cpp" />
+    <ClCompile Include="core\SkPaint_text.cpp" />
     <ClCompile Include="core\SkPath.cpp" />
     <ClCompile Include="core\SkPathEffect.cpp" />
     <ClCompile Include="core\SkPathMeasure.cpp" />
@@ -248,6 +249,7 @@
     <ClCompile Include="core\SkXfermodeInterpretation.cpp" />
     <ClCompile Include="core\SkYUVPlanesCache.cpp" />
     <ClCompile Include="c\sk_effects.cpp" />
+    <ClCompile Include="c\sk_imageinfo.cpp" />
     <ClCompile Include="c\sk_paint.cpp" />
     <ClCompile Include="c\sk_surface.cpp" />
     <ClCompile Include="effects\imagefilters\SkAlphaThresholdFilter.cpp" />
@@ -304,10 +306,11 @@
     <ClCompile Include="gpu\ccpr\GrCCPathProcessor.cpp" />
     <ClCompile Include="gpu\ccpr\GrCCPerFlushResources.cpp" />
     <ClCompile Include="gpu\ccpr\GrCCQuadraticShader.cpp" />
+    <ClCompile Include="gpu\ccpr\GrCCStrokeGeometry.cpp" />
+    <ClCompile Include="gpu\ccpr\GrCCStroker.cpp" />
     <ClCompile Include="gpu\ccpr\GrCoverageCountingPathRenderer.cpp" />
     <ClCompile Include="gpu\effects\GrAARectEffect.cpp" />
     <ClCompile Include="gpu\effects\GrAlphaThresholdFragmentProcessor.cpp" />
-    <ClCompile Include="gpu\effects\GrArithmeticFP.cpp" />
     <ClCompile Include="gpu\effects\GrBezierEffect.cpp" />
     <ClCompile Include="gpu\effects\GrBicubicEffect.cpp" />
     <ClCompile Include="gpu\effects\GrBitmapTextGeoProc.cpp" />
@@ -319,17 +322,14 @@
     <ClCompile Include="gpu\effects\GrConvexPolyEffect.cpp" />
     <ClCompile Include="gpu\effects\GrCoverageSetOpXP.cpp" />
     <ClCompile Include="gpu\effects\GrCustomXfermode.cpp" />
-    <ClCompile Include="gpu\effects\GrDDLTextureStripAtlas.cpp" />
     <ClCompile Include="gpu\effects\GrDisableColorXP.cpp" />
     <ClCompile Include="gpu\effects\GrDistanceFieldGeoProc.cpp" />
-    <ClCompile Include="gpu\effects\GrDynamicTextureStripAtlas.cpp" />
     <ClCompile Include="gpu\effects\GrEllipseEffect.cpp" />
     <ClCompile Include="gpu\effects\GrGaussianConvolutionFragmentProcessor.cpp" />
     <ClCompile Include="gpu\effects\GrLumaColorFilterEffect.cpp" />
     <ClCompile Include="gpu\effects\GrMagnifierEffect.cpp" />
     <ClCompile Include="gpu\effects\GrMatrixConvolutionEffect.cpp" />
     <ClCompile Include="gpu\effects\GrOvalEffect.cpp" />
-    <ClCompile Include="gpu\effects\GrOverdrawFragmentProcessor.cpp" />
     <ClCompile Include="gpu\effects\GrPorterDuffXferProcessor.cpp" />
     <ClCompile Include="gpu\effects\GrPremulInputFragmentProcessor.cpp" />
     <ClCompile Include="gpu\effects\GrRectBlurEffect.cpp" />
@@ -340,8 +340,6 @@
     <ClCompile Include="gpu\effects\GrSkSLFP.cpp" />
     <ClCompile Include="gpu\effects\GrSRGBEffect.cpp" />
     <ClCompile Include="gpu\effects\GrTextureDomain.cpp" />
-    <ClCompile Include="gpu\effects\GrTextureStripAtlas.cpp" />
-    <ClCompile Include="gpu\effects\GrUnpremulInputFragmentProcessor.cpp" />
     <ClCompile Include="gpu\effects\GrXfermodeFragmentProcessor.cpp" />
     <ClCompile Include="gpu\effects\GrYUVtoRGBEffect.cpp" />
     <ClCompile Include="gpu\glsl\GrGLSL.cpp" />
@@ -385,12 +383,23 @@
     <ClCompile Include="gpu\gl\GrGLVaryingHandler.cpp" />
     <ClCompile Include="gpu\gl\GrGLVertexArray.cpp" />
     <ClCompile Include="gpu\gl\win\GrGLMakeNativeInterface_win.cpp" />
+    <ClCompile Include="gpu\gradients\GrClampedGradientEffect.cpp" />
+    <ClCompile Include="gpu\gradients\GrDualIntervalGradientColorizer.cpp" />
+    <ClCompile Include="gpu\gradients\GrGradientBitmapCache.cpp" />
+    <ClCompile Include="gpu\gradients\GrGradientShader.cpp" />
+    <ClCompile Include="gpu\gradients\GrLinearGradientLayout.cpp" />
+    <ClCompile Include="gpu\gradients\GrRadialGradientLayout.cpp" />
+    <ClCompile Include="gpu\gradients\GrSingleIntervalGradientColorizer.cpp" />
+    <ClCompile Include="gpu\gradients\GrSweepGradientLayout.cpp" />
+    <ClCompile Include="gpu\gradients\GrTextureGradientColorizer.cpp" />
+    <ClCompile Include="gpu\gradients\GrTiledGradientEffect.cpp" />
+    <ClCompile Include="gpu\gradients\GrTwoPointConicalGradientLayout.cpp" />
+    <ClCompile Include="gpu\gradients\GrUnrolledBinaryGradientColorizer.cpp" />
     <ClCompile Include="gpu\GrAHardwareBufferImageGenerator.cpp" />
     <ClCompile Include="gpu\GrAuditTrail.cpp" />
     <ClCompile Include="gpu\GrBackendSurface.cpp" />
     <ClCompile Include="gpu\GrBackendTextureImageGenerator.cpp" />
     <ClCompile Include="gpu\GrBitmapTextureMaker.cpp" />
-    <ClCompile Include="gpu\GrBlend.cpp" />
     <ClCompile Include="gpu\GrBlurUtils.cpp" />
     <ClCompile Include="gpu\GrBuffer.cpp" />
     <ClCompile Include="gpu\GrBufferAllocPool.cpp" />
@@ -516,8 +525,11 @@
     <ClCompile Include="images\SkJpegEncoder.cpp" />
     <ClCompile Include="images\SkJPEGWriteUtility.cpp" />
     <ClCompile Include="images\SkPngEncoder.cpp" />
+    <ClCompile Include="images\SkWebpEncoder.cpp" />
     <ClCompile Include="image\SkImage.cpp" />
     <ClCompile Include="image\SkImage_Gpu.cpp" />
+    <ClCompile Include="image\SkImage_GpuBase.cpp" />
+    <ClCompile Include="image\SkImage_GpuYUVA.cpp" />
     <ClCompile Include="image\SkImage_Lazy.cpp" />
     <ClCompile Include="image\SkImage_Raster.cpp" />
     <ClCompile Include="image\SkSurface.cpp" />
@@ -603,8 +615,6 @@
     <ClCompile Include="pathops\SkPathWriter.cpp" />
     <ClCompile Include="pathops\SkReduceOrder.cpp" />
     <ClCompile Include="pdf\SkDocument_PDF_None.cpp" />
-    <ClCompile Include="pipe\SkPipeCanvas.cpp" />
-    <ClCompile Include="pipe\SkPipeReader.cpp" />
     <ClCompile Include="ports\SkDebug_win.cpp" />
     <ClCompile Include="ports\SkDiscardableMemory_none.cpp" />
     <ClCompile Include="ports\SkFontHost_win.cpp" />
@@ -626,13 +636,11 @@
     <ClCompile Include="sfnt\SkOTUtils.cpp" />
     <ClCompile Include="shaders\gradients\Sk4fGradientBase.cpp" />
     <ClCompile Include="shaders\gradients\Sk4fLinearGradient.cpp" />
-    <ClCompile Include="shaders\gradients\SkGradientBitmapCache.cpp" />
     <ClCompile Include="shaders\gradients\SkGradientShader.cpp" />
     <ClCompile Include="shaders\gradients\SkLinearGradient.cpp" />
     <ClCompile Include="shaders\gradients\SkRadialGradient.cpp" />
     <ClCompile Include="shaders\gradients\SkSweepGradient.cpp" />
     <ClCompile Include="shaders\gradients\SkTwoPointConicalGradient.cpp" />
-    <ClCompile Include="shaders\gradients\SkTwoPointConicalGradient_gpu.cpp" />
     <ClCompile Include="shaders\SkBitmapProcShader.cpp" />
     <ClCompile Include="shaders\SkColorFilterShader.cpp" />
     <ClCompile Include="shaders\SkColorShader.cpp" />
@@ -650,6 +658,7 @@
     <ClCompile Include="sksl\SkSLCFGGenerator.cpp" />
     <ClCompile Include="sksl\SkSLCompiler.cpp" />
     <ClCompile Include="sksl\SkSLCPPCodeGenerator.cpp" />
+    <ClCompile Include="sksl\SkSLCPPUniformCTypes.cpp" />
     <ClCompile Include="sksl\SkSLGLSLCodeGenerator.cpp" />
     <ClCompile Include="sksl\SkSLHCodeGenerator.cpp" />
     <ClCompile Include="sksl\SkSLInterpreter.cpp" />
@@ -667,6 +676,7 @@
     <ClCompile Include="utils\mac\SkCreateCGImageRef.cpp" />
     <ClCompile Include="utils\mac\SkStream_mac.cpp" />
     <ClCompile Include="utils\Sk3D.cpp" />
+    <ClCompile Include="utils\SkAnimCodecPlayer.cpp" />
     <ClCompile Include="utils\SkBase64.cpp" />
     <ClCompile Include="utils\SkCamera.cpp" />
     <ClCompile Include="utils\SkCanvasStack.cpp" />
@@ -691,7 +701,6 @@
     <ClCompile Include="utils\SkPolyUtils.cpp" />
     <ClCompile Include="utils\SkShadowTessellator.cpp" />
     <ClCompile Include="utils\SkShadowUtils.cpp" />
-    <ClCompile Include="utils\SkTextOnPath.cpp" />
     <ClCompile Include="utils\SkThreadUtils_pthread.cpp" />
     <ClCompile Include="utils\SkThreadUtils_win.cpp" />
     <ClCompile Include="utils\SkUTF.cpp" />
@@ -713,7 +722,7 @@
     <ProjectGuid>{6B67ADCB-D0D8-468D-9FA0-13ADD2203343}</ProjectGuid>
     <RootNamespace>src</RootNamespace>
     <ProjectName>Skia</ProjectName>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -797,6 +806,7 @@
       <PreprocessorDefinitions>$(SkiaDef);WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
       <AdditionalOptions> /bigobj /utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies />
@@ -818,6 +828,7 @@
       <PreprocessorDefinitions>$(SkiaDef);WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
       <AdditionalOptions> /bigobj /utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies />
@@ -840,6 +851,7 @@
       <PreprocessorDefinitions>$(SkiaDef);WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
       <AdditionalOptions> /bigobj /utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -864,6 +876,7 @@
       <PreprocessorDefinitions>$(SkiaDef);WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
       <AdditionalOptions> /bigobj /utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

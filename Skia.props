@@ -2,12 +2,12 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
     <PropertyGroup Label="UserMacros">
-      <SkiaDef>_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;WIN32_LEAN_AND_MEAN;NOMINMAX;NDEBUG;SK_GAMMA_APPLY_TO_A8;SK_ALLOW_STATIC_GLOBAL_INITIALIZERS=0;SK_ENABLE_DISCRETE_GPU;SKIA_IMPLEMENTATION=1;SK_HAS_JPEG_LIBRARY;SK_HAS_PNG_LIBRARY;SK_XML;SK_HAS_HEIF_LIBRARY;SK_SUPPORT_ATLAS_TEXT=1;SK_ANGLE;GR_TEST_UTILS=1;SK_LEGACY_GPU_PIXEL_OPS;SK_SUPPORT_GPU=1;GR_GL_FUNCTION_TYPE=__stdcall;SK_GAMMA_SRGB;SK_GAMMA_CONTRAST=0.5;SK_USE_SKCMS</SkiaDef>
+      <SkiaDef>_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;WIN32_LEAN_AND_MEAN;NOMINMAX;NDEBUG;SK_GAMMA_CONTRAST=0.5;SK_SUPPORT_ATLAS_TEXT=1;SK_GAMMA_APPLY_TO_A8;SK_ANGLE;SK_ENABLE_DISCRETE_GPU;GR_TEST_UTILS=1;SKIA_IMPLEMENTATION=1;SK_HAS_HEIF_LIBRARY;SK_HAS_JPEG_LIBRARY;SK_HAS_PNG_LIBRARY;SK_HAS_WEBP_LIBRARY;SK_XML</SkiaDef>
       <SkiaDir>$(SolutionDir)</SkiaDir>
       <SkiaInclude>$(SkiaDir)include\</SkiaInclude>
       <SkiaSrc>$(SkiaDir)src\</SkiaSrc>
       <SkiaThirdParty>$(SkiaDir)third_party/externals/expat/lib/;$(SkiaDir)third_party\libpng;$(SkiaDir)third_party\externals\libpng;$(SolutionDir)third_party\gif;$(SkiaDir)third_party\libjpeg-turbo;$(SkiaDir)third_party\externals\libjpeg-turbo;$(SkiaDir)third_party\skcms</SkiaThirdParty>
-      <SkiaIncludeDir>$(SkiaInclude)android;$(SkiaInclude)c;$(SkiaInclude)codec;$(SkiaInclude)config;$(SkiaInclude)core;$(SkiaInclude)effects;$(SkiaInclude)encode;$(SkiaInclude)gpu;$(SkiaInclude)gpu\gl;$(SkiaInclude)atlastext;$(SkiaInclude)pathops;$(SkiaInclude)ports;$(SkiaInclude)svg;$(SkiaInclude)utils;$(SkiaInclude)utils\mac;$(SkiaInclude)atlastext;$(SkiaInclude)private;$(SkiaSrc)c;$(SkiaSrc)codec;$(SkiaSrc)core;$(SkiaSrc)effects;$(SkiaSrc)fonts;$(SkiaSrc)image;$(SkiaSrc)images;$(SkiaSrc)lazy;$(SkiaSrc)opts;$(SkiaSrc)pathops;$(SkiaSrc)pdf;$(SkiaSrc)ports;$(SkiaSrc)sfnt;$(SkiaSrc)shaders;$(SkiaSrc)shaders\gradients;$(SkiaSrc)sksl;$(SkiaSrc)utils;$(SkiaSrc)utils\win;$(SkiaSrc)xml;$(SkiaSrc)gpu</SkiaIncludeDir>
+      <SkiaIncludeDir>$(SkiaInclude)android;$(SkiaInclude)c;$(SkiaInclude)codec;$(SkiaInclude)config;$(SkiaInclude)core;$(SkiaInclude)docs;$(SkiaInclude)effects;$(SkiaInclude)encode;$(SkiaInclude)gpu;$(SkiaInclude)gpu\gl;$(SkiaInclude)atlastext;$(SkiaInclude)pathops;$(SkiaInclude)ports;$(SkiaInclude)svg;$(SkiaInclude)utils;$(SkiaInclude)utils\mac;$(SkiaInclude)atlastext;$(SkiaInclude)private;$(SkiaSrc)c;$(SkiaSrc)codec;$(SkiaSrc)core;$(SkiaSrc)effects;$(SkiaSrc)fonts;$(SkiaSrc)image;$(SkiaSrc)images;$(SkiaSrc)lazy;$(SkiaSrc)opts;$(SkiaSrc)pathops;$(SkiaSrc)pdf;$(SkiaSrc)ports;$(SkiaSrc)sfnt;$(SkiaSrc)shaders;$(SkiaSrc)shaders\gradients;$(SkiaSrc)sksl;$(SkiaSrc)utils;$(SkiaSrc)utils\win;$(SkiaSrc)xml;$(SkiaSrc)gpu</SkiaIncludeDir>
     </PropertyGroup>
   <PropertyGroup />
   <ItemDefinitionGroup />

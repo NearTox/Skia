@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="..\angle2\compiler2.cpp" />
     <ClCompile Include="..\angle2\debug2.cpp" />
+    <ClCompile Include="angle2\src\common\third_party\xxhash\xxhash.c" />
     <ClCompile Include="angle2\src\compiler\preprocessor\DiagnosticsBase.cpp" />
     <ClCompile Include="angle2\src\compiler\preprocessor\DirectiveHandlerBase.cpp" />
     <ClCompile Include="angle2\src\compiler\preprocessor\DirectiveParser.cpp" />
@@ -32,6 +33,7 @@
     <ClCompile Include="angle2\src\compiler\preprocessor\Preprocessor.cpp" />
     <ClCompile Include="angle2\src\compiler\preprocessor\Token.cpp" />
     <ClCompile Include="angle2\src\compiler\preprocessor\Tokenizer.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\AtomicCounterFunctionHLSL.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\BuiltInFunctionEmulator.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\CallDAG.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\CodeGen.cpp" />
@@ -57,12 +59,16 @@
     <ClCompile Include="angle2\src\compiler\translator\ParseContext.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\PoolAlloc.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\QualifierTypes.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\ResourcesHLSL.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\ShaderLang.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\ShaderStorageBlockFunctionHLSL.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\ShaderStorageBlockOutputHLSL.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\ShaderVars.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\Symbol.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\SymbolTable.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\SymbolTable_autogen.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\SymbolUniqueId.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\tree_ops\EmulateGLDrawID.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteAtomicFunctionExpressions.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\Types.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\ValidateGlobalInitializer.cpp" />
@@ -116,8 +122,11 @@
     <ClCompile Include="angle2\src\compiler\translator\tree_util\IntermTraverse.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_util\ReplaceVariable.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_util\RunAtTheEndOfShader.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\BlobCache.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\converged\CompositorNativeWindow11.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\Program11.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\ImageGL.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\renderer\QueryImpl.cpp" />
     <ClCompile Include="angle2\src\third_party\compiler\ArrayBoundsClamper.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\OutputESSL.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\TranslatorESSL.cpp" />
@@ -135,7 +144,6 @@
     <ClCompile Include="angle2\src\compiler\translator\TextureFunctionHLSL.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\ImageFunctionHLSL.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\TranslatorHLSL.cpp" />
-    <ClCompile Include="angle2\src\compiler\translator\UniformHLSL.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\UtilsHLSL.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\emulated_builtin_functions_hlsl_autogen.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\AddDefaultReturnStatements.cpp" />
@@ -198,7 +206,6 @@
     <ClCompile Include="angle2\src\libANGLE\es3_copy_conversion_table_autogen.cpp" />
     <ClCompile Include="angle2\src\libANGLE\format_map_autogen.cpp" />
     <ClCompile Include="angle2\src\libANGLE\formatutils.cpp" />
-    <ClCompile Include="angle2\src\libANGLE\params.cpp" />
     <ClCompile Include="angle2\src\libANGLE\queryconversions.cpp" />
     <ClCompile Include="angle2\src\libANGLE\queryutils.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\ContextImpl.cpp" />
@@ -364,7 +371,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{4ADCA9CF-1774-40F8-B5BD-5CBBD9A68F4A}</ProjectGuid>
     <RootNamespace>libGLESv2</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -443,6 +450,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\third_party/externals/angle2/src/third_party/khronos;$(SolutionDir)\third_party/externals/angle2/src/common/third_party/base;$(SolutionDir)\third_party\externals\angle2\src;$(SolutionDir)\third_party\externals\angle2\include;$(SolutionDir)\third_party\angle2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
       <AdditionalOptions> /bigobj /utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -458,6 +466,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\third_party/externals/angle2/src/third_party/khronos;$(SolutionDir)\third_party/externals/angle2/src/common/third_party/base;$(SolutionDir)\third_party\externals\angle2\src;$(SolutionDir)\third_party\externals\angle2\include;$(SolutionDir)\third_party\angle2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
       <AdditionalOptions> /bigobj /utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -475,6 +484,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\third_party/externals/angle2/src/third_party/khronos;$(SolutionDir)\third_party/externals/angle2/src/common/third_party/base;$(SolutionDir)\third_party\externals\angle2\src;$(SolutionDir)\third_party\externals\angle2\include;$(SolutionDir)\third_party\angle2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
       <AdditionalOptions> /bigobj /utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -494,6 +504,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\third_party/externals/angle2/src/third_party/khronos;$(SolutionDir)\third_party/externals/angle2/src/common/third_party/base;$(SolutionDir)\third_party\externals\angle2\src;$(SolutionDir)\third_party\externals\angle2\include;$(SolutionDir)\third_party\angle2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
       <AdditionalOptions> /bigobj /utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
