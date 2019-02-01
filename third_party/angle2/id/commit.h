@@ -7,8 +7,8 @@
 //   This is a default commit hash header, when git is not available.
 //
 
-#define ANGLE_COMMIT_HASH "6a5d98c4b528a55491047b0217d3aedf0b9c8705"
-#define ANGLE_COMMIT_HASH_SIZE 40
-#define ANGLE_COMMIT_DATE "6a5d98c4b528a55491047b0217d3aedf0b9c8705"
+#define ANGLE_COMMIT_HASH "47ca1b2fa399"
+#define ANGLE_COMMIT_HASH_SIZE 12
+#define ANGLE_COMMIT_DATE "2019-01-23 16:11:56 +0000"
 
 #define ANGLE_DISABLE_PROGRAM_BINARY_LOAD

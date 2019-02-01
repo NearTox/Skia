@@ -70,6 +70,7 @@
     <ClCompile Include="angle2\src\compiler\translator\SymbolUniqueId.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\EmulateGLDrawID.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteAtomicFunctionExpressions.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteExpressionsWithShaderStorageBlock.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\Types.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\ValidateGlobalInitializer.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\ValidateLimitations.cpp" />
@@ -123,8 +124,10 @@
     <ClCompile Include="angle2\src\compiler\translator\tree_util\ReplaceVariable.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_util\RunAtTheEndOfShader.cpp" />
     <ClCompile Include="angle2\src\libANGLE\BlobCache.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\EGLSync.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\converged\CompositorNativeWindow11.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\Program11.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\renderer\d3d\DynamicImage2DHLSL.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\ImageGL.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\QueryImpl.cpp" />
     <ClCompile Include="angle2\src\third_party\compiler\ArrayBoundsClamper.cpp" />
@@ -163,7 +166,6 @@
     <ClCompile Include="angle2\src\libANGLE\Config.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Context.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Context_gles_1_0.cpp" />
-    <ClCompile Include="angle2\src\libANGLE\ContextState.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Debug.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Device.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Display.cpp" />

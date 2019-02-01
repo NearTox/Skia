@@ -79,7 +79,6 @@
     <ClCompile Include="angle2\src\libANGLE\Caps.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Config.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Context.cpp" />
-    <ClCompile Include="angle2\src\libANGLE\ContextState.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Debug.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Device.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Display.cpp" />
@@ -348,5 +347,8 @@
     <ClCompile Include="angle2\src\libANGLE\renderer\QueryImpl.cpp" />
     <ClCompile Include="angle2\src\common\third_party\xxhash\xxhash.c" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\converged\CompositorNativeWindow11.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\EGLSync.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteExpressionsWithShaderStorageBlock.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\renderer\d3d\DynamicImage2DHLSL.cpp" />
   </ItemGroup>
 </Project>
