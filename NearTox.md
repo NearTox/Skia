@@ -1,2 +1,2 @@
 Based on Skia:
-  skia url: https://skia.googlesource.com/skia.git@193565807f7fd2a2c14e21b44c545cc03ebe134f
+  skia url: https://skia.googlesource.com/skia.git@094ab18b457e0a5c79c2159231dea2b7252e8275

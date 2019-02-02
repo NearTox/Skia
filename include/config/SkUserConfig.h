@@ -120,18 +120,6 @@
 #define SK_SUPPORT_GPU 1
 #define SK_SUPPORT_ATLAS_TEXT 1
 
-#ifndef SK_SUPPORT_LEGACY_PAINT_FONT_FIELDS
-#define SK_SUPPORT_LEGACY_PAINT_FONT_FIELDS
-#endif
-
-#ifndef SK_SUPPORT_LEGACY_PAINT_TEXTMEASURE
-#define SK_SUPPORT_LEGACY_PAINT_TEXTMEASURE
-#endif
-
-#ifndef SK_SUPPORT_LEGACY_PAINTTEXTENCODING
-#define SK_SUPPORT_LEGACY_PAINTTEXTENCODING
-#endif
-
 /* Skia makes use of histogram logging macros to trace the frequency of
  * events. By default, Skia provides no-op versions of these macros.
  * Skia consumers can provide their own definitions of these macros to
