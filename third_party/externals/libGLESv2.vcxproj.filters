@@ -350,5 +350,7 @@
     <ClCompile Include="angle2\src\libANGLE\EGLSync.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteExpressionsWithShaderStorageBlock.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\DynamicImage2DHLSL.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\ValidateAST.cpp" />
+    <ClCompile Include="..\angle2\PoolAlloc2.cpp" />
   </ItemGroup>
 </Project>

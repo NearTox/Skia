@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|Win32">
-      <Configuration>Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug|x64">
-      <Configuration>Debug</Configuration>
-      <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
       <Configuration>Release</Configuration>
@@ -21,6 +13,7 @@
   <ItemGroup>
     <ClCompile Include="..\angle2\compiler2.cpp" />
     <ClCompile Include="..\angle2\debug2.cpp" />
+    <ClCompile Include="..\angle2\PoolAlloc2.cpp" />
     <ClCompile Include="angle2\src\common\third_party\xxhash\xxhash.c" />
     <ClCompile Include="angle2\src\compiler\preprocessor\DiagnosticsBase.cpp" />
     <ClCompile Include="angle2\src\compiler\preprocessor\DirectiveHandlerBase.cpp" />
@@ -72,6 +65,7 @@
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteAtomicFunctionExpressions.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteExpressionsWithShaderStorageBlock.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\Types.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\ValidateAST.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\ValidateGlobalInitializer.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\ValidateLimitations.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\ValidateMaxParameters.cpp" />
@@ -376,19 +370,7 @@
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
@@ -405,36 +387,16 @@
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\..\NearTox\NearTox.props" />
-    <Import Project="..\..\Skia.props" />
-  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\..\NearTox\NearTox.props" />
-    <Import Project="..\..\Skia.props" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\..\NearTox\NearTox.props" />
     <Import Project="..\..\Skia.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\..\NearTox\NearTox.props" />
     <Import Project="..\..\Skia.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(MyOutDir)</OutDir>
-    <IntDir>$(MyTempDir)</IntDir>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(MyOutDir)</OutDir>
-    <IntDir>$(MyTempDir)</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(MyOutDir)</OutDir>
     <IntDir>$(MyTempDir)</IntDir>
   </PropertyGroup>
@@ -442,43 +404,10 @@
     <OutDir>$(MyOutDir)</OutDir>
     <IntDir>$(MyTempDir)</IntDir>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;WIN32_LEAN_AND_MEAN;NOMINMAX;NDEBUG;GL_GLEXT_PROTOTYPES;EGL_EGLEXT_PROTOTYPES;LIBANGLE_IMPLEMENTATION;LIBGLESV2_IMPLEMENTATION;EGLAPI=;GL_API=;GL_APICALL=;ANGLE_ENABLE_ESSL;ANGLE_ENABLE_GLSL;ANGLE_ENABLE_OPENGL;ANGLE_ENABLE_HLSL;ANGLE_ENABLE_D3D11;ANGLE_ENABLE_D3D9;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(SolutionDir)\third_party/externals/angle2/src/third_party/khronos;$(SolutionDir)\third_party/externals/angle2/src/common/third_party/base;$(SolutionDir)\third_party\externals\angle2\src;$(SolutionDir)\third_party\externals\angle2\include;$(SolutionDir)\third_party\angle2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DiagnosticsFormat>Caret</DiagnosticsFormat>
-      <AdditionalOptions> /bigobj /utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-    </ClCompile>
-    <Link>
-      <AdditionalDependencies>d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;WIN32_LEAN_AND_MEAN;NOMINMAX;NDEBUG;GL_GLEXT_PROTOTYPES;EGL_EGLEXT_PROTOTYPES;LIBANGLE_IMPLEMENTATION;LIBGLESV2_IMPLEMENTATION;LIBEGL_IMPLEMENTATION;EGLAPI=;GL_API=;GL_APICALL=;ANGLE_ENABLE_ESSL;ANGLE_ENABLE_GLSL;ANGLE_ENABLE_OPENGL;ANGLE_ENABLE_HLSL;ANGLE_ENABLE_D3D11;ANGLE_ENABLE_D3D9;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(SolutionDir)\third_party/externals/angle2/src/third_party/khronos;$(SolutionDir)\third_party/externals/angle2/src/common/third_party/base;$(SolutionDir)\third_party\externals\angle2\src;$(SolutionDir)\third_party\externals\angle2\include;$(SolutionDir)\third_party\angle2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DiagnosticsFormat>Caret</DiagnosticsFormat>
-      <AdditionalOptions> /bigobj /utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-    </ClCompile>
-    <Link>
-      <AdditionalDependencies>d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;WIN32_LEAN_AND_MEAN;NOMINMAX;NDEBUG;GL_GLEXT_PROTOTYPES;EGL_EGLEXT_PROTOTYPES;LIBANGLE_IMPLEMENTATION;LIBGLESV2_IMPLEMENTATION;LIBEGL_IMPLEMENTATION;EGLAPI=;GL_API=;GL_APICALL=;ANGLE_ENABLE_ESSL;ANGLE_ENABLE_GLSL;ANGLE_ENABLE_OPENGL;ANGLE_ENABLE_HLSL;ANGLE_ENABLE_D3D11;ANGLE_ENABLE_D3D9;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -492,13 +421,13 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SetChecksum>true</SetChecksum>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;WIN32_LEAN_AND_MEAN;NOMINMAX;NDEBUG;GL_GLEXT_PROTOTYPES;EGL_EGLEXT_PROTOTYPES;LIBANGLE_IMPLEMENTATION;LIBGLESV2_IMPLEMENTATION;LIBEGL_IMPLEMENTATION;EGLAPI=;GL_API=;GL_APICALL=;ANGLE_ENABLE_ESSL;ANGLE_ENABLE_GLSL;ANGLE_ENABLE_OPENGL;ANGLE_ENABLE_HLSL;ANGLE_ENABLE_D3D11;ANGLE_ENABLE_D3D9;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -512,6 +441,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SetChecksum>true</SetChecksum>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,17 +1,23 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
-    <PropertyGroup Label="UserMacros">
-      <SkiaDef>_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;WIN32_LEAN_AND_MEAN;NOMINMAX;NDEBUG;SK_GAMMA_CONTRAST=0.5;SK_SUPPORT_ATLAS_TEXT=1;SK_GAMMA_APPLY_TO_A8;SK_ANGLE;SK_ENABLE_DISCRETE_GPU;GR_TEST_UTILS=0;SKIA_IMPLEMENTATION=1;SK_HAS_HEIF_LIBRARY;SK_HAS_JPEG_LIBRARY;SK_HAS_PNG_LIBRARY;SK_HAS_WEBP_LIBRARY;SK_XML;SK_DISABLE_EXPLICIT_GPU_RESOURCE_ALLOCATION;SK_LEGACY_SKCODEC_NONE_ENUM;SK_ENABLE_DUMP_GPU;SK_DISABLE_AAA;SK_DISABLE_DAA;SK_DISABLE_READBUFFER;SK_DISABLE_EFFECT_DESERIALIZATION;SK_DISABLE_LEGACY_SHADERCONTEXT;SK_DISABLE_LOWP_RASTER_PIPELINE;SK_FORCE_RASTER_PIPELINE_BLITTER;SK_ENABLE_SKOTTIE</SkiaDef>
-      <SkiaDir>$(SolutionDir)</SkiaDir>
-      <SkiaInclude>$(SkiaDir)include\</SkiaInclude>
-      <SkiaSrc>$(SkiaDir)src\</SkiaSrc>
-      <SkiaThirdParty>$(SkiaDir)third_party/externals/expat/lib/;$(SkiaDir)third_party\libpng;$(SkiaDir)third_party\externals\libpng;$(SolutionDir)third_party\gif;$(SkiaDir)third_party\libjpeg-turbo;$(SkiaDir)third_party\externals\libjpeg-turbo;$(SkiaDir)third_party\skcms</SkiaThirdParty>
-      <SkiaIncludeDir>$(SkiaInclude)android;$(SkiaInclude)c;$(SkiaInclude)codec;$(SkiaInclude)config;$(SkiaInclude)core;$(SkiaInclude)docs;$(SkiaInclude)effects;$(SkiaInclude)encode;$(SkiaInclude)gpu;$(SkiaInclude)gpu\gl;$(SkiaInclude)atlastext;$(SkiaInclude)pathops;$(SkiaInclude)ports;$(SkiaInclude)svg;$(SkiaInclude)utils;$(SkiaInclude)utils\mac;$(SkiaInclude)atlastext;$(SkiaInclude)private;$(SkiaSrc)c;$(SkiaSrc)codec;$(SkiaSrc)core;$(SkiaSrc)effects;$(SkiaSrc)fonts;$(SkiaSrc)image;$(SkiaSrc)images;$(SkiaSrc)lazy;$(SkiaSrc)opts;$(SkiaSrc)pathops;$(SkiaSrc)pdf;$(SkiaSrc)ports;$(SkiaSrc)sfnt;$(SkiaSrc)shaders;$(SkiaSrc)shaders\gradients;$(SkiaSrc)sksl;$(SkiaSrc)utils;$(SkiaSrc)utils\win;$(SkiaSrc)xml;$(SkiaSrc)gpu</SkiaIncludeDir>
-    </PropertyGroup>
+  <PropertyGroup Label="UserMacros">
+    <SkiaDef2>SK_GAMMA_APPLY_TO_A8;SK_ANGLE;SK_ENABLE_DISCRETE_GPU;GR_TEST_UTILS=0;SK_HAS_HEIF_LIBRARY;SK_HAS_JPEG_LIBRARY;SK_HAS_PNG_LIBRARY;SK_HAS_WEBP_LIBRARY;SK_XML;SK_SUPPORT_ATLAS_TEXT=1;SK_ENABLE_SKOTTIE</SkiaDef2>
+    <SkiaDef>_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;WIN32_LEAN_AND_MEAN;NOMINMAX;NDEBUG;SKIA_IMPLEMENTATION=1</SkiaDef>
+    <SkiaSrc>$(SolutionDir)src\</SkiaSrc>
+    <SkiaInclude>$(SolutionDir)include\</SkiaInclude>
+    <SkiaThirdParty>$(SolutionDir)third_party/externals/expat/lib/;$(SolutionDir)third_party\libpng;$(SolutionDir)third_party\externals\libpng;$(SolutionDir)third_party\gif;$(SolutionDir)third_party\libjpeg-turbo;$(SolutionDir)third_party\externals\libjpeg-turbo;$(SolutionDir)third_party\skcms</SkiaThirdParty>
+    <SkiaIncludeDir>$(SkiaInclude)android;$(SkiaInclude)c;$(SkiaInclude)codec;$(SkiaInclude)config;$(SkiaInclude)core;$(SkiaInclude)docs;$(SkiaInclude)effects;$(SkiaInclude)encode;$(SkiaInclude)gpu;$(SkiaInclude)gpu\gl;$(SkiaInclude)atlastext;$(SkiaInclude)pathops;$(SkiaInclude)ports;$(SkiaInclude)svg;$(SkiaInclude)utils;$(SkiaInclude)utils\mac;$(SkiaInclude)atlastext;$(SkiaInclude)private;$(SkiaSrc)c;$(SkiaSrc)codec;$(SkiaSrc)core;$(SkiaSrc)effects;$(SkiaSrc)fonts;$(SkiaSrc)image;$(SkiaSrc)images;$(SkiaSrc)lazy;$(SkiaSrc)opts;$(SkiaSrc)pathops;$(SkiaSrc)pdf;$(SkiaSrc)ports;$(SkiaSrc)sfnt;$(SkiaSrc)shaders;$(SkiaSrc)shaders\gradients;$(SkiaSrc)sksl;$(SkiaSrc)utils;$(SkiaSrc)utils\win;$(SkiaSrc)xml;$(SkiaSrc)gpu</SkiaIncludeDir>
+    <MyIncludeDir>$(SolutionDir)..\vs$(VisualStudioVersion)\$(PlatformTarget)\include;$(SkiaInclude)android;$(SkiaInclude)c;$(SkiaInclude)codec;$(SkiaInclude)config;$(SkiaInclude)core;$(SkiaInclude)effects;$(SkiaInclude)encode;$(SkiaInclude)gpu;$(SkiaInclude)gpu/gl;$(SkiaInclude)pathops;$(SkiaInclude)ports;$(SkiaInclude)svg;$(SkiaInclude)utils;$(SkiaInclude)utils/mac;$(SkiaInclude)private;$(SolutionDir)..\Skia\third_party/externals/angle2/include;$(SolutionDir)..\Skia\src;</MyIncludeDir>
+    <MyOutDir>$(SolutionDir)bin\$(Configuration)-$(PlatformTarget)-vs$(VisualStudioVersion)\</MyOutDir>
+    <MyTempDir>$(SolutionDir)obj\$(ProjectName)\$(Configuration)-$(PlatformTarget)-vs$(VisualStudioVersion)\</MyTempDir>
+  </PropertyGroup>
   <PropertyGroup />
   <ItemDefinitionGroup />
   <ItemGroup>
+    <BuildMacro Include="SkiaDef2">
+      <Value>$(SkiaDef2)</Value>
+    </BuildMacro>
     <BuildMacro Include="SkiaDef">
       <Value>$(SkiaDef)</Value>
     </BuildMacro>
@@ -21,14 +27,21 @@
     <BuildMacro Include="SkiaInclude">
       <Value>$(SkiaInclude)</Value>
     </BuildMacro>
-    <BuildMacro Include="SkiaDir">
-      <Value>$(SkiaDir)</Value>
-    </BuildMacro>
     <BuildMacro Include="SkiaThirdParty">
       <Value>$(SkiaThirdParty)</Value>
     </BuildMacro>
     <BuildMacro Include="SkiaIncludeDir">
       <Value>$(SkiaIncludeDir)</Value>
+    </BuildMacro>
+    <BuildMacro Include="MyIncludeDir">
+      <Value>$(MyIncludeDir)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="MyOutDir">
+      <Value>$(MyOutDir)</Value>
+    </BuildMacro>
+    <BuildMacro Include="MyTempDir">
+      <Value>$(MyTempDir)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>

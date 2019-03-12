@@ -117,8 +117,7 @@
    directories from your include search path when you're not building the GPU
    backend. Defaults to 1 (build the GPU code).
  */
-#define SK_SUPPORT_GPU 1
-#define SK_SUPPORT_ATLAS_TEXT 1
+//#define SK_SUPPORT_GPU 1
 
 /* Skia makes use of histogram logging macros to trace the frequency of
  * events. By default, Skia provides no-op versions of these macros.

@@ -1,17 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|Win32">
-      <Configuration>Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug|x64">
-      <Configuration>Debug</Configuration>
-      <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
       <Configuration>Release</Configuration>
@@ -93,6 +85,7 @@
     <ClCompile Include="core\SkColorSpaceXformCanvas.cpp" />
     <ClCompile Include="core\SkColorSpaceXformer.cpp" />
     <ClCompile Include="core\SkColorSpaceXformSteps.cpp" />
+    <ClCompile Include="core\SkContourMeasure.cpp" />
     <ClCompile Include="core\SkConvertPixels.cpp" />
     <ClCompile Include="core\SkCoverageDelta.cpp" />
     <ClCompile Include="core\SkCpu.cpp" />
@@ -123,6 +116,7 @@
     <ClCompile Include="core\SkFontDescriptor.cpp" />
     <ClCompile Include="core\SkFontLCDConfig.cpp" />
     <ClCompile Include="core\SkFontMgr.cpp" />
+    <ClCompile Include="core\SkFontPriv.cpp" />
     <ClCompile Include="core\SkFontStream.cpp" />
     <ClCompile Include="core\SkGaussFilter.cpp" />
     <ClCompile Include="core\SkGeometry.cpp" />
@@ -139,7 +133,6 @@
     <ClCompile Include="core\SkImageGenerator.cpp" />
     <ClCompile Include="core\SkImageInfo.cpp" />
     <ClCompile Include="core\SkLatticeIter.cpp" />
-    <ClCompile Include="core\SkLights.cpp" />
     <ClCompile Include="core\SkLineClipper.cpp" />
     <ClCompile Include="core\SkLiteDL.cpp" />
     <ClCompile Include="core\SkLiteRecorder.cpp" />
@@ -155,7 +148,6 @@
     <ClCompile Include="core\SkMatrix44.cpp" />
     <ClCompile Include="core\SkMatrixImageFilter.cpp" />
     <ClCompile Include="core\SkMD5.cpp" />
-    <ClCompile Include="core\SkMetaData.cpp" />
     <ClCompile Include="core\SkMiniRecorder.cpp" />
     <ClCompile Include="core\SkMipMap.cpp" />
     <ClCompile Include="core\SkModeColorFilter.cpp" />
@@ -167,7 +159,6 @@
     <ClCompile Include="core\SkOverdrawCanvas.cpp" />
     <ClCompile Include="core\SkPaint.cpp" />
     <ClCompile Include="core\SkPaintPriv.cpp" />
-    <ClCompile Include="core\SkPaint_text.cpp" />
     <ClCompile Include="core\SkPath.cpp" />
     <ClCompile Include="core\SkPathEffect.cpp" />
     <ClCompile Include="core\SkPathMeasure.cpp" />
@@ -331,6 +322,7 @@
     <ClCompile Include="gpu\effects\GrLumaColorFilterEffect.cpp" />
     <ClCompile Include="gpu\effects\GrMagnifierEffect.cpp" />
     <ClCompile Include="gpu\effects\GrMatrixConvolutionEffect.cpp" />
+    <ClCompile Include="gpu\effects\GrMixerEffect.cpp" />
     <ClCompile Include="gpu\effects\GrOvalEffect.cpp" />
     <ClCompile Include="gpu\effects\GrPorterDuffXferProcessor.cpp" />
     <ClCompile Include="gpu\effects\GrPremulInputFragmentProcessor.cpp" />
@@ -370,6 +362,8 @@
     <ClCompile Include="gpu\gl\GrGLGpuCommandBuffer.cpp" />
     <ClCompile Include="gpu\gl\GrGLGpuProgramCache.cpp" />
     <ClCompile Include="gpu\gl\GrGLInterface.cpp" />
+    <ClCompile Include="gpu\gl\GrGLPath.cpp" />
+    <ClCompile Include="gpu\gl\GrGLPathRendering.cpp" />
     <ClCompile Include="gpu\gl\GrGLProgram.cpp" />
     <ClCompile Include="gpu\gl\GrGLProgramDataManager.cpp" />
     <ClCompile Include="gpu\gl\GrGLRenderTarget.cpp" />
@@ -396,22 +390,23 @@
     <ClCompile Include="gpu\gradients\GrTwoPointConicalGradientLayout.cpp" />
     <ClCompile Include="gpu\gradients\GrUnrolledBinaryGradientColorizer.cpp" />
     <ClCompile Include="gpu\GrAHardwareBufferImageGenerator.cpp" />
+    <ClCompile Include="gpu\GrAHardwareBufferUtils.cpp" />
     <ClCompile Include="gpu\GrAuditTrail.cpp" />
     <ClCompile Include="gpu\GrBackendSurface.cpp" />
     <ClCompile Include="gpu\GrBackendTextureImageGenerator.cpp" />
     <ClCompile Include="gpu\GrBitmapTextureMaker.cpp" />
     <ClCompile Include="gpu\GrBlurUtils.cpp" />
-    <ClCompile Include="gpu\GrBuffer.cpp" />
     <ClCompile Include="gpu\GrBufferAllocPool.cpp" />
     <ClCompile Include="gpu\GrCaps.cpp" />
     <ClCompile Include="gpu\GrClipStackClip.cpp" />
     <ClCompile Include="gpu\GrColorSpaceInfo.cpp" />
     <ClCompile Include="gpu\GrColorSpaceXform.cpp" />
     <ClCompile Include="gpu\GrContext.cpp" />
+    <ClCompile Include="gpu\GrContextPriv.cpp" />
+    <ClCompile Include="gpu\GrContextThreadSafeProxy.cpp" />
+    <ClCompile Include="gpu\GrContext_Base.cpp" />
     <ClCompile Include="gpu\GrDDLContext.cpp" />
     <ClCompile Include="gpu\GrDefaultGeoProcFactory.cpp" />
-    <ClCompile Include="gpu\GrDeinstantiateProxyTracker.cpp" />
-    <ClCompile Include="gpu\GrDirectContext.cpp" />
     <ClCompile Include="gpu\GrDistanceFieldGenFromVector.cpp" />
     <ClCompile Include="gpu\GrDrawingManager.cpp" />
     <ClCompile Include="gpu\GrDrawOpAtlas.cpp" />
@@ -420,17 +415,22 @@
     <ClCompile Include="gpu\GrFixedClip.cpp" />
     <ClCompile Include="gpu\GrFragmentProcessor.cpp" />
     <ClCompile Include="gpu\GrGpu.cpp" />
+    <ClCompile Include="gpu\GrGpuBuffer.cpp" />
     <ClCompile Include="gpu\GrGpuCommandBuffer.cpp" />
     <ClCompile Include="gpu\GrGpuResource.cpp" />
+    <ClCompile Include="gpu\GrImageContext.cpp" />
     <ClCompile Include="gpu\GrImageTextureMaker.cpp" />
+    <ClCompile Include="gpu\GrLegacyDirectContext.cpp" />
     <ClCompile Include="gpu\GrMemoryPool.cpp" />
     <ClCompile Include="gpu\GrOnFlushResourceProvider.cpp" />
     <ClCompile Include="gpu\GrOpFlushState.cpp" />
     <ClCompile Include="gpu\GrOpList.cpp" />
     <ClCompile Include="gpu\GrPaint.cpp" />
+    <ClCompile Include="gpu\GrPath.cpp" />
+    <ClCompile Include="gpu\GrPathProcessor.cpp" />
     <ClCompile Include="gpu\GrPathRenderer.cpp" />
     <ClCompile Include="gpu\GrPathRendererChain.cpp" />
-    <ClCompile Include="gpu\GrPathRendering_none.cpp" />
+    <ClCompile Include="gpu\GrPathRendering.cpp" />
     <ClCompile Include="gpu\GrPathUtils.cpp" />
     <ClCompile Include="gpu\GrPipeline.cpp" />
     <ClCompile Include="gpu\GrPrimitiveProcessor.cpp" />
@@ -441,6 +441,7 @@
     <ClCompile Include="gpu\GrProgramDesc.cpp" />
     <ClCompile Include="gpu\GrProxyProvider.cpp" />
     <ClCompile Include="gpu\GrQuad.cpp" />
+    <ClCompile Include="gpu\GrRecordingContext.cpp" />
     <ClCompile Include="gpu\GrRectanizer_pow2.cpp" />
     <ClCompile Include="gpu\GrRectanizer_skyline.cpp" />
     <ClCompile Include="gpu\GrReducedClip.cpp" />
@@ -491,6 +492,7 @@
     <ClCompile Include="gpu\ops\GrDefaultPathRenderer.cpp" />
     <ClCompile Include="gpu\ops\GrDrawableOp.cpp" />
     <ClCompile Include="gpu\ops\GrDrawAtlasOp.cpp" />
+    <ClCompile Include="gpu\ops\GrDrawPathOp.cpp" />
     <ClCompile Include="gpu\ops\GrDrawVerticesOp.cpp" />
     <ClCompile Include="gpu\ops\GrFillRectOp.cpp" />
     <ClCompile Include="gpu\ops\GrLatticeOp.cpp" />
@@ -503,6 +505,8 @@
     <ClCompile Include="gpu\ops\GrShadowRRectOp.cpp" />
     <ClCompile Include="gpu\ops\GrSimpleMeshDrawOpHelper.cpp" />
     <ClCompile Include="gpu\ops\GrSmallPathRenderer.cpp" />
+    <ClCompile Include="gpu\ops\GrStencilAndCoverPathRenderer.cpp" />
+    <ClCompile Include="gpu\ops\GrStencilPathOp.cpp" />
     <ClCompile Include="gpu\ops\GrStrokeRectOp.cpp" />
     <ClCompile Include="gpu\ops\GrTessellatingPathRenderer.cpp" />
     <ClCompile Include="gpu\ops\GrTextureOp.cpp" />
@@ -592,7 +596,6 @@
     <ClCompile Include="pdf\SkDocument_PDF_None.cpp" />
     <ClCompile Include="ports\SkDebug_win.cpp" />
     <ClCompile Include="ports\SkDiscardableMemory_none.cpp" />
-    <ClCompile Include="ports\SkFontHost_win.cpp" />
     <ClCompile Include="ports\SkFontMgr_win_dw.cpp" />
     <ClCompile Include="ports\SkFontMgr_win_dw_factory.cpp" />
     <ClCompile Include="ports\SkGlobalInitialization_default.cpp" />
@@ -621,6 +624,7 @@
     <ClCompile Include="shaders\SkComposeShader.cpp" />
     <ClCompile Include="shaders\SkImageShader.cpp" />
     <ClCompile Include="shaders\SkLightingShader.cpp" />
+    <ClCompile Include="shaders\SkLights.cpp" />
     <ClCompile Include="shaders\SkLocalMatrixShader.cpp" />
     <ClCompile Include="shaders\SkPerlinNoiseShader.cpp" />
     <ClCompile Include="shaders\SkPictureShader.cpp" />
@@ -640,6 +644,7 @@
     <ClCompile Include="sksl\SkSLJIT.cpp" />
     <ClCompile Include="sksl\SkSLLexer.cpp" />
     <ClCompile Include="sksl\SkSLMetalCodeGenerator.cpp" />
+    <ClCompile Include="sksl\SkSLOutputStream.cpp" />
     <ClCompile Include="sksl\SkSLParser.cpp" />
     <ClCompile Include="sksl\SkSLPipelineStageCodeGenerator.cpp" />
     <ClCompile Include="sksl\SkSLSPIRVCodeGenerator.cpp" />
@@ -663,6 +668,7 @@
     <ClCompile Include="utils\SkJSON.cpp" />
     <ClCompile Include="utils\SkJSONWriter.cpp" />
     <ClCompile Include="utils\SkMatrix22.cpp" />
+    <ClCompile Include="utils\SkMetaData.cpp" />
     <ClCompile Include="utils\SkMultiPictureDocument.cpp" />
     <ClCompile Include="utils\SkNullCanvas.cpp" />
     <ClCompile Include="utils\SkNWayCanvas.cpp" />
@@ -700,19 +706,7 @@
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
@@ -730,38 +724,16 @@
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\Skia.props" />
-    <Import Project="..\..\NearTox\NearTox.props" />
-  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\Skia.props" />
-    <Import Project="..\..\NearTox\NearTox.props" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\Skia.props" />
-    <Import Project="..\..\NearTox\NearTox.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\Skia.props" />
-    <Import Project="..\..\NearTox\NearTox.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(MyOutDir)</OutDir>
-    <IntDir>$(MyTempDir)</IntDir>
-    <CodeAnalysisRuleSet>..\rules skia.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(MyOutDir)</OutDir>
-    <IntDir>$(MyTempDir)</IntDir>
-    <CodeAnalysisRuleSet>..\rules skia.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(MyOutDir)</OutDir>
     <IntDir>$(MyTempDir)</IntDir>
     <CodeAnalysisRuleSet>..\rules skia.ruleset</CodeAnalysisRuleSet>
@@ -771,50 +743,6 @@
     <IntDir>$(MyTempDir)</IntDir>
     <CodeAnalysisRuleSet>..\rules skia.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
-      <AdditionalIncludeDirectories>$(MyIncludeDir);$(SkiaIncludeDir);$(SkiaThirdParty);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <PreprocessorDefinitions>$(SkiaDef);WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DiagnosticsFormat>Caret</DiagnosticsFormat>
-      <AdditionalOptions> /bigobj /utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-    </ClCompile>
-    <Link>
-      <AdditionalDependencies />
-      <SubSystem>NotSet</SubSystem>
-    </Link>
-    <Lib>
-      <AdditionalDependencies>FontSub.lib;Ole32.lib;OleAut32.lib;User32.lib;OpenGL32.lib;Gdi32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>
-      </AdditionalLibraryDirectories>
-    </Lib>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
-      <AdditionalIncludeDirectories>$(MyIncludeDir);$(SkiaIncludeDir);$(SkiaThirdParty);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <PreprocessorDefinitions>$(SkiaDef);WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DiagnosticsFormat>Caret</DiagnosticsFormat>
-      <AdditionalOptions> /bigobj /utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-    </ClCompile>
-    <Link>
-      <AdditionalDependencies />
-      <SubSystem>NotSet</SubSystem>
-    </Link>
-    <Lib>
-      <AdditionalDependencies>FontSub.lib;Ole32.lib;OleAut32.lib;User32.lib;OpenGL32.lib;Gdi32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>
-      </AdditionalLibraryDirectories>
-    </Lib>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -823,7 +751,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <PreprocessorDefinitions>$(SkiaDef);WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>$(SkiaDef);$(SkiaDef2);WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
       <AdditionalOptions> /bigobj /utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -848,7 +776,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <PreprocessorDefinitions>$(SkiaDef);WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>$(SkiaDef);$(SkiaDef2);WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
       <AdditionalOptions> /bigobj /utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
