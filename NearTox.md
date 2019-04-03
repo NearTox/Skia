@@ -1,2 +1,3 @@
 Based on Skia:
-  skia url: https://skia.googlesource.com/skia.git@4c1ea43a79b5be7522adeac2e1e0d9ae21f26193
+  skia url: https://skia.googlesource.com/skia.git@ea30e9928ba8e718cffc4365f0c089ae1b0b09b6
+  branch: chrome/m74

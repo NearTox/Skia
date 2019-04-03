@@ -63,7 +63,7 @@ enum SkAlphaType {
                kUnpremul_SkAlphaType
     @return    true if at equals kOpaque_SkAlphaType
 */
-static inline bool SkAlphaTypeIsOpaque(SkAlphaType at) {
+static inline constexpr bool SkAlphaTypeIsOpaque(SkAlphaType at) {
     return kOpaque_SkAlphaType == at;
 }
 
@@ -361,7 +361,7 @@ public:
 
         @return  SkColorType
     */
-    SkColorType colorType() const { return fColorType; }
+    SkColorType colorType() const noexcept { return fColorType; }
 
     /** Returns SkAlphaType, one of:
         kUnknown_SkAlphaType, kOpaque_SkAlphaType, kPremul_SkAlphaType,
@@ -369,14 +369,14 @@ public:
 
         @return  SkAlphaType
     */
-    SkAlphaType alphaType() const { return fAlphaType; }
+    SkAlphaType alphaType() const noexcept { return fAlphaType; }
 
     /** Returns SkColorSpace, the range of colors. The reference count of
         SkColorSpace is unchanged. The returned SkColorSpace is immutable.
 
         @return  SkColorSpace, or nullptr
     */
-    SkColorSpace* colorSpace() const { return fColorSpace.get(); }
+    SkColorSpace* colorSpace() const noexcept { return fColorSpace.get(); }
 
     /** Returns smart pointer to SkColorSpace, the range of colors. The smart pointer
         tracks the number of objects sharing this SkColorSpace reference so the memory
@@ -404,7 +404,7 @@ public:
 
         @return  true if SkAlphaType is kOpaque_SkAlphaType
     */
-    bool isOpaque() const {
+    bool isOpaque() const noexcept {
         return SkAlphaTypeIsOpaque(fAlphaType);
     }
 
@@ -412,13 +412,13 @@ public:
 
         @return  integral size of width() and height()
     */
-    SkISize dimensions() const { return fDimensions; }
+    SkISize dimensions() const noexcept { return fDimensions; }
 
     /** Returns SkIRect { 0, 0, width(), height() }.
 
         @return  integral rectangle from origin to width() and height()
     */
-    SkIRect bounds() const { return SkIRect::MakeSize(fDimensions); }
+    SkIRect bounds() const noexcept { return SkIRect::MakeSize(fDimensions); }
 
     /** Returns true if associated SkColorSpace is not nullptr, and SkColorSpace gamma
         is approximately the same as sRGB.
@@ -579,7 +579,7 @@ public:
         @param byteSize  result of computeByteSize() or computeMinByteSize()
         @return          true if computeByteSize() or computeMinByteSize() result exceeds size_t
     */
-    static bool ByteSizeOverflowed(size_t byteSize) {
+    static constexpr bool ByteSizeOverflowed(size_t byteSize) {
         return SIZE_MAX == byteSize;
     }
 

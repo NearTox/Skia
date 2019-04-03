@@ -17,7 +17,7 @@
     int. This also converts -0 (0x80000000) to 0. Doing this to a float allows
     it to be compared using normal C operators (<, <=, etc.)
 */
-static inline int32_t SkSignBitTo2sCompliment(int32_t x) {
+static inline constexpr int32_t SkSignBitTo2sCompliment(int32_t x) {
     if (x < 0) {
         x &= 0x7FFFFFFF;
         x = -x;
@@ -28,7 +28,7 @@ static inline int32_t SkSignBitTo2sCompliment(int32_t x) {
 /** Convert a 2s compliment int to a sign-bit (i.e. int interpreted as float).
     This undoes the result of SkSignBitTo2sCompliment().
  */
-static inline int32_t Sk2sComplimentToSignBit(int32_t x) {
+static inline constexpr int32_t Sk2sComplimentToSignBit(int32_t x) {
     int sign = x >> 31;
     // make x positive
     x = (x ^ sign) - sign;
@@ -43,15 +43,15 @@ union SkFloatIntUnion {
 };
 
 // Helper to see a float as its bit pattern (w/o aliasing warnings)
-static inline int32_t SkFloat2Bits(float x) {
-    SkFloatIntUnion data;
+static inline constexpr int32_t SkFloat2Bits(float x) {
+    SkFloatIntUnion data = {};
     data.fFloat = x;
     return data.fSignBitInt;
 }
 
 // Helper to see a bit pattern as a float (w/o aliasing warnings)
-static inline float SkBits2Float(int32_t floatAsBits) {
-    SkFloatIntUnion data;
+static inline constexpr float SkBits2Float(int32_t floatAsBits) {
+    SkFloatIntUnion data = {};
     data.fSignBitInt = floatAsBits;
     return data.fFloat;
 }
@@ -59,11 +59,11 @@ static inline float SkBits2Float(int32_t floatAsBits) {
 constexpr int32_t gFloatBits_exponent_mask = 0x7F800000;
 constexpr int32_t gFloatBits_matissa_mask  = 0x007FFFFF;
 
-static inline bool SkFloatBits_IsFinite(int32_t bits) {
+static inline constexpr bool SkFloatBits_IsFinite(int32_t bits) {
     return (bits & gFloatBits_exponent_mask) != gFloatBits_exponent_mask;
 }
 
-static inline bool SkFloatBits_IsInf(int32_t bits) {
+static inline constexpr bool SkFloatBits_IsInf(int32_t bits) {
     return ((bits & gFloatBits_exponent_mask) == gFloatBits_exponent_mask) &&
             (bits & gFloatBits_matissa_mask) == 0;
 }

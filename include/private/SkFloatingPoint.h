@@ -68,15 +68,15 @@ static inline float sk_float_pow(float base, float exp) {
     #define sk_float_log2(x)        log2f(x)
 #endif
 
-static inline bool sk_float_isfinite(float x) {
+static inline constexpr bool sk_float_isfinite(float x) {
     return SkFloatBits_IsFinite(SkFloat2Bits(x));
 }
 
-static inline bool sk_float_isinf(float x) {
+static inline constexpr bool sk_float_isinf(float x) {
     return SkFloatBits_IsInf(SkFloat2Bits(x));
 }
 
-static inline bool sk_float_isnan(float x) {
+static inline constexpr bool sk_float_isnan(float x) {
     return !(x == x);
 }
 
@@ -91,7 +91,7 @@ static inline bool sk_float_isnan(float x) {
 /**
  *  Return the closest int for the given float. Returns SK_MaxS32FitsInFloat for NaN.
  */
-static inline int sk_float_saturate2int(float x) {
+static inline constexpr int sk_float_saturate2int(float x) {
     x = SkTMin<float>(x, SK_MaxS32FitsInFloat);
     x = SkTMax<float>(x, SK_MinS32FitsInFloat);
     return (int)x;
@@ -100,7 +100,7 @@ static inline int sk_float_saturate2int(float x) {
 /**
  *  Return the closest int for the given double. Returns SK_MaxS32 for NaN.
  */
-static inline int sk_double_saturate2int(double x) {
+static inline constexpr int sk_double_saturate2int(double x) {
     x = SkTMin<double>(x, SK_MaxS32);
     x = SkTMax<double>(x, SK_MinS32);
     return (int)x;
@@ -109,7 +109,7 @@ static inline int sk_double_saturate2int(double x) {
 /**
  *  Return the closest int64_t for the given float. Returns SK_MaxS64FitsInFloat for NaN.
  */
-static inline int64_t sk_float_saturate2int64(float x) {
+static inline constexpr int64_t sk_float_saturate2int64(float x) {
     x = SkTMin<float>(x, SK_MaxS64FitsInFloat);
     x = SkTMax<float>(x, SK_MinS64FitsInFloat);
     return (int64_t)x;
@@ -136,7 +136,7 @@ static inline int64_t sk_float_saturate2int64(float x) {
 #if defined(__clang__) && (__clang_major__ * 1000 + __clang_minor__) >= 3007
 __attribute__((no_sanitize("float-cast-overflow")))
 #endif
-static inline float sk_double_to_float(double x) {
+static inline constexpr float sk_double_to_float(double x) {
     return static_cast<float>(x);
 }
 
@@ -203,22 +203,22 @@ static inline float sk_float_rsqrt(float x) {
 #ifdef __clang__
 __attribute__((no_sanitize("float-divide-by-zero")))
 #endif
-static inline float sk_ieee_float_divide(float numer, float denom) {
+static inline constexpr float sk_ieee_float_divide(float numer, float denom) {
     return numer / denom;
 }
 
 #ifdef __clang__
 __attribute__((no_sanitize("float-divide-by-zero")))
 #endif
-static inline double sk_ieee_double_divide(double numer, double denom) {
+static inline constexpr double sk_ieee_double_divide(double numer, double denom) {
     return numer / denom;
 }
 
 // While we clean up divide by zero, we'll replace places that do divide by zero with this TODO.
-static inline float sk_ieee_float_divide_TODO_IS_DIVIDE_BY_ZERO_SAFE_HERE(float n, float d) {
+static inline constexpr float sk_ieee_float_divide_TODO_IS_DIVIDE_BY_ZERO_SAFE_HERE(float n, float d) {
     return sk_ieee_float_divide(n,d);
 }
-static inline float sk_ieee_double_divide_TODO_IS_DIVIDE_BY_ZERO_SAFE_HERE(double n, double d) {
+static inline constexpr double sk_ieee_double_divide_TODO_IS_DIVIDE_BY_ZERO_SAFE_HERE(double n, double d) {
     return sk_ieee_double_divide(n,d);
 }
 

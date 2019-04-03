@@ -50,6 +50,8 @@ SK_API extern void sk_abort_no_print(void);
         static_cast<void>( (cond) ? (void)0 : []{ SK_ABORT("assert(" #cond ")"); }() )
 
 #ifdef SK_DEBUG
+    #define SkNoExcept
+    #define SkConstexpr
     #define SkASSERT(cond) SkASSERT_RELEASE(cond)
     #define SkASSERTF(cond, fmt, ...) static_cast<void>( (cond) ? (void)0 : [&]{ \
                                           SkDebugf(fmt"\n", __VA_ARGS__);        \
@@ -61,6 +63,8 @@ SK_API extern void sk_abort_no_print(void);
     #define SkDEBUGF(...)               SkDebugf(__VA_ARGS__)
     #define SkAssertResult(cond)        SkASSERT(cond)
 #else
+    #define SkNoExcept                noexcept
+    #define SkConstexpr               constexpr
     #define SkASSERT(cond)            static_cast<void>(0)
     #define SkASSERTF(cond, fmt, ...) static_cast<void>(0)
     #define SkDEBUGFAIL(message)
@@ -163,7 +167,7 @@ static constexpr uint32_t SK_InvalidGenID = 0;
 */
 static constexpr uint32_t SK_InvalidUniqueID = 0;
 
-static inline int32_t SkAbs32(int32_t value) {
+static SkConstexpr inline int32_t SkAbs32(int32_t value) SkNoExcept {
     SkASSERT(value != SK_NaN32);  // The most negative int32_t can't be negated.
     if (value < 0) {
         value = -value;
@@ -171,20 +175,20 @@ static inline int32_t SkAbs32(int32_t value) {
     return value;
 }
 
-template <typename T> static inline T SkTAbs(T value) {
+template <typename T> static inline constexpr T SkTAbs(T value) {
     if (value < 0) {
         value = -value;
     }
     return value;
 }
 
-static inline int32_t SkMax32(int32_t a, int32_t b) {
+static inline constexpr int32_t SkMax32(int32_t a, int32_t b) {
     if (a < b)
         a = b;
     return a;
 }
 
-static inline int32_t SkMin32(int32_t a, int32_t b) {
+static inline constexpr int32_t SkMin32(int32_t a, int32_t b) {
     if (a > b)
         a = b;
     return a;

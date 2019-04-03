@@ -60,6 +60,9 @@
       <PreprocessorDefinitions>HAVE_FREETYPE=1;HAVE_UCDN=1;HAVE_CONFIG_H;_CRT_SECURE_NO_WARNINGS;HAVE_DIRECTWRITE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions> /bigobj /utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <ConformanceMode>true</ConformanceMode>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -76,6 +79,9 @@
       <PreprocessorDefinitions>HAVE_FREETYPE=1;HAVE_UCDN=1;HAVE_CONFIG_H;_CRT_SECURE_NO_WARNINGS;HAVE_DIRECTWRITE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions> /bigobj /utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <ConformanceMode>true</ConformanceMode>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

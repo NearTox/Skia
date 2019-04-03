@@ -304,7 +304,7 @@ public:
                       kMPersp0, kMPersp1, kMPersp2
         @return       value corresponding to index
     */
-    SkScalar operator[](int index) const {
+    SkScalar operator[](int index) const SkNoExcept {
         SkASSERT((unsigned)index < 9);
         return fMat[index];
     }
@@ -316,7 +316,7 @@ public:
                       kMPersp0, kMPersp1, kMPersp2
         @return       value corresponding to index
     */
-    SkScalar get(int index) const {
+    SkScalar get(int index) const SkNoExcept {
         SkASSERT((unsigned)index < 9);
         return fMat[index];
     }
@@ -326,14 +326,14 @@ public:
 
         @return  horizontal scale factor
     */
-    SkScalar getScaleX() const { return fMat[kMScaleX]; }
+    SkScalar getScaleX() const noexcept { return fMat[kMScaleX]; }
 
     /** Returns scale factor multiplied by y-axis input, contributing to y-axis output.
         With mapPoints(), scales SkPoint along the y-axis.
 
         @return  vertical scale factor
     */
-    SkScalar getScaleY() const { return fMat[kMScaleY]; }
+    SkScalar getScaleY() const noexcept { return fMat[kMScaleY]; }
 
     /** Returns scale factor multiplied by x-axis input, contributing to y-axis output.
         With mapPoints(), skews SkPoint along the y-axis.
@@ -341,7 +341,7 @@ public:
 
         @return  vertical skew factor
     */
-    SkScalar getSkewY() const { return fMat[kMSkewY]; }
+    SkScalar getSkewY() const noexcept { return fMat[kMSkewY]; }
 
     /** Returns scale factor multiplied by y-axis input, contributing to x-axis output.
         With mapPoints(), skews SkPoint along the x-axis.
@@ -349,33 +349,33 @@ public:
 
         @return  horizontal scale factor
     */
-    SkScalar getSkewX() const { return fMat[kMSkewX]; }
+    SkScalar getSkewX() const noexcept { return fMat[kMSkewX]; }
 
     /** Returns translation contributing to x-axis output.
         With mapPoints(), moves SkPoint along the x-axis.
 
         @return  horizontal translation factor
     */
-    SkScalar getTranslateX() const { return fMat[kMTransX]; }
+    SkScalar getTranslateX() const noexcept { return fMat[kMTransX]; }
 
     /** Returns translation contributing to y-axis output.
         With mapPoints(), moves SkPoint along the y-axis.
 
         @return  vertical translation factor
     */
-    SkScalar getTranslateY() const { return fMat[kMTransY]; }
+    SkScalar getTranslateY() const noexcept { return fMat[kMTransY]; }
 
     /** Returns factor scaling input x-axis relative to input y-axis.
 
         @return  input x-axis perspective factor
     */
-    SkScalar getPerspX() const { return fMat[kMPersp0]; }
+    SkScalar getPerspX() const noexcept { return fMat[kMPersp0]; }
 
     /** Returns factor scaling input y-axis relative to input x-axis.
 
         @return  input y-axis perspective factor
     */
-    SkScalar getPerspY() const { return fMat[kMPersp1]; }
+    SkScalar getPerspY() const noexcept { return fMat[kMPersp1]; }
 
     /** Returns writable SkMatrix value. Asserts if index is out of range and SK_DEBUG is
         defined. Clears internal cache anticipating that caller will change SkMatrix value.

@@ -182,7 +182,7 @@ public:
      *  Returns the image orientation stored in the EXIF data.
      *  If there is no EXIF data, or if we cannot read the EXIF data, returns kTopLeft.
      */
-    SkEncodedOrigin getOrigin() const { return fOrigin; }
+    SkEncodedOrigin getOrigin() const noexcept { return fOrigin; }
 
     /**
      *  Return a size that approximately supports the desired scale factor.

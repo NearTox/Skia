@@ -135,7 +135,7 @@ public:
         uint8_t next(SkPoint pts[4]);
         uint8_t peek() const;
 
-        SkScalar conicWeight() const { return *fConicWeights; }
+        SkScalar conicWeight() const noexcept { return *fConicWeights; }
 
     private:
         const SkPoint*  fPts;
@@ -166,7 +166,7 @@ public:
      *  set if the path contains 1 or more segments of that type.
      *  Returns 0 for an empty path (no segments).
      */
-    uint32_t getSegmentMasks() const { return fSegmentMask; }
+    uint32_t getSegmentMasks() const noexcept { return fSegmentMask; }
 
     /** Returns true if the path is an oval.
      *
@@ -213,7 +213,7 @@ public:
     }
 
 
-    bool hasComputedBounds() const {
+    bool hasComputedBounds() const noexcept {
         return !fBoundsIsDirty;
     }
 
@@ -248,14 +248,14 @@ public:
     static void Rewind(sk_sp<SkPathRef>* pathRef);
 
     ~SkPathRef();
-    int countPoints() const { return fPointCnt; }
-    int countVerbs() const { return fVerbCnt; }
+    int countPoints() const noexcept { return fPointCnt; }
+    int countVerbs() const noexcept { return fVerbCnt; }
     int countWeights() const { return fConicWeights.count(); }
 
     /**
      * Returns a pointer one beyond the first logical verb (last verb in memory order).
      */
-    const uint8_t* verbs() const { return fVerbs; }
+    const uint8_t* verbs() const noexcept { return fVerbs; }
 
     /**
      * Returns a const pointer to the first verb in memory (which is the last logical verb).
@@ -265,7 +265,7 @@ public:
     /**
      * Returns a const pointer to the first point.
      */
-    const SkPoint* points() const { return fPoints; }
+    const SkPoint* points() const noexcept { return fPoints; }
 
     /**
      * Shortcut for this->points() + this->countPoints()
@@ -317,10 +317,10 @@ public:
 
         // The caller can use this method to notify the path that it no longer needs to listen. Once
         // called, the path will remove this listener from the list at some future point.
-        void markShouldUnregisterFromPath() {
+        void markShouldUnregisterFromPath() noexcept {
             fShouldUnregisterFromPath.store(true, std::memory_order_relaxed);
         }
-        bool shouldUnregisterFromPath() {
+        bool shouldUnregisterFromPath() noexcept {
             return fShouldUnregisterFromPath.load(std::memory_order_acquire);
         }
 
@@ -504,7 +504,7 @@ private:
     /**
      * Gets the total amount of space allocated for verbs, points, and reserve.
      */
-    size_t currSize() const {
+    size_t currSize() const noexcept {
         return reinterpret_cast<intptr_t>(fVerbs) - reinterpret_cast<intptr_t>(fPoints);
     }
 
@@ -513,13 +513,13 @@ private:
      */
     friend SkPathRef* sk_create_empty_pathref();
 
-    void setIsOval(bool isOval, bool isCCW, unsigned start) {
+    void setIsOval(bool isOval, bool isCCW, unsigned start) noexcept {
         fIsOval = isOval;
         fRRectOrOvalIsCCW = isCCW;
         fRRectOrOvalStartIdx = SkToU8(start);
     }
 
-    void setIsRRect(bool isRRect, bool isCCW, unsigned start) {
+    void setIsRRect(bool isRRect, bool isCCW, unsigned start) noexcept {
         fIsRRect = isRRect;
         fRRectOrOvalIsCCW = isCCW;
         fRRectOrOvalStartIdx = SkToU8(start);
