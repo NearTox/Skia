@@ -5,19 +5,18 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef GrGLTextureRenderTarget_DEFINED
 #define GrGLTextureRenderTarget_DEFINED
 
-#include "GrGLTexture.h"
-#include "GrGLRenderTarget.h"
+#include "src/gpu/gl/GrGLRenderTarget.h"
+#include "src/gpu/gl/GrGLTexture.h"
 
 class GrGLGpu;
 
 #ifdef SK_BUILD_FOR_WIN
 // Windows gives bogus warnings about inheriting asTexture/asRenderTarget via dominance.
 #pragma warning(push)
-#pragma warning(disable: 4250)
+#pragma warning(disable : 4250)
 #endif
 
 class GrGLTextureRenderTarget : public GrGLTexture, public GrGLRenderTarget {

@@ -5,34 +5,34 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkLua.h"
-#include "SkCanvas.h"
-#include "Resources.h"
-#include "SkData.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkData.h"
+#include "include/utils/SkLua.h"
+#include "samplecode/Sample.h"
+#include "tools/Resources.h"
 
 extern "C" {
+#include "lauxlib.h"
 #include "lua.h"
 #include "lualib.h"
-#include "lauxlib.h"
 }
 
 //#define LUA_FILENAME    "lua/test.lua"
-#define LUA_FILENAME    "lua/slides.lua"
+#define LUA_FILENAME "lua/slides.lua"
 
 static const char gDrawName[] = "onDrawContent";
 static const char gClickName[] = "onClickHandler";
 static const char gUnicharName[] = "onCharHandler";
 
-static const char gMissingCode[] = ""
-    "local paint = Sk.newPaint()"
-    "paint:setAntiAlias(true)"
-    "paint:setTextSize(30)"
-    ""
-    "function onDrawContent(canvas)"
-    "   canvas:drawText('missing \"test.lua\"', 20, 50, paint)"
-    "end"
-    ;
+static const char gMissingCode[] =
+        ""
+        "local paint = Sk.newPaint()"
+        "paint:setAntiAlias(true)"
+        "paint:setTextSize(30)"
+        ""
+        "function onDrawContent(canvas)"
+        "   canvas:drawText('missing \"test.lua\"', 20, 50, paint)"
+        "end";
 
 class LuaView : public Sample {
 public:
@@ -113,8 +113,7 @@ protected:
         }
     }
 
-    virtual Sample::Click* onFindClickHandler(SkScalar x, SkScalar y,
-                                              unsigned modi) override {
+    virtual Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, unsigned modi) override {
         lua_State* L = this->ensureLua();
         lua_getglobal(L, gClickName);
         if (lua_isfunction(L, -1)) {
@@ -164,4 +163,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new LuaView(); )
+DEF_SAMPLE(return new LuaView();)

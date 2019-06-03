@@ -8,11 +8,11 @@
 #ifndef SkRecordDraw_DEFINED
 #define SkRecordDraw_DEFINED
 
-#include "SkBBoxHierarchy.h"
-#include "SkBigPicture.h"
-#include "SkCanvas.h"
-#include "SkMatrix.h"
-#include "SkRecord.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkMatrix.h"
+#include "src/core/SkBBoxHierarchy.h"
+#include "src/core/SkBigPicture.h"
+#include "src/core/SkRecord.h"
 
 class SkDrawable;
 class SkLayerInfo;
@@ -28,17 +28,16 @@ void SkRecordComputeLayers(const SkRect& cullRect, const SkRecord&, SkRect bound
 
 // Draw an SkRecord into an SkCanvas.  A convenience wrapper around SkRecords::Draw.
 void SkRecordDraw(const SkRecord&, SkCanvas*, SkPicture const* const drawablePicts[],
-                  SkDrawable* const drawables[], int drawableCount,
-                  const SkBBoxHierarchy*, SkPicture::AbortCallback*);
+                  SkDrawable* const drawables[], int drawableCount, const SkBBoxHierarchy*,
+                  SkPicture::AbortCallback*);
 
 // Draw a portion of an SkRecord into an SkCanvas.
 // When drawing a portion of an SkRecord the CTM on the passed in canvas must be
 // the composition of the replay matrix with the record-time CTM (for the portion
 // of the record that is being replayed). For setMatrix calls to behave correctly
 // the initialCTM parameter must set to just the replay matrix.
-void SkRecordPartialDraw(const SkRecord&, SkCanvas*,
-                         SkPicture const* const drawablePicts[], int drawableCount,
-                         int start, int stop, const SkMatrix& initialCTM);
+void SkRecordPartialDraw(const SkRecord&, SkCanvas*, SkPicture const* const drawablePicts[],
+                         int drawableCount, int start, int stop, const SkMatrix& initialCTM);
 
 namespace SkRecords {
 
@@ -48,23 +47,20 @@ public:
     explicit Draw(SkCanvas* canvas, SkPicture const* const drawablePicts[],
                   SkDrawable* const drawables[], int drawableCount,
                   const SkMatrix* initialCTM = nullptr)
-        : fInitialCTM(initialCTM ? *initialCTM : canvas->getTotalMatrix())
-        , fCanvas(canvas)
-        , fDrawablePicts(drawablePicts)
-        , fDrawables(drawables)
-        , fDrawableCount(drawableCount)
-    {}
+            : fInitialCTM(initialCTM ? *initialCTM : canvas->getTotalMatrix())
+            , fCanvas(canvas)
+            , fDrawablePicts(drawablePicts)
+            , fDrawables(drawables)
+            , fDrawableCount(drawableCount) {}
 
     // This operator calls methods on the |canvas|. The various draw() wrapper
     // methods around SkCanvas are defined by the DRAW() macro in
     // SkRecordDraw.cpp.
-    template <typename T> void operator()(const T& r) {
-        this->draw(r);
-    }
+    template <typename T> void operator()(const T& r) { this->draw(r); }
 
 protected:
-    SkPicture const* const* drawablePicts() const { return fDrawablePicts; }
-    int drawableCount() const { return fDrawableCount; }
+    SkPicture const* const* drawablePicts() const noexcept { return fDrawablePicts; }
+    int drawableCount() const noexcept { return fDrawableCount; }
 
 private:
     // No base case, so we'll be compile-time checked that we implement all possibilities.
@@ -79,4 +75,4 @@ private:
 
 }  // namespace SkRecords
 
-#endif//SkRecordDraw_DEFINED
+#endif  // SkRecordDraw_DEFINED

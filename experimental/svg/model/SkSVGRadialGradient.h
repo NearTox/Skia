@@ -8,8 +8,8 @@
 #ifndef SkSVGRadialGradient_DEFINED
 #define SkSVGRadialGradient_DEFINED
 
-#include "SkSVGGradient.h"
-#include "SkSVGTypes.h"
+#include "experimental/svg/model/SkSVGGradient.h"
+#include "experimental/svg/model/SkSVGTypes.h"
 
 class SkSVGRadialGradient final : public SkSVGGradient {
 public:
@@ -27,20 +27,19 @@ public:
 protected:
     void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
 
-    sk_sp<SkShader> onMakeShader(const SkSVGRenderContext&,
-                                 const SkColor*, const SkScalar*, int count,
-                                 SkShader::TileMode, const SkMatrix&) const override;
+    sk_sp<SkShader> onMakeShader(const SkSVGRenderContext&, const SkColor*, const SkScalar*,
+                                 int count, SkTileMode, const SkMatrix&) const override;
+
 private:
     SkSVGRadialGradient();
 
     SkSVGLength fCx = SkSVGLength(50, SkSVGLength::Unit::kPercentage);
     SkSVGLength fCy = SkSVGLength(50, SkSVGLength::Unit::kPercentage);
-    SkSVGLength fR  = SkSVGLength(50, SkSVGLength::Unit::kPercentage);
+    SkSVGLength fR = SkSVGLength(50, SkSVGLength::Unit::kPercentage);
     SkTLazy<SkSVGLength> fFx;
     SkTLazy<SkSVGLength> fFy;
 
-
-   typedef SkSVGGradient INHERITED;
+    typedef SkSVGGradient INHERITED;
 };
 
-#endif // SkSVGRadialGradient_DEFINED
+#endif  // SkSVGRadialGradient_DEFINED

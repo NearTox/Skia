@@ -8,10 +8,10 @@
 #ifndef SkLua_DEFINED
 #define SkLua_DEFINED
 
-#include "SkColor.h"
-#include "SkPathEffect.h"
-#include "SkScalar.h"
-#include "SkString.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPathEffect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkString.h"
 
 struct lua_State;
 
@@ -23,15 +23,15 @@ struct SkRect;
 class SkRRect;
 class SkTextBlob;
 
-#define SkScalarToLua(x)    SkScalarToDouble(x)
-#define SkLuaToScalar(x)    SkDoubleToScalar(x)
+#define SkScalarToLua(x) SkScalarToDouble(x)
+#define SkLuaToScalar(x) SkDoubleToScalar(x)
 
 class SkLua {
 public:
     static void Load(lua_State*);
 
-    SkLua(const char termCode[] = nullptr); // creates a new L, will close it
-    SkLua(lua_State*);                      // uses L, will not close it
+    SkLua(const char termCode[] = nullptr);  // creates a new L, will close it
+    SkLua(lua_State*);                       // uses L, will not close it
     ~SkLua();
 
     lua_State* get() const { return fL; }
@@ -61,9 +61,9 @@ public:
     void pushTextBlob(const SkTextBlob*, const char tableKey[] = nullptr);
 
 private:
-    lua_State*  fL;
-    SkString    fTermCode;
-    bool        fWeOwnL;
+    lua_State* fL;
+    SkString fTermCode;
+    bool fWeOwnL;
 };
 
 #endif

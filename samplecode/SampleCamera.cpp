@@ -5,24 +5,25 @@
  * found in the LICENSE file.
  */
 
-#include "DecodeFile.h"
-#include "Sample.h"
-#include "SkAnimTimer.h"
-#include "SkCanvas.h"
-#include "SkCamera.h"
-#include "SkEmbossMaskFilter.h"
-#include "SkGradientShader.h"
-#include "SkPath.h"
-#include "SkRandom.h"
-#include "SkRegion.h"
-#include "SkShader.h"
-#include "SkString.h"
-#include "SkUTF.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRegion.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkString.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/utils/SkCamera.h"
+#include "include/utils/SkRandom.h"
+#include "samplecode/DecodeFile.h"
+#include "samplecode/Sample.h"
+#include "src/effects/SkEmbossMaskFilter.h"
+#include "src/utils/SkUTF.h"
+#include "tools/timer/AnimTimer.h"
 
 class CameraView : public Sample {
     SkTArray<sk_sp<SkShader>> fShaders;
-    int     fShaderIndex;
-    bool    fFrontFace;
+    int fShaderIndex;
+    bool fFrontFace;
+
 public:
     CameraView() {
         fRX = fRY = fRZ = 0;
@@ -34,15 +35,12 @@ public:
             str.printf("/skimages/elephant%d.jpeg", i);
             SkBitmap bm;
             if (decode_file(str.c_str(), &bm)) {
-                SkRect src = { 0, 0, SkIntToScalar(bm.width()), SkIntToScalar(bm.height()) };
-                SkRect dst = { -150, -150, 150, 150 };
+                SkRect src = {0, 0, SkIntToScalar(bm.width()), SkIntToScalar(bm.height())};
+                SkRect dst = {-150, -150, 150, 150};
                 SkMatrix matrix;
                 matrix.setRectToRect(src, dst, SkMatrix::kFill_ScaleToFit);
 
-                fShaders.push_back(SkShader::MakeBitmapShader(bm,
-                                                           SkShader::kClamp_TileMode,
-                                                           SkShader::kClamp_TileMode,
-                                                           &matrix));
+                fShaders.push_back(bm.makeShader(&matrix));
             } else {
                 break;
             }
@@ -60,9 +58,9 @@ protected:
     }
 
     void onDrawContent(SkCanvas* canvas) override {
-        canvas->translate(this->width()/2, this->height()/2);
+        canvas->translate(this->width() / 2, this->height() / 2);
 
-        Sk3DView    view;
+        Sk3DView view;
         view.rotateX(fRX);
         view.rotateY(fRY);
         view.applyToCanvas(canvas);
@@ -78,12 +76,12 @@ protected:
             paint.setAntiAlias(true);
             paint.setShader(fShaders[fShaderIndex]);
             paint.setFilterQuality(kLow_SkFilterQuality);
-            SkRect r = { -150, -150, 150, 150 };
+            SkRect r = {-150, -150, 150, 150};
             canvas->drawRoundRect(r, 30, 30, paint);
         }
     }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         if (timer.isStopped()) {
             fRY = 0;
         } else {
@@ -99,4 +97,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new CameraView(); )
+DEF_SAMPLE(return new CameraView();)

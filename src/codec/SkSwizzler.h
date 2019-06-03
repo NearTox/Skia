@@ -8,10 +8,10 @@
 #ifndef SkSwizzler_DEFINED
 #define SkSwizzler_DEFINED
 
-#include "SkCodec.h"
-#include "SkColor.h"
-#include "SkImageInfo.h"
-#include "SkSampler.h"
+#include "include/codec/SkCodec.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkImageInfo.h"
+#include "src/codec/SkSampler.h"
 
 class SkSwizzler : public SkSampler {
 public:
@@ -33,8 +33,9 @@ public:
      *  @return A new SkSwizzler or nullptr on failure.
      */
     static std::unique_ptr<SkSwizzler> Make(const SkEncodedInfo& encodedInfo,
-            const SkPMColor* ctable, const SkImageInfo& dstInfo, const SkCodec::Options&,
-            const SkIRect* frame = nullptr);
+                                            const SkPMColor* ctable, const SkImageInfo& dstInfo,
+                                            const SkCodec::Options&,
+                                            const SkIRect* frame = nullptr);
 
     /**
      *  Create a simplified swizzler that does not need to do format conversion. The swizzler
@@ -61,9 +62,7 @@ public:
      */
     void swizzle(void* dst, const uint8_t* SK_RESTRICT src);
 
-    int fillWidth() const override {
-        return fAllocatedWidth;
-    }
+    int fillWidth() const noexcept override { return fAllocatedWidth; }
 
     /**
      *  If fSampleX > 1, the swizzler is sampling every fSampleX'th pixel and
@@ -73,22 +72,21 @@ public:
      *  Ideally, the subclasses of SkCodec would have no knowledge of sampling, but
      *  this allows us to apply a transparency mask to pixels after swizzling.
      */
-    int sampleX() const { return fSampleX; }
+    int sampleX() const noexcept { return fSampleX; }
 
     /**
      *  Returns the actual number of pixels written to destination memory, taking
      *  scaling, subsetting, and partial frames into account.
      */
-    int swizzleWidth() const { return fSwizzleWidth; }
+    int swizzleWidth() const noexcept { return fSwizzleWidth; }
 
     /**
      *  Returns the byte offset at which we write to destination memory, taking
      *  scaling, subsetting, and partial frames into account.
      */
-    size_t swizzleOffsetBytes() const { return fDstOffsetBytes; }
+    size_t swizzleOffsetBytes() const noexcept { return fDstOffsetBytes; }
 
 private:
-
     /**
      *  Method for converting raw data to Skia pixels.
      *  @param dstRow Row in which to write the resulting pixels.
@@ -101,14 +99,11 @@ private:
      *  @param offset The offset before the first pixel to sample.
                         Is in bytes or bits based on what deltaSrc is in.
      */
-    typedef void (*RowProc)(void* SK_RESTRICT dstRow,
-                            const uint8_t* SK_RESTRICT src,
-                            int dstWidth, int bpp, int deltaSrc, int offset,
-                            const SkPMColor ctable[]);
+    typedef void (*RowProc)(void* SK_RESTRICT dstRow, const uint8_t* SK_RESTRICT src, int dstWidth,
+                            int bpp, int deltaSrc, int offset, const SkPMColor ctable[]);
 
     template <RowProc Proc>
-    static void SkipLeading8888ZerosThen(void* SK_RESTRICT dstRow,
-                                         const uint8_t* SK_RESTRICT src,
+    static void SkipLeading8888ZerosThen(void* SK_RESTRICT dstRow, const uint8_t* SK_RESTRICT src,
                                          int dstWidth, int bpp, int deltaSrc, int offset,
                                          const SkPMColor ctable[]);
 
@@ -117,14 +112,14 @@ private:
                                               int deltaSrc, int offset, const SkPMColor ctable[]);
 
     // May be NULL.  We have not implemented optimized functions for all supported transforms.
-    const RowProc       fFastProc;
+    const RowProc fFastProc;
     // Always non-NULL.  Supports sampling.
-    const RowProc       fSlowProc;
+    const RowProc fSlowProc;
     // The actual RowProc we are using.  This depends on if fFastProc is non-NULL and
     // whether or not we are sampling.
-    RowProc             fActualProc;
+    RowProc fActualProc;
 
-    const SkPMColor*    fColorTable;      // Unowned pointer
+    const SkPMColor* fColorTable;  // Unowned pointer
 
     // Subset Swizzles
     // There are two types of subset swizzles that we support.  We do not
@@ -193,30 +188,30 @@ private:
     //         fSrcOffsetUnits may be non-zero (we will skip the first few pixels when sampling)
     //         fSrcWidth = fDstWidth = Full original width
     //         fSwizzleWidth = fAllcoatedWidth = Scaled width (if we are sampling)
-    const int           fSrcOffset;
-    const int           fDstOffset;
-    int                 fSrcOffsetUnits;
-    int                 fDstOffsetBytes;
-    const int           fSrcWidth;
-    const int           fDstWidth;
-    int                 fSwizzleWidth;
-    int                 fAllocatedWidth;
+    const int fSrcOffset;
+    const int fDstOffset;
+    int fSrcOffsetUnits;
+    int fDstOffsetBytes;
+    const int fSrcWidth;
+    const int fDstWidth;
+    int fSwizzleWidth;
+    int fAllocatedWidth;
 
-    int                 fSampleX;         // Step between X samples
-    const int           fSrcBPP;          // Bits/bytes per pixel for the SrcConfig
-                                          // if bitsPerPixel % 8 == 0
-                                          //     fBPP is bytesPerPixel
-                                          // else
-                                          //     fBPP is bitsPerPixel
-    const int           fDstBPP;          // Bytes per pixel for the destination color type
+    int fSampleX;       // Step between X samples
+    const int fSrcBPP;  // Bits/bytes per pixel for the SrcConfig
+                        // if bitsPerPixel % 8 == 0
+                        //     fBPP is bytesPerPixel
+                        // else
+                        //     fBPP is bitsPerPixel
+    const int fDstBPP;  // Bytes per pixel for the destination color type
 
-    SkSwizzler(RowProc fastProc, RowProc proc, const SkPMColor* ctable, int srcOffset,
-            int srcWidth, int dstOffset, int dstWidth, int srcBPP, int dstBPP);
+    SkSwizzler(RowProc fastProc, RowProc proc, const SkPMColor* ctable, int srcOffset, int srcWidth,
+               int dstOffset, int dstWidth, int srcBPP, int dstBPP);
     static std::unique_ptr<SkSwizzler> Make(const SkImageInfo& dstInfo, RowProc fastProc,
-            RowProc proc, const SkPMColor* ctable, int srcBPP, int dstBPP,
-            const SkCodec::Options& options, const SkIRect* frame);
+                                            RowProc proc, const SkPMColor* ctable, int srcBPP,
+                                            int dstBPP, const SkCodec::Options& options,
+                                            const SkIRect* frame);
 
-    int onSetSampleX(int) override;
-
+    int onSetSampleX(int) noexcept override;
 };
-#endif // SkSwizzler_DEFINED
+#endif  // SkSwizzler_DEFINED

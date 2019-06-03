@@ -1,43 +1,43 @@
 /*
-* Copyright 2017 Google Inc.
-*
-* Use of this source code is governed by a BSD-style license that can be
-* found in the LICENSE file.
-*/
+ * Copyright 2017 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
-#include "SkShadowUtils.h"
-#include "SkBlurMask.h"
-#include "SkCanvas.h"
-#include "SkColorFilter.h"
-#include "SkColorData.h"
-#include "SkDevice.h"
-#include "SkDrawShadowInfo.h"
-#include "SkMaskFilter.h"
-#include "SkPath.h"
-#include "SkRandom.h"
-#include "SkRasterPipeline.h"
-#include "SkResourceCache.h"
-#include "SkShadowTessellator.h"
-#include "SkString.h"
-#include "SkTLazy.h"
-#include "SkVertices.h"
+#include "include/utils/SkShadowUtils.h"
 #include <new>
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkMaskFilter.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkString.h"
+#include "include/core/SkVertices.h"
+#include "include/private/SkColorData.h"
+#include "include/utils/SkRandom.h"
+#include "src/core/SkBlurMask.h"
+#include "src/core/SkDevice.h"
+#include "src/core/SkDrawShadowInfo.h"
+#include "src/core/SkEffectPriv.h"
+#include "src/core/SkPathPriv.h"
+#include "src/core/SkRasterPipeline.h"
+#include "src/core/SkResourceCache.h"
+#include "src/core/SkTLazy.h"
+#include "src/utils/SkShadowTessellator.h"
 #if SK_SUPPORT_GPU
-#include "GrShape.h"
-#include "effects/GrBlurredEdgeFragmentProcessor.h"
+#include "src/gpu/GrShape.h"
+#include "src/gpu/effects/generated/GrBlurredEdgeFragmentProcessor.h"
 #endif
 
 /**
-*  Gaussian color filter -- produces a Gaussian ramp based on the color's B value,
-*                           then blends with the color's G value.
-*                           Final result is black with alpha of Gaussian(B)*G.
-*                           The assumption is that the original color's alpha is 1.
-*/
+ *  Gaussian color filter -- produces a Gaussian ramp based on the color's B value,
+ *                           then blends with the color's G value.
+ *                           Final result is black with alpha of Gaussian(B)*G.
+ *                           The assumption is that the original color's alpha is 1.
+ */
 class SkGaussianColorFilter : public SkColorFilter {
 public:
-    static sk_sp<SkColorFilter> Make() {
-        return sk_sp<SkColorFilter>(new SkGaussianColorFilter);
-    }
+    static sk_sp<SkColorFilter> Make() { return sk_sp<SkColorFilter>(new SkGaussianColorFilter); }
 
 #if SK_SUPPORT_GPU
     std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(
@@ -46,10 +46,11 @@ public:
 
 protected:
     void flatten(SkWriteBuffer&) const override {}
-    void onAppendStages(SkRasterPipeline* pipeline, SkColorSpace* dstCS, SkArenaAlloc* alloc,
-                        bool shaderIsOpaque) const override {
-        pipeline->append(SkRasterPipeline::gauss_a_to_rgba);
+    bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const override {
+        rec.fPipeline->append(SkRasterPipeline::gauss_a_to_rgba);
+        return true;
     }
+
 private:
     SK_FLATTENABLE_HOOKS(SkGaussianColorFilter)
 
@@ -58,9 +59,7 @@ private:
     typedef SkColorFilter INHERITED;
 };
 
-sk_sp<SkFlattenable> SkGaussianColorFilter::CreateProc(SkReadBuffer&) {
-    return Make();
-}
+sk_sp<SkFlattenable> SkGaussianColorFilter::CreateProc(SkReadBuffer&) { return Make(); }
 
 #if SK_SUPPORT_GPU
 
@@ -119,8 +118,8 @@ struct SpotVerticesFactory {
     };
 
     SkVector fOffset;
-    SkPoint  fLocalCenter;
-    SkScalar fOccluderHeight = SK_ScalarNaN; // NaN so that isCompatible will fail until init'ed.
+    SkPoint fLocalCenter;
+    SkScalar fOccluderHeight = SK_ScalarNaN;  // NaN so that isCompatible will fail until init'ed.
     SkPoint3 fDevLightPos;
     SkScalar fLightRadius;
     OccluderType fOccluderType;
@@ -156,8 +155,8 @@ struct SpotVerticesFactory {
         SkPoint3 zParams = SkPoint3::Make(0, 0, fOccluderHeight);
         if (ctm.hasPerspective() || OccluderType::kOpaquePartialUmbra == fOccluderType) {
             translate->set(0, 0);
-            return SkShadowTessellator::MakeSpot(path, ctm, zParams,
-                                                 fDevLightPos, fLightRadius, transparent);
+            return SkShadowTessellator::MakeSpot(path, ctm, zParams, fDevLightPos, fLightRadius,
+                                                 transparent);
         } else {
             // pick a canonical place to generate shadow, with light centered over path
             SkMatrix noTrans(ctm);
@@ -167,8 +166,8 @@ struct SpotVerticesFactory {
             noTrans.mapPoints(&devCenter, 1);
             SkPoint3 centerLightPos = SkPoint3::Make(devCenter.fX, devCenter.fY, fDevLightPos.fZ);
             *translate = fOffset;
-            return SkShadowTessellator::MakeSpot(path, noTrans, zParams,
-                                                 centerLightPos, fLightRadius, transparent);
+            return SkShadowTessellator::MakeSpot(path, noTrans, zParams, centerLightPos,
+                                                 fLightRadius, transparent);
         }
     }
 };
@@ -204,8 +203,7 @@ public:
     }
 
 private:
-    template <typename FACTORY, int MAX_ENTRIES>
-    class Set {
+    template <typename FACTORY, int MAX_ENTRIES> class Set {
     public:
         size_t size() const { return fSize; }
 
@@ -306,8 +304,7 @@ private:
  * mesh then we inform SkResourceCache to destroy the Rec and we return the CachedTessellations
  * to the caller. The caller will update it and reinsert it back into the cache.
  */
-template <typename FACTORY>
-struct FindContext {
+template <typename FACTORY> struct FindContext {
     FindContext(const SkMatrix* viewMatrix, const FACTORY* factory)
             : fViewMatrix(viewMatrix), fFactory(factory) {}
     const SkMatrix* const fViewMatrix;
@@ -328,8 +325,7 @@ struct FindContext {
  * the FindContext are used to determine if the vertices are reusable. If so the vertices and
  * necessary translation vector are set on the FindContext.
  */
-template <typename FACTORY>
-bool FindVisitor(const SkResourceCache::Rec& baseRec, void* ctx) {
+template <typename FACTORY> bool FindVisitor(const SkResourceCache::Rec& baseRec, void* ctx) {
     FindContext<FACTORY>* findContext = (FindContext<FACTORY>*)ctx;
     const CachedTessellationsRec& rec = static_cast<const CachedTessellationsRec&>(baseRec);
     findContext->fVertices =
@@ -351,7 +347,8 @@ public:
 #if SK_SUPPORT_GPU
             , fShapeForKey(*path, GrStyle::SimpleFill())
 #endif
-    {}
+    {
+    }
 
     const SkPath& path() const { return *fPath; }
     const SkMatrix& viewMatrix() const { return *fViewMatrix; }
@@ -379,14 +376,39 @@ private:
 // This creates a domain of keys in SkResourceCache used by this file.
 static void* kNamespace;
 
+// When the SkPathRef genID changes, invalidate a corresponding GrResource described by key.
+class ShadowInvalidator : public SkPathRef::GenIDChangeListener {
+public:
+    ShadowInvalidator(const SkResourceCache::Key& key) {
+        fKey.reset(new uint8_t[key.size()]);
+        memcpy(fKey.get(), &key, key.size());
+    }
+
+private:
+    const SkResourceCache::Key& getKey() const {
+        return *reinterpret_cast<SkResourceCache::Key*>(fKey.get());
+    }
+
+    // always purge
+    static bool FindVisitor(const SkResourceCache::Rec&, void*) { return false; }
+
+    void onChange() override {
+        SkResourceCache::Find(this->getKey(), ShadowInvalidator::FindVisitor, nullptr);
+    }
+
+    std::unique_ptr<uint8_t[]> fKey;
+};
+
 /**
  * Draws a shadow to 'canvas'. The vertices used to draw the shadow are created by 'factory' unless
  * they are first found in SkResourceCache.
  */
 template <typename FACTORY>
 bool draw_shadow(const FACTORY& factory,
-                 std::function<void(const SkVertices*, SkBlendMode, const SkPaint&,
-                 SkScalar tx, SkScalar ty)> drawProc, ShadowedPath& path, SkColor color) {
+                 std::function<void(const SkVertices*, SkBlendMode, const SkPaint&, SkScalar tx,
+                                    SkScalar ty, bool)>
+                         drawProc,
+                 ShadowedPath& path, SkColor color) {
     FindContext<FACTORY> context(&path.viewMatrix(), &factory);
 
     SkResourceCache::Key* key = nullptr;
@@ -420,10 +442,10 @@ bool draw_shadow(const FACTORY& factory,
                 return false;
             }
             auto rec = new CachedTessellationsRec(*key, std::move(tessellations));
+            SkPathPriv::AddGenIDChangeListener(path.path(), sk_make_sp<ShadowInvalidator>(*key));
             SkResourceCache::Add(rec);
         } else {
-            vertices = factory.makeVertices(path.path(), path.viewMatrix(),
-                                            &context.fTranslate);
+            vertices = factory.makeVertices(path.path(), path.viewMatrix(), &context.fTranslate);
             if (!vertices) {
                 return false;
             }
@@ -433,16 +455,15 @@ bool draw_shadow(const FACTORY& factory,
     SkPaint paint;
     // Run the vertex color through a GaussianColorFilter and then modulate the grayscale result of
     // that against our 'color' param.
-    paint.setColorFilter(
-         SkColorFilter::MakeModeFilter(color, SkBlendMode::kModulate)->makeComposed(
-                                                                    SkGaussianColorFilter::Make()));
+    paint.setColorFilter(SkColorFilters::Blend(color, SkBlendMode::kModulate)
+                                 ->makeComposed(SkGaussianColorFilter::Make()));
 
-    drawProc(vertices.get(), SkBlendMode::kModulate, paint,
-             context.fTranslate.fX, context.fTranslate.fY);
+    drawProc(vertices.get(), SkBlendMode::kModulate, paint, context.fTranslate.fX,
+             context.fTranslate.fY, path.viewMatrix().hasPerspective());
 
     return true;
 }
-}
+}  // namespace
 
 static bool tilted(const SkPoint3& zPlaneParams) {
     return !SkScalarNearlyZero(zPlaneParams.fX) || !SkScalarNearlyZero(zPlaneParams.fY);
@@ -469,8 +490,8 @@ void SkShadowUtils::ComputeTonalColors(SkColor inAmbientColor, SkColor inSpotCol
     int spotB = SkColorGetB(inSpotColor);
     int max = SkTMax(SkTMax(spotR, spotG), spotB);
     int min = SkTMin(SkTMin(spotR, spotG), spotB);
-    SkScalar luminance = 0.5f*(max + min)/255.f;
-    SkScalar origA = SkColorGetA(inSpotColor)/255.f;
+    SkScalar luminance = 0.5f * (max + min) / 255.f;
+    SkScalar origA = SkColorGetA(inSpotColor) / 255.f;
 
     // We compute a color alpha value based on the luminance of the color, scaled by an
     // adjusted alpha value. We want the following properties to match the UX examples
@@ -482,15 +503,15 @@ void SkShadowUtils::ComputeTonalColors(SkColor inAmbientColor, SkColor inSpotCol
     //     f(0.5, 0.25) = .4
     //     f(1, 1) = 1
     // The following functions match this as closely as possible.
-    SkScalar alphaAdjust = (2.6f + (-2.66667f + 1.06667f*origA)*origA)*origA;
-    SkScalar colorAlpha = (3.544762f + (-4.891428f + 2.3466f*luminance)*luminance)*luminance;
-    colorAlpha = SkTPin(alphaAdjust*colorAlpha, 0.0f, 1.0f);
+    SkScalar alphaAdjust = (2.6f + (-2.66667f + 1.06667f * origA) * origA) * origA;
+    SkScalar colorAlpha = (3.544762f + (-4.891428f + 2.3466f * luminance) * luminance) * luminance;
+    colorAlpha = SkTPin(alphaAdjust * colorAlpha, 0.0f, 1.0f);
 
     // Similarly, we set the greyscale alpha based on luminance and alpha so that
     //     f(0, a) = a
     //     f(luminance, 0) = 0
     //     f(1, 0.25) = 0.15
-    SkScalar greyscaleAlpha = SkTPin(origA*(1 - 0.4f*luminance), 0.0f, 1.0f);
+    SkScalar greyscaleAlpha = SkTPin(origA * (1 - 0.4f * luminance), 0.0f, 1.0f);
 
     // The final color we want to emulate is generated by rendering a color shadow (C_rgb) using an
     // alpha computed from the color's luminance (C_a), and then a black shadow with alpha (S_a)
@@ -501,20 +522,19 @@ void SkShadowUtils::ComputeTonalColors(SkColor inAmbientColor, SkColor inSpotCol
     //
     // Assuming premultiplied alpha, this means we scale the color by (C_a - S_a*C_a) and
     // set the alpha to (S_a + C_a - S_a*C_a).
-    SkScalar colorScale = colorAlpha*(SK_Scalar1 - greyscaleAlpha);
+    SkScalar colorScale = colorAlpha * (SK_Scalar1 - greyscaleAlpha);
     SkScalar tonalAlpha = colorScale + greyscaleAlpha;
     SkScalar unPremulScale = colorScale / tonalAlpha;
-    *outSpotColor = SkColorSetARGB(tonalAlpha*255.999f,
-                                   unPremulScale*spotR,
-                                   unPremulScale*spotG,
-                                   unPremulScale*spotB);
+    *outSpotColor = SkColorSetARGB(tonalAlpha * 255.999f,
+                                   unPremulScale * spotR,
+                                   unPremulScale * spotG,
+                                   unPremulScale * spotB);
 }
 
 // Draw an offset spot shadow and outlining ambient shadow for the given path.
 void SkShadowUtils::DrawShadow(SkCanvas* canvas, const SkPath& path, const SkPoint3& zPlaneParams,
                                const SkPoint3& devLightPos, SkScalar lightRadius,
-                               SkColor ambientColor, SkColor spotColor,
-                               uint32_t flags) {
+                               SkColor ambientColor, SkColor spotColor, uint32_t flags) {
     SkMatrix inverse;
     if (!canvas->getTotalMatrix().invert(&inverse)) {
         return;
@@ -522,12 +542,12 @@ void SkShadowUtils::DrawShadow(SkCanvas* canvas, const SkPath& path, const SkPoi
     SkPoint pt = inverse.mapXY(devLightPos.fX, devLightPos.fY);
 
     SkDrawShadowRec rec;
-    rec.fZPlaneParams   = zPlaneParams;
-    rec.fLightPos       = { pt.fX, pt.fY, devLightPos.fZ };
-    rec.fLightRadius    = lightRadius;
-    rec.fAmbientColor   = ambientColor;
-    rec.fSpotColor      = spotColor;
-    rec.fFlags          = flags;
+    rec.fZPlaneParams = zPlaneParams;
+    rec.fLightPos = {pt.fX, pt.fY, devLightPos.fZ};
+    rec.fLightRadius = lightRadius;
+    rec.fAmbientColor = ambientColor;
+    rec.fSpotColor = spotColor;
+    rec.fFlags = flags;
 
     canvas->private_draw_shadow_rec(path, rec);
 }
@@ -539,10 +559,15 @@ static bool validate_rec(const SkDrawShadowRec& rec) {
 
 void SkBaseDevice::drawShadow(const SkPath& path, const SkDrawShadowRec& rec) {
     auto drawVertsProc = [this](const SkVertices* vertices, SkBlendMode mode, const SkPaint& paint,
-                                SkScalar tx, SkScalar ty) {
+                                SkScalar tx, SkScalar ty, bool hasPerspective) {
         if (vertices->vertexCount()) {
-            SkAutoDeviceCTMRestore adr(this, SkMatrix::Concat(this->ctm(),
-                                                              SkMatrix::MakeTrans(tx, ty)));
+            // For perspective shadows we've already computed the shadow in world space,
+            // and we can't translate it without changing it. Otherwise we concat the
+            // change in translation from the cached version.
+            SkAutoDeviceCTMRestore adr(
+                    this,
+                    hasPerspective ? SkMatrix::I()
+                                   : SkMatrix::Concat(this->ctm(), SkMatrix::MakeTrans(tx, ty)));
             this->drawVertices(vertices, nullptr, 0, mode, paint);
         }
     };
@@ -567,17 +592,15 @@ void SkBaseDevice::drawShadow(const SkPath& path, const SkDrawShadowRec& rec) {
     if (SkColorGetA(rec.fAmbientColor) > 0) {
         bool success = false;
         if (uncached) {
-            sk_sp<SkVertices> vertices = SkShadowTessellator::MakeAmbient(path, viewMatrix,
-                                                                          zPlaneParams,
-                                                                          transparent);
+            sk_sp<SkVertices> vertices =
+                    SkShadowTessellator::MakeAmbient(path, viewMatrix, zPlaneParams, transparent);
             if (vertices) {
                 SkPaint paint;
                 // Run the vertex color through a GaussianColorFilter and then modulate the
                 // grayscale result of that against our 'color' param.
                 paint.setColorFilter(
-                    SkColorFilter::MakeModeFilter(rec.fAmbientColor,
-                                                  SkBlendMode::kModulate)->makeComposed(
-                                                                   SkGaussianColorFilter::Make()));
+                        SkColorFilters::Blend(rec.fAmbientColor, SkBlendMode::kModulate)
+                                ->makeComposed(SkGaussianColorFilter::Make()));
                 this->drawVertices(vertices.get(), nullptr, 0, SkBlendMode::kModulate, paint);
                 success = true;
             }
@@ -598,6 +621,7 @@ void SkBaseDevice::drawShadow(const SkPath& path, const SkDrawShadowRec& rec) {
                 // Pretransform the path to avoid transforming the stroke, below.
                 SkPath devSpacePath;
                 path.transform(viewMatrix, &devSpacePath);
+                devSpacePath.setIsVolatile(true);
 
                 // The tesselator outsets by AmbientBlurRadius (or 'r') to get the outer ring of
                 // the tesselation, and sets the alpha on the path to 1/AmbientRecipAlpha (or 'a').
@@ -627,8 +651,8 @@ void SkBaseDevice::drawShadow(const SkPath& path, const SkDrawShadowRec& rec) {
                 //
                 SkScalar devSpaceOutset = SkDrawShadowMetrics::AmbientBlurRadius(zPlaneParams.fZ);
                 SkScalar oneOverA = SkDrawShadowMetrics::AmbientRecipAlpha(zPlaneParams.fZ);
-                SkScalar blurRadius = 0.5f*devSpaceOutset*oneOverA;
-                SkScalar strokeWidth = 0.5f*(devSpaceOutset - blurRadius);
+                SkScalar blurRadius = 0.5f * devSpaceOutset * oneOverA;
+                SkScalar strokeWidth = 0.5f * (devSpaceOutset - blurRadius);
 
                 // Now draw with blur
                 SkPaint paint;
@@ -646,18 +670,14 @@ void SkBaseDevice::drawShadow(const SkPath& path, const SkDrawShadowRec& rec) {
     if (SkColorGetA(rec.fSpotColor) > 0) {
         bool success = false;
         if (uncached) {
-            sk_sp<SkVertices> vertices = SkShadowTessellator::MakeSpot(path, viewMatrix,
-                                                                       zPlaneParams,
-                                                                       devLightPos, lightRadius,
-                                                                       transparent);
+            sk_sp<SkVertices> vertices = SkShadowTessellator::MakeSpot(
+                    path, viewMatrix, zPlaneParams, devLightPos, lightRadius, transparent);
             if (vertices) {
                 SkPaint paint;
                 // Run the vertex color through a GaussianColorFilter and then modulate the
                 // grayscale result of that against our 'color' param.
-                paint.setColorFilter(
-                    SkColorFilter::MakeModeFilter(rec.fSpotColor,
-                                                  SkBlendMode::kModulate)->makeComposed(
-                                                      SkGaussianColorFilter::Make()));
+                paint.setColorFilter(SkColorFilters::Blend(rec.fSpotColor, SkBlendMode::kModulate)
+                                             ->makeComposed(SkGaussianColorFilter::Make()));
                 this->drawVertices(vertices.get(), nullptr, 0, SkBlendMode::kModulate, paint);
                 success = true;
             }
@@ -678,13 +698,12 @@ void SkBaseDevice::drawShadow(const SkPath& path, const SkDrawShadowRec& rec) {
                                                lightRadius, &radius, &scale, &factory.fOffset);
             SkRect devBounds;
             viewMatrix.mapRect(&devBounds, path.getBounds());
-            if (transparent ||
-                SkTAbs(factory.fOffset.fX) > 0.5f*devBounds.width() ||
-                SkTAbs(factory.fOffset.fY) > 0.5f*devBounds.height()) {
+            if (transparent || SkTAbs(factory.fOffset.fX) > 0.5f * devBounds.width() ||
+                SkTAbs(factory.fOffset.fY) > 0.5f * devBounds.height()) {
                 // if the translation of the shadow is big enough we're going to end up
                 // filling the entire umbra, so we can treat these as all the same
                 factory.fOccluderType = SpotVerticesFactory::OccluderType::kTransparent;
-            } else if (factory.fOffset.length()*scale + scale < radius) {
+            } else if (factory.fOffset.length() * scale + scale < radius) {
                 // if we don't translate more than the blur distance, can assume umbra is covered
                 factory.fOccluderType = SpotVerticesFactory::OccluderType::kOpaqueNoUmbra;
             } else if (path.isConvex()) {
@@ -703,7 +722,7 @@ void SkBaseDevice::drawShadow(const SkPath& path, const SkDrawShadowRec& rec) {
                     color = 0xFFD2B48C;  // tan for transparent
                     break;
                 case SpotVerticesFactory::OccluderType::kOpaquePartialUmbra:
-                    color = 0xFFFFA500;   // orange for opaque
+                    color = 0xFFFFA500;  // orange for opaque
                     break;
                 case SpotVerticesFactory::OccluderType::kOpaqueNoUmbra:
                     color = 0xFFE5E500;  // corn yellow for covered
@@ -713,10 +732,9 @@ void SkBaseDevice::drawShadow(const SkPath& path, const SkDrawShadowRec& rec) {
             if (!draw_shadow(factory, drawVertsProc, shadowedPath, color)) {
                 // draw with blur
                 SkMatrix shadowMatrix;
-                if (!SkDrawShadowMetrics::GetSpotShadowTransform(devLightPos, lightRadius,
-                                                                 viewMatrix, zPlaneParams,
-                                                                 path.getBounds(),
-                                                                 &shadowMatrix, &radius)) {
+                if (!SkDrawShadowMetrics::GetSpotShadowTransform(
+                            devLightPos, lightRadius, viewMatrix, zPlaneParams, path.getBounds(),
+                            &shadowMatrix, &radius)) {
                     return;
                 }
                 SkAutoDeviceCTMRestore adr(this, shadowMatrix);

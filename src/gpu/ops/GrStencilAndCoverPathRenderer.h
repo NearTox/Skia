@@ -8,7 +8,7 @@
 #ifndef GrBuiltInPathRenderer_DEFINED
 #define GrBuiltInPathRenderer_DEFINED
 
-#include "GrPathRenderer.h"
+#include "src/gpu/GrPathRenderer.h"
 
 class GrGpu;
 class GrResourceProvider;
@@ -19,9 +19,7 @@ class GrResourceProvider;
  */
 class GrStencilAndCoverPathRenderer : public GrPathRenderer {
 public:
-
     static GrPathRenderer* Create(GrResourceProvider*, const GrCaps&);
-
 
 private:
     StencilSupport onGetStencilSupport(const GrShape&) const override {

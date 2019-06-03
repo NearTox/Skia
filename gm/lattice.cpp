@@ -5,29 +5,42 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkSurface.h"
-#include "sk_tool_utils.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/private/SkMalloc.h"
+#include "tools/ToolUtils.h"
 
-static sk_sp<SkSurface> make_surface(SkCanvas* root, int N, int padLeft, int padTop,
-                                     int padRight, int padBottom) {
+static sk_sp<SkSurface> make_surface(SkCanvas* root, int N, int padLeft, int padTop, int padRight,
+                                     int padBottom) {
     SkImageInfo info = SkImageInfo::MakeN32Premul(N + padLeft + padRight, N + padTop + padBottom);
-    return sk_tool_utils::makeSurface(root, info);
+    return ToolUtils::makeSurface(root, info);
 }
 
 static sk_sp<SkImage> make_image(SkCanvas* root, int* xDivs, int* yDivs, int padLeft, int padTop,
                                  int padRight, int padBottom) {
     const int kCap = 28;
     const int kMid = 8;
-    const int kSize = 2*kCap + 3*kMid;
+    const int kSize = 2 * kCap + 3 * kMid;
 
     auto surface(make_surface(root, kSize, padLeft, padTop, padRight, padBottom));
     SkCanvas* canvas = surface->getCanvas();
-    canvas->translate((float) padLeft, (float) padTop);
+    canvas->translate((float)padLeft, (float)padTop);
 
     SkRect r = SkRect::MakeWH(SkIntToScalar(kSize), SkIntToScalar(kSize));
     const SkScalar strokeWidth = SkIntToScalar(6);
-    const SkScalar radius = SkIntToScalar(kCap) - strokeWidth/2;
+    const SkScalar radius = SkIntToScalar(kCap) - strokeWidth / 2;
 
     xDivs[0] = kCap + padLeft;
     yDivs[0] = kCap + padTop;
@@ -50,7 +63,7 @@ static sk_sp<SkImage> make_image(SkCanvas* root, int* xDivs, int* yDivs, int pad
     r.setXYWH(SkIntToScalar(kCap + kMid), 0, SkIntToScalar(kMid), SkIntToScalar(kSize));
     paint.setColor(0x880000FF);
     canvas->drawRect(r, paint);
-    r.setXYWH(SkIntToScalar(kCap + 2*kMid), 0, SkIntToScalar(kMid), SkIntToScalar(kSize));
+    r.setXYWH(SkIntToScalar(kCap + 2 * kMid), 0, SkIntToScalar(kMid), SkIntToScalar(kSize));
     paint.setColor(0x88FF00FF);
     canvas->drawRect(r, paint);
 
@@ -60,7 +73,7 @@ static sk_sp<SkImage> make_image(SkCanvas* root, int* xDivs, int* yDivs, int pad
     r.setXYWH(0, SkIntToScalar(kCap + kMid), SkIntToScalar(kSize), SkIntToScalar(kMid));
     paint.setColor(0x880000FF);
     canvas->drawRect(r, paint);
-    r.setXYWH(0, SkIntToScalar(kCap + 2*kMid), SkIntToScalar(kSize), SkIntToScalar(kMid));
+    r.setXYWH(0, SkIntToScalar(kCap + 2 * kMid), SkIntToScalar(kSize), SkIntToScalar(kMid));
     paint.setColor(0x88FF00FF);
     canvas->drawRect(r, paint);
 
@@ -82,13 +95,9 @@ public:
     LatticeGM() {}
 
 protected:
-    SkString onShortName() override {
-        return SkString("lattice");
-    }
+    SkString onShortName() override { return SkString("lattice"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(800, 800);
-    }
+    SkISize onISize() override { return SkISize::Make(800, 800); }
 
     void onDrawHelper(SkCanvas* canvas, int padLeft, int padTop, int padRight, int padBottom) {
         canvas->save();
@@ -99,15 +108,27 @@ protected:
         yDivs[0] = padTop;
 
         SkBitmap bitmap;
-        sk_sp<SkImage> image = make_image(canvas, xDivs + 1, yDivs + 1, padLeft, padTop,
-                                          padRight, padBottom);
+        sk_sp<SkImage> image =
+                make_image(canvas, xDivs + 1, yDivs + 1, padLeft, padTop, padRight, padBottom);
         image_to_bitmap(image.get(), &bitmap);
 
         const SkSize size[] = {
-            {  50,  50, }, // shrink in both axes
-            {  50, 200, }, // shrink in X
-            { 200,  50, }, // shrink in Y
-            { 200, 200, },
+                {
+                        50,
+                        50,
+                },  // shrink in both axes
+                {
+                        50,
+                        200,
+                },  // shrink in X
+                {
+                        200,
+                        50,
+                },  // shrink in Y
+                {
+                        200,
+                        200,
+                },
         };
 
         canvas->drawImage(image, 10, 10, nullptr);
@@ -123,16 +144,16 @@ protected:
         lattice.fRectTypes = nullptr;
         lattice.fColors = nullptr;
 
-        SkIRect bounds = SkIRect::MakeLTRB(padLeft, padTop,
-                                           image->width() - padRight, image->height() - padBottom);
-        lattice.fBounds = (bounds == SkIRect::MakeWH(image->width(), image->height())) ?
-                nullptr : &bounds;
+        SkIRect bounds = SkIRect::MakeLTRB(padLeft, padTop, image->width() - padRight,
+                                           image->height() - padBottom);
+        lattice.fBounds =
+                (bounds == SkIRect::MakeWH(image->width(), image->height())) ? nullptr : &bounds;
 
         for (int iy = 0; iy < 2; ++iy) {
             for (int ix = 0; ix < 2; ++ix) {
                 int i = ix * 2 + iy;
-                SkRect r = SkRect::MakeXYWH(x + ix * 60, y + iy * 60,
-                                            size[i].width(), size[i].height());
+                SkRect r = SkRect::MakeXYWH(x + ix * 60, y + iy * 60, size[i].width(),
+                                            size[i].height());
                 canvas->drawBitmapLattice(bitmap, lattice, r);
             }
         }
@@ -142,11 +163,11 @@ protected:
         int fixedColorX[3] = {2, 4, 1};
         int fixedColorY[3] = {1, 1, 2};
         SkColor fixedColor[3] = {SK_ColorBLACK, SK_ColorBLACK, SK_ColorBLACK};
-        const SkImageInfo info = SkImageInfo::Make(1, 1, kBGRA_8888_SkColorType,
-                                                   kUnpremul_SkAlphaType);
+        const SkImageInfo info =
+                SkImageInfo::Make(1, 1, kBGRA_8888_SkColorType, kUnpremul_SkAlphaType);
         for (int rectNum = 0; rectNum < 3; rectNum++) {
-            int srcX = xDivs[fixedColorX[rectNum]-1];
-            int srcY = yDivs[fixedColorY[rectNum]-1];
+            int srcX = xDivs[fixedColorX[rectNum] - 1];
+            int srcY = yDivs[fixedColorY[rectNum] - 1];
             image->readPixels(info, &fixedColor[rectNum], 4, srcX, srcY);
         }
 
@@ -165,16 +186,14 @@ protected:
         flags[12] = SkCanvas::Lattice::kTransparent;
         flags[19] = SkCanvas::Lattice::kTransparent;
         for (int rectNum = 0; rectNum < 3; rectNum++) {
-            flags[fixedColorY[rectNum]*6 + fixedColorX[rectNum]]
-                   = SkCanvas::Lattice::kFixedColor;
+            flags[fixedColorY[rectNum] * 6 + fixedColorX[rectNum]] = SkCanvas::Lattice::kFixedColor;
         }
         lattice.fRectTypes = flags;
 
         SkColor colors[36];
         sk_bzero(colors, 36 * sizeof(SkColor));
         for (int rectNum = 0; rectNum < 3; rectNum++) {
-            colors[fixedColorY[rectNum]*6 + fixedColorX[rectNum]]
-                   = fixedColor[rectNum];
+            colors[fixedColorY[rectNum] * 6 + fixedColorX[rectNum]] = fixedColor[rectNum];
         }
 
         lattice.fColors = colors;
@@ -183,8 +202,8 @@ protected:
         for (int iy = 0; iy < 2; ++iy) {
             for (int ix = 0; ix < 2; ++ix) {
                 int i = ix * 2 + iy;
-                SkRect r = SkRect::MakeXYWH(x + ix * 60, y + iy * 60,
-                                            size[i].width(), size[i].height());
+                SkRect r = SkRect::MakeXYWH(x + ix * 60, y + iy * 60, size[i].width(),
+                                            size[i].height());
                 canvas->drawImageLattice(image.get(), lattice, r);
             }
         }
@@ -201,20 +220,15 @@ protected:
 private:
     typedef skiagm::GM INHERITED;
 };
-DEF_GM( return new LatticeGM; )
-
+DEF_GM(return new LatticeGM;)
 
 // LatticeGM2 exercises code paths that draw fixed color and 1x1 rectangles.
 class LatticeGM2 : public skiagm::GM {
 public:
     LatticeGM2() {}
-    SkString onShortName() override {
-        return SkString("lattice2");
-    }
+    SkString onShortName() override { return SkString("lattice2"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(800, 800);
-    }
+    SkISize onISize() override { return SkISize::Make(800, 800); }
 
     sk_sp<SkImage> makeImage(SkCanvas* root, int padLeft, int padTop, int padRight, int padBottom) {
         const int kSize = 80;
@@ -224,44 +238,42 @@ public:
         paint.setAntiAlias(false);
         SkRect r;
 
-        //first line
-        r.setXYWH(0, 0, 4, 1);  //4x1 green rect
+        // first line
+        r.setXYWH(0, 0, 4, 1);  // 4x1 green rect
         paint.setColor(0xFF00FF00);
         canvas->drawRect(r, paint);
 
-        r.setXYWH(4, 0, 1, 1); //1x1 blue pixel -> draws as rectangle
+        r.setXYWH(4, 0, 1, 1);  // 1x1 blue pixel -> draws as rectangle
         paint.setColor(0xFF0000FF);
         canvas->drawRect(r, paint);
 
-        r.setXYWH(5, 0, kSize-5, 1); //the rest of the line is red
+        r.setXYWH(5, 0, kSize - 5, 1);  // the rest of the line is red
         paint.setColor(0xFFFF0000);
         canvas->drawRect(r, paint);
 
-
-        //second line -> draws as fixed color rectangles
-        r.setXYWH(0, 1, 4, 1);  //4x1 red rect
+        // second line -> draws as fixed color rectangles
+        r.setXYWH(0, 1, 4, 1);  // 4x1 red rect
         paint.setColor(0xFFFF0000);
         canvas->drawRect(r, paint);
 
-        r.setXYWH(4, 1, 1, 1); //1x1 blue pixel with alpha
+        r.setXYWH(4, 1, 1, 1);  // 1x1 blue pixel with alpha
         paint.setColor(0x880000FF);
         canvas->drawRect(r, paint);
 
-        r.setXYWH(5, 1, kSize-5, 1); //the rest of the line is green
+        r.setXYWH(5, 1, kSize - 5, 1);  // the rest of the line is green
         paint.setColor(0xFF00FF00);
         canvas->drawRect(r, paint);
 
-
-        //third line - does not draw, because it is transparent
-        r.setXYWH(0, 2, 4, kSize-2);  //4x78 green rect
+        // third line - does not draw, because it is transparent
+        r.setXYWH(0, 2, 4, kSize - 2);  // 4x78 green rect
         paint.setColor(0xFF00FF00);
         canvas->drawRect(r, paint);
 
-        r.setXYWH(4, 2, 1, kSize-2); //1x78 red pixel with alpha
+        r.setXYWH(4, 2, 1, kSize - 2);  // 1x78 red pixel with alpha
         paint.setColor(0x88FF0000);
         canvas->drawRect(r, paint);
 
-        r.setXYWH(5, 2, kSize-5, kSize-2); //the rest of the image is blue
+        r.setXYWH(5, 2, kSize - 5, kSize - 2);  // the rest of the image is blue
         paint.setColor(0xFF0000FF);
         canvas->drawRect(r, paint);
 
@@ -297,36 +309,34 @@ public:
         flags[8] = SkCanvas::Lattice::kTransparent;
         lattice.fRectTypes = flags;
 
-        SkColor colors[9] = {SK_ColorBLACK, SK_ColorBLACK, SK_ColorBLACK,
-                             0xFFFF0000, 0x880000FF, 0xFF00FF00,
-                             SK_ColorBLACK, SK_ColorBLACK, SK_ColorBLACK};
+        SkColor colors[9] = {SK_ColorBLACK, SK_ColorBLACK, SK_ColorBLACK, 0xFFFF0000,   0x880000FF,
+                             0xFF00FF00,    SK_ColorBLACK, SK_ColorBLACK, SK_ColorBLACK};
         lattice.fColors = colors;
         paint.setColor(0xFFFFFFFF);
-        canvas->drawImageLattice(image.get(), lattice,
-                                 SkRect::MakeXYWH(100, 100, 200, 200), &paint);
+        canvas->drawImageLattice(image.get(), lattice, SkRect::MakeXYWH(100, 100, 200, 200),
+                                 &paint);
 
-        //draw the same content with alpha
+        // draw the same content with alpha
         canvas->translate(400, 0);
         paint.setColor(0x80000FFF);
-        canvas->drawImageLattice(image.get(), lattice,
-                                 SkRect::MakeXYWH(100, 100, 200, 200), &paint);
+        canvas->drawImageLattice(image.get(), lattice, SkRect::MakeXYWH(100, 100, 200, 200),
+                                 &paint);
 
         canvas->restore();
     }
 
     void onDraw(SkCanvas* canvas) override {
-
-        //draw a rectangle in the background with transparent pixels
+        // draw a rectangle in the background with transparent pixels
         SkPaint paint;
         paint.setColor(0x7F123456);
         paint.setBlendMode(SkBlendMode::kSrc);
-        canvas->drawRect( SkRect::MakeXYWH(300, 0, 300, 800), paint);
+        canvas->drawRect(SkRect::MakeXYWH(300, 0, 300, 800), paint);
 
-        //draw image lattice with kSrcOver blending
+        // draw image lattice with kSrcOver blending
         paint.setBlendMode(SkBlendMode::kSrcOver);
         this->onDrawHelper(canvas, 0, 0, 0, 0, paint);
 
-        //draw image lattice with kSrcATop blending
+        // draw image lattice with kSrcATop blending
         canvas->translate(0.0f, 400.0f);
         paint.setBlendMode(SkBlendMode::kSrcATop);
         this->onDrawHelper(canvas, 0, 0, 0, 0, paint);
@@ -335,16 +345,16 @@ public:
 private:
     typedef skiagm::GM INHERITED;
 };
-DEF_GM( return new LatticeGM2; )
+DEF_GM(return new LatticeGM2;)
 
 // Code paths that incorporate the paint color when drawing the lattice (using an alpha image)
 DEF_SIMPLE_GM_BG(lattice_alpha, canvas, 120, 120, SK_ColorWHITE) {
-    auto surface = sk_tool_utils::makeSurface(canvas, SkImageInfo::MakeA8(100, 100));
+    auto surface = ToolUtils::makeSurface(canvas, SkImageInfo::MakeA8(100, 100));
     surface->getCanvas()->clear(0);
     surface->getCanvas()->drawCircle(50, 50, 50, SkPaint());
     auto image = surface->makeImageSnapshot();
 
-    int divs[] = { 20, 40, 60, 80 };
+    int divs[] = {20, 40, 60, 80};
 
     SkCanvas::Lattice lattice;
     lattice.fXCount = 4;

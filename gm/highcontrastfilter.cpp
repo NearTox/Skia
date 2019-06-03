@@ -5,41 +5,57 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkCanvas.h"
-#include "SkFont.h"
-#include "SkGradientShader.h"
-#include "SkHighContrastFilter.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/effects/SkHighContrastFilter.h"
+#include "tools/ToolUtils.h"
+
+#include <stdio.h>
+#include <string.h>
 
 using InvertStyle = SkHighContrastConfig::InvertStyle;
 
-static SkScalar kSize   = 200;
-static SkColor  kColor1 = SkColorSetARGB(0xff, 0xff, 0xff, 0);
-static SkColor  kColor2 = SkColorSetARGB(0xff, 0x82, 0xff, 0);
+static SkScalar kSize = 200;
+static SkColor kColor1 = SkColorSetARGB(0xff, 0xff, 0xff, 0);
+static SkColor kColor2 = SkColorSetARGB(0xff, 0x82, 0xff, 0);
 
 static void draw_label(SkCanvas* canvas, const SkHighContrastConfig& config) {
     char labelBuffer[256];
     const char* invertStr =
-        (config.fInvertStyle == InvertStyle::kInvertBrightness ?
-             "InvBrightness" :
-            (config.fInvertStyle == InvertStyle::kInvertLightness ?
-                 "InvLightness" : "NoInvert"));
+            (config.fInvertStyle == InvertStyle::kInvertBrightness
+                     ? "InvBrightness"
+                     : (config.fInvertStyle == InvertStyle::kInvertLightness ? "InvLightness"
+                                                                             : "NoInvert"));
 
     snprintf(labelBuffer, sizeof(labelBuffer), "%s%s contrast=%.1f",
-             config.fGrayscale ? "Gray " : "",
-             invertStr,
-             config.fContrast);
+             config.fGrayscale ? "Gray " : "", invertStr, config.fContrast);
 
     SkFont font;
-    font.setTypeface(sk_tool_utils::create_portable_typeface());
+    font.setTypeface(ToolUtils::create_portable_typeface());
     font.setSize(0.05f);
     font.setEdging(SkFont::Edging::kAlias);
 
     size_t len = strlen(labelBuffer);
 
-    SkScalar width = font.measureText(labelBuffer, len, kUTF8_SkTextEncoding);
-    canvas->drawSimpleText(labelBuffer, len, kUTF8_SkTextEncoding, 0.5f - width / 2, 0.16f, font, SkPaint());
+    SkScalar width = font.measureText(labelBuffer, len, SkTextEncoding::kUTF8);
+    canvas->drawSimpleText(labelBuffer, len, SkTextEncoding::kUTF8, 0.5f - width / 2, 0.16f, font,
+                           SkPaint());
 }
 
 static void draw_scene(SkCanvas* canvas, const SkHighContrastConfig& config) {
@@ -68,19 +84,17 @@ static void draw_scene(SkCanvas* canvas, const SkHighContrastConfig& config) {
     canvas->drawString("Z", 0.75f, 0.95f, font, paint);
 
     bounds = SkRect::MakeLTRB(0.1f, 0.4f, 0.9f, 0.6f);
-    SkPoint     pts[] = { { 0, 0 }, { 1, 0 } };
-    SkColor     colors[] = { SK_ColorWHITE, SK_ColorBLACK };
-    SkScalar    pos[] = { 0.2f, 0.8f };
-    paint.setShader(SkGradientShader::MakeLinear(
-        pts, colors, pos,
-        SK_ARRAY_COUNT(colors), SkShader::kClamp_TileMode));
+    SkPoint pts[] = {{0, 0}, {1, 0}};
+    SkColor colors[] = {SK_ColorWHITE, SK_ColorBLACK};
+    SkScalar pos[] = {0.2f, 0.8f};
+    paint.setShader(SkGradientShader::MakeLinear(pts, colors, pos, SK_ARRAY_COUNT(colors),
+                                                 SkTileMode::kClamp));
     canvas->drawRect(bounds, paint);
 
     bounds = SkRect::MakeLTRB(0.1f, 0.6f, 0.9f, 0.8f);
-    SkColor colors2[] = { SK_ColorGREEN, SK_ColorWHITE };
-    paint.setShader(SkGradientShader::MakeLinear(
-        pts, colors2, pos,
-        SK_ARRAY_COUNT(colors2), SkShader::kClamp_TileMode));
+    SkColor colors2[] = {SK_ColorGREEN, SK_ColorWHITE};
+    paint.setShader(SkGradientShader::MakeLinear(pts, colors2, pos, SK_ARRAY_COUNT(colors2),
+                                                 SkTileMode::kClamp));
     canvas->drawRect(bounds, paint);
 
     canvas->restore();
@@ -89,42 +103,35 @@ static void draw_scene(SkCanvas* canvas, const SkHighContrastConfig& config) {
 class HighContrastFilterGM : public skiagm::GM {
 public:
     HighContrastFilterGM() {
-        SkColor  g1Colors[] = { kColor1, SkColorSetA(kColor1, 0x20) };
-        SkColor  g2Colors[] = { kColor2, SkColorSetA(kColor2, 0x20) };
-        SkPoint  g1Points[] = { { 0, 0 }, { 0,     100 } };
-        SkPoint  g2Points[] = { { 0, 0 }, { kSize, 0   } };
-        SkScalar pos[] = { 0.2f, 1.0f };
+        SkColor g1Colors[] = {kColor1, SkColorSetA(kColor1, 0x20)};
+        SkColor g2Colors[] = {kColor2, SkColorSetA(kColor2, 0x20)};
+        SkPoint g1Points[] = {{0, 0}, {0, 100}};
+        SkPoint g2Points[] = {{0, 0}, {kSize, 0}};
+        SkScalar pos[] = {0.2f, 1.0f};
 
         SkHighContrastConfig fConfig;
         fFilter = SkHighContrastFilter::Make(fConfig);
-        fGr1 = SkGradientShader::MakeLinear(
-            g1Points, g1Colors, pos, SK_ARRAY_COUNT(g1Colors),
-            SkShader::kClamp_TileMode);
-        fGr2 = SkGradientShader::MakeLinear(
-            g2Points, g2Colors, pos, SK_ARRAY_COUNT(g2Colors),
-            SkShader::kClamp_TileMode);
+        fGr1 = SkGradientShader::MakeLinear(g1Points, g1Colors, pos, SK_ARRAY_COUNT(g1Colors),
+                                            SkTileMode::kClamp);
+        fGr2 = SkGradientShader::MakeLinear(g2Points, g2Colors, pos, SK_ARRAY_COUNT(g2Colors),
+                                            SkTileMode::kClamp);
     }
 
 protected:
+    SkString onShortName() override { return SkString("highcontrastfilter"); }
 
-    SkString onShortName() override {
-        return SkString("highcontrastfilter");
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(600, 420);
-    }
+    SkISize onISize() override { return SkISize::Make(600, 420); }
 
     void onDraw(SkCanvas* canvas) override {
         SkHighContrastConfig configs[] = {
-            { false, InvertStyle::kNoInvert, 0.0f },
-            { false, InvertStyle::kInvertBrightness, 0.0f },
-            { false, InvertStyle::kInvertLightness, 0.0f },
-            { false, InvertStyle::kInvertLightness, 0.2f },
-            { true, InvertStyle::kNoInvert, 0.0f },
-            { true, InvertStyle::kInvertBrightness, 0.0f },
-            { true, InvertStyle::kInvertLightness, 0.0f },
-            { true, InvertStyle::kInvertLightness, 0.2f },
+                {false, InvertStyle::kNoInvert, 0.0f},
+                {false, InvertStyle::kInvertBrightness, 0.0f},
+                {false, InvertStyle::kInvertLightness, 0.0f},
+                {false, InvertStyle::kInvertLightness, 0.2f},
+                {true, InvertStyle::kNoInvert, 0.0f},
+                {true, InvertStyle::kInvertBrightness, 0.0f},
+                {true, InvertStyle::kInvertLightness, 0.0f},
+                {true, InvertStyle::kInvertLightness, 0.2f},
         };
 
         for (size_t i = 0; i < SK_ARRAY_COUNT(configs); ++i) {
@@ -140,8 +147,8 @@ protected:
     }
 
 private:
-    sk_sp<SkColorFilter>    fFilter;
-    sk_sp<SkShader>         fGr1, fGr2;
+    sk_sp<SkColorFilter> fFilter;
+    sk_sp<SkShader> fGr1, fGr2;
 
     typedef skiagm::GM INHERITED;
 };

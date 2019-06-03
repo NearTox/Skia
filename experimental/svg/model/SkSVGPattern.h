@@ -8,8 +8,8 @@
 #ifndef SkSVGPattern_DEFINED
 #define SkSVGPattern_DEFINED
 
-#include "SkSVGHiddenContainer.h"
-#include "SkSVGTypes.h"
+#include "experimental/svg/model/SkSVGHiddenContainer.h"
+#include "experimental/svg/model/SkSVGTypes.h"
 
 class SkSVGRenderContext;
 
@@ -17,9 +17,7 @@ class SkSVGPattern final : public SkSVGHiddenContainer {
 public:
     ~SkSVGPattern() override = default;
 
-    static sk_sp<SkSVGPattern> Make() {
-        return sk_sp<SkSVGPattern>(new SkSVGPattern());
-    }
+    static sk_sp<SkSVGPattern> Make() { return sk_sp<SkSVGPattern>(new SkSVGPattern()); }
 
     void setX(const SkSVGLength&);
     void setY(const SkSVGLength&);
@@ -37,14 +35,11 @@ protected:
 
 private:
     struct PatternAttributes {
-        SkTLazy<SkSVGLength>        fX,
-                                    fY,
-                                    fWidth,
-                                    fHeight;
+        SkTLazy<SkSVGLength> fX, fY, fWidth, fHeight;
         SkTLazy<SkSVGTransformType> fPatternTransform;
     } fAttributes;
 
-    SkSVGStringType    fHref;
+    SkSVGStringType fHref;
 
     const SkSVGPattern* resolveHref(const SkSVGRenderContext&, PatternAttributes*) const;
     const SkSVGPattern* hrefTarget(const SkSVGRenderContext&) const;
@@ -56,4 +51,4 @@ private:
     typedef SkSVGHiddenContainer INHERITED;
 };
 
-#endif // SkSVGPattern_DEFINED
+#endif  // SkSVGPattern_DEFINED

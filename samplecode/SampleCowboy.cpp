@@ -5,39 +5,35 @@
  * found in the LICENSE file.
  */
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 #ifdef SK_XML
 
-#include "Sample.h"
-#include "Resources.h"
-#include "SkCanvas.h"
-#include "SkDOM.h"
-#include "SkOSFile.h"
-#include "SkOSPath.h"
-#include "SkRect.h"
-#include "SkStream.h"
-#include "SkSVGDOM.h"
+#include "experimental/svg/model/SkSVGDOM.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkStream.h"
+#include "samplecode/Sample.h"
+#include "src/core/SkOSFile.h"
+#include "src/utils/SkOSPath.h"
+#include "src/xml/SkDOM.h"
+#include "tools/Resources.h"
 
 namespace {
 
 class CowboyView : public Sample {
 public:
     CowboyView()
-        : fLabel("SampleCowboy")
-        , fState(kZoomIn)
-        , fAnimationLoop(kAnimationIterations)
-        , fDelta(1) {}
+            : fLabel("SampleCowboy")
+            , fState(kZoomIn)
+            , fAnimationLoop(kAnimationIterations)
+            , fDelta(1) {}
     ~CowboyView() override = default;
 
 protected:
     static constexpr auto kAnimationIterations = 5;
 
-    enum State {
-        kZoomIn,
-        kScroll,
-        kZoomOut
-    };
+    enum State { kZoomIn, kScroll, kZoomOut };
 
     void onOnceBeforeDraw() override {
         constexpr char path[] = "Cowboy.svg";
@@ -70,7 +66,7 @@ protected:
                     canvas->concat(SkMatrix::MakeScale(fDelta));
                     break;
                 case kScroll:
-                    if (fAnimationLoop > kAnimationIterations/2) {
+                    if (fAnimationLoop > kAnimationIterations / 2) {
                         fDelta += 80.f;
                     } else {
                         fDelta -= 80.f;
@@ -105,7 +101,7 @@ protected:
         return this->INHERITED::onQuery(evt);
     }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         if (!fDom) {
             return false;
         }
@@ -133,17 +129,17 @@ protected:
 
 private:
     sk_sp<SkSVGDOM> fDom;
-    SkString        fPath;
-    SkString        fLabel;
-    State           fState;
-    int             fAnimationLoop;
-    SkScalar        fDelta;
+    SkString fPath;
+    SkString fLabel;
+    State fState;
+    int fAnimationLoop;
+    SkScalar fDelta;
 
     typedef Sample INHERITED;
 };
 
-} // anonymous namespace
+}  // anonymous namespace
 
-DEF_SAMPLE( return new CowboyView(); )
+DEF_SAMPLE(return new CowboyView();)
 
 #endif  // SK_XML

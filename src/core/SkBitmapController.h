@@ -8,11 +8,11 @@
 #ifndef SkBitmapController_DEFINED
 #define SkBitmapController_DEFINED
 
-#include "SkBitmap.h"
-#include "SkBitmapCache.h"
-#include "SkFilterQuality.h"
-#include "SkMatrix.h"
-#include "SkMipMap.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkFilterQuality.h"
+#include "include/core/SkMatrix.h"
+#include "src/core/SkBitmapCache.h"
+#include "src/core/SkMipMap.h"
 
 class SkBitmapProvider;
 
@@ -33,14 +33,13 @@ public:
         bool processHighRequest(const SkBitmapProvider&);
         bool processMediumRequest(const SkBitmapProvider&);
 
-        SkPixmap              fPixmap;
-        SkMatrix              fInvMatrix;
-        SkFilterQuality       fQuality;
+        SkPixmap fPixmap;
+        SkMatrix fInvMatrix;
+        SkFilterQuality fQuality;
 
         // Pixmap storage.
-        SkBitmap              fResultBitmap;
+        SkBitmap fResultBitmap;
         sk_sp<const SkMipMap> fCurrMip;
-
     };
 
     static State* RequestBitmap(const SkBitmapProvider&, const SkMatrix& inverse, SkFilterQuality,

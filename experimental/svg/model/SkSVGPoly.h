@@ -8,8 +8,8 @@
 #ifndef SkSVGPoly_DEFINED
 #define SkSVGPoly_DEFINED
 
-#include "SkPath.h"
-#include "SkSVGShape.h"
+#include "experimental/svg/model/SkSVGShape.h"
+#include "include/core/SkPath.h"
 
 // Handles <polygon> and <polyline> elements.
 class SkSVGPoly final : public SkSVGShape {
@@ -42,4 +42,4 @@ private:
     typedef SkSVGShape INHERITED;
 };
 
-#endif // SkSVGPoly_DEFINED
+#endif  // SkSVGPoly_DEFINED

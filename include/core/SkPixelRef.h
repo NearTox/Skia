@@ -8,15 +8,15 @@
 #ifndef SkPixelRef_DEFINED
 #define SkPixelRef_DEFINED
 
-#include "../private/SkMutex.h"
-#include "../private/SkTDArray.h"
-#include "SkBitmap.h"
-#include "SkFilterQuality.h"
-#include "SkImageInfo.h"
-#include "SkPixmap.h"
-#include "SkRefCnt.h"
-#include "SkSize.h"
-#include "SkString.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkFilterQuality.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkPixmap.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/private/SkMutex.h"
+#include "include/private/SkTDArray.h"
 
 #include <atomic>
 
@@ -32,19 +32,19 @@ class SkDiscardableMemory;
 */
 class SK_API SkPixelRef : public SkRefCnt {
 public:
-    SkPixelRef(int width, int height, void* addr, size_t rowBytes);
+    SkPixelRef(int width, int height, void* addr, size_t rowBytes) noexcept;
     ~SkPixelRef() override;
 
-    int width() const { return fWidth; }
-    int height() const { return fHeight; }
-    void* pixels() const { return fPixels; }
-    size_t rowBytes() const { return fRowBytes; }
+    int width() const noexcept { return fWidth; }
+    int height() const noexcept { return fHeight; }
+    void* pixels() const noexcept { return fPixels; }
+    size_t rowBytes() const noexcept { return fRowBytes; }
 
     /** Returns a non-zero, unique value corresponding to the pixels in this
         pixelref. Each time the pixels are changed (and notifyPixelsChanged is
         called), a different generation ID will be returned.
     */
-    uint32_t getGenerationID() const;
+    uint32_t getGenerationID() const noexcept;
 
     /**
      *  Call this if you have changed the contents of the pixels. This will in-
@@ -56,13 +56,13 @@ public:
     /** Returns true if this pixelref is marked as immutable, meaning that the
         contents of its pixels will not change for the lifetime of the pixelref.
     */
-    bool isImmutable() const { return fMutability != kMutable; }
+    bool isImmutable() const noexcept { return fMutability != kMutable; }
 
     /** Marks this pixelref is immutable, meaning that the contents of its
         pixels will not change for the lifetime of the pixelref. This state can
         be set on a pixelref, but it cannot be cleared once it is set.
     */
-    void setImmutable();
+    void setImmutable() noexcept;
 
     // Register a listener that may be called the next time our generation ID changes.
     //
@@ -74,34 +74,32 @@ public:
     // This can be used to invalidate caches keyed by SkPixelRef generation ID.
     struct GenIDChangeListener {
         virtual ~GenIDChangeListener() {}
-        virtual void onChange() = 0;
+        virtual void onChange() noexcept = 0;
     };
 
     // Takes ownership of listener.  Threadsafe.
-    void addGenIDChangeListener(GenIDChangeListener* listener);
+    void addGenIDChangeListener(GenIDChangeListener* listener) noexcept;
 
     // Call when this pixelref is part of the key to a resourcecache entry. This allows the cache
     // to know automatically those entries can be purged when this pixelref is changed or deleted.
-    void notifyAddedToCache() {
-        fAddedToCache.store(true);
-    }
+    void notifyAddedToCache() noexcept { fAddedToCache.store(true); }
 
-    virtual SkDiscardableMemory* diagnostic_only_getDiscardable() const { return nullptr; }
+    virtual SkDiscardableMemory* diagnostic_only_getDiscardable() const noexcept { return nullptr; }
 
 protected:
     void android_only_reset(int width, int height, size_t rowBytes);
 
 private:
-    int                 fWidth;
-    int                 fHeight;
-    void*               fPixels;
-    size_t              fRowBytes;
+    int fWidth;
+    int fHeight;
+    void* fPixels;
+    size_t fRowBytes;
 
     // Bottom bit indicates the Gen ID is unique.
-    bool genIDIsUnique() const { return SkToBool(fTaggedGenID.load() & 1); }
+    bool genIDIsUnique() const noexcept { return SkToBool(fTaggedGenID.load() & 1); }
     mutable std::atomic<uint32_t> fTaggedGenID;
 
-    SkMutex                         fGenIDChangeListenersMutex;
+    SkMutex fGenIDChangeListenersMutex;
     SkTDArray<GenIDChangeListener*> fGenIDChangeListeners;  // pointers are owned
 
     // Set true by caches when they cache content that's derived from the current pixels.
@@ -113,14 +111,14 @@ private:
         kImmutable,             // Once set to this state, it never leaves.
     } fMutability : 8;          // easily fits inside a byte
 
-    void needsNewGenID();
+    void needsNewGenID() noexcept;
     void callGenIDChangeListeners();
 
-    void setTemporarilyImmutable();
-    void restoreMutability();
-    friend class SkSurface_Raster;   // For the two methods above.
+    void setTemporarilyImmutable() noexcept;
+    void restoreMutability() noexcept;
+    friend class SkSurface_Raster;  // For the two methods above.
 
-    void setImmutableWithID(uint32_t genID);
+    void setImmutableWithID(uint32_t genID) noexcept;
     friend void SkBitmapCache_setImmutableWithID(SkPixelRef*, uint32_t);
 
     typedef SkRefCnt INHERITED;

@@ -9,16 +9,16 @@
 #ifndef GrBlend_DEFINED
 #define GrBlend_DEFINED
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 /**
  * Equations for alpha-blending.
  */
 enum GrBlendEquation {
     // Basic blend equations.
-    kAdd_GrBlendEquation,             //<! Cs*S + Cd*D
-    kSubtract_GrBlendEquation,        //<! Cs*S - Cd*D
-    kReverseSubtract_GrBlendEquation, //<! Cd*D - Cs*S
+    kAdd_GrBlendEquation,              //<! Cs*S + Cd*D
+    kSubtract_GrBlendEquation,         //<! Cs*S - Cd*D
+    kReverseSubtract_GrBlendEquation,  //<! Cd*D - Cs*S
 
     // Advanced blend equations. These are described in the SVG and PDF specs.
     kScreen_GrBlendEquation,
@@ -45,25 +45,24 @@ enum GrBlendEquation {
 
 static const int kGrBlendEquationCnt = kLast_GrBlendEquation + 1;
 
-
 /**
  * Coefficients for alpha-blending.
  */
 enum GrBlendCoeff {
-    kZero_GrBlendCoeff,    //<! 0
-    kOne_GrBlendCoeff,     //<! 1
-    kSC_GrBlendCoeff,      //<! src color
-    kISC_GrBlendCoeff,     //<! one minus src color
-    kDC_GrBlendCoeff,      //<! dst color
-    kIDC_GrBlendCoeff,     //<! one minus dst color
-    kSA_GrBlendCoeff,      //<! src alpha
-    kISA_GrBlendCoeff,     //<! one minus src alpha
-    kDA_GrBlendCoeff,      //<! dst alpha
-    kIDA_GrBlendCoeff,     //<! one minus dst alpha
-    kConstC_GrBlendCoeff,  //<! constant color
-    kIConstC_GrBlendCoeff, //<! one minus constant color
-    kConstA_GrBlendCoeff,  //<! constant color alpha
-    kIConstA_GrBlendCoeff, //<! one minus constant color alpha
+    kZero_GrBlendCoeff,     //<! 0
+    kOne_GrBlendCoeff,      //<! 1
+    kSC_GrBlendCoeff,       //<! src color
+    kISC_GrBlendCoeff,      //<! one minus src color
+    kDC_GrBlendCoeff,       //<! dst color
+    kIDC_GrBlendCoeff,      //<! one minus dst color
+    kSA_GrBlendCoeff,       //<! src alpha
+    kISA_GrBlendCoeff,      //<! one minus src alpha
+    kDA_GrBlendCoeff,       //<! dst alpha
+    kIDA_GrBlendCoeff,      //<! one minus dst alpha
+    kConstC_GrBlendCoeff,   //<! constant color
+    kIConstC_GrBlendCoeff,  //<! one minus constant color
+    kConstA_GrBlendCoeff,   //<! constant color alpha
+    kIConstA_GrBlendCoeff,  //<! one minus constant color alpha
     kS2C_GrBlendCoeff,
     kIS2C_GrBlendCoeff,
     kS2A_GrBlendCoeff,
@@ -100,8 +99,7 @@ static constexpr bool GrBlendCoeffsUseDstColor(GrBlendCoeff srcCoeff, GrBlendCoe
 }
 
 static constexpr bool GrBlendEquationIsAdvanced(GrBlendEquation equation) {
-    return equation >= kFirstAdvancedGrBlendEquation
-        && equation != kIllegal_GrBlendEquation;
+    return equation >= kFirstAdvancedGrBlendEquation && equation != kIllegal_GrBlendEquation;
 }
 
 static constexpr bool GrBlendModifiesDst(GrBlendEquation equation, GrBlendCoeff srcCoeff,

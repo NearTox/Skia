@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "GrColor.h"
-#include "GrRenderTargetContext.h"
-#include "GrSamplerState.h"
-#include "GrTypesPriv.h"
-#include "SkCanvas.h"
-#include "SkRefCnt.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkRefCnt.h"
+#include "include/gpu/GrSamplerState.h"
+#include "include/private/GrColor.h"
+#include "include/private/GrTypesPriv.h"
+#include "src/gpu/GrRenderTargetContext.h"
 
 class GrColorSpaceXform;
 class GrDrawOp;
@@ -37,30 +37,34 @@ std::unique_ptr<GrDrawOp> Make(GrRecordingContext*,
                                GrQuadAAFlags,
                                SkCanvas::SrcRectConstraint,
                                const SkMatrix& viewMatrix,
-                               sk_sp<GrColorSpaceXform> textureXform);
+                               sk_sp<GrColorSpaceXform>
+                                       textureXform);
 
 // Generalizes the above subrect drawing operation to draw a subquad of an image, where srcQuad
 // and dstQuad correspond to srcRect and dstRect. If domain is not null, this behaves as if it
 // had a strict constraint relying on the given domain.
 std::unique_ptr<GrDrawOp> MakeQuad(GrRecordingContext* context,
-                                  sk_sp<GrTextureProxy>,
-                                  GrSamplerState::Filter,
-                                  const SkPMColor4f&,
-                                  const SkPoint srcQuad[4],
-                                  const SkPoint dstQuad[4],
-                                  GrAAType,
-                                  GrQuadAAFlags,
-                                  const SkRect* domain,
-                                  const SkMatrix& viewMatrix,
-                                  sk_sp<GrColorSpaceXform> textureXform);
+                                   sk_sp<GrTextureProxy>,
+                                   GrSamplerState::Filter,
+                                   const SkPMColor4f&,
+                                   const SkPoint srcQuad[4],
+                                   const SkPoint dstQuad[4],
+                                   GrAAType,
+                                   GrQuadAAFlags,
+                                   const SkRect* domain,
+                                   const SkMatrix& viewMatrix,
+                                   sk_sp<GrColorSpaceXform>
+                                           textureXform);
 
 std::unique_ptr<GrDrawOp> MakeSet(GrRecordingContext*,
                                   const GrRenderTargetContext::TextureSetEntry[],
                                   int cnt,
                                   GrSamplerState::Filter,
                                   GrAAType,
+                                  SkCanvas::SrcRectConstraint,
                                   const SkMatrix& viewMatrix,
-                                  sk_sp<GrColorSpaceXform> textureXform);
+                                  sk_sp<GrColorSpaceXform>
+                                          textureXform);
 
 /**
  * Returns true if bilerp texture filtering matters when rendering the src rect
@@ -68,4 +72,4 @@ std::unique_ptr<GrDrawOp> MakeSet(GrRecordingContext*,
  */
 bool GetFilterHasEffect(const SkMatrix& viewMatrix, const SkRect& srcRect, const SkRect& dstRect);
 
-}
+}  // namespace GrTextureOp

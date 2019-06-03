@@ -8,9 +8,9 @@
 #ifndef GrSurfaceContext_DEFINED
 #define GrSurfaceContext_DEFINED
 
-#include "../private/GrSurfaceProxy.h"
-#include "GrColorSpaceInfo.h"
-#include "SkRefCnt.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/GrSurfaceProxy.h"
+#include "src/gpu/GrColorSpaceInfo.h"
 
 class GrAuditTrail;
 class GrDrawingManager;
@@ -54,9 +54,7 @@ public:
     bool copy(GrSurfaceProxy* src, const SkIRect& srcRect, const SkIPoint& dstPoint);
 
     bool copy(GrSurfaceProxy* src) {
-        return this->copy(src,
-                          SkIRect::MakeWH(src->width(), src->height()),
-                          SkIPoint::Make(0, 0));
+        return this->copy(src, SkIRect::MakeWH(src->width(), src->height()), SkIPoint::Make(0, 0));
     }
 
     /**
@@ -70,8 +68,8 @@ public:
      * @return true if the read succeeded, false if not. The read can fail because of an
      *              unsupported pixel config.
      */
-    bool readPixels(const SkImageInfo& dstInfo, void* dstBuffer, size_t dstRowBytes,
-                    int x, int y, uint32_t flags = 0);
+    bool readPixels(const SkImageInfo& dstInfo, void* dstBuffer, size_t dstRowBytes, int x, int y,
+                    uint32_t flags = 0);
 
     /**
      * Writes a rectangle of pixels [srcInfo, srcBuffer, srcRowbytes] into the
@@ -85,8 +83,8 @@ public:
      * @return true if the write succeeded, false if not. The write can fail because of an
      *              unsupported pixel config.
      */
-    bool writePixels(const SkImageInfo& srcInfo, const void* srcBuffer, size_t srcRowBytes,
-                     int x, int y, uint32_t flags = 0);
+    bool writePixels(const SkImageInfo& srcInfo, const void* srcBuffer, size_t srcRowBytes, int x,
+                     int y, uint32_t flags = 0);
 
     // TODO: this is virtual b.c. this object doesn't have a pointer to the wrapped GrSurfaceProxy?
     virtual GrSurfaceProxy* asSurfaceProxy() = 0;
@@ -117,14 +115,14 @@ protected:
     const GrDrawingManager* drawingManager() const;
 
     virtual GrOpList* getOpList() = 0;
-    SkDEBUGCODE(virtual void validate() const = 0;)
+    SkDEBUGCODE(virtual void validate() const = 0);
 
-    SkDEBUGCODE(GrSingleOwner* singleOwner();)
+    SkDEBUGCODE(GrSingleOwner* singleOwner());
 
     GrRecordingContext* fContext;
 
 private:
-    GrColorSpaceInfo    fColorSpaceInfo;
+    GrColorSpaceInfo fColorSpaceInfo;
 
     typedef SkRefCnt INHERITED;
 };

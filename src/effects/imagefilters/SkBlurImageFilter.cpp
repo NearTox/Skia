@@ -5,28 +5,27 @@
  * found in the LICENSE file.
  */
 
-#include "SkBlurImageFilter.h"
+#include "include/effects/SkBlurImageFilter.h"
 
 #include <algorithm>
 
-#include "SkArenaAlloc.h"
-#include "SkAutoPixmapStorage.h"
-#include "SkBitmap.h"
-#include "SkColorData.h"
-#include "SkColorSpaceXformer.h"
-#include "SkImageFilterPriv.h"
-#include "SkTFitsIn.h"
-#include "SkGpuBlurUtils.h"
-#include "SkNx.h"
-#include "SkOpts.h"
-#include "SkReadBuffer.h"
-#include "SkSpecialImage.h"
-#include "SkWriteBuffer.h"
+#include "include/core/SkBitmap.h"
+#include "include/private/SkArenaAlloc.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkNx.h"
+#include "include/private/SkTFitsIn.h"
+#include "src/core/SkAutoPixmapStorage.h"
+#include "src/core/SkGpuBlurUtils.h"
+#include "src/core/SkImageFilterPriv.h"
+#include "src/core/SkOpts.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkSpecialImage.h"
+#include "src/core/SkWriteBuffer.h"
 
 #if SK_SUPPORT_GPU
-#include "GrContext.h"
-#include "GrTextureProxy.h"
-#include "SkGr.h"
+#include "include/gpu/GrContext.h"
+#include "include/private/GrTextureProxy.h"
+#include "src/gpu/SkGr.h"
 #endif
 
 static constexpr double kPi = 3.14159265358979323846264338327950288;
@@ -35,7 +34,8 @@ class SkBlurImageFilterImpl final : public SkImageFilter {
 public:
     SkBlurImageFilterImpl(SkScalar sigmaX,
                           SkScalar sigmaY,
-                          sk_sp<SkImageFilter> input,
+                          sk_sp<SkImageFilter>
+                                  input,
                           const CropRect* cropRect,
                           SkBlurImageFilter::TileMode tileMode);
 
@@ -45,9 +45,8 @@ protected:
     void flatten(SkWriteBuffer&) const override;
     sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
                                         SkIPoint* offset) const override;
-    sk_sp<SkImageFilter> onMakeColorSpace(SkColorSpaceXformer*) const override;
-    SkIRect onFilterNodeBounds(const SkIRect& src, const SkMatrix& ctm,
-                               MapDirection, const SkIRect* inputRect) const override;
+    SkIRect onFilterNodeBounds(const SkIRect& src, const SkMatrix& ctm, MapDirection,
+                               const SkIRect* inputRect) const override;
 
 private:
     SK_FLATTENABLE_HOOKS(SkBlurImageFilterImpl)
@@ -56,13 +55,13 @@ private:
     friend class SkImageFilter;
 
 #if SK_SUPPORT_GPU
-    sk_sp<SkSpecialImage> gpuFilter(
-            SkSpecialImage *source, SkVector sigma, const sk_sp<SkSpecialImage> &input,
-            SkIRect inputBounds, SkIRect dstBounds, SkIPoint inputOffset,
-            const OutputProperties& outProps, SkIPoint* offset) const;
+    sk_sp<SkSpecialImage> gpuFilter(SkSpecialImage* source, SkVector sigma,
+                                    const sk_sp<SkSpecialImage>& input, SkIRect inputBounds,
+                                    SkIRect dstBounds, SkIPoint inputOffset,
+                                    const OutputProperties& outProps, SkIPoint* offset) const;
 #endif
 
-    SkSize                      fSigma;
+    SkSize fSigma;
     SkBlurImageFilter::TileMode fTileMode;
 };
 
@@ -78,7 +77,7 @@ sk_sp<SkImageFilter> SkBlurImageFilter::Make(SkScalar sigmaX, SkScalar sigmaY,
         return input;
     }
     return sk_sp<SkImageFilter>(
-          new SkBlurImageFilterImpl(sigmaX, sigmaY, input, cropRect, tileMode));
+            new SkBlurImageFilterImpl(sigmaX, sigmaY, input, cropRect, tileMode));
 }
 
 // This rather arbitrary-looking value results in a maximum box blur kernel size
@@ -98,7 +97,8 @@ static SkVector map_sigma(const SkSize& localSigma, const SkMatrix& ctm) {
 
 SkBlurImageFilterImpl::SkBlurImageFilterImpl(SkScalar sigmaX,
                                              SkScalar sigmaY,
-                                             sk_sp<SkImageFilter> input,
+                                             sk_sp<SkImageFilter>
+                                                     input,
                                              const CropRect* cropRect,
                                              SkBlurImageFilter::TileMode tileMode)
         : INHERITED(&input, 1, cropRect), fSigma{sigmaX, sigmaY}, fTileMode(tileMode) {}
@@ -116,8 +116,8 @@ sk_sp<SkFlattenable> SkBlurImageFilterImpl::CreateProc(SkReadBuffer& buffer) {
 
     static_assert(SkBlurImageFilter::kLast_TileMode == 2, "CreateProc");
 
-    return SkBlurImageFilter::Make(
-          sigmaX, sigmaY, common.getInput(0), &common.cropRect(), tileMode);
+    return SkBlurImageFilter::Make(sigmaX, sigmaY, common.getInput(0), &common.cropRect(),
+                                   tileMode);
 }
 
 void SkBlurImageFilterImpl::flatten(SkWriteBuffer& buffer) const {
@@ -134,15 +134,15 @@ void SkBlurImageFilterImpl::flatten(SkWriteBuffer& buffer) const {
 #if SK_SUPPORT_GPU
 static GrTextureDomain::Mode to_texture_domain_mode(SkBlurImageFilter::TileMode tileMode) {
     switch (tileMode) {
-      case SkBlurImageFilter::TileMode::kClamp_TileMode:
-        return GrTextureDomain::kClamp_Mode;
-      case SkBlurImageFilter::TileMode::kClampToBlack_TileMode:
-        return GrTextureDomain::kDecal_Mode;
-      case SkBlurImageFilter::TileMode::kRepeat_TileMode:
-        return GrTextureDomain::kRepeat_Mode;
-      default:
-        SK_ABORT("Unsupported tile mode.");
-        return GrTextureDomain::kDecal_Mode;
+        case SkBlurImageFilter::TileMode::kClamp_TileMode:
+            return GrTextureDomain::kClamp_Mode;
+        case SkBlurImageFilter::TileMode::kClampToBlack_TileMode:
+            return GrTextureDomain::kDecal_Mode;
+        case SkBlurImageFilter::TileMode::kRepeat_TileMode:
+            return GrTextureDomain::kRepeat_Mode;
+        default:
+            SK_ABORT("Unsupported tile mode.");
+            return GrTextureDomain::kDecal_Mode;
     }
 }
 #endif
@@ -262,20 +262,17 @@ static int calculate_buffer(int window) {
 //
 using Pass0And1 = Sk4u[2];
 // The would be dLeft parameter is assumed to be 0.
-static void blur_one_direction(Sk4u* buffer, int window,
-                               int srcLeft, int srcRight, int dstRight,
+static void blur_one_direction(Sk4u* buffer, int window, int srcLeft, int srcRight, int dstRight,
                                const uint32_t* src, int srcXStride, int srcYStride, int srcH,
-                                     uint32_t* dst, int dstXStride, int dstYStride) {
-
+                               uint32_t* dst, int dstXStride, int dstYStride) {
     // The circular buffers are one less than the window.
-    auto pass0Count = window - 1,
-         pass1Count = window - 1,
+    auto pass0Count = window - 1, pass1Count = window - 1,
          pass2Count = (window & 1) == 1 ? window - 1 : window;
 
     Pass0And1* buffer01Start = (Pass0And1*)buffer;
-    Sk4u*      buffer2Start  = buffer + pass0Count + pass1Count;
-    Pass0And1* buffer01End   = (Pass0And1*)buffer2Start;
-    Sk4u*      buffer2End    = buffer2Start + pass2Count;
+    Sk4u* buffer2Start = buffer + pass0Count + pass1Count;
+    Pass0And1* buffer01End = (Pass0And1*)buffer2Start;
+    Sk4u* buffer2End = buffer2Start + pass2Count;
 
     // If the window is odd then the divisor is just window ^ 3 otherwise,
     // it is window * window * (window + 1) = window ^ 3 + window ^ 2;
@@ -300,19 +297,17 @@ static void blur_one_direction(Sk4u* buffer, int window,
     auto border = calculate_border(window);
 
     // Calculate the start and end of the source pixels with respect to the destination start.
-    auto srcStart = srcLeft - border,
-         srcEnd   = srcRight - border,
-         dstEnd   = dstRight;
+    auto srcStart = srcLeft - border, srcEnd = srcRight - border, dstEnd = dstRight;
 
     for (auto y = 0; y < srcH; y++) {
         auto buffer01Cursor = buffer01Start;
-        auto buffer2Cursor  = buffer2Start;
+        auto buffer2Cursor = buffer2Start;
 
         Sk4u sum0{0u};
         Sk4u sum1{0u};
         Sk4u sum2{half};
 
-        sk_bzero(buffer01Start, (buffer2End - (Sk4u *) (buffer01Start)) * sizeof(*buffer2Start));
+        sk_bzero(buffer01Start, (buffer2End - (Sk4u*)(buffer01Start)) * sizeof(*buffer2Start));
 
         // Given an expanded input pixel, move the window ahead using the leadingEdge value.
         auto processValue = [&](const Sk4u& leadingEdge) -> Sk4u {
@@ -339,7 +334,7 @@ static void blur_one_direction(Sk4u* buffer, int window,
         auto srcIdx = srcStart;
         auto dstIdx = 0;
         const uint32_t* srcCursor = src;
-              uint32_t* dstCursor = dst;
+        uint32_t* dstCursor = dst;
 
         // The destination pixels are not effected by the src pixels,
         // change to zero as per the spec.
@@ -355,7 +350,7 @@ static void blur_one_direction(Sk4u* buffer, int window,
         // the pixels before the start of the destination.
         while (dstIdx > srcIdx) {
             Sk4u leadingEdge = srcIdx < srcEnd ? SkNx_cast<uint32_t>(Sk4b::Load(srcCursor)) : 0;
-            (void) processValue(leadingEdge);
+            (void)processValue(leadingEdge);
             srcCursor += srcXStride;
             srcIdx++;
         }
@@ -387,9 +382,9 @@ static void blur_one_direction(Sk4u* buffer, int window,
     }
 }
 
-static sk_sp<SkSpecialImage> copy_image_with_bounds(
-        SkSpecialImage *source, const sk_sp<SkSpecialImage> &input,
-        SkIRect srcBounds, SkIRect dstBounds) {
+static sk_sp<SkSpecialImage> copy_image_with_bounds(SkSpecialImage* source,
+                                                    const sk_sp<SkSpecialImage>& input,
+                                                    SkIRect srcBounds, SkIRect dstBounds) {
     SkBitmap inputBM;
     if (!input->getROPixels(&inputBM)) {
         return nullptr;
@@ -406,9 +401,7 @@ static sk_sp<SkSpecialImage> copy_image_with_bounds(
     srcBounds.offset(-dstBounds.x(), -dstBounds.y());
     dstBounds.offset(-dstBounds.x(), -dstBounds.y());
 
-    auto srcW = srcBounds.width(),
-         dstW = dstBounds.width(),
-         dstH = dstBounds.height();
+    auto srcW = srcBounds.width(), dstW = dstBounds.width(), dstH = dstBounds.height();
 
     SkImageInfo dstInfo = SkImageInfo::Make(dstW, dstH, inputBM.colorType(), inputBM.alphaType());
 
@@ -421,14 +414,14 @@ static sk_sp<SkSpecialImage> copy_image_with_bounds(
     // dstBounds. Remember that the src was intersected with the dst.
     int y = 0;
     size_t dstWBytes = dstW * sizeof(uint32_t);
-    for (;y < srcBounds.top(); y++) {
+    for (; y < srcBounds.top(); y++) {
         sk_bzero(dst.getAddr32(0, y), dstWBytes);
     }
 
-    for (;y < srcBounds.bottom(); y++) {
+    for (; y < srcBounds.bottom(); y++) {
         int x = 0;
         uint32_t* dstPtr = dst.getAddr32(0, y);
-        for (;x < srcBounds.left(); x++) {
+        for (; x < srcBounds.left(); x++) {
             *dstPtr++ = 0;
         }
 
@@ -438,27 +431,24 @@ static sk_sp<SkSpecialImage> copy_image_with_bounds(
         dstPtr += srcW;
         x += srcW;
 
-        for (;x < dstBounds.right(); x++) {
+        for (; x < dstBounds.right(); x++) {
             *dstPtr++ = 0;
         }
     }
 
-    for (;y < dstBounds.bottom(); y++) {
+    for (; y < dstBounds.bottom(); y++) {
         sk_bzero(dst.getAddr32(0, y), dstWBytes);
     }
 
-    return SkSpecialImage::MakeFromRaster(SkIRect::MakeWH(dstBounds.width(),
-                                                          dstBounds.height()),
+    return SkSpecialImage::MakeFromRaster(SkIRect::MakeWH(dstBounds.width(), dstBounds.height()),
                                           dst, &source->props());
 }
 
 // TODO: Implement CPU backend for different fTileMode.
-static sk_sp<SkSpecialImage> cpu_blur(
-        SkVector sigma,
-        SkSpecialImage *source, const sk_sp<SkSpecialImage> &input,
-        SkIRect srcBounds, SkIRect dstBounds) {
-    auto windowW = calculate_window(sigma.x()),
-         windowH = calculate_window(sigma.y());
+static sk_sp<SkSpecialImage> cpu_blur(SkVector sigma, SkSpecialImage* source,
+                                      const sk_sp<SkSpecialImage>& input, SkIRect srcBounds,
+                                      SkIRect dstBounds) {
+    auto windowW = calculate_window(sigma.x()), windowH = calculate_window(sigma.y());
 
     if (windowW <= 1 && windowH <= 1) {
         return copy_image_with_bounds(source, input, srcBounds, dstBounds);
@@ -481,20 +471,17 @@ static sk_sp<SkSpecialImage> cpu_blur(
     srcBounds.offset(-dstBounds.x(), -dstBounds.y());
     dstBounds.offset(-dstBounds.x(), -dstBounds.y());
 
-    auto srcW = srcBounds.width(),
-         srcH = srcBounds.height(),
-         dstW = dstBounds.width(),
+    auto srcW = srcBounds.width(), srcH = srcBounds.height(), dstW = dstBounds.width(),
          dstH = dstBounds.height();
 
-    SkImageInfo dstInfo = SkImageInfo::Make(dstW, dstH, inputBM.colorType(), inputBM.alphaType());
+    SkImageInfo dstInfo = inputBM.info().makeWH(dstW, dstH);
 
     SkBitmap dst;
     if (!dst.tryAllocPixels(dstInfo)) {
         return nullptr;
     }
 
-    auto bufferSizeW = calculate_buffer(windowW),
-         bufferSizeH = calculate_buffer(windowH);
+    auto bufferSizeW = calculate_buffer(windowW), bufferSizeH = calculate_buffer(windowH);
 
     // The amount 1024 is enough for buffers up to 10 sigma. The tmp bitmap will be
     // allocated on the heap.
@@ -509,7 +496,7 @@ static sk_sp<SkSpecialImage> cpu_blur(
 
     // Default to vertical only blur case. If a horizontal blur is needed, then these values
     // will be adjusted while doing the horizontal blur.
-    auto intermediateSrc = static_cast<uint32_t *>(src.getPixels());
+    auto intermediateSrc = static_cast<uint32_t*>(src.getPixels());
     auto intermediateRowBytesAsPixels = src.rowBytesAsPixels();
     auto intermediateWidth = srcW;
 
@@ -535,29 +522,24 @@ static sk_sp<SkSpecialImage> cpu_blur(
         // For the horizontal blur, starts part way down in anticipation of the vertical blur.
         // For a vertical sigma of zero shift should be zero. But, for small sigma,
         // shift may be > 0 but the vertical window could be 1.
-        intermediateSrc = static_cast<uint32_t *>(dst.getPixels())
-                          + (shift > 0 ? shift * dst.rowBytesAsPixels() : 0);
+        intermediateSrc = static_cast<uint32_t*>(dst.getPixels()) +
+                          (shift > 0 ? shift * dst.rowBytesAsPixels() : 0);
         intermediateRowBytesAsPixels = dst.rowBytesAsPixels();
         intermediateWidth = dstW;
-        intermediateDst = static_cast<uint32_t *>(dst.getPixels());
+        intermediateDst = static_cast<uint32_t*>(dst.getPixels());
 
-        blur_one_direction(
-                buffer, windowW,
-                srcBounds.left(), srcBounds.right(), dstBounds.right(),
-                static_cast<uint32_t *>(src.getPixels()), 1, src.rowBytesAsPixels(), srcH,
-                intermediateSrc, 1, intermediateRowBytesAsPixels);
+        blur_one_direction(buffer, windowW, srcBounds.left(), srcBounds.right(), dstBounds.right(),
+                           static_cast<uint32_t*>(src.getPixels()), 1, src.rowBytesAsPixels(), srcH,
+                           intermediateSrc, 1, intermediateRowBytesAsPixels);
     }
 
     if (windowH > 1) {
-        blur_one_direction(
-                buffer, windowH,
-                srcBounds.top(), srcBounds.bottom(), dstBounds.bottom(),
-                intermediateSrc, intermediateRowBytesAsPixels, 1, intermediateWidth,
-                intermediateDst, dst.rowBytesAsPixels(), 1);
+        blur_one_direction(buffer, windowH, srcBounds.top(), srcBounds.bottom(), dstBounds.bottom(),
+                           intermediateSrc, intermediateRowBytesAsPixels, 1, intermediateWidth,
+                           intermediateDst, dst.rowBytesAsPixels(), 1);
     }
 
-    return SkSpecialImage::MakeFromRaster(SkIRect::MakeWH(dstBounds.width(),
-                                                          dstBounds.height()),
+    return SkSpecialImage::MakeFromRaster(SkIRect::MakeWH(dstBounds.width(), dstBounds.height()),
                                           dst, &source->props());
 }
 
@@ -571,8 +553,8 @@ sk_sp<SkSpecialImage> SkBlurImageFilterImpl::onFilterImage(SkSpecialImage* sourc
         return nullptr;
     }
 
-    SkIRect inputBounds = SkIRect::MakeXYWH(inputOffset.fX, inputOffset.fY,
-                                            input->width(), input->height());
+    SkIRect inputBounds =
+            SkIRect::MakeXYWH(inputOffset.fX, inputOffset.fY, input->width(), input->height());
 
     // Calculate the destination bounds.
     SkIRect dstBounds;
@@ -618,11 +600,12 @@ sk_sp<SkSpecialImage> SkBlurImageFilterImpl::onFilterImage(SkSpecialImage* sourc
 }
 
 #if SK_SUPPORT_GPU
-sk_sp<SkSpecialImage> SkBlurImageFilterImpl::gpuFilter(
-        SkSpecialImage *source, SkVector sigma, const sk_sp<SkSpecialImage> &input,
-        SkIRect inputBounds, SkIRect dstBounds, SkIPoint inputOffset,
-        const OutputProperties& outProps, SkIPoint* offset) const
-{
+sk_sp<SkSpecialImage> SkBlurImageFilterImpl::gpuFilter(SkSpecialImage* source, SkVector sigma,
+                                                       const sk_sp<SkSpecialImage>& input,
+                                                       SkIRect inputBounds, SkIRect dstBounds,
+                                                       SkIPoint inputOffset,
+                                                       const OutputProperties& outProps,
+                                                       SkIPoint* offset) const {
     if (0 == sigma.x() && 0 == sigma.y()) {
         offset->fX = inputBounds.x() + inputOffset.fX;
         offset->fY = inputBounds.y() + inputOffset.fY;
@@ -636,27 +619,16 @@ sk_sp<SkSpecialImage> SkBlurImageFilterImpl::gpuFilter(
         return nullptr;
     }
 
-    // Typically, we would create the RTC with the output's color space (from ctx), but we
-    // always blur in the PixelConfig of the *input*. Those might not be compatible (if they
-    // have different transfer functions). We've already guaranteed that those color spaces
-    // have the same gamut, so in this case, we do everything in the input's color space.
-    // ...
-    // Unless the output is legacy. In that case, the input could be almost anything (if we're
-    // using SkColorSpaceXformCanvas), but we can't make a corresponding RTC. We don't care to,
-    // either, we want to do our blending (and blurring) without any color correction, so pass
-    // nullptr here, causing us to operate entirely in the input's color space, with no decoding.
-    // Then, when we create the output image later, we tag it with the input's color space, so
-    // it will be tagged correctly, regardless of how we created the intermediate RTCs.
     sk_sp<GrRenderTargetContext> renderTargetContext(SkGpuBlurUtils::GaussianBlur(
-                            context,
-                            std::move(inputTexture),
-                            outProps.colorSpace() ? sk_ref_sp(input->getColorSpace()) : nullptr,
-                            dstBounds,
-                            inputBounds,
-                            sigma.x(),
-                            sigma.y(),
-                            to_texture_domain_mode(fTileMode),
-                            input->alphaType()));
+            context,
+            std::move(inputTexture),
+            outProps.colorSpace() ? sk_ref_sp(input->getColorSpace()) : nullptr,
+            dstBounds,
+            inputBounds,
+            sigma.x(),
+            sigma.y(),
+            to_texture_domain_mode(fTileMode),
+            input->alphaType()));
     if (!renderTargetContext) {
         return nullptr;
     }
@@ -670,18 +642,6 @@ sk_sp<SkSpecialImage> SkBlurImageFilterImpl::gpuFilter(
             &source->props());
 }
 #endif
-
-sk_sp<SkImageFilter> SkBlurImageFilterImpl::onMakeColorSpace(SkColorSpaceXformer* xformer)
-const {
-    SkASSERT(1 == this->countInputs());
-
-    auto input = xformer->apply(this->getInput(0));
-    if (this->getInput(0) != input.get()) {
-        return SkBlurImageFilter::Make(fSigma.width(), fSigma.height(), std::move(input),
-                                       this->getCropRectIfSet(), fTileMode);
-    }
-    return this->refMe();
-}
 
 SkRect SkBlurImageFilterImpl::computeFastBounds(const SkRect& src) const {
     SkRect bounds = this->getInput(0) ? this->getInput(0)->computeFastBounds(src) : src;

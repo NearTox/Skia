@@ -8,7 +8,7 @@
 #ifndef SkTraceMemoryDump_DEFINED
 #define SkTraceMemoryDump_DEFINED
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 class SkDiscardableMemory;
 
@@ -52,7 +52,7 @@ public:
 
     virtual void dumpStringValue(const char* /*dumpName*/,
                                  const char* /*valueName*/,
-                                 const char* /*value*/) { }
+                                 const char* /*value*/) {}
 
     /**
      * Sets the memory backing for an existing dump.
@@ -67,8 +67,7 @@ public:
      * Specialization for memory backed by discardable memory.
      */
     virtual void setDiscardableMemoryBacking(
-        const char* dumpName,
-        const SkDiscardableMemory& discardableMemoryObject) = 0;
+            const char* dumpName, const SkDiscardableMemory& discardableMemoryObject) = 0;
 
     /**
      * Returns the type of details requested in the dump. The granularity of the dump is supposed to
@@ -84,7 +83,7 @@ public:
     virtual bool shouldDumpWrappedObjects() const { return true; }
 
 protected:
-    virtual ~SkTraceMemoryDump() { }
+    virtual ~SkTraceMemoryDump() {}
 };
 
 #endif

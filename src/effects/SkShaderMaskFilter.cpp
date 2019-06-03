@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "SkCanvas.h"
-#include "SkMaskFilterBase.h"
-#include "SkReadBuffer.h"
-#include "SkShaderMaskFilter.h"
-#include "SkShaderBase.h"
-#include "SkString.h"
+#include "include/effects/SkShaderMaskFilter.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkString.h"
+#include "src/core/SkMaskFilterBase.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/shaders/SkShaderBase.h"
 
 class SkShaderMF : public SkMaskFilterBase {
 public:
@@ -21,9 +21,7 @@ public:
     bool filterMask(SkMask* dst, const SkMask& src, const SkMatrix&,
                     SkIPoint* margin) const override;
 
-    void computeFastBounds(const SkRect& src, SkRect* dst) const override {
-        *dst = src;
-    }
+    void computeFastBounds(const SkRect& src, SkRect* dst) const override { *dst = src; }
 
     bool asABlur(BlurRec*) const override { return false; }
 
@@ -50,12 +48,10 @@ sk_sp<SkFlattenable> SkShaderMF::CreateProc(SkReadBuffer& buffer) {
     return SkShaderMaskFilter::Make(buffer.readShader());
 }
 
-void SkShaderMF::flatten(SkWriteBuffer& buffer) const {
-    buffer.writeFlattenable(fShader.get());
-}
+void SkShaderMF::flatten(SkWriteBuffer& buffer) const { buffer.writeFlattenable(fShader.get()); }
 
-static void rect_memcpy(void* dst, size_t dstRB, const void* src, size_t srcRB,
-                        size_t copyBytes, int rows) {
+static void rect_memcpy(void* dst, size_t dstRB, const void* src, size_t srcRB, size_t copyBytes,
+                        int rows) {
     for (int i = 0; i < rows; ++i) {
         memcpy(dst, src, copyBytes);
         dst = (char*)dst + dstRB;
@@ -72,9 +68,9 @@ bool SkShaderMF::filterMask(SkMask* dst, const SkMask& src, const SkMatrix& ctm,
     if (margin) {
         margin->set(0, 0);
     }
-    dst->fBounds   = src.fBounds;
-    dst->fRowBytes = src.fBounds.width();   // need alignment?
-    dst->fFormat   = SkMask::kA8_Format;
+    dst->fBounds = src.fBounds;
+    dst->fRowBytes = src.fBounds.width();  // need alignment?
+    dst->fFormat = SkMask::kA8_Format;
 
     if (src.fImage == nullptr) {
         dst->fImage = nullptr;
@@ -82,7 +78,7 @@ bool SkShaderMF::filterMask(SkMask* dst, const SkMask& src, const SkMatrix& ctm,
     }
     size_t size = dst->computeImageSize();
     if (0 == size) {
-        return false;   // too big to allocate, abort
+        return false;  // too big to allocate, abort
     }
 
     // Allocate and initialize dst image with a copy of the src image
@@ -111,15 +107,13 @@ bool SkShaderMF::filterMask(SkMask* dst, const SkMask& src, const SkMatrix& ctm,
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #if SK_SUPPORT_GPU
-#include "GrFragmentProcessor.h"
+#include "src/gpu/GrFragmentProcessor.h"
 
 std::unique_ptr<GrFragmentProcessor> SkShaderMF::onAsFragmentProcessor(const GrFPArgs& args) const {
     return GrFragmentProcessor::MulInputByChildAlpha(as_SB(fShader)->asFragmentProcessor(args));
 }
 
-bool SkShaderMF::onHasFragmentProcessor() const {
-    return true;
-}
+bool SkShaderMF::onHasFragmentProcessor() const { return true; }
 
 #endif
 ///////////////////////////////////////////////////////////////////////////////////////////////////

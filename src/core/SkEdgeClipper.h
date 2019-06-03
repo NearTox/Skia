@@ -5,11 +5,10 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkEdgeClipper_DEFINED
 #define SkEdgeClipper_DEFINED
 
-#include "SkPath.h"
+#include "include/core/SkPath.h"
 
 /** This is basically an iterator. It is initialized with an edge and a clip,
     and then next() is called until it returns kDone_Verb.
@@ -27,16 +26,16 @@ public:
     bool canCullToTheRight() const { return fCanCullToTheRight; }
 
 private:
-    SkPoint*        fCurrPoint;
-    SkPath::Verb*   fCurrVerb;
-    const bool      fCanCullToTheRight;
+    SkPoint* fCurrPoint;
+    SkPath::Verb* fCurrVerb;
+    const bool fCanCullToTheRight;
 
     enum {
         kMaxVerbs = 18,  // max curvature in X and Y split cubic into 9 pieces, * (line + cubic)
         kMaxPoints = 54  // 2 lines + 1 cubic require 6 points; times 9 pieces
     };
-    SkPoint         fPoints[kMaxPoints];
-    SkPath::Verb    fVerbs[kMaxVerbs];
+    SkPoint fPoints[kMaxPoints];
+    SkPath::Verb fVerbs[kMaxVerbs];
 
     void clipMonoQuad(const SkPoint srcPts[3], const SkRect& clip);
     void clipMonoCubic(const SkPoint srcPts[4], const SkRect& clip);
@@ -47,11 +46,11 @@ private:
 };
 
 #ifdef SK_DEBUG
-    void sk_assert_monotonic_x(const SkPoint pts[], int count);
-    void sk_assert_monotonic_y(const SkPoint pts[], int count);
+void sk_assert_monotonic_x(const SkPoint pts[], int count);
+void sk_assert_monotonic_y(const SkPoint pts[], int count);
 #else
-    #define sk_assert_monotonic_x(pts, count)
-    #define sk_assert_monotonic_y(pts, count)
+#define sk_assert_monotonic_x(pts, count)
+#define sk_assert_monotonic_y(pts, count)
 #endif
 
 #endif

@@ -5,26 +5,24 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkAnimTimer.h"
-#include "SkBitmapProcShader.h"
-#include "SkCanvas.h"
-#include "SkDrawable.h"
-#include "SkLightingShader.h"
-#include "SkLights.h"
-#include "SkNormalSource.h"
-#include "SkRandom.h"
-#include "SkRSXform.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkDrawable.h"
+#include "include/core/SkRSXform.h"
+#include "include/utils/SkRandom.h"
+#include "samplecode/Sample.h"
+#include "src/core/SkNormalSource.h"
+#include "src/shaders/SkBitmapProcShader.h"
+#include "src/shaders/SkLightingShader.h"
+#include "src/shaders/SkLights.h"
+#include "tools/timer/AnimTimer.h"
 
-#include "sk_tool_utils.h"
+#include "tools/ToolUtils.h"
 
 // A crude normal mapped asteroids-like sample
 class DrawLitAtlasDrawable : public SkDrawable {
 public:
     DrawLitAtlasDrawable(const SkRect& r)
-            : fBounds(r)
-            , fUseColors(false)
-            , fLightDir(SkVector3::Make(1.0f, 0.0f, 0.0f)) {
+            : fBounds(r), fUseColors(false), fLightDir(SkVector3::Make(1.0f, 0.0f, 0.0f)) {
         fAtlas = MakeAtlas();
 
         SkRandom rand;
@@ -37,13 +35,10 @@ public:
         this->updateLights();
     }
 
-    void toggleUseColors() {
-        fUseColors = !fUseColors;
-    }
+    void toggleUseColors() { fUseColors = !fUseColors; }
 
     void rotateLight() {
-        SkScalar c;
-        SkScalar s = SkScalarSinCos(SK_ScalarPI/6.0f, &c);
+        SkScalar r = SK_ScalarPI / 6.0f, s = SkScalarSin(r), c = SkScalarCos(r);
 
         SkScalar newX = c * fLightDir.fX - s * fLightDir.fY;
         SkScalar newY = s * fLightDir.fX + c * fLightDir.fY;
@@ -54,19 +49,18 @@ public:
     }
 
     void left() {
-        SkScalar newRot = SkScalarMod(fShip.rot() + (2*SK_ScalarPI - SK_ScalarPI/32.0f),
-                                      2 * SK_ScalarPI);
+        SkScalar newRot =
+                SkScalarMod(fShip.rot() + (2 * SK_ScalarPI - SK_ScalarPI / 32.0f), 2 * SK_ScalarPI);
         fShip.setRot(newRot);
     }
 
     void right() {
-        SkScalar newRot = SkScalarMod(fShip.rot() + SK_ScalarPI/32.0f, 2 * SK_ScalarPI);
+        SkScalar newRot = SkScalarMod(fShip.rot() + SK_ScalarPI / 32.0f, 2 * SK_ScalarPI);
         fShip.setRot(newRot);
     }
 
     void thrust() {
-        SkScalar c;
-        SkScalar s = SkScalarSinCos(fShip.rot(), &c);
+        SkScalar s = SkScalarSin(fShip.rot()), c = SkScalarCos(fShip.rot());
 
         SkVector newVel = fShip.velocity();
         newVel.fX += s;
@@ -82,8 +76,8 @@ public:
 
 protected:
     void onDraw(SkCanvas* canvas) override {
-        SkRSXform xforms[kNumAsteroids+kNumShips];
-        SkColor colors[kNumAsteroids+kNumShips];
+        SkRSXform xforms[kNumAsteroids + kNumShips];
+        SkColor colors[kNumAsteroids + kNumShips];
 
         for (int i = 0; i < kNumAsteroids; ++i) {
             fAsteroids[i].advance(fBounds);
@@ -100,7 +94,7 @@ protected:
         }
 
 #ifdef SK_DEBUG
-        canvas->drawBitmap(fAtlas, 0, 0); // just to see the atlas
+        canvas->drawBitmap(fAtlas, 0, 0);  // just to see the atlas
 
         this->drawLightDir(canvas, fBounds.centerX(), fBounds.centerY());
 #endif
@@ -118,8 +112,8 @@ protected:
 #else
         SkMatrix diffMat, normalMat;
 
-        for (int i = 0; i < kNumAsteroids+1; ++i) {
-            colors[i] = colors[i] & 0xFF000000; // to silence compilers
+        for (int i = 0; i < kNumAsteroids + 1; ++i) {
+            colors[i] = colors[i] & 0xFF000000;  // to silence compilers
             SkPaint paint;
 
             SkRect r = fDiffTex[i];
@@ -131,18 +125,16 @@ protected:
             SkMatrix m;
             m.setRSXform(xforms[i]);
 
-            sk_sp<SkShader> normalMap = SkShader::MakeBitmapShader(fAtlas, SkShader::kClamp_TileMode,
-                    SkShader::kClamp_TileMode, &normalMat);
-            sk_sp<SkNormalSource> normalSource = SkNormalSource::MakeFromNormalMap(
-                    std::move(normalMap), m);
-            sk_sp<SkShader> diffuseShader = SkShader::MakeBitmapShader(fAtlas,
-                    SkShader::kClamp_TileMode, SkShader::kClamp_TileMode, &diffMat);
+            sk_sp<SkShader> normalMap = fAtlas.makeShader(&normalMat);
+            sk_sp<SkNormalSource> normalSource =
+                    SkNormalSource::MakeFromNormalMap(std::move(normalMap), m);
+            sk_sp<SkShader> diffuseShader = fAtlas.makeShader(&diffMat);
             paint.setShader(SkLightingShader::Make(std::move(diffuseShader),
-                    std::move(normalSource), fLights));
+                                                   std::move(normalSource), fLights));
 
             canvas->save();
-                canvas->setMatrix(m);
-                canvas->drawRect(r, paint);
+            canvas->setMatrix(m);
+            canvas->drawRect(r, paint);
             canvas->restore();
         }
 #endif
@@ -163,12 +155,9 @@ protected:
 #endif
     }
 
-    SkRect onGetBounds() override {
-        return fBounds;
-    }
+    SkRect onGetBounds() override { return fBounds; }
 
 private:
-
     enum ObjType {
         kBigAsteroid_ObjType = 0,
         kMedAsteroid_ObjType,
@@ -183,8 +172,7 @@ private:
     void updateLights() {
         SkLights::Builder builder;
 
-        builder.add(SkLights::Light::MakeDirectional(
-                SkColor3f::Make(1.0f, 1.0f, 1.0f), fLightDir));
+        builder.add(SkLights::Light::MakeDirectional(SkColor3f::Make(1.0f, 1.0f, 1.0f), fLightDir));
         builder.setAmbientLightColor(SkColor3f::Make(0.2f, 0.2f, 0.2f));
 
         fLights = builder.finish();
@@ -197,17 +185,17 @@ private:
         static const int kSmLen = 5;
 
         // TODO: change the lighting coordinate system to be right handed
-        SkPoint p1 = SkPoint::Make(centerX + kBgLen * fLightDir.fX,
-                                   centerY - kBgLen * fLightDir.fY);
-        SkPoint p2 = SkPoint::Make(centerX + (kBgLen-kSmLen) * fLightDir.fX,
-                                   centerY - (kBgLen-kSmLen) * fLightDir.fY);
+        SkPoint p1 =
+                SkPoint::Make(centerX + kBgLen * fLightDir.fX, centerY - kBgLen * fLightDir.fY);
+        SkPoint p2 = SkPoint::Make(centerX + (kBgLen - kSmLen) * fLightDir.fX,
+                                   centerY - (kBgLen - kSmLen) * fLightDir.fY);
 
         SkPaint p;
         canvas->drawLine(centerX, centerY, p1.fX, p1.fY, p);
-        canvas->drawLine(p1.fX, p1.fY,
-                         p2.fX - kSmLen * fLightDir.fY, p2.fY - kSmLen * fLightDir.fX, p);
-        canvas->drawLine(p1.fX, p1.fY,
-                         p2.fX + kSmLen * fLightDir.fY, p2.fY + kSmLen * fLightDir.fX, p);
+        canvas->drawLine(p1.fX, p1.fY, p2.fX - kSmLen * fLightDir.fY, p2.fY - kSmLen * fLightDir.fX,
+                         p);
+        canvas->drawLine(p1.fX, p1.fY, p2.fX + kSmLen * fLightDir.fY, p2.fY + kSmLen * fLightDir.fX,
+                         p);
     }
 #endif
 
@@ -221,29 +209,29 @@ private:
     //    ------------------------------------
     //    big ship          | big tetra normal
     static SkBitmap MakeAtlas() {
-
         SkBitmap atlas;
         atlas.allocN32Pixels(kAtlasWidth, kAtlasHeight);
 
         for (int y = 0; y < kAtlasHeight; ++y) {
             int x = 0;
-            for ( ; x < kBigSize+kPad; ++x) {
+            for (; x < kBigSize + kPad; ++x) {
                 *atlas.getAddr32(x, y) = SK_ColorTRANSPARENT;
             }
-            for ( ; x < kAtlasWidth; ++x) {
+            for (; x < kAtlasWidth; ++x) {
                 *atlas.getAddr32(x, y) = SkPackARGB32(0xFF, 0x88, 0x88, 0xFF);
             }
         }
 
         // big asteroid
         {
-            SkPoint bigCenter = SkPoint::Make(kDiffXOff + kBigSize/2.0f, kBigYOff + kBigSize/2.0f);
+            SkPoint bigCenter =
+                    SkPoint::Make(kDiffXOff + kBigSize / 2.0f, kBigYOff + kBigSize / 2.0f);
 
-            for (int y = kBigYOff; y < kBigYOff+kBigSize; ++y) {
-                for (int x = kDiffXOff; x < kDiffXOff+kBigSize; ++x) {
+            for (int y = kBigYOff; y < kBigYOff + kBigSize; ++y) {
+                for (int x = kDiffXOff; x < kDiffXOff + kBigSize; ++x) {
                     SkScalar distSq = (x - bigCenter.fX) * (x - bigCenter.fX) +
                                       (y - bigCenter.fY) * (y - bigCenter.fY);
-                    if (distSq > kBigSize*kBigSize/4.0f) {
+                    if (distSq > kBigSize * kBigSize / 4.0f) {
                         *atlas.getAddr32(x, y) = SkPreMultiplyARGB(0, 0, 0, 0);
                     } else {
                         *atlas.getAddr32(x, y) = SkPackARGB32(0xFF, 0xFF, 0, 0);
@@ -251,33 +239,31 @@ private:
                 }
             }
 
-            sk_tool_utils::create_hemi_normal_map(&atlas,
-                                                  SkIRect::MakeXYWH(kNormXOff, kBigYOff,
-                                                                    kBigSize, kBigSize));
+            ToolUtils::create_hemi_normal_map(
+                    &atlas, SkIRect::MakeXYWH(kNormXOff, kBigYOff, kBigSize, kBigSize));
         }
 
         // medium asteroid
         {
-            for (int y = kMedYOff; y < kMedYOff+kMedSize; ++y) {
-                for (int x = kDiffXOff; x < kDiffXOff+kMedSize; ++x) {
+            for (int y = kMedYOff; y < kMedYOff + kMedSize; ++y) {
+                for (int x = kDiffXOff; x < kDiffXOff + kMedSize; ++x) {
                     *atlas.getAddr32(x, y) = SkPackARGB32(0xFF, 0, 0xFF, 0);
                 }
             }
 
-            sk_tool_utils::create_frustum_normal_map(&atlas,
-                                                     SkIRect::MakeXYWH(kNormXOff, kMedYOff,
-                                                                       kMedSize, kMedSize));
+            ToolUtils::create_frustum_normal_map(
+                    &atlas, SkIRect::MakeXYWH(kNormXOff, kMedYOff, kMedSize, kMedSize));
         }
 
         // small asteroid
         {
-            SkPoint smCenter = SkPoint::Make(kDiffXOff + kSmSize/2.0f, kSmYOff + kSmSize/2.0f);
+            SkPoint smCenter = SkPoint::Make(kDiffXOff + kSmSize / 2.0f, kSmYOff + kSmSize / 2.0f);
 
-            for (int y = kSmYOff; y < kSmYOff+kSmSize; ++y) {
-                for (int x = kDiffXOff; x < kDiffXOff+kSmSize; ++x) {
+            for (int y = kSmYOff; y < kSmYOff + kSmSize; ++y) {
+                for (int x = kDiffXOff; x < kDiffXOff + kSmSize; ++x) {
                     SkScalar distSq = (x - smCenter.fX) * (x - smCenter.fX) +
                                       (y - smCenter.fY) * (y - smCenter.fY);
-                    if (distSq > kSmSize*kSmSize/4.0f) {
+                    if (distSq > kSmSize * kSmSize / 4.0f) {
                         *atlas.getAddr32(x, y) = SkPreMultiplyARGB(0, 0, 0, 0);
                     } else {
                         *atlas.getAddr32(x, y) = SkPackARGB32(0xFF, 0, 0, 0xFF);
@@ -285,25 +271,24 @@ private:
                 }
             }
 
-            sk_tool_utils::create_hemi_normal_map(&atlas,
-                                                  SkIRect::MakeXYWH(kNormXOff, kSmYOff,
-                                                                    kSmSize, kSmSize));
+            ToolUtils::create_hemi_normal_map(
+                    &atlas, SkIRect::MakeXYWH(kNormXOff, kSmYOff, kSmSize, kSmSize));
         }
 
         // ship
         {
-            SkScalar shipMidLine = kDiffXOff + kMedSize/2.0f;
+            SkScalar shipMidLine = kDiffXOff + kMedSize / 2.0f;
 
-            for (int y = kShipYOff; y < kShipYOff+kMedSize; ++y) {
-                SkScalar scaledY = (y - kShipYOff)/(float)kMedSize; // 0..1
+            for (int y = kShipYOff; y < kShipYOff + kMedSize; ++y) {
+                SkScalar scaledY = (y - kShipYOff) / (float)kMedSize;  // 0..1
 
-                for (int x = kDiffXOff; x < kDiffXOff+kMedSize; ++x) {
+                for (int x = kDiffXOff; x < kDiffXOff + kMedSize; ++x) {
                     SkScalar scaledX;
 
                     if (x < shipMidLine) {
-                        scaledX = 1.0f - (x - kDiffXOff)/(kMedSize/2.0f); // 0..1
+                        scaledX = 1.0f - (x - kDiffXOff) / (kMedSize / 2.0f);  // 0..1
                     } else {
-                        scaledX = (x - shipMidLine)/(kMedSize/2.0f);      // 0..1
+                        scaledX = (x - shipMidLine) / (kMedSize / 2.0f);  // 0..1
                     }
 
                     if (scaledX < scaledY) {
@@ -314,9 +299,8 @@ private:
                 }
             }
 
-            sk_tool_utils::create_tetra_normal_map(&atlas,
-                                                   SkIRect::MakeXYWH(kNormXOff, kShipYOff,
-                                                                     kMedSize, kMedSize));
+            ToolUtils::create_tetra_normal_map(
+                    &atlas, SkIRect::MakeXYWH(kNormXOff, kShipYOff, kMedSize, kMedSize));
         }
 
         return atlas;
@@ -324,11 +308,10 @@ private:
 
     class ObjectRecord {
     public:
-        void initAsteroid(SkRandom *rand, const SkRect& bounds,
-                          SkRect* diffTex, SkRect* normTex) {
-            static const SkScalar gMaxSpeeds[3] = { 1, 2, 5 }; // smaller asteroids can go faster
-            static const SkScalar gYOffs[3] = { kBigYOff, kMedYOff, kSmYOff };
-            static const SkScalar gSizes[3] = { kBigSize, kMedSize, kSmSize };
+        void initAsteroid(SkRandom* rand, const SkRect& bounds, SkRect* diffTex, SkRect* normTex) {
+            static const SkScalar gMaxSpeeds[3] = {1, 2, 5};  // smaller asteroids can go faster
+            static const SkScalar gYOffs[3] = {kBigYOff, kMedYOff, kSmYOff};
+            static const SkScalar gSizes[3] = {kBigSize, kMedSize, kSmSize};
 
             static unsigned int asteroidType = 0;
             fObjType = static_cast<ObjType>(asteroidType++ % 3);
@@ -342,10 +325,10 @@ private:
             fRot = 0;
             fDeltaRot = rand->nextSScalar1() / 32;
 
-            diffTex->setXYWH(SkIntToScalar(kDiffXOff), gYOffs[fObjType],
-                             gSizes[fObjType], gSizes[fObjType]);
-            normTex->setXYWH(SkIntToScalar(kNormXOff), gYOffs[fObjType],
-                             gSizes[fObjType], gSizes[fObjType]);
+            diffTex->setXYWH(SkIntToScalar(kDiffXOff), gYOffs[fObjType], gSizes[fObjType],
+                             gSizes[fObjType]);
+            normTex->setXYWH(SkIntToScalar(kNormXOff), gYOffs[fObjType], gSizes[fObjType],
+                             gSizes[fObjType]);
         }
 
         void initShip(const SkRect& bounds, SkRect* diffTex, SkRect* normTex) {
@@ -394,23 +377,22 @@ private:
 
         SkRSXform asRSXform() const {
             static const SkScalar gHalfSizes[kObjTypeCount] = {
-                SkScalarHalf(kBigSize),
-                SkScalarHalf(kMedSize),
-                SkScalarHalf(kSmSize),
-                SkScalarHalf(kMedSize),
+                    SkScalarHalf(kBigSize),
+                    SkScalarHalf(kMedSize),
+                    SkScalarHalf(kSmSize),
+                    SkScalarHalf(kMedSize),
             };
 
             return SkRSXform::MakeFromRadians(1.0f, fRot, fPosition.x(), fPosition.y(),
-                                              gHalfSizes[fObjType],
-                                              gHalfSizes[fObjType]);
+                                              gHalfSizes[fObjType], gHalfSizes[fObjType]);
         }
 
     private:
-        ObjType     fObjType;
-        SkPoint     fPosition;
-        SkVector    fVelocity;
-        SkScalar    fRot;        // In radians.
-        SkScalar    fDeltaRot;   // In radiands. Not used by ship.
+        ObjType fObjType;
+        SkPoint fPosition;
+        SkVector fVelocity;
+        SkScalar fRot;       // In radians.
+        SkScalar fDeltaRot;  // In radiands. Not used by ship.
     };
 
 private:
@@ -422,7 +404,7 @@ private:
     static const int kMedSize = 64;
     static const int kSmSize = 32;
     static const int kPad = 1;
-    static const int kAtlasWidth = kBigSize + kBigSize + 2 * kPad; // 2 pads in the middle
+    static const int kAtlasWidth = kBigSize + kBigSize + 2 * kPad;  // 2 pads in the middle
     static const int kAtlasHeight = kBigSize + kMedSize + kSmSize + kMedSize + 3 * kPad;
 
     static const int kDiffXOff = 0;
@@ -434,14 +416,14 @@ private:
     static const int kShipYOff = kSmYOff + kSmSize + kPad;
     static const int kMaxShipSpeed = 5;
 
-    SkBitmap        fAtlas;
-    ObjectRecord    fAsteroids[kNumAsteroids];
-    ObjectRecord    fShip;
-    SkRect          fDiffTex[kNumAsteroids+kNumShips];
-    SkRect          fNormTex[kNumAsteroids+kNumShips];
-    SkRect          fBounds;
-    bool            fUseColors;
-    SkVector3       fLightDir;
+    SkBitmap fAtlas;
+    ObjectRecord fAsteroids[kNumAsteroids];
+    ObjectRecord fShip;
+    SkRect fDiffTex[kNumAsteroids + kNumShips];
+    SkRect fNormTex[kNumAsteroids + kNumShips];
+    SkRect fBounds;
+    bool fUseColors;
+    SkVector3 fLightDir;
     sk_sp<SkLights> fLights;
 
     typedef SkDrawable INHERITED;
@@ -482,13 +464,9 @@ protected:
         return this->INHERITED::onQuery(evt);
     }
 
-    void onDrawContent(SkCanvas* canvas) override {
-        canvas->drawDrawable(fDrawable.get());
-    }
+    void onDrawContent(SkCanvas* canvas) override { canvas->drawDrawable(fDrawable.get()); }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
-        return true;
-    }
+    bool onAnimate(const AnimTimer& timer) override { return true; }
 
 private:
     sk_sp<DrawLitAtlasDrawable> fDrawable;
@@ -498,4 +476,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new DrawLitAtlasView(); )
+DEF_SAMPLE(return new DrawLitAtlasView();)

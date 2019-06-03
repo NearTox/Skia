@@ -5,9 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkTypes.h"
+#include "include/gpu/GrContext.h"
 
-#include "GrContext.h"
+class GrRenderTargetContext;
 
 // This test exercises Ganesh's drawing of tiled bitmaps. In particular, that the offsets and the
 // extents of the tiles don't causes gaps between tiles.
@@ -44,13 +50,13 @@ static void draw_tile_bitmap_with_fractional_offset(GrContext* context, SkCanvas
     for (int i = 0; i < 10; ++i) {
         float offset = i * 0.1f;
         if (vertical) {
-            canvas->drawBitmapRect(bmp, SkRect::MakeXYWH(0.0f, (kTileSize - 50) + offset,
-                                                         32.0f, 1124.0f),
-                                   SkRect::MakeXYWH(37.0f * i, 0.0f, 32.0f, 1124.0f), nullptr);
+            canvas->drawBitmapRect(
+                    bmp, SkRect::MakeXYWH(0.0f, (kTileSize - 50) + offset, 32.0f, 1124.0f),
+                    SkRect::MakeXYWH(37.0f * i, 0.0f, 32.0f, 1124.0f), nullptr);
         } else {
-            canvas->drawBitmapRect(bmp, SkRect::MakeXYWH((kTileSize - 50) + offset, 0.0f,
-                                                         1124.0f, 32.0f),
-                                   SkRect::MakeXYWH(0.0f, 37.0f * i, 1124.0f, 32.0f), nullptr);
+            canvas->drawBitmapRect(
+                    bmp, SkRect::MakeXYWH((kTileSize - 50) + offset, 0.0f, 1124.0f, 32.0f),
+                    SkRect::MakeXYWH(0.0f, 37.0f * i, 1124.0f, 32.0f), nullptr);
         }
     }
 
@@ -58,12 +64,12 @@ static void draw_tile_bitmap_with_fractional_offset(GrContext* context, SkCanvas
     context->setResourceCacheLimits(oldMaxResources, oldMaxResourceBytes);
 }
 
-DEF_SIMPLE_GPU_GM_BG(
-        bitmaptiled_fractional_horizontal, context, rtc, canvas, 1124, 365, SK_ColorBLACK) {
+DEF_SIMPLE_GPU_GM_BG(bitmaptiled_fractional_horizontal, context, rtc, canvas, 1124, 365,
+                     SK_ColorBLACK) {
     draw_tile_bitmap_with_fractional_offset(context, canvas, false);
 }
 
-DEF_SIMPLE_GPU_GM_BG(
-        bitmaptiled_fractional_vertical, context, rtc, canvas, 365, 1124, SK_ColorBLACK) {
+DEF_SIMPLE_GPU_GM_BG(bitmaptiled_fractional_vertical, context, rtc, canvas, 365, 1124,
+                     SK_ColorBLACK) {
     draw_tile_bitmap_with_fractional_offset(context, canvas, true);
 }

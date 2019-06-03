@@ -4,15 +4,15 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "Sample.h"
-#include "SkBitmap.h"
-#include "SkCanvas.h"
-#include "SkCornerPathEffect.h"
-#include "SkGradientShader.h"
-#include "SkPath.h"
-#include "SkRegion.h"
-#include "SkShader.h"
-#include "SkUTF.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRegion.h"
+#include "include/core/SkShader.h"
+#include "include/effects/SkCornerPathEffect.h"
+#include "include/effects/SkGradientShader.h"
+#include "samplecode/Sample.h"
+#include "src/utils/SkUTF.h"
 
 static void create_bitmap(SkBitmap* bitmap) {
     const int W = 100;
@@ -23,11 +23,12 @@ static void create_bitmap(SkBitmap* bitmap) {
     canvas.drawColor(SK_ColorRED);
     SkPaint paint;
     paint.setColor(SK_ColorBLUE);
-    canvas.drawCircle(SkIntToScalar(W)/2, SkIntToScalar(H)/2, SkIntToScalar(W)/2, paint);
+    canvas.drawCircle(SkIntToScalar(W) / 2, SkIntToScalar(H) / 2, SkIntToScalar(W) / 2, paint);
 }
 
 class WritePixelsView : public Sample {
     SkPath fPath;
+
 public:
     WritePixelsView() {}
 
@@ -61,4 +62,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new WritePixelsView(); )
+DEF_SAMPLE(return new WritePixelsView();)

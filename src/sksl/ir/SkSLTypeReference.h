@@ -8,8 +8,8 @@
 #ifndef SKSL_TYPEREFERENCE
 #define SKSL_TYPEREFERENCE
 
-#include "SkSLContext.h"
-#include "SkSLExpression.h"
+#include "src/sksl/SkSLContext.h"
+#include "src/sksl/ir/SkSLExpression.h"
 
 namespace SkSL {
 
@@ -19,16 +19,11 @@ namespace SkSL {
  */
 struct TypeReference : public Expression {
     TypeReference(const Context& context, int offset, const Type& value)
-    : INHERITED(offset, kTypeReference_Kind, *context.fInvalid_Type)
-    , fValue(value) {}
+            : INHERITED(offset, kTypeReference_Kind, *context.fInvalid_Type), fValue(value) {}
 
-    bool hasSideEffects() const override {
-        return false;
-    }
+    bool hasSideEffects() const override { return false; }
 
-    String description() const override {
-        return String(fValue.fName);
-    }
+    String description() const override { return String(fValue.fName); }
 
     std::unique_ptr<Expression> clone() const override {
         return std::unique_ptr<Expression>(new TypeReference(fOffset, fValue, &fType));
@@ -40,10 +35,9 @@ struct TypeReference : public Expression {
 
 private:
     TypeReference(int offset, const Type& value, const Type* type)
-    : INHERITED(offset, kTypeReference_Kind, *type)
-    , fValue(value) {}
+            : INHERITED(offset, kTypeReference_Kind, *type), fValue(value) {}
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

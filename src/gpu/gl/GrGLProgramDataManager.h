@@ -8,12 +8,12 @@
 #ifndef GrGLProgramDataManager_DEFINED
 #define GrGLProgramDataManager_DEFINED
 
-#include "GrAllocator.h"
-#include "GrShaderVar.h"
-#include "gl/GrGLTypes.h"
-#include "glsl/GrGLSLProgramDataManager.h"
+#include "include/gpu/gl/GrGLTypes.h"
+#include "src/gpu/GrAllocator.h"
+#include "src/gpu/GrShaderVar.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
 
-#include "SkTArray.h"
+#include "include/private/SkTArray.h"
 
 class GrGLGpu;
 class SkMatrix;
@@ -27,13 +27,13 @@ class GrGLProgramDataManager : public GrGLSLProgramDataManager {
 public:
     struct UniformInfo {
         GrShaderVar fVariable;
-        uint32_t        fVisibility;
-        GrGLint         fLocation;
+        uint32_t fVisibility;
+        GrGLint fLocation;
     };
 
     struct VaryingInfo {
         GrShaderVar fVariable;
-        GrGLint         fLocation;
+        GrGLint fLocation;
     };
 
     // This uses an allocator rather than array so that the GrShaderVars don't move in memory
@@ -48,8 +48,8 @@ public:
     void setSamplerUniforms(const UniformInfoArray& samplers, int startUnit) const;
 
     /** Functions for uploading uniform values. The varities ending in v can be used to upload to an
-    *  array of uniforms. arrayCount must be <= the array count of the uniform.
-    */
+     *  array of uniforms. arrayCount must be <= the array count of the uniform.
+     */
     void set1i(UniformHandle, int32_t) const override;
     void set1iv(UniformHandle, int arrayCount, const int32_t v[]) const override;
     void set1f(UniformHandle, float v0) const override;
@@ -85,10 +85,10 @@ private:
     };
 
     struct Uniform {
-        GrGLint     fLocation;
+        GrGLint fLocation;
 #ifdef SK_DEBUG
-        GrSLType    fType;
-        int         fArrayCount;
+        GrSLType fType;
+        int fArrayCount;
 #endif
     };
 
@@ -96,15 +96,12 @@ private:
         kUnusedPathProcVarying = -1,
     };
     struct PathProcVarying {
-        GrGLint     fLocation;
-        SkDEBUGCODE(
-            GrSLType    fType;
-            int         fArrayCount;
-        );
+        GrGLint fLocation;
+        SkDEBUGCODE(GrSLType fType; int fArrayCount;);
     };
 
-    template<int N> inline void setMatrices(UniformHandle, int arrayCount,
-                                            const float matrices[]) const;
+    template <int N>
+    inline void setMatrices(UniformHandle, int arrayCount, const float matrices[]) const;
 
     SkTArray<Uniform, true> fUniforms;
     SkTArray<PathProcVarying, true> fPathProcVaryings;

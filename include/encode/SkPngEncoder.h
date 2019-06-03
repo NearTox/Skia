@@ -8,23 +8,22 @@
 #ifndef SkPngEncoder_DEFINED
 #define SkPngEncoder_DEFINED
 
-#include "SkEncoder.h"
-#include "SkDataTable.h"
+#include "include/core/SkDataTable.h"
+#include "include/encode/SkEncoder.h"
 
 class SkPngEncoderMgr;
 class SkWStream;
 
 class SK_API SkPngEncoder : public SkEncoder {
 public:
-
     enum class FilterFlag : int {
-        kZero  = 0x00,
-        kNone  = 0x08,
-        kSub   = 0x10,
-        kUp    = 0x20,
-        kAvg   = 0x40,
+        kZero = 0x00,
+        kNone = 0x08,
+        kSub = 0x10,
+        kUp = 0x20,
+        kAvg = 0x40,
         kPaeth = 0x80,
-        kAll   = kNone | kSub | kUp | kAvg | kPaeth,
+        kAll = kNone | kSub | kUp | kAvg | kPaeth,
     };
 
     struct Options {

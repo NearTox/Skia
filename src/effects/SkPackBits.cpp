@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "SkPackBits.h"
-#include "SkTo.h"
+#include "src/effects/SkPackBits.h"
+#include "include/private/SkTo.h"
 
 #include <cstring>
 
@@ -25,8 +25,8 @@ static uint8_t* flush_same8(uint8_t dst[], uint8_t value, size_t count) {
     return dst;
 }
 
-static uint8_t* flush_diff8(uint8_t* SK_RESTRICT dst,
-                            const uint8_t* SK_RESTRICT src, size_t count) {
+static uint8_t* flush_diff8(uint8_t* SK_RESTRICT dst, const uint8_t* SK_RESTRICT src,
+                            size_t count) {
     while (count > 0) {
         size_t n = count > 128 ? 128 : count;
         *dst++ = (uint8_t)(n + 127);
@@ -38,8 +38,8 @@ static uint8_t* flush_diff8(uint8_t* SK_RESTRICT dst,
     return dst;
 }
 
-size_t SkPackBits::Pack8(const uint8_t* SK_RESTRICT src, size_t srcSize,
-                         uint8_t* SK_RESTRICT dst, size_t dstSize) {
+size_t SkPackBits::Pack8(const uint8_t* SK_RESTRICT src, size_t srcSize, uint8_t* SK_RESTRICT dst,
+                         size_t dstSize) {
     if (dstSize < ComputeMaxSize8(srcSize)) {
         return 0;
     }
@@ -57,7 +57,7 @@ size_t SkPackBits::Pack8(const uint8_t* SK_RESTRICT src, size_t srcSize,
         unsigned value = *src;
         const uint8_t* s = src + 1;
 
-        if (*s == value) { // accumulate same values...
+        if (*s == value) {  // accumulate same values...
             do {
                 s++;
                 if (s == stop) {
@@ -65,7 +65,7 @@ size_t SkPackBits::Pack8(const uint8_t* SK_RESTRICT src, size_t srcSize,
                 }
             } while (*s == value);
             dst = flush_same8(dst, value, SkToInt(s - src));
-        } else {    // accumulate diff values...
+        } else {  // accumulate diff values...
             do {
                 if (++s == stop) {
                     goto FLUSH_DIFF;
@@ -73,7 +73,7 @@ size_t SkPackBits::Pack8(const uint8_t* SK_RESTRICT src, size_t srcSize,
                 // only stop if we hit 3 in a row,
                 // otherwise we get bigger than compuatemax
             } while (*s != s[-1] || s[-1] != s[-2]);
-            s -= 2; // back up so we don't grab the "same" values that follow
+            s -= 2;  // back up so we don't grab the "same" values that follow
         FLUSH_DIFF:
             dst = flush_diff8(dst, src, SkToInt(s - src));
         }
@@ -82,21 +82,21 @@ size_t SkPackBits::Pack8(const uint8_t* SK_RESTRICT src, size_t srcSize,
     return dst - origDst;
 }
 
-int SkPackBits::Unpack8(const uint8_t* SK_RESTRICT src, size_t srcSize,
-                        uint8_t* SK_RESTRICT dst, size_t dstSize) {
+int SkPackBits::Unpack8(const uint8_t* SK_RESTRICT src, size_t srcSize, uint8_t* SK_RESTRICT dst,
+                        size_t dstSize) {
     uint8_t* const origDst = dst;
     uint8_t* const endDst = dst + dstSize;
     const uint8_t* stop = src + srcSize;
 
     while (src < stop) {
         unsigned n = *src++;
-        if (n <= 127) {   // repeat count (n + 1)
+        if (n <= 127) {  // repeat count (n + 1)
             n += 1;
             if (dst > (endDst - n) || src >= stop) {
                 return 0;
             }
             memset(dst, *src++, n);
-        } else {    // same count (n - 127)
+        } else {  // same count (n - 127)
             n -= 127;
             if (dst > (endDst - n) || src > (stop - n)) {
                 return 0;

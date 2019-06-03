@@ -5,15 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "SkCanvas.h"
-#include "SkCanvasPriv.h"
-#include "SkMultiPictureDraw.h"
-#include "SkPicture.h"
-#include "SkTaskGroup.h"
+#include "include/core/SkMultiPictureDraw.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPicture.h"
+#include "src/core/SkCanvasPriv.h"
+#include "src/core/SkTaskGroup.h"
 
-void SkMultiPictureDraw::DrawData::draw() {
-    fCanvas->drawPicture(fPicture, &fMatrix, fPaint);
-}
+void SkMultiPictureDraw::DrawData::draw() { fCanvas->drawPicture(fPicture, &fMatrix, fPaint); }
 
 void SkMultiPictureDraw::DrawData::init(SkCanvas* canvas, const SkPicture* picture,
                                         const SkMatrix* matrix, const SkPaint* paint) {
@@ -68,6 +66,7 @@ void SkMultiPictureDraw::add(SkCanvas* canvas,
 
 class AutoMPDReset : SkNoncopyable {
     SkMultiPictureDraw* fMPD;
+
 public:
     AutoMPDReset(SkMultiPictureDraw* mpd) : fMPD(mpd) {}
     ~AutoMPDReset() { fMPD->reset(); }
@@ -83,9 +82,7 @@ void SkMultiPictureDraw::draw(bool flush) {
         fThreadSafeDrawData[i].draw();
     }
 #else
-    SkTaskGroup().batch(fThreadSafeDrawData.count(), [&](int i) {
-        fThreadSafeDrawData[i].draw();
-    });
+    SkTaskGroup().batch(fThreadSafeDrawData.count(), [&](int i) { fThreadSafeDrawData[i].draw(); });
 #endif
 
     // N.B. we could get going on any GPU work from this main thread while the CPU work runs.

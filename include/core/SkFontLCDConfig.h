@@ -8,7 +8,7 @@
 #ifndef SkFontLCDConfig_DEFINED
 #define SkFontLCDConfig_DEFINED
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 class SK_API SkFontLCDConfig {
 public:
@@ -22,14 +22,14 @@ public:
         @deprecated use SkPixelGeometry instead.
     */
     enum LCDOrientation {
-        kHorizontal_LCDOrientation = 0,    //!< this is the default
-        kVertical_LCDOrientation   = 1,
+        kHorizontal_LCDOrientation = 0,  //!< this is the default
+        kVertical_LCDOrientation = 1,
     };
 
     /** @deprecated set on Device creation. */
-    static void SetSubpixelOrientation(LCDOrientation orientation);
+    static void SetSubpixelOrientation(LCDOrientation orientation) noexcept;
     /** @deprecated get from Device. */
-    static LCDOrientation GetSubpixelOrientation();
+    static LCDOrientation GetSubpixelOrientation() noexcept;
 
     /** LCD color elements can vary in order. For subpixel text we need to know
         the order which the LCDs uses so that the color fringes are in the
@@ -44,15 +44,15 @@ public:
         @deprecated use SkPixelGeometry instead.
      */
     enum LCDOrder {
-        kRGB_LCDOrder = 0,    //!< this is the default
+        kRGB_LCDOrder = 0,  //!< this is the default
         kBGR_LCDOrder = 1,
         kNONE_LCDOrder = 2,
     };
 
     /** @deprecated set on Device creation. */
-    static void SetSubpixelOrder(LCDOrder order);
+    static void SetSubpixelOrder(LCDOrder order) noexcept;
     /** @deprecated get from Device. */
-    static LCDOrder GetSubpixelOrder();
+    static LCDOrder GetSubpixelOrder() noexcept;
 };
 
 #endif

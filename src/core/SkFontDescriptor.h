@@ -8,27 +8,26 @@
 #ifndef SkFontDescriptor_DEFINED
 #define SkFontDescriptor_DEFINED
 
-#include "SkFixed.h"
-#include "SkStream.h"
-#include "SkString.h"
-#include "SkTypeface.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypeface.h"
+#include "include/private/SkFixed.h"
 
 class SkFontData {
 public:
     /** Makes a copy of the data in 'axis'. */
-    SkFontData(std::unique_ptr<SkStreamAsset> stream, int index, const SkFixed axis[],int axisCount)
-        : fStream(std::move(stream)), fIndex(index), fAxisCount(axisCount), fAxis(axisCount)
-    {
+    SkFontData(std::unique_ptr<SkStreamAsset> stream, int index, const SkFixed axis[],
+               int axisCount)
+            : fStream(std::move(stream)), fIndex(index), fAxisCount(axisCount), fAxis(axisCount) {
         for (int i = 0; i < axisCount; ++i) {
             fAxis[i] = axis[i];
         }
     }
     SkFontData(const SkFontData& that)
-        : fStream(that.fStream->duplicate())
-        , fIndex(that.fIndex)
-        , fAxisCount(that.fAxisCount)
-        , fAxis(fAxisCount)
-    {
+            : fStream(that.fStream->duplicate())
+            , fIndex(that.fIndex)
+            , fAxisCount(that.fAxisCount)
+            , fAxis(fAxisCount) {
         for (int i = 0; i < fAxisCount; ++i) {
             fAxis[i] = that.fAxis[i];
         }
@@ -80,4 +79,4 @@ private:
     SkFontStyle fStyle;
 };
 
-#endif // SkFontDescriptor_DEFINED
+#endif  // SkFontDescriptor_DEFINED

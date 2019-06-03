@@ -5,24 +5,35 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkBlurImageFilter.h"
-#include "SkGradientShader.h"
-#include "SkLiteDL.h"
-#include "SkLiteRecorder.h"
-#include "SkPictureRecorder.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPictureRecorder.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkBlurImageFilter.h"
+#include "include/effects/SkGradientShader.h"
+#include "src/core/SkLiteDL.h"
+#include "src/core/SkLiteRecorder.h"
+
+#include <initializer_list>
 
 // Make a noisy (with hard-edges) background, so we can see the effect of the blur
 //
 static sk_sp<SkShader> make_shader(SkScalar cx, SkScalar cy, SkScalar rad) {
     const SkColor colors[] = {
-        SK_ColorRED, SK_ColorRED, SK_ColorBLUE, SK_ColorBLUE, SK_ColorGREEN, SK_ColorGREEN,
-        SK_ColorRED, SK_ColorRED, SK_ColorBLUE, SK_ColorBLUE, SK_ColorGREEN, SK_ColorGREEN,
+            SK_ColorRED, SK_ColorRED, SK_ColorBLUE, SK_ColorBLUE, SK_ColorGREEN, SK_ColorGREEN,
+            SK_ColorRED, SK_ColorRED, SK_ColorBLUE, SK_ColorBLUE, SK_ColorGREEN, SK_ColorGREEN,
     };
     constexpr int count = SK_ARRAY_COUNT(colors);
-    SkScalar pos[count] = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6 };
+    SkScalar pos[count] = {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6};
     for (int i = 0; i < count; ++i) {
-        pos[i] *= 1.0f/6;
+        pos[i] *= 1.0f / 6;
     }
     return SkGradientShader::MakeSweep(cx, cy, colors, pos, count);
 }
@@ -39,7 +50,7 @@ static void do_draw(SkCanvas* canvas, bool useClip, bool useHintRect) {
 
     // now setup a saveLayer that will pull in the backdrop and blur it
     //
-    const SkRect r = {cx-50, cy-50, cx+50, cy+50};
+    const SkRect r = {cx - 50, cy - 50, cx + 50, cy + 50};
     const SkRect* drawrptr = useHintRect ? &r : nullptr;
     const SkScalar sigma = 10;
     if (useClip) {
@@ -48,11 +59,11 @@ static void do_draw(SkCanvas* canvas, bool useClip, bool useHintRect) {
     auto blur = SkBlurImageFilter::Make(sigma, sigma, nullptr);
     auto rec = SkCanvas::SaveLayerRec(drawrptr, nullptr, blur.get(), 0);
     canvas->saveLayer(rec);
-        // draw something inside, just to demonstrate that we don't blur the new contents,
-        // just the backdrop.
-        p.setColor(SK_ColorYELLOW);
-        p.setShader(nullptr);
-        canvas->drawCircle(cx, cy, 30, p);
+    // draw something inside, just to demonstrate that we don't blur the new contents,
+    // just the backdrop.
+    p.setColor(SK_ColorYELLOW);
+    p.setShader(nullptr);
+    canvas->drawCircle(cx, cy, 30, p);
     canvas->restore();
 }
 

@@ -8,8 +8,8 @@
 #ifndef SkColorFilterShader_DEFINED
 #define SkColorFilterShader_DEFINED
 
-#include "SkColorFilter.h"
-#include "SkShaderBase.h"
+#include "include/core/SkColorFilter.h"
+#include "src/shaders/SkShaderBase.h"
 
 class SkArenaAlloc;
 
@@ -23,13 +23,12 @@ public:
 
 protected:
     void flatten(SkWriteBuffer&) const override;
-    sk_sp<SkShader> onMakeColorSpace(SkColorSpaceXformer* xformer) const override;
-    bool onAppendStages(const StageRec&) const override;
+    bool onAppendStages(const SkStageRec&) const override;
 
 private:
     SK_FLATTENABLE_HOOKS(SkColorFilterShader)
 
-    sk_sp<SkShader>      fShader;
+    sk_sp<SkShader> fShader;
     sk_sp<SkColorFilter> fFilter;
 
     typedef SkShaderBase INHERITED;

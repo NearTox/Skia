@@ -8,10 +8,10 @@
 #ifndef GrVkSamplerYcbcrConverison_DEFINED
 #define GrVkSamplerYcbcrConverison_DEFINED
 
-#include "GrVkResource.h"
+#include "src/gpu/vk/GrVkResource.h"
 
-#include "SkOpts.h"
-#include "vk/GrVkTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
+#include "src/core/SkOpts.h"
 
 class GrVkGpu;
 
@@ -30,7 +30,7 @@ public:
         }
 
         uint64_t fExternalFormat;
-        uint8_t  fConversionKey;
+        uint8_t fConversionKey;
 
         bool operator==(const Key& that) const {
             return this->fExternalFormat == that.fExternalFormat &&
@@ -56,17 +56,14 @@ public:
 
 private:
     GrVkSamplerYcbcrConversion(VkSamplerYcbcrConversion ycbcrConversion, Key key)
-            : INHERITED()
-            , fYcbcrConversion(ycbcrConversion)
-            , fKey(key) {}
+            : INHERITED(), fYcbcrConversion(ycbcrConversion), fKey(key) {}
 
     void freeGPUData(GrVkGpu* gpu) const override;
 
     VkSamplerYcbcrConversion fYcbcrConversion;
-    Key                      fKey;
+    Key fKey;
 
     typedef GrVkResource INHERITED;
 };
 
 #endif
-

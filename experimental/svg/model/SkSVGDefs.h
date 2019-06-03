@@ -8,7 +8,7 @@
 #ifndef SkSVGDefs_DEFINED
 #define SkSVGDefs_DEFINED
 
-#include "SkSVGHiddenContainer.h"
+#include "experimental/svg/model/SkSVGHiddenContainer.h"
 
 class SkSVGDefs : public SkSVGHiddenContainer {
 public:
@@ -21,4 +21,4 @@ private:
     typedef SkSVGHiddenContainer INHERITED;
 };
 
-#endif // SkSVGDefs_DEFINED
+#endif  // SkSVGDefs_DEFINED

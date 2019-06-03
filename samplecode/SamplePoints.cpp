@@ -5,20 +5,20 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkCanvas.h"
-#include "SkGradientShader.h"
-#include "SkGraphics.h"
-#include "SkPath.h"
-#include "SkRandom.h"
-#include "SkRegion.h"
-#include "SkShader.h"
-#include "SkUTF.h"
-#include "SkColorPriv.h"
-#include "SkColorFilter.h"
-#include "SkTime.h"
-#include "SkTypeface.h"
-#include "SkStream.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkGraphics.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRegion.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkTime.h"
+#include "include/core/SkTypeface.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/utils/SkRandom.h"
+#include "samplecode/Sample.h"
+#include "src/utils/SkUTF.h"
 
 class PointsView : public Sample {
 public:
@@ -42,7 +42,7 @@ protected:
         canvas->translate(SK_Scalar1, SK_Scalar1);
 
         SkRandom rand;
-        SkPaint  p0, p1, p2, p3;
+        SkPaint p0, p1, p2, p3;
         const size_t n = 99;
 
         p0.setColor(SK_ColorRED);
@@ -66,10 +66,9 @@ protected:
     }
 
 private:
-
     typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new PointsView(); )
+DEF_SAMPLE(return new PointsView();)

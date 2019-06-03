@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkAAClip.h"
-#include "SkCanvas.h"
-#include "SkPath.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPath.h"
+#include "samplecode/Sample.h"
+#include "src/core/SkAAClip.h"
 
 static void testop(const SkIRect& r0, const SkIRect& r1, SkRegion::Op op,
                    const SkIRect& expectedR) {
@@ -27,9 +27,9 @@ static const struct {
     SkRegion::Op op;
     SkIRect expectedR;
 } gRec[] = {
-    {{ 1, 2, 9, 3 }, { -3, 2, 5, 11 }, SkRegion::kDifference_Op, { 5, 2, 9, 3 }},
-    {{ 1, 10, 5, 13 }, { 1, 2, 5, 11 }, SkRegion::kDifference_Op, { 1, 11, 5, 13 }},
-    {{ 1, 10, 5, 13 }, { 1, 2, 5, 11 }, SkRegion::kReverseDifference_Op, { 1, 2, 5, 10 }},
+        {{1, 2, 9, 3}, {-3, 2, 5, 11}, SkRegion::kDifference_Op, {5, 2, 9, 3}},
+        {{1, 10, 5, 13}, {1, 2, 5, 11}, SkRegion::kDifference_Op, {1, 11, 5, 13}},
+        {{1, 10, 5, 13}, {1, 2, 5, 11}, SkRegion::kReverseDifference_Op, {1, 2, 5, 10}},
 };
 
 static void testop() {
@@ -48,17 +48,12 @@ static void drawClip(SkCanvas* canvas, const SkAAClip& clip) {
     bm.installMaskPixels(mask);
 
     SkPaint paint;
-    canvas->drawBitmap(bm,
-                       SK_Scalar1 * mask.fBounds.fLeft,
-                       SK_Scalar1 * mask.fBounds.fTop,
-                       &paint);
+    canvas->drawBitmap(bm, SK_Scalar1 * mask.fBounds.fLeft, SK_Scalar1 * mask.fBounds.fTop, &paint);
 }
 
 class AAClipView : public Sample {
 public:
-    AAClipView() {
-        testop();
-    }
+    AAClipView() { testop(); }
 
 protected:
     virtual bool onQuery(Sample::Event* evt) {
@@ -78,8 +73,8 @@ protected:
         bounds.set(0, 0, 20, 20);
         bounds.inset(SK_ScalarHalf, SK_ScalarHalf);
 
-//        path.addRect(bounds);
-//        path.addOval(bounds);
+        //        path.addRect(bounds);
+        //        path.addOval(bounds);
         path.addRoundRect(bounds, 4, 4);
         aaclip.setPath(path);
         canvas->translate(30, 30);
@@ -119,4 +114,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new AAClipView(); )
+DEF_SAMPLE(return new AAClipView();)

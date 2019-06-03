@@ -8,9 +8,9 @@
 #ifndef SKSL_FUNCTIONDEFINITION
 #define SKSL_FUNCTIONDEFINITION
 
-#include "SkSLBlock.h"
-#include "SkSLFunctionDeclaration.h"
-#include "SkSLProgramElement.h"
+#include "src/sksl/ir/SkSLBlock.h"
+#include "src/sksl/ir/SkSLFunctionDeclaration.h"
+#include "src/sksl/ir/SkSLProgramElement.h"
 
 namespace SkSL {
 
@@ -20,13 +20,13 @@ namespace SkSL {
 struct FunctionDefinition : public ProgramElement {
     FunctionDefinition(int offset, const FunctionDeclaration& declaration,
                        std::unique_ptr<Statement> body)
-    : INHERITED(offset, kFunction_Kind)
-    , fDeclaration(declaration)
-    , fBody(std::move(body)) {}
+            : INHERITED(offset, kFunction_Kind)
+            , fDeclaration(declaration)
+            , fBody(std::move(body)) {}
 
     std::unique_ptr<ProgramElement> clone() const override {
-        return std::unique_ptr<ProgramElement>(new FunctionDefinition(fOffset, fDeclaration,
-                                                                      fBody->clone()));
+        return std::unique_ptr<ProgramElement>(
+                new FunctionDefinition(fOffset, fDeclaration, fBody->clone()));
     }
 
     String description() const override {
@@ -39,6 +39,6 @@ struct FunctionDefinition : public ProgramElement {
     typedef ProgramElement INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

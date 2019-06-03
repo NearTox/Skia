@@ -5,27 +5,34 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "Resources.h"
-#include "SkFontMetrics.h"
-#include "SkPath.h"
-#include "SkTextUtils.h"
-#include "SkTypeface.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkFontMetrics.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypeface.h"
+#include "include/utils/SkTextUtils.h"
+#include "tools/Resources.h"
+
+#include <stdint.h>
 
 class Poly2PolyGM : public skiagm::GM {
 public:
     Poly2PolyGM() {}
 
 protected:
+    SkString onShortName() override { return SkString("poly2poly"); }
 
-    SkString onShortName() override {
-        return SkString("poly2poly");
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(835, 840);
-    }
+    SkISize onISize() override { return SkISize::Make(835, 840); }
 
     static void doDraw(SkCanvas* canvas, const SkFont& font, SkPaint* paint, const int isrc[],
                        const int idst[], int count) {
@@ -33,8 +40,8 @@ protected:
         SkPoint src[4], dst[4];
 
         for (int i = 0; i < count; i++) {
-            src[i].set(SkIntToScalar(isrc[2*i+0]), SkIntToScalar(isrc[2*i+1]));
-            dst[i].set(SkIntToScalar(idst[2*i+0]), SkIntToScalar(idst[2*i+1]));
+            src[i].set(SkIntToScalar(isrc[2 * i + 0]), SkIntToScalar(isrc[2 * i + 1]));
+            dst[i].set(SkIntToScalar(idst[2 * i + 0]), SkIntToScalar(idst[2 * i + 1]));
         }
 
         canvas->save();
@@ -52,17 +59,15 @@ protected:
         font.getMetrics(&fm);
         paint->setColor(SK_ColorRED);
         paint->setStyle(SkPaint::kFill_Style);
-        SkScalar x = D/2;
-        SkScalar y = D/2 - (fm.fAscent + fm.fDescent)/2;
-        uint16_t glyphID = 3; // X
-        SkTextUtils::Draw(canvas, &glyphID, sizeof(glyphID), kGlyphID_SkTextEncoding, x, y,
-                          font, *paint, SkTextUtils::kCenter_Align);
+        SkScalar x = D / 2;
+        SkScalar y = D / 2 - (fm.fAscent + fm.fDescent) / 2;
+        uint16_t glyphID = 3;  // X
+        SkTextUtils::Draw(canvas, &glyphID, sizeof(glyphID), SkTextEncoding::kGlyphID, x, y, font,
+                          *paint, SkTextUtils::kCenter_Align);
         canvas->restore();
     }
 
-    void onOnceBeforeDraw() override {
-        fEmFace = MakeResourceAsTypeface("fonts/Em.ttf");
-    }
+    void onOnceBeforeDraw() override { fEmFace = MakeResourceAsTypeface("fonts/Em.ttf"); }
 
     void onDraw(SkCanvas* canvas) override {
         SkPaint paint;
@@ -73,32 +78,32 @@ protected:
         canvas->save();
         canvas->translate(SkIntToScalar(10), SkIntToScalar(10));
         // translate (1 point)
-        const int src1[] = { 0, 0 };
-        const int dst1[] = { 5, 5 };
+        const int src1[] = {0, 0};
+        const int dst1[] = {5, 5};
         doDraw(canvas, font, &paint, src1, dst1, 1);
         canvas->restore();
 
         canvas->save();
         canvas->translate(SkIntToScalar(160), SkIntToScalar(10));
         // rotate/uniform-scale (2 points)
-        const int src2[] = { 32, 32, 64, 32 };
-        const int dst2[] = { 32, 32, 64, 48 };
+        const int src2[] = {32, 32, 64, 32};
+        const int dst2[] = {32, 32, 64, 48};
         doDraw(canvas, font, &paint, src2, dst2, 2);
         canvas->restore();
 
         canvas->save();
         canvas->translate(SkIntToScalar(10), SkIntToScalar(110));
         // rotate/skew (3 points)
-        const int src3[] = { 0, 0, 64, 0, 0, 64 };
-        const int dst3[] = { 0, 0, 96, 0, 24, 64 };
+        const int src3[] = {0, 0, 64, 0, 0, 64};
+        const int dst3[] = {0, 0, 96, 0, 24, 64};
         doDraw(canvas, font, &paint, src3, dst3, 3);
         canvas->restore();
 
         canvas->save();
         canvas->translate(SkIntToScalar(160), SkIntToScalar(110));
         // perspective (4 points)
-        const int src4[] = { 0, 0, 64, 0, 64, 64, 0, 64 };
-        const int dst4[] = { 0, 0, 96, 0, 64, 96, 0, 64 };
+        const int src4[] = {0, 0, 64, 0, 64, 64, 0, 64};
+        const int dst4[] = {0, 0, 96, 0, 64, 96, 0, 64};
         doDraw(canvas, font, &paint, src4, dst4, 4);
         canvas->restore();
     }
@@ -110,4 +115,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new Poly2PolyGM; )
+DEF_GM(return new Poly2PolyGM;)

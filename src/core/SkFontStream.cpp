@@ -5,45 +5,43 @@
  * found in the LICENSE file.
  */
 
-#include "SkAutoMalloc.h"
-#include "SkEndian.h"
-#include "SkFontStream.h"
-#include "SkStream.h"
+#include "src/core/SkFontStream.h"
+#include "include/core/SkStream.h"
+#include "src/core/SkAutoMalloc.h"
+#include "src/core/SkEndian.h"
 
 struct SkSFNTHeader {
-    uint32_t    fVersion;
-    uint16_t    fNumTables;
-    uint16_t    fSearchRange;
-    uint16_t    fEntrySelector;
-    uint16_t    fRangeShift;
+    uint32_t fVersion;
+    uint16_t fNumTables;
+    uint16_t fSearchRange;
+    uint16_t fEntrySelector;
+    uint16_t fRangeShift;
 };
 
 struct SkTTCFHeader {
-    uint32_t    fTag;
-    uint32_t    fVersion;
-    uint32_t    fNumOffsets;
-    uint32_t    fOffset0;   // the first of N (fNumOffsets)
+    uint32_t fTag;
+    uint32_t fVersion;
+    uint32_t fNumOffsets;
+    uint32_t fOffset0;  // the first of N (fNumOffsets)
 };
 
 union SkSharedTTHeader {
-    SkSFNTHeader    fSingle;
-    SkTTCFHeader    fCollection;
+    SkSFNTHeader fSingle;
+    SkTTCFHeader fCollection;
 };
 
 struct SkSFNTDirEntry {
-    uint32_t    fTag;
-    uint32_t    fChecksum;
-    uint32_t    fOffset;
-    uint32_t    fLength;
+    uint32_t fTag;
+    uint32_t fChecksum;
+    uint32_t fOffset;
+    uint32_t fLength;
 };
 
 static bool read(SkStream* stream, void* buffer, size_t amount) {
     return stream->read(buffer, amount) == amount;
 }
 
-static bool skip(SkStream* stream, size_t amount) {
-    return stream->skip(amount) == amount;
-}
+static bool skip(SkStream* stream, size_t amount) { return stream->skip(amount) == amount; }
 
 /** Return the number of tables, or if this is a TTC (collection), return the
     number of tables in the first element of the collection. In either case,
@@ -73,7 +71,7 @@ static int count_tables(SkStream* stream, int ttcIndex, size_t* offsetToDir) {
             return 0;
         }
 
-        if (ttcIndex > 0) { // need to read more of the shared header
+        if (ttcIndex > 0) {  // need to read more of the shared header
             stream->rewind();
             size_t amount = sizeof(SkSharedTTHeader) + ttcIndex * sizeof(uint32_t);
             header = (SkSharedTTHeader*)storage.reset(amount);
@@ -130,7 +128,7 @@ struct SfntHeader {
         return read(stream, fDir, size);
     }
 
-    int             fCount;
+    int fCount;
     SkSFNTDirEntry* fDir;
 };
 
@@ -149,13 +147,12 @@ int SkFontStream::CountTTCEntries(SkStream* stream) {
     if (SkSetFourByteTag('t', 't', 'c', 'f') == tag) {
         return SkEndian_SwapBE32(shared.fCollection.fNumOffsets);
     } else {
-        return 1;   // normal 'sfnt' has 1 dir entry
+        return 1;  // normal 'sfnt' has 1 dir entry
     }
 }
 
-int SkFontStream::GetTableTags(SkStream* stream, int ttcIndex,
-                               SkFontTableTag tags[]) {
-    SfntHeader  header;
+int SkFontStream::GetTableTags(SkStream* stream, int ttcIndex, SkFontTableTag tags[]) {
+    SfntHeader header;
     if (!header.init(stream, ttcIndex)) {
         return 0;
     }
@@ -168,10 +165,9 @@ int SkFontStream::GetTableTags(SkStream* stream, int ttcIndex,
     return header.fCount;
 }
 
-size_t SkFontStream::GetTableData(SkStream* stream, int ttcIndex,
-                                  SkFontTableTag tag,
-                                  size_t offset, size_t length, void* data) {
-    SfntHeader  header;
+size_t SkFontStream::GetTableData(SkStream* stream, int ttcIndex, SkFontTableTag tag, size_t offset,
+                                  size_t length, void* data) {
+    SfntHeader header;
     if (!header.init(stream, ttcIndex)) {
         return 0;
     }

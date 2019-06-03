@@ -7,17 +7,17 @@
 #ifndef GrAHardwareBufferUtils_DEFINED
 #define GrAHardwareBufferUtils_DEFINED
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 #if defined(SK_BUILD_FOR_ANDROID) && __ANDROID_API__ >= 26
 
-#include "GrBackendSurface.h"
-#include "GrTypes.h"
+#include "include/gpu/GrBackendSurface.h"
+#include "include/gpu/GrTypes.h"
 
 class GrContext;
 
 extern "C" {
-    typedef struct AHardwareBuffer AHardwareBuffer;
+typedef struct AHardwareBuffer AHardwareBuffer;
 }
 
 namespace GrAHardwareBufferUtils {
@@ -30,16 +30,12 @@ GrBackendFormat GetBackendFormat(GrContext* context, AHardwareBuffer* hardwareBu
 typedef void* DeleteImageCtx;
 typedef void (*DeleteImageProc)(DeleteImageCtx);
 
-GrBackendTexture MakeBackendTexture(GrContext* context, AHardwareBuffer* hardwareBuffer,
-                                    int width, int height,
-                                    DeleteImageProc* deleteProc,
-                                    DeleteImageCtx* deleteCtx,
-                                    bool isProtectedContent,
-                                    const GrBackendFormat& backendFormat,
-                                    bool isRenderable);
+GrBackendTexture MakeBackendTexture(GrContext* context, AHardwareBuffer* hardwareBuffer, int width,
+                                    int height, DeleteImageProc* deleteProc,
+                                    DeleteImageCtx* deleteCtx, bool isProtectedContent,
+                                    const GrBackendFormat& backendFormat, bool isRenderable);
 
-} // GrAHardwareBufferUtils
-
+}  // namespace GrAHardwareBufferUtils
 
 #endif
 #endif

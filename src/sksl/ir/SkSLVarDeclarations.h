@@ -8,10 +8,10 @@
 #ifndef SKSL_VARDECLARATIONS
 #define SKSL_VARDECLARATIONS
 
-#include "SkSLExpression.h"
-#include "SkSLProgramElement.h"
-#include "SkSLStatement.h"
-#include "SkSLVariable.h"
+#include "src/sksl/ir/SkSLExpression.h"
+#include "src/sksl/ir/SkSLProgramElement.h"
+#include "src/sksl/ir/SkSLStatement.h"
+#include "src/sksl/ir/SkSLVariable.h"
 
 namespace SkSL {
 
@@ -22,12 +22,14 @@ namespace SkSL {
  */
 struct VarDeclaration : public Statement {
     VarDeclaration(const Variable* var,
-                   std::vector<std::unique_ptr<Expression>> sizes,
-                   std::unique_ptr<Expression> value)
-    : INHERITED(var->fOffset, Statement::kVarDeclaration_Kind)
-    , fVar(var)
-    , fSizes(std::move(sizes))
-    , fValue(std::move(value)) {}
+                   std::vector<std::unique_ptr<Expression>>
+                           sizes,
+                   std::unique_ptr<Expression>
+                           value)
+            : INHERITED(var->fOffset, Statement::kVarDeclaration_Kind)
+            , fVar(var)
+            , fSizes(std::move(sizes))
+            , fValue(std::move(value)) {}
 
     std::unique_ptr<Statement> clone() const override {
         std::vector<std::unique_ptr<Expression>> sizesClone;
@@ -70,8 +72,7 @@ struct VarDeclaration : public Statement {
 struct VarDeclarations : public ProgramElement {
     VarDeclarations(int offset, const Type* baseType,
                     std::vector<std::unique_ptr<VarDeclaration>> vars)
-    : INHERITED(offset, kVar_Kind)
-    , fBaseType(*baseType) {
+            : INHERITED(offset, kVar_Kind), fBaseType(*baseType) {
         for (auto& var : vars) {
             fVars.push_back(std::unique_ptr<Statement>(var.release()));
         }
@@ -80,19 +81,19 @@ struct VarDeclarations : public ProgramElement {
     std::unique_ptr<ProgramElement> clone() const override {
         std::vector<std::unique_ptr<VarDeclaration>> cloned;
         for (const auto& v : fVars) {
-            cloned.push_back(std::unique_ptr<VarDeclaration>(
-                                                           (VarDeclaration*) v->clone().release()));
+            cloned.push_back(
+                    std::unique_ptr<VarDeclaration>((VarDeclaration*)v->clone().release()));
         }
-        return std::unique_ptr<ProgramElement>(new VarDeclarations(fOffset, &fBaseType,
-                                                                     std::move(cloned)));
+        return std::unique_ptr<ProgramElement>(
+                new VarDeclarations(fOffset, &fBaseType, std::move(cloned)));
     }
 
     String description() const override {
         if (!fVars.size()) {
             return String();
         }
-        String result = ((VarDeclaration&) *fVars[0]).fVar->fModifiers.description() +
-                fBaseType.description() + " ";
+        String result = ((VarDeclaration&)*fVars[0]).fVar->fModifiers.description() +
+                        fBaseType.description() + " ";
         String separator;
         for (const auto& var : fVars) {
             result += separator;
@@ -110,6 +111,6 @@ struct VarDeclarations : public ProgramElement {
     typedef ProgramElement INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

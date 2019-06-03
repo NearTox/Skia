@@ -8,7 +8,7 @@
 #ifndef GrAAHairLinePathRenderer_DEFINED
 #define GrAAHairLinePathRenderer_DEFINED
 
-#include "GrPathRenderer.h"
+#include "src/gpu/GrPathRenderer.h"
 
 class GrAAHairLinePathRenderer : public GrPathRenderer {
 public:
@@ -25,6 +25,5 @@ private:
 
     typedef GrPathRenderer INHERITED;
 };
-
 
 #endif

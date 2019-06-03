@@ -8,7 +8,7 @@
 #ifndef SkFixed15_DEFINED
 #define SkFixed15_DEFINED
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 // SkFixed15 is a fixed point value that represents values in [0,1] as [0x0000, 0x8000].
 // This mapping allows us to implement most operations in tightly packed 16-bit SIMD,
@@ -19,7 +19,7 @@ public:
     SkFixed15() = default;
 
     SkFixed15(float val) : fVal(val * 32768) { SkASSERT(0.0f <= val && val <= 1.0f); }
-    explicit operator float() const { return fVal * (1/32768.0f); }
+    explicit operator float() const { return fVal * (1 / 32768.0f); }
 
     static SkFixed15 Load(uint16_t val) {
         SkASSERT(val <= 32768);
@@ -28,25 +28,26 @@ public:
     uint16_t store() const { return fVal; }
 
     static SkFixed15 FromU8(uint8_t val) {
-        return val*128 + (val>>1)  // 32768/255 == 128.50196..., which is very close to 128 + 0.5.
-             + ((val+1)>>8);       // All val but 255 are correct.  +1 if val == 255 to get 32768.
+        return val * 128 +
+               (val >> 1)           // 32768/255 == 128.50196..., which is very close to 128 + 0.5.
+               + ((val + 1) >> 8);  // All val but 255 are correct.  +1 if val == 255 to get 32768.
     }
 
     uint8_t to_u8() const {
         // FromU8() and to_u8() roundtrip all bytes.
         // There is still much room to tweak this towards the ideal, a rounding scale by 255/32768.
-        return (fVal - (fVal>>8))>>7;
+        return (fVal - (fVal >> 8)) >> 7;
     }
 
-    SkFixed15 operator +(SkFixed15 o) const { return fVal + o.fVal; }
-    SkFixed15 operator -(SkFixed15 o) const { return fVal - o.fVal; }
-    SkFixed15 operator *(SkFixed15 o) const { return (fVal * o.fVal + (1<<14)) >> 15; }
+    SkFixed15 operator+(SkFixed15 o) const { return fVal + o.fVal; }
+    SkFixed15 operator-(SkFixed15 o) const { return fVal - o.fVal; }
+    SkFixed15 operator*(SkFixed15 o) const { return (fVal * o.fVal + (1 << 14)) >> 15; }
     SkFixed15 operator<<(int bits) const { return fVal << bits; }
     SkFixed15 operator>>(int bits) const { return fVal >> bits; }
 
-    SkFixed15& operator +=(SkFixed15 o) { return (*this = *this + o); }
-    SkFixed15& operator -=(SkFixed15 o) { return (*this = *this - o); }
-    SkFixed15& operator *=(SkFixed15 o) { return (*this = *this * o); }
+    SkFixed15& operator+=(SkFixed15 o) { return (*this = *this + o); }
+    SkFixed15& operator-=(SkFixed15 o) { return (*this = *this - o); }
+    SkFixed15& operator*=(SkFixed15 o) { return (*this = *this * o); }
     SkFixed15& operator<<=(int bits) { return (*this = *this << bits); }
     SkFixed15& operator>>=(int bits) { return (*this = *this >> bits); }
 
@@ -54,8 +55,8 @@ public:
     bool operator!=(SkFixed15 o) const { return fVal != o.fVal; }
     bool operator<=(SkFixed15 o) const { return fVal <= o.fVal; }
     bool operator>=(SkFixed15 o) const { return fVal >= o.fVal; }
-    bool operator< (SkFixed15 o) const { return fVal <  o.fVal; }
-    bool operator> (SkFixed15 o) const { return fVal >  o.fVal; }
+    bool operator<(SkFixed15 o) const { return fVal < o.fVal; }
+    bool operator>(SkFixed15 o) const { return fVal > o.fVal; }
 
 private:
     SkFixed15(int val) : fVal(val) {}
@@ -74,4 +75,4 @@ private:
 //  - On ARM, we can use the vcvtq_n_f32_u32(vmovl_u16(x), 15) to convert to float,
 //    and vcvtq_n_u32_f32(..., 15) for the other way around.
 
-#endif//SkFixed15_DEFINED
+#endif  // SkFixed15_DEFINED

@@ -8,14 +8,14 @@
 #ifndef GrVkMemoryAllocator_DEFINED
 #define GrVkMemoryAllocator_DEFINED
 
-#include "SkRefCnt.h"
-#include "GrTypes.h"
-#include "GrVkTypes.h"
+#include "include/core/SkRefCnt.h"
+#include "include/gpu/GrTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
 
 class GrVkMemoryAllocator : public SkRefCnt {
 public:
     enum class AllocationPropertyFlags {
-        kNone                = 0,
+        kNone = 0,
         // Allocation will be placed in its own VkDeviceMemory and not suballocated from some larger
         // block.
         kDedicatedAllocation = 0x1,
@@ -23,11 +23,11 @@ public:
         // may lazily allocate the memory. This cannot be used with buffers that will be host
         // visible. Setting this flag does not guarantee that we will allocate memory that respects
         // it, but we will try to prefer memory that can respect it.
-        kLazyAllocation      = 0x2,
+        kLazyAllocation = 0x2,
         // The allocation will be mapped immediately and stay mapped until it is destroyed. This
         // flag is only valid for buffers which are host visible (i.e. must have a usage other than
         // BufferUsage::kGpuOnly).
-        kPersistentlyMapped  = 0x4,
+        kPersistentlyMapped = 0x4,
     };
 
     GR_DECL_BITFIELD_CLASS_OPS_FRIENDS(AllocationPropertyFlags);
@@ -71,7 +71,7 @@ public:
     virtual void flushMappedMemory(const GrVkBackendMemory&, VkDeviceSize offset,
                                    VkDeviceSize size) = 0;
     virtual void invalidateMappedMemory(const GrVkBackendMemory&, VkDeviceSize offset,
-                                        VkDeviceSize size)= 0;
+                                        VkDeviceSize size) = 0;
 
     virtual void freeMemory(const GrVkBackendMemory&) = 0;
 

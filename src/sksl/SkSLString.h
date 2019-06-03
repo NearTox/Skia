@@ -15,32 +15,24 @@
 #include <stdarg.h>
 
 #ifdef SKSL_USE_STD_STRING
-    #define SKSL_STRING_BASE std::string
-    #include <string>
+#define SKSL_STRING_BASE std::string
+#include <string>
 #else
-    #define SKSL_STRING_BASE SkString
-    #include "SkString.h"
+#define SKSL_STRING_BASE SkString
+#include "include/core/SkString.h"
 #endif
 
 namespace SkSL {
 
 // Represents a (not necessarily null-terminated) slice of a string.
 struct StringFragment {
-    StringFragment()
-    : fChars("")
-    , fLength(0) {}
+    StringFragment() noexcept : fChars(""), fLength(0) {}
 
-    StringFragment(const char* chars)
-    : fChars(chars)
-    , fLength(strlen(chars)) {}
+    StringFragment(const char* chars) noexcept : fChars(chars), fLength(strlen(chars)) {}
 
-    StringFragment(const char* chars, size_t length)
-    : fChars(chars)
-    , fLength(length) {}
+    StringFragment(const char* chars, size_t length) noexcept : fChars(chars), fLength(length) {}
 
-    char operator[](size_t idx) const {
-        return fChars[idx];
-    }
+    char operator[](size_t idx) const noexcept { return fChars[idx]; }
 
     bool operator==(const char* s) const;
     bool operator!=(const char* s) const;
@@ -65,18 +57,14 @@ public:
     String& operator=(String&&) = default;
 
 #ifndef SKSL_USE_STD_STRING
-    String(const SkString& s)
-    : INHERITED(s) {}
+    String(const SkString& s) : INHERITED(s) {}
 #endif
 
-    String(const char* s)
-    : INHERITED(s) {}
+    String(const char* s) : INHERITED(s) {}
 
-    String(const char* s, size_t size)
-    : INHERITED(s, size) {}
+    String(const char* s, size_t size) : INHERITED(s, size) {}
 
-    String(StringFragment s)
-    : INHERITED(s.fChars, s.fLength) {}
+    String(StringFragment s) : INHERITED(s.fChars, s.fLength) {}
 
     static String printf(const char* fmt, ...);
 
@@ -133,37 +121,35 @@ double stod(const String& s);
 
 long stol(const String& s);
 
-} // namespace
+}  // namespace SkSL
 
 namespace std {
-    template<> struct hash<SkSL::StringFragment> {
-        size_t operator()(const SkSL::StringFragment& s) const {
-            size_t result = 0;
-            for (size_t i = 0; i < s.fLength; ++i) {
-                result = result * 101 + s.fChars[i];
-            }
-            return result;
+template <> struct hash<SkSL::StringFragment> {
+    size_t operator()(const SkSL::StringFragment& s) const {
+        size_t result = 0;
+        for (size_t i = 0; i < s.fLength; ++i) {
+            result = result * 101 + s.fChars[i];
         }
-    };
-} // namespace
+        return result;
+    }
+};
+}  // namespace std
 
 #ifdef SKSL_USE_STD_STRING
 namespace std {
-    template<> struct hash<SkSL::String> {
-        size_t operator()(const SkSL::String& s) const {
-            return hash<std::string>{}(s);
-        }
-    };
-} // namespace
+template <> struct hash<SkSL::String> {
+    size_t operator()(const SkSL::String& s) const { return hash<std::string>{}(s); }
+};
+}  // namespace std
 #else
-#include "SkOpts.h"
+#include "src/core/SkOpts.h"
 namespace std {
-    template<> struct hash<SkSL::String> {
-        size_t operator()(const SkSL::String& s) const {
-            return SkOpts::hash_fn(s.c_str(), s.size(), 0);
-        }
-    };
-} // namespace
-#endif // SKIA_STANDALONE
+template <> struct hash<SkSL::String> {
+    size_t operator()(const SkSL::String& s) const {
+        return SkOpts::hash_fn(s.c_str(), s.size(), 0);
+    }
+};
+}  // namespace std
+#endif  // SKIA_STANDALONE
 
 #endif

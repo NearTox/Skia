@@ -8,8 +8,8 @@
 #ifndef SkOTTable_maxp_CFF_DEFINED
 #define SkOTTable_maxp_CFF_DEFINED
 
-#include "SkEndian.h"
-#include "SkOTTableTypes.h"
+#include "src/core/SkEndian.h"
+#include "src/sfnt/SkOTTableTypes.h"
 
 #pragma pack(push, 1)
 
@@ -22,9 +22,9 @@ struct SkOTTableMaximumProfile_CFF {
 
 #pragma pack(pop)
 
-
 #include <stddef.h>
-static_assert(offsetof(SkOTTableMaximumProfile_CFF, numGlyphs) == 4, "SkOTTableMaximumProfile_CFF_numGlyphs_not_at_4");
+static_assert(offsetof(SkOTTableMaximumProfile_CFF, numGlyphs) == 4,
+              "SkOTTableMaximumProfile_CFF_numGlyphs_not_at_4");
 static_assert(sizeof(SkOTTableMaximumProfile_CFF) == 6, "sizeof_SkOTTableMaximumProfile_CFF_not_6");
 
 #endif

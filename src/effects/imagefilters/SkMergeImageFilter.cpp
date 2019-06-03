@@ -5,18 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "SkMergeImageFilter.h"
+#include "include/effects/SkMergeImageFilter.h"
 
-#include "SkCanvas.h"
-#include "SkColorSpaceXformer.h"
-#include "SkReadBuffer.h"
-#include "SkSpecialImage.h"
-#include "SkSpecialSurface.h"
-#include "SkWriteBuffer.h"
-#include "SkValidationUtils.h"
+#include "include/core/SkCanvas.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkSpecialImage.h"
+#include "src/core/SkSpecialSurface.h"
+#include "src/core/SkValidationUtils.h"
+#include "src/core/SkWriteBuffer.h"
 
 sk_sp<SkImageFilter> SkMergeImageFilter::Make(sk_sp<SkImageFilter>* const filters, int count,
-                                               const CropRect* cropRect) {
+                                              const CropRect* cropRect) {
     return sk_sp<SkImageFilter>(new SkMergeImageFilter(filters, count, cropRect));
 }
 
@@ -24,7 +23,7 @@ sk_sp<SkImageFilter> SkMergeImageFilter::Make(sk_sp<SkImageFilter>* const filter
 
 SkMergeImageFilter::SkMergeImageFilter(sk_sp<SkImageFilter>* const filters, int count,
                                        const CropRect* cropRect)
-    : INHERITED(filters, count, cropRect) {
+        : INHERITED(filters, count, cropRect) {
     SkASSERT(count >= 0);
 }
 
@@ -43,7 +42,7 @@ sk_sp<SkSpecialImage> SkMergeImageFilter::onFilterImage(SkSpecialImage* source, 
 
     // Filter all of the inputs.
     for (int i = 0; i < inputCount; ++i) {
-        offsets[i] = { 0, 0 };
+        offsets[i] = {0, 0};
         inputs[i] = this->filterInput(i, source, ctx, &offsets[i]);
         if (!inputs[i]) {
             continue;
@@ -84,29 +83,13 @@ sk_sp<SkSpecialImage> SkMergeImageFilter::onFilterImage(SkSpecialImage* source, 
             continue;
         }
 
-        inputs[i]->draw(canvas,
-                        SkIntToScalar(offsets[i].x() - x0), SkIntToScalar(offsets[i].y() - y0),
-                        nullptr);
+        inputs[i]->draw(canvas, SkIntToScalar(offsets[i].x() - x0),
+                        SkIntToScalar(offsets[i].y() - y0), nullptr);
     }
 
     offset->fX = bounds.left();
     offset->fY = bounds.top();
     return surf->makeImageSnapshot();
-}
-
-sk_sp<SkImageFilter> SkMergeImageFilter::onMakeColorSpace(SkColorSpaceXformer* xformer) const {
-    SkSTArray<5, sk_sp<SkImageFilter>> inputs(this->countInputs());
-    bool changed = false;
-    for (int i = 0; i < this->countInputs(); i++) {
-        inputs.push_back(xformer->apply(this->getInput(i)));
-        changed |= (inputs[i].get() != this->getInput(i));
-    }
-
-    if (changed) {
-        return SkMergeImageFilter::Make(inputs.begin(), this->countInputs(),
-                                        this->getCropRectIfSet());
-    }
-    return this->refMe();
 }
 
 sk_sp<SkFlattenable> SkMergeImageFilter::CreateProc(SkReadBuffer& buffer) {
@@ -117,7 +100,4 @@ sk_sp<SkFlattenable> SkMergeImageFilter::CreateProc(SkReadBuffer& buffer) {
     return Make(common.inputs(), common.inputCount(), &common.cropRect());
 }
 
-void SkMergeImageFilter::flatten(SkWriteBuffer& buffer) const {
-    this->INHERITED::flatten(buffer);
-}
-
+void SkMergeImageFilter::flatten(SkWriteBuffer& buffer) const { this->INHERITED::flatten(buffer); }

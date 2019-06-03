@@ -8,8 +8,8 @@
 #ifndef SKSL_CFGGENERATOR
 #define SKSL_CFGGENERATOR
 
-#include "ir/SkSLExpression.h"
-#include "ir/SkSLFunctionDefinition.h"
+#include "src/sksl/ir/SkSLExpression.h"
+#include "src/sksl/ir/SkSLFunctionDefinition.h"
 
 #include <set>
 #include <stack>
@@ -21,17 +21,14 @@ typedef size_t BlockId;
 
 struct BasicBlock {
     struct Node {
-        enum Kind {
-            kStatement_Kind,
-            kExpression_Kind
-        };
+        enum Kind { kStatement_Kind, kExpression_Kind };
 
         Node(Kind kind, bool constantPropagation, std::unique_ptr<Expression>* expression,
              std::unique_ptr<Statement>* statement)
-        : fKind(kind)
-        , fConstantPropagation(constantPropagation)
-        , fExpression(expression)
-        , fStatement(statement) {}
+                : fKind(kind)
+                , fConstantPropagation(constantPropagation)
+                , fExpression(expression)
+                , fStatement(statement) {}
 
         std::unique_ptr<Expression>* expression() const {
             SkASSERT(fKind == kExpression_Kind);
@@ -165,6 +162,6 @@ private:
     std::stack<BlockId> fLoopExits;
 };
 
-}
+}  // namespace SkSL
 
 #endif

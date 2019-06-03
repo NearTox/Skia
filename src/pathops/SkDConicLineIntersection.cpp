@@ -4,40 +4,29 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkIntersections.h"
-#include "SkPathOpsConic.h"
-#include "SkPathOpsCurve.h"
-#include "SkPathOpsLine.h"
+#include "src/pathops/SkIntersections.h"
+#include "src/pathops/SkPathOpsConic.h"
+#include "src/pathops/SkPathOpsCurve.h"
+#include "src/pathops/SkPathOpsLine.h"
 
 class LineConicIntersections {
 public:
-    enum PinTPoint {
-        kPointUninitialized,
-        kPointInitialized
-    };
+    enum PinTPoint { kPointUninitialized, kPointInitialized };
 
     LineConicIntersections(const SkDConic& c, const SkDLine& l, SkIntersections* i)
-        : fConic(c)
-        , fLine(&l)
-        , fIntersections(i)
-        , fAllowNear(true) {
+            : fConic(c), fLine(&l), fIntersections(i), fAllowNear(true) {
         i->setMax(4);  // allow short partial coincidence plus discrete intersection
     }
 
     LineConicIntersections(const SkDConic& c)
-        : fConic(c)
-        SkDEBUGPARAMS(fLine(nullptr))
-        SkDEBUGPARAMS(fIntersections(nullptr))
-        SkDEBUGPARAMS(fAllowNear(false)) {
-    }
+            : fConic(c) SkDEBUGPARAMS(fLine(nullptr)) SkDEBUGPARAMS(fIntersections(nullptr))
+                      SkDEBUGPARAMS(fAllowNear(false)) {}
 
-    void allowNear(bool allow) {
-        fAllowNear = allow;
-    }
+    void allowNear(bool allow) { fAllowNear = allow; }
 
     void checkCoincident() {
         int last = fIntersections->used() - 1;
-        for (int index = 0; index < last; ) {
+        for (int index = 0; index < last;) {
             double conicMidT = ((*fIntersections)[0][index] + (*fIntersections)[0][index + 1]) / 2;
             SkDPoint conicMidPt = fConic.ptAtT(conicMidT);
             double t = fLine->nearPoint(conicMidPt, nullptr);
@@ -65,7 +54,7 @@ public:
     }
 #endif
     int horizontalIntersect(double axisIntercept, double roots[2]) {
-        double conicVals[] = { fConic[0].fY, fConic[1].fY, fConic[2].fY };
+        double conicVals[] = {fConic[0].fY, fConic[1].fY, fConic[2].fY};
         return this->validT(conicVals, axisIntercept, roots);
     }
 
@@ -79,11 +68,11 @@ public:
         for (int index = 0; index < count; ++index) {
             double conicT = roots[index];
             SkDPoint pt = fConic.ptAtT(conicT);
-            SkDEBUGCODE(double conicVals[] = { fConic[0].fY, fConic[1].fY, fConic[2].fY });
+            SkDEBUGCODE(double conicVals[] = {fConic[0].fY, fConic[1].fY, fConic[2].fY});
             SkOPOBJASSERT(fIntersections, close_to(pt.fY, axisIntercept, conicVals));
             double lineT = (pt.fX - left) / (right - left);
-            if (this->pinTs(&conicT, &lineT, &pt, kPointInitialized)
-                    && this->uniqueAnswer(conicT, pt)) {
+            if (this->pinTs(&conicT, &lineT, &pt, kPointInitialized) &&
+                this->uniqueAnswer(conicT, pt)) {
                 fIntersections->insert(conicT, lineT, pt);
             }
         }
@@ -105,16 +94,16 @@ public:
             double conicT = rootVals[index];
             double lineT = this->findLineT(conicT);
 #ifdef SK_DEBUG
-            if (!fIntersections->globalState()
-                    || !fIntersections->globalState()->debugSkipAssert()) {
+            if (!fIntersections->globalState() ||
+                !fIntersections->globalState()->debugSkipAssert()) {
                 SkDEBUGCODE(SkDPoint conicPt = fConic.ptAtT(conicT));
                 SkDEBUGCODE(SkDPoint linePt = fLine->ptAtT(lineT));
                 SkASSERT(conicPt.approximatelyDEqual(linePt));
             }
 #endif
             SkDPoint pt;
-            if (this->pinTs(&conicT, &lineT, &pt, kPointUninitialized)
-                    && this->uniqueAnswer(conicT, pt)) {
+            if (this->pinTs(&conicT, &lineT, &pt, kPointUninitialized) &&
+                this->uniqueAnswer(conicT, pt)) {
                 fIntersections->insert(conicT, lineT, pt);
             }
         }
@@ -137,13 +126,13 @@ public:
         double B = r[1] * fConic.fWeight - axisIntercept * fConic.fWeight + axisIntercept;
         double C = r[0];
         A += C - 2 * B;  // A = a + c - 2*(b*w - xCept*w + xCept)
-        B -= C;  // B = b*w - w * xCept + xCept - a
+        B -= C;          // B = b*w - w * xCept + xCept - a
         C -= axisIntercept;
         return SkDQuad::RootsValidT(A, 2 * B, C, roots);
     }
 
     int verticalIntersect(double axisIntercept, double roots[2]) {
-        double conicVals[] = { fConic[0].fX, fConic[1].fX, fConic[2].fX };
+        double conicVals[] = {fConic[0].fX, fConic[1].fX, fConic[2].fX};
         return this->validT(conicVals, axisIntercept, roots);
     }
 
@@ -157,11 +146,11 @@ public:
         for (int index = 0; index < count; ++index) {
             double conicT = roots[index];
             SkDPoint pt = fConic.ptAtT(conicT);
-            SkDEBUGCODE(double conicVals[] = { fConic[0].fX, fConic[1].fX, fConic[2].fX });
+            SkDEBUGCODE(double conicVals[] = {fConic[0].fX, fConic[1].fX, fConic[2].fX});
             SkOPOBJASSERT(fIntersections, close_to(pt.fX, axisIntercept, conicVals));
             double lineT = (pt.fY - top) / (bottom - top);
-            if (this->pinTs(&conicT, &lineT, &pt, kPointInitialized)
-                    && this->uniqueAnswer(conicT, pt)) {
+            if (this->pinTs(&conicT, &lineT, &pt, kPointInitialized) &&
+                this->uniqueAnswer(conicT, pt)) {
                 fIntersections->insert(conicT, lineT, pt);
             }
         }
@@ -173,7 +162,7 @@ public:
     }
 
 protected:
-// OPTIMIZE: Functions of the form add .. points are indentical to the conic routines.
+    // OPTIMIZE: Functions of the form add .. points are indentical to the conic routines.
     // add endpoints first to get zero and one t values exactly
     void addExactEndPoints() {
         for (int cIndex = 0; cIndex < SkDConic::kPointCount; cIndex += SkDConic::kPointLast) {
@@ -181,14 +170,14 @@ protected:
             if (lineT < 0) {
                 continue;
             }
-            double conicT = (double) (cIndex >> 1);
+            double conicT = (double)(cIndex >> 1);
             fIntersections->insert(conicT, lineT, fConic[cIndex]);
         }
     }
 
     void addNearEndPoints() {
         for (int cIndex = 0; cIndex < SkDConic::kPointCount; cIndex += SkDConic::kPointLast) {
-            double conicT = (double) (cIndex >> 1);
+            double conicT = (double)(cIndex >> 1);
             if (fIntersections->hasT(conicT)) {
                 continue;
             }
@@ -203,12 +192,13 @@ protected:
 
     void addLineNearEndPoints() {
         for (int lIndex = 0; lIndex < 2; ++lIndex) {
-            double lineT = (double) lIndex;
+            double lineT = (double)lIndex;
             if (fIntersections->hasOppT(lineT)) {
                 continue;
             }
-            double conicT = ((SkDCurve*) &fConic)->nearPoint(SkPath::kConic_Verb,
-                (*fLine)[lIndex], (*fLine)[!lIndex]);
+            double conicT =
+                    ((SkDCurve*)&fConic)
+                            ->nearPoint(SkPath::kConic_Verb, (*fLine)[lIndex], (*fLine)[!lIndex]);
             if (conicT < 0) {
                 continue;
             }
@@ -222,14 +212,14 @@ protected:
             if (lineT < 0) {
                 continue;
             }
-            double conicT = (double) (cIndex >> 1);
+            double conicT = (double)(cIndex >> 1);
             fIntersections->insert(conicT, lineT, fConic[cIndex]);
         }
     }
 
     void addNearHorizontalEndPoints(double left, double right, double y) {
         for (int cIndex = 0; cIndex < SkDConic::kPointCount; cIndex += SkDConic::kPointLast) {
-            double conicT = (double) (cIndex >> 1);
+            double conicT = (double)(cIndex >> 1);
             if (fIntersections->hasT(conicT)) {
                 continue;
             }
@@ -248,14 +238,14 @@ protected:
             if (lineT < 0) {
                 continue;
             }
-            double conicT = (double) (cIndex >> 1);
+            double conicT = (double)(cIndex >> 1);
             fIntersections->insert(conicT, lineT, fConic[cIndex]);
         }
     }
 
     void addNearVerticalEndPoints(double top, double bottom, double x) {
         for (int cIndex = 0; cIndex < SkDConic::kPointCount; cIndex += SkDConic::kPointLast) {
-            double conicT = (double) (cIndex >> 1);
+            double conicT = (double)(cIndex >> 1);
             if (fIntersections->hasT(conicT)) {
                 continue;
             }
@@ -331,8 +321,8 @@ protected:
         }
 #if ONE_OFF_DEBUG
         SkDPoint qPt = fConic.ptAtT(conicT);
-        SkDebugf("%s pt=(%1.9g,%1.9g) cPt=(%1.9g,%1.9g)\n", __FUNCTION__, pt.fX, pt.fY,
-                qPt.fX, qPt.fY);
+        SkDebugf("%s pt=(%1.9g,%1.9g) cPt=(%1.9g,%1.9g)\n", __FUNCTION__, pt.fX, pt.fY, qPt.fX,
+                 qPt.fY);
 #endif
         return true;
     }
@@ -346,14 +336,14 @@ private:
 
 int SkIntersections::horizontal(const SkDConic& conic, double left, double right, double y,
                                 bool flipped) {
-    SkDLine line = {{{ left, y }, { right, y }}};
+    SkDLine line = {{{left, y}, {right, y}}};
     LineConicIntersections c(conic, line, this);
     return c.horizontalIntersect(y, left, right, flipped);
 }
 
 int SkIntersections::vertical(const SkDConic& conic, double top, double bottom, double x,
                               bool flipped) {
-    SkDLine line = {{{ x, top }, { x, bottom }}};
+    SkDLine line = {{{x, top}, {x, bottom}}};
     LineConicIntersections c(conic, line, this);
     return c.verticalIntersect(x, top, bottom, flipped);
 }

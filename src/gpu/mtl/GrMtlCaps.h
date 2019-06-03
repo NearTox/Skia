@@ -8,9 +8,9 @@
 #ifndef GrMtlCaps_DEFINED
 #define GrMtlCaps_DEFINED
 
-#include "GrCaps.h"
-#include "GrMtlStencilAttachment.h"
-#include "SkTDArray.h"
+#include "include/private/SkTDArray.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/mtl/GrMtlStencilAttachment.h"
 
 #import <Metal/Metal.h>
 
@@ -35,24 +35,20 @@ public:
 
     bool surfaceSupportsReadPixels(const GrSurface*) const override { return true; }
 
-    bool isConfigCopyable(GrPixelConfig config) const override {
-        return true;
-    }
+    bool isConfigCopyable(GrPixelConfig config) const override { return true; }
 
     /**
      * Returns both a supported and most prefered stencil format to use in draws.
      */
-    const StencilFormat& preferredStencilFormat() const {
-        return fPreferredStencilFormat;
-    }
+    const StencilFormat& preferredStencilFormat() const { return fPreferredStencilFormat; }
 
     bool canCopyAsBlit(GrPixelConfig dstConfig, int dstSampleCount, GrSurfaceOrigin dstOrigin,
                        GrPixelConfig srcConfig, int srcSampleCount, GrSurfaceOrigin srcOrigin,
                        const SkIRect& srcRect, const SkIPoint& dstPoint,
                        bool areDstSrcSameObj) const;
 
-    bool canCopyAsDraw(GrPixelConfig dstConfig, bool dstIsRenderable,
-                       GrPixelConfig srcConfig, bool srcIsTextureable) const;
+    bool canCopyAsDraw(GrPixelConfig dstConfig, bool dstIsRenderable, GrPixelConfig srcConfig,
+                       bool srcIsTextureable) const;
 
     bool canCopyAsDrawThenBlit(GrPixelConfig dstConfig, GrPixelConfig srcConfig,
                                bool srcIsTextureable) const;
@@ -82,18 +78,22 @@ private:
 
     void initConfigTable();
 
-    bool onSurfaceSupportsWritePixels(const GrSurface*) const override { return true; }
+    bool onSurfaceSupportsWritePixels(const GrSurface*) const override;
     bool onCanCopySurface(const GrSurfaceProxy* dst, const GrSurfaceProxy* src,
                           const SkIRect& srcRect, const SkIPoint& dstPoint) const override;
+    size_t onTransferFromOffsetAlignment(GrColorType bufferColorType) const override {
+        // Transfer buffers not yet supported.
+        return 0;
+    }
 
     struct ConfigInfo {
         ConfigInfo() : fFlags(0) {}
 
         enum {
             kTextureable_Flag = 0x1,
-            kRenderable_Flag  = 0x2, // Color attachment and blendable
-            kMSAA_Flag        = 0x4,
-            kResolve_Flag     = 0x8,
+            kRenderable_Flag = 0x2,  // Color attachment and blendable
+            kMSAA_Flag = 0x4,
+            kResolve_Flag = 0x8,
         };
         // TODO: Put kMSAA_Flag back when MSAA is implemented
         static const uint16_t kAllFlags = kTextureable_Flag | kRenderable_Flag |
@@ -103,10 +103,7 @@ private:
     };
     ConfigInfo fConfigTable[kGrPixelConfigCnt];
 
-    enum class Platform {
-        kMac,
-        kIOS
-    };
+    enum class Platform { kMac, kIOS };
     bool isMac() { return Platform::kMac == fPlatform; }
     bool isIOS() { return Platform::kIOS == fPlatform; }
 

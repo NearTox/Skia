@@ -8,7 +8,7 @@
 #ifndef GrRecordingContextPriv_DEFINED
 #define GrRecordingContextPriv_DEFINED
 
-#include "GrRecordingContext.h"
+#include "include/private/GrRecordingContext.h"
 
 /** Class that exposes methods to GrRecordingContext that are only intended for use internal to
     Skia. This class is purely a privileged window into GrRecordingContext. It should never have
@@ -21,10 +21,6 @@ public:
     bool matches(GrContext_Base* candidate) const { return fContext->matches(candidate); }
 
     const GrContextOptions& options() const { return fContext->options(); }
-
-    bool explicitlyAllocateGPUResources() const {
-        return fContext->explicitlyAllocateGPUResources();
-    }
 
     const GrCaps* caps() const { return fContext->caps(); }
     sk_sp<const GrCaps> refCaps() const;
@@ -42,10 +38,12 @@ public:
     bool abandoned() const { return fContext->abandoned(); }
 
     /** This is only useful for debug purposes */
-    SkDEBUGCODE(GrSingleOwner* singleOwner() const { return fContext->singleOwner(); } )
+    SkDEBUGCODE(GrSingleOwner* singleOwner() const { return fContext->singleOwner(); })
 
-    // from GrRecordingContext
-    GrDrawingManager* drawingManager() { return fContext->drawingManager(); }
+            // from GrRecordingContext
+            GrDrawingManager* drawingManager() {
+        return fContext->drawingManager();
+    }
 
     sk_sp<GrOpMemoryPool> refOpMemoryPool();
     GrOpMemoryPool* opMemoryPool() { return fContext->opMemoryPool(); }
@@ -80,16 +78,10 @@ public:
      * renderTargetContexts created via this entry point.
      */
     sk_sp<GrRenderTargetContext> makeDeferredRenderTargetContext(
-                                            const GrBackendFormat& format,
-                                            SkBackingFit fit,
-                                            int width, int height,
-                                            GrPixelConfig config,
-                                            sk_sp<SkColorSpace> colorSpace,
-                                            int sampleCnt = 1,
-                                            GrMipMapped = GrMipMapped::kNo,
-                                            GrSurfaceOrigin origin = kBottomLeft_GrSurfaceOrigin,
-                                            const SkSurfaceProps* surfaceProps = nullptr,
-                                            SkBudgeted = SkBudgeted::kYes);
+            const GrBackendFormat& format, SkBackingFit fit, int width, int height,
+            GrPixelConfig config, sk_sp<SkColorSpace> colorSpace, int sampleCnt = 1,
+            GrMipMapped = GrMipMapped::kNo, GrSurfaceOrigin origin = kBottomLeft_GrSurfaceOrigin,
+            const SkSurfaceProps* surfaceProps = nullptr, SkBudgeted = SkBudgeted::kYes);
 
     /*
      * This method will attempt to create a renderTargetContext that has, at least, the number of
@@ -98,16 +90,10 @@ public:
      * SRGB-ness will be preserved.
      */
     sk_sp<GrRenderTargetContext> makeDeferredRenderTargetContextWithFallback(
-                                            const GrBackendFormat& format,
-                                            SkBackingFit fit,
-                                            int width, int height,
-                                            GrPixelConfig config,
-                                            sk_sp<SkColorSpace> colorSpace,
-                                            int sampleCnt = 1,
-                                            GrMipMapped = GrMipMapped::kNo,
-                                            GrSurfaceOrigin origin = kBottomLeft_GrSurfaceOrigin,
-                                            const SkSurfaceProps* surfaceProps = nullptr,
-                                            SkBudgeted budgeted = SkBudgeted::kYes);
+            const GrBackendFormat& format, SkBackingFit fit, int width, int height,
+            GrPixelConfig config, sk_sp<SkColorSpace> colorSpace, int sampleCnt = 1,
+            GrMipMapped = GrMipMapped::kNo, GrSurfaceOrigin origin = kBottomLeft_GrSurfaceOrigin,
+            const SkSurfaceProps* surfaceProps = nullptr, SkBudgeted budgeted = SkBudgeted::kYes);
 
     GrAuditTrail* auditTrail() { return fContext->auditTrail(); }
 
@@ -117,8 +103,8 @@ public:
 
 private:
     explicit GrRecordingContextPriv(GrRecordingContext* context) : fContext(context) {}
-    GrRecordingContextPriv(const GrRecordingContextPriv&); // unimpl
-    GrRecordingContextPriv& operator=(const GrRecordingContextPriv&); // unimpl
+    GrRecordingContextPriv(const GrRecordingContextPriv&);             // unimpl
+    GrRecordingContextPriv& operator=(const GrRecordingContextPriv&);  // unimpl
 
     // No taking addresses of this type.
     const GrRecordingContextPriv* operator&() const;
@@ -126,12 +112,12 @@ private:
 
     GrRecordingContext* fContext;
 
-    friend class GrRecordingContext; // to construct/copy this type.
+    friend class GrRecordingContext;  // to construct/copy this type.
 };
 
 inline GrRecordingContextPriv GrRecordingContext::priv() { return GrRecordingContextPriv(this); }
 
-inline const GrRecordingContextPriv GrRecordingContext::priv () const {
+inline const GrRecordingContextPriv GrRecordingContext::priv() const {
     return GrRecordingContextPriv(const_cast<GrRecordingContext*>(this));
 }
 

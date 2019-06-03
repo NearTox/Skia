@@ -8,7 +8,7 @@
 #ifndef GrSurfaceContextPriv_DEFINED
 #define GrSurfaceContextPriv_DEFINED
 
-#include "GrSurfaceContext.h"
+#include "src/gpu/GrSurfaceContext.h"
 
 /** Class that adds methods to GrSurfaceContext that are only intended for use internal to
     Skia. This class is purely a privileged window into GrSurfaceContext. It should never have
@@ -19,11 +19,10 @@ public:
 
 private:
     explicit GrSurfaceContextPriv(GrSurfaceContext* surfaceContext)
-        : fSurfaceContext(surfaceContext) {
-    }
+            : fSurfaceContext(surfaceContext) {}
 
-    GrSurfaceContextPriv(const GrSurfaceContextPriv&) {} // unimpl
-    GrSurfaceContextPriv& operator=(const GrSurfaceContextPriv&); // unimpl
+    GrSurfaceContextPriv(const GrSurfaceContextPriv&) {}           // unimpl
+    GrSurfaceContextPriv& operator=(const GrSurfaceContextPriv&);  // unimpl
 
     // No taking addresses of this type.
     const GrSurfaceContextPriv* operator&() const;
@@ -31,12 +30,10 @@ private:
 
     GrSurfaceContext* fSurfaceContext;
 
-    friend class GrSurfaceContext; // to construct/copy this type.
+    friend class GrSurfaceContext;  // to construct/copy this type.
 };
 
-inline GrSurfaceContextPriv GrSurfaceContext::surfPriv() {
-    return GrSurfaceContextPriv(this);
-}
+inline GrSurfaceContextPriv GrSurfaceContext::surfPriv() { return GrSurfaceContextPriv(this); }
 
 inline const GrSurfaceContextPriv GrSurfaceContext::surfPriv() const {
     return GrSurfaceContextPriv(const_cast<GrSurfaceContext*>(this));

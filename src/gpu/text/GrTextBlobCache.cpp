@@ -5,21 +5,19 @@
  * found in the LICENSE file.
  */
 
-#include "GrTextBlobCache.h"
+#include "src/gpu/text/GrTextBlobCache.h"
 
 DECLARE_SKMESSAGEBUS_MESSAGE(GrTextBlobCache::PurgeBlobMessage)
 
-static inline bool SkShouldPostMessageToBus(
-        const GrTextBlobCache::PurgeBlobMessage& msg, uint32_t msgBusUniqueID) {
+static inline bool SkShouldPostMessageToBus(const GrTextBlobCache::PurgeBlobMessage& msg,
+                                            uint32_t msgBusUniqueID) {
     return msg.fContextID == msgBusUniqueID;
 }
 
-GrTextBlobCache::~GrTextBlobCache() {
-    this->freeAll();
-}
+GrTextBlobCache::~GrTextBlobCache() { this->freeAll(); }
 
 void GrTextBlobCache::freeAll() {
-    fBlobIDCache.foreach([this](uint32_t, BlobIDCacheEntry* entry) {
+    fBlobIDCache.foreach ([this](uint32_t, BlobIDCacheEntry* entry) {
         for (const auto& blob : entry->fBlobs) {
             fBlobList.remove(blob.get());
         }
@@ -90,6 +88,3 @@ void GrTextBlobCache::checkPurge(GrTextBlob* blob) {
 #endif
     }
 }
-
-
-

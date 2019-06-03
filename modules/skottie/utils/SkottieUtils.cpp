@@ -5,52 +5,85 @@
  * found in the LICENSE file.
  */
 
-#include "SkottieUtils.h"
+#include "modules/skottie/utils/SkottieUtils.h"
 
-#include "SkAnimCodecPlayer.h"
-#include "SkData.h"
-#include "SkCodec.h"
-#include "SkImage.h"
-#include "SkMakeUnique.h"
-#include "SkOSFile.h"
-#include "SkOSPath.h"
+#include "include/codec/SkCodec.h"
+#include "include/core/SkData.h"
+#include "include/core/SkImage.h"
+#include "include/utils/SkAnimCodecPlayer.h"
+#include "src/core/SkMakeUnique.h"
+#include "src/core/SkOSFile.h"
+#include "src/utils/SkOSPath.h"
+
+#include <cmath>
 
 namespace skottie_utils {
 
-sk_sp<MultiFrameImageAsset> MultiFrameImageAsset::Make(sk_sp<SkData> data) {
+sk_sp<MultiFrameImageAsset> MultiFrameImageAsset::Make(sk_sp<SkData> data, bool predecode) {
     if (auto codec = SkCodec::MakeFromData(std::move(data))) {
-        return sk_sp<MultiFrameImageAsset>(
-              new MultiFrameImageAsset(skstd::make_unique<SkAnimCodecPlayer>(std::move(codec))));
+        return sk_sp<MultiFrameImageAsset>(new MultiFrameImageAsset(
+                skstd::make_unique<SkAnimCodecPlayer>(std::move(codec)), predecode));
     }
 
     return nullptr;
 }
 
-MultiFrameImageAsset::MultiFrameImageAsset(std::unique_ptr<SkAnimCodecPlayer> player)
-    : fPlayer(std::move(player)) {
+MultiFrameImageAsset::MultiFrameImageAsset(std::unique_ptr<SkAnimCodecPlayer> player,
+                                           bool predecode)
+        : fPlayer(std::move(player)), fPreDecode(predecode) {
     SkASSERT(fPlayer);
 }
 
-bool MultiFrameImageAsset::isMultiFrame() {
-    return fPlayer->duration() > 0;
-}
+bool MultiFrameImageAsset::isMultiFrame() { return fPlayer->duration() > 0; }
 
 sk_sp<SkImage> MultiFrameImageAsset::getFrame(float t) {
+    auto decode = [](sk_sp<SkImage> image) {
+        SkASSERT(image->isLazyGenerated());
+
+        static constexpr size_t kMaxArea = 2048 * 2048;
+        const auto image_area = SkToSizeT(image->width() * image->height());
+
+        if (image_area > kMaxArea) {
+            // When the image is too large, decode and scale down to a reasonable size.
+            const auto scale = std::sqrt(static_cast<float>(kMaxArea) / image_area);
+            const auto info =
+                    SkImageInfo::MakeN32Premul(scale * image->width(), scale * image->height());
+            SkBitmap bm;
+            if (bm.tryAllocPixels(info, info.minRowBytes()) &&
+                image->scalePixels(bm.pixmap(),
+                                   SkFilterQuality::kMedium_SkFilterQuality,
+                                   SkImage::kDisallow_CachingHint)) {
+                image = SkImage::MakeFromBitmap(bm);
+            }
+        } else {
+            // When the image size is OK, just force-decode.
+            image = image->makeRasterImage();
+        }
+
+        return image;
+    };
+
     fPlayer->seek(static_cast<uint32_t>(t * 1000));
-    return fPlayer->getFrame();
+    auto frame = fPlayer->getFrame();
+
+    if (fPreDecode && frame && frame->isLazyGenerated()) {
+        frame = decode(std::move(frame));
+    }
+
+    return frame;
 }
 
 sk_sp<FileResourceProvider> FileResourceProvider::Make(SkString base_dir) {
     return sk_isdir(base_dir.c_str())
-        ? sk_sp<FileResourceProvider>(new FileResourceProvider(std::move(base_dir)))
-        : nullptr;
+                   ? sk_sp<FileResourceProvider>(new FileResourceProvider(std::move(base_dir)))
+                   : nullptr;
 }
 
 FileResourceProvider::FileResourceProvider(SkString base_dir) : fDir(std::move(base_dir)) {}
 
 sk_sp<SkData> FileResourceProvider::load(const char resource_path[],
                                          const char resource_name[]) const {
-    const auto full_dir  = SkOSPath::Join(fDir.c_str()    , resource_path),
+    const auto full_dir = SkOSPath::Join(fDir.c_str(), resource_path),
                full_path = SkOSPath::Join(full_dir.c_str(), resource_name);
     return SkData::MakeFromFileName(full_path.c_str());
 }
@@ -99,7 +132,7 @@ public:
     void onMarker(const char name[], float t0, float t1) override {
         const auto key = fMgr->acceptKey(name);
         if (!key.empty()) {
-            fMgr->fMarkers.push_back({ std::move(key), t0, t1 });
+            fMgr->fMarkers.push_back({std::move(key), t0, t1});
         }
     }
 
@@ -108,8 +141,8 @@ private:
 };
 
 CustomPropertyManager::CustomPropertyManager()
-    : fPropertyInterceptor(sk_make_sp<PropertyInterceptor>(this))
-    , fMarkerInterceptor(sk_make_sp<MarkerInterceptor>(this)) {}
+        : fPropertyInterceptor(sk_make_sp<PropertyInterceptor>(this))
+        , fMarkerInterceptor(sk_make_sp<MarkerInterceptor>(this)) {}
 
 CustomPropertyManager::~CustomPropertyManager() = default;
 
@@ -122,8 +155,8 @@ sk_sp<skottie::MarkerObserver> CustomPropertyManager::getMarkerObserver() const 
 }
 
 template <typename T>
-std::vector<CustomPropertyManager::PropKey>
-CustomPropertyManager::getProps(const PropMap<T>& container) const {
+std::vector<CustomPropertyManager::PropKey> CustomPropertyManager::getProps(
+        const PropMap<T>& container) const {
     std::vector<PropKey> props;
 
     for (const auto& prop_list : container) {
@@ -138,9 +171,7 @@ template <typename V, typename T>
 V CustomPropertyManager::get(const PropKey& key, const PropMap<T>& container) const {
     auto prop_group = container.find(key);
 
-    return prop_group == container.end()
-            ? V()
-            : prop_group->second.front()->get();
+    return prop_group == container.end() ? V() : prop_group->second.front()->get();
 }
 
 template <typename V, typename T>
@@ -158,8 +189,7 @@ bool CustomPropertyManager::set(const PropKey& key, const V& val, const PropMap<
     return true;
 }
 
-std::vector<CustomPropertyManager::PropKey>
-CustomPropertyManager::getColorProps() const {
+std::vector<CustomPropertyManager::PropKey> CustomPropertyManager::getColorProps() const {
     return this->getProps(fColorMap);
 }
 
@@ -171,8 +201,7 @@ bool CustomPropertyManager::setColor(const PropKey& key, const skottie::ColorPro
     return this->set(key, c, fColorMap);
 }
 
-std::vector<CustomPropertyManager::PropKey>
-CustomPropertyManager::getOpacityProps() const {
+std::vector<CustomPropertyManager::PropKey> CustomPropertyManager::getOpacityProps() const {
     return this->getProps(fOpacityMap);
 }
 
@@ -184,8 +213,7 @@ bool CustomPropertyManager::setOpacity(const PropKey& key, const skottie::Opacit
     return this->set(key, o, fOpacityMap);
 }
 
-std::vector<CustomPropertyManager::PropKey>
-CustomPropertyManager::getTransformProps() const {
+std::vector<CustomPropertyManager::PropKey> CustomPropertyManager::getTransformProps() const {
     return this->getProps(fTransformMap);
 }
 
@@ -194,4 +222,4 @@ bool CustomPropertyManager::setTransform(const PropKey& key,
     return this->set(key, t, fTransformMap);
 }
 
-} // namespace skottie_utils
+}  // namespace skottie_utils

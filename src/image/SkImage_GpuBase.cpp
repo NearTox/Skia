@@ -5,29 +5,27 @@
  * found in the LICENSE file.
  */
 
-#include "SkImage_GpuBase.h"
-#include "GrBackendSurface.h"
-#include "GrClip.h"
-#include "GrContext.h"
-#include "GrContextPriv.h"
-#include "GrRecordingContext.h"
-#include "GrRecordingContextPriv.h"
-#include "GrRenderTargetContext.h"
-#include "GrTexture.h"
-#include "GrTextureAdjuster.h"
-#include "SkBitmapCache.h"
-#include "SkImage_Gpu.h"
-#include "SkPromiseImageTexture.h"
-#include "SkReadPixelsRec.h"
-#include "SkTLList.h"
-#include "effects/GrYUVtoRGBEffect.h"
+#include "src/image/SkImage_GpuBase.h"
+#include "include/core/SkPromiseImageTexture.h"
+#include "include/gpu/GrBackendSurface.h"
+#include "include/gpu/GrContext.h"
+#include "include/gpu/GrTexture.h"
+#include "include/private/GrRecordingContext.h"
+#include "src/core/SkBitmapCache.h"
+#include "src/core/SkTLList.h"
+#include "src/gpu/GrClip.h"
+#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrRecordingContextPriv.h"
+#include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/GrTextureAdjuster.h"
+#include "src/gpu/effects/GrYUVtoRGBEffect.h"
+#include "src/image/SkImage_Gpu.h"
+#include "src/image/SkReadPixelsRec.h"
 
 SkImage_GpuBase::SkImage_GpuBase(sk_sp<GrContext> context, int width, int height, uint32_t uniqueID,
-                                 SkAlphaType at, sk_sp<SkColorSpace> cs)
-        : INHERITED(width, height, uniqueID)
-        , fContext(std::move(context))
-        , fAlphaType(at)
-        , fColorSpace(std::move(cs)) {}
+                                 SkColorType ct, SkAlphaType at, sk_sp<SkColorSpace> cs)
+        : INHERITED(SkImageInfo::Make(width, height, ct, at, std::move(cs)), uniqueID)
+        , fContext(std::move(context)) {}
 
 SkImage_GpuBase::~SkImage_GpuBase() {}
 
@@ -79,18 +77,18 @@ bool SkImage_GpuBase::getROPixels(SkBitmap* dst, CachingHint chint) const {
     SkBitmapCache::RecPtr rec = nullptr;
     SkPixmap pmap;
     if (kAllow_CachingHint == chint) {
-        rec = SkBitmapCache::Alloc(desc, this->onImageInfo(), &pmap);
+        rec = SkBitmapCache::Alloc(desc, this->imageInfo(), &pmap);
         if (!rec) {
             return false;
         }
     } else {
-        if (!dst->tryAllocPixels(this->onImageInfo()) || !dst->peekPixels(&pmap)) {
+        if (!dst->tryAllocPixels(this->imageInfo()) || !dst->peekPixels(&pmap)) {
             return false;
         }
     }
 
     sk_sp<GrSurfaceContext> sContext = direct->priv().makeWrappedSurfaceContext(
-        this->asTextureProxyRef(direct), fColorSpace);
+            this->asTextureProxyRef(direct), this->refColorSpace());
     if (!sContext) {
         return false;
     }
@@ -137,17 +135,17 @@ sk_sp<SkImage> SkImage_GpuBase::onMakeSubset(GrRecordingContext* context,
     }
 
     // MDB: this call is okay bc we know 'sContext' was kExact
-    return sk_make_sp<SkImage_Gpu>(fContext, kNeedNewImageUniqueID, fAlphaType,
+    return sk_make_sp<SkImage_Gpu>(fContext, kNeedNewImageUniqueID, this->alphaType(),
                                    sContext->asTextureProxyRef(), this->refColorSpace());
 }
 
 static void apply_premul(const SkImageInfo& info, void* pixels, size_t rowBytes) {
     switch (info.colorType()) {
-    case kRGBA_8888_SkColorType:
-    case kBGRA_8888_SkColorType:
-        break;
-    default:
-        return; // nothing to do
+        case kRGBA_8888_SkColorType:
+        case kBGRA_8888_SkColorType:
+            break;
+        default:
+            return;  // nothing to do
     }
 
     // SkColor is not necessarily RGBA or BGRA, but it is one of them on little-endian,
@@ -159,7 +157,7 @@ static void apply_premul(const SkImageInfo& info, void* pixels, size_t rowBytes)
         for (int x = 0; x < info.width(); ++x) {
             row[x] = SkPreMultiplyColor(row[x]);
         }
-        row = (SkColor*)((char*)(row)+rowBytes);
+        row = (SkColor*)((char*)(row) + rowBytes);
     }
 }
 
@@ -171,7 +169,7 @@ bool SkImage_GpuBase::onReadPixels(const SkImageInfo& dstInfo, void* dstPixels, 
         return false;
     }
 
-    if (!SkImageInfoValidConversion(dstInfo, this->onImageInfo())) {
+    if (!SkImageInfoValidConversion(dstInfo, this->imageInfo())) {
         return false;
     }
 
@@ -183,13 +181,14 @@ bool SkImage_GpuBase::onReadPixels(const SkImageInfo& dstInfo, void* dstPixels, 
     // TODO: this seems to duplicate code in GrTextureContext::onReadPixels and
     // GrRenderTargetContext::onReadPixels
     uint32_t flags = 0;
-    if (kUnpremul_SkAlphaType == rec.fInfo.alphaType() && kPremul_SkAlphaType == fAlphaType) {
+    if (kUnpremul_SkAlphaType == rec.fInfo.alphaType() &&
+        kPremul_SkAlphaType == this->alphaType()) {
         // let the GPU perform this transformation for us
         flags = GrContextPriv::kUnpremul_PixelOpsFlag;
     }
 
     sk_sp<GrSurfaceContext> sContext = direct->priv().makeWrappedSurfaceContext(
-        this->asTextureProxyRef(direct), this->refColorSpace());
+            this->asTextureProxyRef(direct), this->refColorSpace());
     if (!sContext) {
         return false;
     }
@@ -206,7 +205,8 @@ bool SkImage_GpuBase::onReadPixels(const SkImageInfo& dstInfo, void* dstPixels, 
     //
     // Should this be handled by Ganesh? todo:?
     //
-    if (kPremul_SkAlphaType == rec.fInfo.alphaType() && kUnpremul_SkAlphaType == fAlphaType) {
+    if (kPremul_SkAlphaType == rec.fInfo.alphaType() &&
+        kUnpremul_SkAlphaType == this->alphaType()) {
         apply_premul(rec.fInfo, rec.fPixels, rec.fRowBytes);
     }
     return true;
@@ -220,8 +220,8 @@ sk_sp<GrTextureProxy> SkImage_GpuBase::asTextureProxyRef(GrRecordingContext* con
         return nullptr;
     }
 
-    GrTextureAdjuster adjuster(fContext.get(), this->asTextureProxyRef(context), fAlphaType,
-                               this->uniqueID(), fColorSpace.get());
+    GrTextureAdjuster adjuster(fContext.get(), this->asTextureProxyRef(context), this->alphaType(),
+                               this->uniqueID(), this->colorSpace());
     return adjuster.refTextureProxyForParams(params, scaleAdjust);
 }
 
@@ -230,7 +230,7 @@ GrBackendTexture SkImage_GpuBase::onGetBackendTexture(bool flushPendingGrContext
     auto direct = fContext->priv().asDirectContext();
     if (!direct) {
         // This image was created with a DDL context and cannot be instantiated.
-        return GrBackendTexture(); // invalid
+        return GrBackendTexture();  // invalid
     }
 
     sk_sp<GrTextureProxy> proxy = this->asTextureProxyRef(direct);
@@ -240,21 +240,21 @@ GrBackendTexture SkImage_GpuBase::onGetBackendTexture(bool flushPendingGrContext
         auto resourceProvider = direct->priv().resourceProvider();
 
         if (!proxy->instantiate(resourceProvider)) {
-            return GrBackendTexture(); // invalid
+            return GrBackendTexture();  // invalid
         }
     }
 
     GrTexture* texture = proxy->peekTexture();
     if (texture) {
         if (flushPendingGrContextIO) {
-            direct->priv().prepareSurfaceForExternalIO(proxy.get());
+            direct->priv().flushSurface(proxy.get());
         }
         if (origin) {
             *origin = proxy->origin();
         }
         return texture->getBackendTexture();
     }
-    return GrBackendTexture(); // invalid
+    return GrBackendTexture();  // invalid
 }
 
 GrTexture* SkImage_GpuBase::onGetTexture() const {
@@ -373,20 +373,15 @@ bool SkImage_GpuBase::RenderYUVAToRGBA(GrContext* ctx, GrRenderTargetContext* re
     paint.addColorFragmentProcessor(std::move(fp));
 
     renderTargetContext->drawRect(GrNoClip(), std::move(paint), GrAA::kNo, SkMatrix::I(), rect);
-
-    // DDL TODO: in the promise image version we must not flush here
-    ctx->priv().flushSurfaceWrites(renderTargetContext->asSurfaceProxy());
-
     return true;
 }
 
 sk_sp<GrTextureProxy> SkImage_GpuBase::MakePromiseImageLazyProxy(
         GrContext* context, int width, int height, GrSurfaceOrigin origin, GrPixelConfig config,
         GrBackendFormat backendFormat, GrMipMapped mipMapped,
-        PromiseImageTextureFulfillProc fulfillProc,
-        PromiseImageTextureReleaseProc releaseProc,
-        PromiseImageTextureDoneProc doneProc,
-        PromiseImageTextureContext textureContext) {
+        PromiseImageTextureFulfillProc fulfillProc, PromiseImageTextureReleaseProc releaseProc,
+        PromiseImageTextureDoneProc doneProc, PromiseImageTextureContext textureContext,
+        PromiseImageApiVersion version) {
     SkASSERT(context);
     SkASSERT(width > 0 && height > 0);
     SkASSERT(doneProc);
@@ -425,8 +420,12 @@ sk_sp<GrTextureProxy> SkImage_GpuBase::MakePromiseImageLazyProxy(
                                        PromiseImageTextureReleaseProc releaseProc,
                                        PromiseImageTextureDoneProc doneProc,
                                        PromiseImageTextureContext context,
-                                       GrPixelConfig config)
-                : fFulfillProc(fulfillProc), fReleaseProc(releaseProc), fConfig(config) {
+                                       GrPixelConfig config,
+                                       PromiseImageApiVersion version)
+                : fFulfillProc(fulfillProc)
+                , fReleaseProc(releaseProc)
+                , fConfig(config)
+                , fVersion(version) {
             fDoneCallback = sk_make_sp<GrRefCntedCallback>(doneProc, context);
         }
         PromiseLazyInstantiateCallback(PromiseLazyInstantiateCallback&&) = default;
@@ -441,7 +440,28 @@ sk_sp<GrTextureProxy> SkImage_GpuBase::MakePromiseImageLazyProxy(
             return *this;
         }
 
-        sk_sp<GrSurface> operator()(GrResourceProvider* resourceProvider) {
+        ~PromiseLazyInstantiateCallback() {
+            // Our destructor can run on any thread. We trigger the unref of fTexture by message.
+            if (fTexture) {
+                SkMessageBus<GrGpuResourceFreedMessage>::Post({fTexture, fTextureContextID});
+            }
+        }
+
+        GrSurfaceProxy::LazyInstantiationResult operator()(GrResourceProvider* resourceProvider) {
+            // We use the unique key in a way that is unrelated to the SkImage-based key that the
+            // proxy may receive, hence kUnsynced.
+            static constexpr auto kKeySyncMode =
+                    GrSurfaceProxy::LazyInstantiationKeyMode::kUnsynced;
+
+            // Our proxy is getting instantiated for the second+ time. We are only allowed to call
+            // Fulfill once. So return our cached result.
+            if (fTexture) {
+                return {sk_ref_sp(fTexture), kKeySyncMode};
+            } else if (fConfig == kUnknown_GrPixelConfig) {
+                // We've already called fulfill and it failed. Our contract says that we should only
+                // call each callback once.
+                return {};
+            }
             SkASSERT(fDoneCallback);
             PromiseImageTextureContext textureContext = fDoneCallback->context();
             sk_sp<SkPromiseImageTexture> promiseTexture = fFulfillProc(textureContext);
@@ -449,13 +469,15 @@ sk_sp<GrTextureProxy> SkImage_GpuBase::MakePromiseImageLazyProxy(
             // the return from fulfill was invalid or we fail for some other reason.
             auto releaseCallback = sk_make_sp<GrRefCntedCallback>(fReleaseProc, textureContext);
             if (!promiseTexture) {
-                return sk_sp<GrTexture>();
+                // This records that we have failed.
+                fConfig = kUnknown_GrPixelConfig;
+                return {};
             }
 
             auto backendTexture = promiseTexture->backendTexture();
             backendTexture.fConfig = fConfig;
             if (!backendTexture.isValid()) {
-                return sk_sp<GrTexture>();
+                return {};
             }
 
             sk_sp<GrTexture> tex;
@@ -477,21 +499,35 @@ sk_sp<GrTextureProxy> SkImage_GpuBase::MakePromiseImageLazyProxy(
                              kRead_GrIOType))) {
                     tex->resourcePriv().setUniqueKey(key);
                 } else {
-                    return sk_sp<GrTexture>();
+                    return {};
                 }
             }
-            tex->addIdleProc(std::move(releaseCallback), GrTexture::IdleState::kFinished);
+            auto releaseIdleState = fVersion == PromiseImageApiVersion::kLegacy
+                                            ? GrTexture::IdleState::kFinished
+                                            : GrTexture::IdleState::kFlushed;
+            tex->addIdleProc(std::move(releaseCallback), releaseIdleState);
             tex->addIdleProc(std::move(fDoneCallback), GrTexture::IdleState::kFinished);
             promiseTexture->addKeyToInvalidate(tex->getContext()->priv().contextID(), key);
-            return std::move(tex);
+            fTexture = tex.get();
+            // We need to hold on to the GrTexture in case our proxy gets reinstantiated. However,
+            // we can't unref in our destructor because we may be on another thread then. So we
+            // let the cache know it is waiting on an unref message. We will send that message from
+            // our destructor.
+            GrContext* context = fTexture->getContext();
+            context->priv().getResourceCache()->insertDelayedResourceUnref(fTexture);
+            fTextureContextID = context->priv().contextID();
+            return {std::move(tex), kKeySyncMode};
         }
 
     private:
         PromiseImageTextureFulfillProc fFulfillProc;
         PromiseImageTextureReleaseProc fReleaseProc;
         sk_sp<GrRefCntedCallback> fDoneCallback;
+        GrTexture* fTexture = nullptr;
+        uint32_t fTextureContextID = SK_InvalidUniqueID;
         GrPixelConfig fConfig;
-    } callback(fulfillProc, releaseProc, doneProc, textureContext, config);
+        PromiseImageApiVersion fVersion;
+    } callback(fulfillProc, releaseProc, doneProc, textureContext, config, version);
 
     GrProxyProvider* proxyProvider = context->priv().proxyProvider();
 
@@ -504,5 +540,5 @@ sk_sp<GrTextureProxy> SkImage_GpuBase::MakePromiseImageLazyProxy(
     return proxyProvider->createLazyProxy(std::move(callback), backendFormat, desc, origin,
                                           mipMapped, GrInternalSurfaceFlags::kReadOnly,
                                           SkBackingFit::kExact, SkBudgeted::kNo,
-                                          GrSurfaceProxy::LazyInstantiationType::kSingleUse);
+                                          GrSurfaceProxy::LazyInstantiationType::kDeinstantiate);
 }

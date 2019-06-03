@@ -8,12 +8,11 @@
 #ifndef SkOpPE_DEFINED
 #define SkOpPE_DEFINED
 
-#include "SkOpPathEffect.h"
+#include "include/effects/SkOpPathEffect.h"
 
 class SkOpPE : public SkPathEffect {
 public:
     SkOpPE(sk_sp<SkPathEffect> one, sk_sp<SkPathEffect> two, SkPathOp op);
-
 
 protected:
     void flatten(SkWriteBuffer&) const override;
@@ -24,7 +23,7 @@ private:
 
     sk_sp<SkPathEffect> fOne;
     sk_sp<SkPathEffect> fTwo;
-    SkPathOp            fOp;
+    SkPathOp fOp;
 
     typedef SkPathEffect INHERITED;
 };
@@ -40,7 +39,7 @@ protected:
 private:
     SK_FLATTENABLE_HOOKS(SkMatrixPE)
 
-    SkMatrix    fMatrix;
+    SkMatrix fMatrix;
 
     typedef SkPathEffect INHERITED;
 };
@@ -57,13 +56,11 @@ protected:
 private:
     SK_FLATTENABLE_HOOKS(SkStrokePE)
 
-    SkScalar        fWidth,
-                    fMiter;
-    SkPaint::Join   fJoin;
-    SkPaint::Cap    fCap;
+    SkScalar fWidth, fMiter;
+    SkPaint::Join fJoin;
+    SkPaint::Cap fCap;
 
     typedef SkPathEffect INHERITED;
 };
 
 #endif
-

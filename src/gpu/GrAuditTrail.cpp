@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "GrAuditTrail.h"
-#include "ops/GrOp.h"
-#include "SkJSONWriter.h"
+#include "include/private/GrAuditTrail.h"
+#include "src/gpu/ops/GrOp.h"
+#include "src/utils/SkJSONWriter.h"
 
 const int GrAuditTrail::kGrAuditTrailInvalidID = -1;
 
@@ -90,7 +90,7 @@ void GrAuditTrail::copyOutFromOpList(OpInfo* outOpInfo, int opListID) {
     const OpNode* bn = fOpList[opListID].get();
     SkASSERT(bn);
     outOpInfo->fBounds = bn->fBounds;
-    outOpInfo->fProxyUniqueID    = bn->fProxyUniqueID;
+    outOpInfo->fProxyUniqueID = bn->fProxyUniqueID;
     for (int j = 0; j < bn->fChildren.count(); j++) {
         OpInfo::Op& outOp = outOpInfo->fOps.push_back();
         const Op* currentOp = bn->fChildren[j];

@@ -8,9 +8,9 @@
 #ifndef SkOTTable_EBSC_DEFINED
 #define SkOTTable_EBSC_DEFINED
 
-#include "SkEndian.h"
-#include "SkOTTable_EBLC.h"
-#include "SkOTTableTypes.h"
+#include "src/core/SkEndian.h"
+#include "src/sfnt/SkOTTableTypes.h"
+#include "src/sfnt/SkOTTable_EBLC.h"
 
 #pragma pack(push, 1)
 
@@ -29,11 +29,11 @@ struct SkOTTableEmbeddedBitmapScaling {
     struct BitmapScaleTable {
         SkOTTableEmbeddedBitmapLocation::SbitLineMetrics hori;
         SkOTTableEmbeddedBitmapLocation::SbitLineMetrics vert;
-        SK_OT_BYTE ppemX; //target horizontal pixels per EM
-        SK_OT_BYTE ppemY; //target vertical pixels per EM
-        SK_OT_BYTE substitutePpemX; //use bitmaps of this size
-        SK_OT_BYTE substitutePpemY; //use bitmaps of this size
-    }; //bitmapScaleTable[numSizes];
+        SK_OT_BYTE ppemX;            // target horizontal pixels per EM
+        SK_OT_BYTE ppemY;            // target vertical pixels per EM
+        SK_OT_BYTE substitutePpemX;  // use bitmaps of this size
+        SK_OT_BYTE substitutePpemY;  // use bitmaps of this size
+    };                               // bitmapScaleTable[numSizes];
 };
 
 #pragma pack(pop)

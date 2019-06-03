@@ -5,15 +5,22 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTextBlob.h"
+#include "include/core/SkTypeface.h"
+#include "tools/ToolUtils.h"
 
-#include "Resources.h"
-#include "SkCanvas.h"
-#include "SkGradientShader.h"
-#include "SkStream.h"
-#include "SkTextBlob.h"
-#include "SkTypeface.h"
+#include <string.h>
 
 namespace skiagm {
 class TextBlobTransforms : public GM {
@@ -26,42 +33,37 @@ protected:
         SkTextBlobBuilder builder;
 
         // make textblob.  To stress distance fields, we choose sizes appropriately
-        SkFont font(sk_tool_utils::create_portable_typeface(), 162);
+        SkFont font(ToolUtils::create_portable_typeface(), 162);
         font.setEdging(SkFont::Edging::kAlias);
         const char* text = "A";
 
         SkRect bounds;
-        font.measureText(text, strlen(text), kUTF8_SkTextEncoding, &bounds);
-        sk_tool_utils::add_to_text_blob(&builder, text, font, 0, 0);
+        font.measureText(text, strlen(text), SkTextEncoding::kUTF8, &bounds);
+        ToolUtils::add_to_text_blob(&builder, text, font, 0, 0);
 
         // Medium
         SkScalar xOffset = bounds.width() + 5;
         font.setSize(72);
         text = "B";
-        sk_tool_utils::add_to_text_blob(&builder, text, font, xOffset, 0);
+        ToolUtils::add_to_text_blob(&builder, text, font, xOffset, 0);
 
-        font.measureText(text, strlen(text), kUTF8_SkTextEncoding, &bounds);
+        font.measureText(text, strlen(text), SkTextEncoding::kUTF8, &bounds);
         SkScalar yOffset = bounds.height();
 
         // Small
         font.setSize(32);
         text = "C";
-        sk_tool_utils::add_to_text_blob(&builder, text, font, xOffset, -yOffset - 10);
+        ToolUtils::add_to_text_blob(&builder, text, font, xOffset, -yOffset - 10);
 
         // build
         fBlob = builder.make();
     }
 
-    SkString onShortName() override {
-        return SkString("textblobtransforms");
-    }
+    SkString onShortName() override { return SkString("textblobtransforms"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(kWidth, kHeight);
-    }
+    SkISize onISize() override { return SkISize::Make(kWidth, kHeight); }
 
     void onDraw(SkCanvas* canvas) override {
-
         canvas->drawColor(SK_ColorGRAY);
 
         SkPaint paint;
@@ -72,7 +74,7 @@ protected:
         // Colors were chosen to map to pairs of canonical colors.  The GPU Backend will cache A8
         // Texture Blobs based on the canonical color they map to.  Canonical colors are used to
         // create masks.  For A8 there are 8 of them.
-        //SkColor colors[] = {SK_ColorCYAN, SK_ColorLTGRAY, SK_ColorYELLOW, SK_ColorWHITE};
+        // SkColor colors[] = {SK_ColorCYAN, SK_ColorLTGRAY, SK_ColorYELLOW, SK_ColorWHITE};
 
         SkScalar xOffset = SkScalarCeilToScalar(bounds.width());
         SkScalar yOffset = SkScalarCeilToScalar(bounds.height());
@@ -105,7 +107,7 @@ protected:
         canvas->rotate(90.f);
 
         // and scales
-        canvas->translate(- 3 * xOffset, 3 * yOffset);
+        canvas->translate(-3 * xOffset, 3 * yOffset);
         canvas->scale(1.5f, 1.5f);
         canvas->drawTextBlob(fBlob, 0, 0, paint);
         canvas->translate(xOffset, 0);
@@ -169,4 +171,4 @@ private:
 //////////////////////////////////////////////////////////////////////////////
 
 DEF_GM(return new TextBlobTransforms;)
-}
+}  // namespace skiagm

@@ -5,26 +5,26 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkAnimTimer.h"
-#include "SkCanvas.h"
-#include "SkColorFilter.h"
-#include "SkColorPriv.h"
-#include "SkCornerPathEffect.h"
-#include "SkDrawable.h"
-#include "SkGradientShader.h"
-#include "SkPath.h"
-#include "SkPathMeasure.h"
-#include "SkPictureRecorder.h"
-#include "SkRandom.h"
-#include "SkRegion.h"
-#include "SkShader.h"
-#include "SkString.h"
-#include "SkTextUtils.h"
-#include "SkUTF.h"
-#include "Sk1DPathEffect.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkDrawable.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPathMeasure.h"
+#include "include/core/SkPictureRecorder.h"
+#include "include/core/SkRegion.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkString.h"
+#include "include/effects/Sk1DPathEffect.h"
+#include "include/effects/SkCornerPathEffect.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/utils/SkRandom.h"
+#include "include/utils/SkTextUtils.h"
+#include "samplecode/Sample.h"
+#include "src/utils/SkUTF.h"
+#include "tools/timer/AnimTimer.h"
 
-#include "SkParsePath.h"
+#include "include/utils/SkParsePath.h"
 static void testparse() {
     SkRect r;
     r.set(0, 0, 10, 10.5f);
@@ -39,8 +39,9 @@ static void testparse() {
 
 class ArcsView : public Sample {
     class MyDrawable : public SkDrawable {
-        SkRect   fR;
+        SkRect fR;
         SkScalar fSweep;
+
     public:
         MyDrawable(const SkRect& r) : fR(r), fSweep(0) {}
 
@@ -84,7 +85,7 @@ public:
     sk_sp<MyDrawable> fAnimatingDrawable;
     sk_sp<SkDrawable> fRootDrawable;
 
-    ArcsView() { }
+    ArcsView() {}
 
 protected:
     bool onQuery(Sample::Event* evt) override {
@@ -105,18 +106,18 @@ protected:
 
     static void DrawLabel(SkCanvas* canvas, const SkRect& rect, SkScalar start, SkScalar sweep) {
         SkFont font;
-        SkString    str;
+        SkString str;
         str.appendScalar(start);
         str.append(", ");
         str.appendScalar(sweep);
         SkTextUtils::DrawString(canvas, str.c_str(), rect.centerX(),
-                         rect.fBottom + font.getSize() * 5/4, font, SkPaint(),
+                                rect.fBottom + font.getSize() * 5 / 4, font, SkPaint(),
                                 SkTextUtils::kCenter_Align);
     }
 
     static void DrawArcs(SkCanvas* canvas) {
         SkPaint paint;
-        SkRect  r;
+        SkRect r;
         SkScalar w = 75;
         SkScalar h = 50;
 
@@ -129,26 +130,17 @@ protected:
 
         paint.setStrokeWidth(SkIntToScalar(1));
 
-        static const SkScalar gAngles[] = {
-            0, 360,
-            0, 45,
-            0, -45,
-            720, 135,
-            -90, 269,
-            -90, 270,
-            -90, 271,
-            -180, -270,
-            225, 90
-        };
+        static const SkScalar gAngles[] = {0,   360, 0,   45,  0,   -45,  720,  135, -90,
+                                           269, -90, 270, -90, 271, -180, -270, 225, 90};
 
         for (size_t i = 0; i < SK_ARRAY_COUNT(gAngles); i += 2) {
             paint.setColor(SK_ColorBLACK);
             DrawRectWithLines(canvas, r, paint);
 
             paint.setColor(SK_ColorRED);
-            canvas->drawArc(r, gAngles[i], gAngles[i+1], false, paint);
+            canvas->drawArc(r, gAngles[i], gAngles[i + 1], false, paint);
 
-            DrawLabel(canvas, r, gAngles[i], gAngles[i+1]);
+            DrawLabel(canvas, r, gAngles[i], gAngles[i + 1]);
 
             canvas->translate(w * 8 / 7, 0);
         }
@@ -183,13 +175,13 @@ protected:
         fRootDrawable = recorder.finishRecordingAsDrawable();
     }
 
-    void onDrawContent(SkCanvas* canvas) override {
-        canvas->drawDrawable(fRootDrawable.get());
-    }
+    void onDrawContent(SkCanvas* canvas) override { canvas->drawDrawable(fRootDrawable.get()); }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         SkScalar angle = SkDoubleToScalar(fmod(timer.secs() * 360 / 24, 360));
-        fAnimatingDrawable->setSweep(angle);
+        if (fAnimatingDrawable) {
+            fAnimatingDrawable->setSweep(angle);
+        }
         return true;
     }
 
@@ -201,4 +193,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new ArcsView(); )
+DEF_SAMPLE(return new ArcsView();)

@@ -5,8 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkRandom.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/utils/SkRandom.h"
 
 namespace skiagm {
 
@@ -15,19 +22,12 @@ namespace skiagm {
 // edge of one of its underlying quads).
 class ArcOfZorroGM : public GM {
 public:
-    ArcOfZorroGM() {
-        this->setBGColor(0xFFCCCCCC);
-    }
+    ArcOfZorroGM() { this->setBGColor(0xFFCCCCCC); }
 
 protected:
+    SkString onShortName() override { return SkString("arcofzorro"); }
 
-    SkString onShortName() override {
-        return SkString("arcofzorro");
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(1000, 1000);
-    }
+    SkISize onISize() override { return SkISize::Make(1000, 1000); }
 
     void onDraw(SkCanvas* canvas) override {
         SkRandom rand;
@@ -52,25 +52,24 @@ protected:
             canvas->restore();
 
             switch (direction) {
-            case 0:
-                xOffset += 10;
-                if (xOffset >= 700) {
-                    direction = 1;
-                }
-                break;
-            case 1:
-                xOffset -= 10;
-                yOffset += 10;
-                if (xOffset < 50) {
-                    direction = 2;
-                }
-                break;
-            case 2:
-                xOffset += 10;
-                break;
+                case 0:
+                    xOffset += 10;
+                    if (xOffset >= 700) {
+                        direction = 1;
+                    }
+                    break;
+                case 1:
+                    xOffset -= 10;
+                    yOffset += 10;
+                    if (xOffset < 50) {
+                        direction = 2;
+                    }
+                    break;
+                case 2:
+                    xOffset += 10;
+                    break;
             }
         }
-
     }
 
 private:
@@ -80,4 +79,4 @@ private:
 //////////////////////////////////////////////////////////////////////////////
 
 DEF_GM(return new ArcOfZorroGM;)
-}
+}  // namespace skiagm

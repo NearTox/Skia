@@ -16,17 +16,17 @@ class GrMtlCopyPipelineState {
 public:
     static GrMtlCopyPipelineState* CreateCopyPipelineState(GrMtlGpu* gpu,
                                                            MTLPixelFormat dstPixelFormat,
-                                                           id<MTLFunction> vertexFunction,
-                                                           id<MTLFunction> fragmentFunction,
+                                                           id<MTLFunction>
+                                                                   vertexFunction,
+                                                           id<MTLFunction>
+                                                                   fragmentFunction,
                                                            MTLVertexDescriptor* vertexDescriptor);
 
     id<MTLRenderPipelineState> mtlCopyPipelineState() { return fPipelineState; }
 
 private:
-    GrMtlCopyPipelineState(id<MTLRenderPipelineState> pipelineState,
-                       MTLPixelFormat pixelFormat)
-            : fPipelineState(pipelineState)
-            , fPixelFormat(pixelFormat) {}
+    GrMtlCopyPipelineState(id<MTLRenderPipelineState> pipelineState, MTLPixelFormat pixelFormat)
+            : fPipelineState(pipelineState), fPixelFormat(pixelFormat) {}
 
     id<MTLRenderPipelineState> fPipelineState;
     MTLPixelFormat fPixelFormat;

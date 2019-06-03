@@ -8,11 +8,11 @@
 #ifndef GrDrawableOp_DEFINED
 #define GrDrawableOp_DEFINED
 
-#include "GrOp.h"
+#include "src/gpu/ops/GrOp.h"
 
-#include "GrSemaphore.h"
-#include "SkDrawable.h"
-#include "SkMatrix.h"
+#include "include/core/SkDrawable.h"
+#include "include/core/SkMatrix.h"
+#include "src/gpu/GrSemaphore.h"
 
 class GrRecordingContext;
 
@@ -21,19 +21,18 @@ public:
     DEFINE_OP_CLASS_ID
 
     static std::unique_ptr<GrDrawableOp> Make(GrRecordingContext*,
-                                              std::unique_ptr<SkDrawable::GpuDrawHandler> drawable,
+                                              std::unique_ptr<SkDrawable::GpuDrawHandler>
+                                                      drawable,
                                               const SkRect& bounds);
 
     const char* name() const override { return "Drawable"; }
 
 #ifdef SK_DEBUG
-    SkString dumpInfo() const override {
-        return INHERITED::dumpInfo();
-    }
+    SkString dumpInfo() const override { return INHERITED::dumpInfo(); }
 #endif
 
 private:
-    friend class GrOpMemoryPool; // for ctor
+    friend class GrOpMemoryPool;  // for ctor
 
     GrDrawableOp(std::unique_ptr<SkDrawable::GpuDrawHandler>, const SkRect& bounds);
 
@@ -50,4 +49,3 @@ private:
 };
 
 #endif
-

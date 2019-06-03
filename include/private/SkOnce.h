@@ -10,7 +10,7 @@
 
 #include <atomic>
 #include <utility>
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 // SkOnce provides call-once guarantees for Skia, much like std::once_flag/std::call_once().
 //
@@ -21,8 +21,7 @@ class SkOnce {
 public:
     constexpr SkOnce() = default;
 
-    template <typename Fn, typename... Args>
-    void operator()(Fn&& fn, Args&&... args) {
+    template <typename Fn, typename... Args> void operator()(Fn&& fn, Args&&... args) noexcept {
         auto state = fState.load(std::memory_order_acquire);
 
         if (state == Done) {
@@ -30,9 +29,9 @@ public:
         }
 
         // If it looks like no one has started calling fn(), try to claim that job.
-        if (state == NotStarted && fState.compare_exchange_strong(state, Claimed,
-                                                                  std::memory_order_relaxed,
-                                                                  std::memory_order_relaxed)) {
+        if (state == NotStarted &&
+            fState.compare_exchange_strong(state, Claimed, std::memory_order_relaxed,
+                                           std::memory_order_relaxed)) {
             // Great!  We'll run fn() then notify the other threads by releasing Done into fState.
             fn(std::forward<Args>(args)...);
             return fState.store(Done, std::memory_order_release);
@@ -40,11 +39,12 @@ public:
 
         // Some other thread is calling fn().
         // We'll just spin here acquiring until it releases Done into fState.
-        while (fState.load(std::memory_order_acquire) != Done) { /*spin*/ }
+        while (fState.load(std::memory_order_acquire) != Done) { /*spin*/
+        }
     }
 
 private:
-    enum State : uint8_t { NotStarted, Claimed, Done};
+    enum State : uint8_t { NotStarted, Claimed, Done };
     std::atomic<uint8_t> fState{NotStarted};
 };
 

@@ -5,14 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "SkBlitter.h"
-#include "SkPath.h"
-#include "SkRegionPriv.h"
-#include "SkSafeMath.h"
-#include "SkScan.h"
-#include "SkTDArray.h"
-#include "SkTSort.h"
-#include "SkTo.h"
+#include "include/core/SkPath.h"
+#include "include/private/SkTDArray.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkBlitter.h"
+#include "src/core/SkRegionPriv.h"
+#include "src/core/SkSafeMath.h"
+#include "src/core/SkScan.h"
+#include "src/core/SkTSort.h"
 
 // The rgnbuilder caller *seems* to pass short counts, possible often seens early failure, so
 // we may not want to promote this to a "std" routine just yet.
@@ -35,16 +35,17 @@ public:
 
     void done() {
         if (fCurrScanline != nullptr) {
-            fCurrScanline->fXCount = (SkRegion::RunType)((int)(fCurrXPtr - fCurrScanline->firstX()));
-            if (!this->collapsWithPrev()) { // flush the last line
+            fCurrScanline->fXCount =
+                    (SkRegion::RunType)((int)(fCurrXPtr - fCurrScanline->firstX()));
+            if (!this->collapsWithPrev()) {  // flush the last line
                 fCurrScanline = fCurrScanline->nextScanline();
             }
         }
     }
 
-    int     computeRunCount() const;
-    void    copyToRect(SkIRect*) const;
-    void    copyToRgn(SkRegion::RunType runs[]) const;
+    int computeRunCount() const;
+    void copyToRect(SkIRect*) const;
+    void copyToRgn(SkRegion::RunType runs[]) const;
 
     void blitH(int x, int y, int width) override;
     void blitAntiH(int x, int y, const SkAlpha antialias[], const int16_t runs[]) override {
@@ -89,21 +90,19 @@ private:
             return (Scanline*)((SkRegion::RunType*)(this + 1) + fXCount + 1);
         }
     };
-    SkRegion::RunType*  fStorage;
-    Scanline*           fCurrScanline;
-    Scanline*           fPrevScanline;
+    SkRegion::RunType* fStorage;
+    Scanline* fCurrScanline;
+    Scanline* fPrevScanline;
     //  points at next avialable x[] in fCurrScanline
-    SkRegion::RunType*  fCurrXPtr;
-    SkRegion::RunType   fTop;           // first Y value
+    SkRegion::RunType* fCurrXPtr;
+    SkRegion::RunType fTop;  // first Y value
 
     int fStorageCount;
 
     bool collapsWithPrev() {
-        if (fPrevScanline != nullptr &&
-            fPrevScanline->fLastY + 1 == fCurrScanline->fLastY &&
+        if (fPrevScanline != nullptr && fPrevScanline->fLastY + 1 == fCurrScanline->fLastY &&
             fPrevScanline->fXCount == fCurrScanline->fXCount &&
-            sk_memeq32(fPrevScanline->firstX(), fCurrScanline->firstX(), fCurrScanline->fXCount))
-        {
+            sk_memeq32(fPrevScanline->firstX(), fCurrScanline->firstX(), fCurrScanline->fXCount)) {
             // update the height of fPrevScanline
             fPrevScanline->fLastY = fCurrScanline->fLastY;
             return true;
@@ -112,20 +111,16 @@ private:
     }
 };
 
-SkRgnBuilder::SkRgnBuilder()
-    : fStorage(nullptr) {
-}
+SkRgnBuilder::SkRgnBuilder() : fStorage(nullptr) {}
 
-SkRgnBuilder::~SkRgnBuilder() {
-    sk_free(fStorage);
-}
+SkRgnBuilder::~SkRgnBuilder() { sk_free(fStorage); }
 
 bool SkRgnBuilder::init(int maxHeight, int maxTransitions, bool pathIsInverse) {
     if ((maxHeight | maxTransitions) < 0) {
         return false;
     }
 
-    SkSafeMath  safe;
+    SkSafeMath safe;
 
     if (pathIsInverse) {
         // allow for additional X transitions to "invert" each scanline
@@ -153,8 +148,8 @@ bool SkRgnBuilder::init(int maxHeight, int maxTransitions, bool pathIsInverse) {
         return false;
     }
 
-    fCurrScanline = nullptr;    // signal empty collection
-    fPrevScanline = nullptr;    // signal first scanline
+    fCurrScanline = nullptr;  // signal empty collection
+    fPrevScanline = nullptr;  // signal first scanline
     return true;
 }
 
@@ -169,13 +164,13 @@ void SkRgnBuilder::blitH(int x, int y, int width) {
 
         if (y > fCurrScanline->fLastY) {
             // if we get here, we're done with fCurrScanline
-            fCurrScanline->fXCount = (SkRegion::RunType)((int)(fCurrXPtr - fCurrScanline->firstX()));
+            fCurrScanline->fXCount =
+                    (SkRegion::RunType)((int)(fCurrXPtr - fCurrScanline->firstX()));
 
             int prevLastY = fCurrScanline->fLastY;
             if (!this->collapsWithPrev()) {
                 fPrevScanline = fCurrScanline;
                 fCurrScanline = fCurrScanline->nextScanline();
-
             }
             if (y - 1 > prevLastY) {  // insert empty run
                 fCurrScanline->fLastY = (SkRegion::RunType)(y - 1);
@@ -203,8 +198,8 @@ int SkRgnBuilder::computeRunCount() const {
         return 0;
     }
 
-    const SkRegion::RunType*  line = fStorage;
-    const SkRegion::RunType*  stop = (const SkRegion::RunType*)fCurrScanline;
+    const SkRegion::RunType* line = fStorage;
+    const SkRegion::RunType* stop = (const SkRegion::RunType*)fCurrScanline;
 
     return 2 + (int)(stop - line);
 }
@@ -231,7 +226,7 @@ void SkRgnBuilder::copyToRgn(SkRegion::RunType runs[]) const {
     do {
         *runs++ = (SkRegion::RunType)(line->fLastY + 1);
         int count = line->fXCount;
-        *runs++ = count >> 1;   // intervalCount
+        *runs++ = count >> 1;  // intervalCount
         if (count) {
             memcpy(runs, line->firstX(), count * sizeof(SkRegion::RunType));
             runs += count;
@@ -245,13 +240,13 @@ void SkRgnBuilder::copyToRgn(SkRegion::RunType runs[]) const {
 
 static unsigned verb_to_initial_last_index(unsigned verb) {
     static const uint8_t gPathVerbToInitialLastIndex[] = {
-        0,  //  kMove_Verb
-        1,  //  kLine_Verb
-        2,  //  kQuad_Verb
-        2,  //  kConic_Verb
-        3,  //  kCubic_Verb
-        0,  //  kClose_Verb
-        0   //  kDone_Verb
+            0,  //  kMove_Verb
+            1,  //  kLine_Verb
+            2,  //  kQuad_Verb
+            2,  //  kConic_Verb
+            3,  //  kCubic_Verb
+            0,  //  kClose_Verb
+            0   //  kDone_Verb
     };
     SkASSERT((unsigned)verb < SK_ARRAY_COUNT(gPathVerbToInitialLastIndex));
     return gPathVerbToInitialLastIndex[verb];
@@ -259,13 +254,13 @@ static unsigned verb_to_initial_last_index(unsigned verb) {
 
 static unsigned verb_to_max_edges(unsigned verb) {
     static const uint8_t gPathVerbToMaxEdges[] = {
-        0,  //  kMove_Verb
-        1,  //  kLine_Verb
-        2,  //  kQuad_VerbB
-        2,  //  kConic_VerbB
-        3,  //  kCubic_Verb
-        0,  //  kClose_Verb
-        0   //  kDone_Verb
+            0,  //  kMove_Verb
+            1,  //  kLine_Verb
+            2,  //  kQuad_VerbB
+            2,  //  kConic_VerbB
+            3,  //  kCubic_Verb
+            0,  //  kClose_Verb
+            0   //  kDone_Verb
     };
     SkASSERT((unsigned)verb < SK_ARRAY_COUNT(gPathVerbToMaxEdges));
     return gPathVerbToMaxEdges[verb];
@@ -273,13 +268,13 @@ static unsigned verb_to_max_edges(unsigned verb) {
 
 // If returns 0, ignore itop and ibot
 static int count_path_runtype_values(const SkPath& path, int* itop, int* ibot) {
-    SkPath::Iter    iter(path, true);
-    SkPoint         pts[4];
-    SkPath::Verb    verb;
+    SkPath::Iter iter(path, true);
+    SkPoint pts[4];
+    SkPath::Verb verb;
 
     int maxEdges = 0;
-    SkScalar    top = SkIntToScalar(SK_MaxS16);
-    SkScalar    bot = SkIntToScalar(SK_MinS16);
+    SkScalar top = SkIntToScalar(SK_MaxS16);
+    SkScalar bot = SkIntToScalar(SK_MinS16);
 
     while ((verb = iter.next(pts, false)) != SkPath::kDone_Verb) {
         maxEdges += verb_to_max_edges(verb);
@@ -302,7 +297,7 @@ static int count_path_runtype_values(const SkPath& path, int* itop, int* ibot) {
         }
     }
     if (0 == maxEdges) {
-        return 0;   // we have only moves+closes
+        return 0;  // we have only moves+closes
     }
 
     SkASSERT(top <= bot);
@@ -358,9 +353,8 @@ bool SkRegion::setPath(const SkPath& path, const SkRegion& clip) {
 
     SkRgnBuilder builder;
 
-    if (!builder.init(bot - top,
-                      SkMax32(pathTransitions, clipTransitions),
-                      path.isInverseFillType())) {
+    if (!builder.init(
+                bot - top, SkMax32(pathTransitions, clipTransitions), path.isInverseFillType())) {
         // can't allocate working space, so return false
         return this->setEmpty();
     }
@@ -400,7 +394,7 @@ struct Edge {
     SkRegionPriv::RunType fX;
     SkRegionPriv::RunType fY0, fY1;
     uint8_t fFlags;
-    Edge*   fNext;
+    Edge* fNext;
 
     void set(int x, int y0, int y1) {
         SkASSERT(y0 != y1);
@@ -409,12 +403,10 @@ struct Edge {
         fY0 = (SkRegionPriv::RunType)(y0);
         fY1 = (SkRegionPriv::RunType)(y1);
         fFlags = 0;
-        SkDEBUGCODE(fNext = nullptr;)
+        SkDEBUGCODE(fNext = nullptr);
     }
 
-    int top() const {
-        return SkMin32(fY0, fY1);
-    }
+    int top() const { return SkMin32(fY0, fY1); }
 };
 
 static void find_link(Edge* base, Edge* stop) {
@@ -461,7 +453,7 @@ static void find_link(Edge* base, Edge* stop) {
 
 static int extract_path(Edge* edge, Edge* stop, SkPath* path) {
     while (0 == edge->fFlags) {
-        edge++; // skip over "used" edges
+        edge++;  // skip over "used" edges
     }
 
     SkASSERT(edge < stop);
@@ -475,16 +467,16 @@ static int extract_path(Edge* edge, Edge* stop, SkPath* path) {
     path->moveTo(SkIntToScalar(prev->fX), SkIntToScalar(prev->fY0));
     prev->fFlags = 0;
     do {
-        if (prev->fX != edge->fX || prev->fY1 != edge->fY0) { // skip collinear
-            path->lineTo(SkIntToScalar(prev->fX), SkIntToScalar(prev->fY1));    // V
-            path->lineTo(SkIntToScalar(edge->fX), SkIntToScalar(edge->fY0));    // H
+        if (prev->fX != edge->fX || prev->fY1 != edge->fY0) {                 // skip collinear
+            path->lineTo(SkIntToScalar(prev->fX), SkIntToScalar(prev->fY1));  // V
+            path->lineTo(SkIntToScalar(edge->fX), SkIntToScalar(edge->fY0));  // H
         }
         prev = edge;
         edge = edge->fNext;
         count += 1;
         prev->fFlags = 0;
     } while (edge != base);
-    path->lineTo(SkIntToScalar(prev->fX), SkIntToScalar(prev->fY1));    // V
+    path->lineTo(SkIntToScalar(prev->fX), SkIntToScalar(prev->fY1));  // V
     path->close();
     return count;
 }
@@ -507,14 +499,14 @@ bool SkRegion::getBoundaryPath(SkPath* path) const {
     const SkIRect& bounds = this->getBounds();
 
     if (this->isRect()) {
-        SkRect  r;
-        r.set(bounds);      // this converts the ints to scalars
+        SkRect r;
+        r.set(bounds);  // this converts the ints to scalars
         path->addRect(r);
         return true;
     }
 
-    SkRegion::Iterator  iter(*this);
-    SkTDArray<Edge>     edges;
+    SkRegion::Iterator iter(*this);
+    SkTDArray<Edge> edges;
 
     for (const SkIRect& r = iter.rect(); !iter.done(); iter.next()) {
         Edge* edge = edges.append(2);

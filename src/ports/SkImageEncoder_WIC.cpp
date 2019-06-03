@@ -5,33 +5,33 @@
  * found in the LICENSE file.
  */
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 #if defined(SK_BUILD_FOR_WIN)
 
-#include "SkAutoCoInitialize.h"
-#include "SkAutoMalloc.h"
-#include "SkBitmap.h"
-#include "SkImageEncoderPriv.h"
-#include "SkIStream.h"
-#include "SkImageEncoder.h"
-#include "SkStream.h"
-#include "SkTScopedComPtr.h"
-#include "SkTemplates.h"
-#include "SkUnPreMultiply.h"
 #include <wincodec.h>
+#include "include/core/SkBitmap.h"
+#include "include/core/SkImageEncoder.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkUnPreMultiply.h"
+#include "include/private/SkTemplates.h"
+#include "src/core/SkAutoMalloc.h"
+#include "src/images/SkImageEncoderPriv.h"
+#include "src/utils/win/SkAutoCoInitialize.h"
+#include "src/utils/win/SkIStream.h"
+#include "src/utils/win/SkTScopedComPtr.h"
 
-//All Windows SDKs back to XPSP2 export the CLSID_WICImagingFactory symbol.
-//In the Windows8 SDK the CLSID_WICImagingFactory symbol is still exported
-//but CLSID_WICImagingFactory is then #defined to CLSID_WICImagingFactory2.
-//Undo this #define if it has been done so that we link against the symbols
-//we intended to link against on all SDKs.
+// All Windows SDKs back to XPSP2 export the CLSID_WICImagingFactory symbol.
+// In the Windows8 SDK the CLSID_WICImagingFactory symbol is still exported
+// but CLSID_WICImagingFactory is then #defined to CLSID_WICImagingFactory2.
+// Undo this #define if it has been done so that we link against the symbols
+// we intended to link against on all SDKs.
 #if defined(CLSID_WICImagingFactory)
 #undef CLSID_WICImagingFactory
 #endif
 
-bool SkEncodeImageWithWIC(SkWStream* stream, const SkPixmap& pixmap,
-                          SkEncodedImageFormat format, int quality) {
+bool SkEncodeImageWithWIC(SkWStream* stream, const SkPixmap& pixmap, SkEncodedImageFormat format,
+                          int quality) {
     GUID type;
     switch (format) {
         case SkEncodedImageFormat::kJPEG:
@@ -52,8 +52,7 @@ bool SkEncodeImageWithWIC(SkWStream* stream, const SkPixmap& pixmap,
     // First convert to BGRA if necessary.
     SkBitmap bitmap;
     if (!bitmap.tryAllocPixels(bitmapOrig.info().makeColorType(kBGRA_8888_SkColorType)) ||
-        !bitmapOrig.readPixels(bitmap.info(), bitmap.getPixels(), bitmap.rowBytes(), 0, 0))
-    {
+        !bitmapOrig.readPixels(bitmap.info(), bitmap.getPixels(), bitmap.rowBytes(), 0, 0)) {
         return false;
     }
 
@@ -83,9 +82,9 @@ bool SkEncodeImageWithWIC(SkWStream* stream, const SkPixmap& pixmap,
             uint8_t* dstRow = SkTAddOffset<uint8_t>(pixelStorage.get(), y * rowBytes);
             for (int x = 0; x < bitmap.width(); x++) {
                 uint32_t bgra = *bitmap.getAddr32(x, y);
-                dstRow[0] = (uint8_t) ((bgra >>  0) & 0xFF);
-                dstRow[1] = (uint8_t) ((bgra >>  8) & 0xFF);
-                dstRow[2] = (uint8_t) ((bgra >> 16) & 0xFF);
+                dstRow[0] = (uint8_t)((bgra >> 0) & 0xFF);
+                dstRow[1] = (uint8_t)((bgra >> 8) & 0xFF);
+                dstRow[2] = (uint8_t)((bgra >> 16) & 0xFF);
                 dstRow += 3;
             }
         }
@@ -93,8 +92,7 @@ bool SkEncodeImageWithWIC(SkWStream* stream, const SkPixmap& pixmap,
         pixels = pixelStorage.get();
     }
 
-
-    //Initialize COM.
+    // Initialize COM.
     SkAutoCoInitialize scopedCo;
     if (!scopedCo.succeeded()) {
         return false;
@@ -102,24 +100,20 @@ bool SkEncodeImageWithWIC(SkWStream* stream, const SkPixmap& pixmap,
 
     HRESULT hr = S_OK;
 
-    //Create Windows Imaging Component ImagingFactory.
+    // Create Windows Imaging Component ImagingFactory.
     SkTScopedComPtr<IWICImagingFactory> piImagingFactory;
     if (SUCCEEDED(hr)) {
-        hr = CoCreateInstance(
-            CLSID_WICImagingFactory
-            , nullptr
-            , CLSCTX_INPROC_SERVER
-            , IID_PPV_ARGS(&piImagingFactory)
-        );
+        hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
+                              IID_PPV_ARGS(&piImagingFactory));
     }
 
-    //Convert the SkWStream to an IStream.
+    // Convert the SkWStream to an IStream.
     SkTScopedComPtr<IStream> piStream;
     if (SUCCEEDED(hr)) {
         hr = SkWIStream::CreateFromSkWStream(stream, &piStream);
     }
 
-    //Create an encode of the appropriate type.
+    // Create an encode of the appropriate type.
     SkTScopedComPtr<IWICBitmapEncoder> piEncoder;
     if (SUCCEEDED(hr)) {
         hr = piImagingFactory->CreateEncoder(type, nullptr, &piEncoder);
@@ -129,7 +123,7 @@ bool SkEncodeImageWithWIC(SkWStream* stream, const SkPixmap& pixmap,
         hr = piEncoder->Initialize(piStream.get(), WICBitmapEncoderNoCache);
     }
 
-    //Create a the frame.
+    // Create a the frame.
     SkTScopedComPtr<IWICBitmapFrameEncode> piBitmapFrameEncode;
     SkTScopedComPtr<IPropertyBag2> piPropertybag;
     if (SUCCEEDED(hr)) {
@@ -148,9 +142,9 @@ bool SkEncodeImageWithWIC(SkWStream* stream, const SkPixmap& pixmap,
         value.vt = VT_R4;
         value.fltVal = (FLOAT)(quality / 100.0);
 
-        //Ignore result code.
+        // Ignore result code.
         //  This returns E_FAIL if the named property is not in the bag.
-        //TODO(bungeman) enumerate the properties,
+        // TODO(bungeman) enumerate the properties,
         //  write and set hr iff property exists.
         piPropertybag->Write(1, &name, &value);
     }
@@ -158,29 +152,27 @@ bool SkEncodeImageWithWIC(SkWStream* stream, const SkPixmap& pixmap,
         hr = piBitmapFrameEncode->Initialize(piPropertybag.get());
     }
 
-    //Set the size of the frame.
+    // Set the size of the frame.
     const UINT width = bitmap.width();
     const UINT height = bitmap.height();
     if (SUCCEEDED(hr)) {
         hr = piBitmapFrameEncode->SetSize(width, height);
     }
 
-    //Set the pixel format of the frame.  If native encoded format cannot match BGRA,
-    //it will choose the closest pixel format that it supports.
+    // Set the pixel format of the frame.  If native encoded format cannot match BGRA,
+    // it will choose the closest pixel format that it supports.
     WICPixelFormatGUID formatGUID = formatDesired;
     if (SUCCEEDED(hr)) {
         hr = piBitmapFrameEncode->SetPixelFormat(&formatGUID);
     }
     if (SUCCEEDED(hr)) {
-        //Be sure the image format is the one requested.
+        // Be sure the image format is the one requested.
         hr = IsEqualGUID(formatGUID, formatDesired) ? S_OK : E_FAIL;
     }
 
-    //Write the pixels into the frame.
+    // Write the pixels into the frame.
     if (SUCCEEDED(hr)) {
-        hr = piBitmapFrameEncode->WritePixels(height,
-                                              (UINT) rowBytes,
-                                              (UINT) rowBytes * height,
+        hr = piBitmapFrameEncode->WritePixels(height, (UINT)rowBytes, (UINT)rowBytes * height,
                                               reinterpret_cast<BYTE*>(pixels));
     }
 
@@ -195,4 +187,4 @@ bool SkEncodeImageWithWIC(SkWStream* stream, const SkPixmap& pixmap,
     return SUCCEEDED(hr);
 }
 
-#endif // defined(SK_BUILD_FOR_WIN)
+#endif  // defined(SK_BUILD_FOR_WIN)

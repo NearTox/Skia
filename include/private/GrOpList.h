@@ -8,11 +8,11 @@
 #ifndef GrOpList_DEFINED
 #define GrOpList_DEFINED
 
-#include "GrProxyRef.h"
-#include "GrTextureProxy.h"
-#include "SkColorData.h"
-#include "SkRefCnt.h"
-#include "SkTDArray.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/GrProxyRef.h"
+#include "include/private/GrTextureProxy.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkTDArray.h"
 
 class GrAuditTrail;
 class GrCaps;
@@ -30,7 +30,7 @@ struct SkIRect;
 
 class GrOpList : public SkRefCnt {
 public:
-    GrOpList(GrResourceProvider*, sk_sp<GrOpMemoryPool>, GrSurfaceProxy*, GrAuditTrail*);
+    GrOpList(sk_sp<GrOpMemoryPool>, sk_sp<GrSurfaceProxy>, GrAuditTrail*);
     ~GrOpList() override;
 
     // These four methods are invoked at flush time
@@ -73,24 +73,23 @@ public:
     /*
      * Safely cast this GrOpList to a GrTextureOpList (if possible).
      */
-    virtual GrTextureOpList* asTextureOpList() { return nullptr; }
+    virtual GrTextureOpList* asTextureOpList() noexcept { return nullptr; }
 
     /*
      * Safely case this GrOpList to a GrRenderTargetOpList (if possible).
      */
-    virtual GrRenderTargetOpList* asRenderTargetOpList() { return nullptr; }
+    virtual GrRenderTargetOpList* asRenderTargetOpList() noexcept { return nullptr; }
 
-    uint32_t uniqueID() const { return fUniqueID; }
+    uint32_t uniqueID() const noexcept { return fUniqueID; }
 
     /*
      * Dump out the GrOpList dependency DAG
      */
-    SkDEBUGCODE(virtual void dump(bool printDependencies) const;)
+    SkDEBUGCODE(virtual void dump(bool printDependencies) const);
 
     SkDEBUGCODE(virtual int numClips() const { return 0; })
 
-protected:
-    bool isInstantiated() const;
+            protected : bool isInstantiated() const;
 
     // In addition to just the GrSurface being allocated, has the stencil buffer been allocated (if
     // it is required)?
@@ -100,23 +99,33 @@ protected:
     // In the DDL case, these back pointers keep the DDL's GrOpMemoryPool alive as long as its
     // constituent opLists survive.
     sk_sp<GrOpMemoryPool> fOpMemoryPool;
-    GrSurfaceProxyRef     fTarget;
-    GrAuditTrail*         fAuditTrail;
+    GrSurfaceProxyRef fTarget;
+    GrAuditTrail* fAuditTrail;
 
-    GrLoadOp              fColorLoadOp    = GrLoadOp::kLoad;
-    SkPMColor4f           fLoadClearColor = SK_PMColor4fTRANSPARENT;
-    GrLoadOp              fStencilLoadOp  = GrLoadOp::kLoad;
+    GrLoadOp fColorLoadOp = GrLoadOp::kLoad;
+    SkPMColor4f fLoadClearColor = SK_PMColor4fTRANSPARENT;
+    GrLoadOp fStencilLoadOp = GrLoadOp::kLoad;
 
     // List of texture proxies whose contents are being prepared on a worker thread
     SkTArray<GrTextureProxy*, true> fDeferredProxies;
 
 private:
-    friend class GrDrawingManager; // for resetFlag, TopoSortTraits & gatherProxyIntervals
+    friend class GrDrawingManager;  // for resetFlag, TopoSortTraits & gatherProxyIntervals
+
+    virtual bool onIsUsed(GrSurfaceProxy*) const = 0;
+
+    bool isUsed(GrSurfaceProxy* proxy) const {
+        if (proxy == fTarget.get()) {
+            return true;
+        }
+
+        return this->onIsUsed(proxy);
+    }
 
     void addDependency(GrOpList* dependedOn);
     void addDependent(GrOpList* dependent);
-    SkDEBUGCODE(bool isDependedent(const GrOpList* dependent) const;)
-    SkDEBUGCODE(void validate() const;)
+    SkDEBUGCODE(bool isDependedent(const GrOpList* dependent) const);
+    SkDEBUGCODE(void validate() const);
     void closeThoseWhoDependOnMe(const GrCaps&);
 
     // Remove all Ops which reference proxies that are not instantiated.
@@ -128,23 +137,17 @@ private:
     static uint32_t CreateUniqueID();
 
     enum Flags {
-        kClosed_Flag    = 0x01,   //!< This GrOpList can't accept any more ops
+        kClosed_Flag = 0x01,  //!< This GrOpList can't accept any more ops
 
-        kWasOutput_Flag = 0x02,   //!< Flag for topological sorting
-        kTempMark_Flag  = 0x04,   //!< Flag for topological sorting
+        kWasOutput_Flag = 0x02,  //!< Flag for topological sorting
+        kTempMark_Flag = 0x04,   //!< Flag for topological sorting
     };
 
-    void setFlag(uint32_t flag) {
-        fFlags |= flag;
-    }
+    void setFlag(uint32_t flag) noexcept { fFlags |= flag; }
 
-    void resetFlag(uint32_t flag) {
-        fFlags &= ~flag;
-    }
+    void resetFlag(uint32_t flag) noexcept { fFlags &= ~flag; }
 
-    bool isSetFlag(uint32_t flag) const {
-        return SkToBool(fFlags & flag);
-    }
+    bool isSetFlag(uint32_t flag) const noexcept { return SkToBool(fFlags & flag); }
 
     struct TopoSortTraits {
         static void Output(GrOpList* opList, int /* index */) {
@@ -153,19 +156,15 @@ private:
         static bool WasOutput(const GrOpList* opList) {
             return opList->isSetFlag(GrOpList::kWasOutput_Flag);
         }
-        static void SetTempMark(GrOpList* opList) {
-            opList->setFlag(GrOpList::kTempMark_Flag);
-        }
-        static void ResetTempMark(GrOpList* opList) {
-            opList->resetFlag(GrOpList::kTempMark_Flag);
-        }
+        static void SetTempMark(GrOpList* opList) { opList->setFlag(GrOpList::kTempMark_Flag); }
+        static void ResetTempMark(GrOpList* opList) { opList->resetFlag(GrOpList::kTempMark_Flag); }
         static bool IsTempMarked(const GrOpList* opList) {
             return opList->isSetFlag(GrOpList::kTempMark_Flag);
         }
-        static int NumDependencies(const GrOpList* opList) {
+        static int NumDependencies(const GrOpList* opList) noexcept {
             return opList->fDependencies.count();
         }
-        static GrOpList* Dependency(GrOpList* opList, int index) {
+        static GrOpList* Dependency(GrOpList* opList, int index) noexcept {
             return opList->fDependencies[index];
         }
     };
@@ -173,8 +172,8 @@ private:
     virtual void onPrepare(GrOpFlushState* flushState) = 0;
     virtual bool onExecute(GrOpFlushState* flushState) = 0;
 
-    uint32_t               fUniqueID;
-    uint32_t               fFlags;
+    uint32_t fUniqueID;
+    uint32_t fFlags;
 
     // 'this' GrOpList relies on the output of the GrOpLists in 'fDependencies'
     SkSTArray<1, GrOpList*, true> fDependencies;

@@ -11,7 +11,7 @@
 #ifndef sk_shader_DEFINED
 #define sk_shader_DEFINED
 
-#include "sk_types.h"
+#include "include/c/sk_types.h"
 
 SK_C_PLUS_PLUS_BEGIN_GUARD
 
@@ -48,7 +48,6 @@ sk_shader_t* sk_shader_new_linear_gradient(const sk_point_t points[2],
                                            int colorCount,
                                            sk_shader_tilemode_t tileMode,
                                            const sk_matrix_t* localMatrix);
-
 
 /**
     Returns a shader that generates a radial gradient given the center
@@ -127,16 +126,15 @@ sk_shader_t* sk_shader_new_sweep_gradient(const sk_point_t* center,
     @param localMatrix May be NULL
 
 */
-sk_shader_t* sk_shader_new_two_point_conical_gradient(
-        const sk_point_t* start,
-        float startRadius,
-        const sk_point_t* end,
-        float endRadius,
-        const sk_color_t colors[],
-        const float colorPos[],
-        int colorCount,
-        sk_shader_tilemode_t tileMode,
-        const sk_matrix_t* localMatrix);
+sk_shader_t* sk_shader_new_two_point_conical_gradient(const sk_point_t* start,
+                                                      float startRadius,
+                                                      const sk_point_t* end,
+                                                      float endRadius,
+                                                      const sk_color_t colors[],
+                                                      const float colorPos[],
+                                                      int colorCount,
+                                                      sk_shader_tilemode_t tileMode,
+                                                      const sk_matrix_t* localMatrix);
 
 SK_C_PLUS_PLUS_END_GUARD
 

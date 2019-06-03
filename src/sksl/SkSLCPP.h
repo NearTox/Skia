@@ -11,20 +11,14 @@
 // functions used by CPP programs created by skslc
 
 #include <cmath>
-#include "SkPoint.h"
+#include "include/core/SkPoint.h"
 
 using std::abs;
 
 struct Float4 {
-    Float4(float x, float y, float z, float w)
-    : fX(x)
-    , fY(y)
-    , fZ(z)
-    , fW(w) {}
+    Float4(float x, float y, float z, float w) : fX(x), fY(y), fZ(z), fW(w) {}
 
-    operator SkRect() const {
-        return SkRect::MakeLTRB(fX, fY, fZ, fW);
-    }
+    operator SkRect() const { return SkRect::MakeLTRB(fX, fY, fZ, fW); }
 
 private:
     float fX;

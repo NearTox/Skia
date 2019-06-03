@@ -8,11 +8,11 @@
 #ifndef GrQuad_DEFINED
 #define GrQuad_DEFINED
 
-#include "SkMatrix.h"
-#include "SkNx.h"
-#include "SkPoint.h"
-#include "SkPoint3.h"
-#include "SkTArray.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkPoint3.h"
+#include "include/private/SkTArray.h"
+#include "include/private/SkVx.h"
 
 enum class GrAAType : unsigned;
 enum class GrQuadAAFlags;
@@ -25,27 +25,22 @@ enum class GrQuadAAFlags;
 //  3. Is a quadrilateral - the matrix does not have perspective, but may rotate or skew, or
 //     ws() == all ones.
 //  4. Is a perspective quad - the matrix has perspective, subsuming all previous quad types.
-enum class GrQuadType {
-    kRect,
-    kRectilinear,
-    kStandard,
-    kPerspective,
-    kLast = kPerspective
-};
+enum class GrQuadType { kRect, kRectilinear, kStandard, kPerspective, kLast = kPerspective };
 static const int kGrQuadTypeCount = static_cast<int>(GrQuadType::kLast) + 1;
 
-// If an SkRect is transformed by this matrix, what class of quad is required to represent it. Since
-// quadType() is only provided on Gr[Persp]Quad in debug builds, production code should use this
-// to efficiently determine quad types.
+// If an SkRect is transformed by this matrix, what class of quad is required to represent it.
 GrQuadType GrQuadTypeForTransformedRect(const SkMatrix& matrix);
+// Perform minimal analysis of 'pts' (which are suitable for MakeFromSkQuad), and determine a
+// quad type that will be as minimally general as possible.
+GrQuadType GrQuadTypeForPoints(const SkPoint pts[4], const SkMatrix& matrix);
 
 // Resolve disagreements between the overall requested AA type and the per-edge quad AA flags.
 // knownQuadType must have come from GrQuadTypeForTransformedRect with the matrix that created the
 // provided quad. Both outAAType and outEdgeFlags will be updated.
 template <typename Q>
 void GrResolveAATypeForQuad(GrAAType requestedAAType, GrQuadAAFlags requestedEdgeFlags,
-                            const Q& quad, GrQuadType knownQuadType,
-                            GrAAType* outAAtype, GrQuadAAFlags* outEdgeFlags);
+                            const Q& quad, GrQuadType knownQuadType, GrAAType* outAAtype,
+                            GrQuadAAFlags* outEdgeFlags);
 
 /**
  * GrQuad is a collection of 4 points which can be used to represent an arbitrary quadrilateral. The
@@ -61,7 +56,7 @@ public:
             : fX{rect.fLeft, rect.fLeft, rect.fRight, rect.fRight}
             , fY{rect.fTop, rect.fBottom, rect.fTop, rect.fBottom} {}
 
-    GrQuad(const Sk4f& xs, const Sk4f& ys) {
+    GrQuad(const skvx::Vec<4, float>& xs, const skvx::Vec<4, float>& ys) {
         xs.store(fX);
         ys.store(fY);
     }
@@ -85,25 +80,20 @@ public:
 
     SkRect bounds() const {
         auto x = this->x4f(), y = this->y4f();
-        return {x.min(), y.min(), x.max(), y.max()};
+        return {min(x), min(y), max(x), max(y)};
     }
 
     float x(int i) const { return fX[i]; }
     float y(int i) const { return fY[i]; }
 
-    Sk4f x4f() const { return Sk4f::Load(fX); }
-    Sk4f y4f() const { return Sk4f::Load(fY); }
+    skvx::Vec<4, float> x4f() const { return skvx::Vec<4, float>::Load(fX); }
+    skvx::Vec<4, float> y4f() const { return skvx::Vec<4, float>::Load(fY); }
 
-    // True if anti-aliasing affects this quad. Requires quadType() == kRect_QuadType
+    // True if anti-aliasing affects this quad. Only valid when quadType == kRect_QuadType
     bool aaHasEffectOnRect() const;
 
-#ifdef SK_DEBUG
-    GrQuadType quadType() const;
-#endif
-
 private:
-    template<typename T>
-    friend class GrQuadListBase;
+    template <typename T> friend class GrQuadListBase;
 
     float fX[4];
     float fY[4];
@@ -118,13 +108,14 @@ public:
             , fY{rect.fTop, rect.fBottom, rect.fTop, rect.fBottom}
             , fW{1.f, 1.f, 1.f, 1.f} {}
 
-    GrPerspQuad(const Sk4f& xs, const Sk4f& ys) {
+    GrPerspQuad(const skvx::Vec<4, float>& xs, const skvx::Vec<4, float>& ys) {
         xs.store(fX);
         ys.store(fY);
         fW[0] = fW[1] = fW[2] = fW[3] = 1.f;
     }
 
-    GrPerspQuad(const Sk4f& xs, const Sk4f& ys, const Sk4f& ws) {
+    GrPerspQuad(const skvx::Vec<4, float>& xs, const skvx::Vec<4, float>& ys,
+                const skvx::Vec<4, float>& ws) {
         xs.store(fX);
         ys.store(fY);
         ws.store(fW);
@@ -142,17 +133,15 @@ public:
     SkPoint3 point(int i) const { return {fX[i], fY[i], fW[i]}; }
 
     SkRect bounds(GrQuadType type) const {
-        SkASSERT(this->quadType() <= type);
-
-        Sk4f x = this->x4f();
-        Sk4f y = this->y4f();
+        auto x = this->x4f();
+        auto y = this->y4f();
         if (type == GrQuadType::kPerspective) {
-            Sk4f iw = this->iw4f();
+            auto iw = this->iw4f();
             x *= iw;
             y *= iw;
         }
 
-        return {x.min(), y.min(), x.max(), y.max()};
+        return {min(x), min(y), max(x), max(y)};
     }
 
     float x(int i) const { return fX[i]; }
@@ -160,23 +149,18 @@ public:
     float w(int i) const { return fW[i]; }
     float iw(int i) const { return sk_ieee_float_divide(1.f, fW[i]); }
 
-    Sk4f x4f() const { return Sk4f::Load(fX); }
-    Sk4f y4f() const { return Sk4f::Load(fY); }
-    Sk4f w4f() const { return Sk4f::Load(fW); }
-    Sk4f iw4f() const { return this->w4f().invert(); }
+    skvx::Vec<4, float> x4f() const { return skvx::Vec<4, float>::Load(fX); }
+    skvx::Vec<4, float> y4f() const { return skvx::Vec<4, float>::Load(fY); }
+    skvx::Vec<4, float> w4f() const { return skvx::Vec<4, float>::Load(fW); }
+    skvx::Vec<4, float> iw4f() const { return 1.f / this->w4f(); }
 
-    bool hasPerspective() const { return (w4f() != Sk4f(1.f)).anyTrue(); }
+    bool hasPerspective() const { return any(w4f() != 1.f); }
 
-    // True if anti-aliasing affects this quad. Requires quadType() == kRect_QuadType
+    // True if anti-aliasing affects this quad. Only valid when quadType == kRect_QuadType
     bool aaHasEffectOnRect() const;
 
-#ifdef SK_DEBUG
-    GrQuadType quadType() const;
-#endif
-
 private:
-    template<typename T>
-    friend class GrQuadListBase;
+    template <typename T> friend class GrQuadListBase;
 
     // Copy 4 values from each of the arrays into the quad's components
     GrPerspQuad(const float xs[4], const float ys[4], const float ws[4]);
@@ -188,15 +172,13 @@ private:
 
 // Underlying data used by GrQuadListBase. It is defined outside of GrQuadListBase due to compiler
 // issues related to specializing member types.
-template<typename T>
-struct QuadData {
+template <typename T> struct QuadData {
     float fX[4];
     float fY[4];
     T fMetadata;
 };
 
-template<>
-struct QuadData<void> {
+template <> struct QuadData<void> {
     float fX[4];
     float fY[4];
 };
@@ -205,10 +187,8 @@ struct QuadData<void> {
 // added quads. It avoids storing the 3rd component if the quad type never becomes perspective.
 // Use GrQuadList subclass when only storing quads. Use GrTQuadList subclass when storing quads
 // and per-quad templated metadata (such as color or domain).
-template<typename T>
-class GrQuadListBase {
+template <typename T> class GrQuadListBase {
 public:
-
     int count() const { return fXYs.count(); }
 
     GrQuadType quadType() const { return fType; }
@@ -220,7 +200,7 @@ public:
         }
     }
 
-    GrPerspQuad operator[] (int i) const {
+    GrPerspQuad operator[](int i) const {
         SkASSERT(i < this->count());
         SkASSERT(i >= 0);
 
@@ -258,8 +238,6 @@ protected:
 
     // Returns the added item data so that its metadata can be initialized if T is not void
     QuadData<T>& pushBackImpl(const GrQuad& quad, GrQuadType type) {
-        SkASSERT(quad.quadType() <= type);
-
         this->upgradeType(type);
         QuadData<T>& item = fXYs.push_back();
         memcpy(item.fX, quad.fX, 4 * sizeof(float));
@@ -271,8 +249,6 @@ protected:
     }
 
     QuadData<T>& pushBackImpl(const GrPerspQuad& quad, GrQuadType type) {
-        SkASSERT(quad.quadType() <= type);
-
         this->upgradeType(type);
         QuadData<T>& item = fXYs.push_back();
         memcpy(item.fX, quad.fX, 4 * sizeof(float));
@@ -283,13 +259,9 @@ protected:
         return item;
     }
 
-    const QuadData<T>& item(int i) const {
-        return fXYs[i];
-    }
+    const QuadData<T>& item(int i) const { return fXYs[i]; }
 
-    QuadData<T>& item(int i) {
-        return fXYs[i];
-    }
+    QuadData<T>& item(int i) { return fXYs[i]; }
 
 private:
     void upgradeType(GrQuadType type) {
@@ -317,17 +289,11 @@ class GrQuadList : public GrQuadListBase<void> {
 public:
     GrQuadList() : INHERITED() {}
 
-    void concat(const GrQuadList& that) {
-        this->concatImpl(that);
-    }
+    void concat(const GrQuadList& that) { this->concatImpl(that); }
 
-    void push_back(const GrQuad& quad, GrQuadType type) {
-        this->pushBackImpl(quad, type);
-    }
+    void push_back(const GrQuad& quad, GrQuadType type) { this->pushBackImpl(quad, type); }
 
-    void push_back(const GrPerspQuad& quad, GrQuadType type) {
-        this->pushBackImpl(quad, type);
-    }
+    void push_back(const GrPerspQuad& quad, GrQuadType type) { this->pushBackImpl(quad, type); }
 
 private:
     typedef GrQuadListBase<void> INHERITED;
@@ -335,14 +301,11 @@ private:
 
 // This variant of the list allows simple metadata to be stored per quad as well, such as color
 // or texture domain.
-template<typename T>
-class GrTQuadList : public GrQuadListBase<T> {
+template <typename T> class GrTQuadList : public GrQuadListBase<T> {
 public:
     GrTQuadList() : INHERITED() {}
 
-    void concat(const GrTQuadList<T>& that) {
-        this->concatImpl(that);
-    }
+    void concat(const GrTQuadList<T>& that) { this->concatImpl(that); }
 
     // Adding to the list requires metadata
     void push_back(const GrQuad& quad, GrQuadType type, T&& metadata) {
@@ -356,13 +319,9 @@ public:
     }
 
     // And provide access to the metadata per quad
-    const T& metadata(int i) const {
-        return this->item(i).fMetadata;
-    }
+    const T& metadata(int i) const { return this->item(i).fMetadata; }
 
-    T& metadata(int i) {
-        return this->item(i).fMetadata;
-    }
+    T& metadata(int i) { return this->item(i).fMetadata; }
 
 private:
     typedef GrQuadListBase<T> INHERITED;

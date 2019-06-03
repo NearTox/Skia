@@ -8,8 +8,8 @@
 #ifndef GrCopySurfaceOp_DEFINED
 #define GrCopySurfaceOp_DEFINED
 
-#include "GrOp.h"
-#include "GrOpFlushState.h"
+#include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/ops/GrOp.h"
 
 class GrRecordingContext;
 
@@ -30,25 +30,21 @@ public:
 #ifdef SK_DEBUG
     SkString dumpInfo() const override {
         SkString string;
-        string.append(INHERITED::dumpInfo());
-        string.printf("srcProxyID: %d,\n"
-                      "srcRect: [ L: %d, T: %d, R: %d, B: %d ], dstPt: [ X: %d, Y: %d ]\n",
-                      fSrc.get()->uniqueID().asUInt(),
-                      fSrcRect.fLeft, fSrcRect.fTop, fSrcRect.fRight, fSrcRect.fBottom,
-                      fDstPoint.fX, fDstPoint.fY);
+        string = INHERITED::dumpInfo();
+        string.appendf(
+                "srcProxyID: %d,\n"
+                "srcRect: [ L: %d, T: %d, R: %d, B: %d ], dstPt: [ X: %d, Y: %d ]\n",
+                fSrc.get()->uniqueID().asUInt(), fSrcRect.fLeft, fSrcRect.fTop, fSrcRect.fRight,
+                fSrcRect.fBottom, fDstPoint.fX, fDstPoint.fY);
         return string;
     }
 #endif
 
 private:
-    friend class GrOpMemoryPool; // for ctor
+    friend class GrOpMemoryPool;  // for ctor
 
-    GrCopySurfaceOp(GrSurfaceProxy* dst, GrSurfaceProxy* src,
-                    const SkIRect& srcRect, const SkIPoint& dstPoint)
-            : INHERITED(ClassID())
-            , fSrc(src)
-            , fSrcRect(srcRect)
-            , fDstPoint(dstPoint) {
+    GrCopySurfaceOp(GrSurfaceProxy* src, const SkIRect& srcRect, const SkIPoint& dstPoint)
+            : INHERITED(ClassID()), fSrc(src), fSrcRect(srcRect), fDstPoint(dstPoint) {
         SkRect bounds =
                 SkRect::MakeXYWH(SkIntToScalar(dstPoint.fX), SkIntToScalar(dstPoint.fY),
                                  SkIntToScalar(srcRect.width()), SkIntToScalar(srcRect.height()));
@@ -59,9 +55,9 @@ private:
 
     void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
 
-    GrPendingIOResource<GrSurfaceProxy, kRead_GrIOType>  fSrc;
-    SkIRect                                              fSrcRect;
-    SkIPoint                                             fDstPoint;
+    GrPendingIOResource<GrSurfaceProxy, kRead_GrIOType> fSrc;
+    SkIRect fSrcRect;
+    SkIPoint fDstPoint;
 
     typedef GrOp INHERITED;
 };

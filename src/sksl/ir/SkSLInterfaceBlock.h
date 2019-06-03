@@ -8,9 +8,9 @@
 #ifndef SKSL_INTERFACEBLOCK
 #define SKSL_INTERFACEBLOCK
 
-#include "SkSLProgramElement.h"
-#include "SkSLSymbolTable.h"
-#include "SkSLVarDeclarations.h"
+#include "src/sksl/ir/SkSLProgramElement.h"
+#include "src/sksl/ir/SkSLSymbolTable.h"
+#include "src/sksl/ir/SkSLVarDeclarations.h"
 
 namespace SkSL {
 
@@ -28,22 +28,20 @@ struct InterfaceBlock : public ProgramElement {
     InterfaceBlock(int offset, const Variable* var, String typeName, String instanceName,
                    std::vector<std::unique_ptr<Expression>> sizes,
                    std::shared_ptr<SymbolTable> typeOwner)
-    : INHERITED(offset, kInterfaceBlock_Kind)
-    , fVariable(*var)
-    , fTypeName(std::move(typeName))
-    , fInstanceName(std::move(instanceName))
-    , fSizes(std::move(sizes))
-    , fTypeOwner(typeOwner) {}
+            : INHERITED(offset, kInterfaceBlock_Kind)
+            , fVariable(*var)
+            , fTypeName(std::move(typeName))
+            , fInstanceName(std::move(instanceName))
+            , fSizes(std::move(sizes))
+            , fTypeOwner(typeOwner) {}
 
     std::unique_ptr<ProgramElement> clone() const override {
         std::vector<std::unique_ptr<Expression>> sizesClone;
         for (const auto& s : fSizes) {
             sizesClone.push_back(s->clone());
         }
-        return std::unique_ptr<ProgramElement>(new InterfaceBlock(fOffset, &fVariable, fTypeName,
-                                                                  fInstanceName,
-                                                                  std::move(sizesClone),
-                                                                  fTypeOwner));
+        return std::unique_ptr<ProgramElement>(new InterfaceBlock(
+                fOffset, &fVariable, fTypeName, fInstanceName, std::move(sizesClone), fTypeOwner));
     }
 
     String description() const override {
@@ -78,6 +76,6 @@ struct InterfaceBlock : public ProgramElement {
     typedef ProgramElement INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

@@ -5,24 +5,24 @@
  * found in the LICENSE file.
  */
 
-#include "SkSLPipelineStageCodeGenerator.h"
+#include "src/sksl/SkSLPipelineStageCodeGenerator.h"
 
-#include "SkSLCompiler.h"
-#include "SkSLHCodeGenerator.h"
+#include "src/sksl/SkSLCompiler.h"
+#include "src/sksl/SkSLHCodeGenerator.h"
 
 namespace SkSL {
 
 PipelineStageCodeGenerator::PipelineStageCodeGenerator(
-                                                    const Context* context,
-                                                    const Program* program,
-                                                    ErrorReporter* errors,
-                                                    OutputStream* out,
-                                                    std::vector<Compiler::FormatArg>* outFormatArgs)
-: INHERITED(context, program, errors, out)
-, fName("Temp")
-, fFullName(String::printf("Gr%s", fName.c_str()))
-, fSectionAndParameterHelper(*program, *errors)
-, fFormatArgs(outFormatArgs) {}
+        const Context* context,
+        const Program* program,
+        ErrorReporter* errors,
+        OutputStream* out,
+        std::vector<Compiler::FormatArg>* outFormatArgs)
+        : INHERITED(context, program, errors, out)
+        , fName("Temp")
+        , fFullName(String::printf("Gr%s", fName.c_str()))
+        , fSectionAndParameterHelper(*program, *errors)
+        , fFormatArgs(outFormatArgs) {}
 
 void PipelineStageCodeGenerator::writef(const char* s, va_list va) {
     static constexpr int BUFFER_SIZE = 1024;
@@ -47,19 +47,14 @@ void PipelineStageCodeGenerator::writef(const char* s, ...) {
     va_end(va);
 }
 
-void PipelineStageCodeGenerator::writeHeader() {
-}
+void PipelineStageCodeGenerator::writeHeader() {}
 
-bool PipelineStageCodeGenerator::usesPrecisionModifiers() const {
-    return false;
-}
+bool PipelineStageCodeGenerator::usesPrecisionModifiers() const { return false; }
 
-String PipelineStageCodeGenerator::getTypeName(const Type& type) {
-    return type.name();
-}
+String PipelineStageCodeGenerator::getTypeName(const Type& type) { return type.name(); }
 
 void PipelineStageCodeGenerator::writeBinaryExpression(const BinaryExpression& b,
-                                             Precedence parentPrecedence) {
+                                                       Precedence parentPrecedence) {
     if (b.fOperator == Token::PERCENT) {
         // need to use "%%" instead of "%" b/c the code will be inside of a printf
         Precedence precedence = GetBinaryPrecedence(b.fOperator);
@@ -85,10 +80,10 @@ void PipelineStageCodeGenerator::writeFunctionCall(const FunctionCall& c) {
         bool found = false;
         for (const auto& p : fProgram) {
             if (ProgramElement::kVar_Kind == p.fKind) {
-                const VarDeclarations& decls = (const VarDeclarations&) p;
+                const VarDeclarations& decls = (const VarDeclarations&)p;
                 for (const auto& raw : decls.fVars) {
-                    VarDeclaration& decl = (VarDeclaration&) *raw;
-                    if (decl.fVar == &((VariableReference&) *c.fArguments[0]).fVariable) {
+                    VarDeclaration& decl = (VarDeclaration&)*raw;
+                    if (decl.fVar == &((VariableReference&)*c.fArguments[0]).fVariable) {
                         found = true;
                     } else if (decl.fVar->fType == *fContext.fFragmentProcessor_Type) {
                         ++index;
@@ -103,15 +98,15 @@ void PipelineStageCodeGenerator::writeFunctionCall(const FunctionCall& c) {
         fExtraEmitCodeCode += "        this->emitChild(" + to_string(index) + ", fChildren[" +
                               to_string(index) + "], args);\n";
         this->write("%s");
-        fFormatArgs->push_back(Compiler::FormatArg(Compiler::FormatArg::Kind::kChildProcessor,
-                                                   index));
+        fFormatArgs->push_back(
+                Compiler::FormatArg(Compiler::FormatArg::Kind::kChildProcessor, index));
         return;
     }
     INHERITED::writeFunctionCall(c);
 }
 
 void PipelineStageCodeGenerator::writeIntLiteral(const IntLiteral& i) {
-    this->write(to_string((int32_t) i.fValue));
+    this->write(to_string((int32_t)i.fValue));
 }
 
 void PipelineStageCodeGenerator::writeVariableReference(const VariableReference& ref) {
@@ -140,25 +135,23 @@ void PipelineStageCodeGenerator::writeVariableReference(const VariableReference&
                         break;
                     }
                     if (e.fKind == ProgramElement::Kind::kVar_Kind) {
-                        const VarDeclarations& decls = (const VarDeclarations&) e;
+                        const VarDeclarations& decls = (const VarDeclarations&)e;
                         for (const auto& decl : decls.fVars) {
-                            const Variable& var = *((VarDeclaration&) *decl).fVar;
+                            const Variable& var = *((VarDeclaration&)*decl).fVar;
                             if (&var == &ref.fVariable) {
                                 found = true;
                                 break;
                             }
-                            if (var.fModifiers.fFlags & (Modifiers::kIn_Flag |
-                                                         Modifiers::kUniform_Flag)) {
+                            if (var.fModifiers.fFlags & Modifiers::kUniform_Flag) {
                                 ++index;
                             }
                         }
                     }
                 }
                 SkASSERT(found);
-                fFormatArgs->push_back(Compiler::FormatArg(Compiler::FormatArg::Kind::kUniform,
-                                                           index));
-            }
-            else {
+                fFormatArgs->push_back(
+                        Compiler::FormatArg(Compiler::FormatArg::Kind::kUniform, index));
+            } else {
                 this->write(ref.fVariable.fName);
             }
     }
@@ -179,6 +172,7 @@ void PipelineStageCodeGenerator::writeSwitchStatement(const SwitchStatement& s) 
 }
 
 void PipelineStageCodeGenerator::writeFunction(const FunctionDefinition& f) {
+    fCurrentFunction = &f.fDeclaration;
     if (f.fDeclaration.fName == "main") {
         fFunctionHeader = "";
         OutputStream* oldOut = fOut;
@@ -187,7 +181,7 @@ void PipelineStageCodeGenerator::writeFunction(const FunctionDefinition& f) {
         this->write("%s = %s;\n");
         fFormatArgs->push_back(Compiler::FormatArg(Compiler::FormatArg::Kind::kOutput));
         fFormatArgs->push_back(Compiler::FormatArg(Compiler::FormatArg::Kind::kInput));
-        for (const auto& s : ((Block&) *f.fBody).fStatements) {
+        for (const auto& s : ((Block&)*f.fBody).fStatements) {
             this->writeStatement(*s);
             this->writeLine();
         }
@@ -214,11 +208,11 @@ void PipelineStageCodeGenerator::writeProgramElement(const ProgramElement& p) {
         return;
     }
     if (p.fKind == ProgramElement::kVar_Kind) {
-        const VarDeclarations& decls = (const VarDeclarations&) p;
+        const VarDeclarations& decls = (const VarDeclarations&)p;
         if (!decls.fVars.size()) {
             return;
         }
-        const Variable& var = *((VarDeclaration&) *decls.fVars[0]).fVar;
+        const Variable& var = *((VarDeclaration&)*decls.fVars[0]).fVar;
         if (var.fModifiers.fFlags & (Modifiers::kIn_Flag | Modifiers::kUniform_Flag) ||
             -1 != var.fModifiers.fLayout.fBuiltin) {
             return;
@@ -227,4 +221,4 @@ void PipelineStageCodeGenerator::writeProgramElement(const ProgramElement& p) {
     INHERITED::writeProgramElement(p);
 }
 
-} // namespace
+}  // namespace SkSL

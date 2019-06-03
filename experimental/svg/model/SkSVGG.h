@@ -8,7 +8,7 @@
 #ifndef SkSVGG_DEFINED
 #define SkSVGG_DEFINED
 
-#include "SkSVGContainer.h"
+#include "experimental/svg/model/SkSVGContainer.h"
 
 class SkSVGG : public SkSVGContainer {
 public:
@@ -17,9 +17,9 @@ public:
     static sk_sp<SkSVGG> Make() { return sk_sp<SkSVGG>(new SkSVGG()); }
 
 private:
-    SkSVGG() : INHERITED(SkSVGTag::kG) { }
+    SkSVGG() : INHERITED(SkSVGTag::kG) {}
 
     typedef SkSVGContainer INHERITED;
 };
 
-#endif // SkSVGG_DEFINED
+#endif  // SkSVGG_DEFINED

@@ -8,51 +8,38 @@
 #ifndef SkFloatUtils_DEFINED
 #define SkFloatUtils_DEFINED
 
-#include "SkTypes.h"
-#include <limits.h>
 #include <float.h>
+#include <limits.h>
+#include "include/core/SkTypes.h"
 
-template <size_t size>
-class SkTypeWithSize {
+template <size_t size> class SkTypeWithSize {
 public:
     // Prevents using SkTypeWithSize<N> with non-specialized N.
     typedef void UInt;
 };
 
-template <>
-class SkTypeWithSize<32> {
+template <> class SkTypeWithSize<32> {
 public:
     typedef uint32_t UInt;
 };
 
-template <>
-class SkTypeWithSize<64> {
+template <> class SkTypeWithSize<64> {
 public:
     typedef uint64_t UInt;
 };
 
-template <typename RawType>
-struct SkNumericLimits {
-    static const int digits = 0;
-};
+template <typename RawType> struct SkNumericLimits { static const int digits = 0; };
 
-template <>
-struct SkNumericLimits<double> {
-    static const int digits = DBL_MANT_DIG;
-};
+template <> struct SkNumericLimits<double> { static const int digits = DBL_MANT_DIG; };
 
-template <>
-struct SkNumericLimits<float> {
-    static const int digits = FLT_MANT_DIG;
-};
+template <> struct SkNumericLimits<float> { static const int digits = FLT_MANT_DIG; };
 
-//See
-//http://stackoverflow.com/questions/17333/most-effective-way-for-float-and-double-comparison/3423299#3423299
-//http://code.google.com/p/googletest/source/browse/trunk/include/gtest/internal/gtest-internal.h
-//http://www.cygnus-software.com/papers/comparingfloats/comparingfloats.htm
+// See
+// http://stackoverflow.com/questions/17333/most-effective-way-for-float-and-double-comparison/3423299#3423299
+// http://code.google.com/p/googletest/source/browse/trunk/include/gtest/internal/gtest-internal.h
+// http://www.cygnus-software.com/papers/comparingfloats/comparingfloats.htm
 
-template <typename RawType, unsigned int ULPs>
-class SkFloatingPoint {
+template <typename RawType, unsigned int ULPs> class SkFloatingPoint {
 public:
     /** Bits is a unsigned integer the same size as the floating point number. */
     typedef typename SkTypeWithSize<sizeof(RawType) * CHAR_BIT>::UInt Bits;
@@ -70,8 +57,7 @@ public:
     static const Bits kSignBitMask = static_cast<Bits>(1) << (kBitCount - 1);
 
     /** The mask for the fraction bits. */
-    static const Bits kFractionBitMask =
-        ~static_cast<Bits>(0) >> (kExponentBitCount + 1);
+    static const Bits kFractionBitMask = ~static_cast<Bits>(0) >> (kExponentBitCount + 1);
 
     /** The mask for the exponent bits. */
     static const Bits kExponentBitMask = ~(kSignBitMask | kFractionBitMask);
@@ -114,9 +100,8 @@ public:
         // Any comparison operation involving a NAN must return false.
         if (is_nan() || rhs.is_nan()) return false;
 
-        const Bits dist = DistanceBetweenSignAndMagnitudeNumbers(fU.bits,
-                                                                 rhs.fU.bits);
-        //SkDEBUGF("(%f, %f, %d) ", u_.value_, rhs.u_.value_, dist);
+        const Bits dist = DistanceBetweenSignAndMagnitudeNumbers(fU.bits, rhs.fU.bits);
+        // SkDEBUGF("(%f, %f, %d) ", u_.value_, rhs.u_.value_, dist);
         return dist <= kMaxUlps;
     }
 
@@ -146,7 +131,7 @@ private:
      *  Read http://en.wikipedia.org/wiki/Signed_number_representations
      *  for more details on signed number representations.
      */
-    static Bits SignAndMagnitudeToBiased(const Bits &sam) {
+    static Bits SignAndMagnitudeToBiased(const Bits& sam) {
         if (kSignBitMask & sam) {
             // sam represents a negative number.
             return ~sam + 1;
@@ -160,8 +145,7 @@ private:
      *  Given two numbers in the sign-and-magnitude representation,
      *  returns the distance between them as an unsigned number.
      */
-    static Bits DistanceBetweenSignAndMagnitudeNumbers(const Bits &sam1,
-                                                       const Bits &sam2) {
+    static Bits DistanceBetweenSignAndMagnitudeNumbers(const Bits& sam1, const Bits& sam2) {
         const Bits biased1 = SignAndMagnitudeToBiased(sam1);
         const Bits biased2 = SignAndMagnitudeToBiased(sam2);
         return (biased1 >= biased2) ? (biased1 - biased2) : (biased2 - biased1);

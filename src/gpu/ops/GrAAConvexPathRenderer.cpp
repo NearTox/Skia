@@ -5,31 +5,30 @@
  * found in the LICENSE file.
  */
 
-#include "GrAAConvexPathRenderer.h"
-#include "GrCaps.h"
-#include "GrDrawOpTest.h"
-#include "GrGeometryProcessor.h"
-#include "GrPathUtils.h"
-#include "GrProcessor.h"
-#include "GrRenderTargetContext.h"
-#include "GrShape.h"
-#include "GrSimpleMeshDrawOpHelper.h"
-#include "GrVertexWriter.h"
-#include "SkGeometry.h"
-#include "SkPathPriv.h"
-#include "SkPointPriv.h"
-#include "SkString.h"
-#include "SkTypes.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLGeometryProcessor.h"
-#include "glsl/GrGLSLProgramDataManager.h"
-#include "glsl/GrGLSLUniformHandler.h"
-#include "glsl/GrGLSLVarying.h"
-#include "glsl/GrGLSLVertexGeoBuilder.h"
-#include "ops/GrMeshDrawOp.h"
+#include "src/gpu/ops/GrAAConvexPathRenderer.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "src/core/SkGeometry.h"
+#include "src/core/SkPathPriv.h"
+#include "src/core/SkPointPriv.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrDrawOpTest.h"
+#include "src/gpu/GrGeometryProcessor.h"
+#include "src/gpu/GrPathUtils.h"
+#include "src/gpu/GrProcessor.h"
+#include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/GrShape.h"
+#include "src/gpu/GrVertexWriter.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#include "src/gpu/glsl/GrGLSLVarying.h"
+#include "src/gpu/glsl/GrGLSLVertexGeoBuilder.h"
+#include "src/gpu/ops/GrMeshDrawOp.h"
+#include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 
-GrAAConvexPathRenderer::GrAAConvexPathRenderer() {
-}
+GrAAConvexPathRenderer::GrAAConvexPathRenderer() {}
 
 struct Segment {
     enum {
@@ -178,15 +177,10 @@ static bool compute_vectors(SegmentArray* segments,
 struct DegenerateTestData {
     DegenerateTestData() { fStage = kInitial; }
     bool isDegenerate() const { return kNonDegenerate != fStage; }
-    enum {
-        kInitial,
-        kPoint,
-        kLine,
-        kNonDegenerate
-    }           fStage;
-    SkPoint     fFirstPoint;
-    SkVector    fLineNormal;
-    SkScalar    fLineC;
+    enum { kInitial, kPoint, kLine, kNonDegenerate } fStage;
+    SkPoint fFirstPoint;
+    SkVector fLineNormal;
+    SkScalar fLineC;
 };
 
 static const SkScalar kClose = (SK_Scalar1 / 16);
@@ -226,24 +220,21 @@ static inline bool get_direction(const SkPath& path, const SkMatrix& m,
     // check whether m reverses the orientation
     SkASSERT(!m.hasPerspective());
     SkScalar det2x2 = m.get(SkMatrix::kMScaleX) * m.get(SkMatrix::kMScaleY) -
-                      m.get(SkMatrix::kMSkewX)  * m.get(SkMatrix::kMSkewY);
+                      m.get(SkMatrix::kMSkewX) * m.get(SkMatrix::kMSkewY);
     if (det2x2 < 0) {
         *dir = SkPathPriv::OppositeFirstDirection(*dir);
     }
     return true;
 }
 
-static inline void add_line_to_segment(const SkPoint& pt,
-                                       SegmentArray* segments) {
+static inline void add_line_to_segment(const SkPoint& pt, SegmentArray* segments) {
     segments->push_back();
     segments->back().fType = Segment::kLine;
     segments->back().fPts[0] = pt;
 }
 
-static inline void add_quad_segment(const SkPoint pts[3],
-                                    SegmentArray* segments) {
-    if (SkPointPriv::DistanceToSqd(pts[0], pts[1]) < kCloseSqd ||
-        SkPointPriv::DistanceToSqd(pts[1], pts[2]) < kCloseSqd) {
+static inline void add_quad_segment(const SkPoint pts[3], SegmentArray* segments) {
+    if (SkPointPriv::DistanceToLineSegmentBetweenSqd(pts[1], pts[0], pts[2]) < kCloseSqd) {
         if (pts[0] != pts[2]) {
             add_line_to_segment(pts[2], segments);
         }
@@ -313,9 +304,9 @@ static bool get_segments(const SkPath& path,
                 SkAutoConicToQuads converter;
                 const SkPoint* quadPts = converter.computeQuads(pts, weight, 0.25f);
                 for (int i = 0; i < converter.countQuads(); ++i) {
-                    update_degenerate_test(&degenerateData, quadPts[2*i + 1]);
-                    update_degenerate_test(&degenerateData, quadPts[2*i + 2]);
-                    add_quad_segment(quadPts + 2*i, segments);
+                    update_degenerate_test(&degenerateData, quadPts[2 * i + 1]);
+                    update_degenerate_test(&degenerateData, quadPts[2 * i + 2]);
+                    add_quad_segment(quadPts + 2 * i, segments);
                 }
                 break;
             }
@@ -381,14 +372,14 @@ static void create_vertices(const SegmentArray& segments,
             i = &draw->fIndexCnt;
         }
 
-        const SkScalar negOneDists[2] = { -SK_Scalar1, -SK_Scalar1 };
+        const SkScalar negOneDists[2] = {-SK_Scalar1, -SK_Scalar1};
 
         // FIXME: These tris are inset in the 1 unit arc around the corner
         SkPoint p0 = sega.endPt();
         // Position, Color, UV, D0, D1
-        verts.write(p0,                  color, SkPoint{0, 0},           negOneDists);
+        verts.write(p0, color, SkPoint{0, 0}, negOneDists);
         verts.write(p0 + sega.endNorm(), color, SkPoint{0, -SK_Scalar1}, negOneDists);
-        verts.write(p0 + segb.fMid,      color, SkPoint{0, -SK_Scalar1}, negOneDists);
+        verts.write(p0 + segb.fMid, color, SkPoint{0, -SK_Scalar1}, negOneDists);
         verts.write(p0 + segb.fNorms[0], color, SkPoint{0, -SK_Scalar1}, negOneDists);
 
         idxs[*i + 0] = *v + 0;
@@ -408,9 +399,9 @@ static void create_vertices(const SegmentArray& segments,
             SkPoint v2Pos = segb.fPts[0];
             SkScalar dist = SkPointPriv::DistanceToLineBetween(fanPt, v1Pos, v2Pos);
 
-            verts.write(fanPt,                  color, SkPoint{0, dist},        negOneDists);
-            verts.write(v1Pos,                  color, SkPoint{0, 0},           negOneDists);
-            verts.write(v2Pos,                  color, SkPoint{0, 0},           negOneDists);
+            verts.write(fanPt, color, SkPoint{0, dist}, negOneDists);
+            verts.write(v1Pos, color, SkPoint{0, 0}, negOneDists);
+            verts.write(v2Pos, color, SkPoint{0, 0}, negOneDists);
             verts.write(v1Pos + segb.fNorms[0], color, SkPoint{0, -SK_Scalar1}, negOneDists);
             verts.write(v2Pos + segb.fNorms[0], color, SkPoint{0, -SK_Scalar1}, negOneDists);
 
@@ -445,38 +436,23 @@ static void create_vertices(const SegmentArray& segments,
             SkScalar c1 = segb.fNorms[1].dot(qpts[2]);
             GrVertexWriter::Skip<SkPoint> skipUVs;
 
-            verts.write(fanPt,
-                        color, skipUVs,
-                        -segb.fNorms[0].dot(fanPt) + c0,
+            verts.write(fanPt, color, skipUVs, -segb.fNorms[0].dot(fanPt) + c0,
                         -segb.fNorms[1].dot(fanPt) + c1);
 
-            verts.write(qpts[0],
-                        color, skipUVs,
-                        0.0f,
-                        -segb.fNorms[1].dot(qpts[0]) + c1);
+            verts.write(qpts[0], color, skipUVs, 0.0f, -segb.fNorms[1].dot(qpts[0]) + c1);
 
-            verts.write(qpts[2],
-                        color, skipUVs,
-                        -segb.fNorms[0].dot(qpts[2]) + c0,
-                        0.0f);
+            verts.write(qpts[2], color, skipUVs, -segb.fNorms[0].dot(qpts[2]) + c0, 0.0f);
 
-            verts.write(qpts[0] + segb.fNorms[0],
-                        color, skipUVs,
-                        -SK_ScalarMax/100,
-                        -SK_ScalarMax/100);
+            verts.write(qpts[0] + segb.fNorms[0], color, skipUVs, -SK_ScalarMax / 100,
+                        -SK_ScalarMax / 100);
 
-            verts.write(qpts[2] + segb.fNorms[1],
-                        color, skipUVs,
-                        -SK_ScalarMax/100,
-                        -SK_ScalarMax/100);
+            verts.write(qpts[2] + segb.fNorms[1], color, skipUVs, -SK_ScalarMax / 100,
+                        -SK_ScalarMax / 100);
 
             SkVector midVec = segb.fNorms[0] + segb.fNorms[1];
             midVec.normalize();
 
-            verts.write(qpts[1] + midVec,
-                        color, skipUVs,
-                        -SK_ScalarMax/100,
-                        -SK_ScalarMax/100);
+            verts.write(qpts[1] + midVec, color, skipUVs, -SK_ScalarMax / 100, -SK_ScalarMax / 100);
 
             GrPathUtils::QuadUVMatrix toUV(qpts);
             toUV.apply(quadVertsBegin, 6, vertexStride, uvOffset);
@@ -576,14 +552,16 @@ public:
             // today we know z and w are in device space. We could use derivatives
             fragBuilder->codeAppendf("edgeAlpha = min(min(%s.z, %s.w) + 0.5, 1.0);", v.fsIn(),
                                      v.fsIn());
-            fragBuilder->codeAppendf ("} else {");
-            fragBuilder->codeAppendf("half2 gF = half2(2.0*%s.x*duvdx.x - duvdx.y,"
-                                     "               2.0*%s.x*duvdy.x - duvdy.y);",
-                                     v.fsIn(), v.fsIn());
+            fragBuilder->codeAppendf("} else {");
+            fragBuilder->codeAppendf(
+                    "half2 gF = half2(2.0*%s.x*duvdx.x - duvdx.y,"
+                    "               2.0*%s.x*duvdy.x - duvdy.y);",
+                    v.fsIn(), v.fsIn());
             fragBuilder->codeAppendf("edgeAlpha = (%s.x*%s.x - %s.y);", v.fsIn(), v.fsIn(),
                                      v.fsIn());
-            fragBuilder->codeAppendf("edgeAlpha = "
-                                     "saturate(0.5 - edgeAlpha / length(gF));}");
+            fragBuilder->codeAppendf(
+                    "edgeAlpha = "
+                    "saturate(0.5 - edgeAlpha / length(gF));}");
 
             fragBuilder->codeAppendf("%s = half4(edgeAlpha);", args.fOutputCoverage);
         }
@@ -651,10 +629,10 @@ sk_sp<GrGeometryProcessor> QuadEdgeEffect::TestCreate(GrProcessorTestData* d) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-GrPathRenderer::CanDrawPath
-GrAAConvexPathRenderer::onCanDrawPath(const CanDrawPathArgs& args) const {
+GrPathRenderer::CanDrawPath GrAAConvexPathRenderer::onCanDrawPath(
+        const CanDrawPathArgs& args) const {
     if (args.fCaps->shaderCaps()->shaderDerivativeSupport() &&
-        (GrAAType::kCoverage == args.fAAType) && args.fShape->style().isSimpleFill() &&
+        (AATypeFlags::kCoverage & args.fAATypeFlags) && args.fShape->style().isSimpleFill() &&
         !args.fShape->inverseFilled() && args.fShape->knownToBeConvex()) {
         return CanDrawPath::kYes;
     }
@@ -685,7 +663,6 @@ public:
             : INHERITED(ClassID()), fHelper(helperArgs, GrAAType::kCoverage, stencilSettings) {
         fPaths.emplace_back(PathData{viewMatrix, path, color});
         this->setTransformedBounds(path.getBounds(), viewMatrix, HasAABloat::kYes, IsZeroArea::kNo);
-        fWideColor = !SkPMColor4fFitsInBytes(color);
     }
 
     const char* name() const override { return "AAConvexPathOp"; }
@@ -706,11 +683,11 @@ public:
 
     FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
-    GrProcessorSet::Analysis finalize(
-            const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType) override {
-        return fHelper.finalizeProcessors(
-                caps, clip, fsaaType, GrProcessorAnalysisCoverage::kSingleChannel,
-                &fPaths.back().fColor);
+    GrProcessorSet::Analysis finalize(const GrCaps& caps, const GrAppliedClip* clip,
+                                      GrFSAAType fsaaType, GrClampType clampType) override {
+        return fHelper.finalizeProcessors(caps, clip, fsaaType, clampType,
+                                          GrProcessorAnalysisCoverage::kSingleChannel,
+                                          &fPaths.back().fColor, &fWideColor);
     }
 
 private:
@@ -764,8 +741,8 @@ private:
             sk_sp<const GrBuffer> vertexBuffer;
             int firstVertex;
 
-            GrVertexWriter verts{target->makeVertexSpace(kVertexStride, vertexCount,
-                                                         &vertexBuffer, &firstVertex)};
+            GrVertexWriter verts{target->makeVertexSpace(kVertexStride, vertexCount, &vertexBuffer,
+                                                         &firstVertex)};
 
             if (!verts.fPtr) {
                 SkDebugf("Could not allocate vertices\n");
@@ -775,7 +752,7 @@ private:
             sk_sp<const GrBuffer> indexBuffer;
             int firstIndex;
 
-            uint16_t *idxs = target->makeIndexSpace(indexCount, &indexBuffer, &firstIndex);
+            uint16_t* idxs = target->makeIndexSpace(indexCount, &indexBuffer, &firstIndex);
             if (!idxs) {
                 SkDebugf("Could not allocate indices\n");
                 return;
@@ -842,9 +819,9 @@ bool GrAAConvexPathRenderer::onDrawPath(const DrawPathArgs& args) {
     SkPath path;
     args.fShape->asPath(&path);
 
-    std::unique_ptr<GrDrawOp> op = AAConvexPathOp::Make(args.fContext, std::move(args.fPaint),
-                                                        *args.fViewMatrix,
-                                                        path, args.fUserStencilSettings);
+    std::unique_ptr<GrDrawOp> op =
+            AAConvexPathOp::Make(args.fContext, std::move(args.fPaint), *args.fViewMatrix, path,
+                                 args.fUserStencilSettings);
     args.fRenderTargetContext->addDrawOp(*args.fClip, std::move(op));
     return true;
 }

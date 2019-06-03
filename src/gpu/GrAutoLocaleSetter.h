@@ -8,11 +8,11 @@
 #ifndef GrAutoLocaleSetter_DEFINED
 #define GrAutoLocaleSetter_DEFINED
 
-#include "GrTypes.h"
-#include "SkNoncopyable.h"
+#include "include/gpu/GrTypes.h"
+#include "include/private/SkNoncopyable.h"
 
 #if defined(SK_BUILD_FOR_WIN)
-#include "SkString.h"
+#include "include/core/SkString.h"
 #endif
 
 #if !defined(SK_BUILD_FOR_ANDROID)
@@ -39,7 +39,7 @@
  */
 class GrAutoLocaleSetter : public SkNoncopyable {
 public:
-    GrAutoLocaleSetter (const char* name) {
+    GrAutoLocaleSetter(const char* name) {
 #if defined(SK_BUILD_FOR_WIN)
         fOldPerThreadLocale = _configthreadlocale(_ENABLE_PER_THREAD_LOCALE);
         char* oldLocale = setlocale(LC_ALL, name);
@@ -63,11 +63,11 @@ public:
             fOldLocale = static_cast<locale_t>(nullptr);
         }
 #else
-        (void) name; // suppress unused param warning.
+        (void)name;  // suppress unused param warning.
 #endif
     }
 
-    ~GrAutoLocaleSetter () {
+    ~GrAutoLocaleSetter() {
 #if defined(SK_BUILD_FOR_WIN)
         if (fShouldRestoreLocale) {
             setlocale(LC_ALL, fOldLocale.c_str());
@@ -75,8 +75,8 @@ public:
         _configthreadlocale(fOldPerThreadLocale);
 #elif HAVE_LOCALE_T
         if (fLocale) {
-             uselocale(fOldLocale);
-             freelocale(fLocale);
+            uselocale(fOldLocale);
+            freelocale(fLocale);
         }
 #endif
     }

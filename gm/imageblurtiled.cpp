@@ -5,10 +5,19 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkBlurImageFilter.h"
-#include "SkRandom.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkBlurImageFilter.h"
+#include "tools/ToolUtils.h"
 
 #define WIDTH 640
 #define HEIGHT 480
@@ -17,18 +26,12 @@ namespace skiagm {
 
 class ImageBlurTiledGM : public GM {
 public:
-    ImageBlurTiledGM(SkScalar sigmaX, SkScalar sigmaY)
-        : fSigmaX(sigmaX), fSigmaY(sigmaY) {
-    }
+    ImageBlurTiledGM(SkScalar sigmaX, SkScalar sigmaY) : fSigmaX(sigmaX), fSigmaY(sigmaY) {}
 
 protected:
-    SkString onShortName() override {
-        return SkString("imageblurtiled");
-    }
+    SkString onShortName() override { return SkString("imageblurtiled"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(WIDTH, HEIGHT);
-    }
+    SkISize onISize() override { return SkISize::Make(WIDTH, HEIGHT); }
 
     void onDraw(SkCanvas* canvas) override {
         SkPaint paint;
@@ -41,12 +44,12 @@ protected:
                 canvas->clipRect(SkRect::MakeXYWH(x, y, tileSize, tileSize));
                 canvas->saveLayer(nullptr, &paint);
                 const char* str[] = {
-                    "The quick",
-                    "brown fox",
-                    "jumped over",
-                    "the lazy dog.",
+                        "The quick",
+                        "brown fox",
+                        "jumped over",
+                        "the lazy dog.",
                 };
-                SkFont font(sk_tool_utils::create_portable_typeface(), 100);
+                SkFont font(ToolUtils::create_portable_typeface(), 100);
                 int posY = 0;
                 for (unsigned i = 0; i < SK_ARRAY_COUNT(str); i++) {
                     posY += 100;
@@ -67,6 +70,6 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM(return new  ImageBlurTiledGM(3.0f, 3.0f);)
+DEF_GM(return new ImageBlurTiledGM(3.0f, 3.0f);)
 
-}
+}  // namespace skiagm

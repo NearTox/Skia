@@ -5,25 +5,30 @@
  * found in the LICENSE file.
  */
 
-#include "GrTextureContext.h"
+#include "src/gpu/GrTextureContext.h"
 
-#include "GrContextPriv.h"
-#include "GrDrawingManager.h"
-#include "GrTextureOpList.h"
+#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrDrawingManager.h"
+#include "src/gpu/GrTextureOpList.h"
 
-#include "../private/GrAuditTrail.h"
+#include "include/private/GrAuditTrail.h"
 
 #define ASSERT_SINGLE_OWNER \
-    SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner());)
-#define RETURN_FALSE_IF_ABANDONED  if (this->drawingManager()->wasAbandoned()) { return false; }
+    SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner()));
+#define RETURN_FALSE_IF_ABANDONED                 \
+    if (this->drawingManager()->wasAbandoned()) { \
+        return false;                             \
+    }
 
 GrTextureContext::GrTextureContext(GrRecordingContext* context,
-                                   sk_sp<GrTextureProxy> textureProxy,
-                                   sk_sp<SkColorSpace> colorSpace)
+                                   sk_sp<GrTextureProxy>
+                                           textureProxy,
+                                   sk_sp<SkColorSpace>
+                                           colorSpace)
         : GrSurfaceContext(context, textureProxy->config(), std::move(colorSpace))
         , fTextureProxy(std::move(textureProxy))
         , fOpList(sk_ref_sp(fTextureProxy->getLastTextureOpList())) {
-    SkDEBUGCODE(this->validate();)
+    SkDEBUGCODE(this->validate());
 }
 
 #ifdef SK_DEBUG
@@ -37,9 +42,7 @@ void GrTextureContext::validate() const {
 }
 #endif
 
-GrTextureContext::~GrTextureContext() {
-    ASSERT_SINGLE_OWNER
-}
+GrTextureContext::~GrTextureContext(){ASSERT_SINGLE_OWNER}
 
 GrRenderTargetProxy* GrTextureContext::asRenderTargetProxy() {
     // If the proxy can return an RTProxy it should've been wrapped in a RTContext
@@ -55,10 +58,10 @@ sk_sp<GrRenderTargetProxy> GrTextureContext::asRenderTargetProxyRef() {
 
 GrOpList* GrTextureContext::getOpList() {
     ASSERT_SINGLE_OWNER
-    SkDEBUGCODE(this->validate();)
+    SkDEBUGCODE(this->validate());
 
     if (!fOpList || fOpList->isClosed()) {
-        fOpList = this->drawingManager()->newTextureOpList(fTextureProxy.get());
+        fOpList = this->drawingManager()->newTextureOpList(fTextureProxy);
     }
 
     return fOpList.get();

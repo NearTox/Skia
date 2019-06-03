@@ -11,32 +11,33 @@
 #include <set>
 #include <unordered_set>
 #include <vector>
-#include "ir/SkSLProgram.h"
-#include "ir/SkSLSymbolTable.h"
-#include "SkSLCFGGenerator.h"
-#include "SkSLContext.h"
-#include "SkSLErrorReporter.h"
-#include "SkSLLexer.h"
+#include "src/sksl/SkSLByteCode.h"
+#include "src/sksl/SkSLCFGGenerator.h"
+#include "src/sksl/SkSLContext.h"
+#include "src/sksl/SkSLErrorReporter.h"
+#include "src/sksl/SkSLLexer.h"
+#include "src/sksl/ir/SkSLProgram.h"
+#include "src/sksl/ir/SkSLSymbolTable.h"
 
-#define SK_FRAGCOLOR_BUILTIN           10001
-#define SK_IN_BUILTIN                  10002
-#define SK_INCOLOR_BUILTIN             10003
-#define SK_OUTCOLOR_BUILTIN            10004
+#define SK_FRAGCOLOR_BUILTIN 10001
+#define SK_IN_BUILTIN 10002
+#define SK_INCOLOR_BUILTIN 10003
+#define SK_OUTCOLOR_BUILTIN 10004
 #define SK_TRANSFORMEDCOORDS2D_BUILTIN 10005
-#define SK_TEXTURESAMPLERS_BUILTIN     10006
-#define SK_OUT_BUILTIN                 10007
-#define SK_LASTFRAGCOLOR_BUILTIN       10008
-#define SK_MAIN_X_BUILTIN              10009
-#define SK_MAIN_Y_BUILTIN              10010
-#define SK_WIDTH_BUILTIN               10011
-#define SK_HEIGHT_BUILTIN              10012
-#define SK_FRAGCOORD_BUILTIN              15
-#define SK_CLOCKWISE_BUILTIN              17
-#define SK_VERTEXID_BUILTIN               42
-#define SK_INSTANCEID_BUILTIN             43
-#define SK_CLIPDISTANCE_BUILTIN            3
-#define SK_INVOCATIONID_BUILTIN            8
-#define SK_POSITION_BUILTIN                0
+#define SK_TEXTURESAMPLERS_BUILTIN 10006
+#define SK_OUT_BUILTIN 10007
+#define SK_LASTFRAGCOLOR_BUILTIN 10008
+#define SK_MAIN_X_BUILTIN 10009
+#define SK_MAIN_Y_BUILTIN 10010
+#define SK_WIDTH_BUILTIN 10011
+#define SK_HEIGHT_BUILTIN 10012
+#define SK_FRAGCOORD_BUILTIN 15
+#define SK_CLOCKWISE_BUILTIN 17
+#define SK_VERTEXID_BUILTIN 42
+#define SK_INSTANCEID_BUILTIN 43
+#define SK_CLIPDISTANCE_BUILTIN 3
+#define SK_INVOCATIONID_BUILTIN 8
+#define SK_POSITION_BUILTIN 0
 
 namespace SkSL {
 
@@ -50,9 +51,9 @@ class IRGenerator;
  *
  * See the README for information about SkSL.
  */
-class Compiler : public ErrorReporter {
+class SK_API Compiler : public ErrorReporter {
 public:
-    static constexpr const char* RTADJUST_NAME  = "sk_RTAdjust";
+    static constexpr const char* RTADJUST_NAME = "sk_RTAdjust";
     static constexpr const char* PERVERTEX_NAME = "sk_PerVertex";
 
     enum Flags {
@@ -64,19 +65,11 @@ public:
     };
 
     struct FormatArg {
-        enum class Kind {
-            kInput,
-            kOutput,
-            kUniform,
-            kChildProcessor
-        };
+        enum class Kind { kInput, kOutput, kUniform, kChildProcessor };
 
-        FormatArg(Kind kind)
-                : fKind(kind) {}
+        FormatArg(Kind kind) : fKind(kind) {}
 
-        FormatArg(Kind kind, int index)
-                : fKind(kind)
-                , fIndex(index) {}
+        FormatArg(Kind kind, int index) : fKind(kind), fIndex(index) {}
 
         Kind fKind;
 
@@ -87,13 +80,17 @@ public:
 
     ~Compiler() override;
 
+    Compiler(const Compiler&) = delete;
+    Compiler& operator=(const Compiler&) = delete;
+
     std::unique_ptr<Program> convertProgram(Program::Kind kind, String text,
                                             const Program::Settings& settings);
 
     bool optimize(Program& program);
 
-    std::unique_ptr<Program> specialize(Program& program,
-                    const std::unordered_map<SkSL::String, SkSL::Program::Settings::Value>& inputs);
+    std::unique_ptr<Program> specialize(
+            Program& program,
+            const std::unordered_map<SkSL::String, SkSL::Program::Settings::Value>& inputs);
 
     bool toSPIRV(Program& program, OutputStream& out);
 
@@ -111,6 +108,8 @@ public:
 
     bool toH(Program& program, String name, OutputStream& out);
 
+    std::unique_ptr<ByteCode> toByteCode(Program& program);
+
     bool toPipelineStage(const Program& program, String* out,
                          std::vector<FormatArg>* outFormatArgs);
 
@@ -120,13 +119,9 @@ public:
 
     void writeErrorCount();
 
-    int errorCount() override {
-        return fErrorCount;
-    }
+    int errorCount() override { return fErrorCount; }
 
-    Context& context() {
-        return *fContext;
-    }
+    Context& context() { return *fContext; }
 
     static const char* OperatorName(Token::Kind token);
 
@@ -185,6 +180,6 @@ private:
     String fErrorText;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

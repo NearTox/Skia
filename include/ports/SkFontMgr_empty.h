@@ -8,8 +8,8 @@
 #ifndef SkFontMgr_empty_DEFINED
 #define SkFontMgr_empty_DEFINED
 
-#include "SkRefCnt.h"
-#include "SkTypes.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkTypes.h"
 
 class SkFontMgr;
 
@@ -18,4 +18,4 @@ class SkFontMgr;
  */
 SK_API sk_sp<SkFontMgr> SkFontMgr_New_Custom_Empty();
 
-#endif // SkFontMgr_empty_DEFINED
+#endif  // SkFontMgr_empty_DEFINED

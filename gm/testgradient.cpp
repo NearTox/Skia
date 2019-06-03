@@ -5,24 +5,27 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-
-#include "SkCanvas.h"
-#include "SkGradientShader.h"
-#include "SkRRect.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRRect.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTileMode.h"
+#include "include/effects/SkGradientShader.h"
 
 class TestGradientGM : public skiagm::GM {
 public:
     TestGradientGM() {}
 
 protected:
-    SkString onShortName() override {
-        return SkString("testgradient");
-    }
+    SkString onShortName() override { return SkString("testgradient"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(800, 800);
-    }
+    SkISize onISize() override { return SkISize::Make(800, 800); }
 
     void onDraw(SkCanvas* canvas) override {
         // Set up a gradient paint for a rect.
@@ -37,15 +40,11 @@ protected:
 
         SkRect rect = SkRect::MakeXYWH(10, 10, 100, 160);
 
-        SkPoint points[2] = {
-            SkPoint::Make(0.0f, 0.0f),
-            SkPoint::Make(256.0f, 256.0f)
-        };
+        SkPoint points[2] = {SkPoint::Make(0.0f, 0.0f), SkPoint::Make(256.0f, 256.0f)};
         SkColor colors[2] = {SK_ColorBLUE, SK_ColorYELLOW};
         SkPaint newPaint(paint);
-        newPaint.setShader(SkGradientShader::MakeLinear(
-                points, colors, nullptr, 2,
-                SkShader::kClamp_TileMode, 0, nullptr));
+        newPaint.setShader(
+                SkGradientShader::MakeLinear(points, colors, nullptr, 2, SkTileMode::kClamp));
         canvas->drawRect(rect, newPaint);
 
         SkRRect oval;
@@ -68,4 +67,4 @@ private:
 };
 
 // Register the GM
-DEF_GM( return new TestGradientGM; )
+DEF_GM(return new TestGradientGM;)

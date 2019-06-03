@@ -8,8 +8,8 @@
 #ifndef SKSL_NOP
 #define SKSL_NOP
 
-#include "SkSLStatement.h"
-#include "SkSLSymbolTable.h"
+#include "src/sksl/ir/SkSLStatement.h"
+#include "src/sksl/ir/SkSLSymbolTable.h"
 
 namespace SkSL {
 
@@ -17,16 +17,11 @@ namespace SkSL {
  * A no-op statement that does nothing.
  */
 struct Nop : public Statement {
-    Nop()
-    : INHERITED(-1, kNop_Kind) {}
+    Nop() : INHERITED(-1, kNop_Kind) {}
 
-    virtual bool isEmpty() const override {
-        return true;
-    }
+    virtual bool isEmpty() const override { return true; }
 
-    String description() const override {
-        return String(";");
-    }
+    String description() const override { return String(";"); }
 
     std::unique_ptr<Statement> clone() const override {
         return std::unique_ptr<Statement>(new Nop());
@@ -35,6 +30,6 @@ struct Nop : public Statement {
     typedef Statement INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

@@ -5,28 +5,27 @@
  * found in the LICENSE file.
  */
 
-#include "SkImageEncoderPriv.h"
+#include "src/images/SkImageEncoderPriv.h"
 
 #ifdef SK_HAS_JPEG_LIBRARY
 
-#include "SkColorData.h"
-#include "SkImageEncoderFns.h"
-#include "SkImageInfoPriv.h"
-#include "SkJpegEncoder.h"
-#include "SkJPEGWriteUtility.h"
-#include "SkStream.h"
-#include "SkTemplates.h"
+#include "include/core/SkStream.h"
+#include "include/encode/SkJpegEncoder.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkImageInfoPriv.h"
+#include "include/private/SkTemplates.h"
+#include "src/images/SkImageEncoderFns.h"
+#include "src/images/SkJPEGWriteUtility.h"
 
 #include <stdio.h>
 
 extern "C" {
-    #include "jpeglib.h"
-    #include "jerror.h"
+#include "jerror.h"
+#include "jpeglib.h"
 }
 
 class SkJpegEncoderMgr final : SkNoncopyable {
 public:
-
     /*
      * Create the decode manager
      * Does not take ownership of stream
@@ -43,33 +42,27 @@ public:
 
     transform_scanline_proc proc() const { return fProc; }
 
-    ~SkJpegEncoderMgr() {
-        jpeg_destroy_compress(&fCInfo);
-    }
+    ~SkJpegEncoderMgr() { jpeg_destroy_compress(&fCInfo); }
 
 private:
-
-    SkJpegEncoderMgr(SkWStream* stream)
-        : fDstMgr(stream)
-        , fProc(nullptr)
-    {
+    SkJpegEncoderMgr(SkWStream* stream) : fDstMgr(stream), fProc(nullptr) {
         fCInfo.err = jpeg_std_error(&fErrMgr);
         fErrMgr.error_exit = skjpeg_error_exit;
         jpeg_create_compress(&fCInfo);
         fCInfo.dest = &fDstMgr;
     }
 
-    jpeg_compress_struct    fCInfo;
-    skjpeg_error_mgr        fErrMgr;
-    skjpeg_destination_mgr  fDstMgr;
+    jpeg_compress_struct fCInfo;
+    skjpeg_error_mgr fErrMgr;
+    skjpeg_destination_mgr fDstMgr;
     transform_scanline_proc fProc;
 };
 
-bool SkJpegEncoderMgr::setParams(const SkImageInfo& srcInfo, const SkJpegEncoder::Options& options)
-{
+bool SkJpegEncoderMgr::setParams(const SkImageInfo& srcInfo,
+                                 const SkJpegEncoder::Options& options) {
     auto chooseProc8888 = [&]() {
         if (kUnpremul_SkAlphaType == srcInfo.alphaType() &&
-                options.fAlphaOption == SkJpegEncoder::AlphaOption::kBlendOnBlack) {
+            options.fAlphaOption == SkJpegEncoder::AlphaOption::kBlendOnBlack) {
             return transform_scanline_to_premul_legacy;
         }
         return (transform_scanline_proc) nullptr;
@@ -109,7 +102,7 @@ bool SkJpegEncoderMgr::setParams(const SkImageInfo& srcInfo, const SkJpegEncoder
             break;
         case kRGBA_F16_SkColorType:
             if (kUnpremul_SkAlphaType == srcInfo.alphaType() &&
-                    options.fAlphaOption == SkJpegEncoder::AlphaOption::kBlendOnBlack) {
+                options.fAlphaOption == SkJpegEncoder::AlphaOption::kBlendOnBlack) {
                 fProc = transform_scanline_F16_to_premul_8888;
             } else {
                 fProc = transform_scanline_F16_to_8888;
@@ -186,13 +179,12 @@ std::unique_ptr<SkEncoder> SkJpegEncoder::Make(SkWStream* dst, const SkPixmap& s
     sk_sp<SkData> icc = icc_from_color_space(src.info());
     if (icc) {
         // Create a contiguous block of memory with the icc signature followed by the profile.
-        sk_sp<SkData> markerData =
-                SkData::MakeUninitialized(kICCMarkerHeaderSize + icc->size());
-        uint8_t* ptr = (uint8_t*) markerData->writable_data();
+        sk_sp<SkData> markerData = SkData::MakeUninitialized(kICCMarkerHeaderSize + icc->size());
+        uint8_t* ptr = (uint8_t*)markerData->writable_data();
         memcpy(ptr, kICCSig, sizeof(kICCSig));
         ptr += sizeof(kICCSig);
-        *ptr++ = 1; // This is the first marker.
-        *ptr++ = 1; // Out of one total markers.
+        *ptr++ = 1;  // This is the first marker.
+        *ptr++ = 1;  // Out of one total markers.
         memcpy(ptr, icc->data(), icc->size());
 
         jpeg_write_marker(encoderMgr->cinfo(), kICCMarker, markerData->bytes(), markerData->size());
@@ -202,9 +194,9 @@ std::unique_ptr<SkEncoder> SkJpegEncoder::Make(SkWStream* dst, const SkPixmap& s
 }
 
 SkJpegEncoder::SkJpegEncoder(std::unique_ptr<SkJpegEncoderMgr> encoderMgr, const SkPixmap& src)
-    : INHERITED(src, encoderMgr->proc() ? encoderMgr->cinfo()->input_components*src.width() : 0)
-    , fEncoderMgr(std::move(encoderMgr))
-{}
+        : INHERITED(src,
+                    encoderMgr->proc() ? encoderMgr->cinfo()->input_components * src.width() : 0)
+        , fEncoderMgr(std::move(encoderMgr)) {}
 
 SkJpegEncoder::~SkJpegEncoder() {}
 
@@ -216,7 +208,7 @@ bool SkJpegEncoder::onEncodeRows(int numRows) {
 
     const void* srcRow = fSrc.addr(0, fCurrRow);
     for (int i = 0; i < numRows; i++) {
-        JSAMPLE* jpegSrcRow = (JSAMPLE*) srcRow;
+        JSAMPLE* jpegSrcRow = (JSAMPLE*)srcRow;
         if (fEncoderMgr->proc()) {
             fEncoderMgr->proc()((char*)fStorage.get(),
                                 (const char*)srcRow,

@@ -8,10 +8,10 @@
 #ifndef GrVkInterface_DEFINED
 #define GrVkInterface_DEFINED
 
-#include "SkRefCnt.h"
+#include "include/core/SkRefCnt.h"
 
-#include "vk/GrVkBackendContext.h"
-#include "vk/GrVkTypes.h"
+#include "include/gpu/vk/GrVkBackendContext.h"
+#include "include/gpu/vk/GrVkTypes.h"
 
 class GrVkExtensions;
 
@@ -29,8 +29,12 @@ private:
     template <typename FNPTR_TYPE> class VkPtr {
     public:
         VkPtr() : fPtr(NULL) {}
-        VkPtr operator=(FNPTR_TYPE ptr) { fPtr = ptr; return *this; }
+        VkPtr operator=(FNPTR_TYPE ptr) {
+            fPtr = ptr;
+            return *this;
+        }
         operator FNPTR_TYPE() const { return fPtr; }
+
     private:
         FNPTR_TYPE fPtr;
     };
@@ -86,7 +90,8 @@ public:
         VkPtr<PFN_vkGetBufferMemoryRequirements> fGetBufferMemoryRequirements;
         VkPtr<PFN_vkGetImageMemoryRequirements> fGetImageMemoryRequirements;
         VkPtr<PFN_vkGetImageSparseMemoryRequirements> fGetImageSparseMemoryRequirements;
-        VkPtr<PFN_vkGetPhysicalDeviceSparseImageFormatProperties> fGetPhysicalDeviceSparseImageFormatProperties;
+        VkPtr<PFN_vkGetPhysicalDeviceSparseImageFormatProperties>
+                fGetPhysicalDeviceSparseImageFormatProperties;
         VkPtr<PFN_vkQueueBindSparse> fQueueBindSparse;
         VkPtr<PFN_vkCreateFence> fCreateFence;
         VkPtr<PFN_vkDestroyFence> fDestroyFence;
@@ -195,17 +200,20 @@ public:
         VkPtr<PFN_vkGetPhysicalDeviceFeatures2> fGetPhysicalDeviceFeatures2;
         VkPtr<PFN_vkGetPhysicalDeviceProperties2> fGetPhysicalDeviceProperties2;
         VkPtr<PFN_vkGetPhysicalDeviceFormatProperties2> fGetPhysicalDeviceFormatProperties2;
-        VkPtr<PFN_vkGetPhysicalDeviceImageFormatProperties2> fGetPhysicalDeviceImageFormatProperties2;
-        VkPtr<PFN_vkGetPhysicalDeviceQueueFamilyProperties2> fGetPhysicalDeviceQueueFamilyProperties2;
+        VkPtr<PFN_vkGetPhysicalDeviceImageFormatProperties2>
+                fGetPhysicalDeviceImageFormatProperties2;
+        VkPtr<PFN_vkGetPhysicalDeviceQueueFamilyProperties2>
+                fGetPhysicalDeviceQueueFamilyProperties2;
         VkPtr<PFN_vkGetPhysicalDeviceMemoryProperties2> fGetPhysicalDeviceMemoryProperties2;
-        VkPtr<PFN_vkGetPhysicalDeviceSparseImageFormatProperties2> fGetPhysicalDeviceSparseImageFormatProperties2;
+        VkPtr<PFN_vkGetPhysicalDeviceSparseImageFormatProperties2>
+                fGetPhysicalDeviceSparseImageFormatProperties2;
 
         // Functions for VK_KHR_get_memory_requirements2 or vulkan 1.1
         VkPtr<PFN_vkGetImageMemoryRequirements2> fGetImageMemoryRequirements2;
         VkPtr<PFN_vkGetBufferMemoryRequirements2> fGetBufferMemoryRequirements2;
         VkPtr<PFN_vkGetImageSparseMemoryRequirements2> fGetImageSparseMemoryRequirements2;
 
-        //Functions for VK_KHR_bind_memory2
+        // Functions for VK_KHR_bind_memory2
         VkPtr<PFN_vkBindBufferMemory2> fBindBufferMemory2;
         VkPtr<PFN_vkBindImageMemory2> fBindImageMemory2;
 
@@ -216,7 +224,8 @@ public:
         VkPtr<PFN_vkGetDescriptorSetLayoutSupport> fGetDescriptorSetLayoutSupport;
 
         // Functions for VK_KHR_external_memory_capabilities
-        VkPtr<PFN_vkGetPhysicalDeviceExternalBufferProperties> fGetPhysicalDeviceExternalBufferProperties;
+        VkPtr<PFN_vkGetPhysicalDeviceExternalBufferProperties>
+                fGetPhysicalDeviceExternalBufferProperties;
 
         // Functions for YCBCRConversion
         VkPtr<PFN_vkCreateSamplerYcbcrConversion> fCreateSamplerYcbcrConversion;
@@ -227,7 +236,6 @@ public:
         VkPtr<PFN_vkGetAndroidHardwareBufferPropertiesANDROID> fGetAndroidHardwareBufferProperties;
         VkPtr<PFN_vkGetMemoryAndroidHardwareBufferANDROID> fGetMemoryAndroidHardwareBuffer;
 #endif
-
 
     } fFunctions;
 };

@@ -8,7 +8,7 @@
 #ifndef GrBlurUtils_DEFINED
 #define GrBlurUtils_DEFINED
 
-#include "GrTypesPriv.h"
+#include "include/private/GrTypesPriv.h"
 
 class GrClip;
 class GrContext;
@@ -25,32 +25,31 @@ class SkPaint;
 class SkPath;
 class SkPathEffect;
 
-
 /**
  *  Blur utilities.
  */
 namespace GrBlurUtils {
-    /**
-     * Draw a shape handling the mask filter if present.
-     */
-    void drawShapeWithMaskFilter(GrRecordingContext*,
-                                 GrRenderTargetContext*,
-                                 const GrClip&,
-                                 const SkPaint&,
-                                 const SkMatrix& viewMatrix,
-                                 const GrShape&);
+/**
+ * Draw a shape handling the mask filter if present.
+ */
+void drawShapeWithMaskFilter(GrRecordingContext*,
+                             GrRenderTargetContext*,
+                             const GrClip&,
+                             const SkPaint&,
+                             const SkMatrix& viewMatrix,
+                             const GrShape&);
 
-    /**
-     * Draw a shape handling the mask filter. The mask filter is not optional.
-     * The GrPaint will be modified after return.
-     */
-    void drawShapeWithMaskFilter(GrRecordingContext*,
-                                 GrRenderTargetContext*,
-                                 const GrClip&,
-                                 const GrShape&,
-                                 GrPaint&&,
-                                 const SkMatrix& viewMatrix,
-                                 const SkMaskFilter*);
-};
+/**
+ * Draw a shape handling the mask filter. The mask filter is not optional.
+ * The GrPaint will be modified after return.
+ */
+void drawShapeWithMaskFilter(GrRecordingContext*,
+                             GrRenderTargetContext*,
+                             const GrClip&,
+                             const GrShape&,
+                             GrPaint&&,
+                             const SkMatrix& viewMatrix,
+                             const SkMaskFilter*);
+};  // namespace GrBlurUtils
 
 #endif

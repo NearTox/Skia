@@ -5,101 +5,97 @@
  * found in the LICENSE file.
  */
 
-#include "SkCanvas.h"
-#include "SkColor.h"
-#include "SkFontStyle.h"
-#include "SkPaint.h"
-#include "SkPoint.h"
-#include "SkRect.h"
-#include "SkRefCnt.h"
-#include "SkScalar.h"
-#include "SkSize.h"
-#include "SkString.h"
-#include "SkTDArray.h"
-#include "SkTextBlob.h"
-#include "SkTypeface.h"
-#include "SkTypes.h"
-#include "gm.h"
-#include "sk_tool_utils.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkFontStyle.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTextBlob.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkTDArray.h"
+#include "tools/ToolUtils.h"
 
 #include <cstring>
 
-namespace  {
+namespace {
 
 enum Pos {
     kDefault_Pos = 0,
-    kScalar_Pos  = 1,
-    kPoint_Pos   = 2,
+    kScalar_Pos = 1,
+    kPoint_Pos = 2,
 };
 
 const struct BlobCfg {
     unsigned count;
-    Pos      pos;
+    Pos pos;
     SkScalar scale;
 } blobConfigs[][3][3] = {
-    {
-        { { 1024, kDefault_Pos, 1 }, { 0, kDefault_Pos, 0 }, { 0, kDefault_Pos, 0 } },
-        { { 1024,  kScalar_Pos, 1 }, { 0,  kScalar_Pos, 0 }, { 0,  kScalar_Pos, 0 } },
-        { { 1024,   kPoint_Pos, 1 }, { 0,   kPoint_Pos, 0 }, { 0,   kPoint_Pos, 0 } },
-    },
-    {
-        { { 4, kDefault_Pos, 1 },     { 4, kDefault_Pos, 1 },  { 4, kDefault_Pos, 1 } },
-        { { 4,  kScalar_Pos, 1 },     { 4,  kScalar_Pos, 1 },  { 4,  kScalar_Pos, 1 } },
-        { { 4,   kPoint_Pos, 1 },     { 4,   kPoint_Pos, 1 },  { 4,   kPoint_Pos, 1 } },
-    },
+        {
+                {{1024, kDefault_Pos, 1}, {0, kDefault_Pos, 0}, {0, kDefault_Pos, 0}},
+                {{1024, kScalar_Pos, 1}, {0, kScalar_Pos, 0}, {0, kScalar_Pos, 0}},
+                {{1024, kPoint_Pos, 1}, {0, kPoint_Pos, 0}, {0, kPoint_Pos, 0}},
+        },
+        {
+                {{4, kDefault_Pos, 1}, {4, kDefault_Pos, 1}, {4, kDefault_Pos, 1}},
+                {{4, kScalar_Pos, 1}, {4, kScalar_Pos, 1}, {4, kScalar_Pos, 1}},
+                {{4, kPoint_Pos, 1}, {4, kPoint_Pos, 1}, {4, kPoint_Pos, 1}},
+        },
 
-    {
-        { { 4, kDefault_Pos, 1 },     { 4, kDefault_Pos, 1 },  { 4,  kScalar_Pos, 1 } },
-        { { 4,  kScalar_Pos, 1 },     { 4,  kScalar_Pos, 1 },  { 4,   kPoint_Pos, 1 } },
-        { { 4,   kPoint_Pos, 1 },     { 4,   kPoint_Pos, 1 },  { 4, kDefault_Pos, 1 } },
-    },
+        {
+                {{4, kDefault_Pos, 1}, {4, kDefault_Pos, 1}, {4, kScalar_Pos, 1}},
+                {{4, kScalar_Pos, 1}, {4, kScalar_Pos, 1}, {4, kPoint_Pos, 1}},
+                {{4, kPoint_Pos, 1}, {4, kPoint_Pos, 1}, {4, kDefault_Pos, 1}},
+        },
 
-    {
-        { { 4, kDefault_Pos, 1 },     { 4,  kScalar_Pos, 1 },  { 4,   kPoint_Pos, 1 } },
-        { { 4,  kScalar_Pos, 1 },     { 4,   kPoint_Pos, 1 },  { 4, kDefault_Pos, 1 } },
-        { { 4,   kPoint_Pos, 1 },     { 4, kDefault_Pos, 1 },  { 4,  kScalar_Pos, 1 } },
-    },
+        {
+                {{4, kDefault_Pos, 1}, {4, kScalar_Pos, 1}, {4, kPoint_Pos, 1}},
+                {{4, kScalar_Pos, 1}, {4, kPoint_Pos, 1}, {4, kDefault_Pos, 1}},
+                {{4, kPoint_Pos, 1}, {4, kDefault_Pos, 1}, {4, kScalar_Pos, 1}},
+        },
 
-    {
-        { { 4, kDefault_Pos, .75f },     { 4, kDefault_Pos, 1 },  { 4,  kScalar_Pos, 1.25f } },
-        { { 4,  kScalar_Pos, .75f },     { 4,  kScalar_Pos, 1 },  { 4,   kPoint_Pos, 1.25f } },
-        { { 4,   kPoint_Pos, .75f },     { 4,   kPoint_Pos, 1 },  { 4, kDefault_Pos, 1.25f } },
-    },
+        {
+                {{4, kDefault_Pos, .75f}, {4, kDefault_Pos, 1}, {4, kScalar_Pos, 1.25f}},
+                {{4, kScalar_Pos, .75f}, {4, kScalar_Pos, 1}, {4, kPoint_Pos, 1.25f}},
+                {{4, kPoint_Pos, .75f}, {4, kPoint_Pos, 1}, {4, kDefault_Pos, 1.25f}},
+        },
 
-    {
-        { { 4, kDefault_Pos, 1 },     { 4,  kScalar_Pos, .75f },  { 4,   kPoint_Pos, 1.25f } },
-        { { 4,  kScalar_Pos, 1 },     { 4,   kPoint_Pos, .75f },  { 4, kDefault_Pos, 1.25f } },
-        { { 4,   kPoint_Pos, 1 },     { 4, kDefault_Pos, .75f },  { 4,  kScalar_Pos, 1.25f } },
-    },
+        {
+                {{4, kDefault_Pos, 1}, {4, kScalar_Pos, .75f}, {4, kPoint_Pos, 1.25f}},
+                {{4, kScalar_Pos, 1}, {4, kPoint_Pos, .75f}, {4, kDefault_Pos, 1.25f}},
+                {{4, kPoint_Pos, 1}, {4, kDefault_Pos, .75f}, {4, kScalar_Pos, 1.25f}},
+        },
 };
 
 const SkScalar kFontSize = 16;
-}
+}  // namespace
 
 class TextBlobGM : public skiagm::GM {
 public:
-    TextBlobGM(const char* txt)
-        : fText(txt) {
-    }
+    TextBlobGM(const char* txt) : fText(txt) {}
 
 protected:
     void onOnceBeforeDraw() override {
-        fTypeface = sk_tool_utils::create_portable_typeface("serif", SkFontStyle());
+        fTypeface = ToolUtils::create_portable_typeface("serif", SkFontStyle());
         SkFont font(fTypeface);
         size_t txtLen = strlen(fText);
-        int glyphCount = font.countText(fText, txtLen, kUTF8_SkTextEncoding);
+        int glyphCount = font.countText(fText, txtLen, SkTextEncoding::kUTF8);
 
         fGlyphs.append(glyphCount);
-        font.textToGlyphs(fText, txtLen, kUTF8_SkTextEncoding, fGlyphs.begin(), glyphCount);
+        font.textToGlyphs(fText, txtLen, SkTextEncoding::kUTF8, fGlyphs.begin(), glyphCount);
     }
 
-    SkString onShortName() override {
-        return SkString("textblob");
-    }
+    SkString onShortName() override { return SkString("textblob"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(640, 480);
-    }
+    SkISize onISize() override { return SkISize::Make(640, 480); }
 
     void onDraw(SkCanvas* canvas) override {
         for (unsigned b = 0; b < SK_ARRAY_COUNT(blobConfigs); ++b) {
@@ -118,7 +114,6 @@ protected:
             box.offset(offset);
             p.setAntiAlias(false);
             canvas->drawRect(box, p);
-
         }
     }
 
@@ -149,40 +144,42 @@ private:
                 const SkScalar advanceX = font.getSize() * 0.85f;
                 const SkScalar advanceY = font.getSize() * 1.5f;
 
-                SkPoint offset = SkPoint::Make(currentGlyph * advanceX + c * advanceX,
-                                               advanceY * l);
+                SkPoint offset =
+                        SkPoint::Make(currentGlyph * advanceX + c * advanceX, advanceY * l);
                 switch (cfg->pos) {
-                case kDefault_Pos: {
-                    const SkTextBlobBuilder::RunBuffer& buf = builder.allocRun(font, count,
-                                                                               offset.x(),
-                                                                               offset.y());
-                    memcpy(buf.glyphs, fGlyphs.begin() + currentGlyph, count * sizeof(uint16_t));
-                } break;
-                case kScalar_Pos: {
-                    const SkTextBlobBuilder::RunBuffer& buf = builder.allocRunPosH(font, count,
-                                                                                   offset.y());
-                    SkTDArray<SkScalar> pos;
-                    for (unsigned i = 0; i < count; ++i) {
-                        *pos.append() = offset.x() + i * advanceX;
-                    }
+                    case kDefault_Pos: {
+                        const SkTextBlobBuilder::RunBuffer& buf =
+                                builder.allocRun(font, count, offset.x(), offset.y());
+                        memcpy(buf.glyphs, fGlyphs.begin() + currentGlyph,
+                               count * sizeof(uint16_t));
+                    } break;
+                    case kScalar_Pos: {
+                        const SkTextBlobBuilder::RunBuffer& buf =
+                                builder.allocRunPosH(font, count, offset.y());
+                        SkTDArray<SkScalar> pos;
+                        for (unsigned i = 0; i < count; ++i) {
+                            *pos.append() = offset.x() + i * advanceX;
+                        }
 
-                    memcpy(buf.glyphs, fGlyphs.begin() + currentGlyph, count * sizeof(uint16_t));
-                    memcpy(buf.pos, pos.begin(), count * sizeof(SkScalar));
-                } break;
-                case kPoint_Pos: {
-                    const SkTextBlobBuilder::RunBuffer& buf = builder.allocRunPos(font, count);
+                        memcpy(buf.glyphs, fGlyphs.begin() + currentGlyph,
+                               count * sizeof(uint16_t));
+                        memcpy(buf.pos, pos.begin(), count * sizeof(SkScalar));
+                    } break;
+                    case kPoint_Pos: {
+                        const SkTextBlobBuilder::RunBuffer& buf = builder.allocRunPos(font, count);
 
-                    SkTDArray<SkScalar> pos;
-                    for (unsigned i = 0; i < count; ++i) {
-                        *pos.append() = offset.x() + i * advanceX;
-                        *pos.append() = offset.y() + i * (advanceY / count);
-                    }
+                        SkTDArray<SkScalar> pos;
+                        for (unsigned i = 0; i < count; ++i) {
+                            *pos.append() = offset.x() + i * advanceX;
+                            *pos.append() = offset.y() + i * (advanceY / count);
+                        }
 
-                    memcpy(buf.glyphs, fGlyphs.begin() + currentGlyph, count * sizeof(uint16_t));
-                    memcpy(buf.pos, pos.begin(), count * sizeof(SkScalar) * 2);
-                } break;
-                default:
-                    SK_ABORT("unhandled pos value");
+                        memcpy(buf.glyphs, fGlyphs.begin() + currentGlyph,
+                               count * sizeof(uint16_t));
+                        memcpy(buf.pos, pos.begin(), count * sizeof(SkScalar) * 2);
+                    } break;
+                    default:
+                        SK_ABORT("unhandled pos value");
                 }
 
                 currentGlyph += count;
@@ -193,8 +190,8 @@ private:
     }
 
     SkTDArray<uint16_t> fGlyphs;
-    sk_sp<SkTypeface>   fTypeface;
-    const char*         fText;
+    sk_sp<SkTypeface> fTypeface;
+    const char* fText;
     typedef skiagm::GM INHERITED;
 };
 

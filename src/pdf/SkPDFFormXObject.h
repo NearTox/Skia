@@ -5,12 +5,11 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkPDFFormXObject_DEFINED
 #define SkPDFFormXObject_DEFINED
 
-#include "SkPDFDevice.h"
-#include "SkPDFTypes.h"
+#include "src/pdf/SkPDFDevice.h"
+#include "src/pdf/SkPDFTypes.h"
 
 class SkPDFDocument;
 
@@ -20,9 +19,12 @@ class SkPDFDocument;
     bitmap XObject can be drawn into a page content stream.
 */
 SkPDFIndirectReference SkPDFMakeFormXObject(SkPDFDocument* doc,
-                                            std::unique_ptr<SkStreamAsset> content,
-                                            std::unique_ptr<SkPDFArray> mediaBox,
-                                            std::unique_ptr<SkPDFDict> resourceDict,
+                                            std::unique_ptr<SkStreamAsset>
+                                                    content,
+                                            std::unique_ptr<SkPDFArray>
+                                                    mediaBox,
+                                            std::unique_ptr<SkPDFDict>
+                                                    resourceDict,
                                             const SkMatrix& inverseTransform,
                                             const char* colorSpace);
 #endif

@@ -5,11 +5,10 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkPackBits_DEFINED
 #define SkPackBits_DEFINED
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 class SkPackBits {
 public:
@@ -27,8 +26,7 @@ public:
         @param dstSize  Number of bytes in the output buffer.
         @return the number of bytes written to dst[]
     */
-    static size_t Pack8(const uint8_t src[], size_t srcSize, uint8_t dst[],
-                        size_t dstSize);
+    static size_t Pack8(const uint8_t src[], size_t srcSize, uint8_t dst[], size_t dstSize);
 
     /** Unpack the data in src[], and expand it into dst[]. The src[] data was
         written by a previous call to Pack8.
@@ -38,8 +36,7 @@ public:
         @param dstSize  Number of bytes in the output buffer.
         @return the number of bytes written into dst, or 0 if srcSize or dstSize are too small.
     */
-    static int Unpack8(const uint8_t src[], size_t srcSize, uint8_t dst[],
-                       size_t dstSize);
+    static int Unpack8(const uint8_t src[], size_t srcSize, uint8_t dst[], size_t dstSize);
 };
 
 #endif

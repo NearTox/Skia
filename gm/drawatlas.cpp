@@ -5,19 +5,46 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
+#include "gm/gm.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkFilterQuality.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPathMeasure.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRSXform.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkTextBlob.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "include/core/SkVertices.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/private/SkTemplates.h"
+#include "src/core/SkAutoMalloc.h"
+#include "src/core/SkFontPriv.h"
+#include "tools/Resources.h"
+#include "tools/ToolUtils.h"
 
-#include "SkAutoMalloc.h"
-#include "SkCanvas.h"
-#include "SkRSXform.h"
-#include "SkSurface.h"
-#include "SkTextBlob.h"
-#include "sk_tool_utils.h"
+#include <initializer_list>
 
 class DrawAtlasGM : public skiagm::GM {
     static sk_sp<SkImage> MakeAtlas(SkCanvas* caller, const SkRect& target) {
         SkImageInfo info = SkImageInfo::MakeN32Premul(100, 100);
-        auto surface(sk_tool_utils::makeSurface(caller, info));
+        auto surface(ToolUtils::makeSurface(caller, info));
         SkCanvas* canvas = surface->getCanvas();
         // draw red everywhere, but we don't expect to see it in the draw, testing the notion
         // that drawAtlas draws a subset-region of the atlas.
@@ -40,17 +67,12 @@ public:
     DrawAtlasGM() {}
 
 protected:
+    SkString onShortName() override { return SkString("draw-atlas"); }
 
-    SkString onShortName() override {
-        return SkString("draw-atlas");
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(640, 480);
-    }
+    SkISize onISize() override { return SkISize::Make(640, 480); }
 
     void onDraw(SkCanvas* canvas) override {
-        const SkRect target = { 50, 50, 80, 90 };
+        const SkRect target = {50, 50, 80, 90};
         auto atlas = MakeAtlas(canvas, target);
 
         const struct {
@@ -63,14 +85,14 @@ protected:
                 const SkScalar rad = SkDegreesToRadians(fDegrees);
                 xform->fSCos = fScale * SkScalarCos(rad);
                 xform->fSSin = fScale * SkScalarSin(rad);
-                xform->fTx   = fTx;
-                xform->fTy   = fTy;
+                xform->fTx = fTx;
+                xform->fTy = fTy;
             }
         } rec[] = {
-            { 1, 0, 10, 10 },       // just translate
-            { 2, 0, 110, 10 },      // scale + translate
-            { 1, 30, 210, 10 },     // rotate + translate
-            { 2, -30, 310, 30 },    // scale + rotate + translate
+                {1, 0, 10, 10},     // just translate
+                {2, 0, 110, 10},    // scale + translate
+                {1, 30, 210, 10},   // rotate + translate
+                {2, -30, 310, 30},  // scale + rotate + translate
         };
 
         const int N = SK_ARRAY_COUNT(rec);
@@ -96,20 +118,16 @@ protected:
 private:
     typedef GM INHERITED;
 };
-DEF_GM( return new DrawAtlasGM; )
+DEF_GM(return new DrawAtlasGM;)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#include "SkFont.h"
-#include "SkFontPriv.h"
-#include "SkPath.h"
-#include "SkPathMeasure.h"
 
-static void draw_text_on_path(SkCanvas* canvas, const void* text, size_t length,
-                              const SkPoint xy[], const SkPath& path, const SkFont& font, const SkPaint& paint,
+static void draw_text_on_path(SkCanvas* canvas, const void* text, size_t length, const SkPoint xy[],
+                              const SkPath& path, const SkFont& font, const SkPaint& paint,
                               float baseline_offset) {
     SkPathMeasure meas(path, false);
 
-    int count = font.countText(text, length, kUTF8_SkTextEncoding);
+    int count = font.countText(text, length, SkTextEncoding::kUTF8);
     size_t size = count * (sizeof(SkRSXform) + sizeof(SkScalar));
     SkAutoSMalloc<512> storage(size);
     SkRSXform* xform = (SkRSXform*)storage.get();
@@ -122,7 +140,7 @@ static void draw_text_on_path(SkCanvas* canvas, const void* text, size_t length,
     const SkRect bounds = path.getBounds().makeOutset(max, max);
 
     SkAutoTArray<SkGlyphID> glyphs(count);
-    font.textToGlyphs(text, length, kUTF8_SkTextEncoding, glyphs.get(), count);
+    font.textToGlyphs(text, length, SkTextEncoding::kUTF8, glyphs.get(), count);
     font.getWidths(glyphs.get(), count, widths);
 
     for (int i = 0; i < count; ++i) {
@@ -138,12 +156,12 @@ static void draw_text_on_path(SkCanvas* canvas, const void* text, size_t length,
 
         xform[i].fSCos = tan.x();
         xform[i].fSSin = tan.y();
-        xform[i].fTx   = pos.x() - tan.y() * xy[i].y() - tan.x() * offset;
-        xform[i].fTy   = pos.y() + tan.x() * xy[i].y() - tan.y() * offset;
+        xform[i].fTx = pos.x() - tan.y() * xy[i].y() - tan.x() * offset;
+        xform[i].fTy = pos.y() + tan.x() * xy[i].y() - tan.y() * offset;
     }
 
     canvas->drawTextBlob(SkTextBlob::MakeFromRSXform(glyphs.get(), count * sizeof(SkGlyphID),
-                                         &xform[0], font, kGlyphID_SkTextEncoding),
+                                                     &xform[0], font, SkTextEncoding::kGlyphID),
                          0, 0, paint);
 
     if (true) {
@@ -153,11 +171,10 @@ static void draw_text_on_path(SkCanvas* canvas, const void* text, size_t length,
     }
 }
 
-#include "SkGradientShader.h"
 static sk_sp<SkShader> make_shader() {
     SkPoint pts[2] = {{0, 0}, {220, 0}};
     SkColor colors[2] = {SK_ColorRED, SK_ColorBLUE};
-    return SkGradientShader::MakeLinear(pts, colors, nullptr, 2, SkShader::kMirror_TileMode);
+    return SkGradientShader::MakeLinear(pts, colors, nullptr, 2, SkTileMode::kMirror);
 }
 
 static void drawTextPath(SkCanvas* canvas, bool doStroke) {
@@ -180,14 +197,15 @@ static void drawTextPath(SkCanvas* canvas, bool doStroke) {
     SkScalar x = 0;
     for (int i = 0; i < N; ++i) {
         pos[i].set(x, 0);
-        x += font.measureText(&text0[i], 1, kUTF8_SkTextEncoding, nullptr, &paint);
+        x += font.measureText(&text0[i], 1, SkTextEncoding::kUTF8, nullptr, &paint);
     }
 
     SkPath path;
     const float baseline_offset = -5;
 
     const SkPath::Direction dirs[] = {
-        SkPath::kCW_Direction, SkPath::kCCW_Direction,
+            SkPath::kCW_Direction,
+            SkPath::kCCW_Direction,
     };
     for (auto d : dirs) {
         path.reset();
@@ -202,7 +220,7 @@ static void drawTextPath(SkCanvas* canvas, bool doStroke) {
 
 DEF_SIMPLE_GM(drawTextRSXform, canvas, 430, 860) {
     canvas->scale(0.5f, 0.5f);
-    const bool doStroke[] = { false, true };
+    const bool doStroke[] = {false, true};
     for (auto st : doStroke) {
         drawTextPath(canvas, st);
         canvas->translate(0, 860);
@@ -212,7 +230,7 @@ DEF_SIMPLE_GM(drawTextRSXform, canvas, 430, 860) {
 // Exercise xform blob and its bounds
 DEF_SIMPLE_GM(blob_rsxform, canvas, 500, 100) {
     SkFont font;
-    font.setTypeface(sk_tool_utils::create_portable_typeface());
+    font.setTypeface(ToolUtils::create_portable_typeface());
     font.setSize(50);
 
     const char text[] = "CrazyXform";
@@ -222,14 +240,14 @@ DEF_SIMPLE_GM(blob_rsxform, canvas, 500, 100) {
     SkScalar scale = 1;
     SkScalar x = 0, y = 0;
     for (size_t i = 0; i < len; ++i) {
-        scale = SkScalarSin(i * SK_ScalarPI / (len-1)) * 0.75f + 0.5f;
+        scale = SkScalarSin(i * SK_ScalarPI / (len - 1)) * 0.75f + 0.5f;
         xforms[i] = SkRSXform::Make(scale, 0, x, y);
         x += 50 * scale;
     }
 
     auto blob = SkTextBlob::MakeFromRSXform(text, len, xforms, font);
 
-    SkPoint offset = { 20, 70 };
+    SkPoint offset = {20, 70};
     SkPaint paint;
     paint.setColor(0xFFCCCCCC);
     canvas->drawRect(blob->bounds().makeOffset(offset.fX, offset.fY), paint);
@@ -237,17 +255,11 @@ DEF_SIMPLE_GM(blob_rsxform, canvas, 500, 100) {
     canvas->drawTextBlob(blob, offset.fX, offset.fY, paint);
 }
 
-#include "Resources.h"
-#include "SkColorFilter.h"
-#include "SkVertices.h"
-
-static sk_sp<SkVertices> make_vertices(sk_sp<SkImage> image, const SkRect& r,
-                                       SkColor color) {
+static sk_sp<SkVertices> make_vertices(sk_sp<SkImage> image, const SkRect& r, SkColor color) {
     SkPoint pos[4];
     r.toQuad(pos);
-    SkColor colors[4] = { color, color, color, color };
-    return SkVertices::MakeCopy(SkVertices::kTriangleFan_VertexMode, 4,
-                                pos, pos, colors);
+    SkColor colors[4] = {color, color, color, color};
+    return SkVertices::MakeCopy(SkVertices::kTriangleFan_VertexMode, 4, pos, pos, colors);
 }
 
 /*
@@ -269,24 +281,23 @@ DEF_SIMPLE_GM(compare_atlas_vertices, canvas, 560, 585) {
     auto image = GetResourceAsImage("images/mandrill_128.png");
     auto verts = make_vertices(image, tex, color);
     const sk_sp<SkColorFilter> filters[] = {
-        nullptr,
-        SkColorFilter::MakeModeFilter(0xFF00FF88, SkBlendMode::kModulate),
+            nullptr,
+            SkColorFilters::Blend(0xFF00FF88, SkBlendMode::kModulate),
     };
     const SkBlendMode modes[] = {
-        SkBlendMode::kSrcOver,
-        SkBlendMode::kPlus,
+            SkBlendMode::kSrcOver,
+            SkBlendMode::kPlus,
     };
 
     canvas->translate(10, 10);
     SkPaint paint;
     for (SkBlendMode mode : modes) {
-        for (float alpha : { 1.0f, 0.5f }) {
+        for (float alpha : {1.0f, 0.5f}) {
             paint.setAlphaf(alpha);
             canvas->save();
             for (auto cf : filters) {
                 paint.setColorFilter(cf);
-                canvas->drawAtlas(image, &xform, &tex, &color, 1,
-                                  mode, &tex, &paint);
+                canvas->drawAtlas(image, &xform, &tex, &color, 1, mode, &tex, &paint);
                 canvas->translate(128, 0);
                 paint.setShader(image->makeShader());
                 canvas->drawVertices(verts, mode, paint);

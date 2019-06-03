@@ -1,16 +1,16 @@
 /*
-* Copyright 2016 Google Inc.
-*
-* Use of this source code is governed by a BSD-style license that can be
-* found in the LICENSE file.
-*/
+ * Copyright 2016 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
 #ifndef GrVkDescriptorSet_DEFINED
 #define GrVkDescriptorSet_DEFINED
 
-#include "GrVkDescriptorSetManager.h"
-#include "GrVkResource.h"
-#include "vk/GrVkTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
+#include "src/gpu/vk/GrVkDescriptorSetManager.h"
+#include "src/gpu/vk/GrVkResource.h"
 
 class GrVkDescriptorPool;
 class GrVkGpu;
@@ -36,9 +36,9 @@ private:
     void abandonGPUData() const override;
     void onRecycle(GrVkGpu* gpu) const override;
 
-    VkDescriptorSet                          fDescSet;
+    VkDescriptorSet fDescSet;
     SkDEBUGCODE(mutable) GrVkDescriptorPool* fPool;
-    GrVkDescriptorSetManager::Handle         fHandle;
+    GrVkDescriptorSetManager::Handle fHandle;
 };
 
 #endif

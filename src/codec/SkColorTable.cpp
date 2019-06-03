@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "SkColorTable.h"
-#include "../private/SkMalloc.h"
+#include "src/codec/SkColorTable.h"
+#include "include/private/SkMalloc.h"
 
 SkColorTable::SkColorTable(const SkPMColor colors[], int count) {
     SkASSERT(0 == count || colors);
@@ -18,6 +18,4 @@ SkColorTable::SkColorTable(const SkPMColor colors[], int count) {
     memcpy(fColors, colors, count * sizeof(SkPMColor));
 }
 
-SkColorTable::~SkColorTable() {
-    sk_free(fColors);
-}
+SkColorTable::~SkColorTable() { sk_free(fColors); }

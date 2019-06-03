@@ -5,17 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "GrDefaultGeoProcFactory.h"
+#include "src/gpu/GrDefaultGeoProcFactory.h"
 
-#include "GrCaps.h"
-#include "SkRefCnt.h"
-#include "glsl/GrGLSLColorSpaceXformHelper.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLGeometryProcessor.h"
-#include "glsl/GrGLSLVertexGeoBuilder.h"
-#include "glsl/GrGLSLVarying.h"
-#include "glsl/GrGLSLUniformHandler.h"
-#include "glsl/GrGLSLUtil.h"
+#include "include/core/SkRefCnt.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/glsl/GrGLSLColorSpaceXformHelper.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#include "src/gpu/glsl/GrGLSLUtil.h"
+#include "src/gpu/glsl/GrGLSLVarying.h"
+#include "src/gpu/glsl/GrGLSLVertexGeoBuilder.h"
 
 /*
  * The default Geometry Processor simply takes position and multiplies it by the uniform view
@@ -24,12 +24,12 @@
  */
 
 enum GPFlag {
-    kColorAttribute_GPFlag          = 0x1,
+    kColorAttribute_GPFlag = 0x1,
     kColorAttributeIsSkColor_GPFlag = 0x2,
-    kColorAttributeIsWide_GPFlag    = 0x4,
-    kLocalCoordAttribute_GPFlag     = 0x8,
-    kCoverageAttribute_GPFlag       = 0x10,
-    kCoverageAttributeTweak_GPFlag  = 0x20,
+    kColorAttributeIsWide_GPFlag = 0x4,
+    kLocalCoordAttribute_GPFlag = 0x8,
+    kCoverageAttribute_GPFlag = 0x10,
+    kCoverageAttributeTweak_GPFlag = 0x20,
 };
 
 class DefaultGeoProc : public GrGeometryProcessor {
@@ -37,14 +37,15 @@ public:
     static sk_sp<GrGeometryProcessor> Make(const GrShaderCaps* shaderCaps,
                                            uint32_t gpTypeFlags,
                                            const SkPMColor4f& color,
-                                           sk_sp<GrColorSpaceXform> colorSpaceXform,
+                                           sk_sp<GrColorSpaceXform>
+                                                   colorSpaceXform,
                                            const SkMatrix& viewMatrix,
                                            const SkMatrix& localMatrix,
                                            bool localCoordsWillBeRead,
                                            uint8_t coverage) {
-        return sk_sp<GrGeometryProcessor>(new DefaultGeoProc(
-                shaderCaps, gpTypeFlags, color, std::move(colorSpaceXform), viewMatrix, localMatrix,
-                coverage, localCoordsWillBeRead));
+        return sk_sp<GrGeometryProcessor>(
+                new DefaultGeoProc(shaderCaps, gpTypeFlags, color, std::move(colorSpaceXform),
+                                   viewMatrix, localMatrix, coverage, localCoordsWillBeRead));
     }
 
     const char* name() const override { return "DefaultGeometryProcessor"; }
@@ -60,9 +61,9 @@ public:
     class GLSLProcessor : public GrGLSLGeometryProcessor {
     public:
         GLSLProcessor()
-            : fViewMatrix(SkMatrix::InvalidMatrix())
-            , fColor(SK_PMColor4fILLEGAL)
-            , fCoverage(0xff) {}
+                : fViewMatrix(SkMatrix::InvalidMatrix())
+                , fColor(SK_PMColor4fILLEGAL)
+                , fCoverage(0xff) {}
 
         void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override {
             const DefaultGeoProc& gp = args.fGP.cast<DefaultGeoProc>();
@@ -88,10 +89,8 @@ public:
                     vertBuilder->codeAppendf("half4 color = %s;", gp.fInColor.name());
                 } else {
                     const char* colorUniformName;
-                    fColorUniform = uniformHandler->addUniform(kVertex_GrShaderFlag,
-                                                               kHalf4_GrSLType,
-                                                               "Color",
-                                                               &colorUniformName);
+                    fColorUniform = uniformHandler->addUniform(
+                            kVertex_GrShaderFlag, kHalf4_GrSLType, "Color", &colorUniformName);
                     vertBuilder->codeAppendf("half4 color = %s;", colorUniformName);
                 }
 
@@ -157,10 +156,8 @@ public:
                 fragBuilder->codeAppendf("%s = half4(1);", args.fOutputCoverage);
             } else {
                 const char* fragCoverage;
-                fCoverageUniform = uniformHandler->addUniform(kFragment_GrShaderFlag,
-                                                              kHalf_GrSLType,
-                                                              "Coverage",
-                                                              &fragCoverage);
+                fCoverageUniform = uniformHandler->addUniform(
+                        kFragment_GrShaderFlag, kHalf_GrSLType, "Coverage", &fragCoverage);
                 fragBuilder->codeAppendf("%s = half4(%s);", args.fOutputCoverage, fragCoverage);
             }
         }
@@ -227,7 +224,8 @@ private:
     DefaultGeoProc(const GrShaderCaps* shaderCaps,
                    uint32_t gpTypeFlags,
                    const SkPMColor4f& color,
-                   sk_sp<GrColorSpaceXform> colorSpaceXform,
+                   sk_sp<GrColorSpaceXform>
+                           colorSpaceXform,
                    const SkMatrix& viewMatrix,
                    const SkMatrix& localMatrix,
                    uint8_t coverage,
@@ -242,12 +240,11 @@ private:
             , fColorSpaceXform(std::move(colorSpaceXform)) {
         fInPosition = {"inPosition", kFloat2_GrVertexAttribType, kFloat2_GrSLType};
         if (fFlags & kColorAttribute_GPFlag) {
-            fInColor = MakeColorAttribute("inColor",
-                                          SkToBool(fFlags & kColorAttributeIsWide_GPFlag));
+            fInColor =
+                    MakeColorAttribute("inColor", SkToBool(fFlags & kColorAttributeIsWide_GPFlag));
         }
         if (fFlags & kLocalCoordAttribute_GPFlag) {
-            fInLocalCoords = {"inLocalCoord", kFloat2_GrVertexAttribType,
-                                              kFloat2_GrSLType};
+            fInLocalCoords = {"inLocalCoord", kFloat2_GrVertexAttribType, kFloat2_GrSLType};
         }
         if (fFlags & kCoverageAttribute_GPFlag) {
             fInCoverage = {"inCoverage", kFloat_GrVertexAttribType, kHalf_GrSLType};
@@ -341,11 +338,11 @@ sk_sp<GrGeometryProcessor> GrDefaultGeoProcFactory::Make(const GrShaderCaps* sha
 }
 
 sk_sp<GrGeometryProcessor> GrDefaultGeoProcFactory::MakeForDeviceSpace(
-                                                                     const GrShaderCaps* shaderCaps,
-                                                                     const Color& color,
-                                                                     const Coverage& coverage,
-                                                                     const LocalCoords& localCoords,
-                                                                     const SkMatrix& viewMatrix) {
+        const GrShaderCaps* shaderCaps,
+        const Color& color,
+        const Coverage& coverage,
+        const LocalCoords& localCoords,
+        const SkMatrix& viewMatrix) {
     SkMatrix invert = SkMatrix::I();
     if (LocalCoords::kUnused_Type != localCoords.fType) {
         SkASSERT(LocalCoords::kUsePosition_Type == localCoords.fType);

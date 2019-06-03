@@ -5,9 +5,21 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkRandom.h"
-#include "SkRRect.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRRect.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkTArray.h"
+#include "include/utils/SkRandom.h"
 
 namespace skiagm {
 
@@ -74,12 +86,12 @@ protected:
     virtual void drawShapes(SkCanvas* canvas) const = 0;
 
 protected:
-    SkString             fName;
-    bool                 fAntialias;
-    SkPaint              fPaint;
-    SkTArray<SkRRect>    fShapes;
-    SkTArray<SkScalar>   fRotations;
-    int                  fSimpleShapeCount;
+    SkString fName;
+    bool fAntialias;
+    SkPaint fPaint;
+    SkTArray<SkRRect> fShapes;
+    SkTArray<SkScalar> fRotations;
+    int fSimpleShapeCount;
 
 private:
     typedef GM INHERITED;
@@ -154,9 +166,9 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new SimpleShapesGM(true); )
-DEF_GM( return new SimpleShapesGM(false); )
-DEF_GM( return new InnerShapesGM(true); )
-DEF_GM( return new InnerShapesGM(false); )
+DEF_GM(return new SimpleShapesGM(true);)
+DEF_GM(return new SimpleShapesGM(false);)
+DEF_GM(return new InnerShapesGM(true);)
+DEF_GM(return new InnerShapesGM(false);)
 
-}
+}  // namespace skiagm

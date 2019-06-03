@@ -8,7 +8,7 @@
 #ifndef SkTLS_DEFINED
 #define SkTLS_DEFINED
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 /**
  *  Maintains a per-thread cache, using a CreateProc as the key into that cache.
@@ -16,7 +16,7 @@
 class SkTLS {
 public:
     typedef void* (*CreateProc)();
-    typedef void  (*DeleteProc)(void*);
+    typedef void (*DeleteProc)(void*);
 
     /**
      *  If Get() has previously been called with this CreateProc, then this
@@ -68,7 +68,7 @@ private:
      *  The implementation can rely on GetSpecific(true) having been previously
      *  called before SetSpecific is called.
      */
-    static void  PlatformSetSpecific(void*);
+    static void PlatformSetSpecific(void*);
 
 public:
     /**

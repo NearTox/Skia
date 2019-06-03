@@ -7,7 +7,7 @@
 #ifndef SkPathOpsRect_DEFINED
 #define SkPathOpsRect_DEFINED
 
-#include "SkPathOpsPoint.h"
+#include "src/pathops/SkPathOpsPoint.h"
 
 class SkTCurve;
 
@@ -22,8 +22,8 @@ struct SkDRect {
     }
 
     bool contains(const SkDPoint& pt) const {
-        return approximately_between(fLeft, pt.fX, fRight)
-                && approximately_between(fTop, pt.fY, fBottom);
+        return approximately_between(fLeft, pt.fX, fRight) &&
+               approximately_between(fTop, pt.fY, fBottom);
     }
 
     void debugInit();
@@ -41,37 +41,25 @@ struct SkDRect {
         fTop = fBottom = pt.fY;
     }
 
-    double width() const {
-        return fRight - fLeft;
-    }
+    double width() const { return fRight - fLeft; }
 
-    double height() const {
-        return fBottom - fTop;
-    }
+    double height() const { return fBottom - fTop; }
 
-    void setBounds(const SkDConic& curve) {
-        setBounds(curve, curve, 0, 1);
-    }
+    void setBounds(const SkDConic& curve) { setBounds(curve, curve, 0, 1); }
 
     void setBounds(const SkDConic& curve, const SkDConic& sub, double tStart, double tEnd);
 
-    void setBounds(const SkDCubic& curve) {
-        setBounds(curve, curve, 0, 1);
-    }
+    void setBounds(const SkDCubic& curve) { setBounds(curve, curve, 0, 1); }
 
     void setBounds(const SkDCubic& curve, const SkDCubic& sub, double tStart, double tEnd);
 
-    void setBounds(const SkDQuad& curve) {
-        setBounds(curve, curve, 0, 1);
-    }
+    void setBounds(const SkDQuad& curve) { setBounds(curve, curve, 0, 1); }
 
     void setBounds(const SkDQuad& curve, const SkDQuad& sub, double tStart, double tEnd);
 
     void setBounds(const SkTCurve& curve);
 
-    bool valid() const {
-        return fLeft <= fRight && fTop <= fBottom;
-    }
+    bool valid() const { return fLeft <= fRight && fTop <= fBottom; }
 };
 
 #endif

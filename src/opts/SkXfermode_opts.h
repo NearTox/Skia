@@ -8,39 +8,41 @@
 #ifndef Sk4pxXfermode_DEFINED
 #define Sk4pxXfermode_DEFINED
 
-#include "Sk4px.h"
-#include "SkMSAN.h"
-#include "SkNx.h"
-#include "SkXfermodePriv.h"
+#include "include/private/SkNx.h"
+#include "src/core/Sk4px.h"
+#include "src/core/SkMSAN.h"
+#include "src/core/SkXfermodePriv.h"
 
 #ifdef SK_FORCE_RASTER_PIPELINE_BLITTER
 
 namespace SK_OPTS_NS {
-    /*not static*/ inline SkXfermode* create_xfermode(SkBlendMode) { return nullptr; }
-}
+/*not static*/ inline SkXfermode* create_xfermode(SkBlendMode) { return nullptr; }
+}  // namespace SK_OPTS_NS
 
 #else
 
 namespace {  // NOLINT(google-build-namespaces)
 
 // Most xfermodes can be done most efficiently 4 pixels at a time in 8 or 16-bit fixed point.
-#define XFERMODE(Xfermode) \
-    struct Xfermode { Sk4px operator()(const Sk4px&, const Sk4px&) const; }; \
+#define XFERMODE(Xfermode)                                  \
+    struct Xfermode {                                       \
+        Sk4px operator()(const Sk4px&, const Sk4px&) const; \
+    };                                                      \
     inline Sk4px Xfermode::operator()(const Sk4px& d, const Sk4px& s) const
 
 XFERMODE(Clear) { return Sk4px::DupPMColor(0); }
-XFERMODE(Src)   { return s; }
-XFERMODE(Dst)   { return d; }
-XFERMODE(SrcIn)   { return     s.approxMulDiv255(d.alphas()      ); }
-XFERMODE(SrcOut)  { return     s.approxMulDiv255(d.alphas().inv()); }
+XFERMODE(Src) { return s; }
+XFERMODE(Dst) { return d; }
+XFERMODE(SrcIn) { return s.approxMulDiv255(d.alphas()); }
+XFERMODE(SrcOut) { return s.approxMulDiv255(d.alphas().inv()); }
 XFERMODE(SrcOver) { return s + d.approxMulDiv255(s.alphas().inv()); }
-XFERMODE(DstIn)   { return SrcIn  ()(s,d); }
-XFERMODE(DstOut)  { return SrcOut ()(s,d); }
-XFERMODE(DstOver) { return SrcOver()(s,d); }
+XFERMODE(DstIn) { return SrcIn()(s, d); }
+XFERMODE(DstOut) { return SrcOut()(s, d); }
+XFERMODE(DstOver) { return SrcOver()(s, d); }
 
 // [ S * Da + (1 - Sa) * D]
 XFERMODE(SrcATop) { return (s * d.alphas() + d * s.alphas().inv()).div255(); }
-XFERMODE(DstATop) { return SrcATop()(s,d); }
+XFERMODE(DstATop) { return SrcATop()(s, d); }
 //[ S * (1 - Da) + (1 - Sa) * D ]
 XFERMODE(Xor) { return (s * d.alphas().inv() + d * s.alphas().inv()).div255(); }
 // [S + D ]
@@ -58,8 +60,7 @@ XFERMODE(Screen) {
 
 // A reasonable fallback mode for doing AA is to simply apply the transfermode first,
 // then linearly interpolate the AA.
-template <typename Xfermode>
-static Sk4px xfer_aa(const Sk4px& d, const Sk4px& s, const Sk4px& aa) {
+template <typename Xfermode> static Sk4px xfer_aa(const Sk4px& d, const Sk4px& s, const Sk4px& aa) {
     Sk4px bw = Xfermode()(d, s);
     return (bw * aa + d * aa.inv()).div255();
 }
@@ -86,13 +87,12 @@ template <> void mark_dst_initialized_if_safe<Clear>(void* dst, void* end) {
     sk_msan_mark_initialized(dst, end, "Clear doesn't read dst.");
 }
 
-template <typename Xfermode>
-class Sk4pxXfermode : public SkXfermode {
+template <typename Xfermode> class Sk4pxXfermode : public SkXfermode {
 public:
     Sk4pxXfermode() {}
 
     void xfer32(SkPMColor dst[], const SkPMColor src[], int n, const SkAlpha aa[]) const override {
-        mark_dst_initialized_if_safe<Xfermode>(dst, dst+n);
+        mark_dst_initialized_if_safe<Xfermode>(dst, dst + n);
         if (nullptr == aa) {
             Sk4px::MapDstSrc(n, dst, src, Xfermode());
         } else {
@@ -101,14 +101,15 @@ public:
     }
 };
 
-} // namespace
+}  // namespace
 
 namespace SK_OPTS_NS {
 
 /*not static*/ inline SkXfermode* create_xfermode(SkBlendMode mode) {
     switch (mode) {
-#define CASE(Xfermode) \
-    case SkBlendMode::k##Xfermode: return new Sk4pxXfermode<Xfermode>()
+#define CASE(Xfermode)             \
+    case SkBlendMode::k##Xfermode: \
+        return new Sk4pxXfermode<Xfermode>()
         CASE(Clear);
         CASE(Src);
         CASE(Dst);
@@ -124,15 +125,16 @@ namespace SK_OPTS_NS {
         CASE(Plus);
         CASE(Modulate);
         CASE(Screen);
-    #undef CASE
+#undef CASE
 
-        default: break;
+        default:
+            break;
     }
     return nullptr;
 }
 
-} // namespace SK_OPTS_NS
+}  // namespace SK_OPTS_NS
 
-#endif // #ifdef SK_FORCE_RASTER_PIPELINE_BLITTER
+#endif  // #ifdef SK_FORCE_RASTER_PIPELINE_BLITTER
 
-#endif//Sk4pxXfermode_DEFINED
+#endif  // Sk4pxXfermode_DEFINED

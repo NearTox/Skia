@@ -8,15 +8,12 @@
 #ifndef SkBlitRow_DEFINED
 #define SkBlitRow_DEFINED
 
-#include "SkBitmap.h"
-#include "SkColor.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkColor.h"
 
 class SkBlitRow {
 public:
-    enum Flags32 {
-        kGlobalAlpha_Flag32     = 1 << 0,
-        kSrcPixelAlpha_Flag32   = 1 << 1
-    };
+    enum Flags32 { kGlobalAlpha_Flag32 = 1 << 0, kSrcPixelAlpha_Flag32 = 1 << 1 };
 
     /** Function pointer that blends 32bit colors onto a 32bit destination.
         @param dst  array of dst 32bit colors

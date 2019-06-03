@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "SkData.h"
-#include "SkOSFile.h"
-#include "SkOnce.h"
-#include "SkReadBuffer.h"
-#include "SkStream.h"
-#include "SkWriteBuffer.h"
+#include "include/core/SkData.h"
 #include <new>
+#include "include/core/SkStream.h"
+#include "include/private/SkOnce.h"
+#include "src/core/SkOSFile.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
 
 SkData::SkData(const void* ptr, size_t size, ReleaseProc proc, void* context) {
     fPtr = const_cast<void*>(ptr);
@@ -24,7 +24,7 @@ SkData::SkData(const void* ptr, size_t size, ReleaseProc proc, void* context) {
  *  Thus we set fPtr to point right after this.
  */
 SkData::SkData(size_t size) {
-    fPtr = (char*)(this + 1);   // contents are immediately after this
+    fPtr = (char*)(this + 1);  // contents are immediately after this
     fSize = size;
     fReleaseProc = nullptr;
     fReleaseProcContext = nullptr;
@@ -59,9 +59,7 @@ size_t SkData::copyRange(size_t offset, size_t length, void* buffer) const {
     return length;
 }
 
-void SkData::operator delete(void* p) {
-    ::operator delete(p);
-}
+void SkData::operator delete(void* p) { ::operator delete(p); }
 
 sk_sp<SkData> SkData::PrivateNewWithCopy(const void* srcOrNull, size_t length) {
     if (0 == length) {
@@ -71,7 +69,7 @@ sk_sp<SkData> SkData::PrivateNewWithCopy(const void* srcOrNull, size_t length) {
     const size_t actualLength = length + sizeof(SkData);
     SkASSERT_RELEASE(length < actualLength);  // Check for overflow.
 
-    void* storage = ::operator new (actualLength);
+    void* storage = ::operator new(actualLength);
     sk_sp<SkData> data(new (storage) SkData(length));
     if (srcOrNull) {
         memcpy(data->writable_data(), srcOrNull, length);
@@ -87,14 +85,12 @@ sk_sp<SkData> SkData::MakeEmpty() {
     static SkOnce once;
     static SkData* empty;
 
-    once([]{ empty = new SkData(nullptr, 0, nullptr, nullptr); });
+    once([] { empty = new SkData(nullptr, 0, nullptr, nullptr); });
     return sk_ref_sp(empty);
 }
 
 // assumes fPtr was allocated via sk_malloc
-static void sk_free_releaseproc(const void* ptr, void*) {
-    sk_free((void*)ptr);
-}
+static void sk_free_releaseproc(const void* ptr, void*) { sk_free((void*)ptr); }
 
 sk_sp<SkData> SkData::MakeFromMalloc(const void* data, size_t length) {
     return sk_sp<SkData>(new SkData(data, length, sk_free_releaseproc, nullptr));
@@ -171,7 +167,7 @@ sk_sp<SkData> SkData::MakeSubset(const SkData* src, size_t offset, size_t length
     }
     SkASSERT(length > 0);
 
-    src->ref(); // this will be balanced in sk_dataref_releaseproc
+    src->ref();  // this will be balanced in sk_dataref_releaseproc
     return sk_sp<SkData>(new SkData(src->bytes() + offset, length, sk_dataref_releaseproc,
                                     const_cast<SkData*>(src)));
 }

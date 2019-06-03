@@ -9,11 +9,10 @@
 #ifndef SkLights_DEFINED
 #define SkLights_DEFINED
 
-#include "SkPoint3.h"
-#include "SkRefCnt.h"
-#include "../private/SkTArray.h"
+#include "include/core/SkPoint3.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/SkTArray.h"
 
-class SkColorSpaceXformer;
 class SkReadBuffer;
 class SkWriteBuffer;
 
@@ -21,22 +20,19 @@ class SkWriteBuffer;
     SkLights encapsulates a set of directional, point and ambient lights for use with the
     SkLightingShader.
 */
-class SK_API SkLights  : public SkRefCnt {
+class SK_API SkLights : public SkRefCnt {
 public:
     class Light {
     public:
-        enum LightType {
-            kDirectional_LightType,
-            kPoint_LightType
-        };
+        enum LightType { kDirectional_LightType, kPoint_LightType };
 
-        Light(const Light& other)
+        Light(const Light& other) noexcept
                 : fType(other.fType)
                 , fColor(other.fColor)
                 , fDirOrPos(other.fDirOrPos)
                 , fIntensity(other.fIntensity) {}
 
-        Light(Light&& other)
+        Light(Light&& other) noexcept
                 : fType(other.fType)
                 , fColor(other.fColor)
                 , fDirOrPos(other.fDirOrPos)
@@ -54,22 +50,22 @@ public:
             return Light(kPoint_LightType, color, pos, intensity);
         }
 
-        LightType type() const { return fType; }
-        const SkColor3f& color() const { return fColor; }
-        const SkVector3& dir() const {
+        LightType type() const noexcept { return fType; }
+        const SkColor3f& color() const noexcept { return fColor; }
+        const SkVector3& dir() const noexcept {
             SkASSERT(kDirectional_LightType == fType);
             return fDirOrPos;
         }
-        const SkPoint3& pos() const {
+        const SkPoint3& pos() const noexcept {
             SkASSERT(kPoint_LightType == fType);
             return fDirOrPos;
         }
-        SkScalar intensity() const {
+        SkScalar intensity() const noexcept {
             SkASSERT(kPoint_LightType == fType);
             return fIntensity;
         }
 
-        Light& operator=(const Light& other) {
+        Light& operator=(const Light& other) noexcept {
             if (this == &other) {
                 return *this;
             }
@@ -81,11 +77,9 @@ public:
             return *this;
         }
 
-        bool operator==(const Light& other) {
-            return (fType      == other.fType) &&
-                   (fColor     == other.fColor) &&
-                   (fDirOrPos  == other.fDirOrPos) &&
-                   (fIntensity == other.fIntensity);
+        bool operator==(const Light& other) noexcept {
+            return (fType == other.fType) && (fColor == other.fColor) &&
+                   (fDirOrPos == other.fDirOrPos) && (fIntensity == other.fIntensity);
         }
 
         bool operator!=(const Light& other) { return !(this->operator==(other)); }
@@ -94,49 +88,44 @@ public:
         friend class SkLights;
 
         Light(LightType type, const SkColor3f& color, const SkVector3& dirOrPos,
-              SkScalar intensity)
-                : fType(type)
-                , fColor(color)
-                , fDirOrPos(dirOrPos)
-                , fIntensity(intensity) {}
+              SkScalar intensity) noexcept
+                : fType(type), fColor(color), fDirOrPos(dirOrPos), fIntensity(intensity) {}
 
-        LightType   fType;
-        SkColor3f   fColor;           // linear (unpremul) color. Range is 0..1 in each channel.
+        LightType fType;
+        SkColor3f fColor;  // linear (unpremul) color. Range is 0..1 in each channel.
 
-        SkVector3   fDirOrPos;        // For directional lights, holds the direction towards the
-                                      // light (+Z is out of the screen).
-                                      // If degenerate, it will be replaced with (0, 0, 1).
-                                      // For point lights, holds location of point light
+        SkVector3 fDirOrPos;  // For directional lights, holds the direction towards the
+                              // light (+Z is out of the screen).
+                              // If degenerate, it will be replaced with (0, 0, 1).
+                              // For point lights, holds location of point light
 
-        SkScalar    fIntensity;       // For point lights, dictates the light intensity.
-                                      // Simply a multiplier to the final light output value.
+        SkScalar fIntensity;  // For point lights, dictates the light intensity.
+                              // Simply a multiplier to the final light output value.
     };
 
     class Builder {
     public:
-        Builder() : fLights(new SkLights) {}
+        Builder() noexcept : fLights(new SkLights) {}
 
-        void add(const Light& light) {
+        void add(const Light& light) noexcept {
             if (fLights) {
                 fLights->fLights.push_back(light);
             }
         }
 
-        void add(Light&& light) {
+        void add(Light&& light) noexcept {
             if (fLights) {
                 fLights->fLights.push_back(std::move(light));
             }
         }
 
-        void setAmbientLightColor(const SkColor3f& color) {
+        void setAmbientLightColor(const SkColor3f& color) noexcept {
             if (fLights) {
                 fLights->fAmbientLightColor = color;
             }
         }
 
-        sk_sp<SkLights> finish() {
-            return std::move(fLights);
-        }
+        sk_sp<SkLights> finish() noexcept { return std::move(fLights); }
 
     private:
         sk_sp<SkLights> fLights;
@@ -146,22 +135,20 @@ public:
 
         @return number of lights not including the ambient light
     */
-    int numLights() const { return fLights.count(); }
+    int numLights() const noexcept { return fLights.count(); }
 
     /** Returns the index-th light.
 
         @param index  the index of the desired light
         @return       the index-th light
     */
-    const Light& light(int index) const { return fLights[index]; }
+    const Light& light(int index) const noexcept { return fLights[index]; }
 
     /** Returns the ambient light.
 
         @return the ambient light
     */
-    const SkColor3f& ambientLightColor() const {
-        return fAmbientLightColor;
-    }
+    const SkColor3f& ambientLightColor() const noexcept { return fAmbientLightColor; }
 
     /**
      *  Recreate an SkLights object that was serialized into a buffer.
@@ -182,12 +169,10 @@ public:
 private:
     friend class SkLightingShaderImpl;
 
-    SkLights() : fAmbientLightColor(SkColor3f::Make(0.0f, 0.0f, 0.0f)) {}
-
-    sk_sp<SkLights> makeColorSpace(SkColorSpaceXformer* xformer) const;
+    SkLights() noexcept : fAmbientLightColor(SkColor3f::Make(0.0f, 0.0f, 0.0f)) {}
 
     SkTArray<Light> fLights;
-    SkColor3f       fAmbientLightColor;
+    SkColor3f fAmbientLightColor;
 
     typedef SkRefCnt INHERITED;
 };

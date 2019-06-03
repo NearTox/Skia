@@ -19,13 +19,13 @@
 // dwrite_3.h guards enum, macro, and interface declarations behind NTDDI_VERSION,
 // but it is not clear this is correct since these are all immutable.
 #if defined(NTDDI_VERSION)
-#  undef NTDDI_VERSION
-#  if defined(_WIN32_WINNT)
-#    undef _WIN32_WINNT
-#  endif
-#  if defined(WINVER)
-#    undef WINVER
-#  endif
+#undef NTDDI_VERSION
+#if defined(_WIN32_WINNT)
+#undef _WIN32_WINNT
+#endif
+#if defined(WINVER)
+#undef WINVER
+#endif
 #endif
 
 #endif

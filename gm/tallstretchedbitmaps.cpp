@@ -5,13 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-
-#include "SkCanvas.h"
-#include "SkGradientShader.h"
-#include "SkPath.h"
-#include "SkRandom.h"
-#include "SkTo.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkFilterQuality.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkTo.h"
+#include "include/utils/SkRandom.h"
 
 int make_bm(SkBitmap* bm, int height) {
     constexpr int kRadius = 22;
@@ -35,8 +40,8 @@ int make_bm(SkBitmap* bm, int height) {
         SkPaint paint;
         // The sw rasterizer disables AA for large canvii. So we make a small canvas for each draw.
         SkBitmap smallBM;
-        SkIRect subRect = SkIRect::MakeXYWH(0, i * (kMargin + 2 * kRadius),
-                                            2 * kRadius + kMargin, 2 * kRadius + kMargin);
+        SkIRect subRect = SkIRect::MakeXYWH(0, i * (kMargin + 2 * kRadius), 2 * kRadius + kMargin,
+                                            2 * kRadius + kMargin);
         bm->extractSubset(&smallBM, subRect);
         SkCanvas canvas(smallBM);
         canvas.translate(kMargin + kRadius, kMargin + kRadius);
@@ -61,13 +66,9 @@ public:
     TallStretchedBitmapsGM() {}
 
 protected:
-    SkString onShortName() override {
-        return SkString("tall_stretched_bitmaps");
-    }
+    SkString onShortName() override { return SkString("tall_stretched_bitmaps"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(730, 690);
-    }
+    SkISize onISize() override { return SkISize::Make(730, 690); }
 
     void onOnceBeforeDraw() override {
         for (size_t i = 0; i < SK_ARRAY_COUNT(fTallBmps); ++i) {
@@ -85,8 +86,8 @@ protected:
             // Draw the last 10 elements of the bitmap.
             int startItem = fTallBmps[i].fItemCnt - 10;
             int itemHeight = bmp.height() / fTallBmps[i].fItemCnt;
-            SkIRect subRect = SkIRect::MakeLTRB(0, startItem * itemHeight,
-                                               bmp.width(), bmp.height());
+            SkIRect subRect =
+                    SkIRect::MakeLTRB(0, startItem * itemHeight, bmp.width(), bmp.height());
             SkRect dstRect = SkRect::MakeWH(SkIntToScalar(bmp.width()), 10.f * itemHeight);
             SkPaint paint;
             paint.setFilterQuality(kLow_SkFilterQuality);
@@ -98,7 +99,7 @@ protected:
 private:
     struct {
         SkBitmap fBmp;
-        int      fItemCnt;
+        int fItemCnt;
     } fTallBmps[8];
     typedef skiagm::GM INHERITED;
 };

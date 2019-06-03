@@ -8,10 +8,10 @@
 #ifndef SkAndroidCodec_DEFINED
 #define SkAndroidCodec_DEFINED
 
-#include "SkCodec.h"
-#include "SkEncodedImageFormat.h"
-#include "SkStream.h"
-#include "SkTypes.h"
+#include "include/codec/SkCodec.h"
+#include "include/core/SkEncodedImageFormat.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkTypes.h"
 
 /**
  *  Abstract interface defining image codec functionality that is necessary for
@@ -42,8 +42,8 @@ public:
     /**
      *  Pass ownership of an SkCodec to a newly-created SkAndroidCodec.
      */
-    static std::unique_ptr<SkAndroidCodec> MakeFromCodec(std::unique_ptr<SkCodec>,
-            ExifOrientationBehavior = ExifOrientationBehavior::kIgnore);
+    static std::unique_ptr<SkAndroidCodec> MakeFromCodec(
+            std::unique_ptr<SkCodec>, ExifOrientationBehavior = ExifOrientationBehavior::kIgnore);
 
     /**
      *  If this stream represents an encoded image that we know how to decode,
@@ -190,10 +190,9 @@ public:
     //        should be DecodeOptions or SamplingOptions?
     struct AndroidOptions {
         AndroidOptions()
-            : fZeroInitialized(SkCodec::kNo_ZeroInitialized)
-            , fSubset(nullptr)
-            , fSampleSize(1)
-        {}
+                : fZeroInitialized(SkCodec::kNo_ZeroInitialized)
+                , fSubset(nullptr)
+                , fSampleSize(1) {}
 
         /**
          *  Indicates is destination pixel memory is zero initialized.
@@ -255,7 +254,7 @@ public:
     //        this getPixels() when it is a slightly different API than SkCodec's getPixels().
     //        Maybe this should be decode() or decodeSubset()?
     SkCodec::Result getAndroidPixels(const SkImageInfo& info, void* pixels, size_t rowBytes,
-            const AndroidOptions* options);
+                                     const AndroidOptions* options);
 
     /**
      *  Simplified version of getAndroidPixels() where we supply the default AndroidOptions as
@@ -277,11 +276,11 @@ protected:
     virtual bool onGetSupportedSubset(SkIRect* desiredSubset) const = 0;
 
     virtual SkCodec::Result onGetAndroidPixels(const SkImageInfo& info, void* pixels,
-            size_t rowBytes, const AndroidOptions& options) = 0;
+                                               size_t rowBytes, const AndroidOptions& options) = 0;
 
 private:
-    const SkImageInfo               fInfo;
-    const ExifOrientationBehavior   fOrientationBehavior;
-    std::unique_ptr<SkCodec>        fCodec;
+    const SkImageInfo fInfo;
+    const ExifOrientationBehavior fOrientationBehavior;
+    std::unique_ptr<SkCodec> fCodec;
 };
-#endif // SkAndroidCodec_DEFINED
+#endif  // SkAndroidCodec_DEFINED

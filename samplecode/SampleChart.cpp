@@ -5,19 +5,19 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkCanvas.h"
-#include "SkPaint.h"
-#include "SkPath.h"
-#include "SkRandom.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/utils/SkRandom.h"
+#include "samplecode/Sample.h"
 
 // Generates y values for the chart plots.
 static void gen_data(SkScalar yAvg, SkScalar ySpread, int count, SkTDArray<SkScalar>* dataPts) {
     dataPts->setCount(count);
     static SkRandom gRandom;
     for (int i = 0; i < count; ++i) {
-        (*dataPts)[i] = gRandom.nextRangeScalar(yAvg - SkScalarHalf(ySpread),
-                                                yAvg + SkScalarHalf(ySpread));
+        (*dataPts)[i] =
+                gRandom.nextRangeScalar(yAvg - SkScalarHalf(ySpread), yAvg + SkScalarHalf(ySpread));
     }
 }
 
@@ -25,12 +25,9 @@ static void gen_data(SkScalar yAvg, SkScalar ySpread, int count, SkTDArray<SkSca
 // plot. The fill path is bounded below by the bottomData plot points or a horizontal line at
 // yBase if bottomData == nullptr.
 // The plots are animated by rotating the data points by leftShift.
-static void gen_paths(const SkTDArray<SkScalar>& topData,
-                      const SkTDArray<SkScalar>* bottomData,
-                      SkScalar yBase,
-                      SkScalar xLeft, SkScalar xDelta,
-                      int leftShift,
-                      SkPath* plot, SkPath* fill) {
+static void gen_paths(const SkTDArray<SkScalar>& topData, const SkTDArray<SkScalar>* bottomData,
+                      SkScalar yBase, SkScalar xLeft, SkScalar xDelta, int leftShift, SkPath* plot,
+                      SkPath* fill) {
     plot->rewind();
     fill->rewind();
     plot->incReserve(topData.count());
@@ -120,7 +117,7 @@ protected:
         canvas->clear(0xFFE0F0E0);
 
         static SkRandom colorRand;
-        static SkColor gColors[kNumGraphs] = { 0x0 };
+        static SkColor gColors[kNumGraphs] = {0x0};
         if (0 == gColors[0]) {
             for (int i = 0; i < kNumGraphs; ++i) {
                 gColors[i] = colorRand.nextU() | 0xff000000;
@@ -171,12 +168,12 @@ private:
         kPixelsPerTick = 3,
         kShiftPerFrame = 1,
     };
-    int                 fShift;
-    SkISize             fSize;
+    int fShift;
+    SkISize fSize;
     SkTDArray<SkScalar> fData[kNumGraphs];
     typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new ChartView(); )
+DEF_SAMPLE(return new ChartView();)

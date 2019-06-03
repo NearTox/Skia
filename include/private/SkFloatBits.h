@@ -8,8 +8,8 @@
 #ifndef SkFloatBits_DEFINED
 #define SkFloatBits_DEFINED
 
-#include "SkTypes.h"
-#include "SkSafe_math.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkSafe_math.h"
 
 #include <float.h>
 
@@ -17,7 +17,7 @@
     int. This also converts -0 (0x80000000) to 0. Doing this to a float allows
     it to be compared using normal C operators (<, <=, etc.)
 */
-static inline constexpr int32_t SkSignBitTo2sCompliment(int32_t x) {
+static constexpr inline int32_t SkSignBitTo2sCompliment(int32_t x) noexcept {
     if (x < 0) {
         x &= 0x7FFFFFFF;
         x = -x;
@@ -28,7 +28,7 @@ static inline constexpr int32_t SkSignBitTo2sCompliment(int32_t x) {
 /** Convert a 2s compliment int to a sign-bit (i.e. int interpreted as float).
     This undoes the result of SkSignBitTo2sCompliment().
  */
-static inline constexpr int32_t Sk2sComplimentToSignBit(int32_t x) {
+static constexpr inline int32_t Sk2sComplimentToSignBit(int32_t x) noexcept {
     int sign = x >> 31;
     // make x positive
     x = (x ^ sign) - sign;
@@ -38,34 +38,34 @@ static inline constexpr int32_t Sk2sComplimentToSignBit(int32_t x) {
 }
 
 union SkFloatIntUnion {
-    float   fFloat;
+    float fFloat;
     int32_t fSignBitInt;
 };
 
 // Helper to see a float as its bit pattern (w/o aliasing warnings)
-static inline constexpr int32_t SkFloat2Bits(float x) {
-    SkFloatIntUnion data = {};
+static constexpr inline int32_t SkFloat2Bits(float x) noexcept {
+    SkFloatIntUnion data{};
     data.fFloat = x;
     return data.fSignBitInt;
 }
 
 // Helper to see a bit pattern as a float (w/o aliasing warnings)
-static inline constexpr float SkBits2Float(int32_t floatAsBits) {
-    SkFloatIntUnion data = {};
+static constexpr inline float SkBits2Float(int32_t floatAsBits) noexcept {
+    SkFloatIntUnion data{};
     data.fSignBitInt = floatAsBits;
     return data.fFloat;
 }
 
 constexpr int32_t gFloatBits_exponent_mask = 0x7F800000;
-constexpr int32_t gFloatBits_matissa_mask  = 0x007FFFFF;
+constexpr int32_t gFloatBits_matissa_mask = 0x007FFFFF;
 
-static inline constexpr bool SkFloatBits_IsFinite(int32_t bits) {
+static constexpr inline bool SkFloatBits_IsFinite(int32_t bits) noexcept {
     return (bits & gFloatBits_exponent_mask) != gFloatBits_exponent_mask;
 }
 
-static inline constexpr bool SkFloatBits_IsInf(int32_t bits) {
+static constexpr inline bool SkFloatBits_IsInf(int32_t bits) noexcept {
     return ((bits & gFloatBits_exponent_mask) == gFloatBits_exponent_mask) &&
-            (bits & gFloatBits_matissa_mask) == 0;
+           (bits & gFloatBits_matissa_mask) == 0;
 }
 
 /** Return the float as a 2s compliment int. Just to be used to compare floats
@@ -73,19 +73,19 @@ static inline constexpr bool SkFloatBits_IsInf(int32_t bits) {
     not return the int equivalent of the float, just something cheaper for
     compares-only.
  */
-static inline int32_t SkFloatAs2sCompliment(float x) {
+static constexpr inline int32_t SkFloatAs2sCompliment(float x) noexcept {
     return SkSignBitTo2sCompliment(SkFloat2Bits(x));
 }
 
 /** Return the 2s compliment int as a float. This undos the result of
     SkFloatAs2sCompliment
  */
-static inline float Sk2sComplimentAsFloat(int32_t x) {
+static constexpr inline float Sk2sComplimentAsFloat(int32_t x) noexcept {
     return SkBits2Float(Sk2sComplimentToSignBit(x));
 }
 
 //  Scalar wrappers for float-bit routines
 
-#define SkScalarAs2sCompliment(x)    SkFloatAs2sCompliment(x)
+#define SkScalarAs2sCompliment(x) SkFloatAs2sCompliment(x)
 
 #endif

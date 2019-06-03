@@ -12,8 +12,8 @@
 
 #include <v8.h>
 
-#include "SkPaint.h"
 #include "DrawingMethods.h"
+#include "SkPaint.h"
 
 class SkCanvas;
 class Global;
@@ -27,11 +27,7 @@ class Global;
 //  }
 class JsContext : public DrawingMethods {
 public:
-    JsContext(Global* global)
-            : INHERITED(global)
-            , fCanvas(NULL)
-    {
-    }
+    JsContext(Global* global) : INHERITED(global), fCanvas(NULL) {}
     virtual ~JsContext() {}
 
     // Parse the script.
@@ -43,7 +39,6 @@ public:
     virtual SkCanvas* getCanvas() { return fCanvas; };
 
 private:
-
     // Wrap the 'this' pointer into an Object. Can be retrieved via Unwrap.
     v8::Handle<v8::Object> wrap();
 

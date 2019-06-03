@@ -4,12 +4,12 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkOpEdgeBuilder.h"
-#include "SkPathOpsCommon.h"
+#include "src/pathops/SkOpEdgeBuilder.h"
+#include "src/pathops/SkPathOpsCommon.h"
 
 bool TightBounds(const SkPath& path, SkRect* result) {
     SkPath::RawIter iter(path);
-    SkRect moveBounds = { SK_ScalarMax, SK_ScalarMax, SK_ScalarMin, SK_ScalarMin };
+    SkRect moveBounds = {SK_ScalarMax, SK_ScalarMax, SK_ScalarMin, SK_ScalarMin};
     bool wellBehaved = true;
     SkPath::Verb verb;
     do {
@@ -50,8 +50,8 @@ bool TightBounds(const SkPath& path, SkRect* result) {
     SkSTArenaAlloc<4096> allocator;  // FIXME: constant-ize, tune
     SkOpContour contour;
     SkOpContourHead* contourList = static_cast<SkOpContourHead*>(&contour);
-    SkOpGlobalState globalState(contourList, &allocator  SkDEBUGPARAMS(false)
-            SkDEBUGPARAMS(nullptr));
+    SkOpGlobalState globalState(contourList,
+                                &allocator SkDEBUGPARAMS(false) SkDEBUGPARAMS(nullptr));
     // turn path into list of segments
     SkOpEdgeBuilder builder(path, contourList, &globalState);
     if (!builder.finish()) {

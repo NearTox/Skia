@@ -5,14 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "GrGLSLPrimitiveProcessor.h"
+#include "src/gpu/glsl/GrGLSLPrimitiveProcessor.h"
 
-#include "GrCoordTransform.h"
-#include "GrTexture.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLProgramBuilder.h"
-#include "glsl/GrGLSLUniformHandler.h"
-#include "glsl/GrGLSLVertexGeoBuilder.h"
+#include "include/gpu/GrTexture.h"
+#include "src/gpu/GrCoordTransform.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLProgramBuilder.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#include "src/gpu/glsl/GrGLSLVertexGeoBuilder.h"
 
 SkMatrix GrGLSLPrimitiveProcessor::GetTransformMatrix(const SkMatrix& localMatrix,
                                                       const GrCoordTransform& coordTransform) {
@@ -54,10 +54,8 @@ void GrGLSLPrimitiveProcessor::setupUniformColor(GrGLSLFPFragmentBuilder* fragBu
                                                  UniformHandle* colorUniform) {
     SkASSERT(colorUniform);
     const char* stagedLocalVarName;
-    *colorUniform = uniformHandler->addUniform(kFragment_GrShaderFlag,
-                                               kHalf4_GrSLType,
-                                               "Color",
-                                               &stagedLocalVarName);
+    *colorUniform = uniformHandler->addUniform(
+            kFragment_GrShaderFlag, kHalf4_GrSLType, "Color", &stagedLocalVarName);
     fragBuilder->codeAppendf("%s = %s;", outputName, stagedLocalVarName);
     if (fragBuilder->getProgramBuilder()->shaderCaps()->mustObfuscateUniformColor()) {
         fragBuilder->codeAppendf("%s = max(%s, half4(0, 0, 0, 0));", outputName, outputName);

@@ -8,9 +8,9 @@
 #ifndef GrAtlasTextOp_DEFINED
 #define GrAtlasTextOp_DEFINED
 
-#include "ops/GrMeshDrawOp.h"
-#include "text/GrTextBlob.h"
-#include "text/GrDistanceFieldAdjustTable.h"
+#include "src/gpu/ops/GrMeshDrawOp.h"
+#include "src/gpu/text/GrDistanceFieldAdjustTable.h"
+#include "src/gpu/text/GrTextBlob.h"
 
 class GrRecordingContext;
 class SkAtlasTextTarget;
@@ -30,32 +30,28 @@ public:
 
     typedef GrTextBlob Blob;
     struct Geometry {
-        SkMatrix    fViewMatrix;
-        SkIRect     fClipRect;
-        Blob*       fBlob;
-        SkScalar    fX;
-        SkScalar    fY;
-        uint16_t    fRun;
-        uint16_t    fSubRun;
+        SkMatrix fViewMatrix;
+        SkIRect fClipRect;
+        Blob* fBlob;
+        SkScalar fX;
+        SkScalar fY;
+        uint16_t fRun;
+        uint16_t fSubRun;
         SkPMColor4f fColor;
     };
 
-    static std::unique_ptr<GrAtlasTextOp> MakeBitmap(GrRecordingContext*,
-                                                     GrPaint&&,
-                                                     GrMaskFormat,
-                                                     int glyphCount,
-                                                     bool needsTransform);
+    static std::unique_ptr<GrAtlasTextOp> MakeBitmap(GrRecordingContext*, GrPaint&&, GrMaskFormat,
+                                                     int glyphCount, bool needsTransform);
 
-    static std::unique_ptr<GrAtlasTextOp> MakeDistanceField(
-            GrRecordingContext*,
-            GrPaint&&,
-            int glyphCount,
-            const GrDistanceFieldAdjustTable*,
-            bool useGammaCorrectDistanceTable,
-            SkColor luminanceColor,
-            const SkSurfaceProps&,
-            bool isAntiAliased,
-            bool useLCD);
+    static std::unique_ptr<GrAtlasTextOp> MakeDistanceField(GrRecordingContext*,
+                                                            GrPaint&&,
+                                                            int glyphCount,
+                                                            const GrDistanceFieldAdjustTable*,
+                                                            bool useGammaCorrectDistanceTable,
+                                                            SkColor luminanceColor,
+                                                            const SkSurfaceProps&,
+                                                            bool isAntiAliased,
+                                                            bool useLCD);
 
     // To avoid even the initial copy of the struct, we have a getter for the first item which
     // is used to seed the op with its initial geometry.  After seeding, the client should call
@@ -75,7 +71,8 @@ public:
 
     FixedFunctionFlags fixedFunctionFlags() const override;
 
-    GrProcessorSet::Analysis finalize(const GrCaps&, const GrAppliedClip*, GrFSAAType) override;
+    GrProcessorSet::Analysis finalize(const GrCaps&, const GrAppliedClip*, GrFSAAType,
+                                      GrClampType) override;
 
     enum MaskType {
         kGrayscaleCoverageMask_MaskType,
@@ -93,7 +90,7 @@ public:
     void executeForTextTarget(SkAtlasTextTarget*);
 
 private:
-    friend class GrOpMemoryPool; // for ctor
+    friend class GrOpMemoryPool;  // for ctor
 
     // The minimum number of Geometry we will try to allocate.
     static constexpr auto kMinGeometryAllocated = 12;
@@ -139,14 +136,16 @@ private:
     }
 
     bool isLCD() const {
-        return kLCDCoverageMask_MaskType == fMaskType ||
-               kLCDDistanceField_MaskType == fMaskType ||
+        return kLCDCoverageMask_MaskType == fMaskType || kLCDDistanceField_MaskType == fMaskType ||
                kLCDBGRDistanceField_MaskType == fMaskType;
     }
 
     inline void flush(GrMeshDrawOp::Target* target, FlushInfo* flushInfo) const;
 
-    const SkPMColor4f& color() const { SkASSERT(fGeoCount > 0); return fGeoData[0].fColor; }
+    const SkPMColor4f& color() const {
+        SkASSERT(fGeoCount > 0);
+        return fGeoData[0].fColor;
+    }
     bool usesLocalCoords() const { return fUsesLocalCoords; }
     int numGlyphs() const { return fNumGlyphs; }
 

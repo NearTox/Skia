@@ -8,9 +8,9 @@
 #ifndef SkNoDrawCanvas_DEFINED
 #define SkNoDrawCanvas_DEFINED
 
-#include "SkCanvas.h"
-#include "SkCanvasVirtualEnforcer.h"
-#include "SkVertices.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkCanvasVirtualEnforcer.h"
+#include "include/core/SkVertices.h"
 
 struct SkIRect;
 
@@ -32,9 +32,7 @@ public:
     explicit SkNoDrawCanvas(sk_sp<SkBaseDevice> device);
 
     // Optimization to reset state to be the same as after construction.
-    void resetCanvas(int width, int height) {
-        resetForNextPicture(SkIRect::MakeWH(width, height));
-    }
+    void resetCanvas(int width, int height) { resetForNextPicture(SkIRect::MakeWH(width, height)); }
 
 protected:
     SaveLayerStrategy getSaveLayerStrategy(const SaveLayerRec& rec) override;
@@ -49,9 +47,9 @@ protected:
                      const SkPaint&) override {}
 
     void onDrawPaint(const SkPaint&) override {}
+    void onDrawBehind(const SkPaint&) override {}
     void onDrawPoints(PointMode, size_t, const SkPoint[], const SkPaint&) override {}
     void onDrawRect(const SkRect&, const SkPaint&) override {}
-    void onDrawEdgeAARect(const SkRect&, SkCanvas::QuadAAFlags, SkColor, SkBlendMode) override {}
     void onDrawRegion(const SkRegion&, const SkPaint&) override {}
     void onDrawOval(const SkRect&, const SkPaint&) override {}
     void onDrawArc(const SkRect&, SkScalar, SkScalar, bool, const SkPaint&) override {}
@@ -64,23 +62,26 @@ protected:
     void onDrawImageRect(const SkImage*, const SkRect*, const SkRect&, const SkPaint*,
                          SrcRectConstraint) override {}
     void onDrawImageNine(const SkImage*, const SkIRect&, const SkRect&, const SkPaint*) override {}
-    void onDrawBitmapNine(const SkBitmap&, const SkIRect&, const SkRect&,
-                          const SkPaint*) override {}
+    void onDrawBitmapNine(const SkBitmap&, const SkIRect&, const SkRect&, const SkPaint*) override {
+    }
     void onDrawImageLattice(const SkImage*, const Lattice&, const SkRect&,
                             const SkPaint*) override {}
-    void onDrawImageSet(const SkCanvas::ImageSetEntry[], int, SkFilterQuality,
-                        SkBlendMode) override {}
     void onDrawBitmapLattice(const SkBitmap&, const Lattice&, const SkRect&,
                              const SkPaint*) override {}
     void onDrawVerticesObject(const SkVertices*, const SkVertices::Bone[], int, SkBlendMode,
                               const SkPaint&) override {}
-    void onDrawAtlas(const SkImage*, const SkRSXform[], const SkRect[], const SkColor[],
-                     int, SkBlendMode, const SkRect*, const SkPaint*) override {}
+    void onDrawAtlas(const SkImage*, const SkRSXform[], const SkRect[], const SkColor[], int,
+                     SkBlendMode, const SkRect*, const SkPaint*) override {}
     void onDrawShadowRec(const SkPath&, const SkDrawShadowRec&) override {}
     void onDrawPicture(const SkPicture*, const SkMatrix*, const SkPaint*) override {}
+
+    void onDrawEdgeAAQuad(const SkRect&, const SkPoint[4], QuadAAFlags, SkColor,
+                          SkBlendMode) override {}
+    void onDrawEdgeAAImageSet(const ImageSetEntry[], int, const SkPoint[], const SkMatrix[],
+                              const SkPaint*, SrcRectConstraint) override {}
 
 private:
     typedef SkCanvasVirtualEnforcer<SkCanvas> INHERITED;
 };
 
-#endif // SkNoDrawCanvas_DEFINED
+#endif  // SkNoDrawCanvas_DEFINED

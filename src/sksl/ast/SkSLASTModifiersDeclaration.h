@@ -8,8 +8,8 @@
 #ifndef SKSL_ASTMODIFIERDECLARATION
 #define SKSL_ASTMODIFIERDECLARATION
 
-#include "SkSLASTDeclaration.h"
-#include "../ir/SkSLModifiers.h"
+#include "src/sksl/ast/SkSLASTDeclaration.h"
+#include "src/sksl/ir/SkSLModifiers.h"
 
 namespace SkSL {
 
@@ -20,18 +20,15 @@ namespace SkSL {
  */
 struct ASTModifiersDeclaration : public ASTDeclaration {
     ASTModifiersDeclaration(Modifiers modifiers)
-    : INHERITED(-1, kModifiers_Kind)
-    , fModifiers(modifiers) {}
+            : INHERITED(-1, kModifiers_Kind), fModifiers(modifiers) {}
 
-    String description() const {
-        return fModifiers.description() + ";";
-    }
+    String description() const { return fModifiers.description() + ";"; }
 
     Modifiers fModifiers;
 
     typedef ASTDeclaration INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

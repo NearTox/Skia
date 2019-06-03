@@ -5,18 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkBitmap.h"
-#include "SkCanvas.h"
-#include "SkGeometry.h"
-#include "SkIntersections.h"
-#include "SkMacros.h"
-#include "SkOpEdgeBuilder.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/private/SkMacros.h"
+#include "samplecode/Sample.h"
+#include "src/core/SkGeometry.h"
+#include "src/pathops/SkIntersections.h"
+#include "src/pathops/SkOpEdgeBuilder.h"
 // #include "SkPathOpsSimplifyAA.h"
 // #include "SkPathStroker.h"
-#include "SkPointPriv.h"
-#include "SkString.h"
-#include "SkTextUtils.h"
+#include "include/core/SkString.h"
+#include "include/utils/SkTextUtils.h"
+#include "src/core/SkPointPriv.h"
 
 #if 0
 void SkStrokeSegment::dump() const {
@@ -202,13 +202,13 @@ static void set_path_pt(int index, const SkPoint& pt, SkPath* path) {
 static void add_path_segment(int index, SkPath* path) {
     SkPath result;
     SkPoint pts[4];
-    SkPoint firstPt = { 0, 0 };  // init to avoid warning
-    SkPoint lastPt = { 0, 0 };  // init to avoid warning
+    SkPoint firstPt = {0, 0};  // init to avoid warning
+    SkPoint lastPt = {0, 0};   // init to avoid warning
     SkPath::Verb verb;
     SkPath::RawIter iter(*path);
     int counter = -1;
     while ((verb = iter.next(pts)) != SkPath::kDone_Verb) {
-        SkScalar weight  SK_INIT_TO_AVOID_WARNING;
+        SkScalar weight SK_INIT_TO_AVOID_WARNING;
         if (++counter == index) {
             switch (verb) {
                 case SkPath::kLine_Verb:
@@ -219,7 +219,7 @@ static void add_path_segment(int index, SkPath* path) {
                     SkChopQuadAtHalf(pts, chop);
                     result.quadTo(chop[1], chop[2]);
                     pts[1] = chop[3];
-                    } break;
+                } break;
                 case SkPath::kConic_Verb: {
                     SkConic chop[2];
                     SkConic conic;
@@ -230,17 +230,17 @@ static void add_path_segment(int index, SkPath* path) {
                     result.conicTo(chop[0].fPts[1], chop[0].fPts[2], chop[0].fW);
                     pts[1] = chop[1].fPts[1];
                     weight = chop[1].fW;
-                    } break;
+                } break;
                 case SkPath::kCubic_Verb: {
                     SkPoint chop[7];
                     SkChopCubicAtHalf(pts, chop);
                     result.cubicTo(chop[1], chop[2], chop[3]);
                     pts[1] = chop[4];
                     pts[2] = chop[5];
-                    } break;
+                } break;
                 case SkPath::kClose_Verb: {
                     result.lineTo((lastPt.fX + firstPt.fX) / 2, (lastPt.fY + firstPt.fY) / 2);
-                    } break;
+                } break;
                 default:
                     SkASSERT(0);
             }
@@ -377,7 +377,7 @@ static void set_path_verb(int index, SkPath::Verb v, SkPath* path, SkScalar w) {
                             pts[2].fX = (pts[0].fX + pts[3].fX * 2) / 3;
                             pts[2].fY = (pts[0].fY + pts[3].fY * 2) / 3;
                             break;
-                         default:
+                        default:
                             SkASSERT(0);
                             break;
                     }
@@ -399,8 +399,8 @@ static void set_path_verb(int index, SkPath::Verb v, SkPath* path, SkScalar w) {
                             pts[3] = pts[2];
                             pts[1] = dCubic[1].asSkPoint();
                             pts[2] = dCubic[2].asSkPoint();
-                            } break;
-                         default:
+                        } break;
+                        default:
                             SkASSERT(0);
                             break;
                     }
@@ -418,7 +418,7 @@ static void set_path_verb(int index, SkPath::Verb v, SkPath* path, SkScalar w) {
                             SkDQuad dQuad = dCubic.toQuad();
                             pts[1] = dQuad[1].asSkPoint();
                             pts[2] = pts[3];
-                            } break;
+                        } break;
                         default:
                             SkASSERT(0);
                             break;
@@ -458,7 +458,7 @@ static void set_path_verb(int index, SkPath::Verb v, SkPath* path, SkScalar w) {
 }
 
 static void add_to_map(SkScalar coverage, int x, int y, uint8_t* distanceMap, int w, int h) {
-    int byteCoverage = (int) (coverage * 256);
+    int byteCoverage = (int)(coverage * 256);
     if (byteCoverage < 0) {
         byteCoverage = 0;
     } else if (byteCoverage > 255) {
@@ -466,11 +466,11 @@ static void add_to_map(SkScalar coverage, int x, int y, uint8_t* distanceMap, in
     }
     SkASSERT(x < w);
     SkASSERT(y < h);
-    distanceMap[y * w + x] = SkTMax(distanceMap[y * w + x], (uint8_t) byteCoverage);
+    distanceMap[y * w + x] = SkTMax(distanceMap[y * w + x], (uint8_t)byteCoverage);
 }
 
 static void filter_coverage(const uint8_t* map, int len, uint8_t min, uint8_t max,
-        uint8_t* filter) {
+                            uint8_t* filter) {
     for (int index = 0; index < len; ++index) {
         uint8_t in = map[index];
         filter[index] = in < min ? 0 : max < in ? 0 : in;
@@ -491,7 +491,7 @@ struct ButtonPaints {
     static const int kMaxStateCount = 3;
     SkPaint fDisabled;
     SkPaint fStates[kMaxStateCount];
-    SkFont  fLabelFont;
+    SkFont fLabelFont;
 
     ButtonPaints() {
         fStates[0].setAntiAlias(true);
@@ -527,21 +527,18 @@ struct Button {
         fVisible = false;
     }
 
-    bool contains(const SkRect& rect) {
-        return fVisible && fBounds.contains(rect);
-    }
+    bool contains(const SkRect& rect) { return fVisible && fBounds.contains(rect); }
 
-    bool enabled() {
-        return SkToBool(fState);
-    }
+    bool enabled() { return SkToBool(fState); }
 
     void draw(SkCanvas* canvas, const ButtonPaints& paints) {
         if (!fVisible) {
             return;
         }
         canvas->drawRect(fBounds, paints.fStates[fState]);
-        SkTextUtils::Draw(canvas, &fLabel, 1, kUTF8_SkTextEncoding, fBounds.centerX(), fBounds.fBottom - 5,
-                          paints.fLabelFont, SkPaint(), SkTextUtils::kCenter_Align);
+        SkTextUtils::Draw(canvas, &fLabel, 1, SkTextEncoding::kUTF8, fBounds.centerX(),
+                          fBounds.fBottom - 5, paints.fLabelFont, SkPaint(),
+                          SkTextUtils::kCenter_Align);
     }
 
     void toggle() {
@@ -550,9 +547,7 @@ struct Button {
         }
     }
 
-    void setEnabled(bool enabled) {
-        fState = (int) enabled;
-    }
+    void setEnabled(bool enabled) { fState = (int)enabled; }
 };
 
 struct ControlPaints {
@@ -590,17 +585,14 @@ struct UniControl {
 
     UniControl(const char* name, SkScalar min, SkScalar max) {
         fName = name;
-        fValLo =  fMin = min;
+        fValLo = fMin = min;
         fMax = max;
         fVisible = false;
-
     }
 
     virtual ~UniControl() {}
 
-    bool contains(const SkRect& rect) {
-        return fVisible && fBounds.contains(rect);
-    }
+    bool contains(const SkRect& rect) { return fVisible && fBounds.contains(rect); }
 
     virtual void draw(SkCanvas* canvas, const ControlPaints& paints) {
         if (!fVisible) {
@@ -621,9 +613,7 @@ struct BiControl : public UniControl {
     SkScalar fValHi;
 
     BiControl(const char* name, SkScalar min, SkScalar max)
-        : UniControl(name, min, max)
-        ,  fValHi(fMax) {
-    }
+            : UniControl(name, min, max), fValHi(fMax) {}
 
     virtual ~BiControl() {}
 
@@ -640,11 +630,10 @@ struct BiControl : public UniControl {
             yPos = fYLo + 10;
         }
         canvas->drawString(label, fBounds.fLeft + 5, yPos - 5, paints.fValueFont, paints.fValue);
-        SkRect fill = { fBounds.fLeft, fYLo, fBounds.fRight, yPos };
+        SkRect fill = {fBounds.fLeft, fYLo, fBounds.fRight, yPos};
         canvas->drawRect(fill, paints.fFill);
     }
 };
-
 
 class MyClick : public Sample::Click {
 public:
@@ -686,41 +675,32 @@ public:
     SkScalar fWeight;
 
     MyClick(Sample* target, ClickType type, ControlType control)
-        : Click(target)
-        , fType(type)
-        , fControl(control)
-        , fVerb((SkPath::Verb) -1)
-        , fWeight(1) {
-    }
+            : Click(target), fType(type), fControl(control), fVerb((SkPath::Verb)-1), fWeight(1) {}
 
     MyClick(Sample* target, ClickType type, int index)
-        : Click(target)
-        , fType(type)
-        , fControl((ControlType) index)
-        , fVerb((SkPath::Verb) -1)
-        , fWeight(1) {
-    }
+            : Click(target)
+            , fType(type)
+            , fControl((ControlType)index)
+            , fVerb((SkPath::Verb)-1)
+            , fWeight(1) {}
 
     MyClick(Sample* target, ClickType type, int index, SkPath::Verb verb, SkScalar weight)
-        : Click(target)
-        , fType(type)
-        , fControl((ControlType) index)
-        , fVerb(verb)
-        , fWeight(weight) {
-    }
+            : Click(target)
+            , fType(type)
+            , fControl((ControlType)index)
+            , fVerb(verb)
+            , fWeight(weight) {}
 
-    bool isButton() {
-        return kFirstButton <= fControl && fControl <= kLastButton;
-    }
+    bool isButton() { return kFirstButton <= fControl && fControl <= kLastButton; }
 
     int ptHit() const {
         SkASSERT(fType == kPtType);
-        return (int) fControl;
+        return (int)fControl;
     }
 
     int verbHit() const {
         SkASSERT(fType == kVerbType);
-        return (int) fControl;
+        return (int)fControl;
     }
 };
 
@@ -822,31 +802,29 @@ class AAGeometryView : public Sample {
     const int kHitToleranace = 25;
 
 public:
-
     AAGeometryView()
-        : fResControl("error", 0, 10)
-        , fWeightControl("weight", 0, 5)
-        , fWidthControl("width", FLT_EPSILON, 100)
-        , fFilterControl("filter", 0, 255)
-        , fCubicButton('C')
-        , fConicButton('K')
-        , fQuadButton('Q')
-        , fLineButton('L')
-        , fAddButton('+')
-        , fDeleteButton('x')
-        , fFillButton('p')
-        , fSkeletonButton('s')
-        , fFilterButton('f', 3)
-        , fBisectButton('b')
-        , fJoinButton('j')
-        , fInOutButton('|')
-        , fUndo(nullptr)
-        , fActivePt(-1)
-        , fActiveVerb(-1)
-        , fHandlePathMove(true)
-        , fShowLegend(false)
-        , fHideAll(false)
-    {
+            : fResControl("error", 0, 10)
+            , fWeightControl("weight", 0, 5)
+            , fWidthControl("width", FLT_EPSILON, 100)
+            , fFilterControl("filter", 0, 255)
+            , fCubicButton('C')
+            , fConicButton('K')
+            , fQuadButton('Q')
+            , fLineButton('L')
+            , fAddButton('+')
+            , fDeleteButton('x')
+            , fFillButton('p')
+            , fSkeletonButton('s')
+            , fFilterButton('f', 3)
+            , fBisectButton('b')
+            , fJoinButton('j')
+            , fInOutButton('|')
+            , fUndo(nullptr)
+            , fActivePt(-1)
+            , fActiveVerb(-1)
+            , fHandlePathMove(true)
+            , fShowLegend(false)
+            , fHideAll(false) {
         fCoveragePaint.setAntiAlias(true);
         fCoveragePaint.setColor(SK_ColorBLUE);
         SkPaint strokePaint;
@@ -866,8 +844,8 @@ public:
         fLegendLeftFont.setSize(13);
         fLegendRightFont = fLegendLeftFont;
         construct_path(fPath);
-        fFillButton.fVisible = fSkeletonButton.fVisible = fFilterButton.fVisible
-                = fBisectButton.fVisible = fJoinButton.fVisible = fInOutButton.fVisible = true;
+        fFillButton.fVisible = fSkeletonButton.fVisible = fFilterButton.fVisible =
+                fBisectButton.fVisible = fJoinButton.fVisible = fInOutButton.fVisible = true;
         fSkeletonButton.setEnabled(true);
         fInOutButton.setEnabled(true);
         fJoinButton.setEnabled(true);
@@ -926,8 +904,7 @@ public:
         kControlList[index].fControlType = type;
     }
 
-    #define SET_CONTROL(Name) set_controlList(index++, &f##Name##Control, \
-        MyClick::k##Name##Control)
+#define SET_CONTROL(Name) set_controlList(index++, &f##Name##Control, MyClick::k##Name##Control)
 
     bool hideAll() {
         fHideAll ^= true;
@@ -942,15 +919,14 @@ public:
         SET_CONTROL(Weight);
     }
 
-    #undef SET_CONTROL
+#undef SET_CONTROL
 
     void set_buttonList(int index, Button* button, MyClick::ControlType type) {
         kButtonList[index].fButton = button;
         kButtonList[index].fButtonType = type;
     }
 
-    #define SET_BUTTON(Name) set_buttonList(index++, &f##Name##Button, \
-            MyClick::k##Name##Button)
+#define SET_BUTTON(Name) set_buttonList(index++, &f##Name##Button, MyClick::k##Name##Button)
 
     void init_buttonList() {
         int index = 0;
@@ -968,7 +944,7 @@ public:
         SET_BUTTON(Delete);
     }
 
-    #undef SET_BUTTON
+#undef SET_BUTTON
 
     bool onQuery(Sample::Event* evt) override;
 
@@ -994,8 +970,8 @@ public:
     bool scaleToFit() {
         SkMatrix matrix;
         SkRect bounds = fPath.getBounds();
-        SkScalar scale = SkTMin(this->width() / bounds.width(), this->height() / bounds.height())
-                * 0.8f;
+        SkScalar scale =
+                SkTMin(this->width() / bounds.width(), this->height() / bounds.height()) * 0.8f;
         matrix.setScale(scale, scale, bounds.centerX(), bounds.centerY());
         fPath.transform(matrix);
         bounds = fPath.getBounds();
@@ -1025,8 +1001,8 @@ public:
         }
         SkScalar buttonOffset = 0;
         for (int index = 0; index < kButtonCount; ++index) {
-            kButtonList[index].fButton->fBounds.setXYWH(this->width() - 50,
-                    buttonOffset += 50, 30, 30);
+            kButtonList[index].fButton->fBounds.setXYWH(this->width() - 50, buttonOffset += 50, 30,
+                                                        30);
         }
     }
 
@@ -1036,7 +1012,7 @@ public:
     }
 
     void draw_bisect(SkCanvas* canvas, const SkVector& lastVector, const SkVector& vector,
-                const SkPoint& pt) {
+                     const SkPoint& pt) {
         SkVector lastV = lastVector;
         SkScalar lastLen = lastVector.length();
         SkVector nextV = vector;
@@ -1047,7 +1023,7 @@ public:
             nextV.setLength(lastLen);
         }
 
-        SkVector bisect = { (lastV.fX + nextV.fX) / 2, (lastV.fY + nextV.fY) / 2 };
+        SkVector bisect = {(lastV.fX + nextV.fX) / 2, (lastV.fY + nextV.fY) / 2};
         bisect.setLength(fWidthControl.fValLo * 2);
         if (fBisectButton.enabled()) {
             canvas->drawLine(pt, pt + bisect, fSkeletonPaint);
@@ -1062,14 +1038,14 @@ public:
         }
         if (fJoinButton.enabled()) {
             SkScalar r = fWidthControl.fValLo;
-            SkRect oval = { pt.fX - r, pt.fY - r, pt.fX + r, pt.fY + r};
+            SkRect oval = {pt.fX - r, pt.fY - r, pt.fX + r, pt.fY + r};
             SkScalar startAngle = SkScalarATan2(lastV.fX, -lastV.fY) * 180.f / SK_ScalarPI;
             SkScalar endAngle = SkScalarATan2(-nextV.fX, nextV.fY) * 180.f / SK_ScalarPI;
             if (endAngle > startAngle) {
                 canvas->drawArc(oval, startAngle, endAngle - startAngle, false, fSkeletonPaint);
             } else {
                 canvas->drawArc(oval, startAngle, 360 - (startAngle - endAngle), false,
-                        fSkeletonPaint);
+                                fSkeletonPaint);
             }
         }
     }
@@ -1077,16 +1053,15 @@ public:
     void draw_bisects(SkCanvas* canvas, bool activeOnly) {
         SkVector firstVector, lastVector, nextLast, vector;
         SkPoint pts[4];
-        SkPoint firstPt = { 0, 0 };  // init to avoid warning;
+        SkPoint firstPt = {0, 0};  // init to avoid warning;
         SkPath::Verb verb;
         SkPath::Iter iter(fPath, true);
         bool foundFirst = false;
         int counter = -1;
         while ((verb = iter.next(pts)) != SkPath::kDone_Verb) {
             ++counter;
-            if (activeOnly && counter != fActiveVerb && counter - 1 != fActiveVerb
-                    && counter + 1 != fActiveVerb
-                    && (fActiveVerb != 1 || counter != fPath.countVerbs())) {
+            if (activeOnly && counter != fActiveVerb && counter - 1 != fActiveVerb &&
+                counter + 1 != fActiveVerb && (fActiveVerb != 1 || counter != fPath.countVerbs())) {
                 continue;
             }
             switch (verb) {
@@ -1114,7 +1089,7 @@ public:
                         canvas->drawLine(maxPt, {maxPt.fX + tangent.fY, maxPt.fY - tangent.fX},
                                          fSkeletonPaint);
                     }
-                    } break;
+                } break;
                 case SkPath::kConic_Verb:
                     nextLast = pts[1] - pts[2];
                     if (SkScalarNearlyZero(nextLast.length())) {
@@ -1160,7 +1135,7 @@ public:
                         canvas->drawLine(maxPt, {maxPt.fX + tangent.fY, maxPt.fY - tangent.fX},
                                          fSkeletonPaint);
                     }
-                    } break;
+                } break;
                 case SkPath::kClose_Verb:
                     if (foundFirst) {
                         draw_bisect(canvas, lastVector, firstVector, firstPt);
@@ -1205,14 +1180,14 @@ public:
                     qPath.quadTo(pts[1], pts[2]);
                     canvas->drawPath(qPath, fActivePaint);
                     draw_points(canvas, pts, 3);
-                    } break;
+                } break;
                 case SkPath::kConic_Verb: {
                     SkPath conicPath;
                     conicPath.moveTo(pts[0]);
                     conicPath.conicTo(pts[1], pts[2], iter.conicWeight());
                     canvas->drawPath(conicPath, fActivePaint);
                     draw_points(canvas, pts, 3);
-                    } break;
+                } break;
                 case SkPath::kCubic_Verb: {
                     SkScalar loopT[3];
                     int complex = SkDCubic::ComplexBreak(pts, loopT);
@@ -1221,7 +1196,7 @@ public:
                     cPath.cubicTo(pts[1], pts[2], pts[3]);
                     canvas->drawPath(cPath, complex ? fComplexPaint : fActivePaint);
                     draw_points(canvas, pts, 4);
-                    } break;
+                } break;
                 default:
                     break;
             }
@@ -1237,8 +1212,8 @@ public:
 
     int hittest_verb(SkPoint pt, SkPath::Verb* verbPtr, SkScalar* weight) {
         SkIntersections i;
-        SkDLine hHit = {{{pt.fX - kHitToleranace, pt.fY }, {pt.fX + kHitToleranace, pt.fY}}};
-        SkDLine vHit = {{{pt.fX, pt.fY - kHitToleranace }, {pt.fX, pt.fY + kHitToleranace}}};
+        SkDLine hHit = {{{pt.fX - kHitToleranace, pt.fY}, {pt.fX + kHitToleranace, pt.fY}}};
+        SkDLine vHit = {{{pt.fX, pt.fY - kHitToleranace}, {pt.fX, pt.fY + kHitToleranace}}};
         SkPoint pts[4];
         SkPath::Verb verb;
         SkPath::Iter iter(fPath, true);
@@ -1254,7 +1229,7 @@ public:
                         *weight = 1;
                         return counter;
                     }
-                    } break;
+                } break;
                 case SkPath::kQuad_Verb: {
                     SkDQuad quad;
                     quad.set(pts);
@@ -1263,7 +1238,7 @@ public:
                         *weight = 1;
                         return counter;
                     }
-                    } break;
+                } break;
                 case SkPath::kConic_Verb: {
                     SkDConic conic;
                     SkScalar w = iter.conicWeight();
@@ -1273,7 +1248,7 @@ public:
                         *weight = w;
                         return counter;
                     }
-                    } break;
+                } break;
                 case SkPath::kCubic_Verb: {
                     SkDCubic cubic;
                     cubic.set(pts);
@@ -1282,7 +1257,7 @@ public:
                         *weight = 1;
                         return counter;
                     }
-                    } break;
+                } break;
                 default:
                     break;
             }
@@ -1299,7 +1274,7 @@ public:
                 (y - s.fY) * adjOpp.fX - (x - s.fX) * adjOpp.fY,
         };
         if (rotated.fX < 0 || rotated.fX > lenSq) {
-                return -radius;
+            return -radius;
         }
         rotated.fY /= SkScalarSqrt(lenSq);
         return SkTMax(-radius, SkTMin(radius, rotated.fY));
@@ -1308,10 +1283,10 @@ public:
     // given a line, compute the interior and exterior gradient coverage
     bool coverage(SkPoint s, SkPoint e, uint8_t* distanceMap, int w, int h) {
         SkScalar radius = fWidthControl.fValLo;
-        int minX = SkTMax(0, (int) (SkTMin(s.fX, e.fX) - radius));
-        int minY = SkTMax(0, (int) (SkTMin(s.fY, e.fY) - radius));
-        int maxX = SkTMin(w, (int) (SkTMax(s.fX, e.fX) + radius) + 1);
-        int maxY = SkTMin(h, (int) (SkTMax(s.fY, e.fY) + radius) + 1);
+        int minX = SkTMax(0, (int)(SkTMin(s.fX, e.fX) - radius));
+        int minY = SkTMax(0, (int)(SkTMin(s.fY, e.fY) - radius));
+        int maxX = SkTMin(w, (int)(SkTMax(s.fX, e.fX) + radius) + 1);
+        int maxY = SkTMin(h, (int)(SkTMax(s.fY, e.fY) + radius) + 1);
         for (int y = minY; y < maxY; ++y) {
             for (int x = minX; x < maxX; ++x) {
                 SkScalar ptToLineDist = pt_to_line(s, e, x, y);
@@ -1319,13 +1294,13 @@ public:
                     SkScalar coverage = ptToLineDist / radius;
                     add_to_map(1 - SkScalarAbs(coverage), x, y, distanceMap, w, h);
                 }
-                SkVector ptToS = { x - s.fX, y - s.fY };
+                SkVector ptToS = {x - s.fX, y - s.fY};
                 SkScalar dist = ptToS.length();
                 if (dist < radius) {
                     SkScalar coverage = dist / radius;
                     add_to_map(1 - SkScalarAbs(coverage), x, y, distanceMap, w, h);
                 }
-                SkVector ptToE = { x - e.fX, y - e.fY };
+                SkVector ptToE = {x - e.fX, y - e.fY};
                 dist = ptToE.length();
                 if (dist < radius) {
                     SkScalar coverage = dist / radius;
@@ -1339,7 +1314,7 @@ public:
     void quad_coverage(SkPoint pts[3], uint8_t* distanceMap, int w, int h) {
         SkScalar dist = pts[0].Distance(pts[0], pts[2]);
         if (dist < gCurveDistance) {
-            (void) coverage(pts[0], pts[2], distanceMap, w, h);
+            (void)coverage(pts[0], pts[2], distanceMap, w, h);
             return;
         }
         SkPoint split[5];
@@ -1351,7 +1326,7 @@ public:
     void conic_coverage(SkPoint pts[3], SkScalar weight, uint8_t* distanceMap, int w, int h) {
         SkScalar dist = pts[0].Distance(pts[0], pts[2]);
         if (dist < gCurveDistance) {
-            (void) coverage(pts[0], pts[2], distanceMap, w, h);
+            (void)coverage(pts[0], pts[2], distanceMap, w, h);
             return;
         }
         SkConic split[2];
@@ -1366,7 +1341,7 @@ public:
     void cubic_coverage(SkPoint pts[4], uint8_t* distanceMap, int w, int h) {
         SkScalar dist = pts[0].Distance(pts[0], pts[3]);
         if (dist < gCurveDistance) {
-            (void) coverage(pts[0], pts[3], distanceMap, w, h);
+            (void)coverage(pts[0], pts[3], distanceMap, w, h);
             return;
         }
         SkPoint split[7];
@@ -1383,7 +1358,7 @@ public:
         while ((verb = iter.next(pts)) != SkPath::kDone_Verb) {
             switch (verb) {
                 case SkPath::kLine_Verb:
-                    (void) coverage(pts[0], pts[1], distanceMap, w, h);
+                    (void)coverage(pts[0], pts[1], distanceMap, w, h);
                     break;
                 case SkPath::kQuad_Verb:
                     quad_coverage(pts, distanceMap, w, h);
@@ -1404,12 +1379,12 @@ public:
         distMap->setInfo(imageInfo);
         distMap->setIsVolatile(true);
         SkAssertResult(distMap->tryAllocPixels());
-        SkASSERT((int) distMap->rowBytes() == imageInfo.width());
+        SkASSERT((int)distMap->rowBytes() == imageInfo.width());
         return distMap->getAddr8(0, 0);
     }
 
     void path_stroke(int index, SkPath* inner, SkPath* outer) {
-        #if 0
+#if 0
         SkPathStroker stroker(fPath, fWidthControl.fValLo, 0,
                 SkPaint::kRound_Cap, SkPaint::kRound_Join, fResControl.fValLo);
         SkPoint pts[4], firstPt, lastPt;
@@ -1507,7 +1482,6 @@ public:
                 if (!outPath.getBounds().intersects(inPath.getBounds())) {
                     continue;
                 }
-
             }
         }
     }
@@ -1519,12 +1493,12 @@ public:
                 SkDEBUGPARAMS(&debugGlobals));
 #endif
         SkPath strokePath;
-//        aaResult.simplify(&strokePath);
+        //        aaResult.simplify(&strokePath);
         canvas->drawPath(strokePath, fSkeletonPaint);
         SkRect bounds = fPath.getBounds();
         SkScalar radius = fWidthControl.fValLo;
-        int w = (int) (bounds.fRight + radius + 1);
-        int h = (int) (bounds.fBottom + radius + 1);
+        int w = (int)(bounds.fRight + radius + 1);
+        int h = (int)(bounds.fBottom + radius + 1);
         SkImageInfo imageInfo = SkImageInfo::MakeA8(w, h);
         SkBitmap distMap;
         uint8_t* distanceMap = set_up_dist_map(imageInfo, &distMap);
@@ -1532,12 +1506,12 @@ public:
         if (fFillButton.enabled()) {
             canvas->drawPath(fPath, fCoveragePaint);
         }
-        if (fFilterButton.fState == 2
-                && (0 < fFilterControl.fValLo || fFilterControl.fValHi < 255)) {
+        if (fFilterButton.fState == 2 &&
+            (0 < fFilterControl.fValLo || fFilterControl.fValHi < 255)) {
             SkBitmap filteredMap;
             uint8_t* filtered = set_up_dist_map(imageInfo, &filteredMap);
-            filter_coverage(distanceMap, sizeof(uint8_t) * w * h, (uint8_t) fFilterControl.fValLo,
-                    (uint8_t) fFilterControl.fValHi, filtered);
+            filter_coverage(distanceMap, sizeof(uint8_t) * w * h, (uint8_t)fFilterControl.fValLo,
+                            (uint8_t)fFilterControl.fValHi, filtered);
             canvas->drawBitmap(filteredMap, 0, 0, &fCoveragePaint);
         } else if (fFilterButton.enabled()) {
             canvas->drawBitmap(distMap, 0, 0, &fCoveragePaint);
@@ -1597,7 +1571,6 @@ public:
         canvas->translate(0.0f, -800.0f);
         canvas->drawPath(path, paint);
 #endif
-
     }
 
     int hittest_pt(SkPoint pt) {
@@ -1626,7 +1599,7 @@ public:
             for (int index = 0; index < kControlCount; ++index) {
                 if (kControlList[index].fControl->contains(rectPt)) {
                     return new MyClick(this, MyClick::kControlType,
-                            kControlList[index].fControlType);
+                                       kControlList[index].fControlType);
                 }
             }
             for (int index = 0; index < kButtonCount; ++index) {
@@ -1635,9 +1608,9 @@ public:
                 }
             }
         }
-        fLineButton.fVisible = fQuadButton.fVisible = fConicButton.fVisible
-                = fCubicButton.fVisible = fWeightControl.fVisible = fAddButton.fVisible
-                = fDeleteButton.fVisible = false;
+        fLineButton.fVisible = fQuadButton.fVisible = fConicButton.fVisible =
+                fCubicButton.fVisible = fWeightControl.fVisible = fAddButton.fVisible =
+                        fDeleteButton.fVisible = false;
         fActiveVerb = -1;
         fActivePt = -1;
         if (fHandlePathMove) {
@@ -1647,42 +1620,42 @@ public:
     }
 
     static SkScalar MapScreenYtoValue(int y, const UniControl& control) {
-        return SkTMin(1.f, SkTMax(0.f,
-                SkIntToScalar(y) - control.fBounds.fTop) / control.fBounds.height())
-                * (control.fMax - control.fMin) + control.fMin;
+        return SkTMin(1.f, SkTMax(0.f, SkIntToScalar(y) - control.fBounds.fTop) /
+                                   control.fBounds.height()) *
+                       (control.fMax - control.fMin) +
+               control.fMin;
     }
 
     bool onClick(Click* click) override {
-        MyClick* myClick = (MyClick*) click;
+        MyClick* myClick = (MyClick*)click;
         switch (myClick->fType) {
             case MyClick::kPtType: {
                 savePath(click->fState);
                 fActivePt = myClick->ptHit();
-                SkPoint pt = fPath.getPoint((int) myClick->fControl);
+                SkPoint pt = fPath.getPoint((int)myClick->fControl);
                 pt.offset(SkIntToScalar(click->fICurr.fX - click->fIPrev.fX),
-                        SkIntToScalar(click->fICurr.fY - click->fIPrev.fY));
+                          SkIntToScalar(click->fICurr.fY - click->fIPrev.fY));
                 set_path_pt(fActivePt, pt, &fPath);
                 validatePath();
                 return true;
-                }
+            }
             case MyClick::kPathType:
                 savePath(click->fState);
                 fPath.offset(SkIntToScalar(click->fICurr.fX - click->fIPrev.fX),
-                        SkIntToScalar(click->fICurr.fY - click->fIPrev.fY));
+                             SkIntToScalar(click->fICurr.fY - click->fIPrev.fY));
                 validatePath();
                 return true;
             case MyClick::kVerbType: {
                 fActiveVerb = myClick->verbHit();
-                fLineButton.fVisible = fQuadButton.fVisible = fConicButton.fVisible
-                        = fCubicButton.fVisible = fAddButton.fVisible = fDeleteButton.fVisible
-                        = true;
+                fLineButton.fVisible = fQuadButton.fVisible = fConicButton.fVisible =
+                        fCubicButton.fVisible = fAddButton.fVisible = fDeleteButton.fVisible = true;
                 fLineButton.setEnabled(myClick->fVerb == SkPath::kLine_Verb);
                 fQuadButton.setEnabled(myClick->fVerb == SkPath::kQuad_Verb);
                 fConicButton.setEnabled(myClick->fVerb == SkPath::kConic_Verb);
                 fCubicButton.setEnabled(myClick->fVerb == SkPath::kCubic_Verb);
                 fWeightControl.fValLo = myClick->fWeight;
                 fWeightControl.fVisible = myClick->fVerb == SkPath::kConic_Verb;
-                } break;
+            } break;
             case MyClick::kControlType: {
                 if (click->fState != Click::kDown_State && myClick->isButton()) {
                     return true;
@@ -1695,7 +1668,7 @@ public:
                         } else {
                             fFilterControl.fValHi = SkTMin(255.f, val);
                         }
-                        } break;
+                    } break;
                     case MyClick::kResControl:
                         fResControl.fValLo = MapScreenYtoValue(click->fICurr.fY, fResControl);
                         break;
@@ -1705,7 +1678,7 @@ public:
                         set_path_weight(fActiveVerb, w, &fPath);
                         validatePath();
                         fWeightControl.fValLo = w;
-                        } break;
+                    } break;
                     case MyClick::kWidthControl:
                         fWidthControl.fValLo = MapScreenYtoValue(click->fICurr.fY, fWidthControl);
                         break;
@@ -1731,7 +1704,7 @@ public:
                         set_path_verb(fActiveVerb, SkPath::kConic_Verb, &fPath, defaultConicWeight);
                         validatePath();
                         fWeightControl.fValLo = get_path_weight(fActiveVerb, fPath);
-                        } break;
+                    } break;
                     case MyClick::kCubicButton:
                         savePath(click->fState);
                         enable_verb_button(myClick->fControl);
@@ -1795,27 +1768,27 @@ static struct KeyCommand {
     const char* fDescriptionR;
     bool (AAGeometryView::*fFunction)();
 } kKeyCommandList[] = {
-    { ' ',  0,  "space",   "center path", &AAGeometryView::scaleToFit },
-    { '-',  0,  "-",          "zoom out", &AAGeometryView::scaleDown },
-    { '+', '=', "+/=",         "zoom in", &AAGeometryView::scaleUp },
-    { 'D',  0,  "D",   "dump to console", &AAGeometryView::pathDump },
-    { 'H',  0,  "H",     "hide controls", &AAGeometryView::hideAll },
-    { 'R',  0,  "R",        "reset path", &AAGeometryView::constructPath },
-    { 'Z',  0,  "Z",              "undo", &AAGeometryView::undo },
-    { '?',  0,  "?",       "show legend", &AAGeometryView::showLegend },
+        {' ', 0, "space", "center path", &AAGeometryView::scaleToFit},
+        {'-', 0, "-", "zoom out", &AAGeometryView::scaleDown},
+        {'+', '=', "+/=", "zoom in", &AAGeometryView::scaleUp},
+        {'D', 0, "D", "dump to console", &AAGeometryView::pathDump},
+        {'H', 0, "H", "hide controls", &AAGeometryView::hideAll},
+        {'R', 0, "R", "reset path", &AAGeometryView::constructPath},
+        {'Z', 0, "Z", "undo", &AAGeometryView::undo},
+        {'?', 0, "?", "show legend", &AAGeometryView::showLegend},
 };
 
-const int kKeyCommandCount = (int) SK_ARRAY_COUNT(kKeyCommandList);
+const int kKeyCommandCount = (int)SK_ARRAY_COUNT(kKeyCommandList);
 
 void AAGeometryView::draw_legend(SkCanvas* canvas) {
     SkScalar bottomOffset = this->height() - 10;
     for (int index = kKeyCommandCount - 1; index >= 0; --index) {
         bottomOffset -= 15;
-        SkTextUtils::DrawString(canvas, kKeyCommandList[index].fDescriptionL, this->width() - 160, bottomOffset,
-                                fLegendLeftFont, SkPaint());
-        SkTextUtils::DrawString(canvas, kKeyCommandList[index].fDescriptionR,
-                this->width() - 20, bottomOffset,
-                fLegendRightFont, SkPaint(), SkTextUtils::kRight_Align);
+        SkTextUtils::DrawString(canvas, kKeyCommandList[index].fDescriptionL, this->width() - 160,
+                                bottomOffset, fLegendLeftFont, SkPaint());
+        SkTextUtils::DrawString(canvas, kKeyCommandList[index].fDescriptionR, this->width() - 20,
+                                bottomOffset, fLegendRightFont, SkPaint(),
+                                SkTextUtils::kRight_Align);
     }
 }
 
@@ -1834,7 +1807,7 @@ bool AAGeometryView::onQuery(Sample::Event* evt) {
             if (button->fVisible && uni == button->fLabel) {
                 MyClick click(this, MyClick::kControlType, kButtonList[index].fButtonType);
                 click.fState = Click::kDown_State;
-                (void) this->onClick(&click);
+                (void)this->onClick(&click);
                 return true;
             }
         }
@@ -1850,7 +1823,7 @@ bool AAGeometryView::onQuery(Sample::Event* evt) {
                 if (button->fVisible && (uni & ~0x20) == (button->fLabel & ~0x20)) {
                     MyClick click(this, MyClick::kControlType, kButtonList[index].fButtonType);
                     click.fState = Click::kDown_State;
-                    (void) this->onClick(&click);
+                    (void)this->onClick(&click);
                     return true;
                 }
             }
@@ -1859,4 +1832,4 @@ bool AAGeometryView::onQuery(Sample::Event* evt) {
     return this->INHERITED::onQuery(evt);
 }
 
-DEF_SAMPLE( return new AAGeometryView; )
+DEF_SAMPLE(return new AAGeometryView;)

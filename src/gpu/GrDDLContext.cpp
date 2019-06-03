@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "GrContext.h"
-#include "GrCaps.h"
-#include "GrContextPriv.h"
-#include "GrContextThreadSafeProxyPriv.h"
-#include "GrSkSLFPFactoryCache.h"
+#include "include/gpu/GrContext.h"
+#include "include/private/GrSkSLFPFactoryCache.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrContextThreadSafeProxyPriv.h"
 
 /**
  * The DDL Context is the one in effect during DDL Recording. It isn't backed by a GrGPU and
@@ -22,20 +22,20 @@ public:
         fThreadSafeProxy = std::move(proxy);
     }
 
-    ~GrDDLContext() override { }
+    ~GrDDLContext() override {}
 
     void abandonContext() override {
-        SkASSERT(0); // abandoning in a DDL Recorder doesn't make a whole lot of sense
+        SkASSERT(0);  // abandoning in a DDL Recorder doesn't make a whole lot of sense
         INHERITED::abandonContext();
     }
 
     void releaseResourcesAndAbandonContext() override {
-        SkASSERT(0); // abandoning in a DDL Recorder doesn't make a whole lot of sense
+        SkASSERT(0);  // abandoning in a DDL Recorder doesn't make a whole lot of sense
         INHERITED::releaseResourcesAndAbandonContext();
     }
 
     void freeGpuResources() override {
-        SkASSERT(0); // freeing resources in a DDL Recorder doesn't make a whole lot of sense
+        SkASSERT(0);  // freeing resources in a DDL Recorder doesn't make a whole lot of sense
         INHERITED::freeGpuResources();
     }
 
@@ -46,11 +46,15 @@ protected:
 
     bool init(sk_sp<const GrCaps> caps, sk_sp<GrSkSLFPFactoryCache> FPFactoryCache) override {
         SkASSERT(caps && FPFactoryCache);
-        SkASSERT(fThreadSafeProxy); // should've been set in the ctor
+        SkASSERT(fThreadSafeProxy);  // should've been set in the ctor
 
         if (!INHERITED::init(std::move(caps), std::move(FPFactoryCache))) {
             return false;
         }
+
+        // DDL contexts/drawing managers always sort the oplists and attempt to reduce opList
+        // splitting.
+        this->setupDrawingManager(true, true);
 
         SkASSERT(this->caps());
 
@@ -58,7 +62,7 @@ protected:
     }
 
     GrAtlasManager* onGetAtlasManager() override {
-        SkASSERT(0);   // the DDL Recorders should never invoke this
+        SkASSERT(0);  // the DDL Recorders should never invoke this
         return nullptr;
     }
 

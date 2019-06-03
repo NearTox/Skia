@@ -8,11 +8,11 @@
 #ifndef SkWriteBuffer_DEFINED
 #define SkWriteBuffer_DEFINED
 
-#include "SkData.h"
-#include "SkFlattenable.h"
-#include "SkSerialProcs.h"
-#include "SkWriter32.h"
-#include "../private/SkTHash.h"
+#include "include/core/SkData.h"
+#include "include/core/SkFlattenable.h"
+#include "include/core/SkSerialProcs.h"
+#include "include/private/SkTHash.h"
+#include "src/core/SkWriter32.h"
 
 class SkFactorySet;
 class SkImage;
@@ -21,24 +21,20 @@ class SkRefCntSet;
 
 class SkWriteBuffer {
 public:
-    SkWriteBuffer() {}
+    SkWriteBuffer() noexcept {}
     virtual ~SkWriteBuffer() {}
 
     virtual void writePad32(const void* buffer, size_t bytes) = 0;
 
     virtual void writeByteArray(const void* data, size_t size) = 0;
-    void writeDataAsByteArray(SkData* data) {
-        this->writeByteArray(data->data(), data->size());
-    }
+    void writeDataAsByteArray(SkData* data) { this->writeByteArray(data->data(), data->size()); }
     virtual void writeBool(bool value) = 0;
     virtual void writeScalar(SkScalar value) = 0;
     virtual void writeScalarArray(const SkScalar* value, uint32_t count) = 0;
     virtual void writeInt(int32_t value) = 0;
     virtual void writeIntArray(const int32_t* value, uint32_t count) = 0;
     virtual void writeUInt(uint32_t value) = 0;
-    void write32(int32_t value) {
-        this->writeInt(value);
-    }
+    void write32(int32_t value) { this->writeInt(value); }
     virtual void writeString(const char* value) = 0;
 
     virtual void writeFlattenable(const SkFlattenable* flattenable) = 0;
@@ -59,12 +55,12 @@ public:
     virtual void writeTypeface(SkTypeface* typeface) = 0;
     virtual void writePaint(const SkPaint& paint) = 0;
 
-    void setSerialProcs(const SkSerialProcs& procs) { fProcs = procs; }
+    void setSerialProcs(const SkSerialProcs& procs) noexcept { fProcs = procs; }
 
 protected:
-    SkSerialProcs   fProcs;
+    SkSerialProcs fProcs;
 
-    friend class SkPicturePriv; // fProcs
+    friend class SkPicturePriv;  // fProcs
 };
 
 /**
@@ -76,18 +72,14 @@ public:
     SkBinaryWriteBuffer(void* initialStorage, size_t storageSize);
     ~SkBinaryWriteBuffer() override;
 
-    void write(const void* buffer, size_t bytes) {
-        fWriter.write(buffer, bytes);
-    }
-    void writePad32(const void* buffer, size_t bytes) override {
-        fWriter.writePad(buffer, bytes);
-    }
+    void write(const void* buffer, size_t bytes) { fWriter.write(buffer, bytes); }
+    void writePad32(const void* buffer, size_t bytes) override { fWriter.writePad(buffer, bytes); }
 
-    void reset(void* storage = nullptr, size_t storageSize = 0) {
+    void reset(void* storage = nullptr, size_t storageSize = 0) noexcept {
         fWriter.reset(storage, storageSize);
     }
 
-    size_t bytesWritten() const { return fWriter.bytesWritten(); }
+    size_t bytesWritten() const noexcept { return fWriter.bytesWritten(); }
 
     // Returns true iff all of the bytes written so far are stored in the initial storage
     // buffer provided in the constructor or the most recent call to reset.
@@ -121,7 +113,7 @@ public:
     void writePaint(const SkPaint& paint) override;
 
     bool writeToStream(SkWStream*) const;
-    void writeToMemory(void* dst) const { fWriter.flatten(dst); }
+    void writeToMemory(void* dst) const noexcept { fWriter.flatten(dst); }
 
     void setFactoryRecorder(sk_sp<SkFactorySet>);
     void setTypefaceRecorder(sk_sp<SkRefCntSet>);
@@ -136,4 +128,4 @@ private:
     SkTHashMap<SkFlattenable::Factory, uint32_t> fFlattenableDict;
 };
 
-#endif // SkWriteBuffer_DEFINED
+#endif  // SkWriteBuffer_DEFINED

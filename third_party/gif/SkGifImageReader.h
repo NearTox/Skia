@@ -38,28 +38,30 @@
 #ifndef SkGifImageReader_h
 #define SkGifImageReader_h
 
-// Define ourselves as the clientPtr.  Mozilla just hacked their C++ callback class into this old C decoder,
-// so we will too.
+// Define ourselves as the clientPtr.  Mozilla just hacked their C++ callback class into this old C
+// decoder, so we will too.
 class SkGifCodec;
 
-#include "SkCodec.h"
-#include "SkCodecPriv.h"
-#include "SkCodecAnimation.h"
-#include "SkColorTable.h"
-#include "SkData.h"
-#include "SkFrameHolder.h"
-#include "SkImageInfo.h"
-#include "SkStreamBuffer.h"
-#include "../private/SkTArray.h"
+#include "include/codec/SkCodec.h"
+#include "include/codec/SkCodecAnimation.h"
+#include "include/core/SkData.h"
+#include "include/core/SkImageInfo.h"
+#include "include/private/SkTArray.h"
+#include "src/codec/SkCodecPriv.h"
+#include "src/codec/SkColorTable.h"
+#include "src/codec/SkFrameHolder.h"
+#include "src/codec/SkStreamBuffer.h"
+
+#include <array>
 #include <memory>
 
 typedef SkTArray<unsigned char, true> SkGIFRow;
 
-
 #define SK_MAX_DICTIONARY_ENTRY_BITS 12
-#define SK_MAX_DICTIONARY_ENTRIES    4096 // 2^SK_MAX_DICTIONARY_ENTRY_BITS
-#define SK_MAX_COLORS                256
-#define SK_BYTES_PER_COLORMAP_ENTRY  3
+#define SK_MAX_DICTIONARY_ENTRIES 4096  // 2^SK_MAX_DICTIONARY_ENTRY_BITS
+#define SK_MAX_COLORS 256
+#define SK_BYTES_PER_COLORMAP_ENTRY 3
+#define SK_DICTIONARY_WORD_SIZE 8
 
 // List of possible parsing states.
 enum SkGIFState {
@@ -91,46 +93,44 @@ class SkGIFColorMap;
 // LZW decoder state machine.
 class SkGIFLZWContext final : public SkNoncopyable {
 public:
-    SkGIFLZWContext(SkGifCodec* client, const SkGIFFrameContext* frameContext)
-        : codesize(0)
-        , codemask(0)
-        , clearCode(0)
-        , avail(0)
-        , oldcode(0)
-        , firstchar(0)
-        , bits(0)
-        , datum(0)
-        , ipass(0)
-        , irow(0)
-        , rowsRemaining(0)
-        , rowIter(nullptr)
-        , m_client(client)
-        , m_frameContext(frameContext)
-    { }
+    SkGIFLZWContext(SkGifCodec* client, const SkGIFFrameContext* frameContext) noexcept
+            : codesize(0)
+            , codemask(0)
+            , clearCode(0)
+            , avail(0)
+            , oldcode(0)
+            , bits(0)
+            , datum(0)
+            , ipass(0)
+            , irow(0)
+            , rowsRemaining(0)
+            , rowIter(nullptr)
+            , m_client(client)
+            , m_frameContext(frameContext) {}
 
     bool prepareToDecode();
     void outputRow(const unsigned char* rowBegin);
     bool doLZW(const unsigned char* block, size_t bytesInBlock);
-    bool hasRemainingRows() { return SkToBool(rowsRemaining); }
+    bool hasRemainingRows() noexcept { return SkToBool(rowsRemaining); }
 
 private:
     // LZW decoding states and output states.
     int codesize;
     int codemask;
-    int clearCode; // Codeword used to trigger dictionary reset.
-    int avail; // Index of next available slot in dictionary.
+    int clearCode;  // Codeword used to trigger dictionary reset.
+    int avail;      // Index of next available slot in dictionary.
     int oldcode;
-    unsigned char firstchar;
-    int bits; // Number of unread bits in "datum".
-    int datum; // 32-bit input buffer.
-    int ipass; // Interlace pass; Ranges 1-4 if interlaced.
-    size_t irow; // Current output row, starting at zero.
-    size_t rowsRemaining; // Rows remaining to be output.
+    int bits;              // Number of unread bits in "datum".
+    int datum;             // 32-bit input buffer.
+    int ipass;             // Interlace pass; Ranges 1-4 if interlaced.
+    size_t irow;           // Current output row, starting at zero.
+    size_t rowsRemaining;  // Rows remaining to be output.
 
     unsigned short prefix[SK_MAX_DICTIONARY_ENTRIES];
-    unsigned char suffix[SK_MAX_DICTIONARY_ENTRIES];
+    std::array<std::array<unsigned char, SK_DICTIONARY_WORD_SIZE>, SK_MAX_DICTIONARY_ENTRIES>
+            suffix;
     unsigned short suffixLength[SK_MAX_DICTIONARY_ENTRIES];
-    SkGIFRow rowBuffer; // Single scanline temporary buffer.
+    SkGIFRow rowBuffer;  // Single scanline temporary buffer.
     unsigned char* rowIter;
 
     SkGifCodec* const m_client;
@@ -138,44 +138,42 @@ private:
 };
 
 struct SkGIFLZWBlock {
- public:
-  SkGIFLZWBlock(size_t position, size_t size)
-      : blockPosition(position), blockSize(size) {}
+public:
+    SkGIFLZWBlock(size_t position, size_t size) noexcept
+            : blockPosition(position), blockSize(size) {}
 
-  size_t blockPosition;
-  size_t blockSize;
+    size_t blockPosition;
+    size_t blockSize;
 };
 
 class SkGIFColorMap final {
 public:
     static constexpr int kNotFound = -1;
 
-    SkGIFColorMap()
-        : m_isDefined(false)
-        , m_position(0)
-        , m_colors(0)
-        , m_transPixel(kNotFound)
-        , m_packColorProc(nullptr)
-    {
-    }
+    SkGIFColorMap() noexcept
+            : m_isDefined(false)
+            , m_position(0)
+            , m_colors(0)
+            , m_transPixel(kNotFound)
+            , m_packColorProc(nullptr) {}
 
-    void setNumColors(int colors) {
+    void setNumColors(int colors) noexcept {
         SkASSERT(!m_colors);
         SkASSERT(!m_position);
 
         m_colors = colors;
     }
 
-    void setTablePosition(size_t position) {
+    void setTablePosition(size_t position) noexcept {
         SkASSERT(!m_isDefined);
 
         m_position = position;
         m_isDefined = true;
     }
 
-    int numColors() const { return m_colors; }
+    int numColors() const noexcept { return m_colors; }
 
-    bool isDefined() const { return m_isDefined; }
+    bool isDefined() const noexcept { return m_isDefined; }
 
     // Build RGBA table using the data stream.
     sk_sp<SkColorTable> buildTable(SkStreamBuffer*, SkColorType dstColorType,
@@ -196,62 +194,59 @@ class SkGifImageReader;
 // LocalFrame output state machine.
 class SkGIFFrameContext : public SkFrame {
 public:
-    SkGIFFrameContext(int id)
-        : INHERITED(id)
-        , m_transparentPixel(SkGIFColorMap::kNotFound)
-        , m_dataSize(0)
-        , m_progressiveDisplay(false)
-        , m_interlaced(false)
-        , m_currentLzwBlock(0)
-        , m_isComplete(false)
-        , m_isHeaderDefined(false)
-        , m_isDataSizeDefined(false)
-    {
-    }
+    SkGIFFrameContext(int id) noexcept
+            : INHERITED(id)
+            , m_transparentPixel(SkGIFColorMap::kNotFound)
+            , m_dataSize(0)
+            , m_progressiveDisplay(false)
+            , m_interlaced(false)
+            , m_currentLzwBlock(0)
+            , m_isComplete(false)
+            , m_isHeaderDefined(false)
+            , m_isDataSizeDefined(false) {}
 
-    ~SkGIFFrameContext() override
-    {
-    }
+    ~SkGIFFrameContext() override {}
 
-    void addLzwBlock(size_t position, size_t size)
-    {
+    void addLzwBlock(size_t position, size_t size) noexcept {
         m_lzwBlocks.emplace_back(position, size);
     }
 
     bool decode(SkStreamBuffer*, SkGifCodec* client, bool* frameDecoded);
 
-    int transparentPixel() const { return m_transparentPixel; }
-    void setTransparentPixel(int pixel) { m_transparentPixel = pixel; }
+    int transparentPixel() const noexcept { return m_transparentPixel; }
+    void setTransparentPixel(int pixel) noexcept { m_transparentPixel = pixel; }
 
-    bool isComplete() const { return m_isComplete; }
-    void setComplete() { m_isComplete = true; }
-    bool isHeaderDefined() const { return m_isHeaderDefined; }
-    void setHeaderDefined() { m_isHeaderDefined = true; }
-    bool isDataSizeDefined() const { return m_isDataSizeDefined; }
-    int dataSize() const { return m_dataSize; }
-    void setDataSize(int size)
-    {
+    bool isComplete() const noexcept { return m_isComplete; }
+    void setComplete() noexcept { m_isComplete = true; }
+    bool isHeaderDefined() const noexcept { return m_isHeaderDefined; }
+    void setHeaderDefined() noexcept { m_isHeaderDefined = true; }
+    bool isDataSizeDefined() const noexcept { return m_isDataSizeDefined; }
+    int dataSize() const noexcept { return m_dataSize; }
+    void setDataSize(int size) noexcept {
         m_dataSize = size;
         m_isDataSizeDefined = true;
     }
-    bool progressiveDisplay() const { return m_progressiveDisplay; }
-    void setProgressiveDisplay(bool progressiveDisplay) { m_progressiveDisplay = progressiveDisplay; }
-    bool interlaced() const { return m_interlaced; }
-    void setInterlaced(bool interlaced) { m_interlaced = interlaced; }
+    bool progressiveDisplay() const noexcept { return m_progressiveDisplay; }
+    void setProgressiveDisplay(bool progressiveDisplay) noexcept {
+        m_progressiveDisplay = progressiveDisplay;
+    }
+    bool interlaced() const noexcept { return m_interlaced; }
+    void setInterlaced(bool interlaced) noexcept { m_interlaced = interlaced; }
 
-    void clearDecodeState() { m_lzwContext.reset(); }
-    const SkGIFColorMap& localColorMap() const { return m_localColorMap; }
-    SkGIFColorMap& localColorMap() { return m_localColorMap; }
+    void clearDecodeState() noexcept { m_lzwContext.reset(); }
+    const SkGIFColorMap& localColorMap() const noexcept { return m_localColorMap; }
+    SkGIFColorMap& localColorMap() noexcept { return m_localColorMap; }
 
 protected:
-    SkEncodedInfo::Alpha onReportedAlpha() const override;
+    SkEncodedInfo::Alpha onReportedAlpha() const noexcept override;
 
 private:
-    int m_transparentPixel; // Index of transparent pixel. Value is kNotFound if there is no transparent pixel.
+    int m_transparentPixel;  // Index of transparent pixel. Value is kNotFound if there is no
+                             // transparent pixel.
     int m_dataSize;
 
-    bool m_progressiveDisplay; // If true, do Haeberli interlace hack.
-    bool m_interlaced; // True, if scanlines arrive interlaced order.
+    bool m_progressiveDisplay;  // If true, do Haeberli interlace hack.
+    bool m_interlaced;          // True, if scanlines arrive interlaced order.
 
     std::unique_ptr<SkGIFLZWContext> m_lzwContext;
     // LZW blocks for this frame.
@@ -271,33 +266,29 @@ class SkGifImageReader final : public SkFrameHolder {
 public:
     // This takes ownership of stream.
     SkGifImageReader(std::unique_ptr<SkStream> stream)
-        : m_client(nullptr)
-        , m_state(SkGIFType)
-        , m_bytesToConsume(6) // Number of bytes for GIF type, either "GIF87a" or "GIF89a".
-        , m_version(0)
-        , m_loopCount(cLoopCountNotSeen)
-        , m_streamBuffer(std::move(stream))
-        , m_parseCompleted(false)
-        , m_firstFrameHasAlpha(false)
-    {
-    }
+            : m_client(nullptr)
+            , m_state(SkGIFType)
+            , m_bytesToConsume(6)  // Number of bytes for GIF type, either "GIF87a" or "GIF89a".
+            , m_version(0)
+            , m_loopCount(cLoopCountNotSeen)
+            , m_streamBuffer(std::move(stream))
+            , m_parseCompleted(false)
+            , m_firstFrameHasAlpha(false) {}
 
-    ~SkGifImageReader() override
-    {
-    }
+    ~SkGifImageReader() override {}
 
-    void setClient(SkGifCodec* client) { m_client = client; }
+    void setClient(SkGifCodec* client) noexcept { m_client = client; }
 
     // Option to pass to parse(). All enums are negative, because a non-negative value is used to
     // indicate that the Reader should parse up to and including the frame indicated.
     enum SkGIFParseQuery {
         // Parse enough to determine the size. Note that this parses the first frame's header,
         // since we may decide to expand based on the frame's dimensions.
-        SkGIFSizeQuery        = -1,
+        SkGIFSizeQuery = -1,
         // Parse to the end, so we know about all frames.
-        SkGIFFrameCountQuery  = -2,
+        SkGIFFrameCountQuery = -2,
         // Parse until we see the loop count.
-        SkGIFLoopCountQuery   = -3,
+        SkGIFLoopCountQuery = -3,
     };
 
     // Parse incoming GIF data stream into internal data structures.
@@ -309,8 +300,7 @@ public:
     // The method returns false if there is an error.
     bool decode(int frameIndex, bool* frameComplete);
 
-    int imagesCount() const
-    {
+    int imagesCount() const noexcept {
         const int frames = m_frames.count();
         if (!frames) {
             return 0;
@@ -323,25 +313,20 @@ public:
         // frame.
         return m_frames.back()->reachedStartOfData() ? frames : frames - 1;
     }
-    int loopCount() const {
+    int loopCount() const noexcept {
         if (cLoopCountNotSeen == m_loopCount) {
             return 0;
         }
         return m_loopCount;
     }
 
-    const SkGIFColorMap& globalColorMap() const
-    {
-        return m_globalColorMap;
+    const SkGIFColorMap& globalColorMap() const noexcept { return m_globalColorMap; }
+
+    const SkGIFFrameContext* frameContext(int index) const noexcept {
+        return index >= 0 && index < m_frames.count() ? m_frames[index].get() : nullptr;
     }
 
-    const SkGIFFrameContext* frameContext(int index) const
-    {
-        return index >= 0 && index < m_frames.count()
-                ? m_frames[index].get() : nullptr;
-    }
-
-    void clearDecodeState() {
+    void clearDecodeState() noexcept {
         for (int index = 0; index < m_frames.count(); index++) {
             m_frames[index]->clearDecodeState();
         }
@@ -350,10 +335,10 @@ public:
     // Return the color table for frame index (which may be the global color table).
     sk_sp<SkColorTable> getColorTable(SkColorType dstColorType, int index);
 
-    bool firstFrameHasAlpha() const { return m_firstFrameHasAlpha; }
+    bool firstFrameHasAlpha() const noexcept { return m_firstFrameHasAlpha; }
 
 protected:
-    const SkFrame* onGetFrame(int i) const override {
+    const SkFrame* onGetFrame(int i) const noexcept override {
         return static_cast<const SkFrame*>(this->frameContext(i));
     }
 
@@ -364,8 +349,7 @@ private:
     }
 
     void addFrameIfNecessary();
-    bool currentFrameIsFirstFrame() const
-    {
+    bool currentFrameIsFirstFrame() const noexcept {
         return m_frames.empty() || (m_frames.count() == 1 && !m_frames[0]->isComplete());
     }
 
@@ -373,15 +357,16 @@ private:
     SkGifCodec* m_client;
 
     // Parsing state machine.
-    SkGIFState m_state; // Current decoder master state.
-    size_t m_bytesToConsume; // Number of bytes to consume for next stage of parsing.
+    SkGIFState m_state;       // Current decoder master state.
+    size_t m_bytesToConsume;  // Number of bytes to consume for next stage of parsing.
 
     // Global (multi-image) state.
-    int m_version; // Either 89 for GIF89 or 87 for GIF87.
+    int m_version;  // Either 89 for GIF89 or 87 for GIF87.
     SkGIFColorMap m_globalColorMap;
 
     static constexpr int cLoopCountNotSeen = -2;
-    int m_loopCount; // Netscape specific extension block to control the number of animation loops a GIF renders.
+    int m_loopCount;  // Netscape specific extension block to control the number of animation loops
+                      // a GIF renders.
 
     SkTArray<std::unique_ptr<SkGIFFrameContext>> m_frames;
 

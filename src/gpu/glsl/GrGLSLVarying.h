@@ -8,11 +8,11 @@
 #ifndef GrGLSLVarying_DEFINED
 #define GrGLSLVarying_DEFINED
 
-#include "GrAllocator.h"
-#include "GrGeometryProcessor.h"
-#include "GrShaderVar.h"
-#include "GrTypesPriv.h"
-#include "glsl/GrGLSLProgramDataManager.h"
+#include "include/private/GrTypesPriv.h"
+#include "src/gpu/GrAllocator.h"
+#include "src/gpu/GrGeometryProcessor.h"
+#include "src/gpu/GrShaderVar.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
 
 class GrGLSLProgramBuilder;
 
@@ -34,16 +34,10 @@ static bool is_matrix(GrSLType type) {
 
 class GrGLSLVarying {
 public:
-    enum class Scope {
-        kVertToFrag,
-        kVertToGeo,
-        kGeoToFrag
-    };
+    enum class Scope { kVertToFrag, kVertToGeo, kGeoToFrag };
 
     GrGLSLVarying() = default;
-    GrGLSLVarying(GrSLType type, Scope scope = Scope::kVertToFrag)
-        : fType(type)
-        , fScope(scope) {
+    GrGLSLVarying(GrSLType type, Scope scope = Scope::kVertToFrag) : fType(type), fScope(scope) {
         // Metal doesn't support varying matrices, so we disallow them everywhere for consistency
         SkASSERT(!is_matrix(type));
     }
@@ -61,10 +55,16 @@ public:
     bool isInVertexShader() const { return Scope::kGeoToFrag != fScope; }
     bool isInFragmentShader() const { return Scope::kVertToGeo != fScope; }
 
-    const char* vsOut() const { SkASSERT(this->isInVertexShader()); return fVsOut; }
+    const char* vsOut() const {
+        SkASSERT(this->isInVertexShader());
+        return fVsOut;
+    }
     const char* gsIn() const { return fGsIn; }
     const char* gsOut() const { return fGsOut; }
-    const char* fsIn() const { SkASSERT(this->isInFragmentShader()); return fFsIn; }
+    const char* fsIn() const {
+        SkASSERT(this->isInFragmentShader());
+        return fFsIn;
+    }
 
 private:
     GrSLType fType = kVoid_GrSLType;
@@ -82,15 +82,15 @@ static const int kVaryingsPerBlock = 8;
 class GrGLSLVaryingHandler {
 public:
     explicit GrGLSLVaryingHandler(GrGLSLProgramBuilder* program)
-        : fVaryings(kVaryingsPerBlock)
-        , fVertexInputs(kVaryingsPerBlock)
-        , fVertexOutputs(kVaryingsPerBlock)
-        , fGeomInputs(kVaryingsPerBlock)
-        , fGeomOutputs(kVaryingsPerBlock)
-        , fFragInputs(kVaryingsPerBlock)
-        , fFragOutputs(kVaryingsPerBlock)
-        , fProgramBuilder(program)
-        , fDefaultInterpolationModifier(nullptr) {}
+            : fVaryings(kVaryingsPerBlock)
+            , fVertexInputs(kVaryingsPerBlock)
+            , fVertexOutputs(kVaryingsPerBlock)
+            , fGeomInputs(kVaryingsPerBlock)
+            , fGeomOutputs(kVaryingsPerBlock)
+            , fFragInputs(kVaryingsPerBlock)
+            , fFragOutputs(kVaryingsPerBlock)
+            , fProgramBuilder(program)
+            , fDefaultInterpolationModifier(nullptr) {}
 
     virtual ~GrGLSLVaryingHandler() {}
 
@@ -104,8 +104,8 @@ public:
 
     enum class Interpolation {
         kInterpolated,
-        kCanBeFlat, // Use "flat" if it will be faster.
-        kMustBeFlat // Use "flat" even if it is known to be slow.
+        kCanBeFlat,  // Use "flat" if it will be faster.
+        kMustBeFlat  // Use "flat" even if it is known to be slow.
     };
 
     /*
@@ -142,24 +142,24 @@ public:
 
 protected:
     struct VaryingInfo {
-        GrSLType         fType;
-        bool             fIsFlat;
-        SkString         fVsOut;
-        SkString         fGsOut;
-        GrShaderFlags    fVisibility;
+        GrSLType fType;
+        bool fIsFlat;
+        SkString fVsOut;
+        SkString fGsOut;
+        GrShaderFlags fVisibility;
     };
 
     typedef GrTAllocator<VaryingInfo> VaryingList;
     typedef GrTAllocator<GrShaderVar> VarArray;
     typedef GrGLSLProgramDataManager::VaryingHandle VaryingHandle;
 
-    VaryingList    fVaryings;
-    VarArray       fVertexInputs;
-    VarArray       fVertexOutputs;
-    VarArray       fGeomInputs;
-    VarArray       fGeomOutputs;
-    VarArray       fFragInputs;
-    VarArray       fFragOutputs;
+    VaryingList fVaryings;
+    VarArray fVertexInputs;
+    VarArray fVertexOutputs;
+    VarArray fGeomInputs;
+    VarArray fGeomOutputs;
+    VarArray fFragInputs;
+    VarArray fFragOutputs;
 
     // This is not owned by the class
     GrGLSLProgramBuilder* fProgramBuilder;

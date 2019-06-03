@@ -8,8 +8,8 @@
 #ifndef GrGLBuffer_DEFINED
 #define GrGLBuffer_DEFINED
 
-#include "GrGpuBuffer.h"
-#include "gl/GrGLTypes.h"
+#include "include/gpu/gl/GrGLTypes.h"
+#include "src/gpu/GrGpuBuffer.h"
 
 class GrGLGpu;
 class GrGLCaps;
@@ -57,10 +57,10 @@ private:
 #endif
 
     GrGpuBufferType fIntendedType;
-    GrGLuint        fBufferID;
-    GrGLenum        fUsage;
-    size_t          fGLSizeInBytes;
-    bool            fHasAttachedToTexture;
+    GrGLuint fBufferID;
+    GrGLenum fUsage;
+    size_t fGLSizeInBytes;
+    bool fHasAttachedToTexture;
 
     typedef GrGpuBuffer INHERITED;
 };

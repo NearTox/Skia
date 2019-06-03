@@ -6,25 +6,19 @@
  * found in the LICENSE file.
  */
 
-
-
-
-
 #ifndef SkUnPreMultiply_DEFINED
 #define SkUnPreMultiply_DEFINED
 
-#include "SkColor.h"
+#include "include/core/SkColor.h"
 
 class SK_API SkUnPreMultiply {
 public:
     typedef uint32_t Scale;
 
     // index this table with alpha [0..255]
-    static const Scale* GetScaleTable() {
-        return gTable;
-    }
+    static const Scale* GetScaleTable() noexcept { return gTable; }
 
-    static Scale GetScale(U8CPU alpha) {
+    static Scale GetScale(U8CPU alpha) noexcept {
         SkASSERT(alpha <= 255);
         return gTable[alpha];
     }
@@ -42,7 +36,7 @@ public:
             // now red is unpremultiplied
         }
     */
-    static U8CPU ApplyScale(Scale scale, U8CPU component) {
+    static constexpr U8CPU ApplyScale(Scale scale, U8CPU component) noexcept {
         SkASSERT(component <= 255);
         return (scale * component + (1 << 23)) >> 24;
     }

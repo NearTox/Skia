@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "SkSurfaceCharacterization.h"
+#include "include/core/SkSurfaceCharacterization.h"
 
 #if SK_SUPPORT_GPU
-#include "GrCaps.h"
-#include "GrContextThreadSafeProxyPriv.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrContextThreadSafeProxyPriv.h"
 
 bool SkSurfaceCharacterization::operator==(const SkSurfaceCharacterization& other) const {
     if (!this->isValid() || !other.isValid()) {
@@ -20,14 +20,10 @@ bool SkSurfaceCharacterization::operator==(const SkSurfaceCharacterization& othe
         return false;
     }
 
-    return fCacheMaxResourceBytes == other.fCacheMaxResourceBytes &&
-           fOrigin == other.fOrigin &&
-           fImageInfo == other.fImageInfo &&
-           fConfig == other.fConfig &&
-           fFSAAType == other.fFSAAType &&
-           fStencilCnt == other.fStencilCnt &&
-           fIsTextureable == other.fIsTextureable &&
-           fIsMipMapped == other.fIsMipMapped &&
+    return fCacheMaxResourceBytes == other.fCacheMaxResourceBytes && fOrigin == other.fOrigin &&
+           fImageInfo == other.fImageInfo && fConfig == other.fConfig &&
+           fFSAAType == other.fFSAAType && fStencilCnt == other.fStencilCnt &&
+           fIsTextureable == other.fIsTextureable && fIsMipMapped == other.fIsMipMapped &&
            fUsesGLFBO0 == other.fUsesGLFBO0 &&
            fVulkanSecondaryCBCompatible == other.fVulkanSecondaryCBCompatible &&
            fSurfaceProps == other.fSurfaceProps;

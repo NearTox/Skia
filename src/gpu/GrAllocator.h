@@ -8,12 +8,12 @@
 #ifndef GrAllocator_DEFINED
 #define GrAllocator_DEFINED
 
-#include "GrConfig.h"
-#include "GrTypes.h"
-#include "SkNoncopyable.h"
-#include "SkTArray.h"
-#include "SkTypes.h"
 #include <new>
+#include "include/core/SkTypes.h"
+#include "include/gpu/GrConfig.h"
+#include "include/gpu/GrTypes.h"
+#include "include/private/SkNoncopyable.h"
+#include "include/private/SkTArray.h"
 
 class GrAllocator : SkNoncopyable {
 public:
@@ -29,11 +29,11 @@ public:
      *                          Caller is responsible for freeing this memory.
      */
     GrAllocator(size_t itemSize, int itemsPerBlock, void* initialBlock)
-        : fItemSize(itemSize)
-        , fItemsPerBlock(itemsPerBlock)
-        , fOwnFirstBlock(nullptr == initialBlock)
-        , fCount(0)
-        , fInsertionIndexInBlock(0) {
+            : fItemSize(itemSize)
+            , fItemsPerBlock(itemsPerBlock)
+            , fOwnFirstBlock(nullptr == initialBlock)
+            , fCount(0)
+            , fInsertionIndexInBlock(0) {
         SkASSERT(itemsPerBlock > 0);
         fBlockSize = fItemSize * fItemsPerBlock;
         if (fOwnFirstBlock) {
@@ -50,7 +50,7 @@ public:
      *
      * @return pointer to the added item.
      */
-    void* push_back() {
+    void* push_back() noexcept {
         // we always have at least one block
         if (fItemsPerBlock == fInsertionIndexInBlock) {
             fBlocks.push_back() = sk_malloc_throw(fBlockSize);
@@ -65,7 +65,7 @@ public:
     /**
      * Remove the last item, only call if count() != 0
      */
-    void pop_back() {
+    void pop_back() noexcept {
         SkASSERT(fCount);
         SkASSERT(fInsertionIndexInBlock > 0);
         --fInsertionIndexInBlock;
@@ -83,7 +83,7 @@ public:
     /**
      * Removes all added items.
      */
-    void reset() {
+    void reset() noexcept {
         int firstBlockToFree = fOwnFirstBlock ? 0 : 1;
         for (int i = firstBlockToFree; i < fBlocks.count(); ++i) {
             sk_free(fBlocks[i]);
@@ -102,19 +102,17 @@ public:
     /**
      * Returns the item count.
      */
-    int count() const {
-        return fCount;
-    }
+    int count() const noexcept { return fCount; }
 
     /**
      * Is the count 0?
      */
-    bool empty() const { return 0 == fCount; }
+    bool empty() const noexcept { return 0 == fCount; }
 
     /**
      * Access first item, only call if count() != 0
      */
-    void* front() {
+    void* front() noexcept {
         SkASSERT(fCount);
         SkASSERT(fInsertionIndexInBlock > 0);
         return (char*)(fBlocks.front());
@@ -123,7 +121,7 @@ public:
     /**
      * Access first item, only call if count() != 0
      */
-    const void* front() const {
+    const void* front() const noexcept {
         SkASSERT(fCount);
         SkASSERT(fInsertionIndexInBlock > 0);
         return (const char*)(fBlocks.front());
@@ -132,7 +130,7 @@ public:
     /**
      * Access last item, only call if count() != 0
      */
-    void* back() {
+    void* back() noexcept {
         SkASSERT(fCount);
         SkASSERT(fInsertionIndexInBlock > 0);
         return (char*)(fBlocks.back()) + (fInsertionIndexInBlock - 1) * fItemSize;
@@ -141,7 +139,7 @@ public:
     /**
      * Access last item, only call if count() != 0
      */
-    const void* back() const {
+    const void* back() const noexcept {
         SkASSERT(fCount);
         SkASSERT(fInsertionIndexInBlock > 0);
         return (const char*)(fBlocks.back()) + (fInsertionIndexInBlock - 1) * fItemSize;
@@ -156,16 +154,16 @@ public:
         /**
          * Initializes the iterator. next() must be called before get().
          */
-        Iter(const GrAllocator* allocator)
-            : fAllocator(allocator)
-            , fBlockIndex(-1)
-            , fIndexInBlock(allocator->fItemsPerBlock - 1)
-            , fItemIndex(-1) {}
+        constexpr Iter(const GrAllocator* allocator) noexcept
+                : fAllocator(allocator)
+                , fBlockIndex(-1)
+                , fIndexInBlock(allocator->fItemsPerBlock - 1)
+                , fItemIndex(-1) {}
 
         /**
          * Advances the iterator. Iteration is finished when next() returns false.
          */
-        bool next() {
+        bool next() noexcept {
             ++fIndexInBlock;
             ++fItemIndex;
             if (fIndexInBlock == fAllocator->fItemsPerBlock) {
@@ -179,34 +177,32 @@ public:
          * Gets the current iterator value. Call next() at least once before calling. Don't call
          * after next() returns false.
          */
-        void* get() const {
+        void* get() const noexcept {
             SkASSERT(fItemIndex >= 0 && fItemIndex < fAllocator->fCount);
-            return (char*) fAllocator->fBlocks[fBlockIndex] + fIndexInBlock * fAllocator->fItemSize;
+            return (char*)fAllocator->fBlocks[fBlockIndex] + fIndexInBlock * fAllocator->fItemSize;
         }
 
     private:
         const GrAllocator* fAllocator;
-        int                fBlockIndex;
-        int                fIndexInBlock;
-        int                fItemIndex;
+        int fBlockIndex;
+        int fIndexInBlock;
+        int fItemIndex;
     };
 
     /**
      * Access item by index.
      */
-    void* operator[] (int i) {
+    void* operator[](int i) noexcept {
         SkASSERT(i >= 0 && i < fCount);
-        return (char*)fBlocks[i / fItemsPerBlock] +
-               fItemSize * (i % fItemsPerBlock);
+        return (char*)fBlocks[i / fItemsPerBlock] + fItemSize * (i % fItemsPerBlock);
     }
 
     /**
      * Access item by index.
      */
-    const void* operator[] (int i) const {
+    const void* operator[](int i) const noexcept {
         SkASSERT(i >= 0 && i < fCount);
-        return (const char*)fBlocks[i / fItemsPerBlock] +
-               fItemSize * (i % fItemsPerBlock);
+        return (const char*)fBlocks[i / fItemsPerBlock] + fItemSize * (i % fItemsPerBlock);
     }
 
 protected:
@@ -218,7 +214,7 @@ protected:
      *                          Must be at least itemSize*itemsPerBlock sized.
      *                          Caller is responsible for freeing this memory.
      */
-    void setInitialBlock(void* initialBlock) {
+    void setInitialBlock(void* initialBlock) noexcept {
         SkASSERT(0 == fCount);
         SkASSERT(0 == fBlocks.count());
         SkASSERT(fItemsPerBlock == fInsertionIndexInBlock);
@@ -233,13 +229,13 @@ protected:
 private:
     static const int NUM_INIT_BLOCK_PTRS = 8;
 
-    SkSTArray<NUM_INIT_BLOCK_PTRS, void*, true>   fBlocks;
-    size_t                                        fBlockSize;
-    size_t                                        fItemSize;
-    int                                           fItemsPerBlock;
-    bool                                          fOwnFirstBlock;
-    int                                           fCount;
-    int                                           fInsertionIndexInBlock;
+    SkSTArray<NUM_INIT_BLOCK_PTRS, void*, true> fBlocks;
+    size_t fBlockSize;
+    size_t fItemSize;
+    int fItemsPerBlock;
+    bool fOwnFirstBlock;
+    int fCount;
+    int fInsertionIndexInBlock;
 
     typedef SkNoncopyable INHERITED;
 };
@@ -256,8 +252,7 @@ public:
      *
      * @param   itemsPerBlock   the number of items to allocate at once
      */
-    explicit GrTAllocator(int itemsPerBlock)
-        : fAllocator(sizeof(T), itemsPerBlock, nullptr) {}
+    explicit GrTAllocator(int itemsPerBlock) : fAllocator(sizeof(T), itemsPerBlock, nullptr) {}
 
     /**
      * Adds an item and returns it.
@@ -307,9 +302,7 @@ public:
     /**
      * Returns the item count.
      */
-    int count() const {
-        return fAllocator.count();
-    }
+    int count() const { return fAllocator.count(); }
 
     /**
      * Is the count 0?
@@ -319,30 +312,22 @@ public:
     /**
      * Access first item, only call if count() != 0
      */
-    T& front() {
-        return *(T*)fAllocator.front();
-    }
+    T& front() { return *(T*)fAllocator.front(); }
 
     /**
      * Access first item, only call if count() != 0
      */
-    const T& front() const {
-        return *(T*)fAllocator.front();
-    }
+    const T& front() const { return *(T*)fAllocator.front(); }
 
     /**
      * Access last item, only call if count() != 0
      */
-    T& back() {
-        return *(T*)fAllocator.back();
-    }
+    T& back() { return *(T*)fAllocator.back(); }
 
     /**
      * Access last item, only call if count() != 0
      */
-    const T& back() const {
-        return *(const T*)fAllocator.back();
-    }
+    const T& back() const { return *(const T*)fAllocator.back(); }
 
     /**
      * Iterates through the allocator. This is faster than using operator[] when walking linearly
@@ -364,7 +349,7 @@ public:
          * Gets the current iterator value. Call next() at least once before calling. Don't call
          * after next() returns false.
          */
-        T* get() const { return (T*) fImpl.get(); }
+        T* get() const { return (T*)fImpl.get(); }
 
         /**
          * Convenience operators. Same rules for calling apply as get().
@@ -379,16 +364,12 @@ public:
     /**
      * Access item by index.
      */
-    T& operator[] (int i) {
-        return *(T*)(fAllocator[i]);
-    }
+    T& operator[](int i) { return *(T*)(fAllocator[i]); }
 
     /**
      * Access item by index.
      */
-    const T& operator[] (int i) const {
-        return *(const T*)(fAllocator[i]);
-    }
+    const T& operator[](int i) const { return *(const T*)(fAllocator[i]); }
 
 protected:
     /*
@@ -398,9 +379,7 @@ protected:
      *                          Must be at least size(T)*itemsPerBlock sized.
      *                          Caller is responsible for freeing this memory.
      */
-    void setInitialBlock(void* initialBlock) {
-        fAllocator.setInitialBlock(initialBlock);
-    }
+    void setInitialBlock(void* initialBlock) { fAllocator.setInitialBlock(initialBlock); }
 
 private:
     friend void* operator new<T>(size_t, GrTAllocator*);
@@ -414,9 +393,7 @@ private:
     typedef GrTAllocator<T> INHERITED;
 
 public:
-    GrSTAllocator() : INHERITED(N) {
-        this->setInitialBlock(fStorage.get());
-    }
+    GrSTAllocator() : INHERITED(N) { this->setInitialBlock(fStorage.get()); }
 
 private:
     SkAlignedSTStorage<N, T> fStorage;
@@ -433,7 +410,6 @@ template <typename T> void operator delete(void*, GrTAllocator<T>*) {
     SK_ABORT("Invalid Operation");
 }
 
-#define GrNEW_APPEND_TO_ALLOCATOR(allocator_ptr, type_name, args) \
-    new (allocator_ptr) type_name args
+#define GrNEW_APPEND_TO_ALLOCATOR(allocator_ptr, type_name, args) new (allocator_ptr) type_name args
 
 #endif

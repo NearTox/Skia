@@ -8,7 +8,7 @@
 #ifndef SkRasterHandleAllocator_DEFINED
 #define SkRasterHandleAllocator_DEFINED
 
-#include "SkImageInfo.h"
+#include "include/core/SkImageInfo.h"
 
 class SkBitmap;
 class SkCanvas;
@@ -43,11 +43,11 @@ public:
     struct Rec {
         // When the allocation goes out of scope, this proc is called to free everything associated
         // with it: the pixels, the "handle", etc. This is passed the pixel address and fReleaseCtx.
-        void    (*fReleaseProc)(void* pixels, void* ctx);
-        void*   fReleaseCtx;    // context passed to fReleaseProc
-        void*   fPixels;        // pixels for this allocation
-        size_t  fRowBytes;      // rowbytes for these pixels
-        Handle  fHandle;        // public handle returned by SkCanvas::accessTopRasterHandle()
+        void (*fReleaseProc)(void* pixels, void* ctx);
+        void* fReleaseCtx;  // context passed to fReleaseProc
+        void* fPixels;      // pixels for this allocation
+        size_t fRowBytes;   // rowbytes for these pixels
+        Handle fHandle;     // public handle returned by SkCanvas::accessTopRasterHandle()
     };
 
     /**

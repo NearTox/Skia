@@ -8,14 +8,14 @@
 #ifndef GrMockOptions_DEFINED
 #define GrMockOptions_DEFINED
 
-#include "GrTypes.h"
-#include "../private/GrTypesPriv.h"
+#include "include/gpu/GrTypes.h"
+#include "include/private/GrTypesPriv.h"
 
 struct GrMockTextureInfo {
     GrPixelConfig fConfig;
     int fID;
 
-    bool operator==(const GrMockTextureInfo& that) const {
+    bool operator==(const GrMockTextureInfo& that) const noexcept {
         return fConfig == that.fConfig && fID == that.fID;
     }
 };
@@ -24,7 +24,7 @@ struct GrMockRenderTargetInfo {
     GrPixelConfig fConfig;
     int fID;
 
-    bool operator==(const GrMockRenderTargetInfo& that) const {
+    bool operator==(const GrMockRenderTargetInfo& that) const noexcept {
         return fConfig == that.fConfig && fID == that.fID;
     }
 };
@@ -35,7 +35,7 @@ struct GrMockRenderTargetInfo {
  * GrMockOptions is used.
  */
 struct GrMockOptions {
-    GrMockOptions() {
+    GrMockOptions() noexcept {
         using Renderability = ConfigOptions::Renderability;
         // By default RGBA_8888 is textureable and renderable and A8 and RGB565 are texturable.
         fConfigOptions[kRGBA_8888_GrPixelConfig].fRenderability = Renderability::kNonMSAA;
@@ -48,7 +48,7 @@ struct GrMockOptions {
 
     struct ConfigOptions {
         enum Renderability { kNo, kNonMSAA, kMSAA };
-        Renderability fRenderability;
+        Renderability fRenderability = kNo;
         bool fTexturable = false;
     };
 
@@ -68,6 +68,7 @@ struct GrMockOptions {
     int fMaxVertexSamplers = 0;
     int fMaxFragmentSamplers = 8;
     bool fShaderDerivativeSupport = true;
+    bool fDualSourceBlendingSupport = false;
 
     // GrMockGpu options.
     bool fFailTextureAllocations = false;

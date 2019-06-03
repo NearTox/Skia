@@ -10,26 +10,26 @@
 
 #ifndef SKSL_STANDALONE
 
-#include "SkRasterPipeline.h"
-#include "SkSLContext.h"
-#include "SkSLExpression.h"
+#include "src/core/SkRasterPipeline.h"
+#include "src/sksl/SkSLContext.h"
+#include "src/sksl/ir/SkSLExpression.h"
 
 namespace SkSL {
 
 struct AppendStage : public Expression {
     AppendStage(const Context& context, int offset, SkRasterPipeline::StockStage stage,
                 std::vector<std::unique_ptr<Expression>> arguments)
-    : INHERITED(offset, kAppendStage_Kind, *context.fVoid_Type)
-    , fStage(stage)
-    , fArguments(std::move(arguments)) {}
+            : INHERITED(offset, kAppendStage_Kind, *context.fVoid_Type)
+            , fStage(stage)
+            , fArguments(std::move(arguments)) {}
 
     std::unique_ptr<Expression> clone() const override {
         std::vector<std::unique_ptr<Expression>> cloned;
         for (const auto& arg : fArguments) {
             cloned.push_back(arg->clone());
         }
-        return std::unique_ptr<Expression>(new AppendStage(fOffset, fStage, std::move(cloned),
-                                                           &fType));
+        return std::unique_ptr<Expression>(
+                new AppendStage(fOffset, fStage, std::move(cloned), &fType));
     }
 
     String description() const override {
@@ -44,9 +44,7 @@ struct AppendStage : public Expression {
         return result;
     }
 
-    bool hasSideEffects() const override {
-        return true;
-    }
+    bool hasSideEffects() const override { return true; }
 
     SkRasterPipeline::StockStage fStage;
 
@@ -57,14 +55,13 @@ struct AppendStage : public Expression {
 private:
     AppendStage(int offset, SkRasterPipeline::StockStage stage,
                 std::vector<std::unique_ptr<Expression>> arguments, const Type* type)
-    : INHERITED(offset, kAppendStage_Kind, *type)
-    , fStage(stage)
-    , fArguments(std::move(arguments)) {}
-
+            : INHERITED(offset, kAppendStage_Kind, *type)
+            , fStage(stage)
+            , fArguments(std::move(arguments)) {}
 };
 
-} // namespace
+}  // namespace SkSL
 
-#endif // SKSL_STANDALONE
+#endif  // SKSL_STANDALONE
 
-#endif // SKSL_APPENDSTAGE
+#endif  // SKSL_APPENDSTAGE

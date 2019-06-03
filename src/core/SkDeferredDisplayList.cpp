@@ -5,16 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "SkDeferredDisplayList.h"
+#include "include/private/SkDeferredDisplayList.h"
 
-#include "SkCanvas.h"
-#include "SkSurface.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkSurface.h"
 
 SkDeferredDisplayList::SkDeferredDisplayList(const SkSurfaceCharacterization& characterization,
                                              sk_sp<LazyProxyData> lazyProxyData)
-        : fCharacterization(characterization)
-        , fLazyProxyData(std::move(lazyProxyData)) {
-}
+        : fCharacterization(characterization), fLazyProxyData(std::move(lazyProxyData)) {}
 
-SkDeferredDisplayList::~SkDeferredDisplayList() {
-}
+SkDeferredDisplayList::~SkDeferredDisplayList() {}

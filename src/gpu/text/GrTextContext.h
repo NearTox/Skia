@@ -8,13 +8,13 @@
 #ifndef GrTextContext_DEFINED
 #define GrTextContext_DEFINED
 
-#include "GrDistanceFieldAdjustTable.h"
-#include "GrGeometryProcessor.h"
-#include "GrTextTarget.h"
-#include "SkGlyphRun.h"
+#include "src/core/SkGlyphRun.h"
+#include "src/gpu/GrGeometryProcessor.h"
+#include "src/gpu/text/GrDistanceFieldAdjustTable.h"
+#include "src/gpu/text/GrTextTarget.h"
 
 #if GR_TEST_UTILS
-#include "GrDrawOpTest.h"
+#include "src/gpu/GrDrawOpTest.h"
 #endif
 
 class GrDrawOp;
@@ -48,14 +48,10 @@ public:
     void drawGlyphRunList(GrRecordingContext*, GrTextTarget*, const GrClip&,
                           const SkMatrix& viewMatrix, const SkSurfaceProps&, const SkGlyphRunList&);
 
-    std::unique_ptr<GrDrawOp> createOp_TestingOnly(GrRecordingContext*,
-                                                   GrTextContext*,
-                                                   GrRenderTargetContext*,
-                                                   const SkPaint&, const SkFont&,
-                                                   const SkMatrix& viewMatrix,
-                                                   const char* text,
-                                                   int x,
-                                                   int y);
+    std::unique_ptr<GrDrawOp> createOp_TestingOnly(GrRecordingContext*, GrTextContext*,
+                                                   GrRenderTargetContext*, const SkPaint&,
+                                                   const SkFont&, const SkMatrix& viewMatrix,
+                                                   const char* text, int x, int y);
 
     static void SanitizeOptions(Options* options);
     static bool CanDrawAsDistanceFields(const SkPaint&, const SkFont&, const SkMatrix& viewMatrix,
@@ -82,7 +78,9 @@ private:
     // Determines if we need to use fake gamma (and contrast boost):
     static SkScalerContextFlags ComputeScalerContextFlags(const GrColorSpaceInfo&);
 
-    const GrDistanceFieldAdjustTable* dfAdjustTable() const { return fDistanceAdjustTable.get(); }
+    const GrDistanceFieldAdjustTable* dfAdjustTable() const noexcept {
+        return fDistanceAdjustTable.get();
+    }
 
     sk_sp<const GrDistanceFieldAdjustTable> fDistanceAdjustTable;
 

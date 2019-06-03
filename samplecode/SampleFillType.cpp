@@ -4,17 +4,18 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "Sample.h"
-#include "SkCanvas.h"
-#include "SkCornerPathEffect.h"
-#include "SkGradientShader.h"
-#include "SkPath.h"
-#include "SkRegion.h"
-#include "SkShader.h"
-#include "SkUTF.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRegion.h"
+#include "include/core/SkShader.h"
+#include "include/effects/SkCornerPathEffect.h"
+#include "include/effects/SkGradientShader.h"
+#include "samplecode/Sample.h"
+#include "src/utils/SkUTF.h"
 
 class FillTypeView : public Sample {
     SkPath fPath;
+
 public:
     FillTypeView() {
         const SkScalar radius = SkIntToScalar(45);
@@ -33,10 +34,9 @@ protected:
         return this->INHERITED::onQuery(evt);
     }
 
-    void showPath(SkCanvas* canvas, int x, int y, SkPath::FillType ft,
-                  SkScalar scale, const SkPaint& paint) {
-
-        const SkRect r = { 0, 0, SkIntToScalar(150), SkIntToScalar(150) };
+    void showPath(SkCanvas* canvas, int x, int y, SkPath::FillType ft, SkScalar scale,
+                  const SkPaint& paint) {
+        const SkRect r = {0, 0, SkIntToScalar(150), SkIntToScalar(150)};
 
         canvas->save();
         canvas->translate(SkIntToScalar(x), SkIntToScalar(y));
@@ -51,21 +51,17 @@ protected:
     }
 
     void showFour(SkCanvas* canvas, SkScalar scale, const SkPaint& paint) {
-        showPath(canvas,   0,   0, SkPath::kWinding_FillType,
-                 scale, paint);
-        showPath(canvas, 200,   0, SkPath::kEvenOdd_FillType,
-                 scale, paint);
-        showPath(canvas,  00, 200, SkPath::kInverseWinding_FillType,
-                 scale, paint);
-        showPath(canvas, 200, 200, SkPath::kInverseEvenOdd_FillType,
-                 scale, paint);
+        showPath(canvas, 0, 0, SkPath::kWinding_FillType, scale, paint);
+        showPath(canvas, 200, 0, SkPath::kEvenOdd_FillType, scale, paint);
+        showPath(canvas, 00, 200, SkPath::kInverseWinding_FillType, scale, paint);
+        showPath(canvas, 200, 200, SkPath::kInverseEvenOdd_FillType, scale, paint);
     }
 
     virtual void onDrawContent(SkCanvas* canvas) {
         canvas->translate(SkIntToScalar(20), SkIntToScalar(20));
 
         SkPaint paint;
-        const SkScalar scale = SkIntToScalar(5)/4;
+        const SkScalar scale = SkIntToScalar(5) / 4;
 
         paint.setAntiAlias(false);
         paint.setColor(0x8000FF00);
@@ -88,4 +84,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new FillTypeView(); )
+DEF_SAMPLE(return new FillTypeView();)

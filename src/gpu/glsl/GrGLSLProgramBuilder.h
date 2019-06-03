@@ -8,16 +8,18 @@
 #ifndef GrGLSLProgramBuilder_DEFINED
 #define GrGLSLProgramBuilder_DEFINED
 
-#include "GrCaps.h"
-#include "GrGeometryProcessor.h"
-#include "GrProgramDesc.h"
-#include "glsl/GrGLSLFragmentProcessor.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLPrimitiveProcessor.h"
-#include "glsl/GrGLSLProgramDataManager.h"
-#include "glsl/GrGLSLUniformHandler.h"
-#include "glsl/GrGLSLVertexGeoBuilder.h"
-#include "glsl/GrGLSLXferProcessor.h"
+#include "include/gpu/GrRenderTarget.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrGeometryProcessor.h"
+#include "src/gpu/GrProgramDesc.h"
+#include "src/gpu/GrRenderTargetPriv.h"
+#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLPrimitiveProcessor.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#include "src/gpu/glsl/GrGLSLVertexGeoBuilder.h"
+#include "src/gpu/glsl/GrGLSLXferProcessor.h"
 
 class GrShaderVar;
 class GrGLSLVaryingHandler;
@@ -26,8 +28,8 @@ class GrShaderCaps;
 
 class GrGLSLProgramBuilder {
 public:
-    using UniformHandle      = GrGLSLUniformHandler::UniformHandle;
-    using SamplerHandle      = GrGLSLUniformHandler::SamplerHandle;
+    using UniformHandle = GrGLSLUniformHandler::UniformHandle;
+    using SamplerHandle = GrGLSLUniformHandler::SamplerHandle;
 
     virtual ~GrGLSLProgramBuilder() {}
 
@@ -36,8 +38,12 @@ public:
 
     const GrPrimitiveProcessor& primitiveProcessor() const { return fPrimProc; }
     const GrTextureProxy* const* primProcProxies() const { return fPrimProcProxies; }
-    GrPixelConfig config() const { return fConfig; }
-    int numColorSamples() const { return fNumColorSamples; }
+    const GrRenderTarget* renderTarget() const { return fRenderTarget; }
+    GrPixelConfig config() const { return fRenderTarget->config(); }
+    int effectiveSampleCnt() const {
+        SkASSERT(GrProcessor::CustomFeatures::kSampleLocations & header().processorFeatures());
+        return fRenderTarget->renderTargetPriv().getSampleLocations().count();
+    }
     GrSurfaceOrigin origin() const { return fOrigin; }
     const GrPipeline& pipeline() const { return fPipeline; }
     GrProgramDesc* desc() { return fDesc; }
@@ -78,22 +84,21 @@ public:
     // number of each input/output type in a single allocation block, used by many builders
     static const int kVarsPerBlock;
 
-    GrGLSLVertexBuilder          fVS;
-    GrGLSLGeometryBuilder        fGS;
-    GrGLSLFragmentShaderBuilder  fFS;
+    GrGLSLVertexBuilder fVS;
+    GrGLSLGeometryBuilder fGS;
+    GrGLSLFragmentShaderBuilder fFS;
 
     int fStageIndex;
 
-    const GrPixelConfig          fConfig;
-    const int                    fNumColorSamples;
-    const GrSurfaceOrigin        fOrigin;
-    const GrPipeline&            fPipeline;
-    const GrPrimitiveProcessor&  fPrimProc;
+    const GrRenderTarget* fRenderTarget;
+    const GrSurfaceOrigin fOrigin;
+    const GrPipeline& fPipeline;
+    const GrPrimitiveProcessor& fPrimProc;
     const GrTextureProxy* const* fPrimProcProxies;
 
-    GrProgramDesc*               fDesc;
+    GrProgramDesc* fDesc;
 
-    GrGLSLBuiltinUniformHandles  fUniformHandles;
+    GrGLSLBuiltinUniformHandles fUniformHandles;
 
     std::unique_ptr<GrGLSLPrimitiveProcessor> fGeometryProcessor;
     std::unique_ptr<GrGLSLXferProcessor> fXferProcessor;
@@ -103,8 +108,7 @@ public:
 protected:
     explicit GrGLSLProgramBuilder(GrRenderTarget* renderTarget, GrSurfaceOrigin origin,
                                   const GrPrimitiveProcessor&,
-                                  const GrTextureProxy* const primProcProxies[],
-                                  const GrPipeline&,
+                                  const GrTextureProxy* const primProcProxies[], const GrPipeline&,
                                   GrProgramDesc*);
 
     void addFeature(GrShaderFlags shaders, uint32_t featureBit, const char* extensionName);
@@ -121,19 +125,19 @@ private:
     // fragment shader are cleared.
     void reset() {
         this->addStage();
-        SkDEBUGCODE(fFS.resetVerification();)
+        SkDEBUGCODE(fFS.debugOnly_resetPerStageVerification());
     }
     void addStage() { fStageIndex++; }
 
     class AutoStageAdvance {
     public:
-        AutoStageAdvance(GrGLSLProgramBuilder* pb)
-            : fPB(pb) {
+        AutoStageAdvance(GrGLSLProgramBuilder* pb) : fPB(pb) {
             fPB->reset();
             // Each output to the fragment processor gets its own code section
             fPB->fFS.nextStage();
         }
         ~AutoStageAdvance() {}
+
     private:
         GrGLSLProgramBuilder* fPB;
     };
@@ -151,18 +155,17 @@ private:
                                     SkTArray<std::unique_ptr<GrGLSLFragmentProcessor>>*);
     void emitAndInstallXferProc(const SkString& colorIn, const SkString& coverageIn);
     SamplerHandle emitSampler(const GrTexture*, const GrSamplerState&, const char* name);
-    void emitFSOutputSwizzle(bool hasSecondaryOutput);
     bool checkSamplerCounts();
 
 #ifdef SK_DEBUG
     void verify(const GrPrimitiveProcessor&);
-    void verify(const GrXferProcessor&);
     void verify(const GrFragmentProcessor&);
+    void verify(const GrXferProcessor&);
 #endif
 
     // These are used to check that we don't excede the allowable number of resources in a shader.
-    int                         fNumFragmentSamplers;
-    SkSTArray<4, GrShaderVar>   fTransformedCoordVars;
+    int fNumFragmentSamplers;
+    SkSTArray<4, GrShaderVar> fTransformedCoordVars;
 };
 
 #endif

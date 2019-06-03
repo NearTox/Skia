@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "SkLeanWindows.h"
-#include "SkThreadID.h"
+#include "include/private/SkThreadID.h"
+#include "include/private/SkLeanWindows.h"
 
 #ifdef SK_BUILD_FOR_WIN
-    SkThreadID SkGetThreadID() { return GetCurrentThreadId(); }
+SkThreadID SkGetThreadID() noexcept { return GetCurrentThreadId(); }
 #else
-    #include <pthread.h>
-    SkThreadID SkGetThreadID() { return (int64_t)pthread_self(); }
+#include <pthread.h>
+SkThreadID SkGetThreadID() { return (int64_t)pthread_self(); }
 #endif

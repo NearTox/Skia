@@ -8,8 +8,8 @@
 #ifndef SKSL_ASTVARDECLARATIONSTATEMENT
 #define SKSL_ASTVARDECLARATIONSTATEMENT
 
-#include "SkSLASTStatement.h"
-#include "SkSLASTVarDeclaration.h"
+#include "src/sksl/ast/SkSLASTStatement.h"
+#include "src/sksl/ast/SkSLASTVarDeclaration.h"
 
 namespace SkSL {
 
@@ -18,18 +18,15 @@ namespace SkSL {
  */
 struct ASTVarDeclarationStatement : public ASTStatement {
     ASTVarDeclarationStatement(std::unique_ptr<ASTVarDeclarations> decl)
-    : INHERITED(decl->fOffset, kVarDeclaration_Kind)
-    , fDeclarations(std::move(decl)) {}
+            : INHERITED(decl->fOffset, kVarDeclaration_Kind), fDeclarations(std::move(decl)) {}
 
-    String description() const override {
-        return fDeclarations->description() + ";";
-    }
+    String description() const override { return fDeclarations->description() + ";"; }
 
     std::unique_ptr<ASTVarDeclarations> fDeclarations;
 
     typedef ASTStatement INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

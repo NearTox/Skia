@@ -8,12 +8,12 @@
 #ifndef SkSpecialSurface_DEFINED
 #define SkSpecialSurface_DEFINED
 
-#include "SkImageInfo.h"
-#include "SkRefCnt.h"
-#include "SkSurfaceProps.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkSurfaceProps.h"
 
 #if SK_SUPPORT_GPU
-#include "GrTypesPriv.h"
+#include "include/private/GrTypesPriv.h"
 #endif
 
 class GrBackendFormat;
@@ -21,6 +21,7 @@ class GrContext;
 class SkBitmap;
 class SkCanvas;
 class SkSpecialImage;
+class GrRecordingContext;
 
 /**
  * SkSpecialSurface is a restricted form of SkSurface solely for internal use. It differs
@@ -32,27 +33,27 @@ class SkSpecialImage;
  */
 class SkSpecialSurface : public SkRefCnt {
 public:
-    const SkSurfaceProps& props() const { return fProps; }
+    const SkSurfaceProps& props() const noexcept { return fProps; }
 
-    int width() const { return fSubset.width(); }
-    int height() const { return fSubset.height(); }
+    int width() const noexcept { return fSubset.width(); }
+    int height() const noexcept { return fSubset.height(); }
 
     /**
-    *  Return a canvas that will draw into this surface. This will always
-    *  return the same canvas for a given surface, and is managed/owned by the
-    *  surface.
-    *
-    *  The canvas will be invalid after 'newImageSnapshot' is called.
-    */
+     *  Return a canvas that will draw into this surface. This will always
+     *  return the same canvas for a given surface, and is managed/owned by the
+     *  surface.
+     *
+     *  The canvas will be invalid after 'newImageSnapshot' is called.
+     */
     SkCanvas* getCanvas();
 
     /**
-    *  Returns an image of the current state of the surface pixels up to this
-    *  point. The canvas returned by 'getCanvas' becomes invalidated by this
-    *  call and no more drawing to this surface is allowed.
-    *
-    *  Note: the caller inherits a ref from this call that must be balanced
-    */
+     *  Returns an image of the current state of the surface pixels up to this
+     *  point. The canvas returned by 'getCanvas' becomes invalidated by this
+     *  call and no more drawing to this surface is allowed.
+     *
+     *  Note: the caller inherits a ref from this call that must be balanced
+     */
     sk_sp<SkSpecialImage> makeImageSnapshot();
 
 #if SK_SUPPORT_GPU
@@ -61,9 +62,8 @@ public:
      *  be created, nullptr will be returned.
      */
     static sk_sp<SkSpecialSurface> MakeRenderTarget(GrRecordingContext*,
-                                                    const GrBackendFormat& format,
-                                                    int width, int height,
-                                                    GrPixelConfig config,
+                                                    const GrBackendFormat& format, int width,
+                                                    int height, GrPixelConfig config,
                                                     sk_sp<SkColorSpace> colorSpace,
                                                     const SkSurfaceProps* = nullptr);
 #endif
@@ -81,19 +81,18 @@ public:
      *  If the requested surface cannot be created, or the request is not a
      *  supported configuration, nullptr will be returned.
      */
-    static sk_sp<SkSpecialSurface> MakeRaster(const SkImageInfo&,
-                                              const SkSurfaceProps* = nullptr);
+    static sk_sp<SkSpecialSurface> MakeRaster(const SkImageInfo&, const SkSurfaceProps* = nullptr);
 
 protected:
     SkSpecialSurface(const SkIRect& subset, const SkSurfaceProps*);
 
     // For testing only
     friend class TestingSpecialSurfaceAccess;
-    const SkIRect& subset() const { return fSubset; }
+    const SkIRect& subset() const noexcept { return fSubset; }
 
 private:
     const SkSurfaceProps fProps;
-    const SkIRect        fSubset;
+    const SkIRect fSubset;
 
     typedef SkRefCnt INHERITED;
 };

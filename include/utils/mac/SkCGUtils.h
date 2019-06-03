@@ -8,10 +8,10 @@
 #ifndef SkCGUtils_DEFINED
 #define SkCGUtils_DEFINED
 
-#include "SkSize.h"
-#include "SkImageInfo.h"
-#include "SkImage.h"
-#include "SkPixmap.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkPixmap.h"
+#include "include/core/SkSize.h"
 
 #if defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)
 
@@ -55,8 +55,7 @@ static inline bool SkCopyPixelsFromCGImage(const SkPixmap& dst, CGImageRef src) 
  *  Create an imageref from the specified bitmap using the specified colorspace.
  *  If space is NULL, then CGColorSpaceCreateDeviceRGB() is used.
  */
-SK_API CGImageRef SkCreateCGImageRefWithColorspace(const SkBitmap& bm,
-                                                   CGColorSpaceRef space);
+SK_API CGImageRef SkCreateCGImageRefWithColorspace(const SkBitmap& bm, CGColorSpaceRef space);
 
 /**
  *  Create an imageref from the specified bitmap using the colorspace returned

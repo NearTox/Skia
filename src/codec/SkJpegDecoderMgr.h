@@ -8,18 +8,17 @@
 #ifndef SkJpegDecoderMgr_DEFINED
 #define SkJpegDecoderMgr_DEFINED
 
-#include "SkCodec.h"
-#include "SkCodecPriv.h"
 #include <stdio.h>
-#include "SkJpegUtility.h"
+#include "include/codec/SkCodec.h"
+#include "src/codec/SkCodecPriv.h"
+#include "src/codec/SkJpegUtility.h"
 
 extern "C" {
-    #include "jpeglib.h"
+#include "jpeglib.h"
 }
 
 class JpegDecoderMgr : SkNoncopyable {
 public:
-
     /*
      * Print a useful error message and return false
      */
@@ -40,7 +39,7 @@ public:
      * Initialize decompress struct
      * Initialize the source manager
      */
-    void  init();
+    void init();
 
     /*
      * Returns true if it successfully sets outColor to the encoded color,
@@ -56,20 +55,19 @@ public:
     /*
      * Get the skjpeg_error_mgr in order to set an error return jmp_buf
      */
-    skjpeg_error_mgr* errorMgr() { return &fErrorMgr; }
+    skjpeg_error_mgr* errorMgr() noexcept { return &fErrorMgr; }
 
     /*
      * Get function for the decompress info struct
      */
-    jpeg_decompress_struct* dinfo() { return &fDInfo; }
+    jpeg_decompress_struct* dinfo() noexcept { return &fDInfo; }
 
 private:
-
     jpeg_decompress_struct fDInfo;
-    skjpeg_source_mgr      fSrcMgr;
-    skjpeg_error_mgr       fErrorMgr;
-    jpeg_progress_mgr      fProgressMgr;
-    bool                   fInit;
+    skjpeg_source_mgr fSrcMgr;
+    skjpeg_error_mgr fErrorMgr;
+    jpeg_progress_mgr fProgressMgr;
+    bool fInit;
 };
 
 #endif

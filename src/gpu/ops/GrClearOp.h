@@ -8,8 +8,8 @@
 #ifndef GrClearOp_DEFINED
 #define GrClearOp_DEFINED
 
-#include "GrFixedClip.h"
-#include "GrOp.h"
+#include "src/gpu/GrFixedClip.h"
+#include "src/gpu/ops/GrOp.h"
 
 class GrOpFlushState;
 class GrRecordingContext;
@@ -50,15 +50,12 @@ public:
     void setColor(const SkPMColor4f& color) { fColor = color; }
 
 private:
-    friend class GrOpMemoryPool; // for ctors
+    friend class GrOpMemoryPool;  // for ctors
 
     GrClearOp(const GrFixedClip& clip, const SkPMColor4f& color, GrSurfaceProxy* proxy);
 
     GrClearOp(const SkIRect& rect, const SkPMColor4f& color, bool fullScreen)
-        : INHERITED(ClassID())
-        , fClip(GrFixedClip(rect))
-        , fColor(color) {
-
+            : INHERITED(ClassID()), fClip(GrFixedClip(rect)), fColor(color) {
         if (fullScreen) {
             fClip.disableScissor();
         }
@@ -85,9 +82,8 @@ private:
 
     bool contains(const GrClearOp* that) const {
         // The constructor ensures that scissor gets disabled on any clip that fills the entire RT.
-        return !fClip.scissorEnabled() ||
-               (that->fClip.scissorEnabled() &&
-                fClip.scissorRect().contains(that->fClip.scissorRect()));
+        return !fClip.scissorEnabled() || (that->fClip.scissorEnabled() &&
+                                           fClip.scissorRect().contains(that->fClip.scissorRect()));
     }
 
     void onPrepare(GrOpFlushState*) override {}

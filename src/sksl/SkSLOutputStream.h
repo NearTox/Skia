@@ -8,16 +8,14 @@
 #ifndef SKSL_OUTPUTSTREAM
 #define SKSL_OUTPUTSTREAM
 
-#include "SkSLDefines.h"
-#include "SkSLString.h"
+#include "src/sksl/SkSLDefines.h"
+#include "src/sksl/SkSLString.h"
 
 namespace SkSL {
 
 class OutputStream {
 public:
-    virtual bool isValid() const {
-        return true;
-    }
+    virtual bool isValid() const { return true; }
 
     virtual void write8(uint8_t b) = 0;
 
@@ -37,6 +35,6 @@ private:
     static const int kBufferSize = 1024;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

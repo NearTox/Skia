@@ -5,22 +5,21 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef GrGLStencilAttachment_DEFINED
 #define GrGLStencilAttachment_DEFINED
 
-#include "gl/GrGLInterface.h"
-#include "GrStencilAttachment.h"
+#include "include/gpu/gl/GrGLInterface.h"
+#include "src/gpu/GrStencilAttachment.h"
 
 class GrGLStencilAttachment : public GrStencilAttachment {
 public:
     static const GrGLenum kUnknownInternalFormat = ~0U;
     static const GrGLuint kUnknownBitCount = ~0U;
     struct Format {
-        GrGLenum  fInternalFormat;
-        GrGLuint  fStencilBits;
-        GrGLuint  fTotalBits;
-        bool      fPacked;
+        GrGLenum fInternalFormat;
+        GrGLuint fStencilBits;
+        GrGLuint fTotalBits;
+        bool fPacked;
     };
 
     struct IDDesc {
@@ -28,20 +27,15 @@ public:
         GrGLuint fRenderbufferID;
     };
 
-    GrGLStencilAttachment(GrGpu* gpu,
-                          const IDDesc& idDesc,
-                          int width, int height,
-                          int sampleCnt,
+    GrGLStencilAttachment(GrGpu* gpu, const IDDesc& idDesc, int width, int height, int sampleCnt,
                           const Format& format)
-        : GrStencilAttachment(gpu, width, height, format.fStencilBits, sampleCnt)
-        , fFormat(format)
-        , fRenderbufferID(idDesc.fRenderbufferID) {
+            : GrStencilAttachment(gpu, width, height, format.fStencilBits, sampleCnt)
+            , fFormat(format)
+            , fRenderbufferID(idDesc.fRenderbufferID) {
         this->registerWithCache(SkBudgeted::kYes);
     }
 
-    GrGLuint renderbufferID() const {
-        return fRenderbufferID;
-    }
+    GrGLuint renderbufferID() const { return fRenderbufferID; }
 
     const Format& format() const { return fFormat; }
 

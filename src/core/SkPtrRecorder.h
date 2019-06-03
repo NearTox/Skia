@@ -5,13 +5,12 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkPtrSet_DEFINED
 #define SkPtrSet_DEFINED
 
-#include "SkRefCnt.h"
-#include "SkFlattenable.h"
-#include "SkTDArray.h"
+#include "include/core/SkFlattenable.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/SkTDArray.h"
 
 /**
  *  Maintains a set of ptrs, assigning each a unique ID [1...N]. Duplicate ptrs
@@ -21,8 +20,6 @@
  */
 class SkPtrSet : public SkRefCnt {
 public:
-
-
     /**
      *  Search for the specified ptr in the set. If it is found, return its
      *  32bit ID [1..N], or if not found, return 0. Always returns 0 for nullptr.
@@ -62,20 +59,16 @@ public:
      */
     class Iter {
     public:
-        Iter(const SkPtrSet& set)
-            : fSet(set)
-            , fIndex(0) {}
+        Iter(const SkPtrSet& set) : fSet(set), fIndex(0) {}
 
         /**
          * Return the next ptr in the set or null if the end was reached.
          */
-        void* next() {
-            return fIndex < fSet.fList.count() ? fSet.fList[fIndex++].fPtr : nullptr;
-        }
+        void* next() { return fIndex < fSet.fList.count() ? fSet.fList[fIndex++].fPtr : nullptr; }
 
     private:
         const SkPtrSet& fSet;
-        int             fIndex;
+        int fIndex;
     };
 
 protected:
@@ -84,15 +77,15 @@ protected:
 
 private:
     struct Pair {
-        void*       fPtr;   // never nullptr
-        uint32_t    fIndex; // 1...N
+        void* fPtr;       // never nullptr
+        uint32_t fIndex;  // 1...N
     };
 
     // we store the ptrs in sorted-order (using Cmp) so that we can efficiently
     // detect duplicates when add() is called. Hence we need to store the
     // ptr and its ID/fIndex explicitly, since the ptr's position in the array
     // is not related to its "index".
-    SkTDArray<Pair>  fList;
+    SkTDArray<Pair> fList;
 
     static bool Less(const Pair& a, const Pair& b);
 
@@ -105,16 +98,10 @@ private:
  */
 template <typename T> class SkTPtrSet : public SkPtrSet {
 public:
-    uint32_t find(T ptr) {
-        return this->INHERITED::find((void*)ptr);
-    }
-    uint32_t add(T ptr) {
-        return this->INHERITED::add((void*)ptr);
-    }
+    uint32_t find(T ptr) { return this->INHERITED::find((void*)ptr); }
+    uint32_t add(T ptr) { return this->INHERITED::add((void*)ptr); }
 
-    void copyToArray(T* array) const {
-        this->INHERITED::copyToArray((void**)array);
-    }
+    void copyToArray(T* array) const { this->INHERITED::copyToArray((void**)array); }
 
 private:
     typedef SkPtrSet INHERITED;
@@ -143,8 +130,6 @@ class SkFactorySet : public SkTPtrSet<SkFlattenable::Factory> {};
  */
 class SkNamedFactorySet : public SkRefCnt {
 public:
-
-
     SkNamedFactorySet();
 
     /**
@@ -160,9 +145,10 @@ public:
      * function.
      */
     const char* getNextAddedFactoryName();
+
 private:
-    int                    fNextAddedFactory;
-    SkFactorySet           fFactorySet;
+    int fNextAddedFactory;
+    SkFactorySet fFactorySet;
     SkTDArray<const char*> fNames;
 
     typedef SkRefCnt INHERITED;

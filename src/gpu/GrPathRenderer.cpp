@@ -5,14 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "GrPathRenderer.h"
-#include "GrCaps.h"
-#include "GrPaint.h"
-#include "GrRecordingContextPriv.h"
-#include "GrRenderTargetContext.h"
-#include "GrShape.h"
-#include "GrUserStencilSettings.h"
-#include "SkDrawProcs.h"
+#include "src/gpu/GrPathRenderer.h"
+#include "src/core/SkDrawProcs.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrPaint.h"
+#include "src/gpu/GrRecordingContextPriv.h"
+#include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/GrShape.h"
+#include "src/gpu/GrUserStencilSettings.h"
 
 #ifdef SK_DEBUG
 void GrPathRenderer::StencilPathArgs::validate() const {
@@ -22,7 +22,6 @@ void GrPathRenderer::StencilPathArgs::validate() const {
     SkASSERT(fViewMatrix);
     SkASSERT(fShape);
     SkASSERT(fShape->style().isSimpleFill());
-    SkASSERT(GrAAType::kCoverage != fAAType);
     SkPath path;
     fShape->asPath(&path);
     SkASSERT(!path.isInverseFillType());
@@ -34,8 +33,8 @@ void GrPathRenderer::StencilPathArgs::validate() const {
 GrPathRenderer::GrPathRenderer() {}
 
 GrPathRenderer::StencilSupport GrPathRenderer::getStencilSupport(const GrShape& shape) const {
-    SkDEBUGCODE(SkPath path;)
-    SkDEBUGCODE(shape.asPath(&path);)
+    SkDEBUGCODE(SkPath path);
+    SkDEBUGCODE(shape.asPath(&path));
     SkASSERT(shape.style().isSimpleFill());
     SkASSERT(!path.isInverseFillType());
     return this->onGetStencilSupport(shape);
@@ -49,15 +48,14 @@ bool GrPathRenderer::drawPath(const DrawPathArgs& args) {
     canArgs.fClipConservativeBounds = args.fClipConservativeBounds;
     canArgs.fViewMatrix = args.fViewMatrix;
     canArgs.fShape = args.fShape;
-    canArgs.fAAType = args.fAAType;
+    canArgs.fAATypeFlags = args.fAATypeFlags;
     canArgs.fTargetIsWrappedVkSecondaryCB = args.fRenderTargetContext->wrapsVkSecondaryCB();
     canArgs.validate();
 
     canArgs.fHasUserStencilSettings = !args.fUserStencilSettings->isUnused();
-    SkASSERT(!(canArgs.fAAType == GrAAType::kMSAA &&
-               GrFSAAType::kUnifiedMSAA != args.fRenderTargetContext->fsaaType()));
-    SkASSERT(!(canArgs.fAAType == GrAAType::kMixedSamples &&
-               GrFSAAType::kMixedSamples != args.fRenderTargetContext->fsaaType()));
+    if (AATypeFlags::kMixedSampledStencilThenCover & canArgs.fAATypeFlags) {
+        SkASSERT(GrFSAAType::kMixedSamples == args.fRenderTargetContext->fsaaType());
+    }
     SkASSERT(CanDrawPath::kNo != this->canDrawPath(canArgs));
     if (!args.fUserStencilSettings->isUnused()) {
         SkPath path;
@@ -85,11 +83,8 @@ bool GrPathRenderer::IsStrokeHairlineOrEquivalent(const GrStyle& style, const Sk
            SkDrawTreatAAStrokeAsHairline(stroke.getWidth(), matrix, outCoverage);
 }
 
-
-void GrPathRenderer::GetPathDevBounds(const SkPath& path,
-                                      int devW, int devH,
-                                      const SkMatrix& matrix,
-                                      SkRect* bounds) {
+void GrPathRenderer::GetPathDevBounds(const SkPath& path, int devW, int devH,
+                                      const SkMatrix& matrix, SkRect* bounds) {
     if (path.isInverseFillType()) {
         *bounds = SkRect::MakeWH(SkIntToScalar(devW), SkIntToScalar(devH));
         return;
@@ -100,25 +95,21 @@ void GrPathRenderer::GetPathDevBounds(const SkPath& path,
 
 void GrPathRenderer::onStencilPath(const StencilPathArgs& args) {
     static constexpr GrUserStencilSettings kIncrementStencil(
-            GrUserStencilSettings::StaticInit<
-                    0xffff,
-                    GrUserStencilTest::kAlways,
-                    0xffff,
-                    GrUserStencilOp::kReplace,
-                    GrUserStencilOp::kReplace,
-                    0xffff>()
-    );
+            GrUserStencilSettings::StaticInit<0xffff, GrUserStencilTest::kAlways, 0xffff,
+                                              GrUserStencilOp::kReplace, GrUserStencilOp::kReplace,
+                                              0xffff>());
 
     GrPaint paint;
-    DrawPathArgs drawArgs{args.fContext,
-                          std::move(paint),
-                          &kIncrementStencil,
-                          args.fRenderTargetContext,
-                          nullptr,  // clip
-                          args.fClipConservativeBounds,
-                          args.fViewMatrix,
-                          args.fShape,
-                          args.fAAType,
-                          false};
+    DrawPathArgs drawArgs{
+            args.fContext,
+            std::move(paint),
+            &kIncrementStencil,
+            args.fRenderTargetContext,
+            nullptr,  // clip
+            args.fClipConservativeBounds,
+            args.fViewMatrix,
+            args.fShape,
+            (GrAA::kYes == args.fDoStencilMSAA) ? AATypeFlags::kMSAA : AATypeFlags::kNone,
+            false};
     this->drawPath(drawArgs);
 }

@@ -8,9 +8,9 @@
 #ifndef GrPathRenderer_DEFINED
 #define GrPathRenderer_DEFINED
 
-#include "GrTypesPriv.h"
-#include "SkTArray.h"
-#include "SkRefCnt.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/GrTypesPriv.h"
+#include "include/private/SkTArray.h"
 
 class GrCaps;
 class GrClip;
@@ -41,15 +41,14 @@ public:
      * rendered into the stencil.
      *
      * A GrPathRenderer can provide three levels of support for stenciling paths:
-     * 1) kNoRestriction: This is the most general. The caller passes a GrPaint and calls drawPath().
-     *                    The path is rendered exactly as the draw state indicates including support
-     *                    for simultaneous color and stenciling with arbitrary stenciling rules.
-     *                    Pixels partially covered by AA paths are affected by the stencil settings.
-     * 2) kStencilOnly: The path renderer cannot apply arbitrary stencil rules nor shade and stencil
-     *                  simultaneously. The path renderer does support the stencilPath() function
-     *                  which performs no color writes and writes a non-zero stencil value to pixels
-     *                  covered by the path.
-     * 3) kNoSupport: This path renderer cannot be used to stencil the path.
+     * 1) kNoRestriction: This is the most general. The caller passes a GrPaint and calls
+     * drawPath(). The path is rendered exactly as the draw state indicates including support for
+     * simultaneous color and stenciling with arbitrary stenciling rules. Pixels partially covered
+     * by AA paths are affected by the stencil settings. 2) kStencilOnly: The path renderer cannot
+     * apply arbitrary stencil rules nor shade and stencil simultaneously. The path renderer does
+     * support the stencilPath() function which performs no color writes and writes a non-zero
+     * stencil value to pixels covered by the path. 3) kNoSupport: This path renderer cannot be used
+     * to stencil the path.
      */
     enum StencilSupport {
         kNoSupport_StencilSupport,
@@ -68,22 +67,33 @@ public:
 
     enum class CanDrawPath {
         kNo,
-        kAsBackup, // i.e. This renderer is better than SW fallback if no others can draw the path.
+        kAsBackup,  // i.e. This renderer is better than SW fallback if no others can draw the path.
         kYes
     };
 
-    struct CanDrawPathArgs {
-        SkDEBUGCODE(CanDrawPathArgs() { memset(this, 0, sizeof(*this)); }) // For validation.
+    /**
+     * This enum defines a set of flags indicating which AA methods would be acceptable for a path
+     * renderer to employ (if any) while drawing a given path.
+     */
+    enum class AATypeFlags {
+        kNone = 0,
+        kCoverage = (1 << 0),
+        kMSAA = (1 << 1),
+        kMixedSampledStencilThenCover = (1 << 2),
+    };
 
-        const GrCaps*               fCaps;
-        const SkIRect*              fClipConservativeBounds;
-        const SkMatrix*             fViewMatrix;
-        const GrShape*              fShape;
-        GrAAType                    fAAType;
-        bool                        fTargetIsWrappedVkSecondaryCB;
+    struct CanDrawPathArgs {
+        SkDEBUGCODE(CanDrawPathArgs() { memset(this, 0, sizeof(*this)); })  // For validation.
+
+                const GrCaps* fCaps;
+        const SkIRect* fClipConservativeBounds;
+        const SkMatrix* fViewMatrix;
+        const GrShape* fShape;
+        AATypeFlags fAATypeFlags;
+        bool fTargetIsWrappedVkSecondaryCB;
 
         // This is only used by GrStencilAndCoverPathRenderer
-        bool                        fHasUserStencilSettings;
+        bool fHasUserStencilSettings;
 
 #ifdef SK_DEBUG
         void validate() const {
@@ -101,21 +111,21 @@ public:
      * called when searching for the best path renderer to draw a path.
      */
     CanDrawPath canDrawPath(const CanDrawPathArgs& args) const {
-        SkDEBUGCODE(args.validate();)
+        SkDEBUGCODE(args.validate());
         return this->onCanDrawPath(args);
     }
 
     struct DrawPathArgs {
-        GrRecordingContext*          fContext;
-        GrPaint&&                    fPaint;
+        GrRecordingContext* fContext;
+        GrPaint&& fPaint;
         const GrUserStencilSettings* fUserStencilSettings;
-        GrRenderTargetContext*       fRenderTargetContext;
-        const GrClip*                fClip;
-        const SkIRect*               fClipConservativeBounds;
-        const SkMatrix*              fViewMatrix;
-        const GrShape*               fShape;
-        GrAAType                     fAAType;
-        bool                         fGammaCorrect;
+        GrRenderTargetContext* fRenderTargetContext;
+        const GrClip* fClip;
+        const SkIRect* fClipConservativeBounds;
+        const SkMatrix* fViewMatrix;
+        const GrShape* fShape;
+        AATypeFlags fAATypeFlags;
+        bool fGammaCorrect;
 #ifdef SK_DEBUG
         void validate() const {
             SkASSERT(fContext);
@@ -138,15 +148,15 @@ public:
      * Args to stencilPath(). fAAType cannot be kCoverage.
      */
     struct StencilPathArgs {
-        SkDEBUGCODE(StencilPathArgs() { memset(this, 0, sizeof(*this)); }) // For validation.
+        SkDEBUGCODE(StencilPathArgs() { memset(this, 0, sizeof(*this)); })  // For validation.
 
-        GrRecordingContext*    fContext;
+                GrRecordingContext* fContext;
         GrRenderTargetContext* fRenderTargetContext;
-        const GrHardClip*      fClip;
-        const SkIRect*         fClipConservativeBounds;
-        const SkMatrix*        fViewMatrix;
-        GrAAType               fAAType;
-        const GrShape*         fShape;
+        const GrHardClip* fClip;
+        const SkIRect* fClipConservativeBounds;
+        const SkMatrix* fViewMatrix;
+        const GrShape* fShape;
+        GrAA fDoStencilMSAA;
 
         SkDEBUGCODE(void validate() const);
     };
@@ -156,7 +166,7 @@ public:
      * initialized to zero. The pixels inside the path will have non-zero stencil values afterwards.
      */
     void stencilPath(const StencilPathArgs& args) {
-        SkDEBUGCODE(args.validate();)
+        SkDEBUGCODE(args.validate());
         SkASSERT(kNoSupport_StencilSupport != this->getStencilSupport(*args.fShape));
         this->onStencilPath(args);
     }
@@ -169,10 +179,7 @@ public:
 protected:
     // Helper for getting the device bounds of a path. Inverse filled paths will have bounds set
     // by devSize. Non-inverse path bounds will not necessarily be clipped to devSize.
-    static void GetPathDevBounds(const SkPath& path,
-                                 int devW,
-                                 int devH,
-                                 const SkMatrix& matrix,
+    static void GetPathDevBounds(const SkPath& path, int devW, int devH, const SkMatrix& matrix,
                                  SkRect* bounds);
 
 private:
@@ -201,5 +208,7 @@ private:
 
     typedef SkRefCnt INHERITED;
 };
+
+GR_MAKE_BITFIELD_CLASS_OPS(GrPathRenderer::AATypeFlags);
 
 #endif

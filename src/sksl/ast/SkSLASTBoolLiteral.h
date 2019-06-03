@@ -8,7 +8,7 @@
 #ifndef SKSL_ASTBOOLLITERAL
 #define SKSL_ASTBOOLLITERAL
 
-#include "SkSLASTExpression.h"
+#include "src/sksl/ast/SkSLASTExpression.h"
 
 namespace SkSL {
 
@@ -16,19 +16,15 @@ namespace SkSL {
  * Represents "true" or "false".
  */
 struct ASTBoolLiteral : public ASTExpression {
-    ASTBoolLiteral(int offset, bool value)
-    : INHERITED(offset, kBool_Kind)
-    , fValue(value) {}
+    ASTBoolLiteral(int offset, bool value) : INHERITED(offset, kBool_Kind), fValue(value) {}
 
-    String description() const override {
-        return String(fValue ? "true" : "false");
-    }
+    String description() const override { return String(fValue ? "true" : "false"); }
 
     const bool fValue;
 
     typedef ASTExpression INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

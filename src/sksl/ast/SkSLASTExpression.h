@@ -8,7 +8,7 @@
 #ifndef SKSL_ASTEXPRESSION
 #define SKSL_ASTEXPRESSION
 
-#include "SkSLASTPositionNode.h"
+#include "src/sksl/ast/SkSLASTPositionNode.h"
 
 namespace SkSL {
 
@@ -28,15 +28,13 @@ struct ASTExpression : public ASTPositionNode {
         kTernary_Kind
     };
 
-    ASTExpression(int offset, Kind kind)
-    : INHERITED(offset)
-    , fKind(kind) {}
+    ASTExpression(int offset, Kind kind) : INHERITED(offset), fKind(kind) {}
 
     const Kind fKind;
 
     typedef ASTPositionNode INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

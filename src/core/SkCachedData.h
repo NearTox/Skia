@@ -8,56 +8,53 @@
 #ifndef SkCachedData_DEFINED
 #define SkCachedData_DEFINED
 
-#include "SkMutex.h"
-#include "SkNoncopyable.h"
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkMutex.h"
+#include "include/private/SkNoncopyable.h"
 
 class SkDiscardableMemory;
 
 class SkCachedData : ::SkNoncopyable {
 public:
-    SkCachedData(void* mallocData, size_t size);
-    SkCachedData(size_t size, SkDiscardableMemory*);
+    SkCachedData(void* mallocData, size_t size) noexcept;
+    SkCachedData(size_t size, SkDiscardableMemory*) noexcept;
     virtual ~SkCachedData();
 
-    size_t size() const { return fSize; }
-    const void* data() const { return fData; }
+    size_t size() const noexcept { return fSize; }
+    const void* data() const noexcept { return fData; }
 
-    void* writable_data() { return fData; }
+    void* writable_data() noexcept { return fData; }
 
     void ref() const { this->internalRef(false); }
     void unref() const { this->internalUnref(false); }
 
-    int testing_only_getRefCnt() const { return fRefCnt; }
-    bool testing_only_isLocked() const { return fIsLocked; }
-    bool testing_only_isInCache() const { return fInCache; }
+    int testing_only_getRefCnt() const noexcept { return fRefCnt; }
+    bool testing_only_isLocked() const noexcept { return fIsLocked; }
+    bool testing_only_isInCache() const noexcept { return fInCache; }
 
-    SkDiscardableMemory* diagnostic_only_getDiscardable() const {
+    SkDiscardableMemory* diagnostic_only_getDiscardable() const noexcept {
         return kDiscardableMemory_StorageType == fStorageType ? fStorage.fDM : nullptr;
     }
 
 protected:
     // called when fData changes. could be nullptr.
-    virtual void onDataChange(void* oldData, void* newData) {}
+    virtual void onDataChange(void* oldData, void* newData) noexcept {}
 
 private:
-    SkMutex fMutex;     // could use a pool of these...
+    SkMutex fMutex;  // could use a pool of these...
 
-    enum StorageType {
-        kDiscardableMemory_StorageType,
-        kMalloc_StorageType
-    };
+    enum StorageType { kDiscardableMemory_StorageType, kMalloc_StorageType };
 
     union {
-        SkDiscardableMemory*    fDM;
-        void*                   fMalloc;
+        SkDiscardableMemory* fDM;
+        void* fMalloc;
     } fStorage;
-    void*       fData;
-    size_t      fSize;
-    int         fRefCnt;    // low-bit means we're owned by the cache
+    void* fData;
+    size_t fSize;
+    int fRefCnt;  // low-bit means we're owned by the cache
     StorageType fStorageType;
-    bool        fInCache;
-    bool        fIsLocked;
+    bool fInCache;
+    bool fIsLocked;
 
     void internalRef(bool fromCache) const;
     void internalUnref(bool fromCache) const;
@@ -68,7 +65,7 @@ private:
     void inMutexUnlock();
 
     // called whenever our fData might change (lock or unlock)
-    void setData(void* newData) {
+    void setData(void* newData) noexcept {
         if (newData != fData) {
             // notify our subclasses of the change
             this->onDataChange(fData, newData);
@@ -82,10 +79,10 @@ public:
 #ifdef SK_DEBUG
     void validate() const;
 #else
-    void validate() const {}
+    void validate() const noexcept {}
 #endif
 
-   /*
+    /*
      *  Attaching a data to to a SkResourceCache (only one at a time) enables the data to be
      *  unlocked when the cache is the only owner, thus freeing it to be purged (assuming the
      *  data is backed by a SkDiscardableMemory).

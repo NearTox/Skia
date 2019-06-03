@@ -8,12 +8,12 @@
 #ifndef Sk4fGradientPriv_DEFINED
 #define Sk4fGradientPriv_DEFINED
 
-#include "SkColor.h"
-#include "SkColorData.h"
-#include "SkHalf.h"
-#include "SkImageInfo.h"
-#include "SkNx.h"
-#include "SkUtils.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkImageInfo.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkHalf.h"
+#include "include/private/SkNx.h"
+#include "src/core/SkUtils.h"
 
 // Templates shared by various 4f gradient flavors.
 
@@ -21,17 +21,14 @@ namespace {  // NOLINT(google-build-namespaces)
 
 enum class ApplyPremul { True, False };
 
-template <ApplyPremul>
-struct PremulTraits;
+template <ApplyPremul> struct PremulTraits;
 
-template <>
-struct PremulTraits<ApplyPremul::False> {
-    static Sk4f apply(const Sk4f& c) { return c; }
+template <> struct PremulTraits<ApplyPremul::False> {
+    static Sk4f apply(const Sk4f& c) noexcept { return c; }
 };
 
-template <>
-struct PremulTraits<ApplyPremul::True> {
-    static Sk4f apply(const Sk4f& c) {
+template <> struct PremulTraits<ApplyPremul::True> {
+    static Sk4f apply(const Sk4f& c) noexcept {
         const float alpha = c[3];
         // FIXME: portable swizzle?
         return c * Sk4f(alpha, alpha, alpha, 1);
@@ -51,16 +48,13 @@ struct PremulTraits<ApplyPremul::True> {
 //   - store4x()    Store 4 Sk4f values to dest (opportunistic optimization).
 //
 
-template <ApplyPremul premul>
-struct DstTraits {
-    using PM   = PremulTraits<premul>;
+template <ApplyPremul premul> struct DstTraits {
+    using PM = PremulTraits<premul>;
 
     // For L32, prescaling by 255 saves a per-pixel multiplication when premul is not needed.
     static Sk4f load(const SkPMColor4f& c) {
         Sk4f c4f = swizzle_rb_if_bgra(Sk4f::Load(c.vec()));
-        return premul == ApplyPremul::False
-            ? c4f * Sk4f(255)
-            : c4f;
+        return premul == ApplyPremul::False ? c4f * Sk4f(255) : c4f;
     }
 
     static void store(const Sk4f& c, SkPMColor* dst, const Sk4f& bias) {
@@ -78,11 +72,8 @@ struct DstTraits {
         sk_memset32(dst, pmc, n);
     }
 
-    static void store4x(const Sk4f& c0, const Sk4f& c1,
-                        const Sk4f& c2, const Sk4f& c3,
-                        SkPMColor* dst,
-                        const Sk4f& bias0,
-                        const Sk4f& bias1) {
+    static void store4x(const Sk4f& c0, const Sk4f& c1, const Sk4f& c2, const Sk4f& c3,
+                        SkPMColor* dst, const Sk4f& bias0, const Sk4f& bias1) {
         if (premul == ApplyPremul::False) {
             // colors are pre-scaled and pre-biased.
             Sk4f_ToBytes((uint8_t*)dst, c0, c1, c2, c3);
@@ -100,6 +91,6 @@ struct DstTraits {
     }
 };
 
-} // anonymous namespace
+}  // anonymous namespace
 
-#endif // Sk4fGradientPriv_DEFINED
+#endif  // Sk4fGradientPriv_DEFINED

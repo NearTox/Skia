@@ -8,8 +8,8 @@
 #ifndef SkSVGRect_DEFINED
 #define SkSVGRect_DEFINED
 
-#include "SkSVGShape.h"
-#include "SkSVGTypes.h"
+#include "experimental/svg/model/SkSVGShape.h"
+#include "experimental/svg/model/SkSVGTypes.h"
 
 class SkRRect;
 
@@ -38,17 +38,17 @@ private:
 
     SkRRect resolve(const SkSVGLengthContext&) const;
 
-    SkSVGLength fX      = SkSVGLength(0);
-    SkSVGLength fY      = SkSVGLength(0);
-    SkSVGLength fWidth  = SkSVGLength(0);
+    SkSVGLength fX = SkSVGLength(0);
+    SkSVGLength fY = SkSVGLength(0);
+    SkSVGLength fWidth = SkSVGLength(0);
     SkSVGLength fHeight = SkSVGLength(0);
 
     // The x radius for rounded rects.
-    SkSVGLength fRx     = SkSVGLength(0);
+    SkSVGLength fRx = SkSVGLength(0);
     // The y radius for rounded rects.
-    SkSVGLength fRy     = SkSVGLength(0);
+    SkSVGLength fRy = SkSVGLength(0);
 
     typedef SkSVGShape INHERITED;
 };
 
-#endif // SkSVGRect_DEFINED
+#endif  // SkSVGRect_DEFINED

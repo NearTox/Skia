@@ -8,7 +8,7 @@
 #ifndef SKSL_ASTEXTENSION
 #define SKSL_ASTEXTENSION
 
-#include "SkSLASTDeclaration.h"
+#include "src/sksl/ast/SkSLASTDeclaration.h"
 
 namespace SkSL {
 
@@ -17,18 +17,15 @@ namespace SkSL {
  */
 struct ASTExtension : public ASTDeclaration {
     ASTExtension(int offset, String name)
-    : INHERITED(offset, kExtension_Kind)
-    , fName(std::move(name)) {}
+            : INHERITED(offset, kExtension_Kind), fName(std::move(name)) {}
 
-    String description() const override {
-        return "#extension " + fName + " : enable";
-    }
+    String description() const override { return "#extension " + fName + " : enable"; }
 
     const String fName;
 
     typedef ASTDeclaration INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

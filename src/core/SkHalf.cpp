@@ -5,32 +5,26 @@
  * found in the LICENSE file.
  */
 
-#include "SkHalf.h"
-#include "SkFloatBits.h"
+#include "include/private/SkHalf.h"
+#include "include/private/SkFloatBits.h"
 
-uint16_t halfMantissa(SkHalf h) {
-    return h & 0x03ff;
-}
+uint16_t halfMantissa(SkHalf h) { return h & 0x03ff; }
 
-uint16_t halfExponent(SkHalf h) {
-    return (h >> 10) & 0x001f;
-}
+uint16_t halfExponent(SkHalf h) { return (h >> 10) & 0x001f; }
 
-uint16_t halfSign(SkHalf h) {
-    return h >> 15;
-}
+uint16_t halfSign(SkHalf h) { return h >> 15; }
 
 union FloatUIntUnion {
-    uint32_t fUInt;    // this must come first for the initializations below to work
-    float    fFloat;
+    uint32_t fUInt;  // this must come first for the initializations below to work
+    float fFloat;
 };
 
 // based on Fabien Giesen's float_to_half_fast3()
 // see https://gist.github.com/rygorous/2156668
 SkHalf SkFloatToHalf(float f) {
-    static const uint32_t f32infty = { 255 << 23 };
-    static const uint32_t f16infty = { 31 << 23 };
-    static const FloatUIntUnion magic = { 15 << 23 };
+    static const uint32_t f32infty = {255 << 23};
+    static const uint32_t f16infty = {31 << 23};
+    static const FloatUIntUnion magic = {15 << 23};
     static const uint32_t sign_mask = 0x80000000u;
     static const uint32_t round_mask = ~0xfffu;
     SkHalf o = 0;
@@ -60,7 +54,7 @@ SkHalf SkFloatToHalf(float f) {
             floatUnion.fUInt = f16infty;
         }
 
-        o = floatUnion.fUInt >> 13; // Take the bits!
+        o = floatUnion.fUInt >> 13;  // Take the bits!
     }
 
     o |= sign >> 16;
@@ -70,17 +64,14 @@ SkHalf SkFloatToHalf(float f) {
 // based on Fabien Giesen's half_to_float_fast2()
 // see https://fgiesen.wordpress.com/2012/03/28/half-to-float-done-quic/
 float SkHalfToFloat(SkHalf h) {
-    static const FloatUIntUnion magic = { 126 << 23 };
+    static const FloatUIntUnion magic = {126 << 23};
     FloatUIntUnion o;
 
-    if (halfExponent(h) == 0)
-    {
+    if (halfExponent(h) == 0) {
         // Zero / Denormal
         o.fUInt = magic.fUInt + halfMantissa(h);
         o.fFloat -= magic.fFloat;
-    }
-    else
-    {
+    } else {
         // Set mantissa
         o.fUInt = halfMantissa(h) << 13;
         // Set exponent

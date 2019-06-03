@@ -8,11 +8,11 @@
 #ifndef GrMeshDrawOp_DEFINED
 #define GrMeshDrawOp_DEFINED
 
-#include "GrAppliedClip.h"
-#include "GrDrawOp.h"
-#include "GrGeometryProcessor.h"
-#include "GrMesh.h"
 #include <type_traits>
+#include "src/gpu/GrAppliedClip.h"
+#include "src/gpu/GrGeometryProcessor.h"
+#include "src/gpu/GrMesh.h"
+#include "src/gpu/ops/GrDrawOp.h"
 
 class GrAtlasManager;
 class GrCaps;
@@ -82,9 +82,9 @@ public:
     virtual ~Target() {}
 
     /** Adds a draw of a mesh. */
-    virtual void recordDraw(
-            sk_sp<const GrGeometryProcessor>, const GrMesh[], int meshCnt,
-            const GrPipeline::FixedDynamicState*, const GrPipeline::DynamicStateArrays*) = 0;
+    virtual void recordDraw(sk_sp<const GrGeometryProcessor>, const GrMesh[], int meshCnt,
+                            const GrPipeline::FixedDynamicState*,
+                            const GrPipeline::DynamicStateArrays*) = 0;
 
     /**
      * Helper for drawing GrMesh(es) with zero primProc textures and no dynamic state besides the

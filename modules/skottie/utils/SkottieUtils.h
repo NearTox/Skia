@@ -8,11 +8,11 @@
 #ifndef SkottieUtils_DEFINED
 #define SkottieUtils_DEFINED
 
-#include "SkColor.h"
-#include "Skottie.h"
-#include "SkottieProperty.h"
-#include "SkString.h"
-#include "SkTHash.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkString.h"
+#include "include/private/SkTHash.h"
+#include "modules/skottie/include/Skottie.h"
+#include "modules/skottie/include/SkottieProperty.h"
 
 #include <memory>
 #include <string>
@@ -27,16 +27,24 @@ namespace skottie_utils {
 
 class MultiFrameImageAsset final : public skottie::ImageAsset {
 public:
-    static sk_sp<MultiFrameImageAsset> Make(sk_sp<SkData>);
+    /**
+     * By default, images are decoded on-the-fly, at rasterization time.
+     * Large images may cause jank as decoding is expensive (and can thrash internal caches).
+     *
+     * Pass |predecode| true to force-decode all images upfront, at the cost of potentially more RAM
+     * and slower animation build times.
+     */
+    static sk_sp<MultiFrameImageAsset> Make(sk_sp<SkData>, bool predecode = false);
 
     bool isMultiFrame() override;
 
     sk_sp<SkImage> getFrame(float t) override;
 
 private:
-    explicit MultiFrameImageAsset(std::unique_ptr<SkAnimCodecPlayer>);
+    explicit MultiFrameImageAsset(std::unique_ptr<SkAnimCodecPlayer>, bool predecode);
 
     std::unique_ptr<SkAnimCodecPlayer> fPlayer;
+    bool fPreDecode;
 
     using INHERITED = skottie::ImageAsset;
 };
@@ -47,7 +55,7 @@ public:
 
     sk_sp<SkData> load(const char resource_path[], const char resource_name[]) const override;
 
-    sk_sp<skottie::ImageAsset> loadImageAsset(const char[], const char []) const override;
+    sk_sp<skottie::ImageAsset> loadImageAsset(const char[], const char[]) const override;
 
 private:
     explicit FileResourceProvider(SkString);
@@ -90,7 +98,7 @@ public:
 
     struct MarkerInfo {
         std::string name;
-        float       t0, t1;
+        float t0, t1;
     };
     const std::vector<MarkerInfo>& markers() const { return fMarkers; }
 
@@ -107,35 +115,29 @@ private:
     static std::string acceptKey(const char* name) {
         static constexpr char kPrefix = '$';
 
-        return (name[0] == kPrefix && name[1] != '\0')
-            ? std::string(name + 1)
-            : std::string();
+        return (name[0] == kPrefix && name[1] != '\0') ? std::string(name + 1) : std::string();
     }
 
     sk_sp<PropertyInterceptor> fPropertyInterceptor;
-    sk_sp<MarkerInterceptor>   fMarkerInterceptor;
+    sk_sp<MarkerInterceptor> fMarkerInterceptor;
 
-    template <typename T>
-    using PropGroup = std::vector<std::unique_ptr<T>>;
+    template <typename T> using PropGroup = std::vector<std::unique_ptr<T>>;
 
-    template <typename T>
-    using PropMap = std::unordered_map<PropKey, PropGroup<T>>;
+    template <typename T> using PropMap = std::unordered_map<PropKey, PropGroup<T>>;
 
-    template <typename T>
-    std::vector<PropKey> getProps(const PropMap<T>& container) const;
+    template <typename T> std::vector<PropKey> getProps(const PropMap<T>& container) const;
 
-    template <typename V, typename T>
-    V get(const PropKey&, const PropMap<T>& container) const;
+    template <typename V, typename T> V get(const PropKey&, const PropMap<T>& container) const;
 
     template <typename V, typename T>
     bool set(const PropKey&, const V&, const PropMap<T>& container);
 
-    PropMap<skottie::ColorPropertyHandle>     fColorMap;
-    PropMap<skottie::OpacityPropertyHandle>   fOpacityMap;
+    PropMap<skottie::ColorPropertyHandle> fColorMap;
+    PropMap<skottie::OpacityPropertyHandle> fOpacityMap;
     PropMap<skottie::TransformPropertyHandle> fTransformMap;
-    std::vector<MarkerInfo>                   fMarkers;
+    std::vector<MarkerInfo> fMarkers;
 };
 
-} // namespace skottie_utils
+}  // namespace skottie_utils
 
-#endif // SkottieUtils_DEFINED
+#endif  // SkottieUtils_DEFINED

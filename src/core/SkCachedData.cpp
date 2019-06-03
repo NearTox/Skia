@@ -5,29 +5,27 @@
  * found in the LICENSE file.
  */
 
-#include "SkCachedData.h"
-#include "SkDiscardableMemory.h"
-#include "SkMalloc.h"
+#include "src/core/SkCachedData.h"
+#include "include/private/SkMalloc.h"
+#include "src/core/SkDiscardableMemory.h"
 
-SkCachedData::SkCachedData(void* data, size_t size)
-    : fData(data)
-    , fSize(size)
-    , fRefCnt(1)
-    , fStorageType(kMalloc_StorageType)
-    , fInCache(false)
-    , fIsLocked(true)
-{
+SkCachedData::SkCachedData(void* data, size_t size) noexcept
+        : fData(data)
+        , fSize(size)
+        , fRefCnt(1)
+        , fStorageType(kMalloc_StorageType)
+        , fInCache(false)
+        , fIsLocked(true) {
     fStorage.fMalloc = data;
 }
 
-SkCachedData::SkCachedData(size_t size, SkDiscardableMemory* dm)
-    : fData(dm->data())
-    , fSize(size)
-    , fRefCnt(1)
-    , fStorageType(kDiscardableMemory_StorageType)
-    , fInCache(false)
-    , fIsLocked(true)
-{
+SkCachedData::SkCachedData(size_t size, SkDiscardableMemory* dm) noexcept
+        : fData(dm->data())
+        , fSize(size)
+        , fRefCnt(1)
+        , fStorageType(kDiscardableMemory_StorageType)
+        , fInCache(false)
+        , fIsLocked(true) {
     fStorage.fDM = dm;
 }
 
@@ -44,7 +42,7 @@ SkCachedData::~SkCachedData() {
 
 class SkCachedData::AutoMutexWritable {
 public:
-    AutoMutexWritable(const SkCachedData* cd) : fCD(const_cast<SkCachedData*>(cd)) {
+    AutoMutexWritable(const SkCachedData* cd) noexcept : fCD(const_cast<SkCachedData*>(cd)) {
         fCD->fMutex.acquire();
         fCD->validate();
     }
@@ -53,8 +51,8 @@ public:
         fCD->fMutex.release();
     }
 
-    SkCachedData* get() { return fCD; }
-    SkCachedData* operator->() { return fCD; }
+    SkCachedData* get() noexcept { return fCD; }
+    SkCachedData* operator->() noexcept { return fCD; }
 
 private:
     SkCachedData* fCD;
@@ -130,7 +128,7 @@ void SkCachedData::inMutexLock() {
                 SkASSERT(ptr);
                 this->setData(ptr);
             } else {
-                this->setData(nullptr);   // signal failure to lock, contents are gone
+                this->setData(nullptr);  // signal failure to lock, contents are gone
             }
             break;
     }
@@ -147,12 +145,12 @@ void SkCachedData::inMutexUnlock() {
             // nothing to do/check
             break;
         case kDiscardableMemory_StorageType:
-            if (fData) {    // did the previous lock succeed?
+            if (fData) {  // did the previous lock succeed?
                 fStorage.fDM->unlock();
             }
             break;
     }
-    this->setData(nullptr);   // signal that we're in an unlocked state
+    this->setData(nullptr);  // signal that we're in an unlocked state
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -8,10 +8,10 @@
 #ifndef SkFrameHolder_DEFINED
 #define SkFrameHolder_DEFINED
 
-#include "SkTypes.h"
-#include "SkCodecAnimation.h"
-#include "SkCodecAnimationPriv.h"
-#include "SkRect.h"
+#include "include/codec/SkCodecAnimation.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkTypes.h"
+#include "src/codec/SkCodecAnimationPriv.h"
 
 /**
  *  Base class for a single frame of an animated image.
@@ -21,14 +21,13 @@
  */
 class SkFrame : public SkNoncopyable {
 public:
-    SkFrame(int id)
-        : fId(id)
-        , fHasAlpha(false)
-        , fRequiredFrame(kUninitialized)
-        , fDisposalMethod(SkCodecAnimation::DisposalMethod::kKeep)
-        , fDuration(0)
-        , fBlend(SkCodecAnimation::Blend::kPriorFrame)
-    {
+    SkFrame(int id) noexcept
+            : fId(id)
+            , fHasAlpha(false)
+            , fRequiredFrame(kUninitialized)
+            , fDisposalMethod(SkCodecAnimation::DisposalMethod::kKeep)
+            , fDuration(0)
+            , fBlend(SkCodecAnimation::Blend::kPriorFrame) {
         fRect.setEmpty();
     }
 
@@ -43,12 +42,12 @@ public:
      * Without a move constructor, it is harder to use an SkFrame, or an
      * SkFrame subclass, inside a std::vector.
      */
-    SkFrame(SkFrame&&) = default;
+    SkFrame(SkFrame&&) noexcept = default;
 
     /**
      *  0-based index of the frame in the image sequence.
      */
-    int frameId() const { return fId; }
+    int frameId() const noexcept { return fId; }
 
     /**
      *  How this frame reports its alpha.
@@ -57,33 +56,31 @@ public:
      *  considers it to have alpha even if it is opaque once
      *  blended with the frame behind it.
      */
-    SkEncodedInfo::Alpha reportedAlpha() const {
-        return this->onReportedAlpha();
-    }
+    SkEncodedInfo::Alpha reportedAlpha() const { return this->onReportedAlpha(); }
 
     /**
      *  Cached value representing whether the frame has alpha,
      *  after compositing with the prior frame.
      */
-    bool hasAlpha() const { return fHasAlpha; }
+    bool hasAlpha() const noexcept { return fHasAlpha; }
 
     /**
      *  Cache whether the finished frame has alpha.
      */
-    void setHasAlpha(bool alpha) { fHasAlpha = alpha; }
+    void setHasAlpha(bool alpha) noexcept { fHasAlpha = alpha; }
 
     /**
      *  Whether enough of the frame has been read to determine
      *  fRequiredFrame and fHasAlpha.
      */
-    bool reachedStartOfData() const { return fRequiredFrame != kUninitialized; }
+    bool reachedStartOfData() const noexcept { return fRequiredFrame != kUninitialized; }
 
     /**
      *  The frame this one depends on.
      *
      *  Must not be called until fRequiredFrame has been set properly.
      */
-    int getRequiredFrame() const {
+    int getRequiredFrame() const noexcept {
         SkASSERT(this->reachedStartOfData());
         return fRequiredFrame;
     }
@@ -91,54 +88,44 @@ public:
     /**
      *  Set the frame that this frame depends on.
      */
-    void setRequiredFrame(int req) { fRequiredFrame = req; }
+    void setRequiredFrame(int req) noexcept { fRequiredFrame = req; }
 
     /**
      *  Set the rectangle that is updated by this frame.
      */
-    void setXYWH(int x, int y, int width, int height) {
+    void setXYWH(int x, int y, int width, int height) noexcept {
         fRect.setXYWH(x, y, width, height);
     }
 
     /**
      *  The rectangle that is updated by this frame.
      */
-    SkIRect frameRect() const { return fRect; }
+    SkIRect frameRect() const noexcept { return fRect; }
 
-    int xOffset() const { return fRect.x(); }
-    int yOffset() const { return fRect.y(); }
-    int width()   const { return fRect.width(); }
-    int height()  const { return fRect.height(); }
+    int xOffset() const noexcept { return fRect.x(); }
+    int yOffset() const noexcept { return fRect.y(); }
+    int width() const noexcept { return fRect.width(); }
+    int height() const noexcept { return fRect.height(); }
 
-    SkCodecAnimation::DisposalMethod getDisposalMethod() const {
-        return fDisposalMethod;
-    }
+    SkCodecAnimation::DisposalMethod getDisposalMethod() const noexcept { return fDisposalMethod; }
 
-    void setDisposalMethod(SkCodecAnimation::DisposalMethod disposalMethod) {
+    void setDisposalMethod(SkCodecAnimation::DisposalMethod disposalMethod) noexcept {
         fDisposalMethod = disposalMethod;
     }
 
     /**
      * Set the duration (in ms) to show this frame.
      */
-    void setDuration(int duration) {
-        fDuration = duration;
-    }
+    void setDuration(int duration) noexcept { fDuration = duration; }
 
     /**
      *  Duration in ms to show this frame.
      */
-    int getDuration() const {
-        return fDuration;
-    }
+    int getDuration() const noexcept { return fDuration; }
 
-    void setBlend(SkCodecAnimation::Blend blend) {
-        fBlend = blend;
-    }
+    void setBlend(SkCodecAnimation::Blend blend) noexcept { fBlend = blend; }
 
-    SkCodecAnimation::Blend getBlend() const {
-        return fBlend;
-    }
+    SkCodecAnimation::Blend getBlend() const noexcept { return fBlend; }
 
 protected:
     virtual SkEncodedInfo::Alpha onReportedAlpha() const = 0;
@@ -146,13 +133,13 @@ protected:
 private:
     static constexpr int kUninitialized = -2;
 
-    const int                           fId;
-    bool                                fHasAlpha;
-    int                                 fRequiredFrame;
-    SkIRect                             fRect;
-    SkCodecAnimation::DisposalMethod    fDisposalMethod;
-    int                                 fDuration;
-    SkCodecAnimation::Blend             fBlend;
+    const int fId;
+    bool fHasAlpha;
+    int fRequiredFrame;
+    SkIRect fRect;
+    SkCodecAnimation::DisposalMethod fDisposalMethod;
+    int fDuration;
+    SkCodecAnimation::Blend fBlend;
 };
 
 /**
@@ -161,10 +148,7 @@ private:
  */
 class SkFrameHolder : public SkNoncopyable {
 public:
-    SkFrameHolder()
-        : fScreenWidth(0)
-        , fScreenHeight(0)
-    {}
+    constexpr SkFrameHolder() noexcept : fScreenWidth(0), fScreenHeight(0) {}
 
     virtual ~SkFrameHolder() {}
 
@@ -172,8 +156,8 @@ public:
      *  Size of the image. Each frame will be contained in
      *  these dimensions (possibly after clipping).
      */
-    int screenWidth() const { return fScreenWidth; }
-    int screenHeight() const { return fScreenHeight; }
+    int screenWidth() const noexcept { return fScreenWidth; }
+    int screenHeight() const noexcept { return fScreenHeight; }
 
     /**
      *  Compute the opacity and required frame, based on
@@ -185,9 +169,7 @@ public:
     /**
      *  Return the frame with frameId i.
      */
-    const SkFrame* getFrame(int i) const {
-        return this->onGetFrame(i);
-    }
+    const SkFrame* getFrame(int i) const { return this->onGetFrame(i); }
 
 protected:
     int fScreenWidth;
@@ -196,4 +178,4 @@ protected:
     virtual const SkFrame* onGetFrame(int i) const = 0;
 };
 
-#endif // SkFrameHolder_DEFINED
+#endif  // SkFrameHolder_DEFINED

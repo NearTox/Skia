@@ -5,27 +5,27 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkAnimTimer.h"
-#include "SkBitmap.h"
-#include "SkCanvas.h"
-#include "SkFont.h"
-#include "SkGradientShader.h"
-#include "SkGraphics.h"
-#include "SkPath.h"
-#include "SkRegion.h"
-#include "SkShader.h"
-#include "SkUTF.h"
-#include "SkColorPriv.h"
-#include "SkColorFilter.h"
-#include "SkTime.h"
-#include "SkTypeface.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkGraphics.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRegion.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkTime.h"
+#include "include/core/SkTypeface.h"
+#include "include/effects/SkGradientShader.h"
+#include "samplecode/Sample.h"
+#include "src/utils/SkUTF.h"
+#include "tools/timer/AnimTimer.h"
 
-#include "SkOSFile.h"
-#include "SkStream.h"
+#include "include/core/SkStream.h"
+#include "src/core/SkOSFile.h"
 
-#define INT_SIZE        64
-#define SCALAR_SIZE     SkIntToScalar(INT_SIZE)
+#define INT_SIZE 64
+#define SCALAR_SIZE SkIntToScalar(INT_SIZE)
 
 static void make_bitmap(SkBitmap* bitmap) {
     bitmap->allocN32Pixels(INT_SIZE, INT_SIZE);
@@ -34,28 +34,25 @@ static void make_bitmap(SkBitmap* bitmap) {
     canvas.drawColor(SK_ColorRED);
     SkPaint paint;
     paint.setAntiAlias(true);
-    const SkPoint pts[] = { { 0, 0 }, { SCALAR_SIZE, SCALAR_SIZE } };
-    const SkColor colors[] = { SK_ColorWHITE, SK_ColorBLUE };
-    paint.setShader(SkGradientShader::MakeLinear(pts, colors, nullptr, 2,
-                                                   SkShader::kClamp_TileMode));
-    canvas.drawCircle(SCALAR_SIZE/2, SCALAR_SIZE/2, SCALAR_SIZE/2, paint);
+    const SkPoint pts[] = {{0, 0}, {SCALAR_SIZE, SCALAR_SIZE}};
+    const SkColor colors[] = {SK_ColorWHITE, SK_ColorBLUE};
+    paint.setShader(SkGradientShader::MakeLinear(pts, colors, nullptr, 2, SkTileMode::kClamp));
+    canvas.drawCircle(SCALAR_SIZE / 2, SCALAR_SIZE / 2, SCALAR_SIZE / 2, paint);
 }
 
 static SkPoint unit_vec(int degrees) {
     SkScalar rad = SkDegreesToRadians(SkIntToScalar(degrees));
-    SkScalar s, c;
-    s = SkScalarSinCos(rad, &c);
-    return SkPoint::Make(c, s);
+    return SkPoint::Make(SkScalarCos(rad), SkScalarSin(rad));
 }
 
 static void bounce(SkScalar* value, SkScalar* delta, SkScalar min, SkScalar max) {
     *value += *delta;
     if (*value < min) {
         *value = min;
-        *delta = - *delta;
+        *delta = -*delta;
     } else if (*value > max) {
         *value = max;
-        *delta = - *delta;
+        *delta = -*delta;
     }
 }
 
@@ -67,8 +64,8 @@ static void bounce_pt(SkPoint* pt, SkVector* vec, const SkRect& limit) {
 class BitmapRectView : public Sample {
     SkPoint fSrcPts[2];
     SkPoint fSrcVec[2];
-    SkRect  fSrcLimit;
-    SkRect  fDstR[2];
+    SkRect fSrcLimit;
+    SkRect fDstR[2];
 
     void bounce() {
         bounce_pt(&fSrcPts[0], &fSrcVec[0], fSrcLimit);
@@ -89,13 +86,12 @@ public:
 
         this->resetBounce();
 
-        fSrcLimit.set(-SCALAR_SIZE/4, -SCALAR_SIZE/4,
-                      SCALAR_SIZE*5/4, SCALAR_SIZE*5/4);
+        fSrcLimit.set(-SCALAR_SIZE / 4, -SCALAR_SIZE / 4, SCALAR_SIZE * 5 / 4, SCALAR_SIZE * 5 / 4);
 
-        fDstR[0] = SkRect::MakeXYWH(SkIntToScalar(10), SkIntToScalar(100),
-                                       SkIntToScalar(250), SkIntToScalar(300));
+        fDstR[0] = SkRect::MakeXYWH(SkIntToScalar(10), SkIntToScalar(100), SkIntToScalar(250),
+                                    SkIntToScalar(300));
         fDstR[1] = fDstR[0];
-        fDstR[1].offset(fDstR[0].width() * 5/4, 0);
+        fDstR[1].offset(fDstR[0].width() * 5 / 4, 0);
 
         fSrcPts[0].set(32, 32);
         fSrcPts[1].set(90, 90);
@@ -114,7 +110,7 @@ protected:
         SkRect srcR;
         srcR.set(fSrcPts[0], fSrcPts[1]);
         srcR = SkRect::MakeXYWH(fSrcPts[0].fX, fSrcPts[0].fY, 32, 32);
-        srcR.offset(-srcR.width()/2, -srcR.height()/2);
+        srcR.offset(-srcR.width() / 2, -srcR.height() / 2);
 
         SkPaint paint;
         paint.setStyle(SkPaint::kStroke_Style);
@@ -136,7 +132,7 @@ protected:
         }
     }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         if (timer.isStopped()) {
             this->resetBounce();
         } else if (timer.isRunning()) {
@@ -153,34 +149,36 @@ private:
 
 static void make_big_bitmap(SkBitmap* bm) {
     static const char gText[] =
-        "We the people, in order to form a more perfect union, establish justice,"
-        " ensure domestic tranquility, provide for the common defense, promote the"
-        " general welfare and ensure the blessings of liberty to ourselves and our"
-        " posterity, do ordain and establish this constitution for the United"
-        " States of America.";
+            "We the people, in order to form a more perfect union, establish justice,"
+            " ensure domestic tranquility, provide for the common defense, promote the"
+            " general welfare and ensure the blessings of liberty to ourselves and our"
+            " posterity, do ordain and establish this constitution for the United"
+            " States of America.";
 
     const int BIG_H = 120;
 
     SkFont font;
     font.setSize(SkIntToScalar(BIG_H));
 
-    const int BIG_W = SkScalarRoundToInt(font.measureText(gText, strlen(gText), kUTF8_SkTextEncoding));
+    const int BIG_W =
+            SkScalarRoundToInt(font.measureText(gText, strlen(gText), SkTextEncoding::kUTF8));
 
     bm->allocN32Pixels(BIG_W, BIG_H);
     bm->eraseColor(SK_ColorWHITE);
 
     SkCanvas canvas(*bm);
 
-    canvas.drawSimpleText(gText, strlen(gText), kUTF8_SkTextEncoding, 0, font.getSize()*4/5, font, SkPaint());
+    canvas.drawSimpleText(gText, strlen(gText), SkTextEncoding::kUTF8, 0, font.getSize() * 4 / 5,
+                          font, SkPaint());
 }
 
 class BitmapRectView2 : public Sample {
     SkBitmap fBitmap;
 
-    SkRect  fSrcR;
-    SkRect  fLimitR;
+    SkRect fSrcR;
+    SkRect fLimitR;
     SkScalar fDX;
-    SkRect  fDstR[2];
+    SkRect fDstR[2];
 
     void bounceMe() {
         SkScalar width = fSrcR.width();
@@ -194,7 +192,7 @@ class BitmapRectView2 : public Sample {
     }
 
 public:
-    BitmapRectView2() { }
+    BitmapRectView2() {}
 
 protected:
     bool onQuery(Sample::Event* evt) override {
@@ -216,7 +214,7 @@ protected:
 
         fDstR[0] = SkRect::MakeXYWH(20, 20, 600, 200);
         fDstR[1] = fDstR[0];
-        fDstR[1].offset(0, fDstR[0].height() * 5/4);
+        fDstR[1].offset(0, fDstR[0].height() * 5 / 4);
     }
 
     void onDrawContent(SkCanvas* canvas) override {
@@ -232,7 +230,7 @@ protected:
         }
     }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         if (timer.isStopped()) {
             this->resetBounce();
         } else if (timer.isRunning()) {
@@ -247,5 +245,5 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new BitmapRectView(); )
-DEF_SAMPLE( return new BitmapRectView2(); )
+DEF_SAMPLE(return new BitmapRectView();)
+DEF_SAMPLE(return new BitmapRectView2();)

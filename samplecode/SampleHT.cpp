@@ -5,16 +5,16 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkAnimTimer.h"
-#include "SkCanvas.h"
-#include "SkDrawable.h"
-#include "SkInterpolator.h"
-#include "SkPictureRecorder.h"
-#include "SkPointPriv.h"
-#include "SkRandom.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkDrawable.h"
+#include "include/core/SkPictureRecorder.h"
+#include "include/utils/SkInterpolator.h"
+#include "include/utils/SkRandom.h"
+#include "samplecode/Sample.h"
+#include "src/core/SkPointPriv.h"
+#include "tools/timer/AnimTimer.h"
 
-const SkRect gUnitSquare = { -1, -1, 1, 1 };
+const SkRect gUnitSquare = {-1, -1, 1, 1};
 
 static void color_to_floats(SkColor c, SkScalar f[4]) {
     f[0] = SkIntToScalar(SkColorGetA(c));
@@ -44,10 +44,10 @@ static SkColor rand_opaque_color(uint32_t seed) {
 }
 
 class HTDrawable : public SkDrawable {
-    SkRect          fR;
-    SkColor         fColor;
+    SkRect fR;
+    SkColor fColor;
     SkInterpolator* fInterp;
-    SkMSec          fTime;
+    SkMSec fTime;
 
 public:
     HTDrawable(SkRandom& rand) {
@@ -64,11 +64,14 @@ public:
         delete fInterp;
         fInterp = new SkInterpolator(5, 3);
         SkScalar values[5];
-        color_to_floats(fColor, values); values[4] = 0;
+        color_to_floats(fColor, values);
+        values[4] = 0;
         fInterp->setKeyFrame(0, now, values);
-        values[0] = 0; values[4] = 180;
+        values[0] = 0;
+        values[4] = 180;
         fInterp->setKeyFrame(1, now + 1000, values);
-        color_to_floats(rand_opaque_color(fColor), values); values[4] = 360;
+        color_to_floats(rand_opaque_color(fColor), values);
+        values[4] = 360;
         fInterp->setKeyFrame(2, now + 2000, values);
 
         fInterp->setMirror(true);
@@ -77,9 +80,7 @@ public:
         this->notifyDrawingChanged();
     }
 
-    bool hitTest(SkScalar x, SkScalar y) {
-        return oval_contains(fR, x, y);
-    }
+    bool hitTest(SkScalar x, SkScalar y) { return oval_contains(fR, x, y); }
 
     void setTime(SkMSec time) { fTime = time; }
 
@@ -150,11 +151,9 @@ protected:
         return this->INHERITED::onQuery(evt);
     }
 
-    void onDrawContent(SkCanvas* canvas) override {
-        canvas->drawDrawable(fRoot.get());
-    }
+    void onDrawContent(SkCanvas* canvas) override { canvas->drawDrawable(fRoot.get()); }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         fTime = timer.msec();
         for (int i = 0; i < N; ++i) {
             fArray[i].fDrawable->setTime(fTime);
@@ -179,4 +178,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new HTView(); )
+DEF_SAMPLE(return new HTView();)

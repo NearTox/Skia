@@ -5,26 +5,25 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef GrVkTextureRenderTarget_DEFINED
 #define GrVkTextureRenderTarget_DEFINED
 
-#include "GrVkTexture.h"
-#include "GrVkRenderTarget.h"
-#include "vk/GrVkTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
+#include "src/gpu/vk/GrVkRenderTarget.h"
+#include "src/gpu/vk/GrVkTexture.h"
 
 class GrVkGpu;
 
 #ifdef SK_BUILD_FOR_WIN
 // Windows gives bogus warnings about inheriting asTexture/asRenderTarget via dominance.
 #pragma warning(push)
-#pragma warning(disable: 4250)
+#pragma warning(disable : 4250)
 #endif
 
 class GrVkImageView;
 struct GrVkImageInfo;
 
-class GrVkTextureRenderTarget: public GrVkTexture, public GrVkRenderTarget {
+class GrVkTextureRenderTarget : public GrVkTexture, public GrVkRenderTarget {
 public:
     static sk_sp<GrVkTextureRenderTarget> MakeNewTextureRenderTarget(GrVkGpu*, SkBudgeted,
                                                                      const GrSurfaceDesc&,
@@ -59,10 +58,12 @@ private:
                             SkBudgeted budgeted,
                             const GrSurfaceDesc& desc,
                             const GrVkImageInfo& info,
-                            sk_sp<GrVkImageLayout> layout,
+                            sk_sp<GrVkImageLayout>
+                                    layout,
                             const GrVkImageView* texView,
                             const GrVkImageInfo& msaaInfo,
-                            sk_sp<GrVkImageLayout> msaaLayout,
+                            sk_sp<GrVkImageLayout>
+                                    msaaLayout,
                             const GrVkImageView* colorAttachmentView,
                             const GrVkImageView* resolveAttachmentView,
                             GrMipMapsStatus);
@@ -72,7 +73,8 @@ private:
                             SkBudgeted budgeted,
                             const GrSurfaceDesc& desc,
                             const GrVkImageInfo& info,
-                            sk_sp<GrVkImageLayout> layout,
+                            sk_sp<GrVkImageLayout>
+                                    layout,
                             const GrVkImageView* texView,
                             const GrVkImageView* colorAttachmentView,
                             GrMipMapsStatus);
@@ -81,10 +83,12 @@ private:
     GrVkTextureRenderTarget(GrVkGpu* gpu,
                             const GrSurfaceDesc& desc,
                             const GrVkImageInfo& info,
-                            sk_sp<GrVkImageLayout> layout,
+                            sk_sp<GrVkImageLayout>
+                                    layout,
                             const GrVkImageView* texView,
                             const GrVkImageInfo& msaaInfo,
-                            sk_sp<GrVkImageLayout> msaaLayout,
+                            sk_sp<GrVkImageLayout>
+                                    msaaLayout,
                             const GrVkImageView* colorAttachmentView,
                             const GrVkImageView* resolveAttachmentView,
                             GrMipMapsStatus,
@@ -95,7 +99,8 @@ private:
     GrVkTextureRenderTarget(GrVkGpu* gpu,
                             const GrSurfaceDesc& desc,
                             const GrVkImageInfo& info,
-                            sk_sp<GrVkImageLayout> layout,
+                            sk_sp<GrVkImageLayout>
+                                    layout,
                             const GrVkImageView* texView,
                             const GrVkImageView* colorAttachmentView,
                             GrMipMapsStatus,

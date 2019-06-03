@@ -8,8 +8,8 @@
 #ifndef GrVkTypesPriv_DEFINED
 #define GrVkTypesPriv_DEFINED
 
-#include "vk/GrVkTypes.h"
-#include "SkRefCnt.h"
+#include "include/core/SkRefCnt.h"
+#include "include/gpu/vk/GrVkTypes.h"
 
 class GrVkImageLayout;
 
@@ -20,7 +20,7 @@ class GrVkImageLayout;
 // current VkImageLayout which can be shared with an internal GrVkImage so that layout updates can
 // be seen by all users of the image.
 struct GrVkBackendSurfaceInfo {
-    GrVkBackendSurfaceInfo(GrVkImageInfo info, GrVkImageLayout* layout)
+    GrVkBackendSurfaceInfo(GrVkImageInfo info, GrVkImageLayout* layout) noexcept
             : fImageInfo(info), fLayout(layout) {}
 
     void cleanup();
@@ -42,7 +42,7 @@ struct GrVkBackendSurfaceInfo {
 #endif
 
 private:
-    GrVkImageInfo    fImageInfo;
+    GrVkImageInfo fImageInfo;
     GrVkImageLayout* fLayout;
 };
 

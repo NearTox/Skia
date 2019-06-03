@@ -8,42 +8,38 @@
 #ifndef SkTextToPathIter_DEFINED
 #define SkTextToPathIter_DEFINED
 
-#include "SkFontPriv.h"
-#include "SkPaint.h"
-#include "SkStrikeCache.h"
+#include "include/core/SkPaint.h"
+#include "src/core/SkFontPriv.h"
+#include "src/core/SkStrikeCache.h"
 
 class SkTextBaseIter {
 public:
-    const SkFont&   getFont() const { return fFont; }
-    const SkPaint&  getPaint() const { return fPaint; }
-    SkScalar        getPathScale() const { return fScale; }
+    const SkFont& getFont() const { return fFont; }
+    const SkPaint& getPaint() const { return fPaint; }
+    SkScalar getPathScale() const { return fScale; }
 
 protected:
     SkTextBaseIter(const SkGlyphID glyphs[], int count, const SkFont&, const SkPaint*);
 
     SkExclusiveStrikePtr fCache;
-    SkFont               fFont;
-    SkPaint              fPaint;
-    SkScalar             fScale;
-    SkScalar             fPrevAdvance;
-    const SkGlyphID*     fGlyphs;
-    const SkGlyphID*     fStop;
+    SkFont fFont;
+    SkPaint fPaint;
+    SkScalar fScale;
+    SkScalar fPrevAdvance;
+    const SkGlyphID* fGlyphs;
+    const SkGlyphID* fStop;
 
-    SkScalar        fXPos;      // accumulated xpos, returned in next
+    SkScalar fXPos;  // accumulated xpos, returned in next
 };
 
 class SkTextInterceptsIter : SkTextBaseIter {
 public:
-    enum class TextType {
-        kText,
-        kPosText
-    };
+    enum class TextType { kText, kPosText };
 
     SkTextInterceptsIter(const SkGlyphID glyphs[], int count, const SkFont& font,
                          const SkPaint* paint, const SkScalar bounds[2], SkScalar x, SkScalar y,
                          TextType textType)
-         : SkTextBaseIter(glyphs, count, font, paint)
-    {
+            : SkTextBaseIter(glyphs, count, font, paint) {
         fBoundsBase[0] = bounds[0];
         fBoundsBase[1] = bounds[1];
         this->setPosition(x, y);
@@ -56,7 +52,7 @@ public:
 
     void setPosition(SkScalar x, SkScalar y) {
         SkScalar xOffset = 0;
-        for (int i = 0; i < (int) SK_ARRAY_COUNT(fBounds); ++i) {
+        for (int i = 0; i < (int)SK_ARRAY_COUNT(fBounds); ++i) {
             SkScalar bound = fBoundsBase[i] - y;
             fBounds[i] = bound / fScale;
         }

@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "SkRasterClip.h"
-#include "SkPath.h"
-#include "SkRegionPriv.h"
+#include "src/core/SkRasterClip.h"
+#include "include/core/SkPath.h"
+#include "src/core/SkRegionPriv.h"
 
 enum MutateResult {
     kDoNothing_MutateResult,
@@ -15,7 +15,7 @@ enum MutateResult {
     kContinue_MutateResult,
 };
 
-static MutateResult mutate_conservative_op(SkRegion::Op* op, bool inverseFilled) {
+static MutateResult mutate_conservative_op(SkRegion::Op* op, bool inverseFilled) noexcept {
     if (inverseFilled) {
         switch (*op) {
             case SkRegion::kIntersect_Op:
@@ -57,7 +57,7 @@ static MutateResult mutate_conservative_op(SkRegion::Op* op, bool inverseFilled)
                 return kContinue_MutateResult;
         }
     }
-    SkASSERT(false);    // unknown op
+    SkASSERT(false);  // unknown op
     return kDoNothing_MutateResult;
 }
 
@@ -138,33 +138,31 @@ SkRasterClip::SkRasterClip(const SkRasterClip& src) {
     fIsEmpty = src.isEmpty();
     fIsRect = src.isRect();
     fClipRestrictionRect = src.fClipRestrictionRect;
-    SkDEBUGCODE(this->validate();)
+    SkDEBUGCODE(this->validate());
 }
 
 SkRasterClip::SkRasterClip(const SkRegion& rgn) : fBW(rgn) {
     fIsBW = true;
     fIsEmpty = this->computeIsEmpty();  // bounds might be empty, so compute
     fIsRect = !fIsEmpty;
-    SkDEBUGCODE(this->validate();)
+    SkDEBUGCODE(this->validate());
 }
 
 SkRasterClip::SkRasterClip(const SkIRect& bounds) : fBW(bounds) {
     fIsBW = true;
     fIsEmpty = this->computeIsEmpty();  // bounds might be empty, so compute
     fIsRect = !fIsEmpty;
-    SkDEBUGCODE(this->validate();)
+    SkDEBUGCODE(this->validate());
 }
 
-SkRasterClip::SkRasterClip() {
+SkRasterClip::SkRasterClip() noexcept {
     fIsBW = true;
     fIsEmpty = true;
     fIsRect = false;
-    SkDEBUGCODE(this->validate();)
+    SkDEBUGCODE(this->validate());
 }
 
-SkRasterClip::~SkRasterClip() {
-    SkDEBUGCODE(this->validate();)
-}
+SkRasterClip::~SkRasterClip() { SkDEBUGCODE(this->validate()); }
 
 bool SkRasterClip::operator==(const SkRasterClip& other) const {
     if (fIsBW != other.fIsBW) {
@@ -180,11 +178,9 @@ bool SkRasterClip::operator==(const SkRasterClip& other) const {
     return isEqual;
 }
 
-bool SkRasterClip::isComplex() const {
-    return fIsBW ? fBW.isComplex() : !fAA.isEmpty();
-}
+bool SkRasterClip::isComplex() const noexcept { return fIsBW ? fBW.isComplex() : !fAA.isEmpty(); }
 
-const SkIRect& SkRasterClip::getBounds() const {
+const SkIRect& SkRasterClip::getBounds() const noexcept {
     return fIsBW ? fBW.getBounds() : fAA.getBounds();
 }
 
@@ -352,7 +348,7 @@ bool SkRasterClip::op(const SkRasterClip& clip, SkRegion::Op op) {
  *  axis. Thus we can treat an axis coordinate as an integer if it differs
  *  from its nearest int by < half of that value (1.8 in this case).
  */
-static bool nearly_integral(SkScalar x) {
+static bool nearly_integral(SkScalar x) noexcept {
     static const SkScalar domain = SK_Scalar1 / 4;
     static const SkScalar halfDomain = domain / 2;
 
@@ -470,18 +466,16 @@ void SkRasterClip::validate() const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkAAClipBlitterWrapper::SkAAClipBlitterWrapper() {
-    SkDEBUGCODE(fClipRgn = nullptr;)
-    SkDEBUGCODE(fBlitter = nullptr;)
+SkAAClipBlitterWrapper::SkAAClipBlitterWrapper() noexcept {
+    SkDEBUGCODE(fClipRgn = nullptr);
+    SkDEBUGCODE(fBlitter = nullptr);
 }
 
-SkAAClipBlitterWrapper::SkAAClipBlitterWrapper(const SkRasterClip& clip,
-                                               SkBlitter* blitter) {
+SkAAClipBlitterWrapper::SkAAClipBlitterWrapper(const SkRasterClip& clip, SkBlitter* blitter) {
     this->init(clip, blitter);
 }
 
-SkAAClipBlitterWrapper::SkAAClipBlitterWrapper(const SkAAClip* aaclip,
-                                               SkBlitter* blitter) {
+SkAAClipBlitterWrapper::SkAAClipBlitterWrapper(const SkAAClip* aaclip, SkBlitter* blitter) {
     SkASSERT(blitter);
     SkASSERT(aaclip);
     fBWRgn.setRect(aaclip->getBounds());

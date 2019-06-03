@@ -8,7 +8,7 @@
 #ifndef SKSL_ASTNULLLITERAL
 #define SKSL_ASTNULLLITERAL
 
-#include "SkSLASTExpression.h"
+#include "src/sksl/ast/SkSLASTExpression.h"
 
 namespace SkSL {
 
@@ -16,16 +16,13 @@ namespace SkSL {
  * Represents "null".
  */
 struct ASTNullLiteral : public ASTExpression {
-    ASTNullLiteral(int offset)
-    : INHERITED(offset, kNull_Kind) {}
+    ASTNullLiteral(int offset) : INHERITED(offset, kNull_Kind) {}
 
-    String description() const override {
-        return "null";
-    }
+    String description() const override { return "null"; }
 
     typedef ASTExpression INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

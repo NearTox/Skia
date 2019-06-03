@@ -5,12 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "SkAndroidCodecAdapter.h"
-#include "SkCodecPriv.h"
+#include "src/codec/SkAndroidCodecAdapter.h"
+#include "src/codec/SkCodecPriv.h"
 
 SkAndroidCodecAdapter::SkAndroidCodecAdapter(SkCodec* codec, ExifOrientationBehavior behavior)
-    : INHERITED(codec, behavior)
-{}
+        : INHERITED(codec, behavior) {}
 
 SkISize SkAndroidCodecAdapter::onGetSampledDimensions(int sampleSize) const {
     float scale = get_scale_from_sample_size(sampleSize);
@@ -22,7 +21,8 @@ bool SkAndroidCodecAdapter::onGetSupportedSubset(SkIRect* desiredSubset) const {
 }
 
 SkCodec::Result SkAndroidCodecAdapter::onGetAndroidPixels(const SkImageInfo& info, void* pixels,
-        size_t rowBytes, const AndroidOptions& options) {
+                                                          size_t rowBytes,
+                                                          const AndroidOptions& options) {
     SkCodec::Options codecOptions;
     codecOptions.fZeroInitialized = options.fZeroInitialized;
     codecOptions.fSubset = options.fSubset;

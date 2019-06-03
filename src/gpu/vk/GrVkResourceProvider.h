@@ -1,27 +1,27 @@
 /*
-* Copyright 2016 Google Inc.
-*
-* Use of this source code is governed by a BSD-style license that can be
-* found in the LICENSE file.
-*/
+ * Copyright 2016 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
 #ifndef GrVkResourceProvider_DEFINED
 #define GrVkResourceProvider_DEFINED
 
-#include "GrResourceHandle.h"
-#include "GrVkDescriptorPool.h"
-#include "GrVkDescriptorSetManager.h"
-#include "GrVkPipelineStateBuilder.h"
-#include "GrVkRenderPass.h"
-#include "GrVkResource.h"
-#include "GrVkSampler.h"
-#include "GrVkSamplerYcbcrConversion.h"
-#include "GrVkUtil.h"
-#include "SkLRUCache.h"
-#include "SkTArray.h"
-#include "SkTDynamicHash.h"
-#include "SkTInternalLList.h"
-#include "vk/GrVkTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
+#include "include/private/SkTArray.h"
+#include "include/private/SkTInternalLList.h"
+#include "src/core/SkLRUCache.h"
+#include "src/core/SkTDynamicHash.h"
+#include "src/gpu/GrResourceHandle.h"
+#include "src/gpu/vk/GrVkDescriptorPool.h"
+#include "src/gpu/vk/GrVkDescriptorSetManager.h"
+#include "src/gpu/vk/GrVkPipelineStateBuilder.h"
+#include "src/gpu/vk/GrVkRenderPass.h"
+#include "src/gpu/vk/GrVkResource.h"
+#include "src/gpu/vk/GrVkSampler.h"
+#include "src/gpu/vk/GrVkSamplerYcbcrConversion.h"
+#include "src/gpu/vk/GrVkUtil.h"
 
 #include <mutex>
 #include <thread>
@@ -48,6 +48,7 @@ public:
                                  const GrPrimitiveProcessor& primProc,
                                  const GrPipeline& pipeline,
                                  const GrStencilSettings& stencil,
+                                 GrSurfaceOrigin,
                                  VkPipelineShaderStageCreateInfo* shaderStageInfo,
                                  int shaderStageCount,
                                  GrPrimitiveType primitiveType,
@@ -92,6 +93,13 @@ public:
 
     void checkCommandBuffers();
 
+    // We must add the finishedProc to all active command buffers since we may have flushed work
+    // that the client cares about before they explicitly called flush and the GPU may reorder
+    // command execution. So we make sure all previously submitted work finishes before we call the
+    // finishedProc.
+    void addFinishedProcToActiveCommandBuffers(GrGpuFinishedProc finishedProc,
+                                               GrGpuFinishedContext finishedContext);
+
     // Finds or creates a compatible GrVkDescriptorPool for the requested type and count.
     // The refcount is incremented and a pointer returned.
     // TODO: Currently this will just create a descriptor pool without holding onto a ref itself
@@ -111,11 +119,8 @@ public:
             const GrVkYcbcrConversionInfo& ycbcrInfo);
 
     GrVkPipelineState* findOrCreateCompatiblePipelineState(
-            GrRenderTarget*, GrSurfaceOrigin,
-            const GrPipeline&,
-            const GrPrimitiveProcessor&,
-            const GrTextureProxy* const primProcProxies[],
-            GrPrimitiveType,
+            GrRenderTarget*, GrSurfaceOrigin, const GrPipeline&, const GrPrimitiveProcessor&,
+            const GrTextureProxy* const primProcProxies[], GrPrimitiveType,
             VkRenderPass compatibleRenderPass);
 
     void getSamplerDescriptorSetHandle(VkDescriptorType type,
@@ -143,7 +148,6 @@ public:
     // the GrVkDescriptorSetManager::Handle passed in. The GrVkDescriptorSet is already reffed for
     // the caller.
     const GrVkDescriptorSet* getSamplerDescriptorSet(const GrVkDescriptorSetManager::Handle&);
-
 
     // Signals that the descriptor set passed it, which is compatible with the passed in handle,
     // can be reused by the next allocation request.
@@ -177,8 +181,11 @@ public:
 
     void reset(GrVkCommandPool* pool);
 
-private:
+#if GR_TEST_UTILS
+    void resetShaderCacheForTesting() const { fPipelineStateCache->release(); }
+#endif
 
+private:
 #ifdef SK_DEBUG
 #define GR_PIPELINE_STATE_CACHE_STATS
 #endif
@@ -193,8 +200,7 @@ private:
         GrVkPipelineState* refPipelineState(GrRenderTarget*, GrSurfaceOrigin,
                                             const GrPrimitiveProcessor&,
                                             const GrTextureProxy* const primProcProxies[],
-                                            const GrPipeline&,
-                                            GrPrimitiveType,
+                                            const GrPipeline&, GrPrimitiveType,
                                             VkRenderPass compatibleRenderPass);
 
     private:
@@ -214,11 +220,11 @@ private:
 
         SkLRUCache<const GrVkPipelineStateBuilder::Desc, std::unique_ptr<Entry>, DescHash> fMap;
 
-        GrVkGpu*                    fGpu;
+        GrVkGpu* fGpu;
 
 #ifdef GR_PIPELINE_STATE_CACHE_STATS
-        int                         fTotalRequests;
-        int                         fCacheMisses;
+        int fTotalRequests;
+        int fCacheMisses;
 #endif
     };
 
@@ -247,7 +253,7 @@ private:
 
     private:
         SkSTArray<4, GrVkRenderPass*> fRenderPasses;
-        int                           fLastReturnedIndex;
+        int fLastReturnedIndex;
     };
 
     VkPipelineCache pipelineCache();

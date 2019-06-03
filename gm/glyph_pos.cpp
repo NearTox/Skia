@@ -5,11 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkCanvas.h"
-#include "SkFont.h"
-#include "SkTypeface.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "tools/ToolUtils.h"
 
 /* This test tries to define the effect of using hairline strokes on text.
  * Provides non-hairline images for reference and consistency checks.
@@ -24,9 +31,7 @@ static void drawTestCase(SkCanvas* canvas,
                          SkScalar strokeWidth,
                          SkPaint::Style strokeStyle);
 
-static void draw_gm(SkCanvas* canvas,
-                    SkScalar strokeWidth,
-                    SkPaint::Style strokeStyle) {
+static void draw_gm(SkCanvas* canvas, SkScalar strokeWidth, SkPaint::Style strokeStyle) {
     // There's a black pixel at 40, 40 for reference.
     canvas->drawPoint(40, 40, SkPaint());
 
@@ -87,7 +92,7 @@ static void drawTestCase(SkCanvas* canvas,
     paint.setStrokeWidth(strokeWidth);
     paint.setStyle(strokeStyle);
 
-    SkFont font(sk_tool_utils::create_portable_typeface(), kTextHeight * textScale);
+    SkFont font(ToolUtils::create_portable_typeface(), kTextHeight * textScale);
 
     // This demonstrates that we can not measure the text if
     // there's a device transform. The canvas total matrix will
@@ -97,8 +102,8 @@ static void drawTestCase(SkCanvas* canvas,
 
     SkRect bounds;
     if (drawRef) {
-        SkScalar advance = font.measureText(kText, sizeof(kText) - 1, kUTF8_SkTextEncoding,
-                                            &bounds, &paint);
+        SkScalar advance =
+                font.measureText(kText, sizeof(kText) - 1, SkTextEncoding::kUTF8, &bounds, &paint);
 
         paint.setStrokeWidth(0.0f);
         paint.setStyle(SkPaint::kStroke_Style);
@@ -116,13 +121,14 @@ static void drawTestCase(SkCanvas* canvas,
     paint.setColor(SK_ColorBLACK);
     paint.setStrokeWidth(strokeWidth);
     paint.setStyle(strokeStyle);
-    canvas->drawSimpleText(kText, sizeof(kText) - 1, kUTF8_SkTextEncoding, 0.0f, 0.0f, font, paint);
+    canvas->drawSimpleText(kText, sizeof(kText) - 1, SkTextEncoding::kUTF8, 0.0f, 0.0f, font,
+                           paint);
 
     if (drawRef) {
         const size_t len = sizeof(kText) - 1;
         SkGlyphID glyphs[len];
-        const int count = font.textToGlyphs(kText, len, kUTF8_SkTextEncoding, glyphs, len);
-        SkScalar widths[len]; // len is conservative. we really only need 'count'
+        const int count = font.textToGlyphs(kText, len, SkTextEncoding::kUTF8, glyphs, len);
+        SkScalar widths[len];  // len is conservative. we really only need 'count'
         font.getWidthsBounds(glyphs, count, widths, nullptr, &paint);
 
         paint.setStrokeWidth(0.0f);
@@ -138,21 +144,9 @@ static void drawTestCase(SkCanvas* canvas,
     }
 }
 
-DEF_SIMPLE_GM(glyph_pos_h_b, c, 800, 600) {
-    draw_gm(c, 0.0f, SkPaint::kStrokeAndFill_Style);
-}
-DEF_SIMPLE_GM(glyph_pos_n_b, c, 800, 600) {
-    draw_gm(c, 1.2f, SkPaint::kStrokeAndFill_Style);
-}
-DEF_SIMPLE_GM(glyph_pos_h_s, c, 800, 600) {
-    draw_gm(c, 0.0f, SkPaint::kStroke_Style);
-}
-DEF_SIMPLE_GM(glyph_pos_n_s, c, 800, 600) {
-    draw_gm(c, 1.2f, SkPaint::kStroke_Style);
-}
-DEF_SIMPLE_GM(glyph_pos_h_f, c, 800, 600) {
-    draw_gm(c, 0.0f, SkPaint::kFill_Style);
-}
-DEF_SIMPLE_GM(glyph_pos_n_f, c, 800, 600) {
-    draw_gm(c, 1.2f, SkPaint::kFill_Style);
-}
+DEF_SIMPLE_GM(glyph_pos_h_b, c, 800, 600) { draw_gm(c, 0.0f, SkPaint::kStrokeAndFill_Style); }
+DEF_SIMPLE_GM(glyph_pos_n_b, c, 800, 600) { draw_gm(c, 1.2f, SkPaint::kStrokeAndFill_Style); }
+DEF_SIMPLE_GM(glyph_pos_h_s, c, 800, 600) { draw_gm(c, 0.0f, SkPaint::kStroke_Style); }
+DEF_SIMPLE_GM(glyph_pos_n_s, c, 800, 600) { draw_gm(c, 1.2f, SkPaint::kStroke_Style); }
+DEF_SIMPLE_GM(glyph_pos_h_f, c, 800, 600) { draw_gm(c, 0.0f, SkPaint::kFill_Style); }
+DEF_SIMPLE_GM(glyph_pos_n_f, c, 800, 600) { draw_gm(c, 1.2f, SkPaint::kFill_Style); }

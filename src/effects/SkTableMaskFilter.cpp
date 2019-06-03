@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "SkFixed.h"
-#include "SkReadBuffer.h"
-#include "SkString.h"
-#include "SkTableMaskFilter.h"
-#include "SkWriteBuffer.h"
+#include "include/effects/SkTableMaskFilter.h"
+#include "include/core/SkString.h"
+#include "include/private/SkFixed.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
 
 class SkTableMaskFilterImpl : public SkMaskFilterBase {
 public:
@@ -45,8 +45,8 @@ SkTableMaskFilterImpl::SkTableMaskFilterImpl(const uint8_t table[256]) {
 
 SkTableMaskFilterImpl::~SkTableMaskFilterImpl() {}
 
-bool SkTableMaskFilterImpl::filterMask(SkMask* dst, const SkMask& src,
-                                 const SkMatrix&, SkIPoint* margin) const {
+bool SkTableMaskFilterImpl::filterMask(SkMask* dst, const SkMask& src, const SkMatrix&,
+                                       SkIPoint* margin) const {
     if (src.fFormat != SkMask::kA8_Format) {
         return false;
     }
@@ -87,13 +87,9 @@ bool SkTableMaskFilterImpl::filterMask(SkMask* dst, const SkMask& src,
     return true;
 }
 
-SkMask::Format SkTableMaskFilterImpl::getFormat() const {
-    return SkMask::kA8_Format;
-}
+SkMask::Format SkTableMaskFilterImpl::getFormat() const { return SkMask::kA8_Format; }
 
-void SkTableMaskFilterImpl::flatten(SkWriteBuffer& wb) const {
-    wb.writeByteArray(fTable, 256);
-}
+void SkTableMaskFilterImpl::flatten(SkWriteBuffer& wb) const { wb.writeByteArray(fTable, 256); }
 
 sk_sp<SkFlattenable> SkTableMaskFilterImpl::CreateProc(SkReadBuffer& buffer) {
     uint8_t table[256];
@@ -127,14 +123,13 @@ void SkTableMaskFilter::MakeGammaTable(uint8_t table[256], SkScalar gamma) {
 
     float x = 0;
     for (int i = 0; i < 256; i++) {
-     // float ee = powf(x, g) * 255;
+        // float ee = powf(x, g) * 255;
         table[i] = SkTPin(sk_float_round2int(powf(x, g) * 255), 0, 255);
         x += dx;
     }
 }
 
-void SkTableMaskFilter::MakeClipTable(uint8_t table[256], uint8_t min,
-                                      uint8_t max) {
+void SkTableMaskFilter::MakeClipTable(uint8_t table[256], uint8_t min, uint8_t max) {
     if (0 == max) {
         max = 1;
     }

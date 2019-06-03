@@ -4,14 +4,11 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkCanvasStack.h"
+#include "src/utils/SkCanvasStack.h"
 
-SkCanvasStack::SkCanvasStack(int width, int height)
-        : INHERITED(width, height) {}
+SkCanvasStack::SkCanvasStack(int width, int height) : INHERITED(width, height) {}
 
-SkCanvasStack::~SkCanvasStack() {
-    this->removeAll();
-}
+SkCanvasStack::~SkCanvasStack() { this->removeAll(); }
 
 void SkCanvasStack::pushCanvas(std::unique_ptr<SkCanvas> canvas, const SkIPoint& origin) {
     if (canvas) {
@@ -32,17 +29,17 @@ void SkCanvasStack::pushCanvas(std::unique_ptr<SkCanvas> canvas, const SkIPoint&
         // above them.
         for (int i = fList.count() - 1; i > 0; --i) {
             SkIRect localBounds = canvasBounds;
-            localBounds.offset(origin - fCanvasData[i-1].origin);
+            localBounds.offset(origin - fCanvasData[i - 1].origin);
 
-            fCanvasData[i-1].requiredClip.op(localBounds, SkRegion::kDifference_Op);
-            fList[i-1]->clipRegion(fCanvasData[i-1].requiredClip);
+            fCanvasData[i - 1].requiredClip.op(localBounds, SkRegion::kDifference_Op);
+            fList[i - 1]->clipRegion(fCanvasData[i - 1].requiredClip);
         }
     }
     SkASSERT(fList.count() == fCanvasData.count());
 }
 
 void SkCanvasStack::removeAll() {
-    this->INHERITED::removeAll();   // call the baseclass *before* we actually delete the canvases
+    this->INHERITED::removeAll();  // call the baseclass *before* we actually delete the canvases
     fCanvasData.reset();
 }
 
@@ -68,7 +65,6 @@ void SkCanvasStack::clipToZOrderedBounds() {
 void SkCanvasStack::didSetMatrix(const SkMatrix& matrix) {
     SkASSERT(fList.count() == fCanvasData.count());
     for (int i = 0; i < fList.count(); ++i) {
-
         SkMatrix tempMatrix = matrix;
         tempMatrix.postTranslate(SkIntToScalar(-fCanvasData[i].origin.x()),
                                  SkIntToScalar(-fCanvasData[i].origin.y()));
@@ -96,8 +92,7 @@ void SkCanvasStack::onClipRegion(const SkRegion& deviceRgn, SkClipOp op) {
     SkASSERT(fList.count() == fCanvasData.count());
     for (int i = 0; i < fList.count(); ++i) {
         SkRegion tempRegion;
-        deviceRgn.translate(-fCanvasData[i].origin.x(),
-                            -fCanvasData[i].origin.y(), &tempRegion);
+        deviceRgn.translate(-fCanvasData[i].origin.x(), -fCanvasData[i].origin.y(), &tempRegion);
         tempRegion.op(fCanvasData[i].requiredClip, SkRegion::kIntersect_Op);
         fList[i]->clipRegion(tempRegion, op);
     }

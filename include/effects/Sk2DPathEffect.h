@@ -8,10 +8,10 @@
 #ifndef Sk2DPathEffect_DEFINED
 #define Sk2DPathEffect_DEFINED
 
-#include "SkFlattenable.h"
-#include "SkPath.h"
-#include "SkPathEffect.h"
-#include "SkMatrix.h"
+#include "include/core/SkFlattenable.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPathEffect.h"
 
 class SK_API Sk2DPathEffect : public SkPathEffect {
 protected:
@@ -39,8 +39,8 @@ protected:
     bool onFilterPath(SkPath*, const SkPath&, SkStrokeRec*, const SkRect*) const override;
 
 private:
-    SkMatrix    fMatrix, fInverse;
-    bool        fMatrixIsInvertible;
+    SkMatrix fMatrix, fInverse;
+    bool fMatrixIsInvertible;
 
     // illegal
     Sk2DPathEffect(const Sk2DPathEffect&);
@@ -59,12 +59,11 @@ public:
         return sk_sp<SkPathEffect>(new SkLine2DPathEffect(width, matrix));
     }
 
-
 protected:
     SkLine2DPathEffect(SkScalar width, const SkMatrix& matrix)
-        : Sk2DPathEffect(matrix), fWidth(width) {
-            SkASSERT(width >= 0);
-        }
+            : Sk2DPathEffect(matrix), fWidth(width) {
+        SkASSERT(width >= 0);
+    }
     void flatten(SkWriteBuffer&) const override;
     bool onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec*, const SkRect*) const override;
 
@@ -97,7 +96,7 @@ protected:
 private:
     SK_FLATTENABLE_HOOKS(SkPath2DPathEffect)
 
-    SkPath  fPath;
+    SkPath fPath;
 
     typedef Sk2DPathEffect INHERITED;
 };

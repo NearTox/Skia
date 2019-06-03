@@ -8,7 +8,7 @@
 #ifndef GrTextureProxyPriv_DEFINED
 #define GrTextureProxyPriv_DEFINED
 
-#include "GrTextureProxy.h"
+#include "include/private/GrTextureProxy.h"
 
 class GrDeferredProxyUploader;
 class GrOpFlushState;
@@ -30,8 +30,8 @@ public:
 
 private:
     explicit GrTextureProxyPriv(GrTextureProxy* textureProxy) : fTextureProxy(textureProxy) {}
-    GrTextureProxyPriv(const GrTextureProxyPriv&) {} // unimpl
-    GrTextureProxyPriv& operator=(const GrTextureProxyPriv&); // unimpl
+    GrTextureProxyPriv(const GrTextureProxyPriv&) {}           // unimpl
+    GrTextureProxyPriv& operator=(const GrTextureProxyPriv&);  // unimpl
 
     // No taking addresses of this type.
     const GrTextureProxyPriv* operator&() const;

@@ -5,14 +5,36 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "include/gpu/GrContext.h"
+#include "include/gpu/GrTypes.h"
+#include "include/private/SkTArray.h"
+#include "src/image/SkImage_Base.h"
+#include "src/image/SkImage_Gpu.h"
+#include "tools/ToolUtils.h"
+#include "tools/gpu/ProxyUtils.h"
 
-#include "SkSurface.h"
+#include <string.h>
+#include <utility>
 
-#include "GrContextPriv.h"
-#include "ProxyUtils.h"
-#include "SkImage_Gpu.h"
+class GrRenderTargetContext;
 
 static const int kNumMatrices = 6;
 static const int kImageSize = 128;
@@ -20,41 +42,26 @@ static const int kLabelSize = 32;
 static const int kNumLabels = 4;
 static const int kInset = 16;
 
-static const int kCellSize = kImageSize+2*kLabelSize;
-static const int kGMWidth  = kNumMatrices*kCellSize;
-static const int kGMHeight = 4*kCellSize;
+static const int kCellSize = kImageSize + 2 * kLabelSize;
+static const int kGMWidth = kNumMatrices * kCellSize;
+static const int kGMHeight = 4 * kCellSize;
 
 static const SkPoint kPoints[kNumLabels] = {
-    {          0, kImageSize },     // LL
-    { kImageSize, kImageSize },     // LR
-    {          0,          0 },     // UL
-    { kImageSize,          0 },     // UR
+        {0, kImageSize},           // LL
+        {kImageSize, kImageSize},  // LR
+        {0, 0},                    // UL
+        {kImageSize, 0},           // UR
 };
 
-static const SkMatrix kUVMatrices[kNumMatrices] = {
-    SkMatrix::MakeAll( 0, -1, 1,
-                      -1,  0, 1,
-                       0,  0, 1),
-    SkMatrix::MakeAll( 1,  0, 0,
-                       0, -1, 1,
-                       0,  0, 1),
-    // flip x
-    SkMatrix::MakeAll(-1,  0, 1,
-                       0,  1, 0,
-                       0,  0, 1),
-    SkMatrix::MakeAll( 0,  1, 0,
-                      -1,  0, 1,
-                       0,  0, 1),
-    // flip both x & y == rotate 180
-    SkMatrix::MakeAll(-1,  0, 1,
-                       0, -1, 1,
-                       0,  0, 1),
-    // identity
-    SkMatrix::MakeAll(1,  0, 0,
-                      0,  1, 0,
-                      0,  0, 1)
-};
-
+static const SkMatrix kUVMatrices[kNumMatrices] = {SkMatrix::MakeAll(0, -1, 1, -1, 0, 1, 0, 0, 1),
+                                                   SkMatrix::MakeAll(1, 0, 0, 0, -1, 1, 0, 0, 1),
+                                                   // flip x
+                                                   SkMatrix::MakeAll(-1, 0, 1, 0, 1, 0, 0, 0, 1),
+                                                   SkMatrix::MakeAll(0, 1, 0, -1, 0, 1, 0, 0, 1),
+                                                   // flip both x & y == rotate 180
+                                                   SkMatrix::MakeAll(-1, 0, 1, 0, -1, 1, 0, 0, 1),
+                                                   // identity
+                                                   SkMatrix::MakeAll(1, 0, 0, 0, 1, 0, 0, 0, 1)};
 
 // Create a fixed size text label like "LL" or "LR".
 static sk_sp<SkImage> make_text_image(GrContext* context, const char* text, SkColor color) {
@@ -64,11 +71,11 @@ static sk_sp<SkImage> make_text_image(GrContext* context, const char* text, SkCo
 
     SkFont font;
     font.setEdging(SkFont::Edging::kAntiAlias);
-    font.setTypeface(sk_tool_utils::create_portable_typeface());
+    font.setTypeface(ToolUtils::create_portable_typeface());
     font.setSize(32);
 
     SkRect bounds;
-    font.measureText(text, strlen(text), kUTF8_SkTextEncoding, &bounds);
+    font.measureText(text, strlen(text), SkTextEncoding::kUTF8, &bounds);
     const SkMatrix mat = SkMatrix::MakeRectToRect(bounds, SkRect::MakeWH(kLabelSize, kLabelSize),
                                                   SkMatrix::kFill_ScaleToFit);
 
@@ -79,7 +86,7 @@ static sk_sp<SkImage> make_text_image(GrContext* context, const char* text, SkCo
 
     canvas->clear(SK_ColorWHITE);
     canvas->concat(mat);
-    canvas->drawSimpleText(text, strlen(text), kUTF8_SkTextEncoding, 0, 0, font, paint);
+    canvas->drawSimpleText(text, strlen(text), SkTextEncoding::kUTF8, 0, 0, font, paint);
 
     sk_sp<SkImage> image = surf->makeImageSnapshot();
 
@@ -102,15 +109,15 @@ static sk_sp<SkImage> make_reference_image(GrContext* context,
     canvas.clear(SK_ColorWHITE);
     for (int i = 0; i < kNumLabels; ++i) {
         canvas.drawImage(labels[i],
-                         0.0 != kPoints[i].fX ? kPoints[i].fX-kLabelSize-kInset : kInset,
-                         0.0 != kPoints[i].fY ? kPoints[i].fY-kLabelSize-kInset : kInset);
+                         0.0 != kPoints[i].fX ? kPoints[i].fX - kLabelSize - kInset : kInset,
+                         0.0 != kPoints[i].fY ? kPoints[i].fY - kLabelSize - kInset : kInset);
     }
 
     auto origin = bottomLeftOrigin ? kBottomLeft_GrSurfaceOrigin : kTopLeft_GrSurfaceOrigin;
 
-    auto proxy = sk_gpu_test::MakeTextureProxyFromData(context, false, kImageSize, kImageSize,
-                                                       bm.colorType(), origin, bm.getPixels(),
-                                                       bm.rowBytes());
+    auto proxy = sk_gpu_test::MakeTextureProxyFromData(context, GrRenderable::kNo, kImageSize,
+                                                       kImageSize, bm.colorType(), origin,
+                                                       bm.getPixels(), bm.rowBytes());
     if (!proxy) {
         return nullptr;
     }
@@ -124,12 +131,11 @@ static sk_sp<SkImage> make_reference_image(GrContext* context,
 // other but we also need a scale to map from the [0..1] uv range to the actual size of
 // image.
 static bool UVMatToGeomMatForImage(SkMatrix* geomMat, const SkMatrix& uvMat) {
-
     const SkMatrix yFlip = SkMatrix::MakeAll(1, 0, 0, 0, -1, 1, 0, 0, 1);
 
     SkMatrix tmp = uvMat;
     tmp.preConcat(yFlip);
-    tmp.preScale(1.0f/kImageSize, 1.0f/kImageSize);
+    tmp.preScale(1.0f / kImageSize, 1.0f / kImageSize);
 
     tmp.postConcat(yFlip);
     tmp.postScale(kImageSize, kImageSize);
@@ -141,30 +147,23 @@ static bool UVMatToGeomMatForImage(SkMatrix* geomMat, const SkMatrix& uvMat) {
 // rotates.
 class FlippityGM : public skiagm::GpuGM {
 public:
-    FlippityGM() {
-        this->setBGColor(0xFFCCCCCC);
-    }
+    FlippityGM() { this->setBGColor(0xFFCCCCCC); }
 
 protected:
+    SkString onShortName() override { return SkString("flippity"); }
 
-    SkString onShortName() override {
-        return SkString("flippity");
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(kGMWidth, kGMHeight);
-    }
+    SkISize onISize() override { return SkISize::Make(kGMWidth, kGMHeight); }
 
     // Draw the reference image and the four corner labels in the matrix's coordinate space
     void drawImageWithMatrixAndLabels(SkCanvas* canvas, SkImage* image, int matIndex,
                                       bool drawSubset, bool drawScaled) {
         static const SkRect kSubsets[kNumMatrices] = {
-            SkRect::MakeXYWH(kInset, 0, kImageSize-kInset, kImageSize),
-            SkRect::MakeXYWH(0, kInset, kImageSize, kImageSize-kInset),
-            SkRect::MakeXYWH(0, 0, kImageSize-kInset, kImageSize),
-            SkRect::MakeXYWH(0, 0, kImageSize, kImageSize-kInset),
-            SkRect::MakeXYWH(kInset/2, kInset/2, kImageSize-kInset, kImageSize-kInset),
-            SkRect::MakeXYWH(kInset, kInset, kImageSize-2*kInset, kImageSize-2*kInset),
+                SkRect::MakeXYWH(kInset, 0, kImageSize - kInset, kImageSize),
+                SkRect::MakeXYWH(0, kInset, kImageSize, kImageSize - kInset),
+                SkRect::MakeXYWH(0, 0, kImageSize - kInset, kImageSize),
+                SkRect::MakeXYWH(0, 0, kImageSize, kImageSize - kInset),
+                SkRect::MakeXYWH(kInset / 2, kInset / 2, kImageSize - kInset, kImageSize - kInset),
+                SkRect::MakeXYWH(kInset, kInset, kImageSize - 2 * kInset, kImageSize - 2 * kInset),
         };
 
         SkMatrix imageGeomMat;
@@ -172,51 +171,46 @@ protected:
 
         canvas->save();
 
-            // draw the reference image
-            canvas->concat(imageGeomMat);
-            if (drawSubset) {
-                canvas->drawImageRect(image, kSubsets[matIndex],
-                                      drawScaled ? SkRect::MakeWH(kImageSize, kImageSize)
-                                                 : kSubsets[matIndex],
-                                      nullptr, SkCanvas::kFast_SrcRectConstraint);
-            } else {
-                canvas->drawImage(image, 0, 0);
-            }
+        // draw the reference image
+        canvas->concat(imageGeomMat);
+        if (drawSubset) {
+            canvas->drawImageRect(
+                    image, kSubsets[matIndex],
+                    drawScaled ? SkRect::MakeWH(kImageSize, kImageSize) : kSubsets[matIndex],
+                    nullptr, SkCanvas::kFast_SrcRectConstraint);
+        } else {
+            canvas->drawImage(image, 0, 0);
+        }
 
-            // draw the labels
-            for (int i = 0; i < kNumLabels; ++i) {
-                canvas->drawImage(fLabels[i],
-                                    0.0f == kPoints[i].fX ? -kLabelSize : kPoints[i].fX,
-                                    0.0f == kPoints[i].fY ? -kLabelSize : kPoints[i].fY);
-            }
+        // draw the labels
+        for (int i = 0; i < kNumLabels; ++i) {
+            canvas->drawImage(fLabels[i],
+                              0.0f == kPoints[i].fX ? -kLabelSize : kPoints[i].fX,
+                              0.0f == kPoints[i].fY ? -kLabelSize : kPoints[i].fY);
+        }
         canvas->restore();
     }
 
-    void drawRow(GrContext* context, SkCanvas* canvas,
-                 bool bottomLeftImage, bool drawSubset, bool drawScaled) {
-
+    void drawRow(GrContext* context, SkCanvas* canvas, bool bottomLeftImage, bool drawSubset,
+                 bool drawScaled) {
         sk_sp<SkImage> referenceImage = make_reference_image(context, fLabels, bottomLeftImage);
 
         canvas->save();
-            canvas->translate(kLabelSize, kLabelSize);
+        canvas->translate(kLabelSize, kLabelSize);
 
-            for (int i = 0; i < kNumMatrices; ++i) {
-                this->drawImageWithMatrixAndLabels(canvas, referenceImage.get(), i,
-                                                   drawSubset, drawScaled);
-                canvas->translate(kCellSize, 0);
-            }
+        for (int i = 0; i < kNumMatrices; ++i) {
+            this->drawImageWithMatrixAndLabels(canvas, referenceImage.get(), i, drawSubset,
+                                               drawScaled);
+            canvas->translate(kCellSize, 0);
+        }
         canvas->restore();
     }
 
     void makeLabels(GrContext* context) {
-        static const char* kLabelText[kNumLabels] = { "LL", "LR", "UL", "UR" };
+        static const char* kLabelText[kNumLabels] = {"LL", "LR", "UL", "UR"};
 
-        static const SkColor kLabelColors[kNumLabels] = {
-            SK_ColorRED,
-            SK_ColorGREEN,
-            SK_ColorBLUE,
-            SK_ColorCYAN
-        };
+        static const SkColor kLabelColors[kNumLabels] = {SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE,
+                                                         SK_ColorCYAN};
 
         SkASSERT(!fLabels.count());
         for (int i = 0; i < kNumLabels; ++i) {

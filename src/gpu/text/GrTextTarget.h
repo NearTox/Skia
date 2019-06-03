@@ -8,8 +8,8 @@
 #ifndef GrTextTarget_DEFINED
 #define GrTextTarget_DEFINED
 
-#include "GrColorSpaceInfo.h"
-#include "SkPaint.h"
+#include "include/core/SkPaint.h"
+#include "src/gpu/GrColorSpaceInfo.h"
 
 class GrAtlasTextOp;
 class GrClip;
@@ -24,16 +24,16 @@ class GrTextTarget {
 public:
     virtual ~GrTextTarget() = default;
 
-    int width() const { return fWidth; }
+    int width() const noexcept { return fWidth; }
 
-    int height() const { return fHeight; }
+    int height() const noexcept { return fHeight; }
 
-    const GrColorSpaceInfo& colorSpaceInfo() const { return fColorSpaceInfo; }
+    const GrColorSpaceInfo& colorSpaceInfo() const noexcept { return fColorSpaceInfo; }
 
     virtual void addDrawOp(const GrClip&, std::unique_ptr<GrAtlasTextOp> op) = 0;
 
-    virtual void drawShape(const GrClip&, const SkPaint&,
-                           const SkMatrix& viewMatrix, const GrShape&) = 0;
+    virtual void drawShape(const GrClip&, const SkPaint&, const SkMatrix& viewMatrix,
+                           const GrShape&) = 0;
 
     virtual void makeGrPaint(GrMaskFormat, const SkPaint&, const SkMatrix& viewMatrix,
                              GrPaint*) = 0;
@@ -43,7 +43,7 @@ public:
     virtual SkGlyphRunListPainter* glyphPainter() = 0;
 
 protected:
-    GrTextTarget(int width, int height, const GrColorSpaceInfo& colorSpaceInfo)
+    GrTextTarget(int width, int height, const GrColorSpaceInfo& colorSpaceInfo) noexcept
             : fWidth(width), fHeight(height), fColorSpaceInfo(colorSpaceInfo) {}
 
 private:

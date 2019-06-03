@@ -8,15 +8,13 @@
 #ifndef SkClipStackDevice_DEFINED
 #define SkClipStackDevice_DEFINED
 
-#include "SkClipStack.h"
-#include "SkDevice.h"
+#include "src/core/SkClipStack.h"
+#include "src/core/SkDevice.h"
 
 class SkClipStackDevice : public SkBaseDevice {
 public:
     SkClipStackDevice(const SkImageInfo& info, const SkSurfaceProps& props)
-        : SkBaseDevice(info, props)
-        , fClipStack(fStorage, sizeof(fStorage))
-    {}
+            : SkBaseDevice(info, props), fClipStack(fStorage, sizeof(fStorage)) {}
 
     SkClipStack& cs() { return fClipStack; }
     const SkClipStack& cs() const { return fClipStack; }
@@ -37,7 +35,7 @@ protected:
 
 private:
     enum {
-        kPreallocCount = 16 // empirically determined, adjust as needed to reduce mallocs
+        kPreallocCount = 16  // empirically determined, adjust as needed to reduce mallocs
     };
     intptr_t fStorage[kPreallocCount * sizeof(SkClipStack::Element) / sizeof(intptr_t)];
     SkClipStack fClipStack;

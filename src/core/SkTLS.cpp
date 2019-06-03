@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "SkTLS.h"
+#include "src/core/SkTLS.h"
 
 struct SkTLSRec {
-    SkTLSRec*           fNext;
-    void*               fData;
-    SkTLS::CreateProc   fCreateProc;
-    SkTLS::DeleteProc   fDeleteProc;
+    SkTLSRec* fNext;
+    void* fData;
+    SkTLS::CreateProc fCreateProc;
+    SkTLS::DeleteProc fDeleteProc;
 
     ~SkTLSRec() {
         if (fDeleteProc) {

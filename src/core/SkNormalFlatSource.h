@@ -8,11 +8,11 @@
 #ifndef SkNormalFlatSource_DEFINED
 #define SkNormalFlatSource_DEFINED
 
-#include "SkNormalSource.h"
+#include "src/core/SkNormalSource.h"
 
 class SK_API SkNormalFlatSourceImpl : public SkNormalSource {
 public:
-    SkNormalFlatSourceImpl(){}
+    SkNormalFlatSourceImpl() {}
 
 #if SK_SUPPORT_GPU
     std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs& args) const override;

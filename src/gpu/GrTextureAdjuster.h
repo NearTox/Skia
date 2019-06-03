@@ -8,9 +8,9 @@
 #ifndef GrTextureAdjuster_DEFINED
 #define GrTextureAdjuster_DEFINED
 
-#include "GrTextureProducer.h"
-#include "GrTextureProxy.h"
-#include "SkTLazy.h"
+#include "include/private/GrTextureProxy.h"
+#include "src/core/SkTLazy.h"
+#include "src/gpu/GrTextureProducer.h"
 
 class GrRecordingContext;
 
@@ -31,8 +31,8 @@ public:
 
     // We do not ref the texture nor the colorspace, so the caller must keep them in scope while
     // this Adjuster is alive.
-    GrTextureAdjuster(GrRecordingContext*, sk_sp<GrTextureProxy>, SkAlphaType,
-                      uint32_t uniqueID, SkColorSpace*, bool useDecal = false);
+    GrTextureAdjuster(GrRecordingContext*, sk_sp<GrTextureProxy>, SkAlphaType, uint32_t uniqueID,
+                      SkColorSpace*, bool useDecal = false);
 
 protected:
     SkAlphaType alphaType() const override { return fAlphaType; }
@@ -51,9 +51,9 @@ private:
     sk_sp<GrTextureProxy> refTextureProxyCopy(const CopyParams& copyParams, bool willBeMipped);
 
     sk_sp<GrTextureProxy> fOriginal;
-    SkAlphaType           fAlphaType;
-    SkColorSpace*         fColorSpace;
-    uint32_t              fUniqueID;
+    SkAlphaType fAlphaType;
+    SkColorSpace* fColorSpace;
+    uint32_t fUniqueID;
 
     typedef GrTextureProducer INHERITED;
 };

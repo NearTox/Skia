@@ -5,20 +5,19 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
+#include "samplecode/Sample.h"
 
-#include "SkBlurMask.h"
-#include "SkCanvas.h"
-#include "SkFont.h"
-#include "SkMaskFilter.h"
-#include "SkParsePath.h"
-#include "SkPath.h"
-#include "SkRandom.h"
-
+#include "include/core/SkCanvas.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkMaskFilter.h"
+#include "include/core/SkPath.h"
+#include "include/utils/SkParsePath.h"
+#include "include/utils/SkRandom.h"
+#include "src/core/SkBlurMask.h"
 
 static void test_huge_stroke(SkCanvas* canvas) {
-    SkRect srcR = { 0, 0, 72000, 54000 };
-    SkRect dstR = { 0, 0, 640, 480 };
+    SkRect srcR = {0, 0, 72000, 54000};
+    SkRect dstR = {0, 0, 640, 480};
 
     SkPath path;
     path.moveTo(17600, 8000);
@@ -86,22 +85,23 @@ static void scale_to_width(SkPath* path, SkScalar dstWidth) {
 }
 
 static const struct {
-    SkPaint::Style  fStyle;
-    SkPaint::Join   fJoin;
-    int             fStrokeWidth;
+    SkPaint::Style fStyle;
+    SkPaint::Join fJoin;
+    int fStrokeWidth;
 } gRec[] = {
-    { SkPaint::kFill_Style,             SkPaint::kMiter_Join,   0 },
-    { SkPaint::kStroke_Style,           SkPaint::kMiter_Join,   0 },
-    { SkPaint::kStroke_Style,           SkPaint::kMiter_Join,   10 },
-    { SkPaint::kStrokeAndFill_Style,    SkPaint::kMiter_Join,   10 },
+        {SkPaint::kFill_Style, SkPaint::kMiter_Join, 0},
+        {SkPaint::kStroke_Style, SkPaint::kMiter_Join, 0},
+        {SkPaint::kStroke_Style, SkPaint::kMiter_Join, 10},
+        {SkPaint::kStrokeAndFill_Style, SkPaint::kMiter_Join, 10},
 };
 
 class StrokePathView : public Sample {
-    SkScalar    fWidth;
-    SkPath      fPath;
+    SkScalar fWidth;
+    SkPath fPath;
+
 protected:
     void onOnceBeforeDraw() override {
-//        test_blur();
+        //        test_blur();
         fWidth = SkIntToScalar(120);
 
 #if 0
@@ -146,7 +146,8 @@ protected:
     }
 
     void onDrawContent(SkCanvas* canvas) override {
-        test_huge_stroke(canvas); return;
+        test_huge_stroke(canvas);
+        return;
         canvas->translate(SkIntToScalar(10), SkIntToScalar(10));
 
         SkPaint paint;
@@ -160,10 +161,10 @@ protected:
             canvas->translate(10, 30);
 
             static const SkBlurStyle gStyle[] = {
-                kNormal_SkBlurStyle,
-                kInner_SkBlurStyle,
-                kOuter_SkBlurStyle,
-                kSolid_SkBlurStyle,
+                    kNormal_SkBlurStyle,
+                    kInner_SkBlurStyle,
+                    kOuter_SkBlurStyle,
+                    kSolid_SkBlurStyle,
             };
             for (int x = 0; x < 5; x++) {
                 SkScalar sigma = SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(4));
@@ -174,7 +175,6 @@ protected:
                     canvas->drawString("Title Bar", x * 100.0f, y * 30.0f, font, paint);
                     sigma *= 0.75f;
                 }
-
             }
             return;
         }
@@ -190,8 +190,8 @@ protected:
         p.cubicTo(x-75*r, y+75*r, x-40*r, y+125*r, x, y+85*r);
         p.cubicTo(x+40*r, y+125*r, x+75*r, y+75*r, x, y);
 #else
-        p.cubicTo(x+75*r, y+75*r, x+40*r, y+125*r, x, y+85*r);
-        p.cubicTo(x-40*r, y+125*r, x-75*r, y+75*r, x, y);
+        p.cubicTo(x + 75 * r, y + 75 * r, x + 40 * r, y + 125 * r, x, y + 85 * r);
+        p.cubicTo(x - 40 * r, y + 125 * r, x - 75 * r, y + 75 * r, x, y);
 #endif
         p.close();
         fPath = p;
@@ -212,4 +212,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new StrokePathView(); )
+DEF_SAMPLE(return new StrokePathView();)

@@ -8,9 +8,9 @@
 #ifndef GrBackendDrawableInfo_DEFINED
 #define GrBackendDrawableInfo_DEFINED
 
-#include "GrTypes.h"
+#include "include/gpu/GrTypes.h"
 
-#include "vk/GrVkTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
 
 class SK_API GrBackendDrawableInfo {
 public:
@@ -18,9 +18,7 @@ public:
     GrBackendDrawableInfo() : fIsValid(false) {}
 
     GrBackendDrawableInfo(const GrVkDrawableInfo& info)
-            : fIsValid(true)
-            , fBackend(GrBackendApi::kVulkan)
-            , fVkInfo(info) {}
+            : fIsValid(true), fBackend(GrBackendApi::kVulkan), fVkInfo(info) {}
 
     // Returns true if the backend texture has been initialized.
     bool isValid() const { return fIsValid; }
@@ -36,8 +34,8 @@ public:
     }
 
 private:
-    bool             fIsValid;
-    GrBackendApi     fBackend;
+    bool fIsValid;
+    GrBackendApi fBackend;
     GrVkDrawableInfo fVkInfo;
 };
 

@@ -1,19 +1,19 @@
-﻿/*
+/*
  * Copyright 2011 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkCanvas.h"
-#include "SkGradientShader.h"
-#include "SkMakeUnique.h"
+#include "include/core/SkCanvas.h"
+#include "include/effects/SkGradientShader.h"
+#include "samplecode/Sample.h"
+#include "src/core/SkMakeUnique.h"
 
 static sk_sp<SkShader> make_grad(SkScalar w, SkScalar h) {
-    SkColor colors[] = { 0xFF000000, 0xFF333333 };
-    SkPoint pts[] = { { 0, 0 }, { w, h } };
-    return SkGradientShader::MakeLinear(pts, colors, nullptr, 2, SkShader::kClamp_TileMode);
+    SkColor colors[] = {0xFF000000, 0xFF333333};
+    SkPoint pts[] = {{0, 0}, {w, h}};
+    return SkGradientShader::MakeLinear(pts, colors, nullptr, 2, SkTileMode::kClamp);
 }
 
 class BigGradientView : public Sample {
@@ -43,11 +43,11 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new BigGradientView(); )
+DEF_SAMPLE(return new BigGradientView();)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "SkRasterHandleAllocator.h"
+#include "include/core/SkRasterHandleAllocator.h"
 
 class GraphicsPort {
 protected:
@@ -58,9 +58,7 @@ public:
     virtual ~GraphicsPort() {}
 
     void save() { fCanvas->save(); }
-    void saveLayer(const SkRect& bounds, SkAlpha alpha) {
-        fCanvas->saveLayerAlpha(&bounds, alpha);
-    }
+    void saveLayer(const SkRect& bounds, SkAlpha alpha) { fCanvas->saveLayerAlpha(&bounds, alpha); }
     void restore() { fCanvas->restore(); }
 
     void translate(float x, float y) { fCanvas->translate(x, y); }
@@ -84,7 +82,7 @@ public:
 
 #ifdef SK_BUILD_FOR_MAC
 
-#include "SkCGUtils.h"
+#include "include/utils/mac/SkCGUtils.h"
 class CGGraphicsPort : public GraphicsPort {
 public:
     CGGraphicsPort(SkCanvas* canvas) : GraphicsPort(canvas) {}
@@ -92,10 +90,10 @@ public:
     void drawRect(const SkRect& r, SkColor c) override {
         CGContextRef cg = (CGContextRef)fCanvas->accessTopRasterHandle();
 
-        CGColorRef color = CGColorCreateGenericRGB(SkColorGetR(c)/255.f,
-                                                   SkColorGetG(c)/255.f,
-                                                   SkColorGetB(c)/255.f,
-                                                   SkColorGetA(c)/255.f);
+        CGColorRef color = CGColorCreateGenericRGB(SkColorGetR(c) / 255.f,
+                                                   SkColorGetG(c) / 255.f,
+                                                   SkColorGetB(c) / 255.f,
+                                                   SkColorGetA(c) / 255.f);
 
         CGContextSetFillColorWithColor(cg, color);
         CGContextFillRect(cg, CGRectMake(r.x(), r.y(), r.width(), r.height()));
@@ -126,12 +124,12 @@ public:
         if (!cg) {
             return false;
         }
-        rec->fReleaseProc = [](void* pixels, void* ctx){ CGContextRelease((CGContextRef)ctx); };
+        rec->fReleaseProc = [](void* pixels, void* ctx) { CGContextRelease((CGContextRef)ctx); };
         rec->fReleaseCtx = cg;
         rec->fPixels = CGBitmapContextGetData(cg);
         rec->fRowBytes = CGBitmapContextGetBytesPerRow(cg);
         rec->fHandle = cg;
-        CGContextSaveGState(cg);    // balanced each time updateContext is called
+        CGContextSaveGState(cg);  // balanced each time updateContext is called
         return true;
     }
 
@@ -150,9 +148,7 @@ public:
 
 #elif defined(WIN32)
 
-static RECT toRECT(const SkIRect& r) {
-    return { r.left(), r.top(), r.right(), r.bottom() };
-}
+static RECT toRECT(const SkIRect& r) { return {r.left(), r.top(), r.right(), r.bottom()}; }
 
 class GDIGraphicsPort : public GraphicsPort {
 public:
@@ -161,7 +157,8 @@ public:
     void drawRect(const SkRect& r, SkColor c) override {
         HDC hdc = (HDC)fCanvas->accessTopRasterHandle();
 
-        COLORREF cr = RGB(SkColorGetR(c), SkColorGetG(c), SkColorGetB(c));// SkEndian_Swap32(c) >> 8;
+        COLORREF cr =
+                RGB(SkColorGetR(c), SkColorGetG(c), SkColorGetB(c));  // SkEndian_Swap32(c) >> 8;
         RECT rounded = toRECT(r.round());
         FillRect(hdc, &rounded, CreateSolidBrush(cr));
 
@@ -221,8 +218,8 @@ static bool Create(int width, int height, bool is_opaque, SkRasterHandleAllocato
 }
 
 /**
-*  Subclass of SkRasterHandleAllocator that returns an HDC as its "handle".
-*/
+ *  Subclass of SkRasterHandleAllocator that returns an HDC as its "handle".
+ */
 class GDIAllocator : public SkRasterHandleAllocator {
 public:
     GDIAllocator() {}
@@ -296,7 +293,7 @@ protected:
 
         const SkImageInfo info = SkImageInfo::MakeN32Premul(256, 256);
         std::unique_ptr<SkCanvas> c2 =
-            SkRasterHandleAllocator::MakeCanvas(skstd::make_unique<MyAllocator>(), info);
+                SkRasterHandleAllocator::MakeCanvas(skstd::make_unique<MyAllocator>(), info);
         MyPort cgp(c2.get());
         doDraw(&cgp);
 
@@ -310,5 +307,5 @@ protected:
 private:
     typedef Sample INHERITED;
 };
-DEF_SAMPLE( return new RasterAllocatorSample; )
+DEF_SAMPLE(return new RasterAllocatorSample;)
 #endif

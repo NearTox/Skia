@@ -5,12 +5,20 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-
-#include "SkDashPathEffect.h"
-#include "SkPaint.h"
-#include "SkPath.h"
-#include "SkRRect.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPathEffect.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRRect.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/effects/SkDashPathEffect.h"
+#include "include/private/SkTArray.h"
+#include "include/private/SkTemplates.h"
 
 namespace skiagm {
 
@@ -39,14 +47,11 @@ public:
     }
 
 protected:
-    SkString onShortName() override {
-        return SkString("contour_start");
-    }
+    SkString onShortName() override { return SkString("contour_start"); }
 
     SkISize onISize() override { return SkISize::Make(kImageWidth, kImageHeight); }
 
     void onDraw(SkCanvas* canvas) override {
-
         drawDirs(canvas, [](const SkRect& rect, SkPath::Direction dir, unsigned startIndex) {
             SkPath path;
             path.addRect(rect, dir, startIndex);
@@ -61,7 +66,7 @@ protected:
 
         drawDirs(canvas, [](const SkRect& rect, SkPath::Direction dir, unsigned startIndex) {
             SkRRect rrect;
-            const SkVector radii[4] = { {15, 15}, {15, 15}, {15, 15}, {15, 15}};
+            const SkVector radii[4] = {{15, 15}, {15, 15}, {15, 15}, {15, 15}};
             rrect.setRectRadii(rect, radii);
 
             SkPath path;
@@ -86,7 +91,6 @@ protected:
             path.addRRect(rrect, dir, startIndex);
             return path;
         });
-
     }
 
 private:
@@ -94,7 +98,7 @@ private:
     static constexpr int kImageHeight = 600;
 
     SkPaint fDashPaint, fPointsPaint;
-    SkRect  fRect;
+    SkRect fRect;
 
     void drawDirs(SkCanvas* canvas,
                   SkPath (*makePath)(const SkRect&, SkPath::Direction, unsigned)) const {
@@ -124,6 +128,6 @@ private:
     typedef GM INHERITED;
 };
 
-DEF_GM( return new ContourStartGM(); )
+DEF_GM(return new ContourStartGM();)
 
-} // namespace skiagm
+}  // namespace skiagm

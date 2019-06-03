@@ -6,17 +6,16 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkDraw_DEFINED
 #define SkDraw_DEFINED
 
-#include "SkCanvas.h"
-#include "SkGlyphRunPainter.h"
-#include "SkMask.h"
-#include "SkPaint.h"
-#include "SkPixmap.h"
-#include "SkStrokeRec.h"
-#include "SkVertices.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPixmap.h"
+#include "include/core/SkStrokeRec.h"
+#include "include/core/SkVertices.h"
+#include "src/core/SkGlyphRunPainter.h"
+#include "src/core/SkMask.h"
 
 class SkBitmap;
 class SkClipStack;
@@ -33,15 +32,15 @@ class SkDraw : public SkGlyphRunListPainter::BitmapDevicePainter {
 public:
     SkDraw();
 
-    void    drawPaint(const SkPaint&) const;
-    void    drawPoints(SkCanvas::PointMode, size_t count, const SkPoint[],
-                       const SkPaint&, SkBaseDevice*) const;
-    void    drawRect(const SkRect& prePaintRect, const SkPaint&, const SkMatrix* paintMatrix,
-                     const SkRect* postPaintRect) const;
-    void    drawRect(const SkRect& rect, const SkPaint& paint) const {
+    void drawPaint(const SkPaint&) const;
+    void drawPoints(SkCanvas::PointMode, size_t count, const SkPoint[], const SkPaint&,
+                    SkBaseDevice*) const;
+    void drawRect(const SkRect& prePaintRect, const SkPaint&, const SkMatrix* paintMatrix,
+                  const SkRect* postPaintRect) const;
+    void drawRect(const SkRect& rect, const SkPaint& paint) const {
         this->drawRect(rect, paint, nullptr, nullptr);
     }
-    void    drawRRect(const SkRRect&, const SkPaint&) const;
+    void drawRRect(const SkRRect&, const SkPaint&) const;
     /**
      *  To save on mallocs, we allow a flag that tells us that srcPath is
      *  mutable, so that we don't have to make copies of it as we transform it.
@@ -51,23 +50,23 @@ public:
      *  affect the geometry/rasterization, then the pre matrix can just be
      *  pre-concated with the current matrix.
      */
-    void    drawPath(const SkPath& path, const SkPaint& paint,
-                     const SkMatrix* prePathMatrix = nullptr, bool pathIsMutable = false) const {
+    void drawPath(const SkPath& path, const SkPaint& paint, const SkMatrix* prePathMatrix = nullptr,
+                  bool pathIsMutable = false) const {
         this->drawPath(path, paint, prePathMatrix, pathIsMutable, false);
     }
 
     /* If dstOrNull is null, computes a dst by mapping the bitmap's bounds through the matrix. */
-    void    drawBitmap(const SkBitmap&, const SkMatrix&, const SkRect* dstOrNull,
-                       const SkPaint&) const;
-    void    drawSprite(const SkBitmap&, int x, int y, const SkPaint&) const;
-    void    drawGlyphRunList(const SkGlyphRunList& glyphRunList,
-                             SkGlyphRunListPainter* glyphPainter) const;
-    void    drawVertices(SkVertices::VertexMode mode, int vertexCount,
-                         const SkPoint vertices[], const SkPoint textures[],
-                         const SkColor colors[], const SkVertices::BoneIndices boneIndices[],
-                         const SkVertices::BoneWeights boneWeights[], SkBlendMode bmode,
-                         const uint16_t indices[], int ptCount,
-                         const SkPaint& paint, const SkVertices::Bone bones[], int boneCount) const;
+    void drawBitmap(const SkBitmap&, const SkMatrix&, const SkRect* dstOrNull,
+                    const SkPaint&) const;
+    void drawSprite(const SkBitmap&, int x, int y, const SkPaint&) const;
+    void drawGlyphRunList(const SkGlyphRunList& glyphRunList,
+                          SkGlyphRunListPainter* glyphPainter) const;
+    void drawVertices(SkVertices::VertexMode mode, int vertexCount, const SkPoint vertices[],
+                      const SkPoint textures[], const SkColor colors[],
+                      const SkVertices::BoneIndices boneIndices[],
+                      const SkVertices::BoneWeights boneWeights[], SkBlendMode bmode,
+                      const uint16_t indices[], int ptCount, const SkPaint& paint,
+                      const SkVertices::Bone bones[], int boneCount) const;
 
     /**
      *  Overwrite the target with the path's coverage (i.e. its mask).
@@ -77,12 +76,11 @@ public:
      */
     void drawPathCoverage(const SkPath& src, const SkPaint& paint,
                           SkBlitter* customBlitter = nullptr) const {
-        bool isHairline = paint.getStyle() == SkPaint::kStroke_Style &&
-                          paint.getStrokeWidth() > 0;
+        bool isHairline = paint.getStyle() == SkPaint::kStroke_Style && paint.getStrokeWidth() > 0;
         this->drawPath(src, paint, nullptr, false, !isHairline, customBlitter);
     }
 
-    void paintPaths(SkSpan<const SkGlyphRunListPainter::PathAndPos> pathsAndPositions,
+    void paintPaths(SkSpan<const SkPathPos> pathsAndPositions,
                     SkScalar scale,
                     const SkPaint& paint) const override;
 
@@ -97,19 +95,13 @@ public:
         that must be done afterwards (by calling filterMask). The maskfilter is provided
         solely to assist in computing the mask's bounds (if the mode requests that).
     */
-    static bool DrawToMask(const SkPath& devPath, const SkIRect* clipBounds,
-                           const SkMaskFilter*, const SkMatrix* filterMatrix,
-                           SkMask* mask, SkMask::CreateMode mode,
+    static bool DrawToMask(const SkPath& devPath, const SkIRect* clipBounds, const SkMaskFilter*,
+                           const SkMatrix* filterMatrix, SkMask* mask, SkMask::CreateMode mode,
                            SkStrokeRec::InitStyle style);
 
     void drawDevMask(const SkMask& mask, const SkPaint&) const;
 
-    enum RectType {
-        kHair_RectType,
-        kFill_RectType,
-        kStroke_RectType,
-        kPath_RectType
-    };
+    enum RectType { kHair_RectType, kFill_RectType, kStroke_RectType, kPath_RectType };
 
     /**
      *  Based on the paint's style, strokeWidth, and the matrix, classify how
@@ -119,13 +111,13 @@ public:
      *  Iff RectType == kStroke_RectType, then strokeSize is set to the device
      *  width and height of the stroke.
      */
-    static RectType ComputeRectType(const SkPaint&, const SkMatrix&,
-                                    SkPoint* strokeSize);
+    static RectType ComputeRectType(const SkPaint&, const SkMatrix&, SkPoint* strokeSize);
 
     static bool ShouldDrawTextAsPaths(const SkFont&, const SkPaint&, const SkMatrix&,
                                       SkScalar sizeLimit = 1024);
 
-    static SkScalar ComputeResScaleForStroking(const SkMatrix& );
+    static SkScalar ComputeResScaleForStroking(const SkMatrix&);
+
 private:
     void drawBitmapAsMask(const SkBitmap&, const SkPaint&) const;
 
@@ -154,9 +146,9 @@ private:
     bool SK_WARN_UNUSED_RESULT computeConservativeLocalClipBounds(SkRect* bounds) const;
 
 public:
-    SkPixmap        fDst;
-    const SkMatrix* fMatrix{nullptr};        // required
-    const SkRasterClip* fRC{nullptr};        // required
+    SkPixmap fDst;
+    const SkMatrix* fMatrix{nullptr};  // required
+    const SkRasterClip* fRC{nullptr};  // required
 
     // optional, will be same dimensions as fDst if present
     const SkPixmap* fCoverage{nullptr};
@@ -164,7 +156,7 @@ public:
 #ifdef SK_DEBUG
     void validate() const;
 #else
-    void validate() const {}
+    void validate() const noexcept {}
 #endif
 };
 

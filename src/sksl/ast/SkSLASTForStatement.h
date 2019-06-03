@@ -8,7 +8,7 @@
 #ifndef SKSL_ASTFORSTATEMENT
 #define SKSL_ASTFORSTATEMENT
 
-#include "SkSLASTStatement.h"
+#include "src/sksl/ast/SkSLASTStatement.h"
 
 namespace SkSL {
 
@@ -17,13 +17,13 @@ namespace SkSL {
  */
 struct ASTForStatement : public ASTStatement {
     ASTForStatement(int offset, std::unique_ptr<ASTStatement> initializer,
-                   std::unique_ptr<ASTExpression> test, std::unique_ptr<ASTExpression> next,
-                   std::unique_ptr<ASTStatement> statement)
-    : INHERITED(offset, kFor_Kind)
-    , fInitializer(std::move(initializer))
-    , fTest(std::move(test))
-    , fNext(std::move(next))
-    , fStatement(std::move(statement)) {}
+                    std::unique_ptr<ASTExpression> test, std::unique_ptr<ASTExpression> next,
+                    std::unique_ptr<ASTStatement> statement)
+            : INHERITED(offset, kFor_Kind)
+            , fInitializer(std::move(initializer))
+            , fTest(std::move(test))
+            , fNext(std::move(next))
+            , fStatement(std::move(statement)) {}
 
     String description() const override {
         String result("for (");
@@ -51,6 +51,6 @@ struct ASTForStatement : public ASTStatement {
     typedef ASTStatement INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

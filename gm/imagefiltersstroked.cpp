@@ -5,12 +5,22 @@
  * found in the LICENSE file.
  */
 
-#include "SkBlurImageFilter.h"
-#include "SkColor.h"
-#include "SkDropShadowImageFilter.h"
-#include "SkOffsetImageFilter.h"
-#include "SkScalar.h"
-#include "gm.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFilterQuality.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkBlurImageFilter.h"
+#include "include/effects/SkDropShadowImageFilter.h"
+#include "include/effects/SkOffsetImageFilter.h"
 
 #define RESIZE_FACTOR_X SkIntToScalar(2)
 #define RESIZE_FACTOR_Y SkIntToScalar(5)
@@ -19,23 +29,15 @@ namespace skiagm {
 
 class ImageFiltersStrokedGM : public GM {
 public:
-    ImageFiltersStrokedGM() {
-        this->setBGColor(0x00000000);
-    }
+    ImageFiltersStrokedGM() { this->setBGColor(0x00000000); }
 
 protected:
+    SkString onShortName() override { return SkString("imagefiltersstroked"); }
 
-    SkString onShortName() override {
-        return SkString("imagefiltersstroked");
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(860, 500);
-    }
+    SkISize onISize() override { return SkISize::Make(860, 500); }
 
     static void draw_circle(SkCanvas* canvas, const SkRect& r, const SkPaint& paint) {
-        canvas->drawCircle(r.centerX(), r.centerY(),
-                           r.width() * 2 / 5, paint);
+        canvas->drawCircle(r.centerX(), r.centerY(), r.width() * 2 / 5, paint);
     }
 
     static void draw_line(SkCanvas* canvas, const SkRect& r, const SkPaint& paint) {
@@ -48,7 +50,9 @@ protected:
 
     void onDraw(SkCanvas* canvas) override {
         void (*drawProc[])(SkCanvas*, const SkRect&, const SkPaint&) = {
-            draw_line, draw_rect, draw_circle,
+                draw_line,
+                draw_rect,
+                draw_circle,
         };
 
         canvas->clear(SK_ColorBLACK);
@@ -57,12 +61,12 @@ protected:
         resizeMatrix.setScale(RESIZE_FACTOR_X, RESIZE_FACTOR_Y);
 
         sk_sp<SkImageFilter> filters[] = {
-            SkBlurImageFilter::Make(5, 5, nullptr),
-            SkDropShadowImageFilter::Make(10, 10, 3, 3, SK_ColorGREEN,
-                SkDropShadowImageFilter::kDrawShadowAndForeground_ShadowMode,
-                nullptr),
-            SkOffsetImageFilter::Make(-16, 32, nullptr),
-            SkImageFilter::MakeMatrixFilter(resizeMatrix, kNone_SkFilterQuality, nullptr),
+                SkBlurImageFilter::Make(5, 5, nullptr),
+                SkDropShadowImageFilter::Make(
+                        10, 10, 3, 3, SK_ColorGREEN,
+                        SkDropShadowImageFilter::kDrawShadowAndForeground_ShadowMode, nullptr),
+                SkOffsetImageFilter::Make(-16, 32, nullptr),
+                SkImageFilter::MakeMatrixFilter(resizeMatrix, kNone_SkFilterQuality, nullptr),
         };
 
         SkRect r = SkRect::MakeWH(64, 64);
@@ -82,8 +86,7 @@ protected:
                 if (2 == j) {
                     canvas->translate(16, -32);
                 } else if (3 == j) {
-                    canvas->scale(SkScalarInvert(RESIZE_FACTOR_X),
-                                  SkScalarInvert(RESIZE_FACTOR_Y));
+                    canvas->scale(SkScalarInvert(RESIZE_FACTOR_X), SkScalarInvert(RESIZE_FACTOR_Y));
                 }
                 paint.setImageFilter(filters[j]);
                 drawProc[i](canvas, r, paint);
@@ -103,4 +106,4 @@ private:
 
 DEF_GM(return new ImageFiltersStrokedGM;)
 
-}
+}  // namespace skiagm

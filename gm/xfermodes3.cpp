@@ -5,15 +5,32 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkBitmap.h"
-#include "SkGradientShader.h"
-#include "SkSurface.h"
-#include "SkBlendModePriv.h"
-#include "SkColorPriv.h"
-#include "SkTextUtils.h"
-#include "GrContext.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkGradientShader.h"
+#include "tools/ToolUtils.h"
+
+#include <string.h>
 
 namespace skiagm {
 
@@ -23,49 +40,42 @@ namespace skiagm {
  */
 class Xfermodes3GM : public GM {
 public:
-    Xfermodes3GM() { this->setBGColor(sk_tool_utils::color_to_565(0xFF70D0E0)); }
+    Xfermodes3GM() { this->setBGColor(ToolUtils::color_to_565(0xFF70D0E0)); }
 
 protected:
-    SkString onShortName() override {
-        return SkString("xfermodes3");
-    }
+    SkString onShortName() override { return SkString("xfermodes3"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(630, 1215);
-    }
+    SkISize onISize() override { return SkISize::Make(630, 1215); }
 
     void onDraw(SkCanvas* canvas) override {
         canvas->translate(SkIntToScalar(10), SkIntToScalar(20));
 
-        SkFont font(sk_tool_utils::create_portable_typeface());
+        SkFont font(ToolUtils::create_portable_typeface());
         SkPaint labelP;
 
-        constexpr SkColor kSolidColors[] = {
-            SK_ColorTRANSPARENT,
-            SK_ColorBLUE,
-            0x80808000
-        };
+        constexpr SkColor kSolidColors[] = {SK_ColorTRANSPARENT, SK_ColorBLUE, 0x80808000};
 
         constexpr SkColor kBmpAlphas[] = {
-            0xff,
-            0x80,
+                0xff,
+                0x80,
         };
 
         auto tempSurface(this->makeTempSurface(canvas, kSize, kSize));
 
         int test = 0;
         int x = 0, y = 0;
-        constexpr struct { SkPaint::Style fStyle; SkScalar fWidth; } kStrokes[] = {
-            {SkPaint::kFill_Style, 0},
-            {SkPaint::kStroke_Style, SkIntToScalar(kSize) / 2},
+        constexpr struct {
+            SkPaint::Style fStyle;
+            SkScalar fWidth;
+        } kStrokes[] = {
+                {SkPaint::kFill_Style, 0},
+                {SkPaint::kStroke_Style, SkIntToScalar(kSize) / 2},
         };
         for (size_t s = 0; s < SK_ARRAY_COUNT(kStrokes); ++s) {
             for (size_t m = 0; m <= (size_t)SkBlendMode::kLastMode; ++m) {
                 SkBlendMode mode = static_cast<SkBlendMode>(m);
-                canvas->drawString(SkBlendMode_Name(mode),
-                                   SkIntToScalar(x),
-                                   SkIntToScalar(y + kSize + 3) + font.getSize(),
-                                   font, labelP);
+                canvas->drawString(SkBlendMode_Name(mode), SkIntToScalar(x),
+                                   SkIntToScalar(y + kSize + 3) + font.getSize(), font, labelP);
                 for (size_t c = 0; c < SK_ARRAY_COUNT(kSolidColors); ++c) {
                     SkPaint modePaint;
                     modePaint.setBlendMode(mode);
@@ -118,9 +128,8 @@ private:
         return baseCanvas->makeSurface(info);
     }
 
-    void drawMode(SkCanvas* canvas,
-                  int x, int y, int w, int h,
-                  const SkPaint& modePaint, SkSurface* surface) {
+    void drawMode(SkCanvas* canvas, int x, int y, int w, int h, const SkPaint& modePaint,
+                  SkSurface* surface) {
         canvas->save();
         canvas->translate(SkIntToScalar(x), SkIntToScalar(y));
 
@@ -158,40 +167,33 @@ private:
 
     void onOnceBeforeDraw() override {
         const uint32_t kCheckData[] = {
-            SkPackARGB32(0xFF, 0x42, 0x41, 0x42),
-            SkPackARGB32(0xFF, 0xD6, 0xD3, 0xD6),
-            SkPackARGB32(0xFF, 0xD6, 0xD3, 0xD6),
-            SkPackARGB32(0xFF, 0x42, 0x41, 0x42)
-        };
+                SkPackARGB32(0xFF, 0x42, 0x41, 0x42), SkPackARGB32(0xFF, 0xD6, 0xD3, 0xD6),
+                SkPackARGB32(0xFF, 0xD6, 0xD3, 0xD6), SkPackARGB32(0xFF, 0x42, 0x41, 0x42)};
         SkBitmap bg;
         bg.allocN32Pixels(2, 2, true);
         memcpy(bg.getPixels(), kCheckData, sizeof(kCheckData));
 
         SkMatrix lm;
         lm.setScale(SkIntToScalar(kCheckSize), SkIntToScalar(kCheckSize));
-        fBGShader = SkShader::MakeBitmapShader(bg, SkShader::kRepeat_TileMode,
-                                               SkShader::kRepeat_TileMode, &lm);
+        fBGShader = bg.makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, &lm);
 
         SkPaint bmpPaint;
-        const SkPoint kCenter = { SkIntToScalar(kSize) / 2, SkIntToScalar(kSize) / 2 };
-        const SkColor kColors[] = {
-            SK_ColorTRANSPARENT, 0x80800000, 0xF020F060, SK_ColorWHITE
-        };
+        const SkPoint kCenter = {SkIntToScalar(kSize) / 2, SkIntToScalar(kSize) / 2};
+        const SkColor kColors[] = {SK_ColorTRANSPARENT, 0x80800000, 0xF020F060, SK_ColorWHITE};
         bmpPaint.setShader(SkGradientShader::MakeRadial(kCenter, 3 * SkIntToScalar(kSize) / 4,
                                                         kColors, nullptr, SK_ARRAY_COUNT(kColors),
-                                                        SkShader::kRepeat_TileMode));
+                                                        SkTileMode::kRepeat));
 
         SkBitmap bmp;
         bmp.allocN32Pixels(kSize, kSize);
         SkCanvas bmpCanvas(bmp);
 
         bmpCanvas.clear(SK_ColorTRANSPARENT);
-        SkRect rect = { SkIntToScalar(kSize) / 8, SkIntToScalar(kSize) / 8,
-                        7 * SkIntToScalar(kSize) / 8, 7 * SkIntToScalar(kSize) / 8};
+        SkRect rect = {SkIntToScalar(kSize) / 8, SkIntToScalar(kSize) / 8,
+                       7 * SkIntToScalar(kSize) / 8, 7 * SkIntToScalar(kSize) / 8};
         bmpCanvas.drawRect(rect, bmpPaint);
 
-        fBmpShader = SkShader::MakeBitmapShader(bmp, SkShader::kClamp_TileMode,
-                                                SkShader::kClamp_TileMode);
+        fBmpShader = bmp.makeShader();
     }
 
     enum {
@@ -210,4 +212,4 @@ private:
 
 DEF_GM(return new Xfermodes3GM;)
 
-}
+}  // namespace skiagm

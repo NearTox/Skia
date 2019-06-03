@@ -5,42 +5,33 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkBitmap.h"
-#include "SkCanvas.h"
-#include "SkClipStack.h"
-#include "SkPath.h"
-#include "SkPathOps.h"
-#include "SkPicture.h"
-#include "SkPictureRecorder.h"
-#include "SkRect.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPicture.h"
+#include "include/core/SkPictureRecorder.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
 
 namespace skiagm {
 
 class PathOpsSkpClipGM : public GM {
 public:
-    PathOpsSkpClipGM() {
-    }
+    PathOpsSkpClipGM() {}
 
 protected:
-    SkString onShortName() override {
-        return SkString("pathopsskpclip");
-    }
+    SkString onShortName() override { return SkString("pathopsskpclip"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(1200, 900);
-    }
+    SkISize onISize() override { return SkISize::Make(1200, 900); }
 
     void onDraw(SkCanvas* canvas) override {
         SkPictureRecorder recorder;
         SkCanvas* rec = recorder.beginRecording(1200, 900, nullptr, 0);
         SkPath p;
-        SkRect r = {
-            SkIntToScalar(100),
-            SkIntToScalar(200),
-            SkIntToScalar(400),
-            SkIntToScalar(700)
-        };
+        SkRect r = {SkIntToScalar(100), SkIntToScalar(200), SkIntToScalar(400), SkIntToScalar(700)};
         p.addRoundRect(r, SkIntToScalar(50), SkIntToScalar(50));
         rec->clipPath(p, true);
         rec->translate(SkIntToScalar(250), SkIntToScalar(250));
@@ -66,6 +57,6 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new PathOpsSkpClipGM; )
+DEF_GM(return new PathOpsSkpClipGM;)
 
-}
+}  // namespace skiagm

@@ -4,12 +4,12 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkIntersections.h"
-#include "SkLineParameters.h"
-#include "SkPathOpsCubic.h"
-#include "SkPathOpsCurve.h"
-#include "SkPathOpsQuad.h"
-#include "SkPathOpsRect.h"
+#include "src/pathops/SkPathOpsQuad.h"
+#include "src/pathops/SkIntersections.h"
+#include "src/pathops/SkLineParameters.h"
+#include "src/pathops/SkPathOpsCubic.h"
+#include "src/pathops/SkPathOpsCurve.h"
+#include "src/pathops/SkPathOpsRect.h"
 
 // from blackpawn.com/texts/pointinpoly
 static bool pointInTriangle(const SkDPoint fPts[3], const SkDPoint& test) {
@@ -102,7 +102,7 @@ oddMan    opp   x=oddMan^opp  x=x-oddMan  m=x>>2   x&~m
 void SkDQuad::otherPts(int oddMan, const SkDPoint* endPt[2]) const {
     for (int opp = 1; opp < kPointCount; ++opp) {
         int end = (oddMan ^ opp) - oddMan;  // choose a value not equal to oddMan
-        end &= ~(end >> 2);  // if the value went negative, set it to zero
+        end &= ~(end >> 2);                 // if the value went negative, set it to zero
         endPt[opp - 1] = &fPts[end];
     }
 }
@@ -124,8 +124,7 @@ int SkDQuad::AddValidTs(double s[], int realRoots, double* t) {
             }
             t[foundRoots++] = tValue;
         }
-nextRoot:
-        {}
+    nextRoot : {}
     }
     return foundRoots;
 }
@@ -188,10 +187,14 @@ bool SkDQuad::isLinear(int startIndex, int endIndex) const {
     // FIXME: maybe it's possible to avoid this and compare non-normalized
     lineParameters.normalize();
     double distance = lineParameters.controlPtDistance(*this);
-    double tiniest = SkTMin(SkTMin(SkTMin(SkTMin(SkTMin(fPts[0].fX, fPts[0].fY),
-            fPts[1].fX), fPts[1].fY), fPts[2].fX), fPts[2].fY);
-    double largest = SkTMax(SkTMax(SkTMax(SkTMax(SkTMax(fPts[0].fX, fPts[0].fY),
-            fPts[1].fX), fPts[1].fY), fPts[2].fX), fPts[2].fY);
+    double tiniest =
+            SkTMin(SkTMin(SkTMin(SkTMin(SkTMin(fPts[0].fX, fPts[0].fY), fPts[1].fX), fPts[1].fY),
+                          fPts[2].fX),
+                   fPts[2].fY);
+    double largest =
+            SkTMax(SkTMax(SkTMax(SkTMax(SkTMax(fPts[0].fX, fPts[0].fY), fPts[1].fX), fPts[1].fY),
+                          fPts[2].fX),
+                   fPts[2].fY);
     largest = SkTMax(largest, -tiniest);
     return approximately_zero_when_compared_to(distance, largest);
 }
@@ -200,8 +203,8 @@ SkDVector SkDQuad::dxdyAtT(double t) const {
     double a = t - 1;
     double b = 1 - 2 * t;
     double c = t;
-    SkDVector result = { a * fPts[0].fX + b * fPts[1].fX + c * fPts[2].fX,
-            a * fPts[0].fY + b * fPts[1].fY + c * fPts[2].fY };
+    SkDVector result = {a * fPts[0].fX + b * fPts[1].fX + c * fPts[2].fX,
+                        a * fPts[0].fY + b * fPts[1].fY + c * fPts[2].fY};
     if (result.fX == 0 && result.fY == 0) {
         if (zero_or_one(t)) {
             result = fPts[2] - fPts[0];
@@ -225,8 +228,8 @@ SkDPoint SkDQuad::ptAtT(double t) const {
     double a = one_t * one_t;
     double b = 2 * one_t * t;
     double c = t * t;
-    SkDPoint result = { a * fPts[0].fX + b * fPts[1].fX + c * fPts[2].fX,
-            a * fPts[0].fY + b * fPts[1].fY + c * fPts[2].fY };
+    SkDPoint result = {a * fPts[0].fX + b * fPts[1].fX + c * fPts[2].fX,
+                       a * fPts[0].fY + b * fPts[1].fY + c * fPts[2].fY};
     return result;
 }
 
@@ -243,13 +246,9 @@ static double interp_quad_coords(const double* src, double t) {
     return abc;
 }
 
-bool SkDQuad::monotonicInX() const {
-    return between(fPts[0].fX, fPts[1].fX, fPts[2].fX);
-}
+bool SkDQuad::monotonicInX() const { return between(fPts[0].fX, fPts[1].fX, fPts[2].fX); }
 
-bool SkDQuad::monotonicInY() const {
-    return between(fPts[0].fY, fPts[1].fY, fPts[2].fY);
-}
+bool SkDQuad::monotonicInY() const { return between(fPts[0].fY, fPts[1].fY, fPts[2].fY); }
 
 /*
 Given a quadratic q, t1, and t2, find a small quadratic segment.
@@ -344,16 +343,14 @@ static void interp_quad_coords(const double* src, double* dst, double t) {
     dst[8] = src[4];
 }
 
-SkDQuadPair SkDQuad::chopAt(double t) const
-{
+SkDQuadPair SkDQuad::chopAt(double t) const {
     SkDQuadPair dst;
     interp_quad_coords(&fPts[0].fX, &dst.pts[0].fX, t);
     interp_quad_coords(&fPts[0].fY, &dst.pts[0].fY, t);
     return dst;
 }
 
-static int valid_unit_divide(double numer, double denom, double* ratio)
-{
+static int valid_unit_divide(double numer, double denom, double* ratio) {
     if (numer < 0) {
         numer = -numer;
         denom = -denom;
@@ -403,7 +400,7 @@ int SkTQuad::intersectRay(SkIntersections* i, const SkDLine& line) const {
     return i->intersectRay(fQuad, line);
 }
 
-bool SkTQuad::hullIntersects(const SkDConic& conic, bool* isLinear) const  {
+bool SkTQuad::hullIntersects(const SkDConic& conic, bool* isLinear) const {
     return conic.hullIntersects(fQuad, isLinear);
 }
 
@@ -411,6 +408,4 @@ bool SkTQuad::hullIntersects(const SkDCubic& cubic, bool* isLinear) const {
     return cubic.hullIntersects(fQuad, isLinear);
 }
 
-void SkTQuad::setBounds(SkDRect* rect) const {
-    rect->setBounds(fQuad);
-}
+void SkTQuad::setBounds(SkDRect* rect) const { rect->setBounds(fQuad); }

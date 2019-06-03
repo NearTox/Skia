@@ -5,35 +5,22 @@
  * found in the LICENSE file.
  */
 
-
-#include "SkParse.h"
+#include "include/utils/SkParse.h"
 
 #include <stdlib.h>
 
-static inline bool is_between(int c, int min, int max)
-{
+static inline bool is_between(int c, int min, int max) {
     return (unsigned)(c - min) <= (unsigned)(max - min);
 }
 
-static inline bool is_ws(int c)
-{
-    return is_between(c, 1, 32);
-}
+static inline bool is_ws(int c) { return is_between(c, 1, 32); }
 
-static inline bool is_digit(int c)
-{
-    return is_between(c, '0', '9');
-}
+static inline bool is_digit(int c) { return is_between(c, '0', '9'); }
 
-static inline bool is_sep(int c)
-{
-    return is_ws(c) || c == ',' || c == ';';
-}
+static inline bool is_sep(int c) { return is_ws(c) || c == ',' || c == ';'; }
 
-static int to_hex(int c)
-{
-    if (is_digit(c))
-        return c - '0';
+static int to_hex(int c) {
+    if (is_digit(c)) return c - '0';
 
     c |= 0x20;  // make us lower-case
     if (is_between(c, 'a', 'f'))
@@ -42,160 +29,128 @@ static int to_hex(int c)
         return -1;
 }
 
-static inline bool is_hex(int c)
-{
-    return to_hex(c) >= 0;
-}
+static inline bool is_hex(int c) { return to_hex(c) >= 0; }
 
-static const char* skip_ws(const char str[])
-{
+static const char* skip_ws(const char str[]) {
     SkASSERT(str);
-    while (is_ws(*str))
-        str++;
+    while (is_ws(*str)) str++;
     return str;
 }
 
-static const char* skip_sep(const char str[])
-{
+static const char* skip_sep(const char str[]) {
     SkASSERT(str);
-    while (is_sep(*str))
-        str++;
+    while (is_sep(*str)) str++;
     return str;
 }
 
-int SkParse::Count(const char str[])
-{
+int SkParse::Count(const char str[]) {
     char c;
     int count = 0;
     goto skipLeading;
     do {
         count++;
         do {
-            if ((c = *str++) == '\0')
-                goto goHome;
+            if ((c = *str++) == '\0') goto goHome;
         } while (is_sep(c) == false);
-skipLeading:
+    skipLeading:
         do {
-            if ((c = *str++) == '\0')
-                goto goHome;
+            if ((c = *str++) == '\0') goto goHome;
         } while (is_sep(c));
     } while (true);
 goHome:
     return count;
 }
 
-int SkParse::Count(const char str[], char separator)
-{
+int SkParse::Count(const char str[], char separator) {
     char c;
     int count = 0;
     goto skipLeading;
     do {
         count++;
         do {
-            if ((c = *str++) == '\0')
-                goto goHome;
+            if ((c = *str++) == '\0') goto goHome;
         } while (c != separator);
-skipLeading:
+    skipLeading:
         do {
-            if ((c = *str++) == '\0')
-                goto goHome;
+            if ((c = *str++) == '\0') goto goHome;
         } while (c == separator);
     } while (true);
 goHome:
     return count;
 }
 
-const char* SkParse::FindHex(const char str[], uint32_t* value)
-{
+const char* SkParse::FindHex(const char str[], uint32_t* value) {
     SkASSERT(str);
     str = skip_ws(str);
 
-    if (!is_hex(*str))
-        return nullptr;
+    if (!is_hex(*str)) return nullptr;
 
     uint32_t n = 0;
     int max_digits = 8;
     int digit;
 
-    while ((digit = to_hex(*str)) >= 0)
-    {
-        if (--max_digits < 0)
-            return nullptr;
+    while ((digit = to_hex(*str)) >= 0) {
+        if (--max_digits < 0) return nullptr;
         n = (n << 4) | digit;
         str += 1;
     }
 
-    if (*str == 0 || is_ws(*str))
-    {
-        if (value)
-            *value = n;
+    if (*str == 0 || is_ws(*str)) {
+        if (value) *value = n;
         return str;
     }
     return nullptr;
 }
 
-const char* SkParse::FindS32(const char str[], int32_t* value)
-{
+const char* SkParse::FindS32(const char str[], int32_t* value) {
     SkASSERT(str);
     str = skip_ws(str);
 
     int sign = 0;
-    if (*str == '-')
-    {
+    if (*str == '-') {
         sign = -1;
         str += 1;
     }
 
-    if (!is_digit(*str))
-        return nullptr;
+    if (!is_digit(*str)) return nullptr;
 
     int n = 0;
-    while (is_digit(*str))
-    {
-        n = 10*n + *str - '0';
+    while (is_digit(*str)) {
+        n = 10 * n + *str - '0';
         str += 1;
     }
-    if (value)
-        *value = (n ^ sign) - sign;
+    if (value) *value = (n ^ sign) - sign;
     return str;
 }
 
-const char* SkParse::FindMSec(const char str[], SkMSec* value)
-{
+const char* SkParse::FindMSec(const char str[], SkMSec* value) {
     SkASSERT(str);
     str = skip_ws(str);
 
     int sign = 0;
-    if (*str == '-')
-    {
+    if (*str == '-') {
         sign = -1;
         str += 1;
     }
 
-    if (!is_digit(*str))
-        return nullptr;
+    if (!is_digit(*str)) return nullptr;
 
     int n = 0;
-    while (is_digit(*str))
-    {
-        n = 10*n + *str - '0';
+    while (is_digit(*str)) {
+        n = 10 * n + *str - '0';
         str += 1;
     }
     int remaining10s = 3;
     if (*str == '.') {
         str++;
-        while (is_digit(*str))
-        {
-            n = 10*n + *str - '0';
+        while (is_digit(*str)) {
+            n = 10 * n + *str - '0';
             str += 1;
-            if (--remaining10s == 0)
-                break;
+            if (--remaining10s == 0) break;
         }
     }
-    while (--remaining10s >= 0)
-        n *= 10;
-    if (value)
-        *value = (n ^ sign) - sign;
+    while (--remaining10s >= 0) n *= 10;
+    if (value) *value = (n ^ sign) - sign;
     return str;
 }
 
@@ -214,74 +169,59 @@ const char* SkParse::FindScalar(const char str[], SkScalar* value) {
     return stop;
 }
 
-const char* SkParse::FindScalars(const char str[], SkScalar value[], int count)
-{
+const char* SkParse::FindScalars(const char str[], SkScalar value[], int count) {
     SkASSERT(count >= 0);
 
-    if (count > 0)
-    {
-        for (;;)
-        {
+    if (count > 0) {
+        for (;;) {
             str = SkParse::FindScalar(str, value);
-            if (--count == 0 || str == nullptr)
-                break;
+            if (--count == 0 || str == nullptr) break;
 
             // keep going
             str = skip_sep(str);
-            if (value)
-                value += 1;
+            if (value) value += 1;
         }
     }
     return str;
 }
 
-static bool lookup_str(const char str[], const char** table, int count)
-{
+static bool lookup_str(const char str[], const char** table, int count) {
     while (--count >= 0)
-        if (!strcmp(str, table[count]))
-            return true;
+        if (!strcmp(str, table[count])) return true;
     return false;
 }
 
-bool SkParse::FindBool(const char str[], bool* value)
-{
-    static const char* gYes[] = { "yes", "1", "true" };
-    static const char* gNo[] = { "no", "0", "false" };
+bool SkParse::FindBool(const char str[], bool* value) {
+    static const char* gYes[] = {"yes", "1", "true"};
+    static const char* gNo[] = {"no", "0", "false"};
 
-    if (lookup_str(str, gYes, SK_ARRAY_COUNT(gYes)))
-    {
+    if (lookup_str(str, gYes, SK_ARRAY_COUNT(gYes))) {
         if (value) *value = true;
         return true;
-    }
-    else if (lookup_str(str, gNo, SK_ARRAY_COUNT(gNo)))
-    {
+    } else if (lookup_str(str, gNo, SK_ARRAY_COUNT(gNo))) {
         if (value) *value = false;
         return true;
     }
     return false;
 }
 
-int SkParse::FindList(const char target[], const char list[])
-{
-    size_t  len = strlen(target);
-    int     index = 0;
+int SkParse::FindList(const char target[], const char list[]) {
+    size_t len = strlen(target);
+    int index = 0;
 
-    for (;;)
-    {
+    for (;;) {
         const char* end = strchr(list, ',');
-        size_t      entryLen;
+        size_t entryLen;
 
-        if (end == nullptr) // last entry
+        if (end == nullptr)  // last entry
             entryLen = strlen(list);
         else
             entryLen = end - list;
 
-        if (entryLen == len && memcmp(target, list, len) == 0)
-            return index;
-        if (end == nullptr)
-            break;
+        if (entryLen == len && memcmp(target, list, len) == 0) return index;
+        if (end == nullptr) break;
 
-        list = end + 1; // skip the ','
+        list = end + 1;  // skip the ','
         index += 1;
     }
     return -1;

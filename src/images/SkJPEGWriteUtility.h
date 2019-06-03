@@ -5,16 +5,15 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkJpegUtility_DEFINED
 #define SkJpegUtility_DEFINED
 
-#include "SkJpegPriv.h"
-#include "SkStream.h"
+#include "include/core/SkStream.h"
+#include "src/codec/SkJpegPriv.h"
 
 extern "C" {
-    #include "jpeglib.h"
-    #include "jerror.h"
+#include "jerror.h"
+#include "jpeglib.h"
 }
 
 #include <setjmp.h>
@@ -28,11 +27,9 @@ void SK_API skjpeg_error_exit(j_common_ptr cinfo);
 struct SK_API skjpeg_destination_mgr : jpeg_destination_mgr {
     skjpeg_destination_mgr(SkWStream* stream);
 
-    SkWStream*  fStream;
+    SkWStream* fStream;
 
-    enum {
-        kBufferSize = 1024
-    };
+    enum { kBufferSize = 1024 };
     uint8_t fBuffer[kBufferSize];
 };
 

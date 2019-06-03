@@ -5,19 +5,19 @@
  * found in the LICENSE file.
  */
 
-#include "GrAtlasManager.h"
+#include "src/gpu/text/GrAtlasManager.h"
 
-#include "GrGlyph.h"
-#include "GrStrikeCache.h"
+#include "src/gpu/GrGlyph.h"
+#include "src/gpu/text/GrStrikeCache.h"
 
 GrAtlasManager::GrAtlasManager(GrProxyProvider* proxyProvider, GrStrikeCache* glyphCache,
                                size_t maxTextureBytes,
                                GrDrawOpAtlas::AllowMultitexturing allowMultitexturing)
-            : fAllowMultitexturing{allowMultitexturing}
-            , fProxyProvider{proxyProvider}
-            , fCaps{fProxyProvider->refCaps()}
-            , fGlyphCache{glyphCache}
-            , fAtlasConfig{fCaps->maxTextureSize(), maxTextureBytes} { }
+        : fAllowMultitexturing{allowMultitexturing}
+        , fProxyProvider{proxyProvider}
+        , fCaps{fProxyProvider->refCaps()}
+        , fGlyphCache{glyphCache}
+        , fAtlasConfig{fCaps->maxTextureSize(), maxTextureBytes} {}
 
 GrAtlasManager::~GrAtlasManager() = default;
 
@@ -47,7 +47,6 @@ static SkColorType mask_format_to_color_type(GrMaskFormat format) {
             SkDEBUGFAIL("unsupported GrMaskFormat");
             return kAlpha_8_SkColorType;
     }
-
 }
 
 void GrAtlasManager::freeAll() {
@@ -62,15 +61,15 @@ bool GrAtlasManager::hasGlyph(GrGlyph* glyph) {
 }
 
 // add to texture atlas that matches this format
-GrDrawOpAtlas::ErrorCode GrAtlasManager::addToAtlas(
-                                GrResourceProvider* resourceProvider,
-                                GrStrikeCache* glyphCache,
-                                GrTextStrike* strike, GrDrawOpAtlas::AtlasID* id,
-                                GrDeferredUploadTarget* target, GrMaskFormat format,
-                                int width, int height, const void* image, SkIPoint16* loc) {
+GrDrawOpAtlas::ErrorCode GrAtlasManager::addToAtlas(GrResourceProvider* resourceProvider,
+                                                    GrStrikeCache* glyphCache, GrTextStrike* strike,
+                                                    GrDrawOpAtlas::AtlasID* id,
+                                                    GrDeferredUploadTarget* target,
+                                                    GrMaskFormat format, int width, int height,
+                                                    const void* image, SkIPoint16* loc) {
     glyphCache->setStrikeToPreserve(strike);
-    return this->getAtlas(format)->addToAtlas(resourceProvider, id, target, width, height,
-                                              image, loc);
+    return this->getAtlas(format)->addToAtlas(resourceProvider, id, target, width, height, image,
+                                              loc);
 }
 
 void GrAtlasManager::addGlyphToBulkAndSetUseToken(GrDrawOpAtlas::BulkUseTokenUpdater* updater,
@@ -83,27 +82,27 @@ void GrAtlasManager::addGlyphToBulkAndSetUseToken(GrDrawOpAtlas::BulkUseTokenUpd
 }
 
 #ifdef SK_DEBUG
-#include "GrContextPriv.h"
-#include "GrSurfaceProxy.h"
-#include "GrSurfaceContext.h"
-#include "GrTextureProxy.h"
+#include "include/private/GrSurfaceProxy.h"
+#include "include/private/GrTextureProxy.h"
+#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrSurfaceContext.h"
 
-#include "SkBitmap.h"
-#include "SkImageEncoder.h"
-#include "SkStream.h"
 #include <stdio.h>
+#include "include/core/SkBitmap.h"
+#include "include/core/SkImageEncoder.h"
+#include "include/core/SkStream.h"
 
 /**
-  * Write the contents of the surface proxy to a PNG. Returns true if successful.
-  * @param filename      Full path to desired file
-  */
+ * Write the contents of the surface proxy to a PNG. Returns true if successful.
+ * @param filename      Full path to desired file
+ */
 static bool save_pixels(GrContext* context, GrSurfaceProxy* sProxy, const char* filename) {
     if (!sProxy) {
         return false;
     }
 
-    SkImageInfo ii = SkImageInfo::Make(sProxy->width(), sProxy->height(),
-                                       kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+    SkImageInfo ii = SkImageInfo::Make(sProxy->width(), sProxy->height(), kRGBA_8888_SkColorType,
+                                       kPremul_SkAlphaType);
     SkBitmap bm;
     if (!bm.tryAllocPixels(ii)) {
         return false;
@@ -126,13 +125,13 @@ static bool save_pixels(GrContext* context, GrSurfaceProxy* sProxy, const char* 
     SkFILEWStream file(filename);
     if (!file.isValid()) {
         SkDebugf("------ failed to create file: %s\n", filename);
-        remove(filename);   // remove any partial file
+        remove(filename);  // remove any partial file
         return false;
     }
 
     if (!SkEncodeImage(&file, bm, SkEncodedImageFormat::kPNG, 100)) {
         SkDebugf("------ failed to encode %s\n", filename);
-        remove(filename);   // remove any partial file
+        remove(filename);  // remove any partial file
         return false;
     }
 

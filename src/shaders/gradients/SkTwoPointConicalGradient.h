@@ -8,17 +8,16 @@
 #ifndef SkTwoPointConicalGradient_DEFINED
 #define SkTwoPointConicalGradient_DEFINED
 
-#include "SkColorSpaceXformer.h"
-#include "SkGradientShaderPriv.h"
+#include "src/shaders/gradients/SkGradientShaderPriv.h"
 
 class SkTwoPointConicalGradient final : public SkGradientShaderBase {
 public:
     // See https://skia.org/dev/design/conical for what focal data means and how our shader works.
     // We make it public so the GPU shader can also use it.
     struct FocalData {
-        SkScalar    fR1;        // r1 after mapping focal point to (0, 0)
-        SkScalar    fFocalX;    // f
-        bool        fIsSwapped; // whether we swapped r0, r1
+        SkScalar fR1;      // r1 after mapping focal point to (0, 0)
+        SkScalar fFocalX;  // f
+        bool fIsSwapped;   // whether we swapped r0, r1
 
         // The input r0, r1 are the radii when we map centers to {(0, 0), (1, 0)}.
         // We'll post concat matrix with our transformation matrix that maps focal point to (0, 0).
@@ -31,42 +30,36 @@ public:
         // known as the edge case where the inside circle touches the outside circle (on the focal
         // point). If we were to solve for t bruteforcely using a quadratic equation, this case
         // implies that the quadratic equation degenerates to a linear equation.
-        bool isFocalOnCircle() const { return SkScalarNearlyZero(1 - fR1); }
+        bool isFocalOnCircle() const noexcept { return SkScalarNearlyZero(1 - fR1); }
 
-        bool isSwapped() const { return fIsSwapped; }
-        bool isWellBehaved() const { return !this->isFocalOnCircle() && fR1 > 1; }
-        bool isNativelyFocal() const { return SkScalarNearlyZero(fFocalX); }
+        bool isSwapped() const noexcept { return fIsSwapped; }
+        bool isWellBehaved() const noexcept { return !this->isFocalOnCircle() && fR1 > 1; }
+        bool isNativelyFocal() const noexcept { return SkScalarNearlyZero(fFocalX); }
     };
 
-    enum class Type {
-        kRadial,
-        kStrip,
-        kFocal
-    };
+    enum class Type { kRadial, kStrip, kFocal };
 
-    static sk_sp<SkShader> Create(const SkPoint& start, SkScalar startRadius,
-                                  const SkPoint& end, SkScalar endRadius,
-                                  const Descriptor&);
+    static sk_sp<SkShader> Create(const SkPoint& start, SkScalar startRadius, const SkPoint& end,
+                                  SkScalar endRadius, const Descriptor&);
 
-    SkShader::GradientType asAGradient(GradientInfo* info) const  override;
+    SkShader::GradientType asAGradient(GradientInfo* info) const override;
 #if SK_SUPPORT_GPU
     std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
 #endif
-    bool isOpaque() const override;
+    bool isOpaque() const noexcept override;
 
     SkScalar getCenterX1() const { return SkPoint::Distance(fCenter1, fCenter2); }
-    SkScalar getStartRadius() const { return fRadius1; }
-    SkScalar getDiffRadius() const { return fRadius2 - fRadius1; }
-    const SkPoint& getStartCenter() const { return fCenter1; }
-    const SkPoint& getEndCenter() const { return fCenter2; }
-    SkScalar getEndRadius() const { return fRadius2; }
+    SkScalar getStartRadius() const noexcept { return fRadius1; }
+    SkScalar getDiffRadius() const noexcept { return fRadius2 - fRadius1; }
+    const SkPoint& getStartCenter() const noexcept { return fCenter1; }
+    const SkPoint& getEndCenter() const noexcept { return fCenter2; }
+    SkScalar getEndRadius() const noexcept { return fRadius2; }
 
-    Type getType() const { return fType; }
-    const FocalData& getFocalData() const { return fFocalData; }
+    Type getType() const noexcept { return fType; }
+    const FocalData& getFocalData() const noexcept { return fFocalData; }
 
 protected:
     void flatten(SkWriteBuffer& buffer) const override;
-    sk_sp<SkShader> onMakeColorSpace(SkColorSpaceXformer* xformer) const override;
 
     void appendGradientStages(SkArenaAlloc* alloc, SkRasterPipeline* tPipeline,
                               SkRasterPipeline* postPipeline) const override;
@@ -74,15 +67,14 @@ protected:
 private:
     SK_FLATTENABLE_HOOKS(SkTwoPointConicalGradient)
 
-    SkTwoPointConicalGradient(const SkPoint& c0, SkScalar r0,
-                              const SkPoint& c1, SkScalar r1,
+    SkTwoPointConicalGradient(const SkPoint& c0, SkScalar r0, const SkPoint& c1, SkScalar r1,
                               const Descriptor&, Type, const SkMatrix&, const FocalData&);
 
-    SkPoint  fCenter1;
-    SkPoint  fCenter2;
+    SkPoint fCenter1;
+    SkPoint fCenter2;
     SkScalar fRadius1;
     SkScalar fRadius2;
-    Type     fType;
+    Type fType;
 
     FocalData fFocalData;
 

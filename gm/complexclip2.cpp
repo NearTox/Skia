@@ -5,27 +5,28 @@
  * found in the LICENSE file.
  */
 
-
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkPath.h"
-#include "SkRandom.h"
-#include "SkRect.h"
-#include "SkRRect.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkClipOp.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRRect.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "include/utils/SkRandom.h"
+#include "src/core/SkClipOpPriv.h"
 
 namespace skiagm {
 
 class ComplexClip2GM : public GM {
 public:
-    enum Clip {
-        kRect_Clip,
-        kRRect_Clip,
-        kPath_Clip
-    };
+    enum Clip { kRect_Clip, kRRect_Clip, kPath_Clip };
 
-    ComplexClip2GM(Clip clip, bool antiAlias)
-    : fClip(clip)
-    , fAntiAlias(antiAlias) {
+    ComplexClip2GM(Clip clip, bool antiAlias) : fClip(clip), fAntiAlias(antiAlias) {
         SkScalar xA = 0.65f;
         SkScalar xF = 50.65f;
 
@@ -41,7 +42,7 @@ public:
 
 protected:
     void onOnceBeforeDraw() override {
-        this->setBGColor(SkColorSetRGB(0xDD,0xA0,0xDD));
+        this->setBGColor(SkColorSetRGB(0xDD, 0xA0, 0xDD));
 
         // offset the rects a bit so we get antialiasing even in the rect case
         SkScalar xA = 0.65f;
@@ -84,19 +85,15 @@ protected:
         fRectColors[4] = SK_ColorCYAN;
 
         const SkClipOp ops[] = {
-            kDifference_SkClipOp,
-            kIntersect_SkClipOp,
-            kUnion_SkClipOp,
-            kXOR_SkClipOp,
-            kReverseDifference_SkClipOp,
-            kReplace_SkClipOp,
+                kDifference_SkClipOp, kIntersect_SkClipOp,         kUnion_SkClipOp,
+                kXOR_SkClipOp,        kReverseDifference_SkClipOp, kReplace_SkClipOp,
         };
 
         SkRandom r;
         for (int i = 0; i < kRows; ++i) {
             for (int j = 0; j < kCols; ++j) {
                 for (int k = 0; k < 5; ++k) {
-                    fOps[j*kRows+i][k] = ops[r.nextU() % SK_ARRAY_COUNT(ops)];
+                    fOps[j * kRows + i][k] = ops[r.nextU() % SK_ARRAY_COUNT(ops)];
                 }
             }
         }
@@ -109,12 +106,12 @@ protected:
 
     static const char* ClipStr(Clip clip) {
         switch (clip) {
-        case kRect_Clip:
-            return "rect";
-        case kRRect_Clip:
-            return "rrect";
-        case kPath_Clip:
-            return "path";
+            case kRect_Clip:
+                return "rect";
+            case kRRect_Clip:
+                return "rrect";
+            case kPath_Clip:
+                return "path";
         }
         SkDEBUGFAIL("Unknown clip type.");
         return "";
@@ -126,15 +123,12 @@ protected:
         }
 
         SkString str;
-        str.printf("complexclip2_%s_%s",
-                    ClipStr(fClip),
-                    fAntiAlias ? "aa" : "bw");
+        str.printf("complexclip2_%s_%s", ClipStr(fClip), fAntiAlias ? "aa" : "bw");
         return str;
     }
 
     SkISize onISize() override {
-        return SkISize::Make(SkScalarRoundToInt(fTotalWidth),
-                             SkScalarRoundToInt(fTotalHeight));
+        return SkISize::Make(SkScalarRoundToInt(fTotalWidth), SkScalarRoundToInt(fTotalHeight));
     }
 
     void onDraw(SkCanvas* canvas) override {
@@ -143,14 +137,14 @@ protected:
         rectPaint.setStrokeWidth(-1);
 
         SkPaint fillPaint;
-        fillPaint.setColor(SkColorSetRGB(0xA0,0xDD,0xA0));
+        fillPaint.setColor(SkColorSetRGB(0xA0, 0xDD, 0xA0));
 
         for (int i = 0; i < kRows; ++i) {
             for (int j = 0; j < kCols; ++j) {
                 canvas->save();
 
-                canvas->translate(kPadX * SK_Scalar1 + (fWidth + kPadX * SK_Scalar1)*j,
-                                  kPadY * SK_Scalar1 + (fHeight + kPadY * SK_Scalar1)*i);
+                canvas->translate(kPadX * SK_Scalar1 + (fWidth + kPadX * SK_Scalar1) * j,
+                                  kPadY * SK_Scalar1 + (fHeight + kPadY * SK_Scalar1) * i);
 
                 // draw the original shapes first so we can see the
                 // antialiasing on the clipped draw
@@ -172,19 +166,13 @@ protected:
                 for (int k = 0; k < 5; ++k) {
                     switch (fClip) {
                         case kRect_Clip:
-                            canvas->clipRect(fRects[k],
-                                             fOps[j*kRows+i][k],
-                                             fAntiAlias);
+                            canvas->clipRect(fRects[k], fOps[j * kRows + i][k], fAntiAlias);
                             break;
                         case kRRect_Clip:
-                            canvas->clipRRect(fRRects[k],
-                                              fOps[j*kRows+i][k],
-                                              fAntiAlias);
+                            canvas->clipRRect(fRRects[k], fOps[j * kRows + i][k], fAntiAlias);
                             break;
                         case kPath_Clip:
-                            canvas->clipPath(fPaths[k],
-                                             fOps[j*kRows+i][k],
-                                             fAntiAlias);
+                            canvas->clipPath(fPaths[k], fOps[j * kRows + i][k], fAntiAlias);
                             break;
                     }
                 }
@@ -193,6 +181,7 @@ protected:
             }
         }
     }
+
 private:
     Clip fClip;
     bool fAntiAlias;
@@ -212,13 +201,13 @@ private:
 //////////////////////////////////////////////////////////////////////////////
 
 // bw
-DEF_GM( return new ComplexClip2GM(ComplexClip2GM::kRect_Clip, false); )
-DEF_GM( return new ComplexClip2GM(ComplexClip2GM::kRRect_Clip, false); )
-DEF_GM( return new ComplexClip2GM(ComplexClip2GM::kPath_Clip, false); )
+DEF_GM(return new ComplexClip2GM(ComplexClip2GM::kRect_Clip, false);)
+DEF_GM(return new ComplexClip2GM(ComplexClip2GM::kRRect_Clip, false);)
+DEF_GM(return new ComplexClip2GM(ComplexClip2GM::kPath_Clip, false);)
 
 // aa
-DEF_GM( return new ComplexClip2GM(ComplexClip2GM::kRect_Clip, true); )
-DEF_GM( return new ComplexClip2GM(ComplexClip2GM::kRRect_Clip, true); )
-DEF_GM( return new ComplexClip2GM(ComplexClip2GM::kPath_Clip, true); )
+DEF_GM(return new ComplexClip2GM(ComplexClip2GM::kRect_Clip, true);)
+DEF_GM(return new ComplexClip2GM(ComplexClip2GM::kRRect_Clip, true);)
+DEF_GM(return new ComplexClip2GM(ComplexClip2GM::kPath_Clip, true);)
 
-}
+}  // namespace skiagm

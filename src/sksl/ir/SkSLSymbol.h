@@ -8,7 +8,7 @@
 #ifndef SKSL_SYMBOL
 #define SKSL_SYMBOL
 
-#include "SkSLIRNode.h"
+#include "src/sksl/ir/SkSLIRNode.h"
 
 namespace SkSL {
 
@@ -25,9 +25,7 @@ struct Symbol : public IRNode {
     };
 
     Symbol(int offset, Kind kind, StringFragment name)
-    : INHERITED(offset)
-    , fKind(kind)
-    , fName(name) {}
+            : INHERITED(offset), fKind(kind), fName(name) {}
 
     virtual ~Symbol() {}
 
@@ -37,6 +35,6 @@ struct Symbol : public IRNode {
     typedef IRNode INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "SkJpegDecoderMgr.h"
+#include "src/codec/SkJpegDecoderMgr.h"
 
-#include "SkJpegUtility.h"
+#include "src/codec/SkJpegUtility.h"
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
-    #include "SkAndroidFrameworkUtils.h"
+#include "include/android/SkAndroidFrameworkUtils.h"
 #endif
 
 /*
@@ -25,28 +25,26 @@ static void print_message(const j_common_ptr info, const char caller[]) {
 /*
  * Reporting function for error and warning messages.
  */
-static void output_message(j_common_ptr info) {
-    print_message(info, "output_message");
-}
+static void output_message(j_common_ptr info) { print_message(info, "output_message"); }
 
 static void progress_monitor(j_common_ptr info) {
-  int scan = ((j_decompress_ptr)info)->input_scan_number;
-  // Progressive images with a very large number of scans can cause the
-  // decoder to hang.  Here we use the progress monitor to abort on
-  // a very large number of scans.  100 is arbitrary, but much larger
-  // than the number of scans we might expect in a normal image.
-  if (scan >= 100) {
-      skjpeg_err_exit(info);
-  }
+    int scan = ((j_decompress_ptr)info)->input_scan_number;
+    // Progressive images with a very large number of scans can cause the
+    // decoder to hang.  Here we use the progress monitor to abort on
+    // a very large number of scans.  100 is arbitrary, but much larger
+    // than the number of scans we might expect in a normal image.
+    if (scan >= 100) {
+        skjpeg_err_exit(info);
+    }
 }
 
 bool JpegDecoderMgr::returnFalse(const char caller[]) {
-    print_message((j_common_ptr) &fDInfo, caller);
+    print_message((j_common_ptr)&fDInfo, caller);
     return false;
 }
 
 SkCodec::Result JpegDecoderMgr::returnFailure(const char caller[], SkCodec::Result result) {
-    print_message((j_common_ptr) &fDInfo, caller);
+    print_message((j_common_ptr)&fDInfo, caller);
     return result;
 }
 
@@ -75,10 +73,7 @@ bool JpegDecoderMgr::getEncodedColor(SkEncodedInfo::Color* outColor) {
     }
 }
 
-JpegDecoderMgr::JpegDecoderMgr(SkStream* stream)
-    : fSrcMgr(stream)
-    , fInit(false)
-{
+JpegDecoderMgr::JpegDecoderMgr(SkStream* stream) : fSrcMgr(stream), fInit(false) {
     // Error manager must be set before any calls to libjeg in order to handle failures
     fDInfo.err = jpeg_std_error(&fErrorMgr);
     fErrorMgr.error_exit = skjpeg_err_exit;

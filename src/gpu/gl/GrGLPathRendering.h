@@ -8,12 +8,12 @@
 #ifndef GrGLPathRendering_DEFINED
 #define GrGLPathRendering_DEFINED
 
-#include "SkRefCnt.h"
-#include "GrGpu.h"
-#include "GrPathRendering.h"
-#include "GrStencilSettings.h"
-#include "gl/GrGLTypes.h"
-#include "glsl/GrGLSLUtil.h"
+#include "include/core/SkRefCnt.h"
+#include "include/gpu/gl/GrGLTypes.h"
+#include "src/gpu/GrGpu.h"
+#include "src/gpu/GrPathRendering.h"
+#include "src/gpu/GrStencilSettings.h"
+#include "src/gpu/glsl/GrGLSLUtil.h"
 
 class GrGLNameAllocator;
 class GrGLGpu;
@@ -46,14 +46,11 @@ public:
      */
     void disconnect(GrGpu::DisconnectType);
 
-    bool shouldBindFragmentInputs() const {
-        return fCaps.bindFragmentInputSupport;
-    }
+    bool shouldBindFragmentInputs() const { return fCaps.bindFragmentInputSupport; }
 
     // Functions for "separable shader" texturing support.
-    void setProgramPathFragmentInputTransform(GrGLuint program, GrGLint location,
-                                              GrGLenum genMode, GrGLint components,
-                                              const SkMatrix&);
+    void setProgramPathFragmentInputTransform(GrGLuint program, GrGLint location, GrGLenum genMode,
+                                              GrGLint components, const SkMatrix&);
 
     /* Sets the projection matrix for path rendering */
     void setProjectionMatrix(const SkMatrix& matrix,
@@ -65,12 +62,9 @@ public:
 
 protected:
     void onStencilPath(const StencilPathArgs&, const GrPath*) override;
-    void onDrawPath(GrRenderTarget*, GrSurfaceOrigin,
-                    const GrPrimitiveProcessor&,
-                    const GrPipeline&,
-                    const GrPipeline::FixedDynamicState&,
-                    const GrStencilSettings&,
-                    const GrPath*) override;
+    void onDrawPath(GrRenderTarget*, GrSurfaceOrigin, const GrPrimitiveProcessor&,
+                    const GrPipeline&, const GrPipeline::FixedDynamicState&,
+                    const GrStencilSettings&, const GrPath*) override;
 
 private:
     /**
@@ -83,8 +77,8 @@ private:
     void flushPathStencilSettings(const GrStencilSettings&);
 
     struct MatrixState {
-        SkMatrix        fViewMatrix;
-        SkISize         fRenderTargetSize;
+        SkMatrix fViewMatrix;
+        SkISize fRenderTargetSize;
         GrSurfaceOrigin fRenderTargetOrigin;
 
         MatrixState() { this->invalidate(); }
@@ -92,22 +86,20 @@ private:
             fViewMatrix = SkMatrix::InvalidMatrix();
             fRenderTargetSize.fWidth = -1;
             fRenderTargetSize.fHeight = -1;
-            fRenderTargetOrigin = (GrSurfaceOrigin) -1;
+            fRenderTargetOrigin = (GrSurfaceOrigin)-1;
         }
 
         /**
          * Gets a matrix that goes from local coordinates to GL normalized device coords.
          */
-        template<int Size> void getRTAdjustedGLMatrix(float* destMatrix) {
+        template <int Size> void getRTAdjustedGLMatrix(float* destMatrix) {
             SkMatrix combined;
             if (kBottomLeft_GrSurfaceOrigin == fRenderTargetOrigin) {
-                combined.setAll(SkIntToScalar(2) / fRenderTargetSize.fWidth, 0, -SK_Scalar1,
-                                0, -SkIntToScalar(2) / fRenderTargetSize.fHeight, SK_Scalar1,
-                                0, 0, 1);
+                combined.setAll(SkIntToScalar(2) / fRenderTargetSize.fWidth, 0, -SK_Scalar1, 0,
+                                -SkIntToScalar(2) / fRenderTargetSize.fHeight, SK_Scalar1, 0, 0, 1);
             } else {
-                combined.setAll(SkIntToScalar(2) / fRenderTargetSize.fWidth, 0, -SK_Scalar1,
-                                0, SkIntToScalar(2) / fRenderTargetSize.fHeight, -SK_Scalar1,
-                                0, 0, 1);
+                combined.setAll(SkIntToScalar(2) / fRenderTargetSize.fWidth, 0, -SK_Scalar1, 0,
+                                SkIntToScalar(2) / fRenderTargetSize.fHeight, -SK_Scalar1, 0, 0, 1);
             }
             combined.preConcat(fViewMatrix);
             GrGLSLGetMatrix<Size>(destMatrix, combined);

@@ -5,32 +5,41 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkPath.h"
-#include "SkResourceCache.h"
-#include "SkShadowUtils.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkPoint3.h"
+#include "include/core/SkRRect.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkShadowFlags.h"
+#include "include/private/SkTArray.h"
+#include "include/private/SkTDArray.h"
+#include "include/utils/SkShadowUtils.h"
+
+#include <initializer_list>
 
 void draw_shadow(SkCanvas* canvas, const SkPath& path, SkScalar height, SkColor color,
                  SkPoint3 lightPos, SkScalar lightR, bool isAmbient, uint32_t flags) {
     SkScalar ambientAlpha = isAmbient ? .5f : 0.f;
     SkScalar spotAlpha = isAmbient ? 0.f : .5f;
-    SkColor ambientColor = SkColorSetARGB(ambientAlpha*SkColorGetA(color), SkColorGetR(color),
+    SkColor ambientColor = SkColorSetARGB(ambientAlpha * SkColorGetA(color), SkColorGetR(color),
                                           SkColorGetG(color), SkColorGetB(color));
-    SkColor spotColor = SkColorSetARGB(spotAlpha*SkColorGetA(color), SkColorGetR(color),
+    SkColor spotColor = SkColorSetARGB(spotAlpha * SkColorGetA(color), SkColorGetR(color),
                                        SkColorGetG(color), SkColorGetB(color));
-    SkShadowUtils::DrawShadow(canvas, path, SkPoint3{ 0, 0, height}, lightPos, lightR,
-                              ambientColor, spotColor, flags);
+    SkShadowUtils::DrawShadow(canvas, path, SkPoint3{0, 0, height}, lightPos, lightR, ambientColor,
+                              spotColor, flags);
 }
 
 static constexpr int kW = 800;
 static constexpr int kH = 960;
 
-enum ShadowMode {
-    kDebugColorNoOccluders,
-    kDebugColorOccluders,
-    kGrayscale
-};
+enum ShadowMode { kDebugColorNoOccluders, kDebugColorOccluders, kGrayscale };
 
 void draw_paths(SkCanvas* canvas, ShadowMode mode) {
     SkTArray<SkPath> paths;
@@ -70,7 +79,7 @@ void draw_paths(SkCanvas* canvas, ShadowMode mode) {
 
     // transform light position relative to canvas to handle tiling
     SkPoint lightXY = canvas->getTotalMatrix().mapXY(250, 400);
-    SkPoint3 lightPos = { lightXY.fX, lightXY.fY, 500 };
+    SkPoint3 lightPos = {lightXY.fX, lightXY.fY, 500};
 
     canvas->translate(3 * kPad, 3 * kPad);
     canvas->save();
@@ -82,7 +91,7 @@ void draw_paths(SkCanvas* canvas, ShadowMode mode) {
     m->setRotate(33.f, 25.f, 25.f);
     m->postScale(1.2f, 0.8f, 25.f, 25.f);
     for (auto& m : matrices) {
-        for (int flags : { kNone_ShadowFlag, kTransparentOccluder_ShadowFlag }) {
+        for (int flags : {kNone_ShadowFlag, kTransparentOccluder_ShadowFlag}) {
             for (const auto& path : paths) {
                 SkRect postMBounds = path.getBounds();
                 m.mapRect(&postMBounds);
@@ -100,10 +109,9 @@ void draw_paths(SkCanvas* canvas, ShadowMode mode) {
                 canvas->concat(m);
 
                 if (kDebugColorNoOccluders == mode || kDebugColorOccluders == mode) {
-                    draw_shadow(canvas, path, kHeight, SK_ColorRED, lightPos, kLightR,
-                                true, flags);
-                    draw_shadow(canvas, path, kHeight, SK_ColorBLUE, lightPos, kLightR,
-                                false, flags);
+                    draw_shadow(canvas, path, kHeight, SK_ColorRED, lightPos, kLightR, true, flags);
+                    draw_shadow(canvas, path, kHeight, SK_ColorBLUE, lightPos, kLightR, false,
+                                flags);
                 } else if (kGrayscale == mode) {
                     SkColor ambientColor = SkColorSetARGB(0.1f * 255, 0, 0, 0);
                     SkColor spotColor = SkColorSetARGB(0.25f * 255, 0, 0, 0);
@@ -157,15 +165,15 @@ void draw_paths(SkCanvas* canvas, ShadowMode mode) {
             canvas->concat(m);
 
             if (kDebugColorNoOccluders == mode || kDebugColorOccluders == mode) {
-                draw_shadow(canvas, path, kHeight, SK_ColorRED, lightPos, kLightR,
-                            true, kNone_ShadowFlag);
-                draw_shadow(canvas, path, kHeight, SK_ColorBLUE, lightPos, kLightR,
-                            false, kNone_ShadowFlag);
+                draw_shadow(canvas, path, kHeight, SK_ColorRED, lightPos, kLightR, true,
+                            kNone_ShadowFlag);
+                draw_shadow(canvas, path, kHeight, SK_ColorBLUE, lightPos, kLightR, false,
+                            kNone_ShadowFlag);
             } else if (kGrayscale == mode) {
                 SkColor ambientColor = SkColorSetARGB(0.1f * 255, 0, 0, 0);
                 SkColor spotColor = SkColorSetARGB(0.25f * 255, 0, 0, 0);
-                SkShadowUtils::DrawShadow(canvas, path, SkPoint3{ 0, 0, kHeight }, lightPos,
-                                          kLightR, ambientColor, spotColor, kNone_ShadowFlag);
+                SkShadowUtils::DrawShadow(canvas, path, SkPoint3{0, 0, kHeight}, lightPos, kLightR,
+                                          ambientColor, spotColor, kNone_ShadowFlag);
             }
 
             SkPaint paint;
@@ -201,14 +209,8 @@ void draw_paths(SkCanvas* canvas, ShadowMode mode) {
     }
 }
 
-DEF_SIMPLE_GM(shadow_utils, canvas, kW, kH) {
-    draw_paths(canvas, kDebugColorNoOccluders);
-}
+DEF_SIMPLE_GM(shadow_utils, canvas, kW, kH) { draw_paths(canvas, kDebugColorNoOccluders); }
 
-DEF_SIMPLE_GM(shadow_utils_occl, canvas, kW, kH) {
-    draw_paths(canvas, kDebugColorOccluders);
-}
+DEF_SIMPLE_GM(shadow_utils_occl, canvas, kW, kH) { draw_paths(canvas, kDebugColorOccluders); }
 
-DEF_SIMPLE_GM(shadow_utils_gray, canvas, kW, kH) {
-    draw_paths(canvas, kGrayscale);
-}
+DEF_SIMPLE_GM(shadow_utils_gray, canvas, kW, kH) { draw_paths(canvas, kGrayscale); }

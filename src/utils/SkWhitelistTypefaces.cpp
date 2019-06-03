@@ -5,20 +5,20 @@
  * found in the LICENSE file.
  */
 
-#include "SkFontDescriptor.h"
-#include "SkOpts.h"
-#include "SkStream.h"
-#include "SkString.h"
-#include "SkTypeface.h"
-#include "SkUTF.h"
-#include "../sfnt/SkOTUtils.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypeface.h"
+#include "src/core/SkFontDescriptor.h"
+#include "src/core/SkOpts.h"
+#include "src/sfnt/SkOTUtils.h"
+#include "src/utils/SkUTF.h"
 
 #include "SkWhitelistChecksums.inc"
 
 #define WHITELIST_DEBUG 0
 
-extern void WhitelistSerializeTypeface(const SkTypeface*, SkWStream* );
-sk_sp<SkTypeface> WhitelistDeserializeTypeface(SkStream* );
+extern void WhitelistSerializeTypeface(const SkTypeface*, SkWStream*);
+sk_sp<SkTypeface> WhitelistDeserializeTypeface(SkStream*);
 extern bool CheckChecksums();
 extern bool GenerateChecksums();
 
@@ -38,10 +38,9 @@ static bool font_name_is_local(const char* fontName, SkFontStyle style) {
 }
 
 static int whitelist_name_index(const SkTypeface* tf) {
-
     SkString fontNameStr;
     sk_sp<SkTypeface::LocalizedStrings> nameIter =
-        SkOTUtils::LocalizedStrings_NameTable::MakeForFamilyNames(*tf);
+            SkOTUtils::LocalizedStrings_NameTable::MakeForFamilyNames(*tf);
     SkTypeface::LocalizedString familyNameLocalized;
     while (nameIter->next(&familyNameLocalized)) {
         fontNameStr = familyNameLocalized.fString;
@@ -54,7 +53,7 @@ static int whitelist_name_index(const SkTypeface* tf) {
     }
 #if WHITELIST_DEBUG
     sk_sp<SkTypeface::LocalizedStrings> debugIter =
-        SkOTUtils::LocalizedStrings_NameTable::MakeForFamilyNames(*tf);
+            SkOTUtils::LocalizedStrings_NameTable::MakeForFamilyNames(*tf);
     while (debugIter->next(&familyNameLocalized)) {
         SkDebugf("no match fontName=\"%s\"\n", familyNameLocalized.fString.c_str());
     }
@@ -76,7 +75,7 @@ static uint32_t compute_checksum(const SkTypeface* tf) {
     if (!length) {
         return 0;
     }
-    data.setCount((int) length);
+    data.setCount((int)length);
     if (!fontStream->peek(data.begin(), length)) {
         return 0;
     }
@@ -219,37 +218,60 @@ bool CheckChecksums() {
 const char checksumFileName[] = "SkWhitelistChecksums.inc";
 
 const char checksumHeader[] =
-"/*"                                                                        "\n"
-" * Copyright 2015 Google Inc."                                             "\n"
-" *"                                                                        "\n"
-" * Use of this source code is governed by a BSD-style license that can be" "\n"
-" * found in the LICENSE file."                                             "\n"
-" *"                                                                        "\n"
-" * %s() in %s generated %s."                                               "\n"
-" * Run 'whitelist_typefaces --generate' to create anew."                   "\n"
-" */"                                                                       "\n"
-""                                                                          "\n"
-"#include \"SkTDArray.h\""                                                  "\n"
-""                                                                          "\n"
-"struct Whitelist {"                                                        "\n"
-"    const char* fFontName;"                                                "\n"
-"    uint32_t fChecksum;"                                                   "\n"
-"    bool fSerializedNameOnly;"                                             "\n"
-"    bool fSerializedSub;"                                                  "\n"
-"};"                                                                        "\n"
-""                                                                          "\n"
-"static Whitelist whitelist[] = {"                                          "\n";
+        "/*"
+        "\n"
+        " * Copyright 2015 Google Inc."
+        "\n"
+        " *"
+        "\n"
+        " * Use of this source code is governed by a BSD-style license that can be"
+        "\n"
+        " * found in the LICENSE file."
+        "\n"
+        " *"
+        "\n"
+        " * %s() in %s generated %s."
+        "\n"
+        " * Run 'whitelist_typefaces --generate' to create anew."
+        "\n"
+        " */"
+        "\n"
+        ""
+        "\n"
+        "#include \"SkTDArray.h\""
+        "\n"
+        ""
+        "\n"
+        "struct Whitelist {"
+        "\n"
+        "    const char* fFontName;"
+        "\n"
+        "    uint32_t fChecksum;"
+        "\n"
+        "    bool fSerializedNameOnly;"
+        "\n"
+        "    bool fSerializedSub;"
+        "\n"
+        "};"
+        "\n"
+        ""
+        "\n"
+        "static Whitelist whitelist[] = {"
+        "\n";
 
 const char checksumEntry[] =
-"    { \"%s\", 0x%08x, false, false },"                                     "\n";
+        "    { \"%s\", 0x%08x, false, false },"
+        "\n";
 
 const char checksumTrailer[] =
-"};"                                                                        "\n"
-""                                                                          "\n"
-"static const int whitelistCount = (int) SK_ARRAY_COUNT(whitelist);"        "\n";
+        "};"
+        "\n"
+        ""
+        "\n"
+        "static const int whitelistCount = (int) SK_ARRAY_COUNT(whitelist);"
+        "\n";
 
-
-#include "SkOSFile.h"
+#include "src/core/SkOSFile.h"
 
 bool GenerateChecksums() {
     FILE* file = sk_fopen(checksumFileName, kWrite_SkFILE_Flag);

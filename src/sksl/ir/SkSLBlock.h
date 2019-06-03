@@ -8,8 +8,8 @@
 #ifndef SKSL_BLOCK
 #define SKSL_BLOCK
 
-#include "SkSLStatement.h"
-#include "SkSLSymbolTable.h"
+#include "src/sksl/ir/SkSLStatement.h"
+#include "src/sksl/ir/SkSLSymbolTable.h"
 
 namespace SkSL {
 
@@ -19,9 +19,9 @@ namespace SkSL {
 struct Block : public Statement {
     Block(int offset, std::vector<std::unique_ptr<Statement>> statements,
           const std::shared_ptr<SymbolTable> symbols = nullptr)
-    : INHERITED(offset, kBlock_Kind)
-    , fSymbols(std::move(symbols))
-    , fStatements(std::move(statements)) {}
+            : INHERITED(offset, kBlock_Kind)
+            , fSymbols(std::move(symbols))
+            , fStatements(std::move(statements)) {}
 
     bool isEmpty() const override {
         for (const auto& s : fStatements) {
@@ -58,6 +58,6 @@ struct Block : public Statement {
     typedef Statement INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

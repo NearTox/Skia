@@ -8,8 +8,8 @@
 #ifndef SkDocument_DEFINED
 #define SkDocument_DEFINED
 
-#include "SkRefCnt.h"
-#include "SkScalar.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
 
 class SkCanvas;
 class SkWStream;
@@ -30,7 +30,6 @@ static constexpr SkScalar SK_ScalarDefaultRasterDPI = 72.0f;
  */
 class SK_API SkDocument : public SkRefCnt {
 public:
-
     /**
      *  Begin a new page for the document, returning the canvas that will draw
      *  into the page. The document owns this canvas, and it will go out of
@@ -74,16 +73,12 @@ protected:
     // Allows subclasses to write to the stream as pages are written.
     SkWStream* getStream() { return fStream; }
 
-    enum State {
-        kBetweenPages_State,
-        kInPage_State,
-        kClosed_State
-    };
+    enum State { kBetweenPages_State, kInPage_State, kClosed_State };
     State getState() const { return fState; }
 
 private:
     SkWStream* fStream;
-    State      fState;
+    State fState;
 
     typedef SkRefCnt INHERITED;
 };

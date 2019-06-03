@@ -8,10 +8,10 @@
 #ifndef SkAutoBlitterChoose_DEFINED
 #define SkAutoBlitterChoose_DEFINED
 
-#include "SkArenaAlloc.h"
-#include "SkBlitter.h"
-#include "SkDraw.h"
-#include "SkMacros.h"
+#include "include/private/SkArenaAlloc.h"
+#include "include/private/SkMacros.h"
+#include "src/core/SkBlitter.h"
+#include "src/core/SkDraw.h"
 
 class SkMatrix;
 class SkPaint;
@@ -25,8 +25,8 @@ public:
         this->choose(draw, matrix, paint, drawCoverage);
     }
 
-    SkBlitter*  operator->() { return fBlitter; }
-    SkBlitter*  get() const { return fBlitter; }
+    SkBlitter* operator->() { return fBlitter; }
+    SkBlitter* get() const { return fBlitter; }
 
     SkBlitter* choose(const SkDraw& draw, const SkMatrix* matrix, const SkPaint& paint,
                       bool drawCoverage = false) {
@@ -38,8 +38,8 @@ public:
 
         if (draw.fCoverage) {
             // hmm, why can't choose ignore the paint if drawCoverage is true?
-            SkBlitter* coverageBlitter = SkBlitter::Choose(*draw.fCoverage, *matrix, SkPaint(),
-                                                           &fAlloc, true);
+            SkBlitter* coverageBlitter =
+                    SkBlitter::Choose(*draw.fCoverage, *matrix, SkPaint(), &fAlloc, true);
             fBlitter = fAlloc.make<SkPairBlitter>(fBlitter, coverageBlitter);
         }
         return fBlitter;

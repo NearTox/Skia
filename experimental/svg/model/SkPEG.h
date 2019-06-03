@@ -8,8 +8,8 @@
 #ifndef SkPEG_DEFINED
 #define SkPEG_DEFINED
 
-#include "SkTArray.h"
-#include "SkTLazy.h"
+#include "include/private/SkTArray.h"
+#include "src/core/SkTLazy.h"
 
 namespace skpeg {
 
@@ -21,8 +21,7 @@ namespace skpeg {
  *
  *  Otherwise, |fNext| is nullptr and |fValue| is uninitialized.
  */
-template <typename V>
-struct MatchResult {
+template <typename V> struct MatchResult {
     MatchResult(std::nullptr_t) : fNext(nullptr) {}
     MatchResult(const char* next, const V& v) : fNext(next), fValue(&v) {}
 
@@ -31,11 +30,11 @@ struct MatchResult {
         return SkToBool(fNext);
     }
 
-    const V& operator* () const { return *fValue.get(); }
-    const V* operator->() const { return  fValue.get(); }
+    const V& operator*() const { return *fValue.get(); }
+    const V* operator->() const { return fValue.get(); }
 
     const char* fNext;
-    SkTLazy<V>  fValue;
+    SkTLazy<V> fValue;
 };
 
 /**
@@ -45,8 +44,7 @@ struct MatchResult {
  * Otherwise, |fValue| is uninitialized.
  *
  */
-template <typename E>
-struct Opt {
+template <typename E> struct Opt {
     struct V {
         V(const typename E::V* v) : fValue(v) {}
 
@@ -56,8 +54,7 @@ struct Opt {
 
     static MatchT Match(const char* in) {
         const auto m = E::Match(in);
-        return m ? MatchT(m.fNext, V(m.fValue.get()))
-                 : MatchT(in, nullptr);
+        return m ? MatchT(m.fNext, V(m.fValue.get())) : MatchT(in, nullptr);
     }
 };
 
@@ -66,13 +63,9 @@ struct Opt {
  */
 template <size_t, typename... Es> struct SelectV;
 
-template <typename E, typename... Es>
-struct SelectV<0, E, Es...> {
-    using V = typename E::V;
-};
+template <typename E, typename... Es> struct SelectV<0, E, Es...> { using V = typename E::V; };
 
-template <size_t idx, typename E, typename... Es>
-struct SelectV<idx, E, Es...> {
+template <size_t idx, typename E, typename... Es> struct SelectV<idx, E, Es...> {
     using V = typename SelectV<idx - 1, Es...>::V;
 };
 
@@ -86,22 +79,18 @@ struct SelectV<idx, E, Es...> {
  */
 template <typename... E> struct Seq;
 
-template <>
-struct Seq<> {
+template <> struct Seq<> {
     struct V {};
     using MatchT = MatchResult<V>;
 
-    static MatchT Match(const char* in) {
-        return MatchT(in, V());
-    }
+    static MatchT Match(const char* in) { return MatchT(in, V()); }
 };
 
-template <typename E, typename... Es>
-struct Seq<E, Es...> {
+template <typename E, typename... Es> struct Seq<E, Es...> {
     class V {
     public:
         V(const typename E::V& head, const typename Seq<Es...>::V& tail)
-            : fHeadV(head), fTailV(tail) {}
+                : fHeadV(head), fTailV(tail) {}
 
         template <size_t idx, typename std::enable_if<idx == 0, bool>::type = 0>
         const typename E::V& get() const {
@@ -114,7 +103,7 @@ struct Seq<E, Es...> {
         }
 
     private:
-        typename E::V          fHeadV;
+        typename E::V fHeadV;
         typename Seq<Es...>::V fTailV;
     };
     using MatchT = MatchResult<V>;
@@ -126,8 +115,7 @@ struct Seq<E, Es...> {
         }
 
         const auto tailMatch = Seq<Es...>::Match(headMatch.fNext);
-        return tailMatch ? MatchT(tailMatch.fNext, V(*headMatch, *tailMatch))
-                         : nullptr;
+        return tailMatch ? MatchT(tailMatch.fNext, V(*headMatch, *tailMatch)) : nullptr;
     }
 };
 
@@ -139,11 +127,9 @@ struct Seq<E, Es...> {
  * The (optional) match results are stored in |v1|, |v2|.
  *
  */
-template <typename E1, typename E2>
-struct Choice {
+template <typename E1, typename E2> struct Choice {
     struct V {
-        V (const typename E1::V* v1, const typename E2::V* v2) : v1(v1), v2(v2)
-        {
+        V(const typename E1::V* v1, const typename E2::V* v2) : v1(v1), v2(v2) {
             SkASSERT(!v1 || !v2);
         }
 
@@ -169,8 +155,7 @@ struct Choice {
  * Matches e greedily, and stores the match results in |fValues|.
  *
  */
-template <typename E>
-struct Any {
+template <typename E> struct Any {
     struct V {
         V(SkTArray<typename E::V>&& vs) : fValues(vs) {}
 
@@ -194,8 +179,7 @@ struct Any {
  * Same as zero-or-more, except it fails if e doesn't match at least once.
  *
  */
-template <typename E>
-using Some = Seq<E, Any<E>>;
+template <typename E> using Some = Seq<E, Any<E>>;
 
 /**
  * End-of-string atom.  Matches \0.
@@ -204,29 +188,22 @@ struct EOS {
     struct V {};
     using MatchT = MatchResult<V>;
 
-    static MatchT Match(const char* in) {
-        return (*in != '\0') ? nullptr : MatchT(in, V());
-    }
+    static MatchT Match(const char* in) { return (*in != '\0') ? nullptr : MatchT(in, V()); }
 };
-
 
 /**
  * Literal atom.  Matches a list of char literals.
  */
 template <char... Cs> struct LIT;
 
-template <>
-struct LIT<> {
+template <> struct LIT<> {
     struct V {};
     using MatchT = MatchResult<V>;
 
-    static MatchT Match(const char* in) {
-        return MatchT(in, V());
-    }
+    static MatchT Match(const char* in) { return MatchT(in, V()); }
 };
 
-template <char C, char... Cs>
-struct LIT<C, Cs...> {
+template <char C, char... Cs> struct LIT<C, Cs...> {
     struct V {};
     using MatchT = MatchResult<V>;
 
@@ -239,6 +216,6 @@ struct LIT<C, Cs...> {
     }
 };
 
-} // skpeg ns
+}  // namespace skpeg
 
-#endif // SkPEG_DEFINED
+#endif  // SkPEG_DEFINED

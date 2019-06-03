@@ -8,8 +8,8 @@
 #ifndef GrSwizzle_DEFINED
 #define GrSwizzle_DEFINED
 
-#include "GrColor.h"
-#include "SkColorData.h"
+#include "include/private/GrColor.h"
+#include "include/private/SkColorData.h"
 
 /** Represents a rgba swizzle. It can be converted either into a string or a eight bit int.
     Currently there is no way to specify an arbitrary swizzle, just some static swizzles and an
@@ -56,7 +56,6 @@ public:
         return fSwiz[i];
     }
 
-
     // The normal component swizzles map to key values 0-3. We set the key for constant 1 to the
     // next int.
     static const int k1KeyValue = 4;
@@ -88,7 +87,7 @@ public:
         key >>= 4;
         idx = (key & 15);
         float outA = component_idx_to_float(color, idx);
-        return { outR, outG, outB, outA };
+        return {outR, outG, outB, outA};
     }
 
     static constexpr GrSwizzle RGBA() { return GrSwizzle("rgba"); }
@@ -105,29 +104,42 @@ private:
 
     static constexpr int CToI(char c) {
         switch (c) {
-            case 'r': return (GrColor_SHIFT_R / 8);
-            case 'g': return (GrColor_SHIFT_G / 8);
-            case 'b': return (GrColor_SHIFT_B / 8);
-            case 'a': return (GrColor_SHIFT_A / 8);
-            case '1': return k1KeyValue;
-            default:  return -1;
+            case 'r':
+                return (GrColor_SHIFT_R / 8);
+            case 'g':
+                return (GrColor_SHIFT_G / 8);
+            case 'b':
+                return (GrColor_SHIFT_B / 8);
+            case 'a':
+                return (GrColor_SHIFT_A / 8);
+            case '1':
+                return k1KeyValue;
+            default:
+                return -1;
         }
     }
 
     static constexpr char IToC(int idx) {
         switch (8 * idx) {
-            case GrColor_SHIFT_R  : return 'r';
-            case GrColor_SHIFT_G  : return 'g';
-            case GrColor_SHIFT_B  : return 'b';
-            case GrColor_SHIFT_A  : return 'a';
-            case (k1KeyValue * 8) : return '1';
-            default:                return -1;
+            case GrColor_SHIFT_R:
+                return 'r';
+            case GrColor_SHIFT_G:
+                return 'g';
+            case GrColor_SHIFT_B:
+                return 'b';
+            case GrColor_SHIFT_A:
+                return 'a';
+            case (k1KeyValue * 8):
+                return '1';
+            default:
+                return -1;
         }
     }
 
     constexpr GrSwizzle(const char c[4])
             : fSwiz{c[0], c[1], c[2], c[3], '\0'}
-            , fKey((CToI(c[0]) << 0) | (CToI(c[1]) << 4) | (CToI(c[2]) << 8) | (CToI(c[3]) << 12)) {}
+            , fKey((CToI(c[0]) << 0) | (CToI(c[1]) << 4) | (CToI(c[2]) << 8) | (CToI(c[3]) << 12)) {
+    }
 };
 
 #endif

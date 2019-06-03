@@ -8,9 +8,9 @@
 #ifndef SkDrawable_DEFINED
 #define SkDrawable_DEFINED
 
-#include "SkFlattenable.h"
-#include "SkImageInfo.h"
-#include "SkScalar.h"
+#include "include/core/SkFlattenable.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkScalar.h"
 
 class GrBackendDrawableInfo;
 class SkCanvas;
@@ -110,23 +110,18 @@ public:
      */
     void notifyDrawingChanged();
 
-    static SkFlattenable::Type GetFlattenableType() {
-        return kSkDrawable_Type;
-    }
+    static SkFlattenable::Type GetFlattenableType() noexcept { return kSkDrawable_Type; }
 
-    SkFlattenable::Type getFlattenableType() const override {
-        return kSkDrawable_Type;
-    }
+    SkFlattenable::Type getFlattenableType() const noexcept override { return kSkDrawable_Type; }
 
     static sk_sp<SkDrawable> Deserialize(const void* data, size_t size,
-                                          const SkDeserialProcs* procs = nullptr) {
+                                         const SkDeserialProcs* procs = nullptr) {
         return sk_sp<SkDrawable>(static_cast<SkDrawable*>(
-                                  SkFlattenable::Deserialize(
-                                  kSkDrawable_Type, data, size, procs).release()));
+                SkFlattenable::Deserialize(kSkDrawable_Type, data, size, procs).release()));
     }
 
-    Factory getFactory() const override { return nullptr; }
-    const char* getTypeName() const override { return nullptr; }
+    Factory getFactory() const noexcept override { return nullptr; }
+    const char* getTypeName() const noexcept override { return nullptr; }
 
 protected:
     SkDrawable();

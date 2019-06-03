@@ -8,9 +8,9 @@
 #ifndef GrTessellator_DEFINED
 #define GrTessellator_DEFINED
 
-#include "GrColor.h"
-#include "SkColorData.h"
-#include "SkPoint.h"
+#include "include/core/SkPoint.h"
+#include "include/private/GrColor.h"
+#include "include/private/SkColorData.h"
 
 class SkPath;
 struct SkRect;
@@ -30,6 +30,7 @@ public:
     virtual void* lock(int vertexCount) = 0;
     virtual void unlock(int actualCount) = 0;
     size_t stride() const { return fStride; }
+
 private:
     size_t fStride;
 };
@@ -47,7 +48,7 @@ int PathToVertices(const SkPath& path, SkScalar tolerance, const SkRect& clipBou
                    WindingVertex** verts);
 
 int PathToTriangles(const SkPath& path, SkScalar tolerance, const SkRect& clipBounds,
-                    VertexAllocator*, bool antialias, bool *isLinear);
-}
+                    VertexAllocator*, bool antialias, bool* isLinear);
+}  // namespace GrTessellator
 
 #endif

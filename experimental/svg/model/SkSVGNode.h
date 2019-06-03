@@ -8,8 +8,8 @@
 #ifndef SkSVGNode_DEFINED
 #define SkSVGNode_DEFINED
 
-#include "SkRefCnt.h"
-#include "SkSVGAttribute.h"
+#include "experimental/svg/model/SkSVGAttribute.h"
+#include "include/core/SkRefCnt.h"
 
 class SkCanvas;
 class SkMatrix;
@@ -86,7 +86,7 @@ protected:
     virtual bool hasChildren() const { return false; }
 
 private:
-    SkSVGTag                    fTag;
+    SkSVGTag fTag;
 
     // FIXME: this should be sparse
     SkSVGPresentationAttributes fPresentationAttributes;
@@ -94,4 +94,4 @@ private:
     typedef SkRefCnt INHERITED;
 };
 
-#endif // SkSVGNode_DEFINED
+#endif  // SkSVGNode_DEFINED

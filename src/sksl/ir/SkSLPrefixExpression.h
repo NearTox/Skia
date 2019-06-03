@@ -8,10 +8,10 @@
 #ifndef SKSL_PREFIXEXPRESSION
 #define SKSL_PREFIXEXPRESSION
 
-#include "SkSLExpression.h"
-#include "SkSLFloatLiteral.h"
-#include "SkSLIRGenerator.h"
-#include "SkSLLexer.h"
+#include "src/sksl/SkSLIRGenerator.h"
+#include "src/sksl/SkSLLexer.h"
+#include "src/sksl/ir/SkSLExpression.h"
+#include "src/sksl/ir/SkSLFloatLiteral.h"
 
 namespace SkSL {
 
@@ -20,13 +20,11 @@ namespace SkSL {
  */
 struct PrefixExpression : public Expression {
     PrefixExpression(Token::Kind op, std::unique_ptr<Expression> operand)
-    : INHERITED(operand->fOffset, kPrefix_Kind, operand->fType)
-    , fOperand(std::move(operand))
-    , fOperator(op) {}
+            : INHERITED(operand->fOffset, kPrefix_Kind, operand->fType)
+            , fOperand(std::move(operand))
+            , fOperator(op) {}
 
-    bool isConstant() const override {
-        return fOperator == Token::MINUS && fOperand->isConstant();
-    }
+    bool isConstant() const override { return fOperator == Token::MINUS && fOperand->isConstant(); }
 
     bool hasSideEffects() const override {
         return fOperator == Token::PLUSPLUS || fOperator == Token::MINUSMINUS ||
@@ -37,12 +35,24 @@ struct PrefixExpression : public Expression {
                                                   const DefinitionMap& definitions) override {
         if (fOperand->fKind == Expression::kFloatLiteral_Kind) {
             return std::unique_ptr<Expression>(new FloatLiteral(
-                                                              irGenerator.fContext,
-                                                              fOffset,
-                                                              -((FloatLiteral&) *fOperand).fValue));
-
+                    irGenerator.fContext, fOffset, -((FloatLiteral&)*fOperand).fValue));
         }
         return nullptr;
+    }
+
+    double getFVecComponent(int index) const override {
+        SkASSERT(fOperator == Token::Kind::MINUS);
+        return -fOperand->getFVecComponent(index);
+    }
+
+    int64_t getIVecComponent(int index) const override {
+        SkASSERT(fOperator == Token::Kind::MINUS);
+        return -fOperand->getIVecComponent(index);
+    }
+
+    double getMatComponent(int col, int row) const override {
+        SkASSERT(fOperator == Token::Kind::MINUS);
+        return -fOperand->getMatComponent(col, row);
     }
 
     std::unique_ptr<Expression> clone() const override {
@@ -59,6 +69,6 @@ struct PrefixExpression : public Expression {
     typedef Expression INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

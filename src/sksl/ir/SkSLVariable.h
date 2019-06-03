@@ -8,10 +8,10 @@
 #ifndef SKSL_VARIABLE
 #define SKSL_VARIABLE
 
-#include "SkSLModifiers.h"
-#include "SkSLPosition.h"
-#include "SkSLSymbol.h"
-#include "SkSLType.h"
+#include "src/sksl/SkSLPosition.h"
+#include "src/sksl/ir/SkSLModifiers.h"
+#include "src/sksl/ir/SkSLSymbol.h"
+#include "src/sksl/ir/SkSLType.h"
 
 namespace SkSL {
 
@@ -23,22 +23,17 @@ struct Expression;
  * read or write that storage location.
  */
 struct Variable : public Symbol {
-    enum Storage {
-        kGlobal_Storage,
-        kInterfaceBlock_Storage,
-        kLocal_Storage,
-        kParameter_Storage
-    };
+    enum Storage { kGlobal_Storage, kInterfaceBlock_Storage, kLocal_Storage, kParameter_Storage };
 
     Variable(int offset, Modifiers modifiers, StringFragment name, const Type& type,
              Storage storage, Expression* initialValue = nullptr)
-    : INHERITED(offset, kVariable_Kind, name)
-    , fModifiers(modifiers)
-    , fType(type)
-    , fStorage(storage)
-    , fInitialValue(initialValue)
-    , fReadCount(0)
-    , fWriteCount(initialValue ? 1 : 0) {}
+            : INHERITED(offset, kVariable_Kind, name)
+            , fModifiers(modifiers)
+            , fType(type)
+            , fStorage(storage)
+            , fInitialValue(initialValue)
+            , fReadCount(0)
+            , fWriteCount(initialValue ? 1 : 0) {}
 
     ~Variable() override {
         // can't destroy a variable while there are remaining references to it
@@ -53,11 +48,12 @@ struct Variable : public Symbol {
     }
 
     bool dead() const {
-        return (!fWriteCount && !(fModifiers.fFlags & (Modifiers::kIn_Flag |
-                                                       Modifiers::kUniform_Flag))) ||
-               (!fReadCount && !(fModifiers.fFlags & (Modifiers::kOut_Flag |
-                                                      Modifiers::kPLS_Flag |
-                                                      Modifiers::kPLSOut_Flag)));
+        if (fModifiers.fFlags &
+            (Modifiers::kIn_Flag | Modifiers::kOut_Flag | Modifiers::kUniform_Flag)) {
+            return false;
+        }
+        return !fWriteCount || (!fReadCount && !(fModifiers.fFlags &
+                                                 (Modifiers::kPLS_Flag | Modifiers::kPLSOut_Flag)));
     }
 
     mutable Modifiers fModifiers;
@@ -76,6 +72,6 @@ struct Variable : public Symbol {
     typedef Symbol INHERITED;
 };
 
-} // namespace SkSL
+}  // namespace SkSL
 
 #endif

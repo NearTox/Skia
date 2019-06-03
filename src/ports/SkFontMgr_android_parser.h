@@ -8,12 +8,12 @@
 #ifndef SkFontMgr_android_parser_DEFINED
 #define SkFontMgr_android_parser_DEFINED
 
-#include "SkFontMgr.h"
-#include "SkString.h"
-#include "SkTArray.h"
-#include "SkTDArray.h"
-#include "SkTHash.h"
-#include "SkTypes.h"
+#include "include/core/SkFontMgr.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkTArray.h"
+#include "include/private/SkTDArray.h"
+#include "include/private/SkTHash.h"
 
 #include <climits>
 #include <limits>
@@ -26,11 +26,11 @@
 */
 class SkLanguage {
 public:
-    SkLanguage() { }
-    SkLanguage(const SkString& tag) : fTag(tag) { }
-    SkLanguage(const char* tag) : fTag(tag) { }
-    SkLanguage(const char* tag, size_t len) : fTag(tag, len) { }
-    SkLanguage(const SkLanguage& b) : fTag(b.fTag) { }
+    SkLanguage() {}
+    SkLanguage(const SkString& tag) : fTag(tag) {}
+    SkLanguage(const char* tag) : fTag(tag) {}
+    SkLanguage(const char* tag, size_t len) : fTag(tag, len) {}
+    SkLanguage(const SkLanguage& b) : fTag(b.fTag) {}
 
     /** Gets a BCP 47 language identifier for this SkLanguage.
         @return a BCP 47 language identifier representing this language
@@ -42,12 +42,8 @@ public:
     */
     SkLanguage getParent() const;
 
-    bool operator==(const SkLanguage& b) const {
-        return fTag == b.fTag;
-    }
-    bool operator!=(const SkLanguage& b) const {
-        return fTag != b.fTag;
-    }
+    bool operator==(const SkLanguage& b) const { return fTag == b.fTag; }
+    bool operator!=(const SkLanguage& b) const { return fTag != b.fTag; }
     SkLanguage& operator=(const SkLanguage& b) {
         fTag = b.fTag;
         return *this;
@@ -59,16 +55,16 @@ private:
 };
 
 enum FontVariants {
-   kDefault_FontVariant = 0x01,
-   kCompact_FontVariant = 0x02,
-   kElegant_FontVariant = 0x04,
-   kLast_FontVariant = kElegant_FontVariant,
+    kDefault_FontVariant = 0x01,
+    kCompact_FontVariant = 0x02,
+    kElegant_FontVariant = 0x04,
+    kLast_FontVariant = kElegant_FontVariant,
 };
 typedef uint32_t FontVariant;
 
 // Must remain trivially movable (can be memmoved).
 struct FontFileInfo {
-    FontFileInfo() : fIndex(0), fWeight(0), fStyle(Style::kAuto) { }
+    FontFileInfo() : fIndex(0), fWeight(0), fStyle(Style::kAuto) {}
 
     SkString fFileName;
     int fIndex;
@@ -86,18 +82,17 @@ struct FontFileInfo {
  */
 struct FontFamily {
     FontFamily(const SkString& basePath, bool isFallbackFont)
-        : fVariant(kDefault_FontVariant)
-        , fOrder(-1)
-        , fIsFallbackFont(isFallbackFont)
-        , fBasePath(basePath)
-    { }
+            : fVariant(kDefault_FontVariant)
+            , fOrder(-1)
+            , fIsFallbackFont(isFallbackFont)
+            , fBasePath(basePath) {}
 
     SkTArray<SkString, true> fNames;
     SkTArray<FontFileInfo, true> fFonts;
     SkTArray<SkLanguage, true> fLanguages;
     SkTHashMap<SkString, std::unique_ptr<FontFamily>> fallbackFamilies;
     FontVariant fVariant;
-    int fOrder; // internal to the parser, not useful to users.
+    int fOrder;  // internal to the parser, not useful to users.
     bool fIsFallbackFont;
     SkString fFallbackFor;
     const SkString fBasePath;
@@ -115,8 +110,7 @@ void GetCustomFontFamilies(SkTDArray<FontFamily*>& fontFamilies,
                            const char* fallbackFontsXml,
                            const char* langFallbackFontsDir = nullptr);
 
-} // SkFontMgr_Android_Parser namespace
-
+}  // namespace SkFontMgr_Android_Parser
 
 /** Parses a null terminated string into an integer type, checking for overflow.
  *  http://www.w3.org/TR/html-markup/datatypes.html#common.data.integer.non-negative-def
@@ -194,7 +188,7 @@ template <int N, typename T> static bool parse_fixed(const char* s, T* value) {
             // Read back toward the '.'.
             for (--s; *s != '.'; --s) {
                 T d = *s - '0';
-                frac = (frac + (d << N)) / 10; // This requires four bits overhead.
+                frac = (frac + (d << N)) / 10;  // This requires four bits overhead.
             }
             break;
         }

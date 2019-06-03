@@ -8,10 +8,10 @@
 #ifndef GrGLSLPrimitiveProcessor_DEFINED
 #define GrGLSLPrimitiveProcessor_DEFINED
 
-#include "GrFragmentProcessor.h"
-#include "GrPrimitiveProcessor.h"
-#include "glsl/GrGLSLProgramDataManager.h"
-#include "glsl/GrGLSLUniformHandler.h"
+#include "src/gpu/GrFragmentProcessor.h"
+#include "src/gpu/GrPrimitiveProcessor.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
 class GrPrimitiveProcessor;
 class GrGLSLFPFragmentBuilder;
@@ -27,8 +27,8 @@ public:
 
     virtual ~GrGLSLPrimitiveProcessor() {}
 
-    using UniformHandle      = GrGLSLProgramDataManager::UniformHandle;
-    using SamplerHandle      = GrGLSLUniformHandler::SamplerHandle;
+    using UniformHandle = GrGLSLProgramDataManager::UniformHandle;
+    using SamplerHandle = GrGLSLUniformHandler::SamplerHandle;
 
     /**
      * This class provides access to the GrCoordTransforms across all GrFragmentProcessors in a
@@ -41,26 +41,24 @@ public:
     public:
         FPCoordTransformHandler(const GrPipeline& pipeline,
                                 SkTArray<GrShaderVar>* transformedCoordVars)
-                : fIter(pipeline)
-                , fTransformedCoordVars(transformedCoordVars) {}
+                : fIter(pipeline), fTransformedCoordVars(transformedCoordVars) {}
 
-        ~FPCoordTransformHandler() { SkASSERT(!this->nextCoordTransform());}
+        ~FPCoordTransformHandler() { SkASSERT(!this->nextCoordTransform()); }
 
         const GrCoordTransform* nextCoordTransform();
 
         // 'args' are constructor params to GrShaderVar.
-        template<typename... Args>
-        void specifyCoordsForCurrCoordTransform(Args&&... args) {
+        template <typename... Args> void specifyCoordsForCurrCoordTransform(Args&&... args) {
             SkASSERT(!fAddedCoord);
             fTransformedCoordVars->emplace_back(std::forward<Args>(args)...);
-            SkDEBUGCODE(fAddedCoord = true;)
+            SkDEBUGCODE(fAddedCoord = true);
         }
 
     private:
         GrFragmentProcessor::CoordTransformIter fIter;
-        SkDEBUGCODE(bool                        fAddedCoord = false;)
-        SkDEBUGCODE(const GrCoordTransform*     fCurr = nullptr;)
-        SkTArray<GrShaderVar>*                  fTransformedCoordVars;
+        SkDEBUGCODE(bool fAddedCoord = false);
+        SkDEBUGCODE(const GrCoordTransform* fCurr = nullptr);
+        SkTArray<GrShaderVar>* fTransformedCoordVars;
     };
 
     struct EmitArgs {
@@ -76,18 +74,18 @@ public:
                  const char* rtAdjustName,
                  const SamplerHandle* texSamplers,
                  FPCoordTransformHandler* transformHandler)
-            : fVertBuilder(vertBuilder)
-            , fGeomBuilder(geomBuilder)
-            , fFragBuilder(fragBuilder)
-            , fVaryingHandler(varyingHandler)
-            , fUniformHandler(uniformHandler)
-            , fShaderCaps(caps)
-            , fGP(gp)
-            , fOutputColor(outputColor)
-            , fOutputCoverage(outputCoverage)
-            , fRTAdjustName(rtAdjustName)
-            , fTexSamplers(texSamplers)
-            , fFPCoordTransformHandler(transformHandler) {}
+                : fVertBuilder(vertBuilder)
+                , fGeomBuilder(geomBuilder)
+                , fFragBuilder(fragBuilder)
+                , fVaryingHandler(varyingHandler)
+                , fUniformHandler(uniformHandler)
+                , fShaderCaps(caps)
+                , fGP(gp)
+                , fOutputColor(outputColor)
+                , fOutputCoverage(outputCoverage)
+                , fRTAdjustName(rtAdjustName)
+                , fTexSamplers(texSamplers)
+                , fFPCoordTransformHandler(transformHandler) {}
         GrGLSLVertexBuilder* fVertBuilder;
         GrGLSLGeometryBuilder* fGeomBuilder;
         GrGLSLFPFragmentBuilder* fFragBuilder;

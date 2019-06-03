@@ -5,12 +5,11 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef GrStencilSettings_DEFINED
 #define GrStencilSettings_DEFINED
 
-#include "GrUserStencilSettings.h"
-#include "SkRegion.h"
+#include "include/core/SkRegion.h"
+#include "src/gpu/GrUserStencilSettings.h"
 
 class GrProcessorKeyBuilder;
 
@@ -29,7 +28,7 @@ static constexpr int kGrStencilTestCount = 1 + (int)GrStencilTest::kNotEqual;
 enum class GrStencilOp : uint8_t {
     kKeep,
     kZero,
-    kReplace, // Replace stencil value with fRef (only the bits enabled in fWriteMask).
+    kReplace,  // Replace stencil value with fRef (only the bits enabled in fWriteMask).
     kInvert,
     kIncWrap,
     kDecWrap,
@@ -52,7 +51,10 @@ public:
         this->reset(user, hasStencilClip, numStencilBits);
     }
     GrStencilSettings(const GrStencilSettings& that) { this->reset(that); }
-    GrStencilSettings& operator=(const GrStencilSettings& that) { this->reset(that); return *this; }
+    GrStencilSettings& operator=(const GrStencilSettings& that) {
+        this->reset(that);
+        return *this;
+    }
 
     void invalidate() { fFlags |= kInvalid_PrivateFlag; }
     void setDisabled() { fFlags = kAll_StencilFlags; }
@@ -60,13 +62,22 @@ public:
     void reset(const GrStencilSettings&);
 
     bool isValid() const { return !(fFlags & kInvalid_PrivateFlag); }
-    bool isDisabled() const { SkASSERT(this->isValid()); return fFlags & kDisabled_StencilFlag; }
-    bool doesWrite() const { SkASSERT(this->isValid());
-                             return !(fFlags & kNoModifyStencil_StencilFlag); }
-    bool isTwoSided() const { SkASSERT(this->isValid());
-                              return !(fFlags & kSingleSided_StencilFlag); }
-    bool usesWrapOp() const { SkASSERT(this->isValid());
-                              return !(fFlags & kNoWrapOps_StencilFlag); }
+    bool isDisabled() const {
+        SkASSERT(this->isValid());
+        return fFlags & kDisabled_StencilFlag;
+    }
+    bool doesWrite() const {
+        SkASSERT(this->isValid());
+        return !(fFlags & kNoModifyStencil_StencilFlag);
+    }
+    bool isTwoSided() const {
+        SkASSERT(this->isValid());
+        return !(fFlags & kSingleSided_StencilFlag);
+    }
+    bool usesWrapOp() const {
+        SkASSERT(this->isValid());
+        return !(fFlags & kNoWrapOps_StencilFlag);
+    }
 
     void genKey(GrProcessorKeyBuilder* b) const;
 
@@ -78,8 +89,19 @@ public:
         void setDisabled();
     };
 
-    const Face& front() const { SkASSERT(!this->isDisabled()); return fFront; }
-    const Face& back() const { SkASSERT(this->isTwoSided()); return fBack; }
+    const Face& frontAndBack() const {
+        SkASSERT(!this->isDisabled());
+        SkASSERT(!this->isTwoSided());
+        return fFront;
+    }
+    const Face& front(GrSurfaceOrigin origin) const {
+        SkASSERT(this->isTwoSided());
+        return (kTopLeft_GrSurfaceOrigin == origin) ? fFront : fBack;
+    }
+    const Face& back(GrSurfaceOrigin origin) const {
+        SkASSERT(this->isTwoSided());
+        return (kTopLeft_GrSurfaceOrigin == origin) ? fBack : fFront;
+    }
 
     /**
      * Given a thing to draw into the stencil clip, a fill type, and a set op
@@ -116,9 +138,9 @@ private:
     // Internal flag for backends to optionally mark their tracked stencil state as invalid.
     enum { kInvalid_PrivateFlag = (kLast_StencilFlag << 1) };
 
-    uint32_t   fFlags;
-    Face       fFront;
-    Face       fBack;
+    uint32_t fFlags;
+    Face fFront;
+    Face fBack;
 };
 
 #endif

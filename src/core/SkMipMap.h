@@ -8,12 +8,12 @@
 #ifndef SkMipMap_DEFINED
 #define SkMipMap_DEFINED
 
-#include "SkCachedData.h"
-#include "SkImageInfoPriv.h"
-#include "SkPixmap.h"
-#include "SkScalar.h"
-#include "SkSize.h"
-#include "SkShaderBase.h"
+#include "include/core/SkPixmap.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/private/SkImageInfoPriv.h"
+#include "src/core/SkCachedData.h"
+#include "src/shaders/SkShaderBase.h"
 
 class SkBitmap;
 class SkDiscardableMemory;
@@ -47,8 +47,8 @@ public:
     // aligned, so the pixel data could end up with 4 byte alignment. If the pixel data is F16,
     // it must be 8 byte aligned. To ensure this, keep the Level struct 8 byte aligned as well.
     struct alignas(8) Level {
-        SkPixmap    fPixmap;
-        SkSize      fScale; // < 1.0
+        SkPixmap fPixmap;
+        SkSize fScale;  // < 1.0
     };
 
     bool extractLevel(const SkSize& scale, Level*) const;
@@ -62,17 +62,17 @@ public:
     bool getLevel(int index, Level*) const;
 
 protected:
-    void onDataChange(void* oldData, void* newData) override {
-        fLevels = (Level*)newData; // could be nullptr
+    void onDataChange(void* oldData, void* newData) noexcept override {
+        fLevels = (Level*)newData;  // could be nullptr
     }
 
 private:
     sk_sp<SkColorSpace> fCS;
-    Level*              fLevels;    // managed by the baseclass, may be null due to onDataChanged.
-    int                 fCount;
+    Level* fLevels;  // managed by the baseclass, may be null due to onDataChanged.
+    int fCount;
 
-    SkMipMap(void* malloc, size_t size) : INHERITED(malloc, size) {}
-    SkMipMap(size_t size, SkDiscardableMemory* dm) : INHERITED(size, dm) {}
+    SkMipMap(void* malloc, size_t size) noexcept : INHERITED(malloc, size) {}
+    SkMipMap(size_t size, SkDiscardableMemory* dm) noexcept : INHERITED(size, dm) {}
 
     static size_t AllocLevelsSize(int levelCount, size_t pixelSize);
 

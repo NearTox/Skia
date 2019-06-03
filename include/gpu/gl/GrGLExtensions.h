@@ -8,9 +8,9 @@
 #ifndef GrGLExtensions_DEFINED
 #define GrGLExtensions_DEFINED
 
-#include "../../private/SkTArray.h"
-#include "GrGLFunctions.h"
-#include "SkString.h"
+#include "include/core/SkString.h"
+#include "include/gpu/gl/GrGLFunctions.h"
+#include "include/private/SkTArray.h"
 
 #include <utility>
 
@@ -43,9 +43,12 @@ public:
      * NULL if on desktop GL with version 3.0 or higher. Otherwise it will fail.
      */
     bool init(GrGLStandard standard,
-              GrGLFunction<GrGLGetStringFn> getString,
-              GrGLFunction<GrGLGetStringiFn> getStringi,
-              GrGLFunction<GrGLGetIntegervFn> getIntegerv,
+              GrGLFunction<GrGLGetStringFn>
+                      getString,
+              GrGLFunction<GrGLGetStringiFn>
+                      getStringi,
+              GrGLFunction<GrGLGetIntegervFn>
+                      getIntegerv,
               GrGLFunction<GrEGLQueryStringFn> queryString = nullptr,
               GrEGLDisplay eglDisplay = nullptr);
 

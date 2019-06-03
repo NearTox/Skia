@@ -7,9 +7,9 @@
 #ifndef SkSampler_DEFINED
 #define SkSampler_DEFINED
 
-#include "SkCodec.h"
-#include "SkCodecPriv.h"
-#include "SkTypes.h"
+#include "include/codec/SkCodec.h"
+#include "include/core/SkTypes.h"
+#include "src/codec/SkCodecPriv.h"
 
 class SkSampler : public SkNoncopyable {
 public:
@@ -17,30 +17,24 @@ public:
      *  Update the sampler to sample every sampleX'th pixel. Returns the
      *  width after sampling.
      */
-    int setSampleX(int sampleX) {
-        return this->onSetSampleX(sampleX);
-    }
+    int setSampleX(int sampleX) { return this->onSetSampleX(sampleX); }
 
     /**
      *  Update the sampler to sample every sampleY'th row.
      */
-    void setSampleY(int sampleY) {
-        fSampleY = sampleY;
-    }
+    void setSampleY(int sampleY) noexcept { fSampleY = sampleY; }
 
     /**
      *  Retrieve the value set for sampleY.
      */
-    int sampleY() const {
-        return fSampleY;
-    }
+    int sampleY() const noexcept { return fSampleY; }
 
     /**
      *  Based on fSampleY, return whether this row belongs in the output.
      *
      *  @param row Row of the image, starting with the first row in the subset.
      */
-    bool rowNeeded(int row) const {
+    bool rowNeeded(int row) const noexcept {
         return (row - get_start_coord(fSampleY)) % fSampleY == 0;
     }
 
@@ -70,15 +64,14 @@ public:
 
     virtual int fillWidth() const = 0;
 
-    SkSampler()
-        : fSampleY(1)
-    {}
+    SkSampler() noexcept : fSampleY(1) {}
 
     virtual ~SkSampler() {}
+
 private:
     int fSampleY;
 
     virtual int onSetSampleX(int) = 0;
 };
 
-#endif // SkSampler_DEFINED
+#endif  // SkSampler_DEFINED

@@ -8,8 +8,8 @@
 #ifndef SkOTTable_gasp_DEFINED
 #define SkOTTable_gasp_DEFINED
 
-#include "SkEndian.h"
-#include "SkOTTableTypes.h"
+#include "src/core/SkEndian.h"
+#include "src/sfnt/SkOTTableTypes.h"
 
 #pragma pack(push, 1)
 
@@ -30,26 +30,24 @@ struct SkOTTableGridAndScanProcedure {
         SK_OT_USHORT maxPPEM;
         union behavior {
             struct Field {
-                //8-15
-                SK_OT_BYTE_BITFIELD(
-                    Reserved08,
-                    Reserved09,
-                    Reserved10,
-                    Reserved11,
-                    Reserved12,
-                    Reserved13,
-                    Reserved14,
-                    Reserved15)
-                //0-7
-                SK_OT_BYTE_BITFIELD(
-                    Gridfit,
-                    DoGray,
-                    SymmetricGridfit,  // Version 1
-                    SymmetricSmoothing,  // Version 1
-                    Reserved04,
-                    Reserved05,
-                    Reserved06,
-                    Reserved07)
+                // 8-15
+                SK_OT_BYTE_BITFIELD(Reserved08,
+                                    Reserved09,
+                                    Reserved10,
+                                    Reserved11,
+                                    Reserved12,
+                                    Reserved13,
+                                    Reserved14,
+                                    Reserved15)
+                // 0-7
+                SK_OT_BYTE_BITFIELD(Gridfit,
+                                    DoGray,
+                                    SymmetricGridfit,    // Version 1
+                                    SymmetricSmoothing,  // Version 1
+                                    Reserved04,
+                                    Reserved05,
+                                    Reserved06,
+                                    Reserved07)
             } field;
             struct Raw {
                 static const SK_OT_USHORT GridfitMask = SkTEndian_SwapBE16(1 << 0);
@@ -59,14 +57,15 @@ struct SkOTTableGridAndScanProcedure {
                 SK_OT_USHORT value;
             } raw;
         } flags;
-    }; //gaspRange[numRanges]
+    };  // gaspRange[numRanges]
 };
 
 #pragma pack(pop)
 
-
 #include <stddef.h>
-static_assert(offsetof(SkOTTableGridAndScanProcedure, numRanges) == 2, "SkOTTableGridAndScanProcedure_numRanges_not_at_2");
-static_assert(sizeof(SkOTTableGridAndScanProcedure) == 4, "sizeof_SkOTTableGridAndScanProcedure_not_4");
+static_assert(offsetof(SkOTTableGridAndScanProcedure, numRanges) == 2,
+              "SkOTTableGridAndScanProcedure_numRanges_not_at_2");
+static_assert(sizeof(SkOTTableGridAndScanProcedure) == 4,
+              "sizeof_SkOTTableGridAndScanProcedure_not_4");
 
 #endif

@@ -8,8 +8,8 @@
 #ifndef GrCustomXfermode_DEFINED
 #define GrCustomXfermode_DEFINED
 
-#include "SkBlendMode.h"
-#include "SkRefCnt.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkRefCnt.h"
 
 class GrTexture;
 class GrXPFactory;
@@ -19,8 +19,8 @@ class GrXPFactory;
  * coefficients.
  */
 namespace GrCustomXfermode {
-    bool IsSupportedMode(SkBlendMode mode);
-    const GrXPFactory* Get(SkBlendMode mode);
-};
+bool IsSupportedMode(SkBlendMode mode);
+const GrXPFactory* Get(SkBlendMode mode);
+};  // namespace GrCustomXfermode
 
 #endif

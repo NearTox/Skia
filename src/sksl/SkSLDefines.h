@@ -14,15 +14,17 @@
 #else
 #ifdef SK_BUILD_FOR_WIN
 #define SKSL_BUILD_FOR_WIN
-#endif // SK_BUILD_FOR_WIN
-#endif // SKSL_STANDALONE
+#endif  // SK_BUILD_FOR_WIN
+#endif  // SKSL_STANDALONE
 
 #ifdef SKSL_STANDALONE
-#define SkASSERT(x)
-#define SkAssertResult(x) x
-#define SkDEBUGCODE(x)
+#define SkASSERT(x) \
+    if (!(x)) abort();
+#define SkAssertResult(x) \
+    if (!(x)) abort();
+#define SkDEBUGCODE(...) __VA_ARGS__
 #else
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 #endif
 
 #define SKSL_WARN_UNUSED_RESULT __attribute__((warn_unused_result))

@@ -5,20 +5,24 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkPath.h"
-#include "SkTArray.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkTArray.h"
 
 namespace skiagm {
 
 class HairlinesGM : public GM {
 protected:
-
-
-    SkString onShortName() override {
-        return SkString("hairlines");
-    }
+    SkString onShortName() override { return SkString("hairlines"); }
 
     SkISize onISize() override { return SkISize::Make(1250, 1250); }
 
@@ -79,8 +83,8 @@ protected:
         {
             SkPath* unevenClosedQuad = &fPaths.push_back();
             unevenClosedQuad->moveTo(0, -0);
-            unevenClosedQuad->quadTo(SkIntToScalar(100), SkIntToScalar(100),
-                                     SkIntToScalar(75), SkIntToScalar(75));
+            unevenClosedQuad->quadTo(SkIntToScalar(100), SkIntToScalar(100), SkIntToScalar(75),
+                                     SkIntToScalar(75));
         }
 
         // Two problem cases for gpu hairline renderer found by shapeops testing. These used
@@ -88,9 +92,8 @@ protected:
         {
             SkPath* problem1 = &fPaths.push_back();
             problem1->moveTo(SkIntToScalar(4), SkIntToScalar(6));
-            problem1->cubicTo(SkIntToScalar(5), SkIntToScalar(6),
-                              SkIntToScalar(5), SkIntToScalar(4),
-                              SkIntToScalar(4), SkIntToScalar(0));
+            problem1->cubicTo(SkIntToScalar(5), SkIntToScalar(6), SkIntToScalar(5),
+                              SkIntToScalar(4), SkIntToScalar(4), SkIntToScalar(0));
             problem1->close();
         }
 
@@ -98,12 +101,9 @@ protected:
             SkPath* problem2 = &fPaths.push_back();
             problem2->moveTo(SkIntToScalar(5), SkIntToScalar(1));
             problem2->lineTo(4.32787323f, 1.67212653f);
-            problem2->cubicTo(2.75223875f, 3.24776125f,
-                              3.00581908f, 4.51236057f,
-                              3.7580452f, 4.37367964f);
-            problem2->cubicTo(4.66472578f, 3.888381f,
-                              5.f, 2.875f,
-                              5.f, 1.f);
+            problem2->cubicTo(2.75223875f, 3.24776125f, 3.00581908f, 4.51236057f, 3.7580452f,
+                              4.37367964f);
+            problem2->cubicTo(4.66472578f, 3.888381f, 5.f, 2.875f, 5.f, 1.f);
             problem2->close();
         }
 
@@ -111,10 +111,10 @@ protected:
         {
             // A caret (crbug.com/131770)
             SkPath* bug0 = &fPaths.push_back();
-            bug0->moveTo(6.5f,5.5f);
-            bug0->lineTo(3.5f,0.5f);
-            bug0->moveTo(0.5f,5.5f);
-            bug0->lineTo(3.5f,0.5f);
+            bug0->moveTo(6.5f, 5.5f);
+            bug0->lineTo(3.5f, 0.5f);
+            bug0->moveTo(0.5f, 5.5f);
+            bug0->lineTo(3.5f, 0.5f);
         }
 
         {
@@ -149,13 +149,11 @@ protected:
             bug->addArc(circle, kStartAngle, kSweepAngle);
 
             // Now add the chord that should cap the circular arc
-            SkScalar cosV, sinV = SkScalarSinCos(SkDegreesToRadians(kStartAngle), &cosV);
+            SkPoint p0 = {kRad * SkScalarCos(SkDegreesToRadians(kStartAngle)),
+                          kRad * SkScalarSin(SkDegreesToRadians(kStartAngle))};
 
-            SkPoint p0 = SkPoint::Make(kRad * cosV, kRad * sinV);
-
-            sinV = SkScalarSinCos(SkDegreesToRadians(kStartAngle + kSweepAngle), &cosV);
-
-            SkPoint p1 = SkPoint::Make(kRad * cosV, kRad * sinV);
+            SkPoint p1 = {kRad * SkScalarCos(SkDegreesToRadians(kStartAngle + kSweepAngle)),
+                          kRad * SkScalarSin(SkDegreesToRadians(kStartAngle + kSweepAngle))};
 
             bug->moveTo(p0);
             bug->lineTo(p1);
@@ -163,8 +161,8 @@ protected:
     }
 
     void onDraw(SkCanvas* canvas) override {
-        constexpr SkAlpha kAlphaValue[] = { 0xFF, 0x40 };
-        constexpr SkScalar kWidths[] = { 0, 0.5f, 1.5f };
+        constexpr SkAlpha kAlphaValue[] = {0xFF, 0x40};
+        constexpr SkScalar kWidths[] = {0, 0.5f, 1.5f};
 
         enum {
             kMargin = 5,
@@ -241,9 +239,9 @@ static void draw_squarehair_tests(SkCanvas* canvas, SkScalar width, SkPaint::Cap
 }
 
 DEF_SIMPLE_GM(squarehair, canvas, 240, 360) {
-    const bool aliases[] = { false, true };
-    const SkScalar widths[] = { 0, 0.999f, 1, 1.001f };
-    const SkPaint::Cap caps[] = { SkPaint::kButt_Cap, SkPaint::kSquare_Cap, SkPaint::kRound_Cap };
+    const bool aliases[] = {false, true};
+    const SkScalar widths[] = {0, 0.999f, 1, 1.001f};
+    const SkPaint::Cap caps[] = {SkPaint::kButt_Cap, SkPaint::kSquare_Cap, SkPaint::kRound_Cap};
     for (auto alias : aliases) {
         canvas->save();
         for (auto width : widths) {
@@ -258,6 +256,6 @@ DEF_SIMPLE_GM(squarehair, canvas, 240, 360) {
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new HairlinesGM; )
+DEF_GM(return new HairlinesGM;)
 
-}
+}  // namespace skiagm

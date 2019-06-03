@@ -5,28 +5,28 @@
  * found in the LICENSE file.
  */
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN)
 
-#include "SkLeanWindows.h"
-#include "SkMalloc.h"
-#include "SkNoncopyable.h"
-#include "SkOSFile.h"
-#include "SkStringUtils.h"
-#include "SkTFitsIn.h"
+#include "include/private/SkLeanWindows.h"
+#include "include/private/SkMalloc.h"
+#include "include/private/SkNoncopyable.h"
+#include "include/private/SkTFitsIn.h"
+#include "src/core/SkOSFile.h"
+#include "src/core/SkStringUtils.h"
 
 #include <io.h>
-#include <new>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <new>
 
-bool sk_exists(const char *path, SkFILE_Flags flags) {
-    int mode = 0; // existence
+bool sk_exists(const char* path, SkFILE_Flags flags) {
+    int mode = 0;  // existence
     if (flags & kRead_SkFILE_Flag) {
-        mode |= 4; // read
+        mode |= 4;  // read
     }
     if (flags & kWrite_SkFILE_Flag) {
-        mode |= 2; // write
+        mode |= 2;  // write
     }
     return (0 == _access(path, mode));
 }
@@ -48,7 +48,7 @@ static bool sk_ino(FILE* f, SkFILEID* id) {
         return false;
     }
 
-    //TODO: call GetFileInformationByHandleEx on Vista and later with FileIdInfo.
+    // TODO: call GetFileInformationByHandleEx on Vista and later with FileIdInfo.
     BY_HANDLE_FILE_INFORMATION info;
     if (0 == GetFileInformationByHandle(file, &info)) {
         return false;
@@ -62,26 +62,23 @@ static bool sk_ino(FILE* f, SkFILEID* id) {
 
 bool sk_fidentical(FILE* a, FILE* b) {
     SkFILEID aID, bID;
-    return sk_ino(a, &aID) && sk_ino(b, &bID)
-           && aID.fLsbSize == bID.fLsbSize
-           && aID.fMsbSize == bID.fMsbSize
-           && aID.fVolume == bID.fVolume;
+    return sk_ino(a, &aID) && sk_ino(b, &bID) && aID.fLsbSize == bID.fLsbSize &&
+           aID.fMsbSize == bID.fMsbSize && aID.fVolume == bID.fVolume;
 }
 
 class SkAutoNullKernelHandle : SkNoncopyable {
 public:
-    SkAutoNullKernelHandle(const HANDLE handle) : fHandle(handle) { }
+    SkAutoNullKernelHandle(const HANDLE handle) : fHandle(handle) {}
     ~SkAutoNullKernelHandle() { CloseHandle(fHandle); }
     operator HANDLE() const { return fHandle; }
     bool isValid() const { return SkToBool(fHandle); }
+
 private:
     HANDLE fHandle;
 };
 typedef SkAutoNullKernelHandle SkAutoWinMMap;
 
-void sk_fmunmap(const void* addr, size_t) {
-    UnmapViewOfFile(addr);
-}
+void sk_fmunmap(const void* addr, size_t) { UnmapViewOfFile(addr); }
 
 void* sk_fdmmap(int fileno, size_t* length) {
     HANDLE file = (HANDLE)_get_osfhandle(fileno);
@@ -91,7 +88,7 @@ void* sk_fdmmap(int fileno, size_t* length) {
 
     LARGE_INTEGER fileSize;
     if (0 == GetFileSizeEx(file, &fileSize)) {
-        //TODO: use SK_TRACEHR(GetLastError(), "Could not get file size.") to report.
+        // TODO: use SK_TRACEHR(GetLastError(), "Could not get file size.") to report.
         return nullptr;
     }
     if (!SkTFitsIn<size_t>(fileSize.QuadPart)) {
@@ -100,14 +97,14 @@ void* sk_fdmmap(int fileno, size_t* length) {
 
     SkAutoWinMMap mmap(CreateFileMapping(file, nullptr, PAGE_READONLY, 0, 0, nullptr));
     if (!mmap.isValid()) {
-        //TODO: use SK_TRACEHR(GetLastError(), "Could not create file mapping.") to report.
+        // TODO: use SK_TRACEHR(GetLastError(), "Could not create file mapping.") to report.
         return nullptr;
     }
 
     // Eventually call UnmapViewOfFile
     void* addr = MapViewOfFile(mmap, FILE_MAP_READ, 0, 0, 0);
     if (nullptr == addr) {
-        //TODO: use SK_TRACEHR(GetLastError(), "Could not map view of file.") to report.
+        // TODO: use SK_TRACEHR(GetLastError(), "Could not map view of file.") to report.
         return nullptr;
     }
 
@@ -115,9 +112,7 @@ void* sk_fdmmap(int fileno, size_t* length) {
     return addr;
 }
 
-int sk_fileno(FILE* f) {
-    return _fileno((FILE*)f);
-}
+int sk_fileno(FILE* f) { return _fileno((FILE*)f); }
 
 void* sk_fmmap(FILE* f, size_t* length) {
     int fileno = sk_fileno(f);
@@ -159,22 +154,22 @@ size_t sk_qread(FILE* file, void* buffer, size_t count, size_t offset) {
 ////////////////////////////////////////////////////////////////////////////
 
 struct SkOSFileIterData {
-    SkOSFileIterData() : fHandle(0), fPath16(nullptr) { }
+    SkOSFileIterData() : fHandle(0), fPath16(nullptr) {}
     HANDLE fHandle;
     uint16_t* fPath16;
 };
 static_assert(sizeof(SkOSFileIterData) <= SkOSFile::Iter::kStorageSize, "not_enough_space");
 
 static uint16_t* concat_to_16(const char src[], const char suffix[]) {
-    size_t  i, len = strlen(src);
-    size_t  len2 = 3 + (suffix ? strlen(suffix) : 0);
+    size_t i, len = strlen(src);
+    size_t len2 = 3 + (suffix ? strlen(suffix) : 0);
     uint16_t* dst = (uint16_t*)sk_malloc_throw((len + len2) * sizeof(uint16_t));
 
     for (i = 0; i < len; i++) {
         dst[i] = src[i];
     }
 
-    if (i > 0 && dst[i-1] != '/') {
+    if (i > 0 && dst[i - 1] != '/') {
         dst[i++] = '/';
     }
     dst[i++] = '*';
@@ -226,7 +221,7 @@ static bool is_magic_dir(const uint16_t dir[]) {
 }
 
 static bool get_the_file(HANDLE handle, SkString* name, WIN32_FIND_DATAW* dataPtr, bool getDir) {
-    WIN32_FIND_DATAW    data;
+    WIN32_FIND_DATAW data;
 
     if (nullptr == dataPtr) {
         if (::FindNextFileW(handle, &data))
@@ -238,8 +233,7 @@ static bool get_the_file(HANDLE handle, SkString* name, WIN32_FIND_DATAW* dataPt
     for (;;) {
         if (getDir) {
             if ((dataPtr->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
-                !is_magic_dir((uint16_t*)dataPtr->cFileName))
-            {
+                !is_magic_dir((uint16_t*)dataPtr->cFileName)) {
                 break;
             }
         } else {
@@ -255,7 +249,9 @@ static bool get_the_file(HANDLE handle, SkString* name, WIN32_FIND_DATAW* dataPt
     if (name) {
         const uint16_t* utf16name = (const uint16_t*)dataPtr->cFileName;
         const uint16_t* ptr = utf16name;
-        while (*ptr != 0) { ++ptr; }
+        while (*ptr != 0) {
+            ++ptr;
+        }
         *name = SkStringFromUTF16(utf16name, ptr - utf16name);
     }
     return true;
@@ -263,10 +259,10 @@ static bool get_the_file(HANDLE handle, SkString* name, WIN32_FIND_DATAW* dataPt
 
 bool SkOSFile::Iter::next(SkString* name, bool getDir) {
     SkOSFileIterData& self = *static_cast<SkOSFileIterData*>(fSelf.get());
-    WIN32_FIND_DATAW    data;
-    WIN32_FIND_DATAW*   dataPtr = nullptr;
+    WIN32_FIND_DATAW data;
+    WIN32_FIND_DATAW* dataPtr = nullptr;
 
-    if (self.fHandle == 0) {  // our first time
+    if (self.fHandle == 0) {                                  // our first time
         if (self.fPath16 == nullptr || *self.fPath16 == 0) {  // check for no path
             return false;
         }
@@ -279,4 +275,4 @@ bool SkOSFile::Iter::next(SkString* name, bool getDir) {
     return self.fHandle != (HANDLE)~0 && get_the_file(self.fHandle, name, dataPtr, getDir);
 }
 
-#endif//defined(SK_BUILD_FOR_WIN)
+#endif  // defined(SK_BUILD_FOR_WIN)

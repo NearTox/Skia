@@ -8,11 +8,11 @@
 #ifndef SkDOM_DEFINED
 #define SkDOM_DEFINED
 
-#include "SkArenaAlloc.h"
-#include "SkNoncopyable.h"
-#include "SkScalar.h"
-#include "SkTemplates.h"
-#include "SkTypes.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkArenaAlloc.h"
+#include "include/private/SkNoncopyable.h"
+#include "include/private/SkTemplates.h"
 
 struct SkDOMNode;
 struct SkDOMAttr;
@@ -30,7 +30,7 @@ public:
     typedef SkDOMAttr Attr;
 
     /** Returns null on failure
-    */
+     */
     const Node* build(SkStream&);
     const Node* copy(const SkDOM& dom, const Node* node);
 
@@ -39,10 +39,7 @@ public:
     SkXMLParser* beginParsing();
     const Node* finishParsing();
 
-    enum Type {
-        kElement_Type,
-        kText_Type
-    };
+    enum Type { kElement_Type, kText_Type };
     Type getType(const Node*) const;
 
     const char* getName(const Node*) const;
@@ -63,7 +60,7 @@ public:
     bool findScalars(const Node*, const char name[], SkScalar value[], int count) const;
     bool findHex(const Node*, const char name[], uint32_t* value) const;
     bool findBool(const Node*, const char name[], bool*) const;
-    int  findList(const Node*, const char name[], const char list[]) const;
+    int findList(const Node*, const char name[], const char list[]) const;
 
     bool findScalar(const Node* node, const char name[], SkScalar value[]) const {
         return this->findScalars(node, name, value, 1);
@@ -79,14 +76,15 @@ public:
     public:
         AttrIter(const SkDOM&, const Node*);
         const char* next(const char** value);
+
     private:
         const Attr* fAttr;
         const Attr* fStop;
     };
 
 private:
-    SkArenaAlloc                 fAlloc;
-    Node*                        fRoot;
+    SkArenaAlloc fAlloc;
+    Node* fRoot;
     std::unique_ptr<SkDOMParser> fParser;
 
     typedef SkNoncopyable INHERITED;

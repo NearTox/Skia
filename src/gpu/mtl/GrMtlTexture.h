@@ -8,7 +8,7 @@
 #ifndef GrMtlTexture_DEFINED
 #define GrMtlTexture_DEFINED
 
-#include "GrTexture.h"
+#include "include/gpu/GrTexture.h"
 
 #import <Metal/Metal.h>
 
@@ -17,8 +17,7 @@ class GrMtlGpu;
 class GrMtlTexture : public GrTexture {
 public:
     static sk_sp<GrMtlTexture> CreateNewTexture(GrMtlGpu*, SkBudgeted budgeted,
-                                                const GrSurfaceDesc&,
-                                                MTLTextureDescriptor*,
+                                                const GrSurfaceDesc&, MTLTextureDescriptor*,
                                                 GrMipMapsStatus);
 
     static sk_sp<GrMtlTexture> MakeWrappedTexture(GrMtlGpu*, const GrSurfaceDesc&, id<MTLTexture>,
@@ -50,15 +49,14 @@ protected:
         INHERITED::onRelease();
     }
 
-     bool onStealBackendTexture(GrBackendTexture*, SkImage::BackendTextureReleaseProc*) override {
-         return false;
-     }
+    bool onStealBackendTexture(GrBackendTexture*, SkImage::BackendTextureReleaseProc*) override {
+        return false;
+    }
 
 private:
     enum Wrapped { kWrapped };
 
-    GrMtlTexture(GrMtlGpu*, SkBudgeted, const GrSurfaceDesc&, id<MTLTexture>,
-                 GrMipMapsStatus);
+    GrMtlTexture(GrMtlGpu*, SkBudgeted, const GrSurfaceDesc&, id<MTLTexture>, GrMipMapsStatus);
 
     GrMtlTexture(GrMtlGpu*, Wrapped, const GrSurfaceDesc&, id<MTLTexture>, GrMipMapsStatus,
                  GrWrapCacheable, GrIOType);

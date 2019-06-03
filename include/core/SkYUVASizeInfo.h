@@ -8,14 +8,14 @@
 #ifndef SkYUVASizeInfo_DEFINED
 #define SkYUVASizeInfo_DEFINED
 
-#include "SkEncodedOrigin.h"
-#include "SkImageInfo.h"
-#include "SkSize.h"
+#include "include/codec/SkEncodedOrigin.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkSize.h"
 
 struct SK_API SkYUVASizeInfo {
     static constexpr auto kMaxCount = 4;
 
-    SkISize     fSizes[kMaxCount];
+    SkISize fSizes[kMaxCount];
 
     /**
      * While the widths of the Y, U, V and A planes are not restricted, the
@@ -29,7 +29,7 @@ struct SK_API SkYUVASizeInfo {
      * include any extra padding, while, in this case, every single row of
      * the allocation must be at least "widthBytes".
      */
-    size_t      fWidthBytes[kMaxCount];
+    size_t fWidthBytes[kMaxCount];
 
     /**
      * YUVA data often comes from formats like JPEG that support EXIF orientation.
@@ -37,7 +37,7 @@ struct SK_API SkYUVASizeInfo {
      */
     SkEncodedOrigin fOrigin = kDefault_SkEncodedOrigin;
 
-    bool operator==(const SkYUVASizeInfo& that) const {
+    bool operator==(const SkYUVASizeInfo& that) const noexcept {
         for (int i = 0; i < kMaxCount; ++i) {
             SkASSERT((!fSizes[i].isEmpty() && fWidthBytes[i]) ||
                      (fSizes[i].isEmpty() && !fWidthBytes[i]));
@@ -49,7 +49,7 @@ struct SK_API SkYUVASizeInfo {
         return true;
     }
 
-    size_t computeTotalBytes() const {
+    size_t computeTotalBytes() const noexcept {
         size_t totalBytes = 0;
 
         for (int i = 0; i < kMaxCount; ++i) {
@@ -62,7 +62,6 @@ struct SK_API SkYUVASizeInfo {
     }
 
     void computePlanes(void* base, void* planes[kMaxCount]) const;
-
 };
 
-#endif // SkYUVASizeInfo_DEFINED
+#endif  // SkYUVASizeInfo_DEFINED

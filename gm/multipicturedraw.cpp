@@ -5,17 +5,32 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-
-#include "SkColorFilter.h"
-#include "SkMultiPictureDraw.h"
-#include "SkPath.h"
-#include "SkPictureRecorder.h"
-#include "SkSurface.h"
+#include "gm/gm.h"
+#include "include/core/SkBBHFactory.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkMultiPictureDraw.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPicture.h"
+#include "include/core/SkPictureRecorder.h"
+#include "include/core/SkRRect.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkTArray.h"
+#include "tools/ToolUtils.h"
 
 constexpr SkScalar kRoot3Over2 = 0.86602545f;  // sin(60)
-constexpr SkScalar kRoot3      = 1.73205081f;
+constexpr SkScalar kRoot3 = 1.73205081f;
 
 constexpr int kHexSide = 30;
 constexpr int kNumHexX = 6;
@@ -30,7 +45,7 @@ constexpr int kTriSide = 40;
 // Create a hexagon centered at (originX, originY)
 static SkPath make_hex_path(SkScalar originX, SkScalar originY) {
     SkPath hex;
-    hex.moveTo(originX-kHexSide, originY);
+    hex.moveTo(originX - kHexSide, originY);
     hex.rLineTo(SkScalarHalf(kHexSide), kRoot3Over2 * kHexSide);
     hex.rLineTo(SkIntToScalar(kHexSide), 0);
     hex.rLineTo(SkScalarHalf(kHexSide), -kHexSide * kRoot3Over2);
@@ -44,7 +59,6 @@ static SkPath make_hex_path(SkScalar originX, SkScalar originY) {
 // each hexagon is in its own layer. The layers are to exercise Ganesh's
 // layer hoisting.
 static sk_sp<SkPicture> make_hex_plane_picture(SkColor fillColor) {
-
     // Create a hexagon with its center at the origin
     SkPath hex = make_hex_path(0, 0);
 
@@ -59,8 +73,7 @@ static sk_sp<SkPicture> make_hex_plane_picture(SkColor fillColor) {
     SkPictureRecorder recorder;
     SkRTreeFactory bbhFactory;
 
-    SkCanvas* canvas = recorder.beginRecording(SkIntToScalar(kPicWidth),
-                                               SkIntToScalar(kPicHeight),
+    SkCanvas* canvas = recorder.beginRecording(SkIntToScalar(kPicWidth), SkIntToScalar(kPicHeight),
                                                &bbhFactory);
 
     SkScalar xPos, yPos = 0;
@@ -89,7 +102,6 @@ static sk_sp<SkPicture> make_hex_plane_picture(SkColor fillColor) {
 // This is intended to exercise the layer hoisting code's clip handling (in
 // tile mode).
 static sk_sp<SkPicture> make_single_layer_hex_plane_picture() {
-
     // Create a hexagon with its center at the origin
     SkPath hex = make_hex_path(0, 0);
 
@@ -124,7 +136,7 @@ static sk_sp<SkPicture> make_single_layer_hex_plane_picture() {
             // The color of the filled hex is swapped to yield a different
             // pattern in each tile. This allows an error in layer hoisting (e.g.,
             // the clip isn't blocking cache reuse) to cause a visual discrepancy.
-            canvas->drawPath(hex, ((x+y) % 3) ? whiteFill : greyFill);
+            canvas->drawPath(hex, ((x + y) % 3) ? whiteFill : greyFill);
             canvas->drawPath(hex, stroke);
             canvas->restore();
 
@@ -163,16 +175,15 @@ static sk_sp<SkPicture> make_tri_picture() {
     SkPictureRecorder recorder;
     SkRTreeFactory bbhFactory;
 
-    SkCanvas* canvas = recorder.beginRecording(SkIntToScalar(kPicWidth),
-                                               SkIntToScalar(kPicHeight),
+    SkCanvas* canvas = recorder.beginRecording(SkIntToScalar(kPicWidth), SkIntToScalar(kPicHeight),
                                                &bbhFactory);
     SkRect r = tri.getBounds();
-    r.outset(2.0f, 2.0f);       // outset for stroke
+    r.outset(2.0f, 2.0f);  // outset for stroke
     canvas->clipRect(r);
     // The saveLayer/restore block is to exercise layer hoisting
     canvas->saveLayer(nullptr, nullptr);
-        canvas->drawPath(tri, fill);
-        canvas->drawPath(tri, stroke);
+    canvas->drawPath(tri, fill);
+    canvas->drawPath(tri, stroke);
     canvas->restore();
 
     return recorder.finishRecordingAsPicture();
@@ -182,11 +193,10 @@ static sk_sp<SkPicture> make_sub_picture(const SkPicture* tri) {
     SkPictureRecorder recorder;
     SkRTreeFactory bbhFactory;
 
-    SkCanvas* canvas = recorder.beginRecording(SkIntToScalar(kPicWidth),
-                                               SkIntToScalar(kPicHeight),
+    SkCanvas* canvas = recorder.beginRecording(SkIntToScalar(kPicWidth), SkIntToScalar(kPicHeight),
                                                &bbhFactory);
 
-    canvas->scale(1.0f/2.0f, 1.0f/2.0f);
+    canvas->scale(1.0f / 2.0f, 1.0f / 2.0f);
 
     canvas->save();
     canvas->translate(SkScalarHalf(kTriSide), 0);
@@ -216,18 +226,17 @@ static sk_sp<SkPicture> make_sierpinski_picture() {
     SkPictureRecorder recorder;
     SkRTreeFactory bbhFactory;
 
-    SkCanvas* canvas = recorder.beginRecording(SkIntToScalar(kPicWidth),
-                                               SkIntToScalar(kPicHeight),
+    SkCanvas* canvas = recorder.beginRecording(SkIntToScalar(kPicWidth), SkIntToScalar(kPicHeight),
                                                &bbhFactory);
 
     constexpr int kNumLevels = 4;
     for (int i = 0; i < kNumLevels; ++i) {
         canvas->save();
-            canvas->translate(kPicWidth/2 - (i+1) * (kTriSide/2.0f), 0.0f);
-            for (int j = 0; j < i+1; ++j) {
-                canvas->drawPicture(pic);
-                canvas->translate(SkIntToScalar(kTriSide), 0);
-            }
+        canvas->translate(kPicWidth / 2 - (i + 1) * (kTriSide / 2.0f), 0.0f);
+        for (int j = 0; j < i + 1; ++j) {
+            canvas->drawPicture(pic);
+            canvas->translate(SkIntToScalar(kTriSide), 0);
+        }
         canvas->restore();
 
         pic = make_sub_picture(pic.get());
@@ -241,22 +250,20 @@ static sk_sp<SkPicture> make_sierpinski_picture() {
 static sk_sp<SkSurface> create_compat_surface(SkCanvas* canvas, int width, int height) {
     SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
 
-    return sk_tool_utils::makeSurface(canvas, info);
+    return ToolUtils::makeSurface(canvas, info);
 }
 
 // This class stores the information required to compose all the result
 // fragments potentially generated by the MultiPictureDraw object
 class ComposeStep {
 public:
-    ComposeStep() : fX(0.0f), fY(0.0f), fPaint(nullptr) { }
-    ~ComposeStep() {
-        delete fPaint;
-    }
+    ComposeStep() : fX(0.0f), fY(0.0f), fPaint(nullptr) {}
+    ~ComposeStep() { delete fPaint; }
 
     sk_sp<SkSurface> fSurf;
-    SkScalar   fX;
-    SkScalar   fY;
-    SkPaint*   fPaint;
+    SkScalar fX;
+    SkScalar fY;
+    SkPaint* fPaint;
 };
 
 typedef void (*PFContentMtd)(SkCanvas* canvas, const SkPicture* pictures[kNumPictures]);
@@ -321,11 +328,11 @@ static void invpath_clip(SkCanvas* canvas, const SkPicture* pictures[kNumPicture
 // Reuse a single base (triangular) picture a _lot_ (rotated, scaled and translated).
 static void sierpinski(SkCanvas* canvas, const SkPicture* pictures[kNumPictures]) {
     canvas->save();
-        canvas->drawPicture(pictures[2]);
+    canvas->drawPicture(pictures[2]);
 
-        canvas->rotate(180.0f);
-        canvas->translate(-SkIntToScalar(kPicWidth), -SkIntToScalar(kPicHeight));
-        canvas->drawPicture(pictures[2]);
+    canvas->rotate(180.0f);
+    canvas->translate(-SkIntToScalar(kPicWidth), -SkIntToScalar(kPicHeight));
+    canvas->drawPicture(pictures[2]);
     canvas->restore();
 }
 
@@ -334,18 +341,12 @@ static void big_layer(SkCanvas* canvas, const SkPicture* pictures[kNumPictures])
 }
 
 constexpr PFContentMtd gContentMthds[] = {
-    no_clip,
-    rect_clip,
-    rrect_clip,
-    path_clip,
-    invpath_clip,
-    sierpinski,
-    big_layer,
+        no_clip, rect_clip, rrect_clip, path_clip, invpath_clip, sierpinski, big_layer,
 };
 
 static void create_content(SkMultiPictureDraw* mpd, PFContentMtd pfGen,
-                           const SkPicture* pictures[kNumPictures],
-                           SkCanvas* dest, const SkMatrix& xform) {
+                           const SkPicture* pictures[kNumPictures], SkCanvas* dest,
+                           const SkMatrix& xform) {
     sk_sp<SkPicture> composite;
 
     {
@@ -353,8 +354,7 @@ static void create_content(SkMultiPictureDraw* mpd, PFContentMtd pfGen,
         SkRTreeFactory bbhFactory;
 
         SkCanvas* pictureCanvas = recorder.beginRecording(SkIntToScalar(kPicWidth),
-                                                          SkIntToScalar(kPicHeight),
-                                                          &bbhFactory);
+                                                          SkIntToScalar(kPicHeight), &bbhFactory);
 
         (*pfGen)(pictureCanvas, pictures);
 
@@ -364,16 +364,13 @@ static void create_content(SkMultiPictureDraw* mpd, PFContentMtd pfGen,
     mpd->add(dest, composite.get(), &xform);
 }
 
-typedef void(*PFLayoutMtd)(SkCanvas* finalCanvas, SkMultiPictureDraw* mpd,
-                           PFContentMtd pfGen, const SkPicture* pictures[kNumPictures],
-                           SkTArray<ComposeStep>* composeSteps);
+typedef void (*PFLayoutMtd)(SkCanvas* finalCanvas, SkMultiPictureDraw* mpd, PFContentMtd pfGen,
+                            const SkPicture* pictures[kNumPictures],
+                            SkTArray<ComposeStep>* composeSteps);
 
 // Draw the content into a single canvas
-static void simple(SkCanvas* finalCanvas, SkMultiPictureDraw* mpd,
-                   PFContentMtd pfGen,
-                   const SkPicture* pictures[kNumPictures],
-                   SkTArray<ComposeStep> *composeSteps) {
-
+static void simple(SkCanvas* finalCanvas, SkMultiPictureDraw* mpd, PFContentMtd pfGen,
+                   const SkPicture* pictures[kNumPictures], SkTArray<ComposeStep>* composeSteps) {
     ComposeStep& step = composeSteps->push_back();
 
     step.fSurf = create_compat_surface(finalCanvas, kPicWidth, kPicHeight);
@@ -384,10 +381,8 @@ static void simple(SkCanvas* finalCanvas, SkMultiPictureDraw* mpd,
 }
 
 // Draw the content into multiple canvases/tiles
-static void tiled(SkCanvas* finalCanvas, SkMultiPictureDraw* mpd,
-                  PFContentMtd pfGen,
-                  const SkPicture* pictures[kNumPictures],
-                  SkTArray<ComposeStep> *composeSteps) {
+static void tiled(SkCanvas* finalCanvas, SkMultiPictureDraw* mpd, PFContentMtd pfGen,
+                  const SkPicture* pictures[kNumPictures], SkTArray<ComposeStep>* composeSteps) {
     const int kNumTilesX = 2;
     const int kNumTilesY = 2;
     const int kTileWidth = kPicWidth / kNumTilesX;
@@ -396,168 +391,161 @@ static void tiled(SkCanvas* finalCanvas, SkMultiPictureDraw* mpd,
     SkASSERT(kPicWidth == kNumTilesX * kTileWidth);
     SkASSERT(kPicHeight == kNumTilesY * kTileHeight);
 
-    const SkColor colors[kNumTilesX][kNumTilesY] = {
-        { SK_ColorCYAN,   SK_ColorMAGENTA },
-        { SK_ColorYELLOW, SK_ColorGREEN   }
-    };
+    const SkColor colors[kNumTilesX][kNumTilesY] = {{SK_ColorCYAN, SK_ColorMAGENTA},
+                                                    {SK_ColorYELLOW, SK_ColorGREEN}};
 
     for (int y = 0; y < kNumTilesY; ++y) {
         for (int x = 0; x < kNumTilesX; ++x) {
             ComposeStep& step = composeSteps->push_back();
 
-            step.fX = SkIntToScalar(x*kTileWidth);
-            step.fY = SkIntToScalar(y*kTileHeight);
+            step.fX = SkIntToScalar(x * kTileWidth);
+            step.fY = SkIntToScalar(y * kTileHeight);
             step.fPaint = new SkPaint;
             step.fPaint->setColorFilter(
-                SkColorFilter::MakeModeFilter(colors[x][y], SkBlendMode::kModulate));
+                    SkColorFilters::Blend(colors[x][y], SkBlendMode::kModulate));
 
             step.fSurf = create_compat_surface(finalCanvas, kTileWidth, kTileHeight);
 
             SkCanvas* subCanvas = step.fSurf->getCanvas();
 
-            const SkMatrix trans = SkMatrix::MakeTrans(-SkIntToScalar(x*kTileWidth),
-                                                       -SkIntToScalar(y*kTileHeight));
+            const SkMatrix trans = SkMatrix::MakeTrans(-SkIntToScalar(x * kTileWidth),
+                                                       -SkIntToScalar(y * kTileHeight));
 
             create_content(mpd, pfGen, pictures, subCanvas, trans);
         }
     }
 }
 
-constexpr PFLayoutMtd gLayoutMthds[] = { simple, tiled };
+constexpr PFLayoutMtd gLayoutMthds[] = {simple, tiled};
 
 namespace skiagm {
-    /**
-     * This GM exercises the SkMultiPictureDraw object. It tests the
-     * cross product of:
-     *      tiled vs. all-at-once rendering (e.g., into many or just 1 canvas)
-     *      different clips (e.g., none, rect, rrect)
-     *      single vs. multiple pictures (e.g., normal vs. picture-pile-style content)
-     */
-    class MultiPictureDraw : public GM {
-    public:
-        enum Content {
-            kNoClipSingle_Content,
-            kRectClipMulti_Content,
-            kRRectClipMulti_Content,
-            kPathClipMulti_Content,
-            kInvPathClipMulti_Content,
-            kSierpinski_Content,
-            kBigLayer_Content,
+/**
+ * This GM exercises the SkMultiPictureDraw object. It tests the
+ * cross product of:
+ *      tiled vs. all-at-once rendering (e.g., into many or just 1 canvas)
+ *      different clips (e.g., none, rect, rrect)
+ *      single vs. multiple pictures (e.g., normal vs. picture-pile-style content)
+ */
+class MultiPictureDraw : public GM {
+public:
+    enum Content {
+        kNoClipSingle_Content,
+        kRectClipMulti_Content,
+        kRRectClipMulti_Content,
+        kPathClipMulti_Content,
+        kInvPathClipMulti_Content,
+        kSierpinski_Content,
+        kBigLayer_Content,
 
-            kLast_Content = kBigLayer_Content
-        };
-
-        const int kContentCnt = kLast_Content + 1;
-
-        enum Layout {
-            kSimple_Layout,
-            kTiled_Layout,
-
-            kLast_Layout = kTiled_Layout
-        };
-
-        const int kLayoutCnt = kLast_Layout + 1;
-
-        MultiPictureDraw(Content content, Layout layout) : fContent(content), fLayout(layout) {
-            SkASSERT(SK_ARRAY_COUNT(gLayoutMthds) == kLayoutCnt);
-            SkASSERT(SK_ARRAY_COUNT(gContentMthds) == kContentCnt);
-
-            for (int i = 0; i < kNumPictures; ++i) {
-                fPictures[i] = nullptr;
-            }
-        }
-
-        ~MultiPictureDraw() override {
-            for (int i = 0; i < kNumPictures; ++i) {
-                SkSafeUnref(fPictures[i]);
-            }
-        }
-
-    protected:
-        Content          fContent;
-        Layout           fLayout;
-        const SkPicture* fPictures[kNumPictures];
-
-        void onOnceBeforeDraw() override {
-            fPictures[0] = make_hex_plane_picture(SK_ColorWHITE).release();
-            fPictures[1] = make_hex_plane_picture(SK_ColorGRAY).release();
-            fPictures[2] = make_sierpinski_picture().release();
-            fPictures[3] = make_single_layer_hex_plane_picture().release();
-        }
-
-        void onDraw(SkCanvas* canvas) override {
-            SkMultiPictureDraw mpd;
-            SkTArray<ComposeStep> composeSteps;
-
-            // Fill up the MultiPictureDraw
-            (*gLayoutMthds[fLayout])(canvas, &mpd,
-                                     gContentMthds[fContent],
-                                     fPictures, &composeSteps);
-
-            mpd.draw();
-
-            // Compose all the drawn canvases into the final canvas
-            for (int i = 0; i < composeSteps.count(); ++i) {
-                const ComposeStep& step = composeSteps[i];
-
-                canvas->drawImage(step.fSurf->makeImageSnapshot().get(),
-                                  step.fX, step.fY, step.fPaint);
-            }
-        }
-
-        SkISize onISize() override { return SkISize::Make(kPicWidth, kPicHeight); }
-
-        SkString onShortName() override {
-            const char* gContentNames[] = {
-                "noclip", "rectclip", "rrectclip", "pathclip",
-                "invpathclip", "sierpinski", "biglayer"
-            };
-            const char* gLayoutNames[] = { "simple", "tiled" };
-
-            SkASSERT(SK_ARRAY_COUNT(gLayoutNames) == kLayoutCnt);
-            SkASSERT(SK_ARRAY_COUNT(gContentNames) == kContentCnt);
-
-            SkString name("multipicturedraw_");
-
-            name.append(gContentNames[fContent]);
-            name.append("_");
-            name.append(gLayoutNames[fLayout]);
-            return name;
-        }
-
-        bool runAsBench() const override { return true; }
-
-    private:
-        typedef GM INHERITED;
+        kLast_Content = kBigLayer_Content
     };
 
-    DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kNoClipSingle_Content,
-                                       MultiPictureDraw::kSimple_Layout);)
-    DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kRectClipMulti_Content,
-                                       MultiPictureDraw::kSimple_Layout);)
-    DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kRRectClipMulti_Content,
-                                       MultiPictureDraw::kSimple_Layout);)
-    DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kPathClipMulti_Content,
-                                       MultiPictureDraw::kSimple_Layout);)
-    DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kInvPathClipMulti_Content,
-                                       MultiPictureDraw::kSimple_Layout);)
-    DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kSierpinski_Content,
-                                       MultiPictureDraw::kSimple_Layout);)
-    DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kBigLayer_Content,
-                                       MultiPictureDraw::kSimple_Layout);)
+    const int kContentCnt = kLast_Content + 1;
 
-    DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kNoClipSingle_Content,
-                                       MultiPictureDraw::kTiled_Layout);)
-    DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kRectClipMulti_Content,
-                                       MultiPictureDraw::kTiled_Layout);)
-    DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kRRectClipMulti_Content,
-                                       MultiPictureDraw::kTiled_Layout);)
-    DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kPathClipMulti_Content,
-                                       MultiPictureDraw::kTiled_Layout);)
-    DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kInvPathClipMulti_Content,
-                                       MultiPictureDraw::kTiled_Layout);)
-    DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kSierpinski_Content,
-                                       MultiPictureDraw::kTiled_Layout);)
-    DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kBigLayer_Content,
-                                       MultiPictureDraw::kTiled_Layout);)
-}
+    enum Layout {
+        kSimple_Layout,
+        kTiled_Layout,
+
+        kLast_Layout = kTiled_Layout
+    };
+
+    const int kLayoutCnt = kLast_Layout + 1;
+
+    MultiPictureDraw(Content content, Layout layout) : fContent(content), fLayout(layout) {
+        SkASSERT(SK_ARRAY_COUNT(gLayoutMthds) == kLayoutCnt);
+        SkASSERT(SK_ARRAY_COUNT(gContentMthds) == kContentCnt);
+
+        for (int i = 0; i < kNumPictures; ++i) {
+            fPictures[i] = nullptr;
+        }
+    }
+
+    ~MultiPictureDraw() override {
+        for (int i = 0; i < kNumPictures; ++i) {
+            SkSafeUnref(fPictures[i]);
+        }
+    }
+
+protected:
+    Content fContent;
+    Layout fLayout;
+    const SkPicture* fPictures[kNumPictures];
+
+    void onOnceBeforeDraw() override {
+        fPictures[0] = make_hex_plane_picture(SK_ColorWHITE).release();
+        fPictures[1] = make_hex_plane_picture(SK_ColorGRAY).release();
+        fPictures[2] = make_sierpinski_picture().release();
+        fPictures[3] = make_single_layer_hex_plane_picture().release();
+    }
+
+    void onDraw(SkCanvas* canvas) override {
+        SkMultiPictureDraw mpd;
+        SkTArray<ComposeStep> composeSteps;
+
+        // Fill up the MultiPictureDraw
+        (*gLayoutMthds[fLayout])(canvas, &mpd, gContentMthds[fContent], fPictures, &composeSteps);
+
+        mpd.draw();
+
+        // Compose all the drawn canvases into the final canvas
+        for (int i = 0; i < composeSteps.count(); ++i) {
+            const ComposeStep& step = composeSteps[i];
+
+            canvas->drawImage(step.fSurf->makeImageSnapshot().get(), step.fX, step.fY, step.fPaint);
+        }
+    }
+
+    SkISize onISize() override { return SkISize::Make(kPicWidth, kPicHeight); }
+
+    SkString onShortName() override {
+        const char* gContentNames[] = {"noclip",      "rectclip",   "rrectclip", "pathclip",
+                                       "invpathclip", "sierpinski", "biglayer"};
+        const char* gLayoutNames[] = {"simple", "tiled"};
+
+        SkASSERT(SK_ARRAY_COUNT(gLayoutNames) == kLayoutCnt);
+        SkASSERT(SK_ARRAY_COUNT(gContentNames) == kContentCnt);
+
+        SkString name("multipicturedraw_");
+
+        name.append(gContentNames[fContent]);
+        name.append("_");
+        name.append(gLayoutNames[fLayout]);
+        return name;
+    }
+
+    bool runAsBench() const override { return true; }
+
+private:
+    typedef GM INHERITED;
+};
+
+DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kNoClipSingle_Content,
+                                   MultiPictureDraw::kSimple_Layout);)
+DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kRectClipMulti_Content,
+                                   MultiPictureDraw::kSimple_Layout);)
+DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kRRectClipMulti_Content,
+                                   MultiPictureDraw::kSimple_Layout);)
+DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kPathClipMulti_Content,
+                                   MultiPictureDraw::kSimple_Layout);)
+DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kInvPathClipMulti_Content,
+                                   MultiPictureDraw::kSimple_Layout);)
+DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kSierpinski_Content,
+                                   MultiPictureDraw::kSimple_Layout);)
+DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kBigLayer_Content,
+                                   MultiPictureDraw::kSimple_Layout);)
+
+DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kNoClipSingle_Content,
+                                   MultiPictureDraw::kTiled_Layout);)
+DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kRectClipMulti_Content,
+                                   MultiPictureDraw::kTiled_Layout);)
+DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kRRectClipMulti_Content,
+                                   MultiPictureDraw::kTiled_Layout);)
+DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kPathClipMulti_Content,
+                                   MultiPictureDraw::kTiled_Layout);)
+DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kInvPathClipMulti_Content,
+                                   MultiPictureDraw::kTiled_Layout);)
+DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kSierpinski_Content,
+                                   MultiPictureDraw::kTiled_Layout);)
+DEF_GM(return new MultiPictureDraw(MultiPictureDraw::kBigLayer_Content,
+                                   MultiPictureDraw::kTiled_Layout);)
+}  // namespace skiagm

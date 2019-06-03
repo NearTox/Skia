@@ -8,17 +8,16 @@
 #ifndef SkBmpMaskCodec_DEFINED
 #define SkBmpMaskCodec_DEFINED
 
-#include "SkBmpBaseCodec.h"
-#include "SkImageInfo.h"
-#include "SkMaskSwizzler.h"
-#include "SkTypes.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkTypes.h"
+#include "src/codec/SkBmpBaseCodec.h"
+#include "src/codec/SkMaskSwizzler.h"
 
 /*
  * This class implements the decoding for bmp images using bit masks
  */
 class SkBmpMaskCodec : public SkBmpBaseCodec {
 public:
-
     /*
      * Creates an instance of the decoder
      *
@@ -31,30 +30,26 @@ public:
      * @param masks color masks for certain bmp formats
      * @param rowOrder indicates whether rows are ordered top-down or bottom-up
      */
-    SkBmpMaskCodec(SkEncodedInfo&& info, std::unique_ptr<SkStream>,
-            uint16_t bitsPerPixel, SkMasks* masks,
-            SkCodec::SkScanlineOrder rowOrder);
+    SkBmpMaskCodec(SkEncodedInfo&& info, std::unique_ptr<SkStream>, uint16_t bitsPerPixel,
+                   SkMasks* masks, SkCodec::SkScanlineOrder rowOrder);
 
 protected:
-
-    Result onGetPixels(const SkImageInfo& dstInfo, void* dst,
-                       size_t dstRowBytes, const Options&,
+    Result onGetPixels(const SkImageInfo& dstInfo, void* dst, size_t dstRowBytes, const Options&,
                        int*) override;
 
     SkCodec::Result onPrepareToDecode(const SkImageInfo& dstInfo,
-            const SkCodec::Options& options) override;
+                                      const SkCodec::Options& options) override;
 
 private:
-
-    SkSampler* getSampler(bool createIfNecessary) override {
+    SkSampler* getSampler(bool createIfNecessary) noexcept override {
         SkASSERT(fMaskSwizzler);
         return fMaskSwizzler.get();
     }
 
     int decodeRows(const SkImageInfo& dstInfo, void* dst, size_t dstRowBytes,
-            const Options& opts) override;
+                   const Options& opts) override;
 
-    std::unique_ptr<SkMasks>        fMasks;
+    std::unique_ptr<SkMasks> fMasks;
     std::unique_ptr<SkMaskSwizzler> fMaskSwizzler;
 
     typedef SkBmpBaseCodec INHERITED;

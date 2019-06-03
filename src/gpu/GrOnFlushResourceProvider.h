@@ -8,11 +8,11 @@
 #ifndef GrOnFlushResourceProvider_DEFINED
 #define GrOnFlushResourceProvider_DEFINED
 
-#include "GrDeferredUpload.h"
-#include "GrOpFlushState.h"
-#include "GrResourceProvider.h"
-#include "SkRefCnt.h"
-#include "SkTArray.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/SkTArray.h"
+#include "src/gpu/GrDeferredUpload.h"
+#include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/GrResourceProvider.h"
 
 class GrDrawingManager;
 class GrOpList;
@@ -37,16 +37,15 @@ public:
      * callback. The callback should return the render target contexts used to render the atlases
      * in 'results'.
      */
-    virtual void preFlush(GrOnFlushResourceProvider*,
-                          const uint32_t* opListIDs, int numOpListIDs,
+    virtual void preFlush(GrOnFlushResourceProvider*, const uint32_t* opListIDs, int numOpListIDs,
                           SkTArray<sk_sp<GrRenderTargetContext>>* results) = 0;
 
     /**
      * Called once flushing is complete and all ops indicated by preFlush have been executed and
      * released. startTokenForNextFlush can be used to track resources used in the current flush.
      */
-    virtual void postFlush(GrDeferredUploadToken startTokenForNextFlush,
-                           const uint32_t* opListIDs, int numOpListIDs) {}
+    virtual void postFlush(GrDeferredUploadToken startTokenForNextFlush, const uint32_t* opListIDs,
+                           int numOpListIDs) {}
 
     /**
      * Tells the callback owner to hold onto this object when freeing GPU resources
@@ -65,13 +64,6 @@ public:
 class GrOnFlushResourceProvider {
 public:
     explicit GrOnFlushResourceProvider(GrDrawingManager* drawingMgr) : fDrawingMgr(drawingMgr) {}
-
-#if 0
-    sk_sp<GrRenderTargetContext> makeRenderTargetContext(const GrSurfaceDesc&,
-                                                         GrSurfaceOrigin,
-                                                         sk_sp<SkColorSpace>,
-                                                         const SkSurfaceProps*);
-#endif
 
     sk_sp<GrRenderTargetContext> makeRenderTargetContext(sk_sp<GrSurfaceProxy>,
                                                          sk_sp<SkColorSpace>,

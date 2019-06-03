@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "SkMask.h"
+#include "src/core/SkMask.h"
 
-#include "SkMalloc.h"
-#include "SkSafeMath.h"
-#include "SkTo.h"
+#include "include/private/SkMalloc.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkSafeMath.h"
 
 /** returns the product if it is positive and fits in 31 bits. Otherwise this
     returns 0.
@@ -22,9 +22,7 @@ static int32_t safeMul32(int32_t a, int32_t b) {
     return 0;
 }
 
-size_t SkMask::computeImageSize() const {
-    return safeMul32(fBounds.height(), fRowBytes);
-}
+size_t SkMask::computeImageSize() const { return safeMul32(fBounds.height(), fRowBytes); }
 
 size_t SkMask::computeTotalImageSize() const {
     size_t size = this->computeImageSize();
@@ -49,9 +47,7 @@ uint8_t* SkMask::AllocImage(size_t size, AllocType at) {
 /** We explicitly use this allocator for SkBimap pixels, so that we can
     freely assign memory allocated by one class to the other.
 */
-void SkMask::FreeImage(void* image) {
-    sk_free(image);
-}
+void SkMask::FreeImage(void* image) { sk_free(image); }
 
 SkMask SkMask::PrepareDestination(int radiusX, int radiusY, const SkMask& src) {
     SkSafeMath safe;
@@ -84,16 +80,15 @@ SkMask SkMask::PrepareDestination(int radiusX, int radiusY, const SkMask& src) {
     return dst;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////
 
 static const int gMaskFormatToShift[] = {
-    ~0, // BW -- not supported
-    0,  // A8
-    0,  // 3D
-    2,  // ARGB32
-    1,  // LCD16
-    0,  // SDF
+        ~0,  // BW -- not supported
+        0,   // A8
+        0,   // 3D
+        2,   // ARGB32
+        1,   // LCD16
+        0,   // SDF
 };
 
 static int maskFormatToShift(SkMask::Format format) {

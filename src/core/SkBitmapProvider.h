@@ -8,18 +8,13 @@
 #ifndef SkBitmapProvider_DEFINED
 #define SkBitmapProvider_DEFINED
 
-#include "SkImage.h"
-#include "SkBitmapCache.h"
+#include "include/core/SkImage.h"
+#include "src/core/SkBitmapCache.h"
 
 class SkBitmapProvider {
 public:
-    explicit SkBitmapProvider(const SkImage* img)
-        : fImage(img) {
-        SkASSERT(img);
-    }
-    SkBitmapProvider(const SkBitmapProvider& other)
-        : fImage(other.fImage)
-    {}
+    explicit SkBitmapProvider(const SkImage* img) : fImage(img) { SkASSERT(img); }
+    SkBitmapProvider(const SkBitmapProvider& other) : fImage(other.fImage) {}
 
     SkBitmapCacheDesc makeCacheDesc() const;
     void notifyAddedToCache() const;

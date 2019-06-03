@@ -7,14 +7,14 @@
 #ifndef SkPictureFlat_DEFINED
 #define SkPictureFlat_DEFINED
 
-#include "SkCanvas.h"
-#include "SkChecksum.h"
-#include "SkReadBuffer.h"
-#include "SkWriteBuffer.h"
-#include "SkPaint.h"
-#include "SkPicture.h"
-#include "SkPtrRecorder.h"
-#include "SkTDynamicHash.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPicture.h"
+#include "include/private/SkChecksum.h"
+#include "src/core/SkPtrRecorder.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkTDynamicHash.h"
+#include "src/core/SkWriteBuffer.h"
 
 /*
  * Note: While adding new DrawTypes, it is necessary to add to the end of this list
@@ -70,7 +70,7 @@ enum DrawType {
     PUSH_CULL,  // deprecated, M41 was last Chromium version to write this to an .skp
     POP_CULL,   // deprecated, M41 was last Chromium version to write this to an .skp
 
-    DRAW_PATCH, // could not add in aphabetical order
+    DRAW_PATCH,  // could not add in aphabetical order
     DRAW_PICTURE_MATRIX_PAINT,
     DRAW_TEXT_BLOB,
     DRAW_IMAGE,
@@ -87,7 +87,7 @@ enum DrawType {
     DRAW_DRAWABLE_MATRIX,
     DRAW_TEXT_RSXFORM_DEPRECATED_DEC_2018,
 
-    TRANSLATE_Z, // deprecated (M60)
+    TRANSLATE_Z,  // deprecated (M60)
 
     DRAW_SHADOW_REC,
     DRAW_IMAGE_LATTICE,
@@ -97,37 +97,39 @@ enum DrawType {
 
     FLUSH,
 
-    DRAW_IMAGE_SET,
+    DRAW_EDGEAA_IMAGE_SET,
 
     SAVE_BEHIND,
 
-    DRAW_EDGEAA_RECT,
+    DRAW_EDGEAA_QUAD,
 
-    LAST_DRAWTYPE_ENUM = DRAW_EDGEAA_RECT,
+    DRAW_BEHIND_PAINT,
+
+    LAST_DRAWTYPE_ENUM = DRAW_BEHIND_PAINT,
 };
 
 enum DrawVertexFlags {
-    DRAW_VERTICES_HAS_TEXS    = 0x01,
-    DRAW_VERTICES_HAS_COLORS  = 0x02,
+    DRAW_VERTICES_HAS_TEXS = 0x01,
+    DRAW_VERTICES_HAS_COLORS = 0x02,
     DRAW_VERTICES_HAS_INDICES = 0x04,
-    DRAW_VERTICES_HAS_XFER    = 0x08,
+    DRAW_VERTICES_HAS_XFER = 0x08,
 };
 
 enum DrawAtlasFlags {
-    DRAW_ATLAS_HAS_COLORS   = 1 << 0,
-    DRAW_ATLAS_HAS_CULL     = 1 << 1,
+    DRAW_ATLAS_HAS_COLORS = 1 << 0,
+    DRAW_ATLAS_HAS_CULL = 1 << 1,
 };
 
 enum DrawTextRSXformFlags {
-    DRAW_TEXT_RSXFORM_HAS_CULL  = 1 << 0,
+    DRAW_TEXT_RSXFORM_HAS_CULL = 1 << 0,
 };
 
 enum SaveLayerRecFlatFlags {
-    SAVELAYERREC_HAS_BOUNDS     = 1 << 0,
-    SAVELAYERREC_HAS_PAINT      = 1 << 1,
-    SAVELAYERREC_HAS_BACKDROP   = 1 << 2,
-    SAVELAYERREC_HAS_FLAGS      = 1 << 3,
-    SAVELAYERREC_HAS_CLIPMASK   = 1 << 4,
+    SAVELAYERREC_HAS_BOUNDS = 1 << 0,
+    SAVELAYERREC_HAS_PAINT = 1 << 1,
+    SAVELAYERREC_HAS_BACKDROP = 1 << 2,
+    SAVELAYERREC_HAS_FLAGS = 1 << 3,
+    SAVELAYERREC_HAS_CLIPMASK = 1 << 4,
     SAVELAYERREC_HAS_CLIPMATRIX = 1 << 5,
 };
 
@@ -139,13 +141,12 @@ enum SaveBehindFlatFlags {
 // clipparams are packed in 5 bits
 //  doAA:1 | clipOp:4
 
-static inline uint32_t ClipParams_pack(SkClipOp op, bool doAA) {
+static inline uint32_t ClipParams_pack(SkClipOp op, bool doAA) noexcept {
     unsigned doAABit = doAA ? 1 : 0;
     return (doAABit << 4) | static_cast<int>(op);
 }
 
 template <typename T> T asValidEnum(SkReadBuffer* buffer, uint32_t candidate) {
-
     if (buffer->validate(candidate <= static_cast<uint32_t>(T::kMax_EnumValue))) {
         return static_cast<T>(candidate);
     }
@@ -157,7 +158,7 @@ static inline SkClipOp ClipParams_unpackRegionOp(SkReadBuffer* buffer, uint32_t 
     return asValidEnum<SkClipOp>(buffer, packed & 0xF);
 }
 
-static inline bool ClipParams_unpackDoAA(uint32_t packed) {
+static inline bool ClipParams_unpackDoAA(uint32_t packed) noexcept {
     return SkToBool((packed >> 4) & 1);
 }
 
@@ -165,19 +166,19 @@ static inline bool ClipParams_unpackDoAA(uint32_t packed) {
 
 class SkTypefacePlayback {
 public:
-    SkTypefacePlayback() : fCount(0), fArray(nullptr) {}
+    SkTypefacePlayback() noexcept : fCount(0), fArray(nullptr) {}
     ~SkTypefacePlayback() = default;
 
     void setCount(size_t count);
 
-    size_t count() const { return fCount; }
+    size_t count() const noexcept { return fCount; }
 
     sk_sp<SkTypeface>& operator[](size_t index) {
         SkASSERT(index < fCount);
         return fArray[index];
     }
 
-    void setupBuffer(SkReadBuffer& buffer) const {
+    void setupBuffer(SkReadBuffer& buffer) const noexcept {
         buffer.setTypefaceArray(fArray.get(), fCount);
     }
 
@@ -192,9 +193,9 @@ public:
 
     ~SkFactoryPlayback() { delete[] fArray; }
 
-    SkFlattenable::Factory* base() const { return fArray; }
+    SkFlattenable::Factory* base() const noexcept { return fArray; }
 
-    void setupBuffer(SkReadBuffer& buffer) const {
+    void setupBuffer(SkReadBuffer& buffer) const noexcept {
         buffer.setFactoryPlayback(fArray, fCount);
     }
 

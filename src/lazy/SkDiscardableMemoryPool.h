@@ -8,15 +8,15 @@
 #ifndef SkDiscardableMemoryPool_DEFINED
 #define SkDiscardableMemoryPool_DEFINED
 
-#include "SkDiscardableMemory.h"
-#include "SkMutex.h"
+#include "include/private/SkMutex.h"
+#include "src/core/SkDiscardableMemory.h"
 
 #ifndef SK_LAZY_CACHE_STATS
-    #ifdef SK_DEBUG
-        #define SK_LAZY_CACHE_STATS 1
-    #else
-        #define SK_LAZY_CACHE_STATS 0
-    #endif
+#ifdef SK_DEBUG
+#define SK_LAZY_CACHE_STATS 1
+#else
+#define SK_LAZY_CACHE_STATS 0
+#endif
 #endif
 
 /**
@@ -27,7 +27,7 @@
  */
 class SkDiscardableMemoryPool : public SkDiscardableMemory::Factory {
 public:
-    virtual ~SkDiscardableMemoryPool() { }
+    virtual ~SkDiscardableMemoryPool() {}
 
     virtual size_t getRAMUsed() = 0;
     virtual void setRAMBudget(size_t budget) = 0;
@@ -36,7 +36,7 @@ public:
     /** purges all unlocked DMs */
     virtual void dumpPool() = 0;
 
-    #if SK_LAZY_CACHE_STATS
+#if SK_LAZY_CACHE_STATS
     /**
      * These two values are a count of the number of successful and
      * failed calls to SkDiscardableMemory::lock() for all DMs managed
@@ -45,7 +45,7 @@ public:
     virtual int getCacheHits() = 0;
     virtual int getCacheMisses() = 0;
     virtual void resetCacheHitsAndMisses() = 0;
-    #endif
+#endif
 
     /**
      *  This non-global pool can be used for unit tests to verify that

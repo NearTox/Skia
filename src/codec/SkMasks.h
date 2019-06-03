@@ -7,7 +7,7 @@
 #ifndef SkMasks_DEFINED
 #define SkMasks_DEFINED
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 /*
  *
@@ -16,7 +16,6 @@
  */
 class SkMasks {
 public:
-
     /*
      *
      * Input bit masks format
@@ -34,11 +33,11 @@ public:
      * Contains all of the information for a single mask
      *
      */
-     struct MaskInfo {
+    struct MaskInfo {
         uint32_t mask;
         uint32_t shift;
         uint32_t size;
-     };
+    };
 
     /*
      *
@@ -63,12 +62,9 @@ public:
      * The alpha mask may be used in other decoding modes
      *
      */
-     uint32_t getAlphaMask() const {
-        return fAlpha.mask;
-     }
+    uint32_t getAlphaMask() const noexcept { return fAlpha.mask; }
 
 private:
-
     /*
      *
      * Constructor

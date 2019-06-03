@@ -8,14 +8,14 @@
 #ifndef SkNextID_DEFINED
 #define SkNextID_DEFINED
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 class SkNextID {
 public:
     /**
      *  Shared between SkPixelRef's generationID and SkImage's uniqueID
      */
-    static uint32_t ImageID();
+    static uint32_t ImageID() noexcept;
 };
 
 #endif

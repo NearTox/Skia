@@ -8,20 +8,15 @@
 #ifndef GrWindowRectsState_DEFINED
 #define GrWindowRectsState_DEFINED
 
-#include "GrWindowRectangles.h"
+#include "src/gpu/GrWindowRectangles.h"
 
 class GrWindowRectsState {
 public:
-    enum class Mode : bool {
-        kExclusive,
-        kInclusive
-    };
+    enum class Mode : bool { kExclusive, kInclusive };
 
     GrWindowRectsState() : fMode(Mode::kExclusive) {}
     GrWindowRectsState(const GrWindowRectangles& windows, Mode mode)
-        : fMode(mode)
-        , fWindows(windows) {
-    }
+            : fMode(mode), fWindows(windows) {}
 
     bool enabled() const { return Mode::kInclusive == fMode || !fWindows.empty(); }
     Mode mode() const { return fMode; }
@@ -47,8 +42,8 @@ public:
     bool operator!=(const GrWindowRectsState& that) const { return !(*this == that); }
 
 private:
-    Mode                 fMode;
-    GrWindowRectangles   fWindows;
+    Mode fMode;
+    GrWindowRectangles fWindows;
 };
 
 #endif

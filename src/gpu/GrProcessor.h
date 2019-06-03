@@ -8,15 +8,15 @@
 #ifndef GrProcessor_DEFINED
 #define GrProcessor_DEFINED
 
-#include "GrColor.h"
-#include "GrGpuBuffer.h"
-#include "GrProcessorUnitTest.h"
-#include "GrSamplerState.h"
-#include "GrShaderVar.h"
-#include "GrSurfaceProxyPriv.h"
-#include "GrTextureProxy.h"
-#include "SkMath.h"
-#include "SkString.h"
+#include "include/core/SkMath.h"
+#include "include/core/SkString.h"
+#include "include/gpu/GrSamplerState.h"
+#include "include/private/GrColor.h"
+#include "include/private/GrTextureProxy.h"
+#include "src/gpu/GrGpuBuffer.h"
+#include "src/gpu/GrProcessorUnitTest.h"
+#include "src/gpu/GrShaderVar.h"
+#include "src/gpu/GrSurfaceProxyPriv.h"
 
 class GrContext;
 class GrResourceProvider;
@@ -27,28 +27,28 @@ class GrResourceProvider;
  */
 class GrProcessorKeyBuilder {
 public:
-    GrProcessorKeyBuilder(SkTArray<unsigned char, true>* data) : fData(data), fCount(0) {
+    GrProcessorKeyBuilder(SkTArray<unsigned char, true>* data) noexcept : fData(data), fCount(0) {
         SkASSERT(0 == fData->count() % sizeof(uint32_t));
     }
 
-    void add32(uint32_t v) {
+    void add32(uint32_t v) noexcept {
         ++fCount;
         fData->push_back_n(4, reinterpret_cast<uint8_t*>(&v));
     }
 
     /** Inserts count uint32_ts into the key. The returned pointer is only valid until the next
         add*() call. */
-    uint32_t* SK_WARN_UNUSED_RESULT add32n(int count) {
+    uint32_t* SK_WARN_UNUSED_RESULT add32n(int count) noexcept {
         SkASSERT(count > 0);
         fCount += count;
         return reinterpret_cast<uint32_t*>(fData->push_back_n(4 * count));
     }
 
-    size_t size() const { return sizeof(uint32_t) * fCount; }
+    size_t size() const noexcept { return sizeof(uint32_t) * fCount; }
 
 private:
-    SkTArray<uint8_t, true>* fData; // unowned ptr to the larger key.
-    int fCount;                     // number of uint32_ts added to fData by the processor.
+    SkTArray<uint8_t, true>* fData;  // unowned ptr to the larger key.
+    int fCount;                      // number of uint32_ts added to fData by the processor.
 };
 
 /** Provides custom shader code to the Ganesh shading pipeline. GrProcessor objects *must* be
@@ -83,7 +83,6 @@ public:
         kEllipticalRRectEffect_ClassID,
         kGP_ClassID,
         kVertexColorSpaceBenchGP_ClassID,
-        kGrAAFillRRectOp_Processor_ClassID,
         kGrAARectEffect_ClassID,
         kGrAlphaThresholdFragmentProcessor_ClassID,
         kGrArithmeticFP_ClassID,
@@ -91,12 +90,13 @@ public:
         kGrBitmapTextGeoProc_ClassID,
         kGrBlurredEdgeFragmentProcessor_ClassID,
         kGrCCClipProcessor_ClassID,
-        kGrCCCoverageProcessor_ClassID,
         kGrCCPathProcessor_ClassID,
         kGrCircleBlurFragmentProcessor_ClassID,
         kGrCircleEffect_ClassID,
         kGrClampedGradientEffect_ClassID,
         kGrColorSpaceXformEffect_ClassID,
+        kGrComposeLerpEffect_ClassID,
+        kGrComposeLerpRedEffect_ClassID,
         kGrConfigConversionEffect_ClassID,
         kGrConicEffect_ClassID,
         kGrConstColorProcessor_ClassID,
@@ -110,7 +110,9 @@ public:
         kGrDitherEffect_ClassID,
         kGrDualIntervalGradientColorizer_ClassID,
         kGrEllipseEffect_ClassID,
+        kGrFillRRectOp_Processor_ClassID,
         kGrGaussianConvolutionFragmentProcessor_ClassID,
+        kGrGSCoverageProcessor_ClassID,
         kGrImprovedPerlinNoiseEffect_ClassID,
         kGrLightingEffect_ClassID,
         kGrLinearGradient_ClassID,
@@ -122,6 +124,7 @@ public:
         kGrMorphologyEffect_ClassID,
         kGrMixerEffect_ClassID,
         kGrOverdrawFragmentProcessor_ClassID,
+        kGrOverrideInputFragmentProcessor_ClassID,
         kGrPathProcessor_ClassID,
         kGrPerlinNoise2Effect_ClassID,
         kGrPipelineDynamicStateTestProcessor_ClassID,
@@ -145,6 +148,7 @@ public:
         kGrTwoPointConicalGradientLayout_ClassID,
         kGrUnpremulInputFragmentProcessor_ClassID,
         kGrUnrolledBinaryGradientColorizer_ClassID,
+        kGrVSCoverageProcessor_ClassID,
         kGrYUVtoRGBEffect_ClassID,
         kHighContrastFilterEffect_ClassID,
         kInstanceProcessor_ClassID,
@@ -158,6 +162,7 @@ public:
         kQuadPerEdgeAAGeometryProcessor_ClassID,
         kReplaceInputFragmentProcessor_ClassID,
         kRRectsGaussianEdgeFP_ClassID,
+        kSampleLocationsTestProcessor_ClassID,
         kSeriesFragmentProcessor_ClassID,
         kShaderPDXferProcessor_ClassID,
         kFwidthSquircleTestProcessor_ClassID,
@@ -187,29 +192,44 @@ public:
     SkString dumpInfo() const { return SkString("<Processor information unavailable>"); }
 #endif
 
+    /**
+     * Custom shader features provided by the framework. These require special handling when
+     * preparing shaders, so a processor must call setWillUseCustomFeature() from its constructor if
+     * it intends to use one.
+     */
+    enum class CustomFeatures {
+        kNone = 0,
+        kSampleLocations = 1 << 0,
+    };
+
+    GR_DECL_BITFIELD_CLASS_OPS_FRIENDS(CustomFeatures);
+
+    CustomFeatures requestedFeatures() const noexcept { return fRequestedFeatures; }
+
     void* operator new(size_t size);
     void operator delete(void* target);
 
-    void* operator new(size_t size, void* placement) {
+    void* operator new(size_t size, void* placement) noexcept {
         return ::operator new(size, placement);
     }
-    void operator delete(void* target, void* placement) {
-        ::operator delete(target, placement);
-    }
+    void operator delete(void* target, void* placement) { ::operator delete(target, placement); }
 
     /** Helper for down-casting to a GrProcessor subclass */
     template <typename T> const T& cast() const { return *static_cast<const T*>(this); }
 
-    ClassID classID() const { return fClassID; }
+    ClassID classID() const noexcept { return fClassID; }
 
 protected:
-    GrProcessor(ClassID classID) : fClassID(classID) {}
-
-private:
+    GrProcessor(ClassID classID) noexcept : fClassID(classID) {}
     GrProcessor(const GrProcessor&) = delete;
     GrProcessor& operator=(const GrProcessor&) = delete;
 
-    ClassID fClassID;
+    void setWillUseCustomFeature(CustomFeatures feature) noexcept { fRequestedFeatures |= feature; }
+
+    const ClassID fClassID;
+    CustomFeatures fRequestedFeatures = CustomFeatures::kNone;
 };
+
+GR_MAKE_BITFIELD_CLASS_OPS(GrProcessor::CustomFeatures);
 
 #endif

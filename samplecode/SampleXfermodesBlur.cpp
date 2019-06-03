@@ -5,43 +5,43 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkBitmap.h"
-#include "SkBlurMask.h"
-#include "SkCanvas.h"
-#include "SkCornerPathEffect.h"
-#include "SkFont.h"
-#include "SkGradientShader.h"
-#include "SkGraphics.h"
-#include "SkPath.h"
-#include "SkRandom.h"
-#include "SkRegion.h"
-#include "SkShader.h"
-#include "SkUTF.h"
-#include "SkColorPriv.h"
-#include "SkColorFilter.h"
-#include "SkTextUtils.h"
-#include "SkTime.h"
-#include "SkTypeface.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkGraphics.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRegion.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkTime.h"
+#include "include/core/SkTypeface.h"
+#include "include/effects/SkCornerPathEffect.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/utils/SkRandom.h"
+#include "include/utils/SkTextUtils.h"
+#include "samplecode/Sample.h"
+#include "src/core/SkBlurMask.h"
+#include "src/utils/SkUTF.h"
 
-#include "SkStream.h"
-#include "SkColorPriv.h"
-#include "SkBlurMaskFilter.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkStream.h"
+#include "include/effects/SkBlurMaskFilter.h"
 
 static void setNamedTypeface(SkFont* font, const char name[]) {
     font->setTypeface(SkTypeface::MakeFromName(name, SkFontStyle()));
 }
 
-static uint16_t gBG[] = { 0xFFFF, 0xCCCF, 0xCCCF, 0xFFFF };
+static uint16_t gBG[] = {0xFFFF, 0xCCCF, 0xCCCF, 0xFFFF};
 
 class XfermodesBlurView : public Sample {
-    SkBitmap    fBG;
-    SkBitmap    fSrcB, fDstB;
+    SkBitmap fBG;
+    SkBitmap fSrcB, fDstB;
 
     void draw_mode(SkCanvas* canvas, SkBlendMode mode, int alpha, SkScalar x, SkScalar y) {
         SkPaint p;
-        p.setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle,
-                                               SkBlurMask::ConvertRadiusToSigma(5)));
+        p.setMaskFilter(
+                SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, SkBlurMask::ConvertRadiusToSigma(5)));
 
         SkScalar ww = SkIntToScalar(W);
         SkScalar hh = SkIntToScalar(H);
@@ -50,7 +50,7 @@ class XfermodesBlurView : public Sample {
         // left three quarters of the canvas
         p.setColor(0xFFCC44FF);
         SkRect r;
-        r.set(0, 0, ww*3/4, hh*3/4);
+        r.set(0, 0, ww * 3 / 4, hh * 3 / 4);
         r.offset(x, y);
         canvas->drawOval(r, p);
 
@@ -59,7 +59,7 @@ class XfermodesBlurView : public Sample {
         // draw a square overlapping the circle
         // in the lower right of the canvas
         p.setColor(0x00AA6633 | alpha << 24);
-        r.set(ww/3, hh/3, ww*19/20, hh*19/20);
+        r.set(ww / 3, hh / 3, ww * 19 / 20, hh * 19 / 20);
         r.offset(x, y);
         canvas->drawRect(r, p);
     }
@@ -68,8 +68,8 @@ public:
     const static int W = 64;
     const static int H = 64;
     XfermodesBlurView() {
-        fBG.installPixels(SkImageInfo::Make(2, 2, kARGB_4444_SkColorType, kPremul_SkAlphaType),
-                          gBG, 4);
+        fBG.installPixels(SkImageInfo::Make(2, 2, kARGB_4444_SkColorType, kPremul_SkAlphaType), gBG,
+                          4);
     }
 
 protected:
@@ -85,27 +85,18 @@ protected:
         canvas->translate(SkIntToScalar(10), SkIntToScalar(20));
 
         const SkBlendMode gModes[] = {
-            SkBlendMode::kClear,
-            SkBlendMode::kSrc,
-            SkBlendMode::kDst,
-            SkBlendMode::kSrcOver,
-            SkBlendMode::kDstOver,
-            SkBlendMode::kSrcIn,
-            SkBlendMode::kDstIn,
-            SkBlendMode::kSrcOut,
-            SkBlendMode::kDstOut,
-            SkBlendMode::kSrcATop,
-            SkBlendMode::kDstATop,
-            SkBlendMode::kXor,
-            SkBlendMode::kPlus,
+                SkBlendMode::kClear,   SkBlendMode::kSrc,     SkBlendMode::kDst,
+                SkBlendMode::kSrcOver, SkBlendMode::kDstOver, SkBlendMode::kSrcIn,
+                SkBlendMode::kDstIn,   SkBlendMode::kSrcOut,  SkBlendMode::kDstOut,
+                SkBlendMode::kSrcATop, SkBlendMode::kDstATop, SkBlendMode::kXor,
+                SkBlendMode::kPlus,
         };
 
         const SkScalar w = SkIntToScalar(W);
         const SkScalar h = SkIntToScalar(H);
         SkMatrix m;
         m.setScale(SkIntToScalar(6), SkIntToScalar(6));
-        auto s = SkShader::MakeBitmapShader(fBG, SkShader::kRepeat_TileMode,
-                                            SkShader::kRepeat_TileMode, &m);
+        auto s = fBG.makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, &m);
 
         SkFont font;
         font.setEdging(SkFont::Edging::kSubpixelAntiAlias);
@@ -118,7 +109,7 @@ protected:
             SkScalar x = x0, y = 0;
             for (size_t i = 0; i < SK_ARRAY_COUNT(gModes); i++) {
                 SkRect r;
-                r.set(x, y, x+w, y+h);
+                r.set(x, y, x + w, y + h);
 
                 SkPaint p;
                 p.setStyle(SkPaint::kFill_Style);
@@ -135,8 +126,8 @@ protected:
                 canvas->drawRect(r, p);
 
                 const char* label = SkBlendMode_Name(gModes[i]);
-                SkTextUtils::DrawString(canvas, label, x + w/2, y - font.getSize()/2, font, SkPaint(),
-                                        SkTextUtils::kCenter_Align);
+                SkTextUtils::DrawString(canvas, label, x + w / 2, y - font.getSize() / 2, font,
+                                        SkPaint(), SkTextUtils::kCenter_Align);
                 x += w + SkIntToScalar(10);
                 if ((i % W) == W - 1) {
                     x = x0;
@@ -153,4 +144,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new XfermodesBlurView(); )
+DEF_SAMPLE(return new XfermodesBlurView();)

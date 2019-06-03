@@ -5,29 +5,27 @@
  * found in the LICENSE file.
  */
 
-#include "SkData.h"
-#include "SkDataTable.h"
-#include "SkOnce.h"
+#include "include/core/SkDataTable.h"
+#include "include/core/SkData.h"
+#include "include/private/SkOnce.h"
 
-static void malloc_freeproc(void* context) {
-    sk_free(context);
-}
+static void malloc_freeproc(void* context) { sk_free(context); }
 
 // Makes empty table
 SkDataTable::SkDataTable() {
     fCount = 0;
-    fElemSize = 0;   // 0 signals that we use fDir instead of fElems
+    fElemSize = 0;  // 0 signals that we use fDir instead of fElems
     fU.fDir = nullptr;
     fFreeProc = nullptr;
     fFreeProcContext = nullptr;
 }
 
-SkDataTable::SkDataTable(const void* array, size_t elemSize, int count,
-                         FreeProc proc, void* context) {
+SkDataTable::SkDataTable(const void* array, size_t elemSize, int count, FreeProc proc,
+                         void* context) {
     SkASSERT(count > 0);
 
     fCount = count;
-    fElemSize = elemSize;   // non-zero signals we use fElems instead of fDir
+    fElemSize = elemSize;  // non-zero signals we use fElems instead of fDir
     fU.fElems = (const char*)array;
     fFreeProc = proc;
     fFreeProcContext = context;
@@ -80,12 +78,12 @@ const void* SkDataTable::at(int index, size_t* size) const {
 sk_sp<SkDataTable> SkDataTable::MakeEmpty() {
     static SkDataTable* singleton;
     static SkOnce once;
-    once([]{ singleton = new SkDataTable(); });
+    once([] { singleton = new SkDataTable(); });
     return sk_ref_sp(singleton);
 }
 
-sk_sp<SkDataTable> SkDataTable::MakeCopyArrays(const void * const * ptrs,
-                                               const size_t sizes[], int count) {
+sk_sp<SkDataTable> SkDataTable::MakeCopyArrays(const void* const* ptrs, const size_t sizes[],
+                                               int count) {
     if (count <= 0) {
         return SkDataTable::MakeEmpty();
     }

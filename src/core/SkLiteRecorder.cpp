@@ -5,13 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "SkLiteDL.h"
-#include "SkLiteRecorder.h"
-#include "SkSurface.h"
+#include "src/core/SkLiteRecorder.h"
+#include "include/core/SkSurface.h"
+#include "src/core/SkLiteDL.h"
 
-SkLiteRecorder::SkLiteRecorder()
-    : INHERITED(1, 1)
-    , fDL(nullptr) {}
+SkLiteRecorder::SkLiteRecorder() : INHERITED(1, 1), fDL(nullptr) {}
 
 void SkLiteRecorder::reset(SkLiteDL* dl, const SkIRect& bounds) {
     this->resetCanvas(bounds.right(), bounds.bottom());
@@ -36,20 +34,20 @@ bool SkLiteRecorder::onDoSaveBehind(const SkRect* subset) {
 }
 void SkLiteRecorder::willRestore() { fDL->restore(); }
 
-void SkLiteRecorder::didConcat   (const SkMatrix& matrix)   { fDL->   concat(matrix); }
-void SkLiteRecorder::didSetMatrix(const SkMatrix& matrix)   { fDL->setMatrix(matrix); }
+void SkLiteRecorder::didConcat(const SkMatrix& matrix) { fDL->concat(matrix); }
+void SkLiteRecorder::didSetMatrix(const SkMatrix& matrix) { fDL->setMatrix(matrix); }
 void SkLiteRecorder::didTranslate(SkScalar dx, SkScalar dy) { fDL->translate(dx, dy); }
 
 void SkLiteRecorder::onClipRect(const SkRect& rect, SkClipOp op, ClipEdgeStyle style) {
-    fDL->clipRect(rect, op, style==kSoft_ClipEdgeStyle);
+    fDL->clipRect(rect, op, style == kSoft_ClipEdgeStyle);
     this->INHERITED::onClipRect(rect, op, style);
 }
 void SkLiteRecorder::onClipRRect(const SkRRect& rrect, SkClipOp op, ClipEdgeStyle style) {
-    fDL->clipRRect(rrect, op, style==kSoft_ClipEdgeStyle);
+    fDL->clipRRect(rrect, op, style == kSoft_ClipEdgeStyle);
     this->INHERITED::onClipRRect(rrect, op, style);
 }
 void SkLiteRecorder::onClipPath(const SkPath& path, SkClipOp op, ClipEdgeStyle style) {
-    fDL->clipPath(path, op, style==kSoft_ClipEdgeStyle);
+    fDL->clipPath(path, op, style == kSoft_ClipEdgeStyle);
     this->INHERITED::onClipPath(path, op, style);
 }
 void SkLiteRecorder::onClipRegion(const SkRegion& region, SkClipOp op) {
@@ -57,18 +55,13 @@ void SkLiteRecorder::onClipRegion(const SkRegion& region, SkClipOp op) {
     this->INHERITED::onClipRegion(region, op);
 }
 
-void SkLiteRecorder::onDrawPaint(const SkPaint& paint) {
-    fDL->drawPaint(paint);
-}
+void SkLiteRecorder::onDrawPaint(const SkPaint& paint) { fDL->drawPaint(paint); }
+void SkLiteRecorder::onDrawBehind(const SkPaint& paint) { fDL->drawBehind(paint); }
 void SkLiteRecorder::onDrawPath(const SkPath& path, const SkPaint& paint) {
     fDL->drawPath(path, paint);
 }
 void SkLiteRecorder::onDrawRect(const SkRect& rect, const SkPaint& paint) {
     fDL->drawRect(rect, paint);
-}
-void SkLiteRecorder::onDrawEdgeAARect(const SkRect& rect, SkCanvas::QuadAAFlags aa, SkColor color,
-                                      SkBlendMode mode) {
-    fDL->drawEdgeAARect(rect, aa, color, mode);
 }
 void SkLiteRecorder::onDrawRegion(const SkRegion& region, const SkPaint& paint) {
     fDL->drawRegion(region, paint);
@@ -99,66 +92,50 @@ void SkLiteRecorder::onDrawAnnotation(const SkRect& rect, const char key[], SkDa
     fDL->drawAnnotation(rect, key, val);
 }
 
-void SkLiteRecorder::onDrawTextBlob(const SkTextBlob* blob,
-                                    SkScalar x, SkScalar y,
+void SkLiteRecorder::onDrawTextBlob(const SkTextBlob* blob, SkScalar x, SkScalar y,
                                     const SkPaint& paint) {
-    fDL->drawTextBlob(blob, x,y, paint);
+    fDL->drawTextBlob(blob, x, y, paint);
 }
 
-void SkLiteRecorder::onDrawBitmap(const SkBitmap& bm,
-                                  SkScalar x, SkScalar y,
+void SkLiteRecorder::onDrawBitmap(const SkBitmap& bm, SkScalar x, SkScalar y,
                                   const SkPaint* paint) {
-    fDL->drawImage(SkImage::MakeFromBitmap(bm), x,y, paint);
+    fDL->drawImage(SkImage::MakeFromBitmap(bm), x, y, paint);
 }
-void SkLiteRecorder::onDrawBitmapNine(const SkBitmap& bm,
-                                      const SkIRect& center, const SkRect& dst,
+void SkLiteRecorder::onDrawBitmapNine(const SkBitmap& bm, const SkIRect& center, const SkRect& dst,
                                       const SkPaint* paint) {
     fDL->drawImageNine(SkImage::MakeFromBitmap(bm), center, dst, paint);
 }
-void SkLiteRecorder::onDrawBitmapRect(const SkBitmap& bm,
-                                      const SkRect* src, const SkRect& dst,
+void SkLiteRecorder::onDrawBitmapRect(const SkBitmap& bm, const SkRect* src, const SkRect& dst,
                                       const SkPaint* paint, SrcRectConstraint constraint) {
     fDL->drawImageRect(SkImage::MakeFromBitmap(bm), src, dst, paint, constraint);
 }
-void SkLiteRecorder::onDrawBitmapLattice(const SkBitmap& bm,
-                                         const SkCanvas::Lattice& lattice, const SkRect& dst,
-                                         const SkPaint* paint) {
+void SkLiteRecorder::onDrawBitmapLattice(const SkBitmap& bm, const SkCanvas::Lattice& lattice,
+                                         const SkRect& dst, const SkPaint* paint) {
     fDL->drawImageLattice(SkImage::MakeFromBitmap(bm), lattice, dst, paint);
 }
 
-void SkLiteRecorder::onDrawImage(const SkImage* img,
-                                  SkScalar x, SkScalar y,
-                                  const SkPaint* paint) {
-    fDL->drawImage(sk_ref_sp(img), x,y, paint);
+void SkLiteRecorder::onDrawImage(const SkImage* img, SkScalar x, SkScalar y, const SkPaint* paint) {
+    fDL->drawImage(sk_ref_sp(img), x, y, paint);
 }
-void SkLiteRecorder::onDrawImageNine(const SkImage* img,
-                                      const SkIRect& center, const SkRect& dst,
-                                      const SkPaint* paint) {
+void SkLiteRecorder::onDrawImageNine(const SkImage* img, const SkIRect& center, const SkRect& dst,
+                                     const SkPaint* paint) {
     fDL->drawImageNine(sk_ref_sp(img), center, dst, paint);
 }
-void SkLiteRecorder::onDrawImageRect(const SkImage* img,
-                                      const SkRect* src, const SkRect& dst,
-                                      const SkPaint* paint, SrcRectConstraint constraint) {
+void SkLiteRecorder::onDrawImageRect(const SkImage* img, const SkRect* src, const SkRect& dst,
+                                     const SkPaint* paint, SrcRectConstraint constraint) {
     fDL->drawImageRect(sk_ref_sp(img), src, dst, paint, constraint);
 }
-void SkLiteRecorder::onDrawImageLattice(const SkImage* img,
-                                        const SkCanvas::Lattice& lattice, const SkRect& dst,
-                                        const SkPaint* paint) {
+void SkLiteRecorder::onDrawImageLattice(const SkImage* img, const SkCanvas::Lattice& lattice,
+                                        const SkRect& dst, const SkPaint* paint) {
     fDL->drawImageLattice(sk_ref_sp(img), lattice, dst, paint);
 }
 
-void SkLiteRecorder::onDrawImageSet(const ImageSetEntry set[], int count,
-                                    SkFilterQuality filterQuality, SkBlendMode mode) {
-    fDL->drawImageSet(set, count, filterQuality, mode);
-}
-
-void SkLiteRecorder::onDrawPatch(const SkPoint cubics[12],
-                                 const SkColor colors[4], const SkPoint texCoords[4],
-                                 SkBlendMode bmode, const SkPaint& paint) {
+void SkLiteRecorder::onDrawPatch(const SkPoint cubics[12], const SkColor colors[4],
+                                 const SkPoint texCoords[4], SkBlendMode bmode,
+                                 const SkPaint& paint) {
     fDL->drawPatch(cubics, colors, texCoords, bmode, paint);
 }
-void SkLiteRecorder::onDrawPoints(SkCanvas::PointMode mode,
-                                  size_t count, const SkPoint pts[],
+void SkLiteRecorder::onDrawPoints(SkCanvas::PointMode mode, size_t count, const SkPoint pts[],
                                   const SkPaint& paint) {
     fDL->drawPoints(mode, count, pts, paint);
 }
@@ -179,4 +156,15 @@ void SkLiteRecorder::onDrawAtlas(const SkImage* atlas,
 }
 void SkLiteRecorder::onDrawShadowRec(const SkPath& path, const SkDrawShadowRec& rec) {
     fDL->drawShadowRec(path, rec);
+}
+
+void SkLiteRecorder::onDrawEdgeAAQuad(const SkRect& rect, const SkPoint clip[4],
+                                      QuadAAFlags aaFlags, SkColor color, SkBlendMode mode) {
+    fDL->drawEdgeAAQuad(rect, clip, aaFlags, color, mode);
+}
+void SkLiteRecorder::onDrawEdgeAAImageSet(const ImageSetEntry set[], int count,
+                                          const SkPoint dstClips[],
+                                          const SkMatrix preViewMatrices[], const SkPaint* paint,
+                                          SkCanvas::SrcRectConstraint constraint) {
+    fDL->drawEdgeAAImageSet(set, count, dstClips, preViewMatrices, paint, constraint);
 }

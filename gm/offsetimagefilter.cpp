@@ -5,12 +5,24 @@
  * found in the LICENSE file.
  */
 
-#include "SkImage.h"
-#include "SkImageSource.h"
-#include "SkOffsetImageFilter.h"
-#include "SkSurface.h"
-#include "gm.h"
-#include "sk_tool_utils.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/effects/SkImageSource.h"
+#include "include/effects/SkOffsetImageFilter.h"
+#include "tools/ToolUtils.h"
+
+#include <utility>
 
 #define WIDTH 600
 #define HEIGHT 100
@@ -18,28 +30,19 @@
 
 class OffsetImageFilterGM : public skiagm::GM {
 public:
-    OffsetImageFilterGM() {
-        this->setBGColor(0xFF000000);
-    }
+    OffsetImageFilterGM() { this->setBGColor(0xFF000000); }
 
 protected:
-    SkString onShortName() override {
-        return SkString("offsetimagefilter");
-    }
+    SkString onShortName() override { return SkString("offsetimagefilter"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(WIDTH, HEIGHT);
-    }
+    SkISize onISize() override { return SkISize::Make(WIDTH, HEIGHT); }
 
     void onOnceBeforeDraw() override {
         fBitmap = SkImage::MakeFromBitmap(
-            sk_tool_utils::create_string_bitmap(80, 80, 0xD000D000, 15, 65, 96, "e"));
+                ToolUtils::create_string_bitmap(80, 80, 0xD000D000, 15, 65, 96, "e"));
 
         fCheckerboard = SkImage::MakeFromBitmap(
-            sk_tool_utils::create_checkerboard_bitmap(80, 80,
-                                                      0xFFA0A0A0,
-                                                      0xFF404040,
-                                                      8));
+                ToolUtils::create_checkerboard_bitmap(80, 80, 0xFFA0A0A0, 0xFF404040, 8));
     }
 
     void onDraw(SkCanvas* canvas) override {
@@ -48,14 +51,12 @@ protected:
 
         for (int i = 0; i < 4; i++) {
             sk_sp<SkImage> image = (i & 0x01) ? fCheckerboard : fBitmap;
-            SkIRect cropRect = SkIRect::MakeXYWH(i * 12,
-                                                 i * 8,
-                                                 image->width() - i * 8,
+            SkIRect cropRect = SkIRect::MakeXYWH(i * 12, i * 8, image->width() - i * 8,
                                                  image->height() - i * 12);
             SkImageFilter::CropRect rect(SkRect::Make(cropRect));
             sk_sp<SkImageFilter> tileInput(SkImageSource::Make(image));
-            SkScalar dx = SkIntToScalar(i*5);
-            SkScalar dy = SkIntToScalar(i*10);
+            SkScalar dx = SkIntToScalar(i * 5);
+            SkScalar dy = SkIntToScalar(i * 10);
             paint.setImageFilter(SkOffsetImageFilter::Make(dx, dy, std::move(tileInput), &rect));
             DrawClippedImage(canvas, image.get(), paint, 1, cropRect);
             canvas->translate(SkIntToScalar(image->width() + MARGIN), 0);
@@ -66,9 +67,10 @@ protected:
         paint.setImageFilter(SkOffsetImageFilter::Make(-5, -10, nullptr, &rect));
         DrawClippedImage(canvas, fBitmap.get(), paint, 2, cropRect);
     }
+
 private:
     static void DrawClippedImage(SkCanvas* canvas, const SkImage* image, const SkPaint& paint,
-                          SkScalar scale, const SkIRect& cropRect) {
+                                 SkScalar scale, const SkIRect& cropRect) {
         SkRect clipRect = SkRect::MakeIWH(image->width(), image->height());
 
         canvas->save();
@@ -93,7 +95,7 @@ private:
 
     typedef skiagm::GM INHERITED;
 };
-DEF_GM( return new OffsetImageFilterGM; )
+DEF_GM(return new OffsetImageFilterGM;)
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -102,9 +104,7 @@ public:
     SimpleOffsetImageFilterGM() {}
 
 protected:
-    SkString onShortName() override {
-        return SkString("simple-offsetimagefilter");
-    }
+    SkString onShortName() override { return SkString("simple-offsetimagefilter"); }
 
     SkISize onISize() override { return SkISize::Make(640, 200); }
 
@@ -201,4 +201,4 @@ protected:
 private:
     typedef skiagm::GM INHERITED;
 };
-DEF_GM( return new SimpleOffsetImageFilterGM; )
+DEF_GM(return new SimpleOffsetImageFilterGM;)

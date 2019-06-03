@@ -5,12 +5,23 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "Resources.h"
-#include "SkCodec.h"
-#include "SkColorSpace.h"
-#include "SkImage.h"
-#include "SkImagePriv.h"
+#include "gm/gm.h"
+#include "include/codec/SkCodec.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkData.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "src/core/SkImagePriv.h"
+#include "tools/Resources.h"
+
+#include <initializer_list>
+#include <memory>
 
 sk_sp<SkImage> make_raster_image(const char* path) {
     sk_sp<SkData> resourceData = GetResourceAsData(path);
@@ -40,17 +51,13 @@ public:
     MakeCSGM() {}
 
 protected:
-    SkString onShortName() override {
-        return SkString("makecolorspace");
-    }
+    SkString onShortName() override { return SkString("makecolorspace"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(128*3, 128*4);
-    }
+    SkISize onISize() override { return SkISize::Make(128 * 3, 128 * 4); }
 
     DrawResult onDraw(SkCanvas* canvas, SkString* errorMsg) override {
-        sk_sp<SkColorSpace> wideGamut = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB,
-                                                              SkNamedGamut::kAdobeRGB);
+        sk_sp<SkColorSpace> wideGamut =
+                SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kAdobeRGB);
         sk_sp<SkColorSpace> wideGamutLinear = wideGamut->makeLinearGamma();
 
         // Lazy images
@@ -88,8 +95,8 @@ DEF_GM(return new MakeCSGM;)
 
 DEF_SIMPLE_GM_BG(makecolortypeandspace, canvas, 128 * 3, 128 * 4, SK_ColorWHITE) {
     sk_sp<SkImage> images[] = {
-        GetResourceAsImage("images/mandrill_128.png"),
-        GetResourceAsImage("images/color_wheel.png"),
+            GetResourceAsImage("images/mandrill_128.png"),
+            GetResourceAsImage("images/color_wheel.png"),
     };
     auto rec2020 = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kRec2020);
 
@@ -118,15 +125,15 @@ DEF_SIMPLE_GM_BG(makecolortypeandspace, canvas, 128 * 3, 128 * 4, SK_ColorWHITE)
 
             // Grayscale in the original color space. This fails in even more cases, due to the
             // above opaque issue, and because Ganesh doesn't support drawing to gray, at all.
-            auto imageGray = image->makeColorTypeAndColorSpace(kGray_8_SkColorType,
-                                                               image->refColorSpace());
+            auto imageGray =
+                    image->makeColorTypeAndColorSpace(kGray_8_SkColorType, image->refColorSpace());
             if (!lazy || imageGray->makeRasterImage()) {
                 canvas->drawImage(imageGray, 256, 0);
             }
 
             images[j] = canvas->getGrContext()
-                    ? image->makeTextureImage(canvas->getGrContext(), nullptr)
-                    : image->makeRasterImage();
+                                ? image->makeTextureImage(canvas->getGrContext(), nullptr)
+                                : image->makeRasterImage();
 
             canvas->translate(0, 128);
         }

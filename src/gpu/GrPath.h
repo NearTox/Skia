@@ -8,11 +8,11 @@
 #ifndef GrPath_DEFINED
 #define GrPath_DEFINED
 
-#include "GrGpuResource.h"
-#include "GrPathRendering.h"
-#include "GrStyle.h"
-#include "SkPath.h"
-#include "SkRect.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRect.h"
+#include "include/gpu/GrGpuResource.h"
+#include "src/gpu/GrPathRendering.h"
+#include "src/gpu/GrStyle.h"
 
 class GrShape;
 
@@ -22,12 +22,12 @@ public:
      * Initialize to a path with a fixed stroke. Stroke must not be hairline.
      */
     GrPath(GrGpu* gpu, const SkPath& skPath, const GrStyle& style)
-        : INHERITED(gpu)
-        , fBounds(SkRect::MakeEmpty())
-        , fFillType(GrPathRendering::kWinding_FillType)
+            : INHERITED(gpu)
+            , fBounds(SkRect::MakeEmpty())
+            , fFillType(GrPathRendering::kWinding_FillType)
 #ifdef SK_DEBUG
-        , fSkPath(skPath)
-        , fStyle(style)
+            , fSkPath(skPath)
+            , fStyle(style)
 #endif
     {
     }

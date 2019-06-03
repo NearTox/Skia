@@ -5,11 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkCanvas.h"
-#include "SkRRect.h"
-#include "SkPath.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRRect.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "tools/ToolUtils.h"
 
 typedef void (*InsetProc)(const SkRRect&, SkScalar dx, SkScalar dy, SkRRect*);
 
@@ -105,7 +112,7 @@ static void draw_rrect_color(SkCanvas* canvas, const SkRRect& rrect) {
     if (rrect.isRect()) {
         paint.setColor(SK_ColorRED);
     } else if (rrect.isOval()) {
-        paint.setColor(sk_tool_utils::color_to_565(0xFF008800));
+        paint.setColor(ToolUtils::color_to_565(0xFF008800));
     } else if (rrect.isSimple()) {
         paint.setColor(SK_ColorBLUE);
     } else {
@@ -127,25 +134,16 @@ public:
     RRectGM() {}
 
 protected:
+    SkString onShortName() override { return SkString("rrect"); }
 
-    SkString onShortName() override {
-        return SkString("rrect");
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(820, 710);
-    }
+    SkISize onISize() override { return SkISize::Make(820, 710); }
 
     void onDraw(SkCanvas* canvas) override {
-        constexpr InsetProc insetProcs[] = {
-            inset0, inset1, inset2, inset3
-        };
+        constexpr InsetProc insetProcs[] = {inset0, inset1, inset2, inset3};
 
         SkRRect rrect[4];
-        SkRect r = { 0, 0, 120, 100 };
-        SkVector radii[4] = {
-            { 0, 0 }, { 30, 1 }, { 10, 40 }, { 40, 40 }
-        };
+        SkRect r = {0, 0, 120, 100};
+        SkVector radii[4] = {{0, 0}, {30, 1}, {10, 40}, {40, 40}};
 
         rrect[0].setRect(r);
         rrect[1].setOval(r);
@@ -168,4 +166,4 @@ private:
     typedef GM INHERITED;
 };
 
-DEF_GM( return new RRectGM; )
+DEF_GM(return new RRectGM;)

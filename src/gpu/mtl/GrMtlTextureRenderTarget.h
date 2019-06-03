@@ -8,13 +8,12 @@
 #ifndef GrMtlTextureRenderTarget_DEFINED
 #define GrMtlTextureRenderTarget_DEFINED
 
-#include "GrMtlRenderTarget.h"
-#include "GrMtlTexture.h"
+#include "src/gpu/mtl/GrMtlRenderTarget.h"
+#include "src/gpu/mtl/GrMtlTexture.h"
 
-class GrMtlTextureRenderTarget: public GrMtlTexture, public GrMtlRenderTarget {
+class GrMtlTextureRenderTarget : public GrMtlTexture, public GrMtlRenderTarget {
 public:
-    static sk_sp<GrMtlTextureRenderTarget> CreateNewTextureRenderTarget(GrMtlGpu*,
-                                                                        SkBudgeted,
+    static sk_sp<GrMtlTextureRenderTarget> CreateNewTextureRenderTarget(GrMtlGpu*, SkBudgeted,
                                                                         const GrSurfaceDesc&,
                                                                         MTLTextureDescriptor*,
                                                                         GrMipMapsStatus);
@@ -23,9 +22,7 @@ public:
                                                                           const GrSurfaceDesc&,
                                                                           id<MTLTexture>,
                                                                           GrWrapCacheable);
-    GrBackendFormat backendFormat() const override {
-        return GrMtlTexture::backendFormat();
-    }
+    GrBackendFormat backendFormat() const override { return GrMtlTexture::backendFormat(); }
 
 protected:
     void onAbandon() override {
@@ -42,25 +39,31 @@ private:
     GrMtlTextureRenderTarget(GrMtlGpu* gpu,
                              SkBudgeted budgeted,
                              const GrSurfaceDesc& desc,
-                             id<MTLTexture> renderTexture,
-                             id<MTLTexture> resolveTexture,
+                             id<MTLTexture>
+                                     renderTexture,
+                             id<MTLTexture>
+                                     resolveTexture,
                              GrMipMapsStatus);
 
     GrMtlTextureRenderTarget(GrMtlGpu* gpu,
                              SkBudgeted budgeted,
                              const GrSurfaceDesc& desc,
-                             id<MTLTexture> renderTexture,
+                             id<MTLTexture>
+                                     renderTexture,
                              GrMipMapsStatus);
 
     GrMtlTextureRenderTarget(GrMtlGpu* gpu,
                              const GrSurfaceDesc& desc,
-                             id<MTLTexture> renderTexture,
-                             id<MTLTexture> resolveTexture,
+                             id<MTLTexture>
+                                     renderTexture,
+                             id<MTLTexture>
+                                     resolveTexture,
                              GrMipMapsStatus);
 
     GrMtlTextureRenderTarget(GrMtlGpu* gpu,
                              const GrSurfaceDesc& desc,
-                             id<MTLTexture> renderTexture,
+                             id<MTLTexture>
+                                     renderTexture,
                              GrMipMapsStatus,
                              GrWrapCacheable cacheable);
 

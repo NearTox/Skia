@@ -8,19 +8,19 @@
 #ifndef GrTestUtils_DEFINED
 #define GrTestUtils_DEFINED
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 #if GR_TEST_UTILS
 
-#include "../private/SkTemplates.h"
-#include "GrColor.h"
-#include "GrFPArgs.h"
-#include "GrSamplerState.h"
-#include "SkMacros.h"
-#include "SkPathEffect.h"
-#include "SkRandom.h"
-#include "SkShaderBase.h"
-#include "SkStrokeRec.h"
+#include "include/core/SkPathEffect.h"
+#include "include/core/SkStrokeRec.h"
+#include "include/gpu/GrSamplerState.h"
+#include "include/private/GrColor.h"
+#include "include/private/SkMacros.h"
+#include "include/private/SkTemplates.h"
+#include "include/utils/SkRandom.h"
+#include "src/gpu/GrFPArgs.h"
+#include "src/shaders/SkShaderBase.h"
 
 class GrColorSpaceInfo;
 class GrColorSpaceXform;
@@ -76,18 +76,18 @@ public:
     const char* getTypeName() const override { return nullptr; }
 
 protected:
-    bool onFilterPath(SkPath* dst, const SkPath&, SkStrokeRec* , const SkRect*) const override;
+    bool onFilterPath(SkPath* dst, const SkPath&, SkStrokeRec*, const SkRect*) const override;
     DashType onAsADash(DashInfo* info) const override;
 
 private:
     TestDashPathEffect(const SkScalar* intervals, int count, SkScalar phase);
 
-    int                     fCount;
-    SkAutoTArray<SkScalar>  fIntervals;
-    SkScalar                fPhase;
-    SkScalar                fInitialDashLength;
-    int                     fInitialDashIndex;
-    SkScalar                fIntervalLength;
+    int fCount;
+    SkAutoTArray<SkScalar> fIntervals;
+    SkScalar fPhase;
+    SkScalar fInitialDashLength;
+    int fInitialDashIndex;
+    SkScalar fIntervalLength;
 };
 
 }  // namespace GrTest
@@ -118,11 +118,11 @@ static inline GrColor GrRandomColor(SkRandom* random) {
                                     0xFF);
             break;
         case kRandom_ColorMode: {
-                uint8_t alpha = random->nextULessThan(256);
-                color = GrColorPackRGBA(random->nextRangeU(0, alpha),
-                                        random->nextRangeU(0, alpha),
-                                        random->nextRangeU(0, alpha),
-                                        alpha);
+            uint8_t alpha = random->nextULessThan(256);
+            color = GrColorPackRGBA(random->nextRangeU(0, alpha),
+                                    random->nextRangeU(0, alpha),
+                                    random->nextRangeU(0, alpha),
+                                    alpha);
             break;
         }
     }

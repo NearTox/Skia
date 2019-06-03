@@ -9,8 +9,8 @@
 #define SKSL_ASTSTATEMENT
 
 #include <vector>
-#include "SkSLASTPositionNode.h"
-#include "SkSLASTExpression.h"
+#include "src/sksl/ast/SkSLASTExpression.h"
+#include "src/sksl/ast/SkSLASTPositionNode.h"
 
 namespace SkSL {
 
@@ -33,15 +33,13 @@ struct ASTStatement : public ASTPositionNode {
         kDiscard_Kind
     };
 
-    ASTStatement(int offset, Kind kind)
-    : INHERITED(offset)
-    , fKind(kind) {}
+    ASTStatement(int offset, Kind kind) : INHERITED(offset), fKind(kind) {}
 
     Kind fKind;
 
     typedef ASTPositionNode INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

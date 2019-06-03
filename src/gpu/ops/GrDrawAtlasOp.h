@@ -8,8 +8,8 @@
 #ifndef GrDrawAtlasOp_DEFINED
 #define GrDrawAtlasOp_DEFINED
 
-#include "GrTypesPriv.h"
-#include "SkRefCnt.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/GrTypesPriv.h"
 
 class GrDrawOp;
 class GrPaint;
@@ -17,14 +17,14 @@ class GrRecordingContext;
 class SkMatrix;
 
 namespace GrDrawAtlasOp {
-    std::unique_ptr<GrDrawOp> Make(GrRecordingContext*,
-                                   GrPaint&&,
-                                   const SkMatrix& viewMatrix,
-                                   GrAAType,
-                                   int spriteCount,
-                                   const SkRSXform* xforms,
-                                   const SkRect* rects,
-                                   const SkColor* colors);
+std::unique_ptr<GrDrawOp> Make(GrRecordingContext*,
+                               GrPaint&&,
+                               const SkMatrix& viewMatrix,
+                               GrAAType,
+                               int spriteCount,
+                               const SkRSXform* xforms,
+                               const SkRect* rects,
+                               const SkColor* colors);
 };
 
 #endif

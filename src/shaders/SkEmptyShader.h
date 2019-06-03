@@ -8,7 +8,7 @@
 #ifndef SkEmptyShader_DEFINED
 #define SkEmptyShader_DEFINED
 
-#include "SkShaderBase.h"
+#include "src/shaders/SkShaderBase.h"
 
 // TODO: move this to private, as there is a public factory on SkShader
 
@@ -22,9 +22,7 @@ public:
 
 protected:
 #ifdef SK_ENABLE_LEGACY_SHADERCONTEXT
-    Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const override {
-        return nullptr;
-    }
+    Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const override { return nullptr; }
 #endif
 
     void flatten(SkWriteBuffer& buffer) const override {
@@ -33,9 +31,7 @@ protected:
         // which will write data we don't care to serialize or decode.
     }
 
-    bool onAppendStages(const StageRec&) const override {
-        return false;
-    }
+    bool onAppendStages(const SkStageRec&) const override { return false; }
 
 private:
     SK_FLATTENABLE_HOOKS(SkEmptyShader)

@@ -5,26 +5,23 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkInterpolator_DEFINED
 #define SkInterpolator_DEFINED
 
-#include "../private/SkNoncopyable.h"
-#include "../private/SkTo.h"
-#include "SkScalar.h"
+#include "include/core/SkScalar.h"
+#include "include/private/SkNoncopyable.h"
+#include "include/private/SkTo.h"
 
 class SK_API SkInterpolatorBase : SkNoncopyable {
 public:
-    enum Result {
-        kNormal_Result,
-        kFreezeStart_Result,
-        kFreezeEnd_Result
-    };
+    enum Result { kNormal_Result, kFreezeStart_Result, kFreezeEnd_Result };
+
 protected:
     SkInterpolatorBase();
     ~SkInterpolatorBase();
+
 public:
-    void    reset(int elemCount, int frameCount);
+    void reset(int elemCount, int frameCount);
 
     /** Return the start and end time for this interpolator.
         If there are no key frames, return false.
@@ -36,38 +33,29 @@ public:
                        is ignored (left unchanged).
         @return True if there are key frames, or false if there are none.
     */
-    bool    getDuration(SkMSec* startTime, SkMSec* endTime) const;
-
+    bool getDuration(SkMSec* startTime, SkMSec* endTime) const;
 
     /** Set the whether the repeat is mirrored.
         @param mirror If true, the odd repeats interpolate from the last key
                       frame and the first.
     */
-    void setMirror(bool mirror) {
-        fFlags = SkToU8((fFlags & ~kMirror) | (int)mirror);
-    }
+    void setMirror(bool mirror) { fFlags = SkToU8((fFlags & ~kMirror) | (int)mirror); }
 
     /** Set the repeat count. The repeat count may be fractional.
         @param repeatCount Multiplies the total time by this scalar.
     */
-    void    setRepeatCount(SkScalar repeatCount) { fRepeat = repeatCount; }
+    void setRepeatCount(SkScalar repeatCount) { fRepeat = repeatCount; }
 
     /** Set the whether the repeat is mirrored.
         @param reset If true, the odd repeats interpolate from the last key
                      frame and the first.
     */
-    void setReset(bool reset) {
-        fFlags = SkToU8((fFlags & ~kReset) | (int)reset);
-    }
+    void setReset(bool reset) { fFlags = SkToU8((fFlags & ~kReset) | (int)reset); }
 
-    Result  timeToT(SkMSec time, SkScalar* T, int* index, bool* exact) const;
+    Result timeToT(SkMSec time, SkScalar* T, int* index, bool* exact) const;
 
 protected:
-    enum Flags {
-        kMirror = 1,
-        kReset = 2,
-        kHasBlend = 4
-    };
+    enum Flags { kMirror = 1, kReset = 2, kHasBlend = 4 };
     static SkScalar ComputeRelativeT(SkMSec time, SkMSec prevTime, SkMSec nextTime,
                                      const SkScalar blend[4] = nullptr);
     int16_t fFrameCount;
@@ -75,13 +63,13 @@ protected:
     uint8_t fFlags;
     SkScalar fRepeat;
     struct SkTimeCode {
-        SkMSec  fTime;
+        SkMSec fTime;
         SkScalar fBlend[4];
     };
-    SkTimeCode* fTimes;     // pointer into fStorage
+    SkTimeCode* fTimes;  // pointer into fStorage
     void* fStorage;
 #ifdef SK_DEBUG
-    SkTimeCode(* fTimesArray)[10];
+    SkTimeCode (*fTimesArray)[10];
 #endif
 };
 
@@ -89,7 +77,7 @@ class SK_API SkInterpolator : public SkInterpolatorBase {
 public:
     SkInterpolator();
     SkInterpolator(int elemCount, int frameCount);
-    void    reset(int elemCount, int frameCount);
+    void reset(int elemCount, int frameCount);
 
     /** Add or replace a key frame, copying the values[] data into the
         interpolator.
@@ -117,7 +105,7 @@ public:
 private:
     SkScalar* fValues;  // pointer into fStorage
 #ifdef SK_DEBUG
-    SkScalar(* fScalarsArray)[10];
+    SkScalar (*fScalarsArray)[10];
 #endif
     typedef SkInterpolatorBase INHERITED;
 };
@@ -132,7 +120,6 @@ private:
                         as (0,0) (bx,by) (cx,cy) (1,1)
     @return             the corresponding y-coordinate value, from [0..1].
 */
-SkScalar SkUnitCubicInterp(SkScalar value, SkScalar bx, SkScalar by,
-                           SkScalar cx, SkScalar cy);
+SkScalar SkUnitCubicInterp(SkScalar value, SkScalar bx, SkScalar by, SkScalar cx, SkScalar cy);
 
 #endif

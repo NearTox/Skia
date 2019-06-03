@@ -5,16 +5,16 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkAnimTimer.h"
-#include "SkCanvas.h"
-#include "SkFont.h"
-#include "SkGradientShader.h"
-#include "SkString.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkString.h"
+#include "include/effects/SkGradientShader.h"
+#include "samplecode/Sample.h"
+#include "tools/timer/AnimTimer.h"
 
 static void draw_gradient2(SkCanvas* canvas, const SkRect& rect, SkScalar delta) {
-    SkColor colors[] = { SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorMAGENTA };
-    SkScalar pos[] = { 0, 0.25f, 0.75f, SK_Scalar1 };
+    SkColor colors[] = {SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorMAGENTA};
+    SkScalar pos[] = {0, 0.25f, 0.75f, SK_Scalar1};
 
     SkScalar l = rect.fLeft;
     SkScalar t = rect.fTop;
@@ -23,17 +23,15 @@ static void draw_gradient2(SkCanvas* canvas, const SkRect& rect, SkScalar delta)
 
     SkASSERT(0 == SkScalarMod(w, SK_Scalar1 * 5));
 
-    SkPoint c0 = { l + 2 * w / 5 + delta, t + h / 2 };
-    SkPoint c1 = { l + 3 * w / 5, t + h / 2 };
+    SkPoint c0 = {l + 2 * w / 5 + delta, t + h / 2};
+    SkPoint c1 = {l + 3 * w / 5, t + h / 2};
     SkScalar r0 = w / 5;
     SkScalar r1 = 2 * w / 5;
     SkPaint paint;
-    paint.setShader(SkGradientShader::MakeTwoPointConical(c0, r0, c1, r1, colors,
-                                                          pos, SK_ARRAY_COUNT(pos),
-                                                          SkShader::kClamp_TileMode));
+    paint.setShader(SkGradientShader::MakeTwoPointConical(c0, r0, c1, r1, colors, pos,
+                                                          SK_ARRAY_COUNT(pos), SkTileMode::kClamp));
     canvas->drawRect(rect, paint);
 }
-
 
 class DegenerateTwoPtRadialsView : public Sample {
 public:
@@ -73,16 +71,16 @@ protected:
                            SkFont(), SkPaint());
     }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         fTime = SkDoubleToScalar(timer.secs() / 15);
         return true;
     }
 
 private:
-    SkScalar           fTime;
+    SkScalar fTime;
     typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new DegenerateTwoPtRadialsView(); )
+DEF_SAMPLE(return new DegenerateTwoPtRadialsView();)

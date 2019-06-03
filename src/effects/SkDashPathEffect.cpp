@@ -5,22 +5,19 @@
  * found in the LICENSE file.
  */
 
-#include "SkDashPathEffect.h"
+#include "include/effects/SkDashPathEffect.h"
 
-#include "SkDashImpl.h"
-#include "SkDashPathPriv.h"
-#include "SkReadBuffer.h"
-#include "SkStrokeRec.h"
-#include "SkTo.h"
-#include "SkWriteBuffer.h"
+#include "include/core/SkStrokeRec.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
+#include "src/effects/SkDashImpl.h"
+#include "src/utils/SkDashPathPriv.h"
 
 #include <utility>
 
 SkDashImpl::SkDashImpl(const SkScalar intervals[], int count, SkScalar phase)
-        : fPhase(0)
-        , fInitialDashLength(-1)
-        , fInitialDashIndex(0)
-        , fIntervalLength(0) {
+        : fPhase(0), fInitialDashLength(-1), fInitialDashIndex(0), fIntervalLength(0) {
     SkASSERT(intervals);
     SkASSERT(count > 1 && SkIsAlign2(count));
 
@@ -31,13 +28,11 @@ SkDashImpl::SkDashImpl(const SkScalar intervals[], int count, SkScalar phase)
     }
 
     // set the internal data members
-    SkDashPath::CalcDashParameters(phase, fIntervals, fCount,
-            &fInitialDashLength, &fInitialDashIndex, &fIntervalLength, &fPhase);
+    SkDashPath::CalcDashParameters(phase, fIntervals, fCount, &fInitialDashLength,
+                                   &fInitialDashIndex, &fIntervalLength, &fPhase);
 }
 
-SkDashImpl::~SkDashImpl() {
-    sk_free(fIntervals);
-}
+SkDashImpl::~SkDashImpl() { sk_free(fIntervals); }
 
 bool SkDashImpl::onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
                               const SkRect* cullRect) const {
@@ -48,7 +43,7 @@ bool SkDashImpl::onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
 static void outset_for_stroke(SkRect* rect, const SkStrokeRec& rec) {
     SkScalar radius = SkScalarHalf(rec.getWidth());
     if (0 == radius) {
-        radius = SK_Scalar1;    // hairlines
+        radius = SK_Scalar1;  // hairlines
     }
     if (SkPaint::kMiter_Join == rec.getJoin()) {
         radius *= rec.getMiter();
@@ -59,11 +54,10 @@ static void outset_for_stroke(SkRect* rect, const SkStrokeRec& rec) {
 // Attempt to trim the line to minimally cover the cull rect (currently
 // only works for horizontal and vertical lines).
 // Return true if processing should continue; false otherwise.
-static bool cull_line(SkPoint* pts, const SkStrokeRec& rec,
-                      const SkMatrix& ctm, const SkRect* cullRect,
-                      const SkScalar intervalLength) {
+static bool cull_line(SkPoint* pts, const SkStrokeRec& rec, const SkMatrix& ctm,
+                      const SkRect* cullRect, const SkScalar intervalLength) {
     if (nullptr == cullRect) {
-        SkASSERT(false); // Shouldn't ever occur in practice
+        SkASSERT(false);  // Shouldn't ever occur in practice
         return false;
     }
 
@@ -175,10 +169,8 @@ bool SkDashImpl::onAsPoints(PointData* results, const SkPath& src, const SkStrok
     // Additionally, they do not necessarily need to be integers.
     // We cannot allow arbitrary intervals since we want the returned points
     // to be uniformly sized.
-    if (fCount != 2 ||
-        !SkScalarNearlyEqual(fIntervals[0], fIntervals[1]) ||
-        !SkScalarIsInt(fIntervals[0]) ||
-        !SkScalarIsInt(fIntervals[1])) {
+    if (fCount != 2 || !SkScalarNearlyEqual(fIntervals[0], fIntervals[1]) ||
+        !SkScalarIsInt(fIntervals[0]) || !SkScalarIsInt(fIntervals[1])) {
         return false;
     }
 
@@ -250,7 +242,7 @@ bool SkDashImpl::onAsPoints(PointData* results, const SkPath& src, const SkStrok
                     len2 = 0;
                 }
             } else {
-                len2 -= clampedInitialDashLength; // skip initial partial empty
+                len2 -= clampedInitialDashLength;  // skip initial partial empty
             }
         }
         // Too many midpoints can cause results->fNumPoints to overflow or
@@ -275,8 +267,8 @@ bool SkDashImpl::onAsPoints(PointData* results, const SkPath& src, const SkStrok
 
         results->fPoints = new SkPoint[results->fNumPoints];
 
-        SkScalar    distance = 0;
-        int         curPt = 0;
+        SkScalar distance = 0;
+        int curPt = 0;
 
         if (clampedInitialDashLength > 0 || 0 == fInitialDashIndex) {
             SkASSERT(clampedInitialDashLength <= length);
@@ -284,7 +276,7 @@ bool SkDashImpl::onAsPoints(PointData* results, const SkPath& src, const SkStrok
             if (0 == fInitialDashIndex) {
                 if (clampedInitialDashLength > 0) {
                     // partial first block
-                    SkASSERT(SkPaint::kRound_Cap != rec.getCap()); // can't handle partial circles
+                    SkASSERT(SkPaint::kRound_Cap != rec.getCap());  // can't handle partial circles
                     SkScalar x = pts[0].fX + tangent.fX * SkScalarHalf(clampedInitialDashLength);
                     SkScalar y = pts[0].fY + tangent.fY * SkScalarHalf(clampedInitialDashLength);
                     SkScalar halfWidth, halfHeight;
@@ -297,8 +289,8 @@ bool SkDashImpl::onAsPoints(PointData* results, const SkPath& src, const SkStrok
                     }
                     if (clampedInitialDashLength < fIntervals[0]) {
                         // This one will not be like the others
-                        results->fFirst.addRect(x - halfWidth, y - halfHeight,
-                                                x + halfWidth, y + halfHeight);
+                        results->fFirst.addRect(x - halfWidth, y - halfHeight, x + halfWidth,
+                                                y + halfHeight);
                     } else {
                         SkASSERT(curPt < results->fNumPoints);
                         results->fPoints[curPt].set(x, y);
@@ -333,7 +325,7 @@ bool SkDashImpl::onAsPoints(PointData* results, const SkPath& src, const SkStrok
 
         if (partialLast) {
             // partial final block
-            SkASSERT(SkPaint::kRound_Cap != rec.getCap()); // can't handle partial circles
+            SkASSERT(SkPaint::kRound_Cap != rec.getCap());  // can't handle partial circles
             SkScalar temp = length - distance;
             SkASSERT(temp < fIntervals[0]);
             SkScalar x = pts[0].fX + tangent.fX * (distance + SkScalarHalf(temp));
@@ -346,8 +338,7 @@ bool SkDashImpl::onAsPoints(PointData* results, const SkPath& src, const SkStrok
                 halfWidth = SkScalarHalf(rec.getWidth());
                 halfHeight = SkScalarHalf(temp);
             }
-            results->fLast.addRect(x - halfWidth, y - halfHeight,
-                                   x + halfWidth, y + halfHeight);
+            results->fLast.addRect(x - halfWidth, y - halfHeight, x + halfWidth, y + halfHeight);
         }
 
         SkASSERT(curPt == results->fNumPoints);
@@ -356,7 +347,7 @@ bool SkDashImpl::onAsPoints(PointData* results, const SkPath& src, const SkStrok
     return true;
 }
 
-SkPathEffect::DashType SkDashImpl::onAsADash(DashInfo* info) const {
+SkPathEffect::DashType SkDashImpl::onAsADash(DashInfo* info) const noexcept {
     if (info) {
         if (info->fCount >= fCount && info->fIntervals) {
             memcpy(info->fIntervals, fIntervals, fCount * sizeof(SkScalar));

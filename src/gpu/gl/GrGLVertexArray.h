@@ -8,11 +8,11 @@
 #ifndef GrGLVertexArray_DEFINED
 #define GrGLVertexArray_DEFINED
 
-#include "GrGpuResource.h"
-#include "GrTypesPriv.h"
-#include "gl/GrGLDefines.h"
-#include "gl/GrGLTypes.h"
-#include "SkTArray.h"
+#include "include/gpu/GrGpuResource.h"
+#include "include/gpu/gl/GrGLTypes.h"
+#include "include/private/GrTypesPriv.h"
+#include "include/private/SkTArray.h"
+#include "src/gpu/gl/GrGLDefines.h"
 
 class GrBuffer;
 class GrGLGpu;
@@ -23,9 +23,7 @@ class GrGLGpu;
  */
 class GrGLAttribArrayState {
 public:
-    explicit GrGLAttribArrayState(int arrayCount = 0) {
-        this->resize(arrayCount);
-    }
+    explicit GrGLAttribArrayState(int arrayCount = 0) { this->resize(arrayCount); }
 
     void resize(int newCount) {
         fAttribArrayStates.resize_back(newCount);
@@ -78,13 +76,13 @@ private:
             fUsingCpuBuffer = false;
         }
 
-        GrGpuResource::UniqueID   fVertexBufferUniqueID;
-        bool                      fUsingCpuBuffer;
-        GrVertexAttribType        fCPUType;
-        GrSLType                  fGPUType;
-        GrGLsizei                 fStride;
-        const GrGLvoid*           fOffset;
-        int                       fDivisor;
+        GrGpuResource::UniqueID fVertexBufferUniqueID;
+        bool fUsingCpuBuffer;
+        GrVertexAttribType fCPUType;
+        GrSLType fGPUType;
+        GrGLsizei fStride;
+        const GrGLvoid* fOffset;
+        int fDivisor;
     };
 
     SkSTArray<16, AttribArrayState, true> fAttribArrayStates;
@@ -119,9 +117,9 @@ public:
     void invalidateCachedState();
 
 private:
-    GrGLuint                  fID;
-    GrGLAttribArrayState      fAttribArrays;
-    GrGpuResource::UniqueID   fIndexBufferUniqueID;
+    GrGLuint fID;
+    GrGLAttribArrayState fAttribArrays;
+    GrGpuResource::UniqueID fIndexBufferUniqueID;
 };
 
 #endif

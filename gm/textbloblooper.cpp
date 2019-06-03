@@ -5,33 +5,55 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
+#include "gm/gm.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkBlurTypes.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkDrawLooper.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkMaskFilter.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPathEffect.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTextBlob.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/Sk2DPathEffect.h"
+#include "include/effects/SkColorMatrixFilter.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/effects/SkLayerDrawLooper.h"
+#include "include/private/SkTArray.h"
+#include "include/private/SkTDArray.h"
+#include "src/core/SkBlurMask.h"
+#include "tools/ToolUtils.h"
 
-#include "Sk2DPathEffect.h"
-#include "SkBlurMask.h"
-#include "SkColorMatrixFilter.h"
-#include "SkCanvas.h"
-#include "SkGradientShader.h"
-#include "SkGraphics.h"
-#include "SkLayerDrawLooper.h"
-#include "SkMaskFilter.h"
-#include "SkRandom.h"
-#include "SkTextBlob.h"
+#include <string.h>
 
 namespace skiagm {
 
 constexpr int kWidth = 1250;
 constexpr int kHeight = 700;
 
-// Unlike the variant in sk_tool_utils, this version positions the glyphs on a diagonal
+// Unlike the variant in ToolUtils, this version positions the glyphs on a diagonal
 static void add_to_text_blob(SkTextBlobBuilder* builder, const char* text, const SkFont& font,
                              SkScalar x, SkScalar y) {
     SkTDArray<uint16_t> glyphs;
 
     size_t len = strlen(text);
-    glyphs.append(font.countText(text, len, kUTF8_SkTextEncoding));
-    font.textToGlyphs(text, len, kUTF8_SkTextEncoding, glyphs.begin(), glyphs.count());
+    glyphs.append(font.countText(text, len, SkTextEncoding::kUTF8));
+    font.textToGlyphs(text, len, SkTextEncoding::kUTF8, glyphs.begin(), glyphs.count());
 
     const SkScalar advanceX = font.getSize() * 0.85f;
     const SkScalar advanceY = font.getSize() * 1.5f;
@@ -49,18 +71,18 @@ static void add_to_text_blob(SkTextBlobBuilder* builder, const char* text, const
 typedef void (*LooperProc)(SkPaint*);
 
 struct LooperSettings {
-    SkBlendMode      fMode;
-    SkColor          fColor;
-    SkPaint::Style   fStyle;
-    SkScalar         fWidth;
-    SkScalar         fOffset;
-    SkScalar         fSkewX;
-    bool             fEffect;
+    SkBlendMode fMode;
+    SkColor fColor;
+    SkPaint::Style fStyle;
+    SkScalar fWidth;
+    SkScalar fOffset;
+    SkScalar fSkewX;
+    bool fEffect;
 };
 
 static void mask_filter(SkPaint* paint) {
-    paint->setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle,
-                                                SkBlurMask::ConvertRadiusToSigma(3.f)));
+    paint->setMaskFilter(
+            SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, SkBlurMask::ConvertRadiusToSigma(3.f)));
 }
 
 static sk_sp<SkPathEffect> make_tile_effect() {
@@ -73,21 +95,19 @@ static sk_sp<SkPathEffect> make_tile_effect() {
     return SkPath2DPathEffect::Make(m, path);
 }
 
-static void path_effect(SkPaint* paint) {
-    paint->setPathEffect(make_tile_effect());
-}
+static void path_effect(SkPaint* paint) { paint->setPathEffect(make_tile_effect()); }
 
 static sk_sp<SkShader> make_shader(const SkRect& bounds) {
     const SkPoint pts[] = {
-        { bounds.left(), bounds.top() },
-        { bounds.right(), bounds.bottom() },
+            {bounds.left(), bounds.top()},
+            {bounds.right(), bounds.bottom()},
     };
     const SkColor colors[] = {
-        SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorBLACK,
-        SK_ColorCYAN, SK_ColorMAGENTA, SK_ColorYELLOW,
+            SK_ColorRED,  SK_ColorGREEN,   SK_ColorBLUE,   SK_ColorBLACK,
+            SK_ColorCYAN, SK_ColorMAGENTA, SK_ColorYELLOW,
     };
     return SkGradientShader::MakeLinear(pts, colors, nullptr, SK_ARRAY_COUNT(colors),
-                                        SkShader::kClamp_TileMode);
+                                        SkTileMode::kClamp);
 }
 
 static void color_filter(SkPaint* paint) {
@@ -101,7 +121,6 @@ static void kitchen_sink(SkPaint* paint) {
     color_filter(paint);
     path_effect(paint);
     mask_filter(paint);
-
 }
 
 static sk_sp<SkDrawLooper> setupLooper(SkLayerDrawLooper::BitFlags bits,
@@ -143,84 +162,78 @@ protected:
         const char* text = "The quick brown fox jumps over the lazy dog";
         font.setSubpixel(true);
         font.setEdging(SkFont::Edging::kSubpixelAntiAlias);
-        font.setTypeface(sk_tool_utils::create_portable_typeface());
+        font.setTypeface(ToolUtils::create_portable_typeface());
         add_to_text_blob(&builder, text, font, 0, 0);
         fBlob = builder.make();
 
         // create a looper which sandwhiches an effect in two normal draws
         LooperSettings looperSandwhich[] = {
-           { SkBlendMode::kSrc, SK_ColorMAGENTA, SkPaint::kFill_Style, 0, 0, 0, false },
-           { SkBlendMode::kSrcOver, 0x88000000, SkPaint::kFill_Style, 0, 10.f, 0, true },
-           { SkBlendMode::kSrcOver, 0x50FF00FF, SkPaint::kFill_Style, 0, 20.f, 0, false },
+                {SkBlendMode::kSrc, SK_ColorMAGENTA, SkPaint::kFill_Style, 0, 0, 0, false},
+                {SkBlendMode::kSrcOver, 0x88000000, SkPaint::kFill_Style, 0, 10.f, 0, true},
+                {SkBlendMode::kSrcOver, 0x50FF00FF, SkPaint::kFill_Style, 0, 20.f, 0, false},
         };
 
         LooperSettings compound[] = {
-            { SkBlendMode::kSrc, SK_ColorWHITE, SkPaint::kStroke_Style, 1.f * 3/4, 0, 0, false },
-            { SkBlendMode::kSrc, SK_ColorRED, SkPaint::kStroke_Style, 4.f, 0, 0, false },
-            { SkBlendMode::kSrc, SK_ColorBLUE, SkPaint::kFill_Style, 0, 0, 0, false },
-            { SkBlendMode::kSrcOver, 0x88000000, SkPaint::kFill_Style, 0, 10.f, 0, true }
-        };
+                {SkBlendMode::kSrc, SK_ColorWHITE, SkPaint::kStroke_Style, 1.f * 3 / 4, 0, 0,
+                 false},
+                {SkBlendMode::kSrc, SK_ColorRED, SkPaint::kStroke_Style, 4.f, 0, 0, false},
+                {SkBlendMode::kSrc, SK_ColorBLUE, SkPaint::kFill_Style, 0, 0, 0, false},
+                {SkBlendMode::kSrcOver, 0x88000000, SkPaint::kFill_Style, 0, 10.f, 0, true}};
 
         LooperSettings xfermode[] = {
-            { SkBlendMode::kDifference, SK_ColorWHITE, SkPaint::kFill_Style, 0, 0, 0, false },
-            { SkBlendMode::kSrcOver, 0xFF000000, SkPaint::kFill_Style, 0, 1.f, 0, true },
-            { SkBlendMode::kSrcOver, 0x50FF00FF, SkPaint::kFill_Style, 0, 2.f, 0, false },
+                {SkBlendMode::kDifference, SK_ColorWHITE, SkPaint::kFill_Style, 0, 0, 0, false},
+                {SkBlendMode::kSrcOver, 0xFF000000, SkPaint::kFill_Style, 0, 1.f, 0, true},
+                {SkBlendMode::kSrcOver, 0x50FF00FF, SkPaint::kFill_Style, 0, 2.f, 0, false},
         };
 
         // NOTE, this should be ignored by textblobs
         LooperSettings skew[] = {
-            { SkBlendMode::kSrc, SK_ColorRED, SkPaint::kFill_Style, 0, 0, -1.f, false },
-            { SkBlendMode::kSrc, SK_ColorGREEN, SkPaint::kFill_Style, 0, 10.f, -1.f, false },
-            { SkBlendMode::kSrc, SK_ColorBLUE, SkPaint::kFill_Style, 0, 20.f, -1.f, false },
+                {SkBlendMode::kSrc, SK_ColorRED, SkPaint::kFill_Style, 0, 0, -1.f, false},
+                {SkBlendMode::kSrc, SK_ColorGREEN, SkPaint::kFill_Style, 0, 10.f, -1.f, false},
+                {SkBlendMode::kSrc, SK_ColorBLUE, SkPaint::kFill_Style, 0, 20.f, -1.f, false},
         };
 
         LooperSettings kitchenSink[] = {
-            { SkBlendMode::kSrc, SK_ColorWHITE, SkPaint::kStroke_Style, 1.f * 3/4, 0, 0, false },
-            { SkBlendMode::kSrc, SK_ColorBLACK, SkPaint::kFill_Style, 0, 0, 0, false },
-            { SkBlendMode::kDifference, SK_ColorWHITE, SkPaint::kFill_Style, 1.f, 10.f, 0, false },
-            { SkBlendMode::kSrc, SK_ColorWHITE, SkPaint::kFill_Style, 0, 10.f, 0, true },
-            { SkBlendMode::kSrcOver, 0x50FF00FF, SkPaint::kFill_Style, 0, 20.f, 0, false },
+                {SkBlendMode::kSrc, SK_ColorWHITE, SkPaint::kStroke_Style, 1.f * 3 / 4, 0, 0,
+                 false},
+                {SkBlendMode::kSrc, SK_ColorBLACK, SkPaint::kFill_Style, 0, 0, 0, false},
+                {SkBlendMode::kDifference, SK_ColorWHITE, SkPaint::kFill_Style, 1.f, 10.f, 0,
+                 false},
+                {SkBlendMode::kSrc, SK_ColorWHITE, SkPaint::kFill_Style, 0, 10.f, 0, true},
+                {SkBlendMode::kSrcOver, 0x50FF00FF, SkPaint::kFill_Style, 0, 20.f, 0, false},
         };
 
         fLoopers.push_back(setupLooper(SkLayerDrawLooper::kMaskFilter_Bit |
-                                       SkLayerDrawLooper::kXfermode_Bit |
-                                       SkLayerDrawLooper::kStyle_Bit, &mask_filter,
-                                       compound, SK_ARRAY_COUNT(compound)));
-        fLoopers.push_back(setupLooper(SkLayerDrawLooper::kPathEffect_Bit |
-                                       SkLayerDrawLooper::kXfermode_Bit, &path_effect,
-                                       looperSandwhich, SK_ARRAY_COUNT(looperSandwhich)));
+                                               SkLayerDrawLooper::kXfermode_Bit |
+                                               SkLayerDrawLooper::kStyle_Bit,
+                                       &mask_filter, compound, SK_ARRAY_COUNT(compound)));
+        fLoopers.push_back(
+                setupLooper(SkLayerDrawLooper::kPathEffect_Bit | SkLayerDrawLooper::kXfermode_Bit,
+                            &path_effect, looperSandwhich, SK_ARRAY_COUNT(looperSandwhich)));
+        fLoopers.push_back(
+                setupLooper(SkLayerDrawLooper::kShader_Bit | SkLayerDrawLooper::kColorFilter_Bit |
+                                    SkLayerDrawLooper::kXfermode_Bit,
+                            &color_filter, looperSandwhich, SK_ARRAY_COUNT(looperSandwhich)));
         fLoopers.push_back(setupLooper(SkLayerDrawLooper::kShader_Bit |
-                                       SkLayerDrawLooper::kColorFilter_Bit |
-                                       SkLayerDrawLooper::kXfermode_Bit, &color_filter,
-                                       looperSandwhich, SK_ARRAY_COUNT(looperSandwhich)));
-        fLoopers.push_back(setupLooper(SkLayerDrawLooper::kShader_Bit |
-                                       SkLayerDrawLooper::kColorFilter_Bit |
-                                       SkLayerDrawLooper::kXfermode_Bit, &color_filter,
-                                       xfermode, SK_ARRAY_COUNT(xfermode)));
+                                               SkLayerDrawLooper::kColorFilter_Bit |
+                                               SkLayerDrawLooper::kXfermode_Bit,
+                                       &color_filter, xfermode, SK_ARRAY_COUNT(xfermode)));
         fLoopers.push_back(setupLooper(0, nullptr, skew, SK_ARRAY_COUNT(skew)));
-        fLoopers.push_back(setupLooper(SkLayerDrawLooper::kMaskFilter_Bit |
-                                       SkLayerDrawLooper::kShader_Bit |
-                                       SkLayerDrawLooper::kColorFilter_Bit |
-                                       SkLayerDrawLooper::kPathEffect_Bit |
-                                       SkLayerDrawLooper::kStyle_Bit |
-                                       SkLayerDrawLooper::kXfermode_Bit, &kitchen_sink,
-                                       kitchenSink, SK_ARRAY_COUNT(kitchenSink)));
+        fLoopers.push_back(setupLooper(
+                SkLayerDrawLooper::kMaskFilter_Bit | SkLayerDrawLooper::kShader_Bit |
+                        SkLayerDrawLooper::kColorFilter_Bit | SkLayerDrawLooper::kPathEffect_Bit |
+                        SkLayerDrawLooper::kStyle_Bit | SkLayerDrawLooper::kXfermode_Bit,
+                &kitchen_sink, kitchenSink, SK_ARRAY_COUNT(kitchenSink)));
 
         // Test we respect overrides
-        fLoopers.push_back(setupLooper(0, &kitchen_sink,
-                                       kitchenSink, SK_ARRAY_COUNT(kitchenSink)));
+        fLoopers.push_back(setupLooper(0, &kitchen_sink, kitchenSink, SK_ARRAY_COUNT(kitchenSink)));
     }
 
-    SkString onShortName() override {
-        return SkString("textbloblooper");
-    }
+    SkString onShortName() override { return SkString("textbloblooper"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(kWidth, kHeight);
-    }
+    SkISize onISize() override { return SkISize::Make(kWidth, kHeight); }
 
     void onDraw(SkCanvas* canvas) override {
-
         canvas->drawColor(SK_ColorGRAY);
 
         SkPaint paint;
@@ -249,4 +262,4 @@ private:
 //////////////////////////////////////////////////////////////////////////////
 
 DEF_GM(return new TextBlobLooperGM;)
-}
+}  // namespace skiagm

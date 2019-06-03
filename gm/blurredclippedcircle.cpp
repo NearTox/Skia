@@ -5,12 +5,20 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkClipOpPriv.h"
-#include "SkColorFilter.h"
-#include "SkMaskFilter.h"
-#include "SkPaint.h"
-#include "SkRRect.h"
+#include "gm/gm.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkBlurTypes.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkMaskFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRRect.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "src/core/SkClipOpPriv.h"
 
 namespace skiagm {
 
@@ -18,19 +26,12 @@ namespace skiagm {
 // It draws a largish blurred circle with its center clipped out.
 class BlurredClippedCircleGM : public GM {
 public:
-    BlurredClippedCircleGM() {
-        this->setBGColor(0xFFCCCCCC);
-    }
+    BlurredClippedCircleGM() { this->setBGColor(0xFFCCCCCC); }
 
 protected:
+    SkString onShortName() override { return SkString("blurredclippedcircle"); }
 
-    SkString onShortName() override {
-        return SkString("blurredclippedcircle");
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(kWidth, kHeight);
-    }
+    SkISize onISize() override { return SkISize::Make(kWidth, kHeight); }
 
     void onDraw(SkCanvas* canvas) override {
         SkPaint whitePaint;
@@ -43,39 +44,34 @@ protected:
         canvas->scale(kScale, kScale);
 
         canvas->save();
-            SkRect clipRect1 = SkRect::MakeLTRB(0, 0,
-                                                SkIntToScalar(kWidth), SkIntToScalar(kHeight));
+        SkRect clipRect1 = SkRect::MakeLTRB(0, 0, SkIntToScalar(kWidth), SkIntToScalar(kHeight));
 
-            canvas->clipRect(clipRect1);
+        canvas->clipRect(clipRect1);
 
-            canvas->save();
+        canvas->save();
 
-                canvas->clipRect(clipRect1);
-                canvas->drawRect(clipRect1, whitePaint);
+        canvas->clipRect(clipRect1);
+        canvas->drawRect(clipRect1, whitePaint);
 
-                canvas->save();
+        canvas->save();
 
-                    SkRect clipRect2 = SkRect::MakeLTRB(8, 8, 288, 288);
-                    SkRRect clipRRect = SkRRect::MakeOval(clipRect2);
-                    canvas->clipRRect(clipRRect, kDifference_SkClipOp, true);
+        SkRect clipRect2 = SkRect::MakeLTRB(8, 8, 288, 288);
+        SkRRect clipRRect = SkRRect::MakeOval(clipRect2);
+        canvas->clipRRect(clipRRect, kDifference_SkClipOp, true);
 
-                    SkRect r = SkRect::MakeLTRB(4, 4, 292, 292);
-                    SkRRect rr = SkRRect::MakeOval(r);
+        SkRect r = SkRect::MakeLTRB(4, 4, 292, 292);
+        SkRRect rr = SkRRect::MakeOval(r);
 
-                    SkPaint paint;
+        SkPaint paint;
 
-                    paint.setMaskFilter(SkMaskFilter::MakeBlur(
-                                            kNormal_SkBlurStyle,
-                                            1.366025f));
-                    paint.setColorFilter(SkColorFilter::MakeModeFilter(
-                                             SK_ColorRED,
-                                             SkBlendMode::kSrcIn));
-                    paint.setAntiAlias(true);
+        paint.setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, 1.366025f));
+        paint.setColorFilter(SkColorFilters::Blend(SK_ColorRED, SkBlendMode::kSrcIn));
+        paint.setAntiAlias(true);
 
-                    canvas->drawRRect(rr, paint);
+        canvas->drawRRect(rr, paint);
 
-                canvas->restore();
-            canvas->restore();
+        canvas->restore();
+        canvas->restore();
         canvas->restore();
     }
 
@@ -89,4 +85,4 @@ private:
 //////////////////////////////////////////////////////////////////////////////
 
 DEF_GM(return new BlurredClippedCircleGM;)
-}
+}  // namespace skiagm

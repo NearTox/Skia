@@ -8,10 +8,10 @@
 #ifndef SkShadowUtils_DEFINED
 #define SkShadowUtils_DEFINED
 
-#include "SkColor.h"
-#include "SkPoint3.h"
-#include "SkScalar.h"
-#include "../private/SkShadowFlags.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPoint3.h"
+#include "include/core/SkScalar.h"
+#include "include/private/SkShadowFlags.h"
 
 class SkCanvas;
 class SkPath;
@@ -37,9 +37,8 @@ public:
      *               SkShadowFlags.
      */
     static void DrawShadow(SkCanvas* canvas, const SkPath& path, const SkPoint3& zPlaneParams,
-                           const SkPoint3& lightPos, SkScalar lightRadius,
-                           SkColor ambientColor, SkColor spotColor,
-                           uint32_t flags = SkShadowFlags::kNone_ShadowFlag);
+                           const SkPoint3& lightPos, SkScalar lightRadius, SkColor ambientColor,
+                           SkColor spotColor, uint32_t flags = SkShadowFlags::kNone_ShadowFlag);
 
     /**
      * Helper routine to compute color values for one-pass tonal alpha.

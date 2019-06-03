@@ -1,16 +1,16 @@
 /*
-* Copyright 2015 Google Inc.
-*
-* Use of this source code is governed by a BSD-style license that can be
-* found in the LICENSE file.
-*/
+ * Copyright 2015 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
 #ifndef GrVkRenderPass_DEFINED
 #define GrVkRenderPass_DEFINED
 
-#include "GrTypes.h"
-#include "GrVkResource.h"
-#include "vk/GrVkTypes.h"
+#include "include/gpu/GrTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
+#include "src/gpu/vk/GrVkResource.h"
 
 class GrProcessorKeyBuilder;
 class GrVkGpu;
@@ -30,20 +30,17 @@ public:
             , fColorAttachmentIndex(colorAttachmentIndex) {}
 
     struct LoadStoreOps {
-        VkAttachmentLoadOp  fLoadOp;
+        VkAttachmentLoadOp fLoadOp;
         VkAttachmentStoreOp fStoreOp;
 
         LoadStoreOps(VkAttachmentLoadOp loadOp, VkAttachmentStoreOp storeOp)
-            : fLoadOp(loadOp)
-            , fStoreOp(storeOp) {}
+                : fLoadOp(loadOp), fStoreOp(storeOp) {}
 
         bool operator==(const LoadStoreOps& right) const {
             return fLoadOp == right.fLoadOp && fStoreOp == right.fStoreOp;
         }
 
-        bool operator!=(const LoadStoreOps& right) const {
-            return !(*this == right);
-        }
+        bool operator!=(const LoadStoreOps& right) const { return !(*this == right); }
     };
 
     void initSimple(const GrVkGpu* gpu, const GrVkRenderTarget& target);
@@ -64,24 +61,21 @@ public:
             LoadStoreOps fLoadStoreOps;
 
             AttachmentDesc()
-                : fFormat(VK_FORMAT_UNDEFINED)
-                , fSamples(0)
-                , fLoadStoreOps(VK_ATTACHMENT_LOAD_OP_LOAD, VK_ATTACHMENT_STORE_OP_STORE) {}
+                    : fFormat(VK_FORMAT_UNDEFINED)
+                    , fSamples(0)
+                    , fLoadStoreOps(VK_ATTACHMENT_LOAD_OP_LOAD, VK_ATTACHMENT_STORE_OP_STORE) {}
             bool operator==(const AttachmentDesc& right) const {
-                return (fFormat == right.fFormat &&
-                        fSamples == right.fSamples &&
+                return (fFormat == right.fFormat && fSamples == right.fSamples &&
                         fLoadStoreOps == right.fLoadStoreOps);
             }
-            bool operator!=(const AttachmentDesc& right) const {
-                return !(*this == right);
-            }
+            bool operator!=(const AttachmentDesc& right) const { return !(*this == right); }
             bool isCompatible(const AttachmentDesc& desc) const {
                 return (fFormat == desc.fFormat && fSamples == desc.fSamples);
             }
         };
         AttachmentDesc fColor;
         AttachmentDesc fStencil;
-        uint32_t       fAttachmentCount;
+        uint32_t fAttachmentCount;
     };
 
     enum AttachmentFlags {
@@ -111,8 +105,7 @@ public:
 
     bool isCompatibleExternalRP(VkRenderPass) const;
 
-    bool equalLoadStoreOps(const LoadStoreOps& colorOps,
-                           const LoadStoreOps& stencilOps) const;
+    bool equalLoadStoreOps(const LoadStoreOps& colorOps, const LoadStoreOps& stencilOps) const;
 
     VkRenderPass vkRenderPass() const { return fRenderPass; }
 
@@ -121,7 +114,6 @@ public:
     // Returns the number of clear colors needed to begin this render pass. Currently this will
     // either only be 0 or 1 since we only ever clear the color attachment.
     uint32_t clearValueCount() const { return fClearValueCount; }
-
 
     void genKey(GrProcessorKeyBuilder* b) const;
 
@@ -134,21 +126,19 @@ public:
 private:
     GrVkRenderPass(const GrVkRenderPass&);
 
-    void init(const GrVkGpu* gpu,
-              const LoadStoreOps& colorOps,
-              const LoadStoreOps& stencilOps);
+    void init(const GrVkGpu* gpu, const LoadStoreOps& colorOps, const LoadStoreOps& stencilOps);
 
     bool isCompatible(const AttachmentsDescriptor&, const AttachmentFlags&) const;
 
     void freeGPUData(GrVkGpu* gpu) const override;
 
-    VkRenderPass          fRenderPass;
-    AttachmentFlags       fAttachmentFlags;
+    VkRenderPass fRenderPass;
+    AttachmentFlags fAttachmentFlags;
     AttachmentsDescriptor fAttachmentsDescriptor;
-    VkExtent2D            fGranularity;
-    uint32_t              fClearValueCount;
+    VkExtent2D fGranularity;
+    uint32_t fClearValueCount;
     // For internally created render passes we assume the color attachment index is always 0.
-    uint32_t              fColorAttachmentIndex = 0;
+    uint32_t fColorAttachmentIndex = 0;
 
     typedef GrVkResource INHERITED;
 };

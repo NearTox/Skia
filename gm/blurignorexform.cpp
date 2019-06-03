@@ -5,13 +5,23 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-
-#include "SkBlurMask.h"
-#include "SkCanvas.h"
-#include "SkMaskFilter.h"
-#include "SkPaint.h"
+#include "gm/gm.h"
+#include "include/core/SkBlurTypes.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkMaskFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRRect.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "src/core/SkBlurMask.h"
+#include "tools/ToolUtils.h"
 
 // This GM tests out the SkBlurMaskFilter's kIgnoreTransform flag. That flag causes the blur mask
 // filter to not apply the CTM to the blur's radius.
@@ -23,7 +33,7 @@ public:
         kRRect,
     };
 
-    BlurIgnoreXformGM(DrawType drawType) : fDrawType(drawType) { }
+    BlurIgnoreXformGM(DrawType drawType) : fDrawType(drawType) {}
 
 protected:
     bool runAsBench() const override { return true; }
@@ -31,21 +41,20 @@ protected:
     SkString onShortName() override {
         SkString name;
         name.printf("blur_ignore_xform_%s",
-                    DrawType::kCircle == fDrawType ? "circle"
-                        : DrawType::kRect == fDrawType ? "rect" : "rrect");
+                    DrawType::kCircle == fDrawType
+                            ? "circle"
+                            : DrawType::kRect == fDrawType ? "rect" : "rrect");
         return name;
     }
 
-    SkISize onISize() override {
-        return SkISize::Make(375, 475);
-    }
+    SkISize onISize() override { return SkISize::Make(375, 475); }
 
     void onOnceBeforeDraw() override {
         for (int i = 0; i < kNumBlurs; ++i) {
-            fBlurFilters[i] = SkMaskFilter::MakeBlur(
-                                    kNormal_SkBlurStyle,
-                                    SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(20)),
-                                    kBlurFlags[i].fRespectCTM);
+            fBlurFilters[i] =
+                    SkMaskFilter::MakeBlur(kNormal_SkBlurStyle,
+                                           SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(20)),
+                                           kBlurFlags[i].fRespectCTM);
         }
     }
 
@@ -65,9 +74,9 @@ protected:
                 canvas->scale(scale.fScale, scale.fScale);
                 static const SkScalar kRadius = 20.0f;
                 SkScalar coord = 50.0f * 1.0f / scale.fScale;
-                SkRect rect = SkRect::MakeXYWH(coord - kRadius , coord - kRadius,
-                                               2 * kRadius, 2 * kRadius);
-                SkRRect rrect = SkRRect::MakeRectXY(rect, kRadius/2.0f, kRadius/2.0f);
+                SkRect rect = SkRect::MakeXYWH(coord - kRadius, coord - kRadius, 2 * kRadius,
+                                               2 * kRadius);
+                SkRRect rrect = SkRRect::MakeRectXY(rect, kRadius / 2.0f, kRadius / 2.0f);
 
                 paint.setMaskFilter(fBlurFilters[i]);
                 for (int j = 0; j < 2; ++j) {
@@ -95,7 +104,7 @@ protected:
 
     void drawOverlay(SkCanvas* canvas) {
         canvas->translate(10, 0);
-        SkFont font(sk_tool_utils::create_portable_typeface());
+        SkFont font(ToolUtils::create_portable_typeface());
         canvas->save();
         for (int i = 0; i < kNumBlurs; ++i) {
             canvas->drawString(kBlurFlags[i].fName, 100, 0, font, SkPaint());
@@ -124,23 +133,15 @@ private:
     DrawType fDrawType;
     sk_sp<SkMaskFilter> fBlurFilters[kNumBlurs];
 
-    typedef         skiagm::GM INHERITED;
+    typedef skiagm::GM INHERITED;
 };
 
-const BlurIgnoreXformGM::BlurFlags BlurIgnoreXformGM::kBlurFlags[] = {
-    {true, "none"},
-    {false, "IgnoreTransform"}
-};
+const BlurIgnoreXformGM::BlurFlags BlurIgnoreXformGM::kBlurFlags[] = {{true, "none"},
+                                                                      {false, "IgnoreTransform"}};
 
 const BlurIgnoreXformGM::MatrixScale BlurIgnoreXformGM::kMatrixScales[] = {
-    {1.0f, "Identity"},
-    {0.5f, "Scale = 0.5"},
-    {2.0f, "Scale = 2.0"}
-};
+        {1.0f, "Identity"}, {0.5f, "Scale = 0.5"}, {2.0f, "Scale = 2.0"}};
 
 DEF_GM(return new BlurIgnoreXformGM(BlurIgnoreXformGM::DrawType::kCircle);)
 DEF_GM(return new BlurIgnoreXformGM(BlurIgnoreXformGM::DrawType::kRect);)
 DEF_GM(return new BlurIgnoreXformGM(BlurIgnoreXformGM::DrawType::kRRect);)
-
-
-

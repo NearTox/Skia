@@ -10,8 +10,10 @@
 
 #include <functional>
 
-#include "SkTDArray.h"
-#include "SkPoint.h"
+#include "include/core/SkPoint.h"
+#include "include/private/SkTDArray.h"
+
+struct SkRect;
 
 /**
  * Generates a polygon that is inset a constant from the boundary of a given convex polygon.
@@ -23,8 +25,8 @@
  * @param insetPolygon  The resulting inset polygon, if any.
  * @return true if an inset polygon exists, false otherwise.
  */
-bool SkInsetConvexPolygon(const SkPoint* inputPolygonVerts, int inputPolygonSize,
-                          SkScalar inset, SkTDArray<SkPoint>* insetPolygon);
+bool SkInsetConvexPolygon(const SkPoint* inputPolygonVerts, int inputPolygonSize, SkScalar inset,
+                          SkTDArray<SkPoint>* insetPolygon);
 
 /**
  * Generates a simple polygon (if possible) that is offset a constant distance from the boundary
@@ -33,6 +35,7 @@ bool SkInsetConvexPolygon(const SkPoint* inputPolygonVerts, int inputPolygonSize
  *
  * @param inputPolygonVerts  Array of points representing the vertices of the original polygon.
  * @param inputPolygonSize  Number of vertices in the original polygon.
+ * @param bounds Bounding rectangle for the original polygon.
  * @param offset How far we wish to offset the polygon.
  *   Positive values indicate insetting, negative values outsetting.
  * @param offsetPolgon  The resulting offset polygon, if any.
@@ -40,7 +43,7 @@ bool SkInsetConvexPolygon(const SkPoint* inputPolygonVerts, int inputPolygonSize
  * @return true if an offset simple polygon exists, false otherwise.
  */
 bool SkOffsetSimplePolygon(const SkPoint* inputPolygonVerts, int inputPolygonSize,
-                           SkScalar offset, SkTDArray<SkPoint>* offsetPolygon,
+                           const SkRect& bounds, SkScalar offset, SkTDArray<SkPoint>* offsetPolygon,
                            SkTDArray<int>* polygonIndices = nullptr);
 
 /**
@@ -87,21 +90,21 @@ bool SkIsConvexPolygon(const SkPoint* polygonVerts, int polygonSize);
  * @param polygonSize  Number of vertices in the polygon.
  * @return true if the polygon is simple, false otherwise.
  */
- bool SkIsSimplePolygon(const SkPoint* polygonVerts, int polygonSize);
+bool SkIsSimplePolygon(const SkPoint* polygonVerts, int polygonSize);
 
- /**
-  * Compute indices to triangulate the given polygon.
-  * The input polygon must be simple (i.e. it is not self-intersecting)
-  * and have no coincident vertices or collinear edges.
-  *
-  * @param polygonVerts  Array of points representing the vertices of the polygon.
-  * @param indexMap Mapping from index in the given array to the final index in the triangulation.
-  * @param polygonSize  Number of vertices in the polygon.
-  * @param triangleIndices  Indices of the resulting triangulation.
-  * @return true if successful, false otherwise.
-  */
- bool SkTriangulateSimplePolygon(const SkPoint* polygonVerts, uint16_t* indexMap, int polygonSize,
-                                 SkTDArray<uint16_t>* triangleIndices);
+/**
+ * Compute indices to triangulate the given polygon.
+ * The input polygon must be simple (i.e. it is not self-intersecting)
+ * and have no coincident vertices or collinear edges.
+ *
+ * @param polygonVerts  Array of points representing the vertices of the polygon.
+ * @param indexMap Mapping from index in the given array to the final index in the triangulation.
+ * @param polygonSize  Number of vertices in the polygon.
+ * @param triangleIndices  Indices of the resulting triangulation.
+ * @return true if successful, false otherwise.
+ */
+bool SkTriangulateSimplePolygon(const SkPoint* polygonVerts, uint16_t* indexMap, int polygonSize,
+                                SkTDArray<uint16_t>* triangleIndices);
 
 // Experiment: doesn't handle really big floats (returns false), always returns true for count <= 3
 bool SkIsPolyConvex_experimental(const SkPoint[], int count);

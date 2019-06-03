@@ -8,11 +8,11 @@
 #ifndef SKSL_SYMBOLTABLE
 #define SKSL_SYMBOLTABLE
 
-#include <unordered_map>
 #include <memory>
+#include <unordered_map>
 #include <vector>
-#include "SkSLErrorReporter.h"
-#include "SkSLSymbol.h"
+#include "src/sksl/SkSLErrorReporter.h"
+#include "src/sksl/ir/SkSLSymbol.h"
 
 namespace SkSL {
 
@@ -24,12 +24,10 @@ struct FunctionDeclaration;
  */
 class SymbolTable {
 public:
-    SymbolTable(ErrorReporter* errorReporter)
-    : fErrorReporter(*errorReporter) {}
+    SymbolTable(ErrorReporter* errorReporter) : fErrorReporter(*errorReporter) {}
 
     SymbolTable(std::shared_ptr<SymbolTable> parent, ErrorReporter* errorReporter)
-    : fParent(parent)
-    , fErrorReporter(*errorReporter) {}
+            : fParent(parent), fErrorReporter(*errorReporter) {}
 
     const Symbol* operator[](StringFragment name);
 
@@ -61,6 +59,6 @@ private:
     ErrorReporter& fErrorReporter;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

@@ -8,9 +8,9 @@
 #ifndef SkSerialProcs_DEFINED
 #define SkSerialProcs_DEFINED
 
-#include "SkImage.h"
-#include "SkPicture.h"
-#include "SkTypeface.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkPicture.h"
+#include "include/core/SkTypeface.h"
 
 /**
  *  A serial-proc is asked to serialize the specified object (e.g. picture or image).
@@ -49,25 +49,24 @@ typedef sk_sp<SkTypeface> (*SkDeserialTypefaceProc)(const void* data, size_t len
 
 struct SK_API SkSerialProcs {
     SkSerialPictureProc fPictureProc = nullptr;
-    void*               fPictureCtx = nullptr;
+    void* fPictureCtx = nullptr;
 
-    SkSerialImageProc   fImageProc = nullptr;
-    void*               fImageCtx = nullptr;
+    SkSerialImageProc fImageProc = nullptr;
+    void* fImageCtx = nullptr;
 
     SkSerialTypefaceProc fTypefaceProc = nullptr;
-    void*                fTypefaceCtx = nullptr;
+    void* fTypefaceCtx = nullptr;
 };
 
 struct SK_API SkDeserialProcs {
-    SkDeserialPictureProc   fPictureProc = nullptr;
-    void*                   fPictureCtx = nullptr;
+    SkDeserialPictureProc fPictureProc = nullptr;
+    void* fPictureCtx = nullptr;
 
-    SkDeserialImageProc     fImageProc = nullptr;
-    void*                   fImageCtx = nullptr;
+    SkDeserialImageProc fImageProc = nullptr;
+    void* fImageCtx = nullptr;
 
-    SkDeserialTypefaceProc  fTypefaceProc = nullptr;
-    void*                   fTypefaceCtx = nullptr;
+    SkDeserialTypefaceProc fTypefaceProc = nullptr;
+    void* fTypefaceCtx = nullptr;
 };
 
 #endif
-

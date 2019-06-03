@@ -8,12 +8,10 @@
 #ifndef SkArithmeticImageFilter_DEFINED
 #define SkArithmeticImageFilter_DEFINED
 
-#include "SkImageFilter.h"
+#include "include/core/SkImageFilter.h"
 
 struct ArithmeticFPInputs {
-    ArithmeticFPInputs() {
-        memset(this, 0, sizeof(*this));
-    }
+    ArithmeticFPInputs() { memset(this, 0, sizeof(*this)); }
 
     float k[4];
     bool enforcePMColor;

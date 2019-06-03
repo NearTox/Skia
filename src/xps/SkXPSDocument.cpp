@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN)
 
-#include "SkXPSDocument.h"
+#include "include/docs/SkXPSDocument.h"
 
-#include "SkHRESULT.h"
-#include "SkStream.h"
-#include "SkTScopedComPtr.h"
-#include "SkXPSDevice.h"
+#include "include/core/SkStream.h"
+#include "src/utils/win/SkHRESULT.h"
+#include "src/utils/win/SkTScopedComPtr.h"
+#include "src/xps/SkXPSDevice.h"
 
 #include <XpsObjectModel.h>
 
@@ -32,15 +32,11 @@ struct SkXPSDocument final : public SkDocument {
     void onClose(SkWStream*) override;
     void onAbort() override;
 };
-}
+}  // namespace
 
-SkXPSDocument::SkXPSDocument(SkWStream* stream,
-                   SkScalar dpi,
-                   SkTScopedComPtr<IXpsOMObjectFactory> xpsFactory)
-        : SkDocument(stream)
-        , fXpsFactory(std::move(xpsFactory))
-        , fDevice(SkISize{10000, 10000})
-{
+SkXPSDocument::SkXPSDocument(
+        SkWStream* stream, SkScalar dpi, SkTScopedComPtr<IXpsOMObjectFactory> xpsFactory)
+        : SkDocument(stream), fXpsFactory(std::move(xpsFactory)), fDevice(SkISize{10000, 10000}) {
     const SkScalar kPointsPerMeter = SkDoubleToScalar(360000.0 / 127.0);
     fUnitsPerMeter.set(kPointsPerMeter, kPointsPerMeter);
     SkScalar pixelsPerMeterScale = SkDoubleToScalar(dpi * 5000.0 / 127.0);
@@ -79,8 +75,6 @@ sk_sp<SkDocument> SkXPS::MakeDocument(SkWStream* stream,
                                       IXpsOMObjectFactory* factoryPtr,
                                       SkScalar dpi) {
     SkTScopedComPtr<IXpsOMObjectFactory> factory(SkSafeRefComPtr(factoryPtr));
-    return stream && factory
-           ? sk_make_sp<SkXPSDocument>(stream, dpi, std::move(factory))
-           : nullptr;
+    return stream && factory ? sk_make_sp<SkXPSDocument>(stream, dpi, std::move(factory)) : nullptr;
 }
 #endif  // defined(SK_BUILD_FOR_WIN)

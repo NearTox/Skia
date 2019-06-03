@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "SkFlattenable.h"
-#include "SkPtrRecorder.h"
-#include "SkReadBuffer.h"
+#include "include/core/SkFlattenable.h"
+#include "src/core/SkPtrRecorder.h"
+#include "src/core/SkReadBuffer.h"
 
 #include <algorithm>
 
@@ -40,33 +40,23 @@ SkRefCntSet::~SkRefCntSet() {
     this->reset();
 }
 
-void SkRefCntSet::incPtr(void* ptr) {
-    ((SkRefCnt*)ptr)->ref();
-}
+void SkRefCntSet::incPtr(void* ptr) { ((SkRefCnt*)ptr)->ref(); }
 
-void SkRefCntSet::decPtr(void* ptr) {
-    ((SkRefCnt*)ptr)->unref();
-}
+void SkRefCntSet::decPtr(void* ptr) { ((SkRefCnt*)ptr)->unref(); }
 
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace {
 
 struct Entry {
-    const char*             fName;
-    SkFlattenable::Factory  fFactory;
+    const char* fName;
+    SkFlattenable::Factory fFactory;
 };
 
 struct EntryComparator {
-    bool operator()(const Entry& a, const Entry& b) const {
-        return strcmp(a.fName, b.fName) < 0;
-    }
-    bool operator()(const Entry& a, const char* b) const {
-        return strcmp(a.fName, b) < 0;
-    }
-    bool operator()(const char* a, const Entry& b) const {
-        return strcmp(a, b.fName) < 0;
-    }
+    bool operator()(const Entry& a, const Entry& b) const { return strcmp(a.fName, b.fName) < 0; }
+    bool operator()(const Entry& a, const char* b) const { return strcmp(a.fName, b) < 0; }
+    bool operator()(const char* a, const Entry& b) const { return strcmp(a, b.fName) < 0; }
 };
 
 int gCount = 0;
@@ -74,9 +64,7 @@ Entry gEntries[128];
 
 }  // namespace
 
-void SkFlattenable::Finalize() {
-    std::sort(gEntries, gEntries + gCount, EntryComparator());
-}
+void SkFlattenable::Finalize() { std::sort(gEntries, gEntries + gCount, EntryComparator()); }
 
 void SkFlattenable::Register(const char name[], Factory factory) {
     SkASSERT(name);
@@ -127,12 +115,12 @@ sk_sp<SkData> SkFlattenable::serialize(const SkSerialProcs* procs) const {
 
 size_t SkFlattenable::serialize(void* memory, size_t memory_size,
                                 const SkSerialProcs* procs) const {
-  SkBinaryWriteBuffer writer(memory, memory_size);
-  if (procs) {
-      writer.setSerialProcs(*procs);
-  }
-  writer.writeFlattenable(this);
-  return writer.usingInitialStorage() ? writer.bytesWritten() : 0u;
+    SkBinaryWriteBuffer writer(memory, memory_size);
+    if (procs) {
+        writer.setSerialProcs(*procs);
+    }
+    writer.writeFlattenable(this);
+    return writer.usingInitialStorage() ? writer.bytesWritten() : 0u;
 }
 
 sk_sp<SkFlattenable> SkFlattenable::Deserialize(SkFlattenable::Type type, const void* data,

@@ -8,7 +8,7 @@
 #ifndef SkEmbossMaskFilter_DEFINED
 #define SkEmbossMaskFilter_DEFINED
 
-#include "SkMaskFilterBase.h"
+#include "src/core/SkMaskFilterBase.h"
 
 /** \class SkEmbossMaskFilter
 
@@ -17,10 +17,10 @@
 class SK_API SkEmbossMaskFilter : public SkMaskFilterBase {
 public:
     struct Light {
-        SkScalar    fDirection[3];  // x,y,z
-        uint16_t    fPad;
-        uint8_t     fAmbient;
-        uint8_t     fSpecular;      // exponent, 4.4 right now
+        SkScalar fDirection[3];  // x,y,z
+        uint16_t fPad;
+        uint8_t fAmbient;
+        uint8_t fSpecular;  // exponent, 4.4 right now
     };
 
     static sk_sp<SkMaskFilter> Make(SkScalar blurSigma, const Light& light);
@@ -39,8 +39,8 @@ protected:
 private:
     SK_FLATTENABLE_HOOKS(SkEmbossMaskFilter)
 
-    Light       fLight;
-    SkScalar    fBlurSigma;
+    Light fLight;
+    SkScalar fBlurSigma;
 
     typedef SkMaskFilter INHERITED;
 };

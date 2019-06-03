@@ -8,7 +8,7 @@
 #ifndef SKSL_ASTNODE
 #define SKSL_ASTNODE
 
-#include "SkSLString.h"
+#include "src/sksl/SkSLString.h"
 
 namespace SkSL {
 
@@ -22,6 +22,6 @@ struct ASTNode {
     virtual String description() const = 0;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

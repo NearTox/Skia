@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkCanvas.h"
-#include "SkString.h"
+#include "samplecode/Sample.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkString.h"
 
 #if SK_SUPPORT_GPU
-#   include "GrContext.h"
+#include "include/gpu/GrContext.h"
 #else
 class GrContext;
 #endif
@@ -19,19 +19,13 @@ class GrContext;
 
 Sample::Event::Event() : Event("") {}
 
-Sample::Event::Event(const Event& that) {
-    *this = that;
-}
+Sample::Event::Event(const Event& that) { *this = that; }
 
-Sample::Event::Event(const char type[]) : fType(type), f32(0) {
-    SkASSERT(type);
-}
+Sample::Event::Event(const char type[]) : fType(type), f32(0) { SkASSERT(type); }
 
 Sample::Event::~Event() {}
 
-bool Sample::Event::isType(const char type[]) const {
-    return fType.equals(type);
-}
+bool Sample::Event::isType(const char type[]) const { return fType.equals(type); }
 
 const char* Sample::kCharEvtName = "SampleCode_Char_Event";
 const char* Sample::kTitleEvtName = "SampleCode_Title_Event";
@@ -46,9 +40,7 @@ bool Sample::CharQ(const Event& evt, SkUnichar* outUni) {
     return false;
 }
 
-bool Sample::TitleQ(const Event& evt) {
-    return evt.isType(kTitleEvtName);
-}
+bool Sample::TitleQ(const Event& evt) { return evt.isType(kTitleEvtName); }
 
 void Sample::TitleR(Event* evt, const char title[]) {
     SkASSERT(evt && TitleQ(*evt));
@@ -66,32 +58,24 @@ bool Sample::RequestTitle(Sample* view, SkString* title) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool Sample::doEvent(const Event& evt) {
-    return this->onEvent(evt);
-}
+bool Sample::doEvent(const Event& evt) { return this->onEvent(evt); }
 
-bool Sample::onEvent(const Event&) {
-    return false;
-}
+bool Sample::onEvent(const Event&) { return false; }
 
 bool Sample::doQuery(Event* evt) {
     SkASSERT(evt);
     return this->onQuery(evt);
 }
 
-bool Sample::onQuery(Sample::Event* evt) {
-    return false;
-}
+bool Sample::onQuery(Sample::Event* evt) { return false; }
 
 ////////////////////////////////////////////////////////////////////////
-
 
 void Sample::setSize(SkScalar width, SkScalar height) {
     width = SkMaxScalar(0, width);
     height = SkMaxScalar(0, height);
 
-    if (fWidth != width || fHeight != height)
-    {
+    if (fWidth != width || fHeight != height) {
         fWidth = width;
         fHeight = height;
         this->onSizeChange();
@@ -100,13 +84,13 @@ void Sample::setSize(SkScalar width, SkScalar height) {
 
 void Sample::draw(SkCanvas* canvas) {
     if (fWidth && fHeight) {
-        SkRect    r;
+        SkRect r;
         r.set(0, 0, fWidth, fHeight);
         if (canvas->quickReject(r)) {
             return;
         }
 
-        SkAutoCanvasRestore    as(canvas, true);
+        SkAutoCanvasRestore as(canvas, true);
         int sc = canvas->save();
 
         if (!fHaveCalledOnceBeforeDraw) {
@@ -206,17 +190,11 @@ void Sample::DoClickUp(Click* click, int x, int y, unsigned modi) {
 
 void Sample::onSizeChange() {}
 
-Sample::Click* Sample::onFindClickHandler(SkScalar x, SkScalar y, unsigned modi) {
-    return nullptr;
-}
+Sample::Click* Sample::onFindClickHandler(SkScalar x, SkScalar y, unsigned modi) { return nullptr; }
 
-bool Sample::onClick(Click*) {
-    return false;
-}
+bool Sample::onClick(Click*) { return false; }
 
-void Sample::onDrawBackground(SkCanvas* canvas) {
-    canvas->drawColor(fBGColor);
-}
+void Sample::onDrawBackground(SkCanvas* canvas) { canvas->drawColor(fBGColor); }
 
 // need to explicitly declare this, or we get some weird infinite loop llist
 template SampleRegistry* SampleRegistry::gHead;

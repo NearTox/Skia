@@ -8,13 +8,13 @@
 #ifndef GrTextureRenderTargetProxy_DEFINED
 #define GrTextureRenderTargetProxy_DEFINED
 
-#include "GrRenderTargetProxy.h"
-#include "GrTextureProxy.h"
+#include "include/private/GrRenderTargetProxy.h"
+#include "include/private/GrTextureProxy.h"
 
 #ifdef SK_BUILD_FOR_WIN
 // Windows gives warnings about inheriting asTextureProxy/asRenderTargetProxy via dominance.
 #pragma warning(push)
-#pragma warning(disable: 4250)
+#pragma warning(disable : 4250)
 #endif
 
 // This class delays the acquisition of RenderTargets that are also textures until
@@ -24,8 +24,8 @@
 class GrTextureRenderTargetProxy : public GrRenderTargetProxy, public GrTextureProxy {
 private:
     // DDL TODO: rm the GrSurfaceProxy friending
-    friend class GrSurfaceProxy; // for ctors
-    friend class GrProxyProvider; // for ctors
+    friend class GrSurfaceProxy;   // for ctors
+    friend class GrProxyProvider;  // for ctors
 
     // Deferred version
     GrTextureRenderTargetProxy(const GrCaps&, const GrBackendFormat&, const GrSurfaceDesc&,
@@ -45,7 +45,7 @@ private:
 
     size_t onUninstantiatedGpuMemorySize() const override;
 
-    SkDEBUGCODE(void onValidateSurface(const GrSurface*) override;)
+    SkDEBUGCODE(void onValidateSurface(const GrSurface*) override);
 };
 
 #ifdef SK_BUILD_FOR_WIN

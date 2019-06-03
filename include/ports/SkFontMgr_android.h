@@ -8,16 +8,16 @@
 #ifndef SkFontMgr_android_DEFINED
 #define SkFontMgr_android_DEFINED
 
-#include "SkRefCnt.h"
+#include "include/core/SkRefCnt.h"
 
 class SkFontMgr;
 
 struct SkFontMgr_Android_CustomFonts {
     /** When specifying custom fonts, indicates how to use system fonts. */
     enum SystemFontUse {
-        kOnlyCustom, /** Use only custom fonts. NDK compliant. */
+        kOnlyCustom,   /** Use only custom fonts. NDK compliant. */
         kPreferCustom, /** Use custom fonts before system fonts. */
-        kPreferSystem /** Use system fonts before custom fonts. */
+        kPreferSystem  /** Use system fonts before custom fonts. */
     };
     /** Whether or not to use system fonts. */
     SystemFontUse fSystemFontUse;
@@ -42,4 +42,4 @@ struct SkFontMgr_Android_CustomFonts {
 /** Create a font manager for Android. If 'custom' is NULL, use only system fonts. */
 SK_API sk_sp<SkFontMgr> SkFontMgr_New_Android(const SkFontMgr_Android_CustomFonts* custom);
 
-#endif // SkFontMgr_android_DEFINED
+#endif  // SkFontMgr_android_DEFINED

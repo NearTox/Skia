@@ -8,7 +8,7 @@
 #ifndef SKSL_ASTDISCARDSTATEMENT
 #define SKSL_ASTDISCARDSTATEMENT
 
-#include "SkSLASTStatement.h"
+#include "src/sksl/ast/SkSLASTStatement.h"
 
 namespace SkSL {
 
@@ -16,16 +16,13 @@ namespace SkSL {
  * A 'discard' statement.
  */
 struct ASTDiscardStatement : public ASTStatement {
-    ASTDiscardStatement(int offset)
-    : INHERITED(offset, kDiscard_Kind) {}
+    ASTDiscardStatement(int offset) : INHERITED(offset, kDiscard_Kind) {}
 
-    String description() const override {
-        return String("discard;");
-    }
+    String description() const override { return String("discard;"); }
 
     typedef ASTStatement INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

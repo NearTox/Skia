@@ -8,9 +8,9 @@
 #ifndef SkTrimImpl_DEFINED
 #define SkTrimImpl_DEFINED
 
-#include "SkPathEffect.h"
+#include "include/core/SkPathEffect.h"
 
-#include "SkTrimPathEffect.h"
+#include "include/effects/SkTrimPathEffect.h"
 
 class SkTrimPE : public SkPathEffect {
 public:
@@ -23,8 +23,7 @@ protected:
 private:
     SK_FLATTENABLE_HOOKS(SkTrimPE)
 
-    const SkScalar               fStartT,
-                                 fStopT;
+    const SkScalar fStartT, fStopT;
     const SkTrimPathEffect::Mode fMode;
 
     typedef SkPathEffect INHERITED;

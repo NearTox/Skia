@@ -8,13 +8,13 @@
 #ifndef SkRecorder_DEFINED
 #define SkRecorder_DEFINED
 
-#include "SkBigPicture.h"
-#include "SkCanvasVirtualEnforcer.h"
-#include "SkMiniRecorder.h"
-#include "SkNoDrawCanvas.h"
-#include "SkRecord.h"
-#include "SkRecords.h"
-#include "SkTDArray.h"
+#include "include/core/SkCanvasVirtualEnforcer.h"
+#include "include/private/SkTDArray.h"
+#include "include/utils/SkNoDrawCanvas.h"
+#include "src/core/SkBigPicture.h"
+#include "src/core/SkMiniRecorder.h"
+#include "src/core/SkRecord.h"
+#include "src/core/SkRecords.h"
 
 class SkBBHFactory;
 
@@ -40,7 +40,7 @@ private:
 class SkRecorder final : public SkCanvasVirtualEnforcer<SkNoDrawCanvas> {
 public:
     // Does not take ownership of the SkRecord.
-    SkRecorder(SkRecord*, int width, int height, SkMiniRecorder* = nullptr);   // legacy version
+    SkRecorder(SkRecord*, int width, int height, SkMiniRecorder* = nullptr);  // legacy version
     SkRecorder(SkRecord*, const SkRect& bounds, SkMiniRecorder* = nullptr);
 
     enum DrawPictureMode { Record_DrawPictureMode, Playback_DrawPictureMode };
@@ -72,14 +72,13 @@ public:
                         SkScalar x,
                         SkScalar y,
                         const SkPaint& paint) override;
-    void onDrawPatch(const SkPoint cubics[12], const SkColor colors[4],
-                     const SkPoint texCoords[4], SkBlendMode,
-                     const SkPaint& paint) override;
+    void onDrawPatch(const SkPoint cubics[12], const SkColor colors[4], const SkPoint texCoords[4],
+                     SkBlendMode, const SkPaint& paint) override;
 
     void onDrawPaint(const SkPaint&) override;
+    void onDrawBehind(const SkPaint&) override;
     void onDrawPoints(PointMode, size_t count, const SkPoint pts[], const SkPaint&) override;
     void onDrawRect(const SkRect&, const SkPaint&) override;
-    void onDrawEdgeAARect(const SkRect&, SkCanvas::QuadAAFlags, SkColor, SkBlendMode) override;
     void onDrawRegion(const SkRegion&, const SkPaint&) override;
     void onDrawOval(const SkRect&, const SkPaint&) override;
     void onDrawArc(const SkRect&, SkScalar, SkScalar, bool, const SkPaint&) override;
@@ -89,8 +88,8 @@ public:
     void onDrawBitmapRect(const SkBitmap&, const SkRect* src, const SkRect& dst, const SkPaint*,
                           SrcRectConstraint) override;
     void onDrawImage(const SkImage*, SkScalar left, SkScalar top, const SkPaint*) override;
-    void onDrawImageRect(const SkImage*, const SkRect* src, const SkRect& dst,
-                         const SkPaint*, SrcRectConstraint) override;
+    void onDrawImageRect(const SkImage*, const SkRect* src, const SkRect& dst, const SkPaint*,
+                         SrcRectConstraint) override;
     void onDrawImageNine(const SkImage*, const SkIRect& center, const SkRect& dst,
                          const SkPaint*) override;
     void onDrawBitmapNine(const SkBitmap&, const SkIRect& center, const SkRect& dst,
@@ -99,12 +98,10 @@ public:
                             const SkPaint*) override;
     void onDrawBitmapLattice(const SkBitmap&, const Lattice& lattice, const SkRect& dst,
                              const SkPaint*) override;
-    void onDrawImageSet(const SkCanvas::ImageSetEntry[], int count, SkFilterQuality,
-                        SkBlendMode) override;
     void onDrawVerticesObject(const SkVertices*, const SkVertices::Bone bones[], int boneCount,
                               SkBlendMode, const SkPaint&) override;
-    void onDrawAtlas(const SkImage*, const SkRSXform[], const SkRect[], const SkColor[],
-                     int count, SkBlendMode, const SkRect* cull, const SkPaint*) override;
+    void onDrawAtlas(const SkImage*, const SkRSXform[], const SkRect[], const SkColor[], int count,
+                     SkBlendMode, const SkRect* cull, const SkPaint*) override;
     void onDrawShadowRec(const SkPath&, const SkDrawShadowRec&) override;
 
     void onClipRect(const SkRect& rect, SkClipOp, ClipEdgeStyle) override;
@@ -116,19 +113,21 @@ public:
 
     void onDrawAnnotation(const SkRect&, const char[], SkData*) override;
 
+    void onDrawEdgeAAQuad(const SkRect&, const SkPoint[4], QuadAAFlags, SkColor,
+                          SkBlendMode) override;
+    void onDrawEdgeAAImageSet(const ImageSetEntry[], int count, const SkPoint[], const SkMatrix[],
+                              const SkPaint*, SrcRectConstraint) override;
+
     sk_sp<SkSurface> onNewSurface(const SkImageInfo&, const SkSurfaceProps&) override;
 
     void flushMiniRecorder();
 
 private:
-    template <typename T>
-    T* copy(const T*);
+    template <typename T> T* copy(const T*);
 
-    template <typename T>
-    T* copy(const T[], size_t count);
+    template <typename T> T* copy(const T[], size_t count);
 
-    template<typename T, typename... Args>
-    void append(Args&&...);
+    template <typename T, typename... Args> void append(Args&&...);
 
     DrawPictureMode fDrawPictureMode;
     size_t fApproxBytesUsedBySubPictures;
@@ -138,4 +137,4 @@ private:
     SkMiniRecorder* fMiniRecorder;
 };
 
-#endif//SkRecorder_DEFINED
+#endif  // SkRecorder_DEFINED

@@ -8,8 +8,8 @@
 #ifndef SkSVGEllipse_DEFINED
 #define SkSVGEllipse_DEFINED
 
-#include "SkSVGShape.h"
-#include "SkSVGTypes.h"
+#include "experimental/svg/model/SkSVGShape.h"
+#include "experimental/svg/model/SkSVGTypes.h"
 
 struct SkRect;
 
@@ -44,4 +44,4 @@ private:
     typedef SkSVGShape INHERITED;
 };
 
-#endif // SkSVGEllipse_DEFINED
+#endif  // SkSVGEllipse_DEFINED

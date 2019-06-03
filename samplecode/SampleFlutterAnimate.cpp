@@ -5,20 +5,20 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkAnimTimer.h"
-#include "SkCanvas.h"
-#include "SkFont.h"
-#include "SkColorPriv.h"
-#include "SkColorFilter.h"
-#include "SkImage.h"
-#include "SkRandom.h"
-#include "SkTime.h"
-#include "SkTypeface.h"
-#include "Timer.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkTime.h"
+#include "include/core/SkTypeface.h"
+#include "include/utils/SkRandom.h"
+#include "samplecode/Sample.h"
+#include "tools/timer/AnimTimer.h"
+#include "tools/timer/Timer.h"
 
 #if SK_SUPPORT_GPU
-#include "GrContext.h"
+#include "include/gpu/GrContext.h"
 #endif
 
 // Create an animation of a bunch of letters that rotate in place. This is intended to stress
@@ -55,16 +55,16 @@ protected:
         for (int i = 0; i < kNumChars; ++i) {
             canvas->save();
             double rot = SkScalarInterp(fChars[i].fStartRotation, fChars[i].fEndRotation,
-                                        fCurrTime/kDuration);
+                                        fCurrTime / kDuration);
             canvas->translate(fChars[i].fPosition.fX + kMidX, fChars[i].fPosition.fY - kMidY);
             canvas->rotate(SkRadiansToDegrees(rot));
-            canvas->translate(-35,+50);
+            canvas->translate(-35, +50);
             canvas->drawString(fChars[i].fChar, 0, 0, font, paint);
             canvas->restore();
         }
     }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         fCurrTime = timer.secs() - fResetTime;
         if (fCurrTime > kDuration) {
             this->initChars();
@@ -81,7 +81,8 @@ private:
             char c = fRand.nextULessThan(26) + 65;
             fChars[i].fChar[0] = c;
             fChars[i].fChar[1] = '\0';
-            fChars[i].fPosition = SkPoint::Make(fRand.nextF()*748 + 10, fRand.nextF()*1004 + 10);
+            fChars[i].fPosition =
+                    SkPoint::Make(fRand.nextF() * 748 + 10, fRand.nextF() * 1004 + 10);
             fChars[i].fStartRotation = fRand.nextF();
             fChars[i].fEndRotation = fRand.nextF() * 20 - 10;
         }
@@ -94,7 +95,7 @@ private:
 
     struct AnimatedChar {
         char fChar[2];
-        SkPoint  fPosition;
+        SkPoint fPosition;
         SkScalar fStartRotation;
         SkScalar fEndRotation;
     };
@@ -107,4 +108,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new FlutterAnimateView(); )
+DEF_SAMPLE(return new FlutterAnimateView();)

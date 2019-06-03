@@ -8,8 +8,8 @@
 #ifndef SKSL_MODIFIERDECLARATION
 #define SKSL_MODIFIERDECLARATION
 
-#include "SkSLProgramElement.h"
-#include "SkSLModifiers.h"
+#include "src/sksl/ir/SkSLModifiers.h"
+#include "src/sksl/ir/SkSLProgramElement.h"
 
 namespace SkSL {
 
@@ -20,22 +20,19 @@ namespace SkSL {
  */
 struct ModifiersDeclaration : public ProgramElement {
     ModifiersDeclaration(Modifiers modifiers)
-    : INHERITED(-1, kModifiers_Kind)
-    , fModifiers(modifiers) {}
+            : INHERITED(-1, kModifiers_Kind), fModifiers(modifiers) {}
 
     std::unique_ptr<ProgramElement> clone() const override {
         return std::unique_ptr<ProgramElement>(new ModifiersDeclaration(fModifiers));
     }
 
-    String description() const override {
-        return fModifiers.description() + ";";
-    }
+    String description() const override { return fModifiers.description() + ";"; }
 
     Modifiers fModifiers;
 
     typedef ProgramElement INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

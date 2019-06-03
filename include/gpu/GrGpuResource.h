@@ -8,9 +8,9 @@
 #ifndef GrGpuResource_DEFINED
 #define GrGpuResource_DEFINED
 
-#include "../private/GrResourceKey.h"
-#include "../private/GrTypesPriv.h"
-#include "../private/SkNoncopyable.h"
+#include "include/private/GrResourceKey.h"
+#include "include/private/GrTypesPriv.h"
+#include "include/private/SkNoncopyable.h"
 
 class GrContext;
 class GrGpu;
@@ -52,7 +52,9 @@ public:
     // templated helper classes (e.g. sk_sp). However, we have different categories of
     // refs (e.g. pending reads). We also don't require thread safety as GrCacheable objects are
     // not intended to cross thread boundaries.
-    void ref() const {
+    void ref() const noexcept {
+        // Only the cache should be able to add the first ref to a resource.
+        SkASSERT(fRefCnt > 0);
         this->validate();
         ++fRefCnt;
     }
@@ -75,7 +77,7 @@ public:
         this->didRemoveRefOrPendingIO(kRef_CntType);
     }
 
-    void validate() const {
+    void validate() const noexcept {
 #ifdef SK_DEBUG
         SkASSERT(fRefCnt >= 0);
         SkASSERT(fPendingReads >= 0);
@@ -85,7 +87,7 @@ public:
     }
 
 protected:
-    GrIORef() : fRefCnt(1), fPendingReads(0), fPendingWrites(0) { }
+    GrIORef() : fRefCnt(1), fPendingReads(0), fPendingWrites(0) {}
 
     enum CntType {
         kRef_CntType,
@@ -95,17 +97,23 @@ protected:
 
     bool internalHasPendingRead() const { return SkToBool(fPendingReads); }
     bool internalHasPendingWrite() const { return SkToBool(fPendingWrites); }
-    bool internalHasPendingIO() const { return SkToBool(fPendingWrites | fPendingReads); }
+    bool internalHasPendingIO() const noexcept { return SkToBool(fPendingWrites | fPendingReads); }
 
-    bool internalHasRef() const { return SkToBool(fRefCnt); }
-    bool internalHasUniqueRef() const { return fRefCnt == 1; }
+    bool internalHasRef() const noexcept { return SkToBool(fRefCnt); }
+    bool internalHasUniqueRef() const noexcept { return fRefCnt == 1; }
+
+    // Privileged method that allows going from ref count = 0 to ref count = 1.
+    void addInitialRef() const noexcept {
+        this->validate();
+        ++fRefCnt;
+    }
 
 private:
     // This is for a unit test.
     template <typename T>
     friend void testingOnly_getIORefCnts(const T*, int* refCnt, int* readCnt, int* writeCnt);
 
-    void addPendingRead() const {
+    void addPendingRead() const noexcept {
         this->validate();
         ++fPendingReads;
     }
@@ -119,7 +127,7 @@ private:
         this->didRemoveRefOrPendingIO(kPendingRead_CntType);
     }
 
-    void addPendingWrite() const {
+    void addPendingWrite() const noexcept {
         this->validate();
         ++fPendingWrites;
     }
@@ -143,8 +151,8 @@ private:
     mutable int32_t fPendingReads;
     mutable int32_t fPendingWrites;
 
-    friend class GrIORefProxy;    // needs to forward on wrapped IO calls
-    friend class GrResourceCache; // to check IO ref counts.
+    friend class GrIORefProxy;     // needs to forward on wrapped IO calls
+    friend class GrResourceCache;  // to check IO ref counts.
 
     template <typename, GrIOType> friend class GrPendingIOResource;
 };
@@ -164,7 +172,7 @@ public:
      * @return true if the object has been released or abandoned,
      *         false otherwise.
      */
-    bool wasDestroyed() const { return nullptr == fGpu; }
+    bool wasDestroyed() const noexcept { return nullptr == fGpu; }
 
     /**
      * Retrieves the context that owns the object. Note that it is possible for
@@ -192,17 +200,17 @@ public:
 
     class UniqueID {
     public:
-        UniqueID() = default;
+        constexpr UniqueID() noexcept = default;
 
-        explicit UniqueID(uint32_t id) : fID(id) {}
+        explicit UniqueID(uint32_t id) noexcept : fID(id) {}
 
-        uint32_t asUInt() const { return fID; }
+        uint32_t asUInt() const noexcept { return fID; }
 
-        bool operator==(const UniqueID& other) const { return fID == other.fID; }
-        bool operator!=(const UniqueID& other) const { return !(*this == other); }
+        bool operator==(const UniqueID& other) const noexcept { return fID == other.fID; }
+        bool operator!=(const UniqueID& other) const noexcept { return !(*this == other); }
 
-        void makeInvalid() { fID = SK_InvalidUniqueID; }
-        bool isInvalid() const { return  fID == SK_InvalidUniqueID; }
+        void makeInvalid() noexcept { fID = SK_InvalidUniqueID; }
+        bool isInvalid() const noexcept { return fID == SK_InvalidUniqueID; }
 
     protected:
         uint32_t fID = SK_InvalidUniqueID;
@@ -213,25 +221,31 @@ public:
      * not change when the content of the GrGpuResource object changes. This will never return
      * 0.
      */
-    UniqueID uniqueID() const { return fUniqueID; }
+    UniqueID uniqueID() const noexcept { return fUniqueID; }
 
     /** Returns the current unique key for the resource. It will be invalid if the resource has no
         associated unique key. */
-    const GrUniqueKey& getUniqueKey() const { return fUniqueKey; }
+    const GrUniqueKey& getUniqueKey() const noexcept { return fUniqueKey; }
 
     /**
      * Internal-only helper class used for manipulations of the resource by the cache.
      */
     class CacheAccess;
-    inline CacheAccess cacheAccess();
-    inline const CacheAccess cacheAccess() const;
+    inline CacheAccess cacheAccess() noexcept;
+    inline const CacheAccess cacheAccess() const noexcept;
+
+    /**
+     * Internal-only helper class used for manipulations of the resource by GrSurfaceProxy.
+     */
+    class ProxyAccess;
+    inline ProxyAccess proxyAccess() noexcept;
 
     /**
      * Internal-only helper class used for manipulations of the resource by internal code.
      */
     class ResourcePriv;
-    inline ResourcePriv resourcePriv();
-    inline const ResourcePriv resourcePriv() const;
+    inline ResourcePriv resourcePriv() noexcept;
+    inline const ResourcePriv resourcePriv() const noexcept;
 
     /**
      * Dumps memory usage information for this GrGpuResource to traceMemoryDump.
@@ -249,7 +263,7 @@ public:
      */
     virtual const char* getResourceType() const = 0;
 
-    static uint32_t CreateUniqueID();
+    static uint32_t CreateUniqueID() noexcept;
 
 protected:
     // This must be called by every non-wrapped GrGpuObject. It should be called once the object is
@@ -264,14 +278,14 @@ protected:
     GrGpuResource(GrGpu*);
     virtual ~GrGpuResource();
 
-    GrGpu* getGpu() const { return fGpu; }
+    GrGpu* getGpu() const noexcept { return fGpu; }
 
     /** Overridden to free GPU resources in the backend API. */
-    virtual void onRelease() { }
+    virtual void onRelease() {}
     /** Overridden to abandon any internal handles, ptrs, etc to backend API resources.
         This may be called when the underlying 3D context is no longer valid and so no
         backend API calls should be made. */
-    virtual void onAbandon() { }
+    virtual void onAbandon() {}
 
     /**
      * Allows subclasses to add additional backing information to the SkTraceMemoryDump.
@@ -291,9 +305,9 @@ protected:
     void dumpMemoryStatisticsPriv(SkTraceMemoryDump* traceMemoryDump, const SkString& resourceName,
                                   const char* type, size_t size) const;
 
-
 private:
     bool isPurgeable() const;
+    bool hasRef() const;
     bool hasRefOrPendingIO() const;
 
     /**
@@ -358,7 +372,29 @@ private:
     const UniqueID fUniqueID;
 
     typedef GrIORef<GrGpuResource> INHERITED;
-    friend class GrIORef<GrGpuResource>; // to access notifyAllCntsAreZero and notifyRefCntIsZero.
+    friend class GrIORef<GrGpuResource>;  // to access notifyAllCntsAreZero and notifyRefCntIsZero.
 };
+
+class GrGpuResource::ProxyAccess {
+private:
+    ProxyAccess(GrGpuResource* resource) noexcept : fResource(resource) {}
+
+    /** Proxies are allowed to take a resource from no refs to one ref. */
+    void ref(GrResourceCache* cache);
+
+    // No taking addresses of this type.
+    const CacheAccess* operator&() const = delete;
+    CacheAccess* operator&() = delete;
+
+    GrGpuResource* fResource;
+
+    friend class GrGpuResource;
+    friend class GrSurfaceProxy;
+    friend class GrIORefProxy;
+};
+
+inline GrGpuResource::ProxyAccess GrGpuResource::proxyAccess() noexcept {
+    return ProxyAccess(this);
+}
 
 #endif

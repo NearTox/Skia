@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "SkJSON.h"
+#include "src/utils/SkJSON.h"
 
-#include "SkMalloc.h"
-#include "SkParse.h"
-#include "SkStream.h"
-#include "SkString.h"
-#include "SkUTF.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkString.h"
+#include "include/private/SkMalloc.h"
+#include "include/utils/SkParse.h"
+#include "src/utils/SkUTF.h"
 
 #include <cmath>
 #include <tuple>
@@ -21,7 +21,7 @@ namespace skjson {
 
 // #define SK_JSON_REPORT_ERRORS
 
-static_assert( sizeof(Value) == 8, "");
+static_assert(sizeof(Value) == 8, "");
 static_assert(alignof(Value) == 8, "");
 
 static constexpr size_t kRecAlign = alignof(Value);
@@ -47,7 +47,7 @@ void Value::init_tagged_pointer(Tag t, void* p) {
         fData8[kTagOffset] = SkTo<uint8_t>(t);
     }
 
-    SkASSERT(this->getTag()    == t);
+    SkASSERT(this->getTag() == t);
     SkASSERT(this->ptr<void>() == p);
 }
 
@@ -174,7 +174,7 @@ private:
     }
 };
 
-} // namespace
+}  // namespace
 
 StringValue::StringValue(const char* src, size_t size, SkArenaAlloc& alloc) {
     new (this) FastString(src, size, src, alloc);
@@ -184,7 +184,6 @@ ObjectValue::ObjectValue(const Member* src, size_t size, SkArenaAlloc& alloc) {
     this->init_tagged_pointer(Tag::kObject, MakeVector<Member>(src, size, alloc));
     SkASSERT(this->getTag() == Tag::kObject);
 }
-
 
 // Boring public Value glue.
 
@@ -203,7 +202,7 @@ static int inline_strcmp(const char a[], const char b[]) {
 
 const Value& ObjectValue::operator[](const char* key) const {
     // Reverse search for duplicates resolution (policy: return last).
-    const auto* begin  = this->begin();
+    const auto* begin = this->begin();
     const auto* member = this->end();
 
     while (member > begin) {
@@ -225,7 +224,6 @@ namespace {
 // [2] https://github.com/chadaustin/sajson
 // [3] https://pastebin.com/hnhSTL3h
 
-
 // bit 0 (0x01) - plain ASCII string character
 // bit 1 (0x02) - whitespace
 // bit 2 (0x04) - string terminator (" \\ \0 [control chars] **AND } ]** <- see matchString notes)
@@ -233,28 +231,28 @@ namespace {
 // bit 4 (0x10) - 0-9 e E .
 // bit 5 (0x20) - scope terminator (} ])
 static constexpr uint8_t g_token_flags[256] = {
- // 0    1    2    3    4    5    6    7      8    9    A    B    C    D    E    F
-    4,   4,   4,   4,   4,   4,   4,   4,     4,   6,   6,   4,   4,   6,   4,   4, // 0
-    4,   4,   4,   4,   4,   4,   4,   4,     4,   4,   4,   4,   4,   4,   4,   4, // 1
-    3,   1,   4,   1,   1,   1,   1,   1,     1,   1,   1,   1,   1,   1,   0x11,1, // 2
- 0x19,0x19,0x19,0x19,0x19,0x19,0x19,0x19,  0x19,0x19,   1,   1,   1,   1,   1,   1, // 3
-    1,   1,   1,   1,   1,   0x11,1,   1,     1,   1,   1,   1,   1,   1,   1,   1, // 4
-    1,   1,   1,   1,   1,   1,   1,   1,     1,   1,   1,   1,   4,0x25,   1,   1, // 5
-    1,   1,   1,   1,   1,   0x11,1,   1,     1,   1,   1,   1,   1,   1,   1,   1, // 6
-    1,   1,   1,   1,   1,   1,   1,   1,     1,   1,   1,   1,   1,0x25,   1,   1, // 7
+        // 0    1    2    3    4    5    6    7      8    9    A    B    C    D    E    F
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 6, 6, 4, 4, 6, 4, 4,                                // 0
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,                                // 1
+        3, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0x11, 1,                             // 2
+        0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 1, 1, 1, 1, 1, 1,  // 3
+        1, 1, 1, 1, 1, 0x11, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,                             // 4
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 0x25, 1, 1,                             // 5
+        1, 1, 1, 1, 1, 0x11, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,                             // 6
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0x25, 1, 1,                             // 7
 
- // 128-255
-    0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0
-};
+        // 128-255
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0};
 
-static inline bool is_ws(char c)       { return g_token_flags[static_cast<uint8_t>(c)] & 0x02; }
+static inline bool is_ws(char c) { return g_token_flags[static_cast<uint8_t>(c)] & 0x02; }
 static inline bool is_eostring(char c) { return g_token_flags[static_cast<uint8_t>(c)] & 0x04; }
-static inline bool is_digit(char c)    { return g_token_flags[static_cast<uint8_t>(c)] & 0x08; }
-static inline bool is_numeric(char c)  { return g_token_flags[static_cast<uint8_t>(c)] & 0x10; }
-static inline bool is_eoscope(char c)  { return g_token_flags[static_cast<uint8_t>(c)] & 0x20; }
+static inline bool is_digit(char c) { return g_token_flags[static_cast<uint8_t>(c)] & 0x08; }
+static inline bool is_numeric(char c) { return g_token_flags[static_cast<uint8_t>(c)] & 0x10; }
+static inline bool is_eoscope(char c) { return g_token_flags[static_cast<uint8_t>(c)] & 0x20; }
 
 static inline const char* skip_ws(const char* p) {
     while (is_ws(*p)) ++p;
@@ -262,17 +260,15 @@ static inline const char* skip_ws(const char* p) {
 }
 
 static inline float pow10(int32_t exp) {
-    static constexpr float g_pow10_table[63] =
-    {
-       1.e-031f, 1.e-030f, 1.e-029f, 1.e-028f, 1.e-027f, 1.e-026f, 1.e-025f, 1.e-024f,
-       1.e-023f, 1.e-022f, 1.e-021f, 1.e-020f, 1.e-019f, 1.e-018f, 1.e-017f, 1.e-016f,
-       1.e-015f, 1.e-014f, 1.e-013f, 1.e-012f, 1.e-011f, 1.e-010f, 1.e-009f, 1.e-008f,
-       1.e-007f, 1.e-006f, 1.e-005f, 1.e-004f, 1.e-003f, 1.e-002f, 1.e-001f, 1.e+000f,
-       1.e+001f, 1.e+002f, 1.e+003f, 1.e+004f, 1.e+005f, 1.e+006f, 1.e+007f, 1.e+008f,
-       1.e+009f, 1.e+010f, 1.e+011f, 1.e+012f, 1.e+013f, 1.e+014f, 1.e+015f, 1.e+016f,
-       1.e+017f, 1.e+018f, 1.e+019f, 1.e+020f, 1.e+021f, 1.e+022f, 1.e+023f, 1.e+024f,
-       1.e+025f, 1.e+026f, 1.e+027f, 1.e+028f, 1.e+029f, 1.e+030f, 1.e+031f
-    };
+    static constexpr float g_pow10_table[63] = {
+            1.e-031f, 1.e-030f, 1.e-029f, 1.e-028f, 1.e-027f, 1.e-026f, 1.e-025f, 1.e-024f,
+            1.e-023f, 1.e-022f, 1.e-021f, 1.e-020f, 1.e-019f, 1.e-018f, 1.e-017f, 1.e-016f,
+            1.e-015f, 1.e-014f, 1.e-013f, 1.e-012f, 1.e-011f, 1.e-010f, 1.e-009f, 1.e-008f,
+            1.e-007f, 1.e-006f, 1.e-005f, 1.e-004f, 1.e-003f, 1.e-002f, 1.e-001f, 1.e+000f,
+            1.e+001f, 1.e+002f, 1.e+003f, 1.e+004f, 1.e+005f, 1.e+006f, 1.e+007f, 1.e+008f,
+            1.e+009f, 1.e+010f, 1.e+011f, 1.e+012f, 1.e+013f, 1.e+014f, 1.e+015f, 1.e+016f,
+            1.e+017f, 1.e+018f, 1.e+019f, 1.e+020f, 1.e+021f, 1.e+022f, 1.e+023f, 1.e+024f,
+            1.e+025f, 1.e+026f, 1.e+027f, 1.e+028f, 1.e+029f, 1.e+030f, 1.e+031f};
 
     static constexpr int32_t k_exp_offset = SK_ARRAY_COUNT(g_pow10_table) / 2;
 
@@ -285,8 +281,7 @@ static inline float pow10(int32_t exp) {
 
 class DOMParser {
 public:
-    explicit DOMParser(SkArenaAlloc& alloc)
-        : fAlloc(alloc) {
+    explicit DOMParser(SkArenaAlloc& alloc) : fAlloc(alloc) {
         fValueStack.reserve(kValueStackReserve);
         fUnescapeBuffer.reserve(kUnescapeBufferReserve);
     }
@@ -310,12 +305,12 @@ public:
         p = skip_ws(p);
 
         switch (*p) {
-        case '{':
-            goto match_object;
-        case '[':
-            goto match_array;
-        default:
-            return this->error(NullValue(), p, "invalid top-level value");
+            case '{':
+                goto match_object;
+            case '[':
+                goto match_array;
+            default:
+                return this->error(NullValue(), p, "invalid top-level value");
         }
 
     match_object:
@@ -346,29 +341,30 @@ public:
         p = skip_ws(p);
 
         switch (*p) {
-        case '\0':
-            return this->error(NullValue(), p, "unexpected input end");
-        case '"':
-            p = this->matchString(p, p_stop, [this](const char* str, size_t size, const char* eos) {
-                this->pushString(str, size, eos);
-            });
-            break;
-        case '[':
-            goto match_array;
-        case 'f':
-            p = this->matchFalse(p);
-            break;
-        case 'n':
-            p = this->matchNull(p);
-            break;
-        case 't':
-            p = this->matchTrue(p);
-            break;
-        case '{':
-            goto match_object;
-        default:
-            p = this->matchNumber(p);
-            break;
+            case '\0':
+                return this->error(NullValue(), p, "unexpected input end");
+            case '"':
+                p = this->matchString(
+                        p, p_stop, [this](const char* str, size_t size, const char* eos) {
+                            this->pushString(str, size, eos);
+                        });
+                break;
+            case '[':
+                goto match_array;
+            case 'f':
+                p = this->matchFalse(p);
+                break;
+            case 'n':
+                p = this->matchNull(p);
+                break;
+            case 't':
+                p = this->matchTrue(p);
+                break;
+            case '{':
+                goto match_object;
+            default:
+                p = this->matchNumber(p);
+                break;
         }
 
         if (!p) return NullValue();
@@ -379,20 +375,20 @@ public:
 
         p = skip_ws(p);
         switch (*p) {
-        case ',':
-            ++p;
-            if (this->inObjectScope()) {
-                goto match_object_key;
-            } else {
-                SkASSERT(this->inArrayScope());
-                goto match_value;
-            }
-        case ']':
-            goto pop_array;
-        case '}':
-            goto pop_object;
-        default:
-            return this->error(NullValue(), p - 1, "unexpected value-trailing token");
+            case ',':
+                ++p;
+                if (this->inObjectScope()) {
+                    goto match_object_key;
+                } else {
+                    SkASSERT(this->inArrayScope());
+                    goto match_value;
+                }
+            case ']':
+                goto pop_array;
+            case '}':
+                goto pop_object;
+            default:
+                return this->error(NullValue(), p - 1, "unexpected value-trailing token");
         }
 
         // unreachable
@@ -415,9 +411,8 @@ public:
             SkASSERT(fValueStack.size() == 1);
 
             // Success condition: parsed the top level element and reached the stop token.
-            return p == p_stop
-                ? fValueStack.front()
-                : this->error(NullValue(), p + 1, "trailing root garbage");
+            return p == p_stop ? fValueStack.front()
+                               : this->error(NullValue(), p + 1, "trailing root garbage");
         }
 
         if (p == p_stop) {
@@ -457,15 +452,15 @@ public:
     }
 
 private:
-    SkArenaAlloc&         fAlloc;
+    SkArenaAlloc& fAlloc;
 
     // Pending values stack.
     static constexpr size_t kValueStackReserve = 256;
-    std::vector<Value>    fValueStack;
+    std::vector<Value> fValueStack;
 
     // String unescape buffer.
     static constexpr size_t kUnescapeBufferReserve = 512;
-    std::vector<char>     fUnescapeBuffer;
+    std::vector<char> fUnescapeBuffer;
 
     // Tracks the current object/array scope, as an index into fStack:
     //
@@ -473,40 +468,38 @@ private:
     //   - for arrays : fScopeIndex = -(index of first value in scope)
     //
     // fScopeIndex == 0 IFF we are at the top level (no current/active scope).
-    intptr_t              fScopeIndex = 0;
+    intptr_t fScopeIndex = 0;
 
     // Error reporting.
-    const char*           fErrorToken = nullptr;
-    SkString              fErrorMessage;
+    const char* fErrorToken = nullptr;
+    SkString fErrorMessage;
 
     bool inTopLevelScope() const { return fScopeIndex == 0; }
-    bool inObjectScope()   const { return fScopeIndex >  0; }
-    bool inArrayScope()    const { return fScopeIndex <  0; }
+    bool inObjectScope() const { return fScopeIndex > 0; }
+    bool inArrayScope() const { return fScopeIndex < 0; }
 
     // Helper for masquerading raw primitive types as Values (bypassing tagging, etc).
-    template <typename T>
-    class RawValue final : public Value {
+    template <typename T> class RawValue final : public Value {
     public:
         explicit RawValue(T v) {
             static_assert(sizeof(T) <= sizeof(Value), "");
             *this->cast<T>() = v;
         }
 
-        T operator *() const { return *this->cast<T>(); }
+        T operator*() const { return *this->cast<T>(); }
     };
 
-    template <typename VectorT>
-    void popScopeAsVec(size_t scope_start) {
+    template <typename VectorT> void popScopeAsVec(size_t scope_start) {
         SkASSERT(scope_start > 0);
         SkASSERT(scope_start <= fValueStack.size());
 
         using T = typename VectorT::ValueT;
-        static_assert( sizeof(T) >=  sizeof(Value), "");
-        static_assert( sizeof(T)  %  sizeof(Value) == 0, "");
+        static_assert(sizeof(T) >= sizeof(Value), "");
+        static_assert(sizeof(T) % sizeof(Value) == 0, "");
         static_assert(alignof(T) == alignof(Value), "");
 
         const auto scope_count = fValueStack.size() - scope_start,
-                         count = scope_count / (sizeof(T) / sizeof(Value));
+                   count = scope_count / (sizeof(T) / sizeof(Value));
         SkASSERT(scope_count % (sizeof(T) / sizeof(Value)) == 0);
 
         const auto* begin = reinterpret_cast<const T*>(fValueStack.data() + scope_start);
@@ -533,13 +526,10 @@ private:
         SkASSERT(this->inObjectScope());
         this->popScopeAsVec<ObjectValue>(SkTo<size_t>(fScopeIndex));
 
-        SkDEBUGCODE(
-            const auto& obj = fValueStack.back().as<ObjectValue>();
-            SkASSERT(obj.is<ObjectValue>());
-            for (const auto& member : obj) {
-                SkASSERT(member.fKey.is<StringValue>());
-            }
-        )
+        SkDEBUGCODE(const auto& obj = fValueStack.back().as<ObjectValue>();
+                    SkASSERT(obj.is<ObjectValue>());
+                    for (const auto& member
+                         : obj) { SkASSERT(member.fKey.is<StringValue>()); })
     }
 
     void pushArrayScope() {
@@ -554,10 +544,8 @@ private:
         SkASSERT(this->inArrayScope());
         this->popScopeAsVec<ArrayValue>(SkTo<size_t>(-fScopeIndex));
 
-        SkDEBUGCODE(
-            const auto& arr = fValueStack.back().as<ArrayValue>();
-            SkASSERT(arr.is<ArrayValue>());
-        )
+        SkDEBUGCODE(const auto& arr = fValueStack.back().as<ArrayValue>();
+                    SkASSERT(arr.is<ArrayValue>()));
     }
 
     void pushObjectKey(const char* key, size_t size, const char* eos) {
@@ -567,32 +555,21 @@ private:
         this->pushString(key, size, eos);
     }
 
-    void pushTrue() {
-        fValueStack.push_back(BoolValue(true));
-    }
+    void pushTrue() { fValueStack.push_back(BoolValue(true)); }
 
-    void pushFalse() {
-        fValueStack.push_back(BoolValue(false));
-    }
+    void pushFalse() { fValueStack.push_back(BoolValue(false)); }
 
-    void pushNull() {
-        fValueStack.push_back(NullValue());
-    }
+    void pushNull() { fValueStack.push_back(NullValue()); }
 
     void pushString(const char* s, size_t size, const char* eos) {
         fValueStack.push_back(FastString(s, size, eos, fAlloc));
     }
 
-    void pushInt32(int32_t i) {
-        fValueStack.push_back(NumberValue(i));
-    }
+    void pushInt32(int32_t i) { fValueStack.push_back(NumberValue(i)); }
 
-    void pushFloat(float f) {
-        fValueStack.push_back(NumberValue(f));
-    }
+    void pushFloat(float f) { fValueStack.push_back(NumberValue(f)); }
 
-    template <typename T>
-    T error(T&& ret_val, const char* p, const char* msg) {
+    template <typename T> T error(T&& ret_val, const char* p, const char* msg) {
 #if defined(SK_JSON_REPORT_ERRORS)
         fErrorToken = p;
         fErrorMessage.set(msg);
@@ -647,32 +624,49 @@ private:
             }
 
             switch (*p) {
-            case  '"': fUnescapeBuffer.push_back( '"'); break;
-            case '\\': fUnescapeBuffer.push_back('\\'); break;
-            case  '/': fUnescapeBuffer.push_back( '/'); break;
-            case  'b': fUnescapeBuffer.push_back('\b'); break;
-            case  'f': fUnescapeBuffer.push_back('\f'); break;
-            case  'n': fUnescapeBuffer.push_back('\n'); break;
-            case  'r': fUnescapeBuffer.push_back('\r'); break;
-            case  't': fUnescapeBuffer.push_back('\t'); break;
-            case  'u': {
-                if (p + 4 >= end) {
-                    return nullptr;
-                }
+                case '"':
+                    fUnescapeBuffer.push_back('"');
+                    break;
+                case '\\':
+                    fUnescapeBuffer.push_back('\\');
+                    break;
+                case '/':
+                    fUnescapeBuffer.push_back('/');
+                    break;
+                case 'b':
+                    fUnescapeBuffer.push_back('\b');
+                    break;
+                case 'f':
+                    fUnescapeBuffer.push_back('\f');
+                    break;
+                case 'n':
+                    fUnescapeBuffer.push_back('\n');
+                    break;
+                case 'r':
+                    fUnescapeBuffer.push_back('\r');
+                    break;
+                case 't':
+                    fUnescapeBuffer.push_back('\t');
+                    break;
+                case 'u': {
+                    if (p + 4 >= end) {
+                        return nullptr;
+                    }
 
-                uint32_t hexed;
-                const char hex_str[] = {p[1], p[2], p[3], p[4], '\0'};
-                const auto* eos = SkParse::FindHex(hex_str, &hexed);
-                if (!eos || *eos) {
-                    return nullptr;
-                }
+                    uint32_t hexed;
+                    const char hex_str[] = {p[1], p[2], p[3], p[4], '\0'};
+                    const auto* eos = SkParse::FindHex(hex_str, &hexed);
+                    if (!eos || *eos) {
+                        return nullptr;
+                    }
 
-                char utf8[SkUTF::kMaxBytesInUTF8Sequence];
-                const auto utf8_len = SkUTF::ToUTF8(SkTo<SkUnichar>(hexed), utf8);
-                fUnescapeBuffer.insert(fUnescapeBuffer.end(), utf8, utf8 + utf8_len);
-                p += 4;
-            } break;
-            default: return nullptr;
+                    char utf8[SkUTF::kMaxBytesInUTF8Sequence];
+                    const auto utf8_len = SkUTF::ToUTF8(SkTo<SkUnichar>(hexed), utf8);
+                    fUnescapeBuffer.insert(fUnescapeBuffer.end(), utf8, utf8 + utf8_len);
+                    p += 4;
+                } break;
+                default:
+                    return nullptr;
             }
         }
 
@@ -688,7 +682,8 @@ private:
         do {
             // Consume string chars.
             // This is the fast path, and hopefully we only hit it once then quick-exit below.
-            for (p = p + 1; !is_eostring(*p); ++p);
+            for (p = p + 1; !is_eostring(*p); ++p)
+                ;
 
             if (*p == '"') {
                 // Valid string found.
@@ -735,9 +730,11 @@ private:
 
         for (;;) {
             if (!is_digit(*p)) break;
-            f = f * 10.f + (*p++ - '0'); --exp;
+            f = f * 10.f + (*p++ - '0');
+            --exp;
             if (!is_digit(*p)) break;
-            f = f * 10.f + (*p++ - '0'); --exp;
+            f = f * 10.f + (*p++ - '0');
+            --exp;
         }
 
         const auto decimal_scale = pow10(exp);
@@ -766,8 +763,7 @@ private:
             return p;
         }
 
-        return (*p == '.') ? this->matchFastFloatDecimalPart(p + 1, sign, f, 0)
-                           : nullptr;
+        return (*p == '.') ? this->matchFastFloatDecimalPart(p + 1, sign, f, 0) : nullptr;
     }
 
     const char* matchFast32OrFloat(const char* p) {
@@ -809,9 +805,11 @@ private:
 
             for (;;) {
                 if (!is_digit(*p) || n32 > kMaxInt32) break;
-                n32 = n32 * 10 + (*p++ - '0'); --exp;
+                n32 = n32 * 10 + (*p++ - '0');
+                --exp;
                 if (!is_digit(*p) || n32 > kMaxInt32) break;
-                n32 = n32 * 10 + (*p++ - '0'); --exp;
+                n32 = n32 * 10 + (*p++ - '0');
+                --exp;
             }
 
             if (!is_numeric(*p)) {
@@ -848,50 +846,50 @@ private:
 
 void Write(const Value& v, SkWStream* stream) {
     switch (v.getType()) {
-    case Value::Type::kNull:
-        stream->writeText("null");
-        break;
-    case Value::Type::kBool:
-        stream->writeText(*v.as<BoolValue>() ? "true" : "false");
-        break;
-    case Value::Type::kNumber:
-        stream->writeScalarAsText(*v.as<NumberValue>());
-        break;
-    case Value::Type::kString:
-        stream->writeText("\"");
-        stream->writeText(v.as<StringValue>().begin());
-        stream->writeText("\"");
-        break;
-    case Value::Type::kArray: {
-        const auto& array = v.as<ArrayValue>();
-        stream->writeText("[");
-        bool first_value = true;
-        for (const auto& v : array) {
-            if (!first_value) stream->writeText(",");
-            Write(v, stream);
-            first_value = false;
+        case Value::Type::kNull:
+            stream->writeText("null");
+            break;
+        case Value::Type::kBool:
+            stream->writeText(*v.as<BoolValue>() ? "true" : "false");
+            break;
+        case Value::Type::kNumber:
+            stream->writeScalarAsText(*v.as<NumberValue>());
+            break;
+        case Value::Type::kString:
+            stream->writeText("\"");
+            stream->writeText(v.as<StringValue>().begin());
+            stream->writeText("\"");
+            break;
+        case Value::Type::kArray: {
+            const auto& array = v.as<ArrayValue>();
+            stream->writeText("[");
+            bool first_value = true;
+            for (const auto& v : array) {
+                if (!first_value) stream->writeText(",");
+                Write(v, stream);
+                first_value = false;
+            }
+            stream->writeText("]");
+            break;
         }
-        stream->writeText("]");
-        break;
-    }
-    case Value::Type::kObject:
-        const auto& object = v.as<ObjectValue>();
-        stream->writeText("{");
-        bool first_member = true;
-        for (const auto& member : object) {
-            SkASSERT(member.fKey.getType() == Value::Type::kString);
-            if (!first_member) stream->writeText(",");
-            Write(member.fKey, stream);
-            stream->writeText(":");
-            Write(member.fValue, stream);
-            first_member = false;
-        }
-        stream->writeText("}");
-        break;
+        case Value::Type::kObject:
+            const auto& object = v.as<ObjectValue>();
+            stream->writeText("{");
+            bool first_member = true;
+            for (const auto& member : object) {
+                SkASSERT(member.fKey.getType() == Value::Type::kString);
+                if (!first_member) stream->writeText(",");
+                Write(member.fKey, stream);
+                stream->writeText(":");
+                Write(member.fValue, stream);
+                first_member = false;
+            }
+            stream->writeText("}");
+            break;
     }
 }
 
-} // namespace
+}  // namespace
 
 SkString Value::toString() const {
     SkDynamicMemoryWStream wstream;
@@ -903,15 +901,12 @@ SkString Value::toString() const {
 
 static constexpr size_t kMinChunkSize = 4096;
 
-DOM::DOM(const char* data, size_t size)
-    : fAlloc(kMinChunkSize) {
+DOM::DOM(const char* data, size_t size) : fAlloc(kMinChunkSize) {
     DOMParser parser(fAlloc);
 
     fRoot = parser.parse(data, size);
 }
 
-void DOM::write(SkWStream* stream) const {
-    Write(fRoot, stream);
-}
+void DOM::write(SkWStream* stream) const { Write(fRoot, stream); }
 
-} // namespace skjson
+}  // namespace skjson

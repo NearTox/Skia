@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "SkSpriteBlitter.h"
-#include "SkArenaAlloc.h"
-#include "SkBlitRow.h"
-#include "SkColorFilter.h"
-#include "SkColorData.h"
-#include "SkPaint.h"
-#include "SkTemplates.h"
-#include "SkUTF.h"
-#include "SkXfermodePriv.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/private/SkArenaAlloc.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkTemplates.h"
+#include "src/core/SkBlitRow.h"
+#include "src/core/SkSpriteBlitter.h"
+#include "src/core/SkXfermodePriv.h"
+#include "src/utils/SkUTF.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -31,7 +31,7 @@ static void S32_srcover(uint16_t dst[], const SkPMColor src[], int count) {
 
 class Sprite_D16_S32 : public SkSpriteBlitter {
 public:
-    Sprite_D16_S32(const SkPixmap& src, SkBlendMode mode)  : INHERITED(src) {
+    Sprite_D16_S32(const SkPixmap& src, SkBlendMode mode) : INHERITED(src) {
         SkASSERT(src.colorType() == kN32_SkColorType);
         SkASSERT(mode == SkBlendMode::kSrc || mode == SkBlendMode::kSrcOver);
 
@@ -52,7 +52,7 @@ public:
                 S32_src(dst, src, width);
             }
 
-            dst = (uint16_t* SK_RESTRICT)((char*)dst + dstRB);
+            dst = (uint16_t * SK_RESTRICT)((char*)dst + dstRB);
             src = (const uint32_t* SK_RESTRICT)((const char*)src + srcRB);
         } while (--height != 0);
     }
@@ -93,9 +93,7 @@ SkSpriteBlitter* SkSpriteBlitter::ChooseL565(const SkPixmap& source, const SkPai
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-static unsigned div255(unsigned a, unsigned b) {
-    return (a * b * 257 + 127) >> 16;
-}
+static unsigned div255(unsigned a, unsigned b) { return (a * b * 257 + 127) >> 16; }
 
 static void S32_src_da8(uint8_t dst[], const SkPMColor src[], int count) {
     for (int i = 0; i < count; ++i) {
@@ -119,7 +117,7 @@ static void S32_srcover_da8(uint8_t dst[], const SkPMColor src[], int count) {
 
 class Sprite_D8_S32 : public SkSpriteBlitter {
 public:
-    Sprite_D8_S32(const SkPixmap& src, SkBlendMode mode)  : INHERITED(src) {
+    Sprite_D8_S32(const SkPixmap& src, SkBlendMode mode) : INHERITED(src) {
         SkASSERT(src.colorType() == kN32_SkColorType);
         SkASSERT(mode == SkBlendMode::kSrc || mode == SkBlendMode::kSrcOver);
 
@@ -140,7 +138,7 @@ public:
                 S32_src_da8(dst, src, width);
             }
 
-            dst = (uint8_t* SK_RESTRICT)((char*)dst + dstRB);
+            dst = (uint8_t * SK_RESTRICT)((char*)dst + dstRB);
             src = (const uint32_t* SK_RESTRICT)((const char*)src + srcRB);
         } while (--height != 0);
     }

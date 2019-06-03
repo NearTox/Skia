@@ -5,9 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkPath.h"
-#include "SkDashPathEffect.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPathEffect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkDashPathEffect.h"
 
 DEF_SIMPLE_GM(bug530095, canvas, 900, 1200) {
     SkPath path1, path2;
@@ -18,14 +24,14 @@ DEF_SIMPLE_GM(bug530095, canvas, 900, 1200) {
     paint.setAntiAlias(true);
     paint.setStyle(SkPaint::kStroke_Style);
     paint.setStrokeWidth(26);
-    SkScalar intervals[] = {700, 700 };
-    int intervalCount = (int) SK_ARRAY_COUNT(intervals);
+    SkScalar intervals[] = {700, 700};
+    int intervalCount = (int)SK_ARRAY_COUNT(intervals);
     paint.setPathEffect(SkDashPathEffect::Make(intervals, intervalCount, -40));
     canvas->drawPath(path1, paint);
 
     paint.setStrokeWidth(0.26f);
-    SkScalar smIntervals[] = {7, 7 };
-    int smIntervalCount = (int) SK_ARRAY_COUNT(smIntervals);
+    SkScalar smIntervals[] = {7, 7};
+    int smIntervalCount = (int)SK_ARRAY_COUNT(smIntervals);
     paint.setPathEffect(SkDashPathEffect::Make(smIntervals, smIntervalCount, -0.40f));
     canvas->save();
     canvas->scale(100, 100);
@@ -54,7 +60,7 @@ DEF_SIMPLE_GM(bug591993, canvas, 40, 140) {
     p.setStyle(SkPaint::kStroke_Style);
     p.setStrokeCap(SkPaint::kRound_Cap);
     p.setStrokeWidth(10);
-    const SkScalar intervals[] = { 100, 100 };
+    const SkScalar intervals[] = {100, 100};
     p.setPathEffect(SkDashPathEffect::Make(intervals, SK_ARRAY_COUNT(intervals), 100));
     canvas->drawLine(20, 20, 120, 20, p);
 }

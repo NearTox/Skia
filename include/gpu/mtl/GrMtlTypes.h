@@ -8,7 +8,7 @@
 #ifndef GrMtlTypes_DEFINED
 #define GrMtlTypes_DEFINED
 
-#include "GrTypes.h"
+#include "include/gpu/GrTypes.h"
 
 /**
  * Declares typedefs for Metal types used in Ganesh cpp code
@@ -22,11 +22,9 @@ typedef unsigned int GrMTLPixelFormat;
  */
 struct GrMtlTextureInfo {
 public:
-    const void* fTexture; // Pointer to MTLTexture
+    const void* fTexture;  // Pointer to MTLTexture
 
-    bool operator==(const GrMtlTextureInfo& that) const {
-        return fTexture == that.fTexture;
-    }
+    bool operator==(const GrMtlTextureInfo& that) const { return fTexture == that.fTexture; }
 };
 
 #endif

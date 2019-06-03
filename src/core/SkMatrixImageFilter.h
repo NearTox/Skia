@@ -8,9 +8,9 @@
 #ifndef SkMatrixImageFilter_DEFINED
 #define SkMatrixImageFilter_DEFINED
 
-#include "SkFlattenable.h"
-#include "SkImageFilter.h"
-#include "SkMatrix.h"
+#include "include/core/SkFlattenable.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkMatrix.h"
 
 /*! \class SkMatrixImageFilter
     Matrix transformation image filter.  This filter draws its source
@@ -26,29 +26,25 @@ public:
      *                       passed to filterImage() is used instead.
      */
 
-    static sk_sp<SkImageFilter> Make(const SkMatrix& transform,
-                                     SkFilterQuality filterQuality,
+    static sk_sp<SkImageFilter> Make(const SkMatrix& transform, SkFilterQuality filterQuality,
                                      sk_sp<SkImageFilter> input);
 
     SkRect computeFastBounds(const SkRect&) const override;
 
 protected:
-    SkMatrixImageFilter(const SkMatrix& transform,
-                        SkFilterQuality,
-                        sk_sp<SkImageFilter> input);
+    SkMatrixImageFilter(const SkMatrix& transform, SkFilterQuality, sk_sp<SkImageFilter> input);
     void flatten(SkWriteBuffer&) const override;
 
     sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
                                         SkIPoint* offset) const override;
-    sk_sp<SkImageFilter> onMakeColorSpace(SkColorSpaceXformer*) const override;
-    SkIRect onFilterNodeBounds(const SkIRect& src, const SkMatrix& ctm,
-                               MapDirection, const SkIRect* inputRect) const override;
+    SkIRect onFilterNodeBounds(const SkIRect& src, const SkMatrix& ctm, MapDirection,
+                               const SkIRect* inputRect) const override;
 
 private:
     SK_FLATTENABLE_HOOKS(SkMatrixImageFilter)
 
-    SkMatrix              fTransform;
-    SkFilterQuality       fFilterQuality;
+    SkMatrix fTransform;
+    SkFilterQuality fFilterQuality;
     typedef SkImageFilter INHERITED;
 };
 

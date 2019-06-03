@@ -30,14 +30,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "SkCodecAnimation.h"
-#include "SkCodecPriv.h"
-#include "SkColorData.h"
-#include "SkColorTable.h"
-#include "SkGifCodec.h"
-#include "SkMakeUnique.h"
-#include "SkStream.h"
-#include "SkSwizzler.h"
+#include "src/codec/SkGifCodec.h"
+#include "include/codec/SkCodecAnimation.h"
+#include "include/core/SkStream.h"
+#include "include/private/SkColorData.h"
+#include "src/codec/SkCodecPriv.h"
+#include "src/codec/SkColorTable.h"
+#include "src/codec/SkSwizzler.h"
+#include "src/core/SkMakeUnique.h"
 
 #include <algorithm>
 
@@ -48,11 +48,10 @@
 /*
  * Checks the start of the stream to see if the image is a gif
  */
-bool SkGifCodec::IsGif(const void* buf, size_t bytesRead) {
+bool SkGifCodec::IsGif(const void* buf, size_t bytesRead) noexcept {
     if (bytesRead >= GIF_STAMP_LEN) {
         if (memcmp(GIF87_STAMP, buf, GIF_STAMP_LEN) == 0 ||
-            memcmp(GIF89_STAMP, buf, GIF_STAMP_LEN) == 0)
-        {
+            memcmp(GIF89_STAMP, buf, GIF_STAMP_LEN) == 0) {
             return true;
         }
     }
@@ -62,7 +61,8 @@ bool SkGifCodec::IsGif(const void* buf, size_t bytesRead) {
 /*
  * Error function
  */
-static SkCodec::Result gif_error(const char* msg, SkCodec::Result result = SkCodec::kInvalidInput) {
+static SkCodec::Result gif_error(const char* msg,
+                                 SkCodec::Result result = SkCodec::kInvalidInput) noexcept {
     SkCodecPrintf("Gif Error: %s\n", msg);
     return result;
 }
@@ -102,27 +102,26 @@ bool SkGifCodec::onRewind() {
 }
 
 SkGifCodec::SkGifCodec(SkEncodedInfo&& encodedInfo, SkGifImageReader* reader)
-    : INHERITED(std::move(encodedInfo), skcms_PixelFormat_RGBA_8888, nullptr)
-    , fReader(reader)
-    , fTmpBuffer(nullptr)
-    , fSwizzler(nullptr)
-    , fCurrColorTable(nullptr)
-    , fCurrColorTableIsReal(false)
-    , fFilledBackground(false)
-    , fFirstCallToIncrementalDecode(false)
-    , fDst(nullptr)
-    , fDstRowBytes(0)
-    , fRowsDecoded(0)
-{
+        : INHERITED(std::move(encodedInfo), skcms_PixelFormat_RGBA_8888, nullptr)
+        , fReader(reader)
+        , fTmpBuffer(nullptr)
+        , fSwizzler(nullptr)
+        , fCurrColorTable(nullptr)
+        , fCurrColorTableIsReal(false)
+        , fFilledBackground(false)
+        , fFirstCallToIncrementalDecode(false)
+        , fDst(nullptr)
+        , fDstRowBytes(0)
+        , fRowsDecoded(0) {
     reader->setClient(this);
 }
 
-int SkGifCodec::onGetFrameCount() {
+int SkGifCodec::onGetFrameCount() noexcept {
     fReader->parse(SkGifImageReader::SkGIFFrameCountQuery);
     return fReader->imagesCount();
 }
 
-bool SkGifCodec::onGetFrameInfo(int i, SkCodec::FrameInfo* frameInfo) const {
+bool SkGifCodec::onGetFrameInfo(int i, SkCodec::FrameInfo* frameInfo) const noexcept {
     if (i >= fReader->imagesCount()) {
         return false;
     }
@@ -134,14 +133,14 @@ bool SkGifCodec::onGetFrameInfo(int i, SkCodec::FrameInfo* frameInfo) const {
         frameInfo->fDuration = frameContext->getDuration();
         frameInfo->fRequiredFrame = frameContext->getRequiredFrame();
         frameInfo->fFullyReceived = frameContext->isComplete();
-        frameInfo->fAlphaType = frameContext->hasAlpha() ? kUnpremul_SkAlphaType
-                                                         : kOpaque_SkAlphaType;
+        frameInfo->fAlphaType =
+                frameContext->hasAlpha() ? kUnpremul_SkAlphaType : kOpaque_SkAlphaType;
         frameInfo->fDisposalMethod = frameContext->getDisposalMethod();
     }
     return true;
 }
 
-int SkGifCodec::onGetRepetitionCount() {
+int SkGifCodec::onGetRepetitionCount() noexcept {
     fReader->parse(SkGifImageReader::SkGIFLoopCountQuery);
     return fReader->loopCount();
 }
@@ -162,14 +161,12 @@ void SkGifCodec::initializeColorTable(const SkImageInfo& dstInfo, int frameIndex
         fCurrColorTable.reset(new SkColorTable(&color, 1));
     } else if (this->colorXform() && !this->xformOnDecode()) {
         SkPMColor dstColors[256];
-        this->applyColorXform(dstColors, currColorTable->readColors(),
-                              currColorTable->count());
+        this->applyColorXform(dstColors, currColorTable->readColors(), currColorTable->count());
         fCurrColorTable.reset(new SkColorTable(dstColors, currColorTable->count()));
     } else {
         fCurrColorTable = std::move(currColorTable);
     }
 }
-
 
 SkCodec::Result SkGifCodec::prepareToDecode(const SkImageInfo& dstInfo, const Options& opts) {
     if (opts.fSubset) {
@@ -200,7 +197,7 @@ SkCodec::Result SkGifCodec::prepareToDecode(const SkImageInfo& dstInfo, const Op
     if (0 == frameIndex) {
         // SkCodec does not have a way to just parse through frame 0, so we
         // have to do so manually, here.
-        fReader->parse((SkGifImageReader::SkGIFParseQuery) 0);
+        fReader->parse((SkGifImageReader::SkGIFParseQuery)0);
         if (!frame->reachedStartOfData()) {
             // We have parsed enough to know that there is a color map, but cannot
             // parse the map itself yet. Exit now, so we do not build an incorrect
@@ -262,10 +259,8 @@ void SkGifCodec::initializeSwizzler(const SkImageInfo& dstInfo, int frameIndex) 
 /*
  * Initiates the gif decode
  */
-SkCodec::Result SkGifCodec::onGetPixels(const SkImageInfo& dstInfo,
-                                        void* pixels, size_t dstRowBytes,
-                                        const Options& opts,
-                                        int* rowsDecoded) {
+SkCodec::Result SkGifCodec::onGetPixels(const SkImageInfo& dstInfo, void* pixels,
+                                        size_t dstRowBytes, const Options& opts, int* rowsDecoded) {
     Result result = this->prepareToDecode(dstInfo, opts);
     switch (result) {
         case kSuccess:
@@ -292,9 +287,9 @@ SkCodec::Result SkGifCodec::onGetPixels(const SkImageInfo& dstInfo,
     return this->decodeFrame(true, opts, rowsDecoded);
 }
 
-SkCodec::Result SkGifCodec::onStartIncrementalDecode(const SkImageInfo& dstInfo,
-                                                     void* pixels, size_t dstRowBytes,
-                                                     const SkCodec::Options& opts) {
+SkCodec::Result SkGifCodec::onStartIncrementalDecode(const SkImageInfo& dstInfo, void* pixels,
+                                                     size_t dstRowBytes,
+                                                     const SkCodec::Options& opts) noexcept {
     Result result = this->prepareToDecode(dstInfo, opts);
     if (result != kSuccess) {
         return result;
@@ -308,11 +303,11 @@ SkCodec::Result SkGifCodec::onStartIncrementalDecode(const SkImageInfo& dstInfo,
     return kSuccess;
 }
 
-SkCodec::Result SkGifCodec::onIncrementalDecode(int* rowsDecoded) {
+SkCodec::Result SkGifCodec::onIncrementalDecode(int* rowsDecoded) noexcept {
     // It is possible the client has appended more data. Parse, if needed.
     const auto& options = this->options();
     const int frameIndex = options.fFrameIndex;
-    fReader->parse((SkGifImageReader::SkGIFParseQuery) frameIndex);
+    fReader->parse((SkGifImageReader::SkGIFParseQuery)frameIndex);
 
     const bool firstCallToIncrementalDecode = fFirstCallToIncrementalDecode;
     fFirstCallToIncrementalDecode = false;
@@ -341,8 +336,8 @@ SkCodec::Result SkGifCodec::decodeFrame(bool firstAttempt, const Options& opts, 
             //   cover all rows? If so, we do not have to fill here.)
             // - There is no color table for this frame. In that case will not
             //   draw anything, so we need to fill.
-            if (frameContext->frameRect() != this->bounds()
-                    || frameContext->interlaced() || !fCurrColorTableIsReal) {
+            if (frameContext->frameRect() != this->bounds() || frameContext->interlaced() ||
+                !fCurrColorTableIsReal) {
                 auto fillInfo = dstInfo.makeWH(fSwizzler->fillWidth(), scaledHeight);
                 SkSampler::Fill(fillInfo, fDst, fDstRowBytes, opts.fZeroInitialized);
                 filledBackground = true;
@@ -395,12 +390,11 @@ void SkGifCodec::applyXformRow(const SkImageInfo& dstInfo, void* dst, const uint
     }
 }
 
-template <typename T>
-static void blend_line(void* dstAsVoid, const void* srcAsVoid, int width) {
-    T*       dst = reinterpret_cast<T*>(dstAsVoid);
+template <typename T> static void blend_line(void* dstAsVoid, const void* srcAsVoid, int width) {
+    T* dst = reinterpret_cast<T*>(dstAsVoid);
     const T* src = reinterpret_cast<const T*>(srcAsVoid);
-    while (width --> 0) {
-        if (*src != 0) {   // GIF pixels are either transparent (== 0) or opaque (!= 0).
+    while (width-- > 0) {
+        if (*src != 0) {  // GIF pixels are either transparent (== 0) or opaque (!= 0).
             *dst = *src;
         }
         src++;
@@ -408,9 +402,8 @@ static void blend_line(void* dstAsVoid, const void* srcAsVoid, int width) {
     }
 }
 
-void SkGifCodec::haveDecodedRow(int frameIndex, const unsigned char* rowBegin,
-                                int rowNumber, int repeatCount, bool writeTransparentPixels)
-{
+void SkGifCodec::haveDecodedRow(int frameIndex, const unsigned char* rowBegin, int rowNumber,
+                                int repeatCount, bool writeTransparentPixels) {
     const SkGIFFrameContext* frameContext = fReader->frameContext(frameIndex);
     // The pixel data and coordinates supplied to us are relative to the frame's
     // origin within the entire image size, i.e.
@@ -425,8 +418,7 @@ void SkGifCodec::haveDecodedRow(int frameIndex, const unsigned char* rowBegin,
     const int yEnd = std::min(yBegin + rowNumber + repeatCount, this->dimensions().height());
     // FIXME: No need to make the checks on width/xBegin/xEnd for every row. We could instead do
     // this once in prepareToDecode.
-    if (!width || (xBegin < 0) || (yBegin < 0) || (xEnd <= xBegin) || (yEnd <= yBegin))
-        return;
+    if (!width || (xBegin < 0) || (yBegin < 0) || (xEnd <= xBegin) || (yEnd <= yBegin)) return;
 
     // yBegin is the first row in the non-sampled image. dstRow will be the row in the output,
     // after potentially scaling it.
@@ -503,7 +495,7 @@ void SkGifCodec::haveDecodedRow(int frameIndex, const unsigned char* rowBegin,
             offsetBytes *= 2;
         }
         const void* src = SkTAddOffset<void>(fTmpBuffer.get(), offsetBytes);
-        void*       dst = SkTAddOffset<void>(dstLine, offsetBytes);
+        void* dst = SkTAddOffset<void>(dstLine, offsetBytes);
 
         switch (dstInfo.colorType()) {
             case kBGRA_8888_SkColorType:

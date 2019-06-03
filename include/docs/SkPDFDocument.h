@@ -3,18 +3,18 @@
 #ifndef SkPDFDocument_DEFINED
 #define SkPDFDocument_DEFINED
 
-#include "SkDocument.h"
+#include "include/core/SkDocument.h"
 
-#include "SkScalar.h"
-#include "SkString.h"
-#include "SkTime.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTime.h"
 
 class SkExecutor;
 
 namespace SkPDF {
 
 /** Table 333 in PDF 32000-1:2008 §14.8.4.2
-*/
+ */
 enum class DocumentStructureType {
     kDocument,    //!< Document
     kPart,        //!< Part
@@ -80,18 +80,18 @@ struct StructureElementNode {
 };
 
 /** Optional metadata to be passed into the PDF factory function.
-*/
+ */
 struct Metadata {
     /** The document's title.
-    */
+     */
     SkString fTitle;
 
     /** The name of the person who created the document.
-    */
+     */
     SkString fAuthor;
 
     /** The subject of the document.
-    */
+     */
     SkString fSubject;
 
     /** Keywords associated with the document.  Commas may be used to delineate
@@ -159,6 +159,14 @@ struct Metadata {
         Experimental.
     */
     SkExecutor* fExecutor = nullptr;
+
+    /** Preferred Subsetter. Only respected if both are compiled in.
+        Experimental.
+    */
+    enum Subsetter {
+        kHarfbuzz_Subsetter,
+        kSfntly_Subsetter,
+    } fSubsetter = kHarfbuzz_Subsetter;
 };
 
 /** Associate a node ID with subsequent drawing commands in an

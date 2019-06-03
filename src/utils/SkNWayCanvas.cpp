@@ -5,14 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "SkNWayCanvas.h"
-#include "SkCanvasPriv.h"
+#include "include/utils/SkNWayCanvas.h"
+#include "src/core/SkCanvasPriv.h"
 
 SkNWayCanvas::SkNWayCanvas(int width, int height) : INHERITED(width, height) {}
 
-SkNWayCanvas::~SkNWayCanvas() {
-    this->removeAll();
-}
+SkNWayCanvas::~SkNWayCanvas() { this->removeAll(); }
 
 void SkNWayCanvas::addCanvas(SkCanvas* canvas) {
     if (canvas) {
@@ -27,18 +25,14 @@ void SkNWayCanvas::removeCanvas(SkCanvas* canvas) {
     }
 }
 
-void SkNWayCanvas::removeAll() {
-    fList.reset();
-}
+void SkNWayCanvas::removeAll() { fList.reset(); }
 
 ///////////////////////////////////////////////////////////////////////////
 // These are forwarded to the N canvases we're referencing
 
 class SkNWayCanvas::Iter {
 public:
-    Iter(const SkTDArray<SkCanvas*>& list) : fList(list) {
-        fIndex = 0;
-    }
+    Iter(const SkTDArray<SkCanvas*>& list) : fList(list) { fIndex = 0; }
     bool next() {
         if (fIndex < fList.count()) {
             fCanvas = fList[fIndex++];
@@ -147,6 +141,13 @@ void SkNWayCanvas::onDrawPaint(const SkPaint& paint) {
     }
 }
 
+void SkNWayCanvas::onDrawBehind(const SkPaint& paint) {
+    Iter iter(fList);
+    while (iter.next()) {
+        SkCanvasPriv::DrawBehind(iter.get(), paint);
+    }
+}
+
 void SkNWayCanvas::onDrawPoints(PointMode mode, size_t count, const SkPoint pts[],
                                 const SkPaint& paint) {
     Iter iter(fList);
@@ -159,14 +160,6 @@ void SkNWayCanvas::onDrawRect(const SkRect& rect, const SkPaint& paint) {
     Iter iter(fList);
     while (iter.next()) {
         iter->drawRect(rect, paint);
-    }
-}
-
-void SkNWayCanvas::onDrawEdgeAARect(const SkRect& rect, SkCanvas::QuadAAFlags aa, SkColor color,
-                                    SkBlendMode mode) {
-    Iter iter(fList);
-    while (iter.next()) {
-        iter->experimental_DrawEdgeAARectV1(rect, aa, color, mode);
     }
 }
 
@@ -277,16 +270,8 @@ void SkNWayCanvas::onDrawImageLattice(const SkImage* image, const Lattice& latti
     }
 }
 
-void SkNWayCanvas::onDrawImageSet(const SkCanvas::ImageSetEntry set[], int count,
-                                  SkFilterQuality filterQuality, SkBlendMode mode) {
-    Iter iter(fList);
-    while (iter.next()) {
-        iter->experimental_DrawImageSetV1(set, count, filterQuality, mode);
-    }
-}
-
 void SkNWayCanvas::onDrawTextBlob(const SkTextBlob* blob, SkScalar x, SkScalar y,
-                                  const SkPaint &paint) {
+                                  const SkPaint& paint) {
     Iter iter(fList);
     while (iter.next()) {
         iter->drawTextBlob(blob, x, y, paint);
@@ -345,6 +330,24 @@ void SkNWayCanvas::onDrawAnnotation(const SkRect& rect, const char key[], SkData
     Iter iter(fList);
     while (iter.next()) {
         iter->drawAnnotation(rect, key, data);
+    }
+}
+
+void SkNWayCanvas::onDrawEdgeAAQuad(const SkRect& rect, const SkPoint clip[4], QuadAAFlags aa,
+                                    SkColor color, SkBlendMode mode) {
+    Iter iter(fList);
+    while (iter.next()) {
+        iter->experimental_DrawEdgeAAQuad(rect, clip, aa, color, mode);
+    }
+}
+
+void SkNWayCanvas::onDrawEdgeAAImageSet(const ImageSetEntry set[], int count,
+                                        const SkPoint dstClips[], const SkMatrix preViewMatrices[],
+                                        const SkPaint* paint, SrcRectConstraint constraint) {
+    Iter iter(fList);
+    while (iter.next()) {
+        iter->experimental_DrawEdgeAAImageSet(set, count, dstClips, preViewMatrices, paint,
+                                              constraint);
     }
 }
 

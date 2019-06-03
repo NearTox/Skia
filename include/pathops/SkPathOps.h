@@ -7,18 +7,17 @@
 #ifndef SkPathOps_DEFINED
 #define SkPathOps_DEFINED
 
-#include "../private/SkTArray.h"
-#include "../private/SkTDArray.h"
-#include "SkPreConfig.h"
+#include "include/core/SkPreConfig.h"
+#include "include/private/SkTArray.h"
+#include "include/private/SkTDArray.h"
 
 class SkPath;
 struct SkRect;
 
-
 // FIXME: move everything below into the SkPath class
 /**
-  *  The logical operations that can be performed when combining two paths.
-  */
+ *  The logical operations that can be performed when combining two paths.
+ */
 enum SkPathOp {
     kDifference_SkPathOp,         //!< subtract the op path from the first path
     kIntersect_SkPathOp,          //!< intersect the two paths
@@ -82,7 +81,7 @@ bool SK_API TightBounds(const SkPath& path, SkRect* result);
 bool SK_API AsWinding(const SkPath& path, SkPath* result);
 
 /** Perform a series of path operations, optimized for unioning many paths together.
-  */
+ */
 class SK_API SkOpBuilder {
 public:
     /** Add one or more paths and their operand. The builder is empty before the first

@@ -5,39 +5,54 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkFontMetrics.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkBlurImageFilter.h"
+#include "include/effects/SkColorFilterImageFilter.h"
+#include "include/effects/SkColorMatrixFilter.h"
+#include "include/effects/SkGradientShader.h"
+#include "tools/ToolUtils.h"
 
-#include "Resources.h"
-#include "SkBlurImageFilter.h"
-#include "SkCanvas.h"
-#include "SkColorFilterImageFilter.h"
-#include "SkColorMatrixFilter.h"
-#include "SkFont.h"
-#include "SkFontMetrics.h"
-#include "SkGradientShader.h"
-#include "SkStream.h"
-#include "SkTypeface.h"
+#include <string.h>
+#include <initializer_list>
+#include <utility>
 
 /*
  * Spits out a dummy gradient to test blur with shader on paint
  */
 static sk_sp<SkShader> MakeLinear() {
-    constexpr SkPoint     kPts[] = { { 0, 0 }, { 32, 32 } };
-    constexpr SkScalar    kPos[] = { 0, SK_Scalar1/2, SK_Scalar1 };
-    constexpr SkColor kColors[] = {0x80F00080, 0xF0F08000, 0x800080F0 };
+    constexpr SkPoint kPts[] = {{0, 0}, {32, 32}};
+    constexpr SkScalar kPos[] = {0, SK_Scalar1 / 2, SK_Scalar1};
+    constexpr SkColor kColors[] = {0x80F00080, 0xF0F08000, 0x800080F0};
     return SkGradientShader::MakeLinear(kPts, kColors, kPos, SK_ARRAY_COUNT(kColors),
-                                        SkShader::kClamp_TileMode);
+                                        SkTileMode::kClamp);
 }
 
 static sk_sp<SkImageFilter> make_grayscale(sk_sp<SkImageFilter> input) {
-    SkScalar matrix[20];
-    memset(matrix, 0, 20 * sizeof(SkScalar));
+    float matrix[20];
+    memset(matrix, 0, 20 * sizeof(float));
     matrix[0] = matrix[5] = matrix[10] = 0.2126f;
     matrix[1] = matrix[6] = matrix[11] = 0.7152f;
     matrix[2] = matrix[7] = matrix[12] = 0.0722f;
     matrix[18] = 1.0f;
-    sk_sp<SkColorFilter> filter(SkColorFilter::MakeMatrixFilterRowMajor255(matrix));
+    sk_sp<SkColorFilter> filter(SkColorFilters::Matrix(matrix));
     return SkColorFilterImageFilter::Make(std::move(filter), std::move(input));
 }
 
@@ -54,7 +69,7 @@ namespace skiagm {
 
 class ColorEmojiGM : public GM {
 public:
-    ColorEmojiGM() { }
+    ColorEmojiGM() {}
 
 protected:
     struct EmojiFont {
@@ -62,36 +77,37 @@ protected:
         const char* text;
     } emojiFont;
     virtual void onOnceBeforeDraw() override {
-        emojiFont.typeface = sk_tool_utils::emoji_typeface();
-        emojiFont.text = sk_tool_utils::emoji_sample_text();
+        emojiFont.typeface = ToolUtils::emoji_typeface();
+        emojiFont.text = ToolUtils::emoji_sample_text();
     }
 
-    SkString onShortName() override {
-        SkString name("coloremoji");
-        name.append(sk_tool_utils::platform_font_manager());
-        return name;
-    }
+    SkString onShortName() override { return SkString("coloremoji"); }
 
     SkISize onISize() override { return SkISize::Make(650, 1200); }
 
     void onDraw(SkCanvas* canvas) override {
-
         canvas->drawColor(SK_ColorGRAY);
 
         SkFont font(emojiFont.typeface);
-        const char* text = emojiFont.text;
+        char const* const text = emojiFont.text;
+        size_t textLen = strlen(text);
 
         // draw text at different point sizes
-        constexpr SkScalar textSizes[] = { 10, 30, 50, };
+        constexpr SkScalar textSizes[] = {
+                10,
+                30,
+                50,
+        };
         SkFontMetrics metrics;
         SkScalar y = 0;
-        for (const bool& fakeBold : { false, true }) {
+        for (const bool& fakeBold : {false, true}) {
             font.setEmbolden(fakeBold);
             for (const SkScalar& textSize : textSizes) {
                 font.setSize(textSize);
                 font.getMetrics(&metrics);
                 y += -metrics.fAscent;
-                canvas->drawSimpleText(text, strlen(text), kUTF8_SkTextEncoding, 10, y, font, SkPaint());
+                canvas->drawSimpleText(text, textLen, SkTextEncoding::kUTF8, 10, y, font,
+                                       SkPaint());
                 y += metrics.fDescent + metrics.fLeading;
             }
         }
@@ -128,7 +144,7 @@ protected:
                             shaderFont.setSize(30);
                             shaderFont.getMetrics(&metrics);
                             y += -metrics.fAscent;
-                            canvas->drawSimpleText(text, strlen(text), kUTF8_SkTextEncoding, 380, y,
+                            canvas->drawSimpleText(text, textLen, SkTextEncoding::kUTF8, 380, y,
                                                    shaderFont, shaderPaint);
                             y += metrics.fDescent + metrics.fLeading;
                         }
@@ -142,21 +158,21 @@ protected:
 
         // compute the bounds of the text
         SkRect bounds;
-        font.measureText(text, strlen(text), kUTF8_SkTextEncoding, &bounds);
+        font.measureText(text, textLen, SkTextEncoding::kUTF8, &bounds);
 
         const SkScalar boundsHalfWidth = bounds.width() * SK_ScalarHalf;
         const SkScalar boundsHalfHeight = bounds.height() * SK_ScalarHalf;
         const SkScalar boundsQuarterWidth = boundsHalfWidth * SK_ScalarHalf;
         const SkScalar boundsQuarterHeight = boundsHalfHeight * SK_ScalarHalf;
 
-        SkRect upperLeftClip = SkRect::MakeXYWH(bounds.left(), bounds.top(),
-                                                boundsHalfWidth, boundsHalfHeight);
+        SkRect upperLeftClip =
+                SkRect::MakeXYWH(bounds.left(), bounds.top(), boundsHalfWidth, boundsHalfHeight);
         SkRect lowerRightClip = SkRect::MakeXYWH(bounds.centerX(), bounds.centerY(),
                                                  boundsHalfWidth, boundsHalfHeight);
         SkRect interiorClip = bounds;
         interiorClip.inset(boundsQuarterWidth, boundsQuarterHeight);
 
-        const SkRect clipRects[] = { bounds, upperLeftClip, lowerRightClip, interiorClip };
+        const SkRect clipRects[] = {bounds, upperLeftClip, lowerRightClip, interiorClip};
 
         SkPaint clipHairline;
         clipHairline.setColor(SK_ColorWHITE);
@@ -168,10 +184,10 @@ protected:
             canvas->save();
             canvas->drawRect(clipRect, clipHairline);
             paint.setAlpha(0x20);
-            canvas->drawSimpleText(text, strlen(text), kUTF8_SkTextEncoding, 0, 0, font, paint);
+            canvas->drawSimpleText(text, textLen, SkTextEncoding::kUTF8, 0, 0, font, paint);
             canvas->clipRect(clipRect);
             paint.setAlphaf(1.0f);
-            canvas->drawSimpleText(text, strlen(text), kUTF8_SkTextEncoding, 0, 0, font, paint);
+            canvas->drawSimpleText(text, textLen, SkTextEncoding::kUTF8, 0, 0, font, paint);
             canvas->restore();
             canvas->translate(0, SkIntToScalar(25));
         }
@@ -184,4 +200,4 @@ protected:
 
 DEF_GM(return new ColorEmojiGM;)
 
-}
+}  // namespace skiagm

@@ -8,9 +8,9 @@
 #ifndef SkImageSource_DEFINED
 #define SkImageSource_DEFINED
 
-#include "SkFlattenable.h"
-#include "SkImage.h"
-#include "SkImageFilter.h"
+#include "include/core/SkFlattenable.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageFilter.h"
 
 class SK_API SkImageSource : public SkImageFilter {
 public:
@@ -27,23 +27,19 @@ protected:
 
     sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
                                         SkIPoint* offset) const override;
-    sk_sp<SkImageFilter> onMakeColorSpace(SkColorSpaceXformer*) const override;
 
-    SkIRect onFilterNodeBounds(const SkIRect&, const SkMatrix& ctm,
-                               MapDirection, const SkIRect* inputRect) const override;
+    SkIRect onFilterNodeBounds(const SkIRect&, const SkMatrix& ctm, MapDirection,
+                               const SkIRect* inputRect) const override;
 
 private:
     SK_FLATTENABLE_HOOKS(SkImageSource)
 
     explicit SkImageSource(sk_sp<SkImage>);
-    SkImageSource(sk_sp<SkImage>,
-                  const SkRect& srcRect,
-                  const SkRect& dstRect,
-                  SkFilterQuality);
+    SkImageSource(sk_sp<SkImage>, const SkRect& srcRect, const SkRect& dstRect, SkFilterQuality);
 
-    sk_sp<SkImage>   fImage;
-    SkRect           fSrcRect, fDstRect;
-    SkFilterQuality  fFilterQuality;
+    sk_sp<SkImage> fImage;
+    SkRect fSrcRect, fDstRect;
+    SkFilterQuality fFilterQuality;
 
     typedef SkImageFilter INHERITED;
 };

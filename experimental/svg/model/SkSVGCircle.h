@@ -8,8 +8,8 @@
 #ifndef SkSVGCircle_DEFINED
 #define SkSVGCircle_DEFINED
 
-#include "SkSVGShape.h"
-#include "SkSVGTypes.h"
+#include "experimental/svg/model/SkSVGShape.h"
+#include "experimental/svg/model/SkSVGTypes.h"
 
 struct SkPoint;
 
@@ -38,9 +38,9 @@ private:
 
     SkSVGLength fCx = SkSVGLength(0);
     SkSVGLength fCy = SkSVGLength(0);
-    SkSVGLength fR  = SkSVGLength(0);
+    SkSVGLength fR = SkSVGLength(0);
 
     typedef SkSVGShape INHERITED;
 };
 
-#endif // SkSVGCircle_DEFINED
+#endif  // SkSVGCircle_DEFINED

@@ -8,9 +8,9 @@
 #ifndef GrGrCCStrokeGeometry_DEFINED
 #define GrGrCCStrokeGeometry_DEFINED
 
-#include "SkPaint.h"
-#include "SkPoint.h"
-#include "SkTArray.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/private/SkTArray.h"
 
 class SkStrokeRec;
 
@@ -24,11 +24,11 @@ public:
     static constexpr int kMaxNumLinearSegmentsLog2 = 15;
 
     GrCCStrokeGeometry(int numSkPoints = 0, int numSkVerbs = 0)
-            : fVerbs(numSkVerbs * 5/2)  // Reserve for a 2.5x expansion in verbs. (Joins get their
-                                        // own separate verb in our representation.)
-            , fParams(numSkVerbs * 3)  // Somewhere around 1-2 params per verb.
-            , fPoints(numSkPoints * 5/4)  // Reserve for a 1.25x expansion in points and normals.
-            , fNormals(numSkPoints * 5/4) {}
+            : fVerbs(numSkVerbs * 5 / 2)  // Reserve for a 2.5x expansion in verbs. (Joins get their
+                                          // own separate verb in our representation.)
+            , fParams(numSkVerbs * 3)     // Somewhere around 1-2 params per verb.
+            , fPoints(numSkPoints * 5 / 4)  // Reserve for a 1.25x expansion in points and normals.
+            , fNormals(numSkPoints * 5 / 4) {}
 
     // A string of verbs and their corresponding, params, points, and normals are a compact
     // representation of what will eventually be independent instances in GPU buffers. When added
@@ -72,10 +72,22 @@ public:
         float fConicWeight;  // Round joins only.
     };
 
-    const SkTArray<Verb, true>& verbs() const { SkASSERT(!fInsideContour); return fVerbs; }
-    const SkTArray<Parameter, true>& params() const { SkASSERT(!fInsideContour); return fParams; }
-    const SkTArray<SkPoint, true>& points() const { SkASSERT(!fInsideContour); return fPoints; }
-    const SkTArray<SkVector, true>& normals() const { SkASSERT(!fInsideContour); return fNormals; }
+    const SkTArray<Verb, true>& verbs() const {
+        SkASSERT(!fInsideContour);
+        return fVerbs;
+    }
+    const SkTArray<Parameter, true>& params() const {
+        SkASSERT(!fInsideContour);
+        return fParams;
+    }
+    const SkTArray<SkPoint, true>& points() const {
+        SkASSERT(!fInsideContour);
+        return fPoints;
+    }
+    const SkTArray<SkVector, true>& normals() const {
+        SkASSERT(!fInsideContour);
+        return fNormals;
+    }
 
     // These track the numbers of instances required to draw all the recorded strokes.
     struct InstanceTallies {
@@ -91,7 +103,7 @@ public:
     void lineTo(SkPoint);
     void quadraticTo(const SkPoint[3]);
     void cubicTo(const SkPoint[4]);
-    void closeContour();  // Connect back to the first point in the contour and exit.
+    void closeContour();       // Connect back to the first point in the contour and exit.
     void capContourAndExit();  // Add endcaps (if any) and exit the contour.
 
 private:

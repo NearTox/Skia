@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "GrGpuCommandBuffer.h"
-#include "GrMeshDrawOp.h"
-#include "GrOpFlushState.h"
-#include "GrResourceProvider.h"
+#include "src/gpu/ops/GrMeshDrawOp.h"
+#include "src/gpu/GrGpuCommandBuffer.h"
+#include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/GrResourceProvider.h"
 
 GrMeshDrawOp::GrMeshDrawOp(uint32_t classID) : INHERITED(classID) {}
 
@@ -81,9 +81,8 @@ GrPipeline::DynamicStateArrays* GrMeshDrawOp::Target::allocDynamicStateArrays(
         result->fScissorRects = this->allocator()->makeArray<SkIRect>(numMeshes);
     }
     if (numPrimitiveProcessorTextures) {
-        result->fPrimitiveProcessorTextures =
-                this->allocator()->makeArrayDefault<GrTextureProxy*>(
-                        numPrimitiveProcessorTextures * numMeshes);
+        result->fPrimitiveProcessorTextures = this->allocator()->makeArrayDefault<GrTextureProxy*>(
+                numPrimitiveProcessorTextures * numMeshes);
     }
     return result;
 }
@@ -93,8 +92,7 @@ GrPipeline::FixedDynamicState* GrMeshDrawOp::Target::makeFixedDynamicState(
     const GrAppliedClip* clip = this->appliedClip();
     if ((clip && clip->scissorState().enabled()) || numPrimProcTextures) {
         const SkIRect& scissor = (clip) ? clip->scissorState().rect() : SkIRect::MakeEmpty();
-        auto fixedDynamicState =
-                this->allocator()->make<GrPipeline::FixedDynamicState>(scissor);
+        auto fixedDynamicState = this->allocator()->make<GrPipeline::FixedDynamicState>(scissor);
         if (numPrimProcTextures) {
             fixedDynamicState->fPrimitiveProcessorTextures =
                     this->allocator()->makeArrayDefault<GrTextureProxy*>(numPrimProcTextures);

@@ -8,7 +8,7 @@
 #ifndef SkPDFResourceDict_DEFINED
 #define SkPDFResourceDict_DEFINED
 
-#include "SkPDFFont.h"
+#include "src/pdf/SkPDFFont.h"
 
 #include <vector>
 
@@ -24,7 +24,6 @@ enum class SkPDFResourceType {
     // These additional types are defined by the spec, but not
     // currently used by Skia: ColorSpace, Shading, Properties
 };
-
 
 /** Create a PDF resource dictionary.
  *  The full set of ProcSet entries is automatically created for backwards

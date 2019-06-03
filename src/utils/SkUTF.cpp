@@ -1,12 +1,12 @@
 // Copyright 2018 Google LLC.
 // Use of this source code is governed by a BSD-style license that can be found in the LICENSE file.
 
-#include "SkUTF.h"
+#include "src/utils/SkUTF.h"
 
 #include <climits>
 
 static constexpr inline int32_t left_shift(int32_t value, int32_t shift) {
-    return (int32_t) ((uint32_t) value << shift);
+    return (int32_t)((uint32_t)value << shift);
 }
 
 template <typename T> static constexpr bool is_align2(T x) { return 0 == (x & 1); }
@@ -30,7 +30,7 @@ static int utf8_byte_type(uint8_t c) {
         return 1;
     } else if (c < 0xC0) {
         return 0;
-    } else if (c >= 0xF5 || (c & 0xFE) == 0xC0) { // "octet values c0, c1, f5 to ff never appear"
+    } else if (c >= 0xF5 || (c & 0xFE) == 0xC0) {  // "octet values c0, c1, f5 to ff never appear"
         return -1;
     } else {
         int value = (((0xe5 << 24) >> ((unsigned)c >> 4 << 1)) & 3) + 1;
@@ -55,7 +55,7 @@ int SkUTF::CountUTF8(const char* utf8, size_t byteLength) {
         if (!utf8_type_is_valid_leading_byte(type) || utf8 + type > stop) {
             return -1;  // Sequence extends beyond end.
         }
-        while(type-- > 1) {
+        while (type-- > 1) {
             ++utf8;
             if (!utf8_byte_is_continuation(*(const uint8_t*)utf8)) {
                 return -1;
@@ -97,7 +97,7 @@ int SkUTF::CountUTF32(const int32_t* utf32, size_t byteLength) {
     if (!is_align4(intptr_t(utf32)) || !is_align4(byteLength) || byteLength >> 2 > INT_MAX) {
         return -1;
     }
-    const uint32_t kInvalidUnicharMask = 0xFF000000;    // unichar fits in 24 bits
+    const uint32_t kInvalidUnicharMask = 0xFF000000;  // unichar fits in 24 bits
     const uint32_t* ptr = (const uint32_t*)utf32;
     const uint32_t* stop = ptr + (byteLength >> 2);
     while (ptr < stop) {
@@ -109,22 +109,21 @@ int SkUTF::CountUTF32(const int32_t* utf32, size_t byteLength) {
     return (int)(byteLength >> 2);
 }
 
-template <typename T>
-static SkUnichar next_fail(const T** ptr, const T* end) {
+template <typename T> static SkUnichar next_fail(const T** ptr, const T* end) {
     *ptr = end;
     return -1;
 }
 
 SkUnichar SkUTF::NextUTF8(const char** ptr, const char* end) {
-    if (!ptr || !end ) {
+    if (!ptr || !end) {
         return -1;
     }
-    const uint8_t*  p = (const uint8_t*)*ptr;
+    const uint8_t* p = (const uint8_t*)*ptr;
     if (!p || p >= (const uint8_t*)end) {
         return next_fail(ptr, end);
     }
-    int             c = *p;
-    int             hic = c << 24;
+    int c = *p;
+    int hic = c << 24;
 
     if (!utf8_type_is_valid_leading_byte(utf8_byte_type(c))) {
         return next_fail(ptr, end);
@@ -152,7 +151,7 @@ SkUnichar SkUTF::NextUTF8(const char** ptr, const char* end) {
 }
 
 SkUnichar SkUTF::NextUTF16(const uint16_t** ptr, const uint16_t* end) {
-    if (!ptr || !end ) {
+    if (!ptr || !end) {
         return -1;
     }
     const uint16_t* src = *ptr;
@@ -190,7 +189,7 @@ SkUnichar SkUTF::NextUTF16(const uint16_t** ptr, const uint16_t* end) {
 }
 
 SkUnichar SkUTF::NextUTF32(const int32_t** ptr, const int32_t* end) {
-    if (!ptr || !end ) {
+    if (!ptr || !end) {
         return -1;
     }
     const int32_t* s = *ptr;
@@ -198,7 +197,7 @@ SkUnichar SkUTF::NextUTF32(const int32_t** ptr, const int32_t* end) {
         return next_fail(ptr, end);
     }
     int32_t value = *s;
-    const uint32_t kInvalidUnicharMask = 0xFF000000;    // unichar fits in 24 bits
+    const uint32_t kInvalidUnicharMask = 0xFF000000;  // unichar fits in 24 bits
     if (value & kInvalidUnicharMask) {
         return next_fail(ptr, end);
     }
@@ -216,9 +215,9 @@ size_t SkUTF::ToUTF8(SkUnichar uni, char utf8[SkUTF::kMaxBytesInUTF8Sequence]) {
         }
         return 1;
     }
-    char    tmp[4];
-    char*   p = tmp;
-    size_t  count = 1;
+    char tmp[4];
+    char* p = tmp;
+    size_t count = 1;
     while (uni > 0x7F >> count) {
         *p++ = (char)(0x80 | (uni & 0x3F));
         uni >>= 6;
@@ -250,4 +249,3 @@ size_t SkUTF::ToUTF16(SkUnichar uni, uint16_t utf16[2]) {
     }
     return 1 + extra;
 }
-

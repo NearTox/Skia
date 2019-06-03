@@ -5,28 +5,34 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkGeometry.h"
-#include "SkPath.h"
-#include "SkPaint.h"
-#include "SkStrokeRec.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "src/core/SkGeometry.h"
 
 static constexpr float kStrokeWidth = 40;
 static constexpr int kCellSize = 200;
 
 static const SkPoint kCubics[][4] = {
-    {{122, 737}, {348, 553}, {403, 761}, {400, 760}},
-    {{244, 520}, {244, 518}, {1141, 634}, {394, 688}},
-    {{550, 194}, {138, 130}, {1035, 246}, {288, 300}},
-    {{226, 733}, {556, 779}, {-43, 471}, {348, 683}},
-    {{268, 204}, {492, 304}, {352, 23}, {433, 412}},
-    {{172, 480}, {396, 580}, {256, 299}, {338, 677}},
-    {{731, 340}, {318, 252}, {1026, -64}, {367, 265}},
-    {{475, 708}, {62, 620}, {770, 304}, {220, 659}},
+        {{122, 737}, {348, 553}, {403, 761}, {400, 760}},
+        {{244, 520}, {244, 518}, {1141, 634}, {394, 688}},
+        {{550, 194}, {138, 130}, {1035, 246}, {288, 300}},
+        {{226, 733}, {556, 779}, {-43, 471}, {348, 683}},
+        {{268, 204}, {492, 304}, {352, 23}, {433, 412}},
+        {{172, 480}, {396, 580}, {256, 299}, {338, 677}},
+        {{731, 340}, {318, 252}, {1026, -64}, {367, 265}},
+        {{475, 708}, {62, 620}, {770, 304}, {220, 659}},
 };
 
-static SkRect calc_tight_cubic_bounds(const SkPoint P[4], int depth=5) {
+static SkRect calc_tight_cubic_bounds(const SkPoint P[4], int depth = 5) {
     if (0 == depth) {
         SkRect bounds;
         bounds.fLeft = SkTMin(SkTMin(P[0].x(), P[1].x()), SkTMin(P[2].x(), P[3].x()));
@@ -39,7 +45,7 @@ static SkRect calc_tight_cubic_bounds(const SkPoint P[4], int depth=5) {
     SkPoint chopped[7];
     SkChopCubicAt(P, chopped, .5f);
     SkRect bounds = calc_tight_cubic_bounds(chopped, depth - 1);
-    bounds.join(calc_tight_cubic_bounds(chopped+3, depth - 1));
+    bounds.join(calc_tight_cubic_bounds(chopped + 3, depth - 1));
     return bounds;
 }
 
@@ -49,14 +55,9 @@ public:
     TrickyCubicStrokesGM() {}
 
 protected:
+    SkString onShortName() override { return SkString("trickycubicstrokes"); }
 
-    SkString onShortName() override {
-        return SkString("trickycubicstrokes");
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(3*kCellSize, 3*kCellSize);
-    }
+    SkISize onISize() override { return SkISize::Make(3 * kCellSize, 3 * kCellSize); }
 
     void onOnceBeforeDraw() override {
         fStrokePaint.setAntiAlias(true);
@@ -70,7 +71,7 @@ protected:
 
         for (size_t i = 0; i < SK_ARRAY_COUNT(kCubics); ++i) {
             this->drawStroke(canvas, kCubics[i],
-                             SkRect::MakeXYWH((i%3) * kCellSize, (i/3) * kCellSize, kCellSize,
+                             SkRect::MakeXYWH((i % 3) * kCellSize, (i / 3) * kCellSize, kCellSize,
                                               kCellSize));
         }
     }
@@ -96,4 +97,4 @@ private:
     typedef GM INHERITED;
 };
 
-DEF_GM( return new TrickyCubicStrokesGM; )
+DEF_GM(return new TrickyCubicStrokesGM;)

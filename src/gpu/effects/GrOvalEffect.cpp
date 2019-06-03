@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "GrOvalEffect.h"
+#include "src/gpu/effects/GrOvalEffect.h"
 
-#include "GrCircleEffect.h"
-#include "GrEllipseEffect.h"
-#include "SkRect.h"
+#include "include/core/SkRect.h"
+#include "src/gpu/effects/generated/GrCircleEffect.h"
+#include "src/gpu/effects/generated/GrEllipseEffect.h"
 
 std::unique_ptr<GrFragmentProcessor> GrOvalEffect::Make(GrClipEdgeType edgeType, const SkRect& oval,
                                                         const GrShaderCaps& caps) {
@@ -20,8 +20,7 @@ std::unique_ptr<GrFragmentProcessor> GrOvalEffect::Make(GrClipEdgeType edgeType,
     SkScalar h = oval.height();
     if (SkScalarNearlyEqual(w, h)) {
         w /= 2;
-        return GrCircleEffect::Make(edgeType, SkPoint::Make(oval.fLeft + w, oval.fTop + w),
-                                    w);
+        return GrCircleEffect::Make(edgeType, SkPoint::Make(oval.fLeft + w, oval.fTop + w), w);
     } else {
         w /= 2;
         h /= 2;

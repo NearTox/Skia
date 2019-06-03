@@ -5,14 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "GrCCClipProcessor.h"
+#include "src/gpu/ccpr/GrCCClipProcessor.h"
 
-#include "GrCCClipPath.h"
-#include "GrTexture.h"
-#include "GrTextureProxy.h"
-#include "SkMakeUnique.h"
-#include "glsl/GrGLSLFragmentProcessor.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
+#include "include/gpu/GrTexture.h"
+#include "include/private/GrCCClipPath.h"
+#include "include/private/GrTextureProxy.h"
+#include "src/core/SkMakeUnique.h"
+#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 
 GrCCClipProcessor::GrCCClipProcessor(const GrCCClipPath* clipPath, MustCheckBounds mustCheckBounds,
                                      SkPath::FillType overrideFillType)
@@ -51,49 +51,49 @@ public:
         GrGLSLUniformHandler* uniHandler = args.fUniformHandler;
         GrGLSLFPFragmentBuilder* f = args.fFragBuilder;
 
-        f->codeAppend ("half coverage;");
+        f->codeAppend("half coverage;");
         if (proc.fMustCheckBounds) {
             const char* pathIBounds;
             fPathIBoundsUniform = uniHandler->addUniform(kFragment_GrShaderFlag, kFloat4_GrSLType,
                                                          "path_ibounds", &pathIBounds);
-            f->codeAppendf("if (all(greaterThan(float4(sk_FragCoord.xy, %s.zw), "
-                                               "float4(%s.xy, sk_FragCoord.xy)))) {",
-                                               pathIBounds, pathIBounds);
+            f->codeAppendf(
+                    "if (all(greaterThan(float4(sk_FragCoord.xy, %s.zw), "
+                    "float4(%s.xy, sk_FragCoord.xy)))) {",
+                    pathIBounds, pathIBounds);
         }
 
         const char* atlasTransform;
         fAtlasTransformUniform = uniHandler->addUniform(kFragment_GrShaderFlag, kFloat4_GrSLType,
                                                         "atlas_transform", &atlasTransform);
-        f->codeAppendf("float2 texcoord = sk_FragCoord.xy * %s.xy + %s.zw;",
-                       atlasTransform, atlasTransform);
+        f->codeAppendf("float2 texcoord = sk_FragCoord.xy * %s.xy + %s.zw;", atlasTransform,
+                       atlasTransform);
 
-        f->codeAppend ("half coverage_count = ");
+        f->codeAppend("half coverage_count = ");
         f->appendTextureLookup(args.fTexSamplers[0], "texcoord", kHalf2_GrSLType);
-        f->codeAppend (".a;");
+        f->codeAppend(".a;");
 
         if (SkPath::kEvenOdd_FillType == proc.fOverrideFillType ||
             SkPath::kInverseEvenOdd_FillType == proc.fOverrideFillType) {
-            f->codeAppend ("half t = mod(abs(coverage_count), 2);");
-            f->codeAppend ("coverage = 1 - abs(t - 1);");
+            f->codeAppend("half t = mod(abs(coverage_count), 2);");
+            f->codeAppend("coverage = 1 - abs(t - 1);");
         } else {
-            f->codeAppend ("coverage = min(abs(coverage_count), 1);");
+            f->codeAppend("coverage = min(abs(coverage_count), 1);");
         }
 
         if (proc.fMustCheckBounds) {
-            f->codeAppend ("} else {");
-            f->codeAppend (    "coverage = 0;");
-            f->codeAppend ("}");
+            f->codeAppend("} else {");
+            f->codeAppend("coverage = 0;");
+            f->codeAppend("}");
         }
 
         if (SkPath::IsInverseFillType(proc.fOverrideFillType)) {
-            f->codeAppend ("coverage = 1 - coverage;");
+            f->codeAppend("coverage = 1 - coverage;");
         }
 
         f->codeAppendf("%s = %s * coverage;", args.fOutputColor, args.fInputColor);
     }
 
-    void onSetData(const GrGLSLProgramDataManager& pdman,
-                   const GrFragmentProcessor& fp) override {
+    void onSetData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& fp) override {
         const GrCCClipProcessor& proc = fp.cast<GrCCClipProcessor>();
         if (proc.fMustCheckBounds) {
             const SkRect pathIBounds = SkRect::Make(proc.fClipPath->pathDevIBounds());
@@ -110,6 +110,4 @@ private:
     UniformHandle fAtlasTransformUniform;
 };
 
-GrGLSLFragmentProcessor* GrCCClipProcessor::onCreateGLSLInstance() const {
-    return new Impl();
-}
+GrGLSLFragmentProcessor* GrCCClipProcessor::onCreateGLSLInstance() const { return new Impl(); }

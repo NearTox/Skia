@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "GrShadowRRectOp.h"
+#include "src/gpu/ops/GrShadowRRectOp.h"
 
-#include "GrDrawOpTest.h"
-#include "GrMemoryPool.h"
-#include "GrOpFlushState.h"
-#include "GrRecordingContext.h"
-#include "GrRecordingContextPriv.h"
-#include "SkRRectPriv.h"
-#include "effects/GrShadowGeoProc.h"
+#include "include/private/GrRecordingContext.h"
+#include "src/core/SkRRectPriv.h"
+#include "src/gpu/GrDrawOpTest.h"
+#include "src/gpu/GrMemoryPool.h"
+#include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/GrRecordingContextPriv.h"
+#include "src/gpu/effects/GrShadowGeoProc.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Circle Data
@@ -103,7 +103,7 @@ static const uint16_t* circle_type_to_indices(bool stroked) {
 // For filled rrects we reuse the stroke geometry but add an additional quad to the center.
 
 static const uint16_t gRRectIndices[] = {
-    // clang-format off
+        // clang-format off
     // overstroke quads
     // we place this at the beginning so that we can skip these indices when rendering as filled
     0, 6, 25, 0, 25, 24,
@@ -126,13 +126,13 @@ static const uint16_t gRRectIndices[] = {
     // fill quad
     // we place this at the end so that we can skip these indices when rendering as stroked
     0, 6, 18, 0, 18, 12,
-    // clang-format on
+        // clang-format on
 };
 
 // overstroke count
 static const int kIndicesPerOverstrokeRRect = SK_ARRAY_COUNT(gRRectIndices) - 6;
 // simple stroke count skips overstroke indices
-static const int kIndicesPerStrokeRRect = kIndicesPerOverstrokeRRect - 6*4;
+static const int kIndicesPerStrokeRRect = kIndicesPerOverstrokeRRect - 6 * 4;
 // fill count adds final quad to stroke count
 static const int kIndicesPerFillRRect = kIndicesPerStrokeRRect + 6;
 static const int kVertsPerStrokeRRect = 24;
@@ -175,7 +175,7 @@ static const uint16_t* rrect_type_to_indices(RRectType type) {
     switch (type) {
         case kFill_RRectType:
         case kStroke_RRectType:
-            return gRRectIndices + 6*4;
+            return gRRectIndices + 6 * 4;
         case kOverstroke_RRectType:
             return gRRectIndices;
     }
@@ -191,8 +191,8 @@ public:
     DEFINE_OP_CLASS_ID
 
     // An insetWidth > 1/2 rect width or height indicates a simple fill.
-    ShadowCircularRRectOp(GrColor color, const SkRect& devRect,
-                          float devRadius, bool isCircle, float blurRadius, float insetWidth)
+    ShadowCircularRRectOp(GrColor color, const SkRect& devRect, float devRadius, bool isCircle,
+                          float blurRadius, float insetWidth)
             : INHERITED(ClassID()) {
         SkRect bounds = devRect;
         SkASSERT(insetWidth > 0);
@@ -213,7 +213,7 @@ public:
             innerRadius = devRadius - insetWidth;
             type = innerRadius > 0 ? kStroke_RRectType : kFill_RRectType;
         } else {
-            if (insetWidth <= 0.5f*SkTMin(devRect.width(), devRect.height())) {
+            if (insetWidth <= 0.5f * SkTMin(devRect.width(), devRect.height())) {
                 // We don't worry about a real inner radius, we just need to know if we
                 // need to create overstroke vertices.
                 innerRadius = SkTMax(insetWidth - umbraInset, 0.0f);
@@ -223,8 +223,8 @@ public:
 
         this->setBounds(bounds, HasAABloat::kNo, IsZeroArea::kNo);
 
-        fGeoData.emplace_back(Geometry{color, outerRadius, umbraInset, innerRadius,
-                                       blurRadius, bounds, type, isCircle});
+        fGeoData.emplace_back(Geometry{color, outerRadius, umbraInset, innerRadius, blurRadius,
+                                       bounds, type, isCircle});
         if (isCircle) {
             fVertCount = circle_type_to_vert_count(kStroke_RRectType == type);
             fIndexCount = circle_type_to_index_count(kStroke_RRectType == type);
@@ -245,8 +245,8 @@ public:
                     "OuterRad: %.2f, Umbra: %.2f, InnerRad: %.2f, BlurRad: %.2f\n",
                     fGeoData[i].fColor, fGeoData[i].fDevBounds.fLeft, fGeoData[i].fDevBounds.fTop,
                     fGeoData[i].fDevBounds.fRight, fGeoData[i].fDevBounds.fBottom,
-                    fGeoData[i].fOuterRadius, fGeoData[i].fUmbraInset,
-                    fGeoData[i].fInnerRadius, fGeoData[i].fBlurRadius);
+                    fGeoData[i].fOuterRadius, fGeoData[i].fUmbraInset, fGeoData[i].fInnerRadius,
+                    fGeoData[i].fBlurRadius);
         }
         string.append(INHERITED::dumpInfo());
         return string;
@@ -255,20 +255,21 @@ public:
 
     FixedFunctionFlags fixedFunctionFlags() const override { return FixedFunctionFlags::kNone; }
 
-    GrProcessorSet::Analysis finalize(const GrCaps&, const GrAppliedClip*, GrFSAAType) override {
+    GrProcessorSet::Analysis finalize(const GrCaps&, const GrAppliedClip*, GrFSAAType,
+                                      GrClampType) override {
         return GrProcessorSet::EmptySetAnalysis();
     }
 
 private:
     struct Geometry {
-        GrColor   fColor;
-        SkScalar  fOuterRadius;
-        SkScalar  fUmbraInset;
-        SkScalar  fInnerRadius;
-        SkScalar  fBlurRadius;
-        SkRect    fDevBounds;
+        GrColor fColor;
+        SkScalar fOuterRadius;
+        SkScalar fUmbraInset;
+        SkScalar fInnerRadius;
+        SkScalar fBlurRadius;
+        SkRect fDevBounds;
         RRectType fType;
-        bool      fIsCircle;
+        bool fIsCircle;
     };
 
     struct CircleVertex {
@@ -279,7 +280,6 @@ private:
     };
 
     void fillInCircleVerts(const Geometry& args, bool isStroked, CircleVertex** verts) const {
-
         GrColor color = args.fColor;
         SkScalar outerRadius = args.fOuterRadius;
         SkScalar innerRadius = args.fInnerRadius;
@@ -415,23 +415,21 @@ private:
         const SkRect& bounds = args.fDevBounds;
 
         SkScalar umbraInset = args.fUmbraInset;
-        SkScalar minDim = 0.5f*SkTMin(bounds.width(), bounds.height());
+        SkScalar minDim = 0.5f * SkTMin(bounds.width(), bounds.height());
         if (umbraInset > minDim) {
             umbraInset = minDim;
         }
 
-        SkScalar xInner[4] = { bounds.fLeft + umbraInset, bounds.fRight - umbraInset,
-            bounds.fLeft + umbraInset, bounds.fRight - umbraInset };
-        SkScalar xMid[4] = { bounds.fLeft + outerRadius, bounds.fRight - outerRadius,
-            bounds.fLeft + outerRadius, bounds.fRight - outerRadius };
-        SkScalar xOuter[4] = { bounds.fLeft, bounds.fRight,
-            bounds.fLeft, bounds.fRight };
-        SkScalar yInner[4] = { bounds.fTop + umbraInset, bounds.fTop + umbraInset,
-            bounds.fBottom - umbraInset, bounds.fBottom - umbraInset };
-        SkScalar yMid[4] = { bounds.fTop + outerRadius, bounds.fTop + outerRadius,
-            bounds.fBottom - outerRadius, bounds.fBottom - outerRadius };
-        SkScalar yOuter[4] = { bounds.fTop, bounds.fTop,
-            bounds.fBottom, bounds.fBottom };
+        SkScalar xInner[4] = {bounds.fLeft + umbraInset, bounds.fRight - umbraInset,
+                              bounds.fLeft + umbraInset, bounds.fRight - umbraInset};
+        SkScalar xMid[4] = {bounds.fLeft + outerRadius, bounds.fRight - outerRadius,
+                            bounds.fLeft + outerRadius, bounds.fRight - outerRadius};
+        SkScalar xOuter[4] = {bounds.fLeft, bounds.fRight, bounds.fLeft, bounds.fRight};
+        SkScalar yInner[4] = {bounds.fTop + umbraInset, bounds.fTop + umbraInset,
+                              bounds.fBottom - umbraInset, bounds.fBottom - umbraInset};
+        SkScalar yMid[4] = {bounds.fTop + outerRadius, bounds.fTop + outerRadius,
+                            bounds.fBottom - outerRadius, bounds.fBottom - outerRadius};
+        SkScalar yOuter[4] = {bounds.fTop, bounds.fTop, bounds.fBottom, bounds.fBottom};
 
         SkScalar blurRadius = args.fBlurRadius;
 
@@ -451,7 +449,7 @@ private:
         //      (sqrt(2)*(umbraInset - outerRadius) + outerRadius)/sqrt(2)*umbraInset
         //
         // Setting the components of the diagonal offset to the following value will give us that.
-        SkScalar diagVal = umbraInset / (SK_ScalarSqrt2*(outerRadius - umbraInset) - outerRadius);
+        SkScalar diagVal = umbraInset / (SK_ScalarSqrt2 * (outerRadius - umbraInset) - outerRadius);
         SkVector diagVec = SkVector::Make(diagVal, diagVal);
         SkScalar distanceCorrection = umbraInset / blurRadius;
 
@@ -503,7 +501,7 @@ private:
         if (kOverstroke_RRectType == args.fType) {
             SkASSERT(args.fInnerRadius > 0.0f);
 
-            SkScalar inset =  umbraInset + args.fInnerRadius;
+            SkScalar inset = umbraInset + args.fInnerRadius;
 
             // TL
             (*verts)->fPos = SkPoint::Make(bounds.fLeft + inset, bounds.fTop + inset);
@@ -533,7 +531,6 @@ private:
             (*verts)->fDistanceCorrection = distanceCorrection;
             (*verts)++;
         }
-
     }
 
     void onPrepareDraws(Target* target) override {
@@ -597,8 +594,8 @@ private:
     }
 
     void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
-        flushState->executeDrawsAndUploadsForMeshDrawOp(
-                this, chainBounds, GrProcessorSet::MakeEmptySet());
+        flushState->executeDrawsAndUploadsForMeshDrawOp(this, chainBounds,
+                                                        GrProcessorSet::MakeEmptySet());
     }
 
     CombineResult onCombineIfPossible(GrOp* t, const GrCaps& caps) override {
@@ -638,18 +635,19 @@ std::unique_ptr<GrDrawOp> Make(GrRecordingContext* context,
     // Map radius and inset. As the matrix is a similarity matrix, this should be isotropic.
     SkScalar radius = SkRRectPriv::GetSimpleRadii(rrect).fX;
     SkScalar matrixFactor = viewMatrix[SkMatrix::kMScaleX] + viewMatrix[SkMatrix::kMSkewX];
-    SkScalar scaledRadius = SkScalarAbs(radius*matrixFactor);
-    SkScalar scaledInsetWidth = SkScalarAbs(insetWidth*matrixFactor);
+    SkScalar scaledRadius = SkScalarAbs(radius * matrixFactor);
+    SkScalar scaledInsetWidth = SkScalarAbs(insetWidth * matrixFactor);
+
+    if (scaledInsetWidth <= 0) {
+        return nullptr;
+    }
 
     GrOpMemoryPool* pool = context->priv().opMemoryPool();
 
-    return pool->allocate<ShadowCircularRRectOp>(color, bounds,
-                                                 scaledRadius,
-                                                 rrect.isOval(),
-                                                 blurWidth,
-                                                 scaledInsetWidth);
+    return pool->allocate<ShadowCircularRRectOp>(color, bounds, scaledRadius, rrect.isOval(),
+                                                 blurWidth, scaledInsetWidth);
 }
-}
+}  // namespace GrShadowRRectOp
 
 ///////////////////////////////////////////////////////////////////////////////
 

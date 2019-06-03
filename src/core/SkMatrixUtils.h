@@ -8,8 +8,8 @@
 #ifndef SkMatrixUtils_DEFINED
 #define SkMatrixUtils_DEFINED
 
-#include "SkPoint.h"
-#include "SkSize.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkSize.h"
 
 class SkMatrix;
 class SkPaint;
@@ -22,7 +22,7 @@ class SkPaint;
  *
  *  The src-rect is defined to be { 0, 0, size.width(), size.height() }
  */
-bool SkTreatAsSprite(const SkMatrix&, const SkISize& size, const SkPaint& paint);
+bool SkTreatAsSprite(const SkMatrix&, const SkISize& size, const SkPaint& paint) noexcept;
 
 /** Decomposes the upper-left 2x2 of the matrix into a rotation (represented by
     the cosine and sine of the rotation angle), followed by a non-uniform scale,
@@ -33,6 +33,6 @@ bool SkTreatAsSprite(const SkMatrix&, const SkISize& size, const SkPaint& paint)
 bool SkDecomposeUpper2x2(const SkMatrix& matrix,
                          SkPoint* rotation1,
                          SkPoint* scale,
-                         SkPoint* rotation2);
+                         SkPoint* rotation2) noexcept;
 
 #endif

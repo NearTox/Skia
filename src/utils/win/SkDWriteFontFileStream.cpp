@@ -4,15 +4,15 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN)
 
-#include "SkTypes.h"
-#include "SkDWriteFontFileStream.h"
-#include "SkHRESULT.h"
-#include "SkTemplates.h"
-#include "SkTFitsIn.h"
-#include "SkTScopedComPtr.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkTFitsIn.h"
+#include "include/private/SkTemplates.h"
+#include "src/utils/win/SkDWriteFontFileStream.h"
+#include "src/utils/win/SkHRESULT.h"
+#include "src/utils/win/SkTScopedComPtr.h"
 
 #include <dwrite.h>
 
@@ -20,11 +20,10 @@
 //  SkIDWriteFontFileStream
 
 SkDWriteFontFileStream::SkDWriteFontFileStream(IDWriteFontFileStream* fontFileStream)
-    : fFontFileStream(SkRefComPtr(fontFileStream))
-    , fPos(0)
-    , fLockedMemory(nullptr)
-    , fFragmentLock(nullptr) {
-}
+        : fFontFileStream(SkRefComPtr(fontFileStream))
+        , fPos(0)
+        , fLockedMemory(nullptr)
+        , fFragmentLock(nullptr) {}
 
 SkDWriteFontFileStream::~SkDWriteFontFileStream() {
     if (fFragmentLock) {
@@ -58,10 +57,10 @@ size_t SkDWriteFontFileStream::read(void* buffer, size_t size) {
         return size;
     }
 
-    //The read may have failed because we asked for too much data.
+    // The read may have failed because we asked for too much data.
     size_t fileSize = this->getLength();
     if (fPos + size <= fileSize) {
-        //This means we were within bounds, but failed for some other reason.
+        // This means we were within bounds, but failed for some other reason.
         return 0;
     }
 
@@ -77,9 +76,7 @@ size_t SkDWriteFontFileStream::read(void* buffer, size_t size) {
     return 0;
 }
 
-bool SkDWriteFontFileStream::isAtEnd() const {
-    return fPos == this->getLength();
-}
+bool SkDWriteFontFileStream::isAtEnd() const { return fPos == this->getLength(); }
 
 bool SkDWriteFontFileStream::rewind() {
     fPos = 0;
@@ -90,9 +87,7 @@ SkDWriteFontFileStream* SkDWriteFontFileStream::onDuplicate() const {
     return new SkDWriteFontFileStream(fFontFileStream.get());
 }
 
-size_t SkDWriteFontFileStream::getPosition() const {
-    return fPos;
-}
+size_t SkDWriteFontFileStream::getPosition() const { return fPos; }
 
 bool SkDWriteFontFileStream::seek(size_t position) {
     size_t length = this->getLength();
@@ -100,9 +95,7 @@ bool SkDWriteFontFileStream::seek(size_t position) {
     return true;
 }
 
-bool SkDWriteFontFileStream::move(long offset) {
-    return seek(fPos + offset);
-}
+bool SkDWriteFontFileStream::move(long offset) { return seek(fPos + offset); }
 
 SkDWriteFontFileStream* SkDWriteFontFileStream::onFork() const {
     std::unique_ptr<SkDWriteFontFileStream> that(this->duplicate());
@@ -135,9 +128,8 @@ const void* SkDWriteFontFileStream::getMemoryBase() {
 ///////////////////////////////////////////////////////////////////////////////
 //  SkIDWriteFontFileStreamWrapper
 
-HRESULT SkDWriteFontFileStreamWrapper::Create(SkStreamAsset* stream,
-                                              SkDWriteFontFileStreamWrapper** streamFontFileStream)
-{
+HRESULT SkDWriteFontFileStreamWrapper::Create(
+        SkStreamAsset* stream, SkDWriteFontFileStreamWrapper** streamFontFileStream) {
     *streamFontFileStream = new SkDWriteFontFileStreamWrapper(stream);
     if (nullptr == *streamFontFileStream) {
         return E_OUTOFMEMORY;
@@ -146,10 +138,10 @@ HRESULT SkDWriteFontFileStreamWrapper::Create(SkStreamAsset* stream,
 }
 
 SkDWriteFontFileStreamWrapper::SkDWriteFontFileStreamWrapper(SkStreamAsset* stream)
-    : fRefCount(1), fStream(stream) {
-}
+        : fRefCount(1), fStream(stream) {}
 
-HRESULT STDMETHODCALLTYPE SkDWriteFontFileStreamWrapper::QueryInterface(REFIID iid, void** ppvObject) {
+HRESULT STDMETHODCALLTYPE SkDWriteFontFileStreamWrapper::QueryInterface(REFIID iid,
+                                                                        void** ppvObject) {
     if (iid == IID_IUnknown || iid == __uuidof(IDWriteFontFileStream)) {
         *ppvObject = this;
         AddRef();
@@ -172,12 +164,11 @@ ULONG STDMETHODCALLTYPE SkDWriteFontFileStreamWrapper::Release() {
     return newCount;
 }
 
-HRESULT STDMETHODCALLTYPE SkDWriteFontFileStreamWrapper::ReadFileFragment(
-    void const** fragmentStart,
-    UINT64 fileOffset,
-    UINT64 fragmentSize,
-    void** fragmentContext)
-{
+HRESULT STDMETHODCALLTYPE
+SkDWriteFontFileStreamWrapper::ReadFileFragment(void const** fragmentStart,
+                                                UINT64 fileOffset,
+                                                UINT64 fragmentSize,
+                                                void** fragmentContext) {
     // The loader is responsible for doing a bounds check.
     UINT64 fileSize;
     this->GetFileSize(&fileSize);
@@ -198,7 +189,7 @@ HRESULT STDMETHODCALLTYPE SkDWriteFontFileStreamWrapper::ReadFileFragment(
 
     } else {
         // May be called from multiple threads.
-        SkAutoMutexAcquire ama(fStreamMutex);
+        SkAutoMutexExclusive ama(fStreamMutex);
 
         *fragmentStart = nullptr;
         *fragmentContext = nullptr;
@@ -232,4 +223,4 @@ HRESULT STDMETHODCALLTYPE SkDWriteFontFileStreamWrapper::GetLastWriteTime(UINT64
     return E_NOTIMPL;
 }
 
-#endif//defined(SK_BUILD_FOR_WIN)
+#endif  // defined(SK_BUILD_FOR_WIN)

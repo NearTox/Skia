@@ -4,13 +4,13 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN)
 
-#include "SkDWrite.h"
-#include "SkHRESULT.h"
-#include "SkOnce.h"
-#include "SkString.h"
+#include "include/core/SkString.h"
+#include "include/private/SkOnce.h"
+#include "src/utils/win/SkDWrite.h"
+#include "src/utils/win/SkHRESULT.h"
 
 #include <dwrite.h>
 
@@ -25,7 +25,7 @@ static void release_dwrite_factory() {
 static void create_dwrite_factory(IDWriteFactory** factory) {
     typedef decltype(DWriteCreateFactory)* DWriteCreateFactoryProc;
     DWriteCreateFactoryProc dWriteCreateFactoryProc = reinterpret_cast<DWriteCreateFactoryProc>(
-        GetProcAddress(LoadLibraryW(L"dwrite.dll"), "DWriteCreateFactory"));
+            GetProcAddress(LoadLibraryW(L"dwrite.dll"), "DWriteCreateFactory"));
 
     if (!dWriteCreateFactoryProc) {
         HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
@@ -41,7 +41,6 @@ static void create_dwrite_factory(IDWriteFactory** factory) {
          "Could not create DirectWrite factory.");
     atexit(release_dwrite_factory);
 }
-
 
 IDWriteFactory* sk_get_dwrite_factory() {
     static SkOnce once;
@@ -80,7 +79,8 @@ HRESULT sk_wchar_to_skstring(WCHAR* name, int nameLen, SkString* skname) {
     }
     skname->resize(len);
 
-    len = WideCharToMultiByte(CP_UTF8, 0, name, nameLen, skname->writable_str(), len, nullptr, nullptr);
+    len = WideCharToMultiByte(CP_UTF8, 0, name, nameLen, skname->writable_str(), len, nullptr,
+                              nullptr);
     if (0 == len) {
         HRM(HRESULT_FROM_WIN32(GetLastError()), "Could not convert utf-8 to wchar.");
     }
@@ -114,8 +114,7 @@ HRESULT sk_get_locale_string(IDWriteLocalizedStrings* names, const WCHAR* prefer
 
 HRESULT SkGetGetUserDefaultLocaleNameProc(SkGetUserDefaultLocaleNameProc* proc) {
     *proc = reinterpret_cast<SkGetUserDefaultLocaleNameProc>(
-        GetProcAddress(LoadLibraryW(L"Kernel32.dll"), "GetUserDefaultLocaleName")
-    );
+            GetProcAddress(LoadLibraryW(L"Kernel32.dll"), "GetUserDefaultLocaleName"));
     if (!*proc) {
         HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
         if (!IS_ERROR(hr)) {
@@ -126,4 +125,4 @@ HRESULT SkGetGetUserDefaultLocaleNameProc(SkGetUserDefaultLocaleNameProc* proc) 
     return S_OK;
 }
 
-#endif//defined(SK_BUILD_FOR_WIN)
+#endif  // defined(SK_BUILD_FOR_WIN)

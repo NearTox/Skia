@@ -8,9 +8,9 @@
 #ifndef SkLatticeIter_DEFINED
 #define SkLatticeIter_DEFINED
 
-#include "SkCanvas.h"
-#include "SkScalar.h"
-#include "SkTArray.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkScalar.h"
+#include "include/private/SkTArray.h"
 
 struct SkIRect;
 struct SkRect;
@@ -20,7 +20,6 @@ struct SkRect;
  */
 class SK_API SkLatticeIter {
 public:
-
     static bool Valid(int imageWidth, int imageHeight, const SkCanvas::Lattice& lattice);
 
     SkLatticeIter(const SkCanvas::Lattice& lattice, const SkRect& dst);
@@ -56,9 +55,7 @@ public:
     /**
      *  Returns the number of rects that will actually be drawn.
      */
-    int numRectsToDraw() const {
-        return fNumRectsToDraw;
-    }
+    int numRectsToDraw() const { return fNumRectsToDraw; }
 
 private:
     SkTArray<int> fSrcX;
@@ -68,10 +65,10 @@ private:
     SkTArray<SkCanvas::Lattice::RectType> fRectTypes;
     SkTArray<SkColor> fColors;
 
-    int  fCurrX;
-    int  fCurrY;
-    int  fNumRectsInLattice;
-    int  fNumRectsToDraw;
+    int fCurrX;
+    int fCurrY;
+    int fNumRectsInLattice;
+    int fNumRectsToDraw;
 };
 
 #endif

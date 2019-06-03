@@ -5,107 +5,103 @@
  * found in the LICENSE file.
  */
 
-#include "SkBitmap.h"
+#include "include/core/SkBitmap.h"
 
-#include "SkColorData.h"
-#include "SkConvertPixels.h"
-#include "SkData.h"
-#include "SkFilterQuality.h"
-#include "SkHalf.h"
-#include "SkImageInfoPriv.h"
-#include "SkMallocPixelRef.h"
-#include "SkMask.h"
-#include "SkMaskFilterBase.h"
-#include "SkMath.h"
-#include "SkPixelRef.h"
-#include "SkPixmapPriv.h"
-#include "SkReadBuffer.h"
-#include "SkRect.h"
-#include "SkScalar.h"
-#include "SkTemplates.h"
-#include "SkTo.h"
-#include "SkUnPreMultiply.h"
-#include "SkWriteBuffer.h"
-#include "SkWritePixelsRec.h"
+#include "include/core/SkData.h"
+#include "include/core/SkFilterQuality.h"
+#include "include/core/SkMallocPixelRef.h"
+#include "include/core/SkMath.h"
+#include "include/core/SkPixelRef.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkUnPreMultiply.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkHalf.h"
+#include "include/private/SkImageInfoPriv.h"
+#include "include/private/SkTemplates.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkConvertPixels.h"
+#include "src/core/SkMask.h"
+#include "src/core/SkMaskFilterBase.h"
+#include "src/core/SkPixmapPriv.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
+#include "src/core/SkWritePixelsRec.h"
 
 #include <cstring>
 #include <utility>
 
-static bool reset_return_false(SkBitmap* bm) {
+static bool reset_return_false(SkBitmap* bm) noexcept {
     bm->reset();
     return false;
 }
 
-SkBitmap::SkBitmap() : fFlags(0) {}
+SkBitmap::SkBitmap() noexcept : fFlags(0) {}
 
-SkBitmap::SkBitmap(const SkBitmap& src)
-    : fPixelRef      (src.fPixelRef)
-    , fPixmap        (src.fPixmap)
-    , fFlags         (src.fFlags)
-{
-    SkDEBUGCODE(src.validate();)
-    SkDEBUGCODE(this->validate();)
+SkBitmap::SkBitmap(const SkBitmap& src) noexcept
+        : fPixelRef(src.fPixelRef), fPixmap(src.fPixmap), fFlags(src.fFlags) {
+    SkDEBUGCODE(src.validate());
+    SkDEBUGCODE(this->validate());
 }
 
-SkBitmap::SkBitmap(SkBitmap&& other)
-    : fPixelRef      (std::move(other.fPixelRef))
-    , fPixmap        (std::move(other.fPixmap))
-    , fFlags                   (other.fFlags)
-{
+SkBitmap::SkBitmap(SkBitmap&& other) noexcept
+        : fPixelRef(std::move(other.fPixelRef))
+        , fPixmap(std::move(other.fPixmap))
+        , fFlags(other.fFlags) {
     SkASSERT(!other.fPixelRef);
     other.fPixmap.reset();
-    other.fFlags          = 0;
+    other.fFlags = 0;
 }
 
 SkBitmap::~SkBitmap() {}
 
-SkBitmap& SkBitmap::operator=(const SkBitmap& src) {
+SkBitmap& SkBitmap::operator=(const SkBitmap& src) noexcept {
     if (this != &src) {
-        fPixelRef       = src.fPixelRef;
-        fPixmap         = src.fPixmap;
-        fFlags          = src.fFlags;
+        fPixelRef = src.fPixelRef;
+        fPixmap = src.fPixmap;
+        fFlags = src.fFlags;
     }
-    SkDEBUGCODE(this->validate();)
+    SkDEBUGCODE(this->validate());
     return *this;
 }
 
-SkBitmap& SkBitmap::operator=(SkBitmap&& other) {
+SkBitmap& SkBitmap::operator=(SkBitmap&& other) noexcept {
     if (this != &other) {
-        fPixelRef       = std::move(other.fPixelRef);
-        fPixmap         = std::move(other.fPixmap);
-        fFlags          = other.fFlags;
+        fPixelRef = std::move(other.fPixelRef);
+        fPixmap = std::move(other.fPixmap);
+        fFlags = other.fFlags;
         SkASSERT(!other.fPixelRef);
         other.fPixmap.reset();
-        other.fFlags          = 0;
+        other.fFlags = 0;
     }
     return *this;
 }
 
-void SkBitmap::swap(SkBitmap& other) {
+void SkBitmap::swap(SkBitmap& other) noexcept {
     using std::swap;
     swap(*this, other);
-    SkDEBUGCODE(this->validate();)
+    SkDEBUGCODE(this->validate());
 }
 
-void SkBitmap::reset() {
+void SkBitmap::reset() noexcept {
     fPixelRef = nullptr;  // Free pixels.
     fPixmap.reset();
     fFlags = 0;
 }
 
-void SkBitmap::getBounds(SkRect* bounds) const {
+void SkBitmap::getBounds(SkRect* bounds) const noexcept {
     SkASSERT(bounds);
     *bounds = SkRect::Make(this->dimensions());
 }
 
-void SkBitmap::getBounds(SkIRect* bounds) const {
+void SkBitmap::getBounds(SkIRect* bounds) const noexcept {
     SkASSERT(bounds);
     *bounds = fPixmap.bounds();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool SkBitmap::setInfo(const SkImageInfo& info, size_t rowBytes) {
+bool SkBitmap::setInfo(const SkImageInfo& info, size_t rowBytes) noexcept {
     SkAlphaType newAT = info.alphaType();
     if (!SkColorTypeValidateAlphaType(info.colorType(), info.alphaType(), &newAT)) {
         return reset_return_false(this);
@@ -135,13 +131,11 @@ bool SkBitmap::setInfo(const SkImageInfo& info, size_t rowBytes) {
 
     fPixelRef = nullptr;  // Free pixels.
     fPixmap.reset(info.makeAlphaType(newAT), nullptr, SkToU32(rowBytes));
-    SkDEBUGCODE(this->validate();)
+    SkDEBUGCODE(this->validate());
     return true;
 }
 
-
-
-bool SkBitmap::setAlphaType(SkAlphaType newAlphaType) {
+bool SkBitmap::setAlphaType(SkAlphaType newAlphaType) noexcept {
     if (!SkColorTypeValidateAlphaType(this->colorType(), newAlphaType, &newAlphaType)) {
         return false;
     }
@@ -149,11 +143,11 @@ bool SkBitmap::setAlphaType(SkAlphaType newAlphaType) {
         auto newInfo = fPixmap.info().makeAlphaType(newAlphaType);
         fPixmap.reset(std::move(newInfo), fPixmap.addr(), fPixmap.rowBytes());
     }
-    SkDEBUGCODE(this->validate();)
+    SkDEBUGCODE(this->validate());
     return true;
 }
 
-SkIPoint SkBitmap::pixelRefOrigin() const {
+SkIPoint SkBitmap::pixelRefOrigin() const noexcept {
     const char* addr = (const char*)fPixmap.addr();
     const char* pix = (const char*)(fPixelRef ? fPixelRef->pixels() : nullptr);
     size_t rb = this->rowBytes();
@@ -167,7 +161,7 @@ SkIPoint SkBitmap::pixelRefOrigin() const {
     return {SkToS32((off % rb) >> this->shiftPerPixel()), SkToS32(off / rb)};
 }
 
-void SkBitmap::setPixelRef(sk_sp<SkPixelRef> pr, int dx, int dy) {
+void SkBitmap::setPixelRef(sk_sp<SkPixelRef> pr, int dx, int dy) noexcept {
 #ifdef SK_DEBUG
     if (pr) {
         if (kUnknown_SkColorType != this->colorType()) {
@@ -189,10 +183,10 @@ void SkBitmap::setPixelRef(sk_sp<SkPixelRef> pr, int dx, int dy) {
         }
     }
     SkPixmapPriv::ResetPixmapKeepInfo(&fPixmap, p, rowBytes);
-    SkDEBUGCODE(this->validate();)
+    SkDEBUGCODE(this->validate());
 }
 
-void SkBitmap::setPixels(void* p) {
+void SkBitmap::setPixels(void* p) noexcept {
     if (nullptr == p) {
         this->setPixelRef(nullptr, 0, 0);
         return;
@@ -207,7 +201,7 @@ void SkBitmap::setPixels(void* p) {
     if (!fPixelRef) {
         return;
     }
-    SkDEBUGCODE(this->validate();)
+    SkDEBUGCODE(this->validate());
 }
 
 bool SkBitmap::tryAllocPixels(Allocator* allocator) {
@@ -221,19 +215,17 @@ bool SkBitmap::tryAllocPixels(Allocator* allocator) {
 
 bool SkBitmap::tryAllocN32Pixels(int width, int height, bool isOpaque) {
     SkImageInfo info = SkImageInfo::MakeN32(width, height,
-            isOpaque ? kOpaque_SkAlphaType : kPremul_SkAlphaType);
+                                            isOpaque ? kOpaque_SkAlphaType : kPremul_SkAlphaType);
     return this->tryAllocPixels(info);
 }
 
 void SkBitmap::allocN32Pixels(int width, int height, bool isOpaque) {
     SkImageInfo info = SkImageInfo::MakeN32(width, height,
-                                        isOpaque ? kOpaque_SkAlphaType : kPremul_SkAlphaType);
+                                            isOpaque ? kOpaque_SkAlphaType : kPremul_SkAlphaType);
     this->allocPixels(info);
 }
 
-void SkBitmap::allocPixels() {
-    this->allocPixels((Allocator*)nullptr);
-}
+void SkBitmap::allocPixels() { this->allocPixels((Allocator*)nullptr); }
 
 void SkBitmap::allocPixels(Allocator* allocator) {
     SkASSERT_RELEASE(this->tryAllocPixels(allocator));
@@ -247,9 +239,7 @@ void SkBitmap::allocPixels(const SkImageInfo& info, size_t rowBytes) {
     SkASSERT_RELEASE(this->tryAllocPixels(info, rowBytes));
 }
 
-void SkBitmap::allocPixels(const SkImageInfo& info) {
-    this->allocPixels(info, info.minRowBytes());
-}
+void SkBitmap::allocPixels(const SkImageInfo& info) { this->allocPixels(info, info.minRowBytes()); }
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -274,7 +264,7 @@ bool SkBitmap::tryAllocPixels(const SkImageInfo& requestedInfo, size_t rowBytes)
     if (nullptr == this->getPixels()) {
         return reset_return_false(this);
     }
-    SkDEBUGCODE(this->validate();)
+    SkDEBUGCODE(this->validate());
     return true;
 }
 
@@ -286,9 +276,8 @@ bool SkBitmap::tryAllocPixelsFlags(const SkImageInfo& requestedInfo, uint32_t al
     // setInfo may have corrected info (e.g. 565 is always opaque).
     const SkImageInfo& correctedInfo = this->info();
 
-    sk_sp<SkPixelRef> pr = (allocFlags & kZeroPixels_AllocFlag) ?
-        SkMallocPixelRef::MakeZeroed(correctedInfo, correctedInfo.minRowBytes()) :
-        SkMallocPixelRef::MakeAllocate(correctedInfo, correctedInfo.minRowBytes());
+    sk_sp<SkPixelRef> pr =
+            SkMallocPixelRef::MakeAllocate(correctedInfo, correctedInfo.minRowBytes());
     if (!pr) {
         return reset_return_false(this);
     }
@@ -296,11 +285,12 @@ bool SkBitmap::tryAllocPixelsFlags(const SkImageInfo& requestedInfo, uint32_t al
     if (nullptr == this->getPixels()) {
         return reset_return_false(this);
     }
-    SkDEBUGCODE(this->validate();)
+    SkDEBUGCODE(this->validate());
     return true;
 }
 
-static void invoke_release_proc(void (*proc)(void* pixels, void* ctx), void* pixels, void* ctx) {
+static void invoke_release_proc(void (*proc)(void* pixels, void* ctx), void* pixels,
+                                void* ctx) noexcept {
     if (proc) {
         proc(pixels, ctx);
     }
@@ -315,27 +305,27 @@ bool SkBitmap::installPixels(const SkImageInfo& requestedInfo, void* pixels, siz
     }
     if (nullptr == pixels) {
         invoke_release_proc(releaseProc, pixels, context);
-        return true;    // we behaved as if they called setInfo()
+        return true;  // we behaved as if they called setInfo()
     }
 
     // setInfo may have corrected info (e.g. 565 is always opaque).
     const SkImageInfo& correctedInfo = this->info();
 
-    sk_sp<SkPixelRef> pr = SkMallocPixelRef::MakeWithProc(correctedInfo, rb, pixels,
-                                                          releaseProc, context);
+    sk_sp<SkPixelRef> pr =
+            SkMallocPixelRef::MakeWithProc(correctedInfo, rb, pixels, releaseProc, context);
     if (!pr) {
         this->reset();
         return false;
     }
 
     this->setPixelRef(std::move(pr), 0, 0);
-    SkDEBUGCODE(this->validate();)
+    SkDEBUGCODE(this->validate());
     return true;
 }
 
 bool SkBitmap::installPixels(const SkPixmap& pixmap) {
-    return this->installPixels(pixmap.info(), pixmap.writable_addr(), pixmap.rowBytes(),
-                               nullptr, nullptr);
+    return this->installPixels(pixmap.info(), pixmap.writable_addr(), pixmap.rowBytes(), nullptr,
+                               nullptr);
 }
 
 bool SkBitmap::installMaskPixels(const SkMask& mask) {
@@ -343,14 +333,13 @@ bool SkBitmap::installMaskPixels(const SkMask& mask) {
         this->reset();
         return false;
     }
-    return this->installPixels(SkImageInfo::MakeA8(mask.fBounds.width(),
-                                                   mask.fBounds.height()),
+    return this->installPixels(SkImageInfo::MakeA8(mask.fBounds.width(), mask.fBounds.height()),
                                mask.fImage, mask.fRowBytes);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-uint32_t SkBitmap::getGenerationID() const {
+uint32_t SkBitmap::getGenerationID() const noexcept {
     return fPixelRef ? fPixelRef->getGenerationID() : 0;
 }
 
@@ -369,7 +358,7 @@ void SkBitmap::notifyPixelsChanged() const {
 bool SkBitmap::HeapAllocator::allocPixelRef(SkBitmap* dst) {
     const SkImageInfo info = dst->info();
     if (kUnknown_SkColorType == info.colorType()) {
-//        SkDebugf("unsupported config for info %d\n", dst->config());
+        //        SkDebugf("unsupported config for info %d\n", dst->config());
         return false;
     }
 
@@ -379,27 +368,23 @@ bool SkBitmap::HeapAllocator::allocPixelRef(SkBitmap* dst) {
     }
 
     dst->setPixelRef(std::move(pr), 0, 0);
-    SkDEBUGCODE(dst->validate();)
+    SkDEBUGCODE(dst->validate());
     return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool SkBitmap::isImmutable() const {
-    return fPixelRef ? fPixelRef->isImmutable() : false;
-}
+bool SkBitmap::isImmutable() const noexcept { return fPixelRef ? fPixelRef->isImmutable() : false; }
 
-void SkBitmap::setImmutable() {
+void SkBitmap::setImmutable() noexcept {
     if (fPixelRef) {
         fPixelRef->setImmutable();
     }
 }
 
-bool SkBitmap::isVolatile() const {
-    return (fFlags & kImageIsVolatile_Flag) != 0;
-}
+bool SkBitmap::isVolatile() const noexcept { return (fFlags & kImageIsVolatile_Flag) != 0; }
 
-void SkBitmap::setIsVolatile(bool isVolatile) {
+void SkBitmap::setIsVolatile(bool isVolatile) noexcept {
     if (isVolatile) {
         fFlags |= kImageIsVolatile_Flag;
     } else {
@@ -407,7 +392,7 @@ void SkBitmap::setIsVolatile(bool isVolatile) {
     }
 }
 
-void* SkBitmap::getAddr(int x, int y) const {
+void* SkBitmap::getAddr(int x, int y) const noexcept {
     SkASSERT((unsigned)x < (unsigned)this->width());
     SkASSERT((unsigned)y < (unsigned)this->height());
 
@@ -422,11 +407,11 @@ void* SkBitmap::getAddr(int x, int y) const {
 ///////////////////////////////////////////////////////////////////////////////
 
 void SkBitmap::erase(SkColor c, const SkIRect& area) const {
-    SkDEBUGCODE(this->validate();)
+    SkDEBUGCODE(this->validate());
 
     if (kUnknown_SkColorType == this->colorType()) {
         // TODO: can we ASSERT that we never get here?
-        return; // can't erase. Should we bzero so the memory is not uninitialized?
+        return;  // can't erase. Should we bzero so the memory is not uninitialized?
     }
 
     SkPixmap result;
@@ -446,17 +431,17 @@ void SkBitmap::eraseColor(SkColor c) const {
 //////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////
 
-bool SkBitmap::extractSubset(SkBitmap* result, const SkIRect& subset) const {
-    SkDEBUGCODE(this->validate();)
+bool SkBitmap::extractSubset(SkBitmap* result, const SkIRect& subset) const noexcept {
+    SkDEBUGCODE(this->validate());
 
     if (nullptr == result || !fPixelRef) {
-        return false;   // no src pixels
+        return false;  // no src pixels
     }
 
     SkIRect srcRect, r;
     srcRect.set(0, 0, this->width(), this->height());
     if (!r.intersect(srcRect, subset)) {
-        return false;   // r is empty (i.e. no intersection)
+        return false;  // r is empty (i.e. no intersection)
     }
 
     // If the upper left of the rectangle was outside the bounds of this SkBitmap, we should have
@@ -473,7 +458,7 @@ bool SkBitmap::extractSubset(SkBitmap* result, const SkIRect& subset) const {
         // share the pixelref with a custom offset
         dst.setPixelRef(fPixelRef, origin.x() + r.fLeft, origin.y() + r.fTop);
     }
-    SkDEBUGCODE(dst.validate();)
+    SkDEBUGCODE(dst.validate());
 
     // we know we're good, so commit to result
     result->swap(dst);
@@ -482,8 +467,8 @@ bool SkBitmap::extractSubset(SkBitmap* result, const SkIRect& subset) const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool SkBitmap::readPixels(const SkImageInfo& requestedDstInfo, void* dstPixels, size_t dstRB,
-                          int x, int y) const {
+bool SkBitmap::readPixels(const SkImageInfo& requestedDstInfo, void* dstPixels, size_t dstRB, int x,
+                          int y) const {
     SkPixmap src;
     if (!this->peekPixels(&src)) {
         return false;
@@ -531,17 +516,17 @@ static bool GetBitmapAlpha(const SkBitmap& src, uint8_t* SK_RESTRICT alpha, int 
     return true;
 }
 
-#include "SkPaint.h"
-#include "SkMaskFilter.h"
-#include "SkMatrix.h"
+#include "include/core/SkMaskFilter.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
 
-bool SkBitmap::extractAlpha(SkBitmap* dst, const SkPaint* paint,
-                            Allocator *allocator, SkIPoint* offset) const {
-    SkDEBUGCODE(this->validate();)
+bool SkBitmap::extractAlpha(SkBitmap* dst, const SkPaint* paint, Allocator* allocator,
+                            SkIPoint* offset) const {
+    SkDEBUGCODE(this->validate());
 
-    SkBitmap    tmpBitmap;
-    SkMatrix    identity;
-    SkMask      srcM, dstM;
+    SkBitmap tmpBitmap;
+    SkMatrix identity;
+    SkMask srcM, dstM;
 
     if (this->width() == 0 || this->height() == 0) {
         return false;
@@ -564,8 +549,8 @@ bool SkBitmap::extractAlpha(SkBitmap* dst, const SkPaint* paint,
         tmpBitmap.setInfo(SkImageInfo::MakeA8(this->width(), this->height()), srcM.fRowBytes);
         if (!tmpBitmap.tryAllocPixels(allocator)) {
             // Allocation of pixels for alpha bitmap failed.
-            SkDebugf("extractAlpha failed to allocate (%d,%d) alpha bitmap\n",
-                    tmpBitmap.width(), tmpBitmap.height());
+            SkDebugf("extractAlpha failed to allocate (%d,%d) alpha bitmap\n", tmpBitmap.width(),
+                     tmpBitmap.height());
             return false;
         }
         GetBitmapAlpha(*this, tmpBitmap.getAddr8(0, 0), srcM.fRowBytes);
@@ -588,15 +573,15 @@ bool SkBitmap::extractAlpha(SkBitmap* dst, const SkPaint* paint,
                       dstM.fRowBytes);
     if (!tmpBitmap.tryAllocPixels(allocator)) {
         // Allocation of pixels for alpha bitmap failed.
-        SkDebugf("extractAlpha failed to allocate (%d,%d) alpha bitmap\n",
-                tmpBitmap.width(), tmpBitmap.height());
+        SkDebugf("extractAlpha failed to allocate (%d,%d) alpha bitmap\n", tmpBitmap.width(),
+                 tmpBitmap.height());
         return false;
     }
     memcpy(tmpBitmap.getPixels(), dstM.fImage, dstM.computeImageSize());
     if (offset) {
         offset->set(dstM.fBounds.fLeft, dstM.fBounds.fTop);
     }
-    SkDEBUGCODE(tmpBitmap.validate();)
+    SkDEBUGCODE(tmpBitmap.validate());
 
     tmpBitmap.swap(*dst);
     return true;
@@ -633,7 +618,7 @@ void SkBitmap::validate() const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool SkBitmap::peekPixels(SkPixmap* pmap) const {
+bool SkBitmap::peekPixels(SkPixmap* pmap) const noexcept {
     if (this->getPixels()) {
         if (pmap) {
             *pmap = fPixmap;

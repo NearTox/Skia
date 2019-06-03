@@ -5,31 +5,36 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkGradientShader.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkGradientShader.h"
 
 class AlphaGradientsGM : public skiagm::GM {
 public:
     AlphaGradientsGM() {}
 
 protected:
-    SkString onShortName() override {
-        return SkString("alphagradients");
-    }
+    SkString onShortName() override { return SkString("alphagradients"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(640, 480);
-    }
+    SkISize onISize() override { return SkISize::Make(640, 480); }
 
-    static void draw_grad(SkCanvas* canvas, const SkRect& r,
-                          SkColor c0, SkColor c1, bool doPreMul) {
-        SkColor colors[] = { c0, c1 };
-        SkPoint pts[] = { { r.fLeft, r.fTop }, { r.fRight, r.fBottom } };
+    static void draw_grad(SkCanvas* canvas, const SkRect& r, SkColor c0, SkColor c1,
+                          bool doPreMul) {
+        SkColor colors[] = {c0, c1};
+        SkPoint pts[] = {{r.fLeft, r.fTop}, {r.fRight, r.fBottom}};
         SkPaint paint;
         uint32_t flags = doPreMul ? SkGradientShader::kInterpolateColorsInPremul_Flag : 0;
-        paint.setShader(SkGradientShader::MakeLinear(pts, colors, nullptr, 2,
-                                                     SkShader::kClamp_TileMode, flags, nullptr));
+        paint.setShader(SkGradientShader::MakeLinear(pts, colors, nullptr, 2, SkTileMode::kClamp,
+                                                     flags, nullptr));
         canvas->drawRect(r, paint);
 
         paint.setShader(nullptr);
@@ -42,18 +47,10 @@ protected:
             SkColor fColor0;
             SkColor fColor1;
         } gRec[] = {
-            { 0xFFFFFFFF, 0x00000000 },
-            { 0xFFFFFFFF, 0x00FF0000 },
-            { 0xFFFFFFFF, 0x00FFFF00 },
-            { 0xFFFFFFFF, 0x00FFFFFF },
-            { 0xFFFF0000, 0x00000000 },
-            { 0xFFFF0000, 0x00FF0000 },
-            { 0xFFFF0000, 0x00FFFF00 },
-            { 0xFFFF0000, 0x00FFFFFF },
-            { 0xFF0000FF, 0x00000000 },
-            { 0xFF0000FF, 0x00FF0000 },
-            { 0xFF0000FF, 0x00FFFF00 },
-            { 0xFF0000FF, 0x00FFFFFF },
+                {0xFFFFFFFF, 0x00000000}, {0xFFFFFFFF, 0x00FF0000}, {0xFFFFFFFF, 0x00FFFF00},
+                {0xFFFFFFFF, 0x00FFFFFF}, {0xFFFF0000, 0x00000000}, {0xFFFF0000, 0x00FF0000},
+                {0xFFFF0000, 0x00FFFF00}, {0xFFFF0000, 0x00FFFFFF}, {0xFF0000FF, 0x00000000},
+                {0xFF0000FF, 0x00FF0000}, {0xFF0000FF, 0x00FFFF00}, {0xFF0000FF, 0x00FFFFFF},
         };
 
         SkRect r = SkRect::MakeWH(300, 30);

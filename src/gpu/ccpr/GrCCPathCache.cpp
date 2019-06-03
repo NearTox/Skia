@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "GrCCPathCache.h"
+#include "src/gpu/ccpr/GrCCPathCache.h"
 
-#include "GrOnFlushResourceProvider.h"
-#include "GrProxyProvider.h"
-#include "SkNx.h"
+#include "include/private/SkNx.h"
+#include "src/gpu/GrOnFlushResourceProvider.h"
+#include "src/gpu/GrProxyProvider.h"
 
 static constexpr int kMaxKeyDataCountU32 = 256;  // 1kB of uint32_t's.
 
@@ -25,14 +25,13 @@ static inline uint32_t next_path_cache_id() {
     }
 }
 
-static inline bool SkShouldPostMessageToBus(
-        const sk_sp<GrCCPathCache::Key>& key, uint32_t msgBusUniqueID) {
+static inline bool SkShouldPostMessageToBus(const sk_sp<GrCCPathCache::Key>& key,
+                                            uint32_t msgBusUniqueID) {
     return key->pathCacheUniqueID() == msgBusUniqueID;
 }
 
 // The maximum number of cache entries we allow in our own cache.
 static constexpr int kMaxCacheCount = 1 << 16;
-
 
 GrCCPathCache::MaskTransform::MaskTransform(const SkMatrix& m, SkIVector* shift)
         : fMatrix2x2{m.getScaleX(), m.getSkewX(), m.getSkewY(), m.getScaleY()} {
@@ -57,17 +56,17 @@ inline static bool fuzzy_equals(const GrCCPathCache::MaskTransform& a,
         return false;
     }
 #ifndef SK_BUILD_FOR_ANDROID_FRAMEWORK
-    if (((Sk2f::Load(a.fSubpixelTranslate) -
-          Sk2f::Load(b.fSubpixelTranslate)).abs() > 1.f/256).anyTrue()) {
+    if (((Sk2f::Load(a.fSubpixelTranslate) - Sk2f::Load(b.fSubpixelTranslate)).abs() > 1.f / 256)
+                .anyTrue()) {
         return false;
     }
 #endif
     return true;
 }
 
-sk_sp<GrCCPathCache::Key> GrCCPathCache::Key::Make(uint32_t pathCacheUniqueID,
-                                                   int dataCountU32, const void* data) {
-    void* memory = ::operator new (sizeof(Key) + dataCountU32 * sizeof(uint32_t));
+sk_sp<GrCCPathCache::Key> GrCCPathCache::Key::Make(uint32_t pathCacheUniqueID, int dataCountU32,
+                                                   const void* data) {
+    void* memory = ::operator new(sizeof(Key) + dataCountU32 * sizeof(uint32_t));
     sk_sp<GrCCPathCache::Key> key(new (memory) Key(pathCacheUniqueID, dataCountU32));
     if (data) {
         memcpy(key->data(), data, key->dataSizeInBytes());
@@ -93,8 +92,7 @@ void GrCCPathCache::Key::onChange() {
 GrCCPathCache::GrCCPathCache(uint32_t contextUniqueID)
         : fContextUniqueID(contextUniqueID)
         , fInvalidatedKeysInbox(next_path_cache_id())
-        , fScratchKey(Key::Make(fInvalidatedKeysInbox.uniqueID(), kMaxKeyDataCountU32)) {
-}
+        , fScratchKey(Key::Make(fInvalidatedKeysInbox.uniqueID(), kMaxKeyDataCountU32)) {}
 
 GrCCPathCache::~GrCCPathCache() {
     while (!fLRU.isEmpty()) {
@@ -156,11 +154,13 @@ private:
     int fShapeUnstyledKeyCount;
 };
 
-}
+}  // namespace
 
-GrCCPathCache::OnFlushEntryRef GrCCPathCache::find(
-        GrOnFlushResourceProvider* onFlushRP, const GrShape& shape,
-        const SkIRect& clippedDrawBounds, const SkMatrix& viewMatrix, SkIVector* maskShift) {
+GrCCPathCache::OnFlushEntryRef GrCCPathCache::find(GrOnFlushResourceProvider* onFlushRP,
+                                                   const GrShape& shape,
+                                                   const SkIRect& clippedDrawBounds,
+                                                   const SkMatrix& viewMatrix,
+                                                   SkIVector* maskShift) {
     if (!shape.hasUnstyledKey()) {
         return OnFlushEntryRef();
     }
@@ -226,12 +226,11 @@ GrCCPathCache::OnFlushEntryRef GrCCPathCache::find(
         ++entry->fHitCount;
 
         if (entry->fCachedAtlas) {
-            SkASSERT(SkToBool(entry->fCachedAtlas->peekOnFlushRefCnt())
-                             == SkToBool(entry->fCachedAtlas->getOnFlushProxy()));
+            SkASSERT(SkToBool(entry->fCachedAtlas->peekOnFlushRefCnt()) ==
+                     SkToBool(entry->fCachedAtlas->getOnFlushProxy()));
             if (!entry->fCachedAtlas->getOnFlushProxy()) {
-                entry->fCachedAtlas->setOnFlushProxy(
-                    onFlushRP->findOrCreateProxyByUniqueKey(entry->fCachedAtlas->textureKey(),
-                                                            GrCCAtlas::kTextureOrigin));
+                entry->fCachedAtlas->setOnFlushProxy(onFlushRP->findOrCreateProxyByUniqueKey(
+                        entry->fCachedAtlas->textureKey(), GrCCAtlas::kTextureOrigin));
             }
             if (!entry->fCachedAtlas->getOnFlushProxy()) {
                 // Our atlas's backing texture got purged from the GrResourceCache. Release the
@@ -271,9 +270,8 @@ void GrCCPathCache::purgeEntriesOlderThan(GrProxyProvider* proxyProvider,
     this->evictInvalidatedCacheKeys();
 
 #ifdef SK_DEBUG
-    auto lastTimestamp = (fLRU.isEmpty())
-            ? GrStdSteadyClock::time_point::max()
-            : fLRU.tail()->fTimestamp;
+    auto lastTimestamp =
+            (fLRU.isEmpty()) ? GrStdSteadyClock::time_point::max() : fLRU.tail()->fTimestamp;
 #endif
 
     // Evict every entry from our local path cache whose timestamp is older than purgeTime.
@@ -327,8 +325,8 @@ void GrCCPathCache::evictInvalidatedCacheKeys() {
     }
 }
 
-GrCCPathCache::OnFlushEntryRef
-GrCCPathCache::OnFlushEntryRef::OnFlushRef(GrCCPathCacheEntry* entry) {
+GrCCPathCache::OnFlushEntryRef GrCCPathCache::OnFlushEntryRef::OnFlushRef(
+        GrCCPathCacheEntry* entry) {
     entry->ref();
     ++entry->fOnFlushRefCnt;
     if (entry->fCachedAtlas) {
@@ -349,11 +347,11 @@ GrCCPathCache::OnFlushEntryRef::~OnFlushEntryRef() {
     fEntry->unref();
 }
 
-
-void GrCCPathCacheEntry::setCoverageCountAtlas(
-        GrOnFlushResourceProvider* onFlushRP, GrCCAtlas* atlas, const SkIVector& atlasOffset,
-        const SkRect& devBounds, const SkRect& devBounds45, const SkIRect& devIBounds,
-        const SkIVector& maskShift) {
+void GrCCPathCacheEntry::setCoverageCountAtlas(GrOnFlushResourceProvider* onFlushRP,
+                                               GrCCAtlas* atlas, const SkIVector& atlasOffset,
+                                               const GrOctoBounds& octoBounds,
+                                               const SkIRect& devIBounds,
+                                               const SkIVector& maskShift) {
     SkASSERT(fOnFlushRefCnt > 0);
     SkASSERT(!fCachedAtlas);  // Otherwise we would need to call releaseCachedAtlas().
 
@@ -369,9 +367,7 @@ void GrCCPathCacheEntry::setCoverageCountAtlas(
 
     fAtlasOffset = atlasOffset + maskShift;
 
-    float dx = (float)maskShift.fX, dy = (float)maskShift.fY;
-    fDevBounds = devBounds.makeOffset(-dx, -dy);
-    fDevBounds45 = GrCCPathProcessor::MakeOffset45(devBounds45, -dx, -dy);
+    fOctoBounds.setOffset(octoBounds, -maskShift.fX, -maskShift.fY);
     fDevIBounds = devIBounds.makeOffset(-maskShift.fX, -maskShift.fY);
 }
 

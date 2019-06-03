@@ -8,10 +8,10 @@
 #ifndef GrBezierEffect_DEFINED
 #define GrBezierEffect_DEFINED
 
-#include "GrCaps.h"
-#include "GrProcessor.h"
-#include "GrGeometryProcessor.h"
-#include "GrTypesPriv.h"
+#include "include/private/GrTypesPriv.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrGeometryProcessor.h"
+#include "src/gpu/GrProcessor.h"
 
 /**
  * Shader is based off of Loop-Blinn Quadratic GPU Rendering
@@ -69,21 +69,20 @@ public:
                 if (!caps.shaderCaps()->shaderDerivativeSupport()) {
                     return nullptr;
                 }
-                return sk_sp<GrGeometryProcessor>(
-                    new GrConicEffect(color, viewMatrix, coverage, GrClipEdgeType::kFillAA,
-                                      localMatrix, usesLocalCoords));
+                return sk_sp<GrGeometryProcessor>(new GrConicEffect(color, viewMatrix, coverage,
+                                                                    GrClipEdgeType::kFillAA,
+                                                                    localMatrix, usesLocalCoords));
             case GrClipEdgeType::kHairlineAA:
                 if (!caps.shaderCaps()->shaderDerivativeSupport()) {
                     return nullptr;
                 }
-                return sk_sp<GrGeometryProcessor>(
-                    new GrConicEffect(color, viewMatrix, coverage,
-                                      GrClipEdgeType::kHairlineAA, localMatrix,
-                                      usesLocalCoords));
+                return sk_sp<GrGeometryProcessor>(new GrConicEffect(color, viewMatrix, coverage,
+                                                                    GrClipEdgeType::kHairlineAA,
+                                                                    localMatrix, usesLocalCoords));
             case GrClipEdgeType::kFillBW:
-                return sk_sp<GrGeometryProcessor>(
-                    new GrConicEffect(color, viewMatrix, coverage, GrClipEdgeType::kFillBW,
-                                      localMatrix, usesLocalCoords));
+                return sk_sp<GrGeometryProcessor>(new GrConicEffect(color, viewMatrix, coverage,
+                                                                    GrClipEdgeType::kFillBW,
+                                                                    localMatrix, usesLocalCoords));
             default:
                 return nullptr;
         }
@@ -112,16 +111,15 @@ private:
     GrConicEffect(const SkPMColor4f&, const SkMatrix& viewMatrix, uint8_t coverage, GrClipEdgeType,
                   const SkMatrix& localMatrix, bool usesLocalCoords);
 
-    SkPMColor4f         fColor;
-    SkMatrix            fViewMatrix;
-    SkMatrix            fLocalMatrix;
-    bool                fUsesLocalCoords;
-    uint8_t             fCoverageScale;
+    SkPMColor4f fColor;
+    SkMatrix fViewMatrix;
+    SkMatrix fLocalMatrix;
+    bool fUsesLocalCoords;
+    uint8_t fCoverageScale;
     GrClipEdgeType fEdgeType;
     static constexpr Attribute kAttributes[] = {
-        {"inPosition", kFloat2_GrVertexAttribType, kFloat2_GrSLType},
-        {"inConicCoeffs", kFloat4_GrVertexAttribType, kHalf4_GrSLType}
-    };
+            {"inPosition", kFloat2_GrVertexAttribType, kFloat2_GrSLType},
+            {"inConicCoeffs", kFloat4_GrVertexAttribType, kHalf4_GrSLType}};
 
     GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 
@@ -153,21 +151,20 @@ public:
                 if (!caps.shaderCaps()->shaderDerivativeSupport()) {
                     return nullptr;
                 }
-                return sk_sp<GrGeometryProcessor>(
-                    new GrQuadEffect(color, viewMatrix, coverage, GrClipEdgeType::kFillAA,
-                                     localMatrix, usesLocalCoords));
+                return sk_sp<GrGeometryProcessor>(new GrQuadEffect(color, viewMatrix, coverage,
+                                                                   GrClipEdgeType::kFillAA,
+                                                                   localMatrix, usesLocalCoords));
             case GrClipEdgeType::kHairlineAA:
                 if (!caps.shaderCaps()->shaderDerivativeSupport()) {
                     return nullptr;
                 }
-                return sk_sp<GrGeometryProcessor>(
-                    new GrQuadEffect(color, viewMatrix, coverage,
-                                     GrClipEdgeType::kHairlineAA, localMatrix,
-                                     usesLocalCoords));
+                return sk_sp<GrGeometryProcessor>(new GrQuadEffect(color, viewMatrix, coverage,
+                                                                   GrClipEdgeType::kHairlineAA,
+                                                                   localMatrix, usesLocalCoords));
             case GrClipEdgeType::kFillBW:
-                return sk_sp<GrGeometryProcessor>(
-                    new GrQuadEffect(color, viewMatrix, coverage, GrClipEdgeType::kFillBW,
-                                     localMatrix, usesLocalCoords));
+                return sk_sp<GrGeometryProcessor>(new GrQuadEffect(color, viewMatrix, coverage,
+                                                                   GrClipEdgeType::kFillBW,
+                                                                   localMatrix, usesLocalCoords));
             default:
                 return nullptr;
         }
@@ -204,9 +201,8 @@ private:
     GrClipEdgeType fEdgeType;
 
     static constexpr Attribute kAttributes[] = {
-        {"inPosition", kFloat2_GrVertexAttribType, kFloat2_GrSLType},
-        {"inHairQuadEdge", kFloat4_GrVertexAttribType, kHalf4_GrSLType}
-    };
+            {"inPosition", kFloat2_GrVertexAttribType, kFloat2_GrSLType},
+            {"inHairQuadEdge", kFloat4_GrVertexAttribType, kHalf4_GrSLType}};
 
     GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 

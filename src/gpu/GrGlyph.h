@@ -8,19 +8,16 @@
 #ifndef GrGlyph_DEFINED
 #define GrGlyph_DEFINED
 
-#include "GrDrawOpAtlas.h"
-#include "GrRect.h"
-#include "GrTypes.h"
+#include "include/gpu/GrTypes.h"
+#include "src/gpu/GrDrawOpAtlas.h"
+#include "src/gpu/GrRect.h"
 
-#include "SkChecksum.h"
-#include "SkFixed.h"
-#include "SkPath.h"
+#include "include/core/SkPath.h"
+#include "include/private/SkChecksum.h"
+#include "include/private/SkFixed.h"
 
 struct GrGlyph {
-    enum MaskStyle {
-        kCoverage_MaskStyle,
-        kDistance_MaskStyle
-    };
+    enum MaskStyle { kCoverage_MaskStyle, kDistance_MaskStyle };
 
     static GrMaskFormat FormatFromSkGlyph(const SkGlyph& glyph) {
         SkMask::Format format = static_cast<SkMask::Format>(glyph.fMaskFormat);
@@ -31,7 +28,7 @@ struct GrGlyph {
             case SkMask::kA8_Format:
                 return kA8_GrMaskFormat;
             case SkMask::k3D_Format:
-                return kA8_GrMaskFormat; // ignore the mul and add planes, just use the mask
+                return kA8_GrMaskFormat;  // ignore the mul and add planes, just use the mask
             case SkMask::kLCD16_Format:
                 return kA565_GrMaskFormat;
             case SkMask::kARGB32_Format:
@@ -43,45 +40,39 @@ struct GrGlyph {
     }
 
     static GrIRect16 BoundsFromSkGlyph(const SkGlyph& glyph) {
-        return GrIRect16::MakeXYWH(glyph.fLeft,
-                                   glyph.fTop,
-                                   glyph.fWidth,
-                                   glyph.fHeight);
+        return GrIRect16::MakeXYWH(glyph.fLeft, glyph.fTop, glyph.fWidth, glyph.fHeight);
     }
 
     static MaskStyle MaskStyleFromSkGlyph(const SkGlyph& skGlyph) {
         return (SkMask::Format)skGlyph.fMaskFormat == SkMask::kSDF_Format
-           ? GrGlyph::MaskStyle::kDistance_MaskStyle
-           : GrGlyph::MaskStyle::kCoverage_MaskStyle;
+                       ? GrGlyph::MaskStyle::kDistance_MaskStyle
+                       : GrGlyph::MaskStyle::kCoverage_MaskStyle;
     }
 
     GrGlyph(const SkGlyph& skGlyph)
-        : fPackedID{skGlyph.getPackedID()}
-        , fMaskFormat{FormatFromSkGlyph(skGlyph)}
-        , fMaskStyle{MaskStyleFromSkGlyph(skGlyph)}
-        , fBounds{BoundsFromSkGlyph(skGlyph)} {}
-
+            : fPackedID{skGlyph.getPackedID()}
+            , fMaskFormat{FormatFromSkGlyph(skGlyph)}
+            , fMaskStyle{MaskStyleFromSkGlyph(skGlyph)}
+            , fBounds{BoundsFromSkGlyph(skGlyph)} {}
 
     SkRect destRect(SkPoint origin) {
-        return SkRect::MakeXYWH(
-                SkIntToScalar(fBounds.fLeft) + origin.x(),
-                SkIntToScalar(fBounds.fTop)  + origin.y(),
-                SkIntToScalar(fBounds.width()),
-                SkIntToScalar(fBounds.height()));
+        return SkRect::MakeXYWH(SkIntToScalar(fBounds.fLeft) + origin.x(),
+                                SkIntToScalar(fBounds.fTop) + origin.y(),
+                                SkIntToScalar(fBounds.width()),
+                                SkIntToScalar(fBounds.height()));
     }
 
     SkRect destRect(SkPoint origin, SkScalar textScale) {
         if (fMaskStyle == kCoverage_MaskStyle) {
-            return SkRect::MakeXYWH(
-                    SkIntToScalar(fBounds.fLeft)    * textScale + origin.x(),
-                    SkIntToScalar(fBounds.fTop)     * textScale + origin.y(),
-                    SkIntToScalar(fBounds.width())  * textScale,
-                    SkIntToScalar(fBounds.height()) * textScale);
+            return SkRect::MakeXYWH(SkIntToScalar(fBounds.fLeft) * textScale + origin.x(),
+                                    SkIntToScalar(fBounds.fTop) * textScale + origin.y(),
+                                    SkIntToScalar(fBounds.width()) * textScale,
+                                    SkIntToScalar(fBounds.height()) * textScale);
         } else {
             return SkRect::MakeXYWH(
                     (SkIntToScalar(fBounds.fLeft) + SK_DistanceFieldInset) * textScale + origin.x(),
-                    (SkIntToScalar(fBounds.fTop)  + SK_DistanceFieldInset) * textScale + origin.y(),
-                    (SkIntToScalar(fBounds.width())  - 2 * SK_DistanceFieldInset) * textScale,
+                    (SkIntToScalar(fBounds.fTop) + SK_DistanceFieldInset) * textScale + origin.y(),
+                    (SkIntToScalar(fBounds.width()) - 2 * SK_DistanceFieldInset) * textScale,
                     (SkIntToScalar(fBounds.height()) - 2 * SK_DistanceFieldInset) * textScale);
         }
     }
@@ -92,19 +83,15 @@ struct GrGlyph {
     MaskStyle maskStyle() const { return fMaskStyle; }
 
     // GetKey and Hash for the the hash table.
-    static const SkPackedGlyphID& GetKey(const GrGlyph& glyph) {
-        return glyph.fPackedID;
-    }
+    static const SkPackedGlyphID& GetKey(const GrGlyph& glyph) { return glyph.fPackedID; }
 
-    static uint32_t Hash(SkPackedGlyphID key) {
-        return SkChecksum::Mix(key.hash());
-    }
+    static uint32_t Hash(SkPackedGlyphID key) { return SkChecksum::Mix(key.hash()); }
 
-    const SkPackedGlyphID  fPackedID;
-    const GrMaskFormat     fMaskFormat;
-    const MaskStyle        fMaskStyle;
-    const GrIRect16        fBounds;
-    SkIPoint16             fAtlasLocation{0, 0};
+    const SkPackedGlyphID fPackedID;
+    const GrMaskFormat fMaskFormat;
+    const MaskStyle fMaskStyle;
+    const GrIRect16 fBounds;
+    SkIPoint16 fAtlasLocation{0, 0};
     GrDrawOpAtlas::AtlasID fID{GrDrawOpAtlas::kInvalidAtlasID};
 };
 

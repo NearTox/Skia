@@ -8,7 +8,7 @@
 #ifndef SkTypefacePriv_DEFINED
 #define SkTypefacePriv_DEFINED
 
-#include "SkTypeface.h"
+#include "include/core/SkTypeface.h"
 
 /**
  *  Return a ref'd typeface, which must later be unref'd
@@ -28,8 +28,7 @@ class SkAutoResolveDefaultTypeface : public sk_sp<SkTypeface> {
 public:
     SkAutoResolveDefaultTypeface() : INHERITED(SkTypeface::MakeDefault()) {}
 
-    SkAutoResolveDefaultTypeface(SkTypeface* face)
-        : INHERITED(ref_or_default(face)) {}
+    SkAutoResolveDefaultTypeface(SkTypeface* face) : INHERITED(ref_or_default(face)) {}
 
 private:
     typedef sk_sp<SkTypeface> INHERITED;

@@ -5,12 +5,21 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkBlurImageFilter.h"
-#include "SkRRect.h"
-#include "SkSurface.h"
-#include "SkClipOpPriv.h"
-#include "sk_tool_utils.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRRect.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/effects/SkBlurImageFilter.h"
+#include "src/core/SkClipOpPriv.h"
+#include "tools/ToolUtils.h"
 
 #define WIDTH 512
 #define HEIGHT 512
@@ -19,17 +28,12 @@ namespace skiagm {
 
 class ComplexClipBlurTiledGM : public GM {
 public:
-    ComplexClipBlurTiledGM() {
-    }
+    ComplexClipBlurTiledGM() {}
 
 protected:
-    SkString onShortName() override {
-        return SkString("complexclip_blur_tiled");
-    }
+    SkString onShortName() override { return SkString("complexclip_blur_tiled"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(WIDTH, HEIGHT);
-    }
+    SkISize onISize() override { return SkISize::Make(WIDTH, HEIGHT); }
 
     void onDraw(SkCanvas* canvas) override {
         SkPaint blurPaint;
@@ -38,7 +42,7 @@ protected:
         SkRect bounds = canvas->getLocalClipBounds();
         int ts = SkScalarCeilToInt(tileSize);
         SkImageInfo info = SkImageInfo::MakeN32Premul(ts, ts);
-        auto tileSurface(sk_tool_utils::makeSurface(canvas, info));
+        auto tileSurface(ToolUtils::makeSurface(canvas, info));
         SkCanvas* tileCanvas = tileSurface->getCanvas();
         for (SkScalar y = bounds.top(); y < bounds.bottom(); y += tileSize) {
             for (SkScalar x = bounds.left(); x < bounds.right(); x += tileSize) {
@@ -66,4 +70,4 @@ private:
 
 DEF_GM(return new ComplexClipBlurTiledGM;)
 
-}
+}  // namespace skiagm

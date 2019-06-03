@@ -8,10 +8,10 @@
 #ifndef SkSLUniformCTypes_DEFINED
 #define SkSLUniformCTypes_DEFINED
 
-#include "SkSLString.h"
-#include "SkSLContext.h"
-#include "ir/SkSLType.h"
-#include "ir/SkSLVariable.h"
+#include "src/sksl/SkSLContext.h"
+#include "src/sksl/SkSLString.h"
+#include "src/sksl/ir/SkSLType.h"
+#include "src/sksl/ir/SkSLVariable.h"
 
 namespace SkSL {
 
@@ -34,16 +34,16 @@ class UniformCTypeMapper {
 public:
     // Create a templated mapper that does not support state tracking
     UniformCTypeMapper(Layout::CType ctype, const std::vector<String>& skslTypes,
-            const char* setUniformFormat)
-        : UniformCTypeMapper(ctype, skslTypes, setUniformFormat, false, "", "", "") { }
+                       const char* setUniformFormat)
+            : UniformCTypeMapper(ctype, skslTypes, setUniformFormat, false, "", "", "") {}
 
     // Create a templated mapper that provides extra patterns for the state
     // tracking expressions.
     UniformCTypeMapper(Layout::CType ctype, const std::vector<String>& skslTypes,
-            const String& setUniformFormat, const String& defaultValue,
-            const String& dirtyExpressionFormat, const String& saveStateFormat)
-        : UniformCTypeMapper(ctype, skslTypes, setUniformFormat,
-                true, defaultValue, dirtyExpressionFormat, saveStateFormat) { }
+                       const String& setUniformFormat, const String& defaultValue,
+                       const String& dirtyExpressionFormat, const String& saveStateFormat)
+            : UniformCTypeMapper(ctype, skslTypes, setUniformFormat, true, defaultValue,
+                                 dirtyExpressionFormat, saveStateFormat) {}
 
     // Returns nullptr if the type and layout are not supported; the returned pointer's ownership
     // is not transfered to the caller.
@@ -58,29 +58,21 @@ public:
     }
 
     // The C++ type name that this mapper applies to
-    Layout::CType ctype() const {
-        return fCType;
-    }
+    Layout::CType ctype() const { return fCType; }
 
     // The sksl type names that the mapper's ctype can be mapped to
-    const std::vector<String>& supportedTypeNames() const {
-        return fSKSLTypes;
-    }
+    const std::vector<String>& supportedTypeNames() const { return fSKSLTypes; }
 
     // Whether or not this handler knows how to write state tracking code
     // for the uniform variables
-    bool supportsTracking() const {
-        return fSupportsTracking;
-    }
+    bool supportsTracking() const { return fSupportsTracking; }
 
     // What the C++ class fields are initialized to in the GLSLFragmentProcessor The empty string
     // implies the no-arg constructor is suitable. This is not used if supportsTracking() returns
     // false.
     //
     // The returned snippet will be a valid as the lhs of an assignment.
-    const String& defaultValue() const {
-        return fDefaultValue;
-    }
+    const String& defaultValue() const { return fDefaultValue; }
 
     // Return a boolean expression that returns true if the variables specified by newValueVarName
     // and oldValueVarName have different values. This is ignored if supportsTracking() returns
@@ -108,19 +100,18 @@ public:
     // True if the setUniform() template only uses the value variable once in its expression. The
     // variable does not necessarily get inlined if this returns true, since a local variable may be
     // needed if state tracking is employed for a particular uniform.
-    bool canInlineUniformValue() const {
-        return fInlineValue;
-    }
+    bool canInlineUniformValue() const { return fInlineValue; }
 
 private:
     UniformCTypeMapper(Layout::CType ctype, const std::vector<String>& skslTypes,
-            const String& setUniformFormat, bool enableTracking, const String& defaultValue,
-            const String& dirtyExpressionFormat, const String& saveStateFormat);
+                       const String& setUniformFormat, bool enableTracking,
+                       const String& defaultValue, const String& dirtyExpressionFormat,
+                       const String& saveStateFormat);
 
     Layout::CType fCType;
     std::vector<String> fSKSLTypes;
     String fUniformTemplate;
-    bool fInlineValue; // Cached value calculated from fUniformTemplate
+    bool fInlineValue;  // Cached value calculated from fUniformTemplate
 
     bool fSupportsTracking;
     String fDefaultValue;
@@ -128,6 +119,6 @@ private:
     String fSaveStateTemplate;
 };
 
-} // namespace
+}  // namespace SkSL
 
-#endif // SkSLUniformCTypes_DEFINED
+#endif  // SkSLUniformCTypes_DEFINED

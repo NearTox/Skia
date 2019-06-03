@@ -5,17 +5,23 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkPath.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
 
 namespace skiagm {
 
 class FillTypeGM : public GM {
     SkPath fPath;
+
 public:
-    FillTypeGM() {
-        this->setBGColor(0xFFDDDDDD);
-    }
+    FillTypeGM() { this->setBGColor(0xFFDDDDDD); }
 
     void makePath() {
         if (fPath.isEmpty()) {
@@ -26,18 +32,13 @@ public:
     }
 
 protected:
+    SkString onShortName() override { return SkString("filltypes"); }
 
-    SkString onShortName() override {
-        return SkString("filltypes");
-    }
+    SkISize onISize() override { return SkISize::Make(835, 840); }
 
-    SkISize onISize() override {
-        return SkISize::Make(835, 840);
-    }
-
-    void showPath(SkCanvas* canvas, int x, int y, SkPath::FillType ft,
-                  SkScalar scale, const SkPaint& paint) {
-        const SkRect r = { 0, 0, SkIntToScalar(150), SkIntToScalar(150) };
+    void showPath(SkCanvas* canvas, int x, int y, SkPath::FillType ft, SkScalar scale,
+                  const SkPaint& paint) {
+        const SkRect r = {0, 0, SkIntToScalar(150), SkIntToScalar(150)};
 
         canvas->save();
         canvas->translate(SkIntToScalar(x), SkIntToScalar(y));
@@ -52,14 +53,10 @@ protected:
     }
 
     void showFour(SkCanvas* canvas, SkScalar scale, const SkPaint& paint) {
-        showPath(canvas,   0,   0, SkPath::kWinding_FillType,
-                 scale, paint);
-        showPath(canvas, 200,   0, SkPath::kEvenOdd_FillType,
-                 scale, paint);
-        showPath(canvas,  00, 200, SkPath::kInverseWinding_FillType,
-                 scale, paint);
-        showPath(canvas, 200, 200, SkPath::kInverseEvenOdd_FillType,
-                 scale, paint);
+        showPath(canvas, 0, 0, SkPath::kWinding_FillType, scale, paint);
+        showPath(canvas, 200, 0, SkPath::kEvenOdd_FillType, scale, paint);
+        showPath(canvas, 00, 200, SkPath::kInverseWinding_FillType, scale, paint);
+        showPath(canvas, 200, 200, SkPath::kInverseEvenOdd_FillType, scale, paint);
     }
 
     void onDraw(SkCanvas* canvas) override {
@@ -68,7 +65,7 @@ protected:
         canvas->translate(SkIntToScalar(20), SkIntToScalar(20));
 
         SkPaint paint;
-        const SkScalar scale = SkIntToScalar(5)/4;
+        const SkScalar scale = SkIntToScalar(5) / 4;
 
         paint.setAntiAlias(false);
 
@@ -90,6 +87,6 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new FillTypeGM; )
+DEF_GM(return new FillTypeGM;)
 
-}
+}  // namespace skiagm

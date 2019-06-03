@@ -5,19 +5,32 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkLightingShader.h"
-#include "SkNormalSource.h"
-#include "SkPoint3.h"
-#include "SkShader.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkPoint3.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "src/core/SkNormalSource.h"
+#include "src/shaders/SkLightingShader.h"
+#include "src/shaders/SkLights.h"
+#include "tools/ToolUtils.h"
+
+#include <utility>
 
 // Create a hemispherical normal map
 static SkBitmap make_hemi_normalmap(int texSize) {
     SkBitmap hemi;
     hemi.allocN32Pixels(texSize, texSize);
 
-    sk_tool_utils::create_hemi_normal_map(&hemi, SkIRect::MakeWH(texSize, texSize));
+    ToolUtils::create_hemi_normal_map(&hemi, SkIRect::MakeWH(texSize, texSize));
     return hemi;
 }
 
@@ -26,7 +39,7 @@ static SkBitmap make_frustum_normalmap(int texSize) {
     SkBitmap frustum;
     frustum.allocN32Pixels(texSize, texSize);
 
-    sk_tool_utils::create_frustum_normal_map(&frustum, SkIRect::MakeWH(texSize, texSize));
+    ToolUtils::create_frustum_normal_map(&frustum, SkIRect::MakeWH(texSize, texSize));
     return frustum;
 }
 
@@ -35,7 +48,7 @@ static SkBitmap make_tetra_normalmap(int texSize) {
     SkBitmap tetra;
     tetra.allocN32Pixels(texSize, texSize);
 
-    sk_tool_utils::create_tetra_normal_map(&tetra, SkIRect::MakeWH(texSize, texSize));
+    ToolUtils::create_tetra_normal_map(&tetra, SkIRect::MakeWH(texSize, texSize));
     return tetra;
 }
 
@@ -45,9 +58,7 @@ namespace skiagm {
 // a directional light off to the viewers right.
 class LightingShaderGM : public GM {
 public:
-    LightingShaderGM() {
-        this->setBGColor(0xFFCCCCCC);
-    }
+    LightingShaderGM() { this->setBGColor(0xFFCCCCCC); }
 
 protected:
     enum NormalMap {
@@ -58,7 +69,7 @@ protected:
         kLast_NormalMap = kTetra_NormalMap
     };
 
-    static constexpr int kNormalMapCount = kLast_NormalMap+1;
+    static constexpr int kNormalMapCount = kLast_NormalMap + 1;
 
     SkString onShortName() override { return SkString("lightingshader"); }
 
@@ -69,28 +80,23 @@ protected:
             SkLights::Builder builder;
 
             // The direction vector is towards the light w/ +Z coming out of the screen
-            builder.add(SkLights::Light::MakeDirectional(SkColor3f::Make(1.0f, 1.0f, 1.0f),
-                                                         SkVector3::Make(SK_ScalarRoot2Over2,
-                                                                         0.0f,
-                                                                         SK_ScalarRoot2Over2)));
+            builder.add(SkLights::Light::MakeDirectional(
+                    SkColor3f::Make(1.0f, 1.0f, 1.0f),
+                    SkVector3::Make(SK_ScalarRoot2Over2, 0.0f, SK_ScalarRoot2Over2)));
             builder.setAmbientLightColor(SkColor3f::Make(0.2f, 0.2f, 0.2f));
 
             fLights = builder.finish();
         }
 
-        fDiffuse = sk_tool_utils::create_checkerboard_bitmap(
-                                                        kTexSize, kTexSize,
-                                                        0x00000000,
-                                                        sk_tool_utils::color_to_565(0xFF804020),
-                                                        8);
+        fDiffuse = ToolUtils::create_checkerboard_bitmap(kTexSize, kTexSize, 0x00000000,
+                                                         ToolUtils::color_to_565(0xFF804020), 8);
 
-        fNormalMaps[kHemi_NormalMap]    = make_hemi_normalmap(kTexSize);
+        fNormalMaps[kHemi_NormalMap] = make_hemi_normalmap(kTexSize);
         fNormalMaps[kFrustum_NormalMap] = make_frustum_normalmap(kTexSize);
-        fNormalMaps[kTetra_NormalMap]   = make_tetra_normalmap(kTexSize);
+        fNormalMaps[kTetra_NormalMap] = make_tetra_normalmap(kTexSize);
     }
 
     void drawRect(SkCanvas* canvas, const SkRect& r, NormalMap mapType) {
-
         SkRect bitmapBounds = SkRect::MakeIWH(fDiffuse.width(), fDiffuse.height());
 
         SkMatrix matrix;
@@ -99,14 +105,12 @@ protected:
         const SkMatrix& ctm = canvas->getTotalMatrix();
 
         SkPaint paint;
-        sk_sp<SkShader> diffuseShader = SkShader::MakeBitmapShader(fDiffuse,
-                SkShader::kClamp_TileMode, SkShader::kClamp_TileMode, &matrix);
-        sk_sp<SkShader> normalMap = SkShader::MakeBitmapShader(fNormalMaps[mapType],
-                SkShader::kClamp_TileMode, SkShader::kClamp_TileMode, &matrix);
-        sk_sp<SkNormalSource> normalSource = SkNormalSource::MakeFromNormalMap(std::move(normalMap),
-                                                                               ctm);
-        paint.setShader(SkLightingShader::Make(std::move(diffuseShader), std::move(normalSource),
-                                               fLights));
+        sk_sp<SkShader> diffuseShader = fDiffuse.makeShader(&matrix);
+        sk_sp<SkShader> normalMap = fNormalMaps[mapType].makeShader(&matrix);
+        sk_sp<SkNormalSource> normalSource =
+                SkNormalSource::MakeFromNormalMap(std::move(normalMap), ctm);
+        paint.setShader(
+                SkLightingShader::Make(std::move(diffuseShader), std::move(normalSource), fLights));
 
         canvas->drawRect(r, paint);
     }
@@ -120,8 +124,8 @@ protected:
         this->drawRect(canvas, r, mapType);
 
         canvas->save();
-            canvas->setMatrix(m);
-            this->drawRect(canvas, r, mapType);
+        canvas->setMatrix(m);
+        this->drawRect(canvas, r, mapType);
         canvas->restore();
     }
 
@@ -143,11 +147,11 @@ protected:
 
 private:
     static constexpr int kTexSize = 128;
-    static constexpr int kGMSize  = 512;
-    static constexpr SkScalar kScale = kGMSize/2.0f - kTexSize/2.0f;
+    static constexpr int kGMSize = 512;
+    static constexpr SkScalar kScale = kGMSize / 2.0f - kTexSize / 2.0f;
 
-    SkBitmap        fDiffuse;
-    SkBitmap        fNormalMaps[kNormalMapCount];
+    SkBitmap fDiffuse;
+    SkBitmap fNormalMaps[kNormalMapCount];
 
     sk_sp<SkLights> fLights;
 
@@ -157,4 +161,4 @@ private:
 //////////////////////////////////////////////////////////////////////////////
 
 DEF_GM(return new LightingShaderGM;)
-}
+}  // namespace skiagm

@@ -1,21 +1,21 @@
 /*
-* Copyright 2016 Google Inc.
-*
-* Use of this source code is governed by a BSD-style license that can be
-* found in the LICENSE file.
-*/
+ * Copyright 2016 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
 #ifndef GrVkPipelineStateBuilder_DEFINED
 #define GrVkPipelineStateBuilder_DEFINED
 
-#include "GrPipeline.h"
-#include "GrProgramDesc.h"
-#include "GrVkPipelineState.h"
-#include "GrVkUniformHandler.h"
-#include "GrVkVaryingHandler.h"
-#include "SkSLCompiler.h"
-#include "glsl/GrGLSLProgramBuilder.h"
-#include "vk/GrVkTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
+#include "src/gpu/GrPipeline.h"
+#include "src/gpu/GrProgramDesc.h"
+#include "src/gpu/glsl/GrGLSLProgramBuilder.h"
+#include "src/gpu/vk/GrVkPipelineState.h"
+#include "src/gpu/vk/GrVkUniformHandler.h"
+#include "src/gpu/vk/GrVkVaryingHandler.h"
+#include "src/sksl/SkSLCompiler.h"
 
 class GrVkGpu;
 class GrVkRenderPass;
@@ -54,21 +54,18 @@ public:
     };
 
     /** Generates a pipeline state.
-    *
-    * The GrVkPipelineState implements what is specified in the GrPipeline and GrPrimitiveProcessor
-    * as input. After successful generation, the builder result objects are available to be used.
-    * This function may modify the program key by setting the surface origin key to 0 (unspecified)
-    * if it turns out the program does not care about the surface origin.
-    * @return true if generation was successful.
-    */
-    static GrVkPipelineState* CreatePipelineState(GrVkGpu*,
-                                                  GrRenderTarget*, GrSurfaceOrigin,
+     *
+     * The GrVkPipelineState implements what is specified in the GrPipeline and GrPrimitiveProcessor
+     * as input. After successful generation, the builder result objects are available to be used.
+     * This function may modify the program key by setting the surface origin key to 0 (unspecified)
+     * if it turns out the program does not care about the surface origin.
+     * @return true if generation was successful.
+     */
+    static GrVkPipelineState* CreatePipelineState(GrVkGpu*, GrRenderTarget*, GrSurfaceOrigin,
                                                   const GrPrimitiveProcessor&,
                                                   const GrTextureProxy* const primProcProxies[],
-                                                  const GrPipeline&,
-                                                  const GrStencilSettings&,
-                                                  GrPrimitiveType,
-                                                  Desc*,
+                                                  const GrPipeline&, const GrStencilSettings&,
+                                                  GrPrimitiveType, Desc*,
                                                   VkRenderPass compatibleRenderPass);
 
     const GrCaps* caps() const override;
@@ -79,11 +76,9 @@ public:
     void finalizeFragmentSecondaryColor(GrShaderVar& outputColor) override;
 
 private:
-    GrVkPipelineStateBuilder(GrVkGpu*, GrRenderTarget*, GrSurfaceOrigin,
-                             const GrPipeline&,
+    GrVkPipelineStateBuilder(GrVkGpu*, GrRenderTarget*, GrSurfaceOrigin, const GrPipeline&,
                              const GrPrimitiveProcessor&,
-                             const GrTextureProxy* const primProcProxies[],
-                             GrProgramDesc*);
+                             const GrTextureProxy* const primProcProxies[], GrProgramDesc*);
 
     GrVkPipelineState* finalize(const GrStencilSettings&,
                                 GrPrimitiveType primitiveType,
@@ -91,21 +86,14 @@ private:
                                 Desc*);
 
     // returns number of shader stages
-    int loadShadersFromCache(const SkData& cached,
-                             VkShaderModule* outVertShaderModule,
-                             VkShaderModule* outFragShaderModule,
-                             VkShaderModule* outGeomShaderModule,
+    int loadShadersFromCache(const SkData& cached, VkShaderModule outShaderModules[],
                              VkPipelineShaderStageCreateInfo* outStageInfo);
 
-    void storeShadersInCache(const SkSL::String& vert,
-                             const SkSL::Program::Inputs& vertInputs,
-                             const SkSL::String& frag,
-                             const SkSL::Program::Inputs& fragInputs,
-                             const SkSL::String& geom,
-                             const SkSL::Program::Inputs& geomInputs);
+    void storeShadersInCache(const SkSL::String shaders[], const SkSL::Program::Inputs inputs[],
+                             bool isSkSL);
 
     bool createVkShaderModule(VkShaderStageFlagBits stage,
-                              const GrGLSLShaderBuilder& builder,
+                              const SkSL::String& sksl,
                               VkShaderModule* shaderModule,
                               VkPipelineShaderStageCreateInfo* stageInfo,
                               const SkSL::Program::Settings& settings,

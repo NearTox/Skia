@@ -5,34 +5,24 @@
  * found in the LICENSE file.
  */
 
-#include "SkSVGPattern.h"
+#include "experimental/svg/model/SkSVGPattern.h"
 
-#include "SkPictureRecorder.h"
-#include "SkShader.h"
-#include "SkSVGRenderContext.h"
-#include "SkSVGValue.h"
+#include "experimental/svg/model/SkSVGRenderContext.h"
+#include "experimental/svg/model/SkSVGValue.h"
+#include "include/core/SkPictureRecorder.h"
+#include "include/core/SkShader.h"
 
 SkSVGPattern::SkSVGPattern() : INHERITED(SkSVGTag::kPattern) {}
 
-void SkSVGPattern::setX(const SkSVGLength& x) {
-    fAttributes.fX.set(x);
-}
+void SkSVGPattern::setX(const SkSVGLength& x) { fAttributes.fX.set(x); }
 
-void SkSVGPattern::setY(const SkSVGLength& y) {
-    fAttributes.fY.set(y);
-}
+void SkSVGPattern::setY(const SkSVGLength& y) { fAttributes.fY.set(y); }
 
-void SkSVGPattern::setWidth(const SkSVGLength& w) {
-    fAttributes.fWidth.set(w);
-}
+void SkSVGPattern::setWidth(const SkSVGLength& w) { fAttributes.fWidth.set(w); }
 
-void SkSVGPattern::setHeight(const SkSVGLength& h) {
-    fAttributes.fHeight.set(h);
-}
+void SkSVGPattern::setHeight(const SkSVGLength& h) { fAttributes.fHeight.set(h); }
 
-void SkSVGPattern::setHref(const SkSVGStringType& href) {
-    fHref = std::move(href);
-}
+void SkSVGPattern::setHref(const SkSVGStringType& href) { fHref = std::move(href); }
 
 void SkSVGPattern::setPatternTransform(const SkSVGTransformType& patternTransform) {
     fAttributes.fPatternTransform.set(patternTransform);
@@ -40,38 +30,38 @@ void SkSVGPattern::setPatternTransform(const SkSVGTransformType& patternTransfor
 
 void SkSVGPattern::onSetAttribute(SkSVGAttribute attr, const SkSVGValue& v) {
     switch (attr) {
-    case SkSVGAttribute::kX:
-        if (const auto* x = v.as<SkSVGLengthValue>()) {
-            this->setX(*x);
-        }
-        break;
-    case SkSVGAttribute::kY:
-        if (const auto* y = v.as<SkSVGLengthValue>()) {
-            this->setY(*y);
-        }
-        break;
-    case SkSVGAttribute::kWidth:
-        if (const auto* w = v.as<SkSVGLengthValue>()) {
-            this->setWidth(*w);
-        }
-        break;
-    case SkSVGAttribute::kHeight:
-        if (const auto* h = v.as<SkSVGLengthValue>()) {
-            this->setHeight(*h);
-        }
-        break;
-    case SkSVGAttribute::kHref:
-        if (const auto* href = v.as<SkSVGStringValue>()) {
-            this->setHref(*href);
-        }
-        break;
-    case SkSVGAttribute::kPatternTransform:
-        if (const auto* t = v.as<SkSVGTransformValue>()) {
-            this->setPatternTransform(*t);
-        }
-        break;
-    default:
-        this->INHERITED::onSetAttribute(attr, v);
+        case SkSVGAttribute::kX:
+            if (const auto* x = v.as<SkSVGLengthValue>()) {
+                this->setX(*x);
+            }
+            break;
+        case SkSVGAttribute::kY:
+            if (const auto* y = v.as<SkSVGLengthValue>()) {
+                this->setY(*y);
+            }
+            break;
+        case SkSVGAttribute::kWidth:
+            if (const auto* w = v.as<SkSVGLengthValue>()) {
+                this->setWidth(*w);
+            }
+            break;
+        case SkSVGAttribute::kHeight:
+            if (const auto* h = v.as<SkSVGLengthValue>()) {
+                this->setHeight(*h);
+            }
+            break;
+        case SkSVGAttribute::kHref:
+            if (const auto* href = v.as<SkSVGStringValue>()) {
+                this->setHref(*href);
+            }
+            break;
+        case SkSVGAttribute::kPatternTransform:
+            if (const auto* t = v.as<SkSVGTransformValue>()) {
+                this->setPatternTransform(*t);
+            }
+            break;
+        default:
+            this->INHERITED::onSetAttribute(attr, v);
     }
 }
 
@@ -88,8 +78,7 @@ const SkSVGPattern* SkSVGPattern::hrefTarget(const SkSVGRenderContext& ctx) cons
     return static_cast<const SkSVGPattern*>(href);
 }
 
-template <typename T>
-bool inherit_if_needed(const SkTLazy<T>& src, SkTLazy<T>& dst) {
+template <typename T> bool inherit_if_needed(const SkTLazy<T>& src, SkTLazy<T>& dst) {
     if (!dst.isValid()) {
         dst = src;
         return true;
@@ -109,16 +98,16 @@ bool inherit_if_needed(const SkTLazy<T>& src, SkTLazy<T>& dst) {
  */
 const SkSVGPattern* SkSVGPattern::resolveHref(const SkSVGRenderContext& ctx,
                                               PatternAttributes* attrs) const {
-    const SkSVGPattern *currentNode = this,
-                       *contentNode = this;
+    const SkSVGPattern *currentNode = this, *contentNode = this;
     do {
         // Bitwise OR to avoid short-circuiting.
         const bool didInherit =
-            inherit_if_needed(currentNode->fAttributes.fX               , attrs->fX)      |
-            inherit_if_needed(currentNode->fAttributes.fY               , attrs->fY)      |
-            inherit_if_needed(currentNode->fAttributes.fWidth           , attrs->fWidth)  |
-            inherit_if_needed(currentNode->fAttributes.fHeight          , attrs->fHeight) |
-            inherit_if_needed(currentNode->fAttributes.fPatternTransform, attrs->fPatternTransform);
+                inherit_if_needed(currentNode->fAttributes.fX, attrs->fX) |
+                inherit_if_needed(currentNode->fAttributes.fY, attrs->fY) |
+                inherit_if_needed(currentNode->fAttributes.fWidth, attrs->fWidth) |
+                inherit_if_needed(currentNode->fAttributes.fHeight, attrs->fHeight) |
+                inherit_if_needed(currentNode->fAttributes.fPatternTransform,
+                                  attrs->fPatternTransform);
 
         if (!contentNode->hasChildren()) {
             contentNode = currentNode;
@@ -142,18 +131,17 @@ bool SkSVGPattern::onAsPaint(const SkSVGRenderContext& ctx, SkPaint* paint) cons
     const auto* contentNode = this->resolveHref(ctx, &attrs);
 
     const auto tile = ctx.lengthContext().resolveRect(
-            attrs.fX.isValid()      ? *attrs.fX.get()      : SkSVGLength(0),
-            attrs.fY.isValid()      ? *attrs.fY.get()      : SkSVGLength(0),
-            attrs.fWidth.isValid()  ? *attrs.fWidth.get()  : SkSVGLength(0),
+            attrs.fX.isValid() ? *attrs.fX.get() : SkSVGLength(0),
+            attrs.fY.isValid() ? *attrs.fY.get() : SkSVGLength(0),
+            attrs.fWidth.isValid() ? *attrs.fWidth.get() : SkSVGLength(0),
             attrs.fHeight.isValid() ? *attrs.fHeight.get() : SkSVGLength(0));
 
     if (tile.isEmpty()) {
         return false;
     }
 
-    const SkMatrix* patternTransform = attrs.fPatternTransform.isValid()
-            ? &attrs.fPatternTransform.get()->value()
-            : nullptr;
+    const SkMatrix* patternTransform =
+            attrs.fPatternTransform.isValid() ? &attrs.fPatternTransform.get()->value() : nullptr;
 
     SkPictureRecorder recorder;
     SkSVGRenderContext recordingContext(ctx, recorder.beginRecording(tile));
@@ -161,10 +149,7 @@ bool SkSVGPattern::onAsPaint(const SkSVGRenderContext& ctx, SkPaint* paint) cons
     // Cannot call into INHERITED:: because SkSVGHiddenContainer skips rendering.
     contentNode->SkSVGContainer::onRender(recordingContext);
 
-    paint->setShader(SkShader::MakePictureShader(recorder.finishRecordingAsPicture(),
-                                                 SkShader::kRepeat_TileMode,
-                                                 SkShader::kRepeat_TileMode,
-                                                 patternTransform,
-                                                 &tile));
+    paint->setShader(recorder.finishRecordingAsPicture()->makeShader(
+            SkTileMode::kRepeat, SkTileMode::kRepeat, patternTransform, &tile));
     return true;
 }

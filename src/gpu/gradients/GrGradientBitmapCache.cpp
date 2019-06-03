@@ -5,28 +5,25 @@
  * found in the LICENSE file.
  */
 
+#include "src/gpu/gradients/GrGradientBitmapCache.h"
 
-#include "GrGradientBitmapCache.h"
-
-#include "SkMalloc.h"
-#include "SkFloatBits.h"
-#include "SkHalf.h"
-#include "SkTemplates.h"
+#include "include/private/SkFloatBits.h"
+#include "include/private/SkHalf.h"
+#include "include/private/SkMalloc.h"
+#include "include/private/SkTemplates.h"
 
 #include <functional>
 
 struct GrGradientBitmapCache::Entry {
-    Entry*      fPrev;
-    Entry*      fNext;
+    Entry* fPrev;
+    Entry* fNext;
 
-    void*       fBuffer;
-    size_t      fSize;
-    SkBitmap    fBitmap;
+    void* fBuffer;
+    size_t fSize;
+    SkBitmap fBitmap;
 
     Entry(const void* buffer, size_t size, const SkBitmap& bm)
-            : fPrev(nullptr),
-              fNext(nullptr),
-              fBitmap(bm) {
+            : fPrev(nullptr), fNext(nullptr), fBitmap(bm) {
         fBuffer = sk_malloc_throw(size);
         fSize = size;
         memcpy(fBuffer, buffer, size);
@@ -40,8 +37,7 @@ struct GrGradientBitmapCache::Entry {
 };
 
 GrGradientBitmapCache::GrGradientBitmapCache(int max, int res)
-        : fMaxEntries(max)
-        , fResolution(res) {
+        : fMaxEntries(max), fResolution(res) {
     fEntryCount = 0;
     fHead = fTail = nullptr;
 
@@ -123,7 +119,6 @@ void GrGradientBitmapCache::add(const void* buffer, size_t len, const SkBitmap& 
 
 ///////////////////////////////////////////////////////////////////////////////
 
-
 void GrGradientBitmapCache::fillGradient(const SkPMColor4f* colors, const SkScalar* positions,
                                          int count, SkColorType colorType, SkBitmap* bitmap) {
     SkHalf* pixelsF16 = reinterpret_cast<SkHalf*>(bitmap->getPixels());
@@ -133,10 +128,10 @@ void GrGradientBitmapCache::fillGradient(const SkPMColor4f* colors, const SkScal
 
     pixelWriteFn_t writeF16Pixel = [&](const Sk4f& x, int index) {
         Sk4h c = SkFloatToHalf_finite_ftz(x);
-        pixelsF16[4*index+0] = c[0];
-        pixelsF16[4*index+1] = c[1];
-        pixelsF16[4*index+2] = c[2];
-        pixelsF16[4*index+3] = c[3];
+        pixelsF16[4 * index + 0] = c[0];
+        pixelsF16[4 * index + 1] = c[1];
+        pixelsF16[4 * index + 2] = c[2];
+        pixelsF16[4 * index + 3] = c[3];
     };
     pixelWriteFn_t write8888Pixel = [&](const Sk4f& c, int index) {
         pixels32[index] = Sk4f_toL32(c);
@@ -150,12 +145,10 @@ void GrGradientBitmapCache::fillGradient(const SkPMColor4f* colors, const SkScal
         // Historically, stops have been mapped to [0, 256], with 256 then nudged to the next
         // smaller value, then truncate for the texture index. This seems to produce the best
         // results for some common distributions, so we preserve the behavior.
-        int nextIndex = SkTMin(positions[i] * fResolution,
-                               SkIntToScalar(fResolution - 1));
+        int nextIndex = SkTMin(positions[i] * fResolution, SkIntToScalar(fResolution - 1));
 
         if (nextIndex > prevIndex) {
-            Sk4f          c0 = Sk4f::Load(colors[i - 1].vec()),
-                          c1 = Sk4f::Load(colors[i    ].vec());
+            Sk4f c0 = Sk4f::Load(colors[i - 1].vec()), c1 = Sk4f::Load(colors[i].vec());
 
             Sk4f step = Sk4f(1.0f / static_cast<float>(nextIndex - prevIndex));
             Sk4f delta = (c1 - c0) * step;
@@ -171,7 +164,8 @@ void GrGradientBitmapCache::fillGradient(const SkPMColor4f* colors, const SkScal
 }
 
 void GrGradientBitmapCache::getGradient(const SkPMColor4f* colors, const SkScalar* positions,
-        int count, SkColorType colorType, SkAlphaType alphaType, SkBitmap* bitmap) {
+                                        int count, SkColorType colorType, SkAlphaType alphaType,
+                                        SkBitmap* bitmap) {
     // build our key: [numColors + colors[] + positions[] + alphaType + colorType ]
     static_assert(sizeof(SkPMColor4f) % sizeof(int32_t) == 0, "");
     const int colorsAsIntCount = count * sizeof(SkPMColor4f) / sizeof(int32_t);
@@ -198,7 +192,7 @@ void GrGradientBitmapCache::getGradient(const SkPMColor4f* colors, const SkScala
     ///////////////////////////////////
 
     // acquire lock for checking/adding to cache
-    SkAutoExclusive ama(fMutex);
+    SkAutoMutexExclusive ama(fMutex);
     size_t size = keyCount * sizeof(int32_t);
     if (!this->find(storage.get(), size, bitmap)) {
         SkImageInfo info = SkImageInfo::Make(fResolution, 1, colorType, alphaType);

@@ -8,42 +8,40 @@
 #ifndef SkWebpCodec_DEFINED
 #define SkWebpCodec_DEFINED
 
-#include "SkCodec.h"
-#include "SkEncodedImageFormat.h"
-#include "SkFrameHolder.h"
-#include "SkImageInfo.h"
-#include "SkTypes.h"
+#include "include/codec/SkCodec.h"
+#include "include/core/SkEncodedImageFormat.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkTypes.h"
+#include "src/codec/SkFrameHolder.h"
+#include "src/codec/SkScalingCodec.h"
 
 #include <vector>
 
 class SkStream;
 extern "C" {
-    struct WebPDemuxer;
-    void WebPDemuxDelete(WebPDemuxer* dmux);
+struct WebPDemuxer;
+void WebPDemuxDelete(WebPDemuxer* dmux);
 }
 
-class SkWebpCodec final : public SkCodec {
+class SkWebpCodec final : public SkScalingCodec {
 public:
     // Assumes IsWebp was called and returned true.
     static std::unique_ptr<SkCodec> MakeFromStream(std::unique_ptr<SkStream>, Result*);
     static bool IsWebp(const void*, size_t);
+
 protected:
     Result onGetPixels(const SkImageInfo&, void*, size_t, const Options&, int*) override;
-    SkEncodedImageFormat onGetEncodedFormat() const override { return SkEncodedImageFormat::kWEBP; }
-
-    SkISize onGetScaledDimensions(float desiredScale) const override;
-
-    bool onDimensionsSupported(const SkISize&) override;
+    SkEncodedImageFormat onGetEncodedFormat() const noexcept override {
+        return SkEncodedImageFormat::kWEBP;
+    }
 
     bool onGetValidSubset(SkIRect* /* desiredSubset */) const override;
 
-    int onGetFrameCount() override;
-    bool onGetFrameInfo(int, FrameInfo*) const override;
-    int onGetRepetitionCount() override;
+    int onGetFrameCount() noexcept override;
+    bool onGetFrameInfo(int, FrameInfo*) const noexcept override;
+    int onGetRepetitionCount() noexcept override;
 
-    const SkFrameHolder* getFrameHolder() const override {
-        return &fFrameHolder;
-    }
+    const SkFrameHolder* getFrameHolder() const noexcept override { return &fFrameHolder; }
 
 private:
     SkWebpCodec(SkEncodedInfo&&, std::unique_ptr<SkStream>, WebPDemuxer*, sk_sp<SkData>,
@@ -57,15 +55,10 @@ private:
 
     class Frame : public SkFrame {
     public:
-        Frame(int i, SkEncodedInfo::Alpha alpha)
-            : INHERITED(i)
-            , fReportedAlpha(alpha)
-        {}
+        Frame(int i, SkEncodedInfo::Alpha alpha) : INHERITED(i), fReportedAlpha(alpha) {}
 
     protected:
-        SkEncodedInfo::Alpha onReportedAlpha() const override {
-            return fReportedAlpha;
-        }
+        SkEncodedInfo::Alpha onReportedAlpha() const noexcept override { return fReportedAlpha; }
 
     private:
         const SkEncodedInfo::Alpha fReportedAlpha;
@@ -75,19 +68,15 @@ private:
 
     class FrameHolder : public SkFrameHolder {
     public:
-        ~FrameHolder() override {}
-        void setScreenSize(int w, int h) {
+        ~FrameHolder() noexcept override {}
+        void setScreenSize(int w, int h) noexcept {
             fScreenWidth = w;
             fScreenHeight = h;
         }
         Frame* appendNewFrame(bool hasAlpha);
         const Frame* frame(int i) const;
-        int size() const {
-            return static_cast<int>(fFrames.size());
-        }
-        void reserve(int size) {
-            fFrames.reserve(size);
-        }
+        int size() const noexcept { return static_cast<int>(fFrames.size()); }
+        void reserve(int size) { fFrames.reserve(size); }
 
     protected:
         const SkFrame* onGetFrame(int i) const override;
@@ -100,8 +89,8 @@ private:
     // Set to true if WebPDemuxGetFrame fails. This only means
     // that we will cap the frame count to the frames that
     // succeed.
-    bool        fFailed;
+    bool fFailed;
 
-    typedef SkCodec INHERITED;
+    typedef SkScalingCodec INHERITED;
 };
-#endif // SkWebpCodec_DEFINED
+#endif  // SkWebpCodec_DEFINED

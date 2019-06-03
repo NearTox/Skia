@@ -4,34 +4,34 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "Sample.h"
+#include "samplecode/Sample.h"
 
-#include "SkBlurMaskFilter.h"
-#include "SkCanvas.h"
-#include "SkColorFilter.h"
-#include "SkColorPriv.h"
-#include "SkColorShader.h"
-#include "SkGradientShader.h"
-#include "SkGraphics.h"
-#include "SkOSFile.h"
-#include "SkPath.h"
-#include "SkRandom.h"
-#include "SkRegion.h"
-#include "SkShader.h"
-#include "SkShaper.h"
-#include "SkStream.h"
-#include "SkTextBlob.h"
-#include "SkTime.h"
-#include "SkTypeface.h"
-#include "SkUTF.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkGraphics.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRegion.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkTextBlob.h"
+#include "include/core/SkTime.h"
+#include "include/core/SkTypeface.h"
+#include "include/effects/SkBlurMaskFilter.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/utils/SkRandom.h"
+#include "modules/skshaper/include/SkShaper.h"
+#include "src/core/SkOSFile.h"
+#include "src/shaders/SkColorShader.h"
+#include "src/utils/SkUTF.h"
 
 static const char gText[] =
-    "When in the Course of human events it becomes necessary for one people "
-    "to dissolve the political bands which have connected them with another "
-    "and to assume among the powers of the earth, the separate and equal "
-    "station to which the Laws of Nature and of Nature's God entitle them, "
-    "a decent respect to the opinions of mankind requires that they should "
-    "declare the causes which impel them to the separation.";
+        "When in the Course of human events it becomes necessary for one people "
+        "to dissolve the political bands which have connected them with another "
+        "and to assume among the powers of the earth, the separate and equal "
+        "station to which the Laws of Nature and of Nature's God entitle them, "
+        "a decent respect to the opinions of mankind requires that they should "
+        "declare the causes which impel them to the separation.";
 
 class TextBoxView : public Sample {
 public:
@@ -58,15 +58,14 @@ protected:
         paint.setColor(fg);
 
         for (int i = 9; i < 24; i += 2) {
-            SkTextBlobBuilderRunHandler builder(gText);
+            SkTextBlobBuilderRunHandler builder(gText, {margin, margin});
             SkFont font(nullptr, SkIntToScalar(i));
             font.setEdging(SkFont::Edging::kSubpixelAntiAlias);
 
-            SkPoint end = fShaper->shape(&builder, font, gText, strlen(gText), true,
-                                         { margin, margin }, w - margin);
+            fShaper->shape(gText, strlen(gText), font, true, w - margin, &builder);
             canvas->drawTextBlob(builder.makeBlob(), 0, 0, paint);
 
-            canvas->translate(0, end.y());
+            canvas->translate(0, builder.endPoint().y());
         }
     }
 
@@ -76,9 +75,9 @@ protected:
         canvas->translate(width, 0);
         drawTest(canvas, width, this->height(), SK_ColorWHITE, SK_ColorBLACK);
         canvas->translate(width, 0);
-        drawTest(canvas, width, this->height()/2, SK_ColorGRAY, SK_ColorWHITE);
-        canvas->translate(0, this->height()/2);
-        drawTest(canvas, width, this->height()/2, SK_ColorGRAY, SK_ColorBLACK);
+        drawTest(canvas, width, this->height() / 2, SK_ColorGRAY, SK_ColorWHITE);
+        canvas->translate(0, this->height() / 2);
+        drawTest(canvas, width, this->height() / 2, SK_ColorGRAY, SK_ColorBLACK);
     }
 
 private:
@@ -88,4 +87,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new TextBoxView(); )
+DEF_SAMPLE(return new TextBoxView();)

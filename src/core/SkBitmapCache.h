@@ -8,8 +8,8 @@
 #ifndef SkBitmapCache_DEFINED
 #define SkBitmapCache_DEFINED
 
-#include "SkRect.h"
 #include <memory>
+#include "include/core/SkRect.h"
 
 class SkBitmap;
 class SkBitmapProvider;
@@ -24,10 +24,10 @@ uint64_t SkMakeResourceCacheSharedIDForBitmap(uint32_t bitmapGenID);
 void SkNotifyBitmapGenIDIsStale(uint32_t bitmapGenID);
 
 struct SkBitmapCacheDesc {
-    uint32_t    fImageID;       // != 0
-    SkIRect     fSubset;        // always set to a valid rect (entire or subset)
+    uint32_t fImageID;  // != 0
+    SkIRect fSubset;    // always set to a valid rect (entire or subset)
 
-    void validate() const {
+    void validate() const noexcept {
         SkASSERT(fImageID);
         SkASSERT(fSubset.fLeft >= 0 && fSubset.fTop >= 0);
         SkASSERT(fSubset.width() > 0 && fSubset.height() > 0);
@@ -46,7 +46,9 @@ public:
     static bool Find(const SkBitmapCacheDesc&, SkBitmap* result);
 
     class Rec;
-    struct RecDeleter { void operator()(Rec* r) { PrivateDeleteRec(r); } };
+    struct RecDeleter {
+        void operator()(Rec* r) { PrivateDeleteRec(r); }
+    };
     typedef std::unique_ptr<Rec, RecDeleter> RecPtr;
 
     static RecPtr Alloc(const SkBitmapCacheDesc&, const SkImageInfo&, SkPixmap*);

@@ -8,8 +8,8 @@
 #ifndef SkScaleToSides_DEFINED
 #define SkScaleToSides_DEFINED
 
-#include "SkScalar.h"
-#include "SkTypes.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkTypes.h"
 
 #include <cmath>
 #include <utility>
@@ -63,9 +63,8 @@ public:
         SkASSERTF(*a >= 0.0f && *b >= 0.0f, "a: %g, b: %g, limit: %g, scale: %g", *a, *b, limit,
                   scale);
 
-        SkASSERTF(*a + *b <= limit,
-                  "\nlimit: %.17f, sum: %.17f, a: %.10f, b: %.10f, scale: %.20f",
+        SkASSERTF(*a + *b <= limit, "\nlimit: %.17f, sum: %.17f, a: %.10f, b: %.10f, scale: %.20f",
                   limit, *a + *b, *a, *b, scale);
     }
 };
-#endif // ScaleToSides_DEFINED
+#endif  // ScaleToSides_DEFINED

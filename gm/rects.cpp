@@ -5,14 +5,26 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkBlurDrawLooper.h"
-#include "SkBlurMask.h"
-#include "SkBlurMaskFilter.h"
-#include "SkColorFilter.h"
-#include "SkGradientShader.h"
-#include "SkMatrix.h"
-#include "SkTArray.h"
+#include "gm/gm.h"
+#include "include/core/SkBlurTypes.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkDrawLooper.h"
+#include "include/core/SkMaskFilter.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkBlurDrawLooper.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/private/SkTArray.h"
+#include "src/core/SkBlurMask.h"
 
 namespace skiagm {
 
@@ -26,14 +38,9 @@ public:
     }
 
 protected:
+    SkString onShortName() override { return SkString("rects"); }
 
-    SkString onShortName() override {
-        return SkString("rects");
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(1200, 900);
-    }
+    SkISize onISize() override { return SkISize::Make(1200, 900); }
 
     void makePaints() {
         {
@@ -66,8 +73,7 @@ protected:
             p.setColor(SK_ColorWHITE);
             p.setAntiAlias(true);
             p.setMaskFilter(SkMaskFilter::MakeBlur(
-                                   kNormal_SkBlurStyle,
-                                   SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(5))));
+                    kNormal_SkBlurStyle, SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(5))));
             fPaints.push_back(p);
         }
 
@@ -77,11 +83,10 @@ protected:
             p.setColor(SK_ColorWHITE);
             p.setAntiAlias(true);
             SkPoint center = SkPoint::Make(SkIntToScalar(-5), SkIntToScalar(30));
-            SkColor colors[] = { SK_ColorBLUE, SK_ColorRED, SK_ColorGREEN };
-            SkScalar pos[] = { 0, SK_ScalarHalf, SK_Scalar1 };
+            SkColor colors[] = {SK_ColorBLUE, SK_ColorRED, SK_ColorGREEN};
+            SkScalar pos[] = {0, SK_ScalarHalf, SK_Scalar1};
             p.setShader(SkGradientShader::MakeRadial(center, 20, colors, pos,
-                                                     SK_ARRAY_COUNT(colors),
-                                                     SkShader::kClamp_TileMode));
+                                                     SK_ARRAY_COUNT(colors), SkTileMode::kClamp));
             fPaints.push_back(p);
         }
 
@@ -91,8 +96,8 @@ protected:
             p.setColor(SK_ColorWHITE);
             p.setAntiAlias(true);
             p.setLooper(SkBlurDrawLooper::Make(SK_ColorWHITE,
-                                         SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(10)),
-                                         SkIntToScalar(5), SkIntToScalar(10)));
+                                               SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(10)),
+                                               SkIntToScalar(5), SkIntToScalar(10)));
             fPaints.push_back(p);
         }
 
@@ -270,15 +275,15 @@ protected:
     }
 
 private:
-    SkTArray<SkPaint>  fPaints;
+    SkTArray<SkPaint> fPaints;
     SkTArray<SkMatrix> fMatrices;
-    SkTArray<SkRect>   fRects;
+    SkTArray<SkRect> fRects;
 
     typedef GM INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new RectsGM; )
+DEF_GM(return new RectsGM;)
 
-}
+}  // namespace skiagm

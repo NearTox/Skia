@@ -8,13 +8,13 @@
 #ifndef GrShape_DEFINED
 #define GrShape_DEFINED
 
-#include "GrStyle.h"
-#include "SkPath.h"
-#include "SkPathPriv.h"
-#include "SkRRect.h"
-#include "SkTemplates.h"
-#include "SkTLazy.h"
 #include <new>
+#include "include/core/SkPath.h"
+#include "include/core/SkRRect.h"
+#include "include/private/SkTemplates.h"
+#include "src/core/SkPathPriv.h"
+#include "src/core/SkTLazy.h"
+#include "src/gpu/GrStyle.h"
 
 /**
  * Represents a geometric shape (rrect or path) and the GrStyle that it should be rendered with.
@@ -56,14 +56,14 @@ public:
         this->initType(Type::kRRect);
         fRRectData.fRRect = rrect;
         fRRectData.fInverted = false;
-        fRRectData.fStart = DefaultRRectDirAndStartIndex(rrect, style.hasPathEffect(),
-                                                         &fRRectData.fDir);
+        fRRectData.fStart =
+                DefaultRRectDirAndStartIndex(rrect, style.hasPathEffect(), &fRRectData.fDir);
         this->attemptToSimplifyRRect();
     }
 
     GrShape(const SkRRect& rrect, SkPath::Direction dir, unsigned start, bool inverted,
             const GrStyle& style)
-        : fStyle(style) {
+            : fStyle(style) {
         this->initType(Type::kRRect);
         fRRectData.fRRect = rrect;
         fRRectData.fInverted = inverted;
@@ -85,8 +85,8 @@ public:
         this->initType(Type::kRRect);
         fRRectData.fRRect = SkRRect::MakeRect(rect);
         fRRectData.fInverted = false;
-        fRRectData.fStart = DefaultRectDirAndStartIndex(rect, style.hasPathEffect(),
-                                                        &fRRectData.fDir);
+        fRRectData.fStart =
+                DefaultRectDirAndStartIndex(rect, style.hasPathEffect(), &fRRectData.fDir);
         this->attemptToSimplifyRRect();
     }
 
@@ -99,8 +99,8 @@ public:
         this->initType(Type::kRRect);
         fRRectData.fRRect = rrect;
         fRRectData.fInverted = false;
-        fRRectData.fStart = DefaultRRectDirAndStartIndex(rrect, fStyle.hasPathEffect(),
-                                                         &fRRectData.fDir);
+        fRRectData.fStart =
+                DefaultRRectDirAndStartIndex(rrect, fStyle.hasPathEffect(), &fRRectData.fDir);
         this->attemptToSimplifyRRect();
     }
 
@@ -108,8 +108,8 @@ public:
         this->initType(Type::kRRect);
         fRRectData.fRRect = SkRRect::MakeRect(rect);
         fRRectData.fInverted = false;
-        fRRectData.fStart = DefaultRectDirAndStartIndex(rect, fStyle.hasPathEffect(),
-                                                        &fRRectData.fDir);
+        fRRectData.fStart =
+                DefaultRectDirAndStartIndex(rect, fStyle.hasPathEffect(), &fRRectData.fDir);
         this->attemptToSimplifyRRect();
     }
 
@@ -125,12 +125,7 @@ public:
      * Informs MakeFilled on how to modify that shape's fill rule when making a simple filled
      * version of the shape.
      */
-    enum class FillInversion {
-        kPreserve,
-        kFlip,
-        kForceNoninverted,
-        kForceInverted
-    };
+    enum class FillInversion { kPreserve, kFlip, kForceNoninverted, kForceInverted };
     /**
      * Makes a filled shape from the pre-styled original shape and optionally modifies whether
      * the fill is inverted or not. It's important to note that the original shape's geometry
@@ -331,7 +326,7 @@ public:
                 // whether the path is either filled or closed. Convex paths may only have one
                 // contour hence isLastContourClosed() is a sufficient for a convex path.
                 return (this->style().isSimpleFill() || this->path().isLastContourClosed()) &&
-                        this->path().isConvex();
+                       this->path().isConvex();
         }
         return false;
     }
@@ -370,8 +365,8 @@ public:
      * can be thought of as "inverseFilledAfterStyling()".
      */
     bool mayBeInverseFilledAfterStyling() const {
-         // An arbitrary path effect can produce an arbitrary output path, which may be inverse
-         // filled.
+        // An arbitrary path effect can produce an arbitrary output path, which may be inverse
+        // filled.
         if (this->style().hasNonDashPathEffect()) {
             return true;
         }
@@ -599,7 +594,7 @@ private:
     };
     GrStyle fStyle;
     SkTLazy<SkPath> fInheritedPathForListeners;
-    SkAutoSTArray<8, uint32_t>  fInheritedKey;
+    SkAutoSTArray<8, uint32_t> fInheritedKey;
     Type fType;
 };
 #endif

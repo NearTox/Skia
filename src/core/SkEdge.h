@@ -8,22 +8,18 @@
 #ifndef SkEdge_DEFINED
 #define SkEdge_DEFINED
 
-#include "SkFDot6.h"
-#include "SkMath.h"
-#include "SkRect.h"
-#include "SkTo.h"
+#include "include/core/SkMath.h"
+#include "include/core/SkRect.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkFDot6.h"
 
 #include <utility>
 
 // This correctly favors the lower-pixel when y0 is on a 1/2 pixel boundary
-#define SkEdge_Compute_DY(top, y0)  (SkLeftShift(top, 6) + 32 - (y0))
+#define SkEdge_Compute_DY(top, y0) (SkLeftShift(top, 6) + 32 - (y0))
 
 struct SkEdge {
-    enum Type {
-        kLine_Type,
-        kQuad_Type,
-        kCubic_Type
-    };
+    enum Type { kLine_Type, kQuad_Type, kCubic_Type };
 
     SkEdge* fNext;
     SkEdge* fPrev;
@@ -33,9 +29,9 @@ struct SkEdge {
     int32_t fFirstY;
     int32_t fLastY;
     int8_t fCurveCount;    // only used by kQuad(+) and kCubic(-)
-    uint8_t fCurveShift;    // appled to all Dx/DDx/DDDx except for fCubicDShift exception
-    uint8_t fCubicDShift;   // applied to fCDx and fCDy only in cubic
-    int8_t  fWinding;       // 1 or -1
+    uint8_t fCurveShift;   // appled to all Dx/DDx/DDDx except for fCubicDShift exception
+    uint8_t fCubicDShift;  // applied to fCDx and fCDy only in cubic
+    int8_t fWinding;       // 1 or -1
 
     int setLine(const SkPoint& p0, const SkPoint& p1, const SkIRect* clip, int shiftUp);
     // call this version if you know you don't have a clip
@@ -50,7 +46,8 @@ struct SkEdge {
 
 #ifdef SK_DEBUG
     void dump() const {
-        SkDebugf("edge: firstY:%d lastY:%d x:%g dx:%g w:%d\n", fFirstY, fLastY, SkFixedToFloat(fX), SkFixedToFloat(fDX), fWinding);
+        SkDebugf("edge: firstY:%d lastY:%d x:%g dx:%g w:%d\n", fFirstY, fLastY, SkFixedToFloat(fX),
+                 SkFixedToFloat(fDX), fWinding);
     }
 
     void validate() const {
@@ -123,14 +120,14 @@ int SkEdge::setLine(const SkPoint& p0, const SkPoint& p1, int shift) {
     }
 
     SkFixed slope = SkFDot6Div(x1 - x0, y1 - y0);
-    const SkFDot6 dy  = SkEdge_Compute_DY(top, y0);
+    const SkFDot6 dy = SkEdge_Compute_DY(top, y0);
 
-    fX          = SkFDot6ToFixed(x0 + SkFixedMul(slope, dy));   // + SK_Fixed1/2
-    fDX         = slope;
-    fFirstY     = top;
-    fLastY      = bot - 1;
+    fX = SkFDot6ToFixed(x0 + SkFixedMul(slope, dy));  // + SK_Fixed1/2
+    fDX = slope;
+    fFirstY = top;
+    fLastY = bot - 1;
     fCurveCount = 0;
-    fWinding    = SkToS8(winding);
+    fWinding = SkToS8(winding);
     fCurveShift = 0;
     return 1;
 }

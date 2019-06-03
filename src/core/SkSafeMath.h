@@ -8,25 +8,30 @@
 #ifndef SkSafeMath_DEFINED
 #define SkSafeMath_DEFINED
 
-#include "SkTFitsIn.h"
-#include "SkTypes.h"
 #include <limits>
+#include "include/core/SkTypes.h"
+#include "include/private/SkTFitsIn.h"
 
 // SkSafeMath always check that a series of operations do not overflow.
 // This must be correct for all platforms, because this is a check for safety at runtime.
 
 class SkSafeMath {
 public:
-    SkSafeMath() = default;
+    SkSafeMath() noexcept = default;
 
-    bool ok() const { return fOK; }
-    explicit operator bool() const { return fOK; }
+    bool ok() const noexcept { return fOK; }
+    explicit operator bool() const noexcept { return fOK; }
 
-    size_t mul(size_t x, size_t y) {
-        return sizeof(size_t) == sizeof(uint64_t) ? mul64(x, y) : mul32(x, y);
+    size_t mul(size_t x, size_t y) noexcept {
+        if constexpr (sizeof(size_t) == sizeof(uint64_t)) {
+            return mul64(x, y);
+        } else {
+            return mul32(x, y);
+        }
+        // return sizeof(size_t) == sizeof(uint64_t) ? mul64(x, y) : mul32(x, y);
     }
 
-    size_t add(size_t x, size_t y) {
+    size_t add(size_t x, size_t y) noexcept {
         size_t result = x + y;
         fOK &= result >= x;
         return result;
@@ -36,7 +41,7 @@ public:
      *  Return a + b, unless this result is an overflow/underflow. In those cases, fOK will
      *  be set to false, and it is undefined what this returns.
      */
-    int addInt(int a, int b) {
+    int addInt(int a, int b) noexcept {
         if (b < 0 && a < std::numeric_limits<int>::min() - b) {
             fOK = false;
             return a;
@@ -47,7 +52,7 @@ public:
         return a + b;
     }
 
-    size_t alignUp(size_t x, size_t alignment) {
+    size_t alignUp(size_t x, size_t alignment) noexcept {
         SkASSERT(alignment && !(alignment & (alignment - 1)));
         return add(x, alignment - 1) & ~(alignment - 1);
     }
@@ -60,15 +65,15 @@ public:
     }
 
     // These saturate to their results
-    static size_t Add(size_t x, size_t y);
-    static size_t Mul(size_t x, size_t y);
-    static size_t Align4(size_t x) {
+    static size_t Add(size_t x, size_t y) noexcept;
+    static size_t Mul(size_t x, size_t y) noexcept;
+    static size_t Align4(size_t x) noexcept {
         SkSafeMath safe;
         return safe.alignUp(x, 4);
     }
 
 private:
-    uint32_t mul32(uint32_t x, uint32_t y) {
+    uint32_t mul32(uint32_t x, uint32_t y) noexcept {
         uint64_t bx = x;
         uint64_t by = y;
         uint64_t result = bx * by;
@@ -76,9 +81,9 @@ private:
         return result;
     }
 
-    uint64_t mul64(uint64_t x, uint64_t y) {
-        if (x <= std::numeric_limits<uint64_t>::max() >> 32
-            && y <= std::numeric_limits<uint64_t>::max() >> 32) {
+    uint64_t mul64(uint64_t x, uint64_t y) noexcept {
+        if (x <= std::numeric_limits<uint64_t>::max() >> 32 &&
+            y <= std::numeric_limits<uint64_t>::max() >> 32) {
             return x * y;
         } else {
             auto hi = [](uint64_t x) { return x >> 32; };
@@ -93,11 +98,11 @@ private:
             result = this->add(result, (lx_hy << 32));
             fOK &= (hx_hy + (hx_ly >> 32) + (lx_hy >> 32)) == 0;
 
-            #if defined(SK_DEBUG) && defined(__clang__) && defined(__x86_64__)
-                auto double_check = (unsigned __int128)x * y;
-                SkASSERT(result == (double_check & 0xFFFFFFFFFFFFFFFF));
-                SkASSERT(!fOK || (double_check >> 64 == 0));
-            #endif
+#if defined(SK_DEBUG) && defined(__clang__) && defined(__x86_64__)
+            auto double_check = (unsigned __int128)x * y;
+            SkASSERT(result == (double_check & 0xFFFFFFFFFFFFFFFF));
+            SkASSERT(!fOK || (double_check >> 64 == 0));
+#endif
 
             return result;
         }
@@ -105,4 +110,4 @@ private:
     bool fOK = true;
 };
 
-#endif//SkSafeMath_DEFINED
+#endif  // SkSafeMath_DEFINED

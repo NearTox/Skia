@@ -5,17 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkCanvas.h"
-#include "SkPaint.h"
-#include "SkPath.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "samplecode/Sample.h"
 
 // ensure that we don't accidentally screw up the bounds when the oval is
 // fractional, and the impl computes the center and radii, and uses them to
 // reconstruct the edges of the circle.
 // see bug# 1504910
 static void test_circlebounds(SkCanvas*) {
-    SkRect r = { 1.39999998f, 1, 21.3999996f, 21 };
+    SkRect r = {1.39999998f, 1, 21.3999996f, 21};
     SkPath p;
     p.addOval(r);
     SkASSERT(r == p.getBounds());
@@ -53,7 +53,7 @@ protected:
             paint.setStrokeWidth(SkIntToScalar(width));
         }
         canvas->drawCircle(0, 0, SkIntToScalar(9) + fRAD, paint);
-        if (false) { // avoid bit rot, suppress warning
+        if (false) {  // avoid bit rot, suppress warning
             test_circlebounds(canvas);
         }
     }
@@ -79,8 +79,7 @@ protected:
         SkScalar angle = 0;
         for (int i = 1; i < n; i++) {
             angle += step;
-            SkScalar c, s = SkScalarSinCos(angle, &c);
-            path->lineTo(c, s);
+            path->lineTo(SkScalarCos(angle), SkScalarSin(angle));
         }
         path->close();
     }
@@ -114,4 +113,4 @@ const SkScalar CircleView::ANIM_RAD(SK_Scalar1 / 19);
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new CircleView(); )
+DEF_SAMPLE(return new CircleView();)

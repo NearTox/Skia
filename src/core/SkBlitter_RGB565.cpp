@@ -5,14 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "SkCoreBlitters.h"
-#include "SkColorData.h"
-#include "SkShader.h"
-#include "SkUTF.h"
-#include "SkXfermodePriv.h"
-#include "SkColorData.h"
+#include "include/core/SkShader.h"
+#include "include/private/SkColorData.h"
+#include "src/core/SkCoreBlitters.h"
+#include "src/core/SkXfermodePriv.h"
+#include "src/utils/SkUTF.h"
 
-#include "SkNx.h"
+#include "include/private/SkNx.h"
 
 static void D16_S32X_src(uint16_t dst[], const SkPMColor src[], int count, uint8_t coverage) {
     SkASSERT(coverage == 0xFF);
@@ -24,7 +23,8 @@ static void D16_S32X_src(uint16_t dst[], const SkPMColor src[], int count, uint8
 static void D16_S32X_src_coverage(uint16_t dst[], const SkPMColor src[], int count,
                                   uint8_t coverage) {
     switch (coverage) {
-        case 0: break;
+        case 0:
+            break;
         case 0xFF:
             for (int i = 0; i < count; ++i) {
                 dst[i] = SkPixel32ToPixel16(src[i]);
@@ -49,7 +49,8 @@ static void D16_S32A_srcover(uint16_t dst[], const SkPMColor src[], int count, u
 static void D16_S32A_srcover_coverage(uint16_t dst[], const SkPMColor src[], int count,
                                       uint8_t coverage) {
     switch (coverage) {
-        case 0: break;
+        case 0:
+            break;
         case 0xFF:
             for (int i = 0; i < count; ++i) {
                 dst[i] = SkSrcOver32To16(src[i], dst[i]);
@@ -81,10 +82,9 @@ bool SkRGB565_Shader_Blitter::Supports(const SkPixmap& device, const SkPaint& pa
     return true;
 }
 
-SkRGB565_Shader_Blitter::SkRGB565_Shader_Blitter(const SkPixmap& device,
-        const SkPaint& paint, SkShaderBase::Context* shaderContext)
-    : INHERITED(device, paint, shaderContext)
-{
+SkRGB565_Shader_Blitter::SkRGB565_Shader_Blitter(const SkPixmap& device, const SkPaint& paint,
+                                                 SkShaderBase::Context* shaderContext)
+        : INHERITED(device, paint, shaderContext) {
     SkASSERT(shaderContext);
     SkASSERT(Supports(device, paint));
 
@@ -95,22 +95,20 @@ SkRGB565_Shader_Blitter::SkRGB565_Shader_Blitter(const SkPixmap& device,
     if (paint.getBlendMode() == SkBlendMode::kSrc || isOpaque) {
         fBlend = D16_S32X_src;
         fBlendCoverage = D16_S32X_src_coverage;
-    } else {    // srcover
+    } else {  // srcover
         fBlend = isOpaque ? D16_S32X_src : D16_S32A_srcover;
         fBlendCoverage = isOpaque ? D16_S32X_src_coverage : D16_S32A_srcover_coverage;
     }
 }
 
-SkRGB565_Shader_Blitter::~SkRGB565_Shader_Blitter() {
-    sk_free(fBuffer);
-}
+SkRGB565_Shader_Blitter::~SkRGB565_Shader_Blitter() { sk_free(fBuffer); }
 
 void SkRGB565_Shader_Blitter::blitH(int x, int y, int width) {
     SkASSERT(x >= 0 && y >= 0 && x + width <= fDevice.width());
 
     uint16_t* device = fDevice.writable_addr16(x, y);
 
-    SkPMColor*  span = fBuffer;
+    SkPMColor* span = fBuffer;
     fShaderContext->shadeSpan(x, y, span, width);
     fBlend(device, span, width, 0xFF);
 }
@@ -118,8 +116,8 @@ void SkRGB565_Shader_Blitter::blitH(int x, int y, int width) {
 void SkRGB565_Shader_Blitter::blitAntiH(int x, int y, const SkAlpha coverage[],
                                         const int16_t runs[]) {
     SkPMColor* span = fBuffer;
-    uint16_t*  device = fDevice.writable_addr16(x, y);
-    auto*      shaderContext = fShaderContext;
+    uint16_t* device = fDevice.writable_addr16(x, y);
+    auto* shaderContext = fShaderContext;
 
     for (;;) {
         int count = *runs;

@@ -4,9 +4,9 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "Sample.h"
-#include "SkCanvas.h"
-#include "SkPaint.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPaint.h"
+#include "samplecode/Sample.h"
 
 class StrokeRectSample : public Sample {
 public:
@@ -31,18 +31,10 @@ protected:
         hair.setStyle(SkPaint::kStroke_Style);
         hair.setColor(SK_ColorRED);
 
-        static const SkISize gSize[] = {
-            {   100,   50 },
-            {   100,    0 },
-            {     0,   50 },
-            {     0,    0 }
-        };
+        static const SkISize gSize[] = {{100, 50}, {100, 0}, {0, 50}, {0, 0}};
 
-        static const SkPaint::Join gJoin[] = {
-            SkPaint::kMiter_Join,
-            SkPaint::kRound_Join,
-            SkPaint::kBevel_Join
-        };
+        static const SkPaint::Join gJoin[] = {SkPaint::kMiter_Join, SkPaint::kRound_Join,
+                                              SkPaint::kBevel_Join};
 
         canvas->translate(paint.getStrokeWidth(), paint.getStrokeWidth());
         for (size_t i = 0; i < SK_ARRAY_COUNT(gJoin); ++i) {
@@ -67,4 +59,4 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new StrokeRectSample(); )
+DEF_SAMPLE(return new StrokeRectSample();)

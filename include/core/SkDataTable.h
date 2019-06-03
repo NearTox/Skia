@@ -8,9 +8,9 @@
 #ifndef SkDataTable_DEFINED
 #define SkDataTable_DEFINED
 
-#include "../private/SkTDArray.h"
-#include "SkData.h"
-#include "SkString.h"
+#include "include/core/SkData.h"
+#include "include/core/SkString.h"
+#include "include/private/SkTDArray.h"
 
 /**
  *  Like SkData, SkDataTable holds an immutable data buffer. The data buffer is
@@ -44,8 +44,7 @@ public:
      */
     const void* at(int index, size_t* size = nullptr) const;
 
-    template <typename T>
-    const T* atT(int index, size_t* size = nullptr) const {
+    template <typename T> const T* atT(int index, size_t* size = nullptr) const {
         return reinterpret_cast<const T*>(this->at(index, size));
     }
 
@@ -73,8 +72,8 @@ public:
      *               ptrs[] array.
      *  @param count the number of array elements in ptrs[] and sizes[] to copy.
      */
-    static sk_sp<SkDataTable> MakeCopyArrays(const void * const * ptrs,
-                                             const size_t sizes[], int count);
+    static sk_sp<SkDataTable> MakeCopyArrays(const void* const* ptrs, const size_t sizes[],
+                                             int count);
 
     /**
      *  Return a new table that contains a copy of the data in array.
@@ -92,26 +91,25 @@ public:
 private:
     struct Dir {
         const void* fPtr;
-        uintptr_t   fSize;
+        uintptr_t fSize;
     };
 
-    int         fCount;
-    size_t      fElemSize;
+    int fCount;
+    size_t fElemSize;
     union {
-        const Dir*  fDir;
+        const Dir* fDir;
         const char* fElems;
     } fU;
 
-    FreeProc    fFreeProc;
-    void*       fFreeProcContext;
+    FreeProc fFreeProc;
+    void* fFreeProcContext;
 
     SkDataTable();
-    SkDataTable(const void* array, size_t elemSize, int count,
-                FreeProc, void* context);
+    SkDataTable(const void* array, size_t elemSize, int count, FreeProc, void* context);
     SkDataTable(const Dir*, int count, FreeProc, void* context);
     virtual ~SkDataTable();
 
-    friend class SkDataTableBuilder;    // access to Dir
+    friend class SkDataTableBuilder;  // access to Dir
 
     typedef SkRefCnt INHERITED;
 };

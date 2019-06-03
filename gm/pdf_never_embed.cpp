@@ -5,21 +5,26 @@
  * found in the LICENSE file.
  */
 
-#include "Resources.h"
-#include "SkTextBlob.h"
-#include "SkTo.h"
-#include "SkTypeface.h"
-#include "gm.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTextBlob.h"
+#include "include/core/SkTypeface.h"
+#include "tools/Resources.h"
 
-static void excercise_draw_pos_text(SkCanvas* canvas,
-                                    const char* text,
-                                    SkScalar x, SkScalar y,
-                                    const SkFont& font,
-                                    const SkPaint& paint) {
-    const int count = font.countText(text, strlen(text), kUTF8_SkTextEncoding);
+#include <string.h>
+
+static void excercise_draw_pos_text(SkCanvas* canvas, const char* text, SkScalar x, SkScalar y,
+                                    const SkFont& font, const SkPaint& paint) {
+    const int count = font.countText(text, strlen(text), SkTextEncoding::kUTF8);
     SkTextBlobBuilder builder;
     auto rec = builder.allocRunPos(font, count);
-    font.textToGlyphs(text, strlen(text), kUTF8_SkTextEncoding, rec.glyphs, count);
+    font.textToGlyphs(text, strlen(text), SkTextEncoding::kUTF8, rec.glyphs, count);
     font.getPos(rec.glyphs, count, rec.points());
     canvas->drawTextBlob(builder.make(), x, y, paint);
 }
@@ -29,8 +34,9 @@ DEF_SIMPLE_GM_CAN_FAIL(pdf_never_embed, canvas, errorMsg, 512, 512) {
 
     SkFont font(MakeResourceAsTypeface("fonts/Roboto2-Regular_NoEmbed.ttf"), 60);
     if (!font.getTypefaceOrDefault()) {
-        *errorMsg = "Could not load fonts/Roboto2-Regular_NoEmbed.ttf. "
-                    "Did you forget to set the resourcePath?";
+        *errorMsg =
+                "Could not load fonts/Roboto2-Regular_NoEmbed.ttf. "
+                "Did you forget to set the resourcePath?";
         return skiagm::DrawResult::kFail;
     }
 
@@ -53,10 +59,9 @@ DEF_SIMPLE_GM_CAN_FAIL(pdf_never_embed, canvas, errorMsg, 512, 512) {
 
     canvas->scale(1.0, 0.5);
     p.setColor(0xF0000080);
-    canvas->drawSimpleText(text, strlen(text), kUTF8_SkTextEncoding, 30, 700, font, p);
+    canvas->drawSimpleText(text, strlen(text), SkTextEncoding::kUTF8, 30, 700, font, p);
     return skiagm::DrawResult::kOk;
 }
-
 
 // should draw completely white.
 DEF_SIMPLE_GM(pdf_crbug_772685, canvas, 612, 792) {

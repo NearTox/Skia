@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkBlurMask.h"
-#include "SkBlurMaskFilter.h"
-#include "SkCanvas.h"
-#include "SkSurface.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkSurface.h"
+#include "include/effects/SkBlurMaskFilter.h"
+#include "samplecode/Sample.h"
+#include "src/core/SkBlurMask.h"
 
 static SkBitmap make_bitmap() {
     SkBitmap bm;
@@ -25,12 +25,10 @@ static SkBitmap make_bitmap() {
 }
 
 class TextureDomainView : public Sample {
-    SkBitmap    fBM;
+    SkBitmap fBM;
 
 public:
-    TextureDomainView(){
-        fBM = make_bitmap();
-    }
+    TextureDomainView() { fBM = make_bitmap(); }
 
 protected:
     virtual bool onQuery(Sample::Event* evt) {
@@ -76,7 +74,7 @@ protected:
         srcRect.setXYWH(1, 1, 3, 3);
         dstRect.setXYWH(5, 405, 305, 305);
         paint.setMaskFilter(SkMaskFilter::MakeBlur(
-            kNormal_SkBlurStyle, SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(5)), false));
+                kNormal_SkBlurStyle, SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(5)), false));
         canvas->drawImageRect(image, srcRect, dstRect, &paint);
 
         // Blur and a rotation + nullptr src rect
@@ -84,18 +82,19 @@ protected:
         // but it will test a code path in SkGpuDevice::drawBitmap
         // that handles blurs with rects transformed to non-
         // orthogonal rects. It also tests the nullptr src rect handling
-        paint.setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle,
-                                                   SkBlurMask::ConvertRadiusToSigma(5)));
+        paint.setMaskFilter(
+                SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, SkBlurMask::ConvertRadiusToSigma(5)));
 
         dstRect.setXYWH(-150, -150, 300, 300);
         canvas->translate(550, 550);
         canvas->rotate(45);
         canvas->drawBitmapRect(fBM, dstRect, &paint);
     }
+
 private:
     typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new TextureDomainView(); )
+DEF_SAMPLE(return new TextureDomainView();)

@@ -5,14 +5,13 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef GrGradientBitmapCache_DEFINED
 #define GrGradientBitmapCache_DEFINED
 
-#include "SkBitmap.h"
-#include "SkColorData.h"
-#include "SkMutex.h"
-#include "SkNoncopyable.h"
+#include "include/core/SkBitmap.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkMutex.h"
+#include "include/private/SkNoncopyable.h"
 
 class GrGradientBitmapCache : SkNoncopyable {
 public:
@@ -32,8 +31,8 @@ private:
     const int fResolution;
 
     struct Entry;
-    mutable Entry*  fHead;
-    mutable Entry*  fTail;
+    mutable Entry* fHead;
+    mutable Entry* fTail;
 
     inline Entry* release(Entry*) const;
     inline void attachToHead(Entry*) const;
@@ -54,6 +53,7 @@ private:
     public:
         AutoValidate(const GrGradientBitmapCache* bc) : fBC(bc) { bc->validate(); }
         ~AutoValidate() { fBC->validate(); }
+
     private:
         const GrGradientBitmapCache* fBC;
     };

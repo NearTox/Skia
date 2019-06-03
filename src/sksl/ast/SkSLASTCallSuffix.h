@@ -9,7 +9,7 @@
 #define SKSL_ASTCALLSUFFIX
 
 #include <vector>
-#include "SkSLASTSuffix.h"
+#include "src/sksl/ast/SkSLASTSuffix.h"
 
 namespace SkSL {
 
@@ -18,8 +18,7 @@ namespace SkSL {
  */
 struct ASTCallSuffix : public ASTSuffix {
     ASTCallSuffix(int offset, std::vector<std::unique_ptr<ASTExpression>> arguments)
-    : INHERITED(offset, ASTSuffix::kCall_Kind)
-    , fArguments(std::move(arguments)) {}
+            : INHERITED(offset, ASTSuffix::kCall_Kind), fArguments(std::move(arguments)) {}
 
     String description() const override {
         String result("(");
@@ -38,6 +37,6 @@ struct ASTCallSuffix : public ASTSuffix {
     typedef ASTSuffix INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

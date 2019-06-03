@@ -4,11 +4,22 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "gm.h"
-#include "sk_tool_utils.h"
 
-#include "SkAnnotation.h"
-#include "SkData.h"
+#include "gm/gm.h"
+#include "include/core/SkAnnotation.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkData.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypeface.h"
+#include "tools/ToolUtils.h"
 
 namespace skiagm {
 
@@ -19,18 +30,12 @@ namespace skiagm {
  */
 class InternalLinksGM : public GM {
 public:
-    InternalLinksGM() {
-        this->setBGColor(0xFFDDDDDD);
-    }
+    InternalLinksGM() { this->setBGColor(0xFFDDDDDD); }
 
 protected:
-    virtual SkString onShortName() {
-        return SkString("internal_links");
-    }
+    virtual SkString onShortName() { return SkString("internal_links"); }
 
-    virtual SkISize onISize() {
-        return SkISize::Make(700, 500);
-    }
+    virtual SkISize onISize() { return SkISize::Make(700, 500); }
 
     virtual void onDraw(SkCanvas* canvas) {
         sk_sp<SkData> name(SkData::MakeWithCString("target-a"));
@@ -56,11 +61,10 @@ private:
     void drawLabeledRect(SkCanvas* canvas, const char* text, SkScalar x, SkScalar y) {
         SkPaint paint;
         paint.setColor(SK_ColorBLUE);
-        SkRect rect = SkRect::MakeXYWH(x, y,
-                                       SkIntToScalar(50), SkIntToScalar(20));
+        SkRect rect = SkRect::MakeXYWH(x, y, SkIntToScalar(50), SkIntToScalar(20));
         canvas->drawRect(rect, paint);
 
-        SkFont font(sk_tool_utils::create_portable_typeface(), 25);
+        SkFont font(ToolUtils::create_portable_typeface(), 25);
         paint.setColor(SK_ColorBLACK);
         canvas->drawString(text, x, y, font, paint);
     }
@@ -70,6 +74,6 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new InternalLinksGM; )
+DEF_GM(return new InternalLinksGM;)
 
-}
+}  // namespace skiagm

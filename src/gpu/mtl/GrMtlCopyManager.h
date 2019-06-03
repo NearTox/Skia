@@ -3,12 +3,12 @@
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
-*/
+ */
 
 #ifndef GrMtlCopyManager_DEFINED
 #define GrMtlCopyManager_DEFINED
 
-#include "GrTypes.h"
+#include "include/gpu/GrTypes.h"
 
 #import <metal/metal.h>
 
@@ -22,10 +22,9 @@ class GrMtlCopyManager {
 public:
     GrMtlCopyManager(GrMtlGpu* gpu) : fGpu(gpu) {}
 
-    bool copySurfaceAsDraw(GrSurface* dst, GrSurfaceOrigin dstOrigin,
-                           GrSurface* src, GrSurfaceOrigin srcOrigin,
-                           const SkIRect& srcRect, const SkIPoint& dstPoint,
-                           bool canDiscardOutsideDstRect);
+    bool copySurfaceAsDraw(GrSurface* dst, GrSurfaceOrigin dstOrigin, GrSurface* src,
+                           GrSurfaceOrigin srcOrigin, const SkIRect& srcRect,
+                           const SkIPoint& dstPoint, bool canDiscardOutsideDstRect);
 
     static bool IsCompatible(const GrMtlCopyPipelineState*, MTLPixelFormat dstPixelFormat);
 
@@ -41,10 +40,10 @@ private:
 
     void createCopyProgram();
 
-    id<MTLSamplerState>  fSamplerState;
-    id<MTLBuffer>        fVertexAttributeBuffer;
-    id<MTLFunction>      fVertexFunction;
-    id<MTLFunction>      fFragmentFunction;
+    id<MTLSamplerState> fSamplerState;
+    id<MTLBuffer> fVertexAttributeBuffer;
+    id<MTLFunction> fVertexFunction;
+    id<MTLFunction> fFragmentFunction;
     MTLVertexDescriptor* fVertexDescriptor;
 
     GrMtlGpu* fGpu;

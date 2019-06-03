@@ -4,37 +4,36 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include <SkFont.h>
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkTypeface.h"
+
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+
+#include <string.h>
 
 namespace skiagm {
 
 class FontScalerGM : public GM {
 public:
-    FontScalerGM() {
-        this->setBGColor(0xFFFFFFFF);
-    }
+    FontScalerGM() { this->setBGColor(0xFFFFFFFF); }
 
 protected:
+    SkString onShortName() override { return SkString("fontscaler"); }
 
-    SkString onShortName() override {
-        SkString name("fontscaler");
-        name.append(sk_tool_utils::platform_font_manager());
-        return name;
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(1450, 750);
-    }
+    SkISize onISize() override { return SkISize::Make(1450, 750); }
 
     void onDraw(SkCanvas* canvas) override {
         SkFont font;
         font.setEdging(SkFont::Edging::kSubpixelAntiAlias);
-        //With freetype the default (normal hinting) can be really ugly.
-        //Most distros now set slight (vertical hinting only) in any event.
-        font.setHinting(kSlight_SkFontHinting);
+        // With freetype the default (normal hinting) can be really ugly.
+        // Most distros now set slight (vertical hinting only) in any event.
+        font.setHinting(SkFontHinting::kSlight);
 
         const char* text = "Hamburgefons ooo mmm";
         const size_t textLen = strlen(text);
@@ -46,27 +45,28 @@ protected:
                 SkScalar y = SkIntToScalar(20);
 
                 SkAutoCanvasRestore acr(canvas, true);
-                canvas->translate(SkIntToScalar(50 + i * 230),
-                                  SkIntToScalar(20));
+                canvas->translate(SkIntToScalar(50 + i * 230), SkIntToScalar(20));
                 canvas->rotate(SkIntToScalar(i * 5), x, y * 10);
 
                 {
                     SkPaint p;
                     p.setAntiAlias(true);
                     SkRect r;
-                    r.set(x - SkIntToScalar(3), SkIntToScalar(15),
-                          x - SkIntToScalar(1), SkIntToScalar(280));
+                    r.set(x - SkIntToScalar(3), SkIntToScalar(15), x - SkIntToScalar(1),
+                          SkIntToScalar(280));
                     canvas->drawRect(r, p);
                 }
 
                 for (int ps = 6; ps <= 22; ps++) {
                     font.setSize(SkIntToScalar(ps));
-                    canvas->drawSimpleText(text, textLen, kUTF8_SkTextEncoding, x, y, font, SkPaint());
+                    canvas->drawSimpleText(text, textLen, SkTextEncoding::kUTF8, x, y, font,
+                                           SkPaint());
                     y += font.getMetrics(nullptr);
                 }
             }
             canvas->translate(0, SkIntToScalar(360));
             font.setSubpixel(true);
+            font.setLinearMetrics(true);
         }
     }
 
@@ -76,6 +76,6 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new FontScalerGM; )
+DEF_GM(return new FontScalerGM;)
 
-}
+}  // namespace skiagm

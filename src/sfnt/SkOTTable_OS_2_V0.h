@@ -8,17 +8,17 @@
 #ifndef SkOTTable_OS_2_V0_DEFINED
 #define SkOTTable_OS_2_V0_DEFINED
 
-#include "SkEndian.h"
-#include "SkIBMFamilyClass.h"
-#include "SkOTTableTypes.h"
-#include "SkPanose.h"
+#include "src/core/SkEndian.h"
+#include "src/sfnt/SkIBMFamilyClass.h"
+#include "src/sfnt/SkOTTableTypes.h"
+#include "src/sfnt/SkPanose.h"
 
 #pragma pack(push, 1)
 
 struct SkOTTableOS2_V0 {
     SK_OT_USHORT version;
-    //SkOTTableOS2_VA::VERSION and SkOTTableOS2_V0::VERSION are both 0.
-    //The only way to differentiate these two versions is by the size of the table.
+    // SkOTTableOS2_VA::VERSION and SkOTTableOS2_V0::VERSION are both 0.
+    // The only way to differentiate these two versions is by the size of the table.
     static const SK_OT_USHORT VERSION = SkTEndian_SwapBE16(0);
 
     SK_OT_SHORT xAvgCharWidth;
@@ -51,26 +51,24 @@ struct SkOTTableOS2_V0 {
     } usWidthClass;
     union Type {
         struct Field {
-            //8-15
-            SK_OT_BYTE_BITFIELD(
-                Reserved08,
-                Reserved09,
-                Reserved10,
-                Reserved11,
-                Reserved12,
-                Reserved13,
-                Reserved14,
-                Reserved15)
-            //0-7
-            SK_OT_BYTE_BITFIELD(
-                Reserved00,
-                Restricted,
-                PreviewPrint,
-                Editable,
-                Reserved04,
-                Reserved05,
-                Reserved06,
-                Reserved07)
+            // 8-15
+            SK_OT_BYTE_BITFIELD(Reserved08,
+                                Reserved09,
+                                Reserved10,
+                                Reserved11,
+                                Reserved12,
+                                Reserved13,
+                                Reserved14,
+                                Reserved15)
+            // 0-7
+            SK_OT_BYTE_BITFIELD(Reserved00,
+                                Restricted,
+                                PreviewPrint,
+                                Editable,
+                                Reserved04,
+                                Reserved05,
+                                Reserved06,
+                                Reserved07)
         } field;
         struct Raw {
             static const SK_OT_USHORT Installable = 0;
@@ -96,26 +94,18 @@ struct SkOTTableOS2_V0 {
     SK_OT_CHAR achVendID[4];
     union Selection {
         struct Field {
-            //8-15
+            // 8-15
+            SK_OT_BYTE_BITFIELD(Reserved08,
+                                Reserved09,
+                                Reserved10,
+                                Reserved11,
+                                Reserved12,
+                                Reserved13,
+                                Reserved14,
+                                Reserved15)
+            // 0-7
             SK_OT_BYTE_BITFIELD(
-                Reserved08,
-                Reserved09,
-                Reserved10,
-                Reserved11,
-                Reserved12,
-                Reserved13,
-                Reserved14,
-                Reserved15)
-            //0-7
-            SK_OT_BYTE_BITFIELD(
-                Italic,
-                Underscore,
-                Negative,
-                Outlined,
-                Strikeout,
-                Bold,
-                Regular,
-                Reserved07)
+                    Italic, Underscore, Negative, Outlined, Strikeout, Bold, Regular, Reserved07)
         } field;
         struct Raw {
             static const SK_OT_USHORT ItalicMask = SkOTSetUSHORTBit<0>::value;
@@ -130,7 +120,7 @@ struct SkOTTableOS2_V0 {
     } fsSelection;
     SK_OT_USHORT usFirstCharIndex;
     SK_OT_USHORT usLastCharIndex;
-    //version0
+    // version0
     SK_OT_SHORT sTypoAscender;
     SK_OT_SHORT sTypoDescender;
     SK_OT_SHORT sTypoLineGap;
@@ -139,7 +129,6 @@ struct SkOTTableOS2_V0 {
 };
 
 #pragma pack(pop)
-
 
 static_assert(sizeof(SkOTTableOS2_V0) == 78, "sizeof_SkOTTableOS2_V0_not_78");
 

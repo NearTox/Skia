@@ -8,7 +8,7 @@
 #ifndef SKSL_ASTTERNARYEXPRESSION
 #define SKSL_ASTTERNARYEXPRESSION
 
-#include "SkSLASTExpression.h"
+#include "src/sksl/ast/SkSLASTExpression.h"
 
 namespace SkSL {
 
@@ -17,12 +17,14 @@ namespace SkSL {
  */
 struct ASTTernaryExpression : public ASTExpression {
     ASTTernaryExpression(std::unique_ptr<ASTExpression> test,
-                         std::unique_ptr<ASTExpression> ifTrue,
-                         std::unique_ptr<ASTExpression> ifFalse)
-    : INHERITED(test->fOffset, kTernary_Kind)
-    , fTest(std::move(test))
-    , fIfTrue(std::move(ifTrue))
-    , fIfFalse(std::move(ifFalse)) {}
+                         std::unique_ptr<ASTExpression>
+                                 ifTrue,
+                         std::unique_ptr<ASTExpression>
+                                 ifFalse)
+            : INHERITED(test->fOffset, kTernary_Kind)
+            , fTest(std::move(test))
+            , fIfTrue(std::move(ifTrue))
+            , fIfFalse(std::move(ifFalse)) {}
 
     String description() const override {
         return "(" + fTest->description() + " ? " + fIfTrue->description() + " : " +
@@ -36,6 +38,6 @@ struct ASTTernaryExpression : public ASTExpression {
     typedef ASTExpression INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

@@ -5,15 +5,20 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkPath.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
 
 typedef SkScalar (*MakePathProc)(SkPath*);
 
 static SkScalar make_triangle(SkPath* path) {
-    constexpr int gCoord[] = {
-        10, 20, 15, 5, 30, 30
-    };
+    constexpr int gCoord[] = {10, 20, 15, 5, 30, 30};
     path->moveTo(SkIntToScalar(gCoord[0]), SkIntToScalar(gCoord[1]));
     path->lineTo(SkIntToScalar(gCoord[2]), SkIntToScalar(gCoord[3]));
     path->lineTo(SkIntToScalar(gCoord[4]), SkIntToScalar(gCoord[5]));
@@ -23,16 +28,14 @@ static SkScalar make_triangle(SkPath* path) {
 }
 
 static SkScalar make_rect(SkPath* path) {
-    SkRect r = { SkIntToScalar(10), SkIntToScalar(10),
-                 SkIntToScalar(30), SkIntToScalar(30) };
+    SkRect r = {SkIntToScalar(10), SkIntToScalar(10), SkIntToScalar(30), SkIntToScalar(30)};
     path->addRect(r);
     path->offset(SkIntToScalar(10), SkIntToScalar(0));
     return SkIntToScalar(30);
 }
 
 static SkScalar make_oval(SkPath* path) {
-    SkRect r = { SkIntToScalar(10), SkIntToScalar(10),
-                 SkIntToScalar(30), SkIntToScalar(30) };
+    SkRect r = {SkIntToScalar(10), SkIntToScalar(10), SkIntToScalar(30), SkIntToScalar(30)};
     path->addOval(r);
     path->offset(SkIntToScalar(10), SkIntToScalar(0));
     return SkIntToScalar(30);
@@ -48,8 +51,7 @@ static SkScalar make_star(SkPath* path, int n) {
     path->moveTo(c, c - r);
     for (int i = 1; i < n; i++) {
         rad += drad;
-        SkScalar cosV, sinV = SkScalarSinCos(rad, &cosV);
-        path->lineTo(c + cosV * r, c + sinV * r);
+        path->lineTo(c + SkScalarCos(rad) * r, c + SkScalarSin(rad) * r);
     }
     path->close();
     return r * 2 * 6 / 5;
@@ -98,9 +100,8 @@ static SkScalar make_curve(SkPath* path) {
     static SkScalar xOffset = -382.f;
     static SkScalar yOffset = -50.f;
     path->moveTo(491 + xOffset, 56 + yOffset);
-    path->conicTo(435.93292f + xOffset, 56.000031f + yOffset,
-                  382.61078f + xOffset, 69.752716f + yOffset,
-                  0.9920463f);
+    path->conicTo(435.93292f + xOffset, 56.000031f + yOffset, 382.61078f + xOffset,
+                  69.752716f + yOffset, 0.9920463f);
 
     return SkIntToScalar(40);
 }
@@ -154,67 +155,32 @@ static SkScalar make_battery2(SkPath* path) {
     return SkIntToScalar(70);
 }
 
-constexpr MakePathProc gProcs[] = {
-    make_triangle,
-    make_rect,
-    make_oval,
-    make_star_5,
-    make_star_13,
-    make_three_line,
-    make_arrow,
-    make_curve,
-    make_battery,
-    make_battery2
-};
+constexpr MakePathProc gProcs[] = {make_triangle, make_rect,       make_oval,  make_star_5,
+                                   make_star_13,  make_three_line, make_arrow, make_curve,
+                                   make_battery,  make_battery2};
 
 constexpr SkScalar gWidths[] = {
-    2.0f,
-    3.0f,
-    4.0f,
-    5.0f,
-    6.0f,
-    7.0f,
-    7.0f,
-    14.0f,
-    0.0f,
-    0.0f,
+        2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 7.0f, 14.0f, 0.0f, 0.0f,
 };
 
 constexpr SkScalar gMiters[] = {
-    2.0f,
-    3.0f,
-    3.0f,
-    3.0f,
-    4.0f,
-    4.0f,
-    4.0f,
-    4.0f,
-    4.0f,
-    4.0f,
+        2.0f, 3.0f, 3.0f, 3.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f,
 };
 
 constexpr SkScalar gXTranslate[] = {
-    0.0f,
-    0.0f,
-    0.0f,
-    0.0f,
-    0.0f,
-    0.0f,
-    0.0f,
-    0.0f,
-    -220.625f,
-    0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, -220.625f, 0.0f,
 };
 
-#define N   SK_ARRAY_COUNT(gProcs)
+#define N SK_ARRAY_COUNT(gProcs)
 
 // This GM tests out drawing small paths (i.e., for Ganesh, using the Distance
 // Field path renderer) which are filled, stroked and filledAndStroked. In
 // particular this ensures that any cache keys in use include the stroking
 // parameters.
 class SmallPathsGM : public skiagm::GM {
-    SkPath  fPath[N];
+    SkPath fPath[N];
     SkScalar fDY[N];
+
 protected:
     void onOnceBeforeDraw() override {
         for (size_t i = 0; i < N; i++) {
@@ -222,13 +188,9 @@ protected:
         }
     }
 
-    SkString onShortName() override {
-        return SkString("smallpaths");
-    }
+    SkString onShortName() override { return SkString("smallpaths"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(640, 480);
-    }
+    SkISize onISize() override { return SkISize::Make(640, 480); }
 
     void onDraw(SkCanvas* canvas) override {
         SkPaint paint;
@@ -278,7 +240,6 @@ protected:
             canvas->drawPath(fPath[i], paint);
             canvas->translate(gXTranslate[i], fDY[i]);
         }
-
     }
 
 private:

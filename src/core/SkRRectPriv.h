@@ -8,7 +8,7 @@
 #ifndef SkRRectPriv_DEFINED
 #define SkRRectPriv_DEFINED
 
-#include "SkRRect.h"
+#include "include/core/SkRRect.h"
 
 class SkRBuffer;
 class SkWBuffer;
@@ -29,7 +29,7 @@ public:
     }
 
     static bool EqualRadii(const SkRRect& rr) {
-        return rr.isRect() || SkRRectPriv::IsCircle(rr)  || SkRRectPriv::IsSimpleCircular(rr);
+        return rr.isRect() || SkRRectPriv::IsCircle(rr) || SkRRectPriv::IsSimpleCircular(rr);
     }
 
     static const SkVector* GetRadiiArray(const SkRRect& rr) { return rr.fRadii; }
@@ -42,4 +42,3 @@ public:
 };
 
 #endif
-

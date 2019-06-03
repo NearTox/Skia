@@ -5,32 +5,28 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "Sample.h"
-#include "Resources.h"
-#include "SkCanvas.h"
-#include "SkImage.h"
-#include "SkPath.h"
-#include "SkPoint3.h"
-#include "SkShadowUtils.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPoint3.h"
+#include "include/utils/SkShadowUtils.h"
+#include "samplecode/Sample.h"
+#include "tools/Resources.h"
 
 ////////////////////////////////////////////////////////////////////////////
 // Sample to compare the Material Design shadow reference to our results
 
 class ShadowRefView : public Sample {
-    SkPath         fRRectPath;
+    SkPath fRRectPath;
     sk_sp<SkImage> fReferenceImage;
 
-    bool      fShowAmbient;
-    bool      fShowSpot;
-    bool      fUseAlt;
-    bool      fShowObject;
+    bool fShowAmbient;
+    bool fShowSpot;
+    bool fUseAlt;
+    bool fShowObject;
 
 public:
-    ShadowRefView()
-        : fShowAmbient(true)
-        , fShowSpot(true)
-        , fUseAlt(false)
-        , fShowObject(true) {}
+    ShadowRefView() : fShowAmbient(true), fShowSpot(true), fUseAlt(false), fShowObject(true) {}
 
 protected:
     void onOnceBeforeDraw() override {
@@ -79,10 +75,9 @@ protected:
         canvas->drawImage(fReferenceImage, 10, 30);
     }
 
-    void drawShadowedPath(SkCanvas* canvas, const SkPath& path,
-                          const SkPoint3& zPlaneParams,
-                          const SkPaint& paint, SkScalar ambientAlpha,
-                          const SkPoint3& lightPos, SkScalar lightWidth, SkScalar spotAlpha) {
+    void drawShadowedPath(SkCanvas* canvas, const SkPath& path, const SkPoint3& zPlaneParams,
+                          const SkPaint& paint, SkScalar ambientAlpha, const SkPoint3& lightPos,
+                          SkScalar lightWidth, SkScalar spotAlpha) {
         if (!fShowAmbient) {
             ambientAlpha = 0;
         }
@@ -96,9 +91,8 @@ protected:
 
         SkColor ambientColor = SkColorSetARGB(ambientAlpha * 255, 0, 0, 0);
         SkColor spotColor = SkColorSetARGB(spotAlpha * 255, 0, 0, 0);
-        SkShadowUtils::DrawShadow(canvas, path, zPlaneParams,
-                                  lightPos, lightWidth,
-                                  ambientColor, spotColor, flags);
+        SkShadowUtils::DrawShadow(canvas, path, zPlaneParams, lightPos, lightWidth, ambientColor,
+                                  spotColor, flags);
 
         if (fShowObject) {
             canvas->drawPath(path, paint);
@@ -117,7 +111,7 @@ protected:
         const SkScalar kDP = 4;  // the reference image is 4x bigger than it is displayed on
                                  // on the web page, so we need to reflect that here and
                                  // multiply the heights and light params accordingly
-        const SkScalar kLightWidth = kDP*400;
+        const SkScalar kLightWidth = kDP * 400;
         const SkScalar kAmbientAlpha = 0.03f;
         const SkScalar kSpotAlpha = 0.35f;
 
@@ -125,7 +119,7 @@ protected:
         paint.setAntiAlias(true);
         paint.setColor(SK_ColorWHITE);
 
-        SkPoint3 lightPos = { 175, -800, kDP * 600 };
+        SkPoint3 lightPos = {175, -800, kDP * 600};
         SkScalar xPos = 230;
         SkScalar yPos = 254.25f;
         SkRect clipRect = SkRect::MakeXYWH(45, 75, 122, 250);
@@ -135,8 +129,8 @@ protected:
         canvas->save();
         canvas->clipRect(clipRect);
         canvas->translate(xPos, yPos);
-        this->drawShadowedPath(canvas, fRRectPath, zPlaneParams, paint, kAmbientAlpha,
-                               lightPos, kLightWidth, kSpotAlpha);
+        this->drawShadowedPath(canvas, fRRectPath, zPlaneParams, paint, kAmbientAlpha, lightPos,
+                               kLightWidth, kSpotAlpha);
         canvas->restore();
 
         lightPos.fX += 320;
@@ -146,8 +140,8 @@ protected:
         canvas->save();
         canvas->clipRect(clipRect);
         canvas->translate(xPos, yPos);
-        this->drawShadowedPath(canvas, fRRectPath, zPlaneParams, paint, kAmbientAlpha,
-                               lightPos, kLightWidth, kSpotAlpha);
+        this->drawShadowedPath(canvas, fRRectPath, zPlaneParams, paint, kAmbientAlpha, lightPos,
+                               kLightWidth, kSpotAlpha);
         canvas->restore();
 
         lightPos.fX += 320;
@@ -157,8 +151,8 @@ protected:
         canvas->save();
         canvas->clipRect(clipRect);
         canvas->translate(xPos, yPos);
-        this->drawShadowedPath(canvas, fRRectPath, zPlaneParams, paint, kAmbientAlpha,
-                               lightPos, kLightWidth, kSpotAlpha);
+        this->drawShadowedPath(canvas, fRRectPath, zPlaneParams, paint, kAmbientAlpha, lightPos,
+                               kLightWidth, kSpotAlpha);
         canvas->restore();
 
         lightPos.fX += 320;
@@ -168,8 +162,8 @@ protected:
         canvas->save();
         canvas->clipRect(clipRect);
         canvas->translate(xPos, yPos);
-        this->drawShadowedPath(canvas, fRRectPath, zPlaneParams, paint, kAmbientAlpha,
-                               lightPos, kLightWidth, kSpotAlpha);
+        this->drawShadowedPath(canvas, fRRectPath, zPlaneParams, paint, kAmbientAlpha, lightPos,
+                               kLightWidth, kSpotAlpha);
         canvas->restore();
 
         lightPos.fX += 320;
@@ -179,8 +173,8 @@ protected:
         canvas->save();
         canvas->clipRect(clipRect);
         canvas->translate(xPos, yPos);
-        this->drawShadowedPath(canvas, fRRectPath, zPlaneParams, paint, kAmbientAlpha,
-                               lightPos, kLightWidth, kSpotAlpha);
+        this->drawShadowedPath(canvas, fRRectPath, zPlaneParams, paint, kAmbientAlpha, lightPos,
+                               kLightWidth, kSpotAlpha);
         canvas->restore();
 
         lightPos.fX += 320;
@@ -190,10 +184,9 @@ protected:
         canvas->save();
         canvas->clipRect(clipRect);
         canvas->translate(xPos, yPos);
-        this->drawShadowedPath(canvas, fRRectPath, zPlaneParams, paint, kAmbientAlpha,
-                               lightPos, kLightWidth, kSpotAlpha);
+        this->drawShadowedPath(canvas, fRRectPath, zPlaneParams, paint, kAmbientAlpha, lightPos,
+                               kLightWidth, kSpotAlpha);
         canvas->restore();
-
     }
 
 private:
@@ -202,4 +195,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new ShadowRefView(); )
+DEF_SAMPLE(return new ShadowRefView();)

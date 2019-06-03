@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-
 /*
  * This GM exercises stroking of paths with large stroke lengths, which is
  * referred to as "overstroke" for brevity. In Skia as of 8/2016 we offset
@@ -22,12 +21,18 @@
  * See crbug.com/589769 skbug.com/5405 skbug.com/5406
  */
 
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPathMeasure.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "src/core/SkPointPriv.h"
 
-#include "gm.h"
-#include "SkPaint.h"
-#include "SkPath.h"
-#include "SkPathMeasure.h"
-#include "SkPointPriv.h"
+#include <cstddef>
 
 const SkScalar OVERSTROKE_WIDTH = 500.0f;
 const SkScalar NORMALSTROKE_WIDTH = 3.0f;
@@ -57,8 +62,7 @@ SkPath quad_path() {
     SkPath path;
     path.moveTo(0, 0);
     path.lineTo(100, 0);
-    path.quadTo(50, -40,
-                0, 0);
+    path.quadTo(50, -40, 0, 0);
     path.close();
 
     return path;
@@ -67,9 +71,7 @@ SkPath quad_path() {
 SkPath cubic_path() {
     SkPath path;
     path.moveTo(0, 0);
-    path.cubicTo(25, 75,
-                 75, -50,
-                 100, 0);
+    path.cubicTo(25, 75, 75, -50, 100, 0);
 
     return path;
 }
@@ -108,8 +110,8 @@ SkPath ribs_path(SkPath path, SkScalar radius) {
     return ribs;
 }
 
-void draw_ribs(SkCanvas *canvas, SkPath path) {
-    SkPath ribs = ribs_path(path, OVERSTROKE_WIDTH/2.0f);
+void draw_ribs(SkCanvas* canvas, SkPath path) {
+    SkPath ribs = ribs_path(path, OVERSTROKE_WIDTH / 2.0f);
     SkPaint p = make_normal_paint();
     p.setStrokeWidth(1);
     p.setColor(SK_ColorBLUE);
@@ -120,7 +122,7 @@ void draw_ribs(SkCanvas *canvas, SkPath path) {
 
 ///////// quads
 
-void draw_small_quad(SkCanvas *canvas) {
+void draw_small_quad(SkCanvas* canvas) {
     // scaled so it's visible
     // canvas->scale(8, 8);
 
@@ -131,7 +133,7 @@ void draw_small_quad(SkCanvas *canvas) {
     canvas->drawPath(path, p);
 }
 
-void draw_large_quad(SkCanvas *canvas) {
+void draw_large_quad(SkCanvas* canvas) {
     SkPaint p = make_overstroke_paint();
     SkPath path = quad_path();
 
@@ -139,7 +141,7 @@ void draw_large_quad(SkCanvas *canvas) {
     draw_ribs(canvas, path);
 }
 
-void draw_quad_fillpath(SkCanvas *canvas) {
+void draw_quad_fillpath(SkCanvas* canvas) {
     SkPath path = quad_path();
     SkPaint p = make_overstroke_paint();
 
@@ -152,7 +154,7 @@ void draw_quad_fillpath(SkCanvas *canvas) {
     canvas->drawPath(fillpath, fillp);
 }
 
-void draw_stroked_quad(SkCanvas *canvas) {
+void draw_stroked_quad(SkCanvas* canvas) {
     canvas->translate(400, 0);
     draw_large_quad(canvas);
     draw_quad_fillpath(canvas);
@@ -160,7 +162,7 @@ void draw_stroked_quad(SkCanvas *canvas) {
 
 ////////// cubics
 
-void draw_small_cubic(SkCanvas *canvas) {
+void draw_small_cubic(SkCanvas* canvas) {
     SkPaint p = make_normal_paint();
     SkPath path = cubic_path();
 
@@ -168,7 +170,7 @@ void draw_small_cubic(SkCanvas *canvas) {
     canvas->drawPath(path, p);
 }
 
-void draw_large_cubic(SkCanvas *canvas) {
+void draw_large_cubic(SkCanvas* canvas) {
     SkPaint p = make_overstroke_paint();
     SkPath path = cubic_path();
 
@@ -176,7 +178,7 @@ void draw_large_cubic(SkCanvas *canvas) {
     draw_ribs(canvas, path);
 }
 
-void draw_cubic_fillpath(SkCanvas *canvas) {
+void draw_cubic_fillpath(SkCanvas* canvas) {
     SkPath path = cubic_path();
     SkPaint p = make_overstroke_paint();
 
@@ -189,7 +191,7 @@ void draw_cubic_fillpath(SkCanvas *canvas) {
     canvas->drawPath(fillpath, fillp);
 }
 
-void draw_stroked_cubic(SkCanvas *canvas) {
+void draw_stroked_cubic(SkCanvas* canvas) {
     canvas->translate(400, 0);
     draw_large_cubic(canvas);
     draw_cubic_fillpath(canvas);
@@ -197,7 +199,7 @@ void draw_stroked_cubic(SkCanvas *canvas) {
 
 ////////// ovals
 
-void draw_small_oval(SkCanvas *canvas) {
+void draw_small_oval(SkCanvas* canvas) {
     SkPaint p = make_normal_paint();
 
     SkPath path = oval_path();
@@ -206,7 +208,7 @@ void draw_small_oval(SkCanvas *canvas) {
     canvas->drawPath(path, p);
 }
 
-void draw_large_oval(SkCanvas *canvas) {
+void draw_large_oval(SkCanvas* canvas) {
     SkPaint p = make_overstroke_paint();
     SkPath path = oval_path();
 
@@ -214,7 +216,7 @@ void draw_large_oval(SkCanvas *canvas) {
     draw_ribs(canvas, path);
 }
 
-void draw_oval_fillpath(SkCanvas *canvas) {
+void draw_oval_fillpath(SkCanvas* canvas) {
     SkPath path = oval_path();
     SkPaint p = make_overstroke_paint();
 
@@ -227,7 +229,7 @@ void draw_oval_fillpath(SkCanvas *canvas) {
     canvas->drawPath(fillpath, fillp);
 }
 
-void draw_stroked_oval(SkCanvas *canvas) {
+void draw_stroked_oval(SkCanvas* canvas) {
     canvas->translate(400, 0);
     draw_large_oval(canvas);
     draw_oval_fillpath(canvas);
@@ -235,9 +237,9 @@ void draw_stroked_oval(SkCanvas *canvas) {
 
 ////////// gm
 
-void (*examples[])(SkCanvas *canvas) = {
-    draw_small_quad,    draw_stroked_quad, draw_small_cubic,
-    draw_stroked_cubic, draw_small_oval,   draw_stroked_oval,
+void (*examples[])(SkCanvas* canvas) = {
+        draw_small_quad,    draw_stroked_quad, draw_small_cubic,
+        draw_stroked_cubic, draw_small_oval,   draw_stroked_oval,
 };
 
 DEF_SIMPLE_GM(OverStroke, canvas, 500, 500) {

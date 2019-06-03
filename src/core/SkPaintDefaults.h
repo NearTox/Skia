@@ -8,7 +8,7 @@
 #ifndef SkPaintDefaults_DEFINED
 #define SkPaintDefaults_DEFINED
 
-#include "SkFontTypes.h"
+#include "include/core/SkFontTypes.h"
 
 /**
  *  Any of these can be specified by the build system (or SkUserConfig.h)
@@ -17,15 +17,15 @@
  */
 
 #ifndef SkPaintDefaults_TextSize
-    #define SkPaintDefaults_TextSize        SkIntToScalar(12)
+#define SkPaintDefaults_TextSize SkIntToScalar(12)
 #endif
 
 #ifndef SkPaintDefaults_Hinting
-    #define SkPaintDefaults_Hinting         kNormal_SkFontHinting
+#define SkPaintDefaults_Hinting SkFontHinting::kNormal
 #endif
 
 #ifndef SkPaintDefaults_MiterLimit
-    #define SkPaintDefaults_MiterLimit      SkIntToScalar(4)
+#define SkPaintDefaults_MiterLimit SkIntToScalar(4)
 #endif
 
 #endif

@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "SkMatrix.h"
-#include "SkPictureData.h"
-#include "SkPicturePlayback.h"
-#include "SkPictureRecord.h"
-#include "SkPictureRecorder.h"
-#include "SkRecordedDrawable.h"
-#include "SkRecordDraw.h"
+#include "src/core/SkRecordedDrawable.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPictureRecorder.h"
+#include "src/core/SkPictureData.h"
+#include "src/core/SkPicturePlayback.h"
+#include "src/core/SkPictureRecord.h"
+#include "src/core/SkRecordDraw.h"
 
 void SkRecordedDrawable::onDraw(SkCanvas* canvas) {
     SkDrawable* const* drawables = nullptr;
@@ -60,7 +60,7 @@ void SkRecordedDrawable::flatten(SkWriteBuffer& buffer) const {
     // Record the draw commands.
     pictureRecord.beginRecording();
     SkRecordDraw(*fRecord, &pictureRecord, nullptr, fDrawableList->begin(), fDrawableList->count(),
-                bbh, nullptr);
+                 bbh, nullptr);
     pictureRecord.endRecording();
 
     // Flatten the recorded commands and drawables.

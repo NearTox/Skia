@@ -5,28 +5,27 @@
  * found in the LICENSE file.
  */
 
-#include "SkMagnifierImageFilter.h"
+#include "include/effects/SkMagnifierImageFilter.h"
 
-#include "SkBitmap.h"
-#include "SkColorData.h"
-#include "SkColorSpaceXformer.h"
-#include "SkImageFilterPriv.h"
-#include "SkReadBuffer.h"
-#include "SkSpecialImage.h"
-#include "SkWriteBuffer.h"
-#include "SkValidationUtils.h"
+#include "include/core/SkBitmap.h"
+#include "include/private/SkColorData.h"
+#include "src/core/SkImageFilterPriv.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkSpecialImage.h"
+#include "src/core/SkValidationUtils.h"
+#include "src/core/SkWriteBuffer.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 #if SK_SUPPORT_GPU
-#include "GrColorSpaceXform.h"
-#include "GrContext.h"
-#include "GrCoordTransform.h"
-#include "GrTexture.h"
-#include "effects/GrMagnifierEffect.h"
-#include "glsl/GrGLSLFragmentProcessor.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLProgramDataManager.h"
-#include "glsl/GrGLSLUniformHandler.h"
+#include "include/gpu/GrContext.h"
+#include "include/gpu/GrTexture.h"
+#include "src/gpu/GrColorSpaceXform.h"
+#include "src/gpu/GrCoordTransform.h"
+#include "src/gpu/effects/generated/GrMagnifierEffect.h"
+#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
 #endif
 
 sk_sp<SkImageFilter> SkMagnifierImageFilter::Make(const SkRect& srcRect, SkScalar inset,
@@ -42,20 +41,15 @@ sk_sp<SkImageFilter> SkMagnifierImageFilter::Make(const SkRect& srcRect, SkScala
     if (srcRect.fLeft < 0 || srcRect.fTop < 0) {
         return nullptr;
     }
-    return sk_sp<SkImageFilter>(new SkMagnifierImageFilter(srcRect, inset,
-                                                           std::move(input),
-                                                           cropRect));
+    return sk_sp<SkImageFilter>(
+            new SkMagnifierImageFilter(srcRect, inset, std::move(input), cropRect));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SkMagnifierImageFilter::SkMagnifierImageFilter(const SkRect& srcRect,
-                                               SkScalar inset,
-                                               sk_sp<SkImageFilter> input,
-                                               const CropRect* cropRect)
-    : INHERITED(&input, 1, cropRect)
-    , fSrcRect(srcRect)
-    , fInset(inset) {
+SkMagnifierImageFilter::SkMagnifierImageFilter(const SkRect& srcRect, SkScalar inset,
+                                               sk_sp<SkImageFilter> input, const CropRect* cropRect)
+        : INHERITED(&input, 1, cropRect), fSrcRect(srcRect), fInset(inset) {
     SkASSERT(srcRect.left() >= 0 && srcRect.top() >= 0 && inset >= 0);
 }
 
@@ -81,8 +75,8 @@ sk_sp<SkSpecialImage> SkMagnifierImageFilter::onFilterImage(SkSpecialImage* sour
         return nullptr;
     }
 
-    const SkIRect inputBounds = SkIRect::MakeXYWH(inputOffset.x(), inputOffset.y(),
-                                                  input->width(), input->height());
+    const SkIRect inputBounds =
+            SkIRect::MakeXYWH(inputOffset.x(), inputOffset.y(), input->width(), input->height());
 
     SkIRect bounds;
     if (!this->applyCropRect(ctx, inputBounds, &bounds)) {
@@ -93,7 +87,6 @@ sk_sp<SkSpecialImage> SkMagnifierImageFilter::onFilterImage(SkSpecialImage* sour
 
     SkScalar invXZoom = fSrcRect.width() / bounds.width();
     SkScalar invYZoom = fSrcRect.height() / bounds.height();
-
 
 #if SK_SUPPORT_GPU
     if (source->isTextureBacked()) {
@@ -129,8 +122,8 @@ sk_sp<SkSpecialImage> SkMagnifierImageFilter::onFilterImage(SkSpecialImage* sour
         return nullptr;
     }
 
-    if ((inputBM.colorType() != kN32_SkColorType) ||
-        (fSrcRect.width() >= inputBM.width()) || (fSrcRect.height() >= inputBM.height())) {
+    if ((inputBM.colorType() != kN32_SkColorType) || (fSrcRect.width() >= inputBM.width()) ||
+        (fSrcRect.height() >= inputBM.height())) {
         return nullptr;
     }
 
@@ -162,13 +155,11 @@ sk_sp<SkSpecialImage> SkMagnifierImageFilter::onFilterImage(SkSpecialImage* sour
                 x_dist = kScalar2 - x_dist;
                 y_dist = kScalar2 - y_dist;
 
-                SkScalar dist = SkScalarSqrt(SkScalarSquare(x_dist) +
-                                             SkScalarSquare(y_dist));
+                SkScalar dist = SkScalarSqrt(SkScalarSquare(x_dist) + SkScalarSquare(y_dist));
                 dist = SkMaxScalar(kScalar2 - dist, 0);
                 weight = SkMinScalar(SkScalarSquare(dist), SK_Scalar1);
             } else {
-                SkScalar sqDist = SkMinScalar(SkScalarSquare(x_dist),
-                                              SkScalarSquare(y_dist));
+                SkScalar sqDist = SkMinScalar(SkScalarSquare(x_dist), SkScalarSquare(y_dist));
                 weight = SkMinScalar(sqDist, SK_Scalar1);
             }
 
@@ -185,16 +176,5 @@ sk_sp<SkSpecialImage> SkMagnifierImageFilter::onFilterImage(SkSpecialImage* sour
 
     offset->fX = bounds.left();
     offset->fY = bounds.top();
-    return SkSpecialImage::MakeFromRaster(SkIRect::MakeWH(bounds.width(), bounds.height()),
-                                          dst);
-}
-
-sk_sp<SkImageFilter> SkMagnifierImageFilter::onMakeColorSpace(SkColorSpaceXformer* xformer) const {
-    SkASSERT(1 == this->countInputs());
-    auto input = xformer->apply(this->getInput(0));
-    if (input.get() != this->getInput(0)) {
-        return SkMagnifierImageFilter::Make(fSrcRect, fInset, std::move(input),
-                                            this->getCropRectIfSet());
-    }
-    return this->refMe();
+    return SkSpecialImage::MakeFromRaster(SkIRect::MakeWH(bounds.width(), bounds.height()), dst);
 }

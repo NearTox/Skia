@@ -9,9 +9,9 @@
 #define GrDrawOp_DEFINED
 
 #include <functional>
-#include "GrDeferredUpload.h"
-#include "GrOp.h"
-#include "GrPipeline.h"
+#include "src/gpu/GrDeferredUpload.h"
+#include "src/gpu/GrPipeline.h"
+#include "src/gpu/ops/GrOp.h"
 
 class GrAppliedClip;
 
@@ -43,14 +43,13 @@ public:
      * at this time the op must report whether a copy of the destination (or destination texture
      * itself) needs to be provided to the GrXferProcessor when this op executes.
      */
-    virtual GrProcessorSet::Analysis finalize(const GrCaps&, const GrAppliedClip*, GrFSAAType) = 0;
+    virtual GrProcessorSet::Analysis finalize(const GrCaps&, const GrAppliedClip*, GrFSAAType,
+                                              GrClampType) = 0;
 
 #ifdef SK_DEBUG
     bool fAddDrawOpCalled = false;
 
-    void validate() const override {
-        SkASSERT(fAddDrawOpCalled);
-    }
+    void validate() const override { SkASSERT(fAddDrawOpCalled); }
 #endif
 
 private:

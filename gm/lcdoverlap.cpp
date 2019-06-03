@@ -5,16 +5,21 @@
  * found in the LICENSE file.
  */
 
-
-/*
- * Tests overlapping LCD text
- */
-
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkCanvas.h"
-#include "SkSurface.h"
-#include "SkTextBlob.h"
+#include "gm/gm.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTextBlob.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "tools/ToolUtils.h"
 
 namespace skiagm {
 
@@ -29,20 +34,18 @@ public:
     }
 
 protected:
-    SkString onShortName() override {
-        return SkString("lcdoverlap");
-    }
+    SkString onShortName() override { return SkString("lcdoverlap"); }
 
     void onOnceBeforeDraw() override {
         // build text blob
         SkTextBlobBuilder builder;
 
-        SkFont font(sk_tool_utils::create_portable_typeface(), 32);
+        SkFont font(ToolUtils::create_portable_typeface(), 32);
         const char* text = "able was I ere I saw elba";
         font.setSubpixel(true);
         font.setEdging(SkFont::Edging::kSubpixelAntiAlias);
         // If we use SkTextBlob::MakeFromText, we get very different positioning ... why?
-        sk_tool_utils::add_to_text_blob(&builder, text, font, 0, 0);
+        ToolUtils::add_to_text_blob(&builder, text, font, 0, 0);
         fBlob = builder.make();
     }
 
@@ -50,13 +53,9 @@ protected:
 
     void drawTestCase(SkCanvas* canvas, SkScalar x, SkScalar y, SkBlendMode mode,
                       SkBlendMode mode2) {
-        const SkColor colors[] {
-                SK_ColorRED,
-                SK_ColorGREEN,
-                SK_ColorBLUE,
-                SK_ColorYELLOW,
-                SK_ColorCYAN,
-                SK_ColorMAGENTA,
+        const SkColor colors[]{
+                SK_ColorRED,    SK_ColorGREEN, SK_ColorBLUE,
+                SK_ColorYELLOW, SK_ColorCYAN,  SK_ColorMAGENTA,
         };
 
         for (size_t i = 0; i < SK_ARRAY_COUNT(colors); i++) {
@@ -76,11 +75,11 @@ protected:
     void onDraw(SkCanvas* canvas) override {
         SkScalar offsetX = kWidth / 4.0f;
         SkScalar offsetY = kHeight / 4.0f;
-        drawTestCase(canvas, offsetX, offsetY,  SkBlendMode::kSrc, SkBlendMode::kSrc);
-        drawTestCase(canvas, 3 * offsetX, offsetY,  SkBlendMode::kSrcOver, SkBlendMode::kSrcOver);
-        drawTestCase(canvas, offsetX, 3 * offsetY,  SkBlendMode::kHardLight,
+        drawTestCase(canvas, offsetX, offsetY, SkBlendMode::kSrc, SkBlendMode::kSrc);
+        drawTestCase(canvas, 3 * offsetX, offsetY, SkBlendMode::kSrcOver, SkBlendMode::kSrcOver);
+        drawTestCase(canvas, offsetX, 3 * offsetY, SkBlendMode::kHardLight,
                      SkBlendMode::kLuminosity);
-        drawTestCase(canvas, 3 * offsetX, 3 * offsetY,  SkBlendMode::kSrcOver, SkBlendMode::kSrc);
+        drawTestCase(canvas, 3 * offsetX, 3 * offsetY, SkBlendMode::kSrcOver, SkBlendMode::kSrc);
     }
 
 private:
@@ -91,5 +90,5 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new LcdOverlapGM; )
-}
+DEF_GM(return new LcdOverlapGM;)
+}  // namespace skiagm

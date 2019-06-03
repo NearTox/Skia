@@ -8,19 +8,19 @@
 #ifndef SkSurface_Base_DEFINED
 #define SkSurface_Base_DEFINED
 
-#include "SkCanvas.h"
-#include "SkImagePriv.h"
-#include "SkSurface.h"
-#include "SkSurfacePriv.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkSurface.h"
+#include "src/core/SkImagePriv.h"
+#include "src/core/SkSurfacePriv.h"
 
 class SkSurface_Base : public SkSurface {
 public:
-    SkSurface_Base(int width, int height, const SkSurfaceProps*);
-    SkSurface_Base(const SkImageInfo&, const SkSurfaceProps*);
+    SkSurface_Base(int width, int height, const SkSurfaceProps*) noexcept;
+    SkSurface_Base(const SkImageInfo&, const SkSurfaceProps*) noexcept;
     virtual ~SkSurface_Base();
 
     virtual GrBackendTexture onGetBackendTexture(BackendHandleAccess);
-    virtual GrBackendRenderTarget onGetBackendRenderTarget(BackendHandleAccess);
+    virtual GrBackendRenderTarget onGetBackendRenderTarget(BackendHandleAccess) noexcept;
 
     /**
      *  Allocate a canvas that will draw into this surface. We will cache this
@@ -44,6 +44,13 @@ public:
     virtual sk_sp<SkImage> onNewImageSnapshot(const SkIRect* subset = nullptr) { return nullptr; }
 
     virtual void onWritePixels(const SkPixmap&, int x, int y) = 0;
+
+    /**
+     * Default implementation does a synchronous read and calls the callback.
+     */
+    virtual void onAsyncReadPixels(SkColorType, SkAlphaType, sk_sp<SkColorSpace>,
+                                   const SkIRect& srcRect, ReadPixelsCallback callback,
+                                   ReadPixelsContext context);
 
     /**
      *  Default implementation:
@@ -80,9 +87,7 @@ public:
      * Inserts the requested number of semaphores for the gpu to signal when work is complete on the
      * gpu and inits the array of GrBackendSemaphores with the signaled semaphores.
      */
-    virtual GrSemaphoresSubmitted onFlush(BackendSurfaceAccess access, FlushFlags flags,
-                                          int numSemaphores,
-                                          GrBackendSemaphore signalSemaphores[]) {
+    virtual GrSemaphoresSubmitted onFlush(BackendSurfaceAccess access, const GrFlushInfo&) {
         return GrSemaphoresSubmitted::kNo;
     }
 
@@ -101,20 +106,20 @@ public:
     inline SkCanvas* getCachedCanvas();
     inline sk_sp<SkImage> refCachedImage();
 
-    bool hasCachedImage() const { return fCachedImage != nullptr; }
+    bool hasCachedImage() const noexcept { return fCachedImage != nullptr; }
 
     // called by SkSurface to compute a new genID
-    uint32_t newGenerationID();
+    uint32_t newGenerationID() noexcept;
 
 private:
-    std::unique_ptr<SkCanvas>   fCachedCanvas;
-    sk_sp<SkImage>              fCachedImage;
+    std::unique_ptr<SkCanvas> fCachedCanvas;
+    sk_sp<SkImage> fCachedImage;
 
     void aboutToDraw(ContentChangeMode mode);
 
     // Returns true if there is an outstanding image-snapshot, indicating that a call to aboutToDraw
     // would trigger a copy-on-write.
-    bool outstandingImageSnapshot() const;
+    bool outstandingImageSnapshot() const noexcept;
 
     friend class SkCanvas;
     friend class SkSurface;

@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "SkCoreBlitters.h"
-#include "SkColorData.h"
-#include "SkShader.h"
-#include "SkXfermodePriv.h"
+#include "include/core/SkShader.h"
+#include "include/private/SkColorData.h"
+#include "src/core/SkCoreBlitters.h"
+#include "src/core/SkXfermodePriv.h"
 
-SkA8_Coverage_Blitter::SkA8_Coverage_Blitter(const SkPixmap& device,
-                             const SkPaint& paint) : SkRasterBlitter(device) {
+SkA8_Coverage_Blitter::SkA8_Coverage_Blitter(const SkPixmap& device, const SkPaint& paint)
+        : SkRasterBlitter(device) {
     SkASSERT(nullptr == paint.getShader());
     SkASSERT(paint.isSrcOver());
     SkASSERT(nullptr == paint.getColorFilter());
@@ -20,7 +20,7 @@ SkA8_Coverage_Blitter::SkA8_Coverage_Blitter(const SkPixmap& device,
 void SkA8_Coverage_Blitter::blitAntiH(int x, int y, const SkAlpha antialias[],
                                       const int16_t runs[]) {
     uint8_t* device = fDevice.writable_addr8(x, y);
-    SkDEBUGCODE(int totalCount = 0;)
+    SkDEBUGCODE(int totalCount = 0);
 
     for (;;) {
         int count = runs[0];
@@ -35,7 +35,7 @@ void SkA8_Coverage_Blitter::blitAntiH(int x, int y, const SkAlpha antialias[],
         antialias += count;
         device += count;
 
-        SkDEBUGCODE(totalCount += count;)
+        SkDEBUGCODE(totalCount += count);
     }
     SkASSERT(fDevice.width() == totalCount);
 }
@@ -89,6 +89,4 @@ void SkA8_Coverage_Blitter::blitMask(const SkMask& mask, const SkIRect& clip) {
     }
 }
 
-const SkPixmap* SkA8_Coverage_Blitter::justAnOpaqueColor(uint32_t*) {
-    return nullptr;
-}
+const SkPixmap* SkA8_Coverage_Blitter::justAnOpaqueColor(uint32_t*) { return nullptr; }

@@ -5,16 +5,16 @@
  * found in the LICENSE file.
  */
 
-#include "SkDraw.h"
-#include "SkFontPriv.h"
-#include "SkPaintPriv.h"
-#include "SkRasterClip.h"
-#include "SkScalerContext.h"
-#include "SkStrike.h"
-#include "SkUtils.h"
+#include "src/core/SkDraw.h"
+#include "src/core/SkFontPriv.h"
+#include "src/core/SkPaintPriv.h"
+#include "src/core/SkRasterClip.h"
+#include "src/core/SkScalerContext.h"
+#include "src/core/SkStrike.h"
+#include "src/core/SkUtils.h"
 
-bool SkDraw::ShouldDrawTextAsPaths(const SkFont& font, const SkPaint& paint,
-                                   const SkMatrix& ctm, SkScalar sizeLimit) {
+bool SkDraw::ShouldDrawTextAsPaths(const SkFont& font, const SkPaint& paint, const SkMatrix& ctm,
+                                   SkScalar sizeLimit) {
     // hairline glyphs are fast enough so we don't need to cache them
     if (SkPaint::kStroke_Style == paint.getStyle() && 0 == paint.getStrokeWidth()) {
         return true;
@@ -30,21 +30,19 @@ bool SkDraw::ShouldDrawTextAsPaths(const SkFont& font, const SkPaint& paint,
 
 // disable warning : local variable used without having been initialized
 #if defined _WIN32
-#pragma warning ( push )
-#pragma warning ( disable : 4701 )
+#pragma warning(push)
+#pragma warning(disable : 4701)
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void SkDraw::paintMasks(SkSpan<const SkMask> masks, const SkPaint& paint) const {
-
     // The size used for a typical blitter.
     SkSTArenaAlloc<3308> alloc;
     SkBlitter* blitter = SkBlitter::Choose(fDst, *fMatrix, paint, &alloc, false);
     if (fCoverage) {
         blitter = alloc.make<SkPairBlitter>(
-                blitter,
-                SkBlitter::Choose(*fCoverage, *fMatrix, SkPaint(), &alloc, true));
+                blitter, SkBlitter::Choose(*fCoverage, *fMatrix, SkPaint(), &alloc, true));
     }
 
     SkAAClipBlitterWrapper wrapper{*fRC, blitter};
@@ -73,8 +71,7 @@ void SkDraw::paintMasks(SkSpan<const SkMask> masks, const SkPaint& paint) const 
             }
         }
     } else {
-        SkIRect clipBounds = fRC->isBW() ? fRC->bwRgn().getBounds()
-                                         : fRC->aaRgn().getBounds();
+        SkIRect clipBounds = fRC->isBW() ? fRC->bwRgn().getBounds() : fRC->aaRgn().getBounds();
         for (const SkMask& mask : masks) {
             SkIRect storage;
             const SkIRect* bounds = &mask.fBounds;
@@ -101,7 +98,7 @@ void SkDraw::paintMasks(SkSpan<const SkMask> masks, const SkPaint& paint) const 
     }
 }
 
-void SkDraw::paintPaths(SkSpan<const SkGlyphRunListPainter::PathAndPos> pathsAndPositions,
+void SkDraw::paintPaths(SkSpan<const SkPathPos> pathsAndPositions,
                         SkScalar scale,
                         const SkPaint& paint) const {
     for (const auto& pathAndPos : pathsAndPositions) {
@@ -114,8 +111,7 @@ void SkDraw::paintPaths(SkSpan<const SkGlyphRunListPainter::PathAndPos> pathsAnd
 
 void SkDraw::drawGlyphRunList(const SkGlyphRunList& glyphRunList,
                               SkGlyphRunListPainter* glyphPainter) const {
-
-    SkDEBUGCODE(this->validate();)
+    SkDEBUGCODE(this->validate());
 
     if (fRC->isEmpty()) {
         return;
@@ -125,6 +121,5 @@ void SkDraw::drawGlyphRunList(const SkGlyphRunList& glyphRunList,
 }
 
 #if defined _WIN32
-#pragma warning ( pop )
+#pragma warning(pop)
 #endif
-

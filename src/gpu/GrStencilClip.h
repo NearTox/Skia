@@ -8,8 +8,8 @@
 #ifndef GrStencilClip_DEFINED
 #define GrStencilClip_DEFINED
 
-#include "GrAppliedClip.h"
-#include "GrFixedClip.h"
+#include "src/gpu/GrAppliedClip.h"
+#include "src/gpu/GrFixedClip.h"
 
 /**
  * Implements GrHardClip with the currently-existing stencil buffer contents and GrFixedClip.
@@ -19,9 +19,7 @@ public:
     GrStencilClip(uint32_t stencilStackID = SK_InvalidGenID) : fStencilStackID(stencilStackID) {}
 
     explicit GrStencilClip(const SkIRect& scissorRect, uint32_t stencilStackID = SK_InvalidGenID)
-        : fFixedClip(scissorRect)
-        , fStencilStackID(stencilStackID) {
-    }
+            : fFixedClip(scissorRect), fStencilStackID(stencilStackID) {}
 
     const GrFixedClip& fixedClip() const { return fFixedClip; }
     GrFixedClip& fixedClip() { return fFixedClip; }
@@ -50,8 +48,8 @@ public:
     }
 
 private:
-    GrFixedClip   fFixedClip;
-    uint32_t      fStencilStackID;
+    GrFixedClip fFixedClip;
+    uint32_t fStencilStackID;
 
     typedef GrClip INHERITED;
 };

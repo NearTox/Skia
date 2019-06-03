@@ -34,14 +34,14 @@ public:
     static void ClosePath(const v8::FunctionCallbackInfo<v8::Value>& args);
     static void MoveTo(const v8::FunctionCallbackInfo<v8::Value>& args);
     static void LineTo(const v8::FunctionCallbackInfo<v8::Value>& args);
-    static void QuadraticCurveTo(
-            const v8::FunctionCallbackInfo<v8::Value>& args);
+    static void QuadraticCurveTo(const v8::FunctionCallbackInfo<v8::Value>& args);
     static void BezierCurveTo(const v8::FunctionCallbackInfo<v8::Value>& args);
     static void Arc(const v8::FunctionCallbackInfo<v8::Value>& args);
     static void Rect(const v8::FunctionCallbackInfo<v8::Value>& args);
     static void Oval(const v8::FunctionCallbackInfo<v8::Value>& args);
     static void ConicTo(const v8::FunctionCallbackInfo<v8::Value>& args);
     static void Finalize(const v8::FunctionCallbackInfo<v8::Value>& args);
+
 private:
     SkPath fSkPath;
 

@@ -4,31 +4,30 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "Sample.h"
-#include "SkCanvas.h"
-#include "SkReadBuffer.h"
-#include "SkWriteBuffer.h"
-#include "SkGradientShader.h"
-#include "SkPath.h"
-#include "SkRegion.h"
-#include "SkShader.h"
-#include "SkUTF.h"
-#include "SkColorPriv.h"
-#include "SkColorFilter.h"
-#include "SkStrokeRec.h"
-#include "SkTextUtils.h"
-#include "SkTypeface.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRegion.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkStrokeRec.h"
+#include "include/core/SkTypeface.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/utils/SkTextUtils.h"
+#include "samplecode/Sample.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
+#include "src/utils/SkUTF.h"
 
-#include "SkGradientShader.h"
-#include "SkBlurMaskFilter.h"
+#include "include/effects/SkBlurMaskFilter.h"
+#include "include/effects/SkGradientShader.h"
 
-#include "Sk2DPathEffect.h"
+#include "include/effects/Sk2DPathEffect.h"
 
 class Dot2DPathEffect : public Sk2DPathEffect {
 public:
-    Dot2DPathEffect(SkScalar radius, const SkMatrix& matrix,
-                    SkTDArray<SkPoint>* pts)
-    : Sk2DPathEffect(matrix), fRadius(radius), fPts(pts) {}
+    Dot2DPathEffect(SkScalar radius, const SkMatrix& matrix, SkTDArray<SkPoint>* pts)
+            : Sk2DPathEffect(matrix), fRadius(radius), fPts(pts) {}
 
     SK_FLATTENABLE_HOOKS(Dot2DPathEffect)
 protected:
@@ -39,8 +38,7 @@ protected:
         this->INHERITED::begin(uvBounds, dst);
     }
 
-    virtual void next(const SkPoint& loc, int u, int v,
-                      SkPath* dst) const override {
+    virtual void next(const SkPoint& loc, int u, int v, SkPath* dst) const override {
         if (fPts) {
             *fPts->append() = loc;
         }
@@ -53,7 +51,6 @@ protected:
     }
 
 private:
-
     SkScalar fRadius;
     SkTDArray<SkPoint>* fPts;
 
@@ -62,13 +59,10 @@ private:
 
 // Register this path effect as deserializable before main().
 namespace {
-    static struct Initializer {
-        Initializer() {
-            SK_REGISTER_FLATTENABLE(Dot2DPathEffect);
-        }
-    } initializer;
-}
-
+static struct Initializer {
+    Initializer() { SK_REGISTER_FLATTENABLE(Dot2DPathEffect); }
+} initializer;
+}  // namespace
 
 sk_sp<SkFlattenable> Dot2DPathEffect::CreateProc(SkReadBuffer& buffer) {
     SkMatrix matrix;
@@ -79,8 +73,8 @@ sk_sp<SkFlattenable> Dot2DPathEffect::CreateProc(SkReadBuffer& buffer) {
 class InverseFillPE : public SkPathEffect {
 public:
     InverseFillPE() {}
-    virtual bool onFilterPath(SkPath* dst, const SkPath& src,
-                              SkStrokeRec*, const SkRect*) const override {
+    virtual bool onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec*,
+                              const SkRect*) const override {
         *dst = src;
         dst->setFillType(SkPath::kInverseWinding_FillType);
         return true;
@@ -97,10 +91,10 @@ sk_sp<SkFlattenable> InverseFillPE::CreateProc(SkReadBuffer& buffer) {
 }
 
 static sk_sp<SkPathEffect> makepe(float interp, SkTDArray<SkPoint>* pts) {
-    SkMatrix    lattice;
-    SkScalar    rad = 3 + SkIntToScalar(4) * (1 - interp);
-    lattice.setScale(rad*2, rad*2, 0, 0);
-    lattice.postSkew(SK_Scalar1/3, 0, 0, 0);
+    SkMatrix lattice;
+    SkScalar rad = 3 + SkIntToScalar(4) * (1 - interp);
+    lattice.setScale(rad * 2, rad * 2, 0, 0);
+    lattice.postSkew(SK_Scalar1 / 3, 0, 0, 0);
     return sk_make_sp<Dot2DPathEffect>(rad, lattice, pts);
 }
 
@@ -113,7 +107,7 @@ public:
     TextEffectsView() {
         fFace = SkTypeface::MakeFromFile("/Users/reed/Downloads/p052024l.pfb");
         fInterp = 0;
-        fDx = SK_Scalar1/64;
+        fDx = SK_Scalar1 / 64;
     }
 
 protected:
@@ -125,9 +119,7 @@ protected:
         return this->INHERITED::onQuery(evt);
     }
 
-    void drawBG(SkCanvas* canvas) {
-        canvas->drawColor(SK_ColorWHITE);
-    }
+    void drawBG(SkCanvas* canvas) { canvas->drawColor(SK_ColorWHITE); }
 
     void drawdots(SkCanvas* canvas, SkString s, SkScalar x, SkScalar y, const SkFont& font) {
         SkTDArray<SkPoint> pts;
@@ -135,7 +127,7 @@ protected:
 
         SkStrokeRec rec(SkStrokeRec::kFill_InitStyle);
         SkPath path, dstPath;
-        SkTextUtils::GetPath(s.c_str(), s.size(), kUTF8_SkTextEncoding, x, y, font, &path);
+        SkTextUtils::GetPath(s.c_str(), s.size(), SkTextEncoding::kUTF8, x, y, font, &path);
         pe->filterPath(&dstPath, path, &rec, nullptr);
 
         SkPaint paint;
@@ -176,4 +168,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new TextEffectsView(); )
+DEF_SAMPLE(return new TextEffectsView();)

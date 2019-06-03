@@ -8,7 +8,7 @@
 #ifndef SkGradientShader_DEFINED
 #define SkGradientShader_DEFINED
 
-#include "SkShader.h"
+#include "include/core/SkShader.h"
 
 /** \class SkGradientShader
 
@@ -67,13 +67,11 @@ public:
         @param  count   Must be >=2. The number of colors (and pos if not NULL) entries.
         @param  mode    The tiling mode
     */
-    static sk_sp<SkShader> MakeLinear(const SkPoint pts[2],
-                                      const SkColor colors[], const SkScalar pos[], int count,
-                                      SkShader::TileMode mode,
+    static sk_sp<SkShader> MakeLinear(const SkPoint pts[2], const SkColor colors[],
+                                      const SkScalar pos[], int count, SkTileMode mode,
                                       uint32_t flags, const SkMatrix* localMatrix);
-    static sk_sp<SkShader> MakeLinear(const SkPoint pts[2],
-                                      const SkColor colors[], const SkScalar pos[], int count,
-                                      SkShader::TileMode mode) {
+    static sk_sp<SkShader> MakeLinear(const SkPoint pts[2], const SkColor colors[],
+                                      const SkScalar pos[], int count, SkTileMode mode) {
         return MakeLinear(pts, colors, pos, count, mode, 0, nullptr);
     }
 
@@ -89,13 +87,13 @@ public:
         @param  count   Must be >=2. The number of colors (and pos if not NULL) entries.
         @param  mode    The tiling mode
     */
-    static sk_sp<SkShader> MakeLinear(const SkPoint pts[2],
-                                      const SkColor4f colors[], sk_sp<SkColorSpace> colorSpace,
-                                      const SkScalar pos[], int count, SkShader::TileMode mode,
-                                      uint32_t flags, const SkMatrix* localMatrix);
-    static sk_sp<SkShader> MakeLinear(const SkPoint pts[2],
-                                      const SkColor4f colors[], sk_sp<SkColorSpace> colorSpace,
-                                      const SkScalar pos[], int count, SkShader::TileMode mode) {
+    static sk_sp<SkShader> MakeLinear(const SkPoint pts[2], const SkColor4f colors[],
+                                      sk_sp<SkColorSpace> colorSpace, const SkScalar pos[],
+                                      int count, SkTileMode mode, uint32_t flags,
+                                      const SkMatrix* localMatrix);
+    static sk_sp<SkShader> MakeLinear(const SkPoint pts[2], const SkColor4f colors[],
+                                      sk_sp<SkColorSpace> colorSpace, const SkScalar pos[],
+                                      int count, SkTileMode mode) {
         return MakeLinear(pts, colors, std::move(colorSpace), pos, count, mode, 0, nullptr);
     }
 
@@ -103,22 +101,21 @@ public:
         <p />
         @param  center  The center of the circle for this gradient
         @param  radius  Must be positive. The radius of the circle for this gradient
-        @param  colors  The array[count] of colors, to be distributed between the center and edge of the circle
-        @param  pos     May be NULL. The array[count] of SkScalars, or NULL, of the relative position of
-                        each corresponding color in the colors array. If this is NULL,
-                        the the colors are distributed evenly between the center and edge of the circle.
-                        If this is not null, the values must begin with 0, end with 1.0, and
-                        intermediate values must be strictly increasing.
+        @param  colors  The array[count] of colors, to be distributed between the center and edge of
+       the circle
+        @param  pos     May be NULL. The array[count] of SkScalars, or NULL, of the relative
+       position of each corresponding color in the colors array. If this is NULL, the the colors are
+       distributed evenly between the center and edge of the circle. If this is not null, the values
+       must begin with 0, end with 1.0, and intermediate values must be strictly increasing.
         @param  count   Must be >= 2. The number of colors (and pos if not NULL) entries
         @param  mode    The tiling mode
     */
     static sk_sp<SkShader> MakeRadial(const SkPoint& center, SkScalar radius,
                                       const SkColor colors[], const SkScalar pos[], int count,
-                                      SkShader::TileMode mode,
-                                      uint32_t flags, const SkMatrix* localMatrix);
+                                      SkTileMode mode, uint32_t flags, const SkMatrix* localMatrix);
     static sk_sp<SkShader> MakeRadial(const SkPoint& center, SkScalar radius,
                                       const SkColor colors[], const SkScalar pos[], int count,
-                                      SkShader::TileMode mode) {
+                                      SkTileMode mode) {
         return MakeRadial(center, radius, colors, pos, count, mode, 0, nullptr);
     }
 
@@ -126,24 +123,24 @@ public:
         <p />
         @param  center  The center of the circle for this gradient
         @param  radius  Must be positive. The radius of the circle for this gradient
-        @param  colors  The array[count] of colors, to be distributed between the center and edge of the circle
-        @param  pos     May be NULL. The array[count] of SkScalars, or NULL, of the relative position of
-                        each corresponding color in the colors array. If this is NULL,
-                        the the colors are distributed evenly between the center and edge of the circle.
-                        If this is not null, the values must begin with 0, end with 1.0, and
-                        intermediate values must be strictly increasing.
+        @param  colors  The array[count] of colors, to be distributed between the center and edge of
+       the circle
+        @param  pos     May be NULL. The array[count] of SkScalars, or NULL, of the relative
+       position of each corresponding color in the colors array. If this is NULL, the the colors are
+       distributed evenly between the center and edge of the circle. If this is not null, the values
+       must begin with 0, end with 1.0, and intermediate values must be strictly increasing.
         @param  count   Must be >= 2. The number of colors (and pos if not NULL) entries
         @param  mode    The tiling mode
     */
     static sk_sp<SkShader> MakeRadial(const SkPoint& center, SkScalar radius,
                                       const SkColor4f colors[], sk_sp<SkColorSpace> colorSpace,
-                                      const SkScalar pos[], int count, SkShader::TileMode mode,
+                                      const SkScalar pos[], int count, SkTileMode mode,
                                       uint32_t flags, const SkMatrix* localMatrix);
     static sk_sp<SkShader> MakeRadial(const SkPoint& center, SkScalar radius,
                                       const SkColor4f colors[], sk_sp<SkColorSpace> colorSpace,
-                                      const SkScalar pos[], int count, SkShader::TileMode mode) {
-        return MakeRadial(center, radius, colors, std::move(colorSpace), pos, count, mode,
-                          0, nullptr);
+                                      const SkScalar pos[], int count, SkTileMode mode) {
+        return MakeRadial(center, radius, colors, std::move(colorSpace), pos, count, mode, 0,
+                          nullptr);
     }
 
     /**
@@ -155,14 +152,14 @@ public:
     static sk_sp<SkShader> MakeTwoPointConical(const SkPoint& start, SkScalar startRadius,
                                                const SkPoint& end, SkScalar endRadius,
                                                const SkColor colors[], const SkScalar pos[],
-                                               int count, SkShader::TileMode mode,
-                                               uint32_t flags, const SkMatrix* localMatrix);
+                                               int count, SkTileMode mode, uint32_t flags,
+                                               const SkMatrix* localMatrix);
     static sk_sp<SkShader> MakeTwoPointConical(const SkPoint& start, SkScalar startRadius,
                                                const SkPoint& end, SkScalar endRadius,
                                                const SkColor colors[], const SkScalar pos[],
-                                               int count, SkShader::TileMode mode) {
-        return MakeTwoPointConical(start, startRadius, end, endRadius, colors, pos, count, mode,
-                                   0, nullptr);
+                                               int count, SkTileMode mode) {
+        return MakeTwoPointConical(start, startRadius, end, endRadius, colors, pos, count, mode, 0,
+                                   nullptr);
     }
 
     /**
@@ -175,13 +172,13 @@ public:
                                                const SkPoint& end, SkScalar endRadius,
                                                const SkColor4f colors[],
                                                sk_sp<SkColorSpace> colorSpace, const SkScalar pos[],
-                                               int count, SkShader::TileMode mode,
-                                               uint32_t flags, const SkMatrix* localMatrix);
+                                               int count, SkTileMode mode, uint32_t flags,
+                                               const SkMatrix* localMatrix);
     static sk_sp<SkShader> MakeTwoPointConical(const SkPoint& start, SkScalar startRadius,
                                                const SkPoint& end, SkScalar endRadius,
                                                const SkColor4f colors[],
                                                sk_sp<SkColorSpace> colorSpace, const SkScalar pos[],
-                                               int count, SkShader::TileMode mode) {
+                                               int count, SkTileMode mode) {
         return MakeTwoPointConical(start, startRadius, end, endRadius, colors,
                                    std::move(colorSpace), pos, count, mode, 0, nullptr);
     }
@@ -202,19 +199,18 @@ public:
         @param  startAngle Start of the angular range, corresponding to pos == 0.
         @param  endAngle   End of the angular range, corresponding to pos == 1.
     */
-    static sk_sp<SkShader> MakeSweep(SkScalar cx, SkScalar cy,
-                                     const SkColor colors[], const SkScalar pos[], int count,
-                                     SkShader::TileMode mode,
-                                     SkScalar startAngle, SkScalar endAngle,
-                                     uint32_t flags, const SkMatrix* localMatrix);
-    static sk_sp<SkShader> MakeSweep(SkScalar cx, SkScalar cy,
-                                     const SkColor colors[], const SkScalar pos[], int count,
-                                     uint32_t flags, const SkMatrix* localMatrix) {
-        return MakeSweep(cx, cy, colors, pos, count, SkShader::kClamp_TileMode, 0, 360, flags,
+    static sk_sp<SkShader> MakeSweep(SkScalar cx, SkScalar cy, const SkColor colors[],
+                                     const SkScalar pos[], int count, SkTileMode mode,
+                                     SkScalar startAngle, SkScalar endAngle, uint32_t flags,
+                                     const SkMatrix* localMatrix);
+    static sk_sp<SkShader> MakeSweep(SkScalar cx, SkScalar cy, const SkColor colors[],
+                                     const SkScalar pos[], int count, uint32_t flags,
+                                     const SkMatrix* localMatrix) {
+        return MakeSweep(cx, cy, colors, pos, count, SkTileMode::kClamp, 0, 360, flags,
                          localMatrix);
     }
-    static sk_sp<SkShader> MakeSweep(SkScalar cx, SkScalar cy,
-                                     const SkColor colors[], const SkScalar pos[], int count) {
+    static sk_sp<SkShader> MakeSweep(SkScalar cx, SkScalar cy, const SkColor colors[],
+                                     const SkScalar pos[], int count) {
         return MakeSweep(cx, cy, colors, pos, count, 0, nullptr);
     }
 
@@ -234,22 +230,20 @@ public:
         @param  startAngle Start of the angular range, corresponding to pos == 0.
         @param  endAngle   End of the angular range, corresponding to pos == 1.
     */
-    static sk_sp<SkShader> MakeSweep(SkScalar cx, SkScalar cy,
-                                     const SkColor4f colors[], sk_sp<SkColorSpace> colorSpace,
-                                     const SkScalar pos[], int count,
-                                     SkShader::TileMode mode,
-                                     SkScalar startAngle, SkScalar endAngle,
-                                     uint32_t flags, const SkMatrix* localMatrix);
-    static sk_sp<SkShader> MakeSweep(SkScalar cx, SkScalar cy,
-                                     const SkColor4f colors[], sk_sp<SkColorSpace> colorSpace,
-                                     const SkScalar pos[], int count,
-                                     uint32_t flags, const SkMatrix* localMatrix) {
-        return MakeSweep(cx, cy, colors, std::move(colorSpace), pos, count,
-                         SkShader::kClamp_TileMode, 0, 360, flags, localMatrix);
+    static sk_sp<SkShader> MakeSweep(SkScalar cx, SkScalar cy, const SkColor4f colors[],
+                                     sk_sp<SkColorSpace> colorSpace, const SkScalar pos[],
+                                     int count, SkTileMode mode, SkScalar startAngle,
+                                     SkScalar endAngle, uint32_t flags,
+                                     const SkMatrix* localMatrix);
+    static sk_sp<SkShader> MakeSweep(SkScalar cx, SkScalar cy, const SkColor4f colors[],
+                                     sk_sp<SkColorSpace> colorSpace, const SkScalar pos[],
+                                     int count, uint32_t flags, const SkMatrix* localMatrix) {
+        return MakeSweep(cx, cy, colors, std::move(colorSpace), pos, count, SkTileMode::kClamp, 0,
+                         360, flags, localMatrix);
     }
-    static sk_sp<SkShader> MakeSweep(SkScalar cx, SkScalar cy,
-                                     const SkColor4f colors[], sk_sp<SkColorSpace> colorSpace,
-                                     const SkScalar pos[], int count) {
+    static sk_sp<SkShader> MakeSweep(SkScalar cx, SkScalar cy, const SkColor4f colors[],
+                                     sk_sp<SkColorSpace> colorSpace, const SkScalar pos[],
+                                     int count) {
         return MakeSweep(cx, cy, colors, std::move(colorSpace), pos, count, 0, nullptr);
     }
 

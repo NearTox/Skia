@@ -8,8 +8,8 @@
 #ifndef SkImageEncoderPriv_DEFINED
 #define SkImageEncoderPriv_DEFINED
 
-#include "SkImageEncoder.h"
-#include "SkImageInfoPriv.h"
+#include "include/core/SkImageEncoder.h"
+#include "include/private/SkImageInfoPriv.h"
 
 static inline bool SkPixmapIsValid(const SkPixmap& src) {
     if (!SkImageInfoIsValid(src.info())) {
@@ -24,15 +24,15 @@ static inline bool SkPixmapIsValid(const SkPixmap& src) {
 }
 
 #if defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)
-    bool SkEncodeImageWithCG(SkWStream*, const SkPixmap&, SkEncodedImageFormat);
+bool SkEncodeImageWithCG(SkWStream*, const SkPixmap&, SkEncodedImageFormat);
 #else
-    #define SkEncodeImageWithCG(...) false
+#define SkEncodeImageWithCG(...) false
 #endif
 
 #ifdef SK_BUILD_FOR_WIN
-    bool SkEncodeImageWithWIC(SkWStream*, const SkPixmap&, SkEncodedImageFormat, int quality);
+bool SkEncodeImageWithWIC(SkWStream*, const SkPixmap&, SkEncodedImageFormat, int quality);
 #else
-    #define SkEncodeImageWithWIC(...) false
+#define SkEncodeImageWithWIC(...) false
 #endif
 
-#endif // SkImageEncoderPriv_DEFINED
+#endif  // SkImageEncoderPriv_DEFINED

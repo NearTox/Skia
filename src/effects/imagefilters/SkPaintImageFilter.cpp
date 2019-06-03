@@ -5,24 +5,20 @@
  * found in the LICENSE file.
  */
 
-#include "SkPaintImageFilter.h"
-#include "SkCanvas.h"
-#include "SkColorSpaceXformer.h"
-#include "SkImageFilterPriv.h"
-#include "SkReadBuffer.h"
-#include "SkSpecialImage.h"
-#include "SkSpecialSurface.h"
-#include "SkWriteBuffer.h"
+#include "include/effects/SkPaintImageFilter.h"
+#include "include/core/SkCanvas.h"
+#include "src/core/SkImageFilterPriv.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkSpecialImage.h"
+#include "src/core/SkSpecialSurface.h"
+#include "src/core/SkWriteBuffer.h"
 
-sk_sp<SkImageFilter> SkPaintImageFilter::Make(const SkPaint& paint,
-                                              const CropRect* cropRect) {
+sk_sp<SkImageFilter> SkPaintImageFilter::Make(const SkPaint& paint, const CropRect* cropRect) {
     return sk_sp<SkImageFilter>(new SkPaintImageFilter(paint, cropRect));
 }
 
 SkPaintImageFilter::SkPaintImageFilter(const SkPaint& paint, const CropRect* cropRect)
-    : INHERITED(nullptr, 0, cropRect)
-    , fPaint(paint) {
-}
+        : INHERITED(nullptr, 0, cropRect), fPaint(paint) {}
 
 sk_sp<SkFlattenable> SkPaintImageFilter::CreateProc(SkReadBuffer& buffer) {
     SK_IMAGEFILTER_UNFLATTEN_COMMON(common, 0);
@@ -72,14 +68,4 @@ sk_sp<SkSpecialImage> SkPaintImageFilter::onFilterImage(SkSpecialImage* source,
     return surf->makeImageSnapshot();
 }
 
-sk_sp<SkImageFilter> SkPaintImageFilter::onMakeColorSpace(SkColorSpaceXformer* xformer) const {
-    SkPaint paint = xformer->apply(fPaint);
-    if (paint != fPaint) {
-        return SkPaintImageFilter::Make(paint, this->getCropRectIfSet());
-    }
-    return this->refMe();
-}
-
-bool SkPaintImageFilter::affectsTransparentBlack() const {
-    return true;
-}
+bool SkPaintImageFilter::affectsTransparentBlack() const noexcept { return true; }

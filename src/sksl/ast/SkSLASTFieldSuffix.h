@@ -8,7 +8,7 @@
 #ifndef SKSL_ASTFIELDSUFFIX
 #define SKSL_ASTFIELDSUFFIX
 
-#include "SkSLASTSuffix.h"
+#include "src/sksl/ast/SkSLASTSuffix.h"
 
 namespace SkSL {
 
@@ -18,18 +18,15 @@ namespace SkSL {
  */
 struct ASTFieldSuffix : public ASTSuffix {
     ASTFieldSuffix(int offset, StringFragment field)
-    : INHERITED(offset, ASTSuffix::kField_Kind)
-    , fField(field) {}
+            : INHERITED(offset, ASTSuffix::kField_Kind), fField(field) {}
 
-    String description() const override {
-        return "." + fField;
-    }
+    String description() const override { return "." + fField; }
 
     StringFragment fField;
 
     typedef ASTSuffix INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

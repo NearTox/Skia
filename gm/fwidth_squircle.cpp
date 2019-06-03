@@ -5,33 +5,59 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkTextUtils.h"
+#include "gm/gm.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkString.h"
+#include "include/gpu/GrContext.h"
+#include "include/private/GrRecordingContext.h"
+#include "include/private/GrTypesPriv.h"
+#include "src/gpu/GrBuffer.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrGeometryProcessor.h"
+#include "src/gpu/GrGpuBuffer.h"
+#include "src/gpu/GrGpuCommandBuffer.h"
+#include "src/gpu/GrMemoryPool.h"
+#include "src/gpu/GrMesh.h"
+#include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/GrPipeline.h"
+#include "src/gpu/GrPrimitiveProcessor.h"
+#include "src/gpu/GrProcessor.h"
+#include "src/gpu/GrProcessorSet.h"
+#include "src/gpu/GrRecordingContextPriv.h"
+#include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/GrRenderTargetContextPriv.h"
+#include "src/gpu/GrResourceProvider.h"
+#include "src/gpu/GrShaderCaps.h"
+#include "src/gpu/GrShaderVar.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
+#include "src/gpu/glsl/GrGLSLPrimitiveProcessor.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#include "src/gpu/glsl/GrGLSLVarying.h"
+#include "src/gpu/glsl/GrGLSLVertexGeoBuilder.h"
+#include "src/gpu/ops/GrDrawOp.h"
+#include "src/gpu/ops/GrOp.h"
 
-#if SK_SUPPORT_GPU
+#include <memory>
+#include <utility>
 
-#include "GrContext.h"
-#include "GrContextPriv.h"
-#include "GrGpuCommandBuffer.h"
-#include "GrMemoryPool.h"
-#include "GrOpFlushState.h"
-#include "GrRecordingContext.h"
-#include "GrRecordingContextPriv.h"
-#include "GrRenderTargetContext.h"
-#include "GrRenderTargetContextPriv.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLGeometryProcessor.h"
-#include "glsl/GrGLSLVarying.h"
-#include "glsl/GrGLSLVertexGeoBuilder.h"
+class GrAppliedClip;
 
 /**
  * This test ensures that fwidth() works properly on GPU configs by drawing a squircle.
  */
 namespace skiagm {
 
-static constexpr GrGeometryProcessor::Attribute gVertex =
-        {"bboxcoord", kFloat2_GrVertexAttribType, kFloat2_GrSLType};
+static constexpr GrGeometryProcessor::Attribute gVertex = {"bboxcoord", kFloat2_GrVertexAttribType,
+                                                           kFloat2_GrSLType};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // SkSL code.
@@ -39,8 +65,7 @@ static constexpr GrGeometryProcessor::Attribute gVertex =
 class FwidthSquircleTestProcessor : public GrGeometryProcessor {
 public:
     FwidthSquircleTestProcessor(const SkMatrix& viewMatrix)
-            : GrGeometryProcessor(kFwidthSquircleTestProcessor_ClassID)
-            , fViewMatrix(viewMatrix) {
+            : GrGeometryProcessor(kFwidthSquircleTestProcessor_ClassID), fViewMatrix(viewMatrix) {
         this->setVertexAttributes(&gVertex, 1);
     }
     const char* name() const override { return "FwidthSquircleTestProcessor"; }
@@ -78,8 +103,8 @@ class FwidthSquircleTestProcessor::Impl : public GrGLSLGeometryProcessor {
         auto* f = args.fFragBuilder;
         f->codeAppendf("float golden_ratio = 1.61803398875;");
         f->codeAppendf("float pi = 3.141592653589793;");
-        f->codeAppendf("float x = abs(%s.x), y = abs(%s.y);",
-                       squircleCoord.fsIn(), squircleCoord.fsIn());
+        f->codeAppendf("float x = abs(%s.x), y = abs(%s.y);", squircleCoord.fsIn(),
+                       squircleCoord.fsIn());
 
         // Squircle function!
         f->codeAppendf("float fn = half(pow(x, golden_ratio*pi) + pow(y, golden_ratio*pi) - 1);");
@@ -119,23 +144,23 @@ public:
 
 private:
     FwidthSquircleTestOp(const SkMatrix& viewMatrix)
-            : GrDrawOp(ClassID())
-            , fViewMatrix(viewMatrix) {
+            : GrDrawOp(ClassID()), fViewMatrix(viewMatrix) {
         this->setBounds(SkRect::MakeIWH(200, 200), HasAABloat::kNo, IsZeroArea::kNo);
     }
 
     const char* name() const override { return "ClockwiseTestOp"; }
     FixedFunctionFlags fixedFunctionFlags() const override { return FixedFunctionFlags::kNone; }
-    GrProcessorSet::Analysis finalize(const GrCaps&, const GrAppliedClip*, GrFSAAType) override {
+    GrProcessorSet::Analysis finalize(const GrCaps&, const GrAppliedClip*, GrFSAAType,
+                                      GrClampType) override {
         return GrProcessorSet::EmptySetAnalysis();
     }
     void onPrepare(GrOpFlushState*) override {}
     void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
         SkPoint vertices[4] = {
-            {-1, -1},
-            {+1, -1},
-            {-1, +1},
-            {+1, +1},
+                {-1, -1},
+                {+1, -1},
+                {-1, +1},
+                {+1, +1},
         };
         sk_sp<const GrBuffer> vertexBuffer(flushState->resourceProvider()->createBuffer(
                 sizeof(vertices), GrGpuBufferType::kVertex, kStatic_GrAccessPattern, vertices));
@@ -152,7 +177,7 @@ private:
 
     const SkMatrix fViewMatrix;
 
-    friend class ::GrOpMemoryPool; // for ctor
+    friend class ::GrOpMemoryPool;  // for ctor
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -170,6 +195,4 @@ DEF_SIMPLE_GPU_GM_CAN_FAIL(fwidth_squircle, ctx, rtc, canvas, errorMsg, 200, 200
     return skiagm::DrawResult::kOk;
 }
 
-}
-
-#endif  // SK_SUPPORT_GPU
+}  // namespace skiagm

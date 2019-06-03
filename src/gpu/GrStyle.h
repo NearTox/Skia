@@ -8,10 +8,10 @@
 #ifndef GrStyle_DEFINED
 #define GrStyle_DEFINED
 
-#include "GrTypes.h"
-#include "SkPathEffect.h"
-#include "SkStrokeRec.h"
-#include "SkTemplates.h"
+#include "include/core/SkPathEffect.h"
+#include "include/core/SkStrokeRec.h"
+#include "include/gpu/GrTypes.h"
+#include "include/private/SkTemplates.h"
 
 /**
  * Represents the various ways that a GrShape can be styled. It has fill/stroking information
@@ -29,7 +29,7 @@ public:
     static const GrStyle& SimpleFill() {
         static const GrStyle kFill(SkStrokeRec::kFill_InitStyle);
         return kFill;
-        }
+    }
 
     /**
      * A style object that represents a hairline stroke with no path effect.
@@ -40,10 +40,7 @@ public:
         return kHairline;
     }
 
-    enum class Apply {
-        kPathEffectOnly,
-        kPathEffectAndStrokeRec
-    };
+    enum class Apply { kPathEffectOnly, kPathEffectAndStrokeRec };
 
     /**
      * Optional flags for computing keys that may remove unnecessary variation in the key due to
@@ -200,16 +197,16 @@ private:
             fType = SkPathEffect::kNone_DashType;
             fIntervals.reset(0);
         }
-        SkPathEffect::DashType      fType;
-        SkScalar                    fPhase;
-        SkAutoSTArray<4, SkScalar>  fIntervals;
+        SkPathEffect::DashType fType;
+        SkScalar fPhase;
+        SkAutoSTArray<4, SkScalar> fIntervals;
     };
 
     bool applyPathEffect(SkPath* dst, SkStrokeRec* strokeRec, const SkPath& src) const;
 
-    SkStrokeRec         fStrokeRec;
+    SkStrokeRec fStrokeRec;
     sk_sp<SkPathEffect> fPathEffect;
-    DashInfo            fDashInfo;
+    DashInfo fDashInfo;
 };
 
 #endif

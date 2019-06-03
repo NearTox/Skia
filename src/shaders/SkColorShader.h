@@ -8,8 +8,7 @@
 #ifndef SkColorShader_DEFINED
 #define SkColorShader_DEFINED
 
-#include "SkColorSpaceXformer.h"
-#include "SkShaderBase.h"
+#include "src/shaders/SkShaderBase.h"
 
 /** \class SkColorShader
     A Shader that represents a single color. In general, this effect can be
@@ -24,8 +23,8 @@ public:
     */
     explicit SkColorShader(SkColor c);
 
-    bool isOpaque() const override;
-    bool isConstant() const override { return true; }
+    bool isOpaque() const noexcept override;
+    bool isConstant() const noexcept override { return true; }
 
     GradientType asAGradient(GradientInfo* info) const override;
 
@@ -43,11 +42,7 @@ private:
         return true;
     }
 
-    bool onAppendStages(const StageRec&) const override;
-
-    sk_sp<SkShader> onMakeColorSpace(SkColorSpaceXformer* xformer) const override {
-        return SkShader::MakeColorShader(xformer->apply(fColor));
-    }
+    bool onAppendStages(const SkStageRec&) const override;
 
     SkColor fColor;
 };
@@ -56,8 +51,8 @@ class SkColor4Shader : public SkShaderBase {
 public:
     SkColor4Shader(const SkColor4f&, sk_sp<SkColorSpace>);
 
-    bool isOpaque()   const override { return fColor.isOpaque(); }
-    bool isConstant() const override { return true; }
+    bool isOpaque() const noexcept override { return fColor.isOpaque(); }
+    bool isConstant() const noexcept override { return true; }
 
 #if SK_SUPPORT_GPU
     std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
@@ -67,11 +62,10 @@ private:
     SK_FLATTENABLE_HOOKS(SkColor4Shader)
 
     void flatten(SkWriteBuffer&) const override;
-    bool onAppendStages(const StageRec&) const override;
-    sk_sp<SkShader> onMakeColorSpace(SkColorSpaceXformer* xformer) const override;
+    bool onAppendStages(const SkStageRec&) const override;
 
     sk_sp<SkColorSpace> fColorSpace;
-    const SkColor4f     fColor;
+    const SkColor4f fColor;
 };
 
 #endif

@@ -5,20 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "GrOnFlushResourceProvider.h"
+#include "src/gpu/GrOnFlushResourceProvider.h"
 
-#include "GrContextPriv.h"
-#include "GrDrawingManager.h"
-#include "GrProxyProvider.h"
-#include "GrRecordingContext.h"
-#include "GrRecordingContextPriv.h"
-#include "GrRenderTargetContext.h"
-#include "GrSurfaceProxy.h"
+#include "include/private/GrRecordingContext.h"
+#include "include/private/GrSurfaceProxy.h"
+#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrDrawingManager.h"
+#include "src/gpu/GrProxyProvider.h"
+#include "src/gpu/GrRecordingContextPriv.h"
+#include "src/gpu/GrRenderTargetContext.h"
 
 sk_sp<GrRenderTargetContext> GrOnFlushResourceProvider::makeRenderTargetContext(
-                                                        sk_sp<GrSurfaceProxy> proxy,
-                                                        sk_sp<SkColorSpace> colorSpace,
-                                                        const SkSurfaceProps* props) {
+        sk_sp<GrSurfaceProxy> proxy, sk_sp<SkColorSpace> colorSpace, const SkSurfaceProps* props) {
     // Since this is at flush time and these won't be allocated for us by the GrResourceAllocator
     // we have to manually ensure it is allocated here. The proxy had best have been created
     // with the kNoPendingIO flag!
@@ -26,10 +24,8 @@ sk_sp<GrRenderTargetContext> GrOnFlushResourceProvider::makeRenderTargetContext(
         return nullptr;
     }
 
-    sk_sp<GrRenderTargetContext> renderTargetContext(
-        fDrawingMgr->makeRenderTargetContext(std::move(proxy),
-                                             std::move(colorSpace),
-                                             props, false));
+    sk_sp<GrRenderTargetContext> renderTargetContext(fDrawingMgr->makeRenderTargetContext(
+            std::move(proxy), std::move(colorSpace), props, false));
 
     if (!renderTargetContext) {
         return nullptr;
@@ -64,6 +60,8 @@ sk_sp<GrTextureProxy> GrOnFlushResourceProvider::findOrCreateProxyByUniqueKey(
 }
 
 bool GrOnFlushResourceProvider::instatiateProxy(GrSurfaceProxy* proxy) {
+    SkASSERT(proxy->priv().ignoredByResourceAllocator());
+
     // TODO: this class should probably just get a GrDirectContext
     auto direct = fDrawingMgr->getContext()->priv().asDirectContext();
     if (!direct) {

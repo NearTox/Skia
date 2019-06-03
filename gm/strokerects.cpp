@@ -5,16 +5,20 @@
  * found in the LICENSE file.
  */
 
-
-
-#include "gm.h"
-#include "SkRandom.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/utils/SkRandom.h"
 
 namespace skiagm {
 
-#define W   400
-#define H   400
-#define N   100
+#define W 400
+#define H 400
+#define N 100
 
 constexpr SkScalar SW = SkIntToScalar(W);
 constexpr SkScalar SH = SkIntToScalar(H);
@@ -24,14 +28,9 @@ public:
     StrokeRectsGM() {}
 
 protected:
+    SkString onShortName() override { return SkString("strokerects"); }
 
-    SkString onShortName() override {
-        return SkString("strokerects");
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(W*2, H*2);
-    }
+    SkISize onISize() override { return SkISize::Make(W * 2, H * 2); }
 
     static void rnd_rect(SkRect* r, SkRandom& rand) {
         SkScalar x = rand.nextUScalar1() * W;
@@ -42,7 +41,7 @@ protected:
         SkScalar woffset = rand.nextSScalar1();
 
         r->set(x, y, x + w, y + h);
-        r->offset(-w/2 + woffset, -h/2 + hoffset);
+        r->offset(-w / 2 + woffset, -h / 2 + hoffset);
     }
 
     void onDraw(SkCanvas* canvas) override {
@@ -56,10 +55,8 @@ protected:
 
                 SkAutoCanvasRestore acr(canvas, true);
                 canvas->translate(SW * x, SH * y);
-                canvas->clipRect(SkRect::MakeLTRB(
-                        SkIntToScalar(2), SkIntToScalar(2)
-                        , SW - SkIntToScalar(2), SH - SkIntToScalar(2)
-                ));
+                canvas->clipRect(SkRect::MakeLTRB(SkIntToScalar(2), SkIntToScalar(2),
+                                                  SW - SkIntToScalar(2), SH - SkIntToScalar(2)));
 
                 SkRandom rand;
                 for (int i = 0; i < N; i++) {
@@ -77,6 +74,6 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new StrokeRectsGM; )
+DEF_GM(return new StrokeRectsGM;)
 
-}
+}  // namespace skiagm

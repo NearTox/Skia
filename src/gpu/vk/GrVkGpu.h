@@ -8,17 +8,17 @@
 #ifndef GrVkGpu_DEFINED
 #define GrVkGpu_DEFINED
 
-#include "GrGpu.h"
-#include "GrVkCaps.h"
-#include "GrVkCopyManager.h"
-#include "GrVkIndexBuffer.h"
-#include "GrVkMemory.h"
-#include "GrVkResourceProvider.h"
-#include "GrVkSemaphore.h"
-#include "GrVkVertexBuffer.h"
-#include "GrVkUtil.h"
-#include "vk/GrVkBackendContext.h"
-#include "vk/GrVkTypes.h"
+#include "include/gpu/vk/GrVkBackendContext.h"
+#include "include/gpu/vk/GrVkTypes.h"
+#include "src/gpu/GrGpu.h"
+#include "src/gpu/vk/GrVkCaps.h"
+#include "src/gpu/vk/GrVkCopyManager.h"
+#include "src/gpu/vk/GrVkIndexBuffer.h"
+#include "src/gpu/vk/GrVkMemory.h"
+#include "src/gpu/vk/GrVkResourceProvider.h"
+#include "src/gpu/vk/GrVkSemaphore.h"
+#include "src/gpu/vk/GrVkUtil.h"
+#include "src/gpu/vk/GrVkVertexBuffer.h"
 
 class GrPipeline;
 
@@ -36,7 +36,7 @@ class GrVkTexture;
 struct GrVkInterface;
 
 namespace SkSL {
-    class Compiler;
+class Compiler;
 }
 
 class GrVkGpu : public GrGpu {
@@ -54,12 +54,10 @@ public:
 
     VkPhysicalDevice physicalDevice() const { return fPhysicalDevice; }
     VkDevice device() const { return fDevice; }
-    VkQueue  queue() const { return fQueue; }
-    uint32_t  queueIndex() const { return fQueueIndex; }
+    VkQueue queue() const { return fQueue; }
+    uint32_t queueIndex() const { return fQueueIndex; }
     GrVkCommandPool* cmdPool() const { return fCmdPool; }
-    const VkPhysicalDeviceProperties& physicalDeviceProperties() const {
-        return fPhysDevProps;
-    }
+    const VkPhysicalDeviceProperties& physicalDeviceProperties() const { return fPhysDevProps; }
     const VkPhysicalDeviceMemoryProperties& physicalDeviceMemoryProperties() const {
         return fPhysDevMemProps;
     }
@@ -68,17 +66,20 @@ public:
 
     GrVkPrimaryCommandBuffer* currentCommandBuffer() { return fCurrentCmdBuffer; }
 
-    enum SyncQueue {
-        kForce_SyncQueue,
-        kSkip_SyncQueue
-    };
+    enum SyncQueue { kForce_SyncQueue, kSkip_SyncQueue };
+
+    void querySampleLocations(GrRenderTarget*, SkTArray<SkPoint>*) override {
+        SkASSERT(!this->caps()->sampleLocationsSupport());
+        SK_ABORT("Sample locations not yet implemented for Vulkan.");
+    }
 
     void xferBarrier(GrRenderTarget*, GrXferBarrierType) override {}
 
 #if GR_TEST_UTILS
-    GrBackendTexture createTestingOnlyBackendTexture(const void* pixels, int w, int h,
-                                                     GrColorType colorType, bool isRenderTarget,
-                                                     GrMipMapped, size_t rowBytes = 0) override;
+    GrBackendTexture createTestingOnlyBackendTexture(int w, int h, const GrBackendFormat&,
+                                                     GrMipMapped, GrRenderable,
+                                                     const void* pixels = nullptr,
+                                                     size_t rowBytes = 0) override;
     bool isTestingOnlyBackendTexture(const GrBackendTexture&) const override;
     void deleteTestingOnlyBackendTexture(const GrBackendTexture&) override;
 
@@ -86,6 +87,10 @@ public:
     void deleteTestingOnlyBackendRenderTarget(const GrBackendRenderTarget&) override;
 
     void testingOnly_flushGpuAndSync() override;
+
+    void resetShaderCacheForTesting() const override {
+        fResourceProvider.resetShaderCacheForTesting();
+    }
 #endif
 
     GrStencilAttachment* createStencilAttachmentForRenderTarget(const GrRenderTarget*,
@@ -99,11 +104,6 @@ public:
 
     GrGpuTextureCommandBuffer* getCommandBuffer(GrTexture*, GrSurfaceOrigin) override;
 
-
-    void addMemoryBarrier(VkPipelineStageFlags srcStageMask,
-                          VkPipelineStageFlags dstStageMask,
-                          bool byRegion,
-                          VkMemoryBarrier* barrier) const;
     void addBufferMemoryBarrier(const GrVkResource*,
                                 VkPipelineStageFlags srcStageMask,
                                 VkPipelineStageFlags dstStageMask,
@@ -115,9 +115,7 @@ public:
                                bool byRegion,
                                VkImageMemoryBarrier* barrier) const;
 
-    SkSL::Compiler* shaderCompiler() const {
-        return fCompiler;
-    }
+    SkSL::Compiler* shaderCompiler() const { return fCompiler; }
 
     bool onRegenerateMipMapLevels(GrTexture* tex) override;
 
@@ -133,10 +131,8 @@ public:
     }
 
     void submitSecondaryCommandBuffer(const SkTArray<GrVkSecondaryCommandBuffer*>&,
-                                      const GrVkRenderPass*,
-                                      const VkClearValue* colorClear,
-                                      GrVkRenderTarget*, GrSurfaceOrigin,
-                                      const SkIRect& bounds);
+                                      const GrVkRenderPass*, const VkClearValue* colorClear,
+                                      GrVkRenderTarget*, GrSurfaceOrigin, const SkIRect& bounds);
 
     void submit(GrGpuCommandBuffer*) override;
 
@@ -158,6 +154,8 @@ public:
     // Adds an SkDrawable::GpuDrawHandler that we will delete the next time we submit the primary
     // command buffer to the gpu.
     void addDrawable(std::unique_ptr<SkDrawable::GpuDrawHandler> drawable);
+
+    void checkFinishProcs() override { fResourceProvider.checkCommandBuffers(); }
 
     sk_sp<GrSemaphore> prepareTextureForCrossContextUsage(GrTexture*) override;
 
@@ -209,15 +207,17 @@ private:
     bool onWritePixels(GrSurface* surface, int left, int top, int width, int height, GrColorType,
                        const GrMipLevel texels[], int mipLevelCount) override;
 
-    bool onTransferPixels(GrTexture*, int left, int top, int width, int height, GrColorType,
-                          GrGpuBuffer* transferBuffer, size_t offset, size_t rowBytes) override;
+    bool onTransferPixelsTo(GrTexture*, int left, int top, int width, int height, GrColorType,
+                            GrGpuBuffer* transferBuffer, size_t offset, size_t rowBytes) override;
+    bool onTransferPixelsFrom(GrSurface* surface, int left, int top, int width, int height,
+                              GrColorType, GrGpuBuffer* transferBuffer, size_t offset) override;
 
     bool onCopySurface(GrSurface* dst, GrSurfaceOrigin dstOrigin, GrSurface* src,
-                       GrSurfaceOrigin srcOrigin, const SkIRect& srcRect,
-                       const SkIPoint& dstPoint, bool canDiscardOutsideDstRect) override;
+                       GrSurfaceOrigin srcOrigin, const SkIRect& srcRect, const SkIPoint& dstPoint,
+                       bool canDiscardOutsideDstRect) override;
 
-    void onFinishFlush(GrSurfaceProxy*, SkSurface::BackendSurfaceAccess access,
-                       SkSurface::FlushFlags flags, bool insertedSemaphores) override;
+    void onFinishFlush(GrSurfaceProxy*[], int, SkSurface::BackendSurfaceAccess access,
+                       const GrFlushInfo&, const GrPrepareForExternalIORequests&) override;
 
     // Ends and submits the current command buffer to the queue and then creates a new command
     // buffer and begins it. If sync is set to kForce_SyncQueue, the function will wait for all
@@ -225,25 +225,21 @@ private:
     // fSemaphoreToSignal, we will add those signal semaphores to the submission of this command
     // buffer. If this GrVkGpu object has any semaphores in fSemaphoresToWaitOn, we will add those
     // wait semaphores to the submission of this command buffer.
-    void submitCommandBuffer(SyncQueue sync);
+    void submitCommandBuffer(SyncQueue sync, GrGpuFinishedProc finishedProc = nullptr,
+                             GrGpuFinishedContext finishedContext = nullptr);
 
     void internalResolveRenderTarget(GrRenderTarget*, bool requiresSubmit);
 
-    void copySurfaceAsCopyImage(GrSurface* dst, GrSurfaceOrigin dstOrigin,
-                                GrSurface* src, GrSurfaceOrigin srcOrigin,
-                                GrVkImage* dstImage, GrVkImage* srcImage,
-                                const SkIRect& srcRect,
-                                const SkIPoint& dstPoint);
+    void copySurfaceAsCopyImage(GrSurface* dst, GrSurfaceOrigin dstOrigin, GrSurface* src,
+                                GrSurfaceOrigin srcOrigin, GrVkImage* dstImage, GrVkImage* srcImage,
+                                const SkIRect& srcRect, const SkIPoint& dstPoint);
 
-    void copySurfaceAsBlit(GrSurface* dst, GrSurfaceOrigin dstOrigin,
-                           GrSurface* src, GrSurfaceOrigin srcOrigin,
-                           GrVkImage* dstImage, GrVkImage* srcImage,
-                           const SkIRect& srcRect,
-                           const SkIPoint& dstPoint);
+    void copySurfaceAsBlit(GrSurface* dst, GrSurfaceOrigin dstOrigin, GrSurface* src,
+                           GrSurfaceOrigin srcOrigin, GrVkImage* dstImage, GrVkImage* srcImage,
+                           const SkIRect& srcRect, const SkIPoint& dstPoint);
 
-    void copySurfaceAsResolve(GrSurface* dst, GrSurfaceOrigin dstOrigin,
-                              GrSurface* src, GrSurfaceOrigin srcOrigin,
-                              const SkIRect& srcRect,
+    void copySurfaceAsResolve(GrSurface* dst, GrSurfaceOrigin dstOrigin, GrSurface* src,
+                              GrSurfaceOrigin srcOrigin, const SkIRect& srcRect,
                               const SkIPoint& dstPoint);
 
     // helpers for onCreateTexture and writeTexturePixels
@@ -263,44 +259,44 @@ private:
                                   size_t srcRowBytes, GrVkImageInfo* info);
 #endif
 
-    sk_sp<const GrVkInterface>                            fInterface;
-    sk_sp<GrVkMemoryAllocator>                            fMemoryAllocator;
-    sk_sp<GrVkCaps>                                       fVkCaps;
+    sk_sp<const GrVkInterface> fInterface;
+    sk_sp<GrVkMemoryAllocator> fMemoryAllocator;
+    sk_sp<GrVkCaps> fVkCaps;
 
-    VkInstance                                            fInstance;
-    VkPhysicalDevice                                      fPhysicalDevice;
-    VkDevice                                              fDevice;
-    VkQueue                                               fQueue;    // Must be Graphics queue
-    uint32_t                                              fQueueIndex;
+    VkInstance fInstance;
+    VkPhysicalDevice fPhysicalDevice;
+    VkDevice fDevice;
+    VkQueue fQueue;  // Must be Graphics queue
+    uint32_t fQueueIndex;
 
     // Created by GrVkGpu
-    GrVkResourceProvider                                  fResourceProvider;
+    GrVkResourceProvider fResourceProvider;
 
-    GrVkCommandPool*                                      fCmdPool;
+    GrVkCommandPool* fCmdPool;
 
     // just a raw pointer; object's lifespan is managed by fCmdPool
-    GrVkPrimaryCommandBuffer*                             fCurrentCmdBuffer;
+    GrVkPrimaryCommandBuffer* fCurrentCmdBuffer;
 
-    SkSTArray<1, GrVkSemaphore::Resource*>                fSemaphoresToWaitOn;
-    SkSTArray<1, GrVkSemaphore::Resource*>                fSemaphoresToSignal;
+    SkSTArray<1, GrVkSemaphore::Resource*> fSemaphoresToWaitOn;
+    SkSTArray<1, GrVkSemaphore::Resource*> fSemaphoresToSignal;
 
     SkTArray<std::unique_ptr<SkDrawable::GpuDrawHandler>> fDrawables;
 
-    VkPhysicalDeviceProperties                            fPhysDevProps;
-    VkPhysicalDeviceMemoryProperties                      fPhysDevMemProps;
+    VkPhysicalDeviceProperties fPhysDevProps;
+    VkPhysicalDeviceMemoryProperties fPhysDevMemProps;
 
-    GrVkCopyManager                                       fCopyManager;
+    GrVkCopyManager fCopyManager;
 
     // compiler used for compiling sksl into spirv. We only want to create the compiler once since
     // there is significant overhead to the first compile of any compiler.
-    SkSL::Compiler*                                       fCompiler;
+    SkSL::Compiler* fCompiler;
 
     // We need a bool to track whether or not we've already disconnected all the gpu resources from
     // vulkan context.
-    bool                                                  fDisconnected;
+    bool fDisconnected;
 
-    std::unique_ptr<GrVkGpuRTCommandBuffer>               fCachedRTCommandBuffer;
-    std::unique_ptr<GrVkGpuTextureCommandBuffer>          fCachedTexCommandBuffer;
+    std::unique_ptr<GrVkGpuRTCommandBuffer> fCachedRTCommandBuffer;
+    std::unique_ptr<GrVkGpuTextureCommandBuffer> fCachedTexCommandBuffer;
 
     typedef GrGpu INHERITED;
 };

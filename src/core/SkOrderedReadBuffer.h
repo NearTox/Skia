@@ -2,8 +2,8 @@
 #ifndef SkOrderedReadBuffer_DEFINED
 #define SkOrderedReadBuffer_DEFINED
 
-#include "SkReadBuffer.h"
+#include "src/core/SkReadBuffer.h"
 
 typedef SkReadBuffer SkOrderedReadBuffer;
 
-#endif//SkOrderedReadBuffer_DEFINED
+#endif  // SkOrderedReadBuffer_DEFINED

@@ -8,9 +8,9 @@
 #ifndef GrVkSecondaryCBDrawContext_DEFINED
 #define GrVkSecondaryCBDrawContext_DEFINED
 
-#include "SkTypes.h"
-#include "SkRefCnt.h"
-#include "SkSurfaceProps.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkSurfaceProps.h"
+#include "include/core/SkTypes.h"
 
 class GrBackendSemaphore;
 class GrContext;
@@ -103,9 +103,9 @@ private:
 
     bool isCompatible(const SkSurfaceCharacterization& characterization) const;
 
-    sk_sp<SkGpuDevice>        fDevice;
+    sk_sp<SkGpuDevice> fDevice;
     std::unique_ptr<SkCanvas> fCachedCanvas;
-    const SkSurfaceProps      fProps;
+    const SkSurfaceProps fProps;
 
     typedef SkRefCnt INHERITED;
 };

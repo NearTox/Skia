@@ -1,15 +1,15 @@
 /*
-* Copyright 2016 Google Inc.
-*
-* Use of this source code is governed by a BSD-style license that can be
-* found in the LICENSE file.
-*/
+ * Copyright 2016 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
 #ifndef GrVkDescriptorPool_DEFINED
 #define GrVkDescriptorPool_DEFINED
 
-#include "GrVkResource.h"
-#include "vk/GrVkTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
+#include "src/gpu/vk/GrVkResource.h"
 
 class GrVkGpu;
 
@@ -40,9 +40,9 @@ public:
 private:
     void freeGPUData(GrVkGpu* gpu) const override;
 
-    VkDescriptorType     fType;
-    uint32_t             fCount;
-    VkDescriptorPool     fDescPool;
+    VkDescriptorType fType;
+    uint32_t fCount;
+    VkDescriptorPool fDescPool;
 
     typedef GrVkResource INHERITED;
 };

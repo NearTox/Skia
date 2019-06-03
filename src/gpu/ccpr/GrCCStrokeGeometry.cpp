@@ -5,46 +5,46 @@
  * found in the LICENSE file.
  */
 
-#include "GrCCStrokeGeometry.h"
+#include "src/gpu/ccpr/GrCCStrokeGeometry.h"
 
-#include "SkGeometry.h"
-#include "SkMathPriv.h"
-#include "SkNx.h"
-#include "SkStrokeRec.h"
+#include "include/core/SkStrokeRec.h"
+#include "include/private/SkNx.h"
+#include "src/core/SkGeometry.h"
+#include "src/core/SkMathPriv.h"
 
 // This is the maximum distance in pixels that we can stray from the edge of a stroke when
 // converting it to flat line segments.
-static constexpr float kMaxErrorFromLinearization = 1/8.f;
+static constexpr float kMaxErrorFromLinearization = 1 / 8.f;
 
 static inline float length(const Sk2f& n) {
-    Sk2f nn = n*n;
+    Sk2f nn = n * n;
     return SkScalarSqrt(nn[0] + nn[1]);
 }
 
 static inline Sk2f normalize(const Sk2f& v) {
-    Sk2f vv = v*v;
-    vv += SkNx_shuffle<1,0>(vv);
+    Sk2f vv = v * v;
+    vv += SkNx_shuffle<1, 0>(vv);
     return v * vv.rsqrt();
 }
 
 static inline void transpose(const Sk2f& a, const Sk2f& b, Sk2f* X, Sk2f* Y) {
     float transpose[4];
     a.store(transpose);
-    b.store(transpose+2);
+    b.store(transpose + 2);
     Sk2f::Load2(transpose, X, Y);
 }
 
 static inline void normalize2(const Sk2f& v0, const Sk2f& v1, SkPoint out[2]) {
     Sk2f X, Y;
     transpose(v0, v1, &X, &Y);
-    Sk2f invlength = (X*X + Y*Y).rsqrt();
+    Sk2f invlength = (X * X + Y * Y).rsqrt();
     Sk2f::Store2(out, Y * invlength, -X * invlength);
 }
 
 static inline float calc_curvature_costheta(const Sk2f& leftTan, const Sk2f& rightTan) {
     Sk2f X, Y;
     transpose(leftTan, rightTan, &X, &Y);
-    Sk2f invlength = (X*X + Y*Y).rsqrt();
+    Sk2f invlength = (X * X + Y * Y).rsqrt();
     Sk2f dotprod = leftTan * rightTan;
     return (dotprod[0] + dotprod[1]) * invlength[0] * invlength[1];
 }
@@ -69,7 +69,7 @@ void GrCCStrokeGeometry::beginPath(const SkStrokeRec& stroke, float strokeDevWid
     // Client should have already converted the stroke to device space (i.e. width=1 for hairline).
     SkASSERT(strokeDevWidth > 0);
 
-    fCurrStrokeRadius = strokeDevWidth/2;
+    fCurrStrokeRadius = strokeDevWidth / 2;
     fCurrStrokeJoinVerb = join_verb_from_join(stroke.getJoin());
     fCurrStrokeCapType = stroke.getCap();
     fCurrStrokeTallies = tallies;
@@ -78,13 +78,13 @@ void GrCCStrokeGeometry::beginPath(const SkStrokeRec& stroke, float strokeDevWid
         // We implement miters by placing a triangle-shaped cap on top of a bevel join. Convert the
         // "miter limit" to how tall that triangle cap can be.
         float m = stroke.getMiter();
-        fMiterMaxCapHeightOverWidth = .5f * SkScalarSqrt(m*m - 1);
+        fMiterMaxCapHeightOverWidth = .5f * SkScalarSqrt(m * m - 1);
     }
 
     // Find the angle of curvature where the arc height above a simple line from point A to point B
     // is equal to kMaxErrorFromLinearization.
     float r = SkTMax(1 - kMaxErrorFromLinearization / fCurrStrokeRadius, 0.f);
-    fMaxCurvatureCosTheta = 2*r*r - 1;
+    fMaxCurvatureCosTheta = 2 * r * r - 1;
 
     fCurrContourFirstPtIdx = -1;
     fCurrContourFirstNormalIdx = -1;
@@ -131,14 +131,14 @@ void GrCCStrokeGeometry::quadraticTo(const SkPoint P[3]) {
 // from the actual curve.
 static inline float wangs_formula_quadratic(const Sk2f& p0, const Sk2f& p1, const Sk2f& p2) {
     static constexpr float k = 2 / (8 * kMaxErrorFromLinearization);
-    float f = SkScalarSqrt(k * length(p2 - p1*2 + p0));
+    float f = SkScalarSqrt(k * length(p2 - p1 * 2 + p0));
     return SkScalarCeilToInt(f);
 }
 
 void GrCCStrokeGeometry::quadraticTo(Verb leftJoinVerb, const SkPoint P[3], float maxCurvatureT) {
     Sk2f p0 = Sk2f::Load(P);
-    Sk2f p1 = Sk2f::Load(P+1);
-    Sk2f p2 = Sk2f::Load(P+2);
+    Sk2f p1 = Sk2f::Load(P + 1);
+    Sk2f p2 = Sk2f::Load(P + 2);
 
     Sk2f tan0 = p1 - p0;
     Sk2f tan1 = p2 - p1;
@@ -165,27 +165,27 @@ void GrCCStrokeGeometry::quadraticTo(Verb leftJoinVerb, const SkPoint P[3], floa
     }
 
     // At + B gives a vector tangent to the quadratic.
-    Sk2f A = p0 - p1*2 + p2;
+    Sk2f A = p0 - p1 * 2 + p2;
     Sk2f B = p1 - p0;
 
     // Find a line segment that crosses max curvature.
     float segmentLength = SkScalarInvert(numSegments);
-    float leftT = maxCurvatureT - segmentLength/2;
-    float rightT = maxCurvatureT + segmentLength/2;
+    float leftT = maxCurvatureT - segmentLength / 2;
+    float rightT = maxCurvatureT + segmentLength / 2;
     Sk2f leftTan, rightTan;
     if (leftT <= 0) {
         leftT = 0;
         leftTan = tan0;
         rightT = segmentLength;
-        rightTan = A*rightT + B;
+        rightTan = A * rightT + B;
     } else if (rightT >= 1) {
         leftT = 1 - segmentLength;
-        leftTan = A*leftT + B;
+        leftTan = A * leftT + B;
         rightT = 1;
         rightTan = tan1;
     } else {
-        leftTan = A*leftT + B;
-        rightTan = A*rightT + B;
+        leftTan = A * leftT + B;
+        rightTan = A * rightT + B;
     }
 
     // Check if curvature is too strong for a triangle strip on the line segment that crosses max
@@ -233,8 +233,7 @@ void GrCCStrokeGeometry::cubicTo(const SkPoint P[4]) {
     SkASSERT(fInsideContour);
     float roots[3];
     int numRoots = SkFindCubicMaxCurvature(P, roots);
-    this->cubicTo(fCurrStrokeJoinVerb, P,
-                  numRoots > 0 ? roots[numRoots/2] : 0,
+    this->cubicTo(fCurrStrokeJoinVerb, P, numRoots > 0 ? roots[numRoots / 2] : 0,
                   numRoots > 1 ? roots[0] : kLeftMaxCurvatureNone,
                   numRoots > 2 ? roots[2] : kRightMaxCurvatureNone);
 }
@@ -245,17 +244,17 @@ void GrCCStrokeGeometry::cubicTo(const SkPoint P[4]) {
 static inline float wangs_formula_cubic(const Sk2f& p0, const Sk2f& p1, const Sk2f& p2,
                                         const Sk2f& p3) {
     static constexpr float k = (3 * 2) / (8 * kMaxErrorFromLinearization);
-    float f = SkScalarSqrt(k * length(Sk2f::Max((p2 - p1*2 + p0).abs(),
-                                                (p3 - p2*2 + p1).abs())));
+    float f =
+            SkScalarSqrt(k * length(Sk2f::Max((p2 - p1 * 2 + p0).abs(), (p3 - p2 * 2 + p1).abs())));
     return SkScalarCeilToInt(f);
 }
 
 void GrCCStrokeGeometry::cubicTo(Verb leftJoinVerb, const SkPoint P[4], float maxCurvatureT,
                                  float leftMaxCurvatureT, float rightMaxCurvatureT) {
     Sk2f p0 = Sk2f::Load(P);
-    Sk2f p1 = Sk2f::Load(P+1);
-    Sk2f p2 = Sk2f::Load(P+2);
-    Sk2f p3 = Sk2f::Load(P+3);
+    Sk2f p1 = Sk2f::Load(P + 1);
+    Sk2f p2 = Sk2f::Load(P + 2);
+    Sk2f p3 = Sk2f::Load(P + 3);
 
     Sk2f tan0 = p1 - p0;
     Sk2f tan1 = p3 - p2;
@@ -273,7 +272,7 @@ void GrCCStrokeGeometry::cubicTo(Verb leftJoinVerb, const SkPoint P[4], float ma
         p2 = p3;
         tan1 = p3 - p1;
         if ((tan1.abs() < SK_ScalarNearlyZero).allTrue() ||  // p1 ~= p2 ~= p3
-            (p0 == p1).allTrue()) {  // p0 ~= p1 AND p2 ~= p3
+            (p0 == p1).allTrue()) {                          // p0 ~= p1 AND p2 ~= p3
             this->lineTo(leftJoinVerb, P[3]);
             return;
         }
@@ -294,28 +293,28 @@ void GrCCStrokeGeometry::cubicTo(Verb leftJoinVerb, const SkPoint P[4], float ma
 
     // At^2 + Bt + C gives a vector tangent to the cubic. (More specifically, it's the derivative
     // minus an irrelevant scale by 3, since all we care about is the direction.)
-    Sk2f A = p3 + (p1 - p2)*3 - p0;
-    Sk2f B = (p0 - p1*2 + p2)*2;
+    Sk2f A = p3 + (p1 - p2) * 3 - p0;
+    Sk2f B = (p0 - p1 * 2 + p2) * 2;
     Sk2f C = p1 - p0;
 
     // Find a line segment that crosses max curvature.
     float segmentLength = SkScalarInvert(numSegments);
-    float leftT = maxCurvatureT - segmentLength/2;
-    float rightT = maxCurvatureT + segmentLength/2;
+    float leftT = maxCurvatureT - segmentLength / 2;
+    float rightT = maxCurvatureT + segmentLength / 2;
     Sk2f leftTan, rightTan;
     if (leftT <= 0) {
         leftT = 0;
         leftTan = tan0;
         rightT = segmentLength;
-        rightTan = A*rightT*rightT + B*rightT + C;
+        rightTan = A * rightT * rightT + B * rightT + C;
     } else if (rightT >= 1) {
         leftT = 1 - segmentLength;
-        leftTan = A*leftT*leftT + B*leftT + C;
+        leftTan = A * leftT * leftT + B * leftT + C;
         rightT = 1;
         rightTan = tan1;
     } else {
-        leftTan = A*leftT*leftT + B*leftT + C;
-        rightTan = A*rightT*rightT + B*rightT + C;
+        leftTan = A * leftT * leftT + B * leftT + C;
+        rightTan = A * rightT * rightT + B * rightT + C;
     }
 
     // Check if curvature is too strong for a triangle strip on the line segment that crosses max
@@ -336,8 +335,8 @@ void GrCCStrokeGeometry::cubicTo(Verb leftJoinVerb, const SkPoint P[4], float ma
         if (leftT > 0) {
             SkChopCubicAt(currCubic, ptsBuffer, leftT);
             this->cubicTo(leftJoinVerb, ptsBuffer, /*maxCurvatureT=*/1,
-                          (kLeftMaxCurvatureNone != leftMaxCurvatureT)
-                                  ? leftMaxCurvatureT/leftT : kLeftMaxCurvatureNone,
+                          (kLeftMaxCurvatureNone != leftMaxCurvatureT) ? leftMaxCurvatureT / leftT
+                                                                       : kLeftMaxCurvatureNone,
                           kRightMaxCurvatureNone);
             if (rightT < 1) {
                 rightT = (rightT - leftT) / (1 - leftT);
@@ -431,7 +430,7 @@ void GrCCStrokeGeometry::recordLeftJoinIfNotEmpty(Verb joinVerb, SkVector nextNo
     // NOTE: This value would be infinite at 180 degrees, but we clamp miterCapHeightOverWidth at
     // near-infinity. 180-degree round joins still look perfectly acceptable like this (though
     // technically not pure arcs).
-    Sk2f cross = base * SkNx_shuffle<1,0>(n0);
+    Sk2f cross = base * SkNx_shuffle<1, 0>(n0);
     Sk2f dot = base * n0;
     float miterCapHeight = SkScalarAbs(dot[0] + dot[1]);
     float miterCapWidth = SkScalarAbs(cross[0] - cross[1]) * 2;
@@ -517,7 +516,7 @@ void GrCCStrokeGeometry::closeContour() {
     }
     if (fNormals.count() > fCurrContourFirstNormalIdx) {
         // Join the first and last lines.
-        this->rotateTo(fCurrStrokeJoinVerb,fNormals[fCurrContourFirstNormalIdx]);
+        this->rotateTo(fCurrStrokeJoinVerb, fNormals[fCurrContourFirstNormalIdx]);
     } else {
         // This contour is empty. Add a bogus normal since the iterator always expects one.
         SkASSERT(fNormals.count() == fCurrContourFirstNormalIdx);

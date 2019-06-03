@@ -5,19 +5,19 @@
  * found in the LICENSE file.
  */
 
-#include "SkTypeface_remote.h"
-#include "SkPaint.h"
-#include "SkRemoteGlyphCache.h"
-#include "SkStrike.h"
-#include "SkStrikeCache.h"
-#include "SkTraceEvent.h"
+#include "src/core/SkTypeface_remote.h"
+#include "include/core/SkPaint.h"
+#include "src/core/SkRemoteGlyphCache.h"
+#include "src/core/SkStrike.h"
+#include "src/core/SkStrikeCache.h"
+#include "src/core/SkTraceEvent.h"
 
 SkScalerContextProxy::SkScalerContextProxy(sk_sp<SkTypeface> tf,
                                            const SkScalerContextEffects& effects,
                                            const SkDescriptor* desc,
-                                           sk_sp<SkStrikeClient::DiscardableHandleManager> manager)
-        : SkScalerContext{std::move(tf), effects, desc}
-        , fDiscardableManager{std::move(manager)} {}
+                                           sk_sp<SkStrikeClient::DiscardableHandleManager>
+                                                   manager)
+        : SkScalerContext{std::move(tf), effects, desc}, fDiscardableManager{std::move(manager)} {}
 
 void SkScalerContextProxy::initCache(SkStrike* cache, SkStrikeCache* strikeCache) {
     SkASSERT(fCache == nullptr);
@@ -27,19 +27,12 @@ void SkScalerContextProxy::initCache(SkStrike* cache, SkStrikeCache* strikeCache
     fStrikeCache = strikeCache;
 }
 
-unsigned SkScalerContextProxy::generateGlyphCount()  {
+unsigned SkScalerContextProxy::generateGlyphCount() {
     SK_ABORT("Should never be called.");
     return 0;
 }
 
-uint16_t SkScalerContextProxy::generateCharToGlyph(SkUnichar) {
-    SK_ABORT("Should never be called.");
-    return 0;
-}
-
-bool SkScalerContextProxy::generateAdvance(SkGlyph* glyph) {
-    return false;
-}
+bool SkScalerContextProxy::generateAdvance(SkGlyph* glyph) { return false; }
 
 void SkScalerContextProxy::generateMetrics(SkGlyph* glyph) {
     TRACE_EVENT1("skia", "generateMetrics", "rec", TRACE_STR_COPY(this->getRec().dump().c_str()));

@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkAnimTimer.h"
-#include "SkColorPriv.h"
-#include "SkCanvas.h"
-#include "SkMaskFilter.h"
-#include "SkRandom.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkMaskFilter.h"
+#include "include/utils/SkRandom.h"
+#include "samplecode/Sample.h"
+#include "tools/timer/AnimTimer.h"
 
 SkScalar get_anim_sin(double secs, SkScalar amplitude, SkScalar periodInSec, SkScalar phaseInSec) {
     if (!periodInSec) {
@@ -37,25 +37,23 @@ protected:
 
     void onDrawContent(SkCanvas* canvas) override {
         static const SkBlurStyle gStyles[] = {
-            kNormal_SkBlurStyle,
-            kInner_SkBlurStyle,
-            kSolid_SkBlurStyle,
-            kOuter_SkBlurStyle,
+                kNormal_SkBlurStyle,
+                kInner_SkBlurStyle,
+                kSolid_SkBlurStyle,
+                kOuter_SkBlurStyle,
         };
         SkRandom random;
 
         for (size_t i = 0; i < SK_ARRAY_COUNT(gStyles); ++i) {
             SkPaint paint;
-            paint.setMaskFilter(SkMaskFilter::MakeBlur(gStyles[i],
-                                                       fBlurSigma));
+            paint.setMaskFilter(SkMaskFilter::MakeBlur(gStyles[i], fBlurSigma));
             paint.setColor(random.nextU() | 0xff000000);
             canvas->drawCircle(200 * SK_Scalar1 + 400 * (i % 2) * SK_Scalar1,
-                               200 * SK_Scalar1 + i / 2 * 400 * SK_Scalar1,
-                               fCircleRadius, paint);
+                               200 * SK_Scalar1 + i / 2 * 400 * SK_Scalar1, fCircleRadius, paint);
         }
     }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         fBlurSigma = get_anim_sin(timer.secs(), 100, 4, 5);
         fCircleRadius = 3 + get_anim_sin(timer.secs(), 150, 25, 3);
         return true;
@@ -69,4 +67,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new AnimBlurView(); )
+DEF_SAMPLE(return new AnimBlurView();)

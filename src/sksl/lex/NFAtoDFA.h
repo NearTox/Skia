@@ -5,16 +5,16 @@
  * found in the LICENSE file.
  */
 
-#include "DFA.h"
-#include "DFAState.h"
-#include "NFA.h"
-#include "NFAState.h"
+#include "src/sksl/lex/DFA.h"
+#include "src/sksl/lex/DFAState.h"
+#include "src/sksl/lex/NFA.h"
+#include "src/sksl/lex/NFAState.h"
 
 #include <algorithm>
 #include <climits>
 #include <memory>
-#include <unordered_map>
 #include <set>
+#include <unordered_map>
 #include <vector>
 
 /**
@@ -32,8 +32,7 @@ public:
     static constexpr char START_CHAR = 9;
     static constexpr char END_CHAR = 126;
 
-    NFAtoDFA(NFA* nfa)
-    : fNFA(*nfa) {}
+    NFAtoDFA(NFA* nfa) : fNFA(*nfa) {}
 
     /**
      * Returns a DFA created from the NFA.
@@ -52,7 +51,7 @@ public:
 
         int stateCount = 0;
         for (const auto& row : fTransitions) {
-            stateCount = std::max(stateCount, (int) row.size());
+            stateCount = std::max(stateCount, (int)row.size());
         }
         return DFA(fCharMappings, fTransitions, fAccepts);
     }
@@ -88,11 +87,11 @@ private:
     }
 
     void addTransition(char c, int start, int next) {
-        while (fTransitions.size() <= (size_t) c) {
+        while (fTransitions.size() <= (size_t)c) {
             fTransitions.push_back(std::vector<int>());
         }
         std::vector<int>& row = fTransitions[c];
-        while (row.size() <= (size_t) start) {
+        while (row.size() <= (size_t)start) {
             row.push_back(INVALID);
         }
         row[start] = next;
@@ -118,7 +117,7 @@ private:
             DFAState* nextState = this->getState(DFAState::Label(next));
             this->addTransition(c, state->fId, nextState->fId);
             if (bestAccept != INT_MAX) {
-                while (fAccepts.size() <= (size_t) nextState->fId) {
+                while (fAccepts.size() <= (size_t)nextState->fId) {
                     fAccepts.push_back(INVALID);
                 }
                 fAccepts[nextState->fId] = bestAccept;
@@ -145,7 +144,7 @@ private:
                 }
             }
             if (found == -1) {
-                found = (int) uniques.size();
+                found = (int)uniques.size();
                 uniques.push_back(&fTransitions[i]);
             }
             fCharMappings.push_back(found);

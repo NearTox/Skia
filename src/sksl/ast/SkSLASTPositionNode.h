@@ -8,8 +8,8 @@
 #ifndef SKSL_ASTPOSITIONNODE
 #define SKSL_ASTPOSITIONNODE
 
-#include "SkSLASTNode.h"
-#include "../SkSLPosition.h"
+#include "src/sksl/SkSLPosition.h"
+#include "src/sksl/ast/SkSLASTNode.h"
 
 namespace SkSL {
 
@@ -17,14 +17,13 @@ namespace SkSL {
  * An AST node with an associated position in the source.
  */
 struct ASTPositionNode : public ASTNode {
-    ASTPositionNode(int offset)
-    : fOffset(offset) {}
+    ASTPositionNode(int offset) : fOffset(offset) {}
 
     // character offset of this element within the program being compiled, for error reporting
     // purposes
     const int fOffset;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

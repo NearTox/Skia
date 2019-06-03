@@ -5,29 +5,29 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkCanvas.h"
-#include "SkBlurMaskFilter.h"
-#include "SkCamera.h"
-#include "SkColorFilter.h"
-#include "SkColorPriv.h"
-#include "SkGradientShader.h"
-#include "SkImage.h"
-#include "SkInterpolator.h"
-#include "SkMaskFilter.h"
-#include "SkPath.h"
-#include "SkRegion.h"
-#include "SkShader.h"
-#include "SkTime.h"
-#include "SkTypeface.h"
-#include "SkUTF.h"
-#include "SkClipOpPriv.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkMaskFilter.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRegion.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkTime.h"
+#include "include/core/SkTypeface.h"
+#include "include/effects/SkBlurMaskFilter.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/utils/SkCamera.h"
+#include "include/utils/SkInterpolator.h"
+#include "samplecode/Sample.h"
+#include "src/core/SkClipOpPriv.h"
+#include "src/utils/SkUTF.h"
 
 static void make_paint(SkPaint* paint, const SkMatrix& localMatrix) {
-    SkColor colors[] = { 0, SK_ColorWHITE };
-    SkPoint pts[] = { { 0, 0 }, { 0, SK_Scalar1*20 } };
-    paint->setShader(SkGradientShader::MakeLinear(pts, colors, nullptr, 2,
-                                                  SkShader::kClamp_TileMode, 0, &localMatrix));
+    SkColor colors[] = {0, SK_ColorWHITE};
+    SkPoint pts[] = {{0, 0}, {0, SK_Scalar1 * 20}};
+    paint->setShader(SkGradientShader::MakeLinear(pts, colors, nullptr, 2, SkTileMode::kClamp, 0,
+                                                  &localMatrix));
     paint->setBlendMode(SkBlendMode::kDstIn);
 }
 
@@ -76,7 +76,7 @@ static void test_fade(SkCanvas* canvas) {
         canvas->drawOval(r, p);
     }
 
-//    return;
+    //    return;
 
     // now apply an effect
     SkMatrix m;
@@ -86,12 +86,12 @@ static void test_fade(SkCanvas* canvas) {
     SkPaint paint;
     make_paint(&paint, m);
     r.set(0, 0, SkIntToScalar(100), SkIntToScalar(20));
-//    SkDebugf("--------- draw top grad\n");
+    //    SkDebugf("--------- draw top grad\n");
     canvas->drawRect(r, paint);
 
     r.fTop = SkIntToScalar(80);
     r.fBottom = SkIntToScalar(100);
-//    SkDebugf("--------- draw bot grad\n");
+    //    SkDebugf("--------- draw bot grad\n");
     canvas->drawRect(r, paint);
 }
 
@@ -108,17 +108,14 @@ protected:
         return this->INHERITED::onQuery(evt);
     }
 
-    void drawBG(SkCanvas* canvas) {
-        canvas->drawColor(SK_ColorGRAY);
-    }
+    void drawBG(SkCanvas* canvas) { canvas->drawColor(SK_ColorGRAY); }
 
     void onDrawContent(SkCanvas* canvas) override {
         this->drawBG(canvas);
 
         if (true) {
             SkRect r;
-            r.set(SkIntToScalar(0), SkIntToScalar(0),
-                  SkIntToScalar(220), SkIntToScalar(120));
+            r.set(SkIntToScalar(0), SkIntToScalar(0), SkIntToScalar(220), SkIntToScalar(120));
             SkPaint p;
             canvas->saveLayer(&r, &p);
             canvas->drawColor(0xFFFF0000);
@@ -131,8 +128,7 @@ protected:
 
         if (false) {
             SkRect r;
-            r.set(SkIntToScalar(0), SkIntToScalar(0),
-                  SkIntToScalar(220), SkIntToScalar(120));
+            r.set(SkIntToScalar(0), SkIntToScalar(0), SkIntToScalar(220), SkIntToScalar(120));
             SkPaint p;
             p.setAlpha(0x88);
             p.setAntiAlias(true);
@@ -157,13 +153,11 @@ protected:
             canvas->translate(SkIntToScalar(300), 0);
 
             SkRect r;
-            r.set(SkIntToScalar(0), SkIntToScalar(0),
-                  SkIntToScalar(220), SkIntToScalar(60));
+            r.set(SkIntToScalar(0), SkIntToScalar(0), SkIntToScalar(220), SkIntToScalar(60));
 
             canvas->saveLayer(&r, &p);
 
-            r.set(SkIntToScalar(0), SkIntToScalar(0),
-                  SkIntToScalar(220), SkIntToScalar(120));
+            r.set(SkIntToScalar(0), SkIntToScalar(0), SkIntToScalar(220), SkIntToScalar(120));
             p.setColor(SK_ColorBLUE);
             canvas->drawOval(r, p);
             canvas->restore();
@@ -176,22 +170,23 @@ protected:
 private:
     typedef Sample INHERITED;
 };
-DEF_SAMPLE( return new LayersView; )
+DEF_SAMPLE(return new LayersView;)
 
 //////////////////////////////////////////////////////////////////////////////
 
-#include "SkBlurImageFilter.h"
-#include "SkMatrixConvolutionImageFilter.h"
-#include "SkMorphologyImageFilter.h"
+#include "include/effects/SkBlurImageFilter.h"
+#include "include/effects/SkMatrixConvolutionImageFilter.h"
+#include "include/effects/SkMorphologyImageFilter.h"
 
-#include "Resources.h"
-#include "SkAnimTimer.h"
+#include "tools/Resources.h"
+#include "tools/timer/AnimTimer.h"
 
 class BackdropView : public Sample {
     SkPoint fCenter;
     SkScalar fAngle;
     sk_sp<SkImage> fImage;
     sk_sp<SkImageFilter> fFilter;
+
 public:
     BackdropView() {
         fCenter.set(200, 150);
@@ -215,7 +210,7 @@ protected:
         const SkScalar w = 250;
         const SkScalar h = 150;
         SkPath path;
-        path.addOval(SkRect::MakeXYWH(-w/2, -h/2, w, h));
+        path.addOval(SkRect::MakeXYWH(-w / 2, -h / 2, w, h));
         SkMatrix m;
         m.setRotate(fAngle);
         m.postTranslate(fCenter.x(), fCenter.y());
@@ -226,12 +221,12 @@ protected:
 
         SkPaint paint;
         paint.setAlpha(0xCC);
-        canvas->saveLayer({ &bounds, &paint, fFilter.get(), nullptr, nullptr, 0 });
+        canvas->saveLayer({&bounds, &paint, fFilter.get(), nullptr, nullptr, 0});
 
         canvas->restore();
     }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         fAngle = SkDoubleToScalar(fmod(timer.secs() * 360 / 5, 360));
         return true;
     }
@@ -248,4 +243,4 @@ protected:
 private:
     typedef Sample INHERITED;
 };
-DEF_SAMPLE( return new BackdropView; )
+DEF_SAMPLE(return new BackdropView;)

@@ -8,15 +8,14 @@
 #ifndef GrGLInterface_DEFINED
 #define GrGLInterface_DEFINED
 
-#include "GrGLFunctions.h"
-#include "GrGLExtensions.h"
-#include "SkRefCnt.h"
+#include "include/core/SkRefCnt.h"
+#include "include/gpu/gl/GrGLExtensions.h"
+#include "include/gpu/gl/GrGLFunctions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef void(*GrGLFuncPtr)();
+typedef void (*GrGLFuncPtr)();
 struct GrGLInterface;
-
 
 /**
  * Rather than depend on platform-specific GL headers and libraries, we require
@@ -33,13 +32,6 @@ struct GrGLInterface;
 SK_API sk_sp<const GrGLInterface> GrGLMakeNativeInterface();
 // Deprecated alternative to GrGLMakeNativeInterface().
 SK_API const GrGLInterface* GrGLCreateNativeInterface();
-
-/**
- * Creates a null GrGLInterface that doesn't draw anything. Used for measuring
- * CPU overhead. TODO: We would like to move this to tools/gpu/gl/null but currently
- * Chromium is using it in its unit tests.
- */
-const SK_API GrGLInterface* GrGLCreateNullInterface(bool enableNVPR = false);
 
 /**
  * GrContext uses the following interface to make all calls into OpenGL. When a
@@ -67,7 +59,7 @@ public:
     // Indicates the type of GL implementation
     union {
         GrGLStandard fStandard;
-        GrGLStandard fBindingsExported; // Legacy name, will be remove when Chromium is updated.
+        GrGLStandard fBindingsExported;  // Legacy name, will be remove when Chromium is updated.
     };
 
     GrGLExtensions fExtensions;
@@ -153,7 +145,8 @@ public:
         GrGLFunction<GrGLGenVertexArraysFn> fGenVertexArrays;
         GrGLFunction<GrGLGetBufferParameterivFn> fGetBufferParameteriv;
         GrGLFunction<GrGLGetErrorFn> fGetError;
-        GrGLFunction<GrGLGetFramebufferAttachmentParameterivFn> fGetFramebufferAttachmentParameteriv;
+        GrGLFunction<GrGLGetFramebufferAttachmentParameterivFn>
+                fGetFramebufferAttachmentParameteriv;
         GrGLFunction<GrGLGetIntegervFn> fGetIntegerv;
         GrGLFunction<GrGLGetMultisamplefvFn> fGetMultisamplefv;
         GrGLFunction<GrGLGetProgramBinaryFn> fGetProgramBinary;
@@ -203,26 +196,28 @@ public:
         //  and ES3 adds MSAA support to the standard. On an ES3 driver we may still use the
         //  older extensions for performance reasons or due to ES3 driver bugs. We want the function
         //  that creates the GrGLInterface to provide all available functions and internally
-        //  we will select among them. They all have a method called glRenderbufferStorageMultisample*.
-        //  So we have separate function pointers for GL_IMG/EXT_multisampled_to_texture,
-        //  GL_CHROMIUM/ANGLE_framebuffer_multisample/ES3, and GL_APPLE_framebuffer_multisample
-        //  variations.
+        //  we will select among them. They all have a method called
+        //  glRenderbufferStorageMultisample*. So we have separate function pointers for
+        //  GL_IMG/EXT_multisampled_to_texture, GL_CHROMIUM/ANGLE_framebuffer_multisample/ES3, and
+        //  GL_APPLE_framebuffer_multisample variations.
         //
-        //  If a driver supports multiple GL_ARB_framebuffer_multisample-style extensions then we will
-        //  assume the function pointers for the standard (or equivalent GL_ARB) version have
+        //  If a driver supports multiple GL_ARB_framebuffer_multisample-style extensions then we
+        //  will assume the function pointers for the standard (or equivalent GL_ARB) version have
         //  been preferred over GL_EXT, GL_CHROMIUM, or GL_ANGLE variations that have reduced
         //  functionality.
 
-        //  GL_EXT_multisampled_render_to_texture (preferred) or GL_IMG_multisampled_render_to_texture
+        //  GL_EXT_multisampled_render_to_texture (preferred) or
+        //  GL_IMG_multisampled_render_to_texture
         GrGLFunction<GrGLRenderbufferStorageMultisampleFn> fRenderbufferStorageMultisampleES2EXT;
         //  GL_APPLE_framebuffer_multisample
         GrGLFunction<GrGLRenderbufferStorageMultisampleFn> fRenderbufferStorageMultisampleES2APPLE;
 
-        //  This is used to store the pointer for GL_ARB/EXT/ANGLE/CHROMIUM_framebuffer_multisample or
-        //  the standard function in ES3+ or GL 3.0+.
+        //  This is used to store the pointer for GL_ARB/EXT/ANGLE/CHROMIUM_framebuffer_multisample
+        //  or the standard function in ES3+ or GL 3.0+.
         GrGLFunction<GrGLRenderbufferStorageMultisampleFn> fRenderbufferStorageMultisample;
 
-        // Pointer to BindUniformLocationCHROMIUM from the GL_CHROMIUM_bind_uniform_location extension.
+        // Pointer to BindUniformLocationCHROMIUM from the GL_CHROMIUM_bind_uniform_location
+        // extension.
         GrGLFunction<GrGLBindUniformLocationFn> fBindUniformLocation;
 
         GrGLFunction<GrGLResolveMultisampleFramebufferFn> fResolveMultisampleFramebuffer;
@@ -302,7 +297,8 @@ public:
         GrGLFunction<GrGLStencilThenCoverFillPathFn> fStencilThenCoverFillPath;
         GrGLFunction<GrGLStencilThenCoverStrokePathFn> fStencilThenCoverStrokePath;
         GrGLFunction<GrGLStencilThenCoverFillPathInstancedFn> fStencilThenCoverFillPathInstanced;
-        GrGLFunction<GrGLStencilThenCoverStrokePathInstancedFn> fStencilThenCoverStrokePathInstanced;
+        GrGLFunction<GrGLStencilThenCoverStrokePathInstancedFn>
+                fStencilThenCoverStrokePathInstanced;
         // NV_path_rendering v1.3
         GrGLFunction<GrGLProgramPathFragmentInputGenFn> fProgramPathFragmentInputGen;
         // CHROMIUM_path_rendering

@@ -5,14 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "SkAutoPixmapStorage.h"
-#include "SkData.h"
+#include "src/core/SkAutoPixmapStorage.h"
+#include "include/core/SkData.h"
 
 SkAutoPixmapStorage::SkAutoPixmapStorage() : fStorage(nullptr) {}
 
-SkAutoPixmapStorage::~SkAutoPixmapStorage() {
-    this->freeStorage();
-}
+SkAutoPixmapStorage::~SkAutoPixmapStorage() { this->freeStorage(); }
 
 SkAutoPixmapStorage& SkAutoPixmapStorage::operator=(SkAutoPixmapStorage&& other) {
     this->fStorage = other.fStorage;
@@ -49,9 +47,7 @@ bool SkAutoPixmapStorage::tryAlloc(const SkImageInfo& info) {
     return true;
 }
 
-void SkAutoPixmapStorage::alloc(const SkImageInfo& info) {
-    SkASSERT_RELEASE(this->tryAlloc(info));
-}
+void SkAutoPixmapStorage::alloc(const SkImageInfo& info) { SkASSERT_RELEASE(this->tryAlloc(info)); }
 
 sk_sp<SkData> SkAutoPixmapStorage::detachPixelsAsData() {
     if (!fStorage) {

@@ -8,8 +8,8 @@
 #ifndef GrDistanceFieldGeoProc_DEFINED
 #define GrDistanceFieldGeoProc_DEFINED
 
-#include "GrProcessor.h"
-#include "GrGeometryProcessor.h"
+#include "src/gpu/GrGeometryProcessor.h"
+#include "src/gpu/GrProcessor.h"
 
 class GrGLDistanceFieldA8TextGeoProc;
 class GrGLDistanceFieldPathGeoProc;
@@ -17,32 +17,29 @@ class GrGLDistanceFieldLCDTextGeoProc;
 class GrInvariantOutput;
 
 enum GrDistanceFieldEffectFlags {
-    kSimilarity_DistanceFieldEffectFlag   = 0x01, // ctm is similarity matrix
-    kScaleOnly_DistanceFieldEffectFlag    = 0x02, // ctm has only scale and translate
-    kPerspective_DistanceFieldEffectFlag  = 0x04, // ctm has perspective (and positions are x,y,w)
-    kUseLCD_DistanceFieldEffectFlag       = 0x08, // use lcd text
-    kBGR_DistanceFieldEffectFlag          = 0x10, // lcd display has bgr order
-    kPortrait_DistanceFieldEffectFlag     = 0x20, // lcd display is in portrait mode (not used yet)
-    kGammaCorrect_DistanceFieldEffectFlag = 0x40, // assume gamma-correct output (linear blending)
-    kAliased_DistanceFieldEffectFlag      = 0x80, // monochrome output
+    kSimilarity_DistanceFieldEffectFlag = 0x01,    // ctm is similarity matrix
+    kScaleOnly_DistanceFieldEffectFlag = 0x02,     // ctm has only scale and translate
+    kPerspective_DistanceFieldEffectFlag = 0x04,   // ctm has perspective (and positions are x,y,w)
+    kUseLCD_DistanceFieldEffectFlag = 0x08,        // use lcd text
+    kBGR_DistanceFieldEffectFlag = 0x10,           // lcd display has bgr order
+    kPortrait_DistanceFieldEffectFlag = 0x20,      // lcd display is in portrait mode (not used yet)
+    kGammaCorrect_DistanceFieldEffectFlag = 0x40,  // assume gamma-correct output (linear blending)
+    kAliased_DistanceFieldEffectFlag = 0x80,       // monochrome output
 
-    kInvalid_DistanceFieldEffectFlag      = 0x100,   // invalid state (for initialization)
+    kInvalid_DistanceFieldEffectFlag = 0x100,  // invalid state (for initialization)
 
-    kUniformScale_DistanceFieldEffectMask = kSimilarity_DistanceFieldEffectFlag |
-                                            kScaleOnly_DistanceFieldEffectFlag,
+    kUniformScale_DistanceFieldEffectMask =
+            kSimilarity_DistanceFieldEffectFlag | kScaleOnly_DistanceFieldEffectFlag,
     // The subset of the flags relevant to GrDistanceFieldA8TextGeoProc
-    kNonLCD_DistanceFieldEffectMask       = kSimilarity_DistanceFieldEffectFlag |
-                                            kScaleOnly_DistanceFieldEffectFlag |
-                                            kPerspective_DistanceFieldEffectFlag |
-                                            kGammaCorrect_DistanceFieldEffectFlag |
-                                            kAliased_DistanceFieldEffectFlag,
+    kNonLCD_DistanceFieldEffectMask =
+            kSimilarity_DistanceFieldEffectFlag | kScaleOnly_DistanceFieldEffectFlag |
+            kPerspective_DistanceFieldEffectFlag | kGammaCorrect_DistanceFieldEffectFlag |
+            kAliased_DistanceFieldEffectFlag,
     // The subset of the flags relevant to GrDistanceFieldLCDTextGeoProc
-    kLCD_DistanceFieldEffectMask          = kSimilarity_DistanceFieldEffectFlag |
-                                            kScaleOnly_DistanceFieldEffectFlag |
-                                            kPerspective_DistanceFieldEffectFlag |
-                                            kUseLCD_DistanceFieldEffectFlag |
-                                            kBGR_DistanceFieldEffectFlag |
-                                            kGammaCorrect_DistanceFieldEffectFlag,
+    kLCD_DistanceFieldEffectMask =
+            kSimilarity_DistanceFieldEffectFlag | kScaleOnly_DistanceFieldEffectFlag |
+            kPerspective_DistanceFieldEffectFlag | kUseLCD_DistanceFieldEffectFlag |
+            kBGR_DistanceFieldEffectFlag | kGammaCorrect_DistanceFieldEffectFlag,
 };
 
 /**
@@ -59,8 +56,8 @@ public:
 #ifdef SK_GAMMA_APPLY_TO_A8
     static sk_sp<GrGeometryProcessor> Make(const GrShaderCaps& caps,
                                            const sk_sp<GrTextureProxy>* proxies,
-                                           int numActiveProxies,
-                                           const GrSamplerState& params, float lum, uint32_t flags,
+                                           int numActiveProxies, const GrSamplerState& params,
+                                           float lum, uint32_t flags,
                                            const SkMatrix& localMatrixIfUsesLocalCoords) {
         return sk_sp<GrGeometryProcessor>(new GrDistanceFieldA8TextGeoProc(
                 caps, proxies, numActiveProxies, params, lum, flags, localMatrixIfUsesLocalCoords));
@@ -68,8 +65,8 @@ public:
 #else
     static sk_sp<GrGeometryProcessor> Make(const GrShaderCaps& caps,
                                            const sk_sp<GrTextureProxy>* proxies,
-                                           int numActiveProxies,
-                                           const GrSamplerState& params, uint32_t flags,
+                                           int numActiveProxies, const GrSamplerState& params,
+                                           uint32_t flags,
                                            const SkMatrix& localMatrixIfUsesLocalCoords) {
         return sk_sp<GrGeometryProcessor>(new GrDistanceFieldA8TextGeoProc(
                 caps, proxies, numActiveProxies, params, flags, localMatrixIfUsesLocalCoords));
@@ -97,10 +94,8 @@ public:
     GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
 
 private:
-    GrDistanceFieldA8TextGeoProc(const GrShaderCaps& caps,
-                                 const sk_sp<GrTextureProxy>* proxies,
-                                 int numActiveProxies,
-                                 const GrSamplerState& params,
+    GrDistanceFieldA8TextGeoProc(const GrShaderCaps& caps, const sk_sp<GrTextureProxy>* proxies,
+                                 int numActiveProxies, const GrSamplerState& params,
 #ifdef SK_GAMMA_APPLY_TO_A8
                                  float distanceAdjust,
 #endif
@@ -108,15 +103,15 @@ private:
 
     const TextureSampler& onTextureSampler(int i) const override { return fTextureSamplers[i]; }
 
-    TextureSampler   fTextureSamplers[kMaxTextures];
-    SkISize          fAtlasSize;  // size for all textures used with fTextureSamplers[].
-    SkMatrix         fLocalMatrix;
-    Attribute        fInPosition;
-    Attribute        fInColor;
-    Attribute        fInTextureCoords;
-    uint32_t         fFlags;
+    TextureSampler fTextureSamplers[kMaxTextures];
+    SkISize fAtlasSize;  // size for all textures used with fTextureSamplers[].
+    SkMatrix fLocalMatrix;
+    Attribute fInPosition;
+    Attribute fInColor;
+    Attribute fInTextureCoords;
+    uint32_t fFlags;
 #ifdef SK_GAMMA_APPLY_TO_A8
-    float            fDistanceAdjust;
+    float fDistanceAdjust;
 #endif
 
     GR_DECLARE_GEOMETRY_PROCESSOR_TEST
@@ -135,15 +130,12 @@ public:
     static constexpr int kMaxTextures = 4;
 
     /** The local matrix should be identity if local coords are not required by the GrPipeline. */
-    static sk_sp<GrGeometryProcessor> Make(const GrShaderCaps& caps,
-                                           const SkMatrix& matrix,
-                                           bool wideColor,
-                                           const sk_sp<GrTextureProxy>* proxies,
-                                           int numActiveProxies,
-                                           const GrSamplerState& params, uint32_t flags) {
-        return sk_sp<GrGeometryProcessor>(
-            new GrDistanceFieldPathGeoProc(caps, matrix, wideColor, proxies, numActiveProxies,
-                                           params, flags));
+    static sk_sp<GrGeometryProcessor> Make(const GrShaderCaps& caps, const SkMatrix& matrix,
+                                           bool wideColor, const sk_sp<GrTextureProxy>* proxies,
+                                           int numActiveProxies, const GrSamplerState& params,
+                                           uint32_t flags) {
+        return sk_sp<GrGeometryProcessor>(new GrDistanceFieldPathGeoProc(
+                caps, matrix, wideColor, proxies, numActiveProxies, params, flags));
     }
 
     ~GrDistanceFieldPathGeoProc() override {}
@@ -164,22 +156,19 @@ public:
     GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
 
 private:
-    GrDistanceFieldPathGeoProc(const GrShaderCaps& caps,
-                               const SkMatrix& matrix,
-                               bool wideColor,
-                               const sk_sp<GrTextureProxy>* proxies,
-                               int numActiveProxies,
+    GrDistanceFieldPathGeoProc(const GrShaderCaps& caps, const SkMatrix& matrix, bool wideColor,
+                               const sk_sp<GrTextureProxy>* proxies, int numActiveProxies,
                                const GrSamplerState&, uint32_t flags);
 
     const TextureSampler& onTextureSampler(int i) const override { return fTextureSamplers[i]; }
 
-    SkMatrix         fMatrix;     // view matrix if perspective, local matrix otherwise
-    TextureSampler   fTextureSamplers[kMaxTextures];
-    SkISize          fAtlasSize;  // size for all textures used with fTextureSamplers[].
-    Attribute        fInPosition;
-    Attribute        fInColor;
-    Attribute        fInTextureCoords;
-    uint32_t         fFlags;
+    SkMatrix fMatrix;  // view matrix if perspective, local matrix otherwise
+    TextureSampler fTextureSamplers[kMaxTextures];
+    SkISize fAtlasSize;  // size for all textures used with fTextureSamplers[].
+    Attribute fInPosition;
+    Attribute fInColor;
+    Attribute fInTextureCoords;
+    uint32_t fFlags;
 
     GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 
@@ -200,15 +189,15 @@ public:
         SkScalar fR, fG, fB;
         static DistanceAdjust Make(SkScalar r, SkScalar g, SkScalar b) {
             DistanceAdjust result;
-            result.fR = r; result.fG = g; result.fB = b;
+            result.fR = r;
+            result.fG = g;
+            result.fB = b;
             return result;
         }
         bool operator==(const DistanceAdjust& wa) const {
             return (fR == wa.fR && fG == wa.fG && fB == wa.fB);
         }
-        bool operator!=(const DistanceAdjust& wa) const {
-            return !(*this == wa);
-        }
+        bool operator!=(const DistanceAdjust& wa) const { return !(*this == wa); }
     };
 
     static sk_sp<GrGeometryProcessor> Make(const GrShaderCaps& caps,
@@ -218,9 +207,9 @@ public:
                                            DistanceAdjust distanceAdjust,
                                            uint32_t flags,
                                            const SkMatrix& localMatrixIfUsesLocalCoords) {
-        return sk_sp<GrGeometryProcessor>(
-            new GrDistanceFieldLCDTextGeoProc(caps, proxies, numActiveProxies, params,
-                                              distanceAdjust, flags, localMatrixIfUsesLocalCoords));
+        return sk_sp<GrGeometryProcessor>(new GrDistanceFieldLCDTextGeoProc(
+                caps, proxies, numActiveProxies, params, distanceAdjust, flags,
+                localMatrixIfUsesLocalCoords));
     }
 
     ~GrDistanceFieldLCDTextGeoProc() override {}
@@ -248,14 +237,14 @@ private:
 
     const TextureSampler& onTextureSampler(int i) const override { return fTextureSamplers[i]; }
 
-    TextureSampler   fTextureSamplers[kMaxTextures];
-    SkISize          fAtlasSize;  // size for all textures used with fTextureSamplers[].
-    const SkMatrix   fLocalMatrix;
-    DistanceAdjust   fDistanceAdjust;
-    Attribute        fInPosition;
-    Attribute        fInColor;
-    Attribute        fInTextureCoords;
-    uint32_t         fFlags;
+    TextureSampler fTextureSamplers[kMaxTextures];
+    SkISize fAtlasSize;  // size for all textures used with fTextureSamplers[].
+    const SkMatrix fLocalMatrix;
+    DistanceAdjust fDistanceAdjust;
+    Attribute fInPosition;
+    Attribute fInColor;
+    Attribute fInTextureCoords;
+    uint32_t fFlags;
 
     GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 

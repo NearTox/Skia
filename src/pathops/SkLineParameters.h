@@ -8,9 +8,9 @@
 #ifndef SkLineParameters_DEFINED
 #define SkLineParameters_DEFINED
 
-#include "SkPathOpsCubic.h"
-#include "SkPathOpsLine.h"
-#include "SkPathOpsQuad.h"
+#include "src/pathops/SkPathOpsCubic.h"
+#include "src/pathops/SkPathOpsLine.h"
+#include "src/pathops/SkPathOpsQuad.h"
 
 // Sources
 // computer-aided design - volume 22 number 9 november 1990 pp 538 - 549
@@ -27,7 +27,6 @@
 
 class SkLineParameters {
 public:
-
     bool cubicEndPoints(const SkDCubic& pts) {
         int endIndex = 1;
         cubicEndPoints(pts, 0, endIndex);
@@ -47,14 +46,14 @@ public:
             }
         }
         // FIXME: after switching to round sort, remove bumping fA
-        if (dx() < 0) { // only worry about y bias when breaking cw/ccw tie
+        if (dx() < 0) {  // only worry about y bias when breaking cw/ccw tie
             return true;
         }
         // if cubic tangent is on x axis, look at next control point to break tie
         // control point may be approximate, so it must move significantly to account for error
         if (NotAlmostEqualUlps(pts[0].fY, pts[++endIndex].fY)) {
             if (pts[0].fY > pts[endIndex].fY) {
-                fA = DBL_EPSILON; // push it from 0 to slightly negative (y() returns -a)
+                fA = DBL_EPSILON;  // push it from 0 to slightly negative (y() returns -a)
             }
             return true;
         }
@@ -63,7 +62,7 @@ public:
         }
         SkASSERT(endIndex == 2);
         if (pts[0].fY > pts[3].fY) {
-            fA = DBL_EPSILON; // push it from 0 to slightly negative (y() returns -a)
+            fA = DBL_EPSILON;  // push it from 0 to slightly negative (y() returns -a)
         }
         return true;
     }
@@ -76,7 +75,7 @@ public:
 
     double cubicPart(const SkDCubic& part) {
         cubicEndPoints(part);
-        if (part[0] == part[1] || ((const SkDLine& ) part[0]).nearRay(part[2])) {
+        if (part[0] == part[1] || ((const SkDLine&)part[0]).nearRay(part[2])) {
             return pointDistance(part[3]);
         }
         return pointDistance(part[2]);
@@ -97,7 +96,7 @@ public:
             quadEndPoints(pts, 0, 2);
             return false;
         }
-        if (dx() < 0) { // only worry about y bias when breaking cw/ccw tie
+        if (dx() < 0) {  // only worry about y bias when breaking cw/ccw tie
             return true;
         }
         // FIXME: after switching to round sort, remove this
@@ -118,9 +117,7 @@ public:
         return pointDistance(part[2]);
     }
 
-    double normalSquared() const {
-        return fA * fA + fB * fB;
-    }
+    double normalSquared() const { return fA * fA + fB * fB; }
 
     bool normalize() {
         double normal = sqrt(normalSquared());
@@ -160,17 +157,11 @@ public:
         return fA * pts[1].fX + fB * pts[1].fY + fC;
     }
 
-    double pointDistance(const SkDPoint& pt) const {
-        return fA * pt.fX + fB * pt.fY + fC;
-    }
+    double pointDistance(const SkDPoint& pt) const { return fA * pt.fX + fB * pt.fY + fC; }
 
-    double dx() const {
-        return fB;
-    }
+    double dx() const { return fB; }
 
-    double dy() const {
-        return -fA;
-    }
+    double dy() const { return -fA; }
 
 private:
     double fA;

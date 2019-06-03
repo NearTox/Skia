@@ -8,7 +8,7 @@
 #ifndef SKSL_UNRESOLVEDFUNCTION
 #define SKSL_UNRESOLVEDFUNCTION
 
-#include "SkSLFunctionDeclaration.h"
+#include "src/sksl/ir/SkSLFunctionDeclaration.h"
 
 namespace SkSL {
 
@@ -17,8 +17,8 @@ namespace SkSL {
  */
 struct UnresolvedFunction : public Symbol {
     UnresolvedFunction(std::vector<const FunctionDeclaration*> funcs)
-    : INHERITED(-1, kUnresolvedFunction_Kind, funcs[0]->fName)
-    , fFunctions(std::move(funcs)) {
+            : INHERITED(-1, kUnresolvedFunction_Kind, funcs[0]->fName)
+            , fFunctions(std::move(funcs)) {
 #ifdef DEBUG
         for (auto func : funcs) {
             SkASSERT(func->fName == fName);
@@ -26,15 +26,13 @@ struct UnresolvedFunction : public Symbol {
 #endif
     }
 
-    String description() const override {
-        return fName;
-    }
+    String description() const override { return fName; }
 
     const std::vector<const FunctionDeclaration*> fFunctions;
 
     typedef Symbol INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

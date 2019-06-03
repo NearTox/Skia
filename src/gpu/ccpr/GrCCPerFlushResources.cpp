@@ -5,18 +5,20 @@
  * found in the LICENSE file.
  */
 
-#include "GrCCPerFlushResources.h"
+#include "src/gpu/ccpr/GrCCPerFlushResources.h"
 
-#include "GrClip.h"
-#include "GrMemoryPool.h"
-#include "GrOnFlushResourceProvider.h"
-#include "GrRecordingContext.h"
-#include "GrRecordingContextPriv.h"
-#include "GrRenderTargetContext.h"
-#include "GrShape.h"
-#include "GrSurfaceContextPriv.h"
-#include "SkMakeUnique.h"
-#include "ccpr/GrCCPathCache.h"
+#include "include/private/GrRecordingContext.h"
+#include "src/core/SkMakeUnique.h"
+#include "src/gpu/GrClip.h"
+#include "src/gpu/GrMemoryPool.h"
+#include "src/gpu/GrOnFlushResourceProvider.h"
+#include "src/gpu/GrRecordingContextPriv.h"
+#include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/GrShape.h"
+#include "src/gpu/GrSurfaceContextPriv.h"
+#include "src/gpu/ccpr/GrCCPathCache.h"
+#include "src/gpu/ccpr/GrGSCoverageProcessor.h"
+#include "src/gpu/ccpr/GrVSCoverageProcessor.h"
 
 using FillBatchID = GrCCFiller::BatchID;
 using StrokeBatchID = GrCCStroker::BatchID;
@@ -31,7 +33,8 @@ namespace {
 class AtlasOp : public GrDrawOp {
 public:
     FixedFunctionFlags fixedFunctionFlags() const override { return FixedFunctionFlags::kNone; }
-    GrProcessorSet::Analysis finalize(const GrCaps&, const GrAppliedClip*, GrFSAAType) override {
+    GrProcessorSet::Analysis finalize(const GrCaps&, const GrAppliedClip*, GrFSAAType,
+                                      GrClampType) override {
         return GrProcessorSet::EmptySetAnalysis();
     }
     CombineResult onCombineIfPossible(GrOp* other, const GrCaps&) override {
@@ -44,8 +47,7 @@ public:
 protected:
     AtlasOp(uint32_t classID, sk_sp<const GrCCPerFlushResources> resources,
             const SkISize& drawBounds)
-            : GrDrawOp(classID)
-            , fResources(std::move(resources)) {
+            : GrDrawOp(classID), fResources(std::move(resources)) {
         this->setBounds(SkRect::MakeIWH(drawBounds.width(), drawBounds.height()),
                         GrOp::HasAABloat::kNo, GrOp::IsZeroArea::kNo);
     }
@@ -64,8 +66,8 @@ public:
                                           int endInstance, const SkISize& drawBounds) {
         GrOpMemoryPool* pool = context->priv().opMemoryPool();
 
-        return pool->allocate<CopyAtlasOp>(std::move(resources), std::move(copyProxy),
-                                           baseInstance, endInstance, drawBounds);
+        return pool->allocate<CopyAtlasOp>(std::move(resources), std::move(copyProxy), baseInstance,
+                                           endInstance, drawBounds);
     }
 
     const char* name() const override { return "CopyAtlasOp (CCPR)"; }
@@ -73,33 +75,35 @@ public:
 
     void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
         SkASSERT(fSrcProxy);
-        GrPipeline::FixedDynamicState dynamicState;
         auto srcProxy = fSrcProxy.get();
-        dynamicState.fPrimitiveProcessorTextures = &srcProxy;
+        SkASSERT(srcProxy->isInstantiated());
+
+        GrCCPathProcessor pathProc(srcProxy->peekTexture(), srcProxy->origin());
 
         GrPipeline pipeline(GrScissorTest::kDisabled, SkBlendMode::kSrc);
-        GrCCPathProcessor pathProc(srcProxy);
+        GrPipeline::FixedDynamicState dynamicState;
+        dynamicState.fPrimitiveProcessorTextures = &srcProxy;
+
         pathProc.drawPaths(flushState, pipeline, &dynamicState, *fResources, fBaseInstance,
                            fEndInstance, this->bounds());
     }
 
 private:
-    friend class ::GrOpMemoryPool; // for ctor
+    friend class ::GrOpMemoryPool;  // for ctor
 
     CopyAtlasOp(sk_sp<const GrCCPerFlushResources> resources, sk_sp<GrTextureProxy> srcProxy,
                 int baseInstance, int endInstance, const SkISize& drawBounds)
             : AtlasOp(ClassID(), std::move(resources), drawBounds)
             , fSrcProxy(srcProxy)
             , fBaseInstance(baseInstance)
-            , fEndInstance(endInstance) {
-    }
+            , fEndInstance(endInstance) {}
     sk_sp<GrTextureProxy> fSrcProxy;
     const int fBaseInstance;
     const int fEndInstance;
 };
 
 // Renders coverage counts to a CCPR atlas using the resources' pre-filled GrCCPathParser.
-class RenderAtlasOp : public AtlasOp {
+template <typename ProcessorType> class RenderAtlasOp : public AtlasOp {
 public:
     DEFINE_OP_CLASS_ID
 
@@ -117,34 +121,33 @@ public:
     const char* name() const override { return "RenderAtlasOp (CCPR)"; }
 
     void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
-        fResources->filler().drawFills(flushState, fFillBatchID, fDrawBounds);
-        fResources->stroker().drawStrokes(flushState, fStrokeBatchID, fDrawBounds);
+        ProcessorType proc;
+        fResources->filler().drawFills(flushState, &proc, fFillBatchID, fDrawBounds);
+        fResources->stroker().drawStrokes(flushState, &proc, fStrokeBatchID, fDrawBounds);
     }
 
 private:
-    friend class ::GrOpMemoryPool; // for ctor
+    friend class ::GrOpMemoryPool;  // for ctor
 
     RenderAtlasOp(sk_sp<const GrCCPerFlushResources> resources, FillBatchID fillBatchID,
                   StrokeBatchID strokeBatchID, const SkISize& drawBounds)
             : AtlasOp(ClassID(), std::move(resources), drawBounds)
             , fFillBatchID(fillBatchID)
             , fStrokeBatchID(strokeBatchID)
-            , fDrawBounds(SkIRect::MakeWH(drawBounds.width(), drawBounds.height())) {
-    }
+            , fDrawBounds(SkIRect::MakeWH(drawBounds.width(), drawBounds.height())) {}
 
     const FillBatchID fFillBatchID;
     const StrokeBatchID fStrokeBatchID;
     const SkIRect fDrawBounds;
 };
-
-}
+}  // namespace
 
 static int inst_buffer_count(const GrCCPerFlushResourceSpecs& specs) {
     return specs.fNumCachedPaths +
            // Copies get two instances per draw: 1 copy + 1 draw.
            (specs.fNumCopiedPaths[kFillIdx] + specs.fNumCopiedPaths[kStrokeIdx]) * 2 +
            specs.fNumRenderedPaths[kFillIdx] + specs.fNumRenderedPaths[kStrokeIdx];
-           // No clips in instance buffers.
+    // No clips in instance buffers.
 }
 
 GrCCPerFlushResources::GrCCPerFlushResources(GrOnFlushResourceProvider* onFlushRP,
@@ -153,7 +156,8 @@ GrCCPerFlushResources::GrCCPerFlushResources(GrOnFlushResourceProvider* onFlushR
         // (See transform_path_pts below.)
         // FIXME: instead use built-in instructions to write only the first two lanes of an Sk4f.
         : fLocalDevPtsBuffer(SkTMax(specs.fRenderedPathStats[kFillIdx].fMaxPointsPerPath,
-                                    specs.fRenderedPathStats[kStrokeIdx].fMaxPointsPerPath) + 1)
+                                    specs.fRenderedPathStats[kStrokeIdx].fMaxPointsPerPath) +
+                             1)
         , fFiller(specs.fNumRenderedPaths[kFillIdx] + specs.fNumClipPaths,
                   specs.fRenderedPathStats[kFillIdx].fNumTotalSkPoints,
                   specs.fRenderedPathStats[kFillIdx].fNumTotalSkVerbs,
@@ -224,7 +228,7 @@ void GrCCPerFlushResources::upgradeEntryToLiteralCoverageAtlas(
             sk_ref_sp(cachedAtlas->getOnFlushProxy()->peekTexture());
     GrCCAtlas* newAtlas = &fCopyAtlasStack.current();
     if (ReleaseAtlasResult::kDidInvalidateFromCache ==
-            entry->upgradeToLiteralCoverageAtlas(pathCache, onFlushRP, newAtlas, newAtlasOffset)) {
+        entry->upgradeToLiteralCoverageAtlas(pathCache, onFlushRP, newAtlas, newAtlasOffset)) {
         // This texture just got booted out of the cache. Keep it around, in case we might be able
         // to recycle it for a new atlas. We can recycle it because copying happens before rendering
         // new paths, and every path from the atlas that we're planning to use this flush will be
@@ -233,12 +237,12 @@ void GrCCPerFlushResources::upgradeEntryToLiteralCoverageAtlas(
     }
 }
 
-template<typename T, typename... Args>
+template <typename T, typename... Args>
 static void emplace_at_memcpy(SkTArray<T>* array, int idx, Args&&... args) {
     if (int moveCount = array->count() - idx) {
         array->push_back();
         T* location = array->begin() + idx;
-        memcpy(location+1, location, moveCount * sizeof(T));
+        memcpy(location + 1, location, moveCount * sizeof(T));
         new (location) T(std::forward<Args>(args)...);
     } else {
         array->emplace_back(std::forward<Args>(args)...);
@@ -248,15 +252,14 @@ static void emplace_at_memcpy(SkTArray<T>* array, int idx, Args&&... args) {
 void GrCCPerFlushResources::recordCopyPathInstance(const GrCCPathCacheEntry& entry,
                                                    const SkIVector& newAtlasOffset,
                                                    GrCCPathProcessor::DoEvenOddFill evenOdd,
-                                                   sk_sp<GrTextureProxy> srcProxy) {
+                                                   sk_sp<GrTextureProxy>
+                                                           srcProxy) {
     SkASSERT(fNextCopyInstanceIdx < fEndCopyInstance);
 
     // Write the instance at the back of the array.
     int currentInstanceIdx = fNextCopyInstanceIdx++;
-    constexpr uint64_t kWhite = (((uint64_t) SK_Half1) <<  0) |
-                                (((uint64_t) SK_Half1) << 16) |
-                                (((uint64_t) SK_Half1) << 32) |
-                                (((uint64_t) SK_Half1) << 48);
+    constexpr uint64_t kWhite = (((uint64_t)SK_Half1) << 0) | (((uint64_t)SK_Half1) << 16) |
+                                (((uint64_t)SK_Half1) << 32) | (((uint64_t)SK_Half1) << 48);
     fPathInstanceData[currentInstanceIdx].set(entry, newAtlasOffset, kWhite, evenOdd);
 
     // Percolate the instance forward until it's contiguous with other instances that share the same
@@ -276,8 +279,8 @@ void GrCCPerFlushResources::recordCopyPathInstance(const GrCCPathCacheEntry& ent
 }
 
 static bool transform_path_pts(const SkMatrix& m, const SkPath& path,
-                               const SkAutoSTArray<32, SkPoint>& outDevPts, SkRect* devBounds,
-                               SkRect* devBounds45) {
+                               const SkAutoSTArray<32, SkPoint>& outDevPts,
+                               GrOctoBounds* octoBounds) {
     const SkPoint* pts = SkPathPriv::PointData(path);
     int numPts = path.countPoints();
     SkASSERT(numPts + 1 <= outDevPts.count());
@@ -316,7 +319,7 @@ static bool transform_path_pts(const SkMatrix& m, const SkPath& path,
         devPt.store(&outDevPts[i]);
     }
 
-    if (!(Sk4f(0) == topLeft*0).allTrue() || !(Sk4f(0) == bottomRight*0).allTrue()) {
+    if (!(Sk4f(0) == topLeft * 0).allTrue() || !(Sk4f(0) == bottomRight * 0).allTrue()) {
         // The bounds are infinite or NaN.
         return false;
     }
@@ -324,16 +327,20 @@ static bool transform_path_pts(const SkMatrix& m, const SkPath& path,
     SkPoint topLeftPts[2], bottomRightPts[2];
     topLeft.store(topLeftPts);
     bottomRight.store(bottomRightPts);
-    devBounds->setLTRB(topLeftPts[0].x(), topLeftPts[0].y(), bottomRightPts[0].x(),
-                       bottomRightPts[0].y());
-    devBounds45->setLTRB(topLeftPts[1].x(), topLeftPts[1].y(), bottomRightPts[1].x(),
-                         bottomRightPts[1].y());
+
+    const SkRect& devBounds = SkRect::MakeLTRB(topLeftPts[0].x(), topLeftPts[0].y(),
+                                               bottomRightPts[0].x(), bottomRightPts[0].y());
+    const SkRect& devBounds45 = SkRect::MakeLTRB(topLeftPts[1].x(), topLeftPts[1].y(),
+                                                 bottomRightPts[1].x(), bottomRightPts[1].y());
+
+    octoBounds->set(devBounds, devBounds45);
     return true;
 }
 
-GrCCAtlas* GrCCPerFlushResources::renderShapeInAtlas(
-        const SkIRect& clipIBounds, const SkMatrix& m, const GrShape& shape, float strokeDevWidth,
-        SkRect* devBounds, SkRect* devBounds45, SkIRect* devIBounds, SkIVector* devToAtlasOffset) {
+GrCCAtlas* GrCCPerFlushResources::renderShapeInAtlas(const SkIRect& clipIBounds, const SkMatrix& m,
+                                                     const GrShape& shape, float strokeDevWidth,
+                                                     GrOctoBounds* octoBounds, SkIRect* devIBounds,
+                                                     SkIVector* devToAtlasOffset) {
     SkASSERT(this->isMapped());
     SkASSERT(fNextPathInstanceIdx < fEndPathInstance);
 
@@ -343,7 +350,7 @@ GrCCAtlas* GrCCPerFlushResources::renderShapeInAtlas(
         SkDEBUGCODE(--fEndPathInstance);
         return nullptr;
     }
-    if (!transform_path_pts(m, path, fLocalDevPtsBuffer, devBounds, devBounds45)) {
+    if (!transform_path_pts(m, path, fLocalDevPtsBuffer, octoBounds)) {
         // The transformed path had infinite or NaN bounds.
         SkDEBUGCODE(--fEndPathInstance);
         return nullptr;
@@ -353,79 +360,77 @@ GrCCAtlas* GrCCPerFlushResources::renderShapeInAtlas(
     if (!stroke.isFillStyle()) {
         float r = SkStrokeRec::GetInflationRadius(stroke.getJoin(), stroke.getMiter(),
                                                   stroke.getCap(), strokeDevWidth);
-        devBounds->outset(r, r);
-        // devBounds45 is in (| 1 -1 | * devCoords) space.
-        //                    | 1  1 |
-        devBounds45->outset(r*SK_ScalarSqrt2, r*SK_ScalarSqrt2);
+        octoBounds->outset(r);
     }
-    devBounds->roundOut(devIBounds);
 
-    GrScissorTest scissorTest;
-    SkIRect clippedPathIBounds;
-    if (!this->placeRenderedPathInAtlas(clipIBounds, *devIBounds, &scissorTest, &clippedPathIBounds,
-                                        devToAtlasOffset)) {
+    GrScissorTest enableScissorInAtlas;
+    if (clipIBounds.contains(octoBounds->bounds())) {
+        enableScissorInAtlas = GrScissorTest::kDisabled;
+    } else if (octoBounds->clip(clipIBounds)) {
+        enableScissorInAtlas = GrScissorTest::kEnabled;
+    } else {
+        // The clip and octo bounds do not intersect. Draw nothing.
         SkDEBUGCODE(--fEndPathInstance);
-        return nullptr;  // Path was degenerate or clipped away.
+        return nullptr;
     }
+    octoBounds->roundOut(devIBounds);
+    SkASSERT(clipIBounds.contains(*devIBounds));
+
+    this->placeRenderedPathInAtlas(*devIBounds, enableScissorInAtlas, devToAtlasOffset);
 
     if (stroke.isFillStyle()) {
         SkASSERT(0 == strokeDevWidth);
-        fFiller.parseDeviceSpaceFill(path, fLocalDevPtsBuffer.begin(), scissorTest,
-                                     clippedPathIBounds, *devToAtlasOffset);
+        fFiller.parseDeviceSpaceFill(path, fLocalDevPtsBuffer.begin(), enableScissorInAtlas,
+                                     *devIBounds, *devToAtlasOffset);
     } else {
         // Stroke-and-fill is not yet supported.
         SkASSERT(SkStrokeRec::kStroke_Style == stroke.getStyle() || stroke.isHairlineStyle());
         SkASSERT(!stroke.isHairlineStyle() || 1 == strokeDevWidth);
         fStroker.parseDeviceSpaceStroke(path, fLocalDevPtsBuffer.begin(), stroke, strokeDevWidth,
-                                        scissorTest, clippedPathIBounds, *devToAtlasOffset);
+                                        enableScissorInAtlas, *devIBounds, *devToAtlasOffset);
     }
     return &fRenderedAtlasStack.current();
 }
 
-const GrCCAtlas* GrCCPerFlushResources::renderDeviceSpacePathInAtlas(
-        const SkIRect& clipIBounds, const SkPath& devPath, const SkIRect& devPathIBounds,
-        SkIVector* devToAtlasOffset) {
+const GrCCAtlas* GrCCPerFlushResources::renderDeviceSpacePathInAtlas(const SkIRect& clipIBounds,
+                                                                     const SkPath& devPath,
+                                                                     const SkIRect& devPathIBounds,
+                                                                     SkIVector* devToAtlasOffset) {
     SkASSERT(this->isMapped());
 
     if (devPath.isEmpty()) {
         return nullptr;
     }
 
-    GrScissorTest scissorTest;
+    GrScissorTest enableScissorInAtlas;
     SkIRect clippedPathIBounds;
-    if (!this->placeRenderedPathInAtlas(clipIBounds, devPathIBounds, &scissorTest,
-                                        &clippedPathIBounds, devToAtlasOffset)) {
+    if (clipIBounds.contains(devPathIBounds)) {
+        clippedPathIBounds = devPathIBounds;
+        enableScissorInAtlas = GrScissorTest::kDisabled;
+    } else if (clippedPathIBounds.intersect(clipIBounds, devPathIBounds)) {
+        enableScissorInAtlas = GrScissorTest::kEnabled;
+    } else {
+        // The clip and path bounds do not intersect. Draw nothing.
         return nullptr;
     }
 
-    fFiller.parseDeviceSpaceFill(devPath, SkPathPriv::PointData(devPath), scissorTest,
+    this->placeRenderedPathInAtlas(clippedPathIBounds, enableScissorInAtlas, devToAtlasOffset);
+    fFiller.parseDeviceSpaceFill(devPath, SkPathPriv::PointData(devPath), enableScissorInAtlas,
                                  clippedPathIBounds, *devToAtlasOffset);
     return &fRenderedAtlasStack.current();
 }
 
-bool GrCCPerFlushResources::placeRenderedPathInAtlas(const SkIRect& clipIBounds,
-                                                     const SkIRect& pathIBounds,
-                                                     GrScissorTest* scissorTest,
-                                                     SkIRect* clippedPathIBounds,
+void GrCCPerFlushResources::placeRenderedPathInAtlas(const SkIRect& clippedPathIBounds,
+                                                     GrScissorTest scissorTest,
                                                      SkIVector* devToAtlasOffset) {
-    if (clipIBounds.contains(pathIBounds)) {
-        *clippedPathIBounds = pathIBounds;
-        *scissorTest = GrScissorTest::kDisabled;
-    } else if (clippedPathIBounds->intersect(clipIBounds, pathIBounds)) {
-        *scissorTest = GrScissorTest::kEnabled;
-    } else {
-        return false;
-    }
-
     if (GrCCAtlas* retiredAtlas =
-                fRenderedAtlasStack.addRect(*clippedPathIBounds, devToAtlasOffset)) {
+                fRenderedAtlasStack.addRect(clippedPathIBounds, devToAtlasOffset)) {
         // We did not fit in the previous coverage count atlas and it was retired. Close the path
         // parser's current batch (which does not yet include the path we just parsed). We will
         // render this batch into the retired atlas during finalize().
         retiredAtlas->setFillBatchID(fFiller.closeCurrentBatch());
         retiredAtlas->setStrokeBatchID(fStroker.closeCurrentBatch());
     }
-    return true;
 }
 
 bool GrCCPerFlushResources::finalize(GrOnFlushResourceProvider* onFlushRP,
@@ -487,16 +492,23 @@ bool GrCCPerFlushResources::finalize(GrOnFlushResourceProvider* onFlushRP,
         sk_sp<GrTexture> backingTexture;
         for (sk_sp<GrTexture>& texture : fRecyclableAtlasTextures) {
             if (texture && atlas->currentHeight() == texture->height() &&
-                    atlas->currentWidth() == texture->width()) {
+                atlas->currentWidth() == texture->width()) {
                 backingTexture = skstd::exchange(texture, nullptr);
                 break;
             }
         }
 
         if (auto rtc = atlas->makeRenderTargetContext(onFlushRP, std::move(backingTexture))) {
-            auto op = RenderAtlasOp::Make(rtc->surfPriv().getContext(), sk_ref_sp(this),
-                                          atlas->getFillBatchID(), atlas->getStrokeBatchID(),
-                                          atlas->drawBounds());
+            std::unique_ptr<GrDrawOp> op;
+            if (onFlushRP->caps()->shaderCaps()->geometryShaderSupport()) {
+                op = RenderAtlasOp<GrGSCoverageProcessor>::Make(
+                        rtc->surfPriv().getContext(), sk_ref_sp(this), atlas->getFillBatchID(),
+                        atlas->getStrokeBatchID(), atlas->drawBounds());
+            } else {
+                op = RenderAtlasOp<GrVSCoverageProcessor>::Make(
+                        rtc->surfPriv().getContext(), sk_ref_sp(this), atlas->getFillBatchID(),
+                        atlas->getStrokeBatchID(), atlas->drawBounds());
+            }
             rtc->addDrawOp(GrNoClip(), std::move(op));
             out->push_back(std::move(rtc));
         }

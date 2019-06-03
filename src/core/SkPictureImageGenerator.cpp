@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "SkImage_Base.h"
-#include "SkImageGenerator.h"
-#include "SkCanvas.h"
-#include "SkMakeUnique.h"
-#include "SkMatrix.h"
-#include "SkPaint.h"
-#include "SkPicture.h"
-#include "SkSurface.h"
-#include "SkTLazy.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkImageGenerator.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPicture.h"
+#include "include/core/SkSurface.h"
+#include "src/core/SkMakeUnique.h"
+#include "src/core/SkTLazy.h"
+#include "src/image/SkImage_Base.h"
 
 class SkPictureImageGenerator : public SkImageGenerator {
 public:
@@ -21,8 +21,8 @@ public:
                             const SkPaint*);
 
 protected:
-    bool onGetPixels(const SkImageInfo& info, void* pixels, size_t rowBytes, const Options& opts)
-        override;
+    bool onGetPixels(const SkImageInfo& info, void* pixels, size_t rowBytes,
+                     const Options& opts) override;
 
 #if SK_SUPPORT_GPU
     TexGenType onCanGenerateTexture() const override { return TexGenType::kExpensive; }
@@ -31,19 +31,18 @@ protected:
 #endif
 
 private:
-    sk_sp<SkPicture>    fPicture;
-    SkMatrix            fMatrix;
-    SkTLazy<SkPaint>    fPaint;
+    sk_sp<SkPicture> fPicture;
+    SkMatrix fMatrix;
+    SkTLazy<SkPaint> fPaint;
 
     typedef SkImageGenerator INHERITED;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-std::unique_ptr<SkImageGenerator>
-SkImageGenerator::MakeFromPicture(const SkISize& size, sk_sp<SkPicture> picture,
-                                  const SkMatrix* matrix, const SkPaint* paint,
-                                  SkImage::BitDepth bitDepth, sk_sp<SkColorSpace> colorSpace) {
+std::unique_ptr<SkImageGenerator> SkImageGenerator::MakeFromPicture(
+        const SkISize& size, sk_sp<SkPicture> picture, const SkMatrix* matrix, const SkPaint* paint,
+        SkImage::BitDepth bitDepth, sk_sp<SkColorSpace> colorSpace) {
     if (!picture || !colorSpace || size.isEmpty()) {
         return nullptr;
     }
@@ -56,16 +55,14 @@ SkImageGenerator::MakeFromPicture(const SkISize& size, sk_sp<SkPicture> picture,
     SkImageInfo info = SkImageInfo::Make(size.width(), size.height(), colorType,
                                          kPremul_SkAlphaType, std::move(colorSpace));
     return std::unique_ptr<SkImageGenerator>(
-        new SkPictureImageGenerator(info, std::move(picture), matrix, paint));
+            new SkPictureImageGenerator(info, std::move(picture), matrix, paint));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 SkPictureImageGenerator::SkPictureImageGenerator(const SkImageInfo& info, sk_sp<SkPicture> picture,
                                                  const SkMatrix* matrix, const SkPaint* paint)
-    : INHERITED(info)
-    , fPicture(std::move(picture)) {
-
+        : INHERITED(info), fPicture(std::move(picture)) {
     if (matrix) {
         fMatrix = *matrix;
     } else {
@@ -92,20 +89,20 @@ bool SkPictureImageGenerator::onGetPixels(const SkImageInfo& info, void* pixels,
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if SK_SUPPORT_GPU
-#include "GrRecordingContext.h"
-#include "GrRecordingContextPriv.h"
+#include "include/private/GrRecordingContext.h"
+#include "src/gpu/GrRecordingContextPriv.h"
 
-sk_sp<GrTextureProxy> SkPictureImageGenerator::onGenerateTexture(
-        GrRecordingContext* ctx, const SkImageInfo& info,
-        const SkIPoint& origin, bool willNeedMipMaps) {
+sk_sp<GrTextureProxy> SkPictureImageGenerator::onGenerateTexture(GrRecordingContext* ctx,
+                                                                 const SkImageInfo& info,
+                                                                 const SkIPoint& origin,
+                                                                 bool willNeedMipMaps) {
     SkASSERT(ctx);
 
     SkSurfaceProps props(0, kUnknown_SkPixelGeometry);
 
     // CONTEXT TODO: remove this use of 'backdoor' to create an SkSkSurface
-    sk_sp<SkSurface> surface(SkSurface::MakeRenderTarget(ctx->priv().backdoor(),
-                                                         SkBudgeted::kYes, info, 0,
-                                                         kTopLeft_GrSurfaceOrigin, &props,
+    sk_sp<SkSurface> surface(SkSurface::MakeRenderTarget(ctx->priv().backdoor(), SkBudgeted::kYes,
+                                                         info, 0, kTopLeft_GrSurfaceOrigin, &props,
                                                          willNeedMipMaps));
     if (!surface) {
         return nullptr;

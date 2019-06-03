@@ -5,21 +5,19 @@
  * found in the LICENSE file.
  */
 
-#include "SkSVGContainer.h"
+#include "experimental/svg/model/SkSVGContainer.h"
 
-#include "SkPath.h"
-#include "SkPathOps.h"
+#include "include/core/SkPath.h"
+#include "include/pathops/SkPathOps.h"
 
-SkSVGContainer::SkSVGContainer(SkSVGTag t) : INHERITED(t) { }
+SkSVGContainer::SkSVGContainer(SkSVGTag t) : INHERITED(t) {}
 
 void SkSVGContainer::appendChild(sk_sp<SkSVGNode> node) {
     SkASSERT(node);
     fChildren.push_back(std::move(node));
 }
 
-bool SkSVGContainer::hasChildren() const {
-    return !fChildren.empty();
-}
+bool SkSVGContainer::hasChildren() const { return !fChildren.empty(); }
 
 void SkSVGContainer::onRender(const SkSVGRenderContext& ctx) const {
     for (int i = 0; i < fChildren.count(); ++i) {

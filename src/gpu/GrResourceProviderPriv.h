@@ -8,7 +8,7 @@
 #ifndef GrResourceProviderPriv_DEFINED
 #define GrResourceProviderPriv_DEFINED
 
-#include "GrResourceProvider.h"
+#include "src/gpu/GrResourceProvider.h"
 
 /** Class that adds methods to GrResourceProvider that are only intended for use internal to Skia.
     This class is purely a privileged window into GrResourceProvider. It should never have
@@ -19,15 +19,15 @@ public:
 
 private:
     explicit GrResourceProviderPriv(GrResourceProvider* provider) : fResourceProvider(provider) {}
-    GrResourceProviderPriv(const GrResourceProviderPriv&); // unimpl
-    GrResourceProviderPriv& operator=(const GrResourceProviderPriv&); // unimpl
+    GrResourceProviderPriv(const GrResourceProviderPriv&);             // unimpl
+    GrResourceProviderPriv& operator=(const GrResourceProviderPriv&);  // unimpl
 
     // No taking addresses of this type.
     const GrResourceProviderPriv* operator&() const;
     GrResourceProviderPriv* operator&();
 
     GrResourceProvider* fResourceProvider;
-    friend class GrResourceProvider; // to construct/copy this type
+    friend class GrResourceProvider;  // to construct/copy this type
 };
 
 inline GrResourceProviderPriv GrResourceProvider::priv() { return GrResourceProviderPriv(this); }

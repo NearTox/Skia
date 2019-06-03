@@ -4,34 +4,30 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkArenaAlloc.h"
-#include "SkBlendModePriv.h"
-#include "SkBlurDrawLooper.h"
-#include "SkColorSpacePriv.h"
-#include "SkMaskFilter.h"
-#include "SkCanvas.h"
-#include "SkColorSpaceXformer.h"
-#include "SkColor.h"
-#include "SkMaskFilterBase.h"
-#include "SkReadBuffer.h"
-#include "SkWriteBuffer.h"
-#include "SkLayerDrawLooper.h"
-#include "SkString.h"
-#include "SkStringUtils.h"
-#include "SkUnPreMultiply.h"
-#include "SkXfermodePriv.h"
+#include "include/effects/SkLayerDrawLooper.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkMaskFilter.h"
+#include "include/core/SkString.h"
+#include "include/core/SkUnPreMultiply.h"
+#include "include/effects/SkBlurDrawLooper.h"
+#include "include/private/SkArenaAlloc.h"
+#include "src/core/SkBlendModePriv.h"
+#include "src/core/SkColorSpacePriv.h"
+#include "src/core/SkMaskFilterBase.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkStringUtils.h"
+#include "src/core/SkWriteBuffer.h"
+#include "src/core/SkXfermodePriv.h"
 
-SkLayerDrawLooper::LayerInfo::LayerInfo() {
-    fPaintBits = 0;                     // ignore our paint fields
-    fColorMode = SkBlendMode::kDst;     // ignore our color
+SkLayerDrawLooper::LayerInfo::LayerInfo() noexcept {
+    fPaintBits = 0;                  // ignore our paint fields
+    fColorMode = SkBlendMode::kDst;  // ignore our color
     fOffset.set(0, 0);
     fPostTranslate = false;
 }
 
-SkLayerDrawLooper::SkLayerDrawLooper()
-        : fRecs(nullptr),
-          fCount(0) {
-}
+SkLayerDrawLooper::SkLayerDrawLooper() noexcept : fRecs(nullptr), fCount(0) {}
 
 SkLayerDrawLooper::~SkLayerDrawLooper() {
     Rec* rec = fRecs;
@@ -42,8 +38,8 @@ SkLayerDrawLooper::~SkLayerDrawLooper() {
     }
 }
 
-SkLayerDrawLooper::Context*
-SkLayerDrawLooper::makeContext(SkCanvas* canvas, SkArenaAlloc* alloc) const {
+SkLayerDrawLooper::Context* SkLayerDrawLooper::makeContext(SkCanvas* canvas,
+                                                           SkArenaAlloc* alloc) const {
     canvas->save();
     return alloc->make<LayerDrawLooperContext>(this);
 }
@@ -65,8 +61,8 @@ static SkColor4f xferColor(const SkColor4f& src, const SkColor4f& dst, SkBlendMo
 // Even with kEntirePaint_Bits, we always ensure that the master paint's
 // text-encoding is respected, since that controls how we interpret the
 // text/length parameters of a draw[Pos]Text call.
-void SkLayerDrawLooper::LayerDrawLooperContext::ApplyInfo(
-        SkPaint* dst, const SkPaint& src, const LayerInfo& info) {
+void SkLayerDrawLooper::LayerDrawLooperContext::ApplyInfo(SkPaint* dst, const SkPaint& src,
+                                                          const LayerInfo& info) {
     SkColor4f srcColor = src.getColor4f();
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
     // The framework may respect the alpha value on the original paint.
@@ -139,10 +135,10 @@ static void postTranslate(SkCanvas* canvas, SkScalar dx, SkScalar dy) {
 }
 
 SkLayerDrawLooper::LayerDrawLooperContext::LayerDrawLooperContext(
-        const SkLayerDrawLooper* looper) : fCurrRec(looper->fRecs) {}
+        const SkLayerDrawLooper* looper) noexcept
+        : fCurrRec(looper->fRecs) {}
 
-bool SkLayerDrawLooper::LayerDrawLooperContext::next(SkCanvas* canvas,
-                                                     SkPaint* paint) {
+bool SkLayerDrawLooper::LayerDrawLooperContext::next(SkCanvas* canvas, SkPaint* paint) {
     canvas->restore();
     if (nullptr == fCurrRec) {
         return false;
@@ -152,11 +148,9 @@ bool SkLayerDrawLooper::LayerDrawLooperContext::next(SkCanvas* canvas,
 
     canvas->save();
     if (fCurrRec->fInfo.fPostTranslate) {
-        postTranslate(canvas, fCurrRec->fInfo.fOffset.fX,
-                      fCurrRec->fInfo.fOffset.fY);
+        postTranslate(canvas, fCurrRec->fInfo.fOffset.fX, fCurrRec->fInfo.fOffset.fY);
     } else {
-        canvas->translate(fCurrRec->fInfo.fOffset.fX,
-                          fCurrRec->fInfo.fOffset.fY);
+        canvas->translate(fCurrRec->fInfo.fOffset.fX, fCurrRec->fInfo.fOffset.fY);
     }
     fCurrRec = fCurrRec->fNext;
 
@@ -207,37 +201,6 @@ bool SkLayerDrawLooper::asABlurShadow(BlurShadowRec* bsRec) const {
     return true;
 }
 
-sk_sp<SkDrawLooper> SkLayerDrawLooper::onMakeColorSpace(SkColorSpaceXformer* xformer) const {
-    if (!fCount) {
-        return sk_ref_sp(const_cast<SkLayerDrawLooper*>(this));
-    }
-
-    auto looper = sk_sp<SkLayerDrawLooper>(new SkLayerDrawLooper());
-    looper->fCount = fCount;
-
-    Rec* oldRec = fRecs;
-    Rec* newTopRec = new Rec();
-    newTopRec->fInfo = oldRec->fInfo;
-    newTopRec->fPaint = xformer->apply(oldRec->fPaint);
-    newTopRec->fNext = nullptr;
-
-    Rec* prevNewRec = newTopRec;
-    oldRec = oldRec->fNext;
-    while (oldRec) {
-        Rec* newRec = new Rec();
-        newRec->fInfo = oldRec->fInfo;
-        newRec->fPaint = xformer->apply(oldRec->fPaint);
-        newRec->fNext = nullptr;
-        prevNewRec->fNext = newRec;
-
-        prevNewRec = newRec;
-        oldRec = oldRec->fNext;
-    }
-
-    looper->fRecs = newTopRec;
-    return std::move(looper);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 void SkLayerDrawLooper::flatten(SkWriteBuffer& buffer) const {
@@ -278,11 +241,7 @@ sk_sp<SkFlattenable> SkLayerDrawLooper::CreateProc(SkReadBuffer& buffer) {
     return builder.detach();
 }
 
-SkLayerDrawLooper::Builder::Builder()
-        : fRecs(nullptr),
-          fTopRec(nullptr),
-          fCount(0) {
-}
+SkLayerDrawLooper::Builder::Builder() noexcept : fRecs(nullptr), fTopRec(nullptr), fCount(0) {}
 
 SkLayerDrawLooper::Builder::~Builder() {
     Rec* rec = fRecs;
@@ -343,14 +302,13 @@ sk_sp<SkDrawLooper> SkLayerDrawLooper::Builder::detach() {
     return sk_sp<SkDrawLooper>(looper);
 }
 
-sk_sp<SkDrawLooper> SkBlurDrawLooper::Make(SkColor color, SkScalar sigma, SkScalar dx, SkScalar dy)
-{
+sk_sp<SkDrawLooper> SkBlurDrawLooper::Make(SkColor color, SkScalar sigma, SkScalar dx,
+                                           SkScalar dy) {
     return Make(SkColor4f::FromColor(color), sk_srgb_singleton(), sigma, dx, dy);
 }
 
-sk_sp<SkDrawLooper> SkBlurDrawLooper::Make(SkColor4f color, SkColorSpace* cs,
-        SkScalar sigma, SkScalar dx, SkScalar dy)
-{
+sk_sp<SkDrawLooper> SkBlurDrawLooper::Make(SkColor4f color, SkColorSpace* cs, SkScalar sigma,
+                                           SkScalar dx, SkScalar dy) {
     sk_sp<SkMaskFilter> blur = nullptr;
     if (sigma > 0.0f) {
         blur = SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, sigma, true);

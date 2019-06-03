@@ -5,28 +5,39 @@
  * found in the LICENSE file.
  */
 
-#include "SkBlurImageFilter.h"
-#include "SkMaskFilter.h"
-#include "gm.h"
-#include "sk_tool_utils.h"
+#include "gm/gm.h"
+#include "include/core/SkBlurTypes.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkMaskFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypeface.h"
+#include "include/effects/SkBlurImageFilter.h"
+#include "tools/Resources.h"
+#include "tools/ToolUtils.h"
 
+#include <stdio.h>
 
 DEF_SIMPLE_GM(blurimagevmask, canvas, 700, 1200) {
     SkPaint paint;
     paint.setAntiAlias(true);
     paint.setColor(SK_ColorBLACK);
 
-    SkFont font(sk_tool_utils::create_portable_typeface(), 25);
+    SkFont font(ToolUtils::create_portable_typeface(), 25);
 
     const double sigmas[] = {3.0, 8.0, 16.0, 24.0, 32.0};
 
-    canvas->drawString("mask blur",  285, 50, font, paint);
+    canvas->drawString("mask blur", 285, 50, font, paint);
     canvas->drawString("image blur", 285 + 250, 50, font, paint);
 
-
     SkRect r = {35, 100, 135, 200};
-    for (auto sigma:sigmas) {
-
+    for (auto sigma : sigmas) {
         canvas->drawRect(r, paint);
 
         char out[100];
@@ -48,10 +59,8 @@ DEF_SIMPLE_GM(blurimagevmask, canvas, 700, 1200) {
         canvas->restore();
         r.offset(-500, 200);
     }
-
 }
 
-#include "Resources.h"
 DEF_SIMPLE_GM_CAN_FAIL(blur_image, canvas, errorMsg, 500, 500) {
     auto image = GetResourceAsImage("images/mandrill_128.png");
     if (!image) {

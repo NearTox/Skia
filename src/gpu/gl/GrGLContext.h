@@ -5,19 +5,18 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef GrGLContext_DEFINED
 #define GrGLContext_DEFINED
 
-#include "GrGLCaps.h"
-#include "GrGLUtil.h"
-#include "gl/GrGLExtensions.h"
-#include "gl/GrGLInterface.h"
-#include "glsl/GrGLSL.h"
+#include "include/gpu/gl/GrGLExtensions.h"
+#include "include/gpu/gl/GrGLInterface.h"
+#include "src/gpu/gl/GrGLCaps.h"
+#include "src/gpu/gl/GrGLUtil.h"
+#include "src/gpu/glsl/GrGLSL.h"
 
 struct GrContextOptions;
 namespace SkSL {
-    class Compiler;
+class Compiler;
 }
 
 /**
@@ -45,40 +44,38 @@ public:
     GrGLDriverVersion driverVersion() const { return fDriverVersion; }
     const GrGLCaps* caps() const { return fGLCaps.get(); }
     GrGLCaps* caps() { return fGLCaps.get(); }
-    bool hasExtension(const char* ext) const {
-        return fInterface->hasExtension(ext);
-    }
+    bool hasExtension(const char* ext) const { return fInterface->hasExtension(ext); }
 
     const GrGLExtensions& extensions() const { return fInterface->fExtensions; }
 
 protected:
     struct ConstructorArgs {
-        sk_sp<const GrGLInterface>          fInterface;
-        GrGLVersion                         fGLVersion;
-        GrGLSLGeneration                    fGLSLGeneration;
-        GrGLVendor                          fVendor;
-        GrGLRenderer                        fRenderer;
-        GrGLDriver                          fDriver;
-        GrGLDriverVersion                   fDriverVersion;
-        GrGLANGLEBackend                    fANGLEBackend;
-        GrGLANGLEVendor                     fANGLEVendor;
-        GrGLANGLERenderer                   fANGLERenderer;
-        const  GrContextOptions*            fContextOptions;
+        sk_sp<const GrGLInterface> fInterface;
+        GrGLVersion fGLVersion;
+        GrGLSLGeneration fGLSLGeneration;
+        GrGLVendor fVendor;
+        GrGLRenderer fRenderer;
+        GrGLDriver fDriver;
+        GrGLDriverVersion fDriverVersion;
+        GrGLANGLEBackend fANGLEBackend;
+        GrGLANGLEVendor fANGLEVendor;
+        GrGLANGLERenderer fANGLERenderer;
+        const GrContextOptions* fContextOptions;
     };
 
     GrGLContextInfo(ConstructorArgs&&);
 
     sk_sp<const GrGLInterface> fInterface;
-    GrGLVersion                fGLVersion;
-    GrGLSLGeneration           fGLSLGeneration;
-    GrGLVendor                 fVendor;
-    GrGLRenderer               fRenderer;
-    GrGLDriver                 fDriver;
-    GrGLDriverVersion          fDriverVersion;
-    GrGLANGLEBackend           fANGLEBackend;
-    GrGLANGLEVendor            fANGLEVendor;
-    GrGLANGLERenderer          fANGLERenderer;
-    sk_sp<GrGLCaps>            fGLCaps;
+    GrGLVersion fGLVersion;
+    GrGLSLGeneration fGLSLGeneration;
+    GrGLVendor fVendor;
+    GrGLRenderer fRenderer;
+    GrGLDriver fDriver;
+    GrGLDriverVersion fDriverVersion;
+    GrGLANGLEBackend fANGLEBackend;
+    GrGLANGLEVendor fANGLEVendor;
+    GrGLANGLERenderer fANGLERenderer;
+    sk_sp<GrGLCaps> fGLCaps;
 };
 
 /**

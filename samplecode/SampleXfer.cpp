@@ -5,29 +5,22 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkAnimTimer.h"
-#include "SkDrawable.h"
-#include "SkCanvas.h"
-#include "SkDrawable.h"
-#include "SkPath.h"
-#include "SkRandom.h"
-#include "SkRSXform.h"
-#include "SkString.h"
-#include "SkSurface.h"
-#include "SkTextUtils.h"
-#include "SkGradientShader.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkDrawable.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRSXform.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/utils/SkRandom.h"
+#include "include/utils/SkTextUtils.h"
+#include "samplecode/Sample.h"
+#include "tools/timer/AnimTimer.h"
 
 const SkBlendMode gModes[] = {
-    SkBlendMode::kSrcOver,
-    SkBlendMode::kSrc,
-    SkBlendMode::kSrcIn,
-    SkBlendMode::kSrcOut,
-    SkBlendMode::kSrcATop,
-    SkBlendMode::kDstOver,
-    SkBlendMode::kDstIn,
-    SkBlendMode::kDstOut,
-    SkBlendMode::kDstATop,
+        SkBlendMode::kSrcOver, SkBlendMode::kSrc,     SkBlendMode::kSrcIn,
+        SkBlendMode::kSrcOut,  SkBlendMode::kSrcATop, SkBlendMode::kDstOver,
+        SkBlendMode::kDstIn,   SkBlendMode::kDstOut,  SkBlendMode::kDstATop,
 };
 const int N_Modes = SK_ARRAY_COUNT(gModes);
 
@@ -35,8 +28,8 @@ static SkRandom gRand;
 
 struct ModeButton {
     SkString fLabel;
-    SkColor  fColor;
-    SkRect   fRect;
+    SkColor fColor;
+    SkRect fRect;
 
 public:
     void init(const char label[], const SkRect& rect) {
@@ -55,13 +48,12 @@ public:
         SkFont font;
         font.setSize(16);
         font.setEdging(SkFont::Edging::kSubpixelAntiAlias);
-        SkTextUtils::DrawString(canvas, fLabel.c_str(), fRect.centerX(), fRect.fTop + 0.68f * fRect.height(),
-                                font, paint, SkTextUtils::kCenter_Align);
+        SkTextUtils::DrawString(canvas, fLabel.c_str(), fRect.centerX(),
+                                fRect.fTop + 0.68f * fRect.height(), font, paint,
+                                SkTextUtils::kCenter_Align);
     }
 
-    bool hitTest(SkScalar x, SkScalar y) {
-        return fRect.intersects(x - 1, y - 1, x + 1, y + 1);
-    }
+    bool hitTest(SkScalar x, SkScalar y) { return fRect.intersects(x - 1, y - 1, x + 1, y + 1); }
 };
 
 class ModeDrawable : public SkDrawable {
@@ -69,7 +61,7 @@ public:
     ModeDrawable() : fMode(SkBlendMode::kSrcOver), fLoc(SkPoint::Make(0, 0)) {}
 
     SkBlendMode fMode;
-    SkPoint     fLoc;
+    SkPoint fLoc;
 
     bool hitTest(SkScalar x, SkScalar y) {
         SkRect target = SkRect::MakeXYWH(x - fLoc.x() - 1, y - fLoc.y() - 1, 3, 3);
@@ -79,21 +71,18 @@ public:
 
 class CircDrawable : public ModeDrawable {
     SkPaint fPaint;
-    SkRect  fBounds;
+    SkRect fBounds;
 
 public:
     CircDrawable(SkScalar size, SkColor c) {
-        const SkColor colors[] = { 0, c };
-        fPaint.setShader(SkGradientShader::MakeRadial(SkPoint::Make(size/2, size/2), size/2,
-                                                                     colors, nullptr, 2,
-                                                                     SkShader::kClamp_TileMode));
+        const SkColor colors[] = {0, c};
+        fPaint.setShader(SkGradientShader::MakeRadial(SkPoint::Make(size / 2, size / 2), size / 2,
+                                                      colors, nullptr, 2, SkTileMode::kClamp));
         fBounds = SkRect::MakeWH(size, size);
     }
 
 protected:
-    SkRect onGetBounds() override {
-        return fBounds;
-    }
+    SkRect onGetBounds() override { return fBounds; }
 
     void onDraw(SkCanvas* canvas) override {
         fPaint.setBlendMode(fMode);
@@ -105,12 +94,10 @@ protected:
 };
 
 class XferDemo : public Sample {
-    enum {
-        N = 4
-    };
+    enum { N = 4 };
 
-    SkRect        fModeRect[N_Modes];
-    ModeButton    fModeButtons[N_Modes];
+    SkRect fModeRect[N_Modes];
+    ModeButton fModeButtons[N_Modes];
     sk_sp<CircDrawable> fDrs[N];
     CircDrawable* fSelected;
 
@@ -126,7 +113,7 @@ class XferDemo : public Sample {
 
 public:
     XferDemo() {
-        const SkColor colors[] = { SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorBLACK };
+        const SkColor colors[] = {SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorBLACK};
         for (int i = 0; i < N; ++i) {
             fDrs[i].reset(new CircDrawable(200, colors[i]));
             fDrs[i]->fLoc.set(100.f + i * 100, 100.f + i * 100);
@@ -206,4 +193,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new XferDemo; )
+DEF_SAMPLE(return new XferDemo;)

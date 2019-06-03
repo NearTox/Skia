@@ -8,7 +8,7 @@
 #ifndef SkNoncopyable_DEFINED
 #define SkNoncopyable_DEFINED
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 /** \class SkNoncopyable
 
@@ -20,7 +20,7 @@ public:
     SkNoncopyable() = default;
 
     SkNoncopyable(SkNoncopyable&&) = default;
-    SkNoncopyable& operator =(SkNoncopyable&&) = default;
+    SkNoncopyable& operator=(SkNoncopyable&&) = default;
 
 private:
     SkNoncopyable(const SkNoncopyable&) = delete;

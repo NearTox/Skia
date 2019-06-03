@@ -8,8 +8,8 @@
 #ifndef GrCCClipPath_DEFINED
 #define GrCCClipPath_DEFINED
 
-#include "GrTextureProxy.h"
-#include "SkPath.h"
+#include "include/core/SkPath.h"
+#include "include/private/GrTextureProxy.h"
 
 struct GrCCPerFlushResourceSpecs;
 class GrCCAtlas;
@@ -60,8 +60,14 @@ public:
     void accountForOwnPath(GrCCPerFlushResourceSpecs*) const;
     void renderPathInAtlas(GrCCPerFlushResources*, GrOnFlushResourceProvider*);
 
-    const SkVector& atlasScale() const { SkASSERT(fHasAtlasTransform); return fAtlasScale; }
-    const SkVector& atlasTranslate() const { SkASSERT(fHasAtlasTransform); return fAtlasTranslate; }
+    const SkVector& atlasScale() const {
+        SkASSERT(fHasAtlasTransform);
+        return fAtlasScale;
+    }
+    const SkVector& atlasTranslate() const {
+        SkASSERT(fHasAtlasTransform);
+        return fAtlasTranslate;
+    }
 
 private:
     sk_sp<GrTextureProxy> fAtlasLazyProxy;
@@ -71,11 +77,11 @@ private:
 
     const GrCCAtlas* fAtlas = nullptr;
     SkIVector fDevToAtlasOffset;  // Translation from device space to location in atlas.
-    SkDEBUGCODE(bool fHasAtlas = false;)
+    SkDEBUGCODE(bool fHasAtlas = false);
 
     SkVector fAtlasScale;
     SkVector fAtlasTranslate;
-    SkDEBUGCODE(bool fHasAtlasTransform = false;)
+    SkDEBUGCODE(bool fHasAtlasTransform = false);
 };
 
 #endif

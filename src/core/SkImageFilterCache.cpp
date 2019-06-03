@@ -5,24 +5,24 @@
  * found in the LICENSE file.
  */
 
-#include "SkImageFilterCache.h"
+#include "src/core/SkImageFilterCache.h"
 
 #include <vector>
 
-#include "SkImageFilter.h"
-#include "SkMutex.h"
-#include "SkOnce.h"
-#include "SkOpts.h"
-#include "SkRefCnt.h"
-#include "SkSpecialImage.h"
-#include "SkTDynamicHash.h"
-#include "SkTHash.h"
-#include "SkTInternalLList.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/SkMutex.h"
+#include "include/private/SkOnce.h"
+#include "include/private/SkTHash.h"
+#include "include/private/SkTInternalLList.h"
+#include "src/core/SkOpts.h"
+#include "src/core/SkSpecialImage.h"
+#include "src/core/SkTDynamicHash.h"
 
 #ifdef SK_BUILD_FOR_IOS
-  enum { kDefaultCacheSize = 2 * 1024 * 1024 };
+enum { kDefaultCacheSize = 2 * 1024 * 1024 };
 #else
-  enum { kDefaultCacheSize = 128 * 1024 * 1024 };
+enum { kDefaultCacheSize = 128 * 1024 * 1024 };
 #endif
 
 namespace {
@@ -30,7 +30,7 @@ namespace {
 class CacheImpl : public SkImageFilterCache {
 public:
     typedef SkImageFilterCacheKey Key;
-    CacheImpl(size_t maxBytes) : fMaxBytes(maxBytes), fCurrentBytes(0) { }
+    CacheImpl(size_t maxBytes) : fMaxBytes(maxBytes), fCurrentBytes(0) {}
     ~CacheImpl() override {
         SkTDynamicHash<Value, Key>::Iter iter(&fLookup);
 
@@ -41,16 +41,15 @@ public:
         }
     }
     struct Value {
-        Value(const Key& key, SkSpecialImage* image, const SkIPoint& offset, const SkImageFilter* filter)
-            : fKey(key), fImage(SkRef(image)), fOffset(offset), fFilter(filter) {}
+        Value(const Key& key, SkSpecialImage* image, const SkIPoint& offset,
+              const SkImageFilter* filter)
+                : fKey(key), fImage(SkRef(image)), fOffset(offset), fFilter(filter) {}
 
         Key fKey;
         sk_sp<SkSpecialImage> fImage;
         SkIPoint fOffset;
         const SkImageFilter* fFilter;
-        static const Key& GetKey(const Value& v) {
-            return v.fKey;
-        }
+        static const Key& GetKey(const Value& v) { return v.fKey; }
         static uint32_t Hash(const Key& key) {
             return SkOpts::hash(reinterpret_cast<const uint32_t*>(&key), sizeof(Key));
         }
@@ -58,7 +57,7 @@ public:
     };
 
     sk_sp<SkSpecialImage> get(const Key& key, SkIPoint* offset) const override {
-        SkAutoMutexAcquire mutex(fMutex);
+        SkAutoMutexExclusive mutex(fMutex);
         if (Value* v = fLookup.find(key)) {
             *offset = v->fOffset;
             if (v != fLRU.head()) {
@@ -70,8 +69,9 @@ public:
         return nullptr;
     }
 
-    void set(const Key& key, SkSpecialImage* image, const SkIPoint& offset, const SkImageFilter* filter) override {
-        SkAutoMutexAcquire mutex(fMutex);
+    void set(const Key& key, SkSpecialImage* image, const SkIPoint& offset,
+             const SkImageFilter* filter) override {
+        SkAutoMutexExclusive mutex(fMutex);
         if (Value* v = fLookup.find(key)) {
             this->removeInternal(v);
         }
@@ -96,7 +96,7 @@ public:
     }
 
     void purge() override {
-        SkAutoMutexAcquire mutex(fMutex);
+        SkAutoMutexExclusive mutex(fMutex);
         while (fCurrentBytes > 0) {
             Value* tail = fLRU.tail();
             SkASSERT(tail);
@@ -105,7 +105,7 @@ public:
     }
 
     void purgeByImageFilter(const SkImageFilter* filter) override {
-        SkAutoMutexAcquire mutex(fMutex);
+        SkAutoMutexExclusive mutex(fMutex);
         auto* values = fImageFilterValues.find(filter);
         if (!values) {
             return;
@@ -119,9 +119,8 @@ public:
         fImageFilterValues.remove(filter);
     }
 
-    SkDEBUGCODE(int count() const override { return fLookup.count(); })
-private:
-    void removeInternal(Value* v) {
+    SkDEBUGCODE(int count() const override { return fLookup.count(); }) private
+            : void removeInternal(Value* v) {
         SkASSERT(v->fImage);
         if (v->fFilter) {
             if (auto* values = fImageFilterValues.find(v->fFilter)) {
@@ -142,26 +141,25 @@ private:
         fLookup.remove(v->fKey);
         delete v;
     }
+
 private:
-    SkTDynamicHash<Value, Key>                            fLookup;
-    mutable SkTInternalLList<Value>                       fLRU;
+    SkTDynamicHash<Value, Key> fLookup;
+    mutable SkTInternalLList<Value> fLRU;
     // Value* always points to an item in fLookup.
     SkTHashMap<const SkImageFilter*, std::vector<Value*>> fImageFilterValues;
-    size_t                                                fMaxBytes;
-    size_t                                                fCurrentBytes;
-    mutable SkMutex                                       fMutex;
+    size_t fMaxBytes;
+    size_t fCurrentBytes;
+    mutable SkMutex fMutex;
 };
 
-} // namespace
+}  // namespace
 
-SkImageFilterCache* SkImageFilterCache::Create(size_t maxBytes) {
-    return new CacheImpl(maxBytes);
-}
+SkImageFilterCache* SkImageFilterCache::Create(size_t maxBytes) { return new CacheImpl(maxBytes); }
 
 SkImageFilterCache* SkImageFilterCache::Get() {
     static SkOnce once;
     static SkImageFilterCache* cache;
 
-    once([]{ cache = SkImageFilterCache::Create(kDefaultCacheSize); });
+    once([] { cache = SkImageFilterCache::Create(kDefaultCacheSize); });
     return cache;
 }

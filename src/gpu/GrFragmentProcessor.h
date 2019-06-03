@@ -8,8 +8,8 @@
 #ifndef GrFragmentProcessor_DEFINED
 #define GrFragmentProcessor_DEFINED
 
-#include "GrProcessor.h"
-#include "GrProxyRef.h"
+#include "include/private/GrProxyRef.h"
+#include "src/gpu/GrProcessor.h"
 
 class GrCoordTransform;
 class GrGLSLFragmentProcessor;
@@ -29,13 +29,13 @@ public:
     class TextureSampler;
 
     /**
-    *  In many instances (e.g. SkShader::asFragmentProcessor() implementations) it is desirable to
-    *  only consider the input color's alpha. However, there is a competing desire to have reusable
-    *  GrFragmentProcessor subclasses that can be used in other scenarios where the entire input
-    *  color is considered. This function exists to filter the input color and pass it to a FP. It
-    *  does so by returning a parent FP that multiplies the passed in FPs output by the parent's
-    *  input alpha. The passed in FP will not receive an input color.
-    */
+     *  In many instances (e.g. SkShader::asFragmentProcessor() implementations) it is desirable to
+     *  only consider the input color's alpha. However, there is a competing desire to have reusable
+     *  GrFragmentProcessor subclasses that can be used in other scenarios where the entire input
+     *  color is considered. This function exists to filter the input color and pass it to a FP. It
+     *  does so by returning a parent FP that multiplies the passed in FPs output by the parent's
+     *  input alpha. The passed in FP will not receive an input color.
+     */
     static std::unique_ptr<GrFragmentProcessor> MulChildByInputAlpha(
             std::unique_ptr<GrFragmentProcessor> child);
 
@@ -63,7 +63,8 @@ public:
      *  child.
      */
     static std::unique_ptr<GrFragmentProcessor> OverrideInput(std::unique_ptr<GrFragmentProcessor>,
-                                                              const SkPMColor4f&);
+                                                              const SkPMColor4f&,
+                                                              bool useUniform = true);
 
     /**
      *  Returns a fragment processor that premuls the input before calling the passed in fragment
@@ -104,20 +105,22 @@ public:
         }
     }
 
-    int numTextureSamplers() const { return fTextureSamplerCnt; }
+    int numTextureSamplers() const noexcept { return fTextureSamplerCnt; }
     const TextureSampler& textureSampler(int i) const;
 
-    int numCoordTransforms() const { return fCoordTransforms.count(); }
+    int numCoordTransforms() const noexcept { return fCoordTransforms.count(); }
 
     /** Returns the coordinate transformation at index. index must be valid according to
         numTransforms(). */
-    const GrCoordTransform& coordTransform(int index) const { return *fCoordTransforms[index]; }
+    const GrCoordTransform& coordTransform(int index) const noexcept {
+        return *fCoordTransforms[index];
+    }
 
-    const SkTArray<const GrCoordTransform*, true>& coordTransforms() const {
+    const SkTArray<const GrCoordTransform*, true>& coordTransforms() const noexcept {
         return fCoordTransforms;
     }
 
-    int numChildProcessors() const { return fChildProcessors.count(); }
+    int numChildProcessors() const noexcept { return fChildProcessors.count(); }
 
     const GrFragmentProcessor& childProcessor(int index) const { return *fChildProcessors[index]; }
 
@@ -126,7 +129,7 @@ public:
     void markPendingExecution() const;
 
     /** Do any of the coordtransforms for this processor require local coords? */
-    bool usesLocalCoords() const { return SkToBool(fFlags & kUsesLocalCoords_Flag); }
+    bool usesLocalCoords() const noexcept { return SkToBool(fFlags & kUsesLocalCoords_Flag); }
 
     /**
      * A GrDrawOp may premultiply its antialiasing coverage into its GrGeometryProcessor's color
@@ -140,14 +143,14 @@ public:
      * value cannot depend on the input's color channels unless it unpremultiplies the input color
      * channels by the input alpha.
      */
-    bool compatibleWithCoverageAsAlpha() const {
+    bool compatibleWithCoverageAsAlpha() const noexcept {
         return SkToBool(fFlags & kCompatibleWithCoverageAsAlpha_OptimizationFlag);
     }
 
     /**
      * If this is true then all opaque input colors to the processor produce opaque output colors.
      */
-    bool preservesOpaqueInput() const {
+    bool preservesOpaqueInput() const noexcept {
         return SkToBool(fFlags & kPreservesOpaqueInput_OptimizationFlag);
     }
 
@@ -156,14 +159,15 @@ public:
      * (for all fragments). If true outputColor will contain the constant color produces for
      * inputColor.
      */
-    bool hasConstantOutputForConstantInput(SkPMColor4f inputColor, SkPMColor4f* outputColor) const {
+    bool hasConstantOutputForConstantInput(SkPMColor4f inputColor, SkPMColor4f* outputColor) const
+            noexcept {
         if (fFlags & kConstantOutputForConstantInput_OptimizationFlag) {
             *outputColor = this->constantOutputForConstantInput(inputColor);
             return true;
         }
         return false;
     }
-    bool hasConstantOutputForConstantInput() const {
+    bool hasConstantOutputForConstantInput() const noexcept {
         return SkToBool(fFlags & kConstantOutputForConstantInput_OptimizationFlag);
     }
 
@@ -182,7 +186,7 @@ public:
      */
     class Iter : public SkNoncopyable {
     public:
-        explicit Iter(const GrFragmentProcessor* fp) { fFPStack.push_back(fp); }
+        explicit Iter(const GrFragmentProcessor* fp) noexcept { fFPStack.push_back(fp); }
         explicit Iter(const GrPipeline& pipeline);
         explicit Iter(const GrPaint&);
         const GrFragmentProcessor* next();
@@ -201,15 +205,11 @@ public:
     class FPItemIter : public SkNoncopyable {
     public:
         explicit FPItemIter(const GrFragmentProcessor* fp)
-                : fCurrFP(nullptr)
-                , fCTIdx(0)
-                , fFPIter(fp) {
+                : fCurrFP(nullptr), fCTIdx(0), fFPIter(fp) {
             fCurrFP = fFPIter.next();
         }
         explicit FPItemIter(const GrPipeline& pipeline)
-                : fCurrFP(nullptr)
-                , fCTIdx(0)
-                , fFPIter(pipeline) {
+                : fCurrFP(nullptr), fCTIdx(0), fFPIter(pipeline) {
             fCurrFP = fFPIter.next();
         }
 
@@ -228,17 +228,16 @@ public:
         }
 
     private:
-        const GrFragmentProcessor*  fCurrFP;
-        int                         fCTIdx;
-        GrFragmentProcessor::Iter   fFPIter;
+        const GrFragmentProcessor* fCurrFP;
+        int fCTIdx;
+        GrFragmentProcessor::Iter fFPIter;
     };
 
-    using CoordTransformIter = FPItemIter<GrCoordTransform,
-                                          &GrFragmentProcessor::numCoordTransforms,
-                                          &GrFragmentProcessor::coordTransform>;
+    using CoordTransformIter =
+            FPItemIter<GrCoordTransform, &GrFragmentProcessor::numCoordTransforms,
+                       &GrFragmentProcessor::coordTransform>;
 
-    using TextureAccessIter = FPItemIter<TextureSampler,
-                                         &GrFragmentProcessor::numTextureSamplers,
+    using TextureAccessIter = FPItemIter<TextureSampler, &GrFragmentProcessor::numTextureSamplers,
                                          &GrFragmentProcessor::textureSampler>;
 
     void visitProxies(const std::function<void(GrSurfaceProxy*)>& func);
@@ -265,7 +264,8 @@ protected:
      * callers must determine on their own if the sampling uses a decal strategy in any way, in
      * which case the texture may become transparent regardless of the pixel config.
      */
-    static OptimizationFlags ModulateForSamplerOptFlags(GrPixelConfig config, bool samplingDecal) {
+    static OptimizationFlags ModulateForSamplerOptFlags(GrPixelConfig config,
+                                                        bool samplingDecal) noexcept {
         if (samplingDecal) {
             return kCompatibleWithCoverageAsAlpha_OptimizationFlag;
         } else {
@@ -274,7 +274,7 @@ protected:
     }
 
     // As above, but callers should somehow ensure or assert their sampler still uses clamping
-    static OptimizationFlags ModulateForClampedSamplerOptFlags(GrPixelConfig config) {
+    static OptimizationFlags ModulateForClampedSamplerOptFlags(GrPixelConfig config) noexcept {
         if (GrPixelConfigIsOpaque(config)) {
             return kCompatibleWithCoverageAsAlpha_OptimizationFlag |
                    kPreservesOpaqueInput_OptimizationFlag;
@@ -283,14 +283,18 @@ protected:
         }
     }
 
-    GrFragmentProcessor(ClassID classID, OptimizationFlags optimizationFlags)
-    : INHERITED(classID)
-    , fFlags(optimizationFlags) {
+    GrFragmentProcessor(ClassID classID, OptimizationFlags optimizationFlags) noexcept
+            : INHERITED(classID), fFlags(optimizationFlags) {
         SkASSERT((fFlags & ~kAll_OptimizationFlags) == 0);
     }
 
-    OptimizationFlags optimizationFlags() const {
+    OptimizationFlags optimizationFlags() const noexcept {
         return static_cast<OptimizationFlags>(kAll_OptimizationFlags & fFlags);
+    }
+
+    /** Useful when you can't call fp->optimizationFlags() on a base class object from a subclass.*/
+    static OptimizationFlags ProcessorOptimizationFlags(const GrFragmentProcessor* fp) noexcept {
+        return fp->optimizationFlags();
     }
 
     /**
@@ -299,7 +303,7 @@ protected:
      * hasConstantOutputForConstantInput() is known to be true.
      */
     static SkPMColor4f ConstantOutputForConstantInput(const GrFragmentProcessor& fp,
-                                                      const SkPMColor4f& input) {
+                                                      const SkPMColor4f& input) noexcept {
         SkASSERT(fp.hasConstantOutputForConstantInput());
         return fp.constantOutputForConstantInput(input);
     }
@@ -334,7 +338,7 @@ protected:
      */
     int registerChildProcessor(std::unique_ptr<GrFragmentProcessor> child);
 
-    void setTextureSamplerCnt(int cnt) {
+    void setTextureSamplerCnt(int cnt) noexcept {
         SkASSERT(cnt >= 0);
         fTextureSamplerCnt = cnt;
     }
@@ -351,7 +355,8 @@ protected:
     inline static const TextureSampler& IthTextureSampler(int i);
 
 private:
-    virtual SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& /* inputColor */) const {
+    virtual SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& /* inputColor */) const
+            noexcept {
         SK_ABORT("Subclass must override this if advertising this optimization.");
         return SK_PMColor4fTRANSPARENT;
     }
@@ -406,7 +411,7 @@ public:
      * always takes a new ref on the texture proxy as the new fragment processor will not yet be
      * in pending execution state.
      */
-    explicit TextureSampler(const TextureSampler& that)
+    explicit TextureSampler(const TextureSampler& that) noexcept
             : fProxyRef(sk_ref_sp(that.fProxyRef.get()), that.fProxyRef.ioType())
             , fSamplerState(that.fSamplerState) {}
 
@@ -423,32 +428,33 @@ public:
                GrSamplerState::Filter = GrSamplerState::Filter::kNearest,
                GrSamplerState::WrapMode wrapXAndY = GrSamplerState::WrapMode::kClamp);
 
-    bool operator==(const TextureSampler& that) const {
+    bool operator==(const TextureSampler& that) const noexcept {
         return this->proxy()->underlyingUniqueID() == that.proxy()->underlyingUniqueID() &&
                fSamplerState == that.fSamplerState;
     }
 
-    bool operator!=(const TextureSampler& other) const { return !(*this == other); }
+    bool operator!=(const TextureSampler& other) const noexcept { return !(*this == other); }
 
     // 'instantiate' should only ever be called at flush time.
-    bool instantiate(GrResourceProvider* resourceProvider) const {
-        return SkToBool(fProxyRef.get()->instantiate(resourceProvider));
+    // TODO: this can go away once explicit allocation has stuck
+    bool instantiate(GrResourceProvider* resourceProvider) const noexcept {
+        return fProxyRef.get()->isInstantiated();
     }
 
     // 'peekTexture' should only ever be called after a successful 'instantiate' call
-    GrTexture* peekTexture() const {
+    GrTexture* peekTexture() const noexcept {
         SkASSERT(fProxyRef.get()->peekTexture());
         return fProxyRef.get()->peekTexture();
     }
 
-    GrTextureProxy* proxy() const { return fProxyRef.get(); }
-    const GrSamplerState& samplerState() const { return fSamplerState; }
+    GrTextureProxy* proxy() const noexcept { return fProxyRef.get(); }
+    const GrSamplerState& samplerState() const noexcept { return fSamplerState; }
 
-    bool isInitialized() const { return SkToBool(fProxyRef.get()); }
+    bool isInitialized() const noexcept { return SkToBool(fProxyRef.get()); }
     /**
      * For internal use by GrFragmentProcessor.
      */
-    const GrTextureProxyRef* proxyRef() const { return &fProxyRef; }
+    const GrTextureProxyRef* proxyRef() const noexcept { return &fProxyRef; }
 
 private:
     GrTextureProxyRef fProxyRef;

@@ -8,7 +8,7 @@
 #ifndef GrContextThreadSafeProxy_DEFINED
 #define GrContextThreadSafeProxy_DEFINED
 
-#include "../private/GrContext_Base.h"
+#include "include/private/GrContext_Base.h"
 
 class GrBackendFormat;
 class GrContextThreadSafeProxyPriv;
@@ -54,14 +54,13 @@ public:
      *                               FBO 0. This flag is only valid if using an GL backend.
      *  @param isTextureable         Will the surface be able to act as a texture?
      */
-    SkSurfaceCharacterization createCharacterization(
-                                  size_t cacheMaxResourceBytes,
-                                  const SkImageInfo& ii, const GrBackendFormat& backendFormat,
-                                  int sampleCount, GrSurfaceOrigin origin,
-                                  const SkSurfaceProps& surfaceProps,
-                                  bool isMipMapped,
-                                  bool willUseGLFBO0 = false,
-                                  bool isTextureable = true);
+    SkSurfaceCharacterization createCharacterization(size_t cacheMaxResourceBytes,
+                                                     const SkImageInfo& ii,
+                                                     const GrBackendFormat& backendFormat,
+                                                     int sampleCount, GrSurfaceOrigin origin,
+                                                     const SkSurfaceProps& surfaceProps,
+                                                     bool isMipMapped, bool willUseGLFBO0 = false,
+                                                     bool isTextureable = true);
 
     bool operator==(const GrContextThreadSafeProxy& that) const {
         // Each GrContext should only ever have a single thread-safe proxy.
@@ -76,7 +75,7 @@ public:
     const GrContextThreadSafeProxyPriv priv() const;
 
 private:
-    friend class GrContextThreadSafeProxyPriv; // for ctor and hidden methods
+    friend class GrContextThreadSafeProxyPriv;  // for ctor and hidden methods
 
     // DDL TODO: need to add unit tests for backend & maybe options
     GrContextThreadSafeProxy(GrBackendApi, const GrContextOptions&, uint32_t contextID);

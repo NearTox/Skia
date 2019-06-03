@@ -5,42 +5,45 @@
  * found in the LICENSE file.
  */
 
-#include "GrGLProgram.h"
-#include "GrAllocator.h"
-#include "GrCoordTransform.h"
-#include "GrGLBuffer.h"
-#include "GrGLGpu.h"
-#include "GrGLPathRendering.h"
-#include "GrPathProcessor.h"
-#include "GrPipeline.h"
-#include "GrProcessor.h"
-#include "GrTexturePriv.h"
-#include "GrXferProcessor.h"
-#include "glsl/GrGLSLFragmentProcessor.h"
-#include "glsl/GrGLSLGeometryProcessor.h"
-#include "glsl/GrGLSLXferProcessor.h"
+#include "src/gpu/gl/GrGLProgram.h"
+#include "src/gpu/GrAllocator.h"
+#include "src/gpu/GrCoordTransform.h"
+#include "src/gpu/GrPathProcessor.h"
+#include "src/gpu/GrPipeline.h"
+#include "src/gpu/GrProcessor.h"
+#include "src/gpu/GrTexturePriv.h"
+#include "src/gpu/GrXferProcessor.h"
+#include "src/gpu/gl/GrGLBuffer.h"
+#include "src/gpu/gl/GrGLGpu.h"
+#include "src/gpu/gl/GrGLPathRendering.h"
+#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
+#include "src/gpu/glsl/GrGLSLXferProcessor.h"
 
 #define GL_CALL(X) GR_GL_CALL(fGpu->glInterface(), X)
 #define GL_CALL_RET(R, X) GR_GL_CALL_RET(fGpu->glInterface(), R, X)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-GrGLProgram::GrGLProgram(
-        GrGLGpu* gpu,
-        const GrGLSLBuiltinUniformHandles& builtinUniforms,
-        GrGLuint programID,
-        const UniformInfoArray& uniforms,
-        const UniformInfoArray& textureSamplers,
-        const VaryingInfoArray& pathProcVaryings,
-        std::unique_ptr<GrGLSLPrimitiveProcessor> geometryProcessor,
-        std::unique_ptr<GrGLSLXferProcessor> xferProcessor,
-        std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fragmentProcessors,
-        int fragmentProcessorCnt,
-        std::unique_ptr<Attribute[]> attributes,
-        int vertexAttributeCnt,
-        int instanceAttributeCnt,
-        int vertexStride,
-        int instanceStride)
+GrGLProgram::GrGLProgram(GrGLGpu* gpu,
+                         const GrGLSLBuiltinUniformHandles& builtinUniforms,
+                         GrGLuint programID,
+                         const UniformInfoArray& uniforms,
+                         const UniformInfoArray& textureSamplers,
+                         const VaryingInfoArray& pathProcVaryings,
+                         std::unique_ptr<GrGLSLPrimitiveProcessor>
+                                 geometryProcessor,
+                         std::unique_ptr<GrGLSLXferProcessor>
+                                 xferProcessor,
+                         std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]>
+                                 fragmentProcessors,
+                         int fragmentProcessorCnt,
+                         std::unique_ptr<Attribute[]>
+                                 attributes,
+                         int vertexAttributeCnt,
+                         int instanceAttributeCnt,
+                         int vertexStride,
+                         int instanceStride)
         : fBuiltinUniformHandles(builtinUniforms)
         , fProgramID(programID)
         , fPrimitiveProcessor(std::move(geometryProcessor))
@@ -66,9 +69,7 @@ GrGLProgram::~GrGLProgram() {
     }
 }
 
-void GrGLProgram::abandon() {
-    fProgramID = 0;
-}
+void GrGLProgram::abandon() { fProgramID = 0; }
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -160,7 +161,6 @@ void GrGLProgram::setRenderTargetState(const GrRenderTarget* rt, GrSurfaceOrigin
     } else {
         SkASSERT(fGpu->glCaps().shaderCaps()->pathRenderingSupport());
         const GrPathProcessor& pathProc = primProc.cast<GrPathProcessor>();
-        fGpu->glPathRendering()->setProjectionMatrix(pathProc.viewMatrix(),
-                                                     size, origin);
+        fGpu->glPathRendering()->setProjectionMatrix(pathProc.viewMatrix(), size, origin);
     }
 }

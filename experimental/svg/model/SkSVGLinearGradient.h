@@ -8,8 +8,8 @@
 #ifndef SkSVGLinearGradient_DEFINED
 #define SkSVGLinearGradient_DEFINED
 
-#include "SkSVGGradient.h"
-#include "SkSVGTypes.h"
+#include "experimental/svg/model/SkSVGGradient.h"
+#include "experimental/svg/model/SkSVGTypes.h"
 
 class SkSVGLinearGradient final : public SkSVGGradient {
 public:
@@ -26,18 +26,18 @@ public:
 protected:
     void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
 
-    sk_sp<SkShader> onMakeShader(const SkSVGRenderContext&,
-                                 const SkColor*, const SkScalar*, int count,
-                                 SkShader::TileMode, const SkMatrix&) const override;
+    sk_sp<SkShader> onMakeShader(const SkSVGRenderContext&, const SkColor*, const SkScalar*,
+                                 int count, SkTileMode, const SkMatrix&) const override;
+
 private:
     SkSVGLinearGradient();
 
-    SkSVGLength fX1 = SkSVGLength(0  , SkSVGLength::Unit::kPercentage);
-    SkSVGLength fY1 = SkSVGLength(0  , SkSVGLength::Unit::kPercentage);
+    SkSVGLength fX1 = SkSVGLength(0, SkSVGLength::Unit::kPercentage);
+    SkSVGLength fY1 = SkSVGLength(0, SkSVGLength::Unit::kPercentage);
     SkSVGLength fX2 = SkSVGLength(100, SkSVGLength::Unit::kPercentage);
-    SkSVGLength fY2 = SkSVGLength(0  , SkSVGLength::Unit::kPercentage);
+    SkSVGLength fY2 = SkSVGLength(0, SkSVGLength::Unit::kPercentage);
 
     typedef SkSVGGradient INHERITED;
 };
 
-#endif // SkSVGLinearGradient_DEFINED
+#endif  // SkSVGLinearGradient_DEFINED

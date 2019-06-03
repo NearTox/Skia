@@ -5,12 +5,24 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkCanvas.h"
-#include "SkMaskFilter.h"
-#include "SkPath.h"
-#include "SkShader.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkBlurTypes.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkMaskFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypeface.h"
+#include "tools/ToolUtils.h"
 
 namespace skiagm {
 
@@ -20,20 +32,12 @@ namespace skiagm {
  */
 class SamplerStressGM : public GM {
 public:
-    SamplerStressGM()
-    : fTextureCreated(false)
-    , fMaskFilter(nullptr) {
-    }
+    SamplerStressGM() : fTextureCreated(false), fMaskFilter(nullptr) {}
 
 protected:
+    SkString onShortName() override { return SkString("gpusamplerstress"); }
 
-    SkString onShortName() override {
-        return SkString("gpusamplerstress");
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(640, 480);
-    }
+    SkISize onISize() override { return SkISize::Make(640, 480); }
 
     /**
      * Create a red & green stripes on black texture
@@ -51,13 +55,13 @@ protected:
 
         for (int y = 0; y < ySize; ++y) {
             for (int x = 0; x < xSize; ++x) {
-                addr[y*xSize+x] = SkPreMultiplyColor(SK_ColorBLACK);
+                addr[y * xSize + x] = SkPreMultiplyColor(SK_ColorBLACK);
 
                 if ((y % 5) == 0) {
-                    addr[y*xSize+x] = SkPreMultiplyColor(SK_ColorRED);
+                    addr[y * xSize + x] = SkPreMultiplyColor(SK_ColorRED);
                 }
                 if ((x % 7) == 0) {
-                    addr[y*xSize+x] = SkPreMultiplyColor(SK_ColorGREEN);
+                    addr[y * xSize + x] = SkPreMultiplyColor(SK_ColorGREEN);
                 }
             }
         }
@@ -72,8 +76,7 @@ protected:
 
         createTexture();
 
-        fShader = SkShader::MakeBitmapShader(fTexture, SkShader::kRepeat_TileMode,
-                                             SkShader::kRepeat_TileMode);
+        fShader = fTexture.makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat);
     }
 
     void createMaskFilter() {
@@ -97,18 +100,15 @@ protected:
         paint.setAntiAlias(true);
         paint.setShader(fShader);
         paint.setMaskFilter(fMaskFilter);
-        SkFont font(sk_tool_utils::create_portable_typeface(), 72);
+        SkFont font(ToolUtils::create_portable_typeface(), 72);
 
         SkRect temp;
-        temp.set(SkIntToScalar(115),
-                 SkIntToScalar(75),
-                 SkIntToScalar(144),
-                 SkIntToScalar(110));
+        temp.set(SkIntToScalar(115), SkIntToScalar(75), SkIntToScalar(144), SkIntToScalar(110));
 
         SkPath path;
         path.addRoundRect(temp, SkIntToScalar(5), SkIntToScalar(5));
 
-        canvas->clipPath(path, true); // AA is on
+        canvas->clipPath(path, true);  // AA is on
 
         canvas->drawString("M", 100.0f, 100.0f, font, paint);
 
@@ -129,8 +129,8 @@ protected:
     }
 
 private:
-    SkBitmap        fTexture;
-    bool            fTextureCreated;
+    SkBitmap fTexture;
+    bool fTextureCreated;
     sk_sp<SkShader> fShader;
     sk_sp<SkMaskFilter> fMaskFilter;
 
@@ -139,6 +139,6 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new SamplerStressGM; )
+DEF_GM(return new SamplerStressGM;)
 
-}
+}  // namespace skiagm

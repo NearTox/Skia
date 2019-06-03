@@ -4,10 +4,10 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkIntersections.h"
-#include "SkPathOpsCubic.h"
-#include "SkPathOpsCurve.h"
-#include "SkPathOpsLine.h"
+#include "src/pathops/SkIntersections.h"
+#include "src/pathops/SkPathOpsCubic.h"
+#include "src/pathops/SkPathOpsCurve.h"
+#include "src/pathops/SkPathOpsLine.h"
 
 /*
 Find the interection of a line and cubic by solving for valid t values.
@@ -77,26 +77,18 @@ For horizontal lines:
 
 class LineCubicIntersections {
 public:
-    enum PinTPoint {
-        kPointUninitialized,
-        kPointInitialized
-    };
+    enum PinTPoint { kPointUninitialized, kPointInitialized };
 
     LineCubicIntersections(const SkDCubic& c, const SkDLine& l, SkIntersections* i)
-        : fCubic(c)
-        , fLine(l)
-        , fIntersections(i)
-        , fAllowNear(true) {
+            : fCubic(c), fLine(l), fIntersections(i), fAllowNear(true) {
         i->setMax(4);
     }
 
-    void allowNear(bool allow) {
-        fAllowNear = allow;
-    }
+    void allowNear(bool allow) { fAllowNear = allow; }
 
     void checkCoincident() {
         int last = fIntersections->used() - 1;
-        for (int index = 0; index < last; ) {
+        for (int index = 0; index < last;) {
             double cubicMidT = ((*fIntersections)[0][index] + (*fIntersections)[0][index + 1]) / 2;
             SkDPoint cubicMidPt = fCubic.ptAtT(cubicMidT);
             double t = fLine.nearPoint(cubicMidPt, nullptr);
@@ -133,8 +125,8 @@ public:
             SkDPoint calcPt = c.ptAtT(roots[index]);
             if (!approximately_zero(calcPt.fX)) {
                 for (int n = 0; n < 4; ++n) {
-                    c[n].fY = (fCubic[n].fY - fLine[0].fY) * opp
-                            + (fCubic[n].fX - fLine[0].fX) * adj;
+                    c[n].fY =
+                            (fCubic[n].fY - fLine[0].fY) * opp + (fCubic[n].fX - fLine[0].fX) * adj;
                 }
                 double extremeTs[6];
                 int extrema = SkDCubic::FindExtrema(&c[0].fX, extremeTs);
@@ -190,7 +182,7 @@ public:
         int count = HorizontalIntersect(fCubic, axisIntercept, roots);
         for (int index = 0; index < count; ++index) {
             double cubicT = roots[index];
-            SkDPoint pt = { fCubic.ptAtT(cubicT).fX,  axisIntercept };
+            SkDPoint pt = {fCubic.ptAtT(cubicT).fX, axisIntercept};
             double lineT = (pt.fX - left) / (right - left);
             if (pinTs(&cubicT, &lineT, &pt, kPointInitialized) && uniqueAnswer(cubicT, pt)) {
                 fIntersections->insert(cubicT, lineT, pt);
@@ -203,29 +195,29 @@ public:
         return fIntersections->used();
     }
 
-        bool uniqueAnswer(double cubicT, const SkDPoint& pt) {
-            for (int inner = 0; inner < fIntersections->used(); ++inner) {
-                if (fIntersections->pt(inner) != pt) {
-                    continue;
-                }
-                double existingCubicT = (*fIntersections)[0][inner];
-                if (cubicT == existingCubicT) {
-                    return false;
-                }
-                // check if midway on cubic is also same point. If so, discard this
-                double cubicMidT = (existingCubicT + cubicT) / 2;
-                SkDPoint cubicMidPt = fCubic.ptAtT(cubicMidT);
-                if (cubicMidPt.approximatelyEqual(pt)) {
-                    return false;
-                }
+    bool uniqueAnswer(double cubicT, const SkDPoint& pt) {
+        for (int inner = 0; inner < fIntersections->used(); ++inner) {
+            if (fIntersections->pt(inner) != pt) {
+                continue;
             }
-#if ONE_OFF_DEBUG
-            SkDPoint cPt = fCubic.ptAtT(cubicT);
-            SkDebugf("%s pt=(%1.9g,%1.9g) cPt=(%1.9g,%1.9g)\n", __FUNCTION__, pt.fX, pt.fY,
-                    cPt.fX, cPt.fY);
-#endif
-            return true;
+            double existingCubicT = (*fIntersections)[0][inner];
+            if (cubicT == existingCubicT) {
+                return false;
+            }
+            // check if midway on cubic is also same point. If so, discard this
+            double cubicMidT = (existingCubicT + cubicT) / 2;
+            SkDPoint cubicMidPt = fCubic.ptAtT(cubicMidT);
+            if (cubicMidPt.approximatelyEqual(pt)) {
+                return false;
+            }
         }
+#if ONE_OFF_DEBUG
+        SkDPoint cPt = fCubic.ptAtT(cubicT);
+        SkDebugf("%s pt=(%1.9g,%1.9g) cPt=(%1.9g,%1.9g)\n", __FUNCTION__, pt.fX, pt.fY, cPt.fX,
+                 cPt.fY);
+#endif
+        return true;
+    }
 
     static int VerticalIntersect(const SkDCubic& c, double axisIntercept, double roots[3]) {
         double A, B, C, D;
@@ -253,7 +245,7 @@ public:
         int count = VerticalIntersect(fCubic, axisIntercept, roots);
         for (int index = 0; index < count; ++index) {
             double cubicT = roots[index];
-            SkDPoint pt = { axisIntercept, fCubic.ptAtT(cubicT).fY };
+            SkDPoint pt = {axisIntercept, fCubic.ptAtT(cubicT).fY};
             double lineT = (pt.fY - top) / (bottom - top);
             if (pinTs(&cubicT, &lineT, &pt, kPointInitialized) && uniqueAnswer(cubicT, pt)) {
                 fIntersections->insert(cubicT, lineT, pt);
@@ -266,15 +258,14 @@ public:
         return fIntersections->used();
     }
 
-    protected:
-
+protected:
     void addExactEndPoints() {
         for (int cIndex = 0; cIndex < 4; cIndex += 3) {
             double lineT = fLine.exactPoint(fCubic[cIndex]);
             if (lineT < 0) {
                 continue;
             }
-            double cubicT = (double) (cIndex >> 1);
+            double cubicT = (double)(cIndex >> 1);
             fIntersections->insert(cubicT, lineT, fCubic[cIndex]);
         }
     }
@@ -283,7 +274,7 @@ public:
        These points are found later when check ends looks for missing points */
     void addNearEndPoints() {
         for (int cIndex = 0; cIndex < 4; cIndex += 3) {
-            double cubicT = (double) (cIndex >> 1);
+            double cubicT = (double)(cIndex >> 1);
             if (fIntersections->hasT(cubicT)) {
                 continue;
             }
@@ -298,12 +289,12 @@ public:
 
     void addLineNearEndPoints() {
         for (int lIndex = 0; lIndex < 2; ++lIndex) {
-            double lineT = (double) lIndex;
+            double lineT = (double)lIndex;
             if (fIntersections->hasOppT(lineT)) {
                 continue;
             }
-            double cubicT = ((SkDCurve*) &fCubic)->nearPoint(SkPath::kCubic_Verb,
-                fLine[lIndex], fLine[!lIndex]);
+            double cubicT = ((SkDCurve*)&fCubic)
+                                    ->nearPoint(SkPath::kCubic_Verb, fLine[lIndex], fLine[!lIndex]);
             if (cubicT < 0) {
                 continue;
             }
@@ -317,14 +308,14 @@ public:
             if (lineT < 0) {
                 continue;
             }
-            double cubicT = (double) (cIndex >> 1);
+            double cubicT = (double)(cIndex >> 1);
             fIntersections->insert(cubicT, lineT, fCubic[cIndex]);
         }
     }
 
     void addNearHorizontalEndPoints(double left, double right, double y) {
         for (int cIndex = 0; cIndex < 4; cIndex += 3) {
-            double cubicT = (double) (cIndex >> 1);
+            double cubicT = (double)(cIndex >> 1);
             if (fIntersections->hasT(cubicT)) {
                 continue;
             }
@@ -343,14 +334,14 @@ public:
             if (lineT < 0) {
                 continue;
             }
-            double cubicT = (double) (cIndex >> 1);
+            double cubicT = (double)(cIndex >> 1);
             fIntersections->insert(cubicT, lineT, fCubic[cIndex]);
         }
     }
 
     void addNearVerticalEndPoints(double top, double bottom, double x) {
         for (int cIndex = 0; cIndex < 4; cIndex += 3) {
-            double cubicT = (double) (cIndex >> 1);
+            double cubicT = (double)(cIndex >> 1);
             if (fIntersections->hasT(cubicT)) {
                 continue;
             }
@@ -416,15 +407,15 @@ private:
 };
 
 int SkIntersections::horizontal(const SkDCubic& cubic, double left, double right, double y,
-        bool flipped) {
-    SkDLine line = {{{ left, y }, { right, y }}};
+                                bool flipped) {
+    SkDLine line = {{{left, y}, {right, y}}};
     LineCubicIntersections c(cubic, line, this);
     return c.horizontalIntersect(y, left, right, flipped);
 }
 
 int SkIntersections::vertical(const SkDCubic& cubic, double top, double bottom, double x,
-        bool flipped) {
-    SkDLine line = {{{ x, top }, { x, bottom }}};
+                              bool flipped) {
+    SkDLine line = {{{x, top}, {x, bottom}}};
     LineCubicIntersections c(cubic, line, this);
     return c.verticalIntersect(x, top, bottom, flipped);
 }

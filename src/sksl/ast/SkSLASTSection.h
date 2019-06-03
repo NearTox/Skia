@@ -8,7 +8,7 @@
 #ifndef SKSL_ASTSECTION
 #define SKSL_ASTSECTION
 
-#include "SkSLASTDeclaration.h"
+#include "src/sksl/ast/SkSLASTDeclaration.h"
 
 namespace SkSL {
 
@@ -17,10 +17,10 @@ namespace SkSL {
  */
 struct ASTSection : public ASTDeclaration {
     ASTSection(int offset, String name, String arg, String text)
-    : INHERITED(offset, kSection_Kind)
-    , fName(std::move(name))
-    , fArgument(std::move(arg))
-    , fText(std::move(text)) {}
+            : INHERITED(offset, kSection_Kind)
+            , fName(std::move(name))
+            , fArgument(std::move(arg))
+            , fText(std::move(text)) {}
 
     String description() const override {
         String result = "@" + fName;
@@ -38,6 +38,6 @@ struct ASTSection : public ASTDeclaration {
     typedef ASTDeclaration INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

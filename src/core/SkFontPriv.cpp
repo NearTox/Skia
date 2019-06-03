@@ -5,18 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "SkFontPriv.h"
-#include "SkGraphics.h"
-#include "SkMatrix.h"
+#include "src/core/SkFontPriv.h"
+#include "include/core/SkGraphics.h"
+#include "include/core/SkMatrix.h"
 
-static SkScalar mag2(SkScalar x, SkScalar y) {
-    return x * x + y * y;
-}
+static SkScalar mag2(SkScalar x, SkScalar y) { return x * x + y * y; }
 
 static bool tooBig(const SkMatrix& m, SkScalar ma2max) {
-    return  mag2(m[SkMatrix::kMScaleX], m[SkMatrix::kMSkewY]) > ma2max
-            ||
-            mag2(m[SkMatrix::kMSkewX], m[SkMatrix::kMScaleY]) > ma2max;
+    return mag2(m[SkMatrix::kMScaleX], m[SkMatrix::kMSkewY]) > ma2max ||
+           mag2(m[SkMatrix::kMSkewX], m[SkMatrix::kMScaleY]) > ma2max;
 }
 
 bool SkFontPriv::TooBigToUseCache(const SkMatrix& ctm, const SkMatrix& textM, SkScalar maxLimit) {

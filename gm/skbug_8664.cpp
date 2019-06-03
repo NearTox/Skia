@@ -5,18 +5,24 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-
-#include "Resources.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkFilterQuality.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "tools/Resources.h"
 
 DEF_SIMPLE_GM(skbug_8664, canvas, 830, 550) {
     const struct {
-        SkScalar    fSx, fSy, fTx, fTy;
+        SkScalar fSx, fSy, fTx, fTy;
     } xforms[] = {
-        { 1, 1, 0, 0 },
-        { 0.5f, 0.5f, 530, 0 },
-        { 0.25f, 0.25f, 530, 275 },
-        { 0.125f, 0.125f, 530, 420 },
+            {1, 1, 0, 0},
+            {0.5f, 0.5f, 530, 0},
+            {0.25f, 0.25f, 530, 275},
+            {0.125f, 0.125f, 530, 420},
     };
 
     SkPaint imagePaint;

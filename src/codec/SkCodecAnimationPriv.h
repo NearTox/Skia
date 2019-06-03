@@ -9,24 +9,24 @@
 #define SkCodecAnimationPriv_DEFINED
 
 namespace SkCodecAnimation {
+/**
+ * How to blend the current frame.
+ */
+enum class Blend {
     /**
-     * How to blend the current frame.
+     *  Blend with the prior frame. This is the typical case, supported
+     *  by all animated image types.
      */
-    enum class Blend {
-        /**
-         *  Blend with the prior frame. This is the typical case, supported
-         *  by all animated image types.
-         */
-        kPriorFrame,
+    kPriorFrame,
 
-        /**
-         *  Do not blend.
-         *
-         *  This frames pixels overwrite previous pixels "blending" with
-         *  the background color of transparent.
-         */
-        kBG,
-    };
+    /**
+     *  Do not blend.
+     *
+     *  This frames pixels overwrite previous pixels "blending" with
+     *  the background color of transparent.
+     */
+    kBG,
+};
 
-}
-#endif // SkCodecAnimationPriv_DEFINED
+}  // namespace SkCodecAnimation
+#endif  // SkCodecAnimationPriv_DEFINED

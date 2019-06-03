@@ -8,7 +8,7 @@
 #ifndef SkBBHFactory_DEFINED
 #define SkBBHFactory_DEFINED
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 class SkBBoxHierarchy;
 struct SkRect;
 
@@ -24,6 +24,7 @@ public:
 class SK_API SkRTreeFactory : public SkBBHFactory {
 public:
     SkBBoxHierarchy* operator()(const SkRect& bounds) const override;
+
 private:
     typedef SkBBHFactory INHERITED;
 };

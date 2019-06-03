@@ -5,25 +5,16 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkBitmap.h"
-#include "SkCanvas.h"
-#include "SkColorPriv.h"
-#include "SkShader.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkShader.h"
+#include "samplecode/Sample.h"
 
 static const SkBlendMode gModes[] = {
-    SkBlendMode::kClear,
-    SkBlendMode::kSrc,
-    SkBlendMode::kDst,
-    SkBlendMode::kSrcOver,
-    SkBlendMode::kDstOver,
-    SkBlendMode::kSrcIn,
-    SkBlendMode::kDstIn,
-    SkBlendMode::kSrcOut,
-    SkBlendMode::kDstOut,
-    SkBlendMode::kSrcATop,
-    SkBlendMode::kDstATop,
-    SkBlendMode::kXor,
+        SkBlendMode::kClear,   SkBlendMode::kSrc,     SkBlendMode::kDst,     SkBlendMode::kSrcOver,
+        SkBlendMode::kDstOver, SkBlendMode::kSrcIn,   SkBlendMode::kDstIn,   SkBlendMode::kSrcOut,
+        SkBlendMode::kDstOut,  SkBlendMode::kSrcATop, SkBlendMode::kDstATop, SkBlendMode::kXor,
 };
 
 const int gWidth = 64;
@@ -36,7 +27,7 @@ static SkScalar drawCell(SkCanvas* canvas, SkBlendMode mode, SkAlpha a0, SkAlpha
     paint.setAntiAlias(true);
 
     SkRect r = SkRect::MakeWH(W, H);
-    r.inset(W/10, H/10);
+    r.inset(W / 10, H / 10);
 
     paint.setColor(SK_ColorBLUE);
     paint.setAlpha(a0);
@@ -47,9 +38,7 @@ static SkScalar drawCell(SkCanvas* canvas, SkBlendMode mode, SkAlpha a0, SkAlpha
     paint.setBlendMode(mode);
 
     SkScalar offset = SK_Scalar1 / 3;
-    SkRect rect = SkRect::MakeXYWH(W / 4 + offset,
-                                   H / 4 + offset,
-                                   W / 2, H / 2);
+    SkRect rect = SkRect::MakeXYWH(W / 4 + offset, H / 4 + offset, W / 2, H / 2);
     canvas->drawRect(rect, paint);
 
     return H;
@@ -59,24 +48,19 @@ static sk_sp<SkShader> make_bg_shader() {
     SkBitmap bm;
     bm.allocN32Pixels(2, 2);
     *bm.getAddr32(0, 0) = *bm.getAddr32(1, 1) = 0xFFFFFFFF;
-    *bm.getAddr32(1, 0) = *bm.getAddr32(0, 1) = SkPackARGB32(0xFF, 0xCC,
-                                                             0xCC, 0xCC);
+    *bm.getAddr32(1, 0) = *bm.getAddr32(0, 1) = SkPackARGB32(0xFF, 0xCC, 0xCC, 0xCC);
 
     SkMatrix m;
     m.setScale(SkIntToScalar(6), SkIntToScalar(6));
 
-    return SkShader::MakeBitmapShader(bm,
-                                      SkShader::kRepeat_TileMode,
-                                      SkShader::kRepeat_TileMode,
-                                      &m);
+    return bm.makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, &m);
 }
 
 class AARectsModesView : public Sample {
     SkPaint fBGPaint;
+
 public:
-    AARectsModesView () {
-        fBGPaint.setShader(make_bg_shader());
-    }
+    AARectsModesView() { fBGPaint.setShader(make_bg_shader()); }
 
 protected:
     virtual bool onQuery(Sample::Event* evt) {
@@ -89,7 +73,7 @@ protected:
 
     virtual void onDrawContent(SkCanvas* canvas) {
         const SkRect bounds = SkRect::MakeWH(W, H);
-        static const SkAlpha gAlphaValue[] = { 0xFF, 0x88, 0x88 };
+        static const SkAlpha gAlphaValue[] = {0xFF, 0x88, 0x88};
 
         canvas->translate(SkIntToScalar(4), SkIntToScalar(4));
 
@@ -105,8 +89,8 @@ protected:
 
                 canvas->drawRect(bounds, fBGPaint);
                 canvas->saveLayer(&bounds, nullptr);
-                SkScalar dy = drawCell(canvas, gModes[i], gAlphaValue[alpha & 1],
-                                       gAlphaValue[alpha & 2]);
+                SkScalar dy =
+                        drawCell(canvas, gModes[i], gAlphaValue[alpha & 1], gAlphaValue[alpha & 2]);
                 canvas->restore();
 
                 canvas->translate(0, dy * 5 / 4);
@@ -123,4 +107,4 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new AARectsModesView(); )
+DEF_SAMPLE(return new AARectsModesView();)

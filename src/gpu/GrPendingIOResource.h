@@ -8,19 +8,18 @@
 #ifndef GrPendingIOResource_DEFINED
 #define GrPendingIOResource_DEFINED
 
-#include "GrGpuResource.h"
-#include "SkNoncopyable.h"
-#include "SkRefCnt.h"
+#include "include/core/SkRefCnt.h"
+#include "include/gpu/GrGpuResource.h"
+#include "include/private/SkNoncopyable.h"
 
 /**
  * Helper for owning a pending read, write, read-write on a GrGpuResource. It never owns a regular
  * ref.
  */
-template <typename T, GrIOType IO_TYPE>
-class GrPendingIOResource : SkNoncopyable {
+template <typename T, GrIOType IO_TYPE> class GrPendingIOResource : SkNoncopyable {
 public:
     GrPendingIOResource() = default;
-    explicit GrPendingIOResource(T* resource) { this->reset(resource); }
+    GrPendingIOResource(T* resource) { this->reset(resource); }
     GrPendingIOResource(sk_sp<T> resource) { *this = std::move(resource); }
     GrPendingIOResource(const GrPendingIOResource& that) : GrPendingIOResource(that.get()) {}
     ~GrPendingIOResource() { this->release(); }
@@ -53,7 +52,9 @@ public:
 
     bool operator==(const GrPendingIOResource& other) const { return fResource == other.fResource; }
 
-    T* get() const { return fResource; }
+    T* get() const noexcept { return fResource; }
+    T* operator*() const noexcept { return *fResource; }
+    T* operator->() const noexcept { return fResource; }
 
 private:
     void release() {

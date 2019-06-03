@@ -7,11 +7,11 @@
 #ifndef SkEnumOperators_DEFINED
 #define SkEnumOperators_DEFINED
 
-#include "SkTLogic.h"
+#include "include/private/SkTLogic.h"
 
 namespace skstd {
 template <typename T> struct is_bitmask_enum : std::false_type {};
-}
+}  // namespace skstd
 
 template <typename E> SK_WHEN(skstd::is_bitmask_enum<E>::value, E) operator|(E l, E r) {
     using U = typename std::underlying_type<E>::type;

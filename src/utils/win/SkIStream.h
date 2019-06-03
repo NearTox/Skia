@@ -6,16 +6,15 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkIStream_DEFINED
 #define SkIStream_DEFINED
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 #ifdef SK_BUILD_FOR_WIN
 
-#include "SkLeanWindows.h"
 #include <ole2.h>
+#include "include/private/SkLeanWindows.h"
 
 class SkStream;
 class SkWStream;
@@ -33,8 +32,7 @@ protected:
     virtual ~SkBaseIStream();
 
 public:
-    virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid
-                                                   , void ** ppvObject);
+    virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid, void** ppvObject);
     virtual ULONG STDMETHODCALLTYPE AddRef(void);
     virtual ULONG STDMETHODCALLTYPE Release(void);
 
@@ -42,39 +40,29 @@ public:
 public:
     virtual HRESULT STDMETHODCALLTYPE Read(void* pv, ULONG cb, ULONG* pcbRead);
 
-    virtual HRESULT STDMETHODCALLTYPE Write(void const* pv
-                                          , ULONG cb
-                                          , ULONG* pcbWritten);
+    virtual HRESULT STDMETHODCALLTYPE Write(void const* pv, ULONG cb, ULONG* pcbWritten);
 
     // IStream Interface
 public:
     virtual HRESULT STDMETHODCALLTYPE SetSize(ULARGE_INTEGER);
 
-    virtual HRESULT STDMETHODCALLTYPE CopyTo(IStream*
-                                           , ULARGE_INTEGER
-                                           , ULARGE_INTEGER*
-                                           , ULARGE_INTEGER*);
+    virtual HRESULT STDMETHODCALLTYPE CopyTo(IStream*, ULARGE_INTEGER, ULARGE_INTEGER*,
+                                             ULARGE_INTEGER*);
 
     virtual HRESULT STDMETHODCALLTYPE Commit(DWORD);
 
     virtual HRESULT STDMETHODCALLTYPE Revert(void);
 
-    virtual HRESULT STDMETHODCALLTYPE LockRegion(ULARGE_INTEGER
-                                               , ULARGE_INTEGER
-                                               , DWORD);
+    virtual HRESULT STDMETHODCALLTYPE LockRegion(ULARGE_INTEGER, ULARGE_INTEGER, DWORD);
 
-    virtual HRESULT STDMETHODCALLTYPE UnlockRegion(ULARGE_INTEGER
-                                                 , ULARGE_INTEGER
-                                                 , DWORD);
+    virtual HRESULT STDMETHODCALLTYPE UnlockRegion(ULARGE_INTEGER, ULARGE_INTEGER, DWORD);
 
-    virtual HRESULT STDMETHODCALLTYPE Clone(IStream **);
+    virtual HRESULT STDMETHODCALLTYPE Clone(IStream**);
 
-    virtual HRESULT STDMETHODCALLTYPE Seek(LARGE_INTEGER liDistanceToMove
-                                         , DWORD dwOrigin
-                                         , ULARGE_INTEGER* lpNewFilePointer);
+    virtual HRESULT STDMETHODCALLTYPE Seek(LARGE_INTEGER liDistanceToMove, DWORD dwOrigin,
+                                           ULARGE_INTEGER* lpNewFilePointer);
 
-    virtual HRESULT STDMETHODCALLTYPE Stat(STATSTG* pStatstg
-                                         , DWORD grfStatFlag);
+    virtual HRESULT STDMETHODCALLTYPE Stat(STATSTG* pStatstg, DWORD grfStatFlag);
 };
 
 /**
@@ -82,7 +70,7 @@ public:
  */
 class SkIStream : public SkBaseIStream {
 private:
-    SkStream *fSkStream;
+    SkStream* fSkStream;
     const bool fDeleteOnRelease;
     ULARGE_INTEGER fLocation;
 
@@ -90,22 +78,16 @@ private:
     virtual ~SkIStream();
 
 public:
-    HRESULT static CreateFromSkStream(SkStream* stream
-                                    , bool fDeleteOnRelease
-                                    , IStream ** ppStream);
+    HRESULT static CreateFromSkStream(SkStream* stream, bool fDeleteOnRelease, IStream** ppStream);
 
     virtual HRESULT STDMETHODCALLTYPE Read(void* pv, ULONG cb, ULONG* pcbRead);
 
-    virtual HRESULT STDMETHODCALLTYPE Write(void const* pv
-                                          , ULONG cb
-                                          , ULONG* pcbWritten);
+    virtual HRESULT STDMETHODCALLTYPE Write(void const* pv, ULONG cb, ULONG* pcbWritten);
 
-    virtual HRESULT STDMETHODCALLTYPE Seek(LARGE_INTEGER liDistanceToMove
-                                         , DWORD dwOrigin
-                                         , ULARGE_INTEGER* lpNewFilePointer);
+    virtual HRESULT STDMETHODCALLTYPE Seek(LARGE_INTEGER liDistanceToMove, DWORD dwOrigin,
+                                           ULARGE_INTEGER* lpNewFilePointer);
 
-    virtual HRESULT STDMETHODCALLTYPE Stat(STATSTG* pStatstg
-                                         , DWORD grfStatFlag);
+    virtual HRESULT STDMETHODCALLTYPE Stat(STATSTG* pStatstg, DWORD grfStatFlag);
 };
 
 /**
@@ -113,22 +95,19 @@ public:
  */
 class SkWIStream : public SkBaseIStream {
 private:
-    SkWStream *fSkWStream;
+    SkWStream* fSkWStream;
 
     SkWIStream(SkWStream* stream);
     virtual ~SkWIStream();
 
 public:
-    HRESULT static CreateFromSkWStream(SkWStream* stream, IStream ** ppStream);
+    HRESULT static CreateFromSkWStream(SkWStream* stream, IStream** ppStream);
 
-    virtual HRESULT STDMETHODCALLTYPE Write(void const* pv
-                                          , ULONG cb
-                                          , ULONG* pcbWritten);
+    virtual HRESULT STDMETHODCALLTYPE Write(void const* pv, ULONG cb, ULONG* pcbWritten);
 
     virtual HRESULT STDMETHODCALLTYPE Commit(DWORD);
 
-    virtual HRESULT STDMETHODCALLTYPE Stat(STATSTG* pStatstg
-                                         , DWORD grfStatFlag);
+    virtual HRESULT STDMETHODCALLTYPE Stat(STATSTG* pStatstg, DWORD grfStatFlag);
 };
 
 #endif  // SK_BUILD_FOR_WIN

@@ -8,10 +8,10 @@
 #ifndef SkBitmapRegionDecoder_DEFINED
 #define SkBitmapRegionDecoder_DEFINED
 
-#include "SkBitmap.h"
-#include "SkBRDAllocator.h"
-#include "SkEncodedImageFormat.h"
-#include "SkStream.h"
+#include "include/android/SkBRDAllocator.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkEncodedImageFormat.h"
+#include "include/core/SkStream.h"
 
 /*
  * This class aims to provide an interface to test multiple implementations of
@@ -19,9 +19,8 @@
  */
 class SK_API SkBitmapRegionDecoder {
 public:
-
     enum Strategy {
-        kAndroidCodec_Strategy, // Uses SkAndroidCodec for scaling and subsetting
+        kAndroidCodec_Strategy,  // Uses SkAndroidCodec for scaling and subsetting
     };
 
     /*
@@ -36,8 +35,7 @@ public:
      * @param strategy Strategy used for scaling and subsetting
      * @return         Tries to create an SkBitmapRegionDecoder, returns NULL on failure
      */
-    static SkBitmapRegionDecoder* Create(
-            SkStreamRewindable* stream, Strategy strategy);
+    static SkBitmapRegionDecoder* Create(SkStreamRewindable* stream, Strategy strategy);
 
     /*
      * Decode a scaled region of the encoded image stream
@@ -60,17 +58,16 @@ public:
      *
      */
     virtual bool decodeRegion(SkBitmap* bitmap, SkBRDAllocator* allocator,
-                              const SkIRect& desiredSubset, int sampleSize,
-                              SkColorType colorType, bool requireUnpremul,
+                              const SkIRect& desiredSubset, int sampleSize, SkColorType colorType,
+                              bool requireUnpremul,
                               sk_sp<SkColorSpace> prefColorSpace = nullptr) = 0;
 
     virtual SkEncodedImageFormat getEncodedFormat() = 0;
 
     virtual SkColorType computeOutputColorType(SkColorType requestedColorType) = 0;
 
-    virtual sk_sp<SkColorSpace> computeOutputColorSpace(SkColorType outputColorType,
-            sk_sp<SkColorSpace> prefColorSpace = nullptr) = 0;
-
+    virtual sk_sp<SkColorSpace> computeOutputColorSpace(
+            SkColorType outputColorType, sk_sp<SkColorSpace> prefColorSpace = nullptr) = 0;
 
     int width() const { return fWidth; }
     int height() const { return fHeight; }
@@ -78,11 +75,7 @@ public:
     virtual ~SkBitmapRegionDecoder() {}
 
 protected:
-
-    SkBitmapRegionDecoder(int width, int height)
-        : fWidth(width)
-        , fHeight(height)
-    {}
+    SkBitmapRegionDecoder(int width, int height) : fWidth(width), fHeight(height) {}
 
 private:
     const int fWidth;

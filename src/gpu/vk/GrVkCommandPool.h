@@ -8,10 +8,10 @@
 #ifndef GrVkCommandPool_DEFINED
 #define GrVkCommandPool_DEFINED
 
-#include "GrVkGpuCommandBuffer.h"
-#include "GrVkInterface.h"
-#include "GrVkResource.h"
-#include "GrVkResourceProvider.h"
+#include "src/gpu/vk/GrVkGpuCommandBuffer.h"
+#include "src/gpu/vk/GrVkInterface.h"
+#include "src/gpu/vk/GrVkResource.h"
+#include "src/gpu/vk/GrVkResourceProvider.h"
 
 class GrVkPrimaryCommandBuffer;
 class GrVkSecondaryCommandBuffer;
@@ -21,9 +21,7 @@ class GrVkCommandPool : public GrVkResource {
 public:
     static GrVkCommandPool* Create(const GrVkGpu* gpu);
 
-    VkCommandPool vkCommandPool() const {
-        return fCommandPool;
-    }
+    VkCommandPool vkCommandPool() const { return fCommandPool; }
 
     void reset(GrVkGpu* gpu);
 

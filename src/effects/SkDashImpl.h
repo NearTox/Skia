@@ -8,7 +8,7 @@
 #ifndef SkDashImpl_DEFINED
 #define SkDashImpl_DEFINED
 
-#include "SkPathEffect.h"
+#include "include/core/SkPathEffect.h"
 
 class SkDashImpl : public SkPathEffect {
 public:
@@ -22,19 +22,19 @@ protected:
     bool onAsPoints(PointData* results, const SkPath& src, const SkStrokeRec&, const SkMatrix&,
                     const SkRect*) const override;
 
-    DashType onAsADash(DashInfo* info) const override;
+    DashType onAsADash(DashInfo* info) const noexcept override;
 
 private:
     SK_FLATTENABLE_HOOKS(SkDashImpl)
 
-    SkScalar*   fIntervals;
-    int32_t     fCount;
-    SkScalar    fPhase;
+    SkScalar* fIntervals;
+    int32_t fCount;
+    SkScalar fPhase;
     // computed from phase
 
-    SkScalar    fInitialDashLength;
-    int32_t     fInitialDashIndex;
-    SkScalar    fIntervalLength;
+    SkScalar fInitialDashLength;
+    int32_t fInitialDashIndex;
+    SkScalar fIntervalLength;
 
     typedef SkPathEffect INHERITED;
 };

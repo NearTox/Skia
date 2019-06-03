@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "SkClipStackDevice.h"
-#include "SkDraw.h"
-#include "SkRasterClip.h"
+#include "src/core/SkClipStackDevice.h"
+#include "src/core/SkDraw.h"
+#include "src/core/SkRasterClip.h"
 
 SkIRect SkClipStackDevice::devClipBounds() const {
     SkIRect r = fClipStack.bounds(this->imageInfo().bounds()).roundOut();
@@ -19,13 +19,9 @@ SkIRect SkClipStackDevice::devClipBounds() const {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void SkClipStackDevice::onSave() {
-    fClipStack.save();
-}
+void SkClipStackDevice::onSave() { fClipStack.save(); }
 
-void SkClipStackDevice::onRestore() {
-    fClipStack.restore();
-}
+void SkClipStackDevice::onRestore() { fClipStack.restore(); }
 
 void SkClipStackDevice::onClipRect(const SkRect& rect, SkClipOp op, bool aa) {
     fClipStack.clipRect(rect, this->ctm(), op, aa);
@@ -63,7 +59,7 @@ void SkClipStackDevice::onSetDeviceClipRestriction(SkIRect* clipRestriction) {
 }
 
 bool SkClipStackDevice::onClipIsAA() const {
-    SkClipStack::B2TIter        iter(fClipStack);
+    SkClipStack::B2TIter iter(fClipStack);
     const SkClipStack::Element* element;
 
     while ((element = iter.next()) != nullptr) {

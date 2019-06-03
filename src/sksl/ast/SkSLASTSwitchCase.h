@@ -8,7 +8,7 @@
 #ifndef SKSL_ASTSWITCHCASE
 #define SKSL_ASTSWITCHCASE
 
-#include "SkSLASTStatement.h"
+#include "src/sksl/ast/SkSLASTStatement.h"
 
 namespace SkSL {
 
@@ -19,9 +19,9 @@ struct ASTSwitchCase : public ASTStatement {
     // a null value means "default:"
     ASTSwitchCase(int offset, std::unique_ptr<ASTExpression> value,
                   std::vector<std::unique_ptr<ASTStatement>> statements)
-    : INHERITED(offset, kSwitch_Kind)
-    , fValue(std::move(value))
-    , fStatements(std::move(statements)) {}
+            : INHERITED(offset, kSwitch_Kind)
+            , fValue(std::move(value))
+            , fStatements(std::move(statements)) {}
 
     String description() const override {
         String result;
@@ -43,6 +43,6 @@ struct ASTSwitchCase : public ASTStatement {
     typedef ASTStatement INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

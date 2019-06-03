@@ -5,32 +5,32 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkBlendMode.h"
-#include "SkCanvas.h"
-#include "SkClipOpPriv.h"
-#include "SkColor.h"
-#include "SkImageInfo.h"
-#include "SkMatrix.h"
-#include "SkPaint.h"
-#include "SkPath.h"
-#include "SkPoint.h"
-#include "SkPointPriv.h"
-#include "SkRect.h"
-#include "SkRefCnt.h"
-#include "SkScalar.h"
-#include "SkShader.h"
-#include "SkString.h"
-#include "SkSurface.h"
-#include "SkTypes.h"
-#include "sk_tool_utils.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkTypes.h"
+#include "samplecode/Sample.h"
+#include "src/core/SkClipOpPriv.h"
+#include "src/core/SkPointPriv.h"
+#include "tools/ToolUtils.h"
 
 class SkEvent;
 
-#define FAT_PIXEL_COLOR     SK_ColorBLACK
-#define PIXEL_CENTER_SIZE   3
-#define WIRE_FRAME_COLOR    0xFFFF0000  /*0xFF00FFFF*/
-#define WIRE_FRAME_SIZE     1.5f
+#define FAT_PIXEL_COLOR SK_ColorBLACK
+#define PIXEL_CENTER_SIZE 3
+#define WIRE_FRAME_COLOR 0xFFFF0000 /*0xFF00FFFF*/
+#define WIRE_FRAME_SIZE 1.5f
 
 static SkScalar apply_grid(SkScalar x) {
     const SkScalar grid = 2;
@@ -43,9 +43,7 @@ static void apply_grid(SkPoint pts[], int count) {
     }
 }
 
-static void erase(SkSurface* surface) {
-    surface->getCanvas()->clear(SK_ColorTRANSPARENT);
-}
+static void erase(SkSurface* surface) { surface->getCanvas()->clear(SK_ColorTRANSPARENT); }
 
 class FatBits {
 public:
@@ -59,7 +57,7 @@ public:
         fUseTriangle = false;
         fStrokeCap = SkPaint::kButt_Cap;
 
-        fClipRect.set(2, 2, 11, 8 );
+        fClipRect.set(2, 2, 11, 8);
     }
 
     int getZoom() const { return fZoom; }
@@ -105,8 +103,8 @@ public:
         fBounds.set(0, 0, SkIntToScalar(width * zoom), SkIntToScalar(height * zoom));
         fMatrix.setScale(SkIntToScalar(zoom), SkIntToScalar(zoom));
         fInverse.setScale(SK_Scalar1 / zoom, SK_Scalar1 / zoom);
-        fShader0 = sk_tool_utils::create_checkerboard_shader(0xFFDDDDDD, 0xFFFFFFFF, zoom);
-        fShader1 = SkShader::MakeColorShader(SK_ColorWHITE);
+        fShader0 = ToolUtils::create_checkerboard_shader(0xFFDDDDDD, 0xFFFFFFFF, zoom);
+        fShader1 = SkShaders::Color(SK_ColorWHITE);
         fShader = fShader0;
 
         SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
@@ -127,13 +125,13 @@ private:
     bool fAA, fGrid, fShowSkeleton, fUseClip, fRectAsOval, fUseTriangle;
     Style fStyle;
     int fW, fH, fZoom;
-    SkMatrix            fMatrix, fInverse;
-    SkRect              fBounds, fClipRect;
-    sk_sp<SkShader>     fShader0;
-    sk_sp<SkShader>     fShader1;
-    sk_sp<SkShader>     fShader;
-    sk_sp<SkSurface>    fMinSurface;
-    sk_sp<SkSurface>    fMaxSurface;
+    SkMatrix fMatrix, fInverse;
+    SkRect fBounds, fClipRect;
+    sk_sp<SkShader> fShader0;
+    sk_sp<SkShader> fShader1;
+    sk_sp<SkShader> fShader;
+    sk_sp<SkSurface> fMinSurface;
+    sk_sp<SkSurface> fMaxSurface;
 
     void setupPaint(SkPaint* paint) {
         bool aa = this->getAA();
@@ -222,12 +220,8 @@ void FatBits::drawFG(SkCanvas* canvas) {
         SkPaint p;
         p.setStyle(SkPaint::kStroke_Style);
         p.setColor(SK_ColorLTGRAY);
-        SkRect r = {
-            fClipRect.fLeft * fZoom,
-            fClipRect.fTop * fZoom,
-            fClipRect.fRight * fZoom,
-            fClipRect.fBottom * fZoom
-        };
+        SkRect r = {fClipRect.fLeft * fZoom, fClipRect.fTop * fZoom, fClipRect.fRight * fZoom,
+                    fClipRect.fBottom * fZoom};
         canvas->drawRect(r, p);
     }
 }
@@ -270,7 +264,7 @@ void FatBits::drawLine(SkCanvas* canvas, SkPoint pts[]) {
     if (fUseClip) {
         fMinSurface->getCanvas()->save();
         SkRect r = fClipRect;
-        r.inset(SK_Scalar1/3, SK_Scalar1/3);
+        r.inset(SK_Scalar1 / 3, SK_Scalar1 / 3);
         fMinSurface->getCanvas()->clipRect(r, kIntersect_SkClipOp, true);
     }
     fMinSurface->getCanvas()->drawLine(pts[0], pts[1], paint);
@@ -363,22 +357,22 @@ void FatBits::drawTriangle(SkCanvas* canvas, SkPoint pts[3]) {
 
 class IndexClick : public Sample::Click {
     int fIndex;
+
 public:
     IndexClick(Sample* v, int index) : Sample::Click(v), fIndex(index) {}
 
-    static int GetIndex(Sample::Click* click) {
-        return ((IndexClick*)click)->fIndex;
-    }
+    static int GetIndex(Sample::Click* click) { return ((IndexClick*)click)->fIndex; }
 };
 
 class DrawLineView : public Sample {
     FatBits fFB;
     SkPoint fPts[3];
-    bool    fIsRect;
-    int     fZoom = 64;
+    bool fIsRect;
+    int fZoom = 64;
+
 public:
     DrawLineView() {
-        fFB.setWHZ(24*2, 16*2, fZoom);
+        fFB.setWHZ(24 * 2, 16 * 2, fZoom);
         fPts[0].set(1, 1);
         fPts[1].set(5, 4);
         fPts[2].set(2, 6);
@@ -386,9 +380,7 @@ public:
         fIsRect = false;
     }
 
-    void setStyle(FatBits::Style s) {
-        fFB.setStyle(s);
-    }
+    void setStyle(FatBits::Style s) { fFB.setStyle(s); }
 
 protected:
     bool onQuery(Sample::Event* evt) override {
@@ -420,7 +412,9 @@ protected:
                     return true;
                 case 'k': {
                     const SkPaint::Cap caps[] = {
-                        SkPaint::kButt_Cap, SkPaint::kRound_Cap, SkPaint::kSquare_Cap,
+                            SkPaint::kButt_Cap,
+                            SkPaint::kRound_Cap,
+                            SkPaint::kSquare_Cap,
                     };
                     fFB.fStrokeCap = caps[(fFB.fStrokeCap + 1) % 3];
                     return true;
@@ -452,8 +446,7 @@ protected:
         fFB.drawBG(canvas);
         if (fFB.getTriangle()) {
             fFB.drawTriangle(canvas, fPts);
-        }
-        else if (fIsRect) {
+        } else if (fIsRect) {
             fFB.drawRect(canvas, fPts);
         } else {
             fFB.drawLine(canvas, fPts);
@@ -474,7 +467,7 @@ protected:
     }
 
     Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, unsigned modi) override {
-        SkPoint pt = { x, y };
+        SkPoint pt = {x, y};
         int index = -1;
         int count = fFB.getTriangle() ? 3 : 2;
         SkScalar tol = 12;
@@ -503,10 +496,9 @@ protected:
     }
 
 private:
-
     typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new DrawLineView(); )
+DEF_SAMPLE(return new DrawLineView();)

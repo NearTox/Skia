@@ -5,14 +5,31 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
+#include "gm/gm.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/gpu/GrContext.h"
+#include "include/private/GrTypesPriv.h"
+#include "src/gpu/GrClip.h"
+#include "src/gpu/GrPaint.h"
+#include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/SkGr.h"
 
-#include "GrClip.h"
-#include "GrContext.h"
-#include "GrRenderTargetContext.h"
-#include "GrSurfaceContextPriv.h"
-#include "SkGr.h"
-#include "SkGradientShader.h"
+#include <utility>
 
 static constexpr SkScalar kTileWidth = 40;
 static constexpr SkScalar kTileHeight = 30;
@@ -26,14 +43,14 @@ static void draw_text(SkCanvas* canvas, const char* text) {
 
 static void draw_gradient_tiles(SkCanvas* canvas, bool alignGradients) {
     // Always draw the same gradient
-    static constexpr SkPoint pts[] = { {0.f, 0.f}, {0.25f * kTileWidth, 0.25f * kTileHeight} };
-    static constexpr SkColor colors[] = { SK_ColorBLUE, SK_ColorWHITE };
+    static constexpr SkPoint pts[] = {{0.f, 0.f}, {0.25f * kTileWidth, 0.25f * kTileHeight}};
+    static constexpr SkColor colors[] = {SK_ColorBLUE, SK_ColorWHITE};
 
     GrRenderTargetContext* rtc = canvas->internal_private_accessTopLayerRenderTargetContext();
 
     GrContext* context = canvas->getGrContext();
 
-    auto gradient = SkGradientShader::MakeLinear(pts, colors, nullptr, 2, SkShader::kMirror_TileMode);
+    auto gradient = SkGradientShader::MakeLinear(pts, colors, nullptr, 2, SkTileMode::kMirror);
     SkPaint paint;
     paint.setShader(gradient);
 
@@ -73,8 +90,9 @@ static void draw_gradient_tiles(SkCanvas* canvas, bool alignGradients) {
                 SkColor color = alignGradients ? SK_ColorBLUE
                                                : (i * kColCount + j) % 2 == 0 ? SK_ColorBLUE
                                                                               : SK_ColorWHITE;
-                canvas->experimental_DrawEdgeAARectV1(
-                        tile, static_cast<SkCanvas::QuadAAFlags>(aa), color, SkBlendMode::kSrcOver);
+                canvas->experimental_DrawEdgeAAQuad(tile, nullptr,
+                                                    static_cast<SkCanvas::QuadAAFlags>(aa), color,
+                                                    SkBlendMode::kSrcOver);
             }
 
             if (!alignGradients) {
@@ -88,7 +106,8 @@ static void draw_gradient_tiles(SkCanvas* canvas, bool alignGradients) {
 static void draw_color_tiles(SkCanvas* canvas, bool multicolor) {
     for (int i = 0; i < kRowCount; ++i) {
         for (int j = 0; j < kColCount; ++j) {
-            SkRect tile = SkRect::MakeXYWH(j * kTileWidth, i * kTileHeight, kTileWidth, kTileHeight);
+            SkRect tile =
+                    SkRect::MakeXYWH(j * kTileWidth, i * kTileHeight, kTileWidth, kTileHeight);
 
             SkColor4f color;
             if (multicolor) {
@@ -111,9 +130,9 @@ static void draw_color_tiles(SkCanvas* canvas, bool multicolor) {
                 aa |= SkCanvas::kRight_QuadAAFlag;
             }
 
-            canvas->experimental_DrawEdgeAARectV1(
-                    tile, static_cast<SkCanvas::QuadAAFlags>(aa), color.toSkColor(),
-                    SkBlendMode::kSrcOver);
+            canvas->experimental_DrawEdgeAAQuad(tile, nullptr,
+                                                static_cast<SkCanvas::QuadAAFlags>(aa),
+                                                color.toSkColor(), SkBlendMode::kSrcOver);
         }
     }
 }
@@ -145,12 +164,12 @@ static void draw_tile_boundaries(SkCanvas* canvas, const SkMatrix& local) {
 // Tile renderers (column variation)
 typedef void (*TileRenderer)(SkCanvas*);
 static TileRenderer kTileSets[] = {
-    [](SkCanvas* canvas) { draw_gradient_tiles(canvas, /* aligned */ false); },
-    [](SkCanvas* canvas) { draw_gradient_tiles(canvas, /* aligned */ true); },
-    [](SkCanvas* canvas) { draw_color_tiles(canvas, /* multicolor */ false); },
-    [](SkCanvas* canvas) { draw_color_tiles(canvas, /* multicolor */true); },
+        [](SkCanvas* canvas) { draw_gradient_tiles(canvas, /* aligned */ false); },
+        [](SkCanvas* canvas) { draw_gradient_tiles(canvas, /* aligned */ true); },
+        [](SkCanvas* canvas) { draw_color_tiles(canvas, /* multicolor */ false); },
+        [](SkCanvas* canvas) { draw_color_tiles(canvas, /* multicolor */ true); },
 };
-static const char* kTileSetNames[] = { "Local", "Aligned", "Green", "Multicolor" };
+static const char* kTileSetNames[] = {"Local", "Aligned", "Green", "Multicolor"};
 static_assert(SK_ARRAY_COUNT(kTileSets) == SK_ARRAY_COUNT(kTileSetNames), "Count mismatch");
 
 namespace skiagm {
@@ -182,7 +201,7 @@ private:
                           {25.f, kRowCount * kTileHeight - 15.f}};
         SkAssertResult(rowMatrices[4].setPolyToPoly(src, dst, 4));
         rowMatrices[4].preTranslate(0.f, +10.f);
-        static const char* matrixNames[] = { "Identity", "T+S", "Rotate", "Skew", "Perspective" };
+        static const char* matrixNames[] = {"Identity", "T+S", "Rotate", "Skew", "Perspective"};
         static_assert(SK_ARRAY_COUNT(matrixNames) == SK_ARRAY_COUNT(rowMatrices), "Count mismatch");
 
         // Print a column header
@@ -223,4 +242,4 @@ private:
 
 DEF_GM(return new DrawQuadSetGM();)
 
-} // namespace skiagm
+}  // namespace skiagm

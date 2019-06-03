@@ -8,8 +8,8 @@
 #ifndef GrTextureProxy_DEFINED
 #define GrTextureProxy_DEFINED
 
-#include "GrSamplerState.h"
-#include "GrSurfaceProxy.h"
+#include "include/gpu/GrSamplerState.h"
+#include "include/private/GrSurfaceProxy.h"
 
 class GrCaps;
 class GrDeferredProxyUploader;
@@ -21,8 +21,8 @@ class GrTextureProxyPriv;
 // This class delays the acquisition of textures until they are actually required
 class GrTextureProxy : virtual public GrSurfaceProxy {
 public:
-    GrTextureProxy* asTextureProxy() override { return this; }
-    const GrTextureProxy* asTextureProxy() const override { return this; }
+    GrTextureProxy* asTextureProxy() noexcept override { return this; }
+    const GrTextureProxy* asTextureProxy() const noexcept override { return this; }
 
     // Actually instantiate the backing texture, if necessary
     bool instantiate(GrResourceProvider*) override;
@@ -38,12 +38,12 @@ public:
 
     // Returns the GrMipMapped value of the proxy from creation time regardless of whether it has
     // been instantiated or not.
-    GrMipMapped proxyMipMapped() const { return fMipMapped; }
+    GrMipMapped proxyMipMapped() const noexcept { return fMipMapped; }
 
-    GrTextureType textureType() const { return this->backendFormat().textureType(); }
+    GrTextureType textureType() const noexcept { return this->backendFormat().textureType(); }
 
     /** If true then the texture does not support MIP maps and only supports clamp wrap mode. */
-    bool hasRestrictedSampling() const {
+    bool hasRestrictedSampling() const noexcept {
         return GrTextureTypeHasRestrictedSampling(this->textureType());
     }
 
@@ -55,9 +55,9 @@ public:
     /**
      * Return the texture proxy's unique key. It will be invalid if the proxy doesn't have one.
      */
-    const GrUniqueKey& getUniqueKey() const {
+    const GrUniqueKey& getUniqueKey() const noexcept {
 #ifdef SK_DEBUG
-        if (fTarget && fUniqueKey.isValid()) {
+        if (fTarget && fUniqueKey.isValid() && fSyncTargetKey) {
             SkASSERT(fTarget->getUniqueKey().isValid());
             // It is possible for a non-keyed proxy to have a uniquely keyed resource assigned to
             // it. This just means that a future user of the resource will be filling it with unique
@@ -83,9 +83,10 @@ public:
 
 protected:
     // DDL TODO: rm the GrSurfaceProxy friending
-    friend class GrSurfaceProxy; // for ctors
-    friend class GrProxyProvider; // for ctors
+    friend class GrSurfaceProxy;   // for ctors
+    friend class GrProxyProvider;  // for ctors
     friend class GrTextureProxyPriv;
+    friend class GrSurfaceProxyPriv;  // ability to change key sync state after lazy instantiation.
 
     // Deferred version - when constructed with data the origin is always kTopLeft.
     GrTextureProxy(const GrBackendFormat&, const GrSurfaceDesc& srcDesc, GrMipMapped, SkBackingFit,
@@ -116,6 +117,8 @@ protected:
 
     sk_sp<GrSurface> createSurface(GrResourceProvider*) const override;
 
+    void setTargetKeySync(bool sync) noexcept { fSyncTargetKey = sync; }
+
 private:
     // WARNING: Be careful when adding or removing fields here. ASAN is likely to trigger warnings
     // when instantiating GrTextureRenderTargetProxy. The std::function in GrSurfaceProxy makes
@@ -125,10 +128,11 @@ private:
     // that particular class don't require it. Changing the size of this object can move the start
     // address of other types, leading to this problem.
 
-    GrMipMapped      fMipMapped;
+    GrMipMapped fMipMapped;
+    bool fSyncTargetKey = true;  // Should target's unique key be sync'ed with ours.
 
-    GrUniqueKey      fUniqueKey;
-    GrProxyProvider* fProxyProvider; // only set when fUniqueKey is valid
+    GrUniqueKey fUniqueKey;
+    GrProxyProvider* fProxyProvider;  // only set when fUniqueKey is valid
 
     // Only used for proxies whose contents are being prepared on a worker thread. This object
     // stores the texture data, allowing the proxy to remain uninstantiated until flush. At that
@@ -141,7 +145,7 @@ private:
     void setUniqueKey(GrProxyProvider*, const GrUniqueKey&);
     void clearUniqueKey();
 
-    SkDEBUGCODE(void onValidateSurface(const GrSurface*) override;)
+    SkDEBUGCODE(void onValidateSurface(const GrSurface*) override);
 
     // For wrapped proxies the GrTexture pointer is stored in GrIORefProxy.
     // For deferred proxies that pointer will be filled in when we need to instantiate

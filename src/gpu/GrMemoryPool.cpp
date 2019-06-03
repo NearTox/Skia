@@ -5,17 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "GrMemoryPool.h"
-#include "SkMalloc.h"
-#include "ops/GrOp.h"
+#include "src/gpu/GrMemoryPool.h"
+#include "include/private/SkMalloc.h"
+#include "src/gpu/ops/GrOp.h"
 #ifdef SK_DEBUG
-    #include <atomic>
+#include <atomic>
 #endif
 
 #ifdef SK_DEBUG
-    #define VALIDATE this->validate()
+#define VALIDATE this->validate()
 #else
-    #define VALIDATE
+#define VALIDATE
 #endif
 
 void GrOpMemoryPool::release(std::unique_ptr<GrOp> op) {
@@ -49,7 +49,7 @@ GrMemoryPool::~GrMemoryPool() {
 #ifdef SK_DEBUG
     int i = 0;
     int n = fAllocatedIDs.count();
-    fAllocatedIDs.foreach([&i, n] (int32_t id) {
+    fAllocatedIDs.foreach ([&i, n](int32_t id) {
         if (++i == 1) {
             SkDebugf("Leaked IDs (in no particular order): %d", id);
         } else if (i < 11) {
@@ -89,7 +89,7 @@ void* GrMemoryPool::allocate(size_t size) {
     // so that we can decrement the live count on delete in constant time.
     AllocHeader* allocData = reinterpret_cast<AllocHeader*>(ptr);
     SkDEBUGCODE(allocData->fSentinal = kAssignedMarker);
-    SkDEBUGCODE(allocData->fID = []{
+    SkDEBUGCODE(allocData->fID = [] {
         static std::atomic<int32_t> nextID{1};
         return nextID++;
     }());
@@ -150,22 +150,21 @@ void GrMemoryPool::release(void* p) {
 
 GrMemoryPool::BlockHeader* GrMemoryPool::CreateBlock(size_t blockSize) {
     blockSize = SkTMax<size_t>(blockSize, kHeaderSize);
-    BlockHeader* block =
-        reinterpret_cast<BlockHeader*>(sk_malloc_throw(blockSize));
+    BlockHeader* block = reinterpret_cast<BlockHeader*>(sk_malloc_throw(blockSize));
     // we assume malloc gives us aligned memory
     SkASSERT(!(reinterpret_cast<intptr_t>(block) % kAlignment));
     SkDEBUGCODE(block->fBlockSentinal = kAssignedMarker);
     block->fLiveCount = 0;
     block->fFreeSize = blockSize - kHeaderSize;
     block->fCurrPtr = reinterpret_cast<intptr_t>(block) + kHeaderSize;
-    block->fPrevPtr = 0; // gcc warns on assigning nullptr to an intptr_t.
+    block->fPrevPtr = 0;  // gcc warns on assigning nullptr to an intptr_t.
     block->fSize = blockSize;
     return block;
 }
 
 void GrMemoryPool::DeleteBlock(BlockHeader* block) {
     SkASSERT(kAssignedMarker == block->fBlockSentinal);
-    SkDEBUGCODE(block->fBlockSentinal = kFreedMarker); // FWIW
+    SkDEBUGCODE(block->fBlockSentinal = kFreedMarker);  // FWIW
     sk_free(block);
 }
 
@@ -198,7 +197,7 @@ void GrMemoryPool::validate() {
             SkASSERT(totalSize == block->fSize);
         }
         if (!block->fLiveCount) {
-            SkASSERT(ptrOffset ==  kHeaderSize);
+            SkASSERT(ptrOffset == kHeaderSize);
             SkASSERT(userStart == block->fCurrPtr);
         } else {
             AllocHeader* allocData = reinterpret_cast<AllocHeader*>(userStart);

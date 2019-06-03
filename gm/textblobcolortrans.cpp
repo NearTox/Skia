@@ -5,15 +5,23 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTextBlob.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "tools/ToolUtils.h"
 
-#include "Resources.h"
-#include "SkCanvas.h"
-#include "SkGradientShader.h"
-#include "SkStream.h"
-#include "SkTextBlob.h"
-#include "SkTypeface.h"
+#include <string.h>
 
 namespace skiagm {
 class TextBlobColorTrans : public GM {
@@ -21,7 +29,7 @@ public:
     // This gm tests that textblobs can be translated and have their colors regenerated
     // correctly.  With smaller atlas sizes, it can also trigger regeneration of texture coords on
     // the GPU backend
-    TextBlobColorTrans() { }
+    TextBlobColorTrans() {}
 
 protected:
     void onOnceBeforeDraw() override {
@@ -29,36 +37,31 @@ protected:
 
         // make textblob
         // Large text is used to trigger atlas eviction
-        SkFont font(sk_tool_utils::create_portable_typeface(), 256);
+        SkFont font(ToolUtils::create_portable_typeface(), 256);
         font.setEdging(SkFont::Edging::kAlias);
         const char* text = "AB";
 
         SkRect bounds;
-        font.measureText(text, strlen(text), kUTF8_SkTextEncoding, &bounds);
+        font.measureText(text, strlen(text), SkTextEncoding::kUTF8, &bounds);
 
         SkScalar yOffset = bounds.height();
-        sk_tool_utils::add_to_text_blob(&builder, text, font, 0, yOffset - 30);
+        ToolUtils::add_to_text_blob(&builder, text, font, 0, yOffset - 30);
 
         // A8
         font.setSize(28);
         text = "The quick brown fox jumps over the lazy dog.";
-        font.measureText(text, strlen(text), kUTF8_SkTextEncoding, &bounds);
-        sk_tool_utils::add_to_text_blob(&builder, text, font, 0, yOffset - 8);
+        font.measureText(text, strlen(text), SkTextEncoding::kUTF8, &bounds);
+        ToolUtils::add_to_text_blob(&builder, text, font, 0, yOffset - 8);
 
         // build
         fBlob = builder.make();
     }
 
-    SkString onShortName() override {
-        return SkString("textblobcolortrans");
-    }
+    SkString onShortName() override { return SkString("textblobcolortrans"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(kWidth, kHeight);
-    }
+    SkISize onISize() override { return SkISize::Make(kWidth, kHeight); }
 
     void onDraw(SkCanvas* canvas) override {
-
         canvas->drawColor(SK_ColorGRAY);
 
         SkPaint paint;
@@ -95,4 +98,4 @@ private:
 //////////////////////////////////////////////////////////////////////////////
 
 DEF_GM(return new TextBlobColorTrans;)
-}
+}  // namespace skiagm

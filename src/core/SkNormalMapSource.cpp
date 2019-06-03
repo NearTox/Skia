@@ -5,20 +5,20 @@
  * found in the LICENSE file.
  */
 
-#include "SkNormalMapSource.h"
+#include "src/core/SkNormalMapSource.h"
 
-#include "SkArenaAlloc.h"
-#include "SkLightingShader.h"
-#include "SkMatrix.h"
-#include "SkNormalSource.h"
-#include "SkReadBuffer.h"
-#include "SkWriteBuffer.h"
+#include "include/core/SkMatrix.h"
+#include "include/private/SkArenaAlloc.h"
+#include "src/core/SkNormalSource.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
+#include "src/shaders/SkLightingShader.h"
 
 #if SK_SUPPORT_GPU
-#include "GrCoordTransform.h"
-#include "glsl/GrGLSLFragmentProcessor.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "SkGr.h"
+#include "src/gpu/GrCoordTransform.h"
+#include "src/gpu/SkGr.h"
+#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 
 class NormalMapFP : public GrFragmentProcessor {
 public:
@@ -47,7 +47,7 @@ private:
             // add uniform
             const char* xformUniName = nullptr;
             fXformUni = uniformHandler->addUniform(kFragment_GrShaderFlag, kFloat2x2_GrSLType,
-                                                   kDefault_GrSLPrecision, "Xform", &xformUniName);
+                                                   "Xform", &xformUniName);
 
             SkString dstNormalColorName("dstNormalColor");
             this->emitChild(0, &dstNormalColorName, args);
@@ -55,26 +55,27 @@ private:
                                      dstNormalColorName.c_str());
 
             // If there's no x & y components, return (0, 0, +/- 1) instead to avoid division by 0
-            fragBuilder->codeAppend( "if (abs(normal.z) > 0.999) {");
+            fragBuilder->codeAppend("if (abs(normal.z) > 0.999) {");
             fragBuilder->codeAppendf("    %s = normalize(half4(0.0, 0.0, half(normal.z), 0.0));",
-                    args.fOutputColor);
+                                     args.fOutputColor);
             // Else, Normalizing the transformed X and Y, while keeping constant both Z and the
             // vector's angle in the XY plane. This maintains the "slope" for the surface while
             // appropriately rotating the normal regardless of any anisotropic scaling that occurs.
             // Here, we call 'scaling factor' the number that must divide the transformed X and Y so
             // that the normal's length remains equal to 1.
-            fragBuilder->codeAppend( "} else {");
-            fragBuilder->codeAppendf("    float2 transformed = %s * normal.xy;",
-                    xformUniName);
-            fragBuilder->codeAppend( "    float scalingFactorSquared = "
-                                                 "( (transformed.x * transformed.x) "
-                                                   "+ (transformed.y * transformed.y) )"
-                                                 "/(1.0 - (normal.z * normal.z));");
-            fragBuilder->codeAppendf("    %s = half4(half2(transformed * "
-                                                          "inversesqrt(scalingFactorSquared)),"
-                                                    "half(normal.z), 0.0);",
+            fragBuilder->codeAppend("} else {");
+            fragBuilder->codeAppendf("    float2 transformed = %s * normal.xy;", xformUniName);
+            fragBuilder->codeAppend(
+                    "    float scalingFactorSquared = "
+                    "( (transformed.x * transformed.x) "
+                    "+ (transformed.y * transformed.y) )"
+                    "/(1.0 - (normal.z * normal.z));");
+            fragBuilder->codeAppendf(
+                    "    %s = half4(half2(transformed * "
+                    "inversesqrt(scalingFactorSquared)),"
+                    "half(normal.z), 0.0);",
                     args.fOutputColor);
-            fragBuilder->codeAppend( "}");
+            fragBuilder->codeAppend("}");
         }
 
         static void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
@@ -104,8 +105,7 @@ private:
         GLSLNormalMapFP::GenKey(*this, caps, b);
     }
     NormalMapFP(std::unique_ptr<GrFragmentProcessor> mapFP, const SkMatrix& invCTM)
-            : INHERITED(kMappedNormalsFP_ClassID, kNone_OptimizationFlags)
-            , fInvCTM(invCTM) {
+            : INHERITED(kMappedNormalsFP_ClassID, kNone_OptimizationFlags), fInvCTM(invCTM) {
         this->registerChildProcessor(std::move(mapFP));
     }
 
@@ -122,7 +122,7 @@ private:
 };
 
 std::unique_ptr<GrFragmentProcessor> SkNormalMapSourceImpl::asFragmentProcessor(
-                                                                       const GrFPArgs& args) const {
+        const GrFPArgs& args) const {
     std::unique_ptr<GrFragmentProcessor> mapFP = as_SB(fMapShader)->asFragmentProcessor(args);
     if (!mapFP) {
         return nullptr;
@@ -131,16 +131,15 @@ std::unique_ptr<GrFragmentProcessor> SkNormalMapSourceImpl::asFragmentProcessor(
     return NormalMapFP::Make(std::move(mapFP), fInvCTM);
 }
 
-#endif // SK_SUPPORT_GPU
+#endif  // SK_SUPPORT_GPU
 
 ////////////////////////////////////////////////////////////////////////////
 
 SkNormalMapSourceImpl::Provider::Provider(const SkNormalMapSourceImpl& source,
                                           SkShaderBase::Context* mapContext)
-    : fSource(source)
-    , fMapContext(mapContext) {}
+        : fSource(source), fMapContext(mapContext) {}
 
-SkNormalSource::Provider* SkNormalMapSourceImpl::asProvider(const SkShaderBase::ContextRec &rec,
+SkNormalSource::Provider* SkNormalMapSourceImpl::asProvider(const SkShaderBase::ContextRec& rec,
                                                             SkArenaAlloc* alloc) const {
     SkMatrix normTotalInv;
     if (!this->computeNormTotalInverse(rec, &normTotalInv)) {
@@ -152,7 +151,7 @@ SkNormalSource::Provider* SkNormalMapSourceImpl::asProvider(const SkShaderBase::
     SkColorSpace* dstColorSpace = nullptr;
 
     // Overriding paint's alpha because we need the normal map's RGB channels to be unpremul'd
-    SkPaint overridePaint {*(rec.fPaint)};
+    SkPaint overridePaint{*(rec.fPaint)};
     overridePaint.setAlpha(0xFF);
     SkShaderBase::ContextRec overrideRec(overridePaint, *(rec.fMatrix), rec.fLocalMatrix,
                                          rec.fDstColorType, dstColorSpace);
@@ -167,7 +166,7 @@ SkNormalSource::Provider* SkNormalMapSourceImpl::asProvider(const SkShaderBase::
 
 bool SkNormalMapSourceImpl::computeNormTotalInverse(const SkShaderBase::ContextRec& rec,
                                                     SkMatrix* normTotalInverse) const {
-    SkMatrix total = SkMatrix::Concat(*rec.fMatrix, fMapShader->getLocalMatrix());
+    SkMatrix total = SkMatrix::Concat(*rec.fMatrix, as_SB(fMapShader)->getLocalMatrix());
     if (rec.fLocalMatrix) {
         total.preConcat(*rec.fLocalMatrix);
     }
@@ -194,7 +193,6 @@ void SkNormalMapSourceImpl::Provider::fillScanLine(int x, int y, SkPoint3 output
 
             tempNorm.normalize();
 
-
             if (!SkScalarNearlyEqual(SkScalarAbs(tempNorm.fZ), 1.0f)) {
                 SkVector transformed = fSource.fInvCTM.mapVector(tempNorm.fX, tempNorm.fY);
 
@@ -204,8 +202,8 @@ void SkNormalMapSourceImpl::Provider::fillScanLine(int x, int y, SkPoint3 output
                 // Here, we call scaling factor the number that must divide the transformed X and Y
                 // so that the normal's length remains equal to 1.
                 SkScalar scalingFactorSquared =
-                        (SkScalarSquare(transformed.fX) + SkScalarSquare(transformed.fY))
-                        / (1.0f - SkScalarSquare(tempNorm.fZ));
+                        (SkScalarSquare(transformed.fX) + SkScalarSquare(transformed.fY)) /
+                        (1.0f - SkScalarSquare(tempNorm.fZ));
                 SkScalar invScalingFactor = SkScalarInvert(SkScalarSqrt(scalingFactorSquared));
 
                 output[i].fX = transformed.fX * invScalingFactor;
@@ -228,7 +226,6 @@ void SkNormalMapSourceImpl::Provider::fillScanLine(int x, int y, SkPoint3 output
 ////////////////////////////////////////////////////////////////////////////////
 
 sk_sp<SkFlattenable> SkNormalMapSourceImpl::CreateProc(SkReadBuffer& buf) {
-
     sk_sp<SkShader> mapShader = buf.readFlattenable<SkShaderBase>();
 
     SkMatrix invCTM;

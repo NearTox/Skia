@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "SkRTree.h"
+#include "src/core/SkRTree.h"
 
 SkRTree::SkRTree(SkScalar aspectRatio)
-    : fCount(0), fAspectRatio(isfinite(aspectRatio) ? aspectRatio : 1) {}
+        : fCount(0), fAspectRatio(isfinite(aspectRatio) ? aspectRatio : 1) {}
 
 SkRect SkRTree::getRootBound() const {
     if (fCount) {
@@ -43,7 +43,7 @@ void SkRTree::insert(const SkRect boundsArray[], int N) {
             n->fNumChildren = 1;
             n->fChildren[0] = branches[0];
             fRoot.fSubtree = n;
-            fRoot.fBounds  = branches[0].fBounds;
+            fRoot.fBounds = branches[0].fBounds;
         } else {
             fNodes.setReserve(CountNodes(fCount, fAspectRatio));
             fRoot = this->bulkLoad(&branches);
@@ -66,7 +66,7 @@ int SkRTree::CountNodes(int branches, SkScalar aspectRatio) {
         return 1;
     }
     int numBranches = branches / kMaxChildren;
-    int remainder   = branches % kMaxChildren;
+    int remainder = branches % kMaxChildren;
     if (remainder > 0) {
         numBranches++;
         if (remainder >= kMinChildren) {
@@ -76,7 +76,7 @@ int SkRTree::CountNodes(int branches, SkScalar aspectRatio) {
         }
     }
     int numStrips = SkScalarCeilToInt(SkScalarSqrt(SkIntToScalar(numBranches) / aspectRatio));
-    int numTiles  = SkScalarCeilToInt(SkIntToScalar(numBranches) / SkIntToScalar(numStrips));
+    int numTiles = SkScalarCeilToInt(SkIntToScalar(numBranches) / SkIntToScalar(numStrips));
     int currentBranch = 0;
     int nodes = 0;
     for (int i = 0; i < numStrips; ++i) {
@@ -102,7 +102,7 @@ int SkRTree::CountNodes(int branches, SkScalar aspectRatio) {
 }
 
 SkRTree::Branch SkRTree::bulkLoad(SkTDArray<Branch>* branches, int level) {
-    if (branches->count() == 1) { // Only one branch.  It will be the root.
+    if (branches->count() == 1) {  // Only one branch.  It will be the root.
         return (*branches)[0];
     }
 
@@ -110,7 +110,7 @@ SkRTree::Branch SkRTree::bulkLoad(SkTDArray<Branch>* branches, int level) {
     // Skipping a call to sort (in Y) here resulted in a 17% win for recording with negligible
     // difference in playback speed.
     int numBranches = branches->count() / kMaxChildren;
-    int remainder   = branches->count() % kMaxChildren;
+    int remainder = branches->count() % kMaxChildren;
     int newBranches = 0;
 
     if (remainder > 0) {
@@ -124,7 +124,7 @@ SkRTree::Branch SkRTree::bulkLoad(SkTDArray<Branch>* branches, int level) {
     }
 
     int numStrips = SkScalarCeilToInt(SkScalarSqrt(SkIntToScalar(numBranches) / fAspectRatio));
-    int numTiles  = SkScalarCeilToInt(SkIntToScalar(numBranches) / SkIntToScalar(numStrips));
+    int numTiles = SkScalarCeilToInt(SkIntToScalar(numBranches) / SkIntToScalar(numStrips));
     int currentBranch = 0;
 
     for (int i = 0; i < numStrips; ++i) {

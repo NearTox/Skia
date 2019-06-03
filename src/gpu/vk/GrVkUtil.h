@@ -8,12 +8,12 @@
 #ifndef GrVkUtil_DEFINED
 #define GrVkUtil_DEFINED
 
-#include "GrColor.h"
-#include "GrTypes.h"
-#include "GrVkInterface.h"
-#include "SkMacros.h"
-#include "ir/SkSLProgram.h"
-#include "vk/GrVkTypes.h"
+#include "include/gpu/GrTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
+#include "include/private/GrColor.h"
+#include "include/private/SkMacros.h"
+#include "src/gpu/vk/GrVkInterface.h"
+#include "src/sksl/ir/SkSLProgram.h"
 
 class GrVkGpu;
 
@@ -25,7 +25,7 @@ class GrVkGpu;
     VkResult SK_MACRO_APPEND_LINE(ret) = GR_VK_CALL(IFACE, X); \
     SkASSERT(VK_SUCCESS == SK_MACRO_APPEND_LINE(ret))
 #else
-#define GR_VK_CALL_ERRCHECK(IFACE, X)  (void) GR_VK_CALL(IFACE, X)
+#define GR_VK_CALL_ERRCHECK(IFACE, X) (void)GR_VK_CALL(IFACE, X)
 #endif
 
 /**
@@ -45,7 +45,7 @@ bool GrVkFormatPixelConfigPairIsValid(VkFormat, GrPixelConfig);
 bool GrSampleCountToVkSampleCount(uint32_t samples, VkSampleCountFlagBits* vkSamples);
 
 bool GrCompileVkShaderModule(const GrVkGpu* gpu,
-                             const char* shaderString,
+                             const SkSL::String& shaderString,
                              VkShaderStageFlagBits stage,
                              VkShaderModule* shaderModule,
                              VkPipelineShaderStageCreateInfo* stageInfo,

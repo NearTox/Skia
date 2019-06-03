@@ -3,14 +3,14 @@
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
-*/
+ */
 
 #ifndef GrVkCopyManager_DEFINED
 #define GrVkCopyManager_DEFINED
 
-#include "GrTypes.h"
-#include "GrVkDescriptorSetManager.h"
-#include "vk/GrVkTypes.h"
+#include "include/gpu/GrTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
+#include "src/gpu/vk/GrVkDescriptorSetManager.h"
 
 class GrSurface;
 class GrVkCopyPipeline;
@@ -27,11 +27,9 @@ public:
 
     ~GrVkCopyManager();
 
-    bool copySurfaceAsDraw(GrVkGpu* gpu,
-                           GrSurface* dst, GrSurfaceOrigin dstOrigin,
-                           GrSurface* src, GrSurfaceOrigin srcOrigin,
-                           const SkIRect& srcRect, const SkIPoint& dstPoint,
-                           bool canDiscardOutsideDstRect);
+    bool copySurfaceAsDraw(GrVkGpu* gpu, GrSurface* dst, GrSurfaceOrigin dstOrigin, GrSurface* src,
+                           GrSurfaceOrigin srcOrigin, const SkIRect& srcRect,
+                           const SkIPoint& dstPoint, bool canDiscardOutsideDstRect);
 
     void destroyResources(GrVkGpu* gpu);
     void abandonResources();

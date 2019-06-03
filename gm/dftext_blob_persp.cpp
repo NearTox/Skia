@@ -5,13 +5,29 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "Resources.h"
-#include "SkCanvas.h"
-#include "SkSurface.h"
-#include "SkTextBlob.h"
-#include "SkTypeface.h"
-#include "sk_tool_utils.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkSurfaceProps.h"
+#include "include/core/SkTextBlob.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkTArray.h"
+#include "tools/ToolUtils.h"
+
+#include <initializer_list>
+
+class GrContext;
 
 /**
  * This GM tests reusing the same text blobs with distance fields rendering using various
@@ -23,11 +39,7 @@ public:
     DFTextBlobPerspGM() { this->setBGColor(0xFFFFFFFF); }
 
 protected:
-    SkString onShortName() override {
-        SkString name("dftext_blob_persp");
-        name.append(sk_tool_utils::platform_font_manager());
-        return name;
-    }
+    SkString onShortName() override { return SkString("dftext_blob_persp"); }
 
     SkISize onISize() override { return SkISize::Make(900, 350); }
 
@@ -35,18 +47,18 @@ protected:
         for (int i = 0; i < 3; ++i) {
             SkFont font;
             font.setSize(32);
-            font.setEdging(i == 0 ? SkFont::Edging::kAlias :
-                           (i == 1 ? SkFont::Edging::kAntiAlias :
-                            SkFont::Edging::kSubpixelAntiAlias));
+            font.setEdging(i == 0 ? SkFont::Edging::kAlias
+                                  : (i == 1 ? SkFont::Edging::kAntiAlias
+                                            : SkFont::Edging::kSubpixelAntiAlias));
             font.setSubpixel(true);
             SkTextBlobBuilder builder;
-            sk_tool_utils::add_to_text_blob(&builder, "SkiaText", font, 0, 0);
+            ToolUtils::add_to_text_blob(&builder, "SkiaText", font, 0, 0);
             fBlobs.emplace_back(builder.make());
         }
     }
 
     void onDraw(SkCanvas* inputCanvas) override {
-    // set up offscreen rendering with distance field text
+        // set up offscreen rendering with distance field text
         GrContext* ctx = inputCanvas->getGrContext();
         SkISize size = this->onISize();
         if (!inputCanvas->getBaseLayerSize().isEmpty()) {

@@ -5,27 +5,21 @@
  * found in the LICENSE file.
  */
 
-#include "SkMathPriv.h"
-#include "SkPointPriv.h"
+#include "src/core/SkMathPriv.h"
+#include "src/core/SkPointPriv.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkPoint::scale(SkScalar scale, SkPoint* dst) const {
+void SkPoint::scale(SkScalar scale, SkPoint* dst) const noexcept {
     SkASSERT(dst);
     dst->set(fX * scale, fY * scale);
 }
 
-bool SkPoint::normalize() {
-    return this->setLength(fX, fY, SK_Scalar1);
-}
+bool SkPoint::normalize() { return this->setLength(fX, fY, SK_Scalar1); }
 
-bool SkPoint::setNormalize(SkScalar x, SkScalar y) {
-    return this->setLength(x, y, SK_Scalar1);
-}
+bool SkPoint::setNormalize(SkScalar x, SkScalar y) { return this->setLength(x, y, SK_Scalar1); }
 
-bool SkPoint::setLength(SkScalar length) {
-    return this->setLength(fX, fY, length);
-}
+bool SkPoint::setLength(SkScalar length) { return this->setLength(fX, fY, length); }
 
 /*
  *  We have to worry about 2 tricky conditions:
@@ -35,8 +29,8 @@ bool SkPoint::setLength(SkScalar length) {
  *  If we underflow, we return false. If we overflow, we compute again using
  *  doubles, which is much slower (3x in a desktop test) but will not overflow.
  */
-template <bool use_rsqrt> bool set_point_length(SkPoint* pt, float x, float y, float length,
-                                                float* orig_length = nullptr) {
+template <bool use_rsqrt>
+bool set_point_length(SkPoint* pt, float x, float y, float length, float* orig_length = nullptr) {
     SkASSERT(!use_rsqrt || (orig_length == nullptr));
 
     // our mag2 step overflowed to infinity, so use doubles instead.
@@ -91,23 +85,18 @@ bool SkPointPriv::SetLengthFast(SkPoint* pt, float length) {
     return set_point_length<true>(pt, pt->fX, pt->fY, length);
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////
 
 SkScalar SkPointPriv::DistanceToLineBetweenSqd(const SkPoint& pt, const SkPoint& a,
-                                               const SkPoint& b,
-                                               Side* side) {
-
+                                               const SkPoint& b, Side* side) {
     SkVector u = b - a;
     SkVector v = pt - a;
 
     SkScalar uLengthSqd = LengthSqd(u);
     SkScalar det = u.cross(v);
     if (side) {
-        SkASSERT(-1 == kLeft_Side &&
-                  0 == kOn_Side &&
-                  1 == kRight_Side);
-        *side = (Side) SkScalarSignAsInt(det);
+        SkASSERT(-1 == kLeft_Side && 0 == kOn_Side && 1 == kRight_Side);
+        *side = (Side)SkScalarSignAsInt(det);
     }
     SkScalar temp = sk_ieee_float_divide(det, uLengthSqd);
     temp *= det;
@@ -146,10 +135,10 @@ SkScalar SkPointPriv::DistanceToLineSegmentBetweenSqd(const SkPoint& pt, const S
     // closest point is point A
     if (uDotV <= 0) {
         return LengthSqd(v);
-    // closest point is point B
+        // closest point is point B
     } else if (uDotV > uLengthSqd) {
         return DistanceToSqd(b, pt);
-    // closest point is inside segment
+        // closest point is inside segment
     } else {
         SkScalar det = u.cross(v);
         SkScalar temp = sk_ieee_float_divide(det, uLengthSqd);

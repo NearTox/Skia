@@ -8,10 +8,10 @@
 #ifndef SkTHash_DEFINED
 #define SkTHash_DEFINED
 
-#include "SkChecksum.h"
-#include "SkTypes.h"
-#include "SkTemplates.h"
 #include <new>
+#include "include/core/SkTypes.h"
+#include "include/private/SkChecksum.h"
+#include "include/private/SkTemplates.h"
 
 // Before trying to use SkTHashTable, look below to see if SkTHashMap or SkTHashSet works for you.
 // They're easier to use, usually perform the same, and have fewer sharp edges.
@@ -22,16 +22,15 @@
 //   - static uint32_t Hash(K)
 // If the key is large and stored inside T, you may want to make K a const&.
 // Similarly, if T is large you might want it to be a pointer.
-template <typename T, typename K, typename Traits = T>
-class SkTHashTable {
+template <typename T, typename K, typename Traits = T> class SkTHashTable {
 public:
-    SkTHashTable() : fCount(0), fCapacity(0) {}
-    SkTHashTable(SkTHashTable&& other)
-        : fCount(other.fCount)
-        , fCapacity(other.fCapacity)
-        , fSlots(std::move(other.fSlots)) { other.fCount = other.fCapacity = 0; }
+    SkTHashTable() noexcept : fCount(0), fCapacity(0) {}
+    SkTHashTable(SkTHashTable&& other) noexcept
+            : fCount(other.fCount), fCapacity(other.fCapacity), fSlots(std::move(other.fSlots)) {
+        other.fCount = other.fCapacity = 0;
+    }
 
-    SkTHashTable& operator=(SkTHashTable&& other) {
+    SkTHashTable& operator=(SkTHashTable&& other) noexcept {
         if (this != &other) {
             this->~SkTHashTable();
             new (this) SkTHashTable(std::move(other));
@@ -70,7 +69,7 @@ public:
     // If there is an entry in the table with this key, return a pointer to it.  If not, null.
     T* find(const K& key) const {
         uint32_t hash = Hash(key);
-        int index = hash & (fCapacity-1);
+        int index = hash & (fCapacity - 1);
         for (int n = 0; n < fCapacity; n++) {
             Slot& s = fSlots[index];
             if (s.empty()) {
@@ -99,7 +98,7 @@ public:
         SkASSERT(this->find(key));
 
         uint32_t hash = Hash(key);
-        int index = hash & (fCapacity-1);
+        int index = hash & (fCapacity - 1);
         for (int n = 0; n < fCapacity; n++) {
             Slot& s = fSlots[index];
             SkASSERT(!s.empty());
@@ -130,9 +129,9 @@ public:
                     return;
                 }
                 originalIndex = s.hash & (fCapacity - 1);
-            } while ((index <= originalIndex && originalIndex < emptyIndex)
-                     || (originalIndex < emptyIndex && emptyIndex < index)
-                     || (emptyIndex < index && index <= originalIndex));
+            } while ((index <= originalIndex && originalIndex < emptyIndex) ||
+                     (originalIndex < emptyIndex && emptyIndex < index) ||
+                     (emptyIndex < index && index <= originalIndex));
             // Move the element to the empty slot.
             Slot& moveFrom = fSlots[index];
             emptySlot = std::move(moveFrom);
@@ -141,7 +140,7 @@ public:
 
     // Call fn on every entry in the table.  You may mutate the entries, but be very careful.
     template <typename Fn>  // f(T*)
-    void foreach(Fn&& fn) {
+    void foreach (Fn&& fn) {
         for (int i = 0; i < fCapacity; i++) {
             if (!fSlots[i].empty()) {
                 fn(&fSlots[i].val);
@@ -151,7 +150,7 @@ public:
 
     // Call fn on every entry in the table.  You may not mutate anything.
     template <typename Fn>  // f(T) or f(const T&)
-    void foreach(Fn&& fn) const {
+    void foreach (Fn&& fn) const {
         for (int i = 0; i < fCapacity; i++) {
             if (!fSlots[i].empty()) {
                 fn(fSlots[i].val);
@@ -163,12 +162,12 @@ private:
     T* uncheckedSet(T&& val) {
         const K& key = Traits::GetKey(val);
         uint32_t hash = Hash(key);
-        int index = hash & (fCapacity-1);
+        int index = hash & (fCapacity - 1);
         for (int n = 0; n < fCapacity; n++) {
             Slot& s = fSlots[index];
             if (s.empty()) {
                 // New entry.
-                s.val  = std::move(val);
+                s.val = std::move(val);
                 s.hash = hash;
                 fCount++;
                 return &s.val;
@@ -204,9 +203,11 @@ private:
         SkASSERT(fCount == oldCount);
     }
 
-    int next(int index) const {
+    int next(int index) const noexcept {
         index--;
-        if (index < 0) { index += fCapacity; }
+        if (index < 0) {
+            index += fCapacity;
+        }
         return index;
     }
 
@@ -216,18 +217,18 @@ private:
     }
 
     struct Slot {
-        Slot() : hash(0) {}
+        Slot() noexcept : hash(0) {}
         Slot(T&& v, uint32_t h) : val(std::move(v)), hash(h) {}
         Slot(Slot&& o) { *this = std::move(o); }
-        Slot& operator=(Slot&& o) {
-            val  = std::move(o.val);
+        Slot& operator=(Slot&& o) noexcept {
+            val = std::move(o.val);
             hash = o.hash;
             return *this;
         }
 
-        bool empty() const { return this->hash == 0; }
+        bool empty() const noexcept { return this->hash == 0; }
 
-        T        val;
+        T val;
         uint32_t hash;
     };
 
@@ -240,10 +241,9 @@ private:
 
 // Maps K->V.  A more user-friendly wrapper around SkTHashTable, suitable for most use cases.
 // K and V are treated as ordinary copyable C++ types, with no assumed relationship between the two.
-template <typename K, typename V, typename HashK = SkGoodHash>
-class SkTHashMap {
+template <typename K, typename V, typename HashK = SkGoodHash> class SkTHashMap {
 public:
-    SkTHashMap() {}
+    SkTHashMap() noexcept {}
     SkTHashMap(SkTHashMap&&) = default;
     SkTHashMap& operator=(SkTHashMap&&) = default;
 
@@ -282,21 +282,21 @@ public:
 
     // Call fn on every key/value pair in the table.  You may mutate the value but not the key.
     template <typename Fn>  // f(K, V*) or f(const K&, V*)
-    void foreach(Fn&& fn) {
-        fTable.foreach([&fn](Pair* p){ fn(p->key, &p->val); });
+    void foreach (Fn&& fn) {
+        fTable.foreach ([&fn](Pair* p) { fn(p->key, &p->val); });
     }
 
     // Call fn on every key/value pair in the table.  You may not mutate anything.
     template <typename Fn>  // f(K, V), f(const K&, V), f(K, const V&) or f(const K&, const V&).
-    void foreach(Fn&& fn) const {
-        fTable.foreach([&fn](const Pair& p){ fn(p.key, p.val); });
+    void foreach (Fn&& fn) const {
+        fTable.foreach ([&fn](const Pair& p) { fn(p.key, p.val); });
     }
 
 private:
     struct Pair {
         K key;
         V val;
-        static const K& GetKey(const Pair& p) { return p.key; }
+        static const K& GetKey(const Pair& p) noexcept { return p.key; }
         static uint32_t Hash(const K& key) { return HashK()(key); }
     };
 
@@ -307,8 +307,7 @@ private:
 };
 
 // A set of T.  T is treated as an ordinary copyable C++ type.
-template <typename T, typename HashT = SkGoodHash>
-class SkTHashSet {
+template <typename T, typename HashT = SkGoodHash> class SkTHashSet {
 public:
     SkTHashSet() {}
     SkTHashSet(SkTHashSet&&) = default;
@@ -342,7 +341,7 @@ public:
     // Call fn on every item in the set.  You may not mutate anything.
     template <typename Fn>  // f(T), f(const T&)
     void foreach (Fn&& fn) const {
-        fTable.foreach(fn);
+        fTable.foreach (fn);
     }
 
 private:
@@ -356,4 +355,4 @@ private:
     SkTHashSet& operator=(const SkTHashSet&) = delete;
 };
 
-#endif//SkTHash_DEFINED
+#endif  // SkTHash_DEFINED

@@ -8,7 +8,7 @@
 #ifndef SKSL_ASTIDENTIFIER
 #define SKSL_ASTIDENTIFIER
 
-#include "SkSLASTExpression.h"
+#include "src/sksl/ast/SkSLASTExpression.h"
 
 namespace SkSL {
 
@@ -17,18 +17,15 @@ namespace SkSL {
  */
 struct ASTIdentifier : public ASTExpression {
     ASTIdentifier(int offset, StringFragment text)
-    : INHERITED(offset, kIdentifier_Kind)
-    , fText(text) {}
+            : INHERITED(offset, kIdentifier_Kind), fText(text) {}
 
-    String description() const override {
-        return String(fText);
-    }
+    String description() const override { return String(fText); }
 
     const StringFragment fText;
 
     typedef ASTExpression INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

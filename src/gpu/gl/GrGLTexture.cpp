@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "GrGLTexture.h"
-#include "GrGLGpu.h"
-#include "GrSemaphore.h"
-#include "GrShaderCaps.h"
-#include "GrTexturePriv.h"
-#include "SkTraceMemoryDump.h"
+#include "src/gpu/gl/GrGLTexture.h"
+#include "include/core/SkTraceMemoryDump.h"
+#include "src/gpu/GrSemaphore.h"
+#include "src/gpu/GrShaderCaps.h"
+#include "src/gpu/GrTexturePriv.h"
+#include "src/gpu/gl/GrGLGpu.h"
 
 #define GPUGL static_cast<GrGLGpu*>(this->getGpu())
 #define GL_CALL(X) GR_GL_CALL(GPUGL->glInterface(), X)
@@ -122,7 +122,7 @@ bool GrGLTexture::onStealBackendTexture(GrBackendTexture* backendTexture,
                                         SkImage::BackendTextureReleaseProc* releaseProc) {
     *backendTexture = this->getBackendTexture();
     // Set the release proc to a no-op function. GL doesn't require any special cleanup.
-    *releaseProc = [](GrBackendTexture){};
+    *releaseProc = [](GrBackendTexture) {};
 
     // It's important that we only abandon this texture's objects, not subclass objects such as
     // those held by GrGLTextureRenderTarget. Those objects are not being stolen and need to be

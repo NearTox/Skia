@@ -8,16 +8,13 @@
 #ifndef SkTMultiMap_DEFINED
 #define SkTMultiMap_DEFINED
 
-#include "GrTypes.h"
-#include "SkTDynamicHash.h"
+#include "include/gpu/GrTypes.h"
+#include "src/core/SkTDynamicHash.h"
 
 /** A set that contains pointers to instances of T. Instances can be looked up with key Key.
  * Multiple (possibly same) values can have the same key.
  */
-template <typename T,
-          typename Key,
-          typename HashTraits=T>
-class SkTMultiMap {
+template <typename T, typename Key, typename HashTraits = T> class SkTMultiMap {
     struct ValueList {
         explicit ValueList(T* value) : fValue(value), fNext(nullptr) {}
 
@@ -26,12 +23,13 @@ class SkTMultiMap {
         T* fValue;
         ValueList* fNext;
     };
+
 public:
     SkTMultiMap() : fCount(0) {}
 
     ~SkTMultiMap() {
         typename SkTDynamicHash<ValueList, Key>::Iter iter(&fHash);
-        for ( ; !iter.done(); ++iter) {
+        for (; !iter.done(); ++iter) {
             ValueList* next;
             for (ValueList* cur = &(*iter); cur; cur = next) {
                 HashTraits::OnFree(cur->fValue);
@@ -95,11 +93,10 @@ public:
         return nullptr;
     }
 
-    template<class FindPredicate>
-    T* find(const Key& key, const FindPredicate f) {
+    template <class FindPredicate> T* find(const Key& key, const FindPredicate f) {
         ValueList* list = fHash.find(key);
         while (list) {
-            if (f(list->fValue)){
+            if (f(list->fValue)) {
                 return list->fValue;
             }
             list = list->fNext;
@@ -107,13 +104,12 @@ public:
         return nullptr;
     }
 
-    template<class FindPredicate>
-    T* findAndRemove(const Key& key, const FindPredicate f) {
+    template <class FindPredicate> T* findAndRemove(const Key& key, const FindPredicate f) {
         ValueList* list = fHash.find(key);
 
         ValueList* prev = nullptr;
         while (list) {
-            if (f(list->fValue)){
+            if (f(list->fValue)) {
                 T* value = list->fValue;
                 this->internalRemove(prev, list, key);
                 return value;
@@ -129,17 +125,13 @@ public:
 #ifdef SK_DEBUG
     class ConstIter {
     public:
-        explicit ConstIter(const SkTMultiMap* mmap)
-            : fIter(&(mmap->fHash))
-            , fList(nullptr) {
+        explicit ConstIter(const SkTMultiMap* mmap) : fIter(&(mmap->fHash)), fList(nullptr) {
             if (!fIter.done()) {
                 fList = &(*fIter);
             }
         }
 
-        bool done() const {
-            return fIter.done();
-        }
+        bool done() const { return fIter.done(); }
 
         const T* operator*() {
             SkASSERT(fList);
@@ -204,7 +196,6 @@ private:
 
         --fCount;
     }
-
 };
 
 #endif

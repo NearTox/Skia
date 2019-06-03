@@ -5,21 +5,21 @@
  * found in the LICENSE file.
  */
 
-#include "effects/GrPorterDuffXferProcessor.h"
+#include "src/gpu/effects/GrPorterDuffXferProcessor.h"
 
-#include "GrBlend.h"
-#include "GrCaps.h"
-#include "GrPipeline.h"
-#include "GrProcessor.h"
-#include "GrProcessorAnalysis.h"
-#include "GrTypes.h"
-#include "GrXferProcessor.h"
-#include "SkTo.h"
-#include "glsl/GrGLSLBlend.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLProgramDataManager.h"
-#include "glsl/GrGLSLUniformHandler.h"
-#include "glsl/GrGLSLXferProcessor.h"
+#include "include/gpu/GrBlend.h"
+#include "include/gpu/GrTypes.h"
+#include "include/private/SkTo.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrPipeline.h"
+#include "src/gpu/GrProcessor.h"
+#include "src/gpu/GrProcessorAnalysis.h"
+#include "src/gpu/GrXferProcessor.h"
+#include "src/gpu/glsl/GrGLSLBlend.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#include "src/gpu/glsl/GrGLSLXferProcessor.h"
 
 /**
  * Wraps the shader outputs and HW blend state that comprise a Porter Duff blend mode with coverage.
@@ -31,12 +31,12 @@ public:
      * coverage to support mixed samples. The XP will ignore the multiplies when not using coverage.
      */
     enum OutputType {
-        kNone_OutputType,        //<! 0
-        kCoverage_OutputType,    //<! inputCoverage
-        kModulate_OutputType,    //<! inputColor * inputCoverage
-        kSAModulate_OutputType,  //<! inputColor.a * inputCoverage
-        kISAModulate_OutputType, //<! (1 - inputColor.a) * inputCoverage
-        kISCModulate_OutputType, //<! (1 - inputColor) * inputCoverage
+        kNone_OutputType,         //<! 0
+        kCoverage_OutputType,     //<! inputCoverage
+        kModulate_OutputType,     //<! inputColor * inputCoverage
+        kSAModulate_OutputType,   //<! inputColor.a * inputCoverage
+        kISAModulate_OutputType,  //<! (1 - inputColor.a) * inputCoverage
+        kISCModulate_OutputType,  //<! (1 - inputColor) * inputCoverage
 
         kLast_OutputType = kISCModulate_OutputType
     };
@@ -112,9 +112,9 @@ public:
 
 private:
     enum Properties {
-        kModifiesDst_Property              = 1,
-        kUsesDstColor_Property             = 1 << 1,
-        kUsesInputColor_Property           = 1 << 2,
+        kModifiesDst_Property = 1,
+        kUsesDstColor_Property = 1 << 1,
+        kUsesInputColor_Property = 1 << 2,
         kCanTweakAlphaForCoverage_Property = 1 << 3,
 
         kLast_Property = kCanTweakAlphaForCoverage_Property
@@ -148,20 +148,20 @@ private:
         struct {
             // We allot the enums one more bit than they require because MSVC seems to sign-extend
             // them when the top bit is set. (This is in violation of the C++03 standard 9.6/4)
-            OutputType        fPrimaryOutputType    : 4;
-            OutputType        fSecondaryOutputType  : 4;
-            GrBlendEquation   fBlendEquation        : 6;
-            GrBlendCoeff      fSrcCoeff             : 6;
-            GrBlendCoeff      fDstCoeff             : 6;
-            Properties        fProps                : 32 - (4 + 4 + 6 + 6 + 6);
+            OutputType fPrimaryOutputType : 4;
+            OutputType fSecondaryOutputType : 4;
+            GrBlendEquation fBlendEquation : 6;
+            GrBlendCoeff fSrcCoeff : 6;
+            GrBlendCoeff fDstCoeff : 6;
+            Properties fProps : 32 - (4 + 4 + 6 + 6 + 6);
         };
         uint32_t fData;
     };
 
-    GR_STATIC_ASSERT(kLast_OutputType      < (1 << 3));
+    GR_STATIC_ASSERT(kLast_OutputType < (1 << 3));
     GR_STATIC_ASSERT(kLast_GrBlendEquation < (1 << 5));
-    GR_STATIC_ASSERT(kLast_GrBlendCoeff    < (1 << 5));
-    GR_STATIC_ASSERT(kLast_Property        < (1 << 6));
+    GR_STATIC_ASSERT(kLast_GrBlendCoeff < (1 << 5));
+    GR_STATIC_ASSERT(kLast_Property < (1 << 6));
 };
 
 GR_STATIC_ASSERT(4 == sizeof(BlendFormula));
@@ -196,10 +196,11 @@ static constexpr BlendFormula MakeCoeffFormula(GrBlendCoeff srcCoeff, GrBlendCoe
     // When the coeffs are (Zero, Zero) or (Zero, One) we set the primary output to none.
     return (kZero_GrBlendCoeff == srcCoeff &&
             (kZero_GrBlendCoeff == dstCoeff || kOne_GrBlendCoeff == dstCoeff))
-           ? BlendFormula(BlendFormula::kNone_OutputType, BlendFormula::kNone_OutputType,
-                          kAdd_GrBlendEquation, kZero_GrBlendCoeff, dstCoeff)
-           : BlendFormula(BlendFormula::kModulate_OutputType, BlendFormula::kNone_OutputType,
-                        kAdd_GrBlendEquation, srcCoeff, dstCoeff);
+                   ? BlendFormula(BlendFormula::kNone_OutputType, BlendFormula::kNone_OutputType,
+                                  kAdd_GrBlendEquation, kZero_GrBlendCoeff, dstCoeff)
+                   : BlendFormula(BlendFormula::kModulate_OutputType,
+                                  BlendFormula::kNone_OutputType, kAdd_GrBlendEquation, srcCoeff,
+                                  dstCoeff);
 }
 
 /**
@@ -269,10 +270,11 @@ static constexpr BlendFormula MakeCoverageDstCoeffZeroFormula(GrBlendCoeff srcCo
 // Older GCC won't like the constexpr arrays because of
 // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61484.
 // MSVC 2015 crashes with an internal compiler error.
-#if !defined(__clang__) && ((defined(__GNUC__) && __GNUC__ < 5) || (defined(_MSC_VER) && _MSC_VER <= 1910))
-#   define MAYBE_CONSTEXPR const
+#if !defined(__clang__) && \
+        ((defined(__GNUC__) && __GNUC__ < 5) || (defined(_MSC_VER) && _MSC_VER <= 1910))
+#define MAYBE_CONSTEXPR const
 #else
-#   define MAYBE_CONSTEXPR constexpr
+#define MAYBE_CONSTEXPR constexpr
 #endif
 
 /**
@@ -281,99 +283,113 @@ static constexpr BlendFormula MakeCoverageDstCoeffZeroFormula(GrBlendCoeff srcCo
  * can make runtime decisions quickly. RGB coverage is not supported.
  */
 static MAYBE_CONSTEXPR BlendFormula gBlendTable[2][2][(int)SkBlendMode::kLastCoeffMode + 1] = {
-                     /*>> No coverage, input color unknown <<*/ {{
+        /*>> No coverage, input color unknown <<*/ {
+                {
 
-    /* clear */      MakeCoeffFormula(kZero_GrBlendCoeff, kZero_GrBlendCoeff),
-    /* src */        MakeCoeffFormula(kOne_GrBlendCoeff,  kZero_GrBlendCoeff),
-    /* dst */        MakeCoeffFormula(kZero_GrBlendCoeff, kOne_GrBlendCoeff),
-    /* src-over */   MakeCoeffFormula(kOne_GrBlendCoeff,  kISA_GrBlendCoeff),
-    /* dst-over */   MakeCoeffFormula(kIDA_GrBlendCoeff,  kOne_GrBlendCoeff),
-    /* src-in */     MakeCoeffFormula(kDA_GrBlendCoeff,   kZero_GrBlendCoeff),
-    /* dst-in */     MakeCoeffFormula(kZero_GrBlendCoeff, kSA_GrBlendCoeff),
-    /* src-out */    MakeCoeffFormula(kIDA_GrBlendCoeff,  kZero_GrBlendCoeff),
-    /* dst-out */    MakeCoeffFormula(kZero_GrBlendCoeff, kISA_GrBlendCoeff),
-    /* src-atop */   MakeCoeffFormula(kDA_GrBlendCoeff,   kISA_GrBlendCoeff),
-    /* dst-atop */   MakeCoeffFormula(kIDA_GrBlendCoeff,  kSA_GrBlendCoeff),
-    /* xor */        MakeCoeffFormula(kIDA_GrBlendCoeff,  kISA_GrBlendCoeff),
-    /* plus */       MakeCoeffFormula(kOne_GrBlendCoeff,  kOne_GrBlendCoeff),
-    /* modulate */   MakeCoeffFormula(kZero_GrBlendCoeff, kSC_GrBlendCoeff),
-    /* screen */     MakeCoeffFormula(kOne_GrBlendCoeff,  kISC_GrBlendCoeff),
+                        /* clear */ MakeCoeffFormula(kZero_GrBlendCoeff, kZero_GrBlendCoeff),
+                        /* src */ MakeCoeffFormula(kOne_GrBlendCoeff, kZero_GrBlendCoeff),
+                        /* dst */ MakeCoeffFormula(kZero_GrBlendCoeff, kOne_GrBlendCoeff),
+                        /* src-over */ MakeCoeffFormula(kOne_GrBlendCoeff, kISA_GrBlendCoeff),
+                        /* dst-over */ MakeCoeffFormula(kIDA_GrBlendCoeff, kOne_GrBlendCoeff),
+                        /* src-in */ MakeCoeffFormula(kDA_GrBlendCoeff, kZero_GrBlendCoeff),
+                        /* dst-in */ MakeCoeffFormula(kZero_GrBlendCoeff, kSA_GrBlendCoeff),
+                        /* src-out */ MakeCoeffFormula(kIDA_GrBlendCoeff, kZero_GrBlendCoeff),
+                        /* dst-out */ MakeCoeffFormula(kZero_GrBlendCoeff, kISA_GrBlendCoeff),
+                        /* src-atop */ MakeCoeffFormula(kDA_GrBlendCoeff, kISA_GrBlendCoeff),
+                        /* dst-atop */ MakeCoeffFormula(kIDA_GrBlendCoeff, kSA_GrBlendCoeff),
+                        /* xor */ MakeCoeffFormula(kIDA_GrBlendCoeff, kISA_GrBlendCoeff),
+                        /* plus */ MakeCoeffFormula(kOne_GrBlendCoeff, kOne_GrBlendCoeff),
+                        /* modulate */ MakeCoeffFormula(kZero_GrBlendCoeff, kSC_GrBlendCoeff),
+                        /* screen */ MakeCoeffFormula(kOne_GrBlendCoeff, kISC_GrBlendCoeff),
 
-                     }, /*>> Has coverage, input color unknown <<*/ {
+                },
+                /*>> Has coverage, input color unknown <<*/ {
 
-    /* clear */      MakeCoverageSrcCoeffZeroFormula(BlendFormula::kCoverage_OutputType),
-    /* src */        MakeCoverageDstCoeffZeroFormula(kOne_GrBlendCoeff),
-    /* dst */        MakeCoeffFormula(kZero_GrBlendCoeff, kOne_GrBlendCoeff),
-    /* src-over */   MakeCoeffFormula(kOne_GrBlendCoeff,  kISA_GrBlendCoeff),
-    /* dst-over */   MakeCoeffFormula(kIDA_GrBlendCoeff,  kOne_GrBlendCoeff),
-    /* src-in */     MakeCoverageDstCoeffZeroFormula(kDA_GrBlendCoeff),
-    /* dst-in */     MakeCoverageSrcCoeffZeroFormula(BlendFormula::kISAModulate_OutputType),
-    /* src-out */    MakeCoverageDstCoeffZeroFormula(kIDA_GrBlendCoeff),
-    /* dst-out */    MakeCoeffFormula(kZero_GrBlendCoeff, kISA_GrBlendCoeff),
-    /* src-atop */   MakeCoeffFormula(kDA_GrBlendCoeff,   kISA_GrBlendCoeff),
-    /* dst-atop */   MakeCoverageFormula(BlendFormula::kISAModulate_OutputType, kIDA_GrBlendCoeff),
-    /* xor */        MakeCoeffFormula(kIDA_GrBlendCoeff,  kISA_GrBlendCoeff),
-    /* plus */       MakeCoeffFormula(kOne_GrBlendCoeff,  kOne_GrBlendCoeff),
-    /* modulate */   MakeCoverageSrcCoeffZeroFormula(BlendFormula::kISCModulate_OutputType),
-    /* screen */     MakeCoeffFormula(kOne_GrBlendCoeff,  kISC_GrBlendCoeff),
+                        /* clear */ MakeCoverageSrcCoeffZeroFormula(
+                                BlendFormula::kCoverage_OutputType),
+                        /* src */ MakeCoverageDstCoeffZeroFormula(kOne_GrBlendCoeff),
+                        /* dst */ MakeCoeffFormula(kZero_GrBlendCoeff, kOne_GrBlendCoeff),
+                        /* src-over */ MakeCoeffFormula(kOne_GrBlendCoeff, kISA_GrBlendCoeff),
+                        /* dst-over */ MakeCoeffFormula(kIDA_GrBlendCoeff, kOne_GrBlendCoeff),
+                        /* src-in */ MakeCoverageDstCoeffZeroFormula(kDA_GrBlendCoeff),
+                        /* dst-in */
+                        MakeCoverageSrcCoeffZeroFormula(BlendFormula::kISAModulate_OutputType),
+                        /* src-out */ MakeCoverageDstCoeffZeroFormula(kIDA_GrBlendCoeff),
+                        /* dst-out */ MakeCoeffFormula(kZero_GrBlendCoeff, kISA_GrBlendCoeff),
+                        /* src-atop */ MakeCoeffFormula(kDA_GrBlendCoeff, kISA_GrBlendCoeff),
+                        /* dst-atop */
+                        MakeCoverageFormula(BlendFormula::kISAModulate_OutputType,
+                                            kIDA_GrBlendCoeff),
+                        /* xor */ MakeCoeffFormula(kIDA_GrBlendCoeff, kISA_GrBlendCoeff),
+                        /* plus */ MakeCoeffFormula(kOne_GrBlendCoeff, kOne_GrBlendCoeff),
+                        /* modulate */
+                        MakeCoverageSrcCoeffZeroFormula(BlendFormula::kISCModulate_OutputType),
+                        /* screen */ MakeCoeffFormula(kOne_GrBlendCoeff, kISC_GrBlendCoeff),
 
-                     }}, /*>> No coverage, input color opaque <<*/ {{
+                }},
+        /*>> No coverage, input color opaque <<*/
+        {{
 
-    /* clear */      MakeCoeffFormula(kZero_GrBlendCoeff, kZero_GrBlendCoeff),
-    /* src */        MakeCoeffFormula(kOne_GrBlendCoeff,  kZero_GrBlendCoeff),
-    /* dst */        MakeCoeffFormula(kZero_GrBlendCoeff, kOne_GrBlendCoeff),
-    /* src-over */   MakeCoeffFormula(kOne_GrBlendCoeff,  kISA_GrBlendCoeff), // see comment below
-    /* dst-over */   MakeCoeffFormula(kIDA_GrBlendCoeff,  kOne_GrBlendCoeff),
-    /* src-in */     MakeCoeffFormula(kDA_GrBlendCoeff,   kZero_GrBlendCoeff),
-    /* dst-in */     MakeCoeffFormula(kZero_GrBlendCoeff, kOne_GrBlendCoeff),
-    /* src-out */    MakeCoeffFormula(kIDA_GrBlendCoeff,  kZero_GrBlendCoeff),
-    /* dst-out */    MakeCoeffFormula(kZero_GrBlendCoeff, kZero_GrBlendCoeff),
-    /* src-atop */   MakeCoeffFormula(kDA_GrBlendCoeff,   kZero_GrBlendCoeff),
-    /* dst-atop */   MakeCoeffFormula(kIDA_GrBlendCoeff,  kOne_GrBlendCoeff),
-    /* xor */        MakeCoeffFormula(kIDA_GrBlendCoeff,  kZero_GrBlendCoeff),
-    /* plus */       MakeCoeffFormula(kOne_GrBlendCoeff,  kOne_GrBlendCoeff),
-    /* modulate */   MakeCoeffFormula(kZero_GrBlendCoeff, kSC_GrBlendCoeff),
-    /* screen */     MakeCoeffFormula(kOne_GrBlendCoeff,  kISC_GrBlendCoeff),
+                 /* clear */ MakeCoeffFormula(kZero_GrBlendCoeff, kZero_GrBlendCoeff),
+                 /* src */ MakeCoeffFormula(kOne_GrBlendCoeff, kZero_GrBlendCoeff),
+                 /* dst */ MakeCoeffFormula(kZero_GrBlendCoeff, kOne_GrBlendCoeff),
+                 /* src-over */ MakeCoeffFormula(kOne_GrBlendCoeff, kISA_GrBlendCoeff),  // see
+                                                                                         // comment
+                                                                                         // below
+                 /* dst-over */ MakeCoeffFormula(kIDA_GrBlendCoeff, kOne_GrBlendCoeff),
+                 /* src-in */ MakeCoeffFormula(kDA_GrBlendCoeff, kZero_GrBlendCoeff),
+                 /* dst-in */ MakeCoeffFormula(kZero_GrBlendCoeff, kOne_GrBlendCoeff),
+                 /* src-out */ MakeCoeffFormula(kIDA_GrBlendCoeff, kZero_GrBlendCoeff),
+                 /* dst-out */ MakeCoeffFormula(kZero_GrBlendCoeff, kZero_GrBlendCoeff),
+                 /* src-atop */ MakeCoeffFormula(kDA_GrBlendCoeff, kZero_GrBlendCoeff),
+                 /* dst-atop */ MakeCoeffFormula(kIDA_GrBlendCoeff, kOne_GrBlendCoeff),
+                 /* xor */ MakeCoeffFormula(kIDA_GrBlendCoeff, kZero_GrBlendCoeff),
+                 /* plus */ MakeCoeffFormula(kOne_GrBlendCoeff, kOne_GrBlendCoeff),
+                 /* modulate */ MakeCoeffFormula(kZero_GrBlendCoeff, kSC_GrBlendCoeff),
+                 /* screen */ MakeCoeffFormula(kOne_GrBlendCoeff, kISC_GrBlendCoeff),
 
-                     }, /*>> Has coverage, input color opaque <<*/ {
+         },
+         /*>> Has coverage, input color opaque <<*/ {
 
-    /* clear */      MakeCoverageSrcCoeffZeroFormula(BlendFormula::kCoverage_OutputType),
-    /* src */        MakeCoeffFormula(kOne_GrBlendCoeff,  kISA_GrBlendCoeff),
-    /* dst */        MakeCoeffFormula(kZero_GrBlendCoeff, kOne_GrBlendCoeff),
-    /* src-over */   MakeCoeffFormula(kOne_GrBlendCoeff,  kISA_GrBlendCoeff),
-    /* dst-over */   MakeCoeffFormula(kIDA_GrBlendCoeff,  kOne_GrBlendCoeff),
-    /* src-in */     MakeCoeffFormula(kDA_GrBlendCoeff,   kISA_GrBlendCoeff),
-    /* dst-in */     MakeCoeffFormula(kZero_GrBlendCoeff, kOne_GrBlendCoeff),
-    /* src-out */    MakeCoeffFormula(kIDA_GrBlendCoeff,  kISA_GrBlendCoeff),
-    /* dst-out */    MakeCoverageSrcCoeffZeroFormula(BlendFormula::kCoverage_OutputType),
-    /* src-atop */   MakeCoeffFormula(kDA_GrBlendCoeff,   kISA_GrBlendCoeff),
-    /* dst-atop */   MakeCoeffFormula(kIDA_GrBlendCoeff,  kOne_GrBlendCoeff),
-    /* xor */        MakeCoeffFormula(kIDA_GrBlendCoeff,  kISA_GrBlendCoeff),
-    /* plus */       MakeCoeffFormula(kOne_GrBlendCoeff,  kOne_GrBlendCoeff),
-    /* modulate */   MakeCoverageSrcCoeffZeroFormula(BlendFormula::kISCModulate_OutputType),
-    /* screen */     MakeCoeffFormula(kOne_GrBlendCoeff,  kISC_GrBlendCoeff),
-}}};
+                 /* clear */ MakeCoverageSrcCoeffZeroFormula(BlendFormula::kCoverage_OutputType),
+                 /* src */ MakeCoeffFormula(kOne_GrBlendCoeff, kISA_GrBlendCoeff),
+                 /* dst */ MakeCoeffFormula(kZero_GrBlendCoeff, kOne_GrBlendCoeff),
+                 /* src-over */ MakeCoeffFormula(kOne_GrBlendCoeff, kISA_GrBlendCoeff),
+                 /* dst-over */ MakeCoeffFormula(kIDA_GrBlendCoeff, kOne_GrBlendCoeff),
+                 /* src-in */ MakeCoeffFormula(kDA_GrBlendCoeff, kISA_GrBlendCoeff),
+                 /* dst-in */ MakeCoeffFormula(kZero_GrBlendCoeff, kOne_GrBlendCoeff),
+                 /* src-out */ MakeCoeffFormula(kIDA_GrBlendCoeff, kISA_GrBlendCoeff),
+                 /* dst-out */ MakeCoverageSrcCoeffZeroFormula(BlendFormula::kCoverage_OutputType),
+                 /* src-atop */ MakeCoeffFormula(kDA_GrBlendCoeff, kISA_GrBlendCoeff),
+                 /* dst-atop */ MakeCoeffFormula(kIDA_GrBlendCoeff, kOne_GrBlendCoeff),
+                 /* xor */ MakeCoeffFormula(kIDA_GrBlendCoeff, kISA_GrBlendCoeff),
+                 /* plus */ MakeCoeffFormula(kOne_GrBlendCoeff, kOne_GrBlendCoeff),
+                 /* modulate */
+                 MakeCoverageSrcCoeffZeroFormula(BlendFormula::kISCModulate_OutputType),
+                 /* screen */ MakeCoeffFormula(kOne_GrBlendCoeff, kISC_GrBlendCoeff),
+         }}};
 // In the above table src-over is not optimized to src mode when the color is opaque because we
 // found no advantage to doing so. Also, we are using a global src-over XP in most cases which is
 // not specialized for opaque input. If the table were set to use the src formula then we'd have to
 // change when we use this global XP to keep analysis and practice in sync.
 
 static MAYBE_CONSTEXPR BlendFormula gLCDBlendTable[(int)SkBlendMode::kLastCoeffMode + 1] = {
-    /* clear */      MakeCoverageSrcCoeffZeroFormula(BlendFormula::kCoverage_OutputType),
-    /* src */        MakeCoverageFormula(BlendFormula::kCoverage_OutputType, kOne_GrBlendCoeff),
-    /* dst */        MakeCoeffFormula(kZero_GrBlendCoeff, kOne_GrBlendCoeff),
-    /* src-over */   MakeCoverageFormula(BlendFormula::kSAModulate_OutputType, kOne_GrBlendCoeff),
-    /* dst-over */   MakeCoeffFormula(kIDA_GrBlendCoeff, kOne_GrBlendCoeff),
-    /* src-in */     MakeCoverageFormula(BlendFormula::kCoverage_OutputType, kDA_GrBlendCoeff),
-    /* dst-in */     MakeCoverageSrcCoeffZeroFormula(BlendFormula::kISAModulate_OutputType),
-    /* src-out */    MakeCoverageFormula(BlendFormula::kCoverage_OutputType, kIDA_GrBlendCoeff),
-    /* dst-out */    MakeSAModulateFormula(kZero_GrBlendCoeff, kISC_GrBlendCoeff),
-    /* src-atop */   MakeCoverageFormula(BlendFormula::kSAModulate_OutputType, kDA_GrBlendCoeff),
-    /* dst-atop */   MakeCoverageFormula(BlendFormula::kISAModulate_OutputType, kIDA_GrBlendCoeff),
-    /* xor */        MakeCoverageFormula(BlendFormula::kSAModulate_OutputType, kIDA_GrBlendCoeff),
-    /* plus */       MakeCoeffFormula(kOne_GrBlendCoeff, kOne_GrBlendCoeff),
-    /* modulate */   MakeCoverageSrcCoeffZeroFormula(BlendFormula::kISCModulate_OutputType),
-    /* screen */     MakeCoeffFormula(kOne_GrBlendCoeff, kISC_GrBlendCoeff),
+        /* clear */ MakeCoverageSrcCoeffZeroFormula(BlendFormula::kCoverage_OutputType),
+        /* src */ MakeCoverageFormula(BlendFormula::kCoverage_OutputType, kOne_GrBlendCoeff),
+        /* dst */ MakeCoeffFormula(kZero_GrBlendCoeff, kOne_GrBlendCoeff),
+        /* src-over */ MakeCoverageFormula(BlendFormula::kSAModulate_OutputType, kOne_GrBlendCoeff),
+        /* dst-over */ MakeCoeffFormula(kIDA_GrBlendCoeff, kOne_GrBlendCoeff),
+        /* src-in */ MakeCoverageFormula(BlendFormula::kCoverage_OutputType, kDA_GrBlendCoeff),
+        /* dst-in */ MakeCoverageSrcCoeffZeroFormula(BlendFormula::kISAModulate_OutputType),
+        /* src-out */ MakeCoverageFormula(BlendFormula::kCoverage_OutputType, kIDA_GrBlendCoeff),
+        /* dst-out */ MakeSAModulateFormula(kZero_GrBlendCoeff, kISC_GrBlendCoeff),
+        /* src-atop */ MakeCoverageFormula(BlendFormula::kSAModulate_OutputType, kDA_GrBlendCoeff),
+        /* dst-atop */
+        MakeCoverageFormula(BlendFormula::kISAModulate_OutputType, kIDA_GrBlendCoeff),
+        /* xor */ MakeCoverageFormula(BlendFormula::kSAModulate_OutputType, kIDA_GrBlendCoeff),
+        /* plus */ MakeCoeffFormula(kOne_GrBlendCoeff, kOne_GrBlendCoeff),
+        /* modulate */ MakeCoverageSrcCoeffZeroFormula(BlendFormula::kISCModulate_OutputType),
+        /* screen */ MakeCoeffFormula(kOne_GrBlendCoeff, kISC_GrBlendCoeff),
 };
 
 #undef MAYBE_CONSTEXPR
@@ -399,8 +415,7 @@ class PorterDuffXferProcessor : public GrXferProcessor {
 public:
     PorterDuffXferProcessor(BlendFormula blendFormula, GrProcessorAnalysisCoverage coverage)
             : INHERITED(kPorterDuffXferProcessor_ClassID, false, false, coverage)
-            , fBlendFormula(blendFormula) {
-    }
+            , fBlendFormula(blendFormula) {}
 
     const char* name() const override { return "Porter Duff"; }
 
@@ -510,8 +525,7 @@ public:
     ShaderPDXferProcessor(bool hasMixedSamples, SkBlendMode xfermode,
                           GrProcessorAnalysisCoverage coverage)
             : INHERITED(kShaderPDXferProcessor_ClassID, true, hasMixedSamples, coverage)
-            , fXfermode(xfermode) {
-    }
+            , fXfermode(xfermode) {}
 
     const char* name() const override { return "Porter Duff Shader"; }
 
@@ -656,10 +670,9 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 
 PDLCDXferProcessor::PDLCDXferProcessor(const SkPMColor4f& blendConstant, float alpha)
-    : INHERITED(kPDLCDXferProcessor_ClassID, false, false, GrProcessorAnalysisCoverage::kLCD)
-    , fBlendConstant(blendConstant)
-    , fAlpha(alpha) {
-}
+        : INHERITED(kPDLCDXferProcessor_ClassID, false, false, GrProcessorAnalysisCoverage::kLCD)
+        , fBlendConstant(blendConstant)
+        , fAlpha(alpha) {}
 
 sk_sp<const GrXferProcessor> PDLCDXferProcessor::Make(SkBlendMode mode,
                                                       const GrProcessorAnalysisColor& color) {
@@ -672,12 +685,11 @@ sk_sp<const GrXferProcessor> PDLCDXferProcessor::Make(SkBlendMode mode,
     }
     SkColor4f blendConstantUPM = blendConstantPM.unpremul();
     float alpha = blendConstantUPM.fA;
-    blendConstantPM = { blendConstantUPM.fR, blendConstantUPM.fG, blendConstantUPM.fB, 1 };
+    blendConstantPM = {blendConstantUPM.fR, blendConstantUPM.fG, blendConstantUPM.fB, 1};
     return sk_sp<GrXferProcessor>(new PDLCDXferProcessor(blendConstantPM, alpha));
 }
 
-PDLCDXferProcessor::~PDLCDXferProcessor() {
-}
+PDLCDXferProcessor::~PDLCDXferProcessor() {}
 
 void PDLCDXferProcessor::onGetGLSLProcessorKey(const GrShaderCaps& caps,
                                                GrProcessorKeyBuilder* b) const {
@@ -759,7 +771,7 @@ const GrXPFactory* GrPorterDuffXPFactory::Get(SkBlendMode blendMode) {
 
 sk_sp<const GrXferProcessor> GrPorterDuffXPFactory::makeXferProcessor(
         const GrProcessorAnalysisColor& color, GrProcessorAnalysisCoverage coverage,
-        bool hasMixedSamples, const GrCaps& caps) const {
+        bool hasMixedSamples, const GrCaps& caps, GrClampType clampType) const {
     BlendFormula blendFormula;
     bool isLCD = coverage == GrProcessorAnalysisCoverage::kLCD;
     if (isLCD) {
@@ -778,17 +790,20 @@ sk_sp<const GrXferProcessor> GrPorterDuffXPFactory::makeXferProcessor(
                                   hasMixedSamples, fBlendMode);
     }
 
+    // Skia always saturates after the kPlus blend mode, so it requires shader-based blending when
+    // pixels aren't guaranteed to automatically be normalized (i.e. any floating point config).
     if ((blendFormula.hasSecondaryOutput() && !caps.shaderCaps()->dualSourceBlendingSupport()) ||
-        (isLCD && (SkBlendMode::kSrcOver != fBlendMode /*|| !color.isOpaque()*/))) {
-        return sk_sp<const GrXferProcessor>(new ShaderPDXferProcessor(hasMixedSamples, fBlendMode,
-                                                                      coverage));
+        (isLCD && (SkBlendMode::kSrcOver != fBlendMode /*|| !color.isOpaque()*/)) ||
+        (GrClampType::kAuto != clampType && SkBlendMode::kPlus == fBlendMode)) {
+        return sk_sp<const GrXferProcessor>(
+                new ShaderPDXferProcessor(hasMixedSamples, fBlendMode, coverage));
     }
     return sk_sp<const GrXferProcessor>(new PorterDuffXferProcessor(blendFormula, coverage));
 }
 
 static inline GrXPFactory::AnalysisProperties analysis_properties(
         const GrProcessorAnalysisColor& color, const GrProcessorAnalysisCoverage& coverage,
-        const GrCaps& caps, SkBlendMode mode) {
+        const GrCaps& caps, GrClampType clampType, SkBlendMode mode) {
     using AnalysisProperties = GrXPFactory::AnalysisProperties;
     AnalysisProperties props = AnalysisProperties::kNone;
     bool hasCoverage = GrProcessorAnalysisCoverage::kNone != coverage;
@@ -801,7 +816,7 @@ static inline GrXPFactory::AnalysisProperties analysis_properties(
     }
 
     if (formula.canTweakAlphaForCoverage() && !isLCD) {
-        props |= AnalysisProperties::kCompatibleWithAlphaAsCoverage;
+        props |= AnalysisProperties::kCompatibleWithCoverageAsAlpha;
     }
 
     if (isLCD) {
@@ -817,7 +832,7 @@ static inline GrXPFactory::AnalysisProperties analysis_properties(
             // and DstATop would also work). We also fall into the dst read case for src-over if we
             // do not have dual source blending.
             if (SkBlendMode::kSrcOver != mode ||
-                /*!color.isOpaque() ||*/ // See comment in MakeSrcOverXferProcessor about isOpaque.
+                /*!color.isOpaque() ||*/  // See comment in MakeSrcOverXferProcessor about isOpaque.
                 (formula.hasSecondaryOutput() && !caps.shaderCaps()->dualSourceBlendingSupport())) {
                 props |= AnalysisProperties::kReadsDstInShader;
             }
@@ -835,6 +850,10 @@ static inline GrXPFactory::AnalysisProperties analysis_properties(
         }
     }
 
+    if (GrClampType::kAuto != clampType && SkBlendMode::kPlus == mode) {
+        props |= AnalysisProperties::kReadsDstInShader;
+    }
+
     if (!formula.modifiesDst() || !formula.usesInputColor()) {
         props |= AnalysisProperties::kIgnoresInputColor;
     }
@@ -844,8 +863,9 @@ static inline GrXPFactory::AnalysisProperties analysis_properties(
 GrXPFactory::AnalysisProperties GrPorterDuffXPFactory::analysisProperties(
         const GrProcessorAnalysisColor& color,
         const GrProcessorAnalysisCoverage& coverage,
-        const GrCaps& caps) const {
-    return analysis_properties(color, coverage, caps, fBlendMode);
+        const GrCaps& caps,
+        GrClampType clampType) const {
+    return analysis_properties(color, coverage, caps, clampType, fBlendMode);
 }
 
 GR_DEFINE_XP_FACTORY_TEST(GrPorterDuffXPFactory);
@@ -932,6 +952,7 @@ sk_sp<const GrXferProcessor> GrPorterDuffXPFactory::MakeNoCoverageXP(SkBlendMode
 GrXPFactory::AnalysisProperties GrPorterDuffXPFactory::SrcOverAnalysisProperties(
         const GrProcessorAnalysisColor& color,
         const GrProcessorAnalysisCoverage& coverage,
-        const GrCaps& caps) {
-    return analysis_properties(color, coverage, caps, SkBlendMode::kSrcOver);
+        const GrCaps& caps,
+        GrClampType clampType) {
+    return analysis_properties(color, coverage, caps, clampType, SkBlendMode::kSrcOver);
 }

@@ -8,12 +8,12 @@
 #ifndef SKSL_FUNCTIONDECLARATION
 #define SKSL_FUNCTIONDECLARATION
 
-#include "SkSLExpression.h"
-#include "SkSLModifiers.h"
-#include "SkSLSymbol.h"
-#include "SkSLSymbolTable.h"
-#include "SkSLType.h"
-#include "SkSLVariable.h"
+#include "src/sksl/ir/SkSLExpression.h"
+#include "src/sksl/ir/SkSLModifiers.h"
+#include "src/sksl/ir/SkSLSymbol.h"
+#include "src/sksl/ir/SkSLSymbolTable.h"
+#include "src/sksl/ir/SkSLType.h"
+#include "src/sksl/ir/SkSLVariable.h"
 
 namespace SkSL {
 
@@ -23,12 +23,12 @@ namespace SkSL {
 struct FunctionDeclaration : public Symbol {
     FunctionDeclaration(int offset, Modifiers modifiers, StringFragment name,
                         std::vector<const Variable*> parameters, const Type& returnType)
-    : INHERITED(offset, kFunctionDeclaration_Kind, std::move(name))
-    , fDefined(false)
-    , fBuiltin(false)
-    , fModifiers(modifiers)
-    , fParameters(std::move(parameters))
-    , fReturnType(returnType) {}
+            : INHERITED(offset, kFunctionDeclaration_Kind, std::move(name))
+            , fDefined(false)
+            , fBuiltin(false)
+            , fModifiers(modifiers)
+            , fParameters(std::move(parameters))
+            , fReturnType(returnType) {}
 
     String description() const override {
         String result = fReturnType.description() + " " + fName + "(";
@@ -110,6 +110,6 @@ struct FunctionDeclaration : public Symbol {
     typedef Symbol INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

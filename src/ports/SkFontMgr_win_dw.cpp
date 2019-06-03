@@ -4,25 +4,25 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkDWriteNTDDI_VERSION.h"
+#include "src/utils/win/SkDWriteNTDDI_VERSION.h"
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN)
 
-#include "SkDWrite.h"
-#include "SkDWriteFontFileStream.h"
-#include "SkEndian.h"
-#include "SkFontMgr.h"
-#include "SkHRESULT.h"
-#include "SkMakeUnique.h"
-#include "SkMutex.h"
-#include "SkStream.h"
-#include "SkTScopedComPtr.h"
-#include "SkTypeface.h"
-#include "SkTypefaceCache.h"
-#include "SkTypeface_win_dw.h"
-#include "SkTypes.h"
-#include "SkUTF.h"
+#include "include/core/SkFontMgr.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkMutex.h"
+#include "src/core/SkEndian.h"
+#include "src/core/SkMakeUnique.h"
+#include "src/core/SkTypefaceCache.h"
+#include "src/ports/SkTypeface_win_dw.h"
+#include "src/utils/SkUTF.h"
+#include "src/utils/win/SkDWrite.h"
+#include "src/utils/win/SkDWriteFontFileStream.h"
+#include "src/utils/win/SkHRESULT.h"
+#include "src/utils/win/SkTScopedComPtr.h"
 
 #include <dwrite.h>
 #include <dwrite_2.h>
@@ -38,10 +38,9 @@ public:
     virtual ULONG STDMETHODCALLTYPE Release();
 
     // IDWriteFontFileLoader methods
-    virtual HRESULT STDMETHODCALLTYPE CreateStreamFromKey(
-        void const* fontFileReferenceKey,
-        UINT32 fontFileReferenceKeySize,
-        IDWriteFontFileStream** fontFileStream);
+    virtual HRESULT STDMETHODCALLTYPE CreateStreamFromKey(void const* fontFileReferenceKey,
+                                                          UINT32 fontFileReferenceKeySize,
+                                                          IDWriteFontFileStream** fontFileStream);
 
     // Takes ownership of stream.
     static HRESULT Create(std::unique_ptr<SkStreamAsset> stream,
@@ -57,9 +56,8 @@ public:
 
 private:
     StreamFontFileLoader(std::unique_ptr<SkStreamAsset> stream)
-        : fStream(std::move(stream)), fRefCount(1)
-    {}
-    virtual ~StreamFontFileLoader() { }
+            : fStream(std::move(stream)), fRefCount(1) {}
+    virtual ~StreamFontFileLoader() {}
 
     ULONG fRefCount;
 };
@@ -75,9 +73,7 @@ HRESULT StreamFontFileLoader::QueryInterface(REFIID iid, void** ppvObject) {
     }
 }
 
-ULONG StreamFontFileLoader::AddRef() {
-    return InterlockedIncrement(&fRefCount);
-}
+ULONG StreamFontFileLoader::AddRef() { return InterlockedIncrement(&fRefCount); }
 
 ULONG StreamFontFileLoader::Release() {
     ULONG newCount = InterlockedDecrement(&fRefCount);
@@ -87,11 +83,9 @@ ULONG StreamFontFileLoader::Release() {
     return newCount;
 }
 
-HRESULT StreamFontFileLoader::CreateStreamFromKey(
-    void const* fontFileReferenceKey,
-    UINT32 fontFileReferenceKeySize,
-    IDWriteFontFileStream** fontFileStream)
-{
+HRESULT StreamFontFileLoader::CreateStreamFromKey(void const* fontFileReferenceKey,
+                                                  UINT32 fontFileReferenceKeySize,
+                                                  IDWriteFontFileStream** fontFileStream) {
     SkTScopedComPtr<SkDWriteFontFileStreamWrapper> stream;
     HR(SkDWriteFontFileStreamWrapper::Create(fStream->duplicate().release(), &stream));
     *fontFileStream = stream.release();
@@ -119,9 +113,10 @@ public:
         }
         return S_OK;
     }
+
 private:
     StreamFontFileEnumerator(IDWriteFactory* factory, IDWriteFontFileLoader* fontFileLoader);
-    virtual ~StreamFontFileEnumerator() { }
+    virtual ~StreamFontFileEnumerator() {}
 
     ULONG fRefCount;
 
@@ -133,12 +128,11 @@ private:
 
 StreamFontFileEnumerator::StreamFontFileEnumerator(IDWriteFactory* factory,
                                                    IDWriteFontFileLoader* fontFileLoader)
-    : fRefCount(1)
-    , fFactory(SkRefComPtr(factory))
-    , fCurrentFile()
-    , fFontFileLoader(SkRefComPtr(fontFileLoader))
-    , fHasNext(true)
-{ }
+        : fRefCount(1)
+        , fFactory(SkRefComPtr(factory))
+        , fCurrentFile()
+        , fFontFileLoader(SkRefComPtr(fontFileLoader))
+        , fHasNext(true) {}
 
 HRESULT StreamFontFileEnumerator::QueryInterface(REFIID iid, void** ppvObject) {
     if (iid == IID_IUnknown || iid == __uuidof(IDWriteFontFileEnumerator)) {
@@ -151,9 +145,7 @@ HRESULT StreamFontFileEnumerator::QueryInterface(REFIID iid, void** ppvObject) {
     }
 }
 
-ULONG StreamFontFileEnumerator::AddRef() {
-    return InterlockedIncrement(&fRefCount);
-}
+ULONG StreamFontFileEnumerator::AddRef() { return InterlockedIncrement(&fRefCount); }
 
 ULONG StreamFontFileEnumerator::Release() {
     ULONG newCount = InterlockedDecrement(&fRefCount);
@@ -172,11 +164,10 @@ HRESULT StreamFontFileEnumerator::MoveNext(BOOL* hasCurrentFile) {
     fHasNext = false;
 
     UINT32 dummy = 0;
-    HR(fFactory->CreateCustomFontFileReference(
-            &dummy, //cannot be nullptr
-            sizeof(dummy), //even if this is 0
-            fFontFileLoader.get(),
-            &fCurrentFile));
+    HR(fFactory->CreateCustomFontFileReference(&dummy,         // cannot be nullptr
+                                               sizeof(dummy),  // even if this is 0
+                                               fFontFileLoader.get(),
+                                               &fCurrentFile));
 
     *hasCurrentFile = TRUE;
     return S_OK;
@@ -189,7 +180,7 @@ HRESULT StreamFontFileEnumerator::GetCurrentFontFile(IDWriteFontFile** fontFile)
     }
 
     *fontFile = SkRefComPtr(fCurrentFile.get());
-    return  S_OK;
+    return S_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -202,11 +193,11 @@ public:
     virtual ULONG STDMETHODCALLTYPE Release();
 
     // IDWriteFontCollectionLoader methods
-    virtual HRESULT STDMETHODCALLTYPE CreateEnumeratorFromKey(
-        IDWriteFactory* factory,
-        void const* collectionKey,
-        UINT32 collectionKeySize,
-        IDWriteFontFileEnumerator** fontFileEnumerator);
+    virtual HRESULT STDMETHODCALLTYPE
+    CreateEnumeratorFromKey(IDWriteFactory* factory,
+                            void const* collectionKey,
+                            UINT32 collectionKeySize,
+                            IDWriteFontFileEnumerator** fontFileEnumerator);
 
     static HRESULT Create(IDWriteFontFileLoader* fontFileLoader,
                           StreamFontCollectionLoader** streamFontCollectionLoader) {
@@ -216,12 +207,11 @@ public:
         }
         return S_OK;
     }
+
 private:
     StreamFontCollectionLoader(IDWriteFontFileLoader* fontFileLoader)
-        : fRefCount(1)
-        , fFontFileLoader(SkRefComPtr(fontFileLoader))
-    { }
-    virtual ~StreamFontCollectionLoader() { }
+            : fRefCount(1), fFontFileLoader(SkRefComPtr(fontFileLoader)) {}
+    virtual ~StreamFontCollectionLoader() {}
 
     ULONG fRefCount;
     SkTScopedComPtr<IDWriteFontFileLoader> fFontFileLoader;
@@ -238,9 +228,7 @@ HRESULT StreamFontCollectionLoader::QueryInterface(REFIID iid, void** ppvObject)
     }
 }
 
-ULONG StreamFontCollectionLoader::AddRef() {
-    return InterlockedIncrement(&fRefCount);
-}
+ULONG StreamFontCollectionLoader::AddRef() { return InterlockedIncrement(&fRefCount); }
 
 ULONG StreamFontCollectionLoader::Release() {
     ULONG newCount = InterlockedDecrement(&fRefCount);
@@ -251,11 +239,10 @@ ULONG StreamFontCollectionLoader::Release() {
 }
 
 HRESULT StreamFontCollectionLoader::CreateEnumeratorFromKey(
-    IDWriteFactory* factory,
-    void const* collectionKey,
-    UINT32 collectionKeySize,
-    IDWriteFontFileEnumerator** fontFileEnumerator)
-{
+        IDWriteFactory* factory,
+        void const* collectionKey,
+        UINT32 collectionKeySize,
+        IDWriteFontFileEnumerator** fontFileEnumerator) {
     SkTScopedComPtr<StreamFontFileEnumerator> enumerator;
     HR(StreamFontFileEnumerator::Create(factory, fFontFileLoader.get(), &enumerator));
     *fontFileEnumerator = enumerator.release();
@@ -269,11 +256,10 @@ public:
     /** localeNameLength must include the null terminator. */
     SkFontMgr_DirectWrite(IDWriteFactory* factory, IDWriteFontCollection* fontCollection,
                           IDWriteFontFallback* fallback, WCHAR* localeName, int localeNameLength)
-        : fFactory(SkRefComPtr(factory))
-        , fFontFallback(SkSafeRefComPtr(fallback))
-        , fFontCollection(SkRefComPtr(fontCollection))
-        , fLocaleName(localeNameLength)
-    {
+            : fFactory(SkRefComPtr(factory))
+            , fFontFallback(SkSafeRefComPtr(fallback))
+            , fFontCollection(SkRefComPtr(fontCollection))
+            , fLocaleName(localeNameLength) {
         if (!SUCCEEDED(fFactory->QueryInterface(&fFactory2))) {
             // IUnknown::QueryInterface states that if it fails, punk will be set to nullptr.
             // http://blogs.msdn.com/b/oldnewthing/archive/2004/03/26/96777.aspx
@@ -298,8 +284,10 @@ protected:
                                             SkUnichar character) const override;
     SkTypeface* onMatchFaceStyle(const SkTypeface* familyMember,
                                  const SkFontStyle& fontstyle) const override;
-    sk_sp<SkTypeface> onMakeFromStreamIndex(std::unique_ptr<SkStreamAsset>, int ttcIndex) const override;
-    sk_sp<SkTypeface> onMakeFromStreamArgs(std::unique_ptr<SkStreamAsset>, const SkFontArguments&) const override;
+    sk_sp<SkTypeface> onMakeFromStreamIndex(std::unique_ptr<SkStreamAsset>,
+                                            int ttcIndex) const override;
+    sk_sp<SkTypeface> onMakeFromStreamArgs(std::unique_ptr<SkStreamAsset>,
+                                           const SkFontArguments&) const override;
     sk_sp<SkTypeface> onMakeFromData(sk_sp<SkData>, int ttcIndex) const override;
     sk_sp<SkTypeface> onMakeFromFile(const char path[], int ttcIndex) const override;
     sk_sp<SkTypeface> onLegacyMakeTypeface(const char familyName[], SkFontStyle) const override;
@@ -327,11 +315,8 @@ private:
 
 class SkFontStyleSet_DirectWrite : public SkFontStyleSet {
 public:
-    SkFontStyleSet_DirectWrite(const SkFontMgr_DirectWrite* fontMgr,
-                               IDWriteFontFamily* fontFamily)
-        : fFontMgr(SkRef(fontMgr))
-        , fFontFamily(SkRefComPtr(fontFamily))
-    { }
+    SkFontStyleSet_DirectWrite(const SkFontMgr_DirectWrite* fontMgr, IDWriteFontFamily* fontFamily)
+            : fFontMgr(SkRef(fontMgr)), fFontFamily(SkRefComPtr(fontFamily)) {}
 
     int count() override;
     void getStyle(int index, SkFontStyle* fs, SkString* styleName) override;
@@ -365,7 +350,7 @@ static bool FindByDWriteFont(SkTypeface* cached, void* ctx) {
     ProtoDWriteTypeface* ctxFace = reinterpret_cast<ProtoDWriteTypeface*>(ctx);
     bool same;
 
-    //Check to see if the two fonts are identical.
+    // Check to see if the two fonts are identical.
     HRB(are_same(cshFace->fDWriteFont.get(), ctxFace->fDWriteFont, same));
     if (same) {
         return true;
@@ -376,7 +361,7 @@ static bool FindByDWriteFont(SkTypeface* cached, void* ctx) {
         return true;
     }
 
-    //Check if the two fonts share the same loader and have the same key.
+    // Check if the two fonts share the same loader and have the same key.
     UINT32 cshNumFiles;
     UINT32 ctxNumFiles;
     HRB(cshFace->fDWriteFontFace->GetFiles(&cshNumFiles, nullptr));
@@ -390,7 +375,7 @@ static bool FindByDWriteFont(SkTypeface* cached, void* ctx) {
     HRB(cshFace->fDWriteFontFace->GetFiles(&cshNumFiles, &cshFontFile));
     HRB(ctxFace->fDWriteFontFace->GetFiles(&ctxNumFiles, &ctxFontFile));
 
-    //for (each file) { //we currently only admit fonts from one file.
+    // for (each file) { //we currently only admit fonts from one file.
     SkTScopedComPtr<IDWriteFontFileLoader> cshFontFileLoader;
     SkTScopedComPtr<IDWriteFontFileLoader> ctxFontFileLoader;
     HRB(cshFontFile->GetLoader(&cshFontFileLoader));
@@ -414,8 +399,8 @@ static bool FindByDWriteFont(SkTypeface* cached, void* ctx) {
         return false;
     }
 
-    //TODO: better means than comparing name strings?
-    //NOTE: .ttc and fake bold/italic will end up here.
+    // TODO: better means than comparing name strings?
+    // NOTE: .ttc and fake bold/italic will end up here.
     SkTScopedComPtr<IDWriteLocalizedStrings> cshFamilyNames;
     SkTScopedComPtr<IDWriteLocalizedStrings> cshFaceNames;
     HRB(cshFace->fDWriteFontFamily->GetFamilyNames(&cshFamilyNames));
@@ -434,32 +419,28 @@ static bool FindByDWriteFont(SkTypeface* cached, void* ctx) {
     HRB(ctxFamilyNames->GetStringLength(0, &ctxFamilyNameLength));
     HRB(ctxFaceNames->GetStringLength(0, &ctxFaceNameLength));
 
-    if (cshFamilyNameLength != ctxFamilyNameLength ||
-        cshFaceNameLength != ctxFaceNameLength)
-    {
+    if (cshFamilyNameLength != ctxFamilyNameLength || cshFaceNameLength != ctxFaceNameLength) {
         return false;
     }
 
-    SkSMallocWCHAR cshFamilyName(cshFamilyNameLength+1);
-    SkSMallocWCHAR cshFaceName(cshFaceNameLength+1);
-    HRB(cshFamilyNames->GetString(0, cshFamilyName.get(), cshFamilyNameLength+1));
-    HRB(cshFaceNames->GetString(0, cshFaceName.get(), cshFaceNameLength+1));
+    SkSMallocWCHAR cshFamilyName(cshFamilyNameLength + 1);
+    SkSMallocWCHAR cshFaceName(cshFaceNameLength + 1);
+    HRB(cshFamilyNames->GetString(0, cshFamilyName.get(), cshFamilyNameLength + 1));
+    HRB(cshFaceNames->GetString(0, cshFaceName.get(), cshFaceNameLength + 1));
 
-    SkSMallocWCHAR ctxFamilyName(ctxFamilyNameLength+1);
-    SkSMallocWCHAR ctxFaceName(ctxFaceNameLength+1);
-    HRB(ctxFamilyNames->GetString(0, ctxFamilyName.get(), ctxFamilyNameLength+1));
-    HRB(ctxFaceNames->GetString(0, ctxFaceName.get(), ctxFaceNameLength+1));
+    SkSMallocWCHAR ctxFamilyName(ctxFamilyNameLength + 1);
+    SkSMallocWCHAR ctxFaceName(ctxFaceNameLength + 1);
+    HRB(ctxFamilyNames->GetString(0, ctxFamilyName.get(), ctxFamilyNameLength + 1));
+    HRB(ctxFaceNames->GetString(0, ctxFaceName.get(), ctxFaceNameLength + 1));
 
     return wcscmp(cshFamilyName.get(), ctxFamilyName.get()) == 0 &&
            wcscmp(cshFaceName.get(), ctxFaceName.get()) == 0;
 }
 
 sk_sp<SkTypeface> SkFontMgr_DirectWrite::makeTypefaceFromDWriteFont(
-        IDWriteFontFace* fontFace,
-        IDWriteFont* font,
-        IDWriteFontFamily* fontFamily) const {
-    SkAutoMutexAcquire ama(fTFCacheMutex);
-    ProtoDWriteTypeface spec = { fontFace, font, fontFamily };
+        IDWriteFontFace* fontFace, IDWriteFont* font, IDWriteFontFamily* fontFamily) const {
+    SkAutoMutexExclusive ama(fTFCacheMutex);
+    ProtoDWriteTypeface spec = {fontFace, font, fontFamily};
     sk_sp<SkTypeface> face = fTFCache.findByProcAndRef(FindByDWriteFont, &spec);
     if (nullptr == face) {
         face = DWriteFontTypeface::Make(fFactory.get(), fontFace, font, fontFamily);
@@ -470,9 +451,7 @@ sk_sp<SkTypeface> SkFontMgr_DirectWrite::makeTypefaceFromDWriteFont(
     return face;
 }
 
-int SkFontMgr_DirectWrite::onCountFamilies() const {
-    return fFontCollection->GetFontFamilyCount();
-}
+int SkFontMgr_DirectWrite::onCountFamilies() const { return fFontCollection->GetFontFamilyCount(); }
 
 void SkFontMgr_DirectWrite::onGetFamilyName(int index, SkString* familyName) const {
     SkTScopedComPtr<IDWriteFontFamily> fontFamily;
@@ -502,7 +481,7 @@ SkFontStyleSet* SkFontMgr_DirectWrite::onMatchFamily(const char familyName[]) co
     UINT32 index;
     BOOL exists;
     HRNM(fFontCollection->FindFamilyName(dwFamilyName.get(), &index, &exists),
-            "Failed while finding family by name.");
+         "Failed while finding family by name.");
     if (!exists) {
         return nullptr;
     }
@@ -519,21 +498,22 @@ SkTypeface* SkFontMgr_DirectWrite::onMatchFamilyStyle(const char familyName[],
 class FontFallbackRenderer : public IDWriteTextRenderer {
 public:
     FontFallbackRenderer(const SkFontMgr_DirectWrite* outer, UINT32 character)
-        : fRefCount(1), fOuter(SkSafeRef(outer)), fCharacter(character), fResolvedTypeface(nullptr) {
-    }
+            : fRefCount(1)
+            , fOuter(SkSafeRef(outer))
+            , fCharacter(character)
+            , fResolvedTypeface(nullptr) {}
 
-    virtual ~FontFallbackRenderer() { }
+    virtual ~FontFallbackRenderer() {}
 
     // IDWriteTextRenderer methods
-    virtual HRESULT STDMETHODCALLTYPE DrawGlyphRun(
-        void* clientDrawingContext,
-        FLOAT baselineOriginX,
-        FLOAT baselineOriginY,
-        DWRITE_MEASURING_MODE measuringMode,
-        DWRITE_GLYPH_RUN const* glyphRun,
-        DWRITE_GLYPH_RUN_DESCRIPTION const* glyphRunDescription,
-        IUnknown* clientDrawingEffect) override
-    {
+    virtual HRESULT STDMETHODCALLTYPE
+    DrawGlyphRun(void* clientDrawingContext,
+                 FLOAT baselineOriginX,
+                 FLOAT baselineOriginY,
+                 DWRITE_MEASURING_MODE measuringMode,
+                 DWRITE_GLYPH_RUN const* glyphRun,
+                 DWRITE_GLYPH_RUN_DESCRIPTION const* glyphRunDescription,
+                 IUnknown* clientDrawingEffect) override {
         SkTScopedComPtr<IDWriteFont> font;
         HRM(fOuter->fFontCollection->GetFontFromFontFace(glyphRun->fontFace, &font),
             "Could not get font from font face.");
@@ -547,70 +527,62 @@ public:
         if (exists) {
             SkTScopedComPtr<IDWriteFontFamily> fontFamily;
             HRM(font->GetFontFamily(&fontFamily), "Could not get family.");
-            fResolvedTypeface = fOuter->makeTypefaceFromDWriteFont(glyphRun->fontFace,
-                                                                   font.get(),
-                                                                   fontFamily.get()).release();
+            fResolvedTypeface = fOuter->makeTypefaceFromDWriteFont(glyphRun->fontFace, font.get(),
+                                                                   fontFamily.get())
+                                        .release();
         }
 
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE DrawUnderline(
-        void* clientDrawingContext,
-        FLOAT baselineOriginX,
-        FLOAT baselineOriginY,
-        DWRITE_UNDERLINE const* underline,
-        IUnknown* clientDrawingEffect) override
-    { return E_NOTIMPL; }
+    virtual HRESULT STDMETHODCALLTYPE DrawUnderline(void* clientDrawingContext,
+                                                    FLOAT baselineOriginX,
+                                                    FLOAT baselineOriginY,
+                                                    DWRITE_UNDERLINE const* underline,
+                                                    IUnknown* clientDrawingEffect) override {
+        return E_NOTIMPL;
+    }
 
-    virtual HRESULT STDMETHODCALLTYPE DrawStrikethrough(
-        void* clientDrawingContext,
-        FLOAT baselineOriginX,
-        FLOAT baselineOriginY,
-        DWRITE_STRIKETHROUGH const* strikethrough,
-        IUnknown* clientDrawingEffect) override
-    { return E_NOTIMPL; }
+    virtual HRESULT STDMETHODCALLTYPE DrawStrikethrough(void* clientDrawingContext,
+                                                        FLOAT baselineOriginX,
+                                                        FLOAT baselineOriginY,
+                                                        DWRITE_STRIKETHROUGH const* strikethrough,
+                                                        IUnknown* clientDrawingEffect) override {
+        return E_NOTIMPL;
+    }
 
-    virtual HRESULT STDMETHODCALLTYPE DrawInlineObject(
-        void* clientDrawingContext,
-        FLOAT originX,
-        FLOAT originY,
-        IDWriteInlineObject* inlineObject,
-        BOOL isSideways,
-        BOOL isRightToLeft,
-        IUnknown* clientDrawingEffect) override
-    { return E_NOTIMPL; }
+    virtual HRESULT STDMETHODCALLTYPE DrawInlineObject(void* clientDrawingContext,
+                                                       FLOAT originX,
+                                                       FLOAT originY,
+                                                       IDWriteInlineObject* inlineObject,
+                                                       BOOL isSideways,
+                                                       BOOL isRightToLeft,
+                                                       IUnknown* clientDrawingEffect) override {
+        return E_NOTIMPL;
+    }
 
     // IDWritePixelSnapping methods
-    virtual HRESULT STDMETHODCALLTYPE IsPixelSnappingDisabled(
-        void* clientDrawingContext,
-        BOOL* isDisabled) override
-    {
+    virtual HRESULT STDMETHODCALLTYPE IsPixelSnappingDisabled(void* clientDrawingContext,
+                                                              BOOL* isDisabled) override {
         *isDisabled = FALSE;
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE GetCurrentTransform(
-        void* clientDrawingContext,
-        DWRITE_MATRIX* transform) override
-    {
-        const DWRITE_MATRIX ident = { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 };
+    virtual HRESULT STDMETHODCALLTYPE GetCurrentTransform(void* clientDrawingContext,
+                                                          DWRITE_MATRIX* transform) override {
+        const DWRITE_MATRIX ident = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
         *transform = ident;
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE GetPixelsPerDip(
-        void* clientDrawingContext,
-        FLOAT* pixelsPerDip) override
-    {
+    virtual HRESULT STDMETHODCALLTYPE GetPixelsPerDip(void* clientDrawingContext,
+                                                      FLOAT* pixelsPerDip) override {
         *pixelsPerDip = 1.0f;
         return S_OK;
     }
 
     // IUnknown methods
-    ULONG STDMETHODCALLTYPE AddRef() override {
-        return InterlockedIncrement(&fRefCount);
-    }
+    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&fRefCount); }
 
     ULONG STDMETHODCALLTYPE Release() override {
         ULONG newCount = InterlockedDecrement(&fRefCount);
@@ -620,11 +592,9 @@ public:
         return newCount;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE QueryInterface(IID const& riid, void** ppvObject) override{
-        if (__uuidof(IUnknown) == riid ||
-            __uuidof(IDWritePixelSnapping) == riid ||
-            __uuidof(IDWriteTextRenderer) == riid)
-        {
+    virtual HRESULT STDMETHODCALLTYPE QueryInterface(IID const& riid, void** ppvObject) override {
+        if (__uuidof(IUnknown) == riid || __uuidof(IDWritePixelSnapping) == riid ||
+            __uuidof(IDWriteTextRenderer) == riid) {
             *ppvObject = this;
             this->AddRef();
             return S_OK;
@@ -646,20 +616,17 @@ class FontFallbackSource : public IDWriteTextAnalysisSource {
 public:
     FontFallbackSource(const WCHAR* string, UINT32 length, const WCHAR* locale,
                        IDWriteNumberSubstitution* numberSubstitution)
-        : fString(string)
-        , fLength(length)
-        , fLocale(locale)
-        , fNumberSubstitution(numberSubstitution)
-    { }
+            : fString(string)
+            , fLength(length)
+            , fLocale(locale)
+            , fNumberSubstitution(numberSubstitution) {}
 
-    virtual ~FontFallbackSource() { }
+    virtual ~FontFallbackSource() {}
 
     // IDWriteTextAnalysisSource methods
-    virtual HRESULT STDMETHODCALLTYPE GetTextAtPosition(
-        UINT32 textPosition,
-        WCHAR const** textString,
-        UINT32* textLength) override
-    {
+    virtual HRESULT STDMETHODCALLTYPE GetTextAtPosition(UINT32 textPosition,
+                                                        WCHAR const** textString,
+                                                        UINT32* textLength) override {
         if (fLength <= textPosition) {
             *textString = nullptr;
             *textLength = 0;
@@ -670,11 +637,9 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE GetTextBeforePosition(
-        UINT32 textPosition,
-        WCHAR const** textString,
-        UINT32* textLength) override
-    {
+    virtual HRESULT STDMETHODCALLTYPE GetTextBeforePosition(UINT32 textPosition,
+                                                            WCHAR const** textString,
+                                                            UINT32* textLength) override {
         if (textPosition < 1 || fLength <= textPosition) {
             *textString = nullptr;
             *textLength = 0;
@@ -690,28 +655,23 @@ public:
         return DWRITE_READING_DIRECTION_LEFT_TO_RIGHT;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE GetLocaleName(
-        UINT32 textPosition,
-        UINT32* textLength,
-        WCHAR const** localeName) override
-    {
+    virtual HRESULT STDMETHODCALLTYPE GetLocaleName(UINT32 textPosition,
+                                                    UINT32* textLength,
+                                                    WCHAR const** localeName) override {
         *localeName = fLocale;
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE GetNumberSubstitution(
-        UINT32 textPosition,
-        UINT32* textLength,
-        IDWriteNumberSubstitution** numberSubstitution) override
-    {
+    virtual HRESULT STDMETHODCALLTYPE
+    GetNumberSubstitution(UINT32 textPosition,
+                          UINT32* textLength,
+                          IDWriteNumberSubstitution** numberSubstitution) override {
         *numberSubstitution = fNumberSubstitution;
         return S_OK;
     }
 
     // IUnknown methods
-    ULONG STDMETHODCALLTYPE AddRef() override {
-        return InterlockedIncrement(&fRefCount);
-    }
+    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&fRefCount); }
 
     ULONG STDMETHODCALLTYPE Release() override {
         ULONG newCount = InterlockedDecrement(&fRefCount);
@@ -721,10 +681,8 @@ public:
         return newCount;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE QueryInterface(IID const& riid, void** ppvObject) override{
-        if (__uuidof(IUnknown) == riid ||
-            __uuidof(IDWriteTextAnalysisSource) == riid)
-        {
+    virtual HRESULT STDMETHODCALLTYPE QueryInterface(IID const& riid, void** ppvObject) override {
+        if (__uuidof(IUnknown) == riid || __uuidof(IDWriteTextAnalysisSource) == riid) {
             *ppvObject = this;
             this->AddRef();
             return S_OK;
@@ -744,8 +702,7 @@ protected:
 SkTypeface* SkFontMgr_DirectWrite::onMatchFamilyStyleCharacter(const char familyName[],
                                                                const SkFontStyle& style,
                                                                const char* bcp47[], int bcp47Count,
-                                                               SkUnichar character) const
-{
+                                                               SkUnichar character) const {
     const DWriteStyle dwStyle(style);
 
     const WCHAR* dwFamilyName = nullptr;
@@ -756,8 +713,8 @@ SkTypeface* SkFontMgr_DirectWrite::onMatchFamilyStyleCharacter(const char family
     }
 
     WCHAR str[16];
-    UINT32 strLen = static_cast<UINT32>(
-        SkUTF::ToUTF16(character, reinterpret_cast<uint16_t*>(str)));
+    UINT32 strLen =
+            static_cast<UINT32>(SkUTF::ToUTF16(character, reinterpret_cast<uint16_t*>(str)));
 
     const SkSMallocWCHAR* dwBcp47;
     SkSMallocWCHAR dwBcp47Local;
@@ -781,17 +738,17 @@ SkTypeface* SkFontMgr_DirectWrite::onMatchFamilyStyleCharacter(const char family
         }
 
         SkTScopedComPtr<IDWriteNumberSubstitution> numberSubstitution;
-        HRNM(fFactory2->CreateNumberSubstitution(DWRITE_NUMBER_SUBSTITUTION_METHOD_NONE, nullptr, TRUE,
-                                                 &numberSubstitution),
+        HRNM(fFactory2->CreateNumberSubstitution(DWRITE_NUMBER_SUBSTITUTION_METHOD_NONE, nullptr,
+                                                 TRUE, &numberSubstitution),
              "Could not create number substitution.");
         SkTScopedComPtr<FontFallbackSource> fontFallbackSource(
-            new FontFallbackSource(str, strLen, *dwBcp47, numberSubstitution.get()));
+                new FontFallbackSource(str, strLen, *dwBcp47, numberSubstitution.get()));
 
         UINT32 mappedLength;
         SkTScopedComPtr<IDWriteFont> font;
         FLOAT scale;
         HRNM(fontFallback->MapCharacters(fontFallbackSource.get(),
-                                         0, // textPosition,
+                                         0,  // textPosition,
                                          strLen,
                                          fFontCollection.get(),
                                          dwFamilyName,
@@ -811,7 +768,8 @@ SkTypeface* SkFontMgr_DirectWrite::onMatchFamilyStyleCharacter(const char family
 
         SkTScopedComPtr<IDWriteFontFamily> fontFamily;
         HRNM(font->GetFontFamily(&fontFamily), "Could not get family from font.");
-        return this->makeTypefaceFromDWriteFont(fontFace.get(), font.get(), fontFamily.get()).release();
+        return this->makeTypefaceFromDWriteFont(fontFace.get(), font.get(), fontFamily.get())
+                .release();
     }
 
     SkTScopedComPtr<IDWriteTextFormat> fallbackFormat;
@@ -826,13 +784,12 @@ SkTypeface* SkFontMgr_DirectWrite::onMatchFamilyStyleCharacter(const char family
          "Could not create text format.");
 
     SkTScopedComPtr<IDWriteTextLayout> fallbackLayout;
-    HRNM(fFactory->CreateTextLayout(str, strLen, fallbackFormat.get(),
-                                    200.0f, 200.0f,
+    HRNM(fFactory->CreateTextLayout(str, strLen, fallbackFormat.get(), 200.0f, 200.0f,
                                     &fallbackLayout),
          "Could not create text layout.");
 
     SkTScopedComPtr<FontFallbackRenderer> fontFallbackRenderer(
-        new FontFallbackRenderer(this, character));
+            new FontFallbackRenderer(this, character));
 
     HRNM(fallbackLayout->Draw(nullptr, fontFallbackRenderer.get(), 50.0f, 50.0f),
          "Could not draw layout with renderer.");
@@ -843,17 +800,15 @@ SkTypeface* SkFontMgr_DirectWrite::onMatchFamilyStyleCharacter(const char family
 SkTypeface* SkFontMgr_DirectWrite::onMatchFaceStyle(const SkTypeface* familyMember,
                                                     const SkFontStyle& fontstyle) const {
     SkString familyName;
-    SkFontStyleSet_DirectWrite sset(
-        this, ((DWriteFontTypeface*)familyMember)->fDWriteFontFamily.get()
-    );
+    SkFontStyleSet_DirectWrite sset(this,
+                                    ((DWriteFontTypeface*)familyMember)->fDWriteFontFamily.get());
     return sset.matchStyle(fontstyle);
 }
 
 template <typename T> class SkAutoIDWriteUnregister {
 public:
     SkAutoIDWriteUnregister(IDWriteFactory* factory, T* unregister)
-        : fFactory(factory), fUnregister(unregister)
-    { }
+            : fFactory(factory), fUnregister(unregister) {}
 
     ~SkAutoIDWriteUnregister() {
         if (fUnregister) {
@@ -880,23 +835,24 @@ private:
     T* fUnregister;
 };
 
-sk_sp<SkTypeface> SkFontMgr_DirectWrite::onMakeFromStreamIndex(std::unique_ptr<SkStreamAsset> stream,
-                                                               int ttcIndex) const {
+sk_sp<SkTypeface> SkFontMgr_DirectWrite::onMakeFromStreamIndex(
+        std::unique_ptr<SkStreamAsset> stream, int ttcIndex) const {
     SkTScopedComPtr<StreamFontFileLoader> fontFileLoader;
     // This transfers ownership of stream to the new object.
     HRN(StreamFontFileLoader::Create(std::move(stream), &fontFileLoader));
     HRN(fFactory->RegisterFontFileLoader(fontFileLoader.get()));
     SkAutoIDWriteUnregister<StreamFontFileLoader> autoUnregisterFontFileLoader(
-        fFactory.get(), fontFileLoader.get());
+            fFactory.get(), fontFileLoader.get());
 
     SkTScopedComPtr<StreamFontCollectionLoader> fontCollectionLoader;
     HRN(StreamFontCollectionLoader::Create(fontFileLoader.get(), &fontCollectionLoader));
     HRN(fFactory->RegisterFontCollectionLoader(fontCollectionLoader.get()));
     SkAutoIDWriteUnregister<StreamFontCollectionLoader> autoUnregisterFontCollectionLoader(
-        fFactory.get(), fontCollectionLoader.get());
+            fFactory.get(), fontCollectionLoader.get());
 
     SkTScopedComPtr<IDWriteFontCollection> fontCollection;
-    HRN(fFactory->CreateCustomFontCollection(fontCollectionLoader.get(), nullptr, 0, &fontCollection));
+    HRN(fFactory->CreateCustomFontCollection(fontCollectionLoader.get(), nullptr, 0,
+                                             &fontCollection));
 
     // Find the first non-simulated font which has the given ttc index.
     UINT32 familyCount = fontCollection->GetFontFamilyCount();
@@ -917,8 +873,8 @@ sk_sp<SkTypeface> SkFontMgr_DirectWrite::onMakeFromStreamIndex(std::unique_ptr<S
 
             int faceIndex = fontFace->GetIndex();
             if (faceIndex == ttcIndex) {
-                return DWriteFontTypeface::Make(fFactory.get(),
-                                                fontFace.get(), font.get(), fontFamily.get(),
+                return DWriteFontTypeface::Make(fFactory.get(), fontFace.get(), font.get(),
+                                                fontFamily.get(),
                                                 autoUnregisterFontFileLoader.detatch(),
                                                 autoUnregisterFontCollectionLoader.detatch());
             }
@@ -989,7 +945,7 @@ sk_sp<SkTypeface> SkFontMgr_DirectWrite::onMakeFromStreamArgs(std::unique_ptr<Sk
                         if (SkEndian_SwapBE32(fontAxisValues[fontIndex].axisTag) ==
                             args.getVariationDesignPosition().coordinates[argsIndex].axis) {
                             fontAxisValues[fontIndex].value =
-                                args.getVariationDesignPosition().coordinates[argsIndex].value;
+                                    args.getVariationDesignPosition().coordinates[argsIndex].value;
                         }
                     }
                 }
@@ -1005,10 +961,10 @@ sk_sp<SkTypeface> SkFontMgr_DirectWrite::onMakeFromStreamArgs(std::unique_ptr<Sk
 
 #endif
 
-            return DWriteFontTypeface::Make(
-                    fFactory.get(), fontFace.get(), font.get(), fontFamily.get(),
-                    autoUnregisterFontFileLoader.detatch(),
-                    autoUnregisterFontCollectionLoader.detatch());
+            return DWriteFontTypeface::Make(fFactory.get(), fontFace.get(), font.get(),
+                                            fontFamily.get(),
+                                            autoUnregisterFontFileLoader.detatch(),
+                                            autoUnregisterFontCollectionLoader.detatch());
         }
     }
 
@@ -1080,9 +1036,7 @@ sk_sp<SkTypeface> SkFontMgr_DirectWrite::onLegacyMakeTypeface(const char familyN
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int SkFontStyleSet_DirectWrite::count() {
-    return fFontFamily->GetFontCount();
-}
+int SkFontStyleSet_DirectWrite::count() { return fFontFamily->GetFontCount(); }
 
 SkTypeface* SkFontStyleSet_DirectWrite::createTypeface(int index) {
     SkTScopedComPtr<IDWriteFont> font;
@@ -1091,7 +1045,8 @@ SkTypeface* SkFontStyleSet_DirectWrite::createTypeface(int index) {
     SkTScopedComPtr<IDWriteFontFace> fontFace;
     HRNM(font->CreateFontFace(&fontFace), "Could not create font face.");
 
-    return fFontMgr->makeTypefaceFromDWriteFont(fontFace.get(), font.get(), fFontFamily.get()).release();
+    return fFontMgr->makeTypefaceFromDWriteFont(fontFace.get(), font.get(), fFontFamily.get())
+            .release();
 }
 
 void SkFontStyleSet_DirectWrite::getStyle(int index, SkFontStyle* fs, SkString* styleName) {
@@ -1120,12 +1075,12 @@ SkTypeface* SkFontStyleSet_DirectWrite::matchStyle(const SkFontStyle& pattern) {
     SkTScopedComPtr<IDWriteFontFace> fontFace;
     HRNM(font->CreateFontFace(&fontFace), "Could not create font face.");
 
-    return fFontMgr->makeTypefaceFromDWriteFont(fontFace.get(), font.get(),
-                                                fFontFamily.get()).release();
+    return fFontMgr->makeTypefaceFromDWriteFont(fontFace.get(), font.get(), fFontFamily.get())
+            .release();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-#include "SkTypeface_win.h"
+#include "include/ports/SkTypeface_win.h"
 
 SK_API sk_sp<SkFontMgr> SkFontMgr_New_DirectWrite(IDWriteFactory* factory,
                                                   IDWriteFontCollection* collection) {
@@ -1165,11 +1120,11 @@ SK_API sk_sp<SkFontMgr> SkFontMgr_New_DirectWrite(IDWriteFactory* factory,
         }
     }
 
-    return sk_make_sp<SkFontMgr_DirectWrite>(factory, collection, fallback,
-                                             localeName, localeNameLen);
+    return sk_make_sp<SkFontMgr_DirectWrite>(factory, collection, fallback, localeName,
+                                             localeNameLen);
 }
 
-#include "SkFontMgr_indirect.h"
+#include "include/ports/SkFontMgr_indirect.h"
 SK_API sk_sp<SkFontMgr> SkFontMgr_New_DirectWriteRenderer(sk_sp<SkRemotableFontMgr> proxy) {
     sk_sp<SkFontMgr> impl(SkFontMgr_New_DirectWrite());
     if (!impl) {
@@ -1177,4 +1132,4 @@ SK_API sk_sp<SkFontMgr> SkFontMgr_New_DirectWriteRenderer(sk_sp<SkRemotableFontM
     }
     return sk_make_sp<SkFontMgr_Indirect>(std::move(impl), std::move(proxy));
 }
-#endif//defined(SK_BUILD_FOR_WIN)
+#endif  // defined(SK_BUILD_FOR_WIN)

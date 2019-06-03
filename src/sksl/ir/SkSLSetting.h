@@ -8,8 +8,8 @@
 #ifndef SKSL_SETTING
 #define SKSL_SETTING
 
-#include "SkSLContext.h"
-#include "SkSLExpression.h"
+#include "src/sksl/SkSLContext.h"
+#include "src/sksl/ir/SkSLExpression.h"
 
 namespace SkSL {
 
@@ -19,9 +19,9 @@ namespace SkSL {
  */
 struct Setting : public Expression {
     Setting(int offset, String name, std::unique_ptr<Expression> value)
-    : INHERITED(offset, kSetting_Kind, value->fType)
-    , fName(std::move(name))
-    , fValue(std::move(value)) {
+            : INHERITED(offset, kSetting_Kind, value->fType)
+            , fName(std::move(name))
+            , fValue(std::move(value)) {
         SkASSERT(fValue->isConstant());
     }
 
@@ -32,17 +32,11 @@ struct Setting : public Expression {
         return std::unique_ptr<Expression>(new Setting(fOffset, fName, fValue->clone()));
     }
 
-    String description() const override {
-        return fName;
-    }
+    String description() const override { return fName; }
 
-    bool hasSideEffects() const override {
-        return false;
-    }
+    bool hasSideEffects() const override { return false; }
 
-    bool isConstant() const override {
-        return true;
-    }
+    bool isConstant() const override { return true; }
 
     const String fName;
     std::unique_ptr<Expression> fValue;
@@ -50,6 +44,6 @@ struct Setting : public Expression {
     typedef Expression INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

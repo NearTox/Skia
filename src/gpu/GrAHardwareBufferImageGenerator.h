@@ -7,14 +7,14 @@
 #ifndef GrAHardwareBufferImageGenerator_DEFINED
 #define GrAHardwareBufferImageGenerator_DEFINED
 
-#include "SkImageGenerator.h"
+#include "include/core/SkImageGenerator.h"
 
-#include "GrTypesPriv.h"
+#include "include/private/GrTypesPriv.h"
 
 class GrGpuResource;
 
 extern "C" {
-    typedef struct AHardwareBuffer AHardwareBuffer;
+typedef struct AHardwareBuffer AHardwareBuffer;
 }
 
 /**
@@ -38,7 +38,6 @@ public:
     static void DeleteGLTexture(void* ctx);
 
 protected:
-
     bool onIsValid(GrContext*) const override;
 
     TexGenType onCanGenerateTexture() const override { return TexGenType::kCheap; }
@@ -56,9 +55,9 @@ private:
     static void ReleaseRefHelper_TextureReleaseProc(void* ctx);
 
     AHardwareBuffer* fHardwareBuffer;
-    uint32_t         fBufferFormat;
-    const bool       fIsProtectedContent;
-    GrSurfaceOrigin  fSurfaceOrigin;
+    uint32_t fBufferFormat;
+    const bool fIsProtectedContent;
+    GrSurfaceOrigin fSurfaceOrigin;
 
     typedef SkImageGenerator INHERITED;
 };

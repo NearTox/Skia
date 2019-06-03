@@ -8,10 +8,10 @@
 #ifndef SkDeferredDisplayListPriv_DEFINED
 #define SkDeferredDisplayListPriv_DEFINED
 
-#include "SkDeferredDisplayList.h"
+#include "include/private/SkDeferredDisplayList.h"
 
-/** Class that adds methods to SkDeferredDisplayList that are only intended for use internal to Skia.
-    This class is purely a privileged window into SkDeferredDisplayList. It should never have
+/** Class that adds methods to SkDeferredDisplayList that are only intended for use internal to
+   Skia. This class is purely a privileged window into SkDeferredDisplayList. It should never have
     additional data members or virtual methods. */
 class SkDeferredDisplayListPriv {
 public:
@@ -33,8 +33,8 @@ public:
 
 private:
     explicit SkDeferredDisplayListPriv(SkDeferredDisplayList* ddl) : fDDL(ddl) {}
-    SkDeferredDisplayListPriv(const SkDeferredDisplayListPriv&);            // unimpl
-    SkDeferredDisplayListPriv& operator=(const SkDeferredDisplayListPriv&); // unimpl
+    SkDeferredDisplayListPriv(const SkDeferredDisplayListPriv&);             // unimpl
+    SkDeferredDisplayListPriv& operator=(const SkDeferredDisplayListPriv&);  // unimpl
 
     // No taking addresses of this type.
     const SkDeferredDisplayListPriv* operator&() const;
@@ -42,14 +42,14 @@ private:
 
     SkDeferredDisplayList* fDDL;
 
-    friend class SkDeferredDisplayList; // to construct/copy this type.
+    friend class SkDeferredDisplayList;  // to construct/copy this type.
 };
 
 inline SkDeferredDisplayListPriv SkDeferredDisplayList::priv() {
     return SkDeferredDisplayListPriv(this);
 }
 
-inline const SkDeferredDisplayListPriv SkDeferredDisplayList::priv () const {
+inline const SkDeferredDisplayListPriv SkDeferredDisplayList::priv() const {
     return SkDeferredDisplayListPriv(const_cast<SkDeferredDisplayList*>(this));
 }
 

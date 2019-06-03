@@ -1,14 +1,14 @@
 /*
-* Copyright 2018 Google Inc.
-*
-* Use of this source code is governed by a BSD-style license that can be
-* found in the LICENSE file.
-*/
+ * Copyright 2018 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
 #ifndef GrMtlStencil_DEFINED
 #define GrMtlStencil_DEFINED
 
-#include "GrStencilAttachment.h"
+#include "src/gpu/GrStencilAttachment.h"
 
 #import <Metal/Metal.h>
 
@@ -19,13 +19,13 @@ class GrMtlStencilAttachment : public GrStencilAttachment {
 public:
     struct Format {
         MTLPixelFormat fInternalFormat;
-        int  fStencilBits;
-        int  fTotalBits;
+        int fStencilBits;
+        int fTotalBits;
         bool fPacked;
     };
 
-    static GrMtlStencilAttachment* Create(GrMtlGpu* gpu, int width, int height,
-                                          int sampleCnt, const Format& format);
+    static GrMtlStencilAttachment* Create(GrMtlGpu* gpu, int width, int height, int sampleCnt,
+                                          const Format& format);
 
     ~GrMtlStencilAttachment() override;
 
@@ -40,9 +40,7 @@ protected:
 private:
     size_t onGpuMemorySize() const override;
 
-    GrMtlStencilAttachment(GrMtlGpu* gpu,
-                           const Format& format,
-                           const id<MTLTexture> stencilView);
+    GrMtlStencilAttachment(GrMtlGpu* gpu, const Format& format, const id<MTLTexture> stencilView);
 
     GrMtlGpu* getMtlGpu() const;
 

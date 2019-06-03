@@ -8,7 +8,7 @@
 #ifndef SKSL_ASTIFSTATEMENT
 #define SKSL_ASTIFSTATEMENT
 
-#include "SkSLASTStatement.h"
+#include "src/sksl/ast/SkSLASTStatement.h"
 
 namespace SkSL {
 
@@ -18,11 +18,11 @@ namespace SkSL {
 struct ASTIfStatement : public ASTStatement {
     ASTIfStatement(int offset, bool isStatic, std::unique_ptr<ASTExpression> test,
                    std::unique_ptr<ASTStatement> ifTrue, std::unique_ptr<ASTStatement> ifFalse)
-    : INHERITED(offset, kIf_Kind)
-    , fIsStatic(isStatic)
-    , fTest(std::move(test))
-    , fIfTrue(std::move(ifTrue))
-    , fIfFalse(std::move(ifFalse)) {}
+            : INHERITED(offset, kIf_Kind)
+            , fIsStatic(isStatic)
+            , fTest(std::move(test))
+            , fIfTrue(std::move(ifTrue))
+            , fIfFalse(std::move(ifFalse)) {}
 
     String description() const override {
         String result;
@@ -48,6 +48,6 @@ struct ASTIfStatement : public ASTStatement {
     typedef ASTStatement INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

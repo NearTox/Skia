@@ -5,25 +5,36 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkGradientShader.h"
-#include "SkImage.h"
-#include "SkPatchUtils.h"
-#include "SkPath.h"
+#include "gm/gm.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkGradientShader.h"
+#include "src/utils/SkPatchUtils.h"
+#include "tools/Resources.h"
 
 static sk_sp<SkShader> make_shader() {
     const SkColor colors[] = {
-        SK_ColorRED, SK_ColorCYAN, SK_ColorGREEN, SK_ColorWHITE, SK_ColorMAGENTA, SK_ColorBLUE,
-        SK_ColorYELLOW,
+            SK_ColorRED,     SK_ColorCYAN, SK_ColorGREEN,  SK_ColorWHITE,
+            SK_ColorMAGENTA, SK_ColorBLUE, SK_ColorYELLOW,
     };
-    const SkPoint pts[] = { { 100.f / 4.f, 0.f }, { 3.f * 100.f / 4.f, 100.f } };
+    const SkPoint pts[] = {{100.f / 4.f, 0.f}, {3.f * 100.f / 4.f, 100.f}};
 
     return SkGradientShader::MakeLinear(pts, colors, nullptr, SK_ARRAY_COUNT(colors),
-                                        SkShader::kMirror_TileMode);
+                                        SkTileMode::kMirror);
 }
 
 static void draw_control_points(SkCanvas* canvas, const SkPoint cubics[12]) {
-    //draw control points
+    // draw control points
     SkPaint paint;
     SkPoint bottom[SkPatchUtils::kNumPtsCubic];
     SkPatchUtils::GetBottomCubic(cubics, bottom);
@@ -36,7 +47,7 @@ static void draw_control_points(SkCanvas* canvas, const SkPoint cubics[12]) {
 
     paint.setColor(SK_ColorBLACK);
     paint.setStrokeWidth(0.5f);
-    SkPoint corners[4] = { bottom[0], bottom[3], top[0], top[3] };
+    SkPoint corners[4] = {bottom[0], bottom[3], top[0], top[3]};
     canvas->drawPoints(SkCanvas::kLines_PointMode, 4, bottom, paint);
     canvas->drawPoints(SkCanvas::kLines_PointMode, 2, bottom + 1, paint);
     canvas->drawPoints(SkCanvas::kLines_PointMode, 4, top, paint);
@@ -67,28 +78,33 @@ static void draw_control_points(SkCanvas* canvas, const SkPoint cubics[12]) {
 
 // The order of the colors and points is clockwise starting at upper-left corner.
 const SkPoint gCubics[SkPatchUtils::kNumCtrlPts] = {
-    //top points
-    {100,100},{150,50},{250,150}, {300,100},
-    //right points
-    {250, 150},{350,250},
-    //bottom points
-    {300,300},{250,250},{150,350},{100,300},
-    //left points
-    {50,250},{150,150}
-};
+        // top points
+        {100, 100},
+        {150, 50},
+        {250, 150},
+        {300, 100},
+        // right points
+        {250, 150},
+        {350, 250},
+        // bottom points
+        {300, 300},
+        {250, 250},
+        {150, 350},
+        {100, 300},
+        // left points
+        {50, 250},
+        {150, 150}};
 
 const SkPoint gTexCoords[SkPatchUtils::kNumCorners] = {
-    {0.0f, 0.0f}, {100.0f, 0.0f}, {100.0f,100.0f}, {0.0f, 100.0f}
-};
-
+        {0.0f, 0.0f}, {100.0f, 0.0f}, {100.0f, 100.0f}, {0.0f, 100.0f}};
 
 static void dopatch(SkCanvas* canvas, const SkColor colors[], sk_sp<SkImage> img = nullptr) {
     SkPaint paint;
 
     const SkBlendMode modes[] = {
-        SkBlendMode::kSrc,
-        SkBlendMode::kDst,
-        SkBlendMode::kModulate,
+            SkBlendMode::kSrc,
+            SkBlendMode::kDst,
+            SkBlendMode::kModulate,
     };
 
     SkPoint texStorage[4];
@@ -98,7 +114,7 @@ static void dopatch(SkCanvas* canvas, const SkColor colors[], sk_sp<SkImage> img
     if (img) {
         SkScalar w = img->width();
         SkScalar h = img->height();
-        shader = img->makeShader(SkShader::kClamp_TileMode, SkShader::kClamp_TileMode);
+        shader = img->makeShader();
         texStorage[0].set(0, 0);
         texStorage[1].set(w, 0);
         texStorage[2].set(w, h);
@@ -142,21 +158,21 @@ static void dopatch(SkCanvas* canvas, const SkColor colors[], sk_sp<SkImage> img
 }
 
 DEF_SIMPLE_GM(patch_primitive, canvas, 1500, 1100) {
-    const SkColor colors[SkPatchUtils::kNumCorners] = {
-        SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorCYAN
-    };
+    const SkColor colors[SkPatchUtils::kNumCorners] = {SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE,
+                                                       SK_ColorCYAN};
     dopatch(canvas, colors);
 }
-#include "Resources.h"
 DEF_SIMPLE_GM(patch_image, canvas, 1500, 1100) {
-    const SkColor colors[SkPatchUtils::kNumCorners] = {
-        SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorCYAN
-    };
+    const SkColor colors[SkPatchUtils::kNumCorners] = {SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE,
+                                                       SK_ColorCYAN};
     dopatch(canvas, colors, GetResourceAsImage("images/mandrill_128.png"));
 }
 DEF_SIMPLE_GM(patch_alpha, canvas, 1500, 1100) {
     const SkColor colors[SkPatchUtils::kNumCorners] = {
-        SK_ColorRED, 0x0000FF00, SK_ColorBLUE, 0x00FF00FF,
+            SK_ColorRED,
+            0x0000FF00,
+            SK_ColorBLUE,
+            0x00FF00FF,
     };
     dopatch(canvas, colors);
 }
@@ -166,7 +182,10 @@ DEF_SIMPLE_GM(patch_alpha_test, canvas, 550, 250) {
     canvas->translate(-75, -75);
 
     const SkColor colors[SkPatchUtils::kNumCorners] = {
-        0x80FF0000, 0x80FF0000, 0x80FF0000, 0x80FF0000,
+            0x80FF0000,
+            0x80FF0000,
+            0x80FF0000,
+            0x80FF0000,
     };
     SkPaint paint;
     canvas->drawPatch(gCubics, colors, nullptr, SkBlendMode::kModulate, paint);
@@ -175,11 +194,10 @@ DEF_SIMPLE_GM(patch_alpha_test, canvas, 550, 250) {
 
     SkPath path;
     path.moveTo(gCubics[0]);
-    path.cubicTo(gCubics[ 1], gCubics[ 2], gCubics[ 3]);
-    path.cubicTo(gCubics[ 4], gCubics[ 5], gCubics[ 6]);
-    path.cubicTo(gCubics[ 7], gCubics[ 8], gCubics[ 9]);
-    path.cubicTo(gCubics[10], gCubics[11], gCubics[ 0]);
+    path.cubicTo(gCubics[1], gCubics[2], gCubics[3]);
+    path.cubicTo(gCubics[4], gCubics[5], gCubics[6]);
+    path.cubicTo(gCubics[7], gCubics[8], gCubics[9]);
+    path.cubicTo(gCubics[10], gCubics[11], gCubics[0]);
     paint.setColor(colors[0]);
     canvas->drawPath(path, paint);
 }
-

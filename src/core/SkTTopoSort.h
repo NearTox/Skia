@@ -8,8 +8,8 @@
 #ifndef SkTTopoSort_DEFINED
 #define SkTTopoSort_DEFINED
 
-#include "SkRefCnt.h"
-#include "SkTArray.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/SkTArray.h"
 
 #ifdef SK_DEBUG
 template <typename T, typename Traits = T>
@@ -49,7 +49,7 @@ bool SkTTopoSort_Visit(T* node, SkTArray<sk_sp<T>>* result) {
                 return false;
             }
         }
-        Traits::Output(node, result->count()); // mark this node as output
+        Traits::Output(node, result->count());  // mark this node as output
         Traits::ResetTempMark(node);
 
         result->push_back(sk_ref_sp(node));
@@ -78,8 +78,7 @@ bool SkTTopoSort_Visit(T* node, SkTArray<sk_sp<T>>* result) {
 // TODO: potentially add a version that takes a seed node and just outputs that
 // node and all the nodes on which it depends. This could be used to partially
 // flush a GrOpList DAG.
-template <typename T, typename Traits = T>
-bool SkTTopoSort(SkTArray<sk_sp<T>>* graph) {
+template <typename T, typename Traits = T> bool SkTTopoSort(SkTArray<sk_sp<T>>* graph) {
     SkTArray<sk_sp<T>> result;
 
 #ifdef SK_DEBUG

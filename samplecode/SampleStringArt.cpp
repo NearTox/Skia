@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkCanvas.h"
-#include "SkPath.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPath.h"
+#include "samplecode/Sample.h"
 
 // Reproduces https://code.google.com/p/chromium/issues/detail?id=279014
 
@@ -29,7 +29,7 @@ protected:
     }
 
     void onDrawContent(SkCanvas* canvas) override {
-        SkScalar angle = fAngle*SK_ScalarPI + SkScalarHalf(SK_ScalarPI);
+        SkScalar angle = fAngle * SK_ScalarPI + SkScalarHalf(SK_ScalarPI);
 
         SkPoint center = SkPoint::Make(SkScalarHalf(this->width()), SkScalarHalf(this->height()));
         SkScalar length = 5;
@@ -38,10 +38,9 @@ protected:
         SkPath path;
         path.moveTo(center);
 
-        while (length < (SkScalarHalf(SkMinScalar(this->width(), this->height())) - 10.f))
-        {
-            SkPoint rp = SkPoint::Make(length*SkScalarCos(step) + center.fX,
-                                       length*SkScalarSin(step) + center.fY);
+        while (length < (SkScalarHalf(SkMinScalar(this->width(), this->height())) - 10.f)) {
+            SkPoint rp = SkPoint::Make(length * SkScalarCos(step) + center.fX,
+                                       length * SkScalarSin(step) + center.fY);
             path.lineTo(rp);
             length += angle / SkScalarHalf(SK_ScalarPI);
             step += angle;
@@ -57,15 +56,15 @@ protected:
     }
 
     Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, unsigned) override {
-        fAngle = x/width();
+        fAngle = x / width();
         return nullptr;
     }
-private:
 
+private:
     SkScalar fAngle;
     typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new StringArtView(); )
+DEF_SAMPLE(return new StringArtView();)

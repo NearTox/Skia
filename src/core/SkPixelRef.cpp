@@ -5,14 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "SkBitmapCache.h"
-#include "SkMutex.h"
-#include "SkNextID.h"
-#include "SkPixelRef.h"
-#include "SkTraceEvent.h"
+#include "include/core/SkPixelRef.h"
 #include <atomic>
+#include "include/private/SkMutex.h"
+#include "src/core/SkBitmapCache.h"
+#include "src/core/SkNextID.h"
+#include "src/core/SkTraceEvent.h"
 
-uint32_t SkNextID::ImageID() {
+uint32_t SkNextID::ImageID() noexcept {
     // We never set the low bit.... see SkPixelRef::genIDIsUnique().
     static std::atomic<uint32_t> nextID{2};
 
@@ -25,20 +25,17 @@ uint32_t SkNextID::ImageID() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkPixelRef::SkPixelRef(int width, int height, void* pixels, size_t rowBytes)
-    : fWidth(width)
-    , fHeight(height)
-    , fPixels(pixels)
-    , fRowBytes(rowBytes)
-    , fAddedToCache(false)
-{
+SkPixelRef::SkPixelRef(int width, int height, void* pixels, size_t rowBytes) noexcept
+        : fWidth(width)
+        , fHeight(height)
+        , fPixels(pixels)
+        , fRowBytes(rowBytes)
+        , fAddedToCache(false) {
     this->needsNewGenID();
     fMutability = kMutable;
 }
 
-SkPixelRef::~SkPixelRef() {
-    this->callGenIDChangeListeners();
-}
+SkPixelRef::~SkPixelRef() { this->callGenIDChangeListeners(); }
 
 // This is undefined if there are clients in-flight trying to use us
 void SkPixelRef::android_only_reset(int width, int height, size_t rowBytes) {
@@ -51,12 +48,13 @@ void SkPixelRef::android_only_reset(int width, int height, size_t rowBytes) {
     this->notifyPixelsChanged();
 }
 
-void SkPixelRef::needsNewGenID() {
+void SkPixelRef::needsNewGenID() noexcept {
     fTaggedGenID.store(0);
-    SkASSERT(!this->genIDIsUnique()); // This method isn't threadsafe, so the assert should be fine.
+    SkASSERT(
+            !this->genIDIsUnique());  // This method isn't threadsafe, so the assert should be fine.
 }
 
-uint32_t SkPixelRef::getGenerationID() const {
+uint32_t SkPixelRef::getGenerationID() const noexcept {
     uint32_t id = fTaggedGenID.load();
     if (0 == id) {
         uint32_t next = SkNextID::ImageID() | 1u;
@@ -71,19 +69,19 @@ uint32_t SkPixelRef::getGenerationID() const {
     return id & ~1u;  // Mask off bottom unique bit.
 }
 
-void SkPixelRef::addGenIDChangeListener(GenIDChangeListener* listener) {
+void SkPixelRef::addGenIDChangeListener(GenIDChangeListener* listener) noexcept {
     if (nullptr == listener || !this->genIDIsUnique()) {
         // No point in tracking this if we're not going to call it.
         delete listener;
         return;
     }
-    SkAutoMutexAcquire lock(fGenIDChangeListenersMutex);
+    SkAutoMutexExclusive lock(fGenIDChangeListenersMutex);
     *fGenIDChangeListeners.append() = listener;
 }
 
 // we need to be called *before* the genID gets changed or zerod
 void SkPixelRef::callGenIDChangeListeners() {
-    SkAutoMutexAcquire lock(fGenIDChangeListenersMutex);
+    SkAutoMutexExclusive lock(fGenIDChangeListenersMutex);
     // We don't invalidate ourselves if we think another SkPixelRef is sharing our genID.
     if (this->genIDIsUnique()) {
         for (int i = 0; i < fGenIDChangeListeners.count(); i++) {
@@ -108,11 +106,9 @@ void SkPixelRef::notifyPixelsChanged() {
     this->needsNewGenID();
 }
 
-void SkPixelRef::setImmutable() {
-    fMutability = kImmutable;
-}
+void SkPixelRef::setImmutable() noexcept { fMutability = kImmutable; }
 
-void SkPixelRef::setImmutableWithID(uint32_t genID) {
+void SkPixelRef::setImmutableWithID(uint32_t genID) noexcept {
     /*
      *  We are forcing the genID to match an external value. The caller must ensure that this
      *  value does not conflict with other content.
@@ -123,12 +119,12 @@ void SkPixelRef::setImmutableWithID(uint32_t genID) {
     fTaggedGenID.store(genID);
 }
 
-void SkPixelRef::setTemporarilyImmutable() {
+void SkPixelRef::setTemporarilyImmutable() noexcept {
     SkASSERT(fMutability != kImmutable);
     fMutability = kTemporarilyImmutable;
 }
 
-void SkPixelRef::restoreMutability() {
+void SkPixelRef::restoreMutability() noexcept {
     SkASSERT(fMutability != kImmutable);
     fMutability = kMutable;
 }

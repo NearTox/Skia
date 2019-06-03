@@ -8,11 +8,11 @@
 #ifndef GrSemaphoreOp_DEFINED
 #define GrSemaphoreOp_DEFINED
 
-#include "GrOp.h"
+#include "src/gpu/ops/GrOp.h"
 
-#include "GrRenderTargetProxy.h"
-#include "GrSemaphore.h"
-#include "SkRefCnt.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/GrRenderTargetProxy.h"
+#include "src/gpu/GrSemaphore.h"
 
 class GrRecordingContext;
 
@@ -24,8 +24,7 @@ public:
 
 protected:
     GrSemaphoreOp(uint32_t classId, sk_sp<GrSemaphore> semaphore, GrRenderTargetProxy* proxy)
-            : INHERITED(classId)
-            , fSemaphore(std::move(semaphore)) {
+            : INHERITED(classId), fSemaphore(std::move(semaphore)) {
         this->makeFullScreen(proxy);
     }
 

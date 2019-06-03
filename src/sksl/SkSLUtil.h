@@ -10,19 +10,20 @@
 
 #include <cstdarg>
 #include <memory>
+#include "src/sksl/SkSLDefines.h"
+#include "src/sksl/SkSLLexer.h"
+#include "src/sksl/SkSLString.h"
+#include "src/sksl/SkSLStringStream.h"
 #include "stdlib.h"
 #include "string.h"
-#include "SkSLDefines.h"
-#include "SkSLString.h"
-#include "SkSLStringStream.h"
 
 #ifndef SKSL_STANDALONE
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 #if SK_SUPPORT_GPU
-#include "GrContextOptions.h"
-#include "GrShaderCaps.h"
-#endif // SK_SUPPORT_GPU
-#endif // SKSL_STANDALONE
+#include "include/gpu/GrContextOptions.h"
+#include "src/gpu/GrShaderCaps.h"
+#endif  // SK_SUPPORT_GPU
+#endif  // SKSL_STANDALONE
 
 class GrShaderCaps;
 
@@ -30,6 +31,10 @@ namespace SkSL {
 
 class OutputStream;
 class StringStream;
+
+#ifdef SKSL_STANDALONE
+#define SK_API
+#endif
 
 #if defined(SKSL_STANDALONE) || !SK_SUPPORT_GPU
 
@@ -49,169 +54,87 @@ enum GrGLSLGeneration {
 #define SKSL_CAPS_CLASS StandaloneShaderCaps
 class StandaloneShaderCaps {
 public:
-    GrGLSLGeneration generation() const {
-        return k400_GrGLSLGeneration;
-    }
+    GrGLSLGeneration generation() const { return k400_GrGLSLGeneration; }
 
-    bool atan2ImplementedAsAtanYOverX() const {
-        return false;
-    }
+    bool atan2ImplementedAsAtanYOverX() const { return false; }
 
-    bool canUseMinAndAbsTogether() const {
-        return true;
-    }
+    bool canUseMinAndAbsTogether() const { return true; }
 
-    bool mustForceNegatedAtanParamToFloat() const {
-        return false;
-    }
+    bool mustForceNegatedAtanParamToFloat() const { return false; }
 
-    bool shaderDerivativeSupport() const {
-        return true;
-    }
+    bool shaderDerivativeSupport() const { return true; }
 
-    bool usesPrecisionModifiers() const {
-        return true;
-    }
+    bool usesPrecisionModifiers() const { return true; }
 
-    bool mustDeclareFragmentShaderOutput() const {
-        return true;
-    }
+    bool mustDeclareFragmentShaderOutput() const { return true; }
 
-    bool fbFetchSupport() const {
-        return true;
-    }
+    bool fbFetchSupport() const { return true; }
 
-    bool fbFetchNeedsCustomOutput() const {
-        return false;
-    }
+    bool fbFetchNeedsCustomOutput() const { return false; }
 
-    bool dropsTileOnZeroDivide() const {
-        return false;
-    }
+    bool dropsTileOnZeroDivide() const { return false; }
 
-    bool flatInterpolationSupport() const {
-        return true;
-    }
+    bool flatInterpolationSupport() const { return true; }
 
-    bool noperspectiveInterpolationSupport() const {
-        return true;
-    }
+    bool noperspectiveInterpolationSupport() const { return true; }
 
-    bool multisampleInterpolationSupport() const {
-        return true;
-    }
+    bool multisampleInterpolationSupport() const { return true; }
 
-    bool sampleVariablesSupport() const {
-        return true;
-    }
+    bool sampleVariablesSupport() const { return true; }
 
-    bool externalTextureSupport() const {
-        return true;
-    }
+    bool externalTextureSupport() const { return true; }
 
-    bool imageLoadStoreSupport() const {
-        return true;
-    }
+    bool imageLoadStoreSupport() const { return true; }
 
-    bool mustDoOpBetweenFloorAndAbs() const {
-        return false;
-    }
+    bool mustDoOpBetweenFloorAndAbs() const { return false; }
 
-    bool mustEnableAdvBlendEqs() const {
-        return false;
-    }
+    bool mustEnableAdvBlendEqs() const { return false; }
 
-    bool mustEnableSpecificAdvBlendEqs() const {
-        return false;
-    }
+    bool mustEnableSpecificAdvBlendEqs() const { return false; }
 
-    bool canUseAnyFunctionInShader() const {
-        return false;
-    }
+    bool canUseAnyFunctionInShader() const { return false; }
 
-    bool floatIs32Bits() const {
-        return true;
-    }
+    bool floatIs32Bits() const { return true; }
 
-    bool integerSupport() const {
-        return false;
-    }
+    bool integerSupport() const { return false; }
 
-    bool builtinFMASupport() const {
-        return true;
-    }
+    bool builtinFMASupport() const { return true; }
 
-    const char* shaderDerivativeExtensionString() const {
-        return nullptr;
-    }
+    const char* shaderDerivativeExtensionString() const { return nullptr; }
 
-    const char* fragCoordConventionsExtensionString() const {
-        return nullptr;
-    }
+    const char* fragCoordConventionsExtensionString() const { return nullptr; }
 
-    const char* imageLoadStoreExtensionString() const {
-        return nullptr;
-    }
+    const char* imageLoadStoreExtensionString() const { return nullptr; }
 
-    const char* geometryShaderExtensionString() const {
-        return nullptr;
-    }
+    const char* geometryShaderExtensionString() const { return nullptr; }
 
-    const char* gsInvocationsExtensionString() const {
-        return nullptr;
-    }
+    const char* gsInvocationsExtensionString() const { return nullptr; }
 
-    const char* externalTextureExtensionString() const {
-        return nullptr;
-    }
+    const char* externalTextureExtensionString() const { return nullptr; }
 
-    const char* secondExternalTextureExtensionString() const {
-        return nullptr;
-    }
+    const char* secondExternalTextureExtensionString() const { return nullptr; }
 
-    const char* versionDeclString() const {
-        return "";
-    }
+    const char* versionDeclString() const { return ""; }
 
-    bool gsInvocationsSupport() const {
-        return true;
-    }
+    bool gsInvocationsSupport() const { return true; }
 
-    bool canUseFractForNegativeValues() const {
-        return true;
-    }
+    bool canUseFractForNegativeValues() const { return true; }
 
-    bool canUseFragCoord() const {
-        return true;
-    }
+    bool canUseFragCoord() const { return true; }
 
-    bool incompleteShortIntPrecision() const {
-        return false;
-    }
+    bool incompleteShortIntPrecision() const { return false; }
 
-    bool addAndTrueToLoopCondition() const {
-        return false;
-    }
+    bool addAndTrueToLoopCondition() const { return false; }
 
-    bool unfoldShortCircuitAsTernary() const {
-        return false;
-    }
+    bool unfoldShortCircuitAsTernary() const { return false; }
 
-    bool emulateAbsIntFunction() const {
-        return false;
-    }
+    bool emulateAbsIntFunction() const { return false; }
 
-    bool rewriteDoWhileLoops() const {
-        return false;
-    }
+    bool rewriteDoWhileLoops() const { return false; }
 
-    bool removePowWithConstantExponent() const {
-        return false;
-    }
+    bool removePowWithConstantExponent() const { return false; }
 
-    const char* fbFetchColorName() const {
-        return nullptr;
-    }
+    const char* fbFetchColorName() const { return nullptr; }
 };
 
 extern StandaloneShaderCaps standaloneCaps;
@@ -392,8 +315,15 @@ public:
 
 void write_stringstream(const StringStream& d, OutputStream& out);
 
+// Returns true if op is '=' or any compound assignment operator ('+=', '-=', etc.)
+bool is_assignment(Token::Kind op);
+
+// Given a compound assignment operator, returns the non-assignment version of the operator (e.g.
+// '+=' becomes '+')
+Token::Kind remove_assignment(Token::Kind op);
+
 NORETURN void sksl_abort();
 
-} // namespace
+}  // namespace SkSL
 
 #endif

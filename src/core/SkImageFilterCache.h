@@ -8,8 +8,8 @@
 #ifndef SkImageFilterCache_DEFINED
 #define SkImageFilterCache_DEFINED
 
-#include "SkMatrix.h"
-#include "SkRefCnt.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkRefCnt.h"
 
 struct SkIPoint;
 class SkImageFilter;
@@ -17,18 +17,19 @@ class SkSpecialImage;
 
 struct SkImageFilterCacheKey {
     SkImageFilterCacheKey(const uint32_t uniqueID, const SkMatrix& matrix,
-        const SkIRect& clipBounds, uint32_t srcGenID, const SkIRect& srcSubset)
-        : fUniqueID(uniqueID)
-        , fMatrix(matrix)
-        , fClipBounds(clipBounds)
-        , fSrcGenID(srcGenID)
-        , fSrcSubset(srcSubset) {
+                          const SkIRect& clipBounds, uint32_t srcGenID, const SkIRect& srcSubset)
+            : fUniqueID(uniqueID)
+            , fMatrix(matrix)
+            , fClipBounds(clipBounds)
+            , fSrcGenID(srcGenID)
+            , fSrcSubset(srcSubset) {
         // Assert that Key is tightly-packed, since it is hashed.
         static_assert(sizeof(SkImageFilterCacheKey) == sizeof(uint32_t) + sizeof(SkMatrix) +
-                                     sizeof(SkIRect) + sizeof(uint32_t) + 4 * sizeof(int32_t),
-                                     "image_filter_key_tight_packing");
-        fMatrix.getType();  // force initialization of type, so hashes match
-        SkASSERT(fMatrix.isFinite());   // otherwise we can't rely on == self when comparing keys
+                                                               sizeof(SkIRect) + sizeof(uint32_t) +
+                                                               4 * sizeof(int32_t),
+                      "image_filter_key_tight_packing");
+        fMatrix.getType();             // force initialization of type, so hashes match
+        SkASSERT(fMatrix.isFinite());  // otherwise we can't rely on == self when comparing keys
     }
 
     uint32_t fUniqueID;
@@ -38,10 +39,8 @@ struct SkImageFilterCacheKey {
     SkIRect fSrcSubset;
 
     bool operator==(const SkImageFilterCacheKey& other) const {
-        return fUniqueID == other.fUniqueID &&
-               fMatrix == other.fMatrix &&
-               fClipBounds == other.fClipBounds &&
-               fSrcGenID == other.fSrcGenID &&
+        return fUniqueID == other.fUniqueID && fMatrix == other.fMatrix &&
+               fClipBounds == other.fClipBounds && fSrcGenID == other.fSrcGenID &&
                fSrcSubset == other.fSrcSubset;
     }
 };
@@ -60,7 +59,7 @@ public:
                      const SkIPoint& offset, const SkImageFilter* filter) = 0;
     virtual void purge() = 0;
     virtual void purgeByImageFilter(const SkImageFilter*) = 0;
-    SkDEBUGCODE(virtual int count() const = 0;)
+    SkDEBUGCODE(virtual int count() const = 0);
 };
 
 #endif

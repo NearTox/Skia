@@ -5,11 +5,19 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkImage.h"
-#include "SkRandom.h"
-#include "SkSurface.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkFilterQuality.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkTypes.h"
 
 static sk_sp<SkImage> make_image() {
     const SkImageInfo info = SkImageInfo::MakeN32Premul(319, 52);
@@ -29,14 +37,14 @@ static sk_sp<SkImage> make_image() {
 }
 
 DEF_SIMPLE_GM(mipmap, canvas, 400, 200) {
-    sk_sp<SkImage> img(make_image());//SkImage::NewFromEncoded(data));
+    sk_sp<SkImage> img(make_image());  // SkImage::NewFromEncoded(data));
 
     SkPaint paint;
     const SkRect dst = SkRect::MakeWH(177, 15);
 
     SkString str;
     str.printf("scale %g %g", dst.width() / img->width(), dst.height() / img->height());
-//    canvas->drawString(str, 300, 100, SkFont(nullptr, 30), paint);
+    //    canvas->drawString(str, 300, 100, SkFont(nullptr, 30), paint);
 
     canvas->translate(20, 20);
     for (int i = 0; i < 4; ++i) {
@@ -74,8 +82,8 @@ static void show_mips(SkCanvas* canvas, SkImage* img) {
     while (dst.width() > 5) {
         canvas->drawImageRect(img, SkRect::Make(dst), &paint);
         dst.offset(dst.width() + 10, 0);
-        dst.fRight = dst.fLeft + dst.width()/2;
-        dst.fBottom = dst.fTop + dst.height()/2;
+        dst.fRight = dst.fLeft + dst.width() / 2;
+        dst.fBottom = dst.fTop + dst.height() / 2;
     }
 }
 

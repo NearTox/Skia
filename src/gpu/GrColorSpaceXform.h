@@ -8,29 +8,29 @@
 #ifndef GrColorSpaceXform_DEFINED
 #define GrColorSpaceXform_DEFINED
 
-#include "GrFragmentProcessor.h"
-#include "SkColorSpaceXformSteps.h"
-#include "SkRefCnt.h"
+#include "include/core/SkRefCnt.h"
+#include "src/core/SkColorSpaceXformSteps.h"
+#include "src/gpu/GrFragmentProcessor.h"
 
 class SkColorSpace;
 
- /**
-  * Represents a color space transformation
-  */
+/**
+ * Represents a color space transformation
+ */
 class GrColorSpaceXform : public SkRefCnt {
 public:
-    GrColorSpaceXform(const SkColorSpaceXformSteps& steps) : fSteps(steps) {}
+    GrColorSpaceXform(const SkColorSpaceXformSteps& steps) noexcept : fSteps(steps) {}
 
-    static sk_sp<GrColorSpaceXform> Make(SkColorSpace* src, SkAlphaType srcAT,
-                                         SkColorSpace* dst, SkAlphaType dstAT);
+    static sk_sp<GrColorSpaceXform> Make(SkColorSpace* src, SkAlphaType srcAT, SkColorSpace* dst,
+                                         SkAlphaType dstAT);
 
-    const SkColorSpaceXformSteps& steps() const { return fSteps; }
+    const SkColorSpaceXformSteps& steps() const noexcept { return fSteps; }
 
     /**
      * GrGLSLFragmentProcessor::GenKey() must call this and include the returned value in its
      * computed key.
      */
-    static uint32_t XformKey(const GrColorSpaceXform* xform) {
+    static uint32_t XformKey(const GrColorSpaceXform* xform) noexcept {
         // Code generation depends on which steps we apply
         return xform ? xform->fSteps.flags.mask() : 0;
     }
@@ -68,10 +68,10 @@ public:
     static std::unique_ptr<GrFragmentProcessor> Make(std::unique_ptr<GrFragmentProcessor> child,
                                                      sk_sp<GrColorSpaceXform> colorXform);
 
-    const char* name() const override { return "ColorSpaceXform"; }
+    const char* name() const noexcept override { return "ColorSpaceXform"; }
     std::unique_ptr<GrFragmentProcessor> clone() const override;
 
-    const GrColorSpaceXform* colorXform() const { return fColorXform.get(); }
+    const GrColorSpaceXform* colorXform() const noexcept { return fColorXform.get(); }
 
 private:
     GrColorSpaceXformEffect(std::unique_ptr<GrFragmentProcessor> child,

@@ -8,7 +8,7 @@
 #ifndef SKSL_IRNODE
 #define SKSL_IRNODE
 
-#include "../SkSLLexer.h"
+#include "src/sksl/SkSLLexer.h"
 
 namespace SkSL {
 
@@ -17,8 +17,7 @@ namespace SkSL {
  * version of the program (all types determined, everything validated), ready for code generation.
  */
 struct IRNode {
-    IRNode(int offset)
-    : fOffset(offset) {}
+    IRNode(int offset) : fOffset(offset) {}
 
     virtual ~IRNode() {}
 
@@ -29,6 +28,6 @@ struct IRNode {
     int fOffset;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

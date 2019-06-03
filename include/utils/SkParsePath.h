@@ -6,11 +6,10 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkParsePath_DEFINED
 #define SkParsePath_DEFINED
 
-#include "SkPath.h"
+#include "include/core/SkPath.h"
 
 class SkString;
 

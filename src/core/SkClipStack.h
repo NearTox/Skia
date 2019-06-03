@@ -8,20 +8,20 @@
 #ifndef SkClipStack_DEFINED
 #define SkClipStack_DEFINED
 
-#include "../private/SkMessageBus.h"
-#include "SkCanvas.h"
-#include "SkClipOpPriv.h"
-#include "SkDeque.h"
-#include "SkPath.h"
-#include "SkRRect.h"
-#include "SkRect.h"
-#include "SkRegion.h"
-#include "SkTLazy.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkDeque.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRRect.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRegion.h"
+#include "include/private/SkMessageBus.h"
+#include "src/core/SkClipOpPriv.h"
+#include "src/core/SkTLazy.h"
 
 #if SK_SUPPORT_GPU
 class GrProxyProvider;
 
-#include "GrResourceKey.h"
+#include "include/private/GrResourceKey.h"
 #endif
 
 // Because a single save/restore state can have multiple clips, this class
@@ -85,29 +85,29 @@ public:
 
         ~Element();
 
-        bool operator== (const Element& element) const;
-        bool operator!= (const Element& element) const { return !(*this == element); }
+        bool operator==(const Element& element) const;
+        bool operator!=(const Element& element) const { return !(*this == element); }
 
         //!< Call to get the type of the clip element.
-        DeviceSpaceType getDeviceSpaceType() const { return fDeviceSpaceType; }
+        DeviceSpaceType getDeviceSpaceType() const noexcept { return fDeviceSpaceType; }
 
         //!< Call to get the save count associated with this clip element.
-        int getSaveCount() const { return fSaveCount; }
+        int getSaveCount() const noexcept { return fSaveCount; }
 
         //!< Call if getDeviceSpaceType() is kPath to get the path.
-        const SkPath& getDeviceSpacePath() const {
+        const SkPath& getDeviceSpacePath() const noexcept {
             SkASSERT(DeviceSpaceType::kPath == fDeviceSpaceType);
             return *fDeviceSpacePath.get();
         }
 
         //!< Call if getDeviceSpaceType() is kRRect to get the round-rect.
-        const SkRRect& getDeviceSpaceRRect() const {
+        const SkRRect& getDeviceSpaceRRect() const noexcept {
             SkASSERT(DeviceSpaceType::kRRect == fDeviceSpaceType);
             return fDeviceSpaceRRect;
         }
 
         //!< Call if getDeviceSpaceType() is kRect to get the rect.
-        const SkRect& getDeviceSpaceRect() const {
+        const SkRect& getDeviceSpaceRect() const noexcept {
             SkASSERT(DeviceSpaceType::kRect == fDeviceSpaceType &&
                      (fDeviceSpaceRRect.isRect() || fDeviceSpaceRRect.isEmpty()));
             return fDeviceSpaceRRect.getBounds();
@@ -121,27 +121,30 @@ public:
         void asDeviceSpacePath(SkPath* path) const;
 
         //!< Call if getType() is not kPath to get the element as a round rect.
-        const SkRRect& asDeviceSpaceRRect() const {
+        const SkRRect& asDeviceSpaceRRect() const noexcept {
             SkASSERT(DeviceSpaceType::kPath != fDeviceSpaceType);
             return fDeviceSpaceRRect;
         }
 
         /** If getType() is not kEmpty this indicates whether the clip shape should be anti-aliased
             when it is rasterized. */
-        bool isAA() const { return fDoAA; }
+        bool isAA() const noexcept { return fDoAA; }
 
         //!< Inverts the fill of the clip shape. Note that a kEmpty element remains kEmpty.
         void invertShapeFillType();
 
         //!< Sets the set operation represented by the element.
-        void setOp(SkClipOp op) { fOp = op; }
+        void setOp(SkClipOp op) noexcept { fOp = op; }
 
         /** The GenID can be used by clip stack clients to cache representations of the clip. The
             ID corresponds to the set of clip elements up to and including this element within the
             stack not to the element itself. That is the same clip path in different stacks will
             have a different ID since the elements produce different clip result in the context of
             their stacks. */
-        uint32_t getGenID() const { SkASSERT(kInvalidGenID != fGenID); return fGenID; }
+        uint32_t getGenID() const noexcept {
+            SkASSERT(kInvalidGenID != fGenID);
+            return fGenID;
+        }
 
         /**
          * Gets the bounds of the clip element, either the rect or path bounds. (Whether the shape
@@ -159,7 +162,7 @@ public:
         /**
          * Is the clip shape inverse filled.
          */
-        bool isInverseFilled() const {
+        bool isInverseFilled() const noexcept {
             return DeviceSpaceType::kPath == fDeviceSpaceType &&
                    fDeviceSpacePath.get()->isInverseFillType();
         }
@@ -178,7 +181,7 @@ public:
          * the element is destroyed because their key is based on this element's gen ID.
          */
         void addResourceInvalidationMessage(GrProxyProvider* proxyProvider,
-                                            const GrUniqueKey& key) const {
+                                            const GrUniqueKey& key) const noexcept {
             SkASSERT(proxyProvider);
 
             if (!fProxyProvider) {
@@ -219,7 +222,7 @@ public:
 
         uint32_t fGenID;
 #if SK_SUPPORT_GPU
-        mutable GrProxyProvider*      fProxyProvider = nullptr;
+        mutable GrProxyProvider* fProxyProvider = nullptr;
         mutable SkTArray<GrUniqueKey> fKeysToInvalidate;
 #endif
         Element(int saveCount) {
@@ -283,15 +286,13 @@ public:
 
     void reset();
 
-    int getSaveCount() const { return fSaveCount; }
+    int getSaveCount() const noexcept { return fSaveCount; }
     void save();
     void restore();
 
     class AutoRestore {
     public:
-        AutoRestore(SkClipStack* cs, bool doSave)
-            : fCS(cs), fSaveCount(cs->getSaveCount())
-        {
+        AutoRestore(SkClipStack* cs, bool doSave) : fCS(cs), fSaveCount(cs->getSaveCount()) {
             if (doSave) {
                 fCS->save();
             }
@@ -305,7 +306,7 @@ public:
 
     private:
         SkClipStack* fCS;
-        const int    fSaveCount;
+        const int fSaveCount;
     };
 
     /**
@@ -353,7 +354,7 @@ public:
     void clipPath(const SkPath&, const SkMatrix& matrix, SkClipOp, bool doAA);
     // An optimized version of clipDevRect(emptyRect, kIntersect, ...)
     void clipEmpty();
-    void setDeviceClipRestriction(const SkIRect& rect) {
+    void setDeviceClipRestriction(const SkIRect& rect) noexcept {
         fClipRestrictionRect = SkRect::Make(rect);
     }
 
@@ -382,11 +383,11 @@ public:
      * The generation ID has three reserved values to indicate special
      * (potentially ignorable) cases
      */
-    static const uint32_t kInvalidGenID  = 0;    //!< Invalid id that is never returned by
-                                                 //!< SkClipStack. Useful when caching clips
-                                                 //!< based on GenID.
-    static const uint32_t kEmptyGenID    = 1;    // no pixels writeable
-    static const uint32_t kWideOpenGenID = 2;    // all pixels writeable
+    static const uint32_t kInvalidGenID = 0;   //!< Invalid id that is never returned by
+                                               //!< SkClipStack. Useful when caching clips
+                                               //!< based on GenID.
+    static const uint32_t kEmptyGenID = 1;     // no pixels writeable
+    static const uint32_t kWideOpenGenID = 2;  // all pixels writeable
 
     uint32_t getTopmostGenID() const;
 
@@ -433,7 +434,7 @@ public:
 
     private:
         const SkClipStack* fStack;
-        SkDeque::Iter      fIter;
+        SkDeque::Iter fIter;
     };
 
     /**
@@ -442,15 +443,13 @@ public:
      */
     class B2TIter : private Iter {
     public:
-        B2TIter() {}
+        B2TIter() noexcept {}
 
         /**
          * Wrap Iter's 2 parameter ctor to force initialization to the
          * beginning of the deque/bottom of the stack
          */
-        B2TIter(const SkClipStack& stack)
-        : INHERITED(stack, kBottom_IterStart) {
-        }
+        B2TIter(const SkClipStack& stack) : INHERITED(stack, kBottom_IterStart) {}
 
         using Iter::next;
 
@@ -458,12 +457,9 @@ public:
          * Wrap Iter::reset to force initialization to the
          * beginning of the deque/bottom of the stack
          */
-        void reset(const SkClipStack& stack) {
-            this->INHERITED::reset(stack, kBottom_IterStart);
-        }
+        void reset(const SkClipStack& stack) { this->INHERITED::reset(stack, kBottom_IterStart); }
 
     private:
-
         typedef Iter INHERITED;
     };
 
@@ -491,7 +487,7 @@ private:
     friend class Iter;
 
     SkDeque fDeque;
-    int     fSaveCount;
+    int fSaveCount;
 
     SkRect fClipRestrictionRect = SkRect::MakeEmpty();
 
@@ -508,7 +504,7 @@ private:
      */
     void restoreTo(int saveCount);
 
-    inline bool hasClipRestriction(SkClipOp op) {
+    inline bool hasClipRestriction(SkClipOp op) noexcept {
         return op >= kUnion_SkClipOp && !fClipRestrictionRect.isEmpty();
     }
 
@@ -519,4 +515,3 @@ private:
 };
 
 #endif
-

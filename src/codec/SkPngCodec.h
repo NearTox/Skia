@@ -7,26 +7,26 @@
 #ifndef SkPngCodec_DEFINED
 #define SkPngCodec_DEFINED
 
-#include "SkCodec.h"
-#include "SkColorTable.h"
-#include "SkPngChunkReader.h"
-#include "SkEncodedImageFormat.h"
-#include "SkImageInfo.h"
-#include "SkRefCnt.h"
-#include "SkSwizzler.h"
+#include "include/codec/SkCodec.h"
+#include "include/core/SkEncodedImageFormat.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkPngChunkReader.h"
+#include "include/core/SkRefCnt.h"
+#include "src/codec/SkColorTable.h"
+#include "src/codec/SkSwizzler.h"
 
 class SkStream;
 
 class SkPngCodec : public SkCodec {
 public:
-    static bool IsPng(const char*, size_t);
+    static bool IsPng(const char*, size_t) noexcept;
 
     // Assume IsPng was called and returned true.
     static std::unique_ptr<SkCodec> MakeFromStream(std::unique_ptr<SkStream>, Result*,
                                                    SkPngChunkReader* = nullptr);
 
     // FIXME (scroggo): Temporarily needed by AutoCleanPng.
-    void setIdatLength(size_t len) { fIdatLength = len; }
+    void setIdatLength(size_t len) noexcept { fIdatLength = len; }
 
     ~SkPngCodec() override;
 
@@ -34,34 +34,34 @@ protected:
     // We hold the png_ptr and info_ptr as voidp to avoid having to include png.h
     // or forward declare their types here.  voidp auto-casts to the real pointer types.
     struct voidp {
-        voidp(void* ptr) : fPtr(ptr) {}
+        constexpr voidp(void* ptr) noexcept : fPtr(ptr) {}
 
-        template <typename T>
-        operator T*() const { return (T*)fPtr; }
+        template <typename T> operator T*() const noexcept { return (T*)fPtr; }
 
-        explicit operator bool() const { return fPtr != nullptr; }
+        explicit operator bool() const noexcept { return fPtr != nullptr; }
 
         void* fPtr;
     };
 
-    SkPngCodec(SkEncodedInfo&&, std::unique_ptr<SkStream>, SkPngChunkReader*,
-               void* png_ptr, void* info_ptr, int bitDepth);
+    SkPngCodec(SkEncodedInfo&&, std::unique_ptr<SkStream>, SkPngChunkReader*, void* png_ptr,
+               void* info_ptr, int bitDepth);
 
-    Result onGetPixels(const SkImageInfo&, void*, size_t, const Options&, int*)
-            override;
-    SkEncodedImageFormat onGetEncodedFormat() const override { return SkEncodedImageFormat::kPNG; }
+    Result onGetPixels(const SkImageInfo&, void*, size_t, const Options&, int*) override;
+    SkEncodedImageFormat onGetEncodedFormat() const noexcept override {
+        return SkEncodedImageFormat::kPNG;
+    }
     bool onRewind() override;
 
     SkSampler* getSampler(bool createIfNecessary) override;
     void applyXformRow(void* dst, const void* src);
 
-    voidp png_ptr() { return fPng_ptr; }
-    voidp info_ptr() { return fInfo_ptr; }
+    voidp png_ptr() noexcept { return fPng_ptr; }
+    voidp info_ptr() noexcept { return fInfo_ptr; }
 
-    SkSwizzler* swizzler() { return fSwizzler.get(); }
+    SkSwizzler* swizzler() noexcept { return fSwizzler.get(); }
 
     // Initialize variables used by applyXformRow.
-    void initializeXformParams();
+    void initializeXformParams() noexcept;
 
     /**
      *  Pass available input to libpng to process it.
@@ -72,22 +72,21 @@ protected:
     bool processData();
 
     Result onStartIncrementalDecode(const SkImageInfo& dstInfo, void* pixels, size_t rowBytes,
-            const SkCodec::Options&) override;
-    Result onIncrementalDecode(int*) override;
+                                    const SkCodec::Options&) noexcept override;
+    Result onIncrementalDecode(int*) noexcept override;
 
-    sk_sp<SkPngChunkReader>     fPngChunkReader;
-    voidp                       fPng_ptr;
-    voidp                       fInfo_ptr;
+    sk_sp<SkPngChunkReader> fPngChunkReader;
+    voidp fPng_ptr;
+    voidp fInfo_ptr;
 
     // These are stored here so they can be used both by normal decoding and scanline decoding.
-    sk_sp<SkColorTable>         fColorTable;    // May be unpremul.
+    sk_sp<SkColorTable> fColorTable;  // May be unpremul.
     std::unique_ptr<SkSwizzler> fSwizzler;
-    SkAutoTMalloc<uint8_t>      fStorage;
-    void*                       fColorXformSrcRow;
-    const int                   fBitDepth;
+    SkAutoTMalloc<uint8_t> fStorage;
+    void* fColorXformSrcRow;
+    const int fBitDepth;
 
 private:
-
     enum XformMode {
         // Requires only a swizzle pass.
         kSwizzleOnly_XformMode,
@@ -103,18 +102,18 @@ private:
     // Helper to set up swizzler, color xforms, and color table. Also calls png_read_update_info.
     SkCodec::Result initializeXforms(const SkImageInfo& dstInfo, const Options&);
     void initializeSwizzler(const SkImageInfo& dstInfo, const Options&, bool skipFormatConversion);
-    void allocateStorage(const SkImageInfo& dstInfo);
-    void destroyReadStruct();
+    void allocateStorage(const SkImageInfo& dstInfo) noexcept;
+    void destroyReadStruct() noexcept;
 
     virtual Result decodeAllRows(void* dst, size_t rowBytes, int* rowsDecoded) = 0;
     virtual void setRange(int firstRow, int lastRow, void* dst, size_t rowBytes) = 0;
     virtual Result decode(int* rowsDecoded) = 0;
 
-    XformMode                      fXformMode;
-    int                            fXformWidth;
+    XformMode fXformMode;
+    int fXformWidth;
 
-    size_t                         fIdatLength;
-    bool                           fDecodedIdat;
+    size_t fIdatLength;
+    bool fDecodedIdat;
 
     typedef SkCodec INHERITED;
 };

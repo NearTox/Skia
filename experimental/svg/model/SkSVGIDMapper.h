@@ -8,12 +8,12 @@
 #ifndef SkSVGIDMapper_DEFINED
 #define SkSVGIDMapper_DEFINED
 
-#include "SkRefCnt.h"
-#include "SkTHash.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/SkTHash.h"
 
 class SkString;
 class SkSVGNode;
 
 using SkSVGIDMapper = SkTHashMap<SkString, sk_sp<SkSVGNode>>;
 
-#endif // SkSVGIDMapper_DEFINED
+#endif  // SkSVGIDMapper_DEFINED

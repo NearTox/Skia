@@ -5,16 +5,16 @@
  * found in the LICENSE file.
  */
 
-#include "GrPrimitiveProcessor.h"
+#include "src/gpu/GrPrimitiveProcessor.h"
 
-#include "GrCoordTransform.h"
+#include "src/gpu/GrCoordTransform.h"
 
 /**
  * We specialize the vertex code for each of these matrix types.
  */
 enum MatrixType {
-    kNoPersp_MatrixType  = 0,
-    kGeneral_MatrixType  = 1,
+    kNoPersp_MatrixType = 0,
+    kGeneral_MatrixType = 1,
 };
 
 GrPrimitiveProcessor::GrPrimitiveProcessor(ClassID classID) : GrProcessor(classID) {}
@@ -24,9 +24,8 @@ const GrPrimitiveProcessor::TextureSampler& GrPrimitiveProcessor::textureSampler
     return this->onTextureSampler(i);
 }
 
-uint32_t
-GrPrimitiveProcessor::getTransformKey(const SkTArray<const GrCoordTransform*, true>& coords,
-                                      int numCoords) const {
+uint32_t GrPrimitiveProcessor::getTransformKey(
+        const SkTArray<const GrCoordTransform*, true>& coords, int numCoords) const {
     uint32_t totalKey = 0;
     for (int t = 0; t < numCoords; ++t) {
         uint32_t key = 0;
@@ -37,7 +36,7 @@ GrPrimitiveProcessor::getTransformKey(const SkTArray<const GrCoordTransform*, tr
             key |= kNoPersp_MatrixType;
         }
         key <<= t;
-        SkASSERT(0 == (totalKey & key)); // keys for each transform ought not to overlap
+        SkASSERT(0 == (totalKey & key));  // keys for each transform ought not to overlap
         totalKey |= key;
     }
     return totalKey;

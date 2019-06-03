@@ -8,8 +8,8 @@
 #ifndef GrBitmapTextGeoProc_DEFINED
 #define GrBitmapTextGeoProc_DEFINED
 
-#include "GrProcessor.h"
-#include "GrGeometryProcessor.h"
+#include "src/gpu/GrGeometryProcessor.h"
+#include "src/gpu/GrProcessor.h"
 
 class GrGLBitmapTextGeoProc;
 class GrInvariantOutput;
@@ -23,15 +23,13 @@ class GrBitmapTextGeoProc : public GrGeometryProcessor {
 public:
     static constexpr int kMaxTextures = 4;
 
-    static sk_sp<GrGeometryProcessor> Make(const GrShaderCaps& caps,
-                                           const SkPMColor4f& color, bool wideColor,
-                                           const sk_sp<GrTextureProxy>* proxies,
-                                           int numActiveProxies,
-                                           const GrSamplerState& p, GrMaskFormat format,
-                                           const SkMatrix& localMatrix, bool usesW) {
-        return sk_sp<GrGeometryProcessor>(
-            new GrBitmapTextGeoProc(caps, color, wideColor, proxies, numActiveProxies, p, format,
-                                    localMatrix, usesW));
+    static sk_sp<GrGeometryProcessor> Make(const GrShaderCaps& caps, const SkPMColor4f& color,
+                                           bool wideColor, const sk_sp<GrTextureProxy>* proxies,
+                                           int numActiveProxies, const GrSamplerState& p,
+                                           GrMaskFormat format, const SkMatrix& localMatrix,
+                                           bool usesW) {
+        return sk_sp<GrGeometryProcessor>(new GrBitmapTextGeoProc(
+                caps, color, wideColor, proxies, numActiveProxies, p, format, localMatrix, usesW));
     }
 
     ~GrBitmapTextGeoProc() override {}
@@ -62,15 +60,15 @@ private:
 
     const TextureSampler& onTextureSampler(int i) const override { return fTextureSamplers[i]; }
 
-    SkPMColor4f      fColor;
-    SkMatrix         fLocalMatrix;
-    bool             fUsesW;
-    SkISize          fAtlasSize;  // size for all textures used with fTextureSamplers[].
-    TextureSampler   fTextureSamplers[kMaxTextures];
-    Attribute        fInPosition;
-    Attribute        fInColor;
-    Attribute        fInTextureCoords;
-    GrMaskFormat     fMaskFormat;
+    SkPMColor4f fColor;
+    SkMatrix fLocalMatrix;
+    bool fUsesW;
+    SkISize fAtlasSize;  // size for all textures used with fTextureSamplers[].
+    TextureSampler fTextureSamplers[kMaxTextures];
+    Attribute fInPosition;
+    Attribute fInColor;
+    Attribute fInTextureCoords;
+    GrMaskFormat fMaskFormat;
 
     GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 

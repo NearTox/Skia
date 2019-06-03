@@ -8,8 +8,8 @@
 #ifndef SkMD5_DEFINED
 #define SkMD5_DEFINED
 
-#include "SkStream.h"
-#include "SkTo.h"
+#include "include/core/SkStream.h"
+#include "include/private/SkTo.h"
 
 /* Calculate a 128-bit MD5 message-digest of the bytes sent to this stream. */
 class SkMD5 : public SkWStream {
@@ -24,14 +24,14 @@ public:
 
     struct Digest {
         uint8_t data[16];
-        bool operator ==(Digest const& other) const {
+        bool operator==(Digest const& other) const {
             return 0 == memcmp(data, other.data, sizeof(data));
         }
-        bool operator !=(Digest const& other) const { return !(*this == other); }
+        bool operator!=(Digest const& other) const { return !(*this == other); }
     };
 
     /** Computes and returns the digest. */
-    void finish(Digest& digest);
+    Digest finish();
 
 private:
     uint64_t byteCount;  // number of bytes, modulo 2^64

@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "SkMatrixPriv.h"
-#include "SkReader32.h"
-#include "SkString.h"
-#include "SkTo.h"
+#include "include/core/SkString.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkMatrixPriv.h"
+#include "src/core/SkReader32.h"
 
-#include "SkWriter32.h"
+#include "src/core/SkWriter32.h"
 
 void SkWriter32::writeMatrix(const SkMatrix& matrix) {
     size_t size = SkMatrixPriv::WriteToMemory(matrix, nullptr);
@@ -67,7 +67,7 @@ size_t SkWriter32::WriteStringSize(const char* str, size_t len) {
         SkASSERT(str);
         len = strlen(str);
     }
-    const size_t lenBytes = 4;    // we use 4 bytes to record the length
+    const size_t lenBytes = 4;  // we use 4 bytes to record the length
     // add 1 since we also write a terminating 0
     return SkAlign4(lenBytes + len + 1);
 }
@@ -85,6 +85,4 @@ void SkWriter32::growToAtLeast(size_t size) {
     }
 }
 
-sk_sp<SkData> SkWriter32::snapshotAsData() const {
-    return SkData::MakeWithCopy(fData, fUsed);
-}
+sk_sp<SkData> SkWriter32::snapshotAsData() const { return SkData::MakeWithCopy(fData, fUsed); }

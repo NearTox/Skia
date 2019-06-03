@@ -4,15 +4,14 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "Sample.h"
-#include "SkBlurMask.h"
-#include "SkCanvas.h"
-#include "SkMaskFilter.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkMaskFilter.h"
+#include "samplecode/Sample.h"
+#include "src/core/SkBlurMask.h"
 
 class BigBlurView : public Sample {
 public:
-    BigBlurView() {
-    }
+    BigBlurView() {}
 
 protected:
     virtual bool onQuery(Sample::Event* evt) {
@@ -28,8 +27,7 @@ protected:
         canvas->save();
         paint.setColor(SK_ColorBLUE);
         paint.setMaskFilter(SkMaskFilter::MakeBlur(
-            kNormal_SkBlurStyle,
-            SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(128))));
+                kNormal_SkBlurStyle, SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(128))));
         canvas->translate(200, 200);
         canvas->drawCircle(100, 100, 200, paint);
         canvas->restore();
@@ -41,4 +39,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new BigBlurView(); )
+DEF_SAMPLE(return new BigBlurView();)

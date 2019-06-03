@@ -4,15 +4,16 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkIntersections.h"
-#include "SkPathOpsCurve.h"
-#include "SkPathOpsLine.h"
-#include "SkPathOpsQuad.h"
+#include "src/pathops/SkIntersections.h"
+#include "src/pathops/SkPathOpsCurve.h"
+#include "src/pathops/SkPathOpsLine.h"
+#include "src/pathops/SkPathOpsQuad.h"
 
 /*
 Find the interection of a line and quadratic by solving for valid t values.
 
-From http://stackoverflow.com/questions/1853637/how-to-find-the-mathematical-function-defining-a-bezier-curve
+From
+http://stackoverflow.com/questions/1853637/how-to-find-the-mathematical-function-defining-a-bezier-curve
 
 "A Bezier curve is a parametric function. A quadratic Bezier curve (i.e. three
 control points) can be expressed as: F(t) = A(1 - t)^2 + B(1 - t)t + Ct^2 where
@@ -89,33 +90,22 @@ Thus, if the slope of the line tends towards vertical, we use:
 
 class LineQuadraticIntersections {
 public:
-    enum PinTPoint {
-        kPointUninitialized,
-        kPointInitialized
-    };
+    enum PinTPoint { kPointUninitialized, kPointInitialized };
 
     LineQuadraticIntersections(const SkDQuad& q, const SkDLine& l, SkIntersections* i)
-        : fQuad(q)
-        , fLine(&l)
-        , fIntersections(i)
-        , fAllowNear(true) {
+            : fQuad(q), fLine(&l), fIntersections(i), fAllowNear(true) {
         i->setMax(5);  // allow short partial coincidence plus discrete intersections
     }
 
     LineQuadraticIntersections(const SkDQuad& q)
-        : fQuad(q)
-        SkDEBUGPARAMS(fLine(nullptr))
-        SkDEBUGPARAMS(fIntersections(nullptr))
-        SkDEBUGPARAMS(fAllowNear(false)) {
-    }
+            : fQuad(q) SkDEBUGPARAMS(fLine(nullptr)) SkDEBUGPARAMS(fIntersections(nullptr))
+                      SkDEBUGPARAMS(fAllowNear(false)) {}
 
-    void allowNear(bool allow) {
-        fAllowNear = allow;
-    }
+    void allowNear(bool allow) { fAllowNear = allow; }
 
     void checkCoincident() {
         int last = fIntersections->used() - 1;
-        for (int index = 0; index < last; ) {
+        for (int index = 0; index < last;) {
             double quadMidT = ((*fIntersections)[0][index] + (*fIntersections)[0][index + 1]) / 2;
             SkDPoint quadMidPt = fQuad.ptAtT(quadMidT);
             double t = fLine->nearPoint(quadMidPt, nullptr);
@@ -137,21 +127,21 @@ public:
     }
 
     int intersectRay(double roots[2]) {
-    /*
-        solve by rotating line+quad so line is horizontal, then finding the roots
-        set up matrix to rotate quad to x-axis
-        |cos(a) -sin(a)|
-        |sin(a)  cos(a)|
-        note that cos(a) = A(djacent) / Hypoteneuse
-                  sin(a) = O(pposite) / Hypoteneuse
-        since we are computing Ts, we can ignore hypoteneuse, the scale factor:
-        |  A     -O    |
-        |  O      A    |
-        A = line[1].fX - line[0].fX (adjacent side of the right triangle)
-        O = line[1].fY - line[0].fY (opposite side of the right triangle)
-        for each of the three points (e.g. n = 0 to 2)
-        quad[n].fY' = (quad[n].fY - line[0].fY) * A - (quad[n].fX - line[0].fX) * O
-    */
+        /*
+            solve by rotating line+quad so line is horizontal, then finding the roots
+            set up matrix to rotate quad to x-axis
+            |cos(a) -sin(a)|
+            |sin(a)  cos(a)|
+            note that cos(a) = A(djacent) / Hypoteneuse
+                      sin(a) = O(pposite) / Hypoteneuse
+            since we are computing Ts, we can ignore hypoteneuse, the scale factor:
+            |  A     -O    |
+            |  O      A    |
+            A = line[1].fX - line[0].fX (adjacent side of the right triangle)
+            O = line[1].fY - line[0].fY (opposite side of the right triangle)
+            for each of the three points (e.g. n = 0 to 2)
+            quad[n].fY' = (quad[n].fY - line[0].fY) * A - (quad[n].fX - line[0].fX) * O
+        */
         double adj = (*fLine)[1].fX - (*fLine)[0].fX;
         double opp = (*fLine)[1].fY - (*fLine)[0].fY;
         double r[3];
@@ -162,7 +152,7 @@ public:
         double B = r[1];
         double C = r[0];
         A += C - 2 * B;  // A = a - 2*b + c
-        B -= C;  // B = -(b - c)
+        B -= C;          // B = -(b - c)
         return SkDQuad::RootsValidT(A, 2 * B, C, roots);
     }
 
@@ -189,8 +179,8 @@ public:
         double D = fQuad[2].fY;  // f
         double E = fQuad[1].fY;  // e
         double F = fQuad[0].fY;  // d
-        D += F - 2 * E;         // D = d - 2*e + f
-        E -= F;                 // E = -(d - e)
+        D += F - 2 * E;          // D = d - 2*e + f
+        E -= F;                  // E = -(d - e)
         F -= axisIntercept;
         return SkDQuad::RootsValidT(D, 2 * E, F, roots);
     }
@@ -235,8 +225,8 @@ public:
         }
 #if ONE_OFF_DEBUG
         SkDPoint qPt = fQuad.ptAtT(quadT);
-        SkDebugf("%s pt=(%1.9g,%1.9g) cPt=(%1.9g,%1.9g)\n", __FUNCTION__, pt.fX, pt.fY,
-                qPt.fX, qPt.fY);
+        SkDebugf("%s pt=(%1.9g,%1.9g) cPt=(%1.9g,%1.9g)\n", __FUNCTION__, pt.fX, pt.fY, qPt.fX,
+                 qPt.fY);
 #endif
         return true;
     }
@@ -245,8 +235,8 @@ public:
         double D = fQuad[2].fX;  // f
         double E = fQuad[1].fX;  // e
         double F = fQuad[0].fX;  // d
-        D += F - 2 * E;         // D = d - 2*e + f
-        E -= F;                 // E = -(d - e)
+        D += F - 2 * E;          // D = d - 2*e + f
+        E -= F;                  // E = -(d - e)
         F -= axisIntercept;
         return SkDQuad::RootsValidT(D, 2 * E, F, roots);
     }
@@ -281,14 +271,14 @@ protected:
             if (lineT < 0) {
                 continue;
             }
-            double quadT = (double) (qIndex >> 1);
+            double quadT = (double)(qIndex >> 1);
             fIntersections->insert(quadT, lineT, fQuad[qIndex]);
         }
     }
 
     void addNearEndPoints() {
         for (int qIndex = 0; qIndex < 3; qIndex += 2) {
-            double quadT = (double) (qIndex >> 1);
+            double quadT = (double)(qIndex >> 1);
             if (fIntersections->hasT(quadT)) {
                 continue;
             }
@@ -303,12 +293,13 @@ protected:
 
     void addLineNearEndPoints() {
         for (int lIndex = 0; lIndex < 2; ++lIndex) {
-            double lineT = (double) lIndex;
+            double lineT = (double)lIndex;
             if (fIntersections->hasOppT(lineT)) {
                 continue;
             }
-            double quadT = ((SkDCurve*) &fQuad)->nearPoint(SkPath::kQuad_Verb,
-                    (*fLine)[lIndex], (*fLine)[!lIndex]);
+            double quadT =
+                    ((SkDCurve*)&fQuad)
+                            ->nearPoint(SkPath::kQuad_Verb, (*fLine)[lIndex], (*fLine)[!lIndex]);
             if (quadT < 0) {
                 continue;
             }
@@ -322,14 +313,14 @@ protected:
             if (lineT < 0) {
                 continue;
             }
-            double quadT = (double) (qIndex >> 1);
+            double quadT = (double)(qIndex >> 1);
             fIntersections->insert(quadT, lineT, fQuad[qIndex]);
         }
     }
 
     void addNearHorizontalEndPoints(double left, double right, double y) {
         for (int qIndex = 0; qIndex < 3; qIndex += 2) {
-            double quadT = (double) (qIndex >> 1);
+            double quadT = (double)(qIndex >> 1);
             if (fIntersections->hasT(quadT)) {
                 continue;
             }
@@ -348,14 +339,14 @@ protected:
             if (lineT < 0) {
                 continue;
             }
-            double quadT = (double) (qIndex >> 1);
+            double quadT = (double)(qIndex >> 1);
             fIntersections->insert(quadT, lineT, fQuad[qIndex]);
         }
     }
 
     void addNearVerticalEndPoints(double top, double bottom, double x) {
         for (int qIndex = 0; qIndex < 3; qIndex += 2) {
-            double quadT = (double) (qIndex >> 1);
+            double quadT = (double)(qIndex >> 1);
             if (fIntersections->hasT(quadT)) {
                 continue;
             }
@@ -422,14 +413,14 @@ private:
 
 int SkIntersections::horizontal(const SkDQuad& quad, double left, double right, double y,
                                 bool flipped) {
-    SkDLine line = {{{ left, y }, { right, y }}};
+    SkDLine line = {{{left, y}, {right, y}}};
     LineQuadraticIntersections q(quad, line, this);
     return q.horizontalIntersect(y, left, right, flipped);
 }
 
 int SkIntersections::vertical(const SkDQuad& quad, double top, double bottom, double x,
                               bool flipped) {
-    SkDLine line = {{{ x, top }, { x, bottom }}};
+    SkDLine line = {{{x, top}, {x, bottom}}};
     LineQuadraticIntersections q(quad, line, this);
     return q.verticalIntersect(x, top, bottom, flipped);
 }

@@ -5,17 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkCanvas.h"
-#include "SkFont.h"
-#include "SkFontMetrics.h"
-#include "SkPath.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkFontMetrics.h"
+#include "include/core/SkPath.h"
+#include "samplecode/Sample.h"
 
-#include "SkSGDraw.h"
-#include "SkSGColor.h"
-#include "SkSGGroup.h"
-#include "SkSGRect.h"
-#include "SkSGScene.h"
+#include "modules/sksg/include/SkSGDraw.h"
+#include "modules/sksg/include/SkSGGroup.h"
+#include "modules/sksg/include/SkSGPaint.h"
+#include "modules/sksg/include/SkSGRect.h"
+#include "modules/sksg/include/SkSGScene.h"
 
 struct PerNodeInfo {
     // key
@@ -23,7 +23,7 @@ struct PerNodeInfo {
 
     // value(s)
     sksg::GeometryNode* fGeo;
-    sksg::PaintNode*    fPaint;
+    sksg::PaintNode* fPaint;
 };
 
 class SampleSG : public Sample {
@@ -43,8 +43,8 @@ class SampleSG : public Sample {
     void appendNode(sk_sp<sksg::Draw> d, sk_sp<sksg::GeometryNode> g, sk_sp<sksg::PaintNode> p) {
         fGroup->addChild(d);
         auto sc = fSideCar.append();
-        sc->fDraw  = d.get();
-        sc->fGeo   = g.get();
+        sc->fDraw = d.get();
+        sc->fGeo = g.get();
         sc->fPaint = p.get();
     }
 
@@ -74,9 +74,7 @@ protected:
         return this->INHERITED::onQuery(evt);
     }
 
-    void onDrawContent(SkCanvas* canvas) override {
-        fScene->render(canvas);
-    }
+    void onDrawContent(SkCanvas* canvas) override { fScene->render(canvas); }
 
     Click* onFindClickHandler(SkScalar x, SkScalar y, unsigned modi) override {
         if (auto node = fScene->nodeAt({x, y})) {
@@ -106,10 +104,9 @@ protected:
     }
 
 private:
-
     typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new SampleSG(); )
+DEF_SAMPLE(return new SampleSG();)

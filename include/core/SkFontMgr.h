@@ -8,10 +8,10 @@
 #ifndef SkFontMgr_DEFINED
 #define SkFontMgr_DEFINED
 
-#include "SkFontArguments.h"
-#include "SkFontStyle.h"
-#include "SkRefCnt.h"
-#include "SkTypes.h"
+#include "include/core/SkFontArguments.h"
+#include "include/core/SkFontStyle.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkTypes.h"
 
 class SkData;
 class SkFontData;
@@ -129,18 +129,16 @@ public:
 protected:
     virtual int onCountFamilies() const = 0;
     virtual void onGetFamilyName(int index, SkString* familyName) const = 0;
-    virtual SkFontStyleSet* onCreateStyleSet(int index)const  = 0;
+    virtual SkFontStyleSet* onCreateStyleSet(int index) const = 0;
 
     /** May return NULL if the name is not found. */
     virtual SkFontStyleSet* onMatchFamily(const char familyName[]) const = 0;
 
-    virtual SkTypeface* onMatchFamilyStyle(const char familyName[],
-                                           const SkFontStyle&) const = 0;
+    virtual SkTypeface* onMatchFamilyStyle(const char familyName[], const SkFontStyle&) const = 0;
     virtual SkTypeface* onMatchFamilyStyleCharacter(const char familyName[], const SkFontStyle&,
                                                     const char* bcp47[], int bcp47Count,
                                                     SkUnichar character) const = 0;
-    virtual SkTypeface* onMatchFaceStyle(const SkTypeface*,
-                                         const SkFontStyle&) const = 0;
+    virtual SkTypeface* onMatchFaceStyle(const SkTypeface*, const SkFontStyle&) const = 0;
 
     virtual sk_sp<SkTypeface> onMakeFromData(sk_sp<SkData>, int ttcIndex) const = 0;
     virtual sk_sp<SkTypeface> onMakeFromStreamIndex(std::unique_ptr<SkStreamAsset>,
@@ -153,7 +151,6 @@ protected:
     virtual sk_sp<SkTypeface> onLegacyMakeTypeface(const char familyName[], SkFontStyle) const = 0;
 
 private:
-
     /** Implemented by porting layer to return the default factory. */
     static sk_sp<SkFontMgr> Factory();
 

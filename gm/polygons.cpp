@@ -5,27 +5,30 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkPath.h"
-#include "SkRandom.h"
-#include "SkScalar.h"
-#include "SkTArray.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkTArray.h"
+#include "include/utils/SkRandom.h"
 
 namespace skiagm {
 
 // This GM tests a grab-bag of convex and concave polygons. They are triangles,
 // trapezoid, diamond, polygons with lots of edges, several concave polygons...
 // But rectangles are excluded.
-class PolygonsGM: public GM {
+class PolygonsGM : public GM {
 public:
     PolygonsGM() {}
 
 protected:
-
-    SkString onShortName() override {
-        return SkString("polygons");
-    }
+    SkString onShortName() override { return SkString("polygons"); }
 
     SkISize onISize() override {
         int width = kNumPolygons * kCellSize + 40;
@@ -35,17 +38,17 @@ protected:
 
     // Construct all polygons
     void onOnceBeforeDraw() override {
-        SkPoint p0[] = {{0, 0}, {60, 0}, {90, 40}};  // triangle
-        SkPoint p1[] = {{0, 0}, {0, 40}, {60, 40}, {40, 0}};  // trapezoid
+        SkPoint p0[] = {{0, 0}, {60, 0}, {90, 40}};            // triangle
+        SkPoint p1[] = {{0, 0}, {0, 40}, {60, 40}, {40, 0}};   // trapezoid
         SkPoint p2[] = {{0, 0}, {40, 40}, {80, 40}, {40, 0}};  // diamond
-        SkPoint p3[] = {{10, 0}, {50, 0}, {60, 10}, {60, 30}, {50, 40},
-                        {10, 40}, {0, 30}, {0, 10}};  // octagon
+        SkPoint p3[] = {{10, 0},  {50, 0},  {60, 10}, {60, 30},
+                        {50, 40}, {10, 40}, {0, 30},  {0, 10}};  // octagon
         SkPoint p4[32];  // circle-like polygons with 32-edges.
         SkPoint p5[] = {{0, 0}, {20, 20}, {0, 40}, {60, 20}};  // concave polygon with 4 edges
-        SkPoint p6[] = {{0, 40}, {0, 30}, {15, 30}, {15, 20}, {30, 20},
-                        {30, 10}, {45, 10}, {45, 0}, {60, 0}, {60, 40}};  // stairs-like polygon
-        SkPoint p7[] = {{0, 20}, {20, 20}, {30, 0}, {40, 20}, {60, 20},
-                        {45, 30}, {55, 50}, {30, 40}, {5, 50}, {15, 30}};  // five-point stars
+        SkPoint p6[] = {{0, 40},  {0, 30},  {15, 30}, {15, 20}, {30, 20},
+                        {30, 10}, {45, 10}, {45, 0},  {60, 0},  {60, 40}};  // stairs-like polygon
+        SkPoint p7[] = {{0, 20},  {20, 20}, {30, 0},  {40, 20}, {60, 20},
+                        {45, 30}, {55, 50}, {30, 40}, {5, 50},  {15, 30}};  // five-point stars
 
         for (size_t i = 0; i < SK_ARRAY_COUNT(p4); ++i) {
             SkScalar angle = 2 * SK_ScalarPI * i / SK_ARRAY_COUNT(p4);
@@ -55,21 +58,13 @@ protected:
         struct Polygons {
             SkPoint* fPoints;
             size_t fPointNum;
-        } pgs[] = {
-            { p0, SK_ARRAY_COUNT(p0) },
-            { p1, SK_ARRAY_COUNT(p1) },
-            { p2, SK_ARRAY_COUNT(p2) },
-            { p3, SK_ARRAY_COUNT(p3) },
-            { p4, SK_ARRAY_COUNT(p4) },
-            { p5, SK_ARRAY_COUNT(p5) },
-            { p6, SK_ARRAY_COUNT(p6) },
-            { p7, SK_ARRAY_COUNT(p7) }
-        };
+        } pgs[] = {{p0, SK_ARRAY_COUNT(p0)}, {p1, SK_ARRAY_COUNT(p1)}, {p2, SK_ARRAY_COUNT(p2)},
+                   {p3, SK_ARRAY_COUNT(p3)}, {p4, SK_ARRAY_COUNT(p4)}, {p5, SK_ARRAY_COUNT(p5)},
+                   {p6, SK_ARRAY_COUNT(p6)}, {p7, SK_ARRAY_COUNT(p7)}};
 
         SkASSERT(SK_ARRAY_COUNT(pgs) == kNumPolygons);
         for (size_t pgIndex = 0; pgIndex < SK_ARRAY_COUNT(pgs); ++pgIndex) {
-            fPolygons.push_back().moveTo(pgs[pgIndex].fPoints[0].fX,
-                                         pgs[pgIndex].fPoints[0].fY);
+            fPolygons.push_back().moveTo(pgs[pgIndex].fPoints[0].fX, pgs[pgIndex].fPoints[0].fY);
             for (size_t ptIndex = 1; ptIndex < pgs[pgIndex].fPointNum; ++ptIndex) {
                 fPolygons.back().lineTo(pgs[pgIndex].fPoints[ptIndex].fX,
                                         pgs[pgIndex].fPoints[ptIndex].fY);
@@ -101,9 +96,8 @@ protected:
         constexpr int kStrokeWidths[] = {0, 10, 40};
         SkASSERT(kNumStrokeWidths == SK_ARRAY_COUNT(kStrokeWidths));
 
-        constexpr SkPaint::Join kJoins[] = {
-            SkPaint::kMiter_Join, SkPaint::kRound_Join, SkPaint::kBevel_Join
-        };
+        constexpr SkPaint::Join kJoins[] = {SkPaint::kMiter_Join, SkPaint::kRound_Join,
+                                            SkPaint::kBevel_Join};
         SkASSERT(kNumJoins == SK_ARRAY_COUNT(kJoins));
 
         int counter = 0;
@@ -131,9 +125,7 @@ protected:
         }
 
         // For stroke-and-fill style painter and fill style painter
-        constexpr SkPaint::Style kStyles[] = {
-            SkPaint::kStrokeAndFill_Style, SkPaint::kFill_Style
-        };
+        constexpr SkPaint::Style kStyles[] = {SkPaint::kStrokeAndFill_Style, SkPaint::kFill_Style};
         SkASSERT(kNumExtraStyles == SK_ARRAY_COUNT(kStyles));
 
         paint.setStrokeJoin(SkPaint::kMiter_Join);
@@ -166,4 +158,4 @@ private:
 
 DEF_GM(return new PolygonsGM;)
 
-}
+}  // namespace skiagm

@@ -8,10 +8,10 @@
 #ifndef SkRawCodec_DEFINED
 #define SkRawCodec_DEFINED
 
-#include "SkCodec.h"
-#include "SkColorSpace.h"
-#include "SkImageInfo.h"
-#include "SkTypes.h"
+#include "include/codec/SkCodec.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkTypes.h"
 
 class SkDngImage;
 class SkStream;
@@ -23,7 +23,6 @@ class SkStream;
  */
 class SkRawCodec : public SkCodec {
 public:
-
     /*
      * Creates a RAW decoder
      * Takes ownership of the stream
@@ -33,11 +32,10 @@ public:
     ~SkRawCodec() override;
 
 protected:
-
     Result onGetPixels(const SkImageInfo& dstInfo, void* dst, size_t dstRowBytes, const Options&,
-            int*) override;
+                       int*) override;
 
-    SkEncodedImageFormat onGetEncodedFormat() const override {
+    SkEncodedImageFormat onGetEncodedFormat() const noexcept override {
         return SkEncodedImageFormat::kDNG;
     }
 
@@ -47,10 +45,9 @@ protected:
 
     // SkCodec only applies the colorXform if it's necessary for color space
     // conversion. SkRawCodec will always convert, so tell SkCodec not to.
-    bool usesColorXform() const override { return false; }
+    bool usesColorXform() const noexcept override { return false; }
 
 private:
-
     /*
      * Creates an instance of the decoder
      * Called only by NewFromStream, takes ownership of dngImage.

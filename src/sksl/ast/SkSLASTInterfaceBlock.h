@@ -8,8 +8,8 @@
 #ifndef SKSL_ASTINTERFACEBLOCK
 #define SKSL_ASTINTERFACEBLOCK
 
-#include "SkSLASTVarDeclaration.h"
-#include "../ir/SkSLModifiers.h"
+#include "src/sksl/ast/SkSLASTVarDeclaration.h"
+#include "src/sksl/ir/SkSLModifiers.h"
 
 namespace SkSL {
 
@@ -26,15 +26,17 @@ struct ASTInterfaceBlock : public ASTDeclaration {
     ASTInterfaceBlock(int offset,
                       Modifiers modifiers,
                       StringFragment typeName,
-                      std::vector<std::unique_ptr<ASTVarDeclarations>> declarations,
+                      std::vector<std::unique_ptr<ASTVarDeclarations>>
+                              declarations,
                       StringFragment instanceName,
-                      std::vector<std::unique_ptr<ASTExpression>> sizes)
-    : INHERITED(offset, kInterfaceBlock_Kind)
-    , fModifiers(modifiers)
-    , fTypeName(typeName)
-    , fDeclarations(std::move(declarations))
-    , fInstanceName(instanceName)
-    , fSizes(std::move(sizes)) {}
+                      std::vector<std::unique_ptr<ASTExpression>>
+                              sizes)
+            : INHERITED(offset, kInterfaceBlock_Kind)
+            , fModifiers(modifiers)
+            , fTypeName(typeName)
+            , fDeclarations(std::move(declarations))
+            , fInstanceName(instanceName)
+            , fSizes(std::move(sizes)) {}
 
     String description() const override {
         String result = fModifiers.description() + fTypeName + " {\n";
@@ -64,6 +66,6 @@ struct ASTInterfaceBlock : public ASTDeclaration {
     typedef ASTDeclaration INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

@@ -11,7 +11,7 @@
 #ifndef sk_image_DEFINED
 #define sk_image_DEFINED
 
-#include "sk_types.h"
+#include "include/c/sk_types.h"
 
 SK_C_PLUS_PLUS_BEGIN_GUARD
 
@@ -19,7 +19,8 @@ SK_C_PLUS_PLUS_BEGIN_GUARD
  *  Return a new image that has made a copy of the provided pixels, or NULL on failure.
  *  Balance with a call to sk_image_unref().
  */
-SK_API sk_image_t* sk_image_new_raster_copy(const sk_imageinfo_t*, const void* pixels, size_t rowBytes);
+SK_API sk_image_t* sk_image_new_raster_copy(const sk_imageinfo_t*, const void* pixels,
+                                            size_t rowBytes);
 
 /**
  *  If the specified data can be interpreted as a compressed image (e.g. PNG or JPEG) then this
@@ -42,7 +43,7 @@ SK_API sk_data_t* sk_image_encode(const sk_image_t*);
 /**
  *  Increment the reference count on the given sk_image_t. Must be
  *  balanced by a call to sk_image_unref().
-*/
+ */
 SK_API void sk_image_ref(const sk_image_t*);
 /**
  *  Decrement the reference count. If the reference count is 1 before

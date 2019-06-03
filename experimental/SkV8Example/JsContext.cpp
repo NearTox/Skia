@@ -14,7 +14,6 @@
 #include "Path2D.h"
 #include "SkCanvas.h"
 
-
 // Extracts a C string from a V8 Utf8Value.
 // TODO(jcgregrio) Currently dup'd in two files, fix.
 static const char* to_cstring(const v8::String::Utf8Value& value) {
@@ -82,9 +81,8 @@ void JsContext::onDraw(SkCanvas* canvas) {
     // Invoke the process function, giving the global object as 'this'
     // and one argument, this JsContext.
     const int argc = 1;
-    v8::Handle<v8::Value> argv[argc] = { contextObj };
-    v8::Local<v8::Function> onDraw =
-            v8::Local<v8::Function>::New(fGlobal->getIsolate(), fOnDraw);
+    v8::Handle<v8::Value> argv[argc] = {contextObj};
+    v8::Local<v8::Function> onDraw = v8::Local<v8::Function>::New(fGlobal->getIsolate(), fOnDraw);
     v8::Handle<v8::Value> result = onDraw->Call(context->Global(), argc, argv);
 
     // Handle any exceptions or output.
@@ -106,7 +104,6 @@ void JsContext::onDraw(SkCanvas* canvas) {
 
 // Fetch the onDraw function from the global context.
 bool JsContext::initialize() {
-
     // Create a stack-allocated handle scope.
     v8::HandleScope handleScope(fGlobal->getIsolate());
 
@@ -118,8 +115,7 @@ bool JsContext::initialize() {
 
     v8::TryCatch try_catch;
 
-    v8::Handle<v8::String> fn_name = v8::String::NewFromUtf8(
-        fGlobal->getIsolate(), "onDraw");
+    v8::Handle<v8::String> fn_name = v8::String::NewFromUtf8(fGlobal->getIsolate(), "onDraw");
     v8::Handle<v8::Value> fn_val = context->Global()->Get(fn_name);
 
     if (!fn_val->IsFunction()) {

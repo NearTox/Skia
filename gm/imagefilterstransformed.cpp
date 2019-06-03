@@ -5,18 +5,34 @@
  * found in the LICENSE file.
  */
 
-#include "SkBlurImageFilter.h"
-#include "SkColor.h"
-#include "SkDisplacementMapEffect.h"
-#include "SkDropShadowImageFilter.h"
-#include "SkGradientShader.h"
-#include "SkImage.h"
-#include "SkImageSource.h"
-#include "SkMorphologyImageFilter.h"
-#include "SkScalar.h"
-#include "SkSurface.h"
-#include "gm.h"
-#include "sk_tool_utils.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkBlurImageFilter.h"
+#include "include/effects/SkDisplacementMapEffect.h"
+#include "include/effects/SkDropShadowImageFilter.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/effects/SkImageSource.h"
+#include "include/effects/SkMorphologyImageFilter.h"
+#include "include/effects/SkXfermodeImageFilter.h"
+#include "tools/ToolUtils.h"
+
+#include <utility>
 
 namespace skiagm {
 
@@ -38,7 +54,7 @@ static sk_sp<SkImage> make_gradient_circle(int width, int height) {
     colors[1] = SK_ColorBLACK;
     SkPaint paint;
     paint.setShader(SkGradientShader::MakeRadial(SkPoint::Make(x, y), radius, colors, nullptr, 2,
-                                                 SkShader::kClamp_TileMode));
+                                                 SkTileMode::kClamp));
     canvas->drawCircle(x, y, radius, paint);
 
     return surface->makeImageSnapshot();
@@ -46,19 +62,16 @@ static sk_sp<SkImage> make_gradient_circle(int width, int height) {
 
 class ImageFiltersTransformedGM : public GM {
 public:
-    ImageFiltersTransformedGM() {
-        this->setBGColor(SK_ColorBLACK);
-    }
+    ImageFiltersTransformedGM() { this->setBGColor(SK_ColorBLACK); }
 
 protected:
-
     SkString onShortName() override { return SkString("imagefilterstransformed"); }
 
     SkISize onISize() override { return SkISize::Make(420, 240); }
 
     void onOnceBeforeDraw() override {
         fCheckerboard = SkImage::MakeFromBitmap(
-            sk_tool_utils::create_checkerboard_bitmap(64, 64, 0xFFA0A0A0, 0xFF404040, 8));
+                ToolUtils::create_checkerboard_bitmap(64, 64, 0xFFA0A0A0, 0xFF404040, 8));
         fGradientCircle = make_gradient_circle(64, 64);
     }
 
@@ -66,16 +79,17 @@ protected:
         sk_sp<SkImageFilter> gradient(SkImageSource::Make(fGradientCircle));
         sk_sp<SkImageFilter> checkerboard(SkImageSource::Make(fCheckerboard));
         sk_sp<SkImageFilter> filters[] = {
-            SkBlurImageFilter::Make(12, 0, nullptr),
-            SkDropShadowImageFilter::Make(0, 15, 8, 0, SK_ColorGREEN,
-                SkDropShadowImageFilter::kDrawShadowAndForeground_ShadowMode, nullptr),
-            SkDisplacementMapEffect::Make(SkDisplacementMapEffect::kR_ChannelSelectorType,
-                                          SkDisplacementMapEffect::kR_ChannelSelectorType,
-                                          12,
-                                          std::move(gradient),
-                                          checkerboard),
-            SkDilateImageFilter::Make(2, 2, checkerboard),
-            SkErodeImageFilter::Make(2, 2, checkerboard),
+                SkBlurImageFilter::Make(12, 0, nullptr),
+                SkDropShadowImageFilter::Make(
+                        0, 15, 8, 0, SK_ColorGREEN,
+                        SkDropShadowImageFilter::kDrawShadowAndForeground_ShadowMode, nullptr),
+                SkDisplacementMapEffect::Make(SkDisplacementMapEffect::kR_ChannelSelectorType,
+                                              SkDisplacementMapEffect::kR_ChannelSelectorType,
+                                              12,
+                                              std::move(gradient),
+                                              checkerboard),
+                SkDilateImageFilter::Make(2, 2, checkerboard),
+                SkErodeImageFilter::Make(2, 2, checkerboard),
         };
 
         const SkScalar margin = SkIntToScalar(20);
@@ -98,8 +112,9 @@ protected:
                     canvas->skew(SkDoubleToScalar(0.5), SkDoubleToScalar(0.2));
                 }
                 canvas->translate(-size * SK_ScalarHalf, -size * SK_ScalarHalf);
-                canvas->drawOval(SkRect::MakeXYWH(0, size * SkDoubleToScalar(0.1),
-                                                  size, size * SkDoubleToScalar(0.6)), paint);
+                canvas->drawOval(SkRect::MakeXYWH(0, size * SkDoubleToScalar(0.1), size,
+                                                  size * SkDoubleToScalar(0.6)),
+                                 paint);
                 canvas->restore();
                 canvas->translate(size + margin, 0);
             }
@@ -113,11 +128,10 @@ private:
     sk_sp<SkImage> fGradientCircle;
     typedef GM INHERITED;
 };
-DEF_GM( return new ImageFiltersTransformedGM; )
-}
+DEF_GM(return new ImageFiltersTransformedGM;)
+}  // namespace skiagm
 
 //////////////////////////////////////////////////////////////////////////////
-#include "SkXfermodeImageFilter.h"
 
 DEF_SIMPLE_GM(rotate_imagefilter, canvas, 500, 500) {
     SkPaint paint;
@@ -125,9 +139,9 @@ DEF_SIMPLE_GM(rotate_imagefilter, canvas, 500, 500) {
     const SkRect r = SkRect::MakeXYWH(50, 50, 100, 100);
 
     sk_sp<SkImageFilter> filters[] = {
-        nullptr,
-        SkBlurImageFilter::Make(6, 0, nullptr),
-        SkXfermodeImageFilter::Make(SkBlendMode::kSrcOver, nullptr),
+            nullptr,
+            SkBlurImageFilter::Make(6, 0, nullptr),
+            SkXfermodeImageFilter::Make(SkBlendMode::kSrcOver, nullptr),
     };
 
     for (auto& filter : filters) {
@@ -140,15 +154,15 @@ DEF_SIMPLE_GM(rotate_imagefilter, canvas, 500, 500) {
 
         canvas->translate(150, 0);
         canvas->save();
-            canvas->rotate(30, 100, 100);
-            canvas->drawRect(r, paint);
+        canvas->rotate(30, 100, 100);
+        canvas->drawRect(r, paint);
         canvas->restore();
 
         paint.setAntiAlias(true);
         canvas->translate(150, 0);
         canvas->save();
-            canvas->rotate(30, 100, 100);
-            canvas->drawRect(r, paint);
+        canvas->rotate(30, 100, 100);
+        canvas->drawRect(r, paint);
         canvas->restore();
 
         canvas->restore();

@@ -8,8 +8,8 @@
 #ifndef GrFillRectOp_DEFINED
 #define GrFillRectOp_DEFINED
 
-#include "GrRenderTargetContext.h"
-#include "GrTypesPriv.h"
+#include "include/private/GrTypesPriv.h"
+#include "src/gpu/GrRenderTargetContext.h"
 
 class GrDrawOp;
 class GrPaint;
@@ -99,6 +99,6 @@ std::unique_ptr<GrDrawOp> MakeWithLocalRect(GrRecordingContext* context,
                                             const SkRect& localRect,
                                             const GrUserStencilSettings* stencil = nullptr);
 
-} // namespace GrFillRectOp
+}  // namespace GrFillRectOp
 
-#endif // GrFillRectOp_DEFINED
+#endif  // GrFillRectOp_DEFINED

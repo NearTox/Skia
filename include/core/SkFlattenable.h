@@ -8,7 +8,7 @@
 #ifndef SkFlattenable_DEFINED
 #define SkFlattenable_DEFINED
 
-#include "SkRefCnt.h"
+#include "include/core/SkRefCnt.h"
 
 class SkData;
 class SkReadBuffer;
@@ -33,16 +33,16 @@ public:
         kSkMaskFilter_Type,
         kSkPathEffect_Type,
         kSkPixelRef_Type,
-        kSkUnused_Type4,    // used to be SkRasterizer
+        kSkUnused_Type4,  // used to be SkRasterizer
         kSkShaderBase_Type,
-        kSkUnused_Type,     // used to be SkUnitMapper
+        kSkUnused_Type,  // used to be SkUnitMapper
         kSkUnused_Type2,
         kSkNormalSource_Type,
     };
 
     typedef sk_sp<SkFlattenable> (*Factory)(SkReadBuffer&);
 
-    SkFlattenable() {}
+    SkFlattenable() noexcept {}
 
     /** Implement this to return a factory function pointer that can be called
      to recreate your class given a buffer (previously written to by your
@@ -68,14 +68,13 @@ public:
      */
     virtual void flatten(SkWriteBuffer&) const {}
 
-    virtual Type getFlattenableType() const = 0;
+    virtual Type getFlattenableType() const noexcept = 0;
 
     //
     // public ways to serialize / deserialize
     //
     sk_sp<SkData> serialize(const SkSerialProcs* = nullptr) const;
-    size_t serialize(void* memory, size_t memory_size,
-                     const SkSerialProcs* = nullptr) const;
+    size_t serialize(void* memory, size_t memory_size, const SkSerialProcs* = nullptr) const;
     static sk_sp<SkFlattenable> Deserialize(Type, const void* data, size_t length,
                                             const SkDeserialProcs* procs = nullptr);
 
@@ -97,10 +96,10 @@ private:
 
 #define SK_REGISTER_FLATTENABLE(type) SkFlattenable::Register(#type, type::CreateProc)
 
-#define SK_FLATTENABLE_HOOKS(type)                                   \
-    static sk_sp<SkFlattenable> CreateProc(SkReadBuffer&);           \
-    friend class SkFlattenable::PrivateInitializer;                  \
-    Factory getFactory() const override { return type::CreateProc; } \
-    const char* getTypeName() const override { return #type; }
+#define SK_FLATTENABLE_HOOKS(type)                                            \
+    static sk_sp<SkFlattenable> CreateProc(SkReadBuffer&);                    \
+    friend class SkFlattenable::PrivateInitializer;                           \
+    Factory getFactory() const noexcept override { return type::CreateProc; } \
+    const char* getTypeName() const noexcept override { return #type; }
 
 #endif

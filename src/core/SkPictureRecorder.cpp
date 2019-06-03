@@ -5,17 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "SkBigPicture.h"
-#include "SkData.h"
-#include "SkDrawable.h"
-#include "SkMiniRecorder.h"
-#include "SkPictureRecorder.h"
-#include "SkRecord.h"
-#include "SkRecordDraw.h"
-#include "SkRecordOpts.h"
-#include "SkRecordedDrawable.h"
-#include "SkRecorder.h"
-#include "SkTypes.h"
+#include "include/core/SkPictureRecorder.h"
+#include "include/core/SkData.h"
+#include "include/core/SkDrawable.h"
+#include "include/core/SkTypes.h"
+#include "src/core/SkBigPicture.h"
+#include "src/core/SkMiniRecorder.h"
+#include "src/core/SkRecord.h"
+#include "src/core/SkRecordDraw.h"
+#include "src/core/SkRecordOpts.h"
+#include "src/core/SkRecordedDrawable.h"
+#include "src/core/SkRecorder.h"
 
 SkPictureRecorder::SkPictureRecorder() {
     fActivelyRecording = false;
@@ -42,8 +42,8 @@ SkCanvas* SkPictureRecorder::beginRecording(const SkRect& userCullRect,
         fRecord.reset(new SkRecord);
     }
     SkRecorder::DrawPictureMode dpm = (recordFlags & kPlaybackDrawPicture_RecordFlag)
-        ? SkRecorder::Playback_DrawPictureMode
-        : SkRecorder::Record_DrawPictureMode;
+                                              ? SkRecorder::Playback_DrawPictureMode
+                                              : SkRecorder::Record_DrawPictureMode;
     fRecorder->reset(fRecord.get(), cullRect, dpm, fMiniRecorder.get());
     fActivelyRecording = true;
     return this->getRecordingCanvas();
@@ -68,7 +68,7 @@ sk_sp<SkPicture> SkPictureRecorder::finishRecordingAsPicture(uint32_t finishFlag
 
     SkDrawableList* drawableList = fRecorder->getDrawableList();
     SkBigPicture::SnapshotArray* pictList =
-        drawableList ? drawableList->newDrawableSnapshot() : nullptr;
+            drawableList ? drawableList->newDrawableSnapshot() : nullptr;
 
     if (fBBH.get()) {
         SkAutoTMalloc<SkRect> bounds(fRecord->count());
@@ -78,8 +78,8 @@ sk_sp<SkPicture> SkPictureRecorder::finishRecordingAsPicture(uint32_t finishFlag
         // Now that we've calculated content bounds, we can update fCullRect, often trimming it.
         // TODO: get updated fCullRect from bounds instead of forcing the BBH to return it?
         SkRect bbhBound = fBBH->getRootBound();
-        SkASSERT((bbhBound.isEmpty() || fCullRect.contains(bbhBound))
-            || (bbhBound.isEmpty() && fCullRect.isEmpty()));
+        SkASSERT((bbhBound.isEmpty() || fCullRect.contains(bbhBound)) ||
+                 (bbhBound.isEmpty() && fCullRect.isEmpty()));
         fCullRect = bbhBound;
     }
 
@@ -97,7 +97,6 @@ sk_sp<SkPicture> SkPictureRecorder::finishRecordingAsPictureWithCull(const SkRec
     return this->finishRecordingAsPicture(finishFlags);
 }
 
-
 void SkPictureRecorder::partialReplay(SkCanvas* canvas) const {
     if (nullptr == canvas) {
         return;
@@ -110,7 +109,8 @@ void SkPictureRecorder::partialReplay(SkCanvas* canvas) const {
         drawableCount = drawableList->count();
         drawables = drawableList->begin();
     }
-    SkRecordDraw(*fRecord, canvas, nullptr, drawables, drawableCount, nullptr/*bbh*/, nullptr/*callback*/);
+    SkRecordDraw(*fRecord, canvas, nullptr, drawables, drawableCount, nullptr /*bbh*/,
+                 nullptr /*callback*/);
 }
 
 sk_sp<SkDrawable> SkPictureRecorder::finishRecordingAsDrawable(uint32_t finishFlags) {
@@ -126,9 +126,8 @@ sk_sp<SkDrawable> SkPictureRecorder::finishRecordingAsDrawable(uint32_t finishFl
         fBBH->insert(bounds, fRecord->count());
     }
 
-    sk_sp<SkDrawable> drawable =
-         sk_make_sp<SkRecordedDrawable>(std::move(fRecord), std::move(fBBH),
-                                        fRecorder->detachDrawableList(), fCullRect);
+    sk_sp<SkDrawable> drawable = sk_make_sp<SkRecordedDrawable>(
+            std::move(fRecord), std::move(fBBH), fRecorder->detachDrawableList(), fCullRect);
 
     return drawable;
 }

@@ -1,20 +1,20 @@
 /*
-* Copyright 2013 Google Inc.
-*
-* Use of this source code is governed by a BSD-style license that can be
-* found in the LICENSE file.
-*/
+ * Copyright 2013 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
-#include "GrPathProcessor.h"
+#include "src/gpu/GrPathProcessor.h"
 
-#include "GrShaderCaps.h"
-#include "SkTo.h"
-#include "gl/GrGLGpu.h"
-#include "gl/GrGLVaryingHandler.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLPrimitiveProcessor.h"
-#include "glsl/GrGLSLUniformHandler.h"
-#include "glsl/GrGLSLVarying.h"
+#include "include/private/SkTo.h"
+#include "src/gpu/GrShaderCaps.h"
+#include "src/gpu/gl/GrGLGpu.h"
+#include "src/gpu/gl/GrGLVaryingHandler.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLPrimitiveProcessor.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#include "src/gpu/glsl/GrGLSLVarying.h"
 
 class GrGLPathProcessor : public GrGLSLPrimitiveProcessor {
 public:
@@ -39,10 +39,8 @@ public:
 
         // Setup uniform color
         const char* stagedLocalVarName;
-        fColorUniform = args.fUniformHandler->addUniform(kFragment_GrShaderFlag,
-                                                         kHalf4_GrSLType,
-                                                         "Color",
-                                                         &stagedLocalVarName);
+        fColorUniform = args.fUniformHandler->addUniform(
+                kFragment_GrShaderFlag, kHalf4_GrSLType, "Color", &stagedLocalVarName);
         fragBuilder->codeAppendf("%s = %s;", args.fOutputColor, stagedLocalVarName);
 
         // setup constant solid coverage
@@ -53,17 +51,16 @@ public:
                         FPCoordTransformHandler* transformHandler) {
         int i = 0;
         while (const GrCoordTransform* coordTransform = transformHandler->nextCoordTransform()) {
-            GrSLType varyingType =
-                    coordTransform->getMatrix().hasPerspective() ? kHalf3_GrSLType
-                                                                 : kHalf2_GrSLType;
+            GrSLType varyingType = coordTransform->getMatrix().hasPerspective() ? kHalf3_GrSLType
+                                                                                : kHalf2_GrSLType;
 
             SkString strVaryingName;
             strVaryingName.printf("TransformedCoord_%d", i);
             GrGLSLVarying v(varyingType);
-            GrGLVaryingHandler* glVaryingHandler = (GrGLVaryingHandler*) varyingHandler;
+            GrGLVaryingHandler* glVaryingHandler = (GrGLVaryingHandler*)varyingHandler;
             fInstalledTransforms.push_back().fHandle =
-                    glVaryingHandler->addPathProcessingVarying(strVaryingName.c_str(),
-                                                               &v).toIndex();
+                    glVaryingHandler->addPathProcessingVarying(strVaryingName.c_str(), &v)
+                            .toIndex();
             fInstalledTransforms.back().fType = varyingType;
 
             transformHandler->specifyCoordsForCurrCoordTransform(SkString(v.fsIn()), varyingType);
@@ -100,9 +97,9 @@ public:
 private:
     typedef GrGLSLProgramDataManager::VaryingHandle VaryingHandle;
     struct TransformVarying {
-        VaryingHandle  fHandle;
-        SkMatrix       fCurrentValue = SkMatrix::InvalidMatrix();
-        GrSLType       fType = kVoid_GrSLType;
+        VaryingHandle fHandle;
+        SkMatrix fCurrentValue = SkMatrix::InvalidMatrix();
+        GrSLType fType = kVoid_GrSLType;
     };
 
     SkTArray<TransformVarying, true> fInstalledTransforms;

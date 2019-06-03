@@ -5,21 +5,19 @@
  * found in the LICENSE file.
  */
 
-
-
 #ifndef GrGLIRect_DEFINED
 #define GrGLIRect_DEFINED
 
-#include "gl/GrGLInterface.h"
-#include "GrGLUtil.h"
+#include "include/gpu/gl/GrGLInterface.h"
+#include "src/gpu/gl/GrGLUtil.h"
 
 /**
  * Helper struct for dealing with the fact that Ganesh and GL use different
  * window coordinate systems (top-down vs bottom-up)
  */
 struct GrGLIRect {
-    GrGLint   fLeft;
-    GrGLint   fBottom;
+    GrGLint fLeft;
+    GrGLint fBottom;
     GrGLsizei fWidth;
     GrGLsizei fHeight;
 
@@ -33,7 +31,7 @@ struct GrGLIRect {
         GR_STATIC_ASSERT(4 == offsetof(GrGLIRect, fBottom));
         GR_STATIC_ASSERT(8 == offsetof(GrGLIRect, fWidth));
         GR_STATIC_ASSERT(12 == offsetof(GrGLIRect, fHeight));
-        GR_STATIC_ASSERT(16 == sizeof(GrGLIRect)); // For an array of GrGLIRect.
+        GR_STATIC_ASSERT(16 == sizeof(GrGLIRect));  // For an array of GrGLIRect.
     }
     int* asInts() { return &fLeft; }
 
@@ -46,8 +44,8 @@ struct GrGLIRect {
     }
 
     void setFromGLViewport(const GrGLInterface* gl) {
-        GR_STATIC_ASSERT(sizeof(GrGLIRect) == 4*sizeof(GrGLint));
-        GR_GL_GetIntegerv(gl, GR_GL_VIEWPORT, (GrGLint*) this);
+        GR_STATIC_ASSERT(sizeof(GrGLIRect) == 4 * sizeof(GrGLint));
+        GR_GL_GetIntegerv(gl, GR_GL_VIEWPORT, (GrGLint*)this);
     }
 
     // sometimes we have a SkIRect from the client that we
@@ -78,21 +76,19 @@ struct GrGLIRect {
     }
 
     bool contains(const GrGLIRect& glRect) const {
-        return fLeft <= glRect.fLeft &&
-               fBottom <= glRect.fBottom &&
-               fLeft + fWidth >=  glRect.fLeft + glRect.fWidth &&
-               fBottom + fHeight >=  glRect.fBottom + glRect.fHeight;
+        return fLeft <= glRect.fLeft && fBottom <= glRect.fBottom &&
+               fLeft + fWidth >= glRect.fLeft + glRect.fWidth &&
+               fBottom + fHeight >= glRect.fBottom + glRect.fHeight;
     }
 
-    void invalidate() {fLeft = fWidth = fBottom = fHeight = -1;}
-    bool isInvalid() const { return fLeft == -1 && fWidth == -1 && fBottom == -1
-        && fHeight == -1; }
+    void invalidate() { fLeft = fWidth = fBottom = fHeight = -1; }
+    bool isInvalid() const { return fLeft == -1 && fWidth == -1 && fBottom == -1 && fHeight == -1; }
 
-    bool operator ==(const GrGLIRect& glRect) const {
+    bool operator==(const GrGLIRect& glRect) const {
         return 0 == memcmp(this, &glRect, sizeof(GrGLIRect));
     }
 
-    bool operator !=(const GrGLIRect& glRect) const {return !(*this == glRect);}
+    bool operator!=(const GrGLIRect& glRect) const { return !(*this == glRect); }
 };
 
 #endif

@@ -8,15 +8,15 @@
 #ifndef SkChecksum_DEFINED
 #define SkChecksum_DEFINED
 
-#include "../private/SkNoncopyable.h"
-#include "SkString.h"
-#include "SkTLogic.h"
-#include "SkTypes.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkNoncopyable.h"
+#include "include/private/SkTLogic.h"
 
-// #include "SkOpts.h"
+// #include "src/core/SkOpts.h"
 // It's sort of pesky to be able to include SkOpts.h here, so we'll just re-declare what we need.
 namespace SkOpts {
-    extern uint32_t (*hash_fn)(const void*, size_t, uint32_t);
+extern uint32_t (*hash_fn)(const void*, size_t, uint32_t);
 }
 
 class SkChecksum : SkNoncopyable {
@@ -27,7 +27,7 @@ public:
      *
      * This is the Murmur3 finalizer.
      */
-    static uint32_t Mix(uint32_t hash) {
+    static constexpr uint32_t Mix(uint32_t hash) noexcept {
         hash ^= hash >> 16;
         hash *= 0x85ebca6b;
         hash ^= hash >> 13;
@@ -42,7 +42,7 @@ public:
      *
      *  This version is 2-lines cheaper than Mix, but seems to be sufficient for the font cache.
      */
-    static uint32_t CheapMix(uint32_t hash) {
+    static constexpr uint32_t CheapMix(uint32_t hash) noexcept {
         hash ^= hash >> 16;
         hash *= 0x85ebca6b;
         hash ^= hash >> 16;
@@ -53,17 +53,15 @@ public:
 // SkGoodHash should usually be your first choice in hashing data.
 // It should be both reasonably fast and high quality.
 struct SkGoodHash {
-    template <typename K>
-    SK_WHEN(sizeof(K) == 4, uint32_t) operator()(const K& k) const {
+    template <typename K> SK_WHEN(sizeof(K) == 4, uint32_t) operator()(const K& k) const {
         return SkChecksum::Mix(*(const uint32_t*)&k);
     }
 
-    template <typename K>
-    SK_WHEN(sizeof(K) != 4, uint32_t) operator()(const K& k) const {
+    template <typename K> SK_WHEN(sizeof(K) != 4, uint32_t) operator()(const K& k) const {
         return SkOpts::hash_fn(&k, sizeof(K), 0);
     }
 
-    uint32_t operator()(const SkString& k) const {
+    uint32_t operator()(const SkString& k) const noexcept {
         return SkOpts::hash_fn(k.c_str(), k.size(), 0);
     }
 };

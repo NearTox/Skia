@@ -8,11 +8,10 @@
 #ifndef SkDrawProcs_DEFINED
 #define SkDrawProcs_DEFINED
 
-#include "SkDraw.h"
-#include "SkGlyph.h"
+#include "src/core/SkDraw.h"
+#include "src/core/SkGlyph.h"
 
-bool SkDrawTreatAAStrokeAsHairline(SkScalar strokeWidth, const SkMatrix&,
-                                   SkScalar* coverage);
+bool SkDrawTreatAAStrokeAsHairline(SkScalar strokeWidth, const SkMatrix&, SkScalar* coverage);
 
 /**
  *  If the current paint is set to stroke and the stroke-width when applied to

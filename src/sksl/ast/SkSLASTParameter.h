@@ -8,9 +8,9 @@
 #ifndef SKSL_ASTPARAMETER
 #define SKSL_ASTPARAMETER
 
-#include "SkSLASTPositionNode.h"
-#include "SkSLASTType.h"
-#include "../ir/SkSLModifiers.h"
+#include "src/sksl/ast/SkSLASTPositionNode.h"
+#include "src/sksl/ast/SkSLASTType.h"
+#include "src/sksl/ir/SkSLModifiers.h"
 
 namespace SkSL {
 
@@ -22,11 +22,11 @@ struct ASTParameter : public ASTPositionNode {
     // e.g. int x[3][1] would have sizes [3, 1].
     ASTParameter(int offset, Modifiers modifiers, std::unique_ptr<ASTType> type,
                  StringFragment name, std::vector<int> sizes)
-    : INHERITED(offset)
-    , fModifiers(modifiers)
-    , fType(std::move(type))
-    , fName(name)
-    , fSizes(std::move(sizes)) {}
+            : INHERITED(offset)
+            , fModifiers(modifiers)
+            , fType(std::move(type))
+            , fName(name)
+            , fSizes(std::move(sizes)) {}
 
     String description() const override {
         String result = fModifiers.description() + fType->description() + " " + fName;
@@ -44,6 +44,6 @@ struct ASTParameter : public ASTPositionNode {
     typedef ASTPositionNode INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

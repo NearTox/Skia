@@ -8,14 +8,14 @@
 #ifndef SkFontMgr_indirect_DEFINED
 #define SkFontMgr_indirect_DEFINED
 
-#include "../private/SkMutex.h"
-#include "../private/SkOnce.h"
-#include "../private/SkTArray.h"
-#include "SkFontMgr.h"
-#include "SkRefCnt.h"
-#include "SkRemotableFontMgr.h"
-#include "SkTypeface.h"
-#include "SkTypes.h"
+#include "include/core/SkFontMgr.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "include/ports/SkRemotableFontMgr.h"
+#include "include/private/SkMutex.h"
+#include "include/private/SkOnce.h"
+#include "include/private/SkTArray.h"
 
 class SkData;
 class SkFontStyle;
@@ -28,8 +28,7 @@ public:
     // In the future these calls should be broken out into their own interface
     // with a name like SkFontRenderer.
     SkFontMgr_Indirect(sk_sp<SkFontMgr> impl, sk_sp<SkRemotableFontMgr> proxy)
-        : fImpl(std::move(impl)), fProxy(std::move(proxy))
-    { }
+            : fImpl(std::move(impl)), fProxy(std::move(proxy)) {}
 
 protected:
     int onCountFamilies() const override;
@@ -50,7 +49,8 @@ protected:
     SkTypeface* onMatchFaceStyle(const SkTypeface* familyMember,
                                  const SkFontStyle& fontStyle) const override;
 
-    sk_sp<SkTypeface> onMakeFromStreamIndex(std::unique_ptr<SkStreamAsset>, int ttcIndex) const override;
+    sk_sp<SkTypeface> onMakeFromStreamIndex(std::unique_ptr<SkStreamAsset>,
+                                            int ttcIndex) const override;
     sk_sp<SkTypeface> onMakeFromFile(const char path[], int ttcIndex) const override;
     sk_sp<SkTypeface> onMakeFromData(sk_sp<SkData>, int ttcIndex) const override;
     sk_sp<SkTypeface> onLegacyMakeTypeface(const char familyName[], SkFontStyle) const override;
@@ -62,19 +62,16 @@ private:
     sk_sp<SkRemotableFontMgr> fProxy;
 
     struct DataEntry {
-        uint32_t fDataId;  // key1
-        uint32_t fTtcIndex;  // key2
+        uint32_t fDataId;       // key1
+        uint32_t fTtcIndex;     // key2
         SkTypeface* fTypeface;  // value: weak ref to typeface
 
-        DataEntry() { }
+        DataEntry() {}
 
         DataEntry(DataEntry&& that)
-            : fDataId(that.fDataId)
-            , fTtcIndex(that.fTtcIndex)
-            , fTypeface(that.fTypeface)
-        {
-            SkDEBUGCODE(that.fDataId = SkFontIdentity::kInvalidDataId;)
-            SkDEBUGCODE(that.fTtcIndex = 0xbbadbeef;)
+                : fDataId(that.fDataId), fTtcIndex(that.fTtcIndex), fTypeface(that.fTypeface) {
+            SkDEBUGCODE(that.fDataId = SkFontIdentity::kInvalidDataId);
+            SkDEBUGCODE(that.fTtcIndex = 0xbbadbeef);
             that.fTypeface = nullptr;
         }
 

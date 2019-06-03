@@ -1,15 +1,15 @@
 /*
-* Copyright 2017 Google Inc.
-*
-* Use of this source code is governed by a BSD-style license that can be
-* found in the LICENSE file.
-*/
+ * Copyright 2017 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
 #ifndef SkHighContrastFilter_DEFINED
 #define SkHighContrastFilter_DEFINED
 
-#include "SkColorFilter.h"
-#include "SkPaint.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkPaint.h"
 
 /**
  *  Configuration struct for SkHighContrastFilter.
@@ -31,19 +31,14 @@ struct SkHighContrastConfig {
         fContrast = 0.0f;
     }
 
-    SkHighContrastConfig(bool grayscale,
-                         InvertStyle invertStyle,
-                         SkScalar contrast)
-        : fGrayscale(grayscale),
-          fInvertStyle(invertStyle),
-          fContrast(contrast) {}
+    SkHighContrastConfig(bool grayscale, InvertStyle invertStyle, SkScalar contrast)
+            : fGrayscale(grayscale), fInvertStyle(invertStyle), fContrast(contrast) {}
 
     // Returns true if all of the fields are set within the valid range.
     bool isValid() const {
         return fInvertStyle >= InvertStyle::kNoInvert &&
-            fInvertStyle <= InvertStyle::kInvertLightness &&
-            fContrast >= -1.0 &&
-            fContrast <= 1.0;
+               fInvertStyle <= InvertStyle::kInvertLightness && fContrast >= -1.0 &&
+               fContrast <= 1.0;
     }
 
     // If true, the color will be converted to grayscale.
@@ -54,7 +49,7 @@ struct SkHighContrastConfig {
 
     // After grayscale and inverting, the contrast can be adjusted linearly.
     // The valid range is -1.0 through 1.0, where 0.0 is no adjustment.
-    SkScalar  fContrast;
+    SkScalar fContrast;
 };
 
 /**

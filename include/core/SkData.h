@@ -10,7 +10,7 @@
 
 #include <stdio.h>
 
-#include "SkRefCnt.h"
+#include "include/core/SkRefCnt.h"
 
 class SkStream;
 
@@ -24,29 +24,27 @@ public:
     /**
      *  Returns the number of bytes stored.
      */
-    size_t size() const { return fSize; }
+    size_t size() const noexcept { return fSize; }
 
-    bool isEmpty() const { return 0 == fSize; }
+    bool isEmpty() const noexcept { return 0 == fSize; }
 
     /**
      *  Returns the ptr to the data.
      */
-    const void* data() const { return fPtr; }
+    const void* data() const noexcept { return fPtr; }
 
     /**
      *  Like data(), returns a read-only ptr into the data, but in this case
      *  it is cast to uint8_t*, to make it easy to add an offset to it.
      */
-    const uint8_t* bytes() const {
-        return reinterpret_cast<const uint8_t*>(fPtr);
-    }
+    const uint8_t* bytes() const noexcept { return reinterpret_cast<const uint8_t*>(fPtr); }
 
     /**
      *  USE WITH CAUTION.
      *  This call will assert that the refcnt is 1, as a precaution against modifying the
      *  contents when another client/thread has access to the data.
      */
-    void* writable_data() {
+    void* writable_data() noexcept {
         if (fSize) {
             // only assert we're unique if we're not empty
             SkASSERT(this->unique());
@@ -78,7 +76,6 @@ public:
      *  Create a new dataref by copying the specified data
      */
     static sk_sp<SkData> MakeWithCopy(const void* data, size_t length);
-
 
     /**
      *  Create a new data with uninitialized contents. The caller should call writable_data()
@@ -160,12 +157,12 @@ public:
 private:
     friend class SkNVRefCnt<SkData>;
     ReleaseProc fReleaseProc;
-    void*       fReleaseProcContext;
-    void*       fPtr;
-    size_t      fSize;
+    void* fReleaseProcContext;
+    void* fPtr;
+    size_t fSize;
 
     SkData(const void* ptr, size_t size, ReleaseProc, void* context);
-    explicit SkData(size_t size);   // inplace new/delete
+    explicit SkData(size_t size);  // inplace new/delete
     ~SkData();
 
     // Ensure the unsized delete is called.
@@ -174,7 +171,7 @@ private:
     // shared internal factory
     static sk_sp<SkData> PrivateNewWithCopy(const void* srcOrNull, size_t length);
 
-    static void DummyReleaseProc(const void*, void*); // {}
+    static void DummyReleaseProc(const void*, void*);  // {}
 
     typedef SkRefCnt INHERITED;
 };

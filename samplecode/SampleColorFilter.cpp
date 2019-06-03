@@ -4,20 +4,16 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "sk_tool_utils.h"
-#include "Sample.h"
-#include "SkCanvas.h"
-#include "SkColorFilter.h"
-#include "SkPaint.h"
-#include "SkShader.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkShader.h"
+#include "samplecode/Sample.h"
+#include "tools/ToolUtils.h"
 
-static int inflate5To8(int x) {
-    return (x << 3) | (x >> 2);
-}
+static int inflate5To8(int x) { return (x << 3) | (x >> 2); }
 
-static int trunc5(int x) {
-    return x >> 3;
-}
+static int trunc5(int x) { return x >> 3; }
 
 #define SK_R16_BITS 5
 
@@ -68,9 +64,8 @@ static void test_5bits() {
         int err0 = i - v0;
         int err1 = i - v1;
         int err2 = i - v2;
-        SkDebugf("--- %3d : trunc=%3d (%2d) round:%3d (%2d) \n"/*new:%d (%2d)\n"*/, i,
-                 v0, err0, v1, err1, v2, err2);
-
+        SkDebugf("--- %3d : trunc=%3d (%2d) round:%3d (%2d) \n" /*new:%d (%2d)\n"*/, i, v0, err0,
+                 v1, err1, v2, err2);
 
         e0 += err0;
         e1 += err1;
@@ -98,7 +93,7 @@ static SkBitmap createBitmap(int n) {
     paint.setColor(SK_ColorRED);
     canvas.drawOval(r, paint);
 
-    r.inset(SK_Scalar1*n/4, SK_Scalar1*n/4);
+    r.inset(SK_Scalar1 * n / 4, SK_Scalar1 * n / 4);
     paint.setBlendMode(SkBlendMode::kSrc);
     paint.setColor(0x800000FF);
     canvas.drawOval(r, paint);
@@ -109,17 +104,14 @@ static SkBitmap createBitmap(int n) {
 class ColorFilterView : public Sample {
     SkBitmap fBitmap;
     sk_sp<SkShader> fShader;
-    enum {
-        N = 64
-    };
+    enum { N = 64 };
 
 protected:
     void onOnceBeforeDraw() override {
         fBitmap = createBitmap(N);
-        fShader = sk_tool_utils::create_checkerboard_shader(
-                0xFFCCCCCC, 0xFFFFFFFF, 12);
+        fShader = ToolUtils::create_checkerboard_shader(0xFFCCCCCC, 0xFFFFFFFF, 12);
 
-        if (false) { // avoid bit rot, suppress warning
+        if (false) {  // avoid bit rot, suppress warning
             test_5bits();
         }
     }
@@ -142,7 +134,7 @@ protected:
         if (false) {
             SkPaint p;
             p.setAntiAlias(true);
-            SkRect r = { 20.4f, 10, 20.6f, 20 };
+            SkRect r = {20.4f, 10, 20.6f, 20};
             canvas->drawRect(r, p);
             r.set(30.9f, 10, 31.1f, 20);
             canvas->drawRect(r, p);
@@ -150,28 +142,15 @@ protected:
         }
 
         static const SkBlendMode gModes[] = {
-            SkBlendMode::kClear,
-            SkBlendMode::kSrc,
-            SkBlendMode::kDst,
-            SkBlendMode::kSrcOver,
-            SkBlendMode::kDstOver,
-            SkBlendMode::kSrcIn,
-            SkBlendMode::kDstIn,
-            SkBlendMode::kSrcOut,
-            SkBlendMode::kDstOut,
-            SkBlendMode::kSrcATop,
-            SkBlendMode::kDstATop,
-            SkBlendMode::kXor,
-            SkBlendMode::kPlus,
-            SkBlendMode::kModulate,
+                SkBlendMode::kClear,   SkBlendMode::kSrc,      SkBlendMode::kDst,
+                SkBlendMode::kSrcOver, SkBlendMode::kDstOver,  SkBlendMode::kSrcIn,
+                SkBlendMode::kDstIn,   SkBlendMode::kSrcOut,   SkBlendMode::kDstOut,
+                SkBlendMode::kSrcATop, SkBlendMode::kDstATop,  SkBlendMode::kXor,
+                SkBlendMode::kPlus,    SkBlendMode::kModulate,
         };
 
         static const SkColor gColors[] = {
-            0xFF000000,
-            0x80000000,
-            0xFF00FF00,
-            0x8000FF00,
-            0x00000000,
+                0xFF000000, 0x80000000, 0xFF00FF00, 0x8000FF00, 0x00000000,
         };
 
         float scale = 1.5f;
@@ -180,11 +159,10 @@ protected:
 
         for (size_t y = 0; y < SK_ARRAY_COUNT(gColors); y++) {
             for (size_t x = 0; x < SK_ARRAY_COUNT(gModes); x++) {
-                paint.setColorFilter(SkColorFilter::MakeModeFilter(gColors[y], gModes[x]));
+                paint.setColorFilter(SkColorFilters::Blend(gColors[y], gModes[x]));
                 canvas->drawBitmap(fBitmap, x * N * 1.25f, y * N * scale, &paint);
             }
         }
-
     }
 
 private:
@@ -193,4 +171,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new ColorFilterView(); )
+DEF_SAMPLE(return new ColorFilterView();)

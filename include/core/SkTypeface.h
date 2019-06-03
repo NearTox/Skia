@@ -8,14 +8,15 @@
 #ifndef SkTypeface_DEFINED
 #define SkTypeface_DEFINED
 
-#include "../private/SkNoncopyable.h"
-#include "../private/SkOnce.h"
-#include "../private/SkWeakRefCnt.h"
-#include "SkFontArguments.h"
-#include "SkFontParameters.h"
-#include "SkFontStyle.h"
-#include "SkRect.h"
-#include "SkString.h"
+#include "include/core/SkFontArguments.h"
+#include "include/core/SkFontParameters.h"
+#include "include/core/SkFontStyle.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkString.h"
+#include "include/private/SkNoncopyable.h"
+#include "include/private/SkOnce.h"
+#include "include/private/SkWeakRefCnt.h"
 
 class SkData;
 class SkDescriptor;
@@ -45,20 +46,18 @@ typedef uint32_t SkFontTableTag;
 class SK_API SkTypeface : public SkWeakRefCnt {
 public:
     /** Returns the typeface's intrinsic style attributes. */
-    SkFontStyle fontStyle() const {
-        return fStyle;
-    }
+    SkFontStyle fontStyle() const noexcept { return fStyle; }
 
     /** Returns true if style() has the kBold bit set. */
-    bool isBold() const { return fStyle.weight() >= SkFontStyle::kSemiBold_Weight; }
+    bool isBold() const noexcept { return fStyle.weight() >= SkFontStyle::kSemiBold_Weight; }
 
     /** Returns true if style() has the kItalic bit set. */
-    bool isItalic() const { return fStyle.slant() != SkFontStyle::kUpright_Slant; }
+    bool isItalic() const noexcept { return fStyle.slant() != SkFontStyle::kUpright_Slant; }
 
     /** Returns true if the typeface claims to be fixed-pitch.
      *  This is a style bit, advance widths may vary even if this returns true.
      */
-    bool isFixedPitch() const { return fIsFixedPitch; }
+    bool isFixedPitch() const noexcept { return fIsFixedPitch; }
 
     /** Copy into 'coordinates' (allocated by the caller) the design variation coordinates.
      *
@@ -91,7 +90,7 @@ public:
     /** Return a 32bit value for this typeface, unique for the underlying font
         data. Will never return 0.
      */
-    SkFontID uniqueID() const { return fUniqueID; }
+    SkFontID uniqueID() const noexcept { return fUniqueID; }
 
     /** Return the uniqueID for the specified typeface. If the face is null,
         resolve it to the default font and return its uniqueID. Will never
@@ -176,36 +175,20 @@ public:
      */
     static sk_sp<SkTypeface> MakeDeserialize(SkStream*);
 
-    enum Encoding : uint8_t {
-        kUTF8_Encoding,
-        kUTF16_Encoding,
-        kUTF32_Encoding
-    };
-
     /**
-     *  Given an array of character codes, of the specified encoding,
-     *  optionally return their corresponding glyph IDs (if glyphs is not NULL).
+     *  Given an array of UTF32 character codes, return their corresponding glyph IDs.
      *
-     *  @param chars pointer to the array of character codes
-     *  @param encoding how the characters are encoded
-     *  @param glyphs (optional) returns the corresponding glyph IDs for each
-     *          character code, up to glyphCount values. If a character code is
-     *          not found in the typeface, the corresponding glyph ID will be 0.
-     *  @param glyphCount number of code points in 'chars' to process. If glyphs
-     *          is not NULL, then it must point sufficient memory to write
-     *          glyphCount values into it.
-     *  @return the number of number of continuous non-zero glyph IDs computed
-     *          from the beginning of chars. This value is valid, even if the
-     *          glyphs parameter is NULL.
+     *  @param chars pointer to the array of UTF32 chars
+     *  @param number of chars and glyphs
+     *  @param glyphs returns the corresponding glyph IDs for each character.
      */
-    int charsToGlyphs(const void* chars, Encoding encoding, SkGlyphID glyphs[],
-                      int glyphCount) const;
+    void unicharsToGlyphs(const SkUnichar uni[], int count, SkGlyphID glyphs[]) const;
 
     /**
      *  Return the glyphID that corresponds to the specified unicode code-point
      *  (in UTF32 encoding). If the unichar is not supported, returns 0.
      *
-     *  This is a short-cut for calling charsToGlyphs() with kUTF32_Encoding for one code-point.
+     *  This is a short-cut for calling unicharsToGlyphs().
      */
     SkGlyphID unicharToGlyph(SkUnichar unichar) const;
 
@@ -251,8 +234,7 @@ public:
      *  offset > the table's size, or tag is not a valid table,
      *  then 0 is returned.
      */
-    size_t getTableData(SkFontTableTag tag, size_t offset, size_t length,
-                        void* data) const;
+    size_t getTableData(SkFontTableTag tag, size_t offset, size_t length, void* data) const;
 
     /**
      *  Return the units-per-em value for this typeface, or zero if there is an
@@ -289,9 +271,9 @@ public:
     };
     class LocalizedStrings : ::SkNoncopyable {
     public:
-        virtual ~LocalizedStrings() { }
+        virtual ~LocalizedStrings() {}
         virtual bool next(LocalizedString* localizedString) = 0;
-        void unref() { delete this; }
+        void unref() noexcept { delete this; }
     };
     /**
      *  Returns an iterator which will attempt to enumerate all of the
@@ -338,30 +320,26 @@ public:
     SkRect getBounds() const;
 
     // PRIVATE / EXPERIMENTAL -- do not call
-    void filterRec(SkScalerContextRec* rec) const {
-        this->onFilterRec(rec);
-    }
+    void filterRec(SkScalerContextRec* rec) const { this->onFilterRec(rec); }
     // PRIVATE / EXPERIMENTAL -- do not call
     void getFontDescriptor(SkFontDescriptor* desc, bool* isLocal) const {
         this->onGetFontDescriptor(desc, isLocal);
     }
     // PRIVATE / EXPERIMENTAL -- do not call
-    void* internal_private_getCTFontRef() const {
-        return this->onGetCTFontRef();
-    }
+    void* internal_private_getCTFontRef() const noexcept { return this->onGetCTFontRef(); }
 
 protected:
     /** uniqueID must be unique and non-zero
-    */
+     */
     SkTypeface(const SkFontStyle& style, bool isFixedPitch = false);
     virtual ~SkTypeface();
 
-    virtual sk_sp<SkTypeface> onMakeClone(const SkFontArguments&) const;
+    virtual sk_sp<SkTypeface> onMakeClone(const SkFontArguments&) const = 0;
 
     /** Sets the fixedPitch bit. If used, must be called in the constructor. */
-    void setIsFixedPitch(bool isFixedPitch) { fIsFixedPitch = isFixedPitch; }
+    void setIsFixedPitch(bool isFixedPitch) noexcept { fIsFixedPitch = isFixedPitch; }
     /** Sets the font style. If used, must be called in the constructor. */
-    void setFontStyle(SkFontStyle style) { fStyle = style; }
+    void setFontStyle(SkFontStyle style) noexcept { fStyle = style; }
 
     virtual SkScalerContext* onCreateScalerContext(const SkScalerContextEffects&,
                                                    const SkDescriptor*) const = 0;
@@ -369,32 +347,31 @@ protected:
     friend class SkScalerContext;  // onFilterRec
 
     //  Subclasses *must* override this method to work with the PDF backend.
-    virtual std::unique_ptr<SkAdvancedTypefaceMetrics> onGetAdvancedMetrics() const;
+    virtual std::unique_ptr<SkAdvancedTypefaceMetrics> onGetAdvancedMetrics() const = 0;
     // For type1 postscript fonts only, set the glyph names for each glyph.
     // destination array is non-null, and points to an array of size this->countGlyphs().
     // Backends that do not suport type1 fonts should not override.
-    virtual void getPostScriptGlyphNames(SkString*) const {}
+    virtual void getPostScriptGlyphNames(SkString*) const = 0;
 
     // The mapping from glyph to Unicode; array indices are glyph ids.
     // For each glyph, give the default Unicode value, if it exists.
     // dstArray is non-null, and points to an array of size this->countGlyphs().
-    virtual void getGlyphToUnicodeMap(SkUnichar* dstArray) const;
+    virtual void getGlyphToUnicodeMap(SkUnichar* dstArray) const = 0;
 
     virtual std::unique_ptr<SkStreamAsset> onOpenStream(int* ttcIndex) const = 0;
     // TODO: make pure virtual.
     virtual std::unique_ptr<SkFontData> onMakeFontData() const;
 
     virtual int onGetVariationDesignPosition(
-        SkFontArguments::VariationPosition::Coordinate coordinates[],
-        int coordinateCount) const = 0;
+            SkFontArguments::VariationPosition::Coordinate coordinates[],
+            int coordinateCount) const = 0;
 
-    virtual int onGetVariationDesignParameters(
-        SkFontParameters::Variation::Axis parameters[], int parameterCount) const;
+    virtual int onGetVariationDesignParameters(SkFontParameters::Variation::Axis parameters[],
+                                               int parameterCount) const = 0;
 
     virtual void onGetFontDescriptor(SkFontDescriptor*, bool* isLocal) const = 0;
 
-    virtual int onCharsToGlyphs(const void* chars, Encoding, SkGlyphID glyphs[],
-                                int glyphCount) const = 0;
+    virtual void onCharsToGlyphs(const SkUnichar* chars, int count, SkGlyphID glyphs[]) const = 0;
     virtual int onCountGlyphs() const = 0;
 
     virtual int onGetUPEM() const = 0;
@@ -410,23 +387,23 @@ protected:
     virtual LocalizedStrings* onCreateFamilyNameIterator() const = 0;
 
     virtual int onGetTableTags(SkFontTableTag tags[]) const = 0;
-    virtual size_t onGetTableData(SkFontTableTag, size_t offset,
-                                  size_t length, void* data) const = 0;
+    virtual size_t onGetTableData(SkFontTableTag, size_t offset, size_t length,
+                                  void* data) const = 0;
 
     virtual bool onComputeBounds(SkRect*) const;
 
-    virtual void* onGetCTFontRef() const { return nullptr; }
+    virtual void* onGetCTFontRef() const noexcept { return nullptr; }
 
 private:
     /** Retrieve detailed typeface metrics.  Used by the PDF backend.  */
     std::unique_ptr<SkAdvancedTypefaceMetrics> getAdvancedMetrics() const;
-    friend class SkRandomTypeface; // getAdvancedMetrics
-    friend class SkPDFFont;        // getAdvancedMetrics
+    friend class SkRandomTypeface;  // getAdvancedMetrics
+    friend class SkPDFFont;         // getAdvancedMetrics
 
     /** Style specifies the intrinsic style attributes of a given typeface */
     enum Style {
         kNormal = 0,
-        kBold   = 0x01,
+        kBold = 0x01,
         kItalic = 0x02,
 
         // helpers
@@ -435,16 +412,16 @@ private:
     static SkFontStyle FromOldStyle(Style oldStyle);
     static SkTypeface* GetDefaultTypeface(Style style = SkTypeface::kNormal);
 
-    friend class SkFontPriv;       // GetDefaultTypeface
-    friend class SkPaintPriv;      // GetDefaultTypeface
-    friend class SkFont;           // getGlyphToUnicodeMap
+    friend class SkFontPriv;   // GetDefaultTypeface
+    friend class SkPaintPriv;  // GetDefaultTypeface
+    friend class SkFont;       // getGlyphToUnicodeMap
 
 private:
-    SkFontID            fUniqueID;
-    SkFontStyle         fStyle;
-    mutable SkRect      fBounds;
-    mutable SkOnce      fBoundsOnce;
-    bool                fIsFixedPitch;
+    SkFontID fUniqueID;
+    SkFontStyle fStyle;
+    mutable SkRect fBounds;
+    mutable SkOnce fBoundsOnce;
+    bool fIsFixedPitch;
 
     typedef SkWeakRefCnt INHERITED;
 };

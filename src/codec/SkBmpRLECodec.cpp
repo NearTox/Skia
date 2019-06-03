@@ -5,36 +5,32 @@
  * found in the LICENSE file.
  */
 
-#include "SkBmpRLECodec.h"
-#include "SkCodecPriv.h"
-#include "SkColorData.h"
-#include "SkStream.h"
+#include "src/codec/SkBmpRLECodec.h"
+#include "include/core/SkStream.h"
+#include "include/private/SkColorData.h"
+#include "src/codec/SkCodecPriv.h"
 
 /*
  * Creates an instance of the decoder
  * Called only by NewFromStream
  */
-SkBmpRLECodec::SkBmpRLECodec(SkEncodedInfo&& info,
-                             std::unique_ptr<SkStream> stream,
-                             uint16_t bitsPerPixel, uint32_t numColors,
-                             uint32_t bytesPerColor, uint32_t offset,
-                             SkCodec::SkScanlineOrder rowOrder)
-    : INHERITED(std::move(info), std::move(stream), bitsPerPixel, rowOrder)
-    , fColorTable(nullptr)
-    , fNumColors(numColors)
-    , fBytesPerColor(bytesPerColor)
-    , fOffset(offset)
-    , fBytesBuffered(0)
-    , fCurrRLEByte(0)
-    , fSampleX(1)
-{}
+SkBmpRLECodec::SkBmpRLECodec(SkEncodedInfo&& info, std::unique_ptr<SkStream> stream,
+                             uint16_t bitsPerPixel, uint32_t numColors, uint32_t bytesPerColor,
+                             uint32_t offset, SkCodec::SkScanlineOrder rowOrder)
+        : INHERITED(std::move(info), std::move(stream), bitsPerPixel, rowOrder)
+        , fColorTable(nullptr)
+        , fNumColors(numColors)
+        , fBytesPerColor(bytesPerColor)
+        , fOffset(offset)
+        , fBytesBuffered(0)
+        , fCurrRLEByte(0)
+        , fSampleX(1) {}
 
 /*
  * Initiates the bitmap decode
  */
-SkCodec::Result SkBmpRLECodec::onGetPixels(const SkImageInfo& dstInfo,
-                                           void* dst, size_t dstRowBytes,
-                                           const Options& opts,
+SkCodec::Result SkBmpRLECodec::onGetPixels(const SkImageInfo& dstInfo, void* dst,
+                                           size_t dstRowBytes, const Options& opts,
                                            int* rowsDecoded) {
     if (opts.fSubset) {
         // Subsets are not supported.
@@ -62,7 +58,7 @@ SkCodec::Result SkBmpRLECodec::onGetPixels(const SkImageInfo& dstInfo,
 /*
  * Process the color table for the bmp input
  */
- bool SkBmpRLECodec::createColorTable(SkColorType dstColorType) {
+bool SkBmpRLECodec::createColorTable(SkColorType dstColorType) {
     // Allocate memory for color table
     uint32_t colorBytes = 0;
     SkPMColor colorTable[256];
@@ -71,7 +67,7 @@ SkCodec::Result SkBmpRLECodec::onGetPixels(const SkImageInfo& dstInfo,
         uint32_t maxColors = 1 << this->bitsPerPixel();
         // Don't bother reading more than maxColors.
         const uint32_t numColorsToRead =
-            fNumColors == 0 ? maxColors : SkTMin(fNumColors, maxColors);
+                fNumColors == 0 ? maxColors : SkTMin(fNumColors, maxColors);
 
         // Read the color table from the stream
         colorBytes = numColorsToRead * fBytesPerColor;
@@ -85,9 +81,9 @@ SkCodec::Result SkBmpRLECodec::onGetPixels(const SkImageInfo& dstInfo,
         PackColorProc packARGB = choose_pack_color_proc(false, dstColorType);
         uint32_t i = 0;
         for (; i < numColorsToRead; i++) {
-            uint8_t blue = get_byte(cBuffer.get(), i*fBytesPerColor);
-            uint8_t green = get_byte(cBuffer.get(), i*fBytesPerColor + 1);
-            uint8_t red = get_byte(cBuffer.get(), i*fBytesPerColor + 2);
+            uint8_t blue = get_byte(cBuffer.get(), i * fBytesPerColor);
+            uint8_t green = get_byte(cBuffer.get(), i * fBytesPerColor + 1);
+            uint8_t red = get_byte(cBuffer.get(), i * fBytesPerColor + 2);
             colorTable[i] = packARGB(0xFF, red, green, blue);
         }
 
@@ -103,7 +99,7 @@ SkCodec::Result SkBmpRLECodec::onGetPixels(const SkImageInfo& dstInfo,
     }
 
     // Check that we have not read past the pixel array offset
-    if(fOffset < colorBytes) {
+    if (fOffset < colorBytes) {
         // This may occur on OS 2.1 and other old versions where the color
         // table defaults to max size, and the bmp tries to use a smaller
         // color table.  This is invalid, and our decision is to indicate
@@ -165,9 +161,8 @@ size_t SkBmpRLECodec::checkForMoreData() {
 /*
  * Set an RLE pixel using the color table
  */
-void SkBmpRLECodec::setPixel(void* dst, size_t dstRowBytes,
-                             const SkImageInfo& dstInfo, uint32_t x, uint32_t y,
-                             uint8_t index) {
+void SkBmpRLECodec::setPixel(void* dst, size_t dstRowBytes, const SkImageInfo& dstInfo, uint32_t x,
+                             uint32_t y, uint8_t index) {
     if (dst && is_coord_necessary(x, fSampleX, dstInfo.width())) {
         // Set the row
         uint32_t row = this->getDstRow(y, dstInfo.height());
@@ -177,12 +172,12 @@ void SkBmpRLECodec::setPixel(void* dst, size_t dstRowBytes,
         switch (dstInfo.colorType()) {
             case kRGBA_8888_SkColorType:
             case kBGRA_8888_SkColorType: {
-                SkPMColor* dstRow = SkTAddOffset<SkPMColor>(dst, row * (int) dstRowBytes);
+                SkPMColor* dstRow = SkTAddOffset<SkPMColor>(dst, row * (int)dstRowBytes);
                 dstRow[dstX] = fColorTable->operator[](index);
                 break;
             }
             case kRGB_565_SkColorType: {
-                uint16_t* dstRow = SkTAddOffset<uint16_t>(dst, row * (int) dstRowBytes);
+                uint16_t* dstRow = SkTAddOffset<uint16_t>(dst, row * (int)dstRowBytes);
                 dstRow[dstX] = SkPixel32ToPixel16(fColorTable->operator[](index));
                 break;
             }
@@ -198,10 +193,8 @@ void SkBmpRLECodec::setPixel(void* dst, size_t dstRowBytes,
 /*
  * Set an RLE pixel from R, G, B values
  */
-void SkBmpRLECodec::setRGBPixel(void* dst, size_t dstRowBytes,
-                                const SkImageInfo& dstInfo, uint32_t x,
-                                uint32_t y, uint8_t red, uint8_t green,
-                                uint8_t blue) {
+void SkBmpRLECodec::setRGBPixel(void* dst, size_t dstRowBytes, const SkImageInfo& dstInfo,
+                                uint32_t x, uint32_t y, uint8_t red, uint8_t green, uint8_t blue) {
     if (dst && is_coord_necessary(x, fSampleX, dstInfo.width())) {
         // Set the row
         uint32_t row = this->getDstRow(y, dstInfo.height());
@@ -210,17 +203,17 @@ void SkBmpRLECodec::setRGBPixel(void* dst, size_t dstRowBytes,
         const int dstX = get_dst_coord(x, fSampleX);
         switch (dstInfo.colorType()) {
             case kRGBA_8888_SkColorType: {
-                SkPMColor* dstRow = SkTAddOffset<SkPMColor>(dst, row * (int) dstRowBytes);
+                SkPMColor* dstRow = SkTAddOffset<SkPMColor>(dst, row * (int)dstRowBytes);
                 dstRow[dstX] = SkPackARGB_as_RGBA(0xFF, red, green, blue);
                 break;
             }
             case kBGRA_8888_SkColorType: {
-                SkPMColor* dstRow = SkTAddOffset<SkPMColor>(dst, row * (int) dstRowBytes);
+                SkPMColor* dstRow = SkTAddOffset<SkPMColor>(dst, row * (int)dstRowBytes);
                 dstRow[dstX] = SkPackARGB_as_BGRA(0xFF, red, green, blue);
                 break;
             }
             case kRGB_565_SkColorType: {
-                uint16_t* dstRow = SkTAddOffset<uint16_t>(dst, row * (int) dstRowBytes);
+                uint16_t* dstRow = SkTAddOffset<uint16_t>(dst, row * (int)dstRowBytes);
                 dstRow[dstX] = SkPack888ToRGB16(red, green, blue);
                 break;
             }
@@ -234,7 +227,7 @@ void SkBmpRLECodec::setRGBPixel(void* dst, size_t dstRowBytes,
 }
 
 SkCodec::Result SkBmpRLECodec::onPrepareToDecode(const SkImageInfo& dstInfo,
-        const SkCodec::Options& options) {
+                                                 const SkCodec::Options& options) {
     // FIXME: Support subsets for scanline decodes.
     if (options.fSubset) {
         // Subsets are not supported.
@@ -274,7 +267,7 @@ SkCodec::Result SkBmpRLECodec::onPrepareToDecode(const SkImageInfo& dstInfo,
  * RLE decoding is performed all at once, rather than a one row at a time
  */
 int SkBmpRLECodec::decodeRows(const SkImageInfo& info, void* dst, size_t dstRowBytes,
-        const Options& opts) {
+                              const Options& opts) {
     int height = info.height();
 
     // Account for sampling.
@@ -357,7 +350,7 @@ int SkBmpRLECodec::decodeRLE(const SkImageInfo& dstInfo, void* dst, size_t dstRo
         }
 
         // Every entry takes at least two bytes
-        if ((int) fBytesBuffered - fCurrRLEByte < 2) {
+        if ((int)fBytesBuffered - fCurrRLEByte < 2) {
             if (this->checkForMoreData() < 2) {
                 return y;
             }
@@ -381,7 +374,7 @@ int SkBmpRLECodec::decodeRLE(const SkImageInfo& dstInfo, void* dst, size_t dstRo
                     return height;
                 case RLE_DELTA: {
                     // Two bytes are needed to specify delta
-                    if ((int) fBytesBuffered - fCurrRLEByte < 2) {
+                    if ((int)fBytesBuffered - fCurrRLEByte < 2) {
                         if (this->checkForMoreData() < 2) {
                             return y;
                         }
@@ -406,8 +399,7 @@ int SkBmpRLECodec::decodeRLE(const SkImageInfo& dstInfo, void* dst, size_t dstRo
                     // Furthermore, the value of task is equal to the number
                     // of pixels to interpret.
                     uint8_t numPixels = task;
-                    const size_t rowBytes = compute_row_bytes(numPixels,
-                            this->bitsPerPixel());
+                    const size_t rowBytes = compute_row_bytes(numPixels, this->bitsPerPixel());
                     // Abort if setting numPixels moves us off the edge of the
                     // image.
                     if (x + numPixels > width) {
@@ -422,10 +414,9 @@ int SkBmpRLECodec::decodeRLE(const SkImageInfo& dstInfo, void* dst, size_t dstRo
                     // 3 (max bytes per pixel) + 1 (aligned) = 766. If
                     // fStreamBuffer was smaller than this,
                     // checkForMoreData would never succeed for some bmps.
-                    static_assert(255 * 3 + 1 < kBufferSize,
-                                  "kBufferSize needs to be larger!");
+                    static_assert(255 * 3 + 1 < kBufferSize, "kBufferSize needs to be larger!");
                     const size_t alignedRowBytes = SkAlign2(rowBytes);
-                    if ((int) fBytesBuffered - fCurrRLEByte < alignedRowBytes) {
+                    if ((int)fBytesBuffered - fCurrRLEByte < alignedRowBytes) {
                         SkASSERT(alignedRowBytes < kBufferSize);
                         if (this->checkForMoreData() < alignedRowBytes) {
                             return y;
@@ -433,24 +424,22 @@ int SkBmpRLECodec::decodeRLE(const SkImageInfo& dstInfo, void* dst, size_t dstRo
                     }
                     // Set numPixels number of pixels
                     while (numPixels > 0) {
-                        switch(this->bitsPerPixel()) {
+                        switch (this->bitsPerPixel()) {
                             case 4: {
                                 SkASSERT(fCurrRLEByte < fBytesBuffered);
                                 uint8_t val = fStreamBuffer[fCurrRLEByte++];
-                                setPixel(dst, dstRowBytes, dstInfo, x++,
-                                        y, val >> 4);
+                                setPixel(dst, dstRowBytes, dstInfo, x++, y, val >> 4);
                                 numPixels--;
                                 if (numPixels != 0) {
-                                    setPixel(dst, dstRowBytes, dstInfo,
-                                            x++, y, val & 0xF);
+                                    setPixel(dst, dstRowBytes, dstInfo, x++, y, val & 0xF);
                                     numPixels--;
                                 }
                                 break;
                             }
                             case 8:
                                 SkASSERT(fCurrRLEByte < fBytesBuffered);
-                                setPixel(dst, dstRowBytes, dstInfo, x++,
-                                        y, fStreamBuffer[fCurrRLEByte++]);
+                                setPixel(dst, dstRowBytes, dstInfo, x++, y,
+                                         fStreamBuffer[fCurrRLEByte++]);
                                 numPixels--;
                                 break;
                             case 24: {
@@ -458,8 +447,7 @@ int SkBmpRLECodec::decodeRLE(const SkImageInfo& dstInfo, void* dst, size_t dstRo
                                 uint8_t blue = fStreamBuffer[fCurrRLEByte++];
                                 uint8_t green = fStreamBuffer[fCurrRLEByte++];
                                 uint8_t red = fStreamBuffer[fCurrRLEByte++];
-                                setRGBPixel(dst, dstRowBytes, dstInfo,
-                                            x++, y, red, green, blue);
+                                setRGBPixel(dst, dstRowBytes, dstInfo, x++, y, red, green, blue);
                                 numPixels--;
                                 break;
                             }
@@ -485,7 +473,7 @@ int SkBmpRLECodec::decodeRLE(const SkImageInfo& dstInfo, void* dst, size_t dstRo
                 // In RLE24, the second byte read is part of the pixel color.
                 // There are two more required bytes to finish encoding the
                 // color.
-                if ((int) fBytesBuffered - fCurrRLEByte < 2) {
+                if ((int)fBytesBuffered - fCurrRLEByte < 2) {
                     if (this->checkForMoreData() < 2) {
                         return y;
                     }
@@ -504,7 +492,7 @@ int SkBmpRLECodec::decodeRLE(const SkImageInfo& dstInfo, void* dst, size_t dstRo
                 // RLE8 has one color index that gets repeated
                 // RLE4 has two color indexes in the upper and lower 4 bits of
                 // the bytes, which are alternated
-                uint8_t indices[2] = { task, task };
+                uint8_t indices[2] = {task, task};
                 if (4 == this->bitsPerPixel()) {
                     indices[0] >>= 4;
                     indices[1] &= 0xf;
@@ -531,20 +519,12 @@ bool SkBmpRLECodec::skipRows(int count) {
 //        It currently is a hybrid that needs to know what SkScaledCodec is doing.
 class SkBmpRLESampler : public SkSampler {
 public:
-    SkBmpRLESampler(SkBmpRLECodec* codec)
-        : fCodec(codec)
-    {
-        SkASSERT(fCodec);
-    }
+    SkBmpRLESampler(SkBmpRLECodec* codec) : fCodec(codec) { SkASSERT(fCodec); }
 
-    int fillWidth() const override {
-        return fCodec->fillWidth();
-    }
+    int fillWidth() const override { return fCodec->fillWidth(); }
 
 private:
-    int onSetSampleX(int sampleX) override {
-        return fCodec->setSampleX(sampleX);
-    }
+    int onSetSampleX(int sampleX) override { return fCodec->setSampleX(sampleX); }
 
     // Unowned pointer. fCodec will delete this class in its destructor.
     SkBmpRLECodec* fCodec;

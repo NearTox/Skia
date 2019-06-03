@@ -5,17 +5,16 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef GrGLCaps_DEFINED
 #define GrGLCaps_DEFINED
 
 #include <functional>
-#include "GrCaps.h"
-#include "GrGLStencilAttachment.h"
-#include "GrSwizzle.h"
-#include "SkChecksum.h"
-#include "SkTHash.h"
-#include "SkTArray.h"
+#include "include/private/SkChecksum.h"
+#include "include/private/SkTArray.h"
+#include "include/private/SkTHash.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrSwizzle.h"
+#include "src/gpu/gl/GrGLStencilAttachment.h"
 
 class GrGLContextInfo;
 class GrGLRenderTarget;
@@ -69,36 +68,36 @@ public:
     };
 
     enum BlitFramebufferFlags {
-        kNoSupport_BlitFramebufferFlag                    = 1 << 0,
-        kNoScalingOrMirroring_BlitFramebufferFlag         = 1 << 1,
-        kResolveMustBeFull_BlitFrambufferFlag             = 1 << 2,
-        kNoMSAADst_BlitFramebufferFlag                    = 1 << 3,
-        kNoFormatConversion_BlitFramebufferFlag           = 1 << 4,
+        kNoSupport_BlitFramebufferFlag = 1 << 0,
+        kNoScalingOrMirroring_BlitFramebufferFlag = 1 << 1,
+        kResolveMustBeFull_BlitFrambufferFlag = 1 << 2,
+        kNoMSAADst_BlitFramebufferFlag = 1 << 3,
+        kNoFormatConversion_BlitFramebufferFlag = 1 << 4,
         kNoFormatConversionForMSAASrc_BlitFramebufferFlag = 1 << 5,
-        kRectsMustMatchForMSAASrc_BlitFramebufferFlag     = 1 << 6,
+        kRectsMustMatchForMSAASrc_BlitFramebufferFlag = 1 << 6,
     };
 
     enum InvalidateFBType {
         kNone_InvalidateFBType,
-        kDiscard_InvalidateFBType,       //<! glDiscardFramebuffer()
-        kInvalidate_InvalidateFBType,    //<! glInvalidateFramebuffer()
+        kDiscard_InvalidateFBType,     //<! glDiscardFramebuffer()
+        kInvalidate_InvalidateFBType,  //<! glInvalidateFramebuffer()
 
         kLast_InvalidateFBType = kInvalidate_InvalidateFBType
     };
 
     enum MapBufferType {
         kNone_MapBufferType,
-        kMapBuffer_MapBufferType,         // glMapBuffer()
-        kMapBufferRange_MapBufferType,    // glMapBufferRange()
-        kChromium_MapBufferType,          // GL_CHROMIUM_map_sub
+        kMapBuffer_MapBufferType,       // glMapBuffer()
+        kMapBufferRange_MapBufferType,  // glMapBufferRange()
+        kChromium_MapBufferType,        // GL_CHROMIUM_map_sub
 
         kLast_MapBufferType = kChromium_MapBufferType,
     };
 
     enum TransferBufferType {
         kNone_TransferBufferType,
-        kPBO_TransferBufferType,          // ARB_pixel_buffer_object
-        kChromium_TransferBufferType,     // CHROMIUM_pixel_transfer_buffer_object
+        kPBO_TransferBufferType,       // ARB_pixel_buffer_object
+        kChromium_TransferBufferType,  // CHROMIUM_pixel_transfer_buffer_object
 
         kLast_TransferBufferType = kChromium_TransferBufferType,
     };
@@ -148,7 +147,6 @@ public:
 
     bool getCompressedTexImageFormats(GrPixelConfig surfaceConfig, GrGLenum* internalFormat) const;
 
-
     bool getReadPixelsFormat(GrPixelConfig surfaceConfig, GrPixelConfig externalConfig,
                              GrGLenum* externalFormat, GrGLenum* externalType) const;
 
@@ -161,13 +159,11 @@ public:
     }
 
     /**
-    * Gets an array of legal stencil formats. These formats are not guaranteed
-    * to be supported by the driver but are legal GLenum names given the GL
-    * version and extensions supported.
-    */
-    const SkTArray<StencilFormat, true>& stencilFormats() const {
-        return fStencilFormats;
-    }
+     * Gets an array of legal stencil formats. These formats are not guaranteed
+     * to be supported by the driver but are legal GLenum names given the GL
+     * version and extensions supported.
+     */
+    const SkTArray<StencilFormat, true>& stencilFormats() const { return fStencilFormats; }
 
     /**
      * Has a stencil format index been found for the config (or we've found that no format works).
@@ -226,10 +222,8 @@ public:
      * Does the preferred MSAA FBO extension have MSAA renderbuffers?
      */
     bool usesMSAARenderBuffers() const {
-        return kNone_MSFBOType != fMSFBOType &&
-               kES_IMG_MsToTexture_MSFBOType != fMSFBOType &&
-               kES_EXT_MsToTexture_MSFBOType != fMSFBOType &&
-               kMixedSamples_MSFBOType != fMSFBOType;
+        return kNone_MSFBOType != fMSFBOType && kES_IMG_MsToTexture_MSFBOType != fMSFBOType &&
+               kES_EXT_MsToTexture_MSFBOType != fMSFBOType && kMixedSamples_MSFBOType != fMSFBOType;
     }
 
     /**
@@ -312,14 +306,17 @@ public:
     bool useNonVBOVertexAndIndexDynamicData() const { return fUseNonVBOVertexAndIndexDynamicData; }
 
     bool surfaceSupportsReadPixels(const GrSurface*) const override;
-    GrColorType supportedReadPixelsColorType(GrPixelConfig, GrColorType) const override;
+    GrColorType supportedReadPixelsColorType(GrPixelConfig, GrColorType) const noexcept override;
 
     /// Does ReadPixels support reading readConfig pixels from a FBO that is surfaceConfig?
     bool readPixelsSupported(GrPixelConfig surfaceConfig,
                              GrPixelConfig readConfig,
-                             std::function<void (GrGLenum, GrGLint*)> getIntegerv,
-                             std::function<bool ()> bindRenderTarget,
-                             std::function<void ()> unbindRenderTarget) const;
+                             std::function<void(GrGLenum, GrGLint*)>
+                                     getIntegerv,
+                             std::function<bool()>
+                                     bindRenderTarget,
+                             std::function<void()>
+                                     unbindRenderTarget) const;
 
     bool isCoreProfile() const { return fIsCoreProfile; }
 
@@ -391,23 +388,20 @@ public:
     // without crashing, or 'pendingInstanceCount' if this workaround is not necessary.
     // NOTE: the return value may be larger than pendingInstanceCount.
     int maxInstancesPerDrawWithoutCrashing(int pendingInstanceCount) const {
-        return (fMaxInstancesPerDrawWithoutCrashing)
-                ? fMaxInstancesPerDrawWithoutCrashing : pendingInstanceCount;
+        return (fMaxInstancesPerDrawWithoutCrashing) ? fMaxInstancesPerDrawWithoutCrashing
+                                                     : pendingInstanceCount;
     }
 
     bool canCopyTexSubImage(GrPixelConfig dstConfig, bool dstHasMSAARenderBuffer,
-                            bool dstIsTextureable, bool dstIsGLTexture2D,
-                            GrSurfaceOrigin dstOrigin,
+                            bool dstIsTextureable, bool dstIsGLTexture2D, GrSurfaceOrigin dstOrigin,
                             GrPixelConfig srcConfig, bool srcHasMSAARenderBuffer,
                             bool srcIsTextureable, bool srcIsGLTexture2D,
                             GrSurfaceOrigin srcOrigin) const;
-    bool canCopyAsBlit(GrPixelConfig dstConfig, int dstSampleCnt,
-                       bool dstIsTextureable, bool dstIsGLTexture2D,
-                       GrSurfaceOrigin dstOrigin,
-                       GrPixelConfig srcConfig, int srcSampleCnt,
-                       bool srcIsTextureable, bool srcIsGLTexture2D,
-                       GrSurfaceOrigin srcOrigin, const SkRect& srcBounds,
-                       const SkIRect& srcRect, const SkIPoint& dstPoint) const;
+    bool canCopyAsBlit(GrPixelConfig dstConfig, int dstSampleCnt, bool dstIsTextureable,
+                       bool dstIsGLTexture2D, GrSurfaceOrigin dstOrigin, GrPixelConfig srcConfig,
+                       int srcSampleCnt, bool srcIsTextureable, bool srcIsGLTexture2D,
+                       GrSurfaceOrigin srcOrigin, const SkRect& srcBounds, const SkIRect& srcRect,
+                       const SkIPoint& dstPoint) const;
     bool canCopyAsDraw(GrPixelConfig dstConfig, bool srcIsTextureable) const;
 
     bool initDescForDstCopy(const GrRenderTargetProxy* src, GrSurfaceDesc* desc, GrSurfaceOrigin*,
@@ -465,6 +459,7 @@ private:
     bool onSurfaceSupportsWritePixels(const GrSurface*) const override;
     bool onCanCopySurface(const GrSurfaceProxy* dst, const GrSurfaceProxy* src,
                           const SkIRect& srcRect, const SkIPoint& dstPoint) const override;
+    size_t onTransferFromOffsetAlignment(GrColorType bufferColorType) const override;
 
     GrGLStandard fStandard;
 
@@ -472,17 +467,17 @@ private:
 
     int fMaxFragmentUniformVectors;
 
-    MSFBOType           fMSFBOType;
-    InvalidateFBType    fInvalidateFBType;
-    MapBufferType       fMapBufferType;
-    TransferBufferType  fTransferBufferType;
+    MSFBOType fMSFBOType;
+    InvalidateFBType fInvalidateFBType;
+    MapBufferType fMapBufferType;
+    TransferBufferType fTransferBufferType;
 
     bool fUnpackRowLengthSupport : 1;
     bool fPackRowLengthSupport : 1;
     bool fPackFlipYSupport : 1;
     bool fTextureUsageSupport : 1;
-    bool fAlpha8IsRenderable: 1;
-    bool fImagingSupport  : 1;
+    bool fAlpha8IsRenderable : 1;
+    bool fImagingSupport : 1;
     bool fVertexArrayObjectSupport : 1;
     bool fDebugSupport : 1;
     bool fES2CompatibilitySupport : 1;
@@ -501,7 +496,7 @@ private:
     bool fTextureSwizzleSupport : 1;
     bool fMipMapLevelAndLodControlSupport : 1;
     bool fRGBAToBGRAReadbackConversionsAreSlow : 1;
-    bool fUseBufferDataNullHint                : 1;
+    bool fUseBufferDataNullHint : 1;
     bool fClearTextureSupport : 1;
     bool fProgramBinarySupport : 1;
     bool fSamplerObjectSupport : 1;
@@ -579,13 +574,13 @@ private:
         SkTDArray<int> fColorSampleCounts;
 
         enum {
-            kTextureable_Flag             = 0x1,
-            kRenderable_Flag              = 0x2,
-            kRenderableWithMSAA_Flag      = 0x4,
+            kTextureable_Flag = 0x1,
+            kRenderable_Flag = 0x2,
+            kRenderableWithMSAA_Flag = 0x4,
             /** kFBOColorAttachment means that even if the config cannot be a GrRenderTarget, we can
                 still attach it to a FBO for blitting or reading pixels. */
-            kFBOColorAttachment_Flag      = 0x8,
-            kCanUseTexStorage_Flag        = 0x10,
+            kFBOColorAttachment_Flag = 0x8,
+            kCanUseTexStorage_Flag = 0x10,
         };
         uint32_t fFlags;
 

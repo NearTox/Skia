@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "SkIntersections.h"
+#include "src/pathops/SkIntersections.h"
 
 int SkIntersections::closestTo(double rangeStart, double rangeEnd, const SkDPoint& testPt,
-        double* closestDist) const {
+                               double* closestDist) const {
     int closest = -1;
     *closestDist = SK_ScalarMax;
     for (int index = 0; index < fUsed; ++index) {
@@ -45,10 +45,10 @@ int SkIntersections::insert(double one, double two, const SkDPoint& pt) {
             return -1;
         }
         if (more_roughly_equal(oldOne, one) && more_roughly_equal(oldTwo, two)) {
-            if ((!precisely_zero(one) || precisely_zero(oldOne))
-                    && (!precisely_equal(one, 1) || precisely_equal(oldOne, 1))
-                    && (!precisely_zero(two) || precisely_zero(oldTwo))
-                    && (!precisely_equal(two, 1) || precisely_equal(oldTwo, 1))) {
+            if ((!precisely_zero(one) || precisely_zero(oldOne)) &&
+                (!precisely_equal(one, 1) || precisely_equal(oldOne, 1)) &&
+                (!precisely_zero(two) || precisely_zero(oldTwo)) &&
+                (!precisely_equal(two, 1) || precisely_equal(oldTwo, 1))) {
                 return -1;
             }
             SkASSERT(one >= 0 && one <= 1);
@@ -64,11 +64,11 @@ int SkIntersections::insert(double one, double two, const SkDPoint& pt) {
             --fUsed;
             break;
         }
-    #if ONE_OFF_DEBUG
+#if ONE_OFF_DEBUG
         if (pt.roughlyEqual(fPt[index])) {
             SkDebugf("%s t=%1.9g pts roughly equal\n", __FUNCTION__, one);
         }
-    #endif
+#endif
     }
     for (index = 0; index < fUsed; ++index) {
         if (fT[0][index] > one) {
@@ -77,7 +77,7 @@ int SkIntersections::insert(double one, double two, const SkDPoint& pt) {
     }
     if (fUsed >= fMax) {
         SkOPASSERT(0);  // FIXME : this error, if it is to be handled at runtime in release, must
-                      // be propagated all the way back down to the caller, and return failure.
+                        // be propagated all the way back down to the caller, and return failure.
         fUsed = 0;
         return 0;
     }
@@ -109,7 +109,7 @@ void SkIntersections::insertNear(double one, double two, const SkDPoint& pt1, co
     SkASSERT(two == 0 || two == 1);
     SkASSERT(pt1 != pt2);
     fNearlySame[one ? 1 : 0] = true;
-    (void) insert(one, two, pt1);
+    (void)insert(one, two, pt1);
     fPt2[one ? 1 : 0] = pt2;
 }
 
@@ -129,7 +129,7 @@ void SkIntersections::setCoincident(int index) {
 }
 
 void SkIntersections::merge(const SkIntersections& a, int aIndex, const SkIntersections& b,
-        int bIndex) {
+                            int bIndex) {
     this->reset();
     fT[0][0] = a.fT[0][aIndex];
     fT[1][0] = b.fT[0][bIndex];
@@ -165,7 +165,7 @@ void SkIntersections::removeOne(int index) {
     memmove(&fPt[index], &fPt[index + 1], sizeof(fPt[0]) * remaining);
     memmove(&fT[0][index], &fT[0][index + 1], sizeof(fT[0][0]) * remaining);
     memmove(&fT[1][index], &fT[1][index + 1], sizeof(fT[1][0]) * remaining);
-//    SkASSERT(fIsCoincident[0] == 0);
+    //    SkASSERT(fIsCoincident[0] == 0);
     int coBit = fIsCoincident[0] & (1 << index);
     fIsCoincident[0] -= ((fIsCoincident[0] >> 1) & ~((1 << index) - 1)) + coBit;
     SkASSERT(!(coBit ^ (fIsCoincident[1] & (1 << index))));

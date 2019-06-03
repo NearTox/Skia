@@ -5,14 +5,28 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkSurface.h"
-#include "SkBlurImageFilter.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/effects/SkBlurImageFilter.h"
+#include "tools/ToolUtils.h"
+
+#include <initializer_list>
+#include <utility>
 
 static sk_sp<SkImage> make_image(SkCanvas* canvas) {
     SkImageInfo info = SkImageInfo::MakeN32Premul(250, 200);
-    auto surface = sk_tool_utils::makeSurface(canvas, info);
+    auto surface = ToolUtils::makeSurface(canvas, info);
     SkCanvas* c = surface->getCanvas();
     SkPaint paint;
     paint.setAntiAlias(true);
@@ -33,7 +47,7 @@ static void draw_image(SkCanvas* canvas, const sk_sp<SkImage> image, sk_sp<SkIma
     paint.setImageFilter(std::move(filter));
 
     canvas->translate(SkIntToScalar(30), 0);
-    canvas->clipRect(SkRect::MakeIWH(image->width(),image->height()));
+    canvas->clipRect(SkRect::MakeIWH(image->width(), image->height()));
     canvas->drawImage(image, 0, 0, &paint);
 }
 
@@ -43,19 +57,12 @@ namespace skiagm {
 // with different blur settings.
 class ImageBlurClampModeGM : public GM {
 public:
-    ImageBlurClampModeGM() {
-        this->setBGColor(0xFFCCCCCC);
-    }
+    ImageBlurClampModeGM() { this->setBGColor(0xFFCCCCCC); }
 
 protected:
+    SkString onShortName() override { return SkString("imageblurclampmode"); }
 
-    SkString onShortName() override {
-        return SkString("imageblurclampmode");
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(850, 920);
-    }
+    SkISize onISize() override { return SkISize::Make(850, 920); }
 
     bool runAsBench() const override { return true; }
 
@@ -66,12 +73,12 @@ protected:
         canvas->translate(0, 30);
         // Test different kernel size, including the one to launch 2d Gaussian
         // blur.
-        for (auto sigma: { 0.6f, 3.0f, 8.0f, 20.0f }) {
+        for (auto sigma : {0.6f, 3.0f, 8.0f, 20.0f}) {
             canvas->save();
 
             // x-only blur
-            filter =  SkBlurImageFilter::Make(sigma, 0.0f, nullptr, nullptr,
-                                              SkBlurImageFilter::kClamp_TileMode);
+            filter = SkBlurImageFilter::Make(sigma, 0.0f, nullptr, nullptr,
+                                             SkBlurImageFilter::kClamp_TileMode);
             draw_image(canvas, image, std::move(filter));
             canvas->translate(image->width() + 20, 0);
 
@@ -100,4 +107,4 @@ private:
 //////////////////////////////////////////////////////////////////////////////
 
 DEF_GM(return new ImageBlurClampModeGM;)
-}
+}  // namespace skiagm

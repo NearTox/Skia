@@ -8,9 +8,9 @@
 #ifndef GrMockCaps_DEFINED
 #define GrMockCaps_DEFINED
 
-#include "GrCaps.h"
-#include "SkGr.h"
-#include "mock/GrMockTypes.h"
+#include "include/gpu/mock/GrMockTypes.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/SkGr.h"
 
 class GrMockCaps : public GrCaps {
 public:
@@ -19,7 +19,7 @@ public:
         fInstanceAttribSupport = options.fInstanceAttribSupport;
         fHalfFloatVertexAttributeSupport = options.fHalfFloatVertexAttributeSupport;
         fMapBufferFlags = options.fMapBufferFlags;
-        fBufferMapThreshold = SK_MaxS32; // Overridable in GrContextOptions.
+        fBufferMapThreshold = SK_MaxS32;  // Overridable in GrContextOptions.
         fMaxTextureSize = options.fMaxTextureSize;
         fMaxRenderTargetSize = SkTMin(options.fMaxRenderTargetSize, fMaxTextureSize);
         fMaxPreferredRenderTargetSize = fMaxRenderTargetSize;
@@ -31,6 +31,7 @@ public:
         fShaderCaps->fFlatInterpolationSupport = options.fFlatInterpolationSupport;
         fShaderCaps->fMaxFragmentSamplers = options.fMaxFragmentSamplers;
         fShaderCaps->fShaderDerivativeSupport = options.fShaderDerivativeSupport;
+        fShaderCaps->fDualSourceBlendingSupport = options.fDualSourceBlendingSupport;
 
         this->applyOptionsOverrides(contextOptions);
     }
@@ -38,9 +39,7 @@ public:
         return fOptions.fConfigOptions[config].fTexturable;
     }
 
-    bool isConfigCopyable(GrPixelConfig config) const override {
-        return false;
-    }
+    bool isConfigCopyable(GrPixelConfig config) const override { return false; }
 
     int getRenderTargetSampleCount(int requestCount, GrPixelConfig config) const override {
         requestCount = SkTMax(requestCount, 1);
@@ -110,6 +109,10 @@ private:
     bool onCanCopySurface(const GrSurfaceProxy* dst, const GrSurfaceProxy* src,
                           const SkIRect& srcRect, const SkIPoint& dstPoint) const override {
         return true;
+    }
+    size_t onTransferFromOffsetAlignment(GrColorType bufferColorType) const override {
+        // arbitrary
+        return GrSizeAlignUp(GrColorTypeBytesPerPixel(bufferColorType), 4);
     }
 
     static const int kMaxSampleCnt = 16;

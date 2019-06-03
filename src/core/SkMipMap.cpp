@@ -5,17 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "SkMipMap.h"
+#include "src/core/SkMipMap.h"
 
-#include "SkBitmap.h"
-#include "SkColorData.h"
-#include "SkHalf.h"
-#include "SkImageInfoPriv.h"
-#include "SkMathPriv.h"
-#include "SkNx.h"
-#include "SkTo.h"
-#include "SkTypes.h"
 #include <new>
+#include "include/core/SkBitmap.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkHalf.h"
+#include "include/private/SkImageInfoPriv.h"
+#include "include/private/SkNx.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkMathPriv.h"
 
 //
 // ColorTypeFilter is the "Type" we pass to some downsample template functions.
@@ -26,9 +26,7 @@
 
 struct ColorTypeFilter_8888 {
     typedef uint32_t Type;
-    static Sk4h Expand(uint32_t x) {
-        return SkNx_cast<uint16_t>(Sk4b::Load(&x));
-    }
+    static Sk4h Expand(uint32_t x) { return SkNx_cast<uint16_t>(Sk4b::Load(&x)); }
     static uint32_t Compact(const Sk4h& x) {
         uint32_t r;
         SkNx_cast<uint8_t>(x).store(&r);
@@ -48,29 +46,19 @@ struct ColorTypeFilter_565 {
 
 struct ColorTypeFilter_4444 {
     typedef uint16_t Type;
-    static uint32_t Expand(uint16_t x) {
-        return (x & 0xF0F) | ((x & ~0xF0F) << 12);
-    }
-    static uint16_t Compact(uint32_t x) {
-        return (x & 0xF0F) | ((x >> 12) & ~0xF0F);
-    }
+    static uint32_t Expand(uint16_t x) { return (x & 0xF0F) | ((x & ~0xF0F) << 12); }
+    static uint16_t Compact(uint32_t x) { return (x & 0xF0F) | ((x >> 12) & ~0xF0F); }
 };
 
 struct ColorTypeFilter_8 {
     typedef uint8_t Type;
-    static unsigned Expand(unsigned x) {
-        return x;
-    }
-    static uint8_t Compact(unsigned x) {
-        return (uint8_t)x;
-    }
+    static unsigned Expand(unsigned x) { return x; }
+    static uint8_t Compact(unsigned x) { return (uint8_t)x; }
 };
 
 struct ColorTypeFilter_F16 {
-    typedef uint64_t Type; // SkHalf x4
-    static Sk4f Expand(uint64_t x) {
-        return SkHalfToFloat_finite_ftz(x);
-    }
+    typedef uint64_t Type;  // SkHalf x4
+    static Sk4f Expand(uint64_t x) { return SkHalfToFloat_finite_ftz(x); }
     static uint64_t Compact(const Sk4f& x) {
         uint64_t r;
         SkFloatToHalf_finite_ftz(x).store(&r);
@@ -78,25 +66,15 @@ struct ColorTypeFilter_F16 {
     }
 };
 
-template <typename T> T add_121(const T& a, const T& b, const T& c) {
-    return a + b + b + c;
-}
+template <typename T> T add_121(const T& a, const T& b, const T& c) { return a + b + b + c; }
 
-template <typename T> T shift_right(const T& x, int bits) {
-    return x >> bits;
-}
+template <typename T> T shift_right(const T& x, int bits) { return x >> bits; }
 
-Sk4f shift_right(const Sk4f& x, int bits) {
-    return x * (1.0f / (1 << bits));
-}
+Sk4f shift_right(const Sk4f& x, int bits) { return x * (1.0f / (1 << bits)); }
 
-template <typename T> T shift_left(const T& x, int bits) {
-    return x << bits;
-}
+template <typename T> T shift_left(const T& x, int bits) { return x << bits; }
 
-Sk4f shift_left(const Sk4f& x, int bits) {
-    return x * (1 << bits);
-}
+Sk4f shift_left(const Sk4f& x, int bits) { return x * (1 << bits); }
 
 //
 //  To produce each mip level, we need to filter down by 1/2 (e.g. 100x100 -> 50,50)
@@ -214,7 +192,7 @@ template <typename F> void downsample_3_1(void* dst, const void* src, size_t src
     for (int i = 0; i < count; ++i) {
         auto c00 = c02;
         auto c01 = F::Expand(p0[1]);
-             c02 = F::Expand(p0[2]);
+        c02 = F::Expand(p0[2]);
 
         auto c = add_121(c00, c01, c02);
         d[i] = F::Compact(shift_right(c, 2));
@@ -369,6 +347,7 @@ SkMipMap* SkMipMap::Build(const SkPixmap& src, SkDiscardableFactoryProc fact) {
             proc_3_2 = downsample_3_2<ColorTypeFilter_8>;
             proc_3_3 = downsample_3_3<ColorTypeFilter_8>;
             break;
+        case kRGBA_F16Norm_SkColorType:
         case kRGBA_F16_SkColorType:
             proc_1_2 = downsample_1_2<ColorTypeFilter_F16>;
             proc_1_3 = downsample_1_3<ColorTypeFilter_F16>;
@@ -417,12 +396,12 @@ SkMipMap* SkMipMap::Build(const SkPixmap& src, SkDiscardableFactoryProc fact) {
     SkASSERT(mipmap->fLevels);
 
     Level* levels = mipmap->fLevels;
-    uint8_t*    baseAddr = (uint8_t*)&levels[countLevels];
-    uint8_t*    addr = baseAddr;
-    int         width = src.width();
-    int         height = src.height();
-    uint32_t    rowBytes;
-    SkPixmap    srcPM(src);
+    uint8_t* baseAddr = (uint8_t*)&levels[countLevels];
+    uint8_t* addr = baseAddr;
+    int width = src.width();
+    int height = src.height();
+    uint32_t rowBytes;
+    SkPixmap srcPM(src);
 
     // Depending on architecture and other factors, the pixel data alignment may need to be as
     // large as 8 (for F16 pixels). See the comment on SkMipMap::Level.
@@ -431,31 +410,31 @@ SkMipMap* SkMipMap::Build(const SkPixmap& src, SkDiscardableFactoryProc fact) {
     for (int i = 0; i < countLevels; ++i) {
         FilterProc* proc;
         if (height & 1) {
-            if (height == 1) {        // src-height is 1
-                if (width & 1) {      // src-width is 3
+            if (height == 1) {    // src-height is 1
+                if (width & 1) {  // src-width is 3
                     proc = proc_3_1;
-                } else {              // src-width is 2
+                } else {  // src-width is 2
                     proc = proc_2_1;
                 }
-            } else {                  // src-height is 3
+            } else {  // src-height is 3
                 if (width & 1) {
-                    if (width == 1) { // src-width is 1
+                    if (width == 1) {  // src-width is 1
                         proc = proc_1_3;
-                    } else {          // src-width is 3
+                    } else {  // src-width is 3
                         proc = proc_3_3;
                     }
-                } else {              // src-width is 2
+                } else {  // src-width is 2
                     proc = proc_2_3;
                 }
             }
-        } else {                      // src-height is 2
+        } else {  // src-height is 2
             if (width & 1) {
-                if (width == 1) {     // src-width is 1
+                if (width == 1) {  // src-width is 1
                     proc = proc_1_2;
-                } else {              // src-width is 3
+                } else {  // src-width is 3
                     proc = proc_3_2;
                 }
-            } else {                  // src-width is 2
+            } else {  // src-width is 2
                 proc = proc_2_2;
             }
         }
@@ -467,8 +446,8 @@ SkMipMap* SkMipMap::Build(const SkPixmap& src, SkDiscardableFactoryProc fact) {
         // will not be deleted in a controlled fashion. When the caller is given the pixmap for
         // a given level, we augment this pixmap with fCS (which we do manage).
         new (&levels[i].fPixmap) SkPixmap(SkImageInfo::Make(width, height, ct, at), addr, rowBytes);
-        levels[i].fScale  = SkSize::Make(SkIntToScalar(width)  / src.width(),
-                                         SkIntToScalar(height) / src.height());
+        levels[i].fScale = SkSize::Make(SkIntToScalar(width) / src.width(),
+                                        SkIntToScalar(height) / src.height());
 
         const SkPixmap& dstPM = levels[i].fPixmap;
         const void* srcBasePtr = srcPM.addr();
@@ -477,7 +456,7 @@ SkMipMap* SkMipMap::Build(const SkPixmap& src, SkDiscardableFactoryProc fact) {
         const size_t srcRB = srcPM.rowBytes();
         for (int y = 0; y < height; y++) {
             proc(dstBasePtr, srcBasePtr, srcRB, width);
-            srcBasePtr = (char*)srcBasePtr + srcRB * 2; // jump two rows
+            srcBasePtr = (char*)srcBasePtr + srcRB * 2;  // jump two rows
             dstBasePtr = (char*)dstBasePtr + dstPM.rowBytes();
         }
         srcPM = dstPM;
@@ -602,9 +581,7 @@ SkMipMap* SkMipMap::Build(const SkBitmap& src, SkDiscardableFactoryProc fact) {
     return Build(srcPixmap, fact);
 }
 
-int SkMipMap::countLevels() const {
-    return fCount;
-}
+int SkMipMap::countLevels() const { return fCount; }
 
 bool SkMipMap::getLevel(int index, Level* levelPtr) const {
     if (nullptr == fLevels) {

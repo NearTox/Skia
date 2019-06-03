@@ -5,12 +5,22 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkAnimTimer.h"
-#include "SkLightingImageFilter.h"
-#include "SkOffsetImageFilter.h"
-#include "SkPoint3.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint3.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/effects/SkLightingImageFilter.h"
+#include "include/effects/SkOffsetImageFilter.h"
+#include "tools/ToolUtils.h"
+#include "tools/timer/AnimTimer.h"
 
 #define WIDTH 330
 #define HEIGHT 660
@@ -19,32 +29,24 @@ namespace skiagm {
 
 class ImageLightingGM : public GM {
 public:
-    ImageLightingGM()
-        : fAzimuth(SkIntToScalar(kStartAzimuth)) {
-        this->setBGColor(0xFF000000);
-    }
+    ImageLightingGM() : fAzimuth(SkIntToScalar(kStartAzimuth)) { this->setBGColor(0xFF000000); }
 
 protected:
+    SkString onShortName() override { return SkString("lighting"); }
 
-    SkString onShortName() override {
-        return SkString("lighting");
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(WIDTH, HEIGHT);
-    }
+    SkISize onISize() override { return SkISize::Make(WIDTH, HEIGHT); }
 
     void drawClippedBitmap(SkCanvas* canvas, const SkPaint& paint, int x, int y) {
         canvas->save();
         canvas->translate(SkIntToScalar(x), SkIntToScalar(y));
-        canvas->clipRect(SkRect::MakeWH(
-          SkIntToScalar(fBitmap.width()), SkIntToScalar(fBitmap.height())));
+        canvas->clipRect(
+                SkRect::MakeWH(SkIntToScalar(fBitmap.width()), SkIntToScalar(fBitmap.height())));
         canvas->drawBitmap(fBitmap, 0, 0, &paint);
         canvas->restore();
     }
 
     void onOnceBeforeDraw() override {
-        fBitmap = sk_tool_utils::create_string_bitmap(100, 100, 0xFFFFFFFF, 20, 70, 96, "e");
+        fBitmap = ToolUtils::create_string_bitmap(100, 100, 0xFFFFFFFF, 20, 70, 96, "e");
     }
 
     void onDraw(SkCanvas* canvas) override {
@@ -52,16 +54,16 @@ protected:
         SkPaint checkPaint;
         checkPaint.setColor(0xFF202020);
         for (int y = 0; y < HEIGHT; y += 16) {
-          for (int x = 0; x < WIDTH; x += 16) {
-            canvas->save();
-            canvas->translate(SkIntToScalar(x), SkIntToScalar(y));
-            canvas->drawRect(SkRect::MakeXYWH(8, 0, 8, 8), checkPaint);
-            canvas->drawRect(SkRect::MakeXYWH(0, 8, 8, 8), checkPaint);
-            canvas->restore();
-          }
+            for (int x = 0; x < WIDTH; x += 16) {
+                canvas->save();
+                canvas->translate(SkIntToScalar(x), SkIntToScalar(y));
+                canvas->drawRect(SkRect::MakeXYWH(8, 0, 8, 8), checkPaint);
+                canvas->drawRect(SkRect::MakeXYWH(0, 8, 8, 8), checkPaint);
+                canvas->restore();
+            }
         }
-        SkScalar cosAzimuth;
-        SkScalar sinAzimuth = SkScalarSinCos(SkDegreesToRadians(fAzimuth), &cosAzimuth);
+        SkScalar sinAzimuth = SkScalarSin(SkDegreesToRadians(fAzimuth)),
+                 cosAzimuth = SkScalarCos(SkDegreesToRadians(fAzimuth));
 
         SkPoint3 spotTarget = SkPoint3::Make(SkIntToScalar(40), SkIntToScalar(40), 0);
         SkPoint3 spotLocation = SkPoint3::Make(spotTarget.fX + 70.7214f * cosAzimuth,
@@ -91,22 +93,15 @@ protected:
 
         int y = 0;
         for (int i = 0; i < 3; i++) {
-            const SkImageFilter::CropRect* cr = (i == 1) ? &cropRect : (i == 2) ? &fullSizeCropRect : nullptr;
+            const SkImageFilter::CropRect* cr =
+                    (i == 1) ? &cropRect : (i == 2) ? &fullSizeCropRect : nullptr;
             sk_sp<SkImageFilter> input = (i == 2) ? noopCropped : nullptr;
-            paint.setImageFilter(SkLightingImageFilter::MakePointLitDiffuse(pointLocation,
-                                                                            white,
-                                                                            surfaceScale,
-                                                                            kd,
-                                                                            input,
-                                                                            cr));
+            paint.setImageFilter(SkLightingImageFilter::MakePointLitDiffuse(
+                    pointLocation, white, surfaceScale, kd, input, cr));
             drawClippedBitmap(canvas, paint, 0, y);
 
-            paint.setImageFilter(SkLightingImageFilter::MakeDistantLitDiffuse(distantDirection,
-                                                                              white,
-                                                                              surfaceScale,
-                                                                              kd,
-                                                                              input,
-                                                                              cr));
+            paint.setImageFilter(SkLightingImageFilter::MakeDistantLitDiffuse(
+                    distantDirection, white, surfaceScale, kd, input, cr));
             drawClippedBitmap(canvas, paint, 110, y);
 
             paint.setImageFilter(SkLightingImageFilter::MakeSpotLitDiffuse(spotLocation,
@@ -122,22 +117,12 @@ protected:
 
             y += 110;
 
-            paint.setImageFilter(SkLightingImageFilter::MakePointLitSpecular(pointLocation,
-                                                                             white,
-                                                                             surfaceScale,
-                                                                             ks,
-                                                                             shininess,
-                                                                             input,
-                                                                             cr));
+            paint.setImageFilter(SkLightingImageFilter::MakePointLitSpecular(
+                    pointLocation, white, surfaceScale, ks, shininess, input, cr));
             drawClippedBitmap(canvas, paint, 0, y);
 
-            paint.setImageFilter(SkLightingImageFilter::MakeDistantLitSpecular(distantDirection,
-                                                                               white,
-                                                                               surfaceScale,
-                                                                               ks,
-                                                                               shininess,
-                                                                               input,
-                                                                               cr));
+            paint.setImageFilter(SkLightingImageFilter::MakeDistantLitSpecular(
+                    distantDirection, white, surfaceScale, ks, shininess, input, cr));
             drawClippedBitmap(canvas, paint, 110, y);
 
             paint.setImageFilter(SkLightingImageFilter::MakeSpotLitSpecular(spotLocation,
@@ -156,10 +141,10 @@ protected:
         }
     }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         constexpr SkScalar kDesiredDurationSecs = 15.0f;
 
-        fAzimuth = kStartAzimuth + timer.scaled(360.0f/kDesiredDurationSecs, 360.0f);
+        fAzimuth = kStartAzimuth + timer.scaled(360.0f / kDesiredDurationSecs, 360.0f);
         return true;
     }
 
@@ -175,4 +160,4 @@ private:
 //////////////////////////////////////////////////////////////////////////////
 
 DEF_GM(return new ImageLightingGM;)
-}
+}  // namespace skiagm

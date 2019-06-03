@@ -5,14 +5,25 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkPath.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkTemplates.h"
 
-#define STROKE_WIDTH    SkIntToScalar(20)
+#include <float.h>
 
-static void draw_path(SkCanvas* canvas, const SkPath& path, const SkRect& rect,
-                      SkPaint::Join join, int doFill) {
+#define STROKE_WIDTH SkIntToScalar(20)
+
+static void draw_path(SkCanvas* canvas, const SkPath& path, const SkRect& rect, SkPaint::Join join,
+                      int doFill) {
     SkPaint paint;
     paint.setAntiAlias(true);
     paint.setStyle(doFill ? SkPaint::kStrokeAndFill_Style : SkPaint::kStroke_Style);
@@ -46,42 +57,36 @@ public:
     StrokeRectGM() {}
 
 protected:
+    SkString onShortName() override { return SkString("strokerect"); }
 
-    SkString onShortName() override {
-        return SkString("strokerect");
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(1400, 740);
-    }
+    SkISize onISize() override { return SkISize::Make(1400, 740); }
 
     void onDraw(SkCanvas* canvas) override {
         canvas->drawColor(SK_ColorWHITE);
-        canvas->translate(STROKE_WIDTH*3/2, STROKE_WIDTH*3/2);
+        canvas->translate(STROKE_WIDTH * 3 / 2, STROKE_WIDTH * 3 / 2);
 
         SkPaint paint;
         paint.setStyle(SkPaint::kStroke_Style);
         paint.setStrokeWidth(STROKE_WIDTH);
 
-        constexpr SkPaint::Join gJoins[] = {
-            SkPaint::kMiter_Join, SkPaint::kRound_Join, SkPaint::kBevel_Join
-        };
+        constexpr SkPaint::Join gJoins[] = {SkPaint::kMiter_Join, SkPaint::kRound_Join,
+                                            SkPaint::kBevel_Join};
 
         constexpr SkScalar W = 80;
         constexpr SkScalar H = 80;
         constexpr SkRect gRects[] = {
-            { 0, 0, W, H },
-            { W, 0, 0, H },
-            { 0, H, W, 0 },
-            { 0, 0, STROKE_WIDTH, H },
-            { 0, 0, W, STROKE_WIDTH },
-            { 0, 0, STROKE_WIDTH/2, STROKE_WIDTH/2 },
-            { 0, 0, W, 0 },
-            { 0, 0, 0, H },
-            { 0, 0, 0, 0 },
-            { 0, 0, W, FLT_EPSILON },
-            { 0, 0, FLT_EPSILON, H },
-            { 0, 0, FLT_EPSILON, FLT_EPSILON },
+                {0, 0, W, H},
+                {W, 0, 0, H},
+                {0, H, W, 0},
+                {0, 0, STROKE_WIDTH, H},
+                {0, 0, W, STROKE_WIDTH},
+                {0, 0, STROKE_WIDTH / 2, STROKE_WIDTH / 2},
+                {0, 0, W, 0},
+                {0, 0, 0, H},
+                {0, 0, 0, 0},
+                {0, 0, W, FLT_EPSILON},
+                {0, 0, FLT_EPSILON, H},
+                {0, 0, FLT_EPSILON, FLT_EPSILON},
         };
 
         for (int doFill = 0; doFill <= 1; ++doFill) {

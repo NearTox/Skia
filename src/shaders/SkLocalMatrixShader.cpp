@@ -5,18 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "SkLocalMatrixShader.h"
-#include "SkTLazy.h"
+#include "src/shaders/SkLocalMatrixShader.h"
+#include "src/core/SkTLazy.h"
 
 #if SK_SUPPORT_GPU
-#include "GrFragmentProcessor.h"
+#include "src/gpu/GrFragmentProcessor.h"
 #endif
 
 #if SK_SUPPORT_GPU
 std::unique_ptr<GrFragmentProcessor> SkLocalMatrixShader::asFragmentProcessor(
         const GrFPArgs& args) const {
-    return as_SB(fProxyShader)->asFragmentProcessor(
-        GrFPArgs::WithPreLocalMatrix(args, this->getLocalMatrix()));
+    return as_SB(fProxyShader)
+            ->asFragmentProcessor(GrFPArgs::WithPreLocalMatrix(args, this->getLocalMatrix()));
 }
 #endif
 
@@ -36,9 +36,8 @@ void SkLocalMatrixShader::flatten(SkWriteBuffer& buffer) const {
 }
 
 #ifdef SK_ENABLE_LEGACY_SHADERCONTEXT
-SkShaderBase::Context* SkLocalMatrixShader::onMakeContext(
-    const ContextRec& rec, SkArenaAlloc* alloc) const
-{
+SkShaderBase::Context* SkLocalMatrixShader::onMakeContext(const ContextRec& rec,
+                                                          SkArenaAlloc* alloc) const {
     SkTCopyOnFirstWrite<SkMatrix> lm(this->getLocalMatrix());
     if (rec.fLocalMatrix) {
         lm.writable()->preConcat(*rec.fLocalMatrix);
@@ -51,7 +50,7 @@ SkShaderBase::Context* SkLocalMatrixShader::onMakeContext(
 }
 #endif
 
-SkImage* SkLocalMatrixShader::onIsAImage(SkMatrix* outMatrix, enum TileMode* mode) const {
+SkImage* SkLocalMatrixShader::onIsAImage(SkMatrix* outMatrix, SkTileMode* mode) const noexcept {
     SkMatrix imageMatrix;
     SkImage* image = fProxyShader->isAImage(&imageMatrix, mode);
     if (image && outMatrix) {
@@ -62,13 +61,13 @@ SkImage* SkLocalMatrixShader::onIsAImage(SkMatrix* outMatrix, enum TileMode* mod
     return image;
 }
 
-bool SkLocalMatrixShader::onAppendStages(const StageRec& rec) const {
+bool SkLocalMatrixShader::onAppendStages(const SkStageRec& rec) const {
     SkTCopyOnFirstWrite<SkMatrix> lm(this->getLocalMatrix());
     if (rec.fLocalM) {
         lm.writable()->preConcat(*rec.fLocalM);
     }
 
-    StageRec newRec = rec;
+    SkStageRec newRec = rec;
     newRec.fLocalM = lm;
     return as_SB(fProxyShader)->appendStages(newRec);
 }

@@ -5,12 +5,22 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkCanvas.h"
-#include "SkPaint.h"
-#include "SkPath.h"
-#include "SkRandom.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "include/utils/SkRandom.h"
+#include "tools/ToolUtils.h"
 
 // https://bug.skia.org/1316 shows that this cubic, when slightly clipped, creates big
 // (incorrect) changes to its control points.
@@ -19,10 +29,7 @@ public:
     ClippedCubicGM() {}
 
 protected:
-
-    SkString onShortName() {
-        return SkString("clippedcubic");
-    }
+    SkString onShortName() { return SkString("clippedcubic"); }
 
     SkISize onISize() { return SkISize::Make(1240, 390); }
 
@@ -54,16 +61,12 @@ private:
     typedef skiagm::GM INHERITED;
 };
 
-
 class ClippedCubic2GM : public skiagm::GM {
 public:
     ClippedCubic2GM() {}
 
 protected:
-
-    SkString onShortName() override {
-        return SkString("clippedcubic2");
-    }
+    SkString onShortName() override { return SkString("clippedcubic2"); }
 
     SkISize onISize() override { return SkISize::Make(1240, 390); }
 
@@ -103,10 +106,10 @@ protected:
 
     void onOnceBeforeDraw() override {
         fPath.moveTo(69.7030518991886f, 0);
-        fPath.cubicTo( 69.7030518991886f, 21.831149999999997f,
-                58.08369508178456f, 43.66448333333333f, 34.8449814469765f, 65.5f);
-        fPath.cubicTo( 11.608591683531916f, 87.33115f, -0.010765133872116195f, 109.16448333333332f,
-                -0.013089005235602302f, 131);
+        fPath.cubicTo(69.7030518991886f, 21.831149999999997f, 58.08369508178456f,
+                      43.66448333333333f, 34.8449814469765f, 65.5f);
+        fPath.cubicTo(11.608591683531916f, 87.33115f, -0.010765133872116195f, 109.16448333333332f,
+                      -0.013089005235602302f, 131);
         fPath.close();
         fFlipped = fPath;
         SkMatrix matrix;
@@ -120,26 +123,22 @@ protected:
 
     SkPath fPath;
     SkPath fFlipped;
+
 private:
     typedef skiagm::GM INHERITED;
 };
-
 
 class CubicPathGM : public skiagm::GM {
 public:
     CubicPathGM() {}
 
 protected:
-
-    SkString onShortName() {
-        return SkString("cubicpath");
-    }
+    SkString onShortName() { return SkString("cubicpath"); }
 
     SkISize onISize() { return SkISize::Make(1240, 390); }
 
-    void drawPath(SkPath& path,SkCanvas* canvas,SkColor color,
-                  const SkRect& clip,SkPaint::Cap cap, SkPaint::Join join,
-                  SkPaint::Style style, SkPath::FillType fill,
+    void drawPath(SkPath& path, SkCanvas* canvas, SkColor color, const SkRect& clip,
+                  SkPaint::Cap cap, SkPaint::Join join, SkPaint::Style style, SkPath::FillType fill,
                   SkScalar strokeWidth) {
         path.setFillType(fill);
         SkPaint paint;
@@ -157,54 +156,52 @@ protected:
     virtual void onDraw(SkCanvas* canvas) {
         struct FillAndName {
             SkPath::FillType fFill;
-            const char*      fName;
+            const char* fName;
         };
         constexpr FillAndName gFills[] = {
-            {SkPath::kWinding_FillType, "Winding"},
-            {SkPath::kEvenOdd_FillType, "Even / Odd"},
-            {SkPath::kInverseWinding_FillType, "Inverse Winding"},
-            {SkPath::kInverseEvenOdd_FillType, "Inverse Even / Odd"},
+                {SkPath::kWinding_FillType, "Winding"},
+                {SkPath::kEvenOdd_FillType, "Even / Odd"},
+                {SkPath::kInverseWinding_FillType, "Inverse Winding"},
+                {SkPath::kInverseEvenOdd_FillType, "Inverse Even / Odd"},
         };
         struct StyleAndName {
             SkPaint::Style fStyle;
-            const char*    fName;
+            const char* fName;
         };
         constexpr StyleAndName gStyles[] = {
-            {SkPaint::kFill_Style, "Fill"},
-            {SkPaint::kStroke_Style, "Stroke"},
-            {SkPaint::kStrokeAndFill_Style, "Stroke And Fill"},
+                {SkPaint::kFill_Style, "Fill"},
+                {SkPaint::kStroke_Style, "Stroke"},
+                {SkPaint::kStrokeAndFill_Style, "Stroke And Fill"},
         };
         struct CapAndName {
-            SkPaint::Cap  fCap;
+            SkPaint::Cap fCap;
             SkPaint::Join fJoin;
-            const char*   fName;
+            const char* fName;
         };
-        constexpr CapAndName gCaps[] = {
-            {SkPaint::kButt_Cap, SkPaint::kBevel_Join, "Butt"},
-            {SkPaint::kRound_Cap, SkPaint::kRound_Join, "Round"},
-            {SkPaint::kSquare_Cap, SkPaint::kBevel_Join, "Square"}
-        };
+        constexpr CapAndName gCaps[] = {{SkPaint::kButt_Cap, SkPaint::kBevel_Join, "Butt"},
+                                        {SkPaint::kRound_Cap, SkPaint::kRound_Join, "Round"},
+                                        {SkPaint::kSquare_Cap, SkPaint::kBevel_Join, "Square"}};
         struct PathAndName {
-            SkPath      fPath;
+            SkPath fPath;
             const char* fName;
         };
         PathAndName path;
-        path.fPath.moveTo(25*SK_Scalar1, 10*SK_Scalar1);
-        path.fPath.cubicTo(40*SK_Scalar1, 20*SK_Scalar1,
-                           60*SK_Scalar1, 20*SK_Scalar1,
-                           75*SK_Scalar1, 10*SK_Scalar1);
+        path.fPath.moveTo(25 * SK_Scalar1, 10 * SK_Scalar1);
+        path.fPath.cubicTo(40 * SK_Scalar1, 20 * SK_Scalar1, 60 * SK_Scalar1, 20 * SK_Scalar1,
+                           75 * SK_Scalar1, 10 * SK_Scalar1);
         path.fName = "moveTo-cubic";
 
         SkPaint titlePaint;
         titlePaint.setColor(SK_ColorBLACK);
         titlePaint.setAntiAlias(true);
-        SkFont font(sk_tool_utils::create_portable_typeface(), 15);
-        const char title[] = "Cubic Drawn Into Rectangle Clips With "
-                             "Indicated Style, Fill and Linecaps, with stroke width 10";
+        SkFont font(ToolUtils::create_portable_typeface(), 15);
+        const char title[] =
+                "Cubic Drawn Into Rectangle Clips With "
+                "Indicated Style, Fill and Linecaps, with stroke width 10";
         canvas->drawString(title, 20, 20, font, titlePaint);
 
         SkRandom rand;
-        SkRect rect = SkRect::MakeWH(100*SK_Scalar1, 30*SK_Scalar1);
+        SkRect rect = SkRect::MakeWH(100 * SK_Scalar1, 30 * SK_Scalar1);
         canvas->save();
         canvas->translate(10 * SK_Scalar1, 30 * SK_Scalar1);
         canvas->save();
@@ -224,9 +221,9 @@ protected:
                     }
 
                     SkColor color = 0xff007000;
-                    this->drawPath(path.fPath, canvas, color, rect,
-                                    gCaps[cap].fCap, gCaps[cap].fJoin, gStyles[style].fStyle,
-                                    gFills[fill].fFill, SK_Scalar1*10);
+                    this->drawPath(path.fPath, canvas, color, rect, gCaps[cap].fCap,
+                                   gCaps[cap].fJoin, gStyles[style].fStyle, gFills[fill].fFill,
+                                   SK_Scalar1 * 10);
 
                     SkPaint rectPaint;
                     rectPaint.setColor(SK_ColorBLACK);
@@ -238,7 +235,8 @@ protected:
                     SkPaint labelPaint;
                     labelPaint.setColor(color);
                     font.setSize(10);
-                    canvas->drawString(gStyles[style].fName, 0, rect.height() + 12, font, labelPaint);
+                    canvas->drawString(gStyles[style].fName, 0, rect.height() + 12, font,
+                                       labelPaint);
                     canvas->drawString(gFills[fill].fName, 0, rect.height() + 24, font, labelPaint);
                     canvas->drawString(gCaps[cap].fName, 0, rect.height() + 36, font, labelPaint);
                 }
@@ -259,16 +257,12 @@ public:
     CubicClosePathGM() {}
 
 protected:
-
-    SkString onShortName() {
-        return SkString("cubicclosepath");
-    }
+    SkString onShortName() { return SkString("cubicclosepath"); }
 
     SkISize onISize() { return SkISize::Make(1240, 390); }
 
-    void drawPath(SkPath& path,SkCanvas* canvas,SkColor color,
-                  const SkRect& clip,SkPaint::Cap cap, SkPaint::Join join,
-                  SkPaint::Style style, SkPath::FillType fill,
+    void drawPath(SkPath& path, SkCanvas* canvas, SkColor color, const SkRect& clip,
+                  SkPaint::Cap cap, SkPaint::Join join, SkPaint::Style style, SkPath::FillType fill,
                   SkScalar strokeWidth) {
         path.setFillType(fill);
         SkPaint paint;
@@ -286,55 +280,53 @@ protected:
     virtual void onDraw(SkCanvas* canvas) {
         struct FillAndName {
             SkPath::FillType fFill;
-            const char*      fName;
+            const char* fName;
         };
         constexpr FillAndName gFills[] = {
-            {SkPath::kWinding_FillType, "Winding"},
-            {SkPath::kEvenOdd_FillType, "Even / Odd"},
-            {SkPath::kInverseWinding_FillType, "Inverse Winding"},
-            {SkPath::kInverseEvenOdd_FillType, "Inverse Even / Odd"},
+                {SkPath::kWinding_FillType, "Winding"},
+                {SkPath::kEvenOdd_FillType, "Even / Odd"},
+                {SkPath::kInverseWinding_FillType, "Inverse Winding"},
+                {SkPath::kInverseEvenOdd_FillType, "Inverse Even / Odd"},
         };
         struct StyleAndName {
             SkPaint::Style fStyle;
-            const char*    fName;
+            const char* fName;
         };
         constexpr StyleAndName gStyles[] = {
-            {SkPaint::kFill_Style, "Fill"},
-            {SkPaint::kStroke_Style, "Stroke"},
-            {SkPaint::kStrokeAndFill_Style, "Stroke And Fill"},
+                {SkPaint::kFill_Style, "Fill"},
+                {SkPaint::kStroke_Style, "Stroke"},
+                {SkPaint::kStrokeAndFill_Style, "Stroke And Fill"},
         };
         struct CapAndName {
-            SkPaint::Cap  fCap;
+            SkPaint::Cap fCap;
             SkPaint::Join fJoin;
-            const char*   fName;
+            const char* fName;
         };
-        constexpr CapAndName gCaps[] = {
-            {SkPaint::kButt_Cap, SkPaint::kBevel_Join, "Butt"},
-            {SkPaint::kRound_Cap, SkPaint::kRound_Join, "Round"},
-            {SkPaint::kSquare_Cap, SkPaint::kBevel_Join, "Square"}
-        };
+        constexpr CapAndName gCaps[] = {{SkPaint::kButt_Cap, SkPaint::kBevel_Join, "Butt"},
+                                        {SkPaint::kRound_Cap, SkPaint::kRound_Join, "Round"},
+                                        {SkPaint::kSquare_Cap, SkPaint::kBevel_Join, "Square"}};
         struct PathAndName {
-            SkPath      fPath;
+            SkPath fPath;
             const char* fName;
         };
         PathAndName path;
-        path.fPath.moveTo(25*SK_Scalar1, 10*SK_Scalar1);
-        path.fPath.cubicTo(40*SK_Scalar1, 20*SK_Scalar1,
-                           60*SK_Scalar1, 20*SK_Scalar1,
-                           75*SK_Scalar1, 10*SK_Scalar1);
+        path.fPath.moveTo(25 * SK_Scalar1, 10 * SK_Scalar1);
+        path.fPath.cubicTo(40 * SK_Scalar1, 20 * SK_Scalar1, 60 * SK_Scalar1, 20 * SK_Scalar1,
+                           75 * SK_Scalar1, 10 * SK_Scalar1);
         path.fPath.close();
         path.fName = "moveTo-cubic-close";
 
         SkPaint titlePaint;
         titlePaint.setColor(SK_ColorBLACK);
         titlePaint.setAntiAlias(true);
-        SkFont font(sk_tool_utils::create_portable_typeface(), 15);
-        const char title[] = "Cubic Closed Drawn Into Rectangle Clips With "
-                             "Indicated Style, Fill and Linecaps, with stroke width 10";
+        SkFont font(ToolUtils::create_portable_typeface(), 15);
+        const char title[] =
+                "Cubic Closed Drawn Into Rectangle Clips With "
+                "Indicated Style, Fill and Linecaps, with stroke width 10";
         canvas->drawString(title, 20, 20, font, titlePaint);
 
         SkRandom rand;
-        SkRect rect = SkRect::MakeWH(100*SK_Scalar1, 30*SK_Scalar1);
+        SkRect rect = SkRect::MakeWH(100 * SK_Scalar1, 30 * SK_Scalar1);
         canvas->save();
         canvas->translate(10 * SK_Scalar1, 30 * SK_Scalar1);
         canvas->save();
@@ -354,9 +346,9 @@ protected:
                     }
 
                     SkColor color = 0xff007000;
-                    this->drawPath(path.fPath, canvas, color, rect,
-                                    gCaps[cap].fCap, gCaps[cap].fJoin, gStyles[style].fStyle,
-                                    gFills[fill].fFill, SK_Scalar1*10);
+                    this->drawPath(path.fPath, canvas, color, rect, gCaps[cap].fCap,
+                                   gCaps[cap].fJoin, gStyles[style].fStyle, gFills[fill].fFill,
+                                   SK_Scalar1 * 10);
 
                     SkPaint rectPaint;
                     rectPaint.setColor(SK_ColorBLACK);
@@ -369,7 +361,8 @@ protected:
                     labelPaint.setColor(color);
                     labelPaint.setAntiAlias(true);
                     font.setSize(10);
-                    canvas->drawString(gStyles[style].fName, 0, rect.height() + 12, font, labelPaint);
+                    canvas->drawString(gStyles[style].fName, 0, rect.height() + 12, font,
+                                       labelPaint);
                     canvas->drawString(gFills[fill].fName, 0, rect.height() + 24, font, labelPaint);
                     canvas->drawString(gCaps[cap].fName, 0, rect.height() + 36, font, labelPaint);
                 }
@@ -408,9 +401,9 @@ DEF_SIMPLE_GM(bug6083, canvas, 100, 50) {
     SkPath path;
     path.moveTo(500.988f, 155.200f);
     path.lineTo(526.109f, 155.200f);
-    SkPoint p1 = { 526.109f, 155.200f };
-    SkPoint p2 = { 525.968f, 212.968f };
-    SkPoint p3 = { 526.109f, 241.840f };
+    SkPoint p1 = {526.109f, 155.200f};
+    SkPoint p2 = {525.968f, 212.968f};
+    SkPoint p3 = {526.109f, 241.840f};
     path.cubicTo(p1, p2, p3);
     canvas->drawPath(path, p);
     canvas->translate(50, 0);
@@ -424,7 +417,7 @@ DEF_SIMPLE_GM(bug6083, canvas, 100, 50) {
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new CubicPathGM; )
-DEF_GM( return new CubicClosePathGM; )
-DEF_GM( return new ClippedCubicGM; )
-DEF_GM( return new ClippedCubic2GM; )
+DEF_GM(return new CubicPathGM;)
+DEF_GM(return new CubicClosePathGM;)
+DEF_GM(return new ClippedCubicGM;)
+DEF_GM(return new ClippedCubic2GM;)

@@ -8,9 +8,9 @@
 #ifndef SkOTTable_name_DEFINED
 #define SkOTTable_name_DEFINED
 
-#include "SkEndian.h"
-#include "SkOTTableTypes.h"
-#include "SkString.h"
+#include "include/core/SkString.h"
+#include "src/core/SkEndian.h"
+#include "src/sfnt/SkOTTableTypes.h"
 
 #pragma pack(push, 1)
 
@@ -38,7 +38,7 @@ struct SkOTTableName {
             enum Value : SK_OT_USHORT {
                 Unicode = SkTEndian_SwapBE16(0),
                 Macintosh = SkTEndian_SwapBE16(1),
-                ISO = SkTEndian_SwapBE16(2), // Deprecated, use Unicode instead.
+                ISO = SkTEndian_SwapBE16(2),  // Deprecated, use Unicode instead.
                 Windows = SkTEndian_SwapBE16(3),
                 Custom = SkTEndian_SwapBE16(4),
             } value;
@@ -52,7 +52,7 @@ struct SkOTTableName {
                 enum Value : SK_OT_USHORT {
                     Unicode10 = SkTEndian_SwapBE16(0),
                     Unicode11 = SkTEndian_SwapBE16(1),
-                    ISO10646 = SkTEndian_SwapBE16(2), //deprecated, use Unicode11
+                    ISO10646 = SkTEndian_SwapBE16(2),  // deprecated, use Unicode11
                     Unicode20BMP = SkTEndian_SwapBE16(3),
                     Unicode20 = SkTEndian_SwapBE16(4),
                     UnicodeVariationSequences = SkTEndian_SwapBE16(5),
@@ -117,14 +117,15 @@ struct SkOTTableName {
              */
             struct Windows {
                 enum Value : SK_OT_USHORT {
-                    Symbol = SkTEndian_SwapBE16(0), // UCS2-BE, but don't use this font to display it's own name.
-                    UnicodeBMPUCS2 = SkTEndian_SwapBE16(1), // UCS2-BE, Windows default
+                    Symbol = SkTEndian_SwapBE16(
+                            0),  // UCS2-BE, but don't use this font to display it's own name.
+                    UnicodeBMPUCS2 = SkTEndian_SwapBE16(1),  // UCS2-BE, Windows default
                     ShiftJIS = SkTEndian_SwapBE16(2),
                     PRC = SkTEndian_SwapBE16(3),
                     Big5 = SkTEndian_SwapBE16(4),
                     Wansung = SkTEndian_SwapBE16(5),
                     Johab = SkTEndian_SwapBE16(6),
-                    UnicodeUCS4 = SkTEndian_SwapBE16(10), // UTF-16BE. It means UCS4 in charmaps.
+                    UnicodeUCS4 = SkTEndian_SwapBE16(10),  // UTF-16BE. It means UCS4 in charmaps.
                 } value;
             } windows;
         } encodingID;
@@ -481,17 +482,17 @@ struct SkOTTableName {
 
         /** NameIDs <= 0xFF are predefined. Those > 0xFF are font specific. */
         union NameID {
-           /** A font specific name id which should be greater than 0xFF. */
-           SK_OT_USHORT fontSpecific;
-           struct Predefined {
+            /** A font specific name id which should be greater than 0xFF. */
+            SK_OT_USHORT fontSpecific;
+            struct Predefined {
                 enum Value : SK_OT_USHORT {
                     CopyrightNotice = SkTEndian_SwapBE16(0),
                     FontFamilyName = SkTEndian_SwapBE16(1),
                     FontSubfamilyName = SkTEndian_SwapBE16(2),
                     UniqueFontIdentifier = SkTEndian_SwapBE16(3),
                     FullFontName = SkTEndian_SwapBE16(4),
-                    VersionString = SkTEndian_SwapBE16(5), //Version <number>.<number>
-                    PostscriptName = SkTEndian_SwapBE16(6), //See spec for constraints.
+                    VersionString = SkTEndian_SwapBE16(5),   // Version <number>.<number>
+                    PostscriptName = SkTEndian_SwapBE16(6),  // See spec for constraints.
                     Trademark = SkTEndian_SwapBE16(7),
                     ManufacturerName = SkTEndian_SwapBE16(8),
                     Designer = SkTEndian_SwapBE16(9),
@@ -518,7 +519,7 @@ struct SkOTTableName {
          *  (see SkOTTableName::stringOffset).
          */
         SK_OT_USHORT offset;
-    }; //nameRecord[count];
+    };  // nameRecord[count];
 
     struct Format1Ext {
         /** The number of languageTagRecords which follow. */
@@ -535,16 +536,15 @@ struct SkOTTableName {
              *  (see SkOTTableName::stringOffset).
              */
             SK_OT_USHORT offset;
-        }; //langTagRecord[langTagCount]
-    }; //format1ext (if format == format_1)
+        };  // langTagRecord[langTagCount]
+    };      // format1ext (if format == format_1)
 
     class Iterator {
     public:
         Iterator(const uint8_t* nameTable, size_t size)
-            : fNameTable(nameTable), fNameTableSize(size), fIndex(0), fType(-1) { }
+                : fNameTable(nameTable), fNameTableSize(size), fIndex(0), fType(-1) {}
         Iterator(const uint8_t* nameTable, size_t size, SK_OT_USHORT type)
-            : fNameTable(nameTable), fNameTableSize(size), fIndex(0), fType(type)
-        { }
+                : fNameTable(nameTable), fNameTableSize(size), fIndex(0), fType(type) {}
 
         void reset(SK_OT_USHORT type) {
             fIndex = 0;
@@ -568,10 +568,10 @@ struct SkOTTableName {
 
 #pragma pack(pop)
 
-
 static_assert(sizeof(SkOTTableName) == 6, "sizeof_SkOTTableName_not_6");
 static_assert(sizeof(SkOTTableName::Format1Ext) == 2, "sizeof_SkOTTableNameF1_not_2");
-static_assert(sizeof(SkOTTableName::Format1Ext::LangTagRecord) == 4, "sizeof_SkOTTableNameLangTagRecord_not_4");
+static_assert(sizeof(SkOTTableName::Format1Ext::LangTagRecord) == 4,
+              "sizeof_SkOTTableNameLangTagRecord_not_4");
 static_assert(sizeof(SkOTTableName::Record) == 12, "sizeof_SkOTTableNameRecord_not_12");
 
 #endif

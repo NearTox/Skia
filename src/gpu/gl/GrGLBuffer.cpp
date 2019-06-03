@@ -5,28 +5,30 @@
  * found in the LICENSE file.
  */
 
-#include "GrGLBuffer.h"
-#include "GrGLGpu.h"
-#include "GrGpuResourcePriv.h"
-#include "SkTraceMemoryDump.h"
+#include "src/gpu/gl/GrGLBuffer.h"
+#include "include/core/SkTraceMemoryDump.h"
+#include "src/gpu/GrGpuResourcePriv.h"
+#include "src/gpu/gl/GrGLGpu.h"
 
 #define GL_CALL(X) GR_GL_CALL(this->glGpu()->glInterface(), X)
 #define GL_CALL_RET(RET, X) GR_GL_CALL_RET(this->glGpu()->glInterface(), RET, X)
 
 #if GR_GL_CHECK_ALLOC_WITH_GET_ERROR
-    #define CLEAR_ERROR_BEFORE_ALLOC(iface)   GrGLClearErr(iface)
-    #define GL_ALLOC_CALL(iface, call)        GR_GL_CALL_NOERRCHECK(iface, call)
-    #define CHECK_ALLOC_ERROR(iface)          GR_GL_GET_ERROR(iface)
+#define CLEAR_ERROR_BEFORE_ALLOC(iface) GrGLClearErr(iface)
+#define GL_ALLOC_CALL(iface, call) GR_GL_CALL_NOERRCHECK(iface, call)
+#define CHECK_ALLOC_ERROR(iface) GR_GL_GET_ERROR(iface)
 #else
-    #define CLEAR_ERROR_BEFORE_ALLOC(iface)
-    #define GL_ALLOC_CALL(iface, call)        GR_GL_CALL(iface, call)
-    #define CHECK_ALLOC_ERROR(iface)          GR_GL_NO_ERROR
+#define CLEAR_ERROR_BEFORE_ALLOC(iface)
+#define GL_ALLOC_CALL(iface, call) GR_GL_CALL(iface, call)
+#define CHECK_ALLOC_ERROR(iface) GR_GL_NO_ERROR
 #endif
 
 #ifdef SK_DEBUG
 #define VALIDATE() this->validate()
 #else
-#define VALIDATE() do {} while(false)
+#define VALIDATE() \
+    do {           \
+    } while (false)
 #endif
 
 sk_sp<GrGLBuffer> GrGLBuffer::Make(GrGLGpu* gpu, size_t size, GrGpuBufferType intendedType,
@@ -106,10 +108,7 @@ GrGLBuffer::GrGLBuffer(GrGLGpu* gpu, size_t size, GrGpuBufferType intendedType,
         GrGLenum target = gpu->bindBuffer(fIntendedType, this);
         CLEAR_ERROR_BEFORE_ALLOC(gpu->glInterface());
         // make sure driver can allocate memory for this buffer
-        GL_ALLOC_CALL(gpu->glInterface(), BufferData(target,
-                                                     (GrGLsizeiptr) size,
-                                                     data,
-                                                     fUsage));
+        GL_ALLOC_CALL(gpu->glInterface(), BufferData(target, (GrGLsizeiptr)size, data, fUsage));
         if (CHECK_ALLOC_ERROR(gpu->glInterface()) != GR_GL_NO_ERROR) {
             GL_CALL(DeleteBuffers(1, &fBufferID));
             fBufferID = 0;
@@ -129,9 +128,7 @@ inline GrGLGpu* GrGLBuffer::glGpu() const {
     return static_cast<GrGLGpu*>(this->getGpu());
 }
 
-inline const GrGLCaps& GrGLBuffer::glCaps() const {
-    return this->glGpu()->glCaps();
-}
+inline const GrGLCaps& GrGLBuffer::glCaps() const { return this->glGpu()->glCaps(); }
 
 void GrGLBuffer::onRelease() {
     if (!this->wasDestroyed()) {
@@ -159,10 +156,7 @@ void GrGLBuffer::onAbandon() {
 
 void GrGLBuffer::onMap() {
     SkASSERT(fBufferID);
-    if (this->wasDestroyed()) {
-        return;
-    }
-
+    SkASSERT(!this->wasDestroyed());
     VALIDATE();
     SkASSERT(!this->isMapped());
 
@@ -172,12 +166,14 @@ void GrGLBuffer::onMap() {
     // Handling dirty context is done in the bindBuffer call
     switch (this->glCaps().mapBufferType()) {
         case GrGLCaps::kNone_MapBufferType:
-            break;
+            return;
         case GrGLCaps::kMapBuffer_MapBufferType: {
             GrGLenum target = this->glGpu()->bindBuffer(fIntendedType, this);
-            // Let driver know it can discard the old data
-            if (this->glCaps().useBufferDataNullHint() || fGLSizeInBytes != this->size()) {
-                GL_CALL(BufferData(target, this->size(), nullptr, fUsage));
+            if (!readOnly) {
+                // Let driver know it can discard the old data
+                if (this->glCaps().useBufferDataNullHint() || fGLSizeInBytes != this->size()) {
+                    GL_CALL(BufferData(target, this->size(), nullptr, fUsage));
+                }
             }
             GL_CALL_RET(fMapPtr, MapBuffer(target, readOnly ? GR_GL_READ_ONLY : GR_GL_WRITE_ONLY));
             break;
@@ -188,13 +184,17 @@ void GrGLBuffer::onMap() {
             if (fGLSizeInBytes != this->size()) {
                 GL_CALL(BufferData(target, this->size(), nullptr, fUsage));
             }
-            GrGLbitfield writeAccess = GR_GL_MAP_WRITE_BIT;
-            if (GrGpuBufferType::kXferCpuToGpu != fIntendedType) {
-                // TODO: Make this a function parameter.
-                writeAccess |= GR_GL_MAP_INVALIDATE_BUFFER_BIT;
+            GrGLbitfield access;
+            if (readOnly) {
+                access = GR_GL_MAP_READ_BIT;
+            } else {
+                access = GR_GL_MAP_WRITE_BIT;
+                if (GrGpuBufferType::kXferCpuToGpu != fIntendedType) {
+                    // TODO: Make this a function parameter.
+                    access |= GR_GL_MAP_INVALIDATE_BUFFER_BIT;
+                }
             }
-            GL_CALL_RET(fMapPtr, MapBufferRange(target, 0, this->size(),
-                                                readOnly ? GR_GL_MAP_READ_BIT : writeAccess));
+            GL_CALL_RET(fMapPtr, MapBufferRange(target, 0, this->size(), access));
             break;
         }
         case GrGLCaps::kChromium_MapBufferType: {
@@ -214,10 +214,6 @@ void GrGLBuffer::onMap() {
 
 void GrGLBuffer::onUnmap() {
     SkASSERT(fBufferID);
-    if (this->wasDestroyed()) {
-        return;
-    }
-
     VALIDATE();
     SkASSERT(this->isMapped());
     if (0 == fBufferID) {
@@ -229,14 +225,14 @@ void GrGLBuffer::onUnmap() {
         case GrGLCaps::kNone_MapBufferType:
             SkDEBUGFAIL("Shouldn't get here.");
             return;
-        case GrGLCaps::kMapBuffer_MapBufferType: // fall through
+        case GrGLCaps::kMapBuffer_MapBufferType:  // fall through
         case GrGLCaps::kMapBufferRange_MapBufferType: {
             GrGLenum target = this->glGpu()->bindBuffer(fIntendedType, this);
             GL_CALL(UnmapBuffer(target));
             break;
         }
         case GrGLCaps::kChromium_MapBufferType:
-            this->glGpu()->bindBuffer(fIntendedType, this); // TODO: Is this needed?
+            this->glGpu()->bindBuffer(fIntendedType, this);  // TODO: Is this needed?
             GL_CALL(UnmapBufferSubData(fMapPtr));
             break;
     }
@@ -260,7 +256,7 @@ bool GrGLBuffer::onUpdateData(const void* src, size_t srcSizeInBytes) {
 
     if (this->glCaps().useBufferDataNullHint()) {
         if (this->size() == srcSizeInBytes) {
-            GL_CALL(BufferData(target, (GrGLsizeiptr) srcSizeInBytes, src, fUsage));
+            GL_CALL(BufferData(target, (GrGLsizeiptr)srcSizeInBytes, src, fUsage));
         } else {
             // Before we call glBufferSubData we give the driver a hint using
             // glBufferData with nullptr. This makes the old buffer contents
@@ -270,7 +266,7 @@ bool GrGLBuffer::onUpdateData(const void* src, size_t srcSizeInBytes) {
             // flushing the gpu past draws consuming the old contents.
             // TODO I think we actually want to try calling bufferData here
             GL_CALL(BufferData(target, this->size(), nullptr, fUsage));
-            GL_CALL(BufferSubData(target, 0, (GrGLsizeiptr) srcSizeInBytes, src));
+            GL_CALL(BufferSubData(target, 0, (GrGLsizeiptr)srcSizeInBytes, src));
         }
         fGLSizeInBytes = this->size();
     } else {
@@ -285,11 +281,10 @@ bool GrGLBuffer::onUpdateData(const void* src, size_t srcSizeInBytes) {
 }
 
 void GrGLBuffer::setMemoryBacking(SkTraceMemoryDump* traceMemoryDump,
-                                       const SkString& dumpName) const {
+                                  const SkString& dumpName) const {
     SkString buffer_id;
     buffer_id.appendU32(this->bufferID());
-    traceMemoryDump->setMemoryBacking(dumpName.c_str(), "gl_buffer",
-                                      buffer_id.c_str());
+    traceMemoryDump->setMemoryBacking(dumpName.c_str(), "gl_buffer", buffer_id.c_str());
 }
 
 #ifdef SK_DEBUG

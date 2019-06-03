@@ -8,12 +8,12 @@
 #ifndef GrTextBlobCache_DEFINED
 #define GrTextBlobCache_DEFINED
 
-#include "GrTextBlob.h"
-#include "SkMessageBus.h"
-#include "SkRefCnt.h"
-#include "SkTArray.h"
-#include "SkTextBlobPriv.h"
-#include "SkTHash.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/SkMessageBus.h"
+#include "include/private/SkTArray.h"
+#include "include/private/SkTHash.h"
+#include "src/core/SkTextBlobPriv.h"
+#include "src/gpu/text/GrTextBlob.h"
 
 class GrTextBlobCache {
 public:
@@ -24,11 +24,11 @@ public:
     typedef void (*PFOverBudgetCB)(void* data);
 
     GrTextBlobCache(PFOverBudgetCB cb, void* data, uint32_t uniqueID)
-        : fCallback(cb)
-        , fData(data)
-        , fSizeBudget(kDefaultBudget)
-        , fUniqueID(uniqueID)
-        , fPurgeBlobInbox(uniqueID) {
+            : fCallback(cb)
+            , fData(data)
+            , fSizeBudget(kDefaultBudget)
+            , fUniqueID(uniqueID)
+            , fPurgeBlobInbox(uniqueID) {
         SkASSERT(cb && data);
     }
     ~GrTextBlobCache();
@@ -59,7 +59,7 @@ public:
     }
 
     void remove(GrTextBlob* blob) {
-        auto  id      = GrTextBlob::GetKey(*blob).fUniqueID;
+        auto id = GrTextBlob::GetKey(*blob).fUniqueID;
         auto* idEntry = fBlobIDCache.find(id);
         SkASSERT(idEntry);
 
@@ -116,9 +116,7 @@ private:
         BlobIDCacheEntry() : fID(SK_InvalidGenID) {}
         explicit BlobIDCacheEntry(uint32_t id) : fID(id) {}
 
-        static uint32_t GetKey(const BlobIDCacheEntry& entry) {
-            return entry.fID;
-        }
+        static uint32_t GetKey(const BlobIDCacheEntry& entry) { return entry.fID; }
 
         void addBlob(sk_sp<GrTextBlob> blob) {
             SkASSERT(blob);
@@ -143,7 +141,7 @@ private:
             return index < 0 ? nullptr : fBlobs[index];
         }
 
-        int findBlobIndex(const GrTextBlob::Key& key) const{
+        int findBlobIndex(const GrTextBlob::Key& key) const {
             for (int i = 0; i < fBlobs.count(); ++i) {
                 if (GrTextBlob::GetKey(*fBlobs[i]) == key) {
                     return i;
@@ -152,14 +150,14 @@ private:
             return -1;
         }
 
-        uint32_t                             fID;
+        uint32_t fID;
         // Current clients don't generate multiple GrAtlasTextBlobs per SkTextBlob, so an array w/
         // linear search is acceptable.  If usage changes, we should re-evaluate this structure.
         SkSTArray<1, sk_sp<GrTextBlob>, true> fBlobs;
     };
 
     void add(sk_sp<GrTextBlob> blob) {
-        auto  id      = GrTextBlob::GetKey(*blob).fUniqueID;
+        auto id = GrTextBlob::GetKey(*blob).fUniqueID;
         auto* idEntry = fBlobIDCache.find(id);
         if (!idEntry) {
             idEntry = fBlobIDCache.set(id, BlobIDCacheEntry(id));
@@ -184,7 +182,7 @@ private:
     void* fData;
     size_t fSizeBudget;
     size_t fCurrentSize{0};
-    uint32_t fUniqueID;      // unique id to use for messaging
+    uint32_t fUniqueID;  // unique id to use for messaging
     SkMessageBus<PurgeBlobMessage>::Inbox fPurgeBlobInbox;
 };
 

@@ -8,8 +8,8 @@
 #ifndef SkOTTable_hhea_DEFINED
 #define SkOTTable_hhea_DEFINED
 
-#include "SkEndian.h"
-#include "SkOTTableTypes.h"
+#include "src/core/SkEndian.h"
+#include "src/sfnt/SkOTTableTypes.h"
 
 #pragma pack(push, 1)
 
@@ -46,9 +46,9 @@ struct SkOTTableHorizontalHeader {
 
 #pragma pack(pop)
 
-
 #include <stddef.h>
-static_assert(offsetof(SkOTTableHorizontalHeader, numberOfHMetrics) == 34, "SkOTTableHorizontalHeader_numberOfHMetrics_not_at_34");
+static_assert(offsetof(SkOTTableHorizontalHeader, numberOfHMetrics) == 34,
+              "SkOTTableHorizontalHeader_numberOfHMetrics_not_at_34");
 static_assert(sizeof(SkOTTableHorizontalHeader) == 36, "sizeof_SkOTTableHorizontalHeader_not_36");
 
 #endif

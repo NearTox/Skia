@@ -8,7 +8,7 @@
 #ifndef SKSL_ASTRETURNSTATEMENT
 #define SKSL_ASTRETURNSTATEMENT
 
-#include "SkSLASTStatement.h"
+#include "src/sksl/ast/SkSLASTStatement.h"
 
 namespace SkSL {
 
@@ -18,8 +18,7 @@ namespace SkSL {
 struct ASTReturnStatement : public ASTStatement {
     // expression may be null
     ASTReturnStatement(int offset, std::unique_ptr<ASTExpression> expression)
-    : INHERITED(offset, kReturn_Kind)
-    , fExpression(std::move(expression)) {}
+            : INHERITED(offset, kReturn_Kind), fExpression(std::move(expression)) {}
 
     String description() const override {
         String result("return");
@@ -34,6 +33,6 @@ struct ASTReturnStatement : public ASTStatement {
     typedef ASTStatement INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

@@ -8,7 +8,7 @@
 #ifndef SkAnimCodecPlayer_DEFINED
 #define SkAnimCodecPlayer_DEFINED
 
-#include "SkCodec.h"
+#include "include/codec/SkCodec.h"
 
 class SkImage;
 
@@ -44,17 +44,15 @@ public:
      */
     bool seek(uint32_t msec);
 
-
 private:
-    std::unique_ptr<SkCodec>        fCodec;
-    SkImageInfo                     fImageInfo;
+    std::unique_ptr<SkCodec> fCodec;
+    SkImageInfo fImageInfo;
     std::vector<SkCodec::FrameInfo> fFrameInfos;
-    std::vector<sk_sp<SkImage> >    fImages;
-    int                             fCurrIndex = 0;
-    uint32_t                        fTotalDuration;
+    std::vector<sk_sp<SkImage> > fImages;
+    int fCurrIndex = 0;
+    uint32_t fTotalDuration;
 
     sk_sp<SkImage> getFrameAt(int index);
 };
 
 #endif
-

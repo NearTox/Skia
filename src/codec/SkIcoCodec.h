@@ -7,18 +7,18 @@
 #ifndef SkIcoCodec_DEFINED
 #define SkIcoCodec_DEFINED
 
-#include "SkCodec.h"
-#include "SkImageInfo.h"
-#include "SkStream.h"
-#include "SkTArray.h"
-#include "SkTypes.h"
+#include "include/codec/SkCodec.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkTArray.h"
 
 /*
  * This class implements the decoding for bmp images
  */
 class SkIcoCodec : public SkCodec {
 public:
-    static bool IsIco(const void*, size_t);
+    static bool IsIco(const void*, size_t) noexcept;
 
     /*
      * Assumes IsIco was called and returned true
@@ -28,7 +28,6 @@ public:
     static std::unique_ptr<SkCodec> MakeFromStream(std::unique_ptr<SkStream>, Result*);
 
 protected:
-
     /*
      * Chooses the best dimensions given the desired scale
      */
@@ -40,34 +39,34 @@ protected:
      * Initiates the Ico decode
      */
     Result onGetPixels(const SkImageInfo& dstInfo, void* dst, size_t dstRowBytes, const Options&,
-            int*) override;
+                       int*) override;
 
-    SkEncodedImageFormat onGetEncodedFormat() const override {
+    SkEncodedImageFormat onGetEncodedFormat() const noexcept override {
         return SkEncodedImageFormat::kICO;
     }
 
-    SkScanlineOrder onGetScanlineOrder() const override;
+    SkScanlineOrder onGetScanlineOrder() const noexcept override;
 
-    bool conversionSupported(const SkImageInfo&, bool, bool) override {
+    bool conversionSupported(const SkImageInfo&, bool, bool) noexcept override {
         // This will be checked by the embedded codec.
         return true;
     }
 
     // Handled by the embedded codec.
-    bool usesColorXform() const override { return false; }
-private:
+    bool usesColorXform() const noexcept override { return false; }
 
+private:
     Result onStartScanlineDecode(const SkImageInfo& dstInfo,
-            const SkCodec::Options& options) override;
+                                 const SkCodec::Options& options) noexcept override;
 
     int onGetScanlines(void* dst, int count, size_t rowBytes) override;
 
     bool onSkipScanlines(int count) override;
 
     Result onStartIncrementalDecode(const SkImageInfo& dstInfo, void* pixels, size_t rowBytes,
-            const SkCodec::Options&) override;
+                                    const SkCodec::Options&) noexcept override;
 
-    Result onIncrementalDecode(int* rowsDecoded) override;
+    Result onIncrementalDecode(int* rowsDecoded) noexcept override;
 
     SkSampler* getSampler(bool createIfNecessary) override;
 

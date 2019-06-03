@@ -5,24 +5,31 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkAnimTimer.h"
-#include "SkBlurImageFilter.h"
-#include "SkRandom.h"
-#include "SkRRect.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRRect.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkBlurImageFilter.h"
+#include "include/utils/SkRandom.h"
+#include "tools/timer/AnimTimer.h"
 
 static const SkScalar kBlurMax = 7.0f;
 static const int kNumNodes = 30;
 static const int kWidth = 512;
 static const int kHeight = 512;
-static const SkScalar kBlurAnimationDuration = 4.0f; // in secs
+static const SkScalar kBlurAnimationDuration = 4.0f;  // in secs
 
 // This GM draws a lot of layers with animating BlurImageFilters
 class AnimatedImageBlurs : public skiagm::GM {
 public:
-    AnimatedImageBlurs() : fLastTime(0.0f) {
-        this->setBGColor(0xFFCCCCCC);
-    }
+    AnimatedImageBlurs() : fLastTime(0.0f) { this->setBGColor(0xFFCCCCCC); }
 
 protected:
     bool runAsBench() const override { return true; }
@@ -43,23 +50,22 @@ protected:
 
         for (int i = 0; i < kNumNodes; ++i) {
             SkPaint layerPaint;
-            layerPaint.setImageFilter(SkBlurImageFilter::Make(fNodes[i].sigma(),
-                                                              fNodes[i].sigma(),
-                                                              nullptr));
+            layerPaint.setImageFilter(
+                    SkBlurImageFilter::Make(fNodes[i].sigma(), fNodes[i].sigma(), nullptr));
 
             canvas->saveLayer(nullptr, &layerPaint);
-                // The rect is outset to block the circle case
-                SkRect rect = SkRect::MakeLTRB(fNodes[i].pos().fX - fNodes[i].size()-0.5f,
-                                               fNodes[i].pos().fY - fNodes[i].size()-0.5f,
-                                               fNodes[i].pos().fX + fNodes[i].size()+0.5f,
-                                               fNodes[i].pos().fY + fNodes[i].size()+0.5f);
-                SkRRect rrect = SkRRect::MakeRectXY(rect, fNodes[i].size(), fNodes[i].size());
-                canvas->drawRRect(rrect, paint);
+            // The rect is outset to block the circle case
+            SkRect rect = SkRect::MakeLTRB(fNodes[i].pos().fX - fNodes[i].size() - 0.5f,
+                                           fNodes[i].pos().fY - fNodes[i].size() - 0.5f,
+                                           fNodes[i].pos().fX + fNodes[i].size() + 0.5f,
+                                           fNodes[i].pos().fY + fNodes[i].size() + 0.5f);
+            SkRRect rrect = SkRRect::MakeRectXY(rect, fNodes[i].size(), fNodes[i].size());
+            canvas->drawRRect(rrect, paint);
             canvas->restore();
         }
     }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         if (0.0f != fLastTime) {
             for (int i = 0; i < kNumNodes; ++i) {
                 fNodes[i].update(timer, fLastTime);
@@ -74,13 +80,12 @@ private:
     class Node {
     public:
         Node()
-            : fSize(0.0f)
-            , fPos { 0.0f, 0.0f }
-            , fDir { 1.0f, 0.0f }
-            , fBlurOffset(0.0f)
-            , fBlur(fBlurOffset)
-            , fSpeed(0.0f) {
-        }
+                : fSize(0.0f)
+                , fPos{0.0f, 0.0f}
+                , fDir{1.0f, 0.0f}
+                , fBlurOffset(0.0f)
+                , fBlur(fBlurOffset)
+                , fSpeed(0.0f) {}
 
         void init(SkRandom* rand) {
             fSize = rand->nextRangeF(10.0f, 60.f);
@@ -96,8 +101,7 @@ private:
             fSpeed = rand->nextRangeF(20.0f, 60.0f);
         }
 
-        void update(const SkAnimTimer& timer, SkScalar lastTime) {
-
+        void update(const AnimTimer& timer, SkScalar lastTime) {
             SkScalar deltaTime = timer.secs() - lastTime;
 
             fPos.fX += deltaTime * fSpeed * fDir.fX;
@@ -120,14 +124,14 @@ private:
 
     private:
         SkScalar fSize;
-        SkPoint  fPos;
+        SkPoint fPos;
         SkVector fDir;
         SkScalar fBlurOffset;
         SkScalar fBlur;
         SkScalar fSpeed;
     };
 
-    Node     fNodes[kNumNodes];
+    Node fNodes[kNumNodes];
     SkRandom fRand;
     SkScalar fLastTime;
 

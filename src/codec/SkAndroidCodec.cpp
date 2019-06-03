@@ -5,14 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "SkAndroidCodec.h"
-#include "SkAndroidCodecAdapter.h"
-#include "SkCodec.h"
-#include "SkCodecPriv.h"
-#include "SkMakeUnique.h"
-#include "SkPixmap.h"
-#include "SkPixmapPriv.h"
-#include "SkSampledCodec.h"
+#include "include/codec/SkAndroidCodec.h"
+#include "include/codec/SkCodec.h"
+#include "include/core/SkPixmap.h"
+#include "src/codec/SkAndroidCodecAdapter.h"
+#include "src/codec/SkCodecPriv.h"
+#include "src/codec/SkSampledCodec.h"
+#include "src/core/SkMakeUnique.h"
+#include "src/core/SkPixmapPriv.h"
 
 static bool is_valid_sample_size(int sampleSize) {
     // FIXME: As Leon has mentioned elsewhere, surely there is also a maximum sampleSize?
@@ -40,7 +40,7 @@ static float calculate_area(SkPoint abc[]) {
     SkPoint a = abc[0];
     SkPoint b = abc[1];
     SkPoint c = abc[2];
-    return 0.5f * SkTAbs(a.fX*b.fY + b.fX*c.fY - a.fX*c.fY - c.fX*b.fY - b.fX*a.fY);
+    return 0.5f * SkTAbs(a.fX * b.fY + b.fX * c.fY - a.fX * c.fY - c.fX * b.fY - b.fX * a.fY);
 }
 
 static constexpr float kSRGB_D50_GamutArea = 0.084f;
@@ -58,20 +58,19 @@ static bool is_wide_gamut(const skcms_ICCProfile& profile) {
 }
 
 static inline SkImageInfo adjust_info(SkCodec* codec,
-        SkAndroidCodec::ExifOrientationBehavior orientationBehavior) {
+                                      SkAndroidCodec::ExifOrientationBehavior orientationBehavior) {
     auto info = codec->getInfo();
-    if (orientationBehavior == SkAndroidCodec::ExifOrientationBehavior::kIgnore
-            || !SkPixmapPriv::ShouldSwapWidthHeight(codec->getOrigin())) {
+    if (orientationBehavior == SkAndroidCodec::ExifOrientationBehavior::kIgnore ||
+        !SkPixmapPriv::ShouldSwapWidthHeight(codec->getOrigin())) {
         return info;
     }
     return SkPixmapPriv::SwapWidthHeight(info);
 }
 
 SkAndroidCodec::SkAndroidCodec(SkCodec* codec, ExifOrientationBehavior orientationBehavior)
-    : fInfo(adjust_info(codec, orientationBehavior))
-    , fOrientationBehavior(orientationBehavior)
-    , fCodec(codec)
-{}
+        : fInfo(adjust_info(codec, orientationBehavior))
+        , fOrientationBehavior(orientationBehavior)
+        , fCodec(codec) {}
 
 SkAndroidCodec::~SkAndroidCodec() {}
 
@@ -81,8 +80,8 @@ std::unique_ptr<SkAndroidCodec> SkAndroidCodec::MakeFromStream(std::unique_ptr<S
     return MakeFromCodec(std::move(codec));
 }
 
-std::unique_ptr<SkAndroidCodec> SkAndroidCodec::MakeFromCodec(std::unique_ptr<SkCodec> codec,
-        ExifOrientationBehavior orientationBehavior) {
+std::unique_ptr<SkAndroidCodec> SkAndroidCodec::MakeFromCodec(
+        std::unique_ptr<SkCodec> codec, ExifOrientationBehavior orientationBehavior) {
     if (nullptr == codec) {
         return nullptr;
     }
@@ -91,19 +90,23 @@ std::unique_ptr<SkAndroidCodec> SkAndroidCodec::MakeFromCodec(std::unique_ptr<Sk
         case SkEncodedImageFormat::kPNG:
         case SkEncodedImageFormat::kICO:
         case SkEncodedImageFormat::kJPEG:
+#ifndef SK_HAS_WUFFS_LIBRARY
         case SkEncodedImageFormat::kGIF:
+#endif
         case SkEncodedImageFormat::kBMP:
         case SkEncodedImageFormat::kWBMP:
         case SkEncodedImageFormat::kHEIF:
             return skstd::make_unique<SkSampledCodec>(codec.release(), orientationBehavior);
-
+#ifdef SK_HAS_WUFFS_LIBRARY
+        case SkEncodedImageFormat::kGIF:
+#endif
 #ifdef SK_HAS_WEBP_LIBRARY
         case SkEncodedImageFormat::kWEBP:
 #endif
 #ifdef SK_CODEC_DECODES_RAW
         case SkEncodedImageFormat::kDNG:
 #endif
-#if defined(SK_HAS_WEBP_LIBRARY) || defined(SK_CODEC_DECODES_RAW)
+#if defined(SK_HAS_WEBP_LIBRARY) || defined(SK_CODEC_DECODES_RAW) || defined(SK_HAS_WUFFS_LIBRARY)
             return skstd::make_unique<SkAndroidCodecAdapter>(codec.release(), orientationBehavior);
 #endif
 
@@ -231,7 +234,7 @@ int SkAndroidCodec::computeSampleSize(SkISize* desiredSize) const {
         return 1;
     }
 
-    int sampleX = fInfo.width()  / desiredSize->width();
+    int sampleX = fInfo.width() / desiredSize->width();
     int sampleY = fInfo.height() / desiredSize->height();
     int sampleSize = std::min(sampleX, sampleY);
     auto computedSize = this->getSampledDimensions(sampleSize);
@@ -297,12 +300,12 @@ SkISize SkAndroidCodec::getSampledDimensions(int sampleSize) const {
     }
 
     auto dims = this->onGetSampledDimensions(sampleSize);
-    if (fOrientationBehavior == SkAndroidCodec::ExifOrientationBehavior::kIgnore
-            || !SkPixmapPriv::ShouldSwapWidthHeight(fCodec->getOrigin())) {
+    if (fOrientationBehavior == SkAndroidCodec::ExifOrientationBehavior::kIgnore ||
+        !SkPixmapPriv::ShouldSwapWidthHeight(fCodec->getOrigin())) {
         return dims;
     }
 
-    return { dims.height(), dims.width() };
+    return {dims.height(), dims.width()};
 }
 
 bool SkAndroidCodec::getSupportedSubset(SkIRect* desiredSubset) const {
@@ -351,7 +354,8 @@ static bool acceptable_result(SkCodec::Result result) {
 }
 
 SkCodec::Result SkAndroidCodec::getAndroidPixels(const SkImageInfo& requestInfo,
-        void* requestPixels, size_t requestRowBytes, const AndroidOptions* options) {
+                                                 void* requestPixels, size_t requestRowBytes,
+                                                 const AndroidOptions* options) {
     if (!requestPixels) {
         return SkCodec::kInvalidParameters;
     }
@@ -360,8 +364,8 @@ SkCodec::Result SkAndroidCodec::getAndroidPixels(const SkImageInfo& requestInfo,
     }
 
     SkImageInfo adjustedInfo = fInfo;
-    if (ExifOrientationBehavior::kRespect == fOrientationBehavior
-            && SkPixmapPriv::ShouldSwapWidthHeight(fCodec->getOrigin())) {
+    if (ExifOrientationBehavior::kRespect == fOrientationBehavior &&
+        SkPixmapPriv::ShouldSwapWidthHeight(fCodec->getOrigin())) {
         adjustedInfo = SkPixmapPriv::SwapWidthHeight(adjustedInfo);
     }
 
@@ -407,6 +411,6 @@ SkCodec::Result SkAndroidCodec::getAndroidPixels(const SkImageInfo& requestInfo,
 }
 
 SkCodec::Result SkAndroidCodec::getAndroidPixels(const SkImageInfo& info, void* pixels,
-        size_t rowBytes) {
+                                                 size_t rowBytes) {
     return this->getAndroidPixels(info, pixels, rowBytes, nullptr);
 }

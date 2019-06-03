@@ -8,7 +8,7 @@
 #ifndef SKSL_ASTFLOATLITERAL
 #define SKSL_ASTFLOATLITERAL
 
-#include "SkSLASTExpression.h"
+#include "src/sksl/ast/SkSLASTExpression.h"
 
 namespace SkSL {
 
@@ -16,19 +16,15 @@ namespace SkSL {
  * A literal floating point number.
  */
 struct ASTFloatLiteral : public ASTExpression {
-    ASTFloatLiteral(int offset, double value)
-    : INHERITED(offset, kFloat_Kind)
-    , fValue(value) {}
+    ASTFloatLiteral(int offset, double value) : INHERITED(offset, kFloat_Kind), fValue(value) {}
 
-    String description() const override {
-        return to_string(fValue);
-    }
+    String description() const override { return to_string(fValue); }
 
     const double fValue;
 
     typedef ASTExpression INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

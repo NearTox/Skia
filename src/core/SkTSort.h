@@ -8,9 +8,9 @@
 #ifndef SkTSort_DEFINED
 #define SkTSort_DEFINED
 
-#include "SkMathPriv.h"
-#include "SkTo.h"
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkMathPriv.h"
 
 #include <utility>
 
@@ -42,28 +42,28 @@ template <typename T> struct SkTPointerCompareLT {
  */
 template <typename T, typename C>
 void SkTHeapSort_SiftUp(T array[], size_t root, size_t bottom, C lessThan) {
-    T x = array[root-1];
+    T x = array[root - 1];
     size_t start = root;
     size_t j = root << 1;
     while (j <= bottom) {
-        if (j < bottom && lessThan(array[j-1], array[j])) {
+        if (j < bottom && lessThan(array[j - 1], array[j])) {
             ++j;
         }
-        array[root-1] = array[j-1];
+        array[root - 1] = array[j - 1];
         root = j;
         j = root << 1;
     }
     j = root >> 1;
     while (j >= start) {
-        if (lessThan(array[j-1], x)) {
-            array[root-1] = array[j-1];
+        if (lessThan(array[j - 1], x)) {
+            array[root - 1] = array[j - 1];
             root = j;
             j = root >> 1;
         } else {
             break;
         }
     }
-    array[root-1] = x;
+    array[root - 1] = x;
 }
 
 /*  Sifts a broken heap. The input array is a heap from root to bottom
@@ -76,21 +76,21 @@ void SkTHeapSort_SiftUp(T array[], size_t root, size_t bottom, C lessThan) {
  */
 template <typename T, typename C>
 void SkTHeapSort_SiftDown(T array[], size_t root, size_t bottom, C lessThan) {
-    T x = array[root-1];
+    T x = array[root - 1];
     size_t child = root << 1;
     while (child <= bottom) {
-        if (child < bottom && lessThan(array[child-1], array[child])) {
+        if (child < bottom && lessThan(array[child - 1], array[child])) {
             ++child;
         }
-        if (lessThan(x, array[child-1])) {
-            array[root-1] = array[child-1];
+        if (lessThan(x, array[child - 1])) {
+            array[root - 1] = array[child - 1];
             root = child;
             child = root << 1;
         } else {
             break;
         }
     }
-    array[root-1] = x;
+    array[root - 1] = x;
 }
 
 /** Sorts the array of size count using comparator lessThan using a Heap Sort algorithm. Be sure to
@@ -204,9 +204,7 @@ template <typename T, typename C> void SkTQSort(T* left, T* right, C lessThan) {
 }
 
 /** Sorts the region from left to right using comparator '<' using a Quick Sort algorithm. */
-template <typename T> void SkTQSort(T* left, T* right) {
-    SkTQSort(left, right, SkTCompareLT<T>());
-}
+template <typename T> void SkTQSort(T* left, T* right) { SkTQSort(left, right, SkTCompareLT<T>()); }
 
 /** Sorts the region from left to right using comparator '* < *' using a Quick Sort algorithm. */
 template <typename T> void SkTQSort(T** left, T** right) {

@@ -8,7 +8,7 @@
 #ifndef GrStrokeRectOp_DEFINED
 #define GrStrokeRectOp_DEFINED
 
-#include "GrTypesPriv.h"
+#include "include/private/GrTypesPriv.h"
 
 class GrDrawOp;
 class GrPaint;
@@ -42,4 +42,4 @@ std::unique_ptr<GrDrawOp> MakeNested(GrRecordingContext* context,
 
 }  // namespace GrStrokeRectOp
 
-#endif // GrStrokeRectOp_DEFINED
+#endif  // GrStrokeRectOp_DEFINED

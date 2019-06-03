@@ -8,9 +8,9 @@
 #ifndef SkSVGGradient_DEFINED
 #define SkSVGGradient_DEFINED
 
-#include "SkShader.h"
-#include "SkSVGHiddenContainer.h"
-#include "SkSVGTypes.h"
+#include "experimental/svg/model/SkSVGHiddenContainer.h"
+#include "experimental/svg/model/SkSVGTypes.h"
+#include "include/core/SkShader.h"
 
 class SkMatrix;
 class SkSVGRenderContext;
@@ -30,20 +30,20 @@ protected:
 
     bool onAsPaint(const SkSVGRenderContext&, SkPaint*) const final;
 
-    virtual sk_sp<SkShader> onMakeShader(const SkSVGRenderContext&,
-                                         const SkColor*, const SkScalar*, int count,
-                                         SkShader::TileMode, const SkMatrix& localMatrix) const = 0;
+    virtual sk_sp<SkShader> onMakeShader(const SkSVGRenderContext&, const SkColor*, const SkScalar*,
+                                         int count, SkTileMode,
+                                         const SkMatrix& localMatrix) const = 0;
 
 private:
     using StopPositionArray = SkSTArray<2, SkScalar, true>;
-    using    StopColorArray = SkSTArray<2,  SkColor, true>;
+    using StopColorArray = SkSTArray<2, SkColor, true>;
     void collectColorStops(const SkSVGRenderContext&, StopPositionArray*, StopColorArray*) const;
 
-    SkSVGStringType    fHref;
+    SkSVGStringType fHref;
     SkSVGTransformType fGradientTransform = SkSVGTransformType(SkMatrix::I());
-    SkSVGSpreadMethod  fSpreadMethod = SkSVGSpreadMethod(SkSVGSpreadMethod::Type::kPad);
+    SkSVGSpreadMethod fSpreadMethod = SkSVGSpreadMethod(SkSVGSpreadMethod::Type::kPad);
 
     typedef SkSVGHiddenContainer INHERITED;
 };
 
-#endif // SkSVGGradient_DEFINED
+#endif  // SkSVGGradient_DEFINED

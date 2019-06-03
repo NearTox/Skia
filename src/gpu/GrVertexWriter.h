@@ -8,9 +8,10 @@
 #ifndef GrVertexWriter_DEFINED
 #define GrVertexWriter_DEFINED
 
-#include "GrQuad.h"
-#include "SkTemplates.h"
 #include <type_traits>
+#include "include/private/GrColor.h"
+#include "include/private/SkTemplates.h"
+#include "src/gpu/GrQuad.h"
 
 /**
  * Helper for writing vertex data to a buffer. Usage:
@@ -24,11 +25,11 @@
 struct GrVertexWriter {
     void* fPtr;
 
-    template <typename T>
-    class Conditional {
+    template <typename T> class Conditional {
     public:
         explicit Conditional(bool condition, const T& value)
-            : fCondition(condition), fValue(value) {}
+                : fCondition(condition), fValue(value) {}
+
     private:
         friend struct GrVertexWriter;
 
@@ -36,16 +37,13 @@ struct GrVertexWriter {
         T fValue;
     };
 
-    template <typename T>
-    static Conditional<T> If(bool condition, const T& value) {
+    template <typename T> static Conditional<T> If(bool condition, const T& value) {
         return Conditional<T>(condition, value);
     }
 
-    template <typename T>
-    struct Skip {};
+    template <typename T> struct Skip {};
 
-    template <typename T, typename... Args>
-    void write(const T& val, const Args&... remainder) {
+    template <typename T, typename... Args> void write(const T& val, const Args&... remainder) {
         static_assert(std::is_pod<T>::value, "");
         // This assert is barely related to what we're trying to check - that our vertex data
         // matches our attribute layouts, where each attribute is aligned to four bytes. If this
@@ -57,7 +55,7 @@ struct GrVertexWriter {
     }
 
     template <typename T, size_t N, typename... Args>
-    void write(const T(&val)[N], const Args&... remainder) {
+    void write(const T (&val)[N], const Args&... remainder) {
         static_assert(std::is_pod<T>::value, "");
         static_assert(alignof(T) <= 4, "");
         memcpy(fPtr, val, N * sizeof(T));
@@ -65,8 +63,7 @@ struct GrVertexWriter {
         this->write(remainder...);
     }
 
-    template <typename... Args>
-    void write(const GrVertexColor& color, const Args&... remainder) {
+    template <typename... Args> void write(const GrVertexColor& color, const Args&... remainder) {
         this->write(color.fColor[0]);
         if (color.fWideColor) {
             this->write(color.fColor[1]);
@@ -88,8 +85,7 @@ struct GrVertexWriter {
         this->write(remainder...);
     }
 
-    template <typename... Args>
-    void write(const Sk4f& vector, const Args&... remainder) {
+    template <typename... Args> void write(const Sk4f& vector, const Args&... remainder) {
         float buffer[4];
         vector.store(buffer);
         this->write<float, 4>(buffer);
@@ -109,22 +105,19 @@ struct GrVertexWriter {
      * - For any arguments of type TriStrip, a unique SkPoint will be written at each vertex,
      *   in this order: left-top, left-bottom, right-top, right-bottom.
      */
-    template <typename T>
-    struct TriStrip { T l, t, r, b; };
+    template <typename T> struct TriStrip { T l, t, r, b; };
 
     static TriStrip<float> TriStripFromRect(const SkRect& r) {
-        return { r.fLeft, r.fTop, r.fRight, r.fBottom };
+        return {r.fLeft, r.fTop, r.fRight, r.fBottom};
     }
 
-    template <typename T>
-    struct TriFan { T l, t, r, b; };
+    template <typename T> struct TriFan { T l, t, r, b; };
 
     static TriFan<float> TriFanFromRect(const SkRect& r) {
-        return { r.fLeft, r.fTop, r.fRight, r.fBottom };
+        return {r.fLeft, r.fTop, r.fRight, r.fBottom};
     }
 
-    template <typename... Args>
-    void writeQuad(const Args&... remainder) {
+    template <typename... Args> void writeQuad(const Args&... remainder) {
         this->writeQuadVert<0>(remainder...);
         this->writeQuadVert<1>(remainder...);
         this->writeQuadVert<2>(remainder...);
@@ -138,38 +131,45 @@ private:
         this->writeQuadVert<corner>(remainder...);
     }
 
-    template <int corner>
-    void writeQuadVert() {}
+    template <int corner> void writeQuadVert() {}
 
-    template <int corner, typename T>
-    void writeQuadValue(const T& val) {
-        this->write(val);
-    }
+    template <int corner, typename T> void writeQuadValue(const T& val) { this->write(val); }
 
-    template <int corner, typename T>
-    void writeQuadValue(const TriStrip<T>& r) {
+    template <int corner, typename T> void writeQuadValue(const TriStrip<T>& r) {
         switch (corner) {
-            case 0: this->write(r.l, r.t); break;
-            case 1: this->write(r.l, r.b); break;
-            case 2: this->write(r.r, r.t); break;
-            case 3: this->write(r.r, r.b); break;
+            case 0:
+                this->write(r.l, r.t);
+                break;
+            case 1:
+                this->write(r.l, r.b);
+                break;
+            case 2:
+                this->write(r.r, r.t);
+                break;
+            case 3:
+                this->write(r.r, r.b);
+                break;
         }
     }
 
-    template <int corner, typename T>
-    void writeQuadValue(const TriFan<T>& r) {
+    template <int corner, typename T> void writeQuadValue(const TriFan<T>& r) {
         switch (corner) {
-        case 0: this->write(r.l, r.t); break;
-        case 1: this->write(r.l, r.b); break;
-        case 2: this->write(r.r, r.b); break;
-        case 3: this->write(r.r, r.t); break;
+            case 0:
+                this->write(r.l, r.t);
+                break;
+            case 1:
+                this->write(r.l, r.b);
+                break;
+            case 2:
+                this->write(r.r, r.b);
+                break;
+            case 3:
+                this->write(r.r, r.t);
+                break;
         }
     }
 
-    template <int corner>
-    void writeQuadValue(const GrQuad& q) {
-        this->write(q.point(corner));
-    }
+    template <int corner> void writeQuadValue(const GrQuad& q) { this->write(q.point(corner)); }
 };
 
 #endif

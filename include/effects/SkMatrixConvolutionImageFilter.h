@@ -8,11 +8,11 @@
 #ifndef SkMatrixConvolutionImageFilter_DEFINED
 #define SkMatrixConvolutionImageFilter_DEFINED
 
-#include "SkFlattenable.h"
-#include "SkImageFilter.h"
-#include "SkScalar.h"
-#include "SkSize.h"
-#include "SkPoint.h"
+#include "include/core/SkFlattenable.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
 
 class SkBitmap;
 
@@ -26,13 +26,13 @@ class SK_API SkMatrixConvolutionImageFilter : public SkImageFilter {
 public:
     /*! \enum TileMode */
     enum TileMode {
-      kClamp_TileMode = 0,         /*!< Clamp to the image's edge pixels. */
-      kRepeat_TileMode,        /*!< Wrap around to the image's opposite edge. */
-      kClampToBlack_TileMode,  /*!< Fill with transparent black. */
-      kLast_TileMode = kClampToBlack_TileMode,
+        kClamp_TileMode = 0,    /*!< Clamp to the image's edge pixels. */
+        kRepeat_TileMode,       /*!< Wrap around to the image's opposite edge. */
+        kClampToBlack_TileMode, /*!< Fill with transparent black. */
+        kLast_TileMode = kClampToBlack_TileMode,
 
-      // TODO: remove kMax - it is non-standard but used by Chromium!
-      kMax_TileMode = kClampToBlack_TileMode
+        // TODO: remove kMax - it is non-standard but used by Chromium!
+        kMax_TileMode = kClampToBlack_TileMode
     };
 
     ~SkMatrixConvolutionImageFilter() override;
@@ -65,7 +65,8 @@ public:
                                      const SkIPoint& kernelOffset,
                                      TileMode tileMode,
                                      bool convolveAlpha,
-                                     sk_sp<SkImageFilter> input,
+                                     sk_sp<SkImageFilter>
+                                             input,
                                      const CropRect* cropRect = nullptr);
 
 protected:
@@ -76,27 +77,27 @@ protected:
                                    const SkIPoint& kernelOffset,
                                    TileMode tileMode,
                                    bool convolveAlpha,
-                                   sk_sp<SkImageFilter> input,
+                                   sk_sp<SkImageFilter>
+                                           input,
                                    const CropRect* cropRect);
     void flatten(SkWriteBuffer&) const override;
 
     sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
                                         SkIPoint* offset) const override;
-    sk_sp<SkImageFilter> onMakeColorSpace(SkColorSpaceXformer*) const override;
-    SkIRect onFilterNodeBounds(const SkIRect&, const SkMatrix& ctm,
-                               MapDirection, const SkIRect* inputRect) const override;
-    bool affectsTransparentBlack() const override;
+    SkIRect onFilterNodeBounds(const SkIRect&, const SkMatrix& ctm, MapDirection,
+                               const SkIRect* inputRect) const override;
+    bool affectsTransparentBlack() const noexcept override;
 
 private:
     SK_FLATTENABLE_HOOKS(SkMatrixConvolutionImageFilter)
 
-    SkISize   fKernelSize;
+    SkISize fKernelSize;
     SkScalar* fKernel;
-    SkScalar  fGain;
-    SkScalar  fBias;
-    SkIPoint  fKernelOffset;
-    TileMode  fTileMode;
-    bool      fConvolveAlpha;
+    SkScalar fGain;
+    SkScalar fBias;
+    SkIPoint fKernelOffset;
+    TileMode fTileMode;
+    bool fConvolveAlpha;
 
     template <class PixelFetcher, bool convolveAlpha>
     void filterPixels(const SkBitmap& src,

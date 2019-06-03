@@ -4,8 +4,8 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkPtrRecorder.h"
-#include "SkTSearch.h"
+#include "src/core/SkPtrRecorder.h"
+#include "include/private/SkTSearch.h"
 
 void SkPtrSet::reset() {
     Pair* p = fList.begin();
@@ -17,9 +17,7 @@ void SkPtrSet::reset() {
     fList.reset();
 }
 
-bool SkPtrSet::Less(const Pair& a, const Pair& b) {
-    return (char*)a.fPtr < (char*)b.fPtr;
-}
+bool SkPtrSet::Less(const Pair& a, const Pair& b) { return (char*)a.fPtr < (char*)b.fPtr; }
 
 uint32_t SkPtrSet::find(void* ptr) const {
     if (nullptr == ptr) {
@@ -48,7 +46,7 @@ uint32_t SkPtrSet::add(void* ptr) {
 
     int index = SkTSearch<Pair, Less>(fList.begin(), count, pair, sizeof(pair));
     if (index < 0) {
-        index = ~index; // turn it back into an index for insertion
+        index = ~index;  // turn it back into an index for insertion
         this->incPtr(ptr);
         pair.fIndex = count + 1;
         *fList.insert(index) = pair;

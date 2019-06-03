@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "GrGLContext.h"
-#include "GrGLGLSL.h"
-#include "SkSLCompiler.h"
+#include "src/gpu/gl/GrGLContext.h"
+#include "src/gpu/gl/GrGLGLSL.h"
+#include "src/sksl/SkSLCompiler.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -58,8 +58,7 @@ std::unique_ptr<GrGLContext> GrGLContext::Make(sk_sp<const GrGLInterface> interf
     // extension to be enabled, even when using ESSL3. Some devices appear to only support the ES2
     // extension. As an extreme (optional) solution, we can fallback to using ES2 shading language
     // if we want to prioritize external texture support. skbug.com/7713
-    if (kGLES_GrGLStandard == interface->fStandard &&
-        options.fPreferExternalImagesOverES3 &&
+    if (GR_IS_GR_GL_ES(interface->fStandard) && options.fPreferExternalImagesOverES3 &&
         !options.fDisableDriverCorrectnessWorkarounds &&
         interface->hasExtension("GL_OES_EGL_image_external") &&
         args.fGLSLGeneration >= k330_GrGLSLGeneration &&
@@ -68,8 +67,8 @@ std::unique_ptr<GrGLContext> GrGLContext::Make(sk_sp<const GrGLInterface> interf
         args.fGLSLGeneration = k110_GrGLSLGeneration;
     }
 
-    GrGLGetDriverInfo(interface->fStandard, args.fVendor, renderer, ver,
-                      &args.fDriver, &args.fDriverVersion);
+    GrGLGetDriverInfo(interface->fStandard, args.fVendor, renderer, ver, &args.fDriver,
+                      &args.fDriverVersion);
 
     args.fContextOptions = &options;
     args.fInterface = std::move(interface);
@@ -77,9 +76,7 @@ std::unique_ptr<GrGLContext> GrGLContext::Make(sk_sp<const GrGLInterface> interf
     return std::unique_ptr<GrGLContext>(new GrGLContext(std::move(args)));
 }
 
-GrGLContext::~GrGLContext() {
-    delete fCompiler;
-}
+GrGLContext::~GrGLContext() { delete fCompiler; }
 
 SkSL::Compiler* GrGLContext::compiler() const {
     if (!fCompiler) {

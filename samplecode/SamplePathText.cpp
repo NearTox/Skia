@@ -5,16 +5,16 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkAnimTimer.h"
-#include "SkCanvas.h"
-#include "SkPaint.h"
-#include "SkPath.h"
-#include "SkRandom.h"
-#include "SkStrike.h"
-#include "SkStrikeCache.h"
-#include "SkTaskGroup.h"
-#include "sk_tool_utils.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/utils/SkRandom.h"
+#include "samplecode/Sample.h"
+#include "src/core/SkStrike.h"
+#include "src/core/SkStrikeCache.h"
+#include "src/core/SkTaskGroup.h"
+#include "tools/ToolUtils.h"
+#include "tools/timer/AnimTimer.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Static text from paths.
@@ -50,7 +50,10 @@ public:
         this->INHERITED::onOnceBeforeDraw();
         this->reset();
     }
-    void onSizeChange() final { this->INHERITED::onSizeChange(); this->reset(); }
+    void onSizeChange() final {
+        this->INHERITED::onSizeChange();
+        this->reset();
+    }
 
     bool onQuery(Sample::Event* evt) final {
         if (Sample::TitleQ(*evt)) {
@@ -96,18 +99,18 @@ protected:
         void init(SkRandom& rand, const SkPath& path);
         void reset(SkRandom& rand, int w, int h);
 
-        SkPath     fPath;
-        SkPaint    fPaint;
-        SkPoint    fPosition;
-        SkScalar   fZoom;
-        SkScalar   fSpin;
-        SkPoint    fMidpt;
+        SkPath fPath;
+        SkPaint fPaint;
+        SkPoint fPosition;
+        SkScalar fZoom;
+        SkScalar fSpin;
+        SkPoint fMidpt;
     };
 
-    Glyph      fGlyphs[kNumPaths];
-    SkRandom   fRand{25};
-    SkPath     fClipPath = sk_tool_utils::make_star(SkRect{0,0,1,1}, 11, 3);
-    bool       fDoClip = false;
+    Glyph fGlyphs[kNumPaths];
+    SkRandom fRand{25};
+    SkPath fClipPath = ToolUtils::make_star(SkRect{0, 0, 1, 1}, 11, 3);
+    bool fDoClip = false;
 
     typedef Sample INHERITED;
 };
@@ -137,14 +140,9 @@ class MovingPathText : public PathText {
 public:
     const char* getName() const override { return "MovingPathText"; }
 
-    MovingPathText()
-        : fFrontMatrices(kNumPaths)
-        , fBackMatrices(kNumPaths) {
-    }
+    MovingPathText() : fFrontMatrices(kNumPaths), fBackMatrices(kNumPaths) {}
 
-    ~MovingPathText() override {
-        fBackgroundAnimationTask.wait();
-    }
+    ~MovingPathText() override { fBackgroundAnimationTask.wait(); }
 
     void reset() override {
         const SkScalar screensize = static_cast<SkScalar>(SkTMax(this->width(), this->height()));
@@ -167,14 +165,14 @@ public:
         fLastTick = 0;
     }
 
-    bool onAnimate(const SkAnimTimer& timer) final {
+    bool onAnimate(const AnimTimer& timer) final {
         fBackgroundAnimationTask.wait();
         this->swapAnimationBuffers();
 
         const double tsec = timer.secs();
         const double dt = fLastTick ? (timer.secs() - fLastTick) : 0;
-        fBackgroundAnimationTask.add(std::bind(&MovingPathText::runAnimationTask, this, tsec,
-                                               dt, this->width(), this->height()));
+        fBackgroundAnimationTask.add(std::bind(&MovingPathText::runAnimationTask, this, tsec, dt,
+                                               this->width(), this->height()));
         fLastTick = timer.secs();
         return true;
     }
@@ -215,9 +213,7 @@ public:
         }
     }
 
-    virtual void swapAnimationBuffers() {
-        std::swap(fFrontMatrices, fBackMatrices);
-    }
+    virtual void swapAnimationBuffers() { std::swap(fFrontMatrices, fBackMatrices); }
 
     void drawGlyphs(SkCanvas* canvas) override {
         for (int i = 0; i < kNumPaths; ++i) {
@@ -233,15 +229,14 @@ protected:
         SkScalar fDSpin;
     };
 
-    Velocity                  fVelocities[kNumPaths];
-    SkAutoTMalloc<SkMatrix>   fFrontMatrices;
-    SkAutoTMalloc<SkMatrix>   fBackMatrices;
-    SkTaskGroup               fBackgroundAnimationTask;
-    double                    fLastTick;
+    Velocity fVelocities[kNumPaths];
+    SkAutoTMalloc<SkMatrix> fFrontMatrices;
+    SkAutoTMalloc<SkMatrix> fBackMatrices;
+    SkTaskGroup fBackgroundAnimationTask;
+    double fLastTick;
 
     typedef PathText INHERITED;
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Text from paths with animated control points.
@@ -249,13 +244,9 @@ class WavyPathText : public MovingPathText {
 public:
     const char* getName() const override { return "WavyPathText"; }
 
-    WavyPathText()
-        : fFrontPaths(kNumPaths)
-        , fBackPaths(kNumPaths) {}
+    WavyPathText() : fFrontPaths(kNumPaths), fBackPaths(kNumPaths) {}
 
-    ~WavyPathText() override {
-        fBackgroundAnimationTask.wait();
-    }
+    ~WavyPathText() override { fBackgroundAnimationTask.wait(); }
 
     void reset() override {
         fWaves.reset(fRand, this->width(), this->height());
@@ -274,11 +265,9 @@ public:
             const Glyph& glyph = fGlyphs[i];
             const SkMatrix& backMatrix = fBackMatrices[i];
 
-            const Sk2f matrix[3] = {
-                Sk2f(backMatrix.getScaleX(), backMatrix.getSkewY()),
-                Sk2f(backMatrix.getSkewX(), backMatrix.getScaleY()),
-                Sk2f(backMatrix.getTranslateX(), backMatrix.getTranslateY())
-            };
+            const Sk2f matrix[3] = {Sk2f(backMatrix.getScaleX(), backMatrix.getSkewY()),
+                                    Sk2f(backMatrix.getSkewX(), backMatrix.getScaleY()),
+                                    Sk2f(backMatrix.getTranslateX(), backMatrix.getTranslateY())};
 
             SkPath* backpath = &fBackPaths[i];
             backpath->reset();
@@ -352,9 +341,9 @@ private:
         float fOffsets[4];
     };
 
-    SkAutoTArray<SkPath>   fFrontPaths;
-    SkAutoTArray<SkPath>   fBackPaths;
-    Waves                  fWaves;
+    SkAutoTArray<SkPath> fFrontPaths;
+    SkAutoTArray<SkPath> fBackPaths;
+    Waves fWaves;
 
     typedef MovingPathText INHERITED;
 };
@@ -390,28 +379,29 @@ SkPoint WavyPathText::Waves::apply(float tsec, const Sk2f matrix[3], const SkPoi
         }
     });
 
-     const Sk4f amplitudes = Sk4f::Load(fAmplitudes);
-     const Sk4f frequencies = Sk4f::Load(fFrequencies);
-     const Sk4f dirsX = Sk4f::Load(fDirsX);
-     const Sk4f dirsY = Sk4f::Load(fDirsY);
-     const Sk4f speeds = Sk4f::Load(fSpeeds);
-     const Sk4f offsets = Sk4f::Load(fOffsets);
+    const Sk4f amplitudes = Sk4f::Load(fAmplitudes);
+    const Sk4f frequencies = Sk4f::Load(fFrequencies);
+    const Sk4f dirsX = Sk4f::Load(fDirsX);
+    const Sk4f dirsY = Sk4f::Load(fDirsY);
+    const Sk4f speeds = Sk4f::Load(fSpeeds);
+    const Sk4f offsets = Sk4f::Load(fOffsets);
 
     float devicePt[2];
     (matrix[0] * pt.x() + matrix[1] * pt.y() + matrix[2]).store(devicePt);
 
-    const Sk4f t = (frequencies * (dirsX * devicePt[0] + dirsY * devicePt[1]) +
-                    speeds * tsec +
-                    offsets).abs() * (float(kTablePeriod) / float(SK_ScalarPI));
+    const Sk4f t =
+            (frequencies * (dirsX * devicePt[0] + dirsY * devicePt[1]) + speeds * tsec + offsets)
+                    .abs() *
+            (float(kTablePeriod) / float(SK_ScalarPI));
 
     const Sk4i ipart = SkNx_cast<int>(t);
     const Sk4f fpart = t - SkNx_cast<float>(ipart);
 
     int32_t indices[4];
-    (ipart & (kTablePeriod-1)).store(indices);
+    (ipart & (kTablePeriod - 1)).store(indices);
 
-    const Sk4f left(sin2table[indices[0]], sin2table[indices[1]],
-                    sin2table[indices[2]], sin2table[indices[3]]);
+    const Sk4f left(sin2table[indices[0]], sin2table[indices[1]], sin2table[indices[2]],
+                    sin2table[indices[3]]);
     const Sk4f right(sin2table[indices[0] + 1], sin2table[indices[1] + 1],
                      sin2table[indices[2] + 1], sin2table[indices[3] + 1]);
     const Sk4f height = amplitudes * (left * (1.f - fpart) + right * fpart);
@@ -420,14 +410,14 @@ SkPoint WavyPathText::Waves::apply(float tsec, const Sk2f matrix[3], const SkPoi
     Sk4f dx = height * dirsX;
 
     float offsetY[4], offsetX[4];
-    (dy + SkNx_shuffle<2,3,0,1>(dy)).store(offsetY); // accumulate.
-    (dx + SkNx_shuffle<2,3,0,1>(dx)).store(offsetX);
+    (dy + SkNx_shuffle<2, 3, 0, 1>(dy)).store(offsetY);  // accumulate.
+    (dx + SkNx_shuffle<2, 3, 0, 1>(dx)).store(offsetX);
 
     return {devicePt[0] + offsetY[0] + offsetY[1], devicePt[1] - offsetX[0] - offsetX[1]};
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new WavyPathText; )
-DEF_SAMPLE( return new MovingPathText; )
-DEF_SAMPLE( return new PathText; )
+DEF_SAMPLE(return new WavyPathText;)
+DEF_SAMPLE(return new MovingPathText;)
+DEF_SAMPLE(return new PathText;)

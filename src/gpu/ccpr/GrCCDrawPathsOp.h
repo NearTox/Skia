@@ -8,11 +8,11 @@
 #ifndef GrCCDrawPathsOp_DEFINED
 #define GrCCDrawPathsOp_DEFINED
 
-#include "GrShape.h"
-#include "SkTInternalLList.h"
-#include "ccpr/GrCCSTLList.h"
-#include "ccpr/GrCCPathCache.h"
-#include "ops/GrDrawOp.h"
+#include "include/private/SkTInternalLList.h"
+#include "src/gpu/GrShape.h"
+#include "src/gpu/ccpr/GrCCPathCache.h"
+#include "src/gpu/ccpr/GrCCSTLList.h"
+#include "src/gpu/ops/GrDrawOp.h"
 
 class GrCCAtlas;
 class GrCCPerFlushResources;
@@ -35,7 +35,8 @@ public:
 
     const char* name() const override { return "GrCCDrawPathsOp"; }
     FixedFunctionFlags fixedFunctionFlags() const override { return FixedFunctionFlags::kNone; }
-    GrProcessorSet::Analysis finalize(const GrCaps&, const GrAppliedClip*, GrFSAAType) override;
+    GrProcessorSet::Analysis finalize(const GrCaps&, const GrAppliedClip*, GrFSAAType,
+                                      GrClampType) override;
     CombineResult onCombineIfPossible(GrOp*, const GrCaps&) override;
     void visitProxies(const VisitProxyFunc& fn, VisitorType) const override {
         fProcessors.visitProxies(fn);
@@ -50,10 +51,7 @@ public:
 
     // Allows the caller to decide whether to actually do the suggested copies from cached 16-bit
     // coverage count atlases, and into 8-bit literal coverage atlases. Purely to save space.
-    enum class DoCopiesToA8Coverage : bool {
-        kNo = false,
-        kYes = true
-    };
+    enum class DoCopiesToA8Coverage : bool { kNo = false, kYes = true };
 
     // Allocates the GPU resources indicated by accountForOwnPaths(), in preparation for drawing. If
     // DoCopiesToA8Coverage is kNo, the paths slated for copy will instead be left in their 16-bit
@@ -69,12 +67,9 @@ public:
 private:
     friend class GrOpMemoryPool;
 
-    static std::unique_ptr<GrCCDrawPathsOp> InternalMake(GrRecordingContext*,
-                                                         const SkIRect& clipIBounds,
-                                                         const SkMatrix&, const GrShape&,
-                                                         float strokeDevWidth,
-                                                         const SkRect& conservativeDevBounds,
-                                                         GrPaint&&);
+    static std::unique_ptr<GrCCDrawPathsOp> InternalMake(
+            GrRecordingContext*, const SkIRect& clipIBounds, const SkMatrix&, const GrShape&,
+            float strokeDevWidth, const SkRect& conservativeDevBounds, GrPaint&&);
 
     GrCCDrawPathsOp(const SkMatrix&, const GrShape&, float strokeDevWidth,
                     const SkIRect& shapeConservativeIBounds, const SkIRect& maskDevIBounds,
@@ -91,8 +86,8 @@ private:
                    const SkPMColor4f&);
 
         // See the corresponding methods in GrCCDrawPathsOp.
-        GrProcessorSet::Analysis finalize(
-                const GrCaps&, const GrAppliedClip*, GrFSAAType, GrProcessorSet*);
+        GrProcessorSet::Analysis finalize(const GrCaps&, const GrAppliedClip*, GrFSAAType,
+                                          GrClampType, GrProcessorSet*);
         void accountForOwnPath(GrCCPathCache*, GrOnFlushResourceProvider*,
                                GrCCPerFlushResourceSpecs*);
         void setupResources(GrCCPathCache*, GrOnFlushResourceProvider*, GrCCPerFlushResources*,

@@ -5,18 +5,19 @@
  * found in the LICENSE file.
  */
 
-
-/* Tests text rendering with LCD and subpixel rendering turned on and off.
- */
-
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkCanvas.h"
-#include "SkPicture.h"
-#include "SkPictureImageFilter.h"
-#include "SkPictureRecorder.h"
-#include "SkSurface.h"
-
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
 
 class LcdTextGM : public skiagm::GM {
 public:
@@ -26,30 +27,20 @@ public:
     }
 
 protected:
-
-    SkString onShortName() {
-        SkString name("lcdtext");
-        name.append(sk_tool_utils::platform_font_manager());
-        return name;
-    }
+    SkString onShortName() { return SkString("lcdtext"); }
 
     SkISize onISize() { return SkISize::Make(640, 480); }
 
     virtual void onDraw(SkCanvas* canvas) {
-
         y = textHeight;
-        drawText(canvas, SkString("TEXT: SubpixelTrue LCDRenderTrue"),
-                 true,  true);
-        drawText(canvas, SkString("TEXT: SubpixelTrue LCDRenderFalse"),
-                 true,  false);
-        drawText(canvas, SkString("TEXT: SubpixelFalse LCDRenderTrue"),
-                 false, true);
-        drawText(canvas, SkString("TEXT: SubpixelFalse LCDRenderFalse"),
-                 false, false);
+        drawText(canvas, SkString("TEXT: SubpixelTrue LCDRenderTrue"), true, true);
+        drawText(canvas, SkString("TEXT: SubpixelTrue LCDRenderFalse"), true, false);
+        drawText(canvas, SkString("TEXT: SubpixelFalse LCDRenderTrue"), false, true);
+        drawText(canvas, SkString("TEXT: SubpixelFalse LCDRenderFalse"), false, false);
     }
 
-    void drawText(SkCanvas* canvas, const SkString& string,
-                  bool subpixelTextEnabled, bool lcdRenderTextEnabled) {
+    void drawText(SkCanvas* canvas, const SkString& string, bool subpixelTextEnabled,
+                  bool lcdRenderTextEnabled) {
         SkPaint paint;
         paint.setColor(SK_ColorBLACK);
         paint.setDither(true);
@@ -76,9 +67,7 @@ private:
  *  Test this both by changing "textsize" and by changing the computed size (textsize * CTM)
  */
 class LcdTextSizeGM : public skiagm::GM {
-    enum {
-        kLCDTextSizeLimit = 48
-    };
+    enum { kLCDTextSizeLimit = 48 };
 
     static void ScaleAbout(SkCanvas* canvas, SkScalar sx, SkScalar sy, SkScalar px, SkScalar py) {
         SkMatrix m;
@@ -90,9 +79,7 @@ public:
     LcdTextSizeGM() {}
 
 protected:
-    SkString onShortName() {
-        return SkString("lcdtextsize");
-    }
+    SkString onShortName() { return SkString("lcdtextsize"); }
 
     SkISize onISize() { return SkISize::Make(320, 120); }
 
@@ -101,15 +88,15 @@ protected:
         const char* gray_text = "GRAY";
 
         const struct {
-            SkPoint     fLoc;
-            SkScalar    fTextSize;
-            SkScalar    fScale;
+            SkPoint fLoc;
+            SkScalar fTextSize;
+            SkScalar fScale;
             const char* fText;
         } rec[] = {
-            { {  10,  50 }, kLCDTextSizeLimit - 1,     1,  lcd_text },
-            { { 160,  50 }, kLCDTextSizeLimit + 1,     1,  gray_text },
-            { {  10, 100 }, kLCDTextSizeLimit / 2, 1.99f,  lcd_text },
-            { { 160, 100 }, kLCDTextSizeLimit / 2, 2.01f,  gray_text },
+                {{10, 50}, kLCDTextSizeLimit - 1, 1, lcd_text},
+                {{160, 50}, kLCDTextSizeLimit + 1, 1, gray_text},
+                {{10, 100}, kLCDTextSizeLimit / 2, 1.99f, lcd_text},
+                {{160, 100}, kLCDTextSizeLimit / 2, 2.01f, gray_text},
         };
 
         for (size_t i = 0; i < SK_ARRAY_COUNT(rec); ++i) {
@@ -127,5 +114,5 @@ protected:
 private:
     typedef skiagm::GM INHERITED;
 };
-DEF_GM( return new LcdTextGM; )
-DEF_GM( return new LcdTextSizeGM; )
+DEF_GM(return new LcdTextGM;)
+DEF_GM(return new LcdTextSizeGM;)

@@ -8,13 +8,13 @@
 #ifndef SkImage_Base_DEFINED
 #define SkImage_Base_DEFINED
 
-#include "SkImage.h"
-#include "SkSurface.h"
 #include <atomic>
+#include "include/core/SkImage.h"
+#include "include/core/SkSurface.h"
 
 #if SK_SUPPORT_GPU
-#include "GrTextureProxy.h"
-#include "SkTDArray.h"
+#include "include/private/GrTextureProxy.h"
+#include "include/private/SkTDArray.h"
 
 class GrRecordingContext;
 class GrTexture;
@@ -26,22 +26,13 @@ class GrSamplerState;
 class SkCachedData;
 struct SkYUVASizeInfo;
 
-enum {
-    kNeedNewImageUniqueID = 0
-};
+enum { kNeedNewImageUniqueID = 0 };
 
 class SkImage_Base : public SkImage {
 public:
     virtual ~SkImage_Base();
 
-    // User: returns image info for this SkImage.
-    // Implementors: if you can not return the value, return an invalid ImageInfo with w=0 & h=0
-    // & unknown color space.
-    virtual SkImageInfo onImageInfo() const = 0;
-
-    virtual SkIRect onGetSubset() const {
-        return { 0, 0, this->width(), this->height() };
-    }
+    virtual SkIRect onGetSubset() const { return {0, 0, this->width(), this->height()}; }
 
     virtual bool onPeekPixels(SkPixmap*) const { return false; }
 
@@ -53,6 +44,10 @@ public:
     virtual GrContext* context() const { return nullptr; }
 
 #if SK_SUPPORT_GPU
+    virtual GrSemaphoresSubmitted onFlush(GrContext* context, const GrFlushInfo&) {
+        return GrSemaphoresSubmitted::kNo;
+    }
+
     // Return the proxy if this image is backed by a single proxy. For YUVA images, this
     // will return nullptr unless the YUVA planes have been converted to RGBA in which case
     // that single backing proxy will be returned.
@@ -65,8 +60,6 @@ public:
         return nullptr;
     }
     virtual bool isYUVA() const { return false; }
-    virtual bool asYUVATextureProxiesRef(sk_sp<GrTextureProxy>[4], SkYUVAIndex[4],
-                                         SkYUVColorSpace*) const { return false; }
     virtual GrTexture* onGetTexture() const { return nullptr; }
 #endif
     virtual GrBackendTexture onGetBackendTexture(bool flushPendingGrContextIO,
@@ -78,8 +71,8 @@ public:
 
     virtual sk_sp<SkImage> onMakeSubset(GrRecordingContext*, const SkIRect&) const = 0;
 
-    virtual sk_sp<SkCachedData> getPlanes(SkYUVASizeInfo*, SkYUVAIndex[4],
-                                          SkYUVColorSpace*, const void* planes[4]);
+    virtual sk_sp<SkCachedData> getPlanes(SkYUVASizeInfo*, SkYUVAIndex[4], SkYUVColorSpace*,
+                                          const void* planes[4]);
     virtual sk_sp<SkData> onRefEncoded() const { return nullptr; }
 
     virtual bool onAsLegacyBitmap(SkBitmap*) const;
@@ -92,19 +85,18 @@ public:
 
     // Call when this image is part of the key to a resourcecache entry. This allows the cache
     // to know automatically those entries can be purged when this SkImage deleted.
-    virtual void notifyAddedToRasterCache() const {
-        fAddedToRasterCache.store(true);
-    }
+    virtual void notifyAddedToRasterCache() const { fAddedToRasterCache.store(true); }
 
     virtual bool onIsValid(GrContext*) const = 0;
 
     virtual bool onPinAsTexture(GrContext*) const { return false; }
     virtual void onUnpinAsTexture(GrContext*) const {}
 
-    virtual sk_sp<SkImage> onMakeColorTypeAndColorSpace(GrRecordingContext*,
-                                                        SkColorType, sk_sp<SkColorSpace>) const = 0;
+    virtual sk_sp<SkImage> onMakeColorTypeAndColorSpace(GrRecordingContext*, SkColorType,
+                                                        sk_sp<SkColorSpace>) const = 0;
+
 protected:
-    SkImage_Base(int width, int height, uint32_t uniqueID);
+    SkImage_Base(const SkImageInfo& info, uint32_t uniqueID);
 
 private:
     // Set true by caches when they cache content that's derived from the current pixels.
@@ -113,15 +105,15 @@ private:
     typedef SkImage INHERITED;
 };
 
-static inline SkImage_Base* as_IB(SkImage* image) {
+static inline SkImage_Base* as_IB(SkImage* image) noexcept {
     return static_cast<SkImage_Base*>(image);
 }
 
-static inline SkImage_Base* as_IB(const sk_sp<SkImage>& image) {
+static inline SkImage_Base* as_IB(const sk_sp<SkImage>& image) noexcept {
     return static_cast<SkImage_Base*>(image.get());
 }
 
-static inline const SkImage_Base* as_IB(const SkImage* image) {
+static inline const SkImage_Base* as_IB(const SkImage* image) noexcept {
     return static_cast<const SkImage_Base*>(image);
 }
 

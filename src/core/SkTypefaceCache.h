@@ -5,14 +5,12 @@
  * found in the LICENSE file.
  */
 
-
-
 #ifndef SkTypefaceCache_DEFINED
 #define SkTypefaceCache_DEFINED
 
-#include "SkRefCnt.h"
-#include "SkTypeface.h"
-#include "SkTArray.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkTypeface.h"
+#include "include/private/SkTArray.h"
 
 class SkTypefaceCache {
 public:
@@ -23,7 +21,7 @@ public:
      * for the given context. The passed typeface is owned by the cache and is
      * not additionally ref()ed. The typeface may be in the disposed state.
      */
-    typedef bool(*FindProc)(SkTypeface*, void* context);
+    typedef bool (*FindProc)(SkTypeface*, void* context);
 
     /**
      *  Add a typeface to the cache. Later, if we need to purge the cache,

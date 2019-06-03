@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "GrGLVertexArray.h"
-#include "GrCpuBuffer.h"
-#include "GrGLBuffer.h"
-#include "GrGLGpu.h"
+#include "src/gpu/gl/GrGLVertexArray.h"
+#include "src/gpu/GrCpuBuffer.h"
+#include "src/gpu/gl/GrGLBuffer.h"
+#include "src/gpu/gl/GrGLGpu.h"
 
 struct AttribLayout {
-    bool        fNormalized;  // Only used by floating point types.
-    uint8_t     fCount;
-    uint16_t    fType;
+    bool fNormalized;  // Only used by floating point types.
+    uint8_t fCount;
+    uint16_t fType;
 };
 
 GR_STATIC_ASSERT(4 == sizeof(AttribLayout));
@@ -106,11 +106,8 @@ void GrGLAttribArrayState::set(GrGLGpu* gpu,
         }
         offsetAsPtr = reinterpret_cast<const char*>(offsetInBytes);
     }
-    if (bufferChanged ||
-        array->fCPUType != cpuType ||
-        array->fGPUType != gpuType ||
-        array->fStride != stride ||
-        array->fOffset != offsetAsPtr) {
+    if (bufferChanged || array->fCPUType != cpuType || array->fGPUType != gpuType ||
+        array->fStride != stride || array->fOffset != offsetAsPtr) {
         // We always have to call this if we're going to change the array pointer. 'array' is
         // tracking the last buffer used to setup attrib pointers, not the last buffer bound.
         // GrGLGpu will avoid redundant binds.
@@ -126,11 +123,9 @@ void GrGLAttribArrayState::set(GrGLGpu* gpu,
         } else {
             SkASSERT(gpu->caps()->shaderCaps()->integerSupport());
             SkASSERT(!layout.fNormalized);
-            GR_GL_CALL(gpu->glInterface(), VertexAttribIPointer(index,
-                                                                layout.fCount,
-                                                                layout.fType,
-                                                                stride,
-                                                                offsetAsPtr));
+            GR_GL_CALL(
+                    gpu->glInterface(),
+                    VertexAttribIPointer(index, layout.fCount, layout.fType, stride, offsetAsPtr));
         }
         array->fCPUType = cpuType;
         array->fGPUType = gpuType;
@@ -138,7 +133,8 @@ void GrGLAttribArrayState::set(GrGLGpu* gpu,
         array->fOffset = offsetAsPtr;
     }
     if (gpu->caps()->instanceAttribSupport() && array->fDivisor != divisor) {
-        SkASSERT(0 == divisor || 1 == divisor); // not necessarily a requirement but what we expect.
+        SkASSERT(0 == divisor ||
+                 1 == divisor);  // not necessarily a requirement but what we expect.
         GR_GL_CALL(gpu->glInterface(), VertexAttribDivisor(index, divisor));
         array->fDivisor = divisor;
     }
@@ -182,10 +178,7 @@ void GrGLAttribArrayState::enableVertexArrays(const GrGLGpu* gpu, int enabledCou
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 GrGLVertexArray::GrGLVertexArray(GrGLint id, int attribCount)
-    : fID(id)
-    , fAttribArrays(attribCount)
-    , fIndexBufferUniqueID(SK_InvalidUniqueID) {
-}
+        : fID(id), fAttribArrays(attribCount), fIndexBufferUniqueID(SK_InvalidUniqueID) {}
 
 GrGLAttribArrayState* GrGLVertexArray::bind(GrGLGpu* gpu) {
     if (0 == fID) {

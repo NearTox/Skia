@@ -8,8 +8,8 @@
 #ifndef SkOTTable_maxp_TT_DEFINED
 #define SkOTTable_maxp_TT_DEFINED
 
-#include "SkEndian.h"
-#include "SkOTTableTypes.h"
+#include "src/core/SkEndian.h"
+#include "src/sfnt/SkOTTableTypes.h"
 
 #pragma pack(push, 1)
 
@@ -40,9 +40,9 @@ struct SkOTTableMaximumProfile_TT {
 
 #pragma pack(pop)
 
-
 #include <stddef.h>
-static_assert(offsetof(SkOTTableMaximumProfile_TT, maxComponentDepth) == 30, "SkOTTableMaximumProfile_TT_maxComponentDepth_not_at_30");
+static_assert(offsetof(SkOTTableMaximumProfile_TT, maxComponentDepth) == 30,
+              "SkOTTableMaximumProfile_TT_maxComponentDepth_not_at_30");
 static_assert(sizeof(SkOTTableMaximumProfile_TT) == 32, "sizeof_SkOTTableMaximumProfile_TT_not_32");
 
 #endif

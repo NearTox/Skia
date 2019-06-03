@@ -8,22 +8,19 @@
 #ifndef SkSVGClipPath_DEFINED
 #define SkSVGClipPath_DEFINED
 
-#include "SkSVGHiddenContainer.h"
-#include "SkSVGTypes.h"
+#include "experimental/svg/model/SkSVGHiddenContainer.h"
+#include "experimental/svg/model/SkSVGTypes.h"
 
 class SkSVGClipPath final : public SkSVGHiddenContainer {
 public:
     virtual ~SkSVGClipPath() = default;
-    static sk_sp<SkSVGClipPath> Make() {
-        return sk_sp<SkSVGClipPath>(new SkSVGClipPath());
-    }
+    static sk_sp<SkSVGClipPath> Make() { return sk_sp<SkSVGClipPath>(new SkSVGClipPath()); }
 
 protected:
-
 private:
     SkSVGClipPath();
 
     typedef SkSVGHiddenContainer INHERITED;
 };
 
-#endif // SkSVGClipPath_DEFINED
+#endif  // SkSVGClipPath_DEFINED

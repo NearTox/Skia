@@ -5,52 +5,54 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-
-#include "SkImage.h"
-#include "SkSurface.h"
-#include "SkTArray.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFilterQuality.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkTArray.h"
 
 class ImageScaleAlignedGM : public skiagm::GM {
 protected:
     void onOnceBeforeDraw() override {
-        const SkVector vectors[] = { { 1, 0 }, { 0, 1 } };
+        const SkVector vectors[] = {{1, 0}, {0, 1}};
 
         for (size_t i = 0; i < SK_ARRAY_COUNT(vectors); ++i) {
-           auto& set = fSets.push_back();
+            auto& set = fSets.push_back();
 
-           set.fVector = vectors[i];
-           set.fImages.push_back() = MakeImage(vectors[i], SK_ColorGREEN);
-           set.fScales.push_back() = 1;
-           set.fImages.push_back() = MakeImage(vectors[i], SK_ColorRED);
-           set.fScales.push_back() = kStretchFactor;
-           set.fImages.push_back() = MakeImage(vectors[i], SK_ColorGREEN);
-           set.fScales.push_back() = 1;
+            set.fVector = vectors[i];
+            set.fImages.push_back() = MakeImage(vectors[i], SK_ColorGREEN);
+            set.fScales.push_back() = 1;
+            set.fImages.push_back() = MakeImage(vectors[i], SK_ColorRED);
+            set.fScales.push_back() = kStretchFactor;
+            set.fImages.push_back() = MakeImage(vectors[i], SK_ColorGREEN);
+            set.fScales.push_back() = 1;
         }
     }
 
-    SkString onShortName() override {
-        return SkString("image_scale_aligned");
-    }
+    SkString onShortName() override { return SkString("image_scale_aligned"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(580, 780);
-    }
+    SkISize onISize() override { return SkISize::Make(580, 780); }
 
     void onDraw(SkCanvas* canvas) override {
         struct {
             SkPoint offset;
             SkVector scale;
         } cfgs[] = {
-            {{  10,    10    }, { 1, 1 }},
-            {{ 300.5f, 10    }, { 1, 1 }},
-            {{  10,    200.5f }, { 1, 1 }},
-            {{ 300.5f, 200.5f }, { 1, 1 }},
+                {{10, 10}, {1, 1}},         {{300.5f, 10}, {1, 1}},
+                {{10, 200.5f}, {1, 1}},     {{300.5f, 200.5f}, {1, 1}},
 
-            {{  10.5f, 400.5f }, {  1,  1 }},
-            {{ 550.5f, 400.5f }, { -1,  1 }},
-            {{  10.5f, 750.5f }, {  1, -1 }},
-            {{ 550.5f, 750.5f }, { -1, -1 }},
+                {{10.5f, 400.5f}, {1, 1}},  {{550.5f, 400.5f}, {-1, 1}},
+                {{10.5f, 750.5f}, {1, -1}}, {{550.5f, 750.5f}, {-1, -1}},
         };
 
         for (size_t i = 0; i < SK_ARRAY_COUNT(cfgs); ++i) {
@@ -63,15 +65,15 @@ protected:
 
 private:
     struct ImageSet {
-        SkSTArray<3, sk_sp<SkImage>, true>  fImages;
-        SkSTArray<3, SkScalar>              fScales;
-        SkVector                            fVector;
+        SkSTArray<3, sk_sp<SkImage>, true> fImages;
+        SkSTArray<3, SkScalar> fScales;
+        SkVector fVector;
     };
 
     static sk_sp<SkImage> MakeImage(const SkVector& vec, SkColor color) {
         const SkPoint start = SkPoint::Make(vec.y() * kSegLen / 2, vec.x() * kSegLen / 2);
-        const SkPoint end   = SkPoint::Make(start.x() + vec.x() * (kSegLen - 1),
-                                            start.y() + vec.y() * (kSegLen - 1));
+        const SkPoint end = SkPoint::Make(start.x() + vec.x() * (kSegLen - 1),
+                                          start.y() + vec.y() * (kSegLen - 1));
 
         auto surface(SkSurface::MakeRasterN32Premul(kSegLen, kSegLen));
         surface->getCanvas()->clear(SK_ColorTRANSPARENT);
@@ -88,7 +90,7 @@ private:
 
         paint.reset();
         paint.setColor(color);
-        const SkPoint pts[] = { start, end };
+        const SkPoint pts[] = {start, end};
         surface->getCanvas()->drawPoints(SkCanvas::kPoints_PointMode, 2, pts, paint);
 
         return surface->makeImageSnapshot();
@@ -97,13 +99,9 @@ private:
     void drawSets(SkCanvas* canvas) const {
         SkAutoCanvasRestore acr(canvas, true);
 
-        const SkFilterQuality filters[] = {
-            kNone_SkFilterQuality,
-            kLow_SkFilterQuality,
-            kMedium_SkFilterQuality,
-            kHigh_SkFilterQuality
-        };
-        const bool AAs[] = { false, true };
+        const SkFilterQuality filters[] = {kNone_SkFilterQuality, kLow_SkFilterQuality,
+                                           kMedium_SkFilterQuality, kHigh_SkFilterQuality};
+        const bool AAs[] = {false, true};
 
         SkPaint paint;
         for (int i = 0; i < fSets.count(); ++i) {
@@ -118,8 +116,9 @@ private:
                                       (kSegLen + 4) * set.fVector.x());
                 }
             }
-            canvas->translate(lastPt.x() + kSegLen,
-                - SkIntToScalar(kSegLen + 4) * SK_ARRAY_COUNT(filters) * SK_ARRAY_COUNT(AAs));
+            canvas->translate(
+                    lastPt.x() + kSegLen,
+                    -SkIntToScalar(kSegLen + 4) * SK_ARRAY_COUNT(filters) * SK_ARRAY_COUNT(AAs));
         }
     }
 
@@ -129,9 +128,8 @@ private:
         SkPoint pt = SkPoint::Make(0, 0);
         for (int i = 0; i < set.fImages.count(); ++i) {
             auto& img = set.fImages[i];
-            const SkRect dst =
-                SkRect::MakeXYWH(pt.x(), pt.y(),
-                    img->width() * (1 + (set.fScales[i] - 1) * set.fVector.x()),
+            const SkRect dst = SkRect::MakeXYWH(
+                    pt.x(), pt.y(), img->width() * (1 + (set.fScales[i] - 1) * set.fVector.x()),
                     img->height() * (1 + (set.fScales[i] - 1) * set.fVector.y()));
 
             canvas->drawImageRect(img.get(), dst, &paint);
@@ -141,8 +139,8 @@ private:
         return pt;
     }
 
-    static constexpr unsigned  kSegLen = 15;
-    static constexpr unsigned  kStretchFactor = 4;
+    static constexpr unsigned kSegLen = 15;
+    static constexpr unsigned kStretchFactor = 4;
     SkSTArray<2, ImageSet> fSets;
 
     typedef GM INHERITED;

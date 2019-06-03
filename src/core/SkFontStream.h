@@ -10,7 +10,7 @@
 
 class SkStream;
 
-#include "SkTypeface.h"
+#include "include/core/SkTypeface.h"
 
 class SkFontStream {
 public:
@@ -38,8 +38,8 @@ public:
      *  Note: the stream is rewound initially, but is returned at an arbitrary
      *  read offset.
      */
-    static size_t GetTableData(SkStream*, int ttcIndex, SkFontTableTag tag,
-                               size_t offset, size_t length, void* data);
+    static size_t GetTableData(SkStream*, int ttcIndex, SkFontTableTag tag, size_t offset,
+                               size_t length, void* data);
 
     static size_t GetTableSize(SkStream* stream, int ttcIndex, SkFontTableTag tag) {
         return GetTableData(stream, ttcIndex, tag, 0, ~0U, nullptr);

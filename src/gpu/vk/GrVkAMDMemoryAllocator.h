@@ -8,8 +8,7 @@
 #ifndef GrVkAMDMemoryAllocator_DEFINED
 #define GrVkAMDMemoryAllocator_DEFINED
 
-
-#include "vk/GrVkMemoryAllocator.h"
+#include "include/gpu/vk/GrVkMemoryAllocator.h"
 
 #include "GrVulkanMemoryAllocator.h"
 
@@ -22,10 +21,11 @@ public:
 
     ~GrVkAMDMemoryAllocator() override;
 
-    bool allocateMemoryForImage(VkImage image, AllocationPropertyFlags flags, GrVkBackendMemory*) override;
+    bool allocateMemoryForImage(VkImage image, AllocationPropertyFlags flags,
+                                GrVkBackendMemory*) override;
 
-    bool allocateMemoryForBuffer(VkBuffer buffer, BufferUsage usage,
-                                 AllocationPropertyFlags flags, GrVkBackendMemory*) override;
+    bool allocateMemoryForBuffer(VkBuffer buffer, BufferUsage usage, AllocationPropertyFlags flags,
+                                 GrVkBackendMemory*) override;
 
     void freeMemory(const GrVkBackendMemory&) override;
 

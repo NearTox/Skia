@@ -5,14 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "GrClearOp.h"
+#include "src/gpu/ops/GrClearOp.h"
 
-#include "GrGpuCommandBuffer.h"
-#include "GrMemoryPool.h"
-#include "GrOpFlushState.h"
-#include "GrProxyProvider.h"
-#include "GrRecordingContext.h"
-#include "GrRecordingContextPriv.h"
+#include "include/private/GrRecordingContext.h"
+#include "src/gpu/GrGpuCommandBuffer.h"
+#include "src/gpu/GrMemoryPool.h"
+#include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/GrProxyProvider.h"
+#include "src/gpu/GrRecordingContextPriv.h"
 
 std::unique_ptr<GrClearOp> GrClearOp::Make(GrRecordingContext* context,
                                            const GrFixedClip& clip,
@@ -40,9 +40,7 @@ std::unique_ptr<GrClearOp> GrClearOp::Make(GrRecordingContext* context,
 }
 
 GrClearOp::GrClearOp(const GrFixedClip& clip, const SkPMColor4f& color, GrSurfaceProxy* proxy)
-        : INHERITED(ClassID())
-        , fClip(clip)
-        , fColor(color) {
+        : INHERITED(ClassID()), fClip(clip), fColor(color) {
     const SkIRect rtRect = SkIRect::MakeWH(proxy->width(), proxy->height());
     if (fClip.scissorEnabled()) {
         // Don't let scissors extend outside the RT. This may improve op combining.

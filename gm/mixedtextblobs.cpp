@@ -5,15 +5,23 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTextBlob.h"
+#include "include/core/SkTypeface.h"
+#include "tools/Resources.h"
+#include "tools/ToolUtils.h"
 
-#include "Resources.h"
-#include "SkCanvas.h"
-#include "SkGradientShader.h"
-#include "SkStream.h"
-#include "SkTextBlob.h"
-#include "SkTypeface.h"
+#include <string.h>
 
 namespace skiagm {
 
@@ -36,27 +44,27 @@ static void draw_blob(SkCanvas* canvas, const SkTextBlob* blob, const SkPaint& s
 
 class MixedTextBlobsGM : public GM {
 public:
-    MixedTextBlobsGM() { }
+    MixedTextBlobsGM() {}
 
 protected:
     void onOnceBeforeDraw() override {
-        fEmojiTypeface = sk_tool_utils::emoji_typeface();
-        fEmojiText = sk_tool_utils::emoji_sample_text();
+        fEmojiTypeface = ToolUtils::planet_typeface();
+        fEmojiText = "♁♃";
         fReallyBigATypeface = MakeResourceAsTypeface("fonts/ReallyBigA.ttf");
 
         SkTextBlobBuilder builder;
 
         // make textblob
         // Text so large we draw as paths
-        SkFont font(sk_tool_utils::create_portable_typeface(), 385);
+        SkFont font(ToolUtils::create_portable_typeface(), 385);
         font.setEdging(SkFont::Edging::kAlias);
         const char* text = "O";
 
         SkRect bounds;
-        font.measureText(text, strlen(text), kUTF8_SkTextEncoding, &bounds);
+        font.measureText(text, strlen(text), SkTextEncoding::kUTF8, &bounds);
 
         SkScalar yOffset = bounds.height();
-        sk_tool_utils::add_to_text_blob(&builder, text, font, 10, yOffset);
+        ToolUtils::add_to_text_blob(&builder, text, font, 10, yOffset);
         SkScalar corruptedAx = bounds.width();
         SkScalar corruptedAy = yOffset;
 
@@ -71,41 +79,35 @@ protected:
         font.setEdging(SkFont::Edging::kSubpixelAntiAlias);
         font.setSubpixel(true);
         text = "LCD!!!!!";
-        font.measureText(text, strlen(text), kUTF8_SkTextEncoding, &bounds);
-        sk_tool_utils::add_to_text_blob(&builder, text, font, xOffset - bounds.width() * 0.25f,
-                                        yOffset - bounds.height() * 0.5f);
-        yOffset += bounds.height();
+        font.measureText(text, strlen(text), SkTextEncoding::kUTF8, &bounds);
+        ToolUtils::add_to_text_blob(&builder,
+                                    text,
+                                    font,
+                                    xOffset - bounds.width() * 0.25f,
+                                    yOffset - bounds.height() * 0.5f);
 
-        // color emoji
+        // color emoji font with large glyph
         if (fEmojiTypeface) {
             font.setEdging(SkFont::Edging::kAlias);
             font.setSubpixel(false);
             font.setTypeface(fEmojiTypeface);
-            text = fEmojiText;
-            font.measureText(text, strlen(text), kUTF8_SkTextEncoding, &bounds);
-            sk_tool_utils::add_to_text_blob(&builder, text, font, xOffset - bounds.width() * 0.3f,
-                                            yOffset);
+            font.measureText(fEmojiText, strlen(fEmojiText), SkTextEncoding::kUTF8, &bounds);
+            ToolUtils::add_to_text_blob(&builder, fEmojiText, font, xOffset, yOffset);
         }
 
-        // Corrupted font
+        // outline font with large glyph
         font.setSize(12);
         text = "aA";
         font.setTypeface(fReallyBigATypeface);
-        sk_tool_utils::add_to_text_blob(&builder, text, font, corruptedAx, corruptedAy);
+        ToolUtils::add_to_text_blob(&builder, text, font, corruptedAx, corruptedAy);
         fBlob = builder.make();
     }
 
-    SkString onShortName() override {
-        return SkStringPrintf("mixedtextblobs%s",
-                              sk_tool_utils::platform_font_manager());
-    }
+    SkString onShortName() override { return SkString("mixedtextblobs"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(kWidth, kHeight);
-    }
+    SkISize onISize() override { return SkISize::Make(kWidth, kHeight); }
 
     void onDraw(SkCanvas* canvas) override {
-
         canvas->drawColor(SK_ColorGRAY);
 
         SkPaint paint;
@@ -122,22 +124,22 @@ protected:
         const SkScalar boundsQuarterWidth = boundsHalfWidth * SK_ScalarHalf;
         const SkScalar boundsQuarterHeight = boundsHalfHeight * SK_ScalarHalf;
 
-        SkRect upperLeftClip = SkRect::MakeXYWH(bounds.left(), bounds.top(),
-                                                boundsHalfWidth, boundsHalfHeight);
+        SkRect upperLeftClip =
+                SkRect::MakeXYWH(bounds.left(), bounds.top(), boundsHalfWidth, boundsHalfHeight);
         SkRect lowerRightClip = SkRect::MakeXYWH(bounds.centerX(), bounds.centerY(),
                                                  boundsHalfWidth, boundsHalfHeight);
         SkRect interiorClip = bounds;
         interiorClip.inset(boundsQuarterWidth, boundsQuarterHeight);
 
-        const SkRect clipRects[] = { bounds, upperLeftClip, lowerRightClip, interiorClip};
+        const SkRect clipRects[] = {bounds, upperLeftClip, lowerRightClip, interiorClip};
 
         size_t count = sizeof(clipRects) / sizeof(SkRect);
         for (size_t x = 0; x < count; ++x) {
             draw_blob(canvas, fBlob.get(), paint, clipRects[x]);
             if (x == (count >> 1) - 1) {
-                canvas->translate(SkScalarFloorToScalar(bounds.width() + SkIntToScalar(25)),
-                                  -(x * SkScalarFloorToScalar(bounds.height() +
-                                    SkIntToScalar(25))));
+                canvas->translate(
+                        SkScalarFloorToScalar(bounds.width() + SkIntToScalar(25)),
+                        -(x * SkScalarFloorToScalar(bounds.height() + SkIntToScalar(25))));
             } else {
                 canvas->translate(0, SkScalarFloorToScalar(bounds.height() + SkIntToScalar(25)));
             }
@@ -159,4 +161,4 @@ private:
 //////////////////////////////////////////////////////////////////////////////
 
 DEF_GM(return new MixedTextBlobsGM;)
-}
+}  // namespace skiagm

@@ -8,10 +8,10 @@
 #ifndef SkRemotableFontMgr_DEFINED
 #define SkRemotableFontMgr_DEFINED
 
-#include "../private/SkTemplates.h"
-#include "SkFontStyle.h"
-#include "SkRefCnt.h"
-#include "SkTypes.h"
+#include "include/core/SkFontStyle.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkTemplates.h"
 
 class SkDataTable;
 class SkStreamAsset;
@@ -43,7 +43,7 @@ public:
     static SkRemotableFontIdentitySet* NewEmpty();
 
 private:
-    SkRemotableFontIdentitySet() : fCount(0), fData() { }
+    SkRemotableFontIdentitySet() : fCount(0), fData() {}
 
     friend SkRemotableFontIdentitySet* sk_remotable_font_identity_set_new();
 
@@ -121,7 +121,7 @@ public:
      */
     virtual SkFontIdentity matchNameStyleCharacter(const char familyName[], const SkFontStyle&,
                                                    const char* bcp47[], int bcp47Count,
-                                                   SkUnichar character) const=0;
+                                                   SkUnichar character) const = 0;
 
     /**
      *  Returns the data for the given data id.

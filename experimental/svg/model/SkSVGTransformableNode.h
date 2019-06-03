@@ -8,8 +8,8 @@
 #ifndef SkSVGTransformableNode_DEFINED
 #define SkSVGTransformableNode_DEFINED
 
-#include "SkMatrix.h"
-#include "SkSVGNode.h"
+#include "experimental/svg/model/SkSVGNode.h"
+#include "include/core/SkMatrix.h"
 
 class SkSVGTransformableNode : public SkSVGNode {
 public:
@@ -33,4 +33,4 @@ private:
     typedef SkSVGNode INHERITED;
 };
 
-#endif // SkSVGTransformableNode_DEFINED
+#endif  // SkSVGTransformableNode_DEFINED

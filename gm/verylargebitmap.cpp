@@ -5,19 +5,32 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkGradientShader.h"
-#include "SkPath.h"
-#include "SkPictureRecorder.h"
-#include "SkSurface.h"
+#include "gm/gm.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPicture.h"
+#include "include/core/SkPictureRecorder.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkTileMode.h"
+#include "include/effects/SkGradientShader.h"
 
 static void draw(SkCanvas* canvas, int width, int height, SkColor colors[2]) {
-    const SkPoint center = { SkIntToScalar(width)/2, SkIntToScalar(height)/2 };
+    const SkPoint center = {SkIntToScalar(width) / 2, SkIntToScalar(height) / 2};
     const SkScalar radius = 40;
     SkPaint paint;
-    paint.setShader(SkGradientShader::MakeRadial(center, radius, colors, nullptr, 2,
-                                                 SkShader::kMirror_TileMode));
+    paint.setShader(
+            SkGradientShader::MakeRadial(center, radius, colors, nullptr, 2, SkTileMode::kMirror));
     paint.setBlendMode(SkBlendMode::kSrc);
     canvas->drawPaint(paint);
 }
@@ -33,8 +46,7 @@ static sk_sp<SkImage> make_picture_image(int width, int height, SkColor colors[2
     draw(recorder.beginRecording(SkRect::MakeIWH(width, height)), width, height, colors);
     return SkImage::MakeFromPicture(recorder.finishRecordingAsPicture(),
                                     SkISize::Make(width, height), nullptr, nullptr,
-                                    SkImage::BitDepth::kU8,
-                                    SkColorSpace::MakeSRGB());
+                                    SkImage::BitDepth::kU8, SkColorSpace::MakeSRGB());
 }
 
 typedef sk_sp<SkImage> (*ImageMakerProc)(int width, int height, SkColor colors[2]);
@@ -68,8 +80,8 @@ static void show_image(SkCanvas* canvas, int width, int height, SkColor colors[2
 }
 
 class VeryLargeBitmapGM : public skiagm::GM {
-    ImageMakerProc  fProc;
-    SkString        fName;
+    ImageMakerProc fProc;
+    SkString fName;
 
 public:
     VeryLargeBitmapGM(ImageMakerProc proc, const char suffix[]) : fProc(proc) {
@@ -77,19 +89,15 @@ public:
     }
 
 protected:
-    SkString onShortName() override {
-        return fName;
-    }
+    SkString onShortName() override { return fName; }
 
-    SkISize onISize() override {
-        return SkISize::Make(500, 600);
-    }
+    SkISize onISize() override { return SkISize::Make(500, 600); }
 
     void onDraw(SkCanvas* canvas) override {
-        int veryBig = 65*1024; // 64K < size
-        int big = 33*1024;     // 32K < size < 64K
+        int veryBig = 65 * 1024;  // 64K < size
+        int big = 33 * 1024;      // 32K < size < 64K
         // smaller than many max texture sizes, but large enough to gpu-tile for memory reasons.
-        int medium = 5*1024;
+        int medium = 5 * 1024;
         int small = 150;
 
         SkColor colors[2];
@@ -119,5 +127,5 @@ protected:
 private:
     typedef skiagm::GM INHERITED;
 };
-DEF_GM( return new VeryLargeBitmapGM(make_raster_image, "bitmap"); )
-DEF_GM( return new VeryLargeBitmapGM(make_picture_image, "_picture_image"); )
+DEF_GM(return new VeryLargeBitmapGM(make_raster_image, "bitmap");)
+DEF_GM(return new VeryLargeBitmapGM(make_picture_image, "_picture_image");)

@@ -8,11 +8,11 @@
 #ifndef SKSL_ASTVARDECLARATIONS
 #define SKSL_ASTVARDECLARATIONS
 
-#include "SkSLASTDeclaration.h"
-#include "SkSLASTStatement.h"
-#include "SkSLASTType.h"
-#include "../SkSLUtil.h"
-#include "../ir/SkSLModifiers.h"
+#include "src/sksl/SkSLUtil.h"
+#include "src/sksl/ast/SkSLASTDeclaration.h"
+#include "src/sksl/ast/SkSLASTStatement.h"
+#include "src/sksl/ast/SkSLASTType.h"
+#include "src/sksl/ir/SkSLModifiers.h"
 
 namespace SkSL {
 
@@ -23,11 +23,11 @@ namespace SkSL {
  */
 struct ASTVarDeclaration {
     ASTVarDeclaration(StringFragment name,
-                      std::vector<std::unique_ptr<ASTExpression>> sizes,
-                      std::unique_ptr<ASTExpression> value)
-    : fName(name)
-    , fSizes(std::move(sizes))
-    , fValue(std::move(value)) {}
+                      std::vector<std::unique_ptr<ASTExpression>>
+                              sizes,
+                      std::unique_ptr<ASTExpression>
+                              value)
+            : fName(name), fSizes(std::move(sizes)), fValue(std::move(value)) {}
 
     String description() const {
         String result(fName);
@@ -57,13 +57,12 @@ struct ASTVarDeclaration {
  * A variable declaration statement, which may consist of one or more individual variables.
  */
 struct ASTVarDeclarations : public ASTDeclaration {
-    ASTVarDeclarations(Modifiers modifiers,
-                       std::unique_ptr<ASTType> type,
-                       std::vector<ASTVarDeclaration> vars)
-    : INHERITED(type->fOffset, kVar_Kind)
-    , fModifiers(modifiers)
-    , fType(std::move(type))
-    , fVars(std::move(vars)) {}
+    ASTVarDeclarations(
+            Modifiers modifiers, std::unique_ptr<ASTType> type, std::vector<ASTVarDeclaration> vars)
+            : INHERITED(type->fOffset, kVar_Kind)
+            , fModifiers(modifiers)
+            , fType(std::move(type))
+            , fVars(std::move(vars)) {}
 
     String description() const override {
         String result = fModifiers.description() + fType->description() + " ";
@@ -83,6 +82,6 @@ struct ASTVarDeclarations : public ASTDeclaration {
     typedef ASTDeclaration INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

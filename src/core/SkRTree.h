@@ -8,9 +8,9 @@
 #ifndef SkRTree_DEFINED
 #define SkRTree_DEFINED
 
-#include "SkBBoxHierarchy.h"
-#include "SkRect.h"
-#include "SkTDArray.h"
+#include "include/core/SkRect.h"
+#include "include/private/SkTDArray.h"
+#include "src/core/SkBBoxHierarchy.h"
 
 /**
  * An R-Tree implementation. In short, it is a balanced n-ary tree containing a hierarchy of
@@ -30,8 +30,6 @@
  */
 class SkRTree : public SkBBoxHierarchy {
 public:
-
-
     /**
      * If you have some prior information about the distribution of bounds you're expecting, you
      * can provide an optional aspect ratio parameter. This allows the bulk-load algorithm to
@@ -55,8 +53,7 @@ public:
     SkRect getRootBound() const override;
 
     // These values were empirically determined to produce reasonable performance in most cases.
-    static const int kMinChildren = 6,
-                     kMaxChildren = 11;
+    static const int kMinChildren = 6, kMaxChildren = 11;
 
 private:
     struct Node;

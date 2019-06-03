@@ -8,8 +8,8 @@
 #ifndef GrRenderTargetProxy_DEFINED
 #define GrRenderTargetProxy_DEFINED
 
-#include "GrSurfaceProxy.h"
-#include "GrTypesPriv.h"
+#include "include/private/GrSurfaceProxy.h"
+#include "include/private/GrTypesPriv.h"
 
 class GrResourceProvider;
 class GrRenderTargetProxyPriv;
@@ -20,13 +20,13 @@ class GrRenderTargetProxyPriv;
 // the uniqueID of the RenderTarget it represents!
 class GrRenderTargetProxy : virtual public GrSurfaceProxy {
 public:
-    GrRenderTargetProxy* asRenderTargetProxy() override { return this; }
-    const GrRenderTargetProxy* asRenderTargetProxy() const override { return this; }
+    GrRenderTargetProxy* asRenderTargetProxy() noexcept override { return this; }
+    const GrRenderTargetProxy* asRenderTargetProxy() const noexcept override { return this; }
 
     // Actually instantiate the backing rendertarget, if necessary.
     bool instantiate(GrResourceProvider*) override;
 
-    GrFSAAType fsaaType() const {
+    GrFSAAType fsaaType() const noexcept {
         if (fSampleCnt <= 1) {
             SkASSERT(!this->hasMixedSamples());
             return GrFSAAType::kNone;
@@ -37,13 +37,13 @@ public:
     /*
      * When instantiated does this proxy require a stencil buffer?
      */
-    void setNeedsStencil() { fNeedsStencil = true; }
-    bool needsStencil() const { return fNeedsStencil; }
+    void setNeedsStencil() noexcept { fNeedsStencil = true; }
+    bool needsStencil() const noexcept { return fNeedsStencil; }
 
     /**
      * Returns the number of samples/pixel in the stencil buffer (One if non-MSAA).
      */
-    int numStencilSamples() const { return fSampleCnt; }
+    int numStencilSamples() const noexcept { return fSampleCnt; }
 
     /**
      * Returns the number of samples/pixel in the color buffer (One if non-MSAA or mixed sampled).
@@ -54,7 +54,9 @@ public:
 
     int maxWindowRectangles(const GrCaps& caps) const;
 
-    bool wrapsVkSecondaryCB() const { return fWrapsVkSecondaryCB == WrapsVkSecondaryCB::kYes; }
+    bool wrapsVkSecondaryCB() const noexcept {
+        return fWrapsVkSecondaryCB == WrapsVkSecondaryCB::kYes;
+    }
 
     // TODO: move this to a priv class!
     bool refsWrappedObjects() const;
@@ -84,9 +86,8 @@ protected:
     // The minimal knowledge version is used for CCPR where we are generating an atlas but we do not
     // know the final size until flush time.
     GrRenderTargetProxy(LazyInstantiateCallback&&, LazyInstantiationType lazyType,
-                        const GrBackendFormat&, const GrSurfaceDesc&, GrSurfaceOrigin,
-                        SkBackingFit, SkBudgeted, GrInternalSurfaceFlags,
-                        WrapsVkSecondaryCB wrapsVkSecondaryCB);
+                        const GrBackendFormat&, const GrSurfaceDesc&, GrSurfaceOrigin, SkBackingFit,
+                        SkBudgeted, GrInternalSurfaceFlags, WrapsVkSecondaryCB wrapsVkSecondaryCB);
 
     // Wrapped version
     GrRenderTargetProxy(sk_sp<GrSurface>, GrSurfaceOrigin,
@@ -95,32 +96,30 @@ protected:
     sk_sp<GrSurface> createSurface(GrResourceProvider*) const override;
 
 private:
-    void setHasMixedSamples() {
-        fSurfaceFlags |= GrInternalSurfaceFlags::kMixedSampled;
+    void setHasMixedSamples() noexcept { fSurfaceFlags |= GrInternalSurfaceFlags::kMixedSampled; }
+    bool hasMixedSamples() const noexcept {
+        return fSurfaceFlags & GrInternalSurfaceFlags::kMixedSampled;
     }
-    bool hasMixedSamples() const { return fSurfaceFlags & GrInternalSurfaceFlags::kMixedSampled; }
 
-    void setGLRTFBOIDIs0() {
-        fSurfaceFlags |= GrInternalSurfaceFlags::kGLRTFBOIDIs0;
-    }
-    bool glRTFBOIDIs0() const {
+    void setGLRTFBOIDIs0() noexcept { fSurfaceFlags |= GrInternalSurfaceFlags::kGLRTFBOIDIs0; }
+    bool glRTFBOIDIs0() const noexcept {
         return fSurfaceFlags & GrInternalSurfaceFlags::kGLRTFBOIDIs0;
     }
 
-
     size_t onUninstantiatedGpuMemorySize() const override;
-    SkDEBUGCODE(void onValidateSurface(const GrSurface*) override;)
+    SkDEBUGCODE(void onValidateSurface(const GrSurface*) override);
 
-    // WARNING: Be careful when adding or removing fields here. ASAN is likely to trigger warnings
-    // when instantiating GrTextureRenderTargetProxy. The std::function in GrSurfaceProxy makes
-    // each class in the diamond require 16 byte alignment. Clang appears to layout the fields for
-    // each class to achieve the necessary alignment. However, ASAN checks the alignment of 'this'
-    // in the constructors, and always looks for the full 16 byte alignment, even if the fields in
-    // that particular class don't require it. Changing the size of this object can move the start
-    // address of other types, leading to this problem.
+    // WARNING: Be careful when adding or removing fields here. ASAN is likely to trigger
+    // warnings when instantiating GrTextureRenderTargetProxy. The std::function in
+    // GrSurfaceProxy makes each class in the diamond require 16 byte alignment. Clang
+    // appears to layout the fields for each class to achieve the necessary alignment.
+    // However, ASAN checks the alignment of 'this' in the constructors, and always looks
+    // for the full 16 byte alignment, even if the fields in that particular class don't
+    // require it. Changing the size of this object can move the start address of other
+    // types, leading to this problem.
 
-    int                fSampleCnt;
-    bool               fNeedsStencil;
+    int fSampleCnt;
+    bool fNeedsStencil;
     WrapsVkSecondaryCB fWrapsVkSecondaryCB;
 
     // For wrapped render targets the actual GrRenderTarget is stored in the GrIORefProxy class.

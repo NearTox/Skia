@@ -5,16 +5,15 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef GrVkRenderTarget_DEFINED
 #define GrVkRenderTarget_DEFINED
 
-#include "GrVkImage.h"
-#include "GrRenderTarget.h"
+#include "include/gpu/GrRenderTarget.h"
+#include "src/gpu/vk/GrVkImage.h"
 
-#include "GrVkRenderPass.h"
-#include "GrVkResourceProvider.h"
-#include "vk/GrVkTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
+#include "src/gpu/vk/GrVkRenderPass.h"
+#include "src/gpu/vk/GrVkResourceProvider.h"
 
 class GrVkCommandBuffer;
 class GrVkFramebuffer;
@@ -28,10 +27,10 @@ struct GrVkImageInfo;
 #ifdef SK_BUILD_FOR_WIN
 // Windows gives bogus warnings about inheriting asTexture/asRenderTarget via dominance.
 #pragma warning(push)
-#pragma warning(disable: 4250)
+#pragma warning(disable : 4250)
 #endif
 
-class GrVkRenderTarget: public GrRenderTarget, public virtual GrVkImage {
+class GrVkRenderTarget : public GrRenderTarget, public virtual GrVkImage {
 public:
     static sk_sp<GrVkRenderTarget> MakeWrappedRenderTarget(GrVkGpu*, const GrSurfaceDesc&,
                                                            const GrVkImageInfo&,
@@ -98,9 +97,11 @@ protected:
     GrVkRenderTarget(GrVkGpu* gpu,
                      const GrSurfaceDesc& desc,
                      const GrVkImageInfo& info,
-                     sk_sp<GrVkImageLayout> layout,
+                     sk_sp<GrVkImageLayout>
+                             layout,
                      const GrVkImageInfo& msaaInfo,
-                     sk_sp<GrVkImageLayout> msaaLayout,
+                     sk_sp<GrVkImageLayout>
+                             msaaLayout,
                      const GrVkImageView* colorAttachmentView,
                      const GrVkImageView* resolveAttachmentView,
                      GrBackendObjectOwnership);
@@ -108,7 +109,8 @@ protected:
     GrVkRenderTarget(GrVkGpu* gpu,
                      const GrSurfaceDesc& desc,
                      const GrVkImageInfo& info,
-                     sk_sp<GrVkImageLayout> layout,
+                     sk_sp<GrVkImageLayout>
+                             layout,
                      const GrVkImageView* colorAttachmentView,
                      GrBackendObjectOwnership);
 
@@ -130,31 +132,34 @@ protected:
 
     void createFramebuffer(GrVkGpu* gpu);
 
-    const GrVkImageView*       fColorAttachmentView;
+    const GrVkImageView* fColorAttachmentView;
     std::unique_ptr<GrVkImage> fMSAAImage;
-    const GrVkImageView*       fResolveAttachmentView;
+    const GrVkImageView* fResolveAttachmentView;
 
 private:
     GrVkRenderTarget(GrVkGpu* gpu,
                      const GrSurfaceDesc& desc,
                      const GrVkImageInfo& info,
-                     sk_sp<GrVkImageLayout> layout,
+                     sk_sp<GrVkImageLayout>
+                             layout,
                      const GrVkImageInfo& msaaInfo,
-                     sk_sp<GrVkImageLayout> msaaLayout,
+                     sk_sp<GrVkImageLayout>
+                             msaaLayout,
                      const GrVkImageView* colorAttachmentView,
                      const GrVkImageView* resolveAttachmentView);
 
     GrVkRenderTarget(GrVkGpu* gpu,
                      const GrSurfaceDesc& desc,
                      const GrVkImageInfo& info,
-                     sk_sp<GrVkImageLayout> layout,
+                     sk_sp<GrVkImageLayout>
+                             layout,
                      const GrVkImageView* colorAttachmentView);
-
 
     GrVkRenderTarget(GrVkGpu* gpu,
                      const GrSurfaceDesc& desc,
                      const GrVkImageInfo& info,
-                     sk_sp<GrVkImageLayout> layout,
+                     sk_sp<GrVkImageLayout>
+                             layout,
                      const GrVkRenderPass* renderPass,
                      GrVkSecondaryCommandBuffer* secondaryCommandBuffer);
 
@@ -170,11 +175,11 @@ private:
     void releaseInternalObjects();
     void abandonInternalObjects();
 
-    const GrVkFramebuffer*     fFramebuffer;
+    const GrVkFramebuffer* fFramebuffer;
 
     // This is a cached pointer to a simple render pass. The render target should unref it
     // once it is done with it.
-    const GrVkRenderPass*      fCachedSimpleRenderPass;
+    const GrVkRenderPass* fCachedSimpleRenderPass;
     // This is a handle to be used to quickly get compatible GrVkRenderPasses for this render target
     GrVkResourceProvider::CompatibleRPHandle fCompatibleRPHandle;
 

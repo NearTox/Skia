@@ -8,15 +8,15 @@
 #ifndef GrSkSLFP_DEFINED
 #define GrSkSLFP_DEFINED
 
-#include "GrCaps.h"
-#include "GrFragmentProcessor.h"
-#include "GrCoordTransform.h"
-#include "GrShaderCaps.h"
-#include "SkSLCompiler.h"
-#include "SkSLPipelineStageCodeGenerator.h"
-#include "SkRefCnt.h"
-#include "../private/GrSkSLFPFactoryCache.h"
 #include <atomic>
+#include "include/core/SkRefCnt.h"
+#include "include/private/GrSkSLFPFactoryCache.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrCoordTransform.h"
+#include "src/gpu/GrFragmentProcessor.h"
+#include "src/gpu/GrShaderCaps.h"
+#include "src/sksl/SkSLCompiler.h"
+#include "src/sksl/SkSLPipelineStageCodeGenerator.h"
 
 #if GR_TEST_UTILS
 #define GR_FP_SRC_STRING const char*
@@ -33,7 +33,7 @@ public:
      * Returns a new unique identifier. Each different SkSL fragment processor should call
      * NewIndex once, statically, and use this index for all calls to Make.
      */
-    static int NewIndex() {
+    static int NewIndex() noexcept {
         static std::atomic<int> nextIndex{0};
         return nextIndex++;
     }
@@ -68,20 +68,22 @@ public:
      * associated with it.
      */
     static std::unique_ptr<GrSkSLFP> Make(
-                   GrContext_Base* context,
-                   int index,
-                   const char* name,
-                   const char* sksl,
-                   const void* inputs,
-                   size_t inputSize);
+            GrContext_Base* context,
+            int index,
+            const char* name,
+            const char* sksl,
+            const void* inputs,
+            size_t inputSize,
+            SkSL::Program::Kind kind = SkSL::Program::kPipelineStage_Kind);
 
     static std::unique_ptr<GrSkSLFP> Make(
-                   GrContext_Base* context,
-                   int index,
-                   const char* name,
-                   SkString sksl,
-                   const void* inputs,
-                   size_t inputSize);
+            GrContext_Base* context,
+            int index,
+            const char* name,
+            SkString sksl,
+            const void* inputs,
+            size_t inputSize,
+            SkSL::Program::Kind kind = SkSL::Program::kPipelineStage_Kind);
 
     const char* name() const override;
 
@@ -90,9 +92,9 @@ public:
     std::unique_ptr<GrFragmentProcessor> clone() const override;
 
 private:
-    GrSkSLFP(sk_sp<GrSkSLFPFactoryCache> factoryCache, const GrShaderCaps* shaderCaps, int fIndex,
-             const char* name, const char* sksl, SkString skslString, const void* inputs,
-             size_t inputSize);
+    GrSkSLFP(sk_sp<GrSkSLFPFactoryCache> factoryCache, const GrShaderCaps* shaderCaps,
+             SkSL::Program::Kind kind, int fIndex, const char* name, const char* sksl,
+             SkString skslString, const void* inputs, size_t inputSize);
 
     GrSkSLFP(const GrSkSLFP& other);
 
@@ -109,6 +111,8 @@ private:
     const sk_sp<GrShaderCaps> fShaderCaps;
 
     mutable sk_sp<GrSkSLFPFactory> fFactory;
+
+    SkSL::Program::Kind fKind;
 
     int fIndex;
 
@@ -152,10 +156,13 @@ public:
      * the produced shaders to differ), so it is important to reuse the same factory instance for
      * the same shader in order to avoid repeatedly re-parsing the SkSL.
      */
-    GrSkSLFPFactory(const char* name, const GrShaderCaps* shaderCaps, const char* sksl);
+    GrSkSLFPFactory(const char* name, const GrShaderCaps* shaderCaps, const char* sksl,
+                    SkSL::Program::Kind kind = SkSL::Program::kPipelineStage_Kind);
 
     const SkSL::Program* getSpecialization(const SkSL::String& key, const void* inputs,
                                            size_t inputSize);
+
+    SkSL::Program::Kind fKind;
 
     const char* fName;
 

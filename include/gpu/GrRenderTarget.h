@@ -8,8 +8,8 @@
 #ifndef GrRenderTarget_DEFINED
 #define GrRenderTarget_DEFINED
 
-#include "GrSurface.h"
-#include "SkRect.h"
+#include "include/core/SkRect.h"
+#include "include/gpu/GrSurface.h"
 
 class GrCaps;
 class GrRenderTargetOpList;
@@ -29,11 +29,11 @@ public:
     virtual bool alwaysClearStencil() const { return false; }
 
     // GrSurface overrides
-    GrRenderTarget* asRenderTarget() override { return this; }
-    const GrRenderTarget* asRenderTarget() const  override { return this; }
+    GrRenderTarget* asRenderTarget() noexcept override { return this; }
+    const GrRenderTarget* asRenderTarget() const noexcept override { return this; }
 
     // GrRenderTarget
-    bool isStencilBufferMultisampled() const { return fSampleCnt > 1; }
+    bool isStencilBufferMultisampled() const noexcept { return fSampleCnt > 1; }
 
     GrFSAAType fsaaType() const {
         SkASSERT(fSampleCnt >= 1);
@@ -47,12 +47,12 @@ public:
     /**
      * Returns the number of samples/pixel in the stencil buffer (One if non-MSAA).
      */
-    int numStencilSamples() const { return fSampleCnt; }
+    int numStencilSamples() const noexcept { return fSampleCnt; }
 
     /**
      * Returns the number of samples/pixel in the color buffer (One if non-MSAA or mixed sampled).
      */
-    int numColorSamples() const {
+    int numColorSamples() const noexcept {
         return GrFSAAType::kMixedSamples == this->fsaaType() ? 1 : fSampleCnt;
     }
 
@@ -87,7 +87,7 @@ public:
     /**
      * Returns a rect bounding the region needing resolving.
      */
-    const SkIRect& getResolveRect() const { return fResolveRect; }
+    const SkIRect& getResolveRect() const noexcept { return fResolveRect; }
 
     // a MSAA RT may require explicit resolving , it may auto-resolve (e.g. FBO
     // 0 in GL), or be unresolvable because the client didn't give us the
@@ -125,10 +125,10 @@ private:
 
     friend class GrRenderTargetPriv;
 
-    int                  fSampleCnt;
+    int fSampleCnt;
+    int fSamplePatternKey;
     sk_sp<GrStencilAttachment> fStencilAttachment;
-
-    SkIRect              fResolveRect;
+    SkIRect fResolveRect;
 
     typedef GrSurface INHERITED;
 };

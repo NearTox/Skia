@@ -5,19 +5,19 @@
  * found in the LICENSE file.
  */
 
-#include "SkFontMgr.h"
-#include "SkFontMgr_indirect.h"
-#include "SkFontStyle.h"
-#include "SkMutex.h"
-#include "SkOnce.h"
-#include "SkRefCnt.h"
-#include "SkRemotableFontMgr.h"
-#include "SkStream.h"
-#include "SkString.h"
-#include "SkTArray.h"
-#include "SkTypeface.h"
-#include "SkTypes.h"
-#include "SkTemplates.h"
+#include "include/ports/SkFontMgr_indirect.h"
+#include "include/core/SkFontMgr.h"
+#include "include/core/SkFontStyle.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "include/ports/SkRemotableFontMgr.h"
+#include "include/private/SkMutex.h"
+#include "include/private/SkOnce.h"
+#include "include/private/SkTArray.h"
+#include "include/private/SkTemplates.h"
 
 class SkData;
 
@@ -26,8 +26,7 @@ public:
     /** Takes ownership of the SkRemotableFontIdentitySet. */
     SkStyleSet_Indirect(const SkFontMgr_Indirect* owner, int familyIndex,
                         SkRemotableFontIdentitySet* data)
-        : fOwner(SkRef(owner)), fFamilyIndex(familyIndex), fData(data)
-    { }
+            : fOwner(SkRef(owner)), fFamilyIndex(familyIndex), fData(data) {}
 
     int count() override { return fData->count(); }
 
@@ -53,15 +52,14 @@ public:
 
         return this->matchStyleCSS3(pattern);
     }
+
 private:
     sk_sp<const SkFontMgr_Indirect> fOwner;
     int fFamilyIndex;
     sk_sp<SkRemotableFontIdentitySet> fData;
 };
 
-int SkFontMgr_Indirect::onCountFamilies() const {
-    return 0;
-}
+int SkFontMgr_Indirect::onCountFamilies() const { return 0; }
 
 void SkFontMgr_Indirect::onGetFamilyName(int index, SkString* familyName) const {
     SK_ABORT("Not implemented");
@@ -81,21 +79,19 @@ SkTypeface* SkFontMgr_Indirect::createTypefaceFromFontId(const SkFontIdentity& i
         return nullptr;
     }
 
-    SkAutoMutexAcquire ama(fDataCacheMutex);
+    SkAutoMutexExclusive ama(fDataCacheMutex);
 
     sk_sp<SkTypeface> dataTypeface;
     int dataTypefaceIndex = 0;
     for (int i = 0; i < fDataCache.count(); ++i) {
         const DataEntry& entry = fDataCache[i];
         if (entry.fDataId == id.fDataId) {
-            if (entry.fTtcIndex == id.fTtcIndex &&
-                !entry.fTypeface->weak_expired() && entry.fTypeface->try_ref())
-            {
+            if (entry.fTtcIndex == id.fTtcIndex && !entry.fTypeface->weak_expired() &&
+                entry.fTypeface->try_ref()) {
                 return entry.fTypeface;
             }
-            if (dataTypeface.get() == nullptr &&
-                !entry.fTypeface->weak_expired() && entry.fTypeface->try_ref())
-            {
+            if (dataTypeface.get() == nullptr && !entry.fTypeface->weak_expired() &&
+                entry.fTypeface->try_ref()) {
                 dataTypeface.reset(entry.fTypeface);
                 dataTypefaceIndex = entry.fTtcIndex;
             }
@@ -146,8 +142,8 @@ SkTypeface* SkFontMgr_Indirect::onMatchFamilyStyleCharacter(const char familyNam
                                                             const char* bcp47[],
                                                             int bcp47Count,
                                                             SkUnichar character) const {
-    SkFontIdentity id = fProxy->matchNameStyleCharacter(familyName, style, bcp47,
-                                                        bcp47Count, character);
+    SkFontIdentity id =
+            fProxy->matchNameStyleCharacter(familyName, style, bcp47, bcp47Count, character);
     return this->createTypefaceFromFontId(id);
 }
 

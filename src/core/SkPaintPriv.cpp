@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "SkColorFilter.h"
-#include "SkPaintPriv.h"
-#include "SkPaint.h"
-#include "SkShaderBase.h"
-#include "SkXfermodePriv.h"
+#include "src/core/SkPaintPriv.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkPaint.h"
+#include "src/core/SkXfermodePriv.h"
+#include "src/shaders/SkShaderBase.h"
 
 static bool changes_alpha(const SkPaint& paint) {
     SkColorFilter* cf = paint.getColorFilter();
@@ -28,8 +28,7 @@ bool SkPaintPriv::Overwrites(const SkPaint* paint, ShaderOverrideOpacity overrid
     if (!changes_alpha(*paint)) {
         const unsigned paintAlpha = paint->getAlpha();
         if (0xff == paintAlpha && overrideOpacity != kNotOpaque_ShaderOverrideOpacity &&
-            (!paint->getShader() || paint->getShader()->isOpaque()))
-        {
+            (!paint->getShader() || paint->getShader()->isOpaque())) {
             opacityType = SkXfermode::kOpaque_SrcColorOpacity;
         } else if (0 == paintAlpha) {
             if (overrideOpacity == kNone_ShaderOverrideOpacity && !paint->getShader()) {
@@ -55,8 +54,8 @@ bool SkPaintPriv::ShouldDither(const SkPaint& p, SkColorType dstCT) {
     }
 
     // Otherwise, dither is only needed for non-const paints.
-    return p.getImageFilter() || p.getMaskFilter()
-        || !p.getShader() || !as_SB(p.getShader())->isConstant();
+    return p.getImageFilter() || p.getMaskFilter() || !p.getShader() ||
+           !as_SB(p.getShader())->isConstant();
 }
 
 // return true if the paint is just a single color (i.e. not a shader). If its

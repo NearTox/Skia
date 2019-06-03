@@ -5,14 +5,13 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef GrVkPipelineState_DEFINED
 #define GrVkPipelineState_DEFINED
 
-#include "GrVkDescriptorSetManager.h"
-#include "GrVkPipelineStateDataManager.h"
-#include "glsl/GrGLSLProgramBuilder.h"
-#include "vk/GrVkTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
+#include "src/gpu/glsl/GrGLSLProgramBuilder.h"
+#include "src/gpu/vk/GrVkDescriptorSetManager.h"
+#include "src/gpu/vk/GrVkPipelineStateDataManager.h"
 
 class GrPipeline;
 class GrStencilSettings;
@@ -39,20 +38,22 @@ public:
     using UniformInfoArray = GrVkPipelineStateDataManager::UniformInfoArray;
     using UniformHandle = GrGLSLProgramDataManager::UniformHandle;
 
-    GrVkPipelineState(
-            GrVkGpu* gpu,
-            GrVkPipeline* pipeline,
-            VkPipelineLayout layout,
-            const GrVkDescriptorSetManager::Handle& samplerDSHandle,
-            const GrGLSLBuiltinUniformHandles& builtinUniformHandles,
-            const UniformInfoArray& uniforms,
-            uint32_t geometryUniformSize,
-            uint32_t fragmentUniformSize,
-            const UniformInfoArray& samplers,
-            std::unique_ptr<GrGLSLPrimitiveProcessor> geometryProcessor,
-            std::unique_ptr<GrGLSLXferProcessor> xferProcessor,
-            std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fragmentProcessors,
-            int fFragmentProcessorCnt);
+    GrVkPipelineState(GrVkGpu* gpu,
+                      GrVkPipeline* pipeline,
+                      VkPipelineLayout layout,
+                      const GrVkDescriptorSetManager::Handle& samplerDSHandle,
+                      const GrGLSLBuiltinUniformHandles& builtinUniformHandles,
+                      const UniformInfoArray& uniforms,
+                      uint32_t geometryUniformSize,
+                      uint32_t fragmentUniformSize,
+                      const UniformInfoArray& samplers,
+                      std::unique_ptr<GrGLSLPrimitiveProcessor>
+                              geometryProcessor,
+                      std::unique_ptr<GrGLSLXferProcessor>
+                              xferProcessor,
+                      std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]>
+                              fragmentProcessors,
+                      int fFragmentProcessorCnt);
 
     ~GrVkPipelineState();
 
@@ -83,7 +84,7 @@ private:
      * them.
      */
     struct RenderTargetState {
-        SkISize         fRenderTargetSize;
+        SkISize fRenderTargetSize;
         GrSurfaceOrigin fRenderTargetOrigin;
 
         RenderTargetState() { this->invalidate(); }
@@ -94,12 +95,10 @@ private:
         }
 
         /**
-        * Gets a float4 that adjusts the position from Skia device coords to Vulkans normalized device
-        * coords. Assuming the transformed position, pos, is a homogeneous float3, the vec, v, is
-        * applied as such:
-        * pos.x = dot(v.xy, pos.xz)
-        * pos.y = dot(v.zw, pos.yz)
-        */
+         * Gets a float4 that adjusts the position from Skia device coords to Vulkans normalized
+         * device coords. Assuming the transformed position, pos, is a homogeneous float3, the vec,
+         * v, is applied as such: pos.x = dot(v.xy, pos.xz) pos.y = dot(v.zw, pos.yz)
+         */
         void getRTAdjustmentVec(float* destVec) {
             destVec[0] = 2.f / fRenderTargetSize.fWidth;
             destVec[1] = -1.f;
@@ -135,7 +134,7 @@ private:
 
     const GrVkDescriptorSetManager::Handle fSamplerDSHandle;
 
-    SkSTArray<4, const GrVkSampler*>   fImmutableSamplers;
+    SkSTArray<4, const GrVkSampler*> fImmutableSamplers;
 
     std::unique_ptr<GrVkUniformBuffer> fGeometryUniformBuffer;
     std::unique_ptr<GrVkUniformBuffer> fFragmentUniformBuffer;

@@ -5,23 +5,39 @@
  * found in the LICENSE file.
  */
 
-#include "SkBlurImageFilter.h"
-#include "SkColor.h"
-#include "SkDisplacementMapEffect.h"
-#include "SkDropShadowImageFilter.h"
-#include "SkGradientShader.h"
-#include "SkImage.h"
-#include "SkImageSource.h"
-#include "SkLightingImageFilter.h"
-#include "SkMorphologyImageFilter.h"
-#include "SkOffsetImageFilter.h"
-#include "SkPaintImageFilter.h"
-#include "SkPerlinNoiseShader.h"
-#include "SkPoint3.h"
-#include "SkScalar.h"
-#include "SkSurface.h"
-#include "gm.h"
-#include "sk_tool_utils.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFilterQuality.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkPoint3.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkBlurImageFilter.h"
+#include "include/effects/SkDisplacementMapEffect.h"
+#include "include/effects/SkDropShadowImageFilter.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/effects/SkImageSource.h"
+#include "include/effects/SkLightingImageFilter.h"
+#include "include/effects/SkMorphologyImageFilter.h"
+#include "include/effects/SkOffsetImageFilter.h"
+#include "include/effects/SkPaintImageFilter.h"
+#include "include/effects/SkPerlinNoiseShader.h"
+#include "tools/ToolUtils.h"
+
+#include <utility>
 
 #define RESIZE_FACTOR SkIntToScalar(4)
 
@@ -36,35 +52,27 @@ static sk_sp<SkImage> make_gradient_circle(int width, int height) {
     colors[0] = SK_ColorWHITE;
     colors[1] = SK_ColorBLACK;
     SkPaint paint;
-    paint.setShader(SkGradientShader::MakeRadial(SkPoint::Make(x, y), radius, colors, nullptr,
-        2, SkShader::kClamp_TileMode));
+    paint.setShader(SkGradientShader::MakeRadial(SkPoint::Make(x, y), radius, colors, nullptr, 2,
+                                                 SkTileMode::kClamp));
     canvas->drawCircle(x, y, radius, paint);
 
     return surface->makeImageSnapshot();
 }
 
-
 namespace skiagm {
 
 class ImageFiltersScaledGM : public GM {
 public:
-    ImageFiltersScaledGM() {
-        this->setBGColor(0x00000000);
-    }
+    ImageFiltersScaledGM() { this->setBGColor(0x00000000); }
 
 protected:
+    SkString onShortName() override { return SkString("imagefiltersscaled"); }
 
-    SkString onShortName() override {
-        return SkString("imagefiltersscaled");
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(1428, 500);
-    }
+    SkISize onISize() override { return SkISize::Make(1428, 500); }
 
     void onOnceBeforeDraw() override {
         fCheckerboard = SkImage::MakeFromBitmap(
-            sk_tool_utils::create_checkerboard_bitmap(64, 64, 0xFFA0A0A0, 0xFF404040, 8));
+                ToolUtils::create_checkerboard_bitmap(64, 64, 0xFFA0A0A0, 0xFF404040, 8));
         fGradientCircle = make_gradient_circle(64, 64);
     }
 
@@ -79,9 +87,8 @@ protected:
                                                                    SkDoubleToScalar(0.05), 1, 0));
 
         SkPoint3 pointLocation = SkPoint3::Make(0, 0, SkIntToScalar(10));
-        SkPoint3 spotLocation = SkPoint3::Make(SkIntToScalar(-10),
-                                               SkIntToScalar(-10),
-                                               SkIntToScalar(20));
+        SkPoint3 spotLocation =
+                SkPoint3::Make(SkIntToScalar(-10), SkIntToScalar(-10), SkIntToScalar(20));
         SkPoint3 spotTarget = SkPoint3::Make(SkIntToScalar(40), SkIntToScalar(40), 0);
         SkScalar spotExponent = SK_Scalar1;
         SkScalar cutoffAngle = SkIntToScalar(15);
@@ -92,35 +99,34 @@ protected:
         resizeMatrix.setScale(RESIZE_FACTOR, RESIZE_FACTOR);
 
         sk_sp<SkImageFilter> filters[] = {
-            SkBlurImageFilter::Make(SkIntToScalar(4), SkIntToScalar(4), nullptr),
-            SkDropShadowImageFilter::Make(
-                                    SkIntToScalar(5), SkIntToScalar(10),
-                                    SkIntToScalar(3), SkIntToScalar(3), SK_ColorYELLOW,
-                                    SkDropShadowImageFilter::kDrawShadowAndForeground_ShadowMode,
-                                    nullptr),
-            SkDisplacementMapEffect::Make(SkDisplacementMapEffect::kR_ChannelSelectorType,
-                                          SkDisplacementMapEffect::kR_ChannelSelectorType,
-                                          SkIntToScalar(12),
-                                          std::move(gradient),
-                                          checkerboard),
-            SkDilateImageFilter::Make(1, 1, checkerboard),
-            SkErodeImageFilter::Make(1, 1, checkerboard),
-            SkOffsetImageFilter::Make(SkIntToScalar(32), 0, nullptr),
-            SkImageFilter::MakeMatrixFilter(resizeMatrix, kNone_SkFilterQuality, nullptr),
-            SkPaintImageFilter::Make(noisePaint),
-            SkLightingImageFilter::MakePointLitDiffuse(pointLocation, white, surfaceScale, kd,
-                                                       nullptr),
-            SkLightingImageFilter::MakeSpotLitDiffuse(spotLocation, spotTarget, spotExponent,
-                                                      cutoffAngle, white, surfaceScale, kd,
-                                                      nullptr),
+                SkBlurImageFilter::Make(SkIntToScalar(4), SkIntToScalar(4), nullptr),
+                SkDropShadowImageFilter::Make(
+                        SkIntToScalar(5), SkIntToScalar(10), SkIntToScalar(3), SkIntToScalar(3),
+                        SK_ColorYELLOW,
+                        SkDropShadowImageFilter::kDrawShadowAndForeground_ShadowMode, nullptr),
+                SkDisplacementMapEffect::Make(SkDisplacementMapEffect::kR_ChannelSelectorType,
+                                              SkDisplacementMapEffect::kR_ChannelSelectorType,
+                                              SkIntToScalar(12),
+                                              std::move(gradient),
+                                              checkerboard),
+                SkDilateImageFilter::Make(1, 1, checkerboard),
+                SkErodeImageFilter::Make(1, 1, checkerboard),
+                SkOffsetImageFilter::Make(SkIntToScalar(32), 0, nullptr),
+                SkImageFilter::MakeMatrixFilter(resizeMatrix, kNone_SkFilterQuality, nullptr),
+                SkPaintImageFilter::Make(noisePaint),
+                SkLightingImageFilter::MakePointLitDiffuse(pointLocation, white, surfaceScale, kd,
+                                                           nullptr),
+                SkLightingImageFilter::MakeSpotLitDiffuse(spotLocation, spotTarget, spotExponent,
+                                                          cutoffAngle, white, surfaceScale, kd,
+                                                          nullptr),
         };
 
         SkVector scales[] = {
-            SkVector::Make(SkScalarInvert(2), SkScalarInvert(2)),
-            SkVector::Make(SkIntToScalar(1), SkIntToScalar(1)),
-            SkVector::Make(SkIntToScalar(1), SkIntToScalar(2)),
-            SkVector::Make(SkIntToScalar(2), SkIntToScalar(1)),
-            SkVector::Make(SkIntToScalar(2), SkIntToScalar(2)),
+                SkVector::Make(SkScalarInvert(2), SkScalarInvert(2)),
+                SkVector::Make(SkIntToScalar(1), SkIntToScalar(1)),
+                SkVector::Make(SkIntToScalar(1), SkIntToScalar(2)),
+                SkVector::Make(SkIntToScalar(2), SkIntToScalar(1)),
+                SkVector::Make(SkIntToScalar(2), SkIntToScalar(2)),
         };
 
         SkRect r = SkRect::MakeWH(SkIntToScalar(64), SkIntToScalar(64));
@@ -141,10 +147,9 @@ protected:
                 if (5 == i) {
                     canvas->translate(SkIntToScalar(-32), 0);
                 } else if (6 == i) {
-                    canvas->scale(SkScalarInvert(RESIZE_FACTOR),
-                                  SkScalarInvert(RESIZE_FACTOR));
+                    canvas->scale(SkScalarInvert(RESIZE_FACTOR), SkScalarInvert(RESIZE_FACTOR));
                 }
-                canvas->drawCircle(r.centerX(), r.centerY(), r.width()*2/5, paint);
+                canvas->drawCircle(r.centerX(), r.centerY(), r.width() * 2 / 5, paint);
                 canvas->restore();
                 canvas->translate(r.width() * scales[j].fX + margin, 0);
             }
@@ -162,4 +167,4 @@ private:
 //////////////////////////////////////////////////////////////////////////////
 
 DEF_GM(return new ImageFiltersScaledGM;)
-}
+}  // namespace skiagm

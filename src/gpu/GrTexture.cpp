@@ -5,19 +5,19 @@
  * found in the LICENSE file.
  */
 
-#include "GrTexture.h"
-#include "GrCaps.h"
-#include "GrContext.h"
-#include "GrContextPriv.h"
-#include "GrGpu.h"
-#include "GrRenderTarget.h"
-#include "GrResourceKey.h"
-#include "GrSurfacePriv.h"
-#include "GrTexturePriv.h"
-#include "GrTypes.h"
-#include "SkMath.h"
-#include "SkMipMap.h"
-#include "SkTypes.h"
+#include "include/gpu/GrTexture.h"
+#include "include/core/SkMath.h"
+#include "include/core/SkTypes.h"
+#include "include/gpu/GrContext.h"
+#include "include/gpu/GrRenderTarget.h"
+#include "include/gpu/GrTypes.h"
+#include "include/private/GrResourceKey.h"
+#include "src/core/SkMipMap.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrGpu.h"
+#include "src/gpu/GrSurfacePriv.h"
+#include "src/gpu/GrTexturePriv.h"
 
 void GrTexture::markMipMapsDirty() {
     if (GrMipMapsStatus::kValid == fMipMapsStatus) {
@@ -84,14 +84,14 @@ void GrTexture::computeScratchKey(GrScratchKey* key) const {
             sampleCount = rt->numStencilSamples();
         }
         GrTexturePriv::ComputeScratchKey(this->config(), this->width(), this->height(),
-                                         SkToBool(rt), sampleCount,
-                                         this->texturePriv().mipMapped(), key);
+                                         SkToBool(rt), sampleCount, this->texturePriv().mipMapped(),
+                                         key);
     }
 }
 
 void GrTexturePriv::ComputeScratchKey(GrPixelConfig config, int width, int height,
-                                      bool isRenderTarget, int sampleCnt,
-                                      GrMipMapped mipMapped, GrScratchKey* key) {
+                                      bool isRenderTarget, int sampleCnt, GrMipMapped mipMapped,
+                                      GrScratchKey* key) {
     static const GrScratchKey::ResourceType kType = GrScratchKey::GenerateResourceType();
     uint32_t flags = isRenderTarget;
     SkASSERT(width > 0);

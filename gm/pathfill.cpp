@@ -5,14 +5,21 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkPath.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
 
 typedef SkScalar (*MakePathProc)(SkPath*);
 
 static SkScalar make_frame(SkPath* path) {
-    SkRect r = { SkIntToScalar(10), SkIntToScalar(10),
-                 SkIntToScalar(630), SkIntToScalar(470) };
+    SkRect r = {SkIntToScalar(10), SkIntToScalar(10), SkIntToScalar(630), SkIntToScalar(470)};
     path->addRoundRect(r, SkIntToScalar(15), SkIntToScalar(15));
 
     SkPaint paint;
@@ -23,9 +30,7 @@ static SkScalar make_frame(SkPath* path) {
 }
 
 static SkScalar make_triangle(SkPath* path) {
-    constexpr int gCoord[] = {
-        10, 20, 15, 5, 30, 30
-    };
+    constexpr int gCoord[] = {10, 20, 15, 5, 30, 30};
     path->moveTo(SkIntToScalar(gCoord[0]), SkIntToScalar(gCoord[1]));
     path->lineTo(SkIntToScalar(gCoord[2]), SkIntToScalar(gCoord[3]));
     path->lineTo(SkIntToScalar(gCoord[4]), SkIntToScalar(gCoord[5]));
@@ -35,16 +40,14 @@ static SkScalar make_triangle(SkPath* path) {
 }
 
 static SkScalar make_rect(SkPath* path) {
-    SkRect r = { SkIntToScalar(10), SkIntToScalar(10),
-                 SkIntToScalar(30), SkIntToScalar(30) };
+    SkRect r = {SkIntToScalar(10), SkIntToScalar(10), SkIntToScalar(30), SkIntToScalar(30)};
     path->addRect(r);
     path->offset(SkIntToScalar(10), SkIntToScalar(0));
     return SkIntToScalar(30);
 }
 
 static SkScalar make_oval(SkPath* path) {
-    SkRect r = { SkIntToScalar(10), SkIntToScalar(10),
-                 SkIntToScalar(30), SkIntToScalar(30) };
+    SkRect r = {SkIntToScalar(10), SkIntToScalar(10), SkIntToScalar(30), SkIntToScalar(30)};
     path->addOval(r);
     path->offset(SkIntToScalar(10), SkIntToScalar(0));
     return SkIntToScalar(30);
@@ -118,8 +121,7 @@ static SkScalar make_star(SkPath* path, int n) {
     path->moveTo(c, c - r);
     for (int i = 1; i < n; i++) {
         rad += drad;
-        SkScalar cosV, sinV = SkScalarSinCos(rad, &cosV);
-        path->lineTo(c + cosV * r, c + sinV * r);
+        path->lineTo(c + SkScalarCos(rad) * r, c + SkScalarSin(rad) * r);
     }
     path->close();
     return r * 2 * 6 / 5;
@@ -142,30 +144,10 @@ static SkScalar make_line(SkPath* path) {
 
 static void make_info(SkPath* path) {
     path->moveTo(24, 4);
-    path->cubicTo(12.94999980926514f,
-                  4,
-                  4,
-                  12.94999980926514f,
-                  4,
-                  24);
-    path->cubicTo(4,
-                  35.04999923706055f,
-                  12.94999980926514f,
-                  44,
-                  24,
-                  44);
-    path->cubicTo(35.04999923706055f,
-                  44,
-                  44,
-                  35.04999923706055f,
-                  44,
-                  24);
-    path->cubicTo(44,
-                  12.95000076293945f,
-                  35.04999923706055f,
-                  4,
-                  24,
-                  4);
+    path->cubicTo(12.94999980926514f, 4, 4, 12.94999980926514f, 4, 24);
+    path->cubicTo(4, 35.04999923706055f, 12.94999980926514f, 44, 24, 44);
+    path->cubicTo(35.04999923706055f, 44, 44, 35.04999923706055f, 44, 24);
+    path->cubicTo(44, 12.95000076293945f, 35.04999923706055f, 4, 24, 4);
     path->close();
     path->moveTo(26, 34);
     path->lineTo(22, 34);
@@ -183,30 +165,10 @@ static void make_info(SkPath* path) {
 
 static void make_accessibility(SkPath* path) {
     path->moveTo(12, 2);
-    path->cubicTo(13.10000038146973f,
-                  2,
-                  14,
-                  2.900000095367432f,
-                  14,
-                  4);
-    path->cubicTo(14,
-                  5.099999904632568f,
-                  13.10000038146973f,
-                  6,
-                  12,
-                  6);
-    path->cubicTo(10.89999961853027f,
-                  6,
-                  10,
-                  5.099999904632568f,
-                  10,
-                  4);
-    path->cubicTo(10,
-                  2.900000095367432f,
-                  10.89999961853027f,
-                  2,
-                  12,
-                  2);
+    path->cubicTo(13.10000038146973f, 2, 14, 2.900000095367432f, 14, 4);
+    path->cubicTo(14, 5.099999904632568f, 13.10000038146973f, 6, 12, 6);
+    path->cubicTo(10.89999961853027f, 6, 10, 5.099999904632568f, 10, 4);
+    path->cubicTo(10, 2.900000095367432f, 10.89999961853027f, 2, 12, 2);
     path->close();
     path->moveTo(21, 9);
     path->lineTo(15, 9);
@@ -273,26 +235,19 @@ static void make_visualizer(SkPath* path) {
 }
 
 constexpr MakePathProc gProcs[] = {
-    make_frame,
-    make_triangle,
-    make_rect,
-    make_oval,
-    make_sawtooth_32,
-    make_star_5,
-    make_star_13,
-    make_line,
-    make_house,
-    make_sawtooth_3,
+        make_frame,  make_triangle, make_rect, make_oval,  make_sawtooth_32,
+        make_star_5, make_star_13,  make_line, make_house, make_sawtooth_3,
 };
 
-#define N   SK_ARRAY_COUNT(gProcs)
+#define N SK_ARRAY_COUNT(gProcs)
 
 class PathFillGM : public skiagm::GM {
-    SkPath  fPath[N];
+    SkPath fPath[N];
     SkScalar fDY[N];
-    SkPath  fInfoPath;
-    SkPath  fAccessibilityPath;
-    SkPath  fVisualizerPath;
+    SkPath fInfoPath;
+    SkPath fAccessibilityPath;
+    SkPath fVisualizerPath;
+
 protected:
     void onOnceBeforeDraw() override {
         for (size_t i = 0; i < N; i++) {
@@ -304,14 +259,9 @@ protected:
         make_visualizer(&fVisualizerPath);
     }
 
+    SkString onShortName() override { return SkString("pathfill"); }
 
-    SkString onShortName() override {
-        return SkString("pathfill");
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(640, 480);
-    }
+    SkISize onISize() override { return SkISize::Make(640, 480); }
 
     void onDraw(SkCanvas* canvas) override {
         SkPaint paint;
@@ -343,8 +293,9 @@ private:
 
 // test inverse-fill w/ a clip that completely excludes the geometry
 class PathInverseFillGM : public skiagm::GM {
-    SkPath  fPath[N];
+    SkPath fPath[N];
     SkScalar fDY[N];
+
 protected:
     void onOnceBeforeDraw() override {
         for (size_t i = 0; i < N; i++) {
@@ -352,16 +303,12 @@ protected:
         }
     }
 
-    SkString onShortName() override {
-        return SkString("pathinvfill");
-    }
+    SkString onShortName() override { return SkString("pathinvfill"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(450, 220);
-    }
+    SkISize onISize() override { return SkISize::Make(450, 220); }
 
-    static void show(SkCanvas* canvas, const SkPath& path, const SkPaint& paint,
-                     const SkRect* clip, SkScalar top, const SkScalar bottom) {
+    static void show(SkCanvas* canvas, const SkPath& path, const SkPaint& paint, const SkRect* clip,
+                     SkScalar top, const SkScalar bottom) {
         canvas->save();
         if (clip) {
             SkRect r = *clip;
@@ -379,7 +326,7 @@ protected:
         path.addCircle(SkIntToScalar(50), SkIntToScalar(50), SkIntToScalar(40));
         path.toggleInverseFillType();
 
-        SkRect clipR = { 0, 0, SkIntToScalar(100), SkIntToScalar(200) };
+        SkRect clipR = {0, 0, SkIntToScalar(100), SkIntToScalar(200)};
 
         canvas->translate(SkIntToScalar(10), SkIntToScalar(10));
 
@@ -413,10 +360,10 @@ DEF_SIMPLE_GM(rotatedcubicpath, canvas, 200, 200) {
 
     canvas->translate(50, 50);
     SkPath path;
-    path.moveTo(48,-23);
-    path.cubicTo(48,-29.5, 6,-30, 6,-30);
-    path.cubicTo(6,-30, 2,0, 2,0);
-    path.cubicTo(2,0, 44,-21.5, 48,-23);
+    path.moveTo(48, -23);
+    path.cubicTo(48, -29.5, 6, -30, 6, -30);
+    path.cubicTo(6, -30, 2, 0, 2, 0);
+    path.cubicTo(2, 0, 44, -21.5, 48, -23);
     path.close();
 
     p.setColor(SK_ColorBLUE);
@@ -430,8 +377,8 @@ DEF_SIMPLE_GM(rotatedcubicpath, canvas, 200, 200) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new PathFillGM; )
-DEF_GM( return new PathInverseFillGM; )
+DEF_GM(return new PathFillGM;)
+DEF_GM(return new PathInverseFillGM;)
 
 DEF_SIMPLE_GM(bug7792, canvas, 800, 800) {
     // from skbug.com/7792 bug description

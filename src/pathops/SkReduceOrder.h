@@ -7,17 +7,14 @@
 #ifndef SkReduceOrder_DEFINED
 #define SkReduceOrder_DEFINED
 
-#include "SkPathOpsCubic.h"
-#include "SkPathOpsLine.h"
-#include "SkPathOpsQuad.h"
+#include "src/pathops/SkPathOpsCubic.h"
+#include "src/pathops/SkPathOpsLine.h"
+#include "src/pathops/SkPathOpsQuad.h"
 
 struct SkConic;
 
 union SkReduceOrder {
-    enum Quadratics {
-        kNo_Quadratics,
-        kAllow_Quadratics
-    };
+    enum Quadratics { kNo_Quadratics, kAllow_Quadratics };
 
     int reduce(const SkDCubic& cubic, Quadratics);
     int reduce(const SkDLine& line);

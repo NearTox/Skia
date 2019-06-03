@@ -5,22 +5,24 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkBitmap.h"
-#include "SkColorFilter.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
 
 class ColorFilterAlpha8 : public skiagm::GM {
 public:
     ColorFilterAlpha8() {}
 
 protected:
-    SkString onShortName() override {
-        return SkString("colorfilteralpha8");
-    }
+    SkString onShortName() override { return SkString("colorfilteralpha8"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(400, 400);
-    }
+    SkISize onISize() override { return SkISize::Make(400, 400); }
 
     void onDraw(SkCanvas* canvas) override {
         canvas->clear(SK_ColorRED);
@@ -31,13 +33,9 @@ protected:
         bitmap.eraseColor(0x88FFFFFF);
 
         SkPaint paint;
-        float opaqueGrayMatrix[20] = {
-                0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-                0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-                0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-                0.0f, 0.0f, 0.0f, 0.0f, 255.0f
-        };
-        paint.setColorFilter(SkColorFilter::MakeMatrixFilterRowMajor255(opaqueGrayMatrix));
+        float opaqueGrayMatrix[20] = {0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+                                      0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+        paint.setColorFilter(SkColorFilters::Matrix(opaqueGrayMatrix));
 
         canvas->drawBitmap(bitmap, 100.0f, 100.0f, &paint);
     }
@@ -45,4 +43,4 @@ protected:
 private:
     typedef skiagm::GM INHERITED;
 };
-DEF_GM( return new ColorFilterAlpha8; )
+DEF_GM(return new ColorFilterAlpha8;)

@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "GrGLSLGeometryProcessor.h"
+#include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
 
-#include "GrCoordTransform.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLUniformHandler.h"
-#include "glsl/GrGLSLVarying.h"
-#include "glsl/GrGLSLVertexGeoBuilder.h"
+#include "src/gpu/GrCoordTransform.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#include "src/gpu/glsl/GrGLSLVarying.h"
+#include "src/gpu/glsl/GrGLSLVertexGeoBuilder.h"
 
 void GrGLSLGeometryProcessor::emitCode(EmitArgs& args) {
     GrGPArgs gpArgs;
@@ -35,11 +35,11 @@ void GrGLSLGeometryProcessor::emitCode(EmitArgs& args) {
         vBuilder->codeAppendf("sk_Position = float4(%s", gpArgs.fPositionVar.c_str());
         switch (gpArgs.fPositionVar.getType()) {
             case kFloat_GrSLType:
-                vBuilder->codeAppend(", 0"); // fallthru.
+                vBuilder->codeAppend(", 0");  // fallthru.
             case kFloat2_GrSLType:
-                vBuilder->codeAppend(", 0"); // fallthru.
+                vBuilder->codeAppend(", 0");  // fallthru.
             case kFloat3_GrSLType:
-                vBuilder->codeAppend(", 1"); // fallthru.
+                vBuilder->codeAppend(", 1");  // fallthru.
             case kFloat4_GrSLType:
                 vBuilder->codeAppend(");");
                 break;
@@ -72,13 +72,15 @@ void GrGLSLGeometryProcessor::emitTransforms(GrGLSLVertexBuilder* vb,
         SkString strUniName;
         strUniName.printf("CoordTransformMatrix_%d", i);
         const char* uniName;
-        fInstalledTransforms.push_back().fHandle = uniformHandler->addUniform(kVertex_GrShaderFlag,
-                                                                              kFloat3x3_GrSLType,
-                                                                              strUniName.c_str(),
-                                                                              &uniName).toIndex();
+        fInstalledTransforms.push_back().fHandle = uniformHandler
+                                                           ->addUniform(kVertex_GrShaderFlag,
+                                                                        kFloat3x3_GrSLType,
+                                                                        strUniName.c_str(),
+                                                                        &uniName)
+                                                           .toIndex();
         GrSLType varyingType = kFloat2_GrSLType;
-        if (localMatrix.hasPerspective() || coordTransform->getMatrix().hasPerspective()
-            || threeComponentLocalCoords) {
+        if (localMatrix.hasPerspective() || coordTransform->getMatrix().hasPerspective() ||
+            threeComponentLocalCoords) {
             varyingType = kFloat3_GrSLType;
         }
         SkString strVaryingName;
@@ -130,10 +132,8 @@ void GrGLSLGeometryProcessor::writeOutputPosition(GrGLSLVertexBuilder* vertBuild
         vertBuilder->codeAppendf("float2 %s = %s;", gpArgs->fPositionVar.c_str(), posName);
     } else {
         const char* viewMatrixName;
-        *viewMatrixUniform = uniformHandler->addUniform(kVertex_GrShaderFlag,
-                                                        kFloat3x3_GrSLType,
-                                                        "uViewM",
-                                                        &viewMatrixName);
+        *viewMatrixUniform = uniformHandler->addUniform(kVertex_GrShaderFlag, kFloat3x3_GrSLType,
+                                                        "uViewM", &viewMatrixName);
         if (!mat.hasPerspective()) {
             gpArgs->fPositionVar.set(kFloat2_GrSLType, "pos2");
             vertBuilder->codeAppendf("float2 %s = (%s * float3(%s, 1)).xy;",

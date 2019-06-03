@@ -8,9 +8,9 @@
 #ifndef SkResourceCache_DEFINED
 #define SkResourceCache_DEFINED
 
-#include "SkBitmap.h"
-#include "SkMessageBus.h"
-#include "SkTDArray.h"
+#include "include/core/SkBitmap.h"
+#include "include/private/SkMessageBus.h"
+#include "include/private/SkTDArray.h"
 
 class SkCachedData;
 class SkDiscardableMemory;
@@ -38,9 +38,7 @@ public:
         void init(void* nameSpace, uint64_t sharedID, size_t dataSize);
 
         /** Returns the size of this key. */
-        size_t size() const {
-            return fCount32 << 2;
-        }
+        size_t size() const { return fCount32 << 2; }
 
         void* getNamespace() const { return fNamespace; }
         uint64_t getSharedID() const { return ((uint64_t)fSharedID_hi << 32) | fSharedID_lo; }
@@ -60,12 +58,12 @@ public:
         }
 
     private:
-        int32_t  fCount32;   // local + user contents count32
+        int32_t fCount32;  // local + user contents count32
         uint32_t fHash;
         // split uint64_t into hi and lo so we don't force ourselves to pad on 32bit machines.
         uint32_t fSharedID_lo;
         uint32_t fSharedID_hi;
-        void*    fNamespace; // A unique namespace tag. This is hashed.
+        void* fNamespace;  // A unique namespace tag. This is hashed.
         /* uint32_t fContents32[] */
 
         const uint32_t* as32() const { return (const uint32_t*)this; }
@@ -103,8 +101,8 @@ public:
         virtual SkDiscardableMemory* diagnostic_only_getDiscardable() const { return nullptr; }
 
     private:
-        Rec*    fNext;
-        Rec*    fPrev;
+        Rec* fNext;
+        Rec* fPrev;
 
         friend class SkResourceCache;
     };
@@ -243,9 +241,7 @@ public:
 
     void purgeSharedID(uint64_t sharedID);
 
-    void purgeAll() {
-        this->purgeAsNeeded(true);
-    }
+    void purgeAll() { this->purgeAsNeeded(true); }
 
     DiscardableFactory discardableFactory() const { return fDiscardableFactory; }
 
@@ -257,18 +253,18 @@ public:
     void dump() const;
 
 private:
-    Rec*    fHead;
-    Rec*    fTail;
+    Rec* fHead;
+    Rec* fTail;
 
     class Hash;
-    Hash*   fHash;
+    Hash* fHash;
 
-    DiscardableFactory  fDiscardableFactory;
+    DiscardableFactory fDiscardableFactory;
 
-    size_t  fTotalBytesUsed;
-    size_t  fTotalByteLimit;
-    size_t  fSingleAllocationByteLimit;
-    int     fCount;
+    size_t fTotalBytesUsed;
+    size_t fTotalByteLimit;
+    size_t fSingleAllocationByteLimit;
+    int fCount;
 
     SkMessageBus<PurgeSharedIDMessage>::Inbox fPurgeSharedIDInbox;
 
@@ -281,7 +277,7 @@ private:
     void release(Rec*);
     void remove(Rec*);
 
-    void init();    // called by constructors
+    void init();  // called by constructors
 
 #ifdef SK_DEBUG
     void validate() const;

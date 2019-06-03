@@ -8,13 +8,13 @@
 #ifndef SkTrimPathEffect_DEFINED
 #define SkTrimPathEffect_DEFINED
 
-#include "SkPathEffect.h"
+#include "include/core/SkPathEffect.h"
 
 class SK_API SkTrimPathEffect {
 public:
     enum class Mode {
-        kNormal,   // return the subset path [start,stop]
-        kInverted, // return the complement/subset paths [0,start] + [stop,1]
+        kNormal,    // return the subset path [start,stop]
+        kInverted,  // return the complement/subset paths [0,start] + [stop,1]
     };
 
     /**

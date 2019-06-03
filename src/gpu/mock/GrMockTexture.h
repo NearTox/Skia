@@ -7,12 +7,12 @@
 #ifndef GrMockTexture_DEFINED
 #define GrMockTexture_DEFINED
 
-#include "GrMockGpu.h"
-#include "GrRenderTarget.h"
-#include "GrRenderTargetPriv.h"
-#include "GrTexture.h"
-#include "GrTexturePriv.h"
-#include "mock/GrMockTypes.h"
+#include "include/gpu/GrRenderTarget.h"
+#include "include/gpu/GrTexture.h"
+#include "include/gpu/mock/GrMockTypes.h"
+#include "src/gpu/GrRenderTargetPriv.h"
+#include "src/gpu/GrTexturePriv.h"
+#include "src/gpu/mock/GrMockGpu.h"
 
 class GrMockTexture : public GrTexture {
 public:
@@ -52,13 +52,9 @@ protected:
             , INHERITED(gpu, desc, GrTextureType::k2D, mipMapsStatus)
             , fInfo(info) {}
 
-    void onRelease() override {
-        INHERITED::onRelease();
-    }
+    void onRelease() override { INHERITED::onRelease(); }
 
-    void onAbandon() override {
-        INHERITED::onAbandon();
-    }
+    void onAbandon() override { INHERITED::onAbandon(); }
 
     bool onStealBackendTexture(GrBackendTexture*, SkImage::BackendTextureReleaseProc*) override {
         return false;
@@ -145,18 +141,18 @@ public:
         this->registerWithCacheWrapped(cacheble);
     }
 
-    GrTexture* asTexture() override { return this; }
-    GrRenderTarget* asRenderTarget() override { return this; }
-    const GrTexture* asTexture() const override { return this; }
-    const GrRenderTarget* asRenderTarget() const override { return this; }
+    GrTexture* asTexture() noexcept override { return this; }
+    GrRenderTarget* asRenderTarget() noexcept override { return this; }
+    const GrTexture* asTexture() const noexcept override { return this; }
+    const GrRenderTarget* asRenderTarget() const noexcept override { return this; }
 
-    GrBackendFormat backendFormat() const override {
-        return GrMockTexture::backendFormat();
-    }
+    GrBackendFormat backendFormat() const override { return GrMockTexture::backendFormat(); }
 
 protected:
     // This avoids an inherits via dominance warning on MSVC.
-    void willRemoveLastRefOrPendingIO() override { GrTexture::willRemoveLastRefOrPendingIO(); }
+    void willRemoveLastRefOrPendingIO() noexcept override {
+        GrTexture::willRemoveLastRefOrPendingIO();
+    }
 
 private:
     void onAbandon() override {
@@ -176,14 +172,13 @@ private:
             ++numColorSamples;
         }
         return GrSurface::ComputeSize(this->config(), this->width(), this->height(),
-                                      numColorSamples,
-                                      this->texturePriv().mipMapped());
+                                      numColorSamples, this->texturePriv().mipMapped());
     }
 
     void computeScratchKey(GrScratchKey* key) const override {
-        GrTexturePriv::ComputeScratchKey(this->config(), this->width(), this->height(),
-                                         true, this->numStencilSamples(),
-                                         this->texturePriv().mipMapped(), key);
+        GrTexturePriv::ComputeScratchKey(this->config(), this->width(), this->height(), true,
+                                         this->numStencilSamples(), this->texturePriv().mipMapped(),
+                                         key);
     }
 };
 

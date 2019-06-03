@@ -5,20 +5,20 @@
  * found in the LICENSE file.
  */
 
-#include "GrCCAtlas.h"
+#include "src/gpu/ccpr/GrCCAtlas.h"
 
-#include "GrCaps.h"
-#include "GrOnFlushResourceProvider.h"
-#include "GrProxyProvider.h"
-#include "GrRectanizer_skyline.h"
-#include "GrRenderTargetContext.h"
-#include "GrTexture.h"
-#include "GrTextureProxy.h"
-#include "SkIPoint16.h"
-#include "SkMakeUnique.h"
-#include "SkMathPriv.h"
-#include "ccpr/GrCCPathCache.h"
 #include <atomic>
+#include "include/gpu/GrTexture.h"
+#include "include/private/GrTextureProxy.h"
+#include "src/core/SkIPoint16.h"
+#include "src/core/SkMakeUnique.h"
+#include "src/core/SkMathPriv.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrOnFlushResourceProvider.h"
+#include "src/gpu/GrProxyProvider.h"
+#include "src/gpu/GrRectanizer_skyline.h"
+#include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/ccpr/GrCCPathCache.h"
 
 class GrCCAtlas::Node {
 public:
@@ -77,32 +77,33 @@ GrCCAtlas::GrCCAtlas(CoverageType coverageType, const Specs& specs, const GrCaps
     fTopNode = skstd::make_unique<Node>(nullptr, 0, 0, fWidth, fHeight);
 
     GrColorType colorType = (CoverageType::kFP16_CoverageCount == fCoverageType)
-            ? GrColorType::kAlpha_F16 : GrColorType::kAlpha_8;
+                                    ? GrColorType::kAlpha_F16
+                                    : GrColorType::kAlpha_8;
     const GrBackendFormat format =
             caps.getBackendFormatFromGrColorType(colorType, GrSRGBEncoded::kNo);
     GrPixelConfig pixelConfig = (CoverageType::kFP16_CoverageCount == fCoverageType)
-            ? kAlpha_half_GrPixelConfig : kAlpha_8_GrPixelConfig;
+                                        ? kAlpha_half_GrPixelConfig
+                                        : kAlpha_8_GrPixelConfig;
 
     fTextureProxy = GrProxyProvider::MakeFullyLazyProxy(
             [this, pixelConfig](GrResourceProvider* resourceProvider) {
-                    if (!resourceProvider) {
-                        return sk_sp<GrTexture>();
-                    }
-                    if (!fBackingTexture) {
-                        GrSurfaceDesc desc;
-                        desc.fFlags = kRenderTarget_GrSurfaceFlag;
-                        desc.fWidth = fWidth;
-                        desc.fHeight = fHeight;
-                        desc.fConfig = pixelConfig;
-                        fBackingTexture = resourceProvider->createTexture(desc, SkBudgeted::kYes);
-                    }
-                    return fBackingTexture;
+                if (!fBackingTexture) {
+                    GrSurfaceDesc desc;
+                    desc.fFlags = kRenderTarget_GrSurfaceFlag;
+                    desc.fWidth = fWidth;
+                    desc.fHeight = fHeight;
+                    desc.fConfig = pixelConfig;
+                    fBackingTexture = resourceProvider->createTexture(
+                            desc, SkBudgeted::kYes, GrResourceProvider::Flags::kNoPendingIO);
+                }
+                return GrSurfaceProxy::LazyInstantiationResult(fBackingTexture);
             },
             format, GrProxyProvider::Renderable::kYes, kTextureOrigin, pixelConfig, caps);
+
+    fTextureProxy->priv().setIgnoredByResourceAllocator();
 }
 
-GrCCAtlas::~GrCCAtlas() {
-}
+GrCCAtlas::~GrCCAtlas() {}
 
 bool GrCCAtlas::addRect(const SkIRect& devIBounds, SkIVector* offset) {
     // This can't be called anymore once makeRenderTargetContext() has been called.
@@ -188,6 +189,10 @@ sk_sp<GrRenderTargetContext> GrCCAtlas::makeRenderTargetContext(
     // an atlas larger than maxRenderTargetSize.
     SkASSERT(SkTMax(fHeight, fWidth) <= fMaxTextureSize);
     SkASSERT(fMaxTextureSize <= onFlushRP->caps()->maxRenderTargetSize());
+
+    // Finalize the content size of our proxy. The GPU can potentially make optimizations if it
+    // knows we only intend to write out a smaller sub-rectangle of the backing texture.
+    fTextureProxy->priv().setLazySize(fDrawBounds.width(), fDrawBounds.height());
 
     if (backingTexture) {
         SkASSERT(backingTexture->config() == kAlpha_half_GrPixelConfig);

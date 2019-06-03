@@ -5,10 +5,21 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkImage.h"
-#include "SkImageSource.h"
-#include "SkSurface.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFilterQuality.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkImageSource.h"
 
 namespace skiagm {
 
@@ -32,13 +43,9 @@ protected:
     // Create an image with high frequency vertical stripes
     void onOnceBeforeDraw() override {
         constexpr SkPMColor gColors[] = {
-            SK_ColorRED,     SK_ColorGRAY,
-            SK_ColorGREEN,   SK_ColorGRAY,
-            SK_ColorBLUE,    SK_ColorGRAY,
-            SK_ColorCYAN,    SK_ColorGRAY,
-            SK_ColorMAGENTA, SK_ColorGRAY,
-            SK_ColorYELLOW,  SK_ColorGRAY,
-            SK_ColorWHITE,   SK_ColorGRAY,
+                SK_ColorRED,    SK_ColorGRAY, SK_ColorGREEN, SK_ColorGRAY,    SK_ColorBLUE,
+                SK_ColorGRAY,   SK_ColorCYAN, SK_ColorGRAY,  SK_ColorMAGENTA, SK_ColorGRAY,
+                SK_ColorYELLOW, SK_ColorGRAY, SK_ColorWHITE, SK_ColorGRAY,
         };
 
         auto surface(SkSurface::MakeRasterN32Premul(kImageSize, kImageSize));
@@ -47,22 +54,21 @@ protected:
         int curColor = 0;
 
         for (int x = 0; x < kImageSize; x += 3) {
-            SkRect r = SkRect::MakeXYWH(SkIntToScalar(x), SkIntToScalar(0),
-                                        SkIntToScalar(3), SkIntToScalar(kImageSize));
+            SkRect r = SkRect::MakeXYWH(SkIntToScalar(x), SkIntToScalar(0), SkIntToScalar(3),
+                                        SkIntToScalar(kImageSize));
             SkPaint p;
             p.setColor(gColors[curColor]);
             canvas->drawRect(r, p);
 
-            curColor = (curColor+1) % SK_ARRAY_COUNT(gColors);
+            curColor = (curColor + 1) % SK_ARRAY_COUNT(gColors);
         }
 
         fImage = surface->makeImageSnapshot();
     }
 
     void onDraw(SkCanvas* canvas) override {
-        const SkRect srcRect = SkRect::MakeLTRB(0, 0,
-                                                SkIntToScalar(kImageSize),
-                                                SkIntToScalar(kImageSize));
+        const SkRect srcRect =
+                SkRect::MakeLTRB(0, 0, SkIntToScalar(kImageSize), SkIntToScalar(kImageSize));
         const SkRect dstRect = SkRect::MakeLTRB(0.75f, 0.75f, 225.75f, 225.75f);
 
         SkPaint p;
@@ -77,7 +83,7 @@ private:
 
     SkString fSuffix;
     SkFilterQuality fFilter;
-    sk_sp<SkImage>  fImage;
+    sk_sp<SkImage> fImage;
 
     typedef GM INHERITED;
 };
@@ -88,4 +94,4 @@ DEF_GM(return new ImageSourceGM("none", kNone_SkFilterQuality);)
 DEF_GM(return new ImageSourceGM("low", kLow_SkFilterQuality);)
 DEF_GM(return new ImageSourceGM("med", kMedium_SkFilterQuality);)
 DEF_GM(return new ImageSourceGM("high", kHigh_SkFilterQuality);)
-}
+}  // namespace skiagm

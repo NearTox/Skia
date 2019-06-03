@@ -5,11 +5,24 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkColor.h"
-#include "SkGradientShader.h"
-#include "SkMatrixConvolutionImageFilter.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypeface.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/effects/SkMatrixConvolutionImageFilter.h"
+#include "tools/ToolUtils.h"
 
 namespace skiagm {
 
@@ -23,10 +36,7 @@ public:
     }
 
 protected:
-
-    SkString onShortName() override {
-        return SkStringPrintf("matrixconvolution%s", fNameSuffix);
-    }
+    SkString onShortName() override { return SkStringPrintf("matrixconvolution%s", fNameSuffix); }
 
     void makeBitmap() {
         // Draw our bitmap in N32, so legacy devices get "premul" values they understand
@@ -35,26 +45,22 @@ protected:
         canvas.clear(0x00000000);
         SkPaint paint;
         paint.setColor(0xFFFFFFFF);
-        SkPoint pts[2] = { {0, 0},
-                           {0, 80.0f} };
-        SkScalar pos[2] = { 0, 80.0f };
-        paint.setShader(SkGradientShader::MakeLinear(
-            pts, fColors, pos, 2, SkShader::kClamp_TileMode));
-        SkFont font(sk_tool_utils::create_portable_typeface(), 180.0f);
+        SkPoint pts[2] = {{0, 0}, {0, 80.0f}};
+        SkScalar pos[2] = {0, 80.0f};
+        paint.setShader(SkGradientShader::MakeLinear(pts, fColors, pos, 2, SkTileMode::kClamp));
+        SkFont font(ToolUtils::create_portable_typeface(), 180.0f);
         canvas.drawString("e", -10.0f, 80.0f, font, paint);
     }
 
-    SkISize onISize() override {
-        return SkISize::Make(500, 300);
-    }
+    SkISize onISize() override { return SkISize::Make(500, 300); }
 
     void draw(SkCanvas* canvas, int x, int y, const SkIPoint& kernelOffset,
               SkMatrixConvolutionImageFilter::TileMode tileMode, bool convolveAlpha,
               const SkImageFilter::CropRect* cropRect = nullptr) {
         SkScalar kernel[9] = {
-            SkIntToScalar( 1), SkIntToScalar( 1), SkIntToScalar( 1),
-            SkIntToScalar( 1), SkIntToScalar(-7), SkIntToScalar( 1),
-            SkIntToScalar( 1), SkIntToScalar( 1), SkIntToScalar( 1),
+                SkIntToScalar(1), SkIntToScalar(1),  SkIntToScalar(1),
+                SkIntToScalar(1), SkIntToScalar(-7), SkIntToScalar(1),
+                SkIntToScalar(1), SkIntToScalar(1),  SkIntToScalar(1),
         };
         SkISize kernelSize = SkISize::Make(3, 3);
         SkScalar gain = 0.3f, bias = SkIntToScalar(100);
@@ -76,16 +82,14 @@ protected:
         // matrix image filter. The only (rational) way to achieve that for repeat mode
         // is to create a tight layer.
         canvas->saveLayer(layerBounds, &paint);
-            canvas->drawBitmap(fBitmap, 0, 0, nullptr);
+        canvas->drawBitmap(fBitmap, 0, 0, nullptr);
         canvas->restore();
         canvas->restore();
     }
 
     typedef SkMatrixConvolutionImageFilter MCIF;
 
-    void onOnceBeforeDraw() override {
-        this->makeBitmap();
-    }
+    void onOnceBeforeDraw() override { this->makeBitmap(); }
 
     void onDraw(SkCanvas* canvas) override {
         canvas->clear(SK_ColorBLACK);
@@ -121,4 +125,4 @@ private:
 DEF_GM(return new MatrixConvolutionGM(0xFFFFFFFF, 0x40404040, "");)
 DEF_GM(return new MatrixConvolutionGM(0xFFFF0000, 0xFF00FF00, "_color");)
 
-}
+}  // namespace skiagm

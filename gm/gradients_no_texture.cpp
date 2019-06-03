@@ -4,87 +4,96 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "gm.h"
-#include "SkGradientShader.h"
+
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkGradientShader.h"
+
+#include <string.h>
 
 using namespace skiagm;
 
 struct GradData {
-    int             fCount;
-    const SkColor*  fColors;
+    int fCount;
+    const SkColor* fColors;
     const SkScalar* fPos;
 };
 
 constexpr SkColor gColors[] = {
-    SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorWHITE,
+        SK_ColorRED,
+        SK_ColorGREEN,
+        SK_ColorBLUE,
+        SK_ColorWHITE,
 };
 
 constexpr GradData gGradData[] = {
-    { 1, gColors, nullptr },
-    { 2, gColors, nullptr },
-    { 3, gColors, nullptr },
-    { 4, gColors, nullptr },
+        {1, gColors, nullptr},
+        {2, gColors, nullptr},
+        {3, gColors, nullptr},
+        {4, gColors, nullptr},
 };
 
-static sk_sp<SkShader> MakeLinear(const SkPoint pts[2], const GradData& data, SkShader::TileMode tm) {
+static sk_sp<SkShader> MakeLinear(const SkPoint pts[2], const GradData& data, SkTileMode tm) {
     return SkGradientShader::MakeLinear(pts, data.fColors, data.fPos, data.fCount, tm);
 }
 
-static sk_sp<SkShader> MakeRadial(const SkPoint pts[2], const GradData& data, SkShader::TileMode tm) {
+static sk_sp<SkShader> MakeRadial(const SkPoint pts[2], const GradData& data, SkTileMode tm) {
     SkPoint center;
-    center.set(SkScalarAve(pts[0].fX, pts[1].fX),
-               SkScalarAve(pts[0].fY, pts[1].fY));
-    return SkGradientShader::MakeRadial(center, center.fX, data.fColors, data.fPos, data.fCount, tm);
+    center.set(SkScalarAve(pts[0].fX, pts[1].fX), SkScalarAve(pts[0].fY, pts[1].fY));
+    return SkGradientShader::MakeRadial(center, center.fX, data.fColors, data.fPos, data.fCount,
+                                        tm);
 }
 
-static sk_sp<SkShader> MakeSweep(const SkPoint pts[2], const GradData& data, SkShader::TileMode) {
+static sk_sp<SkShader> MakeSweep(const SkPoint pts[2], const GradData& data, SkTileMode) {
     SkPoint center;
-    center.set(SkScalarAve(pts[0].fX, pts[1].fX),
-               SkScalarAve(pts[0].fY, pts[1].fY));
+    center.set(SkScalarAve(pts[0].fX, pts[1].fX), SkScalarAve(pts[0].fY, pts[1].fY));
     return SkGradientShader::MakeSweep(center.fX, center.fY, data.fColors, data.fPos, data.fCount);
 }
 
-static sk_sp<SkShader> Make2Radial(const SkPoint pts[2], const GradData& data, SkShader::TileMode tm) {
+static sk_sp<SkShader> Make2Radial(const SkPoint pts[2], const GradData& data, SkTileMode tm) {
     SkPoint center0, center1;
-    center0.set(SkScalarAve(pts[0].fX, pts[1].fX),
-                SkScalarAve(pts[0].fY, pts[1].fY));
-    center1.set(SkScalarInterp(pts[0].fX, pts[1].fX, SkIntToScalar(3)/5),
-                SkScalarInterp(pts[0].fY, pts[1].fY, SkIntToScalar(1)/4));
-    return SkGradientShader::MakeTwoPointConical(
-        center1, (pts[1].fX - pts[0].fX) / 7,
-        center0, (pts[1].fX - pts[0].fX) / 2,
-        data.fColors, data.fPos, data.fCount, tm);
+    center0.set(SkScalarAve(pts[0].fX, pts[1].fX), SkScalarAve(pts[0].fY, pts[1].fY));
+    center1.set(SkScalarInterp(pts[0].fX, pts[1].fX, SkIntToScalar(3) / 5),
+                SkScalarInterp(pts[0].fY, pts[1].fY, SkIntToScalar(1) / 4));
+    return SkGradientShader::MakeTwoPointConical(center1, (pts[1].fX - pts[0].fX) / 7, center0,
+                                                 (pts[1].fX - pts[0].fX) / 2, data.fColors,
+                                                 data.fPos, data.fCount, tm);
 }
 
-static sk_sp<SkShader> Make2Conical(const SkPoint pts[2], const GradData& data, SkShader::TileMode tm) {
+static sk_sp<SkShader> Make2Conical(const SkPoint pts[2], const GradData& data, SkTileMode tm) {
     SkPoint center0, center1;
     SkScalar radius0 = (pts[1].fX - pts[0].fX) / 10;
     SkScalar radius1 = (pts[1].fX - pts[0].fX) / 3;
     center0.set(pts[0].fX + radius0, pts[0].fY + radius0);
     center1.set(pts[1].fX - radius1, pts[1].fY - radius1);
-    return SkGradientShader::MakeTwoPointConical(center1, radius1,
-                                                   center0, radius0,
-                                                   data.fColors, data.fPos,
-                                                   data.fCount, tm);
+    return SkGradientShader::MakeTwoPointConical(center1, radius1, center0, radius0, data.fColors,
+                                                 data.fPos, data.fCount, tm);
 }
 
-
-typedef sk_sp<SkShader> (*GradMaker)(const SkPoint pts[2], const GradData& data, SkShader::TileMode tm);
+typedef sk_sp<SkShader> (*GradMaker)(const SkPoint pts[2], const GradData& data, SkTileMode tm);
 
 constexpr GradMaker gGradMakers[] = {
-    MakeLinear, MakeRadial, MakeSweep, Make2Radial, Make2Conical,
+        MakeLinear, MakeRadial, MakeSweep, Make2Radial, Make2Conical,
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
 class GradientsNoTextureGM : public GM {
 public:
-    GradientsNoTextureGM(bool dither) : fDither(dither) {
-        this->setBGColor(0xFFDDDDDD);
-    }
+    GradientsNoTextureGM(bool dither) : fDither(dither) { this->setBGColor(0xFFDDDDDD); }
 
 protected:
-
     SkString onShortName() override {
         return SkString(fDither ? "gradients_no_texture" : "gradients_no_texture_nodither");
     }
@@ -92,16 +101,15 @@ protected:
     SkISize onISize() override { return SkISize::Make(640, 615); }
 
     void onDraw(SkCanvas* canvas) override {
-        constexpr SkPoint kPts[2] = { { 0, 0 },
-                                         { SkIntToScalar(50), SkIntToScalar(50) } };
-        constexpr SkShader::TileMode kTM = SkShader::kClamp_TileMode;
-        SkRect kRect = { 0, 0, SkIntToScalar(50), SkIntToScalar(50) };
+        constexpr SkPoint kPts[2] = {{0, 0}, {SkIntToScalar(50), SkIntToScalar(50)}};
+        constexpr SkTileMode kTM = SkTileMode::kClamp;
+        SkRect kRect = {0, 0, SkIntToScalar(50), SkIntToScalar(50)};
         SkPaint paint;
         paint.setAntiAlias(true);
         paint.setDither(fDither);
 
         canvas->translate(SkIntToScalar(20), SkIntToScalar(20));
-        constexpr uint8_t kAlphas[] = { 0xff, 0x40 };
+        constexpr uint8_t kAlphas[] = {0xff, 0x40};
         for (size_t a = 0; a < SK_ARRAY_COUNT(kAlphas); ++a) {
             for (size_t i = 0; i < SK_ARRAY_COUNT(gGradData); ++i) {
                 canvas->save();
@@ -126,9 +134,9 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 
 struct ColorPos {
-    SkColor*    fColors;
-    SkScalar*   fPos;
-    int         fCount;
+    SkColor* fColors;
+    SkScalar* fPos;
+    int fCount;
 
     ColorPos() : fColors(nullptr), fPos(nullptr), fCount(0) {}
     ~ColorPos() {
@@ -157,18 +165,36 @@ background-image: -webkit-linear-gradient(left, #22d1cd 1%, #22d1cd 0.9510157507
 height: 30px;
 #endif
 
-    const SkColor colors[] = {
-        0xFF22d1cd, 0xFF22d1cd, 0xFFdf4b37, 0xFFdf4b37, 0xFF22d1cd, 0xFF22d1cd, 0xFFe6de36, 0xFFe6de36,
-        0xFF3267ff, 0xFF3267ff, 0xFF9d47d1, 0xFF9d47d1, 0xFF3267ff, 0xFF3267ff, 0xFF5cdd9d, 0xFF5cdd9d,
-        0xFF3267ff, 0xFF3267ff, 0xFF9d47d1, 0xFF9d47d1, 0xFF3267ff, 0xFF3267ff, 0xFFe3d082, 0xFFe3d082
-    };
+    const SkColor colors[] = {0xFF22d1cd, 0xFF22d1cd, 0xFFdf4b37, 0xFFdf4b37, 0xFF22d1cd,
+                              0xFF22d1cd, 0xFFe6de36, 0xFFe6de36, 0xFF3267ff, 0xFF3267ff,
+                              0xFF9d47d1, 0xFF9d47d1, 0xFF3267ff, 0xFF3267ff, 0xFF5cdd9d,
+                              0xFF5cdd9d, 0xFF3267ff, 0xFF3267ff, 0xFF9d47d1, 0xFF9d47d1,
+                              0xFF3267ff, 0xFF3267ff, 0xFFe3d082, 0xFFe3d082};
     const double percent[] = {
-        1, 0.9510157507590116, 2.9510157507590113, 23.695886056604927,
-        25.695886056604927, 25.39321881940624, 27.39321881940624, 31.849399922570655,
-        33.849399922570655, 44.57735802921938, 46.57735802921938, 53.27185850805876,
-        55.27185850805876, 61.95718972227316, 63.95718972227316, 69.89166004442,
-        71.89166004442, 74.45795382765857, 76.45795382765857, 82.78364610713776,
-        84.78364610713776, 94.52743647737229, 96.52743647737229, 96.03934633331295,
+            1,
+            0.9510157507590116,
+            2.9510157507590113,
+            23.695886056604927,
+            25.695886056604927,
+            25.39321881940624,
+            27.39321881940624,
+            31.849399922570655,
+            33.849399922570655,
+            44.57735802921938,
+            46.57735802921938,
+            53.27185850805876,
+            55.27185850805876,
+            61.95718972227316,
+            63.95718972227316,
+            69.89166004442,
+            71.89166004442,
+            74.45795382765857,
+            76.45795382765857,
+            82.78364610713776,
+            84.78364610713776,
+            94.52743647737229,
+            96.52743647737229,
+            96.03934633331295,
     };
     const int N = SK_ARRAY_COUNT(percent);
     SkScalar pos[N];
@@ -180,18 +206,16 @@ height: 30px;
 
 static void make1(ColorPos* rec) {
     const SkColor colors[] = {
-        SK_ColorBLACK, SK_ColorWHITE, SK_ColorBLACK, SK_ColorWHITE,
-        SK_ColorBLACK, SK_ColorWHITE, SK_ColorBLACK, SK_ColorWHITE,
-        SK_ColorBLACK,
+            SK_ColorBLACK, SK_ColorWHITE, SK_ColorBLACK, SK_ColorWHITE, SK_ColorBLACK,
+            SK_ColorWHITE, SK_ColorBLACK, SK_ColorWHITE, SK_ColorBLACK,
     };
     rec->construct(colors, nullptr, SK_ARRAY_COUNT(colors));
 }
 
 static void make2(ColorPos* rec) {
     const SkColor colors[] = {
-        SK_ColorBLACK, SK_ColorWHITE, SK_ColorBLACK, SK_ColorWHITE,
-        SK_ColorBLACK, SK_ColorWHITE, SK_ColorBLACK, SK_ColorWHITE,
-        SK_ColorBLACK,
+            SK_ColorBLACK, SK_ColorWHITE, SK_ColorBLACK, SK_ColorWHITE, SK_ColorBLACK,
+            SK_ColorWHITE, SK_ColorBLACK, SK_ColorWHITE, SK_ColorBLACK,
     };
     const int N = SK_ARRAY_COUNT(colors);
     SkScalar pos[N];
@@ -203,10 +227,10 @@ static void make2(ColorPos* rec) {
 
 static void make3(ColorPos* rec) {
     const SkColor colors[] = {
-        SK_ColorRED, SK_ColorBLUE, SK_ColorBLUE, SK_ColorGREEN, SK_ColorGREEN, SK_ColorBLACK,
+            SK_ColorRED, SK_ColorBLUE, SK_ColorBLUE, SK_ColorGREEN, SK_ColorGREEN, SK_ColorBLACK,
     };
     const SkScalar pos[] = {
-        0, 0, 0.5f, 0.5, 1, 1,
+            0, 0, 0.5f, 0.5, 1, 1,
     };
     rec->construct(colors, pos, SK_ARRAY_COUNT(colors));
 }
@@ -218,11 +242,11 @@ class GradientsManyColorsGM : public GM {
     sk_sp<SkShader> fShader;
 
     typedef void (*Proc)(ColorPos*);
+
 public:
     GradientsManyColorsGM(bool dither) : fDither(dither) {}
 
 protected:
-
     SkString onShortName() override {
         return SkString(fDither ? "gradients_many" : "gradients_many_nodither");
     }
@@ -231,11 +255,14 @@ protected:
 
     void onDraw(SkCanvas* canvas) override {
         const Proc procs[] = {
-            make0, make1, make2, make3,
+                make0,
+                make1,
+                make2,
+                make3,
         };
         const SkPoint pts[] = {
-            { 0, 0 },
-            { SkIntToScalar(W), 0 },
+                {0, 0},
+                {SkIntToScalar(W), 0},
         };
         const SkRect r = SkRect::MakeWH(SkIntToScalar(W), 30);
 
@@ -255,7 +282,7 @@ protected:
             ColorPos rec;
             procs[i](&rec);
             paint.setShader(SkGradientShader::MakeLinear(pts, rec.fColors, rec.fPos, rec.fCount,
-                                                         SkShader::kClamp_TileMode));
+                                                         SkTileMode::kClamp));
             canvas->drawRect(drawR, paint);
 
             canvas->save();
@@ -265,7 +292,7 @@ protected:
             canvas->drawRect(drawR, paint);
             canvas->restore();
 
-            canvas->translate(0, r.height() + 2*r.height() + 8);
+            canvas->translate(0, r.height() + 2 * r.height() + 8);
         }
     }
 

@@ -8,18 +8,16 @@
 #ifndef GrRectanizer_skyline_DEFINED
 #define GrRectanizer_skyline_DEFINED
 
-#include "GrRectanizer.h"
-#include "SkTDArray.h"
+#include "include/private/SkTDArray.h"
+#include "src/gpu/GrRectanizer.h"
 
 // Pack rectangles and track the current silhouette
 // Based, in part, on Jukka Jylanki's work at http://clb.demon.fi
 class GrRectanizerSkyline : public GrRectanizer {
 public:
-    GrRectanizerSkyline(int w, int h) : INHERITED(w, h) {
-        this->reset();
-    }
+    GrRectanizerSkyline(int w, int h) : INHERITED(w, h) { this->reset(); }
 
-    ~GrRectanizerSkyline() override { }
+    ~GrRectanizerSkyline() override {}
 
     void reset() override {
         fAreaSoFar = 0;
@@ -38,9 +36,9 @@ public:
 
 private:
     struct SkylineSegment {
-        int  fX;
-        int  fY;
-        int  fWidth;
+        int fX;
+        int fY;
+        int fWidth;
     };
 
     SkTDArray<SkylineSegment> fSkyline;

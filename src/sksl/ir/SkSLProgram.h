@@ -8,16 +8,16 @@
 #ifndef SKSL_PROGRAM
 #define SKSL_PROGRAM
 
-#include <vector>
 #include <memory>
+#include <vector>
 
-#include "SkSLBoolLiteral.h"
-#include "SkSLExpression.h"
-#include "SkSLFloatLiteral.h"
-#include "SkSLIntLiteral.h"
-#include "SkSLModifiers.h"
-#include "SkSLProgramElement.h"
-#include "SkSLSymbolTable.h"
+#include "src/sksl/ir/SkSLBoolLiteral.h"
+#include "src/sksl/ir/SkSLExpression.h"
+#include "src/sksl/ir/SkSLFloatLiteral.h"
+#include "src/sksl/ir/SkSLIntLiteral.h"
+#include "src/sksl/ir/SkSLModifiers.h"
+#include "src/sksl/ir/SkSLProgramElement.h"
+#include "src/sksl/ir/SkSLSymbolTable.h"
 
 // name of the render target width uniform
 #define SKSL_RTWIDTH_NAME "u_skRTWidth"
@@ -35,36 +35,24 @@ class Context;
 struct Program {
     struct Settings {
         struct Value {
-            Value(bool b)
-            : fKind(kBool_Kind)
-            , fValue(b) {}
+            Value(bool b) : fKind(kBool_Kind), fValue(b) {}
 
-            Value(int i)
-            : fKind(kInt_Kind)
-            , fValue(i) {}
+            Value(int i) : fKind(kInt_Kind), fValue(i) {}
 
-            Value(unsigned int i)
-            : fKind(kInt_Kind)
-            , fValue(i) {}
+            Value(unsigned int i) : fKind(kInt_Kind), fValue(i) {}
 
-            Value(float f)
-            : fKind(kFloat_Kind)
-            , fValue(f) {}
+            Value(float f) : fKind(kFloat_Kind), fValue(f) {}
 
             std::unique_ptr<Expression> literal(const Context& context, int offset) const {
                 switch (fKind) {
                     case Program::Settings::Value::kBool_Kind:
-                        return std::unique_ptr<Expression>(new BoolLiteral(context,
-                                                                           offset,
-                                                                           fValue));
+                        return std::unique_ptr<Expression>(
+                                new BoolLiteral(context, offset, fValue));
                     case Program::Settings::Value::kInt_Kind:
-                        return std::unique_ptr<Expression>(new IntLiteral(context,
-                                                                          offset,
-                                                                          fValue));
+                        return std::unique_ptr<Expression>(new IntLiteral(context, offset, fValue));
                     case Program::Settings::Value::kFloat_Kind:
-                        return std::unique_ptr<Expression>(new FloatLiteral(context,
-                                                                          offset,
-                                                                          fValue));
+                        return std::unique_ptr<Expression>(
+                                new FloatLiteral(context, offset, fValue));
                     default:
                         SkASSERT(false);
                         return nullptr;
@@ -117,9 +105,7 @@ struct Program {
             fFlipY = false;
         }
 
-        bool isEmpty() {
-            return !fRTWidth && !fRTHeight && !fFlipY;
-        }
+        bool isEmpty() { return !fRTWidth && !fRTHeight && !fFlipY; }
     };
 
     class iterator {
@@ -144,18 +130,13 @@ struct Program {
             return fIter1 == other.fIter1 && fIter2 == other.fIter2;
         }
 
-        bool operator!=(const iterator& other) const {
-            return !(*this == other);
-        }
+        bool operator!=(const iterator& other) const { return !(*this == other); }
 
     private:
         using inner = std::vector<std::unique_ptr<ProgramElement>>::iterator;
 
         iterator(inner begin1, inner end1, inner begin2, inner end2)
-        : fIter1(begin1)
-        , fEnd1(end1)
-        , fIter2(begin2)
-        , fEnd2(end2) {}
+                : fIter1(begin1), fEnd1(end1), fIter2(begin2), fEnd2(end2) {}
 
         inner fIter1;
         inner fEnd1;
@@ -187,18 +168,13 @@ struct Program {
             return fIter1 == other.fIter1 && fIter2 == other.fIter2;
         }
 
-        bool operator!=(const const_iterator& other) const {
-            return !(*this == other);
-        }
+        bool operator!=(const const_iterator& other) const { return !(*this == other); }
 
     private:
         using inner = std::vector<std::unique_ptr<ProgramElement>>::const_iterator;
 
         const_iterator(inner begin1, inner end1, inner begin2, inner end2)
-        : fIter1(begin1)
-        , fEnd1(end1)
-        , fIter2(begin2)
-        , fEnd2(end2) {}
+                : fIter1(begin1), fEnd1(end1), fIter2(begin2), fEnd2(end2) {}
 
         inner fIter1;
         inner fEnd1;
@@ -213,25 +189,31 @@ struct Program {
         kVertex_Kind,
         kGeometry_Kind,
         kFragmentProcessor_Kind,
-        kPipelineStage_Kind
+        kPipelineStage_Kind,
+        kGeneric_Kind,
+
     };
 
     Program(Kind kind,
-            std::unique_ptr<String> source,
+            std::unique_ptr<String>
+                    source,
             Settings settings,
-            std::shared_ptr<Context> context,
+            std::shared_ptr<Context>
+                    context,
             std::vector<std::unique_ptr<ProgramElement>>* inheritedElements,
-            std::vector<std::unique_ptr<ProgramElement>> elements,
-            std::shared_ptr<SymbolTable> symbols,
+            std::vector<std::unique_ptr<ProgramElement>>
+                    elements,
+            std::shared_ptr<SymbolTable>
+                    symbols,
             Inputs inputs)
-    : fKind(kind)
-    , fSource(std::move(source))
-    , fSettings(settings)
-    , fContext(context)
-    , fSymbols(symbols)
-    , fInputs(inputs)
-    , fInheritedElements(inheritedElements)
-    , fElements(std::move(elements)) {}
+            : fKind(kind)
+            , fSource(std::move(source))
+            , fSettings(settings)
+            , fContext(context)
+            , fSymbols(symbols)
+            , fInputs(inputs)
+            , fInheritedElements(inheritedElements)
+            , fElements(std::move(elements)) {}
 
     iterator begin() {
         if (fInheritedElements) {
@@ -243,8 +225,8 @@ struct Program {
 
     iterator end() {
         if (fInheritedElements) {
-            return iterator(fInheritedElements->end(), fInheritedElements->end(),
-                            fElements.end(), fElements.end());
+            return iterator(fInheritedElements->end(), fInheritedElements->end(), fElements.end(),
+                            fElements.end());
         }
         return iterator(fElements.end(), fElements.end(), fElements.end(), fElements.end());
     }
@@ -282,6 +264,6 @@ private:
     friend class Compiler;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

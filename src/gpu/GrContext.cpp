@@ -5,43 +5,53 @@
  * found in the LICENSE file.
  */
 
-#include "GrContext.h"
-#include "GrBackendSemaphore.h"
-#include "GrDrawingManager.h"
-#include "GrGpu.h"
-#include "GrMemoryPool.h"
-#include "GrPathRendererChain.h"
-#include "GrProxyProvider.h"
-#include "GrRenderTargetProxy.h"
-#include "GrResourceCache.h"
-#include "GrResourceProvider.h"
-#include "GrSemaphore.h"
-#include "GrSoftwarePathRenderer.h"
-#include "GrTracing.h"
-#include "SkDeferredDisplayList.h"
-#include "SkGr.h"
-#include "SkImageInfoPriv.h"
-#include "SkMakeUnique.h"
-#include "SkSurface_Gpu.h"
-#include "SkTaskGroup.h"
-#include "SkTraceMemoryDump.h"
-#include "effects/GrConfigConversionEffect.h"
-#include "effects/GrSkSLFP.h"
-#include "ccpr/GrCoverageCountingPathRenderer.h"
-#include "text/GrTextBlobCache.h"
-#include "text/GrTextContext.h"
+#include "include/gpu/GrContext.h"
 #include <atomic>
 #include <unordered_map>
+#include "include/core/SkTraceMemoryDump.h"
+#include "include/gpu/GrBackendSemaphore.h"
+#include "include/private/GrRenderTargetProxy.h"
+#include "include/private/SkDeferredDisplayList.h"
+#include "include/private/SkImageInfoPriv.h"
+#include "src/core/SkMakeUnique.h"
+#include "src/core/SkTaskGroup.h"
+#include "src/gpu/GrDrawingManager.h"
+#include "src/gpu/GrGpu.h"
+#include "src/gpu/GrMemoryPool.h"
+#include "src/gpu/GrPathRendererChain.h"
+#include "src/gpu/GrProxyProvider.h"
+#include "src/gpu/GrResourceCache.h"
+#include "src/gpu/GrResourceProvider.h"
+#include "src/gpu/GrSemaphore.h"
+#include "src/gpu/GrShaderUtils.h"
+#include "src/gpu/GrSoftwarePathRenderer.h"
+#include "src/gpu/GrTracing.h"
+#include "src/gpu/SkGr.h"
+#include "src/gpu/ccpr/GrCoverageCountingPathRenderer.h"
+#include "src/gpu/effects/GrSkSLFP.h"
+#include "src/gpu/effects/generated/GrConfigConversionEffect.h"
+#include "src/gpu/text/GrTextBlobCache.h"
+#include "src/gpu/text/GrTextContext.h"
+#include "src/image/SkSurface_Gpu.h"
 
 #define ASSERT_OWNED_PROXY(P) \
     SkASSERT(!(P) || !((P)->peekTexture()) || (P)->peekTexture()->getContext() == this)
 
 #define ASSERT_OWNED_RESOURCE(R) SkASSERT(!(R) || (R)->getContext() == this)
 #define ASSERT_SINGLE_OWNER \
-    SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner());)
-#define RETURN_IF_ABANDONED if (this->abandoned()) { return; }
-#define RETURN_FALSE_IF_ABANDONED if (this->abandoned()) { return false; }
-#define RETURN_NULL_IF_ABANDONED if (this->abandoned()) { return nullptr; }
+    SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner()));
+#define RETURN_IF_ABANDONED  \
+    if (this->abandoned()) { \
+        return;              \
+    }
+#define RETURN_FALSE_IF_ABANDONED \
+    if (this->abandoned()) {      \
+        return false;             \
+    }
+#define RETURN_NULL_IF_ABANDONED \
+    if (this->abandoned()) {     \
+        return nullptr;          \
+    }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -63,22 +73,20 @@ GrContext::~GrContext() {
 
 bool GrContext::init(sk_sp<const GrCaps> caps, sk_sp<GrSkSLFPFactoryCache> FPFactoryCache) {
     ASSERT_SINGLE_OWNER
-    SkASSERT(fThreadSafeProxy); // needs to have been initialized by derived classes
+    SkASSERT(fThreadSafeProxy);  // needs to have been initialized by derived classes
     SkASSERT(this->proxyProvider());
 
     if (!INHERITED::init(std::move(caps), std::move(FPFactoryCache))) {
         return false;
     }
 
-    SkASSERT(this->drawingManager());
     SkASSERT(this->caps());
     SkASSERT(this->getGrStrikeCache());
     SkASSERT(this->getTextBlobCache());
 
     if (fGpu) {
         fResourceCache = new GrResourceCache(this->caps(), this->singleOwner(), this->contextID());
-        fResourceProvider = new GrResourceProvider(fGpu.get(), fResourceCache, this->singleOwner(),
-                                                   this->explicitlyAllocateGPUResources());
+        fResourceProvider = new GrResourceProvider(fGpu.get(), fResourceCache, this->singleOwner());
     }
 
     if (fResourceCache) {
@@ -94,13 +102,15 @@ bool GrContext::init(sk_sp<const GrCaps> caps, sk_sp<GrSkSLFPFactoryCache> FPFac
     }
 
     fPersistentCache = this->options().fPersistentCache;
+    fShaderErrorHandler = this->options().fShaderErrorHandler;
+    if (!fShaderErrorHandler) {
+        fShaderErrorHandler = GrShaderUtils::DefaultShaderErrorHandler();
+    }
 
     return true;
 }
 
-sk_sp<GrContextThreadSafeProxy> GrContext::threadSafeProxy() {
-    return fThreadSafeProxy;
-}
+sk_sp<GrContextThreadSafeProxy> GrContext::threadSafeProxy() { return fThreadSafeProxy; }
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -215,6 +225,13 @@ size_t GrContext::getResourceCachePurgeableBytes() const {
     return fResourceCache->getPurgeableBytes();
 }
 
+size_t GrContext::ComputeTextureSize(SkColorType type, int width, int height, GrMipMapped mipMapped,
+                                     bool useNextPow2) {
+    int colorSamplesPerPixel = 1;
+    return GrSurface::ComputeSize(SkColorType2GrPixelConfig(type), width, height,
+                                  colorSamplesPerPixel, mipMapped, useNextPow2);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 int GrContext::maxTextureSize() const { return this->caps()->maxTextureSize(); }
@@ -233,24 +250,38 @@ int GrContext::maxSurfaceSampleCountForColorType(SkColorType colorType) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GrContext::flush() {
-    ASSERT_SINGLE_OWNER
-    RETURN_IF_ABANDONED
-
-    this->drawingManager()->flush(nullptr, SkSurface::BackendSurfaceAccess::kNoAccess,
-                                  SkSurface::kNone_FlushFlags, 0, nullptr);
+bool GrContext::wait(int numSemaphores, const GrBackendSemaphore waitSemaphores[]) {
+    if (!fGpu || fGpu->caps()->semaphoreSupport()) {
+        return false;
+    }
+    for (int i = 0; i < numSemaphores; ++i) {
+        sk_sp<GrSemaphore> sema = fResourceProvider->wrapBackendSemaphore(
+                waitSemaphores[i], GrResourceProvider::SemaphoreWrapType::kWillWait,
+                kAdopt_GrWrapOwnership);
+        fGpu->waitSemaphore(std::move(sema));
+    }
+    return true;
 }
 
-GrSemaphoresSubmitted GrContext::flushAndSignalSemaphores(int numSemaphores,
-                                                          GrBackendSemaphore signalSemaphores[]) {
+////////////////////////////////////////////////////////////////////////////////
+
+GrSemaphoresSubmitted GrContext::flush(const GrFlushInfo& info,
+                                       const GrPrepareForExternalIORequests& externalRequests) {
     ASSERT_SINGLE_OWNER
     if (this->abandoned()) {
         return GrSemaphoresSubmitted::kNo;
     }
 
-    return this->drawingManager()->flush(nullptr, SkSurface::BackendSurfaceAccess::kNoAccess,
-                                         SkSurface::kNone_FlushFlags, numSemaphores,
-                                         signalSemaphores);
+    return this->drawingManager()->flush(nullptr, 0, SkSurface::BackendSurfaceAccess::kNoAccess,
+                                         info, externalRequests);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void GrContext::checkAsyncWorkCompletion() {
+    if (fGpu) {
+        fGpu->checkFinishProcs();
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -325,4 +356,3 @@ void GrContext::dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const {
     traceMemoryDump->dumpNumericValue("skia/gr_text_blob_cache", "size", "bytes",
                                       this->getTextBlobCache()->usedBytes());
 }
-

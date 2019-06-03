@@ -5,21 +5,17 @@
  * found in the LICENSE file.
  */
 
-
-#include "SkCubicClipper.h"
-#include "SkGeometry.h"
+#include "src/core/SkCubicClipper.h"
+#include "src/core/SkGeometry.h"
 
 #include <utility>
 
-SkCubicClipper::SkCubicClipper() {
-    fClip.setEmpty();
-}
+SkCubicClipper::SkCubicClipper() { fClip.setEmpty(); }
 
 void SkCubicClipper::setClip(const SkIRect& clip) {
     // conver to scalars, since that's where we'll see the points
     fClip.set(clip);
 }
-
 
 bool SkCubicClipper::ChopMonoAtY(const SkPoint pts[4], SkScalar y, SkScalar* t) {
     SkScalar ycrv[4];
@@ -28,7 +24,7 @@ bool SkCubicClipper::ChopMonoAtY(const SkPoint pts[4], SkScalar y, SkScalar* t) 
     ycrv[2] = pts[2].fY - y;
     ycrv[3] = pts[3].fY - y;
 
-#ifdef NEWTON_RAPHSON    // Quadratic convergence, typically <= 3 iterations.
+#ifdef NEWTON_RAPHSON  // Quadratic convergence, typically <= 3 iterations.
     // Initial guess.
     // TODO(turk): Check for zero denominator? Shouldn't happen unless the curve
     // is not only monotonic but degenerate.
@@ -42,38 +38,35 @@ bool SkCubicClipper::ChopMonoAtY(const SkPoint pts[4], SkScalar y, SkScalar* t) 
     bool converged;
     do {
         t0 = t1;
-        SkScalar y01   = SkScalarInterp(ycrv[0], ycrv[1], t0);
-        SkScalar y12   = SkScalarInterp(ycrv[1], ycrv[2], t0);
-        SkScalar y23   = SkScalarInterp(ycrv[2], ycrv[3], t0);
-        SkScalar y012  = SkScalarInterp(y01,  y12,  t0);
-        SkScalar y123  = SkScalarInterp(y12,  y23,  t0);
+        SkScalar y01 = SkScalarInterp(ycrv[0], ycrv[1], t0);
+        SkScalar y12 = SkScalarInterp(ycrv[1], ycrv[2], t0);
+        SkScalar y23 = SkScalarInterp(ycrv[2], ycrv[3], t0);
+        SkScalar y012 = SkScalarInterp(y01, y12, t0);
+        SkScalar y123 = SkScalarInterp(y12, y23, t0);
         SkScalar y0123 = SkScalarInterp(y012, y123, t0);
-        SkScalar yder  = (y123 - y012) * 3;
+        SkScalar yder = (y123 - y012) * 3;
         // TODO(turk): check for yder==0: horizontal.
         t1 -= y0123 / yder;
         converged = SkScalarAbs(t1 - t0) <= tol;  // NaN-safe
         ++iters;
     } while (!converged && (iters < maxiters));
-    *t = t1;                  // Return the result.
+    *t = t1;  // Return the result.
 
     // The result might be valid, even if outside of the range [0, 1], but
     // we never evaluate a Bezier outside this interval, so we return false.
-    if (t1 < 0 || t1 > SK_Scalar1)
-        return false;         // This shouldn't happen, but check anyway.
+    if (t1 < 0 || t1 > SK_Scalar1) return false;  // This shouldn't happen, but check anyway.
     return converged;
 
-#else  // BISECTION    // Linear convergence, typically 16 iterations.
+#else   // BISECTION    // Linear convergence, typically 16 iterations.
 
     // Check that the endpoints straddle zero.
-    SkScalar tNeg, tPos;    // Negative and positive function parameters.
+    SkScalar tNeg, tPos;  // Negative and positive function parameters.
     if (ycrv[0] < 0) {
-        if (ycrv[3] < 0)
-            return false;
+        if (ycrv[3] < 0) return false;
         tNeg = 0;
         tPos = SK_Scalar1;
     } else if (ycrv[0] > 0) {
-        if (ycrv[3] > 0)
-            return false;
+        if (ycrv[3] > 0) return false;
         tNeg = SK_Scalar1;
         tPos = 0;
     } else {
@@ -85,26 +78,27 @@ bool SkCubicClipper::ChopMonoAtY(const SkPoint pts[4], SkScalar y, SkScalar* t) 
     int iters = 0;
     do {
         SkScalar tMid = (tPos + tNeg) / 2;
-        SkScalar y01   = SkScalarInterp(ycrv[0], ycrv[1], tMid);
-        SkScalar y12   = SkScalarInterp(ycrv[1], ycrv[2], tMid);
-        SkScalar y23   = SkScalarInterp(ycrv[2], ycrv[3], tMid);
-        SkScalar y012  = SkScalarInterp(y01,     y12,     tMid);
-        SkScalar y123  = SkScalarInterp(y12,     y23,     tMid);
-        SkScalar y0123 = SkScalarInterp(y012,    y123,    tMid);
+        SkScalar y01 = SkScalarInterp(ycrv[0], ycrv[1], tMid);
+        SkScalar y12 = SkScalarInterp(ycrv[1], ycrv[2], tMid);
+        SkScalar y23 = SkScalarInterp(ycrv[2], ycrv[3], tMid);
+        SkScalar y012 = SkScalarInterp(y01, y12, tMid);
+        SkScalar y123 = SkScalarInterp(y12, y23, tMid);
+        SkScalar y0123 = SkScalarInterp(y012, y123, tMid);
         if (y0123 == 0) {
             *t = tMid;
             return true;
         }
-        if (y0123 < 0)  tNeg = tMid;
-        else            tPos = tMid;
+        if (y0123 < 0)
+            tNeg = tMid;
+        else
+            tPos = tMid;
         ++iters;
-    } while (!(SkScalarAbs(tPos - tNeg) <= tol));   // Nan-safe
+    } while (!(SkScalarAbs(tPos - tNeg) <= tol));  // Nan-safe
 
     *t = (tNeg + tPos) / 2;
     return true;
 #endif  // BISECTION
 }
-
 
 bool SkCubicClipper::clipCubic(const SkPoint srcPts[4], SkPoint dst[4]) {
     bool reverse;
@@ -129,7 +123,7 @@ bool SkCubicClipper::clipCubic(const SkPoint srcPts[4], SkPoint dst[4]) {
     }
 
     SkScalar t;
-    SkPoint tmp[7]; // for SkChopCubicAt
+    SkPoint tmp[7];  // for SkChopCubicAt
 
     // are we partially above
     if (dst[0].fY < ctop && ChopMonoAtY(dst, ctop, &t)) {

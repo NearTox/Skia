@@ -5,21 +5,21 @@
  * found in the LICENSE file.
  */
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN)
 
-#include "SkDWriteGeometrySink.h"
-#include "SkFloatUtils.h"
-#include "SkPath.h"
+#include "include/core/SkPath.h"
+#include "src/utils/SkFloatUtils.h"
+#include "src/utils/win/SkDWriteGeometrySink.h"
 
-#include <dwrite.h>
 #include <d2d1.h>
+#include <dwrite.h>
 
-SkDWriteGeometrySink::SkDWriteGeometrySink(SkPath* path) : fRefCount(1), fPath(path) { }
+SkDWriteGeometrySink::SkDWriteGeometrySink(SkPath* path) : fRefCount(1), fPath(path) {}
 
-SkDWriteGeometrySink::~SkDWriteGeometrySink() { }
+SkDWriteGeometrySink::~SkDWriteGeometrySink() {}
 
-HRESULT STDMETHODCALLTYPE SkDWriteGeometrySink::QueryInterface(REFIID iid, void **object) {
+HRESULT STDMETHODCALLTYPE SkDWriteGeometrySink::QueryInterface(REFIID iid, void** object) {
     if (nullptr == object) {
         return E_INVALIDARG;
     }
@@ -47,33 +47,36 @@ ULONG STDMETHODCALLTYPE SkDWriteGeometrySink::Release(void) {
 
 void STDMETHODCALLTYPE SkDWriteGeometrySink::SetFillMode(D2D1_FILL_MODE fillMode) {
     switch (fillMode) {
-    case D2D1_FILL_MODE_ALTERNATE:
-        fPath->setFillType(SkPath::kEvenOdd_FillType);
-        break;
-    case D2D1_FILL_MODE_WINDING:
-        fPath->setFillType(SkPath::kWinding_FillType);
-        break;
-    default:
-        SkDEBUGFAIL("Unknown D2D1_FILL_MODE.");
-        break;
+        case D2D1_FILL_MODE_ALTERNATE:
+            fPath->setFillType(SkPath::kEvenOdd_FillType);
+            break;
+        case D2D1_FILL_MODE_WINDING:
+            fPath->setFillType(SkPath::kWinding_FillType);
+            break;
+        default:
+            SkDEBUGFAIL("Unknown D2D1_FILL_MODE.");
+            break;
     }
 }
 
 void STDMETHODCALLTYPE SkDWriteGeometrySink::SetSegmentFlags(D2D1_PATH_SEGMENT vertexFlags) {
-    if (vertexFlags == D2D1_PATH_SEGMENT_NONE || vertexFlags == D2D1_PATH_SEGMENT_FORCE_ROUND_LINE_JOIN) {
+    if (vertexFlags == D2D1_PATH_SEGMENT_NONE ||
+        vertexFlags == D2D1_PATH_SEGMENT_FORCE_ROUND_LINE_JOIN) {
         SkDEBUGFAIL("Invalid D2D1_PATH_SEGMENT value.");
     }
 }
 
-void STDMETHODCALLTYPE SkDWriteGeometrySink::BeginFigure(D2D1_POINT_2F startPoint, D2D1_FIGURE_BEGIN figureBegin) {
+void STDMETHODCALLTYPE SkDWriteGeometrySink::BeginFigure(D2D1_POINT_2F startPoint,
+                                                         D2D1_FIGURE_BEGIN figureBegin) {
     fPath->moveTo(startPoint.x, startPoint.y);
     if (figureBegin == D2D1_FIGURE_BEGIN_HOLLOW) {
         SkDEBUGFAIL("Invalid D2D1_FIGURE_BEGIN value.");
     }
 }
 
-void STDMETHODCALLTYPE SkDWriteGeometrySink::AddLines(const D2D1_POINT_2F *points, UINT pointsCount) {
-    for (const D2D1_POINT_2F *end = &points[pointsCount]; points < end; ++points) {
+void STDMETHODCALLTYPE SkDWriteGeometrySink::AddLines(const D2D1_POINT_2F* points,
+                                                      UINT pointsCount) {
+    for (const D2D1_POINT_2F* end = &points[pointsCount]; points < end; ++points) {
         fPath->lineTo(points->x, points->y);
     }
 }
@@ -92,8 +95,8 @@ static bool check_quadratic(const Cubic& cubic, Quadratic& reduction) {
     float dx10 = cubic[1].x - cubic[0].x;
     float dx23 = cubic[2].x - cubic[3].x;
     float midX = cubic[0].x + dx10 * 3 / 2;
-    //NOTE: !approximately_equal(midX - cubic[3].x, dx23 * 3 / 2)
-    //does not work as subnormals get in between the left side and 0.
+    // NOTE: !approximately_equal(midX - cubic[3].x, dx23 * 3 / 2)
+    // does not work as subnormals get in between the left side and 0.
     if (!approximately_equal(midX, (dx23 * 3 / 2) + cubic[3].x)) {
         return false;
     }
@@ -110,24 +113,25 @@ static bool check_quadratic(const Cubic& cubic, Quadratic& reduction) {
     return true;
 }
 
-void STDMETHODCALLTYPE SkDWriteGeometrySink::AddBeziers(const D2D1_BEZIER_SEGMENT *beziers, UINT beziersCount) {
+void STDMETHODCALLTYPE SkDWriteGeometrySink::AddBeziers(const D2D1_BEZIER_SEGMENT* beziers,
+                                                        UINT beziersCount) {
     SkPoint lastPt;
     fPath->getLastPt(&lastPt);
-    D2D1_POINT_2F prevPt = { SkScalarToFloat(lastPt.fX), SkScalarToFloat(lastPt.fY) };
+    D2D1_POINT_2F prevPt = {SkScalarToFloat(lastPt.fX), SkScalarToFloat(lastPt.fY)};
 
-    for (const D2D1_BEZIER_SEGMENT *end = &beziers[beziersCount]; beziers < end; ++beziers) {
-        Cubic cubic = { { prevPt.x, prevPt.y },
-                        { beziers->point1.x, beziers->point1.y },
-                        { beziers->point2.x, beziers->point2.y },
-                        { beziers->point3.x, beziers->point3.y }, };
+    for (const D2D1_BEZIER_SEGMENT* end = &beziers[beziersCount]; beziers < end; ++beziers) {
+        Cubic cubic = {
+                {prevPt.x, prevPt.y},
+                {beziers->point1.x, beziers->point1.y},
+                {beziers->point2.x, beziers->point2.y},
+                {beziers->point3.x, beziers->point3.y},
+        };
         Quadratic quadratic;
         if (check_quadratic(cubic, quadratic)) {
-            fPath->quadTo(quadratic[1].x, quadratic[1].y,
-                          quadratic[2].x, quadratic[2].y);
+            fPath->quadTo(quadratic[1].x, quadratic[1].y, quadratic[2].x, quadratic[2].y);
         } else {
-            fPath->cubicTo(beziers->point1.x, beziers->point1.y,
-                           beziers->point2.x, beziers->point2.y,
-                           beziers->point3.x, beziers->point3.y);
+            fPath->cubicTo(beziers->point1.x, beziers->point1.y, beziers->point2.x,
+                           beziers->point2.y, beziers->point3.x, beziers->point3.y);
         }
         prevPt = beziers->point3;
     }
@@ -137,13 +141,11 @@ void STDMETHODCALLTYPE SkDWriteGeometrySink::EndFigure(D2D1_FIGURE_END figureEnd
     fPath->close();
 }
 
-HRESULT SkDWriteGeometrySink::Close() {
-    return S_OK;
-}
+HRESULT SkDWriteGeometrySink::Close() { return S_OK; }
 
 HRESULT SkDWriteGeometrySink::Create(SkPath* path, IDWriteGeometrySink** geometryToPath) {
     *geometryToPath = new SkDWriteGeometrySink(path);
     return S_OK;
 }
 
-#endif//defined(SK_BUILD_FOR_WIN)
+#endif  // defined(SK_BUILD_FOR_WIN)

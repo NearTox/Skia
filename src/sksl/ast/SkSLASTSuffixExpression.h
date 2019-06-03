@@ -8,8 +8,8 @@
 #ifndef SKSL_ASTSUFFIXEXPRESSION
 #define SKSL_ASTSUFFIXEXPRESSION
 
-#include "SkSLASTSuffix.h"
-#include "SkSLASTExpression.h"
+#include "src/sksl/ast/SkSLASTExpression.h"
+#include "src/sksl/ast/SkSLASTSuffix.h"
 
 namespace SkSL {
 
@@ -18,13 +18,11 @@ namespace SkSL {
  */
 struct ASTSuffixExpression : public ASTExpression {
     ASTSuffixExpression(std::unique_ptr<ASTExpression> base, std::unique_ptr<ASTSuffix> suffix)
-    : INHERITED(base->fOffset, kSuffix_Kind)
-    , fBase(std::move(base))
-    , fSuffix(std::move(suffix)) {}
+            : INHERITED(base->fOffset, kSuffix_Kind)
+            , fBase(std::move(base))
+            , fSuffix(std::move(suffix)) {}
 
-    String description() const override {
-        return fBase->description() + fSuffix->description();
-    }
+    String description() const override { return fBase->description() + fSuffix->description(); }
 
     const std::unique_ptr<ASTExpression> fBase;
     const std::unique_ptr<ASTSuffix> fSuffix;
@@ -32,6 +30,6 @@ struct ASTSuffixExpression : public ASTExpression {
     typedef ASTExpression INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

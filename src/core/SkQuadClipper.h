@@ -5,11 +5,10 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkQuadClipper_DEFINED
 #define SkQuadClipper_DEFINED
 
-#include "SkPath.h"
+#include "include/core/SkPath.h"
 
 /** This class is initialized with a clip rectangle, and then can be fed quads,
     which must already be monotonic in Y.
@@ -26,7 +25,7 @@ public:
     bool clipQuad(const SkPoint src[3], SkPoint dst[3]);
 
 private:
-    SkRect      fClip;
+    SkRect fClip;
 };
 
 /** Iterator that returns the clipped segements of a quad clipped to a rect.
@@ -41,15 +40,12 @@ public:
     SkPath::Verb next(SkPoint pts[]);
 
 private:
-    SkPoint*        fCurrPoint;
-    SkPath::Verb*   fCurrVerb;
+    SkPoint* fCurrPoint;
+    SkPath::Verb* fCurrVerb;
 
-    enum {
-        kMaxVerbs = 13,
-        kMaxPoints = 32
-    };
-    SkPoint         fPoints[kMaxPoints];
-    SkPath::Verb    fVerbs[kMaxVerbs];
+    enum { kMaxVerbs = 13, kMaxPoints = 32 };
+    SkPoint fPoints[kMaxPoints];
+    SkPath::Verb fVerbs[kMaxVerbs];
 
     void clipMonoQuad(const SkPoint srcPts[3], const SkRect& clip);
     void clipMonoCubic(const SkPoint srcPts[4], const SkRect& clip);
@@ -59,11 +55,11 @@ private:
 };
 
 #ifdef SK_DEBUG
-    void sk_assert_monotonic_x(const SkPoint pts[], int count);
-    void sk_assert_monotonic_y(const SkPoint pts[], int count);
+void sk_assert_monotonic_x(const SkPoint pts[], int count);
+void sk_assert_monotonic_y(const SkPoint pts[], int count);
 #else
-    #define sk_assert_monotonic_x(pts, count)
-    #define sk_assert_monotonic_y(pts, count)
+#define sk_assert_monotonic_x(pts, count)
+#define sk_assert_monotonic_y(pts, count)
 #endif
 
 #endif

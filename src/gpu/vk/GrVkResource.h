@@ -8,10 +8,9 @@
 #ifndef GrVkResource_DEFINED
 #define GrVkResource_DEFINED
 
-
-#include "SkRandom.h"
-#include "SkTHash.h"
 #include <atomic>
+#include "include/private/SkTHash.h"
+#include "include/utils/SkRandom.h"
 
 class GrVkGpu;
 
@@ -49,19 +48,13 @@ public:
     class Trace {
     public:
         ~Trace() {
-            fHashSet.foreach([](const GrVkResource* r) {
-                r->dumpInfo();
-            });
+            fHashSet.foreach ([](const GrVkResource* r) { r->dumpInfo(); });
             SkASSERT(0 == fHashSet.count());
         }
 
-        void add(const GrVkResource* r) {
-            fHashSet.add(r);
-        }
+        void add(const GrVkResource* r) { fHashSet.add(r); }
 
-        void remove(const GrVkResource* r) {
-            fHashSet.remove(r);
-        }
+        void remove(const GrVkResource* r) { fHashSet.remove(r); }
 
     private:
         SkTHashSet<const GrVkResource*, GrVkResource::Hash> fHashSet;
@@ -85,7 +78,7 @@ public:
 #ifdef SK_DEBUG
         auto count = this->getRefCnt();
         SkASSERTF(count == 1, "fRefCnt was %d", count);
-        fRefCnt.store(0);    // illegal value, to catch us if we reuse after delete
+        fRefCnt.store(0);  // illegal value, to catch us if we reuse after delete
 #endif
     }
 
@@ -109,7 +102,7 @@ public:
      */
     void ref() const {
         // No barrier required.
-        SkDEBUGCODE(int newRefCount = )fRefCnt.fetch_add(+1, std::memory_order_relaxed);
+        SkDEBUGCODE(int newRefCount =) fRefCnt.fetch_add(+1, std::memory_order_relaxed);
         SkASSERT(newRefCount >= 1);
     }
 
@@ -151,9 +144,7 @@ public:
     virtual void notifyRemovedFromCommandBuffer() const {}
 
 #ifdef SK_DEBUG
-    void validate() const {
-        SkASSERT(this->getRefCnt() > 0);
-    }
+    void validate() const { SkASSERT(this->getRefCnt() > 0); }
 #endif
 
 #ifdef SK_TRACE_VK_RESOURCES

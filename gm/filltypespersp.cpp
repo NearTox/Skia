@@ -5,14 +5,27 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkGradientShader.h"
-#include "SkPath.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkGradientShader.h"
 
 namespace skiagm {
 
 class FillTypePerspGM : public GM {
     SkPath fPath;
+
 public:
     FillTypePerspGM() {}
 
@@ -25,18 +38,13 @@ public:
     }
 
 protected:
+    SkString onShortName() override { return SkString("filltypespersp"); }
 
-    SkString onShortName() override {
-        return SkString("filltypespersp");
-    }
+    SkISize onISize() override { return SkISize::Make(835, 840); }
 
-    SkISize onISize() override {
-        return SkISize::Make(835, 840);
-    }
-
-    void showPath(SkCanvas* canvas, int x, int y, SkPath::FillType ft,
-                  SkScalar scale, const SkPaint& paint) {
-        const SkRect r = { 0, 0, SkIntToScalar(150), SkIntToScalar(150) };
+    void showPath(SkCanvas* canvas, int x, int y, SkPath::FillType ft, SkScalar scale,
+                  const SkPaint& paint) {
+        const SkRect r = {0, 0, SkIntToScalar(150), SkIntToScalar(150)};
 
         canvas->save();
         canvas->translate(SkIntToScalar(x), SkIntToScalar(y));
@@ -60,17 +68,13 @@ protected:
                                                      colors,
                                                      pos,
                                                      SK_ARRAY_COUNT(colors),
-                                                     SkShader::kClamp_TileMode));
+                                                     SkTileMode::kClamp));
         paint.setAntiAlias(aa);
 
-        showPath(canvas,   0,   0, SkPath::kWinding_FillType,
-                 scale, paint);
-        showPath(canvas, 200,   0, SkPath::kEvenOdd_FillType,
-                 scale, paint);
-        showPath(canvas,  00, 200, SkPath::kInverseWinding_FillType,
-                 scale, paint);
-        showPath(canvas, 200, 200, SkPath::kInverseEvenOdd_FillType,
-                 scale, paint);
+        showPath(canvas, 0, 0, SkPath::kWinding_FillType, scale, paint);
+        showPath(canvas, 200, 0, SkPath::kEvenOdd_FillType, scale, paint);
+        showPath(canvas, 00, 200, SkPath::kInverseWinding_FillType, scale, paint);
+        showPath(canvas, 200, 200, SkPath::kInverseEvenOdd_FillType, scale, paint);
     }
 
     void onDraw(SkCanvas* canvas) override {
@@ -78,25 +82,22 @@ protected:
 
         // do perspective drawPaint as the background;
         SkPaint bkgnrd;
-        SkPoint center = SkPoint::Make(SkIntToScalar(100),
-                                       SkIntToScalar(100));
-        SkColor colors[] = {SK_ColorBLACK, SK_ColorCYAN,
-                            SK_ColorYELLOW, SK_ColorWHITE};
-        SkScalar pos[] = {0, SK_ScalarHalf / 2,
-                          3 * SK_ScalarHalf / 2, SK_Scalar1};
+        SkPoint center = SkPoint::Make(SkIntToScalar(100), SkIntToScalar(100));
+        SkColor colors[] = {SK_ColorBLACK, SK_ColorCYAN, SK_ColorYELLOW, SK_ColorWHITE};
+        SkScalar pos[] = {0, SK_ScalarHalf / 2, 3 * SK_ScalarHalf / 2, SK_Scalar1};
         bkgnrd.setShader(SkGradientShader::MakeRadial(center,
                                                       SkIntToScalar(1000),
                                                       colors,
                                                       pos,
                                                       SK_ARRAY_COUNT(colors),
-                                                      SkShader::kClamp_TileMode));
+                                                      SkTileMode::kClamp));
         canvas->save();
-            canvas->translate(SkIntToScalar(100), SkIntToScalar(100));
-            SkMatrix mat;
-            mat.reset();
-            mat.setPerspY(SK_Scalar1 / 1000);
-            canvas->concat(mat);
-            canvas->drawPaint(bkgnrd);
+        canvas->translate(SkIntToScalar(100), SkIntToScalar(100));
+        SkMatrix mat;
+        mat.reset();
+        mat.setPerspY(SK_Scalar1 / 1000);
+        canvas->concat(mat);
+        canvas->drawPaint(bkgnrd);
         canvas->restore();
 
         // draw the paths in perspective
@@ -107,7 +108,7 @@ protected:
         canvas->concat(persp);
 
         canvas->translate(SkIntToScalar(20), SkIntToScalar(20));
-        const SkScalar scale = SkIntToScalar(5)/4;
+        const SkScalar scale = SkIntToScalar(5) / 4;
 
         showFour(canvas, SK_Scalar1, false);
         canvas->translate(SkIntToScalar(450), 0);
@@ -125,6 +126,6 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new FillTypePerspGM; )
+DEF_GM(return new FillTypePerspGM;)
 
-}
+}  // namespace skiagm

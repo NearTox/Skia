@@ -8,8 +8,8 @@
 #ifndef SkConvertPixels_DEFINED
 #define SkConvertPixels_DEFINED
 
-#include "SkImageInfo.h"
-#include "SkTemplates.h"
+#include "include/core/SkImageInfo.h"
+#include "include/private/SkTemplates.h"
 
 class SkColorTable;
 
@@ -17,7 +17,7 @@ void SkConvertPixels(const SkImageInfo& dstInfo, void* dstPixels, size_t dstRowB
                      const SkImageInfo& srcInfo, const void* srcPixels, size_t srcRowBytes);
 
 static inline void SkRectMemcpy(void* dst, size_t dstRB, const void* src, size_t srcRB,
-                                size_t trimRowBytes, int rowCount) {
+                                size_t trimRowBytes, int rowCount) noexcept {
     SkASSERT(trimRowBytes <= dstRB);
     SkASSERT(trimRowBytes <= srcRB);
     if (trimRowBytes == dstRB && trimRowBytes == srcRB) {

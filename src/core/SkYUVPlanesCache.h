@@ -8,10 +8,10 @@
 #ifndef SkYUVPlanesCache_DEFINED
 #define SkYUVPlanesCache_DEFINED
 
-#include "SkCachedData.h"
-#include "SkImageInfo.h"
-#include "SkYUVAIndex.h"
-#include "SkYUVASizeInfo.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkYUVAIndex.h"
+#include "include/core/SkYUVASizeInfo.h"
+#include "src/core/SkCachedData.h"
 
 class SkResourceCache;
 
@@ -25,8 +25,8 @@ public:
      * fColorSpace: color space that will be used for the YUV -> RGB conversion.
      */
     struct Info {
-        SkYUVASizeInfo  fSizeInfo;
-        SkYUVAIndex     fYUVAIndices[SkYUVAIndex::kIndexCount];
+        SkYUVASizeInfo fSizeInfo;
+        SkYUVAIndex fYUVAIndices[SkYUVAIndex::kIndexCount];
         SkYUVColorSpace fColorSpace;
     };
     /**

@@ -5,16 +5,27 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFilterQuality.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/effects/SkImageSource.h"
+#include "tools/ToolUtils.h"
 
-#include "SkImage.h"
-#include "SkImageSource.h"
+#include <utility>
 
 // This GM exercises the SkImageSource ImageFilter class.
 
-static void fill_rect_filtered(SkCanvas* canvas,
-                               const SkRect& clipRect,
+static void fill_rect_filtered(SkCanvas* canvas, const SkRect& clipRect,
                                sk_sp<SkImageFilter> filter) {
     SkPaint paint;
     paint.setImageFilter(std::move(filter));
@@ -26,17 +37,15 @@ static void fill_rect_filtered(SkCanvas* canvas,
 
 class ImageSourceGM : public skiagm::GM {
 public:
-    ImageSourceGM() { }
+    ImageSourceGM() {}
 
 protected:
-    SkString onShortName() override {
-        return SkString("imagesource");
-    }
+    SkString onShortName() override { return SkString("imagesource"); }
 
     SkISize onISize() override { return SkISize::Make(500, 150); }
 
     void onOnceBeforeDraw() override {
-        SkBitmap bm = sk_tool_utils::create_string_bitmap(100, 100, 0xFFFFFFFF, 20, 70, 96, "e");
+        SkBitmap bm = ToolUtils::create_string_bitmap(100, 100, 0xFFFFFFFF, 20, 70, 96, "e");
         fImage = SkImage::MakeFromBitmap(bm);
     }
 
@@ -57,21 +66,21 @@ protected:
         {
             // Draw an unscaled subset of the source bitmap (srcRect -> srcRect).
             sk_sp<SkImageFilter> imageSourceSrcRect(
-                SkImageSource::Make(fImage, srcRect, srcRect, kHigh_SkFilterQuality));
+                    SkImageSource::Make(fImage, srcRect, srcRect, kHigh_SkFilterQuality));
             fill_rect_filtered(canvas, clipRect, std::move(imageSourceSrcRect));
             canvas->translate(SkIntToScalar(100), 0);
         }
         {
             // Draw a subset of the bitmap scaled to a destination rect (srcRect -> dstRect).
             sk_sp<SkImageFilter> imageSourceSrcRectDstRect(
-                SkImageSource::Make(fImage, srcRect, dstRect, kHigh_SkFilterQuality));
+                    SkImageSource::Make(fImage, srcRect, dstRect, kHigh_SkFilterQuality));
             fill_rect_filtered(canvas, clipRect, std::move(imageSourceSrcRectDstRect));
             canvas->translate(SkIntToScalar(100), 0);
         }
         {
             // Draw the entire bitmap scaled to a destination rect (bounds -> dstRect).
             sk_sp<SkImageFilter> imageSourceDstRectOnly(
-                SkImageSource::Make(fImage, bounds, dstRect, kHigh_SkFilterQuality));
+                    SkImageSource::Make(fImage, bounds, dstRect, kHigh_SkFilterQuality));
             fill_rect_filtered(canvas, clipRect, std::move(imageSourceDstRectOnly));
             canvas->translate(SkIntToScalar(100), 0);
         }
@@ -84,4 +93,4 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new ImageSourceGM; )
+DEF_GM(return new ImageSourceGM;)

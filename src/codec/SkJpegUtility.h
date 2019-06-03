@@ -5,20 +5,19 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkJpegUtility_codec_DEFINED
 #define SkJpegUtility_codec_DEFINED
 
-#include "SkJpegPriv.h"
-#include "SkStream.h"
+#include "include/core/SkStream.h"
+#include "src/codec/SkJpegPriv.h"
 
 #include <setjmp.h>
 // stdio is needed for jpeglib
 #include <stdio.h>
 
 extern "C" {
-    #include "jpeglib.h"
-    #include "jerror.h"
+#include "jerror.h"
+#include "jpeglib.h"
 }
 
 /*
@@ -32,7 +31,7 @@ void skjpeg_err_exit(j_common_ptr cinfo);
 struct skjpeg_source_mgr : jpeg_source_mgr {
     skjpeg_source_mgr(SkStream* stream);
 
-    SkStream* fStream; // unowned
+    SkStream* fStream;  // unowned
     enum {
         // TODO (msarett): Experiment with different buffer sizes.
         // This size was chosen because it matches SkImageDecoder.

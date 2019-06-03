@@ -8,7 +8,7 @@
 #ifndef SKSL_VARIABLEREFERENCE
 #define SKSL_VARIABLEREFERENCE
 
-#include "SkSLExpression.h"
+#include "src/sksl/ir/SkSLExpression.h"
 
 namespace SkSL {
 
@@ -35,15 +35,11 @@ struct VariableReference : public Expression {
 
     ~VariableReference() override;
 
-    RefKind refKind() const {
-        return fRefKind;
-    }
+    RefKind refKind() const { return fRefKind; }
 
     void setRefKind(RefKind refKind);
 
-    bool hasSideEffects() const override {
-        return false;
-    }
+    bool hasSideEffects() const override { return false; }
 
     bool isConstant() const override {
         return 0 != (fVariable.fModifiers.fFlags & Modifiers::kConst_Flag);
@@ -53,9 +49,7 @@ struct VariableReference : public Expression {
         return std::unique_ptr<Expression>(new VariableReference(fOffset, fVariable, fRefKind));
     }
 
-    String description() const override {
-        return fVariable.fName;
-    }
+    String description() const override { return fVariable.fName; }
 
     static std::unique_ptr<Expression> copy_constant(const IRGenerator& irGenerator,
                                                      const Expression* expr);
@@ -70,6 +64,6 @@ private:
     typedef Expression INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

@@ -8,14 +8,14 @@
 #ifndef SkPictureRecorder_DEFINED
 #define SkPictureRecorder_DEFINED
 
-#include "../private/SkNoncopyable.h"
-#include "SkBBHFactory.h"
-#include "SkPicture.h"
-#include "SkRefCnt.h"
+#include "include/core/SkBBHFactory.h"
+#include "include/core/SkPicture.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/SkNoncopyable.h"
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
 namespace android {
-    class Picture;
+class Picture;
 };
 #endif
 
@@ -35,11 +35,10 @@ public:
     enum RecordFlags {
         // If you call drawPicture() or drawDrawable() on the recording canvas, this flag forces
         // that object to playback its contents immediately rather than reffing the object.
-        kPlaybackDrawPicture_RecordFlag     = 1 << 0,
+        kPlaybackDrawPicture_RecordFlag = 1 << 0,
     };
 
-    enum FinishFlags {
-    };
+    enum FinishFlags {};
 
     /** Returns the canvas that records the drawing commands.
         @param bounds the cull rect used when recording this picture. Any drawing the falls outside
@@ -52,8 +51,7 @@ public:
                              SkBBHFactory* bbhFactory = nullptr,
                              uint32_t recordFlags = 0);
 
-    SkCanvas* beginRecording(SkScalar width, SkScalar height,
-                             SkBBHFactory* bbhFactory = nullptr,
+    SkCanvas* beginRecording(SkScalar width, SkScalar height, SkBBHFactory* bbhFactory = nullptr,
                              uint32_t recordFlags = 0) {
         return this->beginRecording(SkRect::MakeWH(width, height), bbhFactory, recordFlags);
     }
@@ -108,15 +106,15 @@ private:
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
     friend class android::Picture;
 #endif
-    friend class SkPictureRecorderReplayTester; // for unit testing
+    friend class SkPictureRecorderReplayTester;  // for unit testing
     void partialReplay(SkCanvas* canvas) const;
 
-    bool                        fActivelyRecording;
-    uint32_t                    fFlags;
-    SkRect                      fCullRect;
-    sk_sp<SkBBoxHierarchy>      fBBH;
+    bool fActivelyRecording;
+    uint32_t fFlags;
+    SkRect fCullRect;
+    sk_sp<SkBBoxHierarchy> fBBH;
     std::unique_ptr<SkRecorder> fRecorder;
-    sk_sp<SkRecord>             fRecord;
+    sk_sp<SkRecord> fRecord;
     std::unique_ptr<SkMiniRecorder> fMiniRecorder;
 
     typedef SkNoncopyable INHERITED;

@@ -5,17 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "GrAtlasManager.h"
-#include "GrTextBlob.h"
-#include "GrTextTarget.h"
-#include "SkDistanceFieldGen.h"
-#include "ops/GrAtlasTextOp.h"
+#include "src/core/SkDistanceFieldGen.h"
+#include "src/gpu/ops/GrAtlasTextOp.h"
+#include "src/gpu/text/GrAtlasManager.h"
+#include "src/gpu/text/GrTextBlob.h"
+#include "src/gpu/text/GrTextTarget.h"
 
 enum RegenMask {
-    kNoRegen    = 0x0,
-    kRegenPos   = 0x1,
-    kRegenCol   = 0x2,
-    kRegenTex   = 0x4,
+    kNoRegen = 0x0,
+    kRegenPos = 0x1,
+    kRegenCol = 0x2,
+    kRegenTex = 0x4,
     kRegenGlyph = 0x8,
 };
 
@@ -99,7 +99,8 @@ static void regen_texcoords(char* vertex, size_t vertexStride, const GrGlyph* gl
             hackColor = GrColorPackRGBA(0, 255, 0, 255);
             break;
         case 1:
-            hackColor = GrColorPackRGBA(255, 0, 0, 255);;
+            hackColor = GrColorPackRGBA(255, 0, 0, 255);
+            ;
             break;
         case 2:
             hackColor = GrColorPackRGBA(255, 0, 255, 255);
@@ -115,15 +116,11 @@ static void regen_texcoords(char* vertex, size_t vertexStride, const GrGlyph* gl
 #endif
 }
 
-GrTextBlob::VertexRegenerator::VertexRegenerator(GrResourceProvider* resourceProvider,
-                                                 GrTextBlob* blob,
-                                                 int runIdx, int subRunIdx,
-                                                 const SkMatrix& viewMatrix, SkScalar x, SkScalar y,
-                                                 GrColor color,
-                                                 GrDeferredUploadTarget* uploadTarget,
-                                                 GrStrikeCache* glyphCache,
-                                                 GrAtlasManager* fullAtlasManager,
-                                                 SkExclusiveStrikePtr* lazyCache)
+GrTextBlob::VertexRegenerator::VertexRegenerator(
+        GrResourceProvider* resourceProvider, GrTextBlob* blob, int runIdx, int subRunIdx,
+        const SkMatrix& viewMatrix, SkScalar x, SkScalar y, GrColor color,
+        GrDeferredUploadTarget* uploadTarget, GrStrikeCache* glyphCache,
+        GrAtlasManager* fullAtlasManager, SkExclusiveStrikePtr* lazyCache)
         : fResourceProvider(resourceProvider)
         , fViewMatrix(viewMatrix)
         , fBlob(blob)
@@ -172,7 +169,7 @@ bool GrTextBlob::VertexRegenerator::doRegen(GrTextBlob::VertexRegenerator::Resul
             effects.fPathEffect = fRun->fPathEffect.get();
             effects.fMaskFilter = fRun->fMaskFilter.get();
             *fLazyCache =
-                SkStrikeCache::FindOrCreateStrikeExclusive(*desc, effects, *fRun->fTypeface);
+                    SkStrikeCache::FindOrCreateStrikeExclusive(*desc, effects, *fRun->fTypeface);
         }
 
         if (regenGlyphs) {
@@ -206,14 +203,12 @@ bool GrTextBlob::VertexRegenerator::doRegen(GrTextBlob::VertexRegenerator::Resul
             if (!fFullAtlasManager->hasGlyph(glyph)) {
                 GrDrawOpAtlas::ErrorCode code;
                 code = strike->addGlyphToAtlas(fResourceProvider, fUploadTarget, fGlyphCache,
-                                              fFullAtlasManager, glyph,
-                                              fLazyCache->get(), fSubRun->maskFormat(),
-                                              fSubRun->needsTransform());
+                                               fFullAtlasManager, glyph, fLazyCache->get(),
+                                               fSubRun->maskFormat(), fSubRun->needsTransform());
                 if (GrDrawOpAtlas::ErrorCode::kError == code) {
                     // Something horrible has happened - drop the op
                     return false;
-                }
-                else if (GrDrawOpAtlas::ErrorCode::kTryAgain == code) {
+                } else if (GrDrawOpAtlas::ErrorCode::kTryAgain == code) {
                     fBrokenRun = glyphIdx > 0;
                     result->fFinished = false;
                     return true;
@@ -245,9 +240,9 @@ bool GrTextBlob::VertexRegenerator::doRegen(GrTextBlob::VertexRegenerator::Resul
         if (regenGlyphs) {
             fSubRun->setStrike(std::move(strike));
         }
-        fSubRun->setAtlasGeneration(fBrokenRun
-                                    ? GrDrawOpAtlas::kInvalidAtlasGeneration
-                                    : fFullAtlasManager->atlasGeneration(fSubRun->maskFormat()));
+        fSubRun->setAtlasGeneration(
+                fBrokenRun ? GrDrawOpAtlas::kInvalidAtlasGeneration
+                           : fFullAtlasManager->atlasGeneration(fSubRun->maskFormat()));
     } else {
         // For the non-texCoords case we need to ensure that we update the associated use tokens
         fFullAtlasManager->setUseTokenBulk(*fSubRun->bulkUseToken(),

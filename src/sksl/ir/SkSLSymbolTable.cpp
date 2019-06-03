@@ -5,17 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "SkSLSymbolTable.h"
-#include "SkSLUnresolvedFunction.h"
+#include "src/sksl/ir/SkSLSymbolTable.h"
+#include "src/sksl/ir/SkSLUnresolvedFunction.h"
 
 namespace SkSL {
 
 std::vector<const FunctionDeclaration*> SymbolTable::GetFunctions(const Symbol& s) {
     switch (s.fKind) {
         case Symbol::kFunctionDeclaration_Kind:
-            return { &((FunctionDeclaration&) s) };
+            return {&((FunctionDeclaration&)s)};
         case Symbol::kUnresolvedFunction_Kind:
-            return ((UnresolvedFunction&) s).fFunctions;
+            return ((UnresolvedFunction&)s).fFunctions;
         default:
             return std::vector<const FunctionDeclaration*>();
     }
@@ -82,17 +82,17 @@ void SymbolTable::addWithoutOwnership(StringFragment name, const Symbol* symbol)
         const Symbol* oldSymbol = existing->second;
         if (oldSymbol->fKind == Symbol::kFunctionDeclaration_Kind) {
             std::vector<const FunctionDeclaration*> functions;
-            functions.push_back((const FunctionDeclaration*) oldSymbol);
-            functions.push_back((const FunctionDeclaration*) symbol);
+            functions.push_back((const FunctionDeclaration*)oldSymbol);
+            functions.push_back((const FunctionDeclaration*)symbol);
             UnresolvedFunction* u = new UnresolvedFunction(std::move(functions));
             fSymbols[name] = u;
             this->takeOwnership(u);
         } else if (oldSymbol->fKind == Symbol::kUnresolvedFunction_Kind) {
             std::vector<const FunctionDeclaration*> functions;
-            for (const auto* f : ((UnresolvedFunction&) *oldSymbol).fFunctions) {
+            for (const auto* f : ((UnresolvedFunction&)*oldSymbol).fFunctions) {
                 functions.push_back(f);
             }
-            functions.push_back((const FunctionDeclaration*) symbol);
+            functions.push_back((const FunctionDeclaration*)symbol);
             UnresolvedFunction* u = new UnresolvedFunction(std::move(functions));
             fSymbols[name] = u;
             this->takeOwnership(u);
@@ -102,16 +102,15 @@ void SymbolTable::addWithoutOwnership(StringFragment name, const Symbol* symbol)
     }
 }
 
-
 void SymbolTable::markAllFunctionsBuiltin() {
     for (const auto& pair : fSymbols) {
         switch (pair.second->fKind) {
             case Symbol::kFunctionDeclaration_Kind:
-                ((FunctionDeclaration&) *pair.second).fBuiltin = true;
+                ((FunctionDeclaration&)*pair.second).fBuiltin = true;
                 break;
             case Symbol::kUnresolvedFunction_Kind:
-                for (auto& f : ((UnresolvedFunction&) *pair.second).fFunctions) {
-                    ((FunctionDeclaration*) f)->fBuiltin = true;
+                for (auto& f : ((UnresolvedFunction&)*pair.second).fFunctions) {
+                    ((FunctionDeclaration*)f)->fBuiltin = true;
                 }
                 break;
             default:
@@ -128,5 +127,4 @@ std::unordered_map<StringFragment, const Symbol*>::iterator SymbolTable::end() {
     return fSymbols.end();
 }
 
-
-} // namespace
+}  // namespace SkSL

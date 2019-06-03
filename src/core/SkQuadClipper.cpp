@@ -5,14 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "SkQuadClipper.h"
-#include "SkGeometry.h"
+#include "src/core/SkQuadClipper.h"
+#include "src/core/SkGeometry.h"
 
 #include <utility>
 
-SkQuadClipper::SkQuadClipper() {
-    fClip.setEmpty();
-}
+SkQuadClipper::SkQuadClipper() { fClip.setEmpty(); }
 
 void SkQuadClipper::setClip(const SkIRect& clip) {
     // conver to scalars, since that's where we'll see the points
@@ -21,14 +19,13 @@ void SkQuadClipper::setClip(const SkIRect& clip) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static bool chopMonoQuadAt(SkScalar c0, SkScalar c1, SkScalar c2,
-                           SkScalar target, SkScalar* t) {
+static bool chopMonoQuadAt(SkScalar c0, SkScalar c1, SkScalar c2, SkScalar target, SkScalar* t) {
     /* Solve F(t) = y where F(t) := [0](1-t)^2 + 2[1]t(1-t) + [2]t^2
      *  We solve for t, using quadratic equation, hence we have to rearrange
      * our cooefficents to look like At^2 + Bt + C
      */
     SkScalar A = c0 - c1 - c1 + c2;
-    SkScalar B = 2*(c1 - c0);
+    SkScalar B = 2 * (c1 - c0);
     SkScalar C = c0 - target;
 
     SkScalar roots[2];  // we only expect one, but make room for 2 for safety
@@ -72,7 +69,7 @@ bool SkQuadClipper::clipQuad(const SkPoint srcPts[3], SkPoint dst[3]) {
     }
 
     SkScalar t;
-    SkPoint tmp[5]; // for SkChopQuadAt
+    SkPoint tmp[5];  // for SkChopQuadAt
 
     // are we partially above
     if (dst[0].fY < ctop) {

@@ -8,10 +8,10 @@
 #ifndef GrColorSpaceInfo_DEFINED
 #define GrColorSpaceInfo_DEFINED
 
-#include "GrColorSpaceXform.h"
-#include "GrTypes.h"
-#include "SkColorSpace.h"
-#include "SkRefCnt.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkRefCnt.h"
+#include "include/gpu/GrTypes.h"
+#include "src/gpu/GrColorSpaceXform.h"
 
 /** Describes the color space properties of a surface context. */
 class GrColorSpaceInfo {
@@ -20,8 +20,8 @@ public:
 
     bool isLinearlyBlended() const { return fColorSpace && fColorSpace->gammaIsLinear(); }
 
-    SkColorSpace* colorSpace() const { return fColorSpace.get(); }
-    sk_sp<SkColorSpace> refColorSpace() const { return fColorSpace; }
+    SkColorSpace* colorSpace() const noexcept { return fColorSpace.get(); }
+    sk_sp<SkColorSpace> refColorSpace() const noexcept { return fColorSpace; }
 
     GrColorSpaceXform* colorSpaceXformFromSRGB() const;
     sk_sp<GrColorSpaceXform> refColorSpaceXformFromSRGB() const {
@@ -29,7 +29,7 @@ public:
     }
 
     // TODO: Remove or replace with SkColorType
-    GrPixelConfig config() const { return fConfig; }
+    GrPixelConfig config() const noexcept { return fConfig; }
 
 private:
     sk_sp<SkColorSpace> fColorSpace;

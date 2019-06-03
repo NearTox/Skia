@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "SkPathEffect.h"
-#include "SkPath.h"
-#include "SkReadBuffer.h"
-#include "SkWriteBuffer.h"
+#include "include/core/SkPathEffect.h"
+#include "include/core/SkPath.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -31,14 +31,12 @@ void SkPathEffect::computeFastBounds(SkRect* dst, const SkRect& src) const {
     *dst = this->onComputeFastBounds(src);
 }
 
-bool SkPathEffect::asPoints(PointData* results, const SkPath& src,
-                    const SkStrokeRec& rec, const SkMatrix& mx, const SkRect* rect) const {
+bool SkPathEffect::asPoints(PointData* results, const SkPath& src, const SkStrokeRec& rec,
+                            const SkMatrix& mx, const SkRect* rect) const {
     return this->onAsPoints(results, src, rec, mx, rect);
 }
 
-SkPathEffect::DashType SkPathEffect::asADash(DashInfo* info) const {
-    return this->onAsADash(info);
-}
+SkPathEffect::DashType SkPathEffect::asADash(DashInfo* info) const { return this->onAsADash(info); }
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -51,8 +49,7 @@ SkPathEffect::DashType SkPathEffect::asADash(DashInfo* info) const {
 class SkPairPathEffect : public SkPathEffect {
 protected:
     SkPairPathEffect(sk_sp<SkPathEffect> pe0, sk_sp<SkPathEffect> pe1)
-        : fPE0(std::move(pe0)), fPE1(std::move(pe1))
-    {
+            : fPE0(std::move(pe0)), fPE1(std::move(pe1)) {
         SkASSERT(fPE0.get());
         SkASSERT(fPE1.get());
     }
@@ -96,12 +93,12 @@ public:
 
 protected:
     SkComposePathEffect(sk_sp<SkPathEffect> outer, sk_sp<SkPathEffect> inner)
-        : INHERITED(outer, inner) {}
+            : INHERITED(outer, inner) {}
 
     bool onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
                       const SkRect* cullRect) const override {
-        SkPath          tmp;
-        const SkPath*   ptr = &src;
+        SkPath tmp;
+        const SkPath* ptr = &src;
 
         if (fPE1->filterPath(&tmp, src, rec, cullRect)) {
             ptr = &tmp;
@@ -154,7 +151,7 @@ public:
 
 protected:
     SkSumPathEffect(sk_sp<SkPathEffect> first, sk_sp<SkPathEffect> second)
-        : INHERITED(first, second) {}
+            : INHERITED(first, second) {}
 
     bool onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
                       const SkRect* cullRect) const override {

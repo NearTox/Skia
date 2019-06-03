@@ -5,18 +5,17 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkFlate_DEFINED
 #define SkFlate_DEFINED
 
-#include "SkStream.h"
+#include "include/core/SkStream.h"
 
 /**
-  * Wrap a stream in this class to compress the information written to
-  * this stream using the Deflate algorithm.
-  *
-  * See http://en.wikipedia.org/wiki/DEFLATE
-  */
+ * Wrap a stream in this class to compress the information written to
+ * this stream using the Deflate algorithm.
+ *
+ * See http://en.wikipedia.org/wiki/DEFLATE
+ */
 class SkDeflateWStream final : public SkWStream {
 public:
     /** Does not take ownership of the stream.
@@ -30,9 +29,7 @@ public:
         gzip adds a header with a magic number to the beginning of the
         stream, allowing a client to identify a gzip file.
      */
-    SkDeflateWStream(SkWStream*,
-                     int compressionLevel = -1,
-                     bool gzip = false);
+    SkDeflateWStream(SkWStream*, int compressionLevel = -1, bool gzip = false);
 
     /** The destructor calls finalize(). */
     ~SkDeflateWStream() override;

@@ -8,8 +8,8 @@
 #ifndef SKSL_EXPRESSION
 #define SKSL_EXPRESSION
 
-#include "SkSLType.h"
-#include "SkSLVariable.h"
+#include "src/sksl/ir/SkSLType.h"
+#include "src/sksl/ir/SkSLVariable.h"
 
 #include <unordered_map>
 
@@ -47,17 +47,13 @@ struct Expression : public IRNode {
     };
 
     Expression(int offset, Kind kind, const Type& type)
-    : INHERITED(offset)
-    , fKind(kind)
-    , fType(std::move(type)) {}
+            : INHERITED(offset), fKind(kind), fType(std::move(type)) {}
 
     /**
      * Returns true if this expression is constant. compareConstant must be implemented for all
      * constants!
      */
-    virtual bool isConstant() const {
-        return false;
-    }
+    virtual bool isConstant() const { return false; }
 
     /**
      * Compares this constant expression against another constant expression of the same type. It is
@@ -72,17 +68,13 @@ struct Expression : public IRNode {
      * For an expression which evaluates to a constant int, returns the value. Otherwise calls
      * ABORT.
      */
-    virtual int64_t getConstantInt() const {
-        ABORT("not a constant int");
-    }
+    virtual int64_t getConstantInt() const { ABORT("not a constant int"); }
 
     /**
      * For an expression which evaluates to a constant float, returns the value. Otherwise calls
      * ABORT.
      */
-    virtual double getConstantFloat() const {
-        ABORT("not a constant float");
-    }
+    virtual double getConstantFloat() const { ABORT("not a constant float"); }
 
     /**
      * Returns true if evaluating the expression potentially has side effects. Expressions may never
@@ -103,8 +95,34 @@ struct Expression : public IRNode {
         return nullptr;
     }
 
-    virtual int coercionCost(const Type& target) const {
-        return fType.coercionCost(target);
+    virtual int coercionCost(const Type& target) const { return fType.coercionCost(target); }
+
+    /**
+     * For a literal vector expression, return the floating point value of the n'th vector
+     * component. It is an error to call this method on an expression which is not a literal vector.
+     */
+    virtual double getFVecComponent(int n) const {
+        SkASSERT(false);
+        return 0;
+    }
+
+    /**
+     * For a literal vector expression, return the integer value of the n'th vector component. It is
+     * an error to call this method on an expression which is not a literal vector.
+     */
+    virtual int64_t getIVecComponent(int n) const {
+        SkASSERT(false);
+        return 0;
+    }
+
+    /**
+     * For a literal matrix expression, return the floating point value of the component at
+     * [col][row]. It is an error to call this method on an expression which is not a literal
+     * matrix.
+     */
+    virtual double getMatComponent(int col, int row) const {
+        SkASSERT(false);
+        return 0;
     }
 
     virtual std::unique_ptr<Expression> clone() const = 0;
@@ -115,6 +133,6 @@ struct Expression : public IRNode {
     typedef IRNode INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

@@ -8,8 +8,8 @@
 #ifndef SkOTTable_head_DEFINED
 #define SkOTTable_head_DEFINED
 
-#include "SkEndian.h"
-#include "SkOTTableTypes.h"
+#include "src/core/SkEndian.h"
+#include "src/sfnt/SkOTTableTypes.h"
 
 #pragma pack(push, 1)
 
@@ -23,51 +23,52 @@ struct SkOTTableHead {
     SK_OT_Fixed version;
     static const SK_OT_Fixed version1 = SkTEndian_SwapBE32(0x00010000);
     SK_OT_Fixed fontRevision;
-    static const uint32_t fontChecksum = 0xB1B0AFBA; //checksum of all TT fonts
+    static const uint32_t fontChecksum = 0xB1B0AFBA;  // checksum of all TT fonts
     SK_OT_ULONG checksumAdjustment;
     SK_OT_ULONG magicNumber;
     static const SK_OT_ULONG magicNumberConst = SkTEndian_SwapBE32(0x5F0F3CF5);
     union Flags {
         struct Field {
-            //8-15
-            SK_OT_BYTE_BITFIELD(
-                GXMetamorphosis_Apple,
-                HasStrongRTL_Apple,
-                HasIndicStyleRearrangement,
-                AgfaMicroTypeExpressProcessed,
-                FontConverted,
-                DesignedForClearType,
-                LastResort,
-                Reserved15)
-            //0-7
-            SK_OT_BYTE_BITFIELD(
-                BaselineAtY0,
-                LeftSidebearingAtX0,
-                InstructionsDependOnPointSize,
-                IntegerScaling,
-                InstructionsAlterAdvanceWidth,
-                VerticalCenteredGlyphs_Apple,
-                Reserved06,
-                RequiresLayout_Apple)
+            // 8-15
+            SK_OT_BYTE_BITFIELD(GXMetamorphosis_Apple,
+                                HasStrongRTL_Apple,
+                                HasIndicStyleRearrangement,
+                                AgfaMicroTypeExpressProcessed,
+                                FontConverted,
+                                DesignedForClearType,
+                                LastResort,
+                                Reserved15)
+            // 0-7
+            SK_OT_BYTE_BITFIELD(BaselineAtY0,
+                                LeftSidebearingAtX0,
+                                InstructionsDependOnPointSize,
+                                IntegerScaling,
+                                InstructionsAlterAdvanceWidth,
+                                VerticalCenteredGlyphs_Apple,
+                                Reserved06,
+                                RequiresLayout_Apple)
         } field;
         struct Raw {
             static const SK_OT_USHORT BaselineAtY0Mask = SkTEndian_SwapBE16(1 << 0);
             static const SK_OT_USHORT LeftSidebearingAtX0Mask = SkTEndian_SwapBE16(1 << 1);
-            static const SK_OT_USHORT InstructionsDependOnPointSizeMask = SkTEndian_SwapBE16(1 << 2);
+            static const SK_OT_USHORT InstructionsDependOnPointSizeMask =
+                    SkTEndian_SwapBE16(1 << 2);
             static const SK_OT_USHORT IntegerScalingMask = SkTEndian_SwapBE16(1 << 3);
-            static const SK_OT_USHORT InstructionsAlterAdvanceWidthMask = SkTEndian_SwapBE16(1 << 4);
+            static const SK_OT_USHORT InstructionsAlterAdvanceWidthMask =
+                    SkTEndian_SwapBE16(1 << 4);
             static const SK_OT_USHORT VerticalCenteredGlyphs_AppleMask = SkTEndian_SwapBE16(1 << 5);
-            //Reserved
+            // Reserved
             static const SK_OT_USHORT RequiresLayout_AppleMask = SkTEndian_SwapBE16(1 << 7);
 
             static const SK_OT_USHORT GXMetamorphosis_AppleMask = SkTEndian_SwapBE16(1 << 8);
             static const SK_OT_USHORT HasStrongRTL_AppleMask = SkTEndian_SwapBE16(1 << 9);
             static const SK_OT_USHORT HasIndicStyleRearrangementMask = SkTEndian_SwapBE16(1 << 10);
-            static const SK_OT_USHORT AgfaMicroTypeExpressProcessedMask = SkTEndian_SwapBE16(1 << 11);
+            static const SK_OT_USHORT AgfaMicroTypeExpressProcessedMask =
+                    SkTEndian_SwapBE16(1 << 11);
             static const SK_OT_USHORT FontConvertedMask = SkTEndian_SwapBE16(1 << 12);
             static const SK_OT_USHORT DesignedForClearTypeMask = SkTEndian_SwapBE16(1 << 13);
             static const SK_OT_USHORT LastResortMask = SkTEndian_SwapBE16(1 << 14);
-            //Reserved
+            // Reserved
             SK_OT_USHORT value;
         } raw;
     } flags;
@@ -80,26 +81,18 @@ struct SkOTTableHead {
     SK_OT_SHORT yMax;
     union MacStyle {
         struct Field {
-            //8-15
+            // 8-15
+            SK_OT_BYTE_BITFIELD(Reserved08,
+                                Reserved09,
+                                Reserved10,
+                                Reserved11,
+                                Reserved12,
+                                Reserved13,
+                                Reserved14,
+                                Reserved15)
+            // 0-7
             SK_OT_BYTE_BITFIELD(
-                Reserved08,
-                Reserved09,
-                Reserved10,
-                Reserved11,
-                Reserved12,
-                Reserved13,
-                Reserved14,
-                Reserved15)
-            //0-7
-            SK_OT_BYTE_BITFIELD(
-                Bold,
-                Italic,
-                Underline,
-                Outline,
-                Shadow,
-                Condensed,
-                Extended,
-                Reserved07)
+                    Bold, Italic, Underline, Outline, Shadow, Condensed, Extended, Reserved07)
         } field;
         struct Raw {
             static const SK_OT_USHORT BoldMask = SkTEndian_SwapBE16(1);
@@ -138,9 +131,9 @@ struct SkOTTableHead {
 
 #pragma pack(pop)
 
-
 #include <stddef.h>
-static_assert(offsetof(SkOTTableHead, glyphDataFormat) == 52, "SkOTTableHead_glyphDataFormat_not_at_52");
+static_assert(offsetof(SkOTTableHead, glyphDataFormat) == 52,
+              "SkOTTableHead_glyphDataFormat_not_at_52");
 static_assert(sizeof(SkOTTableHead) == 54, "sizeof_SkOTTableHead_not_54");
 
 #endif

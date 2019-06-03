@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "SkTypefaceCache.h"
-#include "SkMutex.h"
+#include "src/core/SkTypefaceCache.h"
 #include <atomic>
+#include "include/private/SkMutex.h"
 
-#define TYPEFACE_CACHE_LIMIT    1024
+#define TYPEFACE_CACHE_LIMIT 1024
 
 SkTypefaceCache::SkTypefaceCache() {}
 
@@ -46,9 +46,7 @@ void SkTypefaceCache::purge(int numToPurge) {
     }
 }
 
-void SkTypefaceCache::purgeAll() {
-    this->purge(fTypefaces.count());
-}
+void SkTypefaceCache::purgeAll() { this->purge(fTypefaces.count()); }
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -87,8 +85,8 @@ static bool DumpProc(SkTypeface* face, void* ctx) {
     face->getFamilyName(&n);
     SkFontStyle s = face->fontStyle();
     SkFontID id = face->uniqueID();
-    SkDebugf("SkTypefaceCache: face %p fontID %d weight %d width %d style %d name %s\n",
-             face, id, s.weight(), s.width(), s.slant(), n.c_str());
+    SkDebugf("SkTypefaceCache: face %p fontID %d weight %d width %d style %d name %s\n", face, id,
+             s.weight(), s.width(), s.slant(), n.c_str());
     return false;
 }
 #endif

@@ -4,19 +4,19 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "Sample.h"
-#include "SkCanvas.h"
-#include "SkPath.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPath.h"
+#include "samplecode/Sample.h"
 
-#include <iostream>
 #include <cmath>
+#include <iostream>
 
 #define PI SK_ScalarPI
 
 #define LIN_SEGMENTS 10
 
 class OverstrokeView : public Sample {
-   public:
+public:
     SkScalar fStroke;
     int fPathType;  // super lazy enum
     bool fClosePath;
@@ -31,7 +31,7 @@ class OverstrokeView : public Sample {
         this->setBGColor(0xFFFFFFFF);
     }
 
-   protected:
+protected:
     bool onQuery(Sample::Event* evt) override {
         if (Sample::TitleQ(*evt)) {
             Sample::TitleR(evt, "PathOverstroke");
@@ -86,7 +86,7 @@ class OverstrokeView : public Sample {
         path.moveTo(p1);
 
         SkPoint p3 = SkPoint::Make((p1.x() + p2.x()) / 3.0f, p1.y() * 0.7f);
-        SkPoint p4 = SkPoint::Make(2.0f*(p1.x() + p2.x()) / 3.0f, p1.y() * 1.5f);
+        SkPoint p4 = SkPoint::Make(2.0f * (p1.x() + p2.x()) / 3.0f, p1.y() * 1.5f);
 
         path.cubicTo(p3, p4, p2);
 
@@ -195,10 +195,10 @@ class OverstrokeView : public Sample {
         canvas->drawPath(path, hairp);
     }
 
-   private:
+private:
     typedef Sample INHERITED;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new OverstrokeView(); )
+DEF_SAMPLE(return new OverstrokeView();)

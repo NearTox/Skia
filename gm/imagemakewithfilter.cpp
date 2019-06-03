@@ -5,20 +5,35 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkBlurImageFilter.h"
-#include "SkCanvas.h"
-#include "SkColorFilter.h"
-#include "SkColorFilterImageFilter.h"
-#include "SkDropShadowImageFilter.h"
-#include "SkSurface.h"
+#include "gm/gm.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkBlurImageFilter.h"
+#include "include/effects/SkColorFilterImageFilter.h"
+#include "include/effects/SkDropShadowImageFilter.h"
+#include "tools/ToolUtils.h"
+
+#include <utility>
 
 ///////////////////////////////////////////////////////////////////////////////
 
 static void show_bounds(SkCanvas* canvas, const SkIRect& subset, const SkIRect& clip) {
-    SkIRect rects[] { subset, clip };
-    SkColor colors[] { SK_ColorRED, SK_ColorBLUE };
+    SkIRect rects[]{subset, clip};
+    SkColor colors[]{SK_ColorRED, SK_ColorBLUE};
 
     SkPaint paint;
     paint.setStyle(SkPaint::kStroke_Style);
@@ -35,32 +50,26 @@ static void show_bounds(SkCanvas* canvas, const SkIRect& subset, const SkIRect& 
 // given offset.
 class ImageMakeWithFilterGM : public skiagm::GM {
 public:
-    ImageMakeWithFilterGM () {}
+    ImageMakeWithFilterGM() {}
 
 protected:
-    SkString onShortName() override {
-        return SkString("imagemakewithfilter");
-    }
+    SkString onShortName() override { return SkString("imagemakewithfilter"); }
 
     SkISize onISize() override { return SkISize::Make(440, 530); }
 
     void onDraw(SkCanvas* canvas) override {
-        auto cf = SkColorFilter::MakeModeFilter(SK_ColorGREEN, SkBlendMode::kSrc);
+        auto cf = SkColorFilters::Blend(SK_ColorGREEN, SkBlendMode::kSrc);
         sk_sp<SkImageFilter> filters[] = {
-            SkColorFilterImageFilter::Make(std::move(cf), nullptr),
-            SkBlurImageFilter::Make(2.0f, 2.0f, nullptr),
-            SkDropShadowImageFilter::Make(
-                10.0f, 5.0f, 3.0f, 3.0f, SK_ColorBLUE,
-                SkDropShadowImageFilter::kDrawShadowAndForeground_ShadowMode,
-                nullptr),
+                SkColorFilterImageFilter::Make(std::move(cf), nullptr),
+                SkBlurImageFilter::Make(2.0f, 2.0f, nullptr),
+                SkDropShadowImageFilter::Make(
+                        10.0f, 5.0f, 3.0f, 3.0f, SK_ColorBLUE,
+                        SkDropShadowImageFilter::kDrawShadowAndForeground_ShadowMode, nullptr),
         };
 
-        SkIRect clipBounds[] {
-            { -20, -20, 100, 100 },
-            {   0,   0,  75,  75 },
-            {  20,  20, 100, 100 },
-            { -20, -20,  50,  50 },
-            {  20,  20,  50,  50 },
+        SkIRect clipBounds[]{
+                {-20, -20, 100, 100}, {0, 0, 75, 75},   {20, 20, 100, 100},
+                {-20, -20, 50, 50},   {20, 20, 50, 50},
         };
 
         SkImageInfo info = SkImageInfo::MakeN32(100, 100, kPremul_SkAlphaType);
@@ -70,8 +79,8 @@ protected:
 
         canvas->translate(MARGIN, MARGIN);
 
-        sk_sp<SkSurface> surface = sk_tool_utils::makeSurface(canvas, info);
-        sk_tool_utils::draw_checkerboard(surface->getCanvas());
+        sk_sp<SkSurface> surface = ToolUtils::makeSurface(canvas, info);
+        ToolUtils::draw_checkerboard(surface->getCanvas());
         sk_sp<SkImage> source = surface->makeImageSnapshot();
 
         for (auto clipBound : clipBounds) {
@@ -86,8 +95,10 @@ protected:
                 SkASSERT(source->isTextureBacked() == result->isTextureBacked());
                 result = result->makeSubset(outSubset);
                 canvas->drawImage(result.get(), SkIntToScalar(offset.fX), SkIntToScalar(offset.fY));
-                show_bounds(canvas, SkIRect::MakeXYWH(offset.x(), offset.y(), outSubset.width(),
-                                                      outSubset.height()), clipBound);
+                show_bounds(canvas,
+                            SkIRect::MakeXYWH(offset.x(), offset.y(), outSubset.width(),
+                                              outSubset.height()),
+                            clipBound);
                 canvas->translate(DX, 0);
             }
             canvas->restore();
@@ -98,4 +109,4 @@ protected:
 private:
     typedef GM INHERITED;
 };
-DEF_GM( return new ImageMakeWithFilterGM; )
+DEF_GM(return new ImageMakeWithFilterGM;)

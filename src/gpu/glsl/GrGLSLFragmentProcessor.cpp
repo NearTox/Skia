@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "GrGLSLFragmentProcessor.h"
-#include "GrFragmentProcessor.h"
-#include "GrProcessor.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLUniformHandler.h"
+#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#include "src/gpu/GrFragmentProcessor.h"
+#include "src/gpu/GrProcessor.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
 void GrGLSLFragmentProcessor::setData(const GrGLSLProgramDataManager& pdman,
                                       const GrFragmentProcessor& processor) {
@@ -38,7 +38,8 @@ void GrGLSLFragmentProcessor::internalEmitChild(int childIndex, const char* inpu
     // Prepare a mangled input color variable if the default is not used,
     // inputName remains the empty string if no variable is needed.
     SkString inputName;
-    if (inputColor&& strcmp("half4(1.0)", inputColor) != 0 && strcmp("half4(1)", inputColor) != 0) {
+    if (inputColor && strcmp("half4(1.0)", inputColor) != 0 &&
+        strcmp("half4(1)", inputColor) != 0) {
         // The input name is based off of the current mangle string, and
         // since this is called after onBeforeChildProcEmitCode(), it will be
         // unique to the child processor (exactly what we want for its input).

@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "GrDriverBugWorkarounds.h"
+#include "include/gpu/GrDriverBugWorkarounds.h"
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 GrDriverBugWorkarounds::GrDriverBugWorkarounds() = default;
 
@@ -15,10 +15,10 @@ GrDriverBugWorkarounds::GrDriverBugWorkarounds(
         const std::vector<int>& enabled_driver_bug_workarounds) {
     for (auto id : enabled_driver_bug_workarounds) {
         switch (id) {
-#define GPU_OP(type, name)                        \
-            case GrDriverBugWorkaroundType::type: \
-                name = true;                      \
-                break;
+#define GPU_OP(type, name)                \
+    case GrDriverBugWorkaroundType::type: \
+        name = true;                      \
+        break;
 
             GPU_DRIVER_BUG_WORKAROUNDS(GPU_OP)
 #undef GPU_OP
@@ -29,10 +29,8 @@ GrDriverBugWorkarounds::GrDriverBugWorkarounds(
     }
 }
 
-void GrDriverBugWorkarounds::applyOverrides(
-        const GrDriverBugWorkarounds& workarounds) {
-#define GPU_OP(type, name) \
-    name |= workarounds.name;
+void GrDriverBugWorkarounds::applyOverrides(const GrDriverBugWorkarounds& workarounds) {
+#define GPU_OP(type, name) name |= workarounds.name;
 
     GPU_DRIVER_BUG_WORKAROUNDS(GPU_OP)
 #undef GPU_OP

@@ -7,13 +7,13 @@
 #ifndef SkBmpCodec_DEFINED
 #define SkBmpCodec_DEFINED
 
-#include "SkCodec.h"
-#include "SkColorSpace.h"
-#include "SkColorTable.h"
-#include "SkImageInfo.h"
-#include "SkStream.h"
-#include "SkSwizzler.h"
-#include "SkTypes.h"
+#include "include/codec/SkCodec.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkTypes.h"
+#include "src/codec/SkColorTable.h"
+#include "src/codec/SkSwizzler.h"
 
 /*
  * This class enables code sharing between its bmp codec subclasses.  The
@@ -21,7 +21,7 @@
  */
 class SkBmpCodec : public SkCodec {
 public:
-    static bool IsBmp(const void*, size_t);
+    static bool IsBmp(const void*, size_t) noexcept;
 
     /*
      * Assumes IsBmp was called and returned true
@@ -37,11 +37,12 @@ public:
     static std::unique_ptr<SkCodec> MakeFromIco(std::unique_ptr<SkStream>, Result*);
 
 protected:
+    SkBmpCodec(SkEncodedInfo&& info, std::unique_ptr<SkStream>, uint16_t bitsPerPixel,
+               SkCodec::SkScanlineOrder rowOrder);
 
-    SkBmpCodec(SkEncodedInfo&& info, std::unique_ptr<SkStream>,
-            uint16_t bitsPerPixel, SkCodec::SkScanlineOrder rowOrder);
-
-    SkEncodedImageFormat onGetEncodedFormat() const override { return SkEncodedImageFormat::kBMP; }
+    SkEncodedImageFormat onGetEncodedFormat() const noexcept override {
+        return SkEncodedImageFormat::kBMP;
+    }
 
     /*
      * Read enough of the stream to initialize the SkBmpCodec.
@@ -54,13 +55,9 @@ protected:
     /*
      * Returns whether this BMP is part of an ICO image.
      */
-    bool inIco() const {
-        return this->onInIco();
-    }
+    bool inIco() const noexcept { return this->onInIco(); }
 
-    virtual bool onInIco() const {
-        return false;
-    }
+    virtual bool onInIco() const noexcept { return false; }
 
     /*
      * Get the destination row number corresponding to the encoded row number.
@@ -73,14 +70,14 @@ protected:
      *               when we want to decode the full or one when we are
      *               sampling.
      */
-    int32_t getDstRow(int32_t y, int32_t height) const;
+    int32_t getDstRow(int32_t y, int32_t height) const noexcept;
 
     /*
      * Accessors used by subclasses
      */
-    uint16_t bitsPerPixel() const { return fBitsPerPixel; }
-    SkScanlineOrder onGetScanlineOrder() const override { return fRowOrder; }
-    size_t srcRowBytes() const { return fSrcRowBytes; }
+    uint16_t bitsPerPixel() const noexcept { return fBitsPerPixel; }
+    SkScanlineOrder onGetScanlineOrder() const noexcept override { return fRowOrder; }
+    size_t srcRowBytes() const noexcept { return fSrcRowBytes; }
 
     /*
      * To be overriden by bmp subclasses, which provide unique implementations.
@@ -91,11 +88,10 @@ protected:
      * @param options         Additonal options to pass to the decoder.
      */
     virtual SkCodec::Result onPrepareToDecode(const SkImageInfo& dstInfo,
-            const SkCodec::Options& options) = 0;
-    SkCodec::Result prepareToDecode(const SkImageInfo& dstInfo,
-            const SkCodec::Options& options);
+                                              const SkCodec::Options& options) = 0;
+    SkCodec::Result prepareToDecode(const SkImageInfo& dstInfo, const SkCodec::Options& options);
 
-    uint32_t* xformBuffer() const { return fXformBuffer.get(); }
+    uint32_t* xformBuffer() const noexcept { return fXformBuffer.get(); }
     void resetXformBuffer(int count) { fXformBuffer.reset(new uint32_t[count]); }
 
     /*
@@ -106,7 +102,6 @@ protected:
     static constexpr auto kXformSrcColorFormat = skcms_PixelFormat_BGRA_8888;
 
 private:
-
     /*
      * Creates a bmp decoder
      * Reads enough of the stream to determine the image format
@@ -129,20 +124,20 @@ private:
      * @return            Number of rows successfully decoded
      */
     virtual int decodeRows(const SkImageInfo& dstInfo, void* dst, size_t dstRowBytes,
-            const Options& opts) = 0;
+                           const Options& opts) = 0;
 
     virtual bool skipRows(int count);
 
     Result onStartScanlineDecode(const SkImageInfo& dstInfo,
-            const SkCodec::Options&) override;
+                                 const SkCodec::Options&) noexcept override;
 
     int onGetScanlines(void* dst, int count, size_t rowBytes) override;
 
     bool onSkipScanlines(int count) override;
 
-    const uint16_t              fBitsPerPixel;
-    const SkScanlineOrder       fRowOrder;
-    const size_t                fSrcRowBytes;
+    const uint16_t fBitsPerPixel;
+    const SkScanlineOrder fRowOrder;
+    const size_t fSrcRowBytes;
     std::unique_ptr<uint32_t[]> fXformBuffer;
 
     typedef SkCodec INHERITED;

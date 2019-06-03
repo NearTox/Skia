@@ -5,13 +5,20 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkGradientShader.h"
-#include "SkGraphics.h"
-#include "SkPath.h"
-#include "SkRegion.h"
-#include "SkShader.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkGradientShader.h"
 
 static void make_bitmap(SkBitmap* bitmap) {
     bitmap->allocN32Pixels(64, 64);
@@ -21,18 +28,17 @@ static void make_bitmap(SkBitmap* bitmap) {
     canvas.drawColor(SK_ColorRED);
     SkPaint paint;
     paint.setAntiAlias(true);
-    const SkPoint pts[] = { { 0, 0 }, { 64, 64 } };
-    const SkColor colors[] = { SK_ColorWHITE, SK_ColorBLUE };
-    paint.setShader(SkGradientShader::MakeLinear(pts, colors, nullptr, 2,
-                                                 SkShader::kClamp_TileMode));
+    const SkPoint pts[] = {{0, 0}, {64, 64}};
+    const SkColor colors[] = {SK_ColorWHITE, SK_ColorBLUE};
+    paint.setShader(SkGradientShader::MakeLinear(pts, colors, nullptr, 2, SkTileMode::kClamp));
     canvas.drawCircle(32, 32, 32, paint);
 }
 
 class DrawBitmapRect2 : public skiagm::GM {
     bool fUseIRect;
+
 public:
-    DrawBitmapRect2(bool useIRect) : fUseIRect(useIRect) {
-    }
+    DrawBitmapRect2(bool useIRect) : fUseIRect(useIRect) {}
 
 protected:
     SkString onShortName() override {
@@ -41,19 +47,20 @@ protected:
         return str;
     }
 
-    SkISize onISize() override {
-        return SkISize::Make(640, 480);
-    }
+    SkISize onISize() override { return SkISize::Make(640, 480); }
 
     void onDraw(SkCanvas* canvas) override {
         canvas->drawColor(0xFFCCCCCC);
 
-        const SkIRect src[] = {
-            { 0, 0, 32, 32 },
-            { 0, 0, 80, 80 },
-            { 32, 32, 96, 96 },
-            { -32, -32, 32, 32, }
-        };
+        const SkIRect src[] = {{0, 0, 32, 32},
+                               {0, 0, 80, 80},
+                               {32, 32, 96, 96},
+                               {
+                                       -32,
+                                       -32,
+                                       32,
+                                       32,
+                               }};
 
         SkPaint paint;
         paint.setStyle(SkPaint::kStroke_Style);
@@ -61,7 +68,7 @@ protected:
         SkBitmap bitmap;
         make_bitmap(&bitmap);
 
-        SkRect dstR = { 0, 200, 128, 380 };
+        SkRect dstR = {0, 200, 128, 380};
 
         canvas->translate(16, 40);
         for (size_t i = 0; i < SK_ARRAY_COUNT(src); i++) {
@@ -93,11 +100,9 @@ static void make_3x3_bitmap(SkBitmap* bitmap) {
     const int xSize = 3;
     const int ySize = 3;
 
-    const SkColor textureData[xSize][ySize] = {
-        { SK_ColorRED,    SK_ColorWHITE, SK_ColorBLUE },
-        { SK_ColorGREEN,  SK_ColorBLACK, SK_ColorCYAN },
-        { SK_ColorYELLOW, SK_ColorGRAY,  SK_ColorMAGENTA }
-    };
+    const SkColor textureData[xSize][ySize] = {{SK_ColorRED, SK_ColorWHITE, SK_ColorBLUE},
+                                               {SK_ColorGREEN, SK_ColorBLACK, SK_ColorCYAN},
+                                               {SK_ColorYELLOW, SK_ColorGRAY, SK_ColorMAGENTA}};
 
     bitmap->allocN32Pixels(xSize, ySize, true);
     SkCanvas canvas(*bitmap);
@@ -120,9 +125,7 @@ static void make_3x3_bitmap(SkBitmap* bitmap) {
 //                           |    |
 class DrawBitmapRect3 : public skiagm::GM {
 public:
-    DrawBitmapRect3() {
-        this->setBGColor(SK_ColorBLACK);
-    }
+    DrawBitmapRect3() { this->setBGColor(SK_ColorBLACK); }
 
 protected:
     SkString onShortName() override {
@@ -131,17 +134,14 @@ protected:
         return str;
     }
 
-    SkISize onISize() override {
-        return SkISize::Make(640, 480);
-    }
+    SkISize onISize() override { return SkISize::Make(640, 480); }
 
     void onDraw(SkCanvas* canvas) override {
-
         SkBitmap bitmap;
         make_3x3_bitmap(&bitmap);
 
-        SkRect srcR = { 0.5f, 0.5f, 2.5f, 2.5f };
-        SkRect dstR = { 100, 100, 300, 200 };
+        SkRect srcR = {0.5f, 0.5f, 2.5f, 2.5f};
+        SkRect dstR = {100, 100, 300, 200};
 
         canvas->drawBitmapRect(bitmap, srcR, dstR, nullptr, SkCanvas::kStrict_SrcRectConstraint);
     }
@@ -152,7 +152,6 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 static void make_big_bitmap(SkBitmap* bitmap) {
-
     constexpr int gXSize = 4096;
     constexpr int gYSize = 4096;
     constexpr int gBorderWidth = 10;
@@ -160,8 +159,8 @@ static void make_big_bitmap(SkBitmap* bitmap) {
     bitmap->allocN32Pixels(gXSize, gYSize);
     for (int y = 0; y < gYSize; ++y) {
         for (int x = 0; x < gXSize; ++x) {
-            if (x <= gBorderWidth || x >= gXSize-gBorderWidth ||
-                y <= gBorderWidth || y >= gYSize-gBorderWidth) {
+            if (x <= gBorderWidth || x >= gXSize - gBorderWidth || y <= gBorderWidth ||
+                y >= gYSize - gBorderWidth) {
                 *bitmap->getAddr32(x, y) = SkPreMultiplyColor(0x88FFFFFF);
             } else {
                 *bitmap->getAddr32(x, y) = SkPreMultiplyColor(0x88FF0000);
@@ -179,9 +178,7 @@ class DrawBitmapRect4 : public skiagm::GM {
     SkBitmap fBigBitmap;
 
 public:
-    DrawBitmapRect4(bool useIRect) : fUseIRect(useIRect) {
-        this->setBGColor(0x88444444);
-    }
+    DrawBitmapRect4(bool useIRect) : fUseIRect(useIRect) { this->setBGColor(0x88444444); }
 
 protected:
     SkString onShortName() override {
@@ -190,24 +187,20 @@ protected:
         return str;
     }
 
-    SkISize onISize() override {
-        return SkISize::Make(640, 480);
-    }
+    SkISize onISize() override { return SkISize::Make(640, 480); }
 
-    void onOnceBeforeDraw() override {
-        make_big_bitmap(&fBigBitmap);
-    }
+    void onOnceBeforeDraw() override { make_big_bitmap(&fBigBitmap); }
 
     void onDraw(SkCanvas* canvas) override {
         SkPaint paint;
         paint.setAlpha(128);
         paint.setBlendMode(SkBlendMode::kXor);
 
-        SkRect srcR1 = { 0.0f, 0.0f, 4096.0f, 2040.0f };
-        SkRect dstR1 = { 10.1f, 10.1f, 629.9f, 400.9f };
+        SkRect srcR1 = {0.0f, 0.0f, 4096.0f, 2040.0f};
+        SkRect dstR1 = {10.1f, 10.1f, 629.9f, 400.9f};
 
-        SkRect srcR2 = { 4085.0f, 10.0f, 4087.0f, 12.0f };
-        SkRect dstR2 = { 10, 410, 30, 430 };
+        SkRect srcR2 = {4085.0f, 10.0f, 4087.0f, 12.0f};
+        SkRect dstR2 = {10, 410, 30, 430};
 
         if (!fUseIRect) {
             canvas->drawBitmapRect(fBigBitmap, srcR1, dstR1, &paint,
@@ -237,9 +230,7 @@ protected:
         return str;
     }
 
-    SkISize onISize() override {
-        return SkISize::Make(640, 480);
-    }
+    SkISize onISize() override { return SkISize::Make(640, 480); }
 
     void onOnceBeforeDraw() override {
         fBM.allocN32Pixels(10, 10);
@@ -266,15 +257,15 @@ protected:
 private:
     typedef skiagm::GM INHERITED;
 };
-DEF_GM( return new BitmapRectRounding; )
+DEF_GM(return new BitmapRectRounding;)
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new DrawBitmapRect2(false); )
-DEF_GM( return new DrawBitmapRect2(true); )
-DEF_GM( return new DrawBitmapRect3(); )
+DEF_GM(return new DrawBitmapRect2(false);)
+DEF_GM(return new DrawBitmapRect2(true);)
+DEF_GM(return new DrawBitmapRect3();)
 
 #ifndef SK_BUILD_FOR_ANDROID
-DEF_GM( return new DrawBitmapRect4(false); )
-DEF_GM( return new DrawBitmapRect4(true); )
+DEF_GM(return new DrawBitmapRect4(false);)
+DEF_GM(return new DrawBitmapRect4(true);)
 #endif

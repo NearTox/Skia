@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "SkSurface_Base.h"
-#include "SkImageInfoPriv.h"
-#include "SkImagePriv.h"
-#include "SkCanvas.h"
-#include "SkDevice.h"
-#include "SkMallocPixelRef.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkMallocPixelRef.h"
+#include "include/private/SkImageInfoPriv.h"
+#include "src/core/SkDevice.h"
+#include "src/core/SkImagePriv.h"
+#include "src/image/SkSurface_Base.h"
 
 class SkSurface_Raster : public SkSurface_Base {
 public:
@@ -28,9 +28,9 @@ public:
     void onRestoreBackingMutability() override;
 
 private:
-    SkBitmap    fBitmap;
-    size_t      fRowBytes;
-    bool        fWeOwnThePixels;
+    SkBitmap fBitmap;
+    size_t fRowBytes;
+    bool fWeOwnThePixels;
 
     typedef SkSurface_Base INHERITED;
 };
@@ -70,19 +70,17 @@ bool SkSurfaceValidateRasterInfo(const SkImageInfo& info, size_t rowBytes) {
 SkSurface_Raster::SkSurface_Raster(const SkImageInfo& info, void* pixels, size_t rb,
                                    void (*releaseProc)(void* pixels, void* context), void* context,
                                    const SkSurfaceProps* props)
-    : INHERITED(info, props)
-{
+        : INHERITED(info, props) {
     fBitmap.installPixels(info, pixels, rb, releaseProc, context);
-    fRowBytes = 0;              // don't need to track the rowbytes
-    fWeOwnThePixels = false;    // We are "Direct"
+    fRowBytes = 0;            // don't need to track the rowbytes
+    fWeOwnThePixels = false;  // We are "Direct"
 }
 
 SkSurface_Raster::SkSurface_Raster(const SkImageInfo& info, sk_sp<SkPixelRef> pr,
                                    const SkSurfaceProps* props)
-    : INHERITED(pr->width(), pr->height(), props)
-{
+        : INHERITED(pr->width(), pr->height(), props) {
     fBitmap.setInfo(info, pr->rowBytes());
-    fRowBytes = pr->rowBytes(); // we track this, so that subsequent re-allocs will match
+    fRowBytes = pr->rowBytes();  // we track this, so that subsequent re-allocs will match
     fBitmap.setPixelRef(std::move(pr), 0, 0);
     fWeOwnThePixels = true;
 }
@@ -93,8 +91,7 @@ sk_sp<SkSurface> SkSurface_Raster::onNewSurface(const SkImageInfo& info) {
     return SkSurface::MakeRaster(info, &this->props());
 }
 
-void SkSurface_Raster::onDraw(SkCanvas* canvas, SkScalar x, SkScalar y,
-                              const SkPaint* paint) {
+void SkSurface_Raster::onDraw(SkCanvas* canvas, SkScalar x, SkScalar y, const SkPaint* paint) {
     canvas->drawBitmap(fBitmap, x, y, paint);
 }
 
@@ -104,7 +101,7 @@ sk_sp<SkImage> SkSurface_Raster::onNewImageSnapshot(const SkIRect* subset) {
         SkBitmap dst;
         dst.allocPixels(fBitmap.info().makeWH(subset->width(), subset->height()));
         SkAssertResult(fBitmap.readPixels(dst.pixmap(), subset->left(), subset->top()));
-        dst.setImmutable(); // key, so MakeFromBitmap doesn't make a copy of the buffer
+        dst.setImmutable();  // key, so MakeFromBitmap doesn't make a copy of the buffer
         return SkImage::MakeFromBitmap(dst);
     }
 
@@ -162,8 +159,9 @@ void SkSurface_Raster::onCopyOnWrite(ContentChangeMode mode) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-sk_sp<SkSurface> SkSurface::MakeRasterDirectReleaseProc(const SkImageInfo& info, void* pixels,
-        size_t rb, void (*releaseProc)(void* pixels, void* context), void* context,
+sk_sp<SkSurface> SkSurface::MakeRasterDirectReleaseProc(
+        const SkImageInfo& info, void* pixels, size_t rb,
+        void (*releaseProc)(void* pixels, void* context), void* context,
         const SkSurfaceProps* props) {
     if (nullptr == releaseProc) {
         context = nullptr;
@@ -189,7 +187,7 @@ sk_sp<SkSurface> SkSurface::MakeRaster(const SkImageInfo& info, size_t rowBytes,
         return nullptr;
     }
 
-    sk_sp<SkPixelRef> pr = SkMallocPixelRef::MakeZeroed(info, rowBytes);
+    sk_sp<SkPixelRef> pr = SkMallocPixelRef::MakeAllocate(info, rowBytes);
     if (!pr) {
         return nullptr;
     }

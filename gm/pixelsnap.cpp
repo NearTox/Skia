@@ -5,10 +5,20 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-
-#include "SkShader.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "tools/ToolUtils.h"
 
 // This class of GMs test how edges/verts snap near rounding boundaries in device space without
 // anti-aliaing.
@@ -35,35 +45,34 @@ protected:
 
     void onDraw(SkCanvas* canvas) override {
         SkPaint bgPaint;
-        bgPaint.setShader(
-                sk_tool_utils::create_checkerboard_shader(0xFFAAAAAA, 0xFF777777, 1));
+        bgPaint.setShader(ToolUtils::create_checkerboard_shader(0xFFAAAAAA, 0xFF777777, 1));
         canvas->drawPaint(bgPaint);
 
         SkString offset;
         SkPaint labelPaint;
         labelPaint.setColor(SK_ColorWHITE);
-        SkFont font(sk_tool_utils::create_portable_typeface(), SkIntToScalar(kLabelTextSize));
+        SkFont font(ToolUtils::create_portable_typeface(), SkIntToScalar(kLabelTextSize));
         SkPaint linePaint;
         linePaint.setColor(SK_ColorWHITE);
 
         // Draw row labels
         canvas->save();
-            canvas->translate(0, SkIntToScalar(kLabelOffsetY));
-            for (int i = 0; i <= kSubPixelSteps; ++i) {
-                offset.printf("%d", i);
-                canvas->drawString(offset, 0, i * kTrans + SkIntToScalar(kLabelTextSize),
-                                   font, labelPaint);
-            }
+        canvas->translate(0, SkIntToScalar(kLabelOffsetY));
+        for (int i = 0; i <= kSubPixelSteps; ++i) {
+            offset.printf("%d", i);
+            canvas->drawString(offset, 0, i * kTrans + SkIntToScalar(kLabelTextSize), font,
+                               labelPaint);
+        }
         canvas->restore();
 
         // Draw col labels
         canvas->save();
-            canvas->translate(SkIntToScalar(kLabelOffsetX), 0);
-            for (int i = 0; i <= kSubPixelSteps; ++i) {
-                offset.printf("%d", i);
-                canvas->drawString(offset, i * SkIntToScalar(kTrans), SkIntToScalar(kLabelTextSize),
-                                   font, labelPaint);
-            }
+        canvas->translate(SkIntToScalar(kLabelOffsetX), 0);
+        for (int i = 0; i <= kSubPixelSteps; ++i) {
+            offset.printf("%d", i);
+            canvas->drawString(offset, i * SkIntToScalar(kTrans), SkIntToScalar(kLabelTextSize),
+                               font, labelPaint);
+        }
         canvas->restore();
 
         canvas->translate(SkIntToScalar(kLabelOffsetX), SkIntToScalar(kLabelOffsetY));
@@ -87,8 +96,8 @@ protected:
             for (int j = 0; j <= kSubPixelSteps; ++j) {
                 canvas->save();
                 // +1's account for the grid lines around each test case.
-                canvas->translate(j * (kTrans + 1.f/kSubPixelSteps) + 1,
-                                  i * (kTrans + 1.f/kSubPixelSteps) + 1);
+                canvas->translate(j * (kTrans + 1.f / kSubPixelSteps) + 1,
+                                  i * (kTrans + 1.f / kSubPixelSteps) + 1);
                 this->drawElement(canvas);
                 canvas->restore();
             }
@@ -105,7 +114,7 @@ class PointSnapGM : public PixelSnapGM {
 protected:
     SkString onShortName() override { return SkString("pixel_snap_point"); }
     void drawElement(SkCanvas* canvas) override {
-        const SkPoint pt = { 1, 1 };
+        const SkPoint pt = {1, 1};
         SkPaint paint;
         paint.setColor(SK_ColorBLUE);
         canvas->drawPoints(SkCanvas::kPoints_PointMode, 1, &pt, paint);
@@ -155,19 +164,19 @@ protected:
         SkRect rect = SkRect::MakeXYWH(3, 3, 1, 1);
         paint.setColor(SK_ColorGREEN);
         const SkPoint lines[] = {
-            { 3, 3 }, { 0, 3 },
-            { 3, 3 }, { 3, 0 },
-            { 4, 3 }, { 7, 3 },
-            { 4, 3 }, { 4, 0 },
-            { 3, 4 }, { 0, 4 },
-            { 3, 4 }, { 3, 7 },
-            { 4, 4 }, { 7, 4 },
-            { 4, 4 }, { 4, 7 },
+                {3, 3}, {0, 3}, {3, 3}, {3, 0}, {4, 3}, {7, 3}, {4, 3}, {4, 0},
+                {3, 4}, {0, 4}, {3, 4}, {3, 7}, {4, 4}, {7, 4}, {4, 4}, {4, 7},
         };
         canvas->drawPoints(SkCanvas::kLines_PointMode, SK_ARRAY_COUNT(lines), lines, paint);
 
         const SkPoint pts[] = {
-            { 4, 3 }, { 4, 4, }, { 3, 3 }, { 3, 4 },
+                {4, 3},
+                {
+                        4,
+                        4,
+                },
+                {3, 3},
+                {3, 4},
         };
         paint.setColor(SK_ColorBLUE);
         canvas->drawPoints(SkCanvas::kPoints_PointMode, SK_ARRAY_COUNT(pts), pts, paint);

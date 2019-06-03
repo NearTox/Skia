@@ -8,8 +8,8 @@
 #ifndef SKSL_ASTPRECISION
 #define SKSL_ASTPRECISION
 
-#include "SkSLASTDeclaration.h"
-#include "../ir/SkSLModifiers.h"
+#include "src/sksl/ast/SkSLASTDeclaration.h"
+#include "src/sksl/ir/SkSLModifiers.h"
 
 namespace SkSL {
 
@@ -19,14 +19,16 @@ namespace SkSL {
 struct ASTPrecision : public ASTDeclaration {
     // FIXME handle the type
     ASTPrecision(int offset, Modifiers::Flag precision)
-    : INHERITED(offset, kPrecision_Kind)
-    , fPrecision(precision) {}
+            : INHERITED(offset, kPrecision_Kind), fPrecision(precision) {}
 
     String description() const {
         switch (fPrecision) {
-            case Modifiers::kLowp_Flag: return String("precision lowp float;");
-            case Modifiers::kMediump_Flag: return String("precision mediump float;");
-            case Modifiers::kHighp_Flag: return String("precision highp float;");
+            case Modifiers::kLowp_Flag:
+                return String("precision lowp float;");
+            case Modifiers::kMediump_Flag:
+                return String("precision mediump float;");
+            case Modifiers::kHighp_Flag:
+                return String("precision highp float;");
             default:
                 SkASSERT(false);
                 return String("<error>");
@@ -40,6 +42,6 @@ struct ASTPrecision : public ASTDeclaration {
     typedef ASTDeclaration INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

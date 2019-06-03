@@ -5,18 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "SkMathPriv.h"
-#include "SkFixed.h"
-#include "SkFloatBits.h"
-#include "SkFloatingPoint.h"
-#include "SkSafeMath.h"
-#include "SkScalar.h"
+#include "include/core/SkScalar.h"
+#include "include/private/SkFixed.h"
+#include "include/private/SkFloatBits.h"
+#include "include/private/SkFloatingPoint.h"
+#include "src/core/SkMathPriv.h"
+#include "src/core/SkSafeMath.h"
 
-#define sub_shift(zeros, x, n)  \
-    zeros -= n;                 \
+#define sub_shift(zeros, x, n) \
+    zeros -= n;                \
     x >>= n
 
-int SkCLZ_portable(uint32_t x) {
+int SkCLZ_portable(uint32_t x) noexcept {
     if (x == 0) {
         return 32;
     }
@@ -44,18 +44,18 @@ int SkCLZ_portable(uint32_t x) {
 ///////////////////////////////////////////////////////////////////////////////
 
 /* www.worldserver.com/turk/computergraphics/FixedSqrt.pdf
-*/
-int32_t SkSqrtBits(int32_t x, int count) {
+ */
+int32_t SkSqrtBits(int32_t x, int count) noexcept {
     SkASSERT(x >= 0 && count > 0 && (unsigned)count <= 30);
 
-    uint32_t    root = 0;
-    uint32_t    remHi = 0;
-    uint32_t    remLo = x;
+    uint32_t root = 0;
+    uint32_t remHi = 0;
+    uint32_t remLo = x;
 
     do {
         root <<= 1;
 
-        remHi = (remHi<<2) | (remLo>>30);
+        remHi = (remHi << 2) | (remLo >> 30);
         remLo <<= 2;
 
         uint32_t testDiv = (root << 1) + 1;
@@ -68,31 +68,15 @@ int32_t SkSqrtBits(int32_t x, int count) {
     return root;
 }
 
-float SkScalarSinCos(float radians, float* cosValue) {
-    float sinValue = sk_float_sin(radians);
-
-    if (cosValue) {
-        *cosValue = sk_float_cos(radians);
-        if (SkScalarNearlyZero(*cosValue)) {
-            *cosValue = 0;
-        }
-    }
-
-    if (SkScalarNearlyZero(sinValue)) {
-        sinValue = 0;
-    }
-    return sinValue;
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-size_t SkSafeMath::Add(size_t x, size_t y) {
+size_t SkSafeMath::Add(size_t x, size_t y) noexcept {
     SkSafeMath tmp;
     size_t sum = tmp.add(x, y);
     return tmp.ok() ? sum : SIZE_MAX;
 }
 
-size_t SkSafeMath::Mul(size_t x, size_t y) {
+size_t SkSafeMath::Mul(size_t x, size_t y) noexcept {
     SkSafeMath tmp;
     size_t prod = tmp.mul(x, y);
     return tmp.ok() ? prod : SIZE_MAX;
@@ -100,7 +84,7 @@ size_t SkSafeMath::Mul(size_t x, size_t y) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool sk_floats_are_unit(const float array[], size_t count) {
+bool sk_floats_are_unit(const float array[], size_t count) noexcept {
     bool is_unit = true;
     for (size_t i = 0; i < count; ++i) {
         is_unit &= (array[i] >= 0) & (array[i] <= 1);

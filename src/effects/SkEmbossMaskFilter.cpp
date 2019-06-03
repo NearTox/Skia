@@ -5,14 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "SkEmbossMaskFilter.h"
-#include "SkBlurMaskFilter.h"
-#include "SkBlurMask.h"
-#include "SkColorPriv.h"
-#include "SkEmbossMask.h"
-#include "SkReadBuffer.h"
-#include "SkWriteBuffer.h"
-#include "SkString.h"
+#include "src/effects/SkEmbossMaskFilter.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkString.h"
+#include "include/effects/SkBlurMaskFilter.h"
+#include "src/core/SkBlurMask.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
+#include "src/effects/SkEmbossMask.h"
 
 static void normalize3(SkScalar dst[3], const SkScalar src[3]) {
     SkScalar mag = SkScalarSquare(src[0]) + SkScalarSquare(src[1]) + SkScalarSquare(src[2]);
@@ -44,7 +44,7 @@ sk_sp<SkMaskFilter> SkBlurMaskFilter::MakeEmboss(SkScalar blurSigma, const SkSca
         return nullptr;
     }
 
-    SkEmbossMaskFilter::Light   light;
+    SkEmbossMaskFilter::Light light;
 
     memcpy(light.fDirection, direction, sizeof(light.fDirection));
     // ambient should be 0...1 as a scalar
@@ -60,18 +60,15 @@ sk_sp<SkMaskFilter> SkBlurMaskFilter::MakeEmboss(SkScalar blurSigma, const SkSca
 ///////////////////////////////////////////////////////////////////////////////
 
 SkEmbossMaskFilter::SkEmbossMaskFilter(SkScalar blurSigma, const Light& light)
-    : fLight(light), fBlurSigma(blurSigma)
-{
+        : fLight(light), fBlurSigma(blurSigma) {
     SkASSERT(fBlurSigma > 0);
     SkASSERT(SkScalarsAreFinite(fLight.fDirection, 3));
 }
 
-SkMask::Format SkEmbossMaskFilter::getFormat() const {
-    return SkMask::k3D_Format;
-}
+SkMask::Format SkEmbossMaskFilter::getFormat() const { return SkMask::k3D_Format; }
 
-bool SkEmbossMaskFilter::filterMask(SkMask* dst, const SkMask& src,
-                                    const SkMatrix& matrix, SkIPoint* margin) const {
+bool SkEmbossMaskFilter::filterMask(SkMask* dst, const SkMask& src, const SkMatrix& matrix,
+                                    SkIPoint* margin) const {
     if (src.fFormat != SkMask::kA8_Format) {
         return false;
     }
@@ -84,7 +81,7 @@ bool SkEmbossMaskFilter::filterMask(SkMask* dst, const SkMask& src,
 
     dst->fFormat = SkMask::k3D_Format;
     if (margin) {
-        margin->set(SkScalarCeilToInt(3*sigma), SkScalarCeilToInt(3*sigma));
+        margin->set(SkScalarCeilToInt(3 * sigma), SkScalarCeilToInt(3 * sigma));
     }
 
     if (src.fImage == nullptr) {
@@ -95,9 +92,9 @@ bool SkEmbossMaskFilter::filterMask(SkMask* dst, const SkMask& src,
 
     {
         uint8_t* alphaPlane = dst->fImage;
-        size_t   planeSize = dst->computeImageSize();
+        size_t planeSize = dst->computeImageSize();
         if (0 == planeSize) {
-            return false;   // too big to allocate, abort
+            return false;  // too big to allocate, abort
         }
         dst->fImage = SkMask::AllocImage(planeSize * 3);
         memcpy(dst->fImage, alphaPlane, planeSize);
@@ -105,9 +102,8 @@ bool SkEmbossMaskFilter::filterMask(SkMask* dst, const SkMask& src,
     }
 
     // run the light direction through the matrix...
-    Light   light = fLight;
-    matrix.mapVectors((SkVector*)(void*)light.fDirection,
-                      (SkVector*)(void*)fLight.fDirection, 1);
+    Light light = fLight;
+    matrix.mapVectors((SkVector*)(void*)light.fDirection, (SkVector*)(void*)fLight.fDirection, 1);
 
     // now restore the length of the XY component
     // cast to SkVector so we can call setLength (this double cast silences alias warnings)
@@ -127,7 +123,7 @@ bool SkEmbossMaskFilter::filterMask(SkMask* dst, const SkMask& src,
 sk_sp<SkFlattenable> SkEmbossMaskFilter::CreateProc(SkReadBuffer& buffer) {
     Light light;
     if (buffer.readByteArray(&light, sizeof(Light))) {
-        light.fPad = 0; // for the font-cache lookup to be clean
+        light.fPad = 0;  // for the font-cache lookup to be clean
         const SkScalar sigma = buffer.readScalar();
         return Make(sigma, light);
     }
@@ -136,7 +132,7 @@ sk_sp<SkFlattenable> SkEmbossMaskFilter::CreateProc(SkReadBuffer& buffer) {
 
 void SkEmbossMaskFilter::flatten(SkWriteBuffer& buffer) const {
     Light tmpLight = fLight;
-    tmpLight.fPad = 0;    // for the font-cache lookup to be clean
+    tmpLight.fPad = 0;  // for the font-cache lookup to be clean
     buffer.writeByteArray(&tmpLight, sizeof(tmpLight));
     buffer.writeScalar(fBlurSigma);
 }

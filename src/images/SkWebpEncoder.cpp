@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-#include "SkImageEncoderPriv.h"
+#include "src/images/SkImageEncoderPriv.h"
 
 #ifdef SK_HAS_WEBP_LIBRARY
 
-#include "SkBitmap.h"
-#include "SkColorData.h"
-#include "SkImageEncoderFns.h"
-#include "SkStream.h"
-#include "SkTemplates.h"
-#include "SkUnPreMultiply.h"
-#include "SkUTF.h"
-#include "SkWebpEncoder.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkUnPreMultiply.h"
+#include "include/encode/SkWebpEncoder.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkTemplates.h"
+#include "src/images/SkImageEncoderFns.h"
+#include "src/utils/SkUTF.h"
 
 // A WebP encoder only, on top of (subset of) libwebp
 // For more information on WebP image format, and libwebp library, see:
@@ -34,12 +34,11 @@
 //   http://review.webmproject.org/gitweb?p=libwebp.git
 
 #include <stdio.h>
-extern "C" {
+
 // If moving libwebp out of skia source tree, path for webp headers must be
 // updated accordingly. Here, we enforce using local copy in webp sub-directory.
-#include "webp/encode.h"
-#include "webp/mux.h"
-}
+#include <webp/encode.h>
+#include <webp/mux.h>
 
 static transform_scanline_proc choose_proc(const SkImageInfo& info) {
     switch (info.colorType()) {
@@ -97,10 +96,9 @@ static transform_scanline_proc choose_proc(const SkImageInfo& info) {
     }
 }
 
-static int stream_writer(const uint8_t* data, size_t data_size,
-                         const WebPPicture* const picture) {
-  SkWStream* const stream = (SkWStream*)picture->custom_ptr;
-  return stream->write(data, data_size) ? 1 : 0;
+static int stream_writer(const uint8_t* data, size_t data_size, const WebPPicture* const picture) {
+    SkWStream* const stream = (SkWStream*)picture->custom_ptr;
+    return stream->write(data, data_size) ? 1 : 0;
 }
 
 bool SkWebpEncoder::Encode(SkWStream* stream, const SkPixmap& pixmap, const Options& opts) {
@@ -167,10 +165,7 @@ bool SkWebpEncoder::Encode(SkWStream* stream, const SkPixmap& pixmap, const Opti
     // to RGB color space.
     std::unique_ptr<uint8_t[]> rgb(new uint8_t[rgbStride * pic.height]);
     for (int y = 0; y < pic.height; ++y) {
-        proc((char*) &rgb[y * rgbStride],
-             (const char*) &src[y * rowBytes],
-             pic.width,
-             bpp);
+        proc((char*)&rgb[y * rgbStride], (const char*)&src[y * rowBytes], pic.width, bpp);
     }
 
     auto importProc = WebPPictureImportRGB;
@@ -192,8 +187,8 @@ bool SkWebpEncoder::Encode(SkWStream* stream, const SkPixmap& pixmap, const Opti
 
     if (icc) {
         sk_sp<SkData> encodedData = tmp.detachAsData();
-        WebPData encoded = { encodedData->bytes(), encodedData->size() };
-        WebPData iccChunk = { icc->bytes(), icc->size() };
+        WebPData encoded = {encodedData->bytes(), encodedData->size()};
+        WebPData iccChunk = {icc->bytes(), icc->size()};
 
         SkAutoTCallVProc<WebPMux, WebPMuxDelete> mux(WebPMuxNew());
         if (WEBP_MUX_OK != WebPMuxSetImage(mux, &encoded, 0)) {

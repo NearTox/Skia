@@ -5,14 +5,26 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkColorPriv.h"
-#include "SkGradientShader.h"
-#include "SkImage.h"
-#include "SkMathPriv.h"
-#include "SkRandom.h"
-#include "SkShader.h"
-#include "SkSurface.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/utils/SkRandom.h"
+#include "src/core/SkMathPriv.h"
 
 static sk_sp<SkImage> makebm(int w, int h) {
     SkImageInfo info = SkImageInfo::MakeN32Premul(w, h);
@@ -22,34 +34,28 @@ static sk_sp<SkImage> makebm(int w, int h) {
     const SkScalar wScalar = SkIntToScalar(w);
     const SkScalar hScalar = SkIntToScalar(h);
 
-    const SkPoint     pt = { wScalar / 2, hScalar / 2 };
+    const SkPoint pt = {wScalar / 2, hScalar / 2};
 
-    const SkScalar    radius = 4 * SkMaxScalar(wScalar, hScalar);
+    const SkScalar radius = 4 * SkMaxScalar(wScalar, hScalar);
 
-    constexpr SkColor     colors[] = { SK_ColorRED, SK_ColorYELLOW,
-                                          SK_ColorGREEN, SK_ColorMAGENTA,
-                                          SK_ColorBLUE, SK_ColorCYAN,
-                                          SK_ColorRED};
+    constexpr SkColor colors[] = {SK_ColorRED,  SK_ColorYELLOW, SK_ColorGREEN, SK_ColorMAGENTA,
+                                  SK_ColorBLUE, SK_ColorCYAN,   SK_ColorRED};
 
-    constexpr SkScalar    pos[] = {0,
-                                      SK_Scalar1 / 6,
-                                      2 * SK_Scalar1 / 6,
-                                      3 * SK_Scalar1 / 6,
-                                      4 * SK_Scalar1 / 6,
-                                      5 * SK_Scalar1 / 6,
-                                      SK_Scalar1};
+    constexpr SkScalar pos[] = {0,
+                                SK_Scalar1 / 6,
+                                2 * SK_Scalar1 / 6,
+                                3 * SK_Scalar1 / 6,
+                                4 * SK_Scalar1 / 6,
+                                5 * SK_Scalar1 / 6,
+                                SK_Scalar1};
 
     SkASSERT(SK_ARRAY_COUNT(colors) == SK_ARRAY_COUNT(pos));
-    SkPaint     paint;
+    SkPaint paint;
     SkRect rect = SkRect::MakeWH(wScalar, hScalar);
     SkMatrix mat = SkMatrix::I();
     for (int i = 0; i < 4; ++i) {
         paint.setShader(SkGradientShader::MakeRadial(
-                        pt, radius,
-                        colors, pos,
-                        SK_ARRAY_COUNT(colors),
-                        SkShader::kRepeat_TileMode,
-                        0, &mat));
+                pt, radius, colors, pos, SK_ARRAY_COUNT(colors), SkTileMode::kRepeat, 0, &mat));
         canvas->drawRect(rect, paint);
         rect.inset(wScalar / 8, hScalar / 8);
         mat.postScale(SK_Scalar1 / 4, SK_Scalar1 / 4);
@@ -81,7 +87,7 @@ protected:
             fImage = makebm(gSurfaceSize, gSurfaceSize);
         }
 
-        const SkRect dstRect = { 0, 0, SkIntToScalar(64), SkIntToScalar(64)};
+        const SkRect dstRect = {0, 0, SkIntToScalar(64), SkIntToScalar(64)};
         const int kMaxSrcRectSize = 1 << (SkNextLog2(gSurfaceSize) + 2);
 
         constexpr int kPadX = 30;
@@ -96,7 +102,6 @@ protected:
         paint.setAntiAlias(fAA);
         for (int w = 1; w <= kMaxSrcRectSize; w *= 3) {
             for (int h = 1; h <= kMaxSrcRectSize; h *= 3) {
-
                 const SkIRect srcRect =
                         SkIRect::MakeXYWH((gSurfaceSize - w) / 2, (gSurfaceSize - h) / 2, w, h);
                 canvas->save();
@@ -129,12 +134,12 @@ protected:
     }
 
 private:
-    bool            fAA;
-    sk_sp<SkImage>  fImage;
-    SkString        fName;
+    bool fAA;
+    sk_sp<SkImage> fImage;
+    SkString fName;
 
     typedef skiagm::GM INHERITED;
 };
 
-DEF_GM( return new DrawMiniBitmapRectGM(true); )
-DEF_GM( return new DrawMiniBitmapRectGM(false); )
+DEF_GM(return new DrawMiniBitmapRectGM(true);)
+DEF_GM(return new DrawMiniBitmapRectGM(false);)

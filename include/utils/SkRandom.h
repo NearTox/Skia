@@ -8,9 +8,9 @@
 #ifndef SkRandom_DEFINED
 #define SkRandom_DEFINED
 
-#include "../private/SkFixed.h"
-#include "../private/SkFloatBits.h"
-#include "SkScalar.h"
+#include "include/core/SkScalar.h"
+#include "include/private/SkFixed.h"
+#include "include/private/SkFloatBits.h"
 
 /** \class SkRandom
 
@@ -36,8 +36,8 @@ public:
     /** Return the next pseudo random number as an unsigned 32bit value.
      */
     uint32_t nextU() {
-        fK = kKMul*(fK & 0xffff) + (fK >> 16);
-        fJ = kJMul*(fJ & 0xffff) + (fJ >> 16);
+        fK = kKMul * (fK & 0xffff) + (fK >> 16);
+        fJ = kJMul * (fJ & 0xffff) + (fJ >> 16);
         return (((fK << 16) | (fK >> 16)) + fJ);
     }
 
@@ -57,9 +57,7 @@ public:
     /**
      *  Returns value [min...max) as a float
      */
-    float nextRangeF(float min, float max) {
-        return min + this->nextF() * (max - min);
-    }
+    float nextRangeF(float min, float max) { return min + this->nextF() * (max - min); }
 
     /** Return the next pseudo random number, as an unsigned value of
      at most bitCount bits.
@@ -138,7 +136,7 @@ private:
         }
         SkASSERT(0 != fK && 0 != fJ);
     }
-    static uint32_t NextLCG(uint32_t seed) { return kMul*seed + kAdd; }
+    static constexpr uint32_t NextLCG(uint32_t seed) { return kMul * seed + kAdd; }
 
     /** Return the next pseudo random number expressed as an unsigned SkFixed
      in the range [0..SK_Fixed1).
@@ -152,10 +150,7 @@ private:
 
     //  See "Numerical Recipes in C", 1992 page 284 for these constants
     //  For the LCG that sets the initial state from a seed
-    enum {
-        kMul = 1664525,
-        kAdd = 1013904223
-    };
+    enum { kMul = 1664525, kAdd = 1013904223 };
     // Constants for the multiply-with-carry steps
     enum {
         kKMul = 30345,

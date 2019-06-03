@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkAnimTimer.h"
-#include "SkCanvas.h"
-#include "SkGradientShader.h"
-#include "SkPatchUtils.h"
-#include "SkPerlinNoiseShader.h"
+#include "include/core/SkCanvas.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/effects/SkPerlinNoiseShader.h"
+#include "samplecode/Sample.h"
+#include "src/utils/SkPatchUtils.h"
+#include "tools/timer/AnimTimer.h"
 
 static void draw_control_points(SkCanvas* canvas, const SkPoint cubics[12]) {
-    //draw control points
+    // draw control points
     SkPaint paint;
     SkPoint bottom[SkPatchUtils::kNumPtsCubic];
     SkPatchUtils::GetBottomCubic(cubics, bottom);
@@ -26,7 +26,7 @@ static void draw_control_points(SkCanvas* canvas, const SkPoint cubics[12]) {
 
     paint.setColor(SK_ColorBLACK);
     paint.setStrokeWidth(0.5f);
-    SkPoint corners[4] = { bottom[0], bottom[3], top[0], top[3] };
+    SkPoint corners[4] = {bottom[0], bottom[3], top[0], top[3]};
     canvas->drawPoints(SkCanvas::kLines_PointMode, 4, bottom, paint);
     canvas->drawPoints(SkCanvas::kLines_PointMode, 2, bottom + 1, paint);
     canvas->drawPoints(SkCanvas::kLines_PointMode, 4, top, paint);
@@ -66,51 +66,48 @@ class PerlinPatchView : public Sample {
     SkScalar fXFreq;
     SkScalar fYFreq;
     SkScalar fSeed;
-    SkPoint  fPts[SkPatchUtils::kNumCtrlPts];
+    SkPoint fPts[SkPatchUtils::kNumCtrlPts];
     SkScalar fTexX;
     SkScalar fTexY;
     SkScalar fTexScale;
     SkMatrix fInvMatrix;
-    bool     fShowGrid = false;
+    bool fShowGrid = false;
 
 public:
-    PerlinPatchView() : fXFreq(0.025f), fYFreq(0.025f), fSeed(0.0f),
-                        fTexX(100.0), fTexY(50.0), fTexScale(1.0f) {
+    PerlinPatchView()
+            : fXFreq(0.025f)
+            , fYFreq(0.025f)
+            , fSeed(0.0f)
+            , fTexX(100.0)
+            , fTexY(50.0)
+            , fTexScale(1.0f) {
         const SkScalar s = 2;
         // The order of the colors and points is clockwise starting at upper-left corner.
-        //top points
+        // top points
         fPts[0].set(100 * s, 100 * s);
         fPts[1].set(150 * s, 50 * s);
         fPts[2].set(250 * s, 150 * s);
         fPts[3].set(300 * s, 100 * s);
-        //right points
+        // right points
         fPts[4].set(275 * s, 150 * s);
         fPts[5].set(350 * s, 250 * s);
-        //bottom points
+        // bottom points
         fPts[6].set(300 * s, 300 * s);
         fPts[7].set(250 * s, 250 * s);
-        //left points
+        // left points
         fPts[8].set(150 * s, 350 * s);
         fPts[9].set(100 * s, 300 * s);
         fPts[10].set(50 * s, 250 * s);
         fPts[11].set(150 * s, 150 * s);
 
-        const SkColor colors[SkPatchUtils::kNumCorners] = {
-            0xFF5555FF, 0xFF8888FF, 0xFFCCCCFF
-        };
-        const SkPoint points[2] = { SkPoint::Make(0.0f, 0.0f),
-                                    SkPoint::Make(100.0f, 100.0f) };
-        fShader0 = SkGradientShader::MakeLinear(points,
-                                                  colors,
-                                                  nullptr,
-                                                  3,
-                                                  SkShader::kMirror_TileMode,
-                                                  0,
-                                                  nullptr);
+        const SkColor colors[SkPatchUtils::kNumCorners] = {0xFF5555FF, 0xFF8888FF, 0xFFCCCCFF};
+        const SkPoint points[2] = {SkPoint::Make(0.0f, 0.0f), SkPoint::Make(100.0f, 100.0f)};
+        fShader0 = SkGradientShader::MakeLinear(points, colors, nullptr, 3, SkTileMode::kMirror, 0,
+                                                nullptr);
     }
 
 protected:
-    bool onQuery(Sample::Event* evt)  override {
+    bool onQuery(Sample::Event* evt) override {
         if (Sample::TitleQ(*evt)) {
             Sample::TitleR(evt, "PerlinPatch");
             return true;
@@ -118,18 +115,20 @@ protected:
         SkUnichar uni;
         if (Sample::CharQ(*evt, &uni)) {
             switch (uni) {
-                case 'g': fShowGrid = !fShowGrid; return true;
-                default: break;
+                case 'g':
+                    fShowGrid = !fShowGrid;
+                    return true;
+                default:
+                    break;
             }
         }
         return this->INHERITED::onQuery(evt);
     }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         fSeed += 0.005f;
         return true;
     }
-
 
     void onDrawContent(SkCanvas* canvas) override {
         if (!canvas->getTotalMatrix().invert(&fInvMatrix)) {
@@ -141,16 +140,15 @@ protected:
         SkScalar texWidth = fTexScale * TexWidth;
         SkScalar texHeight = fTexScale * TexHeight;
         const SkPoint texCoords[SkPatchUtils::kNumCorners] = {
-            { fTexX - texWidth, fTexY - texHeight},
-            { fTexX + texWidth, fTexY - texHeight},
-            { fTexX + texWidth, fTexY + texHeight},
-            { fTexX - texWidth, fTexY + texHeight}}
-        ;
+                {fTexX - texWidth, fTexY - texHeight},
+                {fTexX + texWidth, fTexY - texHeight},
+                {fTexX + texWidth, fTexY + texHeight},
+                {fTexX - texWidth, fTexY + texHeight}};
 
         SkScalar scaleFreq = 2.0;
-        fShader1 = SkPerlinNoiseShader::MakeImprovedNoise(fXFreq/scaleFreq, fYFreq/scaleFreq, 4,
-                                                             fSeed);
-        fShaderCompose = SkShader::MakeComposeShader(fShader0, fShader1, SkBlendMode::kSrcOver);
+        fShader1 = SkPerlinNoiseShader::MakeImprovedNoise(fXFreq / scaleFreq, fYFreq / scaleFreq, 4,
+                                                          fSeed);
+        fShaderCompose = SkShaders::Blend(SkBlendMode::kSrcOver, fShader0, fShader1);
 
         paint.setShader(fShaderCompose);
 
@@ -195,7 +193,7 @@ protected:
     bool onClick(Click* click) override {
         PtClick* ptClick = (PtClick*)click;
         if (ptClick->fIndex >= 0) {
-            fPts[ptClick->fIndex].set(click->fCurr.fX , click->fCurr.fY );
+            fPts[ptClick->fIndex].set(click->fCurr.fX, click->fCurr.fY);
         } else if (-1 == ptClick->fIndex) {
             SkScalar xDiff = click->fPrev.fX - click->fCurr.fX;
             SkScalar yDiff = click->fPrev.fY - click->fCurr.fY;
@@ -213,4 +211,4 @@ private:
     typedef Sample INHERITED;
 };
 
-DEF_SAMPLE( return new PerlinPatchView(); )
+DEF_SAMPLE(return new PerlinPatchView();)

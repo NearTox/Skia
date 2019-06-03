@@ -5,28 +5,25 @@
  * found in the LICENSE file.
  */
 
-#include "SkBmpMaskCodec.h"
-#include "SkCodecPriv.h"
-#include "SkColorData.h"
+#include "src/codec/SkBmpMaskCodec.h"
+#include "include/private/SkColorData.h"
+#include "src/codec/SkCodecPriv.h"
 
 /*
  * Creates an instance of the decoder
  */
-SkBmpMaskCodec::SkBmpMaskCodec(SkEncodedInfo&& info,
-                               std::unique_ptr<SkStream> stream,
+SkBmpMaskCodec::SkBmpMaskCodec(SkEncodedInfo&& info, std::unique_ptr<SkStream> stream,
                                uint16_t bitsPerPixel, SkMasks* masks,
                                SkCodec::SkScanlineOrder rowOrder)
-    : INHERITED(std::move(info), std::move(stream), bitsPerPixel, rowOrder)
-    , fMasks(masks)
-    , fMaskSwizzler(nullptr)
-{}
+        : INHERITED(std::move(info), std::move(stream), bitsPerPixel, rowOrder)
+        , fMasks(masks)
+        , fMaskSwizzler(nullptr) {}
 
 /*
  * Initiates the bitmap decode
  */
-SkCodec::Result SkBmpMaskCodec::onGetPixels(const SkImageInfo& dstInfo,
-                                            void* dst, size_t dstRowBytes,
-                                            const Options& opts,
+SkCodec::Result SkBmpMaskCodec::onGetPixels(const SkImageInfo& dstInfo, void* dst,
+                                            size_t dstRowBytes, const Options& opts,
                                             int* rowsDecoded) {
     if (opts.fSubset) {
         // Subsets are not supported.
@@ -51,7 +48,7 @@ SkCodec::Result SkBmpMaskCodec::onGetPixels(const SkImageInfo& dstInfo,
 }
 
 SkCodec::Result SkBmpMaskCodec::onPrepareToDecode(const SkImageInfo& dstInfo,
-        const SkCodec::Options& options) {
+                                                  const SkCodec::Options& options) {
     if (this->colorXform()) {
         this->resetXformBuffer(dstInfo.width());
     }
@@ -65,8 +62,8 @@ SkCodec::Result SkBmpMaskCodec::onPrepareToDecode(const SkImageInfo& dstInfo,
     }
 
     bool srcIsOpaque = this->getEncodedInfo().opaque();
-    fMaskSwizzler.reset(SkMaskSwizzler::CreateMaskSwizzler(swizzlerInfo, srcIsOpaque,
-            fMasks.get(), this->bitsPerPixel(), options));
+    fMaskSwizzler.reset(SkMaskSwizzler::CreateMaskSwizzler(swizzlerInfo, srcIsOpaque, fMasks.get(),
+                                                           this->bitsPerPixel(), options));
     SkASSERT(fMaskSwizzler);
 
     return SkCodec::kSuccess;
@@ -75,9 +72,8 @@ SkCodec::Result SkBmpMaskCodec::onPrepareToDecode(const SkImageInfo& dstInfo,
 /*
  * Performs the decoding
  */
-int SkBmpMaskCodec::decodeRows(const SkImageInfo& dstInfo,
-                                           void* dst, size_t dstRowBytes,
-                                           const Options& opts) {
+int SkBmpMaskCodec::decodeRows(const SkImageInfo& dstInfo, void* dst, size_t dstRowBytes,
+                               const Options& opts) {
     // Iterate over rows of the image
     uint8_t* srcRow = this->srcBuffer();
     const int height = dstInfo.height();

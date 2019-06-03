@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkAnimTimer.h"
-#include "SkCanvas.h"
-#include "SkDrawable.h"
-#include "SkPath.h"
-#include "SkRandom.h"
-#include "SkRSXform.h"
-#include "SkSurface.h"
-#include "SkTextUtils.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkDrawable.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRSXform.h"
+#include "include/core/SkSurface.h"
+#include "include/utils/SkRandom.h"
+#include "include/utils/SkTextUtils.h"
+#include "samplecode/Sample.h"
+#include "tools/timer/AnimTimer.h"
 
 typedef void (*DrawAtlasProc)(SkCanvas*, SkImage*, const SkRSXform[], const SkRect[],
                               const SkColor[], int, const SkRect*, const SkPaint*);
@@ -25,8 +25,8 @@ static void draw_atlas(SkCanvas* canvas, SkImage* atlas, const SkRSXform xform[]
 }
 
 static void draw_atlas_sim(SkCanvas* canvas, SkImage* atlas, const SkRSXform xform[],
-                           const SkRect tex[], const SkColor colors[], int count, const SkRect* cull,
-                           const SkPaint* paint) {
+                           const SkRect tex[], const SkColor colors[], int count,
+                           const SkRect* cull, const SkPaint* paint) {
     for (int i = 0; i < count; ++i) {
         SkMatrix matrix;
         matrix.setRSXform(xform[i]);
@@ -57,9 +57,8 @@ static sk_sp<SkImage> make_atlas(int atlasSize, int cellSize) {
             paint.setColor(rand.nextU());
             paint.setAlpha(0xFF);
             int index = i % strlen(s);
-            SkTextUtils::Draw(canvas, &s[index], 1, kUTF8_SkTextEncoding,
-                              x + half, y + half + half/2, font, paint,
-                              SkTextUtils::kCenter_Align);
+            SkTextUtils::Draw(canvas, &s[index], 1, SkTextEncoding::kUTF8, x + half,
+                              y + half + half / 2, font, paint, SkTextUtils::kCenter_Align);
             i += 1;
         }
     }
@@ -74,14 +73,14 @@ class DrawAtlasDrawable : public SkDrawable {
     };
 
     struct Rec {
-        SkPoint     fCenter;
-        SkVector    fVelocity;
-        SkScalar    fScale;
-        SkScalar    fDScale;
-        SkScalar    fRadian;
-        SkScalar    fDRadian;
-        SkScalar    fAlpha;
-        SkScalar    fDAlpha;
+        SkPoint fCenter;
+        SkVector fVelocity;
+        SkScalar fScale;
+        SkScalar fDScale;
+        SkScalar fRadian;
+        SkScalar fDRadian;
+        SkScalar fAlpha;
+        SkScalar fDAlpha;
 
         void advance(const SkRect& bounds) {
             fCenter += fVelocity;
@@ -103,7 +102,7 @@ class DrawAtlasDrawable : public SkDrawable {
             }
 
             fScale += fDScale;
-            if (fScale > 2 || fScale < SK_Scalar1/2) {
+            if (fScale > 2 || fScale < SK_Scalar1 / 2) {
                 fDScale = -fDScale;
             }
 
@@ -133,15 +132,14 @@ class DrawAtlasDrawable : public SkDrawable {
     };
 
     sk_sp<SkImage> fAtlas;
-    Rec         fRec[N];
-    SkRect      fTex[N];
-    SkRect      fBounds;
-    bool        fUseColors;
+    Rec fRec[N];
+    SkRect fTex[N];
+    SkRect fBounds;
+    bool fUseColors;
 
 public:
     DrawAtlasDrawable(DrawAtlasProc proc, const SkRect& r)
-        : fProc(proc), fBounds(r), fUseColors(false)
-    {
+            : fProc(proc), fBounds(r), fUseColors(false) {
         SkRandom rand;
         fAtlas = make_atlas(kAtlasSize, kCellSize);
         const SkScalar kMaxSpeed = 5;
@@ -153,7 +151,7 @@ public:
                 const SkScalar sy = SkIntToScalar(y);
                 fTex[i].setXYWH(sx, sy, cell, cell);
 
-                fRec[i].fCenter.set(sx + cell/2, sy + 3*cell/4);
+                fRec[i].fCenter.set(sx + cell / 2, sy + 3 * cell / 4);
                 fRec[i].fVelocity.fX = rand.nextSScalar1() * kMaxSpeed;
                 fRec[i].fVelocity.fY = rand.nextSScalar1() * kMaxSpeed;
                 fRec[i].fScale = 1;
@@ -167,9 +165,7 @@ public:
         }
     }
 
-    void toggleUseColors() {
-        fUseColors = !fUseColors;
-    }
+    void toggleUseColors() { fUseColors = !fUseColors; }
 
 protected:
     void onDraw(SkCanvas* canvas) override {
@@ -208,7 +204,7 @@ class DrawAtlasView : public Sample {
     sk_sp<DrawAtlasDrawable> fDrawable;
 
 public:
-    DrawAtlasView(const char name[], DrawAtlasProc proc) : fName(name), fProc(proc) { }
+    DrawAtlasView(const char name[], DrawAtlasProc proc) : fName(name), fProc(proc) {}
 
 protected:
     bool onQuery(Sample::Event* evt) override {
@@ -219,8 +215,11 @@ protected:
         SkUnichar uni;
         if (Sample::CharQ(*evt, &uni)) {
             switch (uni) {
-                case 'C': fDrawable->toggleUseColors(); return true;
-                default: break;
+                case 'C':
+                    fDrawable->toggleUseColors();
+                    return true;
+                default:
+                    break;
             }
         }
         return this->INHERITED::onQuery(evt);
@@ -230,16 +229,12 @@ protected:
         fDrawable = sk_make_sp<DrawAtlasDrawable>(fProc, SkRect::MakeWH(640, 480));
     }
 
-    void onDrawContent(SkCanvas* canvas) override {
-        canvas->drawDrawable(fDrawable.get());
-    }
+    void onDrawContent(SkCanvas* canvas) override { canvas->drawDrawable(fDrawable.get()); }
 
-    bool onAnimate(const SkAnimTimer&) override {
-        return true;
-    }
+    bool onAnimate(const AnimTimer&) override { return true; }
 #if 0
     // TODO: switch over to use this for our animation
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         SkScalar angle = SkDoubleToScalar(fmod(timer.secs() * 360 / 24, 360));
         fAnimatingDrawable->setSweep(angle);
         return true;
@@ -252,5 +247,5 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new DrawAtlasView("DrawAtlas", draw_atlas); )
-DEF_SAMPLE( return new DrawAtlasView("DrawAtlasSim", draw_atlas_sim); )
+DEF_SAMPLE(return new DrawAtlasView("DrawAtlas", draw_atlas);)
+DEF_SAMPLE(return new DrawAtlasView("DrawAtlasSim", draw_atlas_sim);)

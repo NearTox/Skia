@@ -8,9 +8,9 @@
 #ifndef SkottieProperty_DEFINED
 #define SkottieProperty_DEFINED
 
-#include "SkColor.h"
-#include "SkPoint.h"
-#include "SkRefCnt.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRefCnt.h"
 
 #include <functional>
 
@@ -21,33 +21,31 @@ namespace sksg {
 class Color;
 class OpacityEffect;
 
-} // namespace sksg
+}  // namespace sksg
 
 namespace skottie {
 
-using ColorPropertyValue   = SkColor;
+using ColorPropertyValue = SkColor;
 using OpacityPropertyValue = float;
 
 struct TransformPropertyValue {
-    SkPoint  fAnchorPoint,
-             fPosition;
+    SkPoint fAnchorPoint, fPosition;
     SkVector fScale;
-    SkScalar fRotation,
-             fSkew,
-             fSkewAxis;
+    SkScalar fRotation, fSkew, fSkewAxis;
 
     bool operator==(const TransformPropertyValue& other) const;
     bool operator!=(const TransformPropertyValue& other) const;
 };
 
-namespace internal { class AnimationBuilder; }
+namespace internal {
+class AnimationBuilder;
+}
 
 /**
  * Property handles are adapters between user-facing AE model/values
  * and the internal scene-graph representation.
  */
-template <typename ValueT, typename NodeT>
-class SK_API PropertyHandle final {
+template <typename ValueT, typename NodeT> class SK_API PropertyHandle final {
 public:
     ~PropertyHandle();
 
@@ -64,9 +62,9 @@ private:
 
 class TransformAdapter2D;
 
-using ColorPropertyHandle     = PropertyHandle<ColorPropertyValue    , sksg::Color         >;
-using OpacityPropertyHandle   = PropertyHandle<OpacityPropertyValue  , sksg::OpacityEffect >;
-using TransformPropertyHandle = PropertyHandle<TransformPropertyValue, TransformAdapter2D  >;
+using ColorPropertyHandle = PropertyHandle<ColorPropertyValue, sksg::Color>;
+using OpacityPropertyHandle = PropertyHandle<OpacityPropertyValue, sksg::OpacityEffect>;
+using TransformPropertyHandle = PropertyHandle<TransformPropertyValue, TransformAdapter2D>;
 
 /**
  * A PropertyObserver can be used to track and manipulate certain properties of "interesting"
@@ -78,17 +76,15 @@ using TransformPropertyHandle = PropertyHandle<TransformPropertyValue, Transform
  */
 class SK_API PropertyObserver : public SkRefCnt {
 public:
-    template <typename T>
-    using LazyHandle = std::function<std::unique_ptr<T>()>;
+    template <typename T> using LazyHandle = std::function<std::unique_ptr<T>()>;
 
-    virtual void onColorProperty    (const char node_name[],
-                                     const LazyHandle<ColorPropertyHandle>&);
-    virtual void onOpacityProperty  (const char node_name[],
-                                     const LazyHandle<OpacityPropertyHandle>&);
+    virtual void onColorProperty(const char node_name[], const LazyHandle<ColorPropertyHandle>&);
+    virtual void onOpacityProperty(const char node_name[],
+                                   const LazyHandle<OpacityPropertyHandle>&);
     virtual void onTransformProperty(const char node_name[],
                                      const LazyHandle<TransformPropertyHandle>&);
 };
 
-} // namespace skottie
+}  // namespace skottie
 
-#endif // SkottieProperty_DEFINED
+#endif  // SkottieProperty_DEFINED

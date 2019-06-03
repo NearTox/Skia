@@ -5,24 +5,24 @@
  * found in the LICENSE file.
  */
 
-#include "GrTextContext.h"
+#include "src/gpu/text/GrTextContext.h"
 
-#include "GrCaps.h"
-#include "GrContext.h"
-#include "GrRecordingContextPriv.h"
-#include "GrSDFMaskFilter.h"
-#include "GrTextBlobCache.h"
-#include "SkDistanceFieldGen.h"
-#include "SkDraw.h"
-#include "SkDrawProcs.h"
-#include "SkGlyphRun.h"
-#include "SkGr.h"
-#include "SkGraphics.h"
-#include "SkMakeUnique.h"
-#include "SkMaskFilterBase.h"
-#include "SkPaintPriv.h"
-#include "SkTo.h"
-#include "ops/GrMeshDrawOp.h"
+#include "include/core/SkGraphics.h"
+#include "include/gpu/GrContext.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkDistanceFieldGen.h"
+#include "src/core/SkDraw.h"
+#include "src/core/SkDrawProcs.h"
+#include "src/core/SkGlyphRun.h"
+#include "src/core/SkMakeUnique.h"
+#include "src/core/SkMaskFilterBase.h"
+#include "src/core/SkPaintPriv.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrRecordingContextPriv.h"
+#include "src/gpu/SkGr.h"
+#include "src/gpu/ops/GrMeshDrawOp.h"
+#include "src/gpu/text/GrSDFMaskFilter.h"
+#include "src/gpu/text/GrTextBlobCache.h"
 
 // DF sizes and thresholds for usage of the small and medium sizes. For example, above
 // kSmallDFFontLimit we will use the medium size. The large size is used up until the size at
@@ -57,7 +57,7 @@ SkColor GrTextContext::ComputeCanonicalColor(const SkPaint& paint, bool lcd) {
         // TODO figure out where all of these overrides are and see if we can incorporate that logic
         // at a higher level *OR* use sRGB
         SkASSERT(false);
-        //canonicalColor = SkMaskGamma::CanonicalColor(canonicalColor);
+        // canonicalColor = SkMaskGamma::CanonicalColor(canonicalColor);
     } else {
         // A8, though can have mixed BMP text but it shouldn't matter because BMP text won't have
         // gamma corrected masks anyways, nor color
@@ -92,8 +92,7 @@ void GrTextContext::SanitizeOptions(Options* options) {
 }
 
 bool GrTextContext::CanDrawAsDistanceFields(const SkPaint& paint, const SkFont& font,
-                                            const SkMatrix& viewMatrix,
-                                            const SkSurfaceProps& props,
+                                            const SkMatrix& viewMatrix, const SkSurfaceProps& props,
                                             bool contextSupportsDistanceFieldText,
                                             const Options& options) {
     if (!viewMatrix.hasPerspective()) {
@@ -171,16 +170,15 @@ SkFont GrTextContext::InitDistanceFieldFont(const SkFont& font,
 
     dfFont.setEdging(SkFont::Edging::kAntiAlias);
     dfFont.setForceAutoHinting(false);
-    dfFont.setHinting(kNormal_SkFontHinting);
-    dfFont.setSubpixel(true);
+    dfFont.setHinting(SkFontHinting::kNormal);
+
+    // The sub-pixel position will always happen when transforming to the screen.
+    dfFont.setSubpixel(false);
     return dfFont;
 }
 
 std::pair<SkScalar, SkScalar> GrTextContext::InitDistanceFieldMinMaxScale(
-        SkScalar textSize,
-        const SkMatrix& viewMatrix,
-        const GrTextContext::Options& options) {
-
+        SkScalar textSize, const SkMatrix& viewMatrix, const GrTextContext::Options& options) {
     SkScalar scaledTextSize = scaled_text_size(textSize, viewMatrix);
 
     // We have three sizes of distance field text, and within each size 'bucket' there is a floor
@@ -220,7 +218,7 @@ SkPaint GrTextContext::InitDistanceFieldPaint(const SkPaint& paint) {
 
 #if GR_TEST_UTILS
 
-#include "GrRenderTargetContext.h"
+#include "src/gpu/GrRenderTargetContext.h"
 
 GR_DRAW_OP_TEST_DEFINE(GrAtlasTextOp) {
     static uint32_t gContextID = SK_InvalidGenID;
@@ -237,7 +235,7 @@ GR_DRAW_OP_TEST_DEFINE(GrAtlasTextOp) {
 
     // Setup dummy SkPaint / GrPaint / GrRenderTargetContext
     sk_sp<GrRenderTargetContext> rtc(context->priv().makeDeferredRenderTargetContext(
-        format, SkBackingFit::kApprox, 1024, 1024, kRGBA_8888_GrPixelConfig, nullptr));
+            format, SkBackingFit::kApprox, 1024, 1024, kRGBA_8888_GrPixelConfig, nullptr));
 
     SkMatrix viewMatrix = GrTest::TestMatrixInvertible(random);
 
@@ -261,8 +259,8 @@ GR_DRAW_OP_TEST_DEFINE(GrAtlasTextOp) {
     int xInt = (random->nextU() % kMaxTrans) * xPos;
     int yInt = (random->nextU() % kMaxTrans) * yPos;
 
-    return gTextContext->createOp_TestingOnly(context, gTextContext.get(), rtc.get(),
-                                              skPaint, font, viewMatrix, text, xInt, yInt);
+    return gTextContext->createOp_TestingOnly(context, gTextContext.get(), rtc.get(), skPaint, font,
+                                              viewMatrix, text, xInt, yInt);
 }
 
 #endif

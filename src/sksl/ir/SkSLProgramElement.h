@@ -8,7 +8,7 @@
 #ifndef SKSL_PROGRAMELEMENT
 #define SKSL_PROGRAMELEMENT
 
-#include "SkSLIRNode.h"
+#include "src/sksl/ir/SkSLIRNode.h"
 
 namespace SkSL {
 
@@ -26,9 +26,7 @@ struct ProgramElement : public IRNode {
         kVar_Kind
     };
 
-    ProgramElement(int offset, Kind kind)
-    : INHERITED(offset)
-    , fKind(kind) {}
+    ProgramElement(int offset, Kind kind) : INHERITED(offset), fKind(kind) {}
 
     Kind fKind;
 
@@ -37,6 +35,6 @@ struct ProgramElement : public IRNode {
     typedef IRNode INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "GrGLSL.h"
-#include "GrShaderCaps.h"
+#include "src/gpu/glsl/GrGLSL.h"
+#include "src/gpu/GrShaderCaps.h"
 
 const char* GrGLSLTypeString(GrSLType t) {
     switch (t) {
@@ -94,5 +94,5 @@ const char* GrGLSLTypeString(GrSLType t) {
             return "ubyte4";
     }
     SK_ABORT("Unknown shader var type.");
-    return ""; // suppress warning
+    return "";  // suppress warning
 }

@@ -5,16 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "SkAutoMalloc.h"
-#include "SkCanvasPriv.h"
-#include "SkReadBuffer.h"
-#include "SkWriter32.h"
+#include "src/core/SkCanvasPriv.h"
+#include "src/core/SkAutoMalloc.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriter32.h"
 
 SkAutoCanvasMatrixPaint::SkAutoCanvasMatrixPaint(SkCanvas* canvas, const SkMatrix* matrix,
                                                  const SkPaint* paint, const SkRect& bounds)
-: fCanvas(canvas)
-, fSaveCount(canvas->getSaveCount())
-{
+        : fCanvas(canvas), fSaveCount(canvas->getSaveCount()) {
     if (paint) {
         SkRect newBounds = bounds;
         if (matrix) {
@@ -30,9 +28,7 @@ SkAutoCanvasMatrixPaint::SkAutoCanvasMatrixPaint(SkCanvas* canvas, const SkMatri
     }
 }
 
-SkAutoCanvasMatrixPaint::~SkAutoCanvasMatrixPaint() {
-    fCanvas->restoreToCount(fSaveCount);
-}
+SkAutoCanvasMatrixPaint::~SkAutoCanvasMatrixPaint() { fCanvas->restoreToCount(fSaveCount); }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -57,8 +53,7 @@ size_t SkCanvasPriv::WriteLattice(void* buffer, const SkCanvas::Lattice& lattice
 
     const size_t size = (1 + lattice.fXCount + 1 + lattice.fYCount + 1) * sizeof(int32_t) +
                         SkAlign4(flagCount * sizeof(SkCanvas::Lattice::RectType)) +
-                        SkAlign4(flagCount * sizeof(SkColor)) +
-                        sizeof(SkIRect);
+                        SkAlign4(flagCount * sizeof(SkColor)) + sizeof(SkIRect);
 
     if (buffer) {
         SkWriter32 writer(buffer, size);
@@ -83,3 +78,17 @@ void SkCanvasPriv::WriteLattice(SkWriteBuffer& buffer, const SkCanvas::Lattice& 
     buffer.writePad32(storage.get(), size);
 }
 
+void SkCanvasPriv::GetDstClipAndMatrixCounts(const SkCanvas::ImageSetEntry set[], int count,
+                                             int* totalDstClipCount, int* totalMatrixCount) {
+    int dstClipCount = 0;
+    int maxMatrixIndex = -1;
+    for (int i = 0; i < count; ++i) {
+        dstClipCount += 4 * set[i].fHasClip;
+        if (set[i].fMatrixIndex > maxMatrixIndex) {
+            maxMatrixIndex = set[i].fMatrixIndex;
+        }
+    }
+
+    *totalDstClipCount = dstClipCount;
+    *totalMatrixCount = maxMatrixIndex + 1;
+}

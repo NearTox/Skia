@@ -5,17 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "SkXMLWriter.h"
+#include "src/xml/SkXMLWriter.h"
 
-#include "SkStream.h"
-#include "SkTo.h"
+#include "include/core/SkStream.h"
+#include "include/private/SkTo.h"
 
-SkXMLWriter::SkXMLWriter(bool doEscapeMarkup) : fDoEscapeMarkup(doEscapeMarkup)
-{}
+SkXMLWriter::SkXMLWriter(bool doEscapeMarkup) : fDoEscapeMarkup(doEscapeMarkup) {}
 
-SkXMLWriter::~SkXMLWriter() {
-    SkASSERT(fElems.count() == 0);
-}
+SkXMLWriter::~SkXMLWriter() { SkASSERT(fElems.count() == 0); }
 
 void SkXMLWriter::flush() {
     while (fElems.count()) {
@@ -28,19 +25,19 @@ void SkXMLWriter::addAttribute(const char name[], const char value[]) {
 }
 
 void SkXMLWriter::addS32Attribute(const char name[], int32_t value) {
-    SkString    tmp;
+    SkString tmp;
     tmp.appendS32(value);
     this->addAttribute(name, tmp.c_str());
 }
 
 void SkXMLWriter::addHexAttribute(const char name[], uint32_t value, int minDigits) {
-    SkString    tmp("0x");
+    SkString tmp("0x");
     tmp.appendHex(value, minDigits);
     this->addAttribute(name, tmp.c_str());
 }
 
 void SkXMLWriter::addScalarAttribute(const char name[], SkScalar value) {
-    SkString    tmp;
+    SkString tmp;
     tmp.appendScalar(value);
     this->addAttribute(name, tmp.c_str());
 }
@@ -55,15 +52,13 @@ void SkXMLWriter::addText(const char text[], size_t length) {
     fElems.top()->fHasText = true;
 }
 
-void SkXMLWriter::doEnd(Elem* elem) {
-    delete elem;
-}
+void SkXMLWriter::doEnd(Elem* elem) { delete elem; }
 
 bool SkXMLWriter::doStart(const char name[], size_t length) {
     int level = fElems.count();
-    bool firstChild = level > 0 && !fElems[level-1]->fHasChildren;
+    bool firstChild = level > 0 && !fElems[level - 1]->fHasChildren;
     if (firstChild) {
-        fElems[level-1]->fHasChildren = true;
+        fElems[level - 1]->fHasChildren = true;
     }
     Elem** elem = fElems.push();
     *elem = new Elem(name, length);
@@ -81,18 +76,13 @@ const char* SkXMLWriter::getHeader() {
     return gHeader;
 }
 
-void SkXMLWriter::startElement(const char name[]) {
-    this->startElementLen(name, strlen(name));
-}
+void SkXMLWriter::startElement(const char name[]) { this->startElementLen(name, strlen(name)); }
 
 static const char* escape_char(char c, char storage[2]) {
-    static const char* gEscapeChars[] = {
-        "<&lt;",
-        ">&gt;",
-        //"\"&quot;",
-        //"'&apos;",
-        "&&amp;"
-    };
+    static const char* gEscapeChars[] = {"<&lt;", ">&gt;",
+                                         //"\"&quot;",
+                                         //"'&apos;",
+                                         "&&amp;"};
 
     const char** array = gEscapeChars;
     for (unsigned i = 0; i < SK_ARRAY_COUNT(gEscapeChars); i++) {
@@ -106,13 +96,13 @@ static const char* escape_char(char c, char storage[2]) {
 }
 
 static size_t escape_markup(char dst[], const char src[], size_t length) {
-    size_t      extra = 0;
+    size_t extra = 0;
     const char* stop = src + length;
 
     while (src < stop) {
-        char        orig[2];
+        char orig[2];
         const char* seq = escape_char(*src, orig);
-        size_t      seqSize = strlen(seq);
+        size_t seqSize = strlen(seq);
 
         if (dst) {
             memcpy(dst, seq, seqSize);
@@ -120,7 +110,7 @@ static size_t escape_markup(char dst[], const char src[], size_t length) {
         }
 
         // now record the extra size needed
-        extra += seqSize - 1;   // minus one to subtract the original char
+        extra += seqSize - 1;  // minus one to subtract the original char
 
         // bump to the next src char
         src += 1;
@@ -132,7 +122,7 @@ void SkXMLWriter::addAttributeLen(const char name[], const char value[], size_t 
     SkString valueStr;
 
     if (fDoEscapeMarkup) {
-        size_t   extra = escape_markup(nullptr, value, length);
+        size_t extra = escape_markup(nullptr, value, length);
         if (extra) {
             valueStr.resize(length + extra);
             (void)escape_markup(valueStr.writable_str(), value, length);
@@ -185,8 +175,7 @@ void SkXMLWriter::writeDOM(const SkDOM& dom, const SkDOM::Node* node, bool skipR
     }
 }
 
-void SkXMLWriter::writeHeader()
-{}
+void SkXMLWriter::writeHeader() {}
 
 // SkXMLStreamWriter
 
@@ -196,12 +185,9 @@ static void tab(SkWStream& stream, int level) {
     }
 }
 
-SkXMLStreamWriter::SkXMLStreamWriter(SkWStream* stream) : fStream(*stream)
-{}
+SkXMLStreamWriter::SkXMLStreamWriter(SkWStream* stream) : fStream(*stream) {}
 
-SkXMLStreamWriter::~SkXMLStreamWriter() {
-    this->flush();
-}
+SkXMLStreamWriter::~SkXMLStreamWriter() { this->flush(); }
 
 void SkXMLStreamWriter::onAddAttributeLen(const char name[], const char value[], size_t length) {
     SkASSERT(!fElems.top()->fHasChildren && !fElems.top()->fHasText);
@@ -260,16 +246,11 @@ void SkXMLStreamWriter::writeHeader() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "SkXMLParser.h"
+#include "src/xml/SkXMLParser.h"
 
-SkXMLParserWriter::SkXMLParserWriter(SkXMLParser* parser)
-    : SkXMLWriter(false), fParser(*parser)
-{
-}
+SkXMLParserWriter::SkXMLParserWriter(SkXMLParser* parser) : SkXMLWriter(false), fParser(*parser) {}
 
-SkXMLParserWriter::~SkXMLParserWriter() {
-    this->flush();
-}
+SkXMLParserWriter::~SkXMLParserWriter() { this->flush(); }
 
 void SkXMLParserWriter::onAddAttributeLen(const char name[], const char value[], size_t length) {
     SkASSERT(fElems.count() == 0 || (!fElems.top()->fHasChildren && !fElems.top()->fHasText));

@@ -8,13 +8,13 @@
 #ifndef GrVkImage_DEFINED
 #define GrVkImage_DEFINED
 
-#include "GrBackendSurface.h"
-#include "GrTexture.h"
-#include "GrTypesPriv.h"
-#include "GrVkImageLayout.h"
-#include "GrVkResource.h"
-#include "SkTypes.h"
-#include "vk/GrVkTypes.h"
+#include "include/core/SkTypes.h"
+#include "include/gpu/GrBackendSurface.h"
+#include "include/gpu/GrTexture.h"
+#include "include/gpu/vk/GrVkTypes.h"
+#include "include/private/GrTypesPriv.h"
+#include "src/gpu/vk/GrVkImageLayout.h"
+#include "src/gpu/vk/GrVkResource.h"
 
 class GrVkGpu;
 class GrVkTexture;
@@ -83,9 +83,7 @@ public:
 
     sk_sp<GrVkImageLayout> grVkImageLayout() const { return fLayout; }
 
-    VkImageLayout currentLayout() const {
-        return fLayout->getImageLayout();
-    }
+    VkImageLayout currentLayout() const { return fLayout->getImageLayout(); }
 
     void setImageLayout(const GrVkGpu* gpu,
                         VkImageLayout newLayout,
@@ -98,6 +96,9 @@ public:
     // family is not external or foreign.
     void prepareForPresent(GrVkGpu* gpu);
 
+    // Returns the image to its original queue family
+    void prepareForExternal(GrVkGpu* gpu);
+
     // This simply updates our tracking of the image layout and does not actually do any gpu work.
     // This is only used for mip map generation where we are manually changing the layouts as we
     // blit each layer, and then at the end need to update our tracking.
@@ -109,26 +110,26 @@ public:
     }
 
     struct ImageDesc {
-        VkImageType         fImageType;
-        VkFormat            fFormat;
-        uint32_t            fWidth;
-        uint32_t            fHeight;
-        uint32_t            fLevels;
-        uint32_t            fSamples;
-        VkImageTiling       fImageTiling;
-        VkImageUsageFlags   fUsageFlags;
-        VkFlags             fMemProps;
+        VkImageType fImageType;
+        VkFormat fFormat;
+        uint32_t fWidth;
+        uint32_t fHeight;
+        uint32_t fLevels;
+        uint32_t fSamples;
+        VkImageTiling fImageTiling;
+        VkImageUsageFlags fUsageFlags;
+        VkFlags fMemProps;
 
         ImageDesc()
-            : fImageType(VK_IMAGE_TYPE_2D)
-            , fFormat(VK_FORMAT_UNDEFINED)
-            , fWidth(0)
-            , fHeight(0)
-            , fLevels(1)
-            , fSamples(1)
-            , fImageTiling(VK_IMAGE_TILING_OPTIMAL)
-            , fUsageFlags(0)
-            , fMemProps(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) {}
+                : fImageType(VK_IMAGE_TYPE_2D)
+                , fFormat(VK_FORMAT_UNDEFINED)
+                , fWidth(0)
+                , fHeight(0)
+                , fLevels(1)
+                , fSamples(1)
+                , fImageTiling(VK_IMAGE_TILING_OPTIMAL)
+                , fUsageFlags(0)
+                , fMemProps(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) {}
     };
 
     static bool InitImageInfo(const GrVkGpu* gpu, const ImageDesc& imageDesc, GrVkImageInfo*);
@@ -154,28 +155,23 @@ protected:
     void abandonImage();
     bool hasResource() const { return fResource; }
 
-    GrVkImageInfo          fInfo;
-    uint32_t               fInitialQueueFamily;
+    GrVkImageInfo fInfo;
+    uint32_t fInitialQueueFamily;
     sk_sp<GrVkImageLayout> fLayout;
-    bool                   fIsBorrowed;
+    bool fIsBorrowed;
 
 private:
     class Resource : public GrVkResource {
     public:
-        Resource()
-                : fImage(VK_NULL_HANDLE) {
+        Resource() : fImage(VK_NULL_HANDLE) {
             fAlloc.fMemory = VK_NULL_HANDLE;
             fAlloc.fOffset = 0;
         }
 
         Resource(VkImage image, const GrVkAlloc& alloc, VkImageTiling tiling)
-            : fImage(image)
-            , fAlloc(alloc)
-            , fImageTiling(tiling) {}
+                : fImage(image), fAlloc(alloc), fImageTiling(tiling) {}
 
-        ~Resource() override {
-            SkASSERT(!fReleaseHelper);
-        }
+        ~Resource() override { SkASSERT(!fReleaseHelper); }
 
 #ifdef SK_TRACE_VK_RESOURCES
         void dumpInfo() const override {
@@ -224,9 +220,9 @@ private:
             SkASSERT(!fReleaseHelper);
         }
 
-        VkImage        fImage;
-        GrVkAlloc      fAlloc;
-        VkImageTiling  fImageTiling;
+        VkImage fImage;
+        GrVkAlloc fAlloc;
+        VkImageTiling fImageTiling;
         mutable int fNumCommandBufferOwners = 0;
         mutable SkTArray<sk_sp<GrRefCntedCallback>> fIdleProcs;
         mutable GrVkTexture* fOwningTexture = nullptr;
@@ -238,8 +234,8 @@ private:
     class BorrowedResource : public Resource {
     public:
         BorrowedResource(VkImage image, const GrVkAlloc& alloc, VkImageTiling tiling)
-            : Resource(image, alloc, tiling) {
-        }
+                : Resource(image, alloc, tiling) {}
+
     private:
         void freeGPUData(GrVkGpu* gpu) const override;
         void abandonGPUData() const override;

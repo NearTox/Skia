@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkCanvas.h"
-#include "SkFont.h"
-#include "SkRandom.h"
-#include "SkPaint.h"
-#include "SkUTF.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkPaint.h"
+#include "include/utils/SkRandom.h"
+#include "samplecode/Sample.h"
+#include "src/utils/SkUTF.h"
 #if SK_SUPPORT_GPU
-#include "GrRectanizer_pow2.h"
-#include "GrRectanizer_skyline.h"
+#include "src/gpu/GrRectanizer_pow2.h"
+#include "src/gpu/GrRectanizer_skyline.h"
 
 // This slide visualizes the various GrRectanizer-derived classes behavior
 // for various input sets
@@ -26,11 +26,9 @@
 //          SmallPow2 -> 128x128 rects
 class RectanizerView : public Sample {
 public:
-    RectanizerView()
-        : fCurRandRect(0)
-        , fCurRectanizer(0) {
+    RectanizerView() : fCurRandRect(0), fCurRectanizer(0) {
         for (int i = 0; i < 3; ++i) {
-           fRects[i].setReserve(kNumRandRects);
+            fRects[i].setReserve(kNumRandRects);
         }
         fRectLocations.setReserve(kNumRandRects);
 
@@ -38,9 +36,9 @@ public:
         for (int i = 0; i < kNumRandRects; ++i) {
             *fRects[0].append() = SkISize::Make(random.nextRangeU(kMinRectSize, kMaxRectSize),
                                                 random.nextRangeU(kMinRectSize, kMaxRectSize));
-            *fRects[1].append() = SkISize::Make(
-                        GrNextPow2(random.nextRangeU(kMinRectSize, kMaxRectSize)),
-                        GrNextPow2(random.nextRangeU(kMinRectSize, kMaxRectSize)));
+            *fRects[1].append() =
+                    SkISize::Make(GrNextPow2(random.nextRangeU(kMinRectSize, kMaxRectSize)),
+                                  GrNextPow2(random.nextRangeU(kMinRectSize, kMaxRectSize)));
             *fRects[2].append() = SkISize::Make(128, 128);
             *fRectLocations.append() = SkIPoint16::Make(0, 0);
         }
@@ -48,9 +46,9 @@ public:
         fCurRects = &fRects[0];
 
         fRectanizers.push_back(
-            std::unique_ptr<GrRectanizer>(new GrRectanizerPow2(kWidth, kHeight)));
+                std::unique_ptr<GrRectanizer>(new GrRectanizerPow2(kWidth, kHeight)));
         fRectanizers.push_back(
-            std::unique_ptr<GrRectanizer>(new GrRectanizerSkyline(kWidth, kHeight)));
+                std::unique_ptr<GrRectanizer>(new GrRectanizerSkyline(kWidth, kHeight)));
     }
 
 protected:
@@ -66,14 +64,14 @@ protected:
             // Only consider events for single char keys
             if (1 == size) {
                 switch (utf8[0]) {
-                case kCycleRectanizerKey:
-                    this->cycleRectanizer();
-                    return true;
-                case kCycleRectsKey:
-                    this->cycleRects();
-                    return true;
-                default:
-                    break;
+                    case kCycleRectanizerKey:
+                        this->cycleRectanizer();
+                        return true;
+                    case kCycleRectsKey:
+                        this->cycleRects();
+                        return true;
+                    default:
+                        break;
                 }
             }
         }
@@ -119,7 +117,7 @@ protected:
                    this->getRectsName(),
                    totArea,
                    100.0f * fRectanizers[fCurRectanizer]->percentFull(),
-                   100.0f * totArea / ((float)kWidth*kHeight),
+                   100.0f * totArea / ((float)kWidth * kHeight),
                    fCurRandRect,
                    kNumRandRects);
         canvas->drawString(str, 50, kHeight + 50, blackBigFont, SkPaint());
@@ -140,12 +138,12 @@ private:
     static const int kMinRectSize = 2;
     static const int kMaxRectSize = 256;
 
-    int                                     fCurRandRect;
-    SkTDArray<SkISize>                      fRects[3];
-    SkTDArray<SkISize>*                     fCurRects;
-    SkTDArray<SkIPoint16>                   fRectLocations;
+    int fCurRandRect;
+    SkTDArray<SkISize> fRects[3];
+    SkTDArray<SkISize>* fCurRects;
+    SkTDArray<SkIPoint16> fRectLocations;
     SkTArray<std::unique_ptr<GrRectanizer>> fRectanizers;
-    int                                     fCurRectanizer;
+    int fCurRectanizer;
 
     const char* getRectanizerName() const {
         if (!fCurRectanizer) {
@@ -190,6 +188,6 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new RectanizerView(); )
+DEF_SAMPLE(return new RectanizerView();)
 
 #endif

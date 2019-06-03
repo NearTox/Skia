@@ -7,27 +7,27 @@
 #ifndef SkOpEdgeBuilder_DEFINED
 #define SkOpEdgeBuilder_DEFINED
 
-#include "SkOpContour.h"
-#include "SkPathWriter.h"
+#include "src/pathops/SkOpContour.h"
+#include "src/pathops/SkPathWriter.h"
 
 class SkOpEdgeBuilder {
 public:
     SkOpEdgeBuilder(const SkPathWriter& path, SkOpContourHead* contours2,
-            SkOpGlobalState* globalState)
-        : fGlobalState(globalState)
-        , fPath(path.nativePath())
-        , fContourBuilder(contours2)
-        , fContoursHead(contours2)
-        , fAllowOpenContours(true) {
+                    SkOpGlobalState* globalState)
+            : fGlobalState(globalState)
+            , fPath(path.nativePath())
+            , fContourBuilder(contours2)
+            , fContoursHead(contours2)
+            , fAllowOpenContours(true) {
         init();
     }
 
     SkOpEdgeBuilder(const SkPath& path, SkOpContourHead* contours2, SkOpGlobalState* globalState)
-        : fGlobalState(globalState)
-        , fPath(&path)
-        , fContourBuilder(contours2)
-        , fContoursHead(contours2)
-        , fAllowOpenContours(false) {
+            : fGlobalState(globalState)
+            , fPath(&path)
+            , fContourBuilder(contours2)
+            , fContoursHead(contours2)
+            , fAllowOpenContours(false) {
         init();
     }
 
@@ -44,9 +44,7 @@ public:
 
     bool finish();
 
-    const SkOpContour* head() const {
-        return fContoursHead;
-    }
+    const SkOpContour* head() const { return fContoursHead; }
 
     void init();
     bool unparseable() const { return fUnparseable; }

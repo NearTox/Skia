@@ -4,7 +4,7 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkPathOpsCubic.h"
+#include "src/pathops/SkPathOpsCubic.h"
 
 static bool rotate(const SkDCubic& cubic, int zero, int index, SkDCubic& rotPath) {
     double dy = cubic[index].fY - cubic[zero].fY;
@@ -35,11 +35,8 @@ static bool rotate(const SkDCubic& cubic, int zero, int index, SkDCubic& rotPath
     return true;
 }
 
-
 // Returns 0 if negative, 1 if zero, 2 if positive
-static int side(double x) {
-    return (x > 0) + (x >= 0);
-}
+static int side(double x) { return (x > 0) + (x >= 0); }
 
 /* Given a cubic, find the convex hull described by the end and control points.
    The hull may have 3 or 4 points. Cubics that degenerate into a point or line
@@ -57,8 +54,8 @@ int SkDCubic::convexHull(char order[4]) const {
     // find top point
     size_t yMin = 0;
     for (index = 1; index < 4; ++index) {
-        if (fPts[yMin].fY > fPts[index].fY || (fPts[yMin].fY == fPts[index].fY
-                && fPts[yMin].fX > fPts[index].fX)) {
+        if (fPts[yMin].fY > fPts[index].fY ||
+            (fPts[yMin].fY == fPts[index].fY && fPts[yMin].fX > fPts[index].fX)) {
             yMin = index;
         }
     }
@@ -77,14 +74,14 @@ int SkDCubic::convexHull(char order[4]) const {
             int side1 = yMin ^ mask;
             int side2 = index ^ mask;
             SkDCubic rotPath;
-            if (!rotate(*this, yMin, index, rotPath)) { // ! if cbc[yMin]==cbc[idx]
+            if (!rotate(*this, yMin, index, rotPath)) {  // ! if cbc[yMin]==cbc[idx]
                 order[1] = side1;
                 order[2] = side2;
                 return 3;
             }
             int sides = side(rotPath[side1].fY - rotPath[yMin].fY);
             sides ^= side(rotPath[side2].fY - rotPath[yMin].fY);
-            if (sides == 2) { // '2' means one remaining point <0, one >0
+            if (sides == 2) {  // '2' means one remaining point <0, one >0
                 if (midX >= 0) {
                     // one of the control points is equal to an end point
                     order[0] = 0;
@@ -110,7 +107,7 @@ int SkDCubic::convexHull(char order[4]) const {
                     }
                 }
                 midX = index;
-            } else if (sides == 0) { // '0' means both to one side or the other
+            } else if (sides == 0) {  // '0' means both to one side or the other
                 backupYMin = index;
             }
         }
@@ -124,7 +121,7 @@ int SkDCubic::convexHull(char order[4]) const {
         backupYMin = -1;
     }
     if (midX < 0) {
-        midX = yMin ^ 3; // choose any other point
+        midX = yMin ^ 3;  // choose any other point
     }
     int mask = other_two(yMin, midX);
     int least = yMin ^ mask;
@@ -134,7 +131,7 @@ int SkDCubic::convexHull(char order[4]) const {
 
     // see if mid value is on same side of line (least, most) as yMin
     SkDCubic midPath;
-    if (!rotate(*this, least, most, midPath)) { // ! if cbc[least]==cbc[most]
+    if (!rotate(*this, least, most, midPath)) {  // ! if cbc[least]==cbc[most]
         order[2] = midX;
         return 3;
     }
@@ -142,9 +139,9 @@ int SkDCubic::convexHull(char order[4]) const {
     midSides ^= side(midPath[midX].fY - midPath[least].fY);
     if (midSides != 2) {  // if mid point is not between
         order[2] = most;
-        return 3; // result is a triangle
+        return 3;  // result is a triangle
     }
     order[2] = midX;
     order[3] = most;
-    return 4; // result is a quadralateral
+    return 4;  // result is a quadralateral
 }

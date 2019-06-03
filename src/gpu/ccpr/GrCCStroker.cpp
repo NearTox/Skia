@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "GrCCStroker.h"
+#include "src/gpu/ccpr/GrCCStroker.h"
 
-#include "GrGpuCommandBuffer.h"
-#include "GrOnFlushResourceProvider.h"
-#include "SkPathPriv.h"
-#include "SkStrokeRec.h"
-#include "ccpr/GrCCCoverageProcessor.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLVertexGeoBuilder.h"
+#include "include/core/SkStrokeRec.h"
+#include "src/core/SkPathPriv.h"
+#include "src/gpu/GrGpuCommandBuffer.h"
+#include "src/gpu/GrOnFlushResourceProvider.h"
+#include "src/gpu/ccpr/GrCCCoverageProcessor.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLVertexGeoBuilder.h"
 
 static constexpr int kMaxNumLinearSegmentsLog2 = GrCCStrokeGeometry::kMaxNumLinearSegmentsLog2;
 using TriangleInstance = GrCCCoverageProcessor::TriPointInstance;
@@ -83,8 +83,7 @@ private:
 
     static constexpr Attribute kInstanceAttribs[2] = {
             {"endpts", kFloat4_GrVertexAttribType, kFloat4_GrSLType},
-            {"stroke_radius", kFloat_GrVertexAttribType, kFloat_GrSLType}
-    };
+            {"stroke_radius", kFloat_GrVertexAttribType, kFloat_GrSLType}};
 
     class Impl : public GrGLSLGeometryProcessor {
         void setData(const GrGLSLProgramDataManager&, const GrPrimitiveProcessor&,
@@ -104,14 +103,15 @@ void LinearStrokeProcessor::Impl::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
     varyingHandler->emitAttributes(args.fGP.cast<LinearStrokeProcessor>());
 
     GrGLSLVertexBuilder* v = args.fVertBuilder;
-    v->codeAppend ("float2 tan = normalize(endpts.zw - endpts.xy);");
-    v->codeAppend ("float2 n = float2(tan.y, -tan.x);");
-    v->codeAppend ("float nwidth = abs(n.x) + abs(n.y);");
+    v->codeAppend("float2 tan = normalize(endpts.zw - endpts.xy);");
+    v->codeAppend("float2 n = float2(tan.y, -tan.x);");
+    v->codeAppend("float nwidth = abs(n.x) + abs(n.y);");
 
     // Outset the vertex position for AA butt caps.
-    v->codeAppend ("float2 outset = tan*nwidth/2;");
-    v->codeAppend ("float2 position = (sk_VertexID < 2) "
-                           "? endpts.xy - outset : endpts.zw + outset;");
+    v->codeAppend("float2 outset = tan*nwidth/2;");
+    v->codeAppend(
+            "float2 position = (sk_VertexID < 2) "
+            "? endpts.xy - outset : endpts.zw + outset;");
 
     // Calculate Manhattan distance from both butt caps, where distance=0 on the actual endpoint and
     // distance=-.5 on the outset edge.
@@ -119,18 +119,18 @@ void LinearStrokeProcessor::Impl::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
     varyingHandler->addVarying("edge_distances", &edgeDistances);
     v->codeAppendf("%s.xz = float2(-.5, dot(endpts.zw - endpts.xy, tan) / nwidth + .5);",
                    edgeDistances.vsOut());
-    v->codeAppendf("%s.xz = (sk_VertexID < 2) ? %s.xz : %s.zx;",
-                   edgeDistances.vsOut(), edgeDistances.vsOut(), edgeDistances.vsOut());
+    v->codeAppendf("%s.xz = (sk_VertexID < 2) ? %s.xz : %s.zx;", edgeDistances.vsOut(),
+                   edgeDistances.vsOut(), edgeDistances.vsOut());
 
     // Outset the vertex position for stroke radius plus edge AA.
-    v->codeAppend ("outset = n * (stroke_radius + nwidth/2);");
-    v->codeAppend ("position += (0 == (sk_VertexID & 1)) ? +outset : -outset;");
+    v->codeAppend("outset = n * (stroke_radius + nwidth/2);");
+    v->codeAppend("position += (0 == (sk_VertexID & 1)) ? +outset : -outset;");
 
     // Calculate Manhattan distance from both edges, where distance=0 on the actual edge and
     // distance=-.5 on the outset.
     v->codeAppendf("%s.yw = float2(-.5, 2*stroke_radius / nwidth + .5);", edgeDistances.vsOut());
-    v->codeAppendf("%s.yw = (0 == (sk_VertexID & 1)) ? %s.yw : %s.wy;",
-                   edgeDistances.vsOut(), edgeDistances.vsOut(), edgeDistances.vsOut());
+    v->codeAppendf("%s.yw = (0 == (sk_VertexID & 1)) ? %s.yw : %s.wy;", edgeDistances.vsOut(),
+                   edgeDistances.vsOut(), edgeDistances.vsOut());
 
     gpArgs->fPositionVar.set(kFloat2_GrSLType, "position");
     this->emitTransforms(v, varyingHandler, uniHandler, GrShaderVar("position", kFloat2_GrSLType),
@@ -174,8 +174,7 @@ private:
     static constexpr Attribute kInstanceAttribs[3] = {
             {"X", kFloat4_GrVertexAttribType, kFloat4_GrSLType},
             {"Y", kFloat4_GrVertexAttribType, kFloat4_GrSLType},
-            {"stroke_info", kFloat2_GrVertexAttribType, kFloat2_GrSLType}
-    };
+            {"stroke_info", kFloat2_GrVertexAttribType, kFloat2_GrSLType}};
 
     class Impl : public GrGLSLGeometryProcessor {
         void setData(const GrGLSLProgramDataManager&, const GrPrimitiveProcessor&,
@@ -195,60 +194,60 @@ void CubicStrokeProcessor::Impl::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
     varyingHandler->emitAttributes(args.fGP.cast<CubicStrokeProcessor>());
 
     GrGLSLVertexBuilder* v = args.fVertBuilder;
-    v->codeAppend ("float4x2 P = transpose(float2x4(X, Y));");
-    v->codeAppend ("float stroke_radius = stroke_info[0];");
-    v->codeAppend ("float num_segments = stroke_info[1];");
+    v->codeAppend("float4x2 P = transpose(float2x4(X, Y));");
+    v->codeAppend("float stroke_radius = stroke_info[0];");
+    v->codeAppend("float num_segments = stroke_info[1];");
 
     // Find the parametric T value at which we will emit our orthogonal line segment. We emit two
     // line segments at T=0 and double at T=1 as well for AA butt caps.
-    v->codeAppend ("float point_id = float(sk_VertexID/2);");
-    v->codeAppend ("float T = max((point_id - 1) / num_segments, 0);");
-    v->codeAppend ("T = (point_id >= num_segments + 1) ? 1 : T;");  // In case x/x !== 1.
+    v->codeAppend("float point_id = float(sk_VertexID/2);");
+    v->codeAppend("float T = max((point_id - 1) / num_segments, 0);");
+    v->codeAppend("T = (point_id >= num_segments + 1) ? 1 : T;");  // In case x/x !== 1.
 
     // Use De Casteljau's algorithm to find the position and tangent for our orthogonal line
     // segment. De Casteljau's is more numerically stable than evaluating the curve and derivative
     // directly.
-    v->codeAppend ("float2 ab = mix(P[0], P[1], T);");
-    v->codeAppend ("float2 bc = mix(P[1], P[2], T);");
-    v->codeAppend ("float2 cd = mix(P[2], P[3], T);");
-    v->codeAppend ("float2 abc = mix(ab, bc, T);");
-    v->codeAppend ("float2 bcd = mix(bc, cd, T);");
-    v->codeAppend ("float2 position = mix(abc, bcd, T);");
-    v->codeAppend ("float2 tan = bcd - abc;");
+    v->codeAppend("float2 ab = mix(P[0], P[1], T);");
+    v->codeAppend("float2 bc = mix(P[1], P[2], T);");
+    v->codeAppend("float2 cd = mix(P[2], P[3], T);");
+    v->codeAppend("float2 abc = mix(ab, bc, T);");
+    v->codeAppend("float2 bcd = mix(bc, cd, T);");
+    v->codeAppend("float2 position = mix(abc, bcd, T);");
+    v->codeAppend("float2 tan = bcd - abc;");
 
     // Find actual tangents for the corner cases when De Casteljau's yields tan=0. (We shouldn't
     // encounter other numerically unstable cases where tan ~= 0, because GrCCStrokeGeometry snaps
     // control points to endpoints in curves where they are almost equal.)
-    v->codeAppend ("if (0 == T && P[0] == P[1]) {");
-    v->codeAppend (    "tan = P[2] - P[0];");
-    v->codeAppend ("}");
-    v->codeAppend ("if (1 == T && P[2] == P[3]) {");
-    v->codeAppend (    "tan = P[3] - P[1];");
-    v->codeAppend ("}");
-    v->codeAppend ("tan = normalize(tan);");
-    v->codeAppend ("float2 n = float2(tan.y, -tan.x);");
-    v->codeAppend ("float nwidth = abs(n.x) + abs(n.y);");
+    v->codeAppend("if (0 == T && P[0] == P[1]) {");
+    v->codeAppend("tan = P[2] - P[0];");
+    v->codeAppend("}");
+    v->codeAppend("if (1 == T && P[2] == P[3]) {");
+    v->codeAppend("tan = P[3] - P[1];");
+    v->codeAppend("}");
+    v->codeAppend("tan = normalize(tan);");
+    v->codeAppend("float2 n = float2(tan.y, -tan.x);");
+    v->codeAppend("float nwidth = abs(n.x) + abs(n.y);");
 
     // Outset the vertex position for stroke radius plus edge AA.
-    v->codeAppend ("float2 outset = n * (stroke_radius + nwidth/2);");
-    v->codeAppend ("position += (0 == (sk_VertexID & 1)) ? -outset : +outset;");
+    v->codeAppend("float2 outset = n * (stroke_radius + nwidth/2);");
+    v->codeAppend("position += (0 == (sk_VertexID & 1)) ? -outset : +outset;");
 
     // Calculate the Manhattan distance from both edges, where distance=0 on the actual edge and
     // distance=-.5 on the outset.
     GrGLSLVarying coverages(kFloat3_GrSLType);
     varyingHandler->addVarying("coverages", &coverages);
     v->codeAppendf("%s.xy = float2(-.5, 2*stroke_radius / nwidth + .5);", coverages.vsOut());
-    v->codeAppendf("%s.xy = (0 == (sk_VertexID & 1)) ? %s.xy : %s.yx;",
-                   coverages.vsOut(), coverages.vsOut(), coverages.vsOut());
+    v->codeAppendf("%s.xy = (0 == (sk_VertexID & 1)) ? %s.xy : %s.yx;", coverages.vsOut(),
+                   coverages.vsOut(), coverages.vsOut());
 
     // Adjust the orthogonal line segments on the endpoints so they straddle the actual endpoint
     // at a Manhattan distance of .5 on either side.
-    v->codeAppend ("if (0 == point_id || num_segments+1 == point_id) {");
-    v->codeAppend (    "position -= tan*nwidth/2;");
-    v->codeAppend ("}");
-    v->codeAppend ("if (1 == point_id || num_segments+2 == point_id) {");
-    v->codeAppend (    "position += tan*nwidth/2;");
-    v->codeAppend ("}");
+    v->codeAppend("if (0 == point_id || num_segments+1 == point_id) {");
+    v->codeAppend("position -= tan*nwidth/2;");
+    v->codeAppend("}");
+    v->codeAppend("if (1 == point_id || num_segments+2 == point_id) {");
+    v->codeAppend("position += tan*nwidth/2;");
+    v->codeAppend("}");
 
     // Interpolate coverage for butt cap AA from 0 on the outer segment to 1 on the inner.
     v->codeAppendf("%s.z = (0 == point_id || num_segments+2 == point_id) ? 0 : 1;",
@@ -261,7 +260,7 @@ void CubicStrokeProcessor::Impl::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
     // Use the 2 edge distances and interpolated butt cap AA to calculate fragment coverage.
     GrGLSLFPFragmentBuilder* f = args.fFragBuilder;
     f->codeAppendf("half2 edge_coverages = min(half2(%s.xy), .5);", coverages.fsIn());
-    f->codeAppend ("half coverage = edge_coverages.x + edge_coverages.y;");
+    f->codeAppend("half coverage = edge_coverages.x + edge_coverages.y;");
     f->codeAppendf("coverage *= half(%s.z);", coverages.fsIn());  // Butt cap AA.
 
     // As is common for CCPR, clockwise-winding triangles from the strip emit positive coverage, and
@@ -300,15 +299,15 @@ void GrCCStroker::parseDeviceSpaceStroke(const SkPath& path, const SkPoint* devi
                 &fTalliesAllocator, *fInstanceCounts[(int)GrScissorTest::kEnabled],
                 clippedDevIBounds.makeOffset(devToAtlasOffset.x(), devToAtlasOffset.y()));
         fBatches.back().fEndScissorSubBatch = fScissorSubBatches.count();
-        fInstanceCounts[(int)GrScissorTest::kEnabled] =
-                currStrokeEndIndices = fScissorSubBatches.back().fEndInstances;
+        fInstanceCounts[(int)GrScissorTest::kEnabled] = currStrokeEndIndices =
+                fScissorSubBatches.back().fEndInstances;
     } else {
         currStrokeEndIndices = fBatches.back().fNonScissorEndInstances;
     }
 
     fGeometry.beginPath(stroke, strokeDevWidth, currStrokeEndIndices);
 
-    fPathInfos.push_back() = {devToAtlasOffset, strokeDevWidth/2, scissorTest};
+    fPathInfos.push_back() = {devToAtlasOffset, strokeDevWidth / 2, scissorTest};
 
     int devPtsIdx = 0;
     SkPath::Verb previousVerb = SkPath::kClose_Verb;
@@ -370,8 +369,8 @@ public:
         fEndInstances[1] = stroker->fBaseInstances[1] + *stroker->fInstanceCounts[1];
 #endif
 
-        int endConicsIdx = stroker->fBaseInstances[1].fConics +
-                           stroker->fInstanceCounts[1]->fConics;
+        int endConicsIdx =
+                stroker->fBaseInstances[1].fConics + stroker->fInstanceCounts[1]->fConics;
         fInstanceBuffer = onFlushRP->makeBuffer(GrGpuBufferType::kVertex,
                                                 endConicsIdx * sizeof(ConicInstance));
         if (!fInstanceBuffer) {
@@ -403,23 +402,24 @@ public:
 
         Sk4f ptsT[2];
         Sk2f p0 = Sk2f::Load(P);
-        Sk2f p1 = Sk2f::Load(P+1);
-        Sk2f p2 = Sk2f::Load(P+2);
+        Sk2f p1 = Sk2f::Load(P + 1);
+        Sk2f p2 = Sk2f::Load(P + 2);
 
         // Convert the quadratic to cubic.
-        Sk2f c1 = SkNx_fma(Sk2f(2/3.f), p1 - p0, p0);
-        Sk2f c2 = SkNx_fma(Sk2f(1/3.f), p2 - p1, p1);
+        Sk2f c1 = SkNx_fma(Sk2f(2 / 3.f), p1 - p0, p0);
+        Sk2f c2 = SkNx_fma(Sk2f(1 / 3.f), p2 - p1, p1);
         Sk2f::Store4(ptsT, p0, c1, c2, p2);
 
-        this->appendCubicStrokeInstance(numLinearSegmentsLog2).set(
-                ptsT[0], ptsT[1], fCurrDX, fCurrDY, fCurrStrokeRadius, 1 << numLinearSegmentsLog2);
+        this->appendCubicStrokeInstance(numLinearSegmentsLog2)
+                .set(ptsT[0], ptsT[1], fCurrDX, fCurrDY, fCurrStrokeRadius,
+                     1 << numLinearSegmentsLog2);
     }
 
     void appendCubicStroke(const SkPoint P[3], int numLinearSegmentsLog2) {
         SkASSERT(this->isMapped());
         SkASSERT(numLinearSegmentsLog2 > 0);
-        this->appendCubicStrokeInstance(numLinearSegmentsLog2).set(
-                P, fCurrDX, fCurrDY, fCurrStrokeRadius, 1 << numLinearSegmentsLog2);
+        this->appendCubicStrokeInstance(numLinearSegmentsLog2)
+                .set(P, fCurrDX, fCurrDY, fCurrStrokeRadius, 1 << numLinearSegmentsLog2);
     }
 
     void appendJoin(Verb joinVerb, const SkPoint& center, const SkVector& leftNorm,
@@ -431,7 +431,7 @@ public:
         Sk2f n1 = Sk2f::Load(&rightNorm);
 
         // Identify the outer edge.
-        Sk2f cross = n0 * SkNx_shuffle<1,0>(n1);
+        Sk2f cross = n0 * SkNx_shuffle<1, 0>(n1);
         if (cross[0] < cross[1]) {
             Sk2f tmp = n0;
             n0 = -n1;
@@ -573,8 +573,8 @@ bool GrCCStroker::prepareToDraw(GrOnFlushResourceProvider* onFlushRP) {
     fBaseInstances[1].fStrokes[0] = fInstanceCounts[0]->fStrokes[0];
     int endLinearStrokesIdx = fBaseInstances[1].fStrokes[0] + fInstanceCounts[1]->fStrokes[0];
 
-    int cubicStrokesIdx = GR_CT_DIV_ROUND_UP(endLinearStrokesIdx * sizeof(LinearStrokeInstance),
-                                             sizeof(CubicStrokeInstance));
+    int cubicStrokesIdx = GrSizeDivRoundUp(endLinearStrokesIdx * sizeof(LinearStrokeInstance),
+                                           sizeof(CubicStrokeInstance));
     for (int i = 1; i <= kMaxNumLinearSegmentsLog2; ++i) {
         for (int j = 0; j < kNumScissorModes; ++j) {
             fBaseInstances[j].fStrokes[i] = cubicStrokesIdx;
@@ -582,16 +582,14 @@ bool GrCCStroker::prepareToDraw(GrOnFlushResourceProvider* onFlushRP) {
         }
     }
 
-    int trianglesIdx = GR_CT_DIV_ROUND_UP(cubicStrokesIdx * sizeof(CubicStrokeInstance),
-                                          sizeof(TriangleInstance));
+    int trianglesIdx = GrSizeDivRoundUp(cubicStrokesIdx * sizeof(CubicStrokeInstance),
+                                        sizeof(TriangleInstance));
     fBaseInstances[0].fTriangles = trianglesIdx;
-    fBaseInstances[1].fTriangles =
-            fBaseInstances[0].fTriangles + fInstanceCounts[0]->fTriangles;
-    int endTrianglesIdx =
-            fBaseInstances[1].fTriangles + fInstanceCounts[1]->fTriangles;
+    fBaseInstances[1].fTriangles = fBaseInstances[0].fTriangles + fInstanceCounts[0]->fTriangles;
+    int endTrianglesIdx = fBaseInstances[1].fTriangles + fInstanceCounts[1]->fTriangles;
 
-    int conicsIdx = GR_CT_DIV_ROUND_UP(endTrianglesIdx * sizeof(TriangleInstance),
-                                       sizeof(ConicInstance));
+    int conicsIdx =
+            GrSizeDivRoundUp(endTrianglesIdx * sizeof(TriangleInstance), sizeof(ConicInstance));
     fBaseInstances[0].fConics = conicsIdx;
     fBaseInstances[1].fConics = fBaseInstances[0].fConics + fInstanceCounts[0]->fConics;
 
@@ -610,7 +608,7 @@ bool GrCCStroker::prepareToDraw(GrOnFlushResourceProvider* onFlushRP) {
     const SkTArray<SkPoint, true>& pts = fGeometry.points();
     const SkTArray<SkVector, true>& normals = fGeometry.normals();
 
-    float miterCapHeightOverWidth=0, conicWeight=0;
+    float miterCapHeightOverWidth = 0, conicWeight = 0;
 
     for (Verb verb : fGeometry.verbs()) {
         switch (verb) {
@@ -672,8 +670,8 @@ bool GrCCStroker::prepareToDraw(GrOnFlushResourceProvider* onFlushRP) {
     return true;
 }
 
-void GrCCStroker::drawStrokes(GrOpFlushState* flushState, BatchID batchID,
-                              const SkIRect& drawBounds) const {
+void GrCCStroker::drawStrokes(GrOpFlushState* flushState, GrCCCoverageProcessor* proc,
+                              BatchID batchID, const SkIRect& drawBounds) const {
     using PrimitiveType = GrCCCoverageProcessor::PrimitiveType;
     SkASSERT(fInstanceBuffer);
 
@@ -684,10 +682,11 @@ void GrCCStroker::drawStrokes(GrOpFlushState* flushState, BatchID batchID,
     int startScissorSubBatch = (!batchID) ? 0 : fBatches[batchID - 1].fEndScissorSubBatch;
 
     const InstanceTallies* startIndices[2];
-    startIndices[(int)GrScissorTest::kDisabled] = (!batchID)
-            ? &fZeroTallies : fBatches[batchID - 1].fNonScissorEndInstances;
-    startIndices[(int)GrScissorTest::kEnabled] = (!startScissorSubBatch)
-            ? &fZeroTallies : fScissorSubBatches[startScissorSubBatch - 1].fEndInstances;
+    startIndices[(int)GrScissorTest::kDisabled] =
+            (!batchID) ? &fZeroTallies : fBatches[batchID - 1].fNonScissorEndInstances;
+    startIndices[(int)GrScissorTest::kEnabled] =
+            (!startScissorSubBatch) ? &fZeroTallies
+                                    : fScissorSubBatches[startScissorSubBatch - 1].fEndInstances;
 
     GrPipeline pipeline(GrScissorTest::kEnabled, SkBlendMode::kPlus);
 
@@ -708,14 +707,14 @@ void GrCCStroker::drawStrokes(GrOpFlushState* flushState, BatchID batchID,
     }
 
     // Draw triangles.
-    GrCCCoverageProcessor triProc(flushState->resourceProvider(), PrimitiveType::kTriangles);
+    proc->reset(PrimitiveType::kTriangles, flushState->resourceProvider());
     this->drawConnectingGeometry<&InstanceTallies::fTriangles>(
-            flushState, pipeline, triProc, batch, startIndices, startScissorSubBatch, drawBounds);
+            flushState, pipeline, *proc, batch, startIndices, startScissorSubBatch, drawBounds);
 
     // Draw conics.
-    GrCCCoverageProcessor conicProc(flushState->resourceProvider(), PrimitiveType::kConics);
+    proc->reset(PrimitiveType::kConics, flushState->resourceProvider());
     this->drawConnectingGeometry<&InstanceTallies::fConics>(
-            flushState, pipeline, conicProc, batch, startIndices, startScissorSubBatch, drawBounds);
+            flushState, pipeline, *proc, batch, startIndices, startScissorSubBatch, drawBounds);
 }
 
 void GrCCStroker::appendStrokeMeshesToBuffers(int numSegmentsLog2, const Batch& batch,
@@ -771,10 +770,10 @@ void GrCCStroker::flushBufferedMeshesAsStrokes(const GrPrimitiveProcessor& proce
     fScissorsBuffer.pop_back_n(fScissorsBuffer.count());
 }
 
-template<int GrCCStrokeGeometry::InstanceTallies::* InstanceType>
+template <int GrCCStrokeGeometry::InstanceTallies::*InstanceType>
 void GrCCStroker::drawConnectingGeometry(GrOpFlushState* flushState, const GrPipeline& pipeline,
-                                         const GrCCCoverageProcessor& processor,
-                                         const Batch& batch, const InstanceTallies* startIndices[2],
+                                         const GrCCCoverageProcessor& processor, const Batch& batch,
+                                         const InstanceTallies* startIndices[2],
                                          int startScissorSubBatch,
                                          const SkIRect& drawBounds) const {
     // Append non-scissored meshes.

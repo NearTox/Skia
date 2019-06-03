@@ -5,10 +5,20 @@
  * found in the LICENSE file.
  */
 
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPathEffect.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkDashPathEffect.h"
+#include "include/private/SkFloatBits.h"
+#include "include/private/SkTArray.h"
+
 #include <functional>
-#include "SkCanvas.h"
-#include "SkDashPathEffect.h"
-#include "gm.h"
 
 constexpr SkScalar kStarts[] = {0.f, 10.f, 30.f, 45.f, 90.f, 165.f, 180.f, 270.f};
 constexpr SkScalar kSweeps[] = {1.f, 45.f, 90.f, 130.f, 180.f, 184.f, 300.f, 355.f};
@@ -21,7 +31,7 @@ constexpr SkScalar kPad = 20.f;
 void draw_arcs(SkCanvas* canvas, std::function<void(SkPaint*)> configureStyle) {
     // Draws grid of arcs with different start/sweep angles in red and their complement arcs in
     // blue.
-    auto drawGrid = [canvas, &configureStyle] (SkScalar x, SkScalar y, bool useCenter, bool aa) {
+    auto drawGrid = [canvas, &configureStyle](SkScalar x, SkScalar y, bool useCenter, bool aa) {
         SkPaint p0;
         p0.setColor(SK_ColorRED);
         p0.setAntiAlias(aa);
@@ -52,27 +62,27 @@ void draw_arcs(SkCanvas* canvas, std::function<void(SkPaint*)> configureStyle) {
     // Draw a grids for combo of enabling/disabling aa and using center.
     constexpr SkScalar kGridW = kW / 2.f;
     constexpr SkScalar kGridH = kH / 2.f;
-    drawGrid(0.f   , 0.f   , false, false);
-    drawGrid(kGridW, 0.f   , true , false);
-    drawGrid(0.f   , kGridH, false, true );
-    drawGrid(kGridW, kGridH, true , true );
+    drawGrid(0.f, 0.f, false, false);
+    drawGrid(kGridW, 0.f, true, false);
+    drawGrid(0.f, kGridH, false, true);
+    drawGrid(kGridW, kGridH, true, true);
     // Draw separators between the grids.
     SkPaint linePaint;
     linePaint.setAntiAlias(true);
     linePaint.setColor(SK_ColorBLACK);
-    canvas->drawLine(kGridW, 0.f   , kGridW,            SkIntToScalar(kH), linePaint);
-    canvas->drawLine(0.f   , kGridH, SkIntToScalar(kW), kGridH,            linePaint);
+    canvas->drawLine(kGridW, 0.f, kGridW, SkIntToScalar(kH), linePaint);
+    canvas->drawLine(0.f, kGridH, SkIntToScalar(kW), kGridH, linePaint);
 }
 
 #define DEF_ARC_GM(name) DEF_SIMPLE_GM(circular_arcs_##name, canvas, kW, kH)
 
 DEF_ARC_GM(fill) {
-    auto setFill = [] (SkPaint*p) { p->setStyle(SkPaint::kFill_Style); };
+    auto setFill = [](SkPaint* p) { p->setStyle(SkPaint::kFill_Style); };
     draw_arcs(canvas, setFill);
 }
 
 DEF_ARC_GM(hairline) {
-    auto setHairline = [] (SkPaint* p) {
+    auto setHairline = [](SkPaint* p) {
         p->setStyle(SkPaint::kStroke_Style);
         p->setStrokeWidth(0.f);
     };
@@ -88,7 +98,7 @@ DEF_ARC_GM(stroke_butt) {
 }
 
 DEF_ARC_GM(stroke_square) {
-    auto setStroke = [] (SkPaint* p) {
+    auto setStroke = [](SkPaint* p) {
         p->setStyle(SkPaint::kStroke_Style);
         p->setStrokeCap(SkPaint::kSquare_Cap);
     };
@@ -96,7 +106,7 @@ DEF_ARC_GM(stroke_square) {
 }
 
 DEF_ARC_GM(stroke_round) {
-    auto setStroke = [] (SkPaint* p) {
+    auto setStroke = [](SkPaint* p) {
         p->setStyle(SkPaint::kStroke_Style);
         p->setStrokeCap(SkPaint::kRound_Cap);
     };
@@ -104,7 +114,7 @@ DEF_ARC_GM(stroke_round) {
 }
 
 DEF_ARC_GM(stroke_and_fill_butt) {
-    auto setStroke = [] (SkPaint* p) {
+    auto setStroke = [](SkPaint* p) {
         p->setStyle(SkPaint::kStrokeAndFill_Style);
         p->setStrokeCap(SkPaint::kButt_Cap);
     };
@@ -112,7 +122,7 @@ DEF_ARC_GM(stroke_and_fill_butt) {
 }
 
 DEF_ARC_GM(stroke_and_fill_square) {
-    auto setStroke = [] (SkPaint* p) {
+    auto setStroke = [](SkPaint* p) {
         p->setStyle(SkPaint::kStrokeAndFill_Style);
         p->setStrokeCap(SkPaint::kSquare_Cap);
     };
@@ -120,7 +130,7 @@ DEF_ARC_GM(stroke_and_fill_square) {
 }
 
 DEF_ARC_GM(stroke_and_fill_round) {
-    auto setStroke = [] (SkPaint* p) {
+    auto setStroke = [](SkPaint* p) {
         p->setStyle(SkPaint::kStrokeAndFill_Style);
         p->setStrokeCap(SkPaint::kRound_Cap);
     };
@@ -130,35 +140,35 @@ DEF_ARC_GM(stroke_and_fill_round) {
 DEF_SIMPLE_GM(circular_arcs_weird, canvas, 1000, 400) {
     constexpr SkScalar kS = 50;
     struct Arc {
-        SkRect   fOval;
+        SkRect fOval;
         SkScalar fStart;
         SkScalar fSweep;
     };
     const Arc noDrawArcs[] = {
-        // no sweep
-        {SkRect::MakeWH(kS, kS),  0,  0},
-        // empty rect in x
-        {SkRect::MakeWH(-kS, kS), 0, 90},
-        // empty rect in y
-        {SkRect::MakeWH(kS, -kS), 0, 90},
-        // empty rect in x and y
-        {SkRect::MakeWH( 0,   0), 0, 90},
+            // no sweep
+            {SkRect::MakeWH(kS, kS), 0, 0},
+            // empty rect in x
+            {SkRect::MakeWH(-kS, kS), 0, 90},
+            // empty rect in y
+            {SkRect::MakeWH(kS, -kS), 0, 90},
+            // empty rect in x and y
+            {SkRect::MakeWH(0, 0), 0, 90},
     };
     const Arc arcs[] = {
-        // large start
-        {SkRect::MakeWH(kS, kS),   810.f,   90.f},
-        // large negative start
-        {SkRect::MakeWH(kS, kS),  -810.f,   90.f},
-        // exactly 360 sweep
-        {SkRect::MakeWH(kS, kS),     0.f,  360.f},
-        // exactly -360 sweep
-        {SkRect::MakeWH(kS, kS),     0.f, -360.f},
-        // exactly 540 sweep
-        {SkRect::MakeWH(kS, kS),     0.f,  540.f},
-        // exactly -540 sweep
-        {SkRect::MakeWH(kS, kS),     0.f, -540.f},
-        // generic large sweep and large start
-        {SkRect::MakeWH(kS, kS),  1125.f,  990.f},
+            // large start
+            {SkRect::MakeWH(kS, kS), 810.f, 90.f},
+            // large negative start
+            {SkRect::MakeWH(kS, kS), -810.f, 90.f},
+            // exactly 360 sweep
+            {SkRect::MakeWH(kS, kS), 0.f, 360.f},
+            // exactly -360 sweep
+            {SkRect::MakeWH(kS, kS), 0.f, -360.f},
+            // exactly 540 sweep
+            {SkRect::MakeWH(kS, kS), 0.f, 540.f},
+            // exactly -540 sweep
+            {SkRect::MakeWH(kS, kS), 0.f, -540.f},
+            // generic large sweep and large start
+            {SkRect::MakeWH(kS, kS), 1125.f, 990.f},
     };
     SkTArray<SkPaint> paints;
     // fill
@@ -191,7 +201,7 @@ DEF_SIMPLE_GM(circular_arcs_weird, canvas, 1000, 400) {
     SkPaint linePaint;
     linePaint.setAntiAlias(true);
     linePaint.setColor(SK_ColorRED);
-    SkScalar midX   = SK_ARRAY_COUNT(arcs) * (kS + kPad) - kPad/2.f;
+    SkScalar midX = SK_ARRAY_COUNT(arcs) * (kS + kPad) - kPad / 2.f;
     SkScalar height = paints.count() * (kS + kPad);
     canvas->drawLine(midX, -kPad, midX, height, linePaint);
 
@@ -216,10 +226,10 @@ DEF_SIMPLE_GM(onebadarc, canvas, 100, 100) {
     path.moveTo(SkBits2Float(0x41a00000), SkBits2Float(0x41a00000));  // 20, 20
     path.lineTo(SkBits2Float(0x4208918c), SkBits2Float(0x4208918c));  // 34.1421f, 34.1421f
     path.conicTo(SkBits2Float(0x41a00000), SkBits2Float(0x42412318),  // 20, 48.2843f
-            SkBits2Float(0x40bb73a0), SkBits2Float(0x4208918c),       // 5.85786f, 34.1421f
-            SkBits2Float(0x3f3504f3));                                // 0.707107f
+                 SkBits2Float(0x40bb73a0), SkBits2Float(0x4208918c),  // 5.85786f, 34.1421f
+                 SkBits2Float(0x3f3504f3));                           // 0.707107f
     path.quadTo(SkBits2Float(0x40bb73a0), SkBits2Float(0x4208918c),   // 5.85786f, 34.1421f
-            SkBits2Float(0x40bb73a2), SkBits2Float(0x4208918c));      // 5.85787f, 34.1421f
+                SkBits2Float(0x40bb73a2), SkBits2Float(0x4208918c));  // 5.85787f, 34.1421f
     path.lineTo(SkBits2Float(0x41a00000), SkBits2Float(0x41a00000));  // 20, 20
     path.close();
     SkPaint p0;
@@ -230,7 +240,7 @@ DEF_SIMPLE_GM(onebadarc, canvas, 100, 100) {
     canvas->translate(20, 0);
     canvas->drawPath(path, p0);
 
-    SkRect kRect = { 60, 0, 100, 40};
+    SkRect kRect = {60, 0, 100, 40};
     canvas->drawArc(kRect, 45, 90, true, p0);
 }
 

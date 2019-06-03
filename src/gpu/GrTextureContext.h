@@ -8,8 +8,8 @@
 #ifndef GrTextureContext_DEFINED
 #define GrTextureContext_DEFINED
 
-#include "GrSurfaceContext.h"
-#include "../private/GrTextureProxy.h"
+#include "include/private/GrTextureProxy.h"
+#include "src/gpu/GrSurfaceContext.h"
 
 class GrContext;
 class GrDrawingManager;
@@ -41,14 +41,14 @@ public:
 protected:
     GrTextureContext(GrRecordingContext*, sk_sp<GrTextureProxy>, sk_sp<SkColorSpace>);
 
-    SkDEBUGCODE(void validate() const override;)
+    SkDEBUGCODE(void validate() const override);
 
 private:
-    friend class GrDrawingManager; // for ctor
+    friend class GrDrawingManager;  // for ctor
 
     GrOpList* getOpList() override;
 
-    sk_sp<GrTextureProxy>  fTextureProxy;
+    sk_sp<GrTextureProxy> fTextureProxy;
 
     // In MDB-mode the GrOpList can be closed by some other renderTargetContext that has picked
     // it up. For this reason, the GrOpList should only ever be accessed via 'getOpList'.

@@ -6,11 +6,10 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkXMLParser_DEFINED
 #define SkXMLParser_DEFINED
 
-#include "SkString.h"
+#include "include/core/SkString.h"
 
 class SkStream;
 
@@ -40,10 +39,12 @@ public:
     void reset();
     void setCode(ErrorCode code) { fCode = code; }
     void setNoun(const SkString& str) { fNoun.set(str); }
-    void setNoun(const char* ch)  { fNoun.set(ch); }
+    void setNoun(const char* ch) { fNoun.set(ch); }
     void setNoun(const char* ch, size_t len) { fNoun.set(ch, len); }
+
 protected:
     ErrorCode fCode;
+
 private:
     int fLineNumber;
     int fNativeCode;
@@ -57,7 +58,7 @@ public:
     virtual ~SkXMLParser();
 
     /** Returns true for success
-    */
+     */
     bool parse(const char doc[], size_t len);
     bool parse(SkStream& docStream);
     bool parse(const SkDOM&, const SkDOMNode*);
@@ -78,8 +79,10 @@ public:
     bool endElement(const char elem[]);
     bool text(const char text[], int len);
     void* fParser;
+
 protected:
     SkXMLParserError* fError;
+
 private:
     void reportError(void* parser);
 };

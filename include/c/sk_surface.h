@@ -11,7 +11,7 @@
 #ifndef sk_surface_DEFINED
 #define sk_surface_DEFINED
 
-#include "sk_types.h"
+#include "include/c/sk_types.h"
 
 SK_C_PLUS_PLUS_BEGIN_GUARD
 
@@ -45,9 +45,8 @@ SK_API sk_surface_t* sk_surface_new_raster(const sk_imageinfo_t*, const sk_surfa
     @param sk_surfaceprops_t* If not NULL, specify additional non-default
                               properties of the surface.
 */
-SK_API sk_surface_t* sk_surface_new_raster_direct(const sk_imageinfo_t*,
-                                                  void* pixels, size_t rowBytes,
-                                                  const sk_surfaceprops_t* props);
+SK_API sk_surface_t* sk_surface_new_raster_direct(const sk_imageinfo_t*, void* pixels,
+                                                  size_t rowBytes, const sk_surfaceprops_t* props);
 
 /**
     Decrement the reference count. If the reference count is 1 before

@@ -8,8 +8,8 @@
 #ifndef SKSL_LAYOUT
 #define SKSL_LAYOUT
 
-#include "SkSLString.h"
-#include "SkSLUtil.h"
+#include "src/sksl/SkSLString.h"
+#include "src/sksl/SkSLUtil.h"
 
 namespace SkSL {
 
@@ -20,26 +20,26 @@ namespace SkSL {
  */
 struct Layout {
     enum Flag {
-        kOriginUpperLeft_Flag            = 1 <<  0,
-        kOverrideCoverage_Flag           = 1 <<  1,
-        kPushConstant_Flag               = 1 <<  2,
-        kBlendSupportAllEquations_Flag   = 1 <<  3,
-        kBlendSupportMultiply_Flag       = 1 <<  4,
-        kBlendSupportScreen_Flag         = 1 <<  5,
-        kBlendSupportOverlay_Flag        = 1 <<  6,
-        kBlendSupportDarken_Flag         = 1 <<  7,
-        kBlendSupportLighten_Flag        = 1 <<  8,
-        kBlendSupportColorDodge_Flag     = 1 <<  9,
-        kBlendSupportColorBurn_Flag      = 1 << 10,
-        kBlendSupportHardLight_Flag      = 1 << 11,
-        kBlendSupportSoftLight_Flag      = 1 << 12,
-        kBlendSupportDifference_Flag     = 1 << 13,
-        kBlendSupportExclusion_Flag      = 1 << 14,
-        kBlendSupportHSLHue_Flag         = 1 << 15,
-        kBlendSupportHSLSaturation_Flag  = 1 << 16,
-        kBlendSupportHSLColor_Flag       = 1 << 17,
-        kBlendSupportHSLLuminosity_Flag  = 1 << 18,
-        kTracked_Flag                    = 1 << 19
+        kOriginUpperLeft_Flag = 1 << 0,
+        kOverrideCoverage_Flag = 1 << 1,
+        kPushConstant_Flag = 1 << 2,
+        kBlendSupportAllEquations_Flag = 1 << 3,
+        kBlendSupportMultiply_Flag = 1 << 4,
+        kBlendSupportScreen_Flag = 1 << 5,
+        kBlendSupportOverlay_Flag = 1 << 6,
+        kBlendSupportDarken_Flag = 1 << 7,
+        kBlendSupportLighten_Flag = 1 << 8,
+        kBlendSupportColorDodge_Flag = 1 << 9,
+        kBlendSupportColorBurn_Flag = 1 << 10,
+        kBlendSupportHardLight_Flag = 1 << 11,
+        kBlendSupportSoftLight_Flag = 1 << 12,
+        kBlendSupportDifference_Flag = 1 << 13,
+        kBlendSupportExclusion_Flag = 1 << 14,
+        kBlendSupportHSLHue_Flag = 1 << 15,
+        kBlendSupportHSLSaturation_Flag = 1 << 16,
+        kBlendSupportHSLColor_Flag = 1 << 17,
+        kBlendSupportHSLLuminosity_Flag = 1 << 18,
+        kTracked_Flag = 1 << 19
     };
 
     enum Primitive {
@@ -79,6 +79,7 @@ struct Layout {
 
     enum class CType {
         kDefault,
+        kBool,
         kFloat,
         kInt32,
         kSkRect,
@@ -95,16 +96,26 @@ struct Layout {
 
     static const char* FormatToStr(Format format) {
         switch (format) {
-            case Format::kUnspecified:  return "";
-            case Format::kRGBA32F:      return "rgba32f";
-            case Format::kR32F:         return "r32f";
-            case Format::kRGBA16F:      return "rgba16f";
-            case Format::kR16F:         return "r16f";
-            case Format::kRGBA8:        return "rgba8";
-            case Format::kR8:           return "r8";
-            case Format::kRGBA8I:       return "rgba8i";
-            case Format::kR8I:          return "r8i";
-            case Format::kRG16F:        return "rg16f";
+            case Format::kUnspecified:
+                return "";
+            case Format::kRGBA32F:
+                return "rgba32f";
+            case Format::kR32F:
+                return "r32f";
+            case Format::kRGBA16F:
+                return "rgba16f";
+            case Format::kR16F:
+                return "r16f";
+            case Format::kRGBA8:
+                return "rgba8";
+            case Format::kR8:
+                return "r8";
+            case Format::kRGBA8I:
+                return "rgba8i";
+            case Format::kR8I:
+                return "r8i";
+            case Format::kRG16F:
+                return "rg16f";
         }
         ABORT("Unexpected format");
     }
@@ -178,37 +189,37 @@ struct Layout {
     Layout(int flags, int location, int offset, int binding, int index, int set, int builtin,
            int inputAttachmentIndex, Format format, Primitive primitive, int maxVertices,
            int invocations, String when, Key key, CType ctype)
-    : fFlags(flags)
-    , fLocation(location)
-    , fOffset(offset)
-    , fBinding(binding)
-    , fIndex(index)
-    , fSet(set)
-    , fBuiltin(builtin)
-    , fInputAttachmentIndex(inputAttachmentIndex)
-    , fFormat(format)
-    , fPrimitive(primitive)
-    , fMaxVertices(maxVertices)
-    , fInvocations(invocations)
-    , fWhen(when)
-    , fKey(key)
-    , fCType(ctype) {}
+            : fFlags(flags)
+            , fLocation(location)
+            , fOffset(offset)
+            , fBinding(binding)
+            , fIndex(index)
+            , fSet(set)
+            , fBuiltin(builtin)
+            , fInputAttachmentIndex(inputAttachmentIndex)
+            , fFormat(format)
+            , fPrimitive(primitive)
+            , fMaxVertices(maxVertices)
+            , fInvocations(invocations)
+            , fWhen(when)
+            , fKey(key)
+            , fCType(ctype) {}
 
     Layout()
-    : fFlags(0)
-    , fLocation(-1)
-    , fOffset(-1)
-    , fBinding(-1)
-    , fIndex(-1)
-    , fSet(-1)
-    , fBuiltin(-1)
-    , fInputAttachmentIndex(-1)
-    , fFormat(Format::kUnspecified)
-    , fPrimitive(kUnspecified_Primitive)
-    , fMaxVertices(-1)
-    , fInvocations(-1)
-    , fKey(kNo_Key)
-    , fCType(CType::kDefault) {}
+            : fFlags(0)
+            , fLocation(-1)
+            , fOffset(-1)
+            , fBinding(-1)
+            , fIndex(-1)
+            , fSet(-1)
+            , fBuiltin(-1)
+            , fInputAttachmentIndex(-1)
+            , fFormat(Format::kUnspecified)
+            , fPrimitive(kUnspecified_Primitive)
+            , fMaxVertices(-1)
+            , fInvocations(-1)
+            , fKey(kNo_Key)
+            , fCType(CType::kDefault) {}
 
     String description() const {
         String result;
@@ -379,23 +390,14 @@ struct Layout {
     }
 
     bool operator==(const Layout& other) const {
-        return fFlags                == other.fFlags &&
-               fLocation             == other.fLocation &&
-               fOffset               == other.fOffset &&
-               fBinding              == other.fBinding &&
-               fIndex                == other.fIndex &&
-               fSet                  == other.fSet &&
-               fBuiltin              == other.fBuiltin &&
-               fInputAttachmentIndex == other.fInputAttachmentIndex &&
-               fFormat               == other.fFormat &&
-               fPrimitive            == other.fPrimitive &&
-               fMaxVertices          == other.fMaxVertices &&
-               fInvocations          == other.fInvocations;
+        return fFlags == other.fFlags && fLocation == other.fLocation && fOffset == other.fOffset &&
+               fBinding == other.fBinding && fIndex == other.fIndex && fSet == other.fSet &&
+               fBuiltin == other.fBuiltin && fInputAttachmentIndex == other.fInputAttachmentIndex &&
+               fFormat == other.fFormat && fPrimitive == other.fPrimitive &&
+               fMaxVertices == other.fMaxVertices && fInvocations == other.fInvocations;
     }
 
-    bool operator!=(const Layout& other) const {
-        return !(*this == other);
-    }
+    bool operator!=(const Layout& other) const { return !(*this == other); }
 
     int fFlags;
     int fLocation;
@@ -418,6 +420,6 @@ struct Layout {
     CType fCType;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

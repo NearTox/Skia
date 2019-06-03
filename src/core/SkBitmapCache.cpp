@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "SkBitmapCache.h"
-#include "SkBitmapProvider.h"
-#include "SkImage.h"
-#include "SkResourceCache.h"
-#include "SkMipMap.h"
-#include "SkPixelRef.h"
-#include "SkRect.h"
+#include "src/core/SkBitmapCache.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkPixelRef.h"
+#include "include/core/SkRect.h"
+#include "src/core/SkBitmapProvider.h"
+#include "src/core/SkMipMap.h"
+#include "src/core/SkResourceCache.h"
 
 /**
  *  Use this for bitmapcache and mipmapcache entries.
@@ -30,7 +30,7 @@ void SkNotifyBitmapGenIDIsStale(uint32_t bitmapGenID) {
 SkBitmapCacheDesc SkBitmapCacheDesc::Make(uint32_t imageID, const SkIRect& subset) {
     SkASSERT(imageID);
     SkASSERT(subset.width() > 0 && subset.height() > 0);
-    return { imageID, subset };
+    return {imageID, subset};
 }
 
 SkBitmapCacheDesc SkBitmapCacheDesc::Make(const SkImage* image) {
@@ -50,27 +50,20 @@ public:
 
     const SkBitmapCacheDesc fDesc;
 };
-}
+}  // namespace
 
 //////////////////////
-#include "SkDiscardableMemory.h"
-#include "SkNextID.h"
+#include "src/core/SkDiscardableMemory.h"
+#include "src/core/SkNextID.h"
 
-void SkBitmapCache_setImmutableWithID(SkPixelRef* pr, uint32_t id) {
-    pr->setImmutableWithID(id);
-}
+void SkBitmapCache_setImmutableWithID(SkPixelRef* pr, uint32_t id) { pr->setImmutableWithID(id); }
 
 class SkBitmapCache::Rec : public SkResourceCache::Rec {
 public:
     Rec(const SkBitmapCacheDesc& desc, const SkImageInfo& info, size_t rowBytes,
         std::unique_ptr<SkDiscardableMemory> dm, void* block)
-        : fKey(desc)
-        , fDM(std::move(dm))
-        , fMalloc(block)
-        , fInfo(info)
-        , fRowBytes(rowBytes)
-    {
-        SkASSERT(!(fDM && fMalloc));    // can't have both
+            : fKey(desc), fDM(std::move(dm)), fMalloc(block), fInfo(info), fRowBytes(rowBytes) {
+        SkASSERT(!(fDM && fMalloc));  // can't have both
 
         // We need an ID to return with the bitmap/pixelref. We can't necessarily use the key/desc
         // ID - lazy images cache the same ID with multiple keys (in different color types).
@@ -83,15 +76,13 @@ public:
             SkASSERT(fDM->data());
             fDM->unlock();
         }
-        sk_free(fMalloc);   // may be null
+        sk_free(fMalloc);  // may be null
     }
 
     const Key& getKey() const override { return fKey; }
-    size_t bytesUsed() const override {
-        return sizeof(fKey) + fInfo.computeByteSize(fRowBytes);
-    }
+    size_t bytesUsed() const override { return sizeof(fKey) + fInfo.computeByteSize(fRowBytes); }
     bool canBePurged() override {
-        SkAutoMutexAcquire ama(fMutex);
+        SkAutoMutexExclusive ama(fMutex);
         return fExternalCounter == 0;
     }
     void postAddInstall(void* payload) override {
@@ -99,13 +90,11 @@ public:
     }
 
     const char* getCategory() const override { return "bitmap"; }
-    SkDiscardableMemory* diagnostic_only_getDiscardable() const override {
-        return fDM.get();
-    }
+    SkDiscardableMemory* diagnostic_only_getDiscardable() const override { return fDM.get(); }
 
     static void ReleaseProc(void* addr, void* ctx) {
         Rec* rec = static_cast<Rec*>(ctx);
-        SkAutoMutexAcquire ama(rec->fMutex);
+        SkAutoMutexExclusive ama(rec->fMutex);
 
         SkASSERT(rec->fExternalCounter > 0);
         rec->fExternalCounter -= 1;
@@ -121,7 +110,7 @@ public:
     }
 
     bool install(SkBitmap* bitmap) {
-        SkAutoMutexAcquire ama(fMutex);
+        SkAutoMutexExclusive ama(fMutex);
 
         if (!fDM && !fMalloc) {
             return false;
@@ -153,21 +142,21 @@ public:
     }
 
 private:
-    BitmapKey   fKey;
+    BitmapKey fKey;
 
-    SkMutex     fMutex;
+    SkMutex fMutex;
 
     // either fDM or fMalloc can be non-null, but not both
     std::unique_ptr<SkDiscardableMemory> fDM;
-    void*       fMalloc;
+    void* fMalloc;
 
     SkImageInfo fInfo;
-    size_t      fRowBytes;
-    uint32_t    fPrUniqueID;
+    size_t fRowBytes;
+    uint32_t fPrUniqueID;
 
     // This field counts the number of external pixelrefs we have created.
     // They notify us when they are destroyed so we can decrement this.
-    int  fExternalCounter     = 0;
+    int fExternalCounter = 0;
     bool fDiscardableIsLocked = true;
 };
 
@@ -230,16 +219,11 @@ public:
 };
 
 struct MipMapRec : public SkResourceCache::Rec {
-    MipMapRec(const SkBitmapCacheDesc& desc, const SkMipMap* result)
-        : fKey(desc)
-        , fMipMap(result)
-    {
+    MipMapRec(const SkBitmapCacheDesc& desc, const SkMipMap* result) : fKey(desc), fMipMap(result) {
         fMipMap->attachToCacheAndRef();
     }
 
-    ~MipMapRec() override {
-        fMipMap->detachFromCacheAndUnref();
-    }
+    ~MipMapRec() override { fMipMap->detachFromCacheAndUnref(); }
 
     const Key& getKey() const override { return fKey; }
     size_t bytesUsed() const override { return sizeof(fKey) + fMipMap->size(); }
@@ -254,7 +238,7 @@ struct MipMapRec : public SkResourceCache::Rec {
         // the call to ref() above triggers a "lock" in the case of discardable memory,
         // which means we can now check for null (in case the lock failed).
         if (nullptr == mm->data()) {
-            mm->unref();    // balance our call to ref()
+            mm->unref();  // balance our call to ref()
             return false;
         }
         // the call must call unref() when they are done.
@@ -263,10 +247,10 @@ struct MipMapRec : public SkResourceCache::Rec {
     }
 
 private:
-    MipMapKey       fKey;
+    MipMapKey fKey;
     const SkMipMap* fMipMap;
 };
-}
+}  // namespace
 
 const SkMipMap* SkMipMapCache::FindAndRef(const SkBitmapCacheDesc& desc,
                                           SkResourceCache* localCache) {

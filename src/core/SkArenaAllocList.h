@@ -8,15 +8,14 @@
 #ifndef SkArenaAllocList_DEFINED
 #define SkArenaAllocList_DEFINED
 
-#include "SkArenaAlloc.h"
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkArenaAlloc.h"
 
 /**
  * A singly linked list of Ts stored in a SkArenaAlloc. The arena rather than the list owns
  * the elements. This supports forward iteration and range based for loops.
  */
-template <typename T>
-class SkArenaAllocList {
+template <typename T> class SkArenaAllocList {
 private:
     struct Node;
 
@@ -25,8 +24,7 @@ public:
 
     void reset() { fHead = fTail = nullptr; }
 
-    template <typename... Args>
-    inline T& append(SkArenaAlloc* arena, Args... args);
+    template <typename... Args> inline T& append(SkArenaAlloc* arena, Args... args);
 
     class Iter {
     public:
@@ -49,8 +47,7 @@ public:
 
 private:
     struct Node {
-        template <typename... Args>
-        Node(Args... args) : fT(std::forward<Args>(args)...) {}
+        template <typename... Args> Node(Args... args) : fT(std::forward<Args>(args)...) {}
         T fT;
         Node* fNext = nullptr;
     };
@@ -71,8 +68,7 @@ T& SkArenaAllocList<T>::append(SkArenaAlloc* arena, Args... args) {
     return fTail->fT;
 }
 
-template <typename T>
-typename SkArenaAllocList<T>::Iter& SkArenaAllocList<T>::Iter::operator++() {
+template <typename T> typename SkArenaAllocList<T>::Iter& SkArenaAllocList<T>::Iter::operator++() {
     fCurr = fCurr->fNext;
     return *this;
 }

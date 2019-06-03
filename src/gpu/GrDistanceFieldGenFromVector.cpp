@@ -5,17 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "SkDistanceFieldGen.h"
-#include "GrDistanceFieldGenFromVector.h"
+#include "src/gpu/GrDistanceFieldGenFromVector.h"
+#include "src/core/SkDistanceFieldGen.h"
 
-#include "GrConfig.h"
-#include "GrPathUtils.h"
-#include "SkAutoMalloc.h"
-#include "SkGeometry.h"
-#include "SkMatrix.h"
-#include "SkPathOps.h"
-#include "SkPointPriv.h"
-#include "SkRectPriv.h"
+#include "include/core/SkMatrix.h"
+#include "include/gpu/GrConfig.h"
+#include "include/pathops/SkPathOps.h"
+#include "src/core/SkAutoMalloc.h"
+#include "src/core/SkGeometry.h"
+#include "src/core/SkPointPriv.h"
+#include "src/core/SkRectPriv.h"
+#include "src/gpu/GrPathUtils.h"
 
 /**
  * If a scanline (a row of texel) cross from the kRight_SegSide
@@ -40,15 +40,15 @@
  *         0                 0
  */
 enum SegSide {
-    kLeft_SegSide  = -1,
-    kOn_SegSide    =  0,
-    kRight_SegSide =  1,
-    kNA_SegSide    =  2,
+    kLeft_SegSide = -1,
+    kOn_SegSide = 0,
+    kRight_SegSide = 1,
+    kNA_SegSide = 2,
 };
 
 struct DFData {
-    float fDistSq;            // distance squared to nearest (so far) edge
-    int   fDeltaWindingScore; // +1 or -1 whenever a scanline cross over a segment
+    float fDistSq;           // distance squared to nearest (so far) edge
+    int fDeltaWindingScore;  // +1 or -1 whenever a scanline cross over a segment
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -70,16 +70,17 @@ struct DPoint {
     double x() const { return fX; }
     double y() const { return fY; }
 
-    void set(double x, double y) { fX = x; fY = y; }
-
-    /** Returns the euclidian distance from (0,0) to (x,y)
-    */
-    static double Length(double x, double y) {
-        return sqrt(x * x + y * y);
+    void set(double x, double y) {
+        fX = x;
+        fY = y;
     }
 
+    /** Returns the euclidian distance from (0,0) to (x,y)
+     */
+    static double Length(double x, double y) { return sqrt(x * x + y * y); }
+
     /** Returns the euclidian distance between a and b
-    */
+     */
     static double Distance(const DPoint& a, const DPoint& b) {
         return Length(a.fX - b.fX, a.fY - b.fY);
     }
@@ -105,8 +106,7 @@ public:
         return fMat[index];
     }
 
-    void setAffine(double m11, double m12, double m13,
-                   double m21, double m22, double m23) {
+    void setAffine(double m11, double m12, double m13, double m21, double m22, double m23) {
         fMat[0] = m11;
         fMat[1] = m12;
         fMat[2] = m13;
@@ -116,11 +116,10 @@ public:
     }
 
     /** Set the matrix to identity
-    */
+     */
     void reset() {
         fMat[0] = fMat[4] = 1.0;
-        fMat[1] = fMat[3] =
-        fMat[2] = fMat[5] = 0.0;
+        fMat[1] = fMat[3] = fMat[2] = fMat[5] = 0.0;
     }
 
     // alias for reset()
@@ -135,6 +134,7 @@ public:
         return DPoint::Make(fMat[0] * src.x() + fMat[1] * src.y() + fMat[2],
                             fMat[3] * src.x() + fMat[4] * src.y() + fMat[5]);
     }
+
 private:
     double fMat[6];
 };
@@ -145,10 +145,9 @@ static const double kClose = (SK_Scalar1 / 16.0);
 static const double kCloseSqd = kClose * kClose;
 static const double kNearlyZero = (SK_Scalar1 / (1 << 18));
 static const double kTangentTolerance = (SK_Scalar1 / (1 << 11));
-static const float  kConicTolerance = 0.25f;
+static const float kConicTolerance = 0.25f;
 
-static inline bool between_closed_open(double a, double b, double c,
-                                       double tolerance = 0.0,
+static inline bool between_closed_open(double a, double b, double c, double tolerance = 0.0,
                                        bool xformToleranceToX = false) {
     SkASSERT(tolerance >= 0.0);
     double tolB = tolerance;
@@ -165,12 +164,10 @@ static inline bool between_closed_open(double a, double b, double c,
         tolB = tolerance / sqrt(4.0 * b * b + 1.0);
         tolC = tolerance / sqrt(4.0 * c * c + 1.0);
     }
-    return b < c ? (a >= b - tolB && a < c - tolC) :
-                   (a >= c - tolC && a < b - tolB);
+    return b < c ? (a >= b - tolB && a < c - tolC) : (a >= c - tolC && a < b - tolB);
 }
 
-static inline bool between_closed(double a, double b, double c,
-                                  double tolerance = 0.0,
+static inline bool between_closed(double a, double b, double c, double tolerance = 0.0,
                                   bool xformToleranceToX = false) {
     SkASSERT(tolerance >= 0.0);
     double tolB = tolerance;
@@ -180,8 +177,7 @@ static inline bool between_closed(double a, double b, double c,
         tolB = tolerance / sqrt(4.0 * b * b + 1.0);
         tolC = tolerance / sqrt(4.0 * c * c + 1.0);
     }
-    return b < c ? (a >= b - tolB && a <= c + tolC) :
-                   (a >= c - tolC && a <= b + tolB);
+    return b < c ? (a >= b - tolB && a <= c + tolC) : (a >= c - tolC && a <= b + tolB);
 }
 
 static inline bool nearly_zero(double x, double tolerance = kNearlyZero) {
@@ -189,8 +185,7 @@ static inline bool nearly_zero(double x, double tolerance = kNearlyZero) {
     return fabs(x) <= tolerance;
 }
 
-static inline bool nearly_equal(double x, double y,
-                                double tolerance = kNearlyZero,
+static inline bool nearly_equal(double x, double y, double tolerance = kNearlyZero,
                                 bool xformToleranceToX = false) {
     SkASSERT(tolerance >= 0.0);
     if (xformToleranceToX) {
@@ -199,13 +194,12 @@ static inline bool nearly_equal(double x, double y,
     return fabs(x - y) <= tolerance;
 }
 
-static inline double sign_of(const double &val) {
-    return (val < 0.0) ? -1.0 : 1.0;
-}
+static inline double sign_of(const double& val) { return (val < 0.0) ? -1.0 : 1.0; }
 
 static bool is_colinear(const SkPoint pts[3]) {
     return nearly_zero((pts[1].y() - pts[0].y()) * (pts[1].x() - pts[2].x()) -
-                       (pts[1].y() - pts[2].y()) * (pts[1].x() - pts[0].x()), kCloseSqd);
+                               (pts[1].y() - pts[2].y()) * (pts[1].x() - pts[0].x()),
+                       kCloseSqd);
 }
 
 class PathSegment {
@@ -219,13 +213,13 @@ public:
     // line uses 2 pts, quad uses 3 pts
     SkPoint fPts[3];
 
-    DPoint  fP0T, fP2T;
+    DPoint fP0T, fP2T;
     DAffineMatrix fXformMatrix;
     double fScalingFactor;
     double fScalingFactorSqd;
     double fNearlyZeroScaled;
     double fTangentTolScaledSqd;
-    SkRect  fBoundingBox;
+    SkRect fBoundingBox;
 
     void init();
 
@@ -259,10 +253,8 @@ void PathSegment::init() {
         const double cosTheta = (p2x - p0x) / hypotenuse;
         const double sinTheta = (p2y - p0y) / hypotenuse;
 
-        fXformMatrix.setAffine(
-            cosTheta, sinTheta, -(cosTheta * p0x) - (sinTheta * p0y),
-            -sinTheta, cosTheta, (sinTheta * p0x) - (cosTheta * p0y)
-        );
+        fXformMatrix.setAffine(cosTheta, sinTheta, -(cosTheta * p0x) - (sinTheta * p0y), -sinTheta,
+                               cosTheta, (sinTheta * p0x) - (cosTheta * p0y));
     } else {
         SkASSERT(fType == PathSegment::kQuad);
 
@@ -300,22 +292,18 @@ void PathSegment::init() {
         const double h = -1.0 * (p0y - (2.0 * p1y) + p2y) * (p0x - (2.0 * p1x) + p2x);
         const double sqrtB = p0x - (2.0 * p1x) + p2x;
         const double b = sqrtB * sqrtB;
-        const double c = (p0xSqd * p2ySqd) - (4.0 * p01xProd * b12yProd)
-                - (2.0 * p02xProd * p02yProd) + (4.0 * p02xProd * p1ySqd)
-                + (4.0 * p1xSqd * p02yProd) - (4.0 * b12xProd * p01yProd)
-                + (p2xSqd * p0ySqd);
-        const double g = (p0x * p02yProd) - (2.0 * p0x * p1ySqd)
-                + (2.0 * p0x * b12yProd) - (p0x * p2ySqd)
-                + (2.0 * p1x * p01yProd) - (4.0 * p1x * p02yProd)
-                + (2.0 * p1x * b12yProd) - (p2x * p0ySqd)
-                + (2.0 * p2x * p01yProd) + (p2x * p02yProd)
-                - (2.0 * p2x * p1ySqd);
-        const double f = -((p0xSqd * p2y) - (2.0 * p01xProd * p1y)
-                - (2.0 * p01xProd * p2y) - (p02xProd * p0y)
-                + (4.0 * p02xProd * p1y) - (p02xProd * p2y)
-                + (2.0 * p1xSqd * p0y) + (2.0 * p1xSqd * p2y)
-                - (2.0 * b12xProd * p0y) - (2.0 * b12xProd * p1y)
-                + (p2xSqd * p0y));
+        const double c = (p0xSqd * p2ySqd) - (4.0 * p01xProd * b12yProd) -
+                         (2.0 * p02xProd * p02yProd) + (4.0 * p02xProd * p1ySqd) +
+                         (4.0 * p1xSqd * p02yProd) - (4.0 * b12xProd * p01yProd) +
+                         (p2xSqd * p0ySqd);
+        const double g = (p0x * p02yProd) - (2.0 * p0x * p1ySqd) + (2.0 * p0x * b12yProd) -
+                         (p0x * p2ySqd) + (2.0 * p1x * p01yProd) - (4.0 * p1x * p02yProd) +
+                         (2.0 * p1x * b12yProd) - (p2x * p0ySqd) + (2.0 * p2x * p01yProd) +
+                         (p2x * p02yProd) - (2.0 * p2x * p1ySqd);
+        const double f = -((p0xSqd * p2y) - (2.0 * p01xProd * p1y) - (2.0 * p01xProd * p2y) -
+                           (p02xProd * p0y) + (4.0 * p02xProd * p1y) - (p02xProd * p2y) +
+                           (2.0 * p1xSqd * p0y) + (2.0 * p1xSqd * p2y) - (2.0 * b12xProd * p0y) -
+                           (2.0 * b12xProd * p1y) + (p2xSqd * p0y));
 
         const double cosTheta = sqrt(a / (a + b));
         const double sinTheta = -1.0 * sign_of((a + b) * h) * sqrt(b / (a + b));
@@ -323,10 +311,8 @@ void PathSegment::init() {
         const double gDef = cosTheta * g - sinTheta * f;
         const double fDef = sinTheta * g + cosTheta * f;
 
-
         const double x0 = gDef / (a + b);
         const double y0 = (1.0 / (2.0 * fDef)) * (c - (gDef * gDef / (a + b)));
-
 
         const double lambda = -1.0 * ((a + b) / (2.0 * fDef));
         fScalingFactor = fabs(1.0 / lambda);
@@ -335,10 +321,8 @@ void PathSegment::init() {
         const double lambda_cosTheta = lambda * cosTheta;
         const double lambda_sinTheta = lambda * sinTheta;
 
-        fXformMatrix.setAffine(
-            lambda_cosTheta, -lambda_sinTheta, lambda * x0,
-            lambda_sinTheta, lambda_cosTheta, lambda * y0
-        );
+        fXformMatrix.setAffine(lambda_cosTheta, -lambda_sinTheta, lambda * x0, lambda_sinTheta,
+                               lambda_cosTheta, lambda * y0);
     }
 
     fNearlyZeroScaled = kNearlyZero / fScalingFactor;
@@ -359,8 +343,7 @@ static void init_distances(DFData* data, int size) {
     }
 }
 
-static inline void add_line_to_segment(const SkPoint pts[2],
-                                       PathSegmentArray* segments) {
+static inline void add_line_to_segment(const SkPoint pts[2], PathSegmentArray* segments) {
     segments->push_back();
     segments->back().fType = PathSegment::kLine;
     segments->back().fPts[0] = pts[0];
@@ -369,11 +352,9 @@ static inline void add_line_to_segment(const SkPoint pts[2],
     segments->back().init();
 }
 
-static inline void add_quad_segment(const SkPoint pts[3],
-                                    PathSegmentArray* segments) {
+static inline void add_quad_segment(const SkPoint pts[3], PathSegmentArray* segments) {
     if (SkPointPriv::DistanceToSqd(pts[0], pts[1]) < kCloseSqd ||
-        SkPointPriv::DistanceToSqd(pts[1], pts[2]) < kCloseSqd ||
-        is_colinear(pts)) {
+        SkPointPriv::DistanceToSqd(pts[1], pts[2]) < kCloseSqd || is_colinear(pts)) {
         if (pts[0] != pts[2]) {
             SkPoint line_pts[2];
             line_pts[0] = pts[0];
@@ -391,8 +372,7 @@ static inline void add_quad_segment(const SkPoint pts[3],
     }
 }
 
-static inline void add_cubic_segments(const SkPoint pts[4],
-                                      PathSegmentArray* segments) {
+static inline void add_cubic_segments(const SkPoint pts[4], PathSegmentArray* segments) {
     SkSTArray<15, SkPoint, true> quads;
     GrPathUtils::convertCubicToQuads(pts, SK_Scalar1, &quads);
     int count = quads.count();
@@ -401,9 +381,7 @@ static inline void add_cubic_segments(const SkPoint pts[4],
     }
 }
 
-static float calculate_nearest_point_for_quad(
-                const PathSegment& segment,
-                const DPoint &xFormPt) {
+static float calculate_nearest_point_for_quad(const PathSegment& segment, const DPoint& xFormPt) {
     static const float kThird = 0.33333333333f;
     static const float kTwentySeventh = 0.037037037f;
 
@@ -426,10 +404,12 @@ static float calculate_nearest_point_for_quad(
         if (xFormPt.x() > 0.f) {
             result = 2.f * (float)sqrt(-a * kThird) * (float)cos(phi * kThird);
             if (!between_closed(result, segment.fP0T.x(), segment.fP2T.x())) {
-                result = 2.f * (float)sqrt(-a * kThird) * (float)cos((phi * kThird) + (SK_ScalarPI * 2.f * kThird));
+                result = 2.f * (float)sqrt(-a * kThird) *
+                         (float)cos((phi * kThird) + (SK_ScalarPI * 2.f * kThird));
             }
         } else {
-            result = 2.f * (float)sqrt(-a * kThird) * (float)cos((phi * kThird) + (SK_ScalarPI * 2.f * kThird));
+            result = 2.f * (float)sqrt(-a * kThird) *
+                     (float)cos((phi * kThird) + (SK_ScalarPI * 2.f * kThird));
             if (!between_closed(result, segment.fP0T.x(), segment.fP2T.x())) {
                 result = 2.f * (float)sqrt(-a * kThird) * (float)cos(phi * kThird);
             }
@@ -464,12 +444,10 @@ struct RowData {
     double fXAtIntersection2;
 };
 
-void precomputation_for_row(
-            RowData *rowData,
-            const PathSegment& segment,
-            const SkPoint& pointLeft,
-            const SkPoint& pointRight
-            ) {
+void precomputation_for_row(RowData* rowData,
+                            const PathSegment& segment,
+                            const SkPoint& pointLeft,
+                            const SkPoint& pointRight) {
     if (segment.fType != PathSegment::kQuad) {
         return;
     }
@@ -504,9 +482,8 @@ void precomputation_for_row(
     // Check if the scanline is the tangent line of the curve,
     // and the curve start or end at the same y-coordinate of the scanline
     if ((rowData->fScanlineXDirection == 1 &&
-         (segment.fPts[0].y() == pointLeft.y() ||
-         segment.fPts[2].y() == pointLeft.y())) &&
-         nearly_zero(c, tol)) {
+         (segment.fPts[0].y() == pointLeft.y() || segment.fPts[2].y() == pointLeft.y())) &&
+        nearly_zero(c, tol)) {
         rowData->fIntersectionType = RowData::kTangentLine;
         rowData->fXAtIntersection1 = m / 2.0;
         rowData->fXAtIntersection2 = m / 2.0;
@@ -521,17 +498,16 @@ void precomputation_for_row(
     }
 }
 
-SegSide calculate_side_of_quad(
-            const PathSegment& segment,
-            const SkPoint& point,
-            const DPoint& xFormPt,
-            const RowData& rowData) {
+SegSide calculate_side_of_quad(const PathSegment& segment,
+                               const SkPoint& point,
+                               const DPoint& xFormPt,
+                               const RowData& rowData) {
     SegSide side = kNA_SegSide;
 
     if (RowData::kVerticalLine == rowData.fIntersectionType) {
-        side = (SegSide)(int)(sign_of(xFormPt.y() - rowData.fYAtIntersection) * rowData.fQuadXDirection);
-    }
-    else if (RowData::kTwoPointsIntersect == rowData.fIntersectionType) {
+        side = (SegSide)(int)(sign_of(xFormPt.y() - rowData.fYAtIntersection) *
+                              rowData.fQuadXDirection);
+    } else if (RowData::kTwoPointsIntersect == rowData.fIntersectionType) {
         const double p1 = rowData.fXAtIntersection1;
         const double p2 = rowData.fXAtIntersection2;
 
@@ -542,13 +518,13 @@ SegSide calculate_side_of_quad(
         if (rowData.fScanlineXDirection == 1) {
             if ((rowData.fQuadXDirection == -1 && segment.fPts[0].y() <= point.y() &&
                  nearly_equal(segment.fP0T.x(), p1, segment.fNearlyZeroScaled, true)) ||
-                 (rowData.fQuadXDirection == 1 && segment.fPts[2].y() <= point.y() &&
+                (rowData.fQuadXDirection == 1 && segment.fPts[2].y() <= point.y() &&
                  nearly_equal(segment.fP2T.x(), p1, segment.fNearlyZeroScaled, true))) {
                 includeP1 = false;
             }
             if ((rowData.fQuadXDirection == -1 && segment.fPts[2].y() <= point.y() &&
                  nearly_equal(segment.fP2T.x(), p2, segment.fNearlyZeroScaled, true)) ||
-                 (rowData.fQuadXDirection == 1 && segment.fPts[0].y() <= point.y() &&
+                (rowData.fQuadXDirection == 1 && segment.fPts[0].y() <= point.y() &&
                  nearly_equal(segment.fP0T.x(), p2, segment.fNearlyZeroScaled, true))) {
                 includeP2 = false;
             }
@@ -599,8 +575,8 @@ static float distance_to_segment(const SkPoint& point,
         } else if (xformPt.x() < segment.fP0T.x()) {
             result = (float)(xformPt.x() * xformPt.x() + xformPt.y() * xformPt.y());
         } else {
-            result = (float)((xformPt.x() - segment.fP2T.x()) * (xformPt.x() - segment.fP2T.x())
-                     + xformPt.y() * xformPt.y());
+            result = (float)((xformPt.x() - segment.fP2T.x()) * (xformPt.x() - segment.fP2T.x()) +
+                             xformPt.y() * xformPt.y());
         }
 
         if (between_closed_open(point.y(), segment.fBoundingBox.top(),
@@ -642,14 +618,13 @@ static float distance_to_segment(const SkPoint& point,
     }
 }
 
-static void calculate_distance_field_data(PathSegmentArray* segments,
-                                          DFData* dataPtr,
-                                          int width, int height) {
+static void calculate_distance_field_data(PathSegmentArray* segments, DFData* dataPtr, int width,
+                                          int height) {
     int count = segments->count();
     for (int a = 0; a < count; ++a) {
         PathSegment& segment = (*segments)[a];
-        const SkRect& segBB = segment.fBoundingBox.makeOutset(
-                                SK_DistanceFieldPad, SK_DistanceFieldPad);
+        const SkRect& segBB =
+                segment.fBoundingBox.makeOutset(SK_DistanceFieldPad, SK_DistanceFieldPad);
         int startColumn = (int)segBB.left();
         int endColumn = SkScalarCeilToInt(segBB.right());
 
@@ -663,9 +638,9 @@ static void calculate_distance_field_data(PathSegmentArray* segments,
 
         // Clip inside the distance field to avoid overflow
         startColumn = SkTMax(startColumn, 0);
-        endColumn   = SkTMin(endColumn,   width);
-        startRow    = SkTMax(startRow,    0);
-        endRow      = SkTMin(endRow,      height);
+        endColumn = SkTMin(endColumn, width);
+        startRow = SkTMax(startRow, 0);
+        endRow = SkTMin(endRow, height);
 
         for (int row = startRow; row < endRow; ++row) {
             SegSide prevSide = kNA_SegSide;
@@ -687,22 +662,25 @@ static void calculate_distance_field_data(PathSegmentArray* segments,
                 const SkPoint point = SkPoint::Make(pX, pY);
 
                 const float distSq = dataPtr[idx].fDistSq;
-                int dilation = distSq < 1.5 * 1.5 ? 1 :
-                               distSq < 2.5 * 2.5 ? 2 :
-                               distSq < 3.5 * 3.5 ? 3 : SK_DistanceFieldPad;
+                int dilation = distSq < 1.5 * 1.5
+                                       ? 1
+                                       : distSq < 2.5 * 2.5
+                                                 ? 2
+                                                 : distSq < 3.5 * 3.5 ? 3 : SK_DistanceFieldPad;
                 if (dilation > SK_DistanceFieldPad) {
                     dilation = SK_DistanceFieldPad;
                 }
 
                 // Optimisation for not calculating some points.
                 if (dilation != SK_DistanceFieldPad && !segment.fBoundingBox.roundOut()
-                    .makeOutset(dilation, dilation).contains(col, row)) {
+                                                                .makeOutset(dilation, dilation)
+                                                                .contains(col, row)) {
                     continue;
                 }
 
                 SegSide side = kNA_SegSide;
-                int     deltaWindingScore = 0;
-                float   currDistSq = distance_to_segment(point, segment, rowData, &side);
+                int deltaWindingScore = 0;
+                float currDistSq = distance_to_segment(point, segment, rowData, &side);
                 if (prevSide == kLeft_SegSide && side == kRight_SegSide) {
                     deltaWindingScore = -1;
                 } else if (prevSide == kRight_SegSide && side == kLeft_SegSide) {
@@ -721,8 +699,7 @@ static void calculate_distance_field_data(PathSegmentArray* segments,
     }
 }
 
-template <int distanceMagnitude>
-static unsigned char pack_distance_field_val(float dist) {
+template <int distanceMagnitude> static unsigned char pack_distance_field_val(float dist) {
     // The distance field is constructed as unsigned char values, so that the zero value is at 128,
     // Beside 128, we have 128 values in range [0, 128), but only 127 values in range (128, 255].
     // So we multiply distanceMagnitude by 127/128 at the latter range to avoid overflow.
@@ -737,9 +714,9 @@ static unsigned char pack_distance_field_val(float dist) {
     return (unsigned char)SkScalarRoundToInt(dist / (2 * distanceMagnitude) * 256.0f);
 }
 
-bool GrGenerateDistanceFieldFromPath(unsigned char* distanceField,
-                                     const SkPath& path, const SkMatrix& drawMatrix,
-                                     int width, int height, size_t rowBytes) {
+bool GrGenerateDistanceFieldFromPath(unsigned char* distanceField, const SkPath& path,
+                                     const SkMatrix& drawMatrix, int width, int height,
+                                     size_t rowBytes) {
     SkASSERT(distanceField);
 
 #ifdef SK_DEBUG
@@ -783,7 +760,7 @@ bool GrGenerateDistanceFieldFromPath(unsigned char* distanceField,
     // create temp data
     size_t dataSize = width * height * sizeof(DFData);
     SkAutoSMalloc<1024> dfStorage(dataSize);
-    DFData* dataPtr = (DFData*) dfStorage.get();
+    DFData* dataPtr = (DFData*)dfStorage.get();
 
     // create initial distance data
     init_distances(dataPtr, width * height);
@@ -809,7 +786,7 @@ bool GrGenerateDistanceFieldFromPath(unsigned char* distanceField,
                 SkAutoConicToQuads converter;
                 const SkPoint* quadPts = converter.computeQuads(pts, weight, kConicTolerance);
                 for (int i = 0; i < converter.countQuads(); ++i) {
-                    add_quad_segment(quadPts + 2*i, &segments);
+                    add_quad_segment(quadPts + 2 * i, &segments);
                 }
                 break;
             }
@@ -828,15 +805,12 @@ bool GrGenerateDistanceFieldFromPath(unsigned char* distanceField,
     calculate_distance_field_data(&segments, dataPtr, width, height);
 
     for (int row = 0; row < height; ++row) {
-        int windingNumber = 0; // Winding number start from zero for each scanline
+        int windingNumber = 0;  // Winding number start from zero for each scanline
         for (int col = 0; col < width; ++col) {
             int idx = (row * width) + col;
             windingNumber += dataPtr[idx].fDeltaWindingScore;
 
-            enum DFSign {
-                kInside = -1,
-                kOutside = 1
-            } dfSign;
+            enum DFSign { kInside = -1, kOutside = 1 } dfSign;
 
             if (workingPath.getFillType() == SkPath::kWinding_FillType) {
                 dfSign = windingNumber ? kInside : kOutside;
@@ -851,7 +825,7 @@ bool GrGenerateDistanceFieldFromPath(unsigned char* distanceField,
 
             // The winding number at the end of a scanline should be zero.
             SkASSERT(((col != width - 1) || (windingNumber == 0)) &&
-                    "Winding number should be zero at the end of a scan line.");
+                     "Winding number should be zero at the end of a scan line.");
             // Fallback to use SkPath::contains to determine the sign of pixel in release build.
             if (col == width - 1 && windingNumber != 0) {
                 for (int col = 0; col < width; ++col) {
@@ -860,7 +834,8 @@ bool GrGenerateDistanceFieldFromPath(unsigned char* distanceField,
                     const float miniDist = sqrt(dataPtr[idx].fDistSq);
                     const float dist = dfSign * miniDist;
 
-                    unsigned char pixelVal = pack_distance_field_val<SK_DistanceFieldMagnitude>(dist);
+                    unsigned char pixelVal =
+                            pack_distance_field_val<SK_DistanceFieldMagnitude>(dist);
 
                     distanceField[(row * rowBytes) + col] = pixelVal;
                 }

@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "SkCanvas.h"
-#include "SkDrawable.h"
+#include "include/core/SkDrawable.h"
 #include <atomic>
+#include "include/core/SkCanvas.h"
 
 static int32_t next_generation_id() {
     static std::atomic<int32_t> nextID{1};
@@ -47,9 +47,7 @@ void SkDrawable::draw(SkCanvas* canvas, SkScalar x, SkScalar y) {
     this->draw(canvas, &matrix);
 }
 
-SkPicture* SkDrawable::newPictureSnapshot() {
-    return this->onNewPictureSnapshot();
-}
+SkPicture* SkDrawable::newPictureSnapshot() { return this->onNewPictureSnapshot(); }
 
 uint32_t SkDrawable::getGenerationID() {
     if (0 == fGenerationID) {
@@ -58,17 +56,13 @@ uint32_t SkDrawable::getGenerationID() {
     return fGenerationID;
 }
 
-SkRect SkDrawable::getBounds() {
-    return this->onGetBounds();
-}
+SkRect SkDrawable::getBounds() { return this->onGetBounds(); }
 
-void SkDrawable::notifyDrawingChanged() {
-    fGenerationID = 0;
-}
+void SkDrawable::notifyDrawingChanged() { fGenerationID = 0; }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-#include "SkPictureRecorder.h"
+#include "include/core/SkPictureRecorder.h"
 
 SkPicture* SkDrawable::onNewPictureSnapshot() {
     SkPictureRecorder recorder;

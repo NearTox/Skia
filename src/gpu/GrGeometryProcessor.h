@@ -8,7 +8,7 @@
 #ifndef GrGeometryProcessor_DEFINED
 #define GrGeometryProcessor_DEFINED
 
-#include "GrPrimitiveProcessor.h"
+#include "src/gpu/GrPrimitiveProcessor.h"
 
 /**
  * A GrGeometryProcessor is a flexible method for rendering a primitive.  The GrGeometryProcessor
@@ -19,21 +19,18 @@
  */
 class GrGeometryProcessor : public GrPrimitiveProcessor {
 public:
-    GrGeometryProcessor(ClassID classID)
-        : INHERITED(classID)
-        , fWillUseGeoShader(false) {}
+    GrGeometryProcessor(ClassID classID) : INHERITED(classID), fWillUseGeoShader(false) {}
 
-    bool willUseGeoShader() const final { return fWillUseGeoShader; }
+    bool willUseGeoShader() const noexcept final { return fWillUseGeoShader; }
 
 protected:
-    void setWillUseGeoShader() { fWillUseGeoShader = true; }
+    void setWillUseGeoShader() noexcept { fWillUseGeoShader = true; }
 
     // GPs that need to use either half-float or ubyte colors can just call this to get a correctly
     // configured Attribute struct
-    static Attribute MakeColorAttribute(const char* name, bool wideColor) {
-        return { name,
-                 wideColor ? kHalf4_GrVertexAttribType : kUByte4_norm_GrVertexAttribType,
-                 kHalf4_GrSLType };
+    static Attribute MakeColorAttribute(const char* name, bool wideColor) noexcept {
+        return {name, wideColor ? kHalf4_GrVertexAttribType : kUByte4_norm_GrVertexAttribType,
+                kHalf4_GrSLType};
     }
 
 private:

@@ -5,25 +5,23 @@
  * found in the LICENSE file.
  */
 
-#include "GrShaderVar.h"
-#include "GrShaderCaps.h"
-#include "GrSwizzle.h"
-#include "glsl/GrGLSLShaderBuilder.h"
-#include "glsl/GrGLSLColorSpaceXformHelper.h"
-#include "glsl/GrGLSLProgramBuilder.h"
+#include "src/gpu/glsl/GrGLSLShaderBuilder.h"
+#include "src/gpu/GrShaderCaps.h"
+#include "src/gpu/GrShaderVar.h"
+#include "src/gpu/GrSwizzle.h"
+#include "src/gpu/glsl/GrGLSLColorSpaceXformHelper.h"
+#include "src/gpu/glsl/GrGLSLProgramBuilder.h"
 
 GrGLSLShaderBuilder::GrGLSLShaderBuilder(GrGLSLProgramBuilder* program)
-    : fProgramBuilder(program)
-    , fInputs(GrGLSLProgramBuilder::kVarsPerBlock)
-    , fOutputs(GrGLSLProgramBuilder::kVarsPerBlock)
-    , fFeaturesAddedMask(0)
-    , fCodeIndex(kCode)
-    , fFinalized(false) {
+        : fProgramBuilder(program)
+        , fInputs(GrGLSLProgramBuilder::kVarsPerBlock)
+        , fOutputs(GrGLSLProgramBuilder::kVarsPerBlock)
+        , fFeaturesAddedMask(0)
+        , fCodeIndex(kCode)
+        , fFinalized(false) {
     // We push back some dummy pointers which will later become our header
     for (int i = 0; i <= kCode; i++) {
         fShaderStrings.push_back();
-        fCompilerStrings.push_back(nullptr);
-        fCompilerStringLengths.push_back(0);
     }
 
     this->main() = "void main() {";
@@ -86,11 +84,11 @@ void GrGLSLShaderBuilder::appendTextureLookup(SamplerHandle samplerHandle,
 }
 
 void GrGLSLShaderBuilder::appendTextureLookupAndModulate(
-                                                    const char* modulation,
-                                                    SamplerHandle samplerHandle,
-                                                    const char* coordName,
-                                                    GrSLType varyingType,
-                                                    GrGLSLColorSpaceXformHelper* colorXformHelper) {
+        const char* modulation,
+        SamplerHandle samplerHandle,
+        const char* coordName,
+        GrSLType varyingType,
+        GrGLSLColorSpaceXformHelper* colorXformHelper) {
     SkString lookup;
     this->appendTextureLookup(&lookup, samplerHandle, coordName, varyingType);
     this->appendColorGamutXform(lookup.c_str(), colorXformHelper);
@@ -114,7 +112,7 @@ void GrGLSLShaderBuilder::appendColorGamutXform(SkString* out,
     // Any combination of these may be present, although some configurations are much more likely.
 
     auto emitTFFunc = [=](const char* name, GrGLSLProgramDataManager::UniformHandle uniform) {
-        const GrShaderVar gTFArgs[] = { GrShaderVar("x", kHalf_GrSLType) };
+        const GrShaderVar gTFArgs[] = {GrShaderVar("x", kHalf_GrSLType)};
         const char* coeffs = uniformHandler->getUniformCStr(uniform);
         SkString body;
         // Temporaries to make evaluation line readable
@@ -146,7 +144,7 @@ void GrGLSLShaderBuilder::appendColorGamutXform(SkString* out,
 
     SkString gamutXformFuncName;
     if (colorXformHelper->applyGamutXform()) {
-        const GrShaderVar gGamutXformArgs[] = { GrShaderVar("color", kHalf4_GrSLType) };
+        const GrShaderVar gGamutXformArgs[] = {GrShaderVar("color", kHalf4_GrSLType)};
         const char* xform = uniformHandler->getUniformCStr(colorXformHelper->gamutXformUniform());
         SkString body;
         body.appendf("color.rgb = (%s * color.rgb);", xform);
@@ -157,7 +155,7 @@ void GrGLSLShaderBuilder::appendColorGamutXform(SkString* out,
 
     // Now define a wrapper function that applies all the intermediate steps
     {
-        const GrShaderVar gColorXformArgs[] = { GrShaderVar("color", kHalf4_GrSLType) };
+        const GrShaderVar gColorXformArgs[] = {GrShaderVar("color", kHalf4_GrSLType)};
         SkString body;
         if (colorXformHelper->applyUnpremul()) {
             body.append("half nonZeroAlpha = max(color.a, 0.00001);");
@@ -217,10 +215,7 @@ void GrGLSLShaderBuilder::addLayoutQualifier(const char* param, InterfaceQualifi
 }
 
 void GrGLSLShaderBuilder::compileAndAppendLayoutQualifiers() {
-    static const char* interfaceQualifierNames[] = {
-        "in",
-        "out"
-    };
+    static const char* interfaceQualifierNames[] = {"in", "out"};
 
     for (int interface = 0; interface <= kLastInterfaceQualifier; ++interface) {
         const SkTArray<SkString>& params = fLayoutParams[interface];
@@ -244,7 +239,7 @@ void GrGLSLShaderBuilder::finalize(uint32_t visibility) {
     this->versionDecl() = fProgramBuilder->shaderCaps()->versionDeclString();
     this->compileAndAppendLayoutQualifiers();
     SkASSERT(visibility);
-    fProgramBuilder->appendUniformDecls((GrShaderFlags) visibility, &this->uniforms());
+    fProgramBuilder->appendUniformDecls((GrShaderFlags)visibility, &this->uniforms());
     this->appendDecls(fInputs, &this->inputs());
     this->appendDecls(fOutputs, &this->outputs());
     this->onFinalize();
@@ -252,8 +247,7 @@ void GrGLSLShaderBuilder::finalize(uint32_t visibility) {
     this->code().append("}");
 
     for (int i = 0; i <= fCodeIndex; i++) {
-        fCompilerStrings[i] = fShaderStrings[i].c_str();
-        fCompilerStringLengths[i] = (int)fShaderStrings[i].size();
+        fCompilerString.append(fShaderStrings[i].c_str(), fShaderStrings[i].size());
     }
 
     fFinalized = true;

@@ -5,17 +5,16 @@
  * found in the LICENSE file.
  */
 
-#include "SkArenaAlloc.h"
-#include "SkColorSpace.h"
-#include "SkColorSpacePriv.h"
-#include "SkColorSpaceXformSteps.h"
-#include "SkCoreBlitters.h"
-#include "SkOpts.h"
-#include "SkRasterPipeline.h"
-#include "SkSpriteBlitter.h"
+#include "include/core/SkColorSpace.h"
+#include "include/private/SkArenaAlloc.h"
+#include "src/core/SkColorSpacePriv.h"
+#include "src/core/SkColorSpaceXformSteps.h"
+#include "src/core/SkCoreBlitters.h"
+#include "src/core/SkOpts.h"
+#include "src/core/SkRasterPipeline.h"
+#include "src/core/SkSpriteBlitter.h"
 
-SkSpriteBlitter::SkSpriteBlitter(const SkPixmap& source)
-    : fSource(source) {}
+SkSpriteBlitter::SkSpriteBlitter(const SkPixmap& source) : fSource(source) {}
 
 void SkSpriteBlitter::setup(const SkPixmap& dst, int left, int top, const SkPaint& paint) {
     fDst = dst;
@@ -57,7 +56,7 @@ class SkSpriteBlitter_Memcpy final : public SkSpriteBlitter {
 public:
     static bool Supports(const SkPixmap& dst, const SkPixmap& src, const SkPaint& paint) {
         // the caller has already inspected the colorspace on src and dst
-        SkASSERT(sk_can_use_legacy_blits(src.colorSpace(), dst.colorSpace()));
+        SkASSERT(!SkColorSpaceXformSteps::Required(src.colorSpace(), dst.colorSpace()));
 
         if (dst.colorType() != src.colorType()) {
             return false;
@@ -72,8 +71,7 @@ public:
         return SkBlendMode::kSrc == mode || (SkBlendMode::kSrcOver == mode && src.isOpaque());
     }
 
-    SkSpriteBlitter_Memcpy(const SkPixmap& src)
-        : INHERITED(src) {}
+    SkSpriteBlitter_Memcpy(const SkPixmap& src) : INHERITED(src) {}
 
     void blitRect(int x, int y, int width, int height) override {
         SkASSERT(fDst.colorType() == fSource.colorType());
@@ -85,7 +83,7 @@ public:
         const size_t srcRB = fSource.rowBytes();
         const size_t bytesToCopy = width << fSource.shiftPerPixel();
 
-        while (height --> 0) {
+        while (height-- > 0) {
             memcpy(dst, src, bytesToCopy);
             dst += dstRB;
             src += srcRB;
@@ -99,16 +97,12 @@ private:
 class SkRasterPipelineSpriteBlitter : public SkSpriteBlitter {
 public:
     SkRasterPipelineSpriteBlitter(const SkPixmap& src, SkArenaAlloc* alloc)
-        : INHERITED(src)
-        , fAlloc(alloc)
-        , fBlitter(nullptr)
-        , fSrcPtr{nullptr, 0}
-    {}
+            : INHERITED(src), fAlloc(alloc), fBlitter(nullptr), fSrcPtr{nullptr, 0} {}
 
     void setup(const SkPixmap& dst, int left, int top, const SkPaint& paint) override {
-        fDst  = dst;
+        fDst = dst;
         fLeft = left;
-        fTop  = top;
+        fTop = top;
         fPaintColor = paint.getColor4f();
 
         SkRasterPipeline p(fAlloc);
@@ -126,11 +120,9 @@ public:
                 // A8 images get their r,g,b from the paint color, so they're also sRGB.
                 srcCS = sk_srgb_singleton();
             }
-            auto srcAT = fSource.isOpaque() ? kOpaque_SkAlphaType
-                                            : kPremul_SkAlphaType;
-            fAlloc->make<SkColorSpaceXformSteps>(srcCS, srcAT,
-                                                 dstCS, kPremul_SkAlphaType)
-                ->apply(&p, fSource.colorType());
+            auto srcAT = fSource.isOpaque() ? kOpaque_SkAlphaType : kPremul_SkAlphaType;
+            fAlloc->make<SkColorSpaceXformSteps>(srcCS, srcAT, dstCS, kPremul_SkAlphaType)
+                    ->apply(&p, fSource.colorType());
         }
         if (fPaintColor.fA != 1.0f) {
             p.append(SkRasterPipeline::scale_1_float, &fPaintColor.fA);
@@ -148,17 +140,17 @@ public:
         // Representing bpp as a size_t keeps all this math in size_t instead of int,
         // which could wrap around with large enough fSrcPtr.stride and y.
         size_t bpp = fSource.info().bytesPerPixel();
-        fSrcPtr.pixels = (char*)fSource.addr(-fLeft+x, -fTop+y) - bpp * x
-                                                                - bpp * y * fSrcPtr.stride;
+        fSrcPtr.pixels =
+                (char*)fSource.addr(-fLeft + x, -fTop + y) - bpp * x - bpp * y * fSrcPtr.stride;
 
-        fBlitter->blitRect(x,y,width,height);
+        fBlitter->blitRect(x, y, width, height);
     }
 
 private:
-    SkArenaAlloc*              fAlloc;
-    SkBlitter*                 fBlitter;
+    SkArenaAlloc* fAlloc;
+    SkBlitter* fBlitter;
     SkRasterPipeline_MemoryCtx fSrcPtr;
-    SkColor4f                  fPaintColor;
+    SkColor4f fPaintColor;
 
     typedef SkSpriteBlitter INHERITED;
 };
@@ -166,7 +158,8 @@ private:
 // returning null means the caller will call SkBlitter::Choose() and
 // have wrapped the source bitmap inside a shader
 SkBlitter* SkBlitter::ChooseSprite(const SkPixmap& dst, const SkPaint& paint,
-        const SkPixmap& source, int left, int top, SkArenaAlloc* allocator) {
+                                   const SkPixmap& source, int left, int top,
+                                   SkArenaAlloc* allocator) {
     /*  We currently ignore antialiasing and filtertype, meaning we will take our
         special blitters regardless of these settings. Ignoring filtertype seems fine
         since by definition there is no scale in the matrix. Ignoring antialiasing is
@@ -184,7 +177,7 @@ SkBlitter* SkBlitter::ChooseSprite(const SkPixmap& dst, const SkPaint& paint,
 
     SkSpriteBlitter* blitter = nullptr;
 
-    if (sk_can_use_legacy_blits(source.colorSpace(), dst.colorSpace())) {
+    if (!SkColorSpaceXformSteps::Required(source.colorSpace(), dst.colorSpace())) {
         if (!blitter && SkSpriteBlitter_Memcpy::Supports(dst, source, paint)) {
             blitter = allocator->make<SkSpriteBlitter_Memcpy>(source);
         }

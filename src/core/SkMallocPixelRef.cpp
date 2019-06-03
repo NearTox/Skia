@@ -5,40 +5,37 @@
  * found in the LICENSE file.
  */
 
-#include "SkData.h"
-#include "SkImageInfo.h"
-#include "SkMalloc.h"
-#include "SkMallocPixelRef.h"
-#include "SkSafeMath.h"
+#include "include/core/SkMallocPixelRef.h"
+#include "include/core/SkData.h"
+#include "include/core/SkImageInfo.h"
+#include "include/private/SkMalloc.h"
+#include "src/core/SkSafeMath.h"
 
-void* sk_calloc_throw(size_t count, size_t elemSize) {
+void* sk_calloc_throw(size_t count, size_t elemSize) noexcept {
     return sk_calloc_throw(SkSafeMath::Mul(count, elemSize));
 }
 
-void* sk_malloc_throw(size_t count, size_t elemSize) {
+void* sk_malloc_throw(size_t count, size_t elemSize) noexcept {
     return sk_malloc_throw(SkSafeMath::Mul(count, elemSize));
 }
 
-void* sk_realloc_throw(void* buffer, size_t count, size_t elemSize) {
+void* sk_realloc_throw(void* buffer, size_t count, size_t elemSize) noexcept {
     return sk_realloc_throw(buffer, SkSafeMath::Mul(count, elemSize));
 }
 
-void* sk_malloc_canfail(size_t count, size_t elemSize) {
+void* sk_malloc_canfail(size_t count, size_t elemSize) noexcept {
     return sk_malloc_canfail(SkSafeMath::Mul(count, elemSize));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 // assumes ptr was allocated via sk_malloc
-static void sk_free_releaseproc(void* ptr, void*) {
-    sk_free(ptr);
-}
+static void sk_free_releaseproc(void* ptr, void*) noexcept { sk_free(ptr); }
 
-static bool is_valid(const SkImageInfo& info) {
+static bool is_valid(const SkImageInfo& info) noexcept {
     if (info.width() < 0 || info.height() < 0 ||
         (unsigned)info.colorType() > (unsigned)kLastEnum_SkColorType ||
-        (unsigned)info.alphaType() > (unsigned)kLastEnum_SkAlphaType)
-    {
+        (unsigned)info.alphaType() > (unsigned)kLastEnum_SkAlphaType) {
         return false;
     }
     return true;
@@ -53,11 +50,7 @@ sk_sp<SkPixelRef> SkMallocPixelRef::MakeDirect(const SkImageInfo& info,
     return sk_sp<SkPixelRef>(new SkMallocPixelRef(info, addr, rowBytes, nullptr, nullptr));
 }
 
-
-sk_sp<SkPixelRef> SkMallocPixelRef::MakeUsing(void*(*allocProc)(size_t),
-                                              const SkImageInfo& info,
-                                              size_t requestedRowBytes) {
-    size_t rowBytes = requestedRowBytes;
+sk_sp<SkPixelRef> SkMallocPixelRef::MakeAllocate(const SkImageInfo& info, size_t rowBytes) {
     if (rowBytes == 0) {
         rowBytes = info.minRowBytes();
         // rowBytes can still be zero, if it overflowed (width * bytesPerPixel > size_t)
@@ -73,25 +66,16 @@ sk_sp<SkPixelRef> SkMallocPixelRef::MakeUsing(void*(*allocProc)(size_t),
             return nullptr;
         }
     }
-    void* addr = allocProc(size);
+    void* addr = sk_calloc_canfail(size);
     if (nullptr == addr) {
         return nullptr;
     }
 
-    return sk_sp<SkPixelRef>(new SkMallocPixelRef(info, addr, rowBytes,
-                                                  sk_free_releaseproc, nullptr));
+    return sk_sp<SkPixelRef>(
+            new SkMallocPixelRef(info, addr, rowBytes, sk_free_releaseproc, nullptr));
 }
 
-sk_sp<SkPixelRef> SkMallocPixelRef::MakeAllocate(const SkImageInfo& info, size_t rowBytes) {
-    return MakeUsing(sk_malloc_canfail, info, rowBytes);
-}
-
-sk_sp<SkPixelRef> SkMallocPixelRef::MakeZeroed(const SkImageInfo& info,
-                                               size_t rowBytes) {
-    return MakeUsing(sk_calloc_canfail, info, rowBytes);
-}
-
-static void sk_data_releaseproc(void*, void* dataPtr) {
+static void sk_data_releaseproc(void*, void* dataPtr) noexcept {
     (static_cast<SkData*>(dataPtr))->unref();
 }
 
@@ -109,8 +93,7 @@ sk_sp<SkPixelRef> SkMallocPixelRef::MakeWithProc(const SkImageInfo& info,
     return sk_sp<SkPixelRef>(new SkMallocPixelRef(info, addr, rowBytes, proc, context));
 }
 
-sk_sp<SkPixelRef> SkMallocPixelRef::MakeWithData(const SkImageInfo& info,
-                                                 size_t rowBytes,
+sk_sp<SkPixelRef> SkMallocPixelRef::MakeWithData(const SkImageInfo& info, size_t rowBytes,
                                                  sk_sp<SkData> data) {
     SkASSERT(data != nullptr);
     if (!is_valid(info)) {
@@ -124,23 +107,19 @@ sk_sp<SkPixelRef> SkMallocPixelRef::MakeWithData(const SkImageInfo& info,
     }
     // must get this address before we call release
     void* pixels = const_cast<void*>(data->data());
-    SkPixelRef* pr = new SkMallocPixelRef(info, pixels, rowBytes,
-                                          sk_data_releaseproc, data.release());
-    pr->setImmutable(); // since we were created with (immutable) data
+    SkPixelRef* pr =
+            new SkMallocPixelRef(info, pixels, rowBytes, sk_data_releaseproc, data.release());
+    pr->setImmutable();  // since we were created with (immutable) data
     return sk_sp<SkPixelRef>(pr);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkMallocPixelRef::SkMallocPixelRef(const SkImageInfo& info, void* storage,
-                                   size_t rowBytes,
-                                   SkMallocPixelRef::ReleaseProc proc,
-                                   void* context)
-    : INHERITED(info.width(), info.height(), storage, rowBytes)
-    , fReleaseProc(proc)
-    , fReleaseProcContext(context)
-{}
-
+SkMallocPixelRef::SkMallocPixelRef(const SkImageInfo& info, void* storage, size_t rowBytes,
+                                   SkMallocPixelRef::ReleaseProc proc, void* context) noexcept
+        : INHERITED(info.width(), info.height(), storage, rowBytes)
+        , fReleaseProc(proc)
+        , fReleaseProcContext(context) {}
 
 SkMallocPixelRef::~SkMallocPixelRef() {
     if (fReleaseProc != nullptr) {

@@ -5,15 +5,13 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkPDFShader_DEFINED
 #define SkPDFShader_DEFINED
 
-#include "SkBitmapKey.h"
-#include "SkMacros.h"
-#include "SkPDFTypes.h"
-#include "SkShader.h"
-
+#include "include/core/SkShader.h"
+#include "include/private/SkMacros.h"
+#include "src/pdf/SkBitmapKey.h"
+#include "src/pdf/SkPDFTypes.h"
 
 class SkPDFDocument;
 class SkMatrix;
@@ -50,7 +48,7 @@ struct SkPDFImageShaderKey {
     SkMatrix fShaderTransform;
     SkIRect fBBox;
     SkBitmapKey fBitmapKey;
-    SkShader::TileMode fImageTileModes[2];
+    SkTileMode fImageTileModes[2];
     SkColor fPaintColor;
 };
 SK_END_REQUIRE_DENSE
@@ -58,12 +56,9 @@ SK_END_REQUIRE_DENSE
 inline bool operator==(const SkPDFImageShaderKey& a, const SkPDFImageShaderKey& b) {
     SkASSERT(a.fBitmapKey.fID != 0);
     SkASSERT(b.fBitmapKey.fID != 0);
-    return a.fCanvasTransform   == b.fCanvasTransform
-        && a.fShaderTransform   == b.fShaderTransform
-        && a.fBBox              == b.fBBox
-        && a.fBitmapKey         == b.fBitmapKey
-        && a.fImageTileModes[0] == b.fImageTileModes[0]
-        && a.fImageTileModes[1] == b.fImageTileModes[1]
-        && a.fPaintColor        == b.fPaintColor;
+    return a.fCanvasTransform == b.fCanvasTransform && a.fShaderTransform == b.fShaderTransform &&
+           a.fBBox == b.fBBox && a.fBitmapKey == b.fBitmapKey &&
+           a.fImageTileModes[0] == b.fImageTileModes[0] &&
+           a.fImageTileModes[1] == b.fImageTileModes[1] && a.fPaintColor == b.fPaintColor;
 }
 #endif

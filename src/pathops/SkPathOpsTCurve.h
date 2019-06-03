@@ -8,7 +8,7 @@
 #ifndef SkPathOpsTCurve_DEFINED
 #define SkPathOpsTCurve_DEFINED
 
-#include "SkPathOpsPoint.h"
+#include "src/pathops/SkPathOpsPoint.h"
 
 class SkArenaAlloc;
 class SkIntersections;
@@ -26,19 +26,19 @@ public:
     virtual void dumpID(int id) const = 0;
 #endif
     virtual SkDVector dxdyAtT(double t) const = 0;
-    virtual bool hullIntersects(const SkDQuad& , bool* isLinear) const = 0;
-    virtual bool hullIntersects(const SkDConic& , bool* isLinear) const = 0;
-    virtual bool hullIntersects(const SkDCubic& , bool* isLinear) const = 0;
-    virtual bool hullIntersects(const SkTCurve& , bool* isLinear) const = 0;
+    virtual bool hullIntersects(const SkDQuad&, bool* isLinear) const = 0;
+    virtual bool hullIntersects(const SkDConic&, bool* isLinear) const = 0;
+    virtual bool hullIntersects(const SkDCubic&, bool* isLinear) const = 0;
+    virtual bool hullIntersects(const SkTCurve&, bool* isLinear) const = 0;
     virtual int intersectRay(SkIntersections* i, const SkDLine& line) const = 0;
     virtual bool IsConic() const = 0;
-    virtual SkTCurve* make(SkArenaAlloc& ) const = 0;
+    virtual SkTCurve* make(SkArenaAlloc&) const = 0;
     virtual int maxIntersections() const = 0;
     virtual void otherPts(int oddMan, const SkDPoint* endPt[2]) const = 0;
     virtual int pointCount() const = 0;
     virtual int pointLast() const = 0;
     virtual SkDPoint ptAtT(double t) const = 0;
-    virtual void setBounds(SkDRect* ) const = 0;
+    virtual void setBounds(SkDRect*) const = 0;
     virtual void subDivide(double t1, double t2, SkTCurve* curve) const = 0;
 #ifdef SK_DEBUG
     virtual SkOpGlobalState* globalState() const = 0;

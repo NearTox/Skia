@@ -7,14 +7,14 @@
 #ifndef SkGifCodec_DEFINED
 #define SkGifCodec_DEFINED
 
-#include "SkCodec.h"
-#include "SkCodecAnimation.h"
-#include "SkColorSpace.h"
-#include "SkColorTable.h"
-#include "SkImageInfo.h"
-#include "SkSwizzler.h"
+#include "include/codec/SkCodec.h"
+#include "include/codec/SkCodecAnimation.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkImageInfo.h"
+#include "src/codec/SkColorTable.h"
+#include "src/codec/SkSwizzler.h"
 
-#include "SkGifImageReader.h"
+#include "third_party/gif/SkGifImageReader.h"
 
 /*
  *
@@ -23,7 +23,7 @@
  */
 class SkGifCodec : public SkCodec {
 public:
-    static bool IsGif(const void*, size_t);
+    static bool IsGif(const void*, size_t) noexcept;
 
     /*
      * Assumes IsGif was called and returned true
@@ -32,36 +32,33 @@ public:
     static std::unique_ptr<SkCodec> MakeFromStream(std::unique_ptr<SkStream>, Result*);
 
     // Callback for SkGifImageReader when a row is available.
-    void haveDecodedRow(int frameIndex, const unsigned char* rowBegin,
-                        int rowNumber, int repeatCount, bool writeTransparentPixels);
+    void haveDecodedRow(int frameIndex, const unsigned char* rowBegin, int rowNumber,
+                        int repeatCount, bool writeTransparentPixels);
+
 protected:
     /*
      * Performs the full gif decode
      */
-    Result onGetPixels(const SkImageInfo&, void*, size_t, const Options&,
-            int*) override;
+    Result onGetPixels(const SkImageInfo&, void*, size_t, const Options&, int*) override;
 
-    SkEncodedImageFormat onGetEncodedFormat() const override {
+    SkEncodedImageFormat onGetEncodedFormat() const noexcept override {
         return SkEncodedImageFormat::kGIF;
     }
 
     bool onRewind() override;
 
-    int onGetFrameCount() override;
-    bool onGetFrameInfo(int, FrameInfo*) const override;
-    int onGetRepetitionCount() override;
+    int onGetFrameCount() noexcept override;
+    bool onGetFrameInfo(int, FrameInfo*) const noexcept override;
+    int onGetRepetitionCount() noexcept override;
 
     Result onStartIncrementalDecode(const SkImageInfo& /*dstInfo*/, void*, size_t,
-            const SkCodec::Options&) override;
+                                    const SkCodec::Options&) noexcept override;
 
-    Result onIncrementalDecode(int*) override;
+    Result onIncrementalDecode(int*) noexcept override;
 
-    const SkFrameHolder* getFrameHolder() const override {
-        return fReader.get();
-    }
+    const SkFrameHolder* getFrameHolder() const noexcept override { return fReader.get(); }
 
 private:
-
     /*
      * Initializes the color table that we will use for decoding.
      *
@@ -70,9 +67,9 @@ private:
      */
     void initializeColorTable(const SkImageInfo& dstInfo, int frameIndex);
 
-   /*
-    * Does necessary setup, including setting up the color table and swizzler.
-    */
+    /*
+     * Does necessary setup, including setting up the color table and swizzler.
+     */
     Result prepareToDecode(const SkImageInfo& dstInfo, const Options& opts);
 
     /*
@@ -86,7 +83,7 @@ private:
      */
     void initializeSwizzler(const SkImageInfo& dstInfo, int frameIndex);
 
-    SkSampler* getSampler(bool createIfNecessary) override {
+    SkSampler* getSampler(bool createIfNecessary) noexcept override {
         SkASSERT(fSwizzler);
         return fSwizzler.get();
     }
@@ -128,28 +125,28 @@ private:
      */
     SkGifCodec(SkEncodedInfo&&, SkGifImageReader*);
 
-    std::unique_ptr<SkGifImageReader>   fReader;
-    std::unique_ptr<uint8_t[]>          fTmpBuffer;
-    std::unique_ptr<SkSwizzler>         fSwizzler;
-    sk_sp<SkColorTable>                 fCurrColorTable;
+    std::unique_ptr<SkGifImageReader> fReader;
+    std::unique_ptr<uint8_t[]> fTmpBuffer;
+    std::unique_ptr<SkSwizzler> fSwizzler;
+    sk_sp<SkColorTable> fCurrColorTable;
     // We may create a dummy table if there is not a Map in the input data. In
     // that case, we set this value to false, and we can skip a lot of decoding
     // work (which would not be meaningful anyway). We create a "fake"/"dummy"
     // one in that case, so the client and the swizzler have something to draw.
-    bool                                fCurrColorTableIsReal;
+    bool fCurrColorTableIsReal;
     // Whether the background was filled.
-    bool                                fFilledBackground;
+    bool fFilledBackground;
     // True on the first call to onIncrementalDecode. This value is passed to
     // decodeFrame.
-    bool                                fFirstCallToIncrementalDecode;
+    bool fFirstCallToIncrementalDecode;
 
-    void*                               fDst;
-    size_t                              fDstRowBytes;
+    void* fDst;
+    size_t fDstRowBytes;
 
     // Updated inside haveDecodedRow when rows are decoded, unless we filled
     // the background, in which case it is set once and left alone.
-    int                                 fRowsDecoded;
-    std::unique_ptr<uint32_t[]>         fXformBuffer;
+    int fRowsDecoded;
+    std::unique_ptr<uint32_t[]> fXformBuffer;
 
     typedef SkCodec INHERITED;
 };

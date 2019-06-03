@@ -5,39 +5,38 @@
  * found in the LICENSE file.
  */
 
-#include "SkAutoMalloc.h"
-#include "SkBitmap.h"
-#include "SkData.h"
-#include "SkImage.h"
-#include "SkImageGenerator.h"
-#include "SkMakeUnique.h"
-#include "SkMathPriv.h"
-#include "SkMatrixPriv.h"
-#include "SkReadBuffer.h"
-#include "SkSafeMath.h"
-#include "SkStream.h"
-#include "SkTypeface.h"
+#include "src/core/SkReadBuffer.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkData.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageGenerator.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkTypeface.h"
+#include "src/core/SkAutoMalloc.h"
+#include "src/core/SkMakeUnique.h"
+#include "src/core/SkMathPriv.h"
+#include "src/core/SkMatrixPriv.h"
+#include "src/core/SkSafeMath.h"
 
 #ifndef SK_DISABLE_READBUFFER
 
 namespace {
-    // This generator intentionally should always fail on all attempts to get its pixels,
-    // simulating a bad or empty codec stream.
-    class EmptyImageGenerator final : public SkImageGenerator {
-    public:
-        EmptyImageGenerator(const SkImageInfo& info) : INHERITED(info) { }
+// This generator intentionally should always fail on all attempts to get its pixels,
+// simulating a bad or empty codec stream.
+class EmptyImageGenerator final : public SkImageGenerator {
+public:
+    EmptyImageGenerator(const SkImageInfo& info) : INHERITED(info) {}
 
-    private:
-        typedef SkImageGenerator INHERITED;
-    };
+private:
+    typedef SkImageGenerator INHERITED;
+};
 
-    static sk_sp<SkImage> MakeEmptyImage(int width, int height) {
-        return SkImage::MakeFromGenerator(
-              skstd::make_unique<EmptyImageGenerator>(SkImageInfo::MakeN32Premul(width, height)));
-    }
+static sk_sp<SkImage> MakeEmptyImage(int width, int height) {
+    return SkImage::MakeFromGenerator(
+            skstd::make_unique<EmptyImageGenerator>(SkImageInfo::MakeN32Premul(width, height)));
+}
 
-} // anonymous namespace
-
+}  // anonymous namespace
 
 SkReadBuffer::SkReadBuffer() {
     fVersion = 0;
@@ -91,9 +90,7 @@ const void* SkReadBuffer::skip(size_t count, size_t size) {
     return this->skip(SkSafeMath::Mul(count, size));
 }
 
-void SkReadBuffer::setDeserialProcs(const SkDeserialProcs& procs) {
-    fProcs = procs;
-}
+void SkReadBuffer::setDeserialProcs(const SkDeserialProcs& procs) { fProcs = procs; }
 
 bool SkReadBuffer::readBool() {
     uint32_t value = this->readUInt();
@@ -102,9 +99,7 @@ bool SkReadBuffer::readBool() {
     return value != 0;
 }
 
-SkColor SkReadBuffer::readColor() {
-    return this->readUInt();
-}
+SkColor SkReadBuffer::readColor() { return this->readUInt(); }
 
 int32_t SkReadBuffer::readInt() {
     const size_t inc = sizeof(int32_t);
@@ -118,20 +113,16 @@ SkScalar SkReadBuffer::readScalar() {
     return fError ? 0 : fReader.readScalar();
 }
 
-uint32_t SkReadBuffer::readUInt() {
-    return this->readInt();
-}
+uint32_t SkReadBuffer::readUInt() { return this->readInt(); }
 
-int32_t SkReadBuffer::read32() {
-    return this->readInt();
-}
+int32_t SkReadBuffer::read32() { return this->readInt(); }
 
 uint8_t SkReadBuffer::peekByte() {
     if (fReader.available() <= 0) {
         fError = true;
         return 0;
     }
-    return *((uint8_t*) fReader.peek());
+    return *((uint8_t*)fReader.peek());
 }
 
 bool SkReadBuffer::readPad32(void* buffer, size_t bytes) {
@@ -142,14 +133,23 @@ bool SkReadBuffer::readPad32(void* buffer, size_t bytes) {
     return false;
 }
 
+const char* SkReadBuffer::readString(size_t* len) {
+    *len = this->readUInt();
+
+    // The string is len characters and a terminating \0.
+    const char* c_str = this->skipT<char>(*len + 1);
+
+    if (this->validate(c_str && c_str[*len] == '\0')) {
+        return c_str;
+    }
+    return nullptr;
+}
+
 void SkReadBuffer::readString(SkString* string) {
-    const size_t len = this->readUInt();
-    // skip over the string + '\0'
-    if (const char* src = this->skipT<char>(len + 1)) {
-        if (this->validate(src[len] == 0)) {
-            string->set(src, len);
-            return;
-        }
+    size_t len;
+    if (const char* c_str = this->readString(&len)) {
+        string->set(c_str, len);
+        return;
     }
     string->reset();
 }
@@ -165,9 +165,7 @@ void SkReadBuffer::readPoint(SkPoint* point) {
     point->fY = this->readScalar();
 }
 
-void SkReadBuffer::readPoint3(SkPoint3* point) {
-    this->readPad32(point, sizeof(SkPoint3));
-}
+void SkReadBuffer::readPoint3(SkPoint3* point) { this->readPad32(point, sizeof(SkPoint3)); }
 
 void SkReadBuffer::readMatrix(SkMatrix* matrix) {
     size_t size = 0;
@@ -288,7 +286,7 @@ sk_sp<SkImage> SkReadBuffer::readImage() {
     }
     const int width = bounds.width();
     const int height = bounds.height();
-    if (width <= 0 || height <= 0) {    // SkImage never has a zero dimension
+    if (width <= 0 || height <= 0) {  // SkImage never has a zero dimension
         this->validate(false);
         return nullptr;
     }
@@ -325,8 +323,8 @@ sk_sp<SkImage> SkReadBuffer::readImage() {
         return nullptr;
     }
     if (this->isVersionLT(kDontNegateImageSize_Version)) {
-        (void)this->read32();   // originX
-        (void)this->read32();   // originY
+        (void)this->read32();  // originX
+        (void)this->read32();  // originY
     }
 
     sk_sp<SkImage> image;
@@ -360,7 +358,7 @@ sk_sp<SkTypeface> SkReadBuffer::readTypeface() {
             return nullptr;
         }
         return fTFArray[index - 1];
-    } else {    // custom
+    } else {  // custom
         size_t size = sk_negate_to_size_t(index);
         const void* data = this->skip(size);
         if (!this->validate(data != nullptr && fProcs.fTypefaceProc)) {
@@ -376,28 +374,28 @@ SkFlattenable* SkReadBuffer::readFlattenable(SkFlattenable::Type ft) {
     if (fFactoryCount > 0) {
         int32_t index = this->read32();
         if (0 == index || !this->isValid()) {
-            return nullptr; // writer failed to give us the flattenable
+            return nullptr;  // writer failed to give us the flattenable
         }
-        index -= 1;     // we stored the index-base-1
+        index -= 1;  // we stored the index-base-1
         if ((unsigned)index >= (unsigned)fFactoryCount) {
             this->validate(false);
             return nullptr;
         }
         factory = fFactoryArray[index];
     } else {
-        if (this->peekByte()) {
+        if (this->peekByte() != 0) {
             // If the first byte is non-zero, the flattenable is specified by a string.
-            SkString name;
-            this->readString(&name);
-
-            factory = SkFlattenable::NameToFactory(name.c_str());
-            fFlattenableDict.set(fFlattenableDict.count() + 1, factory);
+            size_t ignored_length;
+            if (const char* name = this->readString(&ignored_length)) {
+                factory = SkFlattenable::NameToFactory(name);
+                fFlattenableDict.set(fFlattenableDict.count() + 1, factory);
+            }
         } else {
             // Read the index.  We are guaranteed that the first byte
             // is zeroed, so we must shift down a byte.
             uint32_t index = this->readUInt() >> 8;
             if (index == 0) {
-                return nullptr; // writer failed to give us the flattenable
+                return nullptr;  // writer failed to give us the flattenable
             }
 
             if (SkFlattenable::Factory* found = fFlattenableDict.find(index)) {
@@ -453,4 +451,4 @@ SkFilterQuality SkReadBuffer::checkFilterQuality() {
     return this->checkRange<SkFilterQuality>(kNone_SkFilterQuality, kLast_SkFilterQuality);
 }
 
-#endif // #ifndef SK_DISABLE_READBUFFER
+#endif  // #ifndef SK_DISABLE_READBUFFER

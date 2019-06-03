@@ -8,10 +8,10 @@
 #ifndef SkPathEffect_DEFINED
 #define SkPathEffect_DEFINED
 
-#include "SkFlattenable.h"
-#include "SkPath.h"
-#include "SkPoint.h"
-#include "SkRect.h"
+#include "include/core/SkFlattenable.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
 
 class SkPath;
 class SkStrokeRec;
@@ -73,17 +73,12 @@ public:
     */
     class PointData {
     public:
-        PointData()
-            : fFlags(0)
-            , fPoints(nullptr)
-            , fNumPoints(0) {
+        PointData() noexcept : fFlags(0), fPoints(nullptr), fNumPoints(0) {
             fSize.set(SK_Scalar1, SK_Scalar1);
             // 'asPoints' needs to initialize/fill-in 'fClipRect' if it sets
             // the kUseClip flag
         }
-        ~PointData() {
-            delete [] fPoints;
-        }
+        ~PointData() { delete[] fPoints; }
 
         // TODO: consider using passed-in flags to limit the work asPoints does.
         // For example, a kNoPath flag could indicate don't bother generating
@@ -91,29 +86,28 @@ public:
 
         // Currently none of these flags are supported.
         enum PointFlags {
-            kCircles_PointFlag            = 0x01,   // draw points as circles (instead of rects)
-            kUsePath_PointFlag            = 0x02,   // draw points as stamps of the returned path
-            kUseClip_PointFlag            = 0x04,   // apply 'fClipRect' before drawing the points
+            kCircles_PointFlag = 0x01,  // draw points as circles (instead of rects)
+            kUsePath_PointFlag = 0x02,  // draw points as stamps of the returned path
+            kUseClip_PointFlag = 0x04,  // apply 'fClipRect' before drawing the points
         };
 
-        uint32_t           fFlags;      // flags that impact the drawing of the points
-        SkPoint*           fPoints;     // the center point of each generated point
-        int                fNumPoints;  // number of points in fPoints
-        SkVector           fSize;       // the size to draw the points
-        SkRect             fClipRect;   // clip required to draw the points (if kUseClip is set)
-        SkPath             fPath;       // 'stamp' to be used at each point (if kUsePath is set)
+        uint32_t fFlags;   // flags that impact the drawing of the points
+        SkPoint* fPoints;  // the center point of each generated point
+        int fNumPoints;    // number of points in fPoints
+        SkVector fSize;    // the size to draw the points
+        SkRect fClipRect;  // clip required to draw the points (if kUseClip is set)
+        SkPath fPath;      // 'stamp' to be used at each point (if kUsePath is set)
 
-        SkPath             fFirst;      // If not empty, contains geometry for first point
-        SkPath             fLast;       // If not empty, contains geometry for last point
+        SkPath fFirst;  // If not empty, contains geometry for first point
+        SkPath fLast;   // If not empty, contains geometry for last point
     };
 
     /**
      *  Does applying this path effect to 'src' yield a set of points? If so,
      *  optionally return the points in 'results'.
      */
-    bool asPoints(PointData* results, const SkPath& src,
-                          const SkStrokeRec&, const SkMatrix&,
-                          const SkRect* cullR) const;
+    bool asPoints(PointData* results, const SkPath& src, const SkStrokeRec&, const SkMatrix&,
+                  const SkRect* cullR) const;
 
     /**
      *  If the PathEffect can be represented as a dash pattern, asADash will return kDash_DashType
@@ -126,55 +120,46 @@ public:
      */
 
     enum DashType {
-        kNone_DashType, //!< ignores the info parameter
-        kDash_DashType, //!< fills in all of the info parameter
+        kNone_DashType,  //!< ignores the info parameter
+        kDash_DashType,  //!< fills in all of the info parameter
     };
 
     struct DashInfo {
-        DashInfo() : fIntervals(nullptr), fCount(0), fPhase(0) {}
-        DashInfo(SkScalar* intervals, int32_t count, SkScalar phase)
-            : fIntervals(intervals), fCount(count), fPhase(phase) {}
+        DashInfo() noexcept : fIntervals(nullptr), fCount(0), fPhase(0) {}
+        DashInfo(SkScalar* intervals, int32_t count, SkScalar phase) noexcept
+                : fIntervals(intervals), fCount(count), fPhase(phase) {}
 
-        SkScalar*   fIntervals;         //!< Length of on/off intervals for dashed lines
-                                        //   Even values represent ons, and odds offs
-        int32_t     fCount;             //!< Number of intervals in the dash. Should be even number
-        SkScalar    fPhase;             //!< Offset into the dashed interval pattern
-                                        //   mod the sum of all intervals
+        SkScalar* fIntervals;  //!< Length of on/off intervals for dashed lines
+                               //   Even values represent ons, and odds offs
+        int32_t fCount;        //!< Number of intervals in the dash. Should be even number
+        SkScalar fPhase;       //!< Offset into the dashed interval pattern
+                               //   mod the sum of all intervals
     };
 
     DashType asADash(DashInfo* info) const;
 
     static void RegisterFlattenables();
 
-    static SkFlattenable::Type GetFlattenableType() {
-        return kSkPathEffect_Type;
-    }
+    static SkFlattenable::Type GetFlattenableType() noexcept { return kSkPathEffect_Type; }
 
-    SkFlattenable::Type getFlattenableType() const override {
-        return kSkPathEffect_Type;
-    }
+    SkFlattenable::Type getFlattenableType() const noexcept override { return kSkPathEffect_Type; }
 
     static sk_sp<SkPathEffect> Deserialize(const void* data, size_t size,
-                                          const SkDeserialProcs* procs = nullptr) {
+                                           const SkDeserialProcs* procs = nullptr) {
         return sk_sp<SkPathEffect>(static_cast<SkPathEffect*>(
-                                  SkFlattenable::Deserialize(
-                                  kSkPathEffect_Type, data, size, procs).release()));
+                SkFlattenable::Deserialize(kSkPathEffect_Type, data, size, procs).release()));
     }
 
 protected:
-    SkPathEffect() {}
+    SkPathEffect() noexcept {}
 
     virtual bool onFilterPath(SkPath*, const SkPath&, SkStrokeRec*, const SkRect*) const = 0;
-    virtual SkRect onComputeFastBounds(const SkRect& src) const {
-        return src;
-    }
+    virtual SkRect onComputeFastBounds(const SkRect& src) const { return src; }
     virtual bool onAsPoints(PointData*, const SkPath&, const SkStrokeRec&, const SkMatrix&,
                             const SkRect*) const {
         return false;
     }
-    virtual DashType onAsADash(DashInfo*) const {
-        return kNone_DashType;
-    }
+    virtual DashType onAsADash(DashInfo*) const noexcept { return kNone_DashType; }
 
 private:
     // illegal

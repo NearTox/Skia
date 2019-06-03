@@ -7,13 +7,19 @@
 #ifndef SkPathOpsLine_DEFINED
 #define SkPathOpsLine_DEFINED
 
-#include "SkPathOpsPoint.h"
+#include "src/pathops/SkPathOpsPoint.h"
 
 struct SkDLine {
     SkDPoint fPts[2];
 
-    const SkDPoint& operator[](int n) const { SkASSERT(n >= 0 && n < 2); return fPts[n]; }
-    SkDPoint& operator[](int n) { SkASSERT(n >= 0 && n < 2); return fPts[n]; }
+    const SkDPoint& operator[](int n) const {
+        SkASSERT(n >= 0 && n < 2);
+        return fPts[n];
+    }
+    SkDPoint& operator[](int n) {
+        SkASSERT(n >= 0 && n < 2);
+        return fPts[n];
+    }
 
     const SkDLine& set(const SkPoint pts[2]) {
         fPts[0] = pts[0];
@@ -32,7 +38,7 @@ struct SkDLine {
     SkDPoint ptAtT(double t) const;
 
     void dump() const;
-    void dumpID(int ) const;
+    void dumpID(int) const;
     void dumpInner() const;
 };
 

@@ -8,12 +8,12 @@
 #ifndef GrCCPathCache_DEFINED
 #define GrCCPathCache_DEFINED
 
-#include "GrShape.h"
-#include "SkExchange.h"
-#include "SkTHash.h"
-#include "SkTInternalLList.h"
-#include "ccpr/GrCCAtlas.h"
-#include "ccpr/GrCCPathProcessor.h"
+#include "include/private/SkTHash.h"
+#include "include/private/SkTInternalLList.h"
+#include "src/core/SkExchange.h"
+#include "src/gpu/GrShape.h"
+#include "src/gpu/ccpr/GrCCAtlas.h"
+#include "src/gpu/ccpr/GrCCPathProcessor.h"
 
 class GrCCPathCacheEntry;
 class GrShape;
@@ -56,7 +56,7 @@ public:
         Key(uint32_t pathCacheUniqueID, int dataCountU32)
                 : fPathCacheUniqueID(pathCacheUniqueID)
                 , fDataSizeInBytes(dataCountU32 * sizeof(uint32_t))
-                SkDEBUGCODE(, fDataReserveCountU32(dataCountU32)) {
+                          SkDEBUGCODE(, fDataReserveCountU32(dataCountU32)) {
             SkASSERT(SK_InvalidUniqueID != fPathCacheUniqueID);
         }
 
@@ -134,8 +134,7 @@ private:
 
         HashNode() = default;
         HashNode(GrCCPathCache*, sk_sp<Key>, const MaskTransform&, const GrShape&);
-        HashNode(HashNode&& node)
-                : fPathCache(node.fPathCache), fEntry(std::move(node.fEntry)) {
+        HashNode(HashNode&& node) : fPathCache(node.fPathCache), fEntry(std::move(node.fEntry)) {
             SkASSERT(!node.fEntry);
         }
 
@@ -202,7 +201,10 @@ public:
         SkASSERT(0 == fOnFlushRefCnt);
     }
 
-    const GrCCPathCache::Key& cacheKey() const { SkASSERT(fCacheKey); return *fCacheKey; }
+    const GrCCPathCache::Key& cacheKey() const {
+        SkASSERT(fCacheKey);
+        return *fCacheKey;
+    }
 
     // The number of flushes during which this specific entry (path + matrix combination) has been
     // pulled from the path cache. If a path is pulled from the cache more than once in a single
@@ -221,17 +223,14 @@ public:
     int width() const { return fDevIBounds.width(); }
     int height() const { return fDevIBounds.height(); }
 
-    enum class ReleaseAtlasResult : bool {
-        kNone,
-        kDidInvalidateFromCache
-    };
+    enum class ReleaseAtlasResult : bool { kNone, kDidInvalidateFromCache };
 
     // Called once our path has been rendered into the mainline CCPR (fp16, coverage count) atlas.
     // The caller will stash this atlas texture away after drawing, and during the next flush,
     // recover it and attempt to copy any paths that got reused into permanent 8-bit atlases.
     void setCoverageCountAtlas(GrOnFlushResourceProvider*, GrCCAtlas*, const SkIVector& atlasOffset,
-                               const SkRect& devBounds, const SkRect& devBounds45,
-                               const SkIRect& devIBounds, const SkIVector& maskShift);
+                               const GrOctoBounds& octoBounds, const SkIRect& devIBounds,
+                               const SkIVector& maskShift);
 
     // Called once our path mask has been copied into a permanent, 8-bit atlas. This method points
     // the entry at the new atlas and updates the GrCCCCachedAtlas data.
@@ -242,8 +241,7 @@ private:
     using MaskTransform = GrCCPathCache::MaskTransform;
 
     GrCCPathCacheEntry(sk_sp<GrCCPathCache::Key> cacheKey, const MaskTransform& maskTransform)
-            : fCacheKey(std::move(cacheKey)), fMaskTransform(maskTransform) {
-    }
+            : fCacheKey(std::move(cacheKey)), fMaskTransform(maskTransform) {}
 
     bool hasBeenEvicted() const { return fCacheKey->shouldUnregisterFromPath(); }
 
@@ -260,8 +258,7 @@ private:
     SkIVector fAtlasOffset;
 
     MaskTransform fMaskTransform;
-    SkRect fDevBounds;
-    SkRect fDevBounds45;
+    GrOctoBounds fOctoBounds;
     SkIRect fDevIBounds;
 
     int fOnFlushRefCnt = 0;
@@ -300,7 +297,7 @@ public:
         SkASSERT(!fOnFlushRefCnt);
     }
 
-    GrCCAtlas::CoverageType coverageType() const  { return fCoverageType; }
+    GrCCAtlas::CoverageType coverageType() const { return fCoverageType; }
     const GrUniqueKey& textureKey() const { return fTextureKey; }
 
     GrTextureProxy* getOnFlushProxy() const { return fOnFlushProxy.get(); }
@@ -336,11 +333,9 @@ public:
     int testingOnly_peekOnFlushRefCnt() const;
 };
 
-
 inline GrCCPathCache::HashNode::HashNode(GrCCPathCache* pathCache, sk_sp<Key> key,
                                          const MaskTransform& m, const GrShape& shape)
-        : fPathCache(pathCache)
-        , fEntry(new GrCCPathCacheEntry(key, m)) {
+        : fPathCache(pathCache), fEntry(new GrCCPathCacheEntry(key, m)) {
     SkASSERT(shape.hasUnstyledKey());
     shape.addGenIDChangeListener(std::move(key));
 }
@@ -363,8 +358,8 @@ inline void GrCCPathProcessor::Instance::set(const GrCCPathCacheEntry& entry,
                                              const SkIVector& shift, uint64_t color,
                                              DoEvenOddFill doEvenOddFill) {
     float dx = (float)shift.fX, dy = (float)shift.fY;
-    this->set(entry.fDevBounds.makeOffset(dx, dy), MakeOffset45(entry.fDevBounds45, dx, dy),
-              entry.fAtlasOffset - shift, color, doEvenOddFill);
+    this->set(entry.fOctoBounds.makeOffset(dx, dy), entry.fAtlasOffset - shift, color,
+              doEvenOddFill);
 }
 
 #endif

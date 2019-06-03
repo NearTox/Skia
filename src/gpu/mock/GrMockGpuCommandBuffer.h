@@ -8,19 +8,20 @@
 #ifndef GrMockGpuCommandBuffer_DEFINED
 #define GrMockGpuCommandBuffer_DEFINED
 
-#include "GrGpuCommandBuffer.h"
-#include "GrMockGpu.h"
+#include "src/gpu/GrGpuCommandBuffer.h"
+#include "src/gpu/mock/GrMockGpu.h"
 
 class GrMockGpuTextureCommandBuffer : public GrGpuTextureCommandBuffer {
 public:
     GrMockGpuTextureCommandBuffer(GrTexture* texture, GrSurfaceOrigin origin)
-        : INHERITED(texture, origin) {
-    }
+            : INHERITED(texture, origin) {}
 
     ~GrMockGpuTextureCommandBuffer() override {}
 
     void copy(GrSurface* src, GrSurfaceOrigin srcOrigin, const SkIRect& srcRect,
               const SkIPoint& dstPoint) override {}
+    void transferFrom(const SkIRect& srcRect, GrColorType bufferColorType,
+                      GrGpuBuffer* transferBuffer, size_t offset) override {}
     void insertEventMarker(const char*) override {}
 
 private:
@@ -30,9 +31,7 @@ private:
 class GrMockGpuRTCommandBuffer : public GrGpuRTCommandBuffer {
 public:
     GrMockGpuRTCommandBuffer(GrMockGpu* gpu, GrRenderTarget* rt, GrSurfaceOrigin origin)
-            : INHERITED(rt, origin)
-            , fGpu(gpu) {
-    }
+            : INHERITED(rt, origin), fGpu(gpu) {}
 
     GrGpu* gpu() override { return fGpu; }
     void inlineUpload(GrOpFlushState*, GrDeferredTextureUploadFn&) override {}
@@ -42,6 +41,8 @@ public:
     void end() override {}
     void copy(GrSurface* src, GrSurfaceOrigin srcOrigin, const SkIRect& srcRect,
               const SkIPoint& dstPoint) override {}
+    void transferFrom(const SkIRect& srcRect, GrColorType bufferColorType,
+                      GrGpuBuffer* transferBuffer, size_t offset) override {}
 
     int numDraws() const { return fNumDraws; }
 

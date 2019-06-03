@@ -8,8 +8,8 @@
 #ifndef SkColorTable_DEFINED
 #define SkColorTable_DEFINED
 
-#include "SkColor.h"
-#include "SkRefCnt.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkRefCnt.h"
 
 /** \class SkColorTable
 
@@ -27,22 +27,22 @@ public:
 
     /** Returns the number of colors in the table.
      */
-    int count() const { return fCount; }
+    int count() const noexcept { return fCount; }
 
     /** Returns the specified color from the table. In the debug build, this asserts that
      *  the index is in range (0 <= index < count).
      */
-    SkPMColor operator[](int index) const {
+    SkPMColor operator[](int index) const noexcept {
         SkASSERT(fColors != nullptr && (unsigned)index < (unsigned)fCount);
         return fColors[index];
     }
 
     /** Return the array of colors for reading. */
-    const SkPMColor* readColors() const { return fColors; }
+    const SkPMColor* readColors() const noexcept { return fColors; }
 
 private:
-    SkPMColor*  fColors;
-    int         fCount;
+    SkPMColor* fColors;
+    int fCount;
 
     typedef SkRefCnt INHERITED;
 };

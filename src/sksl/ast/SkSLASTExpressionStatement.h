@@ -8,7 +8,7 @@
 #ifndef SKSL_ASTEXPRESSIONSTATEMENT
 #define SKSL_ASTEXPRESSIONSTATEMENT
 
-#include "SkSLASTStatement.h"
+#include "src/sksl/ast/SkSLASTStatement.h"
 
 namespace SkSL {
 
@@ -17,18 +17,16 @@ namespace SkSL {
  */
 struct ASTExpressionStatement : public ASTStatement {
     ASTExpressionStatement(std::unique_ptr<ASTExpression> expression)
-    : INHERITED(expression->fOffset, kExpression_Kind)
-    , fExpression(std::move(expression)) {}
+            : INHERITED(expression->fOffset, kExpression_Kind)
+            , fExpression(std::move(expression)) {}
 
-    String description() const override {
-        return fExpression->description() + ";";
-    }
+    String description() const override { return fExpression->description() + ";"; }
 
     const std::unique_ptr<ASTExpression> fExpression;
 
     typedef ASTStatement INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

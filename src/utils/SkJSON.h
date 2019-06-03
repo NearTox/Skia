@@ -8,10 +8,10 @@
 #ifndef SkJSON_DEFINED
 #define SkJSON_DEFINED
 
-#include "SkArenaAlloc.h"
-#include "SkNoncopyable.h"
-#include "SkTo.h"
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkArenaAlloc.h"
+#include "include/private/SkNoncopyable.h"
+#include "include/private/SkTo.h"
 
 #include <cstring>
 
@@ -72,16 +72,14 @@ public:
     /**
      * @return    True if the record matches the facade type T.
      */
-    template <typename T>
-    bool is() const { return this->getType() == T::kType; }
+    template <typename T> bool is() const { return this->getType() == T::kType; }
 
     /**
      * Unguarded conversion to facade types.
      *
      * @return    The record cast as facade type T&.
      */
-    template <typename T>
-    const T& as() const {
+    template <typename T> const T& as() const {
         SkASSERT(this->is<T>());
         return *reinterpret_cast<const T*>(this);
     }
@@ -91,8 +89,7 @@ public:
      *
      * @return    The record cast as facade type T*.
      */
-    template <typename T>
-    operator const T*() const {
+    template <typename T> operator const T*() const {
         return this->is<T>() ? &this->as<T>() : nullptr;
     }
 
@@ -124,23 +121,21 @@ protected:
         // We picked kShortString == 0 so that tag 0x00 and stored max_size-size (7-7=0)
         // conveniently overlap the '\0' terminator, allowing us to store a 7 character
         // C string inline.
-        kShortString                  = 0b00000000,  // inline payload
-        kNull                         = 0b00100000,  // no payload
-        kBool                         = 0b01000000,  // inline payload
-        kInt                          = 0b01100000,  // inline payload
-        kFloat                        = 0b10000000,  // inline payload
-        kString                       = 0b10100000,  // ptr to external storage
-        kArray                        = 0b11000000,  // ptr to external storage
-        kObject                       = 0b11100000,  // ptr to external storage
+        kShortString = 0b00000000,  // inline payload
+        kNull = 0b00100000,         // no payload
+        kBool = 0b01000000,         // inline payload
+        kInt = 0b01100000,          // inline payload
+        kFloat = 0b10000000,        // inline payload
+        kString = 0b10100000,       // ptr to external storage
+        kArray = 0b11000000,        // ptr to external storage
+        kObject = 0b11100000,       // ptr to external storage
     };
     static constexpr uint8_t kTagMask = 0b11100000;
 
     void init_tagged(Tag);
     void init_tagged_pointer(Tag, void*);
 
-    Tag getTag() const {
-        return static_cast<Tag>(fData8[kTagOffset] & kTagMask);
-    }
+    Tag getTag() const { return static_cast<Tag>(fData8[kTagOffset] & kTagMask); }
 
     // Access the record data as T.
     //
@@ -164,27 +159,26 @@ protected:
     //   |                        T* (kTypeShift bits)                      |TYPE|
     //    -----------------------------------------------------------------------
     //
-    template <typename T>
-    const T* cast() const {
-        static_assert(sizeof (T) <=  sizeof(Value), "");
+    template <typename T> const T* cast() const {
+        static_assert(sizeof(T) <= sizeof(Value), "");
         static_assert(alignof(T) <= alignof(Value), "");
         return reinterpret_cast<const T*>(this);
     }
 
-    template <typename T>
-    T* cast() { return const_cast<T*>(const_cast<const Value*>(this)->cast<T>()); }
+    template <typename T> T* cast() {
+        return const_cast<T*>(const_cast<const Value*>(this)->cast<T>());
+    }
 
     // Access the pointer payload.
-    template <typename T>
-    const T* ptr() const {
-        static_assert(sizeof(uintptr_t)     == sizeof(Value) ||
-                      sizeof(uintptr_t) * 2 == sizeof(Value), "");
+    template <typename T> const T* ptr() const {
+        static_assert(sizeof(uintptr_t) == sizeof(Value) || sizeof(uintptr_t) * 2 == sizeof(Value),
+                      "");
 
         return (sizeof(uintptr_t) < sizeof(Value))
-            // For 32-bit, pointers are stored unmodified.
-            ? *this->cast<const T*>()
-            // For 64-bit, we use the high bits of the pointer as tag storage.
-            : reinterpret_cast<T*>(*this->cast<uintptr_t>() & kTagPointerMask);
+                       // For 32-bit, pointers are stored unmodified.
+                       ? *this->cast<const T*>()
+                       // For 64-bit, we use the high bits of the pointer as tag storage.
+                       : reinterpret_cast<T*>(*this->cast<uintptr_t>() & kTagPointerMask);
     }
 
 private:
@@ -216,7 +210,7 @@ public:
 
     explicit BoolValue(bool);
 
-    bool operator *() const {
+    bool operator*() const {
         SkASSERT(this->getTag() == Tag::kBool);
         return *this->cast<bool>();
     }
@@ -229,18 +223,15 @@ public:
     explicit NumberValue(int32_t);
     explicit NumberValue(float);
 
-    double operator *() const {
-        SkASSERT(this->getTag() == Tag::kInt ||
-                 this->getTag() == Tag::kFloat);
+    double operator*() const {
+        SkASSERT(this->getTag() == Tag::kInt || this->getTag() == Tag::kFloat);
 
-        return this->getTag() == Tag::kInt
-            ? static_cast<double>(*this->cast<int32_t>())
-            : static_cast<double>(*this->cast<float>());
+        return this->getTag() == Tag::kInt ? static_cast<double>(*this->cast<int32_t>())
+                                           : static_cast<double>(*this->cast<float>());
     }
 };
 
-template <typename T, Value::Type vtype>
-class VectorValue : public Value {
+template <typename T, Value::Type vtype> class VectorValue : public Value {
 public:
     using ValueT = T;
     static constexpr Type kType = vtype;
@@ -284,35 +275,35 @@ public:
 
     size_t size() const {
         switch (this->getTag()) {
-        case Tag::kShortString:
-            // We don't bother storing a length for short strings on the assumption
-            // that strlen is fast in this case.  If this becomes problematic, we
-            // can either go back to storing (7-len) in the tag byte or write a fast
-            // short_strlen.
-            return strlen(this->cast<char>());
-        case Tag::kString:
-            return this->cast<VectorValue<char, Value::Type::kString>>()->size();
-        default:
-            return 0;
+            case Tag::kShortString:
+                // We don't bother storing a length for short strings on the assumption
+                // that strlen is fast in this case.  If this becomes problematic, we
+                // can either go back to storing (7-len) in the tag byte or write a fast
+                // short_strlen.
+                return strlen(this->cast<char>());
+            case Tag::kString:
+                return this->cast<VectorValue<char, Value::Type::kString>>()->size();
+            default:
+                return 0;
         }
     }
 
     const char* begin() const {
         return this->getTag() == Tag::kShortString
-            ? this->cast<char>()
-            : this->cast<VectorValue<char, Value::Type::kString>>()->begin();
+                       ? this->cast<char>()
+                       : this->cast<VectorValue<char, Value::Type::kString>>()->begin();
     }
 
     const char* end() const {
         return this->getTag() == Tag::kShortString
-            ? strchr(this->cast<char>(), '\0')
-            : this->cast<VectorValue<char, Value::Type::kString>>()->end();
+                       ? strchr(this->cast<char>(), '\0')
+                       : this->cast<VectorValue<char, Value::Type::kString>>()->end();
     }
 };
 
 struct Member {
     StringValue fKey;
-          Value fValue;
+    Value fValue;
 };
 
 class ObjectValue final : public VectorValue<Member, Value::Type::kObject> {
@@ -336,26 +327,33 @@ public:
 
 private:
     SkArenaAlloc fAlloc;
-    Value        fRoot;
+    Value fRoot;
 };
 
 inline Value::Type Value::getType() const {
     switch (this->getTag()) {
-    case Tag::kNull:        return Type::kNull;
-    case Tag::kBool:        return Type::kBool;
-    case Tag::kInt:         return Type::kNumber;
-    case Tag::kFloat:       return Type::kNumber;
-    case Tag::kShortString: return Type::kString;
-    case Tag::kString:      return Type::kString;
-    case Tag::kArray:       return Type::kArray;
-    case Tag::kObject:      return Type::kObject;
+        case Tag::kNull:
+            return Type::kNull;
+        case Tag::kBool:
+            return Type::kBool;
+        case Tag::kInt:
+            return Type::kNumber;
+        case Tag::kFloat:
+            return Type::kNumber;
+        case Tag::kShortString:
+            return Type::kString;
+        case Tag::kString:
+            return Type::kString;
+        case Tag::kArray:
+            return Type::kArray;
+        case Tag::kObject:
+            return Type::kObject;
     }
 
-    SkASSERT(false); // unreachable
+    SkASSERT(false);  // unreachable
     return Type::kNull;
 }
 
-} // namespace skjson
+}  // namespace skjson
 
-#endif // SkJSON_DEFINED
-
+#endif  // SkJSON_DEFINED

@@ -5,46 +5,41 @@
  * found in the LICENSE file.
  */
 
-#include "SkPatchUtils.h"
+#include "src/utils/SkPatchUtils.h"
 
-#include "SkArenaAlloc.h"
-#include "SkColorData.h"
-#include "SkColorSpacePriv.h"
-#include "SkConvertPixels.h"
-#include "SkGeometry.h"
-#include "SkTo.h"
+#include "include/private/SkArenaAlloc.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkColorSpacePriv.h"
+#include "src/core/SkConvertPixels.h"
+#include "src/core/SkGeometry.h"
 
 namespace {
-    enum CubicCtrlPts {
-        kTopP0_CubicCtrlPts = 0,
-        kTopP1_CubicCtrlPts = 1,
-        kTopP2_CubicCtrlPts = 2,
-        kTopP3_CubicCtrlPts = 3,
+enum CubicCtrlPts {
+    kTopP0_CubicCtrlPts = 0,
+    kTopP1_CubicCtrlPts = 1,
+    kTopP2_CubicCtrlPts = 2,
+    kTopP3_CubicCtrlPts = 3,
 
-        kRightP0_CubicCtrlPts = 3,
-        kRightP1_CubicCtrlPts = 4,
-        kRightP2_CubicCtrlPts = 5,
-        kRightP3_CubicCtrlPts = 6,
+    kRightP0_CubicCtrlPts = 3,
+    kRightP1_CubicCtrlPts = 4,
+    kRightP2_CubicCtrlPts = 5,
+    kRightP3_CubicCtrlPts = 6,
 
-        kBottomP0_CubicCtrlPts = 9,
-        kBottomP1_CubicCtrlPts = 8,
-        kBottomP2_CubicCtrlPts = 7,
-        kBottomP3_CubicCtrlPts = 6,
+    kBottomP0_CubicCtrlPts = 9,
+    kBottomP1_CubicCtrlPts = 8,
+    kBottomP2_CubicCtrlPts = 7,
+    kBottomP3_CubicCtrlPts = 6,
 
-        kLeftP0_CubicCtrlPts = 0,
-        kLeftP1_CubicCtrlPts = 11,
-        kLeftP2_CubicCtrlPts = 10,
-        kLeftP3_CubicCtrlPts = 9,
-    };
+    kLeftP0_CubicCtrlPts = 0,
+    kLeftP1_CubicCtrlPts = 11,
+    kLeftP2_CubicCtrlPts = 10,
+    kLeftP3_CubicCtrlPts = 9,
+};
 
-    // Enum for corner also clockwise.
-    enum Corner {
-        kTopLeft_Corner = 0,
-        kTopRight_Corner,
-        kBottomRight_Corner,
-        kBottomLeft_Corner
-    };
-}
+// Enum for corner also clockwise.
+enum Corner { kTopLeft_Corner = 0, kTopRight_Corner, kBottomRight_Corner, kBottomLeft_Corner };
+}  // namespace
 
 /**
  * Evaluator to sample the values of a cubic bezier using forward differences.
@@ -64,15 +59,12 @@ namespace {
  */
 
 class FwDCubicEvaluator {
-
 public:
-
     /**
      * Receives the 4 control points of the cubic bezier.
      */
 
-    explicit FwDCubicEvaluator(const SkPoint points[4])
-            : fCoefs(points) {
+    explicit FwDCubicEvaluator(const SkPoint points[4]) : fCoefs(points) {
         memcpy(fPoints, points, 4 * sizeof(SkPoint));
 
         this->restart(1);
@@ -81,11 +73,11 @@ public:
     /**
      * Restarts the forward differences evaluator to the first value of t = 0.
      */
-    void restart(int divisions)  {
+    void restart(int divisions) {
         fDivisions = divisions;
-        fCurrent    = 0;
-        fMax        = fDivisions + 1;
-        Sk2s h  = Sk2s(1.f / fDivisions);
+        fCurrent = 0;
+        fMax = fDivisions + 1;
+        Sk2s h = Sk2s(1.f / fDivisions);
         Sk2s h2 = h * h;
         Sk2s h3 = h2 * h;
         Sk2s fwDiff3 = Sk2s(6) * fCoefs.fA * h3;
@@ -98,25 +90,21 @@ public:
     /**
      * Check if the evaluator is still within the range of 0<=t<=1
      */
-    bool done() const {
-        return fCurrent > fMax;
-    }
+    bool done() const { return fCurrent > fMax; }
 
     /**
      * Call next to obtain the SkPoint sampled and move to the next one.
      */
     SkPoint next() {
         SkPoint point = fFwDiff[0];
-        fFwDiff[0]    += fFwDiff[1];
-        fFwDiff[1]    += fFwDiff[2];
-        fFwDiff[2]    += fFwDiff[3];
+        fFwDiff[0] += fFwDiff[1];
+        fFwDiff[1] += fFwDiff[2];
+        fFwDiff[2] += fFwDiff[3];
         fCurrent++;
         return point;
     }
 
-    const SkPoint* getCtrlPoints() const {
-        return fPoints;
-    }
+    const SkPoint* getCtrlPoints() const { return fPoints; }
 
 private:
     SkCubicCoeff fCoefs;
@@ -151,8 +139,8 @@ static SkScalar bilerp(SkScalar tx, SkScalar ty, SkScalar c00, SkScalar c10, SkS
     return a * (1.f - ty) + b * ty;
 }
 
-static Sk4f bilerp(SkScalar tx, SkScalar ty,
-                   const Sk4f& c00, const Sk4f& c10, const Sk4f& c01, const Sk4f& c11) {
+static Sk4f bilerp(SkScalar tx, SkScalar ty, const Sk4f& c00, const Sk4f& c10, const Sk4f& c01,
+                   const Sk4f& c11) {
     Sk4f a = c00 * (1.f - tx) + c10 * tx;
     Sk4f b = c01 * (1.f - tx) + c11 * tx;
     return a * (1.f - ty) + b * ty;
@@ -217,18 +205,18 @@ void SkPatchUtils::GetRightCubic(const SkPoint cubics[12], SkPoint points[4]) {
 }
 
 static void skcolor_to_float(SkPMColor4f* dst, const SkColor* src, int count, SkColorSpace* dstCS) {
-    SkImageInfo srcInfo = SkImageInfo::Make(count, 1, kBGRA_8888_SkColorType,
-                                            kUnpremul_SkAlphaType, SkColorSpace::MakeSRGB());
-    SkImageInfo dstInfo = SkImageInfo::Make(count, 1, kRGBA_F32_SkColorType,
-                                            kPremul_SkAlphaType, sk_ref_sp(dstCS));
+    SkImageInfo srcInfo = SkImageInfo::Make(count, 1, kBGRA_8888_SkColorType, kUnpremul_SkAlphaType,
+                                            SkColorSpace::MakeSRGB());
+    SkImageInfo dstInfo = SkImageInfo::Make(count, 1, kRGBA_F32_SkColorType, kPremul_SkAlphaType,
+                                            sk_ref_sp(dstCS));
     SkConvertPixels(dstInfo, dst, 0, srcInfo, src, 0);
 }
 
 static void float_to_skcolor(SkColor* dst, const SkPMColor4f* src, int count, SkColorSpace* srcCS) {
-    SkImageInfo srcInfo = SkImageInfo::Make(count, 1, kRGBA_F32_SkColorType,
-                                            kPremul_SkAlphaType, sk_ref_sp(srcCS));
-    SkImageInfo dstInfo = SkImageInfo::Make(count, 1, kBGRA_8888_SkColorType,
-                                            kUnpremul_SkAlphaType, SkColorSpace::MakeSRGB());
+    SkImageInfo srcInfo = SkImageInfo::Make(count, 1, kRGBA_F32_SkColorType, kPremul_SkAlphaType,
+                                            sk_ref_sp(srcCS));
+    SkImageInfo dstInfo = SkImageInfo::Make(count, 1, kBGRA_8888_SkColorType, kUnpremul_SkAlphaType,
+                                            SkColorSpace::MakeSRGB());
     SkConvertPixels(dstInfo, dst, 0, srcInfo, src, 0);
 }
 
@@ -240,9 +228,7 @@ sk_sp<SkVertices> SkPatchUtils::MakeVertices(const SkPoint cubics[12], const SkC
     }
 
     // check for overflow in multiplication
-    const int64_t lodX64 = (lodX + 1),
-    lodY64 = (lodY + 1),
-    mult64 = lodX64 * lodY64;
+    const int64_t lodX64 = (lodX + 1), lodY64 = (lodY + 1), mult64 = lodX64 * lodY64;
     if (mult64 > SK_MaxS32) {
         return nullptr;
     }
@@ -317,23 +303,22 @@ sk_sp<SkVertices> SkPatchUtils::MakeVertices(const SkPoint cubics[12], const SkC
                                        (1.0f - v) * top.y() + v * bottom.y());
             SkPoint s1 = SkPoint::Make((1.0f - u) * left.x() + u * right.x(),
                                        (1.0f - u) * left.y() + u * right.y());
-            SkPoint s2 = SkPoint::Make(
-                                       (1.0f - v) * ((1.0f - u) * fTop.getCtrlPoints()[0].x()
-                                                     + u * fTop.getCtrlPoints()[3].x())
-                                       + v * ((1.0f - u) * fBottom.getCtrlPoints()[0].x()
-                                              + u * fBottom.getCtrlPoints()[3].x()),
-                                       (1.0f - v) * ((1.0f - u) * fTop.getCtrlPoints()[0].y()
-                                                     + u * fTop.getCtrlPoints()[3].y())
-                                       + v * ((1.0f - u) * fBottom.getCtrlPoints()[0].y()
-                                              + u * fBottom.getCtrlPoints()[3].y()));
+            SkPoint s2 = SkPoint::Make((1.0f - v) * ((1.0f - u) * fTop.getCtrlPoints()[0].x() +
+                                                     u * fTop.getCtrlPoints()[3].x()) +
+                                               v * ((1.0f - u) * fBottom.getCtrlPoints()[0].x() +
+                                                    u * fBottom.getCtrlPoints()[3].x()),
+                                       (1.0f - v) * ((1.0f - u) * fTop.getCtrlPoints()[0].y() +
+                                                     u * fTop.getCtrlPoints()[3].y()) +
+                                               v * ((1.0f - u) * fBottom.getCtrlPoints()[0].y() +
+                                                    u * fBottom.getCtrlPoints()[3].y()));
             pos[dataIndex] = s0 + s1 - s2;
 
             if (cornerColors) {
                 bilerp(u, v, Sk4f::Load(cornerColors[kTopLeft_Corner].vec()),
-                             Sk4f::Load(cornerColors[kTopRight_Corner].vec()),
-                             Sk4f::Load(cornerColors[kBottomLeft_Corner].vec()),
-                             Sk4f::Load(cornerColors[kBottomRight_Corner].vec()))
-                    .store(tmpColors[dataIndex].vec());
+                       Sk4f::Load(cornerColors[kTopRight_Corner].vec()),
+                       Sk4f::Load(cornerColors[kBottomLeft_Corner].vec()),
+                       Sk4f::Load(cornerColors[kBottomRight_Corner].vec()))
+                        .store(tmpColors[dataIndex].vec());
             }
 
             if (texs) {
@@ -345,10 +330,9 @@ sk_sp<SkVertices> SkPatchUtils::MakeVertices(const SkPoint cubics[12], const SkC
                                                        srcTexCoords[kTopRight_Corner].y(),
                                                        srcTexCoords[kBottomLeft_Corner].y(),
                                                        srcTexCoords[kBottomRight_Corner].y()));
-
             }
 
-            if(x < lodX && y < lodY) {
+            if (x < lodX && y < lodY) {
                 int i = 6 * (x * lodY + y);
                 indices[i] = x * stride + y;
                 indices[i + 1] = x * stride + 1 + y;

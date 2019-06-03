@@ -5,8 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkPath.h"
+#include "gm/gm.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRect.h"
 
 DEF_SIMPLE_GM(PlusMergesAA, canvas, 256, 256) {
     SkPaint p;
@@ -37,9 +42,9 @@ DEF_SIMPLE_GM(PlusMergesAA, canvas, 256, 256) {
 
     // Using Plus on the right should merge the AA of seam together completely covering the red.
     canvas->saveLayer(nullptr, nullptr);
-      p.setBlendMode(SkBlendMode::kPlus);
-      canvas->translate(150, 0);
-      canvas->drawPath(upperLeft, p);
-      canvas->drawPath(bottomRight, p);
+    p.setBlendMode(SkBlendMode::kPlus);
+    canvas->translate(150, 0);
+    canvas->drawPath(upperLeft, p);
+    canvas->drawPath(bottomRight, p);
     canvas->restore();
 }

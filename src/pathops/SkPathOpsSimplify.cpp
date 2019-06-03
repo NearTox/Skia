@@ -4,11 +4,11 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkAddIntersections.h"
-#include "SkOpCoincidence.h"
-#include "SkOpEdgeBuilder.h"
-#include "SkPathOpsCommon.h"
-#include "SkPathWriter.h"
+#include "src/pathops/SkAddIntersections.h"
+#include "src/pathops/SkOpCoincidence.h"
+#include "src/pathops/SkOpEdgeBuilder.h"
+#include "src/pathops/SkPathOpsCommon.h"
+#include "src/pathops/SkPathWriter.h"
 
 static bool bridgeWinding(SkOpContourHead* contourList, SkPathWriter* writer) {
     bool unsortable = false;
@@ -30,16 +30,16 @@ static bool bridgeWinding(SkOpContourHead* contourList, SkPathWriter* writer) {
                     SkASSERT(unsortable || !current->done());
                     SkOpSpanBase* nextStart = start;
                     SkOpSpanBase* nextEnd = end;
-                    SkOpSegment* next = current->findNextWinding(&chase, &nextStart, &nextEnd,
-                            &unsortable);
+                    SkOpSegment* next =
+                            current->findNextWinding(&chase, &nextStart, &nextEnd, &unsortable);
                     if (!next) {
                         break;
                     }
-        #if DEBUG_FLOW
-            SkDebugf("%s current id=%d from=(%1.9g,%1.9g) to=(%1.9g,%1.9g)\n", __FUNCTION__,
-                    current->debugID(), start->pt().fX, start->pt().fY,
-                    end->pt().fX, end->pt().fY);
-        #endif
+#if DEBUG_FLOW
+                    SkDebugf("%s current id=%d from=(%1.9g,%1.9g) to=(%1.9g,%1.9g)\n", __FUNCTION__,
+                             current->debugID(), start->pt().fX, start->pt().fY, end->pt().fX,
+                             end->pt().fY);
+#endif
                     if (!current->addCurveTo(start, end, writer)) {
                         return false;
                     }
@@ -59,7 +59,7 @@ static bool bridgeWinding(SkOpContourHead* contourList, SkPathWriter* writer) {
                 writer->finishContour();
             } else {
                 SkOpSpanBase* last;
-                 if (!current->markAndChaseDone(start, end, &last)) {
+                if (!current->markAndChaseDone(start, end, &last)) {
                     return false;
                 }
                 if (last && !last->chased()) {
@@ -69,7 +69,7 @@ static bool bridgeWinding(SkOpContourHead* contourList, SkPathWriter* writer) {
 #if DEBUG_WINDING
                     SkDebugf("%s chase.append id=%d", __FUNCTION__, last->segment()->debugID());
                     if (!last->final()) {
-                         SkDebugf(" windSum=%d", last->upCast()->windSum());
+                        SkDebugf(" windSum=%d", last->upCast()->windSum());
                     }
                     SkDebugf("\n");
 #endif
@@ -107,16 +107,15 @@ static bool bridgeXor(SkOpContourHead* contourList, SkPathWriter* writer) {
             SkASSERT(unsortable || !current->done());
             SkOpSpanBase* nextStart = start;
             SkOpSpanBase* nextEnd = end;
-            SkOpSegment* next = current->findNextXor(&nextStart, &nextEnd,
-                    &unsortable);
+            SkOpSegment* next = current->findNextXor(&nextStart, &nextEnd, &unsortable);
             if (!next) {
                 break;
             }
-        #if DEBUG_FLOW
+#if DEBUG_FLOW
             SkDebugf("%s current id=%d from=(%1.9g,%1.9g) to=(%1.9g,%1.9g)\n", __FUNCTION__,
-                    current->debugID(), start->pt().fX, start->pt().fY,
-                    end->pt().fX, end->pt().fY);
-        #endif
+                     current->debugID(), start->pt().fX, start->pt().fY, end->pt().fX,
+                     end->pt().fY);
+#endif
             if (!current->addCurveTo(start, end, writer)) {
                 return false;
             }
@@ -137,11 +136,11 @@ static bool bridgeXor(SkOpContourHead* contourList, SkPathWriter* writer) {
 }
 
 // FIXME : add this as a member of SkPath
-bool SimplifyDebug(const SkPath& path, SkPath* result
-        SkDEBUGPARAMS(bool skipAssert) SkDEBUGPARAMS(const char* testName)) {
+bool SimplifyDebug(const SkPath& path, SkPath* result SkDEBUGPARAMS(bool skipAssert)
+                                               SkDEBUGPARAMS(const char* testName)) {
     // returns 1 for evenodd, -1 for winding, regardless of inverse-ness
-    SkPath::FillType fillType = path.isInverseFillType() ? SkPath::kInverseEvenOdd_FillType
-            : SkPath::kEvenOdd_FillType;
+    SkPath::FillType fillType =
+            path.isInverseFillType() ? SkPath::kInverseEvenOdd_FillType : SkPath::kEvenOdd_FillType;
     if (path.isConvex()) {
         if (result != &path) {
             *result = path;
@@ -153,8 +152,8 @@ bool SimplifyDebug(const SkPath& path, SkPath* result
     SkSTArenaAlloc<4096> allocator;  // FIXME: constant-ize, tune
     SkOpContour contour;
     SkOpContourHead* contourList = static_cast<SkOpContourHead*>(&contour);
-    SkOpGlobalState globalState(contourList, &allocator
-            SkDEBUGPARAMS(skipAssert) SkDEBUGPARAMS(testName));
+    SkOpGlobalState globalState(contourList,
+                                &allocator SkDEBUGPARAMS(skipAssert) SkDEBUGPARAMS(testName));
     SkOpCoincidence coincidence(&globalState);
 #if DEBUG_DUMP_VERIFY
 #ifndef SK_DEBUG
@@ -183,8 +182,8 @@ bool SimplifyDebug(const SkPath& path, SkPath* result
     SkOpContour* current = contourList;
     do {
         SkOpContour* next = current;
-        while (AddIntersectTs(current, next, &coincidence)
-                && (next = next->next()));
+        while (AddIntersectTs(current, next, &coincidence) && (next = next->next()))
+            ;
     } while ((current = current->next()));
 #if DEBUG_VALIDATE
     globalState.setPhase(SkOpPhase::kWalking);
@@ -204,7 +203,7 @@ bool SimplifyDebug(const SkPath& path, SkPath* result
     result->setFillType(fillType);
     SkPathWriter wrapper(*result);
     if (builder.xorMask() == kWinding_PathOpsMask ? !bridgeWinding(contourList, &wrapper)
-            : !bridgeXor(contourList, &wrapper)) {
+                                                  : !bridgeXor(contourList, &wrapper)) {
         return false;
     }
     wrapper.assemble();  // if some edges could not be resolved, assemble remaining
@@ -214,7 +213,7 @@ bool SimplifyDebug(const SkPath& path, SkPath* result
 bool Simplify(const SkPath& path, SkPath* result) {
 #if DEBUG_DUMP_VERIFY
     if (SkPathOpsDebug::gVerifyOp) {
-        if (!SimplifyDebug(path, result  SkDEBUGPARAMS(false) SkDEBUGPARAMS(nullptr))) {
+        if (!SimplifyDebug(path, result SkDEBUGPARAMS(false) SkDEBUGPARAMS(nullptr))) {
             SkPathOpsDebug::ReportSimplifyFail(path);
             return false;
         }
@@ -222,5 +221,5 @@ bool Simplify(const SkPath& path, SkPath* result) {
         return true;
     }
 #endif
-    return SimplifyDebug(path, result  SkDEBUGPARAMS(true) SkDEBUGPARAMS(nullptr));
+    return SimplifyDebug(path, result SkDEBUGPARAMS(true) SkDEBUGPARAMS(nullptr));
 }

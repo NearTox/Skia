@@ -5,18 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "SkCanvas.h"
-#include "SkDocument.h"
-#include "SkStream.h"
+#include "include/core/SkDocument.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkStream.h"
 
 SkDocument::SkDocument(SkWStream* stream) : fStream(stream), fState(kBetweenPages_State) {}
 
-SkDocument::~SkDocument() {
-    this->close();
-}
+SkDocument::~SkDocument() { this->close(); }
 
-static SkCanvas* trim(SkCanvas* canvas, SkScalar width, SkScalar height,
-                      const SkRect* content) {
+static SkCanvas* trim(SkCanvas* canvas, SkScalar width, SkScalar height, const SkRect* content) {
     if (content && canvas) {
         SkRect inner = *content;
         if (!inner.intersect({0, 0, width, height})) {
@@ -28,8 +25,7 @@ static SkCanvas* trim(SkCanvas* canvas, SkScalar width, SkScalar height,
     return canvas;
 }
 
-SkCanvas* SkDocument::beginPage(SkScalar width, SkScalar height,
-                                const SkRect* content) {
+SkCanvas* SkDocument::beginPage(SkScalar width, SkScalar height, const SkRect* content) {
     if (width <= 0 || height <= 0 || kClosed_State == fState) {
         return nullptr;
     }

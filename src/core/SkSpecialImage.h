@@ -8,12 +8,12 @@
 #ifndef SkSpecialImage_DEFINED
 #define SkSpecialImage_DEFINED
 
-#include "SkNextID.h"
-#include "SkRefCnt.h"
-#include "SkSurfaceProps.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkSurfaceProps.h"
+#include "src/core/SkNextID.h"
 
-#include "SkImageFilter.h" // for OutputProperties
-#include "SkImageInfo.h"   // for SkAlphaType
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkImageInfo.h"
 
 class GrRecordingContext;
 class GrTextureProxy;
@@ -26,9 +26,7 @@ class SkPixmap;
 class SkSpecialSurface;
 class SkSurface;
 
-enum {
-    kNeedNewImageUniqueID_SpecialImage = 0
-};
+enum { kNeedNewImageUniqueID_SpecialImage = 0 };
 
 /**
  * This is a restricted form of SkImage solely intended for internal use. It
@@ -44,16 +42,16 @@ enum {
 class SkSpecialImage : public SkRefCnt {
 public:
     typedef void* ReleaseContext;
-    typedef void(*RasterReleaseProc)(void* pixels, ReleaseContext);
+    typedef void (*RasterReleaseProc)(void* pixels, ReleaseContext);
 
-    const SkSurfaceProps& props() const { return fProps; }
+    const SkSurfaceProps& props() const noexcept { return fProps; }
 
-    int width() const { return fSubset.width(); }
-    int height() const { return fSubset.height(); }
-    const SkIRect& subset() const { return fSubset; }
+    int width() const noexcept { return fSubset.width(); }
+    int height() const noexcept { return fSubset.height(); }
+    const SkIRect& subset() const noexcept { return fSubset; }
     SkColorSpace* getColorSpace() const;
 
-    uint32_t uniqueID() const { return fUniqueID; }
+    uint32_t uniqueID() const noexcept { return fUniqueID; }
     virtual SkAlphaType alphaType() const = 0;
     virtual size_t getSize() const = 0;
 
@@ -152,8 +150,8 @@ protected:
 
 private:
     const SkSurfaceProps fProps;
-    const SkIRect        fSubset;
-    const uint32_t       fUniqueID;
+    const SkIRect fSubset;
+    const uint32_t fUniqueID;
 
     typedef SkRefCnt INHERITED;
 };

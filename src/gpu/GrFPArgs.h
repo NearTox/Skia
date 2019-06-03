@@ -8,8 +8,8 @@
 #ifndef GrFPArgs_DEFINED
 #define GrFPArgs_DEFINED
 
-#include "SkFilterQuality.h"
-#include "SkMatrix.h"
+#include "include/core/SkFilterQuality.h"
+#include "include/core/SkMatrix.h"
 
 class GrColorSpaceInfo;
 class GrRecordingContext;
@@ -18,11 +18,11 @@ struct GrFPArgs {
     GrFPArgs(GrRecordingContext* context,
              const SkMatrix* viewMatrix,
              SkFilterQuality filterQuality,
-             const GrColorSpaceInfo* dstColorSpaceInfo)
-    : fContext(context)
-    , fViewMatrix(viewMatrix)
-    , fFilterQuality(filterQuality)
-    , fDstColorSpaceInfo(dstColorSpaceInfo) {
+             const GrColorSpaceInfo* dstColorSpaceInfo) noexcept
+            : fContext(context)
+            , fViewMatrix(viewMatrix)
+            , fFilterQuality(filterQuality)
+            , fDstColorSpaceInfo(dstColorSpaceInfo) {
         SkASSERT(fContext);
         SkASSERT(fViewMatrix);
     }
@@ -39,8 +39,11 @@ struct GrFPArgs {
     //
     // Use the helpers above to create pre/post GrFPArgs wrappers.
     //
-    const SkMatrix* fPreLocalMatrix  = nullptr;
+    const SkMatrix* fPreLocalMatrix = nullptr;
     const SkMatrix* fPostLocalMatrix = nullptr;
+
+    // Make this SkAlphaType?
+    bool fInputColorIsOpaque = false;
 
     SkFilterQuality fFilterQuality;
     const GrColorSpaceInfo* fDstColorSpaceInfo;
@@ -48,7 +51,7 @@ struct GrFPArgs {
 
 class GrFPArgs::WithPreLocalMatrix final : public GrFPArgs {
 public:
-    WithPreLocalMatrix(const GrFPArgs& args, const SkMatrix& lm) : INHERITED(args) {
+    WithPreLocalMatrix(const GrFPArgs& args, const SkMatrix& lm) noexcept : INHERITED(args) {
         if (!lm.isIdentity()) {
             if (fPreLocalMatrix) {
                 fStorage.setConcat(lm, *fPreLocalMatrix);
@@ -70,7 +73,7 @@ private:
 
 class GrFPArgs::WithPostLocalMatrix final : public GrFPArgs {
 public:
-    WithPostLocalMatrix(const GrFPArgs& args, const SkMatrix& lm) : INHERITED(args) {
+    WithPostLocalMatrix(const GrFPArgs& args, const SkMatrix& lm) noexcept : INHERITED(args) {
         if (!lm.isIdentity()) {
             if (fPostLocalMatrix) {
                 fStorage.setConcat(*fPostLocalMatrix, lm);
@@ -91,4 +94,3 @@ private:
 };
 
 #endif
-

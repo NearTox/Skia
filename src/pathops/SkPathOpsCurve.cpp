@@ -4,12 +4,12 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkPathOpsBounds.h"
-#include "SkPathOpsRect.h"
-#include "SkPathOpsCurve.h"
+#include "src/pathops/SkPathOpsCurve.h"
+#include "src/pathops/SkPathOpsBounds.h"
+#include "src/pathops/SkPathOpsRect.h"
 
- // this cheats and assumes that the perpendicular to the point is the closest ray to the curve
- // this case (where the line and the curve are nearly coincident) may be the only case that counts
+// this cheats and assumes that the perpendicular to the point is the closest ray to the curve
+// this case (where the line and the curve are nearly coincident) may be the only case that counts
 double SkDCurve::nearPoint(SkPath::Verb verb, const SkDPoint& xy, const SkDPoint& opp) const {
     int count = SkPathOpsVerbToPoints(verb);
     double minX = fCubic.fPts[0].fX;
@@ -31,7 +31,7 @@ double SkDCurve::nearPoint(SkPath::Verb verb, const SkDPoint& xy, const SkDPoint
         return -1;
     }
     SkIntersections i;
-    SkDLine perp = {{ xy, { xy.fX + opp.fY - xy.fY, xy.fY + xy.fX - opp.fX }}};
+    SkDLine perp = {{xy, {xy.fX + opp.fY - xy.fY, xy.fY + xy.fX - opp.fX}}};
     (*CurveDIntersectRay[verb])(*this, perp, &i);
     int minIndex = -1;
     double minDist = FLT_MAX;
@@ -46,7 +46,7 @@ double SkDCurve::nearPoint(SkPath::Verb verb, const SkDPoint& xy, const SkDPoint
         return -1;
     }
     double largest = SkTMax(SkTMax(maxX, maxY), -SkTMin(minX, minY));
-    if (!AlmostEqualUlps_Pin(largest, largest + minDist)) { // is distance within ULPS tolerance?
+    if (!AlmostEqualUlps_Pin(largest, largest + minDist)) {  // is distance within ULPS tolerance?
         return -1;
     }
     return SkPinT(i[0][minIndex]);
@@ -59,34 +59,34 @@ void SkDCurve::offset(SkPath::Verb verb, const SkDVector& off) {
     }
 }
 
-void SkDCurve::setConicBounds(const SkPoint curve[3], SkScalar curveWeight,
-        double tStart, double tEnd, SkPathOpsBounds* bounds) {
+void SkDCurve::setConicBounds(const SkPoint curve[3], SkScalar curveWeight, double tStart,
+                              double tEnd, SkPathOpsBounds* bounds) {
     SkDConic dCurve;
     dCurve.set(curve, curveWeight);
     SkDRect dRect;
     dRect.setBounds(dCurve, fConic, tStart, tEnd);
     bounds->set(SkDoubleToScalar(dRect.fLeft), SkDoubleToScalar(dRect.fTop),
-            SkDoubleToScalar(dRect.fRight), SkDoubleToScalar(dRect.fBottom));
+                SkDoubleToScalar(dRect.fRight), SkDoubleToScalar(dRect.fBottom));
 }
 
-void SkDCurve::setCubicBounds(const SkPoint curve[4], SkScalar ,
-        double tStart, double tEnd, SkPathOpsBounds* bounds) {
+void SkDCurve::setCubicBounds(const SkPoint curve[4], SkScalar, double tStart, double tEnd,
+                              SkPathOpsBounds* bounds) {
     SkDCubic dCurve;
     dCurve.set(curve);
     SkDRect dRect;
     dRect.setBounds(dCurve, fCubic, tStart, tEnd);
     bounds->set(SkDoubleToScalar(dRect.fLeft), SkDoubleToScalar(dRect.fTop),
-            SkDoubleToScalar(dRect.fRight), SkDoubleToScalar(dRect.fBottom));
+                SkDoubleToScalar(dRect.fRight), SkDoubleToScalar(dRect.fBottom));
 }
 
-void SkDCurve::setQuadBounds(const SkPoint curve[3], SkScalar ,
-        double tStart, double tEnd, SkPathOpsBounds* bounds) {
+void SkDCurve::setQuadBounds(const SkPoint curve[3], SkScalar, double tStart, double tEnd,
+                             SkPathOpsBounds* bounds) {
     SkDQuad dCurve;
     dCurve.set(curve);
     SkDRect dRect;
     dRect.setBounds(dCurve, fQuad, tStart, tEnd);
     bounds->set(SkDoubleToScalar(dRect.fLeft), SkDoubleToScalar(dRect.fTop),
-            SkDoubleToScalar(dRect.fRight), SkDoubleToScalar(dRect.fBottom));
+                SkDoubleToScalar(dRect.fRight), SkDoubleToScalar(dRect.fBottom));
 }
 
 void SkDCurveSweep::setCurveHullSweep(SkPath::Verb verb) {
@@ -102,13 +102,12 @@ void SkDCurveSweep::setCurveHullSweep(SkPath::Verb verb) {
     // central place for this val-is-small-compared-to-curve check
     double maxVal = 0;
     for (int index = 0; index <= SkPathOpsVerbToPoints(verb); ++index) {
-        maxVal = SkTMax(maxVal, SkTMax(SkTAbs(fCurve[index].fX),
-                SkTAbs(fCurve[index].fY)));
+        maxVal = SkTMax(maxVal, SkTMax(SkTAbs(fCurve[index].fX), SkTAbs(fCurve[index].fY)));
     }
     {
         if (SkPath::kCubic_Verb != verb) {
-            if (roughly_zero_when_compared_to(fSweep[0].fX, maxVal)
-                    && roughly_zero_when_compared_to(fSweep[0].fY, maxVal)) {
+            if (roughly_zero_when_compared_to(fSweep[0].fX, maxVal) &&
+                roughly_zero_when_compared_to(fSweep[0].fY, maxVal)) {
                 fSweep[0] = fSweep[1];
             }
             goto setIsCurve;
@@ -117,8 +116,8 @@ void SkDCurveSweep::setCurveHullSweep(SkPath::Verb verb) {
         if (fSweep[0].fX == 0 && fSweep[0].fY == 0) {
             fSweep[0] = fSweep[1];
             fSweep[1] = thirdSweep;
-            if (roughly_zero_when_compared_to(fSweep[0].fX, maxVal)
-                    && roughly_zero_when_compared_to(fSweep[0].fY, maxVal)) {
+            if (roughly_zero_when_compared_to(fSweep[0].fX, maxVal) &&
+                roughly_zero_when_compared_to(fSweep[0].fY, maxVal)) {
                 fSweep[0] = fSweep[1];
                 fCurve[1] = fCurve[3];
             }

@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-#include "LexUtil.h"
+#include "src/sksl/lex/LexUtil.h"
 
 struct NFAState {
     enum Kind {
@@ -30,32 +30,20 @@ struct NFAState {
         kTable_Kind
     };
 
-    NFAState(Kind kind, std::vector<int> next)
-    : fKind(kind)
-    , fNext(std::move(next)) {}
+    NFAState(Kind kind, std::vector<int> next) : fKind(kind), fNext(std::move(next)) {}
 
-    NFAState(char c, std::vector<int> next)
-    : fKind(kChar_Kind)
-    , fChar(c)
-    , fNext(std::move(next)) {}
+    NFAState(char c, std::vector<int> next) : fKind(kChar_Kind), fChar(c), fNext(std::move(next)) {}
 
-    NFAState(std::vector<int> states)
-    : fKind(kRemapped_Kind)
-    , fData(std::move(states)) {}
+    NFAState(std::vector<int> states) : fKind(kRemapped_Kind), fData(std::move(states)) {}
 
     NFAState(bool inverse, std::vector<bool> accepts, std::vector<int> next)
-    : fKind(kTable_Kind)
-    , fInverse(inverse)
-    , fNext(std::move(next)) {
+            : fKind(kTable_Kind), fInverse(inverse), fNext(std::move(next)) {
         for (bool b : accepts) {
             fData.push_back(b);
         }
     }
 
-    NFAState(int token)
-    : fKind(kAccept_Kind) {
-        fData.push_back(token);
-    }
+    NFAState(int token) : fKind(kAccept_Kind) { fData.push_back(token); }
 
     bool accept(char c) const {
         switch (fKind) {
@@ -67,7 +55,7 @@ struct NFAState {
                 return c != '\n';
             case kTable_Kind: {
                 bool value;
-                if ((size_t) c < fData.size()) {
+                if ((size_t)c < fData.size()) {
                     value = fData[c];
                 } else {
                     value = false;

@@ -5,13 +5,12 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef GrGLTexture_DEFINED
 #define GrGLTexture_DEFINED
 
-#include "GrGpu.h"
-#include "GrTexture.h"
-#include "GrGLUtil.h"
+#include "include/gpu/GrTexture.h"
+#include "src/gpu/GrGpu.h"
+#include "src/gpu/gl/GrGLUtil.h"
 
 class GrGLGpu;
 
@@ -56,8 +55,8 @@ public:
     };
 
     struct IDDesc {
-        GrGLTextureInfo             fInfo;
-        GrBackendObjectOwnership    fOwnership;
+        GrGLTextureInfo fInfo;
+        GrBackendObjectOwnership fOwnership;
     };
 
     static GrTextureType TextureTypeFromTarget(GrGLenum textureTarget);

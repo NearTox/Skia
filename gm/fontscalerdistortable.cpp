@@ -4,31 +4,38 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include <SkFont.h>
-#include "gm.h"
-#include "Resources.h"
-#include "SkFixed.h"
-#include "SkFontDescriptor.h"
-#include "SkFontMgr.h"
-#include "SkTypeface.h"
+
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkFontArguments.h"
+#include "include/core/SkFontMgr.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "tools/Resources.h"
+
+#include <string.h>
+#include <memory>
+#include <utility>
 
 namespace skiagm {
 
 class FontScalerDistortableGM : public GM {
 public:
-    FontScalerDistortableGM() {
-        this->setBGColor(0xFFFFFFFF);
-    }
+    FontScalerDistortableGM() { this->setBGColor(0xFFFFFFFF); }
 
 protected:
+    SkString onShortName() override { return SkString("fontscalerdistortable"); }
 
-    SkString onShortName() override {
-        return SkString("fontscalerdistortable");
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(550, 700);
-    }
+    SkISize onISize() override { return SkISize::Make(550, 700); }
 
     DrawResult onDraw(SkCanvas* canvas, SkString* errorMsg) override {
         SkPaint paint;
@@ -37,7 +44,8 @@ protected:
         font.setEdging(SkFont::Edging::kSubpixelAntiAlias);
         sk_sp<SkFontMgr> fontMgr(SkFontMgr::RefDefault());
 
-        std::unique_ptr<SkStreamAsset> distortableStream(GetResourceAsStream("fonts/Distortable.ttf"));
+        std::unique_ptr<SkStreamAsset> distortableStream(
+                GetResourceAsStream("fonts/Distortable.ttf"));
         sk_sp<SkTypeface> distortable(MakeResourceAsTypeface("fonts/Distortable.ttf"));
 
         if (!distortableStream) {
@@ -52,19 +60,19 @@ protected:
                 SkScalar x = SkIntToScalar(10);
                 SkScalar y = SkIntToScalar(20);
 
-                SkFourByteTag tag = SkSetFourByteTag('w','g','h','t');
+                SkFourByteTag tag = SkSetFourByteTag('w', 'g', 'h', 't');
                 SkScalar styleValue = SkDoubleToScalar(0.5 + (5 * j + i) * ((2.0 - 0.5) / (2 * 5)));
                 SkFontArguments::VariationPosition::Coordinate coordinates[] = {{tag, styleValue}};
-                SkFontArguments::VariationPosition position =
-                        { coordinates, SK_ARRAY_COUNT(coordinates) };
+                SkFontArguments::VariationPosition position = {coordinates,
+                                                               SK_ARRAY_COUNT(coordinates)};
                 if (j == 0 && distortable) {
-                    font.setTypeface(sk_sp<SkTypeface>(
-                        distortable->makeClone(
-                            SkFontArguments().setVariationDesignPosition(position))));
+                    sk_sp<SkTypeface> clone = distortable->makeClone(
+                            SkFontArguments().setVariationDesignPosition(position));
+                    font.setTypeface(clone ? std::move(clone) : distortable);
                 } else {
-                    font.setTypeface(sk_sp<SkTypeface>(fontMgr->makeFromStream(
-                        distortableStream->duplicate(),
-                        SkFontArguments().setVariationDesignPosition(position))));
+                    font.setTypeface(fontMgr->makeFromStream(
+                            distortableStream->duplicate(),
+                            SkFontArguments().setVariationDesignPosition(position)));
                 }
 
                 SkAutoCanvasRestore acr(canvas, true);
@@ -75,19 +83,20 @@ protected:
                     SkPaint p;
                     p.setAntiAlias(true);
                     SkRect r;
-                    r.set(x - SkIntToScalar(3), SkIntToScalar(15),
-                          x - SkIntToScalar(1), SkIntToScalar(280));
+                    r.set(x - SkIntToScalar(3), SkIntToScalar(15), x - SkIntToScalar(1),
+                          SkIntToScalar(280));
                     canvas->drawRect(r, p);
                 }
 
                 for (int ps = 6; ps <= 22; ps++) {
                     font.setSize(SkIntToScalar(ps));
-                    canvas->drawSimpleText(text, textLen, kUTF8_SkTextEncoding, x, y, font, paint);
+                    canvas->drawSimpleText(text, textLen, SkTextEncoding::kUTF8, x, y, font, paint);
                     y += font.getMetrics(nullptr);
                 }
             }
             canvas->translate(0, SkIntToScalar(360));
             font.setSubpixel(true);
+            font.setLinearMetrics(true);
         }
         return DrawResult::kOk;
     }
@@ -98,6 +107,6 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new FontScalerDistortableGM; )
+DEF_GM(return new FontScalerDistortableGM;)
 
-}
+}  // namespace skiagm

@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "GrCCFillGeometry.h"
+#include "src/gpu/ccpr/GrCCFillGeometry.h"
 
-#include "GrTypes.h"
-#include "SkGeometry.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include "include/gpu/GrTypes.h"
+#include "src/core/SkGeometry.h"
 
-static constexpr float kFlatnessThreshold = 1/16.f; // 1/16 of a pixel.
+static constexpr float kFlatnessThreshold = 1 / 16.f;  // 1/16 of a pixel.
 
 void GrCCFillGeometry::beginPath() {
     SkASSERT(!fBuildingContour);
@@ -37,7 +37,7 @@ void GrCCFillGeometry::lineTo(const SkPoint P[2]) {
     SkASSERT(fBuildingContour);
     SkASSERT(P[0] == fPoints.back());
     Sk2f p0 = Sk2f::Load(P);
-    Sk2f p1 = Sk2f::Load(P+1);
+    Sk2f p1 = Sk2f::Load(P + 1);
     this->appendLine(p0, p1);
 }
 
@@ -51,8 +51,8 @@ inline void GrCCFillGeometry::appendLine(const Sk2f& p0, const Sk2f& p1) {
 }
 
 static inline Sk2f normalize(const Sk2f& n) {
-    Sk2f nn = n*n;
-    return n * (nn + SkNx_shuffle<1,0>(nn)).rsqrt();
+    Sk2f nn = n * n;
+    return n * (nn + SkNx_shuffle<1, 0>(nn)).rsqrt();
 }
 
 static inline float dot(const Sk2f& a, const Sk2f& b) {
@@ -63,7 +63,7 @@ static inline float dot(const Sk2f& a, const Sk2f& b) {
 
 static inline bool are_collinear(const Sk2f& p0, const Sk2f& p1, const Sk2f& p2,
                                  float tolerance = kFlatnessThreshold) {
-    Sk2f l = p2 - p0; // Line from p0 -> p2.
+    Sk2f l = p2 - p0;  // Line from p0 -> p2.
 
     // lwidth = Manhattan width of l.
     Sk2f labs = l.abs();
@@ -71,7 +71,7 @@ static inline bool are_collinear(const Sk2f& p0, const Sk2f& p1, const Sk2f& p2,
 
     // d = |p1 - p0| dot | l.y|
     //                   |-l.x| = distance from p1 to l.
-    Sk2f dd = (p1 - p0) * SkNx_shuffle<1,0>(l);
+    Sk2f dd = (p1 - p0) * SkNx_shuffle<1, 0>(l);
     float d = dd[0] - dd[1];
 
     // We are collinear if a box with radius "tolerance", centered on p1, touches the line l.
@@ -97,17 +97,17 @@ static inline bool are_collinear(const SkPoint P[4], float tolerance = kFlatness
     Py -= Py[3];               // |.   . |   |   0   |
 
     // Find [lx, ly] = the line from p3 to the furthest-away point from p3.
-    Sk4f Pwidth = Px.abs() + Py.abs(); // Pwidth = Manhattan width of each point.
+    Sk4f Pwidth = Px.abs() + Py.abs();  // Pwidth = Manhattan width of each point.
     int lidx = Pwidth[0] > Pwidth[1] ? 0 : 1;
     lidx = Pwidth[lidx] > Pwidth[2] ? lidx : 2;
     float lx = Px[lidx], ly = Py[lidx];
-    float lwidth = Pwidth[lidx]; // lwidth = Manhattan width of [lx, ly].
+    float lwidth = Pwidth[lidx];  // lwidth = Manhattan width of [lx, ly].
 
     //     |Px  Py|
     // d = |.   . | * | ly| = distances from each point to l (two of the distances will be zero).
     //     |.   . |   |-lx|
     //     |.   . |
-    Sk4f d = Px*ly - Py*lx;
+    Sk4f d = Px * ly - Py * lx;
 
     // We are collinear if boxes with radius "tolerance", centered on all 4 points all touch line l.
     // (See the rationale for this formula in the above, 3-point version of this function.)
@@ -128,8 +128,9 @@ static inline bool is_convex_curve_monotonic(const Sk2f& startPt, const Sk2f& ta
     return dot0 >= tolerance && dot1 >= tolerance;
 }
 
-template<int N> static inline SkNx<N,float> lerp(const SkNx<N,float>& a, const SkNx<N,float>& b,
-                                                 const SkNx<N,float>& t) {
+template <int N>
+static inline SkNx<N, float> lerp(const SkNx<N, float>& a, const SkNx<N, float>& b,
+                                  const SkNx<N, float>& t) {
     return SkNx_fma(t, b - a, a);
 }
 
@@ -137,8 +138,8 @@ void GrCCFillGeometry::quadraticTo(const SkPoint P[3]) {
     SkASSERT(fBuildingContour);
     SkASSERT(P[0] == fPoints.back());
     Sk2f p0 = Sk2f::Load(P);
-    Sk2f p1 = Sk2f::Load(P+1);
-    Sk2f p2 = Sk2f::Load(P+2);
+    Sk2f p1 = Sk2f::Load(P + 1);
+    Sk2f p2 = Sk2f::Load(P + 2);
 
     // Don't crunch on the curve if it is nearly flat (or just very small). Flat curves can break
     // The monotonic chopping math.
@@ -177,8 +178,8 @@ inline void GrCCFillGeometry::appendQuadratics(const Sk2f& p0, const Sk2f& p1, c
     //   t = (tan0 dot n) / ((tan0 - tan1) dot n)
     Sk2f dQ1n = (tan0 - tan1) * n;
     Sk2f dQ0n = tan0 * n;
-    Sk2f t = (dQ0n + SkNx_shuffle<1,0>(dQ0n)) / (dQ1n + SkNx_shuffle<1,0>(dQ1n));
-    t = Sk2f::Min(Sk2f::Max(t, 0), 1); // Clamp for FP error.
+    Sk2f t = (dQ0n + SkNx_shuffle<1, 0>(dQ0n)) / (dQ1n + SkNx_shuffle<1, 0>(dQ1n));
+    t = Sk2f::Min(Sk2f::Max(t, 0), 1);  // Clamp for FP error.
 
     Sk2f p01 = SkNx_fma(t, tan0, p0);
     Sk2f p12 = SkNx_fma(t, tan1, p1);
@@ -205,12 +206,12 @@ inline void GrCCFillGeometry::appendMonotonicQuadratic(const Sk2f& p0, const Sk2
 }
 
 static inline Sk2f first_unless_nearly_zero(const Sk2f& a, const Sk2f& b) {
-    Sk2f aa = a*a;
-    aa += SkNx_shuffle<1,0>(aa);
+    Sk2f aa = a * a;
+    aa += SkNx_shuffle<1, 0>(aa);
     SkASSERT(aa[0] == aa[1]);
 
-    Sk2f bb = b*b;
-    bb += SkNx_shuffle<1,0>(bb);
+    Sk2f bb = b * b;
+    bb += SkNx_shuffle<1, 0>(bb);
     SkASSERT(bb[0] == bb[1]);
 
     return (aa > bb * SK_ScalarNearlyZero).thenElse(a, b);
@@ -227,14 +228,11 @@ static inline bool is_cubic_nearly_quadratic(const Sk2f& p0, const Sk2f& p1, con
                                              Sk2f* c) {
     Sk2f c1 = SkNx_fma(Sk2f(1.5f), tan0, p0);
     Sk2f c2 = SkNx_fma(Sk2f(-1.5f), tan1, p3);
-    *c = (c1 + c2) * .5f; // Hopefully optimized out if not used?
+    *c = (c1 + c2) * .5f;  // Hopefully optimized out if not used?
     return ((c1 - c2).abs() <= 1).allTrue();
 }
 
-enum class ExcludedTerm : bool {
-    kQuadraticTerm,
-    kLinearTerm
-};
+enum class ExcludedTerm : bool { kQuadraticTerm, kLinearTerm };
 
 // Finds where to chop a non-loop around its inflection points. The resulting cubic segments will be
 // chopped such that a box of radius 'padRadius', centered at any point along the curve segment, is
@@ -252,7 +250,7 @@ static inline void find_chops_around_inflection_points(float padRadius, Sk2f tl,
     SkASSERT(chops->empty());
     SkASSERT(padRadius >= 0);
 
-    padRadius /= std::abs(Cdet); // Scale this single value rather than all of C^-1 later on.
+    padRadius /= std::abs(Cdet);  // Scale this single value rather than all of C^-1 later on.
 
     // The homogeneous parametric functions for distance from lines L & M are:
     //
@@ -265,7 +263,7 @@ static inline void find_chops_around_inflection_points(float padRadius, Sk2f tl,
     // https://www.microsoft.com/en-us/research/wp-content/uploads/2005/01/p1000-loop.pdf
     //
     // From here on we use Sk2f with "L" names, but the second lane will be for line M.
-    tl = (sl > 0).thenElse(tl, -tl); // Tl=tl/sl is the triple root of l(t,s). Normalize so s >= 0.
+    tl = (sl > 0).thenElse(tl, -tl);  // Tl=tl/sl is the triple root of l(t,s). Normalize so s >= 0.
     sl = sl.abs();
 
     // Convert l(t,s), m(t,s) to power-basis form:
@@ -275,8 +273,8 @@ static inline void find_chops_around_inflection_points(float padRadius, Sk2f tl,
     //                                                  | l1  m1 |
     //                                                  | l0  m0 |
     //
-    Sk2f l3 = sl*sl*sl;
-    Sk2f l2or1 = (ExcludedTerm::kLinearTerm == skipTerm) ? sl*sl*tl*-3 : sl*tl*tl*3;
+    Sk2f l3 = sl * sl * sl;
+    Sk2f l2or1 = (ExcludedTerm::kLinearTerm == skipTerm) ? sl * sl * tl * -3 : sl * tl * tl * 3;
 
     // The equation for line L can be found as follows:
     //
@@ -285,8 +283,8 @@ static inline void find_chops_around_inflection_points(float padRadius, Sk2f tl,
     // (See comments for GrPathUtils::calcCubicInverseTransposePowerBasisMatrix.)
     // We are only interested in the normal to L, so only need the upper 2x2 of C^-1. And rather
     // than divide by determinant(C) here, we have already performed this divide on padRadius.
-    Sk2f Lx =  C1[1]*l3 - C0[1]*l2or1;
-    Sk2f Ly = -C1[0]*l3 + C0[0]*l2or1;
+    Sk2f Lx = C1[1] * l3 - C0[1] * l2or1;
+    Sk2f Ly = -C1[0] * l3 + C0[0] * l2or1;
 
     // A box of radius "padRadius" is touching line L if "center dot L" is less than the Manhattan
     // with of L. (See rationale in are_collinear.)
@@ -294,11 +292,11 @@ static inline void find_chops_around_inflection_points(float padRadius, Sk2f tl,
     Sk2f pad = Lwidth * padRadius;
 
     // Will T=(t + cbrt(pad))/s be greater than 0? No need to solve roots outside T=0..1.
-    Sk2f insideLeftPad = pad + tl*tl*tl;
+    Sk2f insideLeftPad = pad + tl * tl * tl;
 
     // Will T=(t - cbrt(pad))/s be less than 1? No need to solve roots outside T=0..1.
     Sk2f tms = tl - sl;
-    Sk2f insideRightPad = pad - tms*tms*tms;
+    Sk2f insideRightPad = pad - tms * tms * tms;
 
     // Solve for the T values where abs(l(T)) = pad.
     if (insideLeftPad[0] > 0 && insideRightPad[0] > 0) {
@@ -337,7 +335,7 @@ static inline void find_chops_around_loop_intersection(float padRadius, Sk2f t2,
     SkASSERT(chops->empty());
     SkASSERT(padRadius >= 0);
 
-    padRadius /= std::abs(Cdet); // Scale this single value rather than all of C^-1 later on.
+    padRadius /= std::abs(Cdet);  // Scale this single value rather than all of C^-1 later on.
 
     // The parametric functions for distance from lines L & M are:
     //
@@ -348,8 +346,8 @@ static inline void find_chops_around_loop_intersection(float padRadius, Sk2f t2,
     // 4.3 Finding klmn:
     //
     // https://www.microsoft.com/en-us/research/wp-content/uploads/2005/01/p1000-loop.pdf
-    Sk2f T2 = t2/s2; // T2 is the double root of l(T).
-    Sk2f T1 = SkNx_shuffle<1,0>(T2); // T1 is the other root of l(T).
+    Sk2f T2 = t2 / s2;                 // T2 is the double root of l(T).
+    Sk2f T1 = SkNx_shuffle<1, 0>(T2);  // T1 is the other root of l(T).
 
     // Convert l(T), m(T) to power-basis form:
     //
@@ -361,7 +359,7 @@ static inline void find_chops_around_loop_intersection(float padRadius, Sk2f t2,
     // From here on we use Sk2f with "L" names, but the second lane will be for line M.
     Sk2f l2 = SkNx_fma(Sk2f(-2), T2, -T1);
     Sk2f l1 = T2 * SkNx_fma(Sk2f(2), T1, T2);
-    Sk2f l0 = -T2*T2*T1;
+    Sk2f l0 = -T2 * T2 * T1;
 
     // The equation for line L can be found as follows:
     //
@@ -371,8 +369,8 @@ static inline void find_chops_around_loop_intersection(float padRadius, Sk2f t2,
     // We are only interested in the normal to L, so only need the upper 2x2 of C^-1. And rather
     // than divide by determinant(C) here, we have already performed this divide on padRadius.
     Sk2f l2or1 = (ExcludedTerm::kLinearTerm == skipTerm) ? l2 : l1;
-    Sk2f Lx = -C0[1]*l2or1 + C1[1]; // l3 is always 1.
-    Sk2f Ly =  C0[0]*l2or1 - C1[0];
+    Sk2f Lx = -C0[1] * l2or1 + C1[1];  // l3 is always 1.
+    Sk2f Ly = C0[0] * l2or1 - C1[0];
 
     // A box of radius "padRadius" is touching line L if "center dot L" is less than the Manhattan
     // with of L. (See rationale in are_collinear.)
@@ -380,11 +378,11 @@ static inline void find_chops_around_loop_intersection(float padRadius, Sk2f t2,
     Sk2f pad = Lwidth * padRadius;
 
     // Is l(T=0) outside the padding around line L?
-    Sk2f lT0 = l0; // l(T=0) = |0  0  0  1| dot |1  l2  l1  l0| = l0
+    Sk2f lT0 = l0;  // l(T=0) = |0  0  0  1| dot |1  l2  l1  l0| = l0
     Sk2f outsideT0 = lT0.abs() - pad;
 
     // Is l(T=1) outside the padding around line L?
-    Sk2f lT1 = (Sk2f(1) + l2 + l1 + l0).abs(); // l(T=1) = |1  1  1  1| dot |1  l2  l1  l0|
+    Sk2f lT1 = (Sk2f(1) + l2 + l1 + l0).abs();  // l(T=1) = |1  1  1  1| dot |1  l2  l1  l0|
     Sk2f outsideT1 = lT1.abs() - pad;
 
     // Values for solving the cubic.
@@ -401,7 +399,7 @@ static inline void find_chops_around_loop_intersection(float padRadius, Sk2f t2,
 
     // Solve for the T values where l(T) = +pad and m(T) = -pad.
     for (int i = 0; i < 2; ++i) {
-        float T = T2[i]; // T is the point we are chopping around.
+        float T = T2[i];  // T is the point we are chopping around.
         if ((T < 0 && outsideT0[i] >= 0) || (T > 1 && outsideT1[i] >= 0)) {
             // The padding around T is completely out of range. No point solving for it.
             continue;
@@ -409,9 +407,9 @@ static inline void find_chops_around_loop_intersection(float padRadius, Sk2f t2,
 
         if (!hasDiscr) {
             p = Sk2f(+.5f, -.5f) * pad;
-            q = (1.f/3) * (T2 - T1);
-            qqq = q*q*q;
-            discr = qqq*p*2 + p*p;
+            q = (1.f / 3) * (T2 - T1);
+            qqq = q * q * q;
+            discr = qqq * p * 2 + p * p;
             numRoots = (discr < 0).thenElse(3, 1);
             D = T2 - q;
             hasDiscr = true;
@@ -422,12 +420,12 @@ static inline void find_chops_around_loop_intersection(float padRadius, Sk2f t2,
                 Sk2f r = qqq + p;
                 Sk2f s = r.abs() + discr.sqrt();
                 R = (r > 0).thenElse(-s, s);
-                QQ = q*q;
+                QQ = q * q;
                 hasOneRootVals = true;
             }
 
             float A = cbrtf(R[i]);
-            float B = A != 0 ? QQ[i]/A : 0;
+            float B = A != 0 ? QQ[i] / A : 0;
             // When there is only one root, ine L chops from root..1, line M chops from 0..root.
             if (1 == i) {
                 chops->push_back(0);
@@ -446,9 +444,8 @@ static inline void find_chops_around_loop_intersection(float padRadius, Sk2f t2,
         }
 
         static constexpr float k2PiOver3 = 2 * SK_ScalarPI / 3;
-        float theta = std::acos(cosTheta3[i]) * (1.f/3);
-        float roots[3] = {P[i] * std::cos(theta) + D[i],
-                          P[i] * std::cos(theta + k2PiOver3) + D[i],
+        float theta = std::acos(cosTheta3[i]) * (1.f / 3);
+        float roots[3] = {P[i] * std::cos(theta) + D[i], P[i] * std::cos(theta + k2PiOver3) + D[i],
                           P[i] * std::cos(theta - k2PiOver3) + D[i]};
 
         // Sort the three roots.
@@ -469,15 +466,15 @@ void GrCCFillGeometry::cubicTo(const SkPoint P[4], float inflectPad, float loopI
     // Flat curves can break the math below.
     if (are_collinear(P)) {
         Sk2f p0 = Sk2f::Load(P);
-        Sk2f p3 = Sk2f::Load(P+3);
+        Sk2f p3 = Sk2f::Load(P + 3);
         this->appendLine(p0, p3);
         return;
     }
 
     Sk2f p0 = Sk2f::Load(P);
-    Sk2f p1 = Sk2f::Load(P+1);
-    Sk2f p2 = Sk2f::Load(P+2);
-    Sk2f p3 = Sk2f::Load(P+3);
+    Sk2f p1 = Sk2f::Load(P + 1);
+    Sk2f p2 = Sk2f::Load(P + 2);
+    Sk2f p3 = Sk2f::Load(P + 3);
 
     // Also detect near-quadratics ahead of time.
     Sk2f tan0, tan1, c;
@@ -493,14 +490,12 @@ void GrCCFillGeometry::cubicTo(const SkPoint P[4], float inflectPad, float loopI
     Sk2f t = Sk2f(static_cast<float>(tt[0]), static_cast<float>(tt[1]));
     Sk2f s = Sk2f(static_cast<float>(ss[0]), static_cast<float>(ss[1]));
 
-    ExcludedTerm skipTerm = (std::abs(D[2]) > std::abs(D[1]))
-                                    ? ExcludedTerm::kQuadraticTerm
-                                    : ExcludedTerm::kLinearTerm;
+    ExcludedTerm skipTerm = (std::abs(D[2]) > std::abs(D[1])) ? ExcludedTerm::kQuadraticTerm
+                                                              : ExcludedTerm::kLinearTerm;
     Sk2f C0 = SkNx_fma(Sk2f(3), p1 - p2, p3 - p0);
-    Sk2f C1 = (ExcludedTerm::kLinearTerm == skipTerm
-                       ? SkNx_fma(Sk2f(-2), p1, p0 + p2)
-                       : p1 - p0) * 3;
-    Sk2f C0x1 = C0 * SkNx_shuffle<1,0>(C1);
+    Sk2f C1 =
+            (ExcludedTerm::kLinearTerm == skipTerm ? SkNx_fma(Sk2f(-2), p1, p0 + p2) : p1 - p0) * 3;
+    Sk2f C0x1 = C0 * SkNx_shuffle<1, 0>(C1);
     float Cdet = C0x1[0] - C0x1[1];
 
     SkSTArray<4, float> chops;
@@ -514,8 +509,8 @@ void GrCCFillGeometry::cubicTo(const SkPoint P[4], float inflectPad, float loopI
         // approximate the entire middle section, but still have it chopped midway. For loops this
         // chop guarantees the append code only sees convex segments. Otherwise, it means we are (at
         // least almost) a cusp and the chop makes sure we get a sharp point.
-        Sk2f ts = t * SkNx_shuffle<1,0>(s);
-        chops[1] = chops[2] = (ts[0] + ts[1]) / (2*s[0]*s[1]);
+        Sk2f ts = t * SkNx_shuffle<1, 0>(s);
+        chops[1] = chops[2] = (ts[0] + ts[1]) / (2 * s[0] * s[1]);
     }
 
 #ifdef SK_DEBUG
@@ -542,7 +537,7 @@ void GrCCFillGeometry::appendCubics(AppendCubicMode mode, const Sk2f& p0, const 
                                     int numChops, float localT0, float localT1) {
     if (numChops) {
         SkASSERT(numChops > 0);
-        int midChopIdx = numChops/2;
+        int midChopIdx = numChops / 2;
         float T = chops[midChopIdx];
         // Chops alternate between literal and approximate mode.
         AppendCubicMode rightMode = (AppendCubicMode)((bool)mode ^ (midChopIdx & 1) ^ 1);
@@ -633,8 +628,8 @@ void GrCCFillGeometry::appendCubics(AppendCubicMode mode, const Sk2f& p0, const 
 //
 // This function finds the T value whose tangent angle is halfway between the tangents at T=0 and
 // T=1 (tan0 and tan1).
-static inline float find_midtangent(const Sk2f& tan0, const Sk2f& tan1,
-                                    const Sk2f& C2, const Sk2f& C1, const Sk2f& C0) {
+static inline float find_midtangent(const Sk2f& tan0, const Sk2f& tan1, const Sk2f& C2,
+                                    const Sk2f& C1, const Sk2f& C0) {
     // Tangents point in the direction of increasing T, so tan0 and -tan1 both point toward the
     // midtangent. 'n' will therefore bisect tan0 and -tan1, giving us the normal to the midtangent.
     //
@@ -653,19 +648,19 @@ static inline float find_midtangent(const Sk2f& tan0, const Sk2f& tan1,
     // First find coeffs = C*n.
     Sk4f C[2];
     Sk2f::Store4(C, C2, C1, C0, 0);
-    Sk4f coeffs = C[0]*n[0] + C[1]*n[1];
+    Sk4f coeffs = C[0] * n[0] + C[1] * n[1];
 
     // Now solve the quadratic.
     float a = coeffs[0], b = coeffs[1], c = coeffs[2];
-    float discr = b*b - 4*a*c;
+    float discr = b * b - 4 * a * c;
     if (discr < 0) {
-        return 0; // This will only happen if the curve is a line.
+        return 0;  // This will only happen if the curve is a line.
     }
 
     // The roots are q/a and c/q. Pick the one closer to T=.5.
     float q = -.5f * (b + copysignf(std::sqrt(discr), b));
-    float r = .5f*q*a;
-    return std::abs(q*q - r) < std::abs(a*c - r) ? q/a : c/q;
+    float r = .5f * q * a;
+    return std::abs(q * q - r) < std::abs(a * c - r) ? q / a : c / q;
 }
 
 inline void GrCCFillGeometry::chopAndAppendCubicAtMidTangent(AppendCubicMode mode, const Sk2f& p0,
@@ -673,9 +668,8 @@ inline void GrCCFillGeometry::chopAndAppendCubicAtMidTangent(AppendCubicMode mod
                                                              const Sk2f& p3, const Sk2f& tan0,
                                                              const Sk2f& tan1,
                                                              int maxFutureSubdivisions) {
-    float midT = find_midtangent(tan0, tan1, p3 + (p1 - p2)*3 - p0,
-                                             (p0 - p1*2 + p2)*2,
-                                             p1 - p0);
+    float midT =
+            find_midtangent(tan0, tan1, p3 + (p1 - p2) * 3 - p0, (p0 - p1 * 2 + p2) * 2, p1 - p0);
     // Use positive logic since NaN fails comparisons. (However midT should not be NaN since we cull
     // near-flat cubics in cubicTo().)
     if (!(midT > 0 && midT < 1)) {
@@ -694,8 +688,8 @@ void GrCCFillGeometry::conicTo(const SkPoint P[3], float w) {
     SkASSERT(fBuildingContour);
     SkASSERT(P[0] == fPoints.back());
     Sk2f p0 = Sk2f::Load(P);
-    Sk2f p1 = Sk2f::Load(P+1);
-    Sk2f p2 = Sk2f::Load(P+2);
+    Sk2f p1 = Sk2f::Load(P + 1);
+    Sk2f p2 = Sk2f::Load(P + 2);
 
     Sk2f tan0 = p1 - p0;
     Sk2f tan1 = p2 - p1;
@@ -706,9 +700,8 @@ void GrCCFillGeometry::conicTo(const SkPoint P[3], float w) {
         // tangent line. Since the denominator scales dx and dy uniformly, we can throw it out
         // completely after evaluating the derivative with the standard quotient rule. This leaves
         // us with a simpler quadratic function that we use to find the midtangent.
-        float midT = find_midtangent(tan0, tan1, (w - 1) * (p2 - p0),
-                                                 (p2 - p0) - 2*w*(p1 - p0),
-                                                 w*(p1 - p0));
+        float midT = find_midtangent(tan0, tan1, (w - 1) * (p2 - p0), (p2 - p0) - 2 * w * (p1 - p0),
+                                     w * (p1 - p0));
         // Use positive logic since NaN fails comparisons. (However midT should not be NaN since we
         // cull near-linear conics above. And while w=0 is flat, it's not a line and has valid
         // midtangents.)
@@ -748,25 +741,25 @@ void GrCCFillGeometry::appendMonotonicConic(const Sk2f& p0, const Sk2f& p1, cons
     float baseWidth = baseAbs[0] + baseAbs[1];
 
     // Find the height of the curve. Max height always occurs at T=.5 for conics.
-    Sk2f d = (p1 - p0) * SkNx_shuffle<1,0>(base);
-    float h1 = std::abs(d[1] - d[0]); // Height of p1 above the base.
-    float ht = h1*w, hs = 1 + w; // Height of the conic = ht/hs.
+    Sk2f d = (p1 - p0) * SkNx_shuffle<1, 0>(base);
+    float h1 = std::abs(d[1] - d[0]);  // Height of p1 above the base.
+    float ht = h1 * w, hs = 1 + w;     // Height of the conic = ht/hs.
 
     // i.e. (ht/hs <= baseWidth * kFlatnessThreshold). Use "<=" in case base == 0.
-    if (ht <= (baseWidth*hs) * kFlatnessThreshold) {
+    if (ht <= (baseWidth * hs) * kFlatnessThreshold) {
         // We are flat. (See rationale in are_collinear.)
         this->appendLine(p0, p2);
         return;
     }
 
     // i.e. (w > 1 && h1 - ht/hs < baseWidth).
-    if (w > 1 && h1*hs - ht < baseWidth*hs) {
+    if (w > 1 && h1 * hs - ht < baseWidth * hs) {
         // If we get within 1px of p1 when w > 1, we will pick up artifacts from the implicit
         // function's reflection. Chop at max height (T=.5) and draw a triangle instead.
-        Sk2f p1w = p1*w;
+        Sk2f p1w = p1 * w;
         Sk2f ab = p0 + p1w;
         Sk2f bc = p1w + p2;
-        Sk2f highpoint = (ab + bc) / (2*(1 + w));
+        Sk2f highpoint = (ab + bc) / (2 * (1 + w));
         this->appendLine(p0, highpoint);
         this->appendLine(highpoint, p2);
         return;

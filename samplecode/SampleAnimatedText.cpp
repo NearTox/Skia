@@ -5,20 +5,20 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkCanvas.h"
-#include "SkUTF.h"
-#include "SkColorPriv.h"
-#include "SkColorFilter.h"
-#include "SkImage.h"
-#include "SkRandom.h"
-#include "SkTime.h"
-#include "SkTypeface.h"
-#include "Timer.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkTime.h"
+#include "include/core/SkTypeface.h"
+#include "include/utils/SkRandom.h"
+#include "samplecode/Sample.h"
+#include "src/utils/SkUTF.h"
+#include "tools/timer/Timer.h"
 
 #if SK_SUPPORT_GPU
-#include "GrContext.h"
-#include "GrContextPriv.h"
+#include "include/gpu/GrContext.h"
+#include "src/gpu/GrContextPriv.h"
 #endif
 
 SkRandom gRand;
@@ -27,7 +27,7 @@ static void DrawTheText(SkCanvas* canvas, const char text[], size_t length, SkSc
                         const SkFont& font, const SkPaint& paint) {
     SkFont f(font);
     f.setSubpixel(true);
-    canvas->drawSimpleText(text, length, kUTF8_SkTextEncoding, x, y, f, paint);
+    canvas->drawSimpleText(text, length, SkTextEncoding::kUTF8, x, y, f, paint);
 }
 
 // This sample demonstrates the cache behavior of bitmap vs. distance field text
@@ -102,10 +102,9 @@ protected:
 #if SK_SUPPORT_GPU
         GrContext* grContext = canvas->getGrContext();
         if (grContext) {
-            sk_sp<SkImage> image = grContext->priv().testingOnly_getFontAtlasImage(
-                                                                GrMaskFormat::kA8_GrMaskFormat);
-            canvas->drawImageRect(image,
-                                  SkRect::MakeXYWH(512.0f, 10.0f, 512.0f, 512.0f), &paint);
+            sk_sp<SkImage> image =
+                    grContext->priv().testingOnly_getFontAtlasImage(GrMaskFormat::kA8_GrMaskFormat);
+            canvas->drawImageRect(image, SkRect::MakeXYWH(512.0f, 10.0f, 512.0f, 512.0f), &paint);
         }
 #endif
         canvas->translate(180, 180);
@@ -118,18 +117,18 @@ protected:
 
         SkScalar y = SkIntToScalar(0);
         for (int i = 12; i <= 26; i++) {
-            font.setSize(SkIntToScalar(i*fSizeScale));
+            font.setSize(SkIntToScalar(i * fSizeScale));
             y += font.getSpacing();
             DrawTheText(canvas, text, length, SkIntToScalar(110), y, font, paint);
         }
         canvas->restore();
 
         font.setSize(16);
-//        canvas->drawString(outString, 512.f, 540.f, paint);
+        //        canvas->drawString(outString, 512.f, 540.f, paint);
         canvas->drawString(modeString, 768.f, 540.f, font, paint);
     }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         // We add noise to the scale and rotation animations to
         // keep the font atlas from falling into a steady state
         fRotation += (1.0f + gRand.nextRangeF(-0.1f, 0.1f));
@@ -146,16 +145,15 @@ private:
     float fScale;
     float fScaleInc;
     float fRotation;
-    int   fSizeScale;
+    int fSizeScale;
 
-    WallTimer   fTimer;
-    float       fTimes[32];
-    int         fCurrentTime;
-
+    WallTimer fTimer;
+    float fTimes[32];
+    int fCurrentTime;
 
     typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new AnimatedTextView(); )
+DEF_SAMPLE(return new AnimatedTextView();)

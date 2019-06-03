@@ -5,14 +5,23 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "GrContext.h"
-#include "SkCanvas.h"
-#include "SkPath.h"
-#include "SkPictureRecorder.h"
-#include "SkTableColorFilter.h"
-#include "SkColorFilterImageFilter.h"
-#include "SkPictureImageFilter.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPicture.h"
+#include "include/core/SkPictureRecorder.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkColorFilterImageFilter.h"
+#include "include/effects/SkPictureImageFilter.h"
+#include "include/effects/SkTableColorFilter.h"
+#include "include/gpu/GrContext.h"
 
 constexpr int kTestRectSize = 50;
 constexpr int kDetectorGreenValue = 50;
@@ -24,10 +33,18 @@ constexpr int kDetectorGreenValue = 50;
 // pipeline, that pixel will remain empty.
 
 static sk_sp<SkColorFilter> make_detector_color_filter() {
-    uint8_t tableA[256] = { 0, };
-    uint8_t tableR[256] = { 0, };
-    uint8_t tableG[256] = { 0, };
-    uint8_t tableB[256] = { 0, };
+    uint8_t tableA[256] = {
+            0,
+    };
+    uint8_t tableR[256] = {
+            0,
+    };
+    uint8_t tableG[256] = {
+            0,
+    };
+    uint8_t tableB[256] = {
+            0,
+    };
     tableA[255] = 255;
     tableG[kDetectorGreenValue] = 255;
     return SkTableColorFilter::MakeARGB(tableA, tableR, tableG, tableB);
@@ -44,11 +61,9 @@ static void install_detector_image_filter(SkPaint* drawPaint) {
                                                              drawPaint->refImageFilter()));
 }
 
-static void no_detector_install(SkPaint*) {
-}
+static void no_detector_install(SkPaint*) {}
 
-typedef void(*InstallDetectorFunc)(SkPaint*);
-
+typedef void (*InstallDetectorFunc)(SkPaint*);
 
 // Draws an pattern that can be optimized by alpha folding outer savelayer alpha value to
 // inner draw. Since we know that folding will happen to the inner draw, install a detector
@@ -59,10 +74,10 @@ static void draw_save_layer_draw_rect_restore_sequence(SkCanvas* canvas, SkColor
     SkPaint layerPaint;
     layerPaint.setColor(SkColorSetARGB(128, 0, 0, 0));
     canvas->saveLayer(&targetRect, &layerPaint);
-        SkPaint drawPaint;
-        drawPaint.setColor(shapeColor);
-        installDetector(&drawPaint);
-        canvas->drawRect(targetRect, drawPaint);
+    SkPaint drawPaint;
+    drawPaint.setColor(shapeColor);
+    installDetector(&drawPaint);
+    canvas->drawRect(targetRect, drawPaint);
     canvas->restore();
 }
 
@@ -86,9 +101,9 @@ static void draw_save_layer_draw_bitmap_restore_sequence(SkCanvas* canvas, SkCol
     SkPaint layerPaint;
     layerPaint.setColor(SkColorSetARGB(129, 0, 0, 0));
     canvas->saveLayer(&targetRect, &layerPaint);
-        SkPaint drawPaint;
-        installDetector(&drawPaint);
-        canvas->drawBitmap(bitmap, SkIntToScalar(0), SkIntToScalar(0), &drawPaint);
+    SkPaint drawPaint;
+    installDetector(&drawPaint);
+    canvas->drawBitmap(bitmap, SkIntToScalar(0), SkIntToScalar(0), &drawPaint);
     canvas->restore();
 }
 
@@ -96,7 +111,6 @@ static void draw_save_layer_draw_bitmap_restore_sequence(SkCanvas* canvas, SkCol
 // inner savelayer. We know that alpha folding happens to inner savelayer, so add detector there.
 static void draw_svg_opacity_and_filter_layer_sequence(SkCanvas* canvas, SkColor shapeColor,
                                                        InstallDetectorFunc installDetector) {
-
     SkRect targetRect(SkRect::MakeWH(SkIntToScalar(kTestRectSize), SkIntToScalar(kTestRectSize)));
     sk_sp<SkPicture> shape;
     {
@@ -112,14 +126,14 @@ static void draw_svg_opacity_and_filter_layer_sequence(SkCanvas* canvas, SkColor
     SkPaint layerPaint;
     layerPaint.setColor(SkColorSetARGB(130, 0, 0, 0));
     canvas->saveLayer(&targetRect, &layerPaint);
-        canvas->save();
-            canvas->clipRect(targetRect);
-            SkPaint drawPaint;
-            drawPaint.setImageFilter(SkPictureImageFilter::Make(shape));
-            installDetector(&drawPaint);
-            canvas->saveLayer(&targetRect, &drawPaint);
-            canvas->restore();
-        canvas->restore();
+    canvas->save();
+    canvas->clipRect(targetRect);
+    SkPaint drawPaint;
+    drawPaint.setImageFilter(SkPictureImageFilter::Make(shape));
+    installDetector(&drawPaint);
+    canvas->saveLayer(&targetRect, &drawPaint);
+    canvas->restore();
+    canvas->restore();
     canvas->restore();
 }
 
@@ -129,15 +143,15 @@ static void draw_svg_opacity_and_filter_layer_sequence(SkCanvas* canvas, SkColor
 //  - Next 6 rows are green, with a grey dent in the middle row
 //    (the grey dent is from the color filter removing everything but the "good" green, see below)
 //  - Last 6 rows are grey
-DEF_SIMPLE_GM(recordopts, canvas, (kTestRectSize+1)*2, (kTestRectSize+1)*15) {
+DEF_SIMPLE_GM(recordopts, canvas, (kTestRectSize + 1) * 2, (kTestRectSize + 1) * 15) {
     GrContext* context = canvas->getGrContext();
     canvas->clear(SK_ColorTRANSPARENT);
 
     typedef void (*TestVariantSequence)(SkCanvas*, SkColor, InstallDetectorFunc);
     TestVariantSequence funcs[] = {
-        draw_save_layer_draw_rect_restore_sequence,
-        draw_save_layer_draw_bitmap_restore_sequence,
-        draw_svg_opacity_and_filter_layer_sequence,
+            draw_save_layer_draw_rect_restore_sequence,
+            draw_save_layer_draw_bitmap_restore_sequence,
+            draw_svg_opacity_and_filter_layer_sequence,
     };
 
     // Draw layer-related sequences that can be optimized by folding the opacity layer alpha to
@@ -181,14 +195,12 @@ DEF_SIMPLE_GM(recordopts, canvas, (kTestRectSize+1)*2, (kTestRectSize+1)*15) {
     // At the end, draws the same patterns in translucent black. This tests that the detectors
     // work, eg. that if the value the detector sees is wrong, the resulting image shows this.
     SkColor shapeColors[] = {
-        SkColorSetARGB(255, 0, kDetectorGreenValue, 0),
-        SkColorSetARGB(255, 0, (kDetectorGreenValue + 1), 0) // This tests that detectors work.
+            SkColorSetARGB(255, 0, kDetectorGreenValue, 0),
+            SkColorSetARGB(255, 0, (kDetectorGreenValue + 1), 0)  // This tests that detectors work.
     };
 
-    InstallDetectorFunc detectorInstallFuncs[] = {
-        install_detector_image_filter,
-        install_detector_color_filter
-    };
+    InstallDetectorFunc detectorInstallFuncs[] = {install_detector_image_filter,
+                                                  install_detector_color_filter};
 
     for (size_t i = 0; i < SK_ARRAY_COUNT(shapeColors); ++i) {
         shapeColor = shapeColors[i];
@@ -201,7 +213,8 @@ DEF_SIMPLE_GM(recordopts, canvas, (kTestRectSize+1)*2, (kTestRectSize+1)*15) {
                 if (context) {
                     context->flush();
                 }
-                canvas->translate(SkIntToScalar(kTestRectSize) + SkIntToScalar(1), SkIntToScalar(0));
+                canvas->translate(SkIntToScalar(kTestRectSize) + SkIntToScalar(1),
+                                  SkIntToScalar(0));
                 {
                     SkPictureRecorder recorder;
                     drawTestSequence(recorder.beginRecording(SkIntToScalar(kTestRectSize),
@@ -214,9 +227,9 @@ DEF_SIMPLE_GM(recordopts, canvas, (kTestRectSize+1)*2, (kTestRectSize+1)*15) {
                 }
 
                 canvas->restore();
-                canvas->translate(SkIntToScalar(0), SkIntToScalar(kTestRectSize) + SkIntToScalar(1));
+                canvas->translate(SkIntToScalar(0),
+                                  SkIntToScalar(kTestRectSize) + SkIntToScalar(1));
             }
-
         }
     }
 }

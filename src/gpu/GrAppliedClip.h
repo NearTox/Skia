@@ -8,12 +8,11 @@
 #ifndef GrAppliedClip_DEFINED
 #define GrAppliedClip_DEFINED
 
-#include "GrFragmentProcessor.h"
-#include "GrScissorState.h"
-#include "GrWindowRectsState.h"
+#include "src/gpu/GrFragmentProcessor.h"
+#include "src/gpu/GrScissorState.h"
+#include "src/gpu/GrWindowRectsState.h"
 
-#include "SkClipStack.h"
-
+#include "src/core/SkClipStack.h"
 
 /**
  * Produced by GrHardClip. It provides a set of modifications to the hardware drawing state that
@@ -25,10 +24,10 @@ public:
     GrAppliedHardClip(GrAppliedHardClip&& that) = default;
     GrAppliedHardClip(const GrAppliedHardClip&) = delete;
 
-    const GrScissorState& scissorState() const { return fScissorState; }
-    const GrWindowRectsState& windowRectsState() const { return fWindowRectsState; }
-    uint32_t stencilStackID() const { return fStencilStackID; }
-    bool hasStencilClip() const { return SkClipStack::kInvalidGenID != fStencilStackID; }
+    const GrScissorState& scissorState() const noexcept { return fScissorState; }
+    const GrWindowRectsState& windowRectsState() const noexcept { return fWindowRectsState; }
+    uint32_t stencilStackID() const noexcept { return fStencilStackID; }
+    bool hasStencilClip() const noexcept { return SkClipStack::kInvalidGenID != fStencilStackID; }
 
     /**
      * Intersects the applied clip with the provided rect. Returns false if the draw became empty.
@@ -49,7 +48,7 @@ public:
         fWindowRectsState.set(windows, mode);
     }
 
-    void addStencilClip(uint32_t stencilStackID) {
+    void addStencilClip(uint32_t stencilStackID) noexcept {
         SkASSERT(SkClipStack::kInvalidGenID == fStencilStackID);
         fStencilStackID = stencilStackID;
     }
@@ -59,16 +58,15 @@ public:
     }
 
     bool operator==(const GrAppliedHardClip& that) const {
-        return fScissorState == that.fScissorState &&
-               fWindowRectsState == that.fWindowRectsState &&
+        return fScissorState == that.fScissorState && fWindowRectsState == that.fWindowRectsState &&
                fStencilStackID == that.fStencilStackID;
     }
     bool operator!=(const GrAppliedHardClip& that) const { return !(*this == that); }
 
 private:
-    GrScissorState             fScissorState;
-    GrWindowRectsState         fWindowRectsState;
-    uint32_t                   fStencilStackID = SkClipStack::kInvalidGenID;
+    GrScissorState fScissorState;
+    GrWindowRectsState fWindowRectsState;
+    uint32_t fStencilStackID = SkClipStack::kInvalidGenID;
 };
 
 /**
@@ -84,26 +82,24 @@ public:
     const GrWindowRectsState& windowRectsState() const { return fHardClip.windowRectsState(); }
     uint32_t stencilStackID() const { return fHardClip.stencilStackID(); }
     bool hasStencilClip() const { return fHardClip.hasStencilClip(); }
-    int numClipCoverageFragmentProcessors() const { return fClipCoverageFPs.count(); }
-    const GrFragmentProcessor* clipCoverageFragmentProcessor(int i) const {
+    int numClipCoverageFragmentProcessors() const noexcept { return fClipCoverageFPs.count(); }
+    const GrFragmentProcessor* clipCoverageFragmentProcessor(int i) const noexcept {
         SkASSERT(fClipCoverageFPs[i]);
         return fClipCoverageFPs[i].get();
     }
-    std::unique_ptr<const GrFragmentProcessor> detachClipCoverageFragmentProcessor(int i) {
+    std::unique_ptr<const GrFragmentProcessor> detachClipCoverageFragmentProcessor(int i) noexcept {
         SkASSERT(fClipCoverageFPs[i]);
         return std::move(fClipCoverageFPs[i]);
     }
 
-    GrAppliedHardClip& hardClip() { return fHardClip; }
+    GrAppliedHardClip& hardClip() noexcept { return fHardClip; }
 
-    void addCoverageFP(std::unique_ptr<GrFragmentProcessor> fp) {
+    void addCoverageFP(std::unique_ptr<GrFragmentProcessor> fp) noexcept {
         SkASSERT(fp);
         fClipCoverageFPs.push_back(std::move(fp));
     }
 
-    bool doesClip() const {
-        return fHardClip.doesClip() || !fClipCoverageFPs.empty();
-    }
+    bool doesClip() const { return fHardClip.doesClip() || !fClipCoverageFPs.empty(); }
 
     bool operator==(const GrAppliedClip& that) const {
         if (fHardClip != that.fHardClip ||
@@ -113,7 +109,7 @@ public:
         for (int i = 0; i < fClipCoverageFPs.count(); ++i) {
             if (!fClipCoverageFPs[i] || !that.fClipCoverageFPs[i]) {
                 if (fClipCoverageFPs[i] == that.fClipCoverageFPs[i]) {
-                    continue; // Both are null.
+                    continue;  // Both are null.
                 }
                 return false;
             }
@@ -127,7 +123,7 @@ public:
 
     void visitProxies(const std::function<void(GrSurfaceProxy*)>& func) const {
         for (const std::unique_ptr<GrFragmentProcessor>& fp : fClipCoverageFPs) {
-            if (fp) { // This might be called after detach.
+            if (fp) {  // This might be called after detach.
                 fp->visitProxies(func);
             }
         }

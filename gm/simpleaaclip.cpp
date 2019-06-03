@@ -5,16 +5,29 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkAAClip.h"
-#include "SkCanvas.h"
-#include "SkPath.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkClipOp.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRegion.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "src/core/SkAAClip.h"
+#include "src/core/SkClipOpPriv.h"
+#include "src/core/SkMask.h"
+#include "tools/ToolUtils.h"
 
 namespace skiagm {
 
-static void paint_rgn(SkCanvas* canvas, const SkAAClip& clip,
-                      const SkPaint& paint) {
+static void paint_rgn(SkCanvas* canvas, const SkAAClip& clip, const SkPaint& paint) {
     SkMask mask;
     SkBitmap bm;
 
@@ -27,11 +40,9 @@ static void paint_rgn(SkCanvas* canvas, const SkAAClip& clip,
     // need to copy for deferred drawing test to work
     SkBitmap bm2;
 
-    sk_tool_utils::copy_to(&bm2, bm.colorType(), bm);
+    ToolUtils::copy_to(&bm2, bm.colorType(), bm);
 
-    canvas->drawBitmap(bm2,
-                       SK_Scalar1 * mask.fBounds.fLeft,
-                       SK_Scalar1 * mask.fBounds.fTop,
+    canvas->drawBitmap(bm2, SK_Scalar1 * mask.fBounds.fLeft, SK_Scalar1 * mask.fBounds.fTop,
                        &paint);
 }
 
@@ -42,23 +53,14 @@ static void paint_rgn(SkCanvas* canvas, const SkAAClip& clip,
  */
 class SimpleClipGM : public GM {
 public:
-    enum SkGeomTypes {
-        kRect_GeomType,
-        kPath_GeomType,
-        kAAClip_GeomType
-    };
+    enum SkGeomTypes { kRect_GeomType, kPath_GeomType, kAAClip_GeomType };
 
-    SimpleClipGM(SkGeomTypes geomType)
-    : fGeomType(geomType) {
-    }
+    SimpleClipGM(SkGeomTypes geomType) : fGeomType(geomType) {}
 
 protected:
     void onOnceBeforeDraw() override {
         // offset the rects a bit so we get anti-aliasing in the rect case
-        fBase.set(100.65f,
-                  100.65f,
-                  150.65f,
-                  150.65f);
+        fBase.set(100.65f, 100.65f, 150.65f, 150.65f);
         fRect = fBase;
         fRect.inset(5, 5);
         fRect.offset(25, 25);
@@ -77,7 +79,7 @@ protected:
     }
 
     void drawOrig(SkCanvas* canvas) {
-        SkPaint     paint;
+        SkPaint paint;
 
         paint.setStyle(SkPaint::kStroke_Style);
         paint.setColor(SK_ColorBLACK);
@@ -87,7 +89,6 @@ protected:
     }
 
     void drawRgnOped(SkCanvas* canvas, SkClipOp op, SkColor color) {
-
         SkAAClip clip;
 
         this->buildRgn(&clip, op);
@@ -99,7 +100,6 @@ protected:
     }
 
     void drawPathsOped(SkCanvas* canvas, SkClipOp op, SkColor color) {
-
         this->drawOrig(canvas);
 
         canvas->save();
@@ -119,8 +119,8 @@ protected:
         SkPaint paint;
         paint.setColor(color);
 
-        SkRect r = SkRect::MakeLTRB(SkIntToScalar(90),  SkIntToScalar(90),
-                                    SkIntToScalar(180), SkIntToScalar(180));
+        SkRect r = SkRect::MakeLTRB(SkIntToScalar(90), SkIntToScalar(90), SkIntToScalar(180),
+                                    SkIntToScalar(180));
 
         canvas->drawRect(r, paint);
 
@@ -130,33 +130,29 @@ protected:
     SkString onShortName() override {
         SkString str;
         str.printf("simpleaaclip_%s",
-                    kRect_GeomType == fGeomType ? "rect" :
-                    (kPath_GeomType == fGeomType ? "path" :
-                    "aaclip"));
+                   kRect_GeomType == fGeomType ? "rect"
+                                               : (kPath_GeomType == fGeomType ? "path" : "aaclip"));
         return str;
     }
 
-    SkISize onISize() override {
-        return SkISize::Make(640, 480);
-    }
+    SkISize onISize() override { return SkISize::Make(640, 480); }
 
     void onDraw(SkCanvas* canvas) override {
-
         const struct {
-            SkColor         fColor;
-            const char*     fName;
-            SkClipOp        fOp;
+            SkColor fColor;
+            const char* fName;
+            SkClipOp fOp;
         } gOps[] = {
-            { SK_ColorBLACK,    "Difference", kDifference_SkClipOp    },
-            { SK_ColorRED,      "Intersect",  kIntersect_SkClipOp     },
-            { sk_tool_utils::color_to_565(0xFF008800), "Union", kUnion_SkClipOp },
-            { SK_ColorGREEN,    "Rev Diff",   kReverseDifference_SkClipOp },
-            { SK_ColorYELLOW,   "Replace",    kReplace_SkClipOp       },
-            { SK_ColorBLUE,     "XOR",        kXOR_SkClipOp           },
+                {SK_ColorBLACK, "Difference", kDifference_SkClipOp},
+                {SK_ColorRED, "Intersect", kIntersect_SkClipOp},
+                {ToolUtils::color_to_565(0xFF008800), "Union", kUnion_SkClipOp},
+                {SK_ColorGREEN, "Rev Diff", kReverseDifference_SkClipOp},
+                {SK_ColorYELLOW, "Replace", kReplace_SkClipOp},
+                {SK_ColorBLUE, "XOR", kXOR_SkClipOp},
         };
 
         SkPaint textPaint;
-        SkFont font(sk_tool_utils::create_portable_typeface(), 24);
+        SkFont font(ToolUtils::create_portable_typeface(), 24);
         int xOff = 0;
 
         for (size_t op = 0; op < SK_ARRAY_COUNT(gOps); op++) {
@@ -177,15 +173,15 @@ protected:
             }
         }
     }
-private:
 
+private:
     SkGeomTypes fGeomType;
 
     SkRect fBase;
     SkRect fRect;
 
-    SkPath fBasePath;       // fBase as a round rect
-    SkPath fRectPath;       // fRect as a round rect
+    SkPath fBasePath;  // fBase as a round rect
+    SkPath fRectPath;  // fRect as a round rect
 
     typedef GM INHERITED;
 };
@@ -193,8 +189,8 @@ private:
 //////////////////////////////////////////////////////////////////////////////
 
 // rects
-DEF_GM( return new SimpleClipGM(SimpleClipGM::kRect_GeomType); )
-DEF_GM( return new SimpleClipGM(SimpleClipGM::kPath_GeomType); )
-DEF_GM( return new SimpleClipGM(SimpleClipGM::kAAClip_GeomType); )
+DEF_GM(return new SimpleClipGM(SimpleClipGM::kRect_GeomType);)
+DEF_GM(return new SimpleClipGM(SimpleClipGM::kPath_GeomType);)
+DEF_GM(return new SimpleClipGM(SimpleClipGM::kAAClip_GeomType);)
 
-}
+}  // namespace skiagm

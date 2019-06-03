@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "SkArenaAlloc.h"
-#include "SkDrawLooper.h"
-#include "SkCanvas.h"
-#include "SkMatrix.h"
-#include "SkPaint.h"
-#include "SkRect.h"
+#include "include/core/SkDrawLooper.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/private/SkArenaAlloc.h"
 
 bool SkDrawLooper::canComputeFastBounds(const SkPaint& paint) const {
     SkCanvas canvas;
@@ -31,15 +31,14 @@ bool SkDrawLooper::canComputeFastBounds(const SkPaint& paint) const {
     return true;
 }
 
-void SkDrawLooper::computeFastBounds(const SkPaint& paint, const SkRect& s,
-                                     SkRect* dst) const {
+void SkDrawLooper::computeFastBounds(const SkPaint& paint, const SkRect& s, SkRect* dst) const {
     // src and dst rects may alias and we need to keep the original src, so copy it.
     const SkRect src = s;
 
     SkCanvas canvas;
     SkSTArenaAlloc<48> alloc;
 
-    *dst = src;   // catch case where there are no loops
+    *dst = src;  // catch case where there are no loops
     SkDrawLooper::Context* context = this->makeContext(&canvas, &alloc);
 
     for (bool firstTime = true;; firstTime = false) {
@@ -62,6 +61,4 @@ void SkDrawLooper::computeFastBounds(const SkPaint& paint, const SkRect& s,
     }
 }
 
-bool SkDrawLooper::asABlurShadow(BlurShadowRec*) const {
-    return false;
-}
+bool SkDrawLooper::asABlurShadow(BlurShadowRec*) const { return false; }

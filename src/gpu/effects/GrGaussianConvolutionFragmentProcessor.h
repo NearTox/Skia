@@ -8,9 +8,9 @@
 #ifndef GrGaussianConvolutionFragmentProcessor_DEFINED
 #define GrGaussianConvolutionFragmentProcessor_DEFINED
 
-#include "GrCoordTransform.h"
-#include "GrFragmentProcessor.h"
-#include "GrTextureDomain.h"
+#include "src/gpu/GrCoordTransform.h"
+#include "src/gpu/GrFragmentProcessor.h"
+#include "src/gpu/effects/GrTextureDomain.h"
 
 /**
  * A 1D Gaussian convolution effect. The kernel is computed as an array of 2 * half-width weights.
@@ -47,10 +47,8 @@ public:
 #ifdef SK_DEBUG
     SkString dumpInfo() const override {
         SkString str;
-        str.appendf("dir: %s radius: %d bounds: [%d %d]",
-                    Direction::kX == fDirection ? "X" : "Y",
-                    fRadius,
-                    fBounds[0], fBounds[1]);
+        str.appendf("dir: %s radius: %d bounds: [%d %d]", Direction::kX == fDirection ? "X" : "Y",
+                    fRadius, fBounds[0], fBounds[1]);
         return str;
     }
 #endif
@@ -71,9 +69,9 @@ public:
 
 private:
     /// Convolve with a Gaussian kernel
-    GrGaussianConvolutionFragmentProcessor(sk_sp<GrTextureProxy>, Direction,
-                                           int halfWidth, float gaussianSigma,
-                                           GrTextureDomain::Mode mode, int bounds[2]);
+    GrGaussianConvolutionFragmentProcessor(sk_sp<GrTextureProxy>, Direction, int halfWidth,
+                                           float gaussianSigma, GrTextureDomain::Mode mode,
+                                           int bounds[2]);
 
     explicit GrGaussianConvolutionFragmentProcessor(const GrGaussianConvolutionFragmentProcessor&);
 
@@ -87,14 +85,14 @@ private:
 
     GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 
-    GrCoordTransform      fCoordTransform;
-    TextureSampler        fTextureSampler;
+    GrCoordTransform fCoordTransform;
+    TextureSampler fTextureSampler;
     // TODO: Inline the kernel constants into the generated shader code. This may involve pulling
     // some of the logic from SkGpuBlurUtils into this class related to radius/sigma calculations.
-    float                 fKernel[kMaxKernelWidth];
-    int                   fBounds[2];
-    int                   fRadius;
-    Direction             fDirection;
+    float fKernel[kMaxKernelWidth];
+    int fBounds[2];
+    int fRadius;
+    Direction fDirection;
     GrTextureDomain::Mode fMode;
 
     typedef GrFragmentProcessor INHERITED;

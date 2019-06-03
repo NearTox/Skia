@@ -8,22 +8,22 @@
 #ifndef GrMtlGpuCommandBuffer_DEFINED
 #define GrMtlGpuCommandBuffer_DEFINED
 
-#include "GrGpuCommandBuffer.h"
-#include "GrMtlGpu.h"
-#include "GrMesh.h"
+#include "src/gpu/GrGpuCommandBuffer.h"
+#include "src/gpu/GrMesh.h"
+#include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/mtl/GrMtlGpu.h"
 
 #import <metal/metal.h>
 
 typedef uint32_t GrColor;
+class GrMtlBuffer;
 class GrMtlPipelineState;
 class GrMtlRenderTarget;
 
 class GrMtlGpuTextureCommandBuffer : public GrGpuTextureCommandBuffer {
 public:
     GrMtlGpuTextureCommandBuffer(GrMtlGpu* gpu, GrTexture* texture, GrSurfaceOrigin origin)
-            : INHERITED(texture, origin)
-            , fGpu(gpu) {
-    }
+            : INHERITED(texture, origin), fGpu(gpu) {}
 
     ~GrMtlGpuTextureCommandBuffer() override {}
 
@@ -31,7 +31,11 @@ public:
               const SkIPoint& dstPoint) override {
         fGpu->copySurface(fTexture, fOrigin, src, srcOrigin, srcRect, dstPoint);
     }
-
+    void transferFrom(const SkIRect& srcRect, GrColorType bufferColorType,
+                      GrGpuBuffer* transferBuffer, size_t offset) override {
+        fGpu->transferPixelsFrom(fTexture, srcRect.fLeft, srcRect.fTop, srcRect.width(),
+                                 srcRect.height(), bufferColorType, transferBuffer, offset);
+    }
     void insertEventMarker(const char* msg) override {}
 
 private:
@@ -56,8 +60,12 @@ public:
 
     void insertEventMarker(const char* msg) override {}
 
-    void inlineUpload(GrOpFlushState* state, GrDeferredTextureUploadFn& upload) override {}
-
+    void inlineUpload(GrOpFlushState* state, GrDeferredTextureUploadFn& upload) override {
+        // TODO: this could be more efficient
+        state->doUpload(upload);
+    }
+    void transferFrom(const SkIRect& srcRect, GrColorType bufferColorType,
+                      GrGpuBuffer* transferBuffer, size_t offset) override;
     void copy(GrSurface* src, GrSurfaceOrigin srcOrigin, const SkIRect& srcRect,
               const SkIPoint& dstPoint) override;
 
@@ -68,11 +76,10 @@ private:
 
     GrGpu* gpu() override { return fGpu; }
 
-    GrMtlPipelineState* prepareDrawState(
-            const GrPrimitiveProcessor& primProc,
-            const GrPipeline& pipeline,
-            const GrPipeline::FixedDynamicState* fixedDynamicState,
-            GrPrimitiveType primType);
+    GrMtlPipelineState* prepareDrawState(const GrPrimitiveProcessor& primProc,
+                                         const GrPipeline& pipeline,
+                                         const GrPipeline::FixedDynamicState* fixedDynamicState,
+                                         GrPrimitiveType primType);
 
     void onDraw(const GrPrimitiveProcessor& primProc,
                 const GrPipeline& pipeline,
@@ -117,15 +124,18 @@ private:
                                        const GrBuffer* instanceBuffer, int instanceCount,
                                        int baseInstance, GrPrimitiveRestart) final;
 
-    GrMtlGpu*                                     fGpu;
+    void setVertexBuffer(id<MTLRenderCommandEncoder>, const GrMtlBuffer*, size_t index);
+    void resetBufferBindings();
+
+    GrMtlGpu* fGpu;
     // GrRenderTargetProxy bounds
 #ifdef SK_DEBUG
-    SkRect                                        fBounds;
+    SkRect fBounds;
 #endif
-    GrGpuRTCommandBuffer::LoadAndStoreInfo        fColorLoadAndStoreInfo;
+    GrGpuRTCommandBuffer::LoadAndStoreInfo fColorLoadAndStoreInfo;
     GrGpuRTCommandBuffer::StencilLoadAndStoreInfo fStencilLoadAndStoreInfo;
 
-    __strong id<MTLRenderCommandEncoder> fActiveRenderCmdEncoder;
+    id<MTLRenderCommandEncoder> fActiveRenderCmdEncoder;
     MTLRenderPassDescriptor* fRenderPassDesc;
 
     struct CommandBufferInfo {
@@ -134,8 +144,10 @@ private:
 
     CommandBufferInfo fCommandBufferInfo;
 
+    static constexpr size_t kNumBindings = GrMtlUniformHandler::kLastUniformBinding + 3;
+    id<MTLBuffer> fBufferBindings[kNumBindings];
+
     typedef GrGpuRTCommandBuffer INHERITED;
 };
 
 #endif
-

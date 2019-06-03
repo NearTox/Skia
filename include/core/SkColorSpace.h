@@ -8,12 +8,12 @@
 #ifndef SkColorSpace_DEFINED
 #define SkColorSpace_DEFINED
 
-#include "../private/SkFixed.h"
-#include "../private/SkOnce.h"
-#include "../../third_party/skcms/skcms.h"
-#include "SkMatrix44.h"
-#include "SkRefCnt.h"
 #include <memory>
+#include "include/core/SkMatrix44.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/SkFixed.h"
+#include "include/private/SkOnce.h"
+#include "include/third_party/skcms/skcms.h"
 
 class SkData;
 
@@ -40,58 +40,57 @@ struct SK_API SkColorSpacePrimaries {
 namespace SkNamedTransferFn {
 
 // Like SkNamedGamut::kSRGB, keeping this bitwise exactly the same as skcms makes things fastest.
-static constexpr skcms_TransferFunction kSRGB =
-    { 2.4f, (float)(1/1.055), (float)(0.055/1.055), (float)(1/12.92), 0.04045f, 0.0f, 0.0f };
+static constexpr skcms_TransferFunction kSRGB = {
+        2.4f, (float)(1 / 1.055), (float)(0.055 / 1.055), (float)(1 / 12.92), 0.04045f, 0.0f, 0.0f};
 
-static constexpr skcms_TransferFunction k2Dot2 =
-    { 2.2f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+static constexpr skcms_TransferFunction k2Dot2 = {2.2f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 
-static constexpr skcms_TransferFunction kLinear =
-    { 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+static constexpr skcms_TransferFunction kLinear = {1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 
-}
+}  // namespace SkNamedTransferFn
 
 namespace SkNamedGamut {
 
 static constexpr skcms_Matrix3x3 kSRGB = {{
-    // ICC fixed-point (16.16) representation, taken from skcms. Please keep them exactly in sync.
-    // 0.436065674f, 0.385147095f, 0.143066406f,
-    // 0.222488403f, 0.716873169f, 0.060607910f,
-    // 0.013916016f, 0.097076416f, 0.714096069f,
-    { SkFixedToFloat(0x6FA2), SkFixedToFloat(0x6299), SkFixedToFloat(0x24A0) },
-    { SkFixedToFloat(0x38F5), SkFixedToFloat(0xB785), SkFixedToFloat(0x0F84) },
-    { SkFixedToFloat(0x0390), SkFixedToFloat(0x18DA), SkFixedToFloat(0xB6CF) },
+        // ICC fixed-point (16.16) representation, taken from skcms. Please keep them exactly in
+        // sync.
+        // 0.436065674f, 0.385147095f, 0.143066406f,
+        // 0.222488403f, 0.716873169f, 0.060607910f,
+        // 0.013916016f, 0.097076416f, 0.714096069f,
+        {SkFixedToFloat(0x6FA2), SkFixedToFloat(0x6299), SkFixedToFloat(0x24A0)},
+        {SkFixedToFloat(0x38F5), SkFixedToFloat(0xB785), SkFixedToFloat(0x0F84)},
+        {SkFixedToFloat(0x0390), SkFixedToFloat(0x18DA), SkFixedToFloat(0xB6CF)},
 }};
 
 static constexpr skcms_Matrix3x3 kAdobeRGB = {{
-    // ICC fixed-point (16.16) repesentation of:
-    // 0.60974, 0.20528, 0.14919,
-    // 0.31111, 0.62567, 0.06322,
-    // 0.01947, 0.06087, 0.74457,
-    { SkFixedToFloat(0x9c18), SkFixedToFloat(0x348d), SkFixedToFloat(0x2631) },
-    { SkFixedToFloat(0x4fa5), SkFixedToFloat(0xa02c), SkFixedToFloat(0x102f) },
-    { SkFixedToFloat(0x04fc), SkFixedToFloat(0x0f95), SkFixedToFloat(0xbe9c) },
+        // ICC fixed-point (16.16) repesentation of:
+        // 0.60974, 0.20528, 0.14919,
+        // 0.31111, 0.62567, 0.06322,
+        // 0.01947, 0.06087, 0.74457,
+        {SkFixedToFloat(0x9c18), SkFixedToFloat(0x348d), SkFixedToFloat(0x2631)},
+        {SkFixedToFloat(0x4fa5), SkFixedToFloat(0xa02c), SkFixedToFloat(0x102f)},
+        {SkFixedToFloat(0x04fc), SkFixedToFloat(0x0f95), SkFixedToFloat(0xbe9c)},
 }};
 
 static constexpr skcms_Matrix3x3 kDCIP3 = {{
-    {  0.515102f,   0.291965f,  0.157153f  },
-    {  0.241182f,   0.692236f,  0.0665819f },
-    { -0.00104941f, 0.0418818f, 0.784378f  },
+        {0.515102f, 0.291965f, 0.157153f},
+        {0.241182f, 0.692236f, 0.0665819f},
+        {-0.00104941f, 0.0418818f, 0.784378f},
 }};
 
 static constexpr skcms_Matrix3x3 kRec2020 = {{
-    {  0.673459f,   0.165661f,  0.125100f  },
-    {  0.279033f,   0.675338f,  0.0456288f },
-    { -0.00193139f, 0.0299794f, 0.797162f  },
+        {0.673459f, 0.165661f, 0.125100f},
+        {0.279033f, 0.675338f, 0.0456288f},
+        {-0.00193139f, 0.0299794f, 0.797162f},
 }};
 
 static constexpr skcms_Matrix3x3 kXYZ = {{
-    { 1.0f, 0.0f, 0.0f },
-    { 0.0f, 1.0f, 0.0f },
-    { 0.0f, 0.0f, 1.0f },
+        {1.0f, 0.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 0.0f, 1.0f},
 }};
 
-}
+}  // namespace SkNamedGamut
 
 class SK_API SkColorSpace : public SkNVRefCnt<SkColorSpace> {
 public:
@@ -151,7 +150,7 @@ public:
      *  Returns a hash of the gamut transformation to XYZ D50. Allows for fast equality checking
      *  of gamuts, at the (very small) risk of collision.
      */
-    uint32_t toXYZD50Hash() const { return fToXYZD50Hash; }
+    uint32_t toXYZD50Hash() const noexcept { return fToXYZD50Hash; }
 
     /**
      *  Returns a color space with the same gamut as this one, but with a linear gamma.
@@ -211,30 +210,29 @@ public:
      */
     static bool Equals(const SkColorSpace*, const SkColorSpace*);
 
-    void       transferFn(float gabcdef[7]) const;
-    void    invTransferFn(float gabcdef[7]) const;
+    void transferFn(float gabcdef[7]) const;
+    void invTransferFn(float gabcdef[7]) const;
     void gamutTransformTo(const SkColorSpace* dst, float src_to_dst_row_major[9]) const;
 
-    uint32_t transferFnHash() const { return fTransferFnHash; }
-    uint64_t           hash() const { return (uint64_t)fTransferFnHash << 32 | fToXYZD50Hash; }
+    uint32_t transferFnHash() const noexcept { return fTransferFnHash; }
+    uint64_t hash() const noexcept { return (uint64_t)fTransferFnHash << 32 | fToXYZD50Hash; }
 
 private:
     friend class SkColorSpaceSingletonFactory;
 
-    SkColorSpace(const float transferFn[7],
-                 const skcms_Matrix3x3& toXYZ);
+    SkColorSpace(const float transferFn[7], const skcms_Matrix3x3& toXYZ);
 
     void computeLazyDstFields() const;
 
-    uint32_t                            fTransferFnHash;
-    uint32_t                            fToXYZD50Hash;
+    uint32_t fTransferFnHash;
+    uint32_t fToXYZD50Hash;
 
-    float                               fTransferFn[7];
-    float                               fToXYZD50_3x3[9];    // row-major
+    float fTransferFn[7];
+    float fToXYZD50_3x3[9];  // row-major
 
-    mutable float                       fInvTransferFn[7];
-    mutable float                       fFromXYZD50_3x3[9];  // row-major
-    mutable SkOnce                      fLazyDstFieldsOnce;
+    mutable float fInvTransferFn[7];
+    mutable float fFromXYZD50_3x3[9];  // row-major
+    mutable SkOnce fLazyDstFieldsOnce;
 };
 
 #endif

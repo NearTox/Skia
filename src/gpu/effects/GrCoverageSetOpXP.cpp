@@ -5,16 +5,16 @@
  * found in the LICENSE file.
  */
 
-#include "effects/GrCoverageSetOpXP.h"
-#include "GrCaps.h"
-#include "GrColor.h"
-#include "GrPipeline.h"
-#include "GrProcessor.h"
-#include "GrRenderTargetContext.h"
-#include "glsl/GrGLSLBlend.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLUniformHandler.h"
-#include "glsl/GrGLSLXferProcessor.h"
+#include "src/gpu/effects/GrCoverageSetOpXP.h"
+#include "include/private/GrColor.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrPipeline.h"
+#include "src/gpu/GrProcessor.h"
+#include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/glsl/GrGLSLBlend.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#include "src/gpu/glsl/GrGLSLXferProcessor.h"
 
 class CoverageSetOpXP : public GrXferProcessor {
 public:
@@ -30,19 +30,17 @@ public:
     bool invertCoverage() const { return fInvertCoverage; }
 
 private:
-
     void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
 
     void onGetBlendInfo(GrXferProcessor::BlendInfo* blendInfo) const override;
 
     bool onIsEqual(const GrXferProcessor& xpBase) const override {
         const CoverageSetOpXP& xp = xpBase.cast<CoverageSetOpXP>();
-        return (fRegionOp == xp.fRegionOp &&
-                fInvertCoverage == xp.fInvertCoverage);
+        return (fRegionOp == xp.fRegionOp && fInvertCoverage == xp.fInvertCoverage);
     }
 
     SkRegion::Op fRegionOp;
-    bool         fInvertCoverage;
+    bool fInvertCoverage;
 
     typedef GrXferProcessor INHERITED;
 };
@@ -58,7 +56,7 @@ public:
     static void GenKey(const GrProcessor& processor, const GrShaderCaps& caps,
                        GrProcessorKeyBuilder* b) {
         const CoverageSetOpXP& xp = processor.cast<CoverageSetOpXP>();
-        uint32_t key = xp.invertCoverage() ?  0x0 : 0x1;
+        uint32_t key = xp.invertCoverage() ? 0x0 : 0x1;
         b->add32(key);
     }
 
@@ -211,7 +209,8 @@ sk_sp<const GrXferProcessor> GrCoverageSetOpXPFactory::makeXferProcessor(
         const GrProcessorAnalysisColor&,
         GrProcessorAnalysisCoverage,
         bool hasMixedSamples,
-        const GrCaps& caps) const {
+        const GrCaps& caps,
+        GrClampType) const {
     // We don't support inverting coverage with mixed samples. We don't expect to ever want this in
     // the future, however we could at some point make this work using an inverted coverage
     // modulation table. Note that an inverted table still won't work if there are coverage procs.

@@ -8,41 +8,41 @@
 #ifndef SkBitmapProcState_DEFINED
 #define SkBitmapProcState_DEFINED
 
-#include "SkArenaAlloc.h"
-#include "SkBitmap.h"
-#include "SkBitmapController.h"
-#include "SkBitmapProvider.h"
-#include "SkFixed.h"
-#include "SkFloatBits.h"
-#include "SkMatrixPriv.h"
-#include "SkMipMap.h"
-#include "SkPaint.h"
-#include "SkShader.h"
-#include "SkTemplates.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkShader.h"
+#include "include/private/SkArenaAlloc.h"
+#include "include/private/SkFixed.h"
+#include "include/private/SkFloatBits.h"
+#include "include/private/SkTemplates.h"
+#include "src/core/SkBitmapController.h"
+#include "src/core/SkBitmapProvider.h"
+#include "src/core/SkMatrixPriv.h"
+#include "src/core/SkMipMap.h"
 
-typedef SkFixed3232    SkFractionalInt;
-#define SkScalarToFractionalInt(x)  SkScalarToFixed3232(x)
-#define SkFractionalIntToFixed(x)   SkFixed3232ToFixed(x)
-#define SkFixedToFractionalInt(x)   SkFixedToFixed3232(x)
-#define SkFractionalIntToInt(x)     SkFixed3232ToInt(x)
+typedef SkFixed3232 SkFractionalInt;
+#define SkScalarToFractionalInt(x) SkScalarToFixed3232(x)
+#define SkFractionalIntToFixed(x) SkFixed3232ToFixed(x)
+#define SkFixedToFractionalInt(x) SkFixedToFixed3232(x)
+#define SkFractionalIntToInt(x) SkFixed3232ToInt(x)
 
 class SkPaint;
 
 struct SkBitmapProcInfo {
-    SkBitmapProcInfo(const SkBitmapProvider&, SkShader::TileMode tmx, SkShader::TileMode tmy);
+    SkBitmapProcInfo(const SkBitmapProvider&, SkTileMode tmx, SkTileMode tmy);
     ~SkBitmapProcInfo();
 
-    const SkBitmapProvider        fProvider;
+    const SkBitmapProvider fProvider;
 
-    SkPixmap                      fPixmap;
-    SkMatrix                      fInvMatrix;         // This changes based on tile mode.
+    SkPixmap fPixmap;
+    SkMatrix fInvMatrix;  // This changes based on tile mode.
     // TODO: combine fInvMatrix and fRealInvMatrix.
-    SkMatrix                      fRealInvMatrix;     // The actual inverse matrix.
-    SkColor                       fPaintColor;
-    SkShader::TileMode            fTileModeX;
-    SkShader::TileMode            fTileModeY;
-    SkFilterQuality               fFilterQuality;
-    SkMatrix::TypeMask            fInvType;
+    SkMatrix fRealInvMatrix;  // The actual inverse matrix.
+    SkColor fPaintColor;
+    SkTileMode fTileModeX;
+    SkTileMode fTileModeY;
+    SkFilterQuality fFilterQuality;
+    SkMatrix::TypeMask fInvType;
 
     bool init(const SkMatrix& inverse, const SkPaint&);
 
@@ -55,8 +55,8 @@ private:
 };
 
 struct SkBitmapProcState : public SkBitmapProcInfo {
-    SkBitmapProcState(const SkBitmapProvider& prov, SkShader::TileMode tmx, SkShader::TileMode tmy)
-        : SkBitmapProcInfo(prov, tmx, tmy) {}
+    SkBitmapProcState(const SkBitmapProvider& prov, SkTileMode tmx, SkTileMode tmy)
+            : SkBitmapProcInfo(prov, tmx, tmy) {}
 
     bool setup(const SkMatrix& inv, const SkPaint& paint) {
         return this->init(inv, paint) && this->chooseProcs();
@@ -64,27 +64,25 @@ struct SkBitmapProcState : public SkBitmapProcInfo {
 
     typedef void (*ShaderProc32)(const void* ctx, int x, int y, SkPMColor[], int count);
 
-    typedef void (*MatrixProc)(const SkBitmapProcState&,
-                               uint32_t bitmapXY[],
-                               int count,
-                               int x, int y);
+    typedef void (*MatrixProc)(const SkBitmapProcState&, uint32_t bitmapXY[], int count, int x,
+                               int y);
 
     typedef void (*SampleProc32)(const SkBitmapProcState&,
                                  const uint32_t[],
                                  int count,
                                  SkPMColor colors[]);
 
-    SkMatrixPriv::MapXYProc fInvProc;           // chooseProcs
-    SkFractionalInt     fInvSxFractionalInt;
-    SkFractionalInt     fInvKyFractionalInt;
+    SkMatrixPriv::MapXYProc fInvProc;  // chooseProcs
+    SkFractionalInt fInvSxFractionalInt;
+    SkFractionalInt fInvKyFractionalInt;
 
-    SkFixed             fFilterOneX;
-    SkFixed             fFilterOneY;
+    SkFixed fFilterOneX;
+    SkFixed fFilterOneY;
 
-    SkFixed             fInvSx;             // chooseProcs
-    SkFixed             fInvKy;             // chooseProcs
-    SkPMColor           fPaintPMColor;      // chooseProcs - A8 config
-    uint16_t            fAlphaScale;        // chooseProcs
+    SkFixed fInvSx;           // chooseProcs
+    SkFixed fInvKy;           // chooseProcs
+    SkPMColor fPaintPMColor;  // chooseProcs - A8 config
+    uint16_t fAlphaScale;     // chooseProcs
 
     /** Given the byte size of the index buffer to be passed to the matrix proc,
         return the maximum number of resulting pixels that can be computed
@@ -109,21 +107,20 @@ struct SkBitmapProcState : public SkBitmapProcInfo {
     SampleProc32 getSampleProc32() const { return fSampleProc32; }
 
 private:
-    ShaderProc32        fShaderProc32;      // chooseProcs
+    ShaderProc32 fShaderProc32;  // chooseProcs
     // These are used if the shaderproc is nullptr
-    MatrixProc          fMatrixProc;        // chooseProcs
-    SampleProc32        fSampleProc32;      // chooseProcs
+    MatrixProc fMatrixProc;      // chooseProcs
+    SampleProc32 fSampleProc32;  // chooseProcs
 
     MatrixProc chooseMatrixProc(bool trivial_matrix);
-    bool chooseProcs(); // caller must have called init() first (on our base-class)
+    bool chooseProcs();  // caller must have called init() first (on our base-class)
     ShaderProc32 chooseShaderProc32();
 
     // Return false if we failed to setup for fast translate (e.g. overflow)
     bool setupForTranslate();
 
 #ifdef SK_DEBUG
-    static void DebugMatrixProc(const SkBitmapProcState&,
-                                uint32_t[], int count, int x, int y);
+    static void DebugMatrixProc(const SkBitmapProcState&, uint32_t[], int count, int x, int y);
 #endif
 };
 
@@ -132,23 +129,23 @@ private:
     2 at a time by unpacking a uint32_t
  */
 #ifdef SK_CPU_BENDIAN
-    #define PACK_TWO_SHORTS(pri, sec) ((pri) << 16 | (sec))
-    #define UNPACK_PRIMARY_SHORT(packed)    ((uint32_t)(packed) >> 16)
-    #define UNPACK_SECONDARY_SHORT(packed)  ((packed) & 0xFFFF)
+#define PACK_TWO_SHORTS(pri, sec) ((pri) << 16 | (sec))
+#define UNPACK_PRIMARY_SHORT(packed) ((uint32_t)(packed) >> 16)
+#define UNPACK_SECONDARY_SHORT(packed) ((packed)&0xFFFF)
 #else
-    #define PACK_TWO_SHORTS(pri, sec) ((pri) | ((sec) << 16))
-    #define UNPACK_PRIMARY_SHORT(packed)    ((packed) & 0xFFFF)
-    #define UNPACK_SECONDARY_SHORT(packed)  ((uint32_t)(packed) >> 16)
+#define PACK_TWO_SHORTS(pri, sec) ((pri) | ((sec) << 16))
+#define UNPACK_PRIMARY_SHORT(packed) ((packed)&0xFFFF)
+#define UNPACK_SECONDARY_SHORT(packed) ((uint32_t)(packed) >> 16)
 #endif
 
 #ifdef SK_DEBUG
-    static inline uint32_t pack_two_shorts(U16CPU pri, U16CPU sec) {
-        SkASSERT((uint16_t)pri == pri);
-        SkASSERT((uint16_t)sec == sec);
-        return PACK_TWO_SHORTS(pri, sec);
-    }
+static inline uint32_t pack_two_shorts(U16CPU pri, U16CPU sec) {
+    SkASSERT((uint16_t)pri == pri);
+    SkASSERT((uint16_t)sec == sec);
+    return PACK_TWO_SHORTS(pri, sec);
+}
 #else
-    #define pack_two_shorts(pri, sec)   PACK_TWO_SHORTS(pri, sec)
+#define pack_two_shorts(pri, sec) PACK_TWO_SHORTS(pri, sec)
 #endif
 
 // Helper class for mapping the middle of pixel (x, y) into SkFractionalInt bitmap space.
@@ -172,9 +169,8 @@ public:
     SkBitmapProcStateAutoMapper(const SkBitmapProcState& s, int x, int y,
                                 SkPoint* scalarPoint = nullptr) {
         SkPoint pt;
-        s.fInvProc(s.fInvMatrix,
-                   SkIntToScalar(x) + SK_ScalarHalf,
-                   SkIntToScalar(y) + SK_ScalarHalf, &pt);
+        s.fInvProc(s.fInvMatrix, SkIntToScalar(x) + SK_ScalarHalf, SkIntToScalar(y) + SK_ScalarHalf,
+                   &pt);
 
         SkFixed biasX, biasY;
         if (s.fFilterQuality == kNone_SkFilterQuality) {
@@ -196,8 +192,7 @@ public:
                                (uint64_t)SkFixedToFractionalInt(biasY));
 
         if (scalarPoint) {
-            scalarPoint->set(pt.x() - SkFixedToScalar(biasX),
-                             pt.y() - SkFixedToScalar(biasY));
+            scalarPoint->set(pt.x() - SkFixedToScalar(biasX), pt.y() - SkFixedToScalar(biasY));
         }
     }
 

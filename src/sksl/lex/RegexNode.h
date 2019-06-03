@@ -29,16 +29,11 @@ struct RegexNode {
         kStar_Kind
     };
 
-    RegexNode(Kind kind)
-    : fKind(kind) {}
+    RegexNode(Kind kind) : fKind(kind) {}
 
-    RegexNode(Kind kind, char payload)
-    : fKind(kind) {
-        fPayload.fChar = payload;
-    }
+    RegexNode(Kind kind, char payload) : fKind(kind) { fPayload.fChar = payload; }
 
-    RegexNode(Kind kind, const char* children)
-    : fKind(kind) {
+    RegexNode(Kind kind, const char* children) : fKind(kind) {
         fPayload.fBool = false;
         while (*children != '\0') {
             fChildren.emplace_back(kChar_Kind, *children);
@@ -46,13 +41,9 @@ struct RegexNode {
         }
     }
 
-    RegexNode(Kind kind, RegexNode child)
-    : fKind(kind) {
-        fChildren.push_back(std::move(child));
-    }
+    RegexNode(Kind kind, RegexNode child) : fKind(kind) { fChildren.push_back(std::move(child)); }
 
-    RegexNode(Kind kind, RegexNode child1, RegexNode child2)
-    : fKind(kind) {
+    RegexNode(Kind kind, RegexNode child1, RegexNode child2) : fKind(kind) {
         fChildren.push_back(std::move(child1));
         fChildren.push_back(std::move(child2));
     }

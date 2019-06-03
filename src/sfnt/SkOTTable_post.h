@@ -8,8 +8,8 @@
 #ifndef SkOTTable_post_DEFINED
 #define SkOTTable_post_DEFINED
 
-#include "SkEndian.h"
-#include "SkOTTableTypes.h"
+#include "src/core/SkEndian.h"
+#include "src/sfnt/SkOTTableTypes.h"
 
 #pragma pack(push, 1)
 
@@ -42,9 +42,9 @@ struct SkOTTablePostScript {
 
 #pragma pack(pop)
 
-
 #include <stddef.h>
-static_assert(offsetof(SkOTTablePostScript, maxMemType1) == 28, "SkOTTablePostScript_maxMemType1_not_at_28");
+static_assert(offsetof(SkOTTablePostScript, maxMemType1) == 28,
+              "SkOTTablePostScript_maxMemType1_not_at_28");
 static_assert(sizeof(SkOTTablePostScript) == 32, "sizeof_SkOTTablePostScript_not_32");
 
 #endif

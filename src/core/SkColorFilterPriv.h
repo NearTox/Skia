@@ -9,10 +9,10 @@
 
 #ifdef SK_SUPPORT_GPU
 
-#include "SkColorFilter.h"
-#include "SkString.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkString.h"
 
-using SkRuntimeColorFilterFn = void(*)(float[4], const void*);
+using SkRuntimeColorFilterFn = void (*)(float[4], const void*);
 
 class SK_API SkRuntimeColorFilterFactory {
 public:
@@ -48,6 +48,6 @@ private:
     SkRuntimeColorFilterFn fCpuFunc;
 };
 
-#endif // SK_SUPPORT_GPU
+#endif  // SK_SUPPORT_GPU
 
 #endif  // SkColorFilterPriv_DEFINED

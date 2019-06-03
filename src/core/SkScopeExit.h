@@ -8,8 +8,8 @@
 #ifndef SkScopeExit_DEFINED
 #define SkScopeExit_DEFINED
 
-#include "SkTypes.h"
-#include "SkMacros.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkMacros.h"
 
 #include <functional>
 
@@ -17,7 +17,7 @@
 class SkScopeExit {
 public:
     SkScopeExit(std::function<void()> f) : fFn(std::move(f)) {}
-    SkScopeExit(SkScopeExit&& that) : fFn(std::move(that.fFn)) {}
+    SkScopeExit(SkScopeExit&& that) noexcept : fFn(std::move(that.fFn)) {}
 
     ~SkScopeExit() {
         if (fFn) {
@@ -25,9 +25,9 @@ public:
         }
     }
 
-    void clear() { fFn = {}; }
+    void clear() noexcept { fFn = {}; }
 
-    SkScopeExit& operator=(SkScopeExit&& that) {
+    SkScopeExit& operator=(SkScopeExit&& that) noexcept {
         fFn = std::move(that.fFn);
         return *this;
     }
@@ -35,8 +35,8 @@ public:
 private:
     std::function<void()> fFn;
 
-    SkScopeExit(           const SkScopeExit& ) = delete;
-    SkScopeExit& operator=(const SkScopeExit& ) = delete;
+    SkScopeExit(const SkScopeExit&) = delete;
+    SkScopeExit& operator=(const SkScopeExit&) = delete;
 };
 
 /**
@@ -52,7 +52,6 @@ private:
  *        SkASSERT(x == 4);
  *    }
  */
-#define SK_AT_SCOPE_EXIT(stmt)                              \
-    SkScopeExit SK_MACRO_APPEND_LINE(at_scope_exit_)([&]() { stmt; })
+#define SK_AT_SCOPE_EXIT(stmt) SkScopeExit SK_MACRO_APPEND_LINE(at_scope_exit_)([&]() { stmt; })
 
 #endif  // SkScopeExit_DEFINED

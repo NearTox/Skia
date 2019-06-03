@@ -5,23 +5,21 @@
  * found in the LICENSE file.
  */
 
-#include "GrTextBlob.h"
-#include "GrBlurUtils.h"
-#include "GrClip.h"
-#include "GrContext.h"
-#include "GrShape.h"
-#include "GrStyle.h"
-#include "GrTextTarget.h"
-#include "SkColorFilter.h"
-#include "SkMaskFilterBase.h"
-#include "SkPaintPriv.h"
-#include "ops/GrAtlasTextOp.h"
+#include "src/gpu/text/GrTextBlob.h"
+#include "include/core/SkColorFilter.h"
+#include "include/gpu/GrContext.h"
+#include "src/core/SkMaskFilterBase.h"
+#include "src/core/SkPaintPriv.h"
+#include "src/gpu/GrBlurUtils.h"
+#include "src/gpu/GrClip.h"
+#include "src/gpu/GrShape.h"
+#include "src/gpu/GrStyle.h"
+#include "src/gpu/ops/GrAtlasTextOp.h"
+#include "src/gpu/text/GrTextTarget.h"
 
 #include <new>
 
-template <size_t N> static size_t sk_align(size_t s) {
-    return ((s + (N-1)) / N) * N;
-}
+template <size_t N> static size_t sk_align(size_t s) { return ((s + (N - 1)) / N) * N; }
 
 sk_sp<GrTextBlob> GrTextBlob::Make(int glyphCount,
                                    int runCount,
@@ -32,12 +30,12 @@ sk_sp<GrTextBlob> GrTextBlob::Make(int glyphCount,
     size_t verticesCount = glyphCount * kVerticesPerGlyph * kMaxVASize;
 
     size_t blobStart = 0;
-    size_t vertex = sk_align<alignof(char)>           (blobStart + sizeof(GrTextBlob) * 1);
-    size_t glyphs = sk_align<alignof(GrGlyph*)>       (vertex + sizeof(char) * verticesCount);
-    size_t   runs = sk_align<alignof(GrTextBlob::Run)>(glyphs + sizeof(GrGlyph*) * glyphCount);
-    size_t   size =                                   (runs + sizeof(GrTextBlob::Run) * runCount);
+    size_t vertex = sk_align<alignof(char)>(blobStart + sizeof(GrTextBlob) * 1);
+    size_t glyphs = sk_align<alignof(GrGlyph*)>(vertex + sizeof(char) * verticesCount);
+    size_t runs = sk_align<alignof(GrTextBlob::Run)>(glyphs + sizeof(GrGlyph*) * glyphCount);
+    size_t size = (runs + sizeof(GrTextBlob::Run) * runCount);
 
-    void* allocation = ::operator new (size);
+    void* allocation = ::operator new(size);
 
     if (CACHE_SANITY_CHECK) {
         sk_bzero(allocation, size);
@@ -70,8 +68,8 @@ void GrTextBlob::Run::setupFont(const SkStrikeSpec& strikeSpec) {
     desc->reset(strikeSpec.desc());
 }
 
-void GrTextBlob::Run::appendPathGlyph(const SkPath& path, SkPoint position,
-                                      SkScalar scale, bool preTransformed) {
+void GrTextBlob::Run::appendPathGlyph(const SkPath& path, SkPoint position, SkScalar scale,
+                                      bool preTransformed) {
     fPathGlyphs.push_back(PathGlyph(path, position.x(), position.y(), scale, preTransformed));
 }
 
@@ -96,16 +94,14 @@ bool GrTextBlob::mustRegenerate(const SkPaint& paint, bool anyRunHasSubpixelPosi
     }
 
     // We only cache one masked version
-    if (fKey.fHasBlur &&
-        (fBlurRec.fSigma != blurRec.fSigma || fBlurRec.fStyle != blurRec.fStyle)) {
+    if (fKey.fHasBlur && (fBlurRec.fSigma != blurRec.fSigma || fBlurRec.fStyle != blurRec.fStyle)) {
         return true;
     }
 
     // Similarly, we only cache one version for each style
-    if (fKey.fStyle != SkPaint::kFill_Style &&
-        (fStrokeInfo.fFrameWidth != paint.getStrokeWidth() ||
-         fStrokeInfo.fMiterLimit != paint.getStrokeMiter() ||
-         fStrokeInfo.fJoin != paint.getStrokeJoin())) {
+    if (fKey.fStyle != SkPaint::kFill_Style && (fStrokeInfo.fFrameWidth != paint.getStrokeWidth() ||
+                                                fStrokeInfo.fMiterLimit != paint.getStrokeMiter() ||
+                                                fStrokeInfo.fJoin != paint.getStrokeJoin())) {
         return true;
     }
 
@@ -134,12 +130,10 @@ bool GrTextBlob::mustRegenerate(const SkPaint& paint, bool anyRunHasSubpixelPosi
             // blob, but only for integer translations.
             // This cool bit of math will determine the necessary translation to apply to the
             // already generated vertex coordinates to move them to the correct position.
-            SkScalar transX = viewMatrix.getTranslateX() +
-                              viewMatrix.getScaleX() * (x - fInitialX) +
-                              viewMatrix.getSkewX() * (y - fInitialY) -
-                              fInitialViewMatrix.getTranslateX();
-            SkScalar transY = viewMatrix.getTranslateY() +
-                              viewMatrix.getSkewY() * (x - fInitialX) +
+            SkScalar transX =
+                    viewMatrix.getTranslateX() + viewMatrix.getScaleX() * (x - fInitialX) +
+                    viewMatrix.getSkewX() * (y - fInitialY) - fInitialViewMatrix.getTranslateX();
+            SkScalar transY = viewMatrix.getTranslateY() + viewMatrix.getSkewY() * (x - fInitialX) +
                               viewMatrix.getScaleY() * (y - fInitialY) -
                               fInitialViewMatrix.getTranslateY();
             if (!SkScalarIsInt(transX) || !SkScalarIsInt(transY)) {
@@ -175,11 +169,11 @@ inline std::unique_ptr<GrAtlasTextOp> GrTextBlob::makeOp(
     std::unique_ptr<GrAtlasTextOp> op;
     if (info.drawAsDistanceFields()) {
         // TODO: Can we be even smarter based on the dest transfer function?
-        op = GrAtlasTextOp::MakeDistanceField(
-                target->getContext(), std::move(grPaint), glyphCount, distanceAdjustTable,
-                target->colorSpaceInfo().isLinearlyBlended(),
-                SkPaintPriv::ComputeLuminanceColor(paint),
-                props, info.isAntiAliased(), info.hasUseLCDText());
+        op = GrAtlasTextOp::MakeDistanceField(target->getContext(), std::move(grPaint), glyphCount,
+                                              distanceAdjustTable,
+                                              target->colorSpaceInfo().isLinearlyBlended(),
+                                              SkPaintPriv::ComputeLuminanceColor(paint), props,
+                                              info.isAntiAliased(), info.hasUseLCDText());
     } else {
         op = GrAtlasTextOp::MakeBitmap(target->getContext(), std::move(grPaint), format, glyphCount,
                                        info.needsTransform());
@@ -197,20 +191,16 @@ inline std::unique_ptr<GrAtlasTextOp> GrTextBlob::makeOp(
     return op;
 }
 
-static void calculate_translation(bool applyVM,
-                                  const SkMatrix& newViewMatrix, SkScalar newX, SkScalar newY,
-                                  const SkMatrix& currentViewMatrix, SkScalar currentX,
-                                  SkScalar currentY, SkScalar* transX, SkScalar* transY) {
+static void calculate_translation(bool applyVM, const SkMatrix& newViewMatrix, SkScalar newX,
+                                  SkScalar newY, const SkMatrix& currentViewMatrix,
+                                  SkScalar currentX, SkScalar currentY, SkScalar* transX,
+                                  SkScalar* transY) {
     if (applyVM) {
-        *transX = newViewMatrix.getTranslateX() +
-                  newViewMatrix.getScaleX() * (newX - currentX) +
-                  newViewMatrix.getSkewX() * (newY - currentY) -
-                  currentViewMatrix.getTranslateX();
+        *transX = newViewMatrix.getTranslateX() + newViewMatrix.getScaleX() * (newX - currentX) +
+                  newViewMatrix.getSkewX() * (newY - currentY) - currentViewMatrix.getTranslateX();
 
-        *transY = newViewMatrix.getTranslateY() +
-                  newViewMatrix.getSkewY() * (newX - currentX) +
-                  newViewMatrix.getScaleY() * (newY - currentY) -
-                  currentViewMatrix.getTranslateY();
+        *transY = newViewMatrix.getTranslateY() + newViewMatrix.getSkewY() * (newX - currentX) +
+                  newViewMatrix.getScaleY() * (newY - currentY) - currentViewMatrix.getTranslateY();
     } else {
         *transX = newX - currentX;
         *transY = newY - currentY;
@@ -218,17 +208,15 @@ static void calculate_translation(bool applyVM,
 }
 
 void GrTextBlob::flush(GrTextTarget* target, const SkSurfaceProps& props,
-                       const GrDistanceFieldAdjustTable* distanceAdjustTable,
-                       const SkPaint& paint, const SkPMColor4f& filteredColor, const GrClip& clip,
+                       const GrDistanceFieldAdjustTable* distanceAdjustTable, const SkPaint& paint,
+                       const SkPMColor4f& filteredColor, const GrClip& clip,
                        const SkMatrix& viewMatrix, SkScalar x, SkScalar y) {
-
     // GrTextBlob::makeOp only takes uint16_t values for run and subRun indices.
     // Encountering something larger than this is highly unlikely, so we'll just not draw it.
     int lastRun = SkTMin(fRunCountLimit, (1 << 16)) - 1;
     // For each run in the GrTextBlob we're going to churn through all the glyphs.
     // Each run is broken into a path part and a Mask / DFT / ARGB part.
     for (int runIndex = 0; runIndex <= lastRun; runIndex++) {
-
         Run& run = fRuns[runIndex];
 
         // first flush any path glyphs
@@ -266,9 +254,8 @@ void GrTextBlob::flush(GrTextTarget* target, const SkSurfaceProps& props,
                     // space independently of the CTM. This allows the CTM to be correct for the
                     // different effects.
                     GrStyle style(runPaint);
-                    bool scalePath = runPaint.getShader()
-                                     || style.applies()
-                                     || runPaint.getMaskFilter();
+                    bool scalePath =
+                            runPaint.getShader() || style.applies() || runPaint.getMaskFilter();
                     if (!scalePath) {
                         // Scale can be applied to CTM -- no effects.
 
@@ -283,7 +270,6 @@ void GrTextBlob::flush(GrTextTarget* target, const SkSurfaceProps& props,
                         sourceOutline->setIsVolatile(true);
                         path = sourceOutline;
                     }
-
 
                 } else {
                     // Positions and outlines are in device space.
@@ -332,51 +318,46 @@ void GrTextBlob::flush(GrTextTarget* target, const SkSurfaceProps& props,
             // We can clip geometrically if we're not using SDFs or transformed glyphs,
             // and we have an axis-aligned rectangular non-AA clip
             if (!info.drawAsDistanceFields() && !info.needsTransform() &&
-                clip.isRRect(rtBounds, &clipRRect, &aa) &&
-                clipRRect.isRect() && GrAA::kNo == aa) {
+                clip.isRRect(rtBounds, &clipRRect, &aa) && clipRRect.isRect() && GrAA::kNo == aa) {
                 skipClip = true;
                 // We only need to do clipping work if the subrun isn't contained by the clip
                 SkRect subRunBounds;
-                this->computeSubRunBounds(&subRunBounds, runIndex, subRun, viewMatrix, x, y,
-                                          false);
+                this->computeSubRunBounds(&subRunBounds, runIndex, subRun, viewMatrix, x, y, false);
                 if (!clipRRect.getBounds().contains(subRunBounds)) {
                     // If the subrun is completely outside, don't add an op for it
                     if (!clipRRect.getBounds().intersects(subRunBounds)) {
                         submitOp = false;
-                    }
-                    else {
+                    } else {
                         clipRRect.getBounds().round(&clipRect);
                     }
                 }
             }
 
             if (submitOp) {
-                auto op = this->makeOp(info, glyphCount, runIndex, subRun, viewMatrix, x, y,
-                                       clipRect, paint, filteredColor, props, distanceAdjustTable,
-                                       target);
+                auto op =
+                        this->makeOp(info, glyphCount, runIndex, subRun, viewMatrix, x, y, clipRect,
+                                     paint, filteredColor, props, distanceAdjustTable, target);
                 if (op) {
                     if (skipClip) {
                         target->addDrawOp(GrNoClip(), std::move(op));
-                    }
-                    else {
+                    } else {
                         target->addDrawOp(clip, std::move(op));
                     }
                 }
             }
         }
-
     }
 }
 
 std::unique_ptr<GrDrawOp> GrTextBlob::test_makeOp(
-        int glyphCount, uint16_t run, uint16_t subRun, const SkMatrix& viewMatrix,
-        SkScalar x, SkScalar y, const SkPaint& paint, const SkPMColor4f& filteredColor,
+        int glyphCount, uint16_t run, uint16_t subRun, const SkMatrix& viewMatrix, SkScalar x,
+        SkScalar y, const SkPaint& paint, const SkPMColor4f& filteredColor,
         const SkSurfaceProps& props, const GrDistanceFieldAdjustTable* distanceAdjustTable,
         GrTextTarget* target) {
     const GrTextBlob::SubRun& info = fRuns[run].fSubRunInfo[subRun];
     SkIRect emptyRect = SkIRect::MakeEmpty();
-    return this->makeOp(info, glyphCount, run, subRun, viewMatrix, x, y, emptyRect,
-                        paint, filteredColor, props, distanceAdjustTable, target);
+    return this->makeOp(info, glyphCount, run, subRun, viewMatrix, x, y, emptyRect, paint,
+                        filteredColor, props, distanceAdjustTable, target);
 }
 
 void GrTextBlob::AssertEqual(const GrTextBlob& l, const GrTextBlob& r) {
@@ -390,7 +371,7 @@ void GrTextBlob::AssertEqual(const GrTextBlob& l, const GrTextBlob& r) {
     SkASSERT_RELEASE(l.fStrokeInfo.fJoin == r.fStrokeInfo.fJoin);
 
     SkASSERT_RELEASE(l.fKey == r.fKey);
-    //SkASSERT_RELEASE(l.fPaintColor == r.fPaintColor); // Colors might not actually be identical
+    // SkASSERT_RELEASE(l.fPaintColor == r.fPaintColor); // Colors might not actually be identical
     SkASSERT_RELEASE(l.fMaxMinScale == r.fMaxMinScale);
     SkASSERT_RELEASE(l.fMinMaxScale == r.fMinMaxScale);
     SkASSERT_RELEASE(l.fTextType == r.fTextType);
@@ -407,14 +388,14 @@ void GrTextBlob::AssertEqual(const GrTextBlob& l, const GrTextBlob& r) {
             SkASSERT_RELEASE(!rRun.fTypeface.get());
         }
 
-
         SkASSERT_RELEASE(lRun.fDescriptor.getDesc());
         SkASSERT_RELEASE(rRun.fDescriptor.getDesc());
         SkASSERT_RELEASE(*lRun.fDescriptor.getDesc() == *rRun.fDescriptor.getDesc());
 
         if (lRun.fARGBFallbackDescriptor.get()) {
             SkASSERT_RELEASE(lRun.fARGBFallbackDescriptor->getDesc());
-            SkASSERT_RELEASE(rRun.fARGBFallbackDescriptor.get() && rRun.fARGBFallbackDescriptor->getDesc());
+            SkASSERT_RELEASE(rRun.fARGBFallbackDescriptor.get() &&
+                             rRun.fARGBFallbackDescriptor->getDesc());
             SkASSERT_RELEASE(*lRun.fARGBFallbackDescriptor->getDesc() ==
                              *rRun.fARGBFallbackDescriptor->getDesc());
         } else {
@@ -422,16 +403,16 @@ void GrTextBlob::AssertEqual(const GrTextBlob& l, const GrTextBlob& r) {
         }
 
         // color can be changed
-        //SkASSERT(lRun.fColor == rRun.fColor);
+        // SkASSERT(lRun.fColor == rRun.fColor);
         SkASSERT_RELEASE(lRun.fInitialized == rRun.fInitialized);
 
         SkASSERT_RELEASE(lRun.fSubRunInfo.count() == rRun.fSubRunInfo.count());
-        for(int j = 0; j < lRun.fSubRunInfo.count(); j++) {
+        for (int j = 0; j < lRun.fSubRunInfo.count(); j++) {
             const SubRun& lSubRun = lRun.fSubRunInfo[j];
             const SubRun& rSubRun = rRun.fSubRunInfo[j];
 
             // TODO we can do this check, but we have to apply the VM to the old vertex bounds
-            //SkASSERT_RELEASE(lSubRun.vertexBounds() == rSubRun.vertexBounds());
+            // SkASSERT_RELEASE(lSubRun.vertexBounds() == rSubRun.vertexBounds());
 
             if (lSubRun.strike()) {
                 SkASSERT_RELEASE(rSubRun.strike());
@@ -462,12 +443,11 @@ void GrTextBlob::AssertEqual(const GrTextBlob& l, const GrTextBlob& r) {
     }
 }
 
-void GrTextBlob::SubRun::computeTranslation(const SkMatrix& viewMatrix,
-                                                SkScalar x, SkScalar y, SkScalar* transX,
-                                                SkScalar* transY) {
+void GrTextBlob::SubRun::computeTranslation(const SkMatrix& viewMatrix, SkScalar x, SkScalar y,
+                                            SkScalar* transX, SkScalar* transY) {
     // Don't use the matrix to translate on distance field for fallback subruns.
-    calculate_translation(!this->drawAsDistanceFields() && !this->isFallback(), viewMatrix,
-            x, y, fCurrentViewMatrix, fX, fY, transX, transY);
+    calculate_translation(!this->drawAsDistanceFields() && !this->isFallback(), viewMatrix, x, y,
+                          fCurrentViewMatrix, fX, fY, transX, transY);
     fCurrentViewMatrix = viewMatrix;
     fX = x;
     fY = y;

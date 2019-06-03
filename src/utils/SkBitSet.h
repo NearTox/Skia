@@ -8,7 +8,7 @@
 #ifndef SkBitSet_DEFINED
 #define SkBitSet_DEFINED
 
-#include "SkTemplates.h"
+#include "include/private/SkTemplates.h"
 
 class SkBitSet {
 public:
@@ -35,8 +35,7 @@ public:
     }
 
     // Calls f(unsigned) for each set value.
-    template<typename FN>
-    void getSetValues(FN f) const {
+    template <typename FN> void getSetValues(FN f) const {
         const uint32_t* data = fBitData.get();
         for (unsigned i = 0; i < fDwordCount; ++i) {
             if (uint32_t value = data[i]) {  // There are set bits
@@ -62,6 +61,5 @@ private:
         return fBitData.get() + internalIndex;
     }
 };
-
 
 #endif

@@ -5,17 +5,16 @@
  * found in the LICENSE file.
  */
 
-#include "SkLinearGradient.h"
+#include "src/shaders/gradients/SkLinearGradient.h"
 
-#include "Sk4fLinearGradient.h"
-#include "SkColorSpaceXformer.h"
-#include "SkReadBuffer.h"
-#include "SkWriteBuffer.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
+#include "src/shaders/gradients/Sk4fLinearGradient.h"
 
 static SkMatrix pts_to_unit_matrix(const SkPoint pts[2]) {
-    SkVector    vec = pts[1] - pts[0];
-    SkScalar    mag = vec.length();
-    SkScalar    inv = mag ? SkScalarInvert(mag) : 0;
+    SkVector vec = pts[1] - pts[0];
+    SkScalar mag = vec.length();
+    SkScalar inv = mag ? SkScalarInvert(mag) : 0;
 
     vec.scale(inv);
     SkMatrix matrix;
@@ -28,10 +27,7 @@ static SkMatrix pts_to_unit_matrix(const SkPoint pts[2]) {
 ///////////////////////////////////////////////////////////////////////////////
 
 SkLinearGradient::SkLinearGradient(const SkPoint pts[2], const Descriptor& desc)
-    : SkGradientShaderBase(desc, pts_to_unit_matrix(pts))
-    , fStart(pts[0])
-    , fEnd(pts[1]) {
-}
+        : SkGradientShaderBase(desc, pts_to_unit_matrix(pts)), fStart(pts[0]), fEnd(pts[1]) {}
 
 sk_sp<SkFlattenable> SkLinearGradient::CreateProc(SkReadBuffer& buffer) {
     DescriptorScope desc;
@@ -53,9 +49,8 @@ void SkLinearGradient::flatten(SkWriteBuffer& buffer) const {
 }
 
 #ifdef SK_ENABLE_LEGACY_SHADERCONTEXT
-SkShaderBase::Context* SkLinearGradient::onMakeContext(
-    const ContextRec& rec, SkArenaAlloc* alloc) const
-{
+SkShaderBase::Context* SkLinearGradient::onMakeContext(const ContextRec& rec,
+                                                       SkArenaAlloc* alloc) const {
     // make sure our colorspaces are compatible with legacy blits
     if (!rec.isLegacyCompatible(fColorSpace.get())) {
         return nullptr;
@@ -65,15 +60,14 @@ SkShaderBase::Context* SkLinearGradient::onMakeContext(
         return nullptr;
     }
 
-    return fTileMode != kDecal_TileMode
-        ? CheckedMakeContext<LinearGradient4fContext>(alloc, *this, rec)
-        : nullptr;
+    return fTileMode != SkTileMode::kDecal
+                   ? CheckedMakeContext<LinearGradient4fContext>(alloc, *this, rec)
+                   : nullptr;
 }
 
-SkShaderBase::Context* SkLinearGradient::onMakeBurstPipelineContext(
-    const ContextRec& rec, SkArenaAlloc* alloc) const {
-
-    if (fTileMode == SkShader::kDecal_TileMode) {
+SkShaderBase::Context* SkLinearGradient::onMakeBurstPipelineContext(const ContextRec& rec,
+                                                                    SkArenaAlloc* alloc) const {
+    if (fTileMode == SkTileMode::kDecal) {
         // we only support decal w/ stages
         return nullptr;
     }
@@ -86,13 +80,6 @@ SkShaderBase::Context* SkLinearGradient::onMakeBurstPipelineContext(
 void SkLinearGradient::appendGradientStages(SkArenaAlloc*, SkRasterPipeline*,
                                             SkRasterPipeline*) const {
     // No extra stage needed for linear gradients.
-}
-
-sk_sp<SkShader> SkLinearGradient::onMakeColorSpace(SkColorSpaceXformer* xformer) const {
-    const AutoXformColors xformedColors(*this, xformer);
-    SkPoint pts[2] = { fStart, fEnd };
-    return SkGradientShader::MakeLinear(pts, xformedColors.fColors.get(), fOrigPos, fColorCount,
-                                        fTileMode, fGradFlags, &this->getLocalMatrix());
 }
 
 SkShader::GradientType SkLinearGradient::asAGradient(GradientInfo* info) const {
@@ -108,7 +95,7 @@ SkShader::GradientType SkLinearGradient::asAGradient(GradientInfo* info) const {
 
 #if SK_SUPPORT_GPU
 
-#include "gradients/GrGradientShader.h"
+#include "src/gpu/gradients/GrGradientShader.h"
 
 std::unique_ptr<GrFragmentProcessor> SkLinearGradient::asFragmentProcessor(
         const GrFPArgs& args) const {

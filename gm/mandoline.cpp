@@ -5,12 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkGeometry.h"
-#include "SkPaint.h"
-#include "SkPath.h"
-#include "SkPoint.h"
-#include "SkRandom.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "include/utils/SkRandom.h"
+#include "src/core/SkGeometry.h"
 
 #include <math.h>
 
@@ -131,18 +137,12 @@ private:
 
 class SliverPathsGM : public GM {
 public:
-    SliverPathsGM() {
-        this->setBGColor(SK_ColorBLACK);
-    }
+    SliverPathsGM() { this->setBGColor(SK_ColorBLACK); }
 
 protected:
-    SkString onShortName() override {
-        return SkString("mandoline");
-    }
+    SkString onShortName() override { return SkString("mandoline"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(560, 475);
-    }
+    SkISize onISize() override { return SkISize::Make(560, 475); }
 
     void onDraw(SkCanvas* canvas) override {
         SkPaint paint;
@@ -165,10 +165,11 @@ protected:
         canvas->translate(421, 105);
         canvas->scale(100, 81);
         mandoline.reset({-cosf(SkDegreesToRadians(-60)), sinf(SkDegreesToRadians(-60))});
-        mandoline.sliceConic({-2, 0},
-                             {-cosf(SkDegreesToRadians(60)), sinf(SkDegreesToRadians(60))}, .5f);
-        mandoline.sliceConic({-cosf(SkDegreesToRadians(120))*2, sinf(SkDegreesToRadians(120))*2},
-                             {1, 0}, .5f);
+        mandoline.sliceConic({-2, 0}, {-cosf(SkDegreesToRadians(60)), sinf(SkDegreesToRadians(60))},
+                             .5f);
+        mandoline.sliceConic(
+                {-cosf(SkDegreesToRadians(120)) * 2, sinf(SkDegreesToRadians(120)) * 2}, {1, 0},
+                .5f);
         mandoline.sliceLine({0, 0});
         mandoline.sliceLine({-cosf(SkDegreesToRadians(-60)), sinf(SkDegreesToRadians(-60))});
         canvas->drawPath(mandoline.path(), paint);
@@ -180,9 +181,9 @@ protected:
         mandoline.reset({1, 0});
         constexpr int nquads = 5;
         for (int i = 0; i < nquads; ++i) {
-            float theta1 = 2*SK_ScalarPI/nquads * (i + .5f);
-            float theta2 = 2*SK_ScalarPI/nquads * (i + 1);
-            mandoline.sliceQuadratic({cosf(theta1)*2, sinf(theta1)*2},
+            float theta1 = 2 * SK_ScalarPI / nquads * (i + .5f);
+            float theta2 = 2 * SK_ScalarPI / nquads * (i + 1);
+            mandoline.sliceQuadratic({cosf(theta1) * 2, sinf(theta1) * 2},
                                      {cosf(theta2), sinf(theta2)});
         }
         canvas->drawPath(mandoline.path(), paint);
@@ -192,4 +193,4 @@ protected:
 
 DEF_GM(return new SliverPathsGM;)
 
-}
+}  // namespace skiagm

@@ -5,38 +5,36 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkAnimTimer.h"
-#include "SkBitmap.h"
-#include "SkCanvas.h"
-#include "SkGradientShader.h"
-#include "SkGraphics.h"
-#include "SkFont.h"
-#include "SkPath.h"
-#include "SkRegion.h"
-#include "SkShader.h"
-#include "SkUTF.h"
-#include "SkColorPriv.h"
-#include "SkColorFilter.h"
-#include "SkParsePath.h"
-#include "SkTime.h"
-#include "SkTypeface.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkGraphics.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRegion.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkTime.h"
+#include "include/core/SkTypeface.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/utils/SkParsePath.h"
+#include "samplecode/Sample.h"
+#include "src/utils/SkUTF.h"
+#include "tools/timer/AnimTimer.h"
 
-#include "SkGeometry.h"
+#include "src/core/SkGeometry.h"
 
 #include <stdlib.h>
 
 // http://code.google.com/p/skia/issues/detail?id=32
 static void test_cubic() {
-    SkPoint src[4] = {
-        { 556.25000f, 523.03003f },
-        { 556.23999f, 522.96002f },
-        { 556.21997f, 522.89001f },
-        { 556.21997f, 522.82001f }
-    };
+    SkPoint src[4] = {{556.25000f, 523.03003f},
+                      {556.23999f, 522.96002f},
+                      {556.21997f, 522.89001f},
+                      {556.21997f, 522.82001f}};
     SkPoint dst[11];
-    dst[10].set(42, -42);   // one past the end, that we don't clobber these
-    SkScalar tval[] = { 0.33333334f, 0.99999994f };
+    dst[10].set(42, -42);  // one past the end, that we don't clobber these
+    SkScalar tval[] = {0.33333334f, 0.99999994f};
 
     SkChopCubicAt(src, dst, tval, 2);
 
@@ -56,10 +54,9 @@ static void test_cubic2() {
         SkRect r = path.getBounds();
         SkIRect ir;
         r.round(&ir);
-        SkDebugf("[%g %g %g %g] [%x %x %x %x]\n",
-                SkScalarToDouble(r.fLeft), SkScalarToDouble(r.fTop),
-                SkScalarToDouble(r.fRight), SkScalarToDouble(r.fBottom),
-                ir.fLeft, ir.fTop, ir.fRight, ir.fBottom);
+        SkDebugf("[%g %g %g %g] [%x %x %x %x]\n", SkScalarToDouble(r.fLeft),
+                 SkScalarToDouble(r.fTop), SkScalarToDouble(r.fRight), SkScalarToDouble(r.fBottom),
+                 ir.fLeft, ir.fTop, ir.fRight, ir.fBottom);
     }
 
     SkBitmap bitmap;
@@ -73,6 +70,7 @@ static void test_cubic2() {
 
 class PathView : public Sample {
     SkScalar fPrevSecs;
+
 public:
     SkScalar fDStroke, fStroke, fMinStroke, fMaxStroke;
     SkPath fPath[6];
@@ -147,7 +145,7 @@ protected:
         paint.setStrokeWidth(fStroke);
 
         if (fShowHairline) {
-            SkPath  fill;
+            SkPath fill;
 
             paint.getFillPath(path, &fill);
             paint.setStrokeWidth(0);
@@ -165,11 +163,8 @@ protected:
         this->init();
         canvas->translate(50, 50);
 
-        static const SkPaint::Join gJoins[] = {
-            SkPaint::kBevel_Join,
-            SkPaint::kMiter_Join,
-            SkPaint::kRound_Join
-        };
+        static const SkPaint::Join gJoins[] = {SkPaint::kBevel_Join, SkPaint::kMiter_Join,
+                                               SkPaint::kRound_Join};
 
         for (size_t i = 0; i < SK_ARRAY_COUNT(gJoins); i++) {
             canvas->save();
@@ -183,7 +178,7 @@ protected:
         }
     }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         SkScalar currSecs = timer.scaled(100);
         SkScalar delta = currSecs - fPrevSecs;
         fPrevSecs = currSecs;
@@ -203,25 +198,22 @@ protected:
 private:
     typedef Sample INHERITED;
 };
-DEF_SAMPLE( return new PathView; )
+DEF_SAMPLE(return new PathView;)
 
 //////////////////////////////////////////////////////////////////////////////
 
-#include "SkCornerPathEffect.h"
-#include "SkRandom.h"
+#include "include/effects/SkCornerPathEffect.h"
+#include "include/utils/SkRandom.h"
 
 class ArcToView : public Sample {
     bool fDoFrame, fDoCorner, fDoConic;
     SkPaint fPtsPaint, fSkeletonPaint, fCornerPaint;
+
 public:
-    enum {
-        N = 4
-    };
+    enum { N = 4 };
     SkPoint fPts[N];
 
-    ArcToView()
-        : fDoFrame(false), fDoCorner(false), fDoConic(false)
-    {
+    ArcToView() : fDoFrame(false), fDoCorner(false), fDoConic(false) {
         SkRandom rand;
         for (int i = 0; i < N; ++i) {
             fPts[i].fX = 20 + rand.nextUScalar1() * 640;
@@ -238,16 +230,14 @@ public:
         fCornerPaint.setStyle(SkPaint::kStroke_Style);
         fCornerPaint.setStrokeWidth(13);
         fCornerPaint.setColor(SK_ColorGREEN);
-        fCornerPaint.setPathEffect(SkCornerPathEffect::Make(rad*2));
+        fCornerPaint.setPathEffect(SkCornerPathEffect::Make(rad * 2));
 
         fSkeletonPaint.setAntiAlias(true);
         fSkeletonPaint.setStyle(SkPaint::kStroke_Style);
         fSkeletonPaint.setColor(SK_ColorRED);
     }
 
-    void toggle(bool& value) {
-        value = !value;
-    }
+    void toggle(bool& value) { value = !value; }
 
 protected:
     bool onQuery(Sample::Event* evt) override {
@@ -258,10 +248,17 @@ protected:
         SkUnichar uni;
         if (Sample::CharQ(*evt, &uni)) {
             switch (uni) {
-                case '1': this->toggle(fDoFrame); return true;
-                case '2': this->toggle(fDoCorner); return true;
-                case '3': this->toggle(fDoConic); return true;
-                default: break;
+                case '1':
+                    this->toggle(fDoFrame);
+                    return true;
+                case '2':
+                    this->toggle(fDoCorner);
+                    return true;
+                case '3':
+                    this->toggle(fDoConic);
+                    return true;
+                default:
+                    break;
             }
         }
         return this->INHERITED::onQuery(evt);
@@ -316,24 +313,27 @@ protected:
 private:
     typedef Sample INHERITED;
 };
-DEF_SAMPLE( return new ArcToView; )
+DEF_SAMPLE(return new ArcToView;)
 
 /////////////
 
 class FatStroke : public Sample {
     bool fClosed, fShowStroke, fShowHidden, fShowSkeleton;
-    int  fJoinType, fCapType;
+    int fJoinType, fCapType;
     float fWidth = 30;
     SkPaint fPtsPaint, fHiddenPaint, fSkeletonPaint, fStrokePaint;
+
 public:
-    enum {
-        N = 4
-    };
+    enum { N = 4 };
     SkPoint fPts[N];
 
-    FatStroke() : fClosed(false), fShowStroke(true), fShowHidden(false), fShowSkeleton(true),
-                  fJoinType(0), fCapType(0)
-    {
+    FatStroke()
+            : fClosed(false)
+            , fShowStroke(true)
+            , fShowHidden(false)
+            , fShowSkeleton(true)
+            , fJoinType(0)
+            , fCapType(0) {
         SkRandom rand;
         for (int i = 0; i < N; ++i) {
             fPts[i].fX = 20 + rand.nextUScalar1() * 640;
@@ -358,13 +358,9 @@ public:
         fSkeletonPaint.setColor(SK_ColorRED);
     }
 
-    void toggle(bool& value) {
-        value = !value;
-    }
+    void toggle(bool& value) { value = !value; }
 
-    void toggle3(int& value) {
-        value = (value + 1) % 3;
-    }
+    void toggle3(int& value) { value = (value + 1) % 3; }
 
 protected:
     bool onQuery(Sample::Event* evt) override {
@@ -375,15 +371,32 @@ protected:
         SkUnichar uni;
         if (Sample::CharQ(*evt, &uni)) {
             switch (uni) {
-                case '1': this->toggle(fShowSkeleton); return true;
-                case '2': this->toggle(fShowStroke); return true;
-                case '3': this->toggle(fShowHidden); return true;
-                case '4': this->toggle3(fJoinType); return true;
-                case '5': this->toggle3(fCapType); return true;
-                case '6': this->toggle(fClosed); return true;
-                case '-': fWidth -= 5; return true;
-                case '=': fWidth += 5; return true;
-                default: break;
+                case '1':
+                    this->toggle(fShowSkeleton);
+                    return true;
+                case '2':
+                    this->toggle(fShowStroke);
+                    return true;
+                case '3':
+                    this->toggle(fShowHidden);
+                    return true;
+                case '4':
+                    this->toggle3(fJoinType);
+                    return true;
+                case '5':
+                    this->toggle3(fCapType);
+                    return true;
+                case '6':
+                    this->toggle(fClosed);
+                    return true;
+                case '-':
+                    fWidth -= 5;
+                    return true;
+                case '=':
+                    fWidth += 5;
+                    return true;
+                default:
+                    break;
             }
         }
         return this->INHERITED::onQuery(evt);
@@ -449,7 +462,7 @@ protected:
 private:
     typedef Sample INHERITED;
 };
-DEF_SAMPLE( return new FatStroke; )
+DEF_SAMPLE(return new FatStroke;)
 
 static int compute_parallel_to_base(const SkPoint pts[4], SkScalar t[2]) {
     // F = At^3 + Bt^2 + Ct + D
@@ -474,9 +487,7 @@ static int compute_parallel_to_base(const SkPoint pts[4], SkScalar t[2]) {
 
 class CubicCurve : public Sample {
 public:
-    enum {
-        N = 4
-    };
+    enum { N = 4 };
     SkPoint fPts[N];
 
     CubicCurve() {
@@ -528,13 +539,13 @@ protected:
             canvas->drawPoint(loc, paint);
 
             paint.setColor(0xFF008800);
-            SkEvalCubicAt(fPts, 1.0f/3, &loc, nullptr, nullptr);
+            SkEvalCubicAt(fPts, 1.0f / 3, &loc, nullptr, nullptr);
             canvas->drawPoint(loc, paint);
-            SkEvalCubicAt(fPts, 2.0f/3, &loc, nullptr, nullptr);
+            SkEvalCubicAt(fPts, 2.0f / 3, &loc, nullptr, nullptr);
             canvas->drawPoint(loc, paint);
 
-       //     n = SkFindCubicInflections(fPts, t);
-       //     printf("inflections %d %g %g\n", n, t[0], t[1]);
+            //     n = SkFindCubicInflections(fPts, t);
+            //     printf("inflections %d %g %g\n", n, t[0], t[1]);
         }
 
         {
@@ -572,11 +583,9 @@ protected:
 private:
     typedef Sample INHERITED;
 };
-DEF_SAMPLE( return new CubicCurve; )
+DEF_SAMPLE(return new CubicCurve;)
 
-static SkPoint lerp(SkPoint a, SkPoint b, float t) {
-    return a * (1 - t) + b * t;
-}
+static SkPoint lerp(SkPoint a, SkPoint b, float t) { return a * (1 - t) + b * t; }
 
 static int find_max_deviation_cubic(const SkPoint src[4], SkScalar ts[2]) {
     // deviation = F' x (d - a) == 0, solve for t(s)
@@ -595,9 +604,7 @@ static int find_max_deviation_cubic(const SkPoint src[4], SkScalar ts[2]) {
 
 class CubicCurve2 : public Sample {
 public:
-    enum {
-        N = 7
-    };
+    enum { N = 7 };
     SkPoint fPts[N];
     SkPoint* fQuad = fPts + 4;
     SkScalar fT = 0.5f;
@@ -606,14 +613,14 @@ public:
     SkScalar fScale = 0.75;
 
     CubicCurve2() {
-        fPts[0] = { 90, 300 };
-        fPts[1] = { 30, 60 };
-        fPts[2] = { 250, 30 };
-        fPts[3] = { 350, 200 };
+        fPts[0] = {90, 300};
+        fPts[1] = {30, 60};
+        fPts[2] = {250, 30};
+        fPts[3] = {350, 200};
 
-        fQuad[0] = fPts[0] + SkVector{ 300, 0};
-        fQuad[1] = fPts[1] + SkVector{ 300, 0};
-        fQuad[2] = fPts[2] + SkVector{ 300, 0};
+        fQuad[0] = fPts[0] + SkVector{300, 0};
+        fQuad[1] = fPts[1] + SkVector{300, 0};
+        fQuad[2] = fPts[2] + SkVector{300, 0};
     }
 
 protected:
@@ -625,16 +632,25 @@ protected:
         SkUnichar uni;
         if (Sample::CharQ(*evt, &uni)) {
             switch (uni) {
-                case 's': fShowSub = !fShowSub; break;
-                case 'f': fShowFlatness = !fShowFlatness; break;
-                case '-': fT -= 1.0f / 32; break;
-                case '=': fT += 1.0f / 32; break;
-                default: goto DONE;
+                case 's':
+                    fShowSub = !fShowSub;
+                    break;
+                case 'f':
+                    fShowFlatness = !fShowFlatness;
+                    break;
+                case '-':
+                    fT -= 1.0f / 32;
+                    break;
+                case '=':
+                    fT += 1.0f / 32;
+                    break;
+                default:
+                    goto DONE;
             }
             fT = std::min(1.0f, std::max(0.0f, fT));
             return true;
         }
-        DONE:
+    DONE:
         return this->INHERITED::onQuery(evt);
     }
 
@@ -646,8 +662,8 @@ protected:
         int n = count;
         for (int n = count; n > 0; --n) {
             for (int i = 0; i < n; ++i) {
-                canvas->drawLine(prev[i], prev[i+1], paint);
-                tmp[i] = lerp(prev[i], prev[i+1], fT);
+                canvas->drawLine(prev[i], prev[i + 1], paint);
+                tmp[i] = lerp(prev[i], prev[i + 1], fT);
             }
             prev = tmp;
             tmp += n;
@@ -675,7 +691,7 @@ protected:
 
         paint.setColor(0xFF0000FF);
         SkPoint pts[2];
-        pts[0] = (fQuad[0] + fQuad[1] + fQuad[1] + fQuad[2])*0.25;
+        pts[0] = (fQuad[0] + fQuad[1] + fQuad[1] + fQuad[2]) * 0.25;
         pts[1] = (fQuad[0] + fQuad[2]) * 0.5;
         canvas->drawLine(pts[0], pts[1], paint);
 
@@ -746,7 +762,6 @@ protected:
                 canvas->drawCircle(p.fX, p.fY, 3, paint);
             }
         }
-
     }
 
     bool onClick(Click* click) override {
@@ -775,5 +790,4 @@ protected:
 private:
     typedef Sample INHERITED;
 };
-DEF_SAMPLE( return new CubicCurve2; )
-
+DEF_SAMPLE(return new CubicCurve2;)

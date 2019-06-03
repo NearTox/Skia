@@ -5,13 +5,27 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkArithmeticImageFilter.h"
-#include "SkImage.h"
-#include "SkImageSource.h"
-#include "SkOffsetImageFilter.h"
-#include "SkXfermodeImageFilter.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkArithmeticImageFilter.h"
+#include "include/effects/SkImageSource.h"
+#include "include/effects/SkOffsetImageFilter.h"
+#include "include/effects/SkXfermodeImageFilter.h"
+#include "tools/ToolUtils.h"
+
+#include <utility>
 
 #define WIDTH 600
 #define HEIGHT 700
@@ -21,27 +35,18 @@ namespace skiagm {
 
 class XfermodeImageFilterGM : public GM {
 public:
-    XfermodeImageFilterGM(){
-        this->setBGColor(0xFF000000);
-    }
+    XfermodeImageFilterGM() { this->setBGColor(0xFF000000); }
 
 protected:
-    SkString onShortName() override {
-        return SkString("xfermodeimagefilter");
-    }
+    SkString onShortName() override { return SkString("xfermodeimagefilter"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(WIDTH, HEIGHT);
-    }
+    SkISize onISize() override { return SkISize::Make(WIDTH, HEIGHT); }
 
     void onOnceBeforeDraw() override {
-        fBitmap = sk_tool_utils::create_string_bitmap(80, 80, 0xD000D000, 15, 65, 96, "e");
+        fBitmap = ToolUtils::create_string_bitmap(80, 80, 0xD000D000, 15, 65, 96, "e");
 
         fCheckerboard = SkImage::MakeFromBitmap(
-            sk_tool_utils::create_checkerboard_bitmap(80, 80,
-                                                      0xFFA0A0A0,
-                                                      0xFF404040,
-                                                      8));
+                ToolUtils::create_checkerboard_bitmap(80, 80, 0xFFA0A0A0, 0xFF404040, 8));
     }
 
     void onDraw(SkCanvas* canvas) override {
@@ -49,36 +54,17 @@ protected:
         SkPaint paint;
 
         const SkBlendMode gModes[] = {
-            SkBlendMode::kClear,
-            SkBlendMode::kSrc,
-            SkBlendMode::kDst,
-            SkBlendMode::kSrcOver,
-            SkBlendMode::kDstOver,
-            SkBlendMode::kSrcIn,
-            SkBlendMode::kDstIn,
-            SkBlendMode::kSrcOut,
-            SkBlendMode::kDstOut,
-            SkBlendMode::kSrcATop,
-            SkBlendMode::kDstATop,
-            SkBlendMode::kXor,
+                SkBlendMode::kClear,      SkBlendMode::kSrc,        SkBlendMode::kDst,
+                SkBlendMode::kSrcOver,    SkBlendMode::kDstOver,    SkBlendMode::kSrcIn,
+                SkBlendMode::kDstIn,      SkBlendMode::kSrcOut,     SkBlendMode::kDstOut,
+                SkBlendMode::kSrcATop,    SkBlendMode::kDstATop,    SkBlendMode::kXor,
 
-            SkBlendMode::kPlus,
-            SkBlendMode::kModulate,
-            SkBlendMode::kScreen,
-            SkBlendMode::kOverlay,
-            SkBlendMode::kDarken,
-            SkBlendMode::kLighten,
-            SkBlendMode::kColorDodge,
-            SkBlendMode::kColorBurn,
-            SkBlendMode::kHardLight,
-            SkBlendMode::kSoftLight,
-            SkBlendMode::kDifference,
-            SkBlendMode::kExclusion,
-            SkBlendMode::kMultiply,
-            SkBlendMode::kHue,
-            SkBlendMode::kSaturation,
-            SkBlendMode::kColor,
-            SkBlendMode::kLuminosity,
+                SkBlendMode::kPlus,       SkBlendMode::kModulate,   SkBlendMode::kScreen,
+                SkBlendMode::kOverlay,    SkBlendMode::kDarken,     SkBlendMode::kLighten,
+                SkBlendMode::kColorDodge, SkBlendMode::kColorBurn,  SkBlendMode::kHardLight,
+                SkBlendMode::kSoftLight,  SkBlendMode::kDifference, SkBlendMode::kExclusion,
+                SkBlendMode::kMultiply,   SkBlendMode::kHue,        SkBlendMode::kSaturation,
+                SkBlendMode::kColor,      SkBlendMode::kLuminosity,
         };
 
         int x = 0, y = 0;
@@ -93,8 +79,8 @@ protected:
             }
         }
         // Test arithmetic mode as image filter
-        paint.setImageFilter(SkArithmeticImageFilter::Make(0, 1, 1, 0, true, background,
-                                                           nullptr, nullptr));
+        paint.setImageFilter(
+                SkArithmeticImageFilter::Make(0, 1, 1, 0, true, background, nullptr, nullptr));
         DrawClippedBitmap(canvas, fBitmap, paint, x, y);
         x += fBitmap.width() + MARGIN;
         if (x + fBitmap.width() > WIDTH) {
@@ -114,16 +100,12 @@ protected:
         // Test offsets on SrcMode (uses fixed-function blend)
         sk_sp<SkImage> bitmapImage(SkImage::MakeFromBitmap(fBitmap));
         sk_sp<SkImageFilter> foreground(SkImageSource::Make(std::move(bitmapImage)));
-        sk_sp<SkImageFilter> offsetForeground(SkOffsetImageFilter::Make(SkIntToScalar(4),
-                                                                        SkIntToScalar(-4),
-                                                                        foreground));
-        sk_sp<SkImageFilter> offsetBackground(SkOffsetImageFilter::Make(SkIntToScalar(4),
-                                                                        SkIntToScalar(4),
-                                                                        background));
-        paint.setImageFilter(SkXfermodeImageFilter::Make(SkBlendMode::kSrcOver,
-                                                         offsetBackground,
-                                                         offsetForeground,
-                                                         nullptr));
+        sk_sp<SkImageFilter> offsetForeground(
+                SkOffsetImageFilter::Make(SkIntToScalar(4), SkIntToScalar(-4), foreground));
+        sk_sp<SkImageFilter> offsetBackground(
+                SkOffsetImageFilter::Make(SkIntToScalar(4), SkIntToScalar(4), background));
+        paint.setImageFilter(SkXfermodeImageFilter::Make(SkBlendMode::kSrcOver, offsetBackground,
+                                                         offsetForeground, nullptr));
         DrawClippedPaint(canvas, clipRect, paint, x, y);
         x += fBitmap.width() + MARGIN;
         if (x + fBitmap.width() > WIDTH) {
@@ -131,10 +113,8 @@ protected:
             y += fBitmap.height() + MARGIN;
         }
         // Test offsets on Darken (uses shader blend)
-        paint.setImageFilter(SkXfermodeImageFilter::Make(SkBlendMode::kDarken,
-                                                         offsetBackground,
-                                                         offsetForeground,
-                                                         nullptr));
+        paint.setImageFilter(SkXfermodeImageFilter::Make(SkBlendMode::kDarken, offsetBackground,
+                                                         offsetForeground, nullptr));
         DrawClippedPaint(canvas, clipRect, paint, x, y);
         x += fBitmap.width() + MARGIN;
         if (x + fBitmap.width() > WIDTH) {
@@ -143,22 +123,17 @@ protected:
         }
         // Test cropping
         constexpr size_t nbSamples = 3;
-        const SkBlendMode sampledModes[nbSamples] = {
-            SkBlendMode::kOverlay, SkBlendMode::kSrcOver, SkBlendMode::kPlus
-        };
-        int offsets[nbSamples][4] = {{ 10,  10, -16, -16},
-                                     { 10,  10,  10,  10},
-                                     {-10, -10,  -6,  -6}};
+        const SkBlendMode sampledModes[nbSamples] = {SkBlendMode::kOverlay, SkBlendMode::kSrcOver,
+                                                     SkBlendMode::kPlus};
+        int offsets[nbSamples][4] = {{10, 10, -16, -16}, {10, 10, 10, 10}, {-10, -10, -6, -6}};
         for (size_t i = 0; i < nbSamples; ++i) {
             SkIRect cropRect = SkIRect::MakeXYWH(offsets[i][0],
                                                  offsets[i][1],
-                                                 fBitmap.width()  + offsets[i][2],
+                                                 fBitmap.width() + offsets[i][2],
                                                  fBitmap.height() + offsets[i][3]);
             SkImageFilter::CropRect rect(SkRect::Make(cropRect));
-            paint.setImageFilter(SkXfermodeImageFilter::Make(sampledModes[i],
-                                                             offsetBackground,
-                                                             offsetForeground,
-                                                             &rect));
+            paint.setImageFilter(SkXfermodeImageFilter::Make(sampledModes[i], offsetBackground,
+                                                             offsetForeground, &rect));
             DrawClippedPaint(canvas, clipRect, paint, x, y);
             x += fBitmap.width() + MARGIN;
             if (x + fBitmap.width() > WIDTH) {
@@ -190,8 +165,7 @@ protected:
         // the region outside the foreground.
         mode = SkBlendMode::kSrcIn;
         SkImageFilter::CropRect cropRectFull(SkRect::MakeXYWH(0, 0, 80, 80));
-        paint.setImageFilter(SkXfermodeImageFilter::Make(mode, background,
-                                                         cropped, &cropRectFull));
+        paint.setImageFilter(SkXfermodeImageFilter::Make(mode, background, cropped, &cropRectFull));
         DrawClippedPaint(canvas, clipRect, paint, x, y);
         x += fBitmap.width() + MARGIN;
         if (x + fBitmap.width() > WIDTH) {
@@ -210,8 +184,8 @@ private:
         canvas->restore();
     }
 
-    static void DrawClippedPaint(SkCanvas* canvas, const SkRect& rect, const SkPaint& paint,
-                                 int x, int y) {
+    static void DrawClippedPaint(SkCanvas* canvas, const SkRect& rect, const SkPaint& paint, int x,
+                                 int y) {
         canvas->save();
         canvas->translate(SkIntToScalar(x), SkIntToScalar(y));
         canvas->clipRect(rect);
@@ -219,14 +193,14 @@ private:
         canvas->restore();
     }
 
-    SkBitmap        fBitmap;
-    sk_sp<SkImage>  fCheckerboard;
+    SkBitmap fBitmap;
+    sk_sp<SkImage> fCheckerboard;
 
     typedef GM INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new XfermodeImageFilterGM; );
+DEF_GM(return new XfermodeImageFilterGM;);
 
-}
+}  // namespace skiagm

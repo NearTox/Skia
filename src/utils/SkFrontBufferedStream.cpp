@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "SkFrontBufferedStream.h"
-#include "SkStream.h"
-#include "SkTemplates.h"
+#include "include/utils/SkFrontBufferedStream.h"
+#include "include/core/SkStream.h"
+#include "include/private/SkTemplates.h"
 
 class FrontBufferedStream : public SkStreamRewindable {
 public:
@@ -30,18 +30,18 @@ private:
     SkStreamRewindable* onDuplicate() const override { return nullptr; }
 
     std::unique_ptr<SkStream> fStream;
-    const bool                fHasLength;
-    const size_t              fLength;
+    const bool fHasLength;
+    const size_t fLength;
     // Current offset into the stream. Always >= 0.
-    size_t                    fOffset;
+    size_t fOffset;
     // Amount that has been buffered by calls to read. Will always be less than
     // fBufferSize.
-    size_t                    fBufferedSoFar;
+    size_t fBufferedSoFar;
     // Total size of the buffer.
-    const size_t              fBufferSize;
+    const size_t fBufferSize;
     // FIXME: SkAutoTMalloc throws on failure. Instead, Create should return a
     // nullptr stream.
-    SkAutoTMalloc<char>       fBuffer;
+    SkAutoTMalloc<char> fBuffer;
 
     // Read up to size bytes from already buffered data, and copy to
     // dst, if non-nullptr. Updates fOffset. Assumes that fOffset is less
@@ -66,18 +66,18 @@ std::unique_ptr<SkStreamRewindable> SkFrontBufferedStream::Make(std::unique_ptr<
     if (!stream) {
         return nullptr;
     }
-    return std::unique_ptr<SkStreamRewindable>(new FrontBufferedStream(std::move(stream),
-                                                                       bufferSize));
+    return std::unique_ptr<SkStreamRewindable>(
+            new FrontBufferedStream(std::move(stream), bufferSize));
 }
 
 FrontBufferedStream::FrontBufferedStream(std::unique_ptr<SkStream> stream, size_t bufferSize)
-    : fStream(std::move(stream))
-    , fHasLength(fStream->hasPosition() && fStream->hasLength())
-    , fLength(fStream->getLength() - fStream->getPosition())
-    , fOffset(0)
-    , fBufferedSoFar(0)
-    , fBufferSize(bufferSize)
-    , fBuffer(bufferSize) {}
+        : fStream(std::move(stream))
+        , fHasLength(fStream->hasPosition() && fStream->hasLength())
+        , fLength(fStream->getLength() - fStream->getPosition())
+        , fOffset(0)
+        , fBufferedSoFar(0)
+        , fBufferSize(bufferSize)
+        , fBuffer(bufferSize) {}
 
 bool FrontBufferedStream::isAtEnd() const {
     if (fOffset < fBufferedSoFar) {
@@ -174,7 +174,7 @@ size_t FrontBufferedStream::peek(void* dst, size_t size) const {
 size_t FrontBufferedStream::read(void* voidDst, size_t size) {
     // Cast voidDst to a char* for easy addition.
     char* dst = reinterpret_cast<char*>(voidDst);
-    SkDEBUGCODE(const size_t totalSize = size;)
+    SkDEBUGCODE(const size_t totalSize = size);
     const size_t start = fOffset;
 
     // First, read any data that was previously buffered.
@@ -206,7 +206,7 @@ size_t FrontBufferedStream::read(void* voidDst, size_t size) {
 
     if (size > 0 && !fStream->isAtEnd()) {
         SkDEBUGCODE(const size_t bytesReadDirectly =) this->readDirectlyFromStream(dst, size);
-        SkDEBUGCODE(size -= bytesReadDirectly;)
+        SkDEBUGCODE(size -= bytesReadDirectly);
         SkASSERT(size + (fOffset - start) == totalSize);
     }
 

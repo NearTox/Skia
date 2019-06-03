@@ -5,32 +5,31 @@
  * found in the LICENSE file.
  */
 
-#include "SkColor.h"
-#include "SkColorData.h"
-#include "SkFixed.h"
+#include "include/core/SkColor.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkFixed.h"
 
-SkPMColor SkPreMultiplyARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b) {
+SkPMColor SkPreMultiplyARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b) noexcept {
     return SkPremultiplyARGBInline(a, r, g, b);
 }
 
-SkPMColor SkPreMultiplyColor(SkColor c) {
-    return SkPremultiplyARGBInline(SkColorGetA(c), SkColorGetR(c),
-                                   SkColorGetG(c), SkColorGetB(c));
+SkPMColor SkPreMultiplyColor(SkColor c) noexcept {
+    return SkPremultiplyARGBInline(SkColorGetA(c), SkColorGetR(c), SkColorGetG(c), SkColorGetB(c));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static inline SkScalar ByteToScalar(U8CPU x) {
+static constexpr inline SkScalar ByteToScalar(U8CPU x) noexcept {
     SkASSERT(x <= 255);
     return SkIntToScalar(x) / 255;
 }
 
-static inline SkScalar ByteDivToScalar(int numer, U8CPU denom) {
+static constexpr inline SkScalar ByteDivToScalar(int numer, U8CPU denom) noexcept {
     // cast to keep the answer signed
     return SkIntToScalar(numer) / (int)denom;
 }
 
-void SkRGBToHSV(U8CPU r, U8CPU g, U8CPU b, SkScalar hsv[3]) {
+void SkRGBToHSV(U8CPU r, U8CPU g, U8CPU b, SkScalar hsv[3]) noexcept {
     SkASSERT(hsv);
 
     unsigned min = SkMin32(r, SkMin32(g, b));
@@ -40,7 +39,7 @@ void SkRGBToHSV(U8CPU r, U8CPU g, U8CPU b, SkScalar hsv[3]) {
     SkScalar v = ByteToScalar(max);
     SkASSERT(v >= 0 && v <= SK_Scalar1);
 
-    if (0 == delta) { // we're a shade of gray
+    if (0 == delta) {  // we're a shade of gray
         hsv[0] = 0;
         hsv[1] = 0;
         hsv[2] = v;
@@ -55,7 +54,7 @@ void SkRGBToHSV(U8CPU r, U8CPU g, U8CPU b, SkScalar hsv[3]) {
         h = ByteDivToScalar(g - b, delta);
     } else if (g == max) {
         h = SkIntToScalar(2) + ByteDivToScalar(b - r, delta);
-    } else { // b == max
+    } else {  // b == max
         h = SkIntToScalar(4) + ByteDivToScalar(r - g, delta);
     }
 
@@ -70,7 +69,7 @@ void SkRGBToHSV(U8CPU r, U8CPU g, U8CPU b, SkScalar hsv[3]) {
     hsv[2] = v;
 }
 
-SkColor SkHSVToColor(U8CPU a, const SkScalar hsv[3]) {
+SkColor SkHSVToColor(U8CPU a, const SkScalar hsv[3]) noexcept {
     SkASSERT(hsv);
 
     SkScalar s = SkScalarPin(hsv[1], 0, 1);
@@ -78,10 +77,10 @@ SkColor SkHSVToColor(U8CPU a, const SkScalar hsv[3]) {
 
     U8CPU v_byte = SkScalarRoundToInt(v * 255);
 
-    if (SkScalarNearlyZero(s)) { // shade of gray
+    if (SkScalarNearlyZero(s)) {  // shade of gray
         return SkColorSetARGB(a, v_byte, v_byte, v_byte);
     }
-    SkScalar hx = (hsv[0] < 0 || hsv[0] >= SkIntToScalar(360)) ? 0 : hsv[0]/60;
+    SkScalar hx = (hsv[0] < 0 || hsv[0] >= SkIntToScalar(360)) ? 0 : hsv[0] / 60;
     SkScalar w = SkScalarFloorToScalar(hx);
     SkScalar f = hx - w;
 
@@ -93,56 +92,73 @@ SkColor SkHSVToColor(U8CPU a, const SkScalar hsv[3]) {
 
     SkASSERT((unsigned)(w) < 6);
     switch ((unsigned)(w)) {
-        case 0: r = v_byte;  g = t;      b = p; break;
-        case 1: r = q;       g = v_byte; b = p; break;
-        case 2: r = p;       g = v_byte; b = t; break;
-        case 3: r = p;       g = q;      b = v_byte; break;
-        case 4: r = t;       g = p;      b = v_byte; break;
-        default: r = v_byte; g = p;      b = q; break;
+        case 0:
+            r = v_byte;
+            g = t;
+            b = p;
+            break;
+        case 1:
+            r = q;
+            g = v_byte;
+            b = p;
+            break;
+        case 2:
+            r = p;
+            g = v_byte;
+            b = t;
+            break;
+        case 3:
+            r = p;
+            g = q;
+            b = v_byte;
+            break;
+        case 4:
+            r = t;
+            g = p;
+            b = v_byte;
+            break;
+        default:
+            r = v_byte;
+            g = p;
+            b = q;
+            break;
     }
     return SkColorSetARGB(a, r, g, b);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <>
-SkColor4f SkColor4f::FromColor(SkColor bgra) {
+template <> SkColor4f SkColor4f::FromColor(SkColor bgra) {
     SkColor4f rgba;
     swizzle_rb(Sk4f_fromL32(bgra)).store(rgba.vec());
     return rgba;
 }
 
-template <>
-SkColor SkColor4f::toSkColor() const {
+template <> SkColor SkColor4f::toSkColor() const {
     return Sk4f_toL32(swizzle_rb(Sk4f::Load(this->vec())));
 }
 
-template <>
-uint32_t SkColor4f::toBytes_RGBA() const {
+template <> uint32_t SkColor4f::toBytes_RGBA() const noexcept {
     return Sk4f_toL32(Sk4f::Load(this->vec()));
 }
 
-template <>
-SkColor4f SkColor4f::FromBytes_RGBA(uint32_t c) {
+template <> SkColor4f SkColor4f::FromBytes_RGBA(uint32_t c) noexcept {
     SkColor4f color;
     Sk4f_fromL32(c).store(&color);
     return color;
 }
 
-template <>
-SkPMColor4f SkPMColor4f::FromPMColor(SkPMColor c) {
+template <> SkPMColor4f SkPMColor4f::FromPMColor(SkPMColor c) {
     SkPMColor4f color;
     swizzle_rb_if_bgra(Sk4f_fromL32(c)).store(&color);
     return color;
 }
 
-template <>
-uint32_t SkPMColor4f::toBytes_RGBA() const {
+template <> uint32_t SkPMColor4f::toBytes_RGBA() const noexcept {
     return Sk4f_toL32(Sk4f::Load(this->vec()));
 }
 
-template <>
-SkPMColor4f SkPMColor4f::FromBytes_RGBA(uint32_t c) {
+template <> SkPMColor4f SkPMColor4f::FromBytes_RGBA(uint32_t c) noexcept {
     SkPMColor4f color;
     Sk4f_fromL32(c).store(&color);
     return color;

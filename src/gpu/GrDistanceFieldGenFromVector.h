@@ -8,12 +8,12 @@
 #ifndef GrDistanceFieldGenFromVector_DEFINED
 #define GrDistanceFieldGenFromVector_DEFINED
 
-#include "SkPath.h"
+#include "include/core/SkPath.h"
 
 class SkMatrix;
 
 #ifndef SK_USE_LEGACY_DISTANCE_FIELDS
-    #define SK_USE_LEGACY_DISTANCE_FIELDS
+#define SK_USE_LEGACY_DISTANCE_FIELDS
 #endif
 
 /** Given a vector path, generate the associated distance field.
@@ -26,12 +26,11 @@ class SkMatrix;
  *  @param height            Height of the distance field.
  *  @param rowBytes          Size of each row in the distance field, in bytes.
  */
-bool GrGenerateDistanceFieldFromPath(unsigned char* distanceField,
-                                     const SkPath& path, const SkMatrix& viewMatrix,
-                                     int width, int height, size_t rowBytes);
+bool GrGenerateDistanceFieldFromPath(unsigned char* distanceField, const SkPath& path,
+                                     const SkMatrix& viewMatrix, int width, int height,
+                                     size_t rowBytes);
 
-inline bool IsDistanceFieldSupportedFillType(SkPath::FillType fFillType)
-{
+inline bool IsDistanceFieldSupportedFillType(SkPath::FillType fFillType) {
     return (SkPath::kEvenOdd_FillType == fFillType ||
             SkPath::kInverseEvenOdd_FillType == fFillType);
 }

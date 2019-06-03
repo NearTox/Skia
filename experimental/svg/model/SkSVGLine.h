@@ -8,8 +8,8 @@
 #ifndef SkSVGLine_DEFINED
 #define SkSVGLine_DEFINED
 
-#include "SkSVGShape.h"
-#include "SkSVGTypes.h"
+#include "experimental/svg/model/SkSVGShape.h"
+#include "experimental/svg/model/SkSVGTypes.h"
 
 struct SkPoint;
 
@@ -45,4 +45,4 @@ private:
     typedef SkSVGShape INHERITED;
 };
 
-#endif // SkSVGLine_DEFINED
+#endif  // SkSVGLine_DEFINED

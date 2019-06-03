@@ -8,19 +8,19 @@
 #ifndef SkCodec_DEFINED
 #define SkCodec_DEFINED
 
-#include "../private/SkNoncopyable.h"
-#include "../private/SkTemplates.h"
-#include "../private/SkEncodedInfo.h"
-#include "SkCodecAnimation.h"
-#include "SkColor.h"
-#include "SkEncodedImageFormat.h"
-#include "SkEncodedOrigin.h"
-#include "SkImageInfo.h"
-#include "SkPixmap.h"
-#include "SkSize.h"
-#include "SkStream.h"
-#include "SkTypes.h"
-#include "SkYUVASizeInfo.h"
+#include "include/codec/SkCodecAnimation.h"
+#include "include/codec/SkEncodedOrigin.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkEncodedImageFormat.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkPixmap.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkTypes.h"
+#include "include/core/SkYUVASizeInfo.h"
+#include "include/private/SkEncodedInfo.h"
+#include "include/private/SkNoncopyable.h"
+#include "include/private/SkTemplates.h"
 
 #include <vector>
 
@@ -109,7 +109,7 @@ public:
     /**
      *  Readable string representing the error code.
      */
-    static const char* ResultToString(Result);
+    static const char* ResultToString(Result) noexcept;
 
     /**
      *  If this stream represents an encoded image that we know how to decode,
@@ -173,8 +173,8 @@ public:
      */
     SkImageInfo getInfo() const { return fEncodedInfo.makeImageInfo(); }
 
-    SkISize dimensions() const { return {fEncodedInfo.width(), fEncodedInfo.height()}; }
-    SkIRect bounds() const {
+    SkISize dimensions() const noexcept { return {fEncodedInfo.width(), fEncodedInfo.height()}; }
+    SkIRect bounds() const noexcept {
         return SkIRect::MakeWH(fEncodedInfo.width(), fEncodedInfo.height());
     }
 
@@ -228,7 +228,7 @@ public:
     /**
      *  Format of the encoded data.
      */
-    SkEncodedImageFormat getEncodedFormat() const { return this->onGetEncodedFormat(); }
+    SkEncodedImageFormat getEncodedFormat() const noexcept { return this->onGetEncodedFormat(); }
 
     /**
      *  Whether or not the memory passed to getPixels is zero initialized.
@@ -252,14 +252,13 @@ public:
      *  Additional options to pass to getPixels.
      */
     struct Options {
-        Options()
-            : fZeroInitialized(kNo_ZeroInitialized)
-            , fSubset(nullptr)
-            , fFrameIndex(0)
-            , fPriorFrame(kNoFrame)
-        {}
+        Options() noexcept
+                : fZeroInitialized(kNo_ZeroInitialized)
+                , fSubset(nullptr)
+                , fFrameIndex(0)
+                , fPriorFrame(kNoFrame) {}
 
-        ZeroInitialized            fZeroInitialized;
+        ZeroInitialized fZeroInitialized;
         /**
          *  If not NULL, represents a subset of the original image to decode.
          *  Must be within the bounds returned by getInfo().
@@ -277,14 +276,14 @@ public:
          *  subset left and subset width to decode partial scanlines on calls
          *  to getScanlines().
          */
-        const SkIRect*             fSubset;
+        const SkIRect* fSubset;
 
         /**
          *  The frame to decode.
          *
          *  Only meaningful for multi-frame images.
          */
-        int                        fFrameIndex;
+        int fFrameIndex;
 
         /**
          *  If not kNoFrame, the dst already contains the prior frame at this index.
@@ -299,7 +298,7 @@ public:
          *
          *  If set to kNoFrame, the codec will decode any necessary required frame(s) first.
          */
-        int                        fPriorFrame;
+        int fPriorFrame;
     };
 
     /**
@@ -368,8 +367,7 @@ public:
                 SkASSERT(sizeInfo->fSizes[i].fWidth > 0 && sizeInfo->fSizes[i].fHeight > 0 &&
                          sizeInfo->fWidthBytes[i] > 0);
             }
-            SkASSERT(!sizeInfo->fSizes[3].fWidth &&
-                     !sizeInfo->fSizes[3].fHeight &&
+            SkASSERT(!sizeInfo->fSizes[3].fWidth && !sizeInfo->fSizes[3].fHeight &&
                      !sizeInfo->fWidthBytes[3]);
         }
         return result;
@@ -385,11 +383,12 @@ public:
      *                    recommendation (but not smaller).
      *  @param planes     Memory for each of the Y, U, and V planes.
      */
-    Result getYUV8Planes(const SkYUVASizeInfo& sizeInfo, void* planes[SkYUVASizeInfo::kMaxCount]) {
+    Result getYUV8Planes(const SkYUVASizeInfo& sizeInfo,
+                         void* planes[SkYUVASizeInfo::kMaxCount]) noexcept {
         if (!planes || !planes[0] || !planes[1] || !planes[2]) {
             return kInvalidInput;
         }
-        SkASSERT(!planes[3]); // TODO: is this a fair assumption?
+        SkASSERT(!planes[3]);  // TODO: is this a fair assumption?
 
         if (!this->rewindIfNeeded()) {
             return kCouldNotRewind;
@@ -415,7 +414,7 @@ public:
      *  @return Enum representing success or reason for failure.
      */
     Result startIncrementalDecode(const SkImageInfo& dstInfo, void* dst, size_t rowBytes,
-            const Options*);
+                                  const Options*);
 
     Result startIncrementalDecode(const SkImageInfo& dstInfo, void* dst, size_t rowBytes) {
         return this->startIncrementalDecode(dstInfo, dst, rowBytes, nullptr);
@@ -444,7 +443,7 @@ public:
      *  @return kSuccess if all lines requested in startIncrementalDecode have
      *      been completely decoded. kIncompleteInput otherwise.
      */
-    Result incrementalDecode(int* rowsDecoded = nullptr) {
+    Result incrementalDecode(int* rowsDecoded = nullptr) noexcept {
         if (!fStartedIncrementalDecode) {
             return kInvalidParameters;
         }
@@ -559,7 +558,7 @@ public:
      *
      *  This is undefined before startScanlineDecode() is called.
      */
-    SkScanlineOrder getScanlineOrder() const { return this->onGetScanlineOrder(); }
+    SkScanlineOrder getScanlineOrder() const noexcept { return this->onGetScanlineOrder(); }
 
     /**
      *  Returns the y-coordinate of the next row to be returned by the scanline
@@ -587,9 +586,7 @@ public:
      *
      *  May require reading through the stream.
      */
-    int getFrameCount() {
-        return this->onGetFrameCount();
-    }
+    int getFrameCount() noexcept { return this->onGetFrameCount(); }
 
     // Sentinel value used when a frame index implies "no frame":
     // - FrameInfo::fRequiredFrame set to this value means the frame
@@ -609,7 +606,8 @@ public:
     struct FrameInfo {
         /**
          *  The frame that this frame needs to be blended with, or
-         *  kNoFrame if this frame is independent.
+         *  kNoFrame if this frame is independent (so it can be
+         *  drawn over an uninitialized buffer).
          *
          *  Note that this is the *earliest* frame that can be used
          *  for blending. Any frame from [fRequiredFrame, i) can be
@@ -649,7 +647,7 @@ public:
      *  so it should be called after getFrameCount() to parse any frames that
      *  have not already been parsed.
      */
-    bool getFrameInfo(int index, FrameInfo* info) const {
+    bool getFrameInfo(int index, FrameInfo* info) const noexcept {
         if (index < 0) {
             return false;
         }
@@ -684,12 +682,18 @@ public:
      *
      *  For still (non-animated) image codecs, this will return 0.
      */
-    int getRepetitionCount() {
-        return this->onGetRepetitionCount();
-    }
+    int getRepetitionCount() noexcept { return this->onGetRepetitionCount(); }
+
+    // Register a decoder at runtime by passing two function pointers:
+    //    - peek() to return true if the span of bytes appears to be your encoded format;
+    //    - make() to attempt to create an SkCodec from the given stream.
+    // Not thread safe.
+    static void Register(bool (*peek)(const void*, size_t),
+                         std::unique_ptr<SkCodec> (*make)(std::unique_ptr<SkStream>,
+                                                          SkCodec::Result*));
 
 protected:
-    const SkEncodedInfo& getEncodedInfo() const { return fEncodedInfo; }
+    const SkEncodedInfo& getEncodedInfo() const noexcept { return fEncodedInfo; }
 
     using XformFormat = skcms_PixelFormat;
 
@@ -708,11 +712,9 @@ protected:
      *  Subclasses should override if they support dimensions other than the
      *  srcInfo's.
      */
-    virtual bool onDimensionsSupported(const SkISize&) {
-        return false;
-    }
+    virtual bool onDimensionsSupported(const SkISize&) { return false; }
 
-    virtual SkEncodedImageFormat onGetEncodedFormat() const = 0;
+    virtual SkEncodedImageFormat onGetEncodedFormat() const noexcept = 0;
 
     /**
      * @param rowsDecoded When the encoded image stream is incomplete, this function
@@ -720,16 +722,13 @@ protected:
      *                    the number of scanlines that were successfully decoded.
      *                    This will allow getPixels() to fill the uninitialized memory.
      */
-    virtual Result onGetPixels(const SkImageInfo& info,
-                               void* pixels, size_t rowBytes, const Options&,
-                               int* rowsDecoded) = 0;
+    virtual Result onGetPixels(const SkImageInfo& info, void* pixels, size_t rowBytes,
+                               const Options&, int* rowsDecoded) = 0;
 
-    virtual bool onQueryYUV8(SkYUVASizeInfo*, SkYUVColorSpace*) const {
-        return false;
-    }
+    virtual bool onQueryYUV8(SkYUVASizeInfo*, SkYUVColorSpace*) const { return false; }
 
     virtual Result onGetYUV8Planes(const SkYUVASizeInfo&,
-                                   void*[SkYUVASizeInfo::kMaxCount] /*planes*/) {
+                                   void * [SkYUVASizeInfo::kMaxCount] /*planes*/) {
         return kUnimplemented;
     }
 
@@ -755,16 +754,12 @@ protected:
      *
      *  Subclasses should do any set up needed after a rewind.
      */
-    virtual bool onRewind() {
-        return true;
-    }
+    virtual bool onRewind() { return true; }
 
     /**
      * Get method for the input stream
      */
-    SkStream* stream() {
-        return fStream.get();
-    }
+    SkStream* stream() noexcept { return fStream.get(); }
 
     /**
      *  The remaining functions revolve around decoding scanlines.
@@ -773,11 +768,11 @@ protected:
     /**
      *  Most images types will be kTopDown and will not need to override this function.
      */
-    virtual SkScanlineOrder onGetScanlineOrder() const { return kTopDown_SkScanlineOrder; }
+    virtual SkScanlineOrder onGetScanlineOrder() const noexcept { return kTopDown_SkScanlineOrder; }
 
-    const SkImageInfo& dstInfo() const { return fDstInfo; }
+    const SkImageInfo& dstInfo() const noexcept { return fDstInfo; }
 
-    const Options& options() const { return fOptions; }
+    const Options& options() const noexcept { return fOptions; }
 
     /**
      *  Returns the number of scanlines that have been decoded so far.
@@ -785,7 +780,7 @@ protected:
      *
      *  Returns -1 if we have not started a scanline decode.
      */
-    int currScanline() const { return fCurrScanline; }
+    int currScanline() const noexcept { return fCurrScanline; }
 
     virtual int onOutputScanline(int inputScanline) const;
 
@@ -800,48 +795,42 @@ protected:
     // Some classes never need a colorXform e.g.
     // - ICO uses its embedded codec's colorXform
     // - WBMP is just Black/White
-    virtual bool usesColorXform() const { return true; }
+    virtual bool usesColorXform() const noexcept { return true; }
     void applyColorXform(void* dst, const void* src, int count) const;
 
-    bool colorXform() const { return fXformTime != kNo_XformTime; }
-    bool xformOnDecode() const { return fXformTime == kDecodeRow_XformTime; }
+    bool colorXform() const noexcept { return fXformTime != kNo_XformTime; }
+    bool xformOnDecode() const noexcept { return fXformTime == kDecodeRow_XformTime; }
 
-    virtual int onGetFrameCount() {
-        return 1;
-    }
+    virtual int onGetFrameCount() noexcept { return 1; }
 
-    virtual bool onGetFrameInfo(int, FrameInfo*) const {
-        return false;
-    }
+    virtual bool onGetFrameInfo(int, FrameInfo*) const noexcept { return false; }
 
-    virtual int onGetRepetitionCount() {
-        return 0;
-    }
+    virtual int onGetRepetitionCount() noexcept { return 0; }
 
 private:
-    const SkEncodedInfo                fEncodedInfo;
-    const XformFormat                  fSrcXformFormat;
-    std::unique_ptr<SkStream>          fStream;
-    bool                               fNeedsRewind;
-    const SkEncodedOrigin              fOrigin;
+    const SkEncodedInfo fEncodedInfo;
+    const XformFormat fSrcXformFormat;
+    std::unique_ptr<SkStream> fStream;
+    bool fNeedsRewind;
+    const SkEncodedOrigin fOrigin;
 
-    SkImageInfo                        fDstInfo;
-    Options                            fOptions;
+    SkImageInfo fDstInfo;
+    Options fOptions;
 
     enum XformTime {
         kNo_XformTime,
         kPalette_XformTime,
         kDecodeRow_XformTime,
     };
-    XformTime                          fXformTime;
-    XformFormat                        fDstXformFormat; // Based on fDstInfo.
-    skcms_ICCProfile                   fDstProfile;
-    skcms_AlphaFormat                  fDstXformAlphaFormat;
+    XformTime fXformTime;
+    XformFormat fDstXformFormat;  // Based on fDstInfo.
+    skcms_ICCProfile fDstProfile;
+    skcms_AlphaFormat fDstXformAlphaFormat;
 
     // Only meaningful during scanline decodes.
-    int                                fCurrScanline;
+    int fCurrScanline;
 
-    bool                               fStartedIncrementalDecode;
+    bool fStartedIncrementalDecode;
 
     bool initializeColorXform(const SkImageInfo& dstInfo, SkEncodedInfo::Alpha, bool srcIsOpaque);
 
@@ -861,9 +850,7 @@ private:
     /**
      *  For multi-framed images, return the object with information about the frames.
      */
-    virtual const SkFrameHolder* getFrameHolder() const {
-        return nullptr;
-    }
+    virtual const SkFrameHolder* getFrameHolder() const { return nullptr; }
 
     /**
      *  Check for a valid Options.fFrameIndex, and decode prior frames if necessary.
@@ -872,19 +859,16 @@ private:
 
     // Methods for scanline decoding.
     virtual Result onStartScanlineDecode(const SkImageInfo& /*dstInfo*/,
-            const Options& /*options*/) {
+                                         const Options& /*options*/) noexcept {
         return kUnimplemented;
     }
 
     virtual Result onStartIncrementalDecode(const SkImageInfo& /*dstInfo*/, void*, size_t,
-            const Options&) {
+                                            const Options&) noexcept {
         return kUnimplemented;
     }
 
-    virtual Result onIncrementalDecode(int*) {
-        return kUnimplemented;
-    }
-
+    virtual Result onIncrementalDecode(int*) noexcept { return kUnimplemented; }
 
     virtual bool onSkipScanlines(int /*countLines*/) { return false; }
 
@@ -905,7 +889,7 @@ private:
      * @param linesDecoded   Number of lines that were successfully decoded
      */
     void fillIncompleteImage(const SkImageInfo& dstInfo, void* dst, size_t rowBytes,
-            ZeroInitialized zeroInit, int linesRequested, int linesDecoded);
+                             ZeroInitialized zeroInit, int linesRequested, int linesDecoded);
 
     /**
      *  Return an object which will allow forcing scanline decodes to sample in X.
@@ -920,6 +904,6 @@ private:
     friend class DM::CodecSrc;  // for fillIncompleteImage
     friend class SkSampledCodec;
     friend class SkIcoCodec;
-    friend class SkAndroidCodec; // for fEncodedInfo
+    friend class SkAndroidCodec;  // for fEncodedInfo
 };
-#endif // SkCodec_DEFINED
+#endif  // SkCodec_DEFINED

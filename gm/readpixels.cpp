@@ -5,15 +5,31 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "Resources.h"
-#include "SkCodec.h"
-#include "SkColorSpace.h"
-#include "SkColorSpacePriv.h"
-#include "SkHalf.h"
-#include "SkImage.h"
-#include "SkImageInfoPriv.h"
-#include "SkPictureRecorder.h"
+#include "gm/gm.h"
+#include "include/codec/SkCodec.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkData.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPicture.h"
+#include "include/core/SkPictureRecorder.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "include/third_party/skcms/skcms.h"
+#include "tools/Resources.h"
+
+#include <string.h>
+#include <memory>
+#include <utility>
+
+class GrContext;
 
 static const int kWidth = 64;
 static const int kHeight = 64;
@@ -26,9 +42,10 @@ static sk_sp<SkImage> make_raster_image(SkColorType colorType) {
     }
 
     SkBitmap bitmap;
-    SkImageInfo info = codec->getInfo().makeWH(kWidth, kHeight)
-                                       .makeColorType(colorType)
-                                       .makeAlphaType(kPremul_SkAlphaType);
+    SkImageInfo info = codec->getInfo()
+                               .makeWH(kWidth, kHeight)
+                               .makeColorType(colorType)
+                               .makeAlphaType(kPremul_SkAlphaType);
     bitmap.allocPixels(info);
     codec->getPixels(info, bitmap.getPixels(), bitmap.rowBytes());
     bitmap.setImmutable();
@@ -57,14 +74,13 @@ static sk_sp<SkImage> make_picture_image() {
     draw_contents(recorder.beginRecording(SkRect::MakeIWH(kWidth, kHeight)));
     return SkImage::MakeFromPicture(recorder.finishRecordingAsPicture(),
                                     SkISize::Make(kWidth, kHeight), nullptr, nullptr,
-                                    SkImage::BitDepth::kU8,
-                                    SkColorSpace::MakeSRGB());
+                                    SkImage::BitDepth::kU8, SkColorSpace::MakeSRGB());
 }
 
 static sk_sp<SkColorSpace> make_parametric_transfer_fn(const SkColorSpacePrimaries& primaries) {
     skcms_Matrix3x3 toXYZD50;
     SkAssertResult(primaries.toXYZD50(&toXYZD50));
-    skcms_TransferFunction fn = { 1.8f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f };
+    skcms_TransferFunction fn = {1.8f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f};
     return SkColorSpace::MakeRGB(fn, toXYZD50);
 }
 
@@ -117,13 +133,9 @@ public:
     ReadPixelsGM() {}
 
 protected:
-    SkString onShortName() override {
-        return SkString("readpixels");
-    }
+    SkString onShortName() override { return SkString("readpixels"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(6 * kWidth, 9 * kHeight);
-    }
+    SkISize onISize() override { return SkISize::Make(6 * kWidth, 9 * kHeight); }
 
     void onDraw(SkCanvas* canvas) override {
         const SkAlphaType alphaTypes[] = {
@@ -161,7 +173,7 @@ protected:
                     }
                 }
                 canvas->restore();
-                canvas->translate(0.0f, (float) kHeight);
+                canvas->translate(0.0f, (float)kHeight);
             }
         }
     }
@@ -169,16 +181,14 @@ protected:
 private:
     typedef skiagm::GM INHERITED;
 };
-DEF_GM( return new ReadPixelsGM; )
+DEF_GM(return new ReadPixelsGM;)
 
 class ReadPixelsCodecGM : public skiagm::GM {
 public:
     ReadPixelsCodecGM() {}
 
 protected:
-    SkString onShortName() override {
-        return SkString("readpixelscodec");
-    }
+    SkString onShortName() override { return SkString("readpixelscodec"); }
 
     SkISize onISize() override {
         return SkISize::Make(3 * (kEncodedWidth + 1), 12 * (kEncodedHeight + 1));
@@ -217,12 +227,12 @@ protected:
                     for (SkImage::CachingHint hint : hints) {
                         draw_image(canvas, image.get(), dstColorType, dstAlphaType, dstColorSpace,
                                    hint);
-                        canvas->translate(0.0f, (float) kEncodedHeight + 1);
+                        canvas->translate(0.0f, (float)kEncodedHeight + 1);
                     }
                 }
             }
             canvas->restore();
-            canvas->translate((float) kEncodedWidth + 1, 0.0f);
+            canvas->translate((float)kEncodedWidth + 1, 0.0f);
         }
         return DrawResult::kOk;
     }
@@ -233,20 +243,16 @@ private:
 
     typedef skiagm::GM INHERITED;
 };
-DEF_GM( return new ReadPixelsCodecGM; )
+DEF_GM(return new ReadPixelsCodecGM;)
 
 class ReadPixelsPictureGM : public skiagm::GM {
 public:
     ReadPixelsPictureGM() {}
 
 protected:
-    SkString onShortName() override {
-        return SkString("readpixelspicture");
-    }
+    SkString onShortName() override { return SkString("readpixelspicture"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(3 * kWidth, 12 * kHeight);
-    }
+    SkISize onISize() override { return SkISize::Make(3 * kWidth, 12 * kHeight); }
 
     DrawResult onDraw(SkCanvas* canvas, SkString* errorMsg) override {
         if (!canvas->imageInfo().colorSpace()) {
@@ -284,19 +290,18 @@ protected:
                         for (SkImage::CachingHint hint : hints) {
                             draw_image(canvas, image.get(), dstColorType, dstAlphaType,
                                        dstColorSpace, hint);
-                            canvas->translate(0.0f, (float) kHeight);
+                            canvas->translate(0.0f, (float)kHeight);
                         }
                     }
                 }
                 canvas->restore();
-                canvas->translate((float) kWidth, 0.0f);
+                canvas->translate((float)kWidth, 0.0f);
             }
         }
         return DrawResult::kOk;
     }
 
 private:
-
     typedef skiagm::GM INHERITED;
 };
-DEF_GM( return new ReadPixelsPictureGM; )
+DEF_GM(return new ReadPixelsPictureGM;)

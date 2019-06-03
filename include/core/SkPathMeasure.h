@@ -8,10 +8,10 @@
 #ifndef SkPathMeasure_DEFINED
 #define SkPathMeasure_DEFINED
 
-#include "../private/SkNoncopyable.h"
-#include "../private/SkTDArray.h"
-#include "SkContourMeasure.h"
-#include "SkPath.h"
+#include "include/core/SkContourMeasure.h"
+#include "include/core/SkPath.h"
+#include "include/private/SkNoncopyable.h"
+#include "include/private/SkTDArray.h"
 
 class SK_API SkPathMeasure : SkNoncopyable {
 public:
@@ -40,13 +40,12 @@ public:
         Returns false if there is no path, or a zero-length path was specified, in which case
         position and tangent are unchanged.
     */
-    bool SK_WARN_UNUSED_RESULT getPosTan(SkScalar distance, SkPoint* position,
-                                         SkVector* tangent);
+    bool SK_WARN_UNUSED_RESULT getPosTan(SkScalar distance, SkPoint* position, SkVector* tangent);
 
     enum MatrixFlags {
-        kGetPosition_MatrixFlag     = 0x01,
-        kGetTangent_MatrixFlag      = 0x02,
-        kGetPosAndTan_MatrixFlag    = kGetPosition_MatrixFlag | kGetTangent_MatrixFlag
+        kGetPosition_MatrixFlag = 0x01,
+        kGetTangent_MatrixFlag = 0x02,
+        kGetPosAndTan_MatrixFlag = kGetPosition_MatrixFlag | kGetTangent_MatrixFlag
     };
 
     /** Pins distance to 0 <= distance <= getLength(), and then computes
@@ -55,7 +54,7 @@ public:
         matrix is unchanged.
     */
     bool SK_WARN_UNUSED_RESULT getMatrix(SkScalar distance, SkMatrix* matrix,
-                                  MatrixFlags flags = kGetPosAndTan_MatrixFlag);
+                                         MatrixFlags flags = kGetPosAndTan_MatrixFlag);
 
     /** Given a start and stop distance, return in dst the intervening segment(s).
         If the segment is zero-length, return false, else return true.
@@ -66,7 +65,7 @@ public:
     bool getSegment(SkScalar startD, SkScalar stopD, SkPath* dst, bool startWithMoveTo);
 
     /** Return true if the current contour is closed()
-    */
+     */
     bool isClosed();
 
     /** Move to the next contour in the path. Return true if one exists, or false if
@@ -75,11 +74,11 @@ public:
     bool nextContour();
 
 #ifdef SK_DEBUG
-    void    dump();
+    void dump();
 #endif
 
 private:
-    SkContourMeasureIter    fIter;
+    SkContourMeasureIter fIter;
     sk_sp<SkContourMeasure> fContour;
 };
 

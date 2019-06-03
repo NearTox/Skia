@@ -5,20 +5,22 @@
  * found in the LICENSE file.
  */
 
-#include "SkAndroidCodec.h"
-#include "SkAnimatedImage.h"
-#include "SkCanvas.h"
-#include "SkCodec.h"
-#include "SkCodecPriv.h"
-#include "SkImagePriv.h"
-#include "SkPicture.h"
-#include "SkPictureRecorder.h"
-#include "SkPixelRef.h"
+#include "include/android/SkAnimatedImage.h"
+#include "include/codec/SkAndroidCodec.h"
+#include "include/codec/SkCodec.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPicture.h"
+#include "include/core/SkPictureRecorder.h"
+#include "include/core/SkPixelRef.h"
+#include "src/codec/SkCodecPriv.h"
+#include "src/core/SkImagePriv.h"
 
+#include <limits.h>
 #include <utility>
 
 sk_sp<SkAnimatedImage> SkAnimatedImage::Make(std::unique_ptr<SkAndroidCodec> codec,
-        SkISize scaledSize, SkIRect cropRect, sk_sp<SkPicture> postProcess) {
+                                             SkISize scaledSize, SkIRect cropRect,
+                                             sk_sp<SkPicture> postProcess) {
     if (!codec) {
         return nullptr;
     }
@@ -27,23 +29,23 @@ sk_sp<SkAnimatedImage> SkAnimatedImage::Make(std::unique_ptr<SkAndroidCodec> cod
 }
 
 sk_sp<SkAnimatedImage> SkAnimatedImage::Make(std::unique_ptr<SkAndroidCodec> codec,
-        const SkImageInfo& requestedInfo, SkIRect cropRect, sk_sp<SkPicture> postProcess) {
+                                             const SkImageInfo& requestedInfo, SkIRect cropRect,
+                                             sk_sp<SkPicture> postProcess) {
     if (!codec) {
         return nullptr;
     }
 
     auto scaledSize = requestedInfo.dimensions();
     auto decodeInfo = requestedInfo;
-    if (codec->getEncodedFormat() != SkEncodedImageFormat::kWEBP
-            || scaledSize.width()  >= decodeInfo.width()
-            || scaledSize.height() >= decodeInfo.height()) {
+    if (codec->getEncodedFormat() != SkEncodedImageFormat::kWEBP ||
+        scaledSize.width() >= decodeInfo.width() || scaledSize.height() >= decodeInfo.height()) {
         // Only libwebp can decode to arbitrary smaller sizes.
         auto dims = codec->getInfo().dimensions();
         decodeInfo = decodeInfo.makeWH(dims.width(), dims.height());
     }
 
-    auto image = sk_sp<SkAnimatedImage>(new SkAnimatedImage(std::move(codec), scaledSize,
-                decodeInfo, cropRect, std::move(postProcess)));
+    auto image = sk_sp<SkAnimatedImage>(new SkAnimatedImage(
+            std::move(codec), scaledSize, decodeInfo, cropRect, std::move(postProcess)));
     if (!image->fDisplayFrame.fBitmap.getPixels()) {
         // tryAllocPixels failed.
         return nullptr;
@@ -59,9 +61,9 @@ sk_sp<SkAnimatedImage> SkAnimatedImage::Make(std::unique_ptr<SkAndroidCodec> cod
 
     const auto decodeInfo = codec->getInfo();
     const auto scaledSize = decodeInfo.dimensions();
-    const auto cropRect   = SkIRect::MakeSize(scaledSize);
-    auto image = sk_sp<SkAnimatedImage>(new SkAnimatedImage(std::move(codec), scaledSize,
-                decodeInfo, cropRect, nullptr));
+    const auto cropRect = SkIRect::MakeSize(scaledSize);
+    auto image = sk_sp<SkAnimatedImage>(
+            new SkAnimatedImage(std::move(codec), scaledSize, decodeInfo, cropRect, nullptr));
 
     if (!image->fDisplayFrame.fBitmap.getPixels()) {
         // tryAllocPixels failed.
@@ -73,41 +75,39 @@ sk_sp<SkAnimatedImage> SkAnimatedImage::Make(std::unique_ptr<SkAndroidCodec> cod
 }
 
 SkAnimatedImage::SkAnimatedImage(std::unique_ptr<SkAndroidCodec> codec, SkISize scaledSize,
-        SkImageInfo decodeInfo, SkIRect cropRect, sk_sp<SkPicture> postProcess)
-    : fCodec(std::move(codec))
-    , fScaledSize(scaledSize)
-    , fDecodeInfo(decodeInfo)
-    , fCropRect(cropRect)
-    , fPostProcess(std::move(postProcess))
-    , fFrameCount(fCodec->codec()->getFrameCount())
-    , fSimple(fScaledSize == fDecodeInfo.dimensions() && !fPostProcess
-              && fCropRect == fDecodeInfo.bounds())
-    , fFinished(false)
-    , fRepetitionCount(fCodec->codec()->getRepetitionCount())
-    , fRepetitionsCompleted(0)
-{
+                                 SkImageInfo decodeInfo, SkIRect cropRect,
+                                 sk_sp<SkPicture> postProcess)
+        : fCodec(std::move(codec))
+        , fScaledSize(scaledSize)
+        , fDecodeInfo(decodeInfo)
+        , fCropRect(cropRect)
+        , fPostProcess(std::move(postProcess))
+        , fFrameCount(fCodec->codec()->getFrameCount())
+        , fSimple(fScaledSize == fDecodeInfo.dimensions() && !fPostProcess &&
+                  fCropRect == fDecodeInfo.bounds())
+        , fFinished(false)
+        , fRepetitionCount(fCodec->codec()->getRepetitionCount())
+        , fRepetitionsCompleted(0) {
     if (!fDecodingFrame.fBitmap.tryAllocPixels(fDecodeInfo)) {
         return;
     }
 
     if (!fSimple) {
         fMatrix = SkMatrix::MakeTrans(-fCropRect.fLeft, -fCropRect.fTop);
-        float scaleX = (float) fScaledSize.width()  / fDecodeInfo.width();
-        float scaleY = (float) fScaledSize.height() / fDecodeInfo.height();
+        float scaleX = (float)fScaledSize.width() / fDecodeInfo.width();
+        float scaleY = (float)fScaledSize.height() / fDecodeInfo.height();
         fMatrix.preConcat(SkMatrix::MakeScale(scaleX, scaleY));
     }
     this->decodeNextFrame();
 }
 
-SkAnimatedImage::~SkAnimatedImage() { }
+SkAnimatedImage::~SkAnimatedImage() {}
 
 SkRect SkAnimatedImage::onGetBounds() {
     return SkRect::MakeIWH(fCropRect.width(), fCropRect.height());
 }
 
-SkAnimatedImage::Frame::Frame()
-    : fIndex(SkCodec::kNoFrame)
-{}
+SkAnimatedImage::Frame::Frame() : fIndex(SkCodec::kNoFrame) {}
 
 bool SkAnimatedImage::Frame::init(const SkImageInfo& info, OnInit onInit) {
     if (fBitmap.getPixels()) {
@@ -167,8 +167,8 @@ int SkAnimatedImage::computeNextFrame(int current, bool* animationEnded) {
     if (frameToDecode == fFrameCount - 1) {
         // Final frame. Check to determine whether to stop.
         fRepetitionsCompleted++;
-        if (fRepetitionCount != SkCodec::kRepetitionCountInfinite
-                && fRepetitionsCompleted > fRepetitionCount) {
+        if (fRepetitionCount != SkCodec::kRepetitionCountInfinite &&
+            fRepetitionsCompleted > fRepetitionCount) {
             *animationEnded = true;
         }
     } else if (frameToDecode == fFrameCount) {
@@ -211,8 +211,7 @@ int SkAnimatedImage::decodeNextFrame() {
             frameInfo.fFullyReceived = true;
             fCurrentFrameDuration = kFinished;
         } else {
-            SkCodecPrintf("Error getting frameInfo for frame %i\n",
-                          frameToDecode);
+            SkCodecPrintf("Error getting frameInfo for frame %i\n", frameToDecode);
             return this->finish();
         }
     }
@@ -224,7 +223,7 @@ int SkAnimatedImage::decodeNextFrame() {
         return fCurrentFrameDuration;
     }
 
-    for (Frame* frame : { &fRestoreFrame, &fDecodingFrame }) {
+    for (Frame* frame : {&fRestoreFrame, &fDecodingFrame}) {
         if (frameToDecode == frame->fIndex) {
             using std::swap;
             swap(fDisplayFrame, *frame);
@@ -249,15 +248,14 @@ int SkAnimatedImage::decodeNextFrame() {
             // do not overwrite a frame which could possibly be used in the
             // future.
             if (fDecodingFrame.fIndex != SkCodec::kNoFrame &&
-                    !is_restore_previous(fDecodingFrame.fDisposalMethod)) {
+                !is_restore_previous(fDecodingFrame.fDisposalMethod)) {
                 using std::swap;
                 swap(fDecodingFrame, fRestoreFrame);
             }
         }
     } else {
         auto validPriorFrame = [&frameInfo, &frameToDecode](const Frame& frame) {
-            if (SkCodec::kNoFrame == frame.fIndex ||
-                    is_restore_previous(frame.fDisposalMethod)) {
+            if (SkCodec::kNoFrame == frame.fIndex || is_restore_previous(frame.fDisposalMethod)) {
                 return false;
             }
 
@@ -288,16 +286,16 @@ int SkAnimatedImage::decodeNextFrame() {
         }
     }
 
-    auto alphaType = kOpaque_SkAlphaType == frameInfo.fAlphaType ?
-                     kOpaque_SkAlphaType : kPremul_SkAlphaType;
+    auto alphaType =
+            kOpaque_SkAlphaType == frameInfo.fAlphaType ? kOpaque_SkAlphaType : kPremul_SkAlphaType;
     auto info = fDecodeInfo.makeAlphaType(alphaType);
     SkBitmap* dst = &fDecodingFrame.fBitmap;
     if (!fDecodingFrame.init(info, Frame::OnInit::kRestoreIfNecessary)) {
         return this->finish();
     }
 
-    auto result = fCodec->codec()->getPixels(dst->info(), dst->getPixels(), dst->rowBytes(),
-                                             &options);
+    auto result =
+            fCodec->codec()->getPixels(dst->info(), dst->getPixels(), dst->rowBytes(), &options);
     if (result != SkCodec::kSuccess) {
         SkCodecPrintf("error %i, frame %i of %i\n", result, frameToDecode, fFrameCount);
         return this->finish();
@@ -317,8 +315,7 @@ int SkAnimatedImage::decodeNextFrame() {
 }
 
 void SkAnimatedImage::onDraw(SkCanvas* canvas) {
-    auto image = SkMakeImageFromRasterBitmap(fDisplayFrame.fBitmap,
-                                             kNever_SkCopyPixelsMode);
+    auto image = SkMakeImageFromRasterBitmap(fDisplayFrame.fBitmap, kNever_SkCopyPixelsMode);
 
     if (fSimple) {
         canvas->drawImage(image, 0, 0);
@@ -342,6 +339,4 @@ void SkAnimatedImage::onDraw(SkCanvas* canvas) {
     }
 }
 
-void SkAnimatedImage::setRepetitionCount(int newCount) {
-    fRepetitionCount = newCount;
-}
+void SkAnimatedImage::setRepetitionCount(int newCount) { fRepetitionCount = newCount; }

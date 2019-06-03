@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "SkCodecPriv.h"
-#include "SkMasks.h"
-#include "SkTypes.h"
+#include "src/codec/SkMasks.h"
+#include "include/core/SkTypes.h"
+#include "src/codec/SkCodecPriv.h"
 
 /*
  *
@@ -15,32 +15,30 @@
  *
  */
 static constexpr uint8_t n_bit_to_8_bit_lookup_table[] = {
-    // 1 bit
-    0, 255,
-    // 2 bits
-    0, 85, 170, 255,
-    // 3 bits
-    0, 36, 73, 109, 146, 182, 219, 255,
-    // 4 bits
-    0, 17, 34, 51, 68, 85, 102, 119, 136, 153, 170, 187, 204, 221, 238, 255,
-    // 5 bits
-    0, 8, 16, 25, 33, 41, 49, 58, 66, 74, 82, 90, 99, 107, 115, 123, 132, 140,
-    148, 156, 165, 173, 181, 189, 197, 206, 214, 222, 230, 239, 247, 255,
-    // 6 bits
-    0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 45, 49, 53, 57, 61, 65, 69, 73,
-    77, 81, 85, 89, 93, 97, 101, 105, 109, 113, 117, 121, 125, 130, 134, 138,
-    142, 146, 150, 154, 158, 162, 166, 170, 174, 178, 182, 186, 190, 194, 198,
-    202, 206, 210, 215, 219, 223, 227, 231, 235, 239, 243, 247, 251, 255,
-    // 7 bits
-    0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38,
-    40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76,
-    78, 80, 82, 84, 86, 88, 90, 92, 94, 96, 98, 100, 102, 104, 106, 108, 110,
-    112, 114, 116, 118, 120, 122, 124, 126, 129, 131, 133, 135, 137, 139, 141,
-    143, 145, 147, 149, 151, 153, 155, 157, 159, 161, 163, 165, 167, 169, 171,
-    173, 175, 177, 179, 181, 183, 185, 187, 189, 191, 193, 195, 197, 199, 201,
-    203, 205, 207, 209, 211, 213, 215, 217, 219, 221, 223, 225, 227, 229, 231,
-    233, 235, 237, 239, 241, 243, 245, 247, 249, 251, 253, 255
-};
+        // 1 bit
+        0, 255,
+        // 2 bits
+        0, 85, 170, 255,
+        // 3 bits
+        0, 36, 73, 109, 146, 182, 219, 255,
+        // 4 bits
+        0, 17, 34, 51, 68, 85, 102, 119, 136, 153, 170, 187, 204, 221, 238, 255,
+        // 5 bits
+        0, 8, 16, 25, 33, 41, 49, 58, 66, 74, 82, 90, 99, 107, 115, 123, 132, 140, 148, 156, 165,
+        173, 181, 189, 197, 206, 214, 222, 230, 239, 247, 255,
+        // 6 bits
+        0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 45, 49, 53, 57, 61, 65, 69, 73, 77, 81, 85, 89, 93,
+        97, 101, 105, 109, 113, 117, 121, 125, 130, 134, 138, 142, 146, 150, 154, 158, 162, 166,
+        170, 174, 178, 182, 186, 190, 194, 198, 202, 206, 210, 215, 219, 223, 227, 231, 235, 239,
+        243, 247, 251, 255,
+        // 7 bits
+        0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46,
+        48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92,
+        94, 96, 98, 100, 102, 104, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 129, 131,
+        133, 135, 137, 139, 141, 143, 145, 147, 149, 151, 153, 155, 157, 159, 161, 163, 165, 167,
+        169, 171, 173, 175, 177, 179, 181, 183, 185, 187, 189, 191, 193, 195, 197, 199, 201, 203,
+        205, 207, 209, 211, 213, 215, 217, 219, 221, 223, 225, 227, 229, 231, 233, 235, 237, 239,
+        241, 243, 245, 247, 249, 251, 253, 255};
 
 /*
  *
@@ -58,8 +56,7 @@ static uint8_t convert_to_8(uint8_t component, uint32_t n) {
     }
 }
 
-static uint8_t get_comp(uint32_t pixel, uint32_t mask, uint32_t shift,
-                        uint32_t size) {
+static uint8_t get_comp(uint32_t pixel, uint32_t mask, uint32_t shift, uint32_t size) {
     return convert_to_8((pixel & mask) >> shift, size);
 }
 
@@ -116,7 +113,7 @@ static const SkMasks::MaskInfo process_mask(uint32_t mask) {
         }
     }
 
-    return { mask, shift, size };
+    return {mask, shift, size};
 }
 
 /*
@@ -129,34 +126,26 @@ SkMasks* SkMasks::CreateMasks(InputMasks masks, int bytesPerPixel) {
 
     // Trim the input masks to match bytesPerPixel.
     if (bytesPerPixel < 4) {
-        int bitsPerPixel = 8*bytesPerPixel;
-        masks.red   &= (1 << bitsPerPixel) - 1;
+        int bitsPerPixel = 8 * bytesPerPixel;
+        masks.red &= (1 << bitsPerPixel) - 1;
         masks.green &= (1 << bitsPerPixel) - 1;
-        masks.blue  &= (1 << bitsPerPixel) - 1;
+        masks.blue &= (1 << bitsPerPixel) - 1;
         masks.alpha &= (1 << bitsPerPixel) - 1;
     }
 
     // Check that masks do not overlap.
-    if (((masks.red   & masks.green) |
-         (masks.red   & masks.blue ) |
-         (masks.red   & masks.alpha) |
-         (masks.green & masks.blue ) |
-         (masks.green & masks.alpha) |
-         (masks.blue  & masks.alpha) ) != 0) {
+    if (((masks.red & masks.green) | (masks.red & masks.blue) | (masks.red & masks.alpha) |
+         (masks.green & masks.blue) | (masks.green & masks.alpha) | (masks.blue & masks.alpha)) !=
+        0) {
         return nullptr;
     }
 
-    return new SkMasks(process_mask(masks.red  ),
+    return new SkMasks(process_mask(masks.red),
                        process_mask(masks.green),
-                       process_mask(masks.blue ),
+                       process_mask(masks.blue),
                        process_mask(masks.alpha));
 }
 
-
-SkMasks::SkMasks(const MaskInfo& red, const MaskInfo& green,
-                 const MaskInfo& blue, const MaskInfo& alpha)
-    : fRed(red)
-    , fGreen(green)
-    , fBlue(blue)
-    , fAlpha(alpha)
-{}
+SkMasks::SkMasks(const MaskInfo& red, const MaskInfo& green, const MaskInfo& blue,
+                 const MaskInfo& alpha)
+        : fRed(red), fGreen(green), fBlue(blue), fAlpha(alpha) {}

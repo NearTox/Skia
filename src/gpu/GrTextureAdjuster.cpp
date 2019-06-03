@@ -5,25 +5,23 @@
  * found in the LICENSE file.
  */
 
-#include "GrTextureAdjuster.h"
-#include "GrColorSpaceXform.h"
-#include "GrGpu.h"
-#include "GrProxyProvider.h"
-#include "GrRecordingContext.h"
-#include "GrRecordingContextPriv.h"
-#include "SkGr.h"
+#include "src/gpu/GrTextureAdjuster.h"
+#include "include/private/GrRecordingContext.h"
+#include "src/gpu/GrColorSpaceXform.h"
+#include "src/gpu/GrGpu.h"
+#include "src/gpu/GrProxyProvider.h"
+#include "src/gpu/GrRecordingContextPriv.h"
+#include "src/gpu/SkGr.h"
 
 GrTextureAdjuster::GrTextureAdjuster(GrRecordingContext* context, sk_sp<GrTextureProxy> original,
-                                     SkAlphaType alphaType,
-                                     uint32_t uniqueID,
-                                     SkColorSpace* cs,
+                                     SkAlphaType alphaType, uint32_t uniqueID, SkColorSpace* cs,
                                      bool useDecal)
-    : INHERITED(context, original->width(), original->height(),
-                GrPixelConfigIsAlphaOnly(original->config()), useDecal)
-    , fOriginal(std::move(original))
-    , fAlphaType(alphaType)
-    , fColorSpace(cs)
-    , fUniqueID(uniqueID) {}
+        : INHERITED(context, original->width(), original->height(),
+                    GrPixelConfigIsAlphaOnly(original->config()), useDecal)
+        , fOriginal(std::move(original))
+        , fAlphaType(alphaType)
+        , fColorSpace(cs)
+        , fUniqueID(uniqueID) {}
 
 void GrTextureAdjuster::makeCopyKey(const CopyParams& params, GrUniqueKey* copyKey) {
     // Destination color space is irrelevant - we already have a texture so we're just sub-setting
@@ -44,8 +42,8 @@ sk_sp<GrTextureProxy> GrTextureAdjuster::refTextureProxyCopy(const CopyParams& c
     this->makeCopyKey(copyParams, &key);
     sk_sp<GrTextureProxy> cachedCopy;
     if (key.isValid()) {
-        cachedCopy = proxyProvider->findOrCreateProxyByUniqueKey(key,
-                                                                 this->originalProxy()->origin());
+        cachedCopy =
+                proxyProvider->findOrCreateProxyByUniqueKey(key, this->originalProxy()->origin());
         if (cachedCopy && (!willBeMipped || GrMipMapped::kYes == cachedCopy->mipMapped())) {
             return cachedCopy;
         }
@@ -53,8 +51,8 @@ sk_sp<GrTextureProxy> GrTextureAdjuster::refTextureProxyCopy(const CopyParams& c
 
     sk_sp<GrTextureProxy> proxy = this->originalProxyRef();
 
-    sk_sp<GrTextureProxy> copy = CopyOnGpu(this->context(), std::move(proxy),
-                                           copyParams, willBeMipped);
+    sk_sp<GrTextureProxy> copy =
+            CopyOnGpu(this->context(), std::move(proxy), copyParams, willBeMipped);
     if (copy) {
         if (key.isValid()) {
             SkASSERT(copy->origin() == this->originalProxy()->origin());
@@ -74,10 +72,9 @@ sk_sp<GrTextureProxy> GrTextureAdjuster::refTextureProxyCopy(const CopyParams& c
     return copy;
 }
 
-sk_sp<GrTextureProxy> GrTextureAdjuster::onRefTextureProxyForParams(
-        const GrSamplerState& params,
-        bool willBeMipped,
-        SkScalar scaleAdjust[2]) {
+sk_sp<GrTextureProxy> GrTextureAdjuster::onRefTextureProxyForParams(const GrSamplerState& params,
+                                                                    bool willBeMipped,
+                                                                    SkScalar scaleAdjust[2]) {
     sk_sp<GrTextureProxy> proxy = this->originalProxyRef();
     CopyParams copyParams;
 
@@ -94,9 +91,8 @@ sk_sp<GrTextureProxy> GrTextureAdjuster::onRefTextureProxyForParams(
         !GrGpu::IsACopyNeededForRepeatWrapMode(this->context()->priv().caps(), proxy.get(),
                                                proxy->width(), proxy->height(), params.filter(),
                                                &copyParams, scaleAdjust)) {
-        needsCopyForMipsOnly = GrGpu::IsACopyNeededForMips(this->context()->priv().caps(),
-                                                           proxy.get(), params.filter(),
-                                                           &copyParams);
+        needsCopyForMipsOnly = GrGpu::IsACopyNeededForMips(
+                this->context()->priv().caps(), proxy.get(), params.filter(), &copyParams);
         if (!needsCopyForMipsOnly) {
             return proxy;
         }
@@ -120,7 +116,7 @@ std::unique_ptr<GrFragmentProcessor> GrTextureAdjuster::createFragmentProcessor(
         const GrSamplerState::Filter* filterOrNullForBicubic) {
     SkMatrix textureMatrix = origTextureMatrix;
 
-    SkScalar scaleAdjust[2] = { 1.0f, 1.0f };
+    SkScalar scaleAdjust[2] = {1.0f, 1.0f};
     sk_sp<GrTextureProxy> proxy(
             this->refTextureProxyForParams(filterOrNullForBicubic, scaleAdjust));
     if (!proxy) {
@@ -134,8 +130,8 @@ std::unique_ptr<GrFragmentProcessor> GrTextureAdjuster::createFragmentProcessor(
 
     SkRect domain;
     DomainMode domainMode =
-        DetermineDomainMode(constraintRect, filterConstraint, coordsLimitedToConstraintRect,
-                            proxy.get(), filterOrNullForBicubic, &domain);
+            DetermineDomainMode(constraintRect, filterConstraint, coordsLimitedToConstraintRect,
+                                proxy.get(), filterOrNullForBicubic, &domain);
     if (kTightCopy_DomainMode == domainMode) {
         // TODO: Copy the texture and adjust the texture matrix (both parts need to consider
         // non-int constraint rect)
@@ -146,8 +142,8 @@ std::unique_ptr<GrFragmentProcessor> GrTextureAdjuster::createFragmentProcessor(
                  GrSamplerState::Filter::kMipMap == *filterOrNullForBicubic);
         static const GrSamplerState::Filter kBilerp = GrSamplerState::Filter::kBilerp;
         domainMode =
-            DetermineDomainMode(constraintRect, filterConstraint, coordsLimitedToConstraintRect,
-                                proxy.get(), &kBilerp, &domain);
+                DetermineDomainMode(constraintRect, filterConstraint, coordsLimitedToConstraintRect,
+                                    proxy.get(), &kBilerp, &domain);
         SkASSERT(kTightCopy_DomainMode != domainMode);
     }
     SkASSERT(kNoDomain_DomainMode == domainMode ||

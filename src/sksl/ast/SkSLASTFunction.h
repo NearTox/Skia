@@ -8,10 +8,10 @@
 #ifndef SKSL_ASTFUNCTION
 #define SKSL_ASTFUNCTION
 
-#include "SkSLASTBlock.h"
-#include "SkSLASTDeclaration.h"
-#include "SkSLASTParameter.h"
-#include "SkSLASTType.h"
+#include "src/sksl/ast/SkSLASTBlock.h"
+#include "src/sksl/ast/SkSLASTDeclaration.h"
+#include "src/sksl/ast/SkSLASTParameter.h"
+#include "src/sksl/ast/SkSLASTType.h"
 
 namespace SkSL {
 
@@ -19,15 +19,15 @@ namespace SkSL {
  * A function declaration or definition. The fBody field will be null for declarations.
  */
 struct ASTFunction : public ASTDeclaration {
-    ASTFunction(int offset, Modifiers modifiers,  std::unique_ptr<ASTType> returnType,
+    ASTFunction(int offset, Modifiers modifiers, std::unique_ptr<ASTType> returnType,
                 StringFragment name, std::vector<std::unique_ptr<ASTParameter>> parameters,
                 std::unique_ptr<ASTBlock> body)
-    : INHERITED(offset, kFunction_Kind)
-    , fModifiers(modifiers)
-    , fReturnType(std::move(returnType))
-    , fName(name)
-    , fParameters(std::move(parameters))
-    , fBody(std::move(body)) {}
+            : INHERITED(offset, kFunction_Kind)
+            , fModifiers(modifiers)
+            , fReturnType(std::move(returnType))
+            , fName(name)
+            , fParameters(std::move(parameters))
+            , fBody(std::move(body)) {}
 
     String description() const override {
         String result = fReturnType->description() + " " + fName + "(";
@@ -54,6 +54,6 @@ struct ASTFunction : public ASTDeclaration {
     typedef ASTDeclaration INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

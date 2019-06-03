@@ -5,11 +5,23 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkFont.h"
-#include "SkSurface.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkFontStyle.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+
+#include <string.h>
+#include <initializer_list>
 
 #ifdef SK_BUILD_FOR_MAC
+
+#include "include/core/SkSurface.h"
 
 #import <ApplicationServices/ApplicationServices.h>
 
@@ -101,17 +113,26 @@ protected:
         return DrawResult::kOk;
     }
 
-    SkISize onISize() override { return { 1024, 768 }; }
+    SkISize onISize() override { return {1024, 768}; }
 
     SkString onShortName() override { return SkString("macaatest"); }
 
     bool onHandleKey(SkUnichar uni) override {
         switch (uni) {
-            case 'i': fSize += 1; return true;
-            case 'k': fSize -= 1; return true;
-            case 'j': fXPos -= 1.0f/16; return true;
-            case 'l': fXPos += 1.0f/16; return true;
-            default: break;
+            case 'i':
+                fSize += 1;
+                return true;
+            case 'k':
+                fSize -= 1;
+                return true;
+            case 'j':
+                fXPos -= 1.0f / 16;
+                return true;
+            case 'l':
+                fXPos += 1.0f / 16;
+                return true;
+            default:
+                break;
         }
         return false;
     }
@@ -123,10 +144,8 @@ DEF_GM(return new MacAAFontsGM;)
 DEF_SIMPLE_GM(macaa_colors, canvas, 800, 500) {
     const SkColor GRAY = 0xFF808080;
     const SkColor colors[] = {
-        SK_ColorBLACK, SK_ColorWHITE,
-        SK_ColorBLACK, GRAY,
-        SK_ColorWHITE, SK_ColorBLACK,
-        SK_ColorWHITE, GRAY,
+            SK_ColorBLACK, SK_ColorWHITE, SK_ColorBLACK, GRAY,
+            SK_ColorWHITE, SK_ColorBLACK, SK_ColorWHITE, GRAY,
     };
     const SkScalar sizes[] = {10, 12, 15, 18, 24};
 
@@ -142,7 +161,7 @@ DEF_SIMPLE_GM(macaa_colors, canvas, 800, 500) {
         canvas->save();
 
         SkPaint paint;
-        paint.setColor(colors[i+1]);
+        paint.setColor(colors[i + 1]);
         canvas->drawRect({0, 0, width, height}, paint);
         paint.setColor(colors[i]);
 
@@ -153,11 +172,11 @@ DEF_SIMPLE_GM(macaa_colors, canvas, 800, 500) {
             for (bool lcd : {false, true}) {
                 font.setEdging(lcd ? SkFont::Edging::kSubpixelAntiAlias
                                    : SkFont::Edging::kAntiAlias);
-                for (auto h : {kNo_SkFontHinting, kNormal_SkFontHinting}) {
+                for (auto h : {SkFontHinting::kNone, SkFontHinting::kNormal}) {
                     font.setHinting(h);
 
                     y += font.getSpacing() + 2;
-                    canvas->drawSimpleText(str, len, kUTF8_SkTextEncoding, x, y, font, paint);
+                    canvas->drawSimpleText(str, len, SkTextEncoding::kUTF8, x, y, font, paint);
                 }
             }
             y += 8;

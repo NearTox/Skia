@@ -1,13 +1,13 @@
 /*
-* Copyright 2013 Google Inc.
-*
-* Use of this source code is governed by a BSD-style license that can be
-* found in the LICENSE file.
-*/
-#include "SkOpContour.h"
-#include "SkPathWriter.h"
-#include "SkReduceOrder.h"
-#include "SkTSort.h"
+ * Copyright 2013 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+#include "src/pathops/SkOpContour.h"
+#include "src/core/SkTSort.h"
+#include "src/pathops/SkPathWriter.h"
+#include "src/pathops/SkReduceOrder.h"
 
 void SkOpContour::toPath(SkPathWriter* path) const {
     if (!this->count()) {
@@ -99,11 +99,10 @@ void SkOpContourBuilder::addQuad(SkPoint pts[3]) {
 }
 
 void SkOpContourBuilder::flush() {
-    if (!fLastIsLine)
-        return;
+    if (!fLastIsLine) return;
     SkArenaAlloc* allocator = fContour->globalState()->allocator();
     SkPoint* ptStorage = allocator->makeArrayDefault<SkPoint>(2);
     memcpy(ptStorage, fLastLine, sizeof(fLastLine));
-    (void) fContour->addLine(ptStorage);
+    (void)fContour->addLine(ptStorage);
     fLastIsLine = false;
 }

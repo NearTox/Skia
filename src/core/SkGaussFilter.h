@@ -18,17 +18,17 @@ public:
 
     explicit SkGaussFilter(double sigma);
 
-    size_t size()   const { return fN; }
+    size_t size() const { return fN; }
     int radius() const { return fN - 1; }
-    int width()  const { return 2 * this->radius() + 1; }
+    int width() const { return 2 * this->radius() + 1; }
 
     // Allow a filter to be used in a C++ ranged-for loop.
-    const double* begin() const { return &fBasis[0];  }
-    const double* end()   const { return &fBasis[fN]; }
+    const double* begin() const { return &fBasis[0]; }
+    const double* end() const { return &fBasis[fN]; }
 
 private:
     double fBasis[kGaussArrayMax];
-    int    fN;
+    int fN;
 };
 
 #endif  // SkGaussFilter_DEFINED

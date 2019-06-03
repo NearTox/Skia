@@ -8,8 +8,8 @@
 #ifndef SKSL_EXPRESSIONSTATEMENT
 #define SKSL_EXPRESSIONSTATEMENT
 
-#include "SkSLExpression.h"
-#include "SkSLStatement.h"
+#include "src/sksl/ir/SkSLExpression.h"
+#include "src/sksl/ir/SkSLStatement.h"
 
 namespace SkSL {
 
@@ -18,22 +18,20 @@ namespace SkSL {
  */
 struct ExpressionStatement : public Statement {
     ExpressionStatement(std::unique_ptr<Expression> expression)
-    : INHERITED(expression->fOffset, kExpression_Kind)
-    , fExpression(std::move(expression)) {}
+            : INHERITED(expression->fOffset, kExpression_Kind)
+            , fExpression(std::move(expression)) {}
 
     std::unique_ptr<Statement> clone() const override {
         return std::unique_ptr<Statement>(new ExpressionStatement(fExpression->clone()));
     }
 
-    String description() const override {
-        return fExpression->description() + ";";
-    }
+    String description() const override { return fExpression->description() + ";"; }
 
     std::unique_ptr<Expression> fExpression;
 
     typedef Statement INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

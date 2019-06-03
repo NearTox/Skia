@@ -8,7 +8,7 @@
 #ifndef GrGpuResourcePriv_DEFINED
 #define GrGpuResourcePriv_DEFINED
 
-#include "GrGpuResource.h"
+#include "include/gpu/GrGpuResource.h"
 
 /**
  * This class allows code internal to Skia privileged access to manage the cache keys and budget
@@ -18,13 +18,15 @@ class GrGpuResource::ResourcePriv {
 public:
     SkDEBUGCODE(bool hasPendingIO_debugOnly() const { return fResource->internalHasPendingIO(); })
 
-    /**
-     * Sets a unique key for the resource. If the resource was previously cached as scratch it will
-     * be converted to a uniquely-keyed resource. If the key is invalid then this is equivalent to
-     * removeUniqueKey(). If another resource is using the key then its unique key is removed and
-     * this resource takes over the key.
-     */
-    void setUniqueKey(const GrUniqueKey& key) { fResource->setUniqueKey(key); }
+            /**
+             * Sets a unique key for the resource. If the resource was previously cached as scratch
+             * it will be converted to a uniquely-keyed resource. If the key is invalid then this is
+             * equivalent to removeUniqueKey(). If another resource is using the key then its unique
+             * key is removed and this resource takes over the key.
+             */
+            void setUniqueKey(const GrUniqueKey& key) {
+        fResource->setUniqueKey(key);
+    }
 
     /** Removes the unique key from a resource. If the resource has a scratch key, it may be
         preserved for recycling as scratch. */
@@ -46,7 +48,7 @@ public:
      * Get the resource's budgeted-type which indicates whether it counts against the resource cache
      * budget and if not whether it is allowed to be cached.
      */
-    GrBudgetedType budgetedType() const {
+    GrBudgetedType budgetedType() const noexcept {
         SkASSERT(GrBudgetedType::kBudgeted == fResource->fBudgetedType ||
                  !fResource->getUniqueKey().isValid() || fResource->fRefsWrappedObjects);
         return fResource->fBudgetedType;
@@ -55,29 +57,29 @@ public:
     /**
      * Is the resource object wrapping an externally allocated GPU resource?
      */
-    bool refsWrappedObjects() const { return fResource->fRefsWrappedObjects; }
+    bool refsWrappedObjects() const noexcept { return fResource->fRefsWrappedObjects; }
 
     /**
      * If this resource can be used as a scratch resource this returns a valid scratch key.
      * Otherwise it returns a key for which isNullScratch is true. The resource may currently be
      * used as a uniquely keyed resource rather than scratch. Check isScratch().
      */
-    const GrScratchKey& getScratchKey() const { return fResource->fScratchKey; }
+    const GrScratchKey& getScratchKey() const noexcept { return fResource->fScratchKey; }
 
     /**
      * If the resource has a scratch key, the key will be removed. Since scratch keys are installed
      * at resource creation time, this means the resource will never again be used as scratch.
      */
-    void removeScratchKey() const { fResource->removeScratchKey();  }
+    void removeScratchKey() const { fResource->removeScratchKey(); }
 
     bool isPurgeable() const { return fResource->isPurgeable(); }
 
     bool hasRefOrPendingIO() const { return fResource->hasRefOrPendingIO(); }
 
 protected:
-    ResourcePriv(GrGpuResource* resource) : fResource(resource) {   }
-    ResourcePriv(const ResourcePriv& that) : fResource(that.fResource) {}
-    ResourcePriv& operator=(const CacheAccess&); // unimpl
+    ResourcePriv(GrGpuResource* resource) noexcept : fResource(resource) {}
+    ResourcePriv(const ResourcePriv& that) noexcept : fResource(that.fResource) {}
+    ResourcePriv& operator=(const CacheAccess&);  // unimpl
 
     // No taking addresses of this type.
     const ResourcePriv* operator&() const;
@@ -85,12 +87,14 @@ protected:
 
     GrGpuResource* fResource;
 
-    friend class GrGpuResource; // to construct/copy this type.
+    friend class GrGpuResource;  // to construct/copy this type.
 };
 
-inline GrGpuResource::ResourcePriv GrGpuResource::resourcePriv() { return ResourcePriv(this); }
+inline GrGpuResource::ResourcePriv GrGpuResource::resourcePriv() noexcept {
+    return ResourcePriv(this);
+}
 
-inline const GrGpuResource::ResourcePriv GrGpuResource::resourcePriv() const {
+inline const GrGpuResource::ResourcePriv GrGpuResource::resourcePriv() const noexcept {
     return ResourcePriv(const_cast<GrGpuResource*>(this));
 }
 

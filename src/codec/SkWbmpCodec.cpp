@@ -5,25 +5,23 @@
  * found in the LICENSE file.
  */
 
-#include "SkWbmpCodec.h"
+#include "src/codec/SkWbmpCodec.h"
 
-#include "SkCodec.h"
-#include "SkCodecPriv.h"
-#include "SkColorData.h"
-#include "SkColorTable.h"
-#include "SkData.h"
-#include "SkStream.h"
-#include "SkTo.h"
+#include "include/codec/SkCodec.h"
+#include "include/core/SkData.h"
+#include "include/core/SkStream.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkTo.h"
+#include "src/codec/SkCodecPriv.h"
+#include "src/codec/SkColorTable.h"
 
 // Each bit represents a pixel, so width is actually a number of bits.
 // A row will always be stored in bytes, so we round width up to the
 // nearest multiple of 8 to get the number of bits actually in the row.
 // We then divide by 8 to convert to bytes.
-static inline size_t get_src_row_bytes(int width) {
-    return SkAlign8(width) >> 3;
-}
+static inline size_t get_src_row_bytes(int width) noexcept { return SkAlign8(width) >> 3; }
 
-static inline bool valid_color_type(const SkImageInfo& dstInfo) {
+static inline bool valid_color_type(const SkImageInfo& dstInfo) noexcept {
     switch (dstInfo.colorType()) {
         case kRGBA_8888_SkColorType:
         case kBGRA_8888_SkColorType:
@@ -37,10 +35,7 @@ static inline bool valid_color_type(const SkImageInfo& dstInfo) {
     }
 }
 
-static bool read_byte(SkStream* stream, uint8_t* data)
-{
-    return stream->read(data, 1) == 1;
-}
+static bool read_byte(SkStream* stream, uint8_t* data) { return stream->read(data, 1) == 1; }
 
 // http://en.wikipedia.org/wiki/Variable-length_quantity
 static bool read_mbf(SkStream* stream, uint64_t* value) {
@@ -49,7 +44,7 @@ static bool read_mbf(SkStream* stream, uint64_t* value) {
     const uint64_t kLimit = 0xFE00000000000000;
     SkASSERT(kLimit == ~((~static_cast<uint64_t>(0)) >> 7));
     do {
-        if (n & kLimit) { // Will overflow on shift by 7.
+        if (n & kLimit) {  // Will overflow on shift by 7.
             return false;
         }
         if (stream->read(&data, 1) != 1) {
@@ -64,10 +59,10 @@ static bool read_mbf(SkStream* stream, uint64_t* value) {
 static bool read_header(SkStream* stream, SkISize* size) {
     {
         uint8_t data;
-        if (!read_byte(stream, &data) || data != 0) { // unknown type
+        if (!read_byte(stream, &data) || data != 0) {  // unknown type
             return false;
         }
-        if (!read_byte(stream, &data) || (data & 0x9F)) { // skip fixed header
+        if (!read_byte(stream, &data) || (data & 0x9F)) {  // skip fixed header
             return false;
         }
     }
@@ -85,28 +80,24 @@ static bool read_header(SkStream* stream, SkISize* size) {
     return true;
 }
 
-bool SkWbmpCodec::onRewind() {
-    return read_header(this->stream(), nullptr);
-}
+bool SkWbmpCodec::onRewind() { return read_header(this->stream(), nullptr); }
 
 bool SkWbmpCodec::readRow(uint8_t* row) {
     return this->stream()->read(row, fSrcRowBytes) == fSrcRowBytes;
 }
 
 SkWbmpCodec::SkWbmpCodec(SkEncodedInfo&& info, std::unique_ptr<SkStream> stream)
-    // Wbmp does not need a colorXform, so choose an arbitrary srcFormat.
-    : INHERITED(std::move(info), skcms_PixelFormat(),
-                std::move(stream))
-    , fSrcRowBytes(get_src_row_bytes(this->dimensions().width()))
-    , fSwizzler(nullptr)
-{}
+        // Wbmp does not need a colorXform, so choose an arbitrary srcFormat.
+        : INHERITED(std::move(info), skcms_PixelFormat(), std::move(stream))
+        , fSrcRowBytes(get_src_row_bytes(this->dimensions().width()))
+        , fSwizzler(nullptr) {}
 
-SkEncodedImageFormat SkWbmpCodec::onGetEncodedFormat() const {
+SkEncodedImageFormat SkWbmpCodec::onGetEncodedFormat() const noexcept {
     return SkEncodedImageFormat::kWBMP;
 }
 
 bool SkWbmpCodec::conversionSupported(const SkImageInfo& dst, bool srcIsOpaque,
-                                      bool /*needsColorXform*/) {
+                                      bool /*needsColorXform*/) noexcept {
     return valid_color_type(dst) && valid_alpha(dst.alphaType(), srcIsOpaque);
 }
 
@@ -121,8 +112,8 @@ SkCodec::Result SkWbmpCodec::onGetPixels(const SkImageInfo& info,
     }
 
     // Initialize the swizzler
-    std::unique_ptr<SkSwizzler> swizzler = SkSwizzler::Make(this->getEncodedInfo(), nullptr, info,
-                                                            options);
+    std::unique_ptr<SkSwizzler> swizzler =
+            SkSwizzler::Make(this->getEncodedInfo(), nullptr, info, options);
     SkASSERT(swizzler);
 
     // Perform the decode
@@ -178,7 +169,7 @@ bool SkWbmpCodec::onSkipScanlines(int count) {
 }
 
 SkCodec::Result SkWbmpCodec::onStartScanlineDecode(const SkImageInfo& dstInfo,
-        const Options& options) {
+                                                   const Options& options) noexcept {
     if (options.fSubset) {
         // Subsets are not supported.
         return kUnimplemented;

@@ -5,16 +5,14 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkPDFGraphicState_DEFINED
 #define SkPDFGraphicState_DEFINED
 
-#include "SkMacros.h"
-#include "SkOpts.h"
-#include "SkPDFTypes.h"
+#include "include/private/SkMacros.h"
+#include "src/core/SkOpts.h"
+#include "src/pdf/SkPDFTypes.h"
 
 class SkPaint;
-
 
 /** \class SkPDFGraphicState
     SkPaint objects roughly correspond to graphic state dictionaries that can
@@ -22,27 +20,24 @@ class SkPaint;
     once, we want to canonicalize them.
 */
 namespace SkPDFGraphicState {
-    enum SkPDFSMaskMode {
-        kAlpha_SMaskMode,
-        kLuminosity_SMaskMode
-    };
+enum SkPDFSMaskMode { kAlpha_SMaskMode, kLuminosity_SMaskMode };
 
-    /** Get the graphic state for the passed SkPaint.
-     */
-    SkPDFIndirectReference GetGraphicStateForPaint(SkPDFDocument*, const SkPaint&);
+/** Get the graphic state for the passed SkPaint.
+ */
+SkPDFIndirectReference GetGraphicStateForPaint(SkPDFDocument*, const SkPaint&);
 
-    /** Make a graphic state that only sets the passed soft mask.
-     *  @param sMask     The form xobject to use as a soft mask.
-     *  @param invert    Indicates if the alpha of the sMask should be inverted.
-     *  @param sMaskMode Whether to use alpha or luminosity for the sMask.
-     *
-     *  These are not de-duped.
-     */
-    SkPDFIndirectReference GetSMaskGraphicState(SkPDFIndirectReference sMask,
-                                                bool invert,
-                                                SkPDFSMaskMode sMaskMode,
-                                                SkPDFDocument* doc);
-}
+/** Make a graphic state that only sets the passed soft mask.
+ *  @param sMask     The form xobject to use as a soft mask.
+ *  @param invert    Indicates if the alpha of the sMask should be inverted.
+ *  @param sMaskMode Whether to use alpha or luminosity for the sMask.
+ *
+ *  These are not de-duped.
+ */
+SkPDFIndirectReference GetSMaskGraphicState(SkPDFIndirectReference sMask,
+                                            bool invert,
+                                            SkPDFSMaskMode sMaskMode,
+                                            SkPDFDocument* doc);
+}  // namespace SkPDFGraphicState
 
 SK_BEGIN_REQUIRE_DENSE
 struct SkPDFStrokeGraphicState {

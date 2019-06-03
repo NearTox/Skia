@@ -8,9 +8,9 @@
 #ifndef GrGLSLColorSpaceXformHelper_DEFINED
 #define GrGLSLColorSpaceXformHelper_DEFINED
 
-#include "GrColorSpaceXform.h"
-#include "GrGLSLUniformHandler.h"
-#include "SkColorSpaceXformSteps.h"
+#include "src/core/SkColorSpaceXformSteps.h"
+#include "src/gpu/GrColorSpaceXform.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
 /**
  * Helper class to assist with using GrColorSpaceXform within an FP. This manages all of the
@@ -19,9 +19,7 @@
  */
 class GrGLSLColorSpaceXformHelper : public SkNoncopyable {
 public:
-    GrGLSLColorSpaceXformHelper() {
-        memset(&fFlags, 0, sizeof(fFlags));
-    }
+    GrGLSLColorSpaceXformHelper() { memset(&fFlags, 0, sizeof(fFlags)); }
 
     void emitCode(GrGLSLUniformHandler* uniformHandler, const GrColorSpaceXform* colorSpaceXform,
                   uint32_t visibility = kFragment_GrShaderFlag) {
@@ -29,16 +27,16 @@ public:
         if (colorSpaceXform) {
             fFlags = colorSpaceXform->fSteps.flags;
             if (this->applySrcTF()) {
-                fSrcTFVar = uniformHandler->addUniformArray(visibility, kHalf_GrSLType,
-                                                            "SrcTF", kNumTransferFnCoeffs);
+                fSrcTFVar = uniformHandler->addUniformArray(visibility, kHalf_GrSLType, "SrcTF",
+                                                            kNumTransferFnCoeffs);
             }
             if (this->applyGamutXform()) {
-                fGamutXformVar = uniformHandler->addUniform(visibility, kHalf3x3_GrSLType,
-                                                            "ColorXform");
+                fGamutXformVar =
+                        uniformHandler->addUniform(visibility, kHalf3x3_GrSLType, "ColorXform");
             }
             if (this->applyDstTF()) {
-                fDstTFVar = uniformHandler->addUniformArray(visibility, kHalf_GrSLType,
-                                                            "DstTF", kNumTransferFnCoeffs);
+                fDstTFVar = uniformHandler->addUniformArray(visibility, kHalf_GrSLType, "DstTF",
+                                                            kNumTransferFnCoeffs);
             }
         }
     }
@@ -57,11 +55,11 @@ public:
 
     bool isNoop() const { return (0 == fFlags.mask()); }
 
-    bool applyUnpremul() const   { return fFlags.unpremul; }
-    bool applySrcTF() const      { return fFlags.linearize; }
+    bool applyUnpremul() const { return fFlags.unpremul; }
+    bool applySrcTF() const { return fFlags.linearize; }
     bool applyGamutXform() const { return fFlags.gamut_transform; }
-    bool applyDstTF() const      { return fFlags.encode; }
-    bool applyPremul() const     { return fFlags.premul; }
+    bool applyDstTF() const { return fFlags.encode; }
+    bool applyPremul() const { return fFlags.premul; }
 
     GrGLSLProgramDataManager::UniformHandle srcTFUniform() const { return fSrcTFVar; }
     GrGLSLProgramDataManager::UniformHandle gamutXformUniform() const { return fGamutXformVar; }

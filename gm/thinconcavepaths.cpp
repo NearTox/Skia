@@ -5,20 +5,22 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkPath.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkScalar.h"
 
 namespace {
 // Test thin stroked rect (stroked "by hand", not by stroking).
 void draw_thin_stroked_rect(SkCanvas* canvas, const SkPaint& paint, SkScalar width) {
     SkPath path;
     path.moveTo(10 + width, 10 + width);
-    path.lineTo(40,         10 + width);
-    path.lineTo(40,         20);
+    path.lineTo(40, 10 + width);
+    path.lineTo(40, 20);
     path.lineTo(10 + width, 20);
-    path.moveTo(10,         10);
-    path.lineTo(10,         20 + width);
+    path.moveTo(10, 10);
+    path.lineTo(10, 20 + width);
     path.lineTo(40 + width, 20 + width);
     path.lineTo(40 + width, 10);
     canvas->drawPath(path, paint);
@@ -27,11 +29,11 @@ void draw_thin_stroked_rect(SkCanvas* canvas, const SkPaint& paint, SkScalar wid
 void draw_thin_right_angle(SkCanvas* canvas, const SkPaint& paint, SkScalar width) {
     SkPath path;
     path.moveTo(10 + width, 10 + width);
-    path.lineTo(40,         10 + width);
-    path.lineTo(40,         20);
+    path.lineTo(40, 10 + width);
+    path.lineTo(40, 20);
     path.lineTo(40 + width, 20 + width);
     path.lineTo(40 + width, 10);
-    path.lineTo(10,         10);
+    path.lineTo(10, 10);
     canvas->drawPath(path, paint);
 }
 
@@ -52,10 +54,10 @@ void draw_golf_club(SkCanvas* canvas, const SkPaint& paint, SkScalar width) {
 void draw_barbell(SkCanvas* canvas, const SkPaint& paint, SkScalar width) {
     SkScalar offset = width * 0.5f;
     SkPath path;
-    path.moveTo(30,  5);
+    path.moveTo(30, 5);
     path.lineTo(40 - offset, 15 - offset);
     path.lineTo(60 + offset, 15 - offset);
-    path.lineTo(70,  5);
+    path.lineTo(70, 5);
     path.lineTo(70, 25);
     path.lineTo(60 + offset, 15 + offset);
     path.lineTo(40 - offset, 15 + offset);
@@ -67,13 +69,13 @@ void draw_barbell(SkCanvas* canvas, const SkPaint& paint, SkScalar width) {
 // rectangle and all inner edges of the triangle invert on stroking.
 void draw_thin_rect_and_triangle(SkCanvas* canvas, const SkPaint& paint, SkScalar width) {
     SkPath path;
-    path.moveTo(30,  5);
-    path.lineTo(30 + width,  5);
-    path.lineTo(30 + width,  25);
-    path.lineTo(30,  25);
-    path.moveTo(40,  5);
-    path.lineTo(40 + width,  5);
-    path.lineTo(40,  25);
+    path.moveTo(30, 5);
+    path.lineTo(30 + width, 5);
+    path.lineTo(30 + width, 25);
+    path.lineTo(30, 25);
+    path.moveTo(40, 5);
+    path.lineTo(40 + width, 5);
+    path.lineTo(40, 25);
     canvas->drawPath(path, paint);
 }
 
@@ -129,9 +131,7 @@ void draw_small_i(SkCanvas* canvas, const SkPaint& paint, SkScalar width) {
     canvas->drawPath(path, paint);
 }
 
-
-
-};
+};  // namespace
 
 DEF_SIMPLE_GM(thinconcavepaths, canvas, 550, 400) {
     SkPaint paint;

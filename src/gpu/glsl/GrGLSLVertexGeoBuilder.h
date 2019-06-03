@@ -8,7 +8,7 @@
 #ifndef GrGLSLVertexGeoBuilder_DEFINED
 #define GrGLSLVertexGeoBuilder_DEFINED
 
-#include "GrGLSLShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLShaderBuilder.h"
 
 /**
  * Base class for vertex and geometry shader builders. This is the stage that computes input
@@ -31,7 +31,6 @@ protected:
     typedef GrGLSLShaderBuilder INHERITED;
 };
 
-
 class GrGLSLVertexBuilder : public GrGLSLVertexGeoBuilder {
 public:
     GrGLSLVertexBuilder(GrGLSLProgramBuilder* program) : INHERITED(program) {}
@@ -44,24 +43,13 @@ private:
     typedef GrGLSLVertexGeoBuilder INHERITED;
 };
 
-
 class GrGLSLGeometryBuilder : public GrGLSLVertexGeoBuilder {
 public:
     GrGLSLGeometryBuilder(GrGLSLProgramBuilder* program) : INHERITED(program) {}
 
-    enum class InputType {
-        kPoints,
-        kLines,
-        kLinesAdjacency,
-        kTriangles,
-        kTrianglesAdjacency
-    };
+    enum class InputType { kPoints, kLines, kLinesAdjacency, kTriangles, kTrianglesAdjacency };
 
-    enum class OutputType {
-        kPoints,
-        kLineStrip,
-        kTriangleStrip
-    };
+    enum class OutputType { kPoints, kLineStrip, kTriangleStrip };
 
     void configure(InputType, OutputType, int maxVertices, int numInvocations = 1);
     bool isConfigured() const { return fNumInvocations; }

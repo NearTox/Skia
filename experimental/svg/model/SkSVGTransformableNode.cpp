@@ -5,15 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "SkCanvas.h"
-#include "SkSVGRenderContext.h"
-#include "SkSVGTransformableNode.h"
-#include "SkSVGValue.h"
+#include "experimental/svg/model/SkSVGTransformableNode.h"
+#include "experimental/svg/model/SkSVGRenderContext.h"
+#include "experimental/svg/model/SkSVGValue.h"
+#include "include/core/SkCanvas.h"
 
 SkSVGTransformableNode::SkSVGTransformableNode(SkSVGTag tag)
-    : INHERITED(tag)
-    , fTransform(SkMatrix::I()) { }
-
+        : INHERITED(tag), fTransform(SkMatrix::I()) {}
 
 bool SkSVGTransformableNode::onPrepareToRender(SkSVGRenderContext* ctx) const {
     if (!fTransform.value().isIdentity()) {
@@ -26,14 +24,14 @@ bool SkSVGTransformableNode::onPrepareToRender(SkSVGRenderContext* ctx) const {
 
 void SkSVGTransformableNode::onSetAttribute(SkSVGAttribute attr, const SkSVGValue& v) {
     switch (attr) {
-    case SkSVGAttribute::kTransform:
-        if (const auto* transform = v.as<SkSVGTransformValue>()) {
-            this->setTransform(*transform);
-        }
-        break;
-    default:
-        this->INHERITED::onSetAttribute(attr, v);
-        break;
+        case SkSVGAttribute::kTransform:
+            if (const auto* transform = v.as<SkSVGTransformValue>()) {
+                this->setTransform(*transform);
+            }
+            break;
+        default:
+            this->INHERITED::onSetAttribute(attr, v);
+            break;
     }
 }
 

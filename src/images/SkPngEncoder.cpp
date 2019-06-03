@@ -5,27 +5,27 @@
  * found in the LICENSE file.
  */
 
-#include "SkImageEncoderPriv.h"
+#include "src/images/SkImageEncoderPriv.h"
 
 #ifdef SK_HAS_PNG_LIBRARY
 
-#include "SkColorTable.h"
-#include "SkImageEncoderFns.h"
-#include "SkImageInfoPriv.h"
-#include "SkStream.h"
-#include "SkString.h"
-#include "SkPngEncoder.h"
-#include "SkPngPriv.h"
 #include <vector>
+#include "include/core/SkStream.h"
+#include "include/core/SkString.h"
+#include "include/encode/SkPngEncoder.h"
+#include "include/private/SkImageInfoPriv.h"
+#include "src/codec/SkColorTable.h"
+#include "src/codec/SkPngPriv.h"
+#include "src/images/SkImageEncoderFns.h"
 
 #include "png.h"
 
-static_assert(PNG_FILTER_NONE  == (int)SkPngEncoder::FilterFlag::kNone,  "Skia libpng filter err.");
-static_assert(PNG_FILTER_SUB   == (int)SkPngEncoder::FilterFlag::kSub,   "Skia libpng filter err.");
-static_assert(PNG_FILTER_UP    == (int)SkPngEncoder::FilterFlag::kUp,    "Skia libpng filter err.");
-static_assert(PNG_FILTER_AVG   == (int)SkPngEncoder::FilterFlag::kAvg,   "Skia libpng filter err.");
+static_assert(PNG_FILTER_NONE == (int)SkPngEncoder::FilterFlag::kNone, "Skia libpng filter err.");
+static_assert(PNG_FILTER_SUB == (int)SkPngEncoder::FilterFlag::kSub, "Skia libpng filter err.");
+static_assert(PNG_FILTER_UP == (int)SkPngEncoder::FilterFlag::kUp, "Skia libpng filter err.");
+static_assert(PNG_FILTER_AVG == (int)SkPngEncoder::FilterFlag::kAvg, "Skia libpng filter err.");
 static_assert(PNG_FILTER_PAETH == (int)SkPngEncoder::FilterFlag::kPaeth, "Skia libpng filter err.");
-static_assert(PNG_ALL_FILTERS  == (int)SkPngEncoder::FilterFlag::kAll,   "Skia libpng filter err.");
+static_assert(PNG_ALL_FILTERS == (int)SkPngEncoder::FilterFlag::kAll, "Skia libpng filter err.");
 
 static constexpr bool kSuppressPngEncodeWarnings = true;
 
@@ -46,7 +46,6 @@ static void sk_write_fn(png_structp png_ptr, png_bytep data, png_size_t len) {
 
 class SkPngEncoderMgr final : SkNoncopyable {
 public:
-
     /*
      * Create the decode manager
      * Does not take ownership of stream
@@ -63,20 +62,14 @@ public:
     int pngBytesPerPixel() const { return fPngBytesPerPixel; }
     transform_scanline_proc proc() const { return fProc; }
 
-    ~SkPngEncoderMgr() {
-        png_destroy_write_struct(&fPngPtr, &fInfoPtr);
-    }
+    ~SkPngEncoderMgr() { png_destroy_write_struct(&fPngPtr, &fInfoPtr); }
 
 private:
+    SkPngEncoderMgr(png_structp pngPtr, png_infop infoPtr) : fPngPtr(pngPtr), fInfoPtr(infoPtr) {}
 
-    SkPngEncoderMgr(png_structp pngPtr, png_infop infoPtr)
-        : fPngPtr(pngPtr)
-        , fInfoPtr(infoPtr)
-    {}
-
-    png_structp             fPngPtr;
-    png_infop               fInfoPtr;
-    int                     fPngBytesPerPixel;
+    png_structp fPngPtr;
+    png_infop fInfoPtr;
+    int fPngBytesPerPixel;
     transform_scanline_proc fProc;
 };
 
@@ -133,9 +126,9 @@ bool SkPngEncoderMgr::setHeader(const SkImageInfo& srcInfo, const SkPngEncoder::
             fPngBytesPerPixel = srcInfo.isOpaque() ? 3 : 4;
             break;
         case kRGB_888x_SkColorType:
-            sigBit.red   = 8;
+            sigBit.red = 8;
             sigBit.green = 8;
-            sigBit.blue  = 8;
+            sigBit.blue = 8;
             pngColorType = PNG_COLOR_TYPE_RGB;
             fPngBytesPerPixel = 3;
             SkASSERT(srcInfo.isOpaque());
@@ -167,19 +160,19 @@ bool SkPngEncoderMgr::setHeader(const SkImageInfo& srcInfo, const SkPngEncoder::
             fPngBytesPerPixel = 2;
             break;
         case kRGBA_1010102_SkColorType:
-            bitDepth     = 16;
-            sigBit.red   = 10;
+            bitDepth = 16;
+            sigBit.red = 10;
             sigBit.green = 10;
-            sigBit.blue  = 10;
+            sigBit.blue = 10;
             sigBit.alpha = 2;
             pngColorType = srcInfo.isOpaque() ? PNG_COLOR_TYPE_RGB : PNG_COLOR_TYPE_RGB_ALPHA;
             fPngBytesPerPixel = 8;
             break;
         case kRGB_101010x_SkColorType:
-            bitDepth     = 16;
-            sigBit.red   = 10;
+            bitDepth = 16;
+            sigBit.red = 10;
             sigBit.green = 10;
-            sigBit.blue  = 10;
+            sigBit.blue = 10;
             pngColorType = PNG_COLOR_TYPE_RGB;
             fPngBytesPerPixel = 6;
             break;
@@ -187,10 +180,8 @@ bool SkPngEncoderMgr::setHeader(const SkImageInfo& srcInfo, const SkPngEncoder::
             return false;
     }
 
-    png_set_IHDR(fPngPtr, fInfoPtr, srcInfo.width(), srcInfo.height(),
-                 bitDepth, pngColorType,
-                 PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE,
-                 PNG_FILTER_TYPE_BASE);
+    png_set_IHDR(fPngPtr, fInfoPtr, srcInfo.width(), srcInfo.height(), bitDepth, pngColorType,
+                 PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
     png_set_sBIT(fPngPtr, fInfoPtr, &sigBit);
 
     int filters = (int)options.fFilterFlags & (int)SkPngEncoder::FilterFlag::kAll;
@@ -214,7 +205,7 @@ bool SkPngEncoderMgr::setHeader(const SkImageInfo& srcInfo, const SkPngEncoder::
                 keyword = originalKeyword;
             } else {
                 SkDEBUGFAILF("PNG tEXt keyword should be no longer than %d.",
-                        PNG_KEYWORD_MAX_LENGTH);
+                             PNG_KEYWORD_MAX_LENGTH);
                 clippedKeys.emplace_back(originalKeyword, PNG_KEYWORD_MAX_LENGTH);
                 keyword = clippedKeys.back().c_str();
             }
@@ -332,7 +323,7 @@ static void set_icc(png_structp png_ptr, png_infop info_ptr, const SkImageInfo& 
 #else
     SkString str("Skia");
     char* name = str.writable_str();
-    png_charp iccPtr = (png_charp) icc->writable_data();
+    png_charp iccPtr = (png_charp)icc->writable_data();
 #endif
     png_set_iCCP(png_ptr, info_ptr, name, 0, iccPtr, icc->size());
 }
@@ -358,8 +349,7 @@ bool SkPngEncoderMgr::writeInfo(const SkImageInfo& srcInfo) {
 
     png_write_info(fPngPtr, fInfoPtr);
     if (kRGBA_F16_SkColorType == srcInfo.colorType() &&
-        kOpaque_SkAlphaType == srcInfo.alphaType())
-    {
+        kOpaque_SkAlphaType == srcInfo.alphaType()) {
         // For kOpaque, kRGBA_F16, we will keep the row as RGBA and tell libpng
         // to skip the alpha channel.
         png_set_filler(fPngPtr, 0, PNG_FILLER_AFTER);
@@ -368,9 +358,7 @@ bool SkPngEncoderMgr::writeInfo(const SkImageInfo& srcInfo) {
     return true;
 }
 
-void SkPngEncoderMgr::chooseProc(const SkImageInfo& srcInfo) {
-    fProc = choose_proc(srcInfo);
-}
+void SkPngEncoderMgr::chooseProc(const SkImageInfo& srcInfo) { fProc = choose_proc(srcInfo); }
 
 std::unique_ptr<SkEncoder> SkPngEncoder::Make(SkWStream* dst, const SkPixmap& src,
                                               const Options& options) {
@@ -401,9 +389,8 @@ std::unique_ptr<SkEncoder> SkPngEncoder::Make(SkWStream* dst, const SkPixmap& sr
 }
 
 SkPngEncoder::SkPngEncoder(std::unique_ptr<SkPngEncoderMgr> encoderMgr, const SkPixmap& src)
-    : INHERITED(src, encoderMgr->pngBytesPerPixel() * src.width())
-    , fEncoderMgr(std::move(encoderMgr))
-{}
+        : INHERITED(src, encoderMgr->pngBytesPerPixel() * src.width())
+        , fEncoderMgr(std::move(encoderMgr)) {}
 
 SkPngEncoder::~SkPngEncoder() {}
 
@@ -419,7 +406,7 @@ bool SkPngEncoder::onEncodeRows(int numRows) {
                             fSrc.width(),
                             SkColorTypeBytesPerPixel(fSrc.colorType()));
 
-        png_bytep rowPtr = (png_bytep) fStorage.get();
+        png_bytep rowPtr = (png_bytep)fStorage.get();
         png_write_rows(fEncoderMgr->pngPtr(), &rowPtr, 1);
         srcRow = SkTAddOffset<const void>(srcRow, fSrc.rowBytes());
     }

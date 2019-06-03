@@ -8,15 +8,15 @@
 #ifndef GrMtlRenderTarget_DEFINED
 #define GrMtlRenderTarget_DEFINED
 
-#include "GrRenderTarget.h"
+#include "include/gpu/GrRenderTarget.h"
 
-#include "GrBackendSurface.h"
+#include "include/gpu/GrBackendSurface.h"
 
 #import <Metal/Metal.h>
 
 class GrMtlGpu;
 
-class GrMtlRenderTarget: public GrRenderTarget {
+class GrMtlRenderTarget : public GrRenderTarget {
 public:
     static sk_sp<GrMtlRenderTarget> MakeWrappedRenderTarget(GrMtlGpu*,
                                                             const GrSurfaceDesc&,
@@ -27,7 +27,7 @@ public:
     // override of GrRenderTarget
     ResolveType getResolveType() const override {
         return kCantResolve_ResolveType;
-#if 0 // TODO figure this once we support msaa
+#if 0  // TODO figure this once we support msaa
         if (this->numColorSamples() > 1) {
             return kCanResolve_ResolveType;
         }
@@ -35,9 +35,7 @@ public:
 #endif
     }
 
-    bool canAttemptStencilAttachment() const override {
-        return true;
-    }
+    bool canAttemptStencilAttachment() const override { return true; }
 
     id<MTLTexture> mtlRenderTexture() const { return fRenderTexture; }
 
@@ -46,9 +44,7 @@ public:
     GrBackendFormat backendFormat() const override;
 
 protected:
-    GrMtlRenderTarget(GrMtlGpu* gpu,
-                      const GrSurfaceDesc& desc,
-                      id<MTLTexture> renderTexture);
+    GrMtlRenderTarget(GrMtlGpu* gpu, const GrSurfaceDesc& desc, id<MTLTexture> renderTexture);
 
     GrMtlGpu* getMtlGpu() const;
 
@@ -74,9 +70,7 @@ protected:
 private:
     // Extra param to disambiguate from constructor used by subclasses.
     enum Wrapped { kWrapped };
-    GrMtlRenderTarget(GrMtlGpu* gpu,
-                      const GrSurfaceDesc& desc,
-                      id<MTLTexture> renderTexture,
+    GrMtlRenderTarget(GrMtlGpu* gpu, const GrSurfaceDesc& desc, id<MTLTexture> renderTexture,
                       Wrapped);
 
     bool completeStencilAttachment() override;
@@ -84,6 +78,4 @@ private:
     typedef GrRenderTarget INHERITED;
 };
 
-
 #endif
-

@@ -5,11 +5,20 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkBlurImageFilter.h"
-#include "SkRSXform.h"
-#include "SkSurface.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/effects/SkBlurImageFilter.h"
+
+#include <utility>
 
 static void make_bm(SkBitmap* bm) {
     bm->allocN32Pixels(100, 100);
@@ -22,8 +31,8 @@ static void make_bm(SkBitmap* bm) {
     canvas.drawCircle(50, 50, 50, paint);
 }
 
-static void draw_1_bitmap(SkCanvas* canvas, const SkBitmap& bm, bool doClip,
-                         int dx, int dy, sk_sp<SkImageFilter> filter) {
+static void draw_1_bitmap(SkCanvas* canvas, const SkBitmap& bm, bool doClip, int dx, int dy,
+                          sk_sp<SkImageFilter> filter) {
     SkAutoCanvasRestore acr(canvas, true);
     SkPaint paint;
 
@@ -55,14 +64,9 @@ public:
     SpriteBitmapGM() {}
 
 protected:
+    SkString onShortName() override { return SkString("spritebitmap"); }
 
-    SkString onShortName() override {
-        return SkString("spritebitmap");
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(640, 480);
-    }
+    SkISize onISize() override { return SkISize::Make(640, 480); }
 
     void onDraw(SkCanvas* canvas) override {
         SkBitmap bm;
@@ -86,4 +90,4 @@ protected:
 private:
     typedef GM INHERITED;
 };
-DEF_GM( return new SpriteBitmapGM; )
+DEF_GM(return new SpriteBitmapGM;)

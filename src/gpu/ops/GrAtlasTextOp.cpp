@@ -5,22 +5,22 @@
  * found in the LICENSE file.
  */
 
-#include "GrAtlasTextOp.h"
+#include "src/gpu/ops/GrAtlasTextOp.h"
 
-#include "GrCaps.h"
-#include "GrMemoryPool.h"
-#include "GrOpFlushState.h"
-#include "GrRecordingContext.h"
-#include "GrRecordingContextPriv.h"
-#include "GrResourceProvider.h"
-#include "SkMathPriv.h"
-#include "SkMatrixPriv.h"
-#include "SkPoint3.h"
-#include "SkStrikeCache.h"
-#include "effects/GrBitmapTextGeoProc.h"
-#include "effects/GrDistanceFieldGeoProc.h"
-#include "text/GrAtlasManager.h"
-#include "text/GrStrikeCache.h"
+#include "include/core/SkPoint3.h"
+#include "include/private/GrRecordingContext.h"
+#include "src/core/SkMathPriv.h"
+#include "src/core/SkMatrixPriv.h"
+#include "src/core/SkStrikeCache.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrMemoryPool.h"
+#include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/GrRecordingContextPriv.h"
+#include "src/gpu/GrResourceProvider.h"
+#include "src/gpu/effects/GrBitmapTextGeoProc.h"
+#include "src/gpu/effects/GrDistanceFieldGeoProc.h"
+#include "src/gpu/text/GrAtlasManager.h"
+#include "src/gpu/text/GrStrikeCache.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -29,55 +29,55 @@ std::unique_ptr<GrAtlasTextOp> GrAtlasTextOp::MakeBitmap(GrRecordingContext* con
                                                          GrMaskFormat maskFormat,
                                                          int glyphCount,
                                                          bool needsTransform) {
-        GrOpMemoryPool* pool = context->priv().opMemoryPool();
+    GrOpMemoryPool* pool = context->priv().opMemoryPool();
 
-        std::unique_ptr<GrAtlasTextOp> op = pool->allocate<GrAtlasTextOp>(std::move(paint));
+    std::unique_ptr<GrAtlasTextOp> op = pool->allocate<GrAtlasTextOp>(std::move(paint));
 
-        switch (maskFormat) {
-            case kA8_GrMaskFormat:
-                op->fMaskType = kGrayscaleCoverageMask_MaskType;
-                break;
-            case kA565_GrMaskFormat:
-                op->fMaskType = kLCDCoverageMask_MaskType;
-                break;
-            case kARGB_GrMaskFormat:
-                op->fMaskType = kColorBitmapMask_MaskType;
-                break;
-        }
-        op->fNumGlyphs = glyphCount;
-        op->fGeoCount = 1;
-        op->fLuminanceColor = 0;
-        op->fNeedsGlyphTransform = needsTransform;
-        return op;
+    switch (maskFormat) {
+        case kA8_GrMaskFormat:
+            op->fMaskType = kGrayscaleCoverageMask_MaskType;
+            break;
+        case kA565_GrMaskFormat:
+            op->fMaskType = kLCDCoverageMask_MaskType;
+            break;
+        case kARGB_GrMaskFormat:
+            op->fMaskType = kColorBitmapMask_MaskType;
+            break;
     }
+    op->fNumGlyphs = glyphCount;
+    op->fGeoCount = 1;
+    op->fLuminanceColor = 0;
+    op->fNeedsGlyphTransform = needsTransform;
+    return op;
+}
 
 std::unique_ptr<GrAtlasTextOp> GrAtlasTextOp::MakeDistanceField(
-                                            GrRecordingContext* context,
-                                            GrPaint&& paint,
-                                            int glyphCount,
-                                            const GrDistanceFieldAdjustTable* distanceAdjustTable,
-                                            bool useGammaCorrectDistanceTable,
-                                            SkColor luminanceColor,
-                                            const SkSurfaceProps& props,
-                                            bool isAntiAliased,
-                                            bool useLCD) {
-        GrOpMemoryPool* pool = context->priv().opMemoryPool();
+        GrRecordingContext* context,
+        GrPaint&& paint,
+        int glyphCount,
+        const GrDistanceFieldAdjustTable* distanceAdjustTable,
+        bool useGammaCorrectDistanceTable,
+        SkColor luminanceColor,
+        const SkSurfaceProps& props,
+        bool isAntiAliased,
+        bool useLCD) {
+    GrOpMemoryPool* pool = context->priv().opMemoryPool();
 
-        std::unique_ptr<GrAtlasTextOp> op = pool->allocate<GrAtlasTextOp>(std::move(paint));
+    std::unique_ptr<GrAtlasTextOp> op = pool->allocate<GrAtlasTextOp>(std::move(paint));
 
-        bool isBGR = SkPixelGeometryIsBGR(props.pixelGeometry());
-        bool isLCD = useLCD && SkPixelGeometryIsH(props.pixelGeometry());
-        op->fMaskType = !isAntiAliased ? kAliasedDistanceField_MaskType
-                                       : isLCD ? (isBGR ? kLCDBGRDistanceField_MaskType
-                                                        : kLCDDistanceField_MaskType)
-                                               : kGrayscaleDistanceField_MaskType;
-        op->fDistanceAdjustTable.reset(SkRef(distanceAdjustTable));
-        op->fUseGammaCorrectDistanceTable = useGammaCorrectDistanceTable;
-        op->fLuminanceColor = luminanceColor;
-        op->fNumGlyphs = glyphCount;
-        op->fGeoCount = 1;
-        return op;
-    }
+    bool isBGR = SkPixelGeometryIsBGR(props.pixelGeometry());
+    bool isLCD = useLCD && SkPixelGeometryIsH(props.pixelGeometry());
+    op->fMaskType = !isAntiAliased ? kAliasedDistanceField_MaskType
+                                   : isLCD ? (isBGR ? kLCDBGRDistanceField_MaskType
+                                                    : kLCDDistanceField_MaskType)
+                                           : kGrayscaleDistanceField_MaskType;
+    op->fDistanceAdjustTable.reset(SkRef(distanceAdjustTable));
+    op->fUseGammaCorrectDistanceTable = useGammaCorrectDistanceTable;
+    op->fLuminanceColor = luminanceColor;
+    op->fNumGlyphs = glyphCount;
+    op->fGeoCount = 1;
+    return op;
+}
 
 static const int kDistanceAdjustLumShift = 5;
 
@@ -140,8 +140,8 @@ GrDrawOp::FixedFunctionFlags GrAtlasTextOp::fixedFunctionFlags() const {
     return FixedFunctionFlags::kNone;
 }
 
-GrProcessorSet::Analysis GrAtlasTextOp::finalize(
-        const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType) {
+GrProcessorSet::Analysis GrAtlasTextOp::finalize(const GrCaps& caps, const GrAppliedClip* clip,
+                                                 GrFSAAType fsaaType, GrClampType clampType) {
     GrProcessorAnalysisCoverage coverage;
     GrProcessorAnalysisColor color;
     if (kColorBitmapMask_MaskType == fMaskType) {
@@ -164,9 +164,8 @@ GrProcessorSet::Analysis GrAtlasTextOp::finalize(
             coverage = GrProcessorAnalysisCoverage::kNone;
             break;
     }
-    auto analysis = fProcessors.finalize(
-            color, coverage, clip, &GrUserStencilSettings::kUnused, fsaaType, caps,
-            &fGeoData[0].fColor);
+    auto analysis = fProcessors.finalize(color, coverage, clip, &GrUserStencilSettings::kUnused,
+                                         fsaaType, caps, clampType, &fGeoData[0].fColor);
     fUsesLocalCoords = analysis.usesLocalCoords();
     return analysis;
 }
@@ -191,7 +190,7 @@ static void clip_quads(const SkIRect& clipRect, char* currVertex, const char* bl
             // In the LCD case the color will be garbage, but we'll overwrite it with the texcoords
             // and it avoids a lot of conditionals.
             auto color = *reinterpret_cast<const SkColor*>(blobVertices + sizeof(SkPoint));
-            size_t coordOffset = vertexStride - 2*sizeof(uint16_t);
+            size_t coordOffset = vertexStride - 2 * sizeof(uint16_t);
             auto* blobCoordsLT = reinterpret_cast<const uint16_t*>(blobVertices + coordOffset);
             auto* blobCoordsRB = reinterpret_cast<const uint16_t*>(blobVertices + 3 * vertexStride +
                                                                    coordOffset);
@@ -311,14 +310,14 @@ void GrAtlasTextOp::onPrepareDraws(Target* target) {
 
     bool vmPerspective = fGeoData[0].fViewMatrix.hasPerspective();
     if (this->usesDistanceFields()) {
-        flushInfo.fGeometryProcessor = this->setupDfProcessor(*target->caps().shaderCaps(),
-                                                              proxies, numActiveProxies);
+        flushInfo.fGeometryProcessor =
+                this->setupDfProcessor(*target->caps().shaderCaps(), proxies, numActiveProxies);
     } else {
         GrSamplerState samplerState = fNeedsGlyphTransform ? GrSamplerState::ClampBilerp()
                                                            : GrSamplerState::ClampNearest();
         flushInfo.fGeometryProcessor = GrBitmapTextGeoProc::Make(
-            *target->caps().shaderCaps(), this->color(), false, proxies, numActiveProxies,
-            samplerState, maskFormat, localMatrix, vmPerspective);
+                *target->caps().shaderCaps(), this->color(), false, proxies, numActiveProxies,
+                samplerState, maskFormat, localMatrix, vmPerspective);
     }
 
     flushInfo.fGlyphsToFlush = 0;
@@ -390,9 +389,8 @@ void GrAtlasTextOp::onPrepareDraws(Target* target) {
 }
 
 void GrAtlasTextOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) {
-    static const uint32_t kPipelineFlags = 0;
-    flushState->executeDrawsAndUploadsForMeshDrawOp(
-            this, chainBounds, std::move(fProcessors), kPipelineFlags);
+    flushState->executeDrawsAndUploadsForMeshDrawOp(this, chainBounds, std::move(fProcessors),
+                                                    GrPipeline::InputFlags::kNone);
 }
 
 void GrAtlasTextOp::flush(GrMeshDrawOp::Target* target, FlushInfo* flushInfo) const {
@@ -408,7 +406,7 @@ void GrAtlasTextOp::flush(GrMeshDrawOp::Target* target, FlushInfo* flushInfo) co
     unsigned int numActiveProxies;
     const sk_sp<GrTextureProxy>* proxies = atlasManager->getProxies(maskFormat, &numActiveProxies);
     SkASSERT(proxies);
-    if (gp->numTextureSamplers() != (int) numActiveProxies) {
+    if (gp->numTextureSamplers() != (int)numActiveProxies) {
         // During preparation the number of atlas pages has increased.
         // Update the proxies used in the GP to match.
         for (unsigned i = gp->numTextureSamplers(); i < numActiveProxies; ++i) {
@@ -417,10 +415,10 @@ void GrAtlasTextOp::flush(GrMeshDrawOp::Target* target, FlushInfo* flushInfo) co
         if (this->usesDistanceFields()) {
             if (this->isLCD()) {
                 reinterpret_cast<GrDistanceFieldLCDTextGeoProc*>(gp)->addNewProxies(
-                    proxies, numActiveProxies, GrSamplerState::ClampBilerp());
+                        proxies, numActiveProxies, GrSamplerState::ClampBilerp());
             } else {
                 reinterpret_cast<GrDistanceFieldA8TextGeoProc*>(gp)->addNewProxies(
-                    proxies, numActiveProxies, GrSamplerState::ClampBilerp());
+                        proxies, numActiveProxies, GrSamplerState::ClampBilerp());
             }
         } else {
             GrSamplerState samplerState = fNeedsGlyphTransform ? GrSamplerState::ClampBilerp()
@@ -434,8 +432,8 @@ void GrAtlasTextOp::flush(GrMeshDrawOp::Target* target, FlushInfo* flushInfo) co
     mesh->setIndexedPatterned(flushInfo->fIndexBuffer, kIndicesPerGlyph, kVerticesPerGlyph,
                               flushInfo->fGlyphsToFlush, maxGlyphsPerDraw);
     mesh->setVertexData(flushInfo->fVertexBuffer, flushInfo->fVertexOffset);
-    target->recordDraw(
-            flushInfo->fGeometryProcessor, mesh, 1, flushInfo->fFixedDynamicState, nullptr);
+    target->recordDraw(flushInfo->fGeometryProcessor, mesh, 1, flushInfo->fFixedDynamicState,
+                       nullptr);
     flushInfo->fVertexOffset += kVerticesPerGlyph * flushInfo->fGlyphsToFlush;
     flushInfo->fGlyphsToFlush = 0;
 }
@@ -543,8 +541,8 @@ sk_sp<GrGeometryProcessor> GrAtlasTextOp::setupDfProcessor(const GrShaderCaps& c
                 SkColorGetB(fLuminanceColor) >> kDistanceAdjustLumShift,
                 fUseGammaCorrectDistanceTable);
         GrDistanceFieldLCDTextGeoProc::DistanceAdjust widthAdjust =
-                GrDistanceFieldLCDTextGeoProc::DistanceAdjust::Make(
-                        redCorrection, greenCorrection, blueCorrection);
+                GrDistanceFieldLCDTextGeoProc::DistanceAdjust::Make(redCorrection, greenCorrection,
+                                                                    blueCorrection);
         return GrDistanceFieldLCDTextGeoProc::Make(caps, proxies, numActiveProxies,
                                                    GrSamplerState::ClampBilerp(), widthAdjust,
                                                    fDFGPFlags, localMatrix);
@@ -552,19 +550,17 @@ sk_sp<GrGeometryProcessor> GrAtlasTextOp::setupDfProcessor(const GrShaderCaps& c
 #ifdef SK_GAMMA_APPLY_TO_A8
         float correction = 0;
         if (kAliasedDistanceField_MaskType != fMaskType) {
-            U8CPU lum = SkColorSpaceLuminance::computeLuminance(SK_GAMMA_EXPONENT,
-                                                                fLuminanceColor);
+            U8CPU lum = SkColorSpaceLuminance::computeLuminance(SK_GAMMA_EXPONENT, fLuminanceColor);
             correction = fDistanceAdjustTable->getAdjustment(lum >> kDistanceAdjustLumShift,
                                                              fUseGammaCorrectDistanceTable);
         }
         return GrDistanceFieldA8TextGeoProc::Make(caps, proxies, numActiveProxies,
-                                                  GrSamplerState::ClampBilerp(),
-                                                  correction, fDFGPFlags, localMatrix);
+                                                  GrSamplerState::ClampBilerp(), correction,
+                                                  fDFGPFlags, localMatrix);
 #else
         return GrDistanceFieldA8TextGeoProc::Make(caps, proxies, numActiveProxies,
-                                                  GrSamplerState::ClampBilerp(),
-                                                  fDFGPFlags, localMatrix);
+                                                  GrSamplerState::ClampBilerp(), fDFGPFlags,
+                                                  localMatrix);
 #endif
     }
 }
-

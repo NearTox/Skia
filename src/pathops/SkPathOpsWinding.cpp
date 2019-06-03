@@ -7,23 +7,23 @@
 
 // given a prospective edge, compute its initial winding by projecting a ray
 // if the ray hits another edge
-    // if the edge doesn't have a winding yet, hop up to that edge and start over
-        // concern : check for hops forming a loop
-    // if the edge is unsortable, or
-    // the intersection is nearly at the ends, or
-    // the tangent at the intersection is nearly coincident to the ray,
-        // choose a different ray and try again
-            // concern : if it is unable to succeed after N tries, try another edge? direction?
+// if the edge doesn't have a winding yet, hop up to that edge and start over
+// concern : check for hops forming a loop
+// if the edge is unsortable, or
+// the intersection is nearly at the ends, or
+// the tangent at the intersection is nearly coincident to the ray,
+// choose a different ray and try again
+// concern : if it is unable to succeed after N tries, try another edge? direction?
 // if no edge is hit, compute the winding directly
 
 // given the top span, project the most perpendicular ray and look for intersections
-    // let's try up and then down. What the hey
+// let's try up and then down. What the hey
 
 // bestXY is initialized by caller with basePt
 
-#include "SkOpContour.h"
-#include "SkOpSegment.h"
-#include "SkPathOpsCurve.h"
+#include "src/pathops/SkOpContour.h"
+#include "src/pathops/SkOpSegment.h"
+#include "src/pathops/SkPathOpsCurve.h"
 
 #include <utility>
 
@@ -35,33 +35,18 @@ enum class SkOpRayDir {
 };
 
 #if DEBUG_WINDING
-const char* gDebugRayDirName[] = {
-    "kLeft",
-    "kTop",
-    "kRight",
-    "kBottom"
-};
+const char* gDebugRayDirName[] = {"kLeft", "kTop", "kRight", "kBottom"};
 #endif
 
-static int xy_index(SkOpRayDir dir) {
-    return static_cast<int>(dir) & 1;
-}
+static int xy_index(SkOpRayDir dir) { return static_cast<int>(dir) & 1; }
 
-static SkScalar pt_xy(const SkPoint& pt, SkOpRayDir dir) {
-    return (&pt.fX)[xy_index(dir)];
-}
+static SkScalar pt_xy(const SkPoint& pt, SkOpRayDir dir) { return (&pt.fX)[xy_index(dir)]; }
 
-static SkScalar pt_yx(const SkPoint& pt, SkOpRayDir dir) {
-    return (&pt.fX)[!xy_index(dir)];
-}
+static SkScalar pt_yx(const SkPoint& pt, SkOpRayDir dir) { return (&pt.fX)[!xy_index(dir)]; }
 
-static double pt_dxdy(const SkDVector& v, SkOpRayDir dir) {
-    return (&v.fX)[xy_index(dir)];
-}
+static double pt_dxdy(const SkDVector& v, SkOpRayDir dir) { return (&v.fX)[xy_index(dir)]; }
 
-static double pt_dydx(const SkDVector& v, SkOpRayDir dir) {
-    return (&v.fX)[!xy_index(dir)];
-}
+static double pt_dydx(const SkDVector& v, SkOpRayDir dir) { return (&v.fX)[!xy_index(dir)]; }
 
 static SkScalar rect_side(const SkRect& r, SkOpRayDir dir) {
     return (&r.fLeft)[static_cast<int>(dir)];
@@ -157,12 +142,11 @@ void SkOpSegment::rayCheck(const SkOpRayHit& base, SkOpRayDir dir, SkOpRayHit** 
                     continue;
                 }
                 slope = this->dSlopeAtT(t);
-                if (fVerb == SkPath::kCubic_Verb && base.fSpan->segment() == this
-                        && roughly_equal(base.fT, t)
-                        && SkDPoint::RoughlyEqual(pt, base.fPt)) {
-    #if DEBUG_WINDING
+                if (fVerb == SkPath::kCubic_Verb && base.fSpan->segment() == this &&
+                    roughly_equal(base.fT, t) && SkDPoint::RoughlyEqual(pt, base.fPt)) {
+#if DEBUG_WINDING
                     SkDebugf("%s (rarely expect this)\n", __FUNCTION__);
-    #endif
+#endif
                     continue;
                 }
                 if (fabs(pt_dydx(slope, dir) * 10000) > fabs(pt_dxdy(slope, dir))) {
@@ -207,7 +191,7 @@ static bool hit_compare_x(const SkOpRayHit* a, const SkOpRayHit* b) {
 }
 
 static bool reverse_hit_compare_x(const SkOpRayHit* a, const SkOpRayHit* b) {
-    return b->fPt.fX  < a->fPt.fX;
+    return b->fPt.fX < a->fPt.fX;
 }
 
 static bool hit_compare_y(const SkOpRayHit* a, const SkOpRayHit* b) {
@@ -215,7 +199,7 @@ static bool hit_compare_y(const SkOpRayHit* a, const SkOpRayHit* b) {
 }
 
 static bool reverse_hit_compare_y(const SkOpRayHit* a, const SkOpRayHit* b) {
-    return b->fPt.fY  < a->fPt.fY;
+    return b->fPt.fY < a->fPt.fY;
 }
 
 static double get_t_guess(int tTry, int* dirOffset) {
@@ -245,8 +229,8 @@ bool SkOpSpan::sortableTop(SkOpContour* contourHead) {
     }
     SkOpRayHit* hitHead = &hitBase;
     dir = static_cast<SkOpRayDir>(static_cast<int>(dir) + dirOffset);
-    if (hitBase.fSpan && hitBase.fSpan->segment()->verb() > SkPath::kLine_Verb
-            && !pt_dydx(hitBase.fSlope, dir)) {
+    if (hitBase.fSpan && hitBase.fSpan->segment()->verb() > SkPath::kLine_Verb &&
+        !pt_dydx(hitBase.fSlope, dir)) {
         return false;
     }
     SkOpContour* contour = contourHead;
@@ -264,27 +248,27 @@ bool SkOpSpan::sortableTop(SkOpContour* contourHead) {
         hit = hit->fNext;
     }
     int count = sorted.count();
-    SkTQSort(sorted.begin(), sorted.end() - 1, xy_index(dir)
-            ? less_than(dir) ? hit_compare_y : reverse_hit_compare_y
-            : less_than(dir) ? hit_compare_x : reverse_hit_compare_x);
+    SkTQSort(sorted.begin(), sorted.end() - 1,
+             xy_index(dir) ? less_than(dir) ? hit_compare_y : reverse_hit_compare_y
+                           : less_than(dir) ? hit_compare_x : reverse_hit_compare_x);
     // verify windings
 #if DEBUG_WINDING
     SkDebugf("%s dir=%s seg=%d t=%1.9g pt=(%1.9g,%1.9g)\n", __FUNCTION__,
-            gDebugRayDirName[static_cast<int>(dir)], hitBase.fSpan->segment()->debugID(),
-            hitBase.fT, hitBase.fPt.fX, hitBase.fPt.fY);
+             gDebugRayDirName[static_cast<int>(dir)], hitBase.fSpan->segment()->debugID(),
+             hitBase.fT, hitBase.fPt.fX, hitBase.fPt.fY);
     for (int index = 0; index < count; ++index) {
         hit = sorted[index];
         SkOpSpan* span = hit->fSpan;
         SkOpSegment* hitSegment = span ? span->segment() : nullptr;
         bool operand = span ? hitSegment->operand() : false;
         bool ccw = ccw_dxdy(hit->fSlope, dir);
-        SkDebugf("%s [%d] valid=%d operand=%d span=%d ccw=%d ", __FUNCTION__, index,
-                hit->fValid, operand, span ? span->debugID() : -1, ccw);
+        SkDebugf("%s [%d] valid=%d operand=%d span=%d ccw=%d ", __FUNCTION__, index, hit->fValid,
+                 operand, span ? span->debugID() : -1, ccw);
         if (span) {
             hitSegment->dumpPtsInner();
         }
-        SkDebugf(" t=%1.9g pt=(%1.9g,%1.9g) slope=(%1.9g,%1.9g)\n", hit->fT,
-                hit->fPt.fX, hit->fPt.fY, hit->fSlope.fX, hit->fSlope.fY);
+        SkDebugf(" t=%1.9g pt=(%1.9g,%1.9g) slope=(%1.9g,%1.9g)\n", hit->fT, hit->fPt.fX,
+                 hit->fPt.fY, hit->fSlope.fX, hit->fSlope.fY);
     }
 #endif
     const SkPoint* last = nullptr;
@@ -296,7 +280,7 @@ bool SkOpSpan::sortableTop(SkOpContour* contourHead) {
             return false;
         }
         bool ccw = ccw_dxdy(hit->fSlope, dir);
-//        SkASSERT(!approximately_zero(hit->fT) || !hit->fValid);
+        //        SkASSERT(!approximately_zero(hit->fT) || !hit->fValid);
         SkOpSpan* span = hit->fSpan;
         if (!span) {
             return false;
@@ -355,8 +339,8 @@ bool SkOpSpan::sortableTop(SkOpContour* contourHead) {
             if (this->globalState()->phase() == SkOpPhase::kFixWinding) {
                 hitSegment->contour()->setCcw(ccw);
             } else {
-                (void) hitSegment->markAndChaseWinding(span, span->next(), windSum, oppSum, nullptr);
-                (void) hitSegment->markAndChaseWinding(span->next(), span, windSum, oppSum, nullptr);
+                (void)hitSegment->markAndChaseWinding(span, span->next(), windSum, oppSum, nullptr);
+                (void)hitSegment->markAndChaseWinding(span->next(), span, windSum, oppSum, nullptr);
             }
         }
         if (operand) {
@@ -403,7 +387,7 @@ SkOpSpan* SkOpContour::findSortableTop(SkOpContour* contourHead) {
         } while ((testSegment = testSegment->next()));
     }
     if (allDone) {
-      fDone = true;
+        fDone = true;
     }
     return nullptr;
 }

@@ -8,9 +8,9 @@
 #ifndef GrContext_Base_DEFINED
 #define GrContext_Base_DEFINED
 
-#include "SkRefCnt.h"
-#include "GrContextOptions.h"
-#include "GrTypes.h"
+#include "include/core/SkRefCnt.h"
+#include "include/gpu/GrContextOptions.h"
+#include "include/gpu/GrTypes.h"
 
 class GrBaseContextPriv;
 class GrCaps;
@@ -33,7 +33,7 @@ public:
     const GrBaseContextPriv priv() const;
 
 protected:
-    friend class GrBaseContextPriv; // for hidden functions
+    friend class GrBaseContextPriv;  // for hidden functions
 
     GrContext_Base(GrBackendApi backend, const GrContextOptions& options, uint32_t contextID);
 
@@ -57,8 +57,6 @@ protected:
      */
     const GrContextOptions& options() const { return fOptions; }
 
-    bool explicitlyAllocateGPUResources() const;
-
     const GrCaps* caps() const;
     sk_sp<const GrCaps> refCaps() const;
 
@@ -69,10 +67,10 @@ protected:
     virtual GrContext* asDirectContext() { return nullptr; }
 
 private:
-    const GrBackendApi          fBackend;
-    const GrContextOptions      fOptions;
-    const uint32_t              fContextID;
-    sk_sp<const GrCaps>         fCaps;
+    const GrBackendApi fBackend;
+    const GrContextOptions fOptions;
+    const uint32_t fContextID;
+    sk_sp<const GrCaps> fCaps;
     sk_sp<GrSkSLFPFactoryCache> fFPFactoryCache;
 
     typedef SkRefCnt INHERITED;

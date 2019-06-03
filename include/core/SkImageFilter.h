@@ -8,19 +8,18 @@
 #ifndef SkImageFilter_DEFINED
 #define SkImageFilter_DEFINED
 
-#include "../private/SkTArray.h"
-#include "../private/SkTemplates.h"
-#include "../private/SkMutex.h"
-#include "SkColorSpace.h"
-#include "SkFilterQuality.h"
-#include "SkFlattenable.h"
-#include "SkImageInfo.h"
-#include "SkMatrix.h"
-#include "SkRect.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkFilterQuality.h"
+#include "include/core/SkFlattenable.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkRect.h"
+#include "include/private/SkMutex.h"
+#include "include/private/SkTArray.h"
+#include "include/private/SkTemplates.h"
 
 class GrFragmentProcessor;
 class SkColorFilter;
-class SkColorSpaceXformer;
 struct SkIPoint;
 class GrRecordingContext;
 class SkSpecialImage;
@@ -42,11 +41,11 @@ public:
     // consumer of the DAG's output.
     class OutputProperties {
     public:
-        explicit OutputProperties(SkColorType colorType, SkColorSpace* colorSpace)
-            : fColorType(colorType), fColorSpace(colorSpace) {}
+        explicit OutputProperties(SkColorType colorType, SkColorSpace* colorSpace) noexcept
+                : fColorType(colorType), fColorSpace(colorSpace) {}
 
-        SkColorType colorType() const { return fColorType; }
-        SkColorSpace* colorSpace() const { return fColorSpace; }
+        SkColorType colorType() const noexcept { return fColorType; }
+        SkColorSpace* colorSpace() const noexcept { return fColorSpace; }
 
     private:
         SkColorType fColorType;
@@ -58,17 +57,16 @@ public:
     class Context {
     public:
         Context(const SkMatrix& ctm, const SkIRect& clipBounds, SkImageFilterCache* cache,
-                const OutputProperties& outputProperties)
-            : fCTM(ctm)
-            , fClipBounds(clipBounds)
-            , fCache(cache)
-            , fOutputProperties(outputProperties)
-        {}
+                const OutputProperties& outputProperties) noexcept
+                : fCTM(ctm)
+                , fClipBounds(clipBounds)
+                , fCache(cache)
+                , fOutputProperties(outputProperties) {}
 
-        const SkMatrix& ctm() const { return fCTM; }
-        const SkIRect& clipBounds() const { return fClipBounds; }
-        SkImageFilterCache* cache() const { return fCache; }
-        const OutputProperties& outputProperties() const { return fOutputProperties; }
+        const SkMatrix& ctm() const noexcept { return fCTM; }
+        const SkIRect& clipBounds() const noexcept { return fClipBounds; }
+        SkImageFilterCache* cache() const noexcept { return fCache; }
+        const OutputProperties& outputProperties() const noexcept { return fOutputProperties; }
 
         /**
          *  Since a context can be build directly, its constructor has no chance to
@@ -78,29 +76,29 @@ public:
          *  The SkImageFilterCache Key, for example, requires a finite ctm (no infinities
          *  or NaN), so that test is part of isValid.
          */
-        bool isValid() const { return fCTM.isFinite(); }
+        bool isValid() const noexcept { return fCTM.isFinite(); }
 
     private:
-        SkMatrix               fCTM;
-        SkIRect                fClipBounds;
-        SkImageFilterCache*    fCache;
-        OutputProperties       fOutputProperties;
+        SkMatrix fCTM;
+        SkIRect fClipBounds;
+        SkImageFilterCache* fCache;
+        OutputProperties fOutputProperties;
     };
 
     class CropRect {
     public:
         enum CropEdge {
-            kHasLeft_CropEdge   = 0x01,
-            kHasTop_CropEdge    = 0x02,
-            kHasWidth_CropEdge  = 0x04,
+            kHasLeft_CropEdge = 0x01,
+            kHasTop_CropEdge = 0x02,
+            kHasWidth_CropEdge = 0x04,
             kHasHeight_CropEdge = 0x08,
-            kHasAll_CropEdge    = 0x0F,
+            kHasAll_CropEdge = 0x0F,
         };
-        CropRect() {}
-        explicit CropRect(const SkRect& rect, uint32_t flags = kHasAll_CropEdge)
-            : fRect(rect), fFlags(flags) {}
-        uint32_t flags() const { return fFlags; }
-        const SkRect& rect() const { return fRect; }
+        CropRect() noexcept {}
+        explicit CropRect(const SkRect& rect, uint32_t flags = kHasAll_CropEdge) noexcept
+                : fRect(rect), fFlags(flags) {}
+        uint32_t flags() const noexcept { return fFlags; }
+        const SkRect& rect() const noexcept { return fRect; }
 
         /**
          *  Apply this cropRect to the imageBounds. If a given edge of the cropRect is not
@@ -121,8 +119,8 @@ public:
     };
 
     enum TileUsage {
-        kPossible_TileUsage,    //!< the created device may be drawn tiled
-        kNever_TileUsage,       //!< the created device will never be drawn tiled
+        kPossible_TileUsage,  //!< the created device may be drawn tiled
+        kNever_TileUsage,     //!< the created device will never be drawn tiled
     };
 
     /**
@@ -163,12 +161,13 @@ public:
      * mode it should always be null. If 'inputRect' is null in kReverse mode the resulting
      * answer may be incorrect.
      */
-    SkIRect filterBounds(const SkIRect& src, const SkMatrix& ctm,
-                         MapDirection, const SkIRect* inputRect = nullptr) const;
+    SkIRect filterBounds(const SkIRect& src, const SkMatrix& ctm, MapDirection,
+                         const SkIRect* inputRect = nullptr) const;
 
 #if SK_SUPPORT_GPU
     static sk_sp<SkSpecialImage> DrawWithFP(GrRecordingContext* context,
-                                            std::unique_ptr<GrFragmentProcessor> fp,
+                                            std::unique_ptr<GrFragmentProcessor>
+                                                    fp,
                                             const SkIRect& bounds,
                                             const OutputProperties& outputProperties);
 #endif
@@ -202,13 +201,13 @@ public:
      *  Returns the number of inputs this filter will accept (some inputs can
      *  be NULL).
      */
-    int countInputs() const { return fInputs.count(); }
+    int countInputs() const noexcept { return fInputs.count(); }
 
     /**
      *  Returns the input filter at a given index, or NULL if no input is
      *  connected.  The indices used are filter-specific.
      */
-    SkImageFilter* getInput(int i) const {
+    SkImageFilter* getInput(int i) const noexcept {
         SkASSERT(i < fInputs.count());
         return fInputs[i].get();
     }
@@ -222,9 +221,9 @@ public:
      *  should be used to offset access to the input images, and should also
      *  be added to the "offset" parameter in onFilterImage.
      */
-    bool cropRectIsSet() const { return fCropRect.flags() != 0x0; }
+    bool cropRectIsSet() const noexcept { return fCropRect.flags() != 0x0; }
 
-    CropRect getCropRect() const { return fCropRect; }
+    CropRect getCropRect() const noexcept { return fCropRect; }
 
     // Default impl returns union of all input bounds.
     virtual SkRect computeFastBounds(const SkRect& bounds) const;
@@ -248,25 +247,19 @@ public:
     /**
      * Return an imagefilter which transforms its input by the given matrix.
      */
-    static sk_sp<SkImageFilter> MakeMatrixFilter(const SkMatrix& matrix,
-                                                 SkFilterQuality quality,
+    static sk_sp<SkImageFilter> MakeMatrixFilter(const SkMatrix& matrix, SkFilterQuality quality,
                                                  sk_sp<SkImageFilter> input);
 
     static void RegisterFlattenables();
 
-    static SkFlattenable::Type GetFlattenableType() {
-        return kSkImageFilter_Type;
-    }
+    static SkFlattenable::Type GetFlattenableType() noexcept { return kSkImageFilter_Type; }
 
-    SkFlattenable::Type getFlattenableType() const override {
-        return kSkImageFilter_Type;
-    }
+    SkFlattenable::Type getFlattenableType() const noexcept override { return kSkImageFilter_Type; }
 
     static sk_sp<SkImageFilter> Deserialize(const void* data, size_t size,
-                                          const SkDeserialProcs* procs = nullptr) {
+                                            const SkDeserialProcs* procs = nullptr) {
         return sk_sp<SkImageFilter>(static_cast<SkImageFilter*>(
-                                  SkFlattenable::Deserialize(
-                                  kSkImageFilter_Type, data, size, procs).release()));
+                SkFlattenable::Deserialize(kSkImageFilter_Type, data, size, procs).release()));
     }
 
 protected:
@@ -282,11 +275,11 @@ protected:
          */
         bool unflatten(SkReadBuffer&, int expectedInputs);
 
-        const CropRect& cropRect() const { return fCropRect; }
-        int             inputCount() const { return fInputs.count(); }
-        sk_sp<SkImageFilter>* inputs() { return fInputs.begin(); }
+        const CropRect& cropRect() const noexcept { return fCropRect; }
+        int inputCount() const noexcept { return fInputs.count(); }
+        sk_sp<SkImageFilter>* inputs() noexcept { return fInputs.begin(); }
 
-        sk_sp<SkImageFilter> getInput(int index) { return fInputs[index]; }
+        sk_sp<SkImageFilter> getInput(int index) noexcept { return fInputs[index]; }
 
     private:
         CropRect fCropRect;
@@ -309,7 +302,7 @@ protected:
 
     void flatten(SkWriteBuffer&) const override;
 
-    const CropRect* getCropRectIfSet() const {
+    const CropRect* getCropRectIfSet() const noexcept {
         return this->cropRectIsSet() ? &fCropRect : nullptr;
     }
 
@@ -349,8 +342,8 @@ protected:
      * this node's filter bounds requirements (i.e., calling
      * onFilterNodeBounds()); that is handled by filterBounds().
      */
-    virtual SkIRect onFilterBounds(const SkIRect&, const SkMatrix& ctm,
-                                   MapDirection, const SkIRect* inputRect) const;
+    virtual SkIRect onFilterBounds(const SkIRect&, const SkMatrix& ctm, MapDirection,
+                                   const SkIRect* inputRect) const;
 
     /**
      * Performs a forwards or reverse mapping of the given rect to accommodate
@@ -368,8 +361,8 @@ protected:
      * kForward mode, 'inputRect' should always be null. If 'inputRect' is null in kReverse mode
      * the resulting answer may be incorrect.
      */
-    virtual SkIRect onFilterNodeBounds(const SkIRect&, const SkMatrix& ctm,
-                                       MapDirection, const SkIRect* inputRect) const;
+    virtual SkIRect onFilterNodeBounds(const SkIRect&, const SkMatrix& ctm, MapDirection,
+                                       const SkIRect* inputRect) const;
 
     // Helper function which invokes filter processing on the input at the
     // specified "index". If the input is null, it returns "src" and leaves
@@ -384,9 +377,7 @@ protected:
      *  Return true (and return a ref'd colorfilter) if this node in the DAG is just a
      *  colorfilter w/o CropRect constraints.
      */
-    virtual bool onIsColorFilterNode(SkColorFilter** /*filterPtr*/) const {
-        return false;
-    }
+    virtual bool onIsColorFilterNode(SkColorFilter** /*filterPtr*/) const { return false; }
 
     /**
      *  Override this to describe the behavior of your subclass - as a leaf node. The caller will
@@ -433,15 +424,7 @@ protected:
     static sk_sp<SkSpecialImage> ImageToColorSpace(SkSpecialImage* src, const OutputProperties&);
 #endif
 
-    /**
-     *  Returns an image filter transformed into a new color space via the |xformer|.
-     */
-    sk_sp<SkImageFilter> makeColorSpace(SkColorSpaceXformer* xformer) const {
-        return this->onMakeColorSpace(xformer);
-    }
-    virtual sk_sp<SkImageFilter> onMakeColorSpace(SkColorSpaceXformer*) const = 0;
-
-    sk_sp<SkImageFilter> refMe() const {
+    sk_sp<SkImageFilter> refMe() const noexcept {
         return sk_ref_sp(const_cast<SkImageFilter*>(this));
     }
 
@@ -455,23 +438,20 @@ protected:
                                              const SkIRect& originalSrcBounds);
 
 private:
-    // For makeColorSpace().
-    friend class SkColorSpaceXformer;
-
     friend class SkGraphics;
 
     static void PurgeCache();
 
     void init(sk_sp<SkImageFilter> const* inputs, int inputCount, const CropRect* cropRect);
 
-    bool usesSrcInput() const { return fUsesSrcInput; }
-    virtual bool affectsTransparentBlack() const { return false; }
+    bool usesSrcInput() const noexcept { return fUsesSrcInput; }
+    virtual bool affectsTransparentBlack() const noexcept { return false; }
 
     SkAutoSTArray<2, sk_sp<SkImageFilter>> fInputs;
 
     bool fUsesSrcInput;
     CropRect fCropRect;
-    uint32_t fUniqueID; // Globally unique
+    uint32_t fUniqueID;  // Globally unique
 
     typedef SkFlattenable INHERITED;
 };

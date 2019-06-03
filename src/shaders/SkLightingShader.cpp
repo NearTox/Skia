@@ -5,20 +5,19 @@
  * found in the LICENSE file.
  */
 
-#include "SkArenaAlloc.h"
-#include "SkBitmapProcShader.h"
-#include "SkBitmapProcState.h"
-#include "SkColor.h"
-#include "SkColorSpaceXformer.h"
-#include "SkEmptyShader.h"
-#include "SkLightingShader.h"
-#include "SkMathPriv.h"
-#include "SkNormalSource.h"
-#include "SkPoint3.h"
-#include "SkReadBuffer.h"
-#include "SkShaderBase.h"
-#include "SkUnPreMultiply.h"
-#include "SkWriteBuffer.h"
+#include "src/shaders/SkLightingShader.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPoint3.h"
+#include "include/core/SkUnPreMultiply.h"
+#include "include/private/SkArenaAlloc.h"
+#include "src/core/SkBitmapProcState.h"
+#include "src/core/SkMathPriv.h"
+#include "src/core/SkNormalSource.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
+#include "src/shaders/SkBitmapProcShader.h"
+#include "src/shaders/SkEmptyShader.h"
+#include "src/shaders/SkShaderBase.h"
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -33,8 +32,6 @@
         down & upsampled draws
 */
 
-
-
 /** \class SkLightingShaderImpl
     This subclass of shader applies lighting.
 */
@@ -47,13 +44,15 @@ public:
         @param lights            the lights applied to the geometry
     */
     SkLightingShaderImpl(sk_sp<SkShader> diffuseShader,
-                         sk_sp<SkNormalSource> normalSource,
-                         sk_sp<SkLights> lights)
-        : fDiffuseShader(std::move(diffuseShader))
-        , fNormalSource(std::move(normalSource))
-        , fLights(std::move(lights)) {}
+                         sk_sp<SkNormalSource>
+                                 normalSource,
+                         sk_sp<SkLights>
+                                 lights)
+            : fDiffuseShader(std::move(diffuseShader))
+            , fNormalSource(std::move(normalSource))
+            , fLights(std::move(lights)) {}
 
-    bool isOpaque() const override;
+    bool isOpaque() const noexcept override;
 
 #if SK_SUPPORT_GPU
     std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
@@ -69,13 +68,13 @@ public:
 
         void shadeSpan(int x, int y, SkPMColor[], int count) override;
 
-        uint32_t getFlags() const override { return fFlags; }
+        uint32_t getFlags() const noexcept override { return fFlags; }
 
     private:
-        SkShaderBase::Context*    fDiffuseContext;
+        SkShaderBase::Context* fDiffuseContext;
         SkNormalSource::Provider* fNormalProvider;
-        SkColor                   fPaintColor;
-        uint32_t                  fFlags;
+        SkColor fPaintColor;
+        uint32_t fFlags;
 
         typedef Context INHERITED;
     };
@@ -85,7 +84,6 @@ protected:
 #ifdef SK_ENABLE_LEGACY_SHADERCONTEXT
     Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const override;
 #endif
-    sk_sp<SkShader> onMakeColorSpace(SkColorSpaceXformer* xformer) const override;
 
 private:
     SK_FLATTENABLE_HOOKS(SkLightingShaderImpl)
@@ -103,13 +101,13 @@ private:
 
 #if SK_SUPPORT_GPU
 
-#include "GrCoordTransform.h"
-#include "GrFragmentProcessor.h"
-#include "glsl/GrGLSLFragmentProcessor.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLProgramDataManager.h"
-#include "glsl/GrGLSLUniformHandler.h"
-#include "SkGr.h"
+#include "src/gpu/GrCoordTransform.h"
+#include "src/gpu/GrFragmentProcessor.h"
+#include "src/gpu/SkGr.h"
+#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
 // This FP expects a premul'd color input for its diffuse color. Premul'ing of the paint's color is
 // handled by the asFragmentProcessor() factory, but shaders providing diffuse color must output it
@@ -118,54 +116,50 @@ class LightingFP : public GrFragmentProcessor {
 public:
     static std::unique_ptr<GrFragmentProcessor> Make(std::unique_ptr<GrFragmentProcessor> normalFP,
                                                      sk_sp<SkLights> lights) {
-        return std::unique_ptr<GrFragmentProcessor>(new LightingFP(std::move(normalFP),
-                                                                   std::move(lights)));
+        return std::unique_ptr<GrFragmentProcessor>(
+                new LightingFP(std::move(normalFP), std::move(lights)));
     }
 
-    const char* name() const override { return "LightingFP"; }
+    const char* name() const noexcept override { return "LightingFP"; }
 
     std::unique_ptr<GrFragmentProcessor> clone() const override {
         return std::unique_ptr<GrFragmentProcessor>(new LightingFP(*this));
     }
 
-    const SkTArray<SkLights::Light>& directionalLights() const { return fDirectionalLights; }
-    const SkColor3f& ambientColor() const { return fAmbientColor; }
+    const SkTArray<SkLights::Light>& directionalLights() const noexcept {
+        return fDirectionalLights;
+    }
+    const SkColor3f& ambientColor() const noexcept { return fAmbientColor; }
 
 private:
     class GLSLLightingFP : public GrGLSLFragmentProcessor {
     public:
-        GLSLLightingFP() {
-            fAmbientColor.fX = 0.0f;
-        }
+        GLSLLightingFP() noexcept { fAmbientColor.fX = 0.0f; }
 
         void emitCode(EmitArgs& args) override {
-
             GrGLSLFragmentBuilder* fragBuilder = args.fFragBuilder;
             GrGLSLUniformHandler* uniformHandler = args.fUniformHandler;
             const LightingFP& lightingFP = args.fFp.cast<LightingFP>();
 
-            const char *lightDirsUniName = nullptr;
-            const char *lightColorsUniName = nullptr;
+            const char* lightDirsUniName = nullptr;
+            const char* lightColorsUniName = nullptr;
             if (lightingFP.fDirectionalLights.count() != 0) {
-                fLightDirsUni = uniformHandler->addUniformArray(
-                        kFragment_GrShaderFlag,
-                        kFloat3_GrSLType,
-                        kDefault_GrSLPrecision,
-                        "LightDir",
-                        lightingFP.fDirectionalLights.count(),
-                        &lightDirsUniName);
-                fLightColorsUni = uniformHandler->addUniformArray(
-                        kFragment_GrShaderFlag,
-                        kFloat3_GrSLType,
-                        kDefault_GrSLPrecision,
-                        "LightColor",
-                        lightingFP.fDirectionalLights.count(),
-                        &lightColorsUniName);
+                fLightDirsUni =
+                        uniformHandler->addUniformArray(kFragment_GrShaderFlag,
+                                                        kFloat3_GrSLType,
+                                                        "LightDir",
+                                                        lightingFP.fDirectionalLights.count(),
+                                                        &lightDirsUniName);
+                fLightColorsUni =
+                        uniformHandler->addUniformArray(kFragment_GrShaderFlag,
+                                                        kFloat3_GrSLType,
+                                                        "LightColor",
+                                                        lightingFP.fDirectionalLights.count(),
+                                                        &lightColorsUniName);
             }
 
             const char* ambientColorUniName = nullptr;
-            fAmbientColorUni = uniformHandler->addUniform(kFragment_GrShaderFlag,
-                                                          kFloat3_GrSLType, kDefault_GrSLPrecision,
+            fAmbientColorUni = uniformHandler->addUniform(kFragment_GrShaderFlag, kFloat3_GrSLType,
                                                           "AmbientColor", &ambientColorUniName);
 
             fragBuilder->codeAppendf("half4 diffuseColor = %s;", args.fInputColor);
@@ -175,7 +169,7 @@ private:
 
             fragBuilder->codeAppendf("float3 normal = %s.xyz;", dstNormalName.c_str());
 
-            fragBuilder->codeAppend( "half3 result = half3(0.0);");
+            fragBuilder->codeAppend("half3 result = half3(0.0);");
 
             // diffuse light
             if (lightingFP.fDirectionalLights.count() != 0) {
@@ -194,8 +188,10 @@ private:
                                      ambientColorUniName);
 
             // Clamping to alpha (equivalent to an unpremul'd clamp to 1.0)
-            fragBuilder->codeAppendf("%s = half4(clamp(result.rgb, 0.0, diffuseColor.a), "
-                                               "diffuseColor.a);", args.fOutputColor);
+            fragBuilder->codeAppendf(
+                    "%s = half4(clamp(result.rgb, 0.0, diffuseColor.a), "
+                    "diffuseColor.a);",
+                    args.fOutputColor);
         }
 
         static void GenKey(const GrProcessor& proc, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
@@ -275,14 +271,15 @@ private:
     }
 
     SkTArray<SkLights::Light> fDirectionalLights;
-    SkColor3f                 fAmbientColor;
+    SkColor3f fAmbientColor;
 
     typedef GrFragmentProcessor INHERITED;
 };
 
 ////////////////////////////////////////////////////////////////////////////
 
-std::unique_ptr<GrFragmentProcessor> SkLightingShaderImpl::asFragmentProcessor(const GrFPArgs& args) const {
+std::unique_ptr<GrFragmentProcessor> SkLightingShaderImpl::asFragmentProcessor(
+        const GrFPArgs& args) const {
     std::unique_ptr<GrFragmentProcessor> normalFP(fNormalSource->asFragmentProcessor(args));
     if (!normalFP) {
         return nullptr;
@@ -290,14 +287,14 @@ std::unique_ptr<GrFragmentProcessor> SkLightingShaderImpl::asFragmentProcessor(c
 
     if (fDiffuseShader) {
         std::unique_ptr<GrFragmentProcessor> fpPipeline[] = {
-            as_SB(fDiffuseShader)->asFragmentProcessor(args),
-            LightingFP::Make(std::move(normalFP), fLights)
-        };
+                as_SB(fDiffuseShader)->asFragmentProcessor(args),
+                LightingFP::Make(std::move(normalFP), fLights)};
         if (!fpPipeline[0] || !fpPipeline[1]) {
             return nullptr;
         }
 
-        std::unique_ptr<GrFragmentProcessor> innerLightFP = GrFragmentProcessor::RunInSeries(fpPipeline, 2);
+        std::unique_ptr<GrFragmentProcessor> innerLightFP =
+                GrFragmentProcessor::RunInSeries(fpPipeline, 2);
         // FP is wrapped because paint's alpha needs to be applied to output
         return GrFragmentProcessor::MulChildByInputAlpha(std::move(innerLightFP));
     } else {
@@ -311,7 +308,7 @@ std::unique_ptr<GrFragmentProcessor> SkLightingShaderImpl::asFragmentProcessor(c
 
 ////////////////////////////////////////////////////////////////////////////
 
-bool SkLightingShaderImpl::isOpaque() const {
+bool SkLightingShaderImpl::isOpaque() const noexcept {
     return (fDiffuseShader ? fDiffuseShader->isOpaque() : false);
 }
 
@@ -319,9 +316,7 @@ SkLightingShaderImpl::LightingShaderContext::LightingShaderContext(
         const SkLightingShaderImpl& shader, const ContextRec& rec,
         SkShaderBase::Context* diffuseContext, SkNormalSource::Provider* normalProvider,
         void* heapAllocated)
-    : INHERITED(shader, rec)
-    , fDiffuseContext(diffuseContext)
-    , fNormalProvider(normalProvider) {
+        : INHERITED(shader, rec), fDiffuseContext(diffuseContext), fNormalProvider(normalProvider) {
     bool isOpaque = shader.isOpaque();
 
     // update fFlags
@@ -334,7 +329,7 @@ SkLightingShaderImpl::LightingShaderContext::LightingShaderContext(
     fFlags = flags;
 }
 
-static inline SkPMColor convert(SkColor3f color, U8CPU a) {
+static inline SkPMColor convert(SkColor3f color, U8CPU a) noexcept {
     if (color.fX <= 0.0f) {
         color.fX = 0.0f;
     } else if (color.fX >= 255.0f) {
@@ -353,14 +348,14 @@ static inline SkPMColor convert(SkColor3f color, U8CPU a) {
         color.fZ = 255.0f;
     }
 
-    return SkPreMultiplyARGB(a, (int) color.fX,  (int) color.fY, (int) color.fZ);
+    return SkPreMultiplyARGB(a, (int)color.fX, (int)color.fY, (int)color.fZ);
 }
 
 // larger is better (fewer times we have to loop), but we shouldn't
 // take up too much stack-space (each one here costs 16 bytes)
 #define BUFFER_MAX 16
-void SkLightingShaderImpl::LightingShaderContext::shadeSpan(int x, int y,
-                                                            SkPMColor result[], int count) {
+void SkLightingShaderImpl::LightingShaderContext::shadeSpan(int x, int y, SkPMColor result[],
+                                                            int count) {
     const SkLightingShaderImpl& lightShader = static_cast<const SkLightingShaderImpl&>(fShader);
 
     SkPMColor diffuse[BUFFER_MAX];
@@ -420,7 +415,6 @@ void SkLightingShaderImpl::LightingShaderContext::shadeSpan(int x, int y,
 ////////////////////////////////////////////////////////////////////////////
 
 sk_sp<SkFlattenable> SkLightingShaderImpl::CreateProc(SkReadBuffer& buf) {
-
     // Discarding SkShader flattenable params
     bool hasLocalMatrix = buf.readBool();
     if (hasLocalMatrix) {
@@ -454,10 +448,9 @@ void SkLightingShaderImpl::flatten(SkWriteBuffer& buf) const {
 }
 
 #ifdef SK_ENABLE_LEGACY_SHADERCONTEXT
-SkShaderBase::Context* SkLightingShaderImpl::onMakeContext(
-    const ContextRec& rec, SkArenaAlloc* alloc) const
-{
-    SkShaderBase::Context *diffuseContext = nullptr;
+SkShaderBase::Context* SkLightingShaderImpl::onMakeContext(const ContextRec& rec,
+                                                           SkArenaAlloc* alloc) const {
+    SkShaderBase::Context* diffuseContext = nullptr;
     if (fDiffuseShader) {
         diffuseContext = as_SB(fDiffuseShader)->makeContext(rec, alloc);
         if (!diffuseContext) {
@@ -476,18 +469,10 @@ SkShaderBase::Context* SkLightingShaderImpl::onMakeContext(
 }
 #endif
 
-sk_sp<SkShader> SkLightingShaderImpl::onMakeColorSpace(SkColorSpaceXformer* xformer) const {
-    sk_sp<SkShader> xformedDiffuseShader =
-            fDiffuseShader ? xformer->apply(fDiffuseShader.get()) : nullptr;
-    return SkLightingShader::Make(std::move(xformedDiffuseShader), fNormalSource,
-                                  fLights->makeColorSpace(xformer));
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 sk_sp<SkShader> SkLightingShader::Make(sk_sp<SkShader> diffuseShader,
-                                       sk_sp<SkNormalSource> normalSource,
-                                       sk_sp<SkLights> lights) {
+                                       sk_sp<SkNormalSource> normalSource, sk_sp<SkLights> lights) {
     SkASSERT(lights);
     if (!normalSource) {
         normalSource = SkNormalSource::MakeFlat();

@@ -9,23 +9,23 @@
 
 #ifdef SK_LLVM_AVAILABLE
 
-#include "SkSLJIT.h"
+#include "src/sksl/SkSLJIT.h"
 
-#include "SkCpu.h"
-#include "SkRasterPipeline.h"
-#include "ir/SkSLAppendStage.h"
-#include "ir/SkSLExpressionStatement.h"
-#include "ir/SkSLFunctionCall.h"
-#include "ir/SkSLFunctionReference.h"
-#include "ir/SkSLIndexExpression.h"
-#include "ir/SkSLProgram.h"
-#include "ir/SkSLUnresolvedFunction.h"
 #include "llvm/ExecutionEngine/RTDyldMemoryManager.h"
+#include "src/core/SkCpu.h"
+#include "src/core/SkRasterPipeline.h"
+#include "src/sksl/ir/SkSLAppendStage.h"
+#include "src/sksl/ir/SkSLExpressionStatement.h"
+#include "src/sksl/ir/SkSLFunctionCall.h"
+#include "src/sksl/ir/SkSLFunctionReference.h"
+#include "src/sksl/ir/SkSLIndexExpression.h"
+#include "src/sksl/ir/SkSLProgram.h"
+#include "src/sksl/ir/SkSLUnresolvedFunction.h"
 
 static constexpr int MAX_VECTOR_COUNT = 16;
 
 extern "C" void sksl_pipeline_append(SkRasterPipeline* p, int stage, void* ctx) {
-    p->append((SkRasterPipeline::StockStage) stage, ctx);
+    p->append((SkRasterPipeline::StockStage)stage, ctx);
 }
 
 #define PTR_SIZE sizeof(void*)
@@ -34,29 +34,25 @@ extern "C" void sksl_pipeline_append_callback(SkRasterPipeline* p, void* fn) {
     p->append(fn, nullptr);
 }
 
-extern "C" void sksl_debug_print(float f) {
-    printf("Debug: %f\n", f);
-}
+extern "C" void sksl_debug_print(float f) { printf("Debug: %f\n", f); }
 
-extern "C" float sksl_clamp1(float f, float min, float max) {
-    return SkTPin(f, min, max);
-}
+extern "C" float sksl_clamp1(float f, float min, float max) { return SkTPin(f, min, max); }
 
 using float2 = __attribute__((vector_size(8))) float;
 using float3 = __attribute__((vector_size(16))) float;
 using float4 = __attribute__((vector_size(16))) float;
 
 extern "C" float2 sksl_clamp2(float2 f, float min, float max) {
-    return float2 { SkTPin(f[0], min, max), SkTPin(f[1], min, max) };
+    return float2{SkTPin(f[0], min, max), SkTPin(f[1], min, max)};
 }
 
 extern "C" float3 sksl_clamp3(float3 f, float min, float max) {
-    return float3 { SkTPin(f[0], min, max), SkTPin(f[1], min, max), SkTPin(f[2], min, max) };
+    return float3{SkTPin(f[0], min, max), SkTPin(f[1], min, max), SkTPin(f[2], min, max)};
 }
 
 extern "C" float4 sksl_clamp4(float4 f, float min, float max) {
-    return float4 { SkTPin(f[0], min, max), SkTPin(f[1], min, max), SkTPin(f[2], min, max),
-                    SkTPin(f[3], min, max) };
+    return float4{SkTPin(f[0], min, max), SkTPin(f[1], min, max), SkTPin(f[2], min, max),
+                  SkTPin(f[3], min, max)};
 }
 
 namespace SkSL {
@@ -66,27 +62,26 @@ static constexpr int STAGE_PARAM_COUNT = 12;
 static bool ends_with_branch(const Statement& stmt) {
     switch (stmt.fKind) {
         case Statement::kBlock_Kind: {
-            const Block& b = (const Block&) stmt;
+            const Block& b = (const Block&)stmt;
             if (b.fStatements.size()) {
                 return ends_with_branch(*b.fStatements.back());
             }
             return false;
         }
-        case Statement::kBreak_Kind:    // fall through
-        case Statement::kContinue_Kind: // fall through
-        case Statement::kReturn_Kind:   // fall through
+        case Statement::kBreak_Kind:     // fall through
+        case Statement::kContinue_Kind:  // fall through
+        case Statement::kReturn_Kind:    // fall through
             return true;
         default:
             return false;
     }
 }
 
-JIT::JIT(Compiler* compiler)
-: fCompiler(*compiler) {
+JIT::JIT(Compiler* compiler) : fCompiler(*compiler) {
     LLVMInitializeNativeTarget();
     LLVMInitializeNativeAsmPrinter();
     LLVMLinkInMCJIT();
-    SkASSERT(!SkCpu::Supports(SkCpu::SKX)); // not yet supported
+    SkASSERT(!SkCpu::Supports(SkCpu::SKX));  // not yet supported
     if (SkCpu::Supports(SkCpu::HSW)) {
         fVectorCount = 8;
         fCPU = "haswell";
@@ -130,7 +125,7 @@ void JIT::addBuiltinFunction(const char* ourName, const char* realName, LLVMType
     bool found = false;
     for (const auto& pair : *fProgram->fSymbols) {
         if (Symbol::kFunctionDeclaration_Kind == pair.second->fKind) {
-            const FunctionDeclaration& f = (const FunctionDeclaration&) *pair.second;
+            const FunctionDeclaration& f = (const FunctionDeclaration&)*pair.second;
             if (pair.first != ourName || returnType != this->getType(f.fReturnType) ||
                 parameters.size() != f.fParameters.size()) {
                 continue;
@@ -140,15 +135,14 @@ void JIT::addBuiltinFunction(const char* ourName, const char* realName, LLVMType
                     goto next;
                 }
             }
-            fFunctions[&f] = LLVMAddFunction(fModule, realName, LLVMFunctionType(returnType,
-                                                                                 parameters.data(),
-                                                                                 parameters.size(),
-                                                                                 false));
+            fFunctions[&f] = LLVMAddFunction(
+                    fModule, realName,
+                    LLVMFunctionType(returnType, parameters.data(), parameters.size(), false));
             found = true;
         }
         if (Symbol::kUnresolvedFunction_Kind == pair.second->fKind) {
             // FIXME consolidate this with the code above
-            for (const auto& f : ((const UnresolvedFunction&) *pair.second).fFunctions) {
+            for (const auto& f : ((const UnresolvedFunction&)*pair.second).fFunctions) {
                 if (pair.first != ourName || returnType != this->getType(f->fReturnType) ||
                     parameters.size() != f->fParameters.size()) {
                     continue;
@@ -158,57 +152,51 @@ void JIT::addBuiltinFunction(const char* ourName, const char* realName, LLVMType
                         goto next;
                     }
                 }
-                fFunctions[f] = LLVMAddFunction(fModule, realName, LLVMFunctionType(
-                                                                                  returnType,
-                                                                                  parameters.data(),
-                                                                                  parameters.size(),
-                                                                                  false));
+                fFunctions[f] = LLVMAddFunction(
+                        fModule, realName,
+                        LLVMFunctionType(returnType, parameters.data(), parameters.size(), false));
                 found = true;
             }
         }
-        next:;
+    next:;
     }
     SkASSERT(found);
 }
 
 void JIT::loadBuiltinFunctions() {
-    this->addBuiltinFunction("abs", "fabs", fFloat32Type, { fFloat32Type });
-    this->addBuiltinFunction("sin", "sinf", fFloat32Type, { fFloat32Type });
-    this->addBuiltinFunction("cos", "cosf", fFloat32Type, { fFloat32Type });
-    this->addBuiltinFunction("tan", "tanf", fFloat32Type, { fFloat32Type });
-    this->addBuiltinFunction("sqrt", "sqrtf", fFloat32Type, { fFloat32Type });
-    this->addBuiltinFunction("clamp", "sksl_clamp1", fFloat32Type, { fFloat32Type,
-                                                                     fFloat32Type,
-                                                                     fFloat32Type });
-    this->addBuiltinFunction("clamp", "sksl_clamp2", fFloat32Vector2Type, { fFloat32Vector2Type,
-                                                                            fFloat32Type,
-                                                                            fFloat32Type });
-    this->addBuiltinFunction("clamp", "sksl_clamp3", fFloat32Vector3Type, { fFloat32Vector3Type,
-                                                                            fFloat32Type,
-                                                                            fFloat32Type });
-    this->addBuiltinFunction("clamp", "sksl_clamp4", fFloat32Vector4Type, { fFloat32Vector4Type,
-                                                                            fFloat32Type,
-                                                                            fFloat32Type });
-    this->addBuiltinFunction("print", "sksl_debug_print", fVoidType, { fFloat32Type });
+    this->addBuiltinFunction("abs", "fabs", fFloat32Type, {fFloat32Type});
+    this->addBuiltinFunction("sin", "sinf", fFloat32Type, {fFloat32Type});
+    this->addBuiltinFunction("cos", "cosf", fFloat32Type, {fFloat32Type});
+    this->addBuiltinFunction("tan", "tanf", fFloat32Type, {fFloat32Type});
+    this->addBuiltinFunction("sqrt", "sqrtf", fFloat32Type, {fFloat32Type});
+    this->addBuiltinFunction("clamp", "sksl_clamp1", fFloat32Type,
+                             {fFloat32Type, fFloat32Type, fFloat32Type});
+    this->addBuiltinFunction("clamp", "sksl_clamp2", fFloat32Vector2Type,
+                             {fFloat32Vector2Type, fFloat32Type, fFloat32Type});
+    this->addBuiltinFunction("clamp", "sksl_clamp3", fFloat32Vector3Type,
+                             {fFloat32Vector3Type, fFloat32Type, fFloat32Type});
+    this->addBuiltinFunction("clamp", "sksl_clamp4", fFloat32Vector4Type,
+                             {fFloat32Vector4Type, fFloat32Type, fFloat32Type});
+    this->addBuiltinFunction("print", "sksl_debug_print", fVoidType, {fFloat32Type});
 }
 
 uint64_t JIT::resolveSymbol(const char* name, JIT* jit) {
     LLVMOrcTargetAddress result;
     if (!LLVMOrcGetSymbolAddress(jit->fJITStack, &result, name)) {
         if (!strcmp(name, "_sksl_pipeline_append")) {
-            result = (uint64_t) &sksl_pipeline_append;
+            result = (uint64_t)&sksl_pipeline_append;
         } else if (!strcmp(name, "_sksl_pipeline_append_callback")) {
-            result = (uint64_t) &sksl_pipeline_append_callback;
+            result = (uint64_t)&sksl_pipeline_append_callback;
         } else if (!strcmp(name, "_sksl_clamp1")) {
-            result = (uint64_t) &sksl_clamp1;
+            result = (uint64_t)&sksl_clamp1;
         } else if (!strcmp(name, "_sksl_clamp2")) {
-            result = (uint64_t) &sksl_clamp2;
+            result = (uint64_t)&sksl_clamp2;
         } else if (!strcmp(name, "_sksl_clamp3")) {
-            result = (uint64_t) &sksl_clamp3;
+            result = (uint64_t)&sksl_clamp3;
         } else if (!strcmp(name, "_sksl_clamp4")) {
-            result = (uint64_t) &sksl_clamp4;
+            result = (uint64_t)&sksl_clamp4;
         } else if (!strcmp(name, "_sksl_debug_print")) {
-            result = (uint64_t) &sksl_debug_print;
+            result = (uint64_t)&sksl_debug_print;
         } else {
             result = llvm::RTDyldMemoryManager::getSymbolAddressInProcess(name);
         }
@@ -284,8 +272,7 @@ std::unique_ptr<JIT::LValue> JIT::getLValue(LLVMBuilderRef builder, const Expres
         case Expression::kVariableReference_Kind: {
             class PointerLValue : public LValue {
             public:
-                PointerLValue(LLVMValueRef ptr)
-                : fPointer(ptr) {}
+                PointerLValue(LLVMValueRef ptr) : fPointer(ptr) {}
 
                 LLVMValueRef load(LLVMBuilderRef builder) override {
                     return LLVMBuildLoad(builder, fPointer, "lvalue load");
@@ -298,7 +285,7 @@ std::unique_ptr<JIT::LValue> JIT::getLValue(LLVMBuilderRef builder, const Expres
             private:
                 LLVMValueRef fPointer;
             };
-            const Variable* var = &((VariableReference&) expr).fVariable;
+            const Variable* var = &((VariableReference&)expr).fVariable;
             if (var->fStorage == Variable::kParameter_Storage &&
                 !(var->fModifiers.fFlags & Modifiers::kOut_Flag) &&
                 fPromotedParameters.find(var) == fPromotedParameters.end()) {
@@ -319,23 +306,18 @@ std::unique_ptr<JIT::LValue> JIT::getLValue(LLVMBuilderRef builder, const Expres
             public:
                 TernaryLValue(JIT* jit, LLVMValueRef test, std::unique_ptr<LValue> ifTrue,
                               std::unique_ptr<LValue> ifFalse)
-                : fJIT(*jit)
-                , fTest(test)
-                , fIfTrue(std::move(ifTrue))
-                , fIfFalse(std::move(ifFalse)) {}
+                        : fJIT(*jit)
+                        , fTest(test)
+                        , fIfTrue(std::move(ifTrue))
+                        , fIfFalse(std::move(ifFalse)) {}
 
                 LLVMValueRef load(LLVMBuilderRef builder) override {
                     LLVMBasicBlockRef trueBlock = LLVMAppendBasicBlockInContext(
-                                                                              fJIT.fContext,
-                                                                              fJIT.fCurrentFunction,
-                                                                              "true ? ...");
+                            fJIT.fContext, fJIT.fCurrentFunction, "true ? ...");
                     LLVMBasicBlockRef falseBlock = LLVMAppendBasicBlockInContext(
-                                                                              fJIT.fContext,
-                                                                              fJIT.fCurrentFunction,
-                                                                              "false ? ...");
-                    LLVMBasicBlockRef merge = LLVMAppendBasicBlockInContext(fJIT.fContext,
-                                                                            fJIT.fCurrentFunction,
-                                                                            "ternary merge");
+                            fJIT.fContext, fJIT.fCurrentFunction, "false ? ...");
+                    LLVMBasicBlockRef merge = LLVMAppendBasicBlockInContext(
+                            fJIT.fContext, fJIT.fCurrentFunction, "ternary merge");
                     LLVMBuildCondBr(builder, fTest, trueBlock, falseBlock);
                     fJIT.setBlock(builder, trueBlock);
                     LLVMValueRef ifTrue = fIfTrue->load(builder);
@@ -346,24 +328,19 @@ std::unique_ptr<JIT::LValue> JIT::getLValue(LLVMBuilderRef builder, const Expres
                     fJIT.setBlock(builder, merge);
                     LLVMTypeRef type = LLVMPointerType(LLVMTypeOf(ifTrue), 0);
                     LLVMValueRef phi = LLVMBuildPhi(builder, type, "?");
-                    LLVMValueRef incomingValues[2] = { ifTrue, ifFalse };
-                    LLVMBasicBlockRef incomingBlocks[2] = { trueBlock, falseBlock };
+                    LLVMValueRef incomingValues[2] = {ifTrue, ifFalse};
+                    LLVMBasicBlockRef incomingBlocks[2] = {trueBlock, falseBlock};
                     LLVMAddIncoming(phi, incomingValues, incomingBlocks, 2);
                     return phi;
                 }
 
                 void store(LLVMBuilderRef builder, LLVMValueRef value) override {
                     LLVMBasicBlockRef trueBlock = LLVMAppendBasicBlockInContext(
-                                                                              fJIT.fContext,
-                                                                              fJIT.fCurrentFunction,
-                                                                              "true ? ...");
+                            fJIT.fContext, fJIT.fCurrentFunction, "true ? ...");
                     LLVMBasicBlockRef falseBlock = LLVMAppendBasicBlockInContext(
-                                                                              fJIT.fContext,
-                                                                              fJIT.fCurrentFunction,
-                                                                              "false ? ...");
-                    LLVMBasicBlockRef merge = LLVMAppendBasicBlockInContext(fJIT.fContext,
-                                                                            fJIT.fCurrentFunction,
-                                                                            "ternary merge");
+                            fJIT.fContext, fJIT.fCurrentFunction, "false ? ...");
+                    LLVMBasicBlockRef merge = LLVMAppendBasicBlockInContext(
+                            fJIT.fContext, fJIT.fCurrentFunction, "ternary merge");
                     LLVMBuildCondBr(builder, fTest, trueBlock, falseBlock);
                     fJIT.setBlock(builder, trueBlock);
                     fIfTrue->store(builder, value);
@@ -380,24 +357,23 @@ std::unique_ptr<JIT::LValue> JIT::getLValue(LLVMBuilderRef builder, const Expres
                 std::unique_ptr<LValue> fIfTrue;
                 std::unique_ptr<LValue> fIfFalse;
             };
-            const TernaryExpression& t = (const TernaryExpression&) expr;
+            const TernaryExpression& t = (const TernaryExpression&)expr;
             LLVMValueRef test = this->compileExpression(builder, *t.fTest);
-            return std::unique_ptr<LValue>(new TernaryLValue(this,
-                                                             test,
-                                                             this->getLValue(builder,
-                                                                             *t.fIfTrue),
-                                                             this->getLValue(builder,
-                                                                             *t.fIfFalse)));
+            return std::unique_ptr<LValue>(
+                    new TernaryLValue(this,
+                                      test,
+                                      this->getLValue(builder, *t.fIfTrue),
+                                      this->getLValue(builder, *t.fIfFalse)));
         }
         case Expression::kSwizzle_Kind: {
             class SwizzleLValue : public LValue {
             public:
                 SwizzleLValue(JIT* jit, LLVMTypeRef type, std::unique_ptr<LValue> base,
                               std::vector<int> components)
-                : fJIT(*jit)
-                , fType(type)
-                , fBase(std::move(base))
-                , fComponents(components) {}
+                        : fJIT(*jit)
+                        , fType(type)
+                        , fBase(std::move(base))
+                        , fComponents(components) {}
 
                 LLVMValueRef load(LLVMBuilderRef builder) override {
                     LLVMValueRef base = fBase->load(builder);
@@ -405,12 +381,10 @@ std::unique_ptr<JIT::LValue> JIT::getLValue(LLVMBuilderRef builder, const Expres
                         LLVMValueRef result = LLVMGetUndef(fType);
                         for (size_t i = 0; i < fComponents.size(); ++i) {
                             LLVMValueRef element = LLVMBuildExtractElement(
-                                                                       builder,
-                                                                       base,
-                                                                       LLVMConstInt(fJIT.fInt32Type,
-                                                                                    fComponents[i],
-                                                                                    false),
-                                                                       "swizzle extract");
+                                    builder,
+                                    base,
+                                    LLVMConstInt(fJIT.fInt32Type, fComponents[i], false),
+                                    "swizzle extract");
                             result = LLVMBuildInsertElement(builder, result, element,
                                                             LLVMConstInt(fJIT.fInt32Type, i, false),
                                                             "swizzle insert");
@@ -418,35 +392,28 @@ std::unique_ptr<JIT::LValue> JIT::getLValue(LLVMBuilderRef builder, const Expres
                         return result;
                     }
                     SkASSERT(fComponents.size() == 1);
-                    return LLVMBuildExtractElement(builder, base,
-                                                            LLVMConstInt(fJIT.fInt32Type,
-                                                                         fComponents[0],
-                                                                         false),
-                                                            "swizzle extract");
+                    return LLVMBuildExtractElement(
+                            builder, base, LLVMConstInt(fJIT.fInt32Type, fComponents[0], false),
+                            "swizzle extract");
                 }
 
                 void store(LLVMBuilderRef builder, LLVMValueRef value) override {
                     LLVMValueRef result = fBase->load(builder);
                     if (fComponents.size() > 1) {
                         for (size_t i = 0; i < fComponents.size(); ++i) {
-                            LLVMValueRef element = LLVMBuildExtractElement(builder, value,
-                                                                           LLVMConstInt(
-                                                                                    fJIT.fInt32Type,
-                                                                                    i,
-                                                                                    false),
-                                                                           "swizzle extract");
-                            result = LLVMBuildInsertElement(builder, result, element,
-                                                            LLVMConstInt(fJIT.fInt32Type,
-                                                                         fComponents[i],
-                                                                         false),
-                                                            "swizzle insert");
+                            LLVMValueRef element = LLVMBuildExtractElement(
+                                    builder, value, LLVMConstInt(fJIT.fInt32Type, i, false),
+                                    "swizzle extract");
+                            result = LLVMBuildInsertElement(
+                                    builder, result, element,
+                                    LLVMConstInt(fJIT.fInt32Type, fComponents[i], false),
+                                    "swizzle insert");
                         }
                     } else {
-                        result = LLVMBuildInsertElement(builder, result, value,
-                                                        LLVMConstInt(fJIT.fInt32Type,
-                                                                     fComponents[0],
-                                                                     false),
-                                                        "swizzle insert");
+                        result = LLVMBuildInsertElement(
+                                builder, result, value,
+                                LLVMConstInt(fJIT.fInt32Type, fComponents[0], false),
+                                "swizzle insert");
                     }
                     fBase->store(builder, result);
                 }
@@ -457,7 +424,7 @@ std::unique_ptr<JIT::LValue> JIT::getLValue(LLVMBuilderRef builder, const Expres
                 std::unique_ptr<LValue> fBase;
                 std::vector<int> fComponents;
             };
-            const Swizzle& s = (const Swizzle&) expr;
+            const Swizzle& s = (const Swizzle&)expr;
             return std::unique_ptr<LValue>(new SwizzleLValue(this, this->getType(s.fType),
                                                              this->getLValue(builder, *s.fBase),
                                                              s.fComponents));
@@ -484,10 +451,7 @@ JIT::TypeKind JIT::typeKind(const Type& type) {
 void JIT::vectorize(LLVMBuilderRef builder, LLVMValueRef* value, int columns) {
     LLVMValueRef result = LLVMGetUndef(LLVMVectorType(LLVMTypeOf(*value), columns));
     for (int i = 0; i < columns; ++i) {
-        result = LLVMBuildInsertElement(builder,
-                                        result,
-                                        *value,
-                                        LLVMConstInt(fInt32Type, i, false),
+        result = LLVMBuildInsertElement(builder, result, *value, LLVMConstInt(fInt32Type, i, false),
                                         "vectorize");
     }
     *value = result;
@@ -504,24 +468,25 @@ void JIT::vectorize(LLVMBuilderRef builder, const BinaryExpression& b, LLVMValue
     }
 }
 
-
 LLVMValueRef JIT::compileBinary(LLVMBuilderRef builder, const BinaryExpression& b) {
-    #define BINARY(SFunc, UFunc, FFunc) {                                    \
-        LLVMValueRef left = this->compileExpression(builder, *b.fLeft);      \
-        LLVMValueRef right = this->compileExpression(builder, *b.fRight);    \
-        this->vectorize(builder, b, &left, &right);                          \
-        switch (this->typeKind(b.fLeft->fType)) {                            \
-            case kInt_TypeKind:                                              \
-                return SFunc(builder, left, right, "binary");                \
-            case kUInt_TypeKind:                                             \
-                return UFunc(builder, left, right, "binary");                \
-            case kFloat_TypeKind:                                            \
-                return FFunc(builder, left, right, "binary");                \
-            default:                                                         \
-                ABORT("unsupported typeKind");                               \
-        }                                                                    \
+#define BINARY(SFunc, UFunc, FFunc)                                       \
+    {                                                                     \
+        LLVMValueRef left = this->compileExpression(builder, *b.fLeft);   \
+        LLVMValueRef right = this->compileExpression(builder, *b.fRight); \
+        this->vectorize(builder, b, &left, &right);                       \
+        switch (this->typeKind(b.fLeft->fType)) {                         \
+            case kInt_TypeKind:                                           \
+                return SFunc(builder, left, right, "binary");             \
+            case kUInt_TypeKind:                                          \
+                return UFunc(builder, left, right, "binary");             \
+            case kFloat_TypeKind:                                         \
+                return FFunc(builder, left, right, "binary");             \
+            default:                                                      \
+                ABORT("unsupported typeKind");                            \
+        }                                                                 \
     }
-    #define COMPOUND(SFunc, UFunc, FFunc) {                                  \
+#define COMPOUND(SFunc, UFunc, FFunc)                                        \
+    {                                                                        \
         std::unique_ptr<LValue> lvalue = this->getLValue(builder, *b.fLeft); \
         LLVMValueRef left = lvalue->load(builder);                           \
         LLVMValueRef right = this->compileExpression(builder, *b.fRight);    \
@@ -543,20 +508,21 @@ LLVMValueRef JIT::compileBinary(LLVMBuilderRef builder, const BinaryExpression& 
         lvalue->store(builder, result);                                      \
         return result;                                                       \
     }
-    #define COMPARE(SFunc, SOp, UFunc, UOp, FFunc, FOp) {                    \
-        LLVMValueRef left = this->compileExpression(builder, *b.fLeft);      \
-        LLVMValueRef right = this->compileExpression(builder, *b.fRight);    \
-        this->vectorize(builder, b, &left, &right);                          \
-        switch (this->typeKind(b.fLeft->fType)) {                            \
-            case kInt_TypeKind:                                              \
-                return SFunc(builder, SOp, left, right, "binary");           \
-            case kUInt_TypeKind:                                             \
-                return UFunc(builder, UOp, left, right, "binary");           \
-            case kFloat_TypeKind:                                            \
-                return FFunc(builder, FOp, left, right, "binary");           \
-            default:                                                         \
-                ABORT("unsupported typeKind");                               \
-        }                                                                    \
+#define COMPARE(SFunc, SOp, UFunc, UOp, FFunc, FOp)                       \
+    {                                                                     \
+        LLVMValueRef left = this->compileExpression(builder, *b.fLeft);   \
+        LLVMValueRef right = this->compileExpression(builder, *b.fRight); \
+        this->vectorize(builder, b, &left, &right);                       \
+        switch (this->typeKind(b.fLeft->fType)) {                         \
+            case kInt_TypeKind:                                           \
+                return SFunc(builder, SOp, left, right, "binary");        \
+            case kUInt_TypeKind:                                          \
+                return UFunc(builder, UOp, left, right, "binary");        \
+            case kFloat_TypeKind:                                         \
+                return FFunc(builder, FOp, left, right, "binary");        \
+            default:                                                      \
+                ABORT("unsupported typeKind");                            \
+        }                                                                 \
     }
     switch (b.fOperator) {
         case Token::EQ: {
@@ -598,9 +564,8 @@ LLVMValueRef JIT::compileBinary(LLVMBuilderRef builder, const BinaryExpression& 
         case Token::EQEQ:
             switch (b.fLeft->fType.kind()) {
                 case Type::kScalar_Kind:
-                    COMPARE(LLVMBuildICmp, LLVMIntEQ,
-                            LLVMBuildICmp, LLVMIntEQ,
-                            LLVMBuildFCmp, LLVMRealOEQ);
+                    COMPARE(LLVMBuildICmp, LLVMIntEQ, LLVMBuildICmp, LLVMIntEQ, LLVMBuildFCmp,
+                            LLVMRealOEQ);
                 case Type::kVector_Kind: {
                     LLVMValueRef left = this->compileExpression(builder, *b.fLeft);
                     LLVMValueRef right = this->compileExpression(builder, *b.fRight);
@@ -619,12 +584,18 @@ LLVMValueRef JIT::compileBinary(LLVMBuilderRef builder, const BinaryExpression& 
                         default:
                             ABORT("unsupported typeKind");
                     }
-                    LLVMValueRef args[1] = { value };
+                    LLVMValueRef args[1] = {value};
                     LLVMValueRef func;
                     switch (b.fLeft->fType.columns()) {
-                        case 2: func = fFoldAnd2Func; break;
-                        case 3: func = fFoldAnd3Func; break;
-                        case 4: func = fFoldAnd4Func; break;
+                        case 2:
+                            func = fFoldAnd2Func;
+                            break;
+                        case 3:
+                            func = fFoldAnd3Func;
+                            break;
+                        case 4:
+                            func = fFoldAnd4Func;
+                            break;
                         default:
                             SkASSERT(false);
                             func = fFoldAnd2Func;
@@ -637,9 +608,8 @@ LLVMValueRef JIT::compileBinary(LLVMBuilderRef builder, const BinaryExpression& 
         case Token::NEQ:
             switch (b.fLeft->fType.kind()) {
                 case Type::kScalar_Kind:
-                    COMPARE(LLVMBuildICmp, LLVMIntNE,
-                            LLVMBuildICmp, LLVMIntNE,
-                            LLVMBuildFCmp, LLVMRealONE);
+                    COMPARE(LLVMBuildICmp, LLVMIntNE, LLVMBuildICmp, LLVMIntNE, LLVMBuildFCmp,
+                            LLVMRealONE);
                 case Type::kVector_Kind: {
                     LLVMValueRef left = this->compileExpression(builder, *b.fLeft);
                     LLVMValueRef right = this->compileExpression(builder, *b.fRight);
@@ -658,12 +628,18 @@ LLVMValueRef JIT::compileBinary(LLVMBuilderRef builder, const BinaryExpression& 
                         default:
                             ABORT("unsupported typeKind");
                     }
-                    LLVMValueRef args[1] = { value };
+                    LLVMValueRef args[1] = {value};
                     LLVMValueRef func;
                     switch (b.fLeft->fType.columns()) {
-                        case 2: func = fFoldOr2Func; break;
-                        case 3: func = fFoldOr3Func; break;
-                        case 4: func = fFoldOr4Func; break;
+                        case 2:
+                            func = fFoldOr2Func;
+                            break;
+                        case 3:
+                            func = fFoldOr3Func;
+                            break;
+                        case 4:
+                            func = fFoldOr4Func;
+                            break;
                         default:
                             SkASSERT(false);
                             func = fFoldOr2Func;
@@ -674,54 +650,50 @@ LLVMValueRef JIT::compileBinary(LLVMBuilderRef builder, const BinaryExpression& 
                     SkASSERT(false);
             }
         case Token::LT:
-            COMPARE(LLVMBuildICmp, LLVMIntSLT,
-                    LLVMBuildICmp, LLVMIntULT,
-                    LLVMBuildFCmp, LLVMRealOLT);
+            COMPARE(LLVMBuildICmp, LLVMIntSLT, LLVMBuildICmp, LLVMIntULT, LLVMBuildFCmp,
+                    LLVMRealOLT);
         case Token::LTEQ:
-            COMPARE(LLVMBuildICmp, LLVMIntSLE,
-                    LLVMBuildICmp, LLVMIntULE,
-                    LLVMBuildFCmp, LLVMRealOLE);
+            COMPARE(LLVMBuildICmp, LLVMIntSLE, LLVMBuildICmp, LLVMIntULE, LLVMBuildFCmp,
+                    LLVMRealOLE);
         case Token::GT:
-            COMPARE(LLVMBuildICmp, LLVMIntSGT,
-                    LLVMBuildICmp, LLVMIntUGT,
-                    LLVMBuildFCmp, LLVMRealOGT);
+            COMPARE(LLVMBuildICmp, LLVMIntSGT, LLVMBuildICmp, LLVMIntUGT, LLVMBuildFCmp,
+                    LLVMRealOGT);
         case Token::GTEQ:
-            COMPARE(LLVMBuildICmp, LLVMIntSGE,
-                    LLVMBuildICmp, LLVMIntUGE,
-                    LLVMBuildFCmp, LLVMRealOGE);
+            COMPARE(LLVMBuildICmp, LLVMIntSGE, LLVMBuildICmp, LLVMIntUGE, LLVMBuildFCmp,
+                    LLVMRealOGE);
         case Token::LOGICALAND: {
             LLVMValueRef left = this->compileExpression(builder, *b.fLeft);
             LLVMBasicBlockRef ifFalse = fCurrentBlock;
-            LLVMBasicBlockRef ifTrue = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction,
-                                                                     "true && ...");
-            LLVMBasicBlockRef merge = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction,
-                                                                    "&& merge");
+            LLVMBasicBlockRef ifTrue =
+                    LLVMAppendBasicBlockInContext(fContext, fCurrentFunction, "true && ...");
+            LLVMBasicBlockRef merge =
+                    LLVMAppendBasicBlockInContext(fContext, fCurrentFunction, "&& merge");
             LLVMBuildCondBr(builder, left, ifTrue, merge);
             this->setBlock(builder, ifTrue);
             LLVMValueRef right = this->compileExpression(builder, *b.fRight);
             LLVMBuildBr(builder, merge);
             this->setBlock(builder, merge);
             LLVMValueRef phi = LLVMBuildPhi(builder, fInt1Type, "&&");
-            LLVMValueRef incomingValues[2] = { right, LLVMConstInt(fInt1Type, 0, false) };
-            LLVMBasicBlockRef incomingBlocks[2] = { ifTrue, ifFalse };
+            LLVMValueRef incomingValues[2] = {right, LLVMConstInt(fInt1Type, 0, false)};
+            LLVMBasicBlockRef incomingBlocks[2] = {ifTrue, ifFalse};
             LLVMAddIncoming(phi, incomingValues, incomingBlocks, 2);
             return phi;
         }
         case Token::LOGICALOR: {
             LLVMValueRef left = this->compileExpression(builder, *b.fLeft);
             LLVMBasicBlockRef ifTrue = fCurrentBlock;
-            LLVMBasicBlockRef ifFalse = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction,
-                                                                      "false || ...");
-            LLVMBasicBlockRef merge = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction,
-                                                                    "|| merge");
+            LLVMBasicBlockRef ifFalse =
+                    LLVMAppendBasicBlockInContext(fContext, fCurrentFunction, "false || ...");
+            LLVMBasicBlockRef merge =
+                    LLVMAppendBasicBlockInContext(fContext, fCurrentFunction, "|| merge");
             LLVMBuildCondBr(builder, left, merge, ifFalse);
             this->setBlock(builder, ifFalse);
             LLVMValueRef right = this->compileExpression(builder, *b.fRight);
             LLVMBuildBr(builder, merge);
             this->setBlock(builder, merge);
             LLVMValueRef phi = LLVMBuildPhi(builder, fInt1Type, "||");
-            LLVMValueRef incomingValues[2] = { right, LLVMConstInt(fInt1Type, 1, false) };
-            LLVMBasicBlockRef incomingBlocks[2] = { ifFalse, ifTrue };
+            LLVMValueRef incomingValues[2] = {right, LLVMConstInt(fInt1Type, 1, false)};
+            LLVMBasicBlockRef incomingBlocks[2] = {ifFalse, ifTrue};
             LLVMAddIncoming(phi, incomingValues, incomingBlocks, 2);
             return phi;
         }
@@ -746,7 +718,7 @@ LLVMValueRef JIT::compilePostfix(LLVMBuilderRef builder, const PostfixExpression
     switch (p.fOperator) {
         case Token::PLUSPLUS:
             switch (this->typeKind(p.fType)) {
-                case kInt_TypeKind: // fall through
+                case kInt_TypeKind:  // fall through
                 case kUInt_TypeKind:
                     mod = LLVMBuildAdd(builder, result, one, "++");
                     break;
@@ -759,7 +731,7 @@ LLVMValueRef JIT::compilePostfix(LLVMBuilderRef builder, const PostfixExpression
             break;
         case Token::MINUSMINUS:
             switch (this->typeKind(p.fType)) {
-                case kInt_TypeKind: // fall through
+                case kInt_TypeKind:  // fall through
                 case kUInt_TypeKind:
                     mod = LLVMBuildSub(builder, result, one, "--");
                     break;
@@ -793,7 +765,7 @@ LLVMValueRef JIT::compilePrefix(LLVMBuilderRef builder, const PrefixExpression& 
     switch (p.fOperator) {
         case Token::PLUSPLUS:
             switch (this->typeKind(p.fType)) {
-                case kInt_TypeKind: // fall through
+                case kInt_TypeKind:  // fall through
                 case kUInt_TypeKind:
                     result = LLVMBuildAdd(builder, raw, one, "++");
                     break;
@@ -806,7 +778,7 @@ LLVMValueRef JIT::compilePrefix(LLVMBuilderRef builder, const PrefixExpression& 
             break;
         case Token::MINUSMINUS:
             switch (this->typeKind(p.fType)) {
-                case kInt_TypeKind: // fall through
+                case kInt_TypeKind:  // fall through
                 case kUInt_TypeKind:
                     result = LLVMBuildSub(builder, raw, one, "--");
                     break;
@@ -844,17 +816,16 @@ void JIT::appendStage(LLVMBuilderRef builder, const AppendStage& a) {
             SkASSERT(a.fArguments.size() == 2);
             SkASSERT(a.fArguments[1]->fKind == Expression::kFunctionReference_Kind);
             const FunctionDeclaration& functionDecl =
-                                             *((FunctionReference&) *a.fArguments[1]).fFunctions[0];
+                    *((FunctionReference&)*a.fArguments[1]).fFunctions[0];
             bool found = false;
             for (const auto& pe : *fProgram) {
                 if (ProgramElement::kFunction_Kind == pe.fKind) {
-                    const FunctionDefinition& def = (const FunctionDefinition&) pe;
+                    const FunctionDefinition& def = (const FunctionDefinition&)pe;
                     if (&def.fDeclaration == &functionDecl) {
                         LLVMValueRef fn = this->compileStageFunction(def);
                         LLVMValueRef args[2] = {
-                            pipeline,
-                            LLVMBuildBitCast(builder, fn, fInt8PtrType, "callback cast")
-                        };
+                                pipeline,
+                                LLVMBuildBitCast(builder, fn, fInt8PtrType, "callback cast")};
                         LLVMBuildCall(builder, fAppendCallbackFunc, args, 2, "");
                         found = true;
                         break;
@@ -873,11 +844,7 @@ void JIT::appendStage(LLVMBuilderRef builder, const AppendStage& a) {
                 SkASSERT(a.fArguments.size() == 1);
                 ctx = LLVMConstNull(fInt8PtrType);
             }
-            LLVMValueRef args[3] = {
-                pipeline,
-                stage,
-                ctx
-            };
+            LLVMValueRef args[3] = {pipeline, stage, ctx};
             LLVMBuildCall(builder, fAppendFunc, args, 3, "");
             break;
         }
@@ -935,8 +902,7 @@ LLVMValueRef JIT::compileConstructor(LLVMBuilderRef builder, const Constructor& 
                 LLVMValueRef value = this->compileExpression(builder, *c.fArguments[0]);
                 for (int i = 0; i < c.fType.columns(); ++i) {
                     vec = LLVMBuildInsertElement(builder, vec, value,
-                                                 LLVMConstInt(fInt32Type, i, false),
-                                                 "vec build 1");
+                                                 LLVMConstInt(fInt32Type, i, false), "vec build 1");
                 }
             } else {
                 int index = 0;
@@ -944,12 +910,11 @@ LLVMValueRef JIT::compileConstructor(LLVMBuilderRef builder, const Constructor& 
                     LLVMValueRef value = this->compileExpression(builder, *arg);
                     if (arg->fType.kind() == Type::kVector_Kind) {
                         for (int i = 0; i < arg->fType.columns(); ++i) {
-                            LLVMValueRef column = LLVMBuildExtractElement(builder,
-                                                                          vec,
-                                                                          LLVMConstInt(fInt32Type,
-                                                                                       i,
-                                                                                       false),
-                                                                          "construct extract");
+                            LLVMValueRef column =
+                                    LLVMBuildExtractElement(builder,
+                                                            vec,
+                                                            LLVMConstInt(fInt32Type, i, false),
+                                                            "construct extract");
                             vec = LLVMBuildInsertElement(builder, vec, column,
                                                          LLVMConstInt(fInt32Type, index++, false),
                                                          "vec build 2");
@@ -974,35 +939,28 @@ LLVMValueRef JIT::compileSwizzle(LLVMBuilderRef builder, const Swizzle& s) {
     if (s.fComponents.size() > 1) {
         LLVMValueRef result = LLVMGetUndef(this->getType(s.fType));
         for (size_t i = 0; i < s.fComponents.size(); ++i) {
-            LLVMValueRef element = LLVMBuildExtractElement(
-                                                       builder,
-                                                       base,
-                                                       LLVMConstInt(fInt32Type,
-                                                                    s.fComponents[i],
-                                                                    false),
-                                                       "swizzle extract");
+            LLVMValueRef element =
+                    LLVMBuildExtractElement(builder,
+                                            base,
+                                            LLVMConstInt(fInt32Type, s.fComponents[i], false),
+                                            "swizzle extract");
             result = LLVMBuildInsertElement(builder, result, element,
-                                            LLVMConstInt(fInt32Type, i, false),
-                                            "swizzle insert");
+                                            LLVMConstInt(fInt32Type, i, false), "swizzle insert");
         }
         return result;
     }
     SkASSERT(s.fComponents.size() == 1);
-    return LLVMBuildExtractElement(builder, base,
-                                            LLVMConstInt(fInt32Type,
-                                                         s.fComponents[0],
-                                                         false),
-                                            "swizzle extract");
+    return LLVMBuildExtractElement(builder, base, LLVMConstInt(fInt32Type, s.fComponents[0], false),
+                                   "swizzle extract");
 }
 
 LLVMValueRef JIT::compileTernary(LLVMBuilderRef builder, const TernaryExpression& t) {
     LLVMValueRef test = this->compileExpression(builder, *t.fTest);
-    LLVMBasicBlockRef trueBlock = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction,
-                                                                "if true");
-    LLVMBasicBlockRef merge = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction,
-                                                            "if merge");
-    LLVMBasicBlockRef falseBlock = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction,
-                                                                 "if false");
+    LLVMBasicBlockRef trueBlock =
+            LLVMAppendBasicBlockInContext(fContext, fCurrentFunction, "if true");
+    LLVMBasicBlockRef merge = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction, "if merge");
+    LLVMBasicBlockRef falseBlock =
+            LLVMAppendBasicBlockInContext(fContext, fCurrentFunction, "if false");
     LLVMBuildCondBr(builder, test, trueBlock, falseBlock);
     this->setBlock(builder, trueBlock);
     LLVMValueRef ifTrue = this->compileExpression(builder, *t.fIfTrue);
@@ -1014,8 +972,8 @@ LLVMValueRef JIT::compileTernary(LLVMBuilderRef builder, const TernaryExpression
     LLVMBuildBr(builder, merge);
     this->setBlock(builder, merge);
     LLVMValueRef phi = LLVMBuildPhi(builder, this->getType(t.fType), "?");
-    LLVMValueRef incomingValues[2] = { ifTrue, ifFalse };
-    LLVMBasicBlockRef incomingBlocks[2] = { trueBlock, falseBlock };
+    LLVMValueRef incomingValues[2] = {ifTrue, ifFalse};
+    LLVMBasicBlockRef incomingBlocks[2] = {trueBlock, falseBlock};
     LLVMAddIncoming(phi, incomingValues, incomingBlocks, 2);
     return phi;
 }
@@ -1023,37 +981,37 @@ LLVMValueRef JIT::compileTernary(LLVMBuilderRef builder, const TernaryExpression
 LLVMValueRef JIT::compileExpression(LLVMBuilderRef builder, const Expression& expr) {
     switch (expr.fKind) {
         case Expression::kAppendStage_Kind: {
-            this->appendStage(builder, (const AppendStage&) expr);
+            this->appendStage(builder, (const AppendStage&)expr);
             return LLVMValueRef();
         }
         case Expression::kBinary_Kind:
-            return this->compileBinary(builder, (BinaryExpression&) expr);
+            return this->compileBinary(builder, (BinaryExpression&)expr);
         case Expression::kBoolLiteral_Kind:
-            return LLVMConstInt(fInt1Type, ((BoolLiteral&) expr).fValue, false);
+            return LLVMConstInt(fInt1Type, ((BoolLiteral&)expr).fValue, false);
         case Expression::kConstructor_Kind:
-            return this->compileConstructor(builder, (Constructor&) expr);
+            return this->compileConstructor(builder, (Constructor&)expr);
         case Expression::kIntLiteral_Kind:
-            return LLVMConstInt(this->getType(expr.fType), ((IntLiteral&) expr).fValue, true);
+            return LLVMConstInt(this->getType(expr.fType), ((IntLiteral&)expr).fValue, true);
         case Expression::kFieldAccess_Kind:
             abort();
         case Expression::kFloatLiteral_Kind:
-            return LLVMConstReal(this->getType(expr.fType), ((FloatLiteral&) expr).fValue);
+            return LLVMConstReal(this->getType(expr.fType), ((FloatLiteral&)expr).fValue);
         case Expression::kFunctionCall_Kind:
-            return this->compileFunctionCall(builder, (FunctionCall&) expr);
+            return this->compileFunctionCall(builder, (FunctionCall&)expr);
         case Expression::kIndex_Kind:
-            return this->compileIndex(builder, (IndexExpression&) expr);
+            return this->compileIndex(builder, (IndexExpression&)expr);
         case Expression::kPrefix_Kind:
-            return this->compilePrefix(builder, (PrefixExpression&) expr);
+            return this->compilePrefix(builder, (PrefixExpression&)expr);
         case Expression::kPostfix_Kind:
-            return this->compilePostfix(builder, (PostfixExpression&) expr);
+            return this->compilePostfix(builder, (PostfixExpression&)expr);
         case Expression::kSetting_Kind:
             abort();
         case Expression::kSwizzle_Kind:
-            return this->compileSwizzle(builder, (Swizzle&) expr);
+            return this->compileSwizzle(builder, (Swizzle&)expr);
         case Expression::kVariableReference_Kind:
-            return this->compileVariableReference(builder, (VariableReference&) expr);
+            return this->compileVariableReference(builder, (VariableReference&)expr);
         case Expression::kTernary_Kind:
-            return this->compileTernary(builder, (TernaryExpression&) expr);
+            return this->compileTernary(builder, (TernaryExpression&)expr);
         case Expression::kTypeReference_Kind:
             abort();
         default:
@@ -1070,7 +1028,7 @@ void JIT::compileBlock(LLVMBuilderRef builder, const Block& block) {
 
 void JIT::compileVarDeclarations(LLVMBuilderRef builder, const VarDeclarationsStatement& decls) {
     for (const auto& declStatement : decls.fDeclaration->fVars) {
-        const VarDeclaration& decl = (VarDeclaration&) *declStatement;
+        const VarDeclaration& decl = (VarDeclaration&)*declStatement;
         LLVMPositionBuilderAtEnd(builder, fAllocaBlock);
         LLVMValueRef alloca = LLVMBuildAlloca(builder, this->getType(decl.fVar->fType),
                                               String(decl.fVar->fName).c_str());
@@ -1086,8 +1044,7 @@ void JIT::compileVarDeclarations(LLVMBuilderRef builder, const VarDeclarationsSt
 void JIT::compileIf(LLVMBuilderRef builder, const IfStatement& i) {
     LLVMValueRef test = this->compileExpression(builder, *i.fTest);
     LLVMBasicBlockRef ifTrue = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction, "if true");
-    LLVMBasicBlockRef merge = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction,
-                                                              "if merge");
+    LLVMBasicBlockRef merge = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction, "if merge");
     LLVMBasicBlockRef ifFalse;
     if (i.fIfFalse) {
         ifFalse = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction, "if false");
@@ -1146,12 +1103,10 @@ void JIT::compileFor(LLVMBuilderRef builder, const ForStatement& f) {
 }
 
 void JIT::compileDo(LLVMBuilderRef builder, const DoStatement& d) {
-    LLVMBasicBlockRef testBlock = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction,
-                                                                "do test");
-    LLVMBasicBlockRef body = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction,
-                                                           "do body");
-    LLVMBasicBlockRef end = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction,
-                                                          "do end");
+    LLVMBasicBlockRef testBlock =
+            LLVMAppendBasicBlockInContext(fContext, fCurrentFunction, "do test");
+    LLVMBasicBlockRef body = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction, "do body");
+    LLVMBasicBlockRef end = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction, "do end");
     LLVMBuildBr(builder, body);
     this->setBlock(builder, testBlock);
     LLVMValueRef test = this->compileExpression(builder, *d.fTest);
@@ -1169,12 +1124,11 @@ void JIT::compileDo(LLVMBuilderRef builder, const DoStatement& d) {
 }
 
 void JIT::compileWhile(LLVMBuilderRef builder, const WhileStatement& w) {
-    LLVMBasicBlockRef testBlock = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction,
-                                                           "while test");
-    LLVMBasicBlockRef body = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction,
-                                                           "while body");
-    LLVMBasicBlockRef end = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction,
-                                                          "while end");
+    LLVMBasicBlockRef testBlock =
+            LLVMAppendBasicBlockInContext(fContext, fCurrentFunction, "while test");
+    LLVMBasicBlockRef body =
+            LLVMAppendBasicBlockInContext(fContext, fCurrentFunction, "while body");
+    LLVMBasicBlockRef end = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction, "while end");
     LLVMBuildBr(builder, testBlock);
     this->setBlock(builder, testBlock);
     LLVMValueRef test = this->compileExpression(builder, *w.fTest);
@@ -1210,42 +1164,42 @@ void JIT::compileReturn(LLVMBuilderRef builder, const ReturnStatement& r) {
 void JIT::compileStatement(LLVMBuilderRef builder, const Statement& stmt) {
     switch (stmt.fKind) {
         case Statement::kBlock_Kind:
-            this->compileBlock(builder, (Block&) stmt);
+            this->compileBlock(builder, (Block&)stmt);
             break;
         case Statement::kBreak_Kind:
-            this->compileBreak(builder, (BreakStatement&) stmt);
+            this->compileBreak(builder, (BreakStatement&)stmt);
             break;
         case Statement::kContinue_Kind:
-            this->compileContinue(builder, (ContinueStatement&) stmt);
+            this->compileContinue(builder, (ContinueStatement&)stmt);
             break;
         case Statement::kDiscard_Kind:
             abort();
         case Statement::kDo_Kind:
-            this->compileDo(builder, (DoStatement&) stmt);
+            this->compileDo(builder, (DoStatement&)stmt);
             break;
         case Statement::kExpression_Kind:
-            this->compileExpression(builder, *((ExpressionStatement&) stmt).fExpression);
+            this->compileExpression(builder, *((ExpressionStatement&)stmt).fExpression);
             break;
         case Statement::kFor_Kind:
-            this->compileFor(builder, (ForStatement&) stmt);
+            this->compileFor(builder, (ForStatement&)stmt);
             break;
         case Statement::kGroup_Kind:
             abort();
         case Statement::kIf_Kind:
-            this->compileIf(builder, (IfStatement&) stmt);
+            this->compileIf(builder, (IfStatement&)stmt);
             break;
         case Statement::kNop_Kind:
             break;
         case Statement::kReturn_Kind:
-            this->compileReturn(builder, (ReturnStatement&) stmt);
+            this->compileReturn(builder, (ReturnStatement&)stmt);
             break;
         case Statement::kSwitch_Kind:
             abort();
         case Statement::kVarDeclarations_Kind:
-            this->compileVarDeclarations(builder, (VarDeclarationsStatement&) stmt);
+            this->compileVarDeclarations(builder, (VarDeclarationsStatement&)stmt);
             break;
         case Statement::kWhile_Kind:
-            this->compileWhile(builder, (WhileStatement&) stmt);
+            this->compileWhile(builder, (WhileStatement&)stmt);
             break;
         default:
             abort();
@@ -1274,21 +1228,16 @@ void JIT::compileStageFunctionLoop(const FunctionDefinition& f, LLVMValueRef new
     LLVMValueRef aVec = LLVMBuildAlloca(builder, fFloat32VectorType, "aVec");
     LLVMBuildStore(builder, params.get()[7], aVec);
     LLVMValueRef color = LLVMBuildAlloca(builder, fFloat32Vector4Type, "color");
-    fVariables[f.fDeclaration.fParameters[1]] = LLVMBuildTrunc(builder, params.get()[3], fInt32Type,
-                                                               "y->Int32");
+    fVariables[f.fDeclaration.fParameters[1]] =
+            LLVMBuildTrunc(builder, params.get()[3], fInt32Type, "y->Int32");
     fVariables[f.fDeclaration.fParameters[2]] = color;
     LLVMValueRef ivar = LLVMBuildAlloca(builder, fInt32Type, "i");
     LLVMBuildStore(builder, LLVMConstInt(fInt32Type, 0, false), ivar);
     LLVMBasicBlockRef start = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction, "start");
     this->setBlock(builder, start);
     LLVMValueRef iload = LLVMBuildLoad(builder, ivar, "load i");
-    fVariables[f.fDeclaration.fParameters[0]] = LLVMBuildAdd(builder,
-                                                             LLVMBuildTrunc(builder,
-                                                                            params.get()[2],
-                                                                            fInt32Type,
-                                                                            "x->Int32"),
-                                                             iload,
-                                                             "x");
+    fVariables[f.fDeclaration.fParameters[0]] = LLVMBuildAdd(
+            builder, LLVMBuildTrunc(builder, params.get()[2], fInt32Type, "x->Int32"), iload, "x");
     LLVMValueRef vectorSize = LLVMConstInt(fInt32Type, fVectorCount, false);
     LLVMValueRef test = LLVMBuildICmp(builder, LLVMIntSLT, iload, vectorSize, "i < vectorSize");
     LLVMBasicBlockRef loopBody = LLVMAppendBasicBlockInContext(fContext, fCurrentFunction, "body");
@@ -1298,12 +1247,10 @@ void JIT::compileStageFunctionLoop(const FunctionDefinition& f, LLVMValueRef new
     LLVMValueRef vec = LLVMGetUndef(fFloat32Vector4Type);
     // extract the r, g, b, and a values from the color channel vectors and store them into "color"
     for (int i = 0; i < 4; ++i) {
-        vec = LLVMBuildInsertElement(builder, vec,
-                                     LLVMBuildExtractElement(builder,
-                                                             params.get()[4 + i],
-                                                             iload, "initial"),
-                                     LLVMConstInt(fInt32Type, i, false),
-                                     "vec build");
+        vec = LLVMBuildInsertElement(
+                builder, vec,
+                LLVMBuildExtractElement(builder, params.get()[4 + i], iload, "initial"),
+                LLVMConstInt(fInt32Type, i, false), "vec build");
     }
     LLVMBuildStore(builder, vec, color);
     // write actual loop body
@@ -1312,36 +1259,32 @@ void JIT::compileStageFunctionLoop(const FunctionDefinition& f, LLVMValueRef new
     // vectors
     LLVMValueRef colorLoad = LLVMBuildLoad(builder, color, "color load");
     LLVMBuildStore(builder,
-                   LLVMBuildInsertElement(builder, LLVMBuildLoad(builder, rVec, "rVec"),
-                                          LLVMBuildExtractElement(builder, colorLoad,
-                                                                  LLVMConstInt(fInt32Type, 0,
-                                                                               false),
-                                                                  "rExtract"),
-                                          iload, "rInsert"),
+                   LLVMBuildInsertElement(
+                           builder, LLVMBuildLoad(builder, rVec, "rVec"),
+                           LLVMBuildExtractElement(builder, colorLoad,
+                                                   LLVMConstInt(fInt32Type, 0, false), "rExtract"),
+                           iload, "rInsert"),
                    rVec);
     LLVMBuildStore(builder,
-                   LLVMBuildInsertElement(builder, LLVMBuildLoad(builder, gVec, "gVec"),
-                                          LLVMBuildExtractElement(builder, colorLoad,
-                                                                  LLVMConstInt(fInt32Type, 1,
-                                                                               false),
-                                                                  "gExtract"),
-                                          iload, "gInsert"),
+                   LLVMBuildInsertElement(
+                           builder, LLVMBuildLoad(builder, gVec, "gVec"),
+                           LLVMBuildExtractElement(builder, colorLoad,
+                                                   LLVMConstInt(fInt32Type, 1, false), "gExtract"),
+                           iload, "gInsert"),
                    gVec);
     LLVMBuildStore(builder,
-                   LLVMBuildInsertElement(builder, LLVMBuildLoad(builder, bVec, "bVec"),
-                                          LLVMBuildExtractElement(builder, colorLoad,
-                                                                  LLVMConstInt(fInt32Type, 2,
-                                                                               false),
-                                                                  "bExtract"),
-                                          iload, "bInsert"),
+                   LLVMBuildInsertElement(
+                           builder, LLVMBuildLoad(builder, bVec, "bVec"),
+                           LLVMBuildExtractElement(builder, colorLoad,
+                                                   LLVMConstInt(fInt32Type, 2, false), "bExtract"),
+                           iload, "bInsert"),
                    bVec);
     LLVMBuildStore(builder,
-                   LLVMBuildInsertElement(builder, LLVMBuildLoad(builder, aVec, "aVec"),
-                                          LLVMBuildExtractElement(builder, colorLoad,
-                                                                  LLVMConstInt(fInt32Type, 3,
-                                                                               false),
-                                                                  "aExtract"),
-                                          iload, "aInsert"),
+                   LLVMBuildInsertElement(
+                           builder, LLVMBuildLoad(builder, aVec, "aVec"),
+                           LLVMBuildExtractElement(builder, colorLoad,
+                                                   LLVMConstInt(fInt32Type, 3, false), "aExtract"),
+                           iload, "aInsert"),
                    aVec);
     LLVMValueRef inc = LLVMBuildAdd(builder, iload, LLVMConstInt(fInt32Type, 1, false), "inc i");
     LLVMBuildStore(builder, inc, ivar);
@@ -1351,29 +1294,25 @@ void JIT::compileStageFunctionLoop(const FunctionDefinition& f, LLVMValueRef new
     LLVMValueRef rawNextPtr = LLVMBuildLoad(builder, programParam, "next load");
     LLVMTypeRef stageFuncType = LLVMTypeOf(newFunc);
     LLVMValueRef nextPtr = LLVMBuildBitCast(builder, rawNextPtr, stageFuncType, "cast next->func");
-    LLVMValueRef nextInc = LLVMBuildIntToPtr(builder,
-                                             LLVMBuildAdd(builder,
-                                                          LLVMBuildPtrToInt(builder,
-                                                                            programParam,
-                                                                            fInt64Type,
-                                                                            "cast 1"),
-                                                          LLVMConstInt(fInt64Type, PTR_SIZE, false),
-                                                          "add"),
-                                            LLVMPointerType(fInt8PtrType, 0), "cast 2");
-    LLVMValueRef args[STAGE_PARAM_COUNT] = {
-        params.get()[0],
-        nextInc,
-        params.get()[2],
-        params.get()[3],
-        LLVMBuildLoad(builder, rVec, "rVec"),
-        LLVMBuildLoad(builder, gVec, "gVec"),
-        LLVMBuildLoad(builder, bVec, "bVec"),
-        LLVMBuildLoad(builder, aVec, "aVec"),
-        params.get()[8],
-        params.get()[9],
-        params.get()[10],
-        params.get()[11]
-    };
+    LLVMValueRef nextInc = LLVMBuildIntToPtr(
+            builder,
+            LLVMBuildAdd(builder,
+                         LLVMBuildPtrToInt(builder, programParam, fInt64Type, "cast 1"),
+                         LLVMConstInt(fInt64Type, PTR_SIZE, false),
+                         "add"),
+            LLVMPointerType(fInt8PtrType, 0), "cast 2");
+    LLVMValueRef args[STAGE_PARAM_COUNT] = {params.get()[0],
+                                            nextInc,
+                                            params.get()[2],
+                                            params.get()[3],
+                                            LLVMBuildLoad(builder, rVec, "rVec"),
+                                            LLVMBuildLoad(builder, gVec, "gVec"),
+                                            LLVMBuildLoad(builder, bVec, "bVec"),
+                                            LLVMBuildLoad(builder, aVec, "aVec"),
+                                            params.get()[8],
+                                            params.get()[9],
+                                            params.get()[10],
+                                            params.get()[11]};
     LLVMBuildCall(builder, nextPtr, args, STAGE_PARAM_COUNT, "");
     LLVMBuildRetVoid(builder);
     // finish
@@ -1392,17 +1331,16 @@ void JIT::compileStageFunctionLoop(const FunctionDefinition& f, LLVMValueRef new
 // of the normal codegen from the vector codegen and break this up into multiple
 // classes.
 
-bool JIT::getVectorLValue(LLVMBuilderRef builder, const Expression& e,
-                          LLVMValueRef out[CHANNELS]) {
+bool JIT::getVectorLValue(LLVMBuilderRef builder, const Expression& e, LLVMValueRef out[CHANNELS]) {
     switch (e.fKind) {
         case Expression::kVariableReference_Kind:
-            if (fColorParam == &((VariableReference&) e).fVariable) {
+            if (fColorParam == &((VariableReference&)e).fVariable) {
                 memcpy(out, fChannels, sizeof(fChannels));
                 return true;
             }
             return false;
         case Expression::kSwizzle_Kind: {
-            const Swizzle& s = (const Swizzle&) e;
+            const Swizzle& s = (const Swizzle&)e;
             LLVMValueRef base[CHANNELS];
             if (!this->getVectorLValue(builder, *s.fBase, base)) {
                 return false;
@@ -1445,7 +1383,8 @@ bool JIT::compileVectorBinary(LLVMBuilderRef builder, const BinaryExpression& b,
                               LLVMValueRef out[CHANNELS]) {
     LLVMValueRef left[CHANNELS];
     LLVMValueRef right[CHANNELS];
-    #define VECTOR_BINARY(signedOp, unsignedOp, floatOp) {                               \
+#define VECTOR_BINARY(signedOp, unsignedOp, floatOp)                                     \
+    {                                                                                    \
         if (!this->getVectorBinaryOperands(builder, *b.fLeft, left, *b.fRight, right)) { \
             return false;                                                                \
         }                                                                                \
@@ -1461,7 +1400,7 @@ bool JIT::compileVectorBinary(LLVMBuilderRef builder, const BinaryExpression& b,
                     out[i] = floatOp(builder, left[i], right[i], "binary");              \
                     break;                                                               \
                 case kBool_TypeKind:                                                     \
-                    SkASSERT(false);                                                       \
+                    SkASSERT(false);                                                     \
                     break;                                                               \
             }                                                                            \
         }                                                                                \
@@ -1512,18 +1451,17 @@ bool JIT::compileVectorConstructor(LLVMBuilderRef builder, const Constructor& c,
             if (!this->compileVectorExpression(builder, *c.fArguments[0], base)) {
                 return false;
             }
-            #define CONSTRUCT(fn)                                                                \
-                out[0] = LLVMGetUndef(LLVMVectorType(this->getType(c.fType), fVectorCount));     \
-                for (int i = 0; i < fVectorCount; ++i) {                                         \
-                    LLVMValueRef index = LLVMConstInt(fInt32Type, i, false);                     \
-                    LLVMValueRef baseVal = LLVMBuildExtractElement(builder, base[0], index,      \
-                                                                   "construct extract");         \
-                    out[0] = LLVMBuildInsertElement(builder, out[0],                             \
-                                                    fn(builder, baseVal, this->getType(c.fType), \
-                                                       "cast"),                                  \
-                                                    index, "construct insert");                  \
-                }                                                                                \
-                return true;
+#define CONSTRUCT(fn)                                                                         \
+    out[0] = LLVMGetUndef(LLVMVectorType(this->getType(c.fType), fVectorCount));              \
+    for (int i = 0; i < fVectorCount; ++i) {                                                  \
+        LLVMValueRef index = LLVMConstInt(fInt32Type, i, false);                              \
+        LLVMValueRef baseVal =                                                                \
+                LLVMBuildExtractElement(builder, base[0], index, "construct extract");        \
+        out[0] = LLVMBuildInsertElement(builder, out[0],                                      \
+                                        fn(builder, baseVal, this->getType(c.fType), "cast"), \
+                                        index, "construct insert");                           \
+    }                                                                                         \
+    return true;
             if (kFloat_TypeKind == to) {
                 if (kInt_TypeKind == from) {
                     CONSTRUCT(LLVMBuildSIToFP);
@@ -1561,7 +1499,7 @@ bool JIT::compileVectorConstructor(LLVMBuilderRef builder, const Constructor& c,
                     out[i] = base[0];
                 }
             } else {
-                SkASSERT(c.fArguments.size() == (size_t) c.fType.columns());
+                SkASSERT(c.fArguments.size() == (size_t)c.fType.columns());
                 for (int i = 0; i < c.fType.columns(); ++i) {
                     LLVMValueRef base[CHANNELS];
                     if (!this->compileVectorExpression(builder, *c.fArguments[i], base)) {
@@ -1590,7 +1528,6 @@ bool JIT::compileVectorFloatLiteral(LLVMBuilderRef builder,
     return true;
 }
 
-
 bool JIT::compileVectorSwizzle(LLVMBuilderRef builder, const Swizzle& s,
                                LLVMValueRef out[CHANNELS]) {
     LLVMValueRef all[CHANNELS];
@@ -1618,15 +1555,15 @@ bool JIT::compileVectorExpression(LLVMBuilderRef builder, const Expression& expr
                                   LLVMValueRef out[CHANNELS]) {
     switch (expr.fKind) {
         case Expression::kBinary_Kind:
-            return this->compileVectorBinary(builder, (const BinaryExpression&) expr, out);
+            return this->compileVectorBinary(builder, (const BinaryExpression&)expr, out);
         case Expression::kConstructor_Kind:
-            return this->compileVectorConstructor(builder, (const Constructor&) expr, out);
+            return this->compileVectorConstructor(builder, (const Constructor&)expr, out);
         case Expression::kFloatLiteral_Kind:
-            return this->compileVectorFloatLiteral(builder, (const FloatLiteral&) expr, out);
+            return this->compileVectorFloatLiteral(builder, (const FloatLiteral&)expr, out);
         case Expression::kSwizzle_Kind:
-            return this->compileVectorSwizzle(builder, (const Swizzle&) expr, out);
+            return this->compileVectorSwizzle(builder, (const Swizzle&)expr, out);
         case Expression::kVariableReference_Kind:
-            return this->compileVectorVariableReference(builder, (const VariableReference&) expr,
+            return this->compileVectorVariableReference(builder, (const VariableReference&)expr,
                                                         out);
         default:
             return false;
@@ -1636,7 +1573,7 @@ bool JIT::compileVectorExpression(LLVMBuilderRef builder, const Expression& expr
 bool JIT::compileVectorStatement(LLVMBuilderRef builder, const Statement& stmt) {
     switch (stmt.fKind) {
         case Statement::kBlock_Kind:
-            for (const auto& s : ((const Block&) stmt).fStatements) {
+            for (const auto& s : ((const Block&)stmt).fStatements) {
                 if (!this->compileVectorStatement(builder, *s)) {
                     return false;
                 }
@@ -1644,9 +1581,8 @@ bool JIT::compileVectorStatement(LLVMBuilderRef builder, const Statement& stmt) 
             return true;
         case Statement::kExpression_Kind:
             LLVMValueRef result;
-            return this->compileVectorExpression(builder,
-                                                 *((const ExpressionStatement&) stmt).fExpression,
-                                                 &result);
+            return this->compileVectorExpression(
+                    builder, *((const ExpressionStatement&)stmt).fExpression, &result);
         default:
             return false;
     }
@@ -1678,32 +1614,27 @@ bool JIT::compileStageFunctionVector(const FunctionDefinition& f, LLVMValueRef n
         // increment program pointer, call next
         LLVMValueRef rawNextPtr = LLVMBuildLoad(builder, programParam, "next load");
         LLVMTypeRef stageFuncType = LLVMTypeOf(newFunc);
-        LLVMValueRef nextPtr = LLVMBuildBitCast(builder, rawNextPtr, stageFuncType,
-                                                "cast next->func");
-        LLVMValueRef nextInc = LLVMBuildIntToPtr(builder,
-                                                 LLVMBuildAdd(builder,
-                                                              LLVMBuildPtrToInt(builder,
-                                                                                programParam,
-                                                                                fInt64Type,
-                                                                                "cast 1"),
-                                                              LLVMConstInt(fInt64Type, PTR_SIZE,
-                                                                           false),
-                                                              "add"),
-                                                LLVMPointerType(fInt8PtrType, 0), "cast 2");
-        LLVMValueRef args[STAGE_PARAM_COUNT] = {
-            params.get()[0],
-            nextInc,
-            params.get()[2],
-            params.get()[3],
-            LLVMBuildLoad(builder, fChannels[0], "rVec"),
-            LLVMBuildLoad(builder, fChannels[1], "gVec"),
-            LLVMBuildLoad(builder, fChannels[2], "bVec"),
-            LLVMBuildLoad(builder, fChannels[3], "aVec"),
-            params.get()[8],
-            params.get()[9],
-            params.get()[10],
-            params.get()[11]
-        };
+        LLVMValueRef nextPtr =
+                LLVMBuildBitCast(builder, rawNextPtr, stageFuncType, "cast next->func");
+        LLVMValueRef nextInc = LLVMBuildIntToPtr(
+                builder,
+                LLVMBuildAdd(builder,
+                             LLVMBuildPtrToInt(builder, programParam, fInt64Type, "cast 1"),
+                             LLVMConstInt(fInt64Type, PTR_SIZE, false),
+                             "add"),
+                LLVMPointerType(fInt8PtrType, 0), "cast 2");
+        LLVMValueRef args[STAGE_PARAM_COUNT] = {params.get()[0],
+                                                nextInc,
+                                                params.get()[2],
+                                                params.get()[3],
+                                                LLVMBuildLoad(builder, fChannels[0], "rVec"),
+                                                LLVMBuildLoad(builder, fChannels[1], "gVec"),
+                                                LLVMBuildLoad(builder, fChannels[2], "bVec"),
+                                                LLVMBuildLoad(builder, fChannels[3], "aVec"),
+                                                params.get()[8],
+                                                params.get()[9],
+                                                params.get()[10],
+                                                params.get()[11]};
         LLVMBuildCall(builder, nextPtr, args, STAGE_PARAM_COUNT, "");
         LLVMBuildRetVoid(builder);
         // finish
@@ -1726,14 +1657,15 @@ bool JIT::compileStageFunctionVector(const FunctionDefinition& f, LLVMValueRef n
 
 LLVMValueRef JIT::compileStageFunction(const FunctionDefinition& f) {
     LLVMTypeRef returnType = fVoidType;
-    LLVMTypeRef parameterTypes[12] = { fSizeTType, LLVMPointerType(fInt8PtrType, 0), fSizeTType,
-                                       fSizeTType, fFloat32VectorType, fFloat32VectorType,
-                                       fFloat32VectorType, fFloat32VectorType, fFloat32VectorType,
-                                       fFloat32VectorType, fFloat32VectorType, fFloat32VectorType };
+    LLVMTypeRef parameterTypes[12] = {fSizeTType,         LLVMPointerType(fInt8PtrType, 0),
+                                      fSizeTType,         fSizeTType,
+                                      fFloat32VectorType, fFloat32VectorType,
+                                      fFloat32VectorType, fFloat32VectorType,
+                                      fFloat32VectorType, fFloat32VectorType,
+                                      fFloat32VectorType, fFloat32VectorType};
     LLVMTypeRef stageFuncType = LLVMFunctionType(returnType, parameterTypes, 12, false);
-    LLVMValueRef result = LLVMAddFunction(fModule,
-                                          (String(f.fDeclaration.fName) + "$stage").c_str(),
-                                          stageFuncType);
+    LLVMValueRef result = LLVMAddFunction(
+            fModule, (String(f.fDeclaration.fName) + "$stage").c_str(), stageFuncType);
     fColorParam = f.fDeclaration.fParameters[2];
     if (!this->compileStageFunctionVector(f, result)) {
         // vectorization failed, fall back to looping over the pixels
@@ -1743,8 +1675,7 @@ LLVMValueRef JIT::compileStageFunction(const FunctionDefinition& f) {
 }
 
 bool JIT::hasStageSignature(const FunctionDeclaration& f) {
-    return f.fReturnType == *fProgram->fContext->fVoid_Type &&
-           f.fParameters.size() == 3 &&
+    return f.fReturnType == *fProgram->fContext->fVoid_Type && f.fParameters.size() == 3 &&
            f.fParameters[0]->fType == *fProgram->fContext->fInt_Type &&
            f.fParameters[0]->fModifiers.fFlags == 0 &&
            f.fParameters[1]->fType == *fProgram->fContext->fInt_Type &&
@@ -1769,10 +1700,10 @@ LLVMValueRef JIT::compileFunction(const FunctionDefinition& f) {
         }
         parameterTypes.push_back(type);
     }
-    fCurrentFunction  = LLVMAddFunction(fModule,
-                                        String(f.fDeclaration.fName).c_str(),
-                                        LLVMFunctionType(returnType, parameterTypes.data(),
-                                                         parameterTypes.size(), false));
+    fCurrentFunction = LLVMAddFunction(
+            fModule,
+            String(f.fDeclaration.fName).c_str(),
+            LLVMFunctionType(returnType, parameterTypes.data(), parameterTypes.size(), false));
     fFunctions[&f.fDeclaration] = fCurrentFunction;
 
     std::unique_ptr<LLVMValueRef[]> params(new LLVMValueRef[parameterTypes.size()]);
@@ -1806,41 +1737,37 @@ void JIT::createModule() {
     fPromotedParameters.clear();
     fModule = LLVMModuleCreateWithNameInContext("skslmodule", fContext);
     this->loadBuiltinFunctions();
-    LLVMTypeRef fold2Params[1] = { fInt1Vector2Type };
+    LLVMTypeRef fold2Params[1] = {fInt1Vector2Type};
     fFoldAnd2Func = LLVMAddFunction(fModule, "llvm.experimental.vector.reduce.and.i1.v2i1",
                                     LLVMFunctionType(fInt1Type, fold2Params, 1, false));
     fFoldOr2Func = LLVMAddFunction(fModule, "llvm.experimental.vector.reduce.or.i1.v2i1",
                                    LLVMFunctionType(fInt1Type, fold2Params, 1, false));
-    LLVMTypeRef fold3Params[1] = { fInt1Vector3Type };
+    LLVMTypeRef fold3Params[1] = {fInt1Vector3Type};
     fFoldAnd3Func = LLVMAddFunction(fModule, "llvm.experimental.vector.reduce.and.i1.v3i1",
                                     LLVMFunctionType(fInt1Type, fold3Params, 1, false));
     fFoldOr3Func = LLVMAddFunction(fModule, "llvm.experimental.vector.reduce.or.i1.v3i1",
                                    LLVMFunctionType(fInt1Type, fold3Params, 1, false));
-    LLVMTypeRef fold4Params[1] = { fInt1Vector4Type };
+    LLVMTypeRef fold4Params[1] = {fInt1Vector4Type};
     fFoldAnd4Func = LLVMAddFunction(fModule, "llvm.experimental.vector.reduce.and.i1.v4i1",
                                     LLVMFunctionType(fInt1Type, fold4Params, 1, false));
     fFoldOr4Func = LLVMAddFunction(fModule, "llvm.experimental.vector.reduce.or.i1.v4i1",
                                    LLVMFunctionType(fInt1Type, fold4Params, 1, false));
     // LLVM doesn't do void*, have to declare it as int8*
-    LLVMTypeRef appendParams[3] = { fInt8PtrType, fInt32Type, fInt8PtrType };
-    fAppendFunc = LLVMAddFunction(fModule, "sksl_pipeline_append", LLVMFunctionType(fVoidType,
-                                                                                    appendParams,
-                                                                                    3,
-                                                                                    false));
-    LLVMTypeRef appendCallbackParams[2] = { fInt8PtrType, fInt8PtrType };
-    fAppendCallbackFunc = LLVMAddFunction(fModule, "sksl_pipeline_append_callback",
-                                          LLVMFunctionType(fVoidType, appendCallbackParams, 2,
-                                                           false));
+    LLVMTypeRef appendParams[3] = {fInt8PtrType, fInt32Type, fInt8PtrType};
+    fAppendFunc = LLVMAddFunction(fModule, "sksl_pipeline_append",
+                                  LLVMFunctionType(fVoidType, appendParams, 3, false));
+    LLVMTypeRef appendCallbackParams[2] = {fInt8PtrType, fInt8PtrType};
+    fAppendCallbackFunc =
+            LLVMAddFunction(fModule, "sksl_pipeline_append_callback",
+                            LLVMFunctionType(fVoidType, appendCallbackParams, 2, false));
 
-    LLVMTypeRef debugParams[3] = { fFloat32Type };
-    fDebugFunc = LLVMAddFunction(fModule, "sksl_debug_print", LLVMFunctionType(fVoidType,
-                                                                               debugParams,
-                                                                               1,
-                                                                               false));
+    LLVMTypeRef debugParams[3] = {fFloat32Type};
+    fDebugFunc = LLVMAddFunction(fModule, "sksl_debug_print",
+                                 LLVMFunctionType(fVoidType, debugParams, 1, false));
 
     for (const auto& e : *fProgram) {
         if (e.fKind == ProgramElement::kFunction_Kind) {
-            this->compileFunction((FunctionDefinition&) e);
+            this->compileFunction((FunctionDefinition&)e);
         }
     }
 }
@@ -1905,7 +1832,7 @@ void JIT::optimize() {
     fSharedModule = LLVMOrcMakeSharedModule(fModule);
     LLVMOrcModuleHandle orcModule;
     LLVMOrcAddEagerlyCompiledIR(fJITStack, &orcModule, fSharedModule,
-                                (LLVMOrcSymbolResolverFn) resolveSymbol, this);
+                                (LLVMOrcSymbolResolverFn)resolveSymbol, this);
     LLVMDisposeTargetMachine(targetMachine);
 }
 
@@ -1917,15 +1844,15 @@ void* JIT::Module::getSymbol(const char* name) {
     if (!result) {
         ABORT("symbol not found");
     }
-    return (void*) result;
+    return (void*)result;
 }
 
 void* JIT::Module::getJumperStage(const char* name) {
     return this->getSymbol((String(name) + "$stage").c_str());
 }
 
-} // namespace
+}  // namespace SkSL
 
-#endif // SK_LLVM_AVAILABLE
+#endif  // SK_LLVM_AVAILABLE
 
-#endif // SKSL_STANDALONE
+#endif  // SKSL_STANDALONE

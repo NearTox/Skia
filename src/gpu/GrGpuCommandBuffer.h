@@ -1,16 +1,16 @@
 /*
-* Copyright 2016 Google Inc.
-*
-* Use of this source code is governed by a BSD-style license that can be
-* found in the LICENSE file.
-*/
+ * Copyright 2016 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
 #ifndef GrGpuCommandBuffer_DEFINED
 #define GrGpuCommandBuffer_DEFINED
 
-#include "GrPipeline.h"
-#include "SkDrawable.h"
-#include "ops/GrDrawOp.h"
+#include "include/core/SkDrawable.h"
+#include "src/gpu/GrPipeline.h"
+#include "src/gpu/ops/GrDrawOp.h"
 
 class GrOpFlushState;
 class GrFixedClip;
@@ -31,15 +31,18 @@ public:
 
     // Copy src into current surface owned by either a GrGpuTextureCommandBuffer or
     // GrGpuRenderTargetCommandBuffer.
-    virtual void copy(GrSurface* src, GrSurfaceOrigin srcOrigin,
-                      const SkIRect& srcRect, const SkIPoint& dstPoint) = 0;
+    virtual void copy(GrSurface* src, GrSurfaceOrigin srcOrigin, const SkIRect& srcRect,
+                      const SkIPoint& dstPoint) = 0;
+    // Initiates a transfer from the surface owned by the command buffer to the GrGpuBuffer.
+    virtual void transferFrom(const SkIRect& srcRect, GrColorType bufferColorType,
+                              GrGpuBuffer* transferBuffer, size_t offset) = 0;
 
     virtual void insertEventMarker(const char*) = 0;
 
     virtual GrGpuRTCommandBuffer* asRTCommandBuffer() { return nullptr; }
 };
 
-class GrGpuTextureCommandBuffer : public GrGpuCommandBuffer{
+class GrGpuTextureCommandBuffer : public GrGpuCommandBuffer {
 public:
     void set(GrTexture* texture, GrSurfaceOrigin origin) {
         SkASSERT(!fTexture);
@@ -52,12 +55,10 @@ protected:
     GrGpuTextureCommandBuffer() : fOrigin(kTopLeft_GrSurfaceOrigin), fTexture(nullptr) {}
 
     GrGpuTextureCommandBuffer(GrTexture* texture, GrSurfaceOrigin origin)
-            : fOrigin(origin)
-            , fTexture(texture) {
-    }
+            : fOrigin(origin), fTexture(texture) {}
 
     GrSurfaceOrigin fOrigin;
-    GrTexture*      fTexture;
+    GrTexture* fTexture;
 
 private:
     typedef GrGpuCommandBuffer INHERITED;
@@ -72,15 +73,15 @@ private:
 class GrGpuRTCommandBuffer : public GrGpuCommandBuffer {
 public:
     struct LoadAndStoreInfo {
-        GrLoadOp    fLoadOp;
-        GrStoreOp   fStoreOp;
+        GrLoadOp fLoadOp;
+        GrStoreOp fStoreOp;
         SkPMColor4f fClearColor;
     };
 
     // Load-time clears of the stencil buffer are always to 0 so we don't store
     // an 'fStencilClearValue'
     struct StencilLoadAndStoreInfo {
-        GrLoadOp  fLoadOp;
+        GrLoadOp fLoadOp;
         GrStoreOp fStoreOp;
     };
 
@@ -127,9 +128,7 @@ protected:
     GrGpuRTCommandBuffer() : fOrigin(kTopLeft_GrSurfaceOrigin), fRenderTarget(nullptr) {}
 
     GrGpuRTCommandBuffer(GrRenderTarget* rt, GrSurfaceOrigin origin)
-            : fOrigin(origin)
-            , fRenderTarget(rt) {
-    }
+            : fOrigin(origin), fRenderTarget(rt) {}
 
     void set(GrRenderTarget* rt, GrSurfaceOrigin origin) {
         SkASSERT(!fRenderTarget);

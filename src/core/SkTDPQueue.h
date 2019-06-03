@@ -8,8 +8,8 @@
 #ifndef SkTDPQueue_DEFINED
 #define SkTDPQueue_DEFINED
 
-#include "SkTDArray.h"
-#include "SkTSort.h"
+#include "include/private/SkTDArray.h"
+#include "src/core/SkTSort.h"
 
 #include <utility>
 
@@ -24,32 +24,30 @@
  * afterwards. In debug builds the index will be set to -1 before an element is removed from the
  * queue.
  */
-template <typename T,
-          bool (*LESS)(const T&, const T&),
-          int* (*INDEX)(const T&) = (int* (*)(const T&))nullptr>
+template <typename T, bool (*LESS)(const T&, const T&),
+          int* (*INDEX)(const T&) = (int* (*)(const T&)) nullptr>
 class SkTDPQueue {
 public:
-    SkTDPQueue() {}
+    SkTDPQueue() noexcept {}
     SkTDPQueue(int reserve) { fArray.setReserve(reserve); }
 
     SkTDPQueue(SkTDPQueue&&) = default;
-    SkTDPQueue& operator =(SkTDPQueue&&) = default;
+    SkTDPQueue& operator=(SkTDPQueue&&) = default;
 
     SkTDPQueue(const SkTDPQueue&) = delete;
     SkTDPQueue& operator=(const SkTDPQueue&) = delete;
 
     /** Number of items in the queue. */
-    int count() const { return fArray.count(); }
+    int count() const noexcept { return fArray.count(); }
 
     /** Gets the next item in the queue without popping it. */
     const T& peek() const { return fArray[0]; }
-    T& peek() { return fArray[0]; }
+    T& peek() noexcept { return fArray[0]; }
 
     /** Removes the next item. */
     void pop() {
         this->validate();
-        SkDEBUGCODE(if (SkToBool(INDEX)) { *INDEX(fArray[0]) = -1; })
-        if (1 == fArray.count()) {
+        SkDEBUGCODE(if (SkToBool(INDEX)) { *INDEX(fArray[0]) = -1; }) if (1 == fArray.count()) {
             fArray.pop();
             return;
         }
@@ -78,7 +76,7 @@ public:
         int index = *INDEX(entry);
         SkASSERT(index >= 0 && index < fArray.count());
         this->validate();
-        SkDEBUGCODE(*INDEX(fArray[index]) = -1;)
+        SkDEBUGCODE(*INDEX(fArray[index]) = -1);
         if (index == fArray.count() - 1) {
             fArray.pop();
             return;
@@ -104,7 +102,7 @@ public:
 
     /** Gets the item at index i in the priority queue (for i < this->count()). at(0) is equivalent
         to peek(). Otherwise, there is no guarantee about ordering of elements in the queue. */
-    T at(int i) const { return fArray[i]; }
+    T at(int i) const noexcept { return fArray[i]; }
 
     /** Sorts the queue into priority order.  The queue is only guarenteed to remain in sorted order
      *  until any other operation, other than at(), is performed.
@@ -120,8 +118,14 @@ public:
     }
 
 private:
-    static int LeftOf(int x) { SkASSERT(x >= 0); return 2 * x + 1; }
-    static int ParentOf(int x) { SkASSERT(x > 0); return (x - 1) >> 1; }
+    static int LeftOf(int x) noexcept {
+        SkASSERT(x >= 0);
+        return 2 * x + 1;
+    }
+    static int ParentOf(int x) noexcept {
+        SkASSERT(x > 0);
+        return (x - 1) >> 1;
+    }
 
     void percolateUpOrDown(int index) {
         SkASSERT(index >= 0);
@@ -194,14 +198,14 @@ private:
         } while (true);
     }
 
-    void setIndex(int index) {
+    void setIndex(int index) noexcept {
         SkASSERT(index < fArray.count());
         if (SkToBool(INDEX)) {
             *INDEX(fArray[index]) = index;
         }
     }
 
-    void validate(int excludedIndex = -1) const {
+    void validate(int excludedIndex = -1) const noexcept {
 #ifdef SK_DEBUG
         for (int i = 1; i < fArray.count(); ++i) {
             int p = ParentOf(i);

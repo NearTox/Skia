@@ -5,17 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "SkBitmapProvider.h"
-#include "SkImage_Base.h"
+#include "src/core/SkBitmapProvider.h"
+#include "src/image/SkImage_Base.h"
 
 SkBitmapCacheDesc SkBitmapProvider::makeCacheDesc() const {
     return SkBitmapCacheDesc::Make(fImage);
 }
 
-void SkBitmapProvider::notifyAddedToCache() const {
-    as_IB(fImage)->notifyAddedToRasterCache();
-}
+void SkBitmapProvider::notifyAddedToCache() const { as_IB(fImage)->notifyAddedToRasterCache(); }
 
-bool SkBitmapProvider::asBitmap(SkBitmap* bm) const {
-    return as_IB(fImage)->getROPixels(bm);
-}
+bool SkBitmapProvider::asBitmap(SkBitmap* bm) const { return as_IB(fImage)->getROPixels(bm); }

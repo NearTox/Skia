@@ -5,16 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "SkColorFilterImageFilter.h"
+#include "include/effects/SkColorFilterImageFilter.h"
 
-#include "SkCanvas.h"
-#include "SkColorFilter.h"
-#include "SkColorSpaceXformer.h"
-#include "SkImageFilterPriv.h"
-#include "SkReadBuffer.h"
-#include "SkSpecialImage.h"
-#include "SkSpecialSurface.h"
-#include "SkWriteBuffer.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorFilter.h"
+#include "src/core/SkImageFilterPriv.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkSpecialImage.h"
+#include "src/core/SkSpecialSurface.h"
+#include "src/core/SkWriteBuffer.h"
 
 sk_sp<SkImageFilter> SkColorFilterImageFilter::Make(sk_sp<SkColorFilter> cf,
                                                     sk_sp<SkImageFilter> input,
@@ -29,23 +28,19 @@ sk_sp<SkImageFilter> SkColorFilterImageFilter::Make(sk_sp<SkColorFilter> cf,
         // colorfilters into a single one, which the new imagefilter will wrap.
         sk_sp<SkColorFilter> newCF = cf->makeComposed(sk_sp<SkColorFilter>(inputCF));
         if (newCF) {
-            return sk_sp<SkImageFilter>(new SkColorFilterImageFilter(std::move(newCF),
-                                                                     sk_ref_sp(input->getInput(0)),
-                                                                     cropRect));
+            return sk_sp<SkImageFilter>(new SkColorFilterImageFilter(
+                    std::move(newCF), sk_ref_sp(input->getInput(0)), cropRect));
         }
     }
 
-    return sk_sp<SkImageFilter>(new SkColorFilterImageFilter(std::move(cf),
-                                                             std::move(input),
-                                                             cropRect));
+    return sk_sp<SkImageFilter>(
+            new SkColorFilterImageFilter(std::move(cf), std::move(input), cropRect));
 }
 
 SkColorFilterImageFilter::SkColorFilterImageFilter(sk_sp<SkColorFilter> cf,
                                                    sk_sp<SkImageFilter> input,
                                                    const CropRect* cropRect)
-    : INHERITED(&input, 1, cropRect)
-    , fColorFilter(std::move(cf)) {
-}
+        : INHERITED(&input, 1, cropRect), fColorFilter(std::move(cf)) {}
 
 sk_sp<SkFlattenable> SkColorFilterImageFilter::CreateProc(SkReadBuffer& buffer) {
     SK_IMAGEFILTER_UNFLATTEN_COMMON(common, 1);
@@ -71,8 +66,8 @@ sk_sp<SkSpecialImage> SkColorFilterImageFilter::onFilterImage(SkSpecialImage* so
     } else if (!input) {
         return nullptr;
     } else {
-        inputBounds = SkIRect::MakeXYWH(inputOffset.x(), inputOffset.y(),
-                                        input->width(), input->height());
+        inputBounds = SkIRect::MakeXYWH(inputOffset.x(), inputOffset.y(), input->width(),
+                                        input->height());
     }
 
     SkIRect bounds;
@@ -117,19 +112,6 @@ sk_sp<SkSpecialImage> SkColorFilterImageFilter::onFilterImage(SkSpecialImage* so
     return surf->makeImageSnapshot();
 }
 
-sk_sp<SkImageFilter> SkColorFilterImageFilter::onMakeColorSpace(SkColorSpaceXformer* xformer)
-const {
-    SkASSERT(1 == this->countInputs());
-
-    sk_sp<SkImageFilter> input = xformer->apply(this->getInput(0));
-    auto colorFilter = xformer->apply(fColorFilter.get());
-    if (this->getInput(0) != input.get() || fColorFilter != colorFilter) {
-        return SkColorFilterImageFilter::Make(std::move(colorFilter), std::move(input),
-                                              this->getCropRectIfSet());
-    }
-    return this->refMe();
-}
-
 bool SkColorFilterImageFilter::onIsColorFilterNode(SkColorFilter** filter) const {
     SkASSERT(1 == this->countInputs());
     if (!this->cropRectIsSet()) {
@@ -141,6 +123,6 @@ bool SkColorFilterImageFilter::onIsColorFilterNode(SkColorFilter** filter) const
     return false;
 }
 
-bool SkColorFilterImageFilter::affectsTransparentBlack() const {
+bool SkColorFilterImageFilter::affectsTransparentBlack() const noexcept {
     return fColorFilter->affectsTransparentBlack();
 }

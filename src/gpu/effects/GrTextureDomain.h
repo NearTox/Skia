@@ -8,10 +8,10 @@
 #ifndef GrTextureDomainEffect_DEFINED
 #define GrTextureDomainEffect_DEFINED
 
-#include "GrCoordTransform.h"
-#include "GrFragmentProcessor.h"
-#include "glsl/GrGLSLFragmentProcessor.h"
-#include "glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/GrCoordTransform.h"
+#include "src/gpu/GrFragmentProcessor.h"
+#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
 
 class GrGLProgramBuilder;
 class GrGLSLShaderBuilder;
@@ -44,8 +44,8 @@ public:
     static const int kModeCount = kLastMode + 1;
 
     static const GrTextureDomain& IgnoredDomain() {
-        static const GrTextureDomain gDomain((GrTextureProxy*)nullptr,
-                                             SkRect::MakeEmpty(), kIgnore_Mode, kIgnore_Mode);
+        static const GrTextureDomain gDomain((GrTextureProxy*)nullptr, SkRect::MakeEmpty(),
+                                             kIgnore_Mode, kIgnore_Mode);
         return gDomain;
     }
 
@@ -69,23 +69,25 @@ public:
         return MakeTexelDomain(texelRect, mode, mode);
     }
 
-    static const SkRect MakeTexelDomain(const SkIRect& texelRect, Mode modeX, Mode modeY) {
+    static const SkRect MakeTexelDomain(const SkIRect& texelRect, Mode modeX, Mode modeY) noexcept {
         // For Clamp and decal modes, inset by half a texel
         SkScalar insetX = ((modeX == kClamp_Mode || modeX == kDecal_Mode) && texelRect.width() > 0)
-                ? SK_ScalarHalf : 0;
+                                  ? SK_ScalarHalf
+                                  : 0;
         SkScalar insetY = ((modeY == kClamp_Mode || modeY == kDecal_Mode) && texelRect.height() > 0)
-                ? SK_ScalarHalf : 0;
+                                  ? SK_ScalarHalf
+                                  : 0;
         return SkRect::MakeLTRB(texelRect.fLeft + insetX, texelRect.fTop + insetY,
                                 texelRect.fRight - insetX, texelRect.fBottom - insetY);
     }
 
     // Convenience to determine if any axis of a texture uses an explicit decal mode or the hardware
     // clamp to border decal mode.
-    static bool IsDecalSampled(GrSamplerState::WrapMode wrapX, GrSamplerState::WrapMode wrapY,
-                               Mode modeX, Mode modeY) {
+    static constexpr bool IsDecalSampled(GrSamplerState::WrapMode wrapX,
+                                         GrSamplerState::WrapMode wrapY, Mode modeX,
+                                         Mode modeY) noexcept {
         return wrapX == GrSamplerState::WrapMode::kClampToBorder ||
-               wrapY == GrSamplerState::WrapMode::kClampToBorder ||
-               modeX == kDecal_Mode ||
+               wrapY == GrSamplerState::WrapMode::kClampToBorder || modeX == kDecal_Mode ||
                modeY == kDecal_Mode;
     }
 
@@ -97,12 +99,12 @@ public:
         return IsDecalSampled(sampler.wrapModeX(), sampler.wrapModeY(), modeX, modeY);
     }
 
-    bool operator==(const GrTextureDomain& that) const {
+    bool operator==(const GrTextureDomain& that) const noexcept {
         return fModeX == that.fModeX && fModeY == that.fModeY &&
-               (kIgnore_Mode == fModeX || (fDomain.fLeft == that.fDomain.fLeft &&
-                                           fDomain.fRight == that.fDomain.fRight)) &&
-               (kIgnore_Mode == fModeY || (fDomain.fTop == that.fDomain.fTop &&
-                                           fDomain.fBottom == that.fDomain.fBottom));
+               (kIgnore_Mode == fModeX ||
+                (fDomain.fLeft == that.fDomain.fLeft && fDomain.fRight == that.fDomain.fRight)) &&
+               (kIgnore_Mode == fModeY ||
+                (fDomain.fTop == that.fDomain.fTop && fDomain.fBottom == that.fDomain.fBottom));
     }
 
     /**
@@ -113,7 +115,7 @@ public:
      */
     class GLDomain {
     public:
-        GLDomain() {
+        GLDomain() noexcept {
             for (int i = 0; i < kPrevDomainCount; i++) {
                 fPrevDomain[i] = SK_FloatNaN;
             }
@@ -124,8 +126,8 @@ public:
          * domain and mode.
          *
          * @param outcolor  name of half4 variable to hold the sampled color.
-         * @param inCoords  name of float2 variable containing the coords to be used with the domain.
-         *                  It is assumed that this is a variable and not an expression.
+         * @param inCoords  name of float2 variable containing the coords to be used with the
+         * domain. It is assumed that this is a variable and not an expression.
          * @param inModulateColor   if non-nullptr the sampled color will be modulated with this
          *                          expression before being written to outColor.
          */
@@ -147,7 +149,7 @@ public:
                      const GrSamplerState& sampler);
 
         enum {
-            kModeBits = 2, // See DomainKey().
+            kModeBits = 2,  // See DomainKey().
             kDomainKeyBits = 4
         };
 
@@ -162,24 +164,24 @@ public:
 
     private:
         static const int kPrevDomainCount = 4;
-        SkDEBUGCODE(Mode                        fModeX;)
-        SkDEBUGCODE(Mode                        fModeY;)
-        SkDEBUGCODE(bool                        fHasMode = false;)
+        SkDEBUGCODE(Mode fModeX);
+        SkDEBUGCODE(Mode fModeY);
+        SkDEBUGCODE(bool fHasMode = false);
         GrGLSLProgramDataManager::UniformHandle fDomainUni;
-        SkString                                fDomainName;
+        SkString fDomainName;
 
         // Only initialized if the domain has at least one decal axis
         GrGLSLProgramDataManager::UniformHandle fDecalUni;
-        SkString                                fDecalName;
+        SkString fDecalName;
 
-        float                                   fPrevDomain[kPrevDomainCount];
+        float fPrevDomain[kPrevDomainCount];
     };
 
 protected:
-    Mode    fModeX;
-    Mode    fModeY;
-    SkRect  fDomain;
-    int     fIndex;
+    Mode fModeX;
+    Mode fModeY;
+    SkRect fDomain;
+    int fIndex;
 };
 
 /**
@@ -200,7 +202,7 @@ public:
                                                      GrTextureDomain::Mode modeY,
                                                      const GrSamplerState& sampler);
 
-    const char* name() const override { return "TextureDomain"; }
+    const char* name() const noexcept override { return "TextureDomain"; }
 
     std::unique_ptr<GrFragmentProcessor> clone() const override {
         return std::unique_ptr<GrFragmentProcessor>(new GrTextureDomainEffect(*this));
@@ -209,9 +211,9 @@ public:
 #ifdef SK_DEBUG
     SkString dumpInfo() const override {
         SkString str;
-        str.appendf("Domain: [L: %.2f, T: %.2f, R: %.2f, B: %.2f]",
-                    fTextureDomain.domain().fLeft, fTextureDomain.domain().fTop,
-                    fTextureDomain.domain().fRight, fTextureDomain.domain().fBottom);
+        str.appendf("Domain: [L: %.2f, T: %.2f, R: %.2f, B: %.2f]", fTextureDomain.domain().fLeft,
+                    fTextureDomain.domain().fTop, fTextureDomain.domain().fRight,
+                    fTextureDomain.domain().fBottom);
         str.append(INHERITED::dumpInfo());
         return str;
     }
@@ -237,7 +239,7 @@ private:
 
     bool onIsEqual(const GrFragmentProcessor&) const override;
 
-    const TextureSampler& onTextureSampler(int) const override { return fTextureSampler; }
+    const TextureSampler& onTextureSampler(int) const noexcept override { return fTextureSampler; }
 
     GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 
@@ -271,18 +273,19 @@ private:
     GrTextureDomain fTextureDomain;
     SkIPoint fDeviceSpaceOffset;
 
-    GrDeviceSpaceTextureDecalFragmentProcessor(sk_sp<GrTextureProxy>,
-                                               const SkIRect&, const SkIPoint&);
+    GrDeviceSpaceTextureDecalFragmentProcessor(sk_sp<GrTextureProxy>, const SkIRect&,
+                                               const SkIPoint&);
     GrDeviceSpaceTextureDecalFragmentProcessor(const GrDeviceSpaceTextureDecalFragmentProcessor&);
 
     GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
     // Since we always use decal mode, there is no need for key data.
-    void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
+    void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const
+            noexcept override {}
 
     bool onIsEqual(const GrFragmentProcessor& fp) const override;
 
-    const TextureSampler& onTextureSampler(int) const override { return fTextureSampler; }
+    const TextureSampler& onTextureSampler(int) const noexcept override { return fTextureSampler; }
 
     GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 

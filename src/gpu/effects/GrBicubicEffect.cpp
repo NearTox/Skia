@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "GrBicubicEffect.h"
+#include "src/gpu/effects/GrBicubicEffect.h"
 
-#include "GrTexture.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLProgramDataManager.h"
-#include "glsl/GrGLSLUniformHandler.h"
+#include "include/gpu/GrTexture.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
 class GrGLBicubicEffect : public GrGLSLFragmentProcessor {
 public:
@@ -20,6 +20,7 @@ public:
                               GrProcessorKeyBuilder* b) {
         const GrBicubicEffect& bicubicEffect = effect.cast<GrBicubicEffect>();
         b->add32(GrTextureDomain::GLDomain::DomainKey(bicubicEffect.domain()));
+        b->add32(bicubicEffect.alphaType());
     }
 
 protected:
@@ -28,8 +29,8 @@ protected:
 private:
     typedef GrGLSLProgramDataManager::UniformHandle UniformHandle;
 
-    UniformHandle               fImageIncrementUni;
-    GrTextureDomain::GLDomain   fDomain;
+    UniformHandle fImageIncrementUni;
+    GrTextureDomain::GLDomain fDomain;
 
     typedef GrGLSLFragmentProcessor INHERITED;
 };
@@ -38,8 +39,8 @@ void GrGLBicubicEffect::emitCode(EmitArgs& args) {
     const GrBicubicEffect& bicubicEffect = args.fFp.cast<GrBicubicEffect>();
 
     GrGLSLUniformHandler* uniformHandler = args.fUniformHandler;
-    fImageIncrementUni = uniformHandler->addUniform(kFragment_GrShaderFlag, kHalf2_GrSLType,
-                                                    "ImageIncrement");
+    fImageIncrementUni =
+            uniformHandler->addUniform(kFragment_GrShaderFlag, kHalf2_GrSLType, "ImageIncrement");
 
     const char* imgInc = uniformHandler->getUniformCStr(fImageIncrementUni);
 
@@ -64,11 +65,12 @@ void GrGLBicubicEffect::emitCode(EmitArgs& args) {
      *
      * This is GLSL, so the matrix is column-major (transposed from standard matrix notation).
      */
-    fragBuilder->codeAppend("half4x4 kMitchellCoefficients = half4x4("
-                            " 1.0 / 18.0,  16.0 / 18.0,   1.0 / 18.0,  0.0 / 18.0,"
-                            "-9.0 / 18.0,   0.0 / 18.0,   9.0 / 18.0,  0.0 / 18.0,"
-                            "15.0 / 18.0, -36.0 / 18.0,  27.0 / 18.0, -6.0 / 18.0,"
-                            "-7.0 / 18.0,  21.0 / 18.0, -21.0 / 18.0,  7.0 / 18.0);");
+    fragBuilder->codeAppend(
+            "half4x4 kMitchellCoefficients = half4x4("
+            " 1.0 / 18.0,  16.0 / 18.0,   1.0 / 18.0,  0.0 / 18.0,"
+            "-9.0 / 18.0,   0.0 / 18.0,   9.0 / 18.0,  0.0 / 18.0,"
+            "15.0 / 18.0, -36.0 / 18.0,  27.0 / 18.0, -6.0 / 18.0,"
+            "-7.0 / 18.0,  21.0 / 18.0, -21.0 / 18.0,  7.0 / 18.0);");
     fragBuilder->codeAppendf("float2 coord = %s - %s * float2(0.5);", coords2D.c_str(), imgInc);
     // We unnormalize the coord in order to determine our fractional offset (f) within the texel
     // We then snap coord to a texel center and renormalize. The snap prevents cases where the
@@ -77,8 +79,10 @@ void GrGLBicubicEffect::emitCode(EmitArgs& args) {
     fragBuilder->codeAppendf("coord /= %s;", imgInc);
     fragBuilder->codeAppend("half2 f = half2(fract(coord));");
     fragBuilder->codeAppendf("coord = (coord - f + half2(0.5)) * %s;", imgInc);
-    fragBuilder->codeAppend("half4 wx = kMitchellCoefficients * half4(1.0, f.x, f.x * f.x, f.x * f.x * f.x);");
-    fragBuilder->codeAppend("half4 wy = kMitchellCoefficients * half4(1.0, f.y, f.y * f.y, f.y * f.y * f.y);");
+    fragBuilder->codeAppend(
+            "half4 wx = kMitchellCoefficients * half4(1.0, f.x, f.x * f.x, f.x * f.x * f.x);");
+    fragBuilder->codeAppend(
+            "half4 wy = kMitchellCoefficients * half4(1.0, f.y, f.y * f.y, f.y * f.y * f.y);");
     fragBuilder->codeAppend("half4 rowColors[4];");
     for (int y = 0; y < 4; ++y) {
         for (int x = 0; x < 4; ++x) {
@@ -95,12 +99,21 @@ void GrGLBicubicEffect::emitCode(EmitArgs& args) {
                                   args.fTexSamplers[0]);
         }
         fragBuilder->codeAppendf(
-            "half4 s%d = wx.x * rowColors[0] + wx.y * rowColors[1] + wx.z * rowColors[2] + wx.w * rowColors[3];",
-            y);
+                "half4 s%d = wx.x * rowColors[0] + wx.y * rowColors[1] + wx.z * rowColors[2] + "
+                "wx.w * rowColors[3];",
+                y);
     }
-    SkString bicubicColor("(wy.x * s0 + wy.y * s1 + wy.z * s2 + wy.w * s3)");
-    fragBuilder->codeAppendf("%s = %s * %s;", args.fOutputColor, bicubicColor.c_str(),
-                             args.fInputColor);
+    fragBuilder->codeAppend("half4 bicubicColor = wy.x * s0 + wy.y * s1 + wy.z * s2 + wy.w * s3;");
+    // Bicubic can send colors out of range, so clamp to get them back in (source) gamut.
+    // The kind of clamp we have to do depends on the alpha type.
+    if (kPremul_SkAlphaType == bicubicEffect.alphaType()) {
+        fragBuilder->codeAppend("bicubicColor.a = saturate(bicubicColor.a);");
+        fragBuilder->codeAppend(
+                "bicubicColor.rgb = max(half3(0.0), min(bicubicColor.rgb, bicubicColor.aaa));");
+    } else {
+        fragBuilder->codeAppend("bicubicColor = saturate(bicubicColor);");
+    }
+    fragBuilder->codeAppendf("%s = bicubicColor * %s;", args.fOutputColor, args.fInputColor);
 }
 
 void GrGLBicubicEffect::onSetData(const GrGLSLProgramDataManager& pdman,
@@ -117,17 +130,19 @@ void GrGLBicubicEffect::onSetData(const GrGLSLProgramDataManager& pdman,
                     processor.textureSampler(0).samplerState());
 }
 
-GrBicubicEffect::GrBicubicEffect(sk_sp<GrTextureProxy> proxy,
-                                 const SkMatrix& matrix, const SkRect& domain,
-                                 const GrSamplerState::WrapMode wrapModes[2],
-                                 GrTextureDomain::Mode modeX, GrTextureDomain::Mode modeY)
+GrBicubicEffect::GrBicubicEffect(sk_sp<GrTextureProxy> proxy, const SkMatrix& matrix,
+                                 const SkRect& domain, const GrSamplerState::WrapMode wrapModes[2],
+                                 GrTextureDomain::Mode modeX, GrTextureDomain::Mode modeY,
+                                 SkAlphaType alphaType)
         : INHERITED{kGrBicubicEffect_ClassID,
-                    ModulateForSamplerOptFlags(proxy->config(),
-                            GrTextureDomain::IsDecalSampled(wrapModes, modeX,modeY))}
+                    ModulateForSamplerOptFlags(
+                            proxy->config(),
+                            GrTextureDomain::IsDecalSampled(wrapModes, modeX, modeY))}
         , fCoordTransform(matrix, proxy.get())
         , fDomain(proxy.get(), domain, modeX, modeY)
         , fTextureSampler(std::move(proxy),
-                          GrSamplerState(wrapModes, GrSamplerState::Filter::kNearest)) {
+                          GrSamplerState(wrapModes, GrSamplerState::Filter::kNearest))
+        , fAlphaType(alphaType) {
     this->addCoordTransform(&fCoordTransform);
     this->setTextureSamplerCnt(1);
 }
@@ -136,7 +151,8 @@ GrBicubicEffect::GrBicubicEffect(const GrBicubicEffect& that)
         : INHERITED(kGrBicubicEffect_ClassID, that.optimizationFlags())
         , fCoordTransform(that.fCoordTransform)
         , fDomain(that.fDomain)
-        , fTextureSampler(that.fTextureSampler) {
+        , fTextureSampler(that.fTextureSampler)
+        , fAlphaType(that.fAlphaType) {
     this->addCoordTransform(&fCoordTransform);
     this->setTextureSamplerCnt(1);
 }
@@ -146,7 +162,7 @@ void GrBicubicEffect::onGetGLSLProcessorKey(const GrShaderCaps& caps,
     GrGLBicubicEffect::GenKey(*this, caps, b);
 }
 
-GrGLSLFragmentProcessor* GrBicubicEffect::onCreateGLSLInstance() const  {
+GrGLSLFragmentProcessor* GrBicubicEffect::onCreateGLSLInstance() const {
     return new GrGLBicubicEffect;
 }
 
@@ -163,7 +179,8 @@ std::unique_ptr<GrFragmentProcessor> GrBicubicEffect::TestCreate(GrProcessorTest
                                         : GrProcessorUnitTest::kAlphaTextureIdx;
     static const GrSamplerState::WrapMode kClampClamp[] = {GrSamplerState::WrapMode::kClamp,
                                                            GrSamplerState::WrapMode::kClamp};
-    return GrBicubicEffect::Make(d->textureProxy(texIdx), SkMatrix::I(), kClampClamp);
+    SkAlphaType alphaType = d->fRandom->nextBool() ? kPremul_SkAlphaType : kUnpremul_SkAlphaType;
+    return GrBicubicEffect::Make(d->textureProxy(texIdx), SkMatrix::I(), kClampClamp, alphaType);
 }
 #endif
 

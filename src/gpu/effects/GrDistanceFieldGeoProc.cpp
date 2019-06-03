@@ -5,28 +5,28 @@
  * found in the LICENSE file.
  */
 
-#include "GrDistanceFieldGeoProc.h"
-#include "GrAtlasedShaderHelpers.h"
-#include "GrCaps.h"
-#include "GrShaderCaps.h"
-#include "GrTexture.h"
-#include "SkDistanceFieldGen.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLGeometryProcessor.h"
-#include "glsl/GrGLSLProgramDataManager.h"
-#include "glsl/GrGLSLUniformHandler.h"
-#include "glsl/GrGLSLUtil.h"
-#include "glsl/GrGLSLVarying.h"
-#include "glsl/GrGLSLVertexGeoBuilder.h"
+#include "src/gpu/effects/GrDistanceFieldGeoProc.h"
+#include "include/gpu/GrTexture.h"
+#include "src/core/SkDistanceFieldGen.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrShaderCaps.h"
+#include "src/gpu/effects/GrAtlasedShaderHelpers.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#include "src/gpu/glsl/GrGLSLUtil.h"
+#include "src/gpu/glsl/GrGLSLVarying.h"
+#include "src/gpu/glsl/GrGLSLVertexGeoBuilder.h"
 
 // Assuming a radius of a little less than the diagonal of the fragment
-#define SK_DistanceFieldAAFactor     "0.65"
+#define SK_DistanceFieldAAFactor "0.65"
 
 class GrGLDistanceFieldA8TextGeoProc : public GrGLSLGeometryProcessor {
 public:
     GrGLDistanceFieldA8TextGeoProc() = default;
 
-    void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override{
+    void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override {
         const GrDistanceFieldA8TextGeoProc& dfTexEffect =
                 args.fGP.cast<GrDistanceFieldA8TextGeoProc>();
         GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
@@ -39,11 +39,8 @@ public:
         varyingHandler->emitAttributes(dfTexEffect);
 
         const char* atlasSizeInvName;
-        fAtlasSizeInvUniform = uniformHandler->addUniform(kVertex_GrShaderFlag,
-                                                          kFloat2_GrSLType,
-                                                          kHigh_GrSLPrecision,
-                                                          "AtlasSizeInv",
-                                                          &atlasSizeInvName);
+        fAtlasSizeInvUniform = uniformHandler->addUniform(kVertex_GrShaderFlag, kFloat2_GrSLType,
+                                                          "AtlasSizeInv", &atlasSizeInvName);
 #ifdef SK_GAMMA_APPLY_TO_A8
         // adjust based on gamma
         const char* distanceAdjustUniName = nullptr;
@@ -78,18 +75,17 @@ public:
                               kUniformScale_DistanceFieldEffectMask;
         bool isSimilarity = SkToBool(dfTexEffect.getFlags() & kSimilarity_DistanceFieldEffectFlag);
         bool isGammaCorrect =
-            SkToBool(dfTexEffect.getFlags() & kGammaCorrect_DistanceFieldEffectFlag);
-        bool isAliased =
-            SkToBool(dfTexEffect.getFlags() & kAliased_DistanceFieldEffectFlag);
+                SkToBool(dfTexEffect.getFlags() & kGammaCorrect_DistanceFieldEffectFlag);
+        bool isAliased = SkToBool(dfTexEffect.getFlags() & kAliased_DistanceFieldEffectFlag);
 
         // Use highp to work around aliasing issues
         fragBuilder->codeAppendf("float2 uv = %s;\n", uv.fsIn());
         fragBuilder->codeAppend("half4 texColor;");
-        append_multitexture_lookup(args, dfTexEffect.numTextureSamplers(),
-                                   texIdx, "uv", "texColor");
+        append_multitexture_lookup(args, dfTexEffect.numTextureSamplers(), texIdx, "uv",
+                                   "texColor");
 
-        fragBuilder->codeAppend("half distance = "
-                      SK_DistanceFieldMultiplier "*(texColor.r - " SK_DistanceFieldThreshold ");");
+        fragBuilder->codeAppend("half distance = " SK_DistanceFieldMultiplier
+                                "*(texColor.r - " SK_DistanceFieldThreshold ");");
 #ifdef SK_GAMMA_APPLY_TO_A8
         // adjust width based on gamma
         fragBuilder->codeAppendf("distance -= %s;", distanceAdjustUniName);
@@ -103,12 +99,12 @@ public:
 
             // this gives us a smooth step across approximately one fragment
 #ifdef SK_VULKAN
-            fragBuilder->codeAppendf("afwidth = abs(" SK_DistanceFieldAAFactor
-                                    "*half(dFdx(%s.x)));", st.fsIn());
+            fragBuilder->codeAppendf(
+                    "afwidth = abs(" SK_DistanceFieldAAFactor "*half(dFdx(%s.x)));", st.fsIn());
 #else
             // We use the y gradient because there is a bug in the Mali 400 in the x direction.
-            fragBuilder->codeAppendf("afwidth = abs(" SK_DistanceFieldAAFactor
-                                     "*half(dFdy(%s.y)));", st.fsIn());
+            fragBuilder->codeAppendf(
+                    "afwidth = abs(" SK_DistanceFieldAAFactor "*half(dFdy(%s.y)));", st.fsIn());
 #endif
         } else if (isSimilarity) {
             // For similarity transform, we adjust the effect of the transformation on the distance
@@ -128,8 +124,9 @@ public:
             // For general transforms, to determine the amount of correction we multiply a unit
             // vector pointing along the SDF gradient direction by the Jacobian of the st coords
             // (which is the inverse transform for this fragment) and take the length of the result.
-            fragBuilder->codeAppend("half2 dist_grad = half2(float2(dFdx(distance), "
-                                                                   "dFdy(distance)));");
+            fragBuilder->codeAppend(
+                    "half2 dist_grad = half2(float2(dFdx(distance), "
+                    "dFdy(distance)));");
             // the length of the gradient may be 0, so we need to check for this
             // this also compensates for the Adreno, which likes to drop tiles on division by 0
             fragBuilder->codeAppend("half dg_len2 = dot(dist_grad, dist_grad);");
@@ -154,8 +151,7 @@ public:
             // The smoothstep falloff compensates for the non-linear sRGB response curve. If we are
             // doing gamma-correct rendering (to an sRGB or F16 buffer), then we actually want
             // distance mapped linearly to coverage, so use a linear step:
-            fragBuilder->codeAppend(
-                "half val = saturate((distance + afwidth) / (2.0 * afwidth));");
+            fragBuilder->codeAppend("half val = saturate((distance + afwidth) / (2.0 * afwidth));");
         } else {
             fragBuilder->codeAppend("half val = smoothstep(-afwidth, afwidth, distance);");
         }
@@ -231,7 +227,7 @@ GrDistanceFieldA8TextGeoProc::GrDistanceFieldA8TextGeoProc(const GrShaderCaps& c
     } else {
         fInPosition = {"inPosition", kFloat2_GrVertexAttribType, kFloat2_GrSLType};
     }
-    fInColor = {"inColor", kUByte4_norm_GrVertexAttribType, kHalf4_GrSLType };
+    fInColor = {"inColor", kUByte4_norm_GrVertexAttribType, kHalf4_GrSLType};
     fInTextureCoords = {"inTextureCoords", kUShort2_GrVertexAttribType,
                         caps.integerSupport() ? kUShort2_GrSLType : kFloat2_GrSLType};
     this->setVertexAttributes(&fInPosition, 3);
@@ -271,8 +267,8 @@ void GrDistanceFieldA8TextGeoProc::getGLSLProcessorKey(const GrShaderCaps& caps,
     GrGLDistanceFieldA8TextGeoProc::GenKey(*this, caps, b);
 }
 
-GrGLSLPrimitiveProcessor*
-GrDistanceFieldA8TextGeoProc::createGLSLInstance(const GrShaderCaps&) const {
+GrGLSLPrimitiveProcessor* GrDistanceFieldA8TextGeoProc::createGLSLInstance(
+        const GrShaderCaps&) const {
     return new GrGLDistanceFieldA8TextGeoProc();
 }
 
@@ -284,12 +280,8 @@ GR_DEFINE_GEOMETRY_PROCESSOR_TEST(GrDistanceFieldA8TextGeoProc);
 sk_sp<GrGeometryProcessor> GrDistanceFieldA8TextGeoProc::TestCreate(GrProcessorTestData* d) {
     int texIdx = d->fRandom->nextBool() ? GrProcessorUnitTest::kSkiaPMTextureIdx
                                         : GrProcessorUnitTest::kAlphaTextureIdx;
-    sk_sp<GrTextureProxy> proxies[kMaxTextures] = {
-        d->textureProxy(texIdx),
-        nullptr,
-        nullptr,
-        nullptr
-    };
+    sk_sp<GrTextureProxy> proxies[kMaxTextures] = {d->textureProxy(texIdx), nullptr, nullptr,
+                                                   nullptr};
 
     GrSamplerState::WrapMode wrapModes[2];
     GrTest::TestWrapModes(d->fRandom, wrapModes);
@@ -306,9 +298,7 @@ sk_sp<GrGeometryProcessor> GrDistanceFieldA8TextGeoProc::TestCreate(GrProcessorT
 #ifdef SK_GAMMA_APPLY_TO_A8
     float lum = d->fRandom->nextF();
 #endif
-    return GrDistanceFieldA8TextGeoProc::Make(*d->caps()->shaderCaps(),
-                                              proxies, 1,
-                                              samplerState,
+    return GrDistanceFieldA8TextGeoProc::Make(*d->caps()->shaderCaps(), proxies, 1, samplerState,
 #ifdef SK_GAMMA_APPLY_TO_A8
                                               lum,
 #endif
@@ -320,12 +310,9 @@ sk_sp<GrGeometryProcessor> GrDistanceFieldA8TextGeoProc::TestCreate(GrProcessorT
 
 class GrGLDistanceFieldPathGeoProc : public GrGLSLGeometryProcessor {
 public:
-    GrGLDistanceFieldPathGeoProc()
-            : fMatrix(SkMatrix::InvalidMatrix())
-            , fAtlasSize({0,0}) {
-    }
+    GrGLDistanceFieldPathGeoProc() : fMatrix(SkMatrix::InvalidMatrix()), fAtlasSize({0, 0}) {}
 
-    void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override{
+    void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override {
         const GrDistanceFieldPathGeoProc& dfPathEffect =
                 args.fGP.cast<GrDistanceFieldPathGeoProc>();
 
@@ -339,11 +326,8 @@ public:
         varyingHandler->emitAttributes(dfPathEffect);
 
         const char* atlasSizeInvName;
-        fAtlasSizeInvUniform = uniformHandler->addUniform(kVertex_GrShaderFlag,
-                                                          kFloat2_GrSLType,
-                                                          kHigh_GrSLPrecision,
-                                                          "AtlasSizeInv",
-                                                          &atlasSizeInvName);
+        fAtlasSizeInvUniform = uniformHandler->addUniform(kVertex_GrShaderFlag, kFloat2_GrSLType,
+                                                          "AtlasSizeInv", &atlasSizeInvName);
 
         GrGLSLVarying uv(kFloat2_GrSLType);
         GrSLType texIdxType = args.fShaderCaps->integerSupport() ? kInt_GrSLType : kFloat_GrSLType;
@@ -389,8 +373,8 @@ public:
         append_multitexture_lookup(args, dfPathEffect.numTextureSamplers(), texIdx, "uv",
                                    "texColor");
 
-        fragBuilder->codeAppend("half distance = "
-            SK_DistanceFieldMultiplier "*(texColor.r - " SK_DistanceFieldThreshold ");");
+        fragBuilder->codeAppend("half distance = " SK_DistanceFieldMultiplier
+                                "*(texColor.r - " SK_DistanceFieldThreshold ");");
 
         fragBuilder->codeAppend("half afwidth;");
         bool isUniformScale = (dfPathEffect.getFlags() & kUniformScale_DistanceFieldEffectMask) ==
@@ -405,12 +389,12 @@ public:
 
             // this gives us a smooth step across approximately one fragment
 #ifdef SK_VULKAN
-            fragBuilder->codeAppendf("afwidth = abs(" SK_DistanceFieldAAFactor
-                                     "*half(dFdx(%s.x)));", st.fsIn());
+            fragBuilder->codeAppendf(
+                    "afwidth = abs(" SK_DistanceFieldAAFactor "*half(dFdx(%s.x)));", st.fsIn());
 #else
             // We use the y gradient because there is a bug in the Mali 400 in the x direction.
-            fragBuilder->codeAppendf("afwidth = abs(" SK_DistanceFieldAAFactor
-                                     "*half(dFdy(%s.y)));", st.fsIn());
+            fragBuilder->codeAppendf(
+                    "afwidth = abs(" SK_DistanceFieldAAFactor "*half(dFdy(%s.y)));", st.fsIn());
 #endif
         } else if (isSimilarity) {
             // For similarity transform, we adjust the effect of the transformation on the distance
@@ -429,8 +413,9 @@ public:
             // For general transforms, to determine the amount of correction we multiply a unit
             // vector pointing along the SDF gradient direction by the Jacobian of the st coords
             // (which is the inverse transform for this fragment) and take the length of the result.
-            fragBuilder->codeAppend("half2 dist_grad = half2(dFdx(distance), "
-                                                            "dFdy(distance));");
+            fragBuilder->codeAppend(
+                    "half2 dist_grad = half2(dFdx(distance), "
+                    "dFdy(distance));");
             // the length of the gradient may be 0, so we need to check for this
             // this also compensates for the Adreno, which likes to drop tiles on division by 0
             fragBuilder->codeAppend("half dg_len2 = dot(dist_grad, dist_grad);");
@@ -452,8 +437,7 @@ public:
         // doing gamma-correct rendering (to an sRGB or F16 buffer), then we actually want distance
         // mapped linearly to coverage, so use a linear step:
         if (isGammaCorrect) {
-            fragBuilder->codeAppend(
-                "half val = saturate((distance + afwidth) / (2.0 * afwidth));");
+            fragBuilder->codeAppend("half val = saturate((distance + afwidth) / (2.0 * afwidth));");
         } else {
             fragBuilder->codeAppend("half val = smoothstep(-afwidth, afwidth, distance);");
         }
@@ -463,7 +447,6 @@ public:
 
     void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& proc,
                  FPCoordTransformIter&& transformIter) override {
-
         const GrDistanceFieldPathGeoProc& dfpgp = proc.cast<GrDistanceFieldPathGeoProc>();
 
         if (dfpgp.matrix().hasPerspective() && !fMatrix.cheapEqualTo(dfpgp.matrix())) {
@@ -500,10 +483,10 @@ public:
     }
 
 private:
-    SkMatrix      fMatrix;        // view matrix if perspective, local matrix otherwise
+    SkMatrix fMatrix;  // view matrix if perspective, local matrix otherwise
     UniformHandle fMatrixUniform;
 
-    SkISize       fAtlasSize;
+    SkISize fAtlasSize;
     UniformHandle fAtlasSizeInvUniform;
 
     typedef GrGLSLGeometryProcessor INHERITED;
@@ -567,8 +550,8 @@ void GrDistanceFieldPathGeoProc::getGLSLProcessorKey(const GrShaderCaps& caps,
     GrGLDistanceFieldPathGeoProc::GenKey(*this, caps, b);
 }
 
-GrGLSLPrimitiveProcessor*
-GrDistanceFieldPathGeoProc::createGLSLInstance(const GrShaderCaps&) const {
+GrGLSLPrimitiveProcessor* GrDistanceFieldPathGeoProc::createGLSLInstance(
+        const GrShaderCaps&) const {
     return new GrGLDistanceFieldPathGeoProc();
 }
 
@@ -580,12 +563,8 @@ GR_DEFINE_GEOMETRY_PROCESSOR_TEST(GrDistanceFieldPathGeoProc);
 sk_sp<GrGeometryProcessor> GrDistanceFieldPathGeoProc::TestCreate(GrProcessorTestData* d) {
     int texIdx = d->fRandom->nextBool() ? GrProcessorUnitTest::kSkiaPMTextureIdx
                                         : GrProcessorUnitTest::kAlphaTextureIdx;
-    sk_sp<GrTextureProxy> proxies[kMaxTextures] = {
-        d->textureProxy(texIdx),
-        nullptr,
-        nullptr,
-        nullptr
-    };
+    sk_sp<GrTextureProxy> proxies[kMaxTextures] = {d->textureProxy(texIdx), nullptr, nullptr,
+                                                   nullptr};
 
     GrSamplerState::WrapMode wrapModes[2];
     GrTest::TestWrapModes(d->fRandom, wrapModes);
@@ -600,11 +579,8 @@ sk_sp<GrGeometryProcessor> GrDistanceFieldPathGeoProc::TestCreate(GrProcessorTes
     }
 
     return GrDistanceFieldPathGeoProc::Make(*d->caps()->shaderCaps(),
-                                            GrTest::TestMatrix(d->fRandom),
-                                            d->fRandom->nextBool(),
-                                            proxies, 1,
-                                            samplerState,
-                                            flags);
+                                            GrTest::TestMatrix(d->fRandom), d->fRandom->nextBool(),
+                                            proxies, 1, samplerState, flags);
 }
 #endif
 
@@ -616,7 +592,7 @@ public:
         fDistanceAdjust = GrDistanceFieldLCDTextGeoProc::DistanceAdjust::Make(1.0f, 1.0f, 1.0f);
     }
 
-    void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override{
+    void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override {
         const GrDistanceFieldLCDTextGeoProc& dfTexEffect =
                 args.fGP.cast<GrDistanceFieldLCDTextGeoProc>();
 
@@ -628,11 +604,8 @@ public:
         varyingHandler->emitAttributes(dfTexEffect);
 
         const char* atlasSizeInvName;
-        fAtlasSizeInvUniform = uniformHandler->addUniform(kVertex_GrShaderFlag,
-                                                          kFloat2_GrSLType,
-                                                          kHigh_GrSLPrecision,
-                                                          "AtlasSizeInv",
-                                                          &atlasSizeInvName);
+        fAtlasSizeInvUniform = uniformHandler->addUniform(kVertex_GrShaderFlag, kFloat2_GrSLType,
+                                                          "AtlasSizeInv", &atlasSizeInvName);
 
         GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
 
@@ -671,7 +644,7 @@ public:
                               kUniformScale_DistanceFieldEffectMask;
         bool isSimilarity = SkToBool(dfTexEffect.getFlags() & kSimilarity_DistanceFieldEffectFlag);
         bool isGammaCorrect =
-            SkToBool(dfTexEffect.getFlags() & kGammaCorrect_DistanceFieldEffectFlag);
+                SkToBool(dfTexEffect.getFlags() & kGammaCorrect_DistanceFieldEffectFlag);
 
         // create LCD offset adjusted by inverse of transform
         // Use highp to work around aliasing issues
@@ -710,25 +683,27 @@ public:
 
         // sample the texture by index
         fragBuilder->codeAppend("half4 texColor;");
-        append_multitexture_lookup(args, dfTexEffect.numTextureSamplers(),
-                                   texIdx, "uv", "texColor");
+        append_multitexture_lookup(args, dfTexEffect.numTextureSamplers(), texIdx, "uv",
+                                   "texColor");
 
         // green is distance to uv center
         fragBuilder->codeAppend("half3 distance;");
         fragBuilder->codeAppend("distance.y = texColor.r;");
         // red is distance to left offset
         fragBuilder->codeAppend("half2 uv_adjusted = half2(uv) - offset;");
-        append_multitexture_lookup(args, dfTexEffect.numTextureSamplers(),
-                                   texIdx, "uv_adjusted", "texColor");
+        append_multitexture_lookup(args, dfTexEffect.numTextureSamplers(), texIdx, "uv_adjusted",
+                                   "texColor");
         fragBuilder->codeAppend("distance.x = texColor.r;");
         // blue is distance to right offset
         fragBuilder->codeAppend("uv_adjusted = half2(uv) + offset;");
-        append_multitexture_lookup(args, dfTexEffect.numTextureSamplers(),
-                                   texIdx, "uv_adjusted", "texColor");
+        append_multitexture_lookup(args, dfTexEffect.numTextureSamplers(), texIdx, "uv_adjusted",
+                                   "texColor");
         fragBuilder->codeAppend("distance.z = texColor.r;");
 
-        fragBuilder->codeAppend("distance = "
-           "half3(" SK_DistanceFieldMultiplier ")*(distance - half3(" SK_DistanceFieldThreshold"));");
+        fragBuilder->codeAppend(
+                "distance = "
+                "half3(" SK_DistanceFieldMultiplier ")*(distance - half3(" SK_DistanceFieldThreshold
+                "));");
 
         // adjust width based on gamma
         const char* distanceAdjustUniName = nullptr;
@@ -753,8 +728,9 @@ public:
             // For general transforms, to determine the amount of correction we multiply a unit
             // vector pointing along the SDF gradient direction by the Jacobian of the st coords
             // (which is the inverse transform for this fragment) and take the length of the result.
-            fragBuilder->codeAppend("half2 dist_grad = half2(half(dFdx(distance.r)), "
-                                                            "half(dFdy(distance.r)));");
+            fragBuilder->codeAppend(
+                    "half2 dist_grad = half2(half(dFdx(distance.r)), "
+                    "half(dFdy(distance.r)));");
             // the length of the gradient may be 0, so we need to check for this
             // this also compensates for the Adreno, which likes to drop tiles on division by 0
             fragBuilder->codeAppend("half dg_len2 = dot(dist_grad, dist_grad);");
@@ -774,13 +750,14 @@ public:
         // doing gamma-correct rendering (to an sRGB or F16 buffer), then we actually want distance
         // mapped linearly to coverage, so use a linear step:
         if (isGammaCorrect) {
-            fragBuilder->codeAppendf("%s = "
-                "half4(saturate((distance + half3(afwidth)) / half3(2.0 * afwidth)), 1.0);",
-                args.fOutputCoverage);
+            fragBuilder->codeAppendf(
+                    "%s = "
+                    "half4(saturate((distance + half3(afwidth)) / half3(2.0 * afwidth)), 1.0);",
+                    args.fOutputCoverage);
         } else {
             fragBuilder->codeAppendf(
-                "%s = half4(smoothstep(half3(-afwidth), half3(afwidth), distance), 1.0);",
-                args.fOutputCoverage);
+                    "%s = half4(smoothstep(half3(-afwidth), half3(afwidth), distance), 1.0);",
+                    args.fOutputCoverage);
         }
     }
 
@@ -788,13 +765,11 @@ public:
                  FPCoordTransformIter&& transformIter) override {
         SkASSERT(fDistanceAdjustUni.isValid());
 
-        const GrDistanceFieldLCDTextGeoProc& dflcd = processor.cast<GrDistanceFieldLCDTextGeoProc>();
+        const GrDistanceFieldLCDTextGeoProc& dflcd =
+                processor.cast<GrDistanceFieldLCDTextGeoProc>();
         GrDistanceFieldLCDTextGeoProc::DistanceAdjust wa = dflcd.getDistanceAdjust();
         if (wa != fDistanceAdjust) {
-            pdman.set3f(fDistanceAdjustUni,
-                        wa.fR,
-                        wa.fG,
-                        wa.fB);
+            pdman.set3f(fDistanceAdjustUni, wa.fR, wa.fG, wa.fB);
             fDistanceAdjust = wa;
         }
 
@@ -819,10 +794,10 @@ public:
 
 private:
     GrDistanceFieldLCDTextGeoProc::DistanceAdjust fDistanceAdjust;
-    UniformHandle                                 fDistanceAdjustUni;
+    UniformHandle fDistanceAdjustUni;
 
-    SkISize                                       fAtlasSize;
-    UniformHandle                                 fAtlasSizeInvUniform;
+    SkISize fAtlasSize;
+    UniformHandle fAtlasSizeInvUniform;
 
     typedef GrGLSLGeometryProcessor INHERITED;
 };
@@ -890,7 +865,8 @@ void GrDistanceFieldLCDTextGeoProc::getGLSLProcessorKey(const GrShaderCaps& caps
     GrGLDistanceFieldLCDTextGeoProc::GenKey(*this, caps, b);
 }
 
-GrGLSLPrimitiveProcessor* GrDistanceFieldLCDTextGeoProc::createGLSLInstance(const GrShaderCaps&) const {
+GrGLSLPrimitiveProcessor* GrDistanceFieldLCDTextGeoProc::createGLSLInstance(
+        const GrShaderCaps&) const {
     return new GrGLDistanceFieldLCDTextGeoProc();
 }
 
@@ -900,21 +876,17 @@ GR_DEFINE_GEOMETRY_PROCESSOR_TEST(GrDistanceFieldLCDTextGeoProc);
 
 #if GR_TEST_UTILS
 sk_sp<GrGeometryProcessor> GrDistanceFieldLCDTextGeoProc::TestCreate(GrProcessorTestData* d) {
-    int texIdx = d->fRandom->nextBool() ? GrProcessorUnitTest::kSkiaPMTextureIdx :
-                                          GrProcessorUnitTest::kAlphaTextureIdx;
-    sk_sp<GrTextureProxy> proxies[kMaxTextures] = {
-        d->textureProxy(texIdx),
-        nullptr,
-        nullptr,
-        nullptr
-    };
+    int texIdx = d->fRandom->nextBool() ? GrProcessorUnitTest::kSkiaPMTextureIdx
+                                        : GrProcessorUnitTest::kAlphaTextureIdx;
+    sk_sp<GrTextureProxy> proxies[kMaxTextures] = {d->textureProxy(texIdx), nullptr, nullptr,
+                                                   nullptr};
 
     GrSamplerState::WrapMode wrapModes[2];
     GrTest::TestWrapModes(d->fRandom, wrapModes);
     GrSamplerState samplerState(wrapModes, d->fRandom->nextBool()
                                                    ? GrSamplerState::Filter::kBilerp
                                                    : GrSamplerState::Filter::kNearest);
-    DistanceAdjust wa = { 0.0f, 0.1f, -0.1f };
+    DistanceAdjust wa = {0.0f, 0.1f, -0.1f};
     uint32_t flags = kUseLCD_DistanceFieldEffectFlag;
     flags |= d->fRandom->nextBool() ? kSimilarity_DistanceFieldEffectFlag : 0;
     if (flags & kSimilarity_DistanceFieldEffectFlag) {

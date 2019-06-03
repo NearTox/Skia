@@ -5,16 +5,26 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkShader.h"
-#include "SkSurface.h"
-#include "sk_tool_utils.h"
+#include "gm/gm.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkTypes.h"
+#include "tools/ToolUtils.h"
 
 static sk_sp<SkImage> make_image(SkCanvas* rootCanvas) {
     static constexpr SkScalar kSize = 50;
     SkImageInfo info = SkImageInfo::MakeN32Premul(kSize, kSize);
-    auto surface = sk_tool_utils::makeSurface(rootCanvas, info);
+    auto surface = ToolUtils::makeSurface(rootCanvas, info);
 
     SkPaint p;
     p.setAntiAlias(true);
@@ -33,39 +43,38 @@ static sk_sp<SkImage> make_image(SkCanvas* rootCanvas) {
 DEF_SIMPLE_GM(localmatrixshader_nested, canvas, 450, 1200) {
     auto image = make_image(canvas);
 
-    using FactoryT = sk_sp<SkShader> (*)(const sk_sp<SkImage>&,
-                                         const SkMatrix& inner,
+    using FactoryT = sk_sp<SkShader> (*)(const sk_sp<SkImage>&, const SkMatrix& inner,
                                          const SkMatrix& outer);
     static const FactoryT gFactories[] = {
-        // SkLocalMatrixShader(SkImageShader(inner), outer)
-        [](const sk_sp<SkImage>& img, const SkMatrix& inner, const SkMatrix& outer) {
-            return img->makeShader(&inner)->makeWithLocalMatrix(outer);
-        },
+            // SkLocalMatrixShader(SkImageShader(inner), outer)
+            [](const sk_sp<SkImage>& img, const SkMatrix& inner, const SkMatrix& outer) {
+                return img->makeShader(&inner)->makeWithLocalMatrix(outer);
+            },
 
-        // SkLocalMatrixShader(SkLocalMatrixShader(SkImageShader(I), inner), outer)
-        [](const sk_sp<SkImage>& img, const SkMatrix& inner, const SkMatrix& outer) {
-            return img->makeShader()->makeWithLocalMatrix(inner)->makeWithLocalMatrix(outer);
-        },
+            // SkLocalMatrixShader(SkLocalMatrixShader(SkImageShader(I), inner), outer)
+            [](const sk_sp<SkImage>& img, const SkMatrix& inner, const SkMatrix& outer) {
+                return img->makeShader()->makeWithLocalMatrix(inner)->makeWithLocalMatrix(outer);
+            },
 
-        // SkLocalMatrixShader(SkComposeShader(SkImageShader(inner)), outer)
-        [](const sk_sp<SkImage>& img, const SkMatrix& inner, const SkMatrix& outer) {
-            return SkShader::MakeCompose(SkShader::MakeColorShader(SK_ColorTRANSPARENT),
-                                         img->makeShader(&inner),
-                                         SkBlendMode::kSrcOver)
-                   ->makeWithLocalMatrix(outer);
-        },
+            // SkLocalMatrixShader(SkComposeShader(SkImageShader(inner)), outer)
+            [](const sk_sp<SkImage>& img, const SkMatrix& inner, const SkMatrix& outer) {
+                return SkShaders::Blend(SkBlendMode::kSrcOver,
+                                        SkShaders::Color(SK_ColorTRANSPARENT),
+                                        img->makeShader(&inner))
+                        ->makeWithLocalMatrix(outer);
+            },
 
-        // SkLocalMatrixShader(SkComposeShader(SkLocalMatrixShader(SkImageShader(I), inner)), outer)
-        [](const sk_sp<SkImage>& img, const SkMatrix& inner, const SkMatrix& outer) {
-            return SkShader::MakeCompose(SkShader::MakeColorShader(SK_ColorTRANSPARENT),
-                                         img->makeShader()->makeWithLocalMatrix(inner),
-                                         SkBlendMode::kSrcOver)
-                   ->makeWithLocalMatrix(outer);
-        },
+            // SkLocalMatrixShader(SkComposeShader(SkLocalMatrixShader(SkImageShader(I), inner)),
+            // outer)
+            [](const sk_sp<SkImage>& img, const SkMatrix& inner, const SkMatrix& outer) {
+                return SkShaders::Blend(SkBlendMode::kSrcOver,
+                                        SkShaders::Color(SK_ColorTRANSPARENT),
+                                        img->makeShader()->makeWithLocalMatrix(inner))
+                        ->makeWithLocalMatrix(outer);
+            },
     };
 
-    static const auto inner = SkMatrix::MakeScale(2, 2),
-                      outer = SkMatrix::MakeTrans(20, 20);
+    static const auto inner = SkMatrix::MakeScale(2, 2), outer = SkMatrix::MakeTrans(20, 20);
 
     SkPaint border;
     border.setAntiAlias(true);

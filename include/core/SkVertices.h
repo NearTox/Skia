@@ -8,11 +8,11 @@
 #ifndef SkVertices_DEFINED
 #define SkVertices_DEFINED
 
-#include "SkColor.h"
-#include "SkData.h"
-#include "SkPoint.h"
-#include "SkRect.h"
-#include "SkRefCnt.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkData.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
 
 /**
  * An immutable set of vertex data that can be used with SkCanvas::drawVertices.
@@ -25,13 +25,13 @@ public:
     struct BoneIndices {
         uint32_t indices[4];
 
-        uint32_t& operator[] (int i) {
+        uint32_t& operator[](int i) noexcept {
             SkASSERT(i >= 0);
             SkASSERT(i < 4);
             return indices[i];
         }
 
-        const uint32_t& operator[] (int i) const {
+        const uint32_t& operator[](int i) const noexcept {
             SkASSERT(i >= 0);
             SkASSERT(i < 4);
             return indices[i];
@@ -44,13 +44,13 @@ public:
     struct BoneWeights {
         float weights[4];
 
-        float& operator[] (int i) {
+        float& operator[](int i) noexcept {
             SkASSERT(i >= 0);
             SkASSERT(i < 4);
             return weights[i];
         }
 
-        const float& operator[] (int i) const {
+        const float& operator[](int i) const noexcept {
             SkASSERT(i >= 0);
             SkASSERT(i < 4);
             return weights[i];
@@ -64,29 +64,29 @@ public:
     struct Bone {
         float values[6];
 
-        float& operator[] (int i) {
+        float& operator[](int i) noexcept {
             SkASSERT(i >= 0);
             SkASSERT(i < 6);
             return values[i];
         }
 
-        const float& operator[] (int i) const {
+        const float& operator[](int i) const noexcept {
             SkASSERT(i >= 0);
             SkASSERT(i < 6);
             return values[i];
         }
 
-        SkPoint mapPoint(const SkPoint& point) const {
+        SkPoint mapPoint(const SkPoint& point) const noexcept {
             float x = values[0] * point.x() + values[2] * point.y() + values[4];
             float y = values[1] * point.x() + values[3] * point.y() + values[5];
             return SkPoint::Make(x, y);
         }
 
-        SkRect mapRect(const SkRect& rect) const {
+        SkRect mapRect(const SkRect& rect) const noexcept {
             SkRect dst = SkRect::MakeEmpty();
             SkPoint quad[4];
             rect.toQuad(quad);
-            for (int i = 0; i < 4; i ++) {
+            for (int i = 0; i < 4; i++) {
                 quad[i] = mapPoint(quad[i]);
             }
             dst.setBoundsNoCheck(quad, 4);
@@ -109,23 +109,16 @@ public:
      *  boneIndices and boneWeights must either both be nullptr or both point to valid data.
      *  If specified, they must both contain 'vertexCount' entries.
      */
-    static sk_sp<SkVertices> MakeCopy(VertexMode mode, int vertexCount,
-                                      const SkPoint positions[],
-                                      const SkPoint texs[],
-                                      const SkColor colors[],
+    static sk_sp<SkVertices> MakeCopy(VertexMode mode, int vertexCount, const SkPoint positions[],
+                                      const SkPoint texs[], const SkColor colors[],
                                       const BoneIndices boneIndices[],
-                                      const BoneWeights boneWeights[],
-                                      int indexCount,
-                                      const uint16_t indices[],
-                                      bool isVolatile = true);
+                                      const BoneWeights boneWeights[], int indexCount,
+                                      const uint16_t indices[], bool isVolatile = true);
 
-    static sk_sp<SkVertices> MakeCopy(VertexMode mode, int vertexCount,
-                                      const SkPoint positions[],
-                                      const SkPoint texs[],
-                                      const SkColor colors[],
+    static sk_sp<SkVertices> MakeCopy(VertexMode mode, int vertexCount, const SkPoint positions[],
+                                      const SkPoint texs[], const SkColor colors[],
                                       const BoneIndices boneIndices[],
-                                      const BoneWeights boneWeights[],
-                                      bool isVolatile = true) {
+                                      const BoneWeights boneWeights[], bool isVolatile = true) {
         return MakeCopy(mode,
                         vertexCount,
                         positions,
@@ -138,13 +131,9 @@ public:
                         isVolatile);
     }
 
-    static sk_sp<SkVertices> MakeCopy(VertexMode mode, int vertexCount,
-                                      const SkPoint positions[],
-                                      const SkPoint texs[],
-                                      const SkColor colors[],
-                                      int indexCount,
-                                      const uint16_t indices[],
-                                      bool isVolatile = true) {
+    static sk_sp<SkVertices> MakeCopy(VertexMode mode, int vertexCount, const SkPoint positions[],
+                                      const SkPoint texs[], const SkColor colors[], int indexCount,
+                                      const uint16_t indices[], bool isVolatile = true) {
         return MakeCopy(mode,
                         vertexCount,
                         positions,
@@ -157,10 +146,8 @@ public:
                         isVolatile);
     }
 
-    static sk_sp<SkVertices> MakeCopy(VertexMode mode, int vertexCount,
-                                      const SkPoint positions[],
-                                      const SkPoint texs[],
-                                      const SkColor colors[],
+    static sk_sp<SkVertices> MakeCopy(VertexMode mode, int vertexCount, const SkPoint positions[],
+                                      const SkPoint texs[], const SkColor colors[],
                                       bool isVolatile = true) {
         return MakeCopy(mode, vertexCount, positions, texs, colors, nullptr, nullptr, isVolatile);
     }
@@ -168,27 +155,27 @@ public:
     struct Sizes;
 
     enum BuilderFlags {
-        kHasTexCoords_BuilderFlag   = 1 << 0,
-        kHasColors_BuilderFlag      = 1 << 1,
-        kHasBones_BuilderFlag       = 1 << 2,
-        kIsNonVolatile_BuilderFlag  = 1 << 3,
+        kHasTexCoords_BuilderFlag = 1 << 0,
+        kHasColors_BuilderFlag = 1 << 1,
+        kHasBones_BuilderFlag = 1 << 2,
+        kIsNonVolatile_BuilderFlag = 1 << 3,
     };
     class Builder {
     public:
         Builder(VertexMode mode, int vertexCount, int indexCount, uint32_t flags);
 
-        bool isValid() const { return fVertices != nullptr; }
+        bool isValid() const noexcept { return fVertices != nullptr; }
 
         // if the builder is invalid, these will return 0
         int vertexCount() const;
         int indexCount() const;
         bool isVolatile() const;
         SkPoint* positions();
-        SkPoint* texCoords();       // returns null if there are no texCoords
-        SkColor* colors();          // returns null if there are no colors
-        BoneIndices* boneIndices(); // returns null if there are no bone indices
-        BoneWeights* boneWeights(); // returns null if there are no bone weights
-        uint16_t* indices();        // returns null if there are no indices
+        SkPoint* texCoords();        // returns null if there are no texCoords
+        SkColor* colors();           // returns null if there are no colors
+        BoneIndices* boneIndices();  // returns null if there are no bone indices
+        BoneWeights* boneWeights();  // returns null if there are no bone weights
+        uint16_t* indices();         // returns null if there are no indices
 
         // Detach the built vertices object. After the first call, this will always return null.
         sk_sp<SkVertices> detach();
@@ -207,27 +194,27 @@ public:
         friend class SkVertices;
     };
 
-    uint32_t uniqueID() const { return fUniqueID; }
-    VertexMode mode() const { return fMode; }
-    const SkRect& bounds() const { return fBounds; }
+    uint32_t uniqueID() const noexcept { return fUniqueID; }
+    VertexMode mode() const noexcept { return fMode; }
+    const SkRect& bounds() const noexcept { return fBounds; }
 
-    bool hasColors() const { return SkToBool(this->colors()); }
-    bool hasTexCoords() const { return SkToBool(this->texCoords()); }
-    bool hasBones() const { return SkToBool(this->boneIndices()); }
-    bool hasIndices() const { return SkToBool(this->indices()); }
+    bool hasColors() const noexcept { return SkToBool(this->colors()); }
+    bool hasTexCoords() const noexcept { return SkToBool(this->texCoords()); }
+    bool hasBones() const noexcept { return SkToBool(this->boneIndices()); }
+    bool hasIndices() const noexcept { return SkToBool(this->indices()); }
 
-    int vertexCount() const { return fVertexCnt; }
-    const SkPoint* positions() const { return fPositions; }
-    const SkPoint* texCoords() const { return fTexs; }
-    const SkColor* colors() const { return fColors; }
+    int vertexCount() const noexcept { return fVertexCnt; }
+    const SkPoint* positions() const noexcept { return fPositions; }
+    const SkPoint* texCoords() const noexcept { return fTexs; }
+    const SkColor* colors() const noexcept { return fColors; }
 
-    const BoneIndices* boneIndices() const { return fBoneIndices; }
-    const BoneWeights* boneWeights() const { return fBoneWeights; }
+    const BoneIndices* boneIndices() const noexcept { return fBoneIndices; }
+    const BoneWeights* boneWeights() const noexcept { return fBoneWeights; }
 
-    int indexCount() const { return fIndexCnt; }
-    const uint16_t* indices() const { return fIndices; }
+    int indexCount() const noexcept { return fIndexCnt; }
+    const uint16_t* indices() const noexcept { return fIndices; }
 
-    bool isVolatile() const { return fIsVolatile; }
+    bool isVolatile() const noexcept { return fIsVolatile; }
 
     sk_sp<SkVertices> applyBones(const Bone bones[], int boneCount) const;
 
@@ -247,7 +234,7 @@ public:
     sk_sp<SkData> encode() const;
 
 private:
-    SkVertices() {}
+    SkVertices() noexcept {}
 
     // these are needed since we've manually sized our allocation (see Builder::init)
     friend class SkNVRefCnt<SkVertices>;
@@ -261,16 +248,16 @@ private:
     uint32_t fUniqueID;
 
     // these point inside our allocation, so none of these can be "freed"
-    SkPoint*     fPositions;
-    SkPoint*     fTexs;
-    SkColor*     fColors;
+    SkPoint* fPositions;
+    SkPoint* fTexs;
+    SkColor* fColors;
     BoneIndices* fBoneIndices;
     BoneWeights* fBoneWeights;
-    uint16_t*    fIndices;
+    uint16_t* fIndices;
 
-    SkRect  fBounds;    // computed to be the union of the fPositions[]
-    int     fVertexCnt;
-    int     fIndexCnt;
+    SkRect fBounds;  // computed to be the union of the fPositions[]
+    int fVertexCnt;
+    int fIndexCnt;
 
     bool fIsVolatile;
 

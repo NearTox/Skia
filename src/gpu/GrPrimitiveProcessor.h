@@ -8,11 +8,11 @@
 #ifndef GrPrimitiveProcessor_DEFINED
 #define GrPrimitiveProcessor_DEFINED
 
-#include "GrColor.h"
-#include "GrNonAtomicRef.h"
-#include "GrProcessor.h"
-#include "GrProxyRef.h"
-#include "GrShaderVar.h"
+#include "include/private/GrColor.h"
+#include "include/private/GrProxyRef.h"
+#include "src/gpu/GrNonAtomicRef.h"
+#include "src/gpu/GrProcessor.h"
+#include "src/gpu/GrShaderVar.h"
 
 class GrCoordTransform;
 
@@ -53,10 +53,8 @@ public:
     class Attribute {
     public:
         constexpr Attribute() = default;
-        constexpr Attribute(const char* name,
-                            GrVertexAttribType cpuType,
-                            GrSLType gpuType)
-            : fName(name), fCPUType(cpuType), fGPUType(gpuType) {}
+        constexpr Attribute(const char* name, GrVertexAttribType cpuType, GrSLType gpuType)
+                : fName(name), fCPUType(cpuType), fGPUType(gpuType) {}
         constexpr Attribute(const Attribute&) = default;
 
         Attribute& operator=(const Attribute&) = default;
@@ -65,14 +63,12 @@ public:
 
         constexpr const char* name() const { return fName; }
         constexpr GrVertexAttribType cpuType() const { return fCPUType; }
-        constexpr GrSLType           gpuType() const { return fGPUType; }
+        constexpr GrSLType gpuType() const { return fGPUType; }
 
         inline constexpr size_t size() const;
         constexpr size_t sizeAlign4() const { return SkAlign4(this->size()); }
 
-        GrShaderVar asShaderVar() const {
-            return {fName, fGPUType, GrShaderVar::kIn_TypeModifier};
-        }
+        GrShaderVar asShaderVar() const { return {fName, fGPUType, GrShaderVar::kIn_TypeModifier}; }
 
     private:
         const char* fName = nullptr;
@@ -82,20 +78,20 @@ public:
 
     class Iter {
     public:
-        Iter() : fCurr(nullptr), fRemaining(0) {}
-        Iter(const Iter& iter) : fCurr(iter.fCurr), fRemaining(iter.fRemaining) {}
-        Iter& operator= (const Iter& iter) {
+        Iter() noexcept : fCurr(nullptr), fRemaining(0) {}
+        Iter(const Iter& iter) noexcept : fCurr(iter.fCurr), fRemaining(iter.fRemaining) {}
+        Iter& operator=(const Iter& iter) noexcept {
             fCurr = iter.fCurr;
             fRemaining = iter.fRemaining;
             return *this;
         }
-        Iter(const Attribute* attrs, int count) : fCurr(attrs), fRemaining(count) {
+        Iter(const Attribute* attrs, int count) noexcept : fCurr(attrs), fRemaining(count) {
             this->skipUninitialized();
         }
 
-        bool operator!=(const Iter& that) const { return fCurr != that.fCurr; }
-        const Attribute& operator*() const { return *fCurr; }
-        void operator++() {
+        bool operator!=(const Iter& that) const noexcept { return fCurr != that.fCurr; }
+        const Attribute& operator*() const noexcept { return *fCurr; }
+        void operator++() noexcept {
             if (fRemaining) {
                 fRemaining--;
                 fCurr++;
@@ -104,7 +100,7 @@ public:
         }
 
     private:
-        void skipUninitialized() {
+        void skipUninitialized() noexcept {
             if (!fRemaining) {
                 fCurr = nullptr;
             } else {
@@ -120,13 +116,13 @@ public:
 
     class AttributeSet {
     public:
-        Iter begin() const { return Iter(fAttributes, fCount); }
-        Iter end() const { return Iter(); }
+        Iter begin() const noexcept { return Iter(fAttributes, fCount); }
+        Iter end() const noexcept { return Iter(); }
 
     private:
         friend class GrPrimitiveProcessor;
 
-        void init(const Attribute* attrs, int count) {
+        void init(const Attribute* attrs, int count) noexcept {
             fAttributes = attrs;
             fRawCount = count;
             fCount = 0;
@@ -140,30 +136,30 @@ public:
         }
 
         const Attribute* fAttributes = nullptr;
-        int              fRawCount = 0;
-        int              fCount = 0;
-        size_t           fStride = 0;
+        int fRawCount = 0;
+        int fCount = 0;
+        size_t fStride = 0;
     };
 
     GrPrimitiveProcessor(ClassID);
 
-    int numTextureSamplers() const { return fTextureSamplerCnt; }
+    int numTextureSamplers() const noexcept { return fTextureSamplerCnt; }
     const TextureSampler& textureSampler(int index) const;
-    int numVertexAttributes() const { return fVertexAttributes.fCount; }
-    const AttributeSet& vertexAttributes() const { return fVertexAttributes; }
-    int numInstanceAttributes() const { return fInstanceAttributes.fCount; }
-    const AttributeSet& instanceAttributes() const { return fInstanceAttributes; }
+    int numVertexAttributes() const noexcept { return fVertexAttributes.fCount; }
+    const AttributeSet& vertexAttributes() const noexcept { return fVertexAttributes; }
+    int numInstanceAttributes() const noexcept { return fInstanceAttributes.fCount; }
+    const AttributeSet& instanceAttributes() const noexcept { return fInstanceAttributes; }
 
-    bool hasVertexAttributes() const { return SkToBool(fVertexAttributes.fCount); }
-    bool hasInstanceAttributes() const { return SkToBool(fInstanceAttributes.fCount); }
+    bool hasVertexAttributes() const noexcept { return SkToBool(fVertexAttributes.fCount); }
+    bool hasInstanceAttributes() const noexcept { return SkToBool(fInstanceAttributes.fCount); }
 
     /**
      * A common practice is to populate the the vertex/instance's memory using an implicit array of
      * structs. In this case, it is best to assert that:
      *     stride == sizeof(struct)
      */
-    size_t vertexStride() const { return fVertexAttributes.fStride; }
-    size_t instanceStride() const { return fInstanceAttributes.fStride; }
+    size_t vertexStride() const noexcept { return fVertexAttributes.fStride; }
+    size_t instanceStride() const noexcept { return fInstanceAttributes.fStride; }
 
     // Only the GrGeometryProcessor subclass actually has a geo shader or vertex attributes, but
     // we put these calls on the base class to prevent having to cast
@@ -186,12 +182,11 @@ public:
      */
     virtual void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const = 0;
 
-
-    void getAttributeKey(GrProcessorKeyBuilder* b) const {
+    void getAttributeKey(GrProcessorKeyBuilder* b) const noexcept {
         // Ensure that our CPU and GPU type fields fit together in a 32-bit value, and we never
         // collide with the "uninitialized" value.
         static_assert(kGrVertexAttribTypeCount < (1 << 8), "");
-        static_assert(kGrSLTypeCount           < (1 << 8), "");
+        static_assert(kGrSLTypeCount < (1 << 8), "");
 
         auto add_attributes = [=](const Attribute* attrs, int attrCount) {
             for (int i = 0; i < attrCount; ++i) {
@@ -211,14 +206,14 @@ public:
     virtual bool isPathRendering() const { return false; }
 
 protected:
-    void setVertexAttributes(const Attribute* attrs, int attrCount) {
+    void setVertexAttributes(const Attribute* attrs, int attrCount) noexcept {
         fVertexAttributes.init(attrs, attrCount);
     }
-    void setInstanceAttributes(const Attribute* attrs, int attrCount) {
+    void setInstanceAttributes(const Attribute* attrs, int attrCount) noexcept {
         SkASSERT(attrCount >= 0);
         fInstanceAttributes.init(attrs, attrCount);
     }
-    void setTextureSamplerCnt(int cnt) {
+    void setTextureSamplerCnt(int cnt) noexcept {
         SkASSERT(cnt >= 0);
         fTextureSamplerCnt = cnt;
     }
@@ -265,18 +260,17 @@ public:
     TextureSampler& operator=(const TextureSampler&) = delete;
 
     void reset(GrTextureType, GrPixelConfig, const GrSamplerState&, uint32_t extraSamplerKey = 0);
-    void reset(GrTextureType, GrPixelConfig,
-               GrSamplerState::Filter,
+    void reset(GrTextureType, GrPixelConfig, GrSamplerState::Filter,
                GrSamplerState::WrapMode wrapXAndY);
 
-    GrTextureType textureType() const { return fTextureType; }
-    GrPixelConfig config() const { return fConfig; }
+    GrTextureType textureType() const noexcept { return fTextureType; }
+    GrPixelConfig config() const noexcept { return fConfig; }
 
-    const GrSamplerState& samplerState() const { return fSamplerState; }
+    const GrSamplerState& samplerState() const noexcept { return fSamplerState; }
 
-    uint32_t extraSamplerKey() const { return fExtraSamplerKey; }
+    uint32_t extraSamplerKey() const noexcept { return fExtraSamplerKey; }
 
-    bool isInitialized() const { return fConfig != kUnknown_GrPixelConfig; }
+    bool isInitialized() const noexcept { return fConfig != kUnknown_GrPixelConfig; }
 
 private:
     GrSamplerState fSamplerState;
@@ -298,7 +292,7 @@ const GrPrimitiveProcessor::TextureSampler& GrPrimitiveProcessor::IthTextureSamp
  * This was moved from include/private/GrTypesPriv.h in service of Skia dependents that build
  * with C++11.
  */
-static inline constexpr size_t GrVertexAttribTypeSize(GrVertexAttribType type) {
+static constexpr inline size_t GrVertexAttribTypeSize(GrVertexAttribType type) {
     switch (type) {
         case kFloat_GrVertexAttribType:
             return sizeof(float);
@@ -346,7 +340,7 @@ static inline constexpr size_t GrVertexAttribTypeSize(GrVertexAttribType type) {
             return 2 * sizeof(int16_t);
         case kShort4_GrVertexAttribType:
             return 4 * sizeof(int16_t);
-        case kUShort2_GrVertexAttribType: // fall through
+        case kUShort2_GrVertexAttribType:  // fall through
         case kUShort2_norm_GrVertexAttribType:
             return 2 * sizeof(uint16_t);
         case kInt_GrVertexAttribType:
@@ -354,8 +348,8 @@ static inline constexpr size_t GrVertexAttribTypeSize(GrVertexAttribType type) {
         case kUint_GrVertexAttribType:
             return sizeof(uint32_t);
     }
-    // GCC fails because SK_ABORT evaluates to non constexpr. clang and cl.exe think this is
-    // unreachable and don't complain.
+        // GCC fails because SK_ABORT evaluates to non constexpr. clang and cl.exe think this is
+        // unreachable and don't complain.
 #if defined(__clang__) || !defined(__GNUC__)
     SK_ABORT("Unsupported type conversion");
 #endif

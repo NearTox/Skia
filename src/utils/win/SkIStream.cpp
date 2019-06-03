@@ -5,28 +5,24 @@
  * found in the LICENSE file.
  */
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN)
 
-#include "SkIStream.h"
-#include "SkStream.h"
+#include "include/core/SkStream.h"
+#include "src/utils/win/SkIStream.h"
 
 /**
  * SkBaseIStream
  */
-SkBaseIStream::SkBaseIStream() : _refcount(1) { }
-SkBaseIStream::~SkBaseIStream() { }
+SkBaseIStream::SkBaseIStream() : _refcount(1) {}
+SkBaseIStream::~SkBaseIStream() {}
 
-HRESULT STDMETHODCALLTYPE SkBaseIStream::QueryInterface(REFIID iid
-                                                      , void ** ppvObject)
-{
+HRESULT STDMETHODCALLTYPE SkBaseIStream::QueryInterface(REFIID iid, void** ppvObject) {
     if (nullptr == ppvObject) {
         return E_INVALIDARG;
     }
-    if (iid == __uuidof(IUnknown)
-        || iid == __uuidof(IStream)
-        || iid == __uuidof(ISequentialStream))
-    {
+    if (iid == __uuidof(IUnknown) || iid == __uuidof(IStream) ||
+        iid == __uuidof(ISequentialStream)) {
         *ppvObject = static_cast<IStream*>(this);
         AddRef();
         return S_OK;
@@ -41,7 +37,7 @@ ULONG STDMETHODCALLTYPE SkBaseIStream::AddRef(void) {
 }
 
 ULONG STDMETHODCALLTYPE SkBaseIStream::Release(void) {
-    ULONG res = (ULONG) InterlockedDecrement(&_refcount);
+    ULONG res = (ULONG)InterlockedDecrement(&_refcount);
     if (0 == res) {
         delete this;
     }
@@ -49,64 +45,50 @@ ULONG STDMETHODCALLTYPE SkBaseIStream::Release(void) {
 }
 
 // ISequentialStream Interface
-HRESULT STDMETHODCALLTYPE SkBaseIStream::Read(void* pv
-                                            , ULONG cb
-                                            , ULONG* pcbRead)
-{ return E_NOTIMPL; }
+HRESULT STDMETHODCALLTYPE SkBaseIStream::Read(void* pv, ULONG cb, ULONG* pcbRead) {
+    return E_NOTIMPL;
+}
 
-HRESULT STDMETHODCALLTYPE SkBaseIStream::Write(void const* pv
-                                             , ULONG cb
-                                             , ULONG* pcbWritten)
-{ return E_NOTIMPL; }
+HRESULT STDMETHODCALLTYPE SkBaseIStream::Write(void const* pv, ULONG cb, ULONG* pcbWritten) {
+    return E_NOTIMPL;
+}
 
 // IStream Interface
-HRESULT STDMETHODCALLTYPE SkBaseIStream::SetSize(ULARGE_INTEGER)
-{ return E_NOTIMPL; }
+HRESULT STDMETHODCALLTYPE SkBaseIStream::SetSize(ULARGE_INTEGER) { return E_NOTIMPL; }
 
-HRESULT STDMETHODCALLTYPE SkBaseIStream::CopyTo(IStream*
-                                              , ULARGE_INTEGER
-                                              , ULARGE_INTEGER*
-                                              , ULARGE_INTEGER*)
-{ return E_NOTIMPL; }
+HRESULT STDMETHODCALLTYPE SkBaseIStream::CopyTo(IStream*, ULARGE_INTEGER, ULARGE_INTEGER*,
+                                                ULARGE_INTEGER*) {
+    return E_NOTIMPL;
+}
 
-HRESULT STDMETHODCALLTYPE SkBaseIStream::Commit(DWORD)
-{ return E_NOTIMPL; }
+HRESULT STDMETHODCALLTYPE SkBaseIStream::Commit(DWORD) { return E_NOTIMPL; }
 
-HRESULT STDMETHODCALLTYPE SkBaseIStream::Revert(void)
-{ return E_NOTIMPL; }
+HRESULT STDMETHODCALLTYPE SkBaseIStream::Revert(void) { return E_NOTIMPL; }
 
-HRESULT STDMETHODCALLTYPE SkBaseIStream::LockRegion(ULARGE_INTEGER
-                                                  , ULARGE_INTEGER
-                                                  , DWORD)
-{ return E_NOTIMPL; }
+HRESULT STDMETHODCALLTYPE SkBaseIStream::LockRegion(ULARGE_INTEGER, ULARGE_INTEGER, DWORD) {
+    return E_NOTIMPL;
+}
 
-HRESULT STDMETHODCALLTYPE SkBaseIStream::UnlockRegion(ULARGE_INTEGER
-                                                    , ULARGE_INTEGER
-                                                    , DWORD)
-{ return E_NOTIMPL; }
+HRESULT STDMETHODCALLTYPE SkBaseIStream::UnlockRegion(ULARGE_INTEGER, ULARGE_INTEGER, DWORD) {
+    return E_NOTIMPL;
+}
 
-HRESULT STDMETHODCALLTYPE SkBaseIStream::Clone(IStream **)
-{ return E_NOTIMPL; }
+HRESULT STDMETHODCALLTYPE SkBaseIStream::Clone(IStream**) { return E_NOTIMPL; }
 
-HRESULT STDMETHODCALLTYPE SkBaseIStream::Seek(LARGE_INTEGER liDistanceToMove
-                                            , DWORD dwOrigin
-                                            , ULARGE_INTEGER* lpNewFilePointer)
-{ return E_NOTIMPL; }
+HRESULT STDMETHODCALLTYPE SkBaseIStream::Seek(LARGE_INTEGER liDistanceToMove, DWORD dwOrigin,
+                                              ULARGE_INTEGER* lpNewFilePointer) {
+    return E_NOTIMPL;
+}
 
-HRESULT STDMETHODCALLTYPE SkBaseIStream::Stat(STATSTG* pStatstg
-                                            , DWORD grfStatFlag)
-{ return E_NOTIMPL; }
-
+HRESULT STDMETHODCALLTYPE SkBaseIStream::Stat(STATSTG* pStatstg, DWORD grfStatFlag) {
+    return E_NOTIMPL;
+}
 
 /**
  * SkIStream
  */
 SkIStream::SkIStream(SkStream* stream, bool deleteOnRelease)
-    : SkBaseIStream()
-    , fSkStream(stream)
-    , fDeleteOnRelease(deleteOnRelease)
-    , fLocation()
-{
+        : SkBaseIStream(), fSkStream(stream), fDeleteOnRelease(deleteOnRelease), fLocation() {
     this->fSkStream->rewind();
 }
 
@@ -116,10 +98,7 @@ SkIStream::~SkIStream() {
     }
 }
 
-HRESULT SkIStream::CreateFromSkStream(SkStream* stream
-                                    , bool deleteOnRelease
-                                    , IStream ** ppStream)
-{
+HRESULT SkIStream::CreateFromSkStream(SkStream* stream, bool deleteOnRelease, IStream** ppStream) {
     if (nullptr == stream) {
         return E_INVALIDARG;
     }
@@ -134,62 +113,57 @@ HRESULT STDMETHODCALLTYPE SkIStream::Read(void* pv, ULONG cb, ULONG* pcbRead) {
     return (*pcbRead == cb) ? S_OK : S_FALSE;
 }
 
-HRESULT STDMETHODCALLTYPE SkIStream::Write(void const* pv
-                                         , ULONG cb
-                                         , ULONG* pcbWritten)
-{
+HRESULT STDMETHODCALLTYPE SkIStream::Write(void const* pv, ULONG cb, ULONG* pcbWritten) {
     return STG_E_CANTSAVE;
 }
 
 // IStream Interface
-HRESULT STDMETHODCALLTYPE SkIStream::Seek(LARGE_INTEGER liDistanceToMove
-                                        , DWORD dwOrigin
-                                        , ULARGE_INTEGER* lpNewFilePointer)
-{
+HRESULT STDMETHODCALLTYPE SkIStream::Seek(LARGE_INTEGER liDistanceToMove, DWORD dwOrigin,
+                                          ULARGE_INTEGER* lpNewFilePointer) {
     HRESULT hr = S_OK;
 
-    switch(dwOrigin) {
-    case STREAM_SEEK_SET: {
-        if (!this->fSkStream->rewind()) {
-            hr = E_FAIL;
-        } else {
+    switch (dwOrigin) {
+        case STREAM_SEEK_SET: {
+            if (!this->fSkStream->rewind()) {
+                hr = E_FAIL;
+            } else {
+                size_t skip = static_cast<size_t>(liDistanceToMove.QuadPart);
+                size_t skipped = this->fSkStream->skip(skip);
+                this->fLocation.QuadPart = skipped;
+                if (skipped != skip) {
+                    hr = E_FAIL;
+                }
+            }
+            break;
+        }
+        case STREAM_SEEK_CUR: {
             size_t skip = static_cast<size_t>(liDistanceToMove.QuadPart);
             size_t skipped = this->fSkStream->skip(skip);
-            this->fLocation.QuadPart = skipped;
+            this->fLocation.QuadPart += skipped;
             if (skipped != skip) {
                 hr = E_FAIL;
             }
+            break;
         }
-        break;
-    }
-    case STREAM_SEEK_CUR: {
-        size_t skip = static_cast<size_t>(liDistanceToMove.QuadPart);
-        size_t skipped = this->fSkStream->skip(skip);
-        this->fLocation.QuadPart += skipped;
-        if (skipped != skip) {
-            hr = E_FAIL;
-        }
-        break;
-    }
-    case STREAM_SEEK_END: {
-        if (!this->fSkStream->rewind()) {
-            hr = E_FAIL;
-        } else {
-            // FIXME: Should not depend on getLength.
-            // See https://code.google.com/p/skia/issues/detail?id=1570
-            size_t skip = static_cast<size_t>(this->fSkStream->getLength() +
-                                              liDistanceToMove.QuadPart);
-            size_t skipped = this->fSkStream->skip(skip);
-            this->fLocation.QuadPart = skipped;
-            if (skipped != skip) {
+        case STREAM_SEEK_END: {
+            if (!this->fSkStream->rewind()) {
                 hr = E_FAIL;
+            } else {
+                // FIXME: Should not depend on getLength.
+                // See https://code.google.com/p/skia/issues/detail?id=1570
+                size_t skip = static_cast<size_t>(this->fSkStream->getLength() +
+                                                  liDistanceToMove.QuadPart);
+                size_t skipped = this->fSkStream->skip(skip);
+                this->fLocation.QuadPart = skipped;
+                if (skipped != skip) {
+                    hr = E_FAIL;
+                }
             }
+            break;
         }
-        break;
-    }
-    default:
-        hr = STG_E_INVALIDFUNCTION;
-        break;
+        default:
+            hr = STG_E_INVALIDFUNCTION;
+            break;
     }
 
     if (lpNewFilePointer) {
@@ -198,9 +172,7 @@ HRESULT STDMETHODCALLTYPE SkIStream::Seek(LARGE_INTEGER liDistanceToMove
     return hr;
 }
 
-HRESULT STDMETHODCALLTYPE SkIStream::Stat(STATSTG* pStatstg
-                                        , DWORD grfStatFlag)
-{
+HRESULT STDMETHODCALLTYPE SkIStream::Stat(STATSTG* pStatstg, DWORD grfStatFlag) {
     if (0 == (grfStatFlag & STATFLAG_NONAME)) {
         return STG_E_INVALIDFLAG;
     }
@@ -214,14 +186,10 @@ HRESULT STDMETHODCALLTYPE SkIStream::Stat(STATSTG* pStatstg
     return S_OK;
 }
 
-
 /**
  * SkIWStream
  */
-SkWIStream::SkWIStream(SkWStream* stream)
-    : SkBaseIStream()
-    , fSkWStream(stream)
-{ }
+SkWIStream::SkWIStream(SkWStream* stream) : SkBaseIStream(), fSkWStream(stream) {}
 
 SkWIStream::~SkWIStream() {
     if (this->fSkWStream) {
@@ -229,18 +197,13 @@ SkWIStream::~SkWIStream() {
     }
 }
 
-HRESULT SkWIStream::CreateFromSkWStream(SkWStream* stream
-                                      , IStream ** ppStream)
-{
+HRESULT SkWIStream::CreateFromSkWStream(SkWStream* stream, IStream** ppStream) {
     *ppStream = new SkWIStream(stream);
     return S_OK;
 }
 
 // ISequentialStream Interface
-HRESULT STDMETHODCALLTYPE SkWIStream::Write(void const* pv
-                                          , ULONG cb
-                                          , ULONG* pcbWritten)
-{
+HRESULT STDMETHODCALLTYPE SkWIStream::Write(void const* pv, ULONG cb, ULONG* pcbWritten) {
     HRESULT hr = S_OK;
     bool wrote = this->fSkWStream->write(pv, cb);
     if (wrote) {
@@ -258,9 +221,7 @@ HRESULT STDMETHODCALLTYPE SkWIStream::Commit(DWORD) {
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SkWIStream::Stat(STATSTG* pStatstg
-                                         , DWORD grfStatFlag)
-{
+HRESULT STDMETHODCALLTYPE SkWIStream::Stat(STATSTG* pStatstg, DWORD grfStatFlag) {
     if (0 == (grfStatFlag & STATFLAG_NONAME)) {
         return STG_E_INVALIDFLAG;
     }
@@ -271,4 +232,4 @@ HRESULT STDMETHODCALLTYPE SkWIStream::Stat(STATSTG* pStatstg
     pStatstg->grfMode = STGM_WRITE;
     return S_OK;
 }
-#endif//defined(SK_BUILD_FOR_WIN)
+#endif  // defined(SK_BUILD_FOR_WIN)

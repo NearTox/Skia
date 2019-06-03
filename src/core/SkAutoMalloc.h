@@ -8,10 +8,10 @@
 #ifndef SkAutoMalloc_DEFINED
 #define SkAutoMalloc_DEFINED
 
-#include "SkMacros.h"
-#include "SkMalloc.h"
-#include "SkNoncopyable.h"
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkMacros.h"
+#include "include/private/SkMalloc.h"
+#include "include/private/SkNoncopyable.h"
 
 #include <memory>
 
@@ -22,8 +22,8 @@
  */
 class SkAutoMalloc : SkNoncopyable {
 public:
-    explicit SkAutoMalloc(size_t size = 0)
-        : fPtr(size ? sk_malloc_throw(size) : nullptr), fSize(size) {}
+    explicit SkAutoMalloc(size_t size = 0) noexcept
+            : fPtr(size ? sk_malloc_throw(size) : nullptr), fSize(size) {}
 
     /**
      *  Passed to reset to specify what happens if the requested size is smaller
@@ -48,7 +48,7 @@ public:
     /**
      *  Reallocates the block to a new size. The ptr may or may not change.
      */
-    void* reset(size_t size = 0, OnShrink shrink = kAlloc_OnShrink) {
+    void* reset(size_t size = 0, OnShrink shrink = kAlloc_OnShrink) noexcept {
         if (size != fSize && (size > fSize || kReuse_OnShrink != shrink)) {
             fPtr.reset(size ? sk_malloc_throw(size) : nullptr);
             fSize = size;
@@ -59,21 +59,21 @@ public:
     /**
      *  Return the allocated block.
      */
-    void* get() { return fPtr.get(); }
-    const void* get() const { return fPtr.get(); }
+    void* get() noexcept { return fPtr.get(); }
+    const void* get() const noexcept { return fPtr.get(); }
 
-   /** Transfer ownership of the current ptr to the caller, setting the
-       internal reference to null. Note the caller is reponsible for calling
-       sk_free on the returned address.
-    */
-    void* release() {
+    /** Transfer ownership of the current ptr to the caller, setting the
+        internal reference to null. Note the caller is reponsible for calling
+        sk_free on the returned address.
+     */
+    void* release() noexcept {
         fSize = 0;
         return fPtr.release();
     }
 
 private:
     struct WrapFree {
-        void operator()(void* p) { sk_free(p); }
+        void operator()(void* p) noexcept { sk_free(p); }
     };
     std::unique_ptr<void, WrapFree> fPtr;
     size_t fSize;  // can be larger than the requested size (see kReuse)
@@ -92,7 +92,7 @@ public:
      *  Creates initially empty storage. get() returns a ptr, but it is to a zero-byte allocation.
      *  Must call reset(size) to return an allocated block.
      */
-    SkAutoSMalloc() {
+    SkAutoSMalloc() noexcept {
         fPtr = fStorage;
         fSize = kSize;
     }
@@ -143,7 +143,7 @@ public:
             }
 
             if (size == kSize) {
-                SkASSERT(fPtr != fStorage); // otherwise we lied when setting didChangeAlloc.
+                SkASSERT(fPtr != fStorage);  // otherwise we lied when setting didChangeAlloc.
                 fPtr = fStorage;
             } else {
                 fPtr = sk_malloc_throw(size);
@@ -160,17 +160,17 @@ private:
     // Align up to 32 bits.
     static const size_t kSizeAlign4 = SkAlign4(kSizeRequested);
 #if defined(SK_BUILD_FOR_GOOGLE3)
-    // Stack frame size is limited for SK_BUILD_FOR_GOOGLE3. 4k is less than the actual max, but some functions
-    // have multiple large stack allocations.
+    // Stack frame size is limited for SK_BUILD_FOR_GOOGLE3. 4k is less than the actual max, but
+    // some functions have multiple large stack allocations.
     static const size_t kMaxBytes = 4 * 1024;
     static const size_t kSize = kSizeRequested > kMaxBytes ? kMaxBytes : kSizeAlign4;
 #else
     static const size_t kSize = kSizeAlign4;
 #endif
 
-    void*       fPtr;
-    size_t      fSize;  // can be larger than the requested size (see kReuse)
-    uint32_t    fStorage[kSize >> 2];
+    void* fPtr;
+    size_t fSize;  // can be larger than the requested size (see kReuse)
+    uint32_t fStorage[kSize >> 2];
 };
 // Can't guard the constructor because it's a template class.
 

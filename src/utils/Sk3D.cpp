@@ -5,7 +5,7 @@
  * found in the LICENSE file.
  */
 
-#include "Sk3D.h"
+#include "include/utils/Sk3D.h"
 
 static void set_col(SkMatrix44* m, int col, const SkPoint3& v) {
     m->set(0, col, v.fX);
@@ -15,9 +15,9 @@ static void set_col(SkMatrix44* m, int col, const SkPoint3& v) {
 
 static SkPoint3 cross(const SkPoint3& a, const SkPoint3& b) {
     return {
-        a.fY * b.fZ - a.fZ * b.fY,
-        a.fZ * b.fX - a.fX * b.fZ,
-        a.fX * b.fY - a.fY * b.fX,
+            a.fY * b.fZ - a.fZ * b.fY,
+            a.fZ * b.fX - a.fX * b.fZ,
+            a.fX * b.fY - a.fY * b.fX,
     };
 }
 
@@ -56,9 +56,8 @@ bool Sk3Perspective(SkMatrix44* dst, float near, float far, float angle) {
 
 void Sk3MapPts(SkPoint dst[], const SkMatrix44& m4, const SkPoint3 src[], int count) {
     for (int i = 0; i < count; ++i) {
-        SkVector4 v = m4 * SkVector4{ src[i].fX, src[i].fY, src[i].fZ, 1 };
+        SkVector4 v = m4 * SkVector4{src[i].fX, src[i].fY, src[i].fZ, 1};
         // clip v;
-        dst[i] = { v.fData[0] / v.fData[3], v.fData[1] / v.fData[3] };
+        dst[i] = {v.fData[0] / v.fData[3], v.fData[1] / v.fData[3]};
     }
 }
-

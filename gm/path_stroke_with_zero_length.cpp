@@ -5,13 +5,22 @@
  * found in the LICENSE file.
  */
 
-#include "SkAutoPixmapStorage.h"
-#include "SkColorPriv.h"
-#include "SkImage.h"
-#include "SkParsePath.h"
-#include "SkPath.h"
-#include "SkSurface.h"
-#include "gm.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkTypes.h"
+#include "include/utils/SkParsePath.h"
+#include "src/core/SkAutoPixmapStorage.h"
 
 // GM to test combinations of stroking zero length paths with different caps and other settings
 // Variables:
@@ -59,47 +68,36 @@ static bool draw_path_cell(SkCanvas* canvas, SkImage* img, int expectedCaps) {
     SkPaint outline;
     outline.setStyle(SkPaint::kStroke_Style);
     if (numBlobs == expectedCaps) {
-        outline.setColor(0xFF007F00); // Green
+        outline.setColor(0xFF007F00);  // Green
     } else if (numBlobs > expectedCaps) {
-        outline.setColor(0xFF7F7F00); // Yellow -- more geometry than expected
+        outline.setColor(0xFF7F7F00);  // Yellow -- more geometry than expected
     } else {
-        outline.setColor(0xFF7F0000); // Red -- missing some geometry
+        outline.setColor(0xFF7F0000);  // Red -- missing some geometry
     }
 
     canvas->drawRect(SkRect::MakeWH(w, h), outline);
     return numBlobs == expectedCaps;
 }
 
-static const SkPaint::Cap kCaps[] = {
-    SkPaint::kButt_Cap,
-    SkPaint::kRound_Cap,
-    SkPaint::kSquare_Cap
-};
+static const SkPaint::Cap kCaps[] = {SkPaint::kButt_Cap, SkPaint::kRound_Cap, SkPaint::kSquare_Cap};
 
-static const SkScalar kWidths[] = { 0.0f, 0.9f, 1.0f, 1.1f, 15.0f, 25.0f };
+static const SkScalar kWidths[] = {0.0f, 0.9f, 1.0f, 1.1f, 15.0f, 25.0f};
 
 // Full set of path structures for single contour case (each primitive with and without a close)
-static const char* kAllVerbs[] = {
-    nullptr,
-    "z ",
-    "l 0 0 ",
-    "l 0 0 z ",
-    "q 0 0 0 0 ",
-    "q 0 0 0 0 z ",
-    "c 0 0 0 0 0 0 ",
-    "c 0 0 0 0 0 0 z ",
-    "a 0 0 0 0 0 0 0 ",
-    "a 0 0 0 0 0 0 0 z "
-};
+static const char* kAllVerbs[] = {nullptr,
+                                  "z ",
+                                  "l 0 0 ",
+                                  "l 0 0 z ",
+                                  "q 0 0 0 0 ",
+                                  "q 0 0 0 0 z ",
+                                  "c 0 0 0 0 0 0 ",
+                                  "c 0 0 0 0 0 0 z ",
+                                  "a 0 0 0 0 0 0 0 ",
+                                  "a 0 0 0 0 0 0 0 z "};
 
 // Reduced set of path structures for double contour case, to keep total number of cases down
 static const char* kSomeVerbs[] = {
-    nullptr,
-    "z ",
-    "l 0 0 ",
-    "l 0 0 z ",
-    "q 0 0 0 0 ",
-    "q 0 0 0 0 z ",
+        nullptr, "z ", "l 0 0 ", "l 0 0 z ", "q 0 0 0 0 ", "q 0 0 0 0 z ",
 };
 
 static const int kCellWidth = 50;

@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkAAClip.h"
-#include "SkCanvas.h"
-#include "SkColorPriv.h"
-#include "SkFont.h"
-#include "SkPaint.h"
-#include "SkPath.h"
-#include "SkRandom.h"
-#include "SkClipOpPriv.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/utils/SkRandom.h"
+#include "samplecode/Sample.h"
+#include "src/core/SkAAClip.h"
+#include "src/core/SkClipOpPriv.h"
 
 constexpr int W = 150;
 constexpr int H = 200;
@@ -40,13 +40,13 @@ static void show_fill(SkCanvas* canvas, bool doAA) {
         SkRect r;
         SkPath p;
 
-        r.setXYWH(rand.nextSScalar1() * W, rand.nextSScalar1() * H,
-                  rand.nextUScalar1() * W, rand.nextUScalar1() * H);
+        r.setXYWH(rand.nextSScalar1() * W, rand.nextSScalar1() * H, rand.nextUScalar1() * W,
+                  rand.nextUScalar1() * H);
         paint.setColor(rand.nextU());
         canvas->drawRect(r, paint);
 
-        r.setXYWH(rand.nextSScalar1() * W, rand.nextSScalar1() * H,
-                  rand.nextUScalar1() * W, rand.nextUScalar1() * H);
+        r.setXYWH(rand.nextSScalar1() * W, rand.nextSScalar1() * H, rand.nextUScalar1() * W,
+                  rand.nextUScalar1() * H);
         paint.setColor(rand.nextU());
         p.addOval(r);
         canvas->drawPath(p, paint);
@@ -69,31 +69,28 @@ static void show_stroke(SkCanvas* canvas, bool doAA, SkScalar strokeWidth, int n
         SkRect r;
         SkPath p;
 
-        r.setXYWH(rand.nextSScalar1() * W, rand.nextSScalar1() * H,
-                  rand.nextUScalar1() * W, rand.nextUScalar1() * H);
+        r.setXYWH(rand.nextSScalar1() * W, rand.nextSScalar1() * H, rand.nextUScalar1() * W,
+                  rand.nextUScalar1() * H);
         paint.setColor(rand.nextU());
         canvas->drawRect(r, paint);
 
-        r.setXYWH(rand.nextSScalar1() * W, rand.nextSScalar1() * H,
-                  rand.nextUScalar1() * W, rand.nextUScalar1() * H);
+        r.setXYWH(rand.nextSScalar1() * W, rand.nextSScalar1() * H, rand.nextUScalar1() * W,
+                  rand.nextUScalar1() * H);
         paint.setColor(rand.nextU());
         p.addOval(r);
         canvas->drawPath(p, paint);
 
-        const SkScalar minx = -SkIntToScalar(W)/4;
-        const SkScalar maxx = 5*SkIntToScalar(W)/4;
-        const SkScalar miny = -SkIntToScalar(H)/4;
-        const SkScalar maxy = 5*SkIntToScalar(H)/4;
+        const SkScalar minx = -SkIntToScalar(W) / 4;
+        const SkScalar maxx = 5 * SkIntToScalar(W) / 4;
+        const SkScalar miny = -SkIntToScalar(H) / 4;
+        const SkScalar maxy = 5 * SkIntToScalar(H) / 4;
         paint.setColor(rand.nextU());
         canvas->drawLine(randRange(rand, minx, maxx), randRange(rand, miny, maxy),
-                         randRange(rand, minx, maxx), randRange(rand, miny, maxy),
-                         paint);
+                         randRange(rand, minx, maxx), randRange(rand, miny, maxy), paint);
     }
 }
 
-static void show_hair(SkCanvas* canvas, bool doAA) {
-    show_stroke(canvas, doAA, 0, 150);
-}
+static void show_hair(SkCanvas* canvas, bool doAA) { show_stroke(canvas, doAA, 0, 150); }
 
 static void show_thick(SkCanvas* canvas, bool doAA) {
     show_stroke(canvas, doAA, SkIntToScalar(5), 50);
@@ -105,12 +102,11 @@ class ClipView : public Sample {
 public:
     ClipView() {
         SkAAClip clip;
-        SkIRect r = { -2, -3, 842, 18 };
+        SkIRect r = {-2, -3, 842, 18};
         clip.setRect(r);
     }
 
-    virtual ~ClipView() {
-    }
+    virtual ~ClipView() {}
 
 protected:
     virtual bool onQuery(Sample::Event* evt) {
@@ -125,23 +121,21 @@ protected:
         canvas->drawColor(SK_ColorWHITE);
         canvas->translate(SkIntToScalar(20), SkIntToScalar(20));
 
-        static const CanvasProc gProc[] = {
-            show_text, show_thick, show_hair, show_fill
-        };
+        static const CanvasProc gProc[] = {show_text, show_thick, show_hair, show_fill};
 
-        SkRect r = { 0, 0, SkIntToScalar(W), SkIntToScalar(H) };
+        SkRect r = {0, 0, SkIntToScalar(W), SkIntToScalar(H)};
         SkPath clipPath;
         r.inset(SK_Scalar1 / 4, SK_Scalar1 / 4);
         clipPath.addRoundRect(r, SkIntToScalar(20), SkIntToScalar(20));
 
-//        clipPath.toggleInverseFillType();
+        //        clipPath.toggleInverseFillType();
 
         for (int aa = 0; aa <= 1; ++aa) {
             canvas->save();
             for (size_t i = 0; i < SK_ARRAY_COUNT(gProc); ++i) {
                 canvas->save();
                 canvas->clipPath(clipPath, kIntersect_SkClipOp, SkToBool(aa));
-//                canvas->drawColor(SK_ColorWHITE);
+                //                canvas->drawColor(SK_ColorWHITE);
                 gProc[i](canvas, SkToBool(aa));
                 canvas->restore();
                 canvas->translate(W * SK_Scalar1 * 8 / 7, 0);
@@ -157,4 +151,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new ClipView(); )
+DEF_SAMPLE(return new ClipView();)

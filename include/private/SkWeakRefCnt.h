@@ -8,8 +8,8 @@
 #ifndef SkWeakRefCnt_DEFINED
 #define SkWeakRefCnt_DEFINED
 
-#include "SkRefCnt.h"
 #include <atomic>
+#include "include/core/SkRefCnt.h"
 
 /** \class SkWeakRefCnt
 
@@ -56,10 +56,10 @@ public:
         strong reference count goes to zero, the collectively held weak
         reference is released.
     */
-    SkWeakRefCnt() : SkRefCnt(), fWeakCnt(1) {}
+    constexpr SkWeakRefCnt() noexcept : SkRefCnt(), fWeakCnt(1) {}
 
     /** Destruct, asserting that the weak reference count is 1.
-    */
+     */
     ~SkWeakRefCnt() override {
 #ifdef SK_DEBUG
         SkASSERT(getWeakCnt() == 1);
@@ -69,23 +69,21 @@ public:
 
 #ifdef SK_DEBUG
     /** Return the weak reference count. */
-    int32_t getWeakCnt() const {
-        return fWeakCnt.load(std::memory_order_relaxed);
-    }
+    int32_t getWeakCnt() const { return fWeakCnt.load(std::memory_order_relaxed); }
 #endif
 
 private:
     /** If fRefCnt is 0, returns 0.
      *  Otherwise increments fRefCnt, acquires, and returns the old value.
      */
-    int32_t atomic_conditional_acquire_strong_ref() const {
+    int32_t atomic_conditional_acquire_strong_ref() const noexcept {
         int32_t prev = fRefCnt.load(std::memory_order_relaxed);
         do {
             if (0 == prev) {
                 break;
             }
-        } while(!fRefCnt.compare_exchange_weak(prev, prev+1, std::memory_order_acquire,
-                                                             std::memory_order_relaxed));
+        } while (!fRefCnt.compare_exchange_weak(prev, prev + 1, std::memory_order_acquire,
+                                                std::memory_order_relaxed));
         return prev;
     }
 
@@ -97,7 +95,7 @@ public:
         returns false, no strong reference could be created and the owner's
         reference is in the same state as before the call.
     */
-    bool SK_WARN_UNUSED_RESULT try_ref() const {
+    bool SK_WARN_UNUSED_RESULT try_ref() const noexcept {
         if (atomic_conditional_acquire_strong_ref() != 0) {
             // Acquire barrier (L/SL), if not provided above.
             // Prevents subsequent code from happening before the increment.
@@ -109,7 +107,7 @@ public:
     /** Increment the weak reference count. Must be balanced by a call to
         weak_unref().
     */
-    void weak_ref() const {
+    void weak_ref() const noexcept {
         SkASSERT(getRefCnt() > 0);
         SkASSERT(getWeakCnt() > 0);
         // No barrier required.
@@ -121,7 +119,7 @@ public:
         is the case, then the object needs to have been allocated via new, and
         not on the stack.
     */
-    void weak_unref() const {
+    void weak_unref() const noexcept {
         SkASSERT(getWeakCnt() > 0);
         // A release here acts in place of all releases we "should" have been doing in ref().
         if (1 == fWeakCnt.fetch_add(-1, std::memory_order_acq_rel)) {
@@ -138,9 +136,7 @@ public:
     /** Returns true if there are no strong references to the object. When this
         is the case all future calls to try_ref() will return false.
     */
-    bool weak_expired() const {
-        return fRefCnt.load(std::memory_order_relaxed) == 0;
-    }
+    bool weak_expired() const noexcept { return fRefCnt.load(std::memory_order_relaxed) == 0; }
 
 protected:
     /** Called when the strong reference count goes to zero. This allows the
@@ -148,15 +144,14 @@ protected:
         still exist and their level of allowed access to the object is defined
         by the object's class.
     */
-    virtual void weak_dispose() const {
-    }
+    virtual void weak_dispose() const noexcept {}
 
 private:
     /** Called when the strong reference count goes to zero. Calls weak_dispose
         on the object and releases the implicit weak reference held
         collectively by the strong references.
     */
-    void internal_dispose() const override {
+    void internal_dispose() const noexcept override {
         weak_dispose();
         weak_unref();
     }

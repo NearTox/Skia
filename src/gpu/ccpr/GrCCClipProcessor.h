@@ -8,16 +8,13 @@
 #ifndef GrCCClipProcessor_DEFINED
 #define GrCCClipProcessor_DEFINED
 
-#include "GrFragmentProcessor.h"
+#include "src/gpu/GrFragmentProcessor.h"
 
 class GrCCClipPath;
 
 class GrCCClipProcessor : public GrFragmentProcessor {
 public:
-    enum class MustCheckBounds : bool {
-        kNo = false,
-        kYes = true
-    };
+    enum class MustCheckBounds : bool { kNo = false, kYes = true };
 
     GrCCClipProcessor(const GrCCClipPath*, MustCheckBounds, SkPath::FillType overrideFillType);
 

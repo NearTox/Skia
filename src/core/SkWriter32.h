@@ -8,20 +8,20 @@
 #ifndef SkWriter32_DEFINED
 #define SkWriter32_DEFINED
 
-#include "SkData.h"
-#include "SkMatrix.h"
-#include "SkNoncopyable.h"
-#include "SkPath.h"
-#include "SkPoint.h"
-#include "SkPoint3.h"
-#include "SkRRect.h"
-#include "SkRect.h"
-#include "SkRegion.h"
-#include "SkScalar.h"
-#include "SkStream.h"
-#include "SkTemplates.h"
-#include "SkTo.h"
-#include "SkTypes.h"
+#include "include/core/SkData.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkPoint3.h"
+#include "include/core/SkRRect.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRegion.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkNoncopyable.h"
+#include "include/private/SkTemplates.h"
+#include "include/private/SkTo.h"
 
 class SK_API SkWriter32 : SkNoncopyable {
 public:
@@ -32,18 +32,18 @@ public:
      *  first time an allocation doesn't fit.  From then it will use dynamically allocated storage.
      *  This used to be optional behavior, but pipe now relies on it.
      */
-    SkWriter32(void* external = nullptr, size_t externalBytes = 0) {
+    SkWriter32(void* external = nullptr, size_t externalBytes = 0) noexcept {
         this->reset(external, externalBytes);
     }
 
     // return the current offset (will always be a multiple of 4)
-    size_t bytesWritten() const { return fUsed; }
+    size_t bytesWritten() const noexcept { return fUsed; }
 
     // Returns true iff all of the bytes written so far are stored in the initial storage
     // buffer provided in the constructor or the most recent call to reset.
-    bool usingInitialStorage() const { return fData == fExternal; }
+    bool usingInitialStorage() const noexcept { return fData == fExternal; }
 
-    void reset(void* external = nullptr, size_t externalBytes = 0) {
+    void reset(void* external = nullptr, size_t externalBytes = 0) noexcept {
         // we cast this pointer to int* and float* at times, so assert that it is aligned.
         SkASSERT(SkIsAlign4((uintptr_t)external));
         // we always write multiples of 4-bytes, so truncate down the size to match that
@@ -71,8 +71,7 @@ public:
      *  Read a T record at offset, which must be a multiple of 4. Only legal if the record
      *  was written atomically using the write methods below.
      */
-    template<typename T>
-    const T& readTAt(size_t offset) const {
+    template <typename T> const T& readTAt(size_t offset) const {
         SkASSERT(SkAlign4(offset) == offset);
         SkASSERT(offset < fUsed);
         return *(T*)(fData + offset);
@@ -82,8 +81,7 @@ public:
      *  Overwrite a T record at offset, which must be a multiple of 4. Only legal if the record
      *  was written atomically using the write methods below.
      */
-    template<typename T>
-    void overwriteTAt(size_t offset, const T& value) {
+    template <typename T> void overwriteTAt(size_t offset, const T& value) {
         SkASSERT(SkAlign4(offset) == offset);
         SkASSERT(offset < fUsed);
         *(T*)(fData + offset) = value;
@@ -94,21 +92,13 @@ public:
         return value;
     }
 
-    void writeInt(int32_t value) {
-        this->write32(value);
-    }
+    void writeInt(int32_t value) { this->write32(value); }
 
-    void write8(int32_t value) {
-        *(int32_t*)this->reserve(sizeof(value)) = value & 0xFF;
-    }
+    void write8(int32_t value) { *(int32_t*)this->reserve(sizeof(value)) = value & 0xFF; }
 
-    void write16(int32_t value) {
-        *(int32_t*)this->reserve(sizeof(value)) = value & 0xFFFF;
-    }
+    void write16(int32_t value) { *(int32_t*)this->reserve(sizeof(value)) = value & 0xFFFF; }
 
-    void write32(int32_t value) {
-        *(int32_t*)this->reserve(sizeof(value)) = value;
-    }
+    void write32(int32_t value) { *(int32_t*)this->reserve(sizeof(value)) = value; }
 
     void writePtr(void* value) {
         // this->reserve() only returns 4-byte aligned pointers,
@@ -116,25 +106,15 @@ public:
         memcpy(this->reserve(sizeof(value)), &value, sizeof(value));
     }
 
-    void writeScalar(SkScalar value) {
-        *(SkScalar*)this->reserve(sizeof(value)) = value;
-    }
+    void writeScalar(SkScalar value) { *(SkScalar*)this->reserve(sizeof(value)) = value; }
 
-    void writePoint(const SkPoint& pt) {
-        *(SkPoint*)this->reserve(sizeof(pt)) = pt;
-    }
+    void writePoint(const SkPoint& pt) { *(SkPoint*)this->reserve(sizeof(pt)) = pt; }
 
-    void writePoint3(const SkPoint3& pt) {
-        *(SkPoint3*)this->reserve(sizeof(pt)) = pt;
-    }
+    void writePoint3(const SkPoint3& pt) { *(SkPoint3*)this->reserve(sizeof(pt)) = pt; }
 
-    void writeRect(const SkRect& rect) {
-        *(SkRect*)this->reserve(sizeof(rect)) = rect;
-    }
+    void writeRect(const SkRect& rect) { *(SkRect*)this->reserve(sizeof(rect)) = rect; }
 
-    void writeIRect(const SkIRect& rect) {
-        *(SkIRect*)this->reserve(sizeof(rect)) = rect;
-    }
+    void writeIRect(const SkIRect& rect) { *(SkIRect*)this->reserve(sizeof(rect)) = rect; }
 
     void writeRRect(const SkRRect& rrect) {
         rrect.writeToMemory(this->reserve(SkRRect::kSizeInMemory));
@@ -155,9 +135,7 @@ public:
     }
 
     // write count bytes (must be a multiple of 4)
-    void writeMul4(const void* values, size_t size) {
-        this->write(values, size);
-    }
+    void writeMul4(const void* values, size_t size) { this->write(values, size); }
 
     /**
      *  Write size bytes from values. size must be a multiple of 4, though
@@ -214,7 +192,7 @@ public:
         }
     }
 
-    static size_t WriteDataSize(const SkData* data) {
+    static size_t WriteDataSize(const SkData* data) noexcept {
         return 4 + SkAlign4(data ? data->size() : 0);
     }
 
@@ -222,20 +200,16 @@ public:
      *  Move the cursor back to offset bytes from the beginning.
      *  offset must be a multiple of 4 no greater than size().
      */
-    void rewindToOffset(size_t offset) {
+    void rewindToOffset(size_t offset) noexcept {
         SkASSERT(SkAlign4(offset) == offset);
         SkASSERT(offset <= bytesWritten());
         fUsed = offset;
     }
 
     // copy into a single buffer (allocated by caller). Must be at least size()
-    void flatten(void* dst) const {
-        memcpy(dst, fData, fUsed);
-    }
+    void flatten(void* dst) const noexcept { memcpy(dst, fData, fUsed); }
 
-    bool writeToStream(SkWStream* stream) const {
-        return stream->write(fData, fUsed);
-    }
+    bool writeToStream(SkWStream* stream) const { return stream->write(fData, fUsed); }
 
     // read from the stream, and write up to length bytes. Return the actual
     // number of bytes written.
@@ -247,6 +221,7 @@ public:
      *  Captures a snapshot of the data as it is right now, and return it.
      */
     sk_sp<SkData> snapshotAsData() const;
+
 private:
     void growToAtLeast(size_t size);
 
@@ -267,13 +242,13 @@ template <size_t SIZE> class SkSWriter32 : public SkWriter32 {
 public:
     SkSWriter32() { this->reset(); }
 
-    void reset() {this->INHERITED::reset(fData.fStorage, SIZE); }
+    void reset() { this->INHERITED::reset(fData.fStorage, SIZE); }
 
 private:
     union {
-        void*   fPtrAlignment;
-        double  fDoubleAlignment;
-        char    fStorage[SIZE];
+        void* fPtrAlignment;
+        double fDoubleAlignment;
+        char fStorage[SIZE];
     } fData;
 
     typedef SkWriter32 INHERITED;

@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkCanvas.h"
-#include "SkInterpolator.h"
-#include "SkPath.h"
-#include "SkRRect.h"
-#include "SkTime.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRRect.h"
+#include "include/core/SkTime.h"
+#include "include/utils/SkInterpolator.h"
+#include "samplecode/Sample.h"
 
 // This slide tests out the match up between BW clipping and rendering. It can
 // draw a large rect through some clip geometry and draw the same geometry
@@ -92,25 +92,25 @@ static void draw_normal_geom(SkCanvas* canvas, const SkPoint& offset, int geom, 
     p.setColor(SK_ColorBLACK);
 
     switch (geom) {
-    case kRect_Geometry:                // fall thru
-    case kRectAndRect_Geometry:
-        canvas->drawRect(create_rect(offset), p);
-        break;
-    case kRRect_Geometry:               // fall thru
-    case kRectAndRRect_Geometry:
-        canvas->drawRRect(create_rrect(offset), p);
-        break;
-    case kCircle_Geometry:
-        canvas->drawRRect(create_circle(offset), p);
-        break;
-    case kConvexPath_Geometry:          // fall thru
-    case kRectAndConvex_Geometry:
-        canvas->drawPath(create_convex_path(offset), p);
-        break;
-    case kConcavePath_Geometry:         // fall thru
-    case kRectAndConcave_Geometry:
-        canvas->drawPath(create_concave_path(offset), p);
-        break;
+        case kRect_Geometry:  // fall thru
+        case kRectAndRect_Geometry:
+            canvas->drawRect(create_rect(offset), p);
+            break;
+        case kRRect_Geometry:  // fall thru
+        case kRectAndRRect_Geometry:
+            canvas->drawRRect(create_rrect(offset), p);
+            break;
+        case kCircle_Geometry:
+            canvas->drawRRect(create_circle(offset), p);
+            break;
+        case kConvexPath_Geometry:  // fall thru
+        case kRectAndConvex_Geometry:
+            canvas->drawPath(create_convex_path(offset), p);
+            break;
+        case kConcavePath_Geometry:  // fall thru
+        case kRectAndConcave_Geometry:
+            canvas->drawPath(create_concave_path(offset), p);
+            break;
     }
 }
 
@@ -141,66 +141,88 @@ protected:
         SkUnichar uni;
         if (Sample::CharQ(*evt, &uni)) {
             switch (uni) {
-                case '1': fGeom = kRect_Geometry; return true;
-                case '2': fGeom = kRRect_Geometry; return true;
-                case '3': fGeom = kCircle_Geometry; return true;
-                case '4': fGeom = kConvexPath_Geometry; return true;
-                case '5': fGeom = kConcavePath_Geometry; return true;
-                case '6': fGeom = kRectAndRect_Geometry; return true;
-                case '7': fGeom = kRectAndRRect_Geometry; return true;
-                case '8': fGeom = kRectAndConvex_Geometry; return true;
-                case '9': fGeom = kRectAndConcave_Geometry; return true;
-                case 'f': fSign = -fSign; return true;
-                case 't': fClipFirst = !fClipFirst; return true;
-                default: break;
+                case '1':
+                    fGeom = kRect_Geometry;
+                    return true;
+                case '2':
+                    fGeom = kRRect_Geometry;
+                    return true;
+                case '3':
+                    fGeom = kCircle_Geometry;
+                    return true;
+                case '4':
+                    fGeom = kConvexPath_Geometry;
+                    return true;
+                case '5':
+                    fGeom = kConcavePath_Geometry;
+                    return true;
+                case '6':
+                    fGeom = kRectAndRect_Geometry;
+                    return true;
+                case '7':
+                    fGeom = kRectAndRRect_Geometry;
+                    return true;
+                case '8':
+                    fGeom = kRectAndConvex_Geometry;
+                    return true;
+                case '9':
+                    fGeom = kRectAndConcave_Geometry;
+                    return true;
+                case 'f':
+                    fSign = -fSign;
+                    return true;
+                case 't':
+                    fClipFirst = !fClipFirst;
+                    return true;
+                default:
+                    break;
             }
         }
         return this->INHERITED::onQuery(evt);
     }
 
     void drawClippedGeom(SkCanvas* canvas, const SkPoint& offset, bool useAA) {
-
         int count = canvas->save();
 
         switch (fGeom) {
-        case kRect_Geometry:
-            canvas->clipRect(create_rect(offset), useAA);
-            break;
-        case kRRect_Geometry:
-            canvas->clipRRect(create_rrect(offset), useAA);
-            break;
-        case kCircle_Geometry:
-            canvas->clipRRect(create_circle(offset), useAA);
-            break;
-        case kConvexPath_Geometry:
-            canvas->clipPath(create_convex_path(offset), useAA);
-            break;
-        case kConcavePath_Geometry:
-            canvas->clipPath(create_concave_path(offset), useAA);
-            break;
-        case kRectAndRect_Geometry: {
-            SkRect r = create_rect(offset);
-            r.offset(fSign * kXlate, fSign * kXlate);
-            canvas->clipRect(r, true); // AA here forces shader clips
-            canvas->clipRect(create_rect(offset), useAA);
+            case kRect_Geometry:
+                canvas->clipRect(create_rect(offset), useAA);
+                break;
+            case kRRect_Geometry:
+                canvas->clipRRect(create_rrect(offset), useAA);
+                break;
+            case kCircle_Geometry:
+                canvas->clipRRect(create_circle(offset), useAA);
+                break;
+            case kConvexPath_Geometry:
+                canvas->clipPath(create_convex_path(offset), useAA);
+                break;
+            case kConcavePath_Geometry:
+                canvas->clipPath(create_concave_path(offset), useAA);
+                break;
+            case kRectAndRect_Geometry: {
+                SkRect r = create_rect(offset);
+                r.offset(fSign * kXlate, fSign * kXlate);
+                canvas->clipRect(r, true);  // AA here forces shader clips
+                canvas->clipRect(create_rect(offset), useAA);
             } break;
-        case kRectAndRRect_Geometry: {
-            SkRect r = create_rect(offset);
-            r.offset(fSign * kXlate, fSign * kXlate);
-            canvas->clipRect(r, true); // AA here forces shader clips
-            canvas->clipRRect(create_rrect(offset), useAA);
+            case kRectAndRRect_Geometry: {
+                SkRect r = create_rect(offset);
+                r.offset(fSign * kXlate, fSign * kXlate);
+                canvas->clipRect(r, true);  // AA here forces shader clips
+                canvas->clipRRect(create_rrect(offset), useAA);
             } break;
-        case kRectAndConvex_Geometry: {
-            SkRect r = create_rect(offset);
-            r.offset(fSign * kXlate, fSign * kXlate);
-            canvas->clipRect(r, true); // AA here forces shader clips
-            canvas->clipPath(create_convex_path(offset), useAA);
+            case kRectAndConvex_Geometry: {
+                SkRect r = create_rect(offset);
+                r.offset(fSign * kXlate, fSign * kXlate);
+                canvas->clipRect(r, true);  // AA here forces shader clips
+                canvas->clipPath(create_convex_path(offset), useAA);
             } break;
-        case kRectAndConcave_Geometry: {
-            SkRect r = create_rect(offset);
-            r.offset(fSign * kXlate, fSign * kXlate);
-            canvas->clipRect(r, true); // AA here forces shader clips
-            canvas->clipPath(create_concave_path(offset), useAA);
+            case kRectAndConcave_Geometry: {
+                SkRect r = create_rect(offset);
+                r.offset(fSign * kXlate, fSign * kXlate);
+                canvas->clipRect(r, true);  // AA here forces shader clips
+                canvas->clipPath(create_concave_path(offset), useAA);
             } break;
         }
 
@@ -241,20 +263,18 @@ protected:
         canvas->restoreToCount(saveCount);
     }
 
-    SkMSec GetMSecs() const {
-        return static_cast<SkMSec>(SkTime::GetMSecs() - fStart);
-    }
+    SkMSec GetMSecs() const { return static_cast<SkMSec>(SkTime::GetMSecs() - fStart); }
 
 private:
-    SkInterpolator  fTrans;
-    Geometry        fGeom;
-    bool            fClipFirst;
-    int             fSign;
-    const double    fStart = SkTime::GetMSecs();
+    SkInterpolator fTrans;
+    Geometry fGeom;
+    bool fClipFirst;
+    int fSign;
+    const double fStart = SkTime::GetMSecs();
 
     typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new ClipDrawMatchView(); )
+DEF_SAMPLE(return new ClipDrawMatchView();)

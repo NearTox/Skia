@@ -8,10 +8,10 @@
 #ifndef SkLayerDrawLooper_DEFINED
 #define SkLayerDrawLooper_DEFINED
 
-#include "SkDrawLooper.h"
-#include "SkPaint.h"
-#include "SkPoint.h"
-#include "SkBlendMode.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkDrawLooper.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
 
 class SK_API SkLayerDrawLooper : public SkDrawLooper {
 public:
@@ -25,12 +25,12 @@ public:
      *  always applied.
      */
     enum Bits {
-        kStyle_Bit      = 1 << 0,   //!< use this layer's Style/stroke settings
+        kStyle_Bit = 1 << 0,        //!< use this layer's Style/stroke settings
         kPathEffect_Bit = 1 << 2,   //!< use this layer's patheffect
         kMaskFilter_Bit = 1 << 3,   //!< use this layer's maskfilter
-        kShader_Bit     = 1 << 4,   //!< use this layer's shader
+        kShader_Bit = 1 << 4,       //!< use this layer's shader
         kColorFilter_Bit = 1 << 5,  //!< use this layer's colorfilter
-        kXfermode_Bit   = 1 << 6,   //!< use this layer's xfermode
+        kXfermode_Bit = 1 << 6,     //!< use this layer's xfermode
 
         // unsupported kTextSkewX_Bit  = 1 << 1,
 
@@ -57,10 +57,10 @@ public:
      *      kDst: to just keep the draw's color, ignoring the layer's
      */
     struct SK_API LayerInfo {
-        BitFlags    fPaintBits;
+        BitFlags fPaintBits;
         SkBlendMode fColorMode;
-        SkVector    fOffset;
-        bool        fPostTranslate; //!< applies to fOffset
+        SkVector fOffset;
+        bool fPostTranslate;  //!< applies to fOffset
 
         /**
          *  Initial the LayerInfo. Defaults to settings that will draw the
@@ -69,7 +69,7 @@ public:
          *      fColorMode == kDst_Mode
          *      fOffset == (0, 0)
          */
-        LayerInfo();
+        LayerInfo() noexcept;
     };
 
     SkDrawLooper::Context* makeContext(SkCanvas*, SkArenaAlloc*) const override;
@@ -77,9 +77,7 @@ public:
     bool asABlurShadow(BlurShadowRec* rec) const override;
 
 protected:
-    sk_sp<SkDrawLooper> onMakeColorSpace(SkColorSpaceXformer*) const override;
-
-    SkLayerDrawLooper();
+    SkLayerDrawLooper() noexcept;
 
     void flatten(SkWriteBuffer&) const override;
 
@@ -87,17 +85,17 @@ private:
     SK_FLATTENABLE_HOOKS(SkLayerDrawLooper)
 
     struct Rec {
-        Rec*    fNext;
+        Rec* fNext;
         SkPaint fPaint;
         LayerInfo fInfo;
     };
-    Rec*    fRecs;
-    int     fCount;
+    Rec* fRecs;
+    int fCount;
 
     // state-machine during the init/next cycle
     class LayerDrawLooperContext : public SkDrawLooper::Context {
     public:
-        explicit LayerDrawLooperContext(const SkLayerDrawLooper* looper);
+        explicit LayerDrawLooperContext(const SkLayerDrawLooper* looper) noexcept;
 
     protected:
         bool next(SkCanvas*, SkPaint* paint) override;
@@ -113,7 +111,7 @@ private:
 public:
     class SK_API Builder {
     public:
-        Builder();
+        Builder() noexcept;
         ~Builder();
 
         /**
@@ -137,15 +135,15 @@ public:
         SkPaint* addLayerOnTop(const LayerInfo&);
 
         /**
-          * Pass list of layers on to newly built looper and return it. This will
-          * also reset the builder, so it can be used to build another looper.
-          */
+         * Pass list of layers on to newly built looper and return it. This will
+         * also reset the builder, so it can be used to build another looper.
+         */
         sk_sp<SkDrawLooper> detach();
 
     private:
         Rec* fRecs;
         Rec* fTopRec;
-        int  fCount;
+        int fCount;
     };
 };
 

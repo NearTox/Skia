@@ -4,12 +4,22 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkCanvas.h"
-#include "SkPaint.h"
-#include "SkPath.h"
-#include "SkRandom.h"
+
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "include/utils/SkRandom.h"
+#include "tools/ToolUtils.h"
 
 namespace skiagm {
 
@@ -18,17 +28,15 @@ public:
     EmptyPathGM() {}
 
 protected:
-    SkString onShortName() {
-        return SkString("emptypath");
-    }
+    SkString onShortName() { return SkString("emptypath"); }
 
     SkISize onISize() { return SkISize::Make(600, 280); }
 
     void drawEmpty(SkCanvas* canvas,
-                    SkColor color,
-                    const SkRect& clip,
-                    SkPaint::Style style,
-                    SkPath::FillType fill) {
+                   SkColor color,
+                   const SkRect& clip,
+                   SkPaint::Style style,
+                   SkPath::FillType fill) {
         SkPath path;
         path.setFillType(fill);
         SkPaint paint;
@@ -43,31 +51,32 @@ protected:
     virtual void onDraw(SkCanvas* canvas) {
         struct FillAndName {
             SkPath::FillType fFill;
-            const char*      fName;
+            const char* fName;
         };
         constexpr FillAndName gFills[] = {
-            {SkPath::kWinding_FillType, "Winding"},
-            {SkPath::kEvenOdd_FillType, "Even / Odd"},
-            {SkPath::kInverseWinding_FillType, "Inverse Winding"},
-            {SkPath::kInverseEvenOdd_FillType, "Inverse Even / Odd"},
+                {SkPath::kWinding_FillType, "Winding"},
+                {SkPath::kEvenOdd_FillType, "Even / Odd"},
+                {SkPath::kInverseWinding_FillType, "Inverse Winding"},
+                {SkPath::kInverseEvenOdd_FillType, "Inverse Even / Odd"},
         };
         struct StyleAndName {
             SkPaint::Style fStyle;
-            const char*    fName;
+            const char* fName;
         };
         constexpr StyleAndName gStyles[] = {
-            {SkPaint::kFill_Style, "Fill"},
-            {SkPaint::kStroke_Style, "Stroke"},
-            {SkPaint::kStrokeAndFill_Style, "Stroke And Fill"},
+                {SkPaint::kFill_Style, "Fill"},
+                {SkPaint::kStroke_Style, "Stroke"},
+                {SkPaint::kStrokeAndFill_Style, "Stroke And Fill"},
         };
 
-        SkFont font(sk_tool_utils::create_portable_typeface(), 15);
-        const char title[] = "Empty Paths Drawn Into Rectangle Clips With "
-                             "Indicated Style and Fill";
+        SkFont font(ToolUtils::create_portable_typeface(), 15);
+        const char title[] =
+                "Empty Paths Drawn Into Rectangle Clips With "
+                "Indicated Style and Fill";
         canvas->drawString(title, 20.0f, 20.0f, font, SkPaint());
 
         SkRandom rand;
-        SkRect rect = SkRect::MakeWH(100*SK_Scalar1, 30*SK_Scalar1);
+        SkRect rect = SkRect::MakeWH(100 * SK_Scalar1, 30 * SK_Scalar1);
         int i = 0;
         canvas->save();
         canvas->translate(10 * SK_Scalar1, 0);
@@ -83,12 +92,10 @@ protected:
                 }
                 ++i;
 
-
                 SkColor color = rand.nextU();
-                color = 0xff000000 | color; // force solid
-                color = sk_tool_utils::color_to_565(color);
-                this->drawEmpty(canvas, color, rect,
-                                gStyles[style].fStyle, gFills[fill].fFill);
+                color = 0xff000000 | color;  // force solid
+                color = ToolUtils::color_to_565(color);
+                this->drawEmpty(canvas, color, rect, gStyles[style].fStyle, gFills[fill].fFill);
 
                 SkPaint rectPaint;
                 rectPaint.setColor(SK_ColorBLACK);
@@ -99,11 +106,11 @@ protected:
 
                 SkPaint labelPaint;
                 labelPaint.setColor(color);
-                SkFont labelFont(sk_tool_utils::create_portable_typeface(), 12);
-                canvas->drawString(gStyles[style].fName, 0, rect.height() + 15.0f,
-                                   labelFont, labelPaint);
-                canvas->drawString(gFills[fill].fName, 0, rect.height() + 28.0f,
-                                   labelFont, labelPaint);
+                SkFont labelFont(ToolUtils::create_portable_typeface(), 12);
+                canvas->drawString(gStyles[style].fName, 0, rect.height() + 15.0f, labelFont,
+                                   labelPaint);
+                canvas->drawString(gFills[fill].fName, 0, rect.height() + 28.0f, labelFont,
+                                   labelPaint);
             }
         }
         canvas->restore();
@@ -113,7 +120,7 @@ protected:
 private:
     typedef GM INHERITED;
 };
-DEF_GM( return new EmptyPathGM; )
+DEF_GM(return new EmptyPathGM;)
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -141,8 +148,10 @@ typedef void (*MakePathProc)(SkPath*, const SkPoint pts[3]);
 
 static void make_path_move_mix(SkPath* path, const SkPoint pts[3]) {
     path->moveTo(pts[0]);
-    path->moveTo(pts[1]); path->close();
-    path->moveTo(pts[2]); path->lineTo(pts[2]);
+    path->moveTo(pts[1]);
+    path->close();
+    path->moveTo(pts[2]);
+    path->lineTo(pts[2]);
 }
 
 class EmptyStrokeGM : public GM {
@@ -156,18 +165,16 @@ public:
     }
 
 protected:
-    SkString onShortName() override {
-        return SkString("emptystroke");
-    }
+    SkString onShortName() override { return SkString("emptystroke"); }
 
     SkISize onISize() override { return SkISize::Make(200, 240); }
 
     void onDraw(SkCanvas* canvas) override {
         const MakePathProc procs[] = {
-            make_path_move,             // expect red red red
-            make_path_move_close,       // expect black black black
-            make_path_move_line,        // expect black black black
-            make_path_move_mix,         // expect red black black,
+                make_path_move,        // expect red red red
+                make_path_move_close,  // expect black black black
+                make_path_move_line,   // expect black black black
+                make_path_move_mix,    // expect red black black,
         };
 
         SkPaint strokePaint;
@@ -192,6 +199,6 @@ protected:
 private:
     typedef GM INHERITED;
 };
-DEF_GM( return new EmptyStrokeGM; )
+DEF_GM(return new EmptyStrokeGM;)
 
-}
+}  // namespace skiagm

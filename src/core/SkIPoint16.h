@@ -8,16 +8,16 @@
 #ifndef SkIPoint16_DEFINED
 #define SkIPoint16_DEFINED
 
-#include "SkTo.h"
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkTo.h"
 
 /** \struct SkIPoint16
  SkIPoint16 holds two 16 bit integer coordinates.
  */
 struct SkIPoint16 {
-    int16_t fX; //!< x-axis value used by SkIPoint16
+    int16_t fX;  //!< x-axis value used by SkIPoint16
 
-    int16_t fY; //!< y-axis value used by SkIPoint16
+    int16_t fY;  //!< y-axis value used by SkIPoint16
 
     /** Sets fX to x, fY to y. If SK_DEBUG is defined, asserts
      if x or y does not fit in 16 bits.
@@ -26,32 +26,29 @@ struct SkIPoint16 {
      @param y  integer y-axis value of constructed SkIPoint
      @return   SkIPoint16 (x, y)
      */
-    static constexpr SkIPoint16 Make(int x, int y) {
-        return {SkToS16(x), SkToS16(y)};
-    }
+    static constexpr SkIPoint16 Make(int x, int y) { return {SkToS16(x), SkToS16(y)}; }
 
     /** Returns x-axis value of SkIPoint16.
 
      @return  fX
      */
-    int16_t x() const { return fX; }
+    int16_t x() const noexcept { return fX; }
 
     /** Returns y-axis value of SkIPoint.
 
      @return  fY
      */
-    int16_t y() const { return fY; }
+    int16_t y() const noexcept { return fY; }
 
     /** Sets fX to x and fY to y.
 
      @param x  new value for fX
      @param y  new value for fY
      */
-    void set(int x, int y) {
+    void set(int x, int y) noexcept {
         fX = SkToS16(x);
         fY = SkToS16(y);
     }
 };
 
 #endif
-

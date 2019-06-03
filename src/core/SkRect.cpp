@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "SkRect.h"
+#include "include/core/SkRect.h"
 
-#include "SkMalloc.h"
+#include "include/private/SkMalloc.h"
 
-void SkIRect::join(int32_t left, int32_t top, int32_t right, int32_t bottom) {
+void SkIRect::join(int32_t left, int32_t top, int32_t right, int32_t bottom) noexcept {
     // do nothing if the params are empty
     if (left >= right || top >= bottom) {
         return;
@@ -28,7 +28,7 @@ void SkIRect::join(int32_t left, int32_t top, int32_t right, int32_t bottom) {
 
 /////////////////////////////////////////////////////////////////////////////
 
-void SkRect::toQuad(SkPoint quad[4]) const {
+void SkRect::toQuad(SkPoint quad[4]) const noexcept {
     SkASSERT(quad);
 
     quad[0].set(fLeft, fTop);
@@ -37,9 +37,9 @@ void SkRect::toQuad(SkPoint quad[4]) const {
     quad[3].set(fLeft, fBottom);
 }
 
-#include "SkNx.h"
+#include "include/private/SkNx.h"
 
-bool SkRect::setBoundsCheck(const SkPoint pts[], int count) {
+bool SkRect::setBoundsCheck(const SkPoint pts[], int count) noexcept {
     SkASSERT((pts && count > 0) || count == 0);
 
     if (count <= 0) {
@@ -49,13 +49,12 @@ bool SkRect::setBoundsCheck(const SkPoint pts[], int count) {
 
     Sk4s min, max;
     if (count & 1) {
-        min = max = Sk4s(pts->fX, pts->fY,
-                         pts->fX, pts->fY);
-        pts   += 1;
+        min = max = Sk4s(pts->fX, pts->fY, pts->fX, pts->fY);
+        pts += 1;
         count -= 1;
     } else {
         min = max = Sk4s::Load(pts);
-        pts   += 2;
+        pts += 2;
         count -= 2;
     }
 
@@ -65,21 +64,21 @@ bool SkRect::setBoundsCheck(const SkPoint pts[], int count) {
         accum = accum * xy;
         min = Sk4s::Min(min, xy);
         max = Sk4s::Max(max, xy);
-        pts   += 2;
+        pts += 2;
         count -= 2;
     }
 
     bool all_finite = (accum * 0 == 0).allTrue();
     if (all_finite) {
-        this->set(SkTMin(min[0], min[2]), SkTMin(min[1], min[3]),
-                  SkTMax(max[0], max[2]), SkTMax(max[1], max[3]));
+        this->set(SkTMin(min[0], min[2]), SkTMin(min[1], min[3]), SkTMax(max[0], max[2]),
+                  SkTMax(max[1], max[3]));
     } else {
         this->setEmpty();
     }
     return all_finite;
 }
 
-void SkRect::setBoundsNoCheck(const SkPoint pts[], int count) {
+void SkRect::setBoundsNoCheck(const SkPoint pts[], int count) noexcept {
     if (!this->setBoundsCheck(pts, count)) {
         this->set(SK_ScalarNaN, SK_ScalarNaN, SK_ScalarNaN, SK_ScalarNaN);
     }
@@ -90,26 +89,28 @@ void SkRect::setBoundsNoCheck(const SkPoint pts[], int count) {
     SkScalar R = SkMinScalar(ar, br);                   \
     SkScalar T = SkMaxScalar(at, bt);                   \
     SkScalar B = SkMinScalar(ab, bb);                   \
-    do { if (!(L < R && T < B)) return false; } while (0)
-    // do the !(opposite) check so we return false if either arg is NaN
+    do {                                                \
+        if (!(L < R && T < B)) return false;            \
+    } while (0)
+// do the !(opposite) check so we return false if either arg is NaN
 
-bool SkRect::intersect(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) {
+bool SkRect::intersect(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) noexcept {
     CHECK_INTERSECT(left, top, right, bottom, fLeft, fTop, fRight, fBottom);
     this->setLTRB(L, T, R, B);
     return true;
 }
 
-bool SkRect::intersect(const SkRect& r) {
+bool SkRect::intersect(const SkRect& r) noexcept {
     return this->intersect(r.fLeft, r.fTop, r.fRight, r.fBottom);
 }
 
-bool SkRect::intersect(const SkRect& a, const SkRect& b) {
+bool SkRect::intersect(const SkRect& a, const SkRect& b) noexcept {
     CHECK_INTERSECT(a.fLeft, a.fTop, a.fRight, a.fBottom, b.fLeft, b.fTop, b.fRight, b.fBottom);
     this->setLTRB(L, T, R, B);
     return true;
 }
 
-void SkRect::join(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) {
+void SkRect::join(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) noexcept {
     // do nothing if the params are empty
     if (left >= right || top >= bottom) {
         return;
@@ -119,17 +120,17 @@ void SkRect::join(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) 
     if (fLeft >= fRight || fTop >= fBottom) {
         this->set(left, top, right, bottom);
     } else {
-        fLeft   = SkMinScalar(fLeft, left);
-        fTop    = SkMinScalar(fTop, top);
-        fRight  = SkMaxScalar(fRight, right);
+        fLeft = SkMinScalar(fLeft, left);
+        fTop = SkMinScalar(fTop, top);
+        fRight = SkMaxScalar(fRight, right);
         fBottom = SkMaxScalar(fBottom, bottom);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "SkString.h"
-#include "SkStringUtils.h"
+#include "include/core/SkString.h"
+#include "src/core/SkStringUtils.h"
 
 static const char* set_scalar(SkString* storage, SkScalar value, SkScalarAsStringType asType) {
     storage->reset();
@@ -143,7 +144,7 @@ void SkRect::dump(bool asHex) const {
     SkString line;
     if (asHex) {
         SkString tmp;
-        line.printf( "SkRect::MakeLTRB(%s, /* %f */\n", set_scalar(&tmp, fLeft, asType), fLeft);
+        line.printf("SkRect::MakeLTRB(%s, /* %f */\n", set_scalar(&tmp, fLeft, asType), fLeft);
         line.appendf("                 %s, /* %f */\n", set_scalar(&tmp, fTop, asType), fTop);
         line.appendf("                 %s, /* %f */\n", set_scalar(&tmp, fRight, asType), fRight);
         line.appendf("                 %s  /* %f */);", set_scalar(&tmp, fBottom, asType), fBottom);
@@ -153,8 +154,8 @@ void SkRect::dump(bool asHex) const {
         SkAppendScalarDec(&strT, fTop);
         SkAppendScalarDec(&strR, fRight);
         SkAppendScalarDec(&strB, fBottom);
-        line.printf("SkRect::MakeLTRB(%s, %s, %s, %s);",
-                    strL.c_str(), strT.c_str(), strR.c_str(), strB.c_str());
+        line.printf("SkRect::MakeLTRB(%s, %s, %s, %s);", strL.c_str(), strT.c_str(), strR.c_str(),
+                    strB.c_str());
     }
     SkDebugf("%s\n", line.c_str());
 }

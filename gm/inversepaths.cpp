@@ -5,10 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkPath.h"
-#include "SkDashPathEffect.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPathEffect.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkDashPathEffect.h"
+
+#include <utility>
 
 static SkPath generate_square(SkScalar cx, SkScalar cy, SkScalar w) {
     SkRect rect = SkRect::MakeXYWH(cx - w / 2, cy - w / 2, w, w);
@@ -26,7 +34,7 @@ static SkPath generate_rect_line(SkScalar cx, SkScalar cy, SkScalar l) {
 
 static SkPath generate_circle(SkScalar cx, SkScalar cy, SkScalar d) {
     SkPath path;
-    path.addCircle(cx, cy, d/2, SkPath::kCW_Direction);
+    path.addCircle(cx, cy, d / 2, SkPath::kCW_Direction);
     return path;
 }
 
@@ -40,39 +48,27 @@ static SkPath generate_line(SkScalar cx, SkScalar cy, SkScalar l) {
 namespace {
 struct Style {
     Style(SkPaint::Style paintStyle, sk_sp<SkPathEffect> pe = sk_sp<SkPathEffect>())
-        : fPaintStyle(paintStyle)
-        , fPathEffect(std::move(pe)) {}
-    SkPaint::Style      fPaintStyle;
+            : fPaintStyle(paintStyle), fPathEffect(std::move(pe)) {}
+    SkPaint::Style fPaintStyle;
     sk_sp<SkPathEffect> fPathEffect;
 };
 
 sk_sp<SkPathEffect> make_dash() {
-    constexpr SkScalar kIntervals[] = { 4.f, 3.f };
+    constexpr SkScalar kIntervals[] = {4.f, 3.f};
     return SkDashPathEffect::Make(kIntervals, SK_ARRAY_COUNT(kIntervals), 0);
 }
 
-Style styles[] {
-    {SkPaint::kStroke_Style},
-    {SkPaint::kStrokeAndFill_Style},
-    {SkPaint::kFill_Style},
-    {SkPaint::kStroke_Style, make_dash()},
+Style styles[]{
+        {SkPaint::kStroke_Style},
+        {SkPaint::kStrokeAndFill_Style},
+        {SkPaint::kFill_Style},
+        {SkPaint::kStroke_Style, make_dash()},
 };
 
-SkScalar pathSizes[] = {
-        40,
-        10,
-        0
-};
-SkScalar strokeWidths[] = {
-        10,
-        0
-};
-SkPath (*paths[])(SkScalar, SkScalar, SkScalar) = {
-        generate_square,
-        generate_rect_line,
-        generate_circle,
-        generate_line
-};
+SkScalar pathSizes[] = {40, 10, 0};
+SkScalar strokeWidths[] = {10, 0};
+SkPath (*paths[])(SkScalar, SkScalar, SkScalar) = {generate_square, generate_rect_line,
+                                                   generate_circle, generate_line};
 
 const SkScalar slideWidth = 90, slideHeight = 90;
 const SkScalar slideBoundary = 5;
@@ -85,8 +81,7 @@ DEF_SIMPLE_GM(inverse_paths, canvas, 800, 1200) {
     SkScalar dx = slideWidth + 2 * slideBoundary;
     SkScalar dy = slideHeight + 2 * slideBoundary;
 
-    SkRect clipRect = SkRect::MakeLTRB(slideBoundary, slideBoundary,
-                                       slideBoundary + slideWidth,
+    SkRect clipRect = SkRect::MakeLTRB(slideBoundary, slideBoundary, slideBoundary + slideWidth,
                                        slideBoundary + slideHeight);
     SkPaint clipPaint;
     clipPaint.setStyle(SkPaint::kStroke_Style);
@@ -97,26 +92,20 @@ DEF_SIMPLE_GM(inverse_paths, canvas, 800, 1200) {
     outlinePaint.setStyle(SkPaint::kStroke_Style);
     outlinePaint.setStrokeWidth(SkIntToScalar(0));
 
-    for (size_t styleIndex = 0; styleIndex < SK_ARRAY_COUNT(styles);
-            styleIndex++) {
-        for (size_t sizeIndex = 0; sizeIndex < SK_ARRAY_COUNT(pathSizes);
-                sizeIndex++) {
+    for (size_t styleIndex = 0; styleIndex < SK_ARRAY_COUNT(styles); styleIndex++) {
+        for (size_t sizeIndex = 0; sizeIndex < SK_ARRAY_COUNT(pathSizes); sizeIndex++) {
             SkScalar size = pathSizes[sizeIndex];
 
             canvas->save();
 
-            for (size_t widthIndex = 0;
-                    widthIndex < SK_ARRAY_COUNT(strokeWidths);
-                    widthIndex++) {
+            for (size_t widthIndex = 0; widthIndex < SK_ARRAY_COUNT(strokeWidths); widthIndex++) {
                 SkPaint paint;
                 paint.setColor(0xff007000);
                 paint.setStrokeWidth(strokeWidths[widthIndex]);
                 paint.setStyle(styles[styleIndex].fPaintStyle);
                 paint.setPathEffect(styles[styleIndex].fPathEffect);
 
-                for (size_t pathIndex = 0;
-                        pathIndex < SK_ARRAY_COUNT(paths);
-                        pathIndex++) {
+                for (size_t pathIndex = 0; pathIndex < SK_ARRAY_COUNT(paths); pathIndex++) {
                     canvas->drawRect(clipRect, clipPaint);
 
                     canvas->save();

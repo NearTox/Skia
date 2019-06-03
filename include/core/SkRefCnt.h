@@ -8,7 +8,7 @@
 #ifndef SkRefCnt_DEFINED
 #define SkRefCnt_DEFINED
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 #include <atomic>
 #include <cstddef>
@@ -31,17 +31,17 @@
 class SK_API SkRefCntBase {
 public:
     /** Default construct, initializing the reference count to 1.
-    */
-    SkRefCntBase() noexcept : fRefCnt(1) {}
+     */
+    constexpr SkRefCntBase() noexcept : fRefCnt(1) {}
 
     /** Destruct, asserting that the reference count is 1.
-    */
+     */
     virtual ~SkRefCntBase() {
-    #ifdef SK_DEBUG
+#ifdef SK_DEBUG
         SkASSERTF(this->getRefCnt() == 1, "fRefCnt was %d", this->getRefCnt());
         // illegal value, to catch us if we reuse after delete
         fRefCnt.store(0, std::memory_order_relaxed);
-    #endif
+#endif
     }
 
     /** May return true if the caller is the only owner.
@@ -58,8 +58,8 @@ public:
     }
 
     /** Increment the reference count. Must be balanced by a call to unref().
-    */
-    void ref() const SkNoExcept {
+     */
+    void ref() const noexcept {
         SkASSERT(this->getRefCnt() > 0);
         // No barrier required.
         (void)fRefCnt.fetch_add(+1, std::memory_order_relaxed);
@@ -69,7 +69,7 @@ public:
         decrement, then delete the object. Note that if this is the case, then
         the object needs to have been allocated via new, and not on the stack.
     */
-    void unref() const SkNoExcept {
+    void unref() const noexcept {
         SkASSERT(this->getRefCnt() > 0);
         // A release here acts in place of all releases we "should" have been doing in ref().
         if (1 == fRefCnt.fetch_add(-1, std::memory_order_acq_rel)) {
@@ -80,22 +80,19 @@ public:
     }
 
 private:
-
 #ifdef SK_DEBUG
     /** Return the reference count. Use only for debugging. */
-    int32_t getRefCnt() const {
-        return fRefCnt.load(std::memory_order_relaxed);
-    }
+    int32_t getRefCnt() const { return fRefCnt.load(std::memory_order_relaxed); }
 #endif
 
     /**
      *  Called when the ref count goes to 0.
      */
-    virtual void internal_dispose() const {
-    #ifdef SK_DEBUG
+    virtual void internal_dispose() const noexcept {
+#ifdef SK_DEBUG
         SkASSERT(0 == this->getRefCnt());
         fRefCnt.store(1, std::memory_order_relaxed);
-    #endif
+#endif
         delete this;
     }
 
@@ -117,11 +114,11 @@ private:
 #include SK_REF_CNT_MIXIN_INCLUDE
 #else
 class SK_API SkRefCnt : public SkRefCntBase {
-    // "#include SK_REF_CNT_MIXIN_INCLUDE" doesn't work with this build system.
-    #if defined(SK_BUILD_FOR_GOOGLE3)
-    public:
-        void deref() const { this->unref(); }
-    #endif
+// "#include SK_REF_CNT_MIXIN_INCLUDE" doesn't work with this build system.
+#if defined(SK_BUILD_FOR_GOOGLE3)
+public:
+    void deref() const { this->unref(); }
+#endif
 };
 #endif
 
@@ -129,7 +126,7 @@ class SK_API SkRefCnt : public SkRefCntBase {
 
 /** Call obj->ref() and return obj. The obj must not be nullptr.
  */
-template <typename T> static inline T* SkRef(T* obj) {
+template <typename T> static inline T* SkRef(T* obj) noexcept {
     SkASSERT(obj);
     obj->ref();
     return obj;
@@ -137,8 +134,7 @@ template <typename T> static inline T* SkRef(T* obj) {
 
 /** Check if the argument is non-null, and if so, call obj->ref() and return obj.
  */
-template <typename T>
-static inline T* SkSafeRef(T* obj) noexcept(noexcept(typename T::ref)) {
+template <typename T> static inline T* SkSafeRef(T* obj) noexcept {
     if (obj) {
         obj->ref();
     }
@@ -147,8 +143,7 @@ static inline T* SkSafeRef(T* obj) noexcept(noexcept(typename T::ref)) {
 
 /** Check if the argument is non-null, and if so, call obj->unref()
  */
-template <typename T>
-static inline void SkSafeUnref(T* obj) noexcept(noexcept(typename T::unref)) {
+template <typename T> static inline void SkSafeUnref(T* obj) noexcept {
     if (obj) {
         obj->unref();
     }
@@ -158,15 +153,14 @@ static inline void SkSafeUnref(T* obj) noexcept(noexcept(typename T::unref)) {
 
 // This is a variant of SkRefCnt that's Not Virtual, so weighs 4 bytes instead of 8 or 16.
 // There's only benefit to using this if the deriving class does not otherwise need a vtable.
-template <typename Derived>
-class SkNVRefCnt {
+template <typename Derived> class SkNVRefCnt {
 public:
-    SkNVRefCnt() noexcept : fRefCnt(1) {}
+    constexpr SkNVRefCnt() noexcept : fRefCnt(1) {}
     ~SkNVRefCnt() {
-    #ifdef SK_DEBUG
+#ifdef SK_DEBUG
         int rc = fRefCnt.load(std::memory_order_relaxed);
         SkASSERTF(rc == 1, "NVRefCnt was %d", rc);
-    #endif
+#endif
     }
 
     // Implementation is pretty much the same as SkRefCntBase. All required barriers are the same:
@@ -176,14 +170,14 @@ public:
 
     bool unique() const noexcept { return 1 == fRefCnt.load(std::memory_order_acquire); }
     void ref() const noexcept { (void)fRefCnt.fetch_add(+1, std::memory_order_relaxed); }
-    void  unref() const noexcept {
+    void unref() const noexcept {
         if (1 == fRefCnt.fetch_add(-1, std::memory_order_acq_rel)) {
             // restore the 1 for our destructor's assert
             SkDEBUGCODE(fRefCnt.store(1, std::memory_order_relaxed));
             delete (const Derived*)this;
         }
     }
-    void  deref() const noexcept { this->unref(); }
+    void deref() const { this->unref(); }
 
 private:
     mutable std::atomic<int32_t> fRefCnt;
@@ -214,10 +208,10 @@ public:
      *  Shares the underlying object by calling ref(), so that both the argument and the newly
      *  created sk_sp both have a reference to it.
      */
-    sk_sp(const sk_sp<T>& that) noexcept(noexcept(SkSafeRef<T>)) : fPtr(SkSafeRef(that.get())) {}
+    sk_sp(const sk_sp<T>& that) noexcept : fPtr(SkSafeRef(that.get())) {}
     template <typename U,
               typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-    sk_sp(const sk_sp<U>& that) noexcept(noexcept(SkSafeRef<U>)) : fPtr(SkSafeRef(that.get())) {}
+    sk_sp(const sk_sp<U>& that) noexcept : fPtr(SkSafeRef(that.get())) {}
 
     /**
      *  Move the underlying object from the argument to the newly created sk_sp. Afterwards only
@@ -233,7 +227,7 @@ public:
      *  Adopt the bare pointer into the newly created sk_sp.
      *  No call to ref() or unref() will be made.
      */
-    explicit sk_sp(T* obj) : fPtr(obj) {}
+    explicit sk_sp(T* obj) noexcept : fPtr(obj) {}
 
     /**
      *  Calls unref() on the underlying object pointer.
@@ -243,14 +237,17 @@ public:
         SkDEBUGCODE(fPtr = nullptr);
     }
 
-    sk_sp<T>& operator=(std::nullptr_t) { this->reset(); return *this; }
+    sk_sp<T>& operator=(std::nullptr_t) noexcept {
+        this->reset();
+        return *this;
+    }
 
     /**
      *  Shares the underlying object referenced by the argument by calling ref() on it. If this
      *  sk_sp previously had a reference to an object (i.e. not null) it will call unref() on that
      *  object.
      */
-    sk_sp<T>& operator=(const sk_sp<T>& that) {
+    sk_sp<T>& operator=(const sk_sp<T>& that) noexcept {
         if (this != &that) {
             this->reset(SkSafeRef(that.get()));
         }
@@ -258,7 +255,7 @@ public:
     }
     template <typename U,
               typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-    sk_sp<T>& operator=(const sk_sp<U>& that) {
+    sk_sp<T>& operator=(const sk_sp<U>& that) noexcept {
         this->reset(SkSafeRef(that.get()));
         return *this;
     }
@@ -268,18 +265,18 @@ public:
      *  a reference to another object, unref() will be called on that object. No call to ref()
      *  will be made.
      */
-    sk_sp<T>& operator=(sk_sp<T>&& that) {
+    sk_sp<T>& operator=(sk_sp<T>&& that) noexcept {
         this->reset(that.release());
         return *this;
     }
     template <typename U,
               typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-    sk_sp<T>& operator=(sk_sp<U>&& that) {
+    sk_sp<T>& operator=(sk_sp<U>&& that) noexcept {
         this->reset(that.release());
         return *this;
     }
 
-    T& operator*() const {
+    T& operator*() const noexcept {
         SkASSERT(this->get() != nullptr);
         return *this->get();
     }
@@ -293,7 +290,7 @@ public:
      *  Adopt the new bare pointer, and call unref() on any previously held object (if not null).
      *  No call to ref() will be made.
      */
-    void reset(T* ptr = nullptr) {
+    void reset(T* ptr = nullptr) noexcept {
         // Calling fPtr->unref() may call this->~() or this->reset(T*).
         // http://wg21.cmeerw.net/lwg/issue998
         // http://wg21.cmeerw.net/lwg/issue2262
@@ -314,34 +311,35 @@ public:
     }
 
     void swap(sk_sp<T>& that) noexcept {
-        std::swap(fPtr, that.fPtr);
+        using std::swap;
+        swap(fPtr, that.fPtr);
     }
 
 private:
-    T*  fPtr;
+    T* fPtr;
 };
 
-template <typename T> inline void swap(sk_sp<T>& a, sk_sp<T>& b) /*noexcept*/ {
-    a.swap(b);
-}
+template <typename T> inline void swap(sk_sp<T>& a, sk_sp<T>& b) noexcept { a.swap(b); }
 
-template <typename T, typename U> inline bool operator==(const sk_sp<T>& a, const sk_sp<U>& b) {
+template <typename T, typename U>
+inline bool operator==(const sk_sp<T>& a, const sk_sp<U>& b) noexcept {
     return a.get() == b.get();
 }
-template <typename T> inline bool operator==(const sk_sp<T>& a, std::nullptr_t) /*noexcept*/ {
+template <typename T> inline bool operator==(const sk_sp<T>& a, std::nullptr_t) noexcept {
     return !a;
 }
 template <typename T> inline bool operator==(std::nullptr_t, const sk_sp<T>& b) noexcept {
     return !b;
 }
 
-template <typename T, typename U> inline bool operator!=(const sk_sp<T>& a, const sk_sp<U>& b) {
+template <typename T, typename U>
+inline bool operator!=(const sk_sp<T>& a, const sk_sp<U>& b) noexcept {
     return a.get() != b.get();
 }
-template <typename T> inline bool operator!=(const sk_sp<T>& a, std::nullptr_t) /*noexcept*/ {
+template <typename T> inline bool operator!=(const sk_sp<T>& a, std::nullptr_t) noexcept {
     return static_cast<bool>(a);
 }
-template <typename T> inline bool operator!=(std::nullptr_t, const sk_sp<T>& b) /*noexcept*/ {
+template <typename T> inline bool operator!=(std::nullptr_t, const sk_sp<T>& b) noexcept {
     return static_cast<bool>(b);
 }
 
@@ -393,8 +391,7 @@ auto operator<<(std::basic_ostream<C, CT>& os, const sk_sp<T>& sp) -> decltype(o
     return os << sp.get();
 }
 
-template <typename T, typename... Args>
-sk_sp<T> sk_make_sp(Args&&... args) {
+template <typename T, typename... Args> sk_sp<T> sk_make_sp(Args&&... args) {
     return sk_sp<T>(new T(std::forward<Args>(args)...));
 }
 
@@ -404,9 +401,7 @@ sk_sp<T> sk_make_sp(Args&&... args) {
  *  This is different than the semantics of the constructor for sk_sp, which just wraps the ptr,
  *  effectively "adopting" it.
  */
-template <typename T> sk_sp<T> sk_ref_sp(T* obj) {
-    return sk_sp<T>(SkSafeRef(obj));
-}
+template <typename T> sk_sp<T> sk_ref_sp(T* obj) noexcept { return sk_sp<T>(SkSafeRef(obj)); }
 
 template <typename T> sk_sp<T> sk_ref_sp(const T* obj) {
     return sk_sp<T>(const_cast<T*>(SkSafeRef(obj)));

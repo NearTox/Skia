@@ -5,17 +5,23 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-
-#include "SkColorFilter.h"
-#include "SkImage.h"
-#include "SkMaskFilter.h"
-#include "SkShader.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkBlurTypes.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkMaskFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkShader.h"
 
 static SkBitmap make_alpha_image(int w, int h) {
     SkBitmap bm;
     bm.allocPixels(SkImageInfo::MakeA8(w, h));
-    bm.eraseARGB(10, 0, 0 , 0);
+    bm.eraseARGB(10, 0, 0, 0);
     for (int y = 0; y < bm.height(); ++y) {
         for (int x = y; x < bm.width(); ++x) {
             *bm.getAddr8(x, y) = 0xFF;
@@ -26,12 +32,9 @@ static SkBitmap make_alpha_image(int w, int h) {
 }
 
 static sk_sp<SkColorFilter> make_color_filter() {
-    SkScalar colorMatrix[20] = {
-        1, 0, 0,   0,   0,
-        0, 1, 0,   0,   0,
-        0, 0, 0.5, 0.5, 0,
-        0, 0, 0.5, 0.5, 0}; // mix G and A.
-    return SkColorFilter::MakeMatrixFilterRowMajor255(colorMatrix);
+    float colorMatrix[20] = {1, 0, 0,   0,   0, 0, 1, 0,   0,   0,
+                             0, 0, 0.5, 0.5, 0, 0, 0, 0.5, 0.5, 0};  // mix G and A.
+    return SkColorFilters::Matrix(colorMatrix);
 }
 
 DEF_SIMPLE_GM(alpha_image, canvas, 256, 256) {
@@ -43,7 +46,7 @@ DEF_SIMPLE_GM(alpha_image, canvas, 256, 256) {
     canvas->drawImage(image.get(), 16, 16, &paint);
 
     paint.setColorFilter(nullptr);
-    paint.setShader(SkShader::MakeColorShader(SK_ColorCYAN));
+    paint.setShader(SkShaders::Color(SK_ColorCYAN));
     canvas->drawImage(image.get(), 144, 16, &paint);
 
     paint.setColorFilter(make_color_filter());

@@ -8,8 +8,8 @@
 #ifndef SKSL_ASTINDEXSUFFIX
 #define SKSL_ASTINDEXSUFFIX
 
-#include "SkSLASTExpression.h"
-#include "SkSLASTSuffix.h"
+#include "src/sksl/ast/SkSLASTExpression.h"
+#include "src/sksl/ast/SkSLASTSuffix.h"
 
 namespace SkSL {
 
@@ -18,13 +18,11 @@ namespace SkSL {
  * 'float[](5, 6)' are represented with a null fExpression.
  */
 struct ASTIndexSuffix : public ASTSuffix {
-    ASTIndexSuffix(int offset)
-    : INHERITED(offset, ASTSuffix::kIndex_Kind)
-    , fExpression(nullptr) {}
+    ASTIndexSuffix(int offset) : INHERITED(offset, ASTSuffix::kIndex_Kind), fExpression(nullptr) {}
 
     ASTIndexSuffix(std::unique_ptr<ASTExpression> expression)
-    : INHERITED(expression ? expression->fOffset : -1, ASTSuffix::kIndex_Kind)
-    , fExpression(std::move(expression)) {}
+            : INHERITED(expression ? expression->fOffset : -1, ASTSuffix::kIndex_Kind)
+            , fExpression(std::move(expression)) {}
 
     String description() const override {
         if (fExpression) {
@@ -40,6 +38,6 @@ struct ASTIndexSuffix : public ASTSuffix {
     typedef ASTSuffix INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

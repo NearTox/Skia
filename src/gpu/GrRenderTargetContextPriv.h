@@ -8,9 +8,9 @@
 #ifndef GrRenderTargetContextPriv_DEFINED
 #define GrRenderTargetContextPriv_DEFINED
 
-#include "GrRenderTargetContext.h"
-#include "GrRenderTargetOpList.h"
-#include "GrPathRendering.h"
+#include "src/gpu/GrPathRendering.h"
+#include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/GrRenderTargetOpList.h"
 
 class GrFixedClip;
 class GrHardClip;
@@ -62,13 +62,11 @@ public:
      */
     void absClear(const SkIRect* rect, const SkPMColor4f& color);
 
-    void stencilRect(const GrHardClip&,
-                     const GrUserStencilSettings* ss,
-                     GrAAType,
-                     const SkMatrix& viewMatrix,
-                     const SkRect& rect);
+    void stencilRect(const GrHardClip&, const GrUserStencilSettings* ss, GrAA doStencilMSAA,
+                     const SkMatrix& viewMatrix, const SkRect& rect);
 
-    void stencilPath(const GrHardClip&, GrAAType, const SkMatrix& viewMatrix, const GrPath*);
+    void stencilPath(const GrHardClip&, GrAA doStencilMSAA, const SkMatrix& viewMatrix,
+                     const GrPath*);
 
     /**
      * Draws a rect, either AA or not, and touches the stencil buffer with the user stencil settings
@@ -78,7 +76,7 @@ public:
                             const GrUserStencilSettings*,
                             SkRegion::Op op,
                             bool invert,
-                            GrAA,
+                            GrAA doStencilMSAA,
                             const SkMatrix& viewMatrix,
                             const SkRect&);
 
@@ -90,9 +88,14 @@ public:
                             const GrUserStencilSettings*,
                             SkRegion::Op op,
                             bool invert,
-                            GrAA,
+                            GrAA doStencilMSAA,
                             const SkMatrix& viewMatrix,
                             const SkPath&);
+
+    void drawFilledRect(const GrClip& clip, GrPaint&& paint, GrAA aa, const SkMatrix& m,
+                        const SkRect& rect, const GrUserStencilSettings* ss = nullptr) {
+        fRenderTargetContext->drawFilledRect(clip, std::move(paint), aa, m, rect, ss);
+    }
 
     SkBudgeted isBudgeted() const;
 
@@ -119,9 +122,9 @@ public:
 
 private:
     explicit GrRenderTargetContextPriv(GrRenderTargetContext* renderTargetContext)
-        : fRenderTargetContext(renderTargetContext) {}
-    GrRenderTargetContextPriv(const GrRenderTargetPriv&) {} // unimpl
-    GrRenderTargetContextPriv& operator=(const GrRenderTargetPriv&); // unimpl
+            : fRenderTargetContext(renderTargetContext) {}
+    GrRenderTargetContextPriv(const GrRenderTargetPriv&) {}           // unimpl
+    GrRenderTargetContextPriv& operator=(const GrRenderTargetPriv&);  // unimpl
 
     // No taking addresses of this type.
     const GrRenderTargetContextPriv* operator&() const;
@@ -129,7 +132,7 @@ private:
 
     GrRenderTargetContext* fRenderTargetContext;
 
-    friend class GrRenderTargetContext; // to construct/copy this type.
+    friend class GrRenderTargetContext;  // to construct/copy this type.
 };
 
 inline GrRenderTargetContextPriv GrRenderTargetContext::priv() {

@@ -8,12 +8,12 @@
 #ifndef SkPanose_DEFINED
 #define SkPanose_DEFINED
 
-#include "SkOTTableTypes.h"
+#include "src/sfnt/SkOTTableTypes.h"
 
 #pragma pack(push, 1)
 
 struct SkPanose {
-    //This value changes the meaning of the following 9 bytes.
+    // This value changes the meaning of the following 9 bytes.
     enum class FamilyType : SK_OT_BYTE {
         Any = 0,
         NoFit = 1,
@@ -86,8 +86,8 @@ struct SkPanose {
             } bContrast;
 
 #ifdef SK_WIN_PANOSE
-            //This is what Windows (and FontForge and Apple TT spec) define.
-            //The Impact font uses 9.
+            // This is what Windows (and FontForge and Apple TT spec) define.
+            // The Impact font uses 9.
             enum class StrokeVariation : SK_OT_BYTE {
                 Any = 0,
                 NoFit = 1,
@@ -100,8 +100,8 @@ struct SkPanose {
                 InstantVertical = 8,
             } bStrokeVariation;
 #else
-            //Stroke variation description in OT OS/2 ver0,ver1 is incorrect.
-            //This is what HP Panose says.
+            // Stroke variation description in OT OS/2 ver0,ver1 is incorrect.
+            // This is what HP Panose says.
             enum class StrokeVariation : SK_OT_BYTE {
                 Any = 0,
                 NoFit = 1,
@@ -490,7 +490,7 @@ struct SkPanose {
                 VeryNarrow = 9,
             } bAspectRatio119;
 
-             enum class AspectRatio157 : SK_OT_BYTE {
+            enum class AspectRatio157 : SK_OT_BYTE {
                 Any = 0,
                 NoFit = 1,
                 NoWidth = 2,
@@ -520,7 +520,6 @@ struct SkPanose {
 };
 
 #pragma pack(pop)
-
 
 static_assert(sizeof(SkPanose) == 10, "sizeof_SkPanose_not_10");
 

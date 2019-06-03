@@ -8,10 +8,9 @@
 #ifndef SKSL_BINARYEXPRESSION
 #define SKSL_BINARYEXPRESSION
 
-#include "SkSLExpression.h"
-#include "SkSLExpression.h"
-#include "../SkSLIRGenerator.h"
-#include "../SkSLLexer.h"
+#include "src/sksl/SkSLIRGenerator.h"
+#include "src/sksl/SkSLLexer.h"
+#include "src/sksl/ir/SkSLExpression.h"
 
 namespace SkSL {
 
@@ -21,16 +20,14 @@ namespace SkSL {
 struct BinaryExpression : public Expression {
     BinaryExpression(int offset, std::unique_ptr<Expression> left, Token::Kind op,
                      std::unique_ptr<Expression> right, const Type& type)
-    : INHERITED(offset, kBinary_Kind, type)
-    , fLeft(std::move(left))
-    , fOperator(op)
-    , fRight(std::move(right)) {}
+            : INHERITED(offset, kBinary_Kind, type)
+            , fLeft(std::move(left))
+            , fOperator(op)
+            , fRight(std::move(right)) {}
 
     std::unique_ptr<Expression> constantPropagate(const IRGenerator& irGenerator,
                                                   const DefinitionMap& definitions) override {
-        return irGenerator.constantFold(*fLeft,
-                                        fOperator,
-                                        *fRight);
+        return irGenerator.constantFold(*fLeft, fOperator, *fRight);
     }
 
     bool hasSideEffects() const override {
@@ -39,8 +36,8 @@ struct BinaryExpression : public Expression {
     }
 
     std::unique_ptr<Expression> clone() const override {
-        return std::unique_ptr<Expression>(new BinaryExpression(fOffset, fLeft->clone(), fOperator,
-                                                                fRight->clone(), fType));
+        return std::unique_ptr<Expression>(
+                new BinaryExpression(fOffset, fLeft->clone(), fOperator, fRight->clone(), fType));
     }
 
     String description() const override {
@@ -55,6 +52,6 @@ struct BinaryExpression : public Expression {
     typedef Expression INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

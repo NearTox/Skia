@@ -8,7 +8,7 @@
 #ifndef SKSL_ASTDECLARATION
 #define SKSL_ASTDECLARATION
 
-#include "SkSLASTPositionNode.h"
+#include "src/sksl/ast/SkSLASTPositionNode.h"
 
 namespace SkSL {
 
@@ -27,15 +27,13 @@ struct ASTDeclaration : public ASTPositionNode {
         kEnum_Kind
     };
 
-    ASTDeclaration(int offset, Kind kind)
-    : INHERITED(offset)
-    , fKind(kind) {}
+    ASTDeclaration(int offset, Kind kind) : INHERITED(offset), fKind(kind) {}
 
     Kind fKind;
 
     typedef ASTPositionNode INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

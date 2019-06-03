@@ -8,9 +8,9 @@
 #ifndef Sk4px_DEFINED
 #define Sk4px_DEFINED
 
-#include "SkNx.h"
-#include "SkColor.h"
-#include "SkColorData.h"
+#include "include/core/SkColor.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkNx.h"
 
 // This file may be included multiple times by .cpp files with different flags, leading
 // to different definitions.  Usually that doesn't matter because it's all inlined, but
@@ -57,8 +57,8 @@ public:
     static Sk4px Load2Alphas(const SkAlpha[2]);  // Aa   -> AAAA aaaa ???? ????
 
     void store4(SkPMColor px[4]) const { memcpy(px, this, 16); }
-    void store2(SkPMColor px[2]) const { memcpy(px, this,  8); }
-    void store1(SkPMColor px[1]) const { memcpy(px, this,  4); }
+    void store2(SkPMColor px[2]) const { memcpy(px, this, 8); }
+    void store1(SkPMColor px[1]) const { memcpy(px, this, 4); }
 
     // 1, 2, or 4 SkPMColors with 16-bit components.
     // This is most useful as the result of a multiply, e.g. from mulWiden().
@@ -73,27 +73,27 @@ public:
         Sk4px div255() const;
 
         // These just keep the types as Wide so the user doesn't have to keep casting.
-        Wide operator * (const Wide& o) const { return INHERITED::operator*(o); }
-        Wide operator + (const Wide& o) const { return INHERITED::operator+(o); }
-        Wide operator - (const Wide& o) const { return INHERITED::operator-(o); }
-        Wide operator >> (int bits) const { return INHERITED::operator>>(bits); }
-        Wide operator << (int bits) const { return INHERITED::operator<<(bits); }
+        Wide operator*(const Wide& o) const { return INHERITED::operator*(o); }
+        Wide operator+(const Wide& o) const { return INHERITED::operator+(o); }
+        Wide operator-(const Wide& o) const { return INHERITED::operator-(o); }
+        Wide operator>>(int bits) const { return INHERITED::operator>>(bits); }
+        Wide operator<<(int bits) const { return INHERITED::operator<<(bits); }
 
     private:
         typedef Sk16h INHERITED;
     };
 
-    Wide widen() const;               // Widen 8-bit values to low 8-bits of 16-bit lanes.
+    Wide widen() const;                 // Widen 8-bit values to low 8-bits of 16-bit lanes.
     Wide mulWiden(const Sk16b&) const;  // 8-bit x 8-bit -> 16-bit components.
 
     // The only 8-bit multiply we use is 8-bit x 8-bit -> 16-bit.  Might as well make it pithy.
-    Wide operator * (const Sk4px& o) const { return this->mulWiden(o); }
+    Wide operator*(const Sk4px& o) const { return this->mulWiden(o); }
 
     // These just keep the types as Sk4px so the user doesn't have to keep casting.
-    Sk4px operator + (const Sk4px& o) const { return INHERITED::operator+(o); }
-    Sk4px operator - (const Sk4px& o) const { return INHERITED::operator-(o); }
-    Sk4px operator < (const Sk4px& o) const { return INHERITED::operator<(o); }
-    Sk4px thenElse(const Sk4px& t, const Sk4px& e) const { return INHERITED::thenElse(t,e); }
+    Sk4px operator+(const Sk4px& o) const { return INHERITED::operator+(o); }
+    Sk4px operator-(const Sk4px& o) const { return INHERITED::operator-(o); }
+    Sk4px operator<(const Sk4px& o) const { return INHERITED::operator<(o); }
+    Sk4px thenElse(const Sk4px& t, const Sk4px& e) const { return INHERITED::thenElse(t, e); }
 
     // Generally faster than (*this * o).div255().
     // May be incorrect by +-1, but is always exactly correct when *this or o is 0 or 255.
@@ -113,21 +113,26 @@ public:
         // Basically, we need to make sure we keep things inside a single loop.
         while (n > 0) {
             if (n >= 8) {
-                Sk4px dst0 = fn(Load4(src+0)),
-                      dst4 = fn(Load4(src+4));
-                dst0.store4(dst+0);
-                dst4.store4(dst+4);
-                dst += 8; src += 8; n -= 8;
+                Sk4px dst0 = fn(Load4(src + 0)), dst4 = fn(Load4(src + 4));
+                dst0.store4(dst + 0);
+                dst4.store4(dst + 4);
+                dst += 8;
+                src += 8;
+                n -= 8;
                 continue;  // Keep our stride at 8 pixels as long as possible.
             }
             SkASSERT(n <= 7);
             if (n >= 4) {
                 fn(Load4(src)).store4(dst);
-                dst += 4; src += 4; n -= 4;
+                dst += 4;
+                src += 4;
+                n -= 4;
             }
             if (n >= 2) {
                 fn(Load2(src)).store2(dst);
-                dst += 2; src += 2; n -= 2;
+                dst += 2;
+                src += 2;
+                n -= 2;
             }
             if (n >= 1) {
                 fn(Load1(src)).store1(dst);
@@ -143,21 +148,27 @@ public:
         SkASSERT(src);
         while (n > 0) {
             if (n >= 8) {
-                Sk4px dst0 = fn(Load4(dst+0), Load4(src+0)),
-                      dst4 = fn(Load4(dst+4), Load4(src+4));
-                dst0.store4(dst+0);
-                dst4.store4(dst+4);
-                dst += 8; src += 8; n -= 8;
+                Sk4px dst0 = fn(Load4(dst + 0), Load4(src + 0)),
+                      dst4 = fn(Load4(dst + 4), Load4(src + 4));
+                dst0.store4(dst + 0);
+                dst4.store4(dst + 4);
+                dst += 8;
+                src += 8;
+                n -= 8;
                 continue;  // Keep our stride at 8 pixels as long as possible.
             }
             SkASSERT(n <= 7);
             if (n >= 4) {
                 fn(Load4(dst), Load4(src)).store4(dst);
-                dst += 4; src += 4; n -= 4;
+                dst += 4;
+                src += 4;
+                n -= 4;
             }
             if (n >= 2) {
                 fn(Load2(dst), Load2(src)).store2(dst);
-                dst += 2; src += 2; n -= 2;
+                dst += 2;
+                src += 2;
+                n -= 2;
             }
             if (n >= 1) {
                 fn(Load1(dst), Load1(src)).store1(dst);
@@ -173,21 +184,27 @@ public:
         SkASSERT(a);
         while (n > 0) {
             if (n >= 8) {
-                Sk4px dst0 = fn(Load4(dst+0), Load4Alphas(a+0)),
-                      dst4 = fn(Load4(dst+4), Load4Alphas(a+4));
-                dst0.store4(dst+0);
-                dst4.store4(dst+4);
-                dst += 8; a += 8; n -= 8;
+                Sk4px dst0 = fn(Load4(dst + 0), Load4Alphas(a + 0)),
+                      dst4 = fn(Load4(dst + 4), Load4Alphas(a + 4));
+                dst0.store4(dst + 0);
+                dst4.store4(dst + 4);
+                dst += 8;
+                a += 8;
+                n -= 8;
                 continue;  // Keep our stride at 8 pixels as long as possible.
             }
             SkASSERT(n <= 7);
             if (n >= 4) {
                 fn(Load4(dst), Load4Alphas(a)).store4(dst);
-                dst += 4; a += 4; n -= 4;
+                dst += 4;
+                a += 4;
+                n -= 4;
             }
             if (n >= 2) {
                 fn(Load2(dst), Load2Alphas(a)).store2(dst);
-                dst += 2; a += 2; n -= 2;
+                dst += 2;
+                a += 2;
+                n -= 2;
             }
             if (n >= 1) {
                 fn(Load1(dst), Sk16b(*a)).store1(dst);
@@ -205,21 +222,30 @@ public:
         SkASSERT(a);
         while (n > 0) {
             if (n >= 8) {
-                Sk4px dst0 = fn(Load4(dst+0), Load4(src+0), Load4Alphas(a+0)),
-                      dst4 = fn(Load4(dst+4), Load4(src+4), Load4Alphas(a+4));
-                dst0.store4(dst+0);
-                dst4.store4(dst+4);
-                dst += 8; src += 8; a += 8; n -= 8;
+                Sk4px dst0 = fn(Load4(dst + 0), Load4(src + 0), Load4Alphas(a + 0)),
+                      dst4 = fn(Load4(dst + 4), Load4(src + 4), Load4Alphas(a + 4));
+                dst0.store4(dst + 0);
+                dst4.store4(dst + 4);
+                dst += 8;
+                src += 8;
+                a += 8;
+                n -= 8;
                 continue;  // Keep our stride at 8 pixels as long as possible.
             }
             SkASSERT(n <= 7);
             if (n >= 4) {
                 fn(Load4(dst), Load4(src), Load4Alphas(a)).store4(dst);
-                dst += 4; src += 4; a += 4; n -= 4;
+                dst += 4;
+                src += 4;
+                a += 4;
+                n -= 4;
             }
             if (n >= 2) {
                 fn(Load2(dst), Load2(src), Load2Alphas(a)).store2(dst);
-                dst += 2; src += 2; a += 2; n -= 2;
+                dst += 2;
+                src += 2;
+                a += 2;
+                n -= 2;
             }
             if (n >= 1) {
                 fn(Load1(dst), Load1(src), Sk16b(*a)).store1(dst);
@@ -237,15 +263,15 @@ private:
 }  // namespace
 
 #ifdef SKNX_NO_SIMD
-    #include "../opts/Sk4px_none.h"
+#include "src/opts/Sk4px_none.h"
 #else
-    #if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
-        #include "../opts/Sk4px_SSE2.h"
-    #elif defined(SK_ARM_HAS_NEON)
-        #include "../opts/Sk4px_NEON.h"
-    #else
-        #include "../opts/Sk4px_none.h"
-    #endif
+#if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
+#include "src/opts/Sk4px_SSE2.h"
+#elif defined(SK_ARM_HAS_NEON)
+#include "src/opts/Sk4px_NEON.h"
+#else
+#include "src/opts/Sk4px_none.h"
+#endif
 #endif
 
-#endif//Sk4px_DEFINED
+#endif  // Sk4px_DEFINED

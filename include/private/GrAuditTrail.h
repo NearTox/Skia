@@ -8,13 +8,13 @@
 #ifndef GrAuditTrail_DEFINED
 #define GrAuditTrail_DEFINED
 
-#include "GrConfig.h"
-#include "GrGpuResource.h"
-#include "GrRenderTargetProxy.h"
-#include "SkRect.h"
-#include "SkString.h"
-#include "SkTArray.h"
-#include "SkTHash.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkString.h"
+#include "include/gpu/GrConfig.h"
+#include "include/gpu/GrGpuResource.h"
+#include "include/private/GrRenderTargetProxy.h"
+#include "include/private/SkTArray.h"
+#include "include/private/SkTHash.h"
 
 class GrOp;
 class SkJSONWriter;
@@ -30,14 +30,11 @@ class SkJSONWriter;
  */
 class GrAuditTrail {
 public:
-    GrAuditTrail()
-    : fClientID(kGrAuditTrailInvalidID)
-    , fEnabled(false) {}
+    GrAuditTrail() noexcept : fClientID(kGrAuditTrailInvalidID), fEnabled(false) {}
 
     class AutoEnable {
     public:
-        AutoEnable(GrAuditTrail* auditTrail)
-            : fAuditTrail(auditTrail) {
+        AutoEnable(GrAuditTrail* auditTrail) : fAuditTrail(auditTrail) {
             SkASSERT(!fAuditTrail->isEnabled());
             fAuditTrail->setEnabled(true);
         }
@@ -97,22 +94,22 @@ public:
     // returns a json string of all of the ops associated with a given client id
     void toJson(SkJSONWriter& writer, int clientID) const;
 
-    bool isEnabled() { return fEnabled; }
-    void setEnabled(bool enabled) { fEnabled = enabled; }
+    bool isEnabled() noexcept { return fEnabled; }
+    void setEnabled(bool enabled) noexcept { fEnabled = enabled; }
 
-    void setClientID(int clientID) { fClientID = clientID; }
+    void setClientID(int clientID) noexcept { fClientID = clientID; }
 
     // We could just return our internal bookkeeping struct if copying the data out becomes
     // a performance issue, but until then its nice to decouple
     struct OpInfo {
         struct Op {
-            int    fClientID;
+            int fClientID;
             SkRect fBounds;
         };
 
-        SkRect                   fBounds;
+        SkRect fBounds;
         GrSurfaceProxy::UniqueID fProxyUniqueID;
-        SkTArray<Op>             fOps;
+        SkTArray<Op> fOps;
     };
 
     void getBoundsByClientID(SkTArray<OpInfo>* outInfo, int clientID);
@@ -138,11 +135,11 @@ private:
     typedef SkTArray<Op*> Ops;
 
     struct OpNode {
-        OpNode(const GrSurfaceProxy::UniqueID& proxyID) : fProxyUniqueID(proxyID) { }
+        OpNode(const GrSurfaceProxy::UniqueID& proxyID) noexcept : fProxyUniqueID(proxyID) {}
         void toJson(SkJSONWriter& writer) const;
 
-        SkRect                         fBounds;
-        Ops                            fChildren;
+        SkRect fBounds;
+        Ops fChildren;
         const GrSurfaceProxy::UniqueID fProxyUniqueID;
     };
     typedef SkTArray<std::unique_ptr<OpNode>, true> OpList;
@@ -164,13 +161,12 @@ private:
 };
 
 #define GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, invoke, ...) \
-        if (audit_trail->isEnabled()) audit_trail->invoke(__VA_ARGS__)
+    if (audit_trail->isEnabled()) audit_trail->invoke(__VA_ARGS__)
 
 #define GR_AUDIT_TRAIL_AUTO_FRAME(audit_trail, framename) \
     GR_AUDIT_TRAIL_INVOKE_GUARD((audit_trail), pushFrame, framename)
 
-#define GR_AUDIT_TRAIL_RESET(audit_trail) \
-    //GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, fullReset);
+#define GR_AUDIT_TRAIL_RESET(audit_trail)  // GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, fullReset);
 
 #define GR_AUDIT_TRAIL_ADD_OP(audit_trail, op, proxy_id) \
     GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, addOp, op, proxy_id)

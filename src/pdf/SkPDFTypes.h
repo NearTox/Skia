@@ -8,18 +8,18 @@
 #ifndef SkPDFTypes_DEFINED
 #define SkPDFTypes_DEFINED
 
-#include "SkRefCnt.h"
-#include "SkScalar.h"
-#include "SkTHash.h"
-#include "SkTo.h"
-#include "SkTypes.h"
-#include "SkMakeUnique.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkTHash.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkMakeUnique.h"
 
+#include <memory>
 #include <new>
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include <memory>
 
 class SkData;
 class SkPDFArray;
@@ -129,8 +129,7 @@ static inline void SkPDFArray_Append(SkPDFArray* a, T v, Args... args) {
 
 static inline void SkPDFArray_Append(SkPDFArray* a) {}
 
-template <typename... Args>
-static inline std::unique_ptr<SkPDFArray> SkPDFMakeArray(Args... args) {
+template <typename... Args> static inline std::unique_ptr<SkPDFArray> SkPDFMakeArray(Args... args) {
     std::unique_ptr<SkPDFArray> ret(new SkPDFArray());
     ret->reserve(sizeof...(Args));
     SkPDFArray_Append(ret.get(), args...);
@@ -192,13 +191,14 @@ static inline std::unique_ptr<SkPDFDict> SkPDFMakeDict(const char* type = nullpt
 }
 
 #ifdef SK_PDF_LESS_COMPRESSION
-    static constexpr bool kSkPDFDefaultDoDeflate = false;
+static constexpr bool kSkPDFDefaultDoDeflate = false;
 #else
-    static constexpr bool kSkPDFDefaultDoDeflate = true;
+static constexpr bool kSkPDFDefaultDoDeflate = true;
 #endif
 
 SkPDFIndirectReference SkPDFStreamOut(std::unique_ptr<SkPDFDict> dict,
-                                      std::unique_ptr<SkStreamAsset> stream,
+                                      std::unique_ptr<SkStreamAsset>
+                                              stream,
                                       SkPDFDocument* doc,
                                       bool deflate = kSkPDFDefaultDoDeflate);
 #endif

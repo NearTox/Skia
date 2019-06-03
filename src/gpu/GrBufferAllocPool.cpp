@@ -5,18 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "GrBufferAllocPool.h"
-#include "GrCaps.h"
-#include "GrContext.h"
-#include "GrContextPriv.h"
-#include "GrCpuBuffer.h"
-#include "GrGpu.h"
-#include "GrGpuBuffer.h"
-#include "GrResourceProvider.h"
-#include "GrTypes.h"
-#include "SkMacros.h"
-#include "SkSafeMath.h"
-#include "SkTraceEvent.h"
+#include "src/gpu/GrBufferAllocPool.h"
+#include "include/gpu/GrContext.h"
+#include "include/gpu/GrTypes.h"
+#include "include/private/SkMacros.h"
+#include "src/core/SkSafeMath.h"
+#include "src/core/SkTraceEvent.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrCpuBuffer.h"
+#include "src/gpu/GrGpu.h"
+#include "src/gpu/GrGpuBuffer.h"
+#include "src/gpu/GrResourceProvider.h"
 
 sk_sp<GrBufferAllocPool::CpuBufferCache> GrBufferAllocPool::CpuBufferCache::Make(
         int maxBuffersToCache) {
@@ -69,9 +69,9 @@ void GrBufferAllocPool::CpuBufferCache::releaseAll() {
 //////////////////////////////////////////////////////////////////////////////
 
 #ifdef SK_DEBUG
-    #define VALIDATE validate
+#define VALIDATE validate
 #else
-    static void VALIDATE(bool = false) {}
+static void VALIDATE(bool = false) {}
 #endif
 
 #define UNMAP_BUFFER(block)                                                          \
@@ -169,8 +169,7 @@ void GrBufferAllocPool::validate(bool unusedBlockAllowed) const {
     if (!wasDestroyed) {
         SkASSERT(bytesInUse == fBytesInUse);
         if (unusedBlockAllowed) {
-            SkASSERT((fBytesInUse && !fBlocks.empty()) ||
-                     (!fBytesInUse && (fBlocks.count() < 2)));
+            SkASSERT((fBytesInUse && !fBlocks.empty()) || (!fBytesInUse && (fBlocks.count() < 2)));
         } else {
             SkASSERT((0 == fBytesInUse) == fBlocks.empty());
         }
@@ -445,9 +444,7 @@ void* GrVertexBufferAllocPool::makeSpace(size_t vertexSize,
     SkASSERT(startVertex);
 
     size_t offset SK_INIT_TO_AVOID_WARNING;
-    void* ptr = INHERITED::makeSpace(SkSafeMath::Mul(vertexSize, vertexCount),
-                                     vertexSize,
-                                     buffer,
+    void* ptr = INHERITED::makeSpace(SkSafeMath::Mul(vertexSize, vertexCount), vertexSize, buffer,
                                      &offset);
 
     SkASSERT(0 == offset % vertexSize);
@@ -497,9 +494,7 @@ void* GrIndexBufferAllocPool::makeSpace(int indexCount, sk_sp<const GrBuffer>* b
 
     size_t offset SK_INIT_TO_AVOID_WARNING;
     void* ptr = INHERITED::makeSpace(SkSafeMath::Mul(indexCount, sizeof(uint16_t)),
-                                     sizeof(uint16_t),
-                                     buffer,
-                                     &offset);
+                                     sizeof(uint16_t), buffer, &offset);
 
     SkASSERT(0 == offset % sizeof(uint16_t));
     *startIndex = static_cast<int>(offset / sizeof(uint16_t));

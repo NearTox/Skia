@@ -8,9 +8,9 @@
 #ifndef GrCoordTransform_DEFINED
 #define GrCoordTransform_DEFINED
 
-#include "SkMatrix.h"
-#include "GrSurfaceProxyPriv.h"
-#include "GrTextureProxy.h"
+#include "include/core/SkMatrix.h"
+#include "include/private/GrTextureProxy.h"
+#include "src/gpu/GrSurfaceProxyPriv.h"
 
 class GrTexture;
 
@@ -20,10 +20,7 @@ class GrTexture;
  */
 class GrCoordTransform {
 public:
-    GrCoordTransform()
-            : fProxy(nullptr)
-            , fNormalize(false)
-            , fReverseY(false) {
+    GrCoordTransform() noexcept : fProxy(nullptr), fNormalize(false), fReverseY(false) {
         SkDEBUGCODE(fInProcessor = false);
     }
 
@@ -57,7 +54,7 @@ public:
         this->reset(m);
     }
 
-    GrCoordTransform& operator= (const GrCoordTransform& that) {
+    GrCoordTransform& operator=(const GrCoordTransform& that) noexcept {
         SkASSERT(!fInProcessor);
         fMatrix = that.fMatrix;
         fProxy = that.fProxy;
@@ -70,14 +67,13 @@ public:
      * Access the matrix for editing. Note, this must be done before adding the transform to an
      * effect, since effects are immutable.
      */
-    SkMatrix* accessMatrix() {
+    SkMatrix* accessMatrix() noexcept {
         SkASSERT(!fInProcessor);
         return &fMatrix;
     }
 
     bool hasSameEffectAs(const GrCoordTransform& that) const {
-        if (fNormalize != that.fNormalize ||
-            fReverseY != that.fReverseY ||
+        if (fNormalize != that.fNormalize || fReverseY != that.fReverseY ||
             !fMatrix.cheapEqualTo(that.fMatrix)) {
             return false;
         }
@@ -91,10 +87,10 @@ public:
         return true;
     }
 
-    const SkMatrix& getMatrix() const { return fMatrix; }
-    const GrTextureProxy* proxy() const { return fProxy; }
-    bool normalize() const { return fNormalize; }
-    bool reverseY() const { return fReverseY; }
+    const SkMatrix& getMatrix() const noexcept { return fMatrix; }
+    const GrTextureProxy* proxy() const noexcept { return fProxy; }
+    bool normalize() const noexcept { return fNormalize; }
+    bool reverseY() const noexcept { return fReverseY; }
 
     // This should only ever be called at flush time after the backing texture has been
     // successfully instantiated
@@ -115,14 +111,15 @@ private:
     bool operator==(const GrCoordTransform& that) const;
     bool operator!=(const GrCoordTransform& that) const;
 
-    SkMatrix                fMatrix;
-    const GrTextureProxy*   fProxy;
-    bool                    fNormalize;
-    bool                    fReverseY;
+    SkMatrix fMatrix;
+    const GrTextureProxy* fProxy;
+    bool fNormalize;
+    bool fReverseY;
 
 #ifdef SK_DEBUG
 public:
     void setInProcessor() const { fInProcessor = true; }
+
 private:
     mutable bool fInProcessor;
 #endif

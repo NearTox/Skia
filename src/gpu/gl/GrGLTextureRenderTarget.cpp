@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "GrGLTextureRenderTarget.h"
-#include "GrContext.h"
-#include "GrContextPriv.h"
-#include "GrGLGpu.h"
-#include "GrTexturePriv.h"
-#include "SkTraceMemoryDump.h"
+#include "src/gpu/gl/GrGLTextureRenderTarget.h"
+#include "include/core/SkTraceMemoryDump.h"
+#include "include/gpu/GrContext.h"
+#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrTexturePriv.h"
+#include "src/gpu/gl/GrGLGpu.h"
 
 GrGLTextureRenderTarget::GrGLTextureRenderTarget(GrGLGpu* gpu,
                                                  SkBudgeted budgeted,
@@ -36,8 +36,7 @@ GrGLTextureRenderTarget::GrGLTextureRenderTarget(GrGLGpu* gpu,
     this->registerWithCacheWrapped(cacheable);
 }
 
-void GrGLTextureRenderTarget::dumpMemoryStatistics(
-    SkTraceMemoryDump* traceMemoryDump) const {
+void GrGLTextureRenderTarget::dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const {
 #ifndef SK_BUILD_FOR_ANDROID_FRAMEWORK
     // Delegate to the base classes
     GrGLRenderTarget::dumpMemoryStatistics(traceMemoryDump);
@@ -66,6 +65,5 @@ sk_sp<GrGLTextureRenderTarget> GrGLTextureRenderTarget::MakeWrapped(
 
 size_t GrGLTextureRenderTarget::onGpuMemorySize() const {
     return GrSurface::ComputeSize(this->config(), this->width(), this->height(),
-                                    this->numSamplesOwnedPerPixel(),
-                                    this->texturePriv().mipMapped());
+                                  this->numSamplesOwnedPerPixel(), this->texturePriv().mipMapped());
 }

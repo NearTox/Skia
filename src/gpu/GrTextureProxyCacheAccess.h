@@ -8,7 +8,7 @@
 #ifndef GrTextureProxyCacheAccess_DEFINED
 #define GrTextureProxyCacheAccess_DEFINED
 
-#include "GrTextureProxy.h"
+#include "include/private/GrTextureProxy.h"
 
 /**
  * This class allows GrResourceCache increased privileged access to GrTextureProxy objects.
@@ -19,13 +19,11 @@ private:
         fTextureProxy->setUniqueKey(proxyProvider, key);
     }
 
-    void clearUniqueKey() {
-        fTextureProxy->clearUniqueKey();
-    }
+    void clearUniqueKey() { fTextureProxy->clearUniqueKey(); }
 
     explicit CacheAccess(GrTextureProxy* textureProxy) : fTextureProxy(textureProxy) {}
-    CacheAccess(const CacheAccess&) {} // unimpl
-    CacheAccess& operator=(const CacheAccess&); // unimpl
+    CacheAccess(const CacheAccess&) {}           // unimpl
+    CacheAccess& operator=(const CacheAccess&);  // unimpl
 
     // No taking addresses of this type.
     const CacheAccess* operator&() const;
@@ -33,8 +31,8 @@ private:
 
     GrTextureProxy* fTextureProxy;
 
-    friend class GrTextureProxy;  // to construct/copy this type.
-    friend class GrProxyProvider; // to use this type
+    friend class GrTextureProxy;   // to construct/copy this type.
+    friend class GrProxyProvider;  // to use this type
 };
 
 inline GrTextureProxy::CacheAccess GrTextureProxy::cacheAccess() { return CacheAccess(this); }

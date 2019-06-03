@@ -5,18 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "SkArenaAlloc.h"
-#include "SkMatrix.h"
-#include "SkOpEdgeBuilder.h"
-#include "SkPathPriv.h"
-#include "SkPathOps.h"
-#include "SkPathOpsCommon.h"
+#include "include/core/SkMatrix.h"
+#include "include/pathops/SkPathOps.h"
+#include "include/private/SkArenaAlloc.h"
+#include "src/core/SkPathPriv.h"
+#include "src/pathops/SkOpEdgeBuilder.h"
+#include "src/pathops/SkPathOpsCommon.h"
 
 static bool one_contour(const SkPath& path) {
     SkSTArenaAlloc<256> allocator;
     int verbCount = path.countVerbs();
-    uint8_t* verbs = (uint8_t*) allocator.makeArrayDefault<uint8_t>(verbCount);
-    (void) path.getVerbs(verbs, verbCount);
+    uint8_t* verbs = (uint8_t*)allocator.makeArrayDefault<uint8_t>(verbCount);
+    (void)path.getVerbs(verbs, verbCount);
     for (int index = 1; index < verbCount; ++index) {
         if (verbs[index] == SkPath::kMove_Verb) {
             return false;
@@ -52,8 +52,8 @@ bool SkOpBuilder::FixWinding(SkPath* path) {
     }
     SkSTArenaAlloc<4096> allocator;
     SkOpContourHead contourHead;
-    SkOpGlobalState globalState(&contourHead, &allocator  SkDEBUGPARAMS(false)
-            SkDEBUGPARAMS(nullptr));
+    SkOpGlobalState globalState(&contourHead,
+                                &allocator SkDEBUGPARAMS(false) SkDEBUGPARAMS(nullptr));
     SkOpEdgeBuilder builder(*path, &contourHead, &globalState);
     if (builder.unparseable() || !builder.finish()) {
         return false;
@@ -74,8 +74,8 @@ bool SkOpBuilder::FixWinding(SkPath* path) {
         SkOpContour* topContour = topSegment->contour();
         SkASSERT(topContour->isCcw() >= 0);
 #if DEBUG_WINDING
-        SkDebugf("%s id=%d nested=%d ccw=%d\n",  __FUNCTION__,
-                topSegment->debugID(), globalState.nested(), topContour->isCcw());
+        SkDebugf("%s id=%d nested=%d ccw=%d\n", __FUNCTION__, topSegment->debugID(),
+                 globalState.nested(), topContour->isCcw());
 #endif
         if ((globalState.nested() & 1) != SkToBool(topContour->isCcw())) {
             topContour->setReverse();

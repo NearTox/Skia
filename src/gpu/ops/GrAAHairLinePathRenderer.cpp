@@ -5,30 +5,30 @@
  * found in the LICENSE file.
  */
 
-#include "GrAAHairLinePathRenderer.h"
-#include "GrBuffer.h"
-#include "GrCaps.h"
-#include "GrClip.h"
-#include "GrDefaultGeoProcFactory.h"
-#include "GrDrawOpTest.h"
-#include "GrOpFlushState.h"
-#include "GrPathUtils.h"
-#include "GrProcessor.h"
-#include "GrResourceProvider.h"
-#include "GrShape.h"
-#include "GrSimpleMeshDrawOpHelper.h"
-#include "GrStyle.h"
-#include "SkGeometry.h"
-#include "SkMatrixPriv.h"
-#include "SkPoint3.h"
-#include "SkPointPriv.h"
-#include "SkRectPriv.h"
-#include "SkStroke.h"
-#include "SkTemplates.h"
-#include "effects/GrBezierEffect.h"
-#include "ops/GrMeshDrawOp.h"
+#include "src/gpu/ops/GrAAHairLinePathRenderer.h"
+#include "include/core/SkPoint3.h"
+#include "include/private/SkTemplates.h"
+#include "src/core/SkGeometry.h"
+#include "src/core/SkMatrixPriv.h"
+#include "src/core/SkPointPriv.h"
+#include "src/core/SkRectPriv.h"
+#include "src/core/SkStroke.h"
+#include "src/gpu/GrBuffer.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrClip.h"
+#include "src/gpu/GrDefaultGeoProcFactory.h"
+#include "src/gpu/GrDrawOpTest.h"
+#include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/GrPathUtils.h"
+#include "src/gpu/GrProcessor.h"
+#include "src/gpu/GrResourceProvider.h"
+#include "src/gpu/GrShape.h"
+#include "src/gpu/GrStyle.h"
+#include "src/gpu/effects/GrBezierEffect.h"
+#include "src/gpu/ops/GrMeshDrawOp.h"
+#include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 
-#define PREALLOC_PTARRAY(N) SkSTArray<(N),SkPoint, true>
+#define PREALLOC_PTARRAY(N) SkSTArray<(N), SkPoint, true>
 
 // quadratics are rendered as 5-sided polys in order to bound the
 // AA stroke around the center-curve. See comments in push_quad_index_buffer and
@@ -56,11 +56,7 @@
 //       a1       c1
 // Each is drawn as three triangles ((a0,a1,b0), (b0,c1,c0), (a1,c1,b0))
 // specified by these 9 indices:
-static const uint16_t kQuadIdxBufPattern[] = {
-    0, 1, 2,
-    2, 4, 3,
-    1, 4, 2
-};
+static const uint16_t kQuadIdxBufPattern[] = {0, 1, 2, 2, 4, 3, 1, 4, 2};
 
 static const int kIdxsPerQuad = SK_ARRAY_COUNT(kQuadIdxBufPattern);
 static const int kQuadNumVertices = 5;
@@ -70,10 +66,9 @@ GR_DECLARE_STATIC_UNIQUE_KEY(gQuadsIndexBufferKey);
 static sk_sp<const GrBuffer> get_quads_index_buffer(GrResourceProvider* resourceProvider) {
     GR_DEFINE_STATIC_UNIQUE_KEY(gQuadsIndexBufferKey);
     return resourceProvider->findOrCreatePatternedIndexBuffer(
-        kQuadIdxBufPattern, kIdxsPerQuad, kQuadsNumInIdxBuffer, kQuadNumVertices,
-        gQuadsIndexBufferKey);
+            kQuadIdxBufPattern, kIdxsPerQuad, kQuadsNumInIdxBuffer, kQuadNumVertices,
+            gQuadsIndexBufferKey);
 }
-
 
 // Each line segment is rendered as two quads and two triangles.
 // p0 and p1 have alpha = 1 while all other points have alpha = 0.
@@ -86,14 +81,8 @@ static sk_sp<const GrBuffer> get_quads_index_buffer(GrResourceProvider* resource
 //
 // Each is drawn as six triangles specified by these 18 indices:
 
-static const uint16_t kLineSegIdxBufPattern[] = {
-    0, 1, 3,
-    0, 3, 2,
-    0, 4, 5,
-    0, 5, 1,
-    0, 2, 4,
-    1, 5, 3
-};
+static const uint16_t kLineSegIdxBufPattern[] = {0, 1, 3, 0, 3, 2, 0, 4, 5,
+                                                 0, 5, 1, 0, 2, 4, 1, 5, 3};
 
 static const int kIdxsPerLineSeg = SK_ARRAY_COUNT(kLineSegIdxBufPattern);
 static const int kLineSegNumVertices = 6;
@@ -104,8 +93,8 @@ GR_DECLARE_STATIC_UNIQUE_KEY(gLinesIndexBufferKey);
 static sk_sp<const GrBuffer> get_lines_index_buffer(GrResourceProvider* resourceProvider) {
     GR_DEFINE_STATIC_UNIQUE_KEY(gLinesIndexBufferKey);
     return resourceProvider->findOrCreatePatternedIndexBuffer(
-        kLineSegIdxBufPattern, kIdxsPerLineSeg,  kLineSegsNumInIdxBuffer, kLineSegNumVertices,
-        gLinesIndexBufferKey);
+            kLineSegIdxBufPattern, kIdxsPerLineSeg, kLineSegsNumInIdxBuffer, kLineSegNumVertices,
+            gLinesIndexBufferKey);
 }
 
 // Takes 178th time of logf on Z600 / VC2010
@@ -177,8 +166,7 @@ static int chop_conic(const SkPoint src[3], SkConic dst[4], const SkScalar weigh
 // otherwise returns 1
 static int is_degen_quad_or_conic(const SkPoint p[3], SkScalar* dsqd) {
     static const SkScalar gDegenerateToLineTol = GrPathUtils::kDefaultTolerance;
-    static const SkScalar gDegenerateToLineTolSqd =
-        gDegenerateToLineTol * gDegenerateToLineTol;
+    static const SkScalar gDegenerateToLineTolSqd = gDegenerateToLineTol * gDegenerateToLineTol;
 
     if (SkPointPriv::DistanceToSqd(p[0], p[1]) < gDegenerateToLineTolSqd ||
         SkPointPriv::DistanceToSqd(p[1], p[2]) < gDegenerateToLineTolSqd) {
@@ -224,7 +212,7 @@ static int num_quad_subdivs(const SkPoint p[3]) {
         // = log2(d*d/tol*tol)
 
         // +1 since we're ignoring the mantissa contribution.
-        int log = get_float_exp(dsqd/(gSubdivTol*gSubdivTol)) + 1;
+        int log = get_float_exp(dsqd / (gSubdivTol * gSubdivTol)) + 1;
         log = SkTMin(SkTMax(0, log), kMaxSub);
         return log;
     }
@@ -260,7 +248,7 @@ static int gather_lines_and_quads(const SkPath& path,
     // Whenever a degenerate, zero-length contour is encountered, this code will insert a
     // 'capLength' x-aligned line segment. Since this is rendering hairlines it is hoped this will
     // suffice for AA square & circle capping.
-    int verbsInContour = 0; // Does not count moves
+    int verbsInContour = 0;  // Does not count moves
     bool seenZeroLengthVerb = false;
     SkPoint zeroVerbPt;
 
@@ -415,7 +403,7 @@ static int gather_lines_and_quads(const SkPath& path,
                     // In perspective have to do conversion in src space.
                     if (persp) {
                         SkScalar tolScale =
-                            GrPathUtils::scaleToleranceToSrc(SK_Scalar1, m, path.getBounds());
+                                GrPathUtils::scaleToleranceToSrc(SK_Scalar1, m, path.getBounds());
                         GrPathUtils::convertCubicToQuads(pathPts, tolScale, &q);
                     } else {
                         GrPathUtils::convertCubicToQuads(devPts, SK_Scalar1, &q);
@@ -479,7 +467,7 @@ struct BezierVertex {
         struct {
             SkScalar fKLM[3];
         } fConic;
-        SkVector   fQuadCoord;
+        SkVector fQuadCoord;
         struct {
             SkScalar fBogus[4];
         };
@@ -488,10 +476,8 @@ struct BezierVertex {
 
 GR_STATIC_ASSERT(sizeof(BezierVertex) == 3 * sizeof(SkPoint));
 
-static void intersect_lines(const SkPoint& ptA, const SkVector& normA,
-                            const SkPoint& ptB, const SkVector& normB,
-                            SkPoint* result) {
-
+static void intersect_lines(const SkPoint& ptA, const SkVector& normA, const SkPoint& ptB,
+                            const SkVector& normB, SkPoint* result) {
     SkScalar lineAW = -normA.dot(ptA);
     SkScalar lineBW = -normB.dot(ptB);
 
@@ -499,7 +485,7 @@ static void intersect_lines(const SkPoint& ptA, const SkVector& normA,
     wInv = SkScalarInvert(wInv);
     if (!SkScalarIsFinite(wInv)) {
         // lines are parallel, pick the point in between
-        *result = (ptA + ptB)*SK_ScalarHalf;
+        *result = (ptA + ptB) * SK_ScalarHalf;
         *result += normA;
     } else {
         result->fX = normA.fY * lineBW - lineAW * normB.fY;
@@ -516,8 +502,8 @@ static void set_uv_quad(const SkPoint qpts[3], BezierVertex verts[kQuadNumVertic
     DevToUV.apply(verts, kQuadNumVertices, sizeof(BezierVertex), sizeof(SkPoint));
 }
 
-static void bloat_quad(const SkPoint qpts[3], const SkMatrix* toDevice,
-                       const SkMatrix* toSrc, BezierVertex verts[kQuadNumVertices]) {
+static void bloat_quad(const SkPoint qpts[3], const SkMatrix* toDevice, const SkMatrix* toSrc,
+                       BezierVertex verts[kQuadNumVertices]) {
     SkASSERT(!toDevice == !toSrc);
     // original quad is specified by tri a,b,c
     SkPoint a = qpts[0];
@@ -555,10 +541,10 @@ static void bloat_quad(const SkPoint qpts[3], const SkMatrix* toDevice,
     cb -= c;
 
     // After the transform we might have a line, try to do something reasonable
-    if (toDevice && SkPointPriv::LengthSqd(ab) <= SK_ScalarNearlyZero*SK_ScalarNearlyZero) {
+    if (toDevice && SkPointPriv::LengthSqd(ab) <= SK_ScalarNearlyZero * SK_ScalarNearlyZero) {
         ab = cb;
     }
-    if (toDevice && SkPointPriv::LengthSqd(cb) <= SK_ScalarNearlyZero*SK_ScalarNearlyZero) {
+    if (toDevice && SkPointPriv::LengthSqd(cb) <= SK_ScalarNearlyZero * SK_ScalarNearlyZero) {
         cb = ab;
     }
 
@@ -582,7 +568,7 @@ static void bloat_quad(const SkPoint qpts[3], const SkMatrix* toDevice,
     a1.fPos = a;
     a1.fPos -= abN;
 
-    if (toDevice && SkPointPriv::LengthSqd(ac) <= SK_ScalarNearlyZero*SK_ScalarNearlyZero) {
+    if (toDevice && SkPointPriv::LengthSqd(ac) <= SK_ScalarNearlyZero * SK_ScalarNearlyZero) {
         c = b;
     }
     c0.fPos = c;
@@ -613,7 +599,7 @@ static void set_conic_coeffs(const SkPoint p[3], BezierVertex verts[kQuadNumVert
 
     for (int i = 0; i < kQuadNumVertices; ++i) {
         const SkPoint3 pt3 = {verts[i].fPos.x(), verts[i].fPos.y(), 1.f};
-        klm.mapHomogeneousPoints((SkPoint3* ) verts[i].fConic.fKLM, &pt3, 1);
+        klm.mapHomogeneousPoints((SkPoint3*)verts[i].fConic.fKLM, &pt3, 1);
     }
 }
 
@@ -636,8 +622,8 @@ static void add_quads(const SkPoint p[3],
     if (subdiv) {
         SkPoint newP[5];
         SkChopQuadAtHalf(p, newP);
-        add_quads(newP + 0, subdiv-1, toDevice, toSrc, vert);
-        add_quads(newP + 2, subdiv-1, toDevice, toSrc, vert);
+        add_quads(newP + 0, subdiv - 1, toDevice, toSrc, vert);
+        add_quads(newP + 2, subdiv - 1, toDevice, toSrc, vert);
     } else {
         bloat_quad(p, toDevice, toSrc, *vert);
         set_uv_quad(p, *vert);
@@ -711,9 +697,9 @@ static void add_line(const SkPoint p[2],
 
 ///////////////////////////////////////////////////////////////////////////////
 
-GrPathRenderer::CanDrawPath
-GrAAHairLinePathRenderer::onCanDrawPath(const CanDrawPathArgs& args) const {
-    if (GrAAType::kCoverage != args.fAAType) {
+GrPathRenderer::CanDrawPath GrAAHairLinePathRenderer::onCanDrawPath(
+        const CanDrawPathArgs& args) const {
+    if (!(AATypeFlags::kCoverage & args.fAATypeFlags)) {
         return CanDrawPath::kNo;
     }
 
@@ -735,8 +721,7 @@ GrAAHairLinePathRenderer::onCanDrawPath(const CanDrawPathArgs& args) const {
 }
 
 template <class VertexType>
-bool check_bounds(const SkMatrix& viewMatrix, const SkRect& devBounds, void* vertices, int vCount)
-{
+bool check_bounds(const SkMatrix& viewMatrix, const SkRect& devBounds, void* vertices, int vCount) {
     SkRect tolDevBounds = devBounds;
     // The bounds ought to be tight, but in perspective the below code runs the verts
     // through the view matrix to get back to dev coords, which can introduce imprecision.
@@ -797,8 +782,8 @@ public:
         SkScalar capLength = SkPaint::kButt_Cap != stroke.getCap() ? hairlineCoverage * 0.5f : 0.0f;
 
         return Helper::FactoryHelper<AAHairlineOp>(context, std::move(paint), newCoverage,
-                                                   viewMatrix, path,
-                                                   devClipBounds, capLength, stencilSettings);
+                                                   viewMatrix, path, devClipBounds, capLength,
+                                                   stencilSettings);
     }
 
     AAHairlineOp(const Helper::MakeArgs& helperArgs,
@@ -838,10 +823,12 @@ public:
 
     FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
-    GrProcessorSet::Analysis finalize(
-            const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType) override {
-        return fHelper.finalizeProcessors(
-                caps, clip, fsaaType, GrProcessorAnalysisCoverage::kSingleChannel, &fColor);
+    GrProcessorSet::Analysis finalize(const GrCaps& caps, const GrAppliedClip* clip,
+                                      GrFSAAType fsaaType, GrClampType clampType) override {
+        // This Op uses uniform (not vertex) color, so doesn't need to track wide color.
+        return fHelper.finalizeProcessors(caps, clip, fsaaType, clampType,
+                                          GrProcessorAnalysisCoverage::kSingleChannel, &fColor,
+                                          nullptr);
     }
 
 private:
@@ -966,8 +953,8 @@ void AAHairlineOp::onPrepareDraws(Target* target) {
             LocalCoords localCoords(fHelper.usesLocalCoords() ? LocalCoords::kUsePosition_Type
                                                               : LocalCoords::kUnused_Type);
             localCoords.fMatrix = geometryProcessorLocalM;
-            lineGP = GrDefaultGeoProcFactory::Make(target->caps().shaderCaps(),
-                                                   color, Coverage::kAttribute_Type, localCoords,
+            lineGP = GrDefaultGeoProcFactory::Make(target->caps().shaderCaps(), color,
+                                                   Coverage::kAttribute_Type, localCoords,
                                                    *geometryProcessorViewM);
         }
 
@@ -981,13 +968,13 @@ void AAHairlineOp::onPrepareDraws(Target* target) {
         LineVertex* verts = reinterpret_cast<LineVertex*>(target->makeVertexSpace(
                 sizeof(LineVertex), vertexCount, &vertexBuffer, &firstVertex));
 
-        if (!verts|| !linesIndexBuffer) {
+        if (!verts || !linesIndexBuffer) {
             SkDebugf("Could not allocate vertices\n");
             return;
         }
 
         for (int i = 0; i < lineCount; ++i) {
-            add_line(&lines[2*i], toSrc, this->coverage(), &verts);
+            add_line(&lines[2 * i], toSrc, this->coverage(), &verts);
         }
 
         GrMesh* mesh = target->allocMesh(GrPrimitiveType::kTriangles);
@@ -1036,12 +1023,12 @@ void AAHairlineOp::onPrepareDraws(Target* target) {
         int unsubdivQuadCnt = quads.count() / 3;
         for (int i = 0; i < unsubdivQuadCnt; ++i) {
             SkASSERT(qSubdivs[i] >= 0);
-            add_quads(&quads[3*i], qSubdivs[i], toDevice, toSrc, &bezVerts);
+            add_quads(&quads[3 * i], qSubdivs[i], toDevice, toSrc, &bezVerts);
         }
 
         // Start Conics
         for (int i = 0; i < conicCount; ++i) {
-            add_conics(&conics[3*i], cWeights[i], toDevice, toSrc, &bezVerts);
+            add_conics(&conics[3 * i], cWeights[i], toDevice, toSrc, &bezVerts);
         }
 
         if (quadCount > 0) {

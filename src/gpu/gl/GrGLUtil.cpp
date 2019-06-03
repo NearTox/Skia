@@ -5,39 +5,37 @@
  * found in the LICENSE file.
  */
 
-
-#include "GrGLUtil.h"
-#include "GrTypesPriv.h"
-#include "SkMatrix.h"
+#include "src/gpu/gl/GrGLUtil.h"
 #include <stdio.h>
+#include "include/core/SkMatrix.h"
+#include "include/private/GrTypesPriv.h"
 
 void GrGLClearErr(const GrGLInterface* gl) {
-    while (GR_GL_NO_ERROR != gl->fFunctions.fGetError()) {}
+    while (GR_GL_NO_ERROR != gl->fFunctions.fGetError()) {
+    }
 }
 
 namespace {
-const char *get_error_string(uint32_t err) {
+const char* get_error_string(uint32_t err) {
     switch (err) {
-    case GR_GL_NO_ERROR:
-        return "";
-    case GR_GL_INVALID_ENUM:
-        return "Invalid Enum";
-    case GR_GL_INVALID_VALUE:
-        return "Invalid Value";
-    case GR_GL_INVALID_OPERATION:
-        return "Invalid Operation";
-    case GR_GL_OUT_OF_MEMORY:
-        return "Out of Memory";
-    case GR_GL_CONTEXT_LOST:
-        return "Context Lost";
+        case GR_GL_NO_ERROR:
+            return "";
+        case GR_GL_INVALID_ENUM:
+            return "Invalid Enum";
+        case GR_GL_INVALID_VALUE:
+            return "Invalid Value";
+        case GR_GL_INVALID_OPERATION:
+            return "Invalid Operation";
+        case GR_GL_OUT_OF_MEMORY:
+            return "Out of Memory";
+        case GR_GL_CONTEXT_LOST:
+            return "Context Lost";
     }
     return "Unknown";
 }
-}
+}  // namespace
 
-void GrGLCheckErr(const GrGLInterface* gl,
-                  const char* location,
-                  const char* call) {
+void GrGLCheckErr(const GrGLInterface* gl, const char* location, const char* call) {
     uint32_t err = GR_GL_GET_ERROR(gl);
     if (GR_GL_NO_ERROR != err) {
         SkDebugf("---- glGetError 0x%x(%s)", err, get_error_string(err));
@@ -54,11 +52,11 @@ void GrGLCheckErr(const GrGLInterface* gl,
 ///////////////////////////////////////////////////////////////////////////////
 
 #if GR_GL_LOG_CALLS
-    bool gLogCallsGL = !!(GR_GL_LOG_CALLS_START);
+bool gLogCallsGL = !!(GR_GL_LOG_CALLS_START);
 #endif
 
 #if GR_GL_CHECK_ERROR
-    bool gCheckErrorGL = !!(GR_GL_CHECK_ERROR_START);
+bool gCheckErrorGL = !!(GR_GL_CHECK_ERROR_START);
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -77,9 +75,16 @@ GrGLStandard GrGLGetStandardInUseFromString(const char* versionString) {
         return kGL_GrGLStandard;
     }
 
+    // WebGL might look like "OpenGL ES 2.0 (WebGL 1.0 (OpenGL ES 2.0 Chromium))"
+    int esMajor, esMinor;
+    n = sscanf(versionString, "OpenGL ES %d.%d (WebGL %d.%d", &esMajor, &esMinor, &major, &minor);
+    if (4 == n) {
+        return kWebGL_GrGLStandard;
+    }
+
     // check for ES 1
     char profile[2];
-    n = sscanf(versionString, "OpenGL ES-%c%c %d.%d", profile, profile+1, &major, &minor);
+    n = sscanf(versionString, "OpenGL ES-%c%c %d.%d", profile, profile + 1, &major, &minor);
     if (4 == n) {
         // we no longer support ES1.
         return kNone_GrGLStandard;
@@ -121,34 +126,33 @@ void GrGLGetDriverInfo(GrGLStandard standard,
         return;
     }
 
-    if (standard == kGL_GrGLStandard) {
+    if (GR_IS_GR_GL(standard)) {
         if (kNVIDIA_GrGLVendor == vendor) {
             *outDriver = kNVIDIA_GrGLDriver;
-            int n = sscanf(versionString, "%d.%d.%d NVIDIA %d.%d",
-                           &major, &minor, &rev, &driverMajor, &driverMinor);
+            int n = sscanf(versionString, "%d.%d.%d NVIDIA %d.%d", &major, &minor, &rev,
+                           &driverMajor, &driverMinor);
             // Some older NVIDIA drivers don't report the driver version.
             if (5 == n) {
                 *outVersion = GR_GL_DRIVER_VER(driverMajor, driverMinor, 0);
             }
             return;
         }
-        int n = sscanf(versionString, "%d.%d Mesa %d.%d",
-                       &major, &minor, &driverMajor, &driverMinor);
+        int n = sscanf(versionString, "%d.%d Mesa %d.%d", &major, &minor, &driverMajor,
+                       &driverMinor);
         if (4 != n) {
-            n = sscanf(versionString, "%d.%d (Core Profile) Mesa %d.%d",
-                       &major, &minor, &driverMajor, &driverMinor);
+            n = sscanf(versionString, "%d.%d (Core Profile) Mesa %d.%d", &major, &minor,
+                       &driverMajor, &driverMinor);
         }
         if (4 == n) {
             *outDriver = kMesa_GrGLDriver;
             *outVersion = GR_GL_DRIVER_VER(driverMajor, driverMinor, 0);
             return;
         }
-    }
-    else {
+    } else if (GR_IS_GR_GL_ES(standard)) {
         if (kNVIDIA_GrGLVendor == vendor) {
             *outDriver = kNVIDIA_GrGLDriver;
-            int n = sscanf(versionString, "OpenGL ES %d.%d NVIDIA %d.%d",
-                           &major, &minor, &driverMajor, &driverMinor);
+            int n = sscanf(versionString, "OpenGL ES %d.%d NVIDIA %d.%d", &major, &minor,
+                           &driverMajor, &driverMinor);
             // Some older NVIDIA drivers don't report the driver version.
             if (4 == n) {
                 *outVersion = GR_GL_DRIVER_VER(driverMajor, driverMinor, 0);
@@ -156,8 +160,8 @@ void GrGLGetDriverInfo(GrGLStandard standard,
             return;
         }
 
-        int n = sscanf(versionString, "OpenGL ES %d.%d Mesa %d.%d",
-                       &major, &minor, &driverMajor, &driverMinor);
+        int n = sscanf(versionString, "OpenGL ES %d.%d Mesa %d.%d", &major, &minor, &driverMajor,
+                       &driverMinor);
         if (4 == n) {
             *outDriver = kMesa_GrGLDriver;
             *outVersion = GR_GL_DRIVER_VER(driverMajor, driverMinor, 0);
@@ -166,7 +170,7 @@ void GrGLGetDriverInfo(GrGLStandard standard,
         if (0 == strncmp("ANGLE", rendererString, 5)) {
             *outDriver = kANGLE_GrGLDriver;
             n = sscanf(versionString, "OpenGL ES %d.%d (ANGLE %d.%d", &major, &minor, &driverMajor,
-                                                                      &driverMinor);
+                       &driverMinor);
             if (4 == n) {
                 *outVersion = GR_GL_DRIVER_VER(driverMajor, driverMinor, 0);
             }
@@ -193,7 +197,8 @@ void GrGLGetDriverInfo(GrGLStandard standard,
         // We presume we're on the Intel driver since it hasn't identified itself as Mesa.
         *outDriver = kIntel_GrGLDriver;
 
-        //This is how the macOS version strings are structured. This might be different on different
+        // This is how the macOS version strings are structured. This might be different on
+        // different
         // OSes.
         int n = sscanf(versionString, "%d.%d INTEL-%d.%d.%d", &major, &minor, &driverMajor,
                        &driverMinor, &driverPoint);
@@ -233,9 +238,15 @@ GrGLVersion GrGLGetVersionFromString(const char* versionString) {
         return GR_GL_VER(major, minor);
     }
 
+    // WebGL might look like "OpenGL ES 2.0 (WebGL 1.0 (OpenGL ES 2.0 Chromium))"
+    int esMajor, esMinor;
+    n = sscanf(versionString, "OpenGL ES %d.%d (WebGL %d.%d", &esMajor, &esMinor, &major, &minor);
+    if (4 == n) {
+        return GR_GL_VER(major, minor);
+    }
+
     char profile[2];
-    n = sscanf(versionString, "OpenGL ES-%c%c %d.%d", profile, profile+1,
-               &major, &minor);
+    n = sscanf(versionString, "OpenGL ES-%c%c %d.%d", profile, profile + 1, &major, &minor);
     if (4 == n) {
         return GR_GL_VER(major, minor);
     }
@@ -329,23 +340,17 @@ GrGLRenderer GrGLGetRendererFromStrings(const char* rendererString,
         static const char kAppleA4Str[] = "Apple A4";
         static const char kAppleA5Str[] = "Apple A5";
         static const char kAppleA6Str[] = "Apple A6";
-        if (0 == strncmp(rendererString, kAppleA4Str,
-                         SK_ARRAY_COUNT(kAppleA4Str)-1) ||
-            0 == strncmp(rendererString, kAppleA5Str,
-                         SK_ARRAY_COUNT(kAppleA5Str)-1) ||
-            0 == strncmp(rendererString, kAppleA6Str,
-                         SK_ARRAY_COUNT(kAppleA6Str)-1)) {
+        if (0 == strncmp(rendererString, kAppleA4Str, SK_ARRAY_COUNT(kAppleA4Str) - 1) ||
+            0 == strncmp(rendererString, kAppleA5Str, SK_ARRAY_COUNT(kAppleA5Str) - 1) ||
+            0 == strncmp(rendererString, kAppleA6Str, SK_ARRAY_COUNT(kAppleA6Str) - 1)) {
             return kPowerVR54x_GrGLRenderer;
         }
         static const char kPowerVRRogueStr[] = "PowerVR Rogue";
         static const char kAppleA7Str[] = "Apple A7";
         static const char kAppleA8Str[] = "Apple A8";
-        if (0 == strncmp(rendererString, kPowerVRRogueStr,
-                         SK_ARRAY_COUNT(kPowerVRRogueStr)-1) ||
-            0 == strncmp(rendererString, kAppleA7Str,
-                         SK_ARRAY_COUNT(kAppleA7Str)-1) ||
-            0 == strncmp(rendererString, kAppleA8Str,
-                         SK_ARRAY_COUNT(kAppleA8Str)-1)) {
+        if (0 == strncmp(rendererString, kPowerVRRogueStr, SK_ARRAY_COUNT(kPowerVRRogueStr) - 1) ||
+            0 == strncmp(rendererString, kAppleA7Str, SK_ARRAY_COUNT(kAppleA7Str) - 1) ||
+            0 == strncmp(rendererString, kAppleA8Str, SK_ARRAY_COUNT(kAppleA8Str) - 1)) {
             return kPowerVRRogue_GrGLRenderer;
         }
         int adrenoNumber;
@@ -356,8 +361,8 @@ GrGLRenderer GrGLGetRendererFromStrings(const char* rendererString,
                     return kAdreno3xx_GrGLRenderer;
                 }
                 if (adrenoNumber < 500) {
-                    return adrenoNumber >= 430
-                            ? kAdreno430_GrGLRenderer : kAdreno4xx_other_GrGLRenderer;
+                    return adrenoNumber >= 430 ? kAdreno430_GrGLRenderer
+                                               : kAdreno4xx_other_GrGLRenderer;
                 }
                 if (adrenoNumber < 600) {
                     return kAdreno5xx_GrGLRenderer;
@@ -387,7 +392,6 @@ GrGLRenderer GrGLGetRendererFromStrings(const char* rendererString,
                 sscanf(intelString, "Intel(R) Iris(R) Pro Graphics P%d", &intelNumber) ||
                 sscanf(intelString, "Intel(R) HD Graphics %d", &intelNumber) ||
                 sscanf(intelString, "Intel(R) HD Graphics P%d", &intelNumber)) {
-
                 if (intelNumber >= 4000 && intelNumber < 5000) {
                     return kIntel4xxx_GrGLRenderer;
                 }
@@ -406,8 +410,7 @@ GrGLRenderer GrGLGetRendererFromStrings(const char* rendererString,
         // The AMD string can have a somewhat arbitrary preamble (see skbug.com/7195)
         if (const char* amdString = strstr(rendererString, "Radeon")) {
             char amdGeneration, amdTier, amdRevision;
-            n = sscanf(amdString, "Radeon (TM) R9 M%c%c%c",
-                                       &amdGeneration, &amdTier, &amdRevision);
+            n = sscanf(amdString, "Radeon (TM) R9 M%c%c%c", &amdGeneration, &amdTier, &amdRevision);
             if (3 == n) {
                 if ('4' == amdGeneration) {
                     return kAMDRadeonR9M4xx_GrGLRenderer;
@@ -501,19 +504,19 @@ void GrGLGetANGLEInfoFromString(const char* rendererString, GrGLANGLEBackend* ba
 GrGLVersion GrGLGetVersion(const GrGLInterface* gl) {
     const GrGLubyte* v;
     GR_GL_CALL_RET(gl, v, GetString(GR_GL_VERSION));
-    return GrGLGetVersionFromString((const char*) v);
+    return GrGLGetVersionFromString((const char*)v);
 }
 
 GrGLSLVersion GrGLGetGLSLVersion(const GrGLInterface* gl) {
     const GrGLubyte* v;
     GR_GL_CALL_RET(gl, v, GetString(GR_GL_SHADING_LANGUAGE_VERSION));
-    return GrGLGetGLSLVersionFromString((const char*) v);
+    return GrGLGetGLSLVersionFromString((const char*)v);
 }
 
 GrGLVendor GrGLGetVendor(const GrGLInterface* gl) {
     const GrGLubyte* v;
     GR_GL_CALL_RET(gl, v, GetString(GR_GL_VENDOR));
-    return GrGLGetVendorFromString((const char*) v);
+    return GrGLGetVendorFromString((const char*)v);
 }
 
 GrGLRenderer GrGLGetRenderer(const GrGLInterface* gl) {
@@ -525,14 +528,14 @@ GrGLRenderer GrGLGetRenderer(const GrGLInterface* gl) {
 
 GrGLenum GrToGLStencilFunc(GrStencilTest test) {
     static const GrGLenum gTable[kGrStencilTestCount] = {
-        GR_GL_ALWAYS,           // kAlways
-        GR_GL_NEVER,            // kNever
-        GR_GL_GREATER,          // kGreater
-        GR_GL_GEQUAL,           // kGEqual
-        GR_GL_LESS,             // kLess
-        GR_GL_LEQUAL,           // kLEqual
-        GR_GL_EQUAL,            // kEqual
-        GR_GL_NOTEQUAL,         // kNotEqual
+            GR_GL_ALWAYS,    // kAlways
+            GR_GL_NEVER,     // kNever
+            GR_GL_GREATER,   // kGreater
+            GR_GL_GEQUAL,    // kGEqual
+            GR_GL_LESS,      // kLess
+            GR_GL_LEQUAL,    // kLEqual
+            GR_GL_EQUAL,     // kEqual
+            GR_GL_NOTEQUAL,  // kNotEqual
     };
     GR_STATIC_ASSERT(0 == (int)GrStencilTest::kAlways);
     GR_STATIC_ASSERT(1 == (int)GrStencilTest::kNever);
@@ -546,4 +549,3 @@ GrGLenum GrToGLStencilFunc(GrStencilTest test) {
 
     return gTable[(int)test];
 }
-

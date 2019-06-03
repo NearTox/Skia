@@ -8,7 +8,7 @@
 #ifndef GrSoftwarePathRenderer_DEFINED
 #define GrSoftwarePathRenderer_DEFINED
 
-#include "GrPathRenderer.h"
+#include "src/gpu/GrPathRenderer.h"
 
 class GrProxyProvider;
 class GrTextureProxy;
@@ -20,9 +20,7 @@ class GrTextureProxy;
 class GrSoftwarePathRenderer : public GrPathRenderer {
 public:
     GrSoftwarePathRenderer(GrProxyProvider* proxyProvider, bool allowCaching)
-            : fProxyProvider(proxyProvider)
-            , fAllowCaching(allowCaching) {
-    }
+            : fProxyProvider(proxyProvider), fAllowCaching(allowCaching) {}
 
     static bool GetShapeAndClipBounds(GrRenderTargetContext*,
                                       const GrClip& clip,
@@ -69,8 +67,8 @@ private:
     bool onDrawPath(const DrawPathArgs&) override;
 
 private:
-    GrProxyProvider*       fProxyProvider;
-    bool                   fAllowCaching;
+    GrProxyProvider* fProxyProvider;
+    bool fAllowCaching;
 
     typedef GrPathRenderer INHERITED;
 };

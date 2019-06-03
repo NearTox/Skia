@@ -8,8 +8,8 @@
 #ifndef GrPathRendering_DEFINED
 #define GrPathRendering_DEFINED
 
-#include "SkPath.h"
-#include "GrPipeline.h"
+#include "include/core/SkPath.h"
+#include "src/gpu/GrPipeline.h"
 
 class GrGpu;
 class GrPath;
@@ -33,14 +33,14 @@ class SkTypeface;
  */
 class GrPathRendering {
 public:
-    virtual ~GrPathRendering() { }
+    virtual ~GrPathRendering() {}
 
     enum PathTransformType {
         kNone_PathTransformType,        //!< []
         kTranslateX_PathTransformType,  //!< [kMTransX]
         kTranslateY_PathTransformType,  //!< [kMTransY]
         kTranslate_PathTransformType,   //!< [kMTransX, kMTransY]
-        kAffine_PathTransformType,      //!< [kMScaleX, kMSkewX, kMTransX, kMSkewY, kMScaleY, kMTransY]
+        kAffine_PathTransformType,  //!< [kMScaleX, kMSkewX, kMTransX, kMSkewY, kMScaleY, kMTransY]
 
         kLast_PathTransformType = kAffine_PathTransformType
     };
@@ -94,40 +94,35 @@ public:
                         const SkMatrix* viewMatrix,
                         const GrScissorState* scissor,
                         const GrStencilSettings* stencil)
-            : fUseHWAA(useHWAA)
-            , fProxy(proxy)
-            , fViewMatrix(viewMatrix)
-            , fScissor(scissor)
-            , fStencil(stencil) {
-        }
-        bool                     fUseHWAA;
-        GrRenderTargetProxy*     fProxy;
-        const SkMatrix*          fViewMatrix;
-        const GrScissorState*    fScissor;
+                : fUseHWAA(useHWAA)
+                , fProxy(proxy)
+                , fViewMatrix(viewMatrix)
+                , fScissor(scissor)
+                , fStencil(stencil) {}
+        bool fUseHWAA;
+        GrRenderTargetProxy* fProxy;
+        const SkMatrix* fViewMatrix;
+        const GrScissorState* fScissor;
         const GrStencilSettings* fStencil;
     };
 
     void stencilPath(const StencilPathArgs& args, const GrPath* path);
 
-    void drawPath(GrRenderTarget*, GrSurfaceOrigin,
-                  const GrPrimitiveProcessor& primProc,
-                  const GrPipeline& pipeline,
-                  const GrPipeline::FixedDynamicState&,
+    void drawPath(GrRenderTarget*, GrSurfaceOrigin, const GrPrimitiveProcessor& primProc,
+                  const GrPipeline& pipeline, const GrPipeline::FixedDynamicState&,
                   const GrStencilSettings& stencilPassSettings,  // Cover pass settings in pipeline.
                   const GrPath* path);
 
 protected:
-    GrPathRendering(GrGpu* gpu) : fGpu(gpu) { }
+    GrPathRendering(GrGpu* gpu) : fGpu(gpu) {}
 
     virtual void onStencilPath(const StencilPathArgs&, const GrPath*) = 0;
-    virtual void onDrawPath(GrRenderTarget*, GrSurfaceOrigin,
-                            const GrPrimitiveProcessor&,
-                            const GrPipeline&,
-                            const GrPipeline::FixedDynamicState&,
-                            const GrStencilSettings&,
-                            const GrPath*) = 0;
+    virtual void onDrawPath(GrRenderTarget*, GrSurfaceOrigin, const GrPrimitiveProcessor&,
+                            const GrPipeline&, const GrPipeline::FixedDynamicState&,
+                            const GrStencilSettings&, const GrPath*) = 0;
 
     GrGpu* fGpu;
+
 private:
     GrPathRendering& operator=(const GrPathRendering&);
 };

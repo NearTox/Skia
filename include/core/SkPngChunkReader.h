@@ -8,8 +8,8 @@
 #ifndef SkPngChunkReader_DEFINED
 #define SkPngChunkReader_DEFINED
 
-#include "SkTypes.h"
-#include "SkRefCnt.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkTypes.h"
 
 /**
  *  SkPngChunkReader
@@ -42,4 +42,4 @@ public:
      */
     virtual bool readChunk(const char tag[], const void* data, size_t length) = 0;
 };
-#endif // SkPngChunkReader_DEFINED
+#endif  // SkPngChunkReader_DEFINED

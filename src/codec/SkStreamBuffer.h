@@ -8,10 +8,10 @@
 #ifndef SkStreamBuffer_DEFINED
 #define SkStreamBuffer_DEFINED
 
-#include "SkData.h"
-#include "SkStream.h"
-#include "SkTypes.h"
-#include "../private/SkTHash.h"
+#include "include/core/SkData.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkTHash.h"
 
 /**
  *  Helper class for reading from a stream that may not have all its data
@@ -89,15 +89,15 @@ public:
 private:
     static constexpr size_t kMaxSize = 256 * 3;
 
-    std::unique_ptr<SkStream>   fStream;
-    size_t                      fPosition;
-    char                        fBuffer[kMaxSize];
-    size_t                      fBytesBuffered;
+    std::unique_ptr<SkStream> fStream;
+    size_t fPosition;
+    char fBuffer[kMaxSize];
+    size_t fBytesBuffered;
     // If the stream has a length and position, we can make two optimizations:
     // - We can skip buffering
     // - During parsing, we can store the position and size of data that is
     //   needed later during decoding.
-    const bool                  fHasLengthAndPosition;
+    const bool fHasLengthAndPosition;
     // When fHasLengthAndPosition is true, we do not need to actually buffer
     // inside buffer(). We'll buffer inside get(). This keeps track of how many
     // bytes we've buffered inside get(), for the (non-existent) case of:
@@ -107,10 +107,9 @@ private:
     //  get()
     // The second call to get() needs to only truly buffer the part that was
     // not already buffered.
-    mutable size_t              fTrulyBuffered;
+    mutable size_t fTrulyBuffered;
     // Only used if !fHasLengthAndPosition. In that case, markPosition will
     // copy into an SkData, stored here.
     SkTHashMap<size_t, SkData*> fMarkedData;
 };
-#endif // SkStreamBuffer_DEFINED
-
+#endif  // SkStreamBuffer_DEFINED

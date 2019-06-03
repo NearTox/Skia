@@ -8,7 +8,7 @@
 #ifndef SKSL_ASTDOSTATEMENT
 #define SKSL_ASTDOSTATEMENT
 
-#include "SkSLASTStatement.h"
+#include "src/sksl/ast/SkSLASTStatement.h"
 
 namespace SkSL {
 
@@ -18,9 +18,9 @@ namespace SkSL {
 struct ASTDoStatement : public ASTStatement {
     ASTDoStatement(int offset, std::unique_ptr<ASTStatement> statement,
                    std::unique_ptr<ASTExpression> test)
-    : INHERITED(offset, kDo_Kind)
-    , fStatement(std::move(statement))
-    , fTest(std::move(test)) {}
+            : INHERITED(offset, kDo_Kind)
+            , fStatement(std::move(statement))
+            , fTest(std::move(test)) {}
 
     String description() const override {
         return "do " + fStatement->description() + " while (" + fTest->description() + ");";
@@ -32,6 +32,6 @@ struct ASTDoStatement : public ASTStatement {
     typedef ASTStatement INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

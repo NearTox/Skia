@@ -5,19 +5,21 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkPath.h"
-#include "SkTArray.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/private/SkTArray.h"
 
 namespace skiagm {
 
 // this GM tests hairlines which fill nearly the entire render target
 class StLouisArchGM : public GM {
 protected:
-    SkString onShortName() override {
-        return SkString("stlouisarch");
-    }
+    SkString onShortName() override { return SkString("stlouisarch"); }
 
     SkISize onISize() override { return SkISize::Make((int)kWidth, (int)kHeight); }
 
@@ -25,7 +27,7 @@ protected:
         {
             SkPath* bigQuad = &fPaths.push_back();
             bigQuad->moveTo(0, 0);
-            bigQuad->quadTo(kWidth/2, kHeight, kWidth, 0);
+            bigQuad->quadTo(kWidth / 2, kHeight, kWidth, 0);
         }
 
         {
@@ -35,28 +37,23 @@ protected:
             degenBigQuad->quadTo(0, yPos, kWidth, yPos);
         }
 
-
         {
             SkPath* bigCubic = &fPaths.push_back();
             bigCubic->moveTo(0, 0);
-            bigCubic->cubicTo(0, kHeight,
-                              kWidth, kHeight,
-                              kWidth, 0);
+            bigCubic->cubicTo(0, kHeight, kWidth, kHeight, kWidth, 0);
         }
 
         {
             SkPath* degenBigCubic = &fPaths.push_back();
             SkScalar yPos = kHeight / 2;
             degenBigCubic->moveTo(0, yPos);
-            degenBigCubic->cubicTo(0, yPos,
-                                   0, yPos,
-                                   kWidth, yPos);
+            degenBigCubic->cubicTo(0, yPos, 0, yPos, kWidth, yPos);
         }
 
         {
             SkPath* bigConic = &fPaths.push_back();
             bigConic->moveTo(0, 0);
-            bigConic->conicTo(kWidth/2, kHeight, kWidth, 0, .5);
+            bigConic->conicTo(kWidth / 2, kHeight, kWidth, 0, .5);
         }
 
         {
@@ -92,6 +89,6 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new StLouisArchGM; )
+DEF_GM(return new StLouisArchGM;)
 
-}
+}  // namespace skiagm

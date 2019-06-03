@@ -8,11 +8,11 @@
 #ifndef SkSurfacePriv_DEFINED
 #define SkSurfacePriv_DEFINED
 
-#include "SkSurfaceProps.h"
+#include "include/core/SkSurfaceProps.h"
 
 struct SkImageInfo;
 
-static inline SkSurfaceProps SkSurfacePropsCopyOrDefault(const SkSurfaceProps* props) {
+static inline SkSurfaceProps SkSurfacePropsCopyOrDefault(const SkSurfaceProps* props) noexcept {
     if (props) {
         return *props;
     } else {

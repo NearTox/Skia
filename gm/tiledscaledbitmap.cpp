@@ -5,37 +5,35 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFilterQuality.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTileMode.h"
 
-#include "Resources.h"
-#include "SkBitmap.h"
-#include "SkPaint.h"
-#include "SkShader.h"
-#include "SkStream.h"
-
- /***
-  *
-  * This GM reproduces Skia bug 2904, in which a tiled bitmap shader was failing to draw correctly
-  * when fractional image scaling was ignored by the high quality bitmap scaler.
-  *
-  ***/
+/***
+ *
+ * This GM reproduces Skia bug 2904, in which a tiled bitmap shader was failing to draw correctly
+ * when fractional image scaling was ignored by the high quality bitmap scaler.
+ *
+ ***/
 
 namespace skiagm {
 
 class TiledScaledBitmapGM : public GM {
 public:
-
-    TiledScaledBitmapGM() {
-    }
+    TiledScaledBitmapGM() {}
 
 protected:
-    SkString onShortName() override {
-        return SkString("tiledscaledbitmap");
-    }
+    SkString onShortName() override { return SkString("tiledscaledbitmap"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(1016, 616);
-    }
+    SkISize onISize() override { return SkISize::Make(1016, 616); }
 
     static SkBitmap make_bm(int width, int height) {
         SkBitmap bm;
@@ -44,13 +42,11 @@ protected:
         SkCanvas canvas(bm);
         SkPaint paint;
         paint.setAntiAlias(true);
-        canvas.drawCircle(width/2.f, height/2.f, width/4.f, paint);
+        canvas.drawCircle(width / 2.f, height / 2.f, width / 4.f, paint);
         return bm;
     }
 
-    void onOnceBeforeDraw() override {
-        fBitmap = make_bm(360, 288);
-    }
+    void onOnceBeforeDraw() override { fBitmap = make_bm(360, 288); }
 
     void onDraw(SkCanvas* canvas) override {
         SkPaint paint;
@@ -59,12 +55,11 @@ protected:
         paint.setFilterQuality(kHigh_SkFilterQuality);
 
         SkMatrix mat;
-        mat.setScale(121.f/360.f, 93.f/288.f);
+        mat.setScale(121.f / 360.f, 93.f / 288.f);
         mat.postTranslate(-72, -72);
 
-        paint.setShader(SkShader::MakeBitmapShader(fBitmap, SkShader::kRepeat_TileMode,
-                                                   SkShader::kRepeat_TileMode, &mat));
-        canvas->drawRect({ 8, 8, 1008, 608 }, paint);
+        paint.setShader(fBitmap.makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, &mat));
+        canvas->drawRect({8, 8, 1008, 608}, paint);
     }
 
 private:
@@ -76,4 +71,4 @@ private:
 //////////////////////////////////////////////////////////////////////////////
 
 DEF_GM(return new TiledScaledBitmapGM;)
-}
+}  // namespace skiagm

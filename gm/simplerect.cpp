@@ -5,11 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkBlurMask.h"
-#include "SkBlurMaskFilter.h"
-#include "SkPath.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/utils/SkRandom.h"
+#include "tools/ToolUtils.h"
+
+class AnimTimer;
 
 class SimpleRectGM : public skiagm::GM {
 public:
@@ -22,12 +28,10 @@ protected:
         return name;
     }
 
-    SkISize onISize() override {
-        return SkISize::Make(800, 800);
-    }
+    SkISize onISize() override { return SkISize::Make(800, 800); }
 
     void onDraw(SkCanvas* canvas) override {
-        canvas->translate(1, 1);    // want to exercise non-identity ctm performance
+        canvas->translate(1, 1);  // want to exercise non-identity ctm performance
 
         const SkScalar min = -20;
         const SkScalar max = 800;
@@ -36,7 +40,7 @@ protected:
         SkRandom rand;
         SkPaint paint;
         for (int i = 0; i < 10000; i++) {
-            paint.setColor(sk_tool_utils::color_to_565(rand.nextU() | (0xFF << 24)));
+            paint.setColor(ToolUtils::color_to_565(rand.nextU() | (0xFF << 24)));
             SkScalar x = rand.nextRangeScalar(min, max);
             SkScalar y = rand.nextRangeScalar(min, max);
             SkScalar w = rand.nextRangeScalar(0, size);
@@ -45,12 +49,9 @@ protected:
         }
     }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
-        return true;
-    }
+    bool onAnimate(const AnimTimer& timer) override { return true; }
 
 private:
-
     typedef GM INHERITED;
 };
 DEF_GM(return new SimpleRectGM;)

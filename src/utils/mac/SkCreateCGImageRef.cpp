@@ -5,14 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 #if defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)
 
-#include "SkBitmap.h"
-#include "SkCGUtils.h"
-#include "SkColorData.h"
-#include "SkMacros.h"
-#include "SkTo.h"
+#include "include/core/SkBitmap.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkMacros.h"
+#include "include/private/SkTo.h"
+#include "include/utils/mac/SkCGUtils.h"
 
 static CGBitmapInfo ComputeCGAlphaInfo_RGBA(SkAlphaType at) {
     CGBitmapInfo info = kCGBitmapByteOrder32Big;
@@ -122,10 +122,9 @@ static SkBitmap* prepareForImageRef(const SkBitmap& bm,
     return copy;
 }
 
-CGImageRef SkCreateCGImageRefWithColorspace(const SkBitmap& bm,
-                                            CGColorSpaceRef colorSpace) {
+CGImageRef SkCreateCGImageRefWithColorspace(const SkBitmap& bm, CGColorSpaceRef colorSpace) {
     size_t bitsPerComponent SK_INIT_TO_AVOID_WARNING;
-    CGBitmapInfo info       SK_INIT_TO_AVOID_WARNING;
+    CGBitmapInfo info SK_INIT_TO_AVOID_WARNING;
 
     SkBitmap* bitmap = prepareForImageRef(bm, &bitsPerComponent, &info);
     if (nullptr == bitmap) {
@@ -137,8 +136,8 @@ CGImageRef SkCreateCGImageRefWithColorspace(const SkBitmap& bm,
     const size_t s = bitmap->computeByteSize();
 
     // our provider "owns" the bitmap*, and will take care of deleting it
-    CGDataProviderRef dataRef = CGDataProviderCreateWithData(bitmap, bitmap->getPixels(), s,
-                                                             SkBitmap_ReleaseInfo);
+    CGDataProviderRef dataRef =
+            CGDataProviderCreateWithData(bitmap, bitmap->getPixels(), s, SkBitmap_ReleaseInfo);
 
     bool releaseColorSpace = false;
     if (nullptr == colorSpace) {
@@ -146,10 +145,9 @@ CGImageRef SkCreateCGImageRefWithColorspace(const SkBitmap& bm,
         releaseColorSpace = true;
     }
 
-    CGImageRef ref = CGImageCreate(w, h, bitsPerComponent,
-                                   bitmap->bytesPerPixel() * 8,
-                                   bitmap->rowBytes(), colorSpace, info, dataRef,
-                                   nullptr, false, kCGRenderingIntentDefault);
+    CGImageRef ref =
+            CGImageCreate(w, h, bitsPerComponent, bitmap->bytesPerPixel() * 8, bitmap->rowBytes(),
+                          colorSpace, info, dataRef, nullptr, false, kCGRenderingIntentDefault);
 
     if (releaseColorSpace) {
         CGColorSpaceRelease(colorSpace);
@@ -191,7 +189,7 @@ CGContextRef SkCreateCGContext(const SkPixmap& pmap) {
             cg_bitmap_info = ComputeCGAlphaInfo_BGRA(pmap.alphaType());
             break;
         default:
-            return nullptr;   // no other colortypes are supported (for now)
+            return nullptr;  // no other colortypes are supported (for now)
     }
 
     size_t rb = pmap.addr() ? pmap.rowBytes() : 0;
@@ -216,7 +214,7 @@ bool SkCopyPixelsFromCGImage(const SkImageInfo& info, size_t rowBytes, void* pix
             cg_bitmap_info = ComputeCGAlphaInfo_BGRA(info.alphaType());
             break;
         default:
-            return false;   // no other colortypes are supported (for now)
+            return false;  // no other colortypes are supported (for now)
     }
 
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
@@ -279,4 +277,4 @@ sk_sp<SkImage> SkMakeImageFromCGImage(CGImageRef src) {
     return SkImage::MakeFromBitmap(bm);
 }
 
-#endif//defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)
+#endif  // defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)

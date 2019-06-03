@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "SkEdgeClipper.h"
-#include "SkGeometry.h"
-#include "SkLineClipper.h"
-#include "SkMacros.h"
+#include "src/core/SkEdgeClipper.h"
+#include "include/private/SkMacros.h"
+#include "src/core/SkGeometry.h"
+#include "src/core/SkLineClipper.h"
 
 #include <utility>
 
@@ -50,7 +50,7 @@ bool SkEdgeClipper::clipLine(SkPoint p0, SkPoint p1, const SkRect& clip) {
     fCurrVerb = fVerbs;
 
     SkPoint lines[SkLineClipper::kMaxPoints];
-    const SkPoint pts[] = { p0, p1 };
+    const SkPoint pts[] = {p0, p1};
     int lineCount = SkLineClipper::ClipLine(pts, clip, lines, fCanCullToTheRight);
     for (int i = 0; i < lineCount; i++) {
         this->appendLine(lines[i], lines[i + 1]);
@@ -64,14 +64,13 @@ bool SkEdgeClipper::clipLine(SkPoint p0, SkPoint p1, const SkRect& clip) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static bool chopMonoQuadAt(SkScalar c0, SkScalar c1, SkScalar c2,
-                           SkScalar target, SkScalar* t) {
+static bool chopMonoQuadAt(SkScalar c0, SkScalar c1, SkScalar c2, SkScalar target, SkScalar* t) {
     /* Solve F(t) = y where F(t) := [0](1-t)^2 + 2[1]t(1-t) + [2]t^2
      *  We solve for t, using quadratic equation, hence we have to rearrange
      * our cooefficents to look like At^2 + Bt + C
      */
     SkScalar A = c0 - c1 - c1 + c2;
-    SkScalar B = 2*(c1 - c0);
+    SkScalar B = 2 * (c1 - c0);
     SkScalar C = c0 - target;
 
     SkScalar roots[2];  // we only expect one, but make room for 2 for safety
@@ -94,7 +93,7 @@ static bool chopMonoQuadAtX(SkPoint pts[3], SkScalar x, SkScalar* t) {
 // Modify pts[] in place so that it is clipped in Y to the clip rect
 static void chop_quad_in_Y(SkPoint pts[3], const SkRect& clip) {
     SkScalar t;
-    SkPoint tmp[5]; // for SkChopQuadAt
+    SkPoint tmp[5];  // for SkChopQuadAt
 
     // are we partially above
     if (pts[0].fY < clip.fTop) {
@@ -175,7 +174,7 @@ void SkEdgeClipper::clipMonoQuad(const SkPoint srcPts[3], const SkRect& clip) {
     }
 
     SkScalar t;
-    SkPoint tmp[5]; // for SkChopQuadAt
+    SkPoint tmp[5];  // for SkChopQuadAt
 
     // are we partially to the left
     if (pts[0].fX < clip.fLeft) {
@@ -211,7 +210,7 @@ void SkEdgeClipper::clipMonoQuad(const SkPoint srcPts[3], const SkRect& clip) {
             // so we just clamp against the right
             this->appendVLine(clip.fRight, pts[0].fY, pts[2].fY, reverse);
         }
-    } else {    // wholly inside the clip
+    } else {  // wholly inside the clip
         this->appendQuad(pts, reverse);
     }
 }
@@ -220,7 +219,7 @@ bool SkEdgeClipper::clipQuad(const SkPoint srcPts[3], const SkRect& clip) {
     fCurrPoint = fPoints;
     fCurrVerb = fVerbs;
 
-    SkRect  bounds;
+    SkRect bounds;
     bounds.set(srcPts, 3);
 
     if (!quick_reject(bounds, clip)) {
@@ -248,12 +247,12 @@ bool SkEdgeClipper::clipQuad(const SkPoint srcPts[3], const SkRect& clip) {
 static SkScalar mono_cubic_closestT(const SkScalar src[], SkScalar x) {
     SkScalar t = 0.5f;
     SkScalar lastT;
-    SkScalar bestT  SK_INIT_TO_AVOID_WARNING;
+    SkScalar bestT SK_INIT_TO_AVOID_WARNING;
     SkScalar step = 0.25f;
     SkScalar D = src[0];
-    SkScalar A = src[6] + 3*(src[2] - src[4]) - D;
-    SkScalar B = 3*(src[4] - src[2] - src[2] + D);
-    SkScalar C = 3*(src[2] - D);
+    SkScalar A = src[6] + 3 * (src[2] - src[4]) - D;
+    SkScalar B = 3 * (src[4] - src[2] - src[2] + D);
+    SkScalar C = 3 * (src[2] - D);
     x -= D;
     SkScalar closest = SK_ScalarMax;
     do {
@@ -279,7 +278,6 @@ static void chop_mono_cubic_at_y(SkPoint src[4], SkScalar y, SkPoint dst[7]) {
 
 // Modify pts[] in place so that it is clipped in Y to the clip rect
 static void chop_cubic_in_Y(SkPoint pts[4], const SkRect& clip) {
-
     // are we partially above
     if (pts[0].fY < clip.fTop) {
         SkPoint tmp[7];
@@ -390,7 +388,7 @@ void SkEdgeClipper::clipMonoCubic(const SkPoint src[4], const SkRect& clip) {
 
         this->appendCubic(tmp, reverse);
         this->appendVLine(clip.fRight, tmp[3].fY, tmp[6].fY, reverse);
-    } else {    // wholly inside the clip
+    } else {  // wholly inside the clip
         this->appendCubic(pts, reverse);
     }
 }

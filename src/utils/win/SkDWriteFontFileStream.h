@@ -8,11 +8,11 @@
 #ifndef SkDWriteFontFileStream_DEFINED
 #define SkDWriteFontFileStream_DEFINED
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
-#include "SkMutex.h"
-#include "SkStream.h"
-#include "SkTScopedComPtr.h"
+#include "include/core/SkStream.h"
+#include "include/private/SkMutex.h"
+#include "src/utils/win/SkTScopedComPtr.h"
 
 #include <dwrite.h>
 
@@ -63,11 +63,10 @@ public:
     virtual ULONG STDMETHODCALLTYPE Release();
 
     // IDWriteFontFileStream methods
-    virtual HRESULT STDMETHODCALLTYPE ReadFileFragment(
-        void const** fragmentStart,
-        UINT64 fileOffset,
-        UINT64 fragmentSize,
-        void** fragmentContext);
+    virtual HRESULT STDMETHODCALLTYPE ReadFileFragment(void const** fragmentStart,
+                                                       UINT64 fileOffset,
+                                                       UINT64 fragmentSize,
+                                                       void** fragmentContext);
 
     virtual void STDMETHODCALLTYPE ReleaseFileFragment(void* fragmentContext);
     virtual HRESULT STDMETHODCALLTYPE GetFileSize(UINT64* fileSize);
@@ -78,7 +77,7 @@ public:
 
 private:
     explicit SkDWriteFontFileStreamWrapper(SkStreamAsset* stream);
-    virtual ~SkDWriteFontFileStreamWrapper() { }
+    virtual ~SkDWriteFontFileStreamWrapper() {}
 
     ULONG fRefCount;
     std::unique_ptr<SkStreamAsset> fStream;

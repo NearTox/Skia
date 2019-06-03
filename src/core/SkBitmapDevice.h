@@ -8,18 +8,18 @@
 #ifndef SkBitmapDevice_DEFINED
 #define SkBitmapDevice_DEFINED
 
-#include "SkBitmap.h"
-#include "SkCanvas.h"
-#include "SkColor.h"
-#include "SkDevice.h"
-#include "SkGlyphRunPainter.h"
-#include "SkImageInfo.h"
-#include "SkRasterClip.h"
-#include "SkRasterClipStack.h"
-#include "SkRect.h"
-#include "SkScalar.h"
-#include "SkSize.h"
-#include "SkSurfaceProps.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkSurfaceProps.h"
+#include "src/core/SkDevice.h"
+#include "src/core/SkGlyphRunPainter.h"
+#include "src/core/SkRasterClip.h"
+#include "src/core/SkRasterClipStack.h"
 
 class SkImageFilterCache;
 class SkMatrix;
@@ -53,20 +53,17 @@ public:
      *  valid for the bitmap to have no pixels associated with it. In that case,
      *  any drawing to this device will have no effect.
      */
-    SkBitmapDevice(const SkBitmap& bitmap, const SkSurfaceProps& surfaceProps,
-                   void* externalHandle, const SkBitmap* coverage);
+    SkBitmapDevice(const SkBitmap& bitmap, const SkSurfaceProps& surfaceProps, void* externalHandle,
+                   const SkBitmap* coverage);
 
-    static SkBitmapDevice* Create(const SkImageInfo&, const SkSurfaceProps&,
-                                  bool trackCoverage,
+    static SkBitmapDevice* Create(const SkImageInfo&, const SkSurfaceProps&, bool trackCoverage,
                                   SkRasterHandleAllocator*);
 
     static SkBitmapDevice* Create(const SkImageInfo& info, const SkSurfaceProps& props) {
         return Create(info, props, false, nullptr);
     }
 
-    const SkPixmap* accessCoverage() const {
-        return fCoverage ? &fCoverage->pixmap() : nullptr;
-    }
+    const SkPixmap* accessCoverage() const { return fCoverage ? &fCoverage->pixmap() : nullptr; }
 
 protected:
     void* getRasterHandle() const override { return fRasterHandle; }
@@ -76,8 +73,8 @@ protected:
      and are handling any looping from the paint.
      */
     void drawPaint(const SkPaint& paint) override;
-    void drawPoints(SkCanvas::PointMode mode, size_t count,
-                            const SkPoint[], const SkPaint& paint) override;
+    void drawPoints(SkCanvas::PointMode mode, size_t count, const SkPoint[],
+                    const SkPaint& paint) override;
     void drawRect(const SkRect& r, const SkPaint& paint) override;
     void drawOval(const SkRect& oval, const SkPaint& paint) override;
     void drawRRect(const SkRRect& rr, const SkPaint& paint) override;
@@ -95,8 +92,8 @@ protected:
      *  The default impl. will create a bitmap-shader from the bitmap,
      *  and call drawRect with it.
      */
-    void drawBitmapRect(const SkBitmap&, const SkRect*, const SkRect&,
-                        const SkPaint&, SkCanvas::SrcRectConstraint) override;
+    void drawBitmapRect(const SkBitmap&, const SkRect*, const SkRect&, const SkPaint&,
+                        SkCanvas::SrcRectConstraint) override;
 
     void drawGlyphRunList(const SkGlyphRunList& glyphRunList) override;
     void drawVertices(const SkVertices*, const SkVertices::Bone bones[], int boneCount, SkBlendMode,
@@ -105,8 +102,8 @@ protected:
 
     ///////////////////////////////////////////////////////////////////////////
 
-    void drawSpecial(SkSpecialImage*, int x, int y, const SkPaint&,
-                     SkImage*, const SkMatrix&) override;
+    void drawSpecial(SkSpecialImage*, int x, int y, const SkPaint&, SkImage*,
+                     const SkMatrix&) override;
     sk_sp<SkSpecialImage> makeSpecial(const SkBitmap&) override;
     sk_sp<SkSpecialImage> makeSpecial(const SkImage*) override;
     sk_sp<SkSpecialImage> snapSpecial() override;
@@ -138,7 +135,7 @@ protected:
 
 private:
     friend class SkCanvas;
-    friend struct DeviceCM; //for setMatrixClip
+    friend struct DeviceCM;  // for setMatrixClip
     friend class SkDraw;
     friend class SkDrawIter;
     friend class SkDrawTiler;
@@ -157,12 +154,11 @@ private:
 
     SkImageFilterCache* getImageFilterCache() override;
 
-    SkBitmap    fBitmap;
-    void*       fRasterHandle = nullptr;
-    SkRasterClipStack  fRCStack;
-    std::unique_ptr<SkBitmap> fCoverage;    // if non-null, will have the same dimensions as fBitmap
+    SkBitmap fBitmap;
+    void* fRasterHandle = nullptr;
+    SkRasterClipStack fRCStack;
+    std::unique_ptr<SkBitmap> fCoverage;  // if non-null, will have the same dimensions as fBitmap
     SkGlyphRunListPainter fGlyphPainter;
-
 
     typedef SkBaseDevice INHERITED;
 };
@@ -171,13 +167,13 @@ class SkBitmapDeviceFilteredSurfaceProps {
 public:
     SkBitmapDeviceFilteredSurfaceProps(const SkBitmap& bitmap, const SkPaint& paint,
                                        const SkSurfaceProps& surfaceProps)
-        : fSurfaceProps((kN32_SkColorType != bitmap.colorType() || !paint.isSrcOver())
-                        ? fLazy.init(surfaceProps.flags(), kUnknown_SkPixelGeometry)
-                        : &surfaceProps)
-    { }
+            : fSurfaceProps((kN32_SkColorType != bitmap.colorType() || !paint.isSrcOver())
+                                    ? fLazy.init(surfaceProps.flags(), kUnknown_SkPixelGeometry)
+                                    : &surfaceProps) {}
 
     SkBitmapDeviceFilteredSurfaceProps(const SkBitmapDeviceFilteredSurfaceProps&) = delete;
-    SkBitmapDeviceFilteredSurfaceProps& operator=(const SkBitmapDeviceFilteredSurfaceProps&) = delete;
+    SkBitmapDeviceFilteredSurfaceProps& operator=(const SkBitmapDeviceFilteredSurfaceProps&) =
+            delete;
     SkBitmapDeviceFilteredSurfaceProps(SkBitmapDeviceFilteredSurfaceProps&&) = delete;
     SkBitmapDeviceFilteredSurfaceProps& operator=(SkBitmapDeviceFilteredSurfaceProps&&) = delete;
 
@@ -185,7 +181,7 @@ public:
 
 private:
     SkTLazy<SkSurfaceProps> fLazy;
-    SkSurfaceProps const * const fSurfaceProps;
+    SkSurfaceProps const* const fSurfaceProps;
 };
 
-#endif // SkBitmapDevice_DEFINED
+#endif  // SkBitmapDevice_DEFINED

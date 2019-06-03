@@ -7,15 +7,12 @@
 #ifndef SkLineClipper_DEFINED
 #define SkLineClipper_DEFINED
 
-#include "SkRect.h"
-#include "SkPoint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
 
 class SkLineClipper {
 public:
-    enum {
-        kMaxPoints = 4,
-        kMaxClippedLineSegments = kMaxPoints - 1
-    };
+    enum { kMaxPoints = 4, kMaxClippedLineSegments = kMaxPoints - 1 };
 
     /*  Clip the line pts[0]...pts[1] against clip, ignoring segments that
         lie completely above or below the clip. For portions to the left or
@@ -28,8 +25,8 @@ public:
             2nd segment: lines[1]..lines[2]
             3rd segment: lines[2]..lines[3]
      */
-    static int ClipLine(const SkPoint pts[2], const SkRect& clip,
-                        SkPoint lines[kMaxPoints], bool canCullToTheRight);
+    static int ClipLine(const SkPoint pts[2], const SkRect& clip, SkPoint lines[kMaxPoints],
+                        bool canCullToTheRight);
 
     /*  Intersect the line segment against the rect. If there is a non-empty
         resulting segment, return true and set dst[] to that segment. If not,

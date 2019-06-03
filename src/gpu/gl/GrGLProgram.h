@@ -5,13 +5,12 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef GrGLProgram_DEFINED
 #define GrGLProgram_DEFINED
 
-#include "GrGLProgramDataManager.h"
-#include "glsl/GrGLSLProgramDataManager.h"
-#include "glsl/GrGLSLUniformHandler.h"
+#include "src/gpu/gl/GrGLProgramDataManager.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
 class GrGLSLFragmentProcessor;
 class GrGLSLPrimitiveProcessor;
@@ -52,10 +51,13 @@ public:
                 GrGLuint programID,
                 const UniformInfoArray& uniforms,
                 const UniformInfoArray& textureSamplers,
-                const VaryingInfoArray&, // used for NVPR only currently
-                std::unique_ptr<GrGLSLPrimitiveProcessor> geometryProcessor,
-                std::unique_ptr<GrGLSLXferProcessor> xferProcessor,
-                std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fragmentProcessors,
+                const VaryingInfoArray&,  // used for NVPR only currently
+                std::unique_ptr<GrGLSLPrimitiveProcessor>
+                        geometryProcessor,
+                std::unique_ptr<GrGLSLXferProcessor>
+                        xferProcessor,
+                std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]>
+                        fragmentProcessors,
                 int fragmentProcessorCnt,
                 std::unique_ptr<Attribute[]>,
                 int vertexAttributeCnt,
@@ -81,14 +83,14 @@ public:
      * them.
      */
     struct RenderTargetState {
-        SkISize         fRenderTargetSize;
+        SkISize fRenderTargetSize;
         GrSurfaceOrigin fRenderTargetOrigin;
 
         RenderTargetState() { this->invalidate(); }
         void invalidate() {
             fRenderTargetSize.fWidth = -1;
             fRenderTargetSize.fHeight = -1;
-            fRenderTargetOrigin = (GrSurfaceOrigin) -1;
+            fRenderTargetOrigin = (GrSurfaceOrigin)-1;
         }
 
         /**

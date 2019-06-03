@@ -5,12 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "SkCubicMap.h"
-#include "SkottieJson.h"
-#include "SkottiePriv.h"
-#include "SkottieValue.h"
-#include "SkSGScene.h"
-#include "SkString.h"
+#include "include/core/SkCubicMap.h"
+#include "include/core/SkString.h"
+#include "modules/skottie/src/SkottieJson.h"
+#include "modules/skottie/src/SkottiePriv.h"
+#include "modules/skottie/src/SkottieValue.h"
+#include "modules/skottie/src/text/TextValue.h"
+#include "modules/sksg/include/SkSGScene.h"
 
 #include <memory>
 #include <vector>
@@ -29,8 +30,8 @@ protected:
 
     struct KeyframeRec {
         float t0, t1;
-        int   vidx0, vidx1, // v0/v1 indices
-              cmidx;        // cubic map index
+        int vidx0, vidx1,  // v0/v1 indices
+                cmidx;     // cubic map index
 
         bool contains(float t) const { return t0 <= t && t <= t1; }
         bool isConstant() const { return vidx0 == vidx1; }
@@ -55,49 +56,78 @@ protected:
 
         auto lt = (t - rec.t0) / (rec.t1 - rec.t0);
 
-        return rec.cmidx < 0
-            ? lt
-            : SkTPin(fCubicMaps[rec.cmidx].computeYFromX(lt), 0.0f, 1.0f);
+        return rec.cmidx < 0 ? lt : fCubicMaps[rec.cmidx].computeYFromX(lt);
     }
 
     virtual int parseValue(const skjson::Value&, const AnimationBuilder* abuilder) = 0;
 
     void parseKeyFrames(const skjson::ArrayValue& jframes, const AnimationBuilder* abuilder) {
+        // Logically, a keyframe is defined as a (t0, t1, v0, v1) tuple: a given value
+        // is interpolated in the [v0..v1] interval over the [t0..t1] time span.
+        //
+        // There are three interestingly-different keyframe formats handled here.
+        //
+        // 1) Legacy keyframe format
+        //
+        //      - normal keyframes specify t0 ("t"), v0 ("s") and v1 ("e")
+        //      - last frame only specifies a t0
+        //      - t1[frame] == t0[frame + 1]
+        //      - the last entry (where we cannot determine t1) is ignored
+        //
+        // 2) Regular (new) keyframe format
+        //
+        //      - all keyframes specify t0 ("t") and v0 ("s")
+        //      - t1[frame] == t0[frame + 1]
+        //      - v1[frame] == v0[frame + 1]
+        //      - the last entry (where we cannot determine t1/v1) is ignored
+        //
+        // 3) Text value keyframe format
+        //
+        //      - similar to case #2, all keyframes specify t0 & v0
+        //      - unlike case #2, all keyframes are assumed to be constant (v1 == v0),
+        //        and the last frame is not discarded (its t1 is assumed -> inf)
+        //
+
         for (const skjson::ObjectValue* jframe : jframes) {
             if (!jframe) continue;
 
             float t0;
-            if (!Parse<float>((*jframe)["t"], &t0))
-                continue;
+            if (!Parse<float>((*jframe)["t"], &t0)) continue;
+
+            const auto v0_idx = this->parseValue((*jframe)["s"], abuilder),
+                       v1_idx = this->parseValue((*jframe)["e"], abuilder);
 
             if (!fRecs.empty()) {
                 if (fRecs.back().t1 >= t0) {
                     abuilder->log(Logger::Level::kWarning, nullptr,
-                                  "Ignoring out-of-order key frame (t:%f < t:%f).",
-                                  t0, fRecs.back().t1);
+                                  "Ignoring out-of-order key frame (t:%f < t:%f).", t0,
+                                  fRecs.back().t1);
                     continue;
                 }
-                // Back-fill t1 in prev interval.  Note: we do this even if we end up discarding
-                // the current interval (to support "t"-only final frames).
-                fRecs.back().t1 = t0;
+
+                // Back-fill t1 and v1 (if needed).
+                auto& prev = fRecs.back();
+                prev.t1 = t0;
+
+                // Previous keyframe did not specify an end value (case #2, #3).
+                if (prev.vidx1 < 0) {
+                    // If this frame has no v0, we're in case #3 (constant text value),
+                    // otherwise case #2 (v0 for current frame is the same as prev frame v1).
+                    prev.vidx1 = v0_idx < 0 ? prev.vidx0 : v0_idx;
+                }
             }
 
-            // Required start value.
-            const auto v0_idx = this->parseValue((*jframe)["s"], abuilder);
-            if (v0_idx < 0)
-                continue;
+            // Start value 's' is required.
+            if (v0_idx < 0) continue;
 
-            // Optional end value.
-            const auto v1_idx = this->parseValue((*jframe)["e"], abuilder);
-            if (v1_idx < 0) {
-                // Constant keyframe.
-                fRecs.push_back({t0, t0, v0_idx, v0_idx, -1 });
+            if ((v1_idx < 0) && ParseDefault((*jframe)["h"], false)) {
+                // Constant keyframe ("h": true).
+                fRecs.push_back({t0, t0, v0_idx, v0_idx, -1});
                 continue;
             }
 
             // default is linear lerp
-            static constexpr SkPoint kDefaultC0 = { 0, 0 },
-                                     kDefaultC1 = { 1, 1 };
+            static constexpr SkPoint kDefaultC0 = {0, 0}, kDefaultC1 = {1, 1};
             const auto c0 = ParseDefault<SkPoint>((*jframe)["i"], kDefaultC0),
                        c1 = ParseDefault<SkPoint>((*jframe)["o"], kDefaultC1);
 
@@ -108,12 +138,23 @@ protected:
                 fCubicMaps.emplace_back(c1, c0);
             }
 
-            fRecs.push_back({t0, t0, v0_idx, v1_idx, cm_idx });
+            fRecs.push_back({t0, t0, v0_idx, v1_idx, cm_idx});
         }
 
-        // If we couldn't determine a valid t1 for the last frame, discard it.
-        if (!fRecs.empty() && !fRecs.back().isValid()) {
-            fRecs.pop_back();
+        if (!fRecs.empty()) {
+            auto& last = fRecs.back();
+
+            // If the last entry has only a v0, we're in case #3 - make it a constant frame.
+            if (last.vidx0 >= 0 && last.vidx1 < 0) {
+                last.vidx1 = last.vidx0;
+                last.t1 = last.t0;
+            }
+
+            // If we couldn't determine a valid t1 for the last frame, discard it
+            // (most likely the last frame entry for all 3 cases).
+            if (!last.isValid()) {
+                fRecs.pop_back();
+            }
         }
 
         fRecs.shrink_to_fit();
@@ -131,8 +172,7 @@ private:
     const KeyframeRec* findFrame(float t) const {
         SkASSERT(!fRecs.empty());
 
-        auto f0 = &fRecs.front(),
-             f1 = &fRecs.back();
+        auto f0 = &fRecs.front(), f1 = &fRecs.back();
 
         SkASSERT(f0->isValid());
         SkASSERT(f1->isValid());
@@ -166,14 +206,13 @@ private:
     }
 
     std::vector<KeyframeRec> fRecs;
-    std::vector<SkCubicMap>  fCubicMaps;
-    const KeyframeRec*       fCachedRec = nullptr;
+    std::vector<SkCubicMap> fCubicMaps;
+    const KeyframeRec* fCachedRec = nullptr;
 
     using INHERITED = sksg::Animator;
 };
 
-template <typename T>
-class KeyframeAnimator final : public KeyframeAnimatorBase {
+template <typename T> class KeyframeAnimator final : public KeyframeAnimatorBase {
 public:
     static std::unique_ptr<KeyframeAnimator> Make(const skjson::ArrayValue* jv,
                                                   const AnimationBuilder* abuilder,
@@ -181,23 +220,20 @@ public:
         if (!jv) return nullptr;
 
         std::unique_ptr<KeyframeAnimator> animator(
-            new KeyframeAnimator(*jv, abuilder, std::move(apply)));
-        if (!animator->count())
-            return nullptr;
+                new KeyframeAnimator(*jv, abuilder, std::move(apply)));
+        if (!animator->count()) return nullptr;
 
         return animator;
     }
 
 protected:
-    void onTick(float t) override {
-        fApplyFunc(*this->eval(this->frame(t), t, &fScratch));
-    }
+    void onTick(float t) override { fApplyFunc(*this->eval(this->frame(t), t, &fScratch)); }
 
 private:
     KeyframeAnimator(const skjson::ArrayValue& jframes,
                      const AnimationBuilder* abuilder,
                      std::function<void(const T&)>&& apply)
-        : fApplyFunc(std::move(apply)) {
+            : fApplyFunc(std::move(apply)) {
         // Generally, each keyframe holds two values (start, end) and a cubic mapper. Except
         // the last frame, which only holds a marker timestamp.  Then, the values series is
         // contiguous (keyframe[i].end == keyframe[i + 1].start), and we dedupe them.
@@ -241,13 +277,13 @@ private:
     }
 
     const std::function<void(const T&)> fApplyFunc;
-    std::vector<T>                      fVs;
+    std::vector<T> fVs;
 
     // LERP storage: we use this to temporarily store interpolation results.
     // Alternatively, the temp result could live on the stack -- but for vector values that would
     // involve dynamic allocations on each tick.  This a trade-off to avoid allocator pressure
     // during animation.
-    T                                   fScratch; // lerp storage
+    T fScratch;  // lerp storage
 
     using INHERITED = KeyframeAnimatorBase;
 };
@@ -273,8 +309,7 @@ static inline bool BindPropertyImpl(const skjson::ObjectValue* jprop,
         T val;
         if (ValueTraits<T>::FromJSON(jpropK, abuilder, &val)) {
             // Static property.
-            if (noop && val == *noop)
-                return false;
+            if (noop && val == *noop) return false;
 
             apply(val);
             return true;
@@ -309,16 +344,18 @@ public:
         if (!jprop) return nullptr;
 
         std::unique_ptr<SplitPointAnimator> split_animator(
-            new SplitPointAnimator(std::move(apply)));
+                new SplitPointAnimator(std::move(apply)));
 
         // This raw pointer is captured in lambdas below. But the lambdas are owned by
         // the object itself, so the scope is bound to the life time of the object.
         auto* split_animator_ptr = split_animator.get();
 
-        if (!BindPropertyImpl<ScalarValue>((*jprop)["x"], abuilder, &split_animator->fAnimators,
-                [split_animator_ptr](const ScalarValue& x) { split_animator_ptr->setX(x); }) ||
-            !BindPropertyImpl<ScalarValue>((*jprop)["y"], abuilder, &split_animator->fAnimators,
-                [split_animator_ptr](const ScalarValue& y) { split_animator_ptr->setY(y); })) {
+        if (!BindPropertyImpl<ScalarValue>(
+                    (*jprop)["x"], abuilder, &split_animator->fAnimators,
+                    [split_animator_ptr](const ScalarValue& x) { split_animator_ptr->setX(x); }) ||
+            !BindPropertyImpl<ScalarValue>(
+                    (*jprop)["y"], abuilder, &split_animator->fAnimators,
+                    [split_animator_ptr](const ScalarValue& y) { split_animator_ptr->setY(y); })) {
             abuilder->log(Logger::Level::kError, jprop, "Could not parse split property.");
             return nullptr;
         }
@@ -337,7 +374,7 @@ public:
             animator->tick(t);
         }
 
-        const VectorValue vec = { fX, fY };
+        const VectorValue vec = {fX, fY};
         fApplyFunc(vec);
     }
 
@@ -346,13 +383,12 @@ public:
 
 private:
     explicit SplitPointAnimator(std::function<void(const VectorValue&)>&& apply)
-        : fApplyFunc(std::move(apply)) {}
+            : fApplyFunc(std::move(apply)) {}
 
     const std::function<void(const VectorValue&)> fApplyFunc;
-    sksg::AnimatorList                            fAnimators;
+    sksg::AnimatorList fAnimators;
 
-    ScalarValue                                   fX = 0,
-                                                  fY = 0;
+    ScalarValue fX = 0, fY = 0;
 
     using INHERITED = sksg::Animator;
 };
@@ -370,44 +406,43 @@ bool BindSplitPositionProperty(const skjson::Value& jv,
     return false;
 }
 
-} // namespace
+}  // namespace
 
 template <>
 bool AnimationBuilder::bindProperty(const skjson::Value& jv,
-                  AnimatorScope* ascope,
-                  std::function<void(const ScalarValue&)>&& apply,
-                  const ScalarValue* noop) const {
+                                    AnimatorScope* ascope,
+                                    std::function<void(const ScalarValue&)>&& apply,
+                                    const ScalarValue* noop) const {
     return BindPropertyImpl(jv, this, ascope, std::move(apply), noop);
 }
 
 template <>
 bool AnimationBuilder::bindProperty(const skjson::Value& jv,
-                  AnimatorScope* ascope,
-                  std::function<void(const VectorValue&)>&& apply,
-                  const VectorValue* noop) const {
-    if (!jv.is<skjson::ObjectValue>())
-        return false;
+                                    AnimatorScope* ascope,
+                                    std::function<void(const VectorValue&)>&& apply,
+                                    const VectorValue* noop) const {
+    if (!jv.is<skjson::ObjectValue>()) return false;
 
     return ParseDefault<bool>(jv.as<skjson::ObjectValue>()["s"], false)
-        ? BindSplitPositionProperty(jv, this, ascope, std::move(apply), noop)
-        : BindPropertyImpl(jv, this, ascope, std::move(apply), noop);
+                   ? BindSplitPositionProperty(jv, this, ascope, std::move(apply), noop)
+                   : BindPropertyImpl(jv, this, ascope, std::move(apply), noop);
 }
 
 template <>
 bool AnimationBuilder::bindProperty(const skjson::Value& jv,
-                  AnimatorScope* ascope,
-                  std::function<void(const ShapeValue&)>&& apply,
-                  const ShapeValue* noop) const {
+                                    AnimatorScope* ascope,
+                                    std::function<void(const ShapeValue&)>&& apply,
+                                    const ShapeValue* noop) const {
     return BindPropertyImpl(jv, this, ascope, std::move(apply), noop);
 }
 
 template <>
 bool AnimationBuilder::bindProperty(const skjson::Value& jv,
-                  AnimatorScope* ascope,
-                  std::function<void(const TextValue&)>&& apply,
-                  const TextValue* noop) const {
+                                    AnimatorScope* ascope,
+                                    std::function<void(const TextValue&)>&& apply,
+                                    const TextValue* noop) const {
     return BindPropertyImpl(jv, this, ascope, std::move(apply), noop);
 }
 
-} // namespace internal
-} // namespace skottie
+}  // namespace internal
+}  // namespace skottie

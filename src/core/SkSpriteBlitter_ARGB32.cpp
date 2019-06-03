@@ -5,21 +5,21 @@
  * found in the LICENSE file.
  */
 
-#include "SkSpriteBlitter.h"
-#include "SkArenaAlloc.h"
-#include "SkBlitRow.h"
-#include "SkColorFilter.h"
-#include "SkColorData.h"
-#include "SkPaint.h"
-#include "SkTemplates.h"
-#include "SkUTF.h"
-#include "SkXfermodePriv.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/private/SkArenaAlloc.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkTemplates.h"
+#include "src/core/SkBlitRow.h"
+#include "src/core/SkSpriteBlitter.h"
+#include "src/core/SkXfermodePriv.h"
+#include "src/utils/SkUTF.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
 class Sprite_D32_S32 : public SkSpriteBlitter {
 public:
-    Sprite_D32_S32(const SkPixmap& src, U8CPU alpha)  : INHERITED(src) {
+    Sprite_D32_S32(const SkPixmap& src, U8CPU alpha) : INHERITED(src) {
         SkASSERT(src.colorType() == kN32_SkColorType);
 
         unsigned flags32 = 0;
@@ -41,25 +41,25 @@ public:
         size_t dstRB = fDst.rowBytes();
         size_t srcRB = fSource.rowBytes();
         SkBlitRow::Proc32 proc = fProc32;
-        U8CPU             alpha = fAlpha;
+        U8CPU alpha = fAlpha;
 
         do {
             proc(dst, src, width, alpha);
-            dst = (uint32_t* SK_RESTRICT)((char*)dst + dstRB);
+            dst = (uint32_t * SK_RESTRICT)((char*)dst + dstRB);
             src = (const uint32_t* SK_RESTRICT)((const char*)src + srcRB);
         } while (--height != 0);
     }
 
 private:
-    SkBlitRow::Proc32   fProc32;
-    U8CPU               fAlpha;
+    SkBlitRow::Proc32 fProc32;
+    U8CPU fAlpha;
 
     typedef SkSpriteBlitter INHERITED;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class Sprite_D32_S32A_Xfer: public SkSpriteBlitter {
+class Sprite_D32_S32A_Xfer : public SkSpriteBlitter {
 public:
     Sprite_D32_S32A_Xfer(const SkPixmap& source, const SkPaint& paint) : SkSpriteBlitter(source) {
         fXfermode = SkXfermode::Peek(paint.getBlendMode());
@@ -77,7 +77,7 @@ public:
         do {
             xfermode->xfer32(dst, src, width, nullptr);
 
-            dst = (uint32_t* SK_RESTRICT)((char*)dst + dstRB);
+            dst = (uint32_t * SK_RESTRICT)((char*)dst + dstRB);
             src = (const uint32_t* SK_RESTRICT)((const char*)src + srcRB);
         } while (--height != 0);
     }

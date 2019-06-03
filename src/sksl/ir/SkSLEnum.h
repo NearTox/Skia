@@ -8,7 +8,7 @@
 #ifndef SKSL_ENUM
 #define SKSL_ENUM
 
-#include "SkSLProgramElement.h"
+#include "src/sksl/ir/SkSLProgramElement.h"
 
 #include <algorithm>
 
@@ -16,9 +16,7 @@ namespace SkSL {
 
 struct Enum : public ProgramElement {
     Enum(int offset, StringFragment typeName, std::shared_ptr<SymbolTable> symbols)
-    : INHERITED(offset, kEnum_Kind)
-    , fTypeName(typeName)
-    , fSymbols(std::move(symbols)) {}
+            : INHERITED(offset, kEnum_Kind), fTypeName(typeName), fSymbols(std::move(symbols)) {}
 
     std::unique_ptr<ProgramElement> clone() const override {
         return std::unique_ptr<ProgramElement>(new Enum(fOffset, fTypeName, fSymbols));
@@ -35,7 +33,7 @@ struct Enum : public ProgramElement {
                   [](const Symbol* a, const Symbol* b) { return a->fName < b->fName; });
         for (const auto& s : sortedSymbols) {
             result += separator + "    " + s->fName + " = " +
-                      ((Variable*) s)->fInitialValue->description();
+                      ((Variable*)s)->fInitialValue->description();
             separator = ",\n";
         }
         result += "\n};";
@@ -49,6 +47,6 @@ struct Enum : public ProgramElement {
     typedef ProgramElement INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

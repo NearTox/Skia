@@ -8,8 +8,8 @@
 #ifndef SkBRDAllocator_DEFINED
 #define SkBRDAllocator_DEFINED
 
-#include "SkBitmap.h"
-#include "SkCodec.h"
+#include "include/codec/SkCodec.h"
+#include "include/core/SkBitmap.h"
 
 /**
  *  Abstract subclass of SkBitmap's allocator.
@@ -18,7 +18,6 @@
  */
 class SkBRDAllocator : public SkBitmap::Allocator {
 public:
-
     /**
      *  Indicates if the memory allocated by this allocator is
      *  zero initialized.
@@ -26,4 +25,4 @@ public:
     virtual SkCodec::ZeroInitialized zeroInit() const = 0;
 };
 
-#endif // SkBRDAllocator_DEFINED
+#endif  // SkBRDAllocator_DEFINED

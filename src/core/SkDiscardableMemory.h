@@ -8,8 +8,8 @@
 #ifndef SkDiscardableMemory_DEFINED
 #define SkDiscardableMemory_DEFINED
 
-#include "SkRefCnt.h"
-#include "SkTypes.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkTypes.h"
 
 /**
  *  Interface for discardable memory. Implementation is provided by the
@@ -30,6 +30,7 @@ public:
     class Factory : public SkRefCnt {
     public:
         virtual SkDiscardableMemory* create(size_t bytes) = 0;
+
     private:
         typedef SkRefCnt INHERITED;
     };
@@ -53,7 +54,7 @@ public:
      * Returns the current pointer for the discardable memory. This call is ONLY
      * valid when the discardable memory object is locked.
      */
-    virtual void* data() = 0;
+    virtual void* data() noexcept = 0;
 
     /**
      * Unlock the memory so that it can be purged by the system. Must be called

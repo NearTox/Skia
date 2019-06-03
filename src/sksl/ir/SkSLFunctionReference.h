@@ -8,9 +8,9 @@
 #ifndef SKSL_FUNCTIONREFERENCE
 #define SKSL_FUNCTIONREFERENCE
 
-#include "SkSLContext.h"
-#include "SkSLExpression.h"
-#include "SkSLFunctionDeclaration.h"
+#include "src/sksl/SkSLContext.h"
+#include "src/sksl/ir/SkSLExpression.h"
+#include "src/sksl/ir/SkSLFunctionDeclaration.h"
 
 namespace SkSL {
 
@@ -21,20 +21,16 @@ namespace SkSL {
 struct FunctionReference : public Expression {
     FunctionReference(const Context& context, int offset,
                       std::vector<const FunctionDeclaration*> function)
-    : INHERITED(offset, kFunctionReference_Kind, *context.fInvalid_Type)
-    , fFunctions(function) {}
+            : INHERITED(offset, kFunctionReference_Kind, *context.fInvalid_Type)
+            , fFunctions(function) {}
 
-    bool hasSideEffects() const override {
-        return false;
-    }
+    bool hasSideEffects() const override { return false; }
 
     std::unique_ptr<Expression> clone() const override {
         return std::unique_ptr<Expression>(new FunctionReference(fOffset, fFunctions, &fType));
     }
 
-    String description() const override {
-        return String("<function>");
-    }
+    String description() const override { return String("<function>"); }
 
     const std::vector<const FunctionDeclaration*> fFunctions;
 
@@ -43,9 +39,9 @@ struct FunctionReference : public Expression {
 private:
     FunctionReference(int offset, std::vector<const FunctionDeclaration*> function,
                       const Type* type)
-    : INHERITED(offset, kFunctionReference_Kind, *type)
-    , fFunctions(function) {}};
+            : INHERITED(offset, kFunctionReference_Kind, *type), fFunctions(function) {}
+};
 
-} // namespace
+}  // namespace SkSL
 
 #endif

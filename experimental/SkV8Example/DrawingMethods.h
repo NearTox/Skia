@@ -19,9 +19,7 @@ class Global;
 // and DisplayListBuiler.
 class DrawingMethods {
 public:
-    DrawingMethods(Global* global)
-            : fGlobal(global)
-    {}
+    DrawingMethods(Global* global) : fGlobal(global) {}
     virtual ~DrawingMethods() {}
 
     // Retrieve the SkCanvas to draw on. May return NULL.

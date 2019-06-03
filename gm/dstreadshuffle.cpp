@@ -4,13 +4,28 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkBitmap.h"
-#include "SkPath.h"
-#include "SkRandom.h"
-#include "SkShader.h"
-#include "SkSurface.h"
+
+#include "gm/gm.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "include/utils/SkRandom.h"
+#include "tools/ToolUtils.h"
 
 namespace skiagm {
 
@@ -32,13 +47,9 @@ protected:
         kNumShapeTypes
     };
 
-    SkString onShortName() override {
-        return SkString("dstreadshuffle");
-    }
+    SkString onShortName() override { return SkString("dstreadshuffle"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(530, 680);
-    }
+    SkISize onISize() override { return SkISize::Make(530, 680); }
 
     void drawShape(SkCanvas* canvas, SkPaint* paint, ShapeType type) {
         const SkRect kRect = SkRect::MakeXYWH(0, 0, 75.f, 85.f);
@@ -82,7 +93,7 @@ protected:
                 break;
             case kText_ShapeType: {
                 const char* text = "N";
-                SkFont font(sk_tool_utils::create_portable_typeface(), 100);
+                SkFont font(ToolUtils::create_portable_typeface(), 100);
                 font.setEmbolden(true);
                 canvas->drawString(text, 0.f, 100.f, font, *paint);
             }
@@ -92,7 +103,7 @@ protected:
     }
 
     static SkColor GetColor(SkRandom* random) {
-        SkColor color = sk_tool_utils::color_to_565(random->nextU() | 0xFF000000);
+        SkColor color = ToolUtils::color_to_565(random->nextU() | 0xFF000000);
         return SkColorSetA(color, 0x80);
     }
 
@@ -147,8 +158,7 @@ protected:
         if (SkColorType::kUnknown_SkColorType == canvas->imageInfo().colorType()) {
             info = SkImageInfo::MakeN32Premul(35, 35);
         } else {
-            info = SkImageInfo::Make(35, 35,
-                                     canvas->imageInfo().colorType(),
+            info = SkImageInfo::Make(35, 35, canvas->imageInfo().colorType(),
                                      canvas->imageInfo().alphaType(),
                                      canvas->imageInfo().refColorSpace());
         }
@@ -159,9 +169,7 @@ protected:
             if ((info.colorType() == kRGBA_8888_SkColorType ||
                  info.colorType() == kBGRA_8888_SkColorType) &&
                 info.colorType() != kN32_SkColorType) {
-                info = SkImageInfo::Make(35, 35,
-                                         kN32_SkColorType,
-                                         canvas->imageInfo().alphaType(),
+                info = SkImageInfo::Make(35, 35, kN32_SkColorType, canvas->imageInfo().alphaType(),
                                          canvas->imageInfo().refColorSpace());
             }
             surf = SkSurface::MakeRaster(info);
@@ -182,6 +190,6 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new DstReadShuffle; )
+DEF_GM(return new DstReadShuffle;)
 
-}
+}  // namespace skiagm

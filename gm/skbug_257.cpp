@@ -5,16 +5,27 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkImage.h"
-#include "SkRRect.h"
-#include "SkTextBlob.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRRect.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkTextBlob.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypeface.h"
+#include "tools/ToolUtils.h"
 
-static void rotated_checkerboard_shader(SkPaint* paint,
-                                        SkColor c1,
-                                        SkColor c2,
-                                        int size) {
+#include <string.h>
+
+static void rotated_checkerboard_shader(SkPaint* paint, SkColor c1, SkColor c2, int size) {
     SkBitmap bm;
     bm.allocN32Pixels(2 * size, 2 * size);
     bm.eraseColor(c1);
@@ -23,48 +34,39 @@ static void rotated_checkerboard_shader(SkPaint* paint,
     SkMatrix matrix;
     matrix.setScale(0.75f, 0.75f);
     matrix.preRotate(30.0f);
-    paint->setShader(
-            SkShader::MakeBitmapShader(bm, SkShader::kRepeat_TileMode, SkShader::kRepeat_TileMode,
-                                       &matrix));
+    paint->setShader(bm.makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, &matrix));
 }
 
-static void exercise_draw_pos_text(SkCanvas* canvas,
-                                   const char* text,
-                                   SkScalar x, SkScalar y,
+static void exercise_draw_pos_text(SkCanvas* canvas, const char* text, SkScalar x, SkScalar y,
                                    const SkFont& font, const SkPaint& paint) {
-    const int count = font.countText(text, strlen(text), kUTF8_SkTextEncoding);
+    const int count = font.countText(text, strlen(text), SkTextEncoding::kUTF8);
     SkTextBlobBuilder builder;
     auto rec = builder.allocRunPos(font, count);
-    font.textToGlyphs(text, strlen(text), kUTF8_SkTextEncoding, rec.glyphs, count);
+    font.textToGlyphs(text, strlen(text), SkTextEncoding::kUTF8, rec.glyphs, count);
     font.getPos(rec.glyphs, count, rec.points(), {x, y});
     canvas->drawTextBlob(builder.make(), 0, 0, paint);
 }
 
-static void exercise_draw_pos_text_h(SkCanvas* canvas,
-                                     const char* text,
-                                     SkScalar x, SkScalar y,
+static void exercise_draw_pos_text_h(SkCanvas* canvas, const char* text, SkScalar x, SkScalar y,
                                      const SkFont& font, const SkPaint& paint) {
-    const int count = font.countText(text, strlen(text), kUTF8_SkTextEncoding);
+    const int count = font.countText(text, strlen(text), SkTextEncoding::kUTF8);
     SkTextBlobBuilder builder;
     auto rec = builder.allocRunPosH(font, count, 0);
-    font.textToGlyphs(text, strlen(text), kUTF8_SkTextEncoding, rec.glyphs, count);
+    font.textToGlyphs(text, strlen(text), SkTextEncoding::kUTF8, rec.glyphs, count);
     font.getXPos(rec.glyphs, count, rec.pos);
     canvas->drawTextBlob(builder.make(), x, y, paint);
 }
 
-static void test_text(SkCanvas* canvas, SkScalar size,
-                      SkColor color, SkScalar Y) {
-    SkFont font(sk_tool_utils::create_portable_typeface(), 24);
+static void test_text(SkCanvas* canvas, SkScalar size, SkColor color, SkScalar Y) {
+    SkFont font(ToolUtils::create_portable_typeface(), 24);
     font.setEdging(SkFont::Edging::kAlias);
     SkPaint type;
     type.setColor(color);
     const char text[] = "HELLO WORLD";
-    canvas->drawSimpleText(text, strlen(text), kUTF8_SkTextEncoding, 32, size / 2 + Y,
-                           font, type);
+    canvas->drawSimpleText(text, strlen(text), SkTextEncoding::kUTF8, 32, size / 2 + Y, font, type);
     SkScalar lineSpacing = font.getSpacing();
     exercise_draw_pos_text(canvas, text, 32, size / 2 + Y + lineSpacing, font, type);
-    exercise_draw_pos_text_h(canvas, text, 32,
-                             size / 2 + Y + 2 * lineSpacing, font, type);
+    exercise_draw_pos_text_h(canvas, text, 32, size / 2 + Y + 2 * lineSpacing, font, type);
 }
 
 // If this GM works correctly, the cyan layer should be lined up with
@@ -85,8 +87,7 @@ DEF_SIMPLE_GM(skbug_257, canvas, 512, 512) {
         canvas->translate(0, -translate);
 
         // Test rects
-        SkRect rect = SkRect::MakeLTRB(8, 8 + translate, size - 8,
-                                       size - 8 + translate);
+        SkRect rect = SkRect::MakeLTRB(8, 8 + translate, size - 8, size - 8 + translate);
         canvas->drawRect(rect, checker);
 
         // Test Paths
@@ -99,14 +100,11 @@ DEF_SIMPLE_GM(skbug_257, canvas, 512, 512) {
         // Test Points
         canvas->translate(-size, size);
         SkScalar delta = 1.0 / 64.0;
-        SkPoint points[8] = {{size / 2, 8 + translate},
-                             {size / 2, 8 + translate + delta},
-                             {8, size / 2 + translate},
-                             {8, size / 2 + translate + delta},
-                             {size / 2, size - 8 + translate},
-                             {size / 2, size - 8 + translate + delta},
-                             {size - 8, size / 2 + translate},
-                             {size - 8, size / 2 + translate + delta}};
+        SkPoint points[8] = {
+                {size / 2, 8 + translate},        {size / 2, 8 + translate + delta},
+                {8, size / 2 + translate},        {8, size / 2 + translate + delta},
+                {size / 2, size - 8 + translate}, {size / 2, size - 8 + translate + delta},
+                {size - 8, size / 2 + translate}, {size - 8, size / 2 + translate + delta}};
         checker.setStyle(SkPaint::kStroke_Style);
         checker.setStrokeWidth(8);
         checker.setStrokeCap(SkPaint::kRound_Cap);

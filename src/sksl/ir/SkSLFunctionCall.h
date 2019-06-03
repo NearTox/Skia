@@ -8,8 +8,8 @@
 #ifndef SKSL_FUNCTIONCALL
 #define SKSL_FUNCTIONCALL
 
-#include "SkSLExpression.h"
-#include "SkSLFunctionDeclaration.h"
+#include "src/sksl/ir/SkSLExpression.h"
+#include "src/sksl/ir/SkSLFunctionDeclaration.h"
 
 namespace SkSL {
 
@@ -19,9 +19,9 @@ namespace SkSL {
 struct FunctionCall : public Expression {
     FunctionCall(int offset, const Type& type, const FunctionDeclaration& function,
                  std::vector<std::unique_ptr<Expression>> arguments)
-    : INHERITED(offset, kFunctionCall_Kind, type)
-    , fFunction(std::move(function))
-    , fArguments(std::move(arguments)) {}
+            : INHERITED(offset, kFunctionCall_Kind, type)
+            , fFunction(std::move(function))
+            , fArguments(std::move(arguments)) {}
 
     bool hasSideEffects() const override {
         for (const auto& arg : fArguments) {
@@ -37,8 +37,8 @@ struct FunctionCall : public Expression {
         for (const auto& arg : fArguments) {
             cloned.push_back(arg->clone());
         }
-        return std::unique_ptr<Expression>(new FunctionCall(fOffset, fType, fFunction,
-                                                            std::move(cloned)));
+        return std::unique_ptr<Expression>(
+                new FunctionCall(fOffset, fType, fFunction, std::move(cloned)));
     }
 
     String description() const override {
@@ -59,6 +59,6 @@ struct FunctionCall : public Expression {
     typedef Expression INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

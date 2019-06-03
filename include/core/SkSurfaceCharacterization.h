@@ -8,18 +8,18 @@
 #ifndef SkSurfaceCharacterization_DEFINED
 #define SkSurfaceCharacterization_DEFINED
 
-#include "GrTypes.h"
+#include "include/gpu/GrTypes.h"
 
-#include "SkColorSpace.h"
-#include "SkRefCnt.h"
-#include "SkSurfaceProps.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkSurfaceProps.h"
 
 class SkColorSpace;
 
 #if SK_SUPPORT_GPU
 // TODO: remove the GrContext.h include once Flutter is updated
-#include "GrContext.h"
-#include "GrContextThreadSafeProxy.h"
+#include "include/gpu/GrContext.h"
+#include "include/gpu/GrContextThreadSafeProxy.h"
 
 /** \class SkSurfaceCharacterization
     A surface characterization contains all the information Ganesh requires to makes its internal
@@ -46,8 +46,7 @@ public:
             , fIsMipMapped(MipMapped::kYes)
             , fUsesGLFBO0(UsesGLFBO0::kNo)
             , fVulkanSecondaryCBCompatible(VulkanSecondaryCBCompatible::kNo)
-            , fSurfaceProps(0, kUnknown_SkPixelGeometry) {
-    }
+            , fSurfaceProps(0, kUnknown_SkPixelGeometry) {}
 
     SkSurfaceCharacterization(SkSurfaceCharacterization&&) = default;
     SkSurfaceCharacterization& operator=(SkSurfaceCharacterization&&) = default;
@@ -55,9 +54,7 @@ public:
     SkSurfaceCharacterization(const SkSurfaceCharacterization&) = default;
     SkSurfaceCharacterization& operator=(const SkSurfaceCharacterization& other) = default;
     bool operator==(const SkSurfaceCharacterization& other) const;
-    bool operator!=(const SkSurfaceCharacterization& other) const {
-        return !(*this == other);
-    }
+    bool operator!=(const SkSurfaceCharacterization& other) const { return !(*this == other); }
 
     SkSurfaceCharacterization createResized(int width, int height) const;
 
@@ -82,24 +79,21 @@ public:
     }
     SkColorSpace* colorSpace() const { return fImageInfo.colorSpace(); }
     sk_sp<SkColorSpace> refColorSpace() const { return fImageInfo.refColorSpace(); }
-    const SkSurfaceProps& surfaceProps()const { return fSurfaceProps; }
+    const SkSurfaceProps& surfaceProps() const { return fSurfaceProps; }
 
 private:
-    friend class SkSurface_Gpu; // for 'set' & 'config'
-    friend class GrVkSecondaryCBDrawContext; // for 'set' & 'config'
-    friend class GrContextThreadSafeProxy; // for private ctor
-    friend class SkDeferredDisplayListRecorder; // for 'config'
-    friend class SkSurface; // for 'config'
+    friend class SkSurface_Gpu;                  // for 'set' & 'config'
+    friend class GrVkSecondaryCBDrawContext;     // for 'set' & 'config'
+    friend class GrContextThreadSafeProxy;       // for private ctor
+    friend class SkDeferredDisplayListRecorder;  // for 'config'
+    friend class SkSurface;                      // for 'config'
 
     GrPixelConfig config() const { return fConfig; }
 
     SkSurfaceCharacterization(sk_sp<GrContextThreadSafeProxy> contextInfo,
-                              size_t cacheMaxResourceBytes,
-                              const SkImageInfo& ii,
-                              GrSurfaceOrigin origin,
-                              GrPixelConfig config,
-                              GrFSAAType FSAAType, int stencilCnt,
-                              Textureable isTextureable, MipMapped isMipMapped,
+                              size_t cacheMaxResourceBytes, const SkImageInfo& ii,
+                              GrSurfaceOrigin origin, GrPixelConfig config, GrFSAAType FSAAType,
+                              int stencilCnt, Textureable isTextureable, MipMapped isMipMapped,
                               UsesGLFBO0 usesGLFBO0,
                               VulkanSecondaryCBCompatible vulkanSecondaryCBCompatible,
                               const SkSurfaceProps& surfaceProps)
@@ -114,8 +108,7 @@ private:
             , fIsMipMapped(isMipMapped)
             , fUsesGLFBO0(usesGLFBO0)
             , fVulkanSecondaryCBCompatible(vulkanSecondaryCBCompatible)
-            , fSurfaceProps(surfaceProps) {
-    }
+            , fSurfaceProps(surfaceProps) {}
 
     void set(sk_sp<GrContextThreadSafeProxy> contextInfo,
              size_t cacheMaxResourceBytes,
@@ -153,34 +146,30 @@ private:
     }
 
     sk_sp<GrContextThreadSafeProxy> fContextInfo;
-    size_t                          fCacheMaxResourceBytes;
+    size_t fCacheMaxResourceBytes;
 
-    SkImageInfo                     fImageInfo;
-    GrSurfaceOrigin                 fOrigin;
-    GrPixelConfig                   fConfig;
-    GrFSAAType                      fFSAAType;
-    int                             fStencilCnt;
-    Textureable                     fIsTextureable;
-    MipMapped                       fIsMipMapped;
-    UsesGLFBO0                      fUsesGLFBO0;
-    VulkanSecondaryCBCompatible     fVulkanSecondaryCBCompatible;
-    SkSurfaceProps                  fSurfaceProps;
+    SkImageInfo fImageInfo;
+    GrSurfaceOrigin fOrigin;
+    GrPixelConfig fConfig;
+    GrFSAAType fFSAAType;
+    int fStencilCnt;
+    Textureable fIsTextureable;
+    MipMapped fIsMipMapped;
+    UsesGLFBO0 fUsesGLFBO0;
+    VulkanSecondaryCBCompatible fVulkanSecondaryCBCompatible;
+    SkSurfaceProps fSurfaceProps;
 };
 
-#else// !SK_SUPPORT_GPU
+#else  // !SK_SUPPORT_GPU
 
 class SK_API SkSurfaceCharacterization {
 public:
-    SkSurfaceCharacterization() : fSurfaceProps(0, kUnknown_SkPixelGeometry) { }
+    SkSurfaceCharacterization() : fSurfaceProps(0, kUnknown_SkPixelGeometry) {}
 
-    SkSurfaceCharacterization createResized(int width, int height) const {
-        return *this;
-    }
+    SkSurfaceCharacterization createResized(int width, int height) const { return *this; }
 
     bool operator==(const SkSurfaceCharacterization& other) const { return false; }
-    bool operator!=(const SkSurfaceCharacterization& other) const {
-        return !(*this == other);
-    }
+    bool operator!=(const SkSurfaceCharacterization& other) const { return !(*this == other); }
 
     size_t cacheMaxResourceBytes() const { return 0; }
 
@@ -195,7 +184,7 @@ public:
     bool vulkanSecondaryCBCompatible() const { return false; }
     SkColorSpace* colorSpace() const { return nullptr; }
     sk_sp<SkColorSpace> refColorSpace() const { return nullptr; }
-    const SkSurfaceProps& surfaceProps()const { return fSurfaceProps; }
+    const SkSurfaceProps& surfaceProps() const { return fSurfaceProps; }
 
 private:
     SkSurfaceProps fSurfaceProps;

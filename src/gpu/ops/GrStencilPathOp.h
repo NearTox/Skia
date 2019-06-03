@@ -8,10 +8,10 @@
 #ifndef GrStencilPathOp_DEFINED
 #define GrStencilPathOp_DEFINED
 
-#include "GrOp.h"
-#include "GrPath.h"
-#include "GrPathRendering.h"
-#include "GrStencilSettings.h"
+#include "src/gpu/GrPath.h"
+#include "src/gpu/GrPathRendering.h"
+#include "src/gpu/GrStencilSettings.h"
+#include "src/gpu/ops/GrOp.h"
 
 class GrOpFlushState;
 class GrRecordingContext;
@@ -40,7 +40,7 @@ public:
 #endif
 
 private:
-    friend class GrOpMemoryPool; // for ctor
+    friend class GrOpMemoryPool;  // for ctor
 
     GrStencilPathOp(const SkMatrix& viewMatrix,
                     bool useHWAA,
@@ -62,11 +62,11 @@ private:
 
     void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
 
-    SkMatrix                                          fViewMatrix;
-    bool                                              fUseHWAA;
-    GrPathRendering::FillType                         fFillType;
-    bool                                              fHasStencilClip;
-    GrScissorState                                    fScissor;
+    SkMatrix fViewMatrix;
+    bool fUseHWAA;
+    GrPathRendering::FillType fFillType;
+    bool fHasStencilClip;
+    GrScissorState fScissor;
     GrPendingIOResource<const GrPath, kRead_GrIOType> fPath;
 
     typedef GrOp INHERITED;

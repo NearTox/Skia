@@ -8,10 +8,10 @@
 #ifndef SkOTTable_EBDT_DEFINED
 #define SkOTTable_EBDT_DEFINED
 
-#include "SkEndian.h"
-#include "SkOTTableTypes.h"
-#include "SkOTTable_head.h"
-#include "SkOTTable_loca.h"
+#include "src/core/SkEndian.h"
+#include "src/sfnt/SkOTTableTypes.h"
+#include "src/sfnt/SkOTTable_head.h"
+#include "src/sfnt/SkOTTable_loca.h"
 
 #pragma pack(push, 1)
 
@@ -47,13 +47,13 @@ struct SkOTTableEmbeddedBitmapData {
     // Small metrics, byte-aligned data.
     struct Format1 {
         SmallGlyphMetrics smallGlyphMetrics;
-        //SK_OT_BYTE[] byteAlignedBitmap;
+        // SK_OT_BYTE[] byteAlignedBitmap;
     };
 
     // Small metrics, bit-aligned data.
     struct Format2 {
         SmallGlyphMetrics smallGlyphMetrics;
-        //SK_OT_BYTE[] bitAlignedBitmap;
+        // SK_OT_BYTE[] bitAlignedBitmap;
     };
 
     // Format 3 is not used.
@@ -68,38 +68,38 @@ struct SkOTTableEmbeddedBitmapData {
 
     // EBLC metrics (IndexSubTable::header::indexFormat 2 or 5), bit-aligned data.
     struct Format5 {
-        //SK_OT_BYTE[] bitAlignedBitmap;
+        // SK_OT_BYTE[] bitAlignedBitmap;
     };
 
     // Big metrics, byte-aligned data.
     struct Format6 {
         BigGlyphMetrics bigGlyphMetrics;
-        //SK_OT_BYTE[] byteAlignedBitmap;
+        // SK_OT_BYTE[] byteAlignedBitmap;
     };
 
     // Big metrics, bit-aligned data.
     struct Format7 {
         BigGlyphMetrics bigGlyphMetrics;
-        //SK_OT_BYTE[] bitAlignedBitmap;
+        // SK_OT_BYTE[] bitAlignedBitmap;
     };
 
     struct EBDTComponent {
-        SK_OT_USHORT glyphCode; // Component glyph code
-        SK_OT_CHAR xOffset; // Position of component left
-        SK_OT_CHAR yOffset; // Position of component top
+        SK_OT_USHORT glyphCode;  // Component glyph code
+        SK_OT_CHAR xOffset;      // Position of component left
+        SK_OT_CHAR yOffset;      // Position of component top
     };
 
     struct Format8 {
-        SmallGlyphMetrics smallMetrics; // Metrics information for the glyph
-        SK_OT_BYTE pad; // Pad to short boundary
-        SK_OT_USHORT numComponents; // Number of components
-        //EBDTComponent componentArray[numComponents]; // Glyph code, offset array
+        SmallGlyphMetrics smallMetrics;  // Metrics information for the glyph
+        SK_OT_BYTE pad;                  // Pad to short boundary
+        SK_OT_USHORT numComponents;      // Number of components
+        // EBDTComponent componentArray[numComponents]; // Glyph code, offset array
     };
 
     struct Format9 {
-        BigGlyphMetrics bigMetrics; // Metrics information for the glyph
-        SK_OT_USHORT numComponents; // Number of components
-        //EBDTComponent componentArray[numComponents]; // Glyph code, offset array
+        BigGlyphMetrics bigMetrics;  // Metrics information for the glyph
+        SK_OT_USHORT numComponents;  // Number of components
+        // EBDTComponent componentArray[numComponents]; // Glyph code, offset array
     };
 };
 

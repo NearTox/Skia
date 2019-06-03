@@ -8,8 +8,8 @@
 #ifndef SkTTCFHeader_DEFINED
 #define SkTTCFHeader_DEFINED
 
-#include "SkOTTableTypes.h"
-#include "SkSFNTHeader.h"
+#include "src/sfnt/SkOTTableTypes.h"
+#include "src/sfnt/SkSFNTHeader.h"
 
 #pragma pack(push, 1)
 
@@ -26,7 +26,7 @@ struct SkTTCFHeader {
     static const SK_OT_Fixed version_2 = SkTEndian_SwapBE32(2 << 16);
 
     SK_OT_ULONG numOffsets;
-    //SK_OT_ULONG offset[numOffsets]
+    // SK_OT_ULONG offset[numOffsets]
 
     struct Version2Ext {
         SK_OT_ULONG dsigType;
@@ -44,13 +44,12 @@ struct SkTTCFHeader {
             static const SK_OT_CHAR TAG3 = 'G';
             static const SK_OT_ULONG TAG = SkOTTableTAG<dsigType_Format1>::value;
         };
-        SK_OT_ULONG dsigLength; //Length of DSIG table (in bytes).
-        SK_OT_ULONG dsigOffset; //Offset of DSIG table from the beginning of file (in bytes).
-    };// version2ext (if version == version_2)
+        SK_OT_ULONG dsigLength;  // Length of DSIG table (in bytes).
+        SK_OT_ULONG dsigOffset;  // Offset of DSIG table from the beginning of file (in bytes).
+    };                           // version2ext (if version == version_2)
 };
 
 #pragma pack(pop)
-
 
 static_assert(sizeof(SkTTCFHeader) == 12, "sizeof_SkTTCFHeader_not_12");
 

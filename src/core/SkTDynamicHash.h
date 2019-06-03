@@ -8,27 +8,23 @@
 #ifndef SkTDynamicHash_DEFINED
 #define SkTDynamicHash_DEFINED
 
-#include "SkMath.h"
-#include "SkTemplates.h"
-#include "SkTypes.h"
+#include "include/core/SkMath.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkTemplates.h"
 
 // Traits requires:
 //   static const Key& GetKey(const T&) { ... }
 //   static uint32_t Hash(const Key&) { ... }
 // We'll look on T for these by default, or you can pass a custom Traits type.
-template <typename T,
-          typename Key,
-          typename Traits = T,
+template <typename T, typename Key, typename Traits = T,
           int kGrowPercent = 75>  // Larger -> more memory efficient, but slower.
 class SkTDynamicHash {
 public:
-    SkTDynamicHash() : fCount(0), fDeleted(0), fCapacity(0), fArray(nullptr) {
+    SkTDynamicHash() noexcept : fCount(0), fDeleted(0), fCapacity(0), fArray(nullptr) {
         SkASSERT(this->validate());
     }
 
-    ~SkTDynamicHash() {
-        sk_free(fArray);
-    }
+    ~SkTDynamicHash() { sk_free(fArray); }
 
     class Iter {
     public:
@@ -36,7 +32,7 @@ public:
             SkASSERT(hash);
             ++(*this);
         }
-        bool done() const {
+        bool done() const noexcept {
             SkASSERT(fCurrentIndex <= fHash->fCapacity);
             return fCurrentIndex == fHash->fCapacity;
         }
@@ -51,7 +47,7 @@ public:
         }
 
     private:
-        T* current() const { return fHash->fArray[fCurrentIndex]; }
+        T* current() const noexcept { return fHash->fArray[fCurrentIndex]; }
 
         SkTDynamicHash* fHash;
         int fCurrentIndex;
@@ -121,7 +117,7 @@ public:
 
     void rewind() {
         if (fArray) {
-            sk_bzero(fArray, sizeof(T*)* fCapacity);
+            sk_bzero(fArray, sizeof(T*) * fCapacity);
         }
         fCount = 0;
         fDeleted = 0;
@@ -157,11 +153,13 @@ protected:
 
 private:
     // We have two special values to indicate an empty or deleted entry.
-    static T* Empty()   { return reinterpret_cast<T*>(0); }  // i.e. nullptr
-    static T* Deleted() { return reinterpret_cast<T*>(1); }  // Also an invalid pointer.
+    static T* Empty() noexcept { return reinterpret_cast<T*>(0); }    // i.e. nullptr
+    static T* Deleted() noexcept { return reinterpret_cast<T*>(1); }  // Also an invalid pointer.
 
     bool validate() const {
-        #define SKTDYNAMICHASH_CHECK(x) SkASSERT(x); if (!(x)) return false
+#define SKTDYNAMICHASH_CHECK(x) \
+    SkASSERT(x);                \
+    if (!(x)) return false
         static const int kLarge = 50;  // Arbitrary, tweak to suit your patience.
 
         // O(1) checks, always done.
@@ -191,7 +189,7 @@ private:
                 if (Empty() == fArray[i] || Deleted() == fArray[i]) {
                     continue;
                 }
-                for (int j = i+1; j < fCapacity; j++) {
+                for (int j = i + 1; j < fCapacity; j++) {
                     if (Empty() == fArray[j] || Deleted() == fArray[j]) {
                         continue;
                     }
@@ -200,7 +198,7 @@ private:
                 }
             }
         }
-        #undef SKTDYNAMICHASH_CHECK
+#undef SKTDYNAMICHASH_CHECK
         return true;
     }
 
@@ -256,7 +254,7 @@ private:
     }
 
     void resize(int newCapacity) {
-        SkDEBUGCODE(int oldCount = fCount;)
+        SkDEBUGCODE(int oldCount = fCount);
         int oldCapacity = fCapacity;
         SkAutoTMalloc<T*> oldArray(fArray);
 
@@ -274,20 +272,18 @@ private:
     }
 
     // fCapacity is always a power of 2, so this masks the correct low bits to index into our hash.
-    uint32_t hashMask() const { return fCapacity - 1; }
+    uint32_t hashMask() const noexcept { return fCapacity - 1; }
 
-    int firstIndex(const Key& key) const {
-        return Hash(key) & this->hashMask();
-    }
+    int firstIndex(const Key& key) const noexcept { return Hash(key) & this->hashMask(); }
 
     // Given index at round N, what is the index to check at N+1?  round should start at 0.
-    int nextIndex(int index, int round) const {
+    int nextIndex(int index, int round) const noexcept {
         // This will search a power-of-two array fully without repeating an index.
         return (index + round + 1) & this->hashMask();
     }
 
-    static const Key& GetKey(const T& t) { return Traits::GetKey(t); }
-    static uint32_t Hash(const Key& key) { return Traits::Hash(key); }
+    static const Key& GetKey(const T& t) noexcept { return Traits::GetKey(t); }
+    static uint32_t Hash(const Key& key) noexcept { return Traits::Hash(key); }
 
     int fCount;     // Number of non Empty(), non Deleted() entries in fArray.
     int fDeleted;   // Number of Deleted() entries in fArray.

@@ -8,20 +8,20 @@
 #ifndef GrTextBlob_DEFINED
 #define GrTextBlob_DEFINED
 
-#include "GrColor.h"
-#include "GrDrawOpAtlas.h"
-#include "GrStrikeCache.h"
-#include "GrTextTarget.h"
-#include "text/GrTextContext.h"
-#include "SkDescriptor.h"
-#include "SkMaskFilterBase.h"
-#include "SkOpts.h"
-#include "SkPathEffect.h"
-#include "SkPoint3.h"
-#include "SkRectPriv.h"
-#include "SkStrikeCache.h"
-#include "SkSurfaceProps.h"
-#include "SkTInternalLList.h"
+#include "include/core/SkPathEffect.h"
+#include "include/core/SkPoint3.h"
+#include "include/core/SkSurfaceProps.h"
+#include "include/private/GrColor.h"
+#include "include/private/SkTInternalLList.h"
+#include "src/core/SkDescriptor.h"
+#include "src/core/SkMaskFilterBase.h"
+#include "src/core/SkOpts.h"
+#include "src/core/SkRectPriv.h"
+#include "src/core/SkStrikeCache.h"
+#include "src/gpu/GrDrawOpAtlas.h"
+#include "src/gpu/text/GrStrikeCache.h"
+#include "src/gpu/text/GrTextContext.h"
+#include "src/gpu/text/GrTextTarget.h"
 
 class GrAtlasManager;
 struct GrDistanceFieldAdjustTable;
@@ -48,8 +48,9 @@ class SkTextBlobRunIterator;
  *
  * *WARNING* If you add new fields to this struct, then you may need to to update AssertEqual
  */
-class GrTextBlob : public SkNVRefCnt<GrTextBlob> {
+class GrTextBlob : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainterInterface {
     struct Run;
+
 public:
     SK_DECLARE_INTERNAL_LLIST_INTERFACE(GrTextBlob);
 
@@ -64,11 +65,10 @@ public:
                                   const SkGlyphRunList& glyphRunList,
                                   SkGlyphRunListPainter* glyphPainter);
 
-    static sk_sp<GrTextBlob> Make(
-            int glyphCount,
-            int runCount,
-            GrColor color,
-            GrStrikeCache* strikeCache);
+    static sk_sp<GrTextBlob> Make(int glyphCount,
+                                  int runCount,
+                                  GrColor color,
+                                  GrStrikeCache* strikeCache);
 
     /**
      * We currently force regeneration of a blob if old or new matrix differ in having perspective.
@@ -77,9 +77,7 @@ public:
      * uses 2.
      */
     struct Key {
-        Key() {
-            sk_bzero(this, sizeof(Key));
-        }
+        Key() { sk_bzero(this, sizeof(Key)); }
         uint32_t fUniqueID;
         // Color may affect the gamma of the mask we generate, but in a fairly limited way.
         // Each color is assigned to on of a fixed number of buckets based on its
@@ -91,9 +89,7 @@ public:
         bool fHasBlur;
         uint32_t fScalerContextFlags;
 
-        bool operator==(const Key& other) const {
-            return 0 == memcmp(this, &other, sizeof(Key));
-        }
+        bool operator==(const Key& other) const { return 0 == memcmp(this, &other, sizeof(Key)); }
     };
 
     void setupKey(const GrTextBlob::Key& key,
@@ -110,17 +106,11 @@ public:
         }
     }
 
-    static const Key& GetKey(const GrTextBlob& blob) {
-        return blob.fKey;
-    }
+    static const Key& GetKey(const GrTextBlob& blob) { return blob.fKey; }
 
-    static uint32_t Hash(const Key& key) {
-        return SkOpts::hash(&key, sizeof(Key));
-    }
+    static uint32_t Hash(const Key& key) { return SkOpts::hash(&key, sizeof(Key)); }
 
-    void operator delete(void* p) {
-        ::operator delete(p);
-    }
+    void operator delete(void* p) { ::operator delete(p); }
 
     void* operator new(size_t) {
         SK_ABORT("All blobs are created by placement new.");
@@ -172,9 +162,9 @@ public:
                         const SkMatrix& viewMatrix, SkScalar x, SkScalar y);
 
     void flush(GrTextTarget*, const SkSurfaceProps& props,
-               const GrDistanceFieldAdjustTable* distanceAdjustTable,
-               const SkPaint& paint, const SkPMColor4f& filteredColor, const GrClip& clip,
-               const SkMatrix& viewMatrix, SkScalar x, SkScalar y);
+               const GrDistanceFieldAdjustTable* distanceAdjustTable, const SkPaint& paint,
+               const SkPMColor4f& filteredColor, const GrClip& clip, const SkMatrix& viewMatrix,
+               SkScalar x, SkScalar y);
 
     void computeSubRunBounds(SkRect* outBounds, int runIndex, int subRunIndex,
                              const SkMatrix& viewMatrix, SkScalar x, SkScalar y,
@@ -224,8 +214,8 @@ public:
     // The color here is the GrPaint color, and it is used to determine whether we
     // have to regenerate LCD text blobs.
     // We use this color vs the SkPaint color because it has the colorfilter applied.
-    void initReusableBlob(SkColor luminanceColor, const SkMatrix& viewMatrix,
-                          SkScalar x, SkScalar y) {
+    void initReusableBlob(SkColor luminanceColor, const SkMatrix& viewMatrix, SkScalar x,
+                          SkScalar y) {
         fLuminanceColor = luminanceColor;
         this->setupViewMatrix(viewMatrix, x, y);
     }
@@ -238,7 +228,7 @@ public:
 
     size_t size() const { return fSize; }
 
-    ~GrTextBlob() {
+    ~GrTextBlob() override {
         for (int i = 0; i < fRunCountLimit; i++) {
             fRuns[i].~Run();
         }
@@ -253,7 +243,7 @@ public:
                                           GrTextTarget*);
 
 private:
-    GrTextBlob(GrStrikeCache* strikeCache) : fStrikeCache{strikeCache} { }
+    GrTextBlob(GrStrikeCache* strikeCache) : fStrikeCache{strikeCache} {}
 
     // This function will only be called when we are generating a blob from scratch. We record the
     // initial view matrix and initial offsets(x,y), because we record vertex bounds relative to
@@ -276,12 +266,10 @@ private:
     class SubRun {
     public:
         SubRun(Run* run, const SkAutoDescriptor& desc, GrColor color)
-            : fColor{color}
-            , fRun{run}
-            , fDesc{desc} {}
+                : fColor{color}, fRun{run}, fDesc{desc} {}
 
         // When used with emplace_back, this constructs a SubRun from the last SubRun in an array.
-        //SubRun(SkSTArray<1, SubRun>* subRunList)
+        // SubRun(SkSTArray<1, SubRun>* subRunList)
         //    : fColor{subRunList->fromBack(1).fColor} { }
 
         void appendGlyph(GrGlyph* glyph, SkRect dstRect);
@@ -293,7 +281,7 @@ private:
         GrTextStrike* strike() const { return fStrike.get(); }
         sk_sp<GrTextStrike> refStrike() const { return fStrike; }
 
-        void setAtlasGeneration(uint64_t atlasGeneration) { fAtlasGeneration = atlasGeneration;}
+        void setAtlasGeneration(uint64_t atlasGeneration) { fAtlasGeneration = atlasGeneration; }
         uint64_t atlasGeneration() const { return fAtlasGeneration; }
 
         size_t byteCount() const { return fVertexEndIndex - fVertexStartIndex; }
@@ -365,12 +353,12 @@ private:
         GrColor fColor{GrColor_ILLEGAL};
         GrMaskFormat fMaskFormat{kA8_GrMaskFormat};
         struct {
-            bool drawAsSdf:1;
-            bool useLCDText:1;
-            bool antiAliased:1;
-            bool hasWCoord:1;
-            bool needsTransform:1;
-            bool argbFallback:1;
+            bool drawAsSdf : 1;
+            bool useLCDText : 1;
+            bool antiAliased : 1;
+            bool hasWCoord : 1;
+            bool needsTransform : 1;
+            bool argbFallback : 1;
         } fFlags{false, false, false, false, false, false};
         Run* const fRun;
         const SkAutoDescriptor& fDesc;
@@ -400,8 +388,7 @@ private:
      * would greatly increase the memory of these cached items.
      */
     struct Run {
-        explicit Run(GrTextBlob* blob, GrColor color)
-        : fBlob{blob}, fColor{color} {
+        explicit Run(GrTextBlob* blob, GrColor color) : fBlob{blob}, fColor{color} {
             // To ensure we always have one subrun, we push back a fresh run here
             fSubRunInfo.emplace_back(this, fDescriptor, color);
         }
@@ -424,8 +411,8 @@ private:
         }
 
         // Appends a glyph to the blob as a path only.
-        void appendPathGlyph(
-                const SkPath& path, SkPoint position, SkScalar scale, bool preTransformed);
+        void appendPathGlyph(const SkPath& path, SkPoint position, SkScalar scale,
+                             bool preTransformed);
 
         // Append a glyph to the sub run taking care to switch the glyph if needed.
         void switchSubRunIfNeededAndAppendGlyph(GrGlyph* glyph,
@@ -447,9 +434,7 @@ private:
 
         void setupFont(const SkStrikeSpec& strikeSpec);
 
-        void setRunFontAntiAlias(bool aa) {
-            fAntiAlias = aa;
-        }
+        void setRunFontAntiAlias(bool aa) { fAntiAlias = aa; }
 
         // sets the last subrun of runIndex to use distance field text
         void setSubRunHasDistanceFields(bool hasLCD, bool isAntiAlias, bool hasWCoord) {
@@ -475,18 +460,13 @@ private:
         // are rendered as paths
         struct PathGlyph {
             PathGlyph(const SkPath& path, SkScalar x, SkScalar y, SkScalar scale, bool preXformed)
-                : fPath(path)
-                , fX(x)
-                , fY(y)
-                , fScale(scale)
-                , fPreTransformed(preXformed) {}
+                    : fPath(path), fX(x), fY(y), fScale(scale), fPreTransformed(preXformed) {}
             SkPath fPath;
             SkScalar fX;
             SkScalar fY;
             SkScalar fScale;
             bool fPreTransformed;
         };
-
 
         sk_sp<SkTypeface> fTypeface;
         SkSTArray<1, SubRun> fSubRunInfo;
@@ -504,46 +484,46 @@ private:
 
         SkTArray<PathGlyph> fPathGlyphs;
 
-        bool fAntiAlias{false};   // needed mainly for rendering paths
+        bool fAntiAlias{false};  // needed mainly for rendering paths
         bool fInitialized{false};
 
         GrTextBlob* const fBlob;
         GrColor fColor;
     };  // Run
 
-    std::unique_ptr<GrAtlasTextOp> makeOp(
-            const SubRun& info, int glyphCount, uint16_t run, uint16_t subRun,
-            const SkMatrix& viewMatrix, SkScalar x, SkScalar y, const SkIRect& clipRect,
-            const SkPaint& paint, const SkPMColor4f& filteredColor, const SkSurfaceProps&,
-            const GrDistanceFieldAdjustTable*, GrTextTarget*);
+    std::unique_ptr<GrAtlasTextOp> makeOp(const SubRun& info, int glyphCount, uint16_t run,
+                                          uint16_t subRun, const SkMatrix& viewMatrix, SkScalar x,
+                                          SkScalar y, const SkIRect& clipRect, const SkPaint& paint,
+                                          const SkPMColor4f& filteredColor, const SkSurfaceProps&,
+                                          const GrDistanceFieldAdjustTable*, GrTextTarget*);
 
     // currentRun, startRun, and the process* calls are all used by the SkGlyphRunPainter, and
     // live in SkGlyphRunPainter.cpp file.
     Run* currentRun();
-    void startRun(const SkGlyphRun& glyphRun, bool useSDFT);
 
-    void processMasksDevice(SkSpan<const SkGlyphRunListPainter::GlyphAndPos> masks,
-                            SkStrikeInterface* strike);
+    void startRun(const SkGlyphRun& glyphRun, bool useSDFT) override;
 
-    void processPathsSource(SkSpan<const SkGlyphRunListPainter::GlyphAndPos> paths,
-                            SkStrikeInterface* strike, SkScalar textScale);
-    void processPathsDevice(SkSpan<const SkGlyphRunListPainter::GlyphAndPos> paths);
+    void processDeviceMasks(SkSpan<const SkGlyphPos> masks, SkStrikeInterface* strike) override;
 
-    void processSDFTSource(SkSpan<const SkGlyphRunListPainter::GlyphAndPos> masks,
+    void processSourcePaths(SkSpan<const SkGlyphPos> paths, SkStrikeInterface* strike,
+                            SkScalar cacheToSourceScale) override;
+
+    void processDevicePaths(SkSpan<const SkGlyphPos> paths) override;
+
+    void processSourceSDFT(SkSpan<const SkGlyphPos> masks,
                            SkStrikeInterface* strike,
                            const SkFont& runFont,
-                           SkScalar textScale,
+                           SkScalar cacheToSourceScale,
                            SkScalar minScale,
                            SkScalar maxScale,
-                           bool hasWCoord);
+                           bool hasWCoord) override;
 
-    void processFallbackSource(SkSpan<const SkGlyphRunListPainter::GlyphAndPos> masks,
+    void processSourceFallback(SkSpan<const SkGlyphPos> masks,
                                SkStrikeInterface* strike,
-                               SkScalar strikeToSourceRatio,
-                               bool hasW);
+                               SkScalar cacheToSourceScale,
+                               bool hasW) override;
 
-    void processFallbackDevice(SkSpan<const SkGlyphRunListPainter::GlyphAndPos> masks,
-                               SkStrikeInterface* strike);
+    void processDeviceFallback(SkSpan<const SkGlyphPos> masks, SkStrikeInterface* strike) override;
 
     struct StrokeInfo {
         SkScalar fFrameWidth;

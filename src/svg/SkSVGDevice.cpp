@@ -5,38 +5,37 @@
  * found in the LICENSE file.
  */
 
-#include "SkSVGDevice.h"
+#include "src/svg/SkSVGDevice.h"
 
-#include "SkAnnotationKeys.h"
-#include "SkBase64.h"
-#include "SkBitmap.h"
-#include "SkBlendMode.h"
-#include "SkChecksum.h"
-#include "SkClipOpPriv.h"
-#include "SkClipStack.h"
-#include "SkColorFilter.h"
-#include "SkData.h"
-#include "SkDraw.h"
-#include "SkImage.h"
-#include "SkImageEncoder.h"
-#include "SkJpegCodec.h"
-#include "SkPaint.h"
-#include "SkParsePath.h"
-#include "SkPngCodec.h"
-#include "SkShader.h"
-#include "SkStream.h"
-#include "SkTHash.h"
-#include "SkTo.h"
-#include "SkTypeface.h"
-#include "SkUtils.h"
-#include "SkXMLWriter.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkData.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageEncoder.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkTypeface.h"
+#include "include/private/SkChecksum.h"
+#include "include/private/SkTHash.h"
+#include "include/private/SkTo.h"
+#include "include/utils/SkBase64.h"
+#include "include/utils/SkParsePath.h"
+#include "src/codec/SkJpegCodec.h"
+#include "src/codec/SkPngCodec.h"
+#include "src/core/SkAnnotationKeys.h"
+#include "src/core/SkClipOpPriv.h"
+#include "src/core/SkClipStack.h"
+#include "src/core/SkDraw.h"
+#include "src/core/SkUtils.h"
+#include "src/shaders/SkShaderBase.h"
+#include "src/xml/SkXMLWriter.h"
 
 namespace {
 
 static SkString svg_color(SkColor color) {
-    return SkStringPrintf("rgb(%u,%u,%u)",
-                          SkColorGetR(color),
-                          SkColorGetG(color),
+    return SkStringPrintf("rgb(%u,%u,%u)", SkColorGetR(color), SkColorGetG(color),
                           SkColorGetB(color));
 }
 
@@ -45,10 +44,10 @@ static SkScalar svg_opacity(SkColor color) {
 }
 
 // Keep in sync with SkPaint::Cap
-static const char* cap_map[]  = {
-    nullptr,    // kButt_Cap (default)
-    "round", // kRound_Cap
-    "square" // kSquare_Cap
+static const char* cap_map[] = {
+        nullptr,  // kButt_Cap (default)
+        "round",  // kRound_Cap
+        "square"  // kSquare_Cap
 };
 static_assert(SK_ARRAY_COUNT(cap_map) == SkPaint::kCapCount, "missing_cap_map_entry");
 
@@ -59,9 +58,9 @@ static const char* svg_cap(SkPaint::Cap cap) {
 
 // Keep in sync with SkPaint::Join
 static const char* join_map[] = {
-    nullptr,    // kMiter_Join (default)
-    "round", // kRound_Join
-    "bevel"  // kBevel_Join
+        nullptr,  // kMiter_Join (default)
+        "round",  // kRound_Join
+        "bevel"   // kBevel_Join
 };
 static_assert(SK_ARRAY_COUNT(join_map) == SkPaint::kJoinCount, "missing_join_map_entry");
 
@@ -75,33 +74,30 @@ static SkString svg_transform(const SkMatrix& t) {
 
     SkString tstr;
     switch (t.getType()) {
-    case SkMatrix::kPerspective_Mask:
-        // TODO: handle perspective matrices?
-        break;
-    case SkMatrix::kTranslate_Mask:
-        tstr.printf("translate(%g %g)", t.getTranslateX(), t.getTranslateY());
-        break;
-    case SkMatrix::kScale_Mask:
-        tstr.printf("scale(%g %g)", t.getScaleX(), t.getScaleY());
-        break;
-    default:
-        // http://www.w3.org/TR/SVG/coords.html#TransformMatrixDefined
-        //    | a c e |
-        //    | b d f |
-        //    | 0 0 1 |
-        tstr.printf("matrix(%g %g %g %g %g %g)",
-                    t.getScaleX(),     t.getSkewY(),
-                    t.getSkewX(),      t.getScaleY(),
-                    t.getTranslateX(), t.getTranslateY());
-        break;
+        case SkMatrix::kPerspective_Mask:
+            // TODO: handle perspective matrices?
+            break;
+        case SkMatrix::kTranslate_Mask:
+            tstr.printf("translate(%g %g)", t.getTranslateX(), t.getTranslateY());
+            break;
+        case SkMatrix::kScale_Mask:
+            tstr.printf("scale(%g %g)", t.getScaleX(), t.getScaleY());
+            break;
+        default:
+            // http://www.w3.org/TR/SVG/coords.html#TransformMatrixDefined
+            //    | a c e |
+            //    | b d f |
+            //    | 0 0 1 |
+            tstr.printf("matrix(%g %g %g %g %g %g)", t.getScaleX(), t.getSkewY(), t.getSkewX(),
+                        t.getScaleY(), t.getTranslateX(), t.getTranslateY());
+            break;
     }
 
     return tstr;
 }
 
 struct Resources {
-    Resources(const SkPaint& paint)
-        : fPaintServer(svg_color(paint.getColor())) {}
+    Resources(const SkPaint& paint) : fPaintServer(svg_color(paint.getColor())) {}
 
     SkString fPaintServer;
     SkString fClip;
@@ -112,21 +108,18 @@ struct Resources {
 // Currently, we do this whenever the paint shader calls
 // for a repeating image.
 bool RequiresViewportReset(const SkPaint& paint) {
-  SkShader* shader = paint.getShader();
-  if (!shader)
+    SkShader* shader = paint.getShader();
+    if (!shader) return false;
+
+    SkTileMode xy[2];
+    SkImage* image = shader->isAImage(nullptr, xy);
+
+    if (!image) return false;
+
+    for (int i = 0; i < 2; i++) {
+        if (xy[i] == SkTileMode::kRepeat) return true;
+    }
     return false;
-
-  SkShader::TileMode xy[2];
-  SkImage* image = shader->isAImage(nullptr, xy);
-
-  if (!image)
-    return false;
-
-  for (int i = 0; i < 2; i++) {
-    if (xy[i] == SkShader::kRepeat_TileMode)
-      return true;
-  }
-  return false;
 }
 
 }  // namespace
@@ -143,27 +136,17 @@ public:
             , fPatternCount(0)
             , fColorFilterCount(0) {}
 
-    SkString addLinearGradient() {
-        return SkStringPrintf("gradient_%d", fGradientCount++);
-    }
+    SkString addLinearGradient() { return SkStringPrintf("gradient_%d", fGradientCount++); }
 
-    SkString addClip() {
-        return SkStringPrintf("clip_%d", fClipCount++);
-    }
+    SkString addClip() { return SkStringPrintf("clip_%d", fClipCount++); }
 
-    SkString addPath() {
-        return SkStringPrintf("path_%d", fPathCount++);
-    }
+    SkString addPath() { return SkStringPrintf("path_%d", fPathCount++); }
 
-    SkString addImage() {
-        return SkStringPrintf("img_%d", fImageCount++);
-    }
+    SkString addImage() { return SkStringPrintf("img_%d", fImageCount++); }
 
     SkString addColorFilter() { return SkStringPrintf("cfilter_%d", fColorFilterCount++); }
 
-    SkString addPattern() {
-      return SkStringPrintf("pattern_%d", fPatternCount++);
-    }
+    SkString addPattern() { return SkStringPrintf("pattern_%d", fPatternCount++); }
 
 private:
     uint32_t fGradientCount;
@@ -176,7 +159,7 @@ private:
 
 struct SkSVGDevice::MxCp {
     const SkMatrix* fMatrix;
-    const SkClipStack*  fClipStack;
+    const SkClipStack* fClipStack;
 
     MxCp(const SkMatrix* mx, const SkClipStack* cs) : fMatrix(mx), fClipStack(cs) {}
     MxCp(SkSVGDevice* device) : fMatrix(&device->ctm()), fClipStack(&device->cs()) {}
@@ -185,26 +168,23 @@ struct SkSVGDevice::MxCp {
 class SkSVGDevice::AutoElement : ::SkNoncopyable {
 public:
     AutoElement(const char name[], SkXMLWriter* writer)
-        : fWriter(writer)
-        , fResourceBucket(nullptr) {
+            : fWriter(writer), fResourceBucket(nullptr) {
         fWriter->startElement(name);
     }
 
     AutoElement(const char name[], const std::unique_ptr<SkXMLWriter>& writer)
-        : AutoElement(name, writer.get()) {}
+            : AutoElement(name, writer.get()) {}
 
     AutoElement(const char name[], const std::unique_ptr<SkXMLWriter>& writer,
                 ResourceBucket* bucket, const MxCp& mc, const SkPaint& paint)
-        : fWriter(writer.get())
-        , fResourceBucket(bucket) {
-
+            : fWriter(writer.get()), fResourceBucket(bucket) {
         Resources res = this->addResources(mc, paint);
 
         if (!res.fClip.isEmpty()) {
             // The clip is in device space. Apply it via a <g> wrapper to avoid local transform
             // interference.
             fClipGroup.reset(new AutoElement("g", fWriter));
-            fClipGroup->addAttribute("clip-path",res.fClip);
+            fClipGroup->addAttribute("clip-path", res.fClip);
         }
 
         fWriter->startElement(name);
@@ -216,29 +196,19 @@ public:
         }
     }
 
-    ~AutoElement() {
-        fWriter->endElement();
-    }
+    ~AutoElement() { fWriter->endElement(); }
 
-    void addAttribute(const char name[], const char val[]) {
-        fWriter->addAttribute(name, val);
-    }
+    void addAttribute(const char name[], const char val[]) { fWriter->addAttribute(name, val); }
 
     void addAttribute(const char name[], const SkString& val) {
         fWriter->addAttribute(name, val.c_str());
     }
 
-    void addAttribute(const char name[], int32_t val) {
-        fWriter->addS32Attribute(name, val);
-    }
+    void addAttribute(const char name[], int32_t val) { fWriter->addS32Attribute(name, val); }
 
-    void addAttribute(const char name[], SkScalar val) {
-        fWriter->addScalarAttribute(name, val);
-    }
+    void addAttribute(const char name[], SkScalar val) { fWriter->addScalarAttribute(name, val); }
 
-    void addText(const SkString& text) {
-        fWriter->addText(text.c_str(), text.size());
-    }
+    void addText(const SkString& text) { fWriter->addText(text.c_str(), text.size()); }
 
     void addRectAttributes(const SkRect&);
     void addPathAttributes(const SkPath&);
@@ -258,11 +228,10 @@ private:
 
     void addPaint(const SkPaint& paint, const Resources& resources);
 
-
     SkString addLinearGradientDef(const SkShader::GradientInfo& info, const SkShader* shader);
 
-    SkXMLWriter*               fWriter;
-    ResourceBucket*            fResourceBucket;
+    SkXMLWriter* fWriter;
+    ResourceBucket* fResourceBucket;
     std::unique_ptr<AutoElement> fClipGroup;
 };
 
@@ -319,7 +288,7 @@ Resources SkSVGDevice::AutoElement::addResources(const MxCp& mc, const SkPaint& 
     Resources resources(paint);
 
     // FIXME: this is a weak heuristic and we end up with LOTS of redundant clips.
-    bool hasClip   = !mc.fClipStack->isWideOpen();
+    bool hasClip = !mc.fClipStack->isWideOpen();
     bool hasShader = SkToBool(paint.getShader());
 
     if (hasClip || hasShader) {
@@ -337,7 +306,7 @@ Resources SkSVGDevice::AutoElement::addResources(const MxCp& mc, const SkPaint& 
     if (const SkColorFilter* cf = paint.getColorFilter()) {
         // TODO: Implement skia color filters for blend modes other than SrcIn
         SkBlendMode mode;
-        if (cf->asColorMode(nullptr, &mode) && mode == SkBlendMode::kSrcIn) {
+        if (cf->asAColorMode(nullptr, &mode) && mode == SkBlendMode::kSrcIn) {
             this->addColorFilterResources(*cf, &resources);
         }
     }
@@ -354,7 +323,7 @@ void SkSVGDevice::AutoElement::addGradientShaderResources(const SkShader* shader
         return;
     }
 
-    SkAutoSTArray<16, SkColor>  grColors(grInfo.fColorCount);
+    SkAutoSTArray<16, SkColor> grColors(grInfo.fColorCount);
     SkAutoSTArray<16, SkScalar> grOffsets(grInfo.fColorCount);
     grInfo.fColors = grColors.get();
     grInfo.fColorOffsets = grOffsets.get();
@@ -380,8 +349,8 @@ void SkSVGDevice::AutoElement::addColorFilterResources(const SkColorFilter& cf,
 
         SkColor filterColor;
         SkBlendMode mode;
-        bool asColorMode = cf.asColorMode(&filterColor, &mode);
-        SkAssertResult(asColorMode);
+        bool asAColorMode = cf.asAColorMode(&filterColor, &mode);
+        SkAssertResult(asAColorMode);
         SkASSERT(mode == SkBlendMode::kSrcIn);
 
         {
@@ -422,11 +391,11 @@ sk_sp<SkData> AsDataUri(SkImage* image) {
         selectedPrefix = jpgDataPrefix;
         selectedPrefixLength = sizeof(jpgDataPrefix);
     } else {
-      if (!SkPngCodec::IsPng(src, imageData->size())) {
-        imageData = image->encodeToData(SkEncodedImageFormat::kPNG, 100);
-      }
-      selectedPrefix = pngDataPrefix;
-      selectedPrefixLength = sizeof(pngDataPrefix);
+        if (!SkPngCodec::IsPng(src, imageData->size())) {
+            imageData = image->encodeToData(SkEncodedImageFormat::kPNG, 100);
+        }
+        selectedPrefix = pngDataPrefix;
+        selectedPrefixLength = sizeof(pngDataPrefix);
     }
 
     size_t b64Size = SkBase64::Encode(imageData->data(), imageData->size(), nullptr);
@@ -442,7 +411,7 @@ void SkSVGDevice::AutoElement::addImageShaderResources(const SkShader* shader, c
                                                        Resources* resources) {
     SkMatrix outMatrix;
 
-    SkShader::TileMode xy[2];
+    SkTileMode xy[2];
     SkImage* image = shader->isAImage(&outMatrix, xy);
     SkASSERT(image);
 
@@ -456,9 +425,9 @@ void SkSVGDevice::AutoElement::addImageShaderResources(const SkShader* shader, c
     for (int i = 0; i < 2; i++) {
         int imageDimension = i == 0 ? imageSize.width() : imageSize.height();
         switch (xy[i]) {
-            case SkShader::kRepeat_TileMode:
+            case SkTileMode::kRepeat:
                 patternDims[i].appendScalar(imageDimension);
-            break;
+                break;
             default:
                 // TODO: other tile modes?
                 patternDims[i] = "100%";
@@ -506,11 +475,11 @@ void SkSVGDevice::AutoElement::addClipResources(const MxCp& mc, Resources* resou
     SkASSERT(!mc.fClipStack->isWideOpen());
 
     SkPath clipPath;
-    (void) mc.fClipStack->asPath(&clipPath);
+    (void)mc.fClipStack->asPath(&clipPath);
 
     SkString clipID = fResourceBucket->addClip();
-    const char* clipRule = clipPath.getFillType() == SkPath::kEvenOdd_FillType ?
-                           "evenodd" : "nonzero";
+    const char* clipRule =
+            clipPath.getFillType() == SkPath::kEvenOdd_FillType ? "evenodd" : "nonzero";
     {
         // clipPath is in device space, but since we're only pushing transform attributes
         // to the leaf nodes, so are all our elements => SVG userSpaceOnUse == device space.
@@ -547,8 +516,8 @@ SkString SkSVGDevice::AutoElement::addLinearGradientDef(const SkShader::Gradient
         gradient.addAttribute("x2", info.fPoint[1].x());
         gradient.addAttribute("y2", info.fPoint[1].y());
 
-        if (!shader->getLocalMatrix().isIdentity()) {
-            this->addAttribute("gradientTransform", svg_transform(shader->getLocalMatrix()));
+        if (!as_SB(shader)->getLocalMatrix().isIdentity()) {
+            this->addAttribute("gradientTransform", svg_transform(as_SB(shader)->getLocalMatrix()));
         }
 
         SkASSERT(info.fColorCount >= 2);
@@ -606,18 +575,15 @@ void SkSVGDevice::AutoElement::addTextAttributes(const SkFont& font) {
     }
     int weightIndex = (SkTPin(style.weight(), 100, 900) - 50) / 100;
     if (weightIndex != 3) {
-        static constexpr const char* weights[] = {
-            "100", "200", "300", "normal", "400", "500", "600", "bold", "800", "900"
-        };
+        static constexpr const char* weights[] = {"100", "200", "300",  "normal", "400",
+                                                  "500", "600", "bold", "800",    "900"};
         this->addAttribute("font-weight", weights[weightIndex]);
     }
     int stretchIndex = style.width() - 1;
     if (stretchIndex != 4) {
         static constexpr const char* stretches[] = {
-            "ultra-condensed", "extra-condensed", "condensed", "semi-condensed",
-            "normal",
-            "semi-expanded", "expanded", "extra-expanded", "ultra-expanded"
-        };
+                "ultra-condensed", "extra-condensed", "condensed",      "semi-condensed", "normal",
+                "semi-expanded",   "expanded",        "extra-expanded", "ultra-expanded"};
         this->addAttribute("font-stretch", stretches[stretchIndex]);
     }
 
@@ -629,7 +595,8 @@ void SkSVGDevice::AutoElement::addTextAttributes(const SkFont& font) {
                 continue;
             }
             familySet.add(familyString.fString);
-            familyName.appendf((familyName.isEmpty() ? "%s" : ", %s"), familyString.fString.c_str());
+            familyName.appendf((familyName.isEmpty() ? "%s" : ", %s"),
+                               familyString.fString.c_str());
         }
     }
     if (!familyName.isEmpty()) {
@@ -638,16 +605,14 @@ void SkSVGDevice::AutoElement::addTextAttributes(const SkFont& font) {
 }
 
 sk_sp<SkBaseDevice> SkSVGDevice::Make(const SkISize& size, std::unique_ptr<SkXMLWriter> writer) {
-    return writer ? sk_sp<SkBaseDevice>(new SkSVGDevice(size, std::move(writer)))
-                  : nullptr;
+    return writer ? sk_sp<SkBaseDevice>(new SkSVGDevice(size, std::move(writer))) : nullptr;
 }
 
 SkSVGDevice::SkSVGDevice(const SkISize& size, std::unique_ptr<SkXMLWriter> writer)
-    : INHERITED(SkImageInfo::MakeUnknown(size.fWidth, size.fHeight),
-                SkSurfaceProps(0, kUnknown_SkPixelGeometry))
-    , fWriter(std::move(writer))
-    , fResourceBucket(new ResourceBucket)
-{
+        : INHERITED(SkImageInfo::MakeUnknown(size.fWidth, size.fHeight),
+                    SkSurfaceProps(0, kUnknown_SkPixelGeometry))
+        , fWriter(std::move(writer))
+        , fResourceBucket(new ResourceBucket) {
     SkASSERT(fWriter);
 
     fWriter->writeHeader();
@@ -665,8 +630,8 @@ SkSVGDevice::~SkSVGDevice() = default;
 
 void SkSVGDevice::drawPaint(const SkPaint& paint) {
     AutoElement rect("rect", fWriter, fResourceBucket.get(), MxCp(this), paint);
-    rect.addRectAttributes(SkRect::MakeWH(SkIntToScalar(this->width()),
-                                          SkIntToScalar(this->height())));
+    rect.addRectAttributes(
+            SkRect::MakeWH(SkIntToScalar(this->width()), SkIntToScalar(this->height())));
 }
 
 void SkSVGDevice::drawAnnotation(const SkRect& rect, const char key[], SkData* value) {
@@ -695,8 +660,8 @@ void SkSVGDevice::drawAnnotation(const SkRect& rect, const char key[], SkData* v
     }
 }
 
-void SkSVGDevice::drawPoints(SkCanvas::PointMode mode, size_t count,
-                             const SkPoint pts[], const SkPaint& paint) {
+void SkSVGDevice::drawPoints(SkCanvas::PointMode mode, size_t count, const SkPoint pts[],
+                             const SkPaint& paint) {
     SkPath path;
 
     switch (mode) {
@@ -709,7 +674,7 @@ void SkSVGDevice::drawPoints(SkCanvas::PointMode mode, size_t count,
             for (size_t i = 0; i < count; i += 2) {
                 path.rewind();
                 path.moveTo(pts[i]);
-                path.lineTo(pts[i+1]);
+                path.lineTo(pts[i + 1]);
                 AutoElement elem("path", fWriter, fResourceBucket.get(), MxCp(this), paint);
                 elem.addPathAttributes(path);
             }
@@ -728,19 +693,19 @@ void SkSVGDevice::drawPoints(SkCanvas::PointMode mode, size_t count,
 void SkSVGDevice::drawRect(const SkRect& r, const SkPaint& paint) {
     std::unique_ptr<AutoElement> svg;
     if (RequiresViewportReset(paint)) {
-      svg.reset(new AutoElement("svg", fWriter, fResourceBucket.get(), MxCp(this), paint));
-      svg->addRectAttributes(r);
+        svg.reset(new AutoElement("svg", fWriter, fResourceBucket.get(), MxCp(this), paint));
+        svg->addRectAttributes(r);
     }
 
     AutoElement rect("rect", fWriter, fResourceBucket.get(), MxCp(this), paint);
 
     if (svg) {
-      rect.addAttribute("x", 0);
-      rect.addAttribute("y", 0);
-      rect.addAttribute("width", "100%");
-      rect.addAttribute("height", "100%");
+        rect.addAttribute("x", 0);
+        rect.addAttribute("y", 0);
+        rect.addAttribute("width", "100%");
+        rect.addAttribute("height", "100%");
     } else {
-      rect.addRectAttributes(r);
+        rect.addRectAttributes(r);
     }
 }
 
@@ -806,8 +771,7 @@ void SkSVGDevice::drawBitmapCommon(const MxCp& mc, const SkBitmap& bm, const SkP
     }
 }
 
-void SkSVGDevice::drawSprite(const SkBitmap& bitmap,
-                             int x, int y, const SkPaint& paint) {
+void SkSVGDevice::drawSprite(const SkBitmap& bitmap, int x, int y, const SkPaint& paint) {
     MxCp mc(this);
     SkMatrix adjustedMatrix = *mc.fMatrix;
     adjustedMatrix.preTranslate(SkIntToScalar(x), SkIntToScalar(y));
@@ -816,9 +780,8 @@ void SkSVGDevice::drawSprite(const SkBitmap& bitmap,
     drawBitmapCommon(mc, bitmap, paint);
 }
 
-void SkSVGDevice::drawBitmapRect(const SkBitmap& bm, const SkRect* srcOrNull,
-                                 const SkRect& dst, const SkPaint& paint,
-                                 SkCanvas::SrcRectConstraint) {
+void SkSVGDevice::drawBitmapRect(const SkBitmap& bm, const SkRect* srcOrNull, const SkRect& dst,
+                                 const SkPaint& paint, SkCanvas::SrcRectConstraint) {
     SkClipStack* cs = &this->cs();
     SkClipStack::AutoRestore ar(cs, false);
     if (srcOrNull && *srcOrNull != SkRect::Make(bm.bounds())) {
@@ -827,8 +790,7 @@ void SkSVGDevice::drawBitmapRect(const SkBitmap& bm, const SkRect* srcOrNull,
     }
 
     SkMatrix adjustedMatrix;
-    adjustedMatrix.setRectToRect(srcOrNull ? *srcOrNull : SkRect::Make(bm.bounds()),
-                                 dst,
+    adjustedMatrix.setRectToRect(srcOrNull ? *srcOrNull : SkRect::Make(bm.bounds()), dst,
                                  SkMatrix::kFill_ScaleToFit);
     adjustedMatrix.postConcat(this->ctm());
 
@@ -839,7 +801,8 @@ class SVGTextBuilder : SkNoncopyable {
 public:
     SVGTextBuilder(SkPoint origin, const SkGlyphRun& glyphRun)
             : fOrigin(origin)
-            , fLastCharWasWhitespace(true) { // start off in whitespace mode to strip all leadingspace
+            , fLastCharWasWhitespace(
+                      true) {  // start off in whitespace mode to strip all leadingspace
         auto runSize = glyphRun.runSize();
         SkAutoSTArray<64, SkUnichar> unichars(runSize);
         glyphRun.font().glyphsToUnichars(glyphRun.glyphsIDs().data(), runSize, unichars.get());
@@ -858,7 +821,7 @@ private:
         bool discardPos = false;
         bool isWhitespace = false;
 
-        switch(c) {
+        switch (c) {
             case ' ':
             case '\t':
                 // consolidate whitespace to match SVG's xml:space=default munging
@@ -874,7 +837,7 @@ private:
                 // SkPaint::glyphsToUnichars() returns \0 for inconvertible glyphs, but these
                 // are not legal XML characters (http://www.w3.org/TR/REC-xml/#charsets)
                 discardPos = true;
-                isWhitespace = fLastCharWasWhitespace; // preserve whitespace consolidation
+                isWhitespace = fLastCharWasWhitespace;  // preserve whitespace consolidation
                 break;
             case '&':
                 fText.append("&amp;");
@@ -908,16 +871,15 @@ private:
         }
     }
 
-    const SkPoint   fOrigin;
+    const SkPoint fOrigin;
 
     SkString fText, fPosX, fPosY;
-    bool     fLastCharWasWhitespace;
+    bool fLastCharWasWhitespace;
 };
 
-void SkSVGDevice::drawGlyphRunList(const SkGlyphRunList& glyphRunList)  {
-
-    auto processGlyphRun = [this]
-                           (SkPoint origin, const SkGlyphRun& glyphRun, const SkPaint& runPaint) {
+void SkSVGDevice::drawGlyphRunList(const SkGlyphRunList& glyphRunList) {
+    auto processGlyphRun = [this](SkPoint origin, const SkGlyphRun& glyphRun,
+                                  const SkPaint& runPaint) {
         AutoElement elem("text", fWriter, fResourceBucket.get(), MxCp(this), runPaint);
         elem.addTextAttributes(glyphRun.font());
 
@@ -937,7 +899,6 @@ void SkSVGDevice::drawVertices(const SkVertices*, const SkVertices::Bone[], int,
     // todo
 }
 
-void SkSVGDevice::drawDevice(SkBaseDevice*, int x, int y,
-                             const SkPaint&) {
+void SkSVGDevice::drawDevice(SkBaseDevice*, int x, int y, const SkPaint&) {
     // todo
 }

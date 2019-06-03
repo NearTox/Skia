@@ -8,8 +8,8 @@
 #ifndef GrRenderTargetPriv_DEFINED
 #define GrRenderTargetPriv_DEFINED
 
-#include "GrRenderTarget.h"
-#include "GrGpu.h"
+#include "include/gpu/GrRenderTarget.h"
+#include "src/gpu/GrGpu.h"
 
 class GrStencilSettings;
 
@@ -34,10 +34,26 @@ public:
 
     int numStencilBits() const;
 
+    /**
+     * Returns a unique key that identifies this render target's sample pattern. (Must be
+     * multisampled.)
+     */
+    int getSamplePatternKey() const;
+
+    /**
+     * Retrieves the per-pixel HW sample locations for this render target, and, as a by-product, the
+     * actual number of samples in use. (This may differ from fSampleCnt.) Sample locations are
+     * returned as 0..1 offsets relative to the top-left corner of the pixel.
+     */
+    const SkTArray<SkPoint>& getSampleLocations() const {
+        int samplePatternKey = this->getSamplePatternKey();
+        return fRenderTarget->getGpu()->retrieveSampleLocations(samplePatternKey);
+    }
+
 private:
     explicit GrRenderTargetPriv(GrRenderTarget* renderTarget) : fRenderTarget(renderTarget) {}
-    GrRenderTargetPriv(const GrRenderTargetPriv&) {} // unimpl
-    GrRenderTargetPriv& operator=(const GrRenderTargetPriv&); // unimpl
+    GrRenderTargetPriv(const GrRenderTargetPriv&) {}           // unimpl
+    GrRenderTargetPriv& operator=(const GrRenderTargetPriv&);  // unimpl
 
     // No taking addresses of this type.
     const GrRenderTargetPriv* operator&() const;
@@ -45,12 +61,12 @@ private:
 
     GrRenderTarget* fRenderTarget;
 
-    friend class GrRenderTarget; // to construct/copy this type.
+    friend class GrRenderTarget;  // to construct/copy this type.
 };
 
 inline GrRenderTargetPriv GrRenderTarget::renderTargetPriv() { return GrRenderTargetPriv(this); }
 
-inline const GrRenderTargetPriv GrRenderTarget::renderTargetPriv () const {
+inline const GrRenderTargetPriv GrRenderTarget::renderTargetPriv() const {
     return GrRenderTargetPriv(const_cast<GrRenderTarget*>(this));
 }
 

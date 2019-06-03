@@ -8,7 +8,7 @@
 #ifndef SKSL_POSITION
 #define SKSL_POSITION
 
-#include "SkSLUtil.h"
+#include "src/sksl/SkSLUtil.h"
 
 namespace SkSL {
 
@@ -17,22 +17,16 @@ namespace SkSL {
  * ignored.
  */
 struct Position {
-    Position()
-    : fLine(-1)
-    , fColumn(-1) {}
+    Position() : fLine(-1), fColumn(-1) {}
 
-    Position(int line, int column)
-    : fLine(line)
-    , fColumn(column) {}
+    Position(int line, int column) : fLine(line), fColumn(column) {}
 
-    String description() const {
-        return to_string(fLine);
-    }
+    String description() const { return to_string(fLine); }
 
     int fLine;
     int fColumn;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

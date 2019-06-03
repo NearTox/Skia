@@ -8,8 +8,8 @@
 #ifndef SkSVGUse_DEFINED
 #define SkSVGUse_DEFINED
 
-#include "SkSVGTransformableNode.h"
-#include "SkSVGTypes.h"
+#include "experimental/svg/model/SkSVGTransformableNode.h"
+#include "experimental/svg/model/SkSVGTypes.h"
 
 /**
  * Implements support for <use> (reference) elements.
@@ -37,11 +37,11 @@ protected:
 private:
     SkSVGUse();
 
-    SkSVGStringType    fHref;
-    SkSVGLength        fX = SkSVGLength(0);
-    SkSVGLength        fY = SkSVGLength(0);
+    SkSVGStringType fHref;
+    SkSVGLength fX = SkSVGLength(0);
+    SkSVGLength fY = SkSVGLength(0);
 
     typedef SkSVGTransformableNode INHERITED;
 };
 
-#endif // SkSVGUse_DEFINED
+#endif  // SkSVGUse_DEFINED

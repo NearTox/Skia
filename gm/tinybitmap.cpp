@@ -4,12 +4,16 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkColorPriv.h"
-#include "SkShader.h"
-#include "SkCanvas.h"
-#include "SkUTF.h"
+
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTileMode.h"
 
 namespace skiagm {
 
@@ -22,14 +26,10 @@ static SkBitmap make_bitmap() {
 
 class TinyBitmapGM : public GM {
 public:
-    TinyBitmapGM() {
-        this->setBGColor(0xFFDDDDDD);
-    }
+    TinyBitmapGM() { this->setBGColor(0xFFDDDDDD); }
 
 protected:
-    SkString onShortName() {
-        return SkString("tinybitmap");
-    }
+    SkString onShortName() { return SkString("tinybitmap"); }
 
     virtual SkISize onISize() { return SkISize::Make(100, 100); }
 
@@ -37,8 +37,7 @@ protected:
         SkBitmap bm = make_bitmap();
         SkPaint paint;
         paint.setAlphaf(0.5f);
-        paint.setShader(SkShader::MakeBitmapShader(bm, SkShader::kRepeat_TileMode,
-                                                   SkShader::kMirror_TileMode));
+        paint.setShader(bm.makeShader(SkTileMode::kRepeat, SkTileMode::kMirror));
         canvas->drawPaint(paint);
     }
 
@@ -48,6 +47,6 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new TinyBitmapGM; )
+DEF_GM(return new TinyBitmapGM;)
 
-}
+}  // namespace skiagm

@@ -8,9 +8,9 @@
 #ifndef GrGLSemaphore_DEFINED
 #define GrGLSemaphore_DEFINED
 
-#include "GrBackendSemaphore.h"
-#include "GrSemaphore.h"
-#include "GrTypesPriv.h"
+#include "include/gpu/GrBackendSemaphore.h"
+#include "include/private/GrTypesPriv.h"
+#include "src/gpu/GrSemaphore.h"
 
 class GrGLGpu;
 
@@ -23,8 +23,8 @@ public:
     static sk_sp<GrGLSemaphore> MakeWrapped(GrGLGpu* gpu,
                                             GrGLsync sync,
                                             GrWrapOwnership ownership) {
-        auto sema = sk_sp<GrGLSemaphore>(new GrGLSemaphore(gpu,
-                                                           kBorrow_GrWrapOwnership != ownership));
+        auto sema =
+                sk_sp<GrGLSemaphore>(new GrGLSemaphore(gpu, kBorrow_GrWrapOwnership != ownership));
         sema->setSync(sync);
         return sema;
     }
@@ -45,7 +45,7 @@ private:
     void onAbandon() override;
 
     GrGLsync fSync;
-    bool     fIsOwned;
+    bool fIsOwned;
 
     typedef GrSemaphore INHERITED;
 };

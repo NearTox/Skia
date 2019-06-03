@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "GrSDFMaskFilter.h"
-#include "SkDistanceFieldGen.h"
-#include "SkMaskFilterBase.h"
-#include "SkReadBuffer.h"
-#include "SkSafeMath.h"
-#include "SkWriteBuffer.h"
-#include "SkString.h"
+#include "src/gpu/text/GrSDFMaskFilter.h"
+#include "include/core/SkString.h"
+#include "src/core/SkDistanceFieldGen.h"
+#include "src/core/SkMaskFilterBase.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkSafeMath.h"
+#include "src/core/SkWriteBuffer.h"
 
 class SK_API GrSDFMaskFilterImpl : public SkMaskFilterBase {
 public:
@@ -27,7 +27,6 @@ public:
     void computeFastBounds(const SkRect&, SkRect*) const override;
 
 protected:
-
 private:
     SK_FLATTENABLE_HOOKS(GrSDFMaskFilterImpl)
 
@@ -39,15 +38,12 @@ private:
 
 GrSDFMaskFilterImpl::GrSDFMaskFilterImpl() {}
 
-SkMask::Format GrSDFMaskFilterImpl::getFormat() const {
-    return SkMask::kSDF_Format;
-}
+SkMask::Format GrSDFMaskFilterImpl::getFormat() const { return SkMask::kSDF_Format; }
 
-bool GrSDFMaskFilterImpl::filterMask(SkMask* dst, const SkMask& src,
-                                     const SkMatrix& matrix, SkIPoint* margin) const {
-    if (src.fFormat != SkMask::kA8_Format
-        && src.fFormat != SkMask::kBW_Format
-        && src.fFormat != SkMask::kLCD16_Format) {
+bool GrSDFMaskFilterImpl::filterMask(SkMask* dst, const SkMask& src, const SkMatrix& matrix,
+                                     SkIPoint* margin) const {
+    if (src.fFormat != SkMask::kA8_Format && src.fFormat != SkMask::kBW_Format &&
+        src.fFormat != SkMask::kLCD16_Format) {
         return false;
     }
 
@@ -67,23 +63,19 @@ bool GrSDFMaskFilterImpl::filterMask(SkMask* dst, const SkMask& src,
     }
 
     if (src.fFormat == SkMask::kA8_Format) {
-        return SkGenerateDistanceFieldFromA8Image(dst->fImage, src.fImage,
-                                                  src.fBounds.width(), src.fBounds.height(),
-                                                  src.fRowBytes);
+        return SkGenerateDistanceFieldFromA8Image(dst->fImage, src.fImage, src.fBounds.width(),
+                                                  src.fBounds.height(), src.fRowBytes);
     } else if (src.fFormat == SkMask::kLCD16_Format) {
-        return SkGenerateDistanceFieldFromLCD16Mask(dst->fImage, src.fImage,
-                                                     src.fBounds.width(), src.fBounds.height(),
-                                                     src.fRowBytes);
+        return SkGenerateDistanceFieldFromLCD16Mask(dst->fImage, src.fImage, src.fBounds.width(),
+                                                    src.fBounds.height(), src.fRowBytes);
     } else {
-        return SkGenerateDistanceFieldFromBWImage(dst->fImage, src.fImage,
-                                                  src.fBounds.width(), src.fBounds.height(),
-                                                  src.fRowBytes);
+        return SkGenerateDistanceFieldFromBWImage(dst->fImage, src.fImage, src.fBounds.width(),
+                                                  src.fBounds.height(), src.fRowBytes);
     }
 }
 
-void GrSDFMaskFilterImpl::computeFastBounds(const SkRect& src,
-                                            SkRect* dst) const {
-    dst->set(src.fLeft  - SK_DistanceFieldPad, src.fTop    - SK_DistanceFieldPad,
+void GrSDFMaskFilterImpl::computeFastBounds(const SkRect& src, SkRect* dst) const {
+    dst->set(src.fLeft - SK_DistanceFieldPad, src.fTop - SK_DistanceFieldPad,
              src.fRight + SK_DistanceFieldPad, src.fBottom + SK_DistanceFieldPad);
 }
 

@@ -8,7 +8,7 @@
 #ifndef SkATrace_DEFINED
 #define SkATrace_DEFINED
 
-#include "SkEventTracer.h"
+#include "include/utils/SkEventTracer.h"
 
 /**
  * This class is used to support ATrace in android apps. It hooks into the SkEventTracer system. It
@@ -20,7 +20,7 @@
  */
 class SkATrace : public SkEventTracer {
 public:
-    SkATrace();
+    SkATrace() noexcept;
 
     SkEventTracer::Handle addTraceEvent(char phase,
                                         const uint8_t* categoryEnabledFlag,
@@ -30,16 +30,15 @@ public:
                                         const char** argNames,
                                         const uint8_t* argTypes,
                                         const uint64_t* argValues,
-                                        uint8_t flags) override;
-
+                                        uint8_t flags) noexcept override;
 
     void updateTraceEventDuration(const uint8_t* categoryEnabledFlag,
                                   const char* name,
-                                  SkEventTracer::Handle handle) override;
+                                  SkEventTracer::Handle handle) noexcept override;
 
-    const uint8_t* getCategoryGroupEnabled(const char* name) override;
+    const uint8_t* getCategoryGroupEnabled(const char* name) noexcept override;
 
-    const char* getCategoryGroupName(const uint8_t* categoryEnabledFlag) override {
+    const char* getCategoryGroupName(const uint8_t* categoryEnabledFlag) noexcept override {
         static const char* category = "skiaATrace";
         return category;
     }

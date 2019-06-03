@@ -8,8 +8,8 @@
 #ifndef GrDashOp_DEFINED
 #define GrDashOp_DEFINED
 
-#include "GrTypes.h"
-#include "SkPathEffect.h"
+#include "include/core/SkPathEffect.h"
+#include "include/gpu/GrTypes.h"
 
 class GrDrawOp;
 class GrPaint;
@@ -33,6 +33,6 @@ std::unique_ptr<GrDrawOp> MakeDashLineOp(GrRecordingContext*,
                                          const GrStyle& style,
                                          const GrUserStencilSettings*);
 bool CanDrawDashLine(const SkPoint pts[2], const GrStyle& style, const SkMatrix& viewMatrix);
-}
+}  // namespace GrDashOp
 
 #endif

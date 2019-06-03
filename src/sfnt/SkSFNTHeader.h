@@ -8,10 +8,10 @@
 #ifndef SkSFNTHeader_DEFINED
 #define SkSFNTHeader_DEFINED
 
-#include "SkEndian.h"
-#include "SkOTTableTypes.h"
+#include "src/core/SkEndian.h"
+#include "src/sfnt/SkOTTableTypes.h"
 
-//All SK_SFNT_ prefixed types should be considered as big endian.
+// All SK_SFNT_ prefixed types should be considered as big endian.
 typedef uint16_t SK_SFNT_USHORT;
 typedef uint32_t SK_SFNT_ULONG;
 
@@ -56,15 +56,15 @@ struct SkSFNTHeader {
     struct TableDirectoryEntry {
         SK_SFNT_ULONG tag;
         SK_SFNT_ULONG checksum;
-        SK_SFNT_ULONG offset; //From beginning of header.
+        SK_SFNT_ULONG offset;  // From beginning of header.
         SK_SFNT_ULONG logicalLength;
-    }; //tableDirectoryEntries[numTables]
+    };  // tableDirectoryEntries[numTables]
 };
 
 #pragma pack(pop)
 
-
 static_assert(sizeof(SkSFNTHeader) == 12, "sizeof_SkSFNTHeader_not_12");
-static_assert(sizeof(SkSFNTHeader::TableDirectoryEntry) == 16, "sizeof_SkSFNTHeader_TableDirectoryEntry_not_16");
+static_assert(sizeof(SkSFNTHeader::TableDirectoryEntry) == 16,
+              "sizeof_SkSFNTHeader_TableDirectoryEntry_not_16");
 
 #endif

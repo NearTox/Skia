@@ -4,10 +4,22 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkCanvas.h"
-#include "SkPath.h"
+
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkClipOp.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "src/core/SkClipOpPriv.h"
+#include "tools/ToolUtils.h"
 
 #include <utility>
 
@@ -17,13 +29,11 @@ constexpr SkColor gPathColor = SK_ColorYELLOW;
 
 class ComplexClip3GM : public GM {
 public:
-    ComplexClip3GM(bool doSimpleClipFirst)
-        : fDoSimpleClipFirst(doSimpleClipFirst) {
+    ComplexClip3GM(bool doSimpleClipFirst) : fDoSimpleClipFirst(doSimpleClipFirst) {
         this->setBGColor(0xFFDDDDDD);
     }
 
 protected:
-
     SkString onShortName() {
         SkString str;
         str.printf("complexclip3_%s", fDoSimpleClipFirst ? "simple" : "complex");
@@ -36,9 +46,9 @@ protected:
         SkPath clipSimple;
         clipSimple.addCircle(SkIntToScalar(70), SkIntToScalar(50), SkIntToScalar(20));
 
-        SkRect r1 = { 10, 20, 70, 80 };
+        SkRect r1 = {10, 20, 70, 80};
         SkPath clipComplex;
-        clipComplex.moveTo(SkIntToScalar(40),  SkIntToScalar(50));
+        clipComplex.moveTo(SkIntToScalar(40), SkIntToScalar(50));
         clipComplex.arcTo(r1, SkIntToScalar(30), SkIntToScalar(300), false);
         clipComplex.close();
 
@@ -53,18 +63,16 @@ protected:
         SkPaint paint;
         paint.setAntiAlias(true);
 
-        SkFont font(sk_tool_utils::create_portable_typeface(), 20);
+        SkFont font(ToolUtils::create_portable_typeface(), 20);
 
         constexpr struct {
-            SkClipOp    fOp;
+            SkClipOp fOp;
             const char* fName;
-        } gOps[] = {
-            {kIntersect_SkClipOp,         "I"},
-            {kDifference_SkClipOp,        "D" },
-            {kUnion_SkClipOp,             "U"},
-            {kXOR_SkClipOp,               "X"  },
-            {kReverseDifference_SkClipOp, "R"}
-        };
+        } gOps[] = {{kIntersect_SkClipOp, "I"},
+                    {kDifference_SkClipOp, "D"},
+                    {kUnion_SkClipOp, "U"},
+                    {kXOR_SkClipOp, "X"},
+                    {kReverseDifference_SkClipOp, "R"}};
 
         canvas->translate(SkIntToScalar(20), SkIntToScalar(20));
         canvas->scale(3 * SK_Scalar1 / 4, 3 * SK_Scalar1 / 4);
@@ -84,33 +92,29 @@ protected:
                         bool doInvB = SkToBool(invB);
                         canvas->save();
                         // set clip
-                        firstClip->setFillType(doInvA ? SkPath::kInverseEvenOdd_FillType :
-                                               SkPath::kEvenOdd_FillType);
-                        secondClip->setFillType(doInvB ? SkPath::kInverseEvenOdd_FillType :
-                                                SkPath::kEvenOdd_FillType);
+                        firstClip->setFillType(doInvA ? SkPath::kInverseEvenOdd_FillType
+                                                      : SkPath::kEvenOdd_FillType);
+                        secondClip->setFillType(doInvB ? SkPath::kInverseEvenOdd_FillType
+                                                       : SkPath::kEvenOdd_FillType);
                         canvas->clipPath(*firstClip, doAAA);
                         canvas->clipPath(*secondClip, gOps[op].fOp, doAAB);
 
                         // draw rect clipped
-                        SkRect r = { 0, 0, 100, 100 };
+                        SkRect r = {0, 0, 100, 100};
                         canvas->drawRect(r, pathPaint);
                         canvas->restore();
-
 
                         SkScalar txtX = SkIntToScalar(10);
                         paint.setColor(SK_ColorBLACK);
                         SkString str;
-                        str.printf("%s%s %s %s%s", doAAA ? "A" : "B",
-                                                   doInvA ? "I" : "N",
-                                                   gOps[op].fName,
-                                                   doAAB ? "A" : "B",
-                                                   doInvB ? "I" : "N");
+                        str.printf("%s%s %s %s%s", doAAA ? "A" : "B", doInvA ? "I" : "N",
+                                   gOps[op].fName, doAAB ? "A" : "B", doInvB ? "I" : "N");
 
                         canvas->drawString(str.c_str(), txtX, SkIntToScalar(130), font, paint);
                         if (doInvB) {
-                            canvas->translate(SkIntToScalar(150),0);
+                            canvas->translate(SkIntToScalar(150), 0);
                         } else {
-                            canvas->translate(SkIntToScalar(120),0);
+                            canvas->translate(SkIntToScalar(120), 0);
                         }
                     }
                 }
@@ -129,7 +133,7 @@ private:
 //////////////////////////////////////////////////////////////////////////////
 
 // Simple clip first
-DEF_GM( return new ComplexClip3GM(true); )
+DEF_GM(return new ComplexClip3GM(true);)
 // Complex clip first
-DEF_GM( return new ComplexClip3GM(false); )
-}
+DEF_GM(return new ComplexClip3GM(false);)
+}  // namespace skiagm

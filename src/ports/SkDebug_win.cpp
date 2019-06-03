@@ -5,19 +5,19 @@
  * found in the LICENSE file.
  */
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 #if defined(SK_BUILD_FOR_WIN)
 
-#include "SkLeanWindows.h"
+#include "include/private/SkLeanWindows.h"
 
 #include <stdarg.h>
 #include <stdio.h>
 
 static const size_t kBufferSize = 2048;
 
-void SkDebugf(const char format[], ...) {
-    char    buffer[kBufferSize + 1];
+void SkDebugf(const char format[], ...) noexcept {
+    char buffer[kBufferSize + 1];
     va_list args;
 
     va_start(args, format);
@@ -31,4 +31,4 @@ void SkDebugf(const char format[], ...) {
 
     OutputDebugStringA(buffer);
 }
-#endif//defined(SK_BUILD_FOR_WIN)
+#endif  // defined(SK_BUILD_FOR_WIN)

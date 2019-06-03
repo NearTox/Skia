@@ -5,11 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkRandom.h"
-#include "SkRect.h"
-#include "SkRRect.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRRect.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/utils/SkRandom.h"
+#include "tools/ToolUtils.h"
 
 namespace skiagm {
 
@@ -19,28 +25,22 @@ static SkColor gen_color(SkRandom* rand) {
     hsv[1] = rand->nextRangeF(0.5f, 1.0f);
     hsv[2] = rand->nextRangeF(0.5f, 1.0f);
 
-    return sk_tool_utils::color_to_565(SkHSVToColor(hsv));
+    return ToolUtils::color_to_565(SkHSVToColor(hsv));
 }
 
 class ManyCirclesGM : public GM {
     // This GM attempts to flood Ganesh with more circles than will fit in a single index buffer
     // Stresses crbug.com/688582.
 public:
-    ManyCirclesGM() {
-        this->setBGColor(0xFFFFFFFF);
-    }
+    ManyCirclesGM() { this->setBGColor(0xFFFFFFFF); }
 
 protected:
     static const int kWidth = 800;
     static const int kHeight = 600;
 
-    SkString onShortName() override {
-        return SkString("manycircles");
-    }
+    SkString onShortName() override { return SkString("manycircles"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(kWidth, kHeight);
-    }
+    SkISize onISize() override { return SkISize::Make(kWidth, kHeight); }
 
     void onDraw(SkCanvas* canvas) override {
         SkRandom rand(1);
@@ -67,19 +67,12 @@ class ManyRRectsGM : public GM {
     // This GM attempts to flood Ganesh with more rrects than will fit in a single index buffer
     // Stresses crbug.com/684112
 public:
-    ManyRRectsGM() {
-        this->setBGColor(0xFFFFFFFF);
-    }
+    ManyRRectsGM() { this->setBGColor(0xFFFFFFFF); }
 
 protected:
+    SkString onShortName() override { return SkString("manyrrects"); }
 
-    SkString onShortName() override {
-        return SkString("manyrrects");
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(800, 300);
-    }
+    SkISize onISize() override { return SkISize::Make(800, 300); }
 
     void onDraw(SkCanvas* canvas) override {
         SkRandom rand(1);
@@ -116,7 +109,7 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new ManyCirclesGM; )
-DEF_GM( return new ManyRRectsGM; )
+DEF_GM(return new ManyCirclesGM;)
+DEF_GM(return new ManyRRectsGM;)
 
-}
+}  // namespace skiagm

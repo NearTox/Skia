@@ -8,11 +8,11 @@
 #ifndef Skottie_DEFINED
 #define Skottie_DEFINED
 
-#include "SkFontMgr.h"
-#include "SkRefCnt.h"
-#include "SkSize.h"
-#include "SkString.h"
-#include "SkTypes.h"
+#include "include/core/SkFontMgr.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
 
 #include <memory>
 
@@ -22,9 +22,13 @@ class SkImage;
 struct SkRect;
 class SkStream;
 
-namespace skjson { class ObjectValue; }
+namespace skjson {
+class ObjectValue;
+}
 
-namespace sksg { class Scene;  }
+namespace sksg {
+class Scene;
+}
 
 namespace skottie {
 
@@ -64,8 +68,7 @@ public:
      * Load a generic resource (currently only nested animations) specified by |path| + |name|,
      * and return as an SkData.
      */
-    virtual sk_sp<SkData> load(const char resource_path[],
-                               const char resource_name[]) const;
+    virtual sk_sp<SkData> load(const char resource_path[], const char resource_name[]) const;
 
     /**
      * Load an image asset specified by |path| + |name|, and returns the corresponding
@@ -114,18 +117,17 @@ public:
 
 class SK_API Animation : public SkNVRefCnt<Animation> {
 public:
-
     class Builder final {
     public:
         Builder();
         ~Builder();
 
         struct Stats {
-            float  fTotalLoadTimeMS  = 0, // Total animation instantiation time.
-                   fJsonParseTimeMS  = 0, // Time spent building a JSON DOM.
-                   fSceneParseTimeMS = 0; // Time spent constructing the animation scene graph.
-            size_t fJsonSize         = 0, // Input JSON size.
-                   fAnimatorCount    = 0; // Number of dynamically animated properties.
+            float fTotalLoadTimeMS = 0,     // Total animation instantiation time.
+                    fJsonParseTimeMS = 0,   // Time spent building a JSON DOM.
+                    fSceneParseTimeMS = 0;  // Time spent constructing the animation scene graph.
+            size_t fJsonSize = 0,           // Input JSON size.
+                    fAnimatorCount = 0;     // Number of dynamically animated properties.
         };
 
         /**
@@ -172,11 +174,11 @@ public:
 
     private:
         sk_sp<ResourceProvider> fResourceProvider;
-        sk_sp<SkFontMgr>        fFontMgr;
+        sk_sp<SkFontMgr> fFontMgr;
         sk_sp<PropertyObserver> fPropertyObserver;
-        sk_sp<Logger>           fLogger;
-        sk_sp<MarkerObserver>   fMarkerObserver;
-        Stats                   fStats;
+        sk_sp<Logger> fLogger;
+        sk_sp<MarkerObserver> fMarkerObserver;
+        Stats fStats;
     };
 
     /**
@@ -221,30 +223,28 @@ public:
      */
     SkScalar duration() const { return fDuration; }
 
-    const SkString& version() const { return fVersion;   }
-    const SkSize&      size() const { return fSize;      }
+    const SkString& version() const { return fVersion; }
+    const SkSize& size() const { return fSize; }
 
     void setShowInval(bool show);
 
 private:
     enum Flags : uint32_t {
-        kRequiresTopLevelIsolation = 1 << 0, // Needs to draw into a layer due to layer blending.
+        kRequiresTopLevelIsolation = 1 << 0,  // Needs to draw into a layer due to layer blending.
     };
 
-    Animation(std::unique_ptr<sksg::Scene>, SkString ver, const SkSize& size,
-              SkScalar inPoint, SkScalar outPoint, SkScalar duration, uint32_t flags = 0);
+    Animation(std::unique_ptr<sksg::Scene>, SkString ver, const SkSize& size, SkScalar inPoint,
+              SkScalar outPoint, SkScalar duration, uint32_t flags = 0);
 
     std::unique_ptr<sksg::Scene> fScene;
-    const SkString               fVersion;
-    const SkSize                 fSize;
-    const SkScalar               fInPoint,
-                                 fOutPoint,
-                                 fDuration;
-    const uint32_t               fFlags;
+    const SkString fVersion;
+    const SkSize fSize;
+    const SkScalar fInPoint, fOutPoint, fDuration;
+    const uint32_t fFlags;
 
     typedef SkNVRefCnt<Animation> INHERITED;
 };
 
-} // namespace skottie
+}  // namespace skottie
 
-#endif // Skottie_DEFINED
+#endif  // Skottie_DEFINED

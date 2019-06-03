@@ -8,20 +8,15 @@
 #ifndef SKIASL_MEMORYLAYOUT
 #define SKIASL_MEMORYLAYOUT
 
-#include "ir/SkSLType.h"
+#include "src/sksl/ir/SkSLType.h"
 
 namespace SkSL {
 
 class MemoryLayout {
 public:
-    enum Standard {
-        k140_Standard,
-        k430_Standard,
-        kMetal_Standard
-    };
+    enum Standard { k140_Standard, k430_Standard, kMetal_Standard };
 
-    MemoryLayout(Standard std)
-    : fStd(std) {}
+    MemoryLayout(Standard std) : fStd(std) {}
 
     static size_t vector_alignment(size_t componentSize, int columns) {
         return componentSize * (columns + columns % 2);
@@ -34,9 +29,12 @@ public:
      */
     size_t roundUpIfNeeded(size_t raw) const {
         switch (fStd) {
-            case k140_Standard: return (raw + 15) & ~15;
-            case k430_Standard: return raw;
-            case kMetal_Standard: return raw;
+            case k140_Standard:
+                return (raw + 15) & ~15;
+            case k430_Standard:
+                return raw;
+            case kMetal_Standard:
+                return raw;
         }
         ABORT("unreachable");
     }
@@ -52,8 +50,8 @@ public:
             case Type::kVector_Kind:
                 return vector_alignment(this->size(type.componentType()), type.columns());
             case Type::kMatrix_Kind:
-                return this->roundUpIfNeeded(vector_alignment(this->size(type.componentType()),
-                                                              type.rows()));
+                return this->roundUpIfNeeded(
+                        vector_alignment(this->size(type.componentType()), type.rows()));
             case Type::kArray_Kind:
                 return this->roundUpIfNeeded(this->alignment(type.componentType()));
             case Type::kStruct_Kind: {
@@ -109,7 +107,7 @@ public:
                     return 4 * this->size(type.componentType());
                 }
                 return type.columns() * this->size(type.componentType());
-            case Type::kMatrix_Kind: // fall through
+            case Type::kMatrix_Kind:  // fall through
             case Type::kArray_Kind:
                 return type.columns() * this->stride(type);
             case Type::kStruct_Kind: {
@@ -124,7 +122,7 @@ public:
                 }
                 size_t alignment = this->alignment(type);
                 SkASSERT(!type.fields().size() ||
-                       (0 == alignment % this->alignment(*type.fields()[0].fType)));
+                         (0 == alignment % this->alignment(*type.fields()[0].fType)));
                 return (total + alignment - 1) & ~(alignment - 1);
             }
             default:
@@ -135,6 +133,6 @@ public:
     const Standard fStd;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

@@ -8,13 +8,13 @@
 #ifndef SkMaskFilterBase_DEFINED
 #define SkMaskFilterBase_DEFINED
 
-#include "SkBlurTypes.h"
-#include "SkFlattenable.h"
-#include "SkMask.h"
-#include "SkMaskFilter.h"
-#include "SkNoncopyable.h"
-#include "SkPaint.h"
-#include "SkStrokeRec.h"
+#include "include/core/SkBlurTypes.h"
+#include "include/core/SkFlattenable.h"
+#include "include/core/SkMaskFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkStrokeRec.h"
+#include "include/private/SkNoncopyable.h"
+#include "src/core/SkMask.h"
 
 class GrClip;
 struct GrFPArgs;
@@ -48,12 +48,13 @@ public:
         but do fill out the other fields in dstMask.
         If you do allocate a dst image, use SkMask::AllocImage()
         If this returns false, dst mask is ignored.
-        @param  dst the result of the filter. If src.fImage == null, dst should not allocate its image
+        @param  dst the result of the filter. If src.fImage == null, dst should not allocate its
+       image
         @param src the original image to be filtered.
         @param matrix the CTM
-        @param margin   if not null, return the buffer dx/dy need when calculating the effect. Used when
-                        drawing a clipped object to know how much larger to allocate the src before
-                        applying the filter. If returning false, ignore this parameter.
+        @param margin   if not null, return the buffer dx/dy need when calculating the effect. Used
+       when drawing a clipped object to know how much larger to allocate the src before applying the
+       filter. If returning false, ignore this parameter.
         @return true if the dst mask was correctly created.
     */
     virtual bool filterMask(SkMask* dst, const SkMask& src, const SkMatrix&,
@@ -123,7 +124,8 @@ public:
      * additional textures and perform multiple passes.
      */
     virtual sk_sp<GrTextureProxy> filterMaskGPU(GrRecordingContext*,
-                                                sk_sp<GrTextureProxy> srcProxy,
+                                                sk_sp<GrTextureProxy>
+                                                        srcProxy,
                                                 const SkMatrix& ctm,
                                                 const SkIRect& maskRect) const;
 #endif
@@ -142,8 +144,8 @@ public:
     virtual void computeFastBounds(const SkRect& src, SkRect* dest) const;
 
     struct BlurRec {
-        SkScalar        fSigma;
-        SkBlurStyle     fStyle;
+        SkScalar fSigma;
+        SkBlurStyle fStyle;
     };
     /**
      *  If this filter can be represented by a BlurRec, return true and (if not null) fill in the
@@ -153,27 +155,23 @@ public:
     virtual bool asABlur(BlurRec*) const;
 
 protected:
-    SkMaskFilterBase() {}
+    SkMaskFilterBase() noexcept {}
 
 #if SK_SUPPORT_GPU
     virtual std::unique_ptr<GrFragmentProcessor> onAsFragmentProcessor(const GrFPArgs&) const;
     virtual bool onHasFragmentProcessor() const;
 #endif
 
-    enum FilterReturn {
-        kFalse_FilterReturn,
-        kTrue_FilterReturn,
-        kUnimplemented_FilterReturn
-    };
+    enum FilterReturn { kFalse_FilterReturn, kTrue_FilterReturn, kUnimplemented_FilterReturn };
 
     class NinePatch : ::SkNoncopyable {
     public:
-        NinePatch() : fCache(nullptr) { }
+        NinePatch() noexcept : fCache(nullptr) {}
         ~NinePatch();
 
-        SkMask      fMask;      // fBounds must have [0,0] in its top-left
-        SkIRect     fOuterRect; // width/height must be >= fMask.fBounds'
-        SkIPoint    fCenter;    // identifies center row/col for stretching
+        SkMask fMask;        // fBounds must have [0,0] in its top-left
+        SkIRect fOuterRect;  // width/height must be >= fMask.fBounds'
+        SkIPoint fCenter;    // identifies center row/col for stretching
         SkCachedData* fCache;
     };
 
@@ -192,16 +190,13 @@ protected:
      *  the caller will call mask.fBounds.centerX() and centerY() to find the
      *  strips that will be replicated.
      */
-    virtual FilterReturn filterRectsToNine(const SkRect[], int count,
-                                           const SkMatrix&,
-                                           const SkIRect& clipBounds,
-                                           NinePatch*) const;
+    virtual FilterReturn filterRectsToNine(const SkRect[], int count, const SkMatrix&,
+                                           const SkIRect& clipBounds, NinePatch*) const;
     /**
      *  Similar to filterRectsToNine, except it performs the work on a round rect.
      */
     virtual FilterReturn filterRRectToNine(const SkRRect&, const SkMatrix&,
-                                           const SkIRect& clipBounds,
-                                           NinePatch*) const;
+                                           const SkIRect& clipBounds, NinePatch*) const;
 
 private:
     friend class SkDraw;
@@ -224,15 +219,15 @@ private:
     typedef SkFlattenable INHERITED;
 };
 
-inline SkMaskFilterBase* as_MFB(SkMaskFilter* mf) {
+inline SkMaskFilterBase* as_MFB(SkMaskFilter* mf) noexcept {
     return static_cast<SkMaskFilterBase*>(mf);
 }
 
-inline const SkMaskFilterBase* as_MFB(const SkMaskFilter* mf) {
+inline const SkMaskFilterBase* as_MFB(const SkMaskFilter* mf) noexcept {
     return static_cast<const SkMaskFilterBase*>(mf);
 }
 
-inline const SkMaskFilterBase* as_MFB(const sk_sp<SkMaskFilter>& mf) {
+inline const SkMaskFilterBase* as_MFB(const sk_sp<SkMaskFilter>& mf) noexcept {
     return static_cast<SkMaskFilterBase*>(mf.get());
 }
 

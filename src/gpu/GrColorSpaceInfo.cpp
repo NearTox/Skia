@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "GrColorSpaceInfo.h"
-#include "SkColorSpacePriv.h"
+#include "src/gpu/GrColorSpaceInfo.h"
+#include "src/core/SkColorSpacePriv.h"
 
 GrColorSpaceInfo::GrColorSpaceInfo(sk_sp<SkColorSpace> colorSpace, GrPixelConfig config)
         : fColorSpace(std::move(colorSpace))
@@ -18,7 +18,7 @@ GrColorSpaceXform* GrColorSpaceInfo::colorSpaceXformFromSRGB() const {
     if (!fInitializedColorSpaceXformFromSRGB) {
         // sRGB sources are very common (SkColor, etc...), so we cache that transformation
         fColorXformFromSRGB = GrColorSpaceXform::Make(sk_srgb_singleton(), kUnpremul_SkAlphaType,
-                                                      fColorSpace.get(),   kUnpremul_SkAlphaType);
+                                                      fColorSpace.get(), kUnpremul_SkAlphaType);
         fInitializedColorSpaceXformFromSRGB = true;
     }
     // You can't be color-space aware in legacy mode

@@ -8,9 +8,9 @@
 #ifndef SkLuaCanvas_DEFINED
 #define SkLuaCanvas_DEFINED
 
-#include "SkCanvas.h"
-#include "SkString.h"
-#include "SkVertices.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkString.h"
+#include "include/core/SkVertices.h"
 
 struct lua_State;
 
@@ -45,8 +45,8 @@ protected:
     void onDrawBitmapRect(const SkBitmap&, const SkRect* src, const SkRect& dst, const SkPaint*,
                           SrcRectConstraint) override;
     void onDrawImage(const SkImage*, SkScalar left, SkScalar top, const SkPaint*) override;
-    void onDrawImageRect(const SkImage*, const SkRect* src, const SkRect& dst,
-                         const SkPaint*, SrcRectConstraint) override;
+    void onDrawImageRect(const SkImage*, const SkRect* src, const SkRect& dst, const SkPaint*,
+                         SrcRectConstraint) override;
     void onDrawBitmapNine(const SkBitmap&, const SkIRect& center, const SkRect& dst,
                           const SkPaint*) override;
     void onDrawVerticesObject(const SkVertices*, const SkVertices::Bone bones[], int boneCount,
@@ -61,8 +61,8 @@ protected:
     void onDrawDrawable(SkDrawable*, const SkMatrix*) override;
 
 private:
-    lua_State*  fL;
-    SkString    fFunc;
+    lua_State* fL;
+    SkString fFunc;
 
     void sendverb(const char verb[]);
 

@@ -5,14 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "SkCanvasStateUtils.h"
+#include "include/utils/SkCanvasStateUtils.h"
 
-#include "SkCanvas.h"
-#include "SkCanvasStack.h"
-#include "SkDevice.h"
-#include "SkRasterClip.h"
-#include "SkWriter32.h"
-#include "SkClipOpPriv.h"
+#include "include/core/SkCanvas.h"
+#include "src/core/SkClipOpPriv.h"
+#include "src/core/SkDevice.h"
+#include "src/core/SkRasterClip.h"
+#include "src/core/SkWriter32.h"
+#include "src/utils/SkCanvasStack.h"
 
 /*
  * WARNING: The structs below are part of a stable ABI and as such we explicitly
@@ -28,17 +28,17 @@
  * the tests running in the unchanged Skia.
  */
 enum RasterConfigs {
-  kUnknown_RasterConfig   = 0,
-  kRGB_565_RasterConfig   = 1,
-  kARGB_8888_RasterConfig = 2
+    kUnknown_RasterConfig = 0,
+    kRGB_565_RasterConfig = 1,
+    kARGB_8888_RasterConfig = 2
 };
 typedef int32_t RasterConfig;
 
 enum CanvasBackends {
     kUnknown_CanvasBackend = 0,
-    kRaster_CanvasBackend  = 1,
-    kGPU_CanvasBackend     = 2,
-    kPDF_CanvasBackend     = 3
+    kRaster_CanvasBackend = 1,
+    kGPU_CanvasBackend = 2,
+    kPDF_CanvasBackend = 3
 };
 typedef int32_t CanvasBackend;
 
@@ -65,9 +65,9 @@ struct SkCanvasLayerState {
 
     union {
         struct {
-            RasterConfig config; // pixel format: a value from RasterConfigs.
-            uint64_t rowBytes;   // Number of bytes from start of one line to next.
-            void* pixels;        // The pixels, all (height * rowBytes) of them.
+            RasterConfig config;  // pixel format: a value from RasterConfigs.
+            uint64_t rowBytes;    // Number of bytes from start of one line to next.
+            void* pixels;         // The pixels, all (height * rowBytes) of them.
         } raster;
         struct {
             int32_t textureID;
@@ -82,7 +82,6 @@ public:
         this->version = version;
         width = canvas->getBaseLayerSize().width();
         height = canvas->getBaseLayerSize().height();
-
     }
 
     /**
@@ -123,6 +122,7 @@ public:
 
     int32_t layerCount;
     SkCanvasLayerState* layers;
+
 private:
     SkCanvas* originalCanvas;
     typedef SkCanvasState INHERITED;
@@ -155,8 +155,6 @@ static void setup_MC_state(SkMCState* state, const SkMatrix& matrix, const SkIRe
     }
 }
 
-
-
 SkCanvasState* SkCanvasStateUtils::CaptureCanvasState(SkCanvas* canvas) {
     SkASSERT(canvas);
 
@@ -176,10 +174,9 @@ SkCanvasState* SkCanvasStateUtils::CaptureCanvasState(SkCanvas* canvas) {
      * some view systems (e.g. Android) that a few non-clipped layers are present
      * and we will not need to malloc any additional memory in those cases.
      */
-    SkSWriter32<3*sizeof(SkCanvasLayerState)> layerWriter;
+    SkSWriter32<3 * sizeof(SkCanvasLayerState)> layerWriter;
     int layerCount = 0;
     for (SkCanvas::LayerIter layer(canvas); !layer.done(); layer.next()) {
-
         // we currently only work for bitmap backed devices
         SkPixmap pmap;
         if (!layer.device()->accessPixels(&pmap) || 0 == pmap.width() || 0 == pmap.height()) {
@@ -187,7 +184,7 @@ SkCanvasState* SkCanvasStateUtils::CaptureCanvasState(SkCanvas* canvas) {
         }
 
         SkCanvasLayerState* layerState =
-                (SkCanvasLayerState*) layerWriter.reserve(sizeof(SkCanvasLayerState));
+                (SkCanvasLayerState*)layerWriter.reserve(sizeof(SkCanvasLayerState));
         layerState->type = kRaster_CanvasBackend;
         layerState->x = layer.x();
         layerState->y = layer.y();
@@ -214,7 +211,7 @@ SkCanvasState* SkCanvasStateUtils::CaptureCanvasState(SkCanvas* canvas) {
     // allocate memory for the layers and then and copy them to the struct
     SkASSERT(layerWriter.bytesWritten() == layerCount * sizeof(SkCanvasLayerState));
     canvasState->layerCount = layerCount;
-    canvasState->layers = (SkCanvasLayerState*) sk_malloc_throw(layerWriter.bytesWritten());
+    canvasState->layers = (SkCanvasLayerState*)sk_malloc_throw(layerWriter.bytesWritten());
     layerWriter.flatten(canvasState->layers);
 
     return canvasState.release();
@@ -249,23 +246,24 @@ static void setup_canvas_from_MC_state(const SkMCState& state, SkCanvas* canvas)
     canvas->concat(matrix);
 }
 
-static std::unique_ptr<SkCanvas>
-make_canvas_from_canvas_layer(const SkCanvasLayerState& layerState) {
+static std::unique_ptr<SkCanvas> make_canvas_from_canvas_layer(
+        const SkCanvasLayerState& layerState) {
     SkASSERT(kRaster_CanvasBackend == layerState.type);
 
     SkBitmap bitmap;
-    SkColorType colorType =
-        layerState.raster.config == kARGB_8888_RasterConfig ? kN32_SkColorType :
-        layerState.raster.config == kRGB_565_RasterConfig ? kRGB_565_SkColorType :
-        kUnknown_SkColorType;
+    SkColorType colorType = layerState.raster.config == kARGB_8888_RasterConfig
+                                    ? kN32_SkColorType
+                                    : layerState.raster.config == kRGB_565_RasterConfig
+                                              ? kRGB_565_SkColorType
+                                              : kUnknown_SkColorType;
 
     if (colorType == kUnknown_SkColorType) {
         return nullptr;
     }
 
-    bitmap.installPixels(SkImageInfo::Make(layerState.width, layerState.height,
-                                           colorType, kPremul_SkAlphaType),
-                         layerState.raster.pixels, (size_t) layerState.raster.rowBytes);
+    bitmap.installPixels(
+            SkImageInfo::Make(layerState.width, layerState.height, colorType, kPremul_SkAlphaType),
+            layerState.raster.pixels, (size_t)layerState.raster.rowBytes);
 
     SkASSERT(!bitmap.empty());
     SkASSERT(!bitmap.isNull());
@@ -300,8 +298,8 @@ std::unique_ptr<SkCanvas> SkCanvasStateUtils::MakeFromCanvasState(const SkCanvas
         if (!canvasLayer.get()) {
             return nullptr;
         }
-        canvas->pushCanvas(std::move(canvasLayer), SkIPoint::Make(state_v1->layers[i].x,
-                                                                  state_v1->layers[i].y));
+        canvas->pushCanvas(std::move(canvasLayer),
+                           SkIPoint::Make(state_v1->layers[i].x, state_v1->layers[i].y));
     }
 
     return std::move(canvas);

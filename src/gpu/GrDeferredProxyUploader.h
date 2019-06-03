@@ -8,13 +8,13 @@
 #ifndef GrDeferredProxyUploader_DEFINED
 #define GrDeferredProxyUploader_DEFINED
 
-#include "SkAutoPixmapStorage.h"
-#include "SkMakeUnique.h"
-#include "SkRefCnt.h"
-#include "SkSemaphore.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/SkSemaphore.h"
+#include "src/core/SkAutoPixmapStorage.h"
+#include "src/core/SkMakeUnique.h"
 
-#include "GrOpFlushState.h"
-#include "GrTextureProxyPriv.h"
+#include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/GrTextureProxyPriv.h"
 
 /**
  * GrDeferredProxyUploader assists with threaded generation of textures. Currently used by both
@@ -93,13 +93,11 @@ private:
     bool fWaited;
 };
 
-template <typename T>
-class GrTDeferredProxyUploader : public GrDeferredProxyUploader {
+template <typename T> class GrTDeferredProxyUploader : public GrDeferredProxyUploader {
 public:
     template <typename... Args>
     GrTDeferredProxyUploader(Args&&... args)
-        : fData(skstd::make_unique<T>(std::forward<Args>(args)...)) {
-    }
+            : fData(skstd::make_unique<T>(std::forward<Args>(args)...)) {}
 
     ~GrTDeferredProxyUploader() override {
         // We need to wait here, so that we don't free fData before the worker thread is done
@@ -111,9 +109,7 @@ public:
     T& data() { return *fData; }
 
 private:
-    void freeData() override {
-        fData.reset();
-    }
+    void freeData() override { fData.reset(); }
 
     std::unique_ptr<T> fData;
 };

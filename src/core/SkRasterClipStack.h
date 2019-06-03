@@ -8,10 +8,10 @@
 #ifndef SkRasterClipStack_DEFINED
 #define SkRasterClipStack_DEFINED
 
-#include "SkClipOp.h"
-#include "SkDeque.h"
-#include "SkRasterClip.h"
 #include <new>
+#include "include/core/SkClipOp.h"
+#include "include/core/SkDeque.h"
+#include "src/core/SkRasterClip.h"
 
 template <typename T> class SkTStack {
 public:
@@ -27,12 +27,12 @@ public:
 
     int count() const { return fDeque.count(); }
 
-    const T& top() const {
+    const T& top() const noexcept {
         SkASSERT(fTop);
         return *fTop;
     }
 
-    T& top() {
+    T& top() noexcept {
         SkASSERT(fTop);
         return *fTop;
     }
@@ -57,16 +57,15 @@ public:
 
 private:
     SkDeque fDeque;
-    T*      fTop;
+    T* fTop;
 };
 
 class SkRasterClipStack : SkNoncopyable {
     int fCounter = 0;
+
 public:
     SkRasterClipStack(int width, int height)
-        : fStack(fStorage, sizeof(fStorage))
-        , fRootBounds(SkIRect::MakeWH(width, height))
-    {
+            : fStack(fStorage, sizeof(fStorage)), fRootBounds(SkIRect::MakeWH(width, height)) {
         Rec& rec = fStack.push();
         rec.fRC.setRect(fRootBounds);
         rec.fDeferredCount = 0;
@@ -91,7 +90,8 @@ public:
     }
 
     void restore() {
-        fCounter -= 1; SkASSERT(fCounter >= 0);
+        fCounter -= 1;
+        SkASSERT(fCounter >= 0);
         if (--fStack.top().fDeferredCount < 0) {
             SkASSERT(fStack.top().fDeferredCount == -1);
             SkASSERT(fStack.count() > 1);
@@ -140,17 +140,14 @@ public:
 
 private:
     struct Rec {
-        SkRasterClip    fRC;
-        int             fDeferredCount; // 0 for a "normal" entry
+        SkRasterClip fRC;
+        int fDeferredCount;  // 0 for a "normal" entry
     };
 
-    enum {
-        ELEM_COUNT = 16,
-        PTR_COUNT = ELEM_COUNT * sizeof(Rec) / sizeof(void*)
-    };
-    void*           fStorage[PTR_COUNT];
-    SkTStack<Rec>   fStack;
-    SkIRect         fRootBounds;
+    enum { ELEM_COUNT = 16, PTR_COUNT = ELEM_COUNT * sizeof(Rec) / sizeof(void*) };
+    void* fStorage[PTR_COUNT];
+    SkTStack<Rec> fStack;
+    SkIRect fRootBounds;
 
     SkRasterClip& writable_rc() {
         SkASSERT(fStack.top().fDeferredCount >= 0);

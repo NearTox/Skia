@@ -1,18 +1,18 @@
 /*
-* Copyright 2016 Google Inc.
-*
-* Use of this source code is governed by a BSD-style license that can be
-* found in the LICENSE file.
-*/
+ * Copyright 2016 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
 #ifndef GrVkPipelineStateDataManager_DEFINED
 #define GrVkPipelineStateDataManager_DEFINED
 
-#include "glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
 
-#include "SkAutoMalloc.h"
-#include "vk/GrVkTypes.h"
-#include "vk/GrVkUniformHandler.h"
+#include "include/gpu/vk/GrVkTypes.h"
+#include "src/core/SkAutoMalloc.h"
+#include "src/gpu/vk/GrVkUniformHandler.h"
 
 class GrVkGpu;
 class GrVkUniformBuffer;
@@ -62,18 +62,16 @@ public:
     bool uploadUniformBuffers(GrVkGpu* gpu,
                               GrVkUniformBuffer* geometryBuffer,
                               GrVkUniformBuffer* fragmentBuffer) const;
+
 private:
     struct Uniform {
         uint32_t fBinding;
         uint32_t fOffset;
-        SkDEBUGCODE(
-            GrSLType    fType;
-            int         fArrayCount;
-        );
+        SkDEBUGCODE(GrSLType fType; int fArrayCount;);
     };
 
-    template<int N> inline void setMatrices(UniformHandle, int arrayCount,
-                                            const float matrices[]) const;
+    template <int N>
+    inline void setMatrices(UniformHandle, int arrayCount, const float matrices[]) const;
 
     void* getBufferPtrAndMarkDirty(const Uniform& uni) const;
 
@@ -84,8 +82,8 @@ private:
 
     mutable SkAutoMalloc fGeometryUniformData;
     mutable SkAutoMalloc fFragmentUniformData;
-    mutable bool         fGeometryUniformsDirty;
-    mutable bool         fFragmentUniformsDirty;
+    mutable bool fGeometryUniformsDirty;
+    mutable bool fFragmentUniformsDirty;
 };
 
 #endif

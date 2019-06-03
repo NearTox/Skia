@@ -4,14 +4,12 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkOpCoincidence.h"
-#include "SkOpContour.h"
-#include "SkOpSegment.h"
-#include "SkPathWriter.h"
+#include "src/pathops/SkOpCoincidence.h"
+#include "src/pathops/SkOpContour.h"
+#include "src/pathops/SkOpSegment.h"
+#include "src/pathops/SkPathWriter.h"
 
-bool SkOpPtT::alias() const {
-    return this->span()->ptT() != this;
-}
+bool SkOpPtT::alias() const { return this->span()->ptT() != this; }
 
 const SkOpPtT* SkOpPtT::active() const {
     if (!fDeleted) {
@@ -24,7 +22,7 @@ const SkOpPtT* SkOpPtT::active() const {
             return ptT;
         }
     }
-    return nullptr; // should never return deleted; caller must abort
+    return nullptr;  // should never return deleted; caller must abort
 }
 
 bool SkOpPtT::contains(const SkOpPtT* check) const {
@@ -74,9 +72,7 @@ const SkOpPtT* SkOpPtT::contains(const SkOpSegment* check) const {
     return nullptr;
 }
 
-SkOpContour* SkOpPtT::contour() const {
-    return segment()->contour();
-}
+SkOpContour* SkOpPtT::contour() const { return segment()->contour(); }
 
 const SkOpPtT* SkOpPtT::find(const SkOpSegment* segment) const {
     const SkOpPtT* ptT = this;
@@ -87,13 +83,11 @@ const SkOpPtT* SkOpPtT::find(const SkOpSegment* segment) const {
         }
         ptT = ptT->fNext;
     } while (stopPtT != ptT);
-//    SkASSERT(0);
+    //    SkASSERT(0);
     return nullptr;
 }
 
-SkOpGlobalState* SkOpPtT::globalState() const {
-    return contour()->globalState();
-}
+SkOpGlobalState* SkOpPtT::globalState() const { return contour()->globalState(); }
 
 void SkOpPtT::init(SkOpSpanBase* span, double t, const SkPoint& pt, bool duplicate) {
     fT = t;
@@ -135,13 +129,9 @@ SkOpPtT* SkOpPtT::prev() {
     return result;
 }
 
-const SkOpSegment* SkOpPtT::segment() const {
-    return span()->segment();
-}
+const SkOpSegment* SkOpPtT::segment() const { return span()->segment(); }
 
-SkOpSegment* SkOpPtT::segment() {
-    return span()->segment();
-}
+SkOpSegment* SkOpPtT::segment() { return span()->segment(); }
 
 void SkOpPtT::setDeleted() {
     SkASSERT(this->span()->debugDeleted() || this->span()->ptT() != this);
@@ -226,13 +216,9 @@ bool SkOpSpanBase::containsCoinEnd(const SkOpSegment* segment) const {
     return false;
 }
 
-SkOpContour* SkOpSpanBase::contour() const {
-    return segment()->contour();
-}
+SkOpContour* SkOpSpanBase::contour() const { return segment()->contour(); }
 
-SkOpGlobalState* SkOpSpanBase::globalState() const {
-    return contour()->globalState();
-}
+SkOpGlobalState* SkOpSpanBase::globalState() const { return contour()->globalState(); }
 
 void SkOpSpanBase::initBase(SkOpSegment* segment, SkOpSpan* prev, double t, const SkPoint& pt) {
     fSegment = segment;
@@ -257,7 +243,7 @@ void SkOpSpanBase::merge(SkOpSpan* span) {
     span->release(this->ptT());
     if (this->contains(span)) {
         SkOPASSERT(0);  // check to see if this ever happens -- should have been found earlier
-        return;  // merge is already in the ptT loop
+        return;         // merge is already in the ptT loop
     }
     SkOpPtT* remainder = spanPtT->next();
     this->ptT()->insert(spanPtT);
@@ -272,7 +258,7 @@ void SkOpSpanBase::merge(SkOpSpan* span) {
             compare = nextC;
         }
         spanPtT->insert(remainder);
-tryNextRemainder:
+    tryNextRemainder:
         remainder = next;
     }
     fSpanAdds += span->fSpanAdds;
@@ -284,9 +270,10 @@ void SkOpSpanBase::checkForCollapsedCoincidence() {
     if (coins->isEmpty()) {
         return;
     }
-// the insert above may have put both ends of a coincident run in the same span
-// for each coincident ptT in loop; see if its opposite in is also in the loop
-// this implementation is the motivation for marking that a ptT is referenced by a coincident span
+    // the insert above may have put both ends of a coincident run in the same span
+    // for each coincident ptT in loop; see if its opposite in is also in the loop
+    // this implementation is the motivation for marking that a ptT is referenced by a coincident
+    // span
     SkOpPtT* head = this->ptT();
     SkOpPtT* test = head;
     do {
@@ -350,7 +337,7 @@ bool SkOpSpanBase::mergeMatches(SkOpSpanBase* opp) {
                     inner->setDeleted();
                 }
             }
-#ifdef SK_DEBUG   // assert if another undeleted entry points to segment
+#ifdef SK_DEBUG  // assert if another undeleted entry points to segment
             const SkOpPtT* debugInner = inner;
             while ((debugInner = debugInner->next()) != innerStop) {
                 if (debugInner->segment() != segment) {
@@ -432,7 +419,7 @@ bool SkOpSpan::insertCoincidence(const SkOpSegment* segment, bool flipped, bool 
         }
     }
 #if DEBUG_COINCIDENCE
-    SkASSERT(0); // FIXME? if we get here, the span is missing its opposite segment...
+    SkASSERT(0);  // FIXME? if we get here, the span is missing its opposite segment...
 #endif
     return true;
 }

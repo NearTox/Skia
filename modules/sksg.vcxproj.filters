@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="sksg\src\SkSGClipEffect.cpp" />
+    <ClCompile Include="sksg\src\SkSGColorFilter.cpp" />
+    <ClCompile Include="sksg\src\SkSGDraw.cpp" />
+    <ClCompile Include="sksg\src\SkSGEffectNode.cpp" />
+    <ClCompile Include="sksg\src\SkSGGeometryNode.cpp" />
+    <ClCompile Include="sksg\src\SkSGGeometryTransform.cpp" />
+    <ClCompile Include="sksg\src\SkSGGradient.cpp" />
+    <ClCompile Include="sksg\src\SkSGGroup.cpp" />
+    <ClCompile Include="sksg\src\SkSGImage.cpp" />
+    <ClCompile Include="sksg\src\SkSGInvalidationController.cpp" />
+    <ClCompile Include="sksg\src\SkSGMaskEffect.cpp" />
+    <ClCompile Include="sksg\src\SkSGMerge.cpp" />
+    <ClCompile Include="sksg\src\SkSGNode.cpp" />
+    <ClCompile Include="sksg\src\SkSGOpacityEffect.cpp" />
+    <ClCompile Include="sksg\src\SkSGPaint.cpp" />
+    <ClCompile Include="sksg\src\SkSGPath.cpp" />
+    <ClCompile Include="sksg\src\SkSGPlane.cpp" />
+    <ClCompile Include="sksg\src\SkSGRect.cpp" />
+    <ClCompile Include="sksg\src\SkSGRenderEffect.cpp" />
+    <ClCompile Include="sksg\src\SkSGRenderNode.cpp" />
+    <ClCompile Include="sksg\src\SkSGRoundEffect.cpp" />
+    <ClCompile Include="sksg\src\SkSGScene.cpp" />
+    <ClCompile Include="sksg\src\SkSGText.cpp" />
+    <ClCompile Include="sksg\src\SkSGTransform.cpp" />
+    <ClCompile Include="sksg\src\SkSGTrimEffect.cpp" />
+  </ItemGroup>
+</Project>

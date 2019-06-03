@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "SkLatticeIter.h"
-#include "SkRect.h"
+#include "src/core/SkLatticeIter.h"
+#include "include/core/SkRect.h"
 
 /**
  *  Divs must be in increasing order with no duplicates.
@@ -31,23 +31,23 @@ bool SkLatticeIter::Valid(int width, int height, const SkCanvas::Lattice& lattic
         return false;
     }
 
-    bool zeroXDivs = lattice.fXCount <= 0 || (1 == lattice.fXCount &&
-                                              latticeBounds.fLeft == lattice.fXDivs[0]);
-    bool zeroYDivs = lattice.fYCount <= 0 || (1 == lattice.fYCount &&
-                                              latticeBounds.fTop == lattice.fYDivs[0]);
+    bool zeroXDivs = lattice.fXCount <= 0 ||
+                     (1 == lattice.fXCount && latticeBounds.fLeft == lattice.fXDivs[0]);
+    bool zeroYDivs = lattice.fYCount <= 0 ||
+                     (1 == lattice.fYCount && latticeBounds.fTop == lattice.fYDivs[0]);
     if (zeroXDivs && zeroYDivs) {
         return false;
     }
 
-    return valid_divs(lattice.fXDivs, lattice.fXCount, latticeBounds.fLeft, latticeBounds.fRight)
-        && valid_divs(lattice.fYDivs, lattice.fYCount, latticeBounds.fTop, latticeBounds.fBottom);
+    return valid_divs(lattice.fXDivs, lattice.fXCount, latticeBounds.fLeft, latticeBounds.fRight) &&
+           valid_divs(lattice.fYDivs, lattice.fYCount, latticeBounds.fTop, latticeBounds.fBottom);
 }
 
 /**
  *  Count the number of pixels that are in "scalable" patches.
  */
-static int count_scalable_pixels(const int32_t* divs, int numDivs, bool firstIsScalable,
-                                 int start, int end) {
+static int count_scalable_pixels(const int32_t* divs, int numDivs, bool firstIsScalable, int start,
+                                 int end) {
     if (0 == numDivs) {
         return firstIsScalable ? end - start : 0;
     }
@@ -84,10 +84,10 @@ static void set_points(float* dst, int* src, const int* divs, int divCount, int 
     if (srcFixed <= dstLen) {
         // This is the "normal" case, where we scale the "scalable" patches and leave
         // the other patches fixed.
-        scale = (dstLen - ((float) srcFixed)) / ((float) srcScalable);
+        scale = (dstLen - ((float)srcFixed)) / ((float)srcScalable);
     } else {
         // In this case, we eliminate the "scalable" patches and scale the "fixed" patches.
-        scale = dstLen / ((float) srcFixed);
+        scale = dstLen / ((float)srcFixed);
     }
 
     src[0] = srcStart;
@@ -153,13 +153,13 @@ SkLatticeIter::SkLatticeIter(const SkCanvas::Lattice& lattice, const SkRect& dst
 
     fSrcX.reset(xCount + 2);
     fDstX.reset(xCount + 2);
-    set_points(fDstX.begin(), fSrcX.begin(), xDivs, xCount, xCountFixed, xCountScalable,
-               src.fLeft, src.fRight, dst.fLeft, dst.fRight, xIsScalable);
+    set_points(fDstX.begin(), fSrcX.begin(), xDivs, xCount, xCountFixed, xCountScalable, src.fLeft,
+               src.fRight, dst.fLeft, dst.fRight, xIsScalable);
 
     fSrcY.reset(yCount + 2);
     fDstY.reset(yCount + 2);
-    set_points(fDstY.begin(), fSrcY.begin(), yDivs, yCount, yCountFixed, yCountScalable,
-               src.fTop, src.fBottom, dst.fTop, dst.fBottom, yIsScalable);
+    set_points(fDstY.begin(), fSrcY.begin(), yDivs, yCount, yCountFixed, yCountScalable, src.fTop,
+               src.fBottom, dst.fTop, dst.fBottom, yIsScalable);
 
     fCurrX = fCurrY = 0;
     fNumRectsInLattice = (xCount + 1) * (yCount + 1);
@@ -269,16 +269,16 @@ bool SkLatticeIter::next(SkIRect* src, SkRect* dst, bool* isFixedColor, SkColor*
         fCurrY += 1;
     }
 
-    if (fRectTypes.count() > 0
-        && SkToBool(SkCanvas::Lattice::kTransparent == fRectTypes[currRect])) {
+    if (fRectTypes.count() > 0 &&
+        SkToBool(SkCanvas::Lattice::kTransparent == fRectTypes[currRect])) {
         return this->next(src, dst, isFixedColor, fixedColor);
     }
 
     src->set(fSrcX[x], fSrcY[y], fSrcX[x + 1], fSrcY[y + 1]);
     dst->set(fDstX[x], fDstY[y], fDstX[x + 1], fDstY[y + 1]);
     if (isFixedColor && fixedColor) {
-        *isFixedColor = fRectTypes.count() > 0
-                     && SkToBool(SkCanvas::Lattice::kFixedColor == fRectTypes[currRect]);
+        *isFixedColor = fRectTypes.count() > 0 &&
+                        SkToBool(SkCanvas::Lattice::kFixedColor == fRectTypes[currRect]);
         if (*isFixedColor) {
             *fixedColor = fColors[currRect];
         }

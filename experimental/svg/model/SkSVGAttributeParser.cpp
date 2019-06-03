@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "SkParse.h"
-#include "SkSVGAttributeParser.h"
-#include "SkSVGTypes.h"
+#include "experimental/svg/model/SkSVGAttributeParser.h"
+#include "experimental/svg/model/SkSVGTypes.h"
+#include "include/utils/SkParse.h"
 
 namespace {
 
@@ -18,25 +18,18 @@ inline bool is_between(char c, char min, char max) {
     return (unsigned)(c - min) <= (unsigned)(max - min);
 }
 
-inline bool is_eos(char c) {
-    return !c;
-}
+inline bool is_eos(char c) { return !c; }
 
-inline bool is_ws(char c) {
-    return is_between(c, 1, 32);
-}
+inline bool is_ws(char c) { return is_between(c, 1, 32); }
 
-inline bool is_sep(char c) {
-    return is_ws(c) || c == ',' || c == ';';
-}
+inline bool is_sep(char c) { return is_ws(c) || c == ',' || c == ';'; }
 
-} // anonymous ns
+}  // namespace
 
 SkSVGAttributeParser::SkSVGAttributeParser(const char attributeString[])
-    : fCurPos(attributeString) {}
+        : fCurPos(attributeString) {}
 
-template <typename F>
-inline bool SkSVGAttributeParser::advanceWhile(F f) {
+template <typename F> inline bool SkSVGAttributeParser::advanceWhile(F f) {
     auto initial = fCurPos;
     while (f(*fCurPos)) {
         fCurPos++;
@@ -44,17 +37,11 @@ inline bool SkSVGAttributeParser::advanceWhile(F f) {
     return fCurPos != initial;
 }
 
-inline bool SkSVGAttributeParser::parseEOSToken() {
-    return is_eos(*fCurPos);
-}
+inline bool SkSVGAttributeParser::parseEOSToken() { return is_eos(*fCurPos); }
 
-inline bool SkSVGAttributeParser::parseSepToken() {
-    return this->advanceWhile(is_sep);
-}
+inline bool SkSVGAttributeParser::parseSepToken() { return this->advanceWhile(is_sep); }
 
-inline bool SkSVGAttributeParser::parseWSToken() {
-    return this->advanceWhile(is_ws);
-}
+inline bool SkSVGAttributeParser::parseWSToken() { return this->advanceWhile(is_ws); }
 
 inline bool SkSVGAttributeParser::parseExpectedStringToken(const char* expected) {
     const char* c = fCurPos;
@@ -81,27 +68,23 @@ bool SkSVGAttributeParser::parseScalarToken(SkScalar* res) {
 }
 
 bool SkSVGAttributeParser::parseHexToken(uint32_t* res) {
-     if (const char* next = SkParse::FindHex(fCurPos, res)) {
-         fCurPos = next;
-         return true;
-     }
-     return false;
+    if (const char* next = SkParse::FindHex(fCurPos, res)) {
+        fCurPos = next;
+        return true;
+    }
+    return false;
 }
 
 bool SkSVGAttributeParser::parseLengthUnitToken(SkSVGLength::Unit* unit) {
     static const struct {
-        const char*       fUnitName;
+        const char* fUnitName;
         SkSVGLength::Unit fUnit;
     } gUnitInfo[] = {
-        { "%" , SkSVGLength::Unit::kPercentage },
-        { "em", SkSVGLength::Unit::kEMS        },
-        { "ex", SkSVGLength::Unit::kEXS        },
-        { "px", SkSVGLength::Unit::kPX         },
-        { "cm", SkSVGLength::Unit::kCM         },
-        { "mm", SkSVGLength::Unit::kMM         },
-        { "in", SkSVGLength::Unit::kIN         },
-        { "pt", SkSVGLength::Unit::kPT         },
-        { "pc", SkSVGLength::Unit::kPC         },
+            {"%", SkSVGLength::Unit::kPercentage}, {"em", SkSVGLength::Unit::kEMS},
+            {"ex", SkSVGLength::Unit::kEXS},       {"px", SkSVGLength::Unit::kPX},
+            {"cm", SkSVGLength::Unit::kCM},        {"mm", SkSVGLength::Unit::kMM},
+            {"in", SkSVGLength::Unit::kIN},        {"pt", SkSVGLength::Unit::kPT},
+            {"pc", SkSVGLength::Unit::kPC},
     };
 
     for (size_t i = 0; i < SK_ARRAY_COUNT(gUnitInfo); ++i) {
@@ -131,18 +114,16 @@ bool SkSVGAttributeParser::parseHexColorToken(SkColor* c) {
     }
 
     switch (fCurPos - initial) {
-    case 7:
-        // matched #xxxxxxx
-        break;
-    case 4:
-        // matched '#xxx;
-        v = ((v << 12) & 0x00f00000) |
-            ((v <<  8) & 0x000ff000) |
-            ((v <<  4) & 0x00000ff0) |
-            ((v <<  0) & 0x0000000f);
-        break;
-    default:
-        return false;
+        case 7:
+            // matched #xxxxxxx
+            break;
+        case 4:
+            // matched '#xxx;
+            v = ((v << 12) & 0x00f00000) | ((v << 8) & 0x000ff000) | ((v << 4) & 0x00000ff0) |
+                ((v << 0) & 0x0000000f);
+            break;
+        default:
+            return false;
     }
 
     *c = v | 0xff000000;
@@ -164,21 +145,21 @@ bool SkSVGAttributeParser::parseColorComponentToken(int32_t* c) {
 }
 
 bool SkSVGAttributeParser::parseRGBColorToken(SkColor* c) {
-    return this->parseParenthesized("rgb", [this](SkColor* c) -> bool {
-        int32_t r, g, b;
-        if (this->parseColorComponentToken(&r) &&
-            this->parseSepToken() &&
-            this->parseColorComponentToken(&g) &&
-            this->parseSepToken() &&
-            this->parseColorComponentToken(&b)) {
-
-            *c = SkColorSetRGB(static_cast<uint8_t>(r),
-                               static_cast<uint8_t>(g),
-                               static_cast<uint8_t>(b));
-            return true;
-        }
-        return false;
-    }, c);
+    return this->parseParenthesized(
+            "rgb",
+            [this](SkColor* c) -> bool {
+                int32_t r, g, b;
+                if (this->parseColorComponentToken(&r) && this->parseSepToken() &&
+                    this->parseColorComponentToken(&g) && this->parseSepToken() &&
+                    this->parseColorComponentToken(&b)) {
+                    *c = SkColorSetRGB(static_cast<uint8_t>(r),
+                                       static_cast<uint8_t>(g),
+                                       static_cast<uint8_t>(b));
+                    return true;
+                }
+                return false;
+            },
+            c);
 }
 
 bool SkSVGAttributeParser::parseColor(SkSVGColorType* color) {
@@ -189,9 +170,8 @@ bool SkSVGAttributeParser::parseColor(SkSVGColorType* color) {
 
     // TODO: rgb(...)
     bool parsedValue = false;
-    if (this->parseHexColorToken(&c)
-        || this->parseNamedColorToken(&c)
-        || this->parseRGBColorToken(&c)) {
+    if (this->parseHexColorToken(&c) || this->parseNamedColorToken(&c) ||
+        this->parseRGBColorToken(&c)) {
         *color = SkSVGColorType(c);
         parsedValue = true;
 
@@ -222,9 +202,8 @@ bool SkSVGAttributeParser::parseIRI(SkSVGStringType* iri) {
 
 // https://www.w3.org/TR/SVG/types.html#DataTypeFuncIRI
 bool SkSVGAttributeParser::parseFuncIRI(SkSVGStringType* iri) {
-    return this->parseParenthesized("url", [this](SkSVGStringType* iri) -> bool {
-        return this->parseIRI(iri);
-    }, iri);
+    return this->parseParenthesized(
+            "url", [this](SkSVGStringType* iri) -> bool { return this->parseIRI(iri); }, iri);
 }
 
 // https://www.w3.org/TR/SVG/types.html#DataTypeNumber
@@ -265,11 +244,9 @@ bool SkSVGAttributeParser::parseViewBox(SkSVGViewBoxType* vb) {
     this->parseWSToken();
 
     bool parsedValue = false;
-    if (this->parseScalarToken(&x) && this->parseSepToken() &&
-        this->parseScalarToken(&y) && this->parseSepToken() &&
-        this->parseScalarToken(&w) && this->parseSepToken() &&
+    if (this->parseScalarToken(&x) && this->parseSepToken() && this->parseScalarToken(&y) &&
+        this->parseSepToken() && this->parseScalarToken(&w) && this->parseSepToken() &&
         this->parseScalarToken(&h)) {
-
         *vb = SkSVGViewBoxType(SkRect::MakeXYWH(x, y, w, h));
         parsedValue = true;
         // consume trailing whitespace
@@ -299,94 +276,120 @@ bool SkSVGAttributeParser::parseParenthesized(const char* prefix, Func f, T* res
 }
 
 bool SkSVGAttributeParser::parseMatrixToken(SkMatrix* matrix) {
-    return this->parseParenthesized("matrix", [this](SkMatrix* m) -> bool {
-        SkScalar scalars[6];
-        for (int i = 0; i < 6; ++i) {
-            if (!(this->parseScalarToken(scalars + i) &&
-                  (i > 4 || this->parseSepToken()))) {
-                return false;
-            }
-        }
+    return this->parseParenthesized(
+            "matrix",
+            [this](SkMatrix* m) -> bool {
+                SkScalar scalars[6];
+                for (int i = 0; i < 6; ++i) {
+                    if (!(this->parseScalarToken(scalars + i) &&
+                          (i > 4 || this->parseSepToken()))) {
+                        return false;
+                    }
+                }
 
-        m->setAll(scalars[0], scalars[2], scalars[4], scalars[1], scalars[3], scalars[5], 0, 0, 1);
-        return true;
-    }, matrix);
+                m->setAll(scalars[0],
+                          scalars[2],
+                          scalars[4],
+                          scalars[1],
+                          scalars[3],
+                          scalars[5],
+                          0,
+                          0,
+                          1);
+                return true;
+            },
+            matrix);
 }
 
 bool SkSVGAttributeParser::parseTranslateToken(SkMatrix* matrix) {
-    return this->parseParenthesized("translate", [this](SkMatrix* m) -> bool {
-        SkScalar tx = 0.0, ty = 0.0;
-        this->parseWSToken();
-        if (!this->parseScalarToken(&tx)) {
-            return false;
-        }
+    return this->parseParenthesized(
+            "translate",
+            [this](SkMatrix* m) -> bool {
+                SkScalar tx = 0.0, ty = 0.0;
+                this->parseWSToken();
+                if (!this->parseScalarToken(&tx)) {
+                    return false;
+                }
 
-        if (!(this->parseSepToken() && this->parseScalarToken(&ty))) {
-            ty = tx;
-        }
+                if (!(this->parseSepToken() && this->parseScalarToken(&ty))) {
+                    ty = tx;
+                }
 
-        m->setTranslate(tx, ty);
-        return true;
-    }, matrix);
+                m->setTranslate(tx, ty);
+                return true;
+            },
+            matrix);
 }
 
 bool SkSVGAttributeParser::parseScaleToken(SkMatrix* matrix) {
-    return this->parseParenthesized("scale", [this](SkMatrix* m) -> bool {
-        SkScalar sx = 0.0, sy = 0.0;
-        if (!this->parseScalarToken(&sx)) {
-            return false;
-        }
+    return this->parseParenthesized(
+            "scale",
+            [this](SkMatrix* m) -> bool {
+                SkScalar sx = 0.0, sy = 0.0;
+                if (!this->parseScalarToken(&sx)) {
+                    return false;
+                }
 
-        if (!(this->parseSepToken() && this->parseScalarToken(&sy))) {
-            sy = sx;
-        }
+                if (!(this->parseSepToken() && this->parseScalarToken(&sy))) {
+                    sy = sx;
+                }
 
-        m->setScale(sx, sy);
-        return true;
-    }, matrix);
+                m->setScale(sx, sy);
+                return true;
+            },
+            matrix);
 }
 
 bool SkSVGAttributeParser::parseRotateToken(SkMatrix* matrix) {
-    return this->parseParenthesized("rotate", [this](SkMatrix* m) -> bool {
-        SkScalar angle;
-        if (!this->parseScalarToken(&angle)) {
-            return false;
-        }
+    return this->parseParenthesized(
+            "rotate",
+            [this](SkMatrix* m) -> bool {
+                SkScalar angle;
+                if (!this->parseScalarToken(&angle)) {
+                    return false;
+                }
 
-        SkScalar cx = 0;
-        SkScalar cy = 0;
-        // optional [<cx> <cy>]
-        if (this->parseSepToken() && this->parseScalarToken(&cx)) {
-            if (!(this->parseSepToken() && this->parseScalarToken(&cy))) {
-                return false;
-            }
-        }
+                SkScalar cx = 0;
+                SkScalar cy = 0;
+                // optional [<cx> <cy>]
+                if (this->parseSepToken() && this->parseScalarToken(&cx)) {
+                    if (!(this->parseSepToken() && this->parseScalarToken(&cy))) {
+                        return false;
+                    }
+                }
 
-        m->setRotate(angle, cx, cy);
-        return true;
-    }, matrix);
+                m->setRotate(angle, cx, cy);
+                return true;
+            },
+            matrix);
 }
 
 bool SkSVGAttributeParser::parseSkewXToken(SkMatrix* matrix) {
-    return this->parseParenthesized("skewX", [this](SkMatrix* m) -> bool {
-        SkScalar angle;
-        if (!this->parseScalarToken(&angle)) {
-            return false;
-        }
-        m->setSkewX(angle);
-        return true;
-    }, matrix);
+    return this->parseParenthesized(
+            "skewX",
+            [this](SkMatrix* m) -> bool {
+                SkScalar angle;
+                if (!this->parseScalarToken(&angle)) {
+                    return false;
+                }
+                m->setSkewX(angle);
+                return true;
+            },
+            matrix);
 }
 
 bool SkSVGAttributeParser::parseSkewYToken(SkMatrix* matrix) {
-    return this->parseParenthesized("skewY", [this](SkMatrix* m) -> bool {
-        SkScalar angle;
-        if (!this->parseScalarToken(&angle)) {
-            return false;
-        }
-        m->setSkewY(angle);
-        return true;
-    }, matrix);
+    return this->parseParenthesized(
+            "skewY",
+            [this](SkMatrix* m) -> bool {
+                SkScalar angle;
+                if (!this->parseScalarToken(&angle)) {
+                    return false;
+                }
+                m->setSkewY(angle);
+                return true;
+            },
+            matrix);
 }
 
 // https://www.w3.org/TR/SVG/coords.html#TransformAttribute
@@ -397,12 +400,9 @@ bool SkSVGAttributeParser::parseTransform(SkSVGTransformType* t) {
     while (true) {
         SkMatrix m;
 
-        if (!( this->parseMatrixToken(&m)
-            || this->parseTranslateToken(&m)
-            || this->parseScaleToken(&m)
-            || this->parseRotateToken(&m)
-            || this->parseSkewXToken(&m)
-            || this->parseSkewYToken(&m))) {
+        if (!(this->parseMatrixToken(&m) || this->parseTranslateToken(&m) ||
+              this->parseScaleToken(&m) || this->parseRotateToken(&m) ||
+              this->parseSkewXToken(&m) || this->parseSkewYToken(&m))) {
             break;
         }
 
@@ -466,12 +466,12 @@ bool SkSVGAttributeParser::parseClipPath(SkSVGClip* clip) {
 bool SkSVGAttributeParser::parseLineCap(SkSVGLineCap* cap) {
     static const struct {
         SkSVGLineCap::Type fType;
-        const char*        fName;
+        const char* fName;
     } gCapInfo[] = {
-        { SkSVGLineCap::Type::kButt   , "butt"    },
-        { SkSVGLineCap::Type::kRound  , "round"   },
-        { SkSVGLineCap::Type::kSquare , "square"  },
-        { SkSVGLineCap::Type::kInherit, "inherit" },
+            {SkSVGLineCap::Type::kButt, "butt"},
+            {SkSVGLineCap::Type::kRound, "round"},
+            {SkSVGLineCap::Type::kSquare, "square"},
+            {SkSVGLineCap::Type::kInherit, "inherit"},
     };
 
     bool parsedValue = false;
@@ -490,12 +490,12 @@ bool SkSVGAttributeParser::parseLineCap(SkSVGLineCap* cap) {
 bool SkSVGAttributeParser::parseLineJoin(SkSVGLineJoin* join) {
     static const struct {
         SkSVGLineJoin::Type fType;
-        const char*         fName;
+        const char* fName;
     } gJoinInfo[] = {
-        { SkSVGLineJoin::Type::kMiter  , "miter"   },
-        { SkSVGLineJoin::Type::kRound  , "round"   },
-        { SkSVGLineJoin::Type::kBevel  , "bevel"   },
-        { SkSVGLineJoin::Type::kInherit, "inherit" },
+            {SkSVGLineJoin::Type::kMiter, "miter"},
+            {SkSVGLineJoin::Type::kRound, "round"},
+            {SkSVGLineJoin::Type::kBevel, "bevel"},
+            {SkSVGLineJoin::Type::kInherit, "inherit"},
     };
 
     bool parsedValue = false;
@@ -514,11 +514,11 @@ bool SkSVGAttributeParser::parseLineJoin(SkSVGLineJoin* join) {
 bool SkSVGAttributeParser::parseSpreadMethod(SkSVGSpreadMethod* spread) {
     static const struct {
         SkSVGSpreadMethod::Type fType;
-        const char*             fName;
+        const char* fName;
     } gSpreadInfo[] = {
-        { SkSVGSpreadMethod::Type::kPad    , "pad"     },
-        { SkSVGSpreadMethod::Type::kReflect, "reflect" },
-        { SkSVGSpreadMethod::Type::kRepeat , "repeat"  },
+            {SkSVGSpreadMethod::Type::kPad, "pad"},
+            {SkSVGSpreadMethod::Type::kReflect, "reflect"},
+            {SkSVGSpreadMethod::Type::kRepeat, "repeat"},
     };
 
     bool parsedValue = false;
@@ -548,7 +548,7 @@ bool SkSVGAttributeParser::parsePoints(SkSVGPointsType* points) {
 
         // comma-wsp:
         //     (wsp+ comma? wsp*) | (comma wsp*)
-        bool wsp   = this->parseWSToken();
+        bool wsp = this->parseWSToken();
         bool comma = this->parseExpectedStringToken(",");
         if (!(wsp || comma)) {
             break;
@@ -575,11 +575,11 @@ bool SkSVGAttributeParser::parsePoints(SkSVGPointsType* points) {
 bool SkSVGAttributeParser::parseFillRule(SkSVGFillRule* fillRule) {
     static const struct {
         SkSVGFillRule::Type fType;
-        const char*         fName;
+        const char* fName;
     } gFillRuleInfo[] = {
-        { SkSVGFillRule::Type::kNonZero, "nonzero" },
-        { SkSVGFillRule::Type::kEvenOdd, "evenodd" },
-        { SkSVGFillRule::Type::kInherit, "inherit" },
+            {SkSVGFillRule::Type::kNonZero, "nonzero"},
+            {SkSVGFillRule::Type::kEvenOdd, "evenodd"},
+            {SkSVGFillRule::Type::kInherit, "inherit"},
     };
 
     bool parsedValue = false;
@@ -598,12 +598,12 @@ bool SkSVGAttributeParser::parseFillRule(SkSVGFillRule* fillRule) {
 bool SkSVGAttributeParser::parseVisibility(SkSVGVisibility* visibility) {
     static const struct {
         SkSVGVisibility::Type fType;
-        const char*           fName;
+        const char* fName;
     } gVisibilityInfo[] = {
-        { SkSVGVisibility::Type::kVisible , "visible"  },
-        { SkSVGVisibility::Type::kHidden  , "hidden"   },
-        { SkSVGVisibility::Type::kCollapse, "collapse" },
-        { SkSVGVisibility::Type::kInherit , "inherit"  },
+            {SkSVGVisibility::Type::kVisible, "visible"},
+            {SkSVGVisibility::Type::kHidden, "hidden"},
+            {SkSVGVisibility::Type::kCollapse, "collapse"},
+            {SkSVGVisibility::Type::kInherit, "inherit"},
     };
 
     bool parsedValue = false;

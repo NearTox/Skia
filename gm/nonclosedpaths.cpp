@@ -5,16 +5,21 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkPath.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
 
 namespace skiagm {
 
 // This GM tests a grab-bag of non-closed paths. All these paths look like
 // closed rects, but they don't call path.close(). Depending on the stroke
 // settings these slightly different paths give widely different results.
-class NonClosedPathsGM: public GM {
+class NonClosedPathsGM : public GM {
 public:
     NonClosedPathsGM() {}
 
@@ -22,25 +27,20 @@ public:
         TotallyNonClosed,  // The last point doesn't coincide with the first one in the contour.
                            // The path looks not closed at all.
 
-        FakeCloseCorner,   // The last point coincides with the first one at a corner.
-                           // The path looks closed, but final rendering has 2 ends with cap.
+        FakeCloseCorner,  // The last point coincides with the first one at a corner.
+                          // The path looks closed, but final rendering has 2 ends with cap.
 
-        FakeCloseMiddle,   // The last point coincides with the first one in the middle of a line.
-                           // The path looks closed, and the final rendering looks closed too.
+        FakeCloseMiddle,  // The last point coincides with the first one in the middle of a line.
+                          // The path looks closed, and the final rendering looks closed too.
 
         kClosureTypeCount
     };
 
 protected:
-
-    SkString onShortName() override {
-        return SkString("nonclosedpaths");
-    }
+    SkString onShortName() override { return SkString("nonclosedpaths"); }
 
     // 12 * 18 + 3 cases, every case is 100 * 100 pixels.
-    SkISize onISize() override {
-        return SkISize::Make(1220, 1920);
-    }
+    SkISize onISize() override { return SkISize::Make(1220, 1920); }
 
     // Use rect-like geometry for non-closed path, for right angles make it
     // easier to show the visual difference of lineCap and lineJoin.
@@ -74,21 +74,15 @@ protected:
         constexpr int kStrokeWidth[] = {0, 10, 40, 50};
         int numWidths = SK_ARRAY_COUNT(kStrokeWidth);
 
-        constexpr SkPaint::Style kStyle[] = {
-            SkPaint::kStroke_Style, SkPaint::kStrokeAndFill_Style
-        };
+        constexpr SkPaint::Style kStyle[] = {SkPaint::kStroke_Style, SkPaint::kStrokeAndFill_Style};
 
-        constexpr SkPaint::Cap kCap[] = {
-            SkPaint::kButt_Cap, SkPaint::kRound_Cap, SkPaint::kSquare_Cap
-        };
+        constexpr SkPaint::Cap kCap[] = {SkPaint::kButt_Cap, SkPaint::kRound_Cap,
+                                         SkPaint::kSquare_Cap};
 
-        constexpr SkPaint::Join kJoin[] = {
-            SkPaint::kMiter_Join, SkPaint::kRound_Join, SkPaint::kBevel_Join
-        };
+        constexpr SkPaint::Join kJoin[] = {SkPaint::kMiter_Join, SkPaint::kRound_Join,
+                                           SkPaint::kBevel_Join};
 
-        constexpr ClosureType kType[] = {
-            TotallyNonClosed, FakeCloseCorner, FakeCloseMiddle
-        };
+        constexpr ClosureType kType[] = {TotallyNonClosed, FakeCloseCorner, FakeCloseMiddle};
 
         int counter = 0;
         SkPaint paint;
@@ -143,4 +137,4 @@ private:
 
 DEF_GM(return new NonClosedPathsGM;)
 
-}
+}  // namespace skiagm

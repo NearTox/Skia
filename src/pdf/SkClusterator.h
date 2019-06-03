@@ -7,8 +7,8 @@
 #ifndef SkClusterator_DEFINED
 #define SkClusterator_DEFINED
 
-#include <vector>
 #include <cstdint>
+#include <vector>
 
 class SkGlyphRun;
 
@@ -26,22 +26,19 @@ public:
         uint32_t fGlyphCount;
         explicit operator bool() const { return fGlyphCount != 0; }
         bool operator==(const SkClusterator::Cluster& o) {
-            return fUtf8Text       == o.fUtf8Text
-                && fTextByteLength == o.fTextByteLength
-                && fGlyphIndex     == o.fGlyphIndex
-                && fGlyphCount     == o.fGlyphCount;
+            return fUtf8Text == o.fUtf8Text && fTextByteLength == o.fTextByteLength &&
+                   fGlyphIndex == o.fGlyphIndex && fGlyphCount == o.fGlyphCount;
         }
     };
     Cluster next();
 
 private:
-    uint32_t const * const fClusters;
-    char const * const fUtf8Text;
+    uint32_t const* const fClusters;
+    char const* const fUtf8Text;
     uint32_t const fGlyphCount;
     uint32_t const fTextByteLength;
     bool const fReversedChars;
     uint32_t fCurrentGlyphIndex = 0;
 };
-
 
 #endif  // SkClusterator_DEFINED

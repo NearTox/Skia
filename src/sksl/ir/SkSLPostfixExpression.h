@@ -8,8 +8,8 @@
 #ifndef SKSL_POSTFIXEXPRESSION
 #define SKSL_POSTFIXEXPRESSION
 
-#include "SkSLExpression.h"
-#include "SkSLLexer.h"
+#include "src/sksl/SkSLLexer.h"
+#include "src/sksl/ir/SkSLExpression.h"
 
 namespace SkSL {
 
@@ -18,13 +18,11 @@ namespace SkSL {
  */
 struct PostfixExpression : public Expression {
     PostfixExpression(std::unique_ptr<Expression> operand, Token::Kind op)
-    : INHERITED(operand->fOffset, kPostfix_Kind, operand->fType)
-    , fOperand(std::move(operand))
-    , fOperator(op) {}
+            : INHERITED(operand->fOffset, kPostfix_Kind, operand->fType)
+            , fOperand(std::move(operand))
+            , fOperator(op) {}
 
-    bool hasSideEffects() const override {
-        return true;
-    }
+    bool hasSideEffects() const override { return true; }
 
     std::unique_ptr<Expression> clone() const override {
         return std::unique_ptr<Expression>(new PostfixExpression(fOperand->clone(), fOperator));
@@ -40,6 +38,6 @@ struct PostfixExpression : public Expression {
     typedef Expression INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

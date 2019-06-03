@@ -5,7 +5,7 @@
  * found in the LICENSE file.
  */
 
-#include "SkUtils.h"
+#include "src/core/SkUtils.h"
 
 template <typename T>
 static SkUnichar next(const T** srcPtr, unsigned N, SkUnichar (*fn)(const T**, const T*)) {
@@ -23,13 +23,11 @@ static SkUnichar next(const T** srcPtr, unsigned N, SkUnichar (*fn)(const T**, c
 SkUnichar SkUTF8_NextUnichar(const char** p) {
     return next<char>(p, SkUTF::kMaxBytesInUTF8Sequence, SkUTF::NextUTF8);
 }
-SkUnichar SkUTF16_NextUnichar(const uint16_t** p) {
-    return next<uint16_t>(p, 2, SkUTF::NextUTF16);
-}
+SkUnichar SkUTF16_NextUnichar(const uint16_t** p) { return next<uint16_t>(p, 2, SkUTF::NextUTF16); }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-const char SkHexadecimalDigits::gUpper[16] =
-    { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-const char SkHexadecimalDigits::gLower[16] =
-    { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+const char SkHexadecimalDigits::gUpper[16] = {'0', '1', '2', '3', '4', '5', '6', '7',
+                                              '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+const char SkHexadecimalDigits::gLower[16] = {'0', '1', '2', '3', '4', '5', '6', '7',
+                                              '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};

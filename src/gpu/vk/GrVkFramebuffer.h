@@ -1,16 +1,16 @@
 /*
-* Copyright 2016 Google Inc.
-*
-* Use of this source code is governed by a BSD-style license that can be
-* found in the LICENSE file.
-*/
+ * Copyright 2016 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
 #ifndef GrVkFramebuffer_DEFINED
 #define GrVkFramebuffer_DEFINED
 
-#include "GrTypes.h"
-#include "GrVkResource.h"
-#include "vk/GrVkTypes.h"
+#include "include/gpu/GrTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
+#include "src/gpu/vk/GrVkResource.h"
 
 class GrVkGpu;
 class GrVkImageView;
@@ -18,8 +18,7 @@ class GrVkRenderPass;
 
 class GrVkFramebuffer : public GrVkResource {
 public:
-    static GrVkFramebuffer* Create(GrVkGpu* gpu,
-                                   int width, int height,
+    static GrVkFramebuffer* Create(GrVkGpu* gpu, int width, int height,
                                    const GrVkRenderPass* renderPass,
                                    const GrVkImageView* colorAttachment,
                                    const GrVkImageView* stencilAttachment);
@@ -40,7 +39,7 @@ private:
 
     void freeGPUData(GrVkGpu* gpu) const override;
 
-    VkFramebuffer  fFramebuffer;
+    VkFramebuffer fFramebuffer;
 
     typedef GrVkResource INHERITED;
 };

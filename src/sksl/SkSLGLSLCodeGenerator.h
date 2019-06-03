@@ -12,36 +12,36 @@
 #include <tuple>
 #include <unordered_map>
 
-#include "SkSLCodeGenerator.h"
-#include "SkSLStringStream.h"
-#include "ir/SkSLBinaryExpression.h"
-#include "ir/SkSLBoolLiteral.h"
-#include "ir/SkSLConstructor.h"
-#include "ir/SkSLDoStatement.h"
-#include "ir/SkSLExtension.h"
-#include "ir/SkSLFloatLiteral.h"
-#include "ir/SkSLIfStatement.h"
-#include "ir/SkSLIndexExpression.h"
-#include "ir/SkSLInterfaceBlock.h"
-#include "ir/SkSLIntLiteral.h"
-#include "ir/SkSLFieldAccess.h"
-#include "ir/SkSLForStatement.h"
-#include "ir/SkSLFunctionCall.h"
-#include "ir/SkSLFunctionDeclaration.h"
-#include "ir/SkSLFunctionDefinition.h"
-#include "ir/SkSLPrefixExpression.h"
-#include "ir/SkSLPostfixExpression.h"
-#include "ir/SkSLProgramElement.h"
-#include "ir/SkSLReturnStatement.h"
-#include "ir/SkSLSetting.h"
-#include "ir/SkSLStatement.h"
-#include "ir/SkSLSwitchStatement.h"
-#include "ir/SkSLSwizzle.h"
-#include "ir/SkSLTernaryExpression.h"
-#include "ir/SkSLVarDeclarations.h"
-#include "ir/SkSLVarDeclarationsStatement.h"
-#include "ir/SkSLVariableReference.h"
-#include "ir/SkSLWhileStatement.h"
+#include "src/sksl/SkSLCodeGenerator.h"
+#include "src/sksl/SkSLStringStream.h"
+#include "src/sksl/ir/SkSLBinaryExpression.h"
+#include "src/sksl/ir/SkSLBoolLiteral.h"
+#include "src/sksl/ir/SkSLConstructor.h"
+#include "src/sksl/ir/SkSLDoStatement.h"
+#include "src/sksl/ir/SkSLExtension.h"
+#include "src/sksl/ir/SkSLFieldAccess.h"
+#include "src/sksl/ir/SkSLFloatLiteral.h"
+#include "src/sksl/ir/SkSLForStatement.h"
+#include "src/sksl/ir/SkSLFunctionCall.h"
+#include "src/sksl/ir/SkSLFunctionDeclaration.h"
+#include "src/sksl/ir/SkSLFunctionDefinition.h"
+#include "src/sksl/ir/SkSLIfStatement.h"
+#include "src/sksl/ir/SkSLIndexExpression.h"
+#include "src/sksl/ir/SkSLIntLiteral.h"
+#include "src/sksl/ir/SkSLInterfaceBlock.h"
+#include "src/sksl/ir/SkSLPostfixExpression.h"
+#include "src/sksl/ir/SkSLPrefixExpression.h"
+#include "src/sksl/ir/SkSLProgramElement.h"
+#include "src/sksl/ir/SkSLReturnStatement.h"
+#include "src/sksl/ir/SkSLSetting.h"
+#include "src/sksl/ir/SkSLStatement.h"
+#include "src/sksl/ir/SkSLSwitchStatement.h"
+#include "src/sksl/ir/SkSLSwizzle.h"
+#include "src/sksl/ir/SkSLTernaryExpression.h"
+#include "src/sksl/ir/SkSLVarDeclarations.h"
+#include "src/sksl/ir/SkSLVarDeclarationsStatement.h"
+#include "src/sksl/ir/SkSLVariableReference.h"
+#include "src/sksl/ir/SkSLWhileStatement.h"
 
 namespace SkSL {
 
@@ -53,32 +53,32 @@ namespace SkSL {
 class GLSLCodeGenerator : public CodeGenerator {
 public:
     enum Precedence {
-        kParentheses_Precedence    =  1,
-        kPostfix_Precedence        =  2,
-        kPrefix_Precedence         =  3,
-        kMultiplicative_Precedence =  4,
-        kAdditive_Precedence       =  5,
-        kShift_Precedence          =  6,
-        kRelational_Precedence     =  7,
-        kEquality_Precedence       =  8,
-        kBitwiseAnd_Precedence     =  9,
-        kBitwiseXor_Precedence     = 10,
-        kBitwiseOr_Precedence      = 11,
-        kLogicalAnd_Precedence     = 12,
-        kLogicalXor_Precedence     = 13,
-        kLogicalOr_Precedence      = 14,
-        kTernary_Precedence        = 15,
-        kAssignment_Precedence     = 16,
-        kSequence_Precedence       = 17,
-        kTopLevel_Precedence       = kSequence_Precedence
+        kParentheses_Precedence = 1,
+        kPostfix_Precedence = 2,
+        kPrefix_Precedence = 3,
+        kMultiplicative_Precedence = 4,
+        kAdditive_Precedence = 5,
+        kShift_Precedence = 6,
+        kRelational_Precedence = 7,
+        kEquality_Precedence = 8,
+        kBitwiseAnd_Precedence = 9,
+        kBitwiseXor_Precedence = 10,
+        kBitwiseOr_Precedence = 11,
+        kLogicalAnd_Precedence = 12,
+        kLogicalXor_Precedence = 13,
+        kLogicalOr_Precedence = 14,
+        kTernary_Precedence = 15,
+        kAssignment_Precedence = 16,
+        kSequence_Precedence = 17,
+        kTopLevel_Precedence = kSequence_Precedence
     };
 
     GLSLCodeGenerator(const Context* context, const Program* program, ErrorReporter* errors,
                       OutputStream* out)
-    : INHERITED(program, errors, out)
-    , fLineEnding("\n")
-    , fContext(*context)
-    , fProgramKind(program->fKind) {}
+            : INHERITED(program, errors, out)
+            , fLineEnding("\n")
+            , fContext(*context)
+            , fProgramKind(program->fKind) {}
 
     bool generateCode() override;
 
@@ -245,6 +245,6 @@ protected:
     typedef CodeGenerator INHERITED;
 };
 
-}
+}  // namespace SkSL
 
 #endif

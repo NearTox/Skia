@@ -5,19 +5,22 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-
-#include "Resources.h"
-#include "SkBitmapProcState.h"
-#include "SkGradientShader.h"
-#include "SkImageEncoder.h"
-#include "SkStream.h"
-#include "SkTypeface.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkFilterQuality.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "tools/Resources.h"
+#include "tools/ToolUtils.h"
 
 static SkSize computeSize(const SkBitmap& bm, const SkMatrix& mat) {
-    SkRect bounds = SkRect::MakeWH(SkIntToScalar(bm.width()),
-                                   SkIntToScalar(bm.height()));
+    SkRect bounds = SkRect::MakeWH(SkIntToScalar(bm.width()), SkIntToScalar(bm.height()));
     mat.mapRect(&bounds);
     return SkSize::Make(bounds.width(), bounds.height());
 }
@@ -48,34 +51,29 @@ class FilterIndiaBoxGM : public skiagm::GM {
         SkScalar cx = SkScalarHalf(fBM.width());
         SkScalar cy = SkScalarHalf(fBM.height());
 
-        float vertScale = 30.0f/55.0f;
-        float horizScale = 150.0f/200.0f;
+        float vertScale = 30.0f / 55.0f;
+        float horizScale = 150.0f / 200.0f;
 
         fMatrix[0].setScale(horizScale, vertScale);
-        fMatrix[1].setRotate(30, cx, cy); fMatrix[1].postScale(horizScale, vertScale);
+        fMatrix[1].setRotate(30, cx, cy);
+        fMatrix[1].postScale(horizScale, vertScale);
     }
 
 public:
-    SkBitmap    fBM;
-    SkMatrix    fMatrix[2];
-    SkString    fName;
+    SkBitmap fBM;
+    SkMatrix fMatrix[2];
+    SkString fName;
 
-    FilterIndiaBoxGM() {
-        this->setBGColor(sk_tool_utils::color_to_565(0xFFDDDDDD));
-    }
+    FilterIndiaBoxGM() { this->setBGColor(ToolUtils::color_to_565(0xFFDDDDDD)); }
 
     FilterIndiaBoxGM(const char filename[]) : fFilename(filename) {
         fName.printf("filterindiabox");
     }
 
 protected:
-    SkString onShortName() override {
-        return fName;
-    }
+    SkString onShortName() override { return fName; }
 
-    SkISize onISize() override {
-        return SkISize::Make(680, 130);
-    }
+    SkISize onISize() override { return SkISize::Make(680, 130); }
 
     void onDraw(SkCanvas* canvas) override {
         canvas->translate(10, 10);
@@ -89,26 +87,24 @@ protected:
         }
     }
 
-  protected:
-      SkString fFilename;
-      int fSize;
+protected:
+    SkString fFilename;
+    int fSize;
 
-      SkScalar getScale() {
-          return 192.f/fSize;
-      }
+    SkScalar getScale() { return 192.f / fSize; }
 
-      void makeBitmap() {
+    void makeBitmap() {
         if (!GetResourceAsBitmap(fFilename.c_str(), &fBM)) {
             fBM.allocN32Pixels(1, 1);
-            fBM.eraseARGB(255, 255, 0 , 0); // red == bad
+            fBM.eraseARGB(255, 255, 0, 0);  // red == bad
         }
         fSize = fBM.height();
-      }
-  private:
+    }
+
+private:
     typedef skiagm::GM INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-
-DEF_GM( return new FilterIndiaBoxGM("images/box.gif"); )
+DEF_GM(return new FilterIndiaBoxGM("images/box.gif");)

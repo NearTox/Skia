@@ -8,19 +8,18 @@
 #ifndef SkRasterClip_DEFINED
 #define SkRasterClip_DEFINED
 
-#include "SkAAClip.h"
-#include "SkMacros.h"
-#include "SkRegion.h"
+#include "include/core/SkRegion.h"
+#include "include/private/SkMacros.h"
+#include "src/core/SkAAClip.h"
 
 class SkRRect;
 
 class SkConservativeClip {
-    SkIRect         fBounds;
-    const SkIRect*  fClipRestrictionRect;
+    SkIRect fBounds;
+    const SkIRect* fClipRestrictionRect;
 
-    inline void applyClipRestriction(SkRegion::Op op, SkIRect* bounds) {
-        if (op >= SkRegion::kUnion_Op && fClipRestrictionRect
-            && !fClipRestrictionRect->isEmpty()) {
+    inline void applyClipRestriction(SkRegion::Op op, SkIRect* bounds) noexcept {
+        if (op >= SkRegion::kUnion_Op && fClipRestrictionRect && !fClipRestrictionRect->isEmpty()) {
             if (!bounds->intersect(*fClipRestrictionRect)) {
                 bounds->setEmpty();
             }
@@ -28,17 +27,15 @@ class SkConservativeClip {
     }
 
 public:
-    SkConservativeClip() : fBounds(SkIRect::MakeEmpty()), fClipRestrictionRect(nullptr) {}
+    SkConservativeClip() noexcept : fBounds(SkIRect::MakeEmpty()), fClipRestrictionRect(nullptr) {}
 
-    bool isEmpty() const { return fBounds.isEmpty(); }
-    bool isRect() const { return true; }
-    const SkIRect& getBounds() const { return fBounds; }
+    bool isEmpty() const noexcept { return fBounds.isEmpty(); }
+    bool isRect() const noexcept { return true; }
+    const SkIRect& getBounds() const noexcept { return fBounds; }
 
-    void setEmpty() { fBounds.setEmpty(); }
-    void setRect(const SkIRect& r) { fBounds = r; }
-    void setDeviceClipRestriction(const SkIRect* rect) {
-        fClipRestrictionRect = rect;
-    }
+    void setEmpty() noexcept { fBounds.setEmpty(); }
+    void setRect(const SkIRect& r) noexcept { fBounds = r; }
+    void setDeviceClipRestriction(const SkIRect* rect) noexcept { fClipRestrictionRect = rect; }
 
     void opRect(const SkRect&, const SkMatrix&, const SkIRect& limit, SkRegion::Op, bool isAA);
     void opRRect(const SkRRect&, const SkMatrix&, const SkIRect& limit, SkRegion::Op, bool isAA);
@@ -58,7 +55,7 @@ public:
  */
 class SkRasterClip {
 public:
-    SkRasterClip();
+    SkRasterClip() noexcept;
     SkRasterClip(const SkIRect&);
     SkRasterClip(const SkRegion&);
     SkRasterClip(const SkRasterClip&);
@@ -67,27 +64,31 @@ public:
     // Only compares the current state. Does not compare isForceConservativeRects(), so that field
     // could be different but this could still return true.
     bool operator==(const SkRasterClip&) const;
-    bool operator!=(const SkRasterClip& other) const {
-        return !(*this == other);
+    bool operator!=(const SkRasterClip& other) const { return !(*this == other); }
+
+    bool isBW() const noexcept { return fIsBW; }
+    bool isAA() const noexcept { return !fIsBW; }
+    const SkRegion& bwRgn() const noexcept {
+        SkASSERT(fIsBW);
+        return fBW;
+    }
+    const SkAAClip& aaRgn() const noexcept {
+        SkASSERT(!fIsBW);
+        return fAA;
     }
 
-    bool isBW() const { return fIsBW; }
-    bool isAA() const { return !fIsBW; }
-    const SkRegion& bwRgn() const { SkASSERT(fIsBW); return fBW; }
-    const SkAAClip& aaRgn() const { SkASSERT(!fIsBW); return fAA; }
-
-    bool isEmpty() const {
+    bool isEmpty() const noexcept {
         SkASSERT(this->computeIsEmpty() == fIsEmpty);
         return fIsEmpty;
     }
 
-    bool isRect() const {
+    bool isRect() const noexcept {
         SkASSERT(this->computeIsRect() == fIsRect);
         return fIsRect;
     }
 
-    bool isComplex() const;
-    const SkIRect& getBounds() const;
+    bool isComplex() const noexcept;
+    const SkIRect& getBounds() const noexcept;
 
     bool setEmpty();
     bool setRect(const SkIRect&);
@@ -99,9 +100,7 @@ public:
     bool op(const SkPath&, const SkMatrix& matrix, const SkIRect&, SkRegion::Op, bool doAA);
 
     void translate(int dx, int dy, SkRasterClip* dst) const;
-    void translate(int dx, int dy) {
-        this->translate(dx, dy, this);
-    }
+    void translate(int dx, int dy) { this->translate(dx, dy, this); }
 
     bool quickContains(const SkIRect& rect) const;
     bool quickContains(int left, int top, int right, int bottom) const {
@@ -113,7 +112,7 @@ public:
      *  not intersect the region. Returning false is not a guarantee that they
      *  intersect, but returning true is a guarantee that they do not.
      */
-    bool quickReject(const SkIRect& rect) const {
+    bool quickReject(const SkIRect& rect) const noexcept {
         return !SkIRect::Intersects(this->getBounds(), rect);
     }
 
@@ -123,29 +122,23 @@ public:
 #ifdef SK_DEBUG
     void validate() const;
 #else
-    void validate() const {}
+    void validate() const noexcept {}
 #endif
 
-    void setDeviceClipRestriction(const SkIRect* rect) {
-        fClipRestrictionRect = rect;
-    }
+    void setDeviceClipRestriction(const SkIRect* rect) noexcept { fClipRestrictionRect = rect; }
 
 private:
-    SkRegion    fBW;
-    SkAAClip    fAA;
-    bool        fIsBW;
+    SkRegion fBW;
+    SkAAClip fAA;
+    bool fIsBW;
     // these 2 are caches based on querying the right obj based on fIsBW
-    bool        fIsEmpty;
-    bool        fIsRect;
-    const SkIRect*    fClipRestrictionRect = nullptr;
+    bool fIsEmpty;
+    bool fIsRect;
+    const SkIRect* fClipRestrictionRect = nullptr;
 
-    bool computeIsEmpty() const {
-        return fIsBW ? fBW.isEmpty() : fAA.isEmpty();
-    }
+    bool computeIsEmpty() const noexcept { return fIsBW ? fBW.isEmpty() : fAA.isEmpty(); }
 
-    bool computeIsRect() const {
-        return fIsBW ? fBW.isRect() : fAA.isRect();
-    }
+    bool computeIsRect() const { return fIsBW ? fBW.isRect() : fAA.isRect(); }
 
     bool updateCacheAndReturnNonEmpty(bool detectAARect = true) {
         fIsEmpty = this->computeIsEmpty();
@@ -153,7 +146,7 @@ private:
         // detect that our computed AA is really just a (hard-edged) rect
         if (detectAARect && !fIsEmpty && !fIsBW && fAA.isRect()) {
             fBW.setRect(fAA.getBounds());
-            fAA.setEmpty(); // don't need this guy anymore
+            fAA.setEmpty();  // don't need this guy anymore
             fIsBW = true;
         }
 
@@ -168,18 +161,16 @@ private:
     bool op(const SkRasterClip&, SkRegion::Op);
     bool setConservativeRect(const SkRect& r, const SkIRect& clipR, bool isInverse);
 
-    inline void applyClipRestriction(SkRegion::Op op, SkIRect* bounds) {
-        if (op >= SkRegion::kUnion_Op && fClipRestrictionRect
-            && !fClipRestrictionRect->isEmpty()) {
+    inline void applyClipRestriction(SkRegion::Op op, SkIRect* bounds) noexcept {
+        if (op >= SkRegion::kUnion_Op && fClipRestrictionRect && !fClipRestrictionRect->isEmpty()) {
             if (!bounds->intersect(*fClipRestrictionRect)) {
                 bounds->setEmpty();
             }
         }
     }
 
-    inline void applyClipRestriction(SkRegion::Op op, SkRect* bounds) {
-        if (op >= SkRegion::kUnion_Op && fClipRestrictionRect
-            && !fClipRestrictionRect->isEmpty()) {
+    inline void applyClipRestriction(SkRegion::Op op, SkRect* bounds) noexcept {
+        if (op >= SkRegion::kUnion_Op && fClipRestrictionRect && !fClipRestrictionRect->isEmpty()) {
             if (!bounds->intersect(SkRect::Make(*fClipRestrictionRect))) {
                 bounds->setEmpty();
             }
@@ -189,21 +180,18 @@ private:
 
 class SkAutoRasterClipValidate : SkNoncopyable {
 public:
-    SkAutoRasterClipValidate(const SkRasterClip& rc) : fRC(rc) {
-        fRC.validate();
-    }
-    ~SkAutoRasterClipValidate() {
-        fRC.validate();
-    }
+    SkAutoRasterClipValidate(const SkRasterClip& rc) noexcept : fRC(rc) { fRC.validate(); }
+    ~SkAutoRasterClipValidate() { fRC.validate(); }
+
 private:
     const SkRasterClip& fRC;
 };
 #define SkAutoRasterClipValidate(...) SK_REQUIRE_LOCAL_VAR(SkAutoRasterClipValidate)
 
 #ifdef SK_DEBUG
-    #define AUTO_RASTERCLIP_VALIDATE(rc)    SkAutoRasterClipValidate arcv(rc)
+#define AUTO_RASTERCLIP_VALIDATE(rc) SkAutoRasterClipValidate arcv(rc)
 #else
-    #define AUTO_RASTERCLIP_VALIDATE(rc)
+#define AUTO_RASTERCLIP_VALIDATE(rc)
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -219,27 +207,27 @@ private:
  */
 class SkAAClipBlitterWrapper {
 public:
-    SkAAClipBlitterWrapper();
+    SkAAClipBlitterWrapper() noexcept;
     SkAAClipBlitterWrapper(const SkRasterClip&, SkBlitter*);
     SkAAClipBlitterWrapper(const SkAAClip*, SkBlitter*);
 
     void init(const SkRasterClip&, SkBlitter*);
 
-    const SkIRect& getBounds() const {
+    const SkIRect& getBounds() const noexcept {
         SkASSERT(fClipRgn);
         return fClipRgn->getBounds();
     }
-    const SkRegion& getRgn() const {
+    const SkRegion& getRgn() const noexcept {
         SkASSERT(fClipRgn);
         return *fClipRgn;
     }
-    SkBlitter* getBlitter() {
+    SkBlitter* getBlitter() noexcept {
         SkASSERT(fBlitter);
         return fBlitter;
     }
 
 private:
-    SkRegion        fBWRgn;
+    SkRegion fBWRgn;
     SkAAClipBlitter fAABlitter;
     // what we return
     const SkRegion* fClipRgn;

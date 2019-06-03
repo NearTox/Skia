@@ -8,11 +8,11 @@
 #ifndef SKSL_FIELD
 #define SKSL_FIELD
 
-#include "SkSLModifiers.h"
-#include "SkSLPosition.h"
-#include "SkSLSymbol.h"
-#include "SkSLType.h"
-#include "SkSLVariable.h"
+#include "src/sksl/SkSLPosition.h"
+#include "src/sksl/ir/SkSLModifiers.h"
+#include "src/sksl/ir/SkSLSymbol.h"
+#include "src/sksl/ir/SkSLType.h"
+#include "src/sksl/ir/SkSLVariable.h"
 
 namespace SkSL {
 
@@ -23,9 +23,9 @@ namespace SkSL {
  */
 struct Field : public Symbol {
     Field(int offset, const Variable& owner, int fieldIndex)
-    : INHERITED(offset, kField_Kind, owner.fType.fields()[fieldIndex].fName)
-    , fOwner(owner)
-    , fFieldIndex(fieldIndex) {}
+            : INHERITED(offset, kField_Kind, owner.fType.fields()[fieldIndex].fName)
+            , fOwner(owner)
+            , fFieldIndex(fieldIndex) {}
 
     virtual String description() const override {
         return fOwner.description() + "." + fOwner.fType.fields()[fFieldIndex].fName;
@@ -37,6 +37,6 @@ struct Field : public Symbol {
     typedef Symbol INHERITED;
 };
 
-} // namespace SkSL
+}  // namespace SkSL
 
 #endif

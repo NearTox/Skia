@@ -8,7 +8,7 @@
 #ifndef SkAlphaThresholdFilter_DEFINED
 #define SkAlphaThresholdFilter_DEFINED
 
-#include "SkImageFilter.h"
+#include "include/core/SkImageFilter.h"
 
 class SkRegion;
 
@@ -21,10 +21,9 @@ public:
      * The 0,0 point of the region corresponds to the upper left corner of the
      * source image.
      */
-    static sk_sp<SkImageFilter> Make(const SkRegion& region, SkScalar innerMin,
-                                     SkScalar outerMax, sk_sp<SkImageFilter> input,
+    static sk_sp<SkImageFilter> Make(const SkRegion& region, SkScalar innerMin, SkScalar outerMax,
+                                     sk_sp<SkImageFilter> input,
                                      const SkImageFilter::CropRect* cropRect = nullptr);
-
 
     static void RegisterFlattenables();
 };

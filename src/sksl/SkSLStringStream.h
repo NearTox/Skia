@@ -8,7 +8,7 @@
 #ifndef SKSL_STRINGSTREAM
 #define SKSL_STRINGSTREAM
 
-#include "SkSLOutputStream.h"
+#include "src/sksl/SkSLOutputStream.h"
 
 #ifdef SKSL_STANDALONE
 
@@ -16,25 +16,15 @@ namespace SkSL {
 
 class StringStream : public OutputStream {
 public:
-    void write8(uint8_t b) override {
-        fBuffer += (char) b;
-    }
+    void write8(uint8_t b) override { fBuffer += (char)b; }
 
-    void writeText(const char* s) override {
-        fBuffer += s;
-    }
+    void writeText(const char* s) override { fBuffer += s; }
 
-    void write(const void* s, size_t size) override {
-        fBuffer.append((const char*) s, size);
-    }
+    void write(const void* s, size_t size) override { fBuffer.append((const char*)s, size); }
 
-    const String& str() const {
-        return fBuffer;
-    }
+    const String& str() const { return fBuffer; }
 
-    void reset() {
-        fBuffer = "";
-    }
+    void reset() { fBuffer = ""; }
 
 private:
     String fBuffer;
@@ -42,29 +32,23 @@ private:
 
 #else
 
-#include "SkData.h"
-#include "SkStream.h"
+#include "include/core/SkData.h"
+#include "include/core/SkStream.h"
 
 namespace SkSL {
 
 class StringStream : public OutputStream {
 public:
-    void write8(uint8_t b) override {
-        fStream.write8(b);
-    }
+    void write8(uint8_t b) override { fStream.write8(b); }
 
-    void writeText(const char* s) override {
-        fStream.writeText(s);
-    }
+    void writeText(const char* s) override { fStream.writeText(s); }
 
-    void write(const void* s, size_t size) override {
-        fStream.write(s, size);
-    }
+    void write(const void* s, size_t size) override { fStream.write(s, size); }
 
     const String& str() const {
         if (!fString.size()) {
             sk_sp<SkData> data = fStream.detachAsData();
-            fString = String((const char*) data->data(), data->size());
+            fString = String((const char*)data->data(), data->size());
         }
         return fString;
     }
@@ -79,8 +63,8 @@ private:
     mutable String fString;
 };
 
-#endif // SKSL_STANDALONE
+#endif  // SKSL_STANDALONE
 
-} // namespace
+}  // namespace
 
 #endif

@@ -8,10 +8,10 @@
 #ifndef GrAtlasManager_DEFINED
 #define GrAtlasManager_DEFINED
 
-#include "GrCaps.h"
-#include "GrDrawOpAtlas.h"
-#include "GrOnFlushResourceProvider.h"
-#include "GrProxyProvider.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrDrawOpAtlas.h"
+#include "src/gpu/GrOnFlushResourceProvider.h"
+#include "src/gpu/GrProxyProvider.h"
 
 struct GrGlyph;
 class GrTextStrike;
@@ -25,8 +25,8 @@ class GrTextStrike;
  */
 class GrAtlasManager : public GrOnFlushCallbackObject {
 public:
-    GrAtlasManager(GrProxyProvider*, GrStrikeCache*,
-                   size_t maxTextureBytes, GrDrawOpAtlas::AllowMultitexturing);
+    GrAtlasManager(GrProxyProvider*, GrStrikeCache*, size_t maxTextureBytes,
+                   GrDrawOpAtlas::AllowMultitexturing);
     ~GrAtlasManager() override;
 
     // Change an expected 565 mask format to 8888 if 565 is not supported (will happen when using
@@ -73,10 +73,10 @@ public:
     }
 
     // add to texture atlas that matches this format
-    GrDrawOpAtlas::ErrorCode addToAtlas(
-                    GrResourceProvider*, GrStrikeCache*, GrTextStrike*,
-                    GrDrawOpAtlas::AtlasID*, GrDeferredUploadTarget*, GrMaskFormat,
-                    int width, int height, const void* image, SkIPoint16* loc);
+    GrDrawOpAtlas::ErrorCode addToAtlas(GrResourceProvider*, GrStrikeCache*, GrTextStrike*,
+                                        GrDrawOpAtlas::AtlasID*, GrDeferredUploadTarget*,
+                                        GrMaskFormat, int width, int height, const void* image,
+                                        SkIPoint16* loc);
 
     // Some clients may wish to verify the integrity of the texture backing store of the
     // GrDrawOpAtlas. The atlasGeneration returned below is a monotonically increasing number which
@@ -96,8 +96,8 @@ public:
         }
     }
 
-    void postFlush(GrDeferredUploadToken startTokenForNextFlush,
-                   const uint32_t* opListIDs, int numOpListIDs) override {
+    void postFlush(GrDeferredUploadToken startTokenForNextFlush, const uint32_t* opListIDs,
+                   int numOpListIDs) override {
         for (int i = 0; i < kMaskFormatCount; ++i) {
             if (fAtlases[i]) {
                 fAtlases[i]->compact(startTokenForNextFlush);
@@ -124,9 +124,9 @@ private:
     // There is a 1:1 mapping between GrMaskFormats and atlas indices
     static int MaskFormatToAtlasIndex(GrMaskFormat format) {
         static const int sAtlasIndices[] = {
-            kA8_GrMaskFormat,
-            kA565_GrMaskFormat,
-            kARGB_GrMaskFormat,
+                kA8_GrMaskFormat,
+                kA565_GrMaskFormat,
+                kARGB_GrMaskFormat,
         };
         static_assert(SK_ARRAY_COUNT(sAtlasIndices) == kMaskFormatCount, "array_size_mismatch");
 
@@ -151,4 +151,4 @@ private:
     typedef GrOnFlushCallbackObject INHERITED;
 };
 
-#endif // GrAtlasManager_DEFINED
+#endif  // GrAtlasManager_DEFINED

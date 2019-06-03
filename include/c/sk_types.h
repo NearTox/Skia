@@ -11,32 +11,32 @@
 #ifndef sk_types_DEFINED
 #define sk_types_DEFINED
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
-    #define SK_C_PLUS_PLUS_BEGIN_GUARD    extern "C" {
-    #define SK_C_PLUS_PLUS_END_GUARD      }
+#define SK_C_PLUS_PLUS_BEGIN_GUARD extern "C" {
+#define SK_C_PLUS_PLUS_END_GUARD }
 #else
-    #include <stdbool.h>
-    #define SK_C_PLUS_PLUS_BEGIN_GUARD
-    #define SK_C_PLUS_PLUS_END_GUARD
+#include <stdbool.h>
+#define SK_C_PLUS_PLUS_BEGIN_GUARD
+#define SK_C_PLUS_PLUS_END_GUARD
 #endif
 
 #if !defined(SK_API)
-    #if defined(SKIA_DLL)
-        #if defined(_MSC_VER)
-            #if SKIA_IMPLEMENTATION
-                #define SK_API __declspec(dllexport)
-            #else
-                #define SK_API __declspec(dllimport)
-            #endif
-        #else
-            #define SK_API __attribute__((visibility("default")))
-        #endif
-    #else
-        #define SK_API
-    #endif
+#if defined(SKIA_DLL)
+#if defined(_MSC_VER)
+#if SKIA_IMPLEMENTATION
+#define SK_API __declspec(dllexport)
+#else
+#define SK_API __declspec(dllimport)
+#endif
+#else
+#define SK_API __attribute__((visibility("default")))
+#endif
+#else
+#define SK_API
+#endif
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -46,11 +46,11 @@ SK_C_PLUS_PLUS_BEGIN_GUARD
 typedef uint32_t sk_color_t;
 
 /* This macro assumes all arguments are >=0 and <=255. */
-#define sk_color_set_argb(a, r, g, b)   (((a) << 24) | ((r) << 16) | ((g) << 8) | (b))
-#define sk_color_get_a(c)               (((c) >> 24) & 0xFF)
-#define sk_color_get_r(c)               (((c) >> 16) & 0xFF)
-#define sk_color_get_g(c)               (((c) >>  8) & 0xFF)
-#define sk_color_get_b(c)               (((c) >>  0) & 0xFF)
+#define sk_color_set_argb(a, r, g, b) (((a) << 24) | ((r) << 16) | ((g) << 8) | (b))
+#define sk_color_get_a(c) (((c) >> 24) & 0xFF)
+#define sk_color_get_r(c) (((c) >> 16) & 0xFF)
+#define sk_color_get_g(c) (((c) >> 8) & 0xFF)
+#define sk_color_get_b(c) (((c) >> 0) & 0xFF)
 
 typedef enum {
     INTERSECT_SK_CLIPTYPE,
@@ -70,8 +70,8 @@ typedef struct {
 } sk_surfaceprops_t;
 
 typedef struct {
-    float   x;
-    float   y;
+    float x;
+    float y;
 } sk_point_t;
 
 typedef struct {
@@ -82,10 +82,10 @@ typedef struct {
 } sk_irect_t;
 
 typedef struct {
-    float   left;
-    float   top;
-    float   right;
-    float   bottom;
+    float left;
+    float top;
+    float right;
+    float bottom;
 } sk_rect_t;
 
 /**
@@ -142,7 +142,7 @@ typedef struct {
         }
 */
 typedef struct {
-    float   mat[9];
+    float mat[9];
 } sk_matrix_t;
 
 /**

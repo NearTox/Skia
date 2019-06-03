@@ -5,16 +5,16 @@
  * found in the LICENSE file.
  */
 
-#include "SkMultiPictureDocument.h"
+#include "src/utils/SkMultiPictureDocument.h"
 
-#include "SkMultiPictureDocumentPriv.h"
-#include "SkNWayCanvas.h"
-#include "SkPicture.h"
-#include "SkPictureRecorder.h"
-#include "SkSerialProcs.h"
-#include "SkStream.h"
-#include "SkTArray.h"
-#include "SkTo.h"
+#include "include/core/SkPicture.h"
+#include "include/core/SkPictureRecorder.h"
+#include "include/core/SkSerialProcs.h"
+#include "include/core/SkStream.h"
+#include "include/private/SkTArray.h"
+#include "include/private/SkTo.h"
+#include "include/utils/SkNWayCanvas.h"
+#include "src/utils/SkMultiPictureDocumentPriv.h"
 
 #include <limits.h>
 
@@ -54,9 +54,7 @@ struct MultiPictureDocument final : public SkDocument {
     SkTArray<sk_sp<SkPicture>> fPages;
     SkTArray<SkSize> fSizes;
     MultiPictureDocument(SkWStream* s, const SkSerialProcs* procs)
-        : SkDocument(s)
-        , fProcs(procs ? *procs : SkSerialProcs())
-    {}
+            : SkDocument(s), fProcs(procs ? *procs : SkSerialProcs()) {}
     ~MultiPictureDocument() override { this->close(); }
 
     SkCanvas* onBeginPage(SkScalar w, SkScalar h) override {
@@ -93,7 +91,7 @@ struct MultiPictureDocument final : public SkDocument {
         fSizes.reset();
     }
 };
-}
+}  // namespace
 
 sk_sp<SkDocument> SkMakeMultiPictureDocument(SkWStream* wStream, const SkSerialProcs* procs) {
     return sk_make_sp<MultiPictureDocument>(wStream, procs);

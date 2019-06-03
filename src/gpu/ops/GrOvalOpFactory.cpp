@@ -5,26 +5,27 @@
  * found in the LICENSE file.
  */
 
-#include "GrOvalOpFactory.h"
-#include "GrDrawOpTest.h"
-#include "GrGeometryProcessor.h"
-#include "GrOpFlushState.h"
-#include "GrProcessor.h"
-#include "GrResourceProvider.h"
-#include "GrShaderCaps.h"
-#include "GrStyle.h"
-#include "GrVertexWriter.h"
-#include "SkRRectPriv.h"
-#include "SkStrokeRec.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLGeometryProcessor.h"
-#include "glsl/GrGLSLProgramDataManager.h"
-#include "glsl/GrGLSLUniformHandler.h"
-#include "glsl/GrGLSLUtil.h"
-#include "glsl/GrGLSLVarying.h"
-#include "glsl/GrGLSLVertexGeoBuilder.h"
-#include "ops/GrMeshDrawOp.h"
-#include "ops/GrSimpleMeshDrawOpHelper.h"
+#include "src/gpu/ops/GrOvalOpFactory.h"
+#include "include/core/SkStrokeRec.h"
+#include "src/core/SkRRectPriv.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrDrawOpTest.h"
+#include "src/gpu/GrGeometryProcessor.h"
+#include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/GrProcessor.h"
+#include "src/gpu/GrResourceProvider.h"
+#include "src/gpu/GrShaderCaps.h"
+#include "src/gpu/GrStyle.h"
+#include "src/gpu/GrVertexWriter.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#include "src/gpu/glsl/GrGLSLUtil.h"
+#include "src/gpu/glsl/GrGLSLVarying.h"
+#include "src/gpu/glsl/GrGLSLVertexGeoBuilder.h"
+#include "src/gpu/ops/GrMeshDrawOp.h"
+#include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 
 #include <utility>
 
@@ -34,10 +35,10 @@ static inline bool circle_stays_circle(const SkMatrix& m) { return m.isSimilarit
 
 // Produces TriStrip vertex data for an origin-centered rectangle from [-x, -y] to [x, y]
 static inline GrVertexWriter::TriStrip<float> origin_centered_tri_strip(float x, float y) {
-    return GrVertexWriter::TriStrip<float>{ -x, -y, x, y };
+    return GrVertexWriter::TriStrip<float>{-x, -y, x, y};
 };
 
-}
+}  // namespace
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -83,8 +84,8 @@ public:
         if (roundCaps) {
             SkASSERT(stroke);
             SkASSERT(clipPlane);
-            fInRoundCapCenters =
-                    {"inRoundCapCenters", kFloat4_GrVertexAttribType, kFloat4_GrSLType};
+            fInRoundCapCenters = {"inRoundCapCenters", kFloat4_GrVertexAttribType,
+                                  kFloat4_GrSLType};
         }
         this->setVertexAttributes(&fInPosition, 7);
     }
@@ -431,7 +432,8 @@ private:
                              nextDash.y = min(nextDash.y, lastIntervalLength);
                          }
                     }
-            )", fnName.c_str(), fnName.c_str());
+            )",
+                                     fnName.c_str(), fnName.c_str());
             fragBuilder->codeAppendf(R"(
                     if (angleFromStart - x - dashParams.y < -0.01) {
                          dashAlpha += half(%s(x - wrapDashes.x, d) * %s(wrapDashes.y - x, d));
@@ -444,15 +446,17 @@ private:
                              prevDash.x = max(prevDash.x, 0);
                          }
                     }
-            )", fnName.c_str(), fnName.c_str());
+            )",
+                                     fnName.c_str(), fnName.c_str());
             fragBuilder->codeAppendf(R"(
                     dashAlpha += half(%s(x - currDash.x, d) * %s(currDash.y - x, d));
                     dashAlpha += half(%s(x - nextDash.x, d) * %s(nextDash.y - x, d));
                     dashAlpha += half(%s(x - prevDash.x, d) * %s(prevDash.y - x, d));
                     dashAlpha = min(dashAlpha, 1);
                     edgeAlpha *= dashAlpha;
-            )", fnName.c_str(), fnName.c_str(), fnName.c_str(), fnName.c_str(), fnName.c_str(),
-                fnName.c_str());
+            )",
+                                     fnName.c_str(), fnName.c_str(), fnName.c_str(), fnName.c_str(),
+                                     fnName.c_str(), fnName.c_str());
             fragBuilder->codeAppendf("%s = half4(edgeAlpha);", args.fOutputCoverage);
         }
 
@@ -487,7 +491,8 @@ private:
 };
 
 #if GR_TEST_UTILS
-sk_sp<GrGeometryProcessor> ButtCapDashedCircleGeometryProcessor::TestCreate(GrProcessorTestData* d) {
+sk_sp<GrGeometryProcessor> ButtCapDashedCircleGeometryProcessor::TestCreate(
+        GrProcessorTestData* d) {
     bool wideColor = d->fRandom->nextBool();
     const SkMatrix& matrix = GrTest::TestMatrix(d->fRandom);
     return sk_sp<GrGeometryProcessor>(new ButtCapDashedCircleGeometryProcessor(wideColor, matrix));
@@ -506,15 +511,21 @@ sk_sp<GrGeometryProcessor> ButtCapDashedCircleGeometryProcessor::TestCreate(GrPr
 
 class EllipseGeometryProcessor : public GrGeometryProcessor {
 public:
-    EllipseGeometryProcessor(bool stroke, bool wideColor, const SkMatrix& localMatrix)
-    : INHERITED(kEllipseGeometryProcessor_ClassID)
-    , fLocalMatrix(localMatrix) {
+    EllipseGeometryProcessor(bool stroke, bool wideColor, bool useScale,
+                             const SkMatrix& localMatrix)
+            : INHERITED(kEllipseGeometryProcessor_ClassID)
+            , fLocalMatrix(localMatrix)
+            , fStroke(stroke)
+            , fUseScale(useScale) {
         fInPosition = {"inPosition", kFloat2_GrVertexAttribType, kFloat2_GrSLType};
         fInColor = MakeColorAttribute("inColor", wideColor);
-        fInEllipseOffset = {"inEllipseOffset", kFloat2_GrVertexAttribType, kHalf2_GrSLType};
-        fInEllipseRadii = {"inEllipseRadii", kFloat4_GrVertexAttribType, kHalf4_GrSLType};
+        if (useScale) {
+            fInEllipseOffset = {"inEllipseOffset", kFloat3_GrVertexAttribType, kFloat3_GrSLType};
+        } else {
+            fInEllipseOffset = {"inEllipseOffset", kFloat2_GrVertexAttribType, kFloat2_GrSLType};
+        }
+        fInEllipseRadii = {"inEllipseRadii", kFloat4_GrVertexAttribType, kFloat4_GrSLType};
         this->setVertexAttributes(&fInPosition, 4);
-        fStroke = stroke;
     }
 
     ~EllipseGeometryProcessor() override {}
@@ -543,12 +554,13 @@ private:
             // emit attributes
             varyingHandler->emitAttributes(egp);
 
-            GrGLSLVarying ellipseOffsets(kHalf2_GrSLType);
+            GrSLType offsetType = egp.fUseScale ? kFloat3_GrSLType : kFloat2_GrSLType;
+            GrGLSLVarying ellipseOffsets(offsetType);
             varyingHandler->addVarying("EllipseOffsets", &ellipseOffsets);
             vertBuilder->codeAppendf("%s = %s;", ellipseOffsets.vsOut(),
                                      egp.fInEllipseOffset.name());
 
-            GrGLSLVarying ellipseRadii(kHalf4_GrSLType);
+            GrGLSLVarying ellipseRadii(kFloat4_GrSLType);
             varyingHandler->addVarying("EllipseRadii", &ellipseRadii);
             vertBuilder->codeAppendf("%s = %s;", ellipseRadii.vsOut(), egp.fInEllipseRadii.name());
 
@@ -573,31 +585,63 @@ private:
             // the distance by the gradient, non-uniformly scaled by the inverse of the
             // ellipse size.
 
+            // On medium precision devices, we scale the denominator of the distance equation
+            // before taking the inverse square root to minimize the chance that we're dividing
+            // by zero, then we scale the result back.
+
             // for outer curve
-            fragBuilder->codeAppendf("half2 offset = %s;", ellipseOffsets.fsIn());
+            fragBuilder->codeAppendf("float2 offset = %s.xy;", ellipseOffsets.fsIn());
             if (egp.fStroke) {
                 fragBuilder->codeAppendf("offset *= %s.xy;", ellipseRadii.fsIn());
             }
-            fragBuilder->codeAppend("half test = dot(offset, offset) - 1.0;");
-            fragBuilder->codeAppendf("half2 grad = 2.0*offset*%s.xy;", ellipseRadii.fsIn());
-            fragBuilder->codeAppend("half grad_dot = dot(grad, grad);");
+            fragBuilder->codeAppend("float test = dot(offset, offset) - 1.0;");
+            if (egp.fUseScale) {
+                fragBuilder->codeAppendf("float2 grad = 2.0*offset*(%s.z*%s.xy);",
+                                         ellipseOffsets.fsIn(), ellipseRadii.fsIn());
+            } else {
+                fragBuilder->codeAppendf("float2 grad = 2.0*offset*%s.xy;", ellipseRadii.fsIn());
+            }
+            fragBuilder->codeAppend("float grad_dot = dot(grad, grad);");
 
             // avoid calling inversesqrt on zero.
-            fragBuilder->codeAppend("grad_dot = max(grad_dot, 1.0e-4);");
-            fragBuilder->codeAppend("half invlen = half(inversesqrt(grad_dot));");
-            fragBuilder->codeAppend("half edgeAlpha = saturate(0.5-test*invlen);");
+            if (args.fShaderCaps->floatIs32Bits()) {
+                fragBuilder->codeAppend("grad_dot = max(grad_dot, 1.1755e-38);");
+            } else {
+                fragBuilder->codeAppend("grad_dot = max(grad_dot, 6.1036e-5);");
+            }
+            if (egp.fUseScale) {
+                fragBuilder->codeAppendf("float invlen = %s.z*inversesqrt(grad_dot);",
+                                         ellipseOffsets.fsIn());
+            } else {
+                fragBuilder->codeAppend("float invlen = inversesqrt(grad_dot);");
+            }
+            fragBuilder->codeAppend("float edgeAlpha = saturate(0.5-test*invlen);");
 
             // for inner curve
             if (egp.fStroke) {
-                fragBuilder->codeAppendf("offset = %s*%s.zw;", ellipseOffsets.fsIn(),
+                fragBuilder->codeAppendf("offset = %s.xy*%s.zw;", ellipseOffsets.fsIn(),
                                          ellipseRadii.fsIn());
                 fragBuilder->codeAppend("test = dot(offset, offset) - 1.0;");
-                fragBuilder->codeAppendf("grad = 2.0*offset*%s.zw;", ellipseRadii.fsIn());
-                fragBuilder->codeAppend("invlen = half(inversesqrt(dot(grad, grad)));");
+                if (egp.fUseScale) {
+                    fragBuilder->codeAppendf("grad = 2.0*offset*(%s.z*%s.zw);",
+                                             ellipseOffsets.fsIn(), ellipseRadii.fsIn());
+                } else {
+                    fragBuilder->codeAppendf("grad = 2.0*offset*%s.zw;", ellipseRadii.fsIn());
+                }
+                fragBuilder->codeAppend("grad_dot = dot(grad, grad);");
+                if (!args.fShaderCaps->floatIs32Bits()) {
+                    fragBuilder->codeAppend("grad_dot = max(grad_dot, 6.1036e-5);");
+                }
+                if (egp.fUseScale) {
+                    fragBuilder->codeAppendf("invlen = %s.z*inversesqrt(grad_dot);",
+                                             ellipseOffsets.fsIn());
+                } else {
+                    fragBuilder->codeAppend("invlen = inversesqrt(grad_dot);");
+                }
                 fragBuilder->codeAppend("edgeAlpha *= saturate(0.5+test*invlen);");
             }
 
-            fragBuilder->codeAppendf("%s = half4(edgeAlpha);", args.fOutputCoverage);
+            fragBuilder->codeAppendf("%s = half4(half(edgeAlpha));", args.fOutputCoverage);
         }
 
         static void GenKey(const GrGeometryProcessor& gp,
@@ -626,6 +670,7 @@ private:
 
     SkMatrix fLocalMatrix;
     bool fStroke;
+    bool fUseScale;
 
     GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 
@@ -638,7 +683,7 @@ GR_DEFINE_GEOMETRY_PROCESSOR_TEST(EllipseGeometryProcessor);
 sk_sp<GrGeometryProcessor> EllipseGeometryProcessor::TestCreate(GrProcessorTestData* d) {
     return sk_sp<GrGeometryProcessor>(
             new EllipseGeometryProcessor(d->fRandom->nextBool(), d->fRandom->nextBool(),
-                                         GrTest::TestMatrix(d->fRandom)));
+                                         d->fRandom->nextBool(), GrTest::TestMatrix(d->fRandom)));
 }
 #endif
 
@@ -657,14 +702,22 @@ enum class DIEllipseStyle { kStroke = 0, kHairline, kFill };
 
 class DIEllipseGeometryProcessor : public GrGeometryProcessor {
 public:
-    DIEllipseGeometryProcessor(bool wideColor, const SkMatrix& viewMatrix, DIEllipseStyle style)
+    DIEllipseGeometryProcessor(bool wideColor, bool useScale, const SkMatrix& viewMatrix,
+                               DIEllipseStyle style)
             : INHERITED(kDIEllipseGeometryProcessor_ClassID)
-            , fViewMatrix(viewMatrix) {
-        fStyle = style;
+            , fViewMatrix(viewMatrix)
+            , fUseScale(useScale)
+            , fStyle(style) {
         fInPosition = {"inPosition", kFloat2_GrVertexAttribType, kFloat2_GrSLType};
         fInColor = MakeColorAttribute("inColor", wideColor);
-        fInEllipseOffsets0 = {"inEllipseOffsets0", kFloat2_GrVertexAttribType, kHalf2_GrSLType};
-        fInEllipseOffsets1 = {"inEllipseOffsets1", kFloat2_GrVertexAttribType, kHalf2_GrSLType};
+        if (useScale) {
+            fInEllipseOffsets0 = {"inEllipseOffsets0", kFloat3_GrVertexAttribType,
+                                  kFloat3_GrSLType};
+        } else {
+            fInEllipseOffsets0 = {"inEllipseOffsets0", kFloat2_GrVertexAttribType,
+                                  kFloat2_GrSLType};
+        }
+        fInEllipseOffsets1 = {"inEllipseOffsets1", kFloat2_GrVertexAttribType, kFloat2_GrSLType};
         this->setVertexAttributes(&fInPosition, 4);
     }
 
@@ -694,11 +747,12 @@ private:
             // emit attributes
             varyingHandler->emitAttributes(diegp);
 
-            GrGLSLVarying offsets0(kHalf2_GrSLType);
+            GrSLType offsetType = (diegp.fUseScale) ? kFloat3_GrSLType : kFloat2_GrSLType;
+            GrGLSLVarying offsets0(offsetType);
             varyingHandler->addVarying("EllipseOffsets0", &offsets0);
             vertBuilder->codeAppendf("%s = %s;", offsets0.vsOut(), diegp.fInEllipseOffsets0.name());
 
-            GrGLSLVarying offsets1(kHalf2_GrSLType);
+            GrGLSLVarying offsets1(kFloat2_GrSLType);
             varyingHandler->addVarying("EllipseOffsets1", &offsets1);
             vertBuilder->codeAppendf("%s = %s;", offsets1.vsOut(), diegp.fInEllipseOffsets1.name());
 
@@ -721,42 +775,62 @@ private:
                                  args.fFPCoordTransformHandler);
 
             // for outer curve
-            fragBuilder->codeAppendf("half2 scaledOffset = %s.xy;", offsets0.fsIn());
-            fragBuilder->codeAppend("half test = dot(scaledOffset, scaledOffset) - 1.0;");
-            fragBuilder->codeAppendf("half2 duvdx = half2(dFdx(%s));", offsets0.fsIn());
-            fragBuilder->codeAppendf("half2 duvdy = half2(dFdy(%s));", offsets0.fsIn());
+            fragBuilder->codeAppendf("float2 scaledOffset = %s.xy;", offsets0.fsIn());
+            fragBuilder->codeAppend("float test = dot(scaledOffset, scaledOffset) - 1.0;");
+            fragBuilder->codeAppendf("float2 duvdx = dFdx(%s.xy);", offsets0.fsIn());
+            fragBuilder->codeAppendf("float2 duvdy = dFdy(%s.xy);", offsets0.fsIn());
             fragBuilder->codeAppendf(
-                    "half2 grad = half2(2.0*%s.x*duvdx.x + 2.0*%s.y*duvdx.y,"
-                    "                  2.0*%s.x*duvdy.x + 2.0*%s.y*duvdy.y);",
+                    "float2 grad = float2(%s.x*duvdx.x + %s.y*duvdx.y,"
+                    "                     %s.x*duvdy.x + %s.y*duvdy.y);",
                     offsets0.fsIn(), offsets0.fsIn(), offsets0.fsIn(), offsets0.fsIn());
+            if (diegp.fUseScale) {
+                fragBuilder->codeAppendf("grad *= %s.z;", offsets0.fsIn());
+            }
 
-            fragBuilder->codeAppend("half grad_dot = dot(grad, grad);");
+            fragBuilder->codeAppend("float grad_dot = 4.0*dot(grad, grad);");
             // avoid calling inversesqrt on zero.
-            fragBuilder->codeAppend("grad_dot = max(grad_dot, 1.0e-4);");
-            fragBuilder->codeAppend("half invlen = half(inversesqrt(grad_dot));");
+            if (args.fShaderCaps->floatIs32Bits()) {
+                fragBuilder->codeAppend("grad_dot = max(grad_dot, 1.1755e-38);");
+            } else {
+                fragBuilder->codeAppend("grad_dot = max(grad_dot, 6.1036e-5);");
+            }
+            fragBuilder->codeAppend("float invlen = inversesqrt(grad_dot);");
+            if (diegp.fUseScale) {
+                fragBuilder->codeAppendf("invlen *= %s.z;", offsets0.fsIn());
+            }
             if (DIEllipseStyle::kHairline == diegp.fStyle) {
                 // can probably do this with one step
-                fragBuilder->codeAppend("half edgeAlpha = saturate(1.0-test*invlen);");
+                fragBuilder->codeAppend("float edgeAlpha = saturate(1.0-test*invlen);");
                 fragBuilder->codeAppend("edgeAlpha *= saturate(1.0+test*invlen);");
             } else {
-                fragBuilder->codeAppend("half edgeAlpha = saturate(0.5-test*invlen);");
+                fragBuilder->codeAppend("float edgeAlpha = saturate(0.5-test*invlen);");
             }
 
             // for inner curve
             if (DIEllipseStyle::kStroke == diegp.fStyle) {
                 fragBuilder->codeAppendf("scaledOffset = %s.xy;", offsets1.fsIn());
                 fragBuilder->codeAppend("test = dot(scaledOffset, scaledOffset) - 1.0;");
-                fragBuilder->codeAppendf("duvdx = half2(dFdx(%s));", offsets1.fsIn());
-                fragBuilder->codeAppendf("duvdy = half2(dFdy(%s));", offsets1.fsIn());
+                fragBuilder->codeAppendf("duvdx = float2(dFdx(%s));", offsets1.fsIn());
+                fragBuilder->codeAppendf("duvdy = float2(dFdy(%s));", offsets1.fsIn());
                 fragBuilder->codeAppendf(
-                        "grad = half2(2.0*%s.x*duvdx.x + 2.0*%s.y*duvdx.y,"
-                        "             2.0*%s.x*duvdy.x + 2.0*%s.y*duvdy.y);",
+                        "grad = float2(%s.x*duvdx.x + %s.y*duvdx.y,"
+                        "              %s.x*duvdy.x + %s.y*duvdy.y);",
                         offsets1.fsIn(), offsets1.fsIn(), offsets1.fsIn(), offsets1.fsIn());
-                fragBuilder->codeAppend("invlen = half(inversesqrt(dot(grad, grad)));");
+                if (diegp.fUseScale) {
+                    fragBuilder->codeAppendf("grad *= %s.z;", offsets0.fsIn());
+                }
+                fragBuilder->codeAppend("grad_dot = 4.0*dot(grad, grad);");
+                if (!args.fShaderCaps->floatIs32Bits()) {
+                    fragBuilder->codeAppend("grad_dot = max(grad_dot, 6.1036e-5);");
+                }
+                fragBuilder->codeAppend("invlen = inversesqrt(grad_dot);");
+                if (diegp.fUseScale) {
+                    fragBuilder->codeAppendf("invlen *= %s.z;", offsets0.fsIn());
+                }
                 fragBuilder->codeAppend("edgeAlpha *= saturate(0.5+test*invlen);");
             }
 
-            fragBuilder->codeAppendf("%s = half4(edgeAlpha);", args.fOutputCoverage);
+            fragBuilder->codeAppendf("%s = half4(half(edgeAlpha));", args.fOutputCoverage);
         }
 
         static void GenKey(const GrGeometryProcessor& gp,
@@ -788,13 +862,13 @@ private:
         typedef GrGLSLGeometryProcessor INHERITED;
     };
 
-
     Attribute fInPosition;
     Attribute fInColor;
     Attribute fInEllipseOffsets0;
     Attribute fInEllipseOffsets1;
 
     SkMatrix fViewMatrix;
+    bool fUseScale;
     DIEllipseStyle fStyle;
 
     GR_DECLARE_GEOMETRY_PROCESSOR_TEST
@@ -807,7 +881,7 @@ GR_DEFINE_GEOMETRY_PROCESSOR_TEST(DIEllipseGeometryProcessor);
 #if GR_TEST_UTILS
 sk_sp<GrGeometryProcessor> DIEllipseGeometryProcessor::TestCreate(GrProcessorTestData* d) {
     return sk_sp<GrGeometryProcessor>(new DIEllipseGeometryProcessor(
-            d->fRandom->nextBool(), GrTest::TestMatrix(d->fRandom),
+            d->fRandom->nextBool(), d->fRandom->nextBool(), GrTest::TestMatrix(d->fRandom),
             (DIEllipseStyle)(d->fRandom->nextRangeU(0, 2))));
 }
 #endif
@@ -846,28 +920,20 @@ static const uint16_t gStrokeCircleIndices[] = {
 
 static constexpr SkScalar kOctOffset = 0.41421356237f;  // sqrt(2) - 1
 static constexpr SkPoint kOctagonOuter[] = {
-    SkPoint::Make(-kOctOffset, -1),
-    SkPoint::Make( kOctOffset, -1),
-    SkPoint::Make( 1, -kOctOffset),
-    SkPoint::Make( 1,  kOctOffset),
-    SkPoint::Make( kOctOffset, 1),
-    SkPoint::Make(-kOctOffset, 1),
-    SkPoint::Make(-1,  kOctOffset),
-    SkPoint::Make(-1, -kOctOffset),
+        SkPoint::Make(-kOctOffset, -1), SkPoint::Make(kOctOffset, -1),
+        SkPoint::Make(1, -kOctOffset),  SkPoint::Make(1, kOctOffset),
+        SkPoint::Make(kOctOffset, 1),   SkPoint::Make(-kOctOffset, 1),
+        SkPoint::Make(-1, kOctOffset),  SkPoint::Make(-1, -kOctOffset),
 };
 
 // cosine and sine of pi/8
 static constexpr SkScalar kCosPi8 = 0.923579533f;
 static constexpr SkScalar kSinPi8 = 0.382683432f;
 static constexpr SkPoint kOctagonInner[] = {
-    SkPoint::Make(-kSinPi8, -kCosPi8),
-    SkPoint::Make( kSinPi8, -kCosPi8),
-    SkPoint::Make( kCosPi8, -kSinPi8),
-    SkPoint::Make( kCosPi8,  kSinPi8),
-    SkPoint::Make( kSinPi8,  kCosPi8),
-    SkPoint::Make(-kSinPi8,  kCosPi8),
-    SkPoint::Make(-kCosPi8,  kSinPi8),
-    SkPoint::Make(-kCosPi8, -kSinPi8),
+        SkPoint::Make(-kSinPi8, -kCosPi8), SkPoint::Make(kSinPi8, -kCosPi8),
+        SkPoint::Make(kCosPi8, -kSinPi8),  SkPoint::Make(kCosPi8, kSinPi8),
+        SkPoint::Make(kSinPi8, kCosPi8),   SkPoint::Make(-kSinPi8, kCosPi8),
+        SkPoint::Make(-kCosPi8, kSinPi8),  SkPoint::Make(-kCosPi8, -kSinPi8),
 };
 
 static const int kIndicesPerFillCircle = SK_ARRAY_COUNT(gFillCircleIndices);
@@ -953,7 +1019,6 @@ public:
         SkStrokeRec::Style recStyle = stroke.getStyle();
 
         fRoundCaps = false;
-        fWideColor = !SkPMColor4fFitsInBytes(color);
 
         viewMatrix.mapPoints(&center, 1);
         radius = viewMatrix.mapRadius(radius);
@@ -999,9 +1064,11 @@ public:
             // The shader operates in a space where the circle is translated to be centered at the
             // origin. Here we compute points on the unit circle at the starting and ending angles.
             SkPoint startPoint, stopPoint;
-            startPoint.fY = SkScalarSinCos(arcParams->fStartAngleRadians, &startPoint.fX);
+            startPoint.fY = SkScalarSin(arcParams->fStartAngleRadians);
+            startPoint.fX = SkScalarCos(arcParams->fStartAngleRadians);
             SkScalar endAngle = arcParams->fStartAngleRadians + arcParams->fSweepAngleRadians;
-            stopPoint.fY = SkScalarSinCos(endAngle, &stopPoint.fX);
+            stopPoint.fY = SkScalarSin(endAngle);
+            stopPoint.fX = SkScalarCos(endAngle);
 
             // Adjust the start and end points based on the view matrix (to handle rotated arcs)
             startPoint = viewMatrix.mapVector(startPoint.fX, startPoint.fY);
@@ -1149,11 +1216,12 @@ public:
     }
 #endif
 
-    GrProcessorSet::Analysis finalize(
-            const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType) override {
+    GrProcessorSet::Analysis finalize(const GrCaps& caps, const GrAppliedClip* clip,
+                                      GrFSAAType fsaaType, GrClampType clampType) override {
         SkPMColor4f* color = &fCircles.front().fColor;
-        return fHelper.finalizeProcessors(
-                caps, clip, fsaaType, GrProcessorAnalysisCoverage::kSingleChannel, color);
+        return fHelper.finalizeProcessors(caps, clip, fsaaType, clampType,
+                                          GrProcessorAnalysisCoverage::kSingleChannel, color,
+                                          &fWideColor);
     }
 
     FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
@@ -1166,9 +1234,9 @@ private:
         }
 
         // Setup geometry processor
-        sk_sp<GrGeometryProcessor> gp(new CircleGeometryProcessor(
-                !fAllFill, fClipPlane, fClipPlaneIsect, fClipPlaneUnion, fRoundCaps, fWideColor,
-                localMatrix));
+        sk_sp<GrGeometryProcessor> gp(
+                new CircleGeometryProcessor(!fAllFill, fClipPlane, fClipPlaneIsect, fClipPlaneUnion,
+                                            fRoundCaps, fWideColor, localMatrix));
 
         sk_sp<const GrBuffer> vertexBuffer;
         int firstVertex;
@@ -1196,16 +1264,16 @@ private:
 
             // The inner radius in the vertex data must be specified in normalized space.
             innerRadius = innerRadius / outerRadius;
-            SkPoint radii = { outerRadius, innerRadius };
+            SkPoint radii = {outerRadius, innerRadius};
 
             SkPoint center = SkPoint::Make(bounds.centerX(), bounds.centerY());
             SkScalar halfWidth = 0.5f * bounds.width();
 
-            SkVector geoClipPlane = { 0, 0 };
+            SkVector geoClipPlane = {0, 0};
             SkScalar offsetClipDist = SK_Scalar1;
             if (!circle.fStroked && fClipPlane && fClipPlaneIsect &&
-                    (circle.fClipPlane[0] * circle.fIsectPlane[0] +
-                     circle.fClipPlane[1] * circle.fIsectPlane[1]) < 0.0f) {
+                (circle.fClipPlane[0] * circle.fIsectPlane[0] +
+                 circle.fClipPlane[1] * circle.fIsectPlane[1]) < 0.0f) {
                 // Acute arc. Clip the vertices to the perpendicular half-plane. We've constructed
                 // fClipPlane to be clockwise, and fISectPlane to be CCW, so we can can rotate them
                 // each 90 degrees to point "out", then average them. We back off by 1/2 pixel so
@@ -1221,10 +1289,7 @@ private:
                 // compute the vertex position from this.
                 SkScalar dist = SkTMin(kOctagonOuter[i].dot(geoClipPlane) + offsetClipDist, 0.0f);
                 SkVector offset = kOctagonOuter[i] - geoClipPlane * dist;
-                vertices.write(center + offset * halfWidth,
-                               color,
-                               offset,
-                               radii);
+                vertices.write(center + offset * halfWidth, color, offset, radii);
                 if (fClipPlane) {
                     vertices.write(circle.fClipPlane);
                 }
@@ -1397,7 +1462,8 @@ public:
         if (!startAngle) {
             start = {1, 0};
         } else {
-            start.fY = SkScalarSinCos(startAngle, &start.fX);
+            start.fY = SkScalarSin(startAngle);
+            start.fX = SkScalarCos(startAngle);
         }
         viewMatrix.mapVectors(&start, 1);
         startAngle = SkScalarATan2(start.fY, start.fX);
@@ -1432,16 +1498,8 @@ public:
         if (reflection) {
             totalAngle = -totalAngle;
         }
-        fCircles.push_back(Circle{
-            color,
-            outerRadius,
-            innerRadius,
-            onAngle,
-            totalAngle,
-            startAngle,
-            phaseAngle,
-            devBounds
-        });
+        fCircles.push_back(Circle{color, outerRadius, innerRadius, onAngle, totalAngle, startAngle,
+                                  phaseAngle, devBounds});
         // Use the original radius and stroke radius for the bounds so that it does not include the
         // AA bloat.
         radius += halfWidth;
@@ -1450,7 +1508,6 @@ public:
                 HasAABloat::kYes, IsZeroArea::kNo);
         fVertCount = circle_type_to_vert_count(true);
         fIndexCount = circle_type_to_index_count(true);
-        fWideColor = !SkPMColor4fFitsInBytes(color);
     }
 
     const char* name() const override { return "ButtCappedDashedCircleOp"; }
@@ -1479,11 +1536,12 @@ public:
     }
 #endif
 
-    GrProcessorSet::Analysis finalize(
-            const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType) override {
+    GrProcessorSet::Analysis finalize(const GrCaps& caps, const GrAppliedClip* clip,
+                                      GrFSAAType fsaaType, GrClampType clampType) override {
         SkPMColor4f* color = &fCircles.front().fColor;
-        return fHelper.finalizeProcessors(
-                caps, clip, fsaaType, GrProcessorAnalysisCoverage::kSingleChannel, color);
+        return fHelper.finalizeProcessors(caps, clip, fsaaType, clampType,
+                                          GrProcessorAnalysisCoverage::kSingleChannel, color,
+                                          &fWideColor);
     }
 
     FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
@@ -1496,8 +1554,8 @@ private:
         }
 
         // Setup geometry processor
-        sk_sp<GrGeometryProcessor> gp(new ButtCapDashedCircleGeometryProcessor(fWideColor,
-                                                                               localMatrix));
+        sk_sp<GrGeometryProcessor> gp(
+                new ButtCapDashedCircleGeometryProcessor(fWideColor, localMatrix));
 
         sk_sp<const GrBuffer> vertexBuffer;
         int firstVertex;
@@ -1524,9 +1582,10 @@ private:
             auto normInnerRadius = circle.fInnerRadius / circle.fOuterRadius;
             const SkRect& bounds = circle.fDevBounds;
             bool reflect = false;
-            struct { float onAngle, totalAngle, startAngle, phaseAngle; } dashParams = {
-                circle.fOnAngle, circle.fTotalAngle, circle.fStartAngle, circle.fPhaseAngle
-            };
+            struct {
+                float onAngle, totalAngle, startAngle, phaseAngle;
+            } dashParams = {circle.fOnAngle, circle.fTotalAngle, circle.fStartAngle,
+                            circle.fPhaseAngle};
             if (dashParams.totalAngle < 0) {
                 reflect = true;
                 dashParams.totalAngle = -dashParams.totalAngle;
@@ -1542,9 +1601,7 @@ private:
             SkPoint center = SkPoint::Make(bounds.centerX(), bounds.centerY());
             SkScalar halfWidth = 0.5f * bounds.width();
 
-            auto reflectY = [=](const SkPoint& p) {
-                return SkPoint{ p.fX, reflect ? -p.fY : p.fY };
-            };
+            auto reflectY = [=](const SkPoint& p) { return SkPoint{p.fX, reflect ? -p.fY : p.fY}; };
 
             for (int i = 0; i < 8; ++i) {
                 vertices.write(center + kOctagonOuter[i] * halfWidth,
@@ -1709,14 +1766,25 @@ public:
             params.fXRadius += scaledStroke.fX;
             params.fYRadius += scaledStroke.fY;
         }
-        return Helper::FactoryHelper<EllipseOp>(context, std::move(paint), viewMatrix,
-                                                params, stroke);
+
+        // For large ovals with low precision floats, we fall back to the path renderer.
+        // To compute the AA at the edge we divide by the gradient, which is clamped to a
+        // minimum value to avoid divides by zero. With large ovals and low precision this
+        // leads to blurring at the edge of the oval.
+        const SkScalar kMaxOvalRadius = 16384;
+        if (!context->priv().caps()->shaderCaps()->floatIs32Bits() &&
+            (params.fXRadius >= kMaxOvalRadius || params.fYRadius >= kMaxOvalRadius)) {
+            return nullptr;
+        }
+
+        return Helper::FactoryHelper<EllipseOp>(context, std::move(paint), viewMatrix, params,
+                                                stroke);
     }
 
     EllipseOp(const Helper::MakeArgs& helperArgs, const SkPMColor4f& color,
               const SkMatrix& viewMatrix, const DeviceSpaceParams& params,
               const SkStrokeRec& stroke)
-            : INHERITED(ClassID()), fHelper(helperArgs, GrAAType::kCoverage) {
+            : INHERITED(ClassID()), fHelper(helperArgs, GrAAType::kCoverage), fUseScale(false) {
         SkStrokeRec::Style style = stroke.getStyle();
         bool isStrokeOnly =
                 SkStrokeRec::kStroke_Style == style || SkStrokeRec::kHairline_Style == style;
@@ -1735,7 +1803,6 @@ public:
 
         fStroked = isStrokeOnly && params.fInnerXRadius > 0 && params.fInnerYRadius > 0;
         fViewMatrixIfUsingLocalCoords = viewMatrix;
-        fWideColor = !SkPMColor4fFitsInBytes(color);
     }
 
     const char* name() const override { return "EllipseOp"; }
@@ -1762,11 +1829,14 @@ public:
     }
 #endif
 
-    GrProcessorSet::Analysis finalize(
-            const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType) override {
+    GrProcessorSet::Analysis finalize(const GrCaps& caps, const GrAppliedClip* clip,
+                                      GrFSAAType fsaaType, GrClampType clampType) override {
+        fUseScale = !caps.shaderCaps()->floatIs32Bits() &&
+                    !caps.shaderCaps()->hasLowFragmentPrecision();
         SkPMColor4f* color = &fEllipses.front().fColor;
-        return fHelper.finalizeProcessors(
-                caps, clip, fsaaType, GrProcessorAnalysisCoverage::kSingleChannel, color);
+        return fHelper.finalizeProcessors(caps, clip, fsaaType, clampType,
+                                          GrProcessorAnalysisCoverage::kSingleChannel, color,
+                                          &fWideColor);
     }
 
     FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
@@ -1779,8 +1849,8 @@ private:
         }
 
         // Setup geometry processor
-        sk_sp<GrGeometryProcessor> gp(new EllipseGeometryProcessor(fStroked, fWideColor,
-                                                                   localMatrix));
+        sk_sp<GrGeometryProcessor> gp(
+                new EllipseGeometryProcessor(fStroked, fWideColor, fUseScale, localMatrix));
         QuadHelper helper(target, gp->vertexStride(), fEllipses.count());
         GrVertexWriter verts{helper.vertices()};
         if (!verts.fPtr) {
@@ -1793,12 +1863,11 @@ private:
             SkScalar yRadius = ellipse.fYRadius;
 
             // Compute the reciprocals of the radii here to save time in the shader
-            struct { float xOuter, yOuter, xInner, yInner; } invRadii = {
-                SkScalarInvert(xRadius),
-                SkScalarInvert(yRadius),
-                SkScalarInvert(ellipse.fInnerXRadius),
-                SkScalarInvert(ellipse.fInnerYRadius)
-            };
+            struct {
+                float xOuter, yOuter, xInner, yInner;
+            } invRadii = {SkScalarInvert(xRadius), SkScalarInvert(yRadius),
+                          SkScalarInvert(ellipse.fInnerXRadius),
+                          SkScalarInvert(ellipse.fInnerYRadius)};
             SkScalar xMaxOffset = xRadius + SK_ScalarHalf;
             SkScalar yMaxOffset = yRadius + SK_ScalarHalf;
 
@@ -1813,6 +1882,7 @@ private:
             verts.writeQuad(GrVertexWriter::TriStripFromRect(ellipse.fDevBounds),
                             color,
                             origin_centered_tri_strip(xMaxOffset, yMaxOffset),
+                            GrVertexWriter::If(fUseScale, SkTMax(xRadius, yRadius)),
                             invRadii);
         }
         helper.recordDraw(target, std::move(gp));
@@ -1856,6 +1926,7 @@ private:
     Helper fHelper;
     bool fStroked;
     bool fWideColor;
+    bool fUseScale;
     SkSTArray<1, Ellipse, true> fEllipses;
 
     typedef GrMeshDrawOp INHERITED;
@@ -1933,6 +2004,17 @@ public:
             params.fXRadius += strokeWidth;
             params.fYRadius += strokeWidth;
         }
+
+        // For large ovals with low precision floats, we fall back to the path renderer.
+        // To compute the AA at the edge we divide by the gradient, which is clamped to a
+        // minimum value to avoid divides by zero. With large ovals and low precision this
+        // leads to blurring at the edge of the oval.
+        const SkScalar kMaxOvalRadius = 16384;
+        if (!context->priv().caps()->shaderCaps()->floatIs32Bits() &&
+            (params.fXRadius >= kMaxOvalRadius || params.fYRadius >= kMaxOvalRadius)) {
+            return nullptr;
+        }
+
         if (DIEllipseStyle::kStroke == params.fStyle &&
             (params.fInnerXRadius <= 0 || params.fInnerYRadius <= 0)) {
             params.fStyle = DIEllipseStyle::kFill;
@@ -1942,7 +2024,7 @@ public:
 
     DIEllipseOp(Helper::MakeArgs& helperArgs, const SkPMColor4f& color,
                 const DeviceSpaceParams& params, const SkMatrix& viewMatrix)
-            : INHERITED(ClassID()), fHelper(helperArgs, GrAAType::kCoverage) {
+            : INHERITED(ClassID()), fHelper(helperArgs, GrAAType::kCoverage), fUseScale(false) {
         // This expands the outer rect so that after CTM we end up with a half-pixel border
         SkScalar a = viewMatrix[SkMatrix::kMScaleX];
         SkScalar b = viewMatrix[SkMatrix::kMSkewX];
@@ -1960,7 +2042,6 @@ public:
                                          params.fCenter.fY + params.fYRadius + geoDy)});
         this->setTransformedBounds(fEllipses[0].fBounds, viewMatrix, HasAABloat::kYes,
                                    IsZeroArea::kNo);
-        fWideColor = !SkPMColor4fFitsInBytes(color);
     }
 
     const char* name() const override { return "DIEllipseOp"; }
@@ -1987,11 +2068,14 @@ public:
     }
 #endif
 
-    GrProcessorSet::Analysis finalize(
-            const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType) override {
+    GrProcessorSet::Analysis finalize(const GrCaps& caps, const GrAppliedClip* clip,
+                                      GrFSAAType fsaaType, GrClampType clampType) override {
+        fUseScale = !caps.shaderCaps()->floatIs32Bits() &&
+                    !caps.shaderCaps()->hasLowFragmentPrecision();
         SkPMColor4f* color = &fEllipses.front().fColor;
-        return fHelper.finalizeProcessors(
-                caps, clip, fsaaType, GrProcessorAnalysisCoverage::kSingleChannel, color);
+        return fHelper.finalizeProcessors(caps, clip, fsaaType, clampType,
+                                          GrProcessorAnalysisCoverage::kSingleChannel, color,
+                                          &fWideColor);
     }
 
     FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
@@ -1999,8 +2083,8 @@ public:
 private:
     void onPrepareDraws(Target* target) override {
         // Setup geometry processor
-        sk_sp<GrGeometryProcessor> gp(
-                new DIEllipseGeometryProcessor(fWideColor, this->viewMatrix(), this->style()));
+        sk_sp<GrGeometryProcessor> gp(new DIEllipseGeometryProcessor(
+                fWideColor, fUseScale, this->viewMatrix(), this->style()));
 
         QuadHelper helper(target, gp->vertexStride(), fEllipses.count());
         GrVertexWriter verts{helper.vertices()};
@@ -2027,11 +2111,12 @@ private:
                 innerRatioY = yRadius / ellipse.fInnerYRadius;
             }
 
-            verts.writeQuad(GrVertexWriter::TriStripFromRect(ellipse.fBounds),
-                            color,
-                            origin_centered_tri_strip(1.0f + offsetDx, 1.0f + offsetDy),
-                            origin_centered_tri_strip(innerRatioX + offsetDx,
-                                                      innerRatioY + offsetDy));
+            verts.writeQuad(
+                    GrVertexWriter::TriStripFromRect(ellipse.fBounds),
+                    color,
+                    origin_centered_tri_strip(1.0f + offsetDx, 1.0f + offsetDy),
+                    GrVertexWriter::If(fUseScale, SkTMax(xRadius, yRadius)),
+                    origin_centered_tri_strip(innerRatioX + offsetDx, innerRatioY + offsetDy));
         }
         helper.recordDraw(target, std::move(gp));
     }
@@ -2078,6 +2163,7 @@ private:
 
     Helper fHelper;
     bool fWideColor;
+    bool fUseScale;
     SkSTArray<1, Ellipse, true> fEllipses;
 
     typedef GrMeshDrawOp INHERITED;
@@ -2226,8 +2312,8 @@ public:
                                           float devStrokeWidth,
                                           bool strokeOnly) {
         return Helper::FactoryHelper<CircularRRectOp>(context, std::move(paint), viewMatrix,
-                                                      devRect, devRadius,
-                                                      devStrokeWidth, strokeOnly);
+                                                      devRect, devRadius, devStrokeWidth,
+                                                      strokeOnly);
     }
     CircularRRectOp(Helper::MakeArgs& helperArgs, const SkPMColor4f& color,
                     const SkMatrix& viewMatrix, const SkRect& devRect, float devRadius,
@@ -2279,7 +2365,6 @@ public:
         fVertCount = rrect_type_to_vert_count(type);
         fIndexCount = rrect_type_to_index_count(type);
         fAllFill = (kFill_RRectType == type);
-        fWideColor = !SkPMColor4fFitsInBytes(color);
     }
 
     const char* name() const override { return "CircularRRectOp"; }
@@ -2306,11 +2391,12 @@ public:
     }
 #endif
 
-    GrProcessorSet::Analysis finalize(
-            const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType) override {
+    GrProcessorSet::Analysis finalize(const GrCaps& caps, const GrAppliedClip* clip,
+                                      GrFSAAType fsaaType, GrClampType clampType) override {
         SkPMColor4f* color = &fRRects.front().fColor;
-        return fHelper.finalizeProcessors(
-                caps, clip, fsaaType, GrProcessorAnalysisCoverage::kSingleChannel, color);
+        return fHelper.finalizeProcessors(caps, clip, fsaaType, clampType,
+                                          GrProcessorAnalysisCoverage::kSingleChannel, color,
+                                          &fWideColor);
     }
 
     FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
@@ -2322,47 +2408,31 @@ private:
         SkASSERT(smInset < bigInset);
 
         // TL
-        verts.write(bounds.fLeft + smInset, bounds.fTop + smInset,
-                    color,
-                    xOffset, 0.0f,
+        verts.write(bounds.fLeft + smInset, bounds.fTop + smInset, color, xOffset, 0.0f,
                     outerRadius, innerRadius);
 
         // TR
-        verts.write(bounds.fRight - smInset, bounds.fTop + smInset,
-                    color,
-                    xOffset, 0.0f,
+        verts.write(bounds.fRight - smInset, bounds.fTop + smInset, color, xOffset, 0.0f,
                     outerRadius, innerRadius);
 
-        verts.write(bounds.fLeft + bigInset, bounds.fTop + bigInset,
-                    color,
-                    0.0f, 0.0f,
+        verts.write(bounds.fLeft + bigInset, bounds.fTop + bigInset, color, 0.0f, 0.0f, outerRadius,
+                    innerRadius);
+
+        verts.write(bounds.fRight - bigInset, bounds.fTop + bigInset, color, 0.0f, 0.0f,
                     outerRadius, innerRadius);
 
-        verts.write(bounds.fRight - bigInset, bounds.fTop + bigInset,
-                    color,
-                    0.0f, 0.0f,
+        verts.write(bounds.fLeft + bigInset, bounds.fBottom - bigInset, color, 0.0f, 0.0f,
                     outerRadius, innerRadius);
 
-        verts.write(bounds.fLeft + bigInset, bounds.fBottom - bigInset,
-                    color,
-                    0.0f, 0.0f,
-                    outerRadius, innerRadius);
-
-        verts.write(bounds.fRight - bigInset, bounds.fBottom - bigInset,
-                    color,
-                    0.0f, 0.0f,
+        verts.write(bounds.fRight - bigInset, bounds.fBottom - bigInset, color, 0.0f, 0.0f,
                     outerRadius, innerRadius);
 
         // BL
-        verts.write(bounds.fLeft + smInset, bounds.fBottom - smInset,
-                    color,
-                    xOffset, 0.0f,
+        verts.write(bounds.fLeft + smInset, bounds.fBottom - smInset, color, xOffset, 0.0f,
                     outerRadius, innerRadius);
 
         // BR
-        verts.write(bounds.fRight - smInset, bounds.fBottom - smInset,
-                    color,
-                    xOffset, 0.0f,
+        verts.write(bounds.fRight - smInset, bounds.fBottom - smInset, color, xOffset, 0.0f,
                     outerRadius, innerRadius);
     }
 
@@ -2374,15 +2444,14 @@ private:
         }
 
         // Setup geometry processor
-        sk_sp<GrGeometryProcessor> gp(
-                new CircleGeometryProcessor(!fAllFill, false, false, false, false, fWideColor,
-                                            localMatrix));
+        sk_sp<GrGeometryProcessor> gp(new CircleGeometryProcessor(!fAllFill, false, false, false,
+                                                                  false, fWideColor, localMatrix));
 
         sk_sp<const GrBuffer> vertexBuffer;
         int firstVertex;
 
-        GrVertexWriter verts{target->makeVertexSpace(gp->vertexStride(), fVertCount,
-                                                     &vertexBuffer, &firstVertex)};
+        GrVertexWriter verts{target->makeVertexSpace(gp->vertexStride(), fVertCount, &vertexBuffer,
+                                                     &firstVertex)};
         if (!verts.fPtr) {
             SkDebugf("Could not allocate vertices\n");
             return;
@@ -2412,25 +2481,17 @@ private:
                                            ? rrect.fInnerRadius / rrect.fOuterRadius
                                            : -1.0f / rrect.fOuterRadius;
             for (int i = 0; i < 4; ++i) {
-                verts.write(bounds.fLeft, yCoords[i],
-                            color,
-                            -1.0f, yOuterRadii[i],
+                verts.write(bounds.fLeft, yCoords[i], color, -1.0f, yOuterRadii[i], outerRadius,
+                            innerRadius);
+
+                verts.write(bounds.fLeft + outerRadius, yCoords[i], color, 0.0f, yOuterRadii[i],
                             outerRadius, innerRadius);
 
-                verts.write(bounds.fLeft + outerRadius, yCoords[i],
-                            color,
-                            0.0f, yOuterRadii[i],
+                verts.write(bounds.fRight - outerRadius, yCoords[i], color, 0.0f, yOuterRadii[i],
                             outerRadius, innerRadius);
 
-                verts.write(bounds.fRight - outerRadius, yCoords[i],
-                            color,
-                            0.0f, yOuterRadii[i],
-                            outerRadius, innerRadius);
-
-                verts.write(bounds.fRight, yCoords[i],
-                            color,
-                            1.0f, yOuterRadii[i],
-                            outerRadius, innerRadius);
+                verts.write(bounds.fRight, yCoords[i], color, 1.0f, yOuterRadii[i], outerRadius,
+                            innerRadius);
             }
             // Add the additional vertices for overstroked rrects.
             // Effectively this is an additional stroked rrect, with its
@@ -2584,16 +2645,15 @@ public:
                 return nullptr;
             }
         }
-        return Helper::FactoryHelper<EllipticalRRectOp>(context, std::move(paint),
-                                                        viewMatrix, devRect,
-                                                        devXRadius, devYRadius, devStrokeWidths,
-                                                        strokeOnly);
+        return Helper::FactoryHelper<EllipticalRRectOp>(context, std::move(paint), viewMatrix,
+                                                        devRect, devXRadius, devYRadius,
+                                                        devStrokeWidths, strokeOnly);
     }
 
     EllipticalRRectOp(Helper::MakeArgs helperArgs, const SkPMColor4f& color,
                       const SkMatrix& viewMatrix, const SkRect& devRect, float devXRadius,
                       float devYRadius, SkVector devStrokeHalfWidths, bool strokeOnly)
-            : INHERITED(ClassID()), fHelper(helperArgs, GrAAType::kCoverage) {
+            : INHERITED(ClassID()), fHelper(helperArgs, GrAAType::kCoverage), fUseScale(false) {
         SkScalar innerXRadius = 0.0f;
         SkScalar innerYRadius = 0.0f;
         SkRect bounds = devRect;
@@ -2616,7 +2676,6 @@ public:
         this->setBounds(bounds, HasAABloat::kYes, IsZeroArea::kNo);
         // Expand the rect for aa in order to generate the correct vertices.
         bounds.outset(SK_ScalarHalf, SK_ScalarHalf);
-        fWideColor = !SkPMColor4fFitsInBytes(color);
         fRRects.emplace_back(
                 RRect{color, devXRadius, devYRadius, innerXRadius, innerYRadius, bounds});
     }
@@ -2645,11 +2704,13 @@ public:
     }
 #endif
 
-    GrProcessorSet::Analysis finalize(
-            const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType) override {
+    GrProcessorSet::Analysis finalize(const GrCaps& caps, const GrAppliedClip* clip,
+                                      GrFSAAType fsaaType, GrClampType clampType) override {
+        fUseScale = !caps.shaderCaps()->floatIs32Bits();
         SkPMColor4f* color = &fRRects.front().fColor;
-        return fHelper.finalizeProcessors(
-                caps, clip, fsaaType, GrProcessorAnalysisCoverage::kSingleChannel, color);
+        return fHelper.finalizeProcessors(caps, clip, fsaaType, clampType,
+                                          GrProcessorAnalysisCoverage::kSingleChannel, color,
+                                          &fWideColor);
     }
 
     FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
@@ -2662,8 +2723,8 @@ private:
         }
 
         // Setup geometry processor
-        sk_sp<GrGeometryProcessor> gp(new EllipseGeometryProcessor(fStroked, fWideColor,
-                                                                   localMatrix));
+        sk_sp<GrGeometryProcessor> gp(
+                new EllipseGeometryProcessor(fStroked, fWideColor, fUseScale, localMatrix));
 
         // drop out the middle quad if we're stroked
         int indicesPerInstance = fStroked ? kIndicesPerStrokeRRect : kIndicesPerFillRRect;
@@ -2687,11 +2748,8 @@ private:
             GrVertexColor color(rrect.fColor, fWideColor);
             // Compute the reciprocals of the radii here to save time in the shader
             float reciprocalRadii[4] = {
-                SkScalarInvert(rrect.fXRadius),
-                SkScalarInvert(rrect.fYRadius),
-                SkScalarInvert(rrect.fInnerXRadius),
-                SkScalarInvert(rrect.fInnerYRadius)
-            };
+                    SkScalarInvert(rrect.fXRadius), SkScalarInvert(rrect.fYRadius),
+                    SkScalarInvert(rrect.fInnerXRadius), SkScalarInvert(rrect.fInnerYRadius)};
 
             // Extend the radii out half a pixel to antialias.
             SkScalar xOuterRadius = rrect.fXRadius + SK_ScalarHalf;
@@ -2715,26 +2773,19 @@ private:
                                                                // shader, so can't be exactly 0
                                          SK_ScalarNearlyZero, yMaxOffset};
 
+            auto maybeScale = GrVertexWriter::If(fUseScale, SkTMax(rrect.fXRadius, rrect.fYRadius));
             for (int i = 0; i < 4; ++i) {
-                verts.write(bounds.fLeft, yCoords[i],
-                            color,
-                            xMaxOffset, yOuterOffsets[i],
-                            reciprocalRadii);
+                verts.write(bounds.fLeft, yCoords[i], color, xMaxOffset, yOuterOffsets[i],
+                            maybeScale, reciprocalRadii);
 
-                verts.write(bounds.fLeft + xOuterRadius, yCoords[i],
-                            color,
-                            SK_ScalarNearlyZero, yOuterOffsets[i],
-                            reciprocalRadii);
+                verts.write(bounds.fLeft + xOuterRadius, yCoords[i], color, SK_ScalarNearlyZero,
+                            yOuterOffsets[i], maybeScale, reciprocalRadii);
 
-                verts.write(bounds.fRight - xOuterRadius, yCoords[i],
-                            color,
-                            SK_ScalarNearlyZero, yOuterOffsets[i],
-                            reciprocalRadii);
+                verts.write(bounds.fRight - xOuterRadius, yCoords[i], color, SK_ScalarNearlyZero,
+                            yOuterOffsets[i], maybeScale, reciprocalRadii);
 
-                verts.write(bounds.fRight, yCoords[i],
-                            color,
-                            xMaxOffset, yOuterOffsets[i],
-                            reciprocalRadii);
+                verts.write(bounds.fRight, yCoords[i], color, xMaxOffset, yOuterOffsets[i],
+                            maybeScale, reciprocalRadii);
             }
         }
         helper.recordDraw(target, std::move(gp));
@@ -2778,6 +2829,7 @@ private:
     Helper fHelper;
     bool fStroked;
     bool fWideColor;
+    bool fUseScale;
     SkSTArray<1, RRect, true> fRRects;
 
     typedef GrMeshDrawOp INHERITED;
@@ -2834,6 +2886,12 @@ static std::unique_ptr<GrDrawOp> make_rrect_op(GrRecordingContext* context,
         }
     }
 
+    // The matrix may have a rotation by an odd multiple of 90 degrees.
+    if (!isCircular && viewMatrix.getScaleX() == 0) {
+        std::swap(xRadius, yRadius);
+        std::swap(scaledStroke.fX, scaledStroke.fY);
+    }
+
     // The way the effect interpolates the offset-to-ellipse/circle-center attribute only works on
     // the interior of the rrect if the radii are >= 0.5. Otherwise, the inner rect of the nine-
     // patch will have fractional coverage. This only matters when the interior is actually filled.
@@ -2849,8 +2907,8 @@ static std::unique_ptr<GrDrawOp> make_rrect_op(GrRecordingContext* context,
                                      scaledStroke.fX, isStrokeOnly);
         // otherwise we use the ellipse renderer
     } else {
-        return EllipticalRRectOp::Make(context, std::move(paint), viewMatrix, bounds,
-                                       xRadius, yRadius, scaledStroke, isStrokeOnly);
+        return EllipticalRRectOp::Make(context, std::move(paint), viewMatrix, bounds, xRadius,
+                                       yRadius, scaledStroke, isStrokeOnly);
     }
 }
 
@@ -2889,16 +2947,16 @@ std::unique_ptr<GrDrawOp> GrOvalOpFactory::MakeOvalOp(GrRecordingContext* contex
         if (style.hasNonDashPathEffect()) {
             return nullptr;
         } else if (style.isDashed()) {
-            if (style.strokeRec().getCap() != SkPaint::kButt_Cap ||
-                style.dashIntervalCnt() != 2 || style.strokeRec().getWidth() >= width) {
+            if (style.strokeRec().getCap() != SkPaint::kButt_Cap || style.dashIntervalCnt() != 2 ||
+                style.strokeRec().getWidth() >= width) {
                 return nullptr;
             }
             auto onInterval = style.dashIntervals()[0];
             auto offInterval = style.dashIntervals()[1];
             if (offInterval == 0) {
                 GrStyle strokeStyle(style.strokeRec(), nullptr);
-                return MakeOvalOp(context, std::move(paint), viewMatrix, oval,
-                                  strokeStyle, shaderCaps);
+                return MakeOvalOp(context, std::move(paint), viewMatrix, oval, strokeStyle,
+                                  shaderCaps);
             } else if (onInterval == 0) {
                 // There is nothing to draw but we have no way to indicate that here.
                 return nullptr;
@@ -2932,7 +2990,7 @@ std::unique_ptr<GrDrawOp> GrOvalOpFactory::MakeOvalOp(GrRecordingContext* contex
         SkScalar c = viewMatrix[SkMatrix::kMSkewY];
         SkScalar d = viewMatrix[SkMatrix::kMScaleY];
         // Check for near-degenerate matrix
-        if (a*a + c*c > SK_ScalarNearlyZero && b*b + d*d > SK_ScalarNearlyZero) {
+        if (a * a + c * c > SK_ScalarNearlyZero && b * b + d * d > SK_ScalarNearlyZero) {
             return DIEllipseOp::Make(context, std::move(paint), viewMatrix, oval,
                                      style.strokeRec());
         }
@@ -2943,12 +3001,10 @@ std::unique_ptr<GrDrawOp> GrOvalOpFactory::MakeOvalOp(GrRecordingContext* contex
 
 ///////////////////////////////////////////////////////////////////////////////
 
-std::unique_ptr<GrDrawOp> GrOvalOpFactory::MakeArcOp(GrRecordingContext* context,
-                                                     GrPaint&& paint,
-                                                     const SkMatrix& viewMatrix,
-                                                     const SkRect& oval, SkScalar startAngle,
-                                                     SkScalar sweepAngle, bool useCenter,
-                                                     const GrStyle& style,
+std::unique_ptr<GrDrawOp> GrOvalOpFactory::MakeArcOp(GrRecordingContext* context, GrPaint&& paint,
+                                                     const SkMatrix& viewMatrix, const SkRect& oval,
+                                                     SkScalar startAngle, SkScalar sweepAngle,
+                                                     bool useCenter, const GrStyle& style,
                                                      const GrShaderCaps* shaderCaps) {
     SkASSERT(!oval.isEmpty());
     SkASSERT(sweepAngle);
@@ -2962,8 +3018,8 @@ std::unique_ptr<GrDrawOp> GrOvalOpFactory::MakeArcOp(GrRecordingContext* context
     SkPoint center = {oval.centerX(), oval.centerY()};
     CircleOp::ArcParams arcParams = {SkDegreesToRadians(startAngle), SkDegreesToRadians(sweepAngle),
                                      useCenter};
-    return CircleOp::Make(context, std::move(paint), viewMatrix,
-                          center, width / 2.f, style, &arcParams);
+    return CircleOp::Make(context, std::move(paint), viewMatrix, center, width / 2.f, style,
+                          &arcParams);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2995,9 +3051,8 @@ GR_DRAW_OP_TEST_DEFINE(CircleOp) {
             arcParamsTmp.fUseCenter = random->nextBool();
             arcParams = &arcParamsTmp;
         }
-        std::unique_ptr<GrDrawOp> op = CircleOp::Make(context, std::move(paint), viewMatrix,
-                                                      center, radius,
-                                                      GrStyle(stroke, nullptr), arcParams);
+        std::unique_ptr<GrDrawOp> op = CircleOp::Make(context, std::move(paint), viewMatrix, center,
+                                                      radius, GrStyle(stroke, nullptr), arcParams);
         if (op) {
             return op;
         }
@@ -3025,9 +3080,8 @@ GR_DRAW_OP_TEST_DEFINE(ButtCapDashedCircleOp) {
     SkScalar offAngle = random->nextRangeScalar(0.01f, 1000.f);
     SkScalar startAngle = random->nextRangeScalar(-1000.f, 1000.f);
     SkScalar phase = random->nextRangeScalar(-1000.f, 1000.f);
-    return ButtCapDashedCircleOp::Make(context, std::move(paint), viewMatrix,
-                                       center, radius, strokeWidth,
-                                       startAngle, onAngle, offAngle, phase);
+    return ButtCapDashedCircleOp::Make(context, std::move(paint), viewMatrix, center, radius,
+                                       strokeWidth, startAngle, onAngle, offAngle, phase);
 }
 
 GR_DRAW_OP_TEST_DEFINE(EllipseOp) {

@@ -8,10 +8,10 @@
 #ifndef SkStream_DEFINED
 #define SkStream_DEFINED
 
-#include "../private/SkTo.h"
-#include "SkData.h"
-#include "SkRefCnt.h"
-#include "SkScalar.h"
+#include "include/core/SkData.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/private/SkTo.h"
 
 #include <memory.h>
 
@@ -41,7 +41,7 @@ class SkStreamMemory;
 class SK_API SkStream {
 public:
     virtual ~SkStream() {}
-    SkStream() {}
+    SkStream() noexcept {}
 
     /**
      *  Attempts to open the specified file as a stream, returns nullptr on failure.
@@ -60,9 +60,7 @@ public:
     /** Skip size number of bytes.
      *  @return the actual number bytes that could be skipped.
      */
-    size_t skip(size_t size) {
-        return this->read(nullptr, size);
-    }
+    size_t skip(size_t size) { return this->read(nullptr, size); }
 
     /**
      *  Attempt to peek at size bytes.
@@ -95,14 +93,16 @@ public:
 
     bool SK_WARN_UNUSED_RESULT readBool(bool* b) {
         uint8_t i;
-        if (!this->readU8(&i)) { return false; }
+        if (!this->readU8(&i)) {
+            return false;
+        }
         *b = (i != 0);
         return true;
     }
     bool SK_WARN_UNUSED_RESULT readScalar(SkScalar*);
     bool SK_WARN_UNUSED_RESULT readPackedUInt(size_t*);
 
-//SkStreamRewindable
+    // SkStreamRewindable
     /** Rewinds to the beginning of the stream. Returns true if the stream is known
      *  to be at the beginning after this call returns.
      */
@@ -117,11 +117,9 @@ public:
     /** Duplicates this stream. If this cannot be done, returns NULL.
      *  The returned stream will be positioned the same as this stream.
      */
-    std::unique_ptr<SkStream> fork() const {
-        return std::unique_ptr<SkStream>(this->onFork());
-    }
+    std::unique_ptr<SkStream> fork() const { return std::unique_ptr<SkStream>(this->onFork()); }
 
-//SkStreamSeekable
+    // SkStreamSeekable
     /** Returns true if this stream can report it's current position. */
     virtual bool hasPosition() const { return false; }
     /** Returns the current position in the stream. If this cannot be done, returns 0. */
@@ -139,15 +137,15 @@ public:
      */
     virtual bool move(long /*offset*/) { return false; }
 
-//SkStreamAsset
+    // SkStreamAsset
     /** Returns true if this stream can report it's total length. */
     virtual bool hasLength() const { return false; }
     /** Returns the total length of the stream. If this cannot be done, returns 0. */
     virtual size_t getLength() const { return 0; }
 
-//SkStreamMemory
+    // SkStreamMemory
     /** Returns the starting address for the data. If this cannot be done, returns NULL. */
-    //TODO: replace with virtual const SkData* getData()
+    // TODO: replace with virtual const SkData* getData()
     virtual const void* getMemoryBase() { return nullptr; }
 
 private:
@@ -167,18 +165,20 @@ public:
     std::unique_ptr<SkStreamRewindable> duplicate() const {
         return std::unique_ptr<SkStreamRewindable>(this->onDuplicate());
     }
+
 private:
     SkStreamRewindable* onDuplicate() const override = 0;
 };
 
-/** SkStreamSeekable is a SkStreamRewindable for which position, seek, move, and fork are required. */
+/** SkStreamSeekable is a SkStreamRewindable for which position, seek, move, and fork are required.
+ */
 class SK_API SkStreamSeekable : public SkStreamRewindable {
 public:
     std::unique_ptr<SkStreamSeekable> duplicate() const {
         return std::unique_ptr<SkStreamSeekable>(this->onDuplicate());
     }
 
-    bool hasPosition() const override { return true; }
+    bool hasPosition() const noexcept override { return true; }
     size_t getPosition() const override = 0;
     bool seek(size_t position) override = 0;
     bool move(long offset) override = 0;
@@ -186,6 +186,7 @@ public:
     std::unique_ptr<SkStreamSeekable> fork() const {
         return std::unique_ptr<SkStreamSeekable>(this->onFork());
     }
+
 private:
     SkStreamSeekable* onDuplicate() const override = 0;
     SkStreamSeekable* onFork() const override = 0;
@@ -194,7 +195,7 @@ private:
 /** SkStreamAsset is a SkStreamSeekable for which getLength is required. */
 class SK_API SkStreamAsset : public SkStreamSeekable {
 public:
-    bool hasLength() const override { return true; }
+    bool hasLength() const noexcept override { return true; }
     size_t getLength() const override = 0;
 
     std::unique_ptr<SkStreamAsset> duplicate() const {
@@ -203,6 +204,7 @@ public:
     std::unique_ptr<SkStreamAsset> fork() const {
         return std::unique_ptr<SkStreamAsset>(this->onFork());
     }
+
 private:
     SkStreamAsset* onDuplicate() const override = 0;
     SkStreamAsset* onFork() const override = 0;
@@ -219,6 +221,7 @@ public:
     std::unique_ptr<SkStreamMemory> fork() const {
         return std::unique_ptr<SkStreamMemory>(this->onFork());
     }
+
 private:
     SkStreamMemory* onDuplicate() const override = 0;
     SkStreamMemory* onFork() const override = 0;
@@ -227,7 +230,7 @@ private:
 class SK_API SkWStream {
 public:
     virtual ~SkWStream();
-    SkWStream() {}
+    SkWStream() noexcept {}
 
     /** Called to write bytes to a SkWStream. Returns true on success
         @param buffer the address of at least size bytes to be written to the stream
@@ -241,7 +244,7 @@ public:
 
     // helpers
 
-    bool write8(U8CPU value)   {
+    bool write8(U8CPU value) {
         uint8_t v = SkToU8(value);
         return this->write(&v, 1);
     }
@@ -249,9 +252,7 @@ public:
         uint16_t v = SkToU16(value);
         return this->write(&v, 2);
     }
-    bool write32(uint32_t v) {
-        return this->write(&v, 4);
-    }
+    bool write32(uint32_t v) { return this->write(&v, 4); }
 
     bool writeText(const char text[]) {
         SkASSERT(text);
@@ -284,11 +285,14 @@ private:
 
 class SK_API SkNullWStream : public SkWStream {
 public:
-    SkNullWStream() : fBytesWritten(0) {}
+    SkNullWStream() noexcept : fBytesWritten(0) {}
 
-    bool write(const void* , size_t n) override { fBytesWritten += n; return true; }
-    void flush() override {}
-    size_t bytesWritten() const override { return fBytesWritten; }
+    bool write(const void*, size_t n) noexcept override {
+        fBytesWritten += n;
+        return true;
+    }
+    void flush() noexcept override {}
+    size_t bytesWritten() const noexcept override { return fBytesWritten; }
 
 private:
     size_t fBytesWritten;
@@ -321,7 +325,7 @@ public:
     }
 
     /** Returns true if the current path could be opened. */
-    bool isValid() const { return fFILE != nullptr; }
+    bool isValid() const noexcept { return fFILE != nullptr; }
 
     /** Close this SkFILEStream. */
     void close();
@@ -386,15 +390,14 @@ public:
         just like the constructor.
         if copyData is true, the stream makes a private copy of the data
     */
-    virtual void setMemory(const void* data, size_t length,
-                           bool copyData = false);
+    virtual void setMemory(const void* data, size_t length, bool copyData = false);
     /** Replace any memory buffer with the specified buffer. The caller
         must have allocated data with sk_malloc or sk_realloc, since it
         will be freed with sk_free.
     */
     void setMemoryOwned(const void* data, size_t length);
 
-    sk_sp<SkData> asData() const { return fData; }
+    sk_sp<SkData> asData() const noexcept { return fData; }
     void setData(sk_sp<SkData> data);
 
     void skipToAlign4();
@@ -427,8 +430,8 @@ private:
     SkMemoryStream* onDuplicate() const override;
     SkMemoryStream* onFork() const override;
 
-    sk_sp<SkData>   fData;
-    size_t          fOffset;
+    sk_sp<SkData> fData;
+    size_t fOffset;
 
     typedef SkStreamMemory INHERITED;
 };
@@ -441,8 +444,8 @@ public:
     ~SkFILEWStream() override;
 
     /** Returns true if the current path could be opened.
-    */
-    bool isValid() const { return fFILE != nullptr; }
+     */
+    bool isValid() const noexcept { return fFILE != nullptr; }
 
     bool write(const void* buffer, size_t size) override;
     void flush() override;
@@ -493,16 +496,17 @@ public:
     /** Reset the stream to its original, empty, state. */
     void reset();
     void padToAlign4();
+
 private:
     struct Block;
-    Block*  fHead = nullptr;
-    Block*  fTail = nullptr;
-    size_t  fBytesWrittenBeforeTail = 0;
+    Block* fHead = nullptr;
+    Block* fTail = nullptr;
+    size_t fBytesWrittenBeforeTail = 0;
 
 #ifdef SK_DEBUG
     void validate() const;
 #else
-    void validate() const {}
+    void validate() const noexcept {}
 #endif
 
     // For access to the Block type.

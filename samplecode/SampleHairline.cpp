@@ -5,24 +5,24 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkAnimTimer.h"
-#include "SkBitmap.h"
-#include "SkCanvas.h"
-#include "SkColorFilter.h"
-#include "SkColorPriv.h"
-#include "SkCornerPathEffect.h"
-#include "SkGradientShader.h"
-#include "SkGraphics.h"
-#include "SkPath.h"
-#include "SkRandom.h"
-#include "SkRegion.h"
-#include "SkShader.h"
-#include "SkStream.h"
-#include "SkTime.h"
-#include "SkTo.h"
-#include "SkTypeface.h"
-#include "SkUTF.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkGraphics.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRegion.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkTime.h"
+#include "include/core/SkTypeface.h"
+#include "include/effects/SkCornerPathEffect.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/private/SkTo.h"
+#include "include/utils/SkRandom.h"
+#include "samplecode/Sample.h"
+#include "src/utils/SkUTF.h"
+#include "tools/timer/AnimTimer.h"
 
 static SkRandom gRand;
 
@@ -58,20 +58,18 @@ static bool check_bitmap_margin(const SkBitmap& bm, int margin) {
             return false;
         }
         int right = bm.width() - margin + i;
-        if (!check_zeros(bm.getAddr32(right, 0), bm.height(),
-                         SkToInt(rb >> 2))) {
+        if (!check_zeros(bm.getAddr32(right, 0), bm.height(), SkToInt(rb >> 2))) {
             return false;
         }
     }
     return true;
 }
 
-#define WIDTH   620
-#define HEIGHT  460
-#define MARGIN  10
+#define WIDTH 620
+#define HEIGHT 460
+#define MARGIN 10
 
-static void line_proc(SkCanvas* canvas, const SkPaint& paint,
-                      const SkBitmap& bm) {
+static void line_proc(SkCanvas* canvas, const SkPaint& paint, const SkBitmap& bm) {
     const int N = 2;
     SkPoint pts[N];
     for (int i = 0; i < 400; i++) {
@@ -79,15 +77,14 @@ static void line_proc(SkCanvas* canvas, const SkPaint& paint,
 
         canvas->drawLine(pts[0], pts[1], paint);
         if (!check_bitmap_margin(bm, MARGIN)) {
-            SkDebugf("---- hairline failure (%g %g) (%g %g)\n",
-                     pts[0].fX, pts[0].fY, pts[1].fX, pts[1].fY);
+            SkDebugf("---- hairline failure (%g %g) (%g %g)\n", pts[0].fX, pts[0].fY, pts[1].fX,
+                     pts[1].fY);
             break;
         }
     }
 }
 
-static void poly_proc(SkCanvas* canvas, const SkPaint& paint,
-                      const SkBitmap& bm) {
+static void poly_proc(SkCanvas* canvas, const SkPaint& paint, const SkBitmap& bm) {
     const int N = 8;
     SkPoint pts[N];
     for (int i = 0; i < 50; i++) {
@@ -109,8 +106,7 @@ static SkPoint ave(const SkPoint& a, const SkPoint& b) {
     return c;
 }
 
-static void quad_proc(SkCanvas* canvas, const SkPaint& paint,
-                      const SkBitmap& bm) {
+static void quad_proc(SkCanvas* canvas, const SkPaint& paint, const SkBitmap& bm) {
     const int N = 30;
     SkPoint pts[N];
     for (int i = 0; i < 10; i++) {
@@ -119,7 +115,7 @@ static void quad_proc(SkCanvas* canvas, const SkPaint& paint,
         SkPath path;
         path.moveTo(pts[0]);
         for (int j = 1; j < N - 2; j++) {
-            path.quadTo(pts[j], ave(pts[j], pts[j+1]));
+            path.quadTo(pts[j], ave(pts[j], pts[j + 1]));
         }
         path.quadTo(pts[N - 2], pts[N - 1]);
 
@@ -133,8 +129,7 @@ static void add_cubic(SkPath* path, const SkPoint& mid, const SkPoint& end) {
     path->cubicTo(ave(start, mid), ave(mid, end), end);
 }
 
-static void cube_proc(SkCanvas* canvas, const SkPaint& paint,
-                      const SkBitmap& bm) {
+static void cube_proc(SkCanvas* canvas, const SkPaint& paint, const SkBitmap& bm) {
     const int N = 30;
     SkPoint pts[N];
     for (int i = 0; i < 10; i++) {
@@ -143,7 +138,7 @@ static void cube_proc(SkCanvas* canvas, const SkPaint& paint,
         SkPath path;
         path.moveTo(pts[0]);
         for (int j = 1; j < N - 2; j++) {
-            add_cubic(&path, pts[j], ave(pts[j], pts[j+1]));
+            add_cubic(&path, pts[j], ave(pts[j], pts[j + 1]));
         }
         add_cubic(&path, pts[N - 2], pts[N - 1]);
 
@@ -155,22 +150,21 @@ typedef void (*HairProc)(SkCanvas*, const SkPaint&, const SkBitmap&);
 
 static const struct {
     const char* fName;
-    HairProc    fProc;
+    HairProc fProc;
 } gProcs[] = {
-    { "line",   line_proc },
-    { "poly",   poly_proc },
-    { "quad",   quad_proc },
-    { "cube",   cube_proc },
+        {"line", line_proc},
+        {"poly", poly_proc},
+        {"quad", quad_proc},
+        {"cube", cube_proc},
 };
 
-static int cycle_hairproc_index(int index) {
-    return (index + 1) % SK_ARRAY_COUNT(gProcs);
-}
+static int cycle_hairproc_index(int index) { return (index + 1) % SK_ARRAY_COUNT(gProcs); }
 
 class HairlineView : public Sample {
     SkMSec fNow;
     int fProcIndex;
     bool fDoAA;
+
 public:
     HairlineView() {
         fProcIndex = 0;
@@ -199,12 +193,12 @@ protected:
         gRand.setSeed(fNow);
 
         SkBitmap bm, bm2;
-        bm.allocN32Pixels(WIDTH + MARGIN*2, HEIGHT + MARGIN*2);
+        bm.allocN32Pixels(WIDTH + MARGIN * 2, HEIGHT + MARGIN * 2);
         // this will erase our margin, which we want to always stay 0
         bm.eraseColor(SK_ColorTRANSPARENT);
 
-        bm2.installPixels(SkImageInfo::MakeN32Premul(WIDTH, HEIGHT),
-                          bm.getAddr32(MARGIN, MARGIN), bm.rowBytes());
+        bm2.installPixels(SkImageInfo::MakeN32Premul(WIDTH, HEIGHT), bm.getAddr32(MARGIN, MARGIN),
+                          bm.rowBytes());
 
         SkCanvas c2(bm2);
         SkPaint paint;
@@ -216,7 +210,7 @@ protected:
         canvas->drawBitmap(bm2, SkIntToScalar(10), SkIntToScalar(10), nullptr);
     }
 
-    bool onAnimate(const SkAnimTimer&) override {
+    bool onAnimate(const AnimTimer&) override {
         if (fDoAA) {
             fProcIndex = cycle_hairproc_index(fProcIndex);
             // todo: signal that we want to rebuild our TITLE
@@ -230,11 +224,10 @@ protected:
         return this->INHERITED::onFindClickHandler(x, y, modi);
     }
 
-
 private:
     typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new HairlineView(); )
+DEF_SAMPLE(return new HairlineView();)

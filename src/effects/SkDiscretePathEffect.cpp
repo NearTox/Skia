@@ -5,14 +5,13 @@
  * found in the LICENSE file.
  */
 
-
-#include "SkDiscretePathEffect.h"
-#include "SkFixed.h"
-#include "SkPathMeasure.h"
-#include "SkPointPriv.h"
-#include "SkReadBuffer.h"
-#include "SkStrokeRec.h"
-#include "SkWriteBuffer.h"
+#include "include/effects/SkDiscretePathEffect.h"
+#include "include/core/SkPathMeasure.h"
+#include "include/core/SkStrokeRec.h"
+#include "include/private/SkFixed.h"
+#include "src/core/SkPointPriv.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
 
 sk_sp<SkPathEffect> SkDiscretePathEffect::Make(SkScalar segLength, SkScalar deviation,
                                                uint32_t seedAssist) {
@@ -35,9 +34,7 @@ static void Perterb(SkPoint* p, const SkVector& tangent, SkScalar scale) {
 SkDiscretePathEffect::SkDiscretePathEffect(SkScalar segLength,
                                            SkScalar deviation,
                                            uint32_t seedAssist)
-    : fSegLength(segLength), fPerterb(deviation), fSeedAssist(seedAssist)
-{
-}
+        : fSegLength(segLength), fPerterb(deviation), fSeedAssist(seedAssist) {}
 
 /** \class LCGRandom
 
@@ -61,8 +58,12 @@ public:
 
 private:
     /** Return the next pseudo random number as an unsigned 32bit value.
-    */
-    uint32_t nextU() { uint32_t r = fSeed * kMul + kAdd; fSeed = r; return r; }
+     */
+    uint32_t nextU() {
+        uint32_t r = fSeed * kMul + kAdd;
+        fSeed = r;
+        return r;
+    }
 
     /** Return the next pseudo random number as a signed 32bit value.
      */
@@ -74,42 +75,39 @@ private:
     SkFixed nextSFixed1() { return this->nextS() >> 15; }
 
     //  See "Numerical Recipes in C", 1992 page 284 for these constants
-    enum {
-        kMul = 1664525,
-        kAdd = 1013904223
-    };
+    enum { kMul = 1664525, kAdd = 1013904223 };
     uint32_t fSeed;
 };
 
-bool SkDiscretePathEffect::onFilterPath(SkPath* dst, const SkPath& src,
-                                        SkStrokeRec* rec, const SkRect*) const {
+bool SkDiscretePathEffect::onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
+                                        const SkRect*) const {
     bool doFill = rec->isFillStyle();
 
-    SkPathMeasure   meas(src, doFill);
+    SkPathMeasure meas(src, doFill);
 
     /* Caller may supply their own seed assist, which by default is 0 */
     uint32_t seed = fSeedAssist ^ SkScalarRoundToInt(meas.getLength());
 
-    LCGRandom   rand(seed ^ ((seed << 16) | (seed >> 16)));
-    SkScalar    scale = fPerterb;
-    SkPoint     p;
-    SkVector    v;
+    LCGRandom rand(seed ^ ((seed << 16) | (seed >> 16)));
+    SkScalar scale = fPerterb;
+    SkPoint p;
+    SkVector v;
 
     do {
-        SkScalar    length = meas.getLength();
+        SkScalar length = meas.getLength();
 
         if (fSegLength * (2 + doFill) > length) {
             meas.getSegment(0, length, dst, true);  // to short for us to mangle
         } else {
-            int         n = SkScalarRoundToInt(length / fSegLength);
+            int n = SkScalarRoundToInt(length / fSegLength);
             constexpr int kMaxReasonableIterations = 100000;
             n = SkTMin(n, kMaxReasonableIterations);
-            SkScalar    delta = length / n;
-            SkScalar    distance = 0;
+            SkScalar delta = length / n;
+            SkScalar distance = 0;
 
             if (meas.isClosed()) {
                 n -= 1;
-                distance += delta/2;
+                distance += delta / 2;
             }
 
             if (meas.getPosTan(distance, &p, &v)) {

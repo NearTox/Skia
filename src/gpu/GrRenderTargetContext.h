@@ -8,17 +8,17 @@
 #ifndef GrRenderTargetContext_DEFINED
 #define GrRenderTargetContext_DEFINED
 
-#include "../private/GrRenderTargetProxy.h"
-#include "GrPaint.h"
-#include "GrSurfaceContext.h"
-#include "GrTypesPriv.h"
-#include "GrXferProcessor.h"
-#include "SkCanvas.h"
-#include "SkDrawable.h"
-#include "SkRefCnt.h"
-#include "SkSurface.h"
-#include "SkSurfaceProps.h"
-#include "text/GrTextTarget.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkDrawable.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkSurfaceProps.h"
+#include "include/private/GrRenderTargetProxy.h"
+#include "include/private/GrTypesPriv.h"
+#include "src/gpu/GrPaint.h"
+#include "src/gpu/GrSurfaceContext.h"
+#include "src/gpu/GrXferProcessor.h"
+#include "src/gpu/text/GrTextTarget.h"
 
 class GrBackendSemaphore;
 class GrClip;
@@ -66,10 +66,7 @@ public:
      */
     void discard();
 
-    enum class CanClearFullscreen : bool {
-        kNo = false,
-        kYes = true
-    };
+    enum class CanClearFullscreen : bool { kNo = false, kYes = true };
 
     /**
      * Clear the entire or rect of the render target, ignoring any clips.
@@ -160,7 +157,7 @@ public:
     /** Used with drawQuadSet */
     struct QuadSetEntry {
         SkRect fRect;
-        SkPMColor4f fColor; // Overrides any color on the GrPaint
+        SkPMColor4f fColor;  // Overrides any color on the GrPaint
         SkMatrix fLocalMatrix;
         GrQuadAAFlags fAAFlags;
     };
@@ -196,8 +193,9 @@ public:
         sk_sp<GrTextureProxy> fProxy;
         SkRect fSrcRect;
         SkRect fDstRect;
-        const SkPoint* fDstClipQuad; // Must be null, or point to an array of 4 points
-        const SkMatrix* fPreViewMatrix; // If not null, entry's CTM is 'viewMatrix' * fPreViewMatrix
+        const SkPoint* fDstClipQuad;  // Must be null, or point to an array of 4 points
+        const SkMatrix*
+                fPreViewMatrix;  // If not null, entry's CTM is 'viewMatrix' * fPreViewMatrix
         float fAlpha;
         GrQuadAAFlags fAAFlags;
     };
@@ -209,8 +207,8 @@ public:
      * fDstClipCount, so the pointer can become invalid after this returns.
      */
     void drawTextureSet(const GrClip&, const TextureSetEntry[], int cnt, GrSamplerState::Filter,
-                        SkBlendMode mode, GrAA aa, const SkMatrix& viewMatrix,
-                        sk_sp<GrColorSpaceXform> texXform);
+                        SkBlendMode mode, GrAA aa, SkCanvas::SrcRectConstraint,
+                        const SkMatrix& viewMatrix, sk_sp<GrColorSpaceXform> texXform);
 
     /**
      * Draw a roundrect using a paint.
@@ -282,12 +280,7 @@ public:
      * @param viewMatrix    transformation matrix
      * @param shape         the shape to draw
      */
-    void drawShape(const GrClip&,
-                   GrPaint&&,
-                   GrAA,
-                   const SkMatrix& viewMatrix,
-                   const GrShape&);
-
+    void drawShape(const GrClip&, GrPaint&&, GrAA, const SkMatrix& viewMatrix, const GrShape&);
 
     /**
      * Draws vertices with a paint.
@@ -302,7 +295,8 @@ public:
     void drawVertices(const GrClip&,
                       GrPaint&& paint,
                       const SkMatrix& viewMatrix,
-                      sk_sp<SkVertices> vertices,
+                      sk_sp<SkVertices>
+                              vertices,
                       const SkVertices::Bone bones[],
                       int boneCount,
                       GrPrimitiveType* overridePrimType = nullptr);
@@ -402,13 +396,16 @@ public:
      */
     void drawDrawable(std::unique_ptr<SkDrawable::GpuDrawHandler>, const SkRect& bounds);
 
+    using ReadPixelsCallback = SkSurface::ReadPixelsCallback;
+    using ReadPixelsContext = SkSurface::ReadPixelsContext;
+    bool asyncReadPixels(SkColorType, SkAlphaType, sk_sp<SkColorSpace>, const SkIRect& srcRect,
+                         ReadPixelsCallback, ReadPixelsContext);
+
     /**
      * After this returns any pending surface IO will be issued to the backend 3D API and
      * if the surface has MSAA it will be resolved.
      */
-    GrSemaphoresSubmitted prepareForExternalIO(SkSurface::BackendSurfaceAccess access,
-                                               SkSurface::FlushFlags flags, int numSemaphores,
-                                               GrBackendSemaphore backendSemaphores[]);
+    GrSemaphoresSubmitted flush(SkSurface::BackendSurfaceAccess access, const GrFlushInfo&);
 
     /**
      *  The next time this GrRenderTargetContext is flushed, the gpu will wait on the passed in
@@ -457,23 +454,20 @@ public:
     bool isWrapped_ForTesting() const;
 
 protected:
-    GrRenderTargetContext(GrRecordingContext*, sk_sp<GrRenderTargetProxy>,
-                          sk_sp<SkColorSpace>, const SkSurfaceProps*,
-                          bool managedOpList = true);
+    GrRenderTargetContext(GrRecordingContext*, sk_sp<GrRenderTargetProxy>, sk_sp<SkColorSpace>,
+                          const SkSurfaceProps*, bool managedOpList = true);
 
-    SkDEBUGCODE(void validate() const override;)
+    SkDEBUGCODE(void validate() const override);
 
 private:
     class TextTarget;
 
-    inline GrAAType chooseAAType(GrAA aa, GrAllowMixedSamples allowMixedSamples) {
-        return GrChooseAAType(aa, this->fsaaType(), allowMixedSamples, *this->caps());
-    }
+    GrAAType chooseAAType(GrAA);
 
-    friend class GrAtlasTextBlob;               // for access to add[Mesh]DrawOp
-    friend class GrClipStackClip;               // for access to getOpList
+    friend class GrAtlasTextBlob;  // for access to add[Mesh]DrawOp
+    friend class GrClipStackClip;  // for access to getOpList
 
-    friend class GrDrawingManager; // for ctor
+    friend class GrDrawingManager;  // for ctor
     friend class GrRenderTargetContextPriv;
 
     // All the path renderers currently make their own ops

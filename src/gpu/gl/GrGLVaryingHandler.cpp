@@ -5,23 +5,19 @@
  * found in the LICENSE file.
  */
 
-#include "gl/GrGLVaryingHandler.h"
+#include "src/gpu/gl/GrGLVaryingHandler.h"
 
-#include "gl/GrGLGpu.h"
-#include "gl/builders/GrGLProgramBuilder.h"
+#include "src/gpu/gl/GrGLGpu.h"
+#include "src/gpu/gl/builders/GrGLProgramBuilder.h"
 
-
-GrGLSLVaryingHandler::VaryingHandle GrGLVaryingHandler::addPathProcessingVarying(
-                                                                       const char* name,
-                                                                       GrGLSLVarying* v) {
+GrGLSLVaryingHandler::VaryingHandle GrGLVaryingHandler::addPathProcessingVarying(const char* name,
+                                                                                 GrGLSLVarying* v) {
 #ifdef SK_DEBUG
-    GrGLProgramBuilder* glPB = (GrGLProgramBuilder*) fProgramBuilder;
+    GrGLProgramBuilder* glPB = (GrGLProgramBuilder*)fProgramBuilder;
     // This call is not used for non-NVPR backends.
     SkASSERT(glPB->gpu()->glCaps().shaderCaps()->pathRenderingSupport() &&
-             glPB->fPrimProc.isPathRendering() &&
-             !glPB->fPrimProc.willUseGeoShader() &&
-             !glPB->fPrimProc.numVertexAttributes() &&
-             !glPB->fPrimProc.numInstanceAttributes());
+             glPB->fPrimProc.isPathRendering() && !glPB->fPrimProc.willUseGeoShader() &&
+             !glPB->fPrimProc.numVertexAttributes() && !glPB->fPrimProc.numInstanceAttributes());
 #endif
     this->addVarying(name, v);
     auto varyingInfo = fPathProcVaryingInfos.push_back();

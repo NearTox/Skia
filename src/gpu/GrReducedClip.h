@@ -8,10 +8,10 @@
 #ifndef GrReducedClip_DEFINED
 #define GrReducedClip_DEFINED
 
-#include "GrFragmentProcessor.h"
-#include "GrWindowRectangles.h"
-#include "SkClipStack.h"
-#include "SkTLList.h"
+#include "src/core/SkClipStack.h"
+#include "src/core/SkTLList.h"
+#include "src/gpu/GrFragmentProcessor.h"
+#include "src/gpu/GrWindowRectangles.h"
 
 class GrCoverageCountingPathRenderer;
 class GrRecordingContext;
@@ -29,10 +29,7 @@ public:
     GrReducedClip(const SkClipStack&, const SkRect& queryBounds, const GrCaps* caps,
                   int maxWindowRectangles = 0, int maxAnalyticFPs = 0, int maxCCPRClipPaths = 0);
 
-    enum class InitialState : bool {
-        kAllIn,
-        kAllOut
-    };
+    enum class InitialState : bool { kAllIn, kAllOut };
 
     InitialState initialState() const { return fInitialState; }
 
@@ -40,7 +37,10 @@ public:
      * If hasScissor() is true, the clip mask is not valid outside this rect and the caller must
      * enforce this scissor during draw.
      */
-    const SkIRect& scissor() const { SkASSERT(fHasScissor); return fScissor; }
+    const SkIRect& scissor() const {
+        SkASSERT(fHasScissor);
+        return fScissor;
+    }
     int left() const { return this->scissor().left(); }
     int top() const { return this->scissor().top(); }
     int width() const { return this->scissor().width(); }
@@ -75,12 +75,18 @@ public:
      * FIXME: this prevents us from reusing a sub-rect of a perfectly good mask when that rect has
      * been assigned a less restrictive ID.
      */
-    uint32_t maskGenID() const { SkASSERT(!fMaskElements.isEmpty()); return fMaskGenID; }
+    uint32_t maskGenID() const {
+        SkASSERT(!fMaskElements.isEmpty());
+        return fMaskGenID;
+    }
 
     /**
      * Indicates whether antialiasing is required to process any of the mask elements.
      */
-    bool maskRequiresAA() const { SkASSERT(!fMaskElements.isEmpty()); return fMaskRequiresAA; }
+    bool maskRequiresAA() const {
+        SkASSERT(!fMaskElements.isEmpty());
+        return fMaskRequiresAA;
+    }
 
     bool drawAlphaClipMask(GrRenderTargetContext*) const;
     bool drawStencilClipMask(GrRecordingContext*, GrRenderTargetContext*) const;
@@ -103,11 +109,7 @@ public:
 private:
     void walkStack(const SkClipStack&, const SkRect& queryBounds);
 
-    enum class ClipResult {
-        kNotClipped,
-        kClipped,
-        kMadeEmpty
-    };
+    enum class ClipResult { kNotClipped, kClipped, kMadeEmpty };
 
     // Intersects the clip with the element's interior, regardless of inverse fill type.
     // NOTE: do not call for elements followed by ops that can grow the clip.
@@ -119,10 +121,7 @@ private:
 
     void addWindowRectangle(const SkRect& elementInteriorRect, bool elementIsAA);
 
-    enum class Invert : bool {
-        kNo = false,
-        kYes = true
-    };
+    enum class Invert : bool { kNo = false, kYes = true };
 
     static GrClipEdgeType GetClipEdgeType(Invert, GrAA);
     ClipResult addAnalyticFP(const SkRect& deviceSpaceRect, Invert, GrAA);
@@ -140,13 +139,13 @@ private:
     SkIRect fScissor;
     bool fHasScissor;
     SkRect fAAClipRect;
-    uint32_t fAAClipRectGenID; // GenID the mask will have if includes the AA clip rect.
+    uint32_t fAAClipRectGenID;  // GenID the mask will have if includes the AA clip rect.
     GrWindowRectangles fWindowRects;
     ElementList fMaskElements;
     uint32_t fMaskGenID;
     bool fMaskRequiresAA;
     SkSTArray<4, std::unique_ptr<GrFragmentProcessor>> fAnalyticFPs;
-    SkSTArray<4, SkPath> fCCPRClipPaths; // Will convert to FPs once we have an opList ID for CCPR.
+    SkSTArray<4, SkPath> fCCPRClipPaths;  // Will convert to FPs once we have an opList ID for CCPR.
 };
 
 #endif

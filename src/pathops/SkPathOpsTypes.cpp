@@ -4,10 +4,10 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkArenaAlloc.h"
-#include "SkFloatBits.h"
-#include "SkOpCoincidence.h"
-#include "SkPathOpsTypes.h"
+#include "src/pathops/SkPathOpsTypes.h"
+#include "include/private/SkArenaAlloc.h"
+#include "include/private/SkFloatBits.h"
+#include "src/pathops/SkOpCoincidence.h"
 
 static bool arguments_denormalized(float a, float b, int epsilon) {
     float denormalizedCheck = FLT_EPSILON * epsilon / 2;
@@ -165,7 +165,7 @@ bool RoughlyEqualUlps(float a, float b) {
 bool AlmostBetweenUlps(float a, float b, float c) {
     const int UlpsEpsilon = 2;
     return a <= c ? less_or_equal_ulps(a, b, UlpsEpsilon) && less_or_equal_ulps(b, c, UlpsEpsilon)
-        : less_or_equal_ulps(b, a, UlpsEpsilon) && less_or_equal_ulps(c, b, UlpsEpsilon);
+                  : less_or_equal_ulps(b, a, UlpsEpsilon) && less_or_equal_ulps(c, b, UlpsEpsilon);
 }
 
 bool AlmostLessUlps(float a, float b) {
@@ -196,8 +196,8 @@ int UlpsDistance(float a, float b) {
 static double cbrt_5d(double d) {
     const unsigned int B1 = 715094163;
     double t = 0.0;
-    unsigned int* pt = (unsigned int*) &t;
-    unsigned int* px = (unsigned int*) &d;
+    unsigned int* pt = (unsigned int*)&t;
+    unsigned int* px = (unsigned int*)&d;
     pt[1] = px[1] / 3 + B1;
     return t;
 }
@@ -229,23 +229,18 @@ double SkDCubeRoot(double x) {
 }
 
 SkOpGlobalState::SkOpGlobalState(SkOpContourHead* head,
-                                 SkArenaAlloc* allocator
-                                 SkDEBUGPARAMS(bool debugSkipAssert)
-                                 SkDEBUGPARAMS(const char* testName))
-    : fAllocator(allocator)
-    , fCoincidence(nullptr)
-    , fContourHead(head)
-    , fNested(0)
-    , fWindingFailed(false)
-    , fPhase(SkOpPhase::kIntersecting)
-    SkDEBUGPARAMS(fDebugTestName(testName))
-    SkDEBUGPARAMS(fAngleID(0))
-    SkDEBUGPARAMS(fCoinID(0))
-    SkDEBUGPARAMS(fContourID(0))
-    SkDEBUGPARAMS(fPtTID(0))
-    SkDEBUGPARAMS(fSegmentID(0))
-    SkDEBUGPARAMS(fSpanID(0))
-    SkDEBUGPARAMS(fDebugSkipAssert(debugSkipAssert)) {
+                                 SkArenaAlloc* allocator SkDEBUGPARAMS(bool debugSkipAssert)
+                                         SkDEBUGPARAMS(const char* testName))
+        : fAllocator(allocator)
+        , fCoincidence(nullptr)
+        , fContourHead(head)
+        , fNested(0)
+        , fWindingFailed(false)
+        , fPhase(SkOpPhase::kIntersecting) SkDEBUGPARAMS(fDebugTestName(testName))
+                  SkDEBUGPARAMS(fAngleID(0)) SkDEBUGPARAMS(fCoinID(0)) SkDEBUGPARAMS(fContourID(0))
+                          SkDEBUGPARAMS(fPtTID(0)) SkDEBUGPARAMS(fSegmentID(0))
+                                  SkDEBUGPARAMS(fSpanID(0))
+                                          SkDEBUGPARAMS(fDebugSkipAssert(debugSkipAssert)) {
 #if DEBUG_T_SECT_LOOP_COUNT
     debugResetLoopCounts();
 #endif

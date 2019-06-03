@@ -8,7 +8,7 @@
 #ifndef SkCanvasPriv_DEFINED
 #define SkCanvasPriv_DEFINED
 
-#include "SkCanvas.h"
+#include "include/core/SkCanvas.h"
 
 class SkReadBuffer;
 class SkWriteBuffer;
@@ -19,8 +19,8 @@ public:
     ~SkAutoCanvasMatrixPaint();
 
 private:
-    SkCanvas*   fCanvas;
-    int         fSaveCount;
+    SkCanvas* fCanvas;
+    int fSaveCount;
 };
 
 class SkCanvasPriv {
@@ -43,6 +43,15 @@ public:
     static int SaveBehind(SkCanvas* canvas, const SkRect* subset) {
         return canvas->only_axis_aligned_saveBehind(subset);
     }
+    static void DrawBehind(SkCanvas* canvas, const SkPaint& paint) {
+        canvas->drawClippedToSaveBehind(paint);
+    }
+
+    // The experimental_DrawEdgeAAImageSet API accepts separate dstClips and preViewMatrices arrays,
+    // where entries refer into them, but no explicit size is provided. Given a set of entries,
+    // computes the minimum length for these arrays that would provide index access errors.
+    static void GetDstClipAndMatrixCounts(const SkCanvas::ImageSetEntry set[], int count,
+                                          int* totalDstClipCount, int* totalMatrixCount);
 };
 
 #endif

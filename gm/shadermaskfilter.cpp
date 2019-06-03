@@ -5,15 +5,40 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkBlendModePriv.h"
-#include "SkCanvas.h"
-#include "SkImage.h"
-#include "SkMaskFilter.h"
-#include "SkPictureRecorder.h"
-#include "SkShaderMaskFilter.h"
-#include "SkTextUtils.h"
+#include "gm/gm.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkBlurTypes.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkCoverageMode.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkMaskFilter.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPicture.h"
+#include "include/core/SkPictureRecorder.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkBlurImageFilter.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/effects/SkShaderMaskFilter.h"
+#include "include/utils/SkTextUtils.h"
+#include "src/core/SkBlendModePriv.h"
+#include "tools/Resources.h"
+#include "tools/ToolUtils.h"
+
+#include <initializer_list>
 
 static void draw_masked_image(SkCanvas* canvas, const SkImage* image, SkScalar x, SkScalar y,
                               const SkImage* mask, sk_sp<SkMaskFilter> outer, SkBlendMode mode) {
@@ -33,17 +58,17 @@ static void draw_masked_image(SkCanvas* canvas, const SkImage* image, SkScalar x
     canvas->drawImage(image, x, y, &paint);
 }
 
-#include "SkGradientShader.h"
 static sk_sp<SkShader> make_shader(const SkRect& r) {
     const SkPoint pts[] = {
-        { r.fLeft, r.fTop }, { r.fRight, r.fBottom },
+            {r.fLeft, r.fTop},
+            {r.fRight, r.fBottom},
     };
-    const SkColor colors[] = { 0, SK_ColorWHITE };
-    return SkGradientShader::MakeLinear(pts, colors, nullptr, 2, SkShader::kRepeat_TileMode);
+    const SkColor colors[] = {0, SK_ColorWHITE};
+    return SkGradientShader::MakeLinear(pts, colors, nullptr, 2, SkTileMode::kRepeat);
 }
 
 DEF_SIMPLE_GM(shadermaskfilter_gradient, canvas, 512, 512) {
-    SkRect r = { 0, 0, 100, 150 };
+    SkRect r = {0, 0, 100, 150};
     auto shader = make_shader(r);
     auto mf = SkShaderMaskFilter::Make(shader);
 
@@ -57,7 +82,6 @@ DEF_SIMPLE_GM(shadermaskfilter_gradient, canvas, 512, 512) {
     canvas->drawOval(r, paint);
 }
 
-#include "Resources.h"
 DEF_SIMPLE_GM_CAN_FAIL(shadermaskfilter_image, canvas, errorMsg, 560, 370) {
     canvas->scale(1.25f, 1.25f);
 
@@ -68,10 +92,10 @@ DEF_SIMPLE_GM_CAN_FAIL(shadermaskfilter_image, canvas, errorMsg, 560, 370) {
         return skiagm::DrawResult::kFail;
     }
     auto blurmf = SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, 5);
-    auto gradmf = SkShaderMaskFilter::Make(make_shader(SkRect::MakeIWH(mask->width(),
-                                                                       mask->height())));
+    auto gradmf =
+            SkShaderMaskFilter::Make(make_shader(SkRect::MakeIWH(mask->width(), mask->height())));
 
-    const sk_sp<SkMaskFilter> array[] = { nullptr , blurmf, gradmf };
+    const sk_sp<SkMaskFilter> array[] = {nullptr, blurmf, gradmf};
     for (SkBlendMode mode : {SkBlendMode::kSrcOver, SkBlendMode::kSrcIn}) {
         canvas->save();
         for (sk_sp<SkMaskFilter> mf : array) {
@@ -86,9 +110,6 @@ DEF_SIMPLE_GM_CAN_FAIL(shadermaskfilter_image, canvas, errorMsg, 560, 370) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "SkPictureRecorder.h"
-#include "SkPath.h"
-
 static sk_sp<SkMaskFilter> make_path_mf(const SkPath& path, unsigned alpha) {
     SkPaint paint;
     paint.setAntiAlias(true);
@@ -96,20 +117,17 @@ static sk_sp<SkMaskFilter> make_path_mf(const SkPath& path, unsigned alpha) {
 
     SkPictureRecorder recorder;
     recorder.beginRecording(1000, 1000)->drawPath(path, paint);
-    auto shader = SkShader::MakePictureShader(recorder.finishRecordingAsPicture(),
-                                              SkShader::kClamp_TileMode, SkShader::kClamp_TileMode,
-                                              nullptr, nullptr);
+    auto shader =
+            recorder.finishRecordingAsPicture()->makeShader(SkTileMode::kClamp, SkTileMode::kClamp);
     return SkShaderMaskFilter::Make(shader);
 }
 
 typedef void (*MakePathsProc)(const SkRect&, SkPath*, SkPath*);
 
-const char* gCoverageName[] = {
-    "union", "sect", "diff", "rev-diff", "xor"
-};
+const char* gCoverageName[] = {"union", "sect", "diff", "rev-diff", "xor"};
 
 DEF_SIMPLE_GM(combinemaskfilter, canvas, 560, 510) {
-    const SkRect r = { 0, 0, 100, 100 };
+    const SkRect r = {0, 0, 100, 100};
 
     SkPaint paint;
     paint.setColor(SK_ColorRED);
@@ -130,10 +148,10 @@ DEF_SIMPLE_GM(combinemaskfilter, canvas, 560, 510) {
         pathB->lineTo(r.fLeft, r.fBottom);
     };
     auto proc1 = [](const SkRect& r, SkPath* pathA, SkPath* pathB) {
-        pathA->addCircle(r.width()*0.25f, r.height()*0.25f, r.width()*0.5f);
-        pathB->addCircle(r.width()*0.75f, r.height()*0.75f, r.width()*0.5f);
+        pathA->addCircle(r.width() * 0.25f, r.height() * 0.25f, r.width() * 0.5f);
+        pathB->addCircle(r.width() * 0.75f, r.height() * 0.75f, r.width() * 0.5f);
     };
-    MakePathsProc procs[] = { proc0, proc1 };
+    MakePathsProc procs[] = {proc0, proc1};
 
     sk_sp<SkMaskFilter> mfA[2], mfB[2];
     for (int i = 0; i < 2; ++i) {
@@ -146,16 +164,16 @@ DEF_SIMPLE_GM(combinemaskfilter, canvas, 560, 510) {
     canvas->translate(10, 10 + 20);
     canvas->save();
     for (int i = 0; i < 5; ++i) {
-        SkTextUtils::DrawString(canvas, gCoverageName[i], r.width()*0.5f, -10, font, SkPaint(),
-                                       SkTextUtils::kCenter_Align);
+        SkTextUtils::DrawString(canvas, gCoverageName[i], r.width() * 0.5f, -10, font, SkPaint(),
+                                SkTextUtils::kCenter_Align);
 
         SkCoverageMode cmode = static_cast<SkCoverageMode>(i);
         canvas->save();
         // esp. on gpu side, its valuable to exercise modes that do and do-not convolve coverage
         // with alpha. SrcOver and SrcIn have these properties, but also happen to "look" the same
         // for this test.
-        const SkBlendMode bmodes[] = { SkBlendMode::kSrcOver, SkBlendMode::kSrcIn };
-        SkASSERT( SkBlendMode_SupportsCoverageAsAlpha(bmodes[0]));  // test as-alpha
+        const SkBlendMode bmodes[] = {SkBlendMode::kSrcOver, SkBlendMode::kSrcIn};
+        SkASSERT(SkBlendMode_SupportsCoverageAsAlpha(bmodes[0]));   // test as-alpha
         SkASSERT(!SkBlendMode_SupportsCoverageAsAlpha(bmodes[1]));  // test not-as-alpha
         for (auto bmode : bmodes) {
             paint.setBlendMode(bmode);
@@ -173,12 +191,9 @@ DEF_SIMPLE_GM(combinemaskfilter, canvas, 560, 510) {
     canvas->restore();
 }
 
-#include "SkSurface.h"
-#include "SkBlurImageFilter.h"
-#include "SkMaskFilter.h"
 static sk_sp<SkImage> make_circle_image(SkCanvas* canvas, SkScalar radius, int margin) {
     const int n = SkScalarCeilToInt(radius) * 2 + margin * 2;
-    auto surf = sk_tool_utils::makeSurface(canvas, SkImageInfo::MakeN32Premul(n, n));
+    auto surf = ToolUtils::makeSurface(canvas, SkImageInfo::MakeN32Premul(n, n));
     SkPaint paint;
     paint.setAntiAlias(true);
     surf->getCanvas()->drawCircle(n * 0.5f, n * 0.5f, radius, paint);
@@ -198,9 +213,9 @@ DEF_SIMPLE_GM(savelayer_maskfilter, canvas, 450, 675) {
     canvas->scale(2, 2);
 
     sk_sp<SkMaskFilter> mfs[] = {
-        SkShaderMaskFilter::Make(maskImage->makeShader()),
-        SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, 3.5f),
-        nullptr,
+            SkShaderMaskFilter::Make(maskImage->makeShader()),
+            SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, 3.5f),
+            nullptr,
     };
     mfs[2] = SkMaskFilter::MakeCompose(mfs[1], mfs[0]);
 
@@ -238,54 +253,50 @@ static void draw_mask(SkCanvas* canvas) {
 DEF_SIMPLE_GM(shadermaskfilter_localmatrix, canvas, 1500, 1000) {
     static constexpr SkScalar kSize = 100;
 
-    using ShaderMakerT = sk_sp<SkShader>(*)(SkCanvas*, const SkMatrix& lm);
+    using ShaderMakerT = sk_sp<SkShader> (*)(SkCanvas*, const SkMatrix& lm);
     static const ShaderMakerT gShaderMakers[] = {
-        [](SkCanvas* canvas, const SkMatrix& lm) -> sk_sp<SkShader> {
-            auto surface = sk_tool_utils::makeSurface(canvas,
-                                                      SkImageInfo::MakeN32Premul(kSize, kSize));
-            draw_mask(surface->getCanvas());
-            return surface->makeImageSnapshot()->makeShader(SkShader::kClamp_TileMode,
-                                                            SkShader::kClamp_TileMode, &lm);
-        },
-        [](SkCanvas*, const SkMatrix& lm) -> sk_sp<SkShader> {
-            SkPictureRecorder recorder;
-            draw_mask(recorder.beginRecording(kSize, kSize));
-            return SkShader::MakePictureShader(recorder.finishRecordingAsPicture(),
-                                               SkShader::kClamp_TileMode,
-                                               SkShader::kClamp_TileMode,
-                                               &lm, nullptr);
-        },
+            [](SkCanvas* canvas, const SkMatrix& lm) -> sk_sp<SkShader> {
+                auto surface =
+                        ToolUtils::makeSurface(canvas, SkImageInfo::MakeN32Premul(kSize, kSize));
+                draw_mask(surface->getCanvas());
+                return surface->makeImageSnapshot()->makeShader(SkTileMode::kClamp,
+                                                                SkTileMode::kClamp, &lm);
+            },
+            [](SkCanvas*, const SkMatrix& lm) -> sk_sp<SkShader> {
+                SkPictureRecorder recorder;
+                draw_mask(recorder.beginRecording(kSize, kSize));
+                return recorder.finishRecordingAsPicture()->makeShader(
+                        SkTileMode::kClamp, SkTileMode::kClamp, &lm, nullptr);
+            },
     };
 
     struct Config {
-        SkMatrix fCanvasMatrix,
-                 fMaskMatrix,
-                 fShaderMatrix;
+        SkMatrix fCanvasMatrix, fMaskMatrix, fShaderMatrix;
     } gConfigs[] = {
-        { SkMatrix::I(), SkMatrix::MakeScale(2, 2), SkMatrix::MakeTrans(10, 10) },
-        { SkMatrix::MakeScale(2, 2), SkMatrix::I(), SkMatrix::MakeTrans(10, 10) },
-        { SkMatrix::MakeScale(2, 2), SkMatrix::MakeTrans(10, 10), SkMatrix::I() },
-        { SkMatrix::Concat(SkMatrix::MakeScale(2, 2), SkMatrix::MakeTrans(10, 10)),
-          SkMatrix::I(), SkMatrix::I() },
-        { SkMatrix::I(),
-          SkMatrix::Concat(SkMatrix::MakeScale(2, 2), SkMatrix::MakeTrans(10, 10)),
-          SkMatrix::I() },
-        { SkMatrix::I(), SkMatrix::I(),
-          SkMatrix::Concat(SkMatrix::MakeScale(2, 2), SkMatrix::MakeTrans(10, 10)) },
+            {SkMatrix::I(), SkMatrix::MakeScale(2, 2), SkMatrix::MakeTrans(10, 10)},
+            {SkMatrix::MakeScale(2, 2), SkMatrix::I(), SkMatrix::MakeTrans(10, 10)},
+            {SkMatrix::MakeScale(2, 2), SkMatrix::MakeTrans(10, 10), SkMatrix::I()},
+            {SkMatrix::Concat(SkMatrix::MakeScale(2, 2), SkMatrix::MakeTrans(10, 10)),
+             SkMatrix::I(), SkMatrix::I()},
+            {SkMatrix::I(),
+             SkMatrix::Concat(SkMatrix::MakeScale(2, 2), SkMatrix::MakeTrans(10, 10)),
+             SkMatrix::I()},
+            {SkMatrix::I(), SkMatrix::I(),
+             SkMatrix::Concat(SkMatrix::MakeScale(2, 2), SkMatrix::MakeTrans(10, 10))},
     };
 
-    using DrawerT = void(*)(SkCanvas*, const SkRect&, const SkPaint&);
+    using DrawerT = void (*)(SkCanvas*, const SkRect&, const SkPaint&);
     static const DrawerT gDrawers[] = {
-        [](SkCanvas* canvas, const SkRect& dest, const SkPaint& mask) {
-            canvas->drawRect(dest, mask);
-        },
-        [](SkCanvas* canvas, const SkRect& dest, const SkPaint& mask) {
-            canvas->saveLayer(&dest, &mask);
-            SkPaint p = mask;
-            p.setMaskFilter(nullptr);
-            canvas->drawPaint(p);
-            canvas->restore();
-        },
+            [](SkCanvas* canvas, const SkRect& dest, const SkPaint& mask) {
+                canvas->drawRect(dest, mask);
+            },
+            [](SkCanvas* canvas, const SkRect& dest, const SkPaint& mask) {
+                canvas->saveLayer(&dest, &mask);
+                SkPaint p = mask;
+                p.setMaskFilter(nullptr);
+                canvas->drawPaint(p);
+                canvas->restore();
+            },
     };
 
     SkPaint paint, rectPaint;
@@ -299,7 +310,7 @@ DEF_SIMPLE_GM(shadermaskfilter_localmatrix, canvas, 1500, 1000) {
                 SkAutoCanvasRestore acr(canvas, true);
                 for (const auto& cfg : gConfigs) {
                     paint.setMaskFilter(SkShaderMaskFilter::Make(sm(canvas, cfg.fShaderMatrix))
-                                        ->makeWithMatrix(cfg.fMaskMatrix));
+                                                ->makeWithMatrix(cfg.fMaskMatrix));
                     auto dest = SkRect::MakeWH(kSize, kSize);
                     SkMatrix::Concat(cfg.fMaskMatrix, cfg.fShaderMatrix).mapRect(&dest);
 
@@ -315,6 +326,5 @@ DEF_SIMPLE_GM(shadermaskfilter_localmatrix, canvas, 1500, 1000) {
             }
             canvas->translate(0, kSize * 2.5f);
         }
-
     }
 }

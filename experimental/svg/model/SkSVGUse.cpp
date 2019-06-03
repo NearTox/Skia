@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "SkSVGUse.h"
+#include "experimental/svg/model/SkSVGUse.h"
 
-#include "SkCanvas.h"
-#include "SkSVGRenderContext.h"
-#include "SkSVGValue.h"
+#include "experimental/svg/model/SkSVGRenderContext.h"
+#include "experimental/svg/model/SkSVGValue.h"
+#include "include/core/SkCanvas.h"
 
 SkSVGUse::SkSVGUse() : INHERITED(SkSVGTag::kUse) {}
 
@@ -17,37 +17,31 @@ void SkSVGUse::appendChild(sk_sp<SkSVGNode>) {
     SkDebugf("cannot append child nodes to this element.\n");
 }
 
-void SkSVGUse::setHref(const SkSVGStringType& href) {
-    fHref = href;
-}
+void SkSVGUse::setHref(const SkSVGStringType& href) { fHref = href; }
 
-void SkSVGUse::setX(const SkSVGLength& x) {
-    fX = x;
-}
+void SkSVGUse::setX(const SkSVGLength& x) { fX = x; }
 
-void SkSVGUse::setY(const SkSVGLength& y) {
-    fY = y;
-}
+void SkSVGUse::setY(const SkSVGLength& y) { fY = y; }
 
 void SkSVGUse::onSetAttribute(SkSVGAttribute attr, const SkSVGValue& v) {
     switch (attr) {
-    case SkSVGAttribute::kHref:
-        if (const auto* href = v.as<SkSVGStringValue>()) {
-            this->setHref(*href);
-        }
-        break;
-    case SkSVGAttribute::kX:
-        if (const auto* x = v.as<SkSVGLengthValue>()) {
-            this->setX(*x);
-        }
-        break;
-    case SkSVGAttribute::kY:
-        if (const auto* y = v.as<SkSVGLengthValue>()) {
-            this->setY(*y);
-        }
-        break;
-    default:
-        this->INHERITED::onSetAttribute(attr, v);
+        case SkSVGAttribute::kHref:
+            if (const auto* href = v.as<SkSVGStringValue>()) {
+                this->setHref(*href);
+            }
+            break;
+        case SkSVGAttribute::kX:
+            if (const auto* x = v.as<SkSVGLengthValue>()) {
+                this->setX(*x);
+            }
+            break;
+        case SkSVGAttribute::kY:
+            if (const auto* y = v.as<SkSVGLengthValue>()) {
+                this->setY(*y);
+            }
+            break;
+        default:
+            this->INHERITED::onSetAttribute(attr, v);
     }
 }
 

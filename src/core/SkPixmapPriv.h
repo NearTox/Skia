@@ -8,9 +8,9 @@
 #ifndef SkPixmapPriv_DEFINED
 #define SkPixmapPriv_DEFINED
 
-#include "SkPixmap.h"
-#include "SkEncodedOrigin.h"
-#include "SkAutoPixmapStorage.h"
+#include "include/codec/SkEncodedOrigin.h"
+#include "include/core/SkPixmap.h"
+#include "src/core/SkAutoPixmapStorage.h"
 
 class SkPixmapPriv {
 public:
@@ -20,8 +20,8 @@ public:
      */
     static bool Orient(const SkPixmap& dst, const SkPixmap& src, SkEncodedOrigin);
 
-    static bool ShouldSwapWidthHeight(SkEncodedOrigin o);
-    static SkImageInfo SwapWidthHeight(const SkImageInfo& info);
+    static bool ShouldSwapWidthHeight(SkEncodedOrigin o) noexcept;
+    static SkImageInfo SwapWidthHeight(const SkImageInfo& info) noexcept;
 
     /**
      *  Decode an image and then copy into dst, applying origin.
@@ -33,7 +33,7 @@ public:
      *      applying the origin.
      */
     static bool Orient(const SkPixmap& dst, SkEncodedOrigin origin,
-            std::function<bool(const SkPixmap&)> decode) {
+                       std::function<bool(const SkPixmap&)> decode) {
         SkAutoPixmapStorage storage;
         const SkPixmap* tmp = &dst;
         if (origin != kTopLeft_SkEncodedOrigin) {
@@ -55,7 +55,7 @@ public:
         return true;
     }
 
-    static void ResetPixmapKeepInfo(SkPixmap* pm, const void* address, size_t rowBytes) {
+    static void ResetPixmapKeepInfo(SkPixmap* pm, const void* address, size_t rowBytes) noexcept {
         pm->fRowBytes = rowBytes;
         pm->fPixels = address;
     }

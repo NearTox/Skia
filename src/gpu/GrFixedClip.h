@@ -8,9 +8,9 @@
 #ifndef GrFixedClip_DEFINED
 #define GrFixedClip_DEFINED
 
-#include "GrClip.h"
-#include "GrScissorState.h"
-#include "GrWindowRectsState.h"
+#include "src/gpu/GrClip.h"
+#include "src/gpu/GrScissorState.h"
+#include "src/gpu/GrWindowRectsState.h"
 
 /**
  * Implements GrHardClip with scissor and window rectangles.
@@ -22,13 +22,14 @@ public:
 
     const GrScissorState& scissorState() const { return fScissorState; }
     bool scissorEnabled() const { return fScissorState.enabled(); }
-    const SkIRect& scissorRect() const { SkASSERT(scissorEnabled()); return fScissorState.rect(); }
+    const SkIRect& scissorRect() const {
+        SkASSERT(scissorEnabled());
+        return fScissorState.rect();
+    }
 
     void disableScissor() { fScissorState.setDisabled(); }
 
-    void setScissor(const SkIRect& irect) {
-        fScissorState.set(irect);
-    }
+    void setScissor(const SkIRect& irect) { fScissorState.set(irect); }
     bool SK_WARN_UNUSED_RESULT intersect(const SkIRect& irect) {
         return fScissorState.intersect(irect);
     }
@@ -50,8 +51,8 @@ public:
     static const GrFixedClip& Disabled();
 
 private:
-    GrScissorState       fScissorState;
-    GrWindowRectsState   fWindowRectsState;
+    GrScissorState fScissorState;
+    GrWindowRectsState fWindowRectsState;
 };
 
 #endif

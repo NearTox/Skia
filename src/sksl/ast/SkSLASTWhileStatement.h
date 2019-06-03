@@ -8,7 +8,7 @@
 #ifndef SKSL_ASTWHILESTATEMENT
 #define SKSL_ASTWHILESTATEMENT
 
-#include "SkSLASTStatement.h"
+#include "src/sksl/ast/SkSLASTStatement.h"
 
 namespace SkSL {
 
@@ -18,9 +18,9 @@ namespace SkSL {
 struct ASTWhileStatement : public ASTStatement {
     ASTWhileStatement(int offset, std::unique_ptr<ASTExpression> test,
                       std::unique_ptr<ASTStatement> statement)
-    : INHERITED(offset, kWhile_Kind)
-    , fTest(std::move(test))
-    , fStatement(std::move(statement)) {}
+            : INHERITED(offset, kWhile_Kind)
+            , fTest(std::move(test))
+            , fStatement(std::move(statement)) {}
 
     String description() const override {
         return "while (" + fTest->description() + ") " + fStatement->description();
@@ -32,6 +32,6 @@ struct ASTWhileStatement : public ASTStatement {
     typedef ASTStatement INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

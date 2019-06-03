@@ -8,13 +8,13 @@
 #ifndef GrSWMaskHelper_DEFINED
 #define GrSWMaskHelper_DEFINED
 
-#include "GrTypesPriv.h"
-#include "SkAutoPixmapStorage.h"
-#include "SkDraw.h"
-#include "SkMatrix.h"
-#include "SkRasterClip.h"
-#include "SkRegion.h"
-#include "SkTypes.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkRegion.h"
+#include "include/core/SkTypes.h"
+#include "include/private/GrTypesPriv.h"
+#include "src/core/SkAutoPixmapStorage.h"
+#include "src/core/SkDraw.h"
+#include "src/core/SkRasterClip.h"
 
 class GrShape;
 class GrRecordingContext;
@@ -37,7 +37,7 @@ class GrTextureProxy;
 class GrSWMaskHelper : SkNoncopyable {
 public:
     GrSWMaskHelper(SkAutoPixmapStorage* pixels = nullptr)
-            : fPixels(pixels ? pixels : &fPixelsStorage) { }
+            : fPixels(pixels ? pixels : &fPixelsStorage) {}
 
     // set up the internal state in preparation for draws. Since many masks
     // may be accumulated in the helper during creation, "resultBounds"
@@ -54,18 +54,16 @@ public:
     sk_sp<GrTextureProxy> toTextureProxy(GrRecordingContext*, SkBackingFit fit);
 
     // Reset the internal bitmap
-    void clear(uint8_t alpha) {
-        fPixels->erase(SkColorSetARGB(alpha, 0xFF, 0xFF, 0xFF));
-    }
+    void clear(uint8_t alpha) { fPixels->erase(SkColorSetARGB(alpha, 0xFF, 0xFF, 0xFF)); }
 
 private:
-    SkVector             fTranslate;
+    SkVector fTranslate;
     SkAutoPixmapStorage* fPixels;
-    SkAutoPixmapStorage  fPixelsStorage;
-    SkDraw               fDraw;
-    SkRasterClip         fRasterClip;
+    SkAutoPixmapStorage fPixelsStorage;
+    SkDraw fDraw;
+    SkRasterClip fRasterClip;
 
     typedef SkNoncopyable INHERITED;
 };
 
-#endif // GrSWMaskHelper_DEFINED
+#endif  // GrSWMaskHelper_DEFINED

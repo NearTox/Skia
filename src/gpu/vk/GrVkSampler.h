@@ -8,11 +8,11 @@
 #ifndef GrVkSampler_DEFINED
 #define GrVkSampler_DEFINED
 
-#include "GrVkResource.h"
-#include "GrVkSamplerYcbcrConversion.h"
-#include "SkOpts.h"
-#include "vk/GrVkTypes.h"
 #include <atomic>
+#include "include/gpu/vk/GrVkTypes.h"
+#include "src/core/SkOpts.h"
+#include "src/gpu/vk/GrVkResource.h"
+#include "src/gpu/vk/GrVkSamplerYcbcrConversion.h"
 
 class GrSamplerState;
 class GrVkGpu;
@@ -32,12 +32,11 @@ public:
             fSamplerKey = samplerKey;
             fYcbcrKey = ycbcrKey;
         }
-        uint16_t                        fSamplerKey;
+        uint16_t fSamplerKey;
         GrVkSamplerYcbcrConversion::Key fYcbcrKey;
 
         bool operator==(const Key& that) const {
-            return this->fSamplerKey == that.fSamplerKey &&
-                   this->fYcbcrKey == that.fYcbcrKey;
+            return this->fSamplerKey == that.fSamplerKey && this->fYcbcrKey == that.fYcbcrKey;
         }
     };
 
@@ -77,10 +76,10 @@ private:
         return id;
     }
 
-    VkSampler                   fSampler;
+    VkSampler fSampler;
     GrVkSamplerYcbcrConversion* fYcbcrConversion;
-    Key                         fKey;
-    uint32_t                    fUniqueID;
+    Key fKey;
+    uint32_t fUniqueID;
 
     typedef GrVkResource INHERITED;
 };

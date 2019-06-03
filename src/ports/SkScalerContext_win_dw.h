@@ -8,10 +8,10 @@
 #ifndef SkScalarContext_win_dw_DEFINED
 #define SkScalarContext_win_dw_DEFINED
 
-#include "SkScalar.h"
-#include "SkScalerContext.h"
-#include "SkTypeface_win_dw.h"
-#include "SkTypes.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkTypes.h"
+#include "src/core/SkScalerContext.h"
+#include "src/ports/SkTypeface_win_dw.h"
 
 #include <dwrite.h>
 #include <dwrite_2.h>
@@ -28,7 +28,6 @@ public:
 
 protected:
     unsigned generateGlyphCount() override;
-    uint16_t generateCharToGlyph(SkUnichar uni) override;
     bool generateAdvance(SkGlyph* glyph) override;
     void generateMetrics(SkGlyph* glyph) override;
     void generateImage(const SkGlyph& glyph) override;
@@ -62,7 +61,6 @@ private:
     void generatePngMetrics(SkGlyph* glyph);
 
     void generatePngGlyphImage(const SkGlyph& glyph);
-
 
     SkTDArray<uint8_t> fBits;
     /** The total matrix without the text height scale. */

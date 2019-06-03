@@ -8,11 +8,11 @@
 #ifndef GrGLGpuCommandBuffer_DEFINED
 #define GrGLGpuCommandBuffer_DEFINED
 
-#include "GrGpuCommandBuffer.h"
+#include "src/gpu/GrGpuCommandBuffer.h"
 
-#include "GrGLGpu.h"
-#include "GrGLRenderTarget.h"
-#include "GrOpFlushState.h"
+#include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/gl/GrGLGpu.h"
+#include "src/gpu/gl/GrGLRenderTarget.h"
 
 class GrGLGpu;
 class GrGLRenderTarget;
@@ -26,13 +26,15 @@ public:
         fGpu->copySurface(fTexture, fOrigin, src, srcOrigin, srcRect, dstPoint);
     }
 
-    void insertEventMarker(const char* msg) override {
-        fGpu->insertEventMarker(msg);
+    void transferFrom(const SkIRect& srcRect, GrColorType bufferColorType,
+                      GrGpuBuffer* transferBuffer, size_t offset) override {
+        fGpu->transferPixelsFrom(fTexture, srcRect.fLeft, srcRect.fTop, srcRect.width(),
+                                 srcRect.height(), bufferColorType, transferBuffer, offset);
     }
 
-    void reset() {
-        fTexture = nullptr;
-    }
+    void insertEventMarker(const char* msg) override { fGpu->insertEventMarker(msg); }
+
+    void reset() { fTexture = nullptr; }
 
 private:
     GrGLGpu* fGpu;
@@ -41,22 +43,20 @@ private:
 };
 
 class GrGLGpuRTCommandBuffer : public GrGpuRTCommandBuffer {
-/**
- * We do not actually buffer up draws or do any work in the this class for GL. Instead commands
- * are immediately sent to the gpu to execute. Thus all the commands in this class are simply
- * pass through functions to corresponding calls in the GrGLGpu class.
- */
+    /**
+     * We do not actually buffer up draws or do any work in the this class for GL. Instead commands
+     * are immediately sent to the gpu to execute. Thus all the commands in this class are simply
+     * pass through functions to corresponding calls in the GrGLGpu class.
+     */
 public:
     GrGLGpuRTCommandBuffer(GrGLGpu* gpu) : fGpu(gpu) {}
 
     void begin() override;
     void end() override {}
 
-    void discard() override { }
+    void discard() override {}
 
-    void insertEventMarker(const char* msg) override {
-        fGpu->insertEventMarker(msg);
-    }
+    void insertEventMarker(const char* msg) override { fGpu->insertEventMarker(msg); }
 
     void inlineUpload(GrOpFlushState* state, GrDeferredTextureUploadFn& upload) override {
         state->doUpload(upload);
@@ -67,13 +67,16 @@ public:
         fGpu->copySurface(fRenderTarget, fOrigin, src, srcOrigin, srcRect, dstPoint);
     }
 
-    void set(GrRenderTarget*, GrSurfaceOrigin,
-             const GrGpuRTCommandBuffer::LoadAndStoreInfo&,
+    void transferFrom(const SkIRect& srcRect, GrColorType bufferColorType,
+                      GrGpuBuffer* transferBuffer, size_t offset) override {
+        fGpu->transferPixelsFrom(fRenderTarget, srcRect.fLeft, srcRect.fTop, srcRect.width(),
+                                 srcRect.height(), bufferColorType, transferBuffer, offset);
+    }
+
+    void set(GrRenderTarget*, GrSurfaceOrigin, const GrGpuRTCommandBuffer::LoadAndStoreInfo&,
              const GrGpuRTCommandBuffer::StencilLoadAndStoreInfo&);
 
-    void reset() {
-        fRenderTarget = nullptr;
-    }
+    void reset() { fRenderTarget = nullptr; }
 
 private:
     GrGpu* gpu() override { return fGpu; }
@@ -97,12 +100,11 @@ private:
         fGpu->clearStencilClip(clip, insideStencilMask, fRenderTarget, fOrigin);
     }
 
-    GrGLGpu*                                      fGpu;
-    GrGpuRTCommandBuffer::LoadAndStoreInfo        fColorLoadAndStoreInfo;
+    GrGLGpu* fGpu;
+    GrGpuRTCommandBuffer::LoadAndStoreInfo fColorLoadAndStoreInfo;
     GrGpuRTCommandBuffer::StencilLoadAndStoreInfo fStencilLoadAndStoreInfo;
 
     typedef GrGpuRTCommandBuffer INHERITED;
 };
 
 #endif
-

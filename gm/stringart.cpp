@@ -5,11 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkAnimTimer.h"
-#include "SkCanvas.h"
-#include "SkPath.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "tools/ToolUtils.h"
+#include "tools/timer/AnimTimer.h"
 
 // Reproduces https://code.google.com/p/chromium/issues/detail?id=279014
 
@@ -26,17 +32,12 @@ public:
     StringArtGM() : fNumSteps(kMaxNumSteps) {}
 
 protected:
+    SkString onShortName() override { return SkString("stringart"); }
 
-    SkString onShortName() override {
-        return SkString("stringart");
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(kWidth, kHeight);
-    }
+    SkISize onISize() override { return SkISize::Make(kWidth, kHeight); }
 
     void onDraw(SkCanvas* canvas) override {
-        SkScalar angle = kAngle*SK_ScalarPI + SkScalarHalf(SK_ScalarPI);
+        SkScalar angle = kAngle * SK_ScalarPI + SkScalarHalf(SK_ScalarPI);
         SkScalar size = SkIntToScalar(SkMin32(kWidth, kHeight));
         SkPoint center = SkPoint::Make(SkScalarHalf(kWidth), SkScalarHalf(kHeight));
         SkScalar length = 5;
@@ -46,8 +47,8 @@ protected:
         path.moveTo(center);
 
         for (int i = 0; i < fNumSteps && length < (SkScalarHalf(size) - 10.f); ++i) {
-            SkPoint rp = SkPoint::Make(length*SkScalarCos(step) + center.fX,
-                                       length*SkScalarSin(step) + center.fY);
+            SkPoint rp = SkPoint::Make(length * SkScalarCos(step) + center.fX,
+                                       length * SkScalarSin(step) + center.fY);
             path.lineTo(rp);
             length += angle / SkScalarHalf(SK_ScalarPI);
             step += angle;
@@ -56,23 +57,23 @@ protected:
         SkPaint paint;
         paint.setAntiAlias(true);
         paint.setStyle(SkPaint::kStroke_Style);
-        paint.setColor(sk_tool_utils::color_to_565(0xFF007700));
+        paint.setColor(ToolUtils::color_to_565(0xFF007700));
 
         canvas->drawPath(path, paint);
     }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         constexpr SkScalar kDesiredDurationSecs = 3.0f;
 
         // Make the animation ping-pong back and forth but start in the fully drawn state
-        SkScalar fraction = 1.0f - timer.scaled(2.0f/kDesiredDurationSecs, 2.0f);
+        SkScalar fraction = 1.0f - timer.scaled(2.0f / kDesiredDurationSecs, 2.0f);
         if (fraction <= 0.0f) {
             fraction = -fraction;
         }
 
         SkASSERT(fraction >= 0.0f && fraction <= 1.0f);
 
-        fNumSteps = (int) (fraction * kMaxNumSteps);
+        fNumSteps = (int)(fraction * kMaxNumSteps);
         return true;
     }
 
@@ -82,12 +83,12 @@ private:
     typedef GM INHERITED;
 };
 
-DEF_GM( return new StringArtGM; )
+DEF_GM(return new StringArtGM;)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if 0
-#include "Skottie.h"
+#include "modules/skottie/include/Skottie.h"
 
 class SkottieGM : public skiagm::GM {
     enum {
@@ -141,7 +142,7 @@ protected:
         }
     }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         SkScalar time = (float)(fmod(timer.secs(), fDur) / fDur);
         for (auto anim : fAnims) {
             anim->seek(time);
@@ -154,4 +155,3 @@ private:
 };
 DEF_GM( return new SkottieGM; )
 #endif
-

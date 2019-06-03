@@ -5,18 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 #ifdef SK_HAS_HEIF_LIBRARY
-#include "SkCodec.h"
-#include "SkCodecPriv.h"
-#include "SkColorData.h"
-#include "SkEndian.h"
-#include "SkStream.h"
-#include "SkHeifCodec.h"
+#include "include/codec/SkCodec.h"
+#include "include/core/SkStream.h"
+#include "include/private/SkColorData.h"
+#include "src/codec/SkCodecPriv.h"
+#include "src/codec/SkHeifCodec.h"
+#include "src/core/SkEndian.h"
 
-#define FOURCC(c1, c2, c3, c4) \
-    ((c1) << 24 | (c2) << 16 | (c3) << 8 | (c4))
+#define FOURCC(c1, c2, c3, c4) ((c1) << 24 | (c2) << 16 | (c3) << 8 | (c4))
 
 bool SkHeifCodec::IsHeif(const void* buffer, size_t bytesRead) {
     // Parse the ftyp box up to bytesRead to determine if this is HEIF.
@@ -71,55 +70,49 @@ bool SkHeifCodec::IsHeif(const void* buffer, size_t bytesRead) {
         }
         auto* brandPtr = SkTAddOffset<const uint32_t>(buffer, offset + 4 * i);
         uint32_t brand = SkEndian_SwapBE32(*brandPtr);
-        if (brand == FOURCC('m', 'i', 'f', '1') || brand == FOURCC('h', 'e', 'i', 'c')
-         || brand == FOURCC('m', 's', 'f', '1') || brand == FOURCC('h', 'e', 'v', 'c')) {
+        if (brand == FOURCC('m', 'i', 'f', '1') || brand == FOURCC('h', 'e', 'i', 'c') ||
+            brand == FOURCC('m', 's', 'f', '1') || brand == FOURCC('h', 'e', 'v', 'c')) {
             return true;
         }
     }
     return false;
 }
 
-static SkEncodedOrigin get_orientation(const HeifFrameInfo& frameInfo) {
+static SkEncodedOrigin get_orientation(const HeifFrameInfo& frameInfo) noexcept {
     switch (frameInfo.mRotationAngle) {
-        case 0:   return kTopLeft_SkEncodedOrigin;
-        case 90:  return kRightTop_SkEncodedOrigin;
-        case 180: return kBottomRight_SkEncodedOrigin;
-        case 270: return kLeftBottom_SkEncodedOrigin;
+        case 0:
+            return kTopLeft_SkEncodedOrigin;
+        case 90:
+            return kRightTop_SkEncodedOrigin;
+        case 180:
+            return kBottomRight_SkEncodedOrigin;
+        case 270:
+            return kLeftBottom_SkEncodedOrigin;
     }
     return kDefault_SkEncodedOrigin;
 }
 
 struct SkHeifStreamWrapper : public HeifStream {
-    SkHeifStreamWrapper(SkStream* stream) : fStream(stream) {}
+    SkHeifStreamWrapper(SkStream* stream) noexcept : fStream(stream) {}
 
     ~SkHeifStreamWrapper() override {}
 
-    size_t read(void* buffer, size_t size) override {
-        return fStream->read(buffer, size);
-    }
+    size_t read(void* buffer, size_t size) override { return fStream->read(buffer, size); }
 
-    bool rewind() override {
-        return fStream->rewind();
-    }
+    bool rewind() override { return fStream->rewind(); }
 
-    bool seek(size_t position) override {
-        return fStream->seek(position);
-    }
+    bool seek(size_t position) override { return fStream->seek(position); }
 
-    bool hasLength() const override {
-        return fStream->hasLength();
-    }
+    bool hasLength() const override { return fStream->hasLength(); }
 
-    size_t getLength() const override {
-        return fStream->getLength();
-    }
+    size_t getLength() const override { return fStream->getLength(); }
 
 private:
     std::unique_ptr<SkStream> fStream;
 };
 
-std::unique_ptr<SkCodec> SkHeifCodec::MakeFromStream(
-        std::unique_ptr<SkStream> stream, Result* result) {
+std::unique_ptr<SkCodec> SkHeifCodec::MakeFromStream(std::unique_ptr<SkStream> stream,
+                                                     Result* result) {
     std::unique_ptr<HeifDecoder> heifDecoder(createHeifDecoder());
     if (heifDecoder.get() == nullptr) {
         *result = kInternalError;
@@ -127,8 +120,7 @@ std::unique_ptr<SkCodec> SkHeifCodec::MakeFromStream(
     }
 
     HeifFrameInfo frameInfo;
-    if (!heifDecoder->init(new SkHeifStreamWrapper(stream.release()),
-                           &frameInfo)) {
+    if (!heifDecoder->init(new SkHeifStreamWrapper(stream.release()), &frameInfo)) {
         *result = kInvalidInput;
         return nullptr;
     }
@@ -144,22 +136,21 @@ std::unique_ptr<SkCodec> SkHeifCodec::MakeFromStream(
         profile = nullptr;
     }
 
-    SkEncodedInfo info = SkEncodedInfo::Make(frameInfo.mWidth, frameInfo.mHeight,
-            SkEncodedInfo::kYUV_Color, SkEncodedInfo::kOpaque_Alpha, 8, std::move(profile));
+    SkEncodedInfo info =
+            SkEncodedInfo::Make(frameInfo.mWidth, frameInfo.mHeight, SkEncodedInfo::kYUV_Color,
+                                SkEncodedInfo::kOpaque_Alpha, 8, std::move(profile));
     SkEncodedOrigin orientation = get_orientation(frameInfo);
 
     *result = kSuccess;
-    return std::unique_ptr<SkCodec>(new SkHeifCodec(std::move(info), heifDecoder.release(),
-                                                    orientation));
+    return std::unique_ptr<SkCodec>(
+            new SkHeifCodec(std::move(info), heifDecoder.release(), orientation));
 }
 
 SkHeifCodec::SkHeifCodec(SkEncodedInfo&& info, HeifDecoder* heifDecoder, SkEncodedOrigin origin)
-    : INHERITED(std::move(info), skcms_PixelFormat_RGBA_8888, nullptr, origin)
-    , fHeifDecoder(heifDecoder)
-    , fSwizzleSrcRow(nullptr)
-    , fColorXformSrcRow(nullptr)
-{}
-
+        : INHERITED(std::move(info), skcms_PixelFormat_RGBA_8888, nullptr, origin)
+        , fHeifDecoder(heifDecoder)
+        , fSwizzleSrcRow(nullptr)
+        , fColorXformSrcRow(nullptr) {}
 
 bool SkHeifCodec::conversionSupported(const SkImageInfo& dstInfo, bool srcIsOpaque,
                                       bool needsColorXform) {
@@ -170,7 +161,8 @@ bool SkHeifCodec::conversionSupported(const SkImageInfo& dstInfo, bool srcIsOpaq
     }
 
     if (kOpaque_SkAlphaType != dstInfo.alphaType()) {
-        SkCodecPrintf("Warning: an opaque image should be decoded as opaque "
+        SkCodecPrintf(
+                "Warning: an opaque image should be decoded as opaque "
                 "- it is being decoded as non-opaque, which will draw slower\n");
     }
 
@@ -206,8 +198,8 @@ int SkHeifCodec::readRows(const SkImageInfo& dstInfo, void* dst, size_t rowBytes
     // When fColorXformSrcRow is non-null, it means that we need to color xform and that
     // we cannot color xform "in place" (many times we can, but not when the dst is F16).
     // In this case, we will color xform from fColorXformSrcRow into the dst.
-    uint8_t* decodeDst = (uint8_t*) dst;
-    uint32_t* swizzleDst = (uint32_t*) dst;
+    uint8_t* decodeDst = (uint8_t*)dst;
+    uint32_t* swizzleDst = (uint32_t*)dst;
     size_t decodeDstRowBytes = rowBytes;
     size_t swizzleDstRowBytes = rowBytes;
     int dstWidth = opts.fSubset ? opts.fSubset->width() : dstInfo.width();
@@ -218,7 +210,7 @@ int SkHeifCodec::readRows(const SkImageInfo& dstInfo, void* dst, size_t rowBytes
         swizzleDstRowBytes = 0;
         dstWidth = fSwizzler->swizzleWidth();
     } else if (fColorXformSrcRow) {
-        decodeDst = (uint8_t*) fColorXformSrcRow;
+        decodeDst = (uint8_t*)fColorXformSrcRow;
         swizzleDst = fColorXformSrcRow;
         decodeDstRowBytes = 0;
         swizzleDstRowBytes = 0;
@@ -252,10 +244,8 @@ int SkHeifCodec::readRows(const SkImageInfo& dstInfo, void* dst, size_t rowBytes
 /*
  * Performs the heif decode
  */
-SkCodec::Result SkHeifCodec::onGetPixels(const SkImageInfo& dstInfo,
-                                         void* dst, size_t dstRowBytes,
-                                         const Options& options,
-                                         int* rowsDecoded) {
+SkCodec::Result SkHeifCodec::onGetPixels(const SkImageInfo& dstInfo, void* dst, size_t dstRowBytes,
+                                         const Options& options, int* rowsDecoded) {
     if (options.fSubset) {
         // Not supporting subsets on this path for now.
         // TODO: if the heif has tiles, we can support subset here, but
@@ -279,7 +269,7 @@ SkCodec::Result SkHeifCodec::onGetPixels(const SkImageInfo& dstInfo,
     return kSuccess;
 }
 
-void SkHeifCodec::allocateStorage(const SkImageInfo& dstInfo) {
+void SkHeifCodec::allocateStorage(const SkImageInfo& dstInfo) noexcept {
     int dstWidth = dstInfo.width();
 
     size_t swizzleBytes = 0;
@@ -299,13 +289,12 @@ void SkHeifCodec::allocateStorage(const SkImageInfo& dstInfo) {
     fStorage.reset(totalBytes);
     if (totalBytes > 0) {
         fSwizzleSrcRow = (swizzleBytes > 0) ? fStorage.get() : nullptr;
-        fColorXformSrcRow = (xformBytes > 0) ?
-                SkTAddOffset<uint32_t>(fStorage.get(), swizzleBytes) : nullptr;
+        fColorXformSrcRow =
+                (xformBytes > 0) ? SkTAddOffset<uint32_t>(fStorage.get(), swizzleBytes) : nullptr;
     }
 }
 
-void SkHeifCodec::initializeSwizzler(
-        const SkImageInfo& dstInfo, const Options& options) {
+void SkHeifCodec::initializeSwizzler(const SkImageInfo& dstInfo, const Options& options) {
     SkImageInfo swizzlerDstInfo = dstInfo;
     if (this->colorXform()) {
         // The color xform will be expecting RGBA 8888 input.
@@ -332,8 +321,17 @@ SkSampler* SkHeifCodec::getSampler(bool createIfNecessary) {
     return fSwizzler.get();
 }
 
-SkCodec::Result SkHeifCodec::onStartScanlineDecode(
-        const SkImageInfo& dstInfo, const Options& options) {
+bool SkHeifCodec::onRewind() noexcept {
+    fSwizzler.reset(nullptr);
+    fSwizzleSrcRow = nullptr;
+    fColorXformSrcRow = nullptr;
+    fStorage.reset();
+
+    return true;
+}
+
+SkCodec::Result SkHeifCodec::onStartScanlineDecode(const SkImageInfo& dstInfo,
+                                                   const Options& options) noexcept {
     // TODO: For now, just decode the whole thing even when there is a subset.
     // If the heif image has tiles, we could potentially do this much faster,
     // but the tile configuration needs to be retrieved from the metadata.
@@ -357,7 +355,7 @@ int SkHeifCodec::onGetScanlines(void* dst, int count, size_t dstRowBytes) {
 }
 
 bool SkHeifCodec::onSkipScanlines(int count) {
-    return count == (int) fHeifDecoder->skipScanlines(count);
+    return count == (int)fHeifDecoder->skipScanlines(count);
 }
 
-#endif // SK_HAS_HEIF_LIBRARY
+#endif  // SK_HAS_HEIF_LIBRARY

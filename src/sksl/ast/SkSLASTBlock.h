@@ -8,7 +8,7 @@
 #ifndef SKSL_ASTBLOCK
 #define SKSL_ASTBLOCK
 
-#include "SkSLASTStatement.h"
+#include "src/sksl/ast/SkSLASTStatement.h"
 
 namespace SkSL {
 
@@ -17,8 +17,7 @@ namespace SkSL {
  */
 struct ASTBlock : public ASTStatement {
     ASTBlock(int offset, std::vector<std::unique_ptr<ASTStatement>> statements)
-    : INHERITED(offset, kBlock_Kind)
-    , fStatements(std::move(statements)) {}
+            : INHERITED(offset, kBlock_Kind), fStatements(std::move(statements)) {}
 
     String description() const override {
         String result("{");
@@ -35,6 +34,6 @@ struct ASTBlock : public ASTStatement {
     typedef ASTStatement INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

@@ -4,8 +4,8 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkIntersections.h"
-#include "SkPathOpsLine.h"
+#include "src/pathops/SkIntersections.h"
+#include "src/pathops/SkPathOpsLine.h"
 
 #include <utility>
 
@@ -18,8 +18,8 @@ void SkIntersections::cleanUpParallelLines(bool parallel) {
         bool endMatch = fT[0][1] == 1 || zero_or_one(fT[1][1]);
         if ((!startMatch && !endMatch) || approximately_equal(fT[0][0], fT[0][1])) {
             SkASSERT(startMatch || endMatch);
-            if (startMatch && endMatch && (fT[0][0] != 0 || !zero_or_one(fT[1][0]))
-                    && fT[0][1] == 1 && zero_or_one(fT[1][1])) {
+            if (startMatch && endMatch && (fT[0][0] != 0 || !zero_or_one(fT[1][0])) &&
+                fT[0][1] == 1 && zero_or_one(fT[1][1])) {
                 removeOne(0);
             } else {
                 removeOne(endMatch);
@@ -60,13 +60,13 @@ int SkIntersections::intersectRay(const SkDLine& a, const SkDLine& b) {
         fT[1][0] = numerB;
         used = 1;
     } else {
-       /* See if the axis intercepts match:
-                  ay - ax * ayLen / axLen  ==          by - bx * ayLen / axLen
-         axLen * (ay - ax * ayLen / axLen) == axLen * (by - bx * ayLen / axLen)
-         axLen *  ay - ax * ayLen          == axLen *  by - bx * ayLen
-        */
+        /* See if the axis intercepts match:
+                   ay - ax * ayLen / axLen  ==          by - bx * ayLen / axLen
+          axLen * (ay - ax * ayLen / axLen) == axLen * (by - bx * ayLen / axLen)
+          axLen *  ay - ax * ayLen          == axLen *  by - bx * ayLen
+         */
         if (!AlmostEqualUlps(aLen.fX * a[0].fY - aLen.fY * a[0].fX,
-                aLen.fX * b[0].fY - aLen.fY * b[0].fX)) {
+                             aLen.fX * b[0].fY - aLen.fY * b[0].fX)) {
             return fUsed = 0;
         }
         // there's no great answer for intersection points for coincident rays, but return something
@@ -111,7 +111,7 @@ int SkIntersections::intersect(const SkDLine& a, const SkDLine& b) {
     // detect parallel lines the same way here and in SkOpAngle operator <
     // so that non-parallel means they are also sortable
     bool unparallel = fAllowNear ? NotAlmostEqualUlps_Pin(axByLen, ayBxLen)
-            : NotAlmostDequalUlps(axByLen, ayBxLen);
+                                 : NotAlmostDequalUlps(axByLen, ayBxLen);
     if (unparallel && fUsed == 0) {
         double ab0y = a[0].fY - b[0].fY;
         double ab0x = a[0].fX - b[0].fX;
@@ -124,12 +124,12 @@ int SkIntersections::intersect(const SkDLine& a, const SkDLine& b) {
             computePoints(a, 1);
         }
     }
-/* Allow tracking that both sets of end points are near each other -- the lines are entirely
-   coincident -- even when the end points are not exactly the same.
-   Mark this as a 'wild card' for the end points, so that either point is considered totally
-   coincident. Then, avoid folding the lines over each other, but allow either end to mate
-   to the next set of lines.
- */
+    /* Allow tracking that both sets of end points are near each other -- the lines are entirely
+       coincident -- even when the end points are not exactly the same.
+       Mark this as a 'wild card' for the end points, so that either point is considered totally
+       coincident. Then, avoid folding the lines over each other, but allow either end to mate
+       to the next set of lines.
+     */
     if (fAllowNear || !unparallel) {
         double aNearB[2];
         double bNearA[2];
@@ -201,23 +201,23 @@ double SkIntersections::HorizontalIntercept(const SkDLine& line, double y) {
     return SkPinT((y - line[0].fY) / (line[1].fY - line[0].fY));
 }
 
-int SkIntersections::horizontal(const SkDLine& line, double left, double right,
-                                double y, bool flipped) {
+int SkIntersections::horizontal(const SkDLine& line, double left, double right, double y,
+                                bool flipped) {
     fMax = 3;  // clean up parallel at the end will limit the result to 2 at the most
     // see if end points intersect the opposite line
     double t;
-    const SkDPoint leftPt = { left, y };
+    const SkDPoint leftPt = {left, y};
     if ((t = line.exactPoint(leftPt)) >= 0) {
-        insert(t, (double) flipped, leftPt);
+        insert(t, (double)flipped, leftPt);
     }
     if (left != right) {
-        const SkDPoint rightPt = { right, y };
+        const SkDPoint rightPt = {right, y};
         if ((t = line.exactPoint(rightPt)) >= 0) {
-            insert(t, (double) !flipped, rightPt);
+            insert(t, (double)!flipped, rightPt);
         }
         for (int index = 0; index < 2; ++index) {
             if ((t = SkDLine::ExactPointH(line[index], left, right, y)) >= 0) {
-                insert((double) index, flipped ? 1 - t : t, line[index]);
+                insert((double)index, flipped ? 1 - t : t, line[index]);
             }
         }
     }
@@ -240,16 +240,16 @@ int SkIntersections::horizontal(const SkDLine& line, double left, double right,
     }
     if (fAllowNear || result == 2) {
         if ((t = line.nearPoint(leftPt, nullptr)) >= 0) {
-            insert(t, (double) flipped, leftPt);
+            insert(t, (double)flipped, leftPt);
         }
         if (left != right) {
-            const SkDPoint rightPt = { right, y };
+            const SkDPoint rightPt = {right, y};
             if ((t = line.nearPoint(rightPt, nullptr)) >= 0) {
-                insert(t, (double) !flipped, rightPt);
+                insert(t, (double)!flipped, rightPt);
             }
             for (int index = 0; index < 2; ++index) {
                 if ((t = SkDLine::NearPointH(line[index], left, right, y)) >= 0) {
-                    insert((double) index, flipped ? 1 - t : t, line[index]);
+                    insert((double)index, flipped ? 1 - t : t, line[index]);
                 }
             }
         }
@@ -279,23 +279,23 @@ double SkIntersections::VerticalIntercept(const SkDLine& line, double x) {
     return SkPinT((x - line[0].fX) / (line[1].fX - line[0].fX));
 }
 
-int SkIntersections::vertical(const SkDLine& line, double top, double bottom,
-                              double x, bool flipped) {
+int SkIntersections::vertical(const SkDLine& line, double top, double bottom, double x,
+                              bool flipped) {
     fMax = 3;  // cleanup parallel lines will bring this back line
     // see if end points intersect the opposite line
     double t;
-    SkDPoint topPt = { x, top };
+    SkDPoint topPt = {x, top};
     if ((t = line.exactPoint(topPt)) >= 0) {
-        insert(t, (double) flipped, topPt);
+        insert(t, (double)flipped, topPt);
     }
     if (top != bottom) {
-        SkDPoint bottomPt = { x, bottom };
+        SkDPoint bottomPt = {x, bottom};
         if ((t = line.exactPoint(bottomPt)) >= 0) {
-            insert(t, (double) !flipped, bottomPt);
+            insert(t, (double)!flipped, bottomPt);
         }
         for (int index = 0; index < 2; ++index) {
             if ((t = SkDLine::ExactPointV(line[index], top, bottom, x)) >= 0) {
-                insert((double) index, flipped ? 1 - t : t, line[index]);
+                insert((double)index, flipped ? 1 - t : t, line[index]);
             }
         }
     }
@@ -318,16 +318,16 @@ int SkIntersections::vertical(const SkDLine& line, double top, double bottom,
     }
     if (fAllowNear || result == 2) {
         if ((t = line.nearPoint(topPt, nullptr)) >= 0) {
-            insert(t, (double) flipped, topPt);
+            insert(t, (double)flipped, topPt);
         }
         if (top != bottom) {
-            SkDPoint bottomPt = { x, bottom };
+            SkDPoint bottomPt = {x, bottom};
             if ((t = line.nearPoint(bottomPt, nullptr)) >= 0) {
-                insert(t, (double) !flipped, bottomPt);
+                insert(t, (double)!flipped, bottomPt);
             }
             for (int index = 0; index < 2; ++index) {
                 if ((t = SkDLine::NearPointV(line[index], top, bottom, x)) >= 0) {
-                    insert((double) index, flipped ? 1 - t : t, line[index]);
+                    insert((double)index, flipped ? 1 - t : t, line[index]);
                 }
             }
         }
@@ -336,4 +336,3 @@ int SkIntersections::vertical(const SkDLine& line, double top, double bottom,
     SkASSERT(fUsed <= 2);
     return fUsed;
 }
-

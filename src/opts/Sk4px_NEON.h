@@ -8,12 +8,11 @@
 namespace {  // NOLINT(google-build-namespaces)
 
 inline Sk4px::Wide Sk4px::widen() const {
-    return Sk16h(vmovl_u8(vget_low_u8 (this->fVec)),
-                 vmovl_u8(vget_high_u8(this->fVec)));
+    return Sk16h(vmovl_u8(vget_low_u8(this->fVec)), vmovl_u8(vget_high_u8(this->fVec)));
 }
 
 inline Sk4px::Wide Sk4px::mulWiden(const Sk16b& other) const {
-    return Sk16h(vmull_u8(vget_low_u8 (this->fVec), vget_low_u8 (other.fVec)),
+    return Sk16h(vmull_u8(vget_low_u8(this->fVec), vget_low_u8(other.fVec)),
                  vmull_u8(vget_high_u8(this->fVec), vget_high_u8(other.fVec)));
 }
 
@@ -36,21 +35,20 @@ inline Sk4px Sk4px::alphas() const {
 
 inline Sk4px Sk4px::Load4Alphas(const SkAlpha a[4]) {
     uint8x16_t a8 = vdupq_n_u8(0);                           // ____ ____ ____ ____
-    a8 = vld1q_lane_u8(a+0, a8,  0);                         // ____ ____ ____ ___0
-    a8 = vld1q_lane_u8(a+1, a8,  4);                         // ____ ____ ___1 ___0
-    a8 = vld1q_lane_u8(a+2, a8,  8);                         // ____ ___2 ___1 ___0
-    a8 = vld1q_lane_u8(a+3, a8, 12);                         // ___3 ___2 ___1 ___0
+    a8 = vld1q_lane_u8(a + 0, a8, 0);                        // ____ ____ ____ ___0
+    a8 = vld1q_lane_u8(a + 1, a8, 4);                        // ____ ____ ___1 ___0
+    a8 = vld1q_lane_u8(a + 2, a8, 8);                        // ____ ___2 ___1 ___0
+    a8 = vld1q_lane_u8(a + 3, a8, 12);                       // ___3 ___2 ___1 ___0
     auto a32 = (uint32x4_t)a8;                               //
     return Sk16b((uint8x16_t)vmulq_n_u32(a32, 0x01010101));  // 3333 2222 1111 0000
 }
 
 inline Sk4px Sk4px::Load2Alphas(const SkAlpha a[2]) {
     uint8x16_t a8 = vdupq_n_u8(0);                           // ____ ____ ____ ____
-    a8 = vld1q_lane_u8(a+0, a8,  0);                         // ____ ____ ____ ___0
-    a8 = vld1q_lane_u8(a+1, a8,  4);                         // ____ ____ ___1 ___0
+    a8 = vld1q_lane_u8(a + 0, a8, 0);                        // ____ ____ ____ ___0
+    a8 = vld1q_lane_u8(a + 1, a8, 4);                        // ____ ____ ___1 ___0
     auto a32 = (uint32x4_t)a8;                               //
     return Sk16b((uint8x16_t)vmulq_n_u32(a32, 0x01010101));  // ____ ____ 1111 0000
 }
 
-} // namespace
-
+}  // namespace

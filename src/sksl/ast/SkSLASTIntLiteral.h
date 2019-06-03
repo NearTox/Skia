@@ -8,7 +8,7 @@
 #ifndef SKSL_ASTINTLITERAL
 #define SKSL_ASTINTLITERAL
 
-#include "SkSLASTExpression.h"
+#include "src/sksl/ast/SkSLASTExpression.h"
 
 namespace SkSL {
 
@@ -17,19 +17,15 @@ namespace SkSL {
  * appear as a unary minus being applied to an integer literal.
  */
 struct ASTIntLiteral : public ASTExpression {
-    ASTIntLiteral(int offset, uint64_t value)
-    : INHERITED(offset, kInt_Kind)
-    , fValue(value) {}
+    ASTIntLiteral(int offset, uint64_t value) : INHERITED(offset, kInt_Kind), fValue(value) {}
 
-    String description() const override {
-        return to_string(fValue);
-    }
+    String description() const override { return to_string(fValue); }
 
     const uint64_t fValue;
 
     typedef ASTExpression INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

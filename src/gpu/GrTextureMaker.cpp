@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "GrTextureMaker.h"
+#include "src/gpu/GrTextureMaker.h"
 
-#include "GrColorSpaceXform.h"
-#include "GrGpu.h"
-#include "GrProxyProvider.h"
-#include "GrRecordingContext.h"
-#include "GrRecordingContextPriv.h"
+#include "include/private/GrRecordingContext.h"
+#include "src/gpu/GrColorSpaceXform.h"
+#include "src/gpu/GrGpu.h"
+#include "src/gpu/GrProxyProvider.h"
+#include "src/gpu/GrRecordingContextPriv.h"
 
 sk_sp<GrTextureProxy> GrTextureMaker::onRefTextureProxyForParams(const GrSamplerState& params,
                                                                  bool willBeMipped,
@@ -23,17 +23,16 @@ sk_sp<GrTextureProxy> GrTextureMaker::onRefTextureProxyForParams(const GrSampler
 
     CopyParams copyParams;
 
-    sk_sp<GrTextureProxy> original(this->refOriginalTextureProxy(willBeMipped,
-                                                                 AllowedTexGenType::kCheap));
+    sk_sp<GrTextureProxy> original(
+            this->refOriginalTextureProxy(willBeMipped, AllowedTexGenType::kCheap));
     bool needsCopyForMipsOnly = false;
     if (original) {
         if (!params.isRepeated() ||
             !GrGpu::IsACopyNeededForRepeatWrapMode(this->context()->priv().caps(), original.get(),
                                                    original->width(), original->height(),
                                                    params.filter(), &copyParams, scaleAdjust)) {
-            needsCopyForMipsOnly = GrGpu::IsACopyNeededForMips(this->context()->priv().caps(),
-                                                               original.get(), params.filter(),
-                                                               &copyParams);
+            needsCopyForMipsOnly = GrGpu::IsACopyNeededForMips(
+                    this->context()->priv().caps(), original.get(), params.filter(), &copyParams);
             if (!needsCopyForMipsOnly) {
                 return original;
             }
@@ -41,8 +40,8 @@ sk_sp<GrTextureProxy> GrTextureMaker::onRefTextureProxyForParams(const GrSampler
     } else {
         if (!params.isRepeated() ||
             !GrGpu::IsACopyNeededForRepeatWrapMode(this->context()->priv().caps(), nullptr,
-                                                   this->width(), this->height(),
-                                                   params.filter(), &copyParams, scaleAdjust)) {
+                                                   this->width(), this->height(), params.filter(),
+                                                   &copyParams, scaleAdjust)) {
             return this->refOriginalTextureProxy(willBeMipped, AllowedTexGenType::kAny);
         }
     }
@@ -121,9 +120,9 @@ std::unique_ptr<GrFragmentProcessor> GrTextureMaker::createFragmentProcessor(
         fmForDetermineDomain = &kBilerp;
     }
 
-    SkScalar scaleAdjust[2] = { 1.0f, 1.0f };
-    sk_sp<GrTextureProxy> proxy(this->refTextureProxyForParams(filterOrNullForBicubic,
-                                                               scaleAdjust));
+    SkScalar scaleAdjust[2] = {1.0f, 1.0f};
+    sk_sp<GrTextureProxy> proxy(
+            this->refTextureProxyForParams(filterOrNullForBicubic, scaleAdjust));
     if (!proxy) {
         return nullptr;
     }
@@ -132,8 +131,8 @@ std::unique_ptr<GrFragmentProcessor> GrTextureMaker::createFragmentProcessor(
 
     SkRect domain;
     DomainMode domainMode =
-        DetermineDomainMode(constraintRect, filterConstraint, coordsLimitedToConstraintRect,
-                            proxy.get(), fmForDetermineDomain, &domain);
+            DetermineDomainMode(constraintRect, filterConstraint, coordsLimitedToConstraintRect,
+                                proxy.get(), fmForDetermineDomain, &domain);
     SkASSERT(kTightCopy_DomainMode != domainMode);
     return this->createFragmentProcessorForDomainAndFilter(
             std::move(proxy), adjustedMatrix, domainMode, domain, filterOrNullForBicubic);

@@ -8,9 +8,9 @@
 #ifndef SkJSONWriter_DEFINED
 #define SkJSONWriter_DEFINED
 
-#include "SkNoncopyable.h"
-#include "SkStream.h"
-#include "SkTArray.h"
+#include "include/core/SkStream.h"
+#include "include/private/SkNoncopyable.h"
+#include "include/private/SkTArray.h"
 
 /**
  *  Lightweight class for writing properly structured JSON data. No random-access, everything must
@@ -171,14 +171,30 @@ public:
         if (value) {
             while (*value) {
                 switch (*value) {
-                    case '"': this->write("\\\"", 2); break;
-                    case '\\': this->write("\\\\", 2); break;
-                    case '\b': this->write("\\b", 2); break;
-                    case '\f': this->write("\\f", 2); break;
-                    case '\n': this->write("\\n", 2); break;
-                    case '\r': this->write("\\r", 2); break;
-                    case '\t': this->write("\\t", 2); break;
-                    default: this->write(value, 1); break;
+                    case '"':
+                        this->write("\\\"", 2);
+                        break;
+                    case '\\':
+                        this->write("\\\\", 2);
+                        break;
+                    case '\b':
+                        this->write("\\b", 2);
+                        break;
+                    case '\f':
+                        this->write("\\f", 2);
+                        break;
+                    case '\n':
+                        this->write("\\n", 2);
+                        break;
+                    case '\r':
+                        this->write("\\r", 2);
+                        break;
+                    case '\t':
+                        this->write("\\t", 2);
+                        break;
+                    default:
+                        this->write(value, 1);
+                        break;
                 }
                 value++;
             }
@@ -186,7 +202,10 @@ public:
         this->write("\"", 1);
     }
 
-    void appendPointer(const void* value) { this->beginValue(); this->appendf("\"%p\"", value); }
+    void appendPointer(const void* value) {
+        this->beginValue();
+        this->appendf("\"%p\"", value);
+    }
     void appendBool(bool value) {
         this->beginValue();
         if (value) {
@@ -195,12 +214,24 @@ public:
             this->write("false", 5);
         }
     }
-    void appendS32(int32_t value) { this->beginValue(); this->appendf("%d", value); }
+    void appendS32(int32_t value) {
+        this->beginValue();
+        this->appendf("%d", value);
+    }
     void appendS64(int64_t value);
-    void appendU32(uint32_t value) { this->beginValue(); this->appendf("%u", value); }
+    void appendU32(uint32_t value) {
+        this->beginValue();
+        this->appendf("%u", value);
+    }
     void appendU64(uint64_t value);
-    void appendFloat(float value) { this->beginValue(); this->appendf("%g", value); }
-    void appendDouble(double value) { this->beginValue(); this->appendf("%g", value); }
+    void appendFloat(float value) {
+        this->beginValue();
+        this->appendf("%g", value);
+    }
+    void appendDouble(double value) {
+        this->beginValue();
+        this->appendf("%g", value);
+    }
     void appendFloatDigits(float value, int digits) {
         this->beginValue();
         this->appendf("%.*g", digits, value);
@@ -209,18 +240,24 @@ public:
         this->beginValue();
         this->appendf("%.*g", digits, value);
     }
-    void appendHexU32(uint32_t value) { this->beginValue(); this->appendf("\"0x%x\"", value); }
+    void appendHexU32(uint32_t value) {
+        this->beginValue();
+        this->appendf("\"0x%x\"", value);
+    }
     void appendHexU64(uint64_t value);
 
-#define DEFINE_NAMED_APPEND(function, type) \
-    void function(const char* name, type value) { this->appendName(name); this->function(value); }
+#define DEFINE_NAMED_APPEND(function, type)       \
+    void function(const char* name, type value) { \
+        this->appendName(name);                   \
+        this->function(value);                    \
+    }
 
     /**
      *  Functions for adding named values of various types. These add a name field, so must be
      *  called between beginObject() and endObject().
      */
-    DEFINE_NAMED_APPEND(appendString, const char *)
-    DEFINE_NAMED_APPEND(appendPointer, const void *)
+    DEFINE_NAMED_APPEND(appendString, const char*)
+    DEFINE_NAMED_APPEND(appendPointer, const void*)
     DEFINE_NAMED_APPEND(appendBool, bool)
     DEFINE_NAMED_APPEND(appendS32, int32_t)
     DEFINE_NAMED_APPEND(appendS64, int64_t)
@@ -250,11 +287,7 @@ private:
         kBlockSize = 32 * 1024,
     };
 
-    enum class Scope {
-        kNone,
-        kObject,
-        kArray
-    };
+    enum class Scope { kNone, kObject, kArray };
 
     enum class State {
         kStart,
@@ -269,10 +302,8 @@ private:
     void appendf(const char* fmt, ...);
 
     void beginValue(bool structure = false) {
-        SkASSERT(State::kObjectName == fState ||
-                 State::kArrayBegin == fState ||
-                 State::kArrayValue == fState ||
-                 (structure && State::kStart == fState));
+        SkASSERT(State::kObjectName == fState || State::kArrayBegin == fState ||
+                 State::kArrayValue == fState || (structure && State::kStart == fState));
         if (State::kArrayValue == fState) {
             this->write(",", 1);
         }

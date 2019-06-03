@@ -8,7 +8,7 @@
 #ifndef SKSL_ASTTYPE
 #define SKSL_ASTTYPE
 
-#include "SkSLASTPositionNode.h"
+#include "src/sksl/ast/SkSLASTPositionNode.h"
 
 namespace SkSL {
 
@@ -16,21 +16,16 @@ namespace SkSL {
  * A type, such as 'int' or 'struct foo'.
  */
 struct ASTType : public ASTPositionNode {
-    enum Kind {
-        kIdentifier_Kind,
-        kStruct_Kind
-    };
+    enum Kind { kIdentifier_Kind, kStruct_Kind };
 
     ASTType(int offset, StringFragment name, Kind kind, std::vector<int> sizes, bool nullable)
-    : INHERITED(offset)
-    , fName(name)
-    , fKind(kind)
-    , fSizes(std::move(sizes))
-    , fNullable(nullable) {}
+            : INHERITED(offset)
+            , fName(name)
+            , fKind(kind)
+            , fSizes(std::move(sizes))
+            , fNullable(nullable) {}
 
-    String description() const override {
-        return fName;
-    }
+    String description() const override { return fName; }
 
     const StringFragment fName;
 
@@ -44,6 +39,6 @@ struct ASTType : public ASTPositionNode {
     typedef ASTPositionNode INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

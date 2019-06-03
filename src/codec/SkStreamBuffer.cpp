@@ -5,18 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "SkStreamBuffer.h"
+#include "src/codec/SkStreamBuffer.h"
 
 SkStreamBuffer::SkStreamBuffer(std::unique_ptr<SkStream> stream)
-    : fStream(std::move(stream))
-    , fPosition(0)
-    , fBytesBuffered(0)
-    , fHasLengthAndPosition(fStream->hasLength() && fStream->hasPosition())
-    , fTrulyBuffered(0)
-{}
+        : fStream(std::move(stream))
+        , fPosition(0)
+        , fBytesBuffered(0)
+        , fHasLengthAndPosition(fStream->hasLength() && fStream->hasPosition())
+        , fTrulyBuffered(0) {}
 
 SkStreamBuffer::~SkStreamBuffer() {
-    fMarkedData.foreach([](size_t, SkData** data) { (*data)->unref(); });
+    fMarkedData.foreach ([](size_t, SkData** data) { (*data)->unref(); });
 }
 
 const char* SkStreamBuffer::get() const {
@@ -25,9 +24,10 @@ const char* SkStreamBuffer::get() const {
         const size_t bytesToBuffer = fBytesBuffered - fTrulyBuffered;
         char* dst = SkTAddOffset<char>(const_cast<char*>(fBuffer), fTrulyBuffered);
         SkDEBUGCODE(const size_t bytesRead =)
-        // This stream is rewindable, so it should be safe to call the non-const
-        // read()
-        const_cast<SkStream*>(fStream.get())->read(dst, bytesToBuffer);
+                // This stream is rewindable, so it should be safe to call the non-const
+                // read()
+                const_cast<SkStream*>(fStream.get())
+                        ->read(dst, bytesToBuffer);
         SkASSERT(bytesRead == bytesToBuffer);
         fTrulyBuffered = fBytesBuffered;
     }
@@ -72,8 +72,7 @@ sk_sp<SkData> SkStreamBuffer::getDataAtPosition(size_t position, size_t length) 
         return sk_ref_sp<SkData>(*data);
     }
 
-    SkASSERT(length <= fStream->getLength() &&
-             position <= fStream->getLength() - length);
+    SkASSERT(length <= fStream->getLength() && position <= fStream->getLength() - length);
 
     const size_t oldPosition = fStream->getPosition();
     if (!fStream->seek(position)) {

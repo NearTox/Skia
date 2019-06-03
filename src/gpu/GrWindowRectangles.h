@@ -8,8 +8,8 @@
 #ifndef GrWindowRectangles_DEFINED
 #define GrWindowRectangles_DEFINED
 
-#include "GrNonAtomicRef.h"
-#include "SkRect.h"
+#include "include/core/SkRect.h"
+#include "src/gpu/GrNonAtomicRef.h"
 
 class GrWindowRectangles {
 public:
@@ -42,8 +42,8 @@ private:
 
     int fCount;
     union {
-        SkIRect   fLocalWindows[kNumLocalWindows]; // If fCount <= kNumLocalWindows.
-        Rec*      fRec;                            // If fCount > kNumLocalWindows.
+        SkIRect fLocalWindows[kNumLocalWindows];  // If fCount <= kNumLocalWindows.
+        Rec* fRec;                                // If fCount > kNumLocalWindows.
     };
 };
 
@@ -103,7 +103,7 @@ inline SkIRect& GrWindowRectangles::addWindow() {
     }
     if (fCount == kNumLocalWindows) {
         fRec = new Rec(fLocalWindows, kNumLocalWindows);
-    } else if (!fRec->unique()) { // Simple copy-on-write.
+    } else if (!fRec->unique()) {  // Simple copy-on-write.
         fRec->unref();
         fRec = new Rec(fRec->fData, fCount);
     }

@@ -5,19 +5,19 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
-#include "SkCanvas.h"
-#include "SkColorFilter.h"
-#include "SkColorPriv.h"
-#include "SkGradientShader.h"
-#include "SkGraphics.h"
-#include "SkPath.h"
-#include "SkRegion.h"
-#include "SkShader.h"
-#include "SkTime.h"
-#include "SkTo.h"
-#include "SkTypeface.h"
-#include "SkUTF.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkGraphics.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRegion.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkTime.h"
+#include "include/core/SkTypeface.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/private/SkTo.h"
+#include "samplecode/Sample.h"
+#include "src/utils/SkUTF.h"
 
 #include <utility>
 
@@ -38,8 +38,8 @@ protected:
     }
 
     void onDrawContent(SkCanvas* canvas) override {
-        const SkRect oval = fOval.makeOffset(fCenter.fX - fOval.centerX(),
-                                             fCenter.fY - fOval.centerY());
+        const SkRect oval =
+                fOval.makeOffset(fCenter.fX - fOval.centerX(), fCenter.fY - fOval.centerY());
 
         SkPaint p;
         p.setAntiAlias(true);
@@ -70,7 +70,7 @@ protected:
 private:
     typedef Sample INHERITED;
 };
-DEF_SAMPLE( return new PathClipView; )
+DEF_SAMPLE(return new PathClipView;)
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -108,7 +108,7 @@ static int clip_line(const SkRect& bounds, SkPoint p0, SkPoint p1, SkPoint edges
     }
     // now we're left-to-right: p0 .. p1
 
-    if (p1.fX <= bounds.left()) {   // entirely to the left
+    if (p1.fX <= bounds.left()) {  // entirely to the left
         p0.fX = p1.fX = bounds.left();
         *edges++ = p0;
         *edges++ = p1;
@@ -139,8 +139,8 @@ static int clip_line(const SkRect& bounds, SkPoint p0, SkPoint p1, SkPoint edges
     return SkToInt(edges - edgesStart);
 }
 
-static void draw_clipped_line(SkCanvas* canvas, const SkRect& bounds,
-                              SkPoint p0, SkPoint p1, const SkPaint& paint) {
+static void draw_clipped_line(SkCanvas* canvas, const SkRect& bounds, SkPoint p0, SkPoint p1,
+                              const SkPaint& paint) {
     SkPoint verts[6];
     int count = clip_line(bounds, p0, p1, verts);
 
@@ -152,12 +152,11 @@ static void draw_clipped_line(SkCanvas* canvas, const SkRect& bounds,
 // Demonstrate edge-clipping that is used in the scan converter
 //
 class EdgeClipView : public Sample {
-    enum {
-        N = 3
-    };
+    enum { N = 3 };
+
 public:
     SkPoint fPoly[N];
-    SkRect  fClip;
+    SkRect fClip;
     SkColor fEdgeColor[N];
 
     EdgeClipView() : fClip(SkRect::MakeLTRB(150, 150, 550, 450)) {
@@ -179,12 +178,8 @@ protected:
         return this->INHERITED::onQuery(evt);
     }
 
-    static SkScalar snap(SkScalar x) {
-        return SkScalarRoundToScalar(x * 0.5f) * 2;
-    }
-    static SkPoint snap(const SkPoint& pt) {
-        return SkPoint::Make(snap(pt.x()), snap(pt.y()));
-    }
+    static SkScalar snap(SkScalar x) { return SkScalarRoundToScalar(x * 0.5f) * 2; }
+    static SkPoint snap(const SkPoint& pt) { return SkPoint::Make(snap(pt.x()), snap(pt.y())); }
     static void snap(SkPoint dst[], const SkPoint src[], int count) {
         for (int i = 0; i < count; ++i) {
             dst[i] = snap(src[i]);
@@ -245,6 +240,7 @@ protected:
 
     class VertClick : public MyClick {
         SkPoint* fPt;
+
     public:
         VertClick(Sample* view, SkPoint* pt) : MyClick(view), fPt(pt) {}
         void handleMove() override { *fPt = snap(fCurr); }
@@ -252,6 +248,7 @@ protected:
 
     class DragRectClick : public MyClick {
         SkRect* fRect;
+
     public:
         DragRectClick(Sample* view, SkRect* rect) : MyClick(view), fRect(rect) {}
         void handleMove() override { fRect->offset(fCurr.x() - fPrev.x(), fCurr.y() - fPrev.y()); }
@@ -261,10 +258,10 @@ protected:
         SkPoint fSrc[100];
         SkPoint* fPoly;
         int fCount;
+
     public:
         DragPolyClick(Sample* view, SkPoint poly[], int count)
-            : MyClick(view), fPoly(poly), fCount(count)
-        {
+                : MyClick(view), fPoly(poly), fCount(count) {
             SkASSERT((size_t)count <= SK_ARRAY_COUNT(fSrc));
             memcpy(fSrc, poly, count * sizeof(SkPoint));
         }
@@ -287,7 +284,7 @@ protected:
         const SkScalar rad = 8;
         const SkScalar dx = pt.x() - x;
         const SkScalar dy = pt.y() - y;
-        return dx*dx + dy*dy <= rad*rad;
+        return dx * dx + dy * dy <= rad * rad;
     }
 
     Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, unsigned) override {
@@ -318,4 +315,4 @@ private:
     typedef Sample INHERITED;
 };
 
-DEF_SAMPLE( return new EdgeClipView; )
+DEF_SAMPLE(return new EdgeClipView;)

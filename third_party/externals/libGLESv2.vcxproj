@@ -62,6 +62,7 @@
     <ClCompile Include="angle2\src\compiler\translator\SymbolTable_autogen.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\SymbolUniqueId.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\EmulateGLDrawID.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\tree_ops\RedefineInterfaceBlockLayoutQualifiersWithStd.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteAtomicFunctionExpressions.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteExpressionsWithShaderStorageBlock.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\Types.cpp" />
@@ -119,11 +120,14 @@
     <ClCompile Include="angle2\src\compiler\translator\tree_util\RunAtTheEndOfShader.cpp" />
     <ClCompile Include="angle2\src\libANGLE\BlobCache.cpp" />
     <ClCompile Include="angle2\src\libANGLE\EGLSync.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\MemoryObject.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\converged\CompositorNativeWindow11.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\dxgi_support_table_autogen.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\Program11.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\DynamicImage2DHLSL.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\ImageGL.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\QueryImpl.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\renderer\ShaderImpl.cpp" />
     <ClCompile Include="angle2\src\third_party\compiler\ArrayBoundsClamper.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\OutputESSL.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\TranslatorESSL.cpp" />
@@ -333,7 +337,6 @@
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\Context11.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\DebugAnnotator11.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\dxgi_format_map_autogen.cpp" />
-    <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\dxgi_support_table.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\Fence11.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\formatutils11.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\Framebuffer11.cpp" />
@@ -367,19 +370,19 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{4ADCA9CF-1774-40F8-B5BD-5CBBD9A68F4A}</ProjectGuid>
     <RootNamespace>libGLESv2</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -410,7 +413,7 @@
       <Optimization>MaxSpeed</Optimization>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;WIN32_LEAN_AND_MEAN;NOMINMAX;NDEBUG;GL_GLEXT_PROTOTYPES;EGL_EGLEXT_PROTOTYPES;LIBANGLE_IMPLEMENTATION;LIBGLESV2_IMPLEMENTATION;LIBEGL_IMPLEMENTATION;EGLAPI=;GL_API=;GL_APICALL=;ANGLE_ENABLE_ESSL;ANGLE_ENABLE_GLSL;ANGLE_ENABLE_OPENGL;ANGLE_ENABLE_HLSL;ANGLE_ENABLE_D3D11;ANGLE_ENABLE_D3D9;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;NDEBUG;GL_GLEXT_PROTOTYPES;EGL_EGLEXT_PROTOTYPES;LIBANGLE_IMPLEMENTATION;LIBGLESV2_IMPLEMENTATION;LIBEGL_IMPLEMENTATION;EGLAPI=;GL_API=;GL_APICALL=;ANGLE_ENABLE_ESSL;ANGLE_ENABLE_GLSL;ANGLE_ENABLE_OPENGL;ANGLE_ENABLE_HLSL;ANGLE_ENABLE_D3D11;ANGLE_ENABLE_D3D9;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(SolutionDir)\third_party/externals/angle2/src/third_party/khronos;$(SolutionDir)\third_party/externals/angle2/src/common/third_party/base;$(SolutionDir)\third_party\externals\angle2\src;$(SolutionDir)\third_party\externals\angle2\include;$(SolutionDir)\third_party\angle2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
@@ -431,7 +434,7 @@
       <Optimization>MaxSpeed</Optimization>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;WIN32_LEAN_AND_MEAN;NOMINMAX;NDEBUG;GL_GLEXT_PROTOTYPES;EGL_EGLEXT_PROTOTYPES;LIBANGLE_IMPLEMENTATION;LIBGLESV2_IMPLEMENTATION;LIBEGL_IMPLEMENTATION;EGLAPI=;GL_API=;GL_APICALL=;ANGLE_ENABLE_ESSL;ANGLE_ENABLE_GLSL;ANGLE_ENABLE_OPENGL;ANGLE_ENABLE_HLSL;ANGLE_ENABLE_D3D11;ANGLE_ENABLE_D3D9;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;NDEBUG;GL_GLEXT_PROTOTYPES;EGL_EGLEXT_PROTOTYPES;LIBANGLE_IMPLEMENTATION;LIBGLESV2_IMPLEMENTATION;LIBEGL_IMPLEMENTATION;EGLAPI=;GL_API=;GL_APICALL=;ANGLE_ENABLE_ESSL;ANGLE_ENABLE_GLSL;ANGLE_ENABLE_OPENGL;ANGLE_ENABLE_HLSL;ANGLE_ENABLE_D3D11;ANGLE_ENABLE_D3D9;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(SolutionDir)\third_party/externals/angle2/src/third_party/khronos;$(SolutionDir)\third_party/externals/angle2/src/common/third_party/base;$(SolutionDir)\third_party\externals\angle2\src;$(SolutionDir)\third_party\externals\angle2\include;$(SolutionDir)\third_party\angle2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>

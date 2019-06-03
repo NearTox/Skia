@@ -1,14 +1,14 @@
 /*
-* Copyright 2015 Google Inc.
-*
-* Use of this source code is governed by a BSD-style license that can be
-* found in the LICENSE file.
-*/
+ * Copyright 2015 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
-#include "GrGLSLUtil.h"
-#include "SkMatrix.h"
+#include "src/gpu/glsl/GrGLSLUtil.h"
+#include "include/core/SkMatrix.h"
 
-template<> void GrGLSLGetMatrix<3>(float* dest, const SkMatrix& src) {
+template <> void GrGLSLGetMatrix<3>(float* dest, const SkMatrix& src) {
     // Col 0
     dest[0] = SkScalarToFloat(src[SkMatrix::kMScaleX]);
     dest[1] = SkScalarToFloat(src[SkMatrix::kMSkewY]);
@@ -25,7 +25,7 @@ template<> void GrGLSLGetMatrix<3>(float* dest, const SkMatrix& src) {
     dest[8] = SkScalarToFloat(src[SkMatrix::kMPersp2]);
 }
 
-template<> void GrGLSLGetMatrix<4>(float* dest, const SkMatrix& src) {
+template <> void GrGLSLGetMatrix<4>(float* dest, const SkMatrix& src) {
     // Col 0
     dest[0] = SkScalarToFloat(src[SkMatrix::kMScaleX]);
     dest[1] = SkScalarToFloat(src[SkMatrix::kMSkewY]);

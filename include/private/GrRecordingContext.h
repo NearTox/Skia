@@ -8,9 +8,9 @@
 #ifndef GrRecordingContext_DEFINED
 #define GrRecordingContext_DEFINED
 
-#include "GrAuditTrail.h"
-#include "GrImageContext.h"
-#include "SkRefCnt.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/GrAuditTrail.h"
+#include "include/private/GrImageContext.h"
 
 class GrDrawingManager;
 class GrOnFlushCallbackObject;
@@ -28,10 +28,11 @@ public:
     const GrRecordingContextPriv priv() const;
 
 protected:
-    friend class GrRecordingContextPriv; // for hidden functions
+    friend class GrRecordingContextPriv;  // for hidden functions
 
     GrRecordingContext(GrBackendApi, const GrContextOptions&, uint32_t contextID);
     bool init(sk_sp<const GrCaps>, sk_sp<GrSkSLFPFactoryCache>) override;
+    void setupDrawingManager(bool sortOpLists, bool reduceOpListSplitting);
 
     void abandonContext() override;
 
@@ -71,16 +72,10 @@ protected:
      * renderTargetContexts created via this entry point.
      */
     sk_sp<GrRenderTargetContext> makeDeferredRenderTargetContext(
-                                            const GrBackendFormat& format,
-                                            SkBackingFit fit,
-                                            int width, int height,
-                                            GrPixelConfig config,
-                                            sk_sp<SkColorSpace> colorSpace,
-                                            int sampleCnt = 1,
-                                            GrMipMapped = GrMipMapped::kNo,
-                                            GrSurfaceOrigin origin = kBottomLeft_GrSurfaceOrigin,
-                                            const SkSurfaceProps* surfaceProps = nullptr,
-                                            SkBudgeted = SkBudgeted::kYes);
+            const GrBackendFormat& format, SkBackingFit fit, int width, int height,
+            GrPixelConfig config, sk_sp<SkColorSpace> colorSpace, int sampleCnt = 1,
+            GrMipMapped = GrMipMapped::kNo, GrSurfaceOrigin origin = kBottomLeft_GrSurfaceOrigin,
+            const SkSurfaceProps* surfaceProps = nullptr, SkBudgeted = SkBudgeted::kYes);
 
     /*
      * This method will attempt to create a renderTargetContext that has, at least, the number of
@@ -89,16 +84,10 @@ protected:
      * SRGB-ness will be preserved.
      */
     sk_sp<GrRenderTargetContext> makeDeferredRenderTargetContextWithFallback(
-                                            const GrBackendFormat& format,
-                                            SkBackingFit fit,
-                                            int width, int height,
-                                            GrPixelConfig config,
-                                            sk_sp<SkColorSpace> colorSpace,
-                                            int sampleCnt = 1,
-                                            GrMipMapped = GrMipMapped::kNo,
-                                            GrSurfaceOrigin origin = kBottomLeft_GrSurfaceOrigin,
-                                            const SkSurfaceProps* surfaceProps = nullptr,
-                                            SkBudgeted budgeted = SkBudgeted::kYes);
+            const GrBackendFormat& format, SkBackingFit fit, int width, int height,
+            GrPixelConfig config, sk_sp<SkColorSpace> colorSpace, int sampleCnt = 1,
+            GrMipMapped = GrMipMapped::kNo, GrSurfaceOrigin origin = kBottomLeft_GrSurfaceOrigin,
+            const SkSurfaceProps* surfaceProps = nullptr, SkBudgeted budgeted = SkBudgeted::kYes);
 
     GrAuditTrail* auditTrail() { return &fAuditTrail; }
 
@@ -107,12 +96,12 @@ protected:
 private:
     std::unique_ptr<GrDrawingManager> fDrawingManager;
     // All the GrOp-derived classes use this pool.
-    sk_sp<GrOpMemoryPool>             fOpMemoryPool;
+    sk_sp<GrOpMemoryPool> fOpMemoryPool;
 
-    std::unique_ptr<GrStrikeCache>    fStrikeCache;
-    std::unique_ptr<GrTextBlobCache>  fTextBlobCache;
+    std::unique_ptr<GrStrikeCache> fStrikeCache;
+    std::unique_ptr<GrTextBlobCache> fTextBlobCache;
 
-    GrAuditTrail                      fAuditTrail;
+    GrAuditTrail fAuditTrail;
 
     typedef GrImageContext INHERITED;
 };

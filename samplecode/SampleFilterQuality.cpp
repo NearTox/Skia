@@ -5,18 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "Resources.h"
-#include "Sample.h"
-#include "SkAnimTimer.h"
-#include "SkCanvas.h"
-#include "SkInterpolator.h"
-#include "SkFont.h"
-#include "SkGradientShader.h"
-#include "SkData.h"
-#include "SkPath.h"
-#include "SkSurface.h"
-#include "SkRandom.h"
-#include "SkTime.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkData.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkTime.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/utils/SkInterpolator.h"
+#include "include/utils/SkRandom.h"
+#include "samplecode/Sample.h"
+#include "tools/Resources.h"
+#include "tools/timer/AnimTimer.h"
 
 static sk_sp<SkSurface> make_surface(SkCanvas* canvas, const SkImageInfo& info) {
     auto surface = canvas->makeSurface(info);
@@ -31,7 +31,7 @@ static sk_sp<SkShader> make_shader(const SkRect& bounds) {
     return image ? image->makeShader() : nullptr;
 }
 
-#define N   128
+#define N 128
 #define ANGLE_DELTA 3
 #define SCALE_DELTA (SK_Scalar1 / 32)
 
@@ -44,9 +44,12 @@ static sk_sp<SkImage> make_image() {
     SkPath path;
     path.setFillType(SkPath::kEvenOdd_FillType);
 
-    path.addRect(SkRect::MakeWH(N/2, N));
-    path.addRect(SkRect::MakeWH(N, N/2));
-    path.moveTo(0, 0); path.lineTo(N, 0); path.lineTo(0, N); path.close();
+    path.addRect(SkRect::MakeWH(N / 2, N));
+    path.addRect(SkRect::MakeWH(N, N / 2));
+    path.moveTo(0, 0);
+    path.lineTo(N, 0);
+    path.lineTo(0, N);
+    path.close();
 
     SkPaint paint;
     paint.setShader(make_shader(SkRect::MakeWH(N, N)));
@@ -56,12 +59,12 @@ static sk_sp<SkImage> make_image() {
 }
 
 static sk_sp<SkImage> zoom_up(SkSurface* origSurf, SkImage* orig) {
-    const SkScalar S = 16;    // amount to scale up
-    const int D = 2;    // dimension scaling for the offscreen
+    const SkScalar S = 16;  // amount to scale up
+    const int D = 2;        // dimension scaling for the offscreen
     // since we only view the center, don't need to produce the entire thing
 
-    SkImageInfo info = SkImageInfo::MakeN32(orig->width() * D, orig->height() * D,
-                                            kOpaque_SkAlphaType);
+    SkImageInfo info =
+            SkImageInfo::MakeN32(orig->width() * D, orig->height() * D, kOpaque_SkAlphaType);
     auto surface(origSurf->makeSurface(info));
     SkCanvas* canvas = surface->getCanvas();
     canvas->drawColor(SK_ColorWHITE);
@@ -138,12 +141,12 @@ static void draw_box_frame(SkCanvas* canvas, int width, int height) {
 }
 
 class FilterQualityView : public Sample {
-    sk_sp<SkImage>  fImage;
-    AnimValue       fScale, fAngle;
-    SkSize          fCell;
-    SkInterpolator  fTrans;
-    SkMSec          fCurrTime;
-    bool            fShowFatBits;
+    sk_sp<SkImage> fImage;
+    AnimValue fScale, fAngle;
+    SkSize fCell;
+    SkInterpolator fTrans;
+    SkMSec fCurrTime;
+    bool fShowFatBits;
 
 public:
     FilterQualityView() : fTrans(2, 2), fShowFatBits(true) {
@@ -174,19 +177,30 @@ protected:
         SkUnichar uni;
         if (Sample::CharQ(*evt, &uni)) {
             switch (uni) {
-                case '1': fAngle.inc(-ANGLE_DELTA); return true;
-                case '2': fAngle.inc( ANGLE_DELTA); return true;
-                case '3': fScale.inc(-SCALE_DELTA); return true;
-                case '4': fScale.inc( SCALE_DELTA); return true;
-                case '5': fShowFatBits = !fShowFatBits; return true;
-                default: break;
+                case '1':
+                    fAngle.inc(-ANGLE_DELTA);
+                    return true;
+                case '2':
+                    fAngle.inc(ANGLE_DELTA);
+                    return true;
+                case '3':
+                    fScale.inc(-SCALE_DELTA);
+                    return true;
+                case '4':
+                    fScale.inc(SCALE_DELTA);
+                    return true;
+                case '5':
+                    fShowFatBits = !fShowFatBits;
+                    return true;
+                default:
+                    break;
             }
         }
         return this->INHERITED::onQuery(evt);
     }
 
-    void drawTheImage(SkCanvas* canvas, const SkISize& size, SkFilterQuality filter,
-                      SkScalar dx, SkScalar dy) {
+    void drawTheImage(SkCanvas* canvas, const SkISize& size, SkFilterQuality filter, SkScalar dx,
+                      SkScalar dy) {
         SkPaint paint;
         paint.setAntiAlias(true);
         paint.setFilterQuality(filter);
@@ -198,8 +212,8 @@ protected:
         canvas->translate(SkScalarHalf(size.width()), SkScalarHalf(size.height()));
         canvas->scale(fScale, fScale);
         canvas->rotate(fAngle);
-        canvas->drawImage(fImage.get(), -SkScalarHalf(fImage->width()), -SkScalarHalf(fImage->height()),
-                          &paint);
+        canvas->drawImage(fImage.get(), -SkScalarHalf(fImage->width()),
+                          -SkScalarHalf(fImage->height()), &paint);
 
         if (false) {
             acr.restore();
@@ -249,9 +263,7 @@ protected:
         canvas->drawLine(r.centerX(), r.top(), r.centerX(), r.bottom(), p);
     }
 
-    void onOnceBeforeDraw() override {
-        fImage = make_image();
-    }
+    void onOnceBeforeDraw() override { fImage = make_image(); }
 
     void onDrawContent(SkCanvas* canvas) override {
         fCell.set(this->height() / 2, this->height() / 2);
@@ -279,11 +291,11 @@ protected:
         SkPaint paint;
         canvas->drawString(SkStringPrintf("%.8g", (float)fScale), textX, 100, font, paint);
         canvas->drawString(SkStringPrintf("%.8g", (float)fAngle), textX, 150, font, paint);
-        canvas->drawString(SkStringPrintf("%.8g", trans[0]     ), textX, 200, font, paint);
-        canvas->drawString(SkStringPrintf("%.8g", trans[1]     ), textX, 250, font, paint);
+        canvas->drawString(SkStringPrintf("%.8g", trans[0]), textX, 200, font, paint);
+        canvas->drawString(SkStringPrintf("%.8g", trans[1]), textX, 250, font, paint);
     }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         fCurrTime = timer.msec();
         return true;
     }
@@ -294,4 +306,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new FilterQualityView(); )
+DEF_SAMPLE(return new FilterQualityView();)

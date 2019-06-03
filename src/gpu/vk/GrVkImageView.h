@@ -1,29 +1,26 @@
 /*
-* Copyright 2016 Google Inc.
-*
-* Use of this source code is governed by a BSD-style license that can be
-* found in the LICENSE file.
-*/
+ * Copyright 2016 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
 #ifndef GrVkImageView_DEFINED
 #define GrVkImageView_DEFINED
 
-#include "GrTypes.h"
-#include "GrVkResource.h"
-#include "vk/GrVkTypes.h"
+#include "include/gpu/GrTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
+#include "src/gpu/vk/GrVkResource.h"
 
 class GrVkSamplerYcbcrConversion;
 struct GrVkYcbcrConversionInfo;
 
 class GrVkImageView : public GrVkResource {
 public:
-    enum Type {
-        kColor_Type,
-        kStencil_Type
-    };
+    enum Type { kColor_Type, kStencil_Type };
 
-    static const GrVkImageView* Create(GrVkGpu* gpu, VkImage image, VkFormat format,
-                                       Type viewType, uint32_t miplevels,
+    static const GrVkImageView* Create(GrVkGpu* gpu, VkImage image, VkFormat format, Type viewType,
+                                       uint32_t miplevels,
                                        const GrVkYcbcrConversionInfo& ycbcrInfo);
 
     VkImageView imageView() const { return fImageView; }
@@ -44,7 +41,7 @@ private:
     void freeGPUData(GrVkGpu* gpu) const override;
     void abandonGPUData() const override;
 
-    VkImageView  fImageView;
+    VkImageView fImageView;
     GrVkSamplerYcbcrConversion* fYcbcrConversion;
 
     typedef GrVkResource INHERITED;

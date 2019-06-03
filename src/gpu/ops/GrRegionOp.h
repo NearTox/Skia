@@ -8,7 +8,7 @@
 #ifndef GrRegionOp_DEFINED
 #define GrRegionOp_DEFINED
 
-#include "GrTypesPriv.h"
+#include "include/private/GrTypesPriv.h"
 
 class GrDrawOp;
 class GrRecordingContext;
@@ -25,6 +25,6 @@ std::unique_ptr<GrDrawOp> Make(GrRecordingContext*,
                                const SkRegion&,
                                GrAAType,
                                const GrUserStencilSettings* stencilSettings = nullptr);
-}
+}  // namespace GrRegionOp
 
 #endif

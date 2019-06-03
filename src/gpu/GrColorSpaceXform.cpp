@@ -5,17 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "GrColorSpaceXform.h"
-#include "SkColorSpace.h"
-#include "SkColorSpacePriv.h"
-#include "glsl/GrGLSLColorSpaceXformHelper.h"
-#include "glsl/GrGLSLFragmentProcessor.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/GrColorSpaceXform.h"
+#include "include/core/SkColorSpace.h"
+#include "src/core/SkColorSpacePriv.h"
+#include "src/gpu/glsl/GrGLSLColorSpaceXformHelper.h"
+#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 
 sk_sp<GrColorSpaceXform> GrColorSpaceXform::Make(SkColorSpace* src, SkAlphaType srcAT,
                                                  SkColorSpace* dst, SkAlphaType dstAT) {
     SkColorSpaceXformSteps steps(src, srcAT, dst, dstAT);
-    return steps.flags.mask() == 0 ? nullptr  /* Noop transform */
+    return steps.flags.mask() == 0 ? nullptr /* Noop transform */
                                    : sk_make_sp<GrColorSpaceXform>(steps);
 }
 
@@ -69,7 +69,8 @@ public:
             this->emitChild(0, &childColor, args);
 
             SkString xformedColor;
-            fragBuilder->appendColorGamutXform(&xformedColor, childColor.c_str(), &fColorSpaceHelper);
+            fragBuilder->appendColorGamutXform(&xformedColor, childColor.c_str(),
+                                               &fColorSpaceHelper);
             fragBuilder->codeAppendf("%s = %s * %s;", args.fOutputColor, xformedColor.c_str(),
                                      args.fInputColor);
         } else {
@@ -145,31 +146,29 @@ std::unique_ptr<GrFragmentProcessor> GrColorSpaceXformEffect::Make(SkColorSpace*
                                                                    SkAlphaType srcAT,
                                                                    SkColorSpace* dst,
                                                                    SkAlphaType dstAT) {
-    auto xform = GrColorSpaceXform::Make(src, srcAT,
-                                         dst, dstAT);
+    auto xform = GrColorSpaceXform::Make(src, srcAT, dst, dstAT);
     if (!xform) {
         return nullptr;
     }
 
-    return std::unique_ptr<GrFragmentProcessor>(new GrColorSpaceXformEffect(nullptr,
-                                                                            std::move(xform)));
+    return std::unique_ptr<GrFragmentProcessor>(
+            new GrColorSpaceXformEffect(nullptr, std::move(xform)));
 }
 
 std::unique_ptr<GrFragmentProcessor> GrColorSpaceXformEffect::Make(
-        std::unique_ptr<GrFragmentProcessor> child,
-        SkColorSpace* src, SkAlphaType srcAT, SkColorSpace* dst) {
+        std::unique_ptr<GrFragmentProcessor> child, SkColorSpace* src, SkAlphaType srcAT,
+        SkColorSpace* dst) {
     if (!child) {
         return nullptr;
     }
 
-    auto xform = GrColorSpaceXform::Make(src, srcAT,
-                                         dst, kPremul_SkAlphaType);
+    auto xform = GrColorSpaceXform::Make(src, srcAT, dst, kPremul_SkAlphaType);
     if (!xform) {
         return child;
     }
 
-    return std::unique_ptr<GrFragmentProcessor>(new GrColorSpaceXformEffect(std::move(child),
-                                                                            std::move(xform)));
+    return std::unique_ptr<GrFragmentProcessor>(
+            new GrColorSpaceXformEffect(std::move(child), std::move(xform)));
 }
 
 std::unique_ptr<GrFragmentProcessor> GrColorSpaceXformEffect::Make(
@@ -181,6 +180,6 @@ std::unique_ptr<GrFragmentProcessor> GrColorSpaceXformEffect::Make(
         return child;
     }
 
-    return std::unique_ptr<GrFragmentProcessor>(new GrColorSpaceXformEffect(std::move(child),
-                                                                            std::move(colorXform)));
+    return std::unique_ptr<GrFragmentProcessor>(
+            new GrColorSpaceXformEffect(std::move(child), std::move(colorXform)));
 }

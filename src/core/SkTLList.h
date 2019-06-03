@@ -8,12 +8,12 @@
 #ifndef SkTLList_DEFINED
 #define SkTLList_DEFINED
 
-#include "SkMalloc.h"
-#include "SkTInternalLList.h"
-#include "SkTemplates.h"
-#include "SkTypes.h"
 #include <new>
 #include <utility>
+#include "include/core/SkTypes.h"
+#include "include/private/SkMalloc.h"
+#include "include/private/SkTInternalLList.h"
+#include "include/private/SkTemplates.h"
 
 /** Doubly-linked list of objects. The objects' lifetimes are controlled by the list. I.e. the
     the list creates the objects and they are deleted upon removal. This class block-allocates
@@ -28,13 +28,13 @@
     allocCnt is the number of objects to allocate as a group. In the worst case fragmentation
     each object is using the space required for allocCnt unfragmented objects.
 */
-template <typename T, unsigned int N> class SkTLList : SkNoncopyable {
+template <typename T, unsigned int N> class SkTLList {
 private:
     struct Block;
     struct Node {
         SkAlignedSTStorage<1, T> fObj;
         SK_DECLARE_INTERNAL_LLIST_INTERFACE(Node);
-        Block* fBlock; // owning block.
+        Block* fBlock;  // owning block.
     };
     typedef SkTInternalLList<Node> NodeList;
 
@@ -71,7 +71,7 @@ public:
         Node* node = this->createNode();
         fList.addToHead(node);
         this->validate();
-        return new (node->fObj.get())  T(std::forward<Args>(args)...);
+        return new (node->fObj.get()) T(std::forward<Args>(args)...);
     }
 
     /** Adds a new element to the list at the tail. */
@@ -151,10 +151,13 @@ public:
         this->validate();
     }
 
-    int count() const { return SkTMax(fCount ,0); }
-    bool isEmpty() const { this->validate(); return 0 == fCount || -1 == fCount; }
+    int count() const { return SkTMax(fCount, 0); }
+    bool isEmpty() const {
+        this->validate();
+        return 0 == fCount || -1 == fCount;
+    }
 
-    bool operator== (const SkTLList& list) const {
+    bool operator==(const SkTLList& list) const {
         if (this == &list) {
             return true;
         }
@@ -162,17 +165,16 @@ public:
         if (this->count() != list.count()) {
             return false;
         }
-        for (Iter a(*this, Iter::kHead_IterStart), b(list, Iter::kHead_IterStart);
-             a.get();
+        for (Iter a(*this, Iter::kHead_IterStart), b(list, Iter::kHead_IterStart); a.get();
              a.next(), b.next()) {
-            SkASSERT(b.get()); // already checked that counts match.
+            SkASSERT(b.get());  // already checked that counts match.
             if (!(*a.get() == *b.get())) {
                 return false;
             }
         }
         return true;
     }
-    bool operator!= (const SkTLList& list) const { return !(*this == list); }
+    bool operator!=(const SkTLList& list) const { return !(*this == list); }
 
     /** The iterator becomes invalid if the element it refers to is removed from the list. */
     class Iter : private NodeList::Iter {
@@ -202,7 +204,10 @@ public:
 
         T* prev() { return this->nodeToObj(INHERITED::prev()); }
 
-        Iter& operator= (const Iter& iter) { INHERITED::operator=(iter); return *this; }
+        Iter& operator=(const Iter& iter) {
+            INHERITED::operator=(iter);
+            return *this;
+        }
 
     private:
         friend class SkTLList;
@@ -344,8 +349,11 @@ private:
 
     NodeList fList;
     NodeList fFreeList;
-    Block    fFirstBlock;
+    Block fFirstBlock;
     int fCount;
+
+    SkTLList(const SkTLList&) = delete;
+    SkTLList& operator=(const SkTLList&) = delete;
 };
 
 #endif

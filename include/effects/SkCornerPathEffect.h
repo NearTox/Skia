@@ -8,8 +8,8 @@
 #ifndef SkCornerPathEffect_DEFINED
 #define SkCornerPathEffect_DEFINED
 
-#include "SkFlattenable.h"
-#include "SkPathEffect.h"
+#include "include/core/SkFlattenable.h"
+#include "include/core/SkPathEffect.h"
 
 /** \class SkCornerPathEffect
 
@@ -35,7 +35,7 @@ protected:
 private:
     SK_FLATTENABLE_HOOKS(SkCornerPathEffect)
 
-    SkScalar    fRadius;
+    SkScalar fRadius;
 
     typedef SkPathEffect INHERITED;
 };

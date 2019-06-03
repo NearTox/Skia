@@ -5,42 +5,30 @@
  * found in the LICENSE file.
  */
 
-#include "SkGraphics.h"
+#include "include/core/SkGraphics.h"
 
-#include "SkBlitter.h"
-#include "SkCanvas.h"
-#include "SkCpu.h"
-#include "SkGeometry.h"
-#include "SkImageFilter.h"
-#include "SkMath.h"
-#include "SkMatrix.h"
-#include "SkOpts.h"
-#include "SkPath.h"
-#include "SkPathEffect.h"
-#include "SkRefCnt.h"
-#include "SkResourceCache.h"
-#include "SkScalerContext.h"
-#include "SkShader.h"
-#include "SkStream.h"
-#include "SkStrikeCache.h"
-#include "SkTSearch.h"
-#include "SkTime.h"
-#include "SkTypefaceCache.h"
-#include "SkUTF.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkMath.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPathEffect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkTime.h"
+#include "include/private/SkTSearch.h"
+#include "src/core/SkBlitter.h"
+#include "src/core/SkCpu.h"
+#include "src/core/SkGeometry.h"
+#include "src/core/SkOpts.h"
+#include "src/core/SkResourceCache.h"
+#include "src/core/SkScalerContext.h"
+#include "src/core/SkStrikeCache.h"
+#include "src/core/SkTypefaceCache.h"
+#include "src/utils/SkUTF.h"
 
 #include <stdlib.h>
-
-void SkGraphics::GetVersion(int32_t* major, int32_t* minor, int32_t* patch) {
-    if (major) {
-        *major = SKIA_VERSION_MAJOR;
-    }
-    if (minor) {
-        *minor = SKIA_VERSION_MINOR;
-    }
-    if (patch) {
-        *patch = SKIA_VERSION_PATCH;
-    }
-}
 
 void SkGraphics::Init() {
     // SkGraphics::Init() must be thread-safe and idempotent.
@@ -51,8 +39,8 @@ void SkGraphics::Init() {
 ///////////////////////////////////////////////////////////////////////////////
 
 void SkGraphics::DumpMemoryStatistics(SkTraceMemoryDump* dump) {
-  SkResourceCache::DumpMemoryStatistics(dump);
-  SkStrikeCache::DumpMemoryStatistics(dump);
+    SkResourceCache::DumpMemoryStatistics(dump);
+    SkStrikeCache::DumpMemoryStatistics(dump);
 }
 
 void SkGraphics::PurgeAllCaches() {
@@ -70,9 +58,7 @@ static const struct {
     const char* fStr;
     size_t fLen;
     size_t (*fFunc)(size_t);
-} gFlags[] = {
-    { kFontCacheLimitStr, kFontCacheLimitLen, SkGraphics::SetFontCacheLimit }
-};
+} gFlags[] = {{kFontCacheLimitStr, kFontCacheLimitLen, SkGraphics::SetFontCacheLimit}};
 
 /* flags are of the form param; or param=value; */
 void SkGraphics::SetFlags(const char* flags) {
@@ -99,7 +85,7 @@ void SkGraphics::SetFlags(const char* flags) {
             if (strncmp(flags, gFlags[i].fStr, paramLen) == 0) {
                 size_t val = 0;
                 if (nextEqual) {
-                    val = (size_t) atoi(nextEqual + 1);
+                    val = (size_t)atoi(nextEqual + 1);
                 }
                 (gFlags[i].fFunc)(val);
                 break;

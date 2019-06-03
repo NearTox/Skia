@@ -11,9 +11,9 @@
 // This stub implementation of HeifDecoderAPI.h lets us compile SkHeifCodec.cpp
 // even when libheif is not available.  It, of course, does nothing and fails to decode.
 
-#include <memory>
 #include <stddef.h>
 #include <stdint.h>
+#include <memory>
 
 enum HeifColorFormat {
     kHeifColorFormat_RGB565,
@@ -25,10 +25,10 @@ struct HeifStream {
     virtual ~HeifStream() {}
 
     virtual size_t read(void*, size_t) = 0;
-    virtual bool   rewind()            = 0;
-    virtual bool   seek(size_t)        = 0;
-    virtual bool   hasLength() const   = 0;
-    virtual size_t getLength() const   = 0;
+    virtual bool rewind() = 0;
+    virtual bool seek(size_t) = 0;
+    virtual bool hasLength() const = 0;
+    virtual size_t getLength() const = 0;
 };
 
 struct HeifFrameInfo {
@@ -37,7 +37,7 @@ struct HeifFrameInfo {
     int mHeight;
     int mBytesPerPixel;
 
-    size_t                  mIccSize;
+    size_t mIccSize;
     std::unique_ptr<char[]> mIccData;
 };
 
@@ -47,23 +47,15 @@ struct HeifDecoder {
         return false;
     }
 
-    bool decode(HeifFrameInfo*) {
-        return false;
-    }
+    bool decode(HeifFrameInfo*) { return false; }
 
-    bool setOutputColor(HeifColorFormat) {
-        return false;
-    }
+    bool setOutputColor(HeifColorFormat) { return false; }
 
-    bool getScanline(uint8_t*) {
-        return false;
-    }
+    bool getScanline(uint8_t*) { return false; }
 
-    int skipScanlines(int) {
-        return 0;
-    }
+    int skipScanlines(int) { return 0; }
 };
 
 static inline HeifDecoder* createHeifDecoder() { return new HeifDecoder; }
 
-#endif//SkStubHeifDecoderAPI_DEFINED
+#endif  // SkStubHeifDecoderAPI_DEFINED

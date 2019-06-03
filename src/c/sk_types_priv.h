@@ -8,7 +8,7 @@
 #ifndef sk_types_priv_DEFINED
 #define sk_types_priv_DEFINED
 
-#include "sk_types.h"
+#include "include/c/sk_types.h"
 
 class SkMaskFilter;
 class SkPaint;
@@ -22,9 +22,7 @@ static inline const SkPaint* AsPaint(const sk_paint_t* cpaint) {
     return reinterpret_cast<const SkPaint*>(cpaint);
 }
 
-static inline SkPaint* AsPaint(sk_paint_t* cpaint) {
-    return reinterpret_cast<SkPaint*>(cpaint);
-}
+static inline SkPaint* AsPaint(sk_paint_t* cpaint) { return reinterpret_cast<SkPaint*>(cpaint); }
 
 static inline SkMaskFilter* AsMaskFilter(sk_maskfilter_t* cfilter) {
     return reinterpret_cast<SkMaskFilter*>(cfilter);

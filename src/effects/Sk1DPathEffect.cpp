@@ -5,24 +5,23 @@
  * found in the LICENSE file.
  */
 
-
-#include "Sk1DPathEffect.h"
-#include "SkReadBuffer.h"
-#include "SkWriteBuffer.h"
-#include "SkPathMeasure.h"
-#include "SkStrokeRec.h"
+#include "include/effects/Sk1DPathEffect.h"
+#include "include/core/SkPathMeasure.h"
+#include "include/core/SkStrokeRec.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
 
 // Since we are stepping by a float, the do/while loop might go on forever (or nearly so).
 // Put in a governor to limit crash values from looping too long (and allocating too much ram).
-#define MAX_REASONABLE_ITERATIONS   100000
+#define MAX_REASONABLE_ITERATIONS 100000
 
-bool Sk1DPathEffect::onFilterPath(SkPath* dst, const SkPath& src,
-                                  SkStrokeRec*, const SkRect*) const {
-    SkPathMeasure   meas(src, false);
+bool Sk1DPathEffect::onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec*,
+                                  const SkRect*) const {
+    SkPathMeasure meas(src, false);
     do {
         int governor = MAX_REASONABLE_ITERATIONS;
-        SkScalar    length = meas.getLength();
-        SkScalar    distance = this->begin(length);
+        SkScalar length = meas.getLength();
+        SkScalar distance = this->begin(length);
         while (distance < length && --governor >= 0) {
             SkScalar delta = this->next(dst, distance, meas);
             if (delta <= 0) {
@@ -37,9 +36,14 @@ bool Sk1DPathEffect::onFilterPath(SkPath* dst, const SkPath& src,
 ///////////////////////////////////////////////////////////////////////////////
 
 SkPath1DPathEffect::SkPath1DPathEffect(const SkPath& path, SkScalar advance, SkScalar phase,
-                                       Style style) : fPath(path) {
+                                       Style style)
+        : fPath(path) {
     SkASSERT(advance > 0 && !path.isEmpty());
     SkASSERT((unsigned)style <= kMorph_Style);
+
+    // Make the path thread-safe.
+    fPath.updateBoundsCache();
+    (void)fPath.getGenerationID();
 
     // cleanup their phase parameter, inverting it so that it becomes an
     // offset along the path (to match the interpretation in PostScript)
@@ -69,14 +73,14 @@ SkPath1DPathEffect::SkPath1DPathEffect(const SkPath& path, SkScalar advance, SkS
     fStyle = style;
 }
 
-bool SkPath1DPathEffect::onFilterPath(SkPath* dst, const SkPath& src,
-                                      SkStrokeRec* rec, const SkRect* cullRect) const {
+bool SkPath1DPathEffect::onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
+                                      const SkRect* cullRect) const {
     rec->setFillStyle();
     return this->INHERITED::onFilterPath(dst, src, rec, cullRect);
 }
 
-static bool morphpoints(SkPoint dst[], const SkPoint src[], int count,
-                        SkPathMeasure& meas, SkScalar dist) {
+static bool morphpoints(SkPoint dst[], const SkPoint src[], int count, SkPathMeasure& meas,
+                        SkScalar dist) {
     for (int i = 0; i < count; i++) {
         SkPoint pos;
         SkVector tangent;
@@ -88,8 +92,8 @@ static bool morphpoints(SkPoint dst[], const SkPoint src[], int count,
             return false;
         }
 
-        SkMatrix    matrix;
-        SkPoint     pt;
+        SkMatrix matrix;
+        SkPoint pt;
 
         pt.set(sx, sy);
         matrix.setSinCos(tangent.fY, tangent.fX, 0, 0);
@@ -106,11 +110,10 @@ Need differentially more subdivisions when the follow-path is curvy. Not sure ho
 determine that, but we need it. I guess a cheap answer is let the caller tell us,
 but that seems like a cop-out. Another answer is to get Rob Johnson to figure it out.
 */
-static void morphpath(SkPath* dst, const SkPath& src, SkPathMeasure& meas,
-                      SkScalar dist) {
-    SkPath::Iter    iter(src, false);
-    SkPoint         srcP[4], dstP[3];
-    SkPath::Verb    verb;
+static void morphpath(SkPath* dst, const SkPath& src, SkPathMeasure& meas, SkScalar dist) {
+    SkPath::Iter iter(src, false);
+    SkPoint srcP[4], dstP[3];
+    SkPath::Verb verb;
 
     while ((verb = iter.next(srcP)) != SkPath::kDone_Verb) {
         switch (verb) {
@@ -149,9 +152,7 @@ static void morphpath(SkPath* dst, const SkPath& src, SkPathMeasure& meas,
     }
 }
 
-SkScalar SkPath1DPathEffect::begin(SkScalar contourLength) const {
-    return fInitialOffset;
-}
+SkScalar SkPath1DPathEffect::begin(SkScalar contourLength) const { return fInitialOffset; }
 
 sk_sp<SkFlattenable> SkPath1DPathEffect::CreateProc(SkReadBuffer& buffer) {
     SkScalar advance = buffer.readScalar();
@@ -169,8 +170,7 @@ void SkPath1DPathEffect::flatten(SkWriteBuffer& buffer) const {
     buffer.writeUInt(fStyle);
 }
 
-SkScalar SkPath1DPathEffect::next(SkPath* dst, SkScalar distance,
-                                  SkPathMeasure& meas) const {
+SkScalar SkPath1DPathEffect::next(SkPath* dst, SkScalar distance, SkPathMeasure& meas) const {
 #if defined(IS_FUZZING_WITH_LIBFUZZER)
     if (dst->countPoints() > 100000) {
         return fAdvance;

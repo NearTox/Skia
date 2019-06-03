@@ -16,11 +16,10 @@
 // If you're looking for the tracing macros to instrument Skia itself, those
 // live in src/core/SkTraceEvent.h
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 class SK_API SkEventTracer {
 public:
-
     typedef uint64_t Handle;
 
     /**
@@ -28,15 +27,15 @@ public:
      * installed and true is returned. Otherwise, false is returned. In either case ownership of the
      * tracer is transferred and it will be deleted when no longer needed.
      */
-    static bool SetInstance(SkEventTracer*);
+    static bool SetInstance(SkEventTracer*) noexcept;
 
     /**
      * Gets the event tracer. If this is the first call to SetInstance or GetIntance then a default
      * event tracer is installed and returned.
      */
-    static SkEventTracer* GetInstance();
+    static SkEventTracer* GetInstance() noexcept;
 
-    virtual ~SkEventTracer() { }
+    virtual ~SkEventTracer() {}
 
     // The pointer returned from GetCategoryGroupEnabled() points to a
     // value with zero or more of the following bits. Used in this class only.
@@ -51,24 +50,22 @@ public:
         kEnabledForEventCallback_CategoryGroupEnabledFlags = 1 << 2,
     };
 
-    virtual const uint8_t* getCategoryGroupEnabled(const char* name) = 0;
-    virtual const char* getCategoryGroupName(const uint8_t* categoryEnabledFlag) = 0;
+    virtual const uint8_t* getCategoryGroupEnabled(const char* name) noexcept = 0;
+    virtual const char* getCategoryGroupName(const uint8_t* categoryEnabledFlag) noexcept = 0;
 
-    virtual SkEventTracer::Handle
-        addTraceEvent(char phase,
-                      const uint8_t* categoryEnabledFlag,
-                      const char* name,
-                      uint64_t id,
-                      int32_t numArgs,
-                      const char** argNames,
-                      const uint8_t* argTypes,
-                      const uint64_t* argValues,
-                      uint8_t flags) = 0;
+    virtual SkEventTracer::Handle addTraceEvent(char phase,
+                                                const uint8_t* categoryEnabledFlag,
+                                                const char* name,
+                                                uint64_t id,
+                                                int32_t numArgs,
+                                                const char** argNames,
+                                                const uint8_t* argTypes,
+                                                const uint64_t* argValues,
+                                                uint8_t flags) noexcept = 0;
 
-    virtual void
-        updateTraceEventDuration(const uint8_t* categoryEnabledFlag,
-                                 const char* name,
-                                 SkEventTracer::Handle handle) = 0;
+    virtual void updateTraceEventDuration(const uint8_t* categoryEnabledFlag,
+                                          const char* name,
+                                          SkEventTracer::Handle handle) noexcept = 0;
 };
 
-#endif // SkEventTracer_DEFINED
+#endif  // SkEventTracer_DEFINED

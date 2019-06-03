@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "SkRecordDraw.h"
-#include "SkCanvasPriv.h"
-#include "SkImage.h"
-#include "SkPatchUtils.h"
+#include "src/core/SkRecordDraw.h"
+#include "include/core/SkImage.h"
+#include "src/core/SkCanvasPriv.h"
+#include "src/utils/SkPatchUtils.h"
 
 void SkRecordDraw(const SkRecord& record,
                   SkCanvas* canvas,
@@ -56,9 +56,8 @@ void SkRecordDraw(const SkRecord& record,
 }
 
 void SkRecordPartialDraw(const SkRecord& record, SkCanvas* canvas,
-                         SkPicture const* const drawablePicts[], int drawableCount,
-                         int start, int stop,
-                         const SkMatrix& initialCTM) {
+                         SkPicture const* const drawablePicts[], int drawableCount, int start,
+                         int stop, const SkMatrix& initialCTM) {
     SkAutoCanvasRestore saveRestore(canvas, true /*save now, restore at exit*/);
 
     stop = SkTMin(stop, record.count());
@@ -73,7 +72,8 @@ namespace SkRecords {
 // NoOps draw nothing.
 template <> void Draw::draw(const NoOp&) {}
 
-#define DRAW(T, call) template <> void Draw::draw(const T& r) { fCanvas->call; }
+#define DRAW(T, call) \
+    template <> void Draw::draw(const T& r) { fCanvas->call; }
 DRAW(Flush, flush());
 DRAW(Restore, restore());
 DRAW(Save, save());
@@ -84,9 +84,9 @@ DRAW(SaveLayer, saveLayer(SkCanvas::SaveLayerRec(r.bounds,
                                                  r.clipMatrix,
                                                  r.saveLayerFlags)));
 
-template <> void Draw::draw(const SaveBehind& r) {
-    SkCanvasPriv::SaveBehind(fCanvas, r.subset);
-}
+template <> void Draw::draw(const SaveBehind& r) { SkCanvasPriv::SaveBehind(fCanvas, r.subset); }
+
+template <> void Draw::draw(const DrawBehind& r) { SkCanvasPriv::DrawBehind(fCanvas, r.paint); }
 
 DRAW(SetMatrix, setMatrix(SkMatrix::Concat(fInitialCTM, r.matrix)));
 DRAW(Concat, concat(r.matrix));
@@ -115,7 +115,6 @@ template <> void Draw::draw(const DrawImageLattice& r) {
 
 DRAW(DrawImageRect, legacy_drawImageRect(r.image.get(), r.src, r.dst, r.paint, r.constraint));
 DRAW(DrawImageNine, drawImageNine(r.image.get(), r.center, r.dst, r.paint));
-DRAW(DrawImageSet, experimental_DrawImageSetV1(r.set.get(), r.count, r.quality, r.mode));
 DRAW(DrawOval, drawOval(r.oval, r.paint));
 DRAW(DrawPaint, drawPaint(r.paint));
 DRAW(DrawPath, drawPath(r.path, r.paint));
@@ -124,14 +123,18 @@ DRAW(DrawPicture, drawPicture(r.picture.get(), &r.matrix, r.paint));
 DRAW(DrawPoints, drawPoints(r.mode, r.count, r.pts, r.paint));
 DRAW(DrawRRect, drawRRect(r.rrect, r.paint));
 DRAW(DrawRect, drawRect(r.rect, r.paint));
-DRAW(DrawEdgeAARect, experimental_DrawEdgeAARectV1(r.rect, r.aa, r.color, r.mode));
 DRAW(DrawRegion, drawRegion(r.region, r.paint));
 DRAW(DrawTextBlob, drawTextBlob(r.blob.get(), r.x, r.y, r.paint));
-DRAW(DrawAtlas, drawAtlas(r.atlas.get(),
-                          r.xforms, r.texs, r.colors, r.count, r.mode, r.cull, r.paint));
+DRAW(DrawAtlas,
+     drawAtlas(r.atlas.get(), r.xforms, r.texs, r.colors, r.count, r.mode, r.cull, r.paint));
 DRAW(DrawVertices, drawVertices(r.vertices, r.bones, r.boneCount, r.bmode, r.paint));
 DRAW(DrawShadowRec, private_draw_shadow_rec(r.path, r.rec));
 DRAW(DrawAnnotation, drawAnnotation(r.rect, r.key.c_str(), r.value.get()));
+
+DRAW(DrawEdgeAAQuad, experimental_DrawEdgeAAQuad(r.rect, r.clip, r.aa, r.color, r.mode));
+DRAW(DrawEdgeAAImageSet, experimental_DrawEdgeAAImageSet(r.set.get(), r.count, r.dstClips,
+                                                         r.preViewMatrices, r.paint, r.constraint));
+
 #undef DRAW
 
 template <> void Draw::draw(const DrawDrawable& r) {
@@ -166,13 +169,11 @@ template <> void Draw::draw(const DrawDrawable& r) {
 class FillBounds : SkNoncopyable {
 public:
     FillBounds(const SkRect& cullRect, const SkRecord& record, SkRect bounds[])
-        : fNumRecords(record.count())
-        , fCullRect(cullRect)
-        , fBounds(bounds) {
+            : fNumRecords(record.count()), fCullRect(cullRect), fBounds(bounds) {
         fCTM = SkMatrix::I();
 
         // We push an extra save block to track the bounds of any top-level control operations.
-        fSaveStack.push_back({ 0, Bounds::MakeEmpty(), nullptr, fCTM });
+        fSaveStack.push_back({0, Bounds::MakeEmpty(), nullptr, fCTM});
     }
 
     void cleanUp() {
@@ -189,7 +190,6 @@ public:
     }
 
     void setCurrentOp(int currentOp) { fCurrentOp = currentOp; }
-
 
     template <typename T> void operator()(const T& op) {
         this->updateCTM(op);
@@ -241,26 +241,25 @@ private:
 
     // Only Restore, SetMatrix, Concat, and Translate change the CTM.
     template <typename T> void updateCTM(const T&) {}
-    void updateCTM(const Restore& op)   { fCTM = op.matrix; }
+    void updateCTM(const Restore& op) { fCTM = op.matrix; }
     void updateCTM(const SetMatrix& op) { fCTM = op.matrix; }
-    void updateCTM(const Concat& op)    { fCTM.preConcat(op.matrix); }
+    void updateCTM(const Concat& op) { fCTM.preConcat(op.matrix); }
     void updateCTM(const Translate& op) { fCTM.preTranslate(op.dx, op.dy); }
 
     // The bounds of these ops must be calculated when we hit the Restore
     // from the bounds of the ops in the same Save block.
-    void trackBounds(const Save&)          { this->pushSaveBlock(nullptr); }
-    void trackBounds(const SaveLayer& op)  { this->pushSaveBlock(op.paint); }
-    void trackBounds(const SaveBehind&)    { this->pushSaveBlock(nullptr); }
+    void trackBounds(const Save&) { this->pushSaveBlock(nullptr); }
+    void trackBounds(const SaveLayer& op) { this->pushSaveBlock(op.paint); }
+    void trackBounds(const SaveBehind&) { this->pushSaveBlock(nullptr); }
     void trackBounds(const Restore&) { fBounds[fCurrentOp] = this->popSaveBlock(); }
 
-    void trackBounds(const SetMatrix&)         { this->pushControl(); }
-    void trackBounds(const Concat&)            { this->pushControl(); }
-    void trackBounds(const Translate&)         { this->pushControl(); }
-    void trackBounds(const ClipRect&)          { this->pushControl(); }
-    void trackBounds(const ClipRRect&)         { this->pushControl(); }
-    void trackBounds(const ClipPath&)          { this->pushControl(); }
-    void trackBounds(const ClipRegion&)        { this->pushControl(); }
-
+    void trackBounds(const SetMatrix&) { this->pushControl(); }
+    void trackBounds(const Concat&) { this->pushControl(); }
+    void trackBounds(const Translate&) { this->pushControl(); }
+    void trackBounds(const ClipRect&) { this->pushControl(); }
+    void trackBounds(const ClipRRect&) { this->pushControl(); }
+    void trackBounds(const ClipPath&) { this->pushControl(); }
+    void trackBounds(const ClipRegion&) { this->pushControl(); }
 
     // For all other ops, we can calculate and store the bounds directly now.
     template <typename T> void trackBounds(const T& op) {
@@ -274,8 +273,7 @@ private:
         sb.controlOps = 0;
         // If the paint affects transparent black,
         // the bound shouldn't be smaller than the cull.
-        sb.bounds =
-            PaintMayAffectTransparentBlack(paint) ? fCullRect : Bounds::MakeEmpty();
+        sb.bounds = PaintMayAffectTransparentBlack(paint) ? fCullRect : Bounds::MakeEmpty();
         sb.paint = paint;
         sb.ctm = this->fCTM;
 
@@ -321,7 +319,7 @@ private:
         SaveBounds sb;
         fSaveStack.pop(&sb);
 
-        while (sb.controlOps --> 0) {
+        while (sb.controlOps-- > 0) {
             this->popControl(sb.bounds);
         }
 
@@ -354,11 +352,10 @@ private:
     Bounds bounds(const Flush&) const { return fCullRect; }
 
     Bounds bounds(const DrawPaint&) const { return fCullRect; }
-    Bounds bounds(const NoOp&)  const { return Bounds::MakeEmpty(); }    // NoOps don't draw.
+    Bounds bounds(const DrawBehind&) const { return fCullRect; }
+    Bounds bounds(const NoOp&) const { return Bounds::MakeEmpty(); }  // NoOps don't draw.
 
     Bounds bounds(const DrawRect& op) const { return this->adjustAndMap(op.rect, &op.paint); }
-    Bounds bounds(const DrawEdgeAARect& op) const { return this->adjustAndMap(op.rect, nullptr); }
-
     Bounds bounds(const DrawRegion& op) const {
         SkRect rect = SkRect::Make(op.region.getBounds());
         return this->adjustAndMap(rect, &op.paint);
@@ -378,22 +375,9 @@ private:
 
         return this->adjustAndMap(rect, op.paint);
     }
-    Bounds bounds(const DrawImageLattice& op) const {
-        return this->adjustAndMap(op.dst, op.paint);
-    }
-    Bounds bounds(const DrawImageRect& op) const {
-        return this->adjustAndMap(op.dst, op.paint);
-    }
-    Bounds bounds(const DrawImageNine& op) const {
-        return this->adjustAndMap(op.dst, op.paint);
-    }
-    Bounds bounds(const DrawImageSet& op) const {
-        SkRect rect = SkRect::MakeEmpty();
-        for (int i = 0; i < op.count; ++i) {
-            rect.join(this->adjustAndMap(op.set[i].fDstRect, nullptr));
-        }
-        return rect;
-    }
+    Bounds bounds(const DrawImageLattice& op) const { return this->adjustAndMap(op.dst, op.paint); }
+    Bounds bounds(const DrawImageRect& op) const { return this->adjustAndMap(op.dst, op.paint); }
+    Bounds bounds(const DrawImageNine& op) const { return this->adjustAndMap(op.dst, op.paint); }
     Bounds bounds(const DrawPath& op) const {
         return op.path.isInverseFillType() ? fCullRect
                                            : this->adjustAndMap(op.path.getBounds(), &op.paint);
@@ -404,7 +388,7 @@ private:
 
         // Pad the bounding box a little to make sure hairline points' bounds aren't empty.
         SkScalar stroke = SkMaxScalar(op.paint.getStrokeWidth(), 0.01f);
-        dst.outset(stroke/2, stroke/2);
+        dst.outset(stroke / 2, stroke / 2);
 
         return this->adjustAndMap(dst, &op.paint);
     }
@@ -449,8 +433,29 @@ private:
         return this->adjustAndMap(op.worstCaseBounds, nullptr);
     }
 
-    Bounds bounds(const DrawAnnotation& op) const {
-        return this->adjustAndMap(op.rect, nullptr);
+    Bounds bounds(const DrawAnnotation& op) const { return this->adjustAndMap(op.rect, nullptr); }
+    Bounds bounds(const DrawEdgeAAQuad& op) const {
+        SkRect bounds = op.rect;
+        if (op.clip) {
+            bounds.setBounds(op.clip, 4);
+        }
+        return this->adjustAndMap(bounds, nullptr);
+    }
+    Bounds bounds(const DrawEdgeAAImageSet& op) const {
+        SkRect rect = SkRect::MakeEmpty();
+        int clipIndex = 0;
+        for (int i = 0; i < op.count; ++i) {
+            SkRect entryBounds = op.set[i].fDstRect;
+            if (op.set[i].fHasClip) {
+                entryBounds.setBounds(op.dstClips + clipIndex, 4);
+                clipIndex += 4;
+            }
+            if (op.set[i].fMatrixIndex >= 0) {
+                op.preViewMatrices[op.set[i].fMatrixIndex].mapRect(&entryBounds);
+            }
+            rect.join(this->adjustAndMap(entryBounds, nullptr));
+        }
+        return rect;
     }
 
     // Returns true if rect was meaningfully adjusted for the effects of paint,
@@ -496,7 +501,7 @@ private:
 
     // Used to track the bounds of Save/Restore blocks and the control ops inside them.
     SkTDArray<SaveBounds> fSaveStack;
-    SkTDArray<int>   fControlIndices;
+    SkTDArray<int> fControlIndices;
 };
 
 }  // namespace SkRecords
@@ -509,4 +514,3 @@ void SkRecordFillBounds(const SkRect& cullRect, const SkRecord& record, SkRect b
     }
     visitor.cleanUp();
 }
-

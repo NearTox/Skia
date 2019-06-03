@@ -5,38 +5,38 @@
  * found in the LICENSE file.
  */
 
-#include "SkJpegCodec.h"
+#include "src/codec/SkJpegCodec.h"
 
-#include "SkCodec.h"
-#include "SkCodecPriv.h"
-#include "SkColorData.h"
-#include "SkJpegDecoderMgr.h"
-#include "SkJpegInfo.h"
-#include "SkStream.h"
-#include "SkTemplates.h"
-#include "SkTo.h"
-#include "SkTypes.h"
+#include "include/codec/SkCodec.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkTemplates.h"
+#include "include/private/SkTo.h"
+#include "src/codec/SkCodecPriv.h"
+#include "src/codec/SkJpegDecoderMgr.h"
+#include "src/pdf/SkJpegInfo.h"
 
 // stdio is needed for libjpeg-turbo
 #include <stdio.h>
-#include "SkJpegUtility.h"
+#include "src/codec/SkJpegUtility.h"
 
 // This warning triggers false postives way too often in here.
 #if defined(__GNUC__) && !defined(__clang__)
-    #pragma GCC diagnostic ignored "-Wclobbered"
+#pragma GCC diagnostic ignored "-Wclobbered"
 #endif
 
 extern "C" {
-    #include "jerror.h"
-    #include "jpeglib.h"
+#include "jerror.h"
+#include "jpeglib.h"
 }
 
-bool SkJpegCodec::IsJpeg(const void* buffer, size_t bytesRead) {
-    constexpr uint8_t jpegSig[] = { 0xFF, 0xD8, 0xFF };
+bool SkJpegCodec::IsJpeg(const void* buffer, size_t bytesRead) noexcept {
+    constexpr uint8_t jpegSig[] = {0xFF, 0xD8, 0xFF};
     return bytesRead >= 3 && !memcmp(buffer, jpegSig, sizeof(jpegSig));
 }
 
-static uint32_t get_endian_int(const uint8_t* data, bool littleEndian) {
+static uint32_t get_endian_int(const uint8_t* data, bool littleEndian) noexcept {
     if (littleEndian) {
         return (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | (data[0]);
     }
@@ -44,15 +44,15 @@ static uint32_t get_endian_int(const uint8_t* data, bool littleEndian) {
     return (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3]);
 }
 
-const uint32_t kExifHeaderSize = 14;
-const uint32_t kExifMarker = JPEG_APP0 + 1;
+constexpr uint32_t kExifHeaderSize = 14;
+constexpr uint32_t kExifMarker = JPEG_APP0 + 1;
 
 static bool is_orientation_marker(jpeg_marker_struct* marker, SkEncodedOrigin* orientation) {
     if (kExifMarker != marker->marker || marker->data_length < kExifHeaderSize) {
         return false;
     }
 
-    constexpr uint8_t kExifSig[] { 'E', 'x', 'i', 'f', '\0' };
+    constexpr uint8_t kExifSig[]{'E', 'x', 'i', 'f', '\0'};
     if (memcmp(marker->data, kExifSig, sizeof(kExifSig))) {
         return false;
     }
@@ -60,10 +60,11 @@ static bool is_orientation_marker(jpeg_marker_struct* marker, SkEncodedOrigin* o
     // Account for 'E', 'x', 'i', 'f', '\0', '<fill byte>'.
     constexpr size_t kOffset = 6;
     return is_orientation_marker(marker->data + kOffset, marker->data_length - kOffset,
-            orientation);
+                                 orientation);
 }
 
-bool is_orientation_marker(const uint8_t* data, size_t data_length, SkEncodedOrigin* orientation) {
+bool is_orientation_marker(const uint8_t* data, size_t data_length,
+                           SkEncodedOrigin* orientation) noexcept {
     bool littleEndian;
     // We need eight bytes to read the endian marker and the offset, below.
     if (data_length < 8 || !is_valid_endian_marker(data, &littleEndian)) {
@@ -97,7 +98,7 @@ bool is_orientation_marker(const uint8_t* data, size_t data_length, SkEncodedOri
         if (kOriginTag == tag && kOriginType == type && 1 == count) {
             uint16_t val = get_endian_short(data + 8, littleEndian);
             if (0 < val && val <= kLast_SkEncodedOrigin) {
-                *orientation = (SkEncodedOrigin) val;
+                *orientation = (SkEncodedOrigin)val;
                 return true;
             }
         }
@@ -117,7 +118,7 @@ static SkEncodedOrigin get_exif_orientation(jpeg_decompress_struct* dinfo) {
     return kDefault_SkEncodedOrigin;
 }
 
-static bool is_icc_marker(jpeg_marker_struct* marker) {
+static bool is_icc_marker(jpeg_marker_struct* marker) noexcept {
     if (kICCMarker != marker->marker || marker->data_length < kICCMarkerHeaderSize) {
         return false;
     }
@@ -131,8 +132,8 @@ static bool is_icc_marker(jpeg_marker_struct* marker) {
  *     (1) Discover all ICC profile markers and verify that they are numbered properly.
  *     (2) Copy the data from each marker into a contiguous ICC profile.
  */
-static std::unique_ptr<SkEncodedInfo::ICCProfile> read_color_profile(jpeg_decompress_struct* dinfo)
-{
+static std::unique_ptr<SkEncodedInfo::ICCProfile> read_color_profile(
+        jpeg_decompress_struct* dinfo) {
     // Note that 256 will be enough storage space since each markerIndex is stored in 8-bits.
     jpeg_marker_struct* markerSequence[256];
     memset(markerSequence, 0, sizeof(markerSequence));
@@ -195,10 +196,9 @@ static std::unique_ptr<SkEncodedInfo::ICCProfile> read_color_profile(jpeg_decomp
     return SkEncodedInfo::ICCProfile::Make(std::move(iccData));
 }
 
-SkCodec::Result SkJpegCodec::ReadHeader(SkStream* stream, SkCodec** codecOut,
-        JpegDecoderMgr** decoderMgrOut,
+SkCodec::Result SkJpegCodec::ReadHeader(
+        SkStream* stream, SkCodec** codecOut, JpegDecoderMgr** decoderMgrOut,
         std::unique_ptr<SkEncodedInfo::ICCProfile> defaultColorProfile) {
-
     // Create a JpegDecoderMgr to own all of the decompress information
     std::unique_ptr<JpegDecoderMgr> decoderMgr(new JpegDecoderMgr(stream));
 
@@ -249,9 +249,7 @@ SkCodec::Result SkJpegCodec::ReadHeader(SkStream* stream, SkCodec** codecOut,
                     }
                     break;
                 case JCS_GRAYSCALE:
-                    if (type != skcms_Signature_Gray &&
-                        type != skcms_Signature_RGB)
-                    {
+                    if (type != skcms_Signature_Gray && type != skcms_Signature_RGB) {
                         profile = nullptr;
                     }
                     break;
@@ -266,9 +264,9 @@ SkCodec::Result SkJpegCodec::ReadHeader(SkStream* stream, SkCodec** codecOut,
             profile = std::move(defaultColorProfile);
         }
 
-        SkEncodedInfo info = SkEncodedInfo::Make(dinfo->image_width, dinfo->image_height,
-                                                 color, SkEncodedInfo::kOpaque_Alpha, 8,
-                                                 std::move(profile));
+        SkEncodedInfo info =
+                SkEncodedInfo::Make(dinfo->image_width, dinfo->image_height, color,
+                                    SkEncodedInfo::kOpaque_Alpha, 8, std::move(profile));
 
         SkJpegCodec* codec = new SkJpegCodec(std::move(info), std::unique_ptr<SkStream>(stream),
                                              decoderMgr.release(), orientation);
@@ -285,8 +283,9 @@ std::unique_ptr<SkCodec> SkJpegCodec::MakeFromStream(std::unique_ptr<SkStream> s
     return SkJpegCodec::MakeFromStream(std::move(stream), result, nullptr);
 }
 
-std::unique_ptr<SkCodec> SkJpegCodec::MakeFromStream(std::unique_ptr<SkStream> stream,
-        Result* result, std::unique_ptr<SkEncodedInfo::ICCProfile> defaultColorProfile) {
+std::unique_ptr<SkCodec> SkJpegCodec::MakeFromStream(
+        std::unique_ptr<SkStream> stream, Result* result,
+        std::unique_ptr<SkEncodedInfo::ICCProfile> defaultColorProfile) {
     SkCodec* codec = nullptr;
     *result = ReadHeader(stream.get(), &codec, nullptr, std::move(defaultColorProfile));
     if (kSuccess == *result) {
@@ -300,22 +299,20 @@ std::unique_ptr<SkCodec> SkJpegCodec::MakeFromStream(std::unique_ptr<SkStream> s
 
 SkJpegCodec::SkJpegCodec(SkEncodedInfo&& info, std::unique_ptr<SkStream> stream,
                          JpegDecoderMgr* decoderMgr, SkEncodedOrigin origin)
-    : INHERITED(std::move(info), skcms_PixelFormat_RGBA_8888, std::move(stream), origin)
-    , fDecoderMgr(decoderMgr)
-    , fReadyState(decoderMgr->dinfo()->global_state)
-    , fSwizzleSrcRow(nullptr)
-    , fColorXformSrcRow(nullptr)
-    , fSwizzlerSubset(SkIRect::MakeEmpty())
-{}
+        : INHERITED(std::move(info), skcms_PixelFormat_RGBA_8888, std::move(stream), origin)
+        , fDecoderMgr(decoderMgr)
+        , fReadyState(decoderMgr->dinfo()->global_state)
+        , fSwizzleSrcRow(nullptr)
+        , fColorXformSrcRow(nullptr)
+        , fSwizzlerSubset(SkIRect::MakeEmpty()) {}
 
 /*
  * Return the row bytes of a particular image type and width
  */
-static size_t get_row_bytes(const j_decompress_ptr dinfo) {
-    const size_t colorBytes = (dinfo->out_color_space == JCS_RGB565) ? 2 :
-            dinfo->out_color_components;
+static size_t get_row_bytes(const j_decompress_ptr dinfo) noexcept {
+    const size_t colorBytes =
+            (dinfo->out_color_space == JCS_RGB565) ? 2 : dinfo->out_color_components;
     return dinfo->output_width * colorBytes;
-
 }
 
 /*
@@ -324,7 +321,8 @@ static size_t get_row_bytes(const j_decompress_ptr dinfo) {
  *  Not to be used on the actual jpeg_decompress_struct used for decoding, since it will
  *  incorrectly modify num_components.
  */
-void calc_output_dimensions(jpeg_decompress_struct* dinfo, unsigned int num, unsigned int denom) {
+static void calc_output_dimensions(jpeg_decompress_struct* dinfo, unsigned int num,
+                                   unsigned int denom) noexcept {
     dinfo->num_components = 0;
     dinfo->scale_num = num;
     dinfo->scale_denom = denom;
@@ -334,7 +332,7 @@ void calc_output_dimensions(jpeg_decompress_struct* dinfo, unsigned int num, uns
 /*
  * Return a valid set of output dimensions for this decoder, given an input scale
  */
-SkISize SkJpegCodec::onGetScaledDimensions(float desiredScale) const {
+SkISize SkJpegCodec::onGetScaledDimensions(float desiredScale) const noexcept {
     // libjpeg-turbo supports scaling by 1/8, 1/4, 3/8, 1/2, 5/8, 3/4, 7/8, and 1/1, so we will
     // support these as well
     unsigned int num;
@@ -386,7 +384,7 @@ bool SkJpegCodec::onRewind() {
 }
 
 bool SkJpegCodec::conversionSupported(const SkImageInfo& dstInfo, bool srcIsOpaque,
-                                      bool needsColorXform) {
+                                      bool needsColorXform) noexcept {
     SkASSERT(srcIsOpaque);
 
     if (kUnknown_SkAlphaType == dstInfo.alphaType()) {
@@ -394,8 +392,9 @@ bool SkJpegCodec::conversionSupported(const SkImageInfo& dstInfo, bool srcIsOpaq
     }
 
     if (kOpaque_SkAlphaType != dstInfo.alphaType()) {
-        SkCodecPrintf("Warning: an opaque image should be decoded as opaque "
-                      "- it is being decoded as non-opaque, which will draw slower\n");
+        SkCodecPrintf(
+                "Warning: an opaque image should be decoded as opaque "
+                "- it is being decoded as non-opaque, which will draw slower\n");
     }
 
     J_COLOR_SPACE encodedColorType = fDecoderMgr->dinfo()->jpeg_color_space;
@@ -476,7 +475,6 @@ bool SkJpegCodec::onDimensionsSupported(const SkISize& size) {
     const unsigned int denom = 8;
     calc_output_dimensions(&dinfo, num, denom);
     while (dinfo.output_width != dstWidth || dinfo.output_height != dstHeight) {
-
         // Return a failure if we have tried all of the possible scales
         if (1 == num || dstWidth > dinfo.output_width || dstHeight > dinfo.output_height) {
             return false;
@@ -508,24 +506,24 @@ int SkJpegCodec::readRows(const SkImageInfo& dstInfo, void* dst, size_t rowBytes
     // we cannot color xform "in place" (many times we can, but not when the src and dst
     // are different sizes).
     // In this case, we will color xform from fColorXformSrcRow into the dst.
-    JSAMPLE* decodeDst = (JSAMPLE*) dst;
-    uint32_t* swizzleDst = (uint32_t*) dst;
+    JSAMPLE* decodeDst = (JSAMPLE*)dst;
+    uint32_t* swizzleDst = (uint32_t*)dst;
     size_t decodeDstRowBytes = rowBytes;
     size_t swizzleDstRowBytes = rowBytes;
     int dstWidth = opts.fSubset ? opts.fSubset->width() : dstInfo.width();
     if (fSwizzleSrcRow && fColorXformSrcRow) {
-        decodeDst = (JSAMPLE*) fSwizzleSrcRow;
+        decodeDst = (JSAMPLE*)fSwizzleSrcRow;
         swizzleDst = fColorXformSrcRow;
         decodeDstRowBytes = 0;
         swizzleDstRowBytes = 0;
         dstWidth = fSwizzler->swizzleWidth();
     } else if (fColorXformSrcRow) {
-        decodeDst = (JSAMPLE*) fColorXformSrcRow;
+        decodeDst = (JSAMPLE*)fColorXformSrcRow;
         swizzleDst = fColorXformSrcRow;
         decodeDstRowBytes = 0;
         swizzleDstRowBytes = 0;
     } else if (fSwizzleSrcRow) {
-        decodeDst = (JSAMPLE*) fSwizzleSrcRow;
+        decodeDst = (JSAMPLE*)fSwizzleSrcRow;
         decodeDstRowBytes = 0;
         dstWidth = fSwizzler->swizzleWidth();
     }
@@ -560,7 +558,7 @@ int SkJpegCodec::readRows(const SkImageInfo& dstInfo, void* dst, size_t rowBytes
  */
 static inline bool needs_swizzler_to_convert_from_cmyk(J_COLOR_SPACE jpegColorType,
                                                        const skcms_ICCProfile* srcProfile,
-                                                       bool hasColorSpaceXform) {
+                                                       bool hasColorSpaceXform) noexcept {
     if (JCS_CMYK != jpegColorType) {
         return false;
     }
@@ -572,10 +570,8 @@ static inline bool needs_swizzler_to_convert_from_cmyk(J_COLOR_SPACE jpegColorTy
 /*
  * Performs the jpeg decode
  */
-SkCodec::Result SkJpegCodec::onGetPixels(const SkImageInfo& dstInfo,
-                                         void* dst, size_t dstRowBytes,
-                                         const Options& options,
-                                         int* rowsDecoded) {
+SkCodec::Result SkJpegCodec::onGetPixels(const SkImageInfo& dstInfo, void* dst, size_t dstRowBytes,
+                                         const Options& options, int* rowsDecoded) {
     if (options.fSubset) {
         // Subsets are not supported.
         return kUnimplemented;
@@ -614,7 +610,7 @@ SkCodec::Result SkJpegCodec::onGetPixels(const SkImageInfo& dstInfo,
     return kSuccess;
 }
 
-void SkJpegCodec::allocateStorage(const SkImageInfo& dstInfo) {
+void SkJpegCodec::allocateStorage(const SkImageInfo& dstInfo) noexcept {
     int dstWidth = dstInfo.width();
 
     size_t swizzleBytes = 0;
@@ -634,20 +630,20 @@ void SkJpegCodec::allocateStorage(const SkImageInfo& dstInfo) {
     if (totalBytes > 0) {
         fStorage.reset(totalBytes);
         fSwizzleSrcRow = (swizzleBytes > 0) ? fStorage.get() : nullptr;
-        fColorXformSrcRow = (xformBytes > 0) ?
-                SkTAddOffset<uint32_t>(fStorage.get(), swizzleBytes) : nullptr;
+        fColorXformSrcRow =
+                (xformBytes > 0) ? SkTAddOffset<uint32_t>(fStorage.get(), swizzleBytes) : nullptr;
     }
 }
 
 void SkJpegCodec::initializeSwizzler(const SkImageInfo& dstInfo, const Options& options,
-        bool needsCMYKToRGB) {
+                                     bool needsCMYKToRGB) {
     Options swizzlerOptions = options;
     if (options.fSubset) {
         // Use fSwizzlerSubset if this is a subset decode.  This is necessary in the case
         // where libjpeg-turbo provides a subset and then we need to subset it further.
         // Also, verify that fSwizzlerSubset is initialized and valid.
         SkASSERT(!fSwizzlerSubset.isEmpty() && fSwizzlerSubset.x() <= options.fSubset->x() &&
-                fSwizzlerSubset.width() == options.fSubset->width());
+                 fSwizzlerSubset.width() == options.fSubset->width());
         swizzlerOptions.fSubset = &fSwizzlerSubset;
     }
 
@@ -692,16 +688,16 @@ SkSampler* SkJpegCodec::getSampler(bool createIfNecessary) {
         return fSwizzler.get();
     }
 
-    bool needsCMYKToRGB = needs_swizzler_to_convert_from_cmyk(
-            fDecoderMgr->dinfo()->out_color_space, this->getEncodedInfo().profile(),
-            this->colorXform());
+    bool needsCMYKToRGB = needs_swizzler_to_convert_from_cmyk(fDecoderMgr->dinfo()->out_color_space,
+                                                              this->getEncodedInfo().profile(),
+                                                              this->colorXform());
     this->initializeSwizzler(this->dstInfo(), this->options(), needsCMYKToRGB);
     this->allocateStorage(this->dstInfo());
     return fSwizzler.get();
 }
 
 SkCodec::Result SkJpegCodec::onStartScanlineDecode(const SkImageInfo& dstInfo,
-        const Options& options) {
+                                                   const Options& options) noexcept {
     // Set the jump location for libjpeg errors
     skjpeg_error_mgr::AutoPushJmpBuf jmp(fDecoderMgr->errorMgr());
     if (setjmp(jmp)) {
@@ -714,9 +710,9 @@ SkCodec::Result SkJpegCodec::onStartScanlineDecode(const SkImageInfo& dstInfo,
         return kInvalidInput;
     }
 
-    bool needsCMYKToRGB = needs_swizzler_to_convert_from_cmyk(
-            fDecoderMgr->dinfo()->out_color_space, this->getEncodedInfo().profile(),
-            this->colorXform());
+    bool needsCMYKToRGB = needs_swizzler_to_convert_from_cmyk(fDecoderMgr->dinfo()->out_color_space,
+                                                              this->getEncodedInfo().profile(),
+                                                              this->colorXform());
     if (options.fSubset) {
         uint32_t startX = options.fSubset->x();
         uint32_t width = options.fSubset->width();
@@ -728,9 +724,9 @@ SkCodec::Result SkJpegCodec::onStartScanlineDecode(const SkImageInfo& dstInfo,
         // the same.
         jpeg_crop_scanline(fDecoderMgr->dinfo(), &startX, &width);
 
-        SkASSERT(startX <= (uint32_t) options.fSubset->x());
-        SkASSERT(width >= (uint32_t) options.fSubset->width());
-        SkASSERT(startX + width >= (uint32_t) options.fSubset->right());
+        SkASSERT(startX <= (uint32_t)options.fSubset->x());
+        SkASSERT(width >= (uint32_t)options.fSubset->width());
+        SkASSERT(startX + width >= (uint32_t)options.fSubset->right());
 
         // Instruct the swizzler (if it is necessary) to further subset the
         // output provided by libjpeg-turbo.
@@ -743,13 +739,13 @@ SkCodec::Result SkJpegCodec::onStartScanlineDecode(const SkImageInfo& dstInfo,
         // Note that the swizzler will ignore the y and height parameters of
         // the subset.  Since the scanline decoder (and the swizzler) handle
         // one row at a time, only the subsetting in the x-dimension matters.
-        fSwizzlerSubset.setXYWH(options.fSubset->x() - startX, 0,
-                options.fSubset->width(), options.fSubset->height());
+        fSwizzlerSubset.setXYWH(options.fSubset->x() - startX, 0, options.fSubset->width(),
+                                options.fSubset->height());
 
         // We will need a swizzler if libjpeg-turbo cannot provide the exact
         // subset that we request.
-        if (startX != (uint32_t) options.fSubset->x() ||
-                width != (uint32_t) options.fSubset->width()) {
+        if (startX != (uint32_t)options.fSubset->x() ||
+            width != (uint32_t)options.fSubset->width()) {
             this->initializeSwizzler(dstInfo, options, needsCMYKToRGB);
         }
     }
@@ -781,10 +777,10 @@ bool SkJpegCodec::onSkipScanlines(int count) {
         return fDecoderMgr->returnFalse("onSkipScanlines");
     }
 
-    return (uint32_t) count == jpeg_skip_scanlines(fDecoderMgr->dinfo(), count);
+    return (uint32_t)count == jpeg_skip_scanlines(fDecoderMgr->dinfo(), count);
 }
 
-static bool is_yuv_supported(jpeg_decompress_struct* dinfo) {
+static bool is_yuv_supported(jpeg_decompress_struct* dinfo) noexcept {
     // Scaling is not supported in raw data mode.
     SkASSERT(dinfo->scale_num == dinfo->scale_denom);
 
@@ -813,11 +809,8 @@ static bool is_yuv_supported(jpeg_decompress_struct* dinfo) {
     // that of Y would be an extremely difficult change, given that clients
     // allocate memory as if the size of the Y plane is always the size of the
     // image.  However, this case is very, very rare.
-    if  ((1 != dinfo->comp_info[1].h_samp_factor) ||
-         (1 != dinfo->comp_info[1].v_samp_factor) ||
-         (1 != dinfo->comp_info[2].h_samp_factor) ||
-         (1 != dinfo->comp_info[2].v_samp_factor))
-    {
+    if ((1 != dinfo->comp_info[1].h_samp_factor) || (1 != dinfo->comp_info[1].v_samp_factor) ||
+        (1 != dinfo->comp_info[2].h_samp_factor) || (1 != dinfo->comp_info[2].v_samp_factor)) {
         return false;
     }
 
@@ -831,21 +824,19 @@ static bool is_yuv_supported(jpeg_decompress_struct* dinfo) {
     //                     cases?
     int hSampY = dinfo->comp_info[0].h_samp_factor;
     int vSampY = dinfo->comp_info[0].v_samp_factor;
-    return (1 == hSampY && 1 == vSampY) ||
-           (2 == hSampY && 1 == vSampY) ||
-           (2 == hSampY && 2 == vSampY) ||
-           (1 == hSampY && 2 == vSampY) ||
-           (4 == hSampY && 1 == vSampY) ||
-           (4 == hSampY && 2 == vSampY);
+    return (1 == hSampY && 1 == vSampY) || (2 == hSampY && 1 == vSampY) ||
+           (2 == hSampY && 2 == vSampY) || (1 == hSampY && 2 == vSampY) ||
+           (4 == hSampY && 1 == vSampY) || (4 == hSampY && 2 == vSampY);
 }
 
-bool SkJpegCodec::onQueryYUV8(SkYUVASizeInfo* sizeInfo, SkYUVColorSpace* colorSpace) const {
+bool SkJpegCodec::onQueryYUV8(SkYUVASizeInfo* sizeInfo, SkYUVColorSpace* colorSpace) const
+        noexcept {
     jpeg_decompress_struct* dinfo = fDecoderMgr->dinfo();
     if (!is_yuv_supported(dinfo)) {
         return false;
     }
 
-    jpeg_component_info * comp_info = dinfo->comp_info;
+    jpeg_component_info* comp_info = dinfo->comp_info;
     for (int i = 0; i < 3; ++i) {
         sizeInfo->fSizes[i].set(comp_info[i].downsampled_width, comp_info[i].downsampled_height);
         sizeInfo->fWidthBytes[i] = comp_info[i].width_in_blocks * DCTSIZE;
@@ -869,13 +860,12 @@ SkCodec::Result SkJpegCodec::onGetYUV8Planes(const SkYUVASizeInfo& sizeInfo,
 
     // This will check is_yuv_supported(), so we don't need to here.
     bool supportsYUV = this->onQueryYUV8(&defaultInfo, nullptr);
-    if (!supportsYUV ||
-            sizeInfo.fSizes[0] != defaultInfo.fSizes[0] ||
-            sizeInfo.fSizes[1] != defaultInfo.fSizes[1] ||
-            sizeInfo.fSizes[2] != defaultInfo.fSizes[2] ||
-            sizeInfo.fWidthBytes[0] < defaultInfo.fWidthBytes[0] ||
-            sizeInfo.fWidthBytes[1] < defaultInfo.fWidthBytes[1] ||
-            sizeInfo.fWidthBytes[2] < defaultInfo.fWidthBytes[2]) {
+    if (!supportsYUV || sizeInfo.fSizes[0] != defaultInfo.fSizes[0] ||
+        sizeInfo.fSizes[1] != defaultInfo.fSizes[1] ||
+        sizeInfo.fSizes[2] != defaultInfo.fSizes[2] ||
+        sizeInfo.fWidthBytes[0] < defaultInfo.fWidthBytes[0] ||
+        sizeInfo.fWidthBytes[1] < defaultInfo.fWidthBytes[1] ||
+        sizeInfo.fWidthBytes[2] < defaultInfo.fWidthBytes[2]) {
         return fDecoderMgr->returnFailure("onGetYUV8Planes", kInvalidInput);
     }
 
@@ -901,8 +891,8 @@ SkCodec::Result SkJpegCodec::onGetYUV8Planes(const SkYUVASizeInfo& sizeInfo,
     // Currently, we require that the Y plane dimensions match the image dimensions
     // and that the U and V planes are the same dimensions.
     SkASSERT(sizeInfo.fSizes[1] == sizeInfo.fSizes[2]);
-    SkASSERT((uint32_t) sizeInfo.fSizes[0].width() == dinfo->output_width &&
-             (uint32_t) sizeInfo.fSizes[0].height() == dinfo->output_height);
+    SkASSERT((uint32_t)sizeInfo.fSizes[0].width() == dinfo->output_width &&
+             (uint32_t)sizeInfo.fSizes[0].height() == dinfo->output_height);
 
     // Build a JSAMPIMAGE to handle output from libjpeg-turbo.  A JSAMPIMAGE has
     // a 2-D array of pixels for each of the components (Y, U, V) in the image.
@@ -912,9 +902,9 @@ SkCodec::Result SkJpegCodec::onGetYUV8Planes(const SkYUVASizeInfo& sizeInfo,
 
     // Set aside enough space for pointers to rows of Y, U, and V.
     JSAMPROW rowptrs[2 * DCTSIZE + DCTSIZE + DCTSIZE];
-    yuv[0] = &rowptrs[0];           // Y rows (DCTSIZE or 2 * DCTSIZE)
-    yuv[1] = &rowptrs[2 * DCTSIZE]; // U rows (DCTSIZE)
-    yuv[2] = &rowptrs[3 * DCTSIZE]; // V rows (DCTSIZE)
+    yuv[0] = &rowptrs[0];            // Y rows (DCTSIZE or 2 * DCTSIZE)
+    yuv[1] = &rowptrs[2 * DCTSIZE];  // U rows (DCTSIZE)
+    yuv[2] = &rowptrs[3 * DCTSIZE];  // V rows (DCTSIZE)
 
     // Initialize rowptrs.
     int numYRowsPerBlock = DCTSIZE * dinfo->comp_info[0].v_samp_factor;
@@ -922,10 +912,8 @@ SkCodec::Result SkJpegCodec::onGetYUV8Planes(const SkYUVASizeInfo& sizeInfo,
         rowptrs[i] = SkTAddOffset<JSAMPLE>(planes[0], i * sizeInfo.fWidthBytes[0]);
     }
     for (int i = 0; i < DCTSIZE; i++) {
-        rowptrs[i + 2 * DCTSIZE] =
-            SkTAddOffset<JSAMPLE>(planes[1], i * sizeInfo.fWidthBytes[1]);
-        rowptrs[i + 3 * DCTSIZE] =
-            SkTAddOffset<JSAMPLE>(planes[2], i * sizeInfo.fWidthBytes[2]);
+        rowptrs[i + 2 * DCTSIZE] = SkTAddOffset<JSAMPLE>(planes[1], i * sizeInfo.fWidthBytes[1]);
+        rowptrs[i + 3 * DCTSIZE] = SkTAddOffset<JSAMPLE>(planes[2], i * sizeInfo.fWidthBytes[2]);
     }
 
     // After each loop iteration, we will increment pointers to Y, U, and V.
@@ -985,9 +973,7 @@ SkCodec::Result SkJpegCodec::onGetYUV8Planes(const SkYUVASizeInfo& sizeInfo,
 }
 
 // This function is declared in SkJpegInfo.h, used by SkPDF.
-bool SkGetJpegInfo(const void* data, size_t len,
-                   SkISize* size,
-                   SkEncodedInfo::Color* colorType,
+bool SkGetJpegInfo(const void* data, size_t len, SkISize* size, SkEncodedInfo::Color* colorType,
                    SkEncodedOrigin* orientation) {
     if (!SkJpegCodec::IsJpeg(data, len)) {
         return false;

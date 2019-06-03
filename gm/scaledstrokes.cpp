@@ -5,24 +5,23 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkRRect.h"
-#include "SkPath.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
 
 class ScaledStrokesGM : public skiagm::GM {
 public:
     ScaledStrokesGM() {}
 
 protected:
+    SkString onShortName() override { return SkString("scaledstrokes"); }
 
-    SkString onShortName() override {
-        return SkString("scaledstrokes");
-    }
-
-    SkISize onISize() override {
-        return SkISize::Make(640, 320);
-    }
+    SkISize onISize() override { return SkISize::Make(640, 320); }
 
     static void draw_path(SkScalar size, SkCanvas* canvas, SkPaint paint) {
         SkScalar c = 0.551915024494f * size;
@@ -73,11 +72,10 @@ protected:
                 canvas->translate(80.0f, 0.0f);
             }
         }
-
     }
 
 private:
     typedef GM INHERITED;
 };
 
-DEF_GM( return new ScaledStrokesGM; )
+DEF_GM(return new ScaledStrokesGM;)

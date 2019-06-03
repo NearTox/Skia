@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "Sample.h"
+#include "samplecode/Sample.h"
 
-#include "SkAnimTimer.h"
-#include "SkCanvas.h"
-#include "SkColorFilter.h"
-#include "SkFont.h"
-#include "SkImage.h"
-#include "SkPath.h"
-#include "SkSurface.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkSurface.h"
+#include "tools/timer/AnimTimer.h"
 
 namespace skiagm {
 
@@ -28,8 +28,8 @@ public:
     // ty) translation and rotation by angle. Prior to these transform adjustments, the SkCanvas
     // will only have pixel aligned translations (these are separated to make super-sampling
     // renderers easier).
-    virtual void draw(SkCanvas* canvas, SkPaint* paint,
-                      SkScalar tx, SkScalar ty, SkScalar angle) = 0;
+    virtual void draw(SkCanvas* canvas, SkPaint* paint, SkScalar tx, SkScalar ty,
+                      SkScalar angle) = 0;
 
     virtual SkString name() = 0;
 
@@ -43,9 +43,7 @@ public:
 
 class RectRenderer : public ShapeRenderer {
 public:
-    static sk_sp<ShapeRenderer> Make() {
-        return sk_sp<ShapeRenderer>(new RectRenderer());
-    }
+    static sk_sp<ShapeRenderer> Make() { return sk_sp<ShapeRenderer>(new RectRenderer()); }
 
     SkString name() override { return SkString("rect"); }
 
@@ -72,9 +70,7 @@ private:
 
 class PathRenderer : public ShapeRenderer {
 public:
-    static sk_sp<ShapeRenderer> MakeLine(bool hairline = false) {
-        return MakeCurve(0.f, hairline);
-    }
+    static sk_sp<ShapeRenderer> MakeLine(bool hairline = false) { return MakeCurve(0.f, hairline); }
 
     static sk_sp<ShapeRenderer> MakeLines(SkScalar depth, bool hairline = false) {
         return MakeCurve(-depth, hairline);
@@ -111,8 +107,8 @@ public:
         path.moveTo(kTileWidth / 2.f, 2.f);
 
         if (fDepth > 0.f) {
-            path.quadTo(kTileWidth / 2.f + fDepth, kTileHeight / 2.f,
-                        kTileWidth / 2.f, kTileHeight - 2.f);
+            path.quadTo(kTileWidth / 2.f + fDepth, kTileHeight / 2.f, kTileWidth / 2.f,
+                        kTileHeight - 2.f);
         } else {
             if (fDepth < 0.f) {
                 path.lineTo(kTileWidth / 2.f + fDepth, kTileHeight / 2.f);
@@ -145,12 +141,10 @@ public:
     }
 
 private:
-    SkScalar fDepth; // 0.f to make a line, otherwise outset of curve from end points
+    SkScalar fDepth;  // 0.f to make a line, otherwise outset of curve from end points
     bool fHairline;
 
-    PathRenderer(SkScalar depth, bool hairline)
-            : fDepth(depth)
-            , fHairline(hairline) {}
+    PathRenderer(SkScalar depth, bool hairline) : fDepth(depth), fHairline(hairline) {}
 
     typedef ShapeRenderer INHERITED;
 };
@@ -162,8 +156,8 @@ public:
     static sk_sp<OffscreenShapeRenderer> Make(sk_sp<ShapeRenderer> renderer, int supersample,
                                               bool forceRaster = false) {
         SkASSERT(supersample > 0);
-        return sk_sp<OffscreenShapeRenderer>(new OffscreenShapeRenderer(std::move(renderer),
-                                                                        supersample, forceRaster));
+        return sk_sp<OffscreenShapeRenderer>(
+                new OffscreenShapeRenderer(std::move(renderer), supersample, forceRaster));
     }
 
     SkString name() override {
@@ -187,11 +181,11 @@ public:
     // Exposed so that it's easy to fill the offscreen buffer, then draw zooms/filters of it before
     // drawing the original scale back into the canvas.
     void prepareBuffer(SkCanvas* canvas, SkPaint* paint, SkScalar tx, SkScalar ty, SkScalar angle) {
-        auto info = SkImageInfo::Make(fSupersampleFactor * kTileWidth,
-                                      fSupersampleFactor * kTileHeight,
-                                      kRGBA_8888_SkColorType, kPremul_SkAlphaType);
-        auto surface = fForceRasterBackend ? SkSurface::MakeRaster(info)
-                                           : canvas->makeSurface(info);
+        auto info =
+                SkImageInfo::Make(fSupersampleFactor * kTileWidth, fSupersampleFactor * kTileHeight,
+                                  kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+        auto surface =
+                fForceRasterBackend ? SkSurface::MakeRaster(info) : canvas->makeSurface(info);
 
         surface->getCanvas()->save();
         // Make fully transparent so it is easy to determine pixels that are touched by partial cov.
@@ -214,14 +208,11 @@ public:
         blit.setFilterQuality(scale > 1.f ? kNone_SkFilterQuality : kMedium_SkFilterQuality);
         if (debugMode) {
             // Makes anything that's > 1/255 alpha fully opaque and sets color to medium green.
-            static constexpr SkScalar kFilter[] = {
-                0.f, 0.f, 0.f, 0.f, 16.f,
-                0.f, 0.f, 0.f, 0.f, 200.f,
-                0.f, 0.f, 0.f, 0.f, 16.f,
-                0.f, 0.f, 0.f, 255.f, 0.f
-            };
+            static constexpr float kFilter[] = {
+                    0.f, 0.f, 0.f, 0.f, 16.f / 255, 0.f, 0.f, 0.f, 0.f,   200.f / 255,
+                    0.f, 0.f, 0.f, 0.f, 16.f / 255, 0.f, 0.f, 0.f, 255.f, 0.f};
 
-            blit.setColorFilter(SkColorFilter::MakeMatrixFilterRowMajor255(kFilter));
+            blit.setColorFilter(SkColorFilters::Matrix(kFilter));
         }
 
         canvas->scale(scale, scale);
@@ -229,40 +220,38 @@ public:
     }
 
 private:
-    bool                 fForceRasterBackend;
-    sk_sp<SkImage>       fLastRendered;
+    bool fForceRasterBackend;
+    sk_sp<SkImage> fLastRendered;
     sk_sp<ShapeRenderer> fRenderer;
-    int                  fSupersampleFactor;
+    int fSupersampleFactor;
 
     OffscreenShapeRenderer(sk_sp<ShapeRenderer> renderer, int supersample, bool forceRaster)
             : fForceRasterBackend(forceRaster)
             , fLastRendered(nullptr)
             , fRenderer(std::move(renderer))
-            , fSupersampleFactor(supersample) { }
+            , fSupersampleFactor(supersample) {}
 
     typedef ShapeRenderer INHERITED;
 };
 
 class ThinAASample : public Sample {
 public:
-    ThinAASample() {
-        this->setBGColor(0xFFFFFFFF);
-    }
+    ThinAASample() { this->setBGColor(0xFFFFFFFF); }
 
 protected:
     void onOnceBeforeDraw() override {
         // Setup all base renderers
         fShapes.push_back(RectRenderer::Make());
         fShapes.push_back(PathRenderer::MakeLine());
-        fShapes.push_back(PathRenderer::MakeLines(4.f)); // 2 segments
-        fShapes.push_back(PathRenderer::MakeCurve(2.f)); // Shallow curve
-        fShapes.push_back(PathRenderer::MakeCurve(8.f)); // Deep curve
+        fShapes.push_back(PathRenderer::MakeLines(4.f));  // 2 segments
+        fShapes.push_back(PathRenderer::MakeCurve(2.f));  // Shallow curve
+        fShapes.push_back(PathRenderer::MakeCurve(8.f));  // Deep curve
 
         for (int i = 0; i < fShapes.count(); ++i) {
             fNative.push_back(OffscreenShapeRenderer::Make(fShapes[i], 1));
             fRaster.push_back(OffscreenShapeRenderer::Make(fShapes[i], 1, /* raster */ true));
-            fSS4.push_back(OffscreenShapeRenderer::Make(fShapes[i], 4)); // 4x4 -> 16 samples
-            fSS16.push_back(OffscreenShapeRenderer::Make(fShapes[i], 8)); // 8x8 -> 64 samples
+            fSS4.push_back(OffscreenShapeRenderer::Make(fShapes[i], 4));   // 4x4 -> 16 samples
+            fSS16.push_back(OffscreenShapeRenderer::Make(fShapes[i], 8));  // 8x8 -> 64 samples
 
             fHairline.push_back(OffscreenShapeRenderer::Make(fRaster[i]->toHairline(), 1));
         }
@@ -287,16 +276,21 @@ protected:
         SkPaint text;
         SkFont font(nullptr, 12);
         canvas->translate(60.f, 20.f);
-        canvas->drawString("Each row features a rendering command under different AA strategies. "
-                           "Native refers to the current backend of the viewer, e.g. OpenGL.",
-                           0, 0, font, text);
+        canvas->drawString(
+                "Each row features a rendering command under different AA strategies. "
+                "Native refers to the current backend of the viewer, e.g. OpenGL.",
+                0, 0, font, text);
 
         canvas->drawString(SkStringPrintf("Stroke width: %.2f ('-' to decrease, '=' to increase)",
-                fStrokeWidth), 0, 24, font, text);
+                                          fStrokeWidth),
+                           0, 24, font, text);
         canvas->drawString(SkStringPrintf("Rotation: %.3f ('r' to animate, 'y' sets to 90, 'u' sets"
-                " to 0, 'space' adds 15)", fAngle), 0, 36, font, text);
-        canvas->drawString(SkStringPrintf("Translation: %.3f, %.3f ('t' to animate)",
-                fSubpixelX, fSubpixelY), 0, 48, font, text);
+                                          " to 0, 'space' adds 15)",
+                                          fAngle),
+                           0, 36, font, text);
+        canvas->drawString(
+                SkStringPrintf("Translation: %.3f, %.3f ('t' to animate)", fSubpixelX, fSubpixelY),
+                0, 48, font, text);
 
         canvas->translate(0.f, 100.f);
 
@@ -316,7 +310,7 @@ protected:
         this->drawShapes(canvas, "SSx64", 4, fSS16);
     }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         SkScalar t = timer.secs();
         SkScalar dt = fLastFrameTime < 0.f ? 0.f : t - fLastFrameTime;
         fLastFrameTime = t;
@@ -327,7 +321,7 @@ protected:
             return false;
         }
 
-        switch(fCurrentStage) {
+        switch (fCurrentStage) {
             case AnimStage::kMoveLeft:
                 fSubpixelX += 2.f * dt;
                 if (fSubpixelX >= 1.f) {
@@ -381,7 +375,7 @@ protected:
 
         SkUnichar key;
         if (Sample::CharQ(*evt, &key)) {
-            switch(key) {
+            switch (key) {
                 case 't':
                     // Toggle translation animation.
                     fAnimTranslate = !fAnimTranslate;
@@ -406,11 +400,21 @@ protected:
                         fCurrentStage = AnimStage::kRotate;
                     }
                     return true;
-                case 'u': fAngle = 0.f; return true;
-                case 'y': fAngle = 90.f; return true;
-                case ' ': fAngle = SkScalarMod(fAngle + 15.f, 360.f); return true;
-                case '-': fStrokeWidth = SkMaxScalar(0.1f, fStrokeWidth - 0.05f); return true;
-                case '=': fStrokeWidth = SkMinScalar(1.f, fStrokeWidth + 0.05f); return true;
+                case 'u':
+                    fAngle = 0.f;
+                    return true;
+                case 'y':
+                    fAngle = 90.f;
+                    return true;
+                case ' ':
+                    fAngle = SkScalarMod(fAngle + 15.f, 360.f);
+                    return true;
+                case '-':
+                    fStrokeWidth = SkMaxScalar(0.1f, fStrokeWidth - 0.05f);
+                    return true;
+                case '=':
+                    fStrokeWidth = SkMinScalar(1.f, fStrokeWidth + 0.05f);
+                    return true;
             }
         }
         return this->INHERITED::onQuery(evt);
@@ -430,12 +434,10 @@ private:
     SkScalar fStrokeWidth;
 
     // Animated properties to stress the AA algorithms
-    enum class AnimStage {
-        kMoveRight, kMoveDown, kMoveLeft, kMoveUp, kRotate
-    } fCurrentStage;
+    enum class AnimStage { kMoveRight, kMoveDown, kMoveLeft, kMoveUp, kRotate } fCurrentStage;
     SkScalar fLastFrameTime;
-    bool     fAnimRotate;
-    bool     fAnimTranslate;
+    bool fAnimRotate;
+    bool fAnimTranslate;
 
     // Current frame's animation state
     SkScalar fSubpixelX;
@@ -473,13 +475,13 @@ private:
         }
     }
 
-    void drawShape(SkCanvas* canvas, const char* name, int gridX,
-                   OffscreenShapeRenderer* shape, bool drawNameLabels) {
+    void drawShape(SkCanvas* canvas, const char* name, int gridX, OffscreenShapeRenderer* shape,
+                   bool drawNameLabels) {
         static constexpr SkScalar kZoomGridWidth = 8 * ShapeRenderer::kTileWidth + 8.f;
-        static constexpr SkRect kTile = SkRect::MakeWH(ShapeRenderer::kTileWidth,
-                                                       ShapeRenderer::kTileHeight);
-        static constexpr SkRect kZoomTile = SkRect::MakeWH(8 * ShapeRenderer::kTileWidth,
-                                                           8 * ShapeRenderer::kTileHeight);
+        static constexpr SkRect kTile =
+                SkRect::MakeWH(ShapeRenderer::kTileWidth, ShapeRenderer::kTileHeight);
+        static constexpr SkRect kZoomTile =
+                SkRect::MakeWH(8 * ShapeRenderer::kTileWidth, 8 * ShapeRenderer::kTileHeight);
 
         // Labeling per shape and detailed labeling that isn't per-stroke
         canvas->save();
@@ -488,7 +490,7 @@ private:
 
         if (gridX == 0) {
             SkString name = shape->name();
-            SkScalar centering = name.size() * 4.f; // ad-hoc
+            SkScalar centering = name.size() * 4.f;  // ad-hoc
 
             canvas->save();
             canvas->translate(-10.f, 4 * ShapeRenderer::kTileHeight + centering);
@@ -549,6 +551,6 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new ThinAASample; )
+DEF_SAMPLE(return new ThinAASample;)
 
-}
+}  // namespace skiagm

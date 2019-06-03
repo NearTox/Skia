@@ -8,8 +8,8 @@
 #ifndef SkSVGAttributeParser_DEFINED
 #define SkSVGAttributeParser_DEFINED
 
-#include "SkNoncopyable.h"
-#include "SkSVGTypes.h"
+#include "experimental/svg/model/SkSVGTypes.h"
+#include "include/private/SkNoncopyable.h"
 
 class SkSVGAttributeParser : public SkNoncopyable {
 public:
@@ -36,8 +36,7 @@ private:
     void* operator new(size_t) = delete;
     void* operator new(size_t, void*) = delete;
 
-    template <typename F>
-    bool advanceWhile(F func);
+    template <typename F> bool advanceWhile(F func);
 
     bool parseWSToken();
     bool parseEOSToken();
@@ -71,4 +70,4 @@ private:
     typedef SkNoncopyable INHERITED;
 };
 
-#endif // SkSVGAttributeParser_DEFINED
+#endif  // SkSVGAttributeParser_DEFINED

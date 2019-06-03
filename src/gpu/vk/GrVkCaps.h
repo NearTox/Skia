@@ -8,9 +8,9 @@
 #ifndef GrVkCaps_DEFINED
 #define GrVkCaps_DEFINED
 
-#include "GrCaps.h"
-#include "GrVkStencilAttachment.h"
-#include "vk/GrVkTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/vk/GrVkStencilAttachment.h"
 
 class GrShaderCaps;
 class GrVkExtensions;
@@ -36,67 +36,60 @@ public:
         return SkToBool(ConfigInfo::kTextureable_Flag & fConfigTable[config].fOptimalFlags);
     }
 
-    bool isConfigCopyable(GrPixelConfig config) const override {
-        return true;
-    }
+    bool isConfigCopyable(GrPixelConfig config) const override { return true; }
 
     int getRenderTargetSampleCount(int requestedCount, GrPixelConfig config) const override;
     int maxRenderTargetSampleCount(GrPixelConfig config) const override;
 
-    bool surfaceSupportsReadPixels(const GrSurface*) const override { return true; }
+    bool surfaceSupportsReadPixels(const GrSurface*) const override;
 
     bool isConfigTexturableLinearly(GrPixelConfig config) const {
         return SkToBool(ConfigInfo::kTextureable_Flag & fConfigTable[config].fLinearFlags);
     }
 
     bool isConfigRenderableLinearly(GrPixelConfig config, bool withMSAA) const {
-        return !withMSAA && SkToBool(ConfigInfo::kRenderable_Flag &
-                                     fConfigTable[config].fLinearFlags);
+        return !withMSAA &&
+               SkToBool(ConfigInfo::kRenderable_Flag & fConfigTable[config].fLinearFlags);
     }
 
     bool configCanBeDstofBlit(GrPixelConfig config, bool linearTiled) const {
-        const uint16_t& flags = linearTiled ? fConfigTable[config].fLinearFlags :
-                                              fConfigTable[config].fOptimalFlags;
+        const uint16_t& flags = linearTiled ? fConfigTable[config].fLinearFlags
+                                            : fConfigTable[config].fOptimalFlags;
         return SkToBool(ConfigInfo::kBlitDst_Flag & flags);
     }
 
     bool configCanBeSrcofBlit(GrPixelConfig config, bool linearTiled) const {
-        const uint16_t& flags = linearTiled ? fConfigTable[config].fLinearFlags :
-                                              fConfigTable[config].fOptimalFlags;
+        const uint16_t& flags = linearTiled ? fConfigTable[config].fLinearFlags
+                                            : fConfigTable[config].fOptimalFlags;
         return SkToBool(ConfigInfo::kBlitSrc_Flag & flags);
     }
 
     // On Adreno vulkan, they do not respect the imageOffset parameter at least in
     // copyImageToBuffer. This flag says that we must do the copy starting from the origin always.
-    bool mustDoCopiesFromOrigin() const {
-        return fMustDoCopiesFromOrigin;
-    }
+    bool mustDoCopiesFromOrigin() const { return fMustDoCopiesFromOrigin; }
 
     // Sometimes calls to QueueWaitIdle return before actually signalling the fences
     // on the command buffers even though they have completed. This causes an assert to fire when
     // destroying the command buffers. Therefore we add a sleep to make sure the fence signals.
-    bool mustSleepOnTearDown() const {
-        return fMustSleepOnTearDown;
-    }
+    bool mustSleepOnTearDown() const { return fMustSleepOnTearDown; }
 
     // Returns true if while adding commands to command buffers, we must make a new command buffer
     // everytime we want to bind a new VkPipeline. This is true for both primary and secondary
     // command buffers. This is to work around a driver bug specifically on AMD.
-    bool newCBOnPipelineChange() const {
-        return fNewCBOnPipelineChange;
-    }
+    bool newCBOnPipelineChange() const { return fNewCBOnPipelineChange; }
 
     // Returns true if we should always make dedicated allocations for VkImages.
     bool shouldAlwaysUseDedicatedImageMemory() const {
         return fShouldAlwaysUseDedicatedImageMemory;
     }
 
+    // Always use a transfer buffer instead of vkCmdUpdateBuffer to upload data to a VkBuffer.
+    bool avoidUpdateBuffers() const { return fAvoidUpdateBuffers; }
+
     /**
      * Returns both a supported and most preferred stencil format to use in draws.
      */
-    const StencilFormat& preferredStencilFormat() const {
-        return fPreferredStencilFormat;
-    }
+    const StencilFormat& preferredStencilFormat() const { return fPreferredStencilFormat; }
 
     // Returns whether the device supports VK_KHR_Swapchain. Internally Skia never uses any of the
     // swapchain functions, but we may need to transition to and from the
@@ -137,17 +130,19 @@ public:
      * target.
      */
     bool canCopyImage(GrPixelConfig dstConfig, int dstSampleCnt, GrSurfaceOrigin dstOrigin,
-                      GrPixelConfig srcConfig, int srcSamplecnt, GrSurfaceOrigin srcOrigin) const;
+                      bool dstHasYcbcr, GrPixelConfig srcConfig, int srcSamplecnt,
+                      GrSurfaceOrigin srcOrigin, bool srcHasYcbcr) const;
 
     bool canCopyAsBlit(GrPixelConfig dstConfig, int dstSampleCnt, bool dstIsLinear,
-                       GrPixelConfig srcConfig, int srcSampleCnt, bool srcIsLinear) const;
+                       bool dstHasYcbcr, GrPixelConfig srcConfig, int srcSampleCnt,
+                       bool srcIsLinear, bool srcHasYcbcr) const;
 
     bool canCopyAsResolve(GrPixelConfig dstConfig, int dstSampleCnt, GrSurfaceOrigin dstOrigin,
-                          GrPixelConfig srcConfig, int srcSamplecnt,
-                          GrSurfaceOrigin srcOrigin) const;
+                          bool dstHasYcbcr, GrPixelConfig srcConfig, int srcSamplecnt,
+                          GrSurfaceOrigin srcOrigin, bool srcHasYcbcr) const;
 
-    bool canCopyAsDraw(GrPixelConfig dstConfig, bool dstIsRenderable,
-                       GrPixelConfig srcConfig, bool srcIsTextureable) const;
+    bool canCopyAsDraw(GrPixelConfig dstConfig, bool dstIsRenderable, bool dstHasYcbcr,
+                       GrPixelConfig srcConfig, bool srcIsTextureable, bool srcHasYcbcr) const;
 
     bool initDescForDstCopy(const GrRenderTargetProxy* src, GrSurfaceDesc* desc, GrSurfaceOrigin*,
                             bool* rectsMustMatch, bool* disallowSubrect) const override;
@@ -192,6 +187,7 @@ private:
     bool onSurfaceSupportsWritePixels(const GrSurface*) const override;
     bool onCanCopySurface(const GrSurfaceProxy* dst, const GrSurfaceProxy* src,
                           const SkIRect& srcRect, const SkIPoint& dstPoint) const override;
+    size_t onTransferFromOffsetAlignment(GrColorType bufferColorType) const override;
 
     struct ConfigInfo {
         ConfigInfo() : fOptimalFlags(0), fLinearFlags(0) {}
@@ -204,9 +200,9 @@ private:
 
         enum {
             kTextureable_Flag = 0x1,
-            kRenderable_Flag  = 0x2,
-            kBlitSrc_Flag     = 0x4,
-            kBlitDst_Flag     = 0x8,
+            kRenderable_Flag = 0x2,
+            kBlitSrc_Flag = 0x4,
+            kBlitDst_Flag = 0x8,
         };
 
         uint16_t fOptimalFlags;
@@ -224,6 +220,8 @@ private:
     bool fMustSleepOnTearDown = false;
     bool fNewCBOnPipelineChange = false;
     bool fShouldAlwaysUseDedicatedImageMemory = false;
+
+    bool fAvoidUpdateBuffers = false;
 
     bool fSupportsSwapchain = false;
 

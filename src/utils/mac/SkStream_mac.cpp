@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 #if defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)
 
-#include "SkCGUtils.h"
-#include "SkMalloc.h"
-#include "SkStream.h"
+#include "include/core/SkStream.h"
+#include "include/private/SkMalloc.h"
+#include "include/utils/mac/SkCGUtils.h"
 
 // These are used by CGDataProviderCreateWithData
 
@@ -36,7 +36,7 @@ static size_t get_bytes_proc(void* info, void* buffer, size_t bytes) {
 }
 
 static off_t skip_forward_proc(void* info, off_t bytes) {
-    return ((SkStream*)info)->skip((size_t) bytes);
+    return ((SkStream*)info)->skip((size_t)bytes);
 }
 
 static void rewind_proc(void* info) {
@@ -72,7 +72,7 @@ CGDataProviderRef SkCreateDataProviderFromStream(std::unique_ptr<SkStreamRewinda
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "SkData.h"
+#include "include/core/SkData.h"
 
 CGDataProviderRef SkCreateDataProviderFromData(sk_sp<SkData> data) {
     const void* addr = data->data();
@@ -80,4 +80,4 @@ CGDataProviderRef SkCreateDataProviderFromData(sk_sp<SkData> data) {
     return CGDataProviderCreateWithData(data.release(), addr, size, unref_proc);
 }
 
-#endif//defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)
+#endif  // defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)

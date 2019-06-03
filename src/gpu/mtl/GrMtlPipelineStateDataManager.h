@@ -8,9 +8,11 @@
 #ifndef GrMtlPipelineStateDataManager_DEFINED
 #define GrMtlPipelineStateDataManager_DEFINED
 
-#include "glsl/GrGLSLProgramDataManager.h"
-#include "GrMtlUniformHandler.h"
-#include "SkAutoMalloc.h"
+#include "src/core/SkAutoMalloc.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/mtl/GrMtlUniformHandler.h"
+
+#import <Metal/Metal.h>
 
 class GrMtlBuffer;
 class GrMtlGpu;
@@ -54,22 +56,19 @@ public:
         SK_ABORT("Only supported in NVPR, which is not in Metal");
     }
 
-    void uploadUniformBuffers(GrMtlGpu* gpu,
-                              GrMtlBuffer* geometryBuffer,
-                              GrMtlBuffer* fragmentBuffer) const;
+    void uploadAndBindUniformBuffers(
+            GrMtlGpu* gpu, id<MTLRenderCommandEncoder> renderCmdEncoder) const;
+    void resetDirtyBits();
 
 private:
     struct Uniform {
         uint32_t fBinding;
         uint32_t fOffset;
-        SkDEBUGCODE(
-            GrSLType    fType;
-            int         fArrayCount;
-        );
+        SkDEBUGCODE(GrSLType fType; int fArrayCount;);
     };
 
-    template<int N> inline void setMatrices(UniformHandle, int arrayCount,
-                                            const float matrices[]) const;
+    template <int N>
+    inline void setMatrices(UniformHandle, int arrayCount, const float matrices[]) const;
 
     void* getBufferPtrAndMarkDirty(const Uniform& uni) const;
 
@@ -80,8 +79,8 @@ private:
 
     mutable SkAutoMalloc fGeometryUniformData;
     mutable SkAutoMalloc fFragmentUniformData;
-    mutable bool         fGeometryUniformsDirty;
-    mutable bool         fFragmentUniformsDirty;
+    mutable bool fGeometryUniformsDirty;
+    mutable bool fFragmentUniformsDirty;
 };
 
 #endif

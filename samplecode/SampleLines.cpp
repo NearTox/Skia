@@ -5,23 +5,22 @@
  * found in the LICENSE file.
  */
 
-#include "DecodeFile.h"
-#include "Sample.h"
-#include "SkCanvas.h"
-#include "SkCornerPathEffect.h"
-#include "SkGradientShader.h"
-#include "SkGraphics.h"
-#include "SkPath.h"
-#include "SkRandom.h"
-#include "SkRegion.h"
-#include "SkShader.h"
-#include "SkUTF.h"
-#include "SkColorPriv.h"
-#include "SkColorFilter.h"
-#include "SkTime.h"
-#include "SkTypeface.h"
-#include "SkStream.h"
-#include "SkColorPriv.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkGraphics.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRegion.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkTime.h"
+#include "include/core/SkTypeface.h"
+#include "include/effects/SkCornerPathEffect.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/utils/SkRandom.h"
+#include "samplecode/DecodeFile.h"
+#include "samplecode/Sample.h"
+#include "src/utils/SkUTF.h"
 
 class LinesView : public Sample {
 public:
@@ -40,19 +39,19 @@ protected:
      0x1F * x + 0x1F * (32 - x)
      */
     void drawRings(SkCanvas* canvas) {
-        canvas->scale(SkIntToScalar(1)/2, SkIntToScalar(1)/2);
+        canvas->scale(SkIntToScalar(1) / 2, SkIntToScalar(1) / 2);
 
-        SkRect  r;
+        SkRect r;
         SkScalar x = SkIntToScalar(10);
         SkScalar y = SkIntToScalar(10);
         r.set(x, y, x + SkIntToScalar(100), y + SkIntToScalar(100));
 
         SkPaint paint;
-     //   paint.setAntiAlias(true);
+        //   paint.setAntiAlias(true);
         paint.setStyle(SkPaint::kStroke_Style);
         paint.setStrokeWidth(SkScalarHalf(SkIntToScalar(3)));
         paint.setColor(0xFFFF8800);
-     //   paint.setColor(0xFFFFFFFF);
+        //   paint.setColor(0xFFFFFFFF);
         canvas->drawRect(r, paint);
     }
 
@@ -66,7 +65,7 @@ protected:
 
         SkPaint paint;
 
-      //  fAlpha = 0x80;
+        //  fAlpha = 0x80;
         paint.setColor(SK_ColorWHITE);
         paint.setAlpha(fAlpha & 0xFF);
         SkRect r;
@@ -77,15 +76,15 @@ protected:
         canvas->drawRect(r, paint);
         return;
 
-        paint.setColor(0xffffff00);            // yellow
+        paint.setColor(0xffffff00);  // yellow
         paint.setStyle(SkPaint::kStroke_Style);
         paint.setStrokeWidth(SkIntToScalar(2));
 
-//        y += SK_Scalar1/2;
+        //        y += SK_Scalar1/2;
 
         canvas->drawLine(x, y, x + SkIntToScalar(90), y + SkIntToScalar(90), paint);
 
-        paint.setAntiAlias(true);              // with anti-aliasing
+        paint.setAntiAlias(true);  // with anti-aliasing
         y += SkIntToScalar(10);
         canvas->drawLine(x, y, x + SkIntToScalar(90), y + SkIntToScalar(90), paint);
     }
@@ -94,12 +93,12 @@ protected:
         fAlpha = SkScalarRoundToInt(y);
         return nullptr;
     }
-private:
 
+private:
     int fAlpha;
     typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new LinesView(); )
+DEF_SAMPLE(return new LinesView();)

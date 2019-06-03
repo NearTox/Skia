@@ -28,10 +28,6 @@ enum class GrClipEdgeType {
     kLast = kHairlineAA
 };
 
-enum class PMConversion {
-    kToPremul        = 0,
-    kToUnpremul      = 1,
-    kPMConversionCnt = 2
-};
+enum class PMConversion { kToPremul = 0, kToUnpremul = 1, kPMConversionCnt = 2 };
 
 #endif

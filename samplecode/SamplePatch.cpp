@@ -5,44 +5,46 @@
  * found in the LICENSE file.
  */
 
-#include "DecodeFile.h"
-#include "Sample.h"
-#include "SkAnimTimer.h"
-#include "SkCanvas.h"
-#include "SkGradientShader.h"
-#include "SkGraphics.h"
-#include "SkPath.h"
-#include "SkRandom.h"
-#include "SkRegion.h"
-#include "SkShader.h"
-#include "SkUTF.h"
-#include "SkColorPriv.h"
-#include "SkColorFilter.h"
-#include "SkTime.h"
-#include "SkTypeface.h"
-#include "SkVertices.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkGraphics.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRegion.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkTime.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkVertices.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/utils/SkRandom.h"
+#include "samplecode/DecodeFile.h"
+#include "samplecode/Sample.h"
+#include "src/utils/SkUTF.h"
+#include "tools/timer/AnimTimer.h"
 
-#include "SkOSFile.h"
-#include "SkStream.h"
+#include "include/core/SkStream.h"
+#include "src/core/SkOSFile.h"
 
-#include "SkGeometry.h" // private include :(
+#include "src/core/SkGeometry.h"
 
 static sk_sp<SkShader> make_shader0(SkIPoint* size) {
-    SkBitmap    bm;
+    SkBitmap bm;
 
-//    decode_file("/skimages/progressivejpg.jpg", &bm);
+    //    decode_file("/skimages/progressivejpg.jpg", &bm);
     decode_file("/skimages/logo.png", &bm);
     size->set(bm.width(), bm.height());
-    return SkShader::MakeBitmapShader(bm, SkShader::kClamp_TileMode,
-                                       SkShader::kClamp_TileMode);
+    return bm.makeShader();
 }
 
 static sk_sp<SkShader> make_shader1(const SkIPoint& size) {
-    SkPoint pts[] = { { 0, 0, },
-                      { SkIntToScalar(size.fX), SkIntToScalar(size.fY) } };
-    SkColor colors[] = { SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorRED };
-    return SkGradientShader::MakeLinear(pts, colors, nullptr,
-                    SK_ARRAY_COUNT(colors), SkShader::kMirror_TileMode);
+    SkPoint pts[] = {{
+                             0,
+                             0,
+                     },
+                     {SkIntToScalar(size.fX), SkIntToScalar(size.fY)}};
+    SkColor colors[] = {SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorRED};
+    return SkGradientShader::MakeLinear(pts, colors, nullptr, SK_ARRAY_COUNT(colors),
+                                        SkTileMode::kMirror);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -56,14 +58,16 @@ public:
         memcpy(fPts, pts, 12 * sizeof(SkPoint));
         fPts[12] = pts[0];  // the last shall be first
     }
-    void setBounds(int w, int h) { fW = w; fH = h; }
+    void setBounds(int w, int h) {
+        fW = w;
+        fH = h;
+    }
 
-    void draw(SkCanvas*, const SkPaint&, int segsU, int segsV,
-              bool doTextures, bool doColors);
+    void draw(SkCanvas*, const SkPaint&, int segsU, int segsV, bool doTextures, bool doColors);
 
 private:
     SkPoint fPts[13];
-    int     fW, fH;
+    int fW, fH;
 };
 
 static void eval_patch_edge(const SkPoint cubic[], SkPoint samples[], int segs) {
@@ -77,8 +81,7 @@ static void eval_patch_edge(const SkPoint cubic[], SkPoint samples[], int segs) 
     }
 }
 
-static void eval_sheet(const SkPoint edge[], int nu, int nv, int iu, int iv,
-                       SkPoint* pt) {
+static void eval_sheet(const SkPoint edge[], int nu, int nv, int iu, int iv, SkPoint* pt) {
     const int TL = 0;
     const int TR = nu;
     const int BR = TR + nv;
@@ -95,10 +98,10 @@ static void eval_sheet(const SkPoint edge[], int nu, int nv, int iu, int iv,
     SkScalar x0 = UV * edge[TL].fX + uV * edge[TR].fX + Uv * edge[BL].fX + uv * edge[BR].fX;
     SkScalar y0 = UV * edge[TL].fY + uV * edge[TR].fY + Uv * edge[BL].fY + uv * edge[BR].fY;
 
-    SkScalar x = (1 - v) * edge[TL+iu].fX + u * edge[TR+iv].fX +
-                 v * edge[BR+nu-iu].fX + (1 - u) * edge[BL+nv-iv].fX - x0;
-    SkScalar y = (1 - v) * edge[TL+iu].fY + u * edge[TR+iv].fY +
-                 v * edge[BR+nu-iu].fY + (1 - u) * edge[BL+nv-iv].fY - y0;
+    SkScalar x = (1 - v) * edge[TL + iu].fX + u * edge[TR + iv].fX + v * edge[BR + nu - iu].fX +
+                 (1 - u) * edge[BL + nv - iv].fX - x0;
+    SkScalar y = (1 - v) * edge[TL + iu].fY + u * edge[TR + iv].fY + v * edge[BR + nu - iu].fY +
+                 (1 - u) * edge[BL + nv - iv].fY - y0;
     pt->set(x, y);
 }
 
@@ -106,8 +109,8 @@ static SkColor make_color(SkScalar s, SkScalar t) {
     return SkColorSetARGB(0xFF, SkUnitScalarClampToByte(s), SkUnitScalarClampToByte(t), 0);
 }
 
-void Patch::draw(SkCanvas* canvas, const SkPaint& paint, int nu, int nv,
-                 bool doTextures, bool doColors) {
+void Patch::draw(SkCanvas* canvas, const SkPaint& paint, int nu, int nv, bool doTextures,
+                 bool doColors) {
     if (nu < 1 || nv < 1) {
         return;
     }
@@ -124,14 +127,14 @@ void Patch::draw(SkCanvas* canvas, const SkPaint& paint, int nu, int nv,
     eval_patch_edge(fPts + 3, edge1, nv);
     eval_patch_edge(fPts + 6, edge2, nu);
     eval_patch_edge(fPts + 9, edge3, nv);
-    edge3[nv] = edge0[0];   // the last shall be first
+    edge3[nv] = edge0[0];  // the last shall be first
 
     for (i = 0; i < npts; i++) {
-//        canvas->drawLine(edge0[i].fX, edge0[i].fY, edge0[i+1].fX, edge0[i+1].fY, paint);
+        //        canvas->drawLine(edge0[i].fX, edge0[i].fY, edge0[i+1].fX, edge0[i+1].fY, paint);
     }
 
     int row, vertCount = (nu + 1) * (nv + 1);
-    SkAutoTMalloc<SkPoint>  vertStorage(vertCount);
+    SkAutoTMalloc<SkPoint> vertStorage(vertCount);
     SkPoint* verts = vertStorage.get();
 
     // first row
@@ -152,11 +155,11 @@ void Patch::draw(SkCanvas* canvas, const SkPaint& paint, int nu, int nv,
         last[i] = edge2[nu - i];
     }
 
-//    canvas->drawPoints(verts, vertCount, paint);
+    //    canvas->drawPoints(verts, vertCount, paint);
 
     int stripCount = (nu + 1) * 2;
-    SkAutoTMalloc<SkPoint>  stripStorage(stripCount * 2);
-    SkAutoTMalloc<SkColor>  colorStorage(stripCount);
+    SkAutoTMalloc<SkPoint> stripStorage(stripCount * 2);
+    SkAutoTMalloc<SkColor> colorStorage(stripCount);
     SkPoint* strip = stripStorage.get();
     SkPoint* tex = strip + stripCount;
     SkColor* colors = colorStorage.get();
@@ -169,25 +172,24 @@ void Patch::draw(SkCanvas* canvas, const SkPaint& paint, int nu, int nv,
         SkPoint* lower = r + nu + 1;
         r = lower;
         SkScalar s = 0;
-        for (i = 0; i <= nu; i++)  {
-            strip[i*2 + 0] = *upper++;
-            strip[i*2 + 1] = *lower++;
-            tex[i*2 + 0].set(s, t);
-            tex[i*2 + 1].set(s, t + dt);
-            colors[i*2 + 0] = make_color(s/fW, t/fH);
-            colors[i*2 + 1] = make_color(s/fW, (t + dt)/fH);
+        for (i = 0; i <= nu; i++) {
+            strip[i * 2 + 0] = *upper++;
+            strip[i * 2 + 1] = *lower++;
+            tex[i * 2 + 0].set(s, t);
+            tex[i * 2 + 1].set(s, t + dt);
+            colors[i * 2 + 0] = make_color(s / fW, t / fH);
+            colors[i * 2 + 1] = make_color(s / fW, (t + dt) / fH);
             s += ds;
         }
         t += dt;
-        canvas->drawVertices(SkVertices::MakeCopy(SkVertices::kTriangleStrip_VertexMode, stripCount,
-                                                  strip, doTextures ? tex : nullptr,
-                                                  doColors ? colors : nullptr),
-                             SkBlendMode::kModulate, paint);
+        canvas->drawVertices(
+                SkVertices::MakeCopy(SkVertices::kTriangleStrip_VertexMode, stripCount, strip,
+                                     doTextures ? tex : nullptr, doColors ? colors : nullptr),
+                SkBlendMode::kModulate, paint);
     }
 }
 
-static void drawpatches(SkCanvas* canvas, const SkPaint& paint, int nu, int nv,
-                        Patch* patch) {
+static void drawpatches(SkCanvas* canvas, const SkPaint& paint, int nu, int nv, Patch* patch) {
     SkAutoCanvasRestore ar(canvas, true);
 
     patch->draw(canvas, paint, nu, nv, false, false);
@@ -203,11 +205,11 @@ const SkScalar DX = 20;
 const SkScalar DY = 0;
 
 class PatchView : public Sample {
-    SkScalar    fAngle;
+    SkScalar fAngle;
     sk_sp<SkShader> fShader0;
     sk_sp<SkShader> fShader1;
-    SkIPoint    fSize0, fSize1;
-    SkPoint     fPts[12];
+    SkIPoint fSize0, fSize1;
+    SkPoint fPts[12];
 
 public:
     PatchView() : fAngle(0) {
@@ -220,24 +222,24 @@ public:
 
         const SkScalar S = SkIntToScalar(50);
         const SkScalar T = SkIntToScalar(40);
-        fPts[0].set(S*0, T);
-        fPts[1].set(S*1, T);
-        fPts[2].set(S*2, T);
-        fPts[3].set(S*3, T);
-        fPts[4].set(S*3, T*2);
-        fPts[5].set(S*3, T*3);
-        fPts[6].set(S*3, T*4);
-        fPts[7].set(S*2, T*4);
-        fPts[8].set(S*1, T*4);
-        fPts[9].set(S*0, T*4);
-        fPts[10].set(S*0, T*3);
-        fPts[11].set(S*0, T*2);
+        fPts[0].set(S * 0, T);
+        fPts[1].set(S * 1, T);
+        fPts[2].set(S * 2, T);
+        fPts[3].set(S * 3, T);
+        fPts[4].set(S * 3, T * 2);
+        fPts[5].set(S * 3, T * 3);
+        fPts[6].set(S * 3, T * 4);
+        fPts[7].set(S * 2, T * 4);
+        fPts[8].set(S * 1, T * 4);
+        fPts[9].set(S * 0, T * 4);
+        fPts[10].set(S * 0, T * 3);
+        fPts[11].set(S * 0, T * 2);
 
         this->setBGColor(SK_ColorGRAY);
     }
 
 protected:
-    bool onQuery(Sample::Event* evt)  override {
+    bool onQuery(Sample::Event* evt) override {
         if (Sample::TitleQ(*evt)) {
             Sample::TitleR(evt, "Patch");
             return true;
@@ -255,7 +257,7 @@ protected:
 
         canvas->translate(DX, DY);
 
-        Patch   patch;
+        Patch patch;
 
         paint.setShader(fShader0);
         if (fSize0.fX == 0) {
@@ -292,7 +294,7 @@ protected:
         drawpatches(canvas, paint, nu, nv, &patch);
     }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         fAngle = timer.scaled(60, 360);
         return true;
     }
@@ -326,12 +328,12 @@ protected:
 private:
     typedef Sample INHERITED;
 };
-DEF_SAMPLE( return new PatchView(); )
+DEF_SAMPLE(return new PatchView();)
 
 //////////////////////////////////////////////////////////////////////////////
 
-#include "SkContourMeasure.h"
-#include "SkTDArray.h"
+#include "include/core/SkContourMeasure.h"
+#include "include/private/SkTDArray.h"
 
 static sk_sp<SkVertices> make_verts(const SkPath& path, SkScalar width) {
     auto meas = SkContourMeasureIter(path, false).next();
@@ -340,7 +342,8 @@ static sk_sp<SkVertices> make_verts(const SkPath& path, SkScalar width) {
     }
 
     const SkPoint src[2] = {
-        { 0, -width/2 }, { 0, width/2 },
+            {0, -width / 2},
+            {0, width / 2},
     };
     SkTDArray<SkPoint> pts;
 
@@ -355,11 +358,10 @@ static sk_sp<SkVertices> make_verts(const SkPath& path, SkScalar width) {
     }
 
     int vertCount = pts.count();
-    int indexCount = 0; // no texture
-    unsigned flags = SkVertices::kHasColors_BuilderFlag |
-                     SkVertices::kIsNonVolatile_BuilderFlag;
-    SkVertices::Builder builder(SkVertices::kTriangleStrip_VertexMode,
-                                vertCount, indexCount, flags);
+    int indexCount = 0;  // no texture
+    unsigned flags = SkVertices::kHasColors_BuilderFlag | SkVertices::kIsNonVolatile_BuilderFlag;
+    SkVertices::Builder builder(SkVertices::kTriangleStrip_VertexMode, vertCount, indexCount,
+                                flags);
     memcpy(builder.positions(), pts.begin(), vertCount * sizeof(SkPoint));
     SkRandom rand;
     for (int i = 0; i < vertCount; ++i) {
@@ -372,10 +374,10 @@ static sk_sp<SkVertices> make_verts(const SkPath& path, SkScalar width) {
 
 class PseudoInkView : public Sample {
     enum { N = 100 };
-    SkPath            fPath;
+    SkPath fPath;
     sk_sp<SkVertices> fVertices[N];
-    SkPaint           fSkeletonP, fStrokeP, fVertsP;
-    bool              fDirty = true;
+    SkPaint fSkeletonP, fStrokeP, fVertsP;
+    bool fDirty = true;
 
 public:
     PseudoInkView() {
@@ -388,7 +390,7 @@ public:
     }
 
 protected:
-    bool onQuery(Sample::Event* evt)  override {
+    bool onQuery(Sample::Event* evt) override {
         if (Sample::TitleQ(*evt)) {
             Sample::TitleR(evt, "PseudoInk");
             return true;
@@ -396,9 +398,7 @@ protected:
         return this->INHERITED::onQuery(evt);
     }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
-        return true;
-    }
+    bool onAnimate(const AnimTimer& timer) override { return true; }
 
     void onDrawContent(SkCanvas* canvas) override {
         if (fDirty) {
@@ -411,8 +411,8 @@ protected:
             canvas->drawVertices(fVertices[i], SkBlendMode::kSrc, fVertsP);
             canvas->translate(1, 1);
         }
-//        canvas->drawPath(fPath, fStrokeP);
- //       canvas->drawPath(fPath, fSkeletonP);
+        //        canvas->drawPath(fPath, fStrokeP);
+        //       canvas->drawPath(fPath, fSkeletonP);
     }
 
     Click* onFindClickHandler(SkScalar x, SkScalar y, unsigned modi) override {
@@ -437,4 +437,96 @@ protected:
 private:
     typedef Sample INHERITED;
 };
-DEF_SAMPLE( return new PseudoInkView(); )
+DEF_SAMPLE(return new PseudoInkView();)
+
+#include "include/effects/SkOpPathEffect.h"
+// Show stroking options using patheffects (and pathops)
+// and why strokeandfill is a hacks
+class ManyStrokesView : public Sample {
+    SkPath fPath;
+    sk_sp<SkPathEffect> fPE[6];
+
+public:
+    ManyStrokesView() {
+        fPE[0] = SkStrokePathEffect::Make(20, SkPaint::kRound_Join, SkPaint::kRound_Cap);
+
+        auto p0 = SkStrokePathEffect::Make(25, SkPaint::kRound_Join, SkPaint::kRound_Cap);
+        auto p1 = SkStrokePathEffect::Make(20, SkPaint::kRound_Join, SkPaint::kRound_Cap);
+        fPE[1] = SkMergePathEffect::Make(p0, p1, SkPathOp::kDifference_SkPathOp);
+
+        fPE[2] = SkMergePathEffect::Make(nullptr, p1, SkPathOp::kDifference_SkPathOp);
+        fPE[3] = SkMergePathEffect::Make(nullptr, p1, SkPathOp::kUnion_SkPathOp);
+        fPE[4] = SkMergePathEffect::Make(p0, nullptr, SkPathOp::kDifference_SkPathOp);
+        fPE[5] = SkMergePathEffect::Make(p0, nullptr, SkPathOp::kIntersect_SkPathOp);
+    }
+
+protected:
+    bool onQuery(Sample::Event* evt) override {
+        if (Sample::TitleQ(*evt)) {
+            Sample::TitleR(evt, "ManyStrokes");
+            return true;
+        }
+        return this->INHERITED::onQuery(evt);
+    }
+
+    bool onAnimate(const AnimTimer& timer) override { return true; }
+
+    void dodraw(SkCanvas* canvas, sk_sp<SkPathEffect> pe, SkScalar x, SkScalar y,
+                const SkPaint* ptr = nullptr) {
+        SkPaint paint;
+        paint.setAntiAlias(true);
+        paint.setPathEffect(pe);
+        canvas->save();
+        canvas->translate(x, y);
+        canvas->drawPath(fPath, ptr ? *ptr : paint);
+
+        paint.setPathEffect(nullptr);
+        paint.setStyle(SkPaint::kStroke_Style);
+        paint.setColor(SK_ColorGREEN);
+        canvas->drawPath(fPath, paint);
+
+        canvas->restore();
+    }
+
+    void onDrawContent(SkCanvas* canvas) override {
+        SkPaint p;
+        p.setColor(0);
+        this->dodraw(canvas, nullptr, 0, 0, &p);
+
+        this->dodraw(canvas, fPE[0], 300, 0);
+        this->dodraw(canvas, fPE[1], 0, 300);
+        this->dodraw(canvas, fPE[2], 300, 300);
+        this->dodraw(canvas, fPE[3], 600, 300);
+        this->dodraw(canvas, fPE[4], 900, 0);
+        this->dodraw(canvas, fPE[5], 900, 300);
+
+        p.setColor(SK_ColorBLACK);
+        p.setStyle(SkPaint::kStrokeAndFill_Style);
+        p.setStrokeJoin(SkPaint::kRound_Join);
+        p.setStrokeCap(SkPaint::kRound_Cap);
+        p.setStrokeWidth(20);
+        this->dodraw(canvas, nullptr, 600, 0, &p);
+    }
+
+    Click* onFindClickHandler(SkScalar x, SkScalar y, unsigned modi) override {
+        Click* click = new Click(this);
+        fPath.reset();
+        fPath.moveTo(x, y);
+        return click;
+    }
+
+    bool onClick(Click* click) override {
+        switch (click->fState) {
+            case Click::kMoved_State:
+                fPath.lineTo(click->fCurr);
+                break;
+            default:
+                break;
+        }
+        return true;
+    }
+
+private:
+    typedef Sample INHERITED;
+};
+DEF_SAMPLE(return new ManyStrokesView();)

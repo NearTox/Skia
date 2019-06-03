@@ -6,18 +6,15 @@
  * found in the LICENSE file.
  *
  */
-#include <v8.h>
-#include <include/libplatform/libplatform.h>
 #include "SkV8Example.h"
+#include <include/libplatform/libplatform.h>
+#include <v8.h>
 #include "Global.h"
+#include "GrBackendSurface.h"
+#include "GrContext.h"
 #include "JsContext.h"
 #include "Path2D.h"
 #include "Path2DBuilder.h"
-#include "GrBackendSurface.h"
-#include "gl/GrGLUtil.h"
-#include "gl/GrGLDefines.h"
-#include "gl/GrGLInterface.h"
-#include "GrContext.h"
 #include "SkApplication.h"
 #include "SkCommandLineFlags.h"
 #include "SkData.h"
@@ -26,7 +23,9 @@
 #include "SkGraphics.h"
 #include "SkScalar.h"
 #include "SkSurface.h"
-
+#include "gl/GrGLDefines.h"
+#include "gl/GrGLInterface.h"
+#include "gl/GrGLUtil.h"
 
 DEFINE_string2(infile, i, NULL, "Name of file to load JS from.\n");
 DEFINE_bool(gpu, true, "Use the GPU for rendering.");
@@ -36,17 +35,15 @@ void application_init() {
     SkEvent::Init();
 }
 
-void application_term() {
-    SkEvent::Term();
-}
+void application_term() { SkEvent::Term(); }
 
 SkV8ExampleWindow::SkV8ExampleWindow(void* hwnd, JsContext* context)
-    : INHERITED(hwnd)
-    , fJsContext(context)
+        : INHERITED(hwnd)
+        , fJsContext(context)
 #if SK_SUPPORT_GPU
-    , fCurContext(NULL)
-    , fCurIntf(NULL)
-    , fCurSurface(NULL)
+        , fCurContext(NULL)
+        , fCurIntf(NULL)
+        , fCurSurface(NULL)
 #endif
 {
     this->setVisibleP(true);
@@ -69,8 +66,7 @@ SkV8ExampleWindow::~SkV8ExampleWindow() {
 void SkV8ExampleWindow::windowSizeChanged() {
     if (FLAGS_gpu) {
         SkOSWindow::AttachmentInfo attachmentInfo;
-        bool result = this->attach(
-                SkOSWindow::kNativeGL_BackEndType, 0, false, &attachmentInfo);
+        bool result = this->attach(SkOSWindow::kNativeGL_BackEndType, 0, false, &attachmentInfo);
         if (!result) {
             printf("Failed to attach.");
             exit(1);
@@ -93,8 +89,9 @@ void SkV8ExampleWindow::windowSizeChanged() {
                                                   framebufferInfo);
         SkSafeUnref(fCurSurface);
         fCurSurface = SkSurface::MakeFromBackendRenderTarget(fCurContext, backendRenderTarget,
-                                                             kBottomLeft_GrSurfaceOrigin,
-                                                             nullptr, nullptr).release();
+                                                             kBottomLeft_GrSurfaceOrigin, nullptr,
+                                                             nullptr)
+                              .release();
     }
 }
 #endif
@@ -123,7 +120,6 @@ void SkV8ExampleWindow::onSizeChange() {
 Global* global = NULL;
 
 void SkV8ExampleWindow::onDraw(SkCanvas* canvas) {
-
     canvas->save();
     canvas->drawColor(SK_ColorWHITE);
 
@@ -153,7 +149,6 @@ void SkV8ExampleWindow::onHandleInval(const SkIRect& rect) {
 }
 #endif
 
-
 SkOSWindow* create_sk_window(void* hwnd, int argc, char** argv) {
     printf("Started\n");
 
@@ -171,7 +166,6 @@ SkOSWindow* create_sk_window(void* hwnd, int argc, char** argv) {
     isolate->Enter();
 
     global = new Global(isolate);
-
 
     // Set up things to look like a browser by creating
     // a console object that invokes our print function.
@@ -211,7 +205,6 @@ SkOSWindow* create_sk_window(void* hwnd, int argc, char** argv) {
         printf("Failed to parse file: %s.\n", FLAGS_infile[0]);
         exit(1);
     }
-
 
     JsContext* jsContext = new JsContext(global);
 

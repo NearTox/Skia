@@ -5,23 +5,23 @@
  * found in the LICENSE file.
  */
 
-#include "SkDrawShadowInfo.h"
-#include "SkMatrix.h"
-#include "SkPath.h"
-#include "SkPolyUtils.h"
-#include "SkRect.h"
+#include "src/core/SkDrawShadowInfo.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRect.h"
+#include "src/utils/SkPolyUtils.h"
 
 namespace SkDrawShadowMetrics {
 
 static SkScalar compute_z(SkScalar x, SkScalar y, const SkPoint3& params) {
-    return x*params.fX + y*params.fY + params.fZ;
+    return x * params.fX + y * params.fY + params.fZ;
 }
 
-bool GetSpotShadowTransform(const SkPoint3& lightPos, SkScalar lightRadius,
-                            const SkMatrix& ctm, const SkPoint3& zPlaneParams,
-                            const SkRect& pathBounds, SkMatrix* shadowTransform, SkScalar* radius) {
-    auto heightFunc = [zPlaneParams] (SkScalar x, SkScalar y) {
-        return zPlaneParams.fX*x + zPlaneParams.fY*y + zPlaneParams.fZ;
+bool GetSpotShadowTransform(const SkPoint3& lightPos, SkScalar lightRadius, const SkMatrix& ctm,
+                            const SkPoint3& zPlaneParams, const SkRect& pathBounds,
+                            SkMatrix* shadowTransform, SkScalar* radius) {
+    auto heightFunc = [zPlaneParams](SkScalar x, SkScalar y) {
+        return zPlaneParams.fX * x + zPlaneParams.fY * y + zPlaneParams.fZ;
     };
     SkScalar occluderHeight = heightFunc(pathBounds.centerX(), pathBounds.centerY());
 
@@ -62,8 +62,8 @@ bool GetSpotShadowTransform(const SkPoint3& lightPos, SkScalar lightRadius,
                 return false;
             }
             SkScalar zRatio = pts3D[i].fZ / dz;
-            pts3D[i].fX -= (lightPos.fX - pts3D[i].fX)*zRatio;
-            pts3D[i].fY -= (lightPos.fY - pts3D[i].fY)*zRatio;
+            pts3D[i].fX -= (lightPos.fX - pts3D[i].fX) * zRatio;
+            pts3D[i].fY -= (lightPos.fY - pts3D[i].fY) * zRatio;
             pts3D[i].fZ = SK_Scalar1;
         }
 
@@ -85,26 +85,24 @@ bool GetSpotShadowTransform(const SkPoint3& lightPos, SkScalar lightRadius,
         // Want h0 to be to the right of the left edge.
         SkVector3 v = pts3D[3] - pts3D[0];
         SkVector3 w = h0 - pts3D[0];
-        SkScalar perpDot = v.fX*w.fY - v.fY*w.fX;
+        SkScalar perpDot = v.fX * w.fY - v.fY * w.fX;
         if (perpDot > 0) {
             h0 = -h0;
         }
         // Want h1 to be above the bottom edge.
         v = pts3D[1] - pts3D[0];
-        perpDot = v.fX*w.fY - v.fY*w.fX;
+        perpDot = v.fX * w.fY - v.fY * w.fX;
         if (perpDot < 0) {
             h1 = -h1;
         }
-        shadowTransform->setAll(h0.fX / h2.fZ, h1.fX / h2.fZ, h2.fX / h2.fZ,
-                               h0.fY / h2.fZ, h1.fY / h2.fZ, h2.fY / h2.fZ,
-                               h0.fZ / h2.fZ, h1.fZ / h2.fZ, 1);
+        shadowTransform->setAll(h0.fX / h2.fZ, h1.fX / h2.fZ, h2.fX / h2.fZ, h0.fY / h2.fZ,
+                                h1.fY / h2.fZ, h2.fY / h2.fZ, h0.fZ / h2.fZ, h1.fZ / h2.fZ, 1);
         // generate matrix that transforms from bounds to [-1,1]x[-1,1] square
         SkMatrix toHomogeneous;
-        SkScalar xScale = 2/(pathBounds.fRight - pathBounds.fLeft);
-        SkScalar yScale = 2/(pathBounds.fBottom - pathBounds.fTop);
-        toHomogeneous.setAll(xScale, 0, -xScale*pathBounds.fLeft - 1,
-                             0, yScale, -yScale*pathBounds.fTop - 1,
-                             0, 0, 1);
+        SkScalar xScale = 2 / (pathBounds.fRight - pathBounds.fLeft);
+        SkScalar yScale = 2 / (pathBounds.fBottom - pathBounds.fTop);
+        toHomogeneous.setAll(xScale, 0, -xScale * pathBounds.fLeft - 1, 0, yScale,
+                             -yScale * pathBounds.fTop - 1, 0, 0, 1);
         shadowTransform->preConcat(toHomogeneous);
 
         *radius = SkDrawShadowMetrics::SpotBlurRadius(occluderHeight, lightPos.fZ, lightRadius);
@@ -121,8 +119,8 @@ void GetLocalBounds(const SkPath& path, const SkDrawShadowRec& rec, const SkMatr
         occluderZ = rec.fZPlaneParams.fZ;
     } else {
         occluderZ = compute_z(ambientBounds.fLeft, ambientBounds.fTop, rec.fZPlaneParams);
-        occluderZ = SkTMax(occluderZ, compute_z(ambientBounds.fRight, ambientBounds.fTop,
-                                                rec.fZPlaneParams));
+        occluderZ = SkTMax(occluderZ,
+                           compute_z(ambientBounds.fRight, ambientBounds.fTop, rec.fZPlaneParams));
         occluderZ = SkTMax(occluderZ, compute_z(ambientBounds.fLeft, ambientBounds.fBottom,
                                                 rec.fZPlaneParams));
         occluderZ = SkTMax(occluderZ, compute_z(ambientBounds.fRight, ambientBounds.fBottom,
@@ -143,19 +141,19 @@ void GetLocalBounds(const SkPath& path, const SkDrawShadowRec& rec, const SkMatr
         SkPoint devLightPos = SkPoint::Make(rec.fLightPos.fX, rec.fLightPos.fY);
         ctm.mapPoints(&devLightPos, 1);
         SkDrawShadowMetrics::GetSpotParams(occluderZ, devLightPos.fX, devLightPos.fY,
-                                           rec.fLightPos.fZ, rec.fLightRadius,
-                                           &spotBlur, &spotScale, &spotOffset);
+                                           rec.fLightPos.fZ, rec.fLightRadius, &spotBlur,
+                                           &spotScale, &spotOffset);
     } else {
         SkScalar devToSrcScale = SkScalarInvert(ctm.getMinScale());
 
         // get ambient blur (in local space)
         SkScalar devSpaceAmbientBlur = SkDrawShadowMetrics::AmbientBlurRadius(occluderZ);
-        ambientBlur = devSpaceAmbientBlur*devToSrcScale;
+        ambientBlur = devSpaceAmbientBlur * devToSrcScale;
 
         // get spot params (in local space)
         SkDrawShadowMetrics::GetSpotParams(occluderZ, rec.fLightPos.fX, rec.fLightPos.fY,
-                                           rec.fLightPos.fZ, rec.fLightRadius,
-                                           &spotBlur, &spotScale, &spotOffset);
+                                           rec.fLightPos.fZ, rec.fLightRadius, &spotBlur,
+                                           &spotScale, &spotOffset);
 
         // convert spot blur to local space
         spotBlur *= devToSrcScale;
@@ -187,6 +185,4 @@ void GetLocalBounds(const SkPath& path, const SkDrawShadowRec& rec, const SkMatr
     }
 }
 
-
-}
-
+}  // namespace SkDrawShadowMetrics

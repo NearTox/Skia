@@ -8,15 +8,11 @@
 #ifndef SkBase64_DEFINED
 #define SkBase64_DEFINED
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 struct SkBase64 {
 public:
-    enum Error {
-        kNoError,
-        kPadError,
-        kBadCharError
-    };
+    enum Error { kNoError, kPadError, kBadCharError };
 
     SkBase64();
     Error decode(const char* src, size_t length);
@@ -36,4 +32,4 @@ private:
     friend class SkImageBaseBitmap;
 };
 
-#endif // SkBase64_DEFINED
+#endif  // SkBase64_DEFINED

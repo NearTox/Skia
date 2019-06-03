@@ -8,8 +8,8 @@
 #ifndef SkNormalSource_DEFINED
 #define SkNormalSource_DEFINED
 
-#include "SkFlattenable.h"
-#include "SkShaderBase.h"
+#include "include/core/SkFlattenable.h"
+#include "src/shaders/SkShaderBase.h"
 
 class SkMatrix;
 struct SkPoint3;
@@ -19,7 +19,7 @@ class GrFragmentProcessor;
 #endif
 
 /** Abstract class that generates or reads in normals for use by SkLightingShader.
-*/
+ */
 class SK_API SkNormalSource : public SkFlattenable {
 public:
     virtual ~SkNormalSource() override;
@@ -65,11 +65,11 @@ public:
     static sk_sp<SkNormalSource> MakeFromNormalMap(sk_sp<SkShader> map, const SkMatrix& ctm);
 
     /** Returns a normal source that provides straight-up normals only <0, 0, 1>.
-    */
+     */
     static sk_sp<SkNormalSource> MakeFlat();
 
-    static Type GetFlattenableType() { return kSkNormalSource_Type; }
-    Type getFlattenableType() const override { return GetFlattenableType(); }
+    static Type GetFlattenableType() noexcept { return kSkNormalSource_Type; }
+    Type getFlattenableType() const noexcept override { return GetFlattenableType(); }
 
     static sk_sp<SkNormalSource> Deserialize(const void* data, size_t size,
                                              const SkDeserialProcs* procs = nullptr) {

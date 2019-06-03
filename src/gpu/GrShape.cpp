@@ -5,7 +5,7 @@
  * found in the LICENSE file.
  */
 
-#include "GrShape.h"
+#include "src/gpu/GrShape.h"
 
 #include <utility>
 
@@ -104,10 +104,10 @@ GrShape GrShape::MakeFilled(const GrShape& original, FillInversion inversion) {
             }
             break;
         case Type::kEmpty:
-            result.fType = is_inverted(false, inversion) ? Type::kInvertedEmpty :  Type::kEmpty;
+            result.fType = is_inverted(false, inversion) ? Type::kInvertedEmpty : Type::kEmpty;
             break;
         case Type::kInvertedEmpty:
-            result.fType = is_inverted(true, inversion) ? Type::kInvertedEmpty :  Type::kEmpty;
+            result.fType = is_inverted(true, inversion) ? Type::kInvertedEmpty : Type::kEmpty;
             break;
         case Type::kPath:
             result.initType(Type::kPath, &original.fPathData.fPath);
@@ -207,7 +207,7 @@ static void write_path_key_from_data(const SkPath& path, uint32_t* origKey) {
     memcpy(key, SkPathPriv::VerbData(path), verbCnt * sizeof(uint8_t));
     int verbKeySize = SkAlign4(verbCnt);
     // pad out to uint32_t alignment using value that will stand out when debugging.
-    uint8_t* pad = reinterpret_cast<uint8_t*>(key)+ verbCnt;
+    uint8_t* pad = reinterpret_cast<uint8_t*>(key) + verbCnt;
     memset(pad, 0xDE, verbKeySize - verbCnt);
     key += verbKeySize >> 2;
 
@@ -260,10 +260,10 @@ int GrShape::unstyledKeySize() const {
 
 void GrShape::writeUnstyledKey(uint32_t* key) const {
     SkASSERT(this->unstyledKeySize());
-    SkDEBUGCODE(uint32_t* origKey = key;)
+    SkDEBUGCODE(uint32_t* origKey = key);
     if (fInheritedKey.count()) {
         memcpy(key, fInheritedKey.get(), sizeof(uint32_t) * fInheritedKey.count());
-        SkDEBUGCODE(key += fInheritedKey.count();)
+        SkDEBUGCODE(key += fInheritedKey.count());
     } else {
         switch (fType) {
             case Type::kEmpty:
@@ -307,7 +307,7 @@ void GrShape::writeUnstyledKey(uint32_t* key) const {
     SkASSERT(key - origKey == this->unstyledKeySize());
 }
 
-void GrShape::setInheritedKey(const GrShape &parent, GrStyle::Apply apply, SkScalar scale) {
+void GrShape::setInheritedKey(const GrShape& parent, GrStyle::Apply apply, SkScalar scale) {
     SkASSERT(!fInheritedKey.count());
     // If the output shape turns out to be simple, then we will just use its geometric key
     if (Type::kPath == fType) {
@@ -347,8 +347,7 @@ void GrShape::setInheritedKey(const GrShape &parent, GrStyle::Apply apply, SkSca
             parent.writeUnstyledKey(fInheritedKey.get());
         } else {
             // This should be (geo,path_effect).
-            memcpy(fInheritedKey.get(), parent.fInheritedKey.get(),
-                   parentCnt * sizeof(uint32_t));
+            memcpy(fInheritedKey.get(), parent.fInheritedKey.get(), parentCnt * sizeof(uint32_t));
         }
         // Now turn (geo,path_effect) or (geo) into (geo,path_effect,stroke)
         GrStyle::WriteKey(fInheritedKey.get() + parentCnt, parent.fStyle, apply, scale,
@@ -633,8 +632,7 @@ void GrShape::attemptToSimplifyRRect() {
     if (!fStyle.hasPathEffect() &&
         fStyle.strokeRec().getStyle() == SkStrokeRec::kStrokeAndFill_Style &&
         fStyle.strokeRec().getJoin() == SkPaint::kMiter_Join &&
-        fStyle.strokeRec().getMiter() >= SK_ScalarSqrt2 &&
-        fRRectData.fRRect.isRect()) {
+        fStyle.strokeRec().getMiter() >= SK_ScalarSqrt2 && fRRectData.fRRect.isRect()) {
         SkScalar r = fStyle.strokeRec().getWidth() / 2;
         fRRectData.fRRect = SkRRect::MakeRect(fRRectData.fRRect.rect().makeOutset(r, r));
         fStyle = GrStyle::SimpleFill();

@@ -5,21 +5,21 @@
  * found in the LICENSE file.
  */
 
-#include "SkATrace.h"
+#include "src/core/SkATrace.h"
 
-#include "SkTraceEvent.h"
+#include "src/core/SkTraceEvent.h"
 
-#include "SkTraceEventCommon.h"
+#include "src/core/SkTraceEventCommon.h"
 
 #ifdef SK_BUILD_FOR_ANDROID
 #include <dlfcn.h>
 #endif
 
-SkATrace::SkATrace() : fBeginSection(nullptr), fEndSection(nullptr), fIsEnabled(nullptr) {
+SkATrace::SkATrace() noexcept : fBeginSection(nullptr), fEndSection(nullptr), fIsEnabled(nullptr) {
 #if defined(SK_BUILD_FOR_ANDROID_FRAMEWORK)
-    fIsEnabled = []{ return static_cast<bool>(CC_UNLIKELY(ATRACE_ENABLED())); };
-    fBeginSection = [](const char* name){ ATRACE_BEGIN(name); };
-    fEndSection = []{ ATRACE_END(); };
+    fIsEnabled = [] { return static_cast<bool>(CC_UNLIKELY(ATRACE_ENABLED())); };
+    fBeginSection = [](const char* name) { ATRACE_BEGIN(name); };
+    fEndSection = [] { ATRACE_END(); };
 #elif defined(SK_BUILD_FOR_ANDROID)
     if (void* lib = dlopen("libandroid.so", RTLD_NOW | RTLD_LOCAL)) {
         fBeginSection = (decltype(fBeginSection))dlsym(lib, "ATrace_beginSection");
@@ -29,7 +29,7 @@ SkATrace::SkATrace() : fBeginSection(nullptr), fEndSection(nullptr), fIsEnabled(
 #endif
 
     if (!fIsEnabled) {
-        fIsEnabled = []{ return false; };
+        fIsEnabled = [] { return false; };
     }
 }
 
@@ -41,10 +41,9 @@ SkEventTracer::Handle SkATrace::addTraceEvent(char phase,
                                               const char** argNames,
                                               const uint8_t* argTypes,
                                               const uint64_t* argValues,
-                                              uint8_t flags) {
+                                              uint8_t flags) noexcept {
     if (fIsEnabled()) {
-        if (TRACE_EVENT_PHASE_COMPLETE == phase ||
-            TRACE_EVENT_PHASE_INSTANT == phase) {
+        if (TRACE_EVENT_PHASE_COMPLETE == phase || TRACE_EVENT_PHASE_INSTANT == phase) {
             fBeginSection(name);
         }
 
@@ -57,14 +56,14 @@ SkEventTracer::Handle SkATrace::addTraceEvent(char phase,
 
 void SkATrace::updateTraceEventDuration(const uint8_t* categoryEnabledFlag,
                                         const char* name,
-                                        SkEventTracer::Handle handle) {
+                                        SkEventTracer::Handle handle) noexcept {
     // This is only ever called from a scoped trace event so we will just end the ATrace section.
     if (fIsEnabled()) {
         fEndSection();
     }
 }
 
-const uint8_t* SkATrace::getCategoryGroupEnabled(const char* name) {
+const uint8_t* SkATrace::getCategoryGroupEnabled(const char* name) noexcept {
     // Chrome tracing is setup to not repeatly call this function once it has been initialized. So
     // we can't use this to do a check for ATrace isEnabled(). Thus we will always return yes here
     // and then check to see if ATrace is enabled when beginning and ending a section.
@@ -72,12 +71,8 @@ const uint8_t* SkATrace::getCategoryGroupEnabled(const char* name) {
     return &yes;
 }
 
-
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
 
 bool SkAndroidFrameworkTraceUtil::gEnableAndroidTracing = false;
 
-#endif //SK_BUILD_FOR_ANDROID_FRAMEWORK
-
-
-
+#endif  // SK_BUILD_FOR_ANDROID_FRAMEWORK

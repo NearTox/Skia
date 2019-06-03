@@ -5,14 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "GrGpuResource.h"
-#include "GrContext.h"
-#include "GrContextPriv.h"
-#include "GrResourceCache.h"
-#include "GrGpu.h"
-#include "GrGpuResourcePriv.h"
-#include "SkTraceMemoryDump.h"
+#include "include/gpu/GrGpuResource.h"
 #include <atomic>
+#include "include/core/SkTraceMemoryDump.h"
+#include "include/gpu/GrContext.h"
+#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrGpu.h"
+#include "src/gpu/GrGpuResourcePriv.h"
+#include "src/gpu/GrResourceCache.h"
 
 static inline GrResourceCache* get_resource_cache(GrGpu* gpu) {
     SkASSERT(gpu);
@@ -76,8 +76,8 @@ void GrGpuResource::dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) con
 }
 
 void GrGpuResource::dumpMemoryStatisticsPriv(SkTraceMemoryDump* traceMemoryDump,
-                                             const SkString& resourceName,
-                                             const char* type, size_t size) const {
+                                             const SkString& resourceName, const char* type,
+                                             size_t size) const {
     const char* tag = "Scratch";
     if (fUniqueKey.isValid()) {
         tag = (fUniqueKey.tag() != nullptr) ? fUniqueKey.tag() : "Other";
@@ -103,6 +103,8 @@ bool GrGpuResource::isPurgeable() const {
 bool GrGpuResource::hasRefOrPendingIO() const {
     return this->internalHasRef() || this->internalHasPendingIO();
 }
+
+bool GrGpuResource::hasRef() const { return this->internalHasRef(); }
 
 SkString GrGpuResource::getResourceName() const {
     // Dump resource as "skia/gpu_resources/resource_#".
@@ -171,7 +173,7 @@ void GrGpuResource::notifyAllCntsAreZero(CntType lastCntTypeToReachZero) const {
     SkASSERT(kRef_CntType != lastCntTypeToReachZero);
 
     static const uint32_t kFlag =
-        GrResourceCache::ResourceAccess::kAllCntsReachedZero_RefNotificationFlag;
+            GrResourceCache::ResourceAccess::kAllCntsReachedZero_RefNotificationFlag;
     GrGpuResource* mutableThis = const_cast<GrGpuResource*>(this);
     get_resource_cache(fGpu)->resourceAccess().notifyCntReachedZero(mutableThis, kFlag);
 }
@@ -221,11 +223,18 @@ void GrGpuResource::makeUnbudgeted() {
     }
 }
 
-uint32_t GrGpuResource::CreateUniqueID() {
+uint32_t GrGpuResource::CreateUniqueID() noexcept {
     static std::atomic<uint32_t> nextID{1};
     uint32_t id;
     do {
         id = nextID++;
     } while (id == SK_InvalidUniqueID);
     return id;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+void GrGpuResource::ProxyAccess::ref(GrResourceCache* cache) {
+    SkASSERT(cache == fResource->getContext()->priv().getResourceCache());
+    cache->resourceAccess().refResource(fResource);
 }

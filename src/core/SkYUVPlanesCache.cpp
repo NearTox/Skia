@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "SkBitmapCache.h"
-#include "SkResourceCache.h"
-#include "SkYUVPlanesCache.h"
+#include "src/core/SkYUVPlanesCache.h"
+#include "src/core/SkBitmapCache.h"
+#include "src/core/SkResourceCache.h"
 
 #define CHECK_LOCAL(localCache, localName, globalName, ...) \
     ((localCache) ? localCache->localName(__VA_ARGS__) : SkResourceCache::globalName(__VA_ARGS__))
@@ -17,13 +17,11 @@ static unsigned gYUVPlanesKeyNamespaceLabel;
 
 struct YUVValue {
     SkYUVPlanesCache::Info fInfo;
-    SkCachedData*          fData;
+    SkCachedData* fData;
 };
 
 struct YUVPlanesKey : public SkResourceCache::Key {
-    YUVPlanesKey(uint32_t genID)
-        : fGenID(genID)
-    {
+    YUVPlanesKey(uint32_t genID) : fGenID(genID) {
         this->init(&gYUVPlanesKeyNamespaceLabel, SkMakeResourceCacheSharedIDForBitmap(genID),
                    sizeof(genID));
     }
@@ -32,19 +30,15 @@ struct YUVPlanesKey : public SkResourceCache::Key {
 };
 
 struct YUVPlanesRec : public SkResourceCache::Rec {
-    YUVPlanesRec(YUVPlanesKey key, SkCachedData* data, SkYUVPlanesCache::Info* info)
-        : fKey(key)
-    {
+    YUVPlanesRec(YUVPlanesKey key, SkCachedData* data, SkYUVPlanesCache::Info* info) : fKey(key) {
         fValue.fData = data;
         fValue.fInfo = *info;
         fValue.fData->attachToCacheAndRef();
     }
-    ~YUVPlanesRec() override {
-        fValue.fData->detachFromCacheAndUnref();
-    }
+    ~YUVPlanesRec() override { fValue.fData->detachFromCacheAndUnref(); }
 
-    YUVPlanesKey  fKey;
-    YUVValue      fValue;
+    YUVPlanesKey fKey;
+    YUVValue fValue;
 
     const Key& getKey() const override { return fKey; }
     size_t bytesUsed() const override { return sizeof(*this) + fValue.fData->size(); }
@@ -68,7 +62,7 @@ struct YUVPlanesRec : public SkResourceCache::Rec {
         return true;
     }
 };
-} // namespace
+}  // namespace
 
 SkCachedData* SkYUVPlanesCache::FindAndRef(uint32_t genID, Info* info,
                                            SkResourceCache* localCache) {

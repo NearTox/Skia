@@ -8,10 +8,10 @@
 #ifndef SkOTTable_OS_2_V1_DEFINED
 #define SkOTTable_OS_2_V1_DEFINED
 
-#include "SkEndian.h"
-#include "SkIBMFamilyClass.h"
-#include "SkOTTableTypes.h"
-#include "SkPanose.h"
+#include "src/core/SkEndian.h"
+#include "src/sfnt/SkIBMFamilyClass.h"
+#include "src/sfnt/SkOTTableTypes.h"
+#include "src/sfnt/SkPanose.h"
 
 #pragma pack(push, 1)
 
@@ -49,26 +49,24 @@ struct SkOTTableOS2_V1 {
     } usWidthClass;
     union Type {
         struct Field {
-            //8-15
-            SK_OT_BYTE_BITFIELD(
-                Reserved08,
-                Reserved09,
-                Reserved10,
-                Reserved11,
-                Reserved12,
-                Reserved13,
-                Reserved14,
-                Reserved15)
-            //0-7
-            SK_OT_BYTE_BITFIELD(
-                Reserved00,
-                Restricted,
-                PreviewPrint,
-                Editable,
-                Reserved04,
-                Reserved05,
-                Reserved06,
-                Reserved07)
+            // 8-15
+            SK_OT_BYTE_BITFIELD(Reserved08,
+                                Reserved09,
+                                Reserved10,
+                                Reserved11,
+                                Reserved12,
+                                Reserved13,
+                                Reserved14,
+                                Reserved15)
+            // 0-7
+            SK_OT_BYTE_BITFIELD(Reserved00,
+                                Restricted,
+                                PreviewPrint,
+                                Editable,
+                                Reserved04,
+                                Reserved05,
+                                Reserved06,
+                                Reserved07)
         } field;
         struct Raw {
             static const SK_OT_USHORT Installable = 0;
@@ -92,169 +90,147 @@ struct SkOTTableOS2_V1 {
     SkPanose panose;
     union UnicodeRange {
         struct Field {
-            //l0 24-31
+            // l0 24-31
+            SK_OT_BYTE_BITFIELD(Thai,
+                                Lao,
+                                BasicGeorgian,
+                                GeorgianExtended,
+                                HangulJamo,
+                                LatinExtendedAdditional,
+                                GreekExtended,
+                                GeneralPunctuation)
+            // l0 16-23
             SK_OT_BYTE_BITFIELD(
-                Thai,
-                Lao,
-                BasicGeorgian,
-                GeorgianExtended,
-                HangulJamo,
-                LatinExtendedAdditional,
-                GreekExtended,
-                GeneralPunctuation)
-            //l0 16-23
-            SK_OT_BYTE_BITFIELD(
-                Bengali,
-                Gurmukhi,
-                Gujarati,
-                Oriya,
-                Tamil,
-                Telugu,
-                Kannada,
-                Malayalam)
-            //l0 8-15
-            SK_OT_BYTE_BITFIELD(
-                GreekSymbolsAndCoptic,
-                Cyrillic,
-                Armenian,
-                BasicHebrew,
-                HebrewExtendedAB,
-                BasicArabic,
-                ArabicExtended,
-                Devanagari)
-            //l0 0-7
-            SK_OT_BYTE_BITFIELD(
-                BasicLatin,
-                Latin1Supplement,
-                LatinExtendedA,
-                LatinExtendedB,
-                IPAExtensions,
-                SpacingModifierLetters,
-                CombiningDiacriticalMarks,
-                BasicGreek)
+                    Bengali, Gurmukhi, Gujarati, Oriya, Tamil, Telugu, Kannada, Malayalam)
+            // l0 8-15
+            SK_OT_BYTE_BITFIELD(GreekSymbolsAndCoptic,
+                                Cyrillic,
+                                Armenian,
+                                BasicHebrew,
+                                HebrewExtendedAB,
+                                BasicArabic,
+                                ArabicExtended,
+                                Devanagari)
+            // l0 0-7
+            SK_OT_BYTE_BITFIELD(BasicLatin,
+                                Latin1Supplement,
+                                LatinExtendedA,
+                                LatinExtendedB,
+                                IPAExtensions,
+                                SpacingModifierLetters,
+                                CombiningDiacriticalMarks,
+                                BasicGreek)
 
-            //l1 24-31
-            SK_OT_BYTE_BITFIELD(
-                Hangul,
-                Reserved057,
-                Reserved058,
-                CJKUnifiedIdeographs,
-                PrivateUseArea,
-                CJKCompatibilityIdeographs,
-                AlphabeticPresentationForms,
-                ArabicPresentationFormsA)
-            //l1 16-23
-            SK_OT_BYTE_BITFIELD(
-                CJKSymbolsAndPunctuation,
-                Hiragana,
-                Katakana,
-                Bopomofo,
-                HangulCompatibilityJamo,
-                CJKMiscellaneous,
-                EnclosedCJKLettersAndMonths,
-                CJKCompatibility)
-            //l1 8-15
-            SK_OT_BYTE_BITFIELD(
-                ControlPictures,
-                OpticalCharacterRecognition,
-                EnclosedAlphanumerics,
-                BoxDrawing,
-                BlockElements,
-                GeometricShapes,
-                MiscellaneousSymbols,
-                Dingbats)
-            //l1 0-7
-            SK_OT_BYTE_BITFIELD(
-                SuperscriptsAndSubscripts,
-                CurrencySymbols,
-                CombiningDiacriticalMarksForSymbols,
-                LetterlikeSymbols,
-                NumberForms,
-                Arrows,
-                MathematicalOperators,
-                MiscellaneousTechnical)
+            // l1 24-31
+            SK_OT_BYTE_BITFIELD(Hangul,
+                                Reserved057,
+                                Reserved058,
+                                CJKUnifiedIdeographs,
+                                PrivateUseArea,
+                                CJKCompatibilityIdeographs,
+                                AlphabeticPresentationForms,
+                                ArabicPresentationFormsA)
+            // l1 16-23
+            SK_OT_BYTE_BITFIELD(CJKSymbolsAndPunctuation,
+                                Hiragana,
+                                Katakana,
+                                Bopomofo,
+                                HangulCompatibilityJamo,
+                                CJKMiscellaneous,
+                                EnclosedCJKLettersAndMonths,
+                                CJKCompatibility)
+            // l1 8-15
+            SK_OT_BYTE_BITFIELD(ControlPictures,
+                                OpticalCharacterRecognition,
+                                EnclosedAlphanumerics,
+                                BoxDrawing,
+                                BlockElements,
+                                GeometricShapes,
+                                MiscellaneousSymbols,
+                                Dingbats)
+            // l1 0-7
+            SK_OT_BYTE_BITFIELD(SuperscriptsAndSubscripts,
+                                CurrencySymbols,
+                                CombiningDiacriticalMarksForSymbols,
+                                LetterlikeSymbols,
+                                NumberForms,
+                                Arrows,
+                                MathematicalOperators,
+                                MiscellaneousTechnical)
 
-            //l2 24-31
-            SK_OT_BYTE_BITFIELD(
-                Reserved088,
-                Reserved089,
-                Reserved090,
-                Reserved091,
-                Reserved092,
-                Reserved093,
-                Reserved094,
-                Reserved095)
-            //l2 16-23
-            SK_OT_BYTE_BITFIELD(
-                Reserved080,
-                Reserved081,
-                Reserved082,
-                Reserved083,
-                Reserved084,
-                Reserved085,
-                Reserved086,
-                Reserved087)
-            //l2 8-15
-            SK_OT_BYTE_BITFIELD(
-                Reserved072,
-                Reserved073,
-                Reserved074,
-                Reserved075,
-                Reserved076,
-                Reserved077,
-                Reserved078,
-                Reserved079)
-            //l2 0-7
-            SK_OT_BYTE_BITFIELD(
-                CombiningHalfMarks,
-                CJKCompatibilityForms,
-                SmallFormVariants,
-                ArabicPresentationFormsB,
-                HalfwidthAndFullwidthForms,
-                Specials,
-                Reserved70,
-                Reserved71)
+            // l2 24-31
+            SK_OT_BYTE_BITFIELD(Reserved088,
+                                Reserved089,
+                                Reserved090,
+                                Reserved091,
+                                Reserved092,
+                                Reserved093,
+                                Reserved094,
+                                Reserved095)
+            // l2 16-23
+            SK_OT_BYTE_BITFIELD(Reserved080,
+                                Reserved081,
+                                Reserved082,
+                                Reserved083,
+                                Reserved084,
+                                Reserved085,
+                                Reserved086,
+                                Reserved087)
+            // l2 8-15
+            SK_OT_BYTE_BITFIELD(Reserved072,
+                                Reserved073,
+                                Reserved074,
+                                Reserved075,
+                                Reserved076,
+                                Reserved077,
+                                Reserved078,
+                                Reserved079)
+            // l2 0-7
+            SK_OT_BYTE_BITFIELD(CombiningHalfMarks,
+                                CJKCompatibilityForms,
+                                SmallFormVariants,
+                                ArabicPresentationFormsB,
+                                HalfwidthAndFullwidthForms,
+                                Specials,
+                                Reserved70,
+                                Reserved71)
 
-            //l3 24-31
-            SK_OT_BYTE_BITFIELD(
-                Reserved120,
-                Reserved121,
-                Reserved122,
-                Reserved123,
-                Reserved124,
-                Reserved125,
-                Reserved126,
-                Reserved127)
-            //l3 16-23
-            SK_OT_BYTE_BITFIELD(
-                Reserved112,
-                Reserved113,
-                Reserved114,
-                Reserved115,
-                Reserved116,
-                Reserved117,
-                Reserved118,
-                Reserved119)
-            //l3 8-15
-            SK_OT_BYTE_BITFIELD(
-                Reserved104,
-                Reserved105,
-                Reserved106,
-                Reserved107,
-                Reserved108,
-                Reserved109,
-                Reserved110,
-                Reserved111)
-            //l3 0-7
-            SK_OT_BYTE_BITFIELD(
-                Reserved096,
-                Reserved097,
-                Reserved098,
-                Reserved099,
-                Reserved100,
-                Reserved101,
-                Reserved102,
-                Reserved103)
+            // l3 24-31
+            SK_OT_BYTE_BITFIELD(Reserved120,
+                                Reserved121,
+                                Reserved122,
+                                Reserved123,
+                                Reserved124,
+                                Reserved125,
+                                Reserved126,
+                                Reserved127)
+            // l3 16-23
+            SK_OT_BYTE_BITFIELD(Reserved112,
+                                Reserved113,
+                                Reserved114,
+                                Reserved115,
+                                Reserved116,
+                                Reserved117,
+                                Reserved118,
+                                Reserved119)
+            // l3 8-15
+            SK_OT_BYTE_BITFIELD(Reserved104,
+                                Reserved105,
+                                Reserved106,
+                                Reserved107,
+                                Reserved108,
+                                Reserved109,
+                                Reserved110,
+                                Reserved111)
+            // l3 0-7
+            SK_OT_BYTE_BITFIELD(Reserved096,
+                                Reserved097,
+                                Reserved098,
+                                Reserved099,
+                                Reserved100,
+                                Reserved101,
+                                Reserved102,
+                                Reserved103)
         } field;
         struct Raw {
             struct l0 {
@@ -292,45 +268,60 @@ struct SkOTTableOS2_V1 {
                 static const SK_OT_ULONG GeneralPunctuationMask = SkOTSetULONGBit<31>::value;
             };
             struct l1 {
-                static const SK_OT_ULONG SuperscriptsAndSubscriptsMask = SkOTSetULONGBit<32 - 32>::value;
+                static const SK_OT_ULONG SuperscriptsAndSubscriptsMask =
+                        SkOTSetULONGBit<32 - 32>::value;
                 static const SK_OT_ULONG CurrencySymbolsMask = SkOTSetULONGBit<33 - 32>::value;
-                static const SK_OT_ULONG CombiningDiacriticalMarksForSymbolsMask = SkOTSetULONGBit<34 - 32>::value;
+                static const SK_OT_ULONG CombiningDiacriticalMarksForSymbolsMask =
+                        SkOTSetULONGBit<34 - 32>::value;
                 static const SK_OT_ULONG LetterlikeSymbolsMask = SkOTSetULONGBit<35 - 32>::value;
                 static const SK_OT_ULONG NumberFormsMask = SkOTSetULONGBit<36 - 32>::value;
                 static const SK_OT_ULONG ArrowsMask = SkOTSetULONGBit<37 - 32>::value;
-                static const SK_OT_ULONG MathematicalOperatorsMask = SkOTSetULONGBit<38 - 32>::value;
-                static const SK_OT_ULONG MiscellaneousTechnicalMask = SkOTSetULONGBit<39 - 32>::value;
+                static const SK_OT_ULONG MathematicalOperatorsMask =
+                        SkOTSetULONGBit<38 - 32>::value;
+                static const SK_OT_ULONG MiscellaneousTechnicalMask =
+                        SkOTSetULONGBit<39 - 32>::value;
                 static const SK_OT_ULONG ControlPicturesMask = SkOTSetULONGBit<40 - 32>::value;
-                static const SK_OT_ULONG OpticalCharacterRecognitionMask = SkOTSetULONGBit<41 - 32>::value;
-                static const SK_OT_ULONG EnclosedAlphanumericsMask = SkOTSetULONGBit<42 - 32>::value;
+                static const SK_OT_ULONG OpticalCharacterRecognitionMask =
+                        SkOTSetULONGBit<41 - 32>::value;
+                static const SK_OT_ULONG EnclosedAlphanumericsMask =
+                        SkOTSetULONGBit<42 - 32>::value;
                 static const SK_OT_ULONG BoxDrawingMask = SkOTSetULONGBit<43 - 32>::value;
                 static const SK_OT_ULONG BlockElementsMask = SkOTSetULONGBit<44 - 32>::value;
                 static const SK_OT_ULONG GeometricShapesMask = SkOTSetULONGBit<45 - 32>::value;
                 static const SK_OT_ULONG MiscellaneousSymbolsMask = SkOTSetULONGBit<46 - 32>::value;
                 static const SK_OT_ULONG DingbatsMask = SkOTSetULONGBit<47 - 32>::value;
-                static const SK_OT_ULONG CJKSymbolsAndPunctuationMask = SkOTSetULONGBit<48 - 32>::value;
+                static const SK_OT_ULONG CJKSymbolsAndPunctuationMask =
+                        SkOTSetULONGBit<48 - 32>::value;
                 static const SK_OT_ULONG HiraganaMask = SkOTSetULONGBit<49 - 32>::value;
                 static const SK_OT_ULONG KatakanaMask = SkOTSetULONGBit<50 - 32>::value;
                 static const SK_OT_ULONG BopomofoMask = SkOTSetULONGBit<51 - 32>::value;
-                static const SK_OT_ULONG HangulCompatibilityJamoMask = SkOTSetULONGBit<52 - 32>::value;
+                static const SK_OT_ULONG HangulCompatibilityJamoMask =
+                        SkOTSetULONGBit<52 - 32>::value;
                 static const SK_OT_ULONG CJKMiscellaneousMask = SkOTSetULONGBit<53 - 32>::value;
-                static const SK_OT_ULONG EnclosedCJKLettersAndMonthsMask = SkOTSetULONGBit<54 - 32>::value;
+                static const SK_OT_ULONG EnclosedCJKLettersAndMonthsMask =
+                        SkOTSetULONGBit<54 - 32>::value;
                 static const SK_OT_ULONG CJKCompatibilityMask = SkOTSetULONGBit<55 - 32>::value;
                 static const SK_OT_ULONG HangulMask = SkOTSetULONGBit<56 - 32>::value;
-                //Reserved
-                //Reserved
+                // Reserved
+                // Reserved
                 static const SK_OT_ULONG CJKUnifiedIdeographsMask = SkOTSetULONGBit<59 - 32>::value;
                 static const SK_OT_ULONG PrivateUseAreaMask = SkOTSetULONGBit<60 - 32>::value;
-                static const SK_OT_ULONG CJKCompatibilityIdeographsMask = SkOTSetULONGBit<61 - 32>::value;
-                static const SK_OT_ULONG AlphabeticPresentationFormsMask = SkOTSetULONGBit<62 - 32>::value;
-                static const SK_OT_ULONG ArabicPresentationFormsAMask = SkOTSetULONGBit<63 - 32>::value;
+                static const SK_OT_ULONG CJKCompatibilityIdeographsMask =
+                        SkOTSetULONGBit<61 - 32>::value;
+                static const SK_OT_ULONG AlphabeticPresentationFormsMask =
+                        SkOTSetULONGBit<62 - 32>::value;
+                static const SK_OT_ULONG ArabicPresentationFormsAMask =
+                        SkOTSetULONGBit<63 - 32>::value;
             };
             struct l2 {
                 static const SK_OT_ULONG CombiningHalfMarksMask = SkOTSetULONGBit<64 - 64>::value;
-                static const SK_OT_ULONG CJKCompatibilityFormsMask = SkOTSetULONGBit<65 - 64>::value;
+                static const SK_OT_ULONG CJKCompatibilityFormsMask =
+                        SkOTSetULONGBit<65 - 64>::value;
                 static const SK_OT_ULONG SmallFormVariantsMask = SkOTSetULONGBit<66 - 64>::value;
-                static const SK_OT_ULONG ArabicPresentationFormsBMask = SkOTSetULONGBit<67 - 64>::value;
-                static const SK_OT_ULONG HalfwidthAndFullwidthFormsMask = SkOTSetULONGBit<68 - 64>::value;
+                static const SK_OT_ULONG ArabicPresentationFormsBMask =
+                        SkOTSetULONGBit<67 - 64>::value;
+                static const SK_OT_ULONG HalfwidthAndFullwidthFormsMask =
+                        SkOTSetULONGBit<68 - 64>::value;
                 static const SK_OT_ULONG SpecialsMask = SkOTSetULONGBit<69 - 64>::value;
             };
             SK_OT_ULONG value[4];
@@ -339,26 +330,18 @@ struct SkOTTableOS2_V1 {
     SK_OT_CHAR achVendID[4];
     union Selection {
         struct Field {
-            //8-15
+            // 8-15
+            SK_OT_BYTE_BITFIELD(Reserved08,
+                                Reserved09,
+                                Reserved10,
+                                Reserved11,
+                                Reserved12,
+                                Reserved13,
+                                Reserved14,
+                                Reserved15)
+            // 0-7
             SK_OT_BYTE_BITFIELD(
-                Reserved08,
-                Reserved09,
-                Reserved10,
-                Reserved11,
-                Reserved12,
-                Reserved13,
-                Reserved14,
-                Reserved15)
-            //0-7
-            SK_OT_BYTE_BITFIELD(
-                Italic,
-                Underscore,
-                Negative,
-                Outlined,
-                Strikeout,
-                Bold,
-                Regular,
-                Reserved07)
+                    Italic, Underscore, Negative, Outlined, Strikeout, Bold, Regular, Reserved07)
         } field;
         struct Raw {
             static const SK_OT_USHORT ItalicMask = SkOTSetUSHORTBit<0>::value;
@@ -373,96 +356,88 @@ struct SkOTTableOS2_V1 {
     } fsSelection;
     SK_OT_USHORT usFirstCharIndex;
     SK_OT_USHORT usLastCharIndex;
-    //version0
+    // version0
     SK_OT_SHORT sTypoAscender;
     SK_OT_SHORT sTypoDescender;
     SK_OT_SHORT sTypoLineGap;
     SK_OT_USHORT usWinAscent;
     SK_OT_USHORT usWinDescent;
-    //version1
+    // version1
     union CodePageRange {
         struct Field {
-            //l0 24-31
-            SK_OT_BYTE_BITFIELD(
-                Reserved24,
-                Reserved25,
-                Reserved26,
-                Reserved27,
-                Reserved28,
-                MacintoshCharacterSet,
-                OEMCharacterSet,
-                SymbolCharacterSet)
-            //l0 16-23
-            SK_OT_BYTE_BITFIELD(
-                Thai_874,
-                JISJapan_932,
-                ChineseSimplified_936,
-                KoreanWansung_949,
-                ChineseTraditional_950,
-                KoreanJohab_1361,
-                Reserved22,
-                Reserved23)
-            //l0 8-15
-            SK_OT_BYTE_BITFIELD(
-                Reserved08,
-                Reserved09,
-                Reserved10,
-                Reserved11,
-                Reserved12,
-                Reserved13,
-                Reserved14,
-                Reserved15)
-            //l0 0-7
-            SK_OT_BYTE_BITFIELD(
-                Latin1_1252,
-                Latin2EasternEurope_1250,
-                Cyrillic_1251,
-                Greek_1253,
-                Turkish_1254,
-                Hebrew_1255,
-                Arabic_1256,
-                WindowsBaltic_1257)
+            // l0 24-31
+            SK_OT_BYTE_BITFIELD(Reserved24,
+                                Reserved25,
+                                Reserved26,
+                                Reserved27,
+                                Reserved28,
+                                MacintoshCharacterSet,
+                                OEMCharacterSet,
+                                SymbolCharacterSet)
+            // l0 16-23
+            SK_OT_BYTE_BITFIELD(Thai_874,
+                                JISJapan_932,
+                                ChineseSimplified_936,
+                                KoreanWansung_949,
+                                ChineseTraditional_950,
+                                KoreanJohab_1361,
+                                Reserved22,
+                                Reserved23)
+            // l0 8-15
+            SK_OT_BYTE_BITFIELD(Reserved08,
+                                Reserved09,
+                                Reserved10,
+                                Reserved11,
+                                Reserved12,
+                                Reserved13,
+                                Reserved14,
+                                Reserved15)
+            // l0 0-7
+            SK_OT_BYTE_BITFIELD(Latin1_1252,
+                                Latin2EasternEurope_1250,
+                                Cyrillic_1251,
+                                Greek_1253,
+                                Turkish_1254,
+                                Hebrew_1255,
+                                Arabic_1256,
+                                WindowsBaltic_1257)
 
-            //l1 24-31
-            SK_OT_BYTE_BITFIELD(
-                IBMTurkish_857,
-                IBMCyrillic_855,
-                Latin2_852,
-                MSDOSBaltic_775,
-                Greek_737,
-                Arabic_708,
-                WELatin1_850,
-                US_437)
-            //l1 16-23
-            SK_OT_BYTE_BITFIELD(
-                IBMGreek_869,
-                MSDOSRussian_866,
-                MSDOSNordic_865,
-                Arabic_864,
-                MSDOSCanadianFrench_863,
-                Hebrew_862,
-                MSDOSIcelandic_861,
-                MSDOSPortuguese_860)
-            //l1 8-15
-            SK_OT_BYTE_BITFIELD(
-                Reserved40,
-                Reserved41,
-                Reserved42,
-                Reserved43,
-                Reserved44,
-                Reserved45,
-                Reserved46,
-                Reserved47)
-            //l1 0-7
-            SK_OT_BYTE_BITFIELD(
-                Reserved32,
-                Reserved33,
-                Reserved34,
-                Reserved35,
-                Reserved36,
-                Reserved37,
-                Reserved38,
-                Reserved39)
+            // l1 24-31
+            SK_OT_BYTE_BITFIELD(IBMTurkish_857,
+                                IBMCyrillic_855,
+                                Latin2_852,
+                                MSDOSBaltic_775,
+                                Greek_737,
+                                Arabic_708,
+                                WELatin1_850,
+                                US_437)
+            // l1 16-23
+            SK_OT_BYTE_BITFIELD(IBMGreek_869,
+                                MSDOSRussian_866,
+                                MSDOSNordic_865,
+                                Arabic_864,
+                                MSDOSCanadianFrench_863,
+                                Hebrew_862,
+                                MSDOSIcelandic_861,
+                                MSDOSPortuguese_860)
+            // l1 8-15
+            SK_OT_BYTE_BITFIELD(Reserved40,
+                                Reserved41,
+                                Reserved42,
+                                Reserved43,
+                                Reserved44,
+                                Reserved45,
+                                Reserved46,
+                                Reserved47)
+            // l1 0-7
+            SK_OT_BYTE_BITFIELD(Reserved32,
+                                Reserved33,
+                                Reserved34,
+                                Reserved35,
+                                Reserved36,
+                                Reserved37,
+                                Reserved38,
+                                Reserved39)
         } field;
         struct Raw {
             struct l0 {
@@ -489,7 +464,8 @@ struct SkOTTableOS2_V1 {
                 static const SK_OT_ULONG MSDOSRussian_866Mask = SkOTSetULONGBit<49 - 32>::value;
                 static const SK_OT_ULONG MSDOSNordic_865Mask = SkOTSetULONGBit<50 - 32>::value;
                 static const SK_OT_ULONG Arabic_864Mask = SkOTSetULONGBit<51 - 32>::value;
-                static const SK_OT_ULONG MSDOSCanadianFrench_863Mask = SkOTSetULONGBit<52 - 32>::value;
+                static const SK_OT_ULONG MSDOSCanadianFrench_863Mask =
+                        SkOTSetULONGBit<52 - 32>::value;
                 static const SK_OT_ULONG Hebrew_862Mask = SkOTSetULONGBit<53 - 32>::value;
                 static const SK_OT_ULONG MSDOSIcelandic_861Mask = SkOTSetULONGBit<54 - 32>::value;
                 static const SK_OT_ULONG MSDOSPortuguese_860Mask = SkOTSetULONGBit<55 - 32>::value;
@@ -508,7 +484,6 @@ struct SkOTTableOS2_V1 {
 };
 
 #pragma pack(pop)
-
 
 static_assert(sizeof(SkOTTableOS2_V1) == 86, "sizeof_SkOTTableOS2_V1_not_86");
 

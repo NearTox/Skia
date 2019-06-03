@@ -8,12 +8,12 @@
 #ifndef SkImageGenerator_DEFINED
 #define SkImageGenerator_DEFINED
 
-#include "SkBitmap.h"
-#include "SkColor.h"
-#include "SkImage.h"
-#include "SkImageInfo.h"
-#include "SkYUVAIndex.h"
-#include "SkYUVASizeInfo.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkYUVAIndex.h"
+#include "include/core/SkYUVASizeInfo.h"
 
 class GrRecordingContext;
 class GrTextureProxy;
@@ -30,7 +30,7 @@ public:
      *  The PixelRef which takes ownership of this SkImageGenerator
      *  will call the image generator's destructor.
      */
-    virtual ~SkImageGenerator() { }
+    virtual ~SkImageGenerator() {}
 
     uint32_t uniqueID() const { return fUniqueID; }
 
@@ -41,9 +41,7 @@ public:
      *  If non-NULL is returned, the caller is responsible for calling
      *  unref() on the data when it is finished.
      */
-    sk_sp<SkData> refEncodedData() {
-        return this->onRefEncodedData();
-    }
+    sk_sp<SkData> refEncodedData() { return this->onRefEncodedData(); }
 
     /**
      *  Return the ImageInfo associated with this generator.
@@ -54,9 +52,7 @@ public:
      *  Can this generator be used to produce images that will be drawable to the specified context
      *  (or to CPU, if context is nullptr)?
      */
-    bool isValid(GrContext* context) const {
-        return this->onIsValid(context);
-    }
+    bool isValid(GrContext* context) const { return this->onIsValid(context); }
 
     /**
      *  Decode into the given pixels, a block of memory of size at
@@ -140,8 +136,7 @@ public:
      *  overhead in later allocating mips and copying of the base layer.
      */
     sk_sp<GrTextureProxy> generateTexture(GrRecordingContext*, const SkImageInfo& info,
-                                          const SkIPoint& origin,
-                                          bool willNeedMipMaps);
+                                          const SkIPoint& origin, bool willNeedMipMaps);
 #endif
 
     /**
@@ -171,14 +166,19 @@ protected:
     virtual bool onGetPixels(const SkImageInfo&, void*, size_t, const Options&) { return false; }
     virtual bool onIsValid(GrContext*) const { return true; }
     virtual bool onQueryYUVA8(SkYUVASizeInfo*, SkYUVAIndex[SkYUVAIndex::kIndexCount],
-                              SkYUVColorSpace*) const { return false; }
-    virtual bool onGetYUVA8Planes(const SkYUVASizeInfo&, const SkYUVAIndex[SkYUVAIndex::kIndexCount],
-                                  void*[4] /*planes*/) { return false; }
+                              SkYUVColorSpace*) const {
+        return false;
+    }
+    virtual bool onGetYUVA8Planes(const SkYUVASizeInfo&,
+                                  const SkYUVAIndex[SkYUVAIndex::kIndexCount],
+                                  void * [4] /*planes*/) {
+        return false;
+    }
 #if SK_SUPPORT_GPU
     enum class TexGenType {
-        kNone,           //image generator does not implement onGenerateTexture
-        kCheap,          //onGenerateTexture is implemented and it is fast (does not render offscreen)
-        kExpensive,      //onGenerateTexture is implemented and it is relatively slow
+        kNone,       // image generator does not implement onGenerateTexture
+        kCheap,      // onGenerateTexture is implemented and it is fast (does not render offscreen)
+        kExpensive,  // onGenerateTexture is implemented and it is relatively slow
     };
 
     virtual TexGenType onCanGenerateTexture() const { return TexGenType::kNone; }

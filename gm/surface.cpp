@@ -5,12 +5,32 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkGradientShader.h"
-#include "SkSurface.h"
-#include "SkSurfaceProps.h"
-#include "SkTextUtils.h"
+#include "gm/gm.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkSurfaceProps.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/utils/SkTextUtils.h"
+#include "tools/ToolUtils.h"
+
+class GrContext;
 
 #define W 200
 #define H 100
@@ -18,9 +38,9 @@
 static sk_sp<SkShader> make_shader() {
     int a = 0x99;
     int b = 0xBB;
-    SkPoint pts[] = { { 0, 0 }, { W, H } };
-    SkColor colors[] = { SkColorSetRGB(a, a, a), SkColorSetRGB(b, b, b) };
-    return SkGradientShader::MakeLinear(pts, colors, nullptr, 2, SkShader::kClamp_TileMode);
+    SkPoint pts[] = {{0, 0}, {W, H}};
+    SkColor colors[] = {SkColorSetRGB(a, a, a), SkColorSetRGB(b, b, b)};
+    return SkGradientShader::MakeLinear(pts, colors, nullptr, 2, SkTileMode::kClamp);
 }
 
 static sk_sp<SkSurface> make_surface(GrContext* ctx, const SkImageInfo& info, SkPixelGeometry geo) {
@@ -43,7 +63,7 @@ static void test_draw(SkCanvas* canvas, const char label[]) {
     paint.setShader(nullptr);
 
     paint.setColor(SK_ColorWHITE);
-    SkFont font(sk_tool_utils::create_portable_typeface(), 32);
+    SkFont font(ToolUtils::create_portable_typeface(), 32);
     font.setEdging(SkFont::Edging::kSubpixelAntiAlias);
     SkTextUtils::DrawString(canvas, label, W / 2, H * 3 / 4, font, paint,
                             SkTextUtils::kCenter_Align);
@@ -54,13 +74,9 @@ public:
     SurfacePropsGM() {}
 
 protected:
-    SkString onShortName() override {
-        return SkString("surfaceprops");
-    }
+    SkString onShortName() override { return SkString("surfaceprops"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(W, H * 5);
-    }
+    SkISize onISize() override { return SkISize::Make(W, H * 5); }
 
     void onDraw(SkCanvas* canvas) override {
         GrContext* ctx = canvas->getGrContext();
@@ -70,13 +86,11 @@ protected:
 
         const struct {
             SkPixelGeometry fGeo;
-            const char*     fLabel;
+            const char* fLabel;
         } recs[] = {
-            { kUnknown_SkPixelGeometry, "Unknown" },
-            { kRGB_H_SkPixelGeometry,   "RGB_H" },
-            { kBGR_H_SkPixelGeometry,   "BGR_H" },
-            { kRGB_V_SkPixelGeometry,   "RGB_V" },
-            { kBGR_V_SkPixelGeometry,   "BGR_V" },
+                {kUnknown_SkPixelGeometry, "Unknown"}, {kRGB_H_SkPixelGeometry, "RGB_H"},
+                {kBGR_H_SkPixelGeometry, "BGR_H"},     {kRGB_V_SkPixelGeometry, "RGB_V"},
+                {kBGR_V_SkPixelGeometry, "BGR_V"},
         };
 
         SkScalar x = 0;
@@ -96,7 +110,7 @@ protected:
 private:
     typedef GM INHERITED;
 };
-DEF_GM( return new SurfacePropsGM )
+DEF_GM(return new SurfacePropsGM)
 
 #ifdef SK_DEBUG
 static bool equal(const SkSurfaceProps& a, const SkSurfaceProps& b) {
@@ -109,22 +123,16 @@ public:
     NewSurfaceGM() {}
 
 protected:
-    SkString onShortName() override {
-        return SkString("surfacenew");
-    }
+    SkString onShortName() override { return SkString("surfacenew"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(300, 140);
-    }
+    SkISize onISize() override { return SkISize::Make(300, 140); }
 
-    static void drawInto(SkCanvas* canvas) {
-        canvas->drawColor(SK_ColorRED);
-    }
+    static void drawInto(SkCanvas* canvas) { canvas->drawColor(SK_ColorRED); }
 
     void onDraw(SkCanvas* canvas) override {
         SkImageInfo info = SkImageInfo::MakeN32Premul(100, 100);
 
-        auto surf(sk_tool_utils::makeSurface(canvas, info, nullptr));
+        auto surf(ToolUtils::makeSurface(canvas, info, nullptr));
         drawInto(surf->getCanvas());
 
         sk_sp<SkImage> image(surf->makeImageSnapshot());
@@ -143,13 +151,13 @@ protected:
 private:
     typedef GM INHERITED;
 };
-DEF_GM( return new NewSurfaceGM )
+DEF_GM(return new NewSurfaceGM)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 DEF_SIMPLE_GM(copy_on_write_retain, canvas, 256, 256) {
     const SkImageInfo info = SkImageInfo::MakeN32Premul(256, 256);
-    sk_sp<SkSurface> surf = sk_tool_utils::makeSurface(canvas, info);
+    sk_sp<SkSurface> surf = ToolUtils::makeSurface(canvas, info);
 
     surf->getCanvas()->clear(SK_ColorRED);
     // its important that image survives longer than the next draw, so the surface will see
@@ -167,7 +175,7 @@ DEF_SIMPLE_GM(copy_on_write_retain, canvas, 256, 256) {
 
 DEF_SIMPLE_GM(copy_on_write_savelayer, canvas, 256, 256) {
     const SkImageInfo info = SkImageInfo::MakeN32Premul(256, 256);
-    sk_sp<SkSurface> surf = sk_tool_utils::makeSurface(canvas, info);
+    sk_sp<SkSurface> surf = ToolUtils::makeSurface(canvas, info);
     surf->getCanvas()->clear(SK_ColorRED);
     // its important that image survives longer than the next draw, so the surface will see
     // an outstanding image, and have to decide if it should retain or discard those pixels
@@ -188,7 +196,7 @@ DEF_SIMPLE_GM(copy_on_write_savelayer, canvas, 256, 256) {
 
 DEF_SIMPLE_GM(surface_underdraw, canvas, 256, 256) {
     SkImageInfo info = SkImageInfo::MakeN32Premul(256, 256, nullptr);
-    auto surf = sk_tool_utils::makeSurface(canvas, info);
+    auto surf = ToolUtils::makeSurface(canvas, info);
 
     const SkIRect subset = SkIRect::MakeLTRB(180, 0, 256, 256);
 
@@ -196,7 +204,7 @@ DEF_SIMPLE_GM(surface_underdraw, canvas, 256, 256) {
     {
         SkPoint pts[] = {{0, 0}, {40, 50}};
         SkColor colors[] = {SK_ColorRED, SK_ColorBLUE};
-        auto sh = SkGradientShader::MakeLinear(pts, colors, nullptr, 2, SkShader::kRepeat_TileMode);
+        auto sh = SkGradientShader::MakeLinear(pts, colors, nullptr, 2, SkTileMode::kRepeat);
         SkPaint paint;
         paint.setShader(sh);
         surf->getCanvas()->drawPaint(paint);
@@ -214,7 +222,7 @@ DEF_SIMPLE_GM(surface_underdraw, canvas, 256, 256) {
     {
         SkPaint paint;
         paint.setColor(SK_ColorGREEN);
-        SkRect r = { 0, 10, 256, 35 };
+        SkRect r = {0, 10, 256, 35};
         while (r.fBottom < 256) {
             surf->getCanvas()->drawRect(r, paint);
             r.offset(0, r.height() * 2);
@@ -225,7 +233,7 @@ DEF_SIMPLE_GM(surface_underdraw, canvas, 256, 256) {
     {
         SkPoint pts[] = {{SkIntToScalar(subset.left()), 0}, {SkIntToScalar(subset.right()), 0}};
         SkColor colors[] = {0xFF000000, 0};
-        auto sh = SkGradientShader::MakeLinear(pts, colors, nullptr, 2, SkShader::kClamp_TileMode);
+        auto sh = SkGradientShader::MakeLinear(pts, colors, nullptr, 2, SkTileMode::kClamp);
         SkPaint paint;
         paint.setShader(sh);
         paint.setBlendMode(SkBlendMode::kDstIn);
@@ -236,11 +244,10 @@ DEF_SIMPLE_GM(surface_underdraw, canvas, 256, 256) {
     {
         SkPaint paint;
         paint.setBlendMode(SkBlendMode::kDstOver);
-        surf->getCanvas()->drawImage(saveImg,
-                                     SkIntToScalar(subset.left()), SkIntToScalar(subset.top()),
-                                     &paint);
+        surf->getCanvas()->drawImage(saveImg, SkIntToScalar(subset.left()),
+                                     SkIntToScalar(subset.top()), &paint);
     }
 
     // show it on screen
-   surf->draw(canvas, 0, 0, nullptr);
+    surf->draw(canvas, 0, 0, nullptr);
 }

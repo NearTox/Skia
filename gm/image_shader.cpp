@@ -5,12 +5,30 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkData.h"
-#include "SkImage.h"
-#include "SkPictureRecorder.h"
-#include "SkSurface.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkData.h"
+#include "include/core/SkEncodedImageFormat.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPicture.h"
+#include "include/core/SkPictureRecorder.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypes.h"
+
+#include <utility>
+
+class GrContext;
 
 static void draw_something(SkCanvas* canvas, const SkRect& bounds) {
     SkPaint paint;
@@ -48,8 +66,7 @@ static sk_sp<SkImage> make_texture(GrContext* ctx, SkPicture* pic, const SkImage
 
 static sk_sp<SkImage> make_pict_gen(GrContext*, SkPicture* pic, const SkImageInfo& info) {
     return SkImage::MakeFromPicture(sk_ref_sp(pic), info.dimensions(), nullptr, nullptr,
-                                    SkImage::BitDepth::kU8,
-                                    SkColorSpace::MakeSRGB());
+                                    SkImage::BitDepth::kU8, SkColorSpace::MakeSRGB());
 }
 
 static sk_sp<SkImage> make_encode_gen(GrContext* ctx, SkPicture* pic, const SkImageInfo& info) {
@@ -65,10 +82,10 @@ static sk_sp<SkImage> make_encode_gen(GrContext* ctx, SkPicture* pic, const SkIm
 }
 
 const ImageMakerProc gProcs[] = {
-    make_raster,
-    make_texture,
-    make_pict_gen,
-    make_encode_gen,
+        make_raster,
+        make_texture,
+        make_pict_gen,
+        make_encode_gen,
 };
 
 /*
@@ -82,13 +99,9 @@ public:
     ImageShaderGM() {}
 
 protected:
-    SkString onShortName() override {
-        return SkString("image-shader");
-    }
+    SkString onShortName() override { return SkString("image-shader"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(850, 450);
-    }
+    SkISize onISize() override { return SkISize::Make(850, 450); }
 
     void onOnceBeforeDraw() override {
         const SkRect bounds = SkRect::MakeWH(100, 100);
@@ -103,7 +116,7 @@ protected:
         canvas->drawImage(image, 0, 0);
         canvas->translate(0, 120);
 
-        const SkShader::TileMode tile = SkShader::kRepeat_TileMode;
+        const SkTileMode tile = SkTileMode::kRepeat;
         const SkMatrix localM = SkMatrix::MakeTrans(-50, -50);
         SkPaint paint;
         paint.setShader(image->makeShader(tile, tile, &localM));
@@ -128,4 +141,4 @@ protected:
 private:
     typedef skiagm::GM INHERITED;
 };
-DEF_GM( return new ImageShaderGM; )
+DEF_GM(return new ImageShaderGM;)

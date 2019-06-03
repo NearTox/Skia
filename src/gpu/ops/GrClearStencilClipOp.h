@@ -8,9 +8,9 @@
 #ifndef GrClearStencilClipOp_DEFINED
 #define GrClearStencilClipOp_DEFINED
 
-#include "GrFixedClip.h"
-#include "GrOp.h"
-#include "GrRenderTargetProxy.h"
+#include "include/private/GrRenderTargetProxy.h"
+#include "src/gpu/GrFixedClip.h"
+#include "src/gpu/ops/GrOp.h"
 
 class GrOpFlushState;
 class GrRecordingContext;
@@ -42,16 +42,14 @@ public:
 #endif
 
 private:
-    friend class GrOpMemoryPool; // for ctor
+    friend class GrOpMemoryPool;  // for ctor
 
     GrClearStencilClipOp(const GrFixedClip& clip, bool insideStencilMask,
                          GrRenderTargetProxy* proxy)
-            : INHERITED(ClassID())
-            , fClip(clip)
-            , fInsideStencilMask(insideStencilMask) {
+            : INHERITED(ClassID()), fClip(clip), fInsideStencilMask(insideStencilMask) {
         const SkRect& bounds = fClip.scissorEnabled()
-                                            ? SkRect::Make(fClip.scissorRect())
-                                            : SkRect::MakeIWH(proxy->width(), proxy->height());
+                                       ? SkRect::Make(fClip.scissorRect())
+                                       : SkRect::MakeIWH(proxy->width(), proxy->height());
         this->setBounds(bounds, HasAABloat::kNo, IsZeroArea::kNo);
     }
 
@@ -60,7 +58,7 @@ private:
     void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
 
     const GrFixedClip fClip;
-    const bool        fInsideStencilMask;
+    const bool fInsideStencilMask;
 
     typedef GrOp INHERITED;
 };

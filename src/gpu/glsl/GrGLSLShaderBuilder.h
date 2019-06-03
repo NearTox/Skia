@@ -8,10 +8,11 @@
 #ifndef GrGLSLShaderBuilder_DEFINED
 #define GrGLSLShaderBuilder_DEFINED
 
-#include "GrAllocator.h"
-#include "GrShaderVar.h"
-#include "glsl/GrGLSLUniformHandler.h"
-#include "SkTDArray.h"
+#include "include/private/SkTDArray.h"
+#include "src/gpu/GrAllocator.h"
+#include "src/gpu/GrShaderVar.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#include "src/sksl/SkSLString.h"
 
 #include <stdarg.h>
 
@@ -25,7 +26,7 @@ public:
     GrGLSLShaderBuilder(GrGLSLProgramBuilder* program);
     virtual ~GrGLSLShaderBuilder() {}
 
-    using SamplerHandle      = GrGLSLUniformHandler::SamplerHandle;
+    using SamplerHandle = GrGLSLUniformHandler::SamplerHandle;
 
     /** Appends a 2D texture sample with projection if necessary. coordType must either be Vec2f or
         Vec3f. The latter is interpreted as projective texture coords. The vec length and swizzle
@@ -42,7 +43,6 @@ public:
                              const char* coordName,
                              GrSLType coordType = kHalf2_GrSLType,
                              GrGLSLColorSpaceXformHelper* colorXformHelper = nullptr);
-
 
     /** Does the work of appendTextureLookup and modulates the result by modulation. The result is
         always a half4. modulation and the swizzle specified by SamplerHandle must both be
@@ -65,8 +65,8 @@ public:
     void appendColorGamutXform(const char* srcColor, GrGLSLColorSpaceXformHelper* colorXformHelper);
 
     /**
-    * Adds a constant declaration to the top of the shader.
-    */
+     * Adds a constant declaration to the top of the shader.
+     */
     void defineConstant(const char* type, const char* name, const char* value) {
         this->definitions().appendf("const %s %s = %s;\n", type, name, value);
     }
@@ -80,24 +80,24 @@ public:
     }
 
     void defineConstantf(const char* type, const char* name, const char* fmt, ...) {
-       this->definitions().appendf("const %s %s = ", type, name);
-       va_list args;
-       va_start(args, fmt);
-       this->definitions().appendVAList(fmt, args);
-       va_end(args);
-       this->definitions().append(";\n");
+        this->definitions().appendf("const %s %s = ", type, name);
+        va_list args;
+        va_start(args, fmt);
+        this->definitions().appendVAList(fmt, args);
+        va_end(args);
+        this->definitions().append(";\n");
     }
 
     void declareGlobal(const GrShaderVar&);
 
     /**
-    * Called by GrGLSLProcessors to add code to one of the shaders.
-    */
+     * Called by GrGLSLProcessors to add code to one of the shaders.
+     */
     void codeAppendf(const char format[], ...) SK_PRINTF_LIKE(2, 3) {
-       va_list args;
-       va_start(args, format);
-       this->code().appendVAList(format, args);
-       va_end(args);
+        va_list args;
+        va_start(args, format);
+        this->code().appendVAList(format, args);
+        va_end(args);
     }
 
     void codeAppend(const char* str) { this->code().append(str); }
@@ -105,10 +105,10 @@ public:
     void codeAppend(const char* str, size_t length) { this->code().append(str, length); }
 
     void codePrependf(const char format[], ...) SK_PRINTF_LIKE(2, 3) {
-       va_list args;
-       va_start(args, format);
-       this->code().prependVAList(format, args);
-       va_end(args);
+        va_list args;
+        va_start(args, format);
+        this->code().prependVAList(format, args);
+        va_end(args);
     }
 
     /**
@@ -144,9 +144,8 @@ public:
             fBuilder->codeAppend("{");
         }
 
-        ~ShaderBlock() {
-            fBuilder->codeAppend("}");
-        }
+        ~ShaderBlock() { fBuilder->codeAppend("}"); }
+
     private:
         GrGLSLShaderBuilder* fBuilder;
     };
@@ -194,8 +193,6 @@ protected:
 
     void nextStage() {
         fShaderStrings.push_back();
-        fCompilerStrings.push_back(this->code().c_str());
-        fCompilerStringLengths.push_back((int)this->code().size());
         fCodeIndex++;
     }
 
@@ -225,12 +222,13 @@ protected:
         kFunctions,
         kMain,
         kCode,
+
+        kPrealloc = kCode + 6,  // 6 == Reasonable upper bound on number of processor stages
     };
 
     GrGLSLProgramBuilder* fProgramBuilder;
-    SkSTArray<kCode, const char*, true> fCompilerStrings;
-    SkSTArray<kCode, int, true> fCompilerStringLengths;
-    SkSTArray<kCode, SkString> fShaderStrings;
+    SkSL::String fCompilerString;
+    SkSTArray<kPrealloc, SkString> fShaderStrings;
     SkString fCode;
     SkString fFunctions;
     SkString fExtensions;
@@ -242,11 +240,11 @@ protected:
     int fCodeIndex;
     bool fFinalized;
 
-    friend class GrCCCoverageProcessor; // to access code().
+    friend class GrCCCoverageProcessor;  // to access code().
     friend class GrGLSLProgramBuilder;
     friend class GrGLProgramBuilder;
-    friend class GrGLSLVaryingHandler; // to access noperspective interpolation feature.
-    friend class GrGLPathProgramBuilder; // to access fInputs.
+    friend class GrGLSLVaryingHandler;    // to access noperspective interpolation feature.
+    friend class GrGLPathProgramBuilder;  // to access fInputs.
     friend class GrVkPipelineStateBuilder;
     friend class GrMtlPipelineStateBuilder;
 };

@@ -8,7 +8,7 @@
 #ifndef GrMatrixConvolutionEffect_DEFINED
 #define GrMatrixConvolutionEffect_DEFINED
 
-#include "GrTextureDomain.h"
+#include "src/gpu/effects/GrTextureDomain.h"
 
 // A little bit less than the minimum # uniforms required by DX9SM2 (32).
 // Allows for a 5x5 kernel (or 25x1, for that matter).
@@ -78,15 +78,15 @@ private:
     const TextureSampler& onTextureSampler(int i) const override { return fTextureSampler; }
 
     GrCoordTransform fCoordTransform;
-    GrTextureDomain  fDomain;
-    TextureSampler   fTextureSampler;
-    SkIRect          fBounds;
-    SkISize          fKernelSize;
-    float            fKernel[MAX_KERNEL_SIZE];
-    float            fGain;
-    float            fBias;
-    float            fKernelOffset[2];
-    bool             fConvolveAlpha;
+    GrTextureDomain fDomain;
+    TextureSampler fTextureSampler;
+    SkIRect fBounds;
+    SkISize fKernelSize;
+    float fKernel[MAX_KERNEL_SIZE];
+    float fGain;
+    float fBias;
+    float fKernelOffset[2];
+    bool fConvolveAlpha;
 
     GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 

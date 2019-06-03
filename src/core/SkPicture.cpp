@@ -5,19 +5,19 @@
  * found in the LICENSE file.
  */
 
-#include "SkPicture.h"
+#include "include/core/SkPicture.h"
 
-#include "SkImageGenerator.h"
-#include "SkMathPriv.h"
-#include "SkPictureCommon.h"
-#include "SkPictureData.h"
-#include "SkPicturePlayback.h"
-#include "SkPicturePriv.h"
-#include "SkPictureRecord.h"
-#include "SkPictureRecorder.h"
-#include "SkSerialProcs.h"
-#include "SkTo.h"
 #include <atomic>
+#include "include/core/SkImageGenerator.h"
+#include "include/core/SkPictureRecorder.h"
+#include "include/core/SkSerialProcs.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkMathPriv.h"
+#include "src/core/SkPictureCommon.h"
+#include "src/core/SkPictureData.h"
+#include "src/core/SkPicturePlayback.h"
+#include "src/core/SkPicturePriv.h"
+#include "src/core/SkPictureRecord.h"
 
 // When we read/write the SkPictInfo via a stream, we have a sentinel byte right after the info.
 // Note: in the read/write buffer versions, we have a slightly different convention:
@@ -26,9 +26,9 @@
 //          1 : PictureData
 //         <0 : -size of the custom data
 enum {
-    kFailure_TrailingStreamByteAfterPictInfo     = 0,   // nothing follows
-    kPictureData_TrailingStreamByteAfterPictInfo = 1,   // SkPictureData follows
-    kCustom_TrailingStreamByteAfterPictInfo      = 2,   // -size32 follows
+    kFailure_TrailingStreamByteAfterPictInfo = 0,      // nothing follows
+    kPictureData_TrailingStreamByteAfterPictInfo = 1,  // SkPictureData follows
+    kCustom_TrailingStreamByteAfterPictInfo = 2,       // -size32 follows
 };
 
 /* SkPicture impl.  This handles generic responsibilities like unique IDs and serialization. */
@@ -40,7 +40,7 @@ SkPicture::SkPicture() {
     } while (fUniqueID == 0);
 }
 
-static const char kMagic[] = { 's', 'k', 'i', 'a', 'p', 'i', 'c', 't' };
+static const char kMagic[] = {'s', 'k', 'i', 'a', 'p', 'i', 'c', 't'};
 
 SkPictInfo SkPicture::createHeader() const {
     SkPictInfo info;
@@ -77,19 +77,35 @@ bool SkPicture::StreamIsSKP(SkStream* stream, SkPictInfo* pInfo) {
     }
 
     uint32_t version;
-    if (!stream->readU32(&version)) { return false; }
+    if (!stream->readU32(&version)) {
+        return false;
+    }
     info.setVersion(version);
-    if (!stream->readScalar(&info.fCullRect.fLeft  )) { return false; }
-    if (!stream->readScalar(&info.fCullRect.fTop   )) { return false; }
-    if (!stream->readScalar(&info.fCullRect.fRight )) { return false; }
-    if (!stream->readScalar(&info.fCullRect.fBottom)) { return false; }
+    if (!stream->readScalar(&info.fCullRect.fLeft)) {
+        return false;
+    }
+    if (!stream->readScalar(&info.fCullRect.fTop)) {
+        return false;
+    }
+    if (!stream->readScalar(&info.fCullRect.fRight)) {
+        return false;
+    }
+    if (!stream->readScalar(&info.fCullRect.fBottom)) {
+        return false;
+    }
     if (info.getVersion() < SkReadBuffer::kRemoveHeaderFlags_Version) {
-        if (!stream->readU32(nullptr)) { return false; }
+        if (!stream->readU32(nullptr)) {
+            return false;
+        }
     }
 
-    if (!IsValidPictInfo(info)) { return false; }
+    if (!IsValidPictInfo(info)) {
+        return false;
+    }
 
-    if (pInfo) { *pInfo = info; }
+    if (pInfo) {
+        *pInfo = info;
+    }
     return true;
 }
 bool SkPicture_StreamIsSKP(SkStream* stream, SkPictInfo* pInfo) {
@@ -106,11 +122,13 @@ bool SkPicture::BufferIsSKP(SkReadBuffer* buffer, SkPictInfo* pInfo) {
     info.setVersion(buffer->readUInt());
     buffer->readRect(&info.fCullRect);
     if (info.getVersion() < SkReadBuffer::kRemoveHeaderFlags_Version) {
-        (void)buffer->readUInt();   // used to be flags
+        (void)buffer->readUInt();  // used to be flags
     }
 
     if (IsValidPictInfo(info)) {
-        if (pInfo) { *pInfo = info; }
+        if (pInfo) {
+            *pInfo = info;
+        }
         return true;
     }
     return false;
@@ -127,7 +145,7 @@ sk_sp<SkPicture> SkPicture::Forwardport(const SkPictInfo& info,
     }
     SkPicturePlayback playback(data);
     SkPictureRecorder r;
-    playback.draw(r.beginRecording(info.fCullRect), nullptr/*no callback*/, buffer);
+    playback.draw(r.beginRecording(info.fCullRect), nullptr /*no callback*/, buffer);
     return r.finishRecordingAsPicture();
 }
 
@@ -165,7 +183,9 @@ sk_sp<SkPicture> SkPicture::MakeFromStream(SkStream* stream, const SkDeserialPro
     }
 
     uint8_t trailingStreamByteAfterPictInfo;
-    if (!stream->readU8(&trailingStreamByteAfterPictInfo)) { return nullptr; }
+    if (!stream->readU8(&trailingStreamByteAfterPictInfo)) {
+        return nullptr;
+    }
     switch (trailingStreamByteAfterPictInfo) {
         case kPictureData_TrailingStreamByteAfterPictInfo: {
             std::unique_ptr<SkPictureData> data(
@@ -184,7 +204,7 @@ sk_sp<SkPicture> SkPicture::MakeFromStream(SkStream* stream, const SkDeserialPro
             }
             return procs.fPictureProc(data->data(), size, procs.fPictureCtx);
         }
-        default:    // fall through to error return
+        default:  // fall through to error return
             break;
     }
     return nullptr;
@@ -209,15 +229,16 @@ sk_sp<SkPicture> SkPicturePriv::MakeFromBuffer(SkReadBuffer& buffer) {
         // 1 is the magic 'size' that means SkPictureData follows
         return nullptr;
     }
-   std::unique_ptr<SkPictureData> data(SkPictureData::CreateFromBuffer(buffer, info));
+    std::unique_ptr<SkPictureData> data(SkPictureData::CreateFromBuffer(buffer, info));
     return SkPicture::Forwardport(info, data.get(), &buffer);
 }
 
 SkPictureData* SkPicture::backport() const {
     SkPictInfo info = this->createHeader();
-    SkPictureRecord rec(SkISize::Make(info.fCullRect.width(), info.fCullRect.height()), 0/*flags*/);
+    SkPictureRecord rec(SkISize::Make(info.fCullRect.width(), info.fCullRect.height()),
+                        0 /*flags*/);
     rec.beginRecording();
-        this->playback(&rec);
+    this->playback(&rec);
     rec.endRecording();
     return new SkPictureData(rec, info);
 }
@@ -274,7 +295,7 @@ void SkPicture::serialize(SkWStream* stream, const SkSerialProcs* procsPtr,
             return;
         }
         stream->write8(kCustom_TrailingStreamByteAfterPictInfo);
-        stream->write32(-size);    // negative for custom format
+        stream->write32(-size);  // negative for custom format
         write_pad32(stream, custom->data(), size);
         return;
     }
@@ -298,32 +319,32 @@ void SkPicturePriv::Flatten(const sk_sp<const SkPicture> picture, SkWriteBuffer&
 
     if (auto custom = custom_serialize(picture.get(), buffer.fProcs)) {
         int32_t size = SkToS32(custom->size());
-        buffer.write32(-size);    // negative for custom format
+        buffer.write32(-size);  // negative for custom format
         buffer.writePad32(custom->data(), size);
         return;
     }
 
     if (data) {
-        buffer.write32(1); // special size meaning SkPictureData
+        buffer.write32(1);  // special size meaning SkPictureData
         data->flatten(buffer);
     } else {
-        buffer.write32(0); // signal no content
+        buffer.write32(0);  // signal no content
     }
 }
 
 sk_sp<SkPicture> SkPicture::MakePlaceholder(SkRect cull) {
     struct Placeholder : public SkPicture {
-          explicit Placeholder(SkRect cull) : fCull(cull) {}
+        explicit Placeholder(SkRect cull) : fCull(cull) {}
 
-          void playback(SkCanvas*, AbortCallback*) const override { }
+        void playback(SkCanvas*, AbortCallback*) const override {}
 
-          // approximateOpCount() needs to be greater than kMaxPictureOpsToUnrollInsteadOfRef
-          // in SkCanvas.cpp to avoid that unrolling.  SK_MaxS32 can't not be big enough!
-          int    approximateOpCount()   const override { return SK_MaxS32; }
-          size_t approximateBytesUsed() const override { return sizeof(*this); }
-          SkRect cullRect()             const override { return fCull; }
+        // approximateOpCount() needs to be greater than kMaxPictureOpsToUnrollInsteadOfRef
+        // in SkCanvas.cpp to avoid that unrolling.  SK_MaxS32 can't not be big enough!
+        int approximateOpCount() const override { return SK_MaxS32; }
+        size_t approximateBytesUsed() const override { return sizeof(*this); }
+        SkRect cullRect() const override { return fCull; }
 
-          SkRect fCull;
+        SkRect fCull;
     };
     return sk_make_sp<Placeholder>(cull);
 }

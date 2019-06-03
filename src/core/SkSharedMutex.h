@@ -8,14 +8,14 @@
 #ifndef SkSharedLock_DEFINED
 #define SkSharedLock_DEFINED
 
-#include "SkMacros.h"
-#include "SkSemaphore.h"
-#include "SkTypes.h"
 #include <atomic>
+#include "include/core/SkTypes.h"
+#include "include/private/SkMacros.h"
+#include "include/private/SkSemaphore.h"
 
 #ifdef SK_DEBUG
-    #include "SkMutex.h"
-    #include <memory>
+#include <memory>
+#include "include/private/SkMutex.h"
 #endif  // SK_DEBUG
 
 // There are two shared lock implementations one debug the other is high performance. They implement
@@ -60,8 +60,8 @@ private:
     SkSemaphore fExclusiveQueue;
 #else
     std::atomic<int32_t> fQueueCounts;
-    SkSemaphore          fSharedQueue;
-    SkSemaphore          fExclusiveQueue;
+    SkSemaphore fSharedQueue;
+    SkSemaphore fExclusiveQueue;
 #endif  // SK_DEBUG
 };
 
@@ -74,10 +74,11 @@ class SkAutoSharedMutexShared {
 public:
     SkAutoSharedMutexShared(SkSharedMutex& lock) : fLock(lock) { lock.acquireShared(); }
     ~SkAutoSharedMutexShared() { fLock.releaseShared(); }
+
 private:
     SkSharedMutex& fLock;
 };
 
 #define SkAutoSharedMutexShared(...) SK_REQUIRE_LOCAL_VAR(SkAutoSharedMutexShared)
 
-#endif // SkSharedLock_DEFINED
+#endif  // SkSharedLock_DEFINED

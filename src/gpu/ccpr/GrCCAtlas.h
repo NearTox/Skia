@@ -8,12 +8,12 @@
 #ifndef GrCCAtlas_DEFINED
 #define GrCCAtlas_DEFINED
 
-#include "GrAllocator.h"
-#include "GrNonAtomicRef.h"
-#include "GrResourceKey.h"
-#include "GrTexture.h"
-#include "SkRefCnt.h"
-#include "SkSize.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkSize.h"
+#include "include/gpu/GrTexture.h"
+#include "include/private/GrResourceKey.h"
+#include "src/gpu/GrAllocator.h"
+#include "src/gpu/GrNonAtomicRef.h"
 
 class GrCCCachedAtlas;
 class GrOnFlushResourceProvider;
@@ -38,7 +38,7 @@ public:
     struct Specs {
         int fMaxPreferredTextureSize = 0;
         int fMinTextureSize = 0;
-        int fMinWidth = 0;  // If there are 100 20x10 paths, this should be 20.
+        int fMinWidth = 0;   // If there are 100 20x10 paths, this should be 20.
         int fMinHeight = 0;  // If there are 100 20x10 paths, this should be 10.
         int fApproxNumPixels = 0;
 
@@ -46,10 +46,7 @@ public:
         void accountForSpace(int width, int height);
     };
 
-    enum class CoverageType : bool {
-        kFP16_CoverageCount,
-        kA8_LiteralCoverage
-    };
+    enum class CoverageType : bool { kFP16_CoverageCount, kA8_LiteralCoverage };
 
     GrCCAtlas(CoverageType, const Specs&, const GrCaps&);
     ~GrCCAtlas();
@@ -113,15 +110,25 @@ public:
             : fCoverageType(coverageType), fSpecs(specs), fCaps(caps) {}
 
     bool empty() const { return fAtlases.empty(); }
-    const GrCCAtlas& front() const { SkASSERT(!this->empty()); return fAtlases.front(); }
-    GrCCAtlas& front() { SkASSERT(!this->empty()); return fAtlases.front(); }
-    GrCCAtlas& current() { SkASSERT(!this->empty()); return fAtlases.back(); }
+    const GrCCAtlas& front() const {
+        SkASSERT(!this->empty());
+        return fAtlases.front();
+    }
+    GrCCAtlas& front() {
+        SkASSERT(!this->empty());
+        return fAtlases.front();
+    }
+    GrCCAtlas& current() {
+        SkASSERT(!this->empty());
+        return fAtlases.back();
+    }
 
     class Iter {
     public:
         Iter(GrCCAtlasStack& stack) : fImpl(&stack.fAtlases) {}
         bool next() { return fImpl.next(); }
         GrCCAtlas* operator->() const { return fImpl.get(); }
+
     private:
         typename GrTAllocator<GrCCAtlas>::Iter fImpl;
     };

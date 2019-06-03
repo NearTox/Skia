@@ -4,14 +4,28 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkPaint.h"
-#include "Sk1DPathEffect.h"
-#include "Sk2DPathEffect.h"
-#include "SkCornerPathEffect.h"
-#include "SkDashPathEffect.h"
-#include "SkDiscretePathEffect.h"
+
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPathEffect.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/Sk1DPathEffect.h"
+#include "include/effects/Sk2DPathEffect.h"
+#include "include/effects/SkCornerPathEffect.h"
+#include "include/effects/SkDashPathEffect.h"
+#include "include/effects/SkDiscretePathEffect.h"
+#include "include/effects/SkOpPathEffect.h"
+#include "include/pathops/SkPathOps.h"
+
+#include <initializer_list>
 
 namespace skiagm {
 
@@ -27,9 +41,7 @@ static void compose_pe(SkPaint* paint) {
     paint->setPathEffect(compose);
 }
 
-static void hair_pe(SkPaint* paint) {
-    paint->setStrokeWidth(0);
-}
+static void hair_pe(SkPaint* paint) { paint->setStrokeWidth(0); }
 
 static void hair2_pe(SkPaint* paint) {
     paint->setStrokeWidth(0);
@@ -42,15 +54,13 @@ static void stroke_pe(SkPaint* paint) {
 }
 
 static void dash_pe(SkPaint* paint) {
-    SkScalar inter[] = { 20, 10, 10, 10 };
+    SkScalar inter[] = {20, 10, 10, 10};
     paint->setStrokeWidth(12);
     paint->setPathEffect(SkDashPathEffect::Make(inter, SK_ARRAY_COUNT(inter), 0));
     compose_pe(paint);
 }
 
-constexpr int gXY[] = {
-4, 0, 0, -4, 8, -4, 12, 0, 8, 4, 0, 4
-};
+constexpr int gXY[] = {4, 0, 0, -4, 8, -4, 12, 0, 8, 4, 0, 4};
 
 static void scale(SkPath* path, SkScalar scale) {
     SkMatrix m;
@@ -59,10 +69,10 @@ static void scale(SkPath* path, SkScalar scale) {
 }
 
 static void one_d_pe(SkPaint* paint) {
-    SkPath  path;
+    SkPath path;
     path.moveTo(SkIntToScalar(gXY[0]), SkIntToScalar(gXY[1]));
     for (unsigned i = 2; i < SK_ARRAY_COUNT(gXY); i += 2)
-        path.lineTo(SkIntToScalar(gXY[i]), SkIntToScalar(gXY[i+1]));
+        path.lineTo(SkIntToScalar(gXY[i]), SkIntToScalar(gXY[i + 1]));
     path.close();
     path.offset(SkIntToScalar(-6), 0);
     scale(&path, 1.5f);
@@ -73,16 +83,14 @@ static void one_d_pe(SkPaint* paint) {
 }
 
 typedef void (*PE_Proc)(SkPaint*);
-constexpr PE_Proc gPE[] = { hair_pe, hair2_pe, stroke_pe, dash_pe, one_d_pe };
+constexpr PE_Proc gPE[] = {hair_pe, hair2_pe, stroke_pe, dash_pe, one_d_pe};
 
 static void fill_pe(SkPaint* paint) {
     paint->setStyle(SkPaint::kFill_Style);
     paint->setPathEffect(nullptr);
 }
 
-static void discrete_pe(SkPaint* paint) {
-    paint->setPathEffect(SkDiscretePathEffect::Make(10, 4));
-}
+static void discrete_pe(SkPaint* paint) { paint->setPathEffect(SkDiscretePathEffect::Make(10, 4)); }
 
 static sk_sp<SkPathEffect> MakeTileEffect() {
     SkMatrix m;
@@ -94,21 +102,16 @@ static sk_sp<SkPathEffect> MakeTileEffect() {
     return SkPath2DPathEffect::Make(m, path);
 }
 
-static void tile_pe(SkPaint* paint) {
-    paint->setPathEffect(MakeTileEffect());
-}
+static void tile_pe(SkPaint* paint) { paint->setPathEffect(MakeTileEffect()); }
 
-constexpr PE_Proc gPE2[] = { fill_pe, discrete_pe, tile_pe };
+constexpr PE_Proc gPE2[] = {fill_pe, discrete_pe, tile_pe};
 
 class PathEffectGM : public GM {
 public:
     PathEffectGM() {}
 
 protected:
-
-    SkString onShortName() override {
-        return SkString("patheffect");
-    }
+    SkString onShortName() override { return SkString("patheffect"); }
 
     SkISize onISize() override { return SkISize::Make(800, 600); }
 
@@ -133,7 +136,7 @@ protected:
         canvas->restore();
 
         path.reset();
-        SkRect r = { 0, 0, 250, 120 };
+        SkRect r = {0, 0, 250, 120};
         path.addOval(r, SkPath::kCW_Direction);
         r.inset(50, 50);
         path.addRect(r, SkPath::kCCW_Direction);
@@ -160,41 +163,38 @@ private:
     typedef GM INHERITED;
 };
 
-DEF_GM( return new PathEffectGM; )
+DEF_GM(return new PathEffectGM;)
 
-}
+}  // namespace skiagm
 
 //////////////////////////////////////////////////////////////////////////////
-#include "SkOpPathEffect.h"
 
 class ComboPathEfectsGM : public skiagm::GM {
 public:
     ComboPathEfectsGM() {}
 
 protected:
-
-    SkString onShortName() override {
-        return SkString("combo-patheffects");
-    }
+    SkString onShortName() override { return SkString("combo-patheffects"); }
 
     SkISize onISize() override { return SkISize::Make(360, 630); }
 
     void onDraw(SkCanvas* canvas) override {
         SkPath path0, path1, path2;
         path0.addCircle(100, 100, 60);
-        path1.moveTo(20, 20); path1.cubicTo(20, 180, 140, 0, 140, 140);
+        path1.moveTo(20, 20);
+        path1.cubicTo(20, 180, 140, 0, 140, 140);
 
         sk_sp<SkPathEffect> effects[] = {
-            nullptr,
-            SkStrokePathEffect::Make(20, SkPaint::kRound_Join, SkPaint::kRound_Cap, 0),
-            SkMergePathEffect::Make(nullptr,
-                                    SkStrokePathEffect::Make(20, SkPaint::kRound_Join,
-                                                             SkPaint::kRound_Cap, 0),
-                                    kDifference_SkPathOp),
-            SkMergePathEffect::Make(SkMatrixPathEffect::MakeTranslate(50, 30),
-                                    SkStrokePathEffect::Make(20, SkPaint::kRound_Join,
-                                                             SkPaint::kRound_Cap, 0),
-                                    kReverseDifference_SkPathOp),
+                nullptr,
+                SkStrokePathEffect::Make(20, SkPaint::kRound_Join, SkPaint::kRound_Cap, 0),
+                SkMergePathEffect::Make(
+                        nullptr,
+                        SkStrokePathEffect::Make(20, SkPaint::kRound_Join, SkPaint::kRound_Cap, 0),
+                        kDifference_SkPathOp),
+                SkMergePathEffect::Make(
+                        SkMatrixPathEffect::MakeTranslate(50, 30),
+                        SkStrokePathEffect::Make(20, SkPaint::kRound_Join, SkPaint::kRound_Cap, 0),
+                        kReverseDifference_SkPathOp),
         };
 
         SkPaint wireframe;
@@ -205,7 +205,7 @@ protected:
         paint.setColor(0xFF8888FF);
         paint.setAntiAlias(true);
 
-        for (auto& path : { path0, path1 }) {
+        for (auto& path : {path0, path1}) {
             canvas->save();
             for (auto pe : effects) {
                 paint.setPathEffect(pe);
@@ -223,4 +223,3 @@ private:
     typedef GM INHERITED;
 };
 DEF_GM(return new ComboPathEfectsGM;)
-

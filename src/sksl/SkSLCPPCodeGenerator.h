@@ -8,8 +8,8 @@
 #ifndef SKSL_CPPCODEGENERATOR
 #define SKSL_CPPCODEGENERATOR
 
-#include "SkSLGLSLCodeGenerator.h"
-#include "SkSLSectionAndParameterHelper.h"
+#include "src/sksl/SkSLGLSLCodeGenerator.h"
+#include "src/sksl/SkSLSectionAndParameterHelper.h"
 
 #include <set>
 
@@ -136,6 +136,6 @@ private:
     typedef GLSLCodeGenerator INHERITED;
 };
 
-}
+}  // namespace SkSL
 
 #endif

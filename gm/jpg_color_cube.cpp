@@ -4,12 +4,21 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkColorPriv.h"
-#include "SkData.h"
-#include "SkImage.h"
-#include "SkImageEncoder.h"
+
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkData.h"
+#include "include/core/SkEncodedImageFormat.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageEncoder.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+
+#include <utility>
 
 namespace skiagm {
 
@@ -18,13 +27,9 @@ public:
     ColorCubeGM() {}
 
 protected:
-    SkString onShortName() override {
-        return SkString("jpg-color-cube");
-    }
+    SkString onShortName() override { return SkString("jpg-color-cube"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(512, 512);
-    }
+    SkISize onISize() override { return SkISize::Make(512, 512); }
 
     void onOnceBeforeDraw() override {
         SkBitmap bmp;
@@ -49,9 +54,7 @@ protected:
         fImage = SkImage::MakeFromEncoded(std::move(jpegData));
     }
 
-    void onDraw(SkCanvas* canvas) override {
-        canvas->drawImage(fImage, 0, 0);
-    }
+    void onDraw(SkCanvas* canvas) override { canvas->drawImage(fImage, 0, 0); }
 
 private:
     sk_sp<SkImage> fImage;
@@ -59,5 +62,5 @@ private:
     typedef GM INHERITED;
 };
 
-DEF_GM( return new ColorCubeGM; )
-}
+DEF_GM(return new ColorCubeGM;)
+}  // namespace skiagm

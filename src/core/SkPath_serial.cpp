@@ -5,14 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "SkBuffer.h"
-#include "SkData.h"
-#include "SkMath.h"
-#include "SkPathPriv.h"
-#include "SkPathRef.h"
-#include "SkRRectPriv.h"
-#include "SkSafeMath.h"
-#include "SkTo.h"
+#include "include/core/SkData.h"
+#include "include/core/SkMath.h"
+#include "include/private/SkPathRef.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkBuffer.h"
+#include "src/core/SkPathPriv.h"
+#include "src/core/SkRRectPriv.h"
+#include "src/core/SkSafeMath.h"
 
 #include <cmath>
 
@@ -28,19 +28,14 @@ enum SerializationVersions {
     // kPathPrivFirstDirection_Version = 1,
     kPathPrivLastMoveToIndex_Version = 2,
     kPathPrivTypeEnumVersion = 3,
-    kJustPublicData_Version = 4,    // introduced Feb/2018
+    kJustPublicData_Version = 4,  // introduced Feb/2018
 
     kCurrent_Version = kJustPublicData_Version
 };
 
-enum SerializationType {
-    kGeneral = 0,
-    kRRect = 1
-};
+enum SerializationType { kGeneral = 0, kRRect = 1 };
 
-static unsigned extract_version(uint32_t packed) {
-    return packed & kVersion_SerializationMask;
-}
+static unsigned extract_version(uint32_t packed) { return packed & kVersion_SerializationMask; }
 
 static SkPath::FillType extract_filltype(uint32_t packed) {
     return static_cast<SkPath::FillType>((packed >> kFillType_SerializationShift) & 0x3);
@@ -74,8 +69,7 @@ size_t SkPath::writeToMemoryAsRRect(void* storage) const {
     int firstDir = isCCW ? SkPathPriv::kCCW_FirstDirection : SkPathPriv::kCW_FirstDirection;
     int32_t packed = (fFillType << kFillType_SerializationShift) |
                      (firstDir << kDirection_SerializationShift) |
-                     (SerializationType::kRRect << kType_SerializationShift) |
-                     kCurrent_Version;
+                     (SerializationType::kRRect << kType_SerializationShift) | kCurrent_Version;
 
     SkWBuffer buffer(storage);
     buffer.write32(packed);
@@ -87,15 +81,14 @@ size_t SkPath::writeToMemoryAsRRect(void* storage) const {
 }
 
 size_t SkPath::writeToMemory(void* storage) const {
-    SkDEBUGCODE(this->validate();)
+    SkDEBUGCODE(this->validate());
 
     if (size_t bytes = this->writeToMemoryAsRRect(storage)) {
         return bytes;
     }
 
     int32_t packed = (fFillType << kFillType_SerializationShift) |
-                     (SerializationType::kGeneral << kType_SerializationShift) |
-                     kCurrent_Version;
+                     (SerializationType::kGeneral << kType_SerializationShift) | kCurrent_Version;
 
     int32_t pts = fPathRef->countPoints();
     int32_t cnx = fPathRef->countWeights();
@@ -224,14 +217,14 @@ size_t SkPath::readFromMemory_EQ4(const void* storage, size_t length) {
     }
     SkASSERT(buffer.pos() <= length);
 
-#define CHECK_POINTS_CONICS(p, c)       \
-    do {                                \
-        if (p && ((pts -= p) < 0)) {    \
-            return 0;                   \
-        }                               \
-        if (c && ((cnx -= c) < 0)) {    \
-            return 0;                   \
-        }                               \
+#define CHECK_POINTS_CONICS(p, c)    \
+    do {                             \
+        if (p && ((pts -= p) < 0)) { \
+            return 0;                \
+        }                            \
+        if (c && ((cnx -= c) < 0)) { \
+            return 0;                \
+        }                            \
     } while (0)
 
     SkPath tmp;
@@ -266,12 +259,12 @@ size_t SkPath::readFromMemory_EQ4(const void* storage, size_t length) {
                 tmp.close();
                 break;
             default:
-                return 0;   // bad verb
+                return 0;  // bad verb
         }
     }
 #undef CHECK_POINTS_CONICS
     if (pts || cnx) {
-        return 0;   // leftover points and/or conics
+        return 0;  // leftover points and/or conics
     }
 
     *this = std::move(tmp);
@@ -320,8 +313,7 @@ size_t SkPath::readFromMemory_LE3(const void* storage, size_t length) {
     }
 
     fPathRef.reset(pathRef);
-    SkDEBUGCODE(this->validate();)
+    SkDEBUGCODE(this->validate());
     buffer.skipToAlign4();
     return buffer.pos();
 }
-

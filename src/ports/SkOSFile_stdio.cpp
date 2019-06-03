@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "SkOSFile.h"
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
+#include "src/core/SkOSFile.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -20,11 +20,11 @@
 #include <direct.h>
 #include <io.h>
 #include <vector>
-#include "SkUTF.h"
+#include "src/utils/SkUTF.h"
 #endif
 
 #ifdef SK_BUILD_FOR_IOS
-#include "SkOSFile_ios.h"
+#include "src/ports/SkOSFile_ios.h"
 #endif
 
 #ifdef _WIN32
@@ -58,15 +58,15 @@ static FILE* fopen_win(const char* utf8path, const char* perm) {
         out += SkUTF::ToUTF16(SkUTF::NextUTF8(&ptr, end), out);
     }
     SkASSERT(out == &wchars[n]);
-    *out = 0; // final null
+    *out = 0;  // final null
     wchar_t wperms[4] = {(wchar_t)perm[0], (wchar_t)perm[1], (wchar_t)perm[2], (wchar_t)perm[3]};
     return _wfopen((wchar_t*)wchars.data(), wperms);
 }
 #endif
 
 FILE* sk_fopen(const char path[], SkFILE_Flags flags) {
-    char    perm[4] = {0, 0, 0, 0};
-    char*   p = perm;
+    char perm[4] = {0, 0, 0, 0};
+    char* p = perm;
 
     if (flags & kRead_SkFILE_Flag) {
         *p++ = 'r';
@@ -93,8 +93,8 @@ FILE* sk_fopen(const char path[], SkFILE_Flags flags) {
 #endif
 
     if (nullptr == file && (flags & kWrite_SkFILE_Flag)) {
-        SkDEBUGF("sk_fopen: fopen(\"%s\", \"%s\") returned nullptr (errno:%d): %s\n",
-                 path, perm, errno, strerror(errno));
+        SkDEBUGF("sk_fopen: fopen(\"%s\", \"%s\") returned nullptr (errno:%d): %s\n", path, perm,
+                 errno, strerror(errno));
     }
     return file;
 }
@@ -102,18 +102,18 @@ FILE* sk_fopen(const char path[], SkFILE_Flags flags) {
 size_t sk_fgetsize(FILE* f) {
     SkASSERT(f);
 
-    long curr = ftell(f); // remember where we are
+    long curr = ftell(f);  // remember where we are
     if (curr < 0) {
         return 0;
     }
 
-    fseek(f, 0, SEEK_END); // go to the end
-    long size = ftell(f); // record the size
+    fseek(f, 0, SEEK_END);  // go to the end
+    long size = ftell(f);   // record the size
     if (size < 0) {
         size = 0;
     }
 
-    fseek(f, curr, SEEK_SET); // go back to our prev location
+    fseek(f, curr, SEEK_SET);  // go back to our prev location
     return size;
 }
 
@@ -128,8 +128,8 @@ void sk_fflush(FILE* f) {
 }
 
 void sk_fsync(FILE* f) {
-#if !defined(_WIN32) && !defined(SK_BUILD_FOR_ANDROID) && !defined(__UCLIBC__) \
-        && !defined(_NEWLIB_VERSION)
+#if !defined(_WIN32) && !defined(SK_BUILD_FOR_ANDROID) && !defined(__UCLIBC__) && \
+        !defined(_NEWLIB_VERSION)
     int fd = fileno(f);
     fsync(fd);
 #endif
@@ -149,7 +149,7 @@ void sk_fclose(FILE* f) {
     }
 }
 
-bool sk_isdir(const char *path) {
+bool sk_isdir(const char* path) {
     struct stat status;
     if (0 != stat(path, &status)) {
 #ifdef SK_BUILD_FOR_IOS
@@ -172,9 +172,7 @@ bool sk_mkdir(const char* path) {
         return true;
     }
     if (sk_exists(path)) {
-        fprintf(stderr,
-                "sk_mkdir: path '%s' already exists but is not a directory\n",
-                path);
+        fprintf(stderr, "sk_mkdir: path '%s' already exists but is not a directory\n", path);
         return false;
     }
 

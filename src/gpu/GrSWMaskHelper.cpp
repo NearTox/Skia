@@ -5,27 +5,27 @@
  * found in the LICENSE file.
  */
 
-#include "GrSWMaskHelper.h"
+#include "src/gpu/GrSWMaskHelper.h"
 
-#include "GrProxyProvider.h"
-#include "GrRecordingContext.h"
-#include "GrRecordingContextPriv.h"
-#include "GrShape.h"
-#include "GrSurfaceContext.h"
-#include "GrTextureProxy.h"
+#include "include/private/GrRecordingContext.h"
+#include "include/private/GrTextureProxy.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrProxyProvider.h"
+#include "src/gpu/GrRecordingContextPriv.h"
+#include "src/gpu/GrShape.h"
+#include "src/gpu/GrSurfaceContext.h"
 
 /*
  * Convert a boolean operation into a transfer mode code
  */
 static SkBlendMode op_to_mode(SkRegion::Op op) {
-
     static const SkBlendMode modeMap[] = {
-        SkBlendMode::kDstOut,   // kDifference_Op
-        SkBlendMode::kModulate, // kIntersect_Op
-        SkBlendMode::kSrcOver,  // kUnion_Op
-        SkBlendMode::kXor,      // kXOR_Op
-        SkBlendMode::kClear,    // kReverseDifference_Op
-        SkBlendMode::kSrc,      // kReplace_Op
+            SkBlendMode::kDstOut,    // kDifference_Op
+            SkBlendMode::kModulate,  // kIntersect_Op
+            SkBlendMode::kSrcOver,   // kUnion_Op
+            SkBlendMode::kXor,       // kXOR_Op
+            SkBlendMode::kClear,     // kReverseDifference_Op
+            SkBlendMode::kSrc,       // kReplace_Op
     };
 
     return modeMap[op];
@@ -85,9 +85,9 @@ bool GrSWMaskHelper::init(const SkIRect& resultBounds) {
     }
     fPixels->erase(0);
 
-    fDraw.fDst      = *fPixels;
+    fDraw.fDst = *fPixels;
     fRasterClip.setRect(bounds);
-    fDraw.fRC       = &fRasterClip;
+    fDraw.fRC = &fRasterClip;
     return true;
 }
 
@@ -106,24 +106,10 @@ sk_sp<GrTextureProxy> GrSWMaskHelper::toTextureProxy(GrRecordingContext* context
         return nullptr;
     }
 
-    // TODO: http://skbug.com/8422: Although this fixes http://skbug.com/8351, it seems like these
-    // should just participate in the normal allocation process and not need the pending IO flag.
-    auto surfaceFlags = GrInternalSurfaceFlags::kNone;
-    if (!context->priv().proxyProvider()->renderingDirectly()) {
-        // In DDL mode, this texture proxy will be instantiated at flush time, therfore it cannot
-        // have pending IO.
-        surfaceFlags |= GrInternalSurfaceFlags::kNoPendingIO;
-    }
     auto clearFlag = kNone_GrSurfaceFlags;
-    // In a WASM build on Firefox, we see warnings like
-    // WebGL warning: texSubImage2D: This operation requires zeroing texture data. This is slow.
-    // WebGL warning: texSubImage2D: Texture has not been initialized prior to a partial upload,
-    //                forcing the browser to clear it. This may be slow.
-    // Setting the initial clear seems to make those warnings go away and offers a substantial
-    // boost in performance in Firefox. Chrome sees a more modest increase.
-#if IS_WEBGL==1
-    clearFlag = kPerformInitialClear_GrSurfaceFlag;
-#endif
-    return context->priv().proxyProvider()->createTextureProxy(
-            std::move(img), clearFlag, 1, SkBudgeted::kYes, fit, surfaceFlags);
+    if (context->priv().caps()->shouldInitializeTextures() && fit == SkBackingFit::kApprox) {
+        clearFlag = kPerformInitialClear_GrSurfaceFlag;
+    }
+    return context->priv().proxyProvider()->createTextureProxy(std::move(img), clearFlag, 1,
+                                                               SkBudgeted::kYes, fit);
 }

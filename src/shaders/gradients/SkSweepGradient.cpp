@@ -5,20 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "SkColorSpaceXformer.h"
-#include "SkFloatingPoint.h"
-#include "SkRasterPipeline.h"
-#include "SkReadBuffer.h"
-#include "SkSweepGradient.h"
-#include "SkWriteBuffer.h"
+#include "src/shaders/gradients/SkSweepGradient.h"
+#include "include/private/SkFloatingPoint.h"
+#include "src/core/SkRasterPipeline.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
 
 SkSweepGradient::SkSweepGradient(const SkPoint& center, SkScalar t0, SkScalar t1,
                                  const Descriptor& desc)
-    : SkGradientShaderBase(desc, SkMatrix::MakeTrans(-center.x(), -center.y()))
-    , fCenter(center)
-    , fTBias(-t0)
-    , fTScale(1 / (t1 - t0))
-{
+        : SkGradientShaderBase(desc, SkMatrix::MakeTrans(-center.x(), -center.y()))
+        , fCenter(center)
+        , fTBias(-t0)
+        , fTScale(1 / (t1 - t0)) {
     SkASSERT(t0 < t1);
 }
 
@@ -41,18 +39,15 @@ sk_sp<SkFlattenable> SkSweepGradient::CreateProc(SkReadBuffer& buffer) {
     }
     const SkPoint center = buffer.readPoint();
 
-    SkScalar startAngle = 0,
-               endAngle = 360;
+    SkScalar startAngle = 0, endAngle = 360;
     if (!buffer.isVersionLT(SkReadBuffer::kTileInfoInSweepGradient_Version)) {
-        const auto tBias  = buffer.readScalar(),
-                   tScale = buffer.readScalar();
+        const auto tBias = buffer.readScalar(), tScale = buffer.readScalar();
         std::tie(startAngle, endAngle) = angles_from_t_coeff(tBias, tScale);
     }
 
-    return SkGradientShader::MakeSweep(center.x(), center.y(), desc.fColors,
-                                       std::move(desc.fColorSpace), desc.fPos, desc.fCount,
-                                       desc.fTileMode, startAngle, endAngle,
-                                       desc.fGradFlags, desc.fLocalMatrix);
+    return SkGradientShader::MakeSweep(
+            center.x(), center.y(), desc.fColors, std::move(desc.fColorSpace), desc.fPos,
+            desc.fCount, desc.fTileMode, startAngle, endAngle, desc.fGradFlags, desc.fLocalMatrix);
 }
 
 void SkSweepGradient::flatten(SkWriteBuffer& buffer) const {
@@ -62,29 +57,18 @@ void SkSweepGradient::flatten(SkWriteBuffer& buffer) const {
     buffer.writeScalar(fTScale);
 }
 
-sk_sp<SkShader> SkSweepGradient::onMakeColorSpace(SkColorSpaceXformer* xformer) const {
-    const AutoXformColors xformedColors(*this, xformer);
-
-    SkScalar startAngle, endAngle;
-    std::tie(startAngle, endAngle) = angles_from_t_coeff(fTBias, fTScale);
-
-    return SkGradientShader::MakeSweep(fCenter.fX, fCenter.fY, xformedColors.fColors.get(),
-                                       fOrigPos, fColorCount, fTileMode, startAngle, endAngle,
-                                       fGradFlags, &this->getLocalMatrix());
-}
-
 void SkSweepGradient::appendGradientStages(SkArenaAlloc* alloc, SkRasterPipeline* p,
                                            SkRasterPipeline*) const {
     p->append(SkRasterPipeline::xy_to_unit_angle);
     p->append_matrix(alloc, SkMatrix::Concat(SkMatrix::MakeScale(fTScale, 1),
-                                             SkMatrix::MakeTrans(fTBias , 0)));
+                                             SkMatrix::MakeTrans(fTBias, 0)));
 }
 
 /////////////////////////////////////////////////////////////////////
 
 #if SK_SUPPORT_GPU
 
-#include "gradients/GrGradientShader.h"
+#include "src/gpu/gradients/GrGradientShader.h"
 
 std::unique_ptr<GrFragmentProcessor> SkSweepGradient::asFragmentProcessor(
         const GrFPArgs& args) const {

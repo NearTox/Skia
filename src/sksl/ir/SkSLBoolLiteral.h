@@ -8,8 +8,8 @@
 #ifndef SKSL_BOOLLITERAL
 #define SKSL_BOOLLITERAL
 
-#include "SkSLContext.h"
-#include "SkSLExpression.h"
+#include "src/sksl/SkSLContext.h"
+#include "src/sksl/ir/SkSLExpression.h"
 
 namespace SkSL {
 
@@ -18,23 +18,16 @@ namespace SkSL {
  */
 struct BoolLiteral : public Expression {
     BoolLiteral(const Context& context, int offset, bool value)
-    : INHERITED(offset, kBoolLiteral_Kind, *context.fBool_Type)
-    , fValue(value) {}
+            : INHERITED(offset, kBoolLiteral_Kind, *context.fBool_Type), fValue(value) {}
 
-    String description() const override {
-        return String(fValue ? "true" : "false");
-    }
+    String description() const override { return String(fValue ? "true" : "false"); }
 
-    bool hasSideEffects() const override {
-        return false;
-    }
+    bool hasSideEffects() const override { return false; }
 
-    bool isConstant() const override {
-        return true;
-    }
+    bool isConstant() const override { return true; }
 
     bool compareConstant(const Context& context, const Expression& other) const override {
-        BoolLiteral& b = (BoolLiteral&) other;
+        BoolLiteral& b = (BoolLiteral&)other;
         return fValue == b.fValue;
     }
 
@@ -48,10 +41,9 @@ struct BoolLiteral : public Expression {
 
 private:
     BoolLiteral(int offset, bool value, const Type* type)
-    : INHERITED(offset, kBoolLiteral_Kind, *type)
-    , fValue(value) {}
+            : INHERITED(offset, kBoolLiteral_Kind, *type), fValue(value) {}
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

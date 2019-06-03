@@ -5,10 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkPath.h"
-#include "SkTypeface.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkString.h"
 
 /* The hiragino_maru_goth_pro_e path was generated with Mac-specific code:
  *
@@ -68,27 +71,29 @@ static void test_rev(SkCanvas* canvas, const SkPath& path) {
     canvas->restore();
 }
 
-DEF_SIMPLE_GM_BG_NAME(pathreverse, canvas, 640, 480, SK_ColorWHITE,
-                      SkString("path-reverse")) {
-        SkRect r = { 10, 10, 100, 60 };
+DEF_SIMPLE_GM_BG_NAME(pathreverse, canvas, 640, 480, SK_ColorWHITE, SkString("path-reverse")) {
+    SkRect r = {10, 10, 100, 60};
 
-        SkPath path;
+    SkPath path;
 
-        path.addRect(r); test_rev(canvas, path);
+    path.addRect(r);
+    test_rev(canvas, path);
 
-        canvas->translate(0, 100);
-        path.offset(20, 20);
-        path.addRect(r); test_rev(canvas, path);
+    canvas->translate(0, 100);
+    path.offset(20, 20);
+    path.addRect(r);
+    test_rev(canvas, path);
 
-        canvas->translate(0, 100);
-        path.reset();
-        path.moveTo(10, 10); path.lineTo(30, 30);
-        path.addOval(r);
-        r.offset(50, 20);
-        path.addOval(r);
-        test_rev(canvas, path);
+    canvas->translate(0, 100);
+    path.reset();
+    path.moveTo(10, 10);
+    path.lineTo(30, 30);
+    path.addOval(r);
+    r.offset(50, 20);
+    path.addOval(r);
+    test_rev(canvas, path);
 
-        path = hiragino_maru_goth_pro_e();
-        canvas->translate(0, 100);
-        test_rev(canvas, path);
+    path = hiragino_maru_goth_pro_e();
+    canvas->translate(0, 100);
+    test_rev(canvas, path);
 }

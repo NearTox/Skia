@@ -3,16 +3,18 @@
 #ifndef SkPDFGlyphUse_DEFINED
 #define SkPDFGlyphUse_DEFINED
 
-#include "SkBitSet.h"
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
+#include "src/utils/SkBitSet.h"
 
 class SkPDFGlyphUse {
 public:
     SkPDFGlyphUse() : fBitSet(0) {}
     SkPDFGlyphUse(SkGlyphID firstNonZero, SkGlyphID lastGlyph)
-        : fBitSet((int)lastGlyph - firstNonZero + 2)
-        , fFirstNonZero(firstNonZero)
-        , fLastGlyph(lastGlyph) { SkASSERT(firstNonZero >= 1); }
+            : fBitSet((int)lastGlyph - firstNonZero + 2)
+            , fFirstNonZero(firstNonZero)
+            , fLastGlyph(lastGlyph) {
+        SkASSERT(firstNonZero >= 1);
+    }
     ~SkPDFGlyphUse() = default;
     SkPDFGlyphUse(SkPDFGlyphUse&&) = default;
     SkPDFGlyphUse& operator=(SkPDFGlyphUse&&) = default;
@@ -22,8 +24,7 @@ public:
     void set(SkGlyphID gid) { fBitSet.set(this->toCode(gid)); }
     bool has(SkGlyphID gid) const { return fBitSet.has(this->toCode(gid)); }
 
-    template<typename FN>
-    void getSetValues(FN f) const {
+    template <typename FN> void getSetValues(FN f) const {
         if (fFirstNonZero == 1) {
             return fBitSet.getSetValues(std::move(f));
         }

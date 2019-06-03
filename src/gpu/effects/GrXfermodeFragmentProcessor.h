@@ -8,8 +8,8 @@
 #ifndef GrXfermodeFragmentProcessor_DEFINED
 #define GrXfermodeFragmentProcessor_DEFINED
 
-#include "SkRefCnt.h"
-#include "SkBlendMode.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkRefCnt.h"
 
 class GrFragmentProcessor;
 
@@ -29,9 +29,10 @@ std::unique_ptr<GrFragmentProcessor> MakeFromSrcProcessor(std::unique_ptr<GrFrag
     to both src and dst. The outputs of a src and dst are blended using mode and the original
     input's alpha is applied to the blended color to produce a premul output. */
 std::unique_ptr<GrFragmentProcessor> MakeFromTwoProcessors(std::unique_ptr<GrFragmentProcessor> src,
-                                                           std::unique_ptr<GrFragmentProcessor> dst,
+                                                           std::unique_ptr<GrFragmentProcessor>
+                                                                   dst,
                                                            SkBlendMode mode);
 
-};
+};  // namespace GrXfermodeFragmentProcessor
 
 #endif

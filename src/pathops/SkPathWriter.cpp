@@ -4,18 +4,14 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkOpSegment.h"
-#include "SkOpSpan.h"
-#include "SkPathOpsPoint.h"
-#include "SkPathWriter.h"
-#include "SkTSort.h"
+#include "src/pathops/SkPathWriter.h"
+#include "src/core/SkTSort.h"
+#include "src/pathops/SkOpSegment.h"
+#include "src/pathops/SkOpSpan.h"
+#include "src/pathops/SkPathOpsPoint.h"
 
 // wrap path to keep track of whether the contour is initialized and non-empty
-SkPathWriter::SkPathWriter(SkPath& path)
-    : fPathPtr(&path)
-{
-    init();
-}
+SkPathWriter::SkPathWriter(SkPath& path) : fPathPtr(&path) { init(); }
 
 void SkPathWriter::close() {
     if (fCurrent.isEmpty()) {
@@ -34,8 +30,8 @@ void SkPathWriter::close() {
 void SkPathWriter::conicTo(const SkPoint& pt1, const SkOpPtT* pt2, SkScalar weight) {
     SkPoint pt2pt = this->update(pt2);
 #if DEBUG_PATH_CONSTRUCTION
-    SkDebugf("path.conicTo(%1.9g,%1.9g, %1.9g,%1.9g, %1.9g);\n",
-            pt1.fX, pt1.fY, pt2pt.fX, pt2pt.fY, weight);
+    SkDebugf("path.conicTo(%1.9g,%1.9g, %1.9g,%1.9g, %1.9g);\n", pt1.fX, pt1.fY, pt2pt.fX, pt2pt.fY,
+             weight);
 #endif
     fCurrent.conicTo(pt1, pt2pt, weight);
 }
@@ -43,8 +39,8 @@ void SkPathWriter::conicTo(const SkPoint& pt1, const SkOpPtT* pt2, SkScalar weig
 void SkPathWriter::cubicTo(const SkPoint& pt1, const SkPoint& pt2, const SkOpPtT* pt3) {
     SkPoint pt3pt = this->update(pt3);
 #if DEBUG_PATH_CONSTRUCTION
-    SkDebugf("path.cubicTo(%1.9g,%1.9g, %1.9g,%1.9g, %1.9g,%1.9g);\n",
-            pt1.fX, pt1.fY, pt2.fX, pt2.fY, pt3pt.fX, pt3pt.fY);
+    SkDebugf("path.cubicTo(%1.9g,%1.9g, %1.9g,%1.9g, %1.9g,%1.9g);\n", pt1.fX, pt1.fY, pt2.fX,
+             pt2.fY, pt3pt.fX, pt3pt.fY);
 #endif
     fCurrent.cubicTo(pt1, pt2, pt3pt);
 }
@@ -86,7 +82,7 @@ void SkPathWriter::deferredMove(const SkOpPtT* pt) {
 void SkPathWriter::finishContour() {
     if (!this->matchedLast(fDefer[0])) {
         if (!fDefer[1]) {
-          return;
+            return;
         }
         this->lineTo();
     }
@@ -109,9 +105,7 @@ void SkPathWriter::init() {
     fFirstPtT = fDefer[0] = fDefer[1] = nullptr;
 }
 
-bool SkPathWriter::isClosed() const {
-    return this->matchedLast(fFirstPtT);
-}
+bool SkPathWriter::isClosed() const { return this->matchedLast(fFirstPtT); }
 
 void SkPathWriter::lineTo() {
     if (fCurrent.isEmpty()) {
@@ -146,8 +140,7 @@ void SkPathWriter::moveTo() {
 void SkPathWriter::quadTo(const SkPoint& pt1, const SkOpPtT* pt2) {
     SkPoint pt2pt = this->update(pt2);
 #if DEBUG_PATH_CONSTRUCTION
-    SkDebugf("path.quadTo(%1.9g,%1.9g, %1.9g,%1.9g);\n",
-            pt1.fX, pt1.fY, pt2pt.fX, pt2pt.fY);
+    SkDebugf("path.quadTo(%1.9g,%1.9g, %1.9g,%1.9g);\n", pt1.fX, pt1.fY, pt2pt.fX, pt2pt.fY);
 #endif
     fCurrent.quadTo(pt1, pt2pt);
 }
@@ -184,20 +177,18 @@ bool SkPathWriter::changedSlopes(const SkOpPtT* ptT) const {
 
 class DistanceLessThan {
 public:
-    DistanceLessThan(double* distances) : fDistances(distances) { }
+    DistanceLessThan(double* distances) : fDistances(distances) {}
     double* fDistances;
-    bool operator()(const int one, const int two) {
-        return fDistances[one] < fDistances[two];
-    }
+    bool operator()(const int one, const int two) { return fDistances[one] < fDistances[two]; }
 };
 
-    /*
-        check start and end of each contour
-        if not the same, record them
-        match them up
-        connect closest
-        reassemble contour pieces into new path
-    */
+/*
+    check start and end of each contour
+    if not the same, record them
+    match them up
+    connect closest
+    reassemble contour pieces into new path
+*/
 void SkPathWriter::assemble() {
 #if DEBUG_SHOW_TEST_NAME
     SkDebugf("</div>\n");
@@ -209,7 +200,7 @@ void SkPathWriter::assemble() {
     SkDebugf("%s\n", __FUNCTION__);
 #endif
     SkOpPtT const* const* runs = fEndPtTs.begin();  // starts, ends of partial contours
-    int endCount = fEndPtTs.count(); // all starts and ends
+    int endCount = fEndPtTs.count();                // all starts and ends
     SkASSERT(endCount > 0);
     SkASSERT(endCount == fPartials.count() * 2);
 #if DEBUG_ASSEMBLE
@@ -218,8 +209,8 @@ void SkPathWriter::assemble() {
         const SkOpPtT* eEnd = runs[index + 1];
         SkASSERT(eStart != eEnd);
         SkASSERT(!eStart->contains(eEnd));
-        SkDebugf("%s contour start=(%1.9g,%1.9g) end=(%1.9g,%1.9g)\n", __FUNCTION__,
-                eStart->fPt.fX, eStart->fPt.fY, eEnd->fPt.fX, eEnd->fPt.fY);
+        SkDebugf("%s contour start=(%1.9g,%1.9g) end=(%1.9g,%1.9g)\n", __FUNCTION__, eStart->fPt.fX,
+                 eStart->fPt.fY, eEnd->fPt.fX, eEnd->fPt.fY);
     }
 #endif
     // lengthen any partial contour adjacent to a simple segment
@@ -266,7 +257,7 @@ void SkPathWriter::assemble() {
         }
     }
     SkTDArray<int> sLink, eLink;
-    int linkCount = endCount / 2; // number of partial contours
+    int linkCount = endCount / 2;  // number of partial contours
     sLink.append(linkCount);
     eLink.append(linkCount);
     int rIndex, iIndex;
@@ -325,8 +316,8 @@ void SkPathWriter::assemble() {
     for (rIndex = 0; rIndex < linkCount; ++rIndex) {
         int s = sLink[rIndex];
         int e = eLink[rIndex];
-        SkDebugf("%s %c%d <- s%d - e%d -> %c%d\n", __FUNCTION__, s < 0 ? 's' : 'e',
-                s < 0 ? ~s : s, rIndex, rIndex, e < 0 ? 'e' : 's', e < 0 ? ~e : e);
+        SkDebugf("%s %c%d <- s%d - e%d -> %c%d\n", __FUNCTION__, s < 0 ? 's' : 'e', s < 0 ? ~s : s,
+                 rIndex, rIndex, e < 0 ? 'e' : 's', e < 0 ? ~e : e);
     }
 #endif
     rIndex = 0;
@@ -347,8 +338,8 @@ void SkPathWriter::assemble() {
         SkASSERT(eIndex != SK_MaxS32);
 #if DEBUG_ASSEMBLE
         SkDebugf("%s sIndex=%c%d eIndex=%c%d\n", __FUNCTION__, sIndex < 0 ? 's' : 'e',
-                    sIndex < 0 ? ~sIndex : sIndex, eIndex < 0 ? 's' : 'e',
-                    eIndex < 0 ? ~eIndex : eIndex);
+                 sIndex < 0 ? ~sIndex : sIndex, eIndex < 0 ? 's' : 'e',
+                 eIndex < 0 ? ~eIndex : eIndex);
 #endif
         do {
             const SkPath& contour = fPartials[rIndex];
@@ -371,8 +362,8 @@ void SkPathWriter::assemble() {
                 }
             }
             if (forward) {
-                fPathPtr->addPath(contour,
-                        first ? SkPath::kAppend_AddPathMode : SkPath::kExtend_AddPathMode);
+                fPathPtr->addPath(
+                        contour, first ? SkPath::kAppend_AddPathMode : SkPath::kExtend_AddPathMode);
             } else {
                 SkASSERT(!first);
                 fPathPtr->reversePathTo(contour);
@@ -382,8 +373,8 @@ void SkPathWriter::assemble() {
             }
 #if DEBUG_ASSEMBLE
             SkDebugf("%s rIndex=%d eIndex=%s%d close=%d\n", __FUNCTION__, rIndex,
-                eIndex < 0 ? "~" : "", eIndex < 0 ? ~eIndex : eIndex,
-                sIndex == ((rIndex != eIndex) ^ forward ? eIndex : ~eIndex));
+                     eIndex < 0 ? "~" : "", eIndex < 0 ? ~eIndex : eIndex,
+                     sIndex == ((rIndex != eIndex) ^ forward ? eIndex : ~eIndex));
 #endif
             if (sIndex == ((rIndex != eIndex) ^ forward ? eIndex : ~eIndex)) {
                 fPathPtr->close();
@@ -426,8 +417,8 @@ void SkPathWriter::assemble() {
     } while (rIndex < linkCount);
 #if DEBUG_ASSEMBLE
     for (rIndex = 0; rIndex < linkCount; ++rIndex) {
-       SkASSERT(sLink[rIndex] == SK_MaxS32);
-       SkASSERT(eLink[rIndex] == SK_MaxS32);
+        SkASSERT(sLink[rIndex] == SK_MaxS32);
+        SkASSERT(eLink[rIndex] == SK_MaxS32);
     }
 #endif
     return;

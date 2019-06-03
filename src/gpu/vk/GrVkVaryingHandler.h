@@ -1,14 +1,14 @@
 /*
-* Copyright 2016 Google Inc.
-*
-* Use of this source code is governed by a BSD-style license that can be
-* found in the LICENSE file.
-*/
+ * Copyright 2016 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
 #ifndef GrVkVaryingHandler_DEFINED
 #define GrVkVaryingHandler_DEFINED
 
-#include "glsl/GrGLSLVarying.h"
+#include "src/gpu/glsl/GrGLSLVarying.h"
 
 class GrVkVaryingHandler : public GrGLSLVaryingHandler {
 public:

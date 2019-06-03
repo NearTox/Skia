@@ -5,12 +5,22 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkCanvas.h"
-#include "SkPaint.h"
-#include "SkRandom.h"
-#include "SkSurface.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkTypes.h"
+#include "include/utils/SkRandom.h"
+#include "tools/ToolUtils.h"
+
+class GrContext;
+class GrRenderTargetContext;
 
 namespace skiagm {
 
@@ -19,19 +29,13 @@ namespace skiagm {
  * discarding it, drawing to it, and then drawing it to the main canvas.
  */
 class DiscardGM : public GpuGM {
-
 public:
-    DiscardGM() {
-    }
+    DiscardGM() {}
 
 protected:
-    SkString onShortName() override {
-        return SkString("discard");
-    }
+    SkString onShortName() override { return SkString("discard"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(100, 100);
-    }
+    SkISize onISize() override { return SkISize::Make(100, 100); }
 
     DrawResult onDraw(GrContext* context, GrRenderTargetContext*, SkCanvas* canvas,
                       SkString* errorMsg) override {
@@ -50,23 +54,23 @@ protected:
         SkRandom rand;
         for (int x = 0; x < 10; ++x) {
             for (int y = 0; y < 10; ++y) {
-              surface->getCanvas()->discard();
-              // Make something that isn't too close to the background color, black.
-              SkColor color = sk_tool_utils::color_to_565(rand.nextU() | 0xFF404040);
-              switch (rand.nextULessThan(3)) {
-                  case 0:
-                      surface->getCanvas()->drawColor(color);
-                      break;
-                  case 1:
-                      surface->getCanvas()->clear(color);
-                      break;
-                  case 2:
-                      SkPaint paint;
-                      paint.setShader(SkShader::MakeColorShader(color));
-                      surface->getCanvas()->drawPaint(paint);
-                      break;
-              }
-              surface->draw(canvas, 10.f*x, 10.f*y, nullptr);
+                surface->getCanvas()->discard();
+                // Make something that isn't too close to the background color, black.
+                SkColor color = ToolUtils::color_to_565(rand.nextU() | 0xFF404040);
+                switch (rand.nextULessThan(3)) {
+                    case 0:
+                        surface->getCanvas()->drawColor(color);
+                        break;
+                    case 1:
+                        surface->getCanvas()->clear(color);
+                        break;
+                    case 2:
+                        SkPaint paint;
+                        paint.setShader(SkShaders::Color(color));
+                        surface->getCanvas()->drawPaint(paint);
+                        break;
+                }
+                surface->draw(canvas, 10.f * x, 10.f * y, nullptr);
             }
         }
 
@@ -82,4 +86,4 @@ private:
 
 DEF_GM(return new DiscardGM;)
 
-} // end namespace
+}  // namespace skiagm

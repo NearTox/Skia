@@ -5,28 +5,28 @@
  * found in the LICENSE file.
  */
 
-#include "sk_types_priv.h"
-#include "SkMatrix.h"
+#include "include/core/SkMatrix.h"
+#include "src/c/sk_types_priv.h"
 
 static void from_c_matrix(const sk_matrix_t* cmatrix, SkMatrix* matrix) {
-    matrix->setAll(cmatrix->mat[0], cmatrix->mat[1], cmatrix->mat[2],
-                   cmatrix->mat[3], cmatrix->mat[4], cmatrix->mat[5],
-                   cmatrix->mat[6], cmatrix->mat[7], cmatrix->mat[8]);
+    matrix->setAll(cmatrix->mat[0], cmatrix->mat[1], cmatrix->mat[2], cmatrix->mat[3],
+                   cmatrix->mat[4], cmatrix->mat[5], cmatrix->mat[6], cmatrix->mat[7],
+                   cmatrix->mat[8]);
 }
 
-#include "../../include/effects/SkGradientShader.h"
-#include "sk_shader.h"
+#include "include/c/sk_shader.h"
+#include "include/effects/SkGradientShader.h"
 
 const struct {
-    sk_shader_tilemode_t    fC;
-    SkShader::TileMode      fSK;
+    sk_shader_tilemode_t fC;
+    SkTileMode fSK;
 } gTileModeMap[] = {
-    { CLAMP_SK_SHADER_TILEMODE,     SkShader::kClamp_TileMode },
-    { REPEAT_SK_SHADER_TILEMODE,    SkShader::kRepeat_TileMode },
-    { MIRROR_SK_SHADER_TILEMODE,    SkShader::kMirror_TileMode  },
+        {CLAMP_SK_SHADER_TILEMODE, SkTileMode::kClamp},
+        {REPEAT_SK_SHADER_TILEMODE, SkTileMode::kRepeat},
+        {MIRROR_SK_SHADER_TILEMODE, SkTileMode::kMirror},
 };
 
-static bool from_c_tilemode(sk_shader_tilemode_t cMode, SkShader::TileMode* skMode) {
+static bool from_c_tilemode(sk_shader_tilemode_t cMode, SkTileMode* skMode) {
     for (size_t i = 0; i < SK_ARRAY_COUNT(gTileModeMap); ++i) {
         if (cMode == gTileModeMap[i].fC) {
             if (skMode) {
@@ -38,13 +38,9 @@ static bool from_c_tilemode(sk_shader_tilemode_t cMode, SkShader::TileMode* skMo
     return false;
 }
 
-void sk_shader_ref(sk_shader_t* cshader) {
-    SkSafeRef(AsShader(cshader));
-}
+void sk_shader_ref(sk_shader_t* cshader) { SkSafeRef(AsShader(cshader)); }
 
-void sk_shader_unref(sk_shader_t* cshader) {
-    SkSafeUnref(AsShader(cshader));
-}
+void sk_shader_unref(sk_shader_t* cshader) { SkSafeUnref(AsShader(cshader)); }
 
 sk_shader_t* sk_shader_new_linear_gradient(const sk_point_t pts[2],
                                            const sk_color_t colors[],
@@ -52,7 +48,7 @@ sk_shader_t* sk_shader_new_linear_gradient(const sk_point_t pts[2],
                                            int colorCount,
                                            sk_shader_tilemode_t cmode,
                                            const sk_matrix_t* cmatrix) {
-    SkShader::TileMode mode;
+    SkTileMode mode;
     if (!from_c_tilemode(cmode, &mode)) {
         return nullptr;
     }
@@ -64,8 +60,8 @@ sk_shader_t* sk_shader_new_linear_gradient(const sk_point_t pts[2],
     }
     return (sk_shader_t*)SkGradientShader::MakeLinear(reinterpret_cast<const SkPoint*>(pts),
                                                       reinterpret_cast<const SkColor*>(colors),
-                                                      colorPos, colorCount,
-                                                      mode, 0, &matrix).release();
+                                                      colorPos, colorCount, mode, 0, &matrix)
+            .release();
 }
 
 static const SkPoint& to_skpoint(const sk_point_t& p) {
@@ -79,7 +75,7 @@ sk_shader_t* sk_shader_new_radial_gradient(const sk_point_t* ccenter,
                                            int colorCount,
                                            sk_shader_tilemode_t cmode,
                                            const sk_matrix_t* cmatrix) {
-    SkShader::TileMode mode;
+    SkTileMode mode;
     if (!from_c_tilemode(cmode, &mode)) {
         return nullptr;
     }
@@ -90,10 +86,10 @@ sk_shader_t* sk_shader_new_radial_gradient(const sk_point_t* ccenter,
         matrix.setIdentity();
     }
     SkPoint center = to_skpoint(*ccenter);
-    return (sk_shader_t*)SkGradientShader::MakeRadial(center, (SkScalar)radius,
-                                                      reinterpret_cast<const SkColor*>(colors),
-                                                      reinterpret_cast<const SkScalar*>(colorPos),
-                                                      colorCount, mode, 0, &matrix).release();
+    return (sk_shader_t*)SkGradientShader::MakeRadial(
+                   center, (SkScalar)radius, reinterpret_cast<const SkColor*>(colors),
+                   reinterpret_cast<const SkScalar*>(colorPos), colorCount, mode, 0, &matrix)
+            .release();
 }
 
 sk_shader_t* sk_shader_new_sweep_gradient(const sk_point_t* ccenter,
@@ -107,11 +103,11 @@ sk_shader_t* sk_shader_new_sweep_gradient(const sk_point_t* ccenter,
     } else {
         matrix.setIdentity();
     }
-    return (sk_shader_t*)SkGradientShader::MakeSweep((SkScalar)(ccenter->x),
-                                                     (SkScalar)(ccenter->y),
+    return (sk_shader_t*)SkGradientShader::MakeSweep((SkScalar)(ccenter->x), (SkScalar)(ccenter->y),
                                                      reinterpret_cast<const SkColor*>(colors),
                                                      reinterpret_cast<const SkScalar*>(colorPos),
-                                                     colorCount, 0, &matrix).release();
+                                                     colorCount, 0, &matrix)
+            .release();
 }
 
 sk_shader_t* sk_shader_new_two_point_conical_gradient(const sk_point_t* start,
@@ -123,7 +119,7 @@ sk_shader_t* sk_shader_new_two_point_conical_gradient(const sk_point_t* start,
                                                       int colorCount,
                                                       sk_shader_tilemode_t cmode,
                                                       const sk_matrix_t* cmatrix) {
-    SkShader::TileMode mode;
+    SkTileMode mode;
     if (!from_c_tilemode(cmode, &mode)) {
         return nullptr;
     }
@@ -135,26 +131,26 @@ sk_shader_t* sk_shader_new_two_point_conical_gradient(const sk_point_t* start,
     }
     SkPoint skstart = to_skpoint(*start);
     SkPoint skend = to_skpoint(*end);
-    return (sk_shader_t*)SkGradientShader::MakeTwoPointConical(skstart, (SkScalar)startRadius,
-                                                        skend, (SkScalar)endRadius,
-                                                        reinterpret_cast<const SkColor*>(colors),
-                                                        reinterpret_cast<const SkScalar*>(colorPos),
-                                                        colorCount, mode, 0, &matrix).release();
+    return (sk_shader_t*)SkGradientShader::MakeTwoPointConical(
+                   skstart, (SkScalar)startRadius, skend, (SkScalar)endRadius,
+                   reinterpret_cast<const SkColor*>(colors),
+                   reinterpret_cast<const SkScalar*>(colorPos), colorCount, mode, 0, &matrix)
+            .release();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-#include "sk_maskfilter.h"
-#include "SkMaskFilter.h"
+#include "include/c/sk_maskfilter.h"
+#include "include/core/SkMaskFilter.h"
 
 const struct {
-    sk_blurstyle_t  fC;
-    SkBlurStyle     fSk;
+    sk_blurstyle_t fC;
+    SkBlurStyle fSk;
 } gBlurStylePairs[] = {
-    { NORMAL_SK_BLUR_STYLE, kNormal_SkBlurStyle },
-    { SOLID_SK_BLUR_STYLE,  kSolid_SkBlurStyle },
-    { OUTER_SK_BLUR_STYLE,  kOuter_SkBlurStyle },
-    { INNER_SK_BLUR_STYLE,  kInner_SkBlurStyle },
+        {NORMAL_SK_BLUR_STYLE, kNormal_SkBlurStyle},
+        {SOLID_SK_BLUR_STYLE, kSolid_SkBlurStyle},
+        {OUTER_SK_BLUR_STYLE, kOuter_SkBlurStyle},
+        {INNER_SK_BLUR_STYLE, kInner_SkBlurStyle},
 };
 
 static bool find_blurstyle(sk_blurstyle_t csrc, SkBlurStyle* dst) {
@@ -169,13 +165,9 @@ static bool find_blurstyle(sk_blurstyle_t csrc, SkBlurStyle* dst) {
     return false;
 }
 
-void sk_maskfilter_ref(sk_maskfilter_t* cfilter) {
-    SkSafeRef(AsMaskFilter(cfilter));
-}
+void sk_maskfilter_ref(sk_maskfilter_t* cfilter) { SkSafeRef(AsMaskFilter(cfilter)); }
 
-void sk_maskfilter_unref(sk_maskfilter_t* cfilter) {
-    SkSafeUnref(AsMaskFilter(cfilter));
-}
+void sk_maskfilter_unref(sk_maskfilter_t* cfilter) { SkSafeUnref(AsMaskFilter(cfilter)); }
 
 sk_maskfilter_t* sk_maskfilter_new_blur(sk_blurstyle_t cstyle, float sigma) {
     SkBlurStyle style;

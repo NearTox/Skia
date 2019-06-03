@@ -8,7 +8,7 @@
 #ifndef SKSL_ERRORREPORTER
 #define SKSL_ERRORREPORTER
 
-#include "SkSLPosition.h"
+#include "src/sksl/SkSLPosition.h"
 
 namespace SkSL {
 
@@ -19,15 +19,13 @@ class ErrorReporter {
 public:
     virtual ~ErrorReporter() {}
 
-    void error(int offset, const char* msg) {
-        this->error(offset, String(msg));
-    }
+    void error(int offset, const char* msg) { this->error(offset, String(msg)); }
 
     virtual void error(int offset, String msg) = 0;
 
     virtual int errorCount() = 0;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

@@ -8,10 +8,10 @@
 #ifndef SkFontConfigInterface_DEFINED
 #define SkFontConfigInterface_DEFINED
 
-#include "SkFontStyle.h"
-#include "SkRefCnt.h"
-#include "SkStream.h"
-#include "SkTypeface.h"
+#include "include/core/SkFontStyle.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkTypeface.h"
 
 class SkFontMgr;
 
@@ -23,7 +23,6 @@ class SkFontMgr;
  */
 class SK_API SkFontConfigInterface : public SkRefCnt {
 public:
-
     /**
      *  Returns the global SkFontConfigInterface instance. If it is not
      *  nullptr, calls ref() on it. The caller must balance this with a call to
@@ -46,17 +45,13 @@ public:
         FontIdentity() : fID(0), fTTCIndex(0) {}
 
         bool operator==(const FontIdentity& other) const {
-            return fID == other.fID &&
-                   fTTCIndex == other.fTTCIndex &&
-                   fString == other.fString;
+            return fID == other.fID && fTTCIndex == other.fTTCIndex && fString == other.fString;
         }
-        bool operator!=(const FontIdentity& other) const {
-            return !(*this == other);
-        }
+        bool operator!=(const FontIdentity& other) const { return !(*this == other); }
 
-        uint32_t    fID;
-        int32_t     fTTCIndex;
-        SkString    fString;
+        uint32_t fID;
+        int32_t fTTCIndex;
+        SkString fString;
         SkFontStyle fStyle;
 
         // If buffer is NULL, just return the number of bytes that would have
@@ -98,9 +93,8 @@ public:
      *  openStream(), but derived classes may implement more complex caching schemes.
      */
     virtual sk_sp<SkTypeface> makeTypeface(const FontIdentity& identity) {
-        return SkTypeface::MakeFromStream(std::unique_ptr<SkStreamAsset>(this->openStream(identity)),
-                                          identity.fTTCIndex);
-
+        return SkTypeface::MakeFromStream(
+                std::unique_ptr<SkStreamAsset>(this->openStream(identity)), identity.fTTCIndex);
     }
 
     /**

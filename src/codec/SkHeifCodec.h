@@ -8,16 +8,16 @@
 #ifndef SkHeifCodec_DEFINED
 #define SkHeifCodec_DEFINED
 
-#include "SkCodec.h"
-#include "SkEncodedOrigin.h"
-#include "SkImageInfo.h"
-#include "SkSwizzler.h"
-#include "SkStream.h"
+#include "include/codec/SkCodec.h"
+#include "include/codec/SkEncodedOrigin.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkStream.h"
+#include "src/codec/SkSwizzler.h"
 
 #if __has_include("HeifDecoderAPI.h")
-    #include "HeifDecoderAPI.h"
+#include "HeifDecoderAPI.h"
 #else
-    #include "SkStubHeifDecoderAPI.h"
+#include "src/codec/SkStubHeifDecoderAPI.h"
 #endif
 
 class SkHeifCodec : public SkCodec {
@@ -30,18 +30,16 @@ public:
     static std::unique_ptr<SkCodec> MakeFromStream(std::unique_ptr<SkStream>, Result*);
 
 protected:
+    Result onGetPixels(const SkImageInfo& dstInfo, void* dst, size_t dstRowBytes,
+                       const Options& options, int* rowsDecoded) override;
 
-    Result onGetPixels(
-            const SkImageInfo& dstInfo,
-            void* dst, size_t dstRowBytes,
-            const Options& options,
-            int* rowsDecoded) override;
-
-    SkEncodedImageFormat onGetEncodedFormat() const override {
+    SkEncodedImageFormat onGetEncodedFormat() const noexcept override {
         return SkEncodedImageFormat::kHEIF;
     }
 
     bool conversionSupported(const SkImageInfo&, bool, bool) override;
+
+    bool onRewind() noexcept override;
 
 private:
     /*
@@ -51,28 +49,27 @@ private:
     SkHeifCodec(SkEncodedInfo&&, HeifDecoder*, SkEncodedOrigin);
 
     void initializeSwizzler(const SkImageInfo& dstInfo, const Options& options);
-    void allocateStorage(const SkImageInfo& dstInfo);
-    int readRows(const SkImageInfo& dstInfo, void* dst,
-            size_t rowBytes, int count, const Options&);
+    void allocateStorage(const SkImageInfo& dstInfo) noexcept;
+    int readRows(const SkImageInfo& dstInfo, void* dst, size_t rowBytes, int count, const Options&);
 
     /*
      * Scanline decoding.
      */
     SkSampler* getSampler(bool createIfNecessary) override;
     Result onStartScanlineDecode(const SkImageInfo& dstInfo,
-            const Options& options) override;
+                                 const Options& options) noexcept override;
     int onGetScanlines(void* dst, int count, size_t rowBytes) override;
     bool onSkipScanlines(int count) override;
 
-    std::unique_ptr<HeifDecoder>       fHeifDecoder;
-    HeifFrameInfo                      fFrameInfo;
-    SkAutoTMalloc<uint8_t>             fStorage;
-    uint8_t*                           fSwizzleSrcRow;
-    uint32_t*                          fColorXformSrcRow;
+    std::unique_ptr<HeifDecoder> fHeifDecoder;
+    HeifFrameInfo fFrameInfo;
+    SkAutoTMalloc<uint8_t> fStorage;
+    uint8_t* fSwizzleSrcRow;
+    uint32_t* fColorXformSrcRow;
 
-    std::unique_ptr<SkSwizzler>        fSwizzler;
+    std::unique_ptr<SkSwizzler> fSwizzler;
 
     typedef SkCodec INHERITED;
 };
 
-#endif // SkHeifCodec_DEFINED
+#endif  // SkHeifCodec_DEFINED

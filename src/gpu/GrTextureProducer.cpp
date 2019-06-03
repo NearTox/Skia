@@ -5,23 +5,24 @@
  * found in the LICENSE file.
  */
 
-#include "GrTextureProducer.h"
-#include "GrClip.h"
-#include "GrContextPriv.h"
-#include "GrProxyProvider.h"
-#include "GrRecordingContext.h"
-#include "GrRecordingContextPriv.h"
-#include "GrRenderTargetContext.h"
-#include "GrTextureProxy.h"
-#include "SkGr.h"
-#include "SkMipMap.h"
-#include "SkRectPriv.h"
-#include "effects/GrBicubicEffect.h"
-#include "effects/GrSimpleTextureEffect.h"
-#include "effects/GrTextureDomain.h"
+#include "src/gpu/GrTextureProducer.h"
+#include "include/private/GrRecordingContext.h"
+#include "include/private/GrTextureProxy.h"
+#include "src/core/SkMipMap.h"
+#include "src/core/SkRectPriv.h"
+#include "src/gpu/GrClip.h"
+#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrProxyProvider.h"
+#include "src/gpu/GrRecordingContextPriv.h"
+#include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/SkGr.h"
+#include "src/gpu/effects/GrBicubicEffect.h"
+#include "src/gpu/effects/GrTextureDomain.h"
+#include "src/gpu/effects/generated/GrSimpleTextureEffect.h"
 
 sk_sp<GrTextureProxy> GrTextureProducer::CopyOnGpu(GrRecordingContext* context,
-                                                   sk_sp<GrTextureProxy> inputProxy,
+                                                   sk_sp<GrTextureProxy>
+                                                           inputProxy,
                                                    const CopyParams& copyParams,
                                                    bool dstWillRequireMipMaps) {
     SkASSERT(context);
@@ -36,8 +37,8 @@ sk_sp<GrTextureProxy> GrTextureProducer::CopyOnGpu(GrRecordingContext* context,
     bool needsDomain = false;
     bool resizing = false;
     if (copyParams.fFilter != GrSamplerState::Filter::kNearest) {
-        bool resizing = localRect.width()  != dstRect.width() ||
-                        localRect.height() != dstRect.height();
+        bool resizing =
+                localRect.width() != dstRect.width() || localRect.height() != dstRect.height();
         needsDomain = resizing && !GrProxyProvider::IsFunctionallyExact(inputProxy.get());
     }
 
@@ -55,9 +56,9 @@ sk_sp<GrTextureProxy> GrTextureProducer::CopyOnGpu(GrRecordingContext* context,
     }
 
     sk_sp<GrRenderTargetContext> copyRTC =
-        context->priv().makeDeferredRenderTargetContextWithFallback(
-            format, SkBackingFit::kExact, dstRect.width(), dstRect.height(),
-            config, nullptr, 1, mipMapped, inputProxy->origin());
+            context->priv().makeDeferredRenderTargetContextWithFallback(
+                    format, SkBackingFit::kExact, dstRect.width(), dstRect.height(), config,
+                    nullptr, 1, mipMapped, inputProxy->origin());
     if (!copyRTC) {
         return nullptr;
     }
@@ -70,8 +71,8 @@ sk_sp<GrTextureProxy> GrTextureProducer::CopyOnGpu(GrRecordingContext* context,
         // better!
         SkASSERT(copyParams.fFilter != GrSamplerState::Filter::kMipMap);
         paint.addColorFragmentProcessor(
-            GrTextureDomainEffect::Make(std::move(inputProxy), SkMatrix::I(), domain,
-                                        GrTextureDomain::kClamp_Mode, copyParams.fFilter));
+                GrTextureDomainEffect::Make(std::move(inputProxy), SkMatrix::I(), domain,
+                                            GrTextureDomain::kClamp_Mode, copyParams.fFilter));
     } else {
         GrSamplerState samplerState(GrSamplerState::WrapMode::kClamp, copyParams.fFilter);
         paint.addColorTextureProcessor(std::move(inputProxy), SkMatrix::I(), samplerState);
@@ -208,40 +209,40 @@ std::unique_ptr<GrFragmentProcessor> GrTextureProducer::createFragmentProcessorF
     bool clampToBorderSupport = fContext->priv().caps()->clampToBorderSupport();
     if (filterOrNullForBicubic) {
         if (kDomain_DomainMode == domainMode || (fDomainNeedsDecal && !clampToBorderSupport)) {
-            GrTextureDomain::Mode wrapMode = fDomainNeedsDecal ? GrTextureDomain::kDecal_Mode
-                                                               : GrTextureDomain::kClamp_Mode;
-            return GrTextureDomainEffect::Make(std::move(proxy), textureMatrix, domain,
-                                               wrapMode, *filterOrNullForBicubic);
+            GrTextureDomain::Mode wrapMode =
+                    fDomainNeedsDecal ? GrTextureDomain::kDecal_Mode : GrTextureDomain::kClamp_Mode;
+            return GrTextureDomainEffect::Make(std::move(proxy), textureMatrix, domain, wrapMode,
+                                               *filterOrNullForBicubic);
         } else {
-            GrSamplerState::WrapMode wrapMode =
-                    fDomainNeedsDecal ? GrSamplerState::WrapMode::kClampToBorder
-                                      : GrSamplerState::WrapMode::kClamp;
+            GrSamplerState::WrapMode wrapMode = fDomainNeedsDecal
+                                                        ? GrSamplerState::WrapMode::kClampToBorder
+                                                        : GrSamplerState::WrapMode::kClamp;
             GrSamplerState samplerState(wrapMode, *filterOrNullForBicubic);
             return GrSimpleTextureEffect::Make(std::move(proxy), textureMatrix, samplerState);
         }
     } else {
-        static const GrSamplerState::WrapMode kClampClamp[] = {
-                GrSamplerState::WrapMode::kClamp, GrSamplerState::WrapMode::kClamp};
+        static const GrSamplerState::WrapMode kClampClamp[] = {GrSamplerState::WrapMode::kClamp,
+                                                               GrSamplerState::WrapMode::kClamp};
         static const GrSamplerState::WrapMode kDecalDecal[] = {
                 GrSamplerState::WrapMode::kClampToBorder, GrSamplerState::WrapMode::kClampToBorder};
 
         if (kDomain_DomainMode == domainMode || (fDomainNeedsDecal && !clampToBorderSupport)) {
-            GrTextureDomain::Mode wrapMode = fDomainNeedsDecal ? GrTextureDomain::kDecal_Mode
-                                         : GrTextureDomain::kClamp_Mode;
-            return GrBicubicEffect::Make(std::move(proxy), textureMatrix, kClampClamp,
-                                         wrapMode, wrapMode,
+            GrTextureDomain::Mode wrapMode =
+                    fDomainNeedsDecal ? GrTextureDomain::kDecal_Mode : GrTextureDomain::kClamp_Mode;
+            return GrBicubicEffect::Make(std::move(proxy), textureMatrix, kClampClamp, wrapMode,
+                                         wrapMode, this->alphaType(),
                                          kDomain_DomainMode == domainMode ? &domain : nullptr);
         } else {
             return GrBicubicEffect::Make(std::move(proxy), textureMatrix,
-                                         fDomainNeedsDecal ? kDecalDecal : kClampClamp);
+                                         fDomainNeedsDecal ? kDecalDecal : kClampClamp,
+                                         this->alphaType());
         }
     }
 }
 
 sk_sp<GrTextureProxy> GrTextureProducer::refTextureProxyForParams(
-        const GrSamplerState::Filter* filterOrNullForBicubic,
-        SkScalar scaleAdjust[2]) {
-    GrSamplerState sampler; // Default is nearest + clamp
+        const GrSamplerState::Filter* filterOrNullForBicubic, SkScalar scaleAdjust[2]) {
+    GrSamplerState sampler;  // Default is nearest + clamp
     if (filterOrNullForBicubic) {
         sampler.setFilterMode(*filterOrNullForBicubic);
     }
@@ -255,9 +256,8 @@ sk_sp<GrTextureProxy> GrTextureProducer::refTextureProxyForParams(
     return this->refTextureProxyForParams(sampler, scaleAdjust);
 }
 
-sk_sp<GrTextureProxy> GrTextureProducer::refTextureProxyForParams(
-        const GrSamplerState& sampler,
-        SkScalar scaleAdjust[2]) {
+sk_sp<GrTextureProxy> GrTextureProducer::refTextureProxyForParams(const GrSamplerState& sampler,
+                                                                  SkScalar scaleAdjust[2]) {
     // Check that the caller pre-initialized scaleAdjust
     SkASSERT(!scaleAdjust || (scaleAdjust[0] == 1 && scaleAdjust[1] == 1));
     // Check that if the caller passed nullptr for scaleAdjust that we're in the case where there
@@ -285,9 +285,9 @@ sk_sp<GrTextureProxy> GrTextureProducer::refTextureProxyForParams(
 }
 
 sk_sp<GrTextureProxy> GrTextureProducer::refTextureProxy(GrMipMapped willNeedMips) {
-    GrSamplerState::Filter filter =
-            GrMipMapped::kNo == willNeedMips ? GrSamplerState::Filter::kNearest
-                                             : GrSamplerState::Filter::kMipMap;
+    GrSamplerState::Filter filter = GrMipMapped::kNo == willNeedMips
+                                            ? GrSamplerState::Filter::kNearest
+                                            : GrSamplerState::Filter::kMipMap;
     GrSamplerState sampler(GrSamplerState::WrapMode::kClamp, filter);
 
     int mipCount = SkMipMap::ComputeLevelCount(this->width(), this->height());

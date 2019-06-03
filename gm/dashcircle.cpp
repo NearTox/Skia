@@ -5,30 +5,38 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkAnimTimer.h"
-#include "SkPath.h"
-#include "SkDashPathEffect.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPathEffect.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkDashPathEffect.h"
+#include "tools/timer/AnimTimer.h"
 
-int dash1[] = { 1, 1 };
-int dash2[] = { 1, 3 };
-int dash3[] = { 1, 1, 3, 3 };
-int dash4[] = { 1, 3, 2, 4 };
+int dash1[] = {1, 1};
+int dash2[] = {1, 3};
+int dash3[] = {1, 1, 3, 3};
+int dash4[] = {1, 3, 2, 4};
 
 struct DashExample {
     int* pattern;
     int length;
-} dashExamples[] = {
-    { dash1, SK_ARRAY_COUNT(dash1) },
-    { dash2, SK_ARRAY_COUNT(dash2) },
-    { dash3, SK_ARRAY_COUNT(dash3) },
-    { dash4, SK_ARRAY_COUNT(dash4) }
-};
-
+} dashExamples[] = {{dash1, SK_ARRAY_COUNT(dash1)},
+                    {dash2, SK_ARRAY_COUNT(dash2)},
+                    {dash3, SK_ARRAY_COUNT(dash3)},
+                    {dash4, SK_ARRAY_COUNT(dash4)}};
 
 class DashCircleGM : public skiagm::GM {
 public:
-    DashCircleGM() : fRotation(0) { }
+    DashCircleGM() : fRotation(0) {}
 
 protected:
     SkString onShortName() override { return SkString("dashcircle"); }
@@ -46,8 +54,8 @@ protected:
         SkPath circle;
         circle.addCircle(0, 0, radius);
         SkScalar circumference = radius * SK_ScalarPI * 2;
-        int wedges[] = { 6, 12, 36 };
-        canvas->translate(radius+20, radius+20);
+        int wedges[] = {6, 12, 36};
+        canvas->translate(radius + 20, radius + 20);
         for (int wedge : wedges) {
             SkScalar arcLength = 360.f / wedge;
             canvas->save();
@@ -94,10 +102,10 @@ protected:
         }
     }
 
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         constexpr SkScalar kDesiredDurationSecs = 100.0f;
 
-        fRotation = timer.scaled(360.0f/kDesiredDurationSecs, 360.0f);
+        fRotation = timer.scaled(360.0f / kDesiredDurationSecs, 360.0f);
         return true;
     }
 
@@ -107,7 +115,7 @@ private:
     typedef GM INHERITED;
 };
 
-DEF_GM(return new DashCircleGM; )
+DEF_GM(return new DashCircleGM;)
 
 class DashCircle2GM : public skiagm::GM {
 public:
@@ -121,16 +129,10 @@ protected:
     void onDraw(SkCanvas* canvas) override {
         // These intervals are defined relative to tau.
         static constexpr SkScalar kIntervals[][2]{
-                {0.333f, 0.333f},
-                {0.015f, 0.015f},
-                {0.01f , 0.09f },
-                {0.097f, 0.003f},
-                {0.02f , 0.04f },
-                {0.1f  , 0.2f  },
-                {0.25f , 0.25f },
-                {0.6f  , 0.7f  }, // adds to > 1
-                {1.2f  , 0.8f  }, // on is > 1
-                {0.1f  , 1.1f  }, // off is > 1*/
+                {0.333f, 0.333f}, {0.015f, 0.015f}, {0.01f, 0.09f}, {0.097f, 0.003f},
+                {0.02f, 0.04f},   {0.1f, 0.2f},     {0.25f, 0.25f}, {0.6f, 0.7f},  // adds to > 1
+                {1.2f, 0.8f},                                                      // on is > 1
+                {0.1f, 1.1f},                                                      // off is > 1*/
         };
 
         static constexpr int kN = SK_ARRAY_COUNT(kIntervals);
@@ -140,8 +142,8 @@ protected:
         static constexpr SkRect kCircle = {-kRadius, -kRadius, kRadius, kRadius};
 
         static constexpr SkScalar kThinRadius = kRadius * 1.5;
-        static constexpr SkRect kThinCircle = {-kThinRadius, -kThinRadius,
-                                                kThinRadius,  kThinRadius};
+        static constexpr SkRect kThinCircle = {-kThinRadius, -kThinRadius, kThinRadius,
+                                               kThinRadius};
         static constexpr SkScalar kThinStrokeWidth = 0.4f;
 
         sk_sp<SkPathEffect> deffects[SK_ARRAY_COUNT(kIntervals)];
@@ -171,8 +173,7 @@ protected:
                 rotate,
                 SkMatrix::Concat(
                         SkMatrix::Concat(SkMatrix::MakeAll(-1, 0, 0, 0, 1, 0, 0, 0, 1), rotate),
-                        rotate)
-        };
+                        rotate)};
 
         SkPaint paint;
         paint.setAntiAlias(true);
@@ -181,8 +182,8 @@ protected:
 
         // Compute the union of bounds of all of our test cases.
         SkRect bounds = SkRect::MakeEmpty();
-        static const SkRect kBounds = kThinCircle.makeOutset(kThinStrokeWidth / 2.f,
-                                                             kThinStrokeWidth / 2.f);
+        static const SkRect kBounds =
+                kThinCircle.makeOutset(kThinStrokeWidth / 2.f, kThinStrokeWidth / 2.f);
         for (const auto& m : kMatrices) {
             SkRect devBounds;
             m.mapRect(&devBounds, kBounds);
@@ -215,7 +216,7 @@ protected:
     }
 
 protected:
-    bool onAnimate(const SkAnimTimer& timer) override {
+    bool onAnimate(const AnimTimer& timer) override {
         fPhaseDegrees = timer.secs();
         return true;
     }
@@ -234,7 +235,7 @@ DEF_SIMPLE_GM(maddash, canvas, 1600, 1600) {
     p.setStyle(SkPaint::kStroke_Style);
     p.setStrokeWidth(380);
 
-    SkScalar intvls[] = { 2.5, 10 /* 1200 */ };
+    SkScalar intvls[] = {2.5, 10 /* 1200 */};
     p.setPathEffect(SkDashPathEffect::Make(intvls, 2, 0));
 
     canvas->drawCircle(400, 400, 200, p);

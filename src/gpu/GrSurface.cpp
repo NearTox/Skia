@@ -5,26 +5,26 @@
  * found in the LICENSE file.
  */
 
-#include "GrSurface.h"
-#include "GrContext.h"
-#include "GrOpList.h"
-#include "GrRenderTarget.h"
-#include "GrResourceProvider.h"
-#include "GrSurfacePriv.h"
-#include "GrTexture.h"
+#include "include/gpu/GrSurface.h"
+#include "include/gpu/GrContext.h"
+#include "include/gpu/GrRenderTarget.h"
+#include "include/gpu/GrTexture.h"
+#include "include/private/GrOpList.h"
+#include "src/gpu/GrResourceProvider.h"
+#include "src/gpu/GrSurfacePriv.h"
 
-#include "SkGr.h"
-#include "SkMathPriv.h"
+#include "src/core/SkMathPriv.h"
+#include "src/gpu/SkGr.h"
 
 size_t GrSurface::WorstCaseSize(const GrSurfaceDesc& desc, bool useNextPow2) {
     size_t size;
 
-    int width = useNextPow2
-                ? SkTMax(GrResourceProvider::kMinScratchTextureSize, GrNextPow2(desc.fWidth))
-                : desc.fWidth;
-    int height = useNextPow2
-                ? SkTMax(GrResourceProvider::kMinScratchTextureSize, GrNextPow2(desc.fHeight))
-                : desc.fHeight;
+    int width = useNextPow2 ? SkTMax(GrResourceProvider::kMinScratchTextureSize,
+                                     GrNextPow2(desc.fWidth))
+                            : desc.fWidth;
+    int height = useNextPow2 ? SkTMax(GrResourceProvider::kMinScratchTextureSize,
+                                      GrNextPow2(desc.fHeight))
+                             : desc.fHeight;
 
     bool isRenderTarget = SkToBool(desc.fFlags & kRenderTarget_GrSurfaceFlag);
     if (isRenderTarget) {
@@ -37,14 +37,14 @@ size_t GrSurface::WorstCaseSize(const GrSurfaceDesc& desc, bool useNextPow2) {
         }
         SkASSERT(kUnknown_GrPixelConfig != desc.fConfig);
         SkASSERT(!GrPixelConfigIsCompressed(desc.fConfig));
-        size_t colorBytes = (size_t) width * height * GrBytesPerPixel(desc.fConfig);
+        size_t colorBytes = (size_t)width * height * GrBytesPerPixel(desc.fConfig);
 
         // This would be a nice assert to have (i.e., we aren't creating 0 width/height surfaces).
         // Unfortunately Chromium seems to want to do this.
-        //SkASSERT(colorBytes > 0);
+        // SkASSERT(colorBytes > 0);
 
         size = colorValuesPerPixel * colorBytes;
-        size += colorBytes/3; // in case we have to mipmap
+        size += colorBytes / 3;  // in case we have to mipmap
     } else {
         if (GrPixelConfigIsCompressed(desc.fConfig)) {
             size = GrCompressedFormatDataSize(desc.fConfig, width, height);
@@ -52,7 +52,7 @@ size_t GrSurface::WorstCaseSize(const GrSurfaceDesc& desc, bool useNextPow2) {
             size = (size_t)width * height * GrBytesPerPixel(desc.fConfig);
         }
 
-        size += size/3;  // in case we have to mipmap
+        size += size / 3;  // in case we have to mipmap
     }
 
     return size;
@@ -66,12 +66,10 @@ size_t GrSurface::ComputeSize(GrPixelConfig config,
                               bool useNextPow2) {
     size_t colorSize;
 
-    width = useNextPow2
-            ? SkTMax(GrResourceProvider::kMinScratchTextureSize, GrNextPow2(width))
-            : width;
-    height = useNextPow2
-            ? SkTMax(GrResourceProvider::kMinScratchTextureSize, GrNextPow2(height))
-            : height;
+    width = useNextPow2 ? SkTMax(GrResourceProvider::kMinScratchTextureSize, GrNextPow2(width))
+                        : width;
+    height = useNextPow2 ? SkTMax(GrResourceProvider::kMinScratchTextureSize, GrNextPow2(height))
+                         : height;
 
     SkASSERT(kUnknown_GrPixelConfig != config);
     if (GrPixelConfigIsCompressed(config)) {
@@ -86,17 +84,14 @@ size_t GrSurface::ComputeSize(GrPixelConfig config,
     if (GrMipMapped::kYes == mipMapped) {
         // We don't have to worry about the mipmaps being a different size than
         // we'd expect because we never change fDesc.fWidth/fHeight.
-        finalSize += colorSize/3;
+        finalSize += colorSize / 3;
     }
     return finalSize;
 }
 
-template<typename T> static bool adjust_params(int surfaceWidth,
-                                               int surfaceHeight,
-                                               size_t bpp,
-                                               int* left, int* top, int* width, int* height,
-                                               T** data,
-                                               size_t* rowBytes) {
+template <typename T>
+static bool adjust_params(int surfaceWidth, int surfaceHeight, size_t bpp, int* left, int* top,
+                          int* width, int* height, T** data, size_t* rowBytes) {
     if (!*rowBytes) {
         *rowBytes = *width * bpp;
     }
@@ -108,7 +103,8 @@ template<typename T> static bool adjust_params(int surfaceWidth,
         return false;
     }
     *data = reinterpret_cast<void*>(reinterpret_cast<intptr_t>(*data) +
-            (subRect.fTop - *top) * *rowBytes + (subRect.fLeft - *left) * bpp);
+                                    (subRect.fTop - *top) * *rowBytes +
+                                    (subRect.fLeft - *left) * bpp);
 
     *left = subRect.fLeft;
     *top = subRect.fTop;
@@ -117,26 +113,19 @@ template<typename T> static bool adjust_params(int surfaceWidth,
     return true;
 }
 
-bool GrSurfacePriv::AdjustReadPixelParams(int surfaceWidth,
-                                          int surfaceHeight,
-                                          size_t bpp,
-                                          int* left, int* top, int* width, int* height,
-                                          void** data,
+bool GrSurfacePriv::AdjustReadPixelParams(int surfaceWidth, int surfaceHeight, size_t bpp,
+                                          int* left, int* top, int* width, int* height, void** data,
                                           size_t* rowBytes) {
     return adjust_params<void>(surfaceWidth, surfaceHeight, bpp, left, top, width, height, data,
                                rowBytes);
 }
 
-bool GrSurfacePriv::AdjustWritePixelParams(int surfaceWidth,
-                                           int surfaceHeight,
-                                           size_t bpp,
+bool GrSurfacePriv::AdjustWritePixelParams(int surfaceWidth, int surfaceHeight, size_t bpp,
                                            int* left, int* top, int* width, int* height,
-                                           const void** data,
-                                           size_t* rowBytes) {
+                                           const void** data, size_t* rowBytes) {
     return adjust_params<const void>(surfaceWidth, surfaceHeight, bpp, left, top, width, height,
                                      data, rowBytes);
 }
-
 
 //////////////////////////////////////////////////////////////////////////////
 

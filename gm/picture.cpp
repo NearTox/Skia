@@ -5,10 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkPaint.h"
-#include "SkPath.h"
-#include "SkPictureRecorder.h"
+#include "gm/gm.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPicture.h"
+#include "include/core/SkPictureRecorder.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
 
 static sk_sp<SkPicture> make_picture() {
     SkPictureRecorder rec;
@@ -22,11 +30,16 @@ static sk_sp<SkPicture> make_picture() {
     canvas->drawRect(SkRect::MakeWH(100, 100), paint);
 
     paint.setColor(0x80FF0000);
-    path.moveTo(0, 0); path.lineTo(100, 0); path.lineTo(100, 100);
+    path.moveTo(0, 0);
+    path.lineTo(100, 0);
+    path.lineTo(100, 100);
     canvas->drawPath(path, paint);
 
     paint.setColor(0x8000FF00);
-    path.reset(); path.moveTo(0, 0); path.lineTo(100, 0); path.lineTo(0, 100);
+    path.reset();
+    path.moveTo(0, 0);
+    path.lineTo(100, 0);
+    path.lineTo(0, 100);
     canvas->drawPath(path, paint);
 
     paint.setColor(0x80FFFFFF);
@@ -40,22 +53,14 @@ static sk_sp<SkPicture> make_picture() {
 //
 class PictureGM : public skiagm::GM {
 public:
-    PictureGM()
-        : fPicture(nullptr)
-    {}
+    PictureGM() : fPicture(nullptr) {}
 
 protected:
-    void onOnceBeforeDraw() override {
-         fPicture = make_picture();
-    }
+    void onOnceBeforeDraw() override { fPicture = make_picture(); }
 
-    SkString onShortName() override {
-        return SkString("pictures");
-    }
+    SkString onShortName() override { return SkString("pictures"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(450, 120);
-    }
+    SkISize onISize() override { return SkISize::Make(450, 120); }
 
     void onDraw(SkCanvas* canvas) override {
         canvas->translate(10, 10);

@@ -5,14 +5,25 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "Resources.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkData.h"
+#include "include/core/SkFilterQuality.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPixmap.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "tools/Resources.h"
 
-#include "GrContext.h"
-#include "SkImage.h"
+class GrContext;
+class GrRenderTargetContext;
 
-DEF_SIMPLE_GPU_GM_CAN_FAIL(cross_context_image, context, rtc, canvas, errorMsg,
-                           5 * 256 + 60, 256 + 128 + 30) {
+DEF_SIMPLE_GPU_GM_CAN_FAIL(cross_context_image, context, rtc, canvas, errorMsg, 5 * 256 + 60,
+                           256 + 128 + 30) {
     sk_sp<SkData> encodedData = GetResourceAsData("images/mandrill_256.png");
     if (!encodedData) {
         *errorMsg = "Could not load mandrill_256.png. Did you forget to set the resourcePath?";
@@ -24,8 +35,7 @@ DEF_SIMPLE_GPU_GM_CAN_FAIL(cross_context_image, context, rtc, canvas, errorMsg,
 
     SkBitmap bmp;
     SkPixmap pixmap;
-    SkAssertResult(images[0]->asLegacyBitmap(&bmp) &&
-                   bmp.peekPixels(&pixmap));
+    SkAssertResult(images[0]->asLegacyBitmap(&bmp) && bmp.peekPixels(&pixmap));
 
     images[1] = SkImage::MakeCrossContextFromEncoded(context, encodedData, false, nullptr);
     images[2] = SkImage::MakeCrossContextFromEncoded(context, encodedData, true, nullptr);

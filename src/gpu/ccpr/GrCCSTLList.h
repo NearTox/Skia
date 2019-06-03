@@ -8,22 +8,21 @@
 #ifndef GrCCSTLList_DEFINED
 #define GrCCSTLList_DEFINED
 
-#include "SkArenaAlloc.h"
-#include "SkNoncopyable.h"
 #include <new>
+#include "include/private/SkArenaAlloc.h"
+#include "include/private/SkNoncopyable.h"
 
 /**
  * A singly-linked list whose head element is a local class member. This is required by
  * GrCCDrawPathsOp because the owning opList is unknown at the time of creation, so we can't use its
  * associated allocator to create the first element.
  */
-template<typename T> class GrCCSTLList : SkNoncopyable {
+template <typename T> class GrCCSTLList : SkNoncopyable {
 public:
-    template <typename ...Args>
-    GrCCSTLList(Args&&... args) : fHead(std::forward<Args>(args)...) {}
+    template <typename... Args> GrCCSTLList(Args&&... args) : fHead(std::forward<Args>(args)...) {}
 
     ~GrCCSTLList() {
-        T* draw = fHead.fNext; // fHead will be destructed automatically.
+        T* draw = fHead.fNext;  // fHead will be destructed automatically.
         while (draw) {
             T* next = draw->fNext;
             draw->~T();
@@ -47,7 +46,7 @@ public:
         fTail = !nextTail ? newRightHead : nextTail;
     }
 
-    template<typename U> struct Iter {
+    template <typename U> struct Iter {
         bool operator!=(const Iter& that) { return fCurr != that.fCurr; }
         U& operator*() { return *fCurr; }
         void operator++() { fCurr = fCurr->fNext; }

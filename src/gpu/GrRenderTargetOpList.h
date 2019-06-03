@@ -8,20 +8,20 @@
 #ifndef GrRenderTargetOpList_DEFINED
 #define GrRenderTargetOpList_DEFINED
 
-#include "GrAppliedClip.h"
-#include "GrOpList.h"
-#include "GrPathRendering.h"
-#include "GrPrimitiveProcessor.h"
-#include "ops/GrOp.h"
-#include "ops/GrDrawOp.h"
-#include "SkArenaAlloc.h"
-#include "SkClipStack.h"
-#include "SkMatrix.h"
-#include "SkStringUtils.h"
-#include "SkStrokeRec.h"
-#include "SkTArray.h"
-#include "SkTLazy.h"
-#include "SkTypes.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkStrokeRec.h"
+#include "include/core/SkTypes.h"
+#include "include/private/GrOpList.h"
+#include "include/private/SkArenaAlloc.h"
+#include "include/private/SkTArray.h"
+#include "src/core/SkClipStack.h"
+#include "src/core/SkStringUtils.h"
+#include "src/core/SkTLazy.h"
+#include "src/gpu/GrAppliedClip.h"
+#include "src/gpu/GrPathRendering.h"
+#include "src/gpu/GrPrimitiveProcessor.h"
+#include "src/gpu/ops/GrDrawOp.h"
+#include "src/gpu/ops/GrOp.h"
 
 class GrAuditTrail;
 class GrClearOp;
@@ -33,8 +33,7 @@ private:
     using DstProxy = GrXferProcessor::DstProxy;
 
 public:
-    GrRenderTargetOpList(GrResourceProvider*, sk_sp<GrOpMemoryPool>,
-                         GrRenderTargetProxy*, GrAuditTrail*);
+    GrRenderTargetOpList(sk_sp<GrOpMemoryPool>, sk_sp<GrRenderTargetProxy>, GrAuditTrail*);
 
     ~GrRenderTargetOpList() override;
 
@@ -63,9 +62,7 @@ public:
     bool onExecute(GrOpFlushState* flushState) override;
 
     void addOp(std::unique_ptr<GrOp> op, const GrCaps& caps) {
-        auto addDependency = [ &caps, this ] (GrSurfaceProxy* p) {
-            this->addDependency(p, caps);
-        };
+        auto addDependency = [&caps, this](GrSurfaceProxy* p) { this->addDependency(p, caps); };
 
         op->visitProxies(addDependency);
 
@@ -73,15 +70,13 @@ public:
     }
 
     void addWaitOp(std::unique_ptr<GrOp> op, const GrCaps& caps) {
-        fHasWaitOp= true;
+        fHasWaitOp = true;
         this->addOp(std::move(op), caps);
     }
 
     void addDrawOp(std::unique_ptr<GrDrawOp> op, const GrProcessorSet::Analysis& processorAnalysis,
                    GrAppliedClip&& clip, const DstProxy& dstProxy, const GrCaps& caps) {
-        auto addDependency = [ &caps, this ] (GrSurfaceProxy* p) {
-            this->addDependency(p, caps);
-        };
+        auto addDependency = [&caps, this](GrSurfaceProxy* p) { this->addDependency(p, caps); };
 
         op->visitProxies(addDependency);
         clip.visitProxies(addDependency);
@@ -111,20 +106,23 @@ public:
                      const SkIRect& srcRect,
                      const SkIPoint& dstPoint) override;
 
-    GrRenderTargetOpList* asRenderTargetOpList() override { return this; }
+    GrRenderTargetOpList* asRenderTargetOpList() noexcept override { return this; }
 
-    SkDEBUGCODE(void dump(bool printDependencies) const override;)
-    SkDEBUGCODE(int numClips() const override { return fNumClips; })
-    SkDEBUGCODE(void visitProxies_debugOnly(const GrOp::VisitProxyFunc&) const;)
+    SkDEBUGCODE(void dump(bool printDependencies) const override);
+    SkDEBUGCODE(int numClips() const override { return fNumClips; });
+    SkDEBUGCODE(void visitProxies_debugOnly(const GrOp::VisitProxyFunc&) const);
 
 private:
-    friend class GrRenderTargetContextPriv; // for stencil clip state. TODO: this is invasive
+    friend class GrRenderTargetContextPriv;  // for stencil clip state. TODO: this is
+                                             // invasive
 
     // The RTC and RTOpList have to work together to handle buffer clears. In most cases, buffer
     // clearing can be done natively, in which case the op list's load ops are sufficient. In other
     // cases, draw ops must be used, which makes the RTC the best place for those decisions. This,
     // however, requires that the RTC be able to coordinate with the op list to achieve similar ends
     friend class GrRenderTargetContext;
+
+    bool onIsUsed(GrSurfaceProxy*) const override;
 
     // Must only be called if native stencil buffer clearing is enabled
     void setStencilLoadOp(GrLoadOp op);
@@ -223,20 +221,21 @@ private:
 
     void forwardCombine(const GrCaps&);
 
-    uint32_t                       fLastClipStackGenID;
-    SkIRect                        fLastDevClipBounds;
-    int                            fLastClipNumAnalyticFPs;
+    uint32_t fLastClipStackGenID;
+    SkIRect fLastDevClipBounds;
+    int fLastClipNumAnalyticFPs;
 
     // We must track if we have a wait op so that we don't delete the op when we have a full clear.
-    bool fHasWaitOp = false;;
+    bool fHasWaitOp = false;
+    ;
 
     // For ops/opList we have mean: 5 stdDev: 28
     SkSTArray<25, OpChain, true> fOpChains;
 
     // MDB TODO: 4096 for the first allocation of the clip space will be huge overkill.
     // Gather statistics to determine the correct size.
-    SkArenaAlloc                   fClipAllocator{4096};
-    SkDEBUGCODE(int                fNumClips;)
+    SkArenaAlloc fClipAllocator{4096};
+    SkDEBUGCODE(int fNumClips);
 
     typedef GrOpList INHERITED;
 };

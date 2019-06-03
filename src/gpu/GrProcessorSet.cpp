@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "GrProcessorSet.h"
-#include "GrAppliedClip.h"
-#include "GrCaps.h"
-#include "GrUserStencilSettings.h"
-#include "GrXferProcessor.h"
-#include "SkBlendModePriv.h"
-#include "effects/GrPorterDuffXferProcessor.h"
+#include "src/gpu/GrProcessorSet.h"
+#include "src/core/SkBlendModePriv.h"
+#include "src/gpu/GrAppliedClip.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrUserStencilSettings.h"
+#include "src/gpu/GrXferProcessor.h"
+#include "src/gpu/effects/GrPorterDuffXferProcessor.h"
 
 const GrProcessorSet& GrProcessorSet::EmptySet() {
     static GrProcessorSet gEmpty(GrProcessorSet::Empty::kEmpty);
@@ -40,7 +40,7 @@ GrProcessorSet::GrProcessorSet(GrPaint&& paint) : fXP(paint.getXPFactory()) {
         SkDebugf("Insane number of color fragment processors in paint. Dropping all processors.");
         fColorFragmentProcessorCnt = 0;
     }
-    SkDEBUGCODE(paint.fAlive = false;)
+    SkDEBUGCODE(paint.fAlive = false);
 }
 
 GrProcessorSet::GrProcessorSet(SkBlendMode mode)
@@ -154,16 +154,15 @@ bool GrProcessorSet::operator==(const GrProcessorSet& that) const {
     const GrXferProcessor& thisXP = this->xferProcessor()
                                             ? *this->xferProcessor()
                                             : GrPorterDuffXPFactory::SimpleSrcOverXP();
-    const GrXferProcessor& thatXP = that.xferProcessor()
-                                            ? *that.xferProcessor()
-                                            : GrPorterDuffXPFactory::SimpleSrcOverXP();
+    const GrXferProcessor& thatXP =
+            that.xferProcessor() ? *that.xferProcessor() : GrPorterDuffXPFactory::SimpleSrcOverXP();
     return thisXP.isEqual(thatXP);
 }
 
 GrProcessorSet::Analysis GrProcessorSet::finalize(
         const GrProcessorAnalysisColor& colorInput, const GrProcessorAnalysisCoverage coverageInput,
         const GrAppliedClip* clip, const GrUserStencilSettings* userStencil, GrFSAAType fsaaType,
-        const GrCaps& caps, SkPMColor4f* overrideInputColor) {
+        const GrCaps& caps, GrClampType clampType, SkPMColor4f* overrideInputColor) {
     SkASSERT(!this->isFinalized());
     SkASSERT(!fFragmentProcessorOffset);
 
@@ -190,6 +189,7 @@ GrProcessorSet::Analysis GrProcessorSet::finalize(
         hasCoverageFP = hasCoverageFP || clip->numClipCoverageFragmentProcessors();
         for (int i = 0; i < clip->numClipCoverageFragmentProcessors(); ++i) {
             const GrFragmentProcessor* clipFP = clip->clipCoverageFragmentProcessor(i);
+            clipFP->markPendingExecution();
             analysis.fCompatibleWithCoverageAsAlpha &= clipFP->compatibleWithCoverageAsAlpha();
             coverageUsesLocalCoords |= clipFP->usesLocalCoords();
         }
@@ -209,16 +209,16 @@ GrProcessorSet::Analysis GrProcessorSet::finalize(
     }
 
     GrXPFactory::AnalysisProperties props = GrXPFactory::GetAnalysisProperties(
-            this->xpFactory(), colorAnalysis.outputColor(), outputCoverage, caps);
+            this->xpFactory(), colorAnalysis.outputColor(), outputCoverage, caps, clampType);
     if (!this->numCoverageFragmentProcessors() &&
         GrProcessorAnalysisCoverage::kNone == coverageInput) {
     }
     analysis.fRequiresDstTexture =
             SkToBool(props & GrXPFactory::AnalysisProperties::kRequiresDstTexture);
     analysis.fCompatibleWithCoverageAsAlpha &=
-            SkToBool(props & GrXPFactory::AnalysisProperties::kCompatibleWithAlphaAsCoverage);
-    analysis.fRequiresNonOverlappingDraws = SkToBool(
-            props & GrXPFactory::AnalysisProperties::kRequiresNonOverlappingDraws);
+            SkToBool(props & GrXPFactory::AnalysisProperties::kCompatibleWithCoverageAsAlpha);
+    analysis.fRequiresNonOverlappingDraws =
+            SkToBool(props & GrXPFactory::AnalysisProperties::kRequiresNonOverlappingDraws);
     if (props & GrXPFactory::AnalysisProperties::kIgnoresInputColor) {
         colorFPsToEliminate = this->numColorFragmentProcessors();
         analysis.fInputColorType =
@@ -235,19 +235,21 @@ GrProcessorSet::Analysis GrProcessorSet::finalize(
     }
     fFragmentProcessorOffset = colorFPsToEliminate;
     fColorFragmentProcessorCnt -= colorFPsToEliminate;
+    analysis.fHasColorFragmentProcessor = (fColorFragmentProcessorCnt != 0);
 
-    bool hasMixedSampledCoverage = (GrFSAAType::kMixedSamples == fsaaType)
-            && !userStencil->testAlwaysPasses((clip) ? clip->hasStencilClip() : false);
+    bool hasMixedSampledCoverage =
+            (GrFSAAType::kMixedSamples == fsaaType) &&
+            !userStencil->testAlwaysPasses((clip) ? clip->hasStencilClip() : false);
     auto xp = GrXPFactory::MakeXferProcessor(this->xpFactory(), colorAnalysis.outputColor(),
-                                             outputCoverage, hasMixedSampledCoverage, caps);
+                                             outputCoverage, hasMixedSampledCoverage, caps,
+                                             clampType);
     fXP.fProcessor = xp.release();
 
     fFlags |= kFinalized_Flag;
     analysis.fIsInitialized = true;
 #ifdef SK_DEBUG
-    bool hasXferBarrier =
-            fXP.fProcessor &&
-            GrXferBarrierType::kNone_GrXferBarrierType != fXP.fProcessor->xferBarrierType(caps);
+    bool hasXferBarrier = fXP.fProcessor && GrXferBarrierType::kNone_GrXferBarrierType !=
+                                                    fXP.fProcessor->xferBarrierType(caps);
     bool needsNonOverlappingDraws = analysis.fRequiresDstTexture || hasXferBarrier;
     SkASSERT(analysis.fRequiresNonOverlappingDraws == needsNonOverlappingDraws);
 #endif

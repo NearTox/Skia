@@ -5,12 +5,11 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef GrStencilAttachment_DEFINED
 #define GrStencilAttachment_DEFINED
 
-#include "GrGpuResource.h"
-#include "SkClipStack.h"
+#include "include/gpu/GrGpuResource.h"
+#include "src/core/SkClipStack.h"
 
 class GrRenderTarget;
 class GrResourceKey;
@@ -41,8 +40,7 @@ protected:
             , fHeight(height)
             , fBits(bits)
             , fSampleCnt(sampleCnt)
-            , fIsDirty(true) {
-    }
+            , fIsDirty(true) {}
 
 private:
     const char* getResourceType() const override { return "Stencil"; }

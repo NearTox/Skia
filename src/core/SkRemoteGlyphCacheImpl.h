@@ -8,17 +8,18 @@
 #ifndef SkRemoteGlyphCacheImpl_DEFINED
 #define SkRemoteGlyphCacheImpl_DEFINED
 
-#include "SkArenaAlloc.h"
-#include "SkDescriptor.h"
-#include "SkGlyphRun.h"
-#include "SkGlyphRunPainter.h"
-#include "SkRemoteGlyphCache.h"
+#include "include/private/SkArenaAlloc.h"
+#include "src/core/SkDescriptor.h"
+#include "src/core/SkGlyphRun.h"
+#include "src/core/SkGlyphRunPainter.h"
+#include "src/core/SkRemoteGlyphCache.h"
 
 class SkStrikeServer::SkGlyphCacheState : public SkStrikeInterface {
 public:
     // N.B. SkGlyphCacheState is not valid until ensureScalerContext is called.
     SkGlyphCacheState(const SkDescriptor& descriptor,
-                      std::unique_ptr<SkScalerContext> context,
+                      std::unique_ptr<SkScalerContext>
+                              context,
                       SkDiscardableHandleId discardableHandleId);
     ~SkGlyphCacheState() override;
 
@@ -29,9 +30,7 @@ public:
     bool isSubpixel() const { return fIsSubpixel; }
     SkAxisAlignment axisAlignmentForHText() const { return fAxisAlignmentForHText; }
 
-    const SkDescriptor& getDescriptor() const override {
-        return *fDescriptor.getDesc();
-    }
+    const SkDescriptor& getDescriptor() const override { return *fDescriptor.getDesc(); }
 
     SkStrikeSpec strikeSpec() const override {
         return SkStrikeSpec(this->getDescriptor(), *fTypeface, fEffects);
@@ -43,7 +42,14 @@ public:
 
     const SkGlyph& getGlyphMetrics(SkGlyphID glyphID, SkPoint position) override;
 
-    bool decideCouldDrawFromPath(const SkGlyph& glyph) override;
+    SkSpan<const SkGlyphPos> prepareForDrawing(const SkGlyphID glyphIDs[],
+                                               const SkPoint positions[],
+                                               size_t n,
+                                               int maxDimension,
+                                               PreparationDetail detail,
+                                               SkGlyphPos results[]) override;
+
+    void generatePath(const SkGlyph& glyph) override;
 
     void onAboutToExitScope() override {}
 
@@ -83,12 +89,8 @@ private:
 
     class GlyphMapHashTraits {
     public:
-        static SkPackedGlyphID GetKey(const SkGlyph* glyph) {
-            return glyph->getPackedID();
-        }
-        static uint32_t Hash(SkPackedGlyphID glyphId) {
-            return glyphId.hash();
-        }
+        static SkPackedGlyphID GetKey(const SkGlyph* glyph) { return glyph->getPackedID(); }
+        static uint32_t Hash(SkPackedGlyphID glyphId) { return glyphId.hash(); }
     };
 
     // FallbackTextHelper cases require glyph metrics when analyzing a glyph run, in which case
@@ -110,26 +112,9 @@ protected:
     void drawGlyphRunList(const SkGlyphRunList& glyphRunList) override;
 
 private:
-    void processGlyphRun(
-            const SkPoint& origin, const SkGlyphRun& glyphRun, const SkPaint& runPaint);
-
-    void processGlyphRunForMask(
-            const SkGlyphRun& glyphRun, const SkMatrix& runMatrix,
-            SkPoint origin, const SkPaint& paint);
-
-    void processGlyphRunForPaths(
-            const SkGlyphRun& glyphRun, const SkMatrix& runMatrix,
-            SkPoint origin, const SkPaint& paint);
-
-#if SK_SUPPORT_GPU
-    bool maybeProcessGlyphRunForDFT(
-            const SkGlyphRun& glyphRun, const SkMatrix& runMatrix,
-            SkPoint origin, const SkPaint& paint);
-#endif
-
     SkStrikeServer* const fStrikeServer;
     const SkTextBlobCacheDiffCanvas::Settings fSettings;
     SkGlyphRunListPainter fPainter;
 };
 
-#endif // SkRemoteGlyphCacheImpl_DEFINED
+#endif  // SkRemoteGlyphCacheImpl_DEFINED

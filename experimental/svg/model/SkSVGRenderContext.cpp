@@ -5,26 +5,26 @@
  * found in the LICENSE file.
  */
 
-#include "SkSVGRenderContext.h"
+#include "experimental/svg/model/SkSVGRenderContext.h"
 
-#include "SkCanvas.h"
-#include "SkDashPathEffect.h"
-#include "SkPath.h"
-#include "SkSVGAttribute.h"
-#include "SkSVGNode.h"
-#include "SkSVGTypes.h"
-#include "SkTo.h"
+#include "experimental/svg/model/SkSVGAttribute.h"
+#include "experimental/svg/model/SkSVGNode.h"
+#include "experimental/svg/model/SkSVGTypes.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPath.h"
+#include "include/effects/SkDashPathEffect.h"
+#include "include/private/SkTo.h"
 
 namespace {
 
 SkScalar length_size_for_type(const SkSize& viewport, SkSVGLengthContext::LengthType t) {
     switch (t) {
-    case SkSVGLengthContext::LengthType::kHorizontal:
-        return viewport.width();
-    case SkSVGLengthContext::LengthType::kVertical:
-        return viewport.height();
-    case SkSVGLengthContext::LengthType::kOther:
-        return SkScalarSqrt(viewport.width() * viewport.height());
+        case SkSVGLengthContext::LengthType::kHorizontal:
+            return viewport.width();
+        case SkSVGLengthContext::LengthType::kVertical:
+            return viewport.height();
+        case SkSVGLengthContext::LengthType::kOther:
+            return SkScalarSqrt(viewport.width() * viewport.height());
     }
 
     SkASSERT(false);  // Not reached.
@@ -38,96 +38,93 @@ constexpr SkScalar kPCMultiplier = kPTMultiplier * 12;
 constexpr SkScalar kMMMultiplier = kINMultiplier / 25.4f;
 constexpr SkScalar kCMMultiplier = kMMMultiplier * 10;
 
-} // anonymous ns
+}  // namespace
 
 SkScalar SkSVGLengthContext::resolve(const SkSVGLength& l, LengthType t) const {
     switch (l.unit()) {
-    case SkSVGLength::Unit::kNumber:
-        // Fall through.
-    case SkSVGLength::Unit::kPX:
-        return l.value();
-    case SkSVGLength::Unit::kPercentage:
-        return l.value() * length_size_for_type(fViewport, t) / 100;
-    case SkSVGLength::Unit::kCM:
-        return l.value() * fDPI * kCMMultiplier;
-    case SkSVGLength::Unit::kMM:
-        return l.value() * fDPI * kMMMultiplier;
-    case SkSVGLength::Unit::kIN:
-        return l.value() * fDPI * kINMultiplier;
-    case SkSVGLength::Unit::kPT:
-        return l.value() * fDPI * kPTMultiplier;
-    case SkSVGLength::Unit::kPC:
-        return l.value() * fDPI * kPCMultiplier;
-    default:
-        SkDebugf("unsupported unit type: <%d>\n", l.unit());
-        return 0;
+        case SkSVGLength::Unit::kNumber:
+            // Fall through.
+        case SkSVGLength::Unit::kPX:
+            return l.value();
+        case SkSVGLength::Unit::kPercentage:
+            return l.value() * length_size_for_type(fViewport, t) / 100;
+        case SkSVGLength::Unit::kCM:
+            return l.value() * fDPI * kCMMultiplier;
+        case SkSVGLength::Unit::kMM:
+            return l.value() * fDPI * kMMMultiplier;
+        case SkSVGLength::Unit::kIN:
+            return l.value() * fDPI * kINMultiplier;
+        case SkSVGLength::Unit::kPT:
+            return l.value() * fDPI * kPTMultiplier;
+        case SkSVGLength::Unit::kPC:
+            return l.value() * fDPI * kPCMultiplier;
+        default:
+            SkDebugf("unsupported unit type: <%d>\n", l.unit());
+            return 0;
     }
 }
 
 SkRect SkSVGLengthContext::resolveRect(const SkSVGLength& x, const SkSVGLength& y,
                                        const SkSVGLength& w, const SkSVGLength& h) const {
-    return SkRect::MakeXYWH(
-        this->resolve(x, SkSVGLengthContext::LengthType::kHorizontal),
-        this->resolve(y, SkSVGLengthContext::LengthType::kVertical),
-        this->resolve(w, SkSVGLengthContext::LengthType::kHorizontal),
-        this->resolve(h, SkSVGLengthContext::LengthType::kVertical));
+    return SkRect::MakeXYWH(this->resolve(x, SkSVGLengthContext::LengthType::kHorizontal),
+                            this->resolve(y, SkSVGLengthContext::LengthType::kVertical),
+                            this->resolve(w, SkSVGLengthContext::LengthType::kHorizontal),
+                            this->resolve(h, SkSVGLengthContext::LengthType::kVertical));
 }
 
 namespace {
 
 SkPaint::Cap toSkCap(const SkSVGLineCap& cap) {
     switch (cap.type()) {
-    case SkSVGLineCap::Type::kButt:
-        return SkPaint::kButt_Cap;
-    case SkSVGLineCap::Type::kRound:
-        return SkPaint::kRound_Cap;
-    case SkSVGLineCap::Type::kSquare:
-        return SkPaint::kSquare_Cap;
-    default:
-        SkASSERT(false);
-        return SkPaint::kButt_Cap;
+        case SkSVGLineCap::Type::kButt:
+            return SkPaint::kButt_Cap;
+        case SkSVGLineCap::Type::kRound:
+            return SkPaint::kRound_Cap;
+        case SkSVGLineCap::Type::kSquare:
+            return SkPaint::kSquare_Cap;
+        default:
+            SkASSERT(false);
+            return SkPaint::kButt_Cap;
     }
 }
 
 SkPaint::Join toSkJoin(const SkSVGLineJoin& join) {
     switch (join.type()) {
-    case SkSVGLineJoin::Type::kMiter:
-        return SkPaint::kMiter_Join;
-    case SkSVGLineJoin::Type::kRound:
-        return SkPaint::kRound_Join;
-    case SkSVGLineJoin::Type::kBevel:
-        return SkPaint::kBevel_Join;
-    default:
-        SkASSERT(false);
-        return SkPaint::kMiter_Join;
+        case SkSVGLineJoin::Type::kMiter:
+            return SkPaint::kMiter_Join;
+        case SkSVGLineJoin::Type::kRound:
+            return SkPaint::kRound_Join;
+        case SkSVGLineJoin::Type::kBevel:
+            return SkPaint::kBevel_Join;
+        default:
+            SkASSERT(false);
+            return SkPaint::kMiter_Join;
     }
 }
 
 void applySvgPaint(const SkSVGRenderContext& ctx, const SkSVGPaint& svgPaint, SkPaint* p) {
     switch (svgPaint.type()) {
-    case SkSVGPaint::Type::kColor:
-        p->setColor(SkColorSetA(svgPaint.color(), p->getAlpha()));
-        break;
-    case SkSVGPaint::Type::kIRI: {
-        const auto* node = ctx.findNodeById(svgPaint.iri());
-        if (!node || !node->asPaint(ctx, p)) {
-            p->setColor(SK_ColorTRANSPARENT);
+        case SkSVGPaint::Type::kColor:
+            p->setColor(SkColorSetA(svgPaint.color(), p->getAlpha()));
+            break;
+        case SkSVGPaint::Type::kIRI: {
+            const auto* node = ctx.findNodeById(svgPaint.iri());
+            if (!node || !node->asPaint(ctx, p)) {
+                p->setColor(SK_ColorTRANSPARENT);
+            }
+            break;
         }
-        break;
-    }
-    case SkSVGPaint::Type::kCurrentColor:
-        SkDebugf("unimplemented 'currentColor' paint type");
-        // Fall through.
-    case SkSVGPaint::Type::kNone:
-        // Fall through.
-    case SkSVGPaint::Type::kInherit:
-        break;
+        case SkSVGPaint::Type::kCurrentColor:
+            SkDebugf("unimplemented 'currentColor' paint type");
+            // Fall through.
+        case SkSVGPaint::Type::kNone:
+            // Fall through.
+        case SkSVGPaint::Type::kInherit:
+            break;
     }
 }
 
-inline uint8_t opacity_to_alpha(SkScalar o) {
-    return SkTo<uint8_t>(SkScalarRoundToInt(o * 255));
-}
+inline uint8_t opacity_to_alpha(SkScalar o) { return SkTo<uint8_t>(SkScalarRoundToInt(o * 255)); }
 
 // Commit the selected attribute to the paint cache.
 template <SkSVGAttribute>
@@ -168,8 +165,8 @@ void commitToPaint<SkSVGAttribute::kStrokeDashArray>(const SkSVGPresentationAttr
     const auto count = dashArray->dashArray().count();
     SkSTArray<128, SkScalar, true> intervals(count);
     for (const auto& dash : dashArray->dashArray()) {
-        intervals.push_back(ctx.lengthContext().resolve(dash,
-                                                        SkSVGLengthContext::LengthType::kOther));
+        intervals.push_back(
+                ctx.lengthContext().resolve(dash, SkSVGLengthContext::LengthType::kOther));
     }
 
     if (count & 1) {
@@ -183,9 +180,8 @@ void commitToPaint<SkSVGAttribute::kStrokeDashArray>(const SkSVGPresentationAttr
 
     const SkScalar phase = ctx.lengthContext().resolve(*pctx->fInherited.fStrokeDashOffset.get(),
                                                        SkSVGLengthContext::LengthType::kOther);
-    pctx->fStrokePaint.setPathEffect(SkDashPathEffect::Make(intervals.begin(),
-                                                            intervals.count(),
-                                                            phase));
+    pctx->fStrokePaint.setPathEffect(
+            SkDashPathEffect::Make(intervals.begin(), intervals.count(), phase));
 }
 
 template <>
@@ -259,11 +255,10 @@ void commitToPaint<SkSVGAttribute::kVisibility>(const SkSVGPresentationAttribute
     // Not part of the SkPaint state; queried to veto rendering.
 }
 
-} // anonymous ns
+}  // namespace
 
 SkSVGPresentationContext::SkSVGPresentationContext()
-    : fInherited(SkSVGPresentationAttributes::MakeInitial()) {
-
+        : fInherited(SkSVGPresentationAttributes::MakeInitial()) {
     fFillPaint.setStyle(SkPaint::kFill_Style);
     fStrokePaint.setStyle(SkPaint::kStroke_Style);
 
@@ -290,27 +285,23 @@ SkSVGRenderContext::SkSVGRenderContext(SkCanvas* canvas,
                                        const SkSVGIDMapper& mapper,
                                        const SkSVGLengthContext& lctx,
                                        const SkSVGPresentationContext& pctx)
-    : fIDMapper(mapper)
-    , fLengthContext(lctx)
-    , fPresentationContext(pctx)
-    , fCanvas(canvas)
-    , fCanvasSaveCount(canvas->getSaveCount()) {}
+        : fIDMapper(mapper)
+        , fLengthContext(lctx)
+        , fPresentationContext(pctx)
+        , fCanvas(canvas)
+        , fCanvasSaveCount(canvas->getSaveCount()) {}
 
 SkSVGRenderContext::SkSVGRenderContext(const SkSVGRenderContext& other)
-    : SkSVGRenderContext(other.fCanvas,
-                         other.fIDMapper,
-                         *other.fLengthContext,
-                         *other.fPresentationContext) {}
+        : SkSVGRenderContext(other.fCanvas,
+                             other.fIDMapper,
+                             *other.fLengthContext,
+                             *other.fPresentationContext) {}
 
 SkSVGRenderContext::SkSVGRenderContext(const SkSVGRenderContext& other, SkCanvas* canvas)
-    : SkSVGRenderContext(canvas,
-                         other.fIDMapper,
-                         *other.fLengthContext,
-                         *other.fPresentationContext) {}
+        : SkSVGRenderContext(canvas, other.fIDMapper, *other.fLengthContext,
+                             *other.fPresentationContext) {}
 
-SkSVGRenderContext::~SkSVGRenderContext() {
-    fCanvas->restoreToCount(fCanvasSaveCount);
-}
+SkSVGRenderContext::~SkSVGRenderContext() { fCanvas->restoreToCount(fCanvasSaveCount); }
 
 const SkSVGNode* SkSVGRenderContext::findNodeById(const SkString& id) const {
     const auto* v = fIDMapper.find(id);
@@ -319,19 +310,17 @@ const SkSVGNode* SkSVGRenderContext::findNodeById(const SkString& id) const {
 
 void SkSVGRenderContext::applyPresentationAttributes(const SkSVGPresentationAttributes& attrs,
                                                      uint32_t flags) {
-
-#define ApplyLazyInheritedAttribute(ATTR)                                               \
-    do {                                                                                \
-        /* All attributes should be defined on the inherited context. */                \
-        SkASSERT(fPresentationContext->fInherited.f ## ATTR.isValid());                 \
-        const auto* value = attrs.f ## ATTR.getMaybeNull();                             \
-        if (value && *value != *fPresentationContext->fInherited.f ## ATTR.get()) {     \
-            /* Update the local attribute value */                                      \
-            fPresentationContext.writable()->fInherited.f ## ATTR.set(*value);          \
-            /* Update the cached paints */                                              \
-            commitToPaint<SkSVGAttribute::k ## ATTR>(attrs, *this,    \
-                                                     fPresentationContext.writable());  \
-        }                                                                               \
+#define ApplyLazyInheritedAttribute(ATTR)                                                          \
+    do {                                                                                           \
+        /* All attributes should be defined on the inherited context. */                           \
+        SkASSERT(fPresentationContext->fInherited.f##ATTR.isValid());                              \
+        const auto* value = attrs.f##ATTR.getMaybeNull();                                          \
+        if (value && *value != *fPresentationContext->fInherited.f##ATTR.get()) {                  \
+            /* Update the local attribute value */                                                 \
+            fPresentationContext.writable()->fInherited.f##ATTR.set(*value);                       \
+            /* Update the cached paints */                                                         \
+            commitToPaint<SkSVGAttribute::k##ATTR>(attrs, *this, fPresentationContext.writable()); \
+        }                                                                                          \
     } while (false)
 
     ApplyLazyInheritedAttribute(Fill);
@@ -366,7 +355,7 @@ void SkSVGRenderContext::applyOpacity(SkScalar opacity, uint32_t flags) {
         return;
     }
 
-    const bool hasFill   = SkToBool(this->fillPaint());
+    const bool hasFill = SkToBool(this->fillPaint());
     const bool hasStroke = SkToBool(this->strokePaint());
 
     // We can apply the opacity as paint alpha iif it only affects one atomic draw.
@@ -376,11 +365,10 @@ void SkSVGRenderContext::applyOpacity(SkScalar opacity, uint32_t flags) {
     if ((flags & kLeaf) && (hasFill ^ hasStroke)) {
         auto* pctx = fPresentationContext.writable();
         if (hasFill) {
-            pctx->fFillPaint.setAlpha(
-                SkScalarRoundToInt(opacity * pctx->fFillPaint.getAlpha()));
+            pctx->fFillPaint.setAlpha(SkScalarRoundToInt(opacity * pctx->fFillPaint.getAlpha()));
         } else {
             pctx->fStrokePaint.setAlpha(
-                SkScalarRoundToInt(opacity * pctx->fStrokePaint.getAlpha()));
+                    SkScalarRoundToInt(opacity * pctx->fStrokePaint.getAlpha()));
         }
     } else {
         // Expensive, layer-based fall back.

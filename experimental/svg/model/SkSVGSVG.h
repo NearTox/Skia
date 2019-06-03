@@ -8,9 +8,9 @@
 #ifndef SkSVGSVG_DEFINED
 #define SkSVGSVG_DEFINED
 
-#include "SkSVGContainer.h"
-#include "SkSVGTypes.h"
-#include "SkTLazy.h"
+#include "experimental/svg/model/SkSVGContainer.h"
+#include "experimental/svg/model/SkSVGTypes.h"
+#include "src/core/SkTLazy.h"
 
 class SkSVGLengthContext;
 
@@ -36,9 +36,9 @@ protected:
 private:
     SkSVGSVG();
 
-    SkSVGLength fX      = SkSVGLength(0);
-    SkSVGLength fY      = SkSVGLength(0);
-    SkSVGLength fWidth  = SkSVGLength(100, SkSVGLength::Unit::kPercentage);
+    SkSVGLength fX = SkSVGLength(0);
+    SkSVGLength fY = SkSVGLength(0);
+    SkSVGLength fWidth = SkSVGLength(100, SkSVGLength::Unit::kPercentage);
     SkSVGLength fHeight = SkSVGLength(100, SkSVGLength::Unit::kPercentage);
 
     SkTLazy<SkSVGViewBoxType> fViewBox;
@@ -46,4 +46,4 @@ private:
     typedef SkSVGContainer INHERITED;
 };
 
-#endif // SkSVGSVG_DEFINED
+#endif  // SkSVGSVG_DEFINED

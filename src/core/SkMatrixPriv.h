@@ -8,9 +8,9 @@
 #ifndef SkMatrixPriv_DEFINE
 #define SkMatrixPriv_DEFINE
 
-#include "SkMatrix.h"
-#include "SkNx.h"
-#include "SkPointPriv.h"
+#include "include/core/SkMatrix.h"
+#include "include/private/SkNx.h"
+#include "src/core/SkPointPriv.h"
 
 class SkMatrixPriv {
 public:
@@ -19,23 +19,22 @@ public:
         kMaxFlattenSize = 9 * sizeof(SkScalar) + sizeof(uint32_t),
     };
 
-    static size_t WriteToMemory(const SkMatrix& matrix, void* buffer) {
+    static size_t WriteToMemory(const SkMatrix& matrix, void* buffer) noexcept {
         return matrix.writeToMemory(buffer);
     }
 
-    static size_t ReadFromMemory(SkMatrix* matrix, const void* buffer, size_t length) {
+    static size_t ReadFromMemory(SkMatrix* matrix, const void* buffer, size_t length) noexcept {
         return matrix->readFromMemory(buffer, length);
     }
 
     typedef SkMatrix::MapXYProc MapXYProc;
     typedef SkMatrix::MapPtsProc MapPtsProc;
 
-
-    static MapPtsProc GetMapPtsProc(const SkMatrix& matrix) {
+    static MapPtsProc GetMapPtsProc(const SkMatrix& matrix) noexcept {
         return SkMatrix::GetMapPtsProc(matrix.getType());
     }
 
-    static MapXYProc GetMapXYProc(const SkMatrix& matrix) {
+    static MapXYProc GetMapXYProc(const SkMatrix& matrix) noexcept {
         return SkMatrix::GetMapXYProc(matrix.getType());
     }
 
@@ -43,8 +42,8 @@ public:
      *  Attempt to map the rect through the inverse of the matrix. If it is not invertible,
      *  then this returns false and dst is unchanged.
      */
-    static bool SK_WARN_UNUSED_RESULT InverseMapRect(const SkMatrix& mx,
-                                                     SkRect* dst, const SkRect& src) {
+    static bool SK_WARN_UNUSED_RESULT InverseMapRect(const SkMatrix& mx, SkRect* dst,
+                                                     const SkRect& src) noexcept {
         if (mx.getType() <= SkMatrix::kTranslate_Mask) {
             SkScalar tx = mx.getTranslateX();
             SkScalar ty = mx.getTranslateY();
@@ -81,7 +80,8 @@ public:
         @param stride  size of record starting with SkPoint, in bytes
         @param count   number of points to transform
     */
-    static void MapPointsWithStride(const SkMatrix& mx, SkPoint pts[], size_t stride, int count) {
+    static void MapPointsWithStride(const SkMatrix& mx, SkPoint pts[], size_t stride,
+                                    int count) noexcept {
         SkASSERT(stride >= sizeof(SkPoint));
         SkASSERT(0 == stride % sizeof(SkScalar));
 
@@ -131,7 +131,7 @@ public:
         @param count   number of points to transform
     */
     static void MapPointsWithStride(const SkMatrix& mx, SkPoint dst[], size_t dstStride,
-                                    const SkPoint src[], size_t srcStride, int count) {
+                                    const SkPoint src[], size_t srcStride, int count) noexcept {
         SkASSERT(srcStride >= sizeof(SkPoint));
         SkASSERT(dstStride >= sizeof(SkPoint));
         SkASSERT(0 == srcStride % sizeof(SkScalar));
@@ -144,8 +144,8 @@ public:
     }
 
     static void MapHomogeneousPointsWithStride(const SkMatrix& mx, SkPoint3 dst[], size_t dstStride,
-                                               const SkPoint3 src[], size_t srcStride, int count);
-
+                                               const SkPoint3 src[], size_t srcStride,
+                                               int count) noexcept;
 };
 
 #endif

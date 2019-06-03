@@ -4,17 +4,15 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkIntersections.h"
-#include "SkLineParameters.h"
-#include "SkPathOpsConic.h"
-#include "SkPathOpsCubic.h"
-#include "SkPathOpsQuad.h"
-#include "SkPathOpsRect.h"
+#include "src/pathops/SkPathOpsConic.h"
+#include "src/pathops/SkIntersections.h"
+#include "src/pathops/SkLineParameters.h"
+#include "src/pathops/SkPathOpsCubic.h"
+#include "src/pathops/SkPathOpsQuad.h"
+#include "src/pathops/SkPathOpsRect.h"
 
 // cribbed from the float version in SkGeometry.cpp
-static void conic_deriv_coeff(const double src[],
-                              SkScalar w,
-                              double coeff[3]) {
+static void conic_deriv_coeff(const double src[], SkScalar w, double coeff[3]) {
     const double P20 = src[4] - src[0];
     const double P10 = src[2] - src[0];
     const double wP10 = w * P10;
@@ -48,10 +46,8 @@ int SkDConic::FindExtrema(const double src[], SkScalar w, double t[1]) {
 }
 
 SkDVector SkDConic::dxdyAtT(double t) const {
-    SkDVector result = {
-        conic_eval_tan(&fPts[0].fX, fWeight, t),
-        conic_eval_tan(&fPts[0].fY, fWeight, t)
-    };
+    SkDVector result = {conic_eval_tan(&fPts[0].fX, fWeight, t),
+                        conic_eval_tan(&fPts[0].fY, fWeight, t)};
     if (result.fX == 0 && result.fY == 0) {
         if (zero_or_one(t)) {
             result = fPts[2] - fPts[0];
@@ -73,7 +69,6 @@ static double conic_eval_numerator(const double src[], SkScalar w, double t) {
     return (A * t + B) * t + C;
 }
 
-
 static double conic_eval_denominator(SkScalar w, double t) {
     double B = 2 * (w - 1);
     double C = 1;
@@ -94,9 +89,8 @@ SkDPoint SkDConic::ptAtT(double t) const {
     }
     double denominator = conic_eval_denominator(fWeight, t);
     SkDPoint result = {
-        sk_ieee_double_divide(conic_eval_numerator(&fPts[0].fX, fWeight, t), denominator),
-        sk_ieee_double_divide(conic_eval_numerator(&fPts[0].fY, fWeight, t), denominator)
-    };
+            sk_ieee_double_divide(conic_eval_numerator(&fPts[0].fX, fWeight, t), denominator),
+            sk_ieee_double_divide(conic_eval_numerator(&fPts[0].fY, fWeight, t), denominator)};
     return result;
 }
 
@@ -158,16 +152,16 @@ SkDConic SkDConic::subDivide(double t1, double t2) const {
     double by = 2 * dy - (ay + cy) / 2;
     double bz = 2 * dz - (az + cz) / 2;
     if (!bz) {
-        bz = 1; // if bz is 0, weight is 0, control point has no effect: any value will do
+        bz = 1;  // if bz is 0, weight is 0, control point has no effect: any value will do
     }
-    SkDConic dst = {{{{ax / az, ay / az}, {bx / bz, by / bz}, {cx / cz, cy / cz}}
-            SkDEBUGPARAMS(fPts.fDebugGlobalState) },
-            SkDoubleToScalar(bz / sqrt(az * cz)) };
+    SkDConic dst = {{{{ax / az, ay / az}, {bx / bz, by / bz}, {cx / cz, cy / cz}} SkDEBUGPARAMS(
+                            fPts.fDebugGlobalState)},
+                    SkDoubleToScalar(bz / sqrt(az * cz))};
     return dst;
 }
 
 SkDPoint SkDConic::subDivide(const SkDPoint& a, const SkDPoint& c, double t1, double t2,
-        SkScalar* weight) const {
+                             SkScalar* weight) const {
     SkDConic chopped = this->subDivide(t1, t2);
     *weight = chopped.fWeight;
     return chopped[1];
@@ -177,7 +171,7 @@ int SkTConic::intersectRay(SkIntersections* i, const SkDLine& line) const {
     return i->intersectRay(fConic, line);
 }
 
-bool SkTConic::hullIntersects(const SkDQuad& quad, bool* isLinear) const  {
+bool SkTConic::hullIntersects(const SkDQuad& quad, bool* isLinear) const {
     return quad.hullIntersects(fConic, isLinear);
 }
 
@@ -185,6 +179,4 @@ bool SkTConic::hullIntersects(const SkDCubic& cubic, bool* isLinear) const {
     return cubic.hullIntersects(fConic, isLinear);
 }
 
-void SkTConic::setBounds(SkDRect* rect) const {
-    rect->setBounds(fConic);
-}
+void SkTConic::setBounds(SkDRect* rect) const { rect->setBounds(fConic); }

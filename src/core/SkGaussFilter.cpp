@@ -5,11 +5,10 @@
  * found in the LICENSE file.
  */
 
-
-#include "SkFloatingPoint.h"
-#include "SkGaussFilter.h"
-#include "SkTypes.h"
+#include "src/core/SkGaussFilter.h"
 #include <cmath>
+#include "include/core/SkTypes.h"
+#include "include/private/SkFloatingPoint.h"
 
 // The value when we can stop expanding the filter. The spec implies that 3% is acceptable, but
 // we just use 1%.
@@ -20,7 +19,7 @@ static constexpr double kGoodEnough = 1.0 / 100.0;
 static void normalize(int n, double* gauss) {
     // Carefully add from smallest to largest to calculate the normalizing sum.
     double sum = 0;
-    for (int i = n-1; i >= 1; i--) {
+    for (int i = n - 1; i >= 1; i--) {
         sum += 2 * gauss[i];
     }
     sum += gauss[0];
@@ -40,7 +39,7 @@ static void normalize(int n, double* gauss) {
     gauss[0] = 1 - sum;
 }
 
-static int calculate_bessel_factors(double sigma, double *gauss) {
+static int calculate_bessel_factors(double sigma, double* gauss) {
     auto var = sigma * sigma;
 
     // The two functions below come from the equations in "Handbook of Mathematical Functions"
@@ -55,7 +54,7 @@ static int calculate_bessel_factors(double sigma, double *gauss) {
         auto k = 1;
         // Use a variable number of loops. When sigma is small, this only requires 3-4 loops, but
         // when sigma is near 2, it could require 10 loops. The same holds for BesselI_1.
-        while(factor > 1.0/1000000.0) {
+        while (factor > 1.0 / 1000000.0) {
             factor *= tSquaredOver4 / (k * k);
             sum += factor;
             k += 1;
@@ -68,7 +67,7 @@ static int calculate_bessel_factors(double sigma, double *gauss) {
         auto sum = t / 2.0;
         auto factor = sum;
         auto k = 1;
-        while (factor > 1.0/1000000.0) {
+        while (factor > 1.0 / 1000000.0) {
             factor *= tSquaredOver4 / (k * (k + 1));
             sum += factor;
             k += 1;
@@ -81,8 +80,8 @@ static int calculate_bessel_factors(double sigma, double *gauss) {
     // gauss(n; var) = besselI_n(var) / (e^var)
     auto d = std::exp(var);
     double b[SkGaussFilter::kGaussArrayMax] = {besselI_0(var), besselI_1(var)};
-    gauss[0] = b[0]/d;
-    gauss[1] = b[1]/d;
+    gauss[0] = b[0] / d;
+    gauss[1] = b[1] / d;
 
     // The code below is tricky, and written to mirror the recursive equations from the book.
     // The maximum spread for sigma == 2 is guass[4], but in order to know to stop guass[5]
@@ -92,8 +91,8 @@ static int calculate_bessel_factors(double sigma, double *gauss) {
     // The recurrence relation below is from "Numerical Recipes" 3rd Edition.
     // Equation 6.5.16 p.282
     while (gauss[n] > kGoodEnough) {
-        b[n+1] = -(2*n/var) * b[n] + b[n-1];
-        gauss[n+1] = b[n+1] / d;
+        b[n + 1] = -(2 * n / var) * b[n] + b[n - 1];
+        gauss[n + 1] = b[n + 1] / d;
         n += 1;
     }
 

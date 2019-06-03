@@ -13,13 +13,12 @@
 namespace skstd {
 
 // std::exchange is in C++14
-template<typename T, typename U = T>
-inline static T exchange(T& obj, U&& new_val) {
+template <typename T, typename U = T> inline static T exchange(T& obj, U&& new_val) noexcept {
     T old_val = std::move(obj);
     obj = std::forward<U>(new_val);
     return old_val;
 }
 
-}
+}  // namespace skstd
 
 #endif  // SkExchange_DEFINED

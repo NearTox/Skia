@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN) && !defined(_M_ARM64)
 
-#include "SkWGL.h"
+#include "src/utils/win/SkWGL.h"
 
-#include "SkOnce.h"
-#include "SkTDArray.h"
-#include "SkTSearch.h"
-#include "SkTSort.h"
+#include "include/private/SkOnce.h"
+#include "include/private/SkTDArray.h"
+#include "include/private/SkTSearch.h"
+#include "src/core/SkTSort.h"
 
 bool SkWGLExtensions::hasExtension(HDC dc, const char* ext) const {
     if (nullptr == this->fGetExtensionsString) {
@@ -33,7 +33,7 @@ bool SkWGLExtensions::hasExtension(HDC dc, const char* ext) const {
         if (0 == extensionString[n]) {
             return false;
         }
-        extensionString += n+1;
+        extensionString += n + 1;
     }
 
     return false;
@@ -49,58 +49,49 @@ BOOL SkWGLExtensions::choosePixelFormat(HDC hdc,
                                         UINT nMaxFormats,
                                         int* piFormats,
                                         UINT* nNumFormats) const {
-    return fChoosePixelFormat(hdc, piAttribIList, pfAttribFList,
-                              nMaxFormats, piFormats, nNumFormats);
+    return fChoosePixelFormat(hdc, piAttribIList, pfAttribFList, nMaxFormats, piFormats,
+                              nNumFormats);
 }
 
 BOOL SkWGLExtensions::getPixelFormatAttribiv(HDC hdc,
                                              int iPixelFormat,
                                              int iLayerPlane,
                                              UINT nAttributes,
-                                             const int *piAttributes,
-                                             int *piValues) const {
-    return fGetPixelFormatAttribiv(hdc, iPixelFormat, iLayerPlane,
-                                   nAttributes, piAttributes, piValues);
+                                             const int* piAttributes,
+                                             int* piValues) const {
+    return fGetPixelFormatAttribiv(hdc, iPixelFormat, iLayerPlane, nAttributes, piAttributes,
+                                   piValues);
 }
 
 BOOL SkWGLExtensions::getPixelFormatAttribfv(HDC hdc,
                                              int iPixelFormat,
                                              int iLayerPlane,
                                              UINT nAttributes,
-                                             const int *piAttributes,
-                                             float *pfValues) const {
-    return fGetPixelFormatAttribfv(hdc, iPixelFormat, iLayerPlane,
-                                   nAttributes, piAttributes, pfValues);
+                                             const int* piAttributes,
+                                             float* pfValues) const {
+    return fGetPixelFormatAttribfv(hdc, iPixelFormat, iLayerPlane, nAttributes, piAttributes,
+                                   pfValues);
 }
 HGLRC SkWGLExtensions::createContextAttribs(HDC hDC,
                                             HGLRC hShareContext,
-                                            const int *attribList) const {
+                                            const int* attribList) const {
     return fCreateContextAttribs(hDC, hShareContext, attribList);
 }
 
-BOOL SkWGLExtensions::swapInterval(int interval) const {
-    return fSwapInterval(interval);
-}
+BOOL SkWGLExtensions::swapInterval(int interval) const { return fSwapInterval(interval); }
 
-HPBUFFER SkWGLExtensions::createPbuffer(HDC hDC,
-                                        int iPixelFormat,
-                                        int iWidth,
-                                        int iHeight,
-                                        const int *piAttribList) const {
+HPBUFFER SkWGLExtensions::createPbuffer(HDC hDC, int iPixelFormat, int iWidth, int iHeight,
+                                        const int* piAttribList) const {
     return fCreatePbuffer(hDC, iPixelFormat, iWidth, iHeight, piAttribList);
 }
 
-HDC SkWGLExtensions::getPbufferDC(HPBUFFER hPbuffer) const {
-    return fGetPbufferDC(hPbuffer);
-}
+HDC SkWGLExtensions::getPbufferDC(HPBUFFER hPbuffer) const { return fGetPbufferDC(hPbuffer); }
 
 int SkWGLExtensions::releasePbufferDC(HPBUFFER hPbuffer, HDC hDC) const {
     return fReleasePbufferDC(hPbuffer, hDC);
 }
 
-BOOL SkWGLExtensions::destroyPbuffer(HPBUFFER hPbuffer) const {
-    return fDestroyPbuffer(hPbuffer);
-}
+BOOL SkWGLExtensions::destroyPbuffer(HPBUFFER hPbuffer) const { return fDestroyPbuffer(hPbuffer); }
 
 namespace {
 
@@ -120,7 +111,7 @@ bool pf_less(const PixelFormat& a, const PixelFormat& b) {
     }
     return false;
 }
-}
+}  // namespace
 
 int SkWGLExtensions::selectFormat(const int formats[],
                                   int formatCount,
@@ -131,32 +122,25 @@ int SkWGLExtensions::selectFormat(const int formats[],
         return -1;
     }
     PixelFormat desiredFormat = {
-        0,
-        desiredSampleCount,
-        0,
+            0,
+            desiredSampleCount,
+            0,
     };
     SkTDArray<PixelFormat> rankedFormats;
     rankedFormats.setCount(formatCount);
     for (int i = 0; i < formatCount; ++i) {
         static const int kQueryAttr = SK_WGL_SAMPLES;
         int numSamples;
-        this->getPixelFormatAttribiv(dc,
-                                     formats[i],
-                                     0,
-                                     1,
-                                     &kQueryAttr,
-                                     &numSamples);
-        rankedFormats[i].fFormat =  formats[i];
+        this->getPixelFormatAttribiv(dc, formats[i], 0, 1, &kQueryAttr, &numSamples);
+        rankedFormats[i].fFormat = formats[i];
         rankedFormats[i].fSampleCnt = SkTMax(1, numSamples);
         rankedFormats[i].fChoosePixelFormatRank = i;
     }
     SkTQSort(rankedFormats.begin(),
              rankedFormats.begin() + rankedFormats.count() - 1,
              SkTLessFunctionToFunctorAdaptor<PixelFormat, pf_less>());
-    int idx = SkTSearch<PixelFormat, pf_less>(rankedFormats.begin(),
-                                              rankedFormats.count(),
-                                              desiredFormat,
-                                              sizeof(PixelFormat));
+    int idx = SkTSearch<PixelFormat, pf_less>(rankedFormats.begin(), rankedFormats.count(),
+                                              desiredFormat, sizeof(PixelFormat));
     if (idx < 0) {
         idx = ~idx;
     }
@@ -167,13 +151,12 @@ int SkWGLExtensions::selectFormat(const int formats[],
     return rankedFormats[idx].fFormat;
 }
 
-
 namespace {
 
 #if defined(UNICODE)
-    #define STR_LIT(X) L## #X
+#define STR_LIT(X) L## #X
 #else
-    #define STR_LIT(X) #X
+#define STR_LIT(X) #X
 #endif
 
 #define DUMMY_CLASS STR_LIT("DummyClass")
@@ -190,7 +173,7 @@ HWND create_dummy_window() {
     WNDCLASS wc;
 
     wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
-    wc.lpfnWndProc = (WNDPROC) DefWindowProc;
+    wc.lpfnWndProc = (WNDPROC)DefWindowProc;
     wc.cbClsExtra = 0;
     wc.cbWndExtra = 0;
     wc.hInstance = module;
@@ -200,7 +183,7 @@ HWND create_dummy_window() {
     wc.lpszMenuName = nullptr;
     wc.lpszClassName = DUMMY_CLASS;
 
-    if(!RegisterClass(&wc)) {
+    if (!RegisterClass(&wc)) {
         return 0;
     }
 
@@ -209,16 +192,11 @@ HWND create_dummy_window() {
     style = WS_SYSMENU;
 
     AdjustWindowRectEx(&windowRect, style, false, exStyle);
-    if(!(dummy = CreateWindowEx(exStyle,
-                                DUMMY_CLASS,
-                                STR_LIT("DummyWindow"),
-                                WS_CLIPSIBLINGS | WS_CLIPCHILDREN | style,
-                                0, 0,
-                                windowRect.right-windowRect.left,
-                                windowRect.bottom-windowRect.top,
-                                nullptr, nullptr,
-                                module,
-                                nullptr))) {
+    if (!(dummy = CreateWindowEx(exStyle, DUMMY_CLASS, STR_LIT("DummyWindow"),
+                                 WS_CLIPSIBLINGS | WS_CLIPCHILDREN | style, 0, 0,
+                                 windowRect.right - windowRect.left,
+                                 windowRect.bottom - windowRect.top, nullptr, nullptr, module,
+                                 nullptr))) {
         UnregisterClass(DUMMY_CLASS, module);
         return nullptr;
     }
@@ -232,11 +210,9 @@ void destroy_dummy_window(HWND dummy) {
     HMODULE module = GetModuleHandle(nullptr);
     UnregisterClass(DUMMY_CLASS, module);
 }
-}
+}  // namespace
 
-#define GET_PROC(NAME, SUFFIX) f##NAME = \
-                     (NAME##Proc) wglGetProcAddress("wgl" #NAME #SUFFIX)
-
+#define GET_PROC(NAME, SUFFIX) f##NAME = (NAME##Proc)wglGetProcAddress("wgl" #NAME #SUFFIX)
 
 SkWGLExtensions::GetExtensionsStringProc SkWGLExtensions::fGetExtensionsString = nullptr;
 SkWGLExtensions::ChoosePixelFormatProc SkWGLExtensions::fChoosePixelFormat = nullptr;
@@ -265,8 +241,8 @@ SkWGLExtensions::SkWGLExtensions() {
         dummyPFD.nVersion = 1;
         dummyPFD.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
         dummyPFD.iPixelType = PFD_TYPE_RGBA;
-        dummyPFD.cColorBits  = 32;
-        dummyPFD.cDepthBits  = 0;
+        dummyPFD.cColorBits = 32;
+        dummyPFD.cDepthBits = 0;
         dummyPFD.cStencilBits = 8;
         dummyPFD.iLayerType = PFD_MAIN_PLANE;
         HWND dummyWND = create_dummy_window();
@@ -300,9 +276,8 @@ SkWGLExtensions::SkWGLExtensions() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static void get_pixel_formats_to_try(HDC dc, const SkWGLExtensions& extensions,
-                                     bool doubleBuffered, int msaaSampleCount, bool deepColor,
-                                     int formatsToTry[2]) {
+static void get_pixel_formats_to_try(HDC dc, const SkWGLExtensions& extensions, bool doubleBuffered,
+                                     int msaaSampleCount, bool deepColor, int formatsToTry[2]) {
     auto appendAttr = [](SkTDArray<int>& attrs, int attr, int value) {
         attrs.push_back(attr);
         attrs.push_back(value);
@@ -327,8 +302,7 @@ static void get_pixel_formats_to_try(HDC dc, const SkWGLExtensions& extensions,
     float fAttrs[] = {0, 0};
 
     // Get a MSAA format if requested and possible.
-    if (msaaSampleCount > 0 &&
-        extensions.hasExtension(dc, "WGL_ARB_multisample")) {
+    if (msaaSampleCount > 0 && extensions.hasExtension(dc, "WGL_ARB_multisample")) {
         SkTDArray<int> msaaIAttrs = iAttrs;
         appendAttr(msaaIAttrs, SK_WGL_SAMPLE_BUFFERS, TRUE);
         appendAttr(msaaIAttrs, SK_WGL_SAMPLES, msaaSampleCount);
@@ -359,10 +333,13 @@ static HGLRC create_gl_context(HDC dc, const SkWGLExtensions& extensions,
             return nullptr;
         }
         static const int glesAttribs[] = {
-            SK_WGL_CONTEXT_MAJOR_VERSION, 3,
-            SK_WGL_CONTEXT_MINOR_VERSION, 0,
-            SK_WGL_CONTEXT_PROFILE_MASK,  SK_WGL_CONTEXT_ES2_PROFILE_BIT,
-            0,
+                SK_WGL_CONTEXT_MAJOR_VERSION,
+                3,
+                SK_WGL_CONTEXT_MINOR_VERSION,
+                0,
+                SK_WGL_CONTEXT_PROFILE_MASK,
+                SK_WGL_CONTEXT_ES2_PROFILE_BIT,
+                0,
         };
         glrc = extensions.createContextAttribs(dc, shareContext, glesAttribs);
         if (nullptr == glrc) {
@@ -373,18 +350,16 @@ static HGLRC create_gl_context(HDC dc, const SkWGLExtensions& extensions,
         if (kGLPreferCoreProfile_SkWGLContextRequest == contextType &&
             extensions.hasExtension(dc, "WGL_ARB_create_context")) {
             static const int kCoreGLVersions[] = {
-                4, 3,
-                4, 2,
-                4, 1,
-                4, 0,
-                3, 3,
-                3, 2,
+                    4, 3, 4, 2, 4, 1, 4, 0, 3, 3, 3, 2,
             };
             int coreProfileAttribs[] = {
-                SK_WGL_CONTEXT_MAJOR_VERSION, -1,
-                SK_WGL_CONTEXT_MINOR_VERSION, -1,
-                SK_WGL_CONTEXT_PROFILE_MASK,  SK_WGL_CONTEXT_CORE_PROFILE_BIT,
-                0,
+                    SK_WGL_CONTEXT_MAJOR_VERSION,
+                    -1,
+                    SK_WGL_CONTEXT_MINOR_VERSION,
+                    -1,
+                    SK_WGL_CONTEXT_PROFILE_MASK,
+                    SK_WGL_CONTEXT_CORE_PROFILE_BIT,
+                    0,
             };
             for (size_t v = 0; v < SK_ARRAY_COUNT(kCoreGLVersions) / 2; ++v) {
                 coreProfileAttribs[1] = kCoreGLVersions[2 * v];
@@ -410,10 +385,6 @@ static HGLRC create_gl_context(HDC dc, const SkWGLExtensions& extensions,
 
     wglMakeCurrent(prevDC, prevGLRC);
 
-    // This might help make the context non-vsynced.
-    if (extensions.hasExtension(dc, "WGL_EXT_swap_control")) {
-        extensions.swapInterval(-1);
-    }
     return glrc;
 }
 
@@ -426,10 +397,9 @@ HGLRC SkCreateWGLContext(HDC dc, int msaaSampleCount, bool deepColor,
 
     BOOL set = FALSE;
 
-    int pixelFormatsToTry[] = { -1, -1 };
+    int pixelFormatsToTry[] = {-1, -1};
     get_pixel_formats_to_try(dc, extensions, true, msaaSampleCount, deepColor, pixelFormatsToTry);
-    for (size_t f = 0;
-         !set && -1 != pixelFormatsToTry[f] && f < SK_ARRAY_COUNT(pixelFormatsToTry);
+    for (size_t f = 0; !set && -1 != pixelFormatsToTry[f] && f < SK_ARRAY_COUNT(pixelFormatsToTry);
          ++f) {
         PIXELFORMATDESCRIPTOR pfd;
         DescribePixelFormat(dc, pixelFormatsToTry[f], sizeof(pfd), &pfd);
@@ -458,18 +428,18 @@ sk_sp<SkWGLPbufferContext> SkWGLPbufferContext::Create(HDC parentDC,
     //
     // We only store two potential pixel formats, one for single buffer, one for double buffer.
     // We never ask for MSAA, so we don't need the second pixel format for each buffering state.
-    static int gPixelFormats[2] = { -1, -1 };
+    static int gPixelFormats[2] = {-1, -1};
     static SkOnce once;
     once([=] {
         {
             // Single buffer
-            int pixelFormatsToTry[2] = { -1, -1 };
+            int pixelFormatsToTry[2] = {-1, -1};
             get_pixel_formats_to_try(parentDC, extensions, false, 0, false, pixelFormatsToTry);
             gPixelFormats[0] = pixelFormatsToTry[0];
         }
         {
             // Double buffer
-            int pixelFormatsToTry[2] = { -1, -1 };
+            int pixelFormatsToTry[2] = {-1, -1};
             get_pixel_formats_to_try(parentDC, extensions, true, 0, false, pixelFormatsToTry);
             gPixelFormats[1] = pixelFormatsToTry[0];
         }
@@ -504,9 +474,6 @@ SkWGLPbufferContext::~SkWGLPbufferContext() {
 }
 
 SkWGLPbufferContext::SkWGLPbufferContext(HPBUFFER pbuffer, HDC dc, HGLRC glrc)
-    : fPbuffer(pbuffer)
-    , fDC(dc)
-    , fGLRC(glrc) {
-}
+        : fPbuffer(pbuffer), fDC(dc), fGLRC(glrc) {}
 
-#endif//defined(SK_BUILD_FOR_WIN)
+#endif  // defined(SK_BUILD_FOR_WIN)

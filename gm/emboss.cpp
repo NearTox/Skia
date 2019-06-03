@@ -5,13 +5,22 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-
-#include "SkBlurMask.h"
-#include "SkCanvas.h"
-#include "SkColorFilter.h"
-#include "SkEmbossMaskFilter.h"
-#include "SkFont.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkMaskFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypeface.h"
+#include "src/core/SkBlurMask.h"
+#include "src/effects/SkEmbossMaskFilter.h"
 
 static SkBitmap make_bm() {
     SkBitmap bm;
@@ -27,17 +36,12 @@ static SkBitmap make_bm() {
 
 class EmbossGM : public skiagm::GM {
 public:
-    EmbossGM() {
-    }
+    EmbossGM() {}
 
 protected:
-    SkString onShortName() override {
-        return SkString("emboss");
-    }
+    SkString onShortName() override { return SkString("emboss"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(600, 120);
-    }
+    SkISize onISize() override { return SkISize::Make(600, 120); }
 
     void onDraw(SkCanvas* canvas) override {
         SkPaint paint;
@@ -45,29 +49,28 @@ protected:
         canvas->drawBitmap(bm, 10, 10, &paint);
         canvas->translate(bm.width() + SkIntToScalar(10), 0);
 
-        paint.setMaskFilter(SkEmbossMaskFilter::Make(
-            SkBlurMask::ConvertRadiusToSigma(3),
-            { { SK_Scalar1, SK_Scalar1, SK_Scalar1 }, 0, 128, 16*2 }));
+        paint.setMaskFilter(
+                SkEmbossMaskFilter::Make(SkBlurMask::ConvertRadiusToSigma(3),
+                                         {{SK_Scalar1, SK_Scalar1, SK_Scalar1}, 0, 128, 16 * 2}));
         canvas->drawBitmap(bm, 10, 10, &paint);
         canvas->translate(bm.width() + SkIntToScalar(10), 0);
 
         // this combination of emboss+colorfilter used to crash -- so we exercise it to
         // confirm that we have a fix.
-        paint.setColorFilter(SkColorFilter::MakeModeFilter(0xFFFF0000, SkBlendMode::kSrcATop));
+        paint.setColorFilter(SkColorFilters::Blend(0xFFFF0000, SkBlendMode::kSrcATop));
         canvas->drawBitmap(bm, 10, 10, &paint);
         canvas->translate(bm.width() + SkIntToScalar(10), 0);
 
         paint.setAntiAlias(true);
         paint.setStyle(SkPaint::kStroke_Style);
         paint.setStrokeWidth(SkIntToScalar(10));
-        paint.setMaskFilter(SkEmbossMaskFilter::Make(
-            SkBlurMask::ConvertRadiusToSigma(4),
-            { { SK_Scalar1, SK_Scalar1, SK_Scalar1 }, 0, 128, 16*2 }));
+        paint.setMaskFilter(
+                SkEmbossMaskFilter::Make(SkBlurMask::ConvertRadiusToSigma(4),
+                                         {{SK_Scalar1, SK_Scalar1, SK_Scalar1}, 0, 128, 16 * 2}));
         paint.setColorFilter(nullptr);
-        paint.setShader(SkShader::MakeColorShader(SK_ColorBLUE));
+        paint.setShader(SkShaders::Color(SK_ColorBLUE));
         paint.setDither(true);
-        canvas->drawCircle(SkIntToScalar(50), SkIntToScalar(50),
-                           SkIntToScalar(30), paint);
+        canvas->drawCircle(SkIntToScalar(50), SkIntToScalar(50), SkIntToScalar(30), paint);
         canvas->translate(SkIntToScalar(100), 0);
 
         paint.setStyle(SkPaint::kFill_Style);

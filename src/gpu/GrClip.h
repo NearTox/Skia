@@ -8,10 +8,10 @@
 #ifndef GrClip_DEFINED
 #define GrClip_DEFINED
 
-#include "GrAppliedClip.h"
-#include "GrRenderTargetContext.h"
-#include "SkRRect.h"
-#include "SkRect.h"
+#include "include/core/SkRRect.h"
+#include "include/core/SkRect.h"
+#include "src/gpu/GrAppliedClip.h"
+#include "src/gpu/GrRenderTargetContext.h"
 
 class GrContext;
 
@@ -89,15 +89,15 @@ public:
     template <typename TRect>
     constexpr static bool IsOutsideClip(const TRect& outerClipBounds, const SkRect& queryBounds) {
         return
-            // Is the clip so small that it is effectively empty?
-            outerClipBounds.fRight - outerClipBounds.fLeft <= kBoundsTolerance ||
-            outerClipBounds.fBottom - outerClipBounds.fTop <= kBoundsTolerance ||
+                // Is the clip so small that it is effectively empty?
+                outerClipBounds.fRight - outerClipBounds.fLeft <= kBoundsTolerance ||
+                outerClipBounds.fBottom - outerClipBounds.fTop <= kBoundsTolerance ||
 
-            // Are the query bounds effectively outside the clip?
-            outerClipBounds.fLeft >= queryBounds.fRight - kBoundsTolerance ||
-            outerClipBounds.fTop >= queryBounds.fBottom - kBoundsTolerance ||
-            outerClipBounds.fRight <= queryBounds.fLeft + kBoundsTolerance ||
-            outerClipBounds.fBottom <= queryBounds.fTop + kBoundsTolerance;
+                // Are the query bounds effectively outside the clip?
+                outerClipBounds.fLeft >= queryBounds.fRight - kBoundsTolerance ||
+                outerClipBounds.fTop >= queryBounds.fBottom - kBoundsTolerance ||
+                outerClipBounds.fRight <= queryBounds.fLeft + kBoundsTolerance ||
+                outerClipBounds.fBottom <= queryBounds.fTop + kBoundsTolerance;
     }
 
     /**
@@ -130,7 +130,6 @@ public:
                SkScalarAbs(SkScalarRoundToScalar(rect.fBottom) - rect.fBottom) <= kBoundsTolerance;
     }
 };
-
 
 /**
  * GrHardClip never uses coverage FPs. It can only enforce the clip using the already-existing

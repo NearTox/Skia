@@ -10,9 +10,9 @@
 
 #include <memory>
 
-#include "SkMacros.h"
-#include "SkNoncopyable.h"
-#include "SkScalerContext.h"
+#include "include/private/SkMacros.h"
+#include "include/private/SkNoncopyable.h"
+#include "src/core/SkScalerContext.h"
 
 class SkDescriptor : SkNoncopyable {
 public:
@@ -27,7 +27,7 @@ public:
     void operator delete(void* p);
     void init() {
         fLength = sizeof(SkDescriptor);
-        fCount  = 0;
+        fCount = 0;
     }
     uint32_t getLength() const { return fLength; }
     void* addEntry(uint32_t tag, size_t length, const void* data = nullptr);
@@ -37,9 +37,7 @@ public:
     bool isValid() const;
 
 #ifdef SK_DEBUG
-    void assertChecksum() const {
-        SkASSERT(SkDescriptor::ComputeChecksum(this) == fChecksum);
-    }
+    void assertChecksum() const { SkASSERT(SkDescriptor::ComputeChecksum(this) == fChecksum); }
 #endif
 
     const void* findEntry(uint32_t tag, uint32_t* length) const;
@@ -80,24 +78,27 @@ public:
     SkAutoDescriptor(size_t size);
     SkAutoDescriptor(const SkDescriptor& desc);
     SkAutoDescriptor(SkAutoDescriptor&&) = delete;
-    SkAutoDescriptor& operator =(SkAutoDescriptor&&) = delete;
+    SkAutoDescriptor& operator=(SkAutoDescriptor&&) = delete;
 
     ~SkAutoDescriptor();
 
     void reset(size_t size);
     void reset(const SkDescriptor& desc);
-    SkDescriptor* getDesc() const { SkASSERT(fDesc); return fDesc; }
+    SkDescriptor* getDesc() const {
+        SkASSERT(fDesc);
+        return fDesc;
+    }
 
 private:
     void free();
-    static constexpr size_t kStorageSize
-            = sizeof(SkDescriptor)
-              + sizeof(SkDescriptor::Entry) + sizeof(SkScalerContextRec) // for rec
-              + sizeof(SkDescriptor::Entry) + sizeof(void*)              // for typeface
-              + 32;   // slop for occasional small extras
+    static constexpr size_t kStorageSize = sizeof(SkDescriptor) + sizeof(SkDescriptor::Entry) +
+                                           sizeof(SkScalerContextRec)  // for rec
+                                           + sizeof(SkDescriptor::Entry) +
+                                           sizeof(void*)  // for typeface
+                                           + 32;          // slop for occasional small extras
 
-    SkDescriptor*   fDesc{nullptr};
+    SkDescriptor* fDesc{nullptr};
     std::aligned_storage<kStorageSize, alignof(uint32_t)>::type fStorage;
 };
 
-#endif  //SkDescriptor_DEFINED
+#endif  // SkDescriptor_DEFINED

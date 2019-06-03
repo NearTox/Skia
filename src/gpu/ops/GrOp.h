@@ -8,15 +8,15 @@
 #ifndef GrOp_DEFINED
 #define GrOp_DEFINED
 
-#include "GrGpuResource.h"
-#include "GrNonAtomicRef.h"
-#include "GrTracing.h"
-#include "GrXferProcessor.h"
-#include "SkMatrix.h"
-#include "SkRect.h"
-#include "SkString.h"
 #include <atomic>
 #include <new>
+#include "include/core/SkMatrix.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkString.h"
+#include "include/gpu/GrGpuResource.h"
+#include "src/gpu/GrNonAtomicRef.h"
+#include "src/gpu/GrTracing.h"
+#include "src/gpu/GrXferProcessor.h"
 
 class GrCaps;
 class GrGpuCommandBuffer;
@@ -46,21 +46,21 @@ class GrRenderTargetOpList;
  */
 #define GR_OP_SPEW 0
 #if GR_OP_SPEW
-    #define GrOP_SPEW(code) code
-    #define GrOP_INFO(...) SkDebugf(__VA_ARGS__)
+#define GrOP_SPEW(code) code
+#define GrOP_INFO(...) SkDebugf(__VA_ARGS__)
 #else
-    #define GrOP_SPEW(code)
-    #define GrOP_INFO(...)
+#define GrOP_SPEW(code)
+#define GrOP_INFO(...)
 #endif
 
 // Print out op information at flush time
 #define GR_FLUSH_TIME_OP_SPEW 0
 
 // A helper macro to generate a class static id
-#define DEFINE_OP_CLASS_ID \
-    static uint32_t ClassID() { \
+#define DEFINE_OP_CLASS_ID                         \
+    static uint32_t ClassID() {                    \
         static uint32_t kClassID = GenOpClassID(); \
-        return kClassID; \
+        return kClassID;                           \
     }
 
 class GrOp : private SkNoncopyable {
@@ -112,23 +112,23 @@ public:
 
     CombineResult combineIfPossible(GrOp* that, const GrCaps& caps);
 
-    const SkRect& bounds() const {
+    const SkRect& bounds() const noexcept {
         SkASSERT(kUninitialized_BoundsFlag != fBoundsFlags);
         return fBounds;
     }
 
-    void setClippedBounds(const SkRect& clippedBounds) {
+    void setClippedBounds(const SkRect& clippedBounds) noexcept {
         fBounds = clippedBounds;
         // The clipped bounds already incorporate any effect of the bounds flags.
         fBoundsFlags = 0;
     }
 
-    bool hasAABloat() const {
+    bool hasAABloat() const noexcept {
         SkASSERT(fBoundsFlags != kUninitialized_BoundsFlag);
         return SkToBool(fBoundsFlags & kAABloat_BoundsFlag);
     }
 
-    bool hasZeroArea() const {
+    bool hasZeroArea() const noexcept {
         SkASSERT(fBoundsFlags != kUninitialized_BoundsFlag);
         return SkToBool(fBoundsFlags & kZeroArea_BoundsFlag);
     }
@@ -138,12 +138,8 @@ public:
     void* operator new(size_t size);
     void operator delete(void* target);
 
-    void* operator new(size_t size, void* placement) {
-        return ::operator new(size, placement);
-    }
-    void operator delete(void* target, void* placement) {
-        ::operator delete(target, placement);
-    }
+    void* operator new(size_t size, void* placement) { return ::operator new(size, placement); }
+    void operator delete(void* target, void* placement) { ::operator delete(target, placement); }
 #endif
 
     /**
@@ -159,7 +155,10 @@ public:
         return static_cast<T*>(this);
     }
 
-    uint32_t classID() const { SkASSERT(kIllegalOpID != fClassID); return fClassID; }
+    uint32_t classID() const noexcept {
+        SkASSERT(kIllegalOpID != fClassID);
+        return fClassID;
+    }
 
     // We lazily initialize the uniqueID because currently the only user is GrAuditTrail
     uint32_t uniqueID() const {
@@ -185,8 +184,8 @@ public:
 #ifdef SK_DEBUG
     virtual SkString dumpInfo() const {
         SkString string;
-        string.appendf("OpBounds: [L: %.2f, T: %.2f, R: %.2f, B: %.2f]\n",
-                       fBounds.fLeft, fBounds.fTop, fBounds.fRight, fBounds.fBottom);
+        string.appendf("OpBounds: [L: %.2f, T: %.2f, R: %.2f, B: %.2f]\n", fBounds.fLeft,
+                       fBounds.fTop, fBounds.fRight, fBounds.fBottom);
         return string;
     }
 #else
@@ -228,13 +227,13 @@ public:
      */
     void chainConcat(std::unique_ptr<GrOp>);
     /** Returns true if this is the head of a chain (including a length 1 chain). */
-    bool isChainHead() const { return !fPrevInChain; }
+    bool isChainHead() const noexcept { return !fPrevInChain; }
     /** Returns true if this is the tail of a chain (including a length 1 chain). */
-    bool isChainTail() const { return !fNextInChain; }
+    bool isChainTail() const noexcept { return !fNextInChain; }
     /** The next op in the chain. */
-    GrOp* nextInChain() const { return fNextInChain.get(); }
+    GrOp* nextInChain() const noexcept { return fNextInChain.get(); }
     /** The previous op in the chain. */
-    GrOp* prevInChain() const { return fPrevInChain; }
+    GrOp* prevInChain() const noexcept { return fPrevInChain; }
     /**
      * Cuts the chain after this op. The returned op is the op that was previously next in the
      * chain or null if this was already a tail.
@@ -254,34 +253,28 @@ protected:
      * purpose of ensuring that the fragment shader runs on partially covered pixels for
      * non-MSAA antialiasing.
      */
-    enum class HasAABloat : bool {
-        kNo = false,
-        kYes = true
-    };
+    enum class HasAABloat : bool { kNo = false, kYes = true };
     /**
      * Indicates that the geometry represented by the op has zero area (e.g. it is hairline or
      * points).
      */
-    enum class IsZeroArea : bool {
-        kNo = false,
-        kYes = true
-    };
+    enum class IsZeroArea : bool { kNo = false, kYes = true };
 
-    void setBounds(const SkRect& newBounds, HasAABloat aabloat, IsZeroArea zeroArea) {
+    void setBounds(const SkRect& newBounds, HasAABloat aabloat, IsZeroArea zeroArea) noexcept {
         fBounds = newBounds;
         this->setBoundsFlags(aabloat, zeroArea);
     }
-    void setTransformedBounds(const SkRect& srcBounds, const SkMatrix& m,
-                              HasAABloat aabloat, IsZeroArea zeroArea) {
+    void setTransformedBounds(const SkRect& srcBounds, const SkMatrix& m, HasAABloat aabloat,
+                              IsZeroArea zeroArea) noexcept {
         m.mapRect(&fBounds, srcBounds);
         this->setBoundsFlags(aabloat, zeroArea);
     }
     void makeFullScreen(GrSurfaceProxy* proxy) {
-        this->setBounds(SkRect::MakeIWH(proxy->width(), proxy->height()),
-                        HasAABloat::kNo, IsZeroArea::kNo);
+        this->setBounds(SkRect::MakeIWH(proxy->width(), proxy->height()), HasAABloat::kNo,
+                        IsZeroArea::kNo);
     }
 
-    static uint32_t GenOpClassID() { return GenID(&gCurrOpClassID); }
+    static uint32_t GenOpClassID() noexcept { return GenID(&gCurrOpClassID); }
 
 private:
     void joinBounds(const GrOp& that) {
@@ -303,16 +296,17 @@ private:
     // Otherwise, this op's bounds.
     virtual void onExecute(GrOpFlushState*, const SkRect& chainBounds) = 0;
 
-    static uint32_t GenID(std::atomic<uint32_t>* idCounter) {
+    static uint32_t GenID(std::atomic<uint32_t>* idCounter) noexcept {
         uint32_t id = (*idCounter)++;
         if (id == 0) {
-            SK_ABORT("This should never wrap as it should only be called once for each GrOp "
-                   "subclass.");
+            SK_ABORT(
+                    "This should never wrap as it should only be called once for each GrOp "
+                    "subclass.");
         }
         return id;
     }
 
-    void setBoundsFlags(HasAABloat aabloat, IsZeroArea zeroArea) {
+    void setBoundsFlags(HasAABloat aabloat, IsZeroArea zeroArea) noexcept {
         fBoundsFlags = 0;
         fBoundsFlags |= (HasAABloat::kYes == aabloat) ? kAABloat_BoundsFlag : 0;
         fBoundsFlags |= (IsZeroArea ::kYes == zeroArea) ? kZeroArea_BoundsFlag : 0;
@@ -323,19 +317,19 @@ private:
     };
 
     enum BoundsFlags {
-        kAABloat_BoundsFlag                     = 0x1,
-        kZeroArea_BoundsFlag                    = 0x2,
-        SkDEBUGCODE(kUninitialized_BoundsFlag   = 0x4)
+        kAABloat_BoundsFlag = 0x1,
+        kZeroArea_BoundsFlag = 0x2,
+        SkDEBUGCODE(kUninitialized_BoundsFlag = 0x4)
     };
 
-    std::unique_ptr<GrOp>               fNextInChain;
-    GrOp*                               fPrevInChain = nullptr;
-    const uint16_t                      fClassID;
-    uint16_t                            fBoundsFlags;
+    std::unique_ptr<GrOp> fNextInChain;
+    GrOp* fPrevInChain = nullptr;
+    const uint16_t fClassID;
+    uint16_t fBoundsFlags;
 
-    static uint32_t GenOpID() { return GenID(&gCurrOpUniqueID); }
-    mutable uint32_t                    fUniqueID = SK_InvalidUniqueID;
-    SkRect                              fBounds;
+    static uint32_t GenOpID() noexcept { return GenID(&gCurrOpUniqueID); }
+    mutable uint32_t fUniqueID = SK_InvalidUniqueID;
+    SkRect fBounds;
 
     static std::atomic<uint32_t> gCurrOpUniqueID;
     static std::atomic<uint32_t> gCurrOpClassID;

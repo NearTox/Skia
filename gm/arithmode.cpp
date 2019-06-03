@@ -5,33 +5,47 @@
  * found in the LICENSE file.
  */
 
-#include <SkFont.h>
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkArithmeticImageFilter.h"
-#include "SkCanvas.h"
-#include "SkColorPriv.h"
-#include "SkGradientShader.h"
-#include "SkImage.h"
-#include "SkImageSource.h"
-#include "SkShader.h"
-#include "SkSurface.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkArithmeticImageFilter.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/effects/SkImageSource.h"
+#include "tools/ToolUtils.h"
 
-#define WW  100
-#define HH  32
+#include <utility>
+
+#define WW 100
+#define HH 32
 
 static sk_sp<SkImage> make_src() {
     sk_sp<SkSurface> surface(SkSurface::MakeRasterN32Premul(WW, HH));
     SkCanvas* canvas = surface->getCanvas();
 
     SkPaint paint;
-    SkPoint pts[] = { {0, 0}, {SkIntToScalar(WW), SkIntToScalar(HH)} };
+    SkPoint pts[] = {{0, 0}, {SkIntToScalar(WW), SkIntToScalar(HH)}};
     SkColor colors[] = {
-        SK_ColorTRANSPARENT, SK_ColorGREEN, SK_ColorCYAN,
-        SK_ColorRED, SK_ColorMAGENTA, SK_ColorWHITE,
+            SK_ColorTRANSPARENT, SK_ColorGREEN,   SK_ColorCYAN,
+            SK_ColorRED,         SK_ColorMAGENTA, SK_ColorWHITE,
     };
     paint.setShader(SkGradientShader::MakeLinear(pts, colors, nullptr, SK_ARRAY_COUNT(colors),
-                                                 SkShader::kClamp_TileMode));
+                                                 SkTileMode::kClamp));
     canvas->drawPaint(paint);
     return surface->makeImageSnapshot();
 }
@@ -41,26 +55,25 @@ static sk_sp<SkImage> make_dst() {
     SkCanvas* canvas = surface->getCanvas();
 
     SkPaint paint;
-    SkPoint pts[] = { {0, SkIntToScalar(HH)}, {SkIntToScalar(WW), 0} };
+    SkPoint pts[] = {{0, SkIntToScalar(HH)}, {SkIntToScalar(WW), 0}};
     SkColor colors[] = {
-        SK_ColorBLUE, SK_ColorYELLOW, SK_ColorBLACK, SK_ColorGREEN,
-        SK_ColorGRAY,
+            SK_ColorBLUE, SK_ColorYELLOW, SK_ColorBLACK, SK_ColorGREEN, SK_ColorGRAY,
     };
     paint.setShader(SkGradientShader::MakeLinear(pts, colors, nullptr, SK_ARRAY_COUNT(colors),
-                                                 SkShader::kClamp_TileMode));
+                                                 SkTileMode::kClamp));
     canvas->drawPaint(paint);
     return surface->makeImageSnapshot();
 }
 
 static void show_k_text(SkCanvas* canvas, SkScalar x, SkScalar y, const SkScalar k[]) {
-    SkFont font(sk_tool_utils::create_portable_typeface(), 24);
+    SkFont font(ToolUtils::create_portable_typeface(), 24);
     font.setEdging(SkFont::Edging::kAntiAlias);
     SkPaint paint;
     paint.setAntiAlias(true);
     for (int i = 0; i < 4; ++i) {
         SkString str;
         str.appendScalar(k[i]);
-        SkScalar width = font.measureText(str.c_str(), str.size(), kUTF8_SkTextEncoding);
+        SkScalar width = font.measureText(str.c_str(), str.size(), SkTextEncoding::kUTF8);
         canvas->drawString(str, x, y + font.getSize(), font, paint);
         x += width + SkIntToScalar(10);
     }
@@ -68,13 +81,10 @@ static void show_k_text(SkCanvas* canvas, SkScalar x, SkScalar y, const SkScalar
 
 class ArithmodeGM : public skiagm::GM {
 public:
-    ArithmodeGM () {}
+    ArithmodeGM() {}
 
 protected:
-
-    virtual SkString onShortName() {
-        return SkString("arithmode");
-    }
+    virtual SkString onShortName() { return SkString("arithmode"); }
 
     virtual SkISize onISize() { return SkISize::Make(640, 572); }
 
@@ -86,17 +96,11 @@ protected:
 
         constexpr SkScalar one = SK_Scalar1;
         constexpr SkScalar K[] = {
-            0, 0, 0, 0,
-            0, 0, 0, one,
-            0, one, 0, 0,
-            0, 0, one, 0,
-            0, one, one, 0,
-            0, one, -one, 0,
-            0, one/2, one/2, 0,
-            0, one/2, one/2, one/4,
-            0, one/2, one/2, -one/4,
-            one/4, one/2, one/2, 0,
-            -one/4, one/2, one/2, 0,
+                0,       0,       0,       0,       0,        0,       0,       one,     0,
+                one,     0,       0,       0,       0,        one,     0,       0,       one,
+                one,     0,       0,       one,     -one,     0,       0,       one / 2, one / 2,
+                0,       0,       one / 2, one / 2, one / 4,  0,       one / 2, one / 2, -one / 4,
+                one / 4, one / 2, one / 2, 0,       -one / 4, one / 2, one / 2, 0,
         };
 
         const SkScalar* k = K;
@@ -138,9 +142,8 @@ protected:
                 canvas->drawImage(dst, 0, 0);
                 canvas->translate(gap, 0);
 
-                sk_sp<SkImageFilter> bg =
-                        SkArithmeticImageFilter::Make(0, 0, -one / 2, 1, enforcePMColor, dstFilter,
-                                                      nullptr, nullptr);
+                sk_sp<SkImageFilter> bg = SkArithmeticImageFilter::Make(
+                        0, 0, -one / 2, 1, enforcePMColor, dstFilter, nullptr, nullptr);
                 SkPaint p;
                 p.setImageFilter(SkArithmeticImageFilter::Make(0, one / 2, -one, 1, true,
                                                                std::move(bg), dstFilter, nullptr));
@@ -149,7 +152,7 @@ protected:
                 canvas->translate(gap, 0);
 
                 // Label
-                SkFont font(sk_tool_utils::create_portable_typeface(), 24);
+                SkFont font(ToolUtils::create_portable_typeface(), 24);
                 SkString str(enforcePMColor ? "enforcePM" : "no enforcePM");
                 canvas->drawString(str, 0, font.getSize(), font, SkPaint());
             }
@@ -163,4 +166,4 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new ArithmodeGM; )
+DEF_GM(return new ArithmodeGM;)

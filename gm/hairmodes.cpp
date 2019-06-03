@@ -5,24 +5,27 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkColorPriv.h"
-#include "SkShader.h"
+#include "gm/gm.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTileMode.h"
+#include "include/core/SkTypes.h"
 
 constexpr SkBlendMode gModes[] = {
-    SkBlendMode::kClear,
-    SkBlendMode::kSrc,
-    SkBlendMode::kDst,
-    SkBlendMode::kSrcOver,
-    SkBlendMode::kDstOver,
-    SkBlendMode::kSrcIn,
-    SkBlendMode::kDstIn,
-    SkBlendMode::kSrcOut,
-    SkBlendMode::kDstOut,
-    SkBlendMode::kSrcATop,
-    SkBlendMode::kDstATop,
-    SkBlendMode::kXor,
+        SkBlendMode::kClear,   SkBlendMode::kSrc,     SkBlendMode::kDst,     SkBlendMode::kSrcOver,
+        SkBlendMode::kDstOver, SkBlendMode::kSrcIn,   SkBlendMode::kDstIn,   SkBlendMode::kSrcOut,
+        SkBlendMode::kDstOut,  SkBlendMode::kSrcATop, SkBlendMode::kDstATop, SkBlendMode::kXor,
 };
 
 const int gWidth = 64;
@@ -31,12 +34,11 @@ const SkScalar W = SkIntToScalar(gWidth);
 const SkScalar H = SkIntToScalar(gHeight);
 
 static SkScalar drawCell(SkCanvas* canvas, SkBlendMode mode, SkAlpha a0, SkAlpha a1) {
-
     SkPaint paint;
     paint.setAntiAlias(true);
 
     SkRect r = SkRect::MakeWH(W, H);
-    r.inset(W/10, H/10);
+    r.inset(W / 10, H / 10);
 
     paint.setColor(SK_ColorBLUE);
     paint.setAlpha(a0);
@@ -49,7 +51,7 @@ static SkScalar drawCell(SkCanvas* canvas, SkBlendMode mode, SkAlpha a0, SkAlpha
         SkScalar x = SkScalarCos(SkIntToScalar(angle) * (SK_ScalarPI * 2) / 24) * gWidth;
         SkScalar y = SkScalarSin(SkIntToScalar(angle) * (SK_ScalarPI * 2) / 24) * gHeight;
         paint.setStrokeWidth(SK_Scalar1 * angle * 2 / 24);
-        canvas->drawLine(W/2, H/2, W/2 + x, H/2 + y, paint);
+        canvas->drawLine(W / 2, H / 2, W / 2 + x, H / 2 + y, paint);
     }
 
     return H;
@@ -63,62 +65,56 @@ static sk_sp<SkShader> make_bg_shader() {
 
     SkMatrix m;
     m.setScale(SkIntToScalar(6), SkIntToScalar(6));
-    return SkShader::MakeBitmapShader(bm,
-                                      SkShader::kRepeat_TileMode, SkShader::kRepeat_TileMode, &m);
+    return bm.makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, &m);
 }
 
 namespace skiagm {
 
-    class HairModesGM : public GM {
-        SkPaint fBGPaint;
+class HairModesGM : public GM {
+    SkPaint fBGPaint;
 
-    protected:
-        SkString onShortName() override {
-            return SkString("hairmodes");
-        }
+protected:
+    SkString onShortName() override { return SkString("hairmodes"); }
 
-        virtual SkISize onISize() override { return SkISize::Make(640, 480); }
+    virtual SkISize onISize() override { return SkISize::Make(640, 480); }
 
-        void onOnceBeforeDraw() override {
-            fBGPaint.setShader(make_bg_shader());
-        }
+    void onOnceBeforeDraw() override { fBGPaint.setShader(make_bg_shader()); }
 
-        void onDraw(SkCanvas* canvas) override {
-            const SkRect bounds = SkRect::MakeWH(W, H);
-            constexpr SkAlpha gAlphaValue[] = { 0xFF, 0x88, 0x88 };
+    void onDraw(SkCanvas* canvas) override {
+        const SkRect bounds = SkRect::MakeWH(W, H);
+        constexpr SkAlpha gAlphaValue[] = {0xFF, 0x88, 0x88};
 
-            canvas->translate(SkIntToScalar(4), SkIntToScalar(4));
+        canvas->translate(SkIntToScalar(4), SkIntToScalar(4));
 
-            for (int alpha = 0; alpha < 4; ++alpha) {
-                canvas->save();
-                canvas->save();
-                for (size_t i = 0; i < SK_ARRAY_COUNT(gModes); ++i) {
-                    if (6 == i) {
-                        canvas->restore();
-                        canvas->translate(W * 5, 0);
-                        canvas->save();
-                    }
-
-                    canvas->drawRect(bounds, fBGPaint);
-                    canvas->saveLayer(&bounds, nullptr);
-                    SkScalar dy = drawCell(canvas, gModes[i],
-                                           gAlphaValue[alpha & 1],
-                                           gAlphaValue[alpha & 2]);
+        for (int alpha = 0; alpha < 4; ++alpha) {
+            canvas->save();
+            canvas->save();
+            for (size_t i = 0; i < SK_ARRAY_COUNT(gModes); ++i) {
+                if (6 == i) {
                     canvas->restore();
-
-                    canvas->translate(0, dy * 5 / 4);
+                    canvas->translate(W * 5, 0);
+                    canvas->save();
                 }
+
+                canvas->drawRect(bounds, fBGPaint);
+                canvas->saveLayer(&bounds, nullptr);
+                SkScalar dy =
+                        drawCell(canvas, gModes[i], gAlphaValue[alpha & 1], gAlphaValue[alpha & 2]);
                 canvas->restore();
-                canvas->restore();
-                canvas->translate(W * 5 / 4, 0);
+
+                canvas->translate(0, dy * 5 / 4);
             }
+            canvas->restore();
+            canvas->restore();
+            canvas->translate(W * 5 / 4, 0);
         }
+    }
 
-    private:
-        typedef GM INHERITED;
-    };
+private:
+    typedef GM INHERITED;
+};
 
-    //////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 
-    DEF_GM( return new HairModesGM; )
-}
+DEF_GM(return new HairModesGM;)
+}  // namespace skiagm

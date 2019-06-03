@@ -6,11 +6,10 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkMetaData_DEFINED
 #define SkMetaData_DEFINED
 
-#include "SkScalar.h"
+#include "include/core/SkScalar.h"
 
 class SkRefCnt;
 
@@ -50,8 +49,7 @@ public:
 
     bool findS32(const char name[], int32_t* value = nullptr) const;
     bool findScalar(const char name[], SkScalar* value = nullptr) const;
-    const SkScalar* findScalars(const char name[], int* count,
-                                SkScalar values[] = nullptr) const;
+    const SkScalar* findScalars(const char name[], int* count, SkScalar values[] = nullptr) const;
     const char* findString(const char name[]) const;
     bool findPtr(const char name[], void** value = nullptr, PtrProc* = nullptr) const;
     bool findBool(const char name[], bool* value = nullptr) const;
@@ -67,15 +65,15 @@ public:
     }
     bool hasString(const char name[], const char value[]) const {
         const char* v = this->findString(name);
-        return  (v == nullptr && value == nullptr) ||
-                (v != nullptr && value != nullptr && !strcmp(v, value));
+        return (v == nullptr && value == nullptr) ||
+               (v != nullptr && value != nullptr && !strcmp(v, value));
     }
     bool hasPtr(const char name[], void* value) const {
         void* v;
         return this->findPtr(name, &v) && v == value;
     }
     bool hasBool(const char name[], bool value) const {
-        bool    v;
+        bool v;
         return this->findBool(name, &v) && v == value;
     }
     bool hasData(const char name[], const void* data, size_t byteCount) const {
@@ -104,15 +102,9 @@ public:
     bool findRefCnt(const char name[], SkRefCnt** ptr = nullptr) {
         return this->findPtr(name, reinterpret_cast<void**>(ptr));
     }
-    bool hasRefCnt(const char name[], SkRefCnt* ptr) {
-        return this->hasPtr(name, ptr);
-    }
-    void setRefCnt(const char name[], SkRefCnt* ptr) {
-        this->setPtr(name, ptr, RefCntProc);
-    }
-    bool removeRefCnt(const char name[]) {
-        return this->removePtr(name);
-    }
+    bool hasRefCnt(const char name[], SkRefCnt* ptr) { return this->hasPtr(name, ptr); }
+    void setRefCnt(const char name[], SkRefCnt* ptr) { this->setPtr(name, ptr, RefCntProc); }
+    bool removeRefCnt(const char name[]) { return this->removePtr(name); }
 
     enum Type {
         kS32_Type,
@@ -152,20 +144,20 @@ public:
 
 public:
     struct Rec {
-        Rec*        fNext;
-        uint16_t    fDataCount; // number of elements
-        uint8_t     fDataLen;   // sizeof a single element
-        uint8_t     fType;
+        Rec* fNext;
+        uint16_t fDataCount;  // number of elements
+        uint8_t fDataLen;     // sizeof a single element
+        uint8_t fType;
 
         const void* data() const { return (this + 1); }
-        void*       data() { return (this + 1); }
+        void* data() { return (this + 1); }
         const char* name() const { return (const char*)this->data() + fDataLen * fDataCount; }
-        char*       name() { return (char*)this->data() + fDataLen * fDataCount; }
+        char* name() { return (char*)this->data() + fDataLen * fDataCount; }
 
         static Rec* Alloc(size_t);
         static void Free(Rec*);
     };
-    Rec*    fRec;
+    Rec* fRec;
 
     const Rec* find(const char name[], Type) const;
     void* set(const char name[], const void* data, size_t len, Type, int count);

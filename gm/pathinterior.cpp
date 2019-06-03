@@ -5,14 +5,16 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "sk_tool_utils.h"
-#include "SkBlurMaskFilter.h"
-#include "SkCanvas.h"
-#include "SkGraphics.h"
-#include "SkLayerDrawLooper.h"
-#include "SkPath.h"
-#include "SkRandom.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "tools/ToolUtils.h"
 
 static SkRect inset(const SkRect& r) {
     SkRect rect = r;
@@ -22,18 +24,12 @@ static SkRect inset(const SkRect& r) {
 
 class PathInteriorGM : public skiagm::GM {
 public:
-    PathInteriorGM() {
-        this->setBGColor(0xFFDDDDDD);
-    }
+    PathInteriorGM() { this->setBGColor(0xFFDDDDDD); }
 
 protected:
-    SkISize onISize() override {
-        return SkISize::Make(770, 770);
-    }
+    SkISize onISize() override { return SkISize::Make(770, 770); }
 
-    SkString onShortName() override {
-        return SkString("pathinterior");
-    }
+    SkString onShortName() override { return SkString("pathinterior"); }
 
     void show(SkCanvas* canvas, const SkPath& path) {
         SkPaint paint;
@@ -46,7 +42,7 @@ protected:
         bool hasInterior = false;
 #endif
 
-        paint.setColor(hasInterior ? sk_tool_utils::color_to_565(0xFF8888FF) : SK_ColorGRAY);
+        paint.setColor(hasInterior ? ToolUtils::color_to_565(0xFF8888FF) : SK_ColorGRAY);
         canvas->drawPath(path, paint);
         paint.setStyle(SkPaint::kStroke_Style);
         paint.setColor(SK_ColorRED);
@@ -62,8 +58,8 @@ protected:
     void onDraw(SkCanvas* canvas) override {
         canvas->translate(8.5f, 8.5f);
 
-        const SkRect rect = { 0, 0, 80, 80 };
-        const SkScalar RAD = rect.width()/8;
+        const SkRect rect = {0, 0, 80, 80};
+        const SkScalar RAD = rect.width() / 8;
 
         int i = 0;
         for (int insetFirst = 0; insetFirst <= 1; ++insetFirst) {
@@ -73,9 +69,12 @@ protected:
                         for (int outerCW = 0; outerCW <= 1; ++outerCW) {
                             for (int innerCW = 0; innerCW <= 1; ++innerCW) {
                                 SkPath path;
-                                path.setFillType(doEvenOdd ? SkPath::kEvenOdd_FillType : SkPath::kWinding_FillType);
-                                SkPath::Direction outerDir = outerCW ? SkPath::kCW_Direction : SkPath::kCCW_Direction;
-                                SkPath::Direction innerDir = innerCW ? SkPath::kCW_Direction : SkPath::kCCW_Direction;
+                                path.setFillType(doEvenOdd ? SkPath::kEvenOdd_FillType
+                                                           : SkPath::kWinding_FillType);
+                                SkPath::Direction outerDir =
+                                        outerCW ? SkPath::kCW_Direction : SkPath::kCCW_Direction;
+                                SkPath::Direction innerDir =
+                                        innerCW ? SkPath::kCW_Direction : SkPath::kCCW_Direction;
 
                                 SkRect r = insetFirst ? inset(rect) : rect;
                                 if (outerRR) {
@@ -105,10 +104,9 @@ protected:
     }
 
 private:
-
     typedef GM INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new PathInteriorGM; )
+DEF_GM(return new PathInteriorGM;)

@@ -8,9 +8,9 @@
 #ifndef Sk1DPathEffect_DEFINED
 #define Sk1DPathEffect_DEFINED
 
-#include "SkFlattenable.h"
-#include "SkPathEffect.h"
-#include "SkPath.h"
+#include "include/core/SkFlattenable.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPathEffect.h"
 
 class SkPathMeasure;
 
@@ -38,9 +38,9 @@ private:
 class SK_API SkPath1DPathEffect : public Sk1DPathEffect {
 public:
     enum Style {
-        kTranslate_Style,   // translate the shape to each position
-        kRotate_Style,      // rotate the shape about its center
-        kMorph_Style,       // transform each point, and turn lines into curves
+        kTranslate_Style,  // translate the shape to each position
+        kRotate_Style,     // rotate the shape about its center
+        kMorph_Style,      // transform each point, and turn lines into curves
 
         kLastEnum_Style = kMorph_Style,
     };
@@ -66,10 +66,10 @@ protected:
 private:
     SK_FLATTENABLE_HOOKS(SkPath1DPathEffect)
 
-    SkPath      fPath;          // copied from constructor
-    SkScalar    fAdvance;       // copied from constructor
-    SkScalar    fInitialOffset; // computed from phase
-    Style       fStyle;         // copied from constructor
+    SkPath fPath;             // copied from constructor
+    SkScalar fAdvance;        // copied from constructor
+    SkScalar fInitialOffset;  // computed from phase
+    Style fStyle;             // copied from constructor
 
     typedef Sk1DPathEffect INHERITED;
 };

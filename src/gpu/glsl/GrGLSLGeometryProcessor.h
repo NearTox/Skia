@@ -8,7 +8,7 @@
 #ifndef GrGLSLGeometryProcessor_DEFINED
 #define GrGLSLGeometryProcessor_DEFINED
 
-#include "GrGLSLPrimitiveProcessor.h"
+#include "src/gpu/glsl/GrGLSLPrimitiveProcessor.h"
 
 class GrGLSLGPBuilder;
 
@@ -83,8 +83,8 @@ private:
     virtual void onEmitCode(EmitArgs&, GrGPArgs*) = 0;
 
     struct TransformUniform {
-        UniformHandle  fHandle;
-        SkMatrix       fCurrentValue = SkMatrix::InvalidMatrix();
+        UniformHandle fHandle;
+        SkMatrix fCurrentValue = SkMatrix::InvalidMatrix();
     };
 
     SkTArray<TransformUniform, true> fInstalledTransforms;

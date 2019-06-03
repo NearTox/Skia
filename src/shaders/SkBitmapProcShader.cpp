@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "SkBitmapProcShader.h"
+#include "src/shaders/SkBitmapProcShader.h"
 
-#include "SkArenaAlloc.h"
-#include "SkBitmapProcState.h"
-#include "SkBitmapProvider.h"
-#include "SkXfermodePriv.h"
+#include "include/private/SkArenaAlloc.h"
+#include "src/core/SkBitmapProcState.h"
+#include "src/core/SkBitmapProvider.h"
+#include "src/core/SkXfermodePriv.h"
 
 static bool only_scale_and_translate(const SkMatrix& matrix) {
     unsigned mask = SkMatrix::kTranslate_Mask | SkMatrix::kScale_Mask;
@@ -21,10 +21,8 @@ class BitmapProcInfoContext : public SkShaderBase::Context {
 public:
     // The info has been allocated elsewhere, but we are responsible for calling its destructor.
     BitmapProcInfoContext(const SkShaderBase& shader, const SkShaderBase::ContextRec& rec,
-                            SkBitmapProcInfo* info)
-        : INHERITED(shader, rec)
-        , fInfo(info)
-    {
+                          SkBitmapProcInfo* info)
+            : INHERITED(shader, rec), fInfo(info) {
         fFlags = 0;
         if (fInfo->fPixmap.isOpaque() && (255 == this->getPaintAlpha())) {
             fFlags |= SkShaderBase::kOpaqueAlpha_Flag;
@@ -35,11 +33,11 @@ public:
         }
     }
 
-    uint32_t getFlags() const override { return fFlags; }
+    uint32_t getFlags() const noexcept override { return fFlags; }
 
 private:
-    SkBitmapProcInfo*   fInfo;
-    uint32_t            fFlags;
+    SkBitmapProcInfo* fInfo;
+    uint32_t fFlags;
 
     typedef SkShaderBase::Context INHERITED;
 };
@@ -50,9 +48,7 @@ class BitmapProcShaderContext : public BitmapProcInfoContext {
 public:
     BitmapProcShaderContext(const SkShaderBase& shader, const SkShaderBase::ContextRec& rec,
                             SkBitmapProcState* state)
-        : INHERITED(shader, rec, state)
-        , fState(state)
-    {}
+            : INHERITED(shader, rec, state), fState(state) {}
 
     void shadeSpan(int x, int y, SkPMColor dstC[], int count) override {
         const SkBitmapProcState& state = *fState;
@@ -63,7 +59,7 @@ public:
 
         const int BUF_MAX = 128;
         uint32_t buffer[BUF_MAX];
-        SkBitmapProcState::MatrixProc   mproc = state.getMatrixProc();
+        SkBitmapProcState::MatrixProc mproc = state.getMatrixProc();
         SkBitmapProcState::SampleProc32 sproc = state.getSampleProc32();
         const int max = state.maxCountForBufferSize(sizeof(buffer[0]) * BUF_MAX);
 
@@ -71,7 +67,7 @@ public:
 
         for (;;) {
             int n = SkTMin(count, max);
-            SkASSERT(n > 0 && n < BUF_MAX*2);
+            SkASSERT(n > 0 && n < BUF_MAX * 2);
             mproc(state, buffer, n, x, y);
             sproc(state, buffer, n, dstC);
 
@@ -85,17 +81,18 @@ public:
     }
 
 private:
-    SkBitmapProcState*  fState;
+    SkBitmapProcState* fState;
 
     typedef BitmapProcInfoContext INHERITED;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkShaderBase::Context* SkBitmapProcLegacyShader::MakeContext(
-    const SkShaderBase& shader, TileMode tmx, TileMode tmy,
-    const SkBitmapProvider& provider, const ContextRec& rec, SkArenaAlloc* alloc)
-{
+SkShaderBase::Context* SkBitmapProcLegacyShader::MakeContext(const SkShaderBase& shader,
+                                                             SkTileMode tmx, SkTileMode tmy,
+                                                             const SkBitmapProvider& provider,
+                                                             const ContextRec& rec,
+                                                             SkArenaAlloc* alloc) {
     SkMatrix totalInverse;
     // Do this first, so we know the matrix can be inverted.
     if (!shader.computeTotalInverse(*rec.fMatrix, rec.fLocalMatrix, &totalInverse)) {

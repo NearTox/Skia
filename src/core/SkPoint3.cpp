@@ -5,12 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "SkPoint3.h"
+#include "include/core/SkPoint3.h"
 
 // Returns the square of the Euclidian distance to (x,y,z).
-static inline float get_length_squared(float x, float y, float z) {
-    return x * x + y * y + z * z;
-}
+static inline float get_length_squared(float x, float y, float z) { return x * x + y * y + z * z; }
 
 // Calculates the square of the Euclidian distance to (x,y,z) and stores it in
 // *lengthSquared.  Returns true if the distance is judged to be "nearly zero".
@@ -18,7 +16,7 @@ static inline float get_length_squared(float x, float y, float z) {
 // This logic is encapsulated in a helper method to make it explicit that we
 // always perform this check in the same manner, to avoid inconsistencies
 // (see http://code.google.com/p/skia/issues/detail?id=560 ).
-static inline bool is_length_nearly_zero(float x, float y, float z, float *lengthSquared) {
+static inline bool is_length_nearly_zero(float x, float y, float z, float* lengthSquared) {
     *lengthSquared = get_length_squared(x, y, z);
     return *lengthSquared <= (SK_ScalarNearlyZero * SK_ScalarNearlyZero);
 }

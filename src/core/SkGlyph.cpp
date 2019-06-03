@@ -5,33 +5,40 @@
  * found in the LICENSE file.
  */
 
-#include "SkGlyph.h"
+#include "src/core/SkGlyph.h"
 
-#include "SkArenaAlloc.h"
-#include "SkMakeUnique.h"
-#include "SkScalerContext.h"
+#include "include/private/SkArenaAlloc.h"
+#include "src/core/SkMakeUnique.h"
+#include "src/core/SkScalerContext.h"
 
-void SkGlyph::toMask(SkMask* mask) const {
-    SkASSERT(mask);
+SkMask SkGlyph::mask() const {
+    // getMetrics had to be called.
+    SkASSERT(fMaskFormat != MASK_FORMAT_UNKNOWN);
 
-    mask->fImage = (uint8_t*)fImage;
-    mask->fBounds.set(fLeft, fTop, fLeft + fWidth, fTop + fHeight);
-    mask->fRowBytes = this->rowBytes();
-    mask->fFormat = static_cast<SkMask::Format>(fMaskFormat);
+    SkMask mask;
+    mask.fImage = (uint8_t*)fImage;
+    mask.fBounds.set(fLeft, fTop, fLeft + fWidth, fTop + fHeight);
+    mask.fRowBytes = this->rowBytes();
+    mask.fFormat = static_cast<SkMask::Format>(fMaskFormat);
+    return mask;
+}
+
+SkMask SkGlyph::mask(SkPoint position) const {
+    SkMask answer = this->mask();
+    answer.fBounds.offset(SkScalarFloorToInt(position.x()), SkScalarFloorToInt(position.y()));
+    return answer;
 }
 
 void SkGlyph::zeroMetrics() {
     fAdvanceX = 0;
     fAdvanceY = 0;
-    fWidth    = 0;
-    fHeight   = 0;
-    fTop      = 0;
-    fLeft     = 0;
+    fWidth = 0;
+    fHeight = 0;
+    fTop = 0;
+    fLeft = 0;
 }
 
-static size_t bits_to_bytes(size_t bits) {
-    return (bits + 7) >> 3;
-}
+static size_t bits_to_bytes(size_t bits) { return (bits + 7) >> 3; }
 
 static size_t format_alignment(SkMask::Format format) {
     switch (format) {
@@ -52,8 +59,7 @@ static size_t format_alignment(SkMask::Format format) {
 }
 
 static size_t format_rowbytes(int width, SkMask::Format format) {
-    return format == SkMask::kBW_Format ? bits_to_bytes(width)
-                                        : width * format_alignment(format);
+    return format == SkMask::kBW_Format ? bits_to_bytes(width) : width * format_alignment(format);
 }
 
 size_t SkGlyph::formatAlignment() const {
@@ -69,9 +75,7 @@ size_t SkGlyph::allocImage(SkArenaAlloc* alloc) {
     return size;
 }
 
-size_t SkGlyph::rowBytes() const {
-    return format_rowbytes(fWidth, (SkMask::Format)fMaskFormat);
-}
+size_t SkGlyph::rowBytes() const { return format_rowbytes(fWidth, (SkMask::Format)fMaskFormat); }
 
 size_t SkGlyph::rowBytesUsingFormat(SkMask::Format format) const {
     return format_rowbytes(fWidth, format);
@@ -119,4 +123,3 @@ SkPath* SkGlyph::addPath(SkScalerContext* scalerContext, SkArenaAlloc* alloc) {
     }
     return this->path();
 }
-

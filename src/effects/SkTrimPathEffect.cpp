@@ -5,19 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "SkPathMeasure.h"
-#include "SkTrimPathEffect.h"
-#include "SkTrimPE.h"
-#include "SkReadBuffer.h"
-#include "SkWriteBuffer.h"
+#include "include/effects/SkTrimPathEffect.h"
+#include "include/core/SkPathMeasure.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
+#include "src/effects/SkTrimPE.h"
 
 namespace {
 
 class Segmentator : public SkNoncopyable {
 public:
-    Segmentator(const SkPath& src, SkPath* dst)
-        : fMeasure(src, false)
-        , fDst(dst) {}
+    Segmentator(const SkPath& src, SkPath* dst) : fMeasure(src, false), fDst(dst) {}
 
     void add(SkScalar start, SkScalar stop) {
         SkASSERT(start < stop);
@@ -27,12 +25,10 @@ public:
             const auto nextOffset = fCurrentSegmentOffset + fMeasure.getLength();
 
             if (start < nextOffset) {
-                fMeasure.getSegment(start - fCurrentSegmentOffset,
-                                    stop  - fCurrentSegmentOffset,
+                fMeasure.getSegment(start - fCurrentSegmentOffset, stop - fCurrentSegmentOffset,
                                     fDst, true);
 
-                if (stop < nextOffset)
-                    break;
+                if (stop < nextOffset) break;
             }
 
             fCurrentSegmentOffset = nextOffset;
@@ -41,17 +37,17 @@ public:
 
 private:
     SkPathMeasure fMeasure;
-    SkPath*       fDst;
+    SkPath* fDst;
 
     SkScalar fCurrentSegmentOffset = 0;
 
     using INHERITED = SkNoncopyable;
 };
 
-} // namespace
+}  // namespace
 
 SkTrimPE::SkTrimPE(SkScalar startT, SkScalar stopT, SkTrimPathEffect::Mode mode)
-    : fStartT(startT), fStopT(stopT), fMode(mode) {}
+        : fStartT(startT), fStopT(stopT), fMode(mode) {}
 
 bool SkTrimPE::onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
                             const SkRect* cullRect) const {
@@ -67,15 +63,14 @@ bool SkTrimPE::onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
         len += meas.getLength();
     } while (meas.nextContour());
 
-    const auto arcStart = len * fStartT,
-               arcStop  = len * fStopT;
+    const auto arcStart = len * fStartT, arcStop = len * fStopT;
 
     // Second pass: actually add segments.
     Segmentator segmentator(src, dst);
     if (fMode == SkTrimPathEffect::Mode::kNormal) {
         if (arcStart < arcStop) segmentator.add(arcStart, arcStop);
     } else {
-        if (0 <  arcStart) segmentator.add(0,  arcStart);
+        if (0 < arcStart) segmentator.add(0, arcStart);
         if (arcStop < len) segmentator.add(arcStop, len);
     }
 
@@ -89,12 +84,12 @@ void SkTrimPE::flatten(SkWriteBuffer& buffer) const {
 }
 
 sk_sp<SkFlattenable> SkTrimPE::CreateProc(SkReadBuffer& buffer) {
-    const auto start = buffer.readScalar(),
-               stop  = buffer.readScalar();
-    const auto mode  = buffer.readUInt();
+    const auto start = buffer.readScalar(), stop = buffer.readScalar();
+    const auto mode = buffer.readUInt();
 
-    return SkTrimPathEffect::Make(start, stop,
-        (mode & 1) ? SkTrimPathEffect::Mode::kInverted : SkTrimPathEffect::Mode::kNormal);
+    return SkTrimPathEffect::Make(
+            start, stop,
+            (mode & 1) ? SkTrimPathEffect::Mode::kInverted : SkTrimPathEffect::Mode::kNormal);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -109,7 +104,7 @@ sk_sp<SkPathEffect> SkTrimPathEffect::Make(SkScalar startT, SkScalar stopT, Mode
     }
 
     startT = SkTPin(startT, 0.f, 1.f);
-    stopT  = SkTPin(stopT,  0.f, 1.f);
+    stopT = SkTPin(stopT, 0.f, 1.f);
 
     if (startT >= stopT && mode == Mode::kInverted) {
         return nullptr;

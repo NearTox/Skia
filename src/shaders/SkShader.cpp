@@ -5,29 +5,29 @@
  * found in the LICENSE file.
  */
 
-#include "SkArenaAlloc.h"
-#include "SkBitmapProcShader.h"
-#include "SkColorShader.h"
-#include "SkColorSpacePriv.h"
-#include "SkColorSpaceXformer.h"
-#include "SkEmptyShader.h"
-#include "SkMallocPixelRef.h"
-#include "SkPaint.h"
-#include "SkPicture.h"
-#include "SkPictureShader.h"
-#include "SkRasterPipeline.h"
-#include "SkReadBuffer.h"
-#include "SkScalar.h"
-#include "SkShaderBase.h"
-#include "SkTLazy.h"
-#include "SkWriteBuffer.h"
+#include "include/core/SkMallocPixelRef.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPicture.h"
+#include "include/core/SkScalar.h"
+#include "include/private/SkArenaAlloc.h"
+#include "src/core/SkColorSpacePriv.h"
+#include "src/core/SkColorSpaceXformSteps.h"
+#include "src/core/SkRasterPipeline.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkTLazy.h"
+#include "src/core/SkWriteBuffer.h"
+#include "src/shaders/SkBitmapProcShader.h"
+#include "src/shaders/SkColorShader.h"
+#include "src/shaders/SkEmptyShader.h"
+#include "src/shaders/SkPictureShader.h"
+#include "src/shaders/SkShaderBase.h"
 
 #if SK_SUPPORT_GPU
-#include "GrFragmentProcessor.h"
+#include "src/gpu/GrFragmentProcessor.h"
 #endif
 
 SkShaderBase::SkShaderBase(const SkMatrix* localMatrix)
-    : fLocalMatrix(localMatrix ? *localMatrix : SkMatrix::I()) {
+        : fLocalMatrix(localMatrix ? *localMatrix : SkMatrix::I()) {
     // Pre-cache so future calls to fLocalMatrix.getType() are threadsafe.
     (void)fLocalMatrix.getType();
 }
@@ -43,9 +43,8 @@ void SkShaderBase::flatten(SkWriteBuffer& buffer) const {
     }
 }
 
-SkTCopyOnFirstWrite<SkMatrix>
-SkShaderBase::totalLocalMatrix(const SkMatrix* preLocalMatrix,
-                               const SkMatrix* postLocalMatrix) const {
+SkTCopyOnFirstWrite<SkMatrix> SkShaderBase::totalLocalMatrix(
+        const SkMatrix* preLocalMatrix, const SkMatrix* postLocalMatrix) const {
     SkTCopyOnFirstWrite<SkMatrix> m(fLocalMatrix);
 
     if (preLocalMatrix) {
@@ -71,7 +70,7 @@ bool SkShaderBase::asLuminanceColor(SkColor* colorPtr) const {
         colorPtr = &storage;
     }
     if (this->onAsLuminanceColor(colorPtr)) {
-        *colorPtr = SkColorSetA(*colorPtr, 0xFF);   // we only return opaque
+        *colorPtr = SkColorSetA(*colorPtr, 0xFF);  // we only return opaque
         return true;
     }
     return false;
@@ -80,8 +79,7 @@ bool SkShaderBase::asLuminanceColor(SkColor* colorPtr) const {
 SkShaderBase::Context* SkShaderBase::makeContext(const ContextRec& rec, SkArenaAlloc* alloc) const {
 #ifdef SK_ENABLE_LEGACY_SHADERCONTEXT
     // We always fall back to raster pipeline when perspective is present.
-    if (rec.fMatrix->hasPerspective() ||
-        fLocalMatrix.hasPerspective() ||
+    if (rec.fMatrix->hasPerspective() || fLocalMatrix.hasPerspective() ||
         (rec.fLocalMatrix && rec.fLocalMatrix->hasPerspective()) ||
         !this->computeTotalInverse(*rec.fMatrix, rec.fLocalMatrix, nullptr)) {
         return nullptr;
@@ -94,8 +92,7 @@ SkShaderBase::Context* SkShaderBase::makeContext(const ContextRec& rec, SkArenaA
 }
 
 SkShaderBase::Context::Context(const SkShaderBase& shader, const ContextRec& rec)
-    : fShader(shader), fCTM(*rec.fMatrix)
-{
+        : fShader(shader), fCTM(*rec.fMatrix) {
     // We should never use a context with perspective.
     SkASSERT(!rec.fMatrix->hasPerspective());
     SkASSERT(!rec.fLocalMatrix || !rec.fLocalMatrix->hasPerspective());
@@ -111,14 +108,10 @@ SkShaderBase::Context::Context(const SkShaderBase& shader, const ContextRec& rec
 SkShaderBase::Context::~Context() {}
 
 bool SkShaderBase::ContextRec::isLegacyCompatible(SkColorSpace* shaderColorSpace) const {
-    return sk_can_use_legacy_blits(shaderColorSpace, fDstColorSpace);
+    return !SkColorSpaceXformSteps::Required(shaderColorSpace, fDstColorSpace);
 }
 
-const SkMatrix& SkShader::getLocalMatrix() const {
-    return as_SB(this)->getLocalMatrix();
-}
-
-SkImage* SkShader::isAImage(SkMatrix* localMatrix, TileMode xy[2]) const {
+SkImage* SkShader::isAImage(SkMatrix* localMatrix, SkTileMode xy[2]) const {
     return as_SB(this)->onIsAImage(localMatrix, xy);
 }
 
@@ -132,35 +125,25 @@ std::unique_ptr<GrFragmentProcessor> SkShaderBase::asFragmentProcessor(const GrF
 }
 #endif
 
-sk_sp<SkShader> SkShader::makeAsALocalMatrixShader(SkMatrix*) const {
-    return nullptr;
-}
+sk_sp<SkShader> SkShaderBase::makeAsALocalMatrixShader(SkMatrix*) const { return nullptr; }
 
-sk_sp<SkShader> SkShader::MakeEmptyShader() { return sk_make_sp<SkEmptyShader>(); }
+sk_sp<SkShader> SkShaders::Empty() { return sk_make_sp<SkEmptyShader>(); }
+sk_sp<SkShader> SkShaders::Color(SkColor color) { return sk_make_sp<SkColorShader>(color); }
 
-sk_sp<SkShader> SkShader::MakeColorShader(SkColor color) { return sk_make_sp<SkColorShader>(color); }
-
-sk_sp<SkShader> SkShader::MakeBitmapShader(const SkBitmap& src, TileMode tmx, TileMode tmy,
-                                           const SkMatrix* localMatrix) {
-    if (localMatrix && !localMatrix->invert(nullptr)) {
+sk_sp<SkShader> SkBitmap::makeShader(SkTileMode tmx, SkTileMode tmy, const SkMatrix* lm) const {
+    if (lm && !lm->invert(nullptr)) {
         return nullptr;
     }
-    return SkMakeBitmapShader(src, tmx, tmy, localMatrix, kIfMutable_SkCopyPixelsMode);
+    return SkMakeBitmapShader(*this, tmx, tmy, lm, kIfMutable_SkCopyPixelsMode);
 }
 
-sk_sp<SkShader> SkShader::MakePictureShader(sk_sp<SkPicture> src, TileMode tmx, TileMode tmy,
-                                            const SkMatrix* localMatrix, const SkRect* tile) {
-    if (localMatrix && !localMatrix->invert(nullptr)) {
-        return nullptr;
-    }
-    return SkPictureShader::Make(std::move(src), tmx, tmy, localMatrix, tile);
+sk_sp<SkShader> SkBitmap::makeShader(const SkMatrix* lm) const {
+    return this->makeShader(SkTileMode::kClamp, SkTileMode::kClamp, lm);
 }
 
-bool SkShaderBase::appendStages(const StageRec& rec) const {
-    return this->onAppendStages(rec);
-}
+bool SkShaderBase::appendStages(const SkStageRec& rec) const { return this->onAppendStages(rec); }
 
-bool SkShaderBase::onAppendStages(const StageRec& rec) const {
+bool SkShaderBase::onAppendStages(const SkStageRec& rec) const {
     // SkShader::Context::shadeSpan() handles the paint opacity internally,
     // but SkRasterPipelineBlitter applies it as a separate stage.
     // We skip the internal shadeSpan() step by forcing the paint opaque.
@@ -169,32 +152,34 @@ bool SkShaderBase::onAppendStages(const StageRec& rec) const {
         opaquePaint.writable()->setAlpha(SK_AlphaOPAQUE);
     }
 
-    ContextRec cr(*opaquePaint, rec.fCTM, rec.fLocalM, rec.fDstColorType, rec.fDstCS);
+    ContextRec cr(*opaquePaint, rec.fCTM, rec.fLocalM, rec.fDstColorType, sk_srgb_singleton());
 
     struct CallbackCtx : SkRasterPipeline_CallbackCtx {
-        sk_sp<SkShader> shader;
-        Context*        ctx;
+        sk_sp<const SkShader> shader;
+        Context* ctx;
     };
     auto cb = rec.fAlloc->make<CallbackCtx>();
-    cb->shader = rec.fDstCS ? SkColorSpaceXformer::Make(sk_ref_sp(rec.fDstCS))->apply(this)
-                            : sk_ref_sp((SkShader*)this);
-    cb->ctx = as_SB(cb->shader)->makeContext(cr, rec.fAlloc);
-    cb->fn  = [](SkRasterPipeline_CallbackCtx* self, int active_pixels) {
+    cb->shader = sk_ref_sp(this);
+    cb->ctx = as_SB(this)->makeContext(cr, rec.fAlloc);
+    cb->fn = [](SkRasterPipeline_CallbackCtx* self, int active_pixels) {
         auto c = (CallbackCtx*)self;
-        int x = (int)c->rgba[0],
-            y = (int)c->rgba[1];
+        int x = (int)c->rgba[0], y = (int)c->rgba[1];
         SkPMColor tmp[SkRasterPipeline_kMaxStride];
-        c->ctx->shadeSpan(x,y, tmp, active_pixels);
+        c->ctx->shadeSpan(x, y, tmp, active_pixels);
 
         for (int i = 0; i < active_pixels; i++) {
             auto rgba_4f = SkPMColor4f::FromPMColor(tmp[i]);
-            memcpy(c->rgba + 4*i, rgba_4f.vec(), 4*sizeof(float));
+            memcpy(c->rgba + 4 * i, rgba_4f.vec(), 4 * sizeof(float));
         }
     };
 
     if (cb->ctx) {
         rec.fPipeline->append(SkRasterPipeline::seed_shader);
         rec.fPipeline->append(SkRasterPipeline::callback, cb);
+        rec.fAlloc
+                ->make<SkColorSpaceXformSteps>(sk_srgb_singleton(), kPremul_SkAlphaType, rec.fDstCS,
+                                               kPremul_SkAlphaType)
+                ->apply(rec.fPipeline, true);
         return true;
     }
     return false;
@@ -202,6 +187,4 @@ bool SkShaderBase::onAppendStages(const StageRec& rec) const {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-sk_sp<SkFlattenable> SkEmptyShader::CreateProc(SkReadBuffer&) {
-    return SkShader::MakeEmptyShader();
-}
+sk_sp<SkFlattenable> SkEmptyShader::CreateProc(SkReadBuffer&) { return SkShaders::Empty(); }

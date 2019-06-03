@@ -8,9 +8,9 @@
 #ifndef GrRRectEffect_DEFINED
 #define GrRRectEffect_DEFINED
 
-#include "GrTypes.h"
-#include "GrTypesPriv.h"
-#include "SkRefCnt.h"
+#include "include/core/SkRefCnt.h"
+#include "include/gpu/GrTypes.h"
+#include "include/private/GrTypesPriv.h"
 
 class GrFragmentProcessor;
 class GrShaderCaps;
@@ -24,6 +24,6 @@ namespace GrRRectEffect {
  * all varieties of SkRRect so the caller must check for a nullptr return.
  */
 std::unique_ptr<GrFragmentProcessor> Make(GrClipEdgeType, const SkRRect&, const GrShaderCaps&);
-};
+};  // namespace GrRRectEffect
 
 #endif

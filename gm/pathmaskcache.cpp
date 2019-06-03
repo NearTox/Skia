@@ -5,11 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-
-#include "GrContext.h"
-#include "GrContextOptions.h"
-#include "SkPath.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/gpu/GrContextOptions.h"
+#include "include/private/GrTypesPriv.h"
+#include "include/private/SkTArray.h"
 
 /** This tests the GPU backend's caching of path coverage masks */
 class PathMaskCache : public skiagm::GM {
@@ -19,53 +26,50 @@ public:
 protected:
     SkString onShortName() override { return SkString("path_mask_cache"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(650, 950);
-    }
+    SkISize onISize() override { return SkISize::Make(650, 950); }
 
     void onDraw(SkCanvas* canvas) override {
         static constexpr SkScalar kPad = 5.f;
 
         SkPaint paint;
         paint.setAntiAlias(true);
-        auto drawPathSet = [canvas] (const SkPath& path, const SkMatrix& m) {
+        auto drawPathSet = [canvas](const SkPath& path, const SkMatrix& m) {
             SkPaint paint;
             paint.setAntiAlias(true);
             SkRect bounds = path.getBounds();
             m.mapRect(&bounds);
             bounds.roundOut();
             canvas->save();
-                canvas->translate(-bounds.fLeft, -bounds.fTop);
+            canvas->translate(-bounds.fLeft, -bounds.fTop);
 
-                canvas->save();
-                    canvas->concat(m);
-                    canvas->drawPath(path, paint);
-                canvas->restore();
+            canvas->save();
+            canvas->concat(m);
+            canvas->drawPath(path, paint);
+            canvas->restore();
 
-                // translate by integer
-                canvas->translate(bounds.width() + kPad, 0.f);
-                canvas->save();
-                    canvas->concat(m);
-                    canvas->drawPath(path, paint);
-                canvas->restore();
+            // translate by integer
+            canvas->translate(bounds.width() + kPad, 0.f);
+            canvas->save();
+            canvas->concat(m);
+            canvas->drawPath(path, paint);
+            canvas->restore();
 
-                // translate by non-integer
-                canvas->translate(bounds.width() + kPad + 0.15f, 0.f);
-                canvas->save();
-                    canvas->concat(m);
-                    canvas->drawPath(path, paint);
-                canvas->restore();
+            // translate by non-integer
+            canvas->translate(bounds.width() + kPad + 0.15f, 0.f);
+            canvas->save();
+            canvas->concat(m);
+            canvas->drawPath(path, paint);
+            canvas->restore();
 
-                // translate again so total translate fraction is almost identical to previous.
-                canvas->translate(bounds.width() + kPad + 0.002f, 0.f);
-                canvas->save();
-                    canvas->concat(m);
-                    canvas->drawPath(path, paint);
-                canvas->restore();
+            // translate again so total translate fraction is almost identical to previous.
+            canvas->translate(bounds.width() + kPad + 0.002f, 0.f);
+            canvas->save();
+            canvas->concat(m);
+            canvas->drawPath(path, paint);
+            canvas->restore();
             canvas->restore();
             return bounds.fBottom + kPad;
         };
-
 
         SkTArray<SkPath> paths;
         paths.push_back();
@@ -110,4 +114,4 @@ private:
     typedef GM INHERITED;
 };
 
-DEF_GM( return new PathMaskCache(); )
+DEF_GM(return new PathMaskCache();)

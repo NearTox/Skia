@@ -8,12 +8,12 @@
 #ifndef GrMtlPipelineStateBuilder_DEFINED
 #define GrMtlPipelineStateBuilder_DEFINED
 
-#include "GrPipeline.h"
-#include "GrProgramDesc.h"
-#include "GrMtlUniformHandler.h"
-#include "GrMtlVaryingHandler.h"
-#include "SkSLCompiler.h"
-#include "glsl/GrGLSLProgramBuilder.h"
+#include "src/gpu/GrPipeline.h"
+#include "src/gpu/GrProgramDesc.h"
+#include "src/gpu/glsl/GrGLSLProgramBuilder.h"
+#include "src/gpu/mtl/GrMtlUniformHandler.h"
+#include "src/gpu/mtl/GrMtlVaryingHandler.h"
+#include "src/sksl/SkSLCompiler.h"
 
 #import <metal/metal.h>
 
@@ -58,19 +58,15 @@ public:
      * key to 0 (unspecified) if it turns out the program does not care about the surface origin.
      * @return true if generation was successful.
      */
-    static GrMtlPipelineState* CreatePipelineState(GrMtlGpu*,
-                                                   GrRenderTarget*, GrSurfaceOrigin,
+    static GrMtlPipelineState* CreatePipelineState(GrMtlGpu*, GrRenderTarget*, GrSurfaceOrigin,
                                                    const GrPrimitiveProcessor&,
                                                    const GrTextureProxy* const primProcProxies[],
-                                                   const GrPipeline&,
-                                                   Desc*);
+                                                   const GrPipeline&, Desc*);
 
 private:
-    GrMtlPipelineStateBuilder(GrMtlGpu*, GrRenderTarget*, GrSurfaceOrigin,
-                              const GrPipeline&,
+    GrMtlPipelineStateBuilder(GrMtlGpu*, GrRenderTarget*, GrSurfaceOrigin, const GrPipeline&,
                               const GrPrimitiveProcessor&,
-                              const GrTextureProxy* const primProcProxies[],
-                              GrProgramDesc*);
+                              const GrTextureProxy* const primProcProxies[], GrProgramDesc*);
 
     GrMtlPipelineState* finalize(GrRenderTarget* renderTarget,
                                  const GrPrimitiveProcessor& primProc,

@@ -5,28 +5,27 @@
  * found in the LICENSE file.
  */
 
-#include "GrOpFlushState.h"
+#include "src/gpu/GrOpFlushState.h"
 
-#include "GrContextPriv.h"
-#include "GrDrawOpAtlas.h"
-#include "GrGpu.h"
-#include "GrResourceProvider.h"
-#include "GrTexture.h"
+#include "include/gpu/GrTexture.h"
+#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrDrawOpAtlas.h"
+#include "src/gpu/GrGpu.h"
+#include "src/gpu/GrResourceProvider.h"
 
 //////////////////////////////////////////////////////////////////////////////
 
 GrOpFlushState::GrOpFlushState(GrGpu* gpu, GrResourceProvider* resourceProvider,
-                               GrTokenTracker* tokenTracker,
+                               GrResourceCache* cache, GrTokenTracker* tokenTracker,
                                sk_sp<GrBufferAllocPool::CpuBufferCache> cpuBufferCache)
         : fVertexPool(gpu, cpuBufferCache)
         , fIndexPool(gpu, std::move(cpuBufferCache))
         , fGpu(gpu)
         , fResourceProvider(resourceProvider)
-        , fTokenTracker(tokenTracker) {}
+        , fTokenTracker(tokenTracker)
+        , fDeinstantiateProxyTracker(cache) {}
 
-const GrCaps& GrOpFlushState::caps() const {
-    return *fGpu->caps();
-}
+const GrCaps& GrOpFlushState::caps() const { return *fGpu->caps(); }
 
 GrGpuRTCommandBuffer* GrOpFlushState::rtCommandBuffer() {
     return fCommandBuffer->asRTCommandBuffer();
@@ -34,11 +33,11 @@ GrGpuRTCommandBuffer* GrOpFlushState::rtCommandBuffer() {
 
 void GrOpFlushState::executeDrawsAndUploadsForMeshDrawOp(
         const GrOp* op, const SkRect& chainBounds, GrProcessorSet&& processorSet,
-        uint32_t pipelineFlags, const GrUserStencilSettings* stencilSettings) {
+        GrPipeline::InputFlags pipelineFlags, const GrUserStencilSettings* stencilSettings) {
     SkASSERT(this->rtCommandBuffer());
 
     GrPipeline::InitArgs pipelineArgs;
-    pipelineArgs.fFlags = pipelineFlags;
+    pipelineArgs.fInputFlags = pipelineFlags;
     pipelineArgs.fDstProxy = this->dstProxy();
     pipelineArgs.fCaps = &this->caps();
     pipelineArgs.fResourceProvider = this->resourceProvider();
@@ -52,10 +51,9 @@ void GrOpFlushState::executeDrawsAndUploadsForMeshDrawOp(
             this->rtCommandBuffer()->inlineUpload(this, fCurrUpload->fUpload);
             ++fCurrUpload;
         }
-        this->rtCommandBuffer()->draw(
-                *fCurrDraw->fGeometryProcessor, pipeline, fCurrDraw->fFixedDynamicState,
-                fCurrDraw->fDynamicStateArrays, fCurrDraw->fMeshes, fCurrDraw->fMeshCnt,
-                chainBounds);
+        this->rtCommandBuffer()->draw(*fCurrDraw->fGeometryProcessor, pipeline,
+                                      fCurrDraw->fFixedDynamicState, fCurrDraw->fDynamicStateArrays,
+                                      fCurrDraw->fMeshes, fCurrDraw->fMeshCnt, chainBounds);
         fTokenTracker->flushToken();
         ++fCurrDraw;
     }
@@ -85,18 +83,18 @@ void GrOpFlushState::reset() {
 }
 
 void GrOpFlushState::doUpload(GrDeferredTextureUploadFn& upload) {
-    GrDeferredTextureUploadWritePixelsFn wp = [this](GrTextureProxy* dstProxy, int left, int top,
-                                                     int width, int height,
-                                                     GrColorType srcColorType, const void* buffer,
-                                                     size_t rowBytes) {
-        GrSurface* dstSurface = dstProxy->peekSurface();
-        if (!fGpu->caps()->surfaceSupportsWritePixels(dstSurface) &&
-            fGpu->caps()->supportedWritePixelsColorType(dstSurface->config(), srcColorType) != srcColorType) {
-            return false;
-        }
-        return this->fGpu->writePixels(dstSurface, left, top, width, height, srcColorType, buffer,
-                                       rowBytes);
-    };
+    GrDeferredTextureUploadWritePixelsFn wp =
+            [this](GrTextureProxy* dstProxy, int left, int top, int width, int height,
+                   GrColorType srcColorType, const void* buffer, size_t rowBytes) {
+                GrSurface* dstSurface = dstProxy->peekSurface();
+                if (!fGpu->caps()->surfaceSupportsWritePixels(dstSurface) &&
+                    fGpu->caps()->supportedWritePixelsColorType(dstSurface->config(),
+                                                                srcColorType) != srcColorType) {
+                    return false;
+                }
+                return this->fGpu->writePixels(dstSurface, left, top, width, height, srcColorType,
+                                               buffer, rowBytes);
+            };
     upload(wp);
 }
 
@@ -110,10 +108,9 @@ GrDeferredUploadToken GrOpFlushState::addASAPUpload(GrDeferredTextureUploadFn&& 
     return fTokenTracker->nextTokenToFlush();
 }
 
-void GrOpFlushState::recordDraw(
-        sk_sp<const GrGeometryProcessor> gp, const GrMesh meshes[], int meshCnt,
-        const GrPipeline::FixedDynamicState* fixedDynamicState,
-        const GrPipeline::DynamicStateArrays* dynamicStateArrays) {
+void GrOpFlushState::recordDraw(sk_sp<const GrGeometryProcessor> gp, const GrMesh meshes[],
+                                int meshCnt, const GrPipeline::FixedDynamicState* fixedDynamicState,
+                                const GrPipeline::DynamicStateArrays* dynamicStateArrays) {
     SkASSERT(fOpArgs);
     SkASSERT(fOpArgs->fOp);
     bool firstDraw = fDraws.begin() == fDraws.end();

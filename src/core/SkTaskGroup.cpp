@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "SkExecutor.h"
-#include "SkTaskGroup.h"
+#include "src/core/SkTaskGroup.h"
+#include "include/core/SkExecutor.h"
 
 SkTaskGroup::SkTaskGroup(SkExecutor& executor) : fPending(0), fExecutor(executor) {}
 
@@ -29,9 +29,7 @@ void SkTaskGroup::batch(int N, std::function<void(int)> fn) {
     }
 }
 
-bool SkTaskGroup::done() const {
-    return fPending.load(std::memory_order_acquire) == 0;
-}
+bool SkTaskGroup::done() const { return fPending.load(std::memory_order_acquire) == 0; }
 
 void SkTaskGroup::wait() {
     // Actively help the executor do work until our task group is done.

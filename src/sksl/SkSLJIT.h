@@ -10,27 +10,28 @@
 
 #ifdef SK_LLVM_AVAILABLE
 
-#include "ir/SkSLBinaryExpression.h"
-#include "ir/SkSLBreakStatement.h"
-#include "ir/SkSLContinueStatement.h"
-#include "ir/SkSLExpression.h"
-#include "ir/SkSLDoStatement.h"
-#include "ir/SkSLForStatement.h"
-#include "ir/SkSLFunctionCall.h"
-#include "ir/SkSLFunctionDefinition.h"
-#include "ir/SkSLIfStatement.h"
-#include "ir/SkSLIndexExpression.h"
-#include "ir/SkSLPrefixExpression.h"
-#include "ir/SkSLPostfixExpression.h"
-#include "ir/SkSLProgram.h"
-#include "ir/SkSLReturnStatement.h"
-#include "ir/SkSLStatement.h"
-#include "ir/SkSLSwizzle.h"
-#include "ir/SkSLTernaryExpression.h"
-#include "ir/SkSLVarDeclarationsStatement.h"
-#include "ir/SkSLVariableReference.h"
-#include "ir/SkSLWhileStatement.h"
+#include "src/sksl/ir/SkSLBinaryExpression.h"
+#include "src/sksl/ir/SkSLBreakStatement.h"
+#include "src/sksl/ir/SkSLContinueStatement.h"
+#include "src/sksl/ir/SkSLDoStatement.h"
+#include "src/sksl/ir/SkSLExpression.h"
+#include "src/sksl/ir/SkSLForStatement.h"
+#include "src/sksl/ir/SkSLFunctionCall.h"
+#include "src/sksl/ir/SkSLFunctionDefinition.h"
+#include "src/sksl/ir/SkSLIfStatement.h"
+#include "src/sksl/ir/SkSLIndexExpression.h"
+#include "src/sksl/ir/SkSLPostfixExpression.h"
+#include "src/sksl/ir/SkSLPrefixExpression.h"
+#include "src/sksl/ir/SkSLProgram.h"
+#include "src/sksl/ir/SkSLReturnStatement.h"
+#include "src/sksl/ir/SkSLStatement.h"
+#include "src/sksl/ir/SkSLSwizzle.h"
+#include "src/sksl/ir/SkSLTernaryExpression.h"
+#include "src/sksl/ir/SkSLVarDeclarationsStatement.h"
+#include "src/sksl/ir/SkSLVariableReference.h"
+#include "src/sksl/ir/SkSLWhileStatement.h"
 
+#include <stack>
 #include "llvm-c/Analysis.h"
 #include "llvm-c/Core.h"
 #include "llvm-c/OrcBindings.h"
@@ -38,7 +39,6 @@
 #include "llvm-c/Target.h"
 #include "llvm-c/Transforms/PassManagerBuilder.h"
 #include "llvm-c/Types.h"
-#include <stack>
 
 class SkRasterPipeline;
 
@@ -91,17 +91,13 @@ public:
          */
         void* getJumperStage(const char* name);
 
-        ~Module() {
-            LLVMOrcDisposeSharedModuleRef(fSharedModule);
-        }
+        ~Module() { LLVMOrcDisposeSharedModuleRef(fSharedModule); }
 
     private:
         Module(std::unique_ptr<Program> program,
                LLVMSharedModuleRef sharedModule,
                LLVMOrcJITStackRef jitStack)
-        : fProgram(std::move(program))
-        , fSharedModule(sharedModule)
-        , fJITStack(jitStack) {}
+                : fProgram(std::move(program)), fSharedModule(sharedModule), fJITStack(jitStack) {}
 
         std::unique_ptr<Program> fProgram;
         LLVMSharedModuleRef fSharedModule;
@@ -123,12 +119,7 @@ public:
 private:
     static constexpr int CHANNELS = 4;
 
-    enum TypeKind {
-        kFloat_TypeKind,
-        kInt_TypeKind,
-        kUInt_TypeKind,
-        kBool_TypeKind
-    };
+    enum TypeKind { kFloat_TypeKind, kInt_TypeKind, kUInt_TypeKind, kBool_TypeKind };
 
     class LValue {
     public:
@@ -227,8 +218,7 @@ private:
     bool compileVectorFloatLiteral(LLVMBuilderRef builder, const FloatLiteral& f,
                                    LLVMValueRef out[CHANNELS]);
 
-    bool compileVectorSwizzle(LLVMBuilderRef builder, const Swizzle& s,
-                              LLVMValueRef out[CHANNELS]);
+    bool compileVectorSwizzle(LLVMBuilderRef builder, const Swizzle& s, LLVMValueRef out[CHANNELS]);
 
     bool compileVectorVariableReference(LLVMBuilderRef builder, const VariableReference& v,
                                         LLVMValueRef out[CHANNELS]);
@@ -349,8 +339,8 @@ private:
     LLVMValueRef fDebugFunc;
 };
 
-} // namespace
+}  // namespace SkSL
 
-#endif // SK_LLVM_AVAILABLE
+#endif  // SK_LLVM_AVAILABLE
 
-#endif // SKSL_JIT
+#endif  // SKSL_JIT

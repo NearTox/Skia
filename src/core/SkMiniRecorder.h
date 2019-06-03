@@ -8,9 +8,9 @@
 #ifndef SkMiniRecorder_DEFINED
 #define SkMiniRecorder_DEFINED
 
-#include "SkRecords.h"
-#include "SkScalar.h"
-#include "SkTypes.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkTypes.h"
+#include "src/core/SkRecords.h"
 class SkCanvas;
 
 // Records small pictures, but only a limited subset of the canvas API, and may fail.
@@ -44,14 +44,12 @@ private:
 
     State fState;
 
-    template <size_t A, size_t B>
-    struct Max { static const size_t val = A > B ? A : B; };
+    template <size_t A, size_t B> struct Max { static const size_t val = A > B ? A : B; };
 
     static const size_t kInlineStorage =
-        Max<sizeof(SkRecords::DrawPath),
-        Max<sizeof(SkRecords::DrawRect),
-            sizeof(SkRecords::DrawTextBlob)>::val>::val;
+            Max<sizeof(SkRecords::DrawPath),
+                Max<sizeof(SkRecords::DrawRect), sizeof(SkRecords::DrawTextBlob)>::val>::val;
     SkAlignedSStorage<kInlineStorage> fBuffer;
 };
 
-#endif//SkMiniRecorder_DEFINED
+#endif  // SkMiniRecorder_DEFINED

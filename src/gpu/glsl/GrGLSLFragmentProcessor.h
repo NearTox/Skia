@@ -8,10 +8,10 @@
 #ifndef GrGLSLFragmentProcessor_DEFINED
 #define GrGLSLFragmentProcessor_DEFINED
 
-#include "GrFragmentProcessor.h"
-#include "GrShaderVar.h"
-#include "glsl/GrGLSLProgramDataManager.h"
-#include "glsl/GrGLSLUniformHandler.h"
+#include "src/gpu/GrFragmentProcessor.h"
+#include "src/gpu/GrShaderVar.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
 class GrProcessor;
 class GrProcessorKeyBuilder;
@@ -28,8 +28,8 @@ public:
         }
     }
 
-    using UniformHandle      = GrGLSLUniformHandler::UniformHandle;
-    using SamplerHandle      = GrGLSLUniformHandler::SamplerHandle;
+    using UniformHandle = GrGLSLUniformHandler::UniformHandle;
+    using SamplerHandle = GrGLSLUniformHandler::SamplerHandle;
 
 private:
     /**
@@ -38,12 +38,11 @@ private:
      * the GrFragmentProcessor that generated the GLSLFP. For example, this is used to provide a
      * variable holding transformed coords for each GrCoordTransform owned by the FP.
      */
-    template <typename T, int (GrFragmentProcessor::*COUNT)() const>
-    class BuilderInputProvider {
+    template <typename T, int (GrFragmentProcessor::*COUNT)() const> class BuilderInputProvider {
     public:
-        BuilderInputProvider(const GrFragmentProcessor* fp, const T* ts) : fFP(fp) , fTs(ts) {}
+        BuilderInputProvider(const GrFragmentProcessor* fp, const T* ts) : fFP(fp), fTs(ts) {}
 
-        const T& operator[] (int i) const {
+        const T& operator[](int i) const {
             SkASSERT(i >= 0 && i < (fFP->*COUNT)());
             return fTs[i];
         }
@@ -65,7 +64,7 @@ private:
 
     private:
         const GrFragmentProcessor* fFP;
-        const T*                   fTs;
+        const T* fTs;
     };
 
 public:
@@ -132,9 +131,7 @@ public:
 
     int numChildProcessors() const { return fChildProcessors.count(); }
 
-    GrGLSLFragmentProcessor* childProcessor(int index) {
-        return fChildProcessors[index];
-    }
+    GrGLSLFragmentProcessor* childProcessor(int index) { return fChildProcessors[index]; }
 
     // Emit the child with the default input color (solid white)
     inline void emitChild(int childIndex, SkString* outputColor, EmitArgs& parentArgs) {
@@ -156,7 +153,7 @@ public:
     // default input color of solid white
     inline void emitChild(int childIndex, EmitArgs& args) {
         // null pointer cast required to disambiguate the function call
-        this->emitChild(childIndex, (const char*) nullptr, args);
+        this->emitChild(childIndex, (const char*)nullptr, args);
     }
 
     /** Variation that uses the parent's output color variable to hold the child's output.*/

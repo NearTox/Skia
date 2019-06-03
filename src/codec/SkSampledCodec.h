@@ -7,8 +7,8 @@
 #ifndef SkSampledCodec_DEFINED
 #define SkSampledCodec_DEFINED
 
-#include "SkAndroidCodec.h"
-#include "SkCodec.h"
+#include "include/codec/SkAndroidCodec.h"
+#include "include/codec/SkCodec.h"
 
 /**
  *  This class implements the functionality of SkAndroidCodec.  Scaling will
@@ -21,13 +21,12 @@ public:
     ~SkSampledCodec() override {}
 
 protected:
-
     SkISize onGetSampledDimensions(int sampleSize) const override;
 
     bool onGetSupportedSubset(SkIRect* desiredSubset) const override { return true; }
 
     SkCodec::Result onGetAndroidPixels(const SkImageInfo& info, void* pixels, size_t rowBytes,
-            const AndroidOptions& options) override;
+                                       const AndroidOptions& options) override;
 
 private:
     /**
@@ -52,8 +51,8 @@ private:
      *  provide the scale by sampling.
      */
     SkCodec::Result sampledDecode(const SkImageInfo& info, void* pixels, size_t rowBytes,
-            const AndroidOptions& options);
+                                  const AndroidOptions& options);
 
     typedef SkAndroidCodec INHERITED;
 };
-#endif // SkSampledCodec_DEFINED
+#endif  // SkSampledCodec_DEFINED

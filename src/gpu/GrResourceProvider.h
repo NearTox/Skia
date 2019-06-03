@@ -8,11 +8,11 @@
 #ifndef GrResourceProvider_DEFINED
 #define GrResourceProvider_DEFINED
 
-#include "GrContextOptions.h"
-#include "GrGpuBuffer.h"
-#include "GrResourceCache.h"
-#include "SkImageInfoPriv.h"
-#include "SkScalerContext.h"
+#include "include/gpu/GrContextOptions.h"
+#include "include/private/SkImageInfoPriv.h"
+#include "src/core/SkScalerContext.h"
+#include "src/gpu/GrGpuBuffer.h"
+#include "src/gpu/GrResourceCache.h"
 
 class GrBackendRenderTarget;
 class GrBackendSemaphore;
@@ -42,7 +42,7 @@ class GrResourceProvider {
 public:
     /** These flags govern which scratch resources we are allowed to return */
     enum class Flags {
-        kNone            = 0x0,
+        kNone = 0x0,
 
         /** If the caller intends to do direct reads/writes to/from the CPU then this flag must be
          *  set when accessing resources during a GrOpList flush. This includes the execution of
@@ -50,11 +50,10 @@ public:
          *  will occur out of order WRT the operations being flushed.
          *  Make this automatic: https://bug.skia.org/4156
          */
-        kNoPendingIO     = 0x1,
+        kNoPendingIO = 0x1,
     };
 
-    GrResourceProvider(GrGpu*, GrResourceCache*, GrSingleOwner*,
-                       bool explicitlyAllocateGPUResources);
+    GrResourceProvider(GrGpu*, GrResourceCache*, GrSingleOwner*);
 
     /**
      * Finds a resource in the cache, based on the specified key. Prior to calling this, the caller
@@ -211,17 +210,16 @@ public:
      */
     bool attachStencilAttachment(GrRenderTarget* rt);
 
-     /**
-      * Wraps an existing texture with a GrRenderTarget object. This is useful when the provided
-      * texture has a format that cannot be textured from by Skia, but we want to raster to it.
-      *
-      * The texture is wrapped as borrowed. The texture object will not be freed once the
-      * render target is destroyed.
-      *
-      * @return GrRenderTarget object or NULL on failure.
-      */
-     sk_sp<GrRenderTarget> wrapBackendTextureAsRenderTarget(const GrBackendTexture&,
-                                                            int sampleCnt);
+    /**
+     * Wraps an existing texture with a GrRenderTarget object. This is useful when the provided
+     * texture has a format that cannot be textured from by Skia, but we want to raster to it.
+     *
+     * The texture is wrapped as borrowed. The texture object will not be freed once the
+     * render target is destroyed.
+     *
+     * @return GrRenderTarget object or NULL on failure.
+     */
+    sk_sp<GrRenderTarget> wrapBackendTextureAsRenderTarget(const GrBackendTexture&, int sampleCnt);
 
     /**
      * Assigns a unique key to a resource. If the key is associated with another resource that
@@ -240,21 +238,17 @@ public:
                                             SemaphoreWrapType wrapType,
                                             GrWrapOwnership = kBorrow_GrWrapOwnership);
 
-    void abandon() {
+    void abandon() noexcept {
         fCache = nullptr;
         fGpu = nullptr;
     }
 
-    uint32_t contextUniqueID() const { return fCache->contextUniqueID(); }
-    const GrCaps* caps() const { return fCaps.get(); }
-    bool overBudget() const { return fCache->overBudget(); }
+    uint32_t contextUniqueID() const noexcept { return fCache->contextUniqueID(); }
+    const GrCaps* caps() const noexcept { return fCaps.get(); }
+    bool overBudget() const noexcept { return fCache->overBudget(); }
 
     inline GrResourceProviderPriv priv();
     inline const GrResourceProviderPriv priv() const;
-
-    bool explicitlyAllocateGPUResources() const { return fExplicitlyAllocateGPUResources; }
-
-    bool testingOnly_setExplicitlyAllocateGPUResources(bool newValue);
 
 private:
     sk_sp<GrGpuResource> findResourceByUniqueKey(const GrUniqueKey&);
@@ -269,16 +263,16 @@ private:
      */
     sk_sp<GrTexture> getExactScratch(const GrSurfaceDesc&, SkBudgeted, Flags);
 
-    GrResourceCache* cache() { return fCache; }
-    const GrResourceCache* cache() const { return fCache; }
+    GrResourceCache* cache() noexcept { return fCache; }
+    const GrResourceCache* cache() const noexcept { return fCache; }
 
     friend class GrResourceProviderPriv;
 
     // Method made available via GrResourceProviderPriv
-    GrGpu* gpu() { return fGpu; }
-    const GrGpu* gpu() const { return fGpu; }
+    GrGpu* gpu() noexcept { return fGpu; }
+    const GrGpu* gpu() const noexcept { return fGpu; }
 
-    bool isAbandoned() const {
+    bool isAbandoned() const noexcept {
         SkASSERT(SkToBool(fGpu) == SkToBool(fCache));
         return !SkToBool(fCache);
     }
@@ -295,10 +289,9 @@ private:
     GrGpu* fGpu;
     sk_sp<const GrCaps> fCaps;
     sk_sp<const GrGpuBuffer> fQuadIndexBuffer;
-    bool fExplicitlyAllocateGPUResources;
 
     // In debug builds we guard against improper thread handling
-    SkDEBUGCODE(mutable GrSingleOwner* fSingleOwner;)
+    SkDEBUGCODE(mutable GrSingleOwner* fSingleOwner);
 };
 
 GR_MAKE_BITFIELD_CLASS_OPS(GrResourceProvider::Flags);

@@ -12,10 +12,10 @@
 //   SkTextHunter   -- SkRecord visitor that returns true when the op draws text.
 //   SkPathCounter  -- SkRecord visitor that counts paths that draw slowly on the GPU.
 
-#include "SkPathEffect.h"
-#include "SkRecords.h"
-#include "SkShader.h"
-#include "SkTLogic.h"
+#include "include/core/SkPathEffect.h"
+#include "include/core/SkShader.h"
+#include "include/private/SkTLogic.h"
+#include "src/core/SkRecords.h"
 
 // TODO: might be nicer to have operator() return an int (the number of slow paths) ?
 struct SkPathCounter {
@@ -50,8 +50,7 @@ struct SkPathCounter {
         if (op.paint.isAntiAlias() && !op.path.isConvex()) {
             SkPaint::Style paintStyle = op.paint.getStyle();
             const SkRect& pathBounds = op.path.getBounds();
-            if (SkPaint::kStroke_Style == paintStyle &&
-                0 == op.paint.getStrokeWidth()) {
+            if (SkPaint::kStroke_Style == paintStyle && 0 == op.paint.getStrokeWidth()) {
                 // AA hairline concave path is not slow.
             } else if (SkPaint::kFill_Style == paintStyle && pathBounds.width() < 64.f &&
                        pathBounds.height() < 64.f && !op.path.isVolatile()) {
@@ -69,18 +68,18 @@ struct SkPathCounter {
         }
     }
 
-    void operator()(const SkRecords::SaveLayer& op) {
-        this->checkPaint(AsPtr(op.paint));
-    }
+    void operator()(const SkRecords::SaveLayer& op) { this->checkPaint(AsPtr(op.paint)); }
 
     template <typename T>
-    SK_WHEN(T::kTags & SkRecords::kHasPaint_Tag, void) operator()(const T& op) {
+    SK_WHEN(T::kTags& SkRecords::kHasPaint_Tag, void)
+    operator()(const T& op) {
         this->checkPaint(AsPtr(op.paint));
     }
 
     template <typename T>
     SK_WHEN(!(T::kTags & SkRecords::kHasPaint_Tag), void)
-      operator()(const T& op) { /* do nothing */ }
+    operator()(const T& op) { /* do nothing */
+    }
 
     int fNumSlowPathsAndDashEffects;
 };

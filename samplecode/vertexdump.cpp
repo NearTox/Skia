@@ -4,7 +4,7 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkPoint.h"
+#include "include/core/SkPoint.h"
 
 void setup_vertexbug(SkPoint verts[], SkPoint texs[], uint16_t index[]);
 
@@ -41,14 +41,22 @@ void setup_vertexbug(SkPoint verts[], SkPoint texs[], uint16_t index[]) {
     texs[14].set(35, 48);
     verts[15].set(212, 233);
     texs[15].set(44, 48);
-    index[0] = 0; index[1] = 5; index[2] = 1;
-    index[3] = 0; index[4] = 4; index[5] = 5;
+    index[0] = 0;
+    index[1] = 5;
+    index[2] = 1;
+    index[3] = 0;
+    index[4] = 4;
+    index[5] = 5;
 #if 0
     index[6] = 1; index[7] = 6; index[8] = 2;
 #else
-    index[6] = 6; index[7] = 2; index[8] = 1;
+    index[6] = 6;
+    index[7] = 2;
+    index[8] = 1;
 #endif
-    index[9] = 1; index[10] = 5; index[11] = 6;
+    index[9] = 1;
+    index[10] = 5;
+    index[11] = 6;
     index[12] = 2;
     index[13] = 7;
     index[14] = 3;

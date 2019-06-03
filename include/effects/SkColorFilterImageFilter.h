@@ -8,29 +8,26 @@
 #ifndef SkColorFilterImageFilter_DEFINED
 #define SkColorFilterImageFilter_DEFINED
 
-#include "SkImageFilter.h"
-#include "SkColorFilter.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkImageFilter.h"
 
 class SK_API SkColorFilterImageFilter : public SkImageFilter {
 public:
-    static sk_sp<SkImageFilter> Make(sk_sp<SkColorFilter> cf,
-                                     sk_sp<SkImageFilter> input,
+    static sk_sp<SkImageFilter> Make(sk_sp<SkColorFilter> cf, sk_sp<SkImageFilter> input,
                                      const CropRect* cropRect = nullptr);
 
 protected:
     void flatten(SkWriteBuffer&) const override;
     sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
                                         SkIPoint* offset) const override;
-    sk_sp<SkImageFilter> onMakeColorSpace(SkColorSpaceXformer*) const override;
     bool onIsColorFilterNode(SkColorFilter**) const override;
-    bool onCanHandleComplexCTM() const override { return true; }
-    bool affectsTransparentBlack() const override;
+    bool onCanHandleComplexCTM() const noexcept override { return true; }
+    bool affectsTransparentBlack() const noexcept override;
 
 private:
     SK_FLATTENABLE_HOOKS(SkColorFilterImageFilter)
 
-    SkColorFilterImageFilter(sk_sp<SkColorFilter> cf,
-                             sk_sp<SkImageFilter> input,
+    SkColorFilterImageFilter(sk_sp<SkColorFilter> cf, sk_sp<SkImageFilter> input,
                              const CropRect* cropRect);
 
     sk_sp<SkColorFilter> fColorFilter;

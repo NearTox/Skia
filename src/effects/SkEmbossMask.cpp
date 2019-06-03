@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "SkEmbossMask.h"
+#include "src/effects/SkEmbossMask.h"
 
-#include "SkFixed.h"
-#include "SkMath.h"
-#include "SkMathPriv.h"
-#include "SkTo.h"
+#include "include/core/SkMath.h"
+#include "include/private/SkFixed.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkMathPriv.h"
 
 static inline int nonzero_to_one(int x) {
 #if 0
@@ -39,27 +39,27 @@ static inline int neq_to_mask(int x, int max) {
 }
 
 static inline unsigned div255(unsigned x) {
-    SkASSERT(x <= (255*255));
+    SkASSERT(x <= (255 * 255));
     return x * ((1 << 24) / 255) >> 24;
 }
 
-#define kDelta  32  // small enough to show off angle differences
+#define kDelta 32  // small enough to show off angle differences
 
 void SkEmbossMask::Emboss(SkMask* mask, const SkEmbossMaskFilter::Light& light) {
     SkASSERT(mask->fFormat == SkMask::k3D_Format);
 
-    int     specular = light.fSpecular;
-    int     ambient = light.fAmbient;
+    int specular = light.fSpecular;
+    int ambient = light.fAmbient;
     SkFixed lx = SkScalarToFixed(light.fDirection[0]);
     SkFixed ly = SkScalarToFixed(light.fDirection[1]);
     SkFixed lz = SkScalarToFixed(light.fDirection[2]);
     SkFixed lz_dot_nz = lz * kDelta;
-    int     lz_dot8 = lz >> 8;
+    int lz_dot8 = lz >> 8;
 
-    size_t      planeSize = mask->computeImageSize();
-    uint8_t*    alpha = mask->fImage;
-    uint8_t*    multiply = (uint8_t*)alpha + planeSize;
-    uint8_t*    additive = multiply + planeSize;
+    size_t planeSize = mask->computeImageSize();
+    uint8_t* alpha = mask->fImage;
+    uint8_t* multiply = (uint8_t*)alpha + planeSize;
+    uint8_t* additive = multiply + planeSize;
 
     int rowBytes = mask->fRowBytes;
     int maxy = mask->fBounds.height() - 1;
@@ -74,11 +74,11 @@ void SkEmbossMask::Emboss(SkMask* mask, const SkEmbossMaskFilter::Light& light) 
             int ny = alpha[x + next_row] - alpha[x - prev_row];
 
             SkFixed numer = lx * nx + ly * ny + lz_dot_nz;
-            int     mul = ambient;
-            int     add = 0;
+            int mul = ambient;
+            int add = 0;
 
             if (numer > 0) {  // preflight when numer/denom will be <= 0
-                int denom = SkSqrt32(nx * nx + ny * ny + kDelta*kDelta);
+                int denom = SkSqrt32(nx * nx + ny * ny + kDelta * kDelta);
                 SkFixed dot = numer / denom;
                 dot >>= 8;  // now dot is 2^8 instead of 2^16
                 mul = SkMin32(mul + dot, 255);

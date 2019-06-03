@@ -5,20 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "SkAndroidCodec.h"
-#include "SkBitmapRegionCodec.h"
-#include "SkBitmapRegionDecoderPriv.h"
-#include "SkCodecPriv.h"
+#include "src/android/SkBitmapRegionCodec.h"
+#include "include/codec/SkAndroidCodec.h"
+#include "src/android/SkBitmapRegionDecoderPriv.h"
+#include "src/codec/SkCodecPriv.h"
 
 SkBitmapRegionCodec::SkBitmapRegionCodec(SkAndroidCodec* codec)
-    : INHERITED(codec->getInfo().width(), codec->getInfo().height())
-    , fCodec(codec)
-{}
+        : INHERITED(codec->getInfo().width(), codec->getInfo().height()), fCodec(codec) {}
 
 bool SkBitmapRegionCodec::decodeRegion(SkBitmap* bitmap, SkBRDAllocator* allocator,
-        const SkIRect& desiredSubset, int sampleSize, SkColorType dstColorType,
-        bool requireUnpremul, sk_sp<SkColorSpace> dstColorSpace) {
-
+                                       const SkIRect& desiredSubset, int sampleSize,
+                                       SkColorType dstColorType, bool requireUnpremul,
+                                       sk_sp<SkColorSpace> dstColorSpace) {
     // Fix the input sampleSize if necessary.
     if (sampleSize < 1) {
         sampleSize = 1;
@@ -87,10 +85,10 @@ bool SkBitmapRegionCodec::decodeRegion(SkBitmap* bitmap, SkBRDAllocator* allocat
     // TODO (msarett): Can we make this faster by implementing it to only
     //                 zero parts of the image that we won't overwrite with
     //                 pixels?
-    SkCodec::ZeroInitialized zeroInit = allocator ? allocator->zeroInit() :
-            SkCodec::kNo_ZeroInitialized;
+    SkCodec::ZeroInitialized zeroInit =
+            allocator ? allocator->zeroInit() : SkCodec::kNo_ZeroInitialized;
     if (SubsetType::kPartiallyInside_SubsetType == type &&
-            SkCodec::kNo_ZeroInitialized == zeroInit) {
+        SkCodec::kNo_ZeroInitialized == zeroInit) {
         void* pixels = bitmap->getPixels();
         size_t bytes = outInfo.computeByteSize(bitmap->rowBytes());
         memset(pixels, 0, bytes);
@@ -103,8 +101,8 @@ bool SkBitmapRegionCodec::decodeRegion(SkBitmap* bitmap, SkBRDAllocator* allocat
     options.fZeroInitialized = zeroInit;
     void* dst = bitmap->getAddr(scaledOutX, scaledOutY);
 
-    SkCodec::Result result = fCodec->getAndroidPixels(decodeInfo, dst, bitmap->rowBytes(),
-            &options);
+    SkCodec::Result result =
+            fCodec->getAndroidPixels(decodeInfo, dst, bitmap->rowBytes(), &options);
     switch (result) {
         case SkCodec::kSuccess:
         case SkCodec::kIncompleteInput:

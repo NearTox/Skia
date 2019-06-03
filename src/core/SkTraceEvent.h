@@ -10,30 +10,28 @@
 #ifndef SkTraceEvent_DEFINED
 #define SkTraceEvent_DEFINED
 
-#include "SkEventTracer.h"
-#include "SkTraceEventCommon.h"
 #include <atomic>
+#include "include/utils/SkEventTracer.h"
+#include "src/core/SkTraceEventCommon.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Implementation specific tracing API definitions.
 
 // Makes it easier to add traces with a simple TRACE_EVENT0("skia", TRACE_FUNC).
 #if defined(_MSC_VER)
-    #define TRACE_FUNC __FUNCSIG__
+#define TRACE_FUNC __FUNCSIG__
 #else
-    #define TRACE_FUNC __PRETTY_FUNCTION__
+#define TRACE_FUNC __PRETTY_FUNCTION__
 #endif
 
 // By default, const char* argument values are assumed to have long-lived scope
 // and will not be copied. Use this macro to force a const char* to be copied.
-#define TRACE_STR_COPY(str) \
-    skia::tracing_internals::TraceStringWithCopy(str)
+#define TRACE_STR_COPY(str) skia::tracing_internals::TraceStringWithCopy(str)
 
-
-#define INTERNAL_TRACE_EVENT_CATEGORY_GROUP_ENABLED_FOR_RECORDING_MODE() \
-    *INTERNAL_TRACE_EVENT_UID(category_group_enabled) & \
-        (SkEventTracer::kEnabledForRecording_CategoryGroupEnabledFlags | \
-         SkEventTracer::kEnabledForEventCallback_CategoryGroupEnabledFlags)
+#define INTERNAL_TRACE_EVENT_CATEGORY_GROUP_ENABLED_FOR_RECORDING_MODE()     \
+    *INTERNAL_TRACE_EVENT_UID(category_group_enabled) &                      \
+            (SkEventTracer::kEnabledForRecording_CategoryGroupEnabledFlags | \
+             SkEventTracer::kEnabledForEventCallback_CategoryGroupEnabledFlags)
 
 // Get a pointer to the enabled state of the given trace category. Only
 // long-lived literal strings should be given as the category group. The
@@ -59,8 +57,7 @@
 //                    const uint8_t* arg_types,
 //                    const uint64_t* arg_values,
 //                    unsigned char flags)
-#define TRACE_EVENT_API_ADD_TRACE_EVENT \
-    SkEventTracer::GetInstance()->addTraceEvent
+#define TRACE_EVENT_API_ADD_TRACE_EVENT SkEventTracer::GetInstance()->addTraceEvent
 
 // Set the duration field of a COMPLETE trace event.
 // void TRACE_EVENT_API_UPDATE_TRACE_EVENT_DURATION(
@@ -82,80 +79,72 @@
 // Implementation detail: trace event macros create temporary variables
 // to keep instrumentation overhead low. These macros give each temporary
 // variable a unique name based on the line number to prevent name collisions.
-#define INTERNAL_TRACE_EVENT_UID3(a,b) \
-    trace_event_unique_##a##b
-#define INTERNAL_TRACE_EVENT_UID2(a,b) \
-    INTERNAL_TRACE_EVENT_UID3(a,b)
-#define INTERNAL_TRACE_EVENT_UID(name_prefix) \
-    INTERNAL_TRACE_EVENT_UID2(name_prefix, __LINE__)
+#define INTERNAL_TRACE_EVENT_UID3(a, b) trace_event_unique_##a##b
+#define INTERNAL_TRACE_EVENT_UID2(a, b) INTERNAL_TRACE_EVENT_UID3(a, b)
+#define INTERNAL_TRACE_EVENT_UID(name_prefix) INTERNAL_TRACE_EVENT_UID2(name_prefix, __LINE__)
 
 // Implementation detail: internal macro to create static category.
 // No barriers are needed, because this code is designed to operate safely
 // even when the unsigned char* points to garbage data (which may be the case
 // on processors without cache coherency).
-#define INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO_CUSTOM_VARIABLES( \
-    category_group, atomic, category_group_enabled) \
-    category_group_enabled = \
-        reinterpret_cast<const uint8_t*>(atomic.load(std::memory_order_relaxed)); \
-    if (!category_group_enabled) { \
-      category_group_enabled = TRACE_EVENT_API_GET_CATEGORY_GROUP_ENABLED(category_group); \
-      atomic.store(reinterpret_cast<intptr_t>(category_group_enabled), \
-                   std::memory_order_relaxed); \
+#define INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO_CUSTOM_VARIABLES(category_group, atomic,      \
+                                                                category_group_enabled)      \
+    category_group_enabled =                                                                 \
+            reinterpret_cast<const uint8_t*>(atomic.load(std::memory_order_relaxed));        \
+    if (!category_group_enabled) {                                                           \
+        category_group_enabled = TRACE_EVENT_API_GET_CATEGORY_GROUP_ENABLED(category_group); \
+        atomic.store(reinterpret_cast<intptr_t>(category_group_enabled),                     \
+                     std::memory_order_relaxed);                                             \
     }
 
-#define INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(category_group) \
-    static std::atomic<intptr_t> INTERNAL_TRACE_EVENT_UID(atomic){0}; \
-    const uint8_t* INTERNAL_TRACE_EVENT_UID(category_group_enabled); \
-    INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO_CUSTOM_VARIABLES( \
-        TRACE_CATEGORY_PREFIX category_group, \
-        INTERNAL_TRACE_EVENT_UID(atomic), \
-        INTERNAL_TRACE_EVENT_UID(category_group_enabled));
+#define INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(category_group)                      \
+    static std::atomic<intptr_t> INTERNAL_TRACE_EVENT_UID(atomic){0};               \
+    const uint8_t* INTERNAL_TRACE_EVENT_UID(category_group_enabled);                \
+    INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO_CUSTOM_VARIABLES(                        \
+            TRACE_CATEGORY_PREFIX category_group, INTERNAL_TRACE_EVENT_UID(atomic), \
+            INTERNAL_TRACE_EVENT_UID(category_group_enabled));
 
 // Implementation detail: internal macro to create static category and add
 // event if the category is enabled.
-#define INTERNAL_TRACE_EVENT_ADD(phase, category_group, name, flags, ...) \
-    do { \
-      INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(category_group); \
-      if (INTERNAL_TRACE_EVENT_CATEGORY_GROUP_ENABLED_FOR_RECORDING_MODE()) { \
-        skia::tracing_internals::AddTraceEvent( \
-            phase, INTERNAL_TRACE_EVENT_UID(category_group_enabled), name, \
-            skia::tracing_internals::kNoEventId, flags, ##__VA_ARGS__); \
-      } \
+#define INTERNAL_TRACE_EVENT_ADD(phase, category_group, name, flags, ...)          \
+    do {                                                                           \
+        INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(category_group);                    \
+        if (INTERNAL_TRACE_EVENT_CATEGORY_GROUP_ENABLED_FOR_RECORDING_MODE()) {    \
+            skia::tracing_internals::AddTraceEvent(                                \
+                    phase, INTERNAL_TRACE_EVENT_UID(category_group_enabled), name, \
+                    skia::tracing_internals::kNoEventId, flags, ##__VA_ARGS__);    \
+        }                                                                          \
     } while (0)
 
 // Implementation detail: internal macro to create static category and add
 // event if the category is enabled.
-#define INTERNAL_TRACE_EVENT_ADD_WITH_ID(phase, category_group, name, id, \
-                                         flags, ...) \
-    do { \
-      INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(category_group); \
-      if (INTERNAL_TRACE_EVENT_CATEGORY_GROUP_ENABLED_FOR_RECORDING_MODE()) { \
-        unsigned char trace_event_flags = flags | TRACE_EVENT_FLAG_HAS_ID; \
-        skia::tracing_internals::TraceID trace_event_trace_id( \
-            id, &trace_event_flags); \
-        skia::tracing_internals::AddTraceEvent( \
-            phase, INTERNAL_TRACE_EVENT_UID(category_group_enabled), \
-            name, trace_event_trace_id.data(), trace_event_flags, \
-            ##__VA_ARGS__); \
-      } \
+#define INTERNAL_TRACE_EVENT_ADD_WITH_ID(phase, category_group, name, id, flags, ...)      \
+    do {                                                                                   \
+        INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(category_group);                            \
+        if (INTERNAL_TRACE_EVENT_CATEGORY_GROUP_ENABLED_FOR_RECORDING_MODE()) {            \
+            unsigned char trace_event_flags = flags | TRACE_EVENT_FLAG_HAS_ID;             \
+            skia::tracing_internals::TraceID trace_event_trace_id(id, &trace_event_flags); \
+            skia::tracing_internals::AddTraceEvent(                                        \
+                    phase, INTERNAL_TRACE_EVENT_UID(category_group_enabled), name,         \
+                    trace_event_trace_id.data(), trace_event_flags, ##__VA_ARGS__);        \
+        }                                                                                  \
     } while (0)
 
 // Implementation detail: internal macro to create static category and add begin
 // event if the category is enabled. Also adds the end event when the scope
 // ends.
-#define INTERNAL_TRACE_EVENT_ADD_SCOPED(category_group, name, ...) \
-    INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(category_group); \
-    skia::tracing_internals::ScopedTracer INTERNAL_TRACE_EVENT_UID(tracer); \
-    do { \
-        if (INTERNAL_TRACE_EVENT_CATEGORY_GROUP_ENABLED_FOR_RECORDING_MODE()) { \
-          SkEventTracer::Handle h = skia::tracing_internals::AddTraceEvent( \
-              TRACE_EVENT_PHASE_COMPLETE, \
-              INTERNAL_TRACE_EVENT_UID(category_group_enabled), \
-              name, skia::tracing_internals::kNoEventId, \
-              TRACE_EVENT_FLAG_NONE, ##__VA_ARGS__); \
-          INTERNAL_TRACE_EVENT_UID(tracer).Initialize( \
-              INTERNAL_TRACE_EVENT_UID(category_group_enabled), name, h); \
-        } \
+#define INTERNAL_TRACE_EVENT_ADD_SCOPED(category_group, name, ...)                                \
+    INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(category_group);                                       \
+    skia::tracing_internals::ScopedTracer INTERNAL_TRACE_EVENT_UID(tracer);                       \
+    do {                                                                                          \
+        if (INTERNAL_TRACE_EVENT_CATEGORY_GROUP_ENABLED_FOR_RECORDING_MODE()) {                   \
+            SkEventTracer::Handle h = skia::tracing_internals::AddTraceEvent(                     \
+                    TRACE_EVENT_PHASE_COMPLETE, INTERNAL_TRACE_EVENT_UID(category_group_enabled), \
+                    name, skia::tracing_internals::kNoEventId, TRACE_EVENT_FLAG_NONE,             \
+                    ##__VA_ARGS__);                                                               \
+            INTERNAL_TRACE_EVENT_UID(tracer).Initialize(                                          \
+                    INTERNAL_TRACE_EVENT_UID(category_group_enabled), name, h);                   \
+        }                                                                                         \
     } while (0)
 
 namespace skia {
@@ -171,30 +160,31 @@ const uint64_t kNoEventId = 0;
 // collide when the same pointer is used on different processes.
 class TraceID {
 public:
-    TraceID(const void* id, unsigned char* flags)
+    TraceID(const void* id, unsigned char* flags) noexcept
             : data_(static_cast<uint64_t>(reinterpret_cast<uintptr_t>(id))) {
         *flags |= TRACE_EVENT_FLAG_MANGLE_ID;
     }
-    TraceID(uint64_t id, unsigned char* flags)
-        : data_(id) { (void)flags; }
-    TraceID(unsigned int id, unsigned char* flags)
-        : data_(id) { (void)flags; }
-    TraceID(unsigned short id, unsigned char* flags)
-        : data_(id) { (void)flags; }
-    TraceID(unsigned char id, unsigned char* flags)
-        : data_(id) { (void)flags; }
-    TraceID(long long id, unsigned char* flags)
-        : data_(static_cast<uint64_t>(id)) { (void)flags; }
-    TraceID(long id, unsigned char* flags)
-        : data_(static_cast<uint64_t>(id)) { (void)flags; }
-    TraceID(int id, unsigned char* flags)
-        : data_(static_cast<uint64_t>(id)) { (void)flags; }
-    TraceID(short id, unsigned char* flags)
-        : data_(static_cast<uint64_t>(id)) { (void)flags; }
-    TraceID(signed char id, unsigned char* flags)
-        : data_(static_cast<uint64_t>(id)) { (void)flags; }
+    TraceID(uint64_t id, unsigned char* flags) noexcept : data_(id) { (void)flags; }
+    TraceID(unsigned int id, unsigned char* flags) noexcept : data_(id) { (void)flags; }
+    TraceID(unsigned short id, unsigned char* flags) noexcept : data_(id) { (void)flags; }
+    TraceID(unsigned char id, unsigned char* flags) noexcept : data_(id) { (void)flags; }
+    TraceID(long long id, unsigned char* flags) noexcept : data_(static_cast<uint64_t>(id)) {
+        (void)flags;
+    }
+    TraceID(long id, unsigned char* flags) noexcept : data_(static_cast<uint64_t>(id)) {
+        (void)flags;
+    }
+    TraceID(int id, unsigned char* flags) noexcept : data_(static_cast<uint64_t>(id)) {
+        (void)flags;
+    }
+    TraceID(short id, unsigned char* flags) noexcept : data_(static_cast<uint64_t>(id)) {
+        (void)flags;
+    }
+    TraceID(signed char id, unsigned char* flags) noexcept : data_(static_cast<uint64_t>(id)) {
+        (void)flags;
+    }
 
-    uint64_t data() const { return data_; }
+    uint64_t data() const noexcept { return data_; }
 
 private:
     uint64_t data_;
@@ -202,47 +192,41 @@ private:
 
 // Simple union to store various types as uint64_t.
 union TraceValueUnion {
-  bool as_bool;
-  uint64_t as_uint;
-  long long as_int;
-  double as_double;
-  const void* as_pointer;
-  const char* as_string;
+    bool as_bool;
+    uint64_t as_uint;
+    long long as_int;
+    double as_double;
+    const void* as_pointer;
+    const char* as_string;
 };
 
 // Simple container for const char* that should be copied instead of retained.
 class TraceStringWithCopy {
- public:
-  explicit TraceStringWithCopy(const char* str) : str_(str) {}
-  operator const char* () const { return str_; }
- private:
-  const char* str_;
+public:
+    explicit TraceStringWithCopy(const char* str) noexcept : str_(str) {}
+    operator const char*() const noexcept { return str_; }
+
+private:
+    const char* str_;
 };
 
 // Define SetTraceValue for each allowed type. It stores the type and
 // value in the return arguments. This allows this API to avoid declaring any
 // structures so that it is portable to third_party libraries.
-#define INTERNAL_DECLARE_SET_TRACE_VALUE(actual_type, \
-                                         union_member, \
-                                         value_type_id) \
-    static inline void SetTraceValue( \
-        actual_type arg, \
-        unsigned char* type, \
-        uint64_t* value) { \
-      TraceValueUnion type_value; \
-      type_value.union_member = arg; \
-      *type = value_type_id; \
-      *value = type_value.as_uint; \
+#define INTERNAL_DECLARE_SET_TRACE_VALUE(actual_type, union_member, value_type_id) \
+    static inline void SetTraceValue(actual_type arg, unsigned char* type,         \
+                                     uint64_t* value) noexcept {                   \
+        TraceValueUnion type_value;                                                \
+        type_value.union_member = arg;                                             \
+        *type = value_type_id;                                                     \
+        *value = type_value.as_uint;                                               \
     }
 // Simpler form for int types that can be safely casted.
-#define INTERNAL_DECLARE_SET_TRACE_VALUE_INT(actual_type, \
-                                             value_type_id) \
-    static inline void SetTraceValue( \
-        actual_type arg, \
-        unsigned char* type, \
-        uint64_t* value) { \
-      *type = value_type_id; \
-      *value = static_cast<uint64_t>(arg); \
+#define INTERNAL_DECLARE_SET_TRACE_VALUE_INT(actual_type, value_type_id)   \
+    static inline void SetTraceValue(actual_type arg, unsigned char* type, \
+                                     uint64_t* value) noexcept {           \
+        *type = value_type_id;                                             \
+        *value = static_cast<uint64_t>(arg);                               \
     }
 
 INTERNAL_DECLARE_SET_TRACE_VALUE_INT(uint64_t, TRACE_VALUE_TYPE_UINT)
@@ -270,94 +254,85 @@ INTERNAL_DECLARE_SET_TRACE_VALUE(const TraceStringWithCopy&, as_string,
 // pointers to the internal c_str and pass through to the tracing API,
 // the arg_values must live throughout these procedures.
 
-static inline SkEventTracer::Handle
-AddTraceEvent(
-    char phase,
-    const uint8_t* category_group_enabled,
-    const char* name,
-    uint64_t id,
-    unsigned char flags) {
-  return TRACE_EVENT_API_ADD_TRACE_EVENT(
-      phase, category_group_enabled, name, id,
-      kZeroNumArgs, nullptr, nullptr, nullptr, flags);
+static inline SkEventTracer::Handle AddTraceEvent(char phase,
+                                                  const uint8_t* category_group_enabled,
+                                                  const char* name,
+                                                  uint64_t id,
+                                                  unsigned char flags) noexcept {
+    return TRACE_EVENT_API_ADD_TRACE_EVENT(phase, category_group_enabled, name, id, kZeroNumArgs,
+                                           nullptr, nullptr, nullptr, flags);
 }
 
-template<class ARG1_TYPE>
-static inline SkEventTracer::Handle
-AddTraceEvent(
-    char phase,
-    const uint8_t* category_group_enabled,
-    const char* name,
-    uint64_t id,
-    unsigned char flags,
-    const char* arg1_name,
-    const ARG1_TYPE& arg1_val) {
-  const int num_args = 1;
-  uint8_t arg_types[1];
-  uint64_t arg_values[1];
-  SetTraceValue(arg1_val, &arg_types[0], &arg_values[0]);
-  return TRACE_EVENT_API_ADD_TRACE_EVENT(
-      phase, category_group_enabled, name, id,
-      num_args, &arg1_name, arg_types, arg_values, flags);
+template <class ARG1_TYPE>
+static inline SkEventTracer::Handle AddTraceEvent(char phase,
+                                                  const uint8_t* category_group_enabled,
+                                                  const char* name,
+                                                  uint64_t id,
+                                                  unsigned char flags,
+                                                  const char* arg1_name,
+                                                  const ARG1_TYPE& arg1_val) {
+    const int num_args = 1;
+    uint8_t arg_types[1];
+    uint64_t arg_values[1];
+    SetTraceValue(arg1_val, &arg_types[0], &arg_values[0]);
+    return TRACE_EVENT_API_ADD_TRACE_EVENT(phase, category_group_enabled, name, id, num_args,
+                                           &arg1_name, arg_types, arg_values, flags);
 }
 
-template<class ARG1_TYPE, class ARG2_TYPE>
-static inline SkEventTracer::Handle
-AddTraceEvent(
-    char phase,
-    const uint8_t* category_group_enabled,
-    const char* name,
-    uint64_t id,
-    unsigned char flags,
-    const char* arg1_name,
-    const ARG1_TYPE& arg1_val,
-    const char* arg2_name,
-    const ARG2_TYPE& arg2_val) {
-  const int num_args = 2;
-  const char* arg_names[2] = { arg1_name, arg2_name };
-  unsigned char arg_types[2];
-  uint64_t arg_values[2];
-  SetTraceValue(arg1_val, &arg_types[0], &arg_values[0]);
-  SetTraceValue(arg2_val, &arg_types[1], &arg_values[1]);
-  return TRACE_EVENT_API_ADD_TRACE_EVENT(
-      phase, category_group_enabled, name, id,
-      num_args, arg_names, arg_types, arg_values, flags);
+template <class ARG1_TYPE, class ARG2_TYPE>
+static inline SkEventTracer::Handle AddTraceEvent(char phase,
+                                                  const uint8_t* category_group_enabled,
+                                                  const char* name,
+                                                  uint64_t id,
+                                                  unsigned char flags,
+                                                  const char* arg1_name,
+                                                  const ARG1_TYPE& arg1_val,
+                                                  const char* arg2_name,
+                                                  const ARG2_TYPE& arg2_val) {
+    const int num_args = 2;
+    const char* arg_names[2] = {arg1_name, arg2_name};
+    unsigned char arg_types[2];
+    uint64_t arg_values[2];
+    SetTraceValue(arg1_val, &arg_types[0], &arg_values[0]);
+    SetTraceValue(arg2_val, &arg_types[1], &arg_values[1]);
+    return TRACE_EVENT_API_ADD_TRACE_EVENT(phase, category_group_enabled, name, id, num_args,
+                                           arg_names, arg_types, arg_values, flags);
 }
 
 // Used by TRACE_EVENTx macros. Do not use directly.
 class TRACE_EVENT_API_CLASS_EXPORT ScopedTracer {
- public:
-  // Note: members of data_ intentionally left uninitialized. See Initialize.
-  ScopedTracer() : p_data_(nullptr) {}
+public:
+    // Note: members of data_ intentionally left uninitialized. See Initialize.
+    ScopedTracer() noexcept : p_data_(nullptr) {}
 
-  ~ScopedTracer() {
-    if (p_data_ && *data_.category_group_enabled)
-      TRACE_EVENT_API_UPDATE_TRACE_EVENT_DURATION(
-          data_.category_group_enabled, data_.name, data_.event_handle);
-  }
+    ~ScopedTracer() {
+        if (p_data_ && *data_.category_group_enabled)
+            TRACE_EVENT_API_UPDATE_TRACE_EVENT_DURATION(data_.category_group_enabled, data_.name,
+                                                        data_.event_handle);
+    }
 
-  void Initialize(const uint8_t* category_group_enabled,
-                  const char* name,
-                  SkEventTracer::Handle event_handle) {
-    data_.category_group_enabled = category_group_enabled;
-    data_.name = name;
-    data_.event_handle = event_handle;
-    p_data_ = &data_;
-  }
+    void Initialize(const uint8_t* category_group_enabled,
+                    const char* name,
+                    SkEventTracer::Handle event_handle) noexcept {
+        data_.category_group_enabled = category_group_enabled;
+        data_.name = name;
+        data_.event_handle = event_handle;
+        p_data_ = &data_;
+    }
 
- private:
-  // This Data struct workaround is to avoid initializing all the members
-  // in Data during construction of this object, since this object is always
-  // constructed, even when tracing is disabled. If the members of Data were
-  // members of this class instead, compiler warnings occur about potential
-  // uninitialized accesses.
-  struct Data {
-    const uint8_t* category_group_enabled;
-    const char* name;
-    SkEventTracer::Handle event_handle;
-  };
-  Data* p_data_;
-  Data data_;
+private:
+    // This Data struct workaround is to avoid initializing all the members
+    // in Data during construction of this object, since this object is always
+    // constructed, even when tracing is disabled. If the members of Data were
+    // members of this class instead, compiler warnings occur about potential
+    // uninitialized accesses.
+    struct Data {
+        const uint8_t* category_group_enabled;
+        const char* name;
+        SkEventTracer::Handle event_handle;
+    };
+    Data* p_data_;
+    Data data_;
 };
 
 }  // namespace tracing_internals

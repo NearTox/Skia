@@ -5,41 +5,41 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "Sample.h"
-#include "SkAnimTimer.h"
-#include "SkBlurMask.h"
-#include "SkBlurMaskFilter.h"
-#include "SkColorFilter.h"
-#include "SkCamera.h"
-#include "SkCanvas.h"
-#include "SkPath.h"
-#include "SkPathOps.h"
-#include "SkPoint3.h"
-#include "SkShadowUtils.h"
-#include "SkUTF.h"
-#include "sk_tool_utils.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPoint3.h"
+#include "include/effects/SkBlurMaskFilter.h"
+#include "include/pathops/SkPathOps.h"
+#include "include/utils/SkCamera.h"
+#include "include/utils/SkShadowUtils.h"
+#include "samplecode/Sample.h"
+#include "src/core/SkBlurMask.h"
+#include "src/utils/SkUTF.h"
+#include "tools/ToolUtils.h"
+#include "tools/timer/AnimTimer.h"
 
 ////////////////////////////////////////////////////////////////////////////
 
 class ShadowUtilsView : public Sample {
     SkTArray<SkPath> fConvexPaths;
     SkTArray<SkPath> fConcavePaths;
-    SkScalar         fZDelta;
+    SkScalar fZDelta;
 
-    bool      fShowAmbient;
-    bool      fShowSpot;
-    bool      fUseAlt;
-    bool      fShowObject;
-    bool      fIgnoreShadowAlpha;
+    bool fShowAmbient;
+    bool fShowSpot;
+    bool fUseAlt;
+    bool fShowObject;
+    bool fIgnoreShadowAlpha;
 
 public:
     ShadowUtilsView()
-        : fZDelta(0)
-        , fShowAmbient(true)
-        , fShowSpot(true)
-        , fUseAlt(false)
-        , fShowObject(false)
-        , fIgnoreShadowAlpha(false) {}
+            : fZDelta(0)
+            , fShowAmbient(true)
+            , fShowSpot(true)
+            , fUseAlt(false)
+            , fShowObject(false)
+            , fIgnoreShadowAlpha(false) {}
 
 protected:
     void onOnceBeforeDraw() override {
@@ -121,15 +121,11 @@ protected:
         return this->INHERITED::onQuery(evt);
     }
 
-    void drawBG(SkCanvas* canvas) {
-        canvas->drawColor(0xFFFFFFFF);
-    }
+    void drawBG(SkCanvas* canvas) { canvas->drawColor(0xFFFFFFFF); }
 
-    void drawShadowedPath(SkCanvas* canvas, const SkPath& path,
-                          const SkPoint3& zPlaneParams,
-                          const SkPaint& paint, SkScalar ambientAlpha,
-                          const SkPoint3& lightPos, SkScalar lightWidth, SkScalar spotAlpha,
-                          uint32_t flags) {
+    void drawShadowedPath(SkCanvas* canvas, const SkPath& path, const SkPoint3& zPlaneParams,
+                          const SkPaint& paint, SkScalar ambientAlpha, const SkPoint3& lightPos,
+                          SkScalar lightWidth, SkScalar spotAlpha, uint32_t flags) {
         if (fIgnoreShadowAlpha) {
             ambientAlpha = 255;
             spotAlpha = 255;
@@ -146,9 +142,8 @@ protected:
 
         SkColor ambientColor = SkColorSetARGB(ambientAlpha * 255, 255, 0, 0);
         SkColor spotColor = SkColorSetARGB(spotAlpha * 255, 0, 0, 255);
-        SkShadowUtils::DrawShadow(canvas, path, zPlaneParams,
-                                  lightPos, lightWidth,
-                                  ambientColor, spotColor, flags);
+        SkShadowUtils::DrawShadow(canvas, path, zPlaneParams, lightPos, lightWidth, ambientColor,
+                                  spotColor, flags);
 
         if (fShowObject) {
             canvas->drawPath(path, paint);
@@ -171,7 +166,7 @@ protected:
         static constexpr SkScalar kHeight = 50.f;
         static constexpr SkScalar kAmbientAlpha = 0.5f;
         static constexpr SkScalar kSpotAlpha = 0.5f;
-        static constexpr SkPoint3 lightPos = { 250, 400, 500 };
+        static constexpr SkPoint3 lightPos = {250, 400, 500};
 
         canvas->translate(3 * kPad, 3 * kPad);
         canvas->save();
@@ -189,7 +184,7 @@ protected:
 
         // convex paths
         for (auto& m : matrices) {
-            for (auto flags : { kNone_ShadowFlag, kTransparentOccluder_ShadowFlag }) {
+            for (auto flags : {kNone_ShadowFlag, kTransparentOccluder_ShadowFlag}) {
                 for (const auto& path : fConvexPaths) {
                     SkRect postMBounds = path.getBounds();
                     m.mapRect(&postMBounds);
@@ -260,4 +255,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE( return new ShadowUtilsView(); )
+DEF_SAMPLE(return new ShadowUtilsView();)

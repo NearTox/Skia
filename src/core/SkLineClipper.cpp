@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "SkLineClipper.h"
-#include "SkTo.h"
+#include "src/core/SkLineClipper.h"
+#include "include/private/SkTo.h"
 
 #include <utility>
 
@@ -81,14 +81,12 @@ static inline bool nestedLT(SkScalar a, SkScalar b, SkScalar dim) {
 
 // returns true if outer contains inner, even if inner is empty.
 // note: outer.contains(inner) always returns false if inner is empty.
-static inline bool containsNoEmptyCheck(const SkRect& outer,
-                                        const SkRect& inner) {
-    return  outer.fLeft <= inner.fLeft && outer.fTop <= inner.fTop &&
-            outer.fRight >= inner.fRight && outer.fBottom >= inner.fBottom;
+static inline bool containsNoEmptyCheck(const SkRect& outer, const SkRect& inner) {
+    return outer.fLeft <= inner.fLeft && outer.fTop <= inner.fTop && outer.fRight >= inner.fRight &&
+           outer.fBottom >= inner.fBottom;
 }
 
-bool SkLineClipper::IntersectLine(const SkPoint src[2], const SkRect& clip,
-                                  SkPoint dst[2]) {
+bool SkLineClipper::IntersectLine(const SkPoint src[2], const SkRect& clip, SkPoint dst[2]) {
     SkRect bounds;
 
     bounds.set(src[0], src[1]);
@@ -162,8 +160,7 @@ bool SkLineClipper::IntersectLine(const SkPoint src[2], const SkRect& clip,
 #ifdef SK_DEBUG
 // return value between the two limits, where the limits are either ascending
 // or descending.
-static bool is_between_unsorted(SkScalar value,
-                                SkScalar limit0, SkScalar limit1) {
+static bool is_between_unsorted(SkScalar value, SkScalar limit0, SkScalar limit1) {
     if (limit0 < limit1) {
         return limit0 <= value && value <= limit1;
     } else {
@@ -212,7 +209,7 @@ int SkLineClipper::ClipLine(const SkPoint pts[], const SkRect& clip, SkPoint lin
 
     // temp storage for up to 3 segments
     SkPoint resultStorage[kMaxPoints];
-    SkPoint* result;    // points to our results, either tmp or resultStorage
+    SkPoint* result;  // points to our results, either tmp or resultStorage
     int lineCount = 1;
     bool reverse;
 
@@ -230,7 +227,7 @@ int SkLineClipper::ClipLine(const SkPoint pts[], const SkRect& clip, SkPoint lin
         tmp[0].fX = tmp[1].fX = clip.fLeft;
         result = tmp;
         reverse = false;
-    } else if (tmp[index0].fX >= clip.fRight) {    // wholly to the right
+    } else if (tmp[index0].fX >= clip.fRight) {  // wholly to the right
         if (canCullToTheRight) {
             return 0;
         }

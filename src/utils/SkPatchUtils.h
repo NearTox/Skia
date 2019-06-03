@@ -8,21 +8,16 @@
 #ifndef SkPatchUtils_DEFINED
 #define SkPatchUtils_DEFINED
 
-#include "SkColorData.h"
-#include "SkMatrix.h"
-#include "SkVertices.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkVertices.h"
+#include "include/private/SkColorData.h"
 
 class SkColorSpace;
 
 class SK_API SkPatchUtils {
-
 public:
     // Enums for control points based on the order specified in the constructor (clockwise).
-    enum {
-        kNumCtrlPts = 12,
-        kNumCorners = 4,
-        kNumPtsCubic = 4
-    };
+    enum { kNumCtrlPts = 12, kNumCorners = 4, kNumPtsCubic = 4 };
 
     /**
      * Get the points corresponding to the top cubic of cubics.

@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "SkRWBuffer.h"
+#include "include/core/SkRWBuffer.h"
 
-#include "SkMakeUnique.h"
-#include "SkMalloc.h"
-#include "SkStream.h"
-#include "SkTo.h"
+#include "include/core/SkStream.h"
+#include "include/private/SkMalloc.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkMakeUnique.h"
 
 #include <atomic>
 #include <new>
@@ -19,9 +19,9 @@
 static const size_t kMinAllocSize = 4096;
 
 struct SkBufferBlock {
-    SkBufferBlock*  fNext;      // updated by the writer
-    size_t          fUsed;      // updated by the writer
-    const size_t    fCapacity;
+    SkBufferBlock* fNext;  // updated by the writer
+    size_t fUsed;          // updated by the writer
+    const size_t fCapacity;
 
     SkBufferBlock(size_t capacity) : fNext(nullptr), fUsed(0), fCapacity(capacity) {}
 
@@ -66,7 +66,7 @@ private:
 
 struct SkBufferHead {
     mutable std::atomic<int32_t> fRefCnt;
-    SkBufferBlock   fBlock;
+    SkBufferBlock fBlock;
 
     SkBufferHead(size_t capacity) : fRefCnt(1), fBlock(capacity) {}
 
@@ -82,9 +82,7 @@ struct SkBufferHead {
         return new (buffer) SkBufferHead(capacity);
     }
 
-    void ref() const {
-        SkAssertResult(fRefCnt.fetch_add(+1, std::memory_order_relaxed));
-    }
+    void ref() const { SkAssertResult(fRefCnt.fetch_add(+1, std::memory_order_relaxed)); }
 
     void unref() const {
         // A release here acts in place of all releases we "should" have been doing in ref().
@@ -127,8 +125,7 @@ struct SkBufferHead {
 // block.fUsed, which may be updated by the writer.
 //
 SkROBuffer::SkROBuffer(const SkBufferHead* head, size_t available, const SkBufferBlock* tail)
-    : fHead(head), fAvailable(available), fTail(tail)
-{
+        : fHead(head), fAvailable(available), fTail(tail) {
     if (head) {
         fHead->ref();
         SkASSERT(available > 0);
@@ -145,13 +142,9 @@ SkROBuffer::~SkROBuffer() {
     }
 }
 
-SkROBuffer::Iter::Iter(const SkROBuffer* buffer) {
-    this->reset(buffer);
-}
+SkROBuffer::Iter::Iter(const SkROBuffer* buffer) { this->reset(buffer); }
 
-SkROBuffer::Iter::Iter(const sk_sp<SkROBuffer>& buffer) {
-    this->reset(buffer.get());
-}
+SkROBuffer::Iter::Iter(const sk_sp<SkROBuffer>& buffer) { this->reset(buffer.get()); }
 
 void SkROBuffer::Iter::reset(const SkROBuffer* buffer) {
     fBuffer = buffer;
@@ -164,9 +157,7 @@ void SkROBuffer::Iter::reset(const SkROBuffer* buffer) {
     }
 }
 
-const void* SkROBuffer::Iter::data() const {
-    return fRemaining ? fBlock->startData() : nullptr;
-}
+const void* SkROBuffer::Iter::data() const { return fRemaining ? fBlock->startData() : nullptr; }
 
 size_t SkROBuffer::Iter::size() const {
     if (!fBlock) {
@@ -262,13 +253,14 @@ class SkROBufferStreamAsset : public SkStreamAsset {
 #ifdef SK_DEBUG
     class AutoValidate {
         SkROBufferStreamAsset* fStream;
+
     public:
         AutoValidate(SkROBufferStreamAsset* stream) : fStream(stream) { stream->validate(); }
         ~AutoValidate() { fStream->validate(); }
     };
-    #define AUTO_VALIDATE   AutoValidate av(this);
+#define AUTO_VALIDATE AutoValidate av(this);
 #else
-    #define AUTO_VALIDATE
+#define AUTO_VALIDATE
 #endif
 
 public:
@@ -306,7 +298,7 @@ public:
             SkASSERT(fLocalOffset == size);
             fLocalOffset = 0;
             if (!fIter.next()) {
-                break;   // ran out of data
+                break;  // ran out of data
             }
         }
         fGlobalOffset += bytesRead;
@@ -314,13 +306,9 @@ public:
         return bytesRead;
     }
 
-    bool isAtEnd() const override {
-        return fBuffer->size() == fGlobalOffset;
-    }
+    bool isAtEnd() const override { return fBuffer->size() == fGlobalOffset; }
 
-    size_t getPosition() const override {
-        return fGlobalOffset;
-    }
+    size_t getPosition() const override { return fGlobalOffset; }
 
     bool seek(size_t position) override {
         AUTO_VALIDATE
@@ -331,7 +319,7 @@ public:
         return true;
     }
 
-    bool move(long offset)  override{
+    bool move(long offset) override {
         AUTO_VALIDATE
         offset += fGlobalOffset;
         if (offset <= 0) {
@@ -343,9 +331,7 @@ public:
     }
 
 private:
-    SkStreamAsset* onDuplicate() const override {
-        return new SkROBufferStreamAsset(fBuffer);
-    }
+    SkStreamAsset* onDuplicate() const override { return new SkROBufferStreamAsset(fBuffer); }
 
     SkStreamAsset* onFork() const override {
         auto clone = this->duplicate();
@@ -354,9 +340,9 @@ private:
     }
 
     sk_sp<SkROBuffer> fBuffer;
-    SkROBuffer::Iter  fIter;
-    size_t            fLocalOffset;
-    size_t            fGlobalOffset;
+    SkROBuffer::Iter fIter;
+    size_t fLocalOffset;
+    size_t fGlobalOffset;
 };
 
 std::unique_ptr<SkStreamAsset> SkRWBuffer::makeStreamSnapshot() const {

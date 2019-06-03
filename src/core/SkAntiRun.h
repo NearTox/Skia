@@ -8,8 +8,8 @@
 #ifndef SkAntiRun_DEFINED
 #define SkAntiRun_DEFINED
 
-#include "SkBlitter.h"
-#include "SkTo.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkBlitter.h"
 
 /** Sparse array of run-length-encoded alpha (supersampling coverage) values.
     Sparseness allows us to independently compose several paths into the
@@ -18,8 +18,8 @@
 
 class SkAlphaRuns {
 public:
-    int16_t*    fRuns;
-    uint8_t*     fAlpha;
+    int16_t* fRuns;
+    uint8_t* fAlpha;
 
     // Return 0-255 given 0-256
     static inline SkAlpha CatchOverflow(int alpha) {
@@ -35,7 +35,7 @@ public:
     }
 
     /// Reinitialize for a new scanline.
-    void    reset(int width);
+    void reset(int width);
 
     /**
      *  Insert into the buffer a run starting at (x-offsetX):
@@ -57,9 +57,9 @@ public:
 
         SkASSERT(fRuns[offsetX] >= 0);
 
-        int16_t*    runs = fRuns + offsetX;
-        uint8_t*    alpha = fAlpha + offsetX;
-        uint8_t*    lastAlpha = alpha;
+        int16_t* runs = fRuns + offsetX;
+        uint8_t* alpha = fAlpha + offsetX;
+        uint8_t* lastAlpha = alpha;
         x -= offsetX;
 
         if (startAlpha) {
@@ -71,12 +71,15 @@ public:
             */
             unsigned tmp = alpha[x] + startAlpha;
             SkASSERT(tmp <= 256);
-            alpha[x] = SkToU8(tmp - (tmp >> 8));    // was (tmp >> 7), but that seems wrong if we're trying to catch 256
+            alpha[x] = SkToU8(
+                    tmp -
+                    (tmp >>
+                     8));  // was (tmp >> 7), but that seems wrong if we're trying to catch 256
 
             runs += x + 1;
             alpha += x + 1;
             x = 0;
-            SkDEBUGCODE(this->validate();)
+            SkDEBUGCODE(this->validate());
         }
 
         if (middleCount) {
@@ -92,7 +95,7 @@ public:
                 runs += n;
                 middleCount -= n;
             } while (middleCount > 0);
-            SkDEBUGCODE(this->validate();)
+            SkDEBUGCODE(this->validate());
             lastAlpha = alpha;
         }
 
@@ -100,15 +103,15 @@ public:
             SkAlphaRuns::Break(runs, alpha, x, 1);
             alpha += x;
             alpha[0] = SkToU8(alpha[0] + stopAlpha);
-            SkDEBUGCODE(this->validate();)
+            SkDEBUGCODE(this->validate());
             lastAlpha = alpha;
         }
 
         return SkToS32(lastAlpha - fAlpha);  // new offsetX
     }
 
-    SkDEBUGCODE(void assertValid(int y, int maxStep) const;)
-    SkDEBUGCODE(void dump() const;)
+    SkDEBUGCODE(void assertValid(int y, int maxStep) const);
+    SkDEBUGCODE(void dump() const);
 
     /**
      * Break the runs in the buffer at offsets x and x+count, properly
@@ -125,7 +128,7 @@ public:
         //  SkAlphaRuns::BreakAt(&runs[x], &alpha[x], count);
 
         int16_t* next_runs = runs + x;
-        uint8_t*  next_alpha = alpha + x;
+        uint8_t* next_alpha = alpha + x;
 
         while (x > 0) {
             int n = runs[0];
@@ -189,8 +192,8 @@ public:
     }
 
 private:
-    SkDEBUGCODE(int fWidth;)
-    SkDEBUGCODE(void validate() const;)
+    SkDEBUGCODE(int fWidth);
+    SkDEBUGCODE(void validate() const);
 };
 
 #endif

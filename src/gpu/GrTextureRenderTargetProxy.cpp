@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "GrTextureRenderTargetProxy.h"
+#include "src/gpu/GrTextureRenderTargetProxy.h"
 
-#include "GrCaps.h"
-#include "GrTexture.h"
-#include "GrTexturePriv.h"
-#include "GrTextureProxyPriv.h"
-#include "GrRenderTarget.h"
-#include "GrSurfacePriv.h"
-#include "GrSurfaceProxyPriv.h"
+#include "include/gpu/GrRenderTarget.h"
+#include "include/gpu/GrTexture.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrSurfacePriv.h"
+#include "src/gpu/GrSurfaceProxyPriv.h"
+#include "src/gpu/GrTexturePriv.h"
+#include "src/gpu/GrTextureProxyPriv.h"
 
 // Deferred version
 // This class is virtually derived from GrSurfaceProxy (via both GrTextureProxy and
@@ -47,8 +47,8 @@ GrTextureRenderTargetProxy::GrTextureRenderTargetProxy(LazyInstantiateCallback&&
         // callbacks to the texture and RT proxies simply to route to the appropriate constructors.
         , GrRenderTargetProxy(LazyInstantiateCallback(), lazyType, format, desc, origin, fit,
                               budgeted, surfaceFlags, WrapsVkSecondaryCB::kNo)
-        , GrTextureProxy(LazyInstantiateCallback(), lazyType, format, desc, origin, mipMapped,
-                         fit, budgeted, surfaceFlags) {}
+        , GrTextureProxy(LazyInstantiateCallback(), lazyType, format, desc, origin, mipMapped, fit,
+                         budgeted, surfaceFlags) {}
 
 // Wrapped version
 // This class is virtually derived from GrSurfaceProxy (via both GrTextureProxy and
@@ -98,12 +98,12 @@ bool GrTextureRenderTargetProxy::instantiate(GrResourceProvider* resourceProvide
 }
 
 sk_sp<GrSurface> GrTextureRenderTargetProxy::createSurface(
-                                                    GrResourceProvider* resourceProvider) const {
+        GrResourceProvider* resourceProvider) const {
     static constexpr GrSurfaceDescFlags kDescFlags = kRenderTarget_GrSurfaceFlag;
 
-    sk_sp<GrSurface> surface = this->createSurfaceImpl(resourceProvider, this->numStencilSamples(),
-                                                       this->needsStencil(), kDescFlags,
-                                                       this->mipMapped());
+    sk_sp<GrSurface> surface =
+            this->createSurfaceImpl(resourceProvider, this->numStencilSamples(),
+                                    this->needsStencil(), kDescFlags, this->mipMapped());
     if (!surface) {
         return nullptr;
     }
@@ -139,4 +139,3 @@ void GrTextureRenderTargetProxy::onValidateSurface(const GrSurface* surface) {
              (surfaceFlags & GrInternalSurfaceFlags::kTextureMask));
 }
 #endif
-

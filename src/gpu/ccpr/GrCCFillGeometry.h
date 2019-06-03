@@ -8,10 +8,10 @@
 #ifndef GrGrCCFillGeometry_DEFINED
 #define GrGrCCFillGeometry_DEFINED
 
-#include "SkGeometry.h"
-#include "SkNx.h"
-#include "SkPoint.h"
-#include "SkTArray.h"
+#include "include/core/SkPoint.h"
+#include "include/private/SkNx.h"
+#include "include/private/SkTArray.h"
+#include "src/core/SkGeometry.h"
 
 /**
  * This class chops device-space contours up into a series of segments that CCPR knows how to
@@ -26,20 +26,20 @@ public:
     // this list, then they are chopped into smaller ones that do. A list of these comprise a
     // compact representation of what can later be expanded into GPU instance data.
     enum class Verb : uint8_t {
-        kBeginPath, // Included only for caller convenience.
+        kBeginPath,  // Included only for caller convenience.
         kBeginContour,
         kLineTo,
-        kMonotonicQuadraticTo, // Monotonic relative to the vector between its endpoints [P2 - P0].
+        kMonotonicQuadraticTo,  // Monotonic relative to the vector between its endpoints [P2 - P0].
         kMonotonicCubicTo,
         kMonotonicConicTo,
-        kEndClosedContour, // endPt == startPt.
-        kEndOpenContour // endPt != startPt.
+        kEndClosedContour,  // endPt == startPt.
+        kEndOpenContour     // endPt != startPt.
     };
 
     // These tallies track numbers of CCPR primitives that are required to draw a contour.
     struct PrimitiveTallies {
-        int fTriangles; // Number of triangles in the contour's fan.
-        int fWeightedTriangles; // Triangles (from the tessellator) whose winding magnitude > 1.
+        int fTriangles;          // Number of triangles in the contour's fan.
+        int fWeightedTriangles;  // Triangles (from the tessellator) whose winding magnitude > 1.
         int fQuadratics;
         int fCubics;
         int fConics;
@@ -50,13 +50,22 @@ public:
     };
 
     GrCCFillGeometry(int numSkPoints = 0, int numSkVerbs = 0, int numConicWeights = 0)
-            : fPoints(numSkPoints * 3) // Reserve for a 3x expansion in points and verbs.
+            : fPoints(numSkPoints * 3)  // Reserve for a 3x expansion in points and verbs.
             , fVerbs(numSkVerbs * 3)
-            , fConicWeights(numConicWeights * 3/2) {}
+            , fConicWeights(numConicWeights * 3 / 2) {}
 
-    const SkTArray<SkPoint, true>& points() const { SkASSERT(!fBuildingContour); return fPoints; }
-    const SkTArray<Verb, true>& verbs() const { SkASSERT(!fBuildingContour); return fVerbs; }
-    float getConicWeight(int idx) const { SkASSERT(!fBuildingContour); return fConicWeights[idx]; }
+    const SkTArray<SkPoint, true>& points() const {
+        SkASSERT(!fBuildingContour);
+        return fPoints;
+    }
+    const SkTArray<Verb, true>& verbs() const {
+        SkASSERT(!fBuildingContour);
+        return fVerbs;
+    }
+    float getConicWeight(int idx) const {
+        SkASSERT(!fBuildingContour);
+        return fConicWeights[idx];
+    }
 
     void reset() {
         SkASSERT(!fBuildingContour);
@@ -84,7 +93,7 @@ public:
 
     void conicTo(const SkPoint[3], float w);
 
-    PrimitiveTallies endContour(); // Returns the numbers of primitives needed to draw the contour.
+    PrimitiveTallies endContour();  // Returns the numbers of primitives needed to draw the contour.
 
 private:
     inline void appendLine(const Sk2f& p0, const Sk2f& p1);
@@ -92,13 +101,10 @@ private:
     inline void appendQuadratics(const Sk2f& p0, const Sk2f& p1, const Sk2f& p2);
     inline void appendMonotonicQuadratic(const Sk2f& p0, const Sk2f& p1, const Sk2f& p2);
 
-    enum class AppendCubicMode : bool {
-        kLiteral,
-        kApproximate
-    };
+    enum class AppendCubicMode : bool { kLiteral, kApproximate };
     void appendCubics(AppendCubicMode, const Sk2f& p0, const Sk2f& p1, const Sk2f& p2,
                       const Sk2f& p3, const float chops[], int numChops, float localT0 = 0,
-                     float localT1 = 1);
+                      float localT1 = 1);
     void appendCubics(AppendCubicMode, const Sk2f& p0, const Sk2f& p1, const Sk2f& p2,
                       const Sk2f& p3, int maxSubdivisions = 2);
     void chopAndAppendCubicAtMidTangent(AppendCubicMode, const Sk2f& p0, const Sk2f& p1,
@@ -126,13 +132,10 @@ inline void GrCCFillGeometry::PrimitiveTallies::operator+=(const PrimitiveTallie
     fConics += b.fConics;
 }
 
-GrCCFillGeometry::PrimitiveTallies
-inline GrCCFillGeometry::PrimitiveTallies::operator-(const PrimitiveTallies& b) const {
-    return {fTriangles - b.fTriangles,
-            fWeightedTriangles - b.fWeightedTriangles,
-            fQuadratics - b.fQuadratics,
-            fCubics - b.fCubics,
-            fConics - b.fConics};
+GrCCFillGeometry::PrimitiveTallies inline GrCCFillGeometry::PrimitiveTallies::operator-(
+        const PrimitiveTallies& b) const {
+    return {fTriangles - b.fTriangles, fWeightedTriangles - b.fWeightedTriangles,
+            fQuadratics - b.fQuadratics, fCubics - b.fCubics, fConics - b.fConics};
 }
 
 inline bool GrCCFillGeometry::PrimitiveTallies::operator==(const PrimitiveTallies& b) {

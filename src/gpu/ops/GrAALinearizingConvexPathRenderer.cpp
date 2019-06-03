@@ -5,26 +5,26 @@
  * found in the LICENSE file.
  */
 
-#include "GrAALinearizingConvexPathRenderer.h"
-#include "GrAAConvexTessellator.h"
-#include "GrCaps.h"
-#include "GrDefaultGeoProcFactory.h"
-#include "GrDrawOpTest.h"
-#include "GrGeometryProcessor.h"
-#include "GrOpFlushState.h"
-#include "GrPathUtils.h"
-#include "GrProcessor.h"
-#include "GrRenderTargetContext.h"
-#include "GrShape.h"
-#include "GrStyle.h"
-#include "GrVertexWriter.h"
-#include "SkGeometry.h"
-#include "SkPathPriv.h"
-#include "SkString.h"
-#include "SkTraceEvent.h"
-#include "glsl/GrGLSLGeometryProcessor.h"
-#include "ops/GrMeshDrawOp.h"
-#include "ops/GrSimpleMeshDrawOpHelper.h"
+#include "src/gpu/ops/GrAALinearizingConvexPathRenderer.h"
+#include "include/core/SkString.h"
+#include "src/core/SkGeometry.h"
+#include "src/core/SkPathPriv.h"
+#include "src/core/SkTraceEvent.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrDefaultGeoProcFactory.h"
+#include "src/gpu/GrDrawOpTest.h"
+#include "src/gpu/GrGeometryProcessor.h"
+#include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/GrPathUtils.h"
+#include "src/gpu/GrProcessor.h"
+#include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/GrShape.h"
+#include "src/gpu/GrStyle.h"
+#include "src/gpu/GrVertexWriter.h"
+#include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
+#include "src/gpu/ops/GrAAConvexTessellator.h"
+#include "src/gpu/ops/GrMeshDrawOp.h"
+#include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 
 static const int DEFAULT_BUFFER_SIZE = 100;
 
@@ -32,14 +32,13 @@ static const int DEFAULT_BUFFER_SIZE = 100;
 // the time being, we simply drop back to software rendering above this stroke width.
 static const SkScalar kMaxStrokeWidth = 20.0;
 
-GrAALinearizingConvexPathRenderer::GrAALinearizingConvexPathRenderer() {
-}
+GrAALinearizingConvexPathRenderer::GrAALinearizingConvexPathRenderer() {}
 
 ///////////////////////////////////////////////////////////////////////////////
 
-GrPathRenderer::CanDrawPath
-GrAALinearizingConvexPathRenderer::onCanDrawPath(const CanDrawPathArgs& args) const {
-    if (GrAAType::kCoverage != args.fAAType) {
+GrPathRenderer::CanDrawPath GrAALinearizingConvexPathRenderer::onCanDrawPath(
+        const CanDrawPathArgs& args) const {
+    if (!(AATypeFlags::kCoverage & args.fAATypeFlags)) {
         return CanDrawPath::kNo;
     }
     if (!args.fShape->knownToBeConvex()) {
@@ -66,8 +65,7 @@ GrAALinearizingConvexPathRenderer::onCanDrawPath(const CanDrawPathArgs& args) co
         if (strokeWidth < 1.0f && stroke.getStyle() == SkStrokeRec::kStroke_Style) {
             return CanDrawPath::kNo;
         }
-        if (strokeWidth > kMaxStrokeWidth ||
-            !args.fShape->knownToBeClosed() ||
+        if (strokeWidth > kMaxStrokeWidth || !args.fShape->knownToBeClosed() ||
             stroke.getJoin() == SkPaint::Join::kRound_Join) {
             return CanDrawPath::kNo;
         }
@@ -103,11 +101,11 @@ static sk_sp<GrGeometryProcessor> create_lines_only_gp(const GrShaderCaps* shade
     using namespace GrDefaultGeoProcFactory;
 
     Coverage::Type coverageType =
-        tweakAlphaForCoverage ? Coverage::kAttributeTweakAlpha_Type : Coverage::kAttribute_Type;
+            tweakAlphaForCoverage ? Coverage::kAttributeTweakAlpha_Type : Coverage::kAttribute_Type;
     LocalCoords::Type localCoordsType =
-        usesLocalCoords ? LocalCoords::kUsePosition_Type : LocalCoords::kUnused_Type;
+            usesLocalCoords ? LocalCoords::kUsePosition_Type : LocalCoords::kUnused_Type;
     Color::Type colorType =
-        wideColor ? Color::kPremulWideColorAttribute_Type : Color::kPremulGrColorAttribute_Type;
+            wideColor ? Color::kPremulWideColorAttribute_Type : Color::kPremulGrColorAttribute_Type;
 
     return MakeForDeviceSpace(shaderCaps, colorType, coverageType, localCoordsType, viewMatrix);
 }
@@ -130,9 +128,8 @@ public:
                                           SkScalar miterLimit,
                                           const GrUserStencilSettings* stencilSettings) {
         return Helper::FactoryHelper<AAFlatteningConvexPathOp>(context, std::move(paint),
-                                                               viewMatrix, path,
-                                                               strokeWidth, style, join, miterLimit,
-                                                               stencilSettings);
+                                                               viewMatrix, path, strokeWidth, style,
+                                                               join, miterLimit, stencilSettings);
     }
 
     AAFlatteningConvexPathOp(const Helper::MakeArgs& helperArgs,
@@ -160,7 +157,6 @@ public:
             bounds.outset(w, w);
         }
         this->setTransformedBounds(bounds, viewMatrix, HasAABloat::kYes, IsZeroArea::kNo);
-        fWideColor = !SkPMColor4fFitsInBytes(color);
     }
 
     const char* name() const override { return "AAFlatteningConvexPathOp"; }
@@ -187,11 +183,11 @@ public:
 
     FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
-    GrProcessorSet::Analysis finalize(
-            const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType) override {
-        return fHelper.finalizeProcessors(
-                caps, clip, fsaaType, GrProcessorAnalysisCoverage::kSingleChannel,
-                &fPaths.back().fColor);
+    GrProcessorSet::Analysis finalize(const GrCaps& caps, const GrAppliedClip* clip,
+                                      GrFSAAType fsaaType, GrClampType clampType) override {
+        return fHelper.finalizeProcessors(caps, clip, fsaaType, clampType,
+                                          GrProcessorAnalysisCoverage::kSingleChannel,
+                                          &fPaths.back().fColor, &fWideColor);
     }
 
 private:
@@ -202,8 +198,8 @@ private:
         }
         sk_sp<const GrBuffer> vertexBuffer;
         int firstVertex;
-        void* verts = target->makeVertexSpace(vertexStride, vertexCount, &vertexBuffer,
-                                              &firstVertex);
+        void* verts =
+                target->makeVertexSpace(vertexStride, vertexCount, &vertexBuffer, &firstVertex);
         if (!verts) {
             SkDebugf("Could not allocate vertices\n");
             return;
@@ -228,7 +224,7 @@ private:
     void onPrepareDraws(Target* target) override {
         // Setup GrGeometryProcessor
         sk_sp<GrGeometryProcessor> gp(create_lines_only_gp(target->caps().shaderCaps(),
-                                                           fHelper.compatibleWithAlphaAsCoverage(),
+                                                           fHelper.compatibleWithCoverageAsAlpha(),
                                                            this->viewMatrix(),
                                                            fHelper.usesLocalCoords(),
                                                            fWideColor));
@@ -244,12 +240,12 @@ private:
         int64_t indexCount = 0;
         int64_t maxVertices = DEFAULT_BUFFER_SIZE;
         int64_t maxIndices = DEFAULT_BUFFER_SIZE;
-        uint8_t* vertices = (uint8_t*) sk_malloc_throw(maxVertices * vertexStride);
-        uint16_t* indices = (uint16_t*) sk_malloc_throw(maxIndices * sizeof(uint16_t));
+        uint8_t* vertices = (uint8_t*)sk_malloc_throw(maxVertices * vertexStride);
+        uint16_t* indices = (uint16_t*)sk_malloc_throw(maxIndices * sizeof(uint16_t));
         for (int i = 0; i < instanceCount; i++) {
             const PathData& args = fPaths[i];
-            GrAAConvexTessellator tess(args.fStyle, args.fStrokeWidth,
-                                       args.fJoin, args.fMiterLimit);
+            GrAAConvexTessellator tess(args.fStyle, args.fStrokeWidth, args.fJoin,
+                                       args.fMiterLimit);
 
             if (!tess.tessellate(args.fViewMatrix, args.fPath)) {
                 continue;
@@ -259,8 +255,8 @@ private:
             if (vertexCount + currentVertices > static_cast<int>(UINT16_MAX)) {
                 // if we added the current instance, we would overflow the indices we can store in a
                 // uint16_t. Draw what we've got so far and reset.
-                this->recordDraw(
-                        target, gp, vertexCount, vertexStride, vertices, indexCount, indices);
+                this->recordDraw(target, gp, vertexCount, vertexStride, vertices, indexCount,
+                                 indices);
                 vertexCount = 0;
                 indexCount = 0;
             }
@@ -271,7 +267,7 @@ private:
                     sk_free(indices);
                     return;
                 }
-                vertices = (uint8_t*) sk_realloc_throw(vertices, maxVertices * vertexStride);
+                vertices = (uint8_t*)sk_realloc_throw(vertices, maxVertices * vertexStride);
             }
             int currentIndices = tess.numIndices();
             if (indexCount + currentIndices > maxIndices) {
@@ -281,7 +277,7 @@ private:
                     sk_free(indices);
                     return;
                 }
-                indices = (uint16_t*) sk_realloc_throw(indices, maxIndices * sizeof(uint16_t));
+                indices = (uint16_t*)sk_realloc_throw(indices, maxIndices * sizeof(uint16_t));
             }
 
             extract_verts(tess, vertices + vertexStride * vertexCount,
@@ -364,9 +360,8 @@ GR_DRAW_OP_TEST_DEFINE(AAFlatteningConvexPathOp) {
     SkMatrix viewMatrix = GrTest::TestMatrixPreservesRightAngles(random);
     SkPath path = GrTest::TestPathConvex(random);
 
-    SkStrokeRec::Style styles[3] = { SkStrokeRec::kFill_Style,
-                                     SkStrokeRec::kStroke_Style,
-                                     SkStrokeRec::kStrokeAndFill_Style };
+    SkStrokeRec::Style styles[3] = {SkStrokeRec::kFill_Style, SkStrokeRec::kStroke_Style,
+                                    SkStrokeRec::kStrokeAndFill_Style};
 
     SkStrokeRec::Style style = styles[random->nextU() % 3];
 

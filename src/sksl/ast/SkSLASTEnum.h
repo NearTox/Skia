@@ -8,16 +8,16 @@
 #ifndef SKSL_ASTENUM
 #define SKSL_ASTENUM
 
-#include "SkSLASTDeclaration.h"
+#include "src/sksl/ast/SkSLASTDeclaration.h"
 namespace SkSL {
 
 struct ASTEnum : public ASTDeclaration {
     ASTEnum(int offset, StringFragment typeName, std::vector<StringFragment> names,
             std::vector<std::unique_ptr<ASTExpression>> values)
-    : INHERITED(offset, kEnum_Kind)
-    , fTypeName(typeName)
-    , fNames(std::move(names))
-    , fValues(std::move(values)) {
+            : INHERITED(offset, kEnum_Kind)
+            , fTypeName(typeName)
+            , fNames(std::move(names))
+            , fValues(std::move(values)) {
         SkASSERT(fNames.size() == fValues.size());
     }
 
@@ -39,6 +39,6 @@ struct ASTEnum : public ASTDeclaration {
     typedef ASTDeclaration INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

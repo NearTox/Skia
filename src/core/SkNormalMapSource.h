@@ -8,13 +8,12 @@
 #ifndef SkNormalMapSource_DEFINED
 #define SkNormalMapSource_DEFINED
 
-#include "SkNormalSource.h"
+#include "src/core/SkNormalSource.h"
 
 class SkNormalMapSourceImpl : public SkNormalSource {
 public:
     SkNormalMapSourceImpl(sk_sp<SkShader> mapShader, const SkMatrix& invCTM)
-            : fMapShader(std::move(mapShader))
-            , fInvCTM(invCTM) {}
+            : fMapShader(std::move(mapShader)), fInvCTM(invCTM) {}
 
 #if SK_SUPPORT_GPU
     std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs& args) const override;
@@ -40,13 +39,13 @@ private:
 
     private:
         const SkNormalMapSourceImpl& fSource;
-        SkShaderBase::Context*       fMapContext;
+        SkShaderBase::Context* fMapContext;
 
         typedef SkNormalSource::Provider INHERITED;
     };
 
     sk_sp<SkShader> fMapShader;
-    SkMatrix        fInvCTM; // Inverse of the canvas total matrix, used for rotating normals.
+    SkMatrix fInvCTM;  // Inverse of the canvas total matrix, used for rotating normals.
 
     friend class SkNormalSource;
 
@@ -54,4 +53,3 @@ private:
 };
 
 #endif
-

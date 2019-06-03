@@ -5,9 +5,29 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkParsePath.h"
-#include "SkPath.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPathEffect.h"
+#include "include/core/SkPathMeasure.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkDashPathEffect.h"
+#include "include/utils/SkParsePath.h"
+#include "include/utils/SkRandom.h"
+#include "src/core/SkOSFile.h"
+#include "tools/random_parse_path.h"
+
+#include <stdio.h>
+
+/* The test below generates a reference image using SVG. To compare the result for correctness,
+   enable the define below and then view the generated SVG in a browser.
+ */
+static constexpr bool GENERATE_SVG_REFERENCE = false;
 
 /*
 The arcto test below should draw the same as this SVG:
@@ -50,39 +70,34 @@ DEF_SIMPLE_GM(arcto, canvas, 500, 600) {
     paint.setStyle(SkPaint::kStroke_Style);
     paint.setStrokeWidth(2);
     paint.setColor(0xFF660000);
-//    canvas->scale(2, 2);  // for testing on retina
+    //    canvas->scale(2, 2);  // for testing on retina
     SkRect oval = SkRect::MakeXYWH(100, 100, 100, 100);
     SkPath svgArc;
 
     for (int angle = 0; angle <= 45; angle += 45) {
-       for (int oHeight = 2; oHeight >= 1; --oHeight) {
+        for (int oHeight = 2; oHeight >= 1; --oHeight) {
             SkScalar ovalHeight = oval.height() / oHeight;
             svgArc.moveTo(oval.fLeft, oval.fTop);
             svgArc.arcTo(oval.width() / 2, ovalHeight, SkIntToScalar(angle), SkPath::kSmall_ArcSize,
-                    SkPath::kCW_Direction, oval.right(), oval.bottom());
+                         SkPath::kCW_Direction, oval.right(), oval.bottom());
             canvas->drawPath(svgArc, paint);
             svgArc.reset();
 
             svgArc.moveTo(oval.fLeft + 100, oval.fTop + 100);
             svgArc.arcTo(oval.width() / 2, ovalHeight, SkIntToScalar(angle), SkPath::kLarge_ArcSize,
-                    SkPath::kCCW_Direction, oval.right(), oval.bottom() + 100);
+                         SkPath::kCCW_Direction, oval.right(), oval.bottom() + 100);
             canvas->drawPath(svgArc, paint);
             oval.offset(50, 0);
             svgArc.reset();
-
         }
     }
 
     paint.setStrokeWidth(5);
     const SkColor purple = 0xFF800080;
     const SkColor darkgreen = 0xFF008000;
-    const SkColor colors[] = { SK_ColorRED, darkgreen, purple, SK_ColorBLUE };
-    const char* arcstrs[] = {
-        "M250,400  A120,80 0 0,0 250,500",
-        "M250,400  A120,80 0 1,1 250,500",
-        "M250,400  A120,80 0 1,0 250,500",
-        "M250,400  A120,80 0 0,1 250,500"
-    };
+    const SkColor colors[] = {SK_ColorRED, darkgreen, purple, SK_ColorBLUE};
+    const char* arcstrs[] = {"M250,400  A120,80 0 0,0 250,500", "M250,400  A120,80 0 1,1 250,500",
+                             "M250,400  A120,80 0 1,0 250,500", "M250,400  A120,80 0 0,1 250,500"};
     int cIndex = 0;
     for (const char* arcstr : arcstrs) {
         SkParsePath::FromSVGString(arcstr, &svgArc);
@@ -103,47 +118,33 @@ DEF_SIMPLE_GM(arcto, canvas, 500, 600) {
     canvas->drawPath(path, paint);
 }
 
-#include "random_parse_path.h"
-#include "SkRandom.h"
-
-/* The test below generates a reference image using SVG. To compare the result for correctness,
-   enable the define below and then view the generated SVG in a browser.
- */
-#define GENERATE_SVG_REFERENCE 0
-
-#if GENERATE_SVG_REFERENCE
-#include "SkOSFile.h"
-#endif
-
-enum {
-    kParsePathTestDimension = 500
-};
+enum { kParsePathTestDimension = 500 };
 
 DEF_SIMPLE_GM(parsedpaths, canvas, kParsePathTestDimension, kParsePathTestDimension) {
-#if GENERATE_SVG_REFERENCE
-    FILE* file = sk_fopen("svgout.htm", kWrite_SkFILE_Flag);
     SkString str;
-    str.printf("<svg width=\"%d\" height=\"%d\">\n", kParsePathTestDimension,
-            kParsePathTestDimension);
-    sk_fwrite(str.c_str(), str.size(), file);
-#endif
+    FILE* file;
+    if (GENERATE_SVG_REFERENCE) {
+        file = sk_fopen("svgout.htm", kWrite_SkFILE_Flag);
+        str.printf("<svg width=\"%d\" height=\"%d\">\n", kParsePathTestDimension,
+                   kParsePathTestDimension);
+        sk_fwrite(str.c_str(), str.size(), file);
+    }
     SkRandom rand;
     SkPaint paint;
     paint.setAntiAlias(true);
-    for (int xStart = 0; xStart < kParsePathTestDimension; xStart +=  100) {
+    for (int xStart = 0; xStart < kParsePathTestDimension; xStart += 100) {
         canvas->save();
         for (int yStart = 0; yStart < kParsePathTestDimension; yStart += 100) {
-#if GENERATE_SVG_REFERENCE
-            str.printf("<g transform='translate(%d,%d) scale(%d,%d)'>\n", xStart, yStart,
-                1, 1);
-            sk_fwrite(str.c_str(), str.size(), file);
-            str.printf("<clipPath id='clip_%d_%d'>\n", xStart, yStart);
-            sk_fwrite(str.c_str(), str.size(), file);
-            str.printf("<rect width='100' height='100' x='0' y='0'></rect>\n");
-            sk_fwrite(str.c_str(), str.size(), file);
-            str.printf("</clipPath>\n");
-            sk_fwrite(str.c_str(), str.size(), file);
-#endif
+            if (GENERATE_SVG_REFERENCE) {
+                str.printf("<g transform='translate(%d,%d) scale(%d,%d)'>\n", xStart, yStart, 1, 1);
+                sk_fwrite(str.c_str(), str.size(), file);
+                str.printf("<clipPath id='clip_%d_%d'>\n", xStart, yStart);
+                sk_fwrite(str.c_str(), str.size(), file);
+                str.printf("<rect width='100' height='100' x='0' y='0'></rect>\n");
+                sk_fwrite(str.c_str(), str.size(), file);
+                str.printf("</clipPath>\n");
+                sk_fwrite(str.c_str(), str.size(), file);
+            }
             int count = 3;
             do {
                 SkPath path;
@@ -161,31 +162,31 @@ DEF_SIMPLE_GM(parsedpaths, canvas, kParsePathTestDimension, kParsePathTestDimens
                 canvas->clipRect(SkRect::MakeIWH(100, 100));
                 canvas->drawPath(path, paint);
                 canvas->restore();
-#if GENERATE_SVG_REFERENCE
-                str.printf("<path d='\n");
-                sk_fwrite(str.c_str(), str.size(), file);
-                sk_fwrite(spec.c_str(), spec.size(), file);
-                str.printf("\n' fill='#%06x' fill-opacity='%g'", paint.getColor() & 0xFFFFFF,
-                        paint.getAlpha() / 255.f);
-                sk_fwrite(str.c_str(), str.size(), file);
-                str.printf(" clip-path='url(#clip_%d_%d)'/>\n", xStart, yStart);
-                sk_fwrite(str.c_str(), str.size(), file);
-#endif
+                if (GENERATE_SVG_REFERENCE) {
+                    str.printf("<path d='\n");
+                    sk_fwrite(str.c_str(), str.size(), file);
+                    sk_fwrite(spec.c_str(), spec.size(), file);
+                    str.printf("\n' fill='#%06x' fill-opacity='%g'", paint.getColor() & 0xFFFFFF,
+                               paint.getAlpha() / 255.f);
+                    sk_fwrite(str.c_str(), str.size(), file);
+                    str.printf(" clip-path='url(#clip_%d_%d)'/>\n", xStart, yStart);
+                    sk_fwrite(str.c_str(), str.size(), file);
+                }
             } while (--count > 0);
-#if GENERATE_SVG_REFERENCE
-            str.printf("</g>\n");
-            sk_fwrite(str.c_str(), str.size(), file);
-#endif
+            if (GENERATE_SVG_REFERENCE) {
+                str.printf("</g>\n");
+                sk_fwrite(str.c_str(), str.size(), file);
+            }
             canvas->translate(0, 100);
         }
         canvas->restore();
         canvas->translate(100, 0);
     }
-#if GENERATE_SVG_REFERENCE
-    const char trailer[] = "</svg>\n";
-    sk_fwrite(trailer, sizeof(trailer) - 1, file);
-    sk_fclose(file);
-#endif
+    if (GENERATE_SVG_REFERENCE) {
+        const char trailer[] = "</svg>\n";
+        sk_fwrite(trailer, sizeof(trailer) - 1, file);
+        sk_fclose(file);
+    }
 }
 
 DEF_SIMPLE_GM(bug593049, canvas, 300, 300) {
@@ -206,23 +207,20 @@ DEF_SIMPLE_GM(bug593049, canvas, 300, 300) {
     canvas->drawPath(p, paint);
 }
 
-#include "SkDashPathEffect.h"
-#include "SkPathMeasure.h"
-
 DEF_SIMPLE_GM(bug583299, canvas, 300, 300) {
-  const char* d="M60,60 A50,50 0 0 0 160,60 A50,50 0 0 0 60,60z";
-  SkPaint p;
-  p.setStyle(SkPaint::kStroke_Style);
-  p.setStrokeWidth(100);
-  p.setAntiAlias(true);
-  p.setColor(0xFF008200);
-  p.setStrokeCap(SkPaint::kSquare_Cap);
-  SkPath path;
-  SkParsePath::FromSVGString(d, &path);
-  SkPathMeasure meas(path, false);
-  SkScalar length = meas.getLength();
-  SkScalar intervals[] = {0, length };
-  int intervalCount = (int) SK_ARRAY_COUNT(intervals);
-  p.setPathEffect(SkDashPathEffect::Make(intervals, intervalCount, 0));
-  canvas->drawPath(path, p);
+    const char* d = "M60,60 A50,50 0 0 0 160,60 A50,50 0 0 0 60,60z";
+    SkPaint p;
+    p.setStyle(SkPaint::kStroke_Style);
+    p.setStrokeWidth(100);
+    p.setAntiAlias(true);
+    p.setColor(0xFF008200);
+    p.setStrokeCap(SkPaint::kSquare_Cap);
+    SkPath path;
+    SkParsePath::FromSVGString(d, &path);
+    SkPathMeasure meas(path, false);
+    SkScalar length = meas.getLength();
+    SkScalar intervals[] = {0, length};
+    int intervalCount = (int)SK_ARRAY_COUNT(intervals);
+    p.setPathEffect(SkDashPathEffect::Make(intervals, intervalCount, 0));
+    canvas->drawPath(path, p);
 }

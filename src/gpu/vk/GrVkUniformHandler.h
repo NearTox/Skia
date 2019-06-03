@@ -1,19 +1,19 @@
 /*
-* Copyright 2016 Google Inc.
-*
-* Use of this source code is governed by a BSD-style license that can be
-* found in the LICENSE file.
-*/
+ * Copyright 2016 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
 #ifndef GrVkUniformHandler_DEFINED
 #define GrVkUniformHandler_DEFINED
 
-#include "GrAllocator.h"
-#include "GrSamplerState.h"
-#include "GrShaderVar.h"
-#include "GrVkSampler.h"
-#include "glsl/GrGLSLUniformHandler.h"
-#include "vk/GrVkTypes.h"
+#include "include/gpu/GrSamplerState.h"
+#include "include/gpu/vk/GrVkTypes.h"
+#include "src/gpu/GrAllocator.h"
+#include "src/gpu/GrShaderVar.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#include "src/gpu/vk/GrVkSampler.h"
 
 class GrVkUniformHandler : public GrGLSLUniformHandler {
 public:
@@ -35,13 +35,13 @@ public:
     };
 
     struct UniformInfo {
-        GrShaderVar             fVariable;
-        uint32_t                fVisibility;
+        GrShaderVar fVariable;
+        uint32_t fVisibility;
         // fUBOffset is only valid if the GrSLType of the fVariable is not a sampler
-        uint32_t                fUBOffset;
+        uint32_t fUBOffset;
         // The SamplerState, maxMipLevel, and ycbcrInfo are only valid if the GrSLType is a sampler
         // and that sampler is used for sampling an external image with a ycbcr conversion.
-        const GrVkSampler*      fImmutableSampler = nullptr;
+        const GrVkSampler* fImmutableSampler = nullptr;
     };
     typedef GrTAllocator<UniformInfo> UniformInfoArray;
 
@@ -55,16 +55,14 @@ public:
 
 private:
     explicit GrVkUniformHandler(GrGLSLProgramBuilder* program)
-        : INHERITED(program)
-        , fUniforms(kUniformsPerBlock)
-        , fSamplers(kUniformsPerBlock)
-        , fCurrentGeometryUBOOffset(0)
-        , fCurrentFragmentUBOOffset(0) {
-    }
+            : INHERITED(program)
+            , fUniforms(kUniformsPerBlock)
+            , fSamplers(kUniformsPerBlock)
+            , fCurrentGeometryUBOOffset(0)
+            , fCurrentFragmentUBOOffset(0) {}
 
     UniformHandle internalAddUniformArray(uint32_t visibility,
                                           GrSLType type,
-                                          GrSLPrecision precision,
                                           const char* name,
                                           bool mangleName,
                                           int arrayCount,
@@ -95,18 +93,14 @@ private:
     bool hasGeometryUniforms() const { return fCurrentGeometryUBOOffset > 0; }
     bool hasFragmentUniforms() const { return fCurrentFragmentUBOOffset > 0; }
 
+    const UniformInfo& getUniformInfo(UniformHandle u) const { return fUniforms[u.toIndex()]; }
 
-    const UniformInfo& getUniformInfo(UniformHandle u) const {
-        return fUniforms[u.toIndex()];
-    }
-
-
-    UniformInfoArray    fUniforms;
-    UniformInfoArray    fSamplers;
+    UniformInfoArray fUniforms;
+    UniformInfoArray fSamplers;
     SkTArray<GrSwizzle> fSamplerSwizzles;
 
-    uint32_t            fCurrentGeometryUBOOffset;
-    uint32_t            fCurrentFragmentUBOOffset;
+    uint32_t fCurrentGeometryUBOOffset;
+    uint32_t fCurrentFragmentUBOOffset;
 
     friend class GrVkPipelineStateBuilder;
     friend class GrVkDescriptorSetManager;

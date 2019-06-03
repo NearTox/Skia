@@ -8,7 +8,7 @@
 #ifndef SkPaintPriv_DEFINED
 #define SkPaintPriv_DEFINED
 
-#include "SkPaint.h"
+#include "include/core/SkPaint.h"
 
 class SkFont;
 class SkReadBuffer;
@@ -23,9 +23,9 @@ enum SkReadPaintResult {
 class SkPaintPriv {
 public:
     enum ShaderOverrideOpacity {
-        kNone_ShaderOverrideOpacity,        //!< there is no overriding shader (bitmap or image)
-        kOpaque_ShaderOverrideOpacity,      //!< the overriding shader is opaque
-        kNotOpaque_ShaderOverrideOpacity,   //!< the overriding shader may not be opaque
+        kNone_ShaderOverrideOpacity,       //!< there is no overriding shader (bitmap or image)
+        kOpaque_ShaderOverrideOpacity,     //!< the overriding shader is opaque
+        kNotOpaque_ShaderOverrideOpacity,  //!< the overriding shader may not be opaque
     };
 
     /**

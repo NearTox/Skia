@@ -5,13 +5,21 @@
  * found in the LICENSE file.
  */
 
-#include "gm.h"
-#include "SkCanvas.h"
-#include "SkPath.h"
+#include "gm/gm.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkClipOp.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "src/core/SkClipOpPriv.h"
 
 class CircularClipsGM : public skiagm::GM {
     SkScalar fX1, fX2, fY, fR;
-    SkPath   fCircle1, fCircle2;
+    SkPath fCircle1, fCircle2;
 
 protected:
     void onOnceBeforeDraw() override {
@@ -24,25 +32,16 @@ protected:
         fCircle2.addCircle(fX2, fY, fR, SkPath::kCW_Direction);
     }
 
-
     bool runAsBench() const override { return true; }
 
-    SkString onShortName() override {
-        return SkString("circular-clips");
-    }
+    SkString onShortName() override { return SkString("circular-clips"); }
 
-    SkISize onISize() override {
-        return SkISize::Make(800, 600);
-    }
+    SkISize onISize() override { return SkISize::Make(800, 600); }
 
     void onDraw(SkCanvas* canvas) override {
         const SkClipOp ops[] = {
-            kDifference_SkClipOp,
-            kIntersect_SkClipOp,
-            kUnion_SkClipOp,
-            kXOR_SkClipOp,
-            kReverseDifference_SkClipOp,
-            kReplace_SkClipOp,
+                kDifference_SkClipOp, kIntersect_SkClipOp,         kUnion_SkClipOp,
+                kXOR_SkClipOp,        kReverseDifference_SkClipOp, kReplace_SkClipOp,
         };
 
         SkRect rect = SkRect::MakeLTRB(fX1 - fR, fY - fR, fX2 + fR, fY + fR);
@@ -53,7 +52,7 @@ protected:
         fillPaint.setColor(0x80808080);
         canvas->save();
         canvas->scale(10, 10);
-        canvas->translate(-((fX1 + fX2)/2 - fR), -(fY - 2*fR/3));
+        canvas->translate(-((fX1 + fX2) / 2 - fR), -(fY - 2 * fR / 3));
         canvas->clipPath(fCircle1, true);
         canvas->clipPath(fCircle2, true);
 
@@ -92,4 +91,4 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM( return new CircularClipsGM; )
+DEF_GM(return new CircularClipsGM;)

@@ -8,8 +8,8 @@
 #ifndef SKSL_NULLLITERAL
 #define SKSL_NULLLITERAL
 
-#include "SkSLContext.h"
-#include "SkSLExpression.h"
+#include "src/sksl/SkSLContext.h"
+#include "src/sksl/ir/SkSLExpression.h"
 
 namespace SkSL {
 
@@ -18,22 +18,15 @@ namespace SkSL {
  */
 struct NullLiteral : public Expression {
     NullLiteral(const Context& context, int offset)
-    : INHERITED(offset, kNullLiteral_Kind, *context.fNull_Type) {}
+            : INHERITED(offset, kNullLiteral_Kind, *context.fNull_Type) {}
 
-    NullLiteral(int offset, const Type& type)
-    : INHERITED(offset, kNullLiteral_Kind, type) {}
+    NullLiteral(int offset, const Type& type) : INHERITED(offset, kNullLiteral_Kind, type) {}
 
-    String description() const override {
-        return "null";
-    }
+    String description() const override { return "null"; }
 
-    bool hasSideEffects() const override {
-        return false;
-    }
+    bool hasSideEffects() const override { return false; }
 
-    bool isConstant() const override {
-        return true;
-    }
+    bool isConstant() const override { return true; }
 
     bool compareConstant(const Context& context, const Expression& other) const override {
         return true;
@@ -46,6 +39,6 @@ struct NullLiteral : public Expression {
     typedef Expression INHERITED;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif
