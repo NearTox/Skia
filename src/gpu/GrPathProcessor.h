@@ -15,36 +15,36 @@
  * extending this class to handle all nvpr uniform / varying / program work.
  */
 class GrPathProcessor : public GrPrimitiveProcessor {
-public:
-    static GrPathProcessor* Create(const SkPMColor4f& color,
-                                   const SkMatrix& viewMatrix = SkMatrix::I(),
-                                   const SkMatrix& localMatrix = SkMatrix::I()) {
-        return new GrPathProcessor(color, viewMatrix, localMatrix);
-    }
+ public:
+  static GrPathProcessor* Create(
+      const SkPMColor4f& color, const SkMatrix& viewMatrix = SkMatrix::I(),
+      const SkMatrix& localMatrix = SkMatrix::I()) {
+    return new GrPathProcessor(color, viewMatrix, localMatrix);
+  }
 
-    const char* name() const override { return "PathProcessor"; }
+  const char* name() const override { return "PathProcessor"; }
 
-    const SkPMColor4f& color() const { return fColor; }
-    const SkMatrix& viewMatrix() const { return fViewMatrix; }
-    const SkMatrix& localMatrix() const { return fLocalMatrix; }
+  const SkPMColor4f& color() const { return fColor; }
+  const SkMatrix& viewMatrix() const { return fViewMatrix; }
+  const SkMatrix& localMatrix() const { return fLocalMatrix; }
 
-    bool willUseGeoShader() const override { return false; }
+  bool willUseGeoShader() const override { return false; }
 
-    virtual void getGLSLProcessorKey(const GrShaderCaps& caps,
-                                     GrProcessorKeyBuilder* b) const override;
+  virtual void getGLSLProcessorKey(
+      const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
 
-    virtual GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps& caps) const override;
+  virtual GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps& caps) const override;
 
-    virtual bool isPathRendering() const override { return true; }
+  virtual bool isPathRendering() const override { return true; }
 
-private:
-    GrPathProcessor(const SkPMColor4f&, const SkMatrix& viewMatrix, const SkMatrix& localMatrix);
+ private:
+  GrPathProcessor(const SkPMColor4f&, const SkMatrix& viewMatrix, const SkMatrix& localMatrix);
 
-    SkPMColor4f fColor;
-    const SkMatrix fViewMatrix;
-    const SkMatrix fLocalMatrix;
+  SkPMColor4f fColor;
+  const SkMatrix fViewMatrix;
+  const SkMatrix fLocalMatrix;
 
-    typedef GrPrimitiveProcessor INHERITED;
+  typedef GrPrimitiveProcessor INHERITED;
 };
 
 #endif

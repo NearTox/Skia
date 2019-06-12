@@ -18,59 +18,46 @@ class GrTextureProxy;
  * then uploads the result to the gpu
  */
 class GrSoftwarePathRenderer : public GrPathRenderer {
-public:
-    GrSoftwarePathRenderer(GrProxyProvider* proxyProvider, bool allowCaching)
-            : fProxyProvider(proxyProvider), fAllowCaching(allowCaching) {}
+ public:
+  GrSoftwarePathRenderer(GrProxyProvider* proxyProvider, bool allowCaching)
+      : fProxyProvider(proxyProvider), fAllowCaching(allowCaching) {}
 
-    static bool GetShapeAndClipBounds(GrRenderTargetContext*,
-                                      const GrClip& clip,
-                                      const GrShape& shape,
-                                      const SkMatrix& matrix,
-                                      SkIRect* unclippedDevShapeBounds,
-                                      SkIRect* clippedDevShapeBounds,
-                                      SkIRect* devClipBounds);
+  static bool GetShapeAndClipBounds(
+      GrRenderTargetContext*, const GrClip& clip, const GrShape& shape, const SkMatrix& matrix,
+      SkIRect* unclippedDevShapeBounds, SkIRect* clippedDevShapeBounds, SkIRect* devClipBounds);
 
-private:
-    static void DrawNonAARect(GrRenderTargetContext* renderTargetContext,
-                              GrPaint&& paint,
-                              const GrUserStencilSettings& userStencilSettings,
-                              const GrClip& clip,
-                              const SkMatrix& viewMatrix,
-                              const SkRect& rect,
-                              const SkMatrix& localMatrix);
-    static void DrawAroundInvPath(GrRenderTargetContext* renderTargetContext,
-                                  GrPaint&& paint,
-                                  const GrUserStencilSettings& userStencilSettings,
-                                  const GrClip& clip,
-                                  const SkMatrix& viewMatrix,
-                                  const SkIRect& devClipBounds,
-                                  const SkIRect& devPathBounds);
+ private:
+  static void DrawNonAARect(
+      GrRenderTargetContext* renderTargetContext, GrPaint&& paint,
+      const GrUserStencilSettings& userStencilSettings, const GrClip& clip,
+      const SkMatrix& viewMatrix, const SkRect& rect, const SkMatrix& localMatrix);
+  static void DrawAroundInvPath(
+      GrRenderTargetContext* renderTargetContext, GrPaint&& paint,
+      const GrUserStencilSettings& userStencilSettings, const GrClip& clip,
+      const SkMatrix& viewMatrix, const SkIRect& devClipBounds, const SkIRect& devPathBounds);
 
-    // This utility draws a path mask using a provided paint. The rectangle is drawn in device
-    // space. The 'viewMatrix' will be used to ensure the correct local coords are provided to
-    // any fragment processors in the paint.
-    static void DrawToTargetWithShapeMask(sk_sp<GrTextureProxy> proxy,
-                                          GrRenderTargetContext* renderTargetContext,
-                                          GrPaint&& paint,
-                                          const GrUserStencilSettings& userStencilSettings,
-                                          const GrClip& clip,
-                                          const SkMatrix& viewMatrix,
-                                          const SkIPoint& textureOriginInDeviceSpace,
-                                          const SkIRect& deviceSpaceRectToDraw);
+  // This utility draws a path mask using a provided paint. The rectangle is drawn in device
+  // space. The 'viewMatrix' will be used to ensure the correct local coords are provided to
+  // any fragment processors in the paint.
+  static void DrawToTargetWithShapeMask(
+      sk_sp<GrTextureProxy> proxy, GrRenderTargetContext* renderTargetContext, GrPaint&& paint,
+      const GrUserStencilSettings& userStencilSettings, const GrClip& clip,
+      const SkMatrix& viewMatrix, const SkIPoint& textureOriginInDeviceSpace,
+      const SkIRect& deviceSpaceRectToDraw);
 
-    StencilSupport onGetStencilSupport(const GrShape&) const override {
-        return GrPathRenderer::kNoSupport_StencilSupport;
-    }
+  StencilSupport onGetStencilSupport(const GrShape&) const override {
+    return GrPathRenderer::kNoSupport_StencilSupport;
+  }
 
-    CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;
+  CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;
 
-    bool onDrawPath(const DrawPathArgs&) override;
+  bool onDrawPath(const DrawPathArgs&) override;
 
-private:
-    GrProxyProvider* fProxyProvider;
-    bool fAllowCaching;
+ private:
+  GrProxyProvider* fProxyProvider;
+  bool fAllowCaching;
 
-    typedef GrPathRenderer INHERITED;
+  typedef GrPathRenderer INHERITED;
 };
 
 #endif

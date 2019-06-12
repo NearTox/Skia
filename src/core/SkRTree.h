@@ -29,66 +29,60 @@
  *      an efficient and robust access method for points and rectangles"
  */
 class SkRTree : public SkBBoxHierarchy {
-public:
-    /**
-     * If you have some prior information about the distribution of bounds you're expecting, you
-     * can provide an optional aspect ratio parameter. This allows the bulk-load algorithm to
-     * create better proportioned tiles of rectangles.
-     */
-    explicit SkRTree(SkScalar aspectRatio = 1);
-    ~SkRTree() override {}
+ public:
+  SkRTree();
+  ~SkRTree() override {}
 
-    void insert(const SkRect[], int N) override;
-    void search(const SkRect& query, SkTDArray<int>* results) const override;
-    size_t bytesUsed() const override;
+  void insert(const SkRect[], int N) override;
+  void search(const SkRect& query, SkTDArray<int>* results) const override;
+  size_t bytesUsed() const override;
 
-    // Methods and constants below here are only public for tests.
+  // Methods and constants below here are only public for tests.
 
-    // Return the depth of the tree structure.
-    int getDepth() const { return fCount ? fRoot.fSubtree->fLevel + 1 : 0; }
-    // Insertion count (not overall node count, which may be greater).
-    int getCount() const { return fCount; }
+  // Return the depth of the tree structure.
+  int getDepth() const { return fCount ? fRoot.fSubtree->fLevel + 1 : 0; }
+  // Insertion count (not overall node count, which may be greater).
+  int getCount() const { return fCount; }
 
-    // Get the root bound.
-    SkRect getRootBound() const override;
+  // Get the root bound.
+  SkRect getRootBound() const override;
 
-    // These values were empirically determined to produce reasonable performance in most cases.
-    static const int kMinChildren = 6, kMaxChildren = 11;
+  // These values were empirically determined to produce reasonable performance in most cases.
+  static const int kMinChildren = 6, kMaxChildren = 11;
 
-private:
-    struct Node;
+ private:
+  struct Node;
 
-    struct Branch {
-        union {
-            Node* fSubtree;
-            int fOpIndex;
-        };
-        SkRect fBounds;
+  struct Branch {
+    union {
+      Node* fSubtree;
+      int fOpIndex;
     };
+    SkRect fBounds;
+  };
 
-    struct Node {
-        uint16_t fNumChildren;
-        uint16_t fLevel;
-        Branch fChildren[kMaxChildren];
-    };
+  struct Node {
+    uint16_t fNumChildren;
+    uint16_t fLevel;
+    Branch fChildren[kMaxChildren];
+  };
 
-    void search(Node* root, const SkRect& query, SkTDArray<int>* results) const;
+  void search(Node* root, const SkRect& query, SkTDArray<int>* results) const;
 
-    // Consumes the input array.
-    Branch bulkLoad(SkTDArray<Branch>* branches, int level = 0);
+  // Consumes the input array.
+  Branch bulkLoad(SkTDArray<Branch>* branches, int level = 0);
 
-    // How many times will bulkLoad() call allocateNodeAtLevel()?
-    static int CountNodes(int branches, SkScalar aspectRatio);
+  // How many times will bulkLoad() call allocateNodeAtLevel()?
+  static int CountNodes(int branches);
 
-    Node* allocateNodeAtLevel(uint16_t level);
+  Node* allocateNodeAtLevel(uint16_t level);
 
-    // This is the count of data elements (rather than total nodes in the tree)
-    int fCount;
-    SkScalar fAspectRatio;
-    Branch fRoot;
-    SkTDArray<Node> fNodes;
+  // This is the count of data elements (rather than total nodes in the tree)
+  int fCount;
+  Branch fRoot;
+  SkTDArray<Node> fNodes;
 
-    typedef SkBBoxHierarchy INHERITED;
+  typedef SkBBoxHierarchy INHERITED;
 };
 
 #endif

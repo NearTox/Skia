@@ -52,132 +52,147 @@ class IRGenerator;
  * See the README for information about SkSL.
  */
 class SK_API Compiler : public ErrorReporter {
-public:
-    static constexpr const char* RTADJUST_NAME = "sk_RTAdjust";
-    static constexpr const char* PERVERTEX_NAME = "sk_PerVertex";
+ public:
+  static constexpr const char* RTADJUST_NAME = "sk_RTAdjust";
+  static constexpr const char* PERVERTEX_NAME = "sk_PerVertex";
 
-    enum Flags {
-        kNone_Flags = 0,
-        // permits static if/switch statements to be used with non-constant tests. This is used when
-        // producing H and CPP code; the static tests don't have to have constant values *yet*, but
-        // the generated code will contain a static test which then does have to be a constant.
-        kPermitInvalidStaticTests_Flag = 1,
-    };
+  enum Flags {
+    kNone_Flags = 0,
+    // permits static if/switch statements to be used with non-constant tests. This is used when
+    // producing H and CPP code; the static tests don't have to have constant values *yet*, but
+    // the generated code will contain a static test which then does have to be a constant.
+    kPermitInvalidStaticTests_Flag = 1,
+  };
 
-    struct FormatArg {
-        enum class Kind { kInput, kOutput, kUniform, kChildProcessor };
+  struct FormatArg {
+    enum class Kind { kInput, kOutput, kUniform, kChildProcessor };
 
-        FormatArg(Kind kind) : fKind(kind) {}
+    FormatArg(Kind kind) : fKind(kind) {}
 
-        FormatArg(Kind kind, int index) : fKind(kind), fIndex(index) {}
+    FormatArg(Kind kind, int index) : fKind(kind), fIndex(index) {}
 
-        Kind fKind;
+    Kind fKind;
 
-        int fIndex;
-    };
+    int fIndex;
+  };
 
-    Compiler(Flags flags = kNone_Flags);
+  Compiler(Flags flags = kNone_Flags);
 
-    ~Compiler() override;
+  ~Compiler() override;
 
-    Compiler(const Compiler&) = delete;
-    Compiler& operator=(const Compiler&) = delete;
+  Compiler(const Compiler&) = delete;
+  Compiler& operator=(const Compiler&) = delete;
 
-    std::unique_ptr<Program> convertProgram(Program::Kind kind, String text,
-                                            const Program::Settings& settings);
+  /**
+   * Registers an ExternalValue as a top-level symbol which is visible in the global namespace.
+   */
+  void registerExternalValue(ExternalValue* value);
 
-    bool optimize(Program& program);
+  std::unique_ptr<Program> convertProgram(
+      Program::Kind kind, String text, const Program::Settings& settings);
 
-    std::unique_ptr<Program> specialize(
-            Program& program,
-            const std::unordered_map<SkSL::String, SkSL::Program::Settings::Value>& inputs);
+  bool optimize(Program& program);
 
-    bool toSPIRV(Program& program, OutputStream& out);
+  std::unique_ptr<Program> specialize(
+      Program& program,
+      const std::unordered_map<SkSL::String, SkSL::Program::Settings::Value>& inputs);
 
-    bool toSPIRV(Program& program, String* out);
+  bool toSPIRV(Program& program, OutputStream& out);
 
-    bool toGLSL(Program& program, OutputStream& out);
+  bool toSPIRV(Program& program, String* out);
 
-    bool toGLSL(Program& program, String* out);
+  bool toGLSL(Program& program, OutputStream& out);
 
-    bool toMetal(Program& program, OutputStream& out);
+  bool toGLSL(Program& program, String* out);
 
-    bool toMetal(Program& program, String* out);
+  bool toMetal(Program& program, OutputStream& out);
 
-    bool toCPP(Program& program, String name, OutputStream& out);
+  bool toMetal(Program& program, String* out);
 
-    bool toH(Program& program, String name, OutputStream& out);
+  bool toCPP(Program& program, String name, OutputStream& out);
 
-    std::unique_ptr<ByteCode> toByteCode(Program& program);
+  bool toH(Program& program, String name, OutputStream& out);
 
-    bool toPipelineStage(const Program& program, String* out,
-                         std::vector<FormatArg>* outFormatArgs);
+  std::unique_ptr<ByteCode> toByteCode(Program& program);
 
-    void error(int offset, String msg) override;
+  bool toPipelineStage(const Program& program, String* out, std::vector<FormatArg>* outFormatArgs);
 
-    String errorText();
+  /**
+   * Takes ownership of the given symbol. It will be destroyed when the compiler is destroyed.
+   */
+  Symbol* takeOwnership(std::unique_ptr<Symbol> symbol);
 
-    void writeErrorCount();
+  void error(int offset, String msg) override;
 
-    int errorCount() override { return fErrorCount; }
+  String errorText();
 
-    Context& context() { return *fContext; }
+  void writeErrorCount();
 
-    static const char* OperatorName(Token::Kind token);
+  int errorCount() override { return fErrorCount; }
 
-    static bool IsAssignment(Token::Kind token);
+  Context& context() { return *fContext; }
 
-private:
-    void addDefinition(const Expression* lvalue, std::unique_ptr<Expression>* expr,
-                       DefinitionMap* definitions);
+  static const char* OperatorName(Token::Kind token);
 
-    void addDefinitions(const BasicBlock::Node& node, DefinitionMap* definitions);
+  static bool IsAssignment(Token::Kind token);
 
-    void scanCFG(CFG* cfg, BlockId block, std::set<BlockId>* workList);
+ private:
+  void processIncludeFile(
+      Program::Kind kind, const char* src, size_t length, std::shared_ptr<SymbolTable> base,
+      std::vector<std::unique_ptr<ProgramElement>>* outElements,
+      std::shared_ptr<SymbolTable>* outSymbolTable);
 
-    void computeDataFlow(CFG* cfg);
+  void addDefinition(
+      const Expression* lvalue, std::unique_ptr<Expression>* expr, DefinitionMap* definitions);
 
-    /**
-     * Simplifies the expression pointed to by iter (in both the IR and CFG structures), if
-     * possible.
-     */
-    void simplifyExpression(DefinitionMap& definitions,
-                            BasicBlock& b,
-                            std::vector<BasicBlock::Node>::iterator* iter,
-                            std::unordered_set<const Variable*>* undefinedVariables,
-                            bool* outUpdated,
-                            bool* outNeedsRescan);
+  void addDefinitions(const BasicBlock::Node& node, DefinitionMap* definitions);
 
-    /**
-     * Simplifies the statement pointed to by iter (in both the IR and CFG structures), if
-     * possible.
-     */
-    void simplifyStatement(DefinitionMap& definitions,
-                           BasicBlock& b,
-                           std::vector<BasicBlock::Node>::iterator* iter,
-                           std::unordered_set<const Variable*>* undefinedVariables,
-                           bool* outUpdated,
-                           bool* outNeedsRescan);
+  void scanCFG(CFG* cfg, BlockId block, std::set<BlockId>* workList);
 
-    void scanCFG(FunctionDefinition& f);
+  void computeDataFlow(CFG* cfg);
 
-    Position position(int offset);
+  /**
+   * Simplifies the expression pointed to by iter (in both the IR and CFG structures), if
+   * possible.
+   */
+  void simplifyExpression(
+      DefinitionMap& definitions, BasicBlock& b, std::vector<BasicBlock::Node>::iterator* iter,
+      std::unordered_set<const Variable*>* undefinedVariables, bool* outUpdated,
+      bool* outNeedsRescan);
 
-    std::vector<std::unique_ptr<ProgramElement>> fVertexInclude;
-    std::shared_ptr<SymbolTable> fVertexSymbolTable;
-    std::vector<std::unique_ptr<ProgramElement>> fFragmentInclude;
-    std::shared_ptr<SymbolTable> fFragmentSymbolTable;
-    std::vector<std::unique_ptr<ProgramElement>> fGeometryInclude;
-    std::shared_ptr<SymbolTable> fGeometrySymbolTable;
+  /**
+   * Simplifies the statement pointed to by iter (in both the IR and CFG structures), if
+   * possible.
+   */
+  void simplifyStatement(
+      DefinitionMap& definitions, BasicBlock& b, std::vector<BasicBlock::Node>::iterator* iter,
+      std::unordered_set<const Variable*>* undefinedVariables, bool* outUpdated,
+      bool* outNeedsRescan);
 
-    std::shared_ptr<SymbolTable> fTypes;
-    IRGenerator* fIRGenerator;
-    int fFlags;
+  void scanCFG(FunctionDefinition& f);
 
-    const String* fSource;
-    std::shared_ptr<Context> fContext;
-    int fErrorCount;
-    String fErrorText;
+  Position position(int offset);
+
+  std::shared_ptr<SymbolTable> fGpuSymbolTable;
+  std::vector<std::unique_ptr<ProgramElement>> fVertexInclude;
+  std::shared_ptr<SymbolTable> fVertexSymbolTable;
+  std::vector<std::unique_ptr<ProgramElement>> fFragmentInclude;
+  std::shared_ptr<SymbolTable> fFragmentSymbolTable;
+  std::vector<std::unique_ptr<ProgramElement>> fGeometryInclude;
+  std::shared_ptr<SymbolTable> fGeometrySymbolTable;
+  std::vector<std::unique_ptr<ProgramElement>> fPipelineInclude;
+  std::shared_ptr<SymbolTable> fPipelineSymbolTable;
+  std::vector<std::unique_ptr<ProgramElement>> fInterpreterInclude;
+  std::shared_ptr<SymbolTable> fInterpreterSymbolTable;
+
+  std::shared_ptr<SymbolTable> fTypes;
+  IRGenerator* fIRGenerator;
+  int fFlags;
+
+  const String* fSource;
+  std::shared_ptr<Context> fContext;
+  int fErrorCount;
+  String fErrorText;
 };
 
 }  // namespace SkSL

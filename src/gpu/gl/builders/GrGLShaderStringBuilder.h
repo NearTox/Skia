@@ -15,18 +15,13 @@
 #include "src/gpu/gl/GrGLContext.h"
 #include "src/sksl/SkSLGLSLCodeGenerator.h"
 
-std::unique_ptr<SkSL::Program> GrSkSLtoGLSL(const GrGLContext& context,
-                                            SkSL::Program::Kind programKind,
-                                            const SkSL::String& sksl,
-                                            const SkSL::Program::Settings& settings,
-                                            SkSL::String* glsl,
-                                            GrContextOptions::ShaderErrorHandler* errorHandler);
+std::unique_ptr<SkSL::Program> GrSkSLtoGLSL(
+    const GrGLContext& context, SkSL::Program::Kind programKind, const SkSL::String& sksl,
+    const SkSL::Program::Settings& settings, SkSL::String* glsl,
+    GrContextOptions::ShaderErrorHandler* errorHandler);
 
-GrGLuint GrGLCompileAndAttachShader(const GrGLContext& glCtx,
-                                    GrGLuint programId,
-                                    GrGLenum type,
-                                    const SkSL::String& glsl,
-                                    GrGpu::Stats*,
-                                    GrContextOptions::ShaderErrorHandler* errorHandler);
+GrGLuint GrGLCompileAndAttachShader(
+    const GrGLContext& glCtx, GrGLuint programId, GrGLenum type, const SkSL::String& glsl,
+    GrGpu::Stats*, GrContextOptions::ShaderErrorHandler* errorHandler);
 
 #endif

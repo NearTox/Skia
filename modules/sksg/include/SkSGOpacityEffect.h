@@ -17,25 +17,25 @@ namespace sksg {
  *
  */
 class OpacityEffect final : public EffectNode {
-public:
-    static sk_sp<OpacityEffect> Make(sk_sp<RenderNode> child, float opacity = 1) {
-        return child ? sk_sp<OpacityEffect>(new OpacityEffect(std::move(child), opacity)) : nullptr;
-    }
+ public:
+  static sk_sp<OpacityEffect> Make(sk_sp<RenderNode> child, float opacity = 1) {
+    return child ? sk_sp<OpacityEffect>(new OpacityEffect(std::move(child), opacity)) : nullptr;
+  }
 
-    SG_ATTRIBUTE(Opacity, float, fOpacity)
+  SG_ATTRIBUTE(Opacity, float, fOpacity)
 
-protected:
-    OpacityEffect(sk_sp<RenderNode>, float);
+ protected:
+  OpacityEffect(sk_sp<RenderNode>, float);
 
-    void onRender(SkCanvas*, const RenderContext*) const override;
-    const RenderNode* onNodeAt(const SkPoint&) const override;
+  void onRender(SkCanvas*, const RenderContext*) const override;
+  const RenderNode* onNodeAt(const SkPoint&) const override;
 
-    SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
+  SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
 
-private:
-    float fOpacity;
+ private:
+  float fOpacity;
 
-    typedef EffectNode INHERITED;
+  typedef EffectNode INHERITED;
 };
 
 }  // namespace sksg

@@ -16,23 +16,23 @@ namespace SkSL {
  * Abstract supertype of all expressions.
  */
 struct ASTExpression : public ASTPositionNode {
-    enum Kind {
-        kBinary_Kind,
-        kBool_Kind,
-        kFloat_Kind,
-        kIdentifier_Kind,
-        kInt_Kind,
-        kNull_Kind,
-        kPrefix_Kind,
-        kSuffix_Kind,
-        kTernary_Kind
-    };
+  enum Kind {
+    kBinary_Kind,
+    kBool_Kind,
+    kFloat_Kind,
+    kIdentifier_Kind,
+    kInt_Kind,
+    kNull_Kind,
+    kPrefix_Kind,
+    kSuffix_Kind,
+    kTernary_Kind
+  };
 
-    ASTExpression(int offset, Kind kind) : INHERITED(offset), fKind(kind) {}
+  ASTExpression(int offset, Kind kind) : INHERITED(offset), fKind(kind) {}
 
-    const Kind fKind;
+  const Kind fKind;
 
-    typedef ASTPositionNode INHERITED;
+  typedef ASTPositionNode INHERITED;
 };
 
 }  // namespace SkSL

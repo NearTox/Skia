@@ -33,15 +33,15 @@
  * For examples of encoding an image to a file or to a block of memory,
  * see tools/ToolUtils.h.
  */
-SK_API bool SkEncodeImage(SkWStream* dst, const SkPixmap& src, SkEncodedImageFormat format,
-                          int quality);
+SK_API bool SkEncodeImage(
+    SkWStream* dst, const SkPixmap& src, SkEncodedImageFormat format, int quality);
 
 /**
  * The following helper function wraps SkEncodeImage().
  */
 inline bool SkEncodeImage(SkWStream* dst, const SkBitmap& src, SkEncodedImageFormat f, int q) {
-    SkPixmap pixmap;
-    return src.peekPixels(&pixmap) && SkEncodeImage(dst, pixmap, f, q);
+  SkPixmap pixmap;
+  return src.peekPixels(&pixmap) && SkEncodeImage(dst, pixmap, f, q);
 }
 
 /**

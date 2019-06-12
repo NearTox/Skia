@@ -20,61 +20,60 @@
 namespace {
 
 class SVGFileView : public Sample {
-public:
-    SVGFileView(const SkString& path)
-            : fPath(path)
-            , fLabel(SkStringPrintf("[%s]", SkOSPath::Basename(path.c_str()).c_str())) {}
-    ~SVGFileView() override = default;
+ public:
+  SVGFileView(const SkString& path)
+      : fPath(path), fLabel(SkStringPrintf("[%s]", SkOSPath::Basename(path.c_str()).c_str())) {}
+  ~SVGFileView() override = default;
 
-protected:
-    void onOnceBeforeDraw() override {
-        SkFILEStream svgStream(fPath.c_str());
-        if (!svgStream.isValid()) {
-            SkDebugf("file not found: \"path\"\n", fPath.c_str());
-            return;
-        }
-
-        SkDOM xmlDom;
-        if (!xmlDom.build(svgStream)) {
-            SkDebugf("XML parsing failed: \"path\"\n", fPath.c_str());
-            return;
-        }
-
-        fDom = SkSVGDOM::MakeFromDOM(xmlDom);
-        if (fDom) {
-            fDom->setContainerSize(SkSize::Make(this->width(), this->height()));
-        }
+ protected:
+  void onOnceBeforeDraw() override {
+    SkFILEStream svgStream(fPath.c_str());
+    if (!svgStream.isValid()) {
+      SkDebugf("file not found: \"path\"\n", fPath.c_str());
+      return;
     }
 
-    void onDrawContent(SkCanvas* canvas) override {
-        if (fDom) {
-            fDom->render(canvas);
-        }
+    SkDOM xmlDom;
+    if (!xmlDom.build(svgStream)) {
+      SkDebugf("XML parsing failed: \"path\"\n", fPath.c_str());
+      return;
     }
 
-    void onSizeChange() override {
-        if (fDom) {
-            fDom->setContainerSize(SkSize::Make(this->width(), this->height()));
-        }
+    fDom = SkSVGDOM::MakeFromDOM(xmlDom);
+    if (fDom) {
+      fDom->setContainerSize(SkSize::Make(this->width(), this->height()));
+    }
+  }
 
-        this->INHERITED::onSizeChange();
+  void onDrawContent(SkCanvas* canvas) override {
+    if (fDom) {
+      fDom->render(canvas);
+    }
+  }
+
+  void onSizeChange() override {
+    if (fDom) {
+      fDom->setContainerSize(SkSize::Make(this->width(), this->height()));
     }
 
-    bool onQuery(Sample::Event* evt) override {
-        if (Sample::TitleQ(*evt)) {
-            Sample::TitleR(evt, fLabel.c_str());
-            return true;
-        }
+    this->INHERITED::onSizeChange();
+  }
 
-        return this->INHERITED::onQuery(evt);
+  bool onQuery(Sample::Event* evt) override {
+    if (Sample::TitleQ(*evt)) {
+      Sample::TitleR(evt, fLabel.c_str());
+      return true;
     }
 
-private:
-    sk_sp<SkSVGDOM> fDom;
-    SkString fPath;
-    SkString fLabel;
+    return this->INHERITED::onQuery(evt);
+  }
 
-    typedef Sample INHERITED;
+ private:
+  sk_sp<SkSVGDOM> fDom;
+  SkString fPath;
+  SkString fLabel;
+
+  typedef Sample INHERITED;
 };
 
 }  // anonymous namespace

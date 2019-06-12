@@ -14,35 +14,35 @@
     and then next() is called until it returns kDone_Verb.
  */
 class SkEdgeClipper {
-public:
-    SkEdgeClipper(bool canCullToTheRight) : fCanCullToTheRight(canCullToTheRight) {}
+ public:
+  SkEdgeClipper(bool canCullToTheRight) : fCanCullToTheRight(canCullToTheRight) {}
 
-    bool clipLine(SkPoint p0, SkPoint p1, const SkRect& clip);
-    bool clipQuad(const SkPoint pts[3], const SkRect& clip);
-    bool clipCubic(const SkPoint pts[4], const SkRect& clip);
+  bool clipLine(SkPoint p0, SkPoint p1, const SkRect& clip);
+  bool clipQuad(const SkPoint pts[3], const SkRect& clip);
+  bool clipCubic(const SkPoint pts[4], const SkRect& clip);
 
-    SkPath::Verb next(SkPoint pts[]);
+  SkPath::Verb next(SkPoint pts[]);
 
-    bool canCullToTheRight() const { return fCanCullToTheRight; }
+  bool canCullToTheRight() const { return fCanCullToTheRight; }
 
-private:
-    SkPoint* fCurrPoint;
-    SkPath::Verb* fCurrVerb;
-    const bool fCanCullToTheRight;
+ private:
+  SkPoint* fCurrPoint;
+  SkPath::Verb* fCurrVerb;
+  const bool fCanCullToTheRight;
 
-    enum {
-        kMaxVerbs = 18,  // max curvature in X and Y split cubic into 9 pieces, * (line + cubic)
-        kMaxPoints = 54  // 2 lines + 1 cubic require 6 points; times 9 pieces
-    };
-    SkPoint fPoints[kMaxPoints];
-    SkPath::Verb fVerbs[kMaxVerbs];
+  enum {
+    kMaxVerbs = 18,  // max curvature in X and Y split cubic into 9 pieces, * (line + cubic)
+    kMaxPoints = 54  // 2 lines + 1 cubic require 6 points; times 9 pieces
+  };
+  SkPoint fPoints[kMaxPoints];
+  SkPath::Verb fVerbs[kMaxVerbs];
 
-    void clipMonoQuad(const SkPoint srcPts[3], const SkRect& clip);
-    void clipMonoCubic(const SkPoint srcPts[4], const SkRect& clip);
-    void appendLine(SkPoint p0, SkPoint p1);
-    void appendVLine(SkScalar x, SkScalar y0, SkScalar y1, bool reverse);
-    void appendQuad(const SkPoint pts[3], bool reverse);
-    void appendCubic(const SkPoint pts[4], bool reverse);
+  void clipMonoQuad(const SkPoint srcPts[3], const SkRect& clip);
+  void clipMonoCubic(const SkPoint srcPts[4], const SkRect& clip);
+  void appendLine(SkPoint p0, SkPoint p1);
+  void appendVLine(SkScalar x, SkScalar y0, SkScalar y1, bool reverse);
+  void appendQuad(const SkPoint pts[3], bool reverse);
+  void appendCubic(const SkPoint pts[4], bool reverse);
 };
 
 #ifdef SK_DEBUG

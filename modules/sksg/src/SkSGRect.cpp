@@ -16,7 +16,7 @@ namespace sksg {
 Rect::Rect(const SkRect& rect) : fRect(rect) {}
 
 void Rect::onClip(SkCanvas* canvas, bool antiAlias) const {
-    canvas->clipRect(fRect, SkClipOp::kIntersect, antiAlias);
+  canvas->clipRect(fRect, SkClipOp::kIntersect, antiAlias);
 }
 
 void Rect::onDraw(SkCanvas* canvas, const SkPaint& paint) const { canvas->drawRect(fRect, paint); }
@@ -24,53 +24,52 @@ void Rect::onDraw(SkCanvas* canvas, const SkPaint& paint) const { canvas->drawRe
 bool Rect::onContains(const SkPoint& p) const { return fRect.contains(p.x(), p.y()); }
 
 SkRect Rect::onRevalidate(InvalidationController*, const SkMatrix&) {
-    SkASSERT(this->hasInval());
+  SkASSERT(this->hasInval());
 
-    return fRect;
+  return fRect;
 }
 
 SkPath Rect::onAsPath() const {
-    SkPath path;
-    path.addRect(fRect, this->getDirection(), this->getInitialPointIndex());
-    return path;
+  SkPath path;
+  path.addRect(fRect, this->getDirection(), this->getInitialPointIndex());
+  return path;
 }
 
 RRect::RRect(const SkRRect& rr) : fRRect(rr) {}
 
 void RRect::onClip(SkCanvas* canvas, bool antiAlias) const {
-    canvas->clipRRect(fRRect, SkClipOp::kIntersect, antiAlias);
+  canvas->clipRRect(fRRect, SkClipOp::kIntersect, antiAlias);
 }
 
 void RRect::onDraw(SkCanvas* canvas, const SkPaint& paint) const {
-    canvas->drawRRect(fRRect, paint);
+  canvas->drawRRect(fRRect, paint);
 }
 
 bool RRect::onContains(const SkPoint& p) const {
-    if (!fRRect.rect().contains(p.x(), p.y())) {
-        return false;
-    }
+  if (!fRRect.rect().contains(p.x(), p.y())) {
+    return false;
+  }
 
-    if (fRRect.isRect()) {
-        return true;
-    }
+  if (fRRect.isRect()) {
+    return true;
+  }
 
-    // TODO: no SkRRect::contains(x, y)
-    return fRRect.contains(SkRect::MakeLTRB(p.x() - SK_ScalarNearlyZero,
-                                            p.y() - SK_ScalarNearlyZero,
-                                            p.x() + SK_ScalarNearlyZero,
-                                            p.y() + SK_ScalarNearlyZero));
+  // TODO: no SkRRect::contains(x, y)
+  return fRRect.contains(SkRect::MakeLTRB(
+      p.x() - SK_ScalarNearlyZero, p.y() - SK_ScalarNearlyZero, p.x() + SK_ScalarNearlyZero,
+      p.y() + SK_ScalarNearlyZero));
 }
 
 SkRect RRect::onRevalidate(InvalidationController*, const SkMatrix&) {
-    SkASSERT(this->hasInval());
+  SkASSERT(this->hasInval());
 
-    return fRRect.getBounds();
+  return fRRect.getBounds();
 }
 
 SkPath RRect::onAsPath() const {
-    SkPath path;
-    path.addRRect(fRRect, this->getDirection(), this->getInitialPointIndex());
-    return path;
+  SkPath path;
+  path.addRRect(fRRect, this->getDirection(), this->getInitialPointIndex());
+  return path;
 }
 
 }  // namespace sksg

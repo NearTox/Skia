@@ -14,35 +14,34 @@
 #include "src/gpu/GrRecordingContextPriv.h"
 
 class GrWaitSemaphoreOp final : public GrSemaphoreOp {
-public:
-    DEFINE_OP_CLASS_ID
+ public:
+  DEFINE_OP_CLASS_ID
 
-    static std::unique_ptr<GrOp> Make(GrRecordingContext* context, sk_sp<GrSemaphore> semaphore,
-                                      GrRenderTargetProxy* proxy) {
-        GrOpMemoryPool* pool = context->priv().opMemoryPool();
+  static std::unique_ptr<GrOp> Make(
+      GrRecordingContext* context, sk_sp<GrSemaphore> semaphore, GrRenderTargetProxy* proxy) {
+    GrOpMemoryPool* pool = context->priv().opMemoryPool();
 
-        return pool->allocate<GrWaitSemaphoreOp>(std::move(semaphore), proxy);
-    }
+    return pool->allocate<GrWaitSemaphoreOp>(std::move(semaphore), proxy);
+  }
 
-    const char* name() const override { return "WaitSemaphore"; }
+  const char* name() const override { return "WaitSemaphore"; }
 
-private:
-    friend class GrOpMemoryPool;  // for ctor
+ private:
+  friend class GrOpMemoryPool;  // for ctor
 
-    explicit GrWaitSemaphoreOp(sk_sp<GrSemaphore> semaphore, GrRenderTargetProxy* proxy)
-            : INHERITED(ClassID(), std::move(semaphore), proxy) {}
+  explicit GrWaitSemaphoreOp(sk_sp<GrSemaphore> semaphore, GrRenderTargetProxy* proxy)
+      : INHERITED(ClassID(), std::move(semaphore), proxy) {}
 
-    void onExecute(GrOpFlushState* state, const SkRect& chainBounds) override {
-        state->gpu()->waitSemaphore(fSemaphore);
-    }
+  void onExecute(GrOpFlushState* state, const SkRect& chainBounds) override {
+    state->gpu()->waitSemaphore(fSemaphore);
+  }
 
-    typedef GrSemaphoreOp INHERITED;
+  typedef GrSemaphoreOp INHERITED;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::unique_ptr<GrOp> GrSemaphoreOp::MakeWait(GrRecordingContext* context,
-                                              sk_sp<GrSemaphore> semaphore,
-                                              GrRenderTargetProxy* proxy) {
-    return GrWaitSemaphoreOp::Make(context, std::move(semaphore), proxy);
+std::unique_ptr<GrOp> GrSemaphoreOp::MakeWait(
+    GrRecordingContext* context, sk_sp<GrSemaphore> semaphore, GrRenderTargetProxy* proxy) {
+  return GrWaitSemaphoreOp::Make(context, std::move(semaphore), proxy);
 }

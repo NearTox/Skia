@@ -18,40 +18,40 @@
 */
 
 struct VertState {
-    int f0, f1, f2;
+  int f0, f1, f2;
 
-    /**
-     *  Construct a VertState from a vertex count, index array, and index count.
-     *  If the vertices are unindexed pass nullptr for indices.
-     */
-    VertState(int vCount, const uint16_t indices[], int indexCount) : fIndices(indices) {
-        fCurrIndex = 0;
-        if (indices) {
-            fCount = indexCount;
-        } else {
-            fCount = vCount;
-        }
+  /**
+   *  Construct a VertState from a vertex count, index array, and index count.
+   *  If the vertices are unindexed pass nullptr for indices.
+   */
+  VertState(int vCount, const uint16_t indices[], int indexCount) : fIndices(indices) {
+    fCurrIndex = 0;
+    if (indices) {
+      fCount = indexCount;
+    } else {
+      fCount = vCount;
     }
+  }
 
-    typedef bool (*Proc)(VertState*);
+  typedef bool (*Proc)(VertState*);
 
-    /**
-     *  Choose an appropriate function to traverse the vertices.
-     *  @param mode    Specifies the SkCanvas::VertexMode.
-     */
-    Proc chooseProc(SkVertices::VertexMode mode);
+  /**
+   *  Choose an appropriate function to traverse the vertices.
+   *  @param mode    Specifies the SkCanvas::VertexMode.
+   */
+  Proc chooseProc(SkVertices::VertexMode mode);
 
-private:
-    int fCount;
-    int fCurrIndex;
-    const uint16_t* fIndices;
+ private:
+  int fCount;
+  int fCurrIndex;
+  const uint16_t* fIndices;
 
-    static bool Triangles(VertState*);
-    static bool TrianglesX(VertState*);
-    static bool TriangleStrip(VertState*);
-    static bool TriangleStripX(VertState*);
-    static bool TriangleFan(VertState*);
-    static bool TriangleFanX(VertState*);
+  static bool Triangles(VertState*);
+  static bool TrianglesX(VertState*);
+  static bool TriangleStrip(VertState*);
+  static bool TriangleStripX(VertState*);
+  static bool TriangleFan(VertState*);
+  static bool TriangleFanX(VertState*);
 };
 
 #endif

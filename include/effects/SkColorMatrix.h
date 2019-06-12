@@ -12,35 +12,45 @@
 #include "include/core/SkTypes.h"
 
 class SK_API SkColorMatrix {
-public:
-    void setIdentity();
-    void setScale(float rScale, float gScale, float bScale, float aScale = 1.0f);
+ public:
+  void setIdentity();
+  void setScale(float rScale, float gScale, float bScale, float aScale = 1.0f);
 
-    enum Axis { kR_Axis = 0, kG_Axis = 1, kB_Axis = 2 };
-    void setRotate(Axis, float degrees);
-    void setSinCos(Axis, float sine, float cosine);
-    void preRotate(Axis, float degrees);
-    void postRotate(Axis, float degrees);
-    void postTranslate(float dr, float dg, float db, float da);
+  void setRowMajor(const float src[20]) { memcpy(fMat, src, sizeof(fMat)); }
 
-    void setConcat(const SkColorMatrix& a, const SkColorMatrix& b);
-    void preConcat(const SkColorMatrix& mat) { this->setConcat(*this, mat); }
-    void postConcat(const SkColorMatrix& mat) { this->setConcat(mat, *this); }
+  void getRowMajor(float dst[20]) const { memcpy(dst, fMat, sizeof(fMat)); }
 
-    void setSaturation(float sat);
-    void setRGB2YUV();
-    void setYUV2RGB();
+  enum Axis { kR_Axis = 0, kG_Axis = 1, kB_Axis = 2 };
+  void setRotate(Axis, float degrees);
+  void setSinCos(Axis, float sine, float cosine);
+  void preRotate(Axis, float degrees);
+  void postRotate(Axis, float degrees);
+  void postTranslate(float dr, float dg, float db, float da);
 
-    bool operator==(const SkColorMatrix& other) const {
-        return 0 == memcmp(fMat, other.fMat, sizeof(fMat));
-    }
+  void setConcat(const SkColorMatrix& a, const SkColorMatrix& b);
+  void preConcat(const SkColorMatrix& mat) { this->setConcat(*this, mat); }
+  void postConcat(const SkColorMatrix& mat) { this->setConcat(mat, *this); }
 
-    bool operator!=(const SkColorMatrix& other) const { return !((*this) == other); }
+  void setSaturation(float sat);
+  void setRGB2YUV();
+  void setYUV2RGB();
 
-private:
-    float fMat[20];
+  bool operator==(const SkColorMatrix& other) const {
+    return 0 == memcmp(fMat, other.fMat, sizeof(fMat));
+  }
 
-    friend class SkColorFilters;
+  bool operator!=(const SkColorMatrix& other) const { return !((*this) == other); }
+
+  float* get20(float m[20]) const {
+    memcpy(m, fMat, sizeof(fMat));
+    return m;
+  }
+  void set20(const float m[20]) { memcpy(fMat, m, sizeof(fMat)); }
+
+ private:
+  float fMat[20];
+
+  friend class SkColorFilters;
 };
 
 #endif

@@ -11,29 +11,30 @@
 #include "src/shaders/gradients/SkGradientShaderPriv.h"
 
 class SkRadialGradient final : public SkGradientShaderBase {
-public:
-    SkRadialGradient(const SkPoint& center, SkScalar radius, const Descriptor&);
+ public:
+  SkRadialGradient(const SkPoint& center, SkScalar radius, const Descriptor&);
 
-    GradientType asAGradient(GradientInfo* info) const override;
+  GradientType asAGradient(GradientInfo* info) const override;
 #if SK_SUPPORT_GPU
-    std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
+  std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
 #endif
 
-protected:
-    SkRadialGradient(SkReadBuffer& buffer);
-    void flatten(SkWriteBuffer& buffer) const override;
+ protected:
+  SkRadialGradient(SkReadBuffer& buffer);
+  void flatten(SkWriteBuffer& buffer) const override;
 
-    void appendGradientStages(SkArenaAlloc* alloc, SkRasterPipeline* tPipeline,
-                              SkRasterPipeline* postPipeline) const override;
+  void appendGradientStages(
+      SkArenaAlloc* alloc, SkRasterPipeline* tPipeline,
+      SkRasterPipeline* postPipeline) const override;
 
-private:
-    SK_FLATTENABLE_HOOKS(SkRadialGradient)
+ private:
+  SK_FLATTENABLE_HOOKS(SkRadialGradient)
 
-    const SkPoint fCenter;
-    const SkScalar fRadius;
+  const SkPoint fCenter;
+  const SkScalar fRadius;
 
-    friend class SkGradientShader;
-    typedef SkGradientShaderBase INHERITED;
+  friend class SkGradientShader;
+  typedef SkGradientShaderBase INHERITED;
 };
 
 #endif

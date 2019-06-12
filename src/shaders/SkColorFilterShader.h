@@ -14,24 +14,24 @@
 class SkArenaAlloc;
 
 class SkColorFilterShader : public SkShaderBase {
-public:
-    SkColorFilterShader(sk_sp<SkShader> shader, sk_sp<SkColorFilter> filter);
+ public:
+  SkColorFilterShader(sk_sp<SkShader> shader, sk_sp<SkColorFilter> filter);
 
 #if SK_SUPPORT_GPU
-    std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
+  std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
 #endif
 
-protected:
-    void flatten(SkWriteBuffer&) const override;
-    bool onAppendStages(const SkStageRec&) const override;
+ protected:
+  void flatten(SkWriteBuffer&) const override;
+  bool onAppendStages(const SkStageRec&) const override;
 
-private:
-    SK_FLATTENABLE_HOOKS(SkColorFilterShader)
+ private:
+  SK_FLATTENABLE_HOOKS(SkColorFilterShader)
 
-    sk_sp<SkShader> fShader;
-    sk_sp<SkColorFilter> fFilter;
+  sk_sp<SkShader> fShader;
+  sk_sp<SkColorFilter> fFilter;
 
-    typedef SkShaderBase INHERITED;
+  typedef SkShaderBase INHERITED;
 };
 
 #endif

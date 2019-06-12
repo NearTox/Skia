@@ -12,21 +12,21 @@
 
 #ifdef SK_BUILD_FOR_WIN
 
-#include "include/private/SkLeanWindows.h"
 #include "include/private/SkNoncopyable.h"
+#include "src/core/SkLeanWindows.h"
 
 /**
  * An instance of this class initializes COM on creation
  * and closes the COM library on destruction.
  */
 class SkAutoCoInitialize : SkNoncopyable {
-private:
-    HRESULT fHR;
+ private:
+  HRESULT fHR;
 
-public:
-    SkAutoCoInitialize();
-    ~SkAutoCoInitialize();
-    bool succeeded();
+ public:
+  SkAutoCoInitialize();
+  ~SkAutoCoInitialize();
+  bool succeeded();
 };
 
 #endif  // SK_BUILD_FOR_WIN

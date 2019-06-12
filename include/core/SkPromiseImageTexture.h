@@ -22,37 +22,37 @@
  * the same underlying backend API texture.
  */
 class SK_API SkPromiseImageTexture : public SkNVRefCnt<SkPromiseImageTexture> {
-public:
-    SkPromiseImageTexture() = delete;
-    SkPromiseImageTexture(const SkPromiseImageTexture&) = delete;
-    SkPromiseImageTexture(SkPromiseImageTexture&&) = delete;
-    ~SkPromiseImageTexture();
-    SkPromiseImageTexture& operator=(const SkPromiseImageTexture&) = delete;
-    SkPromiseImageTexture& operator=(SkPromiseImageTexture&&) = delete;
+ public:
+  SkPromiseImageTexture() = delete;
+  SkPromiseImageTexture(const SkPromiseImageTexture&) = delete;
+  SkPromiseImageTexture(SkPromiseImageTexture&&) = delete;
+  ~SkPromiseImageTexture();
+  SkPromiseImageTexture& operator=(const SkPromiseImageTexture&) = delete;
+  SkPromiseImageTexture& operator=(SkPromiseImageTexture&&) = delete;
 
-    static sk_sp<SkPromiseImageTexture> Make(const GrBackendTexture& backendTexture) {
-        if (!backendTexture.isValid()) {
-            return nullptr;
-        }
-        return sk_sp<SkPromiseImageTexture>(new SkPromiseImageTexture(backendTexture));
+  static sk_sp<SkPromiseImageTexture> Make(const GrBackendTexture& backendTexture) {
+    if (!backendTexture.isValid()) {
+      return nullptr;
     }
+    return sk_sp<SkPromiseImageTexture>(new SkPromiseImageTexture(backendTexture));
+  }
 
-    const GrBackendTexture& backendTexture() const { return fBackendTexture; }
+  const GrBackendTexture& backendTexture() const { return fBackendTexture; }
 
-    void addKeyToInvalidate(uint32_t contextID, const GrUniqueKey& key);
-    uint32_t uniqueID() const { return fUniqueID; }
+  void addKeyToInvalidate(uint32_t contextID, const GrUniqueKey& key);
+  uint32_t uniqueID() const { return fUniqueID; }
 
 #if GR_TEST_UTILS
-    SkTArray<GrUniqueKey> testingOnly_uniqueKeysToInvalidate() const;
+  SkTArray<GrUniqueKey> testingOnly_uniqueKeysToInvalidate() const;
 #endif
 
-private:
-    explicit SkPromiseImageTexture(const GrBackendTexture& backendTexture);
+ private:
+  explicit SkPromiseImageTexture(const GrBackendTexture& backendTexture);
 
-    SkSTArray<1, GrUniqueKeyInvalidatedMessage> fMessages;
-    GrBackendTexture fBackendTexture;
-    uint32_t fUniqueID = SK_InvalidUniqueID;
-    static std::atomic<uint32_t> gUniqueID;
+  SkSTArray<1, GrUniqueKeyInvalidatedMessage> fMessages;
+  GrBackendTexture fBackendTexture;
+  uint32_t fUniqueID = SK_InvalidUniqueID;
+  static std::atomic<uint32_t> gUniqueID;
 };
 #endif
 

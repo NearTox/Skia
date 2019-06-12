@@ -12,29 +12,26 @@
 #include "include/core/SkRect.h"
 
 class SK_API SkMagnifierImageFilter : public SkImageFilter {
-public:
-    static sk_sp<SkImageFilter> Make(const SkRect& srcRect, SkScalar inset,
-                                     sk_sp<SkImageFilter> input,
-                                     const CropRect* cropRect = nullptr);
+ public:
+  static sk_sp<SkImageFilter> Make(
+      const SkRect& srcRect, SkScalar inset, sk_sp<SkImageFilter> input,
+      const CropRect* cropRect = nullptr);
 
-protected:
-    SkMagnifierImageFilter(const SkRect& srcRect,
-                           SkScalar inset,
-                           sk_sp<SkImageFilter>
-                                   input,
-                           const CropRect* cropRect);
-    void flatten(SkWriteBuffer&) const override;
+ protected:
+  SkMagnifierImageFilter(
+      const SkRect& srcRect, SkScalar inset, sk_sp<SkImageFilter> input, const CropRect* cropRect);
+  void flatten(SkWriteBuffer&) const override;
 
-    sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
-                                        SkIPoint* offset) const override;
+  sk_sp<SkSpecialImage> onFilterImage(
+      SkSpecialImage* source, const Context&, SkIPoint* offset) const override;
 
-private:
-    SK_FLATTENABLE_HOOKS(SkMagnifierImageFilter)
+ private:
+  SK_FLATTENABLE_HOOKS(SkMagnifierImageFilter)
 
-    SkRect fSrcRect;
-    SkScalar fInset;
+  SkRect fSrcRect;
+  SkScalar fInset;
 
-    typedef SkImageFilter INHERITED;
+  typedef SkImageFilter INHERITED;
 };
 
 #endif

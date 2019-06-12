@@ -17,12 +17,12 @@
 #include "include/core/SkRect.h"
 
 DEF_SIMPLE_GM(crbug_899512, canvas, 520, 520) {
-    // comment this line below to solve the problem
-    SkMatrix matrix;
-    matrix.setAll(-1, 0, 220, 0, 1, 0, 0, 0, 1);
-    canvas->concat(matrix);
-    SkPaint paint;
-    paint.setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, 6.2735f, false));
-    paint.setColorFilter(SkColorFilters::Blend(SK_ColorBLACK, SkBlendMode::kSrcIn));
-    canvas->drawRect(SkRect::MakeXYWH(0, 10, 200, 200), paint);
+  // comment this line below to solve the problem
+  SkMatrix matrix;
+  matrix.setAll(-1, 0, 220, 0, 1, 0, 0, 0, 1);
+  canvas->concat(matrix);
+  SkPaint paint;
+  paint.setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, 6.2735f, false));
+  paint.setColorFilter(SkColorFilters::Blend(SK_ColorBLACK, SkBlendMode::kSrcIn));
+  canvas->drawRect(SkRect::MakeXYWH(0, 10, 200, 200), paint);
 }

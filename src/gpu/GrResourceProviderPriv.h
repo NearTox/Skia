@@ -14,26 +14,26 @@
     This class is purely a privileged window into GrResourceProvider. It should never have
     additional data members or virtual methods. */
 class GrResourceProviderPriv {
-public:
-    GrGpu* gpu() { return fResourceProvider->gpu(); }
+ public:
+  GrGpu* gpu() { return fResourceProvider->gpu(); }
 
-private:
-    explicit GrResourceProviderPriv(GrResourceProvider* provider) : fResourceProvider(provider) {}
-    GrResourceProviderPriv(const GrResourceProviderPriv&);             // unimpl
-    GrResourceProviderPriv& operator=(const GrResourceProviderPriv&);  // unimpl
+ private:
+  explicit GrResourceProviderPriv(GrResourceProvider* provider) : fResourceProvider(provider) {}
+  GrResourceProviderPriv(const GrResourceProviderPriv&);             // unimpl
+  GrResourceProviderPriv& operator=(const GrResourceProviderPriv&);  // unimpl
 
-    // No taking addresses of this type.
-    const GrResourceProviderPriv* operator&() const;
-    GrResourceProviderPriv* operator&();
+  // No taking addresses of this type.
+  const GrResourceProviderPriv* operator&() const;
+  GrResourceProviderPriv* operator&();
 
-    GrResourceProvider* fResourceProvider;
-    friend class GrResourceProvider;  // to construct/copy this type
+  GrResourceProvider* fResourceProvider;
+  friend class GrResourceProvider;  // to construct/copy this type
 };
 
 inline GrResourceProviderPriv GrResourceProvider::priv() { return GrResourceProviderPriv(this); }
 
 inline const GrResourceProviderPriv GrResourceProvider::priv() const {
-    return GrResourceProviderPriv(const_cast<GrResourceProvider*>(this));
+  return GrResourceProviderPriv(const_cast<GrResourceProvider*>(this));
 }
 
 #endif

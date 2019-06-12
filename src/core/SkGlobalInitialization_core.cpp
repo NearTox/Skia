@@ -9,10 +9,10 @@
 #include "include/private/SkOnce.h"
 
 void SkFlattenable::RegisterFlattenablesIfNeeded() {
-    static SkOnce once;
-    once([] {
-        SkFlattenable::PrivateInitializer::InitEffects();
-        SkFlattenable::PrivateInitializer::InitImageFilters();
-        SkFlattenable::Finalize();
-    });
+  static SkOnce once;
+  once([] {
+    SkFlattenable::PrivateInitializer::InitEffects();
+    SkFlattenable::PrivateInitializer::InitImageFilters();
+    SkFlattenable::Finalize();
+  });
 }

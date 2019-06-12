@@ -17,50 +17,50 @@
  * Wrapper class for passing into and receiving data from Ganesh about a backend semaphore object.
  */
 class GrBackendSemaphore {
-public:
-    // For convenience we just set the backend here to OpenGL. The GrBackendSemaphore cannot be used
-    // until either initGL or initVulkan are called which will set the appropriate GrBackend.
-    GrBackendSemaphore() : fBackend(GrBackendApi::kOpenGL), fGLSync(0), fIsInitialized(false) {}
+ public:
+  // For convenience we just set the backend here to OpenGL. The GrBackendSemaphore cannot be used
+  // until either initGL or initVulkan are called which will set the appropriate GrBackend.
+  GrBackendSemaphore() : fBackend(GrBackendApi::kOpenGL), fGLSync(0), fIsInitialized(false) {}
 
-    void initGL(GrGLsync sync) {
-        fBackend = GrBackendApi::kOpenGL;
-        fGLSync = sync;
-        fIsInitialized = true;
-    }
+  void initGL(GrGLsync sync) {
+    fBackend = GrBackendApi::kOpenGL;
+    fGLSync = sync;
+    fIsInitialized = true;
+  }
 
-    void initVulkan(VkSemaphore semaphore) {
-        fBackend = GrBackendApi::kVulkan;
-        fVkSemaphore = semaphore;
+  void initVulkan(VkSemaphore semaphore) {
+    fBackend = GrBackendApi::kVulkan;
+    fVkSemaphore = semaphore;
 #ifdef SK_VULKAN
-        fIsInitialized = true;
+    fIsInitialized = true;
 #else
-        fIsInitialized = false;
+    fIsInitialized = false;
 #endif
+  }
+
+  bool isInitialized() const { return fIsInitialized; }
+
+  GrGLsync glSync() const {
+    if (!fIsInitialized || GrBackendApi::kOpenGL != fBackend) {
+      return 0;
     }
+    return fGLSync;
+  }
 
-    bool isInitialized() const { return fIsInitialized; }
-
-    GrGLsync glSync() const {
-        if (!fIsInitialized || GrBackendApi::kOpenGL != fBackend) {
-            return 0;
-        }
-        return fGLSync;
+  VkSemaphore vkSemaphore() const {
+    if (!fIsInitialized || GrBackendApi::kVulkan != fBackend) {
+      return VK_NULL_HANDLE;
     }
+    return fVkSemaphore;
+  }
 
-    VkSemaphore vkSemaphore() const {
-        if (!fIsInitialized || GrBackendApi::kVulkan != fBackend) {
-            return VK_NULL_HANDLE;
-        }
-        return fVkSemaphore;
-    }
-
-private:
-    GrBackendApi fBackend;
-    union {
-        GrGLsync fGLSync;
-        VkSemaphore fVkSemaphore;
-    };
-    bool fIsInitialized;
+ private:
+  GrBackendApi fBackend;
+  union {
+    GrGLsync fGLSync;
+    VkSemaphore fVkSemaphore;
+  };
+  bool fIsInitialized;
 };
 
 #endif

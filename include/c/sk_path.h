@@ -16,8 +16,8 @@
 SK_C_PLUS_PLUS_BEGIN_GUARD
 
 typedef enum {
-    CW_SK_PATH_DIRECTION,
-    CCW_SK_PATH_DIRECTION,
+  CW_SK_PATH_DIRECTION,
+  CCW_SK_PATH_DIRECTION,
 } sk_path_direction_t;
 
 /** Create a new, empty path. */
@@ -53,8 +53,8 @@ SK_API void sk_path_conic_to(sk_path_t*, float x0, float y0, float x1, float y1,
     sk_path_move_to() call has been made for this contour, the first
     point is automatically set to (0,0).
 */
-SK_API void sk_path_cubic_to(sk_path_t*, float x0, float y0, float x1, float y1, float x2,
-                             float y2);
+SK_API void sk_path_cubic_to(
+    sk_path_t*, float x0, float y0, float x1, float y1, float x2, float y2);
 /**
    Close the current contour. If the current point is not equal to the
    first point of the contour, a line segment is automatically added.

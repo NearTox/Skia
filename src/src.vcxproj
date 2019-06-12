@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\test\coreTest.hpp" />
     <ClCompile Include="..\third_party\etc1\etc1.cpp" />
     <ClCompile Include="..\third_party\gif\SkGifImageReader.cpp" />
     <ClCompile Include="..\third_party\skcms\skcms.cc" />
@@ -131,8 +132,6 @@
     <ClCompile Include="core\SkImageInfo.cpp" />
     <ClCompile Include="core\SkLatticeIter.cpp" />
     <ClCompile Include="core\SkLineClipper.cpp" />
-    <ClCompile Include="core\SkLiteDL.cpp" />
-    <ClCompile Include="core\SkLiteRecorder.cpp" />
     <ClCompile Include="core\SkLocalMatrixImageFilter.cpp" />
     <ClCompile Include="core\SkMallocPixelRef.cpp" />
     <ClCompile Include="core\SkMask.cpp" />
@@ -211,6 +210,7 @@
     <ClCompile Include="core\SkStream.cpp" />
     <ClCompile Include="core\SkStrike.cpp" />
     <ClCompile Include="core\SkStrikeCache.cpp" />
+    <ClCompile Include="core\SkStrikeSpec.cpp" />
     <ClCompile Include="core\SkString.cpp" />
     <ClCompile Include="core\SkStringUtils.cpp" />
     <ClCompile Include="core\SkStroke.cpp" />
@@ -236,6 +236,7 @@
     <ClCompile Include="core\SkXfermode.cpp" />
     <ClCompile Include="core\SkXfermodeInterpretation.cpp" />
     <ClCompile Include="core\SkYUVASizeInfo.cpp" />
+    <ClCompile Include="core\SkYUVMath.cpp" />
     <ClCompile Include="core\SkYUVPlanesCache.cpp" />
     <ClCompile Include="c\sk_effects.cpp" />
     <ClCompile Include="c\sk_imageinfo.cpp" />
@@ -406,6 +407,7 @@
     <ClCompile Include="gpu\GrContextPriv.cpp" />
     <ClCompile Include="gpu\GrContextThreadSafeProxy.cpp" />
     <ClCompile Include="gpu\GrContext_Base.cpp" />
+    <ClCompile Include="gpu\GrDataUtils.cpp" />
     <ClCompile Include="gpu\GrDDLContext.cpp" />
     <ClCompile Include="gpu\GrDefaultGeoProcFactory.cpp" />
     <ClCompile Include="gpu\GrDeinstantiateProxyTracker.cpp" />
@@ -592,6 +594,7 @@
     <ClCompile Include="pdf\SkDocument_PDF_None.cpp" />
     <ClCompile Include="ports\SkDebug_win.cpp" />
     <ClCompile Include="ports\SkDiscardableMemory_none.cpp" />
+    <ClCompile Include="ports\SkFontHost_win.cpp" />
     <ClCompile Include="ports\SkFontMgr_win_dw.cpp" />
     <ClCompile Include="ports\SkFontMgr_win_dw_factory.cpp" />
     <ClCompile Include="ports\SkGlobalInitialization_default.cpp" />
@@ -759,6 +762,7 @@
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <EnablePREfast>false</EnablePREfast>
+      <AssemblerOutput>AssemblyCode</AssemblerOutput>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -787,6 +791,7 @@
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <EnablePREfast>false</EnablePREfast>
+      <AssemblerOutput>AssemblyCode</AssemblerOutput>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

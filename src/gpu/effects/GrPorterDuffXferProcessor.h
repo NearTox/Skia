@@ -22,49 +22,44 @@
 #pragma clang diagnostic ignored "-Wnon-virtual-dtor"
 #endif
 class GrPorterDuffXPFactory : public GrXPFactory {
-public:
-    static const GrXPFactory* Get(SkBlendMode blendMode);
+ public:
+  static const GrXPFactory* Get(SkBlendMode blendMode);
 
-    /** Because src-over is so common we special case it for performance reasons. If this returns
-        null then the SimpleSrcOverXP() below should be used. */
-    static sk_sp<const GrXferProcessor> MakeSrcOverXferProcessor(const GrProcessorAnalysisColor&,
-                                                                 GrProcessorAnalysisCoverage,
-                                                                 bool hasMixedSamples,
-                                                                 const GrCaps&);
+  /** Because src-over is so common we special case it for performance reasons. If this returns
+      null then the SimpleSrcOverXP() below should be used. */
+  static sk_sp<const GrXferProcessor> MakeSrcOverXferProcessor(
+      const GrProcessorAnalysisColor&, GrProcessorAnalysisCoverage, bool hasMixedSamples,
+      const GrCaps&);
 
-    /** Returns a simple non-LCD porter duff blend XP with no optimizations or coverage. */
-    static sk_sp<const GrXferProcessor> MakeNoCoverageXP(SkBlendMode);
+  /** Returns a simple non-LCD porter duff blend XP with no optimizations or coverage. */
+  static sk_sp<const GrXferProcessor> MakeNoCoverageXP(SkBlendMode);
 
-    /** This XP implements non-LCD src-over using hw blend with no optimizations. It is returned
-        by reference because it is global and its ref-cnting methods are not thread safe. */
-    static const GrXferProcessor& SimpleSrcOverXP();
+  /** This XP implements non-LCD src-over using hw blend with no optimizations. It is returned
+      by reference because it is global and its ref-cnting methods are not thread safe. */
+  static const GrXferProcessor& SimpleSrcOverXP();
 
-    static AnalysisProperties SrcOverAnalysisProperties(const GrProcessorAnalysisColor&,
-                                                        const GrProcessorAnalysisCoverage&,
-                                                        const GrCaps&,
-                                                        GrClampType);
+  static AnalysisProperties SrcOverAnalysisProperties(
+      const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, const GrCaps&,
+      GrClampType);
 
-private:
-    constexpr GrPorterDuffXPFactory(SkBlendMode);
+ private:
+  constexpr GrPorterDuffXPFactory(SkBlendMode);
 
-    sk_sp<const GrXferProcessor> makeXferProcessor(const GrProcessorAnalysisColor&,
-                                                   GrProcessorAnalysisCoverage,
-                                                   bool hasMixedSamples,
-                                                   const GrCaps&,
-                                                   GrClampType) const override;
+  sk_sp<const GrXferProcessor> makeXferProcessor(
+      const GrProcessorAnalysisColor&, GrProcessorAnalysisCoverage, bool hasMixedSamples,
+      const GrCaps&, GrClampType) const override;
 
-    AnalysisProperties analysisProperties(const GrProcessorAnalysisColor&,
-                                          const GrProcessorAnalysisCoverage&,
-                                          const GrCaps&,
-                                          GrClampType) const override;
+  AnalysisProperties analysisProperties(
+      const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, const GrCaps&,
+      GrClampType) const override;
 
-    GR_DECLARE_XP_FACTORY_TEST
-    static void TestGetXPOutputTypes(const GrXferProcessor*, int* outPrimary, int* outSecondary);
+  GR_DECLARE_XP_FACTORY_TEST
+  static void TestGetXPOutputTypes(const GrXferProcessor*, int* outPrimary, int* outSecondary);
 
-    SkBlendMode fBlendMode;
+  SkBlendMode fBlendMode;
 
-    friend class GrPorterDuffTest;  // for TestGetXPOutputTypes()
-    typedef GrXPFactory INHERITED;
+  friend class GrPorterDuffTest;  // for TestGetXPOutputTypes()
+  typedef GrXPFactory INHERITED;
 };
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop

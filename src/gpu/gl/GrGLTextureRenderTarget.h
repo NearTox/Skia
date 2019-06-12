@@ -20,51 +20,45 @@ class GrGLGpu;
 #endif
 
 class GrGLTextureRenderTarget : public GrGLTexture, public GrGLRenderTarget {
-public:
-    // We're virtually derived from GrSurface (via both GrGLTexture and GrGLRenderTarget) so its
-    // constructor must be explicitly called.
-    GrGLTextureRenderTarget(GrGLGpu* gpu,
-                            SkBudgeted budgeted,
-                            const GrSurfaceDesc& desc,
-                            const GrGLTexture::IDDesc& texIDDesc,
-                            const GrGLRenderTarget::IDDesc& rtIDDesc,
-                            GrMipMapsStatus);
+ public:
+  // We're virtually derived from GrSurface (via both GrGLTexture and GrGLRenderTarget) so its
+  // constructor must be explicitly called.
+  GrGLTextureRenderTarget(
+      GrGLGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc,
+      const GrGLTexture::IDDesc& texIDDesc, const GrGLRenderTarget::IDDesc& rtIDDesc,
+      GrMipMapsStatus);
 
-    bool canAttemptStencilAttachment() const override;
+  bool canAttemptStencilAttachment() const override;
 
-    void dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const override;
+  void dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const override;
 
-    static sk_sp<GrGLTextureRenderTarget> MakeWrapped(GrGLGpu* gpu, const GrSurfaceDesc& desc,
-                                                      const GrGLTexture::IDDesc& texIDDesc,
-                                                      const GrGLRenderTarget::IDDesc& rtIDDesc,
-                                                      GrWrapCacheable cacheble, GrMipMapsStatus);
+  static sk_sp<GrGLTextureRenderTarget> MakeWrapped(
+      GrGLGpu* gpu, const GrSurfaceDesc& desc, const GrGLTexture::IDDesc& texIDDesc,
+      const GrGLRenderTarget::IDDesc& rtIDDesc, GrWrapCacheable cacheble, GrMipMapsStatus);
 
-    GrBackendFormat backendFormat() const override {
-        // It doesn't matter if we take the texture or render target path, so just pick texture.
-        return GrGLTexture::backendFormat();
-    }
+  GrBackendFormat backendFormat() const override {
+    // It doesn't matter if we take the texture or render target path, so just pick texture.
+    return GrGLTexture::backendFormat();
+  }
 
-protected:
-    void onAbandon() override {
-        GrGLRenderTarget::onAbandon();
-        GrGLTexture::onAbandon();
-    }
+ protected:
+  void onAbandon() override {
+    GrGLRenderTarget::onAbandon();
+    GrGLTexture::onAbandon();
+  }
 
-    void onRelease() override {
-        GrGLRenderTarget::onRelease();
-        GrGLTexture::onRelease();
-    }
+  void onRelease() override {
+    GrGLRenderTarget::onRelease();
+    GrGLTexture::onRelease();
+  }
 
-private:
-    // Constructor for instances wrapping backend objects.
-    GrGLTextureRenderTarget(GrGLGpu* gpu,
-                            const GrSurfaceDesc& desc,
-                            const GrGLTexture::IDDesc& texIDDesc,
-                            const GrGLRenderTarget::IDDesc& rtIDDesc,
-                            GrWrapCacheable,
-                            GrMipMapsStatus);
+ private:
+  // Constructor for instances wrapping backend objects.
+  GrGLTextureRenderTarget(
+      GrGLGpu* gpu, const GrSurfaceDesc& desc, const GrGLTexture::IDDesc& texIDDesc,
+      const GrGLRenderTarget::IDDesc& rtIDDesc, GrWrapCacheable, GrMipMapsStatus);
 
-    size_t onGpuMemorySize() const override;
+  size_t onGpuMemorySize() const override;
 };
 
 #ifdef SK_BUILD_FOR_WIN

@@ -18,22 +18,22 @@
  * sample patterns, we favor sample pattern keys over actual arrays of points.
  */
 class GrSamplePatternDictionary {
-public:
-    static constexpr int kInvalidSamplePatternKey = -1;
+ public:
+  static constexpr int kInvalidSamplePatternKey = -1;
 
-    int findOrAssignSamplePatternKey(const SkTArray<SkPoint>& sampleLocations);
+  int findOrAssignSamplePatternKey(const SkTArray<SkPoint>& sampleLocations);
 
-    const SkTArray<SkPoint>& retrieveSampleLocations(int samplePatternKey) const {
-        return *fSampleLocationsArray[samplePatternKey];
-    }
+  const SkTArray<SkPoint>& retrieveSampleLocations(int samplePatternKey) const {
+    return *fSampleLocationsArray[samplePatternKey];
+  }
 
-private:
-    struct LessThan {
-        bool operator()(const SkTArray<SkPoint>&, const SkTArray<SkPoint>&) const;
-    };
+ private:
+  struct LessThan {
+    bool operator()(const SkTArray<SkPoint>&, const SkTArray<SkPoint>&) const;
+  };
 
-    std::map<SkTArray<SkPoint>, int, LessThan> fSamplePatternKeyMap;
-    SkTArray<const SkTArray<SkPoint>*> fSampleLocationsArray;
+  std::map<SkTArray<SkPoint>, int, LessThan> fSamplePatternKeyMap;
+  SkTArray<const SkTArray<SkPoint>*> fSampleLocationsArray;
 };
 
 #endif

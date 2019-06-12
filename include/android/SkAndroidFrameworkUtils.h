@@ -21,33 +21,33 @@ class SkSurface;
  *  SkAndroidFrameworkUtils expose private APIs used only by Android framework.
  */
 class SkAndroidFrameworkUtils {
-public:
+ public:
 #if SK_SUPPORT_GPU
-    /**
-     *  clipWithStencil draws the current clip into a stencil buffer with reference value and mask
-     *  set to 0x1. This function works only on a GPU canvas.
-     *
-     *  @param  canvas A GPU canvas that has a non-empty clip.
-     *
-     *  @return true on success or false if clip is empty or not a GPU canvas.
-     */
-    static bool clipWithStencil(SkCanvas* canvas);
+  /**
+   *  clipWithStencil draws the current clip into a stencil buffer with reference value and mask
+   *  set to 0x1. This function works only on a GPU canvas.
+   *
+   *  @param  canvas A GPU canvas that has a non-empty clip.
+   *
+   *  @return true on success or false if clip is empty or not a GPU canvas.
+   */
+  static bool clipWithStencil(SkCanvas* canvas);
 #endif  // SK_SUPPORT_GPU
 
-    static void SafetyNetLog(const char*);
+  static void SafetyNetLog(const char*);
 
-    static sk_sp<SkSurface> getSurfaceFromCanvas(SkCanvas* canvas);
+  static sk_sp<SkSurface> getSurfaceFromCanvas(SkCanvas* canvas);
 
-    static int SaveBehind(SkCanvas* canvas, const SkRect* subset);
+  static int SaveBehind(SkCanvas* canvas, const SkRect* subset);
 
-    /**
-     * Unrolls a chain of nested SkPaintFilterCanvas to return the base wrapped canvas.
-     *
-     *  @param  canvas A SkPaintFilterCanvas or any other SkCanvas subclass.
-     *
-     *  @return SkCanvas that was found in the innermost SkPaintFilterCanvas.
-     */
-    static SkCanvas* getBaseWrappedCanvas(SkCanvas* canvas);
+  /**
+   * Unrolls a chain of nested SkPaintFilterCanvas to return the base wrapped canvas.
+   *
+   *  @param  canvas A SkPaintFilterCanvas or any other SkCanvas subclass.
+   *
+   *  @return SkCanvas that was found in the innermost SkPaintFilterCanvas.
+   */
+  static SkCanvas* getBaseWrappedCanvas(SkCanvas* canvas);
 };
 
 #endif  // SK_BUILD_FOR_ANDROID_ANDROID

@@ -16,59 +16,60 @@
 #include "include/private/SkNoncopyable.h"
 
 class SkSVGValue : public SkNoncopyable {
-public:
-    enum class Type {
-        kClip,
-        kColor,
-        kDashArray,
-        kFillRule,
-        kLength,
-        kLineCap,
-        kLineJoin,
-        kNumber,
-        kPaint,
-        kPath,
-        kPoints,
-        kSpreadMethod,
-        kString,
-        kTransform,
-        kViewBox,
-        kVisibility,
-    };
+ public:
+  enum class Type {
+    kClip,
+    kColor,
+    kDashArray,
+    kFillRule,
+    kLength,
+    kLineCap,
+    kLineJoin,
+    kNumber,
+    kPaint,
+    kPath,
+    kPoints,
+    kSpreadMethod,
+    kString,
+    kTransform,
+    kViewBox,
+    kVisibility,
+  };
 
-    Type type() const { return fType; }
+  Type type() const { return fType; }
 
-    template <typename T> const T* as() const {
-        return fType == T::TYPE ? static_cast<const T*>(this) : nullptr;
-    }
+  template <typename T>
+  const T* as() const {
+    return fType == T::TYPE ? static_cast<const T*>(this) : nullptr;
+  }
 
-protected:
-    SkSVGValue(Type t) : fType(t) {}
+ protected:
+  SkSVGValue(Type t) : fType(t) {}
 
-private:
-    Type fType;
+ private:
+  Type fType;
 
-    typedef SkNoncopyable INHERITED;
+  typedef SkNoncopyable INHERITED;
 };
 
 template <typename T, SkSVGValue::Type ValueType>
 class SkSVGWrapperValue final : public SkSVGValue {
-public:
-    static constexpr Type TYPE = ValueType;
+ public:
+  static constexpr Type TYPE = ValueType;
 
-    explicit SkSVGWrapperValue(const T& v) : INHERITED(ValueType), fWrappedValue(v) {}
+  explicit SkSVGWrapperValue(const T& v) : INHERITED(ValueType), fWrappedValue(v) {}
 
-    operator const T&() const { return fWrappedValue; }
-    const T* operator->() const { return &fWrappedValue; }
+  operator const T&() const { return fWrappedValue; }
+  const T* operator->() const { return &fWrappedValue; }
 
-private:
-    // Stack-only
-    void* operator new(size_t) = delete;
-    void* operator new(size_t, void*) = delete;
+ private:
+  // Stack-only
+  void* operator new(size_t) = delete;
+  void* operator new(size_t, void*) = delete;
 
-    const T& fWrappedValue;
+  const T& fWrappedValue;
 
-    typedef SkSVGValue INHERITED;
+  typedef SkSVGValue INHERITED;
 };
 
 using SkSVGClipValue = SkSVGWrapperValue<SkSVGClip, SkSVGValue::Type::kClip>;
@@ -85,7 +86,7 @@ using SkSVGNumberValue = SkSVGWrapperValue<SkSVGNumberType, SkSVGValue::Type::kN
 using SkSVGPointsValue = SkSVGWrapperValue<SkSVGPointsType, SkSVGValue::Type::kPoints>;
 using SkSVGStringValue = SkSVGWrapperValue<SkSVGStringType, SkSVGValue::Type::kString>;
 using SkSVGSpreadMethodValue =
-        SkSVGWrapperValue<SkSVGSpreadMethod, SkSVGValue::Type::kSpreadMethod>;
+    SkSVGWrapperValue<SkSVGSpreadMethod, SkSVGValue::Type::kSpreadMethod>;
 using SkSVGVisibilityValue = SkSVGWrapperValue<SkSVGVisibility, SkSVGValue::Type::kVisibility>;
 using SkSVGDashArrayValue = SkSVGWrapperValue<SkSVGDashArray, SkSVGValue::Type::kDashArray>;
 

@@ -21,24 +21,24 @@
  * (Use GrCCGeometry::quadraticTo().)
  */
 class GrCCQuadraticShader : public GrCCCoverageProcessor::Shader {
-public:
-    void emitSetupCode(GrGLSLVertexGeoBuilder*, const char* pts,
-                       const char** outHull4) const override;
+ public:
+  void emitSetupCode(
+      GrGLSLVertexGeoBuilder*, const char* pts, const char** outHull4) const override;
 
-    void onEmitVaryings(GrGLSLVaryingHandler*, GrGLSLVarying::Scope, SkString* code,
-                        const char* position, const char* coverage, const char* cornerCoverage,
-                        const char* wind) override;
+  void onEmitVaryings(
+      GrGLSLVaryingHandler*, GrGLSLVarying::Scope, SkString* code, const char* position,
+      const char* coverage, const char* cornerCoverage, const char* wind) override;
 
-    void onEmitFragmentCode(GrGLSLFPFragmentBuilder*, const char* outputCoverage) const override;
+  void onEmitFragmentCode(GrGLSLFPFragmentBuilder*, const char* outputCoverage) const override;
 
-private:
-    void calcHullCoverage(SkString* code, const char* coordAndGrad, const char* d,
-                          const char* outputCoverage) const;
+ private:
+  void calcHullCoverage(
+      SkString* code, const char* coordAndGrad, const char* d, const char* outputCoverage) const;
 
-    const GrShaderVar fQCoordMatrix{"qcoord_matrix", kFloat2x2_GrSLType};
-    const GrShaderVar fQCoord0{"qcoord0", kFloat2_GrSLType};
-    GrGLSLVarying fCoord_fGrad;
-    GrGLSLVarying fEdge_fWind_fCorner;
+  const GrShaderVar fQCoordMatrix{"qcoord_matrix", kFloat2x2_GrSLType};
+  const GrShaderVar fQCoord0{"qcoord0", kFloat2_GrSLType};
+  GrGLSLVarying fCoord_fGrad;
+  GrGLSLVarying fEdge_fWind_fCorner;
 };
 
 #endif

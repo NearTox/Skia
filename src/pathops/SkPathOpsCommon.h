@@ -14,16 +14,17 @@ class SkOpCoincidence;
 class SkOpContour;
 class SkPathWriter;
 
-const SkOpAngle* AngleWinding(SkOpSpanBase* start, SkOpSpanBase* end, int* windingPtr,
-                              bool* sortable);
-SkOpSegment* FindChase(SkTDArray<SkOpSpanBase*>* chase, SkOpSpanBase** startPtr,
-                       SkOpSpanBase** endPtr);
+const SkOpAngle* AngleWinding(
+    SkOpSpanBase* start, SkOpSpanBase* end, int* windingPtr, bool* sortable);
+SkOpSegment* FindChase(
+    SkTDArray<SkOpSpanBase*>* chase, SkOpSpanBase** startPtr, SkOpSpanBase** endPtr);
 SkOpSpan* FindSortableTop(SkOpContourHead*);
 SkOpSpan* FindUndone(SkOpContourHead*);
 bool FixWinding(SkPath* path);
 bool SortContourList(SkOpContourHead**, bool evenOdd, bool oppEvenOdd);
 bool HandleCoincidence(SkOpContourHead*, SkOpCoincidence*);
-bool OpDebug(const SkPath& one, const SkPath& two, SkPathOp op,
-             SkPath* result SkDEBUGPARAMS(bool skipAssert) SkDEBUGPARAMS(const char* testName));
+bool OpDebug(
+    const SkPath& one, const SkPath& two, SkPathOp op,
+    SkPath* result SkDEBUGPARAMS(bool skipAssert) SkDEBUGPARAMS(const char* testName));
 
 #endif

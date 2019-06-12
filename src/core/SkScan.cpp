@@ -13,92 +13,92 @@ std::atomic<bool> gSkUseAnalyticAA{true};
 std::atomic<bool> gSkForceAnalyticAA{false};
 
 static inline void blitrect(SkBlitter* blitter, const SkIRect& r) {
-    blitter->blitRect(r.fLeft, r.fTop, r.width(), r.height());
+  blitter->blitRect(r.fLeft, r.fTop, r.width(), r.height());
 }
 
 void SkScan::FillIRect(const SkIRect& r, const SkRegion* clip, SkBlitter* blitter) {
-    if (!r.isEmpty()) {
-        if (clip) {
-            if (clip->isRect()) {
-                const SkIRect& clipBounds = clip->getBounds();
+  if (!r.isEmpty()) {
+    if (clip) {
+      if (clip->isRect()) {
+        const SkIRect& clipBounds = clip->getBounds();
 
-                if (clipBounds.contains(r)) {
-                    blitrect(blitter, r);
-                } else {
-                    SkIRect rr = r;
-                    if (rr.intersect(clipBounds)) {
-                        blitrect(blitter, rr);
-                    }
-                }
-            } else {
-                SkRegion::Cliperator cliper(*clip, r);
-                const SkIRect& rr = cliper.rect();
-
-                while (!cliper.done()) {
-                    blitrect(blitter, rr);
-                    cliper.next();
-                }
-            }
+        if (clipBounds.contains(r)) {
+          blitrect(blitter, r);
         } else {
-            blitrect(blitter, r);
+          SkIRect rr = r;
+          if (rr.intersect(clipBounds)) {
+            blitrect(blitter, rr);
+          }
         }
+      } else {
+        SkRegion::Cliperator cliper(*clip, r);
+        const SkIRect& rr = cliper.rect();
+
+        while (!cliper.done()) {
+          blitrect(blitter, rr);
+          cliper.next();
+        }
+      }
+    } else {
+      blitrect(blitter, r);
     }
+  }
 }
 
 void SkScan::FillXRect(const SkXRect& xr, const SkRegion* clip, SkBlitter* blitter) {
-    SkIRect r;
+  SkIRect r;
 
-    XRect_round(xr, &r);
-    SkScan::FillIRect(r, clip, blitter);
+  XRect_round(xr, &r);
+  SkScan::FillIRect(r, clip, blitter);
 }
 
 void SkScan::FillRect(const SkRect& r, const SkRegion* clip, SkBlitter* blitter) {
-    SkIRect ir;
+  SkIRect ir;
 
-    r.round(&ir);
-    SkScan::FillIRect(ir, clip, blitter);
+  r.round(&ir);
+  SkScan::FillIRect(ir, clip, blitter);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
 void SkScan::FillIRect(const SkIRect& r, const SkRasterClip& clip, SkBlitter* blitter) {
-    if (clip.isEmpty() || r.isEmpty()) {
-        return;
-    }
+  if (clip.isEmpty() || r.isEmpty()) {
+    return;
+  }
 
-    if (clip.isBW()) {
-        FillIRect(r, &clip.bwRgn(), blitter);
-        return;
-    }
+  if (clip.isBW()) {
+    FillIRect(r, &clip.bwRgn(), blitter);
+    return;
+  }
 
-    SkAAClipBlitterWrapper wrapper(clip, blitter);
-    FillIRect(r, &wrapper.getRgn(), wrapper.getBlitter());
+  SkAAClipBlitterWrapper wrapper(clip, blitter);
+  FillIRect(r, &wrapper.getRgn(), wrapper.getBlitter());
 }
 
 void SkScan::FillXRect(const SkXRect& xr, const SkRasterClip& clip, SkBlitter* blitter) {
-    if (clip.isEmpty() || xr.isEmpty()) {
-        return;
-    }
+  if (clip.isEmpty() || xr.isEmpty()) {
+    return;
+  }
 
-    if (clip.isBW()) {
-        FillXRect(xr, &clip.bwRgn(), blitter);
-        return;
-    }
+  if (clip.isBW()) {
+    FillXRect(xr, &clip.bwRgn(), blitter);
+    return;
+  }
 
-    SkAAClipBlitterWrapper wrapper(clip, blitter);
-    FillXRect(xr, &wrapper.getRgn(), wrapper.getBlitter());
+  SkAAClipBlitterWrapper wrapper(clip, blitter);
+  FillXRect(xr, &wrapper.getRgn(), wrapper.getBlitter());
 }
 
 void SkScan::FillRect(const SkRect& r, const SkRasterClip& clip, SkBlitter* blitter) {
-    if (clip.isEmpty() || r.isEmpty()) {
-        return;
-    }
+  if (clip.isEmpty() || r.isEmpty()) {
+    return;
+  }
 
-    if (clip.isBW()) {
-        FillRect(r, &clip.bwRgn(), blitter);
-        return;
-    }
+  if (clip.isBW()) {
+    FillRect(r, &clip.bwRgn(), blitter);
+    return;
+  }
 
-    SkAAClipBlitterWrapper wrapper(clip, blitter);
-    FillRect(r, &wrapper.getRgn(), wrapper.getBlitter());
+  SkAAClipBlitterWrapper wrapper(clip, blitter);
+  FillRect(r, &wrapper.getRgn(), wrapper.getBlitter());
 }

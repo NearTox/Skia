@@ -11,10 +11,10 @@
 #include "src/xml/SkXMLWriter.h"
 
 std::unique_ptr<SkCanvas> SkSVGCanvas::Make(const SkRect& bounds, SkWStream* writer) {
-    // TODO: pass full bounds to the device
-    SkISize size = bounds.roundOut().size();
+  // TODO: pass full bounds to the device
+  SkISize size = bounds.roundOut().size();
 
-    auto svgDevice = SkSVGDevice::Make(size, skstd::make_unique<SkXMLStreamWriter>(writer));
+  auto svgDevice = SkSVGDevice::Make(size, skstd::make_unique<SkXMLStreamWriter>(writer));
 
-    return svgDevice ? skstd::make_unique<SkCanvas>(svgDevice) : nullptr;
+  return svgDevice ? skstd::make_unique<SkCanvas>(svgDevice) : nullptr;
 }

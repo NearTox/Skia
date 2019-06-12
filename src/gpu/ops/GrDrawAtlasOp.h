@@ -17,14 +17,9 @@ class GrRecordingContext;
 class SkMatrix;
 
 namespace GrDrawAtlasOp {
-std::unique_ptr<GrDrawOp> Make(GrRecordingContext*,
-                               GrPaint&&,
-                               const SkMatrix& viewMatrix,
-                               GrAAType,
-                               int spriteCount,
-                               const SkRSXform* xforms,
-                               const SkRect* rects,
-                               const SkColor* colors);
+std::unique_ptr<GrDrawOp> Make(
+    GrRecordingContext*, GrPaint&&, const SkMatrix& viewMatrix, GrAAType, int spriteCount,
+    const SkRSXform* xforms, const SkRect* rects, const SkColor* colors);
 };
 
 #endif

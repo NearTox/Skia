@@ -17,46 +17,44 @@ class SkPictureData;
 
 // The basic picture playback class replays the provided picture into a canvas.
 class SkPicturePlayback final : SkNoncopyable {
-public:
-    SkPicturePlayback(const SkPictureData* data) : fPictureData(data), fCurOffset(0) {}
+ public:
+  SkPicturePlayback(const SkPictureData* data) : fPictureData(data), fCurOffset(0) {}
 
-    void draw(SkCanvas* canvas, SkPicture::AbortCallback*, SkReadBuffer* buffer);
+  void draw(SkCanvas* canvas, SkPicture::AbortCallback*, SkReadBuffer* buffer);
 
-    // TODO: remove the curOp calls after cleaning up GrGatherDevice
-    // Return the ID of the operation currently being executed when playing
-    // back. 0 indicates no call is active.
-    size_t curOpID() const noexcept { return fCurOffset; }
-    void resetOpID() noexcept { fCurOffset = 0; }
+  // TODO: remove the curOp calls after cleaning up GrGatherDevice
+  // Return the ID of the operation currently being executed when playing
+  // back. 0 indicates no call is active.
+  size_t curOpID() const { return fCurOffset; }
+  void resetOpID() { fCurOffset = 0; }
 
-protected:
-    const SkPictureData* fPictureData;
+ protected:
+  const SkPictureData* fPictureData;
 
-    // The offset of the current operation when within the draw method
-    size_t fCurOffset;
+  // The offset of the current operation when within the draw method
+  size_t fCurOffset;
 
-    void handleOp(SkReadBuffer* reader,
-                  DrawType op,
-                  uint32_t size,
-                  SkCanvas* canvas,
-                  const SkMatrix& initialMatrix);
+  void handleOp(
+      SkReadBuffer* reader, DrawType op, uint32_t size, SkCanvas* canvas,
+      const SkMatrix& initialMatrix);
 
-    static DrawType ReadOpAndSize(SkReadBuffer* reader, uint32_t* size);
+  static DrawType ReadOpAndSize(SkReadBuffer* reader, uint32_t* size);
 
-    class AutoResetOpID {
-    public:
-        AutoResetOpID(SkPicturePlayback* playback) noexcept : fPlayback(playback) {}
-        ~AutoResetOpID() {
-            if (fPlayback) {
-                fPlayback->resetOpID();
-            }
-        }
+  class AutoResetOpID {
+   public:
+    AutoResetOpID(SkPicturePlayback* playback) : fPlayback(playback) {}
+    ~AutoResetOpID() {
+      if (fPlayback) {
+        fPlayback->resetOpID();
+      }
+    }
 
-    private:
-        SkPicturePlayback* fPlayback;
-    };
+   private:
+    SkPicturePlayback* fPlayback;
+  };
 
-private:
-    typedef SkNoncopyable INHERITED;
+ private:
+  typedef SkNoncopyable INHERITED;
 };
 
 #endif

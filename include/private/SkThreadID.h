@@ -12,7 +12,7 @@
 
 typedef int64_t SkThreadID;
 
-SkThreadID SkGetThreadID() noexcept;
+SkThreadID SkGetThreadID();
 
 const SkThreadID kIllegalThreadID = 0;
 

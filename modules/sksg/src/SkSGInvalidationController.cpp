@@ -15,18 +15,18 @@ namespace sksg {
 InvalidationController::InvalidationController() : fBounds(SkRect::MakeEmpty()) {}
 
 void InvalidationController::inval(const SkRect& r, const SkMatrix& ctm) {
-    if (r.isEmpty()) {
-        return;
-    }
+  if (r.isEmpty()) {
+    return;
+  }
 
-    SkTCopyOnFirstWrite<SkRect> rect(r);
+  SkTCopyOnFirstWrite<SkRect> rect(r);
 
-    if (!ctm.isIdentity()) {
-        ctm.mapRect(rect.writable());
-    }
+  if (!ctm.isIdentity()) {
+    ctm.mapRect(rect.writable());
+  }
 
-    fRects.push_back(*rect);
-    fBounds.join(*rect);
+  fRects.push_back(*rect);
+  fBounds.join(*rect);
 }
 
 }  // namespace sksg

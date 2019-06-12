@@ -14,29 +14,29 @@
     Skia. This class is purely a privileged window into GrSurfaceContext. It should never have
     additional data members or virtual methods. */
 class GrSurfaceContextPriv {
-public:
-    GrRecordingContext* getContext() { return fSurfaceContext->fContext; }
+ public:
+  GrRecordingContext* getContext() { return fSurfaceContext->fContext; }
 
-private:
-    explicit GrSurfaceContextPriv(GrSurfaceContext* surfaceContext)
-            : fSurfaceContext(surfaceContext) {}
+ private:
+  explicit GrSurfaceContextPriv(GrSurfaceContext* surfaceContext)
+      : fSurfaceContext(surfaceContext) {}
 
-    GrSurfaceContextPriv(const GrSurfaceContextPriv&) {}           // unimpl
-    GrSurfaceContextPriv& operator=(const GrSurfaceContextPriv&);  // unimpl
+  GrSurfaceContextPriv(const GrSurfaceContextPriv&) {}           // unimpl
+  GrSurfaceContextPriv& operator=(const GrSurfaceContextPriv&);  // unimpl
 
-    // No taking addresses of this type.
-    const GrSurfaceContextPriv* operator&() const;
-    GrSurfaceContextPriv* operator&();
+  // No taking addresses of this type.
+  const GrSurfaceContextPriv* operator&() const;
+  GrSurfaceContextPriv* operator&();
 
-    GrSurfaceContext* fSurfaceContext;
+  GrSurfaceContext* fSurfaceContext;
 
-    friend class GrSurfaceContext;  // to construct/copy this type.
+  friend class GrSurfaceContext;  // to construct/copy this type.
 };
 
 inline GrSurfaceContextPriv GrSurfaceContext::surfPriv() { return GrSurfaceContextPriv(this); }
 
 inline const GrSurfaceContextPriv GrSurfaceContext::surfPriv() const {
-    return GrSurfaceContextPriv(const_cast<GrSurfaceContext*>(this));
+  return GrSurfaceContextPriv(const_cast<GrSurfaceContext*>(this));
 }
 
 #endif

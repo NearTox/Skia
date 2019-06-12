@@ -19,28 +19,28 @@ class SkStream;
 class SkSVGNode;
 
 class SkSVGDOM : public SkRefCnt {
-public:
-    SkSVGDOM();
-    ~SkSVGDOM() = default;
+ public:
+  SkSVGDOM();
+  ~SkSVGDOM() = default;
 
-    static sk_sp<SkSVGDOM> MakeFromDOM(const SkDOM&);
-    static sk_sp<SkSVGDOM> MakeFromStream(SkStream&);
+  static sk_sp<SkSVGDOM> MakeFromDOM(const SkDOM&);
+  static sk_sp<SkSVGDOM> MakeFromStream(SkStream&);
 
-    const SkSize& containerSize() const;
-    void setContainerSize(const SkSize&);
+  const SkSize& containerSize() const;
+  void setContainerSize(const SkSize&);
 
-    void setRoot(sk_sp<SkSVGNode>);
+  void setRoot(sk_sp<SkSVGNode>);
 
-    void render(SkCanvas*) const;
+  void render(SkCanvas*) const;
 
-private:
-    SkSize intrinsicSize() const;
+ private:
+  SkSize intrinsicSize() const;
 
-    SkSize fContainerSize;
-    sk_sp<SkSVGNode> fRoot;
-    SkSVGIDMapper fIDMapper;
+  SkSize fContainerSize;
+  sk_sp<SkSVGNode> fRoot;
+  SkSVGIDMapper fIDMapper;
 
-    typedef SkRefCnt INHERITED;
+  typedef SkRefCnt INHERITED;
 };
 
 #endif  // SkSVGDOM_DEFINED

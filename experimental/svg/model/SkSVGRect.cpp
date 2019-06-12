@@ -26,60 +26,60 @@ void SkSVGRect::setRx(const SkSVGLength& rx) { fRx = rx; }
 void SkSVGRect::setRy(const SkSVGLength& ry) { fRy = ry; }
 
 void SkSVGRect::onSetAttribute(SkSVGAttribute attr, const SkSVGValue& v) {
-    switch (attr) {
-        case SkSVGAttribute::kX:
-            if (const auto* x = v.as<SkSVGLengthValue>()) {
-                this->setX(*x);
-            }
-            break;
-        case SkSVGAttribute::kY:
-            if (const auto* y = v.as<SkSVGLengthValue>()) {
-                this->setY(*y);
-            }
-            break;
-        case SkSVGAttribute::kWidth:
-            if (const auto* w = v.as<SkSVGLengthValue>()) {
-                this->setWidth(*w);
-            }
-            break;
-        case SkSVGAttribute::kHeight:
-            if (const auto* h = v.as<SkSVGLengthValue>()) {
-                this->setHeight(*h);
-            }
-            break;
-        case SkSVGAttribute::kRx:
-            if (const auto* rx = v.as<SkSVGLengthValue>()) {
-                this->setRx(*rx);
-            }
-            break;
-        case SkSVGAttribute::kRy:
-            if (const auto* ry = v.as<SkSVGLengthValue>()) {
-                this->setRy(*ry);
-            }
-            break;
-        default:
-            this->INHERITED::onSetAttribute(attr, v);
-    }
+  switch (attr) {
+    case SkSVGAttribute::kX:
+      if (const auto* x = v.as<SkSVGLengthValue>()) {
+        this->setX(*x);
+      }
+      break;
+    case SkSVGAttribute::kY:
+      if (const auto* y = v.as<SkSVGLengthValue>()) {
+        this->setY(*y);
+      }
+      break;
+    case SkSVGAttribute::kWidth:
+      if (const auto* w = v.as<SkSVGLengthValue>()) {
+        this->setWidth(*w);
+      }
+      break;
+    case SkSVGAttribute::kHeight:
+      if (const auto* h = v.as<SkSVGLengthValue>()) {
+        this->setHeight(*h);
+      }
+      break;
+    case SkSVGAttribute::kRx:
+      if (const auto* rx = v.as<SkSVGLengthValue>()) {
+        this->setRx(*rx);
+      }
+      break;
+    case SkSVGAttribute::kRy:
+      if (const auto* ry = v.as<SkSVGLengthValue>()) {
+        this->setRy(*ry);
+      }
+      break;
+    default: this->INHERITED::onSetAttribute(attr, v);
+  }
 }
 
 SkRRect SkSVGRect::resolve(const SkSVGLengthContext& lctx) const {
-    const SkRect rect = lctx.resolveRect(fX, fY, fWidth, fHeight);
-    const SkScalar rx = lctx.resolve(fRx, SkSVGLengthContext::LengthType::kHorizontal);
-    const SkScalar ry = lctx.resolve(fRy, SkSVGLengthContext::LengthType::kVertical);
+  const SkRect rect = lctx.resolveRect(fX, fY, fWidth, fHeight);
+  const SkScalar rx = lctx.resolve(fRx, SkSVGLengthContext::LengthType::kHorizontal);
+  const SkScalar ry = lctx.resolve(fRy, SkSVGLengthContext::LengthType::kVertical);
 
-    return SkRRect::MakeRectXY(rect, rx, ry);
+  return SkRRect::MakeRectXY(rect, rx, ry);
 }
 
-void SkSVGRect::onDraw(SkCanvas* canvas, const SkSVGLengthContext& lctx, const SkPaint& paint,
-                       SkPath::FillType) const {
-    canvas->drawRRect(this->resolve(lctx), paint);
+void SkSVGRect::onDraw(
+    SkCanvas* canvas, const SkSVGLengthContext& lctx, const SkPaint& paint,
+    SkPath::FillType) const {
+  canvas->drawRRect(this->resolve(lctx), paint);
 }
 
 SkPath SkSVGRect::onAsPath(const SkSVGRenderContext& ctx) const {
-    SkPath path;
-    path.addRRect(this->resolve(ctx.lengthContext()));
+  SkPath path;
+  path.addRRect(this->resolve(ctx.lengthContext()));
 
-    this->mapToParent(&path);
+  this->mapToParent(&path);
 
-    return path;
+  return path;
 }

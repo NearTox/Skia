@@ -26,9 +26,9 @@ extern void sk_test_c_api(sk_canvas_t*);
 #define H 256
 
 static sk_shader_t* make_shader() {
-    sk_point_t pts[] = {{0, 0}, {W, H}};
-    sk_color_t colors[] = {0xFF00FF00, 0xFF0000FF};
-    return sk_shader_new_linear_gradient(pts, colors, NULL, 2, CLAMP_SK_SHADER_TILEMODE, NULL);
+  sk_point_t pts[] = {{0, 0}, {W, H}};
+  sk_color_t colors[] = {0xFF00FF00, 0xFF0000FF};
+  return sk_shader_new_linear_gradient(pts, colors, NULL, 2, CLAMP_SK_SHADER_TILEMODE, NULL);
 }
 
 static void do_draw(sk_canvas_t* canvas) {
@@ -56,7 +56,7 @@ void sk_test_c_api(sk_canvas_t* canvas) {
     do_draw(canvas);
 
     sk_imageinfo_t* info =
-            sk_imageinfo_new(W, H, RGBA_8888_SK_COLORTYPE, OPAQUE_SK_ALPHATYPE, NULL);
+        sk_imageinfo_new(W, H, RGBA_8888_SK_COLORTYPE, OPAQUE_SK_ALPHATYPE, NULL);
     sk_surfaceprops_t surfaceProps = {UNKNOWN_SK_PIXELGEOMETRY};
     sk_surface_t* surf = sk_surface_new_raster(info, &surfaceProps);
     sk_imageinfo_delete(info);
@@ -74,7 +74,7 @@ void sk_test_c_api(sk_canvas_t* canvas) {
     sk_data_unref(data);
 
     if (img1) {
-        sk_canvas_draw_image(canvas, img1, W / 2, H / 2, NULL);
-        sk_image_unref(img1);
+      sk_canvas_draw_image(canvas, img1, W / 2, H / 2, NULL);
+      sk_image_unref(img1);
     }
 }

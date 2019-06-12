@@ -21,59 +21,58 @@
 namespace SkSL {
 
 class Interpreter {
-    typedef int StackIndex;
+  typedef int StackIndex;
 
-public:
-    union Value {
-        Value() {}
+ public:
+  union Value {
+    Value() {}
 
-        Value(float f) : fFloat(f) {}
+    Value(float f) : fFloat(f) {}
 
-        Value(int32_t s) : fSigned(s) {}
+    Value(int32_t s) : fSigned(s) {}
 
-        Value(uint32_t u) : fUnsigned(u) {}
+    Value(uint32_t u) : fUnsigned(u) {}
 
-        Value(bool b) : fBool(b) {}
+    Value(bool b) : fBool(b) {}
 
-        float fFloat;
-        int32_t fSigned;
-        uint32_t fUnsigned;
-        bool fBool;
-    };
+    float fFloat;
+    int32_t fSigned;
+    uint32_t fUnsigned;
+    bool fBool;
+  };
 
-    enum TypeKind { kFloat_TypeKind, kInt_TypeKind, kBool_TypeKind };
+  enum TypeKind { kFloat_TypeKind, kInt_TypeKind, kBool_TypeKind };
 
-    /**
-     * 'inputs' contains the values of global 'in' variables in source order.
-     */
-    Interpreter(std::unique_ptr<Program> program, std::unique_ptr<ByteCode> byteCode,
-                Value inputs[] = nullptr);
+  /**
+   * 'inputs' contains the values of global 'in' variables in source order.
+   */
+  Interpreter(
+      std::unique_ptr<Program> program, std::unique_ptr<ByteCode> byteCode,
+      Value inputs[] = nullptr);
 
-    /**
-     * Invokes the specified function with the given arguments. 'out' and 'inout' parameters will
-     * result in the 'args' array being modified. The return value is stored in 'outReturn' (may be
-     * null, in which case the return value is discarded).
-     */
-    void run(const ByteCodeFunction& f, Value args[], Value* outReturn);
+  /**
+   * Invokes the specified function with the given arguments. 'out' and 'inout' parameters will
+   * result in the 'args' array being modified. The return value is stored in 'outReturn' (may be
+   * null, in which case the return value is discarded).
+   */
+  void run(const ByteCodeFunction& f, Value args[], Value* outReturn);
 
-    /**
-     * Updates the global inputs.
-     */
-    void setInputs(Value inputs[]);
+  /**
+   * Updates the global inputs.
+   */
+  void setInputs(Value inputs[]);
 
-private:
-    StackIndex stackAlloc(int count);
+  /**
+   * Print bytecode disassembly to stdout.
+   */
+  void disassemble(const ByteCodeFunction&);
 
-    void run(Value* stack, Value args[], Value* outReturn);
+ private:
+  void innerRun(const ByteCodeFunction& f, Value* stack, Value* outReturn);
 
-    void swizzle();
-
-    void disassemble(const ByteCodeFunction& f);
-
-    std::unique_ptr<Program> fProgram;
-    std::unique_ptr<ByteCode> fByteCode;
-    const ByteCodeFunction* fCurrentFunction;
-    std::vector<Value> fGlobals;
+  std::unique_ptr<Program> fProgram;
+  std::unique_ptr<ByteCode> fByteCode;
+  std::vector<Value> fGlobals;
 };
 
 }  // namespace SkSL

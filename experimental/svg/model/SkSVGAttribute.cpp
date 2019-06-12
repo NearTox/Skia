@@ -8,23 +8,23 @@
 #include "experimental/svg/model/SkSVGAttribute.h"
 
 SkSVGPresentationAttributes SkSVGPresentationAttributes::MakeInitial() {
-    SkSVGPresentationAttributes result;
+  SkSVGPresentationAttributes result;
 
-    result.fFill.set(SkSVGPaint(SkSVGColorType(SK_ColorBLACK)));
-    result.fFillOpacity.set(SkSVGNumberType(1));
-    result.fFillRule.set(SkSVGFillRule(SkSVGFillRule::Type::kNonZero));
-    result.fClipRule.set(SkSVGFillRule(SkSVGFillRule::Type::kNonZero));
+  result.fFill.set(SkSVGPaint(SkSVGColorType(SK_ColorBLACK)));
+  result.fFillOpacity.set(SkSVGNumberType(1));
+  result.fFillRule.set(SkSVGFillRule(SkSVGFillRule::Type::kNonZero));
+  result.fClipRule.set(SkSVGFillRule(SkSVGFillRule::Type::kNonZero));
 
-    result.fStroke.set(SkSVGPaint(SkSVGPaint::Type::kNone));
-    result.fStrokeDashArray.set(SkSVGDashArray(SkSVGDashArray::Type::kNone));
-    result.fStrokeDashOffset.set(SkSVGLength(0));
-    result.fStrokeLineCap.set(SkSVGLineCap(SkSVGLineCap::Type::kButt));
-    result.fStrokeLineJoin.set(SkSVGLineJoin(SkSVGLineJoin::Type::kMiter));
-    result.fStrokeMiterLimit.set(SkSVGNumberType(4));
-    result.fStrokeOpacity.set(SkSVGNumberType(1));
-    result.fStrokeWidth.set(SkSVGLength(1));
+  result.fStroke.set(SkSVGPaint(SkSVGPaint::Type::kNone));
+  result.fStrokeDashArray.set(SkSVGDashArray(SkSVGDashArray::Type::kNone));
+  result.fStrokeDashOffset.set(SkSVGLength(0));
+  result.fStrokeLineCap.set(SkSVGLineCap(SkSVGLineCap::Type::kButt));
+  result.fStrokeLineJoin.set(SkSVGLineJoin(SkSVGLineJoin::Type::kMiter));
+  result.fStrokeMiterLimit.set(SkSVGNumberType(4));
+  result.fStrokeOpacity.set(SkSVGNumberType(1));
+  result.fStrokeWidth.set(SkSVGLength(1));
 
-    result.fVisibility.set(SkSVGVisibility(SkSVGVisibility::Type::kVisible));
+  result.fVisibility.set(SkSVGVisibility(SkSVGVisibility::Type::kVisible));
 
-    return result;
+  return result;
 }

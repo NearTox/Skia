@@ -35,48 +35,48 @@
 // visible pieces of cap geometry. These are counted by scanning horizontally for peaks (blobs).
 
 static bool draw_path_cell(SkCanvas* canvas, SkImage* img, int expectedCaps) {
-    // Draw the image
-    canvas->drawImage(img, 0, 0);
+  // Draw the image
+  canvas->drawImage(img, 0, 0);
 
-    int w = img->width(), h = img->height();
+  int w = img->width(), h = img->height();
 
-    // Read the pixels back
-    SkImageInfo info = SkImageInfo::MakeN32Premul(w, h);
-    SkAutoPixmapStorage pmap;
-    pmap.alloc(info);
-    if (!img->readPixels(pmap, 0, 0)) {
-        return false;
+  // Read the pixels back
+  SkImageInfo info = SkImageInfo::MakeN32Premul(w, h);
+  SkAutoPixmapStorage pmap;
+  pmap.alloc(info);
+  if (!img->readPixels(pmap, 0, 0)) {
+    return false;
+  }
+
+  // To account for rasterization differences, we scan the middle two rows [y, y+1] of the image
+  SkASSERT(h % 2 == 0);
+  int y = (h - 1) / 2;
+
+  bool inBlob = false;
+  int numBlobs = 0;
+  for (int x = 0; x < w; ++x) {
+    // We drew white-on-black. We can look for any non-zero value. Just check red.
+    // And we care if either row is non-zero, so just add them to simplify everything.
+    uint32_t v = SkGetPackedR32(*pmap.addr32(x, y)) + SkGetPackedR32(*pmap.addr32(x, y + 1));
+
+    if (!inBlob && v) {
+      ++numBlobs;
     }
+    inBlob = SkToBool(v);
+  }
 
-    // To account for rasterization differences, we scan the middle two rows [y, y+1] of the image
-    SkASSERT(h % 2 == 0);
-    int y = (h - 1) / 2;
+  SkPaint outline;
+  outline.setStyle(SkPaint::kStroke_Style);
+  if (numBlobs == expectedCaps) {
+    outline.setColor(0xFF007F00);  // Green
+  } else if (numBlobs > expectedCaps) {
+    outline.setColor(0xFF7F7F00);  // Yellow -- more geometry than expected
+  } else {
+    outline.setColor(0xFF7F0000);  // Red -- missing some geometry
+  }
 
-    bool inBlob = false;
-    int numBlobs = 0;
-    for (int x = 0; x < w; ++x) {
-        // We drew white-on-black. We can look for any non-zero value. Just check red.
-        // And we care if either row is non-zero, so just add them to simplify everything.
-        uint32_t v = SkGetPackedR32(*pmap.addr32(x, y)) + SkGetPackedR32(*pmap.addr32(x, y + 1));
-
-        if (!inBlob && v) {
-            ++numBlobs;
-        }
-        inBlob = SkToBool(v);
-    }
-
-    SkPaint outline;
-    outline.setStyle(SkPaint::kStroke_Style);
-    if (numBlobs == expectedCaps) {
-        outline.setColor(0xFF007F00);  // Green
-    } else if (numBlobs > expectedCaps) {
-        outline.setColor(0xFF7F7F00);  // Yellow -- more geometry than expected
-    } else {
-        outline.setColor(0xFF7F0000);  // Red -- missing some geometry
-    }
-
-    canvas->drawRect(SkRect::MakeWH(w, h), outline);
-    return numBlobs == expectedCaps;
+  canvas->drawRect(SkRect::MakeWH(w, h), outline);
+  return numBlobs == expectedCaps;
 }
 
 static const SkPaint::Cap kCaps[] = {SkPaint::kButt_Cap, SkPaint::kRound_Cap, SkPaint::kSquare_Cap};
@@ -97,7 +97,7 @@ static const char* kAllVerbs[] = {nullptr,
 
 // Reduced set of path structures for double contour case, to keep total number of cases down
 static const char* kSomeVerbs[] = {
-        nullptr, "z ", "l 0 0 ", "l 0 0 z ", "q 0 0 0 0 ", "q 0 0 0 0 z ",
+    nullptr, "z ", "l 0 0 ", "l 0 0 z ", "q 0 0 0 0 ", "q 0 0 0 0 z ",
 };
 
 static const int kCellWidth = 50;
@@ -117,133 +117,133 @@ static const SkColor kFailureRed = 0x7FE7298A;
 static const SkColor kSuccessGreen = 0x7F1B9E77;
 
 static void draw_zero_length_capped_paths(SkCanvas* canvas, bool aa) {
-    canvas->translate(kCellPad, kCellPad);
+  canvas->translate(kCellPad, kCellPad);
 
-    SkImageInfo info = canvas->imageInfo().makeWH(kCellWidth, kCellHeight);
-    auto surface = canvas->makeSurface(info);
-    if (!surface) {
-        surface = SkSurface::MakeRasterN32Premul(kCellWidth, kCellHeight);
-    }
+  SkImageInfo info = canvas->imageInfo().makeWH(kCellWidth, kCellHeight);
+  auto surface = canvas->makeSurface(info);
+  if (!surface) {
+    surface = SkSurface::MakeRasterN32Premul(kCellWidth, kCellHeight);
+  }
 
-    SkPaint paint;
-    paint.setColor(SK_ColorWHITE);
-    paint.setAntiAlias(aa);
-    paint.setStyle(SkPaint::kStroke_Style);
+  SkPaint paint;
+  paint.setColor(SK_ColorWHITE);
+  paint.setAntiAlias(aa);
+  paint.setStyle(SkPaint::kStroke_Style);
 
-    int numFailedTests = 0;
-    for (auto cap : kCaps) {
-        for (auto width : kWidths) {
-            paint.setStrokeCap(cap);
-            paint.setStrokeWidth(width);
-            canvas->save();
+  int numFailedTests = 0;
+  for (auto cap : kCaps) {
+    for (auto width : kWidths) {
+      paint.setStrokeCap(cap);
+      paint.setStrokeWidth(width);
+      canvas->save();
 
-            for (auto verb : kAllVerbs) {
-                SkString pathStr;
-                pathStr.appendf("M %f %f ", (kCellWidth - 1) * 0.5f, (kCellHeight - 1) * 0.5f);
-                if (verb) {
-                    pathStr.append(verb);
-                }
-
-                SkPath path;
-                SkParsePath::FromSVGString(pathStr.c_str(), &path);
-
-                surface->getCanvas()->clear(SK_ColorTRANSPARENT);
-                surface->getCanvas()->drawPath(path, paint);
-                auto img = surface->makeImageSnapshot();
-
-                // All cases should draw one cap, except for butt capped, and dangling moves
-                // (without a verb or close), which shouldn't draw anything.
-                int expectedCaps = ((SkPaint::kButt_Cap == cap) || !verb) ? 0 : 1;
-
-                if (!draw_path_cell(canvas, img.get(), expectedCaps)) {
-                    ++numFailedTests;
-                }
-                canvas->translate(kCellWidth + kCellPad, 0);
-            }
-            canvas->restore();
-            canvas->translate(0, kCellHeight + kCellPad);
+      for (auto verb : kAllVerbs) {
+        SkString pathStr;
+        pathStr.appendf("M %f %f ", (kCellWidth - 1) * 0.5f, (kCellHeight - 1) * 0.5f);
+        if (verb) {
+          pathStr.append(verb);
         }
-    }
 
-    canvas->drawColor(numFailedTests > 0 ? kFailureRed : kSuccessGreen);
+        SkPath path;
+        SkParsePath::FromSVGString(pathStr.c_str(), &path);
+
+        surface->getCanvas()->clear(SK_ColorTRANSPARENT);
+        surface->getCanvas()->drawPath(path, paint);
+        auto img = surface->makeImageSnapshot();
+
+        // All cases should draw one cap, except for butt capped, and dangling moves
+        // (without a verb or close), which shouldn't draw anything.
+        int expectedCaps = ((SkPaint::kButt_Cap == cap) || !verb) ? 0 : 1;
+
+        if (!draw_path_cell(canvas, img.get(), expectedCaps)) {
+          ++numFailedTests;
+        }
+        canvas->translate(kCellWidth + kCellPad, 0);
+      }
+      canvas->restore();
+      canvas->translate(0, kCellHeight + kCellPad);
+    }
+  }
+
+  canvas->drawColor(numFailedTests > 0 ? kFailureRed : kSuccessGreen);
 }
 
 DEF_SIMPLE_GM_BG(zero_length_paths_aa, canvas, kTotalWidth, kTotalHeight, SK_ColorBLACK) {
-    draw_zero_length_capped_paths(canvas, true);
+  draw_zero_length_capped_paths(canvas, true);
 }
 
 DEF_SIMPLE_GM_BG(zero_length_paths_bw, canvas, kTotalWidth, kTotalHeight, SK_ColorBLACK) {
-    draw_zero_length_capped_paths(canvas, false);
+  draw_zero_length_capped_paths(canvas, false);
 }
 
 static void draw_zero_length_capped_paths_dbl_contour(SkCanvas* canvas, bool aa) {
-    canvas->translate(kCellPad, kCellPad);
+  canvas->translate(kCellPad, kCellPad);
 
-    SkImageInfo info = canvas->imageInfo().makeWH(kCellWidth, kCellHeight);
-    auto surface = canvas->makeSurface(info);
-    if (!surface) {
-        surface = SkSurface::MakeRasterN32Premul(kCellWidth, kCellHeight);
-    }
+  SkImageInfo info = canvas->imageInfo().makeWH(kCellWidth, kCellHeight);
+  auto surface = canvas->makeSurface(info);
+  if (!surface) {
+    surface = SkSurface::MakeRasterN32Premul(kCellWidth, kCellHeight);
+  }
 
-    SkPaint paint;
-    paint.setColor(SK_ColorWHITE);
-    paint.setAntiAlias(aa);
-    paint.setStyle(SkPaint::kStroke_Style);
+  SkPaint paint;
+  paint.setColor(SK_ColorWHITE);
+  paint.setAntiAlias(aa);
+  paint.setStyle(SkPaint::kStroke_Style);
 
-    int numFailedTests = 0;
-    for (auto cap : kCaps) {
-        for (auto width : kWidths) {
-            paint.setStrokeCap(cap);
-            paint.setStrokeWidth(width);
-            canvas->save();
+  int numFailedTests = 0;
+  for (auto cap : kCaps) {
+    for (auto width : kWidths) {
+      paint.setStrokeCap(cap);
+      paint.setStrokeWidth(width);
+      canvas->save();
 
-            for (auto firstVerb : kSomeVerbs) {
-                for (auto secondVerb : kSomeVerbs) {
-                    int expectedCaps = 0;
+      for (auto firstVerb : kSomeVerbs) {
+        for (auto secondVerb : kSomeVerbs) {
+          int expectedCaps = 0;
 
-                    SkString pathStr;
-                    pathStr.append("M 9.5 9.5 ");
-                    if (firstVerb) {
-                        pathStr.append(firstVerb);
-                        ++expectedCaps;
-                    }
-                    pathStr.append("M 40.5 9.5 ");
-                    if (secondVerb) {
-                        pathStr.append(secondVerb);
-                        ++expectedCaps;
-                    }
+          SkString pathStr;
+          pathStr.append("M 9.5 9.5 ");
+          if (firstVerb) {
+            pathStr.append(firstVerb);
+            ++expectedCaps;
+          }
+          pathStr.append("M 40.5 9.5 ");
+          if (secondVerb) {
+            pathStr.append(secondVerb);
+            ++expectedCaps;
+          }
 
-                    SkPath path;
-                    SkParsePath::FromSVGString(pathStr.c_str(), &path);
+          SkPath path;
+          SkParsePath::FromSVGString(pathStr.c_str(), &path);
 
-                    surface->getCanvas()->clear(SK_ColorTRANSPARENT);
-                    surface->getCanvas()->drawPath(path, paint);
-                    auto img = surface->makeImageSnapshot();
+          surface->getCanvas()->clear(SK_ColorTRANSPARENT);
+          surface->getCanvas()->drawPath(path, paint);
+          auto img = surface->makeImageSnapshot();
 
-                    if (SkPaint::kButt_Cap == cap) {
-                        expectedCaps = 0;
-                    }
+          if (SkPaint::kButt_Cap == cap) {
+            expectedCaps = 0;
+          }
 
-                    if (!draw_path_cell(canvas, img.get(), expectedCaps)) {
-                        ++numFailedTests;
-                    }
-                    canvas->translate(kCellWidth + kCellPad, 0);
-                }
-            }
-            canvas->restore();
-            canvas->translate(0, kCellHeight + kCellPad);
+          if (!draw_path_cell(canvas, img.get(), expectedCaps)) {
+            ++numFailedTests;
+          }
+          canvas->translate(kCellWidth + kCellPad, 0);
         }
+      }
+      canvas->restore();
+      canvas->translate(0, kCellHeight + kCellPad);
     }
+  }
 
-    canvas->drawColor(numFailedTests > 0 ? kFailureRed : kSuccessGreen);
+  canvas->drawColor(numFailedTests > 0 ? kFailureRed : kSuccessGreen);
 }
 
-DEF_SIMPLE_GM_BG(zero_length_paths_dbl_aa, canvas, kDblContourTotalWidth, kTotalHeight,
-                 SK_ColorBLACK) {
-    draw_zero_length_capped_paths_dbl_contour(canvas, true);
+DEF_SIMPLE_GM_BG(
+    zero_length_paths_dbl_aa, canvas, kDblContourTotalWidth, kTotalHeight, SK_ColorBLACK) {
+  draw_zero_length_capped_paths_dbl_contour(canvas, true);
 }
 
-DEF_SIMPLE_GM_BG(zero_length_paths_dbl_bw, canvas, kDblContourTotalWidth, kTotalHeight,
-                 SK_ColorBLACK) {
-    draw_zero_length_capped_paths_dbl_contour(canvas, false);
+DEF_SIMPLE_GM_BG(
+    zero_length_paths_dbl_bw, canvas, kDblContourTotalWidth, kTotalHeight, SK_ColorBLACK) {
+  draw_zero_length_capped_paths_dbl_contour(canvas, false);
 }

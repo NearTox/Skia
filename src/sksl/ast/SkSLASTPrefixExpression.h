@@ -18,19 +18,17 @@ namespace SkSL {
  * An expression modified by a unary operator appearing in front of it, such as '-x' or '!inside'.
  */
 struct ASTPrefixExpression : public ASTExpression {
-    ASTPrefixExpression(Token op, std::unique_ptr<ASTExpression> operand)
-            : INHERITED(op.fOffset, kPrefix_Kind)
-            , fOperator(op.fKind)
-            , fOperand(std::move(operand)) {}
+  ASTPrefixExpression(Token op, std::unique_ptr<ASTExpression> operand)
+      : INHERITED(op.fOffset, kPrefix_Kind), fOperator(op.fKind), fOperand(std::move(operand)) {}
 
-    String description() const override {
-        return Compiler::OperatorName(fOperator) + fOperand->description();
-    }
+  String description() const override {
+    return Compiler::OperatorName(fOperator) + fOperand->description();
+  }
 
-    const Token::Kind fOperator;
-    const std::unique_ptr<ASTExpression> fOperand;
+  const Token::Kind fOperator;
+  const std::unique_ptr<ASTExpression> fOperand;
 
-    typedef ASTExpression INHERITED;
+  typedef ASTExpression INHERITED;
 };
 
 }  // namespace SkSL

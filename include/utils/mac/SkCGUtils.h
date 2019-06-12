@@ -45,10 +45,10 @@ SK_API sk_sp<SkImage> SkMakeImageFromCGImage(CGImageRef);
  *  Copy the pixels from src into the memory specified by info/rowBytes/dstPixels. On failure,
  *  return false (e.g. ImageInfo incompatible with src).
  */
-SK_API bool SkCopyPixelsFromCGImage(const SkImageInfo& info, size_t rowBytes, void* dstPixels,
-                                    CGImageRef src);
+SK_API bool SkCopyPixelsFromCGImage(
+    const SkImageInfo& info, size_t rowBytes, void* dstPixels, CGImageRef src);
 static inline bool SkCopyPixelsFromCGImage(const SkPixmap& dst, CGImageRef src) {
-    return SkCopyPixelsFromCGImage(dst.info(), dst.rowBytes(), dst.writable_addr(), src);
+  return SkCopyPixelsFromCGImage(dst.info(), dst.rowBytes(), dst.writable_addr(), src);
 }
 
 /**
@@ -62,7 +62,7 @@ SK_API CGImageRef SkCreateCGImageRefWithColorspace(const SkBitmap& bm, CGColorSp
  *  by CGColorSpaceCreateDeviceRGB()
  */
 static inline CGImageRef SkCreateCGImageRef(const SkBitmap& bm) {
-    return SkCreateCGImageRefWithColorspace(bm, NULL);
+  return SkCreateCGImageRefWithColorspace(bm, NULL);
 }
 
 /**

@@ -18,26 +18,26 @@ namespace SkSL {
  * Abstract supertype of all statements.
  */
 struct ASTStatement : public ASTPositionNode {
-    enum Kind {
-        kBlock_Kind,
-        kVarDeclaration_Kind,
-        kExpression_Kind,
-        kIf_Kind,
-        kFor_Kind,
-        kWhile_Kind,
-        kDo_Kind,
-        kSwitch_Kind,
-        kReturn_Kind,
-        kBreak_Kind,
-        kContinue_Kind,
-        kDiscard_Kind
-    };
+  enum Kind {
+    kBlock_Kind,
+    kVarDeclaration_Kind,
+    kExpression_Kind,
+    kIf_Kind,
+    kFor_Kind,
+    kWhile_Kind,
+    kDo_Kind,
+    kSwitch_Kind,
+    kReturn_Kind,
+    kBreak_Kind,
+    kContinue_Kind,
+    kDiscard_Kind
+  };
 
-    ASTStatement(int offset, Kind kind) : INHERITED(offset), fKind(kind) {}
+  ASTStatement(int offset, Kind kind) : INHERITED(offset), fKind(kind) {}
 
-    Kind fKind;
+  Kind fKind;
 
-    typedef ASTPositionNode INHERITED;
+  typedef ASTPositionNode INHERITED;
 };
 
 }  // namespace SkSL

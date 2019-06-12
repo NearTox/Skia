@@ -33,22 +33,20 @@ extern "C" {
 typedef VkFlags VkIOSSurfaceCreateFlagsMVK;
 
 typedef struct VkIOSSurfaceCreateInfoMVK {
-    VkStructureType sType;
-    const void* pNext;
-    VkIOSSurfaceCreateFlagsMVK flags;
-    const void* pView;
+  VkStructureType sType;
+  const void* pNext;
+  VkIOSSurfaceCreateFlagsMVK flags;
+  const void* pView;
 } VkIOSSurfaceCreateInfoMVK;
 
-typedef VkResult(VKAPI_PTR* PFN_vkCreateIOSSurfaceMVK)(VkInstance instance,
-                                                       const VkIOSSurfaceCreateInfoMVK* pCreateInfo,
-                                                       const VkAllocationCallbacks* pAllocator,
-                                                       VkSurfaceKHR* pSurface);
+typedef VkResult(VKAPI_PTR* PFN_vkCreateIOSSurfaceMVK)(
+    VkInstance instance, const VkIOSSurfaceCreateInfoMVK* pCreateInfo,
+    const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface);
 
 #ifndef VK_NO_PROTOTYPES
-VKAPI_ATTR VkResult VKAPI_CALL vkCreateIOSSurfaceMVK(VkInstance instance,
-                                                     const VkIOSSurfaceCreateInfoMVK* pCreateInfo,
-                                                     const VkAllocationCallbacks* pAllocator,
-                                                     VkSurfaceKHR* pSurface);
+VKAPI_ATTR VkResult VKAPI_CALL vkCreateIOSSurfaceMVK(
+    VkInstance instance, const VkIOSSurfaceCreateInfoMVK* pCreateInfo,
+    const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface);
 #endif
 
 #ifdef __cplusplus

@@ -25,47 +25,47 @@
 namespace skiagm {
 
 class ImageBlurTiledGM : public GM {
-public:
-    ImageBlurTiledGM(SkScalar sigmaX, SkScalar sigmaY) : fSigmaX(sigmaX), fSigmaY(sigmaY) {}
+ public:
+  ImageBlurTiledGM(SkScalar sigmaX, SkScalar sigmaY) : fSigmaX(sigmaX), fSigmaY(sigmaY) {}
 
-protected:
-    SkString onShortName() override { return SkString("imageblurtiled"); }
+ protected:
+  SkString onShortName() override { return SkString("imageblurtiled"); }
 
-    SkISize onISize() override { return SkISize::Make(WIDTH, HEIGHT); }
+  SkISize onISize() override { return SkISize::Make(WIDTH, HEIGHT); }
 
-    void onDraw(SkCanvas* canvas) override {
-        SkPaint paint;
-        paint.setImageFilter(SkBlurImageFilter::Make(fSigmaX, fSigmaY, nullptr));
-        const SkScalar tileSize = SkIntToScalar(128);
-        SkRect bounds = canvas->getLocalClipBounds();
-        for (SkScalar y = bounds.top(); y < bounds.bottom(); y += tileSize) {
-            for (SkScalar x = bounds.left(); x < bounds.right(); x += tileSize) {
-                canvas->save();
-                canvas->clipRect(SkRect::MakeXYWH(x, y, tileSize, tileSize));
-                canvas->saveLayer(nullptr, &paint);
-                const char* str[] = {
-                        "The quick",
-                        "brown fox",
-                        "jumped over",
-                        "the lazy dog.",
-                };
-                SkFont font(ToolUtils::create_portable_typeface(), 100);
-                int posY = 0;
-                for (unsigned i = 0; i < SK_ARRAY_COUNT(str); i++) {
-                    posY += 100;
-                    canvas->drawString(str[i], 0, SkIntToScalar(posY), font, SkPaint());
-                }
-                canvas->restore();
-                canvas->restore();
-            }
+  void onDraw(SkCanvas* canvas) override {
+    SkPaint paint;
+    paint.setImageFilter(SkBlurImageFilter::Make(fSigmaX, fSigmaY, nullptr));
+    const SkScalar tileSize = SkIntToScalar(128);
+    SkRect bounds = canvas->getLocalClipBounds();
+    for (SkScalar y = bounds.top(); y < bounds.bottom(); y += tileSize) {
+      for (SkScalar x = bounds.left(); x < bounds.right(); x += tileSize) {
+        canvas->save();
+        canvas->clipRect(SkRect::MakeXYWH(x, y, tileSize, tileSize));
+        canvas->saveLayer(nullptr, &paint);
+        const char* str[] = {
+            "The quick",
+            "brown fox",
+            "jumped over",
+            "the lazy dog.",
+        };
+        SkFont font(ToolUtils::create_portable_typeface(), 100);
+        int posY = 0;
+        for (unsigned i = 0; i < SK_ARRAY_COUNT(str); i++) {
+          posY += 100;
+          canvas->drawString(str[i], 0, SkIntToScalar(posY), font, SkPaint());
         }
+        canvas->restore();
+        canvas->restore();
+      }
     }
+  }
 
-private:
-    SkScalar fSigmaX;
-    SkScalar fSigmaY;
+ private:
+  SkScalar fSigmaX;
+  SkScalar fSigmaY;
 
-    typedef GM INHERITED;
+  typedef GM INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////

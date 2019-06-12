@@ -28,31 +28,28 @@
  * applying the set operator.
  */
 class GrCoverageSetOpXPFactory : public GrXPFactory {
-public:
-    static const GrXPFactory* Get(SkRegion::Op regionOp, bool invertCoverage = false);
+ public:
+  static const GrXPFactory* Get(SkRegion::Op regionOp, bool invertCoverage = false);
 
-private:
-    constexpr GrCoverageSetOpXPFactory(SkRegion::Op regionOp, bool invertCoverage);
+ private:
+  constexpr GrCoverageSetOpXPFactory(SkRegion::Op regionOp, bool invertCoverage);
 
-    sk_sp<const GrXferProcessor> makeXferProcessor(const GrProcessorAnalysisColor&,
-                                                   GrProcessorAnalysisCoverage,
-                                                   bool hasMixedSamples,
-                                                   const GrCaps&,
-                                                   GrClampType) const override;
+  sk_sp<const GrXferProcessor> makeXferProcessor(
+      const GrProcessorAnalysisColor&, GrProcessorAnalysisCoverage, bool hasMixedSamples,
+      const GrCaps&, GrClampType) const override;
 
-    AnalysisProperties analysisProperties(const GrProcessorAnalysisColor&,
-                                          const GrProcessorAnalysisCoverage&,
-                                          const GrCaps&,
-                                          GrClampType) const override {
-        return AnalysisProperties::kIgnoresInputColor;
-    }
+  AnalysisProperties analysisProperties(
+      const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, const GrCaps&,
+      GrClampType) const override {
+    return AnalysisProperties::kIgnoresInputColor;
+  }
 
-    GR_DECLARE_XP_FACTORY_TEST
+  GR_DECLARE_XP_FACTORY_TEST
 
-    SkRegion::Op fRegionOp;
-    bool fInvertCoverage;
+  SkRegion::Op fRegionOp;
+  bool fInvertCoverage;
 
-    typedef GrXPFactory INHERITED;
+  typedef GrXPFactory INHERITED;
 };
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop

@@ -23,74 +23,74 @@ namespace sksg {
  * Gradient base class.
  */
 class Gradient : public Shader {
-public:
-    struct ColorStop {
-        SkScalar fPosition;
-        SkColor fColor;
+ public:
+  struct ColorStop {
+    SkScalar fPosition;
+    SkColor fColor;
 
-        bool operator==(const ColorStop& other) const {
-            return fPosition == other.fPosition && fColor == other.fColor;
-        }
-    };
+    bool operator==(const ColorStop& other) const {
+      return fPosition == other.fPosition && fColor == other.fColor;
+    }
+  };
 
-    SG_ATTRIBUTE(ColorStops, std::vector<ColorStop>, fColorStops)
-    SG_ATTRIBUTE(TileMode, SkTileMode, fTileMode)
+  SG_ATTRIBUTE(ColorStops, std::vector<ColorStop>, fColorStops)
+  SG_ATTRIBUTE(TileMode, SkTileMode, fTileMode)
 
-protected:
-    sk_sp<SkShader> onRevalidateShader() final;
+ protected:
+  sk_sp<SkShader> onRevalidateShader() final;
 
-    virtual sk_sp<SkShader> onMakeShader(const std::vector<SkColor>& colors,
-                                         const std::vector<SkScalar>& positions) const = 0;
+  virtual sk_sp<SkShader> onMakeShader(
+      const std::vector<SkColor>& colors, const std::vector<SkScalar>& positions) const = 0;
 
-protected:
-    Gradient() = default;
+ protected:
+  Gradient() = default;
 
-private:
-    std::vector<ColorStop> fColorStops;
-    SkTileMode fTileMode = SkTileMode::kClamp;
+ private:
+  std::vector<ColorStop> fColorStops;
+  SkTileMode fTileMode = SkTileMode::kClamp;
 
-    using INHERITED = Shader;
+  using INHERITED = Shader;
 };
 
 class LinearGradient final : public Gradient {
-public:
-    static sk_sp<LinearGradient> Make() { return sk_sp<LinearGradient>(new LinearGradient()); }
+ public:
+  static sk_sp<LinearGradient> Make() { return sk_sp<LinearGradient>(new LinearGradient()); }
 
-    SG_ATTRIBUTE(StartPoint, SkPoint, fStartPoint)
-    SG_ATTRIBUTE(EndPoint, SkPoint, fEndPoint)
+  SG_ATTRIBUTE(StartPoint, SkPoint, fStartPoint)
+  SG_ATTRIBUTE(EndPoint, SkPoint, fEndPoint)
 
-protected:
-    sk_sp<SkShader> onMakeShader(const std::vector<SkColor>& colors,
-                                 const std::vector<SkScalar>& positions) const override;
+ protected:
+  sk_sp<SkShader> onMakeShader(
+      const std::vector<SkColor>& colors, const std::vector<SkScalar>& positions) const override;
 
-private:
-    LinearGradient() = default;
+ private:
+  LinearGradient() = default;
 
-    SkPoint fStartPoint = SkPoint::Make(0, 0), fEndPoint = SkPoint::Make(0, 0);
+  SkPoint fStartPoint = SkPoint::Make(0, 0), fEndPoint = SkPoint::Make(0, 0);
 
-    using INHERITED = Gradient;
+  using INHERITED = Gradient;
 };
 
 class RadialGradient final : public Gradient {
-public:
-    static sk_sp<RadialGradient> Make() { return sk_sp<RadialGradient>(new RadialGradient()); }
+ public:
+  static sk_sp<RadialGradient> Make() { return sk_sp<RadialGradient>(new RadialGradient()); }
 
-    SG_ATTRIBUTE(StartCenter, SkPoint, fStartCenter)
-    SG_ATTRIBUTE(EndCenter, SkPoint, fEndCenter)
-    SG_ATTRIBUTE(StartRadius, SkScalar, fStartRadius)
-    SG_ATTRIBUTE(EndRadius, SkScalar, fEndRadius)
+  SG_ATTRIBUTE(StartCenter, SkPoint, fStartCenter)
+  SG_ATTRIBUTE(EndCenter, SkPoint, fEndCenter)
+  SG_ATTRIBUTE(StartRadius, SkScalar, fStartRadius)
+  SG_ATTRIBUTE(EndRadius, SkScalar, fEndRadius)
 
-protected:
-    sk_sp<SkShader> onMakeShader(const std::vector<SkColor>& colors,
-                                 const std::vector<SkScalar>& positions) const override;
+ protected:
+  sk_sp<SkShader> onMakeShader(
+      const std::vector<SkColor>& colors, const std::vector<SkScalar>& positions) const override;
 
-private:
-    RadialGradient() = default;
+ private:
+  RadialGradient() = default;
 
-    SkPoint fStartCenter = SkPoint::Make(0, 0), fEndCenter = SkPoint::Make(0, 0);
-    SkScalar fStartRadius = 0, fEndRadius = 0;
+  SkPoint fStartCenter = SkPoint::Make(0, 0), fEndCenter = SkPoint::Make(0, 0);
+  SkScalar fStartRadius = 0, fEndRadius = 0;
 
-    using INHERITED = Gradient;
+  using INHERITED = Gradient;
 };
 
 }  // namespace sksg

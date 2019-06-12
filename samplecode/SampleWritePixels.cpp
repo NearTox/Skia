@@ -15,49 +15,49 @@
 #include "src/utils/SkUTF.h"
 
 static void create_bitmap(SkBitmap* bitmap) {
-    const int W = 100;
-    const int H = 100;
-    bitmap->allocN32Pixels(W, H);
+  const int W = 100;
+  const int H = 100;
+  bitmap->allocN32Pixels(W, H);
 
-    SkCanvas canvas(*bitmap);
-    canvas.drawColor(SK_ColorRED);
-    SkPaint paint;
-    paint.setColor(SK_ColorBLUE);
-    canvas.drawCircle(SkIntToScalar(W) / 2, SkIntToScalar(H) / 2, SkIntToScalar(W) / 2, paint);
+  SkCanvas canvas(*bitmap);
+  canvas.drawColor(SK_ColorRED);
+  SkPaint paint;
+  paint.setColor(SK_ColorBLUE);
+  canvas.drawCircle(SkIntToScalar(W) / 2, SkIntToScalar(H) / 2, SkIntToScalar(W) / 2, paint);
 }
 
 class WritePixelsView : public Sample {
-    SkPath fPath;
+  SkPath fPath;
 
-public:
-    WritePixelsView() {}
+ public:
+  WritePixelsView() {}
 
-protected:
-    virtual bool onQuery(Sample::Event* evt) {
-        if (Sample::TitleQ(*evt)) {
-            Sample::TitleR(evt, "WritePixels");
-            return true;
-        }
-        return this->INHERITED::onQuery(evt);
+ protected:
+  virtual bool onQuery(Sample::Event* evt) {
+    if (Sample::TitleQ(*evt)) {
+      Sample::TitleR(evt, "WritePixels");
+      return true;
     }
+    return this->INHERITED::onQuery(evt);
+  }
 
-    virtual void onDrawContent(SkCanvas* canvas) {
-        SkBitmap bitmap;
-        create_bitmap(&bitmap);
-        int x = bitmap.width() / 2;
-        int y = bitmap.height() / 2;
+  virtual void onDrawContent(SkCanvas* canvas) {
+    SkBitmap bitmap;
+    create_bitmap(&bitmap);
+    int x = bitmap.width() / 2;
+    int y = bitmap.height() / 2;
 
-        SkBitmap subset;
-        bitmap.extractSubset(&subset, SkIRect::MakeXYWH(x, y, x, y));
+    SkBitmap subset;
+    bitmap.extractSubset(&subset, SkIRect::MakeXYWH(x, y, x, y));
 
-        canvas->translate(SkIntToScalar(20), SkIntToScalar(20));
+    canvas->translate(SkIntToScalar(20), SkIntToScalar(20));
 
-        canvas->writePixels(bitmap, 0, 0);
-        canvas->writePixels(subset, 0, 0);
-    }
+    canvas->writePixels(bitmap, 0, 0);
+    canvas->writePixels(subset, 0, 0);
+  }
 
-private:
-    typedef Sample INHERITED;
+ private:
+  typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////

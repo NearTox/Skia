@@ -19,42 +19,42 @@
  *  is deleted.
  */
 class SkCanvasStack : public SkNWayCanvas {
-public:
-    SkCanvasStack(int width, int height);
-    ~SkCanvasStack() override;
+ public:
+  SkCanvasStack(int width, int height);
+  ~SkCanvasStack() override;
 
-    void pushCanvas(std::unique_ptr<SkCanvas>, const SkIPoint& origin);
-    void removeAll() override;
+  void pushCanvas(std::unique_ptr<SkCanvas>, const SkIPoint& origin);
+  void removeAll() override;
 
-    /*
-     * The following add/remove canvas methods are overrides from SkNWayCanvas
-     * that do not make sense in the context of our CanvasStack, but since we
-     * can share most of the other implementation of NWay we override those
-     * methods to be no-ops.
-     */
-    void addCanvas(SkCanvas*) override { SkDEBUGFAIL("Invalid Op"); }
-    void removeCanvas(SkCanvas*) override { SkDEBUGFAIL("Invalid Op"); }
+  /*
+   * The following add/remove canvas methods are overrides from SkNWayCanvas
+   * that do not make sense in the context of our CanvasStack, but since we
+   * can share most of the other implementation of NWay we override those
+   * methods to be no-ops.
+   */
+  void addCanvas(SkCanvas*) override { SkDEBUGFAIL("Invalid Op"); }
+  void removeCanvas(SkCanvas*) override { SkDEBUGFAIL("Invalid Op"); }
 
-protected:
-    void didSetMatrix(const SkMatrix&) override;
+ protected:
+  void didSetMatrix(const SkMatrix&) override;
 
-    void onClipRect(const SkRect&, SkClipOp, ClipEdgeStyle) override;
-    void onClipRRect(const SkRRect&, SkClipOp, ClipEdgeStyle) override;
-    void onClipPath(const SkPath&, SkClipOp, ClipEdgeStyle) override;
-    void onClipRegion(const SkRegion&, SkClipOp) override;
+  void onClipRect(const SkRect&, SkClipOp, ClipEdgeStyle) override;
+  void onClipRRect(const SkRRect&, SkClipOp, ClipEdgeStyle) override;
+  void onClipPath(const SkPath&, SkClipOp, ClipEdgeStyle) override;
+  void onClipRegion(const SkRegion&, SkClipOp) override;
 
-private:
-    void clipToZOrderedBounds();
+ private:
+  void clipToZOrderedBounds();
 
-    struct CanvasData {
-        SkIPoint origin;
-        SkRegion requiredClip;
-        std::unique_ptr<SkCanvas> ownedCanvas;
-    };
+  struct CanvasData {
+    SkIPoint origin;
+    SkRegion requiredClip;
+    std::unique_ptr<SkCanvas> ownedCanvas;
+  };
 
-    SkTArray<CanvasData> fCanvasData;
+  SkTArray<CanvasData> fCanvasData;
 
-    typedef SkNWayCanvas INHERITED;
+  typedef SkNWayCanvas INHERITED;
 };
 
 #endif

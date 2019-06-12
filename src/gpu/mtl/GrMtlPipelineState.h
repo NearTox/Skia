@@ -27,111 +27,103 @@ class GrPipeline;
  * by Ganesh
  */
 class GrMtlPipelineState {
-public:
-    using UniformInfoArray = GrMtlPipelineStateDataManager::UniformInfoArray;
-    using UniformHandle = GrGLSLProgramDataManager::UniformHandle;
+ public:
+  using UniformInfoArray = GrMtlPipelineStateDataManager::UniformInfoArray;
+  using UniformHandle = GrGLSLProgramDataManager::UniformHandle;
 
-    GrMtlPipelineState(GrMtlGpu* gpu,
-                       id<MTLRenderPipelineState>
-                               pipelineState,
-                       MTLPixelFormat pixelFormat,
-                       const GrGLSLBuiltinUniformHandles& builtinUniformHandles,
-                       const UniformInfoArray& uniforms,
-                       uint32_t geometryUniformBufferSize,
-                       uint32_t fragmentUniformBufferSize,
-                       uint32_t numSamplers,
-                       std::unique_ptr<GrGLSLPrimitiveProcessor>
-                               geometryProcessor,
-                       std::unique_ptr<GrGLSLXferProcessor>
-                               xferPRocessor,
-                       std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]>
-                               fragmentProcessors,
-                       int fFragmentProcessorCnt);
+  GrMtlPipelineState(
+      GrMtlGpu* gpu, id<MTLRenderPipelineState> pipelineState, MTLPixelFormat pixelFormat,
+      const GrGLSLBuiltinUniformHandles& builtinUniformHandles, const UniformInfoArray& uniforms,
+      uint32_t geometryUniformBufferSize, uint32_t fragmentUniformBufferSize, uint32_t numSamplers,
+      std::unique_ptr<GrGLSLPrimitiveProcessor> geometryProcessor,
+      std::unique_ptr<GrGLSLXferProcessor> xferPRocessor,
+      std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fragmentProcessors,
+      int fFragmentProcessorCnt);
 
-    id<MTLRenderPipelineState> mtlPipelineState() { return fPipelineState; }
+  id<MTLRenderPipelineState> mtlPipelineState() { return fPipelineState; }
 
-    void setData(const GrRenderTarget*, GrSurfaceOrigin, const GrPrimitiveProcessor& primPRoc,
-                 const GrPipeline& pipeline, const GrTextureProxy* const primProcTextures[]);
+  void setData(
+      const GrRenderTarget*, GrSurfaceOrigin, const GrPrimitiveProcessor& primPRoc,
+      const GrPipeline& pipeline, const GrTextureProxy* const primProcTextures[]);
 
-    void setDrawState(id<MTLRenderCommandEncoder>, GrPixelConfig, const GrXferProcessor&);
+  void setDrawState(id<MTLRenderCommandEncoder>, GrPixelConfig, const GrXferProcessor&);
 
-    static void SetDynamicScissorRectState(id<MTLRenderCommandEncoder> renderCmdEncoder,
-                                           const GrRenderTarget* renderTarget,
-                                           GrSurfaceOrigin rtOrigin,
-                                           SkIRect scissorRect);
+  static void SetDynamicScissorRectState(
+      id<MTLRenderCommandEncoder> renderCmdEncoder, const GrRenderTarget* renderTarget,
+      GrSurfaceOrigin rtOrigin, SkIRect scissorRect);
 
-    bool doesntSampleAttachment(const MTLRenderPassAttachmentDescriptor*) const;
+  bool doesntSampleAttachment(const MTLRenderPassAttachmentDescriptor*) const;
 
-private:
+ private:
+  /**
+   * We use the RT's size and origin to adjust from Skia device space to Metal normalized device
+   * space and to make device space positions have the correct origin for processors that require
+   * them.
+   */
+  struct RenderTargetState {
+    SkISize fRenderTargetSize;
+    GrSurfaceOrigin fRenderTargetOrigin;
+
+    RenderTargetState() { this->invalidate(); }
+    void invalidate() {
+      fRenderTargetSize.fWidth = -1;
+      fRenderTargetSize.fHeight = -1;
+      fRenderTargetOrigin = (GrSurfaceOrigin)-1;
+    }
+
     /**
-     * We use the RT's size and origin to adjust from Skia device space to Metal normalized device
-     * space and to make device space positions have the correct origin for processors that require
-     * them.
+     * Gets a float4 that adjusts the position from Skia device coords to Metals normalized
+     * device coords. Assuming the transformed position, pos, is a homogeneous float3, the vec,
+     * v, is applied as such:
+     * pos.x = dot(v.xy, pos.xz)
+     * pos.y = dot(v.zw, pos.yz)
      */
-    struct RenderTargetState {
-        SkISize fRenderTargetSize;
-        GrSurfaceOrigin fRenderTargetOrigin;
+    void getRTAdjustmentVec(float* destVec) {
+      destVec[0] = 2.f / fRenderTargetSize.fWidth;
+      destVec[1] = -1.f;
+      if (kBottomLeft_GrSurfaceOrigin == fRenderTargetOrigin) {
+        destVec[2] = -2.f / fRenderTargetSize.fHeight;
+        destVec[3] = 1.f;
+      } else {
+        destVec[2] = 2.f / fRenderTargetSize.fHeight;
+        destVec[3] = -1.f;
+      }
+    }
+  };
 
-        RenderTargetState() { this->invalidate(); }
-        void invalidate() {
-            fRenderTargetSize.fWidth = -1;
-            fRenderTargetSize.fHeight = -1;
-            fRenderTargetOrigin = (GrSurfaceOrigin)-1;
-        }
+  void setRenderTargetState(const GrRenderTarget*, GrSurfaceOrigin);
 
-        /**
-         * Gets a float4 that adjusts the position from Skia device coords to Metals normalized
-         * device coords. Assuming the transformed position, pos, is a homogeneous float3, the vec,
-         * v, is applied as such:
-         * pos.x = dot(v.xy, pos.xz)
-         * pos.y = dot(v.zw, pos.yz)
-         */
-        void getRTAdjustmentVec(float* destVec) {
-            destVec[0] = 2.f / fRenderTargetSize.fWidth;
-            destVec[1] = -1.f;
-            if (kBottomLeft_GrSurfaceOrigin == fRenderTargetOrigin) {
-                destVec[2] = -2.f / fRenderTargetSize.fHeight;
-                destVec[3] = 1.f;
-            } else {
-                destVec[2] = 2.f / fRenderTargetSize.fHeight;
-                destVec[3] = -1.f;
-            }
-        }
-    };
+  void bind(id<MTLRenderCommandEncoder>);
 
-    void setRenderTargetState(const GrRenderTarget*, GrSurfaceOrigin);
+  void setBlendConstants(id<MTLRenderCommandEncoder>, GrPixelConfig, const GrXferProcessor&);
 
-    void bind(id<MTLRenderCommandEncoder>);
+  void setDepthStencilState(id<MTLRenderCommandEncoder> renderCmdEncoder);
 
-    void setBlendConstants(id<MTLRenderCommandEncoder>, GrPixelConfig, const GrXferProcessor&);
+  struct SamplerBindings {
+    GrMtlSampler* fSampler;
+    id<MTLTexture> fTexture;
 
-    void setDepthStencilState(id<MTLRenderCommandEncoder> renderCmdEncoder);
+    SamplerBindings(const GrSamplerState& state, GrTexture* texture, GrMtlGpu*);
+  };
 
-    struct SamplerBindings {
-        GrMtlSampler* fSampler;
-        id<MTLTexture> fTexture;
+  GrMtlGpu* fGpu;
+  id<MTLRenderPipelineState> fPipelineState;
+  MTLPixelFormat fPixelFormat;
 
-        SamplerBindings(const GrSamplerState& state, GrTexture* texture, GrMtlGpu*);
-    };
+  RenderTargetState fRenderTargetState;
+  GrGLSLBuiltinUniformHandles fBuiltinUniformHandles;
 
-    GrMtlGpu* fGpu;
-    id<MTLRenderPipelineState> fPipelineState;
-    MTLPixelFormat fPixelFormat;
+  GrStencilSettings fStencil;
 
-    RenderTargetState fRenderTargetState;
-    GrGLSLBuiltinUniformHandles fBuiltinUniformHandles;
+  int fNumSamplers;
+  SkTArray<SamplerBindings> fSamplerBindings;
 
-    GrStencilSettings fStencil;
+  std::unique_ptr<GrGLSLPrimitiveProcessor> fGeometryProcessor;
+  std::unique_ptr<GrGLSLXferProcessor> fXferProcessor;
+  std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fFragmentProcessors;
+  int fFragmentProcessorCnt;
 
-    int fNumSamplers;
-    SkTArray<SamplerBindings> fSamplerBindings;
-
-    std::unique_ptr<GrGLSLPrimitiveProcessor> fGeometryProcessor;
-    std::unique_ptr<GrGLSLXferProcessor> fXferProcessor;
-    std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fFragmentProcessors;
-    int fFragmentProcessorCnt;
-
-    GrMtlPipelineStateDataManager fDataManager;
+  GrMtlPipelineStateDataManager fDataManager;
 };
 
 #endif

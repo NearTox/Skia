@@ -14,5 +14,6 @@
     <ClCompile Include="skottie\src\text\TextLayer.cpp" />
     <ClCompile Include="skottie\src\text\TextValue.cpp" />
     <ClCompile Include="skottie\src\SkottiePrecompLayer.cpp" />
+    <ClCompile Include="skottie\src\SkottieValue.cpp" />
   </ItemGroup>
 </Project>

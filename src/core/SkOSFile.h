@@ -71,25 +71,25 @@ size_t sk_qread(FILE*, void* buffer, size_t count, size_t offset);
 bool sk_mkdir(const char* path);
 
 class SkOSFile {
-public:
-    class Iter {
-    public:
-        Iter();
-        Iter(const char path[], const char suffix[] = nullptr);
-        ~Iter();
+ public:
+  class Iter {
+   public:
+    Iter();
+    Iter(const char path[], const char suffix[] = nullptr);
+    ~Iter();
 
-        void reset(const char path[], const char suffix[] = nullptr);
-        /** If getDir is true, only returns directories.
-            Results are undefined if true and false calls are
-            interleaved on a single iterator.
-        */
-        bool next(SkString* name, bool getDir = false);
+    void reset(const char path[], const char suffix[] = nullptr);
+    /** If getDir is true, only returns directories.
+        Results are undefined if true and false calls are
+        interleaved on a single iterator.
+    */
+    bool next(SkString* name, bool getDir = false);
 
-        static const size_t kStorageSize = 40;
+    static const size_t kStorageSize = 40;
 
-    private:
-        SkAlignedSStorage<kStorageSize> fSelf;
-    };
+   private:
+    SkAlignedSStorage<kStorageSize> fSelf;
+  };
 };
 
 #endif

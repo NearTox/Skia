@@ -14,35 +14,35 @@
 struct SkPoint;
 
 class SkSVGLine final : public SkSVGShape {
-public:
-    ~SkSVGLine() override = default;
-    static sk_sp<SkSVGLine> Make() { return sk_sp<SkSVGLine>(new SkSVGLine()); }
+ public:
+  ~SkSVGLine() override = default;
+  static sk_sp<SkSVGLine> Make() { return sk_sp<SkSVGLine>(new SkSVGLine()); }
 
-    void setX1(const SkSVGLength&);
-    void setY1(const SkSVGLength&);
-    void setX2(const SkSVGLength&);
-    void setY2(const SkSVGLength&);
+  void setX1(const SkSVGLength&);
+  void setY1(const SkSVGLength&);
+  void setX2(const SkSVGLength&);
+  void setY2(const SkSVGLength&);
 
-protected:
-    void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
+ protected:
+  void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
 
-    void onDraw(SkCanvas*, const SkSVGLengthContext&, const SkPaint&,
-                SkPath::FillType) const override;
+  void onDraw(
+      SkCanvas*, const SkSVGLengthContext&, const SkPaint&, SkPath::FillType) const override;
 
-    SkPath onAsPath(const SkSVGRenderContext&) const override;
+  SkPath onAsPath(const SkSVGRenderContext&) const override;
 
-private:
-    SkSVGLine();
+ private:
+  SkSVGLine();
 
-    // resolve and return the two endpoints
-    std::tuple<SkPoint, SkPoint> resolve(const SkSVGLengthContext&) const;
+  // resolve and return the two endpoints
+  std::tuple<SkPoint, SkPoint> resolve(const SkSVGLengthContext&) const;
 
-    SkSVGLength fX1 = SkSVGLength(0);
-    SkSVGLength fY1 = SkSVGLength(0);
-    SkSVGLength fX2 = SkSVGLength(0);
-    SkSVGLength fY2 = SkSVGLength(0);
+  SkSVGLength fX1 = SkSVGLength(0);
+  SkSVGLength fY1 = SkSVGLength(0);
+  SkSVGLength fX2 = SkSVGLength(0);
+  SkSVGLength fY2 = SkSVGLength(0);
 
-    typedef SkSVGShape INHERITED;
+  typedef SkSVGShape INHERITED;
 };
 
 #endif  // SkSVGLine_DEFINED

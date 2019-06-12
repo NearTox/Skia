@@ -11,11 +11,11 @@
 #include "include/core/SkTypes.h"
 
 class SkNextID {
-public:
-    /**
-     *  Shared between SkPixelRef's generationID and SkImage's uniqueID
-     */
-    static uint32_t ImageID() noexcept;
+ public:
+  /**
+   *  Shared between SkPixelRef's generationID and SkImage's uniqueID
+   */
+  static uint32_t ImageID();
 };
 
 #endif

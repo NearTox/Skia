@@ -18,11 +18,13 @@ namespace GrGLSLBlend {
  * Appends GLSL code to fsBuilder that assigns a specified blend of the srcColor and dstColor
  * variables to the outColor variable.
  */
-void AppendMode(GrGLSLFragmentBuilder* fsBuilder, const char* srcColor, const char* dstColor,
-                const char* outColor, SkBlendMode mode);
+void AppendMode(
+    GrGLSLFragmentBuilder* fsBuilder, const char* srcColor, const char* dstColor,
+    const char* outColor, SkBlendMode mode);
 
-void AppendRegionOp(GrGLSLFragmentBuilder* fsBuilder, const char* srcColor, const char* dstColor,
-                    const char* outColor, SkRegion::Op regionOp);
+void AppendRegionOp(
+    GrGLSLFragmentBuilder* fsBuilder, const char* srcColor, const char* dstColor,
+    const char* outColor, SkRegion::Op regionOp);
 };  // namespace GrGLSLBlend
 
 #endif

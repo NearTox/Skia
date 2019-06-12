@@ -73,6 +73,10 @@ DEFINE_DEFAULT(memset16);
 DEFINE_DEFAULT(memset32);
 DEFINE_DEFAULT(memset64);
 
+DEFINE_DEFAULT(rect_memset16);
+DEFINE_DEFAULT(rect_memset32);
+DEFINE_DEFAULT(rect_memset64);
+
 DEFINE_DEFAULT(hash_fn);
 
 DEFINE_DEFAULT(S32_alpha_D32_filter_DX);
@@ -87,8 +91,8 @@ void (*start_pipeline_highp)(size_t, size_t, size_t, size_t, void**) = SK_OPTS_N
 #define M(st) (StageFn) SK_OPTS_NS::lowp::st,
 StageFn stages_lowp[] = {SK_RASTER_PIPELINE_STAGES(M)};
 StageFn just_return_lowp = (StageFn)SK_OPTS_NS::lowp::just_return;
-void (*start_pipeline_lowp)(size_t, size_t, size_t, size_t,
-                            void**) = SK_OPTS_NS::lowp::start_pipeline;
+void (*start_pipeline_lowp)(size_t, size_t, size_t, size_t, void**) =
+    SK_OPTS_NS::lowp::start_pipeline;
 #undef M
 
 // Each Init_foo() is defined in src/opts/SkOpts_foo.cpp.
@@ -103,43 +107,43 @@ static void init() {
 #if !defined(SK_BUILD_NO_OPTS)
 #if defined(SK_CPU_X86)
 #if SK_CPU_SSE_LEVEL < SK_CPU_SSE_LEVEL_SSSE3
-    if (SkCpu::Supports(SkCpu::SSSE3)) {
-        Init_ssse3();
-    }
+  if (SkCpu::Supports(SkCpu::SSSE3)) {
+    Init_ssse3();
+  }
 #endif
 
 #if SK_CPU_SSE_LEVEL < SK_CPU_SSE_LEVEL_SSE41
-    if (SkCpu::Supports(SkCpu::SSE41)) {
-        Init_sse41();
-    }
+  if (SkCpu::Supports(SkCpu::SSE41)) {
+    Init_sse41();
+  }
 #endif
 
 #if SK_CPU_SSE_LEVEL < SK_CPU_SSE_LEVEL_SSE42
-    if (SkCpu::Supports(SkCpu::SSE42)) {
-        Init_sse42();
-    }
+  if (SkCpu::Supports(SkCpu::SSE42)) {
+    Init_sse42();
+  }
 #endif
 
 #if SK_CPU_SSE_LEVEL < SK_CPU_SSE_LEVEL_AVX
-    if (SkCpu::Supports(SkCpu::AVX)) {
-        Init_avx();
-    }
-    if (SkCpu::Supports(SkCpu::HSW)) {
-        Init_hsw();
-    }
+  if (SkCpu::Supports(SkCpu::AVX)) {
+    Init_avx();
+  }
+  if (SkCpu::Supports(SkCpu::HSW)) {
+    Init_hsw();
+  }
 #endif
 
 #elif defined(SK_CPU_ARM64)
-    if (SkCpu::Supports(SkCpu::CRC32)) {
-        Init_crc32();
-    }
+  if (SkCpu::Supports(SkCpu::CRC32)) {
+    Init_crc32();
+  }
 
 #endif
 #endif
 }
 
 void Init() {
-    static SkOnce once;
-    once(init);
+  static SkOnce once;
+  once(init);
 }
 }  // namespace SkOpts

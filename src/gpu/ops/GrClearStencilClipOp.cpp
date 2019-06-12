@@ -13,16 +13,15 @@
 #include "src/gpu/GrOpFlushState.h"
 #include "src/gpu/GrRecordingContextPriv.h"
 
-std::unique_ptr<GrOp> GrClearStencilClipOp::Make(GrRecordingContext* context,
-                                                 const GrFixedClip& clip,
-                                                 bool insideStencilMask,
-                                                 GrRenderTargetProxy* proxy) {
-    GrOpMemoryPool* pool = context->priv().opMemoryPool();
+std::unique_ptr<GrOp> GrClearStencilClipOp::Make(
+    GrRecordingContext* context, const GrFixedClip& clip, bool insideStencilMask,
+    GrRenderTargetProxy* proxy) {
+  GrOpMemoryPool* pool = context->priv().opMemoryPool();
 
-    return pool->allocate<GrClearStencilClipOp>(clip, insideStencilMask, proxy);
+  return pool->allocate<GrClearStencilClipOp>(clip, insideStencilMask, proxy);
 }
 
 void GrClearStencilClipOp::onExecute(GrOpFlushState* state, const SkRect& chainBounds) {
-    SkASSERT(state->rtCommandBuffer());
-    state->rtCommandBuffer()->clearStencilClip(fClip, fInsideStencilMask);
+  SkASSERT(state->rtCommandBuffer());
+  state->rtCommandBuffer()->clearStencilClip(fClip, fInsideStencilMask);
 }

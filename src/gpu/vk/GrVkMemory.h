@@ -19,14 +19,12 @@ namespace GrVkMemory {
  * Allocates vulkan device memory and binds it to the gpu's device for the given object.
  * Returns true if allocation succeeded.
  */
-bool AllocAndBindBufferMemory(const GrVkGpu* gpu, VkBuffer buffer, GrVkBuffer::Type type,
-                              bool dynamic, GrVkAlloc* alloc);
+bool AllocAndBindBufferMemory(
+    const GrVkGpu* gpu, VkBuffer buffer, GrVkBuffer::Type type, bool dynamic, GrVkAlloc* alloc);
 void FreeBufferMemory(const GrVkGpu* gpu, GrVkBuffer::Type type, const GrVkAlloc& alloc);
 
-bool AllocAndBindImageMemory(const GrVkGpu* gpu,
-                             VkImage image,
-                             bool linearTiling,
-                             GrVkAlloc* alloc);
+bool AllocAndBindImageMemory(
+    const GrVkGpu* gpu, VkImage image, bool linearTiling, GrVkAlloc* alloc);
 void FreeImageMemory(const GrVkGpu* gpu, bool linearTiling, const GrVkAlloc& alloc);
 
 // Maps the entire GrVkAlloc and returns a pointer to the start of the allocation. Underneath
@@ -39,15 +37,16 @@ void UnmapAlloc(const GrVkGpu* gpu, const GrVkAlloc& alloc);
 // For the Flush and Invalidate calls, the offset should be relative to the GrVkAlloc. Thus this
 // will often be 0. The client does not need to make sure the offset and size are aligned to the
 // nonCoherentAtomSize, the internal calls will handle that.
-void FlushMappedAlloc(const GrVkGpu* gpu, const GrVkAlloc& alloc, VkDeviceSize offset,
-                      VkDeviceSize size);
-void InvalidateMappedAlloc(const GrVkGpu* gpu, const GrVkAlloc& alloc, VkDeviceSize offset,
-                           VkDeviceSize size);
+void FlushMappedAlloc(
+    const GrVkGpu* gpu, const GrVkAlloc& alloc, VkDeviceSize offset, VkDeviceSize size);
+void InvalidateMappedAlloc(
+    const GrVkGpu* gpu, const GrVkAlloc& alloc, VkDeviceSize offset, VkDeviceSize size);
 
 // Helper for aligning and setting VkMappedMemoryRange for flushing/invalidating noncoherent
 // memory.
-void GetNonCoherentMappedMemoryRange(const GrVkAlloc&, VkDeviceSize offset, VkDeviceSize size,
-                                     VkDeviceSize alignment, VkMappedMemoryRange*);
+void GetNonCoherentMappedMemoryRange(
+    const GrVkAlloc&, VkDeviceSize offset, VkDeviceSize size, VkDeviceSize alignment,
+    VkMappedMemoryRange*);
 }  // namespace GrVkMemory
 
 #endif

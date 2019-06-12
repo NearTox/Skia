@@ -29,15 +29,15 @@ void skjpeg_err_exit(j_common_ptr cinfo);
  * Source handling struct for that allows libjpeg to use our stream object
  */
 struct skjpeg_source_mgr : jpeg_source_mgr {
-    skjpeg_source_mgr(SkStream* stream);
+  skjpeg_source_mgr(SkStream* stream);
 
-    SkStream* fStream;  // unowned
-    enum {
-        // TODO (msarett): Experiment with different buffer sizes.
-        // This size was chosen because it matches SkImageDecoder.
-        kBufferSize = 1024
-    };
-    uint8_t fBuffer[kBufferSize];
+  SkStream* fStream;  // unowned
+  enum {
+    // TODO (msarett): Experiment with different buffer sizes.
+    // This size was chosen because it matches SkImageDecoder.
+    kBufferSize = 1024
+  };
+  uint8_t fBuffer[kBufferSize];
 };
 
 #endif

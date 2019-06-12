@@ -62,9 +62,9 @@
     <ClCompile Include="angle2\src\compiler\translator\SymbolTable_autogen.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\SymbolUniqueId.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\EmulateGLDrawID.cpp" />
-    <ClCompile Include="angle2\src\compiler\translator\tree_ops\RedefineInterfaceBlockLayoutQualifiersWithStd.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteAtomicFunctionExpressions.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteExpressionsWithShaderStorageBlock.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\tree_util\ReplaceShadowingVariables.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\Types.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\ValidateAST.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\ValidateGlobalInitializer.cpp" />
@@ -128,6 +128,7 @@
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\ImageGL.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\QueryImpl.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\ShaderImpl.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\Semaphore.cpp" />
     <ClCompile Include="angle2\src\third_party\compiler\ArrayBoundsClamper.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\OutputESSL.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\TranslatorESSL.cpp" />

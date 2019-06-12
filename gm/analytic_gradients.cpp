@@ -96,68 +96,64 @@ const int RECT_WIDTH = CELL_WIDTH - (2 * PAD_WIDTH);
 const int RECT_HEIGHT = CELL_HEIGHT - (2 * PAD_HEIGHT);
 
 static void shade_rect(SkCanvas* canvas, sk_sp<SkShader> shader, int cellRow, int cellCol) {
-    SkPaint paint;
-    paint.setShader(shader);
+  SkPaint paint;
+  paint.setShader(shader);
 
-    canvas->save();
-    canvas->translate(SkIntToScalar(cellCol * CELL_WIDTH + PAD_WIDTH),
-                      SkIntToScalar(cellRow * CELL_HEIGHT + PAD_HEIGHT));
+  canvas->save();
+  canvas->translate(
+      SkIntToScalar(cellCol * CELL_WIDTH + PAD_WIDTH),
+      SkIntToScalar(cellRow * CELL_HEIGHT + PAD_HEIGHT));
 
-    const SkRect rect = SkRect::MakeWH(SkIntToScalar(RECT_WIDTH), SkIntToScalar(RECT_HEIGHT));
-    canvas->drawRect(rect, paint);
-    canvas->restore();
+  const SkRect rect = SkRect::MakeWH(SkIntToScalar(RECT_WIDTH), SkIntToScalar(RECT_HEIGHT));
+  canvas->drawRect(rect, paint);
+  canvas->restore();
 }
 
 class AnalyticGradientShaderGM : public skiagm::GM {
-public:
-    AnalyticGradientShaderGM() {}
+ public:
+  AnalyticGradientShaderGM() {}
 
-protected:
-    SkString onShortName() override { return SkString("analytic_gradients"); }
+ protected:
+  SkString onShortName() override { return SkString("analytic_gradients"); }
 
-    SkISize onISize() override { return SkISize::Make(1024, 512); }
+  SkISize onISize() override { return SkISize::Make(1024, 512); }
 
-    void onDraw(SkCanvas* canvas) override {
-        const SkPoint points[2] = {SkPoint::Make(0, 0), SkPoint::Make(RECT_WIDTH, 0.0)};
+  void onDraw(SkCanvas* canvas) override {
+    const SkPoint points[2] = {SkPoint::Make(0, 0), SkPoint::Make(RECT_WIDTH, 0.0)};
 
-        for (int cellRow = 0; cellRow < NUM_ROWS; cellRow++) {
-            // Each interval has 4 different color counts, one per mode
-            const int* colorCounts = INTERVAL_COLOR_COUNTS[cellRow];  // Has len = 4
+    for (int cellRow = 0; cellRow < NUM_ROWS; cellRow++) {
+      // Each interval has 4 different color counts, one per mode
+      const int* colorCounts = INTERVAL_COLOR_COUNTS[cellRow];  // Has len = 4
 
-            for (int cellCol = 0; cellCol < NUM_COLS; cellCol++) {
-                // create_gradient_points(cellRow, cellCol, points);
+      for (int cellCol = 0; cellCol < NUM_COLS; cellCol++) {
+        // create_gradient_points(cellRow, cellCol, points);
 
-                // Get the color count dependent on interval and mode
-                int colorCount = colorCounts[cellCol];
-                // Get the positions given the mode
-                const int* layout = M_POSITIONS[cellCol];
+        // Get the color count dependent on interval and mode
+        int colorCount = colorCounts[cellCol];
+        // Get the positions given the mode
+        const int* layout = M_POSITIONS[cellCol];
 
-                // Collect positions and colors specific to the interval+mode normalizing the
-                // position based on the interval count (== cellRow+1)
-                SkAutoSTMalloc<4, SkColor> colors(colorCount);
-                SkAutoSTMalloc<4, SkScalar> positions(colorCount);
-                int j = 0;
-                for (int i = 0; i < colorCount; i++) {
-                    positions[i] = SkIntToScalar(layout[i]) / (cellRow + 1);
-                    colors[i] = COLORS[j % COLOR_COUNT];
-                    j++;
-                }
-
-                auto shader = SkGradientShader::MakeLinear(points,
-                                                           colors.get(),
-                                                           positions.get(),
-                                                           colorCount,
-                                                           SkTileMode::kClamp,
-                                                           0,
-                                                           nullptr);
-
-                shade_rect(canvas, shader, cellRow, cellCol);
-            }
+        // Collect positions and colors specific to the interval+mode normalizing the
+        // position based on the interval count (== cellRow+1)
+        SkAutoSTMalloc<4, SkColor> colors(colorCount);
+        SkAutoSTMalloc<4, SkScalar> positions(colorCount);
+        int j = 0;
+        for (int i = 0; i < colorCount; i++) {
+          positions[i] = SkIntToScalar(layout[i]) / (cellRow + 1);
+          colors[i] = COLORS[j % COLOR_COUNT];
+          j++;
         }
-    }
 
-private:
-    typedef skiagm::GM INHERITED;
+        auto shader = SkGradientShader::MakeLinear(
+            points, colors.get(), positions.get(), colorCount, SkTileMode::kClamp, 0, nullptr);
+
+        shade_rect(canvas, shader, cellRow, cellCol);
+      }
+    }
+  }
+
+ private:
+  typedef skiagm::GM INHERITED;
 };
 
 DEF_GM(return new AnalyticGradientShaderGM;)

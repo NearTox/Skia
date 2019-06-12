@@ -21,16 +21,16 @@
 #endif
 
 namespace GrGradientShader {
-std::unique_ptr<GrFragmentProcessor> MakeLinear(const SkLinearGradient& shader,
-                                                const GrFPArgs& args);
+std::unique_ptr<GrFragmentProcessor> MakeLinear(
+    const SkLinearGradient& shader, const GrFPArgs& args);
 
-std::unique_ptr<GrFragmentProcessor> MakeRadial(const SkRadialGradient& shader,
-                                                const GrFPArgs& args);
+std::unique_ptr<GrFragmentProcessor> MakeRadial(
+    const SkRadialGradient& shader, const GrFPArgs& args);
 
 std::unique_ptr<GrFragmentProcessor> MakeSweep(const SkSweepGradient& shader, const GrFPArgs& args);
 
-std::unique_ptr<GrFragmentProcessor> MakeConical(const SkTwoPointConicalGradient& shader,
-                                                 const GrFPArgs& args);
+std::unique_ptr<GrFragmentProcessor> MakeConical(
+    const SkTwoPointConicalGradient& shader, const GrFPArgs& args);
 
 #if GR_TEST_UTILS
 /** Helper struct that stores (and populates) parameters to construct a random gradient.
@@ -40,22 +40,22 @@ std::unique_ptr<GrFragmentProcessor> MakeConical(const SkTwoPointConicalGradient
     the gradient factory. (The constructor may decide not to use stops, in which case fStops
     will be nullptr). */
 struct RandomParams {
-    static constexpr int kMaxRandomGradientColors = 5;
+  static constexpr int kMaxRandomGradientColors = 5;
 
-    // Should be of similar magnitude to the draw area of the tests so that the gradient
-    // sampling is done at an appropriate scale.
-    static constexpr SkScalar kGradientScale = 256.0f;
+  // Should be of similar magnitude to the draw area of the tests so that the gradient
+  // sampling is done at an appropriate scale.
+  static constexpr SkScalar kGradientScale = 256.0f;
 
-    RandomParams(SkRandom* r);
+  RandomParams(SkRandom* r);
 
-    bool fUseColors4f;
-    SkColor fColors[kMaxRandomGradientColors];
-    SkColor4f fColors4f[kMaxRandomGradientColors];
-    sk_sp<SkColorSpace> fColorSpace;
-    SkScalar fStopStorage[kMaxRandomGradientColors];
-    SkTileMode fTileMode;
-    int fColorCount;
-    SkScalar* fStops;
+  bool fUseColors4f;
+  SkColor fColors[kMaxRandomGradientColors];
+  SkColor4f fColors4f[kMaxRandomGradientColors];
+  sk_sp<SkColorSpace> fColorSpace;
+  SkScalar fStopStorage[kMaxRandomGradientColors];
+  SkTileMode fTileMode;
+  int fColorCount;
+  SkScalar* fStops;
 };
 #endif
 

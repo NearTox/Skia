@@ -14,23 +14,23 @@
 
 // http://crbug.com/957275
 DEF_SIMPLE_GM(tilemodes_alpha, canvas, 512, 512) {
-    sk_sp<SkImage> image = GetResourceAsImage("images/mandrill_64.png");
-    if (!image) {
-        return;
+  sk_sp<SkImage> image = GetResourceAsImage("images/mandrill_64.png");
+  if (!image) {
+    return;
+  }
+  constexpr SkTileMode kModes[4] = {
+      SkTileMode::kClamp,
+      SkTileMode::kRepeat,
+      SkTileMode::kMirror,
+      SkTileMode::kDecal,
+  };
+  for (int y = 0; y < 4; ++y) {
+    for (int x = 0; x < 4; ++x) {
+      SkRect rect = SkRect::MakeXYWH(128 * x + 1, 128 * y + 1, 126, 126);
+      SkMatrix matrix = SkMatrix::MakeTrans(rect.x(), rect.y());
+      SkPaint paint(SkColor4f{0, 0, 0, 0.5f});
+      paint.setShader(image->makeShader(kModes[x], kModes[y], &matrix));
+      canvas->drawRect(rect, paint);
     }
-    constexpr SkTileMode kModes[4] = {
-            SkTileMode::kClamp,
-            SkTileMode::kRepeat,
-            SkTileMode::kMirror,
-            SkTileMode::kDecal,
-    };
-    for (int y = 0; y < 4; ++y) {
-        for (int x = 0; x < 4; ++x) {
-            SkRect rect = SkRect::MakeXYWH(128 * x + 1, 128 * y + 1, 126, 126);
-            SkMatrix matrix = SkMatrix::MakeTrans(rect.x(), rect.y());
-            SkPaint paint(SkColor4f{0, 0, 0, 0.5f});
-            paint.setShader(image->makeShader(kModes[x], kModes[y], &matrix));
-            canvas->drawRect(rect, paint);
-        }
-    }
+  }
 }

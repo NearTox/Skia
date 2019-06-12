@@ -25,8 +25,9 @@ struct SkRect;
  * @param insetPolygon  The resulting inset polygon, if any.
  * @return true if an inset polygon exists, false otherwise.
  */
-bool SkInsetConvexPolygon(const SkPoint* inputPolygonVerts, int inputPolygonSize, SkScalar inset,
-                          SkTDArray<SkPoint>* insetPolygon);
+bool SkInsetConvexPolygon(
+    const SkPoint* inputPolygonVerts, int inputPolygonSize, SkScalar inset,
+    SkTDArray<SkPoint>* insetPolygon);
 
 /**
  * Generates a simple polygon (if possible) that is offset a constant distance from the boundary
@@ -42,9 +43,9 @@ bool SkInsetConvexPolygon(const SkPoint* inputPolygonVerts, int inputPolygonSize
  * @param polygonIndices  The indices of the original polygon that map to the new one.
  * @return true if an offset simple polygon exists, false otherwise.
  */
-bool SkOffsetSimplePolygon(const SkPoint* inputPolygonVerts, int inputPolygonSize,
-                           const SkRect& bounds, SkScalar offset, SkTDArray<SkPoint>* offsetPolygon,
-                           SkTDArray<int>* polygonIndices = nullptr);
+bool SkOffsetSimplePolygon(
+    const SkPoint* inputPolygonVerts, int inputPolygonSize, const SkRect& bounds, SkScalar offset,
+    SkTDArray<SkPoint>* offsetPolygon, SkTDArray<int>* polygonIndices = nullptr);
 
 /**
  * Compute the number of points needed for a circular join when offsetting a vertex.
@@ -59,8 +60,9 @@ bool SkOffsetSimplePolygon(const SkPoint* inputPolygonVerts, int inputPolygonSiz
  * @param n  Number of steps to fill out the arc.
  * @return true for success, false otherwise
  */
-bool SkComputeRadialSteps(const SkVector& offset0, const SkVector& offset1, SkScalar offset,
-                          SkScalar* rotSin, SkScalar* rotCos, int* n);
+bool SkComputeRadialSteps(
+    const SkVector& offset0, const SkVector& offset1, SkScalar offset, SkScalar* rotSin,
+    SkScalar* rotCos, int* n);
 
 /**
  * Determine winding direction for a polygon.
@@ -103,8 +105,9 @@ bool SkIsSimplePolygon(const SkPoint* polygonVerts, int polygonSize);
  * @param triangleIndices  Indices of the resulting triangulation.
  * @return true if successful, false otherwise.
  */
-bool SkTriangulateSimplePolygon(const SkPoint* polygonVerts, uint16_t* indexMap, int polygonSize,
-                                SkTDArray<uint16_t>* triangleIndices);
+bool SkTriangulateSimplePolygon(
+    const SkPoint* polygonVerts, uint16_t* indexMap, int polygonSize,
+    SkTDArray<uint16_t>* triangleIndices);
 
 // Experiment: doesn't handle really big floats (returns false), always returns true for count <= 3
 bool SkIsPolyConvex_experimental(const SkPoint[], int count);

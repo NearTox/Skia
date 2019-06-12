@@ -35,85 +35,77 @@ namespace skiagm {
 // verify that).
 
 static SkBitmap create_bitmap() {
-    SkBitmap bmp;
-    bmp.allocN32Pixels(2, 2);
-    uint32_t* pixels = reinterpret_cast<uint32_t*>(bmp.getPixels());
-    pixels[0] = SkPreMultiplyColor(SK_ColorRED);
-    pixels[1] = SkPreMultiplyColor(SK_ColorGREEN);
-    pixels[2] = SkPreMultiplyColor(SK_ColorBLACK);
-    pixels[3] = SkPreMultiplyColor(SK_ColorBLUE);
+  SkBitmap bmp;
+  bmp.allocN32Pixels(2, 2);
+  uint32_t* pixels = reinterpret_cast<uint32_t*>(bmp.getPixels());
+  pixels[0] = SkPreMultiplyColor(SK_ColorRED);
+  pixels[1] = SkPreMultiplyColor(SK_ColorGREEN);
+  pixels[2] = SkPreMultiplyColor(SK_ColorBLACK);
+  pixels[3] = SkPreMultiplyColor(SK_ColorBLUE);
 
-    return bmp;
+  return bmp;
 }
 
 constexpr SkScalar RECT_SIZE = 64;
 constexpr SkScalar SLIDE_SIZE = 300;
 
 class ClippedBitmapShadersGM : public GM {
-public:
-    ClippedBitmapShadersGM(SkTileMode mode, bool hq = false) : fMode(mode), fHQ(hq) {}
+ public:
+  ClippedBitmapShadersGM(SkTileMode mode, bool hq = false) : fMode(mode), fHQ(hq) {}
 
-protected:
-    SkTileMode fMode;
-    bool fHQ;
+ protected:
+  SkTileMode fMode;
+  bool fHQ;
 
-    virtual SkString onShortName() {
-        SkString descriptor;
-        switch (fMode) {
-            case SkTileMode::kRepeat:
-                descriptor = "tile";
-                break;
-            case SkTileMode::kMirror:
-                descriptor = "mirror";
-                break;
-            case SkTileMode::kClamp:
-                descriptor = "clamp";
-                break;
-            case SkTileMode::kDecal:
-                descriptor = "decal";
-                break;
-        }
-        descriptor.prepend("clipped-bitmap-shaders-");
-        if (fHQ) {
-            descriptor.append("-hq");
-        }
-        return descriptor;
+  virtual SkString onShortName() {
+    SkString descriptor;
+    switch (fMode) {
+      case SkTileMode::kRepeat: descriptor = "tile"; break;
+      case SkTileMode::kMirror: descriptor = "mirror"; break;
+      case SkTileMode::kClamp: descriptor = "clamp"; break;
+      case SkTileMode::kDecal: descriptor = "decal"; break;
+    }
+    descriptor.prepend("clipped-bitmap-shaders-");
+    if (fHQ) {
+      descriptor.append("-hq");
+    }
+    return descriptor;
+  }
+
+  virtual SkISize onISize() { return SkISize::Make(300, 300); }
+
+  virtual void onDraw(SkCanvas* canvas) {
+    SkBitmap bmp = create_bitmap();
+    SkMatrix s;
+    s.reset();
+    s.setScale(8, 8);
+    s.postTranslate(SLIDE_SIZE / 2, SLIDE_SIZE / 2);
+    SkPaint paint;
+    paint.setShader(bmp.makeShader(fMode, fMode, &s));
+
+    if (fHQ) {
+      paint.setFilterQuality(kHigh_SkFilterQuality);
     }
 
-    virtual SkISize onISize() { return SkISize::Make(300, 300); }
-
-    virtual void onDraw(SkCanvas* canvas) {
-        SkBitmap bmp = create_bitmap();
-        SkMatrix s;
-        s.reset();
-        s.setScale(8, 8);
-        s.postTranslate(SLIDE_SIZE / 2, SLIDE_SIZE / 2);
-        SkPaint paint;
-        paint.setShader(bmp.makeShader(fMode, fMode, &s));
-
-        if (fHQ) {
-            paint.setFilterQuality(kHigh_SkFilterQuality);
+    SkScalar margin = (SLIDE_SIZE / 3 - RECT_SIZE) / 2;
+    for (int i = 0; i < 3; i++) {
+      SkScalar yOrigin = SLIDE_SIZE / 3 * i + margin;
+      for (int j = 0; j < 3; j++) {
+        SkScalar xOrigin = SLIDE_SIZE / 3 * j + margin;
+        if (i == 1 && j == 1) {
+          continue;  // skip center element
         }
-
-        SkScalar margin = (SLIDE_SIZE / 3 - RECT_SIZE) / 2;
-        for (int i = 0; i < 3; i++) {
-            SkScalar yOrigin = SLIDE_SIZE / 3 * i + margin;
-            for (int j = 0; j < 3; j++) {
-                SkScalar xOrigin = SLIDE_SIZE / 3 * j + margin;
-                if (i == 1 && j == 1) {
-                    continue;  // skip center element
-                }
-                SkRect rect = SkRect::MakeXYWH(xOrigin, yOrigin, RECT_SIZE, RECT_SIZE);
-                canvas->save();
-                canvas->clipRect(rect);
-                canvas->drawRect(rect, paint);
-                canvas->restore();
-            }
-        }
+        SkRect rect = SkRect::MakeXYWH(xOrigin, yOrigin, RECT_SIZE, RECT_SIZE);
+        canvas->save();
+        canvas->clipRect(rect);
+        canvas->drawRect(rect, paint);
+        canvas->restore();
+      }
     }
+  }
 
-private:
-    typedef GM INHERITED;
+ private:
+  typedef GM INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -125,4 +117,5 @@ DEF_GM(return new ClippedBitmapShadersGM(SkTileMode::kClamp);)
 DEF_GM(return new ClippedBitmapShadersGM(SkTileMode::kRepeat, true);)
 DEF_GM(return new ClippedBitmapShadersGM(SkTileMode::kMirror, true);)
 DEF_GM(return new ClippedBitmapShadersGM(SkTileMode::kClamp, true);)
+
 }  // namespace skiagm

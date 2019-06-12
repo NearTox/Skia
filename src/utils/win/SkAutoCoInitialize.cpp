@@ -14,16 +14,16 @@
 #include <winerror.h>
 
 SkAutoCoInitialize::SkAutoCoInitialize()
-        : fHR(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE)) {}
+    : fHR(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE)) {}
 
 SkAutoCoInitialize::~SkAutoCoInitialize() {
-    if (SUCCEEDED(this->fHR)) {
-        CoUninitialize();
-    }
+  if (SUCCEEDED(this->fHR)) {
+    CoUninitialize();
+  }
 }
 
 bool SkAutoCoInitialize::succeeded() {
-    return SUCCEEDED(this->fHR) || RPC_E_CHANGED_MODE == this->fHR;
+  return SUCCEEDED(this->fHR) || RPC_E_CHANGED_MODE == this->fHR;
 }
 
 #endif  // defined(SK_BUILD_FOR_WIN)

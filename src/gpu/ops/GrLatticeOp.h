@@ -22,14 +22,10 @@ class SkMatrix;
 struct SkRect;
 
 namespace GrLatticeOp {
-std::unique_ptr<GrDrawOp> MakeNonAA(GrRecordingContext*,
-                                    GrPaint&&,
-                                    const SkMatrix& viewMatrix,
-                                    sk_sp<GrTextureProxy>,
-                                    sk_sp<GrColorSpaceXform>,
-                                    GrSamplerState::Filter,
-                                    std::unique_ptr<SkLatticeIter>,
-                                    const SkRect& dst);
+std::unique_ptr<GrDrawOp> MakeNonAA(
+    GrRecordingContext*, GrPaint&&, const SkMatrix& viewMatrix, sk_sp<GrTextureProxy>,
+    sk_sp<GrColorSpaceXform>, GrSamplerState::Filter, std::unique_ptr<SkLatticeIter>,
+    const SkRect& dst);
 };
 
 #endif

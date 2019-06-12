@@ -17,23 +17,22 @@
 class GrRecordingContext;
 
 class GrSemaphoreOp : public GrOp {
-public:
-    static std::unique_ptr<GrOp> MakeWait(GrRecordingContext*,
-                                          sk_sp<GrSemaphore>,
-                                          GrRenderTargetProxy*);
+ public:
+  static std::unique_ptr<GrOp> MakeWait(
+      GrRecordingContext*, sk_sp<GrSemaphore>, GrRenderTargetProxy*);
 
-protected:
-    GrSemaphoreOp(uint32_t classId, sk_sp<GrSemaphore> semaphore, GrRenderTargetProxy* proxy)
-            : INHERITED(classId), fSemaphore(std::move(semaphore)) {
-        this->makeFullScreen(proxy);
-    }
+ protected:
+  GrSemaphoreOp(uint32_t classId, sk_sp<GrSemaphore> semaphore, GrRenderTargetProxy* proxy)
+      : INHERITED(classId), fSemaphore(std::move(semaphore)) {
+    this->makeFullScreen(proxy);
+  }
 
-    sk_sp<GrSemaphore> fSemaphore;
+  sk_sp<GrSemaphore> fSemaphore;
 
-private:
-    void onPrepare(GrOpFlushState*) override {}
+ private:
+  void onPrepare(GrOpFlushState*) override {}
 
-    typedef GrOp INHERITED;
+  typedef GrOp INHERITED;
 };
 
 #endif

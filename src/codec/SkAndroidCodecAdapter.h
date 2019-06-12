@@ -15,20 +15,21 @@
  *  implement that are wrapped with SkSampledCodec instead.
  */
 class SkAndroidCodecAdapter : public SkAndroidCodec {
-public:
-    explicit SkAndroidCodecAdapter(SkCodec*, ExifOrientationBehavior);
+ public:
+  explicit SkAndroidCodecAdapter(SkCodec*, ExifOrientationBehavior);
 
-    ~SkAndroidCodecAdapter() override {}
+  ~SkAndroidCodecAdapter() override {}
 
-protected:
-    SkISize onGetSampledDimensions(int sampleSize) const override;
+ protected:
+  SkISize onGetSampledDimensions(int sampleSize) const override;
 
-    bool onGetSupportedSubset(SkIRect* desiredSubset) const override;
+  bool onGetSupportedSubset(SkIRect* desiredSubset) const override;
 
-    SkCodec::Result onGetAndroidPixels(const SkImageInfo& info, void* pixels, size_t rowBytes,
-                                       const AndroidOptions& options) override;
+  SkCodec::Result onGetAndroidPixels(
+      const SkImageInfo& info, void* pixels, size_t rowBytes,
+      const AndroidOptions& options) override;
 
-private:
-    typedef SkAndroidCodec INHERITED;
+ private:
+  typedef SkAndroidCodec INHERITED;
 };
 #endif  // SkAndroidCodecAdapter_DEFINED

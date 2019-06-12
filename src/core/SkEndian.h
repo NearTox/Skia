@@ -28,80 +28,81 @@
     e.g. 0x1234 -> 0x3412
 */
 static inline uint16_t SkEndianSwap16(uint16_t value) {
-    return static_cast<uint16_t>((value >> 8) | ((value & 0xFF) << 8));
+  return static_cast<uint16_t>((value >> 8) | ((value & 0xFF) << 8));
 }
 
-template <uint16_t N> struct SkTEndianSwap16 {
-    static const uint16_t value = static_cast<uint16_t>((N >> 8) | ((N & 0xFF) << 8));
+template <uint16_t N>
+struct SkTEndianSwap16 {
+  static const uint16_t value = static_cast<uint16_t>((N >> 8) | ((N & 0xFF) << 8));
 };
 
 /** Vector version of SkEndianSwap16(), which swaps the
     low two bytes of each value in the array.
 */
 static inline void SkEndianSwap16s(uint16_t array[], int count) {
-    SkASSERT(count == 0 || array != nullptr);
+  SkASSERT(count == 0 || array != nullptr);
 
-    while (--count >= 0) {
-        *array = SkEndianSwap16(*array);
-        array += 1;
-    }
+  while (--count >= 0) {
+    *array = SkEndianSwap16(*array);
+    array += 1;
+  }
 }
 
 /** Reverse all 4 bytes in a 32bit value.
     e.g. 0x12345678 -> 0x78563412
 */
 static constexpr uint32_t SkEndianSwap32(uint32_t value) {
-    return ((value & 0xFF) << 24) | ((value & 0xFF00) << 8) | ((value & 0xFF0000) >> 8) |
-           (value >> 24);
+  return ((value & 0xFF) << 24) | ((value & 0xFF00) << 8) | ((value & 0xFF0000) >> 8) |
+         (value >> 24);
 }
 
-template <uint32_t N> struct SkTEndianSwap32 {
-    static const uint32_t value =
-            ((N & 0xFF) << 24) | ((N & 0xFF00) << 8) | ((N & 0xFF0000) >> 8) | (N >> 24);
+template <uint32_t N>
+struct SkTEndianSwap32 {
+  static const uint32_t value =
+      ((N & 0xFF) << 24) | ((N & 0xFF00) << 8) | ((N & 0xFF0000) >> 8) | (N >> 24);
 };
 
 /** Vector version of SkEndianSwap32(), which swaps the
     bytes of each value in the array.
 */
 static inline void SkEndianSwap32s(uint32_t array[], int count) {
-    SkASSERT(count == 0 || array != nullptr);
+  SkASSERT(count == 0 || array != nullptr);
 
-    while (--count >= 0) {
-        *array = SkEndianSwap32(*array);
-        array += 1;
-    }
+  while (--count >= 0) {
+    *array = SkEndianSwap32(*array);
+    array += 1;
+  }
 }
 
 /** Reverse all 8 bytes in a 64bit value.
     e.g. 0x1122334455667788 -> 0x8877665544332211
 */
 static inline uint64_t SkEndianSwap64(uint64_t value) {
-    return (((value & 0x00000000000000FFULL) << (8 * 7)) |
-            ((value & 0x000000000000FF00ULL) << (8 * 5)) |
-            ((value & 0x0000000000FF0000ULL) << (8 * 3)) |
-            ((value & 0x00000000FF000000ULL) << (8 * 1)) |
-            ((value & 0x000000FF00000000ULL) >> (8 * 1)) |
-            ((value & 0x0000FF0000000000ULL) >> (8 * 3)) |
-            ((value & 0x00FF000000000000ULL) >> (8 * 5)) | ((value) >> (8 * 7)));
+  return (
+      ((value & 0x00000000000000FFULL) << (8 * 7)) | ((value & 0x000000000000FF00ULL) << (8 * 5)) |
+      ((value & 0x0000000000FF0000ULL) << (8 * 3)) | ((value & 0x00000000FF000000ULL) << (8 * 1)) |
+      ((value & 0x000000FF00000000ULL) >> (8 * 1)) | ((value & 0x0000FF0000000000ULL) >> (8 * 3)) |
+      ((value & 0x00FF000000000000ULL) >> (8 * 5)) | ((value) >> (8 * 7)));
 }
-template <uint64_t N> struct SkTEndianSwap64 {
-    static const uint64_t value =
-            (((N & 0x00000000000000FFULL) << (8 * 7)) | ((N & 0x000000000000FF00ULL) << (8 * 5)) |
-             ((N & 0x0000000000FF0000ULL) << (8 * 3)) | ((N & 0x00000000FF000000ULL) << (8 * 1)) |
-             ((N & 0x000000FF00000000ULL) >> (8 * 1)) | ((N & 0x0000FF0000000000ULL) >> (8 * 3)) |
-             ((N & 0x00FF000000000000ULL) >> (8 * 5)) | ((N) >> (8 * 7)));
+template <uint64_t N>
+struct SkTEndianSwap64 {
+  static const uint64_t value =
+      (((N & 0x00000000000000FFULL) << (8 * 7)) | ((N & 0x000000000000FF00ULL) << (8 * 5)) |
+       ((N & 0x0000000000FF0000ULL) << (8 * 3)) | ((N & 0x00000000FF000000ULL) << (8 * 1)) |
+       ((N & 0x000000FF00000000ULL) >> (8 * 1)) | ((N & 0x0000FF0000000000ULL) >> (8 * 3)) |
+       ((N & 0x00FF000000000000ULL) >> (8 * 5)) | ((N) >> (8 * 7)));
 };
 
 /** Vector version of SkEndianSwap64(), which swaps the
     bytes of each value in the array.
 */
 static inline void SkEndianSwap64s(uint64_t array[], int count) {
-    SkASSERT(count == 0 || array != nullptr);
+  SkASSERT(count == 0 || array != nullptr);
 
-    while (--count >= 0) {
-        *array = SkEndianSwap64(*array);
-        array += 1;
-    }
+  while (--count >= 0) {
+    *array = SkEndianSwap64(*array);
+    array += 1;
+  }
 }
 
 #ifdef SK_CPU_LENDIAN
@@ -162,24 +163,24 @@ static inline void SkEndianSwap64s(uint64_t array[], int count) {
 
 #ifdef SK_UINT8_BITFIELD_LENDIAN
 #define SK_UINT8_BITFIELD(f0, f1, f2, f3, f4, f5, f6, f7) \
-    SK_OT_BYTE f0 : 1;                                    \
-    SK_OT_BYTE f1 : 1;                                    \
-    SK_OT_BYTE f2 : 1;                                    \
-    SK_OT_BYTE f3 : 1;                                    \
-    SK_OT_BYTE f4 : 1;                                    \
-    SK_OT_BYTE f5 : 1;                                    \
-    SK_OT_BYTE f6 : 1;                                    \
-    SK_OT_BYTE f7 : 1;
+  SK_OT_BYTE f0 : 1;                                      \
+  SK_OT_BYTE f1 : 1;                                      \
+  SK_OT_BYTE f2 : 1;                                      \
+  SK_OT_BYTE f3 : 1;                                      \
+  SK_OT_BYTE f4 : 1;                                      \
+  SK_OT_BYTE f5 : 1;                                      \
+  SK_OT_BYTE f6 : 1;                                      \
+  SK_OT_BYTE f7 : 1;
 #else
 #define SK_UINT8_BITFIELD(f0, f1, f2, f3, f4, f5, f6, f7) \
-    SK_OT_BYTE f7 : 1;                                    \
-    SK_OT_BYTE f6 : 1;                                    \
-    SK_OT_BYTE f5 : 1;                                    \
-    SK_OT_BYTE f4 : 1;                                    \
-    SK_OT_BYTE f3 : 1;                                    \
-    SK_OT_BYTE f2 : 1;                                    \
-    SK_OT_BYTE f1 : 1;                                    \
-    SK_OT_BYTE f0 : 1;
+  SK_OT_BYTE f7 : 1;                                      \
+  SK_OT_BYTE f6 : 1;                                      \
+  SK_OT_BYTE f5 : 1;                                      \
+  SK_OT_BYTE f4 : 1;                                      \
+  SK_OT_BYTE f3 : 1;                                      \
+  SK_OT_BYTE f2 : 1;                                      \
+  SK_OT_BYTE f1 : 1;                                      \
+  SK_OT_BYTE f0 : 1;
 #endif
 
 #endif

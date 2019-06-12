@@ -25,30 +25,18 @@ class SkStrokeRec;
  * This namespace wraps helper functions that draw ovals, rrects, and arcs (filled & stroked)
  */
 class GrOvalOpFactory {
-public:
-    static std::unique_ptr<GrDrawOp> MakeOvalOp(GrRecordingContext*,
-                                                GrPaint&&,
-                                                const SkMatrix&,
-                                                const SkRect& oval,
-                                                const GrStyle& style,
-                                                const GrShaderCaps*);
+ public:
+  static std::unique_ptr<GrDrawOp> MakeOvalOp(
+      GrRecordingContext*, GrPaint&&, const SkMatrix&, const SkRect& oval, const GrStyle& style,
+      const GrShaderCaps*);
 
-    static std::unique_ptr<GrDrawOp> MakeRRectOp(GrRecordingContext*,
-                                                 GrPaint&&,
-                                                 const SkMatrix&,
-                                                 const SkRRect&,
-                                                 const SkStrokeRec&,
-                                                 const GrShaderCaps*);
+  static std::unique_ptr<GrDrawOp> MakeRRectOp(
+      GrRecordingContext*, GrPaint&&, const SkMatrix&, const SkRRect&, const SkStrokeRec&,
+      const GrShaderCaps*);
 
-    static std::unique_ptr<GrDrawOp> MakeArcOp(GrRecordingContext*,
-                                               GrPaint&&,
-                                               const SkMatrix&,
-                                               const SkRect& oval,
-                                               SkScalar startAngle,
-                                               SkScalar sweepAngle,
-                                               bool useCenter,
-                                               const GrStyle&,
-                                               const GrShaderCaps*);
+  static std::unique_ptr<GrDrawOp> MakeArcOp(
+      GrRecordingContext*, GrPaint&&, const SkMatrix&, const SkRect& oval, SkScalar startAngle,
+      SkScalar sweepAngle, bool useCenter, const GrStyle&, const GrShaderCaps*);
 };
 
 #endif  // GrOvalOpFactory_DEFINED

@@ -12,31 +12,31 @@
 #include "include/core/SkImageFilter.h"
 
 class SK_API SkMergeImageFilter : public SkImageFilter {
-public:
-    static sk_sp<SkImageFilter> Make(sk_sp<SkImageFilter>* const filters, int count,
-                                     const CropRect* cropRect = nullptr);
+ public:
+  static sk_sp<SkImageFilter> Make(
+      sk_sp<SkImageFilter>* const filters, int count, const CropRect* cropRect = nullptr);
 
-    static sk_sp<SkImageFilter> Make(sk_sp<SkImageFilter> first, sk_sp<SkImageFilter> second,
-                                     const CropRect* cropRect = nullptr) {
-        sk_sp<SkImageFilter> array[] = {
-                std::move(first),
-                std::move(second),
-        };
-        return Make(array, 2, cropRect);
-    }
+  static sk_sp<SkImageFilter> Make(
+      sk_sp<SkImageFilter> first, sk_sp<SkImageFilter> second, const CropRect* cropRect = nullptr) {
+    sk_sp<SkImageFilter> array[] = {
+        std::move(first),
+        std::move(second),
+    };
+    return Make(array, 2, cropRect);
+  }
 
-protected:
-    void flatten(SkWriteBuffer&) const override;
-    sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
-                                        SkIPoint* offset) const override;
-    bool onCanHandleComplexCTM() const override { return true; }
+ protected:
+  void flatten(SkWriteBuffer&) const override;
+  sk_sp<SkSpecialImage> onFilterImage(
+      SkSpecialImage* source, const Context&, SkIPoint* offset) const override;
+  bool onCanHandleComplexCTM() const override { return true; }
 
-private:
-    SK_FLATTENABLE_HOOKS(SkMergeImageFilter)
+ private:
+  SK_FLATTENABLE_HOOKS(SkMergeImageFilter)
 
-    SkMergeImageFilter(sk_sp<SkImageFilter>* const filters, int count, const CropRect* cropRect);
+  SkMergeImageFilter(sk_sp<SkImageFilter>* const filters, int count, const CropRect* cropRect);
 
-    typedef SkImageFilter INHERITED;
+  typedef SkImageFilter INHERITED;
 };
 
 #endif

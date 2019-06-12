@@ -23,21 +23,21 @@
 // This test ensures that glyphs whose point size is less than the SkStrike's maxmium, but
 // who have a large blur, are still handled correctly
 DEF_SIMPLE_GM(largeglyphblur, canvas, 1920, 600) {
-    const char text[] = "Hamburgefons";
+  const char text[] = "Hamburgefons";
 
-    SkFont font(ToolUtils::create_portable_typeface(), 256);
-    auto blob = SkTextBlob::MakeFromText(text, strlen(text), font);
+  SkFont font(ToolUtils::create_portable_typeface(), 256);
+  auto blob = SkTextBlob::MakeFromText(text, strlen(text), font);
 
-    // setup up maskfilter
-    const SkScalar kSigma = SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(40));
+  // setup up maskfilter
+  const SkScalar kSigma = SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(40));
 
-    SkPaint blurPaint;
-    blurPaint.setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, kSigma));
+  SkPaint blurPaint;
+  blurPaint.setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, kSigma));
 
-    canvas->drawTextBlob(blob, 10, 200, blurPaint);
-    canvas->drawTextBlob(blob, 10, 200, SkPaint());
+  canvas->drawTextBlob(blob, 10, 200, blurPaint);
+  canvas->drawTextBlob(blob, 10, 200, SkPaint());
 
-    size_t len = strlen(text);
-    canvas->drawSimpleText(text, len, SkTextEncoding::kUTF8, 10, 500, font, blurPaint);
-    canvas->drawSimpleText(text, len, SkTextEncoding::kUTF8, 10, 500, font, SkPaint());
+  size_t len = strlen(text);
+  canvas->drawSimpleText(text, len, SkTextEncoding::kUTF8, 10, 500, font, blurPaint);
+  canvas->drawSimpleText(text, len, SkTextEncoding::kUTF8, 10, 500, font, SkPaint());
 }

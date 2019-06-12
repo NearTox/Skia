@@ -12,35 +12,35 @@
 #include "include/core/SkFlattenable.h"
 
 class SkModeColorFilter : public SkColorFilter {
-public:
-    static sk_sp<SkColorFilter> Make(SkColor color, SkBlendMode mode) {
-        return sk_sp<SkColorFilter>(new SkModeColorFilter(color, mode));
-    }
+ public:
+  static sk_sp<SkColorFilter> Make(SkColor color, SkBlendMode mode) {
+    return sk_sp<SkColorFilter>(new SkModeColorFilter(color, mode));
+  }
 
-    uint32_t getFlags() const noexcept override;
+  uint32_t getFlags() const override;
 
 #if SK_SUPPORT_GPU
-    std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(
-            GrRecordingContext*, const GrColorSpaceInfo&) const override;
+  std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(
+      GrRecordingContext*, const GrColorSpaceInfo&) const override;
 #endif
 
-protected:
-    SkModeColorFilter(SkColor color, SkBlendMode mode);
+ protected:
+  SkModeColorFilter(SkColor color, SkBlendMode mode);
 
-    void flatten(SkWriteBuffer&) const override;
-    bool onAsAColorMode(SkColor*, SkBlendMode*) const override;
+  void flatten(SkWriteBuffer&) const override;
+  bool onAsAColorMode(SkColor*, SkBlendMode*) const override;
 
-    bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const override;
+  bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const override;
 
-private:
-    SK_FLATTENABLE_HOOKS(SkModeColorFilter)
+ private:
+  SK_FLATTENABLE_HOOKS(SkModeColorFilter)
 
-    SkColor fColor;
-    SkBlendMode fMode;
+  SkColor fColor;
+  SkBlendMode fMode;
 
-    friend class SkColorFilter;
+  friend class SkColorFilter;
 
-    typedef SkColorFilter INHERITED;
+  typedef SkColorFilter INHERITED;
 };
 
 #endif

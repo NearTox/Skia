@@ -21,27 +21,27 @@ namespace sksg {
  * Concrete Geometry node, wrapping an SkPath.
  */
 class Path : public GeometryNode {
-public:
-    static sk_sp<Path> Make() { return sk_sp<Path>(new Path(SkPath())); }
-    static sk_sp<Path> Make(const SkPath& r) { return sk_sp<Path>(new Path(r)); }
+ public:
+  static sk_sp<Path> Make() { return sk_sp<Path>(new Path(SkPath())); }
+  static sk_sp<Path> Make(const SkPath& r) { return sk_sp<Path>(new Path(r)); }
 
-    SG_ATTRIBUTE(Path, SkPath, fPath)
-    SG_MAPPED_ATTRIBUTE(FillType, SkPath::FillType, fPath)
+  SG_ATTRIBUTE(Path, SkPath, fPath)
+  SG_MAPPED_ATTRIBUTE(FillType, SkPath::FillType, fPath)
 
-protected:
-    void onClip(SkCanvas*, bool antiAlias) const override;
-    void onDraw(SkCanvas*, const SkPaint&) const override;
-    bool onContains(const SkPoint&) const override;
+ protected:
+  void onClip(SkCanvas*, bool antiAlias) const override;
+  void onDraw(SkCanvas*, const SkPaint&) const override;
+  bool onContains(const SkPoint&) const override;
 
-    SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
-    SkPath onAsPath() const override;
+  SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
+  SkPath onAsPath() const override;
 
-private:
-    explicit Path(const SkPath&);
+ private:
+  explicit Path(const SkPath&);
 
-    SkPath fPath;
+  SkPath fPath;
 
-    using INHERITED = GeometryNode;
+  using INHERITED = GeometryNode;
 };
 
 }  // namespace sksg

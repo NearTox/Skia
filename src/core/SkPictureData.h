@@ -30,26 +30,26 @@ class SkReadBuffer;
 class SkTextBlob;
 
 struct SkPictInfo {
-    SkPictInfo() noexcept : fVersion(~0U) {}
+  SkPictInfo() : fVersion(~0U) {}
 
-    uint32_t getVersion() const noexcept {
-        SkASSERT(fVersion != ~0U);
-        return fVersion;
-    }
+  uint32_t getVersion() const {
+    SkASSERT(fVersion != ~0U);
+    return fVersion;
+  }
 
-    void setVersion(uint32_t version) noexcept {
-        SkASSERT(version != ~0U);
-        fVersion = version;
-    }
+  void setVersion(uint32_t version) {
+    SkASSERT(version != ~0U);
+    fVersion = version;
+  }
 
-public:
-    char fMagic[8];
+ public:
+  char fMagic[8];
 
-private:
-    uint32_t fVersion;
+ private:
+  uint32_t fVersion;
 
-public:
-    SkRect fCullRect;
+ public:
+  SkRect fCullRect;
 };
 
 #define SK_PICT_READER_TAG SkSetFourByteTag('r', 'e', 'a', 'd')
@@ -72,101 +72,97 @@ public:
 
 template <typename T>
 T* read_index_base_1_or_null(SkReadBuffer* reader, const SkTArray<sk_sp<T>>& array) {
-    int index = reader->readInt();
-    return reader->validate(index > 0 && index <= array.count()) ? array[index - 1].get() : nullptr;
+  int index = reader->readInt();
+  return reader->validate(index > 0 && index <= array.count()) ? array[index - 1].get() : nullptr;
 }
 
 class SkPictureData {
-public:
-    SkPictureData(const SkPictureRecord& record, const SkPictInfo&);
-    // Does not affect ownership of SkStream.
-    static SkPictureData* CreateFromStream(SkStream*,
-                                           const SkPictInfo&,
-                                           const SkDeserialProcs&,
-                                           SkTypefacePlayback*);
-    static SkPictureData* CreateFromBuffer(SkReadBuffer&, const SkPictInfo&);
+ public:
+  SkPictureData(const SkPictureRecord& record, const SkPictInfo&);
+  // Does not affect ownership of SkStream.
+  static SkPictureData* CreateFromStream(
+      SkStream*, const SkPictInfo&, const SkDeserialProcs&, SkTypefacePlayback*);
+  static SkPictureData* CreateFromBuffer(SkReadBuffer&, const SkPictInfo&);
 
-    void serialize(SkWStream*, const SkSerialProcs&, SkRefCntSet*) const;
-    void flatten(SkWriteBuffer&) const;
+  void serialize(SkWStream*, const SkSerialProcs&, SkRefCntSet*) const;
+  void flatten(SkWriteBuffer&) const;
 
-    const sk_sp<SkData>& opData() const noexcept { return fOpData; }
+  const sk_sp<SkData>& opData() const { return fOpData; }
 
-protected:
-    explicit SkPictureData(const SkPictInfo& info);
+ protected:
+  explicit SkPictureData(const SkPictInfo& info);
 
-    // Does not affect ownership of SkStream.
-    bool parseStream(SkStream*, const SkDeserialProcs&, SkTypefacePlayback*);
-    bool parseBuffer(SkReadBuffer& buffer);
+  // Does not affect ownership of SkStream.
+  bool parseStream(SkStream*, const SkDeserialProcs&, SkTypefacePlayback*);
+  bool parseBuffer(SkReadBuffer& buffer);
 
-public:
-    const SkImage* getImage(SkReadBuffer* reader) const {
-        // images are written base-0, unlike paths, pictures, drawables, etc.
-        const int index = reader->readInt();
-        return reader->validateIndex(index, fImages.count()) ? fImages[index].get() : nullptr;
+ public:
+  const SkImage* getImage(SkReadBuffer* reader) const {
+    // images are written base-0, unlike paths, pictures, drawables, etc.
+    const int index = reader->readInt();
+    return reader->validateIndex(index, fImages.count()) ? fImages[index].get() : nullptr;
+  }
+
+  const SkPath& getPath(SkReadBuffer* reader) const {
+    int index = reader->readInt();
+    return reader->validate(index > 0 && index <= fPaths.count()) ? fPaths[index - 1] : fEmptyPath;
+  }
+
+  const SkPicture* getPicture(SkReadBuffer* reader) const {
+    return read_index_base_1_or_null(reader, fPictures);
+  }
+
+  SkDrawable* getDrawable(SkReadBuffer* reader) const {
+    return read_index_base_1_or_null(reader, fDrawables);
+  }
+
+  const SkPaint* getPaint(SkReadBuffer* reader) const {
+    int index = reader->readInt();
+    if (index == 0) {
+      return nullptr;  // recorder wrote a zero for no paint (likely drawimage)
     }
+    return reader->validate(index > 0 && index <= fPaints.count()) ? &fPaints[index - 1] : nullptr;
+  }
 
-    const SkPath& getPath(SkReadBuffer* reader) const {
-        int index = reader->readInt();
-        return reader->validate(index > 0 && index <= fPaths.count()) ? fPaths[index - 1]
-                                                                      : fEmptyPath;
-    }
+  const SkTextBlob* getTextBlob(SkReadBuffer* reader) const {
+    return read_index_base_1_or_null(reader, fTextBlobs);
+  }
 
-    const SkPicture* getPicture(SkReadBuffer* reader) const {
-        return read_index_base_1_or_null(reader, fPictures);
-    }
+  const SkVertices* getVertices(SkReadBuffer* reader) const {
+    return read_index_base_1_or_null(reader, fVertices);
+  }
 
-    SkDrawable* getDrawable(SkReadBuffer* reader) const {
-        return read_index_base_1_or_null(reader, fDrawables);
-    }
+ private:
+  // these help us with reading/writing
+  // Does not affect ownership of SkStream.
+  bool parseStreamTag(
+      SkStream*, uint32_t tag, uint32_t size, const SkDeserialProcs&, SkTypefacePlayback*);
+  void parseBufferTag(SkReadBuffer&, uint32_t tag, uint32_t size);
+  void flattenToBuffer(SkWriteBuffer&) const;
 
-    const SkPaint* getPaint(SkReadBuffer* reader) const {
-        int index = reader->readInt();
-        if (index == 0) {
-            return nullptr;  // recorder wrote a zero for no paint (likely drawimage)
-        }
-        return reader->validate(index > 0 && index <= fPaints.count()) ? &fPaints[index - 1]
-                                                                       : nullptr;
-    }
+  SkTArray<SkPaint> fPaints;
+  SkTArray<SkPath> fPaths;
 
-    const SkTextBlob* getTextBlob(SkReadBuffer* reader) const {
-        return read_index_base_1_or_null(reader, fTextBlobs);
-    }
+  sk_sp<SkData> fOpData;  // opcodes and parameters
 
-    const SkVertices* getVertices(SkReadBuffer* reader) const {
-        return read_index_base_1_or_null(reader, fVertices);
-    }
+  const SkPath fEmptyPath;
+  const SkBitmap fEmptyBitmap;
 
-private:
-    // these help us with reading/writing
-    // Does not affect ownership of SkStream.
-    bool parseStreamTag(SkStream*, uint32_t tag, uint32_t size, const SkDeserialProcs&,
-                        SkTypefacePlayback*);
-    void parseBufferTag(SkReadBuffer&, uint32_t tag, uint32_t size);
-    void flattenToBuffer(SkWriteBuffer&) const;
+  SkTArray<sk_sp<const SkPicture>> fPictures;
+  SkTArray<sk_sp<SkDrawable>> fDrawables;
+  SkTArray<sk_sp<const SkTextBlob>> fTextBlobs;
+  SkTArray<sk_sp<const SkVertices>> fVertices;
+  SkTArray<sk_sp<const SkImage>> fImages;
 
-    SkTArray<SkPaint> fPaints;
-    SkTArray<SkPath> fPaths;
+  SkTypefacePlayback fTFPlayback;
+  std::unique_ptr<SkFactoryPlayback> fFactoryPlayback;
 
-    sk_sp<SkData> fOpData;  // opcodes and parameters
+  const SkPictInfo fInfo;
 
-    const SkPath fEmptyPath;
-    const SkBitmap fEmptyBitmap;
+  static void WriteFactories(SkWStream* stream, const SkFactorySet& rec);
+  static void WriteTypefaces(SkWStream* stream, const SkRefCntSet& rec, const SkSerialProcs&);
 
-    SkTArray<sk_sp<const SkPicture>> fPictures;
-    SkTArray<sk_sp<SkDrawable>> fDrawables;
-    SkTArray<sk_sp<const SkTextBlob>> fTextBlobs;
-    SkTArray<sk_sp<const SkVertices>> fVertices;
-    SkTArray<sk_sp<const SkImage>> fImages;
-
-    SkTypefacePlayback fTFPlayback;
-    std::unique_ptr<SkFactoryPlayback> fFactoryPlayback;
-
-    const SkPictInfo fInfo;
-
-    static void WriteFactories(SkWStream* stream, const SkFactorySet& rec);
-    static void WriteTypefaces(SkWStream* stream, const SkRefCntSet& rec, const SkSerialProcs&);
-
-    void initForPlayback() const;
+  void initForPlayback() const;
 };
 
 #endif

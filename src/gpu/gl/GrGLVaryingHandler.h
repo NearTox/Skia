@@ -13,22 +13,22 @@
 #include "src/gpu/glsl/GrGLSLVarying.h"
 
 class GrGLVaryingHandler : public GrGLSLVaryingHandler {
-public:
-    GrGLVaryingHandler(GrGLSLProgramBuilder* program)
-            : INHERITED(program), fPathProcVaryingInfos(kVaryingsPerBlock) {}
+ public:
+  GrGLVaryingHandler(GrGLSLProgramBuilder* program)
+      : INHERITED(program), fPathProcVaryingInfos(kVaryingsPerBlock) {}
 
-    // This function is used by the NVPR PathProcessor to add a varying directly into the fragment
-    // shader since there is no vertex shader.
-    VaryingHandle addPathProcessingVarying(const char* name, GrGLSLVarying*);
+  // This function is used by the NVPR PathProcessor to add a varying directly into the fragment
+  // shader since there is no vertex shader.
+  VaryingHandle addPathProcessingVarying(const char* name, GrGLSLVarying*);
 
-private:
-    void onFinalize() override;
+ private:
+  void onFinalize() override;
 
-    GrGLProgramDataManager::VaryingInfoArray fPathProcVaryingInfos;
+  GrGLProgramDataManager::VaryingInfoArray fPathProcVaryingInfos;
 
-    friend class GrGLProgramBuilder;
+  friend class GrGLProgramBuilder;
 
-    typedef GrGLSLVaryingHandler INHERITED;
+  typedef GrGLSLVaryingHandler INHERITED;
 };
 
 #endif

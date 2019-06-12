@@ -24,37 +24,36 @@ struct SkIRect;
  * GrTextures and not GrRenderTargets.
  */
 class SK_API GrTextureContext : public GrSurfaceContext {
-public:
-    ~GrTextureContext() override;
+ public:
+  ~GrTextureContext() override;
 
-    GrSurfaceProxy* asSurfaceProxy() override { return fTextureProxy.get(); }
-    const GrSurfaceProxy* asSurfaceProxy() const override { return fTextureProxy.get(); }
-    sk_sp<GrSurfaceProxy> asSurfaceProxyRef() override { return fTextureProxy; }
+  GrSurfaceProxy* asSurfaceProxy() override { return fTextureProxy.get(); }
+  const GrSurfaceProxy* asSurfaceProxy() const override { return fTextureProxy.get(); }
+  sk_sp<GrSurfaceProxy> asSurfaceProxyRef() override { return fTextureProxy; }
 
-    GrTextureProxy* asTextureProxy() override { return fTextureProxy.get(); }
-    const GrTextureProxy* asTextureProxy() const override { return fTextureProxy.get(); }
-    sk_sp<GrTextureProxy> asTextureProxyRef() override { return fTextureProxy; }
+  GrTextureProxy* asTextureProxy() override { return fTextureProxy.get(); }
+  const GrTextureProxy* asTextureProxy() const override { return fTextureProxy.get(); }
+  sk_sp<GrTextureProxy> asTextureProxyRef() override { return fTextureProxy; }
 
-    GrRenderTargetProxy* asRenderTargetProxy() override;
-    sk_sp<GrRenderTargetProxy> asRenderTargetProxyRef() override;
+  GrRenderTargetProxy* asRenderTargetProxy() override;
+  sk_sp<GrRenderTargetProxy> asRenderTargetProxyRef() override;
 
-protected:
-    GrTextureContext(GrRecordingContext*, sk_sp<GrTextureProxy>, sk_sp<SkColorSpace>);
+ protected:
+  GrTextureContext(GrRecordingContext*, sk_sp<GrTextureProxy>, sk_sp<SkColorSpace>);
 
-    SkDEBUGCODE(void validate() const override);
+  SkDEBUGCODE(void validate() const override;)
 
-private:
-    friend class GrDrawingManager;  // for ctor
+      private : friend class GrDrawingManager;  // for ctor
 
-    GrOpList* getOpList() override;
+  GrOpList* getOpList() override;
 
-    sk_sp<GrTextureProxy> fTextureProxy;
+  sk_sp<GrTextureProxy> fTextureProxy;
 
-    // In MDB-mode the GrOpList can be closed by some other renderTargetContext that has picked
-    // it up. For this reason, the GrOpList should only ever be accessed via 'getOpList'.
-    sk_sp<GrTextureOpList> fOpList;
+  // In MDB-mode the GrOpList can be closed by some other renderTargetContext that has picked
+  // it up. For this reason, the GrOpList should only ever be accessed via 'getOpList'.
+  sk_sp<GrTextureOpList> fOpList;
 
-    typedef GrSurfaceContext INHERITED;
+  typedef GrSurfaceContext INHERITED;
 };
 
 #endif

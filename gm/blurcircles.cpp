@@ -19,53 +19,52 @@
 #include "src/core/SkBlurMask.h"
 
 class BlurCirclesGM : public skiagm::GM {
-public:
-    BlurCirclesGM() {}
+ public:
+  BlurCirclesGM() {}
 
-protected:
-    bool runAsBench() const override { return true; }
+ protected:
+  bool runAsBench() const override { return true; }
 
-    SkString onShortName() override { return SkString("blurcircles"); }
+  SkString onShortName() override { return SkString("blurcircles"); }
 
-    SkISize onISize() override { return SkISize::Make(950, 950); }
+  SkISize onISize() override { return SkISize::Make(950, 950); }
 
-    void onOnceBeforeDraw() override {
-        const float blurRadii[kNumBlurs] = {1, 5, 10, 20};
+  void onOnceBeforeDraw() override {
+    const float blurRadii[kNumBlurs] = {1, 5, 10, 20};
 
-        for (int i = 0; i < kNumBlurs; ++i) {
-            fBlurFilters[i] = SkMaskFilter::MakeBlur(
-                    kNormal_SkBlurStyle,
-                    SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(blurRadii[i])));
-        }
+    for (int i = 0; i < kNumBlurs; ++i) {
+      fBlurFilters[i] = SkMaskFilter::MakeBlur(
+          kNormal_SkBlurStyle, SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(blurRadii[i])));
     }
+  }
 
-    void onDraw(SkCanvas* canvas) override {
-        canvas->scale(1.5f, 1.5f);
-        canvas->translate(50, 50);
+  void onDraw(SkCanvas* canvas) override {
+    canvas->scale(1.5f, 1.5f);
+    canvas->translate(50, 50);
 
-        const int circleRadii[] = {5, 10, 25, 50};
+    const int circleRadii[] = {5, 10, 25, 50};
 
-        for (size_t i = 0; i < kNumBlurs; ++i) {
-            SkAutoCanvasRestore autoRestore(canvas, true);
-            canvas->translate(0, SkIntToScalar(150 * i));
-            for (size_t j = 0; j < SK_ARRAY_COUNT(circleRadii); ++j) {
-                SkPaint paint;
-                paint.setColor(SK_ColorBLACK);
-                paint.setMaskFilter(fBlurFilters[i]);
+    for (size_t i = 0; i < kNumBlurs; ++i) {
+      SkAutoCanvasRestore autoRestore(canvas, true);
+      canvas->translate(0, SkIntToScalar(150 * i));
+      for (size_t j = 0; j < SK_ARRAY_COUNT(circleRadii); ++j) {
+        SkPaint paint;
+        paint.setColor(SK_ColorBLACK);
+        paint.setMaskFilter(fBlurFilters[i]);
 
-                canvas->drawCircle(
-                        SkIntToScalar(50), SkIntToScalar(50), SkIntToScalar(circleRadii[j]), paint);
-                canvas->translate(SkIntToScalar(150), 0);
-            }
-        }
+        canvas->drawCircle(
+            SkIntToScalar(50), SkIntToScalar(50), SkIntToScalar(circleRadii[j]), paint);
+        canvas->translate(SkIntToScalar(150), 0);
+      }
     }
+  }
 
-private:
-    static constexpr int kNumBlurs = 4;
+ private:
+  static constexpr int kNumBlurs = 4;
 
-    sk_sp<SkMaskFilter> fBlurFilters[kNumBlurs];
+  sk_sp<SkMaskFilter> fBlurFilters[kNumBlurs];
 
-    typedef skiagm::GM INHERITED;
+  typedef skiagm::GM INHERITED;
 };
 
 DEF_GM(return new BlurCirclesGM();)

@@ -14,34 +14,34 @@
 struct SkRect;
 
 class SkSVGEllipse final : public SkSVGShape {
-public:
-    ~SkSVGEllipse() override = default;
-    static sk_sp<SkSVGEllipse> Make() { return sk_sp<SkSVGEllipse>(new SkSVGEllipse()); }
+ public:
+  ~SkSVGEllipse() override = default;
+  static sk_sp<SkSVGEllipse> Make() { return sk_sp<SkSVGEllipse>(new SkSVGEllipse()); }
 
-    void setCx(const SkSVGLength&);
-    void setCy(const SkSVGLength&);
-    void setRx(const SkSVGLength&);
-    void setRy(const SkSVGLength&);
+  void setCx(const SkSVGLength&);
+  void setCy(const SkSVGLength&);
+  void setRx(const SkSVGLength&);
+  void setRy(const SkSVGLength&);
 
-protected:
-    void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
+ protected:
+  void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
 
-    void onDraw(SkCanvas*, const SkSVGLengthContext&, const SkPaint&,
-                SkPath::FillType) const override;
+  void onDraw(
+      SkCanvas*, const SkSVGLengthContext&, const SkPaint&, SkPath::FillType) const override;
 
-    SkPath onAsPath(const SkSVGRenderContext&) const override;
+  SkPath onAsPath(const SkSVGRenderContext&) const override;
 
-private:
-    SkSVGEllipse();
+ private:
+  SkSVGEllipse();
 
-    SkRect resolve(const SkSVGLengthContext&) const;
+  SkRect resolve(const SkSVGLengthContext&) const;
 
-    SkSVGLength fCx = SkSVGLength(0);
-    SkSVGLength fCy = SkSVGLength(0);
-    SkSVGLength fRx = SkSVGLength(0);
-    SkSVGLength fRy = SkSVGLength(0);
+  SkSVGLength fCx = SkSVGLength(0);
+  SkSVGLength fCy = SkSVGLength(0);
+  SkSVGLength fRx = SkSVGLength(0);
+  SkSVGLength fRy = SkSVGLength(0);
 
-    typedef SkSVGShape INHERITED;
+  typedef SkSVGShape INHERITED;
 };
 
 #endif  // SkSVGEllipse_DEFINED

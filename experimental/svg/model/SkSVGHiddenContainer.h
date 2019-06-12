@@ -11,16 +11,16 @@
 #include "experimental/svg/model/SkSVGContainer.h"
 
 class SkSVGHiddenContainer : public SkSVGContainer {
-public:
-    virtual ~SkSVGHiddenContainer() = default;
+ public:
+  virtual ~SkSVGHiddenContainer() = default;
 
-protected:
-    explicit SkSVGHiddenContainer(SkSVGTag t) : INHERITED(t) {}
+ protected:
+  explicit SkSVGHiddenContainer(SkSVGTag t) : INHERITED(t) {}
 
-    void onRender(const SkSVGRenderContext&) const final {}
+  void onRender(const SkSVGRenderContext&) const final {}
 
-private:
-    typedef SkSVGContainer INHERITED;
+ private:
+  typedef SkSVGContainer INHERITED;
 };
 
 #endif  // SkSVGHiddenContainer_DEFINED

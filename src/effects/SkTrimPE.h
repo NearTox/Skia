@@ -13,20 +13,20 @@
 #include "include/effects/SkTrimPathEffect.h"
 
 class SkTrimPE : public SkPathEffect {
-public:
-    SkTrimPE(SkScalar startT, SkScalar stopT, SkTrimPathEffect::Mode);
+ public:
+  SkTrimPE(SkScalar startT, SkScalar stopT, SkTrimPathEffect::Mode);
 
-protected:
-    void flatten(SkWriteBuffer&) const override;
-    bool onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec*, const SkRect*) const override;
+ protected:
+  void flatten(SkWriteBuffer&) const override;
+  bool onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec*, const SkRect*) const override;
 
-private:
-    SK_FLATTENABLE_HOOKS(SkTrimPE)
+ private:
+  SK_FLATTENABLE_HOOKS(SkTrimPE)
 
-    const SkScalar fStartT, fStopT;
-    const SkTrimPathEffect::Mode fMode;
+  const SkScalar fStartT, fStopT;
+  const SkTrimPathEffect::Mode fMode;
 
-    typedef SkPathEffect INHERITED;
+  typedef SkPathEffect INHERITED;
 };
 
 #endif

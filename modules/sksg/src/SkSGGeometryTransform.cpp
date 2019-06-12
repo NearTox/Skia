@@ -14,42 +14,42 @@
 namespace sksg {
 
 GeometryTransform::GeometryTransform(sk_sp<GeometryNode> child, sk_sp<Transform> transform)
-        : fChild(std::move(child)), fTransform(std::move(transform)) {
-    this->observeInval(fChild);
-    this->observeInval(fTransform);
+    : fChild(std::move(child)), fTransform(std::move(transform)) {
+  this->observeInval(fChild);
+  this->observeInval(fTransform);
 }
 
 GeometryTransform::~GeometryTransform() {
-    this->unobserveInval(fChild);
-    this->unobserveInval(fTransform);
+  this->unobserveInval(fChild);
+  this->unobserveInval(fTransform);
 }
 
 void GeometryTransform::onClip(SkCanvas* canvas, bool antiAlias) const {
-    canvas->clipPath(fTransformedPath, SkClipOp::kIntersect, antiAlias);
+  canvas->clipPath(fTransformedPath, SkClipOp::kIntersect, antiAlias);
 }
 
 void GeometryTransform::onDraw(SkCanvas* canvas, const SkPaint& paint) const {
-    canvas->drawPath(fTransformedPath, paint);
+  canvas->drawPath(fTransformedPath, paint);
 }
 
 bool GeometryTransform::onContains(const SkPoint& p) const {
-    return fTransformedPath.contains(p.x(), p.y());
+  return fTransformedPath.contains(p.x(), p.y());
 }
 
 SkRect GeometryTransform::onRevalidate(InvalidationController* ic, const SkMatrix& ctm) {
-    SkASSERT(this->hasInval());
+  SkASSERT(this->hasInval());
 
-    // We don't care about matrix reval results.
-    fTransform->revalidate(ic, ctm);
-    const auto m = TransformPriv::As<SkMatrix>(fTransform);
+  // We don't care about matrix reval results.
+  fTransform->revalidate(ic, ctm);
+  const auto m = TransformPriv::As<SkMatrix>(fTransform);
 
-    auto bounds = fChild->revalidate(ic, ctm);
-    fTransformedPath = fChild->asPath();
-    fTransformedPath.transform(m);
-    fTransformedPath.shrinkToFit();
+  auto bounds = fChild->revalidate(ic, ctm);
+  fTransformedPath = fChild->asPath();
+  fTransformedPath.transform(m);
+  fTransformedPath.shrinkToFit();
 
-    m.mapRect(&bounds);
-    return bounds;
+  m.mapRect(&bounds);
+  return bounds;
 }
 
 SkPath GeometryTransform::onAsPath() const { return fTransformedPath; }

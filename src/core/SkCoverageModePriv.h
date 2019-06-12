@@ -11,7 +11,7 @@
 #include "include/core/SkBlendMode.h"
 #include "include/core/SkCoverageMode.h"
 
-SkBlendMode SkUncorrelatedCoverageModeToBlendMode(SkCoverageMode) noexcept;
+SkBlendMode SkUncorrelatedCoverageModeToBlendMode(SkCoverageMode);
 
 #if 0
 // Experimental idea to extend to overlap types

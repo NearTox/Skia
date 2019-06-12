@@ -11,31 +11,29 @@
 #include "src/gpu/vk/GrVkPipeline.h"
 
 class GrVkCopyPipeline : public GrVkPipeline {
-public:
-    // We expect the passed in renderPass to be stored on the GrVkResourceProvider and not a local
-    // object of the client.
-    static GrVkCopyPipeline* Create(GrVkGpu* gpu,
-                                    VkPipelineShaderStageCreateInfo* shaderStageInfo,
-                                    VkPipelineLayout pipelineLayout,
-                                    int numSamples,
-                                    const GrVkRenderPass& renderPass,
-                                    VkPipelineCache cache);
+ public:
+  // We expect the passed in renderPass to be stored on the GrVkResourceProvider and not a local
+  // object of the client.
+  static GrVkCopyPipeline* Create(
+      GrVkGpu* gpu, VkPipelineShaderStageCreateInfo* shaderStageInfo,
+      VkPipelineLayout pipelineLayout, int numSamples, const GrVkRenderPass& renderPass,
+      VkPipelineCache cache);
 
-    bool isCompatible(const GrVkRenderPass& rp) const;
+  bool isCompatible(const GrVkRenderPass& rp) const;
 
 #ifdef SK_TRACE_VK_RESOURCES
-    void dumpInfo() const override {
-        SkDebugf("GrVkCopyPipeline: %d (%d refs)\n", fPipeline, this->getRefCnt());
-    }
+  void dumpInfo() const override {
+    SkDebugf("GrVkCopyPipeline: %d (%d refs)\n", fPipeline, this->getRefCnt());
+  }
 #endif
 
-private:
-    GrVkCopyPipeline(VkPipeline pipeline, const GrVkRenderPass* renderPass)
-            : INHERITED(pipeline), fRenderPass(renderPass) {}
+ private:
+  GrVkCopyPipeline(VkPipeline pipeline, const GrVkRenderPass* renderPass)
+      : INHERITED(pipeline), fRenderPass(renderPass) {}
 
-    const GrVkRenderPass* fRenderPass;
+  const GrVkRenderPass* fRenderPass;
 
-    typedef GrVkPipeline INHERITED;
+  typedef GrVkPipeline INHERITED;
 };
 
 #endif

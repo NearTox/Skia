@@ -14,43 +14,43 @@
    Skia. This class is purely a privileged window into SkDeferredDisplayList. It should never have
     additional data members or virtual methods. */
 class SkDeferredDisplayListPriv {
-public:
-    int numOpLists() const {
+ public:
+  int numOpLists() const {
 #if SK_SUPPORT_GPU
-        return fDDL->fOpLists.count();
+    return fDDL->fOpLists.count();
 #else
-        return 0;
+    return 0;
 #endif
-    }
+  }
 
-    const SkDeferredDisplayList::LazyProxyData* lazyProxyData() const {
+  const SkDeferredDisplayList::LazyProxyData* lazyProxyData() const {
 #if SK_SUPPORT_GPU
-        return fDDL->fLazyProxyData.get();
+    return fDDL->fLazyProxyData.get();
 #else
-        return nullptr;
+    return nullptr;
 #endif
-    }
+  }
 
-private:
-    explicit SkDeferredDisplayListPriv(SkDeferredDisplayList* ddl) : fDDL(ddl) {}
-    SkDeferredDisplayListPriv(const SkDeferredDisplayListPriv&);             // unimpl
-    SkDeferredDisplayListPriv& operator=(const SkDeferredDisplayListPriv&);  // unimpl
+ private:
+  explicit SkDeferredDisplayListPriv(SkDeferredDisplayList* ddl) : fDDL(ddl) {}
+  SkDeferredDisplayListPriv(const SkDeferredDisplayListPriv&);             // unimpl
+  SkDeferredDisplayListPriv& operator=(const SkDeferredDisplayListPriv&);  // unimpl
 
-    // No taking addresses of this type.
-    const SkDeferredDisplayListPriv* operator&() const;
-    SkDeferredDisplayListPriv* operator&();
+  // No taking addresses of this type.
+  const SkDeferredDisplayListPriv* operator&() const;
+  SkDeferredDisplayListPriv* operator&();
 
-    SkDeferredDisplayList* fDDL;
+  SkDeferredDisplayList* fDDL;
 
-    friend class SkDeferredDisplayList;  // to construct/copy this type.
+  friend class SkDeferredDisplayList;  // to construct/copy this type.
 };
 
 inline SkDeferredDisplayListPriv SkDeferredDisplayList::priv() {
-    return SkDeferredDisplayListPriv(this);
+  return SkDeferredDisplayListPriv(this);
 }
 
 inline const SkDeferredDisplayListPriv SkDeferredDisplayList::priv() const {
-    return SkDeferredDisplayListPriv(const_cast<SkDeferredDisplayList*>(this));
+  return SkDeferredDisplayListPriv(const_cast<SkDeferredDisplayList*>(this));
 }
 
 #endif

@@ -17,15 +17,15 @@ namespace SkSL {
  * A 'discard' statement.
  */
 struct DiscardStatement : public Statement {
-    DiscardStatement(int offset) : INHERITED(offset, kDiscard_Kind) {}
+  DiscardStatement(int offset) : INHERITED(offset, kDiscard_Kind) {}
 
-    std::unique_ptr<Statement> clone() const override {
-        return std::unique_ptr<Statement>(new DiscardStatement(fOffset));
-    }
+  std::unique_ptr<Statement> clone() const override {
+    return std::unique_ptr<Statement>(new DiscardStatement(fOffset));
+  }
 
-    String description() const override { return String("discard;"); }
+  String description() const override { return String("discard;"); }
 
-    typedef Statement INHERITED;
+  typedef Statement INHERITED;
 };
 
 }  // namespace SkSL

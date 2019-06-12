@@ -14,26 +14,23 @@
 #include <fontconfig/fontconfig.h>
 
 class SkFontConfigInterfaceDirect : public SkFontConfigInterface {
-public:
-    SkFontConfigInterfaceDirect();
-    ~SkFontConfigInterfaceDirect() override;
+ public:
+  SkFontConfigInterfaceDirect();
+  ~SkFontConfigInterfaceDirect() override;
 
-    bool matchFamilyName(const char familyName[],
-                         SkFontStyle requested,
-                         FontIdentity* outFontIdentifier,
-                         SkString* outFamilyName,
-                         SkFontStyle* outStyle) override;
+  bool matchFamilyName(
+      const char familyName[], SkFontStyle requested, FontIdentity* outFontIdentifier,
+      SkString* outFamilyName, SkFontStyle* outStyle) override;
 
-    SkStreamAsset* openStream(const FontIdentity&) override;
+  SkStreamAsset* openStream(const FontIdentity&) override;
 
-protected:
-    virtual bool isAccessible(const char* filename);
+ protected:
+  virtual bool isAccessible(const char* filename);
 
-private:
-    bool isValidPattern(FcPattern* pattern);
-    FcPattern* MatchFont(FcFontSet* font_set, const char* post_config_family,
-                         const SkString& family);
-    typedef SkFontConfigInterface INHERITED;
+ private:
+  bool isValidPattern(FcPattern* pattern);
+  FcPattern* MatchFont(FcFontSet* font_set, const char* post_config_family, const SkString& family);
+  typedef SkFontConfigInterface INHERITED;
 };
 
 #endif

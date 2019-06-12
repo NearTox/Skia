@@ -14,42 +14,42 @@
 #include "include/core/SkScalar.h"
 
 class SK_API SkDropShadowImageFilter : public SkImageFilter {
-public:
-    enum ShadowMode {
-        kDrawShadowAndForeground_ShadowMode,
-        kDrawShadowOnly_ShadowMode,
+ public:
+  enum ShadowMode {
+    kDrawShadowAndForeground_ShadowMode,
+    kDrawShadowOnly_ShadowMode,
 
-        kLast_ShadowMode = kDrawShadowOnly_ShadowMode
-    };
+    kLast_ShadowMode = kDrawShadowOnly_ShadowMode
+  };
 
-    static const int kShadowModeCount = kLast_ShadowMode + 1;
+  static const int kShadowModeCount = kLast_ShadowMode + 1;
 
-    static sk_sp<SkImageFilter> Make(SkScalar dx, SkScalar dy, SkScalar sigmaX, SkScalar sigmaY,
-                                     SkColor color, ShadowMode shadowMode,
-                                     sk_sp<SkImageFilter> input,
-                                     const CropRect* cropRect = nullptr);
+  static sk_sp<SkImageFilter> Make(
+      SkScalar dx, SkScalar dy, SkScalar sigmaX, SkScalar sigmaY, SkColor color,
+      ShadowMode shadowMode, sk_sp<SkImageFilter> input, const CropRect* cropRect = nullptr);
 
-    SkRect computeFastBounds(const SkRect&) const override;
+  SkRect computeFastBounds(const SkRect&) const override;
 
-protected:
-    void flatten(SkWriteBuffer&) const override;
-    sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
-                                        SkIPoint* offset) const override;
-    SkIRect onFilterNodeBounds(const SkIRect& src, const SkMatrix& ctm, MapDirection,
-                               const SkIRect* inputRect) const override;
+ protected:
+  void flatten(SkWriteBuffer&) const override;
+  sk_sp<SkSpecialImage> onFilterImage(
+      SkSpecialImage* source, const Context&, SkIPoint* offset) const override;
+  SkIRect onFilterNodeBounds(
+      const SkIRect& src, const SkMatrix& ctm, MapDirection,
+      const SkIRect* inputRect) const override;
 
-private:
-    SK_FLATTENABLE_HOOKS(SkDropShadowImageFilter)
+ private:
+  SK_FLATTENABLE_HOOKS(SkDropShadowImageFilter)
 
-    SkDropShadowImageFilter(SkScalar dx, SkScalar dy, SkScalar sigmaX, SkScalar sigmaY, SkColor,
-                            ShadowMode shadowMode, sk_sp<SkImageFilter> input,
-                            const CropRect* cropRect);
+  SkDropShadowImageFilter(
+      SkScalar dx, SkScalar dy, SkScalar sigmaX, SkScalar sigmaY, SkColor, ShadowMode shadowMode,
+      sk_sp<SkImageFilter> input, const CropRect* cropRect);
 
-    SkScalar fDx, fDy, fSigmaX, fSigmaY;
-    SkColor fColor;
-    ShadowMode fShadowMode;
+  SkScalar fDx, fDy, fSigmaX, fSigmaY;
+  SkColor fColor;
+  ShadowMode fShadowMode;
 
-    typedef SkImageFilter INHERITED;
+  typedef SkImageFilter INHERITED;
 };
 
 #endif

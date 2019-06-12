@@ -18,31 +18,31 @@
 namespace skiagm {
 
 static SkBitmap make_bitmap() {
-    SkBitmap bm;
-    bm.allocN32Pixels(1, 1);
-    *bm.getAddr32(0, 0) = SkPackARGB32(0x80, 0x80, 0, 0);
-    return bm;
+  SkBitmap bm;
+  bm.allocN32Pixels(1, 1);
+  *bm.getAddr32(0, 0) = SkPackARGB32(0x80, 0x80, 0, 0);
+  return bm;
 }
 
 class TinyBitmapGM : public GM {
-public:
-    TinyBitmapGM() { this->setBGColor(0xFFDDDDDD); }
+ public:
+  TinyBitmapGM() { this->setBGColor(0xFFDDDDDD); }
 
-protected:
-    SkString onShortName() { return SkString("tinybitmap"); }
+ protected:
+  SkString onShortName() { return SkString("tinybitmap"); }
 
-    virtual SkISize onISize() { return SkISize::Make(100, 100); }
+  virtual SkISize onISize() { return SkISize::Make(100, 100); }
 
-    virtual void onDraw(SkCanvas* canvas) {
-        SkBitmap bm = make_bitmap();
-        SkPaint paint;
-        paint.setAlphaf(0.5f);
-        paint.setShader(bm.makeShader(SkTileMode::kRepeat, SkTileMode::kMirror));
-        canvas->drawPaint(paint);
-    }
+  virtual void onDraw(SkCanvas* canvas) {
+    SkBitmap bm = make_bitmap();
+    SkPaint paint;
+    paint.setAlphaf(0.5f);
+    paint.setShader(bm.makeShader(SkTileMode::kRepeat, SkTileMode::kMirror));
+    canvas->drawPaint(paint);
+  }
 
-private:
-    typedef GM INHERITED;
+ private:
+  typedef GM INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////

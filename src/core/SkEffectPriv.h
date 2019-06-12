@@ -18,13 +18,13 @@ class SkRasterPipeline;
 
 // Passed to effects that will add stages to rasterpipeline
 struct SkStageRec {
-    SkRasterPipeline* fPipeline;
-    SkArenaAlloc* fAlloc;
-    SkColorType fDstColorType;
-    SkColorSpace* fDstCS;  // may be nullptr
-    const SkPaint& fPaint;
-    const SkMatrix* fLocalM;  // may be nullptr
-    const SkMatrix fCTM;
+  SkRasterPipeline* fPipeline;
+  SkArenaAlloc* fAlloc;
+  SkColorType fDstColorType;
+  SkColorSpace* fDstCS;  // may be nullptr
+  const SkPaint& fPaint;
+  const SkMatrix* fLocalM;  // may be nullptr
+  const SkMatrix fCTM;
 };
 
 #endif  // SkEffectPriv_DEFINED

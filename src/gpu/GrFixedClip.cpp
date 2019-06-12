@@ -11,62 +11,62 @@
 #include "src/gpu/GrRenderTargetContext.h"
 
 bool GrFixedClip::quickContains(const SkRect& rect) const {
-    if (fWindowRectsState.enabled()) {
-        return false;
-    }
-    return !fScissorState.enabled() || GrClip::IsInsideClip(fScissorState.rect(), rect);
+  if (fWindowRectsState.enabled()) {
+    return false;
+  }
+  return !fScissorState.enabled() || GrClip::IsInsideClip(fScissorState.rect(), rect);
 }
 
 void GrFixedClip::getConservativeBounds(int w, int h, SkIRect* devResult, bool* iior) const {
-    devResult->setXYWH(0, 0, w, h);
-    if (fScissorState.enabled()) {
-        if (!devResult->intersect(fScissorState.rect())) {
-            devResult->setEmpty();
-        }
+  devResult->setXYWH(0, 0, w, h);
+  if (fScissorState.enabled()) {
+    if (!devResult->intersect(fScissorState.rect())) {
+      devResult->setEmpty();
     }
-    if (iior) {
-        *iior = true;
-    }
+  }
+  if (iior) {
+    *iior = true;
+  }
 }
 
 bool GrFixedClip::isRRect(const SkRect& rtBounds, SkRRect* rr, GrAA* aa) const {
-    if (fWindowRectsState.enabled()) {
-        return false;
-    }
-    if (fScissorState.enabled()) {
-        SkRect rect = SkRect::Make(fScissorState.rect());
-        if (!rect.intersects(rtBounds)) {
-            return false;
-        }
-        rr->setRect(rect);
-        *aa = GrAA::kNo;
-        return true;
-    }
+  if (fWindowRectsState.enabled()) {
     return false;
+  }
+  if (fScissorState.enabled()) {
+    SkRect rect = SkRect::Make(fScissorState.rect());
+    if (!rect.intersects(rtBounds)) {
+      return false;
+    }
+    rr->setRect(rect);
+    *aa = GrAA::kNo;
+    return true;
+  }
+  return false;
 };
 
 bool GrFixedClip::apply(int rtWidth, int rtHeight, GrAppliedHardClip* out, SkRect* bounds) const {
-    if (fScissorState.enabled()) {
-        SkIRect tightScissor = SkIRect::MakeWH(rtWidth, rtHeight);
-        if (!tightScissor.intersect(fScissorState.rect())) {
-            return false;
-        }
-        if (IsOutsideClip(tightScissor, *bounds)) {
-            return false;
-        }
-        if (!IsInsideClip(fScissorState.rect(), *bounds)) {
-            out->addScissor(tightScissor, bounds);
-        }
+  if (fScissorState.enabled()) {
+    SkIRect tightScissor = SkIRect::MakeWH(rtWidth, rtHeight);
+    if (!tightScissor.intersect(fScissorState.rect())) {
+      return false;
     }
-
-    if (fWindowRectsState.enabled()) {
-        out->addWindowRectangles(fWindowRectsState);
+    if (IsOutsideClip(tightScissor, *bounds)) {
+      return false;
     }
+    if (!IsInsideClip(fScissorState.rect(), *bounds)) {
+      out->addScissor(tightScissor, bounds);
+    }
+  }
 
-    return true;
+  if (fWindowRectsState.enabled()) {
+    out->addWindowRectangles(fWindowRectsState);
+  }
+
+  return true;
 }
 
 const GrFixedClip& GrFixedClip::Disabled() {
-    static const GrFixedClip disabled = GrFixedClip();
-    return disabled;
+  static const GrFixedClip disabled = GrFixedClip();
+  return disabled;
 }

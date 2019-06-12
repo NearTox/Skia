@@ -29,12 +29,12 @@ using ColorPropertyValue = SkColor;
 using OpacityPropertyValue = float;
 
 struct TransformPropertyValue {
-    SkPoint fAnchorPoint, fPosition;
-    SkVector fScale;
-    SkScalar fRotation, fSkew, fSkewAxis;
+  SkPoint fAnchorPoint, fPosition;
+  SkVector fScale;
+  SkScalar fRotation, fSkew, fSkewAxis;
 
-    bool operator==(const TransformPropertyValue& other) const;
-    bool operator!=(const TransformPropertyValue& other) const;
+  bool operator==(const TransformPropertyValue& other) const;
+  bool operator!=(const TransformPropertyValue& other) const;
 };
 
 namespace internal {
@@ -45,19 +45,20 @@ class AnimationBuilder;
  * Property handles are adapters between user-facing AE model/values
  * and the internal scene-graph representation.
  */
-template <typename ValueT, typename NodeT> class SK_API PropertyHandle final {
-public:
-    ~PropertyHandle();
+template <typename ValueT, typename NodeT>
+class SK_API PropertyHandle final {
+ public:
+  ~PropertyHandle();
 
-    ValueT get() const;
-    void set(const ValueT&);
+  ValueT get() const;
+  void set(const ValueT&);
 
-private:
-    explicit PropertyHandle(sk_sp<NodeT> node) : fNode(std::move(node)) {}
+ private:
+  explicit PropertyHandle(sk_sp<NodeT> node) : fNode(std::move(node)) {}
 
-    friend class skottie::internal::AnimationBuilder;
+  friend class skottie::internal::AnimationBuilder;
 
-    const sk_sp<NodeT> fNode;
+  const sk_sp<NodeT> fNode;
 };
 
 class TransformAdapter2D;
@@ -75,14 +76,14 @@ using TransformPropertyHandle = PropertyHandle<TransformPropertyValue, Transform
  * name ("nm") node property.
  */
 class SK_API PropertyObserver : public SkRefCnt {
-public:
-    template <typename T> using LazyHandle = std::function<std::unique_ptr<T>()>;
+ public:
+  template <typename T>
+  using LazyHandle = std::function<std::unique_ptr<T>()>;
 
-    virtual void onColorProperty(const char node_name[], const LazyHandle<ColorPropertyHandle>&);
-    virtual void onOpacityProperty(const char node_name[],
-                                   const LazyHandle<OpacityPropertyHandle>&);
-    virtual void onTransformProperty(const char node_name[],
-                                     const LazyHandle<TransformPropertyHandle>&);
+  virtual void onColorProperty(const char node_name[], const LazyHandle<ColorPropertyHandle>&);
+  virtual void onOpacityProperty(const char node_name[], const LazyHandle<OpacityPropertyHandle>&);
+  virtual void onTransformProperty(
+      const char node_name[], const LazyHandle<TransformPropertyHandle>&);
 };
 
 }  // namespace skottie

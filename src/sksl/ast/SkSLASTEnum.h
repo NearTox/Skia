@@ -12,31 +12,32 @@
 namespace SkSL {
 
 struct ASTEnum : public ASTDeclaration {
-    ASTEnum(int offset, StringFragment typeName, std::vector<StringFragment> names,
-            std::vector<std::unique_ptr<ASTExpression>> values)
-            : INHERITED(offset, kEnum_Kind)
-            , fTypeName(typeName)
-            , fNames(std::move(names))
-            , fValues(std::move(values)) {
-        SkASSERT(fNames.size() == fValues.size());
+  ASTEnum(
+      int offset, StringFragment typeName, std::vector<StringFragment> names,
+      std::vector<std::unique_ptr<ASTExpression>> values)
+      : INHERITED(offset, kEnum_Kind),
+        fTypeName(typeName),
+        fNames(std::move(names)),
+        fValues(std::move(values)) {
+    SkASSERT(fNames.size() == fValues.size());
+  }
+
+  String description() const override {
+    String result = "enum class " + fTypeName + " {\n";
+    String separator;
+    for (StringFragment name : fNames) {
+      result += separator + "    " + name;
+      separator = ",\n";
     }
+    result += "};";
+    return result;
+  }
 
-    String description() const override {
-        String result = "enum class " + fTypeName + " {\n";
-        String separator;
-        for (StringFragment name : fNames) {
-            result += separator + "    " + name;
-            separator = ",\n";
-        }
-        result += "};";
-        return result;
-    }
+  const StringFragment fTypeName;
+  const std::vector<StringFragment> fNames;
+  const std::vector<std::unique_ptr<ASTExpression>> fValues;
 
-    const StringFragment fTypeName;
-    const std::vector<StringFragment> fNames;
-    const std::vector<std::unique_ptr<ASTExpression>> fValues;
-
-    typedef ASTDeclaration INHERITED;
+  typedef ASTDeclaration INHERITED;
 };
 
 }  // namespace SkSL

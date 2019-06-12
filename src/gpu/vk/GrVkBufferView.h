@@ -13,26 +13,27 @@
 #include "src/gpu/vk/GrVkResource.h"
 
 class GrVkBufferView : public GrVkResource {
-public:
-    static const GrVkBufferView* Create(const GrVkGpu* gpu, VkBuffer buffer, VkFormat format,
-                                        VkDeviceSize offset, VkDeviceSize range);
+ public:
+  static const GrVkBufferView* Create(
+      const GrVkGpu* gpu, VkBuffer buffer, VkFormat format, VkDeviceSize offset,
+      VkDeviceSize range);
 
-    VkBufferView bufferView() const { return fBufferView; }
+  VkBufferView bufferView() const { return fBufferView; }
 
 #ifdef SK_TRACE_VK_RESOURCES
-    void dumpInfo() const override {
-        SkDebugf("GrVkBufferView: %d (%d refs)\n", fBufferView, this->getRefCnt());
-    }
+  void dumpInfo() const override {
+    SkDebugf("GrVkBufferView: %d (%d refs)\n", fBufferView, this->getRefCnt());
+  }
 #endif
 
-private:
-    GrVkBufferView(VkBufferView bufferView) : INHERITED(), fBufferView(bufferView) {}
+ private:
+  GrVkBufferView(VkBufferView bufferView) : INHERITED(), fBufferView(bufferView) {}
 
-    void freeGPUData(GrVkGpu* gpu) const override;
+  void freeGPUData(GrVkGpu* gpu) const override;
 
-    VkBufferView fBufferView;
+  VkBufferView fBufferView;
 
-    typedef GrVkResource INHERITED;
+  typedef GrVkResource INHERITED;
 };
 
 #endif

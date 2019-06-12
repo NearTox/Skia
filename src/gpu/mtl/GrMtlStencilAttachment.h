@@ -16,37 +16,37 @@ class GrMtlImageView;
 class GrMtlGpu;
 
 class GrMtlStencilAttachment : public GrStencilAttachment {
-public:
-    struct Format {
-        MTLPixelFormat fInternalFormat;
-        int fStencilBits;
-        int fTotalBits;
-        bool fPacked;
-    };
+ public:
+  struct Format {
+    MTLPixelFormat fInternalFormat;
+    int fStencilBits;
+    int fTotalBits;
+    bool fPacked;
+  };
 
-    static GrMtlStencilAttachment* Create(GrMtlGpu* gpu, int width, int height, int sampleCnt,
-                                          const Format& format);
+  static GrMtlStencilAttachment* Create(
+      GrMtlGpu* gpu, int width, int height, int sampleCnt, const Format& format);
 
-    ~GrMtlStencilAttachment() override;
+  ~GrMtlStencilAttachment() override;
 
-    MTLPixelFormat mtlFormat() const { return fFormat.fInternalFormat; }
+  MTLPixelFormat mtlFormat() const { return fFormat.fInternalFormat; }
 
-    id<MTLTexture> stencilView() const { return fStencilView; }
+  id<MTLTexture> stencilView() const { return fStencilView; }
 
-protected:
-    void onRelease() override;
-    void onAbandon() override;
+ protected:
+  void onRelease() override;
+  void onAbandon() override;
 
-private:
-    size_t onGpuMemorySize() const override;
+ private:
+  size_t onGpuMemorySize() const override;
 
-    GrMtlStencilAttachment(GrMtlGpu* gpu, const Format& format, const id<MTLTexture> stencilView);
+  GrMtlStencilAttachment(GrMtlGpu* gpu, const Format& format, const id<MTLTexture> stencilView);
 
-    GrMtlGpu* getMtlGpu() const;
+  GrMtlGpu* getMtlGpu() const;
 
-    Format fFormat;
+  Format fFormat;
 
-    id<MTLTexture> fStencilView;
+  id<MTLTexture> fStencilView;
 };
 
 #endif

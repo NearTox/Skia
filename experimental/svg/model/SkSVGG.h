@@ -11,15 +11,15 @@
 #include "experimental/svg/model/SkSVGContainer.h"
 
 class SkSVGG : public SkSVGContainer {
-public:
-    virtual ~SkSVGG() = default;
+ public:
+  virtual ~SkSVGG() = default;
 
-    static sk_sp<SkSVGG> Make() { return sk_sp<SkSVGG>(new SkSVGG()); }
+  static sk_sp<SkSVGG> Make() { return sk_sp<SkSVGG>(new SkSVGG()); }
 
-private:
-    SkSVGG() : INHERITED(SkSVGTag::kG) {}
+ private:
+  SkSVGG() : INHERITED(SkSVGTag::kG) {}
 
-    typedef SkSVGContainer INHERITED;
+  typedef SkSVGContainer INHERITED;
 };
 
 #endif  // SkSVGG_DEFINED

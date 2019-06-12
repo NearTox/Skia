@@ -17,18 +17,18 @@
  * If foreground or background is NULL, the input bitmap (src) is used instead.
  */
 class SK_API SkXfermodeImageFilter {
-public:
-    static sk_sp<SkImageFilter> Make(SkBlendMode, sk_sp<SkImageFilter> background,
-                                     sk_sp<SkImageFilter> foreground,
-                                     const SkImageFilter::CropRect* cropRect);
-    static sk_sp<SkImageFilter> Make(SkBlendMode mode, sk_sp<SkImageFilter> background) {
-        return Make(mode, std::move(background), nullptr, nullptr);
-    }
+ public:
+  static sk_sp<SkImageFilter> Make(
+      SkBlendMode, sk_sp<SkImageFilter> background, sk_sp<SkImageFilter> foreground,
+      const SkImageFilter::CropRect* cropRect);
+  static sk_sp<SkImageFilter> Make(SkBlendMode mode, sk_sp<SkImageFilter> background) {
+    return Make(mode, std::move(background), nullptr, nullptr);
+  }
 
-    static void RegisterFlattenables();
+  static void RegisterFlattenables();
 
-private:
-    SkXfermodeImageFilter();  // can't instantiate
+ private:
+  SkXfermodeImageFilter();  // can't instantiate
 };
 
 #endif

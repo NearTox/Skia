@@ -25,37 +25,37 @@ class GrRenderTargetContext;
 // This tests that we correctly regenerate textblobs after freeing all gpu resources crbug/491350
 namespace skiagm {
 class TextBlobUseAfterGpuFree : public GpuGM {
-public:
-    TextBlobUseAfterGpuFree() {}
+ public:
+  TextBlobUseAfterGpuFree() {}
 
-protected:
-    SkString onShortName() override { return SkString("textblobuseaftergpufree"); }
+ protected:
+  SkString onShortName() override { return SkString("textblobuseaftergpufree"); }
 
-    SkISize onISize() override { return SkISize::Make(kWidth, kHeight); }
+  SkISize onISize() override { return SkISize::Make(kWidth, kHeight); }
 
-    void onDraw(GrContext* context, GrRenderTargetContext*, SkCanvas* canvas) override {
-        const char text[] = "Hamburgefons";
+  void onDraw(GrContext* context, GrRenderTargetContext*, SkCanvas* canvas) override {
+    const char text[] = "Hamburgefons";
 
-        SkFont font(ToolUtils::create_portable_typeface(), 20);
-        auto blob = SkTextBlob::MakeFromText(text, strlen(text), font);
+    SkFont font(ToolUtils::create_portable_typeface(), 20);
+    auto blob = SkTextBlob::MakeFromText(text, strlen(text), font);
 
-        // draw textblob
-        SkRect rect = SkRect::MakeLTRB(0.f, 0.f, SkIntToScalar(kWidth), kHeight / 2.f);
-        SkPaint rectPaint;
-        rectPaint.setColor(0xffffffff);
-        canvas->drawRect(rect, rectPaint);
-        canvas->drawTextBlob(blob, 20, 60, SkPaint());
+    // draw textblob
+    SkRect rect = SkRect::MakeLTRB(0.f, 0.f, SkIntToScalar(kWidth), kHeight / 2.f);
+    SkPaint rectPaint;
+    rectPaint.setColor(0xffffffff);
+    canvas->drawRect(rect, rectPaint);
+    canvas->drawTextBlob(blob, 20, 60, SkPaint());
 
-        // This text should look fine
-        context->freeGpuResources();
-        canvas->drawTextBlob(blob, 20, 160, SkPaint());
-    }
+    // This text should look fine
+    context->freeGpuResources();
+    canvas->drawTextBlob(blob, 20, 160, SkPaint());
+  }
 
-private:
-    static constexpr int kWidth = 200;
-    static constexpr int kHeight = 200;
+ private:
+  static constexpr int kWidth = 200;
+  static constexpr int kHeight = 200;
 
-    typedef GM INHERITED;
+  typedef GM INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////

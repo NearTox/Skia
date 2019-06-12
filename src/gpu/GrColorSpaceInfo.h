@@ -15,27 +15,27 @@
 
 /** Describes the color space properties of a surface context. */
 class GrColorSpaceInfo {
-public:
-    GrColorSpaceInfo(sk_sp<SkColorSpace>, GrPixelConfig);
+ public:
+  GrColorSpaceInfo(sk_sp<SkColorSpace>, GrPixelConfig);
 
-    bool isLinearlyBlended() const { return fColorSpace && fColorSpace->gammaIsLinear(); }
+  bool isLinearlyBlended() const { return fColorSpace && fColorSpace->gammaIsLinear(); }
 
-    SkColorSpace* colorSpace() const noexcept { return fColorSpace.get(); }
-    sk_sp<SkColorSpace> refColorSpace() const noexcept { return fColorSpace; }
+  SkColorSpace* colorSpace() const { return fColorSpace.get(); }
+  sk_sp<SkColorSpace> refColorSpace() const { return fColorSpace; }
 
-    GrColorSpaceXform* colorSpaceXformFromSRGB() const;
-    sk_sp<GrColorSpaceXform> refColorSpaceXformFromSRGB() const {
-        return sk_ref_sp(this->colorSpaceXformFromSRGB());
-    }
+  GrColorSpaceXform* colorSpaceXformFromSRGB() const;
+  sk_sp<GrColorSpaceXform> refColorSpaceXformFromSRGB() const {
+    return sk_ref_sp(this->colorSpaceXformFromSRGB());
+  }
 
-    // TODO: Remove or replace with SkColorType
-    GrPixelConfig config() const noexcept { return fConfig; }
+  // TODO: Remove or replace with SkColorType
+  GrPixelConfig config() const { return fConfig; }
 
-private:
-    sk_sp<SkColorSpace> fColorSpace;
-    mutable sk_sp<GrColorSpaceXform> fColorXformFromSRGB;
-    GrPixelConfig fConfig;
-    mutable bool fInitializedColorSpaceXformFromSRGB;
+ private:
+  sk_sp<SkColorSpace> fColorSpace;
+  mutable sk_sp<GrColorSpaceXform> fColorXformFromSRGB;
+  GrPixelConfig fConfig;
+  mutable bool fInitializedColorSpaceXformFromSRGB;
 };
 
 #endif

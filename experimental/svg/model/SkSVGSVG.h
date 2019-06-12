@@ -15,35 +15,35 @@
 class SkSVGLengthContext;
 
 class SkSVGSVG : public SkSVGContainer {
-public:
-    ~SkSVGSVG() override = default;
+ public:
+  ~SkSVGSVG() override = default;
 
-    static sk_sp<SkSVGSVG> Make() { return sk_sp<SkSVGSVG>(new SkSVGSVG()); }
+  static sk_sp<SkSVGSVG> Make() { return sk_sp<SkSVGSVG>(new SkSVGSVG()); }
 
-    void setX(const SkSVGLength&);
-    void setY(const SkSVGLength&);
-    void setWidth(const SkSVGLength&);
-    void setHeight(const SkSVGLength&);
-    void setViewBox(const SkSVGViewBoxType&);
+  void setX(const SkSVGLength&);
+  void setY(const SkSVGLength&);
+  void setWidth(const SkSVGLength&);
+  void setHeight(const SkSVGLength&);
+  void setViewBox(const SkSVGViewBoxType&);
 
-    SkSize intrinsicSize(const SkSVGLengthContext&) const;
+  SkSize intrinsicSize(const SkSVGLengthContext&) const;
 
-protected:
-    bool onPrepareToRender(SkSVGRenderContext*) const override;
+ protected:
+  bool onPrepareToRender(SkSVGRenderContext*) const override;
 
-    void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
+  void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
 
-private:
-    SkSVGSVG();
+ private:
+  SkSVGSVG();
 
-    SkSVGLength fX = SkSVGLength(0);
-    SkSVGLength fY = SkSVGLength(0);
-    SkSVGLength fWidth = SkSVGLength(100, SkSVGLength::Unit::kPercentage);
-    SkSVGLength fHeight = SkSVGLength(100, SkSVGLength::Unit::kPercentage);
+  SkSVGLength fX = SkSVGLength(0);
+  SkSVGLength fY = SkSVGLength(0);
+  SkSVGLength fWidth = SkSVGLength(100, SkSVGLength::Unit::kPercentage);
+  SkSVGLength fHeight = SkSVGLength(100, SkSVGLength::Unit::kPercentage);
 
-    SkTLazy<SkSVGViewBoxType> fViewBox;
+  SkTLazy<SkSVGViewBoxType> fViewBox;
 
-    typedef SkSVGContainer INHERITED;
+  typedef SkSVGContainer INHERITED;
 };
 
 #endif  // SkSVGSVG_DEFINED

@@ -19,7 +19,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #if !defined(SK_BUILD_FOR_ANDROID) && !defined(SK_BUILD_FOR_IOS) && !defined(SK_BUILD_FOR_WIN) && \
-        !defined(SK_BUILD_FOR_UNIX) && !defined(SK_BUILD_FOR_MAC)
+    !defined(SK_BUILD_FOR_UNIX) && !defined(SK_BUILD_FOR_MAC)
 
 #ifdef __APPLE__
 #include "TargetConditionals.h"
@@ -29,9 +29,9 @@
 #define SK_BUILD_FOR_WIN
 #elif defined(ANDROID) || defined(__ANDROID__)
 #define SK_BUILD_FOR_ANDROID
-#elif defined(linux) || defined(__linux) || defined(__FreeBSD__) || defined(__OpenBSD__) ||        \
-        defined(__sun) || defined(__NetBSD__) || defined(__DragonFly__) || defined(__Fuchsia__) || \
-        defined(__GLIBC__) || defined(__GNU__) || defined(__unix__)
+#elif defined(linux) || defined(__linux) || defined(__FreeBSD__) || defined(__OpenBSD__) ||    \
+    defined(__sun) || defined(__NetBSD__) || defined(__DragonFly__) || defined(__Fuchsia__) || \
+    defined(__GLIBC__) || defined(__GNU__) || defined(__unix__)
 #define SK_BUILD_FOR_UNIX
 #elif TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
 #define SK_BUILD_FOR_IOS
@@ -68,10 +68,9 @@
 #elif defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
 #define SK_CPU_LENDIAN
 #elif defined(__sparc) || defined(__sparc__) || defined(_POWER) || defined(__powerpc__) || \
-        defined(__ppc__) || defined(__hppa) || defined(__PPC__) || defined(__PPC64__) ||   \
-        defined(_MIPSEB) || defined(__ARMEB__) || defined(__s390__) ||                     \
-        (defined(__sh__) && defined(__BIG_ENDIAN__)) ||                                    \
-        (defined(__ia64) && defined(__BIG_ENDIAN__))
+    defined(__ppc__) || defined(__hppa) || defined(__PPC__) || defined(__PPC64__) ||       \
+    defined(_MIPSEB) || defined(__ARMEB__) || defined(__s390__) ||                         \
+    (defined(__sh__) && defined(__BIG_ENDIAN__)) || (defined(__ia64) && defined(__BIG_ENDIAN__))
 #define SK_CPU_BENDIAN
 #else
 #define SK_CPU_LENDIAN

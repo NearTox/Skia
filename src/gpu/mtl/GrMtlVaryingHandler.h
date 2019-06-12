@@ -11,17 +11,17 @@
 #include "src/gpu/glsl/GrGLSLVarying.h"
 
 class GrMtlVaryingHandler : public GrGLSLVaryingHandler {
-public:
-    GrMtlVaryingHandler(GrGLSLProgramBuilder* program) : INHERITED(program) {}
+ public:
+  GrMtlVaryingHandler(GrGLSLProgramBuilder* program) : INHERITED(program) {}
 
-    typedef GrGLSLVaryingHandler::VarArray VarArray;
+  typedef GrGLSLVaryingHandler::VarArray VarArray;
 
-private:
-    void onFinalize() override;
+ private:
+  void onFinalize() override;
 
-    friend class GrMtlPipelineStateBuilder;
+  friend class GrMtlPipelineStateBuilder;
 
-    typedef GrGLSLVaryingHandler INHERITED;
+  typedef GrGLSLVaryingHandler INHERITED;
 };
 
 #endif

@@ -15,19 +15,19 @@
 namespace SkSL {
 
 class StringStream : public OutputStream {
-public:
-    void write8(uint8_t b) override { fBuffer += (char)b; }
+ public:
+  void write8(uint8_t b) override { fBuffer += (char)b; }
 
-    void writeText(const char* s) override { fBuffer += s; }
+  void writeText(const char* s) override { fBuffer += s; }
 
-    void write(const void* s, size_t size) override { fBuffer.append((const char*)s, size); }
+  void write(const void* s, size_t size) override { fBuffer.append((const char*)s, size); }
 
-    const String& str() const { return fBuffer; }
+  const String& str() const { return fBuffer; }
 
-    void reset() { fBuffer = ""; }
+  void reset() { fBuffer = ""; }
 
-private:
-    String fBuffer;
+ private:
+  String fBuffer;
 };
 
 #else
@@ -38,29 +38,29 @@ private:
 namespace SkSL {
 
 class StringStream : public OutputStream {
-public:
-    void write8(uint8_t b) override { fStream.write8(b); }
+ public:
+  void write8(uint8_t b) override { fStream.write8(b); }
 
-    void writeText(const char* s) override { fStream.writeText(s); }
+  void writeText(const char* s) override { fStream.writeText(s); }
 
-    void write(const void* s, size_t size) override { fStream.write(s, size); }
+  void write(const void* s, size_t size) override { fStream.write(s, size); }
 
-    const String& str() const {
-        if (!fString.size()) {
-            sk_sp<SkData> data = fStream.detachAsData();
-            fString = String((const char*)data->data(), data->size());
-        }
-        return fString;
+  const String& str() const {
+    if (!fString.size()) {
+      sk_sp<SkData> data = fStream.detachAsData();
+      fString = String((const char*)data->data(), data->size());
     }
+    return fString;
+  }
 
-    void reset() {
-        fStream.reset();
-        fString = "";
-    }
+  void reset() {
+    fStream.reset();
+    fString = "";
+  }
 
-private:
-    mutable SkDynamicMemoryWStream fStream;
-    mutable String fString;
+ private:
+  mutable SkDynamicMemoryWStream fStream;
+  mutable String fString;
 };
 
 #endif  // SKSL_STANDALONE

@@ -19,23 +19,23 @@ bool SkDrawTreatAAStrokeAsHairline(SkScalar strokeWidth, const SkMatrix&, SkScal
  *  a stroke by drawing a hairline with partial coverage). If any of these
  *  conditions are false, then this returns false and coverage is ignored.
  */
-inline bool SkDrawTreatAsHairline(const SkPaint& paint, const SkMatrix& matrix,
-                                  SkScalar* coverage) {
-    if (SkPaint::kStroke_Style != paint.getStyle()) {
-        return false;
-    }
+inline bool SkDrawTreatAsHairline(
+    const SkPaint& paint, const SkMatrix& matrix, SkScalar* coverage) {
+  if (SkPaint::kStroke_Style != paint.getStyle()) {
+    return false;
+  }
 
-    SkScalar strokeWidth = paint.getStrokeWidth();
-    if (0 == strokeWidth) {
-        *coverage = SK_Scalar1;
-        return true;
-    }
+  SkScalar strokeWidth = paint.getStrokeWidth();
+  if (0 == strokeWidth) {
+    *coverage = SK_Scalar1;
+    return true;
+  }
 
-    if (!paint.isAntiAlias()) {
-        return false;
-    }
+  if (!paint.isAntiAlias()) {
+    return false;
+  }
 
-    return SkDrawTreatAAStrokeAsHairline(strokeWidth, matrix, coverage);
+  return SkDrawTreatAAStrokeAsHairline(strokeWidth, matrix, coverage);
 }
 
 #endif

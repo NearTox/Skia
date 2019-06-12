@@ -18,24 +18,21 @@ namespace SkSL {
  * expressions in and of themselves; they are attached to expressions to modify them.
  */
 struct ASTSuffix : public ASTPositionNode {
-    enum Kind { kIndex_Kind, kCall_Kind, kField_Kind, kPostIncrement_Kind, kPostDecrement_Kind };
+  enum Kind { kIndex_Kind, kCall_Kind, kField_Kind, kPostIncrement_Kind, kPostDecrement_Kind };
 
-    ASTSuffix(int offset, Kind kind) : INHERITED(offset), fKind(kind) {}
+  ASTSuffix(int offset, Kind kind) : INHERITED(offset), fKind(kind) {}
 
-    String description() const override {
-        switch (fKind) {
-            case kPostIncrement_Kind:
-                return String("++");
-            case kPostDecrement_Kind:
-                return String("--");
-            default:
-                ABORT("unsupported suffix operator");
-        }
+  String description() const override {
+    switch (fKind) {
+      case kPostIncrement_Kind: return String("++");
+      case kPostDecrement_Kind: return String("--");
+      default: ABORT("unsupported suffix operator");
     }
+  }
 
-    Kind fKind;
+  Kind fKind;
 
-    typedef ASTPositionNode INHERITED;
+  typedef ASTPositionNode INHERITED;
 };
 
 }  // namespace SkSL

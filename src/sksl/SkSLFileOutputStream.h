@@ -15,54 +15,54 @@
 namespace SkSL {
 
 class FileOutputStream : public OutputStream {
-public:
-    FileOutputStream(const char* name) { fFile = fopen(name, "wb"); }
+ public:
+  FileOutputStream(const char* name) { fFile = fopen(name, "wb"); }
 
-    ~FileOutputStream() override { SkASSERT(!fOpen); }
+  ~FileOutputStream() override { SkASSERT(!fOpen); }
 
-    bool isValid() const override { return nullptr != fFile; }
+  bool isValid() const override { return nullptr != fFile; }
 
-    void write8(uint8_t b) override {
-        SkASSERT(fOpen);
-        if (isValid()) {
-            if (EOF == fputc(b, fFile)) {
-                fFile = nullptr;
-            }
-        }
+  void write8(uint8_t b) override {
+    SkASSERT(fOpen);
+    if (isValid()) {
+      if (EOF == fputc(b, fFile)) {
+        fFile = nullptr;
+      }
     }
+  }
 
-    void writeText(const char* s) override {
-        SkASSERT(fOpen);
-        if (isValid()) {
-            if (EOF == fputs(s, fFile)) {
-                fFile = nullptr;
-            }
-        }
+  void writeText(const char* s) override {
+    SkASSERT(fOpen);
+    if (isValid()) {
+      if (EOF == fputs(s, fFile)) {
+        fFile = nullptr;
+      }
     }
+  }
 
-    void write(const void* s, size_t size) override {
-        if (isValid()) {
-            size_t written = fwrite(s, 1, size, fFile);
-            if (written != size) {
-                fFile = nullptr;
-            }
-        }
+  void write(const void* s, size_t size) override {
+    if (isValid()) {
+      size_t written = fwrite(s, 1, size, fFile);
+      if (written != size) {
+        fFile = nullptr;
+      }
     }
+  }
 
-    bool close() {
-        fOpen = false;
-        if (isValid() && fclose(fFile)) {
-            fFile = nullptr;
-            return false;
-        }
-        return true;
+  bool close() {
+    fOpen = false;
+    if (isValid() && fclose(fFile)) {
+      fFile = nullptr;
+      return false;
     }
+    return true;
+  }
 
-private:
-    bool fOpen = true;
-    FILE* fFile;
+ private:
+  bool fOpen = true;
+  FILE* fFile;
 
-    typedef OutputStream INHERITED;
+  typedef OutputStream INHERITED;
 };
 
 }  // namespace SkSL

@@ -26,33 +26,33 @@ class Global;
 //    context.fillRect(x, y, w, h);
 //  }
 class JsContext : public DrawingMethods {
-public:
-    JsContext(Global* global) : INHERITED(global), fCanvas(NULL) {}
-    virtual ~JsContext() {}
+ public:
+  JsContext(Global* global) : INHERITED(global), fCanvas(NULL) {}
+  virtual ~JsContext() {}
 
-    // Parse the script.
-    bool initialize();
+  // Parse the script.
+  bool initialize();
 
-    // Call this with the SkCanvas you want onDraw to draw on.
-    void onDraw(SkCanvas* canvas);
+  // Call this with the SkCanvas you want onDraw to draw on.
+  void onDraw(SkCanvas* canvas);
 
-    virtual SkCanvas* getCanvas() { return fCanvas; };
+  virtual SkCanvas* getCanvas() { return fCanvas; };
 
-private:
-    // Wrap the 'this' pointer into an Object. Can be retrieved via Unwrap.
-    v8::Handle<v8::Object> wrap();
+ private:
+  // Wrap the 'this' pointer into an Object. Can be retrieved via Unwrap.
+  v8::Handle<v8::Object> wrap();
 
-    // A handle to the onDraw function defined in the script.
-    v8::Persistent<v8::Function> fOnDraw;
+  // A handle to the onDraw function defined in the script.
+  v8::Persistent<v8::Function> fOnDraw;
 
-    // The template for what a canvas context object looks like. The canvas
-    // context object is what's passed into the JS onDraw() function.
-    static v8::Persistent<v8::ObjectTemplate> gContextTemplate;
+  // The template for what a canvas context object looks like. The canvas
+  // context object is what's passed into the JS onDraw() function.
+  static v8::Persistent<v8::ObjectTemplate> gContextTemplate;
 
-    // Only valid when inside OnDraw().
-    SkCanvas* fCanvas;
+  // Only valid when inside OnDraw().
+  SkCanvas* fCanvas;
 
-    typedef DrawingMethods INHERITED;
+  typedef DrawingMethods INHERITED;
 };
 
 #endif

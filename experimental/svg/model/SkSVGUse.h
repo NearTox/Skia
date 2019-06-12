@@ -16,32 +16,32 @@
  * (https://www.w3.org/TR/SVG/struct.html#UseElement)
  */
 class SkSVGUse final : public SkSVGTransformableNode {
-public:
-    ~SkSVGUse() override = default;
+ public:
+  ~SkSVGUse() override = default;
 
-    static sk_sp<SkSVGUse> Make() { return sk_sp<SkSVGUse>(new SkSVGUse()); }
+  static sk_sp<SkSVGUse> Make() { return sk_sp<SkSVGUse>(new SkSVGUse()); }
 
-    void appendChild(sk_sp<SkSVGNode>) override;
+  void appendChild(sk_sp<SkSVGNode>) override;
 
-    void setHref(const SkSVGStringType&);
-    void setX(const SkSVGLength&);
-    void setY(const SkSVGLength&);
+  void setHref(const SkSVGStringType&);
+  void setX(const SkSVGLength&);
+  void setY(const SkSVGLength&);
 
-protected:
-    void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
+ protected:
+  void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
 
-    bool onPrepareToRender(SkSVGRenderContext*) const override;
-    void onRender(const SkSVGRenderContext&) const override;
-    SkPath onAsPath(const SkSVGRenderContext&) const override;
+  bool onPrepareToRender(SkSVGRenderContext*) const override;
+  void onRender(const SkSVGRenderContext&) const override;
+  SkPath onAsPath(const SkSVGRenderContext&) const override;
 
-private:
-    SkSVGUse();
+ private:
+  SkSVGUse();
 
-    SkSVGStringType fHref;
-    SkSVGLength fX = SkSVGLength(0);
-    SkSVGLength fY = SkSVGLength(0);
+  SkSVGStringType fHref;
+  SkSVGLength fX = SkSVGLength(0);
+  SkSVGLength fY = SkSVGLength(0);
 
-    typedef SkSVGTransformableNode INHERITED;
+  typedef SkSVGTransformableNode INHERITED;
 };
 
 #endif  // SkSVGUse_DEFINED

@@ -43,7 +43,7 @@ public:
      *  Pass ownership of an SkCodec to a newly-created SkAndroidCodec.
      */
     static std::unique_ptr<SkAndroidCodec> MakeFromCodec(
-            std::unique_ptr<SkCodec>, ExifOrientationBehavior = ExifOrientationBehavior::kIgnore);
+        std::unique_ptr<SkCodec>, ExifOrientationBehavior = ExifOrientationBehavior::kIgnore);
 
     /**
      *  If this stream represents an encoded image that we know how to decode,
@@ -189,38 +189,36 @@ public:
     //        these Options when SkCodec has a slightly different set of Options.  Maybe these
     //        should be DecodeOptions or SamplingOptions?
     struct AndroidOptions {
-        AndroidOptions()
-                : fZeroInitialized(SkCodec::kNo_ZeroInitialized)
-                , fSubset(nullptr)
-                , fSampleSize(1) {}
+      AndroidOptions()
+          : fZeroInitialized(SkCodec::kNo_ZeroInitialized), fSubset(nullptr), fSampleSize(1) {}
 
-        /**
-         *  Indicates is destination pixel memory is zero initialized.
-         *
-         *  The default is SkCodec::kNo_ZeroInitialized.
-         */
-        SkCodec::ZeroInitialized fZeroInitialized;
+      /**
+       *  Indicates is destination pixel memory is zero initialized.
+       *
+       *  The default is SkCodec::kNo_ZeroInitialized.
+       */
+      SkCodec::ZeroInitialized fZeroInitialized;
 
-        /**
-         *  If not NULL, represents a subset of the original image to decode.
-         *
-         *  Must be within the bounds returned by getInfo().
-         *
-         *  If the EncodedFormat is SkEncodedImageFormat::kWEBP, the top and left
-         *  values must be even.
-         *
-         *  The default is NULL, meaning a decode of the entire image.
-         */
-        SkIRect* fSubset;
+      /**
+       *  If not NULL, represents a subset of the original image to decode.
+       *
+       *  Must be within the bounds returned by getInfo().
+       *
+       *  If the EncodedFormat is SkEncodedImageFormat::kWEBP, the top and left
+       *  values must be even.
+       *
+       *  The default is NULL, meaning a decode of the entire image.
+       */
+      SkIRect* fSubset;
 
-        /**
-         *  The client may provide an integer downscale factor for the decode.
-         *  The codec may implement this downscaling by sampling or another
-         *  method if it is more efficient.
-         *
-         *  The default is 1, representing no downscaling.
-         */
-        int fSampleSize;
+      /**
+       *  The client may provide an integer downscale factor for the decode.
+       *  The codec may implement this downscaling by sampling or another
+       *  method if it is more efficient.
+       *
+       *  The default is 1, representing no downscaling.
+       */
+      int fSampleSize;
     };
 
     /**
@@ -253,8 +251,8 @@ public:
     //        called SkAndroidCodec.  On the other hand, it's may be a bit confusing to call
     //        this getPixels() when it is a slightly different API than SkCodec's getPixels().
     //        Maybe this should be decode() or decodeSubset()?
-    SkCodec::Result getAndroidPixels(const SkImageInfo& info, void* pixels, size_t rowBytes,
-                                     const AndroidOptions* options);
+    SkCodec::Result getAndroidPixels(
+        const SkImageInfo& info, void* pixels, size_t rowBytes, const AndroidOptions* options);
 
     /**
      *  Simplified version of getAndroidPixels() where we supply the default AndroidOptions as
@@ -275,10 +273,10 @@ protected:
 
     virtual bool onGetSupportedSubset(SkIRect* desiredSubset) const = 0;
 
-    virtual SkCodec::Result onGetAndroidPixels(const SkImageInfo& info, void* pixels,
-                                               size_t rowBytes, const AndroidOptions& options) = 0;
+    virtual SkCodec::Result onGetAndroidPixels(
+        const SkImageInfo& info, void* pixels, size_t rowBytes, const AndroidOptions& options) = 0;
 
-private:
+   private:
     const SkImageInfo fInfo;
     const ExifOrientationBehavior fOrientationBehavior;
     std::unique_ptr<SkCodec> fCodec;

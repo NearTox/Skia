@@ -15,34 +15,34 @@
 class GrVkGpu;
 
 class GrVkTransferBuffer : public GrGpuBuffer, public GrVkBuffer {
-public:
-    static sk_sp<GrVkTransferBuffer> Make(GrVkGpu* gpu, size_t size, GrVkBuffer::Type type);
+ public:
+  static sk_sp<GrVkTransferBuffer> Make(GrVkGpu* gpu, size_t size, GrVkBuffer::Type type);
 
-protected:
-    void onAbandon() override;
-    void onRelease() override;
+ protected:
+  void onAbandon() override;
+  void onRelease() override;
 
-private:
-    GrVkTransferBuffer(GrVkGpu* gpu, const GrVkBuffer::Desc& desc,
-                       const GrVkBuffer::Resource* resource);
-    void setMemoryBacking(SkTraceMemoryDump* traceMemoryDump,
-                          const SkString& dumpName) const override;
+ private:
+  GrVkTransferBuffer(
+      GrVkGpu* gpu, const GrVkBuffer::Desc& desc, const GrVkBuffer::Resource* resource);
+  void setMemoryBacking(
+      SkTraceMemoryDump* traceMemoryDump, const SkString& dumpName) const override;
 
-    void onMap() override { this->GrGpuBuffer::fMapPtr = this->vkMap(this->getVkGpu()); }
+  void onMap() override { this->GrGpuBuffer::fMapPtr = this->vkMap(this->getVkGpu()); }
 
-    void onUnmap() override { this->vkUnmap(this->getVkGpu()); }
+  void onUnmap() override { this->vkUnmap(this->getVkGpu()); }
 
-    bool onUpdateData(const void* src, size_t srcSizeInBytes) override {
-        SK_ABORT("Not implemented for transfer buffers.");
-        return false;
-    }
+  bool onUpdateData(const void* src, size_t srcSizeInBytes) override {
+    SK_ABORT("Not implemented for transfer buffers.");
+    return false;
+  }
 
-    GrVkGpu* getVkGpu() const {
-        SkASSERT(!this->wasDestroyed());
-        return reinterpret_cast<GrVkGpu*>(this->getGpu());
-    }
+  GrVkGpu* getVkGpu() const {
+    SkASSERT(!this->wasDestroyed());
+    return reinterpret_cast<GrVkGpu*>(this->getGpu());
+  }
 
-    typedef GrGpuBuffer INHERITED;
+  typedef GrGpuBuffer INHERITED;
 };
 
 #endif

@@ -13,23 +13,24 @@
 
 class SkColorTable;
 
-void SkConvertPixels(const SkImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes,
-                     const SkImageInfo& srcInfo, const void* srcPixels, size_t srcRowBytes);
+void SkConvertPixels(
+    const SkImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes, const SkImageInfo& srcInfo,
+    const void* srcPixels, size_t srcRowBytes);
 
-static inline void SkRectMemcpy(void* dst, size_t dstRB, const void* src, size_t srcRB,
-                                size_t trimRowBytes, int rowCount) noexcept {
-    SkASSERT(trimRowBytes <= dstRB);
-    SkASSERT(trimRowBytes <= srcRB);
-    if (trimRowBytes == dstRB && trimRowBytes == srcRB) {
-        memcpy(dst, src, trimRowBytes * rowCount);
-        return;
-    }
+static inline void SkRectMemcpy(
+    void* dst, size_t dstRB, const void* src, size_t srcRB, size_t trimRowBytes, int rowCount) {
+  SkASSERT(trimRowBytes <= dstRB);
+  SkASSERT(trimRowBytes <= srcRB);
+  if (trimRowBytes == dstRB && trimRowBytes == srcRB) {
+    memcpy(dst, src, trimRowBytes * rowCount);
+    return;
+  }
 
-    for (int i = 0; i < rowCount; ++i) {
-        memcpy(dst, src, trimRowBytes);
-        dst = SkTAddOffset<void>(dst, dstRB);
-        src = SkTAddOffset<const void>(src, srcRB);
-    }
+  for (int i = 0; i < rowCount; ++i) {
+    memcpy(dst, src, trimRowBytes);
+    dst = SkTAddOffset<void>(dst, dstRB);
+    src = SkTAddOffset<const void>(src, srcRB);
+  }
 }
 
 #endif

@@ -26,31 +26,31 @@ class RenderNode;
  *
  */
 class Animator {
-public:
-    virtual ~Animator();
-    Animator(const Animator&) = delete;
-    Animator& operator=(const Animator&) = delete;
+ public:
+  virtual ~Animator();
+  Animator(const Animator&) = delete;
+  Animator& operator=(const Animator&) = delete;
 
-    void tick(float t);
+  void tick(float t);
 
-protected:
-    Animator();
+ protected:
+  Animator();
 
-    virtual void onTick(float t) = 0;
+  virtual void onTick(float t) = 0;
 };
 
 using AnimatorList = std::vector<std::unique_ptr<Animator>>;
 
 class GroupAnimator : public Animator {
-protected:
-    explicit GroupAnimator(AnimatorList&&);
+ protected:
+  explicit GroupAnimator(AnimatorList&&);
 
-    void onTick(float t) override;
+  void onTick(float t) override;
 
-private:
-    const AnimatorList fAnimators;
+ private:
+  const AnimatorList fAnimators;
 
-    using INHERITED = Animator;
+  using INHERITED = Animator;
 };
 
 /**
@@ -60,25 +60,25 @@ private:
  *
  */
 class Scene final {
-public:
-    static std::unique_ptr<Scene> Make(sk_sp<RenderNode> root, AnimatorList&& animators);
-    ~Scene();
-    Scene(const Scene&) = delete;
-    Scene& operator=(const Scene&) = delete;
+ public:
+  static std::unique_ptr<Scene> Make(sk_sp<RenderNode> root, AnimatorList&& animators);
+  ~Scene();
+  Scene(const Scene&) = delete;
+  Scene& operator=(const Scene&) = delete;
 
-    void render(SkCanvas*) const;
-    void animate(float t);
-    const RenderNode* nodeAt(const SkPoint&) const;
+  void render(SkCanvas*) const;
+  void animate(float t);
+  const RenderNode* nodeAt(const SkPoint&) const;
 
-    void setShowInval(bool show) { fShowInval = show; }
+  void setShowInval(bool show) { fShowInval = show; }
 
-private:
-    Scene(sk_sp<RenderNode> root, AnimatorList&& animators);
+ private:
+  Scene(sk_sp<RenderNode> root, AnimatorList&& animators);
 
-    const sk_sp<RenderNode> fRoot;
-    const AnimatorList fAnimators;
+  const sk_sp<RenderNode> fRoot;
+  const AnimatorList fAnimators;
 
-    bool fShowInval = false;
+  bool fShowInval = false;
 };
 
 }  // namespace sksg

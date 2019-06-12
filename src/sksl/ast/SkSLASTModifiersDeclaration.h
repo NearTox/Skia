@@ -19,14 +19,14 @@ namespace SkSL {
  * layout(blend_support_all_equations) out;
  */
 struct ASTModifiersDeclaration : public ASTDeclaration {
-    ASTModifiersDeclaration(Modifiers modifiers)
-            : INHERITED(-1, kModifiers_Kind), fModifiers(modifiers) {}
+  ASTModifiersDeclaration(Modifiers modifiers)
+      : INHERITED(-1, kModifiers_Kind), fModifiers(modifiers) {}
 
-    String description() const { return fModifiers.description() + ";"; }
+  String description() const { return fModifiers.description() + ";"; }
 
-    Modifiers fModifiers;
+  Modifiers fModifiers;
 
-    typedef ASTDeclaration INHERITED;
+  typedef ASTDeclaration INHERITED;
 };
 
 }  // namespace SkSL

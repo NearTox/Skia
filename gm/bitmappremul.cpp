@@ -29,81 +29,81 @@
 constexpr int SLIDE_SIZE = 256;
 
 static void init_bitmap(SkColorType ct, SkBitmap* bitmap) {
-    bitmap->allocPixels(SkImageInfo::Make(SLIDE_SIZE, SLIDE_SIZE, ct, kPremul_SkAlphaType));
-    bitmap->eraseColor(SK_ColorWHITE);
+  bitmap->allocPixels(SkImageInfo::Make(SLIDE_SIZE, SLIDE_SIZE, ct, kPremul_SkAlphaType));
+  bitmap->eraseColor(SK_ColorWHITE);
 }
 
 static SkBitmap make_argb8888_gradient() {
-    SkBitmap bitmap;
-    init_bitmap(kN32_SkColorType, &bitmap);
-    for (int y = 0; y < SLIDE_SIZE; y++) {
-        uint32_t* dst = bitmap.getAddr32(0, y);
-        for (int x = 0; x < SLIDE_SIZE; x++) {
-            dst[x] = SkPackARGB32(y, y, y, y);
-        }
+  SkBitmap bitmap;
+  init_bitmap(kN32_SkColorType, &bitmap);
+  for (int y = 0; y < SLIDE_SIZE; y++) {
+    uint32_t* dst = bitmap.getAddr32(0, y);
+    for (int x = 0; x < SLIDE_SIZE; x++) {
+      dst[x] = SkPackARGB32(y, y, y, y);
     }
-    return bitmap;
+  }
+  return bitmap;
 }
 
 static SkBitmap make_argb4444_gradient() {
-    SkBitmap bitmap;
-    init_bitmap(kARGB_4444_SkColorType, &bitmap);
-    // Using draw rather than readPixels to suppress dither
-    SkPaint paint;
-    paint.setBlendMode(SkBlendMode::kSrc);
-    SkCanvas{bitmap}.drawBitmap(make_argb8888_gradient(), 0, 0, &paint);
-    return bitmap;
+  SkBitmap bitmap;
+  init_bitmap(kARGB_4444_SkColorType, &bitmap);
+  // Using draw rather than readPixels to suppress dither
+  SkPaint paint;
+  paint.setBlendMode(SkBlendMode::kSrc);
+  SkCanvas{bitmap}.drawBitmap(make_argb8888_gradient(), 0, 0, &paint);
+  return bitmap;
 }
 
 static SkBitmap make_argb8888_stripes() {
-    SkBitmap bitmap;
-    init_bitmap(kN32_SkColorType, &bitmap);
-    uint8_t rowColor = 0;
-    for (int y = 0; y < SLIDE_SIZE; y++) {
-        uint32_t* dst = bitmap.getAddr32(0, y);
-        for (int x = 0; x < SLIDE_SIZE; x++) {
-            dst[x] = SkPackARGB32(rowColor, rowColor, rowColor, rowColor);
-        }
-        if (rowColor == 0) {
-            rowColor = 255;
-        } else {
-            rowColor = 0;
-        }
+  SkBitmap bitmap;
+  init_bitmap(kN32_SkColorType, &bitmap);
+  uint8_t rowColor = 0;
+  for (int y = 0; y < SLIDE_SIZE; y++) {
+    uint32_t* dst = bitmap.getAddr32(0, y);
+    for (int x = 0; x < SLIDE_SIZE; x++) {
+      dst[x] = SkPackARGB32(rowColor, rowColor, rowColor, rowColor);
     }
-    return bitmap;
+    if (rowColor == 0) {
+      rowColor = 255;
+    } else {
+      rowColor = 0;
+    }
+  }
+  return bitmap;
 }
 
 static SkBitmap make_argb4444_stripes() {
-    SkBitmap bitmap;
-    init_bitmap(kARGB_4444_SkColorType, &bitmap);
-    // Using draw rather than readPixels to suppress dither
-    SkPaint paint;
-    paint.setBlendMode(SkBlendMode::kSrc);
-    SkCanvas{bitmap}.drawBitmap(make_argb8888_stripes(), 0, 0, &paint);
-    return bitmap;
+  SkBitmap bitmap;
+  init_bitmap(kARGB_4444_SkColorType, &bitmap);
+  // Using draw rather than readPixels to suppress dither
+  SkPaint paint;
+  paint.setBlendMode(SkBlendMode::kSrc);
+  SkCanvas{bitmap}.drawBitmap(make_argb8888_stripes(), 0, 0, &paint);
+  return bitmap;
 }
 
 namespace skiagm {
 
 class BitmapPremulGM : public GM {
-public:
-    BitmapPremulGM() { this->setBGColor(SK_ColorWHITE); }
+ public:
+  BitmapPremulGM() { this->setBGColor(SK_ColorWHITE); }
 
-protected:
-    SkString onShortName() override { return SkString("bitmap_premul"); }
+ protected:
+  SkString onShortName() override { return SkString("bitmap_premul"); }
 
-    SkISize onISize() override { return SkISize::Make(SLIDE_SIZE * 2, SLIDE_SIZE * 2); }
+  SkISize onISize() override { return SkISize::Make(SLIDE_SIZE * 2, SLIDE_SIZE * 2); }
 
-    void onDraw(SkCanvas* canvas) override {
-        SkScalar slideSize = SkIntToScalar(SLIDE_SIZE);
-        canvas->drawBitmap(make_argb8888_gradient(), 0, 0);
-        canvas->drawBitmap(make_argb4444_gradient(), slideSize, 0);
-        canvas->drawBitmap(make_argb8888_stripes(), 0, slideSize);
-        canvas->drawBitmap(make_argb4444_stripes(), slideSize, slideSize);
-    }
+  void onDraw(SkCanvas* canvas) override {
+    SkScalar slideSize = SkIntToScalar(SLIDE_SIZE);
+    canvas->drawBitmap(make_argb8888_gradient(), 0, 0);
+    canvas->drawBitmap(make_argb4444_gradient(), slideSize, 0);
+    canvas->drawBitmap(make_argb8888_stripes(), 0, slideSize);
+    canvas->drawBitmap(make_argb4444_stripes(), slideSize, slideSize);
+  }
 
-private:
-    typedef GM INHERITED;
+ private:
+  typedef GM INHERITED;
 };
 
 DEF_GM(return new BitmapPremulGM;)

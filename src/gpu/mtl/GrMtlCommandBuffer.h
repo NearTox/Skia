@@ -16,26 +16,26 @@ class GrMtlGpu;
 class GrMtlPipelineState;
 
 class GrMtlCommandBuffer {
-public:
-    static GrMtlCommandBuffer* Create(id<MTLCommandQueue> queue);
-    ~GrMtlCommandBuffer();
+ public:
+  static GrMtlCommandBuffer* Create(id<MTLCommandQueue> queue);
+  ~GrMtlCommandBuffer();
 
-    void commit(bool waitUntilCompleted);
+  void commit(bool waitUntilCompleted);
 
-    id<MTLBlitCommandEncoder> getBlitCommandEncoder();
-    id<MTLRenderCommandEncoder> getRenderCommandEncoder(MTLRenderPassDescriptor*,
-                                                        const GrMtlPipelineState*);
+  id<MTLBlitCommandEncoder> getBlitCommandEncoder();
+  id<MTLRenderCommandEncoder> getRenderCommandEncoder(
+      MTLRenderPassDescriptor*, const GrMtlPipelineState*);
 
-private:
-    GrMtlCommandBuffer(id<MTLCommandBuffer> cmdBuffer)
-            : fCmdBuffer(cmdBuffer), fPreviousRenderPassDescriptor(nil) {}
+ private:
+  GrMtlCommandBuffer(id<MTLCommandBuffer> cmdBuffer)
+      : fCmdBuffer(cmdBuffer), fPreviousRenderPassDescriptor(nil) {}
 
-    void endAllEncoding();
+  void endAllEncoding();
 
-    id<MTLCommandBuffer> fCmdBuffer;
-    id<MTLBlitCommandEncoder> fActiveBlitCommandEncoder;
-    id<MTLRenderCommandEncoder> fActiveRenderCommandEncoder;
-    MTLRenderPassDescriptor* fPreviousRenderPassDescriptor;
+  id<MTLCommandBuffer> fCmdBuffer;
+  id<MTLBlitCommandEncoder> fActiveBlitCommandEncoder;
+  id<MTLRenderCommandEncoder> fActiveRenderCommandEncoder;
+  MTLRenderPassDescriptor* fPreviousRenderPassDescriptor;
 };
 
 #endif

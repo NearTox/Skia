@@ -18,34 +18,34 @@ class GrGLRRectShadowGeoProc;
  * assuming circular corner geometry.
  */
 class GrRRectShadowGeoProc : public GrGeometryProcessor {
-public:
-    static sk_sp<GrGeometryProcessor> Make() {
-        return sk_sp<GrGeometryProcessor>(new GrRRectShadowGeoProc());
-    }
+ public:
+  static sk_sp<GrGeometryProcessor> Make() {
+    return sk_sp<GrGeometryProcessor>(new GrRRectShadowGeoProc());
+  }
 
-    const char* name() const override { return "RRectShadow"; }
+  const char* name() const override { return "RRectShadow"; }
 
-    const Attribute& inPosition() const { return fInPosition; }
-    const Attribute& inColor() const { return fInColor; }
-    const Attribute& inShadowParams() const { return fInShadowParams; }
-    GrColor color() const { return fColor; }
+  const Attribute& inPosition() const { return fInPosition; }
+  const Attribute& inColor() const { return fInColor; }
+  const Attribute& inShadowParams() const { return fInShadowParams; }
+  GrColor color() const { return fColor; }
 
-    void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {}
+  void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {}
 
-    GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
+  GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
 
-private:
-    GrRRectShadowGeoProc();
+ private:
+  GrRRectShadowGeoProc();
 
-    GrColor fColor;
+  GrColor fColor;
 
-    Attribute fInPosition;
-    Attribute fInColor;
-    Attribute fInShadowParams;
+  Attribute fInPosition;
+  Attribute fInColor;
+  Attribute fInShadowParams;
 
-    GR_DECLARE_GEOMETRY_PROCESSOR_TEST
+  GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 
-    typedef GrGeometryProcessor INHERITED;
+  typedef GrGeometryProcessor INHERITED;
 };
 
 #endif

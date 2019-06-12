@@ -16,15 +16,14 @@ namespace SkSL {
  * A lone expression being used as a statement.
  */
 struct ASTExpressionStatement : public ASTStatement {
-    ASTExpressionStatement(std::unique_ptr<ASTExpression> expression)
-            : INHERITED(expression->fOffset, kExpression_Kind)
-            , fExpression(std::move(expression)) {}
+  ASTExpressionStatement(std::unique_ptr<ASTExpression> expression)
+      : INHERITED(expression->fOffset, kExpression_Kind), fExpression(std::move(expression)) {}
 
-    String description() const override { return fExpression->description() + ";"; }
+  String description() const override { return fExpression->description() + ";"; }
 
-    const std::unique_ptr<ASTExpression> fExpression;
+  const std::unique_ptr<ASTExpression> fExpression;
 
-    typedef ASTStatement INHERITED;
+  typedef ASTStatement INHERITED;
 };
 
 }  // namespace SkSL

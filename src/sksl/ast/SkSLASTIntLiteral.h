@@ -17,13 +17,13 @@ namespace SkSL {
  * appear as a unary minus being applied to an integer literal.
  */
 struct ASTIntLiteral : public ASTExpression {
-    ASTIntLiteral(int offset, uint64_t value) : INHERITED(offset, kInt_Kind), fValue(value) {}
+  ASTIntLiteral(int offset, uint64_t value) : INHERITED(offset, kInt_Kind), fValue(value) {}
 
-    String description() const override { return to_string(fValue); }
+  String description() const override { return to_string(fValue); }
 
-    const uint64_t fValue;
+  const uint64_t fValue;
 
-    typedef ASTExpression INHERITED;
+  typedef ASTExpression INHERITED;
 };
 
 }  // namespace SkSL

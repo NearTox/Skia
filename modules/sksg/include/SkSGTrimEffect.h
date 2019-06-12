@@ -22,35 +22,35 @@ namespace sksg {
  * Concrete Geometry node, applying a trim effect to its child.
  */
 class TrimEffect final : public GeometryNode {
-public:
-    static sk_sp<TrimEffect> Make(sk_sp<GeometryNode> child) {
-        return child ? sk_sp<TrimEffect>(new TrimEffect(std::move(child))) : nullptr;
-    }
+ public:
+  static sk_sp<TrimEffect> Make(sk_sp<GeometryNode> child) {
+    return child ? sk_sp<TrimEffect>(new TrimEffect(std::move(child))) : nullptr;
+  }
 
-    ~TrimEffect() override;
+  ~TrimEffect() override;
 
-    SG_ATTRIBUTE(Start, SkScalar, fStart)
-    SG_ATTRIBUTE(Stop, SkScalar, fStop)
-    SG_ATTRIBUTE(Mode, SkTrimPathEffect::Mode, fMode)
+  SG_ATTRIBUTE(Start, SkScalar, fStart)
+  SG_ATTRIBUTE(Stop, SkScalar, fStop)
+  SG_ATTRIBUTE(Mode, SkTrimPathEffect::Mode, fMode)
 
-protected:
-    void onClip(SkCanvas*, bool antiAlias) const override;
-    void onDraw(SkCanvas*, const SkPaint&) const override;
-    bool onContains(const SkPoint&) const override;
+ protected:
+  void onClip(SkCanvas*, bool antiAlias) const override;
+  void onDraw(SkCanvas*, const SkPaint&) const override;
+  bool onContains(const SkPoint&) const override;
 
-    SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
-    SkPath onAsPath() const override;
+  SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
+  SkPath onAsPath() const override;
 
-private:
-    explicit TrimEffect(sk_sp<GeometryNode>);
+ private:
+  explicit TrimEffect(sk_sp<GeometryNode>);
 
-    const sk_sp<GeometryNode> fChild;
+  const sk_sp<GeometryNode> fChild;
 
-    SkPath fTrimmedPath;
-    SkScalar fStart = 0, fStop = 1;
-    SkTrimPathEffect::Mode fMode = SkTrimPathEffect::Mode::kNormal;
+  SkPath fTrimmedPath;
+  SkScalar fStart = 0, fStop = 1;
+  SkTrimPathEffect::Mode fMode = SkTrimPathEffect::Mode::kNormal;
 
-    using INHERITED = GeometryNode;
+  using INHERITED = GeometryNode;
 };
 
 }  // namespace sksg

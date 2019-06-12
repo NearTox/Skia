@@ -44,11 +44,11 @@ static constexpr uint32_t kTAG_ParaCurveType = SkSetFourByteTag('p', 'a', 'r', '
 static constexpr uint32_t kTAG_TextType = SkSetFourByteTag('m', 'l', 'u', 'c');
 
 enum ParaCurveType {
-    kExponential_ParaCurveType = 0,
-    kGAB_ParaCurveType = 1,
-    kGABC_ParaCurveType = 2,
-    kGABDE_ParaCurveType = 3,
-    kGABCDEF_ParaCurveType = 4,
+  kExponential_ParaCurveType = 0,
+  kGAB_ParaCurveType = 1,
+  kGABC_ParaCurveType = 2,
+  kGABDE_ParaCurveType = 3,
+  kGABCDEF_ParaCurveType = 4,
 };
 
 #endif  // SkICCPriv_DEFINED

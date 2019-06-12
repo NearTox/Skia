@@ -19,32 +19,31 @@ class GrVkGpu;
  * for one type of descriptor.
  */
 class GrVkDescriptorPool : public GrVkResource {
-public:
-    GrVkDescriptorPool(const GrVkGpu* gpu, VkDescriptorType type, uint32_t count);
+ public:
+  GrVkDescriptorPool(const GrVkGpu* gpu, VkDescriptorType type, uint32_t count);
 
-    VkDescriptorPool descPool() const { return fDescPool; }
+  VkDescriptorPool descPool() const { return fDescPool; }
 
-    void reset(const GrVkGpu* gpu);
+  void reset(const GrVkGpu* gpu);
 
-    // Returns whether or not this descriptor pool could be used, assuming it gets fully reset and
-    // not in use by another draw, to support the requested type and count.
-    bool isCompatible(VkDescriptorType type, uint32_t count) const;
+  // Returns whether or not this descriptor pool could be used, assuming it gets fully reset and
+  // not in use by another draw, to support the requested type and count.
+  bool isCompatible(VkDescriptorType type, uint32_t count) const;
 
 #ifdef SK_TRACE_VK_RESOURCES
-    void dumpInfo() const override {
-        SkDebugf("GrVkDescriptorPool: %d, type %d (%d refs)\n", fDescPool, fType,
-                 this->getRefCnt());
-    }
+  void dumpInfo() const override {
+    SkDebugf("GrVkDescriptorPool: %d, type %d (%d refs)\n", fDescPool, fType, this->getRefCnt());
+  }
 #endif
 
-private:
-    void freeGPUData(GrVkGpu* gpu) const override;
+ private:
+  void freeGPUData(GrVkGpu* gpu) const override;
 
-    VkDescriptorType fType;
-    uint32_t fCount;
-    VkDescriptorPool fDescPool;
+  VkDescriptorType fType;
+  uint32_t fCount;
+  VkDescriptorPool fDescPool;
 
-    typedef GrVkResource INHERITED;
+  typedef GrVkResource INHERITED;
 };
 
 #endif

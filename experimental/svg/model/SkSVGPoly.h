@@ -13,33 +13,33 @@
 
 // Handles <polygon> and <polyline> elements.
 class SkSVGPoly final : public SkSVGShape {
-public:
-    ~SkSVGPoly() override = default;
+ public:
+  ~SkSVGPoly() override = default;
 
-    static sk_sp<SkSVGPoly> MakePolygon() {
-        return sk_sp<SkSVGPoly>(new SkSVGPoly(SkSVGTag::kPolygon));
-    }
+  static sk_sp<SkSVGPoly> MakePolygon() {
+    return sk_sp<SkSVGPoly>(new SkSVGPoly(SkSVGTag::kPolygon));
+  }
 
-    static sk_sp<SkSVGPoly> MakePolyline() {
-        return sk_sp<SkSVGPoly>(new SkSVGPoly(SkSVGTag::kPolyline));
-    }
+  static sk_sp<SkSVGPoly> MakePolyline() {
+    return sk_sp<SkSVGPoly>(new SkSVGPoly(SkSVGTag::kPolyline));
+  }
 
-    void setPoints(const SkSVGPointsType&);
+  void setPoints(const SkSVGPointsType&);
 
-protected:
-    void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
+ protected:
+  void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
 
-    void onDraw(SkCanvas*, const SkSVGLengthContext&, const SkPaint&,
-                SkPath::FillType) const override;
+  void onDraw(
+      SkCanvas*, const SkSVGLengthContext&, const SkPaint&, SkPath::FillType) const override;
 
-    SkPath onAsPath(const SkSVGRenderContext&) const override;
+  SkPath onAsPath(const SkSVGRenderContext&) const override;
 
-private:
-    SkSVGPoly(SkSVGTag);
+ private:
+  SkSVGPoly(SkSVGTag);
 
-    mutable SkPath fPath;  // mutated in onDraw(), to apply inherited fill types.
+  mutable SkPath fPath;  // mutated in onDraw(), to apply inherited fill types.
 
-    typedef SkSVGShape INHERITED;
+  typedef SkSVGShape INHERITED;
 };
 
 #endif  // SkSVGPoly_DEFINED

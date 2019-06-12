@@ -16,56 +16,56 @@
     actual shader object is needed, this provides that feature.
 */
 class SkColorShader : public SkShaderBase {
-public:
-    /** Create a ColorShader that ignores the color in the paint, and uses the
-        specified color. Note: like all shaders, at draw time the paint's alpha
-        will be respected, and is applied to the specified color.
-    */
-    explicit SkColorShader(SkColor c);
+ public:
+  /** Create a ColorShader that ignores the color in the paint, and uses the
+      specified color. Note: like all shaders, at draw time the paint's alpha
+      will be respected, and is applied to the specified color.
+  */
+  explicit SkColorShader(SkColor c);
 
-    bool isOpaque() const noexcept override;
-    bool isConstant() const noexcept override { return true; }
+  bool isOpaque() const override;
+  bool isConstant() const override { return true; }
 
-    GradientType asAGradient(GradientInfo* info) const override;
+  GradientType asAGradient(GradientInfo* info) const override;
 
 #if SK_SUPPORT_GPU
-    std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
+  std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
 #endif
 
-private:
-    SK_FLATTENABLE_HOOKS(SkColorShader)
+ private:
+  SK_FLATTENABLE_HOOKS(SkColorShader)
 
-    void flatten(SkWriteBuffer&) const override;
+  void flatten(SkWriteBuffer&) const override;
 
-    bool onAsLuminanceColor(SkColor* lum) const override {
-        *lum = fColor;
-        return true;
-    }
+  bool onAsLuminanceColor(SkColor* lum) const override {
+    *lum = fColor;
+    return true;
+  }
 
-    bool onAppendStages(const SkStageRec&) const override;
+  bool onAppendStages(const SkStageRec&) const override;
 
-    SkColor fColor;
+  SkColor fColor;
 };
 
 class SkColor4Shader : public SkShaderBase {
-public:
-    SkColor4Shader(const SkColor4f&, sk_sp<SkColorSpace>);
+ public:
+  SkColor4Shader(const SkColor4f&, sk_sp<SkColorSpace>);
 
-    bool isOpaque() const noexcept override { return fColor.isOpaque(); }
-    bool isConstant() const noexcept override { return true; }
+  bool isOpaque() const override { return fColor.isOpaque(); }
+  bool isConstant() const override { return true; }
 
 #if SK_SUPPORT_GPU
-    std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
+  std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
 #endif
 
-private:
-    SK_FLATTENABLE_HOOKS(SkColor4Shader)
+ private:
+  SK_FLATTENABLE_HOOKS(SkColor4Shader)
 
-    void flatten(SkWriteBuffer&) const override;
-    bool onAppendStages(const SkStageRec&) const override;
+  void flatten(SkWriteBuffer&) const override;
+  bool onAppendStages(const SkStageRec&) const override;
 
-    sk_sp<SkColorSpace> fColorSpace;
-    const SkColor4f fColor;
+  sk_sp<SkColorSpace> fColorSpace;
+  const SkColor4f fColor;
 };
 
 #endif

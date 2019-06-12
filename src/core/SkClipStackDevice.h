@@ -12,35 +12,35 @@
 #include "src/core/SkDevice.h"
 
 class SkClipStackDevice : public SkBaseDevice {
-public:
-    SkClipStackDevice(const SkImageInfo& info, const SkSurfaceProps& props)
-            : SkBaseDevice(info, props), fClipStack(fStorage, sizeof(fStorage)) {}
+ public:
+  SkClipStackDevice(const SkImageInfo& info, const SkSurfaceProps& props)
+      : SkBaseDevice(info, props), fClipStack(fStorage, sizeof(fStorage)) {}
 
-    SkClipStack& cs() { return fClipStack; }
-    const SkClipStack& cs() const { return fClipStack; }
+  SkClipStack& cs() { return fClipStack; }
+  const SkClipStack& cs() const { return fClipStack; }
 
-    SkIRect devClipBounds() const;
+  SkIRect devClipBounds() const;
 
-protected:
-    void onSave() override;
-    void onRestore() override;
-    void onClipRect(const SkRect& rect, SkClipOp, bool aa) override;
-    void onClipRRect(const SkRRect& rrect, SkClipOp, bool aa) override;
-    void onClipPath(const SkPath& path, SkClipOp, bool aa) override;
-    void onClipRegion(const SkRegion& deviceRgn, SkClipOp) override;
-    void onSetDeviceClipRestriction(SkIRect* mutableClipRestriction) override;
-    bool onClipIsAA() const override;
-    void onAsRgnClip(SkRegion*) const override;
-    ClipType onGetClipType() const override;
+ protected:
+  void onSave() override;
+  void onRestore() override;
+  void onClipRect(const SkRect& rect, SkClipOp, bool aa) override;
+  void onClipRRect(const SkRRect& rrect, SkClipOp, bool aa) override;
+  void onClipPath(const SkPath& path, SkClipOp, bool aa) override;
+  void onClipRegion(const SkRegion& deviceRgn, SkClipOp) override;
+  void onSetDeviceClipRestriction(SkIRect* mutableClipRestriction) override;
+  bool onClipIsAA() const override;
+  void onAsRgnClip(SkRegion*) const override;
+  ClipType onGetClipType() const override;
 
-private:
-    enum {
-        kPreallocCount = 16  // empirically determined, adjust as needed to reduce mallocs
-    };
-    intptr_t fStorage[kPreallocCount * sizeof(SkClipStack::Element) / sizeof(intptr_t)];
-    SkClipStack fClipStack;
+ private:
+  enum {
+    kPreallocCount = 16  // empirically determined, adjust as needed to reduce mallocs
+  };
+  intptr_t fStorage[kPreallocCount * sizeof(SkClipStack::Element) / sizeof(intptr_t)];
+  SkClipStack fClipStack;
 
-    typedef SkBaseDevice INHERITED;
+  typedef SkBaseDevice INHERITED;
 };
 
 #endif

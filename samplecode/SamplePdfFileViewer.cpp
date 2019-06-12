@@ -27,59 +27,59 @@
 #include "src/utils/SkUTF.h"
 
 class PdfFileViewer : public Sample {
-private:
-    SkString fFilename;
-    SkPicture* fPicture;  // TODO(edisonn): multiple pages, one page / picture, make it an array
+ private:
+  SkString fFilename;
+  SkPicture* fPicture;  // TODO(edisonn): multiple pages, one page / picture, make it an array
 
-    static SkPicture* LoadPdf(const char path[]) {
-        std::unique_ptr<SkPdfRenderer> renderer(SkPdfRenderer::CreateFromFile(path));
-        if (nullptr == renderer.get()) {
-            return nullptr;
-        }
-
-        SkPicture* pic = new SkPicture;
-        SkCanvas* canvas = pic->beginRecording((int)renderer->MediaBox(0).width(),
-                                               (int)renderer->MediaBox(0).height());
-        renderer->renderPage(0, canvas, renderer->MediaBox(0));
-        pic->endRecording();
-        return pic;
+  static SkPicture* LoadPdf(const char path[]) {
+    std::unique_ptr<SkPdfRenderer> renderer(SkPdfRenderer::CreateFromFile(path));
+    if (nullptr == renderer.get()) {
+      return nullptr;
     }
 
-public:
-    PdfFileViewer(const char name[] = nullptr) : fFilename(name) { fPicture = nullptr; }
+    SkPicture* pic = new SkPicture;
+    SkCanvas* canvas = pic->beginRecording(
+        (int)renderer->MediaBox(0).width(), (int)renderer->MediaBox(0).height());
+    renderer->renderPage(0, canvas, renderer->MediaBox(0));
+    pic->endRecording();
+    return pic;
+  }
 
-    virtual ~PdfFileViewer() { SkSafeUnref(fPicture); }
+ public:
+  PdfFileViewer(const char name[] = nullptr) : fFilename(name) { fPicture = nullptr; }
 
-protected:
-    virtual bool onQuery(Sample::Event* evt) {
-        if (Sample::TitleQ(*evt)) {
-            SkString name("P:");
-            const char* basename = strrchr(fFilename.c_str(), SkPATH_SEPARATOR);
-            name.append(basename ? basename + 1 : fFilename.c_str());
-            Sample::TitleR(evt, name.c_str());
-            return true;
-        }
-        return this->INHERITED::onQuery(evt);
+  virtual ~PdfFileViewer() { SkSafeUnref(fPicture); }
+
+ protected:
+  virtual bool onQuery(Sample::Event* evt) {
+    if (Sample::TitleQ(*evt)) {
+      SkString name("P:");
+      const char* basename = strrchr(fFilename.c_str(), SkPATH_SEPARATOR);
+      name.append(basename ? basename + 1 : fFilename.c_str());
+      Sample::TitleR(evt, name.c_str());
+      return true;
     }
+    return this->INHERITED::onQuery(evt);
+  }
 
-    virtual bool onEvent(const SkEvent& evt) {
-        // TODO(edisonn): add here event handlers to disable clipping, or to show helpful info
-        // like pdf object from click, ...
-        // TODO(edisonn): first, next, prev, last page navigation + slideshow
-        return this->INHERITED::onEvent(evt);
+  virtual bool onEvent(const SkEvent& evt) {
+    // TODO(edisonn): add here event handlers to disable clipping, or to show helpful info
+    // like pdf object from click, ...
+    // TODO(edisonn): first, next, prev, last page navigation + slideshow
+    return this->INHERITED::onEvent(evt);
+  }
+
+  virtual void onDrawContent(SkCanvas* canvas) {
+    if (!fPicture) {
+      fPicture = LoadPdf(fFilename.c_str());
     }
-
-    virtual void onDrawContent(SkCanvas* canvas) {
-        if (!fPicture) {
-            fPicture = LoadPdf(fFilename.c_str());
-        }
-        if (fPicture) {
-            canvas->drawPicture(*fPicture);
-        }
+    if (fPicture) {
+      canvas->drawPicture(*fPicture);
     }
+  }
 
-private:
-    typedef Sample INHERITED;
+ private:
+  typedef Sample INHERITED;
 };
 
 Sample* CreateSamplePdfFileViewer(const char filename[]);

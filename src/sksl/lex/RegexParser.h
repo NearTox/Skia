@@ -19,71 +19,71 @@
  * groups ('()').
  */
 class RegexParser {
-public:
-    RegexNode parse(std::string source);
+ public:
+  RegexNode parse(std::string source);
 
-private:
-    static constexpr char END = '\0';
+ private:
+  static constexpr char END = '\0';
 
-    char peek();
+  char peek();
 
-    void expect(char c);
+  void expect(char c);
 
-    RegexNode pop();
+  RegexNode pop();
 
-    /**
-     * Matches a char literal, parenthesized group, character set, or dot ('.').
-     */
-    void term();
+  /**
+   * Matches a char literal, parenthesized group, character set, or dot ('.').
+   */
+  void term();
 
-    /**
-     * Matches a term followed by an optional quantifier ('*', '+', or '?').
-     */
-    void quantifiedTerm();
+  /**
+   * Matches a term followed by an optional quantifier ('*', '+', or '?').
+   */
+  void quantifiedTerm();
 
-    /**
-     * Matches a sequence of quantifiedTerms.
-     */
-    void sequence();
+  /**
+   * Matches a sequence of quantifiedTerms.
+   */
+  void sequence();
 
-    /**
-     * Returns a node representing the given escape character (e.g. escapeSequence('n') returns a
-     * node which matches a newline character).
-     */
-    RegexNode escapeSequence(char c);
+  /**
+   * Returns a node representing the given escape character (e.g. escapeSequence('n') returns a
+   * node which matches a newline character).
+   */
+  RegexNode escapeSequence(char c);
 
-    /**
-     * Matches a literal character or escape sequence.
-     */
-    void literal();
+  /**
+   * Matches a literal character or escape sequence.
+   */
+  void literal();
 
-    /**
-     * Matches a dot ('.').
-     */
-    void dot();
+  /**
+   * Matches a dot ('.').
+   */
+  void dot();
 
-    /**
-     * Matches a parenthesized group.
-     */
-    void group();
+  /**
+   * Matches a parenthesized group.
+   */
+  void group();
 
-    /**
-     * Matches a literal character, escape sequence, or character range from a character set.
-     */
-    void setItem();
+  /**
+   * Matches a literal character, escape sequence, or character range from a character set.
+   */
+  void setItem();
 
-    /**
-     * Matches a character set.
-     */
-    void set();
+  /**
+   * Matches a character set.
+   */
+  void set();
 
-    void regex();
+  void regex();
 
-    std::string fSource;
+  std::string fSource;
 
-    size_t fIndex;
+  size_t fIndex;
 
-    std::stack<RegexNode> fStack;
+  std::stack<RegexNode> fStack;
 };
 
 #endif

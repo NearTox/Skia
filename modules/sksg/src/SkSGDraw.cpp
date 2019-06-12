@@ -17,59 +17,59 @@
 namespace sksg {
 
 Draw::Draw(sk_sp<GeometryNode> geometry, sk_sp<PaintNode> paint)
-        : fGeometry(std::move(geometry)), fPaint(std::move(paint)) {
-    this->observeInval(fGeometry);
-    this->observeInval(fPaint);
+    : fGeometry(std::move(geometry)), fPaint(std::move(paint)) {
+  this->observeInval(fGeometry);
+  this->observeInval(fPaint);
 }
 
 Draw::~Draw() {
-    this->unobserveInval(fGeometry);
-    this->unobserveInval(fPaint);
+  this->unobserveInval(fGeometry);
+  this->unobserveInval(fPaint);
 }
 
 void Draw::onRender(SkCanvas* canvas, const RenderContext* ctx) const {
-    auto paint = fPaint->makePaint();
-    if (ctx) {
-        ctx->modulatePaint(canvas->getTotalMatrix(), &paint);
-    }
+  auto paint = fPaint->makePaint();
+  if (ctx) {
+    ctx->modulatePaint(canvas->getTotalMatrix(), &paint);
+  }
 
-    const auto skipDraw = paint.nothingToDraw() || (paint.getStyle() == SkPaint::kStroke_Style &&
-                                                    paint.getStrokeWidth() <= 0);
+  const auto skipDraw = paint.nothingToDraw() ||
+                        (paint.getStyle() == SkPaint::kStroke_Style && paint.getStrokeWidth() <= 0);
 
-    if (!skipDraw) {
-        fGeometry->draw(canvas, paint);
-    }
+  if (!skipDraw) {
+    fGeometry->draw(canvas, paint);
+  }
 }
 
 const RenderNode* Draw::onNodeAt(const SkPoint& p) const {
-    const auto paint = fPaint->makePaint();
+  const auto paint = fPaint->makePaint();
 
-    if (!paint.getAlpha()) {
-        return nullptr;
-    }
+  if (!paint.getAlpha()) {
+    return nullptr;
+  }
 
-    if (paint.getStyle() == SkPaint::Style::kFill_Style && fGeometry->contains(p)) {
-        return this;
-    }
+  if (paint.getStyle() == SkPaint::Style::kFill_Style && fGeometry->contains(p)) {
+    return this;
+  }
 
-    SkPath stroke_path;
-    if (!paint.getFillPath(fGeometry->asPath(), &stroke_path)) {
-        return nullptr;
-    }
+  SkPath stroke_path;
+  if (!paint.getFillPath(fGeometry->asPath(), &stroke_path)) {
+    return nullptr;
+  }
 
-    return stroke_path.contains(p.x(), p.y()) ? this : nullptr;
+  return stroke_path.contains(p.x(), p.y()) ? this : nullptr;
 }
 
 SkRect Draw::onRevalidate(InvalidationController* ic, const SkMatrix& ctm) {
-    SkASSERT(this->hasInval());
+  SkASSERT(this->hasInval());
 
-    auto bounds = fGeometry->revalidate(ic, ctm);
-    fPaint->revalidate(ic, ctm);
+  auto bounds = fGeometry->revalidate(ic, ctm);
+  fPaint->revalidate(ic, ctm);
 
-    const auto paint = fPaint->makePaint();
-    SkASSERT(paint.canComputeFastBounds());
+  const auto paint = fPaint->makePaint();
+  SkASSERT(paint.canComputeFastBounds());
 
-    return paint.computeFastBounds(bounds, &bounds);
+  return paint.computeFastBounds(bounds, &bounds);
 }
 
 }  // namespace sksg

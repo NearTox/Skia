@@ -17,9 +17,9 @@ namespace SkSL {
  * it is a parsed-but-not-yet-analyzed version of the program.
  */
 struct ASTNode {
-    virtual ~ASTNode() {}
+  virtual ~ASTNode() {}
 
-    virtual String description() const = 0;
+  virtual String description() const = 0;
 };
 
 }  // namespace SkSL

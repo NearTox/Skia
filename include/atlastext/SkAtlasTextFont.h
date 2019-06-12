@@ -14,25 +14,25 @@
 
 /** Represents a font at a size. TODO: What else do we need here (skewX, scaleX, vertical, ...)? */
 class SK_API SkAtlasTextFont : public SkRefCnt {
-public:
-    static sk_sp<SkAtlasTextFont> Make(sk_sp<SkTypeface> typeface, SkScalar size) {
-        return sk_sp<SkAtlasTextFont>(new SkAtlasTextFont(std::move(typeface), size));
-    }
+ public:
+  static sk_sp<SkAtlasTextFont> Make(sk_sp<SkTypeface> typeface, SkScalar size) {
+    return sk_sp<SkAtlasTextFont>(new SkAtlasTextFont(std::move(typeface), size));
+  }
 
-    SkTypeface* typeface() const { return fTypeface.get(); }
+  SkTypeface* typeface() const { return fTypeface.get(); }
 
-    sk_sp<SkTypeface> refTypeface() const { return fTypeface; }
+  sk_sp<SkTypeface> refTypeface() const { return fTypeface; }
 
-    SkScalar size() const { return fSize; }
+  SkScalar size() const { return fSize; }
 
-    SkFont makeFont() const { return SkFont(fTypeface, fSize); }
+  SkFont makeFont() const { return SkFont(fTypeface, fSize); }
 
-private:
-    SkAtlasTextFont(sk_sp<SkTypeface> typeface, SkScalar size)
-            : fTypeface(std::move(typeface)), fSize(size) {}
+ private:
+  SkAtlasTextFont(sk_sp<SkTypeface> typeface, SkScalar size)
+      : fTypeface(std::move(typeface)), fSize(size) {}
 
-    sk_sp<SkTypeface> fTypeface;
-    SkScalar fSize;
+  sk_sp<SkTypeface> fTypeface;
+  SkScalar fSize;
 };
 
 #endif

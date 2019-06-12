@@ -19,19 +19,20 @@ namespace SkDashPath {
  *
  * Caller should have already used ValidDashPath to exclude invalid data.
  */
-void CalcDashParameters(SkScalar phase, const SkScalar intervals[], int32_t count,
-                        SkScalar* initialDashLength, int32_t* initialDashIndex,
-                        SkScalar* intervalLength, SkScalar* adjustedPhase = nullptr);
+void CalcDashParameters(
+    SkScalar phase, const SkScalar intervals[], int32_t count, SkScalar* initialDashLength,
+    int32_t* initialDashIndex, SkScalar* intervalLength, SkScalar* adjustedPhase = nullptr);
 
-bool FilterDashPath(SkPath* dst, const SkPath& src, SkStrokeRec*, const SkRect*,
-                    const SkPathEffect::DashInfo& info);
+bool FilterDashPath(
+    SkPath* dst, const SkPath& src, SkStrokeRec*, const SkRect*,
+    const SkPathEffect::DashInfo& info);
 
 const SkScalar kMaxDashCount = 1000000;
 
 /** See comments for InternalFilter */
 enum class StrokeRecApplication {
-    kDisallow,
-    kAllow,
+  kDisallow,
+  kAllow,
 };
 
 /**
@@ -40,10 +41,11 @@ enum class StrokeRecApplication {
  * evaluate the dash and stroke to produce a stroked output path with a fill strokeRec. Passing
  * true for disallowStrokeRecApplication turns this behavior off.
  */
-bool InternalFilter(SkPath* dst, const SkPath& src, SkStrokeRec* rec, const SkRect* cullRect,
-                    const SkScalar aIntervals[], int32_t count, SkScalar initialDashLength,
-                    int32_t initialDashIndex, SkScalar intervalLength,
-                    StrokeRecApplication = StrokeRecApplication::kAllow);
+bool InternalFilter(
+    SkPath* dst, const SkPath& src, SkStrokeRec* rec, const SkRect* cullRect,
+    const SkScalar aIntervals[], int32_t count, SkScalar initialDashLength,
+    int32_t initialDashIndex, SkScalar intervalLength,
+    StrokeRecApplication = StrokeRecApplication::kAllow);
 
 bool ValidDashPath(SkScalar phase, const SkScalar intervals[], int32_t count);
 }  // namespace SkDashPath

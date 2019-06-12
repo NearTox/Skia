@@ -19,12 +19,9 @@ class SkRRect;
 
 namespace GrShadowRRectOp {
 
-std::unique_ptr<GrDrawOp> Make(GrRecordingContext*,
-                               GrColor,
-                               const SkMatrix& viewMatrix,
-                               const SkRRect&,
-                               SkScalar blurWidth,
-                               SkScalar insetWidth);
+std::unique_ptr<GrDrawOp> Make(
+    GrRecordingContext*, GrColor, const SkMatrix& viewMatrix, const SkRRect&, SkScalar blurWidth,
+    SkScalar insetWidth);
 }
 
 #endif

@@ -15,28 +15,28 @@ namespace sksg {
 Image::Image(sk_sp<SkImage> image) : fImage(std::move(image)) {}
 
 void Image::onRender(SkCanvas* canvas, const RenderContext* ctx) const {
-    if (!fImage) {
-        return;
-    }
+  if (!fImage) {
+    return;
+  }
 
-    SkPaint paint;
-    paint.setAntiAlias(fAntiAlias);
-    paint.setFilterQuality(fQuality);
+  SkPaint paint;
+  paint.setAntiAlias(fAntiAlias);
+  paint.setFilterQuality(fQuality);
 
-    if (ctx) {
-        ctx->modulatePaint(canvas->getTotalMatrix(), &paint);
-    }
+  if (ctx) {
+    ctx->modulatePaint(canvas->getTotalMatrix(), &paint);
+  }
 
-    canvas->drawImage(fImage, 0, 0, &paint);
+  canvas->drawImage(fImage, 0, 0, &paint);
 }
 
 const RenderNode* Image::onNodeAt(const SkPoint& p) const {
-    SkASSERT(this->bounds().contains(p.x(), p.y()));
-    return this;
+  SkASSERT(this->bounds().contains(p.x(), p.y()));
+  return this;
 }
 
 SkRect Image::onRevalidate(InvalidationController*, const SkMatrix& ctm) {
-    return fImage ? SkRect::Make(fImage->bounds()) : SkRect::MakeEmpty();
+  return fImage ? SkRect::Make(fImage->bounds()) : SkRect::MakeEmpty();
 }
 
 }  // namespace sksg

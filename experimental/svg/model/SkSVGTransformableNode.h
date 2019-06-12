@@ -12,25 +12,25 @@
 #include "include/core/SkMatrix.h"
 
 class SkSVGTransformableNode : public SkSVGNode {
-public:
-    ~SkSVGTransformableNode() override = default;
+ public:
+  ~SkSVGTransformableNode() override = default;
 
-    void setTransform(const SkSVGTransformType& t) { fTransform = t; }
+  void setTransform(const SkSVGTransformType& t) { fTransform = t; }
 
-protected:
-    SkSVGTransformableNode(SkSVGTag);
+ protected:
+  SkSVGTransformableNode(SkSVGTag);
 
-    bool onPrepareToRender(SkSVGRenderContext*) const override;
+  bool onPrepareToRender(SkSVGRenderContext*) const override;
 
-    void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
+  void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
 
-    void mapToParent(SkPath*) const;
+  void mapToParent(SkPath*) const;
 
-private:
-    // FIXME: should be sparse
-    SkSVGTransformType fTransform;
+ private:
+  // FIXME: should be sparse
+  SkSVGTransformType fTransform;
 
-    typedef SkSVGNode INHERITED;
+  typedef SkSVGNode INHERITED;
 };
 
 #endif  // SkSVGTransformableNode_DEFINED

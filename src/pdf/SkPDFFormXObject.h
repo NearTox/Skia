@@ -18,13 +18,8 @@ class SkPDFDocument;
     syntax, that can be drawn into a page content stream, just like a
     bitmap XObject can be drawn into a page content stream.
 */
-SkPDFIndirectReference SkPDFMakeFormXObject(SkPDFDocument* doc,
-                                            std::unique_ptr<SkStreamAsset>
-                                                    content,
-                                            std::unique_ptr<SkPDFArray>
-                                                    mediaBox,
-                                            std::unique_ptr<SkPDFDict>
-                                                    resourceDict,
-                                            const SkMatrix& inverseTransform,
-                                            const char* colorSpace);
+SkPDFIndirectReference SkPDFMakeFormXObject(
+    SkPDFDocument* doc, std::unique_ptr<SkStreamAsset> content,
+    std::unique_ptr<SkPDFArray> mediaBox, std::unique_ptr<SkPDFDict> resourceDict,
+    const SkMatrix& inverseTransform, const char* colorSpace);
 #endif

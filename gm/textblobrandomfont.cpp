@@ -34,131 +34,131 @@ class GrRenderTargetContext;
 
 namespace skiagm {
 class TextBlobRandomFont : public GpuGM {
-public:
-    // This gm tests that textblobs can be translated and scaled with a font that returns random
-    // but deterministic masks
-    TextBlobRandomFont() {}
+ public:
+  // This gm tests that textblobs can be translated and scaled with a font that returns random
+  // but deterministic masks
+  TextBlobRandomFont() {}
 
-protected:
-    void onOnceBeforeDraw() override {
-        SkTextBlobBuilder builder;
+ protected:
+  void onOnceBeforeDraw() override {
+    SkTextBlobBuilder builder;
 
-        const char* text = "The quick brown fox jumps over the lazy dog.";
+    const char* text = "The quick brown fox jumps over the lazy dog.";
 
-        SkPaint paint;
-        paint.setAntiAlias(true);
-        paint.setColor(SK_ColorMAGENTA);
+    SkPaint paint;
+    paint.setAntiAlias(true);
+    paint.setColor(SK_ColorMAGENTA);
 
-        // make textbloben
-        SkFont font;
-        font.setSize(32);
-        font.setEdging(SkFont::Edging::kSubpixelAntiAlias);
+    // make textbloben
+    SkFont font;
+    font.setSize(32);
+    font.setEdging(SkFont::Edging::kSubpixelAntiAlias);
 
-        // Setup our random scaler context
-        auto typeface = ToolUtils::create_portable_typeface("sans-serif", SkFontStyle::Bold());
-        if (!typeface) {
-            typeface = SkTypeface::MakeDefault();
-        }
-        font.setTypeface(sk_make_sp<SkRandomTypeface>(std::move(typeface), paint, false));
+    // Setup our random scaler context
+    auto typeface = ToolUtils::create_portable_typeface("sans-serif", SkFontStyle::Bold());
+    if (!typeface) {
+      typeface = SkTypeface::MakeDefault();
+    }
+    font.setTypeface(sk_make_sp<SkRandomTypeface>(std::move(typeface), paint, false));
 
-        SkScalar y = 0;
-        SkRect bounds;
-        font.measureText(text, strlen(text), SkTextEncoding::kUTF8, &bounds);
-        y -= bounds.fTop;
-        ToolUtils::add_to_text_blob(&builder, text, font, 0, y);
-        y += bounds.fBottom;
+    SkScalar y = 0;
+    SkRect bounds;
+    font.measureText(text, strlen(text), SkTextEncoding::kUTF8, &bounds);
+    y -= bounds.fTop;
+    ToolUtils::add_to_text_blob(&builder, text, font, 0, y);
+    y += bounds.fBottom;
 
-        // A8
-        const char* bigtext1 = "The quick brown fox";
-        const char* bigtext2 = "jumps over the lazy dog.";
-        font.setSize(160);
-        font.setSubpixel(false);
-        font.setEdging(SkFont::Edging::kAntiAlias);
-        font.measureText(bigtext1, strlen(bigtext1), SkTextEncoding::kUTF8, &bounds);
-        y -= bounds.fTop;
-        ToolUtils::add_to_text_blob(&builder, bigtext1, font, 0, y);
-        y += bounds.fBottom;
+    // A8
+    const char* bigtext1 = "The quick brown fox";
+    const char* bigtext2 = "jumps over the lazy dog.";
+    font.setSize(160);
+    font.setSubpixel(false);
+    font.setEdging(SkFont::Edging::kAntiAlias);
+    font.measureText(bigtext1, strlen(bigtext1), SkTextEncoding::kUTF8, &bounds);
+    y -= bounds.fTop;
+    ToolUtils::add_to_text_blob(&builder, bigtext1, font, 0, y);
+    y += bounds.fBottom;
 
-        font.measureText(bigtext2, strlen(bigtext2), SkTextEncoding::kUTF8, &bounds);
-        y -= bounds.fTop;
-        ToolUtils::add_to_text_blob(&builder, bigtext2, font, 0, y);
-        y += bounds.fBottom;
+    font.measureText(bigtext2, strlen(bigtext2), SkTextEncoding::kUTF8, &bounds);
+    y -= bounds.fTop;
+    ToolUtils::add_to_text_blob(&builder, bigtext2, font, 0, y);
+    y += bounds.fBottom;
 
-        // color emoji
-        if (sk_sp<SkTypeface> origEmoji = ToolUtils::emoji_typeface()) {
-            font.setTypeface(sk_make_sp<SkRandomTypeface>(origEmoji, paint, false));
-            const char* emojiText = ToolUtils::emoji_sample_text();
-            font.measureText(emojiText, strlen(emojiText), SkTextEncoding::kUTF8, &bounds);
-            y -= bounds.fTop;
-            ToolUtils::add_to_text_blob(&builder, emojiText, font, 0, y);
-            y += bounds.fBottom;
-        }
-
-        // build
-        fBlob = builder.make();
+    // color emoji
+    if (sk_sp<SkTypeface> origEmoji = ToolUtils::emoji_typeface()) {
+      font.setTypeface(sk_make_sp<SkRandomTypeface>(origEmoji, paint, false));
+      const char* emojiText = ToolUtils::emoji_sample_text();
+      font.measureText(emojiText, strlen(emojiText), SkTextEncoding::kUTF8, &bounds);
+      y -= bounds.fTop;
+      ToolUtils::add_to_text_blob(&builder, emojiText, font, 0, y);
+      y += bounds.fBottom;
     }
 
-    SkString onShortName() override { return SkString("textblobrandomfont"); }
+    // build
+    fBlob = builder.make();
+  }
 
-    SkISize onISize() override { return SkISize::Make(kWidth, kHeight); }
+  SkString onShortName() override { return SkString("textblobrandomfont"); }
 
-    DrawResult onDraw(GrContext* context, GrRenderTargetContext*, SkCanvas* canvas,
-                      SkString* errorMsg) override {
-        // This GM exists to test a specific feature of the GPU backend.
-        // This GM uses ToolUtils::makeSurface which doesn't work well with vias.
-        // This GM uses SkRandomTypeface which doesn't work well with serialization.
-        canvas->drawColor(SK_ColorWHITE);
+  SkISize onISize() override { return SkISize::Make(kWidth, kHeight); }
 
-        SkImageInfo info =
-                SkImageInfo::Make(kWidth, kHeight, canvas->imageInfo().colorType(),
-                                  kPremul_SkAlphaType, canvas->imageInfo().refColorSpace());
-        SkSurfaceProps props(0, kUnknown_SkPixelGeometry);
-        auto surface(ToolUtils::makeSurface(canvas, info, &props));
-        if (!surface) {
-            *errorMsg = "This test requires a surface";
-            return DrawResult::kFail;
-        }
+  DrawResult onDraw(
+      GrContext* context, GrRenderTargetContext*, SkCanvas* canvas, SkString* errorMsg) override {
+    // This GM exists to test a specific feature of the GPU backend.
+    // This GM uses ToolUtils::makeSurface which doesn't work well with vias.
+    // This GM uses SkRandomTypeface which doesn't work well with serialization.
+    canvas->drawColor(SK_ColorWHITE);
 
-        SkPaint paint;
-        paint.setAntiAlias(true);
-
-        SkCanvas* surfaceCanvas = surface->getCanvas();
-
-        SkScalar stride = SkScalarCeilToScalar(fBlob->bounds().height());
-        SkScalar yOffset = 5;
-
-        canvas->save();
-        // Originally we would alternate between rotating and not to force blob regeneration,
-        // but that code seems to have rotted. Keeping the rotate to match the old GM as
-        // much as possible, and it seems like a reasonable stress test for transformed
-        // color emoji.
-        canvas->rotate(-0.05f);
-        canvas->drawTextBlob(fBlob, 10, yOffset, paint);
-        yOffset += stride;
-        canvas->restore();
-
-        // Rotate in the surface canvas, not the final canvas, to avoid aliasing
-        surfaceCanvas->rotate(-0.05f);
-        surfaceCanvas->drawTextBlob(fBlob, 10, yOffset, paint);
-        surface->draw(canvas, 0, 0, nullptr);
-        yOffset += stride;
-
-        // free gpu resources and verify
-        context->freeGpuResources();
-
-        canvas->rotate(-0.05f);
-        canvas->drawTextBlob(fBlob, 10, yOffset, paint);
-        yOffset += stride;
-        return DrawResult::kOk;
+    SkImageInfo info = SkImageInfo::Make(
+        kWidth, kHeight, canvas->imageInfo().colorType(), kPremul_SkAlphaType,
+        canvas->imageInfo().refColorSpace());
+    SkSurfaceProps props(0, kUnknown_SkPixelGeometry);
+    auto surface(ToolUtils::makeSurface(canvas, info, &props));
+    if (!surface) {
+      *errorMsg = "This test requires a surface";
+      return DrawResult::kFail;
     }
 
-private:
-    sk_sp<SkTextBlob> fBlob;
+    SkPaint paint;
+    paint.setAntiAlias(true);
 
-    static constexpr int kWidth = 2000;
-    static constexpr int kHeight = 1600;
+    SkCanvas* surfaceCanvas = surface->getCanvas();
 
-    typedef GM INHERITED;
+    SkScalar stride = SkScalarCeilToScalar(fBlob->bounds().height());
+    SkScalar yOffset = 5;
+
+    canvas->save();
+    // Originally we would alternate between rotating and not to force blob regeneration,
+    // but that code seems to have rotted. Keeping the rotate to match the old GM as
+    // much as possible, and it seems like a reasonable stress test for transformed
+    // color emoji.
+    canvas->rotate(-0.05f);
+    canvas->drawTextBlob(fBlob, 10, yOffset, paint);
+    yOffset += stride;
+    canvas->restore();
+
+    // Rotate in the surface canvas, not the final canvas, to avoid aliasing
+    surfaceCanvas->rotate(-0.05f);
+    surfaceCanvas->drawTextBlob(fBlob, 10, yOffset, paint);
+    surface->draw(canvas, 0, 0, nullptr);
+    yOffset += stride;
+
+    // free gpu resources and verify
+    context->freeGpuResources();
+
+    canvas->rotate(-0.05f);
+    canvas->drawTextBlob(fBlob, 10, yOffset, paint);
+    yOffset += stride;
+    return DrawResult::kOk;
+  }
+
+ private:
+  sk_sp<SkTextBlob> fBlob;
+
+  static constexpr int kWidth = 2000;
+  static constexpr int kHeight = 1600;
+
+  typedef GM INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////

@@ -27,53 +27,53 @@ extern int gMaxRecursion[];
     kStroke_Mask bit set in the paint.
 */
 class SkStroke {
-public:
-    SkStroke();
-    SkStroke(const SkPaint&);
-    SkStroke(const SkPaint&, SkScalar width);  // width overrides paint.getStrokeWidth()
+ public:
+  SkStroke();
+  SkStroke(const SkPaint&);
+  SkStroke(const SkPaint&, SkScalar width);  // width overrides paint.getStrokeWidth()
 
-    SkPaint::Cap getCap() const noexcept { return (SkPaint::Cap)fCap; }
-    void setCap(SkPaint::Cap);
+  SkPaint::Cap getCap() const { return (SkPaint::Cap)fCap; }
+  void setCap(SkPaint::Cap);
 
-    SkPaint::Join getJoin() const noexcept { return (SkPaint::Join)fJoin; }
-    void setJoin(SkPaint::Join);
+  SkPaint::Join getJoin() const { return (SkPaint::Join)fJoin; }
+  void setJoin(SkPaint::Join);
 
-    void setMiterLimit(SkScalar);
-    void setWidth(SkScalar);
+  void setMiterLimit(SkScalar);
+  void setWidth(SkScalar);
 
-    bool getDoFill() const noexcept { return SkToBool(fDoFill); }
-    void setDoFill(bool doFill) noexcept { fDoFill = SkToU8(doFill); }
+  bool getDoFill() const { return SkToBool(fDoFill); }
+  void setDoFill(bool doFill) { fDoFill = SkToU8(doFill); }
 
-    /**
-     *  ResScale is the "intended" resolution for the output.
-     *      Default is 1.0.
-     *      Larger values (res > 1) indicate that the result should be more precise, since it will
-     *          be zoomed up, and small errors will be magnified.
-     *      Smaller values (0 < res < 1) indicate that the result can be less precise, since it will
-     *          be zoomed down, and small errors may be invisible.
-     */
-    SkScalar getResScale() const noexcept { return fResScale; }
-    void setResScale(SkScalar rs) noexcept {
-        SkASSERT(rs > 0 && SkScalarIsFinite(rs));
-        fResScale = rs;
-    }
+  /**
+   *  ResScale is the "intended" resolution for the output.
+   *      Default is 1.0.
+   *      Larger values (res > 1) indicate that the result should be more precise, since it will
+   *          be zoomed up, and small errors will be magnified.
+   *      Smaller values (0 < res < 1) indicate that the result can be less precise, since it will
+   *          be zoomed down, and small errors may be invisible.
+   */
+  SkScalar getResScale() const { return fResScale; }
+  void setResScale(SkScalar rs) {
+    SkASSERT(rs > 0 && SkScalarIsFinite(rs));
+    fResScale = rs;
+  }
 
-    /**
-     *  Stroke the specified rect, winding it in the specified direction..
-     */
-    void strokeRect(const SkRect& rect, SkPath* result,
-                    SkPath::Direction = SkPath::kCW_Direction) const;
-    void strokePath(const SkPath& path, SkPath*) const;
+  /**
+   *  Stroke the specified rect, winding it in the specified direction..
+   */
+  void strokeRect(
+      const SkRect& rect, SkPath* result, SkPath::Direction = SkPath::kCW_Direction) const;
+  void strokePath(const SkPath& path, SkPath*) const;
 
-    ////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////
 
-private:
-    SkScalar fWidth, fMiterLimit;
-    SkScalar fResScale;
-    uint8_t fCap, fJoin;
-    bool fDoFill;
+ private:
+  SkScalar fWidth, fMiterLimit;
+  SkScalar fResScale;
+  uint8_t fCap, fJoin;
+  bool fDoFill;
 
-    friend class SkPaint;
+  friend class SkPaint;
 };
 
 #endif

@@ -13,6 +13,6 @@
 SkNormalSource::~SkNormalSource() {}
 
 void SkNormalSource::RegisterFlattenables() {
-    SK_REGISTER_FLATTENABLE(SkNormalMapSourceImpl);
-    SK_REGISTER_FLATTENABLE(SkNormalFlatSourceImpl);
+  SK_REGISTER_FLATTENABLE(SkNormalMapSourceImpl);
+  SK_REGISTER_FLATTENABLE(SkNormalFlatSourceImpl);
 }

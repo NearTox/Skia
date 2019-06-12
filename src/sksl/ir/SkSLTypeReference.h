@@ -18,24 +18,24 @@ namespace SkSL {
  * always eventually replaced by Constructors in valid programs.
  */
 struct TypeReference : public Expression {
-    TypeReference(const Context& context, int offset, const Type& value)
-            : INHERITED(offset, kTypeReference_Kind, *context.fInvalid_Type), fValue(value) {}
+  TypeReference(const Context& context, int offset, const Type& value)
+      : INHERITED(offset, kTypeReference_Kind, *context.fInvalid_Type), fValue(value) {}
 
-    bool hasSideEffects() const override { return false; }
+  bool hasSideEffects() const override { return false; }
 
-    String description() const override { return String(fValue.fName); }
+  String description() const override { return String(fValue.fName); }
 
-    std::unique_ptr<Expression> clone() const override {
-        return std::unique_ptr<Expression>(new TypeReference(fOffset, fValue, &fType));
-    }
+  std::unique_ptr<Expression> clone() const override {
+    return std::unique_ptr<Expression>(new TypeReference(fOffset, fValue, &fType));
+  }
 
-    const Type& fValue;
+  const Type& fValue;
 
-    typedef Expression INHERITED;
+  typedef Expression INHERITED;
 
-private:
-    TypeReference(int offset, const Type& value, const Type* type)
-            : INHERITED(offset, kTypeReference_Kind, *type), fValue(value) {}
+ private:
+  TypeReference(int offset, const Type& value, const Type* type)
+      : INHERITED(offset, kTypeReference_Kind, *type), fValue(value) {}
 };
 
 }  // namespace SkSL

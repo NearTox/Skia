@@ -18,14 +18,13 @@
 #if GR_TEST_UTILS
 
 GrResourceProvider* GrProcessorTestData::resourceProvider() {
-    return fContext->priv().resourceProvider();
+  return fContext->priv().resourceProvider();
 }
 
 GrProxyProvider* GrProcessorTestData::proxyProvider() { return fContext->priv().proxyProvider(); }
 
 const GrCaps* GrProcessorTestData::caps() { return fContext->priv().caps(); }
 
-#if SK_ALLOW_STATIC_GLOBAL_INITIALIZERS
 class GrFragmentProcessor;
 class GrGeometryProcessor;
 
@@ -35,19 +34,19 @@ class GrGeometryProcessor;
  */
 template <>
 SkTArray<GrFragmentProcessorTestFactory*, true>* GrFragmentProcessorTestFactory::GetFactories() {
-    static SkTArray<GrFragmentProcessorTestFactory*, true> gFactories;
-    return &gFactories;
+  static SkTArray<GrFragmentProcessorTestFactory*, true> gFactories;
+  return &gFactories;
 }
 
 template <>
 SkTArray<GrGeometryProcessorTestFactory*, true>* GrGeometryProcessorTestFactory::GetFactories() {
-    static SkTArray<GrGeometryProcessorTestFactory*, true> gFactories;
-    return &gFactories;
+  static SkTArray<GrGeometryProcessorTestFactory*, true> gFactories;
+  return &gFactories;
 }
 
 SkTArray<GrXPFactoryTestFactory*, true>* GrXPFactoryTestFactory::GetFactories() {
-    static SkTArray<GrXPFactoryTestFactory*, true> gFactories;
-    return &gFactories;
+  static SkTArray<GrXPFactoryTestFactory*, true> gFactories;
+  return &gFactories;
 }
 
 /*
@@ -55,35 +54,45 @@ SkTArray<GrXPFactoryTestFactory*, true>* GrXPFactoryTestFactory::GetFactories() 
  * we verify the count is as expected.  If a new factory is added, then these numbers must be
  * manually adjusted.
  */
+#if SK_ALLOW_STATIC_GLOBAL_INITIALIZERS
 static const int kFPFactoryCount = 36;
 static const int kGPFactoryCount = 14;
 static const int kXPFactoryCount = 4;
+#else
+static const int kFPFactoryCount = 0;
+static const int kGPFactoryCount = 0;
+static const int kXPFactoryCount = 0;
+#endif
 
-template <> void GrFragmentProcessorTestFactory::VerifyFactoryCount() {
-    if (kFPFactoryCount != GetFactories()->count()) {
-        SkDebugf("\nExpected %d fragment processor factories, found %d.\n", kFPFactoryCount,
-                 GetFactories()->count());
-        SK_ABORT("Wrong number of fragment processor factories!");
-    }
+template <>
+void GrFragmentProcessorTestFactory::VerifyFactoryCount() {
+  if (kFPFactoryCount != GetFactories()->count()) {
+    SkDebugf(
+        "\nExpected %d fragment processor factories, found %d.\n", kFPFactoryCount,
+        GetFactories()->count());
+    SK_ABORT("Wrong number of fragment processor factories!");
+  }
 }
 
-template <> void GrGeometryProcessorTestFactory::VerifyFactoryCount() {
-    if (kGPFactoryCount != GetFactories()->count()) {
-        SkDebugf("\nExpected %d geometry processor factories, found %d.\n", kGPFactoryCount,
-                 GetFactories()->count());
-        SK_ABORT("Wrong number of geometry processor factories!");
-    }
+template <>
+void GrGeometryProcessorTestFactory::VerifyFactoryCount() {
+  if (kGPFactoryCount != GetFactories()->count()) {
+    SkDebugf(
+        "\nExpected %d geometry processor factories, found %d.\n", kGPFactoryCount,
+        GetFactories()->count());
+    SK_ABORT("Wrong number of geometry processor factories!");
+  }
 }
 
 void GrXPFactoryTestFactory::VerifyFactoryCount() {
-    if (kXPFactoryCount != GetFactories()->count()) {
-        SkDebugf("\nExpected %d xp factory factories, found %d.\n", kXPFactoryCount,
-                 GetFactories()->count());
-        SK_ABORT("Wrong number of xp factory factories!");
-    }
+  if (kXPFactoryCount != GetFactories()->count()) {
+    SkDebugf(
+        "\nExpected %d xp factory factories, found %d.\n", kXPFactoryCount,
+        GetFactories()->count());
+    SK_ABORT("Wrong number of xp factory factories!");
+  }
 }
 
-#endif
 #endif
 
 // We use a global pool protected by a mutex(spinlock). Chrome may use the same GrContext on
@@ -95,20 +104,20 @@ namespace {
 static SkSpinlock gProcessorSpinlock;
 #endif
 class MemoryPoolAccessor {
-public:
+ public:
 // We know in the Android framework there is only one GrContext.
 #if defined(SK_BUILD_FOR_ANDROID_FRAMEWORK)
-    MemoryPoolAccessor() {}
-    ~MemoryPoolAccessor() {}
+  MemoryPoolAccessor() {}
+  ~MemoryPoolAccessor() {}
 #else
-    MemoryPoolAccessor() { gProcessorSpinlock.acquire(); }
-    ~MemoryPoolAccessor() { gProcessorSpinlock.release(); }
+  MemoryPoolAccessor() { gProcessorSpinlock.acquire(); }
+  ~MemoryPoolAccessor() { gProcessorSpinlock.release(); }
 #endif
 
-    GrMemoryPool* pool() const {
-        static GrMemoryPool gPool(4096, 4096);
-        return &gPool;
-    }
+  GrMemoryPool* pool() const {
+    static GrMemoryPool gPool(4096, 4096);
+    return &gPool;
+  }
 };
 }  // namespace
 
@@ -117,5 +126,5 @@ public:
 void* GrProcessor::operator new(size_t size) { return MemoryPoolAccessor().pool()->allocate(size); }
 
 void GrProcessor::operator delete(void* target) {
-    return MemoryPoolAccessor().pool()->release(target);
+  return MemoryPoolAccessor().pool()->release(target);
 }

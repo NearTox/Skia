@@ -16,51 +16,51 @@
 namespace SkSL {
 
 class PipelineStageCodeGenerator : public GLSLCodeGenerator {
-public:
-    PipelineStageCodeGenerator(const Context* context, const Program* program,
-                               ErrorReporter* errors, OutputStream* out,
-                               std::vector<Compiler::FormatArg>* outFormatArgs);
+ public:
+  PipelineStageCodeGenerator(
+      const Context* context, const Program* program, ErrorReporter* errors, OutputStream* out,
+      std::vector<Compiler::FormatArg>* outFormatArgs);
 
-private:
-    void writef(const char* s, va_list va) SKSL_PRINTF_LIKE(2, 0);
+ private:
+  void writef(const char* s, va_list va) SKSL_PRINTF_LIKE(2, 0);
 
-    void writef(const char* s, ...) SKSL_PRINTF_LIKE(2, 3);
+  void writef(const char* s, ...) SKSL_PRINTF_LIKE(2, 3);
 
-    bool writeSection(const char* name, const char* prefix = "");
+  bool writeSection(const char* name, const char* prefix = "");
 
-    void writeHeader() override;
+  void writeHeader() override;
 
-    bool usesPrecisionModifiers() const override;
+  bool usesPrecisionModifiers() const override;
 
-    String getTypeName(const Type& type) override;
+  String getTypeName(const Type& type) override;
 
-    void writeBinaryExpression(const BinaryExpression& b, Precedence parentPrecedence) override;
+  void writeBinaryExpression(const BinaryExpression& b, Precedence parentPrecedence) override;
 
-    void writeFunctionCall(const FunctionCall& c) override;
+  void writeFunctionCall(const FunctionCall& c) override;
 
-    void writeIntLiteral(const IntLiteral& i) override;
+  void writeIntLiteral(const IntLiteral& i) override;
 
-    void writeVariableReference(const VariableReference& ref) override;
+  void writeVariableReference(const VariableReference& ref) override;
 
-    void writeIfStatement(const IfStatement& s) override;
+  void writeIfStatement(const IfStatement& s) override;
 
-    void writeSwitchStatement(const SwitchStatement& s) override;
+  void writeSwitchStatement(const SwitchStatement& s) override;
 
-    void writeFunction(const FunctionDefinition& f) override;
+  void writeFunction(const FunctionDefinition& f) override;
 
-    void writeProgramElement(const ProgramElement& p) override;
+  void writeProgramElement(const ProgramElement& p) override;
 
-    bool writeEmitCode(std::vector<const Variable*>& uniforms);
+  bool writeEmitCode(std::vector<const Variable*>& uniforms);
 
-    String fName;
-    String fFullName;
-    SectionAndParameterHelper fSectionAndParameterHelper;
-    String fExtraEmitCodeCode;
-    std::set<int> fWrittenTransformedCoords;
-    std::vector<Compiler::FormatArg>* fFormatArgs;
-    const FunctionDeclaration* fCurrentFunction;
+  String fName;
+  String fFullName;
+  SectionAndParameterHelper fSectionAndParameterHelper;
+  String fExtraEmitCodeCode;
+  std::set<int> fWrittenTransformedCoords;
+  std::vector<Compiler::FormatArg>* fFormatArgs;
+  const FunctionDeclaration* fCurrentFunction;
 
-    typedef GLSLCodeGenerator INHERITED;
+  typedef GLSLCodeGenerator INHERITED;
 };
 
 }  // namespace SkSL

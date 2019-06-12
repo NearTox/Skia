@@ -11,34 +11,34 @@
 #include "src/shaders/gradients/SkGradientShaderPriv.h"
 
 class SkLinearGradient : public SkGradientShaderBase {
-public:
-    SkLinearGradient(const SkPoint pts[2], const Descriptor&);
+ public:
+  SkLinearGradient(const SkPoint pts[2], const Descriptor&);
 
-    GradientType asAGradient(GradientInfo* info) const override;
+  GradientType asAGradient(GradientInfo* info) const override;
 #if SK_SUPPORT_GPU
-    std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
+  std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
 #endif
 
-protected:
-    SkLinearGradient(SkReadBuffer& buffer);
-    void flatten(SkWriteBuffer& buffer) const override;
+ protected:
+  SkLinearGradient(SkReadBuffer& buffer);
+  void flatten(SkWriteBuffer& buffer) const override;
 #ifdef SK_ENABLE_LEGACY_SHADERCONTEXT
-    Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const override;
-    Context* onMakeBurstPipelineContext(const ContextRec&, SkArenaAlloc*) const override;
+  Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const override;
+  Context* onMakeBurstPipelineContext(const ContextRec&, SkArenaAlloc*) const override;
 #endif
 
-    void appendGradientStages(SkArenaAlloc* alloc, SkRasterPipeline* tPipeline,
-                              SkRasterPipeline* postPipeline) const final;
+  void appendGradientStages(
+      SkArenaAlloc* alloc, SkRasterPipeline* tPipeline, SkRasterPipeline* postPipeline) const final;
 
-private:
-    SK_FLATTENABLE_HOOKS(SkLinearGradient)
+ private:
+  SK_FLATTENABLE_HOOKS(SkLinearGradient)
 
-    class LinearGradient4fContext;
+  class LinearGradient4fContext;
 
-    friend class SkGradientShader;
-    typedef SkGradientShaderBase INHERITED;
-    const SkPoint fStart;
-    const SkPoint fEnd;
+  friend class SkGradientShader;
+  typedef SkGradientShaderBase INHERITED;
+  const SkPoint fStart;
+  const SkPoint fEnd;
 };
 
 #endif

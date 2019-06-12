@@ -14,41 +14,41 @@
     This class is purely a privileged window into GrContext_Base. It should never have
     additional data members or virtual methods. */
 class GrBaseContextPriv {
-public:
-    // from GrContext_Base
-    uint32_t contextID() const { return fContext->contextID(); }
+ public:
+  // from GrContext_Base
+  uint32_t contextID() const { return fContext->contextID(); }
 
-    bool matches(GrContext_Base* candidate) const { return fContext->matches(candidate); }
+  bool matches(GrContext_Base* candidate) const { return fContext->matches(candidate); }
 
-    const GrContextOptions& options() const { return fContext->options(); }
+  const GrContextOptions& options() const { return fContext->options(); }
 
-    const GrCaps* caps() const { return fContext->caps(); }
-    sk_sp<const GrCaps> refCaps() const;
+  const GrCaps* caps() const { return fContext->caps(); }
+  sk_sp<const GrCaps> refCaps() const;
 
-    sk_sp<GrSkSLFPFactoryCache> fpFactoryCache();
+  sk_sp<GrSkSLFPFactoryCache> fpFactoryCache();
 
-    GrImageContext* asImageContext() { return fContext->asImageContext(); }
-    GrRecordingContext* asRecordingContext() { return fContext->asRecordingContext(); }
-    GrContext* asDirectContext() { return fContext->asDirectContext(); }
+  GrImageContext* asImageContext() { return fContext->asImageContext(); }
+  GrRecordingContext* asRecordingContext() { return fContext->asRecordingContext(); }
+  GrContext* asDirectContext() { return fContext->asDirectContext(); }
 
-private:
-    explicit GrBaseContextPriv(GrContext_Base* context) : fContext(context) {}
-    GrBaseContextPriv(const GrBaseContextPriv&);             // unimpl
-    GrBaseContextPriv& operator=(const GrBaseContextPriv&);  // unimpl
+ private:
+  explicit GrBaseContextPriv(GrContext_Base* context) : fContext(context) {}
+  GrBaseContextPriv(const GrBaseContextPriv&);             // unimpl
+  GrBaseContextPriv& operator=(const GrBaseContextPriv&);  // unimpl
 
-    // No taking addresses of this type.
-    const GrBaseContextPriv* operator&() const;
-    GrBaseContextPriv* operator&();
+  // No taking addresses of this type.
+  const GrBaseContextPriv* operator&() const;
+  GrBaseContextPriv* operator&();
 
-    GrContext_Base* fContext;
+  GrContext_Base* fContext;
 
-    friend class GrContext_Base;  // to construct/copy this type.
+  friend class GrContext_Base;  // to construct/copy this type.
 };
 
 inline GrBaseContextPriv GrContext_Base::priv() { return GrBaseContextPriv(this); }
 
 inline const GrBaseContextPriv GrContext_Base::priv() const {
-    return GrBaseContextPriv(const_cast<GrContext_Base*>(this));
+  return GrBaseContextPriv(const_cast<GrContext_Base*>(this));
 }
 
 #endif

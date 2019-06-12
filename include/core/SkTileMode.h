@@ -11,29 +11,29 @@
 #include "include/core/SkTypes.h"
 
 enum class SkTileMode {
-    /**
-     *  Replicate the edge color if the shader draws outside of its
-     *  original bounds.
-     */
-    kClamp,
+  /**
+   *  Replicate the edge color if the shader draws outside of its
+   *  original bounds.
+   */
+  kClamp,
 
-    /**
-     *  Repeat the shader's image horizontally and vertically.
-     */
-    kRepeat,
+  /**
+   *  Repeat the shader's image horizontally and vertically.
+   */
+  kRepeat,
 
-    /**
-     *  Repeat the shader's image horizontally and vertically, alternating
-     *  mirror images so that adjacent images always seam.
-     */
-    kMirror,
+  /**
+   *  Repeat the shader's image horizontally and vertically, alternating
+   *  mirror images so that adjacent images always seam.
+   */
+  kMirror,
 
-    /**
-     *  Only draw within the original domain, return transparent-black everywhere else.
-     */
-    kDecal,
+  /**
+   *  Only draw within the original domain, return transparent-black everywhere else.
+   */
+  kDecal,
 
-    kLastTileMode = kDecal,
+  kLastTileMode = kDecal,
 };
 
 static constexpr int kSkTileModeCount = static_cast<int>(SkTileMode::kLastTileMode) + 1;

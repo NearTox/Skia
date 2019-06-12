@@ -13,46 +13,46 @@
 namespace sksg {
 
 sk_sp<SkShader> Gradient::onRevalidateShader() {
-    if (fColorStops.empty()) {
-        return nullptr;
-    }
+  if (fColorStops.empty()) {
+    return nullptr;
+  }
 
-    std::vector<SkColor> colors;
-    std::vector<SkScalar> positions;
-    colors.reserve(fColorStops.size());
-    positions.reserve(fColorStops.size());
+  std::vector<SkColor> colors;
+  std::vector<SkScalar> positions;
+  colors.reserve(fColorStops.size());
+  positions.reserve(fColorStops.size());
 
-    SkScalar position = 0;
-    for (const auto& stop : fColorStops) {
-        colors.push_back(stop.fColor);
-        position = SkTPin(stop.fPosition, position, 1.0f);
-        positions.push_back(position);
-    }
+  SkScalar position = 0;
+  for (const auto& stop : fColorStops) {
+    colors.push_back(stop.fColor);
+    position = SkTPin(stop.fPosition, position, 1.0f);
+    positions.push_back(position);
+  }
 
-    // TODO: detect even stop distributions, pass null for positions.
-    return this->onMakeShader(colors, positions);
+  // TODO: detect even stop distributions, pass null for positions.
+  return this->onMakeShader(colors, positions);
 }
 
-sk_sp<SkShader> LinearGradient::onMakeShader(const std::vector<SkColor>& colors,
-                                             const std::vector<SkScalar>& positions) const {
-    SkASSERT(colors.size() == positions.size());
+sk_sp<SkShader> LinearGradient::onMakeShader(
+    const std::vector<SkColor>& colors, const std::vector<SkScalar>& positions) const {
+  SkASSERT(colors.size() == positions.size());
 
-    const SkPoint pts[] = {fStartPoint, fEndPoint};
-    return SkGradientShader::MakeLinear(pts, colors.data(), positions.data(), colors.size(),
-                                        this->getTileMode());
+  const SkPoint pts[] = {fStartPoint, fEndPoint};
+  return SkGradientShader::MakeLinear(
+      pts, colors.data(), positions.data(), colors.size(), this->getTileMode());
 }
 
-sk_sp<SkShader> RadialGradient::onMakeShader(const std::vector<SkColor>& colors,
-                                             const std::vector<SkScalar>& positions) const {
-    SkASSERT(colors.size() == positions.size());
+sk_sp<SkShader> RadialGradient::onMakeShader(
+    const std::vector<SkColor>& colors, const std::vector<SkScalar>& positions) const {
+  SkASSERT(colors.size() == positions.size());
 
-    return (fStartRadius <= 0 && fStartCenter == fEndCenter)
-                   ? SkGradientShader::MakeRadial(fEndCenter, fEndRadius, colors.data(),
-                                                  positions.data(), colors.size(),
-                                                  this->getTileMode())
-                   : SkGradientShader::MakeTwoPointConical(
-                             fStartCenter, fStartRadius, fEndCenter, fEndRadius, colors.data(),
-                             positions.data(), colors.size(), this->getTileMode());
+  return (fStartRadius <= 0 && fStartCenter == fEndCenter)
+             ? SkGradientShader::MakeRadial(
+                   fEndCenter, fEndRadius, colors.data(), positions.data(), colors.size(),
+                   this->getTileMode())
+             : SkGradientShader::MakeTwoPointConical(
+                   fStartCenter, fStartRadius, fEndCenter, fEndRadius, colors.data(),
+                   positions.data(), colors.size(), this->getTileMode());
 }
 
 }  // namespace sksg

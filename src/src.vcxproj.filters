@@ -573,7 +573,6 @@
     <ClCompile Include="core\SkMiniRecorder.cpp" />
     <ClCompile Include="core\SkMipMap.cpp" />
     <ClCompile Include="core\SkMatrixImageFilter.cpp" />
-    <ClCompile Include="core\SkLiteRecorder.cpp" />
     <ClCompile Include="core\SkLocalMatrixImageFilter.cpp" />
     <ClCompile Include="core\SkMallocPixelRef.cpp" />
     <ClCompile Include="core\SkMask.cpp" />
@@ -590,7 +589,6 @@
     <ClCompile Include="core\SkImageGenerator.cpp" />
     <ClCompile Include="core\SkImageInfo.cpp" />
     <ClCompile Include="core\SkLineClipper.cpp" />
-    <ClCompile Include="core\SkLiteDL.cpp" />
     <ClCompile Include="core\SkGpuBlurUtils.cpp" />
     <ClCompile Include="core\SkGraphics.cpp" />
     <ClCompile Include="core\SkHalf.cpp" />
@@ -675,5 +673,12 @@
     <ClCompile Include="..\third_party\etc1\etc1.cpp" />
     <ClCompile Include="..\third_party\skcms\skcms.cc" />
     <ClCompile Include="..\third_party\gif\SkGifImageReader.cpp" />
+    <ClCompile Include="ports\SkFontHost_win.cpp" />
+    <ClCompile Include="gpu\GrDataUtils.cpp" />
+    <ClCompile Include="core\SkYUVMath.cpp" />
+    <ClCompile Include="core\SkStrikeSpec.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\test\coreTest.hpp" />
   </ItemGroup>
 </Project>

@@ -15,24 +15,24 @@ namespace sksg {
 PaintNode::PaintNode() : INHERITED(kBubbleDamage_Trait) {}
 
 SkPaint PaintNode::makePaint() const {
-    SkASSERT(!this->hasInval());
+  SkASSERT(!this->hasInval());
 
-    SkPaint paint;
+  SkPaint paint;
 
-    paint.setAntiAlias(fAntiAlias);
-    paint.setBlendMode(fBlendMode);
-    paint.setStyle(fStyle);
-    paint.setStrokeWidth(fStrokeWidth);
-    paint.setStrokeMiter(fStrokeMiter);
-    paint.setStrokeJoin(fStrokeJoin);
-    paint.setStrokeCap(fStrokeCap);
+  paint.setAntiAlias(fAntiAlias);
+  paint.setBlendMode(fBlendMode);
+  paint.setStyle(fStyle);
+  paint.setStrokeWidth(fStrokeWidth);
+  paint.setStrokeMiter(fStrokeMiter);
+  paint.setStrokeJoin(fStrokeJoin);
+  paint.setStrokeCap(fStrokeCap);
 
-    this->onApplyToPaint(&paint);
+  this->onApplyToPaint(&paint);
 
-    // Compose opacity on top of the subclass value.
-    paint.setAlpha(SkScalarRoundToInt(paint.getAlpha() * SkTPin<SkScalar>(fOpacity, 0, 1)));
+  // Compose opacity on top of the subclass value.
+  paint.setAlpha(SkScalarRoundToInt(paint.getAlpha() * SkTPin<SkScalar>(fOpacity, 0, 1)));
 
-    return paint;
+  return paint;
 }
 
 sk_sp<Color> Color::Make(SkColor c) { return sk_sp<Color>(new Color(c)); }
@@ -40,15 +40,15 @@ sk_sp<Color> Color::Make(SkColor c) { return sk_sp<Color>(new Color(c)); }
 Color::Color(SkColor c) : fColor(c) {}
 
 SkRect Color::onRevalidate(InvalidationController* ic, const SkMatrix& ctm) {
-    SkASSERT(this->hasInval());
+  SkASSERT(this->hasInval());
 
-    return SkRect::MakeEmpty();
+  return SkRect::MakeEmpty();
 }
 
 void Color::onApplyToPaint(SkPaint* paint) const { paint->setColor(fColor); }
 
 sk_sp<ShaderPaint> ShaderPaint::Make(sk_sp<Shader> sh) {
-    return sh ? sk_sp<ShaderPaint>(new ShaderPaint(std::move(sh))) : nullptr;
+  return sh ? sk_sp<ShaderPaint>(new ShaderPaint(std::move(sh))) : nullptr;
 }
 
 ShaderPaint::ShaderPaint(sk_sp<Shader> sh) : fShader(std::move(sh)) { this->observeInval(fShader); }
@@ -56,9 +56,9 @@ ShaderPaint::ShaderPaint(sk_sp<Shader> sh) : fShader(std::move(sh)) { this->obse
 ShaderPaint::~ShaderPaint() { this->unobserveInval(fShader); }
 
 SkRect ShaderPaint::onRevalidate(InvalidationController* ic, const SkMatrix& ctm) {
-    SkASSERT(this->hasInval());
+  SkASSERT(this->hasInval());
 
-    return fShader->revalidate(ic, ctm);
+  return fShader->revalidate(ic, ctm);
 }
 
 void ShaderPaint::onApplyToPaint(SkPaint* paint) const { paint->setShader(fShader->getShader()); }

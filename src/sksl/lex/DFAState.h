@@ -11,50 +11,51 @@
 #include "src/sksl/lex/LexUtil.h"
 
 struct DFAState {
-    struct Label {
-        std::vector<int> fStates;
+  struct Label {
+    std::vector<int> fStates;
 
-        Label(std::vector<int> states) : fStates(std::move(states)) {}
+    Label(std::vector<int> states) : fStates(std::move(states)) {}
 
-        bool operator==(const Label& other) const { return fStates == other.fStates; }
+    bool operator==(const Label& other) const { return fStates == other.fStates; }
 
-        bool operator!=(const Label& other) const { return !(*this == other); }
+    bool operator!=(const Label& other) const { return !(*this == other); }
 
-        std::string description() const {
-            std::string result = "<";
-            const char* separator = "";
-            for (int s : fStates) {
-                result += separator;
-                result += std::to_string(s);
-                separator = ", ";
-            }
-            result += ">";
-            return result;
-        }
-    };
+    std::string description() const {
+      std::string result = "<";
+      const char* separator = "";
+      for (int s : fStates) {
+        result += separator;
+        result += std::to_string(s);
+        separator = ", ";
+      }
+      result += ">";
+      return result;
+    }
+  };
 
-    DFAState() : fId(INVALID), fLabel({}) {}
+  DFAState() : fId(INVALID), fLabel({}) {}
 
-    DFAState(int id, Label label) : fId(id), fLabel(std::move(label)) {}
+  DFAState(int id, Label label) : fId(id), fLabel(std::move(label)) {}
 
-    DFAState(const DFAState& other) = delete;
+  DFAState(const DFAState& other) = delete;
 
-    int fId;
+  int fId;
 
-    Label fLabel;
+  Label fLabel;
 
-    bool fIsScanned = false;
+  bool fIsScanned = false;
 };
 
 namespace std {
-template <> struct hash<DFAState::Label> {
-    size_t operator()(const DFAState::Label& s) const {
-        size_t result = 0;
-        for (int i : s.fStates) {
-            result = result * 101 + i;
-        }
-        return result;
+template <>
+struct hash<DFAState::Label> {
+  size_t operator()(const DFAState::Label& s) const {
+    size_t result = 0;
+    for (int i : s.fStates) {
+      result = result * 101 + i;
     }
+    return result;
+  }
 };
 }  // namespace std
 

@@ -17,14 +17,16 @@ class SkString;
 
 namespace skottie {
 
-template <typename T> bool Parse(const skjson::Value&, T*);
+template <typename T>
+bool Parse(const skjson::Value&, T*);
 
-template <typename T> T ParseDefault(const skjson::Value& v, const T& defaultValue) {
-    T res;
-    if (!Parse<T>(v, &res)) {
-        res = defaultValue;
-    }
-    return res;
+template <typename T>
+T ParseDefault(const skjson::Value& v, const T& defaultValue) {
+  T res;
+  if (!Parse<T>(v, &res)) {
+    res = defaultValue;
+  }
+  return res;
 }
 
 }  // namespace skottie

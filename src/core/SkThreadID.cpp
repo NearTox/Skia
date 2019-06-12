@@ -6,10 +6,10 @@
  */
 
 #include "include/private/SkThreadID.h"
-#include "include/private/SkLeanWindows.h"
 
 #ifdef SK_BUILD_FOR_WIN
-SkThreadID SkGetThreadID() noexcept { return GetCurrentThreadId(); }
+#include "src/core/SkLeanWindows.h"
+SkThreadID SkGetThreadID() { return GetCurrentThreadId(); }
 #else
 #include <pthread.h>
 SkThreadID SkGetThreadID() { return (int64_t)pthread_self(); }

@@ -18,38 +18,37 @@ class Global;
 // DrawingMethods contains common functionality for both Context, Image2Builder,
 // and DisplayListBuiler.
 class DrawingMethods {
-public:
-    DrawingMethods(Global* global) : fGlobal(global) {}
-    virtual ~DrawingMethods() {}
+ public:
+  DrawingMethods(Global* global) : fGlobal(global) {}
+  virtual ~DrawingMethods() {}
 
-    // Retrieve the SkCanvas to draw on. May return NULL.
-    virtual SkCanvas* getCanvas() = 0;
+  // Retrieve the SkCanvas to draw on. May return NULL.
+  virtual SkCanvas* getCanvas() = 0;
 
-    // Add the Javascript attributes and methods that DrawingMethods
-    // implements to the ObjectTemplate.
-    void addAttributesAndMethods(v8::Handle<v8::ObjectTemplate> tmpl);
+  // Add the Javascript attributes and methods that DrawingMethods
+  // implements to the ObjectTemplate.
+  void addAttributesAndMethods(v8::Handle<v8::ObjectTemplate> tmpl);
 
-protected:
-    // Get the pointer out of obj.
-    static DrawingMethods* Unwrap(v8::Handle<v8::Object> obj);
+ protected:
+  // Get the pointer out of obj.
+  static DrawingMethods* Unwrap(v8::Handle<v8::Object> obj);
 
-    Global* fGlobal;
+  Global* fGlobal;
 
-private:
-    // JS Attributes
-    static void GetWidth(v8::Local<v8::String> name,
-                         const v8::PropertyCallbackInfo<v8::Value>& info);
-    static void GetHeight(v8::Local<v8::String> name,
-                          const v8::PropertyCallbackInfo<v8::Value>& info);
+ private:
+  // JS Attributes
+  static void GetWidth(v8::Local<v8::String> name, const v8::PropertyCallbackInfo<v8::Value>& info);
+  static void GetHeight(
+      v8::Local<v8::String> name, const v8::PropertyCallbackInfo<v8::Value>& info);
 
-    // JS Methods
-    static void Save(const v8::FunctionCallbackInfo<v8::Value>& args);
-    static void Restore(const v8::FunctionCallbackInfo<v8::Value>& args);
-    static void Rotate(const v8::FunctionCallbackInfo<v8::Value>& args);
-    static void Translate(const v8::FunctionCallbackInfo<v8::Value>& args);
-    static void ResetTransform(const v8::FunctionCallbackInfo<v8::Value>& args);
+  // JS Methods
+  static void Save(const v8::FunctionCallbackInfo<v8::Value>& args);
+  static void Restore(const v8::FunctionCallbackInfo<v8::Value>& args);
+  static void Rotate(const v8::FunctionCallbackInfo<v8::Value>& args);
+  static void Translate(const v8::FunctionCallbackInfo<v8::Value>& args);
+  static void ResetTransform(const v8::FunctionCallbackInfo<v8::Value>& args);
 
-    static void DrawPath(const v8::FunctionCallbackInfo<v8::Value>& args);
+  static void DrawPath(const v8::FunctionCallbackInfo<v8::Value>& args);
 };
 
 #endif

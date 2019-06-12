@@ -22,32 +22,32 @@
 namespace skiagm {
 
 class EncodeGM : public GM {
-public:
-    EncodeGM() {}
+ public:
+  EncodeGM() {}
 
-protected:
-    SkString onShortName() override { return SkString("encode"); }
+ protected:
+  SkString onShortName() override { return SkString("encode"); }
 
-    SkISize onISize() override { return SkISize::Make(1024, 600); }
+  SkISize onISize() override { return SkISize::Make(1024, 600); }
 
-    void onDraw(SkCanvas* canvas) override {
-        SkBitmap orig;
-        GetResourceAsBitmap("images/mandrill_512_q075.jpg", &orig);
-        auto pngData = SkEncodeBitmap(orig, SkEncodedImageFormat::kPNG, 100);
-        auto jpgData = SkEncodeBitmap(orig, SkEncodedImageFormat::kJPEG, 100);
+  void onDraw(SkCanvas* canvas) override {
+    SkBitmap orig;
+    GetResourceAsBitmap("images/mandrill_512_q075.jpg", &orig);
+    auto pngData = SkEncodeBitmap(orig, SkEncodedImageFormat::kPNG, 100);
+    auto jpgData = SkEncodeBitmap(orig, SkEncodedImageFormat::kJPEG, 100);
 
-        sk_sp<SkImage> pngImage = SkImage::MakeFromEncoded(pngData);
-        sk_sp<SkImage> jpgImage = SkImage::MakeFromEncoded(jpgData);
-        canvas->drawImage(pngImage.get(), 0.0f, 0.0f);
-        canvas->drawImage(jpgImage.get(), 512.0f, 0.0f);
+    sk_sp<SkImage> pngImage = SkImage::MakeFromEncoded(pngData);
+    sk_sp<SkImage> jpgImage = SkImage::MakeFromEncoded(jpgData);
+    canvas->drawImage(pngImage.get(), 0.0f, 0.0f);
+    canvas->drawImage(jpgImage.get(), 512.0f, 0.0f);
 
-        SkFont font;
-        font.setEdging(SkFont::Edging::kAlias);
-        canvas->drawString("Images should look identical.", 450.0f, 550.0f, font, SkPaint());
-    }
+    SkFont font;
+    font.setEdging(SkFont::Edging::kAlias);
+    canvas->drawString("Images should look identical.", 450.0f, 550.0f, font, SkPaint());
+  }
 
-private:
-    typedef GM INHERITED;
+ private:
+  typedef GM INHERITED;
 };
 
 DEF_GM(return new EncodeGM;)

@@ -16,14 +16,14 @@ namespace SkSL {
  * An identifier in an expression context.
  */
 struct ASTIdentifier : public ASTExpression {
-    ASTIdentifier(int offset, StringFragment text)
-            : INHERITED(offset, kIdentifier_Kind), fText(text) {}
+  ASTIdentifier(int offset, StringFragment text)
+      : INHERITED(offset, kIdentifier_Kind), fText(text) {}
 
-    String description() const override { return String(fText); }
+  String description() const override { return String(fText); }
 
-    const StringFragment fText;
+  const StringFragment fText;
 
-    typedef ASTExpression INHERITED;
+  typedef ASTExpression INHERITED;
 };
 
 }  // namespace SkSL

@@ -17,27 +17,27 @@
     into various treatments (e.g. rounded corners)
 */
 class SK_API SkCornerPathEffect : public SkPathEffect {
-public:
-    /** radius must be > 0 to have an effect. It specifies the distance from each corner
-        that should be "rounded".
-    */
-    static sk_sp<SkPathEffect> Make(SkScalar radius) {
-        return radius > 0 ? sk_sp<SkPathEffect>(new SkCornerPathEffect(radius)) : nullptr;
-    }
+ public:
+  /** radius must be > 0 to have an effect. It specifies the distance from each corner
+      that should be "rounded".
+  */
+  static sk_sp<SkPathEffect> Make(SkScalar radius) {
+    return radius > 0 ? sk_sp<SkPathEffect>(new SkCornerPathEffect(radius)) : nullptr;
+  }
 
-protected:
-    ~SkCornerPathEffect() override;
+ protected:
+  ~SkCornerPathEffect() override;
 
-    explicit SkCornerPathEffect(SkScalar radius);
-    void flatten(SkWriteBuffer&) const override;
-    bool onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec*, const SkRect*) const override;
+  explicit SkCornerPathEffect(SkScalar radius);
+  void flatten(SkWriteBuffer&) const override;
+  bool onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec*, const SkRect*) const override;
 
-private:
-    SK_FLATTENABLE_HOOKS(SkCornerPathEffect)
+ private:
+  SK_FLATTENABLE_HOOKS(SkCornerPathEffect)
 
-    SkScalar fRadius;
+  SkScalar fRadius;
 
-    typedef SkPathEffect INHERITED;
+  typedef SkPathEffect INHERITED;
 };
 
 #endif

@@ -16,34 +16,34 @@ class SkMatrix;
 class SkSVGRenderContext;
 
 class SkSVGGradient : public SkSVGHiddenContainer {
-public:
-    ~SkSVGGradient() override = default;
+ public:
+  ~SkSVGGradient() override = default;
 
-    void setHref(const SkSVGStringType&);
-    void setGradientTransform(const SkSVGTransformType&);
-    void setSpreadMethod(const SkSVGSpreadMethod&);
+  void setHref(const SkSVGStringType&);
+  void setGradientTransform(const SkSVGTransformType&);
+  void setSpreadMethod(const SkSVGSpreadMethod&);
 
-protected:
-    explicit SkSVGGradient(SkSVGTag t) : INHERITED(t) {}
+ protected:
+  explicit SkSVGGradient(SkSVGTag t) : INHERITED(t) {}
 
-    void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
+  void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
 
-    bool onAsPaint(const SkSVGRenderContext&, SkPaint*) const final;
+  bool onAsPaint(const SkSVGRenderContext&, SkPaint*) const final;
 
-    virtual sk_sp<SkShader> onMakeShader(const SkSVGRenderContext&, const SkColor*, const SkScalar*,
-                                         int count, SkTileMode,
-                                         const SkMatrix& localMatrix) const = 0;
+  virtual sk_sp<SkShader> onMakeShader(
+      const SkSVGRenderContext&, const SkColor*, const SkScalar*, int count, SkTileMode,
+      const SkMatrix& localMatrix) const = 0;
 
-private:
-    using StopPositionArray = SkSTArray<2, SkScalar, true>;
-    using StopColorArray = SkSTArray<2, SkColor, true>;
-    void collectColorStops(const SkSVGRenderContext&, StopPositionArray*, StopColorArray*) const;
+ private:
+  using StopPositionArray = SkSTArray<2, SkScalar, true>;
+  using StopColorArray = SkSTArray<2, SkColor, true>;
+  void collectColorStops(const SkSVGRenderContext&, StopPositionArray*, StopColorArray*) const;
 
-    SkSVGStringType fHref;
-    SkSVGTransformType fGradientTransform = SkSVGTransformType(SkMatrix::I());
-    SkSVGSpreadMethod fSpreadMethod = SkSVGSpreadMethod(SkSVGSpreadMethod::Type::kPad);
+  SkSVGStringType fHref;
+  SkSVGTransformType fGradientTransform = SkSVGTransformType(SkMatrix::I());
+  SkSVGSpreadMethod fSpreadMethod = SkSVGSpreadMethod(SkSVGSpreadMethod::Type::kPad);
 
-    typedef SkSVGHiddenContainer INHERITED;
+  typedef SkSVGHiddenContainer INHERITED;
 };
 
 #endif  // SkSVGGradient_DEFINED

@@ -13,29 +13,30 @@
 #include "src/core/SkRecorder.h"
 
 class SkRecordedDrawable : public SkDrawable {
-public:
-    SkRecordedDrawable(sk_sp<SkRecord> record, sk_sp<SkBBoxHierarchy> bbh,
-                       std::unique_ptr<SkDrawableList> drawableList, const SkRect& bounds)
-            : fRecord(std::move(record))
-            , fBBH(std::move(bbh))
-            , fDrawableList(std::move(drawableList))
-            , fBounds(bounds) {}
+ public:
+  SkRecordedDrawable(
+      sk_sp<SkRecord> record, sk_sp<SkBBoxHierarchy> bbh,
+      std::unique_ptr<SkDrawableList> drawableList, const SkRect& bounds)
+      : fRecord(std::move(record)),
+        fBBH(std::move(bbh)),
+        fDrawableList(std::move(drawableList)),
+        fBounds(bounds) {}
 
-    void flatten(SkWriteBuffer& buffer) const override;
+  void flatten(SkWriteBuffer& buffer) const override;
 
-protected:
-    SkRect onGetBounds() noexcept override { return fBounds; }
+ protected:
+  SkRect onGetBounds() override { return fBounds; }
 
-    void onDraw(SkCanvas* canvas) override;
+  void onDraw(SkCanvas* canvas) override;
 
-    SkPicture* onNewPictureSnapshot() override;
+  SkPicture* onNewPictureSnapshot() override;
 
-private:
-    SK_FLATTENABLE_HOOKS(SkRecordedDrawable)
+ private:
+  SK_FLATTENABLE_HOOKS(SkRecordedDrawable)
 
-    sk_sp<SkRecord> fRecord;
-    sk_sp<SkBBoxHierarchy> fBBH;
-    std::unique_ptr<SkDrawableList> fDrawableList;
-    const SkRect fBounds;
+  sk_sp<SkRecord> fRecord;
+  sk_sp<SkBBoxHierarchy> fBBH;
+  std::unique_ptr<SkDrawableList> fDrawableList;
+  const SkRect fBounds;
 };
 #endif  // SkRecordedDrawable_DEFINED

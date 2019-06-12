@@ -10,7 +10,7 @@
 #ifndef SkWGL_DEFINED
 #define SkWGL_DEFINED
 
-#include "include/private/SkLeanWindows.h"
+#include "src/core/SkLeanWindows.h"
 
 /**
  * Working with WGL extensions can be a pain. Among the reasons is that You must
@@ -53,78 +53,78 @@
 DECLARE_HANDLE(HPBUFFER);
 
 class SkWGLExtensions {
-public:
-    SkWGLExtensions();
-    /**
-     * Determines if an extensions is available for a given DC.
-     * WGL_extensions_string is considered a prerequisite for all other
-     * extensions. It is necessary to check this before calling other class
-     * functions.
-     */
-    bool hasExtension(HDC dc, const char* ext) const;
+ public:
+  SkWGLExtensions();
+  /**
+   * Determines if an extensions is available for a given DC.
+   * WGL_extensions_string is considered a prerequisite for all other
+   * extensions. It is necessary to check this before calling other class
+   * functions.
+   */
+  bool hasExtension(HDC dc, const char* ext) const;
 
-    const char* getExtensionsString(HDC hdc) const;
-    BOOL choosePixelFormat(HDC hdc, const int*, const FLOAT*, UINT, int*, UINT*) const;
-    BOOL getPixelFormatAttribiv(HDC, int, int, UINT, const int*, int*) const;
-    BOOL getPixelFormatAttribfv(HDC hdc, int, int, UINT, const int*, FLOAT*) const;
-    HGLRC createContextAttribs(HDC, HGLRC, const int*) const;
+  const char* getExtensionsString(HDC hdc) const;
+  BOOL choosePixelFormat(HDC hdc, const int*, const FLOAT*, UINT, int*, UINT*) const;
+  BOOL getPixelFormatAttribiv(HDC, int, int, UINT, const int*, int*) const;
+  BOOL getPixelFormatAttribfv(HDC hdc, int, int, UINT, const int*, FLOAT*) const;
+  HGLRC createContextAttribs(HDC, HGLRC, const int*) const;
 
-    BOOL swapInterval(int interval) const;
+  BOOL swapInterval(int interval) const;
 
-    HPBUFFER createPbuffer(HDC, int, int, int, const int*) const;
-    HDC getPbufferDC(HPBUFFER) const;
-    int releasePbufferDC(HPBUFFER, HDC) const;
-    BOOL destroyPbuffer(HPBUFFER) const;
+  HPBUFFER createPbuffer(HDC, int, int, int, const int*) const;
+  HDC getPbufferDC(HPBUFFER) const;
+  int releasePbufferDC(HPBUFFER, HDC) const;
+  BOOL destroyPbuffer(HPBUFFER) const;
 
-    /**
-     * WGL doesn't have precise rules for the ordering of formats returned
-     * by wglChoosePixelFormat. This function helps choose among the set of
-     * formats returned by wglChoosePixelFormat. The rules in decreasing
-     * priority are:
-     *     * Choose formats with the smallest sample count that is >=
-     *       desiredSampleCount (or the largest sample count if all formats have
-     *       fewer samples than desiredSampleCount.) If desiredSampleCount is 1 then
-     *       all msaa formats are excluded from consideration.
-     *     * Choose formats with the fewest color samples when coverage sampling
-     *       is available.
-     *     * If the above rules leave multiple formats, choose the one that
-     *       appears first in the formats array parameter.
-     */
-    int selectFormat(const int formats[], int formatCount, HDC dc, int desiredSampleCount) const;
+  /**
+   * WGL doesn't have precise rules for the ordering of formats returned
+   * by wglChoosePixelFormat. This function helps choose among the set of
+   * formats returned by wglChoosePixelFormat. The rules in decreasing
+   * priority are:
+   *     * Choose formats with the smallest sample count that is >=
+   *       desiredSampleCount (or the largest sample count if all formats have
+   *       fewer samples than desiredSampleCount.) If desiredSampleCount is 1 then
+   *       all msaa formats are excluded from consideration.
+   *     * Choose formats with the fewest color samples when coverage sampling
+   *       is available.
+   *     * If the above rules leave multiple formats, choose the one that
+   *       appears first in the formats array parameter.
+   */
+  int selectFormat(const int formats[], int formatCount, HDC dc, int desiredSampleCount) const;
 
-private:
-    typedef const char*(WINAPI* GetExtensionsStringProc)(HDC);
-    typedef BOOL(WINAPI* ChoosePixelFormatProc)(HDC, const int*, const FLOAT*, UINT, int*, UINT*);
-    typedef BOOL(WINAPI* GetPixelFormatAttribivProc)(HDC, int, int, UINT, const int*, int*);
-    typedef BOOL(WINAPI* GetPixelFormatAttribfvProc)(HDC, int, int, UINT, const int*, FLOAT*);
-    typedef HGLRC(WINAPI* CreateContextAttribsProc)(HDC, HGLRC, const int*);
-    typedef BOOL(WINAPI* SwapIntervalProc)(int);
-    typedef HPBUFFER(WINAPI* CreatePbufferProc)(HDC, int, int, int, const int*);
-    typedef HDC(WINAPI* GetPbufferDCProc)(HPBUFFER);
-    typedef int(WINAPI* ReleasePbufferDCProc)(HPBUFFER, HDC);
-    typedef BOOL(WINAPI* DestroyPbufferProc)(HPBUFFER);
+ private:
+  typedef const char*(WINAPI* GetExtensionsStringProc)(HDC);
+  typedef BOOL(WINAPI* ChoosePixelFormatProc)(HDC, const int*, const FLOAT*, UINT, int*, UINT*);
+  typedef BOOL(WINAPI* GetPixelFormatAttribivProc)(HDC, int, int, UINT, const int*, int*);
+  typedef BOOL(WINAPI* GetPixelFormatAttribfvProc)(HDC, int, int, UINT, const int*, FLOAT*);
+  typedef HGLRC(WINAPI* CreateContextAttribsProc)(HDC, HGLRC, const int*);
+  typedef BOOL(WINAPI* SwapIntervalProc)(int);
+  typedef HPBUFFER(WINAPI* CreatePbufferProc)(HDC, int, int, int, const int*);
+  typedef HDC(WINAPI* GetPbufferDCProc)(HPBUFFER);
+  typedef int(WINAPI* ReleasePbufferDCProc)(HPBUFFER, HDC);
+  typedef BOOL(WINAPI* DestroyPbufferProc)(HPBUFFER);
 
-    static GetExtensionsStringProc fGetExtensionsString;
-    static ChoosePixelFormatProc fChoosePixelFormat;
-    static GetPixelFormatAttribfvProc fGetPixelFormatAttribfv;
-    static GetPixelFormatAttribivProc fGetPixelFormatAttribiv;
-    static CreateContextAttribsProc fCreateContextAttribs;
-    static SwapIntervalProc fSwapInterval;
-    static CreatePbufferProc fCreatePbuffer;
-    static GetPbufferDCProc fGetPbufferDC;
-    static ReleasePbufferDCProc fReleasePbufferDC;
-    static DestroyPbufferProc fDestroyPbuffer;
+  static GetExtensionsStringProc fGetExtensionsString;
+  static ChoosePixelFormatProc fChoosePixelFormat;
+  static GetPixelFormatAttribfvProc fGetPixelFormatAttribfv;
+  static GetPixelFormatAttribivProc fGetPixelFormatAttribiv;
+  static CreateContextAttribsProc fCreateContextAttribs;
+  static SwapIntervalProc fSwapInterval;
+  static CreatePbufferProc fCreatePbuffer;
+  static GetPbufferDCProc fGetPbufferDC;
+  static ReleasePbufferDCProc fReleasePbufferDC;
+  static DestroyPbufferProc fDestroyPbuffer;
 };
 
 enum SkWGLContextRequest {
-    /** Requests to create core profile context if possible, otherwise
-        compatibility profile. */
-    kGLPreferCoreProfile_SkWGLContextRequest,
-    /** Requests to create compatibility profile context if possible, otherwise
-        core profile. */
-    kGLPreferCompatibilityProfile_SkWGLContextRequest,
-    /** Requests to create GL ES profile context. */
-    kGLES_SkWGLContextRequest
+  /** Requests to create core profile context if possible, otherwise
+      compatibility profile. */
+  kGLPreferCoreProfile_SkWGLContextRequest,
+  /** Requests to create compatibility profile context if possible, otherwise
+      core profile. */
+  kGLPreferCompatibilityProfile_SkWGLContextRequest,
+  /** Requests to create GL ES profile context. */
+  kGLES_SkWGLContextRequest
 };
 /**
  * Helper to create an OpenGL context for a DC using WGL. Configs with a sample count >= to
@@ -133,8 +133,9 @@ enum SkWGLContextRequest {
  * context cannot be created. If preferCoreProfile is true but a core profile cannot be created
  * then a compatible profile context will be created.
  */
-HGLRC SkCreateWGLContext(HDC dc, int msaaSampleCount, bool deepColor, SkWGLContextRequest context,
-                         HGLRC shareContext = nullptr);
+HGLRC SkCreateWGLContext(
+    HDC dc, int msaaSampleCount, bool deepColor, SkWGLContextRequest context,
+    HGLRC shareContext = nullptr);
 
 /**
  * Helper class for creating a pbuffer context and deleting all the handles when finished. This
@@ -142,22 +143,22 @@ HGLRC SkCreateWGLContext(HDC dc, int msaaSampleCount, bool deepColor, SkWGLConte
  * context. The original device context can be released once the pbuffer context is created.
  */
 class SkWGLPbufferContext : public SkRefCnt {
-public:
-    static sk_sp<SkWGLPbufferContext> Create(HDC parentDC, SkWGLContextRequest contextType,
-                                             HGLRC shareContext);
+ public:
+  static sk_sp<SkWGLPbufferContext> Create(
+      HDC parentDC, SkWGLContextRequest contextType, HGLRC shareContext);
 
-    virtual ~SkWGLPbufferContext();
+  virtual ~SkWGLPbufferContext();
 
-    HDC getDC() const { return fDC; }
-    HGLRC getGLRC() const { return fGLRC; }
+  HDC getDC() const { return fDC; }
+  HGLRC getGLRC() const { return fGLRC; }
 
-private:
-    SkWGLPbufferContext(HPBUFFER pbuffer, HDC dc, HGLRC glrc);
+ private:
+  SkWGLPbufferContext(HPBUFFER pbuffer, HDC dc, HGLRC glrc);
 
-    HPBUFFER fPbuffer;
-    HDC fDC;
-    HGLRC fGLRC;
-    SkWGLExtensions fExtensions;
+  HPBUFFER fPbuffer;
+  HDC fDC;
+  HGLRC fGLRC;
+  SkWGLExtensions fExtensions;
 };
 
 #endif

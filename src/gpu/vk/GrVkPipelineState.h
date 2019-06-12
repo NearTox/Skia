@@ -34,124 +34,118 @@ class GrVkUniformBuffer;
  * allocating and freeing these objects, as well as updating their values.
  */
 class GrVkPipelineState : public SkRefCnt {
-public:
-    using UniformInfoArray = GrVkPipelineStateDataManager::UniformInfoArray;
-    using UniformHandle = GrGLSLProgramDataManager::UniformHandle;
+ public:
+  using UniformInfoArray = GrVkPipelineStateDataManager::UniformInfoArray;
+  using UniformHandle = GrGLSLProgramDataManager::UniformHandle;
 
-    GrVkPipelineState(GrVkGpu* gpu,
-                      GrVkPipeline* pipeline,
-                      VkPipelineLayout layout,
-                      const GrVkDescriptorSetManager::Handle& samplerDSHandle,
-                      const GrGLSLBuiltinUniformHandles& builtinUniformHandles,
-                      const UniformInfoArray& uniforms,
-                      uint32_t geometryUniformSize,
-                      uint32_t fragmentUniformSize,
-                      const UniformInfoArray& samplers,
-                      std::unique_ptr<GrGLSLPrimitiveProcessor>
-                              geometryProcessor,
-                      std::unique_ptr<GrGLSLXferProcessor>
-                              xferProcessor,
-                      std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]>
-                              fragmentProcessors,
-                      int fFragmentProcessorCnt);
+  GrVkPipelineState(
+      GrVkGpu* gpu, GrVkPipeline* pipeline, VkPipelineLayout layout,
+      const GrVkDescriptorSetManager::Handle& samplerDSHandle,
+      const GrGLSLBuiltinUniformHandles& builtinUniformHandles, const UniformInfoArray& uniforms,
+      uint32_t geometryUniformSize, uint32_t fragmentUniformSize, const UniformInfoArray& samplers,
+      std::unique_ptr<GrGLSLPrimitiveProcessor> geometryProcessor,
+      std::unique_ptr<GrGLSLXferProcessor> xferProcessor,
+      std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fragmentProcessors,
+      int fFragmentProcessorCnt);
 
-    ~GrVkPipelineState();
+  ~GrVkPipelineState();
 
-    void setAndBindUniforms(GrVkGpu*, const GrRenderTarget*, GrSurfaceOrigin,
-                            const GrPrimitiveProcessor&, const GrPipeline&, GrVkCommandBuffer*);
+  void setAndBindUniforms(
+      GrVkGpu*, const GrRenderTarget*, GrSurfaceOrigin, const GrPrimitiveProcessor&,
+      const GrPipeline&, GrVkCommandBuffer*);
+  /**
+   * This must be called after setAndBindUniforms() since that function invalidates texture
+   * bindings.
+   */
+  void setAndBindTextures(
+      GrVkGpu*, const GrPrimitiveProcessor&, const GrPipeline&,
+      const GrTextureProxy* const primitiveProcessorTextures[], GrVkCommandBuffer*);
+
+  void bindPipeline(const GrVkGpu* gpu, GrVkCommandBuffer* commandBuffer);
+
+  void addUniformResources(GrVkCommandBuffer&, GrVkSampler*[], GrVkTexture*[], int numTextures);
+
+  void freeGPUResources(GrVkGpu* gpu);
+
+  void abandonGPUResources();
+
+ private:
+  void writeUniformBuffers(const GrVkGpu* gpu);
+
+  /**
+   * We use the RT's size and origin to adjust from Skia device space to vulkan normalized device
+   * space and to make device space positions have the correct origin for processors that require
+   * them.
+   */
+  struct RenderTargetState {
+    SkISize fRenderTargetSize;
+    GrSurfaceOrigin fRenderTargetOrigin;
+
+    RenderTargetState() { this->invalidate(); }
+    void invalidate() {
+      fRenderTargetSize.fWidth = -1;
+      fRenderTargetSize.fHeight = -1;
+      fRenderTargetOrigin = (GrSurfaceOrigin)-1;
+    }
+
     /**
-     * This must be called after setAndBindUniforms() since that function invalidates texture
-     * bindings.
+     * Gets a float4 that adjusts the position from Skia device coords to Vulkans normalized
+     * device coords. Assuming the transformed position, pos, is a homogeneous float3, the vec,
+     * v, is applied as such: pos.x = dot(v.xy, pos.xz) pos.y = dot(v.zw, pos.yz)
      */
-    void setAndBindTextures(GrVkGpu*, const GrPrimitiveProcessor&, const GrPipeline&,
-                            const GrTextureProxy* const primitiveProcessorTextures[],
-                            GrVkCommandBuffer*);
+    void getRTAdjustmentVec(float* destVec) {
+      destVec[0] = 2.f / fRenderTargetSize.fWidth;
+      destVec[1] = -1.f;
+      if (kBottomLeft_GrSurfaceOrigin == fRenderTargetOrigin) {
+        destVec[2] = -2.f / fRenderTargetSize.fHeight;
+        destVec[3] = 1.f;
+      } else {
+        destVec[2] = 2.f / fRenderTargetSize.fHeight;
+        destVec[3] = -1.f;
+      }
+    }
+  };
 
-    void bindPipeline(const GrVkGpu* gpu, GrVkCommandBuffer* commandBuffer);
+  // Helper for setData() that sets the view matrix and loads the render target height uniform
+  void setRenderTargetState(const GrRenderTarget*, GrSurfaceOrigin);
 
-    void addUniformResources(GrVkCommandBuffer&, GrVkSampler*[], GrVkTexture*[], int numTextures);
+  // GrVkResources
+  GrVkPipeline* fPipeline;
 
-    void freeGPUResources(GrVkGpu* gpu);
+  // Used for binding DescriptorSets to the command buffer but does not need to survive during
+  // command buffer execution. Thus this is not need to be a GrVkResource.
+  GrVkPipelineLayout* fPipelineLayout;
 
-    void abandonGPUResources();
+  // The DescriptorSets need to survive until the gpu has finished all draws that use them.
+  // However, they will only be freed by the descriptor pool. Thus by simply keeping the
+  // descriptor pool alive through the draw, the descritor sets will also stay alive. Thus we do
+  // not need a GrVkResource versions of VkDescriptorSet. We hold on to these in the
+  // GrVkPipelineState since we update the descriptor sets and bind them at separate times;
+  VkDescriptorSet fDescriptorSets[3];
 
-private:
-    void writeUniformBuffers(const GrVkGpu* gpu);
+  const GrVkDescriptorSet* fUniformDescriptorSet;
+  const GrVkDescriptorSet* fSamplerDescriptorSet;
 
-    /**
-     * We use the RT's size and origin to adjust from Skia device space to vulkan normalized device
-     * space and to make device space positions have the correct origin for processors that require
-     * them.
-     */
-    struct RenderTargetState {
-        SkISize fRenderTargetSize;
-        GrSurfaceOrigin fRenderTargetOrigin;
+  const GrVkDescriptorSetManager::Handle fSamplerDSHandle;
 
-        RenderTargetState() { this->invalidate(); }
-        void invalidate() {
-            fRenderTargetSize.fWidth = -1;
-            fRenderTargetSize.fHeight = -1;
-            fRenderTargetOrigin = (GrSurfaceOrigin)-1;
-        }
+  SkSTArray<4, const GrVkSampler*> fImmutableSamplers;
 
-        /**
-         * Gets a float4 that adjusts the position from Skia device coords to Vulkans normalized
-         * device coords. Assuming the transformed position, pos, is a homogeneous float3, the vec,
-         * v, is applied as such: pos.x = dot(v.xy, pos.xz) pos.y = dot(v.zw, pos.yz)
-         */
-        void getRTAdjustmentVec(float* destVec) {
-            destVec[0] = 2.f / fRenderTargetSize.fWidth;
-            destVec[1] = -1.f;
-            if (kBottomLeft_GrSurfaceOrigin == fRenderTargetOrigin) {
-                destVec[2] = -2.f / fRenderTargetSize.fHeight;
-                destVec[3] = 1.f;
-            } else {
-                destVec[2] = 2.f / fRenderTargetSize.fHeight;
-                destVec[3] = -1.f;
-            }
-        }
-    };
+  std::unique_ptr<GrVkUniformBuffer> fGeometryUniformBuffer;
+  std::unique_ptr<GrVkUniformBuffer> fFragmentUniformBuffer;
 
-    // Helper for setData() that sets the view matrix and loads the render target height uniform
-    void setRenderTargetState(const GrRenderTarget*, GrSurfaceOrigin);
+  // Tracks the current render target uniforms stored in the vertex buffer.
+  RenderTargetState fRenderTargetState;
+  GrGLSLBuiltinUniformHandles fBuiltinUniformHandles;
 
-    // GrVkResources
-    GrVkPipeline* fPipeline;
+  // Processors in the GrVkPipelineState
+  std::unique_ptr<GrGLSLPrimitiveProcessor> fGeometryProcessor;
+  std::unique_ptr<GrGLSLXferProcessor> fXferProcessor;
+  std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fFragmentProcessors;
+  int fFragmentProcessorCnt;
 
-    // Used for binding DescriptorSets to the command buffer but does not need to survive during
-    // command buffer execution. Thus this is not need to be a GrVkResource.
-    GrVkPipelineLayout* fPipelineLayout;
+  GrVkPipelineStateDataManager fDataManager;
 
-    // The DescriptorSets need to survive until the gpu has finished all draws that use them.
-    // However, they will only be freed by the descriptor pool. Thus by simply keeping the
-    // descriptor pool alive through the draw, the descritor sets will also stay alive. Thus we do
-    // not need a GrVkResource versions of VkDescriptorSet. We hold on to these in the
-    // GrVkPipelineState since we update the descriptor sets and bind them at separate times;
-    VkDescriptorSet fDescriptorSets[3];
-
-    const GrVkDescriptorSet* fUniformDescriptorSet;
-    const GrVkDescriptorSet* fSamplerDescriptorSet;
-
-    const GrVkDescriptorSetManager::Handle fSamplerDSHandle;
-
-    SkSTArray<4, const GrVkSampler*> fImmutableSamplers;
-
-    std::unique_ptr<GrVkUniformBuffer> fGeometryUniformBuffer;
-    std::unique_ptr<GrVkUniformBuffer> fFragmentUniformBuffer;
-
-    // Tracks the current render target uniforms stored in the vertex buffer.
-    RenderTargetState fRenderTargetState;
-    GrGLSLBuiltinUniformHandles fBuiltinUniformHandles;
-
-    // Processors in the GrVkPipelineState
-    std::unique_ptr<GrGLSLPrimitiveProcessor> fGeometryProcessor;
-    std::unique_ptr<GrGLSLXferProcessor> fXferProcessor;
-    std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fFragmentProcessors;
-    int fFragmentProcessorCnt;
-
-    GrVkPipelineStateDataManager fDataManager;
-
-    int fNumSamplers;
+  int fNumSamplers;
 };
 
 #endif

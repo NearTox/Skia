@@ -16,24 +16,27 @@
  *  as using the wrapped filter with the matrix applied to its context.
  */
 class SkLocalMatrixImageFilter : public SkImageFilter {
-public:
-    static sk_sp<SkImageFilter> Make(const SkMatrix& localM, sk_sp<SkImageFilter> input);
+ public:
+  static sk_sp<SkImageFilter> Make(const SkMatrix& localM, sk_sp<SkImageFilter> input);
 
-protected:
-    void flatten(SkWriteBuffer&) const override;
-    sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
-                                        SkIPoint* offset) const override;
-    SkIRect onFilterBounds(const SkIRect& src, const SkMatrix& ctm, MapDirection,
-                           const SkIRect* inputRect) const override;
+ protected:
+  void flatten(SkWriteBuffer&) const override;
+  sk_sp<SkSpecialImage> onFilterImage(
+      SkSpecialImage* source, const Context&, SkIPoint* offset) const override;
+  SkIRect onFilterBounds(
+      const SkIRect& src, const SkMatrix& ctm, MapDirection,
+      const SkIRect* inputRect) const override;
 
-private:
-    SK_FLATTENABLE_HOOKS(SkLocalMatrixImageFilter)
+  bool onCanHandleComplexCTM() const override { return true; }
 
-    SkLocalMatrixImageFilter(const SkMatrix& localM, sk_sp<SkImageFilter> input);
+ private:
+  SK_FLATTENABLE_HOOKS(SkLocalMatrixImageFilter)
 
-    SkMatrix fLocalM;
+  SkLocalMatrixImageFilter(const SkMatrix& localM, sk_sp<SkImageFilter> input);
 
-    typedef SkImageFilter INHERITED;
+  SkMatrix fLocalM;
+
+  typedef SkImageFilter INHERITED;
 };
 
 #endif

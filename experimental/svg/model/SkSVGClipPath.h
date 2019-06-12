@@ -12,15 +12,15 @@
 #include "experimental/svg/model/SkSVGTypes.h"
 
 class SkSVGClipPath final : public SkSVGHiddenContainer {
-public:
-    virtual ~SkSVGClipPath() = default;
-    static sk_sp<SkSVGClipPath> Make() { return sk_sp<SkSVGClipPath>(new SkSVGClipPath()); }
+ public:
+  virtual ~SkSVGClipPath() = default;
+  static sk_sp<SkSVGClipPath> Make() { return sk_sp<SkSVGClipPath>(new SkSVGClipPath()); }
 
-protected:
-private:
-    SkSVGClipPath();
+ protected:
+ private:
+  SkSVGClipPath();
 
-    typedef SkSVGHiddenContainer INHERITED;
+  typedef SkSVGHiddenContainer INHERITED;
 };
 
 #endif  // SkSVGClipPath_DEFINED

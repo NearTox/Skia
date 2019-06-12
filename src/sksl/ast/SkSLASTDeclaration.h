@@ -16,22 +16,22 @@ namespace SkSL {
  * Abstract supertype of declarations such as variables and functions.
  */
 struct ASTDeclaration : public ASTPositionNode {
-    enum Kind {
-        kVar_Kind,
-        kFunction_Kind,
-        kInterfaceBlock_Kind,
-        kExtension_Kind,
-        kPrecision_Kind,
-        kModifiers_Kind,
-        kSection_Kind,
-        kEnum_Kind
-    };
+  enum Kind {
+    kVar_Kind,
+    kFunction_Kind,
+    kInterfaceBlock_Kind,
+    kExtension_Kind,
+    kPrecision_Kind,
+    kModifiers_Kind,
+    kSection_Kind,
+    kEnum_Kind
+  };
 
-    ASTDeclaration(int offset, Kind kind) : INHERITED(offset), fKind(kind) {}
+  ASTDeclaration(int offset, Kind kind) : INHERITED(offset), fKind(kind) {}
 
-    Kind fKind;
+  Kind fKind;
 
-    typedef ASTPositionNode INHERITED;
+  typedef ASTPositionNode INHERITED;
 };
 
 }  // namespace SkSL

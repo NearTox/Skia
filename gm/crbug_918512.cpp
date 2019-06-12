@@ -12,22 +12,22 @@
 
 // PDF backend should produce correct results.
 DEF_SIMPLE_GM(crbug_918512, canvas, 256, 256) {
-    canvas->drawColor(SK_ColorYELLOW);
+  canvas->drawColor(SK_ColorYELLOW);
+  {
+    SkAutoCanvasRestore autoCanvasRestore1(canvas, false);
+    canvas->saveLayer(nullptr, nullptr);
+    canvas->drawColor(SK_ColorCYAN);
     {
-        SkAutoCanvasRestore autoCanvasRestore1(canvas, false);
-        canvas->saveLayer(nullptr, nullptr);
-        canvas->drawColor(SK_ColorCYAN);
-        {
-            SkAutoCanvasRestore autoCanvasRestore2(canvas, false);
-            SkPaint lumaFilter;
-            lumaFilter.setBlendMode(SkBlendMode::kDstIn);
-            lumaFilter.setColorFilter(SkLumaColorFilter::Make());
-            canvas->saveLayer(nullptr, &lumaFilter);
+      SkAutoCanvasRestore autoCanvasRestore2(canvas, false);
+      SkPaint lumaFilter;
+      lumaFilter.setBlendMode(SkBlendMode::kDstIn);
+      lumaFilter.setColorFilter(SkLumaColorFilter::Make());
+      canvas->saveLayer(nullptr, &lumaFilter);
 
-            canvas->drawColor(SK_ColorTRANSPARENT);
-            SkPaint paint;
-            paint.setColor(SK_ColorGRAY);
-            canvas->drawRect(SkRect{0, 0, 128, 256}, paint);
-        }
+      canvas->drawColor(SK_ColorTRANSPARENT);
+      SkPaint paint;
+      paint.setColor(SK_ColorGRAY);
+      canvas->drawRect(SkRect{0, 0, 128, 256}, paint);
     }
+  }
 }

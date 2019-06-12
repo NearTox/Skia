@@ -16,11 +16,11 @@ namespace SkSL {
  * Represents "null".
  */
 struct ASTNullLiteral : public ASTExpression {
-    ASTNullLiteral(int offset) : INHERITED(offset, kNull_Kind) {}
+  ASTNullLiteral(int offset) : INHERITED(offset, kNull_Kind) {}
 
-    String description() const override { return "null"; }
+  String description() const override { return "null"; }
 
-    typedef ASTExpression INHERITED;
+  typedef ASTExpression INHERITED;
 };
 
 }  // namespace SkSL

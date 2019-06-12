@@ -26,32 +26,32 @@
  *  can exceed the memory-use budget.
  */
 class SkDiscardableMemoryPool : public SkDiscardableMemory::Factory {
-public:
-    virtual ~SkDiscardableMemoryPool() {}
+ public:
+  virtual ~SkDiscardableMemoryPool() {}
 
-    virtual size_t getRAMUsed() = 0;
-    virtual void setRAMBudget(size_t budget) = 0;
-    virtual size_t getRAMBudget() = 0;
+  virtual size_t getRAMUsed() = 0;
+  virtual void setRAMBudget(size_t budget) = 0;
+  virtual size_t getRAMBudget() = 0;
 
-    /** purges all unlocked DMs */
-    virtual void dumpPool() = 0;
+  /** purges all unlocked DMs */
+  virtual void dumpPool() = 0;
 
 #if SK_LAZY_CACHE_STATS
-    /**
-     * These two values are a count of the number of successful and
-     * failed calls to SkDiscardableMemory::lock() for all DMs managed
-     * by this pool.
-     */
-    virtual int getCacheHits() = 0;
-    virtual int getCacheMisses() = 0;
-    virtual void resetCacheHitsAndMisses() = 0;
+  /**
+   * These two values are a count of the number of successful and
+   * failed calls to SkDiscardableMemory::lock() for all DMs managed
+   * by this pool.
+   */
+  virtual int getCacheHits() = 0;
+  virtual int getCacheMisses() = 0;
+  virtual void resetCacheHitsAndMisses() = 0;
 #endif
 
-    /**
-     *  This non-global pool can be used for unit tests to verify that
-     *  the pool works.
-     */
-    static sk_sp<SkDiscardableMemoryPool> Make(size_t size);
+  /**
+   *  This non-global pool can be used for unit tests to verify that
+   *  the pool works.
+   */
+  static sk_sp<SkDiscardableMemoryPool> Make(size_t size);
 };
 
 /**

@@ -39,13 +39,13 @@ typedef uint32_t GrColor;
 /**
  *  Pack 4 components (RGBA) into a GrColor int
  */
-static inline constexpr GrColor GrColorPackRGBA(unsigned r, unsigned g, unsigned b, unsigned a) {
-    SkASSERT((uint8_t)r == r);
-    SkASSERT((uint8_t)g == g);
-    SkASSERT((uint8_t)b == b);
-    SkASSERT((uint8_t)a == a);
-    return (r << GrColor_SHIFT_R) | (g << GrColor_SHIFT_G) | (b << GrColor_SHIFT_B) |
-           (a << GrColor_SHIFT_A);
+static inline GrColor GrColorPackRGBA(unsigned r, unsigned g, unsigned b, unsigned a) {
+  SkASSERT((uint8_t)r == r);
+  SkASSERT((uint8_t)g == g);
+  SkASSERT((uint8_t)b == b);
+  SkASSERT((uint8_t)a == a);
+  return (r << GrColor_SHIFT_R) | (g << GrColor_SHIFT_G) | (b << GrColor_SHIFT_B) |
+         (a << GrColor_SHIFT_A);
 }
 
 // extract a component (byte) from a GrColor int
@@ -62,21 +62,21 @@ static inline constexpr GrColor GrColorPackRGBA(unsigned r, unsigned g, unsigned
 #define GrColor_ILLEGAL (~(0xFF << GrColor_SHIFT_A))
 
 /** Normalizes and coverts an uint8_t to a float. [0, 255] -> [0.0, 1.0] */
-static inline float GrNormalizeByteToFloat(uint8_t value) noexcept {
-    static const float ONE_OVER_255 = 1.f / 255.f;
-    return value * ONE_OVER_255;
+static inline float GrNormalizeByteToFloat(uint8_t value) {
+  static const float ONE_OVER_255 = 1.f / 255.f;
+  return value * ONE_OVER_255;
 }
 
 /** Used to pick vertex attribute types. */
-static inline bool SkPMColor4fFitsInBytes(const SkPMColor4f& color) noexcept {
-    // Might want to instead check that the components are [0...a] instead of [0...1]?
-    return color.fitsInBytes();
+static inline bool SkPMColor4fFitsInBytes(const SkPMColor4f& color) {
+  // Might want to instead check that the components are [0...a] instead of [0...1]?
+  return color.fitsInBytes();
 }
 
-static inline uint64_t SkPMColor4f_toFP16(const SkPMColor4f& color) noexcept {
-    uint64_t halfColor;
-    SkFloatToHalf_finite_ftz(Sk4f::Load(color.vec())).store(&halfColor);
-    return halfColor;
+static inline uint64_t SkPMColor4f_toFP16(const SkPMColor4f& color) {
+  uint64_t halfColor;
+  SkFloatToHalf_finite_ftz(Sk4f::Load(color.vec())).store(&halfColor);
+  return halfColor;
 }
 
 /**
@@ -86,23 +86,22 @@ static inline uint64_t SkPMColor4f_toFP16(const SkPMColor4f& color) noexcept {
  * attribute type for colors, to match the usage here.
  */
 class GrVertexColor {
-public:
-    explicit GrVertexColor(const SkPMColor4f& color, bool wideColor) noexcept
-            : fWideColor(wideColor) {
-        if (wideColor) {
-            SkFloatToHalf_finite_ftz(Sk4f::Load(color.vec())).store(&fColor);
-        } else {
-            fColor[0] = color.toBytes_RGBA();
-        }
+ public:
+  explicit GrVertexColor(const SkPMColor4f& color, bool wideColor) : fWideColor(wideColor) {
+    if (wideColor) {
+      SkFloatToHalf_finite_ftz(Sk4f::Load(color.vec())).store(&fColor);
+    } else {
+      fColor[0] = color.toBytes_RGBA();
     }
+  }
 
-    size_t size() const noexcept { return fWideColor ? 8 : 4; }
+  size_t size() const { return fWideColor ? 8 : 4; }
 
-private:
-    friend struct GrVertexWriter;
+ private:
+  friend struct GrVertexWriter;
 
-    uint32_t fColor[2];
-    bool fWideColor;
+  uint32_t fColor[2];
+  bool fWideColor;
 };
 
 #endif

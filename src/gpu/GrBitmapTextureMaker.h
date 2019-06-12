@@ -15,25 +15,24 @@
     non-volatile the texture is cached using a key created from the pixels' image id and the
     subset of the pixelref specified by the bitmap. */
 class GrBitmapTextureMaker : public GrTextureMaker {
-public:
-    GrBitmapTextureMaker(GrRecordingContext* context, const SkBitmap& bitmap,
-                         bool useDecal = false);
+ public:
+  GrBitmapTextureMaker(GrRecordingContext* context, const SkBitmap& bitmap, bool useDecal = false);
 
-protected:
-    sk_sp<GrTextureProxy> refOriginalTextureProxy(bool willBeMipped,
-                                                  AllowedTexGenType onlyIfFast) override;
+ protected:
+  sk_sp<GrTextureProxy> refOriginalTextureProxy(
+      bool willBeMipped, AllowedTexGenType onlyIfFast) override;
 
-    void makeCopyKey(const CopyParams& copyParams, GrUniqueKey* copyKey) override;
-    void didCacheCopy(const GrUniqueKey& copyKey, uint32_t contextUniqueID) override;
+  void makeCopyKey(const CopyParams& copyParams, GrUniqueKey* copyKey) override;
+  void didCacheCopy(const GrUniqueKey& copyKey, uint32_t contextUniqueID) override;
 
-    SkAlphaType alphaType() const override;
-    SkColorSpace* colorSpace() const override;
+  SkAlphaType alphaType() const override;
+  SkColorSpace* colorSpace() const override;
 
-private:
-    const SkBitmap fBitmap;
-    GrUniqueKey fOriginalKey;
+ private:
+  const SkBitmap fBitmap;
+  GrUniqueKey fOriginalKey;
 
-    typedef GrTextureMaker INHERITED;
+  typedef GrTextureMaker INHERITED;
 };
 
 #endif

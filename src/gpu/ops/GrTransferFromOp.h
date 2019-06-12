@@ -16,57 +16,52 @@
  * that the caller has checked the GrCaps to ensure this transfer is legal.
  */
 class GrTransferFromOp final : public GrOp {
-public:
-    DEFINE_OP_CLASS_ID
+ public:
+  DEFINE_OP_CLASS_ID
 
-    static std::unique_ptr<GrOp> Make(GrRecordingContext*,
-                                      const SkIRect& srcRect,
-                                      GrColorType dstColorType,
-                                      sk_sp<GrGpuBuffer>
-                                              dstBuffer,
-                                      size_t dstOffset);
+  static std::unique_ptr<GrOp> Make(
+      GrRecordingContext*, const SkIRect& srcRect, GrColorType dstColorType,
+      sk_sp<GrGpuBuffer> dstBuffer, size_t dstOffset);
 
-    const char* name() const override { return "TransferFromOp"; }
+  const char* name() const override { return "TransferFromOp"; }
 
 #ifdef SK_DEBUG
-    SkString dumpInfo() const override {
-        SkString string;
-        string = INHERITED::dumpInfo();
-        string.appendf(
-                "bufferID:: %d offset: %zu, color type: %d\n"
-                "srcRect: [ L: %d, T: %d, R: %d, B: %d ]\n",
-                fDstBuffer->uniqueID().asUInt(), fDstOffset, (int)fDstColorType, fSrcRect.fLeft,
-                fSrcRect.fTop, fSrcRect.fRight, fSrcRect.fBottom);
-        return string;
-    }
+  SkString dumpInfo() const override {
+    SkString string;
+    string = INHERITED::dumpInfo();
+    string.appendf(
+        "bufferID:: %d offset: %zu, color type: %d\n"
+        "srcRect: [ L: %d, T: %d, R: %d, B: %d ]\n",
+        fDstBuffer->uniqueID().asUInt(), fDstOffset, (int)fDstColorType, fSrcRect.fLeft,
+        fSrcRect.fTop, fSrcRect.fRight, fSrcRect.fBottom);
+    return string;
+  }
 #endif
 
-private:
-    friend class GrOpMemoryPool;  // for ctor
+ private:
+  friend class GrOpMemoryPool;  // for ctor
 
-    GrTransferFromOp(const SkIRect& srcRect,
-                     GrColorType dstColorType,
-                     sk_sp<GrGpuBuffer>
-                             dstBuffer,
-                     size_t dstOffset)
-            : INHERITED(ClassID())
-            , fDstBuffer(std::move(dstBuffer))
-            , fDstOffset(dstOffset)
-            , fSrcRect(srcRect)
-            , fDstColorType(dstColorType) {
-        this->setBounds(SkRect::Make(srcRect), HasAABloat::kNo, IsZeroArea::kNo);
-    }
+  GrTransferFromOp(
+      const SkIRect& srcRect, GrColorType dstColorType, sk_sp<GrGpuBuffer> dstBuffer,
+      size_t dstOffset)
+      : INHERITED(ClassID()),
+        fDstBuffer(std::move(dstBuffer)),
+        fDstOffset(dstOffset),
+        fSrcRect(srcRect),
+        fDstColorType(dstColorType) {
+    this->setBounds(SkRect::Make(srcRect), HasAABloat::kNo, IsZeroArea::kNo);
+  }
 
-    void onPrepare(GrOpFlushState*) override {}
+  void onPrepare(GrOpFlushState*) override {}
 
-    void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
+  void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
 
-    sk_sp<GrGpuBuffer> fDstBuffer;
-    size_t fDstOffset;
-    SkIRect fSrcRect;
-    GrColorType fDstColorType;
+  sk_sp<GrGpuBuffer> fDstBuffer;
+  size_t fDstOffset;
+  SkIRect fSrcRect;
+  GrColorType fDstColorType;
 
-    typedef GrOp INHERITED;
+  typedef GrOp INHERITED;
 };
 
 #endif

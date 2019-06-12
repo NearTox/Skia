@@ -17,25 +17,25 @@
    The SkImage holds on to encoded data.  The SkBitmapKey properly de-dups subsets.
  */
 class SkKeyedImage {
-public:
-    SkKeyedImage() {}
-    SkKeyedImage(sk_sp<SkImage>);
-    SkKeyedImage(const SkBitmap&);
-    SkKeyedImage(SkKeyedImage&&) = default;
-    SkKeyedImage(const SkKeyedImage&) = default;
+ public:
+  SkKeyedImage() {}
+  SkKeyedImage(sk_sp<SkImage>);
+  SkKeyedImage(const SkBitmap&);
+  SkKeyedImage(SkKeyedImage&&) = default;
+  SkKeyedImage(const SkKeyedImage&) = default;
 
-    SkKeyedImage& operator=(SkKeyedImage&&) = default;
-    SkKeyedImage& operator=(const SkKeyedImage&) = default;
+  SkKeyedImage& operator=(SkKeyedImage&&) = default;
+  SkKeyedImage& operator=(const SkKeyedImage&) = default;
 
-    explicit operator bool() const { return fImage != nullptr; }
-    const SkBitmapKey& key() const { return fKey; }
-    const sk_sp<SkImage>& image() const { return fImage; }
-    sk_sp<SkImage> release();
-    SkKeyedImage subset(SkIRect subset) const;
+  explicit operator bool() const { return fImage != nullptr; }
+  const SkBitmapKey& key() const { return fKey; }
+  const sk_sp<SkImage>& image() const { return fImage; }
+  sk_sp<SkImage> release();
+  SkKeyedImage subset(SkIRect subset) const;
 
-private:
-    sk_sp<SkImage> fImage;
-    SkBitmapKey fKey = {{0, 0, 0, 0}, 0};
+ private:
+  sk_sp<SkImage> fImage;
+  SkBitmapKey fKey = {{0, 0, 0, 0}, 0};
 };
 
 /**

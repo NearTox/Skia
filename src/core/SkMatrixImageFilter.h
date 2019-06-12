@@ -18,34 +18,35 @@
  */
 
 class SkMatrixImageFilter : public SkImageFilter {
-public:
-    /** Construct a 2D transformation image filter.
-     *  @param transform     The matrix to apply when drawing the src bitmap
-     *  @param filterQuality The quality of filtering to apply when scaling.
-     *  @param input         The input image filter.  If nullptr, the src bitmap
-     *                       passed to filterImage() is used instead.
-     */
+ public:
+  /** Construct a 2D transformation image filter.
+   *  @param transform     The matrix to apply when drawing the src bitmap
+   *  @param filterQuality The quality of filtering to apply when scaling.
+   *  @param input         The input image filter.  If nullptr, the src bitmap
+   *                       passed to filterImage() is used instead.
+   */
 
-    static sk_sp<SkImageFilter> Make(const SkMatrix& transform, SkFilterQuality filterQuality,
-                                     sk_sp<SkImageFilter> input);
+  static sk_sp<SkImageFilter> Make(
+      const SkMatrix& transform, SkFilterQuality filterQuality, sk_sp<SkImageFilter> input);
 
-    SkRect computeFastBounds(const SkRect&) const override;
+  SkRect computeFastBounds(const SkRect&) const override;
 
-protected:
-    SkMatrixImageFilter(const SkMatrix& transform, SkFilterQuality, sk_sp<SkImageFilter> input);
-    void flatten(SkWriteBuffer&) const override;
+ protected:
+  SkMatrixImageFilter(const SkMatrix& transform, SkFilterQuality, sk_sp<SkImageFilter> input);
+  void flatten(SkWriteBuffer&) const override;
 
-    sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
-                                        SkIPoint* offset) const override;
-    SkIRect onFilterNodeBounds(const SkIRect& src, const SkMatrix& ctm, MapDirection,
-                               const SkIRect* inputRect) const override;
+  sk_sp<SkSpecialImage> onFilterImage(
+      SkSpecialImage* source, const Context&, SkIPoint* offset) const override;
+  SkIRect onFilterNodeBounds(
+      const SkIRect& src, const SkMatrix& ctm, MapDirection,
+      const SkIRect* inputRect) const override;
 
-private:
-    SK_FLATTENABLE_HOOKS(SkMatrixImageFilter)
+ private:
+  SK_FLATTENABLE_HOOKS(SkMatrixImageFilter)
 
-    SkMatrix fTransform;
-    SkFilterQuality fFilterQuality;
-    typedef SkImageFilter INHERITED;
+  SkMatrix fTransform;
+  SkFilterQuality fFilterQuality;
+  typedef SkImageFilter INHERITED;
 };
 
 #endif

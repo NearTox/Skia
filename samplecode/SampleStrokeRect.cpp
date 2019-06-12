@@ -9,52 +9,51 @@
 #include "samplecode/Sample.h"
 
 class StrokeRectSample : public Sample {
-public:
-    StrokeRectSample() {}
+ public:
+  StrokeRectSample() {}
 
-protected:
-    virtual bool onQuery(Sample::Event* evt) {
-        if (Sample::TitleQ(*evt)) {
-            Sample::TitleR(evt, "Stroke Rects");
-            return true;
-        }
-        return this->INHERITED::onQuery(evt);
+ protected:
+  virtual bool onQuery(Sample::Event* evt) {
+    if (Sample::TitleQ(*evt)) {
+      Sample::TitleR(evt, "Stroke Rects");
+      return true;
     }
+    return this->INHERITED::onQuery(evt);
+  }
 
-    virtual void onDrawContent(SkCanvas* canvas) {
-        SkPaint paint;
-        paint.setAntiAlias(true);
-        paint.setStyle(SkPaint::kStroke_Style);
-        paint.setStrokeWidth(SkIntToScalar(20));
+  virtual void onDrawContent(SkCanvas* canvas) {
+    SkPaint paint;
+    paint.setAntiAlias(true);
+    paint.setStyle(SkPaint::kStroke_Style);
+    paint.setStrokeWidth(SkIntToScalar(20));
 
-        SkPaint hair;
-        hair.setStyle(SkPaint::kStroke_Style);
-        hair.setColor(SK_ColorRED);
+    SkPaint hair;
+    hair.setStyle(SkPaint::kStroke_Style);
+    hair.setColor(SK_ColorRED);
 
-        static const SkISize gSize[] = {{100, 50}, {100, 0}, {0, 50}, {0, 0}};
+    static const SkISize gSize[] = {{100, 50}, {100, 0}, {0, 50}, {0, 0}};
 
-        static const SkPaint::Join gJoin[] = {SkPaint::kMiter_Join, SkPaint::kRound_Join,
-                                              SkPaint::kBevel_Join};
+    static const SkPaint::Join gJoin[] = {SkPaint::kMiter_Join, SkPaint::kRound_Join,
+                                          SkPaint::kBevel_Join};
 
-        canvas->translate(paint.getStrokeWidth(), paint.getStrokeWidth());
-        for (size_t i = 0; i < SK_ARRAY_COUNT(gJoin); ++i) {
-            paint.setStrokeJoin(gJoin[i]);
+    canvas->translate(paint.getStrokeWidth(), paint.getStrokeWidth());
+    for (size_t i = 0; i < SK_ARRAY_COUNT(gJoin); ++i) {
+      paint.setStrokeJoin(gJoin[i]);
 
-            canvas->save();
-            for (size_t j = 0; j < SK_ARRAY_COUNT(gSize); ++j) {
-                SkRect r = SkRect::MakeWH(SkIntToScalar(gSize[j].fWidth),
-                                          SkIntToScalar(gSize[j].fHeight));
-                canvas->drawRect(r, paint);
-                canvas->drawRect(r, hair);
-                canvas->translate(0, SkIntToScalar(100));
-            }
-            canvas->restore();
-            canvas->translate(SkIntToScalar(150), 0);
-        }
+      canvas->save();
+      for (size_t j = 0; j < SK_ARRAY_COUNT(gSize); ++j) {
+        SkRect r = SkRect::MakeWH(SkIntToScalar(gSize[j].fWidth), SkIntToScalar(gSize[j].fHeight));
+        canvas->drawRect(r, paint);
+        canvas->drawRect(r, hair);
+        canvas->translate(0, SkIntToScalar(100));
+      }
+      canvas->restore();
+      canvas->translate(SkIntToScalar(150), 0);
     }
+  }
 
-private:
-    typedef Sample INHERITED;
+ private:
+  typedef Sample INHERITED;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -6,7 +6,7 @@
  */
 
 #include "include/private/SkSemaphore.h"
-#include "include/private/SkLeanWindows.h"
+#include "src/core/SkLeanWindows.h"
 
 #if defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)
 #include <mach/mach.h>
@@ -22,82 +22,81 @@ static void AnnotateHappensAfter(const char*, int, void*) {}
 #endif
 
 struct SkBaseSemaphore::OSSemaphore {
-    semaphore_t fSemaphore;
+  semaphore_t fSemaphore;
 
-    OSSemaphore() {
-        semaphore_create(mach_task_self(), &fSemaphore, SYNC_POLICY_LIFO, 0 /*initial count*/);
-    }
-    ~OSSemaphore() { semaphore_destroy(mach_task_self(), fSemaphore); }
+  OSSemaphore() {
+    semaphore_create(mach_task_self(), &fSemaphore, SYNC_POLICY_LIFO, 0 /*initial count*/);
+  }
+  ~OSSemaphore() { semaphore_destroy(mach_task_self(), fSemaphore); }
 
-    void signal(int n) {
-        while (n-- > 0) {
-            AnnotateHappensBefore(__FILE__, __LINE__, &fSemaphore);
-            semaphore_signal(fSemaphore);
-        }
+  void signal(int n) {
+    while (n-- > 0) {
+      AnnotateHappensBefore(__FILE__, __LINE__, &fSemaphore);
+      semaphore_signal(fSemaphore);
     }
-    void wait() {
-        semaphore_wait(fSemaphore);
-        AnnotateHappensAfter(__FILE__, __LINE__, &fSemaphore);
-    }
+  }
+  void wait() {
+    semaphore_wait(fSemaphore);
+    AnnotateHappensAfter(__FILE__, __LINE__, &fSemaphore);
+  }
 };
 #elif defined(SK_BUILD_FOR_WIN)
 struct SkBaseSemaphore::OSSemaphore {
-    HANDLE fSemaphore;
+  HANDLE fSemaphore;
 
-    OSSemaphore() noexcept {
-        fSemaphore = CreateSemaphore(nullptr /*security attributes, optional*/,
-                                     0 /*initial count*/,
-                                     MAXLONG /*max count*/,
-                                     nullptr /*name, optional*/);
-    }
-    ~OSSemaphore() { CloseHandle(fSemaphore); }
+  OSSemaphore() {
+    fSemaphore = CreateSemaphore(
+        nullptr /*security attributes, optional*/, 0 /*initial count*/, MAXLONG /*max count*/,
+        nullptr /*name, optional*/);
+  }
+  ~OSSemaphore() { CloseHandle(fSemaphore); }
 
-    void signal(int n) noexcept {
-        ReleaseSemaphore(fSemaphore, n, nullptr /*returns previous count, optional*/);
-    }
-    void wait() noexcept { WaitForSingleObject(fSemaphore, INFINITE /*timeout in ms*/); }
+  void signal(int n) {
+    ReleaseSemaphore(fSemaphore, n, nullptr /*returns previous count, optional*/);
+  }
+  void wait() { WaitForSingleObject(fSemaphore, INFINITE /*timeout in ms*/); }
 };
 #else
 // It's important we test for Mach before this.  This code will compile but not work there.
 #include <errno.h>
 #include <semaphore.h>
 struct SkBaseSemaphore::OSSemaphore {
-    sem_t fSemaphore;
+  sem_t fSemaphore;
 
-    OSSemaphore() { sem_init(&fSemaphore, 0 /*cross process?*/, 0 /*initial count*/); }
-    ~OSSemaphore() { sem_destroy(&fSemaphore); }
+  OSSemaphore() { sem_init(&fSemaphore, 0 /*cross process?*/, 0 /*initial count*/); }
+  ~OSSemaphore() { sem_destroy(&fSemaphore); }
 
-    void signal(int n) {
-        while (n-- > 0) {
-            sem_post(&fSemaphore);
-        }
+  void signal(int n) {
+    while (n-- > 0) {
+      sem_post(&fSemaphore);
     }
-    void wait() {
-        // Try until we're not interrupted.
-        while (sem_wait(&fSemaphore) == -1 && errno == EINTR)
-            ;
-    }
+  }
+  void wait() {
+    // Try until we're not interrupted.
+    while (sem_wait(&fSemaphore) == -1 && errno == EINTR)
+      ;
+  }
 };
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkBaseSemaphore::osSignal(int n) noexcept {
-    fOSSemaphoreOnce([this] { fOSSemaphore = new OSSemaphore; });
-    fOSSemaphore->signal(n);
+void SkBaseSemaphore::osSignal(int n) {
+  fOSSemaphoreOnce([this] { fOSSemaphore = new OSSemaphore; });
+  fOSSemaphore->signal(n);
 }
 
-void SkBaseSemaphore::osWait() noexcept {
-    fOSSemaphoreOnce([this] { fOSSemaphore = new OSSemaphore; });
-    fOSSemaphore->wait();
+void SkBaseSemaphore::osWait() {
+  fOSSemaphoreOnce([this] { fOSSemaphore = new OSSemaphore; });
+  fOSSemaphore->wait();
 }
 
-void SkBaseSemaphore::cleanup() noexcept { delete fOSSemaphore; }
+void SkBaseSemaphore::cleanup() { delete fOSSemaphore; }
 
-bool SkBaseSemaphore::try_wait() noexcept {
-    int count = fCount.load(std::memory_order_relaxed);
-    if (count > 0) {
-        return fCount.compare_exchange_weak(count, count - 1, std::memory_order_acquire);
-    }
-    return false;
+bool SkBaseSemaphore::try_wait() {
+  int count = fCount.load(std::memory_order_relaxed);
+  if (count > 0) {
+    return fCount.compare_exchange_weak(count, count - 1, std::memory_order_acquire);
+  }
+  return false;
 }

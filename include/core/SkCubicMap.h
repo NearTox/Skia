@@ -19,22 +19,22 @@
  *  pts[1,2].X are inside the unit [0..1]
  */
 class SK_API SkCubicMap {
-public:
-    SkCubicMap(SkPoint p1, SkPoint p2);
+ public:
+  SkCubicMap(SkPoint p1, SkPoint p2);
 
-    float computeYFromX(float x) const;
+  float computeYFromX(float x) const;
 
-    SkPoint computeFromT(float t) const;
+  SkPoint computeFromT(float t) const;
 
-private:
-    enum Type {
-        kLine_Type,      // x == y
-        kCubeRoot_Type,  // At^3 == x
-        kSolver_Type,    // general monotonic cubic solver
-    };
+ private:
+  enum Type {
+    kLine_Type,      // x == y
+    kCubeRoot_Type,  // At^3 == x
+    kSolver_Type,    // general monotonic cubic solver
+  };
 
-    SkPoint fCoeff[3];
-    Type fType;
+  SkPoint fCoeff[3];
+  Type fType;
 };
 
 #endif

@@ -26,42 +26,44 @@ struct SkRect;
 class GrGpuRTCommandBuffer;
 
 class GrGpuCommandBuffer {
-public:
-    virtual ~GrGpuCommandBuffer() {}
+ public:
+  virtual ~GrGpuCommandBuffer() {}
 
-    // Copy src into current surface owned by either a GrGpuTextureCommandBuffer or
-    // GrGpuRenderTargetCommandBuffer.
-    virtual void copy(GrSurface* src, GrSurfaceOrigin srcOrigin, const SkIRect& srcRect,
-                      const SkIPoint& dstPoint) = 0;
-    // Initiates a transfer from the surface owned by the command buffer to the GrGpuBuffer.
-    virtual void transferFrom(const SkIRect& srcRect, GrColorType bufferColorType,
-                              GrGpuBuffer* transferBuffer, size_t offset) = 0;
+  // Copy src into current surface owned by either a GrGpuTextureCommandBuffer or
+  // GrGpuRenderTargetCommandBuffer.
+  virtual void copy(
+      GrSurface* src, GrSurfaceOrigin srcOrigin, const SkIRect& srcRect,
+      const SkIPoint& dstPoint) = 0;
+  // Initiates a transfer from the surface owned by the command buffer to the GrGpuBuffer.
+  virtual void transferFrom(
+      const SkIRect& srcRect, GrColorType bufferColorType, GrGpuBuffer* transferBuffer,
+      size_t offset) = 0;
 
-    virtual void insertEventMarker(const char*) = 0;
+  virtual void insertEventMarker(const char*) = 0;
 
-    virtual GrGpuRTCommandBuffer* asRTCommandBuffer() { return nullptr; }
+  virtual GrGpuRTCommandBuffer* asRTCommandBuffer() { return nullptr; }
 };
 
 class GrGpuTextureCommandBuffer : public GrGpuCommandBuffer {
-public:
-    void set(GrTexture* texture, GrSurfaceOrigin origin) {
-        SkASSERT(!fTexture);
+ public:
+  void set(GrTexture* texture, GrSurfaceOrigin origin) {
+    SkASSERT(!fTexture);
 
-        fOrigin = origin;
-        fTexture = texture;
-    }
+    fOrigin = origin;
+    fTexture = texture;
+  }
 
-protected:
-    GrGpuTextureCommandBuffer() : fOrigin(kTopLeft_GrSurfaceOrigin), fTexture(nullptr) {}
+ protected:
+  GrGpuTextureCommandBuffer() : fOrigin(kTopLeft_GrSurfaceOrigin), fTexture(nullptr) {}
 
-    GrGpuTextureCommandBuffer(GrTexture* texture, GrSurfaceOrigin origin)
-            : fOrigin(origin), fTexture(texture) {}
+  GrGpuTextureCommandBuffer(GrTexture* texture, GrSurfaceOrigin origin)
+      : fOrigin(origin), fTexture(texture) {}
 
-    GrSurfaceOrigin fOrigin;
-    GrTexture* fTexture;
+  GrSurfaceOrigin fOrigin;
+  GrTexture* fTexture;
 
-private:
-    typedef GrGpuCommandBuffer INHERITED;
+ private:
+  typedef GrGpuCommandBuffer INHERITED;
 };
 
 /**
@@ -71,93 +73,86 @@ private:
  * GrGpuCommandBuffer.
  */
 class GrGpuRTCommandBuffer : public GrGpuCommandBuffer {
-public:
-    struct LoadAndStoreInfo {
-        GrLoadOp fLoadOp;
-        GrStoreOp fStoreOp;
-        SkPMColor4f fClearColor;
-    };
+ public:
+  struct LoadAndStoreInfo {
+    GrLoadOp fLoadOp;
+    GrStoreOp fStoreOp;
+    SkPMColor4f fClearColor;
+  };
 
-    // Load-time clears of the stencil buffer are always to 0 so we don't store
-    // an 'fStencilClearValue'
-    struct StencilLoadAndStoreInfo {
-        GrLoadOp fLoadOp;
-        GrStoreOp fStoreOp;
-    };
+  // Load-time clears of the stencil buffer are always to 0 so we don't store
+  // an 'fStencilClearValue'
+  struct StencilLoadAndStoreInfo {
+    GrLoadOp fLoadOp;
+    GrStoreOp fStoreOp;
+  };
 
-    GrGpuRTCommandBuffer* asRTCommandBuffer() { return this; }
+  GrGpuRTCommandBuffer* asRTCommandBuffer() { return this; }
 
-    virtual void begin() = 0;
-    // Signals the end of recording to the command buffer and that it can now be submitted.
-    virtual void end() = 0;
+  virtual void begin() = 0;
+  // Signals the end of recording to the command buffer and that it can now be submitted.
+  virtual void end() = 0;
 
-    // We pass in an array of meshCount GrMesh to the draw. The backend should loop over each
-    // GrMesh object and emit a draw for it. Each draw will use the same GrPipeline and
-    // GrPrimitiveProcessor. This may fail if the draw would exceed any resource limits (e.g.
-    // number of vertex attributes is too large).
-    bool draw(const GrPrimitiveProcessor&,
-              const GrPipeline&,
-              const GrPipeline::FixedDynamicState*,
-              const GrPipeline::DynamicStateArrays*,
-              const GrMesh[],
-              int meshCount,
-              const SkRect& bounds);
+  // We pass in an array of meshCount GrMesh to the draw. The backend should loop over each
+  // GrMesh object and emit a draw for it. Each draw will use the same GrPipeline and
+  // GrPrimitiveProcessor. This may fail if the draw would exceed any resource limits (e.g.
+  // number of vertex attributes is too large).
+  bool draw(
+      const GrPrimitiveProcessor&, const GrPipeline&, const GrPipeline::FixedDynamicState*,
+      const GrPipeline::DynamicStateArrays*, const GrMesh[], int meshCount, const SkRect& bounds);
 
-    // Performs an upload of vertex data in the middle of a set of a set of draws
-    virtual void inlineUpload(GrOpFlushState*, GrDeferredTextureUploadFn&) = 0;
+  // Performs an upload of vertex data in the middle of a set of a set of draws
+  virtual void inlineUpload(GrOpFlushState*, GrDeferredTextureUploadFn&) = 0;
 
-    /**
-     * Clear the owned render target. Ignores the draw state and clip.
-     */
-    void clear(const GrFixedClip&, const SkPMColor4f&);
+  /**
+   * Clear the owned render target. Ignores the draw state and clip.
+   */
+  void clear(const GrFixedClip&, const SkPMColor4f&);
 
-    void clearStencilClip(const GrFixedClip&, bool insideStencilMask);
+  void clearStencilClip(const GrFixedClip&, bool insideStencilMask);
 
-    /**
-     * Discards the contents render target.
-     */
-    // TODO: This should be removed in the future to favor using the load and store ops for discard
-    virtual void discard() = 0;
+  /**
+   * Discards the contents render target.
+   */
+  // TODO: This should be removed in the future to favor using the load and store ops for discard
+  virtual void discard() = 0;
 
-    /**
-     * Executes the SkDrawable object for the underlying backend.
-     */
-    virtual void executeDrawable(std::unique_ptr<SkDrawable::GpuDrawHandler>) {}
+  /**
+   * Executes the SkDrawable object for the underlying backend.
+   */
+  virtual void executeDrawable(std::unique_ptr<SkDrawable::GpuDrawHandler>) {}
 
-protected:
-    GrGpuRTCommandBuffer() : fOrigin(kTopLeft_GrSurfaceOrigin), fRenderTarget(nullptr) {}
+ protected:
+  GrGpuRTCommandBuffer() : fOrigin(kTopLeft_GrSurfaceOrigin), fRenderTarget(nullptr) {}
 
-    GrGpuRTCommandBuffer(GrRenderTarget* rt, GrSurfaceOrigin origin)
-            : fOrigin(origin), fRenderTarget(rt) {}
+  GrGpuRTCommandBuffer(GrRenderTarget* rt, GrSurfaceOrigin origin)
+      : fOrigin(origin), fRenderTarget(rt) {}
 
-    void set(GrRenderTarget* rt, GrSurfaceOrigin origin) {
-        SkASSERT(!fRenderTarget);
+  void set(GrRenderTarget* rt, GrSurfaceOrigin origin) {
+    SkASSERT(!fRenderTarget);
 
-        fRenderTarget = rt;
-        fOrigin = origin;
-    }
+    fRenderTarget = rt;
+    fOrigin = origin;
+  }
 
-    GrSurfaceOrigin fOrigin;
-    GrRenderTarget* fRenderTarget;
+  GrSurfaceOrigin fOrigin;
+  GrRenderTarget* fRenderTarget;
 
-private:
-    virtual GrGpu* gpu() = 0;
+ private:
+  virtual GrGpu* gpu() = 0;
 
-    // overridden by backend-specific derived class to perform the draw call.
-    virtual void onDraw(const GrPrimitiveProcessor&,
-                        const GrPipeline&,
-                        const GrPipeline::FixedDynamicState*,
-                        const GrPipeline::DynamicStateArrays*,
-                        const GrMesh[],
-                        int meshCount,
-                        const SkRect& bounds) = 0;
+  // overridden by backend-specific derived class to perform the draw call.
+  virtual void onDraw(
+      const GrPrimitiveProcessor&, const GrPipeline&, const GrPipeline::FixedDynamicState*,
+      const GrPipeline::DynamicStateArrays*, const GrMesh[], int meshCount,
+      const SkRect& bounds) = 0;
 
-    // overridden by backend-specific derived class to perform the clear.
-    virtual void onClear(const GrFixedClip&, const SkPMColor4f&) = 0;
+  // overridden by backend-specific derived class to perform the clear.
+  virtual void onClear(const GrFixedClip&, const SkPMColor4f&) = 0;
 
-    virtual void onClearStencilClip(const GrFixedClip&, bool insideStencilMask) = 0;
+  virtual void onClearStencilClip(const GrFixedClip&, bool insideStencilMask) = 0;
 
-    typedef GrGpuCommandBuffer INHERITED;
+  typedef GrGpuCommandBuffer INHERITED;
 };
 
 #endif

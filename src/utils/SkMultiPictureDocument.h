@@ -22,8 +22,8 @@ class SkStreamSeekable;
 SK_API sk_sp<SkDocument> SkMakeMultiPictureDocument(SkWStream* dst, const SkSerialProcs* = nullptr);
 
 struct SkDocumentPage {
-    sk_sp<SkPicture> fPicture;
-    SkSize fSize;
+  sk_sp<SkPicture> fPicture;
+  SkSize fSize;
 };
 
 /**
@@ -36,9 +36,8 @@ SK_API int SkMultiPictureDocumentReadPageCount(SkStreamSeekable* src);
  *  dstArrayCount must equal SkMultiPictureDocumentReadPageCount().
  *  Return false on error.
  */
-SK_API bool SkMultiPictureDocumentRead(SkStreamSeekable* src,
-                                       SkDocumentPage* dstArray,
-                                       int dstArrayCount,
-                                       const SkDeserialProcs* = nullptr);
+SK_API bool SkMultiPictureDocumentRead(
+    SkStreamSeekable* src, SkDocumentPage* dstArray, int dstArrayCount,
+    const SkDeserialProcs* = nullptr);
 
 #endif  // SkMultiPictureDocument_DEFINED

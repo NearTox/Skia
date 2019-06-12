@@ -19,34 +19,28 @@
  * startA is before startB, then endB is before endA).
  */
 class SkATrace : public SkEventTracer {
-public:
-    SkATrace() noexcept;
+ public:
+  SkATrace();
 
-    SkEventTracer::Handle addTraceEvent(char phase,
-                                        const uint8_t* categoryEnabledFlag,
-                                        const char* name,
-                                        uint64_t id,
-                                        int numArgs,
-                                        const char** argNames,
-                                        const uint8_t* argTypes,
-                                        const uint64_t* argValues,
-                                        uint8_t flags) noexcept override;
+  SkEventTracer::Handle addTraceEvent(
+      char phase, const uint8_t* categoryEnabledFlag, const char* name, uint64_t id, int numArgs,
+      const char** argNames, const uint8_t* argTypes, const uint64_t* argValues,
+      uint8_t flags) override;
 
-    void updateTraceEventDuration(const uint8_t* categoryEnabledFlag,
-                                  const char* name,
-                                  SkEventTracer::Handle handle) noexcept override;
+  void updateTraceEventDuration(
+      const uint8_t* categoryEnabledFlag, const char* name, SkEventTracer::Handle handle) override;
 
-    const uint8_t* getCategoryGroupEnabled(const char* name) noexcept override;
+  const uint8_t* getCategoryGroupEnabled(const char* name) override;
 
-    const char* getCategoryGroupName(const uint8_t* categoryEnabledFlag) noexcept override {
-        static const char* category = "skiaATrace";
-        return category;
-    }
+  const char* getCategoryGroupName(const uint8_t* categoryEnabledFlag) override {
+    static const char* category = "skiaATrace";
+    return category;
+  }
 
-private:
-    void (*fBeginSection)(const char*);
-    void (*fEndSection)(void);
-    bool (*fIsEnabled)(void);
+ private:
+  void (*fBeginSection)(const char*);
+  void (*fEndSection)(void);
+  bool (*fIsEnabled)(void);
 };
 
 #endif

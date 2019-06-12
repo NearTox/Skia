@@ -21,9 +21,7 @@ SkUUID CreateUUID(const SkPDF::Metadata&);
 
 std::unique_ptr<SkPDFObject> MakePdfId(const SkUUID& doc, const SkUUID& instance);
 
-SkPDFIndirectReference MakeXMPObject(const SkPDF::Metadata& metadata,
-                                     const SkUUID& doc,
-                                     const SkUUID& instance,
-                                     SkPDFDocument*);
+SkPDFIndirectReference MakeXMPObject(
+    const SkPDF::Metadata& metadata, const SkUUID& doc, const SkUUID& instance, SkPDFDocument*);
 }  // namespace SkPDFMetadata
 #endif  // SkPDFMetadata_DEFINED

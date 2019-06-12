@@ -23,43 +23,36 @@ class GrVkRenderPass;
 struct SkIRect;
 
 class GrVkPipeline : public GrVkResource {
-public:
-    static GrVkPipeline* Create(GrVkGpu*,
-                                int numColorSamples,
-                                const GrPrimitiveProcessor&,
-                                const GrPipeline& pipeline,
-                                const GrStencilSettings&,
-                                GrSurfaceOrigin,
-                                VkPipelineShaderStageCreateInfo* shaderStageInfo,
-                                int shaderStageCount,
-                                GrPrimitiveType primitiveType,
-                                VkRenderPass compatibleRenderPass,
-                                VkPipelineLayout layout,
-                                VkPipelineCache cache);
+ public:
+  static GrVkPipeline* Create(
+      GrVkGpu*, int numColorSamples, const GrPrimitiveProcessor&, const GrPipeline& pipeline,
+      const GrStencilSettings&, GrSurfaceOrigin, VkPipelineShaderStageCreateInfo* shaderStageInfo,
+      int shaderStageCount, GrPrimitiveType primitiveType, VkRenderPass compatibleRenderPass,
+      VkPipelineLayout layout, VkPipelineCache cache);
 
-    VkPipeline pipeline() const { return fPipeline; }
+  VkPipeline pipeline() const { return fPipeline; }
 
-    static void SetDynamicScissorRectState(GrVkGpu*, GrVkCommandBuffer*, const GrRenderTarget*,
-                                           GrSurfaceOrigin, SkIRect);
-    static void SetDynamicViewportState(GrVkGpu*, GrVkCommandBuffer*, const GrRenderTarget*);
-    static void SetDynamicBlendConstantState(GrVkGpu*, GrVkCommandBuffer*, GrPixelConfig,
-                                             const GrXferProcessor&);
+  static void SetDynamicScissorRectState(
+      GrVkGpu*, GrVkCommandBuffer*, const GrRenderTarget*, GrSurfaceOrigin, SkIRect);
+  static void SetDynamicViewportState(GrVkGpu*, GrVkCommandBuffer*, const GrRenderTarget*);
+  static void SetDynamicBlendConstantState(
+      GrVkGpu*, GrVkCommandBuffer*, GrPixelConfig, const GrXferProcessor&);
 
 #ifdef SK_TRACE_VK_RESOURCES
-    void dumpInfo() const override {
-        SkDebugf("GrVkPipeline: %d (%d refs)\n", fPipeline, this->getRefCnt());
-    }
+  void dumpInfo() const override {
+    SkDebugf("GrVkPipeline: %d (%d refs)\n", fPipeline, this->getRefCnt());
+  }
 #endif
 
-protected:
-    GrVkPipeline(VkPipeline pipeline) : INHERITED(), fPipeline(pipeline) {}
+ protected:
+  GrVkPipeline(VkPipeline pipeline) : INHERITED(), fPipeline(pipeline) {}
 
-    VkPipeline fPipeline;
+  VkPipeline fPipeline;
 
-private:
-    void freeGPUData(GrVkGpu* gpu) const override;
+ private:
+  void freeGPUData(GrVkGpu* gpu) const override;
 
-    typedef GrVkResource INHERITED;
+  typedef GrVkResource INHERITED;
 };
 
 #endif

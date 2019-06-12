@@ -17,28 +17,23 @@
  * (e.g. winding, even-odd)
  */
 class SK_API GrDefaultPathRenderer : public GrPathRenderer {
-public:
-    GrDefaultPathRenderer();
+ public:
+  GrDefaultPathRenderer();
 
-private:
-    StencilSupport onGetStencilSupport(const GrShape&) const override;
+ private:
+  StencilSupport onGetStencilSupport(const GrShape&) const override;
 
-    CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;
+  CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;
 
-    bool onDrawPath(const DrawPathArgs&) override;
+  bool onDrawPath(const DrawPathArgs&) override;
 
-    void onStencilPath(const StencilPathArgs&) override;
+  void onStencilPath(const StencilPathArgs&) override;
 
-    bool internalDrawPath(GrRenderTargetContext*,
-                          GrPaint&&,
-                          GrAAType,
-                          const GrUserStencilSettings&,
-                          const GrClip&,
-                          const SkMatrix& viewMatrix,
-                          const GrShape&,
-                          bool stencilOnly);
+  bool internalDrawPath(
+      GrRenderTargetContext*, GrPaint&&, GrAAType, const GrUserStencilSettings&, const GrClip&,
+      const SkMatrix& viewMatrix, const GrShape&, bool stencilOnly);
 
-    typedef GrPathRenderer INHERITED;
+  typedef GrPathRenderer INHERITED;
 };
 
 #endif

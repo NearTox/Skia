@@ -16,26 +16,24 @@ namespace SkSL {
  * A ternary expression (test ? ifTrue : ifFalse).
  */
 struct ASTTernaryExpression : public ASTExpression {
-    ASTTernaryExpression(std::unique_ptr<ASTExpression> test,
-                         std::unique_ptr<ASTExpression>
-                                 ifTrue,
-                         std::unique_ptr<ASTExpression>
-                                 ifFalse)
-            : INHERITED(test->fOffset, kTernary_Kind)
-            , fTest(std::move(test))
-            , fIfTrue(std::move(ifTrue))
-            , fIfFalse(std::move(ifFalse)) {}
+  ASTTernaryExpression(
+      std::unique_ptr<ASTExpression> test, std::unique_ptr<ASTExpression> ifTrue,
+      std::unique_ptr<ASTExpression> ifFalse)
+      : INHERITED(test->fOffset, kTernary_Kind),
+        fTest(std::move(test)),
+        fIfTrue(std::move(ifTrue)),
+        fIfFalse(std::move(ifFalse)) {}
 
-    String description() const override {
-        return "(" + fTest->description() + " ? " + fIfTrue->description() + " : " +
-               fIfFalse->description() + ")";
-    }
+  String description() const override {
+    return "(" + fTest->description() + " ? " + fIfTrue->description() + " : " +
+           fIfFalse->description() + ")";
+  }
 
-    const std::unique_ptr<ASTExpression> fTest;
-    const std::unique_ptr<ASTExpression> fIfTrue;
-    const std::unique_ptr<ASTExpression> fIfFalse;
+  const std::unique_ptr<ASTExpression> fTest;
+  const std::unique_ptr<ASTExpression> fIfTrue;
+  const std::unique_ptr<ASTExpression> fIfFalse;
 
-    typedef ASTExpression INHERITED;
+  typedef ASTExpression INHERITED;
 };
 
 }  // namespace SkSL

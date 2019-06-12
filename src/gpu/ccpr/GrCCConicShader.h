@@ -21,26 +21,26 @@
  * (Use GrCCGeometry::conicTo().)
  */
 class GrCCConicShader : public GrCCCoverageProcessor::Shader {
-public:
-    bool calculatesOwnEdgeCoverage() const override { return true; }
+ public:
+  bool calculatesOwnEdgeCoverage() const override { return true; }
 
-    void emitSetupCode(GrGLSLVertexGeoBuilder*, const char* pts,
-                       const char** outHull4) const override;
+  void emitSetupCode(
+      GrGLSLVertexGeoBuilder*, const char* pts, const char** outHull4) const override;
 
-    void onEmitVaryings(GrGLSLVaryingHandler*, GrGLSLVarying::Scope, SkString* code,
-                        const char* position, const char* coverage, const char* cornerCoverage,
-                        const char* wind) override;
+  void onEmitVaryings(
+      GrGLSLVaryingHandler*, GrGLSLVarying::Scope, SkString* code, const char* position,
+      const char* coverage, const char* cornerCoverage, const char* wind) override;
 
-    void onEmitFragmentCode(GrGLSLFPFragmentBuilder*, const char* outputCoverage) const override;
+  void onEmitFragmentCode(GrGLSLFPFragmentBuilder*, const char* outputCoverage) const override;
 
-private:
-    void calcHullCoverage(SkString* code, const char* klm, const char* grad,
-                          const char* outputCoverage) const;
+ private:
+  void calcHullCoverage(
+      SkString* code, const char* klm, const char* grad, const char* outputCoverage) const;
 
-    const GrShaderVar fKLMMatrix{"klm_matrix", kFloat3x3_GrSLType};
-    const GrShaderVar fControlPoint{"control_point", kFloat2_GrSLType};
-    GrGLSLVarying fKLM_fWind;
-    GrGLSLVarying fGrad_fCorner;
+  const GrShaderVar fKLMMatrix{"klm_matrix", kFloat3x3_GrSLType};
+  const GrShaderVar fControlPoint{"control_point", kFloat2_GrSLType};
+  GrGLSLVarying fKLM_fWind;
+  GrGLSLVarying fGrad_fCorner;
 };
 
 #endif

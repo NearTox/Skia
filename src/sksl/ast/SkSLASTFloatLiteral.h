@@ -16,13 +16,13 @@ namespace SkSL {
  * A literal floating point number.
  */
 struct ASTFloatLiteral : public ASTExpression {
-    ASTFloatLiteral(int offset, double value) : INHERITED(offset, kFloat_Kind), fValue(value) {}
+  ASTFloatLiteral(int offset, double value) : INHERITED(offset, kFloat_Kind), fValue(value) {}
 
-    String description() const override { return to_string(fValue); }
+  String description() const override { return to_string(fValue); }
 
-    const double fValue;
+  const double fValue;
 
-    typedef ASTExpression INHERITED;
+  typedef ASTExpression INHERITED;
 };
 
 }  // namespace SkSL

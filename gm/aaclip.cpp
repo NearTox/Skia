@@ -20,10 +20,10 @@
 #include "tools/ToolUtils.h"
 
 static void do_draw(SkCanvas* canvas, const SkRect& r) {
-    SkPaint paint;
-    paint.setBlendMode(SkBlendMode::kSrc);
-    paint.setColor(0x800000FF);
-    canvas->drawRect(r, paint);
+  SkPaint paint;
+  paint.setBlendMode(SkBlendMode::kSrc);
+  paint.setColor(0x800000FF);
+  canvas->drawRect(r, paint);
 }
 
 /**
@@ -53,29 +53,29 @@ static void do_draw(SkCanvas* canvas, const SkRect& r) {
  *  light blue 0xFF7F7FFF.
  */
 DEF_SIMPLE_GM(dont_clip_to_layer, canvas, 120, 120) {
-    const SkRect r{10, 10, 110, 110};
+  const SkRect r{10, 10, 110, 110};
 
-    // Wrap the entire test inside a red layer, so we don't punch the actual gm's alpha with
-    // kSrc_Mode, which makes it hard to view (we like our GMs to have opaque pixels).
-    canvas->saveLayer(&r, nullptr);
-    canvas->drawColor(SK_ColorRED);
+  // Wrap the entire test inside a red layer, so we don't punch the actual gm's alpha with
+  // kSrc_Mode, which makes it hard to view (we like our GMs to have opaque pixels).
+  canvas->saveLayer(&r, nullptr);
+  canvas->drawColor(SK_ColorRED);
 
-    SkRect r0 = {20, 20, 100, 55};
-    SkRect r1 = {20, 65, 100, 100};
+  SkRect r0 = {20, 20, 100, 55};
+  SkRect r1 = {20, 65, 100, 100};
 
-    SkCanvas::SaveLayerRec rec;
-    rec.fPaint = nullptr;
-    rec.fBounds = &r0;
-    rec.fBackdrop = nullptr;
-    rec.fSaveLayerFlags = SkCanvasPriv::kDontClipToLayer_SaveLayerFlag;
-    canvas->saveLayer(rec);
-    rec.fBounds = &r1;
-    canvas->saveLayer(rec);
-    do_draw(canvas, r);
-    canvas->restore();
-    canvas->restore();
+  SkCanvas::SaveLayerRec rec;
+  rec.fPaint = nullptr;
+  rec.fBounds = &r0;
+  rec.fBackdrop = nullptr;
+  rec.fSaveLayerFlags = SkCanvasPriv::kDontClipToLayer_SaveLayerFlag;
+  canvas->saveLayer(rec);
+  rec.fBounds = &r1;
+  canvas->saveLayer(rec);
+  do_draw(canvas, r);
+  canvas->restore();
+  canvas->restore();
 
-    canvas->restore();  // red-layer
+  canvas->restore();  // red-layer
 }
 
 /** Draw a 2px border around the target, then red behind the target;
@@ -83,47 +83,47 @@ DEF_SIMPLE_GM(dont_clip_to_layer, canvas, 120, 120) {
 */
 
 static void draw(SkCanvas* canvas, SkRect& target, int x, int y) {
-    SkPaint borderPaint;
-    borderPaint.setColor(SkColorSetRGB(0x0, 0xDD, 0x0));
-    borderPaint.setAntiAlias(true);
-    SkPaint backgroundPaint;
-    backgroundPaint.setColor(SkColorSetRGB(0xDD, 0x0, 0x0));
-    backgroundPaint.setAntiAlias(true);
-    SkPaint foregroundPaint;
-    foregroundPaint.setColor(SkColorSetRGB(0x0, 0x0, 0xDD));
-    foregroundPaint.setAntiAlias(true);
+  SkPaint borderPaint;
+  borderPaint.setColor(SkColorSetRGB(0x0, 0xDD, 0x0));
+  borderPaint.setAntiAlias(true);
+  SkPaint backgroundPaint;
+  backgroundPaint.setColor(SkColorSetRGB(0xDD, 0x0, 0x0));
+  backgroundPaint.setAntiAlias(true);
+  SkPaint foregroundPaint;
+  foregroundPaint.setColor(SkColorSetRGB(0x0, 0x0, 0xDD));
+  foregroundPaint.setAntiAlias(true);
 
-    canvas->save();
-    canvas->translate(SkIntToScalar(x), SkIntToScalar(y));
-    target.inset(SkIntToScalar(-2), SkIntToScalar(-2));
-    canvas->drawRect(target, borderPaint);
-    target.inset(SkIntToScalar(2), SkIntToScalar(2));
-    canvas->drawRect(target, backgroundPaint);
-    canvas->clipRect(target, true);
-    target.inset(SkIntToScalar(-4), SkIntToScalar(-4));
-    canvas->drawRect(target, foregroundPaint);
-    canvas->restore();
+  canvas->save();
+  canvas->translate(SkIntToScalar(x), SkIntToScalar(y));
+  target.inset(SkIntToScalar(-2), SkIntToScalar(-2));
+  canvas->drawRect(target, borderPaint);
+  target.inset(SkIntToScalar(2), SkIntToScalar(2));
+  canvas->drawRect(target, backgroundPaint);
+  canvas->clipRect(target, true);
+  target.inset(SkIntToScalar(-4), SkIntToScalar(-4));
+  canvas->drawRect(target, foregroundPaint);
+  canvas->restore();
 }
 
 static void draw_square(SkCanvas* canvas, int x, int y) {
-    SkRect target(SkRect::MakeWH(10 * SK_Scalar1, 10 * SK_Scalar1));
-    draw(canvas, target, x, y);
+  SkRect target(SkRect::MakeWH(10 * SK_Scalar1, 10 * SK_Scalar1));
+  draw(canvas, target, x, y);
 }
 
 static void draw_column(SkCanvas* canvas, int x, int y) {
-    SkRect target(SkRect::MakeWH(1 * SK_Scalar1, 10 * SK_Scalar1));
-    draw(canvas, target, x, y);
+  SkRect target(SkRect::MakeWH(1 * SK_Scalar1, 10 * SK_Scalar1));
+  draw(canvas, target, x, y);
 }
 
 static void draw_bar(SkCanvas* canvas, int x, int y) {
-    SkRect target(SkRect::MakeWH(10 * SK_Scalar1, 1 * SK_Scalar1));
-    draw(canvas, target, x, y);
+  SkRect target(SkRect::MakeWH(10 * SK_Scalar1, 1 * SK_Scalar1));
+  draw(canvas, target, x, y);
 }
 
 static void draw_rect_tests(SkCanvas* canvas) {
-    draw_square(canvas, 10, 10);
-    draw_column(canvas, 30, 10);
-    draw_bar(canvas, 10, 30);
+  draw_square(canvas, 10, 10);
+  draw_column(canvas, 30, 10);
+  draw_bar(canvas, 10, 30);
 }
 
 /**
@@ -133,25 +133,25 @@ static void draw_rect_tests(SkCanvas* canvas) {
    border, with no red.
 */
 DEF_SIMPLE_GM(aaclip, canvas, 240, 120) {
-    // Initial pixel-boundary-aligned draw
-    draw_rect_tests(canvas);
+  // Initial pixel-boundary-aligned draw
+  draw_rect_tests(canvas);
 
-    // Repeat 4x with .2, .4, .6, .8 px offsets
-    canvas->translate(SK_Scalar1 / 5, SK_Scalar1 / 5);
-    canvas->translate(SkIntToScalar(50), 0);
-    draw_rect_tests(canvas);
+  // Repeat 4x with .2, .4, .6, .8 px offsets
+  canvas->translate(SK_Scalar1 / 5, SK_Scalar1 / 5);
+  canvas->translate(SkIntToScalar(50), 0);
+  draw_rect_tests(canvas);
 
-    canvas->translate(SK_Scalar1 / 5, SK_Scalar1 / 5);
-    canvas->translate(SkIntToScalar(50), 0);
-    draw_rect_tests(canvas);
+  canvas->translate(SK_Scalar1 / 5, SK_Scalar1 / 5);
+  canvas->translate(SkIntToScalar(50), 0);
+  draw_rect_tests(canvas);
 
-    canvas->translate(SK_Scalar1 / 5, SK_Scalar1 / 5);
-    canvas->translate(SkIntToScalar(50), 0);
-    draw_rect_tests(canvas);
+  canvas->translate(SK_Scalar1 / 5, SK_Scalar1 / 5);
+  canvas->translate(SkIntToScalar(50), 0);
+  draw_rect_tests(canvas);
 
-    canvas->translate(SK_Scalar1 / 5, SK_Scalar1 / 5);
-    canvas->translate(SkIntToScalar(50), 0);
-    draw_rect_tests(canvas);
+  canvas->translate(SK_Scalar1 / 5, SK_Scalar1 / 5);
+  canvas->translate(SkIntToScalar(50), 0);
+  draw_rect_tests(canvas);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -162,62 +162,62 @@ DEF_SIMPLE_GM(aaclip, canvas, 240, 120) {
 #include "src/core/SkMakeUnique.h"
 
 static std::unique_ptr<SkCanvas> make_canvas(const SkBitmap& bm) {
-    const SkImageInfo& info = bm.info();
-    if (info.bytesPerPixel() == 4) {
-        return SkCanvas::MakeRasterDirectN32(info.width(), info.height(),
-                                             (SkPMColor*)bm.getPixels(), bm.rowBytes());
-    } else {
-        return skstd::make_unique<SkCanvas>(bm);
-    }
+  const SkImageInfo& info = bm.info();
+  if (info.bytesPerPixel() == 4) {
+    return SkCanvas::MakeRasterDirectN32(
+        info.width(), info.height(), (SkPMColor*)bm.getPixels(), bm.rowBytes());
+  } else {
+    return skstd::make_unique<SkCanvas>(bm);
+  }
 }
 
 static void test_image(SkCanvas* canvas, const SkImageInfo& info) {
-    SkBitmap bm;
-    bm.allocPixels(info);
+  SkBitmap bm;
+  bm.allocPixels(info);
 
-    if (info.isOpaque()) {
-        bm.eraseColor(SK_ColorGREEN);
-    } else {
-        bm.eraseColor(0);
-    }
+  if (info.isOpaque()) {
+    bm.eraseColor(SK_ColorGREEN);
+  } else {
+    bm.eraseColor(0);
+  }
 
-    SkPaint paint;
-    paint.setAntiAlias(true);
-    paint.setColor(SK_ColorBLUE);
-    make_canvas(bm)->drawCircle(50, 50, 49, paint);
-    canvas->drawBitmap(bm, 10, 10);
+  SkPaint paint;
+  paint.setAntiAlias(true);
+  paint.setColor(SK_ColorBLUE);
+  make_canvas(bm)->drawCircle(50, 50, 49, paint);
+  canvas->drawBitmap(bm, 10, 10);
 
-    CGImageRef image = SkCreateCGImageRefWithColorspace(bm, nullptr);
+  CGImageRef image = SkCreateCGImageRefWithColorspace(bm, nullptr);
 
-    SkBitmap bm2;
-    SkCreateBitmapFromCGImage(&bm2, image);
-    canvas->drawBitmap(bm2, 10, 120);
-    canvas->drawImage(SkMakeImageFromCGImage(image), 10, 120 + bm2.height() + 10);
+  SkBitmap bm2;
+  SkCreateBitmapFromCGImage(&bm2, image);
+  canvas->drawBitmap(bm2, 10, 120);
+  canvas->drawImage(SkMakeImageFromCGImage(image), 10, 120 + bm2.height() + 10);
 
-    CGImageRelease(image);
+  CGImageRelease(image);
 }
 
 DEF_SIMPLE_GM(cgimage, canvas, 800, 250) {
-    const struct {
-        SkColorType fCT;
-        SkAlphaType fAT;
-    } rec[] = {
-            {kRGB_565_SkColorType, kOpaque_SkAlphaType},
+  const struct {
+    SkColorType fCT;
+    SkAlphaType fAT;
+  } rec[] = {
+      {kRGB_565_SkColorType, kOpaque_SkAlphaType},
 
-            {kRGBA_8888_SkColorType, kPremul_SkAlphaType},
-            {kRGBA_8888_SkColorType, kUnpremul_SkAlphaType},
-            {kRGBA_8888_SkColorType, kOpaque_SkAlphaType},
+      {kRGBA_8888_SkColorType, kPremul_SkAlphaType},
+      {kRGBA_8888_SkColorType, kUnpremul_SkAlphaType},
+      {kRGBA_8888_SkColorType, kOpaque_SkAlphaType},
 
-            {kBGRA_8888_SkColorType, kPremul_SkAlphaType},
-            {kBGRA_8888_SkColorType, kUnpremul_SkAlphaType},
-            {kBGRA_8888_SkColorType, kOpaque_SkAlphaType},
-    };
+      {kBGRA_8888_SkColorType, kPremul_SkAlphaType},
+      {kBGRA_8888_SkColorType, kUnpremul_SkAlphaType},
+      {kBGRA_8888_SkColorType, kOpaque_SkAlphaType},
+  };
 
-    for (size_t i = 0; i < SK_ARRAY_COUNT(rec); ++i) {
-        SkImageInfo info = SkImageInfo::Make(100, 100, rec[i].fCT, rec[i].fAT);
-        test_image(canvas, info);
-        canvas->translate(info.width() + 10, 0);
-    }
+  for (size_t i = 0; i < SK_ARRAY_COUNT(rec); ++i) {
+    SkImageInfo info = SkImageInfo::Make(100, 100, rec[i].fCT, rec[i].fAT);
+    test_image(canvas, info);
+    canvas->translate(info.width() + 10, 0);
+  }
 }
 
 #endif
@@ -226,63 +226,63 @@ DEF_SIMPLE_GM(cgimage, canvas, 800, 250) {
 
 // https://bug.skia.org/3716
 class ClipCubicGM : public skiagm::GM {
-    const SkScalar W = 100;
-    const SkScalar H = 240;
+  const SkScalar W = 100;
+  const SkScalar H = 240;
 
-    SkPath fVPath, fHPath;
+  SkPath fVPath, fHPath;
 
-public:
-    ClipCubicGM() {
-        fVPath.moveTo(W, 0);
-        fVPath.cubicTo(W, H - 10, 0, 10, 0, H);
+ public:
+  ClipCubicGM() {
+    fVPath.moveTo(W, 0);
+    fVPath.cubicTo(W, H - 10, 0, 10, 0, H);
 
-        SkMatrix pivot;
-        pivot.setRotate(90, W / 2, H / 2);
-        fVPath.transform(pivot, &fHPath);
-    }
+    SkMatrix pivot;
+    pivot.setRotate(90, W / 2, H / 2);
+    fVPath.transform(pivot, &fHPath);
+  }
 
-protected:
-    SkString onShortName() override { return SkString("clipcubic"); }
+ protected:
+  SkString onShortName() override { return SkString("clipcubic"); }
 
-    SkISize onISize() override { return SkISize::Make(400, 410); }
+  SkISize onISize() override { return SkISize::Make(400, 410); }
 
-    void doDraw(SkCanvas* canvas, const SkPath& path) {
-        SkPaint paint;
-        paint.setAntiAlias(true);
+  void doDraw(SkCanvas* canvas, const SkPath& path) {
+    SkPaint paint;
+    paint.setAntiAlias(true);
 
-        paint.setColor(0xFFCCCCCC);
-        canvas->drawPath(path, paint);
+    paint.setColor(0xFFCCCCCC);
+    canvas->drawPath(path, paint);
 
-        paint.setColor(SK_ColorRED);
-        paint.setStyle(SkPaint::kStroke_Style);
-        canvas->drawPath(path, paint);
-    }
+    paint.setColor(SK_ColorRED);
+    paint.setStyle(SkPaint::kStroke_Style);
+    canvas->drawPath(path, paint);
+  }
 
-    void drawAndClip(SkCanvas* canvas, const SkPath& path, SkScalar dx, SkScalar dy) {
-        SkAutoCanvasRestore acr(canvas, true);
+  void drawAndClip(SkCanvas* canvas, const SkPath& path, SkScalar dx, SkScalar dy) {
+    SkAutoCanvasRestore acr(canvas, true);
 
-        SkRect r = SkRect::MakeXYWH(0, H / 4, W, H / 2);
-        SkPaint paint;
-        paint.setColor(ToolUtils::color_to_565(0xFF8888FF));
+    SkRect r = SkRect::MakeXYWH(0, H / 4, W, H / 2);
+    SkPaint paint;
+    paint.setColor(ToolUtils::color_to_565(0xFF8888FF));
 
-        canvas->drawRect(r, paint);
-        this->doDraw(canvas, path);
+    canvas->drawRect(r, paint);
+    this->doDraw(canvas, path);
 
-        canvas->translate(dx, dy);
+    canvas->translate(dx, dy);
 
-        canvas->drawRect(r, paint);
-        canvas->clipRect(r);
-        this->doDraw(canvas, path);
-    }
+    canvas->drawRect(r, paint);
+    canvas->clipRect(r);
+    this->doDraw(canvas, path);
+  }
 
-    void onDraw(SkCanvas* canvas) override {
-        canvas->translate(80, 10);
-        this->drawAndClip(canvas, fVPath, 200, 0);
-        canvas->translate(0, 200);
-        this->drawAndClip(canvas, fHPath, 200, 0);
-    }
+  void onDraw(SkCanvas* canvas) override {
+    canvas->translate(80, 10);
+    this->drawAndClip(canvas, fVPath, 200, 0);
+    canvas->translate(0, 200);
+    this->drawAndClip(canvas, fHPath, 200, 0);
+  }
 
-private:
-    typedef skiagm::GM INHERITED;
+ private:
+  typedef skiagm::GM INHERITED;
 };
 DEF_GM(return new ClipCubicGM;)

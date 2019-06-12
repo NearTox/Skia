@@ -38,57 +38,57 @@
  * doesn't support locale in the NDK, so this is a no-op there.
  */
 class GrAutoLocaleSetter : public SkNoncopyable {
-public:
-    GrAutoLocaleSetter(const char* name) {
+ public:
+  GrAutoLocaleSetter(const char* name) {
 #if defined(SK_BUILD_FOR_WIN)
-        fOldPerThreadLocale = _configthreadlocale(_ENABLE_PER_THREAD_LOCALE);
-        char* oldLocale = setlocale(LC_ALL, name);
-        if (oldLocale) {
-            fOldLocale = oldLocale;
-            fShouldRestoreLocale = true;
-        } else {
-            fShouldRestoreLocale = false;
-        }
+    fOldPerThreadLocale = _configthreadlocale(_ENABLE_PER_THREAD_LOCALE);
+    char* oldLocale = setlocale(LC_ALL, name);
+    if (oldLocale) {
+      fOldLocale = oldLocale;
+      fShouldRestoreLocale = true;
+    } else {
+      fShouldRestoreLocale = false;
+    }
 #elif HAVE_LOCALE_T
 #if HAVE_XLOCALE
-        // In xlocale nullptr means the C locale.
-        if (0 == strcmp(name, "C")) {
-            name = nullptr;
-        }
+    // In xlocale nullptr means the C locale.
+    if (0 == strcmp(name, "C")) {
+      name = nullptr;
+    }
 #endif
-        fLocale = newlocale(LC_ALL_MASK, name, nullptr);
-        if (fLocale) {
-            fOldLocale = uselocale(fLocale);
-        } else {
-            fOldLocale = static_cast<locale_t>(nullptr);
-        }
+    fLocale = newlocale(LC_ALL_MASK, name, nullptr);
+    if (fLocale) {
+      fOldLocale = uselocale(fLocale);
+    } else {
+      fOldLocale = static_cast<locale_t>(nullptr);
+    }
 #else
-        (void)name;  // suppress unused param warning.
+    (void)name;  // suppress unused param warning.
 #endif
-    }
+  }
 
-    ~GrAutoLocaleSetter() {
+  ~GrAutoLocaleSetter() {
 #if defined(SK_BUILD_FOR_WIN)
-        if (fShouldRestoreLocale) {
-            setlocale(LC_ALL, fOldLocale.c_str());
-        }
-        _configthreadlocale(fOldPerThreadLocale);
+    if (fShouldRestoreLocale) {
+      setlocale(LC_ALL, fOldLocale.c_str());
+    }
+    _configthreadlocale(fOldPerThreadLocale);
 #elif HAVE_LOCALE_T
-        if (fLocale) {
-            uselocale(fOldLocale);
-            freelocale(fLocale);
-        }
+    if (fLocale) {
+      uselocale(fOldLocale);
+      freelocale(fLocale);
+    }
 #endif
-    }
+  }
 
-private:
+ private:
 #if defined(SK_BUILD_FOR_WIN)
-    int fOldPerThreadLocale;
-    bool fShouldRestoreLocale;
-    SkString fOldLocale;
+  int fOldPerThreadLocale;
+  bool fShouldRestoreLocale;
+  SkString fOldLocale;
 #elif HAVE_LOCALE_T
-    locale_t fOldLocale;
-    locale_t fLocale;
+  locale_t fOldLocale;
+  locale_t fLocale;
 #endif
 };
 

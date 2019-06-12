@@ -13,26 +13,25 @@
 #include "include/pathops/SkPathOps.h"
 
 class SK_API SkMergePathEffect {
-public:
-    /*  Defers to two other patheffects, and then combines their outputs using the specified op.
-     *  e.g.
-     *      result = output_one op output_two
-     *
-     *  If either one or two is nullptr, then the original path is passed through to the op.
-     */
-    static sk_sp<SkPathEffect> Make(sk_sp<SkPathEffect> one, sk_sp<SkPathEffect> two, SkPathOp op);
+ public:
+  /*  Defers to two other patheffects, and then combines their outputs using the specified op.
+   *  e.g.
+   *      result = output_one op output_two
+   *
+   *  If either one or two is nullptr, then the original path is passed through to the op.
+   */
+  static sk_sp<SkPathEffect> Make(sk_sp<SkPathEffect> one, sk_sp<SkPathEffect> two, SkPathOp op);
 };
 
 class SK_API SkMatrixPathEffect {
-public:
-    static sk_sp<SkPathEffect> MakeTranslate(SkScalar dx, SkScalar dy);
-    static sk_sp<SkPathEffect> Make(const SkMatrix&);
+ public:
+  static sk_sp<SkPathEffect> MakeTranslate(SkScalar dx, SkScalar dy);
+  static sk_sp<SkPathEffect> Make(const SkMatrix&);
 };
 
 class SK_API SkStrokePathEffect {
-public:
-    static sk_sp<SkPathEffect> Make(SkScalar width, SkPaint::Join, SkPaint::Cap,
-                                    SkScalar miter = 4);
+ public:
+  static sk_sp<SkPathEffect> Make(SkScalar width, SkPaint::Join, SkPaint::Cap, SkScalar miter = 4);
 };
 
 #endif

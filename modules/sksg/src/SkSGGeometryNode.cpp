@@ -15,23 +15,23 @@ namespace sksg {
 GeometryNode::GeometryNode() : INHERITED(kBubbleDamage_Trait) {}
 
 void GeometryNode::clip(SkCanvas* canvas, bool aa) const {
-    SkASSERT(!this->hasInval());
-    this->onClip(canvas, aa);
+  SkASSERT(!this->hasInval());
+  this->onClip(canvas, aa);
 }
 
 void GeometryNode::draw(SkCanvas* canvas, const SkPaint& paint) const {
-    SkASSERT(!this->hasInval());
-    this->onDraw(canvas, paint);
+  SkASSERT(!this->hasInval());
+  this->onDraw(canvas, paint);
 }
 
 bool GeometryNode::contains(const SkPoint& p) const {
-    SkASSERT(!this->hasInval());
-    return this->bounds().contains(p.x(), p.y()) ? this->onContains(p) : false;
+  SkASSERT(!this->hasInval());
+  return this->bounds().contains(p.x(), p.y()) ? this->onContains(p) : false;
 }
 
 SkPath GeometryNode::asPath() const {
-    SkASSERT(!this->hasInval());
-    return this->onAsPath();
+  SkASSERT(!this->hasInval());
+  return this->onAsPath();
 }
 
 }  // namespace sksg

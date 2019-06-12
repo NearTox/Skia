@@ -9,36 +9,35 @@
 #define SkottieTextAdapter_DEFINED
 
 #include "modules/skottie/src/SkottieAdapter.h"
+#include "modules/skottie/src/text/SkottieShaper.h"
 #include "modules/skottie/src/text/TextValue.h"
 
+#include <vector>
+
 namespace sksg {
-class Color;
-class Draw;
 class Group;
-class TextBlob;
 }  // namespace sksg
 
 namespace skottie {
 
 class TextAdapter final : public SkNVRefCnt<TextAdapter> {
-public:
-    explicit TextAdapter(sk_sp<sksg::Group> root);
-    ~TextAdapter();
+ public:
+  explicit TextAdapter(sk_sp<sksg::Group> root);
+  ~TextAdapter();
 
-    ADAPTER_PROPERTY(Text, TextValue, TextValue())
+  ADAPTER_PROPERTY(Text, TextValue, TextValue())
 
-    const sk_sp<sksg::Group>& root() const { return fRoot; }
+  const sk_sp<sksg::Group>& root() const { return fRoot; }
 
-private:
-    void apply();
+ private:
+  struct FragmentRec;
 
-    sk_sp<sksg::Group> fRoot;
-    sk_sp<sksg::TextBlob> fTextNode;
-    sk_sp<sksg::Color> fFillColor, fStrokeColor;
-    sk_sp<sksg::Draw> fFillNode, fStrokeNode;
+  FragmentRec buildFragment(const skottie::Shaper::Fragment&) const;
 
-    bool fHadFill : 1,       //  - state cached from the prev apply()
-            fHadStroke : 1;  //  /
+  void apply();
+
+  sk_sp<sksg::Group> fRoot;
+  std::vector<FragmentRec> fFragments;
 };
 
 }  // namespace skottie

@@ -12,66 +12,64 @@
 #include "src/codec/SkCodecPriv.h"
 
 class SkSampler : public SkNoncopyable {
-public:
-    /**
-     *  Update the sampler to sample every sampleX'th pixel. Returns the
-     *  width after sampling.
-     */
-    int setSampleX(int sampleX) { return this->onSetSampleX(sampleX); }
+ public:
+  /**
+   *  Update the sampler to sample every sampleX'th pixel. Returns the
+   *  width after sampling.
+   */
+  int setSampleX(int sampleX) { return this->onSetSampleX(sampleX); }
 
-    /**
-     *  Update the sampler to sample every sampleY'th row.
-     */
-    void setSampleY(int sampleY) noexcept { fSampleY = sampleY; }
+  /**
+   *  Update the sampler to sample every sampleY'th row.
+   */
+  void setSampleY(int sampleY) { fSampleY = sampleY; }
 
-    /**
-     *  Retrieve the value set for sampleY.
-     */
-    int sampleY() const noexcept { return fSampleY; }
+  /**
+   *  Retrieve the value set for sampleY.
+   */
+  int sampleY() const { return fSampleY; }
 
-    /**
-     *  Based on fSampleY, return whether this row belongs in the output.
-     *
-     *  @param row Row of the image, starting with the first row in the subset.
-     */
-    bool rowNeeded(int row) const noexcept {
-        return (row - get_start_coord(fSampleY)) % fSampleY == 0;
-    }
+  /**
+   *  Based on fSampleY, return whether this row belongs in the output.
+   *
+   *  @param row Row of the image, starting with the first row in the subset.
+   */
+  bool rowNeeded(int row) const { return (row - get_start_coord(fSampleY)) % fSampleY == 0; }
 
-    /**
-     * Fill the remainder of the destination with 0.
-     *
-     * 0 has a different meaning depending on the SkColorType. For color types
-     * with transparency, this means transparent. For k565 and kGray, 0 is
-     * black.
-     *
-     * @param info
-     * Contains the color type of the rows to fill.
-     * Contains the pixel width of the destination rows to fill
-     * Contains the number of rows that we need to fill.
-     *
-     * @param dst
-     * The destination row to fill.
-     *
-     * @param rowBytes
-     * Stride in bytes of the destination.
-     *
-     * @param zeroInit
-     * Indicates whether memory is already zero initialized.
-     */
-    static void Fill(const SkImageInfo& info, void* dst, size_t rowBytes,
-                     SkCodec::ZeroInitialized zeroInit);
+  /**
+   * Fill the remainder of the destination with 0.
+   *
+   * 0 has a different meaning depending on the SkColorType. For color types
+   * with transparency, this means transparent. For k565 and kGray, 0 is
+   * black.
+   *
+   * @param info
+   * Contains the color type of the rows to fill.
+   * Contains the pixel width of the destination rows to fill
+   * Contains the number of rows that we need to fill.
+   *
+   * @param dst
+   * The destination row to fill.
+   *
+   * @param rowBytes
+   * Stride in bytes of the destination.
+   *
+   * @param zeroInit
+   * Indicates whether memory is already zero initialized.
+   */
+  static void Fill(
+      const SkImageInfo& info, void* dst, size_t rowBytes, SkCodec::ZeroInitialized zeroInit);
 
-    virtual int fillWidth() const = 0;
+  virtual int fillWidth() const = 0;
 
-    SkSampler() noexcept : fSampleY(1) {}
+  SkSampler() : fSampleY(1) {}
 
-    virtual ~SkSampler() {}
+  virtual ~SkSampler() {}
 
-private:
-    int fSampleY;
+ private:
+  int fSampleY;
 
-    virtual int onSetSampleX(int) = 0;
+  virtual int onSetSampleX(int) = 0;
 };
 
 #endif  // SkSampler_DEFINED

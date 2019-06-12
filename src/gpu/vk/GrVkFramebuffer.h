@@ -17,31 +17,30 @@ class GrVkImageView;
 class GrVkRenderPass;
 
 class GrVkFramebuffer : public GrVkResource {
-public:
-    static GrVkFramebuffer* Create(GrVkGpu* gpu, int width, int height,
-                                   const GrVkRenderPass* renderPass,
-                                   const GrVkImageView* colorAttachment,
-                                   const GrVkImageView* stencilAttachment);
+ public:
+  static GrVkFramebuffer* Create(
+      GrVkGpu* gpu, int width, int height, const GrVkRenderPass* renderPass,
+      const GrVkImageView* colorAttachment, const GrVkImageView* stencilAttachment);
 
-    VkFramebuffer framebuffer() const { return fFramebuffer; }
+  VkFramebuffer framebuffer() const { return fFramebuffer; }
 
 #ifdef SK_TRACE_VK_RESOURCES
-    void dumpInfo() const override {
-        SkDebugf("GrVkFramebuffer: %d (%d refs)\n", fFramebuffer, this->getRefCnt());
-    }
+  void dumpInfo() const override {
+    SkDebugf("GrVkFramebuffer: %d (%d refs)\n", fFramebuffer, this->getRefCnt());
+  }
 #endif
 
-private:
-    GrVkFramebuffer(VkFramebuffer framebuffer) : INHERITED(), fFramebuffer(framebuffer) {}
+ private:
+  GrVkFramebuffer(VkFramebuffer framebuffer) : INHERITED(), fFramebuffer(framebuffer) {}
 
-    GrVkFramebuffer(const GrVkFramebuffer&);
-    GrVkFramebuffer& operator=(const GrVkFramebuffer&);
+  GrVkFramebuffer(const GrVkFramebuffer&);
+  GrVkFramebuffer& operator=(const GrVkFramebuffer&);
 
-    void freeGPUData(GrVkGpu* gpu) const override;
+  void freeGPUData(GrVkGpu* gpu) const override;
 
-    VkFramebuffer fFramebuffer;
+  VkFramebuffer fFramebuffer;
 
-    typedef GrVkResource INHERITED;
+  typedef GrVkResource INHERITED;
 };
 
 #endif

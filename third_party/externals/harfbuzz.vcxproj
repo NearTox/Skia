@@ -28,7 +28,6 @@
     <ClCompile Include="harfbuzz\src\hb-ot-layout.cc" />
     <ClCompile Include="harfbuzz\src\hb-ot-map.cc" />
     <ClCompile Include="harfbuzz\src\hb-ot-math.cc" />
-    <ClCompile Include="harfbuzz\src\hb-ot-name-language.cc" />
     <ClCompile Include="harfbuzz\src\hb-ot-name.cc" />
     <ClCompile Include="harfbuzz\src\hb-ot-shape-complex-arabic.cc" />
     <ClCompile Include="harfbuzz\src\hb-ot-shape-complex-default.cc" />
@@ -55,9 +54,9 @@
     <ClCompile Include="harfbuzz\src\hb-subset-cff-common.cc" />
     <ClCompile Include="harfbuzz\src\hb-subset-cff1.cc" />
     <ClCompile Include="harfbuzz\src\hb-subset-cff2.cc" />
-    <ClCompile Include="harfbuzz\src\hb-subset-glyf.cc" />
     <ClCompile Include="harfbuzz\src\hb-subset-input.cc" />
     <ClCompile Include="harfbuzz\src\hb-subset-plan.cc" />
+    <ClCompile Include="harfbuzz\src\hb-ucd.cc" />
     <ClCompile Include="harfbuzz\src\hb-unicode.cc" />
     <ClCompile Include="harfbuzz\src\hb-warning.cc" />
   </ItemGroup>

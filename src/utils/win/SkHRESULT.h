@@ -11,7 +11,7 @@
 #include "include/core/SkTypes.h"
 #ifdef SK_BUILD_FOR_WIN
 
-#include "include/private/SkLeanWindows.h"
+#include "src/core/SkLeanWindows.h"
 
 void SkTraceHR(const char* file, unsigned long line, HRESULT hr, const char* msg);
 
@@ -22,13 +22,13 @@ void SkTraceHR(const char* file, unsigned long line, HRESULT hr, const char* msg
 #endif
 
 #define HR_GENERAL(_ex, _msg, _ret) \
-    do {                            \
-        HRESULT _hr = _ex;          \
-        if (FAILED(_hr)) {          \
-            SK_TRACEHR(_hr, _msg);  \
-            return _ret;            \
-        }                           \
-    } while (false)
+  do {                              \
+    HRESULT _hr = _ex;              \
+    if (FAILED(_hr)) {              \
+      SK_TRACEHR(_hr, _msg);        \
+      return _ret;                  \
+    }                               \
+  } while (false)
 
 //@{
 /**

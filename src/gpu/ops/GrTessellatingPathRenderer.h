@@ -15,19 +15,23 @@
  *   extra 1-pixel geometry for AA.
  */
 class SK_API GrTessellatingPathRenderer : public GrPathRenderer {
-public:
-    GrTessellatingPathRenderer();
+ public:
+  GrTessellatingPathRenderer();
+#if GR_TEST_UTILS
+  void setMaxVerbCount(int maxVerbCount) { fMaxVerbCount = maxVerbCount; }
+#endif
 
-private:
-    CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;
+ private:
+  CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;
 
-    StencilSupport onGetStencilSupport(const GrShape&) const override {
-        return GrPathRenderer::kNoSupport_StencilSupport;
-    }
+  StencilSupport onGetStencilSupport(const GrShape&) const override {
+    return GrPathRenderer::kNoSupport_StencilSupport;
+  }
 
-    bool onDrawPath(const DrawPathArgs&) override;
+  bool onDrawPath(const DrawPathArgs&) override;
+  int fMaxVerbCount;
 
-    typedef GrPathRenderer INHERITED;
+  typedef GrPathRenderer INHERITED;
 };
 
 #endif

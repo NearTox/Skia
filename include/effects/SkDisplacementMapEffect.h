@@ -11,53 +11,50 @@
 #include "include/core/SkImageFilter.h"
 
 class SK_API SkDisplacementMapEffect : public SkImageFilter {
-public:
-    enum ChannelSelectorType {
-        kUnknown_ChannelSelectorType,
-        kR_ChannelSelectorType,
-        kG_ChannelSelectorType,
-        kB_ChannelSelectorType,
-        kA_ChannelSelectorType,
+ public:
+  enum ChannelSelectorType {
+    kUnknown_ChannelSelectorType,
+    kR_ChannelSelectorType,
+    kG_ChannelSelectorType,
+    kB_ChannelSelectorType,
+    kA_ChannelSelectorType,
 
-        kLast_ChannelSelectorType = kA_ChannelSelectorType
-    };
+    kLast_ChannelSelectorType = kA_ChannelSelectorType
+  };
 
-    ~SkDisplacementMapEffect() override;
+  ~SkDisplacementMapEffect() override;
 
-    static sk_sp<SkImageFilter> Make(ChannelSelectorType xChannelSelector,
-                                     ChannelSelectorType yChannelSelector,
-                                     SkScalar scale,
-                                     sk_sp<SkImageFilter>
-                                             displacement,
-                                     sk_sp<SkImageFilter>
-                                             color,
-                                     const CropRect* cropRect = nullptr);
+  static sk_sp<SkImageFilter> Make(
+      ChannelSelectorType xChannelSelector, ChannelSelectorType yChannelSelector, SkScalar scale,
+      sk_sp<SkImageFilter> displacement, sk_sp<SkImageFilter> color,
+      const CropRect* cropRect = nullptr);
 
-    SkRect computeFastBounds(const SkRect& src) const override;
+  SkRect computeFastBounds(const SkRect& src) const override;
 
-    virtual SkIRect onFilterBounds(const SkIRect& src, const SkMatrix& ctm, MapDirection,
-                                   const SkIRect* inputRect) const override;
-    SkIRect onFilterNodeBounds(const SkIRect&, const SkMatrix& ctm, MapDirection,
-                               const SkIRect* inputRect) const override;
+  virtual SkIRect onFilterBounds(
+      const SkIRect& src, const SkMatrix& ctm, MapDirection,
+      const SkIRect* inputRect) const override;
+  SkIRect onFilterNodeBounds(
+      const SkIRect&, const SkMatrix& ctm, MapDirection, const SkIRect* inputRect) const override;
 
-protected:
-    sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
-                                        SkIPoint* offset) const override;
+ protected:
+  sk_sp<SkSpecialImage> onFilterImage(
+      SkSpecialImage* source, const Context&, SkIPoint* offset) const override;
 
-    SkDisplacementMapEffect(ChannelSelectorType xChannelSelector,
-                            ChannelSelectorType yChannelSelector, SkScalar scale,
-                            sk_sp<SkImageFilter> inputs[2], const CropRect* cropRect);
-    void flatten(SkWriteBuffer&) const override;
+  SkDisplacementMapEffect(
+      ChannelSelectorType xChannelSelector, ChannelSelectorType yChannelSelector, SkScalar scale,
+      sk_sp<SkImageFilter> inputs[2], const CropRect* cropRect);
+  void flatten(SkWriteBuffer&) const override;
 
-private:
-    SK_FLATTENABLE_HOOKS(SkDisplacementMapEffect)
+ private:
+  SK_FLATTENABLE_HOOKS(SkDisplacementMapEffect)
 
-    ChannelSelectorType fXChannelSelector;
-    ChannelSelectorType fYChannelSelector;
-    SkScalar fScale;
-    typedef SkImageFilter INHERITED;
-    const SkImageFilter* getDisplacementInput() const { return getInput(0); }
-    const SkImageFilter* getColorInput() const { return getInput(1); }
+  ChannelSelectorType fXChannelSelector;
+  ChannelSelectorType fYChannelSelector;
+  SkScalar fScale;
+  typedef SkImageFilter INHERITED;
+  const SkImageFilter* getDisplacementInput() const { return getInput(0); }
+  const SkImageFilter* getColorInput() const { return getInput(1); }
 };
 
 #endif

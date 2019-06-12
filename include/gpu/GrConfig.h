@@ -103,16 +103,16 @@
  */
 #if !defined(GR_ALWAYSBREAK)
 #if defined(SK_BUILD_FOR_WIN)
-#define GR_ALWAYSBREAK  \
-    SkNO_RETURN_HINT(); \
-    __debugbreak()
+#define GR_ALWAYSBREAK \
+  SkNO_RETURN_HINT();  \
+  __debugbreak()
 #else
 // TODO: do other platforms really not have continuable breakpoints?
 // sign extend for 64bit architectures to be sure this is
 // in the high address range
-#define GR_ALWAYSBREAK  \
-    SkNO_RETURN_HINT(); \
-    *((int*)(int64_t)(int32_t)0xbeefcafe) = 0;
+#define GR_ALWAYSBREAK \
+  SkNO_RETURN_HINT();  \
+  *((int*)(int64_t)(int32_t)0xbeefcafe) = 0;
 #endif
 #endif
 
@@ -131,13 +131,13 @@
  *  GR_ALWAYSASSERT is an assertion in all builds.
  */
 #if !defined(GR_ALWAYSASSERT)
-#define GR_ALWAYSASSERT(COND)                                        \
-    do {                                                             \
-        if (!(COND)) {                                               \
-            SkDebugf("%s %s failed\n", GR_FILE_AND_LINE_STR, #COND); \
-            GR_ALWAYSBREAK;                                          \
-        }                                                            \
-    } while (false)
+#define GR_ALWAYSASSERT(COND)                                  \
+  do {                                                         \
+    if (!(COND)) {                                             \
+      SkDebugf("%s %s failed\n", GR_FILE_AND_LINE_STR, #COND); \
+      GR_ALWAYSBREAK;                                          \
+    }                                                          \
+  } while (false)
 #endif
 
 /**

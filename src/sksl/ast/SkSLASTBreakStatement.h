@@ -16,11 +16,11 @@ namespace SkSL {
  * A 'break' statement.
  */
 struct ASTBreakStatement : public ASTStatement {
-    ASTBreakStatement(int offset) : INHERITED(offset, kBreak_Kind) {}
+  ASTBreakStatement(int offset) : INHERITED(offset, kBreak_Kind) {}
 
-    String description() const override { return String("break;"); }
+  String description() const override { return String("break;"); }
 
-    typedef ASTStatement INHERITED;
+  typedef ASTStatement INHERITED;
 };
 
 }  // namespace SkSL

@@ -19,31 +19,31 @@ class GeometryNode;
  *
  */
 class ClipEffect final : public EffectNode {
-public:
-    static sk_sp<ClipEffect> Make(sk_sp<RenderNode> child, sk_sp<GeometryNode> clip,
-                                  bool aa = false) {
-        return (child && clip)
-                       ? sk_sp<ClipEffect>(new ClipEffect(std::move(child), std::move(clip), aa))
-                       : nullptr;
-    }
+ public:
+  static sk_sp<ClipEffect> Make(
+      sk_sp<RenderNode> child, sk_sp<GeometryNode> clip, bool aa = false) {
+    return (child && clip)
+               ? sk_sp<ClipEffect>(new ClipEffect(std::move(child), std::move(clip), aa))
+               : nullptr;
+  }
 
-    ~ClipEffect() override;
+  ~ClipEffect() override;
 
-protected:
-    ClipEffect(sk_sp<RenderNode>, sk_sp<GeometryNode>, bool aa);
+ protected:
+  ClipEffect(sk_sp<RenderNode>, sk_sp<GeometryNode>, bool aa);
 
-    void onRender(SkCanvas*, const RenderContext*) const override;
-    const RenderNode* onNodeAt(const SkPoint&) const override;
+  void onRender(SkCanvas*, const RenderContext*) const override;
+  const RenderNode* onNodeAt(const SkPoint&) const override;
 
-    SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
+  SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
 
-private:
-    const sk_sp<GeometryNode> fClipNode;
-    const bool fAntiAlias;
+ private:
+  const sk_sp<GeometryNode> fClipNode;
+  const bool fAntiAlias;
 
-    bool fNoop = false;
+  bool fNoop = false;
 
-    typedef EffectNode INHERITED;
+  typedef EffectNode INHERITED;
 };
 
 }  // namespace sksg

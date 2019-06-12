@@ -21,55 +21,53 @@
 #endif
 
 class SkHeifCodec : public SkCodec {
-public:
-    static bool IsHeif(const void*, size_t);
+ public:
+  static bool IsHeif(const void*, size_t);
 
-    /*
-     * Assumes IsHeif was called and returned true.
-     */
-    static std::unique_ptr<SkCodec> MakeFromStream(std::unique_ptr<SkStream>, Result*);
+  /*
+   * Assumes IsHeif was called and returned true.
+   */
+  static std::unique_ptr<SkCodec> MakeFromStream(std::unique_ptr<SkStream>, Result*);
 
-protected:
-    Result onGetPixels(const SkImageInfo& dstInfo, void* dst, size_t dstRowBytes,
-                       const Options& options, int* rowsDecoded) override;
+ protected:
+  Result onGetPixels(
+      const SkImageInfo& dstInfo, void* dst, size_t dstRowBytes, const Options& options,
+      int* rowsDecoded) override;
 
-    SkEncodedImageFormat onGetEncodedFormat() const noexcept override {
-        return SkEncodedImageFormat::kHEIF;
-    }
+  SkEncodedImageFormat onGetEncodedFormat() const override { return SkEncodedImageFormat::kHEIF; }
 
-    bool conversionSupported(const SkImageInfo&, bool, bool) override;
+  bool conversionSupported(const SkImageInfo&, bool, bool) override;
 
-    bool onRewind() noexcept override;
+  bool onRewind() override;
 
-private:
-    /*
-     * Creates an instance of the decoder
-     * Called only by NewFromStream
-     */
-    SkHeifCodec(SkEncodedInfo&&, HeifDecoder*, SkEncodedOrigin);
+ private:
+  /*
+   * Creates an instance of the decoder
+   * Called only by NewFromStream
+   */
+  SkHeifCodec(SkEncodedInfo&&, HeifDecoder*, SkEncodedOrigin);
 
-    void initializeSwizzler(const SkImageInfo& dstInfo, const Options& options);
-    void allocateStorage(const SkImageInfo& dstInfo) noexcept;
-    int readRows(const SkImageInfo& dstInfo, void* dst, size_t rowBytes, int count, const Options&);
+  void initializeSwizzler(const SkImageInfo& dstInfo, const Options& options);
+  void allocateStorage(const SkImageInfo& dstInfo);
+  int readRows(const SkImageInfo& dstInfo, void* dst, size_t rowBytes, int count, const Options&);
 
-    /*
-     * Scanline decoding.
-     */
-    SkSampler* getSampler(bool createIfNecessary) override;
-    Result onStartScanlineDecode(const SkImageInfo& dstInfo,
-                                 const Options& options) noexcept override;
-    int onGetScanlines(void* dst, int count, size_t rowBytes) override;
-    bool onSkipScanlines(int count) override;
+  /*
+   * Scanline decoding.
+   */
+  SkSampler* getSampler(bool createIfNecessary) override;
+  Result onStartScanlineDecode(const SkImageInfo& dstInfo, const Options& options) override;
+  int onGetScanlines(void* dst, int count, size_t rowBytes) override;
+  bool onSkipScanlines(int count) override;
 
-    std::unique_ptr<HeifDecoder> fHeifDecoder;
-    HeifFrameInfo fFrameInfo;
-    SkAutoTMalloc<uint8_t> fStorage;
-    uint8_t* fSwizzleSrcRow;
-    uint32_t* fColorXformSrcRow;
+  std::unique_ptr<HeifDecoder> fHeifDecoder;
+  HeifFrameInfo fFrameInfo;
+  SkAutoTMalloc<uint8_t> fStorage;
+  uint8_t* fSwizzleSrcRow;
+  uint32_t* fColorXformSrcRow;
 
-    std::unique_ptr<SkSwizzler> fSwizzler;
+  std::unique_ptr<SkSwizzler> fSwizzler;
 
-    typedef SkCodec INHERITED;
+  typedef SkCodec INHERITED;
 };
 
 #endif  // SkHeifCodec_DEFINED

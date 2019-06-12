@@ -15,8 +15,8 @@
     This mask filter converts an alpha mask to a signed distance field representation
 */
 class SK_API GrSDFMaskFilter : public SkMaskFilter {
-public:
-    static sk_sp<SkMaskFilter> Make();
+ public:
+  static sk_sp<SkMaskFilter> Make();
 };
 
 extern void gr_register_sdf_maskfilter_createproc();

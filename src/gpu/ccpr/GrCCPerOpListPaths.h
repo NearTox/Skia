@@ -9,9 +9,9 @@
 #define GrCCPerOpListPaths_DEFINED
 
 #include "include/core/SkRefCnt.h"
-#include "include/private/GrCCClipPath.h"
-#include "include/private/SkArenaAlloc.h"
-#include "include/private/SkTInternalLList.h"
+#include "src/core/SkArenaAlloc.h"
+#include "src/core/SkTInternalLList.h"
+#include "src/gpu/ccpr/GrCCClipPath.h"
 
 #include <map>
 
@@ -23,10 +23,10 @@ class GrCCPerFlushResources;
  */
 // DDL TODO: given the usage pattern in DDL mode, this could probably be non-atomic refcounting.
 struct GrCCPerOpListPaths : public SkRefCnt {
-    SkTInternalLList<GrCCDrawPathsOp> fDrawOps;  // This class does not own these ops.
-    std::map<uint32_t, GrCCClipPath> fClipPaths;
-    SkSTArenaAlloc<10 * 1024> fAllocator{10 * 1024 * 2};
-    sk_sp<const GrCCPerFlushResources> fFlushResources;
+  SkTInternalLList<GrCCDrawPathsOp> fDrawOps;  // This class does not own these ops.
+  std::map<uint32_t, GrCCClipPath> fClipPaths;
+  SkSTArenaAlloc<10 * 1024> fAllocator{10 * 1024 * 2};
+  sk_sp<const GrCCPerFlushResources> fFlushResources;
 };
 
 #endif

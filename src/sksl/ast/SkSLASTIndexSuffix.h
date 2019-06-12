@@ -18,24 +18,24 @@ namespace SkSL {
  * 'float[](5, 6)' are represented with a null fExpression.
  */
 struct ASTIndexSuffix : public ASTSuffix {
-    ASTIndexSuffix(int offset) : INHERITED(offset, ASTSuffix::kIndex_Kind), fExpression(nullptr) {}
+  ASTIndexSuffix(int offset) : INHERITED(offset, ASTSuffix::kIndex_Kind), fExpression(nullptr) {}
 
-    ASTIndexSuffix(std::unique_ptr<ASTExpression> expression)
-            : INHERITED(expression ? expression->fOffset : -1, ASTSuffix::kIndex_Kind)
-            , fExpression(std::move(expression)) {}
+  ASTIndexSuffix(std::unique_ptr<ASTExpression> expression)
+      : INHERITED(expression ? expression->fOffset : -1, ASTSuffix::kIndex_Kind),
+        fExpression(std::move(expression)) {}
 
-    String description() const override {
-        if (fExpression) {
-            return "[" + fExpression->description() + "]";
-        } else {
-            return String("[]");
-        }
+  String description() const override {
+    if (fExpression) {
+      return "[" + fExpression->description() + "]";
+    } else {
+      return String("[]");
     }
+  }
 
-    // may be null
-    std::unique_ptr<ASTExpression> fExpression;
+  // may be null
+  std::unique_ptr<ASTExpression> fExpression;
 
-    typedef ASTSuffix INHERITED;
+  typedef ASTSuffix INHERITED;
 };
 
 }  // namespace SkSL

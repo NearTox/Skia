@@ -8,11 +8,11 @@
 #include "src/gpu/GrStencilAttachment.h"
 #include "include/private/GrResourceKey.h"
 
-void GrStencilAttachment::ComputeSharedStencilAttachmentKey(int width, int height, int sampleCnt,
-                                                            GrUniqueKey* key) {
-    static const GrUniqueKey::Domain kDomain = GrUniqueKey::GenerateDomain();
-    GrUniqueKey::Builder builder(key, kDomain, 3);
-    builder[0] = width;
-    builder[1] = height;
-    builder[2] = sampleCnt;
+void GrStencilAttachment::ComputeSharedStencilAttachmentKey(
+    int width, int height, int sampleCnt, GrUniqueKey* key) {
+  static const GrUniqueKey::Domain kDomain = GrUniqueKey::GenerateDomain();
+  GrUniqueKey::Builder builder(key, kDomain, 3);
+  builder[0] = width;
+  builder[1] = height;
+  builder[2] = sampleCnt;
 }

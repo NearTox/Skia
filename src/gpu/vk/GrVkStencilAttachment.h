@@ -16,44 +16,40 @@ class GrVkImageView;
 class GrVkGpu;
 
 class GrVkStencilAttachment : public GrStencilAttachment, public GrVkImage {
-public:
-    struct Format {
-        VkFormat fInternalFormat;
-        int fStencilBits;
-        int fTotalBits;
-        bool fPacked;
-    };
+ public:
+  struct Format {
+    VkFormat fInternalFormat;
+    int fStencilBits;
+    int fTotalBits;
+    bool fPacked;
+  };
 
-    static GrVkStencilAttachment* Create(GrVkGpu* gpu, int width, int height, int sampleCnt,
-                                         const Format& format);
+  static GrVkStencilAttachment* Create(
+      GrVkGpu* gpu, int width, int height, int sampleCnt, const Format& format);
 
-    ~GrVkStencilAttachment() override;
+  ~GrVkStencilAttachment() override;
 
-    const GrVkResource* imageResource() const { return this->resource(); }
-    const GrVkImageView* stencilView() const { return fStencilView; }
+  const GrVkResource* imageResource() const { return this->resource(); }
+  const GrVkImageView* stencilView() const { return fStencilView; }
 
-    VkFormat vkFormat() const { return fFormat.fInternalFormat; }
+  VkFormat vkFormat() const { return fFormat.fInternalFormat; }
 
-protected:
-    void onRelease() override;
-    void onAbandon() override;
+ protected:
+  void onRelease() override;
+  void onAbandon() override;
 
-private:
-    size_t onGpuMemorySize() const override;
+ private:
+  size_t onGpuMemorySize() const override;
 
-    GrVkStencilAttachment(GrVkGpu* gpu,
-                          const Format& format,
-                          const GrVkImage::ImageDesc&,
-                          const GrVkImageInfo&,
-                          sk_sp<GrVkImageLayout>
-                                  layout,
-                          const GrVkImageView* stencilView);
+  GrVkStencilAttachment(
+      GrVkGpu* gpu, const Format& format, const GrVkImage::ImageDesc&, const GrVkImageInfo&,
+      sk_sp<GrVkImageLayout> layout, const GrVkImageView* stencilView);
 
-    GrVkGpu* getVkGpu() const;
+  GrVkGpu* getVkGpu() const;
 
-    Format fFormat;
+  Format fFormat;
 
-    const GrVkImageView* fStencilView;
+  const GrVkImageView* fStencilView;
 };
 
 #endif

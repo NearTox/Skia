@@ -16,30 +16,30 @@
  * This class implements SkBitmapRegionDecoder using an SkAndroidCodec.
  */
 class SkBitmapRegionCodec : public SkBitmapRegionDecoder {
-public:
-    /*
-     * Takes ownership of pointer to codec
-     */
-    SkBitmapRegionCodec(SkAndroidCodec* codec);
+ public:
+  /*
+   * Takes ownership of pointer to codec
+   */
+  SkBitmapRegionCodec(SkAndroidCodec* codec);
 
-    bool decodeRegion(SkBitmap* bitmap, SkBRDAllocator* allocator, const SkIRect& desiredSubset,
-                      int sampleSize, SkColorType colorType, bool requireUnpremul,
-                      sk_sp<SkColorSpace> prefColorSpace) override;
+  bool decodeRegion(
+      SkBitmap* bitmap, SkBRDAllocator* allocator, const SkIRect& desiredSubset, int sampleSize,
+      SkColorType colorType, bool requireUnpremul, sk_sp<SkColorSpace> prefColorSpace) override;
 
-    SkEncodedImageFormat getEncodedFormat() override { return fCodec->getEncodedFormat(); }
+  SkEncodedImageFormat getEncodedFormat() override { return fCodec->getEncodedFormat(); }
 
-    SkColorType computeOutputColorType(SkColorType requestedColorType) override {
-        return fCodec->computeOutputColorType(requestedColorType);
-    }
+  SkColorType computeOutputColorType(SkColorType requestedColorType) override {
+    return fCodec->computeOutputColorType(requestedColorType);
+  }
 
-    sk_sp<SkColorSpace> computeOutputColorSpace(
-            SkColorType outputColorType, sk_sp<SkColorSpace> prefColorSpace = nullptr) override {
-        return fCodec->computeOutputColorSpace(outputColorType, prefColorSpace);
-    }
+  sk_sp<SkColorSpace> computeOutputColorSpace(
+      SkColorType outputColorType, sk_sp<SkColorSpace> prefColorSpace = nullptr) override {
+    return fCodec->computeOutputColorSpace(outputColorType, prefColorSpace);
+  }
 
-private:
-    std::unique_ptr<SkAndroidCodec> fCodec;
+ private:
+  std::unique_ptr<SkAndroidCodec> fCodec;
 
-    typedef SkBitmapRegionDecoder INHERITED;
+  typedef SkBitmapRegionDecoder INHERITED;
 };
 #endif  // SkBitmapRegionCodec_DEFINED

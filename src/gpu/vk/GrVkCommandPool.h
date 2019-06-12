@@ -18,51 +18,51 @@ class GrVkSecondaryCommandBuffer;
 class GrVkGpu;
 
 class GrVkCommandPool : public GrVkResource {
-public:
-    static GrVkCommandPool* Create(const GrVkGpu* gpu);
+ public:
+  static GrVkCommandPool* Create(const GrVkGpu* gpu);
 
-    VkCommandPool vkCommandPool() const { return fCommandPool; }
+  VkCommandPool vkCommandPool() const { return fCommandPool; }
 
-    void reset(GrVkGpu* gpu);
+  void reset(GrVkGpu* gpu);
 
-    void releaseResources(GrVkGpu* gpu);
+  void releaseResources(GrVkGpu* gpu);
 
-    GrVkPrimaryCommandBuffer* getPrimaryCommandBuffer() { return fPrimaryCommandBuffer; }
+  GrVkPrimaryCommandBuffer* getPrimaryCommandBuffer() { return fPrimaryCommandBuffer; }
 
-    GrVkSecondaryCommandBuffer* findOrCreateSecondaryCommandBuffer(GrVkGpu* gpu);
+  GrVkSecondaryCommandBuffer* findOrCreateSecondaryCommandBuffer(GrVkGpu* gpu);
 
-    void recycleSecondaryCommandBuffer(GrVkSecondaryCommandBuffer* buffer);
+  void recycleSecondaryCommandBuffer(GrVkSecondaryCommandBuffer* buffer);
 
-    // marks that we are finished with this command pool; it is not legal to continue creating or
-    // writing to command buffers in a closed pool
-    void close();
+  // marks that we are finished with this command pool; it is not legal to continue creating or
+  // writing to command buffers in a closed pool
+  void close();
 
-    // returns true if close() has not been called
-    bool isOpen() const { return fOpen; }
+  // returns true if close() has not been called
+  bool isOpen() const { return fOpen; }
 
 #ifdef SK_DEBUG
-    void dumpInfo() const override {
-        SkDebugf("GrVkCommandPool: %p (%d refs)\n", fCommandPool, this->getRefCnt());
-    }
+  void dumpInfo() const override {
+    SkDebugf("GrVkCommandPool: %p (%d refs)\n", fCommandPool, this->getRefCnt());
+  }
 #endif
 
-private:
-    GrVkCommandPool() = delete;
+ private:
+  GrVkCommandPool() = delete;
 
-    GrVkCommandPool(const GrVkGpu* gpu, VkCommandPool commandPool);
+  GrVkCommandPool(const GrVkGpu* gpu, VkCommandPool commandPool);
 
-    void abandonGPUData() const override;
+  void abandonGPUData() const override;
 
-    void freeGPUData(GrVkGpu* gpu) const override;
+  void freeGPUData(GrVkGpu* gpu) const override;
 
-    bool fOpen = true;
+  bool fOpen = true;
 
-    VkCommandPool fCommandPool;
+  VkCommandPool fCommandPool;
 
-    GrVkPrimaryCommandBuffer* fPrimaryCommandBuffer;
+  GrVkPrimaryCommandBuffer* fPrimaryCommandBuffer;
 
-    // Array of available secondary command buffers that are not in flight
-    SkSTArray<4, GrVkSecondaryCommandBuffer*, true> fAvailableSecondaryBuffers;
+  // Array of available secondary command buffers that are not in flight
+  SkSTArray<4, GrVkSecondaryCommandBuffer*, true> fAvailableSecondaryBuffers;
 };
 
 #endif

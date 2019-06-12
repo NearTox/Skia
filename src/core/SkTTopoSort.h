@@ -14,18 +14,18 @@
 #ifdef SK_DEBUG
 template <typename T, typename Traits = T>
 void SkTTopoSort_CheckAllUnmarked(const SkTArray<sk_sp<T>>& graph) {
-    for (int i = 0; i < graph.count(); ++i) {
-        SkASSERT(!Traits::IsTempMarked(graph[i].get()));
-        SkASSERT(!Traits::WasOutput(graph[i].get()));
-    }
+  for (int i = 0; i < graph.count(); ++i) {
+    SkASSERT(!Traits::IsTempMarked(graph[i].get()));
+    SkASSERT(!Traits::WasOutput(graph[i].get()));
+  }
 }
 
 template <typename T, typename Traits = T>
 void SkTTopoSort_CleanExit(const SkTArray<sk_sp<T>>& graph) {
-    for (int i = 0; i < graph.count(); ++i) {
-        SkASSERT(!Traits::IsTempMarked(graph[i].get()));
-        SkASSERT(Traits::WasOutput(graph[i].get()));
-    }
+  for (int i = 0; i < graph.count(); ++i) {
+    SkASSERT(!Traits::IsTempMarked(graph[i].get()));
+    SkASSERT(Traits::WasOutput(graph[i].get()));
+  }
 }
 #endif
 
@@ -33,29 +33,29 @@ void SkTTopoSort_CleanExit(const SkTArray<sk_sp<T>>& graph) {
 // Return false if there is a loop.
 template <typename T, typename Traits = T>
 bool SkTTopoSort_Visit(T* node, SkTArray<sk_sp<T>>* result) {
-    if (Traits::IsTempMarked(node)) {
-        // There is a loop.
+  if (Traits::IsTempMarked(node)) {
+    // There is a loop.
+    return false;
+  }
+
+  // If the node under consideration has been already been output it means it
+  // (and all the nodes it depends on) are already in 'result'.
+  if (!Traits::WasOutput(node)) {
+    // This node hasn't been output yet. Recursively assess all the
+    // nodes it depends on outputing them first.
+    Traits::SetTempMark(node);
+    for (int i = 0; i < Traits::NumDependencies(node); ++i) {
+      if (!SkTTopoSort_Visit<T, Traits>(Traits::Dependency(node, i), result)) {
         return false;
+      }
     }
+    Traits::Output(node, result->count());  // mark this node as output
+    Traits::ResetTempMark(node);
 
-    // If the node under consideration has been already been output it means it
-    // (and all the nodes it depends on) are already in 'result'.
-    if (!Traits::WasOutput(node)) {
-        // This node hasn't been output yet. Recursively assess all the
-        // nodes it depends on outputing them first.
-        Traits::SetTempMark(node);
-        for (int i = 0; i < Traits::NumDependencies(node); ++i) {
-            if (!SkTTopoSort_Visit<T, Traits>(Traits::Dependency(node, i), result)) {
-                return false;
-            }
-        }
-        Traits::Output(node, result->count());  // mark this node as output
-        Traits::ResetTempMark(node);
+    result->push_back(sk_ref_sp(node));
+  }
 
-        result->push_back(sk_ref_sp(node));
-    }
-
-    return true;
+  return true;
 }
 
 // Topologically sort the nodes in 'graph'. For this sort, when node 'i' depends
@@ -78,35 +78,36 @@ bool SkTTopoSort_Visit(T* node, SkTArray<sk_sp<T>>* result) {
 // TODO: potentially add a version that takes a seed node and just outputs that
 // node and all the nodes on which it depends. This could be used to partially
 // flush a GrOpList DAG.
-template <typename T, typename Traits = T> bool SkTTopoSort(SkTArray<sk_sp<T>>* graph) {
-    SkTArray<sk_sp<T>> result;
+template <typename T, typename Traits = T>
+bool SkTTopoSort(SkTArray<sk_sp<T>>* graph) {
+  SkTArray<sk_sp<T>> result;
 
 #ifdef SK_DEBUG
-    SkTTopoSort_CheckAllUnmarked<T, Traits>(*graph);
+  SkTTopoSort_CheckAllUnmarked<T, Traits>(*graph);
 #endif
 
-    result.reserve(graph->count());
+  result.reserve(graph->count());
 
-    for (int i = 0; i < graph->count(); ++i) {
-        if (Traits::WasOutput((*graph)[i].get())) {
-            // This node was depended on by some earlier node and has already
-            // been output
-            continue;
-        }
-
-        // Output this node after all the nodes it depends on have been output.
-        if (!SkTTopoSort_Visit<T, Traits>((*graph)[i].get(), &result)) {
-            return false;
-        }
+  for (int i = 0; i < graph->count(); ++i) {
+    if (Traits::WasOutput((*graph)[i].get())) {
+      // This node was depended on by some earlier node and has already
+      // been output
+      continue;
     }
 
-    SkASSERT(graph->count() == result.count());
-    graph->swap(result);
+    // Output this node after all the nodes it depends on have been output.
+    if (!SkTTopoSort_Visit<T, Traits>((*graph)[i].get(), &result)) {
+      return false;
+    }
+  }
+
+  SkASSERT(graph->count() == result.count());
+  graph->swap(result);
 
 #ifdef SK_DEBUG
-    SkTTopoSort_CleanExit<T, Traits>(*graph);
+  SkTTopoSort_CleanExit<T, Traits>(*graph);
 #endif
-    return true;
+  return true;
 }
 
 #endif

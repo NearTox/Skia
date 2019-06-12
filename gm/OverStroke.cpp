@@ -40,223 +40,223 @@ const SkScalar NORMALSTROKE_WIDTH = 3.0f;
 //////// path and paint builders
 
 SkPaint make_normal_paint() {
-    SkPaint p;
-    p.setAntiAlias(true);
-    p.setStyle(SkPaint::kStroke_Style);
-    p.setStrokeWidth(NORMALSTROKE_WIDTH);
-    p.setColor(SK_ColorBLUE);
+  SkPaint p;
+  p.setAntiAlias(true);
+  p.setStyle(SkPaint::kStroke_Style);
+  p.setStrokeWidth(NORMALSTROKE_WIDTH);
+  p.setColor(SK_ColorBLUE);
 
-    return p;
+  return p;
 }
 
 SkPaint make_overstroke_paint() {
-    SkPaint p;
-    p.setAntiAlias(true);
-    p.setStyle(SkPaint::kStroke_Style);
-    p.setStrokeWidth(OVERSTROKE_WIDTH);
+  SkPaint p;
+  p.setAntiAlias(true);
+  p.setStyle(SkPaint::kStroke_Style);
+  p.setStrokeWidth(OVERSTROKE_WIDTH);
 
-    return p;
+  return p;
 }
 
 SkPath quad_path() {
-    SkPath path;
-    path.moveTo(0, 0);
-    path.lineTo(100, 0);
-    path.quadTo(50, -40, 0, 0);
-    path.close();
+  SkPath path;
+  path.moveTo(0, 0);
+  path.lineTo(100, 0);
+  path.quadTo(50, -40, 0, 0);
+  path.close();
 
-    return path;
+  return path;
 }
 
 SkPath cubic_path() {
-    SkPath path;
-    path.moveTo(0, 0);
-    path.cubicTo(25, 75, 75, -50, 100, 0);
+  SkPath path;
+  path.moveTo(0, 0);
+  path.cubicTo(25, 75, 75, -50, 100, 0);
 
-    return path;
+  return path;
 }
 
 SkPath oval_path() {
-    SkRect oval = SkRect::MakeXYWH(0, -25, 100, 50);
+  SkRect oval = SkRect::MakeXYWH(0, -25, 100, 50);
 
-    SkPath path;
-    path.arcTo(oval, 0, 359, true);
-    path.close();
+  SkPath path;
+  path.arcTo(oval, 0, 359, true);
+  path.close();
 
-    return path;
+  return path;
 }
 
 SkPath ribs_path(SkPath path, SkScalar radius) {
-    SkPath ribs;
+  SkPath ribs;
 
-    const SkScalar spacing = 5.0f;
-    float accum = 0.0f;
+  const SkScalar spacing = 5.0f;
+  float accum = 0.0f;
 
-    SkPathMeasure meas(path, false);
-    SkScalar length = meas.getLength();
-    SkPoint pos;
-    SkVector tan;
-    while (accum < length) {
-        if (meas.getPosTan(accum, &pos, &tan)) {
-            tan.scale(radius);
-            SkPointPriv::RotateCCW(&tan);
+  SkPathMeasure meas(path, false);
+  SkScalar length = meas.getLength();
+  SkPoint pos;
+  SkVector tan;
+  while (accum < length) {
+    if (meas.getPosTan(accum, &pos, &tan)) {
+      tan.scale(radius);
+      SkPointPriv::RotateCCW(&tan);
 
-            ribs.moveTo(pos.x() + tan.x(), pos.y() + tan.y());
-            ribs.lineTo(pos.x() - tan.x(), pos.y() - tan.y());
-        }
-        accum += spacing;
+      ribs.moveTo(pos.x() + tan.x(), pos.y() + tan.y());
+      ribs.lineTo(pos.x() - tan.x(), pos.y() - tan.y());
     }
+    accum += spacing;
+  }
 
-    return ribs;
+  return ribs;
 }
 
 void draw_ribs(SkCanvas* canvas, SkPath path) {
-    SkPath ribs = ribs_path(path, OVERSTROKE_WIDTH / 2.0f);
-    SkPaint p = make_normal_paint();
-    p.setStrokeWidth(1);
-    p.setColor(SK_ColorBLUE);
-    p.setColor(SK_ColorGREEN);
+  SkPath ribs = ribs_path(path, OVERSTROKE_WIDTH / 2.0f);
+  SkPaint p = make_normal_paint();
+  p.setStrokeWidth(1);
+  p.setColor(SK_ColorBLUE);
+  p.setColor(SK_ColorGREEN);
 
-    canvas->drawPath(ribs, p);
+  canvas->drawPath(ribs, p);
 }
 
 ///////// quads
 
 void draw_small_quad(SkCanvas* canvas) {
-    // scaled so it's visible
-    // canvas->scale(8, 8);
+  // scaled so it's visible
+  // canvas->scale(8, 8);
 
-    SkPaint p = make_normal_paint();
-    SkPath path = quad_path();
+  SkPaint p = make_normal_paint();
+  SkPath path = quad_path();
 
-    draw_ribs(canvas, path);
-    canvas->drawPath(path, p);
+  draw_ribs(canvas, path);
+  canvas->drawPath(path, p);
 }
 
 void draw_large_quad(SkCanvas* canvas) {
-    SkPaint p = make_overstroke_paint();
-    SkPath path = quad_path();
+  SkPaint p = make_overstroke_paint();
+  SkPath path = quad_path();
 
-    canvas->drawPath(path, p);
-    draw_ribs(canvas, path);
+  canvas->drawPath(path, p);
+  draw_ribs(canvas, path);
 }
 
 void draw_quad_fillpath(SkCanvas* canvas) {
-    SkPath path = quad_path();
-    SkPaint p = make_overstroke_paint();
+  SkPath path = quad_path();
+  SkPaint p = make_overstroke_paint();
 
-    SkPaint fillp = make_normal_paint();
-    fillp.setColor(SK_ColorMAGENTA);
+  SkPaint fillp = make_normal_paint();
+  fillp.setColor(SK_ColorMAGENTA);
 
-    SkPath fillpath;
-    p.getFillPath(path, &fillpath);
+  SkPath fillpath;
+  p.getFillPath(path, &fillpath);
 
-    canvas->drawPath(fillpath, fillp);
+  canvas->drawPath(fillpath, fillp);
 }
 
 void draw_stroked_quad(SkCanvas* canvas) {
-    canvas->translate(400, 0);
-    draw_large_quad(canvas);
-    draw_quad_fillpath(canvas);
+  canvas->translate(400, 0);
+  draw_large_quad(canvas);
+  draw_quad_fillpath(canvas);
 }
 
 ////////// cubics
 
 void draw_small_cubic(SkCanvas* canvas) {
-    SkPaint p = make_normal_paint();
-    SkPath path = cubic_path();
+  SkPaint p = make_normal_paint();
+  SkPath path = cubic_path();
 
-    draw_ribs(canvas, path);
-    canvas->drawPath(path, p);
+  draw_ribs(canvas, path);
+  canvas->drawPath(path, p);
 }
 
 void draw_large_cubic(SkCanvas* canvas) {
-    SkPaint p = make_overstroke_paint();
-    SkPath path = cubic_path();
+  SkPaint p = make_overstroke_paint();
+  SkPath path = cubic_path();
 
-    canvas->drawPath(path, p);
-    draw_ribs(canvas, path);
+  canvas->drawPath(path, p);
+  draw_ribs(canvas, path);
 }
 
 void draw_cubic_fillpath(SkCanvas* canvas) {
-    SkPath path = cubic_path();
-    SkPaint p = make_overstroke_paint();
+  SkPath path = cubic_path();
+  SkPaint p = make_overstroke_paint();
 
-    SkPaint fillp = make_normal_paint();
-    fillp.setColor(SK_ColorMAGENTA);
+  SkPaint fillp = make_normal_paint();
+  fillp.setColor(SK_ColorMAGENTA);
 
-    SkPath fillpath;
-    p.getFillPath(path, &fillpath);
+  SkPath fillpath;
+  p.getFillPath(path, &fillpath);
 
-    canvas->drawPath(fillpath, fillp);
+  canvas->drawPath(fillpath, fillp);
 }
 
 void draw_stroked_cubic(SkCanvas* canvas) {
-    canvas->translate(400, 0);
-    draw_large_cubic(canvas);
-    draw_cubic_fillpath(canvas);
+  canvas->translate(400, 0);
+  draw_large_cubic(canvas);
+  draw_cubic_fillpath(canvas);
 }
 
 ////////// ovals
 
 void draw_small_oval(SkCanvas* canvas) {
-    SkPaint p = make_normal_paint();
+  SkPaint p = make_normal_paint();
 
-    SkPath path = oval_path();
+  SkPath path = oval_path();
 
-    draw_ribs(canvas, path);
-    canvas->drawPath(path, p);
+  draw_ribs(canvas, path);
+  canvas->drawPath(path, p);
 }
 
 void draw_large_oval(SkCanvas* canvas) {
-    SkPaint p = make_overstroke_paint();
-    SkPath path = oval_path();
+  SkPaint p = make_overstroke_paint();
+  SkPath path = oval_path();
 
-    canvas->drawPath(path, p);
-    draw_ribs(canvas, path);
+  canvas->drawPath(path, p);
+  draw_ribs(canvas, path);
 }
 
 void draw_oval_fillpath(SkCanvas* canvas) {
-    SkPath path = oval_path();
-    SkPaint p = make_overstroke_paint();
+  SkPath path = oval_path();
+  SkPaint p = make_overstroke_paint();
 
-    SkPaint fillp = make_normal_paint();
-    fillp.setColor(SK_ColorMAGENTA);
+  SkPaint fillp = make_normal_paint();
+  fillp.setColor(SK_ColorMAGENTA);
 
-    SkPath fillpath;
-    p.getFillPath(path, &fillpath);
+  SkPath fillpath;
+  p.getFillPath(path, &fillpath);
 
-    canvas->drawPath(fillpath, fillp);
+  canvas->drawPath(fillpath, fillp);
 }
 
 void draw_stroked_oval(SkCanvas* canvas) {
-    canvas->translate(400, 0);
-    draw_large_oval(canvas);
-    draw_oval_fillpath(canvas);
+  canvas->translate(400, 0);
+  draw_large_oval(canvas);
+  draw_oval_fillpath(canvas);
 }
 
 ////////// gm
 
 void (*examples[])(SkCanvas* canvas) = {
-        draw_small_quad,    draw_stroked_quad, draw_small_cubic,
-        draw_stroked_cubic, draw_small_oval,   draw_stroked_oval,
+    draw_small_quad,    draw_stroked_quad, draw_small_cubic,
+    draw_stroked_cubic, draw_small_oval,   draw_stroked_oval,
 };
 
 DEF_SIMPLE_GM(OverStroke, canvas, 500, 500) {
-    const size_t length = sizeof(examples) / sizeof(examples[0]);
-    const size_t width = 2;
+  const size_t length = sizeof(examples) / sizeof(examples[0]);
+  const size_t width = 2;
 
-    for (size_t i = 0; i < length; i++) {
-        int x = (int)(i % width);
-        int y = (int)(i / width);
+  for (size_t i = 0; i < length; i++) {
+    int x = (int)(i % width);
+    int y = (int)(i / width);
 
-        canvas->save();
-        canvas->translate(150.0f * x, 150.0f * y);
-        canvas->scale(0.2f, 0.2f);
-        canvas->translate(300.0f, 400.0f);
+    canvas->save();
+    canvas->translate(150.0f * x, 150.0f * y);
+    canvas->scale(0.2f, 0.2f);
+    canvas->translate(300.0f, 400.0f);
 
-        examples[i](canvas);
+    examples[i](canvas);
 
-        canvas->restore();
-    }
+    canvas->restore();
+  }
 }

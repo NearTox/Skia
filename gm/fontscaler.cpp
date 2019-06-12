@@ -20,58 +20,56 @@
 namespace skiagm {
 
 class FontScalerGM : public GM {
-public:
-    FontScalerGM() { this->setBGColor(0xFFFFFFFF); }
+ public:
+  FontScalerGM() { this->setBGColor(0xFFFFFFFF); }
 
-protected:
-    SkString onShortName() override { return SkString("fontscaler"); }
+ protected:
+  SkString onShortName() override { return SkString("fontscaler"); }
 
-    SkISize onISize() override { return SkISize::Make(1450, 750); }
+  SkISize onISize() override { return SkISize::Make(1450, 750); }
 
-    void onDraw(SkCanvas* canvas) override {
-        SkFont font;
-        font.setEdging(SkFont::Edging::kSubpixelAntiAlias);
-        // With freetype the default (normal hinting) can be really ugly.
-        // Most distros now set slight (vertical hinting only) in any event.
-        font.setHinting(SkFontHinting::kSlight);
+  void onDraw(SkCanvas* canvas) override {
+    SkFont font;
+    font.setEdging(SkFont::Edging::kSubpixelAntiAlias);
+    // With freetype the default (normal hinting) can be really ugly.
+    // Most distros now set slight (vertical hinting only) in any event.
+    font.setHinting(SkFontHinting::kSlight);
 
-        const char* text = "Hamburgefons ooo mmm";
-        const size_t textLen = strlen(text);
+    const char* text = "Hamburgefons ooo mmm";
+    const size_t textLen = strlen(text);
 
-        for (int j = 0; j < 2; ++j) {
-            // This used to do 6 iterations but it causes the N4 to crash in the MSAA4 config.
-            for (int i = 0; i < 5; ++i) {
-                SkScalar x = SkIntToScalar(10);
-                SkScalar y = SkIntToScalar(20);
+    for (int j = 0; j < 2; ++j) {
+      // This used to do 6 iterations but it causes the N4 to crash in the MSAA4 config.
+      for (int i = 0; i < 5; ++i) {
+        SkScalar x = SkIntToScalar(10);
+        SkScalar y = SkIntToScalar(20);
 
-                SkAutoCanvasRestore acr(canvas, true);
-                canvas->translate(SkIntToScalar(50 + i * 230), SkIntToScalar(20));
-                canvas->rotate(SkIntToScalar(i * 5), x, y * 10);
+        SkAutoCanvasRestore acr(canvas, true);
+        canvas->translate(SkIntToScalar(50 + i * 230), SkIntToScalar(20));
+        canvas->rotate(SkIntToScalar(i * 5), x, y * 10);
 
-                {
-                    SkPaint p;
-                    p.setAntiAlias(true);
-                    SkRect r;
-                    r.set(x - SkIntToScalar(3), SkIntToScalar(15), x - SkIntToScalar(1),
-                          SkIntToScalar(280));
-                    canvas->drawRect(r, p);
-                }
-
-                for (int ps = 6; ps <= 22; ps++) {
-                    font.setSize(SkIntToScalar(ps));
-                    canvas->drawSimpleText(text, textLen, SkTextEncoding::kUTF8, x, y, font,
-                                           SkPaint());
-                    y += font.getMetrics(nullptr);
-                }
-            }
-            canvas->translate(0, SkIntToScalar(360));
-            font.setSubpixel(true);
-            font.setLinearMetrics(true);
+        {
+          SkPaint p;
+          p.setAntiAlias(true);
+          SkRect r;
+          r.set(x - SkIntToScalar(3), SkIntToScalar(15), x - SkIntToScalar(1), SkIntToScalar(280));
+          canvas->drawRect(r, p);
         }
-    }
 
-private:
-    typedef GM INHERITED;
+        for (int ps = 6; ps <= 22; ps++) {
+          font.setSize(SkIntToScalar(ps));
+          canvas->drawSimpleText(text, textLen, SkTextEncoding::kUTF8, x, y, font, SkPaint());
+          y += font.getMetrics(nullptr);
+        }
+      }
+      canvas->translate(0, SkIntToScalar(360));
+      font.setSubpixel(true);
+      font.setLinearMetrics(true);
+    }
+  }
+
+ private:
+  typedef GM INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////

@@ -27,62 +27,55 @@ int worstCasePointCount(const SkPath&, int* subpaths, SkScalar tol);
 
 uint32_t quadraticPointCount(const SkPoint points[], SkScalar tol);
 
-uint32_t generateQuadraticPoints(const SkPoint& p0,
-                                 const SkPoint& p1,
-                                 const SkPoint& p2,
-                                 SkScalar tolSqd,
-                                 SkPoint** points,
-                                 uint32_t pointsLeft);
+uint32_t generateQuadraticPoints(
+    const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, SkScalar tolSqd, SkPoint** points,
+    uint32_t pointsLeft);
 
 uint32_t cubicPointCount(const SkPoint points[], SkScalar tol);
 
-uint32_t generateCubicPoints(const SkPoint& p0,
-                             const SkPoint& p1,
-                             const SkPoint& p2,
-                             const SkPoint& p3,
-                             SkScalar tolSqd,
-                             SkPoint** points,
-                             uint32_t pointsLeft);
+uint32_t generateCubicPoints(
+    const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, const SkPoint& p3, SkScalar tolSqd,
+    SkPoint** points, uint32_t pointsLeft);
 
 // A 2x3 matrix that goes from the 2d space coordinates to UV space where
 // u^2-v = 0 specifies the quad. The matrix is determined by the control
 // points of the quadratic.
 class QuadUVMatrix {
-public:
-    QuadUVMatrix() {}
-    // Initialize the matrix from the control pts
-    QuadUVMatrix(const SkPoint controlPts[3]) { this->set(controlPts); }
-    void set(const SkPoint controlPts[3]);
+ public:
+  QuadUVMatrix() {}
+  // Initialize the matrix from the control pts
+  QuadUVMatrix(const SkPoint controlPts[3]) { this->set(controlPts); }
+  void set(const SkPoint controlPts[3]);
 
-    /**
-     * Applies the matrix to vertex positions to compute UV coords.
-     *
-     * vertices is a pointer to the first vertex.
-     * vertexCount is the number of vertices.
-     * stride is the size of each vertex.
-     * uvOffset is the offset of the UV values within each vertex.
-     */
-    void apply(void* vertices, int vertexCount, size_t stride, size_t uvOffset) const {
-        intptr_t xyPtr = reinterpret_cast<intptr_t>(vertices);
-        intptr_t uvPtr = reinterpret_cast<intptr_t>(vertices) + uvOffset;
-        float sx = fM[0];
-        float kx = fM[1];
-        float tx = fM[2];
-        float ky = fM[3];
-        float sy = fM[4];
-        float ty = fM[5];
-        for (int i = 0; i < vertexCount; ++i) {
-            const SkPoint* xy = reinterpret_cast<const SkPoint*>(xyPtr);
-            SkPoint* uv = reinterpret_cast<SkPoint*>(uvPtr);
-            uv->fX = sx * xy->fX + kx * xy->fY + tx;
-            uv->fY = ky * xy->fX + sy * xy->fY + ty;
-            xyPtr += stride;
-            uvPtr += stride;
-        }
+  /**
+   * Applies the matrix to vertex positions to compute UV coords.
+   *
+   * vertices is a pointer to the first vertex.
+   * vertexCount is the number of vertices.
+   * stride is the size of each vertex.
+   * uvOffset is the offset of the UV values within each vertex.
+   */
+  void apply(void* vertices, int vertexCount, size_t stride, size_t uvOffset) const {
+    intptr_t xyPtr = reinterpret_cast<intptr_t>(vertices);
+    intptr_t uvPtr = reinterpret_cast<intptr_t>(vertices) + uvOffset;
+    float sx = fM[0];
+    float kx = fM[1];
+    float tx = fM[2];
+    float ky = fM[3];
+    float sy = fM[4];
+    float ty = fM[5];
+    for (int i = 0; i < vertexCount; ++i) {
+      const SkPoint* xy = reinterpret_cast<const SkPoint*>(xyPtr);
+      SkPoint* uv = reinterpret_cast<SkPoint*>(uvPtr);
+      uv->fX = sx * xy->fX + kx * xy->fY + tx;
+      uv->fY = ky * xy->fX + sy * xy->fY + ty;
+      xyPtr += stride;
+      uvPtr += stride;
     }
+  }
 
-private:
-    float fM[6];
+ private:
+  float fM[6];
 };
 
 // Input is 3 control points and a weight for a bezier conic. Calculates the
@@ -110,10 +103,9 @@ void convertCubicToQuads(const SkPoint p[4], SkScalar tolScale, SkTArray<SkPoint
 // property and the quadratic approximation of cubics step cannot alter it.
 // This variation enforces this constraint. The cubic must be simple and dir
 // must specify the orientation of the contour containing the cubic.
-void convertCubicToQuadsConstrainToTangents(const SkPoint p[4],
-                                            SkScalar tolScale,
-                                            SkPathPriv::FirstDirection dir,
-                                            SkTArray<SkPoint, true>* quads);
+void convertCubicToQuadsConstrainToTangents(
+    const SkPoint p[4], SkScalar tolScale, SkPathPriv::FirstDirection dir,
+    SkTArray<SkPoint, true>* quads);
 
 enum class ExcludedTerm { kNonInvertible, kQuadraticTerm, kLinearTerm };
 
@@ -192,8 +184,8 @@ SkCubicType getCubicKLM(const SkPoint src[4], SkMatrix* klm, double t[2], double
 //            The flip should be done by negating the k and l values as follows:
 //
 //            KLM.postScale(-1, -1)
-int chopCubicAtLoopIntersection(const SkPoint src[4], SkPoint dst[10], SkMatrix* klm,
-                                int* loopIndex);
+int chopCubicAtLoopIntersection(
+    const SkPoint src[4], SkPoint dst[10], SkMatrix* klm, int* loopIndex);
 
 // When tessellating curved paths into linear segments, this defines the maximum distance
 // in screen space which a segment may deviate from the mathmatically correct value.

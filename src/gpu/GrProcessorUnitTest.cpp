@@ -12,15 +12,15 @@
 
 std::unique_ptr<GrFragmentProcessor> GrProcessorUnitTest::MakeChildFP(GrProcessorTestData* data) {
 #if SK_ALLOW_STATIC_GLOBAL_INITIALIZERS
-    std::unique_ptr<GrFragmentProcessor> fp;
-    do {
-        fp = GrFragmentProcessorTestFactory::Make(data);
-        SkASSERT(fp);
-    } while (fp->numChildProcessors() != 0);
-    return fp;
+  std::unique_ptr<GrFragmentProcessor> fp;
+  do {
+    fp = GrFragmentProcessorTestFactory::Make(data);
+    SkASSERT(fp);
+  } while (fp->numChildProcessors() != 0);
+  return fp;
 #else
-    SK_ABORT("Should not be called if !SK_ALLOW_STATIC_GLOBAL_INITIALIZERS");
-    return nullptr;
+  SK_ABORT("Should not be called if !SK_ALLOW_STATIC_GLOBAL_INITIALIZERS");
+  return nullptr;
 #endif
 }
 #endif

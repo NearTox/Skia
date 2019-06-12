@@ -15,9 +15,9 @@
 // failures based on the output logs.
 // Define this flag in your SkUserConfig.h or in your Make/Build system.
 #ifdef SK_FUZZ_LOGGING
-#define SkFUZZF(args)     \
-    SkDebugf("SkFUZZ: "); \
-    SkDebugf args
+#define SkFUZZF(args)   \
+  SkDebugf("SkFUZZ: "); \
+  SkDebugf args
 #else
 #define SkFUZZF(args)
 #endif

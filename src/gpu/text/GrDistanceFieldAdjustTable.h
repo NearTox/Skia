@@ -15,21 +15,21 @@
 // Because the GrTextContext can go out of scope before the final flush, this needs to be
 // refcnted and malloced
 struct GrDistanceFieldAdjustTable : public SkNVRefCnt<GrDistanceFieldAdjustTable> {
-    GrDistanceFieldAdjustTable() noexcept { this->buildDistanceAdjustTables(); }
-    ~GrDistanceFieldAdjustTable() {
-        delete[] fTable;
-        delete[] fGammaCorrectTable;
-    }
+  GrDistanceFieldAdjustTable() { this->buildDistanceAdjustTables(); }
+  ~GrDistanceFieldAdjustTable() {
+    delete[] fTable;
+    delete[] fGammaCorrectTable;
+  }
 
-    const SkScalar& getAdjustment(int i, bool useGammaCorrectTable) const noexcept {
-        return useGammaCorrectTable ? fGammaCorrectTable[i] : fTable[i];
-    }
+  const SkScalar& getAdjustment(int i, bool useGammaCorrectTable) const {
+    return useGammaCorrectTable ? fGammaCorrectTable[i] : fTable[i];
+  }
 
-private:
-    void buildDistanceAdjustTables();
+ private:
+  void buildDistanceAdjustTables();
 
-    SkScalar* fTable;
-    SkScalar* fGammaCorrectTable;
+  SkScalar* fTable;
+  SkScalar* fGammaCorrectTable;
 };
 
 #endif

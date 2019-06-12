@@ -12,32 +12,33 @@
 #include "experimental/svg/model/SkSVGTypes.h"
 
 class SkSVGLinearGradient final : public SkSVGGradient {
-public:
-    ~SkSVGLinearGradient() override = default;
-    static sk_sp<SkSVGLinearGradient> Make() {
-        return sk_sp<SkSVGLinearGradient>(new SkSVGLinearGradient());
-    }
+ public:
+  ~SkSVGLinearGradient() override = default;
+  static sk_sp<SkSVGLinearGradient> Make() {
+    return sk_sp<SkSVGLinearGradient>(new SkSVGLinearGradient());
+  }
 
-    void setX1(const SkSVGLength&);
-    void setY1(const SkSVGLength&);
-    void setX2(const SkSVGLength&);
-    void setY2(const SkSVGLength&);
+  void setX1(const SkSVGLength&);
+  void setY1(const SkSVGLength&);
+  void setX2(const SkSVGLength&);
+  void setY2(const SkSVGLength&);
 
-protected:
-    void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
+ protected:
+  void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
 
-    sk_sp<SkShader> onMakeShader(const SkSVGRenderContext&, const SkColor*, const SkScalar*,
-                                 int count, SkTileMode, const SkMatrix&) const override;
+  sk_sp<SkShader> onMakeShader(
+      const SkSVGRenderContext&, const SkColor*, const SkScalar*, int count, SkTileMode,
+      const SkMatrix&) const override;
 
-private:
-    SkSVGLinearGradient();
+ private:
+  SkSVGLinearGradient();
 
-    SkSVGLength fX1 = SkSVGLength(0, SkSVGLength::Unit::kPercentage);
-    SkSVGLength fY1 = SkSVGLength(0, SkSVGLength::Unit::kPercentage);
-    SkSVGLength fX2 = SkSVGLength(100, SkSVGLength::Unit::kPercentage);
-    SkSVGLength fY2 = SkSVGLength(0, SkSVGLength::Unit::kPercentage);
+  SkSVGLength fX1 = SkSVGLength(0, SkSVGLength::Unit::kPercentage);
+  SkSVGLength fY1 = SkSVGLength(0, SkSVGLength::Unit::kPercentage);
+  SkSVGLength fX2 = SkSVGLength(100, SkSVGLength::Unit::kPercentage);
+  SkSVGLength fY2 = SkSVGLength(0, SkSVGLength::Unit::kPercentage);
 
-    typedef SkSVGGradient INHERITED;
+  typedef SkSVGGradient INHERITED;
 };
 
 #endif  // SkSVGLinearGradient_DEFINED

@@ -20,15 +20,15 @@
 #include "tools/ToolUtils.h"
 
 static void draw_image(SkCanvas* canvas, const char* resource, int x, int y) {
-    sk_sp<SkImage> image(GetResourceAsImage(resource));
-    if (image) {
-        canvas->drawImage(image, SkIntToScalar(x), SkIntToScalar(y));
-    } else {
-        SkDebugf(
-                "\nCould not decode file '%s'. Did you forget"
-                " to set the resourcePath?\n",
-                resource);
-    }
+  sk_sp<SkImage> image(GetResourceAsImage(resource));
+  if (image) {
+    canvas->drawImage(image, SkIntToScalar(x), SkIntToScalar(y));
+  } else {
+    SkDebugf(
+        "\nCould not decode file '%s'. Did you forget"
+        " to set the resourcePath?\n",
+        resource);
+  }
 }
 
 /*
@@ -41,23 +41,23 @@ static void draw_image(SkCanvas* canvas, const char* resource, int x, int y) {
   background and compression artifacts.
  */
 DEF_SIMPLE_GM(colorwheel, canvas, 256, 256) {
-    ToolUtils::draw_checkerboard(canvas);
-    draw_image(canvas, "images/color_wheel.png", 0, 0);      // top left
-    draw_image(canvas, "images/color_wheel.gif", 128, 0);    // top right
-    draw_image(canvas, "images/color_wheel.webp", 0, 128);   // bottom left
-    draw_image(canvas, "images/color_wheel.jpg", 128, 128);  // bottom right
+  ToolUtils::draw_checkerboard(canvas);
+  draw_image(canvas, "images/color_wheel.png", 0, 0);      // top left
+  draw_image(canvas, "images/color_wheel.gif", 128, 0);    // top right
+  draw_image(canvas, "images/color_wheel.webp", 0, 128);   // bottom left
+  draw_image(canvas, "images/color_wheel.jpg", 128, 128);  // bottom right
 }
 
 DEF_SIMPLE_GM(colorwheelnative, canvas, 128, 28) {
-    SkFont font(ToolUtils::create_portable_typeface("sans-serif", SkFontStyle::Bold()), 18);
-    font.setEdging(SkFont::Edging::kAlias);
+  SkFont font(ToolUtils::create_portable_typeface("sans-serif", SkFontStyle::Bold()), 18);
+  font.setEdging(SkFont::Edging::kAlias);
 
-    canvas->clear(SK_ColorLTGRAY);
-    canvas->drawString("R", 8.0f, 20.0f, font, SkPaint(SkColors::kRed));
-    canvas->drawString("G", 24.0f, 20.0f, font, SkPaint(SkColors::kGreen));
-    canvas->drawString("B", 40.0f, 20.0f, font, SkPaint(SkColors::kBlue));
-    canvas->drawString("C", 56.0f, 20.0f, font, SkPaint(SkColors::kCyan));
-    canvas->drawString("M", 72.0f, 20.0f, font, SkPaint(SkColors::kMagenta));
-    canvas->drawString("Y", 88.0f, 20.0f, font, SkPaint(SkColors::kYellow));
-    canvas->drawString("K", 104.0f, 20.0f, font, SkPaint(SkColors::kBlack));
+  canvas->clear(SK_ColorLTGRAY);
+  canvas->drawString("R", 8.0f, 20.0f, font, SkPaint(SkColors::kRed));
+  canvas->drawString("G", 24.0f, 20.0f, font, SkPaint(SkColors::kGreen));
+  canvas->drawString("B", 40.0f, 20.0f, font, SkPaint(SkColors::kBlue));
+  canvas->drawString("C", 56.0f, 20.0f, font, SkPaint(SkColors::kCyan));
+  canvas->drawString("M", 72.0f, 20.0f, font, SkPaint(SkColors::kMagenta));
+  canvas->drawString("Y", 88.0f, 20.0f, font, SkPaint(SkColors::kYellow));
+  canvas->drawString("K", 104.0f, 20.0f, font, SkPaint(SkColors::kBlack));
 }

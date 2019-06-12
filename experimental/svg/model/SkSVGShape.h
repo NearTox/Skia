@@ -15,21 +15,21 @@ class SkSVGLengthContext;
 class SkPaint;
 
 class SkSVGShape : public SkSVGTransformableNode {
-public:
-    ~SkSVGShape() override = default;
+ public:
+  ~SkSVGShape() override = default;
 
-    void appendChild(sk_sp<SkSVGNode>) override;
+  void appendChild(sk_sp<SkSVGNode>) override;
 
-protected:
-    SkSVGShape(SkSVGTag);
+ protected:
+  SkSVGShape(SkSVGTag);
 
-    void onRender(const SkSVGRenderContext&) const final;
+  void onRender(const SkSVGRenderContext&) const final;
 
-    virtual void onDraw(SkCanvas*, const SkSVGLengthContext&, const SkPaint&,
-                        SkPath::FillType) const = 0;
+  virtual void onDraw(
+      SkCanvas*, const SkSVGLengthContext&, const SkPaint&, SkPath::FillType) const = 0;
 
-private:
-    typedef SkSVGTransformableNode INHERITED;
+ private:
+  typedef SkSVGTransformableNode INHERITED;
 };
 
 #endif  // SkSVGShape_DEFINED

@@ -19,9 +19,9 @@ void sk_shader_ref(sk_shader_t*);
 void sk_shader_unref(sk_shader_t*);
 
 typedef enum {
-    CLAMP_SK_SHADER_TILEMODE,
-    REPEAT_SK_SHADER_TILEMODE,
-    MIRROR_SK_SHADER_TILEMODE,
+  CLAMP_SK_SHADER_TILEMODE,
+  REPEAT_SK_SHADER_TILEMODE,
+  MIRROR_SK_SHADER_TILEMODE,
 } sk_shader_tilemode_t;
 
 /**
@@ -42,12 +42,9 @@ typedef enum {
                       NULL) entries.
     @param mode The tiling mode
 */
-sk_shader_t* sk_shader_new_linear_gradient(const sk_point_t points[2],
-                                           const sk_color_t colors[],
-                                           const float colorPos[],
-                                           int colorCount,
-                                           sk_shader_tilemode_t tileMode,
-                                           const sk_matrix_t* localMatrix);
+sk_shader_t* sk_shader_new_linear_gradient(
+    const sk_point_t points[2], const sk_color_t colors[], const float colorPos[], int colorCount,
+    sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix);
 
 /**
     Returns a shader that generates a radial gradient given the center
@@ -70,13 +67,9 @@ sk_shader_t* sk_shader_new_linear_gradient(const sk_point_t points[2],
     @param tileMode The tiling mode
     @param localMatrix May be NULL
 */
-sk_shader_t* sk_shader_new_radial_gradient(const sk_point_t* center,
-                                           float radius,
-                                           const sk_color_t colors[],
-                                           const float colorPos[],
-                                           int colorCount,
-                                           sk_shader_tilemode_t tileMode,
-                                           const sk_matrix_t* localMatrix);
+sk_shader_t* sk_shader_new_radial_gradient(
+    const sk_point_t* center, float radius, const sk_color_t colors[], const float colorPos[],
+    int colorCount, sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix);
 
 /**
     Returns a shader that generates a sweep gradient given a center.
@@ -95,11 +88,9 @@ sk_shader_t* sk_shader_new_radial_gradient(const sk_point_t* center,
                       not NULL) entries
     @param localMatrix May be NULL
 */
-sk_shader_t* sk_shader_new_sweep_gradient(const sk_point_t* center,
-                                          const sk_color_t colors[],
-                                          const float colorPos[],
-                                          int colorCount,
-                                          const sk_matrix_t* localMatrix);
+sk_shader_t* sk_shader_new_sweep_gradient(
+    const sk_point_t* center, const sk_color_t colors[], const float colorPos[], int colorCount,
+    const sk_matrix_t* localMatrix);
 
 /**
     Returns a shader that generates a conical gradient given two circles, or
@@ -126,15 +117,10 @@ sk_shader_t* sk_shader_new_sweep_gradient(const sk_point_t* center,
     @param localMatrix May be NULL
 
 */
-sk_shader_t* sk_shader_new_two_point_conical_gradient(const sk_point_t* start,
-                                                      float startRadius,
-                                                      const sk_point_t* end,
-                                                      float endRadius,
-                                                      const sk_color_t colors[],
-                                                      const float colorPos[],
-                                                      int colorCount,
-                                                      sk_shader_tilemode_t tileMode,
-                                                      const sk_matrix_t* localMatrix);
+sk_shader_t* sk_shader_new_two_point_conical_gradient(
+    const sk_point_t* start, float startRadius, const sk_point_t* end, float endRadius,
+    const sk_color_t colors[], const float colorPos[], int colorCount,
+    sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix);
 
 SK_C_PLUS_PLUS_END_GUARD
 

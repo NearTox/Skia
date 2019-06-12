@@ -16,33 +16,32 @@ class SkPath;
 #include <dwrite.h>
 
 class SkDWriteGeometrySink : public IDWriteGeometrySink {
-private:
-    LONG fRefCount;
-    SkPath* fPath;
+ private:
+  LONG fRefCount;
+  SkPath* fPath;
 
-    SkDWriteGeometrySink(const SkDWriteGeometrySink&);
-    SkDWriteGeometrySink& operator=(const SkDWriteGeometrySink&);
+  SkDWriteGeometrySink(const SkDWriteGeometrySink&);
+  SkDWriteGeometrySink& operator=(const SkDWriteGeometrySink&);
 
-protected:
-    explicit SkDWriteGeometrySink(SkPath* path);
-    virtual ~SkDWriteGeometrySink();
+ protected:
+  explicit SkDWriteGeometrySink(SkPath* path);
+  virtual ~SkDWriteGeometrySink();
 
-public:
-    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid, void** object) override;
-    ULONG STDMETHODCALLTYPE AddRef(void) override;
-    ULONG STDMETHODCALLTYPE Release(void) override;
+ public:
+  HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid, void** object) override;
+  ULONG STDMETHODCALLTYPE AddRef(void) override;
+  ULONG STDMETHODCALLTYPE Release(void) override;
 
-    void STDMETHODCALLTYPE SetFillMode(D2D1_FILL_MODE fillMode) override;
-    void STDMETHODCALLTYPE SetSegmentFlags(D2D1_PATH_SEGMENT vertexFlags) override;
-    void STDMETHODCALLTYPE BeginFigure(D2D1_POINT_2F startPoint,
-                                       D2D1_FIGURE_BEGIN figureBegin) override;
-    void STDMETHODCALLTYPE AddLines(const D2D1_POINT_2F* points, UINT pointsCount) override;
-    void STDMETHODCALLTYPE AddBeziers(const D2D1_BEZIER_SEGMENT* beziers,
-                                      UINT beziersCount) override;
-    void STDMETHODCALLTYPE EndFigure(D2D1_FIGURE_END figureEnd) override;
-    HRESULT STDMETHODCALLTYPE Close() override;
+  void STDMETHODCALLTYPE SetFillMode(D2D1_FILL_MODE fillMode) override;
+  void STDMETHODCALLTYPE SetSegmentFlags(D2D1_PATH_SEGMENT vertexFlags) override;
+  void STDMETHODCALLTYPE
+  BeginFigure(D2D1_POINT_2F startPoint, D2D1_FIGURE_BEGIN figureBegin) override;
+  void STDMETHODCALLTYPE AddLines(const D2D1_POINT_2F* points, UINT pointsCount) override;
+  void STDMETHODCALLTYPE AddBeziers(const D2D1_BEZIER_SEGMENT* beziers, UINT beziersCount) override;
+  void STDMETHODCALLTYPE EndFigure(D2D1_FIGURE_END figureEnd) override;
+  HRESULT STDMETHODCALLTYPE Close() override;
 
-    static HRESULT Create(SkPath* path, IDWriteGeometrySink** geometryToPath);
+  static HRESULT Create(SkPath* path, IDWriteGeometrySink** geometryToPath);
 };
 
 #endif

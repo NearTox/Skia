@@ -16,65 +16,58 @@
  * Helper for owning a pending read, write, read-write on a GrGpuResource. It never owns a regular
  * ref.
  */
-template <typename T, GrIOType IO_TYPE> class GrPendingIOResource : SkNoncopyable {
-public:
-    GrPendingIOResource() = default;
-    GrPendingIOResource(T* resource) { this->reset(resource); }
-    GrPendingIOResource(sk_sp<T> resource) { *this = std::move(resource); }
-    GrPendingIOResource(const GrPendingIOResource& that) : GrPendingIOResource(that.get()) {}
-    ~GrPendingIOResource() { this->release(); }
+template <typename T, GrIOType IO_TYPE>
+class GrPendingIOResource : SkNoncopyable {
+ public:
+  GrPendingIOResource() = default;
+  GrPendingIOResource(T* resource) { this->reset(resource); }
+  GrPendingIOResource(sk_sp<T> resource) { *this = std::move(resource); }
+  GrPendingIOResource(const GrPendingIOResource& that) : GrPendingIOResource(that.get()) {}
+  ~GrPendingIOResource() { this->release(); }
 
-    GrPendingIOResource& operator=(sk_sp<T> resource) {
-        this->reset(resource.get());
-        return *this;
+  GrPendingIOResource& operator=(sk_sp<T> resource) {
+    this->reset(resource.get());
+    return *this;
+  }
+
+  void reset(T* resource = nullptr) {
+    if (resource) {
+      switch (IO_TYPE) {
+        case kRead_GrIOType: resource->addPendingRead(); break;
+        case kWrite_GrIOType: resource->addPendingWrite(); break;
+        case kRW_GrIOType:
+          resource->addPendingRead();
+          resource->addPendingWrite();
+          break;
+      }
     }
+    this->release();
+    fResource = resource;
+  }
 
-    void reset(T* resource = nullptr) {
-        if (resource) {
-            switch (IO_TYPE) {
-                case kRead_GrIOType:
-                    resource->addPendingRead();
-                    break;
-                case kWrite_GrIOType:
-                    resource->addPendingWrite();
-                    break;
-                case kRW_GrIOType:
-                    resource->addPendingRead();
-                    resource->addPendingWrite();
-                    break;
-            }
-        }
-        this->release();
-        fResource = resource;
+  explicit operator bool() const { return SkToBool(fResource); }
+
+  bool operator==(const GrPendingIOResource& other) const { return fResource == other.fResource; }
+
+  T* get() const { return fResource; }
+  T* operator*() const { return *fResource; }
+  T* operator->() const { return fResource; }
+
+ private:
+  void release() {
+    if (fResource) {
+      switch (IO_TYPE) {
+        case kRead_GrIOType: fResource->completedRead(); break;
+        case kWrite_GrIOType: fResource->completedWrite(); break;
+        case kRW_GrIOType:
+          fResource->completedRead();
+          fResource->completedWrite();
+          break;
+      }
     }
+  }
 
-    explicit operator bool() const { return SkToBool(fResource); }
-
-    bool operator==(const GrPendingIOResource& other) const { return fResource == other.fResource; }
-
-    T* get() const noexcept { return fResource; }
-    T* operator*() const noexcept { return *fResource; }
-    T* operator->() const noexcept { return fResource; }
-
-private:
-    void release() {
-        if (fResource) {
-            switch (IO_TYPE) {
-                case kRead_GrIOType:
-                    fResource->completedRead();
-                    break;
-                case kWrite_GrIOType:
-                    fResource->completedWrite();
-                    break;
-                case kRW_GrIOType:
-                    fResource->completedRead();
-                    fResource->completedWrite();
-                    break;
-            }
-        }
-    }
-
-    T* fResource = nullptr;
+  T* fResource = nullptr;
 };
 
 #endif

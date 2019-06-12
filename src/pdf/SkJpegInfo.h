@@ -17,7 +17,8 @@
     @param [out] colorType   Encoded color type (kGray_Color, kYUV_Color, several others).
     @param [out] orientation EXIF Orientation of the image.
 */
-bool SkGetJpegInfo(const void* data, size_t len, SkISize* size, SkEncodedInfo::Color* colorType,
-                   SkEncodedOrigin* orientation);
+bool SkGetJpegInfo(
+    const void* data, size_t len, SkISize* size, SkEncodedInfo::Color* colorType,
+    SkEncodedOrigin* orientation);
 
 #endif  // SkJpegInfo_DEFINED

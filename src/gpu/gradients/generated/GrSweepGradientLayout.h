@@ -18,31 +18,32 @@
 #include "src/gpu/GrCoordTransform.h"
 #include "src/gpu/GrFragmentProcessor.h"
 class GrSweepGradientLayout : public GrFragmentProcessor {
-public:
-    static std::unique_ptr<GrFragmentProcessor> Make(const SkSweepGradient& gradient,
-                                                     const GrFPArgs& args);
-    GrSweepGradientLayout(const GrSweepGradientLayout& src);
-    std::unique_ptr<GrFragmentProcessor> clone() const override;
-    const char* name() const override { return "SweepGradientLayout"; }
-    GrCoordTransform fCoordTransform0;
-    SkMatrix44 gradientMatrix;
-    float bias;
-    float scale;
+ public:
+  static std::unique_ptr<GrFragmentProcessor> Make(
+      const SkSweepGradient& gradient, const GrFPArgs& args);
+  GrSweepGradientLayout(const GrSweepGradientLayout& src);
+  std::unique_ptr<GrFragmentProcessor> clone() const override;
+  const char* name() const override { return "SweepGradientLayout"; }
+  GrCoordTransform fCoordTransform0;
+  SkMatrix44 gradientMatrix;
+  float bias;
+  float scale;
 
-private:
-    GrSweepGradientLayout(SkMatrix44 gradientMatrix, float bias, float scale)
-            : INHERITED(kGrSweepGradientLayout_ClassID,
-                        (OptimizationFlags)kPreservesOpaqueInput_OptimizationFlag)
-            , fCoordTransform0(gradientMatrix)
-            , gradientMatrix(gradientMatrix)
-            , bias(bias)
-            , scale(scale) {
-        this->addCoordTransform(&fCoordTransform0);
-    }
-    GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-    void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-    bool onIsEqual(const GrFragmentProcessor&) const override;
-    GR_DECLARE_FRAGMENT_PROCESSOR_TEST
-    typedef GrFragmentProcessor INHERITED;
+ private:
+  GrSweepGradientLayout(SkMatrix44 gradientMatrix, float bias, float scale)
+      : INHERITED(
+            kGrSweepGradientLayout_ClassID,
+            (OptimizationFlags)kPreservesOpaqueInput_OptimizationFlag),
+        fCoordTransform0(gradientMatrix),
+        gradientMatrix(gradientMatrix),
+        bias(bias),
+        scale(scale) {
+    this->addCoordTransform(&fCoordTransform0);
+  }
+  GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const override;
+  GR_DECLARE_FRAGMENT_PROCESSOR_TEST
+  typedef GrFragmentProcessor INHERITED;
 };
 #endif

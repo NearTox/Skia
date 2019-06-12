@@ -16,13 +16,13 @@ namespace SkSL {
  * Represents "true" or "false".
  */
 struct ASTBoolLiteral : public ASTExpression {
-    ASTBoolLiteral(int offset, bool value) : INHERITED(offset, kBool_Kind), fValue(value) {}
+  ASTBoolLiteral(int offset, bool value) : INHERITED(offset, kBool_Kind), fValue(value) {}
 
-    String description() const override { return String(fValue ? "true" : "false"); }
+  String description() const override { return String(fValue ? "true" : "false"); }
 
-    const bool fValue;
+  const bool fValue;
 
-    typedef ASTExpression INHERITED;
+  typedef ASTExpression INHERITED;
 };
 
 }  // namespace SkSL

@@ -12,34 +12,34 @@
 #include "include/core/SkFlattenable.h"
 
 class SkColorFilter_Matrix : public SkColorFilter {
-public:
-    SkColorFilter_Matrix() {}
-    explicit SkColorFilter_Matrix(const float array[20]);
+ public:
+  SkColorFilter_Matrix() {}
+  explicit SkColorFilter_Matrix(const float array[20]);
 
-    uint32_t getFlags() const noexcept override;
+  uint32_t getFlags() const override;
 
 #if SK_SUPPORT_GPU
-    std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(
-            GrRecordingContext*, const GrColorSpaceInfo&) const override;
+  std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(
+      GrRecordingContext*, const GrColorSpaceInfo&) const override;
 #endif
 
-    static void RegisterFlattenables();
+  static void RegisterFlattenables();
 
-protected:
-    void flatten(SkWriteBuffer&) const override;
-    bool onAsAColorMatrix(float matrix[20]) const override;
+ protected:
+  void flatten(SkWriteBuffer&) const override;
+  bool onAsAColorMatrix(float matrix[20]) const override;
 
-private:
-    SK_FLATTENABLE_HOOKS(SkColorFilter_Matrix)
+ private:
+  SK_FLATTENABLE_HOOKS(SkColorFilter_Matrix)
 
-    bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const override;
+  bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const override;
 
-    float fMatrix[20];
-    uint32_t fFlags;
+  float fMatrix[20];
+  uint32_t fFlags;
 
-    void initState();
+  void initState();
 
-    typedef SkColorFilter INHERITED;
+  typedef SkColorFilter INHERITED;
 };
 
 #endif

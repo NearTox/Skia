@@ -35,79 +35,79 @@
 #include "src/image/SkSurface_Gpu.h"
 
 #define ASSERT_OWNED_PROXY(P) \
-    SkASSERT(!(P) || !((P)->peekTexture()) || (P)->peekTexture()->getContext() == this)
+  SkASSERT(!(P) || !((P)->peekTexture()) || (P)->peekTexture()->getContext() == this)
 
 #define ASSERT_OWNED_RESOURCE(R) SkASSERT(!(R) || (R)->getContext() == this)
 #define ASSERT_SINGLE_OWNER \
-    SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner()));
-#define RETURN_IF_ABANDONED  \
-    if (this->abandoned()) { \
-        return;              \
-    }
+  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner());)
+#define RETURN_IF_ABANDONED \
+  if (this->abandoned()) {  \
+    return;                 \
+  }
 #define RETURN_FALSE_IF_ABANDONED \
-    if (this->abandoned()) {      \
-        return false;             \
-    }
+  if (this->abandoned()) {        \
+    return false;                 \
+  }
 #define RETURN_NULL_IF_ABANDONED \
-    if (this->abandoned()) {     \
-        return nullptr;          \
-    }
+  if (this->abandoned()) {       \
+    return nullptr;              \
+  }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 GrContext::GrContext(GrBackendApi backend, const GrContextOptions& options, int32_t contextID)
-        : INHERITED(backend, options, contextID) {
-    fResourceCache = nullptr;
-    fResourceProvider = nullptr;
+    : INHERITED(backend, options, contextID) {
+  fResourceCache = nullptr;
+  fResourceProvider = nullptr;
 }
 
 GrContext::~GrContext() {
-    ASSERT_SINGLE_OWNER
+  ASSERT_SINGLE_OWNER
 
-    if (this->drawingManager()) {
-        this->drawingManager()->cleanup();
-    }
-    delete fResourceProvider;
-    delete fResourceCache;
+  if (this->drawingManager()) {
+    this->drawingManager()->cleanup();
+  }
+  delete fResourceProvider;
+  delete fResourceCache;
 }
 
 bool GrContext::init(sk_sp<const GrCaps> caps, sk_sp<GrSkSLFPFactoryCache> FPFactoryCache) {
-    ASSERT_SINGLE_OWNER
-    SkASSERT(fThreadSafeProxy);  // needs to have been initialized by derived classes
-    SkASSERT(this->proxyProvider());
+  ASSERT_SINGLE_OWNER
+  SkASSERT(fThreadSafeProxy);  // needs to have been initialized by derived classes
+  SkASSERT(this->proxyProvider());
 
-    if (!INHERITED::init(std::move(caps), std::move(FPFactoryCache))) {
-        return false;
-    }
+  if (!INHERITED::init(std::move(caps), std::move(FPFactoryCache))) {
+    return false;
+  }
 
-    SkASSERT(this->caps());
-    SkASSERT(this->getGrStrikeCache());
-    SkASSERT(this->getTextBlobCache());
+  SkASSERT(this->caps());
+  SkASSERT(this->getGrStrikeCache());
+  SkASSERT(this->getTextBlobCache());
 
-    if (fGpu) {
-        fResourceCache = new GrResourceCache(this->caps(), this->singleOwner(), this->contextID());
-        fResourceProvider = new GrResourceProvider(fGpu.get(), fResourceCache, this->singleOwner());
-    }
+  if (fGpu) {
+    fResourceCache = new GrResourceCache(this->caps(), this->singleOwner(), this->contextID());
+    fResourceProvider = new GrResourceProvider(fGpu.get(), fResourceCache, this->singleOwner());
+  }
 
-    if (fResourceCache) {
-        fResourceCache->setProxyProvider(this->proxyProvider());
-    }
+  if (fResourceCache) {
+    fResourceCache->setProxyProvider(this->proxyProvider());
+  }
 
-    fDidTestPMConversions = false;
+  fDidTestPMConversions = false;
 
-    // DDL TODO: we need to think through how the task group & persistent cache
-    // get passed on to/shared between all the DDLRecorders created with this context.
-    if (this->options().fExecutor) {
-        fTaskGroup = skstd::make_unique<SkTaskGroup>(*this->options().fExecutor);
-    }
+  // DDL TODO: we need to think through how the task group & persistent cache
+  // get passed on to/shared between all the DDLRecorders created with this context.
+  if (this->options().fExecutor) {
+    fTaskGroup = skstd::make_unique<SkTaskGroup>(*this->options().fExecutor);
+  }
 
-    fPersistentCache = this->options().fPersistentCache;
-    fShaderErrorHandler = this->options().fShaderErrorHandler;
-    if (!fShaderErrorHandler) {
-        fShaderErrorHandler = GrShaderUtils::DefaultShaderErrorHandler();
-    }
+  fPersistentCache = this->options().fPersistentCache;
+  fShaderErrorHandler = this->options().fShaderErrorHandler;
+  if (!fShaderErrorHandler) {
+    fShaderErrorHandler = GrShaderUtils::DefaultShaderErrorHandler();
+  }
 
-    return true;
+  return true;
 }
 
 sk_sp<GrContextThreadSafeProxy> GrContext::threadSafeProxy() { return fThreadSafeProxy; }
@@ -115,121 +115,121 @@ sk_sp<GrContextThreadSafeProxy> GrContext::threadSafeProxy() { return fThreadSaf
 //////////////////////////////////////////////////////////////////////////////
 
 void GrContext::abandonContext() {
-    if (this->abandoned()) {
-        return;
-    }
+  if (this->abandoned()) {
+    return;
+  }
 
-    INHERITED::abandonContext();
+  INHERITED::abandonContext();
 
-    fResourceProvider->abandon();
+  fResourceProvider->abandon();
 
-    // Need to cleanup the drawing manager first so all the render targets
-    // will be released/forgotten before they too are abandoned.
-    this->drawingManager()->cleanup();
+  // Need to cleanup the drawing manager first so all the render targets
+  // will be released/forgotten before they too are abandoned.
+  this->drawingManager()->cleanup();
 
-    // abandon first to so destructors
-    // don't try to free the resources in the API.
-    fResourceCache->abandonAll();
+  // abandon first to so destructors
+  // don't try to free the resources in the API.
+  fResourceCache->abandonAll();
 
-    fGpu->disconnect(GrGpu::DisconnectType::kAbandon);
+  fGpu->disconnect(GrGpu::DisconnectType::kAbandon);
 }
 
 void GrContext::releaseResourcesAndAbandonContext() {
-    if (this->abandoned()) {
-        return;
-    }
+  if (this->abandoned()) {
+    return;
+  }
 
-    INHERITED::abandonContext();
+  INHERITED::abandonContext();
 
-    fResourceProvider->abandon();
+  fResourceProvider->abandon();
 
-    // Need to cleanup the drawing manager first so all the render targets
-    // will be released/forgotten before they too are abandoned.
-    this->drawingManager()->cleanup();
+  // Need to cleanup the drawing manager first so all the render targets
+  // will be released/forgotten before they too are abandoned.
+  this->drawingManager()->cleanup();
 
-    // Release all resources in the backend 3D API.
-    fResourceCache->releaseAll();
+  // Release all resources in the backend 3D API.
+  fResourceCache->releaseAll();
 
-    fGpu->disconnect(GrGpu::DisconnectType::kCleanup);
+  fGpu->disconnect(GrGpu::DisconnectType::kCleanup);
 }
 
 void GrContext::resetGLTextureBindings() {
-    if (this->abandoned() || this->backend() != GrBackendApi::kOpenGL) {
-        return;
-    }
-    fGpu->resetTextureBindings();
+  if (this->abandoned() || this->backend() != GrBackendApi::kOpenGL) {
+    return;
+  }
+  fGpu->resetTextureBindings();
 }
 
 void GrContext::resetContext(uint32_t state) {
-    ASSERT_SINGLE_OWNER
-    fGpu->markContextDirty(state);
+  ASSERT_SINGLE_OWNER
+  fGpu->markContextDirty(state);
 }
 
 void GrContext::freeGpuResources() {
-    ASSERT_SINGLE_OWNER
+  ASSERT_SINGLE_OWNER
 
-    // TODO: the glyph cache doesn't hold any GpuResources so this call should not be needed here.
-    // Some slack in the GrTextBlob's implementation requires it though. That could be fixed.
-    this->getGrStrikeCache()->freeAll();
+  // TODO: the glyph cache doesn't hold any GpuResources so this call should not be needed here.
+  // Some slack in the GrTextBlob's implementation requires it though. That could be fixed.
+  this->getGrStrikeCache()->freeAll();
 
-    this->drawingManager()->freeGpuResources();
+  this->drawingManager()->freeGpuResources();
 
-    fResourceCache->purgeAllUnlocked();
+  fResourceCache->purgeAllUnlocked();
 }
 
 void GrContext::purgeUnlockedResources(bool scratchResourcesOnly) {
-    ASSERT_SINGLE_OWNER
-    fResourceCache->purgeUnlockedResources(scratchResourcesOnly);
-    fResourceCache->purgeAsNeeded();
+  ASSERT_SINGLE_OWNER
+  fResourceCache->purgeUnlockedResources(scratchResourcesOnly);
+  fResourceCache->purgeAsNeeded();
 
-    // The textBlob Cache doesn't actually hold any GPU resource but this is a convenient
-    // place to purge stale blobs
-    this->getTextBlobCache()->purgeStaleBlobs();
+  // The textBlob Cache doesn't actually hold any GPU resource but this is a convenient
+  // place to purge stale blobs
+  this->getTextBlobCache()->purgeStaleBlobs();
 }
 
 void GrContext::performDeferredCleanup(std::chrono::milliseconds msNotUsed) {
-    ASSERT_SINGLE_OWNER
+  ASSERT_SINGLE_OWNER
 
-    auto purgeTime = GrStdSteadyClock::now() - msNotUsed;
+  auto purgeTime = GrStdSteadyClock::now() - msNotUsed;
 
-    fResourceCache->purgeAsNeeded();
-    fResourceCache->purgeResourcesNotUsedSince(purgeTime);
+  fResourceCache->purgeAsNeeded();
+  fResourceCache->purgeResourcesNotUsedSince(purgeTime);
 
-    if (auto ccpr = this->drawingManager()->getCoverageCountingPathRenderer()) {
-        ccpr->purgeCacheEntriesOlderThan(this->proxyProvider(), purgeTime);
-    }
+  if (auto ccpr = this->drawingManager()->getCoverageCountingPathRenderer()) {
+    ccpr->purgeCacheEntriesOlderThan(this->proxyProvider(), purgeTime);
+  }
 
-    // The textBlob Cache doesn't actually hold any GPU resource but this is a convenient
-    // place to purge stale blobs
-    this->getTextBlobCache()->purgeStaleBlobs();
+  // The textBlob Cache doesn't actually hold any GPU resource but this is a convenient
+  // place to purge stale blobs
+  this->getTextBlobCache()->purgeStaleBlobs();
 }
 
 void GrContext::purgeUnlockedResources(size_t bytesToPurge, bool preferScratchResources) {
-    ASSERT_SINGLE_OWNER
-    fResourceCache->purgeUnlockedResources(bytesToPurge, preferScratchResources);
+  ASSERT_SINGLE_OWNER
+  fResourceCache->purgeUnlockedResources(bytesToPurge, preferScratchResources);
 }
 
 void GrContext::getResourceCacheUsage(int* resourceCount, size_t* resourceBytes) const {
-    ASSERT_SINGLE_OWNER
+  ASSERT_SINGLE_OWNER
 
-    if (resourceCount) {
-        *resourceCount = fResourceCache->getBudgetedResourceCount();
-    }
-    if (resourceBytes) {
-        *resourceBytes = fResourceCache->getBudgetedResourceBytes();
-    }
+  if (resourceCount) {
+    *resourceCount = fResourceCache->getBudgetedResourceCount();
+  }
+  if (resourceBytes) {
+    *resourceBytes = fResourceCache->getBudgetedResourceBytes();
+  }
 }
 
 size_t GrContext::getResourceCachePurgeableBytes() const {
-    ASSERT_SINGLE_OWNER
-    return fResourceCache->getPurgeableBytes();
+  ASSERT_SINGLE_OWNER
+  return fResourceCache->getPurgeableBytes();
 }
 
-size_t GrContext::ComputeTextureSize(SkColorType type, int width, int height, GrMipMapped mipMapped,
-                                     bool useNextPow2) {
-    int colorSamplesPerPixel = 1;
-    return GrSurface::ComputeSize(SkColorType2GrPixelConfig(type), width, height,
-                                  colorSamplesPerPixel, mipMapped, useNextPow2);
+size_t GrContext::ComputeTextureSize(
+    SkColorType type, int width, int height, GrMipMapped mipMapped, bool useNextPow2) {
+  int colorSamplesPerPixel = 1;
+  return GrSurface::ComputeSize(
+      SkColorType2GrPixelConfig(type), width, height, colorSamplesPerPixel, mipMapped, useNextPow2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -239,120 +239,166 @@ int GrContext::maxTextureSize() const { return this->caps()->maxTextureSize(); }
 int GrContext::maxRenderTargetSize() const { return this->caps()->maxRenderTargetSize(); }
 
 bool GrContext::colorTypeSupportedAsImage(SkColorType colorType) const {
-    GrPixelConfig config = SkColorType2GrPixelConfig(colorType);
-    return this->caps()->isConfigTexturable(config);
+  GrPixelConfig config = SkColorType2GrPixelConfig(colorType);
+  return this->caps()->isConfigTexturable(config);
 }
 
 int GrContext::maxSurfaceSampleCountForColorType(SkColorType colorType) const {
-    GrPixelConfig config = SkColorType2GrPixelConfig(colorType);
-    return this->caps()->maxRenderTargetSampleCount(config);
+  GrPixelConfig config = SkColorType2GrPixelConfig(colorType);
+  return this->caps()->maxRenderTargetSampleCount(config);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 bool GrContext::wait(int numSemaphores, const GrBackendSemaphore waitSemaphores[]) {
-    if (!fGpu || fGpu->caps()->semaphoreSupport()) {
-        return false;
-    }
-    for (int i = 0; i < numSemaphores; ++i) {
-        sk_sp<GrSemaphore> sema = fResourceProvider->wrapBackendSemaphore(
-                waitSemaphores[i], GrResourceProvider::SemaphoreWrapType::kWillWait,
-                kAdopt_GrWrapOwnership);
-        fGpu->waitSemaphore(std::move(sema));
-    }
-    return true;
+  if (!fGpu || fGpu->caps()->semaphoreSupport()) {
+    return false;
+  }
+  for (int i = 0; i < numSemaphores; ++i) {
+    sk_sp<GrSemaphore> sema = fResourceProvider->wrapBackendSemaphore(
+        waitSemaphores[i], GrResourceProvider::SemaphoreWrapType::kWillWait,
+        kAdopt_GrWrapOwnership);
+    fGpu->waitSemaphore(std::move(sema));
+  }
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GrSemaphoresSubmitted GrContext::flush(const GrFlushInfo& info,
-                                       const GrPrepareForExternalIORequests& externalRequests) {
-    ASSERT_SINGLE_OWNER
-    if (this->abandoned()) {
-        return GrSemaphoresSubmitted::kNo;
-    }
+GrSemaphoresSubmitted GrContext::flush(
+    const GrFlushInfo& info, const GrPrepareForExternalIORequests& externalRequests) {
+  ASSERT_SINGLE_OWNER
+  if (this->abandoned()) {
+    return GrSemaphoresSubmitted::kNo;
+  }
 
-    return this->drawingManager()->flush(nullptr, 0, SkSurface::BackendSurfaceAccess::kNoAccess,
-                                         info, externalRequests);
+  return this->drawingManager()->flush(
+      nullptr, 0, SkSurface::BackendSurfaceAccess::kNoAccess, info, externalRequests);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void GrContext::checkAsyncWorkCompletion() {
-    if (fGpu) {
-        fGpu->checkFinishProcs();
-    }
+  if (fGpu) {
+    fGpu->checkFinishProcs();
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void GrContext::storeVkPipelineCacheData() {
-    if (fGpu) {
-        fGpu->storeVkPipelineCacheData();
-    }
+  if (fGpu) {
+    fGpu->storeVkPipelineCacheData();
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 std::unique_ptr<GrFragmentProcessor> GrContext::createPMToUPMEffect(
-        std::unique_ptr<GrFragmentProcessor> fp) {
-    ASSERT_SINGLE_OWNER
-    // We should have already called this->validPMUPMConversionExists() in this case
-    SkASSERT(fDidTestPMConversions);
-    // ...and it should have succeeded
-    SkASSERT(this->validPMUPMConversionExists());
+    std::unique_ptr<GrFragmentProcessor> fp) {
+  ASSERT_SINGLE_OWNER
+  // We should have already called this->validPMUPMConversionExists() in this case
+  SkASSERT(fDidTestPMConversions);
+  // ...and it should have succeeded
+  SkASSERT(this->validPMUPMConversionExists());
 
-    return GrConfigConversionEffect::Make(std::move(fp), PMConversion::kToUnpremul);
+  return GrConfigConversionEffect::Make(std::move(fp), PMConversion::kToUnpremul);
 }
 
 std::unique_ptr<GrFragmentProcessor> GrContext::createUPMToPMEffect(
-        std::unique_ptr<GrFragmentProcessor> fp) {
-    ASSERT_SINGLE_OWNER
-    // We should have already called this->validPMUPMConversionExists() in this case
-    SkASSERT(fDidTestPMConversions);
-    // ...and it should have succeeded
-    SkASSERT(this->validPMUPMConversionExists());
+    std::unique_ptr<GrFragmentProcessor> fp) {
+  ASSERT_SINGLE_OWNER
+  // We should have already called this->validPMUPMConversionExists() in this case
+  SkASSERT(fDidTestPMConversions);
+  // ...and it should have succeeded
+  SkASSERT(this->validPMUPMConversionExists());
 
-    return GrConfigConversionEffect::Make(std::move(fp), PMConversion::kToPremul);
+  return GrConfigConversionEffect::Make(std::move(fp), PMConversion::kToPremul);
 }
 
 bool GrContext::validPMUPMConversionExists() {
-    ASSERT_SINGLE_OWNER
-    if (!fDidTestPMConversions) {
-        fPMUPMConversionsRoundTrip = GrConfigConversionEffect::TestForPreservingPMConversions(this);
-        fDidTestPMConversions = true;
-    }
+  ASSERT_SINGLE_OWNER
+  if (!fDidTestPMConversions) {
+    fPMUPMConversionsRoundTrip = GrConfigConversionEffect::TestForPreservingPMConversions(this);
+    fDidTestPMConversions = true;
+  }
 
-    // The PM<->UPM tests fail or succeed together so we only need to check one.
-    return fPMUPMConversionsRoundTrip;
+  // The PM<->UPM tests fail or succeed together so we only need to check one.
+  return fPMUPMConversionsRoundTrip;
 }
 
 bool GrContext::supportsDistanceFieldText() const {
-    return this->caps()->shaderCaps()->supportsDistanceFieldText();
+  return this->caps()->shaderCaps()->supportsDistanceFieldText();
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
 // DDL TODO: remove 'maxResources'
 void GrContext::getResourceCacheLimits(int* maxResources, size_t* maxResourceBytes) const {
-    ASSERT_SINGLE_OWNER
-    if (maxResources) {
-        *maxResources = fResourceCache->getMaxResourceCount();
-    }
-    if (maxResourceBytes) {
-        *maxResourceBytes = fResourceCache->getMaxResourceBytes();
-    }
+  ASSERT_SINGLE_OWNER
+  if (maxResources) {
+    *maxResources = fResourceCache->getMaxResourceCount();
+  }
+  if (maxResourceBytes) {
+    *maxResourceBytes = fResourceCache->getMaxResourceBytes();
+  }
 }
 
 void GrContext::setResourceCacheLimits(int maxResources, size_t maxResourceBytes) {
-    ASSERT_SINGLE_OWNER
-    fResourceCache->setLimits(maxResources, maxResourceBytes);
+  ASSERT_SINGLE_OWNER
+  fResourceCache->setLimits(maxResources, maxResourceBytes);
 }
 
 //////////////////////////////////////////////////////////////////////////////
 void GrContext::dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const {
-    ASSERT_SINGLE_OWNER
-    fResourceCache->dumpMemoryStatistics(traceMemoryDump);
-    traceMemoryDump->dumpNumericValue("skia/gr_text_blob_cache", "size", "bytes",
-                                      this->getTextBlobCache()->usedBytes());
+  ASSERT_SINGLE_OWNER
+  fResourceCache->dumpMemoryStatistics(traceMemoryDump);
+  traceMemoryDump->dumpNumericValue(
+      "skia/gr_text_blob_cache", "size", "bytes", this->getTextBlobCache()->usedBytes());
+}
+
+//////////////////////////////////////////////////////////////////////////////
+GrBackendTexture GrContext::createBackendTexture(
+    int width, int height, GrBackendFormat backendFormat, GrMipMapped mipMapped,
+    GrRenderable renderable) {
+  if (!this->asDirectContext()) {
+    return GrBackendTexture();
+  }
+
+  if (this->abandoned()) {
+    return GrBackendTexture();
+  }
+
+  if (!backendFormat.isValid()) {
+    return GrBackendTexture();
+  }
+
+  return fGpu->createBackendTexture(
+      width, height, backendFormat, mipMapped, renderable, nullptr, 0);
+}
+
+GrBackendTexture GrContext::createBackendTexture(
+    int width, int height, SkColorType colorType, GrMipMapped mipMapped, GrRenderable renderable) {
+  if (!this->asDirectContext()) {
+    return GrBackendTexture();
+  }
+
+  if (this->abandoned()) {
+    return GrBackendTexture();
+  }
+
+  GrBackendFormat format = this->caps()->getBackendFormatFromColorType(colorType);
+  if (!format.isValid()) {
+    return GrBackendTexture();
+  }
+
+  return this->createBackendTexture(width, height, format, mipMapped, renderable);
+}
+
+void GrContext::deleteBackendTexture(GrBackendTexture backendTex) {
+  if (this->abandoned() || !backendTex.isValid()) {
+    return;
+  }
+
+  fGpu->deleteBackendTexture(backendTex);
 }

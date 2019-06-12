@@ -20,33 +20,33 @@ class SkBitmapProvider;
  *  Handles request to scale, filter, and lock a bitmap to be rasterized.
  */
 class SkBitmapController : ::SkNoncopyable {
-public:
-    class State : ::SkNoncopyable {
-    public:
-        State(const SkBitmapProvider&, const SkMatrix& inv, SkFilterQuality);
+ public:
+  class State : ::SkNoncopyable {
+   public:
+    State(const SkBitmapProvider&, const SkMatrix& inv, SkFilterQuality);
 
-        const SkPixmap& pixmap() const { return fPixmap; }
-        const SkMatrix& invMatrix() const { return fInvMatrix; }
-        SkFilterQuality quality() const { return fQuality; }
+    const SkPixmap& pixmap() const { return fPixmap; }
+    const SkMatrix& invMatrix() const { return fInvMatrix; }
+    SkFilterQuality quality() const { return fQuality; }
 
-    private:
-        bool processHighRequest(const SkBitmapProvider&);
-        bool processMediumRequest(const SkBitmapProvider&);
+   private:
+    bool processHighRequest(const SkBitmapProvider&);
+    bool processMediumRequest(const SkBitmapProvider&);
 
-        SkPixmap fPixmap;
-        SkMatrix fInvMatrix;
-        SkFilterQuality fQuality;
+    SkPixmap fPixmap;
+    SkMatrix fInvMatrix;
+    SkFilterQuality fQuality;
 
-        // Pixmap storage.
-        SkBitmap fResultBitmap;
-        sk_sp<const SkMipMap> fCurrMip;
-    };
+    // Pixmap storage.
+    SkBitmap fResultBitmap;
+    sk_sp<const SkMipMap> fCurrMip;
+  };
 
-    static State* RequestBitmap(const SkBitmapProvider&, const SkMatrix& inverse, SkFilterQuality,
-                                SkArenaAlloc*);
+  static State* RequestBitmap(
+      const SkBitmapProvider&, const SkMatrix& inverse, SkFilterQuality, SkArenaAlloc*);
 
-private:
-    SkBitmapController() = delete;
+ private:
+  SkBitmapController() = delete;
 };
 
 #endif

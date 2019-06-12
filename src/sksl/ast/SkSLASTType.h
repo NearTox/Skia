@@ -16,27 +16,27 @@ namespace SkSL {
  * A type, such as 'int' or 'struct foo'.
  */
 struct ASTType : public ASTPositionNode {
-    enum Kind { kIdentifier_Kind, kStruct_Kind };
+  enum Kind { kIdentifier_Kind, kStruct_Kind };
 
-    ASTType(int offset, StringFragment name, Kind kind, std::vector<int> sizes, bool nullable)
-            : INHERITED(offset)
-            , fName(name)
-            , fKind(kind)
-            , fSizes(std::move(sizes))
-            , fNullable(nullable) {}
+  ASTType(int offset, StringFragment name, Kind kind, std::vector<int> sizes, bool nullable)
+      : INHERITED(offset),
+        fName(name),
+        fKind(kind),
+        fSizes(std::move(sizes)),
+        fNullable(nullable) {}
 
-    String description() const override { return fName; }
+  String description() const override { return fName; }
 
-    const StringFragment fName;
+  const StringFragment fName;
 
-    const Kind fKind;
+  const Kind fKind;
 
-    // array sizes, -1 meaning unspecified
-    const std::vector<int> fSizes;
+  // array sizes, -1 meaning unspecified
+  const std::vector<int> fSizes;
 
-    bool fNullable;
+  bool fNullable;
 
-    typedef ASTPositionNode INHERITED;
+  typedef ASTPositionNode INHERITED;
 };
 
 }  // namespace SkSL

@@ -34,83 +34,82 @@ constexpr SkRect kSrcImageClip{75, 75, 275, 275};
  * background, scissor is never used, and ideally, all the rectangles draw in one GrDrawOp.
  */
 class CroppedRectsGM : public GM {
-private:
-    SkString onShortName() override final { return SkString("croppedrects"); }
-    SkISize onISize() override { return SkISize::Make(500, 500); }
+ private:
+  SkString onShortName() override final { return SkString("croppedrects"); }
+  SkISize onISize() override { return SkISize::Make(500, 500); }
 
-    void onOnceBeforeDraw() override {
-        sk_sp<SkSurface> srcSurface = SkSurface::MakeRasterN32Premul(500, 500);
-        SkCanvas* srcCanvas = srcSurface->getCanvas();
+  void onOnceBeforeDraw() override {
+    sk_sp<SkSurface> srcSurface = SkSurface::MakeRasterN32Premul(500, 500);
+    SkCanvas* srcCanvas = srcSurface->getCanvas();
 
-        srcCanvas->clear(SK_ColorRED);
+    srcCanvas->clear(SK_ColorRED);
 
-        SkPaint paint;
-        paint.setColor(0xff00ff00);
-        srcCanvas->drawRect(kSrcImageClip, paint);
+    SkPaint paint;
+    paint.setColor(0xff00ff00);
+    srcCanvas->drawRect(kSrcImageClip, paint);
 
-        constexpr SkScalar kStrokeWidth = 10;
-        SkPaint stroke;
-        stroke.setStyle(SkPaint::kStroke_Style);
-        stroke.setStrokeWidth(kStrokeWidth);
-        stroke.setColor(0xff008800);
-        srcCanvas->drawRect(kSrcImageClip.makeInset(kStrokeWidth / 2, kStrokeWidth / 2), stroke);
+    constexpr SkScalar kStrokeWidth = 10;
+    SkPaint stroke;
+    stroke.setStyle(SkPaint::kStroke_Style);
+    stroke.setStrokeWidth(kStrokeWidth);
+    stroke.setColor(0xff008800);
+    srcCanvas->drawRect(kSrcImageClip.makeInset(kStrokeWidth / 2, kStrokeWidth / 2), stroke);
 
-        fSrcImage = srcSurface->makeImageSnapshot();
-        fSrcImageShader = fSrcImage->makeShader();
+    fSrcImage = srcSurface->makeImageSnapshot();
+    fSrcImageShader = fSrcImage->makeShader();
+  }
+
+  void onDraw(SkCanvas* canvas) override {
+    canvas->clear(SK_ColorWHITE);
+
+    {
+      // GrRenderTargetContext::drawFilledRect.
+      SkAutoCanvasRestore acr(canvas, true);
+      SkPaint paint;
+      paint.setShader(fSrcImageShader);
+      paint.setFilterQuality(kNone_SkFilterQuality);
+      canvas->clipRect(kSrcImageClip);
+      canvas->drawPaint(paint);
     }
 
-    void onDraw(SkCanvas* canvas) override {
-        canvas->clear(SK_ColorWHITE);
-
-        {
-            // GrRenderTargetContext::drawFilledRect.
-            SkAutoCanvasRestore acr(canvas, true);
-            SkPaint paint;
-            paint.setShader(fSrcImageShader);
-            paint.setFilterQuality(kNone_SkFilterQuality);
-            canvas->clipRect(kSrcImageClip);
-            canvas->drawPaint(paint);
-        }
-
-        {
-            // GrRenderTargetContext::fillRectToRect.
-            SkAutoCanvasRestore acr(canvas, true);
-            SkPaint paint;
-            paint.setFilterQuality(kNone_SkFilterQuality);
-            SkRect drawRect = SkRect::MakeXYWH(350, 100, 100, 300);
-            canvas->clipRect(drawRect);
-            canvas->drawImageRect(
-                    fSrcImage.get(),
-                    kSrcImageClip.makeOutset(0.5f * kSrcImageClip.width(), kSrcImageClip.height()),
-                    drawRect.makeOutset(0.5f * drawRect.width(), drawRect.height()),
-                    &paint);
-        }
-
-        {
-            // GrRenderTargetContext::fillRectWithLocalMatrix.
-            SkAutoCanvasRestore acr(canvas, true);
-            SkPath path;
-            path.moveTo(kSrcImageClip.fLeft - kSrcImageClip.width(), kSrcImageClip.centerY());
-            path.lineTo(kSrcImageClip.fRight + 3 * kSrcImageClip.width(), kSrcImageClip.centerY());
-            SkPaint paint;
-            paint.setStyle(SkPaint::kStroke_Style);
-            paint.setStrokeWidth(2 * kSrcImageClip.height());
-            paint.setShader(fSrcImageShader);
-            paint.setFilterQuality(kNone_SkFilterQuality);
-            canvas->translate(23, 301);
-            canvas->scale(300 / kSrcImageClip.width(), 100 / kSrcImageClip.height());
-            canvas->translate(-kSrcImageClip.left(), -kSrcImageClip.top());
-            canvas->clipRect(kSrcImageClip);
-            canvas->drawPath(path, paint);
-        }
-
-        // TODO: assert the draw target only has one op in the post-MDB world.
+    {
+      // GrRenderTargetContext::fillRectToRect.
+      SkAutoCanvasRestore acr(canvas, true);
+      SkPaint paint;
+      paint.setFilterQuality(kNone_SkFilterQuality);
+      SkRect drawRect = SkRect::MakeXYWH(350, 100, 100, 300);
+      canvas->clipRect(drawRect);
+      canvas->drawImageRect(
+          fSrcImage.get(),
+          kSrcImageClip.makeOutset(0.5f * kSrcImageClip.width(), kSrcImageClip.height()),
+          drawRect.makeOutset(0.5f * drawRect.width(), drawRect.height()), &paint);
     }
 
-    sk_sp<SkImage> fSrcImage;
-    sk_sp<SkShader> fSrcImageShader;
+    {
+      // GrRenderTargetContext::fillRectWithLocalMatrix.
+      SkAutoCanvasRestore acr(canvas, true);
+      SkPath path;
+      path.moveTo(kSrcImageClip.fLeft - kSrcImageClip.width(), kSrcImageClip.centerY());
+      path.lineTo(kSrcImageClip.fRight + 3 * kSrcImageClip.width(), kSrcImageClip.centerY());
+      SkPaint paint;
+      paint.setStyle(SkPaint::kStroke_Style);
+      paint.setStrokeWidth(2 * kSrcImageClip.height());
+      paint.setShader(fSrcImageShader);
+      paint.setFilterQuality(kNone_SkFilterQuality);
+      canvas->translate(23, 301);
+      canvas->scale(300 / kSrcImageClip.width(), 100 / kSrcImageClip.height());
+      canvas->translate(-kSrcImageClip.left(), -kSrcImageClip.top());
+      canvas->clipRect(kSrcImageClip);
+      canvas->drawPath(path, paint);
+    }
 
-    typedef GM INHERITED;
+    // TODO: assert the draw target only has one op in the post-MDB world.
+  }
+
+  sk_sp<SkImage> fSrcImage;
+  sk_sp<SkShader> fSrcImageShader;
+
+  typedef GM INHERITED;
 };
 
 DEF_GM(return new CroppedRectsGM();)

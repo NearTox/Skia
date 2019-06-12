@@ -11,19 +11,19 @@
 #include "src/gpu/GrPathRenderer.h"
 
 class GrAAHairLinePathRenderer : public GrPathRenderer {
-public:
-    GrAAHairLinePathRenderer() {}
+ public:
+  GrAAHairLinePathRenderer() {}
 
-    typedef SkTArray<SkPoint, true> PtArray;
-    typedef SkTArray<int, true> IntArray;
-    typedef SkTArray<float, true> FloatArray;
+  typedef SkTArray<SkPoint, true> PtArray;
+  typedef SkTArray<int, true> IntArray;
+  typedef SkTArray<float, true> FloatArray;
 
-private:
-    CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;
+ private:
+  CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;
 
-    bool onDrawPath(const DrawPathArgs&) override;
+  bool onDrawPath(const DrawPathArgs&) override;
 
-    typedef GrPathRenderer INHERITED;
+  typedef GrPathRenderer INHERITED;
 };
 
 #endif

@@ -11,23 +11,23 @@
 #include "include/core/SkTypes.h"
 
 class SkAnnotationKeys {
-public:
-    /**
-     *  Returns the canonical key whose payload is a URL
-     */
-    static const char* URL_Key();
+ public:
+  /**
+   *  Returns the canonical key whose payload is a URL
+   */
+  static const char* URL_Key();
 
-    /**
-     *  Returns the canonical key whose payload is the name of a destination to
-     *  be defined.
-     */
-    static const char* Define_Named_Dest_Key();
+  /**
+   *  Returns the canonical key whose payload is the name of a destination to
+   *  be defined.
+   */
+  static const char* Define_Named_Dest_Key();
 
-    /**
-     *  Returns the canonical key whose payload is the name of a destination to
-     *  be linked to.
-     */
-    static const char* Link_Named_Dest_Key();
+  /**
+   *  Returns the canonical key whose payload is the name of a destination to
+   *  be linked to.
+   */
+  static const char* Link_Named_Dest_Key();
 };
 
 #endif

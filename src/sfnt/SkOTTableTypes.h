@@ -34,28 +34,31 @@ typedef uint64_t SK_OT_LONGDATETIME;
 
 #define SK_OT_BYTE_BITFIELD SK_UINT8_BITFIELD
 
-template <typename T> class SkOTTableTAG {
-public:
-    /**
-     * SkOTTableTAG<T>::value is the big endian value of an OpenType table tag.
-     * It may be directly compared with raw big endian table data.
-     */
-    static const SK_OT_ULONG value =
-            SkTEndian_SwapBE32(SkSetFourByteTag(T::TAG0, T::TAG1, T::TAG2, T::TAG3));
+template <typename T>
+class SkOTTableTAG {
+ public:
+  /**
+   * SkOTTableTAG<T>::value is the big endian value of an OpenType table tag.
+   * It may be directly compared with raw big endian table data.
+   */
+  static const SK_OT_ULONG value =
+      SkTEndian_SwapBE32(SkSetFourByteTag(T::TAG0, T::TAG1, T::TAG2, T::TAG3));
 };
 
 /** SkOTSetUSHORTBit<N>::value is an SK_OT_USHORT with the Nth BE bit set. */
-template <unsigned N> struct SkOTSetUSHORTBit {
-    static_assert(N < 16, "NTooBig");
-    static const uint16_t bit = 1u << N;
-    static const SK_OT_USHORT value = SkTEndian_SwapBE16(bit);
+template <unsigned N>
+struct SkOTSetUSHORTBit {
+  static_assert(N < 16, "NTooBig");
+  static const uint16_t bit = 1u << N;
+  static const SK_OT_USHORT value = SkTEndian_SwapBE16(bit);
 };
 
 /** SkOTSetULONGBit<N>::value is an SK_OT_ULONG with the Nth BE bit set. */
-template <unsigned N> struct SkOTSetULONGBit {
-    static_assert(N < 32, "NTooBig");
-    static const uint32_t bit = 1u << N;
-    static const SK_OT_ULONG value = SkTEndian_SwapBE32(bit);
+template <unsigned N>
+struct SkOTSetULONGBit {
+  static_assert(N < 32, "NTooBig");
+  static const uint32_t bit = 1u << N;
+  static const SK_OT_ULONG value = SkTEndian_SwapBE32(bit);
 };
 
 #endif

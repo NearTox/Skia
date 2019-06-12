@@ -35,10 +35,10 @@ class SkTSect;
 // #define IS_FUZZING_WITH_LIBFUZZER
 
 // dummy classes to fool msvs Visual Studio 2018 Immediate Window
-#define DummyClasses(a, b)          \
-    class SkDebugTCoincident##a##b; \
-    class SkDebugTSect##a##b;       \
-    class SkDebugTSpan##a##b
+#define DummyClasses(a, b)        \
+  class SkDebugTCoincident##a##b; \
+  class SkDebugTSect##a##b;       \
+  class SkDebugTSpan##a##b
 
 DummyClasses(Quad, Quad);
 DummyClasses(Conic, Quad);
@@ -71,12 +71,12 @@ DummyClasses(Cubic, Cubic);
 #define SK_SNPRINTF snprintf
 #endif
 
-#define WIND_AS_STRING(x)              \
-    char x##Str[12];                   \
-    if (!SkPathOpsDebug::ValidWind(x)) \
-        strcpy(x##Str, "?");           \
-    else                               \
-        SK_SNPRINTF(x##Str, sizeof(x##Str), "%d", x)
+#define WIND_AS_STRING(x)            \
+  char x##Str[12];                   \
+  if (!SkPathOpsDebug::ValidWind(x)) \
+    strcpy(x##Str, "?");             \
+  else                               \
+    SK_SNPRINTF(x##Str, sizeof(x##Str), "%d", x)
 
 #if FORCE_RELEASE
 
@@ -187,7 +187,7 @@ extern int gDumpTSectNum;
 #define DEBUG_PHASE_PARAMS(phase) , DEBUG_PHASE_ONLY_PARAMS(phase)
 #define DEBUG_SET_PHASE() this->globalState()->debugSetPhase(__func__, lineNo, phase, iteration)
 #define DEBUG_STATIC_SET_PHASE(obj) \
-    obj->globalState()->debugSetPhase(__func__, lineNo, phase, iteration)
+  obj->globalState()->debugSetPhase(__func__, lineNo, phase, iteration)
 #elif DEBUG_VALIDATE
 #define DEBUG_COIN_DECLARE_ONLY_PARAMS() SkOpPhase phase
 #define DEBUG_COIN_DECLARE_PARAMS() , DEBUG_COIN_DECLARE_ONLY_PARAMS()
@@ -235,144 +235,144 @@ extern int gDumpTSectNum;
 #endif
 
 // Tests with extreme numbers may fail, but all other tests should never fail.
-#define FAIL_IF(cond)           \
-    do {                        \
-        bool fail = (cond);     \
-        SkOPASSERT(!fail);      \
-        if (fail) return false; \
-    } while (false)
+#define FAIL_IF(cond)       \
+  do {                      \
+    bool fail = (cond);     \
+    SkOPASSERT(!fail);      \
+    if (fail) return false; \
+  } while (false)
 
-#define FAIL_WITH_NULL_IF(cond)   \
-    do {                          \
-        bool fail = (cond);       \
-        SkOPASSERT(!fail);        \
-        if (fail) return nullptr; \
-    } while (false)
+#define FAIL_WITH_NULL_IF(cond) \
+  do {                          \
+    bool fail = (cond);         \
+    SkOPASSERT(!fail);          \
+    if (fail) return nullptr;   \
+  } while (false)
 
 // Some functions serve two masters: one allows the function to fail, the other expects success
 // always. If abort is true, tests with normal numbers may not fail and assert if they do so.
 // If abort is false, both normal and extreme numbers may return false without asserting.
-#define RETURN_FALSE_IF(abort, cond)   \
-    do {                               \
-        bool fail = (cond);            \
-        SkOPASSERT(!(abort) || !fail); \
-        if (fail) return false;        \
-    } while (false)
+#define RETURN_FALSE_IF(abort, cond) \
+  do {                               \
+    bool fail = (cond);              \
+    SkOPASSERT(!(abort) || !fail);   \
+    if (fail) return false;          \
+  } while (false)
 
 class SkPathOpsDebug {
-public:
+ public:
 #if DEBUG_COIN
-    struct GlitchLog;
+  struct GlitchLog;
 
-    enum GlitchType {
-        kUninitialized_Glitch,
-        kAddCorruptCoin_Glitch,
-        kAddExpandedCoin_Glitch,
-        kAddExpandedFail_Glitch,
-        kAddIfCollapsed_Glitch,
-        kAddIfMissingCoin_Glitch,
-        kAddMissingCoin_Glitch,
-        kAddMissingExtend_Glitch,
-        kAddOrOverlap_Glitch,
-        kCollapsedCoin_Glitch,
-        kCollapsedDone_Glitch,
-        kCollapsedOppValue_Glitch,
-        kCollapsedSpan_Glitch,
-        kCollapsedWindValue_Glitch,
-        kCorrectEnd_Glitch,
-        kDeletedCoin_Glitch,
-        kExpandCoin_Glitch,
-        kFail_Glitch,
-        kMarkCoinEnd_Glitch,
-        kMarkCoinInsert_Glitch,
-        kMarkCoinMissing_Glitch,
-        kMarkCoinStart_Glitch,
-        kMergeMatches_Glitch,
-        kMissingCoin_Glitch,
-        kMissingDone_Glitch,
-        kMissingIntersection_Glitch,
-        kMoveMultiple_Glitch,
-        kMoveNearbyClearAll_Glitch,
-        kMoveNearbyClearAll2_Glitch,
-        kMoveNearbyMerge_Glitch,
-        kMoveNearbyMergeFinal_Glitch,
-        kMoveNearbyRelease_Glitch,
-        kMoveNearbyReleaseFinal_Glitch,
-        kReleasedSpan_Glitch,
-        kReturnFalse_Glitch,
-        kUnaligned_Glitch,
-        kUnalignedHead_Glitch,
-        kUnalignedTail_Glitch,
-    };
+  enum GlitchType {
+    kUninitialized_Glitch,
+    kAddCorruptCoin_Glitch,
+    kAddExpandedCoin_Glitch,
+    kAddExpandedFail_Glitch,
+    kAddIfCollapsed_Glitch,
+    kAddIfMissingCoin_Glitch,
+    kAddMissingCoin_Glitch,
+    kAddMissingExtend_Glitch,
+    kAddOrOverlap_Glitch,
+    kCollapsedCoin_Glitch,
+    kCollapsedDone_Glitch,
+    kCollapsedOppValue_Glitch,
+    kCollapsedSpan_Glitch,
+    kCollapsedWindValue_Glitch,
+    kCorrectEnd_Glitch,
+    kDeletedCoin_Glitch,
+    kExpandCoin_Glitch,
+    kFail_Glitch,
+    kMarkCoinEnd_Glitch,
+    kMarkCoinInsert_Glitch,
+    kMarkCoinMissing_Glitch,
+    kMarkCoinStart_Glitch,
+    kMergeMatches_Glitch,
+    kMissingCoin_Glitch,
+    kMissingDone_Glitch,
+    kMissingIntersection_Glitch,
+    kMoveMultiple_Glitch,
+    kMoveNearbyClearAll_Glitch,
+    kMoveNearbyClearAll2_Glitch,
+    kMoveNearbyMerge_Glitch,
+    kMoveNearbyMergeFinal_Glitch,
+    kMoveNearbyRelease_Glitch,
+    kMoveNearbyReleaseFinal_Glitch,
+    kReleasedSpan_Glitch,
+    kReturnFalse_Glitch,
+    kUnaligned_Glitch,
+    kUnalignedHead_Glitch,
+    kUnalignedTail_Glitch,
+  };
 
-    struct CoinDictEntry {
-        int fIteration;
-        int fLineNumber;
-        GlitchType fGlitchType;
-        const char* fFunctionName;
-    };
+  struct CoinDictEntry {
+    int fIteration;
+    int fLineNumber;
+    GlitchType fGlitchType;
+    const char* fFunctionName;
+  };
 
-    struct CoinDict {
-        void add(const CoinDictEntry& key);
-        void add(const CoinDict& dict);
-        void dump(const char* str, bool visitCheck) const;
-        SkTDArray<CoinDictEntry> fDict;
-    };
+  struct CoinDict {
+    void add(const CoinDictEntry& key);
+    void add(const CoinDict& dict);
+    void dump(const char* str, bool visitCheck) const;
+    SkTDArray<CoinDictEntry> fDict;
+  };
 
-    static CoinDict gCoinSumChangedDict;
-    static CoinDict gCoinSumVisitedDict;
-    static CoinDict gCoinVistedDict;
+  static CoinDict gCoinSumChangedDict;
+  static CoinDict gCoinSumVisitedDict;
+  static CoinDict gCoinVistedDict;
 #endif
 
 #if defined(SK_DEBUG) || !FORCE_RELEASE
-    static int gContourID;
-    static int gSegmentID;
+  static int gContourID;
+  static int gSegmentID;
 #endif
 
 #if DEBUG_SORT
-    static int gSortCountDefault;
-    static int gSortCount;
+  static int gSortCountDefault;
+  static int gSortCount;
 #endif
 
 #if DEBUG_ACTIVE_OP
-    static const char* kPathOpStr[];
+  static const char* kPathOpStr[];
 #endif
-    static bool gRunFail;
-    static bool gVeryVerbose;
+  static bool gRunFail;
+  static bool gVeryVerbose;
 
 #if DEBUG_ACTIVE_SPANS
-    static SkString gActiveSpans;
+  static SkString gActiveSpans;
 #endif
 #if DEBUG_DUMP_VERIFY
-    static bool gDumpOp;
-    static bool gVerifyOp;
+  static bool gDumpOp;
+  static bool gVerifyOp;
 #endif
 
-    static const char* OpStr(SkPathOp);
-    static void MathematicaIze(char* str, size_t bufferSize);
-    static bool ValidWind(int winding);
-    static void WindingPrintf(int winding);
+  static const char* OpStr(SkPathOp);
+  static void MathematicaIze(char* str, size_t bufferSize);
+  static bool ValidWind(int winding);
+  static void WindingPrintf(int winding);
 
 #if DEBUG_SHOW_TEST_NAME
-    static void* CreateNameStr();
-    static void DeleteNameStr(void* v);
+  static void* CreateNameStr();
+  static void DeleteNameStr(void* v);
 #define DEBUG_FILENAME_STRING_LENGTH 64
 #define DEBUG_FILENAME_STRING \
-    (reinterpret_cast<char*>( \
-            SkTLS::Get(SkPathOpsDebug::CreateNameStr, SkPathOpsDebug::DeleteNameStr)))
-    static void BumpTestName(char*);
+  (reinterpret_cast<char*>(   \
+      SkTLS::Get(SkPathOpsDebug::CreateNameStr, SkPathOpsDebug::DeleteNameStr)))
+  static void BumpTestName(char*);
 #endif
-    static void ShowActiveSpans(SkOpContourHead* contourList);
-    static void ShowOnePath(const SkPath& path, const char* name, bool includeDeclaration);
-    static void ShowPath(const SkPath& one, const SkPath& two, SkPathOp op, const char* name);
+  static void ShowActiveSpans(SkOpContourHead* contourList);
+  static void ShowOnePath(const SkPath& path, const char* name, bool includeDeclaration);
+  static void ShowPath(const SkPath& one, const SkPath& two, SkPathOp op, const char* name);
 
-    static bool ChaseContains(const SkTDArray<SkOpSpanBase*>&, const SkOpSpanBase*);
+  static bool ChaseContains(const SkTDArray<SkOpSpanBase*>&, const SkOpSpanBase*);
 
-    static void CheckHealth(class SkOpContourHead* contourList);
+  static void CheckHealth(class SkOpContourHead* contourList);
 
 #if DEBUG_COIN
-    static void DumpCoinDict();
-    static void DumpGlitchType(GlitchType);
+  static void DumpCoinDict();
+  static void DumpGlitchType(GlitchType);
 #endif
 };
 

@@ -16,13 +16,13 @@
 // It is used as a 2-bit field so if you add to this
 // you must increase the size of the bitfield there.
 enum SkSegType {
-    kLine_SegType,
-    kQuad_SegType,
-    kCubic_SegType,
-    kConic_SegType,
+  kLine_SegType,
+  kQuad_SegType,
+  kCubic_SegType,
+  kConic_SegType,
 };
 
-void SkPathMeasure_segTo(const SkPoint pts[], unsigned segType, SkScalar startT, SkScalar stopT,
-                         SkPath* dst);
+void SkPathMeasure_segTo(
+    const SkPoint pts[], unsigned segType, SkScalar startT, SkScalar stopT, SkPath* dst);
 
 #endif  // SkPathMeasurePriv_DEFINED

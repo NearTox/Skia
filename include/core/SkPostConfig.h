@@ -66,6 +66,17 @@
 #define SK_SUPPORT_GPU 1
 #endif
 
+/**
+ * If GPU is enabled but no GPU backends are enabled then enable GL by default.
+ * Traditionally clients have relied on Skia always building with the GL backend
+ * and opting in to additional backends. TODO: Require explicit opt in for GL.
+ */
+#if SK_SUPPORT_GPU
+#if !defined(SK_GL) && !defined(SK_VULKAN) && !defined(SK_METAL)
+#define SK_GL
+#endif
+#endif
+
 #if !defined(SK_SUPPORT_ATLAS_TEXT)
 #define SK_SUPPORT_ATLAS_TEXT 0
 #elif SK_SUPPORT_ATLAS_TEXT && !SK_SUPPORT_GPU
@@ -85,8 +96,8 @@ static inline void SkNO_RETURN_HINT() __attribute__((analyzer_noreturn));
 static inline void SkNO_RETURN_HINT() {}
 #else
 #define SkNO_RETURN_HINT() \
-    do {                   \
-    } while (false)
+  do {                     \
+  } while (false)
 #endif
 #endif
 
@@ -102,23 +113,21 @@ void DumpStackTrace(int skip_count, void w(const char*, void*), void* arg);
 
 #ifdef SK_BUILD_FOR_WIN
 // permits visual studio to follow error back to source
-#define SK_DUMP_LINE_FORMAT(message)                                                          \
-    SkDebugf(/*"%s(%d): fatal error: \"%s\"\n", __FILE__, __LINE__*/ "fatal error: \"%s\"\n", \
-             message)
+#define SK_DUMP_LINE_FORMAT(message) \
+  SkDebugf(/*"%s(%d): fatal error: \"%s\"\n", __FILE__, __LINE__*/ "fatal error: \"%s\"\n", message)
 #else
-#define SK_DUMP_LINE_FORMAT(message)                                                         \
-    SkDebugf(/*"%s:%d: fatal error: \"%s\"\n", __FILE__, __LINE__*/ "fatal error: \"%s\"\n", \
-             message)
+#define SK_DUMP_LINE_FORMAT(message) \
+  SkDebugf(/*"%s:%d: fatal error: \"%s\"\n", __FILE__, __LINE__*/ "fatal error: \"%s\"\n", message)
 #endif
 
 #ifndef SK_ABORT
-#define SK_ABORT(message)             \
-    do {                              \
-        SkNO_RETURN_HINT();           \
-        SK_DUMP_LINE_FORMAT(message); \
-        SK_DUMP_GOOGLE3_STACK();      \
-        sk_abort_no_print();          \
-    } while (false)
+#define SK_ABORT(message)         \
+  do {                            \
+    SkNO_RETURN_HINT();           \
+    SK_DUMP_LINE_FORMAT(message); \
+    SK_DUMP_GOOGLE3_STACK();      \
+    sk_abort_no_print();          \
+  } while (false)
 #endif
 
 // If SK_R32_SHIFT is set, we'll use that to choose RGBA or BGRA.
@@ -146,7 +155,7 @@ static_assert(SK_B32_SHIFT == (16 - SK_R32_SHIFT), "");
  * ignoring the machine's endianness.
  */
 #define SK_COLOR_MATCHES_PMCOLOR_BYTE_ORDER \
-    (SK_A32_SHIFT == 24 && SK_R32_SHIFT == 16 && SK_G32_SHIFT == 8 && SK_B32_SHIFT == 0)
+  (SK_A32_SHIFT == 24 && SK_R32_SHIFT == 16 && SK_G32_SHIFT == 8 && SK_B32_SHIFT == 0)
 
 /**
  * SK_PMCOLOR_BYTE_ORDER can be used to query the byte order of SkPMColor at compile time. The
@@ -157,13 +166,13 @@ static_assert(SK_B32_SHIFT == (16 - SK_R32_SHIFT), "");
  * SK_PMCOLOR_BYTE_ORDER(A,B,G,R) will be true on a big endian machine.
  */
 #ifdef SK_CPU_BENDIAN
-#define SK_PMCOLOR_BYTE_ORDER(C0, C1, C2, C3)                                       \
-    (SK_##C3##32_SHIFT == 0 && SK_##C2##32_SHIFT == 8 && SK_##C1##32_SHIFT == 16 && \
-     SK_##C0##32_SHIFT == 24)
+#define SK_PMCOLOR_BYTE_ORDER(C0, C1, C2, C3)                                     \
+  (SK_##C3##32_SHIFT == 0 && SK_##C2##32_SHIFT == 8 && SK_##C1##32_SHIFT == 16 && \
+   SK_##C0##32_SHIFT == 24)
 #else
-#define SK_PMCOLOR_BYTE_ORDER(C0, C1, C2, C3)                                       \
-    (SK_##C0##32_SHIFT == 0 && SK_##C1##32_SHIFT == 8 && SK_##C2##32_SHIFT == 16 && \
-     SK_##C3##32_SHIFT == 24)
+#define SK_PMCOLOR_BYTE_ORDER(C0, C1, C2, C3)                                     \
+  (SK_##C0##32_SHIFT == 0 && SK_##C1##32_SHIFT == 8 && SK_##C2##32_SHIFT == 16 && \
+   SK_##C3##32_SHIFT == 24)
 #endif
 
 //////////////////////////////////////////////////////////////////////////////////////////////

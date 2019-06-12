@@ -22,20 +22,20 @@ namespace sksg {
  * Tracks dirty regions for repaint.
  */
 class InvalidationController {
-public:
-    InvalidationController();
-    InvalidationController(const InvalidationController&) = delete;
-    InvalidationController& operator=(const InvalidationController&) = delete;
+ public:
+  InvalidationController();
+  InvalidationController(const InvalidationController&) = delete;
+  InvalidationController& operator=(const InvalidationController&) = delete;
 
-    void inval(const SkRect&, const SkMatrix& ctm = SkMatrix::I());
+  void inval(const SkRect&, const SkMatrix& ctm = SkMatrix::I());
 
-    const SkRect& bounds() const { return fBounds; }
-    const SkRect* begin() const { return fRects.begin(); }
-    const SkRect* end() const { return fRects.end(); }
+  const SkRect& bounds() const { return fBounds; }
+  const SkRect* begin() const { return fRects.begin(); }
+  const SkRect* end() const { return fRects.end(); }
 
-private:
-    SkTDArray<SkRect> fRects;
-    SkRect fBounds;
+ private:
+  SkTDArray<SkRect> fRects;
+  SkRect fBounds;
 };
 
 }  // namespace sksg

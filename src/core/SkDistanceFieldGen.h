@@ -34,8 +34,8 @@
  *  @param h                 Height of the original image.
  *  @param rowBytes          Size of each row in the image, in bytes
  */
-bool SkGenerateDistanceFieldFromA8Image(unsigned char* distanceField, const unsigned char* image,
-                                        int w, int h, size_t rowBytes);
+bool SkGenerateDistanceFieldFromA8Image(
+    unsigned char* distanceField, const unsigned char* image, int w, int h, size_t rowBytes);
 
 /** Given LCD16 mask data (not a 16-bit image), generate the associated distance field
 
@@ -46,8 +46,8 @@ bool SkGenerateDistanceFieldFromA8Image(unsigned char* distanceField, const unsi
  *  @param h                 Height of the original image.
  *  @param rowBytes          Size of each row in the image, in bytes
  */
-bool SkGenerateDistanceFieldFromLCD16Mask(unsigned char* distanceField, const unsigned char* image,
-                                          int w, int h, size_t rowBytes);
+bool SkGenerateDistanceFieldFromLCD16Mask(
+    unsigned char* distanceField, const unsigned char* image, int w, int h, size_t rowBytes);
 
 /** Given 1-bit mask data, generate the associated distance field
 
@@ -58,15 +58,15 @@ bool SkGenerateDistanceFieldFromLCD16Mask(unsigned char* distanceField, const un
  *  @param h                 Height of the original image.
  *  @param rowBytes          Size of each row in the image, in bytes
  */
-bool SkGenerateDistanceFieldFromBWImage(unsigned char* distanceField, const unsigned char* image,
-                                        int w, int h, size_t rowBytes);
+bool SkGenerateDistanceFieldFromBWImage(
+    unsigned char* distanceField, const unsigned char* image, int w, int h, size_t rowBytes);
 
 /** Given width and height of original image, return size (in bytes) of distance field
  *  @param w                 Width of the original image.
  *  @param h                 Height of the original image.
  */
-constexpr inline size_t SkComputeDistanceFieldSize(int w, int h) {
-    return (w + 2 * SK_DistanceFieldPad) * (h + 2 * SK_DistanceFieldPad) * sizeof(unsigned char);
+inline size_t SkComputeDistanceFieldSize(int w, int h) {
+  return (w + 2 * SK_DistanceFieldPad) * (h + 2 * SK_DistanceFieldPad) * sizeof(unsigned char);
 }
 
 #endif

@@ -17,17 +17,17 @@
 // sense to actually draw outside the clip in pixel space because we don't consider aa bloat when
 // determining if the draw is contained by the clip.
 DEF_SIMPLE_GM(crbug_892988, canvas, 256, 256) {
-    SkPaint paint1;
-    paint1.setStyle(SkPaint::kStroke_Style);
-    paint1.setStrokeWidth(1.f);
-    paint1.setAntiAlias(true);
-    canvas->drawRect(SkRect::MakeLTRB(11.5, 0.5, 245.5, 245.5), paint1);
-    canvas->clipRect(SkRect::MakeLTRB(12, 1, 244, 244), true);
-    SkPaint paint2;
-    // Use src mode with a non-opaque color to produce a blend that can't be handled with
-    // simple blend coefficients.
-    paint2.setColor(0xF0FFFFFF);
-    paint2.setBlendMode(SkBlendMode::kSrc);
-    paint2.setAntiAlias(true);
-    canvas->drawRect(SkRect::MakeLTRB(12, 1, 244, 244), paint2);
+  SkPaint paint1;
+  paint1.setStyle(SkPaint::kStroke_Style);
+  paint1.setStrokeWidth(1.f);
+  paint1.setAntiAlias(true);
+  canvas->drawRect(SkRect::MakeLTRB(11.5, 0.5, 245.5, 245.5), paint1);
+  canvas->clipRect(SkRect::MakeLTRB(12, 1, 244, 244), true);
+  SkPaint paint2;
+  // Use src mode with a non-opaque color to produce a blend that can't be handled with
+  // simple blend coefficients.
+  paint2.setColor(0xF0FFFFFF);
+  paint2.setBlendMode(SkBlendMode::kSrc);
+  paint2.setAntiAlias(true);
+  canvas->drawRect(SkRect::MakeLTRB(12, 1, 244, 244), paint2);
 }

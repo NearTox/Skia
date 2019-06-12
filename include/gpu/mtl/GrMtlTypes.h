@@ -21,10 +21,10 @@ typedef unsigned int GrMTLPixelFormat;
  * const void*. This is used by GrBackendObjects.
  */
 struct GrMtlTextureInfo {
-public:
-    const void* fTexture;  // Pointer to MTLTexture
+ public:
+  const void* fTexture;  // Pointer to MTLTexture
 
-    bool operator==(const GrMtlTextureInfo& that) const { return fTexture == that.fTexture; }
+  bool operator==(const GrMtlTextureInfo& that) const { return fTexture == that.fTexture; }
 };
 
 #endif

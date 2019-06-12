@@ -16,42 +16,46 @@
  * A simple non-atomic ref used in the GrBackendApi when we don't want to pay for the overhead of a
  * threadsafe ref counted object
  */
-template <typename TSubclass> class GrNonAtomicRef : public SkNoncopyable {
-public:
-    GrNonAtomicRef() noexcept : fRefCnt(1) {}
+template <typename TSubclass>
+class GrNonAtomicRef : public SkNoncopyable {
+ public:
+  GrNonAtomicRef() : fRefCnt(1) {}
 
 #ifdef SK_DEBUG
-    ~GrNonAtomicRef() {
-        // fRefCnt can be one when a subclass is created statically
-        SkASSERT((0 == fRefCnt || 1 == fRefCnt));
-        // Set to invalid values.
-        fRefCnt = -10;
-    }
+  ~GrNonAtomicRef() {
+    // fRefCnt can be one when a subclass is created statically
+    SkASSERT((0 == fRefCnt || 1 == fRefCnt));
+    // Set to invalid values.
+    fRefCnt = -10;
+  }
 #endif
 
-    bool unique() const noexcept { return 1 == fRefCnt; }
+  bool unique() const { return 1 == fRefCnt; }
 
-    void ref() const noexcept {
-        // Once the ref cnt reaches zero it should never be ref'ed again.
-        SkASSERT(fRefCnt > 0);
-        ++fRefCnt;
+  void ref() const {
+    // Once the ref cnt reaches zero it should never be ref'ed again.
+    SkASSERT(fRefCnt > 0);
+    ++fRefCnt;
+  }
+
+  void unref() const {
+    SkASSERT(fRefCnt > 0);
+    --fRefCnt;
+    if (0 == fRefCnt) {
+      GrTDeleteNonAtomicRef(static_cast<const TSubclass*>(this));
+      return;
     }
+  }
 
-    void unref() const noexcept {
-        SkASSERT(fRefCnt > 0);
-        --fRefCnt;
-        if (0 == fRefCnt) {
-            GrTDeleteNonAtomicRef(static_cast<const TSubclass*>(this));
-            return;
-        }
-    }
+ private:
+  mutable int32_t fRefCnt;
 
-private:
-    mutable int32_t fRefCnt;
-
-    typedef SkNoncopyable INHERITED;
+  typedef SkNoncopyable INHERITED;
 };
 
-template <typename T> inline void GrTDeleteNonAtomicRef(const T* ref) noexcept { delete ref; }
+template <typename T>
+inline void GrTDeleteNonAtomicRef(const T* ref) {
+  delete ref;
+}
 
 #endif

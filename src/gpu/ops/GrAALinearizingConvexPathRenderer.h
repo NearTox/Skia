@@ -11,13 +11,13 @@
 #include "src/gpu/GrPathRenderer.h"
 
 class GrAALinearizingConvexPathRenderer : public GrPathRenderer {
-public:
-    GrAALinearizingConvexPathRenderer();
+ public:
+  GrAALinearizingConvexPathRenderer();
 
-private:
-    CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;
+ private:
+  CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;
 
-    bool onDrawPath(const DrawPathArgs&) override;
+  bool onDrawPath(const DrawPathArgs&) override;
 };
 
 #endif

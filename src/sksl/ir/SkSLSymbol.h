@@ -16,23 +16,24 @@ namespace SkSL {
  * Represents a symboltable entry.
  */
 struct Symbol : public IRNode {
-    enum Kind {
-        kFunctionDeclaration_Kind,
-        kUnresolvedFunction_Kind,
-        kType_Kind,
-        kVariable_Kind,
-        kField_Kind
-    };
+  enum Kind {
+    kFunctionDeclaration_Kind,
+    kUnresolvedFunction_Kind,
+    kType_Kind,
+    kVariable_Kind,
+    kField_Kind,
+    kExternal_Kind
+  };
 
-    Symbol(int offset, Kind kind, StringFragment name)
-            : INHERITED(offset), fKind(kind), fName(name) {}
+  Symbol(int offset, Kind kind, StringFragment name)
+      : INHERITED(offset), fKind(kind), fName(name) {}
 
-    virtual ~Symbol() {}
+  virtual ~Symbol() {}
 
-    Kind fKind;
-    StringFragment fName;
+  Kind fKind;
+  StringFragment fName;
 
-    typedef IRNode INHERITED;
+  typedef IRNode INHERITED;
 };
 
 }  // namespace SkSL

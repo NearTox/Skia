@@ -13,17 +13,17 @@
 class GrGpu;
 
 class GrDashLinePathRenderer : public GrPathRenderer {
-private:
-    CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;
+ private:
+  CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;
 
-    StencilSupport onGetStencilSupport(const GrShape&) const override {
-        return kNoSupport_StencilSupport;
-    }
+  StencilSupport onGetStencilSupport(const GrShape&) const override {
+    return kNoSupport_StencilSupport;
+  }
 
-    bool onDrawPath(const DrawPathArgs&) override;
+  bool onDrawPath(const DrawPathArgs&) override;
 
-    sk_sp<GrGpu> fGpu;
-    typedef GrPathRenderer INHERITED;
+  sk_sp<GrGpu> fGpu;
+  typedef GrPathRenderer INHERITED;
 };
 
 #endif

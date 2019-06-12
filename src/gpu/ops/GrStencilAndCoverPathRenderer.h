@@ -18,25 +18,25 @@ class GrResourceProvider;
  * on the target having MSAA if AA is desired.
  */
 class GrStencilAndCoverPathRenderer : public GrPathRenderer {
-public:
-    static GrPathRenderer* Create(GrResourceProvider*, const GrCaps&);
+ public:
+  static GrPathRenderer* Create(GrResourceProvider*, const GrCaps&);
 
-private:
-    StencilSupport onGetStencilSupport(const GrShape&) const override {
-        return GrPathRenderer::kStencilOnly_StencilSupport;
-    }
+ private:
+  StencilSupport onGetStencilSupport(const GrShape&) const override {
+    return GrPathRenderer::kStencilOnly_StencilSupport;
+  }
 
-    CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;
+  CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;
 
-    bool onDrawPath(const DrawPathArgs&) override;
+  bool onDrawPath(const DrawPathArgs&) override;
 
-    void onStencilPath(const StencilPathArgs&) override;
+  void onStencilPath(const StencilPathArgs&) override;
 
-    GrStencilAndCoverPathRenderer(GrResourceProvider*);
+  GrStencilAndCoverPathRenderer(GrResourceProvider*);
 
-    GrResourceProvider* fResourceProvider;
+  GrResourceProvider* fResourceProvider;
 
-    typedef GrPathRenderer INHERITED;
+  typedef GrPathRenderer INHERITED;
 };
 
 #endif

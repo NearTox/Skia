@@ -15,59 +15,56 @@
 class GrGLCaps;
 
 class GrGLUniformHandler : public GrGLSLUniformHandler {
-public:
-    static const int kUniformsPerBlock = 8;
+ public:
+  static const int kUniformsPerBlock = 8;
 
-    const GrShaderVar& getUniformVariable(UniformHandle u) const override {
-        return fUniforms[u.toIndex()].fVariable;
-    }
+  const GrShaderVar& getUniformVariable(UniformHandle u) const override {
+    return fUniforms[u.toIndex()].fVariable;
+  }
 
-    const char* getUniformCStr(UniformHandle u) const override {
-        return this->getUniformVariable(u).c_str();
-    }
+  const char* getUniformCStr(UniformHandle u) const override {
+    return this->getUniformVariable(u).c_str();
+  }
 
-private:
-    explicit GrGLUniformHandler(GrGLSLProgramBuilder* program)
-            : INHERITED(program), fUniforms(kUniformsPerBlock), fSamplers(kUniformsPerBlock) {}
+ private:
+  explicit GrGLUniformHandler(GrGLSLProgramBuilder* program)
+      : INHERITED(program), fUniforms(kUniformsPerBlock), fSamplers(kUniformsPerBlock) {}
 
-    UniformHandle internalAddUniformArray(uint32_t visibility,
-                                          GrSLType type,
-                                          const char* name,
-                                          bool mangleName,
-                                          int arrayCount,
-                                          const char** outName) override;
+  UniformHandle internalAddUniformArray(
+      uint32_t visibility, GrSLType type, const char* name, bool mangleName, int arrayCount,
+      const char** outName) override;
 
-    SamplerHandle addSampler(const GrTexture*, const GrSamplerState&, const char* name,
-                             const GrShaderCaps*) override;
+  SamplerHandle addSampler(
+      const GrTexture*, const GrSamplerState&, const char* name, const GrShaderCaps*) override;
 
-    const GrShaderVar& samplerVariable(SamplerHandle handle) const override {
-        return fSamplers[handle.toIndex()].fVariable;
-    }
+  const GrShaderVar& samplerVariable(SamplerHandle handle) const override {
+    return fSamplers[handle.toIndex()].fVariable;
+  }
 
-    GrSwizzle samplerSwizzle(SamplerHandle handle) const override {
-        return fSamplerSwizzles[handle.toIndex()];
-    }
+  GrSwizzle samplerSwizzle(SamplerHandle handle) const override {
+    return fSamplerSwizzles[handle.toIndex()];
+  }
 
-    void appendUniformDecls(GrShaderFlags visibility, SkString*) const override;
+  void appendUniformDecls(GrShaderFlags visibility, SkString*) const override;
 
-    // Manually set uniform locations for all our uniforms.
-    void bindUniformLocations(GrGLuint programID, const GrGLCaps& caps);
+  // Manually set uniform locations for all our uniforms.
+  void bindUniformLocations(GrGLuint programID, const GrGLCaps& caps);
 
-    // Updates the loction of the Uniforms if we cannot bind uniform locations manually
-    void getUniformLocations(GrGLuint programID, const GrGLCaps& caps);
+  // Updates the loction of the Uniforms if we cannot bind uniform locations manually
+  void getUniformLocations(GrGLuint programID, const GrGLCaps& caps);
 
-    const GrGLGpu* glGpu() const;
+  const GrGLGpu* glGpu() const;
 
-    typedef GrGLProgramDataManager::UniformInfo UniformInfo;
-    typedef GrGLProgramDataManager::UniformInfoArray UniformInfoArray;
+  typedef GrGLProgramDataManager::UniformInfo UniformInfo;
+  typedef GrGLProgramDataManager::UniformInfoArray UniformInfoArray;
 
-    UniformInfoArray fUniforms;
-    UniformInfoArray fSamplers;
-    SkTArray<GrSwizzle> fSamplerSwizzles;
+  UniformInfoArray fUniforms;
+  UniformInfoArray fSamplers;
+  SkTArray<GrSwizzle> fSamplerSwizzles;
 
-    friend class GrGLProgramBuilder;
+  friend class GrGLProgramBuilder;
 
-    typedef GrGLSLUniformHandler INHERITED;
+  typedef GrGLSLUniformHandler INHERITED;
 };
 
 #endif

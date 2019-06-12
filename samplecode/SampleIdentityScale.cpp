@@ -22,55 +22,55 @@
 // with non-scaled images, but for a different reason):  Bug 1145
 
 class IdentityScaleView : public Sample {
-public:
-    IdentityScaleView(const char imageFilename[]) {
-        if (!DecodeDataToBitmap(GetResourceAsData(imageFilename), &fBM)) {
-            fBM.allocN32Pixels(1, 1);
-            *(fBM.getAddr32(0, 0)) = 0xFF0000FF;  // red == bad
-        }
+ public:
+  IdentityScaleView(const char imageFilename[]) {
+    if (!DecodeDataToBitmap(GetResourceAsData(imageFilename), &fBM)) {
+      fBM.allocN32Pixels(1, 1);
+      *(fBM.getAddr32(0, 0)) = 0xFF0000FF;  // red == bad
     }
+  }
 
-protected:
-    SkBitmap fBM;
+ protected:
+  SkBitmap fBM;
 
-    bool onQuery(Sample::Event* evt) override {
-        if (Sample::TitleQ(*evt)) {
-            Sample::TitleR(evt, "IdentityScale");
-            return true;
-        }
-        return this->INHERITED::onQuery(evt);
+  bool onQuery(Sample::Event* evt) override {
+    if (Sample::TitleQ(*evt)) {
+      Sample::TitleR(evt, "IdentityScale");
+      return true;
     }
+    return this->INHERITED::onQuery(evt);
+  }
 
-    void onDrawContent(SkCanvas* canvas) override {
-        SkFont font(nullptr, 48);
-        SkPaint paint;
+  void onDrawContent(SkCanvas* canvas) override {
+    SkFont font(nullptr, 48);
+    SkPaint paint;
 
-        paint.setAntiAlias(true);
-        paint.setFilterQuality(kHigh_SkFilterQuality);
+    paint.setAntiAlias(true);
+    paint.setFilterQuality(kHigh_SkFilterQuality);
 
-        SkTime::DateTime time;
-        SkTime::GetDateTime(&time);
+    SkTime::DateTime time;
+    SkTime::GetDateTime(&time);
 
-        bool use_scale = (time.fSecond % 2 == 1);
-        const char* text;
+    bool use_scale = (time.fSecond % 2 == 1);
+    const char* text;
 
-        canvas->save();
-        if (use_scale) {
-            text = "Scaled = 1";
-        } else {
-            SkRect r = {100, 100, 356, 356};
-            SkPath clipPath;
-            clipPath.addRoundRect(r, SkIntToScalar(5), SkIntToScalar(5));
-            canvas->clipPath(clipPath, kIntersect_SkClipOp, true);
-            text = "Scaled = 0";
-        }
-        canvas->drawBitmap(fBM, 100, 100, &paint);
-        canvas->restore();
-        canvas->drawString(text, 100, 400, font, paint);
+    canvas->save();
+    if (use_scale) {
+      text = "Scaled = 1";
+    } else {
+      SkRect r = {100, 100, 356, 356};
+      SkPath clipPath;
+      clipPath.addRoundRect(r, SkIntToScalar(5), SkIntToScalar(5));
+      canvas->clipPath(clipPath, kIntersect_SkClipOp, true);
+      text = "Scaled = 0";
     }
+    canvas->drawBitmap(fBM, 100, 100, &paint);
+    canvas->restore();
+    canvas->drawString(text, 100, 400, font, paint);
+  }
 
-private:
-    typedef Sample INHERITED;
+ private:
+  typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////

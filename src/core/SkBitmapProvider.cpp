@@ -9,7 +9,7 @@
 #include "src/image/SkImage_Base.h"
 
 SkBitmapCacheDesc SkBitmapProvider::makeCacheDesc() const {
-    return SkBitmapCacheDesc::Make(fImage);
+  return SkBitmapCacheDesc::Make(fImage);
 }
 
 void SkBitmapProvider::notifyAddedToCache() const { as_IB(fImage)->notifyAddedToRasterCache(); }

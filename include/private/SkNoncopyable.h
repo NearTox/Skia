@@ -16,15 +16,15 @@
     be copied. It hides its copy-constructor and its assignment-operator.
 */
 class SK_API SkNoncopyable {
-public:
-    SkNoncopyable() = default;
+ public:
+  SkNoncopyable() = default;
 
-    SkNoncopyable(SkNoncopyable&&) = default;
-    SkNoncopyable& operator=(SkNoncopyable&&) = default;
+  SkNoncopyable(SkNoncopyable&&) = default;
+  SkNoncopyable& operator=(SkNoncopyable&&) = default;
 
-private:
-    SkNoncopyable(const SkNoncopyable&) = delete;
-    SkNoncopyable& operator=(const SkNoncopyable&) = delete;
+ private:
+  SkNoncopyable(const SkNoncopyable&) = delete;
+  SkNoncopyable& operator=(const SkNoncopyable&) = delete;
 };
 
 #endif

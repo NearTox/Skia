@@ -22,19 +22,19 @@ namespace SkSL {
  * result of declaring anonymous interface blocks.
  */
 struct Field : public Symbol {
-    Field(int offset, const Variable& owner, int fieldIndex)
-            : INHERITED(offset, kField_Kind, owner.fType.fields()[fieldIndex].fName)
-            , fOwner(owner)
-            , fFieldIndex(fieldIndex) {}
+  Field(int offset, const Variable& owner, int fieldIndex)
+      : INHERITED(offset, kField_Kind, owner.fType.fields()[fieldIndex].fName),
+        fOwner(owner),
+        fFieldIndex(fieldIndex) {}
 
-    virtual String description() const override {
-        return fOwner.description() + "." + fOwner.fType.fields()[fFieldIndex].fName;
-    }
+  virtual String description() const override {
+    return fOwner.description() + "." + fOwner.fType.fields()[fFieldIndex].fName;
+  }
 
-    const Variable& fOwner;
-    const int fFieldIndex;
+  const Variable& fOwner;
+  const int fFieldIndex;
 
-    typedef Symbol INHERITED;
+  typedef Symbol INHERITED;
 };
 
 }  // namespace SkSL

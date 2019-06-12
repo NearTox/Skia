@@ -28,55 +28,55 @@ typedef SkDiscardableMemory* (*SkDiscardableFactoryProc)(size_t bytes);
  * not include the base level in its range.
  */
 class SkMipMap : public SkCachedData {
-public:
-    static SkMipMap* Build(const SkPixmap& src, SkDiscardableFactoryProc);
-    static SkMipMap* Build(const SkBitmap& src, SkDiscardableFactoryProc);
+ public:
+  static SkMipMap* Build(const SkPixmap& src, SkDiscardableFactoryProc);
+  static SkMipMap* Build(const SkBitmap& src, SkDiscardableFactoryProc);
 
-    // Determines how many levels a SkMipMap will have without creating that mipmap.
-    // This does not include the base mipmap level that the user provided when
-    // creating the SkMipMap.
-    static int ComputeLevelCount(int baseWidth, int baseHeight);
+  // Determines how many levels a SkMipMap will have without creating that mipmap.
+  // This does not include the base mipmap level that the user provided when
+  // creating the SkMipMap.
+  static int ComputeLevelCount(int baseWidth, int baseHeight);
 
-    // Determines the size of a given mipmap level.
-    // |level| is an index into the generated mipmap levels. It does not include
-    // the base level. So index 0 represents mipmap level 1.
-    static SkISize ComputeLevelSize(int baseWidth, int baseHeight, int level);
+  // Determines the size of a given mipmap level.
+  // |level| is an index into the generated mipmap levels. It does not include
+  // the base level. So index 0 represents mipmap level 1.
+  static SkISize ComputeLevelSize(int baseWidth, int baseHeight, int level);
 
-    // We use a block of (possibly discardable) memory to hold an array of Level structs, followed
-    // by the pixel data for each level. On 32-bit platforms, Level would naturally be 4 byte
-    // aligned, so the pixel data could end up with 4 byte alignment. If the pixel data is F16,
-    // it must be 8 byte aligned. To ensure this, keep the Level struct 8 byte aligned as well.
-    struct alignas(8) Level {
-        SkPixmap fPixmap;
-        SkSize fScale;  // < 1.0
-    };
+  // We use a block of (possibly discardable) memory to hold an array of Level structs, followed
+  // by the pixel data for each level. On 32-bit platforms, Level would naturally be 4 byte
+  // aligned, so the pixel data could end up with 4 byte alignment. If the pixel data is F16,
+  // it must be 8 byte aligned. To ensure this, keep the Level struct 8 byte aligned as well.
+  struct alignas(8) Level {
+    SkPixmap fPixmap;
+    SkSize fScale;  // < 1.0
+  };
 
-    bool extractLevel(const SkSize& scale, Level*) const;
+  bool extractLevel(const SkSize& scale, Level*) const;
 
-    // countLevels returns the number of mipmap levels generated (which does not
-    // include the base mipmap level).
-    int countLevels() const;
+  // countLevels returns the number of mipmap levels generated (which does not
+  // include the base mipmap level).
+  int countLevels() const;
 
-    // |index| is an index into the generated mipmap levels. It does not include
-    // the base level. So index 0 represents mipmap level 1.
-    bool getLevel(int index, Level*) const;
+  // |index| is an index into the generated mipmap levels. It does not include
+  // the base level. So index 0 represents mipmap level 1.
+  bool getLevel(int index, Level*) const;
 
-protected:
-    void onDataChange(void* oldData, void* newData) noexcept override {
-        fLevels = (Level*)newData;  // could be nullptr
-    }
+ protected:
+  void onDataChange(void* oldData, void* newData) override {
+    fLevels = (Level*)newData;  // could be nullptr
+  }
 
-private:
-    sk_sp<SkColorSpace> fCS;
-    Level* fLevels;  // managed by the baseclass, may be null due to onDataChanged.
-    int fCount;
+ private:
+  sk_sp<SkColorSpace> fCS;
+  Level* fLevels;  // managed by the baseclass, may be null due to onDataChanged.
+  int fCount;
 
-    SkMipMap(void* malloc, size_t size) noexcept : INHERITED(malloc, size) {}
-    SkMipMap(size_t size, SkDiscardableMemory* dm) noexcept : INHERITED(size, dm) {}
+  SkMipMap(void* malloc, size_t size) : INHERITED(malloc, size) {}
+  SkMipMap(size_t size, SkDiscardableMemory* dm) : INHERITED(size, dm) {}
 
-    static size_t AllocLevelsSize(int levelCount, size_t pixelSize);
+  static size_t AllocLevelsSize(int levelCount, size_t pixelSize);
 
-    typedef SkCachedData INHERITED;
+  typedef SkCachedData INHERITED;
 };
 
 #endif

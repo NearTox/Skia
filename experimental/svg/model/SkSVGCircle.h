@@ -14,33 +14,33 @@
 struct SkPoint;
 
 class SkSVGCircle final : public SkSVGShape {
-public:
-    ~SkSVGCircle() override = default;
-    static sk_sp<SkSVGCircle> Make() { return sk_sp<SkSVGCircle>(new SkSVGCircle()); }
+ public:
+  ~SkSVGCircle() override = default;
+  static sk_sp<SkSVGCircle> Make() { return sk_sp<SkSVGCircle>(new SkSVGCircle()); }
 
-    void setCx(const SkSVGLength&);
-    void setCy(const SkSVGLength&);
-    void setR(const SkSVGLength&);
+  void setCx(const SkSVGLength&);
+  void setCy(const SkSVGLength&);
+  void setR(const SkSVGLength&);
 
-protected:
-    void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
+ protected:
+  void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
 
-    void onDraw(SkCanvas*, const SkSVGLengthContext&, const SkPaint&,
-                SkPath::FillType) const override;
+  void onDraw(
+      SkCanvas*, const SkSVGLengthContext&, const SkPaint&, SkPath::FillType) const override;
 
-    SkPath onAsPath(const SkSVGRenderContext&) const override;
+  SkPath onAsPath(const SkSVGRenderContext&) const override;
 
-private:
-    SkSVGCircle();
+ private:
+  SkSVGCircle();
 
-    // resolve and return the center and radius values
-    std::tuple<SkPoint, SkScalar> resolve(const SkSVGLengthContext&) const;
+  // resolve and return the center and radius values
+  std::tuple<SkPoint, SkScalar> resolve(const SkSVGLengthContext&) const;
 
-    SkSVGLength fCx = SkSVGLength(0);
-    SkSVGLength fCy = SkSVGLength(0);
-    SkSVGLength fR = SkSVGLength(0);
+  SkSVGLength fCx = SkSVGLength(0);
+  SkSVGLength fCy = SkSVGLength(0);
+  SkSVGLength fR = SkSVGLength(0);
 
-    typedef SkSVGShape INHERITED;
+  typedef SkSVGShape INHERITED;
 };
 
 #endif  // SkSVGCircle_DEFINED

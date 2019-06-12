@@ -16,8 +16,8 @@ static void pause() { /*spin*/
 #endif
 
 void SkSpinlock::contendedAcquire() {
-    // To act as a mutex, we need an acquire barrier when we acquire the lock.
-    while (fLocked.exchange(true, std::memory_order_acquire)) {
-        pause();
-    }
+  // To act as a mutex, we need an acquire barrier when we acquire the lock.
+  while (fLocked.exchange(true, std::memory_order_acquire)) {
+    pause();
+  }
 }

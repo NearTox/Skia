@@ -14,19 +14,19 @@
 namespace sksg {
 
 TrimEffect::TrimEffect(sk_sp<GeometryNode> child) : fChild(std::move(child)) {
-    this->observeInval(fChild);
+  this->observeInval(fChild);
 }
 
 TrimEffect::~TrimEffect() { this->unobserveInval(fChild); }
 
 void TrimEffect::onClip(SkCanvas* canvas, bool antiAlias) const {
-    canvas->clipPath(fTrimmedPath, SkClipOp::kIntersect, antiAlias);
+  canvas->clipPath(fTrimmedPath, SkClipOp::kIntersect, antiAlias);
 }
 
 void TrimEffect::onDraw(SkCanvas* canvas, const SkPaint& paint) const {
-    SkASSERT(!paint.getPathEffect());
+  SkASSERT(!paint.getPathEffect());
 
-    canvas->drawPath(fTrimmedPath, paint);
+  canvas->drawPath(fTrimmedPath, paint);
 }
 
 bool TrimEffect::onContains(const SkPoint& p) const { return fTrimmedPath.contains(p.x(), p.y()); }
@@ -34,22 +34,22 @@ bool TrimEffect::onContains(const SkPoint& p) const { return fTrimmedPath.contai
 SkPath TrimEffect::onAsPath() const { return fTrimmedPath; }
 
 SkRect TrimEffect::onRevalidate(InvalidationController* ic, const SkMatrix& ctm) {
-    SkASSERT(this->hasInval());
+  SkASSERT(this->hasInval());
 
-    const auto childbounds = fChild->revalidate(ic, ctm);
-    const auto path = fChild->asPath();
+  const auto childbounds = fChild->revalidate(ic, ctm);
+  const auto path = fChild->asPath();
 
-    if (auto trim = SkTrimPathEffect::Make(fStart, fStop, fMode)) {
-        fTrimmedPath.reset();
-        SkStrokeRec rec(SkStrokeRec::kHairline_InitStyle);
-        SkAssertResult(trim->filterPath(&fTrimmedPath, path, &rec, &childbounds));
-    } else {
-        fTrimmedPath = path;
-    }
+  if (auto trim = SkTrimPathEffect::Make(fStart, fStop, fMode)) {
+    fTrimmedPath.reset();
+    SkStrokeRec rec(SkStrokeRec::kHairline_InitStyle);
+    SkAssertResult(trim->filterPath(&fTrimmedPath, path, &rec, &childbounds));
+  } else {
+    fTrimmedPath = path;
+  }
 
-    fTrimmedPath.shrinkToFit();
+  fTrimmedPath.shrinkToFit();
 
-    return fTrimmedPath.computeTightBounds();
+  return fTrimmedPath.computeTightBounds();
 }
 
 }  // namespace sksg

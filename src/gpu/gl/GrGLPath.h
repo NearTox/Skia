@@ -21,32 +21,32 @@ class GrStyle;
  */
 
 class GrGLPath : public GrPath {
-public:
-    static bool InitPathObjectPathDataCheckingDegenerates(GrGLGpu*, GrGLuint pathID, const SkPath&);
-    static void InitPathObjectPathData(GrGLGpu*, GrGLuint pathID, const SkPath&);
-    static void InitPathObjectStroke(GrGLGpu*, GrGLuint pathID, const SkStrokeRec&);
+ public:
+  static bool InitPathObjectPathDataCheckingDegenerates(GrGLGpu*, GrGLuint pathID, const SkPath&);
+  static void InitPathObjectPathData(GrGLGpu*, GrGLuint pathID, const SkPath&);
+  static void InitPathObjectStroke(GrGLGpu*, GrGLuint pathID, const SkStrokeRec&);
 
-    static void InitPathObjectEmptyPath(GrGLGpu*, GrGLuint pathID);
+  static void InitPathObjectEmptyPath(GrGLGpu*, GrGLuint pathID);
 
-    GrGLPath(GrGLGpu*, const SkPath&, const GrStyle&);
-    GrGLuint pathID() const { return fPathID; }
+  GrGLPath(GrGLGpu*, const SkPath&, const GrStyle&);
+  GrGLuint pathID() const { return fPathID; }
 
-    bool shouldStroke() const { return fShouldStroke; }
-    bool shouldFill() const { return fShouldFill; }
+  bool shouldStroke() const { return fShouldStroke; }
+  bool shouldFill() const { return fShouldFill; }
 
-protected:
-    void onRelease() override;
-    void onAbandon() override;
+ protected:
+  void onRelease() override;
+  void onAbandon() override;
 
-private:
-    // TODO: Figure out how to get an approximate size of the path in Gpu memory.
-    size_t onGpuMemorySize() const override { return 100; }
+ private:
+  // TODO: Figure out how to get an approximate size of the path in Gpu memory.
+  size_t onGpuMemorySize() const override { return 100; }
 
-    GrGLuint fPathID;
-    bool fShouldStroke;
-    bool fShouldFill;
+  GrGLuint fPathID;
+  bool fShouldStroke;
+  bool fShouldFill;
 
-    typedef GrPath INHERITED;
+  typedef GrPath INHERITED;
 };
 
 #endif

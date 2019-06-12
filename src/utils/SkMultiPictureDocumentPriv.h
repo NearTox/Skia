@@ -14,8 +14,7 @@
  *  Additional API allows one to read the array of page-sizes without parsing
  *  the entire file.  Used by DM.
  */
-bool SkMultiPictureDocumentReadPageSizes(SkStreamSeekable* src,
-                                         SkDocumentPage* dstArray,
-                                         int dstArrayCount);
+bool SkMultiPictureDocumentReadPageSizes(
+    SkStreamSeekable* src, SkDocumentPage* dstArray, int dstArrayCount);
 
 #endif  // SkMultiPictureDocumentPriv_DEFINED

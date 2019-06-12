@@ -16,6 +16,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 void SkTypefacePlayback::setCount(size_t count) {
-    fCount = count;
-    fArray.reset(new sk_sp<SkTypeface>[count]);
+  fCount = count;
+  fArray.reset(new sk_sp<SkTypeface>[count]);
 }

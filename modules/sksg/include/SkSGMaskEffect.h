@@ -17,31 +17,31 @@ namespace sksg {
  *
  */
 class MaskEffect final : public EffectNode {
-public:
-    enum class Mode { kNormal, kInvert };
+ public:
+  enum class Mode { kNormal, kInvert };
 
-    static sk_sp<MaskEffect> Make(sk_sp<RenderNode> child, sk_sp<RenderNode> mask,
-                                  Mode mode = Mode::kNormal) {
-        return (child && mask)
-                       ? sk_sp<MaskEffect>(new MaskEffect(std::move(child), std::move(mask), mode))
-                       : nullptr;
-    }
+  static sk_sp<MaskEffect> Make(
+      sk_sp<RenderNode> child, sk_sp<RenderNode> mask, Mode mode = Mode::kNormal) {
+    return (child && mask)
+               ? sk_sp<MaskEffect>(new MaskEffect(std::move(child), std::move(mask), mode))
+               : nullptr;
+  }
 
-    ~MaskEffect() override;
+  ~MaskEffect() override;
 
-protected:
-    MaskEffect(sk_sp<RenderNode>, sk_sp<RenderNode> mask, Mode);
+ protected:
+  MaskEffect(sk_sp<RenderNode>, sk_sp<RenderNode> mask, Mode);
 
-    void onRender(SkCanvas*, const RenderContext*) const override;
-    const RenderNode* onNodeAt(const SkPoint&) const override;
+  void onRender(SkCanvas*, const RenderContext*) const override;
+  const RenderNode* onNodeAt(const SkPoint&) const override;
 
-    SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
+  SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
 
-private:
-    const sk_sp<RenderNode> fMaskNode;
-    const Mode fMaskMode;
+ private:
+  const sk_sp<RenderNode> fMaskNode;
+  const Mode fMaskMode;
 
-    typedef EffectNode INHERITED;
+  typedef EffectNode INHERITED;
 };
 
 }  // namespace sksg

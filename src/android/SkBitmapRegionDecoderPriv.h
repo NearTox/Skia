@@ -11,9 +11,9 @@
 #include "include/core/SkRect.h"
 
 enum SubsetType {
-    kFullyInside_SubsetType,
-    kPartiallyInside_SubsetType,
-    kOutside_SubsetType,
+  kFullyInside_SubsetType,
+  kPartiallyInside_SubsetType,
+  kOutside_SubsetType,
 };
 
 /*
@@ -32,30 +32,29 @@ enum SubsetType {
  * @return An indication of how the subset is contained in the image.
  *         If the return value is kInvalid, values of output variables are undefined.
  */
-inline SubsetType adjust_subset_rect(const SkISize& imageDims, SkIRect* subset, int* outX,
-                                     int* outY) {
-    // These must be at least zero, we can't start decoding the image at a negative coordinate.
-    int left = SkTMax(0, subset->fLeft);
-    int top = SkTMax(0, subset->fTop);
+inline SubsetType adjust_subset_rect(
+    const SkISize& imageDims, SkIRect* subset, int* outX, int* outY) {
+  // These must be at least zero, we can't start decoding the image at a negative coordinate.
+  int left = SkTMax(0, subset->fLeft);
+  int top = SkTMax(0, subset->fTop);
 
-    // If input offsets are less than zero, we decode to an offset location in the output bitmap.
-    *outX = left - subset->fLeft;
-    *outY = top - subset->fTop;
+  // If input offsets are less than zero, we decode to an offset location in the output bitmap.
+  *outX = left - subset->fLeft;
+  *outY = top - subset->fTop;
 
-    // Make sure we don't decode pixels past the edge of the image or past the edge of the subset.
-    int width = SkTMin(imageDims.width() - left, subset->width() - *outX);
-    int height = SkTMin(imageDims.height() - top, subset->height() - *outY);
-    if (width <= 0 || height <= 0) {
-        return SubsetType::kOutside_SubsetType;
-    }
+  // Make sure we don't decode pixels past the edge of the image or past the edge of the subset.
+  int width = SkTMin(imageDims.width() - left, subset->width() - *outX);
+  int height = SkTMin(imageDims.height() - top, subset->height() - *outY);
+  if (width <= 0 || height <= 0) {
+    return SubsetType::kOutside_SubsetType;
+  }
 
-    subset->setXYWH(left, top, width, height);
-    if ((*outX != 0) || (*outY != 0) || (width != subset->width()) ||
-        (height != subset->height())) {
-        return SubsetType::kPartiallyInside_SubsetType;
-    }
+  subset->setXYWH(left, top, width, height);
+  if ((*outX != 0) || (*outY != 0) || (width != subset->width()) || (height != subset->height())) {
+    return SubsetType::kPartiallyInside_SubsetType;
+  }
 
-    return SubsetType::kFullyInside_SubsetType;
+  return SubsetType::kFullyInside_SubsetType;
 }
 
 #endif  // SkBitmapRegionDecoderPriv_DEFINED

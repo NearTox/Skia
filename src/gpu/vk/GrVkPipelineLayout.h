@@ -13,26 +13,26 @@
 #include "src/gpu/vk/GrVkResource.h"
 
 class GrVkPipelineLayout : public GrVkResource {
-public:
-    GrVkPipelineLayout(VkPipelineLayout layout) : fPipelineLayout(layout) {}
+ public:
+  GrVkPipelineLayout(VkPipelineLayout layout) : fPipelineLayout(layout) {}
 
-    VkPipelineLayout layout() const { return fPipelineLayout; }
+  VkPipelineLayout layout() const { return fPipelineLayout; }
 
 #ifdef SK_TRACE_VK_RESOURCES
-    void dumpInfo() const override {
-        SkDebugf("GrVkPipelineLayout: %d (%d refs)\n", fPipelineLayout, this->getRefCnt());
-    }
+  void dumpInfo() const override {
+    SkDebugf("GrVkPipelineLayout: %d (%d refs)\n", fPipelineLayout, this->getRefCnt());
+  }
 #endif
 
-private:
-    GrVkPipelineLayout(const GrVkPipelineLayout&);
-    GrVkPipelineLayout& operator=(const GrVkPipelineLayout&);
+ private:
+  GrVkPipelineLayout(const GrVkPipelineLayout&);
+  GrVkPipelineLayout& operator=(const GrVkPipelineLayout&);
 
-    void freeGPUData(GrVkGpu* gpu) const override;
+  void freeGPUData(GrVkGpu* gpu) const override;
 
-    VkPipelineLayout fPipelineLayout;
+  VkPipelineLayout fPipelineLayout;
 
-    typedef GrVkResource INHERITED;
+  typedef GrVkResource INHERITED;
 };
 
 #endif

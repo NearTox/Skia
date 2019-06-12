@@ -16,56 +16,55 @@
     Non-static methods that are not trivial inlines should be spring-boarded (e.g. declared and
     implemented privately in GrTexture with a inline public method here). */
 class GrTexturePriv {
-public:
-    void markMipMapsDirty() { fTexture->markMipMapsDirty(); }
+ public:
+  void markMipMapsDirty() { fTexture->markMipMapsDirty(); }
 
-    void markMipMapsClean() { fTexture->markMipMapsClean(); }
+  void markMipMapsClean() { fTexture->markMipMapsClean(); }
 
-    bool mipMapsAreDirty() const noexcept {
-        return GrMipMapsStatus::kValid != fTexture->fMipMapsStatus;
+  bool mipMapsAreDirty() const { return GrMipMapsStatus::kValid != fTexture->fMipMapsStatus; }
+
+  GrMipMapped mipMapped() const {
+    if (GrMipMapsStatus::kNotAllocated != fTexture->fMipMapsStatus) {
+      return GrMipMapped::kYes;
     }
+    return GrMipMapped::kNo;
+  }
 
-    GrMipMapped mipMapped() const noexcept {
-        if (GrMipMapsStatus::kNotAllocated != fTexture->fMipMapsStatus) {
-            return GrMipMapped::kYes;
-        }
-        return GrMipMapped::kNo;
-    }
+  int maxMipMapLevel() const { return fTexture->fMaxMipMapLevel; }
 
-    int maxMipMapLevel() const noexcept { return fTexture->fMaxMipMapLevel; }
+  GrTextureType textureType() const { return fTexture->fTextureType; }
+  bool hasRestrictedSampling() const {
+    return GrTextureTypeHasRestrictedSampling(this->textureType());
+  }
+  /** Filtering is clamped to this value. */
+  GrSamplerState::Filter highestFilterMode() const {
+    return this->hasRestrictedSampling() ? GrSamplerState::Filter::kBilerp
+                                         : GrSamplerState::Filter::kMipMap;
+  }
 
-    GrTextureType textureType() const noexcept { return fTexture->fTextureType; }
-    bool hasRestrictedSampling() const {
-        return GrTextureTypeHasRestrictedSampling(this->textureType());
-    }
-    /** Filtering is clamped to this value. */
-    GrSamplerState::Filter highestFilterMode() const {
-        return this->hasRestrictedSampling() ? GrSamplerState::Filter::kBilerp
-                                             : GrSamplerState::Filter::kMipMap;
-    }
+  static void ComputeScratchKey(const GrSurfaceDesc&, GrScratchKey*);
+  static void ComputeScratchKey(
+      GrPixelConfig config, int width, int height, bool isRenderTarget, int sampleCnt, GrMipMapped,
+      GrScratchKey* key);
 
-    static void ComputeScratchKey(const GrSurfaceDesc&, GrScratchKey*);
-    static void ComputeScratchKey(GrPixelConfig config, int width, int height, bool isRenderTarget,
-                                  int sampleCnt, GrMipMapped, GrScratchKey* key);
+ private:
+  GrTexturePriv(GrTexture* texture) : fTexture(texture) {}
+  GrTexturePriv(const GrTexturePriv& that) : fTexture(that.fTexture) {}
+  GrTexturePriv& operator=(const GrTexturePriv&);  // unimpl
 
-private:
-    GrTexturePriv(GrTexture* texture) noexcept : fTexture(texture) {}
-    GrTexturePriv(const GrTexturePriv& that) noexcept : fTexture(that.fTexture) {}
-    GrTexturePriv& operator=(const GrTexturePriv&);  // unimpl
+  // No taking addresses of this type.
+  const GrTexturePriv* operator&() const;
+  GrTexturePriv* operator&();
 
-    // No taking addresses of this type.
-    const GrTexturePriv* operator&() const;
-    GrTexturePriv* operator&();
+  GrTexture* fTexture;
 
-    GrTexture* fTexture;
-
-    friend class GrTexture;  // to construct/copy this type.
+  friend class GrTexture;  // to construct/copy this type.
 };
 
 inline GrTexturePriv GrTexture::texturePriv() { return GrTexturePriv(this); }
 
 inline const GrTexturePriv GrTexture::texturePriv() const {
-    return GrTexturePriv(const_cast<GrTexture*>(this));
+  return GrTexturePriv(const_cast<GrTexture*>(this));
 }
 
 #endif

@@ -9,19 +9,19 @@
 
 template <typename T>
 static SkUnichar next(const T** srcPtr, unsigned N, SkUnichar (*fn)(const T**, const T*)) {
-    SkASSERT(srcPtr);
-    const T* ptr = *srcPtr;
-    SkUnichar c = fn(&ptr, ptr + N);
-    if (c == -1) {
-        SkASSERT(false);
-        ++(*srcPtr);
-        return 0xFFFD;  // REPLACEMENT CHARACTER
-    }
-    *srcPtr = ptr;
-    return c;
+  SkASSERT(srcPtr);
+  const T* ptr = *srcPtr;
+  SkUnichar c = fn(&ptr, ptr + N);
+  if (c == -1) {
+    SkASSERT(false);
+    ++(*srcPtr);
+    return 0xFFFD;  // REPLACEMENT CHARACTER
+  }
+  *srcPtr = ptr;
+  return c;
 }
 SkUnichar SkUTF8_NextUnichar(const char** p) {
-    return next<char>(p, SkUTF::kMaxBytesInUTF8Sequence, SkUTF::NextUTF8);
+  return next<char>(p, SkUTF::kMaxBytesInUTF8Sequence, SkUTF::NextUTF8);
 }
 SkUnichar SkUTF16_NextUnichar(const uint16_t** p) { return next<uint16_t>(p, 2, SkUTF::NextUTF16); }
 

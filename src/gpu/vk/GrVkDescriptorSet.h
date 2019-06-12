@@ -16,29 +16,28 @@ class GrVkDescriptorPool;
 class GrVkGpu;
 
 class GrVkDescriptorSet : public GrVkRecycledResource {
-public:
-    GrVkDescriptorSet(VkDescriptorSet descSet,
-                      GrVkDescriptorPool* pool,
-                      GrVkDescriptorSetManager::Handle handle);
+ public:
+  GrVkDescriptorSet(
+      VkDescriptorSet descSet, GrVkDescriptorPool* pool, GrVkDescriptorSetManager::Handle handle);
 
-    ~GrVkDescriptorSet() override {}
+  ~GrVkDescriptorSet() override {}
 
-    VkDescriptorSet descriptorSet() const { return fDescSet; }
+  VkDescriptorSet descriptorSet() const { return fDescSet; }
 
 #ifdef SK_TRACE_VK_RESOURCES
-    void dumpInfo() const override {
-        SkDebugf("GrVkDescriptorSet: %d (%d refs)\n", fDescSet, this->getRefCnt());
-    }
+  void dumpInfo() const override {
+    SkDebugf("GrVkDescriptorSet: %d (%d refs)\n", fDescSet, this->getRefCnt());
+  }
 #endif
 
-private:
-    void freeGPUData(GrVkGpu* gpu) const override;
-    void abandonGPUData() const override;
-    void onRecycle(GrVkGpu* gpu) const override;
+ private:
+  void freeGPUData(GrVkGpu* gpu) const override;
+  void abandonGPUData() const override;
+  void onRecycle(GrVkGpu* gpu) const override;
 
-    VkDescriptorSet fDescSet;
-    SkDEBUGCODE(mutable) GrVkDescriptorPool* fPool;
-    GrVkDescriptorSetManager::Handle fHandle;
+  VkDescriptorSet fDescSet;
+  SkDEBUGCODE(mutable) GrVkDescriptorPool* fPool;
+  GrVkDescriptorSetManager::Handle fHandle;
 };
 
 #endif

@@ -31,29 +31,29 @@ const char* Sample::kCharEvtName = "SampleCode_Char_Event";
 const char* Sample::kTitleEvtName = "SampleCode_Title_Event";
 
 bool Sample::CharQ(const Event& evt, SkUnichar* outUni) {
-    if (evt.isType(kCharEvtName)) {
-        if (outUni) {
-            *outUni = evt.getFast32();
-        }
-        return true;
+  if (evt.isType(kCharEvtName)) {
+    if (outUni) {
+      *outUni = evt.getFast32();
     }
-    return false;
+    return true;
+  }
+  return false;
 }
 
 bool Sample::TitleQ(const Event& evt) { return evt.isType(kTitleEvtName); }
 
 void Sample::TitleR(Event* evt, const char title[]) {
-    SkASSERT(evt && TitleQ(*evt));
-    evt->setString(kTitleEvtName, title);
+  SkASSERT(evt && TitleQ(*evt));
+  evt->setString(kTitleEvtName, title);
 }
 
 bool Sample::RequestTitle(Sample* view, SkString* title) {
-    Event evt(kTitleEvtName);
-    if (view->doQuery(&evt)) {
-        title->set(evt.findString(kTitleEvtName));
-        return true;
-    }
-    return false;
+  Event evt(kTitleEvtName);
+  if (view->doQuery(&evt)) {
+    title->set(evt.findString(kTitleEvtName));
+    return true;
+  }
+  return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -63,8 +63,8 @@ bool Sample::doEvent(const Event& evt) { return this->onEvent(evt); }
 bool Sample::onEvent(const Event&) { return false; }
 
 bool Sample::doQuery(Event* evt) {
-    SkASSERT(evt);
-    return this->onQuery(evt);
+  SkASSERT(evt);
+  return this->onQuery(evt);
 }
 
 bool Sample::onQuery(Sample::Event* evt) { return false; }
@@ -72,118 +72,118 @@ bool Sample::onQuery(Sample::Event* evt) { return false; }
 ////////////////////////////////////////////////////////////////////////
 
 void Sample::setSize(SkScalar width, SkScalar height) {
-    width = SkMaxScalar(0, width);
-    height = SkMaxScalar(0, height);
+  width = SkMaxScalar(0, width);
+  height = SkMaxScalar(0, height);
 
-    if (fWidth != width || fHeight != height) {
-        fWidth = width;
-        fHeight = height;
-        this->onSizeChange();
-    }
+  if (fWidth != width || fHeight != height) {
+    fWidth = width;
+    fHeight = height;
+    this->onSizeChange();
+  }
 }
 
 void Sample::draw(SkCanvas* canvas) {
-    if (fWidth && fHeight) {
-        SkRect r;
-        r.set(0, 0, fWidth, fHeight);
-        if (canvas->quickReject(r)) {
-            return;
-        }
+  if (fWidth && fHeight) {
+    SkRect r;
+    r.set(0, 0, fWidth, fHeight);
+    if (canvas->quickReject(r)) {
+      return;
+    }
 
-        SkAutoCanvasRestore as(canvas, true);
-        int sc = canvas->save();
+    SkAutoCanvasRestore as(canvas, true);
+    int sc = canvas->save();
 
-        if (!fHaveCalledOnceBeforeDraw) {
-            fHaveCalledOnceBeforeDraw = true;
-            this->onOnceBeforeDraw();
-        }
-        this->onDrawBackground(canvas);
+    if (!fHaveCalledOnceBeforeDraw) {
+      fHaveCalledOnceBeforeDraw = true;
+      this->onOnceBeforeDraw();
+    }
+    this->onDrawBackground(canvas);
 
-        SkAutoCanvasRestore acr(canvas, true);
-        this->onDrawContent(canvas);
+    SkAutoCanvasRestore acr(canvas, true);
+    this->onDrawContent(canvas);
 #if SK_SUPPORT_GPU
-        // Ensure the GrContext doesn't combine GrDrawOps across draw loops.
-        if (GrContext* context = canvas->getGrContext()) {
-            context->flush();
-        }
+    // Ensure the GrContext doesn't combine GrDrawOps across draw loops.
+    if (GrContext* context = canvas->getGrContext()) {
+      context->flush();
+    }
 #endif
 
-        canvas->restoreToCount(sc);
-    }
+    canvas->restoreToCount(sc);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////
 
 Sample::Click::Click(Sample* target) {
-    SkASSERT(target);
-    fTarget = sk_ref_sp(target);
+  SkASSERT(target);
+  fTarget = sk_ref_sp(target);
 }
 
 Sample::Click::~Click() {}
 
 Sample::Click* Sample::findClickHandler(SkScalar x, SkScalar y, unsigned modi) {
-    if (x < 0 || y < 0 || x >= fWidth || y >= fHeight) {
-        return nullptr;
-    }
+  if (x < 0 || y < 0 || x >= fWidth || y >= fHeight) {
+    return nullptr;
+  }
 
-    return this->onFindClickHandler(x, y, modi);
+  return this->onFindClickHandler(x, y, modi);
 }
 
 void Sample::DoClickDown(Click* click, int x, int y, unsigned modi) {
-    SkASSERT(click);
+  SkASSERT(click);
 
-    Sample* target = click->fTarget.get();
-    if (nullptr == target) {
-        return;
-    }
+  Sample* target = click->fTarget.get();
+  if (nullptr == target) {
+    return;
+  }
 
-    click->fIOrig.set(x, y);
-    click->fICurr = click->fIPrev = click->fIOrig;
+  click->fIOrig.set(x, y);
+  click->fICurr = click->fIPrev = click->fIOrig;
 
-    click->fOrig.iset(x, y);
-    click->fPrev = click->fCurr = click->fOrig;
+  click->fOrig.iset(x, y);
+  click->fPrev = click->fCurr = click->fOrig;
 
-    click->fState = Click::kDown_State;
-    click->fModifierKeys = modi;
-    target->onClick(click);
+  click->fState = Click::kDown_State;
+  click->fModifierKeys = modi;
+  target->onClick(click);
 }
 
 void Sample::DoClickMoved(Click* click, int x, int y, unsigned modi) {
-    SkASSERT(click);
+  SkASSERT(click);
 
-    Sample* target = click->fTarget.get();
-    if (nullptr == target) {
-        return;
-    }
+  Sample* target = click->fTarget.get();
+  if (nullptr == target) {
+    return;
+  }
 
-    click->fIPrev = click->fICurr;
-    click->fICurr.set(x, y);
+  click->fIPrev = click->fICurr;
+  click->fICurr.set(x, y);
 
-    click->fPrev = click->fCurr;
-    click->fCurr.iset(x, y);
+  click->fPrev = click->fCurr;
+  click->fCurr.iset(x, y);
 
-    click->fState = Click::kMoved_State;
-    click->fModifierKeys = modi;
-    target->onClick(click);
+  click->fState = Click::kMoved_State;
+  click->fModifierKeys = modi;
+  target->onClick(click);
 }
 
 void Sample::DoClickUp(Click* click, int x, int y, unsigned modi) {
-    SkASSERT(click);
+  SkASSERT(click);
 
-    Sample* target = click->fTarget.get();
-    if (nullptr == target) {
-        return;
-    }
+  Sample* target = click->fTarget.get();
+  if (nullptr == target) {
+    return;
+  }
 
-    click->fIPrev = click->fICurr;
-    click->fICurr.set(x, y);
+  click->fIPrev = click->fICurr;
+  click->fICurr.set(x, y);
 
-    click->fPrev = click->fCurr;
-    click->fCurr.iset(x, y);
+  click->fPrev = click->fCurr;
+  click->fCurr.iset(x, y);
 
-    click->fState = Click::kUp_State;
-    click->fModifierKeys = modi;
-    target->onClick(click);
+  click->fState = Click::kUp_State;
+  click->fModifierKeys = modi;
+  target->onClick(click);
 }
 
 //////////////////////////////////////////////////////////////////////

@@ -17,12 +17,12 @@
  *  is zero initialized.
  */
 class SkBRDAllocator : public SkBitmap::Allocator {
-public:
-    /**
-     *  Indicates if the memory allocated by this allocator is
-     *  zero initialized.
-     */
-    virtual SkCodec::ZeroInitialized zeroInit() const = 0;
+ public:
+  /**
+   *  Indicates if the memory allocated by this allocator is
+   *  zero initialized.
+   */
+  virtual SkCodec::ZeroInitialized zeroInit() const = 0;
 };
 
 #endif  // SkBRDAllocator_DEFINED

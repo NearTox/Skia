@@ -17,64 +17,64 @@ class GrVkImageView;
 struct GrVkImageInfo;
 
 class GrVkTexture : public GrTexture, public virtual GrVkImage {
-public:
-    static sk_sp<GrVkTexture> MakeNewTexture(GrVkGpu*,
-                                             SkBudgeted budgeted,
-                                             const GrSurfaceDesc&,
-                                             const GrVkImage::ImageDesc&,
-                                             GrMipMapsStatus);
+ public:
+  static sk_sp<GrVkTexture> MakeNewTexture(
+      GrVkGpu*, SkBudgeted budgeted, const GrSurfaceDesc&, const GrVkImage::ImageDesc&,
+      GrMipMapsStatus);
 
-    static sk_sp<GrVkTexture> MakeWrappedTexture(GrVkGpu*, const GrSurfaceDesc&, GrWrapOwnership,
-                                                 GrWrapCacheable, GrIOType, const GrVkImageInfo&,
-                                                 sk_sp<GrVkImageLayout>);
+  static sk_sp<GrVkTexture> MakeWrappedTexture(
+      GrVkGpu*, const GrSurfaceDesc&, GrWrapOwnership, GrWrapCacheable, GrIOType,
+      const GrVkImageInfo&, sk_sp<GrVkImageLayout>);
 
-    ~GrVkTexture() override;
+  ~GrVkTexture() override;
 
-    GrBackendTexture getBackendTexture() const override;
+  GrBackendTexture getBackendTexture() const override;
 
-    GrBackendFormat backendFormat() const override { return this->getBackendFormat(); }
+  GrBackendFormat backendFormat() const override { return this->getBackendFormat(); }
 
-    void textureParamsModified() override {}
+  void textureParamsModified() override {}
 
-    const GrVkImageView* textureView();
+  const GrVkImageView* textureView();
 
-    void addIdleProc(sk_sp<GrRefCntedCallback>, IdleState) override;
-    void callIdleProcsOnBehalfOfResource();
+  void addIdleProc(sk_sp<GrRefCntedCallback>, IdleState) override;
+  void callIdleProcsOnBehalfOfResource();
 
-protected:
-    GrVkTexture(GrVkGpu*, const GrSurfaceDesc&, const GrVkImageInfo&, sk_sp<GrVkImageLayout>,
-                const GrVkImageView*, GrMipMapsStatus, GrBackendObjectOwnership);
+ protected:
+  GrVkTexture(
+      GrVkGpu*, const GrSurfaceDesc&, const GrVkImageInfo&, sk_sp<GrVkImageLayout>,
+      const GrVkImageView*, GrMipMapsStatus, GrBackendObjectOwnership);
 
-    GrVkGpu* getVkGpu() const;
+  GrVkGpu* getVkGpu() const;
 
-    void onAbandon() override;
-    void onRelease() override;
+  void onAbandon() override;
+  void onRelease() override;
 
-    bool onStealBackendTexture(GrBackendTexture*, SkImage::BackendTextureReleaseProc*) override {
-        return false;
-    }
+  bool onStealBackendTexture(GrBackendTexture*, SkImage::BackendTextureReleaseProc*) override {
+    return false;
+  }
 
-    void willRemoveLastRefOrPendingIO() override;
+  void willRemoveLastRefOrPendingIO() override;
 
-private:
-    GrVkTexture(GrVkGpu*, SkBudgeted, const GrSurfaceDesc&, const GrVkImageInfo&,
-                sk_sp<GrVkImageLayout> layout, const GrVkImageView* imageView, GrMipMapsStatus);
-    GrVkTexture(GrVkGpu*, const GrSurfaceDesc&, const GrVkImageInfo&, sk_sp<GrVkImageLayout>,
-                const GrVkImageView*, GrMipMapsStatus, GrBackendObjectOwnership, GrWrapCacheable,
-                GrIOType);
+ private:
+  GrVkTexture(
+      GrVkGpu*, SkBudgeted, const GrSurfaceDesc&, const GrVkImageInfo&,
+      sk_sp<GrVkImageLayout> layout, const GrVkImageView* imageView, GrMipMapsStatus);
+  GrVkTexture(
+      GrVkGpu*, const GrSurfaceDesc&, const GrVkImageInfo&, sk_sp<GrVkImageLayout>,
+      const GrVkImageView*, GrMipMapsStatus, GrBackendObjectOwnership, GrWrapCacheable, GrIOType);
 
-    // In Vulkan we call the release proc after we are finished with the underlying
-    // GrVkImage::Resource object (which occurs after the GPU has finished all work on it).
-    void onSetRelease(sk_sp<GrRefCntedCallback> releaseHelper) override {
-        // Forward the release proc on to GrVkImage
-        this->setResourceRelease(std::move(releaseHelper));
-    }
+  // In Vulkan we call the release proc after we are finished with the underlying
+  // GrVkImage::Resource object (which occurs after the GPU has finished all work on it).
+  void onSetRelease(sk_sp<GrRefCntedCallback> releaseHelper) override {
+    // Forward the release proc on to GrVkImage
+    this->setResourceRelease(std::move(releaseHelper));
+  }
 
-    void removeFinishIdleProcs();
+  void removeFinishIdleProcs();
 
-    const GrVkImageView* fTextureView;
+  const GrVkImageView* fTextureView;
 
-    typedef GrTexture INHERITED;
+  typedef GrTexture INHERITED;
 };
 
 #endif

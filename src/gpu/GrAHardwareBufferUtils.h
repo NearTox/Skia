@@ -24,16 +24,17 @@ namespace GrAHardwareBufferUtils {
 
 SkColorType GetSkColorTypeFromBufferFormat(uint32_t bufferFormat);
 
-GrBackendFormat GetBackendFormat(GrContext* context, AHardwareBuffer* hardwareBuffer,
-                                 uint32_t bufferFormat, bool requireKnownFormat);
+GrBackendFormat GetBackendFormat(
+    GrContext* context, AHardwareBuffer* hardwareBuffer, uint32_t bufferFormat,
+    bool requireKnownFormat);
 
 typedef void* DeleteImageCtx;
 typedef void (*DeleteImageProc)(DeleteImageCtx);
 
-GrBackendTexture MakeBackendTexture(GrContext* context, AHardwareBuffer* hardwareBuffer, int width,
-                                    int height, DeleteImageProc* deleteProc,
-                                    DeleteImageCtx* deleteCtx, bool isProtectedContent,
-                                    const GrBackendFormat& backendFormat, bool isRenderable);
+GrBackendTexture MakeBackendTexture(
+    GrContext* context, AHardwareBuffer* hardwareBuffer, int width, int height,
+    DeleteImageProc* deleteProc, DeleteImageCtx* deleteCtx, bool isProtectedContent,
+    const GrBackendFormat& backendFormat, bool isRenderable);
 
 }  // namespace GrAHardwareBufferUtils
 

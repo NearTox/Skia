@@ -15,8 +15,7 @@ struct SkPDFIndirectReference;
  * Serialize a SkImage as an Image Xobject.
  *  quality > 100 means lossless
  */
-SkPDFIndirectReference SkPDFSerializeImage(const SkImage* img,
-                                           SkPDFDocument* doc,
-                                           int encodingQuality = 101);
+SkPDFIndirectReference SkPDFSerializeImage(
+    const SkImage* img, SkPDFDocument* doc, int encodingQuality = 101);
 
 #endif  // SkPDFBitmap_DEFINED

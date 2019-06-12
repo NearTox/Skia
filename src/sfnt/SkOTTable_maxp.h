@@ -15,20 +15,20 @@
 #pragma pack(push, 1)
 
 struct SkOTTableMaximumProfile {
-    static const SK_OT_CHAR TAG0 = 'm';
-    static const SK_OT_CHAR TAG1 = 'a';
-    static const SK_OT_CHAR TAG2 = 'x';
-    static const SK_OT_CHAR TAG3 = 'p';
-    static const SK_OT_ULONG TAG = SkOTTableTAG<SkOTTableMaximumProfile>::value;
+  static const SK_OT_CHAR TAG0 = 'm';
+  static const SK_OT_CHAR TAG1 = 'a';
+  static const SK_OT_CHAR TAG2 = 'x';
+  static const SK_OT_CHAR TAG3 = 'p';
+  static const SK_OT_ULONG TAG = SkOTTableTAG<SkOTTableMaximumProfile>::value;
 
-    union Version {
-        SK_OT_Fixed version;
+  union Version {
+    SK_OT_Fixed version;
 
-        struct CFF : SkOTTableMaximumProfile_CFF {
-        } cff;
-        struct TT : SkOTTableMaximumProfile_TT {
-        } tt;
-    } version;
+    struct CFF : SkOTTableMaximumProfile_CFF {
+    } cff;
+    struct TT : SkOTTableMaximumProfile_TT {
+    } tt;
+  } version;
 };
 
 #pragma pack(pop)

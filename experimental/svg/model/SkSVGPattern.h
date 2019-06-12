@@ -14,41 +14,41 @@
 class SkSVGRenderContext;
 
 class SkSVGPattern final : public SkSVGHiddenContainer {
-public:
-    ~SkSVGPattern() override = default;
+ public:
+  ~SkSVGPattern() override = default;
 
-    static sk_sp<SkSVGPattern> Make() { return sk_sp<SkSVGPattern>(new SkSVGPattern()); }
+  static sk_sp<SkSVGPattern> Make() { return sk_sp<SkSVGPattern>(new SkSVGPattern()); }
 
-    void setX(const SkSVGLength&);
-    void setY(const SkSVGLength&);
-    void setWidth(const SkSVGLength&);
-    void setHeight(const SkSVGLength&);
-    void setHref(const SkSVGStringType&);
-    void setPatternTransform(const SkSVGTransformType&);
+  void setX(const SkSVGLength&);
+  void setY(const SkSVGLength&);
+  void setWidth(const SkSVGLength&);
+  void setHeight(const SkSVGLength&);
+  void setHref(const SkSVGStringType&);
+  void setPatternTransform(const SkSVGTransformType&);
 
-protected:
-    SkSVGPattern();
+ protected:
+  SkSVGPattern();
 
-    void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
+  void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
 
-    bool onAsPaint(const SkSVGRenderContext&, SkPaint*) const override;
+  bool onAsPaint(const SkSVGRenderContext&, SkPaint*) const override;
 
-private:
-    struct PatternAttributes {
-        SkTLazy<SkSVGLength> fX, fY, fWidth, fHeight;
-        SkTLazy<SkSVGTransformType> fPatternTransform;
-    } fAttributes;
+ private:
+  struct PatternAttributes {
+    SkTLazy<SkSVGLength> fX, fY, fWidth, fHeight;
+    SkTLazy<SkSVGTransformType> fPatternTransform;
+  } fAttributes;
 
-    SkSVGStringType fHref;
+  SkSVGStringType fHref;
 
-    const SkSVGPattern* resolveHref(const SkSVGRenderContext&, PatternAttributes*) const;
-    const SkSVGPattern* hrefTarget(const SkSVGRenderContext&) const;
+  const SkSVGPattern* resolveHref(const SkSVGRenderContext&, PatternAttributes*) const;
+  const SkSVGPattern* hrefTarget(const SkSVGRenderContext&) const;
 
-    // TODO:
-    //   - patternUnits
-    //   - patternContentUnits
+  // TODO:
+  //   - patternUnits
+  //   - patternContentUnits
 
-    typedef SkSVGHiddenContainer INHERITED;
+  typedef SkSVGHiddenContainer INHERITED;
 };
 
 #endif  // SkSVGPattern_DEFINED

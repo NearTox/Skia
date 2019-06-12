@@ -7,11 +7,11 @@
 #include <cstring>
 
 struct SkUUID {
-    uint8_t fData[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  uint8_t fData[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 };
 
 static inline bool operator==(const SkUUID& u, const SkUUID& v) {
-    return 0 == memcmp(u.fData, v.fData, sizeof(u.fData));
+  return 0 == memcmp(u.fData, v.fData, sizeof(u.fData));
 }
 static inline bool operator!=(const SkUUID& u, const SkUUID& v) { return !(u == v); }
 

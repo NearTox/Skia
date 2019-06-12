@@ -13,11 +13,12 @@
 
 // Experimentally, see if we can get at the vptr of objects with one.
 
-template <typename T> static inline void* SkVptr(const T& object) {
-    static_assert(std::has_virtual_destructor<T>::value, "");
-    void* vptr;
-    memcpy(&vptr, (const void*)&object, sizeof(vptr));
-    return vptr;
+template <typename T>
+static inline void* SkVptr(const T& object) {
+  static_assert(std::has_virtual_destructor<T>::value, "");
+  void* vptr;
+  memcpy(&vptr, (const void*)&object, sizeof(vptr));
+  return vptr;
 }
 
 #endif  // SkVptr_DEFINED

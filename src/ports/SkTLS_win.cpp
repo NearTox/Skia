@@ -7,8 +7,8 @@
 #include "include/core/SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN)
 
-#include "include/private/SkLeanWindows.h"
 #include "include/private/SkMutex.h"
+#include "src/core/SkLeanWindows.h"
 #include "src/core/SkTLS.h"
 
 static bool gOnce = false;
@@ -16,23 +16,23 @@ static DWORD gTlsIndex;
 SK_DECLARE_STATIC_MUTEX(gMutex);
 
 void* SkTLS::PlatformGetSpecific(bool forceCreateTheSlot) {
-    if (!forceCreateTheSlot && !gOnce) {
-        return nullptr;
-    }
+  if (!forceCreateTheSlot && !gOnce) {
+    return nullptr;
+  }
 
+  if (!gOnce) {
+    SkAutoMutexAcquire tmp(gMutex);
     if (!gOnce) {
-        SkAutoMutexAcquire tmp(gMutex);
-        if (!gOnce) {
-            gTlsIndex = TlsAlloc();
-            gOnce = true;
-        }
+      gTlsIndex = TlsAlloc();
+      gOnce = true;
     }
-    return TlsGetValue(gTlsIndex);
+  }
+  return TlsGetValue(gTlsIndex);
 }
 
 void SkTLS::PlatformSetSpecific(void* ptr) {
-    SkASSERT(gOnce);
-    (void)TlsSetValue(gTlsIndex, ptr);
+  SkASSERT(gOnce);
+  (void)TlsSetValue(gTlsIndex, ptr);
 }
 
 // Call TLS destructors on thread exit. Code based on Chromium's
@@ -50,13 +50,13 @@ void SkTLS::PlatformSetSpecific(void* ptr) {
 #endif
 
 void NTAPI onTLSCallback(PVOID unused, DWORD reason, PVOID unused2) {
-    if ((DLL_THREAD_DETACH == reason || DLL_PROCESS_DETACH == reason) && gOnce) {
-        void* ptr = TlsGetValue(gTlsIndex);
-        if (ptr != nullptr) {
-            SkTLS::Destructor(ptr);
-            TlsSetValue(gTlsIndex, nullptr);
-        }
+  if ((DLL_THREAD_DETACH == reason || DLL_PROCESS_DETACH == reason) && gOnce) {
+    void* ptr = TlsGetValue(gTlsIndex);
+    if (ptr != nullptr) {
+      SkTLS::Destructor(ptr);
+      TlsSetValue(gTlsIndex, nullptr);
     }
+  }
 }
 
 extern "C" {

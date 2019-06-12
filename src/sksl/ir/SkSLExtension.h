@@ -16,18 +16,17 @@ namespace SkSL {
  * An extension declaration.
  */
 struct Extension : public ProgramElement {
-    Extension(int offset, String name)
-            : INHERITED(offset, kExtension_Kind), fName(std::move(name)) {}
+  Extension(int offset, String name) : INHERITED(offset, kExtension_Kind), fName(std::move(name)) {}
 
-    std::unique_ptr<ProgramElement> clone() const override {
-        return std::unique_ptr<ProgramElement>(new Extension(fOffset, fName));
-    }
+  std::unique_ptr<ProgramElement> clone() const override {
+    return std::unique_ptr<ProgramElement>(new Extension(fOffset, fName));
+  }
 
-    String description() const override { return "#extension " + fName + " : enable"; }
+  String description() const override { return "#extension " + fName + " : enable"; }
 
-    const String fName;
+  const String fName;
 
-    typedef ProgramElement INHERITED;
+  typedef ProgramElement INHERITED;
 };
 
 }  // namespace SkSL

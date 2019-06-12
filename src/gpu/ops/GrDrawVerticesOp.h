@@ -25,15 +25,10 @@ namespace GrDrawVerticesOp {
  * primitive type drawn is derived from the SkVertices object, unless overridePrimType is
  * specified.
  */
-std::unique_ptr<GrDrawOp> Make(GrRecordingContext*,
-                               GrPaint&&,
-                               sk_sp<SkVertices>,
-                               const SkVertices::Bone bones[],
-                               int boneCount,
-                               const SkMatrix& viewMatrix,
-                               GrAAType,
-                               sk_sp<GrColorSpaceXform>,
-                               GrPrimitiveType* overridePrimType = nullptr);
+std::unique_ptr<GrDrawOp> Make(
+    GrRecordingContext*, GrPaint&&, sk_sp<SkVertices>, const SkVertices::Bone bones[],
+    int boneCount, const SkMatrix& viewMatrix, GrAAType, sk_sp<GrColorSpaceXform>,
+    GrPrimitiveType* overridePrimType = nullptr);
 };  // namespace GrDrawVerticesOp
 
 #endif

@@ -19,21 +19,21 @@
  * unused functionality off of GrGpuResource.
  */
 class GrSemaphore : public GrGpuResource {
-public:
-    // The derived class can return its GrBackendSemaphore. This is used when flushing with signal
-    // semaphores so we can set the client's GrBackendSemaphore object after we've created the
-    // internal semaphore.
-    virtual GrBackendSemaphore backendSemaphore() const = 0;
+ public:
+  // The derived class can return its GrBackendSemaphore. This is used when flushing with signal
+  // semaphores so we can set the client's GrBackendSemaphore object after we've created the
+  // internal semaphore.
+  virtual GrBackendSemaphore backendSemaphore() const = 0;
 
-    const char* getResourceType() const override { return "semaphore"; }
+  const char* getResourceType() const override { return "semaphore"; }
 
-protected:
-    explicit GrSemaphore(GrGpu* gpu) : INHERITED(gpu) {}
+ protected:
+  explicit GrSemaphore(GrGpu* gpu) : INHERITED(gpu) {}
 
-private:
-    size_t onGpuMemorySize() const override { return 0; }
+ private:
+  size_t onGpuMemorySize() const override { return 0; }
 
-    typedef GrGpuResource INHERITED;
+  typedef GrGpuResource INHERITED;
 };
 
 #endif

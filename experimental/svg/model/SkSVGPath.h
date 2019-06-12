@@ -12,26 +12,26 @@
 #include "include/core/SkPath.h"
 
 class SkSVGPath final : public SkSVGShape {
-public:
-    ~SkSVGPath() override = default;
-    static sk_sp<SkSVGPath> Make() { return sk_sp<SkSVGPath>(new SkSVGPath()); }
+ public:
+  ~SkSVGPath() override = default;
+  static sk_sp<SkSVGPath> Make() { return sk_sp<SkSVGPath>(new SkSVGPath()); }
 
-    void setPath(const SkPath& path) { fPath = path; }
+  void setPath(const SkPath& path) { fPath = path; }
 
-protected:
-    void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
+ protected:
+  void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
 
-    void onDraw(SkCanvas*, const SkSVGLengthContext&, const SkPaint&,
-                SkPath::FillType) const override;
+  void onDraw(
+      SkCanvas*, const SkSVGLengthContext&, const SkPaint&, SkPath::FillType) const override;
 
-    SkPath onAsPath(const SkSVGRenderContext&) const override;
+  SkPath onAsPath(const SkSVGRenderContext&) const override;
 
-private:
-    SkSVGPath();
+ private:
+  SkSVGPath();
 
-    mutable SkPath fPath;  // mutated in onDraw(), to apply inherited fill types.
+  mutable SkPath fPath;  // mutated in onDraw(), to apply inherited fill types.
 
-    typedef SkSVGShape INHERITED;
+  typedef SkSVGShape INHERITED;
 };
 
 #endif  // SkSVGPath_DEFINED

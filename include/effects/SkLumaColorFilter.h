@@ -34,24 +34,24 @@ class SkRasterPipeline;
 #include "include/core/SkFlattenable.h"
 
 class SK_API SkLumaColorFilter : public SkColorFilter {
-public:
-    static sk_sp<SkColorFilter> Make();
+ public:
+  static sk_sp<SkColorFilter> Make();
 
 #if SK_SUPPORT_GPU
-    std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(
-            GrRecordingContext*, const GrColorSpaceInfo&) const override;
+  std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(
+      GrRecordingContext*, const GrColorSpaceInfo&) const override;
 #endif
 
-protected:
-    void flatten(SkWriteBuffer&) const override;
+ protected:
+  void flatten(SkWriteBuffer&) const override;
 
-private:
-    SK_FLATTENABLE_HOOKS(SkLumaColorFilter)
+ private:
+  SK_FLATTENABLE_HOOKS(SkLumaColorFilter)
 
-    SkLumaColorFilter();
-    bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const override;
+  SkLumaColorFilter();
+  bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const override;
 
-    typedef SkColorFilter INHERITED;
+  typedef SkColorFilter INHERITED;
 };
 
 #endif

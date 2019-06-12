@@ -23,40 +23,40 @@ struct FunctionDeclaration;
  * or UnresolvedFunction depending on whether they are overloaded or not.
  */
 class SymbolTable {
-public:
-    SymbolTable(ErrorReporter* errorReporter) : fErrorReporter(*errorReporter) {}
+ public:
+  SymbolTable(ErrorReporter* errorReporter) : fErrorReporter(*errorReporter) {}
 
-    SymbolTable(std::shared_ptr<SymbolTable> parent, ErrorReporter* errorReporter)
-            : fParent(parent), fErrorReporter(*errorReporter) {}
+  SymbolTable(std::shared_ptr<SymbolTable> parent, ErrorReporter* errorReporter)
+      : fParent(parent), fErrorReporter(*errorReporter) {}
 
-    const Symbol* operator[](StringFragment name);
+  const Symbol* operator[](StringFragment name);
 
-    void add(StringFragment name, std::unique_ptr<Symbol> symbol);
+  void add(StringFragment name, std::unique_ptr<Symbol> symbol);
 
-    void addWithoutOwnership(StringFragment name, const Symbol* symbol);
+  void addWithoutOwnership(StringFragment name, const Symbol* symbol);
 
-    Symbol* takeOwnership(Symbol* s);
+  Symbol* takeOwnership(std::unique_ptr<Symbol> s);
 
-    IRNode* takeOwnership(IRNode* n);
+  IRNode* takeOwnership(std::unique_ptr<IRNode> n);
 
-    void markAllFunctionsBuiltin();
+  void markAllFunctionsBuiltin();
 
-    std::unordered_map<StringFragment, const Symbol*>::iterator begin();
+  std::unordered_map<StringFragment, const Symbol*>::iterator begin();
 
-    std::unordered_map<StringFragment, const Symbol*>::iterator end();
+  std::unordered_map<StringFragment, const Symbol*>::iterator end();
 
-    const std::shared_ptr<SymbolTable> fParent;
+  const std::shared_ptr<SymbolTable> fParent;
 
-private:
-    static std::vector<const FunctionDeclaration*> GetFunctions(const Symbol& s);
+ private:
+  static std::vector<const FunctionDeclaration*> GetFunctions(const Symbol& s);
 
-    std::vector<std::unique_ptr<Symbol>> fOwnedSymbols;
+  std::vector<std::unique_ptr<Symbol>> fOwnedSymbols;
 
-    std::vector<std::unique_ptr<IRNode>> fOwnedNodes;
+  std::vector<std::unique_ptr<IRNode>> fOwnedNodes;
 
-    std::unordered_map<StringFragment, const Symbol*> fSymbols;
+  std::unordered_map<StringFragment, const Symbol*> fSymbols;
 
-    ErrorReporter& fErrorReporter;
+  ErrorReporter& fErrorReporter;
 };
 
 }  // namespace SkSL

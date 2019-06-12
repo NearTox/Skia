@@ -15,55 +15,55 @@
 class GrMtlGpu;
 
 class GrMtlTexture : public GrTexture {
-public:
-    static sk_sp<GrMtlTexture> CreateNewTexture(GrMtlGpu*, SkBudgeted budgeted,
-                                                const GrSurfaceDesc&, MTLTextureDescriptor*,
-                                                GrMipMapsStatus);
+ public:
+  static sk_sp<GrMtlTexture> CreateNewTexture(
+      GrMtlGpu*, SkBudgeted budgeted, const GrSurfaceDesc&, MTLTextureDescriptor*, GrMipMapsStatus);
 
-    static sk_sp<GrMtlTexture> MakeWrappedTexture(GrMtlGpu*, const GrSurfaceDesc&, id<MTLTexture>,
-                                                  GrWrapCacheable, GrIOType);
+  static sk_sp<GrMtlTexture> MakeWrappedTexture(
+      GrMtlGpu*, const GrSurfaceDesc&, id<MTLTexture>, GrWrapCacheable, GrIOType);
 
-    ~GrMtlTexture() override;
+  ~GrMtlTexture() override;
 
-    id<MTLTexture> mtlTexture() const { return fTexture; }
+  id<MTLTexture> mtlTexture() const { return fTexture; }
 
-    GrBackendTexture getBackendTexture() const override;
+  GrBackendTexture getBackendTexture() const override;
 
-    GrBackendFormat backendFormat() const override;
+  GrBackendFormat backendFormat() const override;
 
-    void textureParamsModified() override {}
+  void textureParamsModified() override {}
 
-    bool reallocForMipmap(GrMtlGpu* gpu, uint32_t mipLevels);
+  bool reallocForMipmap(GrMtlGpu* gpu, uint32_t mipLevels);
 
-protected:
-    GrMtlTexture(GrMtlGpu*, const GrSurfaceDesc&, id<MTLTexture>, GrMipMapsStatus);
+ protected:
+  GrMtlTexture(GrMtlGpu*, const GrSurfaceDesc&, id<MTLTexture>, GrMipMapsStatus);
 
-    GrMtlGpu* getMtlGpu() const;
+  GrMtlGpu* getMtlGpu() const;
 
-    void onAbandon() override {
-        fTexture = nil;
-        INHERITED::onAbandon();
-    }
-    void onRelease() override {
-        fTexture = nil;
-        INHERITED::onRelease();
-    }
+  void onAbandon() override {
+    fTexture = nil;
+    INHERITED::onAbandon();
+  }
+  void onRelease() override {
+    fTexture = nil;
+    INHERITED::onRelease();
+  }
 
-    bool onStealBackendTexture(GrBackendTexture*, SkImage::BackendTextureReleaseProc*) override {
-        return false;
-    }
+  bool onStealBackendTexture(GrBackendTexture*, SkImage::BackendTextureReleaseProc*) override {
+    return false;
+  }
 
-private:
-    enum Wrapped { kWrapped };
+ private:
+  enum Wrapped { kWrapped };
 
-    GrMtlTexture(GrMtlGpu*, SkBudgeted, const GrSurfaceDesc&, id<MTLTexture>, GrMipMapsStatus);
+  GrMtlTexture(GrMtlGpu*, SkBudgeted, const GrSurfaceDesc&, id<MTLTexture>, GrMipMapsStatus);
 
-    GrMtlTexture(GrMtlGpu*, Wrapped, const GrSurfaceDesc&, id<MTLTexture>, GrMipMapsStatus,
-                 GrWrapCacheable, GrIOType);
+  GrMtlTexture(
+      GrMtlGpu*, Wrapped, const GrSurfaceDesc&, id<MTLTexture>, GrMipMapsStatus, GrWrapCacheable,
+      GrIOType);
 
-    id<MTLTexture> fTexture;
+  id<MTLTexture> fTexture;
 
-    typedef GrTexture INHERITED;
+  typedef GrTexture INHERITED;
 };
 
 #endif

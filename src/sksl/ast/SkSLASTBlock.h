@@ -16,22 +16,22 @@ namespace SkSL {
  * Represents a curly-braced block of statements.
  */
 struct ASTBlock : public ASTStatement {
-    ASTBlock(int offset, std::vector<std::unique_ptr<ASTStatement>> statements)
-            : INHERITED(offset, kBlock_Kind), fStatements(std::move(statements)) {}
+  ASTBlock(int offset, std::vector<std::unique_ptr<ASTStatement>> statements)
+      : INHERITED(offset, kBlock_Kind), fStatements(std::move(statements)) {}
 
-    String description() const override {
-        String result("{");
-        for (size_t i = 0; i < fStatements.size(); i++) {
-            result += "\n";
-            result += fStatements[i]->description();
-        }
-        result += "\n}\n";
-        return result;
+  String description() const override {
+    String result("{");
+    for (size_t i = 0; i < fStatements.size(); i++) {
+      result += "\n";
+      result += fStatements[i]->description();
     }
+    result += "\n}\n";
+    return result;
+  }
 
-    const std::vector<std::unique_ptr<ASTStatement>> fStatements;
+  const std::vector<std::unique_ptr<ASTStatement>> fStatements;
 
-    typedef ASTStatement INHERITED;
+  typedef ASTStatement INHERITED;
 };
 
 }  // namespace SkSL

@@ -56,58 +56,57 @@ class SkSurfaceProps;
  * any internal objects that were created for the draws into the secondary command buffer.
  */
 class SK_API GrVkSecondaryCBDrawContext : public SkRefCnt {
-public:
-    static sk_sp<GrVkSecondaryCBDrawContext> Make(GrContext*, const SkImageInfo&,
-                                                  const GrVkDrawableInfo&,
-                                                  const SkSurfaceProps* props);
+ public:
+  static sk_sp<GrVkSecondaryCBDrawContext> Make(
+      GrContext*, const SkImageInfo&, const GrVkDrawableInfo&, const SkSurfaceProps* props);
 
-    ~GrVkSecondaryCBDrawContext() override;
+  ~GrVkSecondaryCBDrawContext() override;
 
-    SkCanvas* getCanvas();
+  SkCanvas* getCanvas();
 
-    // Records all the draws to the imported secondary command buffer and sets any dependent
-    // offscreen draws to the GPU.
-    void flush();
+  // Records all the draws to the imported secondary command buffer and sets any dependent
+  // offscreen draws to the GPU.
+  void flush();
 
-    /** Inserts a list of GPU semaphores that Skia will have the driver wait on before executing
-        commands for this secondary CB. The wait semaphores will get added to the VkCommandBuffer
-        owned by this GrContext when flush() is called, and not the command buffer which the
-        Secondary CB is from. This will guarantee that the driver waits on the semaphores before
-        the secondary command buffer gets executed. Skia will take ownership of the underlying
-        semaphores and delete them once they have been signaled and waited on. If this call returns
-        false, then the GPU back-end will not wait on any passed in semaphores, and the client will
-        still own the semaphores.
+  /** Inserts a list of GPU semaphores that Skia will have the driver wait on before executing
+      commands for this secondary CB. The wait semaphores will get added to the VkCommandBuffer
+      owned by this GrContext when flush() is called, and not the command buffer which the
+      Secondary CB is from. This will guarantee that the driver waits on the semaphores before
+      the secondary command buffer gets executed. Skia will take ownership of the underlying
+      semaphores and delete them once they have been signaled and waited on. If this call returns
+      false, then the GPU back-end will not wait on any passed in semaphores, and the client will
+      still own the semaphores.
 
-        @param numSemaphores   size of waitSemaphores array
-        @param waitSemaphores  array of semaphore containers
-        @return                true if GPU is waiting on semaphores
-    */
-    bool wait(int numSemaphores, const GrBackendSemaphore waitSemaphores[]);
+      @param numSemaphores   size of waitSemaphores array
+      @param waitSemaphores  array of semaphore containers
+      @return                true if GPU is waiting on semaphores
+  */
+  bool wait(int numSemaphores, const GrBackendSemaphore waitSemaphores[]);
 
-    // This call will release all resources held by the draw context. The client must call
-    // releaseResources() before deleting the drawing context. However, the resources also include
-    // any Vulkan resources that were created and used for draws. Therefore the client must only
-    // call releaseResources() after submitting the secondary command buffer, and waiting for it to
-    // finish on the GPU. If it is called earlier then some vulkan objects may be deleted while they
-    // are still in use by the GPU.
-    void releaseResources();
+  // This call will release all resources held by the draw context. The client must call
+  // releaseResources() before deleting the drawing context. However, the resources also include
+  // any Vulkan resources that were created and used for draws. Therefore the client must only
+  // call releaseResources() after submitting the secondary command buffer, and waiting for it to
+  // finish on the GPU. If it is called earlier then some vulkan objects may be deleted while they
+  // are still in use by the GPU.
+  void releaseResources();
 
-    const SkSurfaceProps& props() const { return fProps; }
+  const SkSurfaceProps& props() const { return fProps; }
 
-    // TODO: Fill out these calls to support DDL
-    bool characterize(SkSurfaceCharacterization* characterization) const;
-    bool draw(SkDeferredDisplayList* deferredDisplayList);
+  // TODO: Fill out these calls to support DDL
+  bool characterize(SkSurfaceCharacterization* characterization) const;
+  bool draw(SkDeferredDisplayList* deferredDisplayList);
 
-private:
-    explicit GrVkSecondaryCBDrawContext(sk_sp<SkGpuDevice>, const SkSurfaceProps*);
+ private:
+  explicit GrVkSecondaryCBDrawContext(sk_sp<SkGpuDevice>, const SkSurfaceProps*);
 
-    bool isCompatible(const SkSurfaceCharacterization& characterization) const;
+  bool isCompatible(const SkSurfaceCharacterization& characterization) const;
 
-    sk_sp<SkGpuDevice> fDevice;
-    std::unique_ptr<SkCanvas> fCachedCanvas;
-    const SkSurfaceProps fProps;
+  sk_sp<SkGpuDevice> fDevice;
+  std::unique_ptr<SkCanvas> fCachedCanvas;
+  const SkSurfaceProps fProps;
 
-    typedef SkRefCnt INHERITED;
+  typedef SkRefCnt INHERITED;
 };
 
 #endif

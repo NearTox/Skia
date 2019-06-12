@@ -13,7 +13,7 @@
 struct skcms_Matrix3x3;
 struct skcms_TransferFunction;
 
-SK_API sk_sp<SkData> SkWriteICCProfile(const skcms_TransferFunction&,
-                                       const skcms_Matrix3x3& toXYZD50);
+SK_API sk_sp<SkData> SkWriteICCProfile(
+    const skcms_TransferFunction&, const skcms_Matrix3x3& toXYZD50);
 
 #endif  // SkICC_DEFINED

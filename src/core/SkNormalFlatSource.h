@@ -11,37 +11,37 @@
 #include "src/core/SkNormalSource.h"
 
 class SK_API SkNormalFlatSourceImpl : public SkNormalSource {
-public:
-    SkNormalFlatSourceImpl() {}
+ public:
+  SkNormalFlatSourceImpl() {}
 
 #if SK_SUPPORT_GPU
-    std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs& args) const override;
+  std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs& args) const override;
 #endif
 
-    SkNormalSource::Provider* asProvider(const SkShaderBase::ContextRec& rec,
-                                         SkArenaAlloc* alloc) const override;
+  SkNormalSource::Provider* asProvider(
+      const SkShaderBase::ContextRec& rec, SkArenaAlloc* alloc) const override;
 
-protected:
-    void flatten(SkWriteBuffer& buf) const override;
+ protected:
+  void flatten(SkWriteBuffer& buf) const override;
 
-private:
-    SK_FLATTENABLE_HOOKS(SkNormalFlatSourceImpl)
+ private:
+  SK_FLATTENABLE_HOOKS(SkNormalFlatSourceImpl)
 
-    class Provider : public SkNormalSource::Provider {
-    public:
-        Provider();
+  class Provider : public SkNormalSource::Provider {
+   public:
+    Provider();
 
-        ~Provider() override;
+    ~Provider() override;
 
-        void fillScanLine(int x, int y, SkPoint3 output[], int count) const override;
+    void fillScanLine(int x, int y, SkPoint3 output[], int count) const override;
 
-    private:
-        typedef SkNormalSource::Provider INHERITED;
-    };
+   private:
+    typedef SkNormalSource::Provider INHERITED;
+  };
 
-    friend class SkNormalSource;
+  friend class SkNormalSource;
 
-    typedef SkNormalSource INHERITED;
+  typedef SkNormalSource INHERITED;
 };
 
 #endif

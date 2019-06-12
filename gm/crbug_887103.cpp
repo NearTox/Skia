@@ -11,22 +11,22 @@
 #include "include/core/SkPath.h"
 
 DEF_SIMPLE_GM(crbug_887103, canvas, 520, 520) {
-    SkPaint paint;
+  SkPaint paint;
 
-    paint.setAntiAlias(true);
-    paint.setStyle(SkPaint::kFill_Style);
+  paint.setAntiAlias(true);
+  paint.setStyle(SkPaint::kFill_Style);
 
-    SkPath path;
-    path.moveTo(510, 20);
-    path.lineTo(500, 20);
-    path.lineTo(510, 500);
+  SkPath path;
+  path.moveTo(510, 20);
+  path.lineTo(500, 20);
+  path.lineTo(510, 500);
 
-    path.moveTo(500, 20);
-    path.lineTo(510, 500);
-    path.lineTo(500, 510);
+  path.moveTo(500, 20);
+  path.lineTo(510, 500);
+  path.lineTo(500, 510);
 
-    path.moveTo(500, 30);
-    path.lineTo(510, 10);
-    path.lineTo(10, 30);
-    canvas->drawPath(path, paint);
+  path.moveTo(500, 30);
+  path.lineTo(510, 10);
+  path.lineTo(10, 30);
+  canvas->drawPath(path, paint);
 }

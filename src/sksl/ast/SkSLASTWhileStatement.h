@@ -16,20 +16,18 @@ namespace SkSL {
  * A 'while' statement.
  */
 struct ASTWhileStatement : public ASTStatement {
-    ASTWhileStatement(int offset, std::unique_ptr<ASTExpression> test,
-                      std::unique_ptr<ASTStatement> statement)
-            : INHERITED(offset, kWhile_Kind)
-            , fTest(std::move(test))
-            , fStatement(std::move(statement)) {}
+  ASTWhileStatement(
+      int offset, std::unique_ptr<ASTExpression> test, std::unique_ptr<ASTStatement> statement)
+      : INHERITED(offset, kWhile_Kind), fTest(std::move(test)), fStatement(std::move(statement)) {}
 
-    String description() const override {
-        return "while (" + fTest->description() + ") " + fStatement->description();
-    }
+  String description() const override {
+    return "while (" + fTest->description() + ") " + fStatement->description();
+  }
 
-    const std::unique_ptr<ASTExpression> fTest;
-    const std::unique_ptr<ASTStatement> fStatement;
+  const std::unique_ptr<ASTExpression> fTest;
+  const std::unique_ptr<ASTStatement> fStatement;
 
-    typedef ASTStatement INHERITED;
+  typedef ASTStatement INHERITED;
 };
 
 }  // namespace SkSL

@@ -19,40 +19,40 @@
 namespace skiagm {
 
 class PathOpsSkpClipGM : public GM {
-public:
-    PathOpsSkpClipGM() {}
+ public:
+  PathOpsSkpClipGM() {}
 
-protected:
-    SkString onShortName() override { return SkString("pathopsskpclip"); }
+ protected:
+  SkString onShortName() override { return SkString("pathopsskpclip"); }
 
-    SkISize onISize() override { return SkISize::Make(1200, 900); }
+  SkISize onISize() override { return SkISize::Make(1200, 900); }
 
-    void onDraw(SkCanvas* canvas) override {
-        SkPictureRecorder recorder;
-        SkCanvas* rec = recorder.beginRecording(1200, 900, nullptr, 0);
-        SkPath p;
-        SkRect r = {SkIntToScalar(100), SkIntToScalar(200), SkIntToScalar(400), SkIntToScalar(700)};
-        p.addRoundRect(r, SkIntToScalar(50), SkIntToScalar(50));
-        rec->clipPath(p, true);
-        rec->translate(SkIntToScalar(250), SkIntToScalar(250));
-        rec->clipPath(p, true);
-        rec->drawColor(0xffff0000);
-        sk_sp<SkPicture> pict(recorder.finishRecordingAsPicture());
+  void onDraw(SkCanvas* canvas) override {
+    SkPictureRecorder recorder;
+    SkCanvas* rec = recorder.beginRecording(1200, 900, nullptr, 0);
+    SkPath p;
+    SkRect r = {SkIntToScalar(100), SkIntToScalar(200), SkIntToScalar(400), SkIntToScalar(700)};
+    p.addRoundRect(r, SkIntToScalar(50), SkIntToScalar(50));
+    rec->clipPath(p, true);
+    rec->translate(SkIntToScalar(250), SkIntToScalar(250));
+    rec->clipPath(p, true);
+    rec->drawColor(0xffff0000);
+    sk_sp<SkPicture> pict(recorder.finishRecordingAsPicture());
 
-        canvas->setAllowSimplifyClip(true);
-        canvas->save();
-        canvas->drawPicture(pict);
-        canvas->restore();
+    canvas->setAllowSimplifyClip(true);
+    canvas->save();
+    canvas->drawPicture(pict);
+    canvas->restore();
 
-        canvas->setAllowSimplifyClip(false);
-        canvas->save();
-        canvas->translate(SkIntToScalar(1200 / 2), 0);
-        canvas->drawPicture(pict);
-        canvas->restore();
-    }
+    canvas->setAllowSimplifyClip(false);
+    canvas->save();
+    canvas->translate(SkIntToScalar(1200 / 2), 0);
+    canvas->drawPicture(pict);
+    canvas->restore();
+  }
 
-private:
-    typedef GM INHERITED;
+ private:
+  typedef GM INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////

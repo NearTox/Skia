@@ -13,33 +13,33 @@
 #include "include/core/SkPaint.h"
 
 class SK_API SkPaintImageFilter : public SkImageFilter {
-public:
-    /** Create a new image filter which fills the given rectangle using the
-     *  given paint. If no rectangle is specified, an output is produced with
-     *  the same bounds as the input primitive (even though the input
-     *  primitive's pixels are not used for processing).
-     *  @param paint  Paint to use when filling the rect.
-     *  @param rect   Rectangle of output pixels. If NULL or a given crop edge is
-     *                not specified, the source primitive's bounds are used
-     *                instead.
-     */
-    static sk_sp<SkImageFilter> Make(const SkPaint& paint, const CropRect* cropRect = nullptr);
+ public:
+  /** Create a new image filter which fills the given rectangle using the
+   *  given paint. If no rectangle is specified, an output is produced with
+   *  the same bounds as the input primitive (even though the input
+   *  primitive's pixels are not used for processing).
+   *  @param paint  Paint to use when filling the rect.
+   *  @param rect   Rectangle of output pixels. If NULL or a given crop edge is
+   *                not specified, the source primitive's bounds are used
+   *                instead.
+   */
+  static sk_sp<SkImageFilter> Make(const SkPaint& paint, const CropRect* cropRect = nullptr);
 
-    bool affectsTransparentBlack() const noexcept override;
+  bool affectsTransparentBlack() const override;
 
-protected:
-    void flatten(SkWriteBuffer&) const override;
-    sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
-                                        SkIPoint* offset) const override;
+ protected:
+  void flatten(SkWriteBuffer&) const override;
+  sk_sp<SkSpecialImage> onFilterImage(
+      SkSpecialImage* source, const Context&, SkIPoint* offset) const override;
 
-private:
-    SK_FLATTENABLE_HOOKS(SkPaintImageFilter)
+ private:
+  SK_FLATTENABLE_HOOKS(SkPaintImageFilter)
 
-    SkPaintImageFilter(const SkPaint& paint, const CropRect* rect);
+  SkPaintImageFilter(const SkPaint& paint, const CropRect* rect);
 
-    SkPaint fPaint;
+  SkPaint fPaint;
 
-    typedef SkImageFilter INHERITED;
+  typedef SkImageFilter INHERITED;
 };
 
 #endif

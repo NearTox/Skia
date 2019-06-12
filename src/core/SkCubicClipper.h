@@ -18,17 +18,17 @@
     also in X, to ensure that all segments fit in a finite coordinate system.
  */
 class SkCubicClipper {
-public:
-    SkCubicClipper();
+ public:
+  SkCubicClipper();
 
-    void setClip(const SkIRect& clip);
+  void setClip(const SkIRect& clip);
 
-    bool SK_WARN_UNUSED_RESULT clipCubic(const SkPoint src[4], SkPoint dst[4]);
+  bool SK_WARN_UNUSED_RESULT clipCubic(const SkPoint src[4], SkPoint dst[4]);
 
-    static bool SK_WARN_UNUSED_RESULT ChopMonoAtY(const SkPoint pts[4], SkScalar y, SkScalar* t);
+  static bool SK_WARN_UNUSED_RESULT ChopMonoAtY(const SkPoint pts[4], SkScalar y, SkScalar* t);
 
-private:
-    SkRect fClip;
+ private:
+  SkRect fClip;
 };
 
 #endif  // SkCubicClipper_DEFINED

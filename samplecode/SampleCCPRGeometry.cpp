@@ -44,126 +44,128 @@ static constexpr float kDebugBloat = 40;
  * geometry processors.
  */
 class CCPRGeometryView : public Sample {
-public:
-    CCPRGeometryView() { this->updateGpuData(); }
-    void onDrawContent(SkCanvas*) override;
+ public:
+  CCPRGeometryView() { this->updateGpuData(); }
+  void onDrawContent(SkCanvas*) override;
 
-    Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, unsigned) override;
-    bool onClick(Sample::Click*) override;
-    bool onQuery(Sample::Event* evt) override;
+  Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, unsigned) override;
+  bool onClick(Sample::Click*) override;
+  bool onQuery(Sample::Event* evt) override;
 
-private:
-    class Click;
-    class DrawCoverageCountOp;
-    class VisualizeCoverageCountFP;
+ private:
+  class Click;
+  class DrawCoverageCountOp;
+  class VisualizeCoverageCountFP;
 
-    void updateAndInval() { this->updateGpuData(); }
+  void updateAndInval() { this->updateGpuData(); }
 
-    void updateGpuData();
+  void updateGpuData();
 
-    PrimitiveType fPrimitiveType = PrimitiveType::kTriangles;
-    SkCubicType fCubicType;
-    SkMatrix fCubicKLM;
+  PrimitiveType fPrimitiveType = PrimitiveType::kTriangles;
+  SkCubicType fCubicType;
+  SkMatrix fCubicKLM;
 
-    SkPoint fPoints[4] = {
-            {100.05f, 100.05f}, {400.75f, 100.05f}, {400.75f, 300.95f}, {100.05f, 300.95f}};
+  SkPoint fPoints[4] = {
+      {100.05f, 100.05f}, {400.75f, 100.05f}, {400.75f, 300.95f}, {100.05f, 300.95f}};
 
-    float fConicWeight = .5;
-    float fStrokeWidth = 40;
-    bool fDoStroke = false;
+  float fConicWeight = .5;
+  float fStrokeWidth = 40;
+  bool fDoStroke = false;
 
-    SkTArray<TriPointInstance> fTriPointInstances;
-    SkTArray<QuadPointInstance> fQuadPointInstances;
-    SkPath fPath;
+  SkTArray<TriPointInstance> fTriPointInstances;
+  SkTArray<QuadPointInstance> fQuadPointInstances;
+  SkPath fPath;
 
-    typedef Sample INHERITED;
+  typedef Sample INHERITED;
 };
 
 class CCPRGeometryView::DrawCoverageCountOp : public GrDrawOp {
-    DEFINE_OP_CLASS_ID
+  DEFINE_OP_CLASS_ID
 
-public:
-    DrawCoverageCountOp(CCPRGeometryView* view) : INHERITED(ClassID()), fView(view) {
-        this->setBounds(SkRect::MakeIWH(fView->width(), fView->height()), GrOp::HasAABloat::kNo,
-                        GrOp::IsZeroArea::kNo);
-    }
+ public:
+  DrawCoverageCountOp(CCPRGeometryView* view) : INHERITED(ClassID()), fView(view) {
+    this->setBounds(
+        SkRect::MakeIWH(fView->width(), fView->height()), GrOp::HasAABloat::kNo,
+        GrOp::IsZeroArea::kNo);
+  }
 
-    const char* name() const override {
-        return "[Testing/Sample code] CCPRGeometryView::DrawCoverageCountOp";
-    }
+  const char* name() const override {
+    return "[Testing/Sample code] CCPRGeometryView::DrawCoverageCountOp";
+  }
 
-private:
-    FixedFunctionFlags fixedFunctionFlags() const override { return FixedFunctionFlags::kNone; }
-    GrProcessorSet::Analysis finalize(const GrCaps&, const GrAppliedClip*, GrFSAAType,
-                                      GrClampType) override {
-        return GrProcessorSet::EmptySetAnalysis();
-    }
-    void onPrepare(GrOpFlushState*) override {}
-    void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
+ private:
+  FixedFunctionFlags fixedFunctionFlags() const override { return FixedFunctionFlags::kNone; }
+  GrProcessorSet::Analysis finalize(
+      const GrCaps&, const GrAppliedClip*, GrFSAAType, GrClampType) override {
+    return GrProcessorSet::EmptySetAnalysis();
+  }
+  void onPrepare(GrOpFlushState*) override {}
+  void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
 
-    CCPRGeometryView* fView;
+  CCPRGeometryView* fView;
 
-    typedef GrDrawOp INHERITED;
+  typedef GrDrawOp INHERITED;
 };
 
 class CCPRGeometryView::VisualizeCoverageCountFP : public GrFragmentProcessor {
-public:
-    VisualizeCoverageCountFP() : GrFragmentProcessor(kTestFP_ClassID, kNone_OptimizationFlags) {}
+ public:
+  VisualizeCoverageCountFP() : GrFragmentProcessor(kTestFP_ClassID, kNone_OptimizationFlags) {}
 
-private:
-    const char* name() const override {
-        return "[Testing/Sample code] CCPRGeometryView::VisualizeCoverageCountFP";
+ private:
+  const char* name() const override {
+    return "[Testing/Sample code] CCPRGeometryView::VisualizeCoverageCountFP";
+  }
+  std::unique_ptr<GrFragmentProcessor> clone() const override {
+    return skstd::make_unique<VisualizeCoverageCountFP>();
+  }
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
+  bool onIsEqual(const GrFragmentProcessor&) const override { return true; }
+
+  class Impl : public GrGLSLFragmentProcessor {
+    void emitCode(EmitArgs& args) override {
+      GrGLSLFPFragmentBuilder* f = args.fFragBuilder;
+      f->codeAppendf("half count = %s.a;", args.fInputColor);
+      f->codeAppendf(
+          "%s = half4(clamp(-count, 0, 1), clamp(+count, 0, 1), 0, abs(count));",
+          args.fOutputColor);
     }
-    std::unique_ptr<GrFragmentProcessor> clone() const override {
-        return skstd::make_unique<VisualizeCoverageCountFP>();
-    }
-    void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
-    bool onIsEqual(const GrFragmentProcessor&) const override { return true; }
+  };
 
-    class Impl : public GrGLSLFragmentProcessor {
-        void emitCode(EmitArgs& args) override {
-            GrGLSLFPFragmentBuilder* f = args.fFragBuilder;
-            f->codeAppendf("half count = %s.a;", args.fInputColor);
-            f->codeAppendf("%s = half4(clamp(-count, 0, 1), clamp(+count, 0, 1), 0, abs(count));",
-                           args.fOutputColor);
-        }
-    };
-
-    GrGLSLFragmentProcessor* onCreateGLSLInstance() const override { return new Impl; }
+  GrGLSLFragmentProcessor* onCreateGLSLInstance() const override { return new Impl; }
 };
 
 static void draw_klm_line(int w, int h, SkCanvas* canvas, const SkScalar line[3], SkColor color) {
-    SkPoint p1, p2;
-    if (SkScalarAbs(line[1]) > SkScalarAbs(line[0])) {
-        // Draw from vertical edge to vertical edge.
-        p1 = {0, -line[2] / line[1]};
-        p2 = {(SkScalar)w, (-line[2] - w * line[0]) / line[1]};
-    } else {
-        // Draw from horizontal edge to horizontal edge.
-        p1 = {-line[2] / line[0], 0};
-        p2 = {(-line[2] - h * line[1]) / line[0], (SkScalar)h};
-    }
+  SkPoint p1, p2;
+  if (SkScalarAbs(line[1]) > SkScalarAbs(line[0])) {
+    // Draw from vertical edge to vertical edge.
+    p1 = {0, -line[2] / line[1]};
+    p2 = {(SkScalar)w, (-line[2] - w * line[0]) / line[1]};
+  } else {
+    // Draw from horizontal edge to horizontal edge.
+    p1 = {-line[2] / line[0], 0};
+    p2 = {(-line[2] - h * line[1]) / line[0], (SkScalar)h};
+  }
 
-    SkPaint linePaint;
-    linePaint.setColor(color);
-    linePaint.setAlpha(128);
-    linePaint.setStyle(SkPaint::kStroke_Style);
-    linePaint.setStrokeWidth(0);
-    linePaint.setAntiAlias(true);
-    canvas->drawLine(p1, p2, linePaint);
+  SkPaint linePaint;
+  linePaint.setColor(color);
+  linePaint.setAlpha(128);
+  linePaint.setStyle(SkPaint::kStroke_Style);
+  linePaint.setStrokeWidth(0);
+  linePaint.setAntiAlias(true);
+  canvas->drawLine(p1, p2, linePaint);
 }
 
 void CCPRGeometryView::onDrawContent(SkCanvas* canvas) {
-    canvas->clear(SK_ColorBLACK);
+  canvas->clear(SK_ColorBLACK);
 
-    if (!fDoStroke) {
-        SkPaint outlinePaint;
-        outlinePaint.setColor(0x80ffffff);
-        outlinePaint.setStyle(SkPaint::kStroke_Style);
-        outlinePaint.setStrokeWidth(0);
-        outlinePaint.setAntiAlias(true);
-        canvas->drawPath(fPath, outlinePaint);
-    }
+  if (!fDoStroke) {
+    SkPaint outlinePaint;
+    outlinePaint.setColor(0x80ffffff);
+    outlinePaint.setStyle(SkPaint::kStroke_Style);
+    outlinePaint.setStrokeWidth(0);
+    outlinePaint.setAntiAlias(true);
+    canvas->drawPath(fPath, outlinePaint);
+  }
 
 #if 0
     SkPaint gridPaint;
@@ -179,324 +181,314 @@ void CCPRGeometryView::onDrawContent(SkCanvas* canvas) {
     }
 #endif
 
-    SkString caption;
-    if (GrRenderTargetContext* rtc = canvas->internal_private_accessTopLayerRenderTargetContext()) {
-        // Render coverage count.
-        GrContext* ctx = canvas->getGrContext();
-        SkASSERT(ctx);
+  SkString caption;
+  if (GrRenderTargetContext* rtc = canvas->internal_private_accessTopLayerRenderTargetContext()) {
+    // Render coverage count.
+    GrContext* ctx = canvas->getGrContext();
+    SkASSERT(ctx);
 
-        GrOpMemoryPool* pool = ctx->priv().opMemoryPool();
+    GrOpMemoryPool* pool = ctx->priv().opMemoryPool();
 
-        const GrBackendFormat format = ctx->priv().caps()->getBackendFormatFromGrColorType(
-                GrColorType::kAlpha_F16, GrSRGBEncoded::kNo);
-        sk_sp<GrRenderTargetContext> ccbuff = ctx->priv().makeDeferredRenderTargetContext(
-                format, SkBackingFit::kApprox, this->width(), this->height(),
-                kAlpha_half_GrPixelConfig, nullptr);
-        SkASSERT(ccbuff);
-        ccbuff->clear(nullptr, SK_PMColor4fTRANSPARENT,
-                      GrRenderTargetContext::CanClearFullscreen::kYes);
-        ccbuff->priv().testingOnly_addDrawOp(pool->allocate<DrawCoverageCountOp>(this));
+    const GrBackendFormat format = ctx->priv().caps()->getBackendFormatFromGrColorType(
+        GrColorType::kAlpha_F16, GrSRGBEncoded::kNo);
+    sk_sp<GrRenderTargetContext> ccbuff = ctx->priv().makeDeferredRenderTargetContext(
+        format, SkBackingFit::kApprox, this->width(), this->height(), kAlpha_half_GrPixelConfig,
+        nullptr);
+    SkASSERT(ccbuff);
+    ccbuff->clear(
+        nullptr, SK_PMColor4fTRANSPARENT, GrRenderTargetContext::CanClearFullscreen::kYes);
+    ccbuff->priv().testingOnly_addDrawOp(pool->allocate<DrawCoverageCountOp>(this));
 
-        // Visualize coverage count in main canvas.
-        GrPaint paint;
-        paint.addColorFragmentProcessor(
-                GrSimpleTextureEffect::Make(sk_ref_sp(ccbuff->asTextureProxy()), SkMatrix::I()));
-        paint.addColorFragmentProcessor(skstd::make_unique<VisualizeCoverageCountFP>());
-        paint.setPorterDuffXPFactory(SkBlendMode::kSrcOver);
-        rtc->drawRect(GrNoClip(), std::move(paint), GrAA::kNo, SkMatrix::I(),
-                      SkRect::MakeIWH(this->width(), this->height()));
+    // Visualize coverage count in main canvas.
+    GrPaint paint;
+    paint.addColorFragmentProcessor(
+        GrSimpleTextureEffect::Make(sk_ref_sp(ccbuff->asTextureProxy()), SkMatrix::I()));
+    paint.addColorFragmentProcessor(skstd::make_unique<VisualizeCoverageCountFP>());
+    paint.setPorterDuffXPFactory(SkBlendMode::kSrcOver);
+    rtc->drawRect(
+        GrNoClip(), std::move(paint), GrAA::kNo, SkMatrix::I(),
+        SkRect::MakeIWH(this->width(), this->height()));
 
-        // Add label.
-        caption.appendf("PrimitiveType_%s",
-                        GrCCCoverageProcessor::PrimitiveTypeName(fPrimitiveType));
-        if (PrimitiveType::kCubics == fPrimitiveType) {
-            caption.appendf(" (%s)", SkCubicTypeName(fCubicType));
-        } else if (PrimitiveType::kConics == fPrimitiveType) {
-            caption.appendf(" (w=%f)", fConicWeight);
-        }
-        if (fDoStroke) {
-            caption.appendf(" (stroke_width=%f)", fStrokeWidth);
-        }
-    } else {
-        caption = "Use GPU backend to visualize geometry.";
-    }
-
-    SkPaint pointsPaint;
-    pointsPaint.setColor(SK_ColorBLUE);
-    pointsPaint.setStrokeWidth(8);
-    pointsPaint.setAntiAlias(true);
-
+    // Add label.
+    caption.appendf("PrimitiveType_%s", GrCCCoverageProcessor::PrimitiveTypeName(fPrimitiveType));
     if (PrimitiveType::kCubics == fPrimitiveType) {
-        canvas->drawPoints(SkCanvas::kPoints_PointMode, 4, fPoints, pointsPaint);
-        if (!fDoStroke) {
-            int w = this->width(), h = this->height();
-            draw_klm_line(w, h, canvas, &fCubicKLM[0], SK_ColorYELLOW);
-            draw_klm_line(w, h, canvas, &fCubicKLM[3], SK_ColorBLUE);
-            draw_klm_line(w, h, canvas, &fCubicKLM[6], SK_ColorRED);
-        }
-    } else {
-        canvas->drawPoints(SkCanvas::kPoints_PointMode, 2, fPoints, pointsPaint);
-        canvas->drawPoints(SkCanvas::kPoints_PointMode, 1, fPoints + 3, pointsPaint);
+      caption.appendf(" (%s)", SkCubicTypeName(fCubicType));
+    } else if (PrimitiveType::kConics == fPrimitiveType) {
+      caption.appendf(" (w=%f)", fConicWeight);
     }
+    if (fDoStroke) {
+      caption.appendf(" (stroke_width=%f)", fStrokeWidth);
+    }
+  } else {
+    caption = "Use GPU backend to visualize geometry.";
+  }
 
-    SkFont font(nullptr, 20);
-    SkPaint captionPaint;
-    captionPaint.setColor(SK_ColorWHITE);
-    canvas->drawString(caption, 10, 30, font, captionPaint);
+  SkPaint pointsPaint;
+  pointsPaint.setColor(SK_ColorBLUE);
+  pointsPaint.setStrokeWidth(8);
+  pointsPaint.setAntiAlias(true);
+
+  if (PrimitiveType::kCubics == fPrimitiveType) {
+    canvas->drawPoints(SkCanvas::kPoints_PointMode, 4, fPoints, pointsPaint);
+    if (!fDoStroke) {
+      int w = this->width(), h = this->height();
+      draw_klm_line(w, h, canvas, &fCubicKLM[0], SK_ColorYELLOW);
+      draw_klm_line(w, h, canvas, &fCubicKLM[3], SK_ColorBLUE);
+      draw_klm_line(w, h, canvas, &fCubicKLM[6], SK_ColorRED);
+    }
+  } else {
+    canvas->drawPoints(SkCanvas::kPoints_PointMode, 2, fPoints, pointsPaint);
+    canvas->drawPoints(SkCanvas::kPoints_PointMode, 1, fPoints + 3, pointsPaint);
+  }
+
+  SkFont font(nullptr, 20);
+  SkPaint captionPaint;
+  captionPaint.setColor(SK_ColorWHITE);
+  canvas->drawString(caption, 10, 30, font, captionPaint);
 }
 
 void CCPRGeometryView::updateGpuData() {
-    using Verb = GrCCFillGeometry::Verb;
-    fTriPointInstances.reset();
-    fQuadPointInstances.reset();
+  using Verb = GrCCFillGeometry::Verb;
+  fTriPointInstances.reset();
+  fQuadPointInstances.reset();
 
-    fPath.reset();
-    fPath.moveTo(fPoints[0]);
+  fPath.reset();
+  fPath.moveTo(fPoints[0]);
 
-    if (PrimitiveType::kCubics == fPrimitiveType) {
-        double t[2], s[2];
-        fCubicType = GrPathUtils::getCubicKLM(fPoints, &fCubicKLM, t, s);
-        GrCCFillGeometry geometry;
-        geometry.beginContour(fPoints[0]);
-        geometry.cubicTo(fPoints, kDebugBloat / 2, kDebugBloat / 2);
-        geometry.endContour();
-        int ptsIdx = 0;
-        for (Verb verb : geometry.verbs()) {
-            switch (verb) {
-                case Verb::kLineTo:
-                    ++ptsIdx;
-                    continue;
-                case Verb::kMonotonicQuadraticTo:
-                    ptsIdx += 2;
-                    continue;
-                case Verb::kMonotonicCubicTo:
-                    fQuadPointInstances.push_back().set(&geometry.points()[ptsIdx], 0, 0);
-                    ptsIdx += 3;
-                    continue;
-                default:
-                    continue;
-            }
-        }
-        fPath.cubicTo(fPoints[1], fPoints[2], fPoints[3]);
-    } else if (PrimitiveType::kTriangles != fPrimitiveType) {
-        SkPoint P3[3] = {fPoints[0], fPoints[1], fPoints[3]};
-        GrCCFillGeometry geometry;
-        geometry.beginContour(P3[0]);
-        if (PrimitiveType::kQuadratics == fPrimitiveType) {
-            geometry.quadraticTo(P3);
-            fPath.quadTo(fPoints[1], fPoints[3]);
-        } else {
-            SkASSERT(PrimitiveType::kConics == fPrimitiveType);
-            geometry.conicTo(P3, fConicWeight);
-            fPath.conicTo(fPoints[1], fPoints[3], fConicWeight);
-        }
-        geometry.endContour();
-        int ptsIdx = 0, conicWeightIdx = 0;
-        for (Verb verb : geometry.verbs()) {
-            if (Verb::kBeginContour == verb || Verb::kEndOpenContour == verb ||
-                Verb::kEndClosedContour == verb) {
-                continue;
-            }
-            if (Verb::kLineTo == verb) {
-                ++ptsIdx;
-                continue;
-            }
-            SkASSERT(Verb::kMonotonicQuadraticTo == verb || Verb::kMonotonicConicTo == verb);
-            if (PrimitiveType::kQuadratics == fPrimitiveType &&
-                Verb::kMonotonicQuadraticTo == verb) {
-                fTriPointInstances.push_back().set(&geometry.points()[ptsIdx], Sk2f(0, 0));
-            } else if (PrimitiveType::kConics == fPrimitiveType &&
-                       Verb::kMonotonicConicTo == verb) {
-                fQuadPointInstances.push_back().setW(&geometry.points()[ptsIdx], Sk2f(0, 0),
-                                                     geometry.getConicWeight(conicWeightIdx++));
-            }
-            ptsIdx += 2;
-        }
-    } else {
-        fTriPointInstances.push_back().set(fPoints[0], fPoints[1], fPoints[3], Sk2f(0, 0));
-        fPath.lineTo(fPoints[1]);
-        fPath.lineTo(fPoints[3]);
-        fPath.close();
+  if (PrimitiveType::kCubics == fPrimitiveType) {
+    double t[2], s[2];
+    fCubicType = GrPathUtils::getCubicKLM(fPoints, &fCubicKLM, t, s);
+    GrCCFillGeometry geometry;
+    geometry.beginContour(fPoints[0]);
+    geometry.cubicTo(fPoints, kDebugBloat / 2, kDebugBloat / 2);
+    geometry.endContour();
+    int ptsIdx = 0;
+    for (Verb verb : geometry.verbs()) {
+      switch (verb) {
+        case Verb::kLineTo: ++ptsIdx; continue;
+        case Verb::kMonotonicQuadraticTo: ptsIdx += 2; continue;
+        case Verb::kMonotonicCubicTo:
+          fQuadPointInstances.push_back().set(&geometry.points()[ptsIdx], 0, 0);
+          ptsIdx += 3;
+          continue;
+        default: continue;
+      }
     }
+    fPath.cubicTo(fPoints[1], fPoints[2], fPoints[3]);
+  } else if (PrimitiveType::kTriangles != fPrimitiveType) {
+    SkPoint P3[3] = {fPoints[0], fPoints[1], fPoints[3]};
+    GrCCFillGeometry geometry;
+    geometry.beginContour(P3[0]);
+    if (PrimitiveType::kQuadratics == fPrimitiveType) {
+      geometry.quadraticTo(P3);
+      fPath.quadTo(fPoints[1], fPoints[3]);
+    } else {
+      SkASSERT(PrimitiveType::kConics == fPrimitiveType);
+      geometry.conicTo(P3, fConicWeight);
+      fPath.conicTo(fPoints[1], fPoints[3], fConicWeight);
+    }
+    geometry.endContour();
+    int ptsIdx = 0, conicWeightIdx = 0;
+    for (Verb verb : geometry.verbs()) {
+      if (Verb::kBeginContour == verb || Verb::kEndOpenContour == verb ||
+          Verb::kEndClosedContour == verb) {
+        continue;
+      }
+      if (Verb::kLineTo == verb) {
+        ++ptsIdx;
+        continue;
+      }
+      SkASSERT(Verb::kMonotonicQuadraticTo == verb || Verb::kMonotonicConicTo == verb);
+      if (PrimitiveType::kQuadratics == fPrimitiveType && Verb::kMonotonicQuadraticTo == verb) {
+        fTriPointInstances.push_back().set(&geometry.points()[ptsIdx], Sk2f(0, 0));
+      } else if (PrimitiveType::kConics == fPrimitiveType && Verb::kMonotonicConicTo == verb) {
+        fQuadPointInstances.push_back().setW(
+            &geometry.points()[ptsIdx], Sk2f(0, 0), geometry.getConicWeight(conicWeightIdx++));
+      }
+      ptsIdx += 2;
+    }
+  } else {
+    fTriPointInstances.push_back().set(fPoints[0], fPoints[1], fPoints[3], Sk2f(0, 0));
+    fPath.lineTo(fPoints[1]);
+    fPath.lineTo(fPoints[3]);
+    fPath.close();
+  }
 }
 
-void CCPRGeometryView::DrawCoverageCountOp::onExecute(GrOpFlushState* state,
-                                                      const SkRect& chainBounds) {
-    GrResourceProvider* rp = state->resourceProvider();
-    GrContext* context = state->gpu()->getContext();
-    GrGLGpu* glGpu = GrBackendApi::kOpenGL == context->backend()
-                             ? static_cast<GrGLGpu*>(state->gpu())
-                             : nullptr;
-    if (glGpu) {
-        glGpu->handleDirtyContext();
-        // GR_GL_CALL(glGpu->glInterface(), PolygonMode(GR_GL_FRONT_AND_BACK, GR_GL_LINE));
-        GR_GL_CALL(glGpu->glInterface(), Enable(GR_GL_LINE_SMOOTH));
-    }
+void CCPRGeometryView::DrawCoverageCountOp::onExecute(
+    GrOpFlushState* state, const SkRect& chainBounds) {
+  GrResourceProvider* rp = state->resourceProvider();
+  GrContext* context = state->gpu()->getContext();
+  GrGLGpu* glGpu =
+      GrBackendApi::kOpenGL == context->backend() ? static_cast<GrGLGpu*>(state->gpu()) : nullptr;
+  if (glGpu) {
+    glGpu->handleDirtyContext();
+    // GR_GL_CALL(glGpu->glInterface(), PolygonMode(GR_GL_FRONT_AND_BACK, GR_GL_LINE));
+    GR_GL_CALL(glGpu->glInterface(), Enable(GR_GL_LINE_SMOOTH));
+  }
 
-    GrPipeline pipeline(GrScissorTest::kDisabled, SkBlendMode::kPlus);
+  GrPipeline pipeline(GrScissorTest::kDisabled, SkBlendMode::kPlus);
 
-    std::unique_ptr<GrCCCoverageProcessor> proc;
-    if (state->caps().shaderCaps()->geometryShaderSupport()) {
-        proc = skstd::make_unique<GrGSCoverageProcessor>();
+  std::unique_ptr<GrCCCoverageProcessor> proc;
+  if (state->caps().shaderCaps()->geometryShaderSupport()) {
+    proc = skstd::make_unique<GrGSCoverageProcessor>();
+  } else {
+    proc = skstd::make_unique<GrVSCoverageProcessor>();
+  }
+
+  if (!fView->fDoStroke) {
+    proc->reset(fView->fPrimitiveType, rp);
+    SkDEBUGCODE(proc->enableDebugBloat(kDebugBloat));
+
+    SkSTArray<1, GrMesh> mesh;
+    if (PrimitiveType::kCubics == fView->fPrimitiveType ||
+        PrimitiveType::kConics == fView->fPrimitiveType) {
+      sk_sp<GrGpuBuffer> instBuff(rp->createBuffer(
+          fView->fQuadPointInstances.count() * sizeof(QuadPointInstance), GrGpuBufferType::kVertex,
+          kDynamic_GrAccessPattern, fView->fQuadPointInstances.begin()));
+      if (!fView->fQuadPointInstances.empty() && instBuff) {
+        proc->appendMesh(std::move(instBuff), fView->fQuadPointInstances.count(), 0, &mesh);
+      }
     } else {
-        proc = skstd::make_unique<GrVSCoverageProcessor>();
+      sk_sp<GrGpuBuffer> instBuff(rp->createBuffer(
+          fView->fTriPointInstances.count() * sizeof(TriPointInstance), GrGpuBufferType::kVertex,
+          kDynamic_GrAccessPattern, fView->fTriPointInstances.begin()));
+      if (!fView->fTriPointInstances.empty() && instBuff) {
+        proc->appendMesh(std::move(instBuff), fView->fTriPointInstances.count(), 0, &mesh);
+      }
     }
 
-    if (!fView->fDoStroke) {
-        proc->reset(fView->fPrimitiveType, rp);
-        SkDEBUGCODE(proc->enableDebugBloat(kDebugBloat));
-
-        SkSTArray<1, GrMesh> mesh;
-        if (PrimitiveType::kCubics == fView->fPrimitiveType ||
-            PrimitiveType::kConics == fView->fPrimitiveType) {
-            sk_sp<GrGpuBuffer> instBuff(
-                    rp->createBuffer(fView->fQuadPointInstances.count() * sizeof(QuadPointInstance),
-                                     GrGpuBufferType::kVertex, kDynamic_GrAccessPattern,
-                                     fView->fQuadPointInstances.begin()));
-            if (!fView->fQuadPointInstances.empty() && instBuff) {
-                proc->appendMesh(std::move(instBuff), fView->fQuadPointInstances.count(), 0, &mesh);
-            }
-        } else {
-            sk_sp<GrGpuBuffer> instBuff(
-                    rp->createBuffer(fView->fTriPointInstances.count() * sizeof(TriPointInstance),
-                                     GrGpuBufferType::kVertex, kDynamic_GrAccessPattern,
-                                     fView->fTriPointInstances.begin()));
-            if (!fView->fTriPointInstances.empty() && instBuff) {
-                proc->appendMesh(std::move(instBuff), fView->fTriPointInstances.count(), 0, &mesh);
-            }
-        }
-
-        if (!mesh.empty()) {
-            SkASSERT(1 == mesh.count());
-            proc->draw(state, pipeline, nullptr, mesh.begin(), 1, this->bounds());
-        }
-    } else if (PrimitiveType::kConics != fView->fPrimitiveType) {  // No conic stroke support yet.
-        GrCCStroker stroker(0, 0, 0);
-
-        SkPaint p;
-        p.setStyle(SkPaint::kStroke_Style);
-        p.setStrokeWidth(fView->fStrokeWidth);
-        p.setStrokeJoin(SkPaint::kMiter_Join);
-        p.setStrokeMiter(4);
-        // p.setStrokeCap(SkPaint::kRound_Cap);
-        stroker.parseDeviceSpaceStroke(fView->fPath, SkPathPriv::PointData(fView->fPath),
-                                       SkStrokeRec(p), p.getStrokeWidth(), GrScissorTest::kDisabled,
-                                       SkIRect::MakeWH(fView->width(), fView->height()), {0, 0});
-        GrCCStroker::BatchID batchID = stroker.closeCurrentBatch();
-
-        GrOnFlushResourceProvider onFlushRP(context->priv().drawingManager());
-        stroker.prepareToDraw(&onFlushRP);
-
-        SkIRect ibounds;
-        this->bounds().roundOut(&ibounds);
-        stroker.drawStrokes(state, proc.get(), batchID, ibounds);
+    if (!mesh.empty()) {
+      SkASSERT(1 == mesh.count());
+      proc->draw(state, pipeline, nullptr, mesh.begin(), 1, this->bounds());
     }
+  } else if (PrimitiveType::kConics != fView->fPrimitiveType) {  // No conic stroke support yet.
+    GrCCStroker stroker(0, 0, 0);
 
-    if (glGpu) {
-        context->resetContext(kMisc_GrGLBackendState);
-    }
+    SkPaint p;
+    p.setStyle(SkPaint::kStroke_Style);
+    p.setStrokeWidth(fView->fStrokeWidth);
+    p.setStrokeJoin(SkPaint::kMiter_Join);
+    p.setStrokeMiter(4);
+    // p.setStrokeCap(SkPaint::kRound_Cap);
+    stroker.parseDeviceSpaceStroke(
+        fView->fPath, SkPathPriv::PointData(fView->fPath), SkStrokeRec(p), p.getStrokeWidth(),
+        GrScissorTest::kDisabled, SkIRect::MakeWH(fView->width(), fView->height()), {0, 0});
+    GrCCStroker::BatchID batchID = stroker.closeCurrentBatch();
+
+    GrOnFlushResourceProvider onFlushRP(context->priv().drawingManager());
+    stroker.prepareToDraw(&onFlushRP);
+
+    SkIRect ibounds;
+    this->bounds().roundOut(&ibounds);
+    stroker.drawStrokes(state, proc.get(), batchID, ibounds);
+  }
+
+  if (glGpu) {
+    context->resetContext(kMisc_GrGLBackendState);
+  }
 }
 
 class CCPRGeometryView::Click : public Sample::Click {
-public:
-    Click(Sample* target, int ptIdx) : Sample::Click(target), fPtIdx(ptIdx) {}
+ public:
+  Click(Sample* target, int ptIdx) : Sample::Click(target), fPtIdx(ptIdx) {}
 
-    void doClick(SkPoint points[]) {
-        if (fPtIdx >= 0) {
-            this->dragPoint(points, fPtIdx);
-        } else {
-            for (int i = 0; i < 4; ++i) {
-                this->dragPoint(points, i);
-            }
-        }
+  void doClick(SkPoint points[]) {
+    if (fPtIdx >= 0) {
+      this->dragPoint(points, fPtIdx);
+    } else {
+      for (int i = 0; i < 4; ++i) {
+        this->dragPoint(points, i);
+      }
     }
+  }
 
-private:
-    void dragPoint(SkPoint points[], int idx) {
-        SkIPoint delta = fICurr - fIPrev;
-        points[idx] += SkPoint::Make(delta.x(), delta.y());
-    }
+ private:
+  void dragPoint(SkPoint points[], int idx) {
+    SkIPoint delta = fICurr - fIPrev;
+    points[idx] += SkPoint::Make(delta.x(), delta.y());
+  }
 
-    int fPtIdx;
+  int fPtIdx;
 };
 
 Sample::Click* CCPRGeometryView::onFindClickHandler(SkScalar x, SkScalar y, unsigned) {
-    for (int i = 0; i < 4; ++i) {
-        if (PrimitiveType::kCubics != fPrimitiveType && 2 == i) {
-            continue;
-        }
-        if (fabs(x - fPoints[i].x()) < 20 && fabsf(y - fPoints[i].y()) < 20) {
-            return new Click(this, i);
-        }
+  for (int i = 0; i < 4; ++i) {
+    if (PrimitiveType::kCubics != fPrimitiveType && 2 == i) {
+      continue;
     }
-    return new Click(this, -1);
+    if (fabs(x - fPoints[i].x()) < 20 && fabsf(y - fPoints[i].y()) < 20) {
+      return new Click(this, i);
+    }
+  }
+  return new Click(this, -1);
 }
 
 bool CCPRGeometryView::onClick(Sample::Click* click) {
-    Click* myClick = (Click*)click;
-    myClick->doClick(fPoints);
-    this->updateAndInval();
-    return true;
+  Click* myClick = (Click*)click;
+  myClick->doClick(fPoints);
+  this->updateAndInval();
+  return true;
 }
 
 bool CCPRGeometryView::onQuery(Sample::Event* evt) {
-    if (Sample::TitleQ(*evt)) {
-        Sample::TitleR(evt, "CCPRGeometry");
+  if (Sample::TitleQ(*evt)) {
+    Sample::TitleR(evt, "CCPRGeometry");
+    return true;
+  }
+  SkUnichar unichar;
+  if (Sample::CharQ(*evt, &unichar)) {
+    if (unichar >= '1' && unichar <= '4') {
+      fPrimitiveType = PrimitiveType(unichar - '1');
+      if (fPrimitiveType >= PrimitiveType::kWeightedTriangles) {
+        fPrimitiveType = (PrimitiveType)((int)fPrimitiveType + 1);
+      }
+      this->updateAndInval();
+      return true;
+    }
+    float* valueToScale = nullptr;
+    if (fDoStroke) {
+      valueToScale = &fStrokeWidth;
+    } else if (PrimitiveType::kConics == fPrimitiveType) {
+      valueToScale = &fConicWeight;
+    }
+    if (valueToScale) {
+      if (unichar == '+') {
+        *valueToScale *= 2;
+        this->updateAndInval();
         return true;
+      }
+      if (unichar == '+' || unichar == '=') {
+        *valueToScale *= 5 / 4.f;
+        this->updateAndInval();
+        return true;
+      }
+      if (unichar == '-') {
+        *valueToScale *= 4 / 5.f;
+        this->updateAndInval();
+        return true;
+      }
+      if (unichar == '_') {
+        *valueToScale *= .5f;
+        this->updateAndInval();
+        return true;
+      }
     }
-    SkUnichar unichar;
-    if (Sample::CharQ(*evt, &unichar)) {
-        if (unichar >= '1' && unichar <= '4') {
-            fPrimitiveType = PrimitiveType(unichar - '1');
-            if (fPrimitiveType >= PrimitiveType::kWeightedTriangles) {
-                fPrimitiveType = (PrimitiveType)((int)fPrimitiveType + 1);
-            }
-            this->updateAndInval();
-            return true;
-        }
-        float* valueToScale = nullptr;
-        if (fDoStroke) {
-            valueToScale = &fStrokeWidth;
-        } else if (PrimitiveType::kConics == fPrimitiveType) {
-            valueToScale = &fConicWeight;
-        }
-        if (valueToScale) {
-            if (unichar == '+') {
-                *valueToScale *= 2;
-                this->updateAndInval();
-                return true;
-            }
-            if (unichar == '+' || unichar == '=') {
-                *valueToScale *= 5 / 4.f;
-                this->updateAndInval();
-                return true;
-            }
-            if (unichar == '-') {
-                *valueToScale *= 4 / 5.f;
-                this->updateAndInval();
-                return true;
-            }
-            if (unichar == '_') {
-                *valueToScale *= .5f;
-                this->updateAndInval();
-                return true;
-            }
-        }
-        if (unichar == 'D') {
-            SkDebugf("    SkPoint fPoints[4] = {\n");
-            SkDebugf("        {%ff, %ff},\n", fPoints[0].x(), fPoints[0].y());
-            SkDebugf("        {%ff, %ff},\n", fPoints[1].x(), fPoints[1].y());
-            SkDebugf("        {%ff, %ff},\n", fPoints[2].x(), fPoints[2].y());
-            SkDebugf("        {%ff, %ff}\n", fPoints[3].x(), fPoints[3].y());
-            SkDebugf("    };\n");
-            return true;
-        }
-        if (unichar == 'S') {
-            fDoStroke = !fDoStroke;
-            this->updateAndInval();
-        }
+    if (unichar == 'D') {
+      SkDebugf("    SkPoint fPoints[4] = {\n");
+      SkDebugf("        {%ff, %ff},\n", fPoints[0].x(), fPoints[0].y());
+      SkDebugf("        {%ff, %ff},\n", fPoints[1].x(), fPoints[1].y());
+      SkDebugf("        {%ff, %ff},\n", fPoints[2].x(), fPoints[2].y());
+      SkDebugf("        {%ff, %ff}\n", fPoints[3].x(), fPoints[3].y());
+      SkDebugf("    };\n");
+      return true;
     }
-    return this->INHERITED::onQuery(evt);
+    if (unichar == 'S') {
+      fDoStroke = !fDoStroke;
+      this->updateAndInval();
+    }
+  }
+  return this->INHERITED::onQuery(evt);
 }
 
 DEF_SAMPLE(return new CCPRGeometryView;)

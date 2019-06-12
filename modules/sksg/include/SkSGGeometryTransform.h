@@ -22,33 +22,33 @@ class Transform;
  * Concrete Effect node, binding a Matrix to a GeometryNode.
  */
 class GeometryTransform final : public GeometryNode {
-public:
-    static sk_sp<GeometryTransform> Make(sk_sp<GeometryNode> child, sk_sp<Transform> transform) {
-        return child && transform ? sk_sp<GeometryTransform>(new GeometryTransform(
-                                            std::move(child), std::move(transform)))
-                                  : nullptr;
-    }
+ public:
+  static sk_sp<GeometryTransform> Make(sk_sp<GeometryNode> child, sk_sp<Transform> transform) {
+    return child && transform ? sk_sp<GeometryTransform>(
+                                    new GeometryTransform(std::move(child), std::move(transform)))
+                              : nullptr;
+  }
 
-    ~GeometryTransform() override;
+  ~GeometryTransform() override;
 
-    const sk_sp<Transform>& getTransform() const { return fTransform; }
+  const sk_sp<Transform>& getTransform() const { return fTransform; }
 
-protected:
-    void onClip(SkCanvas*, bool antiAlias) const override;
-    void onDraw(SkCanvas*, const SkPaint&) const override;
-    bool onContains(const SkPoint&) const override;
+ protected:
+  void onClip(SkCanvas*, bool antiAlias) const override;
+  void onDraw(SkCanvas*, const SkPaint&) const override;
+  bool onContains(const SkPoint&) const override;
 
-    SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
-    SkPath onAsPath() const override;
+  SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
+  SkPath onAsPath() const override;
 
-private:
-    GeometryTransform(sk_sp<GeometryNode>, sk_sp<Transform>);
+ private:
+  GeometryTransform(sk_sp<GeometryNode>, sk_sp<Transform>);
 
-    const sk_sp<GeometryNode> fChild;
-    const sk_sp<Transform> fTransform;
-    SkPath fTransformedPath;
+  const sk_sp<GeometryNode> fChild;
+  const sk_sp<Transform> fTransform;
+  SkPath fTransformedPath;
 
-    using INHERITED = GeometryNode;
+  using INHERITED = GeometryNode;
 };
 
 }  // namespace sksg

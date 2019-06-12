@@ -17,29 +17,29 @@ class GrGLDistanceFieldLCDTextGeoProc;
 class GrInvariantOutput;
 
 enum GrDistanceFieldEffectFlags {
-    kSimilarity_DistanceFieldEffectFlag = 0x01,    // ctm is similarity matrix
-    kScaleOnly_DistanceFieldEffectFlag = 0x02,     // ctm has only scale and translate
-    kPerspective_DistanceFieldEffectFlag = 0x04,   // ctm has perspective (and positions are x,y,w)
-    kUseLCD_DistanceFieldEffectFlag = 0x08,        // use lcd text
-    kBGR_DistanceFieldEffectFlag = 0x10,           // lcd display has bgr order
-    kPortrait_DistanceFieldEffectFlag = 0x20,      // lcd display is in portrait mode (not used yet)
-    kGammaCorrect_DistanceFieldEffectFlag = 0x40,  // assume gamma-correct output (linear blending)
-    kAliased_DistanceFieldEffectFlag = 0x80,       // monochrome output
+  kSimilarity_DistanceFieldEffectFlag = 0x01,    // ctm is similarity matrix
+  kScaleOnly_DistanceFieldEffectFlag = 0x02,     // ctm has only scale and translate
+  kPerspective_DistanceFieldEffectFlag = 0x04,   // ctm has perspective (and positions are x,y,w)
+  kUseLCD_DistanceFieldEffectFlag = 0x08,        // use lcd text
+  kBGR_DistanceFieldEffectFlag = 0x10,           // lcd display has bgr order
+  kPortrait_DistanceFieldEffectFlag = 0x20,      // lcd display is in portrait mode (not used yet)
+  kGammaCorrect_DistanceFieldEffectFlag = 0x40,  // assume gamma-correct output (linear blending)
+  kAliased_DistanceFieldEffectFlag = 0x80,       // monochrome output
 
-    kInvalid_DistanceFieldEffectFlag = 0x100,  // invalid state (for initialization)
+  kInvalid_DistanceFieldEffectFlag = 0x100,  // invalid state (for initialization)
 
-    kUniformScale_DistanceFieldEffectMask =
-            kSimilarity_DistanceFieldEffectFlag | kScaleOnly_DistanceFieldEffectFlag,
-    // The subset of the flags relevant to GrDistanceFieldA8TextGeoProc
-    kNonLCD_DistanceFieldEffectMask =
-            kSimilarity_DistanceFieldEffectFlag | kScaleOnly_DistanceFieldEffectFlag |
-            kPerspective_DistanceFieldEffectFlag | kGammaCorrect_DistanceFieldEffectFlag |
-            kAliased_DistanceFieldEffectFlag,
-    // The subset of the flags relevant to GrDistanceFieldLCDTextGeoProc
-    kLCD_DistanceFieldEffectMask =
-            kSimilarity_DistanceFieldEffectFlag | kScaleOnly_DistanceFieldEffectFlag |
-            kPerspective_DistanceFieldEffectFlag | kUseLCD_DistanceFieldEffectFlag |
-            kBGR_DistanceFieldEffectFlag | kGammaCorrect_DistanceFieldEffectFlag,
+  kUniformScale_DistanceFieldEffectMask =
+      kSimilarity_DistanceFieldEffectFlag | kScaleOnly_DistanceFieldEffectFlag,
+  // The subset of the flags relevant to GrDistanceFieldA8TextGeoProc
+  kNonLCD_DistanceFieldEffectMask =
+      kSimilarity_DistanceFieldEffectFlag | kScaleOnly_DistanceFieldEffectFlag |
+      kPerspective_DistanceFieldEffectFlag | kGammaCorrect_DistanceFieldEffectFlag |
+      kAliased_DistanceFieldEffectFlag,
+  // The subset of the flags relevant to GrDistanceFieldLCDTextGeoProc
+  kLCD_DistanceFieldEffectMask =
+      kSimilarity_DistanceFieldEffectFlag | kScaleOnly_DistanceFieldEffectFlag |
+      kPerspective_DistanceFieldEffectFlag | kUseLCD_DistanceFieldEffectFlag |
+      kBGR_DistanceFieldEffectFlag | kGammaCorrect_DistanceFieldEffectFlag,
 };
 
 /**
@@ -49,74 +49,72 @@ enum GrDistanceFieldEffectFlags {
  * coords are a custom attribute. Gamma correction is handled via a texture LUT.
  */
 class GrDistanceFieldA8TextGeoProc : public GrGeometryProcessor {
-public:
-    static constexpr int kMaxTextures = 4;
+ public:
+  static constexpr int kMaxTextures = 4;
 
-    /** The local matrix should be identity if local coords are not required by the GrPipeline. */
+  /** The local matrix should be identity if local coords are not required by the GrPipeline. */
 #ifdef SK_GAMMA_APPLY_TO_A8
-    static sk_sp<GrGeometryProcessor> Make(const GrShaderCaps& caps,
-                                           const sk_sp<GrTextureProxy>* proxies,
-                                           int numActiveProxies, const GrSamplerState& params,
-                                           float lum, uint32_t flags,
-                                           const SkMatrix& localMatrixIfUsesLocalCoords) {
-        return sk_sp<GrGeometryProcessor>(new GrDistanceFieldA8TextGeoProc(
-                caps, proxies, numActiveProxies, params, lum, flags, localMatrixIfUsesLocalCoords));
-    }
+  static sk_sp<GrGeometryProcessor> Make(
+      const GrShaderCaps& caps, const sk_sp<GrTextureProxy>* proxies, int numActiveProxies,
+      const GrSamplerState& params, float lum, uint32_t flags,
+      const SkMatrix& localMatrixIfUsesLocalCoords) {
+    return sk_sp<GrGeometryProcessor>(new GrDistanceFieldA8TextGeoProc(
+        caps, proxies, numActiveProxies, params, lum, flags, localMatrixIfUsesLocalCoords));
+  }
 #else
-    static sk_sp<GrGeometryProcessor> Make(const GrShaderCaps& caps,
-                                           const sk_sp<GrTextureProxy>* proxies,
-                                           int numActiveProxies, const GrSamplerState& params,
-                                           uint32_t flags,
-                                           const SkMatrix& localMatrixIfUsesLocalCoords) {
-        return sk_sp<GrGeometryProcessor>(new GrDistanceFieldA8TextGeoProc(
-                caps, proxies, numActiveProxies, params, flags, localMatrixIfUsesLocalCoords));
-    }
+  static sk_sp<GrGeometryProcessor> Make(
+      const GrShaderCaps& caps, const sk_sp<GrTextureProxy>* proxies, int numActiveProxies,
+      const GrSamplerState& params, uint32_t flags, const SkMatrix& localMatrixIfUsesLocalCoords) {
+    return sk_sp<GrGeometryProcessor>(new GrDistanceFieldA8TextGeoProc(
+        caps, proxies, numActiveProxies, params, flags, localMatrixIfUsesLocalCoords));
+  }
 #endif
 
-    ~GrDistanceFieldA8TextGeoProc() override {}
+  ~GrDistanceFieldA8TextGeoProc() override {}
 
-    const char* name() const override { return "DistanceFieldA8Text"; }
+  const char* name() const override { return "DistanceFieldA8Text"; }
 
-    const Attribute& inPosition() const { return fInPosition; }
-    const Attribute& inColor() const { return fInColor; }
-    const Attribute& inTextureCoords() const { return fInTextureCoords; }
-    const SkMatrix& localMatrix() const { return fLocalMatrix; }
+  const Attribute& inPosition() const { return fInPosition; }
+  const Attribute& inColor() const { return fInColor; }
+  const Attribute& inTextureCoords() const { return fInTextureCoords; }
+  const SkMatrix& localMatrix() const { return fLocalMatrix; }
 #ifdef SK_GAMMA_APPLY_TO_A8
-    float getDistanceAdjust() const { return fDistanceAdjust; }
+  float getDistanceAdjust() const { return fDistanceAdjust; }
 #endif
-    uint32_t getFlags() const { return fFlags; }
-    const SkISize& atlasSize() const { return fAtlasSize; }
+  uint32_t getFlags() const { return fFlags; }
+  const SkISize& atlasSize() const { return fAtlasSize; }
 
-    void addNewProxies(const sk_sp<GrTextureProxy>* proxies, int numProxies, const GrSamplerState&);
+  void addNewProxies(const sk_sp<GrTextureProxy>* proxies, int numProxies, const GrSamplerState&);
 
-    void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
+  void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
 
-    GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
+  GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
 
-private:
-    GrDistanceFieldA8TextGeoProc(const GrShaderCaps& caps, const sk_sp<GrTextureProxy>* proxies,
-                                 int numActiveProxies, const GrSamplerState& params,
+ private:
+  GrDistanceFieldA8TextGeoProc(
+      const GrShaderCaps& caps, const sk_sp<GrTextureProxy>* proxies, int numActiveProxies,
+      const GrSamplerState& params,
 #ifdef SK_GAMMA_APPLY_TO_A8
-                                 float distanceAdjust,
+      float distanceAdjust,
 #endif
-                                 uint32_t flags, const SkMatrix& localMatrix);
+      uint32_t flags, const SkMatrix& localMatrix);
 
-    const TextureSampler& onTextureSampler(int i) const override { return fTextureSamplers[i]; }
+  const TextureSampler& onTextureSampler(int i) const override { return fTextureSamplers[i]; }
 
-    TextureSampler fTextureSamplers[kMaxTextures];
-    SkISize fAtlasSize;  // size for all textures used with fTextureSamplers[].
-    SkMatrix fLocalMatrix;
-    Attribute fInPosition;
-    Attribute fInColor;
-    Attribute fInTextureCoords;
-    uint32_t fFlags;
+  TextureSampler fTextureSamplers[kMaxTextures];
+  SkISize fAtlasSize;  // size for all textures used with fTextureSamplers[].
+  SkMatrix fLocalMatrix;
+  Attribute fInPosition;
+  Attribute fInColor;
+  Attribute fInTextureCoords;
+  uint32_t fFlags;
 #ifdef SK_GAMMA_APPLY_TO_A8
-    float fDistanceAdjust;
+  float fDistanceAdjust;
 #endif
 
-    GR_DECLARE_GEOMETRY_PROCESSOR_TEST
+  GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 
-    typedef GrGeometryProcessor INHERITED;
+  typedef GrGeometryProcessor INHERITED;
 };
 
 /**
@@ -126,53 +124,54 @@ private:
  * coords are a custom attribute. No gamma correct blending is applied. Used for paths only.
  */
 class GrDistanceFieldPathGeoProc : public GrGeometryProcessor {
-public:
-    static constexpr int kMaxTextures = 4;
+ public:
+  static constexpr int kMaxTextures = 4;
 
-    /** The local matrix should be identity if local coords are not required by the GrPipeline. */
-    static sk_sp<GrGeometryProcessor> Make(const GrShaderCaps& caps, const SkMatrix& matrix,
-                                           bool wideColor, const sk_sp<GrTextureProxy>* proxies,
-                                           int numActiveProxies, const GrSamplerState& params,
-                                           uint32_t flags) {
-        return sk_sp<GrGeometryProcessor>(new GrDistanceFieldPathGeoProc(
-                caps, matrix, wideColor, proxies, numActiveProxies, params, flags));
-    }
+  /** The local matrix should be identity if local coords are not required by the GrPipeline. */
+  static sk_sp<GrGeometryProcessor> Make(
+      const GrShaderCaps& caps, const SkMatrix& matrix, bool wideColor,
+      const sk_sp<GrTextureProxy>* proxies, int numActiveProxies, const GrSamplerState& params,
+      uint32_t flags) {
+    return sk_sp<GrGeometryProcessor>(new GrDistanceFieldPathGeoProc(
+        caps, matrix, wideColor, proxies, numActiveProxies, params, flags));
+  }
 
-    ~GrDistanceFieldPathGeoProc() override {}
+  ~GrDistanceFieldPathGeoProc() override {}
 
-    const char* name() const override { return "DistanceFieldPath"; }
+  const char* name() const override { return "DistanceFieldPath"; }
 
-    const Attribute& inPosition() const { return fInPosition; }
-    const Attribute& inColor() const { return fInColor; }
-    const Attribute& inTextureCoords() const { return fInTextureCoords; }
-    const SkMatrix& matrix() const { return fMatrix; }
-    uint32_t getFlags() const { return fFlags; }
-    const SkISize& atlasSize() const { return fAtlasSize; }
+  const Attribute& inPosition() const { return fInPosition; }
+  const Attribute& inColor() const { return fInColor; }
+  const Attribute& inTextureCoords() const { return fInTextureCoords; }
+  const SkMatrix& matrix() const { return fMatrix; }
+  uint32_t getFlags() const { return fFlags; }
+  const SkISize& atlasSize() const { return fAtlasSize; }
 
-    void addNewProxies(const sk_sp<GrTextureProxy>*, int numActiveProxies, const GrSamplerState&);
+  void addNewProxies(const sk_sp<GrTextureProxy>*, int numActiveProxies, const GrSamplerState&);
 
-    void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
+  void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
 
-    GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
+  GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
 
-private:
-    GrDistanceFieldPathGeoProc(const GrShaderCaps& caps, const SkMatrix& matrix, bool wideColor,
-                               const sk_sp<GrTextureProxy>* proxies, int numActiveProxies,
-                               const GrSamplerState&, uint32_t flags);
+ private:
+  GrDistanceFieldPathGeoProc(
+      const GrShaderCaps& caps, const SkMatrix& matrix, bool wideColor,
+      const sk_sp<GrTextureProxy>* proxies, int numActiveProxies, const GrSamplerState&,
+      uint32_t flags);
 
-    const TextureSampler& onTextureSampler(int i) const override { return fTextureSamplers[i]; }
+  const TextureSampler& onTextureSampler(int i) const override { return fTextureSamplers[i]; }
 
-    SkMatrix fMatrix;  // view matrix if perspective, local matrix otherwise
-    TextureSampler fTextureSamplers[kMaxTextures];
-    SkISize fAtlasSize;  // size for all textures used with fTextureSamplers[].
-    Attribute fInPosition;
-    Attribute fInColor;
-    Attribute fInTextureCoords;
-    uint32_t fFlags;
+  SkMatrix fMatrix;  // view matrix if perspective, local matrix otherwise
+  TextureSampler fTextureSamplers[kMaxTextures];
+  SkISize fAtlasSize;  // size for all textures used with fTextureSamplers[].
+  Attribute fInPosition;
+  Attribute fInColor;
+  Attribute fInTextureCoords;
+  uint32_t fFlags;
 
-    GR_DECLARE_GEOMETRY_PROCESSOR_TEST
+  GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 
-    typedef GrGeometryProcessor INHERITED;
+  typedef GrGeometryProcessor INHERITED;
 };
 
 /**
@@ -182,73 +181,70 @@ private:
  * coords are a custom attribute. Gamma correction is handled via a texture LUT.
  */
 class GrDistanceFieldLCDTextGeoProc : public GrGeometryProcessor {
-public:
-    static constexpr int kMaxTextures = 4;
+ public:
+  static constexpr int kMaxTextures = 4;
 
-    struct DistanceAdjust {
-        SkScalar fR, fG, fB;
-        static DistanceAdjust Make(SkScalar r, SkScalar g, SkScalar b) {
-            DistanceAdjust result;
-            result.fR = r;
-            result.fG = g;
-            result.fB = b;
-            return result;
-        }
-        bool operator==(const DistanceAdjust& wa) const {
-            return (fR == wa.fR && fG == wa.fG && fB == wa.fB);
-        }
-        bool operator!=(const DistanceAdjust& wa) const { return !(*this == wa); }
-    };
-
-    static sk_sp<GrGeometryProcessor> Make(const GrShaderCaps& caps,
-                                           const sk_sp<GrTextureProxy>* proxies,
-                                           int numActiveProxies,
-                                           const GrSamplerState& params,
-                                           DistanceAdjust distanceAdjust,
-                                           uint32_t flags,
-                                           const SkMatrix& localMatrixIfUsesLocalCoords) {
-        return sk_sp<GrGeometryProcessor>(new GrDistanceFieldLCDTextGeoProc(
-                caps, proxies, numActiveProxies, params, distanceAdjust, flags,
-                localMatrixIfUsesLocalCoords));
+  struct DistanceAdjust {
+    SkScalar fR, fG, fB;
+    static DistanceAdjust Make(SkScalar r, SkScalar g, SkScalar b) {
+      DistanceAdjust result;
+      result.fR = r;
+      result.fG = g;
+      result.fB = b;
+      return result;
     }
+    bool operator==(const DistanceAdjust& wa) const {
+      return (fR == wa.fR && fG == wa.fG && fB == wa.fB);
+    }
+    bool operator!=(const DistanceAdjust& wa) const { return !(*this == wa); }
+  };
 
-    ~GrDistanceFieldLCDTextGeoProc() override {}
+  static sk_sp<GrGeometryProcessor> Make(
+      const GrShaderCaps& caps, const sk_sp<GrTextureProxy>* proxies, int numActiveProxies,
+      const GrSamplerState& params, DistanceAdjust distanceAdjust, uint32_t flags,
+      const SkMatrix& localMatrixIfUsesLocalCoords) {
+    return sk_sp<GrGeometryProcessor>(new GrDistanceFieldLCDTextGeoProc(
+        caps, proxies, numActiveProxies, params, distanceAdjust, flags,
+        localMatrixIfUsesLocalCoords));
+  }
 
-    const char* name() const override { return "DistanceFieldLCDText"; }
+  ~GrDistanceFieldLCDTextGeoProc() override {}
 
-    const Attribute& inPosition() const { return fInPosition; }
-    const Attribute& inColor() const { return fInColor; }
-    const Attribute& inTextureCoords() const { return fInTextureCoords; }
-    DistanceAdjust getDistanceAdjust() const { return fDistanceAdjust; }
-    uint32_t getFlags() const { return fFlags; }
-    const SkMatrix& localMatrix() const { return fLocalMatrix; }
-    const SkISize& atlasSize() const { return fAtlasSize; }
+  const char* name() const override { return "DistanceFieldLCDText"; }
 
-    void addNewProxies(const sk_sp<GrTextureProxy>*, int numActiveProxies, const GrSamplerState&);
+  const Attribute& inPosition() const { return fInPosition; }
+  const Attribute& inColor() const { return fInColor; }
+  const Attribute& inTextureCoords() const { return fInTextureCoords; }
+  DistanceAdjust getDistanceAdjust() const { return fDistanceAdjust; }
+  uint32_t getFlags() const { return fFlags; }
+  const SkMatrix& localMatrix() const { return fLocalMatrix; }
+  const SkISize& atlasSize() const { return fAtlasSize; }
 
-    void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
+  void addNewProxies(const sk_sp<GrTextureProxy>*, int numActiveProxies, const GrSamplerState&);
 
-    GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
+  void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
 
-private:
-    GrDistanceFieldLCDTextGeoProc(const GrShaderCaps& caps, const sk_sp<GrTextureProxy>* proxies,
-                                  int numActiveProxies, const GrSamplerState& params,
-                                  DistanceAdjust wa, uint32_t flags, const SkMatrix& localMatrix);
+  GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
 
-    const TextureSampler& onTextureSampler(int i) const override { return fTextureSamplers[i]; }
+ private:
+  GrDistanceFieldLCDTextGeoProc(
+      const GrShaderCaps& caps, const sk_sp<GrTextureProxy>* proxies, int numActiveProxies,
+      const GrSamplerState& params, DistanceAdjust wa, uint32_t flags, const SkMatrix& localMatrix);
 
-    TextureSampler fTextureSamplers[kMaxTextures];
-    SkISize fAtlasSize;  // size for all textures used with fTextureSamplers[].
-    const SkMatrix fLocalMatrix;
-    DistanceAdjust fDistanceAdjust;
-    Attribute fInPosition;
-    Attribute fInColor;
-    Attribute fInTextureCoords;
-    uint32_t fFlags;
+  const TextureSampler& onTextureSampler(int i) const override { return fTextureSamplers[i]; }
 
-    GR_DECLARE_GEOMETRY_PROCESSOR_TEST
+  TextureSampler fTextureSamplers[kMaxTextures];
+  SkISize fAtlasSize;  // size for all textures used with fTextureSamplers[].
+  const SkMatrix fLocalMatrix;
+  DistanceAdjust fDistanceAdjust;
+  Attribute fInPosition;
+  Attribute fInColor;
+  Attribute fInTextureCoords;
+  uint32_t fFlags;
 
-    typedef GrGeometryProcessor INHERITED;
+  GR_DECLARE_GEOMETRY_PROCESSOR_TEST
+
+  typedef GrGeometryProcessor INHERITED;
 };
 
 #endif

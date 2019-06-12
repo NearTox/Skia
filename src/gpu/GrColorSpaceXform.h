@@ -18,74 +18,74 @@ class SkColorSpace;
  * Represents a color space transformation
  */
 class GrColorSpaceXform : public SkRefCnt {
-public:
-    GrColorSpaceXform(const SkColorSpaceXformSteps& steps) noexcept : fSteps(steps) {}
+ public:
+  GrColorSpaceXform(const SkColorSpaceXformSteps& steps) : fSteps(steps) {}
 
-    static sk_sp<GrColorSpaceXform> Make(SkColorSpace* src, SkAlphaType srcAT, SkColorSpace* dst,
-                                         SkAlphaType dstAT);
+  static sk_sp<GrColorSpaceXform> Make(
+      SkColorSpace* src, SkAlphaType srcAT, SkColorSpace* dst, SkAlphaType dstAT);
 
-    const SkColorSpaceXformSteps& steps() const noexcept { return fSteps; }
+  const SkColorSpaceXformSteps& steps() const { return fSteps; }
 
-    /**
-     * GrGLSLFragmentProcessor::GenKey() must call this and include the returned value in its
-     * computed key.
-     */
-    static uint32_t XformKey(const GrColorSpaceXform* xform) noexcept {
-        // Code generation depends on which steps we apply
-        return xform ? xform->fSteps.flags.mask() : 0;
-    }
+  /**
+   * GrGLSLFragmentProcessor::GenKey() must call this and include the returned value in its
+   * computed key.
+   */
+  static uint32_t XformKey(const GrColorSpaceXform* xform) {
+    // Code generation depends on which steps we apply
+    return xform ? xform->fSteps.flags.mask() : 0;
+  }
 
-    static bool Equals(const GrColorSpaceXform* a, const GrColorSpaceXform* b);
+  static bool Equals(const GrColorSpaceXform* a, const GrColorSpaceXform* b);
 
-    SkColor4f apply(const SkColor4f& srcColor);
+  SkColor4f apply(const SkColor4f& srcColor);
 
-private:
-    friend class GrGLSLColorSpaceXformHelper;
+ private:
+  friend class GrGLSLColorSpaceXformHelper;
 
-    SkColorSpaceXformSteps fSteps;
+  SkColorSpaceXformSteps fSteps;
 };
 
 class GrColorSpaceXformEffect : public GrFragmentProcessor {
-public:
-    /**
-     *  Returns a fragment processor that converts the input's color space from src to dst.
-     */
-    static std::unique_ptr<GrFragmentProcessor> Make(SkColorSpace* src, SkAlphaType srcAT,
-                                                     SkColorSpace* dst, SkAlphaType dstAT);
+ public:
+  /**
+   *  Returns a fragment processor that converts the input's color space from src to dst.
+   */
+  static std::unique_ptr<GrFragmentProcessor> Make(
+      SkColorSpace* src, SkAlphaType srcAT, SkColorSpace* dst, SkAlphaType dstAT);
 
-    /**
-     *  Returns a fragment processor that calls the passed in fragment processor, and then converts
-     *  the color space of the output from src to dst.
-     */
-    static std::unique_ptr<GrFragmentProcessor> Make(std::unique_ptr<GrFragmentProcessor> child,
-                                                     SkColorSpace* src, SkAlphaType srcAT,
-                                                     SkColorSpace* dst);
+  /**
+   *  Returns a fragment processor that calls the passed in fragment processor, and then converts
+   *  the color space of the output from src to dst.
+   */
+  static std::unique_ptr<GrFragmentProcessor> Make(
+      std::unique_ptr<GrFragmentProcessor> child, SkColorSpace* src, SkAlphaType srcAT,
+      SkColorSpace* dst);
 
-    /**
-     * Returns a fragment processor that calls the passed in FP and then converts it with the given
-     * color xform. Returns null if child is null, returns child if the xform is null (e.g. noop).
-     */
-    static std::unique_ptr<GrFragmentProcessor> Make(std::unique_ptr<GrFragmentProcessor> child,
-                                                     sk_sp<GrColorSpaceXform> colorXform);
+  /**
+   * Returns a fragment processor that calls the passed in FP and then converts it with the given
+   * color xform. Returns null if child is null, returns child if the xform is null (e.g. noop).
+   */
+  static std::unique_ptr<GrFragmentProcessor> Make(
+      std::unique_ptr<GrFragmentProcessor> child, sk_sp<GrColorSpaceXform> colorXform);
 
-    const char* name() const noexcept override { return "ColorSpaceXform"; }
-    std::unique_ptr<GrFragmentProcessor> clone() const override;
+  const char* name() const override { return "ColorSpaceXform"; }
+  std::unique_ptr<GrFragmentProcessor> clone() const override;
 
-    const GrColorSpaceXform* colorXform() const noexcept { return fColorXform.get(); }
+  const GrColorSpaceXform* colorXform() const { return fColorXform.get(); }
 
-private:
-    GrColorSpaceXformEffect(std::unique_ptr<GrFragmentProcessor> child,
-                            sk_sp<GrColorSpaceXform> colorXform);
+ private:
+  GrColorSpaceXformEffect(
+      std::unique_ptr<GrFragmentProcessor> child, sk_sp<GrColorSpaceXform> colorXform);
 
-    static OptimizationFlags OptFlags(const GrFragmentProcessor* child);
+  static OptimizationFlags OptFlags(const GrFragmentProcessor* child);
 
-    GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-    void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-    bool onIsEqual(const GrFragmentProcessor&) const override;
+  GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const override;
 
-    sk_sp<GrColorSpaceXform> fColorXform;
+  sk_sp<GrColorSpaceXform> fColorXform;
 
-    typedef GrFragmentProcessor INHERITED;
+  typedef GrFragmentProcessor INHERITED;
 };
 
 #endif

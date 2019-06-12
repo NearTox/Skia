@@ -9,7 +9,7 @@
 #define SkInternalAtlasTextContext_DEFINED
 
 #include "include/core/SkRefCnt.h"
-#include "include/private/SkArenaAlloc.h"
+#include "src/core/SkArenaAlloc.h"
 #include "src/core/SkArenaAllocList.h"
 #include "src/gpu/GrDeferredUpload.h"
 
@@ -25,59 +25,59 @@ class SkMatrix;
  * and to be able to use other private types.
  */
 class SkInternalAtlasTextContext : public GrDeferredUploadTarget {
-public:
-    static std::unique_ptr<SkInternalAtlasTextContext> Make(sk_sp<SkAtlasTextRenderer>);
+ public:
+  static std::unique_ptr<SkInternalAtlasTextContext> Make(sk_sp<SkAtlasTextRenderer>);
 
-    ~SkInternalAtlasTextContext() override;
+  ~SkInternalAtlasTextContext() override;
 
-    SkAtlasTextRenderer* renderer() const { return fRenderer.get(); }
+  SkAtlasTextRenderer* renderer() const { return fRenderer.get(); }
 
-    GrContext* grContext() const { return fGrContext.get(); }
-    GrStrikeCache* glyphCache();
-    GrTextBlobCache* textBlobCache();
+  GrContext* grContext() const { return fGrContext.get(); }
+  GrStrikeCache* glyphCache();
+  GrTextBlobCache* textBlobCache();
 
-    const GrTokenTracker* tokenTracker() final { return &fTokenTracker; }
-    GrDeferredUploadToken addInlineUpload(GrDeferredTextureUploadFn&&) final;
-    GrDeferredUploadToken addASAPUpload(GrDeferredTextureUploadFn&&) final;
+  const GrTokenTracker* tokenTracker() final { return &fTokenTracker; }
+  GrDeferredUploadToken addInlineUpload(GrDeferredTextureUploadFn&&) final;
+  GrDeferredUploadToken addASAPUpload(GrDeferredTextureUploadFn&&) final;
 
-    void recordDraw(const void* vertexData, int glyphCnt, const SkMatrix&, void* targetHandle);
+  void recordDraw(const void* vertexData, int glyphCnt, const SkMatrix&, void* targetHandle);
 
-    void flush();
+  void flush();
 
-private:
-    class DeferredUploader;
-    SkInternalAtlasTextContext() = delete;
-    SkInternalAtlasTextContext(const SkInternalAtlasTextContext&) = delete;
-    SkInternalAtlasTextContext& operator=(const SkInternalAtlasTextContext&) = delete;
+ private:
+  class DeferredUploader;
+  SkInternalAtlasTextContext() = delete;
+  SkInternalAtlasTextContext(const SkInternalAtlasTextContext&) = delete;
+  SkInternalAtlasTextContext& operator=(const SkInternalAtlasTextContext&) = delete;
 
-    SkInternalAtlasTextContext(sk_sp<SkAtlasTextRenderer>);
+  SkInternalAtlasTextContext(sk_sp<SkAtlasTextRenderer>);
 
-    sk_sp<SkAtlasTextRenderer> fRenderer;
+  sk_sp<SkAtlasTextRenderer> fRenderer;
 
-    struct AtlasTexture {
-        void* fTextureHandle = nullptr;
-        GrTextureProxy* fProxy = nullptr;
-    };
+  struct AtlasTexture {
+    void* fTextureHandle = nullptr;
+    GrTextureProxy* fProxy = nullptr;
+  };
 
-    struct Draw {
-        int fGlyphCnt;
-        GrDeferredUploadToken fToken;
-        void* fTargetHandle;
-        const void* fVertexData;
-    };
+  struct Draw {
+    int fGlyphCnt;
+    GrDeferredUploadToken fToken;
+    void* fTargetHandle;
+    const void* fVertexData;
+  };
 
-    struct InlineUpload {
-        GrDeferredTextureUploadFn fUpload;
-        GrDeferredUploadToken fToken;
-    };
+  struct InlineUpload {
+    GrDeferredTextureUploadFn fUpload;
+    GrDeferredUploadToken fToken;
+  };
 
-    GrTokenTracker fTokenTracker;
-    SkArenaAllocList<InlineUpload> fInlineUploads;
-    SkArenaAllocList<Draw> fDraws;
-    SkArenaAllocList<GrDeferredTextureUploadFn> fASAPUploads;
-    SkArenaAlloc fArena{1024 * 40};
-    sk_sp<GrContext> fGrContext;
-    AtlasTexture fDistanceFieldAtlas;
+  GrTokenTracker fTokenTracker;
+  SkArenaAllocList<InlineUpload> fInlineUploads;
+  SkArenaAllocList<Draw> fDraws;
+  SkArenaAllocList<GrDeferredTextureUploadFn> fASAPUploads;
+  SkArenaAlloc fArena{1024 * 40};
+  sk_sp<GrContext> fGrContext;
+  AtlasTexture fDistanceFieldAtlas;
 };
 
 #endif

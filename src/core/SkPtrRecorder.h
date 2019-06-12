@@ -19,92 +19,93 @@
  *  set. decPtr() is called on each ptr when the set is destroyed or reset.
  */
 class SkPtrSet : public SkRefCnt {
-public:
-    /**
-     *  Search for the specified ptr in the set. If it is found, return its
-     *  32bit ID [1..N], or if not found, return 0. Always returns 0 for nullptr.
-     */
-    uint32_t find(void*) const;
+ public:
+  /**
+   *  Search for the specified ptr in the set. If it is found, return its
+   *  32bit ID [1..N], or if not found, return 0. Always returns 0 for nullptr.
+   */
+  uint32_t find(void*) const;
+
+  /**
+   *  Add the specified ptr to the set, returning a unique 32bit ID for it
+   *  [1...N]. Duplicate ptrs will return the same ID.
+   *
+   *  If the ptr is nullptr, it is not added, and 0 is returned.
+   */
+  uint32_t add(void*);
+
+  /**
+   *  Return the number of (non-null) ptrs in the set.
+   */
+  int count() const { return fList.count(); }
+
+  /**
+   *  Copy the ptrs in the set into the specified array (allocated by the
+   *  caller). The ptrs are assgined to the array based on their corresponding
+   *  ID. e.g. array[ptr.ID - 1] = ptr.
+   *
+   *  incPtr() and decPtr() are not called during this operation.
+   */
+  void copyToArray(void* array[]) const;
+
+  /**
+   *  Call decPtr() on each ptr in the set, and the reset the size of the set
+   *  to 0.
+   */
+  void reset();
+
+  /**
+   * Set iterator.
+   */
+  class Iter {
+   public:
+    Iter(const SkPtrSet& set) : fSet(set), fIndex(0) {}
 
     /**
-     *  Add the specified ptr to the set, returning a unique 32bit ID for it
-     *  [1...N]. Duplicate ptrs will return the same ID.
-     *
-     *  If the ptr is nullptr, it is not added, and 0 is returned.
+     * Return the next ptr in the set or null if the end was reached.
      */
-    uint32_t add(void*);
+    void* next() { return fIndex < fSet.fList.count() ? fSet.fList[fIndex++].fPtr : nullptr; }
 
-    /**
-     *  Return the number of (non-null) ptrs in the set.
-     */
-    int count() const { return fList.count(); }
+   private:
+    const SkPtrSet& fSet;
+    int fIndex;
+  };
 
-    /**
-     *  Copy the ptrs in the set into the specified array (allocated by the
-     *  caller). The ptrs are assgined to the array based on their corresponding
-     *  ID. e.g. array[ptr.ID - 1] = ptr.
-     *
-     *  incPtr() and decPtr() are not called during this operation.
-     */
-    void copyToArray(void* array[]) const;
+ protected:
+  virtual void incPtr(void*) {}
+  virtual void decPtr(void*) {}
 
-    /**
-     *  Call decPtr() on each ptr in the set, and the reset the size of the set
-     *  to 0.
-     */
-    void reset();
+ private:
+  struct Pair {
+    void* fPtr;       // never nullptr
+    uint32_t fIndex;  // 1...N
+  };
 
-    /**
-     * Set iterator.
-     */
-    class Iter {
-    public:
-        Iter(const SkPtrSet& set) : fSet(set), fIndex(0) {}
+  // we store the ptrs in sorted-order (using Cmp) so that we can efficiently
+  // detect duplicates when add() is called. Hence we need to store the
+  // ptr and its ID/fIndex explicitly, since the ptr's position in the array
+  // is not related to its "index".
+  SkTDArray<Pair> fList;
 
-        /**
-         * Return the next ptr in the set or null if the end was reached.
-         */
-        void* next() { return fIndex < fSet.fList.count() ? fSet.fList[fIndex++].fPtr : nullptr; }
+  static bool Less(const Pair& a, const Pair& b);
 
-    private:
-        const SkPtrSet& fSet;
-        int fIndex;
-    };
-
-protected:
-    virtual void incPtr(void*) {}
-    virtual void decPtr(void*) {}
-
-private:
-    struct Pair {
-        void* fPtr;       // never nullptr
-        uint32_t fIndex;  // 1...N
-    };
-
-    // we store the ptrs in sorted-order (using Cmp) so that we can efficiently
-    // detect duplicates when add() is called. Hence we need to store the
-    // ptr and its ID/fIndex explicitly, since the ptr's position in the array
-    // is not related to its "index".
-    SkTDArray<Pair> fList;
-
-    static bool Less(const Pair& a, const Pair& b);
-
-    typedef SkRefCnt INHERITED;
+  typedef SkRefCnt INHERITED;
 };
 
 /**
  *  Templated wrapper for SkPtrSet, just meant to automate typecasting
  *  parameters to and from void* (which the base class expects).
  */
-template <typename T> class SkTPtrSet : public SkPtrSet {
-public:
-    uint32_t find(T ptr) { return this->INHERITED::find((void*)ptr); }
-    uint32_t add(T ptr) { return this->INHERITED::add((void*)ptr); }
+template <typename T>
+class SkTPtrSet : public SkPtrSet {
+ public:
+  uint32_t find(T ptr) { return this->INHERITED::find((void*)ptr); }
+  uint32_t add(T ptr) { return this->INHERITED::add((void*)ptr); }
 
-    void copyToArray(T* array) const { this->INHERITED::copyToArray((void**)array); }
+  void copyToArray(T* array) const { this->INHERITED::copyToArray((void**)array); }
 
-private:
-    typedef SkPtrSet INHERITED;
+ private:
+  typedef SkPtrSet INHERITED;
 };
 
 /**
@@ -113,13 +114,13 @@ private:
  *  of each ptr, which is released when the set is reset or destroyed.
  */
 class SkRefCntSet : public SkTPtrSet<SkRefCnt*> {
-public:
-    virtual ~SkRefCntSet();
+ public:
+  virtual ~SkRefCntSet();
 
-protected:
-    // overrides
-    virtual void incPtr(void*);
-    virtual void decPtr(void*);
+ protected:
+  // overrides
+  virtual void incPtr(void*);
+  virtual void decPtr(void*);
 };
 
 class SkFactorySet : public SkTPtrSet<SkFlattenable::Factory> {};
@@ -129,29 +130,29 @@ class SkFactorySet : public SkTPtrSet<SkFlattenable::Factory> {};
  * Also has a function to return the next added Factory's name.
  */
 class SkNamedFactorySet : public SkRefCnt {
-public:
-    SkNamedFactorySet();
+ public:
+  SkNamedFactorySet();
 
-    /**
-     * Find the specified Factory in the set. If it is not already in the set,
-     * and has registered its name, add it to the set, and return its index.
-     * If the Factory has no registered name, return 0.
-     */
-    uint32_t find(SkFlattenable::Factory);
+  /**
+   * Find the specified Factory in the set. If it is not already in the set,
+   * and has registered its name, add it to the set, and return its index.
+   * If the Factory has no registered name, return 0.
+   */
+  uint32_t find(SkFlattenable::Factory);
 
-    /**
-     * If new Factorys have been added to the set, return the name of the first
-     * Factory added after the Factory name returned by the last call to this
-     * function.
-     */
-    const char* getNextAddedFactoryName();
+  /**
+   * If new Factorys have been added to the set, return the name of the first
+   * Factory added after the Factory name returned by the last call to this
+   * function.
+   */
+  const char* getNextAddedFactoryName();
 
-private:
-    int fNextAddedFactory;
-    SkFactorySet fFactorySet;
-    SkTDArray<const char*> fNames;
+ private:
+  int fNextAddedFactory;
+  SkFactorySet fFactorySet;
+  SkTDArray<const char*> fNames;
 
-    typedef SkRefCnt INHERITED;
+  typedef SkRefCnt INHERITED;
 };
 
 #endif

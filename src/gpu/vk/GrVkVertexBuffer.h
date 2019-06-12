@@ -14,24 +14,24 @@
 class GrVkGpu;
 
 class GrVkVertexBuffer : public GrGpuBuffer, public GrVkBuffer {
-public:
-    static sk_sp<GrVkVertexBuffer> Make(GrVkGpu* gpu, size_t size, bool dynamic);
+ public:
+  static sk_sp<GrVkVertexBuffer> Make(GrVkGpu* gpu, size_t size, bool dynamic);
 
-protected:
-    void onAbandon() override;
-    void onRelease() override;
+ protected:
+  void onAbandon() override;
+  void onRelease() override;
 
-private:
-    GrVkVertexBuffer(GrVkGpu* gpu, const GrVkBuffer::Desc& desc,
-                     const GrVkBuffer::Resource* resource);
+ private:
+  GrVkVertexBuffer(
+      GrVkGpu* gpu, const GrVkBuffer::Desc& desc, const GrVkBuffer::Resource* resource);
 
-    void onMap() override;
-    void onUnmap() override;
-    bool onUpdateData(const void* src, size_t srcSizeInBytes) override;
+  void onMap() override;
+  void onUnmap() override;
+  bool onUpdateData(const void* src, size_t srcSizeInBytes) override;
 
-    GrVkGpu* getVkGpu() const;
+  GrVkGpu* getVkGpu() const;
 
-    typedef GrGpuBuffer INHERITED;
+  typedef GrGpuBuffer INHERITED;
 };
 
 #endif

@@ -19,44 +19,44 @@
 
 /** This GM draws with invalid paints. It should draw nothing other than the background. */
 class BadPaintGM : public skiagm::GM {
-public:
-    BadPaintGM() {}
+ public:
+  BadPaintGM() {}
 
-protected:
-    SkString onShortName() override { return SkString("badpaint"); }
+ protected:
+  SkString onShortName() override { return SkString("badpaint"); }
 
-    SkISize onISize() override { return SkISize::Make(100, 100); }
+  SkISize onISize() override { return SkISize::Make(100, 100); }
 
-    void onOnceBeforeDraw() override {
-        SkBitmap emptyBmp;
+  void onOnceBeforeDraw() override {
+    SkBitmap emptyBmp;
 
-        SkBitmap blueBmp;
-        blueBmp.allocN32Pixels(10, 10);
-        blueBmp.eraseColor(SK_ColorBLUE);
+    SkBitmap blueBmp;
+    blueBmp.allocN32Pixels(10, 10);
+    blueBmp.eraseColor(SK_ColorBLUE);
 
-        SkMatrix badMatrix;
-        badMatrix.setAll(0, 0, 0, 0, 0, 0, 0, 0, 0);
+    SkMatrix badMatrix;
+    badMatrix.setAll(0, 0, 0, 0, 0, 0, 0, 0, 0);
 
-        // Empty bitmap.
-        fPaints.push_back().setColor(SK_ColorGREEN);
-        fPaints.back().setShader(emptyBmp.makeShader());
+    // Empty bitmap.
+    fPaints.push_back().setColor(SK_ColorGREEN);
+    fPaints.back().setShader(emptyBmp.makeShader());
 
-        // Non-invertible local matrix.
-        fPaints.push_back().setColor(SK_ColorGREEN);
-        fPaints.back().setShader(blueBmp.makeShader(&badMatrix));
+    // Non-invertible local matrix.
+    fPaints.push_back().setColor(SK_ColorGREEN);
+    fPaints.back().setShader(blueBmp.makeShader(&badMatrix));
+  }
+
+  void onDraw(SkCanvas* canvas) override {
+    SkRect rect = SkRect::MakeXYWH(10, 10, 80, 80);
+    for (int i = 0; i < fPaints.count(); ++i) {
+      canvas->drawRect(rect, fPaints[i]);
     }
+  }
 
-    void onDraw(SkCanvas* canvas) override {
-        SkRect rect = SkRect::MakeXYWH(10, 10, 80, 80);
-        for (int i = 0; i < fPaints.count(); ++i) {
-            canvas->drawRect(rect, fPaints[i]);
-        }
-    }
+ private:
+  SkTArray<SkPaint> fPaints;
 
-private:
-    SkTArray<SkPaint> fPaints;
-
-    typedef skiagm::GM INHERITED;
+  typedef skiagm::GM INHERITED;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////

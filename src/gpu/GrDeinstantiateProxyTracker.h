@@ -14,19 +14,19 @@
 class GrResourceCache;
 
 class GrDeinstantiateProxyTracker {
-public:
-    GrDeinstantiateProxyTracker(GrResourceCache* cache) : fCache(cache) {}
+ public:
+  GrDeinstantiateProxyTracker(GrResourceCache* cache) : fCache(cache) {}
 
-    // Adds a proxy which will be deinstantiated at the end of flush. The same proxy may not be
-    // added multiple times.
-    void addProxy(GrSurfaceProxy* proxy);
+  // Adds a proxy which will be deinstantiated at the end of flush. The same proxy may not be
+  // added multiple times.
+  void addProxy(GrSurfaceProxy* proxy);
 
-    // Loops through all tracked proxies and deinstantiates them.
-    void deinstantiateAllProxies();
+  // Loops through all tracked proxies and deinstantiates them.
+  void deinstantiateAllProxies();
 
-private:
-    GrResourceCache* fCache;
-    SkTArray<sk_sp<GrSurfaceProxy>> fProxies;
+ private:
+  GrResourceCache* fCache;
+  SkTArray<sk_sp<GrSurfaceProxy>> fProxies;
 };
 
 #endif

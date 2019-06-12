@@ -20,8 +20,8 @@ struct GrContextOptions;
  * objective-c files.
  */
 class GrMtlTrampoline {
-public:
-    static sk_sp<GrGpu> MakeGpu(GrContext*, const GrContextOptions&, void* device, void* queue);
+ public:
+  static sk_sp<GrGpu> MakeGpu(GrContext*, const GrContextOptions&, void* device, void* queue);
 };
 
 #endif

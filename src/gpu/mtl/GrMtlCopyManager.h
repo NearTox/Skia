@@ -19,34 +19,36 @@ struct SkIPoint;
 struct SkIRect;
 
 class GrMtlCopyManager {
-public:
-    GrMtlCopyManager(GrMtlGpu* gpu) : fGpu(gpu) {}
+ public:
+  GrMtlCopyManager(GrMtlGpu* gpu) : fGpu(gpu) {}
 
-    bool copySurfaceAsDraw(GrSurface* dst, GrSurfaceOrigin dstOrigin, GrSurface* src,
-                           GrSurfaceOrigin srcOrigin, const SkIRect& srcRect,
-                           const SkIPoint& dstPoint, bool canDiscardOutsideDstRect);
+  bool copySurfaceAsDraw(
+      GrSurface* dst, GrSurfaceOrigin dstOrigin, GrSurface* src, GrSurfaceOrigin srcOrigin,
+      const SkIRect& srcRect, const SkIPoint& dstPoint, bool canDiscardOutsideDstRect);
 
-    static bool IsCompatible(const GrMtlCopyPipelineState*, MTLPixelFormat dstPixelFormat);
+  static bool IsCompatible(const GrMtlCopyPipelineState*, MTLPixelFormat dstPixelFormat);
 
-private:
-    enum BufferIndex {
-        kUniform_BufferIndex,
-        kAttribute_BufferIndex,
-    };
+  void destroyResources();
 
-    void createCopyProgramBuffer();
-    void createCopyProgramShaders();
-    void createCopyProgramVertexDescriptor();
+ private:
+  enum BufferIndex {
+    kUniform_BufferIndex,
+    kAttribute_BufferIndex,
+  };
 
-    void createCopyProgram();
+  void createCopyProgramBuffer();
+  void createCopyProgramShaders();
+  void createCopyProgramVertexDescriptor();
 
-    id<MTLSamplerState> fSamplerState;
-    id<MTLBuffer> fVertexAttributeBuffer;
-    id<MTLFunction> fVertexFunction;
-    id<MTLFunction> fFragmentFunction;
-    MTLVertexDescriptor* fVertexDescriptor;
+  void createCopyProgram();
 
-    GrMtlGpu* fGpu;
+  id<MTLSamplerState> fSamplerState;
+  id<MTLBuffer> fVertexAttributeBuffer;
+  id<MTLFunction> fVertexFunction;
+  id<MTLFunction> fFragmentFunction;
+  MTLVertexDescriptor* fVertexDescriptor;
+
+  GrMtlGpu* fGpu;
 };
 
 #endif

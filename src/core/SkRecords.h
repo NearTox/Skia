@@ -38,96 +38,99 @@ namespace SkRecords {
 // Order doesn't technically matter here, but the compiler can generally generate better code if
 // you keep them semantically grouped, especially the Draws.  It's also nice to leave NoOp at 0.
 #define SK_RECORD_TYPES(M) \
-    M(NoOp)                \
-    M(Flush)               \
-    M(Restore)             \
-    M(Save)                \
-    M(SaveLayer)           \
-    M(SaveBehind)          \
-    M(SetMatrix)           \
-    M(Translate)           \
-    M(Concat)              \
-    M(ClipPath)            \
-    M(ClipRRect)           \
-    M(ClipRect)            \
-    M(ClipRegion)          \
-    M(DrawArc)             \
-    M(DrawDrawable)        \
-    M(DrawImage)           \
-    M(DrawImageLattice)    \
-    M(DrawImageRect)       \
-    M(DrawImageNine)       \
-    M(DrawDRRect)          \
-    M(DrawOval)            \
-    M(DrawBehind)          \
-    M(DrawPaint)           \
-    M(DrawPath)            \
-    M(DrawPatch)           \
-    M(DrawPicture)         \
-    M(DrawPoints)          \
-    M(DrawRRect)           \
-    M(DrawRect)            \
-    M(DrawRegion)          \
-    M(DrawTextBlob)        \
-    M(DrawAtlas)           \
-    M(DrawVertices)        \
-    M(DrawShadowRec)       \
-    M(DrawAnnotation)      \
-    M(DrawEdgeAAQuad)      \
-    M(DrawEdgeAAImageSet)
+  M(NoOp)                  \
+  M(Flush)                 \
+  M(Restore)               \
+  M(Save)                  \
+  M(SaveLayer)             \
+  M(SaveBehind)            \
+  M(SetMatrix)             \
+  M(Translate)             \
+  M(Concat)                \
+  M(ClipPath)              \
+  M(ClipRRect)             \
+  M(ClipRect)              \
+  M(ClipRegion)            \
+  M(DrawArc)               \
+  M(DrawDrawable)          \
+  M(DrawImage)             \
+  M(DrawImageLattice)      \
+  M(DrawImageRect)         \
+  M(DrawImageNine)         \
+  M(DrawDRRect)            \
+  M(DrawOval)              \
+  M(DrawBehind)            \
+  M(DrawPaint)             \
+  M(DrawPath)              \
+  M(DrawPatch)             \
+  M(DrawPicture)           \
+  M(DrawPoints)            \
+  M(DrawRRect)             \
+  M(DrawRect)              \
+  M(DrawRegion)            \
+  M(DrawTextBlob)          \
+  M(DrawAtlas)             \
+  M(DrawVertices)          \
+  M(DrawShadowRec)         \
+  M(DrawAnnotation)        \
+  M(DrawEdgeAAQuad)        \
+  M(DrawEdgeAAImageSet)
 
 // Defines SkRecords::Type, an enum of all record types.
 #define ENUM(T) T##_Type,
 enum Type { SK_RECORD_TYPES(ENUM) };
 #undef ENUM
 
-#define ACT_AS_PTR(ptr)                 \
-    operator T*() const { return ptr; } \
-    T* operator->() const { return ptr; }
+#define ACT_AS_PTR(ptr)               \
+  operator T*() const { return ptr; } \
+  T* operator->() const { return ptr; }
 
 // An Optional doesn't own the pointer's memory, but may need to destroy non-POD data.
-template <typename T> class Optional : SkNoncopyable {
-public:
-    Optional() : fPtr(nullptr) {}
-    Optional(T* ptr) : fPtr(ptr) {}
-    Optional(Optional&& o) : fPtr(o.fPtr) { o.fPtr = nullptr; }
-    ~Optional() {
-        if (fPtr) fPtr->~T();
-    }
+template <typename T>
+class Optional : SkNoncopyable {
+ public:
+  Optional() : fPtr(nullptr) {}
+  Optional(T* ptr) : fPtr(ptr) {}
+  Optional(Optional&& o) : fPtr(o.fPtr) { o.fPtr = nullptr; }
+  ~Optional() {
+    if (fPtr) fPtr->~T();
+  }
 
-    ACT_AS_PTR(fPtr)
-private:
-    T* fPtr;
+  ACT_AS_PTR(fPtr)
+ private:
+  T* fPtr;
 };
 
 // Like Optional, but ptr must not be NULL.
-template <typename T> class Adopted : SkNoncopyable {
-public:
-    Adopted(T* ptr) : fPtr(ptr) { SkASSERT(fPtr); }
-    Adopted(Adopted* source) {
-        // Transfer ownership from source to this.
-        fPtr = source->fPtr;
-        source->fPtr = NULL;
-    }
-    ~Adopted() {
-        if (fPtr) fPtr->~T();
-    }
+template <typename T>
+class Adopted : SkNoncopyable {
+ public:
+  Adopted(T* ptr) : fPtr(ptr) { SkASSERT(fPtr); }
+  Adopted(Adopted* source) {
+    // Transfer ownership from source to this.
+    fPtr = source->fPtr;
+    source->fPtr = NULL;
+  }
+  ~Adopted() {
+    if (fPtr) fPtr->~T();
+  }
 
-    ACT_AS_PTR(fPtr)
-private:
-    T* fPtr;
+  ACT_AS_PTR(fPtr)
+ private:
+  T* fPtr;
 };
 
 // PODArray doesn't own the pointer's memory, and we assume the data is POD.
-template <typename T> class PODArray {
-public:
-    PODArray() {}
-    PODArray(T* ptr) : fPtr(ptr) {}
-    // Default copy and assign.
+template <typename T>
+class PODArray {
+ public:
+  PODArray() {}
+  PODArray(T* ptr) : fPtr(ptr) {}
+  // Default copy and assign.
 
-    ACT_AS_PTR(fPtr)
-private:
-    T* fPtr;
+  ACT_AS_PTR(fPtr)
+ private:
+  T* fPtr;
 };
 
 #undef ACT_AS_PTR
@@ -136,33 +139,33 @@ private:
 // SkPath::cheapComputeDirection() is similar.
 // Recording is a convenient time to cache these, or we can delay it to between record and playback.
 struct PreCachedPath : public SkPath {
-    PreCachedPath() {}
-    PreCachedPath(const SkPath& path);
+  PreCachedPath() {}
+  PreCachedPath(const SkPath& path);
 };
 
 // Like SkPath::getBounds(), SkMatrix::getType() isn't thread safe unless we precache it.
 // This may not cover all SkMatrices used by the picture (e.g. some could be hiding in a shader).
 struct TypedMatrix : public SkMatrix {
-    TypedMatrix() {}
-    TypedMatrix(const SkMatrix& matrix);
+  TypedMatrix() {}
+  TypedMatrix(const SkMatrix& matrix);
 };
 
 enum Tags {
-    kDraw_Tag = 1,      // May draw something (usually named DrawFoo).
-    kHasImage_Tag = 2,  // Contains an SkImage or SkBitmap.
-    kHasText_Tag = 4,   // Contains text.
-    kHasPaint_Tag = 8,  // May have an SkPaint field, at least optionally.
+  kDraw_Tag = 1,      // May draw something (usually named DrawFoo).
+  kHasImage_Tag = 2,  // Contains an SkImage or SkBitmap.
+  kHasText_Tag = 4,   // Contains text.
+  kHasPaint_Tag = 8,  // May have an SkPaint field, at least optionally.
 
-    kDrawWithPaint_Tag = kDraw_Tag | kHasPaint_Tag,
+  kDrawWithPaint_Tag = kDraw_Tag | kHasPaint_Tag,
 };
 
 // A macro to make it a little easier to define a struct that can be stored in SkRecord.
-#define RECORD(T, tags, ...)                \
-    struct T {                              \
-        static const Type kType = T##_Type; \
-        static const int kTags = tags;      \
-        __VA_ARGS__;                        \
-    };
+#define RECORD(T, tags, ...)            \
+  struct T {                            \
+    static const Type kType = T##_Type; \
+    static const int kTags = tags;      \
+    __VA_ARGS__;                        \
+  };
 
 RECORD(NoOp, 0);
 RECORD(Flush, 0);
@@ -181,15 +184,15 @@ RECORD(Concat, 0, TypedMatrix matrix);
 RECORD(Translate, 0, SkScalar dx; SkScalar dy);
 
 struct ClipOpAndAA {
-    ClipOpAndAA() {}
-    ClipOpAndAA(SkClipOp op, bool aa) : fOp(static_cast<unsigned>(op)), fAA(aa) {}
+  ClipOpAndAA() {}
+  ClipOpAndAA(SkClipOp op, bool aa) : fOp(static_cast<unsigned>(op)), fAA(aa) {}
 
-    SkClipOp op() const { return static_cast<SkClipOp>(fOp); }
-    bool aa() const { return fAA != 0; }
+  SkClipOp op() const { return static_cast<SkClipOp>(fOp); }
+  bool aa() const { return fAA != 0; }
 
-private:
-    unsigned fOp : 31;  // This really only needs to be 3, but there's no win today to do so.
-    unsigned fAA : 1;   // MSVC won't pack an enum with an bool, so we call this an unsigned.
+ private:
+  unsigned fOp : 31;  // This really only needs to be 3, but there's no win today to do so.
+  unsigned fAA : 1;   // MSVC won't pack an enum with an bool, so we call this an unsigned.
 };
 static_assert(sizeof(ClipOpAndAA) == 4, "ClipOpAndAASize");
 

@@ -22,30 +22,31 @@
 // Beware: the uniqueID of the TextureRenderTargetProxy will usually be different than
 // the uniqueID of the RenderTarget/Texture it represents!
 class GrTextureRenderTargetProxy : public GrRenderTargetProxy, public GrTextureProxy {
-private:
-    // DDL TODO: rm the GrSurfaceProxy friending
-    friend class GrSurfaceProxy;   // for ctors
-    friend class GrProxyProvider;  // for ctors
+ private:
+  // DDL TODO: rm the GrSurfaceProxy friending
+  friend class GrSurfaceProxy;   // for ctors
+  friend class GrProxyProvider;  // for ctors
 
-    // Deferred version
-    GrTextureRenderTargetProxy(const GrCaps&, const GrBackendFormat&, const GrSurfaceDesc&,
-                               GrSurfaceOrigin, GrMipMapped, SkBackingFit, SkBudgeted,
-                               GrInternalSurfaceFlags);
+  // Deferred version
+  GrTextureRenderTargetProxy(
+      const GrCaps&, const GrBackendFormat&, const GrSurfaceDesc&, GrSurfaceOrigin, GrMipMapped,
+      SkBackingFit, SkBudgeted, GrInternalSurfaceFlags);
 
-    // Lazy-callback version
-    GrTextureRenderTargetProxy(LazyInstantiateCallback&&, LazyInstantiationType,
-                               const GrBackendFormat&, const GrSurfaceDesc& desc, GrSurfaceOrigin,
-                               GrMipMapped, SkBackingFit, SkBudgeted, GrInternalSurfaceFlags);
+  // Lazy-callback version
+  GrTextureRenderTargetProxy(
+      LazyInstantiateCallback&&, LazyInstantiationType, const GrBackendFormat&,
+      const GrSurfaceDesc& desc, GrSurfaceOrigin, GrMipMapped, SkBackingFit, SkBudgeted,
+      GrInternalSurfaceFlags);
 
-    // Wrapped version
-    GrTextureRenderTargetProxy(sk_sp<GrSurface>, GrSurfaceOrigin);
+  // Wrapped version
+  GrTextureRenderTargetProxy(sk_sp<GrSurface>, GrSurfaceOrigin);
 
-    bool instantiate(GrResourceProvider*) override;
-    sk_sp<GrSurface> createSurface(GrResourceProvider*) const override;
+  bool instantiate(GrResourceProvider*) override;
+  sk_sp<GrSurface> createSurface(GrResourceProvider*) const override;
 
-    size_t onUninstantiatedGpuMemorySize() const override;
+  size_t onUninstantiatedGpuMemorySize() const override;
 
-    SkDEBUGCODE(void onValidateSurface(const GrSurface*) override);
+  SkDEBUGCODE(void onValidateSurface(const GrSurface*) override;)
 };
 
 #ifdef SK_BUILD_FOR_WIN

@@ -39,44 +39,47 @@
 // e.g. setTextSize(-1)
 //#define SK_REPORT_API_RANGE_CHECK
 
-SkPaint::SkPaint() noexcept
-        : fColor4f{0, 0, 0, 1}  // opaque black
-        , fWidth{0}
-        , fMiterLimit{SkPaintDefaults_MiterLimit}
-        , fBitfields{(unsigned)false,                   // fAntiAlias
-                     (unsigned)false,                   // fDither
-                     (unsigned)SkPaint::kDefault_Cap,   // fCapType
-                     (unsigned)SkPaint::kDefault_Join,  // fJoinType
-                     (unsigned)SkPaint::kFill_Style,    // fStyle
-                     (unsigned)kNone_SkFilterQuality,   // fFilterQuality
-                     (unsigned)SkBlendMode::kSrcOver,   // fBlendMode
-                     0}                                 // fPadding
+SkPaint::SkPaint()
+    : fColor4f{0, 0, 0, 1}  // opaque black
+      ,
+      fWidth{0},
+      fMiterLimit{SkPaintDefaults_MiterLimit},
+      fBitfields{(unsigned)false,                   // fAntiAlias
+                 (unsigned)false,                   // fDither
+                 (unsigned)SkPaint::kDefault_Cap,   // fCapType
+                 (unsigned)SkPaint::kDefault_Join,  // fJoinType
+                 (unsigned)SkPaint::kFill_Style,    // fStyle
+                 (unsigned)kNone_SkFilterQuality,   // fFilterQuality
+                 (unsigned)SkBlendMode::kSrcOver,   // fBlendMode
+                 0}                                 // fPadding
 {
-    static_assert(sizeof(fBitfields) == sizeof(fBitfieldsUInt), "");
+  static_assert(sizeof(fBitfields) == sizeof(fBitfieldsUInt), "");
 }
 
 SkPaint::SkPaint(const SkColor4f& color, SkColorSpace* colorSpace) : SkPaint() {
-    this->setColor4f(color, colorSpace);
+  this->setColor(color, colorSpace);
 }
 
-SkPaint::SkPaint(const SkPaint& paint) noexcept = default;
-SkPaint::SkPaint(SkPaint&& paint) noexcept = default;
+SkPaint::SkPaint(const SkPaint& src) = default;
 
-SkPaint::~SkPaint() noexcept = default;
-SkPaint& SkPaint::operator=(const SkPaint& paint) noexcept = default;
+SkPaint::SkPaint(SkPaint&& src) = default;
 
-SkPaint& SkPaint::operator=(SkPaint&& paint) noexcept = default;
+SkPaint::~SkPaint() = default;
 
-bool operator==(const SkPaint& a, const SkPaint& b) noexcept {
+SkPaint& SkPaint::operator=(const SkPaint& src) = default;
+
+SkPaint& SkPaint::operator=(SkPaint&& src) = default;
+
+bool operator==(const SkPaint& a, const SkPaint& b) {
 #define EQUAL(field) (a.field == b.field)
-    return EQUAL(fPathEffect) && EQUAL(fShader) && EQUAL(fMaskFilter) && EQUAL(fColorFilter) &&
-           EQUAL(fDrawLooper) && EQUAL(fImageFilter) && EQUAL(fColor4f) && EQUAL(fWidth) &&
-           EQUAL(fMiterLimit) && EQUAL(fBitfieldsUInt);
+  return EQUAL(fPathEffect) && EQUAL(fShader) && EQUAL(fMaskFilter) && EQUAL(fColorFilter) &&
+         EQUAL(fDrawLooper) && EQUAL(fImageFilter) && EQUAL(fColor4f) && EQUAL(fWidth) &&
+         EQUAL(fMiterLimit) && EQUAL(fBitfieldsUInt);
 #undef EQUAL
 }
 
 #define DEFINE_REF_FOO(type) \
-    sk_sp<Sk##type> SkPaint::ref##type() const noexcept { return f##type; }
+  sk_sp<Sk##type> SkPaint::ref##type() const { return f##type; }
 DEFINE_REF_FOO(ColorFilter)
 DEFINE_REF_FOO(DrawLooper)
 DEFINE_REF_FOO(ImageFilter)
@@ -85,86 +88,84 @@ DEFINE_REF_FOO(PathEffect)
 DEFINE_REF_FOO(Shader)
 #undef DEFINE_REF_FOO
 
-void SkPaint::reset() noexcept { *this = SkPaint(); }
+void SkPaint::reset() { *this = SkPaint(); }
 
-void SkPaint::setFilterQuality(SkFilterQuality quality) noexcept {
-    fBitfields.fFilterQuality = quality;
-}
+void SkPaint::setFilterQuality(SkFilterQuality quality) { fBitfields.fFilterQuality = quality; }
 
-void SkPaint::setStyle(Style style) noexcept {
-    if ((unsigned)style < kStyleCount) {
-        fBitfields.fStyle = style;
-    } else {
+void SkPaint::setStyle(Style style) {
+  if ((unsigned)style < kStyleCount) {
+    fBitfields.fStyle = style;
+  } else {
 #ifdef SK_REPORT_API_RANGE_CHECK
-        SkDebugf("SkPaint::setStyle(%d) out of range\n", style);
+    SkDebugf("SkPaint::setStyle(%d) out of range\n", style);
 #endif
-    }
+  }
 }
 
 void SkPaint::setColor(SkColor color) { fColor4f = SkColor4f::FromColor(color); }
 
-void SkPaint::setColor4f(const SkColor4f& color, SkColorSpace* colorSpace) {
-    SkASSERT(fColor4f.fA >= 0 && fColor4f.fA <= 1.0f);
+void SkPaint::setColor(const SkColor4f& color, SkColorSpace* colorSpace) {
+  SkASSERT(fColor4f.fA >= 0 && fColor4f.fA <= 1.0f);
 
-    SkColorSpaceXformSteps steps{colorSpace, kUnpremul_SkAlphaType, sk_srgb_singleton(),
-                                 kUnpremul_SkAlphaType};
-    fColor4f = color;
-    steps.apply(fColor4f.vec());
+  SkColorSpaceXformSteps steps{colorSpace, kUnpremul_SkAlphaType, sk_srgb_singleton(),
+                               kUnpremul_SkAlphaType};
+  fColor4f = color;
+  steps.apply(fColor4f.vec());
 }
 
-void SkPaint::setAlphaf(float a) noexcept {
-    SkASSERT(a >= 0 && a <= 1.0f);
-    fColor4f.fA = a;
+void SkPaint::setAlphaf(float a) {
+  SkASSERT(a >= 0 && a <= 1.0f);
+  fColor4f.fA = a;
 }
 
 void SkPaint::setARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b) {
-    this->setColor(SkColorSetARGB(a, r, g, b));
+  this->setColor(SkColorSetARGB(a, r, g, b));
 }
 
-void SkPaint::setStrokeWidth(SkScalar width) noexcept {
-    if (width >= 0) {
-        fWidth = width;
-    } else {
+void SkPaint::setStrokeWidth(SkScalar width) {
+  if (width >= 0) {
+    fWidth = width;
+  } else {
 #ifdef SK_REPORT_API_RANGE_CHECK
-        SkDebugf("SkPaint::setStrokeWidth() called with negative value\n");
+    SkDebugf("SkPaint::setStrokeWidth() called with negative value\n");
 #endif
-    }
+  }
 }
 
-void SkPaint::setStrokeMiter(SkScalar limit) noexcept {
-    if (limit >= 0) {
-        fMiterLimit = limit;
-    } else {
+void SkPaint::setStrokeMiter(SkScalar limit) {
+  if (limit >= 0) {
+    fMiterLimit = limit;
+  } else {
 #ifdef SK_REPORT_API_RANGE_CHECK
-        SkDebugf("SkPaint::setStrokeMiter() called with negative value\n");
+    SkDebugf("SkPaint::setStrokeMiter() called with negative value\n");
 #endif
-    }
+  }
 }
 
-void SkPaint::setStrokeCap(Cap ct) noexcept {
-    if ((unsigned)ct < kCapCount) {
-        fBitfields.fCapType = SkToU8(ct);
-    } else {
+void SkPaint::setStrokeCap(Cap ct) {
+  if ((unsigned)ct < kCapCount) {
+    fBitfields.fCapType = SkToU8(ct);
+  } else {
 #ifdef SK_REPORT_API_RANGE_CHECK
-        SkDebugf("SkPaint::setStrokeCap(%d) out of range\n", ct);
+    SkDebugf("SkPaint::setStrokeCap(%d) out of range\n", ct);
 #endif
-    }
+  }
 }
 
-void SkPaint::setStrokeJoin(Join jt) noexcept {
-    if ((unsigned)jt < kJoinCount) {
-        fBitfields.fJoinType = SkToU8(jt);
-    } else {
+void SkPaint::setStrokeJoin(Join jt) {
+  if ((unsigned)jt < kJoinCount) {
+    fBitfields.fJoinType = SkToU8(jt);
+  } else {
 #ifdef SK_REPORT_API_RANGE_CHECK
-        SkDebugf("SkPaint::setStrokeJoin(%d) out of range\n", jt);
+    SkDebugf("SkPaint::setStrokeJoin(%d) out of range\n", jt);
 #endif
-    }
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
 #define MOVE_FIELD(Field) \
-    void SkPaint::set##Field(sk_sp<Sk##Field> f) noexcept { f##Field = std::move(f); }
+  void SkPaint::set##Field(sk_sp<Sk##Field> f) { f##Field = std::move(f); }
 MOVE_FIELD(ImageFilter)
 MOVE_FIELD(Shader)
 MOVE_FIELD(ColorFilter)
@@ -172,7 +173,7 @@ MOVE_FIELD(PathEffect)
 MOVE_FIELD(MaskFilter)
 MOVE_FIELD(DrawLooper)
 #undef MOVE_FIELD
-void SkPaint::setLooper(sk_sp<SkDrawLooper> looper) noexcept { fDrawLooper = std::move(looper); }
+void SkPaint::setLooper(sk_sp<SkDrawLooper> looper) { fDrawLooper = std::move(looper); }
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -180,81 +181,82 @@ void SkPaint::setLooper(sk_sp<SkDrawLooper> looper) noexcept { fDrawLooper = std
 
 #ifdef SK_DEBUG
 static void ASSERT_FITS_IN(uint32_t value, int bitCount) {
-    SkASSERT(bitCount > 0 && bitCount <= 32);
-    uint32_t mask = ~0U;
-    mask >>= (32 - bitCount);
-    SkASSERT(0 == (value & ~mask));
+  SkASSERT(bitCount > 0 && bitCount <= 32);
+  uint32_t mask = ~0U;
+  mask >>= (32 - bitCount);
+  SkASSERT(0 == (value & ~mask));
 }
 #else
 #define ASSERT_FITS_IN(value, bitcount)
 #endif
 
 enum FlatFlags {
-    kHasTypeface_FlatFlag = 0x1,
-    kHasEffects_FlatFlag = 0x2,
+  kHasTypeface_FlatFlag = 0x1,
+  kHasEffects_FlatFlag = 0x2,
 
-    kFlatFlagMask = 0x3,
+  kFlatFlagMask = 0x3,
 };
 
 enum BitsPerField {
-    kFlags_BPF = 16,
-    kHint_BPF = 2,
-    kFilter_BPF = 2,
-    kFlatFlags_BPF = 3,
+  kFlags_BPF = 16,
+  kHint_BPF = 2,
+  kFilter_BPF = 2,
+  kFlatFlags_BPF = 3,
 };
 
-static inline constexpr int BPF_Mask(int bits) noexcept { return (1 << bits) - 1; }
+static inline int BPF_Mask(int bits) { return (1 << bits) - 1; }
 
 // SkPaint originally defined flags, some of which now apply to SkFont. These are renames
 // of those flags, split into categories depending on which objects they (now) apply to.
 
 enum PaintFlagsForPaint {
-    kAA_PaintFlagForPaint = 0x01,
-    kDither_PaintFlagForPaint = 0x04,
+  kAA_PaintFlagForPaint = 0x01,
+  kDither_PaintFlagForPaint = 0x04,
 };
 
 enum PaintFlagsForFont {
-    kFakeBold_PaintFlagForFont = 0x20,
-    kLinear_PaintFlagForFont = 0x40,
-    kSubpixel_PaintFlagForFont = 0x80,
-    kLCD_PaintFlagForFont = 0x200,
-    kEmbeddedBitmap_PaintFlagForFont = 0x400,
-    kAutoHinting_PaintFlagForFont = 0x800,
+  kFakeBold_PaintFlagForFont = 0x20,
+  kLinear_PaintFlagForFont = 0x40,
+  kSubpixel_PaintFlagForFont = 0x80,
+  kLCD_PaintFlagForFont = 0x200,
+  kEmbeddedBitmap_PaintFlagForFont = 0x400,
+  kAutoHinting_PaintFlagForFont = 0x800,
 };
 
 static FlatFlags unpack_paint_flags(SkPaint* paint, uint32_t packed, SkFont* font) {
-    uint32_t f = packed >> 16;
-    paint->setAntiAlias((f & kAA_PaintFlagForPaint) != 0);
-    paint->setDither((f & kDither_PaintFlagForPaint) != 0);
-    if (font) {
-        font->setEmbolden((f & kFakeBold_PaintFlagForFont) != 0);
-        font->setLinearMetrics((f & kLinear_PaintFlagForFont) != 0);
-        font->setSubpixel((f & kSubpixel_PaintFlagForFont) != 0);
-        font->setEmbeddedBitmaps((f & kEmbeddedBitmap_PaintFlagForFont) != 0);
-        font->setForceAutoHinting((f & kAutoHinting_PaintFlagForFont) != 0);
+  uint32_t f = packed >> 16;
+  paint->setAntiAlias((f & kAA_PaintFlagForPaint) != 0);
+  paint->setDither((f & kDither_PaintFlagForPaint) != 0);
+  if (font) {
+    font->setEmbolden((f & kFakeBold_PaintFlagForFont) != 0);
+    font->setLinearMetrics((f & kLinear_PaintFlagForFont) != 0);
+    font->setSubpixel((f & kSubpixel_PaintFlagForFont) != 0);
+    font->setEmbeddedBitmaps((f & kEmbeddedBitmap_PaintFlagForFont) != 0);
+    font->setForceAutoHinting((f & kAutoHinting_PaintFlagForFont) != 0);
 
-        font->setHinting((SkFontHinting)((packed >> 14) & BPF_Mask(kHint_BPF)));
+    font->setHinting((SkFontHinting)((packed >> 14) & BPF_Mask(kHint_BPF)));
 
-        if (f & kAA_PaintFlagForPaint) {
-            if (f & kLCD_PaintFlagForFont) {
-                font->setEdging(SkFont::Edging::kSubpixelAntiAlias);
-            } else {
-                font->setEdging(SkFont::Edging::kAntiAlias);
-            }
-        } else {
-            font->setEdging(SkFont::Edging::kAlias);
-        }
+    if (f & kAA_PaintFlagForPaint) {
+      if (f & kLCD_PaintFlagForFont) {
+        font->setEdging(SkFont::Edging::kSubpixelAntiAlias);
+      } else {
+        font->setEdging(SkFont::Edging::kAntiAlias);
+      }
+    } else {
+      font->setEdging(SkFont::Edging::kAlias);
     }
+  }
 
-    paint->setFilterQuality((SkFilterQuality)((packed >> 10) & BPF_Mask(kFilter_BPF)));
-    return (FlatFlags)(packed & kFlatFlagMask);
+  paint->setFilterQuality((SkFilterQuality)((packed >> 10) & BPF_Mask(kFilter_BPF)));
+  return (FlatFlags)(packed & kFlatFlagMask);
 }
 
-template <typename T> uint32_t shift_bits(T value, unsigned shift, unsigned bits) noexcept {
-    SkASSERT(shift + bits <= 32);
-    uint32_t v = static_cast<uint32_t>(value);
-    ASSERT_FITS_IN(v, bits);
-    return v << shift;
+template <typename T>
+uint32_t shift_bits(T value, unsigned shift, unsigned bits) {
+  SkASSERT(shift + bits <= 32);
+  uint32_t v = static_cast<uint32_t>(value);
+  ASSERT_FITS_IN(v, bits);
+  return v << shift;
 }
 
 /*  Packing the paint
@@ -267,288 +269,287 @@ template <typename T> uint32_t shift_bits(T value, unsigned shift, unsigned bits
  flat  :  8  // 1...
  total : 32
  */
-static uint32_t pack_v68(const SkPaint& paint, unsigned flatFlags) noexcept {
-    uint32_t packed = 0;
-    packed |= shift_bits(((unsigned)paint.isDither() << 1) | (unsigned)paint.isAntiAlias(), 0, 8);
-    packed |= shift_bits(paint.getBlendMode(), 8, 8);
-    packed |= shift_bits(paint.getStrokeCap(), 16, 2);
-    packed |= shift_bits(paint.getStrokeJoin(), 18, 2);
-    packed |= shift_bits(paint.getStyle(), 20, 2);
-    packed |= shift_bits(paint.getFilterQuality(), 22, 2);
-    packed |= shift_bits(flatFlags, 24, 8);
-    return packed;
+static uint32_t pack_v68(const SkPaint& paint, unsigned flatFlags) {
+  uint32_t packed = 0;
+  packed |= shift_bits(((unsigned)paint.isDither() << 1) | (unsigned)paint.isAntiAlias(), 0, 8);
+  packed |= shift_bits(paint.getBlendMode(), 8, 8);
+  packed |= shift_bits(paint.getStrokeCap(), 16, 2);
+  packed |= shift_bits(paint.getStrokeJoin(), 18, 2);
+  packed |= shift_bits(paint.getStyle(), 20, 2);
+  packed |= shift_bits(paint.getFilterQuality(), 22, 2);
+  packed |= shift_bits(flatFlags, 24, 8);
+  return packed;
 }
 
-static uint32_t unpack_v68(SkPaint* paint, uint32_t packed, SkSafeRange& safe) noexcept {
-    paint->setAntiAlias((packed & 1) != 0);
-    paint->setDither((packed & 2) != 0);
-    packed >>= 8;
-    paint->setBlendMode(safe.checkLE(packed & 0xFF, SkBlendMode::kLastMode));
-    packed >>= 8;
-    paint->setStrokeCap(safe.checkLE(packed & 0x3, SkPaint::kLast_Cap));
-    packed >>= 2;
-    paint->setStrokeJoin(safe.checkLE(packed & 0x3, SkPaint::kLast_Join));
-    packed >>= 2;
-    paint->setStyle(safe.checkLE(packed & 0x3, SkPaint::kStrokeAndFill_Style));
-    packed >>= 2;
-    paint->setFilterQuality(safe.checkLE(packed & 0x3, kLast_SkFilterQuality));
-    packed >>= 2;
-    return packed;
+static uint32_t unpack_v68(SkPaint* paint, uint32_t packed, SkSafeRange& safe) {
+  paint->setAntiAlias((packed & 1) != 0);
+  paint->setDither((packed & 2) != 0);
+  packed >>= 8;
+  paint->setBlendMode(safe.checkLE(packed & 0xFF, SkBlendMode::kLastMode));
+  packed >>= 8;
+  paint->setStrokeCap(safe.checkLE(packed & 0x3, SkPaint::kLast_Cap));
+  packed >>= 2;
+  paint->setStrokeJoin(safe.checkLE(packed & 0x3, SkPaint::kLast_Join));
+  packed >>= 2;
+  paint->setStyle(safe.checkLE(packed & 0x3, SkPaint::kStrokeAndFill_Style));
+  packed >>= 2;
+  paint->setFilterQuality(safe.checkLE(packed & 0x3, kLast_SkFilterQuality));
+  packed >>= 2;
+  return packed;
 }
 
 /*  To save space/time, we analyze the paint, and write a truncated version of
     it if there are not tricky elements like shaders, etc.
  */
 void SkPaintPriv::Flatten(const SkPaint& paint, SkWriteBuffer& buffer) {
-    uint8_t flatFlags = 0;
+  uint8_t flatFlags = 0;
 
-    if (paint.getPathEffect() || paint.getShader() || paint.getMaskFilter() ||
-        paint.getColorFilter() || paint.getLooper() || paint.getImageFilter()) {
-        flatFlags |= kHasEffects_FlatFlag;
-    }
+  if (paint.getPathEffect() || paint.getShader() || paint.getMaskFilter() ||
+      paint.getColorFilter() || paint.getLooper() || paint.getImageFilter()) {
+    flatFlags |= kHasEffects_FlatFlag;
+  }
 
-    buffer.writeScalar(paint.getStrokeWidth());
-    buffer.writeScalar(paint.getStrokeMiter());
-    buffer.writeColor4f(paint.getColor4f());
+  buffer.writeScalar(paint.getStrokeWidth());
+  buffer.writeScalar(paint.getStrokeMiter());
+  buffer.writeColor4f(paint.getColor4f());
 
-    buffer.write32(pack_v68(paint, flatFlags));
+  buffer.write32(pack_v68(paint, flatFlags));
 
-    if (flatFlags & kHasEffects_FlatFlag) {
-        buffer.writeFlattenable(paint.getPathEffect());
-        buffer.writeFlattenable(paint.getShader());
-        buffer.writeFlattenable(paint.getMaskFilter());
-        buffer.writeFlattenable(paint.getColorFilter());
-        buffer.writeFlattenable(paint.getLooper());
-        buffer.writeFlattenable(paint.getImageFilter());
-    }
+  if (flatFlags & kHasEffects_FlatFlag) {
+    buffer.writeFlattenable(paint.getPathEffect());
+    buffer.writeFlattenable(paint.getShader());
+    buffer.writeFlattenable(paint.getMaskFilter());
+    buffer.writeFlattenable(paint.getColorFilter());
+    buffer.writeFlattenable(paint.getLooper());
+    buffer.writeFlattenable(paint.getImageFilter());
+  }
 }
 
-SkReadPaintResult SkPaintPriv::Unflatten_PreV68(SkPaint* paint, SkReadBuffer& buffer,
-                                                SkFont* font) {
-    SkSafeRange safe;
+SkReadPaintResult SkPaintPriv::Unflatten_PreV68(
+    SkPaint* paint, SkReadBuffer& buffer, SkFont* font) {
+  SkSafeRange safe;
 
-    {
-        SkScalar sz = buffer.readScalar();
-        SkScalar sx = buffer.readScalar();
-        SkScalar kx = buffer.readScalar();
-        if (font) {
-            font->setSize(sz);
-            font->setScaleX(sx);
-            font->setSkewX(kx);
-        }
-    }
-
-    paint->setStrokeWidth(buffer.readScalar());
-    paint->setStrokeMiter(buffer.readScalar());
-    if (buffer.isVersionLT(SkReadBuffer::kFloat4PaintColor_Version)) {
-        paint->setColor(buffer.readColor());
-    } else {
-        SkColor4f color;
-        buffer.readColor4f(&color);
-        paint->setColor4f(color, sk_srgb_singleton());
-    }
-
-    unsigned flatFlags = unpack_paint_flags(paint, buffer.readUInt(), font);
-
-    uint32_t tmp = buffer.readUInt();
-    paint->setStrokeCap(safe.checkLE((tmp >> 24) & 0xFF, SkPaint::kLast_Cap));
-    paint->setStrokeJoin(safe.checkLE((tmp >> 16) & 0xFF, SkPaint::kLast_Join));
-    paint->setStyle(safe.checkLE((tmp >> 12) & 0xF, SkPaint::kStrokeAndFill_Style));
-    paint->setBlendMode(safe.checkLE(tmp & 0xFF, SkBlendMode::kLastMode));
-
-    sk_sp<SkTypeface> tf;
-    if (flatFlags & kHasTypeface_FlatFlag) {
-        tf = buffer.readTypeface();
-    }
+  {
+    SkScalar sz = buffer.readScalar();
+    SkScalar sx = buffer.readScalar();
+    SkScalar kx = buffer.readScalar();
     if (font) {
-        font->setTypeface(tf);
+      font->setSize(sz);
+      font->setScaleX(sx);
+      font->setSkewX(kx);
     }
+  }
 
-    if (flatFlags & kHasEffects_FlatFlag) {
-        paint->setPathEffect(buffer.readPathEffect());
-        paint->setShader(buffer.readShader());
-        paint->setMaskFilter(buffer.readMaskFilter());
-        paint->setColorFilter(buffer.readColorFilter());
-        (void)buffer.read32();  // use to be SkRasterizer
-        paint->setLooper(buffer.readDrawLooper());
-        paint->setImageFilter(buffer.readImageFilter());
-    } else {
-        paint->setPathEffect(nullptr);
-        paint->setShader(nullptr);
-        paint->setMaskFilter(nullptr);
-        paint->setColorFilter(nullptr);
-        paint->setLooper(nullptr);
-        paint->setImageFilter(nullptr);
-    }
+  paint->setStrokeWidth(buffer.readScalar());
+  paint->setStrokeMiter(buffer.readScalar());
+  if (buffer.isVersionLT(SkReadBuffer::kFloat4PaintColor_Version)) {
+    paint->setColor(buffer.readColor());
+  } else {
+    SkColor4f color;
+    buffer.readColor4f(&color);
+    paint->setColor(color, sk_srgb_singleton());
+  }
 
-    if (!buffer.validate(safe)) {
-        paint->reset();
-        return kFailed_ReadPaint;
-    }
-    return kSuccess_PaintAndFont;
+  unsigned flatFlags = unpack_paint_flags(paint, buffer.readUInt(), font);
+
+  uint32_t tmp = buffer.readUInt();
+  paint->setStrokeCap(safe.checkLE((tmp >> 24) & 0xFF, SkPaint::kLast_Cap));
+  paint->setStrokeJoin(safe.checkLE((tmp >> 16) & 0xFF, SkPaint::kLast_Join));
+  paint->setStyle(safe.checkLE((tmp >> 12) & 0xF, SkPaint::kStrokeAndFill_Style));
+  paint->setBlendMode(safe.checkLE(tmp & 0xFF, SkBlendMode::kLastMode));
+
+  sk_sp<SkTypeface> tf;
+  if (flatFlags & kHasTypeface_FlatFlag) {
+    tf = buffer.readTypeface();
+  }
+  if (font) {
+    font->setTypeface(tf);
+  }
+
+  if (flatFlags & kHasEffects_FlatFlag) {
+    paint->setPathEffect(buffer.readPathEffect());
+    paint->setShader(buffer.readShader());
+    paint->setMaskFilter(buffer.readMaskFilter());
+    paint->setColorFilter(buffer.readColorFilter());
+    (void)buffer.read32();  // use to be SkRasterizer
+    paint->setLooper(buffer.readDrawLooper());
+    paint->setImageFilter(buffer.readImageFilter());
+  } else {
+    paint->setPathEffect(nullptr);
+    paint->setShader(nullptr);
+    paint->setMaskFilter(nullptr);
+    paint->setColorFilter(nullptr);
+    paint->setLooper(nullptr);
+    paint->setImageFilter(nullptr);
+  }
+
+  if (!buffer.validate(safe)) {
+    paint->reset();
+    return kFailed_ReadPaint;
+  }
+  return kSuccess_PaintAndFont;
 }
 
 SkReadPaintResult SkPaintPriv::Unflatten(SkPaint* paint, SkReadBuffer& buffer, SkFont* font) {
-    if (buffer.isVersionLT(SkReadBuffer::kPaintDoesntSerializeFonts_Version)) {
-        return Unflatten_PreV68(paint, buffer, font);
-    }
+  if (buffer.isVersionLT(SkReadBuffer::kPaintDoesntSerializeFonts_Version)) {
+    return Unflatten_PreV68(paint, buffer, font);
+  }
 
-    SkSafeRange safe;
+  SkSafeRange safe;
 
-    paint->setStrokeWidth(buffer.readScalar());
-    paint->setStrokeMiter(buffer.readScalar());
-    {
-        SkColor4f color;
-        buffer.readColor4f(&color);
-        paint->setColor4f(color, sk_srgb_singleton());
-    }
+  paint->setStrokeWidth(buffer.readScalar());
+  paint->setStrokeMiter(buffer.readScalar());
+  {
+    SkColor4f color;
+    buffer.readColor4f(&color);
+    paint->setColor(color, sk_srgb_singleton());
+  }
 
-    unsigned flatFlags = unpack_v68(paint, buffer.readUInt(), safe);
+  unsigned flatFlags = unpack_v68(paint, buffer.readUInt(), safe);
 
-    if (flatFlags & kHasEffects_FlatFlag) {
-        paint->setPathEffect(buffer.readPathEffect());
-        paint->setShader(buffer.readShader());
-        paint->setMaskFilter(buffer.readMaskFilter());
-        paint->setColorFilter(buffer.readColorFilter());
-        paint->setLooper(buffer.readDrawLooper());
-        paint->setImageFilter(buffer.readImageFilter());
-    } else {
-        paint->setPathEffect(nullptr);
-        paint->setShader(nullptr);
-        paint->setMaskFilter(nullptr);
-        paint->setColorFilter(nullptr);
-        paint->setLooper(nullptr);
-        paint->setImageFilter(nullptr);
-    }
+  if (flatFlags & kHasEffects_FlatFlag) {
+    paint->setPathEffect(buffer.readPathEffect());
+    paint->setShader(buffer.readShader());
+    paint->setMaskFilter(buffer.readMaskFilter());
+    paint->setColorFilter(buffer.readColorFilter());
+    paint->setLooper(buffer.readDrawLooper());
+    paint->setImageFilter(buffer.readImageFilter());
+  } else {
+    paint->setPathEffect(nullptr);
+    paint->setShader(nullptr);
+    paint->setMaskFilter(nullptr);
+    paint->setColorFilter(nullptr);
+    paint->setLooper(nullptr);
+    paint->setImageFilter(nullptr);
+  }
 
-    if (!buffer.validate(safe)) {
-        paint->reset();
-        return kFailed_ReadPaint;
-    }
-    return kSuccess_JustPaint;
+  if (!buffer.validate(safe)) {
+    paint->reset();
+    return kFailed_ReadPaint;
+  }
+  return kSuccess_JustPaint;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool SkPaint::getFillPath(const SkPath& src, SkPath* dst, const SkRect* cullRect,
-                          SkScalar resScale) const {
-    if (!src.isFinite()) {
-        dst->reset();
-        return false;
+bool SkPaint::getFillPath(
+    const SkPath& src, SkPath* dst, const SkRect* cullRect, SkScalar resScale) const {
+  if (!src.isFinite()) {
+    dst->reset();
+    return false;
+  }
+
+  SkStrokeRec rec(*this, resScale);
+
+  const SkPath* srcPtr = &src;
+  SkPath tmpPath;
+
+  if (fPathEffect && fPathEffect->filterPath(&tmpPath, src, &rec, cullRect)) {
+    srcPtr = &tmpPath;
+  }
+
+  if (!rec.applyToPath(dst, *srcPtr)) {
+    if (srcPtr == &tmpPath) {
+      // If path's were copy-on-write, this trick would not be needed.
+      // As it is, we want to save making a deep-copy from tmpPath -> dst
+      // since we know we're just going to delete tmpPath when we return,
+      // so the swap saves that copy.
+      dst->swap(tmpPath);
+    } else {
+      *dst = *srcPtr;
     }
+  }
 
-    SkStrokeRec rec(*this, resScale);
-
-    const SkPath* srcPtr = &src;
-    SkPath tmpPath;
-
-    if (fPathEffect && fPathEffect->filterPath(&tmpPath, src, &rec, cullRect)) {
-        srcPtr = &tmpPath;
-    }
-
-    if (!rec.applyToPath(dst, *srcPtr)) {
-        if (srcPtr == &tmpPath) {
-            // If path's were copy-on-write, this trick would not be needed.
-            // As it is, we want to save making a deep-copy from tmpPath -> dst
-            // since we know we're just going to delete tmpPath when we return,
-            // so the swap saves that copy.
-            dst->swap(tmpPath);
-        } else {
-            *dst = *srcPtr;
-        }
-    }
-
-    if (!dst->isFinite()) {
-        dst->reset();
-        return false;
-    }
-    return !rec.isHairlineStyle();
+  if (!dst->isFinite()) {
+    dst->reset();
+    return false;
+  }
+  return !rec.isHairlineStyle();
 }
 
 bool SkPaint::canComputeFastBounds() const {
-    if (this->getLooper()) {
-        return this->getLooper()->canComputeFastBounds(*this);
-    }
-    if (this->getImageFilter() && !this->getImageFilter()->canComputeFastBounds()) {
-        return false;
-    }
-    return true;
+  if (this->getLooper()) {
+    return this->getLooper()->canComputeFastBounds(*this);
+  }
+  if (this->getImageFilter() && !this->getImageFilter()->canComputeFastBounds()) {
+    return false;
+  }
+  return true;
 }
 
-const SkRect& SkPaint::doComputeFastBounds(const SkRect& origSrc,
-                                           SkRect* storage,
-                                           Style style) const {
-    SkASSERT(storage);
+const SkRect& SkPaint::doComputeFastBounds(
+    const SkRect& origSrc, SkRect* storage, Style style) const {
+  SkASSERT(storage);
 
-    const SkRect* src = &origSrc;
+  const SkRect* src = &origSrc;
 
-    if (this->getLooper()) {
-        SkASSERT(this->getLooper()->canComputeFastBounds(*this));
-        this->getLooper()->computeFastBounds(*this, *src, storage);
-        return *storage;
-    }
-
-    SkRect tmpSrc;
-    if (this->getPathEffect()) {
-        this->getPathEffect()->computeFastBounds(&tmpSrc, origSrc);
-        src = &tmpSrc;
-    }
-
-    SkScalar radius = SkStrokeRec::GetInflationRadius(*this, style);
-    *storage = src->makeOutset(radius, radius);
-
-    if (this->getMaskFilter()) {
-        as_MFB(this->getMaskFilter())->computeFastBounds(*storage, storage);
-    }
-
-    if (this->getImageFilter()) {
-        *storage = this->getImageFilter()->computeFastBounds(*storage);
-    }
-
+  if (this->getLooper()) {
+    SkASSERT(this->getLooper()->canComputeFastBounds(*this));
+    this->getLooper()->computeFastBounds(*this, *src, storage);
     return *storage;
+  }
+
+  SkRect tmpSrc;
+  if (this->getPathEffect()) {
+    this->getPathEffect()->computeFastBounds(&tmpSrc, origSrc);
+    src = &tmpSrc;
+  }
+
+  SkScalar radius = SkStrokeRec::GetInflationRadius(*this, style);
+  *storage = src->makeOutset(radius, radius);
+
+  if (this->getMaskFilter()) {
+    as_MFB(this->getMaskFilter())->computeFastBounds(*storage, storage);
+  }
+
+  if (this->getImageFilter()) {
+    *storage = this->getImageFilter()->computeFastBounds(*storage);
+  }
+
+  return *storage;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
 // return true if the filter exists, and may affect alpha
-static bool affects_alpha(const SkColorFilter* cf) noexcept {
-    return cf && !(cf->getFlags() & SkColorFilter::kAlphaUnchanged_Flag);
+static bool affects_alpha(const SkColorFilter* cf) {
+  return cf && !(cf->getFlags() & SkColorFilter::kAlphaUnchanged_Flag);
 }
 
 // return true if the filter exists, and may affect alpha
-static bool affects_alpha(const SkImageFilter* imf) noexcept {
-    // TODO: check if we should allow imagefilters to broadcast that they don't affect alpha
-    // ala colorfilters
-    return imf != nullptr;
+static bool affects_alpha(const SkImageFilter* imf) {
+  // TODO: check if we should allow imagefilters to broadcast that they don't affect alpha
+  // ala colorfilters
+  return imf != nullptr;
 }
 
-bool SkPaint::nothingToDraw() const noexcept {
-    if (fDrawLooper) {
-        return false;
-    }
-    switch (this->getBlendMode()) {
-        case SkBlendMode::kSrcOver:
-        case SkBlendMode::kSrcATop:
-        case SkBlendMode::kDstOut:
-        case SkBlendMode::kDstOver:
-        case SkBlendMode::kPlus:
-            if (0 == this->getAlpha()) {
-                return !affects_alpha(fColorFilter.get()) && !affects_alpha(fImageFilter.get());
-            }
-            break;
-        case SkBlendMode::kDst:
-            return true;
-        default:
-            break;
-    }
+bool SkPaint::nothingToDraw() const {
+  if (fDrawLooper) {
     return false;
+  }
+  switch (this->getBlendMode()) {
+    case SkBlendMode::kSrcOver:
+    case SkBlendMode::kSrcATop:
+    case SkBlendMode::kDstOut:
+    case SkBlendMode::kDstOver:
+    case SkBlendMode::kPlus:
+      if (0 == this->getAlpha()) {
+        return !affects_alpha(fColorFilter.get()) && !affects_alpha(fImageFilter.get());
+      }
+      break;
+    case SkBlendMode::kDst: return true;
+    default: break;
+  }
+  return false;
 }
 
-uint32_t SkPaint::getHash() const noexcept {
-    // We're going to hash 6 pointers and 6 floats, finishing up with fBitfields,
-    // so fBitfields should be 6 pointers and 6 floats from the start.
-    static_assert(offsetof(SkPaint, fBitfieldsUInt) == 6 * sizeof(void*) + 6 * sizeof(float),
-                  "SkPaint_notPackedTightly");
-    return SkOpts::hash(reinterpret_cast<const uint32_t*>(this),
-                        offsetof(SkPaint, fBitfieldsUInt) + sizeof(fBitfieldsUInt));
+uint32_t SkPaint::getHash() const {
+  // We're going to hash 6 pointers and 6 floats, finishing up with fBitfields,
+  // so fBitfields should be 6 pointers and 6 floats from the start.
+  static_assert(
+      offsetof(SkPaint, fBitfieldsUInt) == 6 * sizeof(void*) + 6 * sizeof(float),
+      "SkPaint_notPackedTightly");
+  return SkOpts::hash(
+      reinterpret_cast<const uint32_t*>(this),
+      offsetof(SkPaint, fBitfieldsUInt) + sizeof(fBitfieldsUInt));
 }

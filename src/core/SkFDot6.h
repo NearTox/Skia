@@ -21,18 +21,18 @@ typedef int32_t SkFDot6;
  * (i.e. round to nearest even)
  */
 inline SkFDot6 SkScalarRoundToFDot6(SkScalar x, int shift = 0) {
-    union {
-        double fDouble;
-        int32_t fBits[2];
-    } tmp;
-    int fractionalBits = 6 + shift;
-    double magic = (1LL << (52 - (fractionalBits))) * 1.5;
+  union {
+    double fDouble;
+    int32_t fBits[2];
+  } tmp;
+  int fractionalBits = 6 + shift;
+  double magic = (1LL << (52 - (fractionalBits))) * 1.5;
 
-    tmp.fDouble = SkScalarToDouble(x) + magic;
+  tmp.fDouble = SkScalarToDouble(x) + magic;
 #ifdef SK_CPU_BENDIAN
-    return tmp.fBits[1];
+  return tmp.fBits[1];
 #else
-    return tmp.fBits[0];
+  return tmp.fBits[0];
 #endif
 }
 
@@ -41,8 +41,8 @@ inline SkFDot6 SkScalarRoundToFDot6(SkScalar x, int shift = 0) {
 
 #ifdef SK_DEBUG
 inline SkFDot6 SkIntToFDot6(int x) {
-    SkASSERT(SkToS16(x) == x);
-    return x << 6;
+  SkASSERT(SkToS16(x) == x);
+  return x << 6;
 }
 #else
 #define SkIntToFDot6(x) ((x) << 6)
@@ -55,9 +55,9 @@ inline SkFDot6 SkIntToFDot6(int x) {
 #define SkFixedToFDot6(x) ((x) >> 10)
 
 inline SkFixed SkFDot6ToFixed(SkFDot6 x) {
-    SkASSERT((SkLeftShift(x, 10) >> 10) == x);
+  SkASSERT((SkLeftShift(x, 10) >> 10) == x);
 
-    return SkLeftShift(x, 10);
+  return SkLeftShift(x, 10);
 }
 
 #define SkScalarToFDot6(x) (SkFDot6)((x)*64)
@@ -65,13 +65,13 @@ inline SkFixed SkFDot6ToFixed(SkFDot6 x) {
 #define SkFDot6ToFloat SkFDot6ToScalar
 
 inline SkFixed SkFDot6Div(SkFDot6 a, SkFDot6 b) {
-    SkASSERT(b != 0);
+  SkASSERT(b != 0);
 
-    if (SkTFitsIn<int16_t>(a)) {
-        return SkLeftShift(a, 16) / b;
-    } else {
-        return SkFixedDiv(a, b);
-    }
+  if (SkTFitsIn<int16_t>(a)) {
+    return SkLeftShift(a, 16) / b;
+  } else {
+    return SkFixedDiv(a, b);
+  }
 }
 
 #endif

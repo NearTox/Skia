@@ -19,12 +19,9 @@ struct GrUserStencilSettings;
 
 namespace GrRegionOp {
 /** GrAAType must be kNone or kMSAA. */
-std::unique_ptr<GrDrawOp> Make(GrRecordingContext*,
-                               GrPaint&&,
-                               const SkMatrix& viewMatrix,
-                               const SkRegion&,
-                               GrAAType,
-                               const GrUserStencilSettings* stencilSettings = nullptr);
+std::unique_ptr<GrDrawOp> Make(
+    GrRecordingContext*, GrPaint&&, const SkMatrix& viewMatrix, const SkRegion&, GrAAType,
+    const GrUserStencilSettings* stencilSettings = nullptr);
 }  // namespace GrRegionOp
 
 #endif

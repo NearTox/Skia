@@ -36,29 +36,27 @@ struct SkIRect;
  *  @param paintColor  Color+Alpha of the paint.  Color is usually ignored,
  *                     unless it is a alpha shader.
  */
-SkPDFIndirectReference SkPDFMakeShader(SkPDFDocument* doc,
-                                       SkShader* shader,
-                                       const SkMatrix& ctm,
-                                       const SkIRect& surfaceBBox,
-                                       SkColor paintColor);
+SkPDFIndirectReference SkPDFMakeShader(
+    SkPDFDocument* doc, SkShader* shader, const SkMatrix& ctm, const SkIRect& surfaceBBox,
+    SkColor paintColor);
 
 SK_BEGIN_REQUIRE_DENSE
 struct SkPDFImageShaderKey {
-    SkMatrix fCanvasTransform;
-    SkMatrix fShaderTransform;
-    SkIRect fBBox;
-    SkBitmapKey fBitmapKey;
-    SkTileMode fImageTileModes[2];
-    SkColor fPaintColor;
+  SkMatrix fCanvasTransform;
+  SkMatrix fShaderTransform;
+  SkIRect fBBox;
+  SkBitmapKey fBitmapKey;
+  SkTileMode fImageTileModes[2];
+  SkColor fPaintColor;
 };
 SK_END_REQUIRE_DENSE
 
 inline bool operator==(const SkPDFImageShaderKey& a, const SkPDFImageShaderKey& b) {
-    SkASSERT(a.fBitmapKey.fID != 0);
-    SkASSERT(b.fBitmapKey.fID != 0);
-    return a.fCanvasTransform == b.fCanvasTransform && a.fShaderTransform == b.fShaderTransform &&
-           a.fBBox == b.fBBox && a.fBitmapKey == b.fBitmapKey &&
-           a.fImageTileModes[0] == b.fImageTileModes[0] &&
-           a.fImageTileModes[1] == b.fImageTileModes[1] && a.fPaintColor == b.fPaintColor;
+  SkASSERT(a.fBitmapKey.fID != 0);
+  SkASSERT(b.fBitmapKey.fID != 0);
+  return a.fCanvasTransform == b.fCanvasTransform && a.fShaderTransform == b.fShaderTransform &&
+         a.fBBox == b.fBBox && a.fBitmapKey == b.fBitmapKey &&
+         a.fImageTileModes[0] == b.fImageTileModes[0] &&
+         a.fImageTileModes[1] == b.fImageTileModes[1] && a.fPaintColor == b.fPaintColor;
 }
 #endif

@@ -13,28 +13,27 @@
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
 
-sk_sp<SkPathEffect> SkDiscretePathEffect::Make(SkScalar segLength, SkScalar deviation,
-                                               uint32_t seedAssist) {
-    if (!SkScalarIsFinite(segLength) || !SkScalarIsFinite(deviation)) {
-        return nullptr;
-    }
-    if (segLength <= SK_ScalarNearlyZero) {
-        return nullptr;
-    }
-    return sk_sp<SkPathEffect>(new SkDiscretePathEffect(segLength, deviation, seedAssist));
+sk_sp<SkPathEffect> SkDiscretePathEffect::Make(
+    SkScalar segLength, SkScalar deviation, uint32_t seedAssist) {
+  if (!SkScalarIsFinite(segLength) || !SkScalarIsFinite(deviation)) {
+    return nullptr;
+  }
+  if (segLength <= SK_ScalarNearlyZero) {
+    return nullptr;
+  }
+  return sk_sp<SkPathEffect>(new SkDiscretePathEffect(segLength, deviation, seedAssist));
 }
 
 static void Perterb(SkPoint* p, const SkVector& tangent, SkScalar scale) {
-    SkVector normal = tangent;
-    SkPointPriv::RotateCCW(&normal);
-    normal.setLength(scale);
-    *p += normal;
+  SkVector normal = tangent;
+  SkPointPriv::RotateCCW(&normal);
+  normal.setLength(scale);
+  *p += normal;
 }
 
-SkDiscretePathEffect::SkDiscretePathEffect(SkScalar segLength,
-                                           SkScalar deviation,
-                                           uint32_t seedAssist)
-        : fSegLength(segLength), fPerterb(deviation), fSeedAssist(seedAssist) {}
+SkDiscretePathEffect::SkDiscretePathEffect(
+    SkScalar segLength, SkScalar deviation, uint32_t seedAssist)
+    : fSegLength(segLength), fPerterb(deviation), fSeedAssist(seedAssist) {}
 
 /** \class LCGRandom
 
@@ -48,96 +47,96 @@ SkDiscretePathEffect::SkDiscretePathEffect(SkScalar segLength,
 */
 
 class LCGRandom {
-public:
-    LCGRandom(uint32_t seed) : fSeed(seed) {}
+ public:
+  LCGRandom(uint32_t seed) : fSeed(seed) {}
 
-    /** Return the next pseudo random number expressed as a SkScalar
-        in the range [-SK_Scalar1..SK_Scalar1).
-    */
-    SkScalar nextSScalar1() { return SkFixedToScalar(this->nextSFixed1()); }
+  /** Return the next pseudo random number expressed as a SkScalar
+      in the range [-SK_Scalar1..SK_Scalar1).
+  */
+  SkScalar nextSScalar1() { return SkFixedToScalar(this->nextSFixed1()); }
 
-private:
-    /** Return the next pseudo random number as an unsigned 32bit value.
-     */
-    uint32_t nextU() {
-        uint32_t r = fSeed * kMul + kAdd;
-        fSeed = r;
-        return r;
-    }
+ private:
+  /** Return the next pseudo random number as an unsigned 32bit value.
+   */
+  uint32_t nextU() {
+    uint32_t r = fSeed * kMul + kAdd;
+    fSeed = r;
+    return r;
+  }
 
-    /** Return the next pseudo random number as a signed 32bit value.
-     */
-    int32_t nextS() { return (int32_t)this->nextU(); }
+  /** Return the next pseudo random number as a signed 32bit value.
+   */
+  int32_t nextS() { return (int32_t)this->nextU(); }
 
-    /** Return the next pseudo random number expressed as a signed SkFixed
-     in the range [-SK_Fixed1..SK_Fixed1).
-     */
-    SkFixed nextSFixed1() { return this->nextS() >> 15; }
+  /** Return the next pseudo random number expressed as a signed SkFixed
+   in the range [-SK_Fixed1..SK_Fixed1).
+   */
+  SkFixed nextSFixed1() { return this->nextS() >> 15; }
 
-    //  See "Numerical Recipes in C", 1992 page 284 for these constants
-    enum { kMul = 1664525, kAdd = 1013904223 };
-    uint32_t fSeed;
+  //  See "Numerical Recipes in C", 1992 page 284 for these constants
+  enum { kMul = 1664525, kAdd = 1013904223 };
+  uint32_t fSeed;
 };
 
-bool SkDiscretePathEffect::onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
-                                        const SkRect*) const {
-    bool doFill = rec->isFillStyle();
+bool SkDiscretePathEffect::onFilterPath(
+    SkPath* dst, const SkPath& src, SkStrokeRec* rec, const SkRect*) const {
+  bool doFill = rec->isFillStyle();
 
-    SkPathMeasure meas(src, doFill);
+  SkPathMeasure meas(src, doFill);
 
-    /* Caller may supply their own seed assist, which by default is 0 */
-    uint32_t seed = fSeedAssist ^ SkScalarRoundToInt(meas.getLength());
+  /* Caller may supply their own seed assist, which by default is 0 */
+  uint32_t seed = fSeedAssist ^ SkScalarRoundToInt(meas.getLength());
 
-    LCGRandom rand(seed ^ ((seed << 16) | (seed >> 16)));
-    SkScalar scale = fPerterb;
-    SkPoint p;
-    SkVector v;
+  LCGRandom rand(seed ^ ((seed << 16) | (seed >> 16)));
+  SkScalar scale = fPerterb;
+  SkPoint p;
+  SkVector v;
 
-    do {
-        SkScalar length = meas.getLength();
+  do {
+    SkScalar length = meas.getLength();
 
-        if (fSegLength * (2 + doFill) > length) {
-            meas.getSegment(0, length, dst, true);  // to short for us to mangle
-        } else {
-            int n = SkScalarRoundToInt(length / fSegLength);
-            constexpr int kMaxReasonableIterations = 100000;
-            n = SkTMin(n, kMaxReasonableIterations);
-            SkScalar delta = length / n;
-            SkScalar distance = 0;
+    if (fSegLength * (2 + doFill) > length) {
+      meas.getSegment(0, length, dst, true);  // to short for us to mangle
+    } else {
+      int n = SkScalarRoundToInt(length / fSegLength);
+      constexpr int kMaxReasonableIterations = 100000;
+      n = SkTMin(n, kMaxReasonableIterations);
+      SkScalar delta = length / n;
+      SkScalar distance = 0;
 
-            if (meas.isClosed()) {
-                n -= 1;
-                distance += delta / 2;
-            }
+      if (meas.isClosed()) {
+        n -= 1;
+        distance += delta / 2;
+      }
 
-            if (meas.getPosTan(distance, &p, &v)) {
-                Perterb(&p, v, rand.nextSScalar1() * scale);
-                dst->moveTo(p);
-            }
-            while (--n >= 0) {
-                distance += delta;
-                if (meas.getPosTan(distance, &p, &v)) {
-                    Perterb(&p, v, rand.nextSScalar1() * scale);
-                    dst->lineTo(p);
-                }
-            }
-            if (meas.isClosed()) {
-                dst->close();
-            }
+      if (meas.getPosTan(distance, &p, &v)) {
+        Perterb(&p, v, rand.nextSScalar1() * scale);
+        dst->moveTo(p);
+      }
+      while (--n >= 0) {
+        distance += delta;
+        if (meas.getPosTan(distance, &p, &v)) {
+          Perterb(&p, v, rand.nextSScalar1() * scale);
+          dst->lineTo(p);
         }
-    } while (meas.nextContour());
-    return true;
+      }
+      if (meas.isClosed()) {
+        dst->close();
+      }
+    }
+  } while (meas.nextContour());
+  return true;
 }
 
 sk_sp<SkFlattenable> SkDiscretePathEffect::CreateProc(SkReadBuffer& buffer) {
-    SkScalar segLength = buffer.readScalar();
-    SkScalar perterb = buffer.readScalar();
-    uint32_t seed = buffer.readUInt();
-    return Make(segLength, perterb, seed);
+  SkScalar segLength = buffer.readScalar();
+  SkScalar perterb = buffer.readScalar();
+  uint32_t seed = buffer.readUInt();
+  return Make(segLength, perterb, seed);
 }
 
 void SkDiscretePathEffect::flatten(SkWriteBuffer& buffer) const {
-    buffer.writeScalar(fSegLength);
-    buffer.writeScalar(fPerterb);
-    buffer.writeUInt(fSeedAssist);
+  buffer.writeScalar(fSegLength);
+  buffer.writeScalar(fPerterb);
+  buffer.writeUInt(fSeedAssist);
 }
