@@ -33,13 +33,13 @@ class SK_API SkTextBlob final : public SkNVRefCnt<SkTextBlob> {
 
       @return  conservative bounding box
   */
-  const SkRect& bounds() const { return fBounds; }
+  const SkRect& bounds() const noexcept { return fBounds; }
 
   /** Returns a non-zero value unique among all text blobs.
 
       @return  identifier for SkTextBlob
   */
-  uint32_t uniqueID() const { return fUniqueID; }
+  uint32_t uniqueID() const noexcept { return fUniqueID; }
 
   /** Returns the number of intervals that intersect bounds.
       bounds describes a pair of lines parallel to the text advance.
@@ -205,7 +205,7 @@ class SK_API SkTextBlob final : public SkNVRefCnt<SkTextBlob> {
 
   // Call when this blob is part of the key to a cache entry. This allows the cache
   // to know automatically those entries can be purged when this SkTextBlob is deleted.
-  void notifyAddedToCache(uint32_t cacheID) const { fCacheID.store(cacheID); }
+  void notifyAddedToCache(uint32_t cacheID) const noexcept { fCacheID.store(cacheID); }
 
   friend class SkGlyphRunList;
   friend class GrTextBlobCache;
@@ -217,12 +217,12 @@ class SK_API SkTextBlob final : public SkNVRefCnt<SkTextBlob> {
   const uint32_t fUniqueID;
   mutable std::atomic<uint32_t> fCacheID;
 
-  SkDEBUGCODE(size_t fStorageSize;)
+  SkDEBUGCODE(size_t fStorageSize);
 
-      // The actual payload resides in externally-managed storage, following the object.
-      // (see the .cpp for more details)
+  // The actual payload resides in externally-managed storage, following the object.
+  // (see the .cpp for more details)
 
-      typedef SkRefCnt INHERITED;
+  typedef SkRefCnt INHERITED;
 };
 
 /** \class SkTextBlobBuilder
@@ -268,8 +268,8 @@ class SK_API SkTextBlobBuilder {
     uint32_t* clusters;  //!< reserved for future use
 
     // Helpers, since the "pos" field can be different types (always some number of floats).
-    SkPoint* points() const { return reinterpret_cast<SkPoint*>(pos); }
-    SkRSXform* xforms() const { return reinterpret_cast<SkRSXform*>(pos); }
+    SkPoint* points() const noexcept { return reinterpret_cast<SkPoint*>(pos); }
+    SkRSXform* xforms() const noexcept { return reinterpret_cast<SkRSXform*>(pos); }
   };
 
   /** Returns run with storage for glyphs. Caller must write count glyphs to

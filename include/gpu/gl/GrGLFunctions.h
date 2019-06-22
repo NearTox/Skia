@@ -454,7 +454,7 @@ class GrGLFunction<R GR_GL_FUNCTION_TYPE(Args...)> {
     return fCall(fBuf, std::forward<Args>(args)...);
   }
 
-  explicit operator bool() const { return fCall != nullptr; }
+  explicit operator bool() const noexcept { return fCall != nullptr; }
 
   void reset() { fCall = nullptr; }
 

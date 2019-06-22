@@ -78,20 +78,20 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
 
   class Iter {
    public:
-    Iter() : fCurr(nullptr), fRemaining(0) {}
-    Iter(const Iter& iter) : fCurr(iter.fCurr), fRemaining(iter.fRemaining) {}
-    Iter& operator=(const Iter& iter) {
+    constexpr Iter() noexcept : fCurr(nullptr), fRemaining(0) {}
+    Iter(const Iter& iter) noexcept : fCurr(iter.fCurr), fRemaining(iter.fRemaining) {}
+    Iter& operator=(const Iter& iter) noexcept {
       fCurr = iter.fCurr;
       fRemaining = iter.fRemaining;
       return *this;
     }
-    Iter(const Attribute* attrs, int count) : fCurr(attrs), fRemaining(count) {
+    Iter(const Attribute* attrs, int count) noexcept : fCurr(attrs), fRemaining(count) {
       this->skipUninitialized();
     }
 
-    bool operator!=(const Iter& that) const { return fCurr != that.fCurr; }
-    const Attribute& operator*() const { return *fCurr; }
-    void operator++() {
+    bool operator!=(const Iter& that) const noexcept { return fCurr != that.fCurr; }
+    const Attribute& operator*() const noexcept { return *fCurr; }
+    void operator++() noexcept {
       if (fRemaining) {
         fRemaining--;
         fCurr++;
@@ -100,7 +100,7 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
     }
 
    private:
-    void skipUninitialized() {
+    void skipUninitialized() noexcept {
       if (!fRemaining) {
         fCurr = nullptr;
       } else {
@@ -116,13 +116,13 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
 
   class AttributeSet {
    public:
-    Iter begin() const { return Iter(fAttributes, fCount); }
-    Iter end() const { return Iter(); }
+    Iter begin() const noexcept { return Iter(fAttributes, fCount); }
+    Iter end() const noexcept { return Iter(); }
 
    private:
     friend class GrPrimitiveProcessor;
 
-    void init(const Attribute* attrs, int count) {
+    void init(const Attribute* attrs, int count) noexcept {
       fAttributes = attrs;
       fRawCount = count;
       fCount = 0;
@@ -143,23 +143,23 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
 
   GrPrimitiveProcessor(ClassID);
 
-  int numTextureSamplers() const { return fTextureSamplerCnt; }
+  int numTextureSamplers() const noexcept { return fTextureSamplerCnt; }
   const TextureSampler& textureSampler(int index) const;
-  int numVertexAttributes() const { return fVertexAttributes.fCount; }
-  const AttributeSet& vertexAttributes() const { return fVertexAttributes; }
-  int numInstanceAttributes() const { return fInstanceAttributes.fCount; }
-  const AttributeSet& instanceAttributes() const { return fInstanceAttributes; }
+  int numVertexAttributes() const noexcept { return fVertexAttributes.fCount; }
+  const AttributeSet& vertexAttributes() const noexcept { return fVertexAttributes; }
+  int numInstanceAttributes() const noexcept { return fInstanceAttributes.fCount; }
+  const AttributeSet& instanceAttributes() const noexcept { return fInstanceAttributes; }
 
-  bool hasVertexAttributes() const { return SkToBool(fVertexAttributes.fCount); }
-  bool hasInstanceAttributes() const { return SkToBool(fInstanceAttributes.fCount); }
+  bool hasVertexAttributes() const noexcept { return SkToBool(fVertexAttributes.fCount); }
+  bool hasInstanceAttributes() const noexcept { return SkToBool(fInstanceAttributes.fCount); }
 
   /**
    * A common practice is to populate the the vertex/instance's memory using an implicit array of
    * structs. In this case, it is best to assert that:
    *     stride == sizeof(struct)
    */
-  size_t vertexStride() const { return fVertexAttributes.fStride; }
-  size_t instanceStride() const { return fInstanceAttributes.fStride; }
+  size_t vertexStride() const noexcept { return fVertexAttributes.fStride; }
+  size_t instanceStride() const noexcept { return fInstanceAttributes.fStride; }
 
   // Only the GrGeometryProcessor subclass actually has a geo shader or vertex attributes, but
   // we put these calls on the base class to prevent having to cast
@@ -172,7 +172,7 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
    * TODO: A better name for this function  would be "compute" instead of "get".
    */
   uint32_t getTransformKey(
-      const SkTArray<const GrCoordTransform*, true>& coords, int numCoords) const;
+      const SkTArray<const GrCoordTransform*, true>& coords, int numCoords) const noexcept;
 
   /**
    * Sets a unique key on the GrProcessorKeyBuilder that is directly associated with this geometry
@@ -182,7 +182,7 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
    */
   virtual void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const = 0;
 
-  void getAttributeKey(GrProcessorKeyBuilder* b) const {
+  void getAttributeKey(GrProcessorKeyBuilder* b) const noexcept {
     // Ensure that our CPU and GPU type fields fit together in a 32-bit value, and we never
     // collide with the "uninitialized" value.
     static_assert(kGrVertexAttribTypeCount < (1 << 8), "");
@@ -205,14 +205,14 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
   virtual bool isPathRendering() const { return false; }
 
  protected:
-  void setVertexAttributes(const Attribute* attrs, int attrCount) {
+  void setVertexAttributes(const Attribute* attrs, int attrCount) noexcept {
     fVertexAttributes.init(attrs, attrCount);
   }
-  void setInstanceAttributes(const Attribute* attrs, int attrCount) {
+  void setInstanceAttributes(const Attribute* attrs, int attrCount) noexcept {
     SkASSERT(attrCount >= 0);
     fInstanceAttributes.init(attrs, attrCount);
   }
-  void setTextureSamplerCnt(int cnt) {
+  void setTextureSamplerCnt(int cnt) noexcept {
     SkASSERT(cnt >= 0);
     fTextureSamplerCnt = cnt;
   }
@@ -262,14 +262,14 @@ class GrPrimitiveProcessor::TextureSampler {
   void reset(
       GrTextureType, GrPixelConfig, GrSamplerState::Filter, GrSamplerState::WrapMode wrapXAndY);
 
-  GrTextureType textureType() const { return fTextureType; }
-  GrPixelConfig config() const { return fConfig; }
+  GrTextureType textureType() const noexcept { return fTextureType; }
+  GrPixelConfig config() const noexcept { return fConfig; }
 
-  const GrSamplerState& samplerState() const { return fSamplerState; }
+  const GrSamplerState& samplerState() const noexcept { return fSamplerState; }
 
-  uint32_t extraSamplerKey() const { return fExtraSamplerKey; }
+  uint32_t extraSamplerKey() const noexcept { return fExtraSamplerKey; }
 
-  bool isInitialized() const { return fConfig != kUnknown_GrPixelConfig; }
+  bool isInitialized() const noexcept { return fConfig != kUnknown_GrPixelConfig; }
 
  private:
   GrSamplerState fSamplerState;

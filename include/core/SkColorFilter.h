@@ -62,7 +62,7 @@ class SK_API SkColorFilter : public SkFlattenable {
 
   /** Returns the flags for this filter. Override in subclasses to return custom flags.
    */
-  virtual uint32_t getFlags() const { return 0; }
+  virtual uint32_t getFlags() const noexcept { return 0; }
 
   SkColor filterColor(SkColor) const;
   SkColor4f filterColor4f(const SkColor4f&, SkColorSpace*) const;
@@ -97,9 +97,9 @@ class SK_API SkColorFilter : public SkFlattenable {
 
   static void RegisterFlattenables();
 
-  static SkFlattenable::Type GetFlattenableType() { return kSkColorFilter_Type; }
+  static SkFlattenable::Type GetFlattenableType() noexcept { return kSkColorFilter_Type; }
 
-  SkFlattenable::Type getFlattenableType() const override { return kSkColorFilter_Type; }
+  SkFlattenable::Type getFlattenableType() const noexcept override { return kSkColorFilter_Type; }
 
   static sk_sp<SkColorFilter> Deserialize(
       const void* data, size_t size, const SkDeserialProcs* procs = nullptr) {

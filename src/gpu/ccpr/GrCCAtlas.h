@@ -43,7 +43,7 @@ class GrCCAtlas {
     int fApproxNumPixels = 0;
 
     // Add space for a rect in the desired atlas specs.
-    void accountForSpace(int width, int height);
+    void accountForSpace(int width, int height) noexcept;
   };
 
   enum class CoverageType : bool { kFP16_CoverageCount, kA8_LiteralCoverage };
@@ -51,21 +51,21 @@ class GrCCAtlas {
   GrCCAtlas(CoverageType, const Specs&, const GrCaps&);
   ~GrCCAtlas();
 
-  GrTextureProxy* textureProxy() const { return fTextureProxy.get(); }
-  int currentWidth() const { return fWidth; }
-  int currentHeight() const { return fHeight; }
+  GrTextureProxy* textureProxy() const noexcept { return fTextureProxy.get(); }
+  int currentWidth() const noexcept { return fWidth; }
+  int currentHeight() const noexcept { return fHeight; }
 
   // Attempts to add a rect to the atlas. If successful, returns the integer offset from
   // device-space pixels where the path will be drawn, to atlas pixels where its mask resides.
   bool addRect(const SkIRect& devIBounds, SkIVector* atlasOffset);
-  const SkISize& drawBounds() { return fDrawBounds; }
+  const SkISize& drawBounds() noexcept { return fDrawBounds; }
 
   // This is an optional space for the caller to jot down which user-defined batches to use when
   // they render the content of this atlas.
-  void setFillBatchID(int id);
-  int getFillBatchID() const { return fFillBatchID; }
-  void setStrokeBatchID(int id);
-  int getStrokeBatchID() const { return fStrokeBatchID; }
+  void setFillBatchID(int id) noexcept;
+  int getFillBatchID() const noexcept { return fFillBatchID; }
+  void setStrokeBatchID(int id) noexcept;
+  int getStrokeBatchID() const noexcept { return fStrokeBatchID; }
 
   sk_sp<GrCCCachedAtlas> refOrMakeCachedAtlas(GrOnFlushResourceProvider*);
 
@@ -109,25 +109,25 @@ class GrCCAtlasStack {
   GrCCAtlasStack(CoverageType coverageType, const GrCCAtlas::Specs& specs, const GrCaps* caps)
       : fCoverageType(coverageType), fSpecs(specs), fCaps(caps) {}
 
-  bool empty() const { return fAtlases.empty(); }
-  const GrCCAtlas& front() const {
+  bool empty() const noexcept { return fAtlases.empty(); }
+  const GrCCAtlas& front() const noexcept {
     SkASSERT(!this->empty());
     return fAtlases.front();
   }
-  GrCCAtlas& front() {
+  GrCCAtlas& front() noexcept {
     SkASSERT(!this->empty());
     return fAtlases.front();
   }
-  GrCCAtlas& current() {
+  GrCCAtlas& current() noexcept {
     SkASSERT(!this->empty());
     return fAtlases.back();
   }
 
   class Iter {
    public:
-    Iter(GrCCAtlasStack& stack) : fImpl(&stack.fAtlases) {}
-    bool next() { return fImpl.next(); }
-    GrCCAtlas* operator->() const { return fImpl.get(); }
+    Iter(GrCCAtlasStack& stack) noexcept : fImpl(&stack.fAtlases) {}
+    bool next() noexcept { return fImpl.next(); }
+    GrCCAtlas* operator->() const noexcept { return fImpl.get(); }
 
    private:
     typename GrTAllocator<GrCCAtlas>::Iter fImpl;
@@ -149,7 +149,7 @@ class GrCCAtlasStack {
   GrSTAllocator<4, GrCCAtlas> fAtlases;
 };
 
-inline void GrCCAtlas::Specs::accountForSpace(int width, int height) {
+inline void GrCCAtlas::Specs::accountForSpace(int width, int height) noexcept {
   fMinWidth = SkTMax(width, fMinWidth);
   fMinHeight = SkTMax(height, fMinHeight);
   fApproxNumPixels += (width + kPadding) * (height + kPadding);

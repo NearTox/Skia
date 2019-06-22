@@ -24,7 +24,7 @@ class GrWaitSemaphoreOp final : public GrSemaphoreOp {
     return pool->allocate<GrWaitSemaphoreOp>(std::move(semaphore), proxy);
   }
 
-  const char* name() const override { return "WaitSemaphore"; }
+  const char* name() const noexcept override { return "WaitSemaphore"; }
 
  private:
   friend class GrOpMemoryPool;  // for ctor

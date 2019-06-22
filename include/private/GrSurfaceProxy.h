@@ -32,7 +32,7 @@ class GrTextureProxy;
 // forwards on the utilization in the wrapped case
 class GrIORefProxy : public SkNoncopyable {
  public:
-  void ref() const {
+  void ref() const noexcept {
     this->validate();
 
     ++fRefCnt;
@@ -41,7 +41,7 @@ class GrIORefProxy : public SkNoncopyable {
     }
   }
 
-  void unref() const {
+  void unref() const noexcept {
     this->validate();
 
     if (fTarget) {
@@ -59,7 +59,7 @@ class GrIORefProxy : public SkNoncopyable {
   }
 #endif
 
-  void release() {
+  void release() noexcept {
     // The proxy itself may still have multiple refs. It can be owned by an SkImage and multiple
     // SkDeferredDisplayLists at the same time if we are using DDLs.
     SkASSERT(0 == fPendingReads);
@@ -77,7 +77,7 @@ class GrIORefProxy : public SkNoncopyable {
     fTarget = nullptr;
   }
 
-  void validate() const {
+  void validate() const noexcept {
 #ifdef SK_DEBUG
     SkASSERT(fRefCnt >= 0);
     SkASSERT(fPendingReads >= 0);
@@ -99,7 +99,7 @@ class GrIORefProxy : public SkNoncopyable {
   int32_t getPendingReadCnt_TestOnly() const;
   int32_t getPendingWriteCnt_TestOnly() const;
 
-  void addPendingRead() const {
+  void addPendingRead() const noexcept {
     this->validate();
 
     ++fPendingReads;
@@ -108,7 +108,7 @@ class GrIORefProxy : public SkNoncopyable {
     }
   }
 
-  void completedRead() const {
+  void completedRead() const noexcept {
     this->validate();
 
     if (fTarget) {
@@ -119,7 +119,7 @@ class GrIORefProxy : public SkNoncopyable {
     this->didRemoveRefOrPendingIO();
   }
 
-  void addPendingWrite() const {
+  void addPendingWrite() const noexcept {
     this->validate();
 
     ++fPendingWrites;
@@ -128,7 +128,7 @@ class GrIORefProxy : public SkNoncopyable {
     }
   }
 
-  void completedWrite() const {
+  void completedWrite() const noexcept {
     this->validate();
 
     if (fTarget) {
@@ -140,8 +140,10 @@ class GrIORefProxy : public SkNoncopyable {
   }
 
  protected:
-  GrIORefProxy() : fTarget(nullptr), fRefCnt(1), fPendingReads(0), fPendingWrites(0) {}
-  GrIORefProxy(sk_sp<GrSurface> surface) : fRefCnt(1), fPendingReads(0), fPendingWrites(0) {
+  constexpr GrIORefProxy() noexcept
+      : fTarget(nullptr), fRefCnt(1), fPendingReads(0), fPendingWrites(0) {}
+  GrIORefProxy(sk_sp<GrSurface> surface) noexcept
+      : fRefCnt(1), fPendingReads(0), fPendingWrites(0) {
     // Since we're manually forwarding on refs & unrefs we don't want sk_sp doing
     // anything extra.
     fTarget = surface.release();
@@ -163,7 +165,7 @@ class GrIORefProxy : public SkNoncopyable {
   // This GrIORefProxy was deferred before but has just been instantiated. To
   // make all the reffing & unreffing work out we now need to transfer any deferred
   // refs & unrefs to the new GrSurface
-  void transferRefs() {
+  void transferRefs() noexcept {
     SkASSERT(fTarget);
     // Make sure we're going to take some ownership of our target.
     SkASSERT(fRefCnt > 0 || fPendingReads > 0 || fPendingWrites > 0);
@@ -183,8 +185,8 @@ class GrIORefProxy : public SkNoncopyable {
     }
   }
 
-  int32_t internalGetProxyRefCnt() const { return fRefCnt; }
-  int32_t internalGetTotalRefs() const { return fRefCnt + fPendingReads + fPendingWrites; }
+  int32_t internalGetProxyRefCnt() const noexcept { return fRefCnt; }
+  int32_t internalGetTotalRefs() const noexcept { return fRefCnt + fPendingReads + fPendingWrites; }
 
   // For deferred proxies this will be null. For wrapped proxies it will point to the
   // wrapped resource.
@@ -195,7 +197,7 @@ class GrIORefProxy : public SkNoncopyable {
   template <typename>
   friend class GrProxyRef;
 
-  void didRemoveRefOrPendingIO() const {
+  void didRemoveRefOrPendingIO() const noexcept {
     if (0 == fPendingReads && 0 == fPendingWrites && 0 == fRefCnt) {
       delete this;
     }
@@ -229,17 +231,18 @@ class GrSurfaceProxy : public GrIORefProxy {
   };
 
   struct LazyInstantiationResult {
-    LazyInstantiationResult() = default;
-    LazyInstantiationResult(const LazyInstantiationResult&) = default;
-    LazyInstantiationResult(LazyInstantiationResult&& that) = default;
+    constexpr LazyInstantiationResult() noexcept = default;
+    LazyInstantiationResult(const LazyInstantiationResult&) noexcept = default;
+    LazyInstantiationResult(LazyInstantiationResult&& that) noexcept = default;
     LazyInstantiationResult(
-        sk_sp<GrSurface> surf, LazyInstantiationKeyMode mode = LazyInstantiationKeyMode::kSynced)
+        sk_sp<GrSurface> surf,
+        LazyInstantiationKeyMode mode = LazyInstantiationKeyMode::kSynced) noexcept
         : fSurface(std::move(surf)), fKeyMode(mode) {}
-    LazyInstantiationResult(sk_sp<GrTexture> tex)
+    LazyInstantiationResult(sk_sp<GrTexture> tex) noexcept
         : LazyInstantiationResult(sk_sp<GrSurface>(std::move(tex))) {}
 
-    LazyInstantiationResult& operator=(const LazyInstantiationResult&) = default;
-    LazyInstantiationResult& operator=(LazyInstantiationResult&&) = default;
+    LazyInstantiationResult& operator=(const LazyInstantiationResult&) noexcept = default;
+    LazyInstantiationResult& operator=(LazyInstantiationResult&&) noexcept = default;
 
     sk_sp<GrSurface> fSurface;
     LazyInstantiationKeyMode fKeyMode = LazyInstantiationKeyMode::kSynced;
@@ -260,7 +263,7 @@ class GrSurfaceProxy : public GrIORefProxy {
     kFully,      // The proxy has a lazy callback and also doesn't know its width, height, etc.
   };
 
-  LazyState lazyInstantiationState() const {
+  LazyState lazyInstantiationState() const noexcept {
     if (fTarget || !SkToBool(fLazyInstantiateCallback)) {
       return LazyState::kNot;
     } else {
@@ -274,61 +277,61 @@ class GrSurfaceProxy : public GrIORefProxy {
     }
   }
 
-  GrPixelConfig config() const { return fConfig; }
-  int width() const {
+  GrPixelConfig config() const noexcept { return fConfig; }
+  int width() const noexcept {
     SkASSERT(LazyState::kFully != this->lazyInstantiationState());
     return fWidth;
   }
-  int height() const {
+  int height() const noexcept {
     SkASSERT(LazyState::kFully != this->lazyInstantiationState());
     return fHeight;
   }
 
-  SkISize isize() const { return {fWidth, fHeight}; }
+  SkISize isize() const noexcept { return {fWidth, fHeight}; }
 
-  int worstCaseWidth() const;
-  int worstCaseHeight() const;
+  int worstCaseWidth() const noexcept;
+  int worstCaseHeight() const noexcept;
   /**
    * Helper that gets the width and height of the surface as a bounding rectangle.
    */
-  SkRect getBoundsRect() const {
+  SkRect getBoundsRect() const noexcept {
     SkASSERT(LazyState::kFully != this->lazyInstantiationState());
     return SkRect::MakeIWH(this->width(), this->height());
   }
   /**
    * Helper that gets the worst case width and height of the surface as a bounding rectangle.
    */
-  SkRect getWorstCaseBoundsRect() const {
+  SkRect getWorstCaseBoundsRect() const noexcept {
     SkASSERT(LazyState::kFully != this->lazyInstantiationState());
     return SkRect::MakeIWH(this->worstCaseWidth(), this->worstCaseHeight());
   }
 
-  GrSurfaceOrigin origin() const {
+  GrSurfaceOrigin origin() const noexcept {
     SkASSERT(kTopLeft_GrSurfaceOrigin == fOrigin || kBottomLeft_GrSurfaceOrigin == fOrigin);
     return fOrigin;
   }
 
-  const GrBackendFormat& backendFormat() const { return fFormat; }
+  const GrBackendFormat& backendFormat() const noexcept { return fFormat; }
 
   class UniqueID {
    public:
-    static UniqueID InvalidID() { return UniqueID(uint32_t(SK_InvalidUniqueID)); }
+    static UniqueID InvalidID() noexcept { return UniqueID(uint32_t(SK_InvalidUniqueID)); }
 
     // wrapped
-    explicit UniqueID(const GrGpuResource::UniqueID& id) : fID(id.asUInt()) {}
+    explicit UniqueID(const GrGpuResource::UniqueID& id) noexcept : fID(id.asUInt()) {}
     // deferred and lazy-callback
     UniqueID() : fID(GrGpuResource::CreateUniqueID()) {}
 
-    uint32_t asUInt() const { return fID; }
+    uint32_t asUInt() const noexcept { return fID; }
 
-    bool operator==(const UniqueID& other) const { return fID == other.fID; }
-    bool operator!=(const UniqueID& other) const { return !(*this == other); }
+    bool operator==(const UniqueID& other) const noexcept { return fID == other.fID; }
+    bool operator!=(const UniqueID& other) const noexcept { return !(*this == other); }
 
-    void makeInvalid() { fID = SK_InvalidUniqueID; }
-    bool isInvalid() const { return SK_InvalidUniqueID == fID; }
+    void makeInvalid() noexcept { fID = SK_InvalidUniqueID; }
+    bool isInvalid() const noexcept { return SK_InvalidUniqueID == fID; }
 
    private:
-    explicit UniqueID(uint32_t id) : fID(id) {}
+    constexpr explicit UniqueID(uint32_t id) noexcept : fID(id) {}
 
     uint32_t fID;
   };
@@ -348,9 +351,9 @@ class GrSurfaceProxy : public GrIORefProxy {
    * track/identify a proxy but should never be used to distinguish between
    * resources and proxies - beware!
    */
-  UniqueID uniqueID() const { return fUniqueID; }
+  UniqueID uniqueID() const noexcept { return fUniqueID; }
 
-  UniqueID underlyingUniqueID() const {
+  UniqueID underlyingUniqueID() const noexcept {
     if (fTarget) {
       return UniqueID(fTarget->uniqueID());
     }
@@ -360,53 +363,55 @@ class GrSurfaceProxy : public GrIORefProxy {
 
   virtual bool instantiate(GrResourceProvider*) = 0;
 
-  void deinstantiate();
+  void deinstantiate() noexcept;
 
   /**
    * Proxies that are already instantiated and whose backing surface cannot be recycled to
    * instantiate other proxies do not need to be considered by GrResourceAllocator.
    */
-  bool canSkipResourceAllocator() const;
+  bool canSkipResourceAllocator() const noexcept;
 
   /**
    * @return the texture proxy associated with the surface proxy, may be NULL.
    */
-  virtual GrTextureProxy* asTextureProxy() { return nullptr; }
-  virtual const GrTextureProxy* asTextureProxy() const { return nullptr; }
+  virtual GrTextureProxy* asTextureProxy() noexcept { return nullptr; }
+  virtual const GrTextureProxy* asTextureProxy() const noexcept { return nullptr; }
 
   /**
    * @return the render target proxy associated with the surface proxy, may be NULL.
    */
-  virtual GrRenderTargetProxy* asRenderTargetProxy() { return nullptr; }
-  virtual const GrRenderTargetProxy* asRenderTargetProxy() const { return nullptr; }
+  virtual GrRenderTargetProxy* asRenderTargetProxy() noexcept { return nullptr; }
+  virtual const GrRenderTargetProxy* asRenderTargetProxy() const noexcept { return nullptr; }
 
-  bool isInstantiated() const { return SkToBool(fTarget); }
+  bool isInstantiated() const noexcept { return SkToBool(fTarget); }
 
   // If the proxy is already instantiated, return its backing GrTexture; if not, return null.
-  GrSurface* peekSurface() const { return fTarget; }
+  GrSurface* peekSurface() const noexcept { return fTarget; }
 
   // If this is a texture proxy and the proxy is already instantiated, return its backing
   // GrTexture; if not, return null.
-  GrTexture* peekTexture() const { return fTarget ? fTarget->asTexture() : nullptr; }
+  GrTexture* peekTexture() const noexcept { return fTarget ? fTarget->asTexture() : nullptr; }
 
   // If this is a render target proxy and the proxy is already instantiated, return its backing
   // GrRenderTarget; if not, return null.
-  GrRenderTarget* peekRenderTarget() const { return fTarget ? fTarget->asRenderTarget() : nullptr; }
+  GrRenderTarget* peekRenderTarget() const noexcept {
+    return fTarget ? fTarget->asRenderTarget() : nullptr;
+  }
 
   /**
    * Does the resource count against the resource budget?
    */
-  SkBudgeted isBudgeted() const { return fBudgeted; }
+  SkBudgeted isBudgeted() const noexcept { return fBudgeted; }
 
   /**
    * The pixel values of this proxy's surface cannot be modified (e.g. doesn't support write
    * pixels or MIP map level regen). Read-only proxies also bypass interval tracking and
    * assignment in GrResourceAllocator.
    */
-  bool readOnly() const { return fSurfaceFlags & GrInternalSurfaceFlags::kReadOnly; }
+  bool readOnly() const noexcept { return fSurfaceFlags & GrInternalSurfaceFlags::kReadOnly; }
 
-  void setLastOpList(GrOpList* opList);
-  GrOpList* getLastOpList() { return fLastOpList; }
+  void setLastOpList(GrOpList* opList) noexcept;
+  GrOpList* getLastOpList() noexcept { return fLastOpList; }
 
   GrRenderTargetOpList* getLastRenderTargetOpList();
   GrTextureOpList* getLastTextureOpList();
@@ -447,18 +452,18 @@ class GrSurfaceProxy : public GrIORefProxy {
 
   bool isWrapped_ForTesting() const;
 
-  SkDEBUGCODE(void validate(GrContext_Base*) const;)
+  SkDEBUGCODE(void validate(GrContext_Base*) const);
 
-      // Provides access to functions that aren't part of the public API.
-      inline GrSurfaceProxyPriv priv();
-  inline const GrSurfaceProxyPriv priv() const;
+  // Provides access to functions that aren't part of the public API.
+  inline GrSurfaceProxyPriv priv() noexcept;
+  inline const GrSurfaceProxyPriv priv() const noexcept;
 
   /**
    * Provides privileged access to select callers to be able to add a ref to a GrSurfaceProxy
    * with zero refs.
    */
   class FirstRefAccess;
-  inline FirstRefAccess firstRefAccess();
+  inline FirstRefAccess firstRefAccess() noexcept;
 
   GrInternalSurfaceFlags testingOnly_getFlags() const;
 
@@ -486,16 +491,16 @@ class GrSurfaceProxy : public GrIORefProxy {
   friend class GrSurfaceProxyPriv;
 
   // Methods made available via GrSurfaceProxyPriv
-  bool ignoredByResourceAllocator() const { return fIgnoredByResourceAllocator; }
-  void setIgnoredByResourceAllocator() { fIgnoredByResourceAllocator = true; }
+  bool ignoredByResourceAllocator() const noexcept { return fIgnoredByResourceAllocator; }
+  void setIgnoredByResourceAllocator() noexcept { fIgnoredByResourceAllocator = true; }
 
-  int32_t getProxyRefCnt() const { return this->internalGetProxyRefCnt(); }
-  int32_t getTotalRefs() const { return this->internalGetTotalRefs(); }
+  int32_t getProxyRefCnt() const noexcept { return this->internalGetProxyRefCnt(); }
+  int32_t getTotalRefs() const noexcept { return this->internalGetTotalRefs(); }
 
   void computeScratchKey(GrScratchKey*) const;
 
   virtual sk_sp<GrSurface> createSurface(GrResourceProvider*) const = 0;
-  void assign(sk_sp<GrSurface> surface);
+  void assign(sk_sp<GrSurface> surface) noexcept;
 
   sk_sp<GrSurface> createSurfaceImpl(
       GrResourceProvider*, int sampleCnt, bool needsStencil, GrSurfaceDescFlags, GrMipMapped) const;
@@ -504,7 +509,7 @@ class GrSurfaceProxy : public GrIORefProxy {
   // can use this optional method to specify the proxy's size. (A proxy's size can be less than
   // the GPU surface that backs it. e.g., SkBackingFit::kApprox.) Otherwise, the proxy's size will
   // be set to match the underlying GPU surface upon instantiation.
-  void setLazySize(int width, int height) {
+  void setLazySize(int width, int height) noexcept {
     SkASSERT(GrSurfaceProxy::LazyState::kFully == this->lazyInstantiationState());
     SkASSERT(width > 0 && height > 0);
     fWidth = width;
@@ -547,13 +552,13 @@ class GrSurfaceProxy : public GrIORefProxy {
   // Note: This is ignored if fLazyInstantiateCallback is null.
   LazyInstantiationType fLazyInstantiationType;
 
-  SkDEBUGCODE(void validateSurface(const GrSurface*);)
-      SkDEBUGCODE(virtual void onValidateSurface(const GrSurface*) = 0;)
+  SkDEBUGCODE(void validateSurface(const GrSurface*));
+  SkDEBUGCODE(virtual void onValidateSurface(const GrSurface*) = 0);
 
-          static const size_t kInvalidGpuMemorySize = ~static_cast<size_t>(0);
-  SkDEBUGCODE(size_t getRawGpuMemorySize_debugOnly() const { return fGpuMemorySize; })
+  static const size_t kInvalidGpuMemorySize = ~static_cast<size_t>(0);
+  SkDEBUGCODE(size_t getRawGpuMemorySize_debugOnly() const { return fGpuMemorySize; });
 
-      virtual size_t onUninstantiatedGpuMemorySize() const = 0;
+  virtual size_t onUninstantiatedGpuMemorySize() const = 0;
 
   bool fNeedsClear;
   bool fIgnoredByResourceAllocator = false;
@@ -580,7 +585,7 @@ class GrSurfaceProxy::FirstRefAccess {
  private:
   void ref(GrResourceCache* cache) { fProxy->addInitialRef(cache); }
 
-  FirstRefAccess(GrSurfaceProxy* proxy) : fProxy(proxy) {}
+  constexpr FirstRefAccess(GrSurfaceProxy* proxy) noexcept : fProxy(proxy) {}
 
   // No taking addresses of this type.
   const FirstRefAccess* operator&() const = delete;
@@ -593,7 +598,7 @@ class GrSurfaceProxy::FirstRefAccess {
   friend class GrDeinstantiateProxyTracker;
 };
 
-inline GrSurfaceProxy::FirstRefAccess GrSurfaceProxy::firstRefAccess() {
+inline GrSurfaceProxy::FirstRefAccess GrSurfaceProxy::firstRefAccess() noexcept {
   return FirstRefAccess(this);
 }
 

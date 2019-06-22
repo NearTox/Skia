@@ -8,7 +8,7 @@
 #include "src/codec/SkColorTable.h"
 #include "include/private/SkMalloc.h"
 
-SkColorTable::SkColorTable(const SkPMColor colors[], int count) {
+SkColorTable::SkColorTable(const SkPMColor colors[], int count) noexcept {
   SkASSERT(0 == count || colors);
   SkASSERT(count >= 0 && count <= 256);
 

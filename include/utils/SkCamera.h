@@ -18,33 +18,33 @@ class SkCanvas;
 struct SkUnit3D {
   SkScalar fX, fY, fZ;
 
-  void set(SkScalar x, SkScalar y, SkScalar z) {
+  void set(SkScalar x, SkScalar y, SkScalar z) noexcept {
     fX = x;
     fY = y;
     fZ = z;
   }
-  static SkScalar Dot(const SkUnit3D&, const SkUnit3D&);
-  static void Cross(const SkUnit3D&, const SkUnit3D&, SkUnit3D* cross);
+  static SkScalar Dot(const SkUnit3D&, const SkUnit3D&) noexcept;
+  static void Cross(const SkUnit3D&, const SkUnit3D&, SkUnit3D* cross) noexcept;
 };
 
 struct SkPoint3D {
   SkScalar fX, fY, fZ;
 
-  void set(SkScalar x, SkScalar y, SkScalar z) {
+  void set(SkScalar x, SkScalar y, SkScalar z) noexcept {
     fX = x;
     fY = y;
     fZ = z;
   }
-  SkScalar normalize(SkUnit3D*) const;
+  SkScalar normalize(SkUnit3D*) const noexcept;
 };
 typedef SkPoint3D SkVector3D;
 
 struct SkMatrix3D {
   SkScalar fMat[3][4];
 
-  void reset();
+  void reset() noexcept;
 
-  void setRow(int row, SkScalar a, SkScalar b, SkScalar c, SkScalar d = 0) {
+  void setRow(int row, SkScalar a, SkScalar b, SkScalar c, SkScalar d = 0) noexcept {
     SkASSERT((unsigned)row < 3);
     fMat[row][0] = a;
     fMat[row][1] = b;
@@ -52,35 +52,35 @@ struct SkMatrix3D {
     fMat[row][3] = d;
   }
 
-  void setRotateX(SkScalar deg);
-  void setRotateY(SkScalar deg);
-  void setRotateZ(SkScalar deg);
-  void setTranslate(SkScalar x, SkScalar y, SkScalar z);
+  void setRotateX(SkScalar deg) noexcept;
+  void setRotateY(SkScalar deg) noexcept;
+  void setRotateZ(SkScalar deg) noexcept;
+  void setTranslate(SkScalar x, SkScalar y, SkScalar z) noexcept;
 
-  void preRotateX(SkScalar deg);
-  void preRotateY(SkScalar deg);
-  void preRotateZ(SkScalar deg);
-  void preTranslate(SkScalar x, SkScalar y, SkScalar z);
+  void preRotateX(SkScalar deg) noexcept;
+  void preRotateY(SkScalar deg) noexcept;
+  void preRotateZ(SkScalar deg) noexcept;
+  void preTranslate(SkScalar x, SkScalar y, SkScalar z) noexcept;
 
-  void setConcat(const SkMatrix3D& a, const SkMatrix3D& b);
-  void mapPoint(const SkPoint3D& src, SkPoint3D* dst) const;
-  void mapVector(const SkVector3D& src, SkVector3D* dst) const;
+  void setConcat(const SkMatrix3D& a, const SkMatrix3D& b) noexcept;
+  void mapPoint(const SkPoint3D& src, SkPoint3D* dst) const noexcept;
+  void mapVector(const SkVector3D& src, SkVector3D* dst) const noexcept;
 
-  void mapPoint(SkPoint3D* v) const { this->mapPoint(*v, v); }
+  void mapPoint(SkPoint3D* v) const noexcept { this->mapPoint(*v, v); }
 
-  void mapVector(SkVector3D* v) const { this->mapVector(*v, v); }
+  void mapVector(SkVector3D* v) const noexcept { this->mapVector(*v, v); }
 };
 
 class SkPatch3D {
  public:
-  SkPatch3D();
+  SkPatch3D() noexcept;
 
-  void reset();
-  void transform(const SkMatrix3D&, SkPatch3D* dst = nullptr) const;
+  void reset() noexcept;
+  void transform(const SkMatrix3D&, SkPatch3D* dst = nullptr) const noexcept;
 
   // dot a unit vector with the patch's normal
-  SkScalar dotWith(SkScalar dx, SkScalar dy, SkScalar dz) const;
-  SkScalar dotWith(const SkVector3D& v) const { return this->dotWith(v.fX, v.fY, v.fZ); }
+  SkScalar dotWith(SkScalar dx, SkScalar dy, SkScalar dz) const noexcept;
+  SkScalar dotWith(const SkVector3D& v) const noexcept { return this->dotWith(v.fX, v.fY, v.fZ); }
 
   // deprecated, but still here for animator (for now)
   void rotate(SkScalar /*x*/, SkScalar /*y*/, SkScalar /*z*/) {}
@@ -96,11 +96,11 @@ class SkPatch3D {
 
 class SkCamera3D {
  public:
-  SkCamera3D();
+  SkCamera3D() noexcept;
 
-  void reset();
-  void update();
-  void patchToMatrix(const SkPatch3D&, SkMatrix* matrix) const;
+  void reset() noexcept;
+  void update() noexcept;
+  void patchToMatrix(const SkPatch3D&, SkMatrix* matrix) const noexcept;
 
   SkPoint3D fLocation;  // origin of the camera's space
   SkPoint3D fAxis;      // view direction
@@ -111,21 +111,21 @@ class SkCamera3D {
   mutable SkMatrix fOrientation;
   mutable bool fNeedToUpdate;
 
-  void doUpdate() const;
+  void doUpdate() const noexcept;
 };
 
 class SK_API Sk3DView : SkNoncopyable {
  public:
-  Sk3DView();
+  Sk3DView() noexcept;
   ~Sk3DView();
 
   void save();
-  void restore();
+  void restore() noexcept;
 
-  void translate(SkScalar x, SkScalar y, SkScalar z);
-  void rotateX(SkScalar deg);
-  void rotateY(SkScalar deg);
-  void rotateZ(SkScalar deg);
+  void translate(SkScalar x, SkScalar y, SkScalar z) noexcept;
+  void rotateX(SkScalar deg) noexcept;
+  void rotateY(SkScalar deg) noexcept;
+  void rotateZ(SkScalar deg) noexcept;
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
   void setCameraLocation(SkScalar x, SkScalar y, SkScalar z);
@@ -134,10 +134,10 @@ class SK_API Sk3DView : SkNoncopyable {
   SkScalar getCameraLocationZ() const;
 #endif
 
-  void getMatrix(SkMatrix*) const;
+  void getMatrix(SkMatrix*) const noexcept;
   void applyToCanvas(SkCanvas*) const;
 
-  SkScalar dotWithNormal(SkScalar dx, SkScalar dy, SkScalar dz) const;
+  SkScalar dotWithNormal(SkScalar dx, SkScalar dy, SkScalar dz) const noexcept;
 
  private:
   struct Rec {

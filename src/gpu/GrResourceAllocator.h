@@ -216,9 +216,9 @@ class GrResourceAllocator {
     Interval* detachAll();
 
    private:
-    SkDEBUGCODE(void validate() const;)
+    SkDEBUGCODE(void validate() const);
 
-        Interval* fHead = nullptr;
+    Interval* fHead = nullptr;
     Interval* fTail = nullptr;
   };
 
@@ -236,11 +236,11 @@ class GrResourceAllocator {
   unsigned int fNumOps = 0;
   SkTArray<unsigned int> fEndOfOpListOpIndices;
   int fCurOpListIndex = 0;
-  SkDEBUGCODE(const int fNumOpLists = -1;)
+  SkDEBUGCODE(const int fNumOpLists = -1);
 
-      SkDEBUGCODE(bool fAssigned = false;)
+  SkDEBUGCODE(bool fAssigned = false);
 
-          char fStorage[kInitialArenaSize];
+  char fStorage[kInitialArenaSize];
   SkArenaAlloc fIntervalAllocator{fStorage, kInitialArenaSize, kInitialArenaSize};
   Interval* fFreeIntervalList = nullptr;
 };

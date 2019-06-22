@@ -25,7 +25,7 @@ class SkSurface_Raster : public SkSurface_Base {
   void onWritePixels(const SkPixmap&, int x, int y) override;
   void onDraw(SkCanvas*, SkScalar x, SkScalar y, const SkPaint*) override;
   void onCopyOnWrite(ContentChangeMode) override;
-  void onRestoreBackingMutability() override;
+  void onRestoreBackingMutability() noexcept override;
 
  private:
   SkBitmap fBitmap;
@@ -125,7 +125,7 @@ void SkSurface_Raster::onWritePixels(const SkPixmap& src, int x, int y) {
   fBitmap.writePixels(src, x, y);
 }
 
-void SkSurface_Raster::onRestoreBackingMutability() {
+void SkSurface_Raster::onRestoreBackingMutability() noexcept {
   SkASSERT(!this->hasCachedImage());  // Shouldn't be any snapshots out there.
   if (SkPixelRef* pr = fBitmap.pixelRef()) {
     pr->restoreMutability();

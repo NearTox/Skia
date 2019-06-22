@@ -24,7 +24,7 @@
 
 SkImage_GpuBase::SkImage_GpuBase(
     sk_sp<GrContext> context, int width, int height, uint32_t uniqueID, SkColorType ct,
-    SkAlphaType at, sk_sp<SkColorSpace> cs)
+    SkAlphaType at, sk_sp<SkColorSpace> cs) noexcept
     : INHERITED(SkImageInfo::Make(width, height, ct, at, std::move(cs)), uniqueID),
       fContext(std::move(context)) {}
 
@@ -140,7 +140,7 @@ sk_sp<SkImage> SkImage_GpuBase::onMakeSubset(
       this->refColorSpace());
 }
 
-static void apply_premul(const SkImageInfo& info, void* pixels, size_t rowBytes) {
+static void apply_premul(const SkImageInfo& info, void* pixels, size_t rowBytes) noexcept {
   switch (info.colorType()) {
     case kRGBA_8888_SkColorType:
     case kBGRA_8888_SkColorType: break;
@@ -277,7 +277,7 @@ GrTexture* SkImage_GpuBase::onGetTexture() const {
   return proxyRef->peekTexture();
 }
 
-bool SkImage_GpuBase::onIsValid(GrContext* context) const {
+bool SkImage_GpuBase::onIsValid(GrContext* context) const noexcept {
   // The base class has already checked that context isn't abandoned (if it's not nullptr)
   if (fContext->priv().abandoned()) {
     return false;
@@ -420,14 +420,14 @@ sk_sp<GrTextureProxy> SkImage_GpuBase::MakePromiseImageLazyProxy(
         : fFulfillProc(fulfillProc), fReleaseProc(releaseProc), fConfig(config), fVersion(version) {
       fDoneCallback = sk_make_sp<GrRefCntedCallback>(doneProc, context);
     }
-    PromiseLazyInstantiateCallback(PromiseLazyInstantiateCallback&&) = default;
-    PromiseLazyInstantiateCallback(const PromiseLazyInstantiateCallback&) {
+    PromiseLazyInstantiateCallback(PromiseLazyInstantiateCallback&&) noexcept = default;
+    PromiseLazyInstantiateCallback(const PromiseLazyInstantiateCallback&) noexcept {
       // Because we get wrapped in std::function we must be copyable. But we should never
       // be copied.
       SkASSERT(false);
     }
-    PromiseLazyInstantiateCallback& operator=(PromiseLazyInstantiateCallback&&) = default;
-    PromiseLazyInstantiateCallback& operator=(const PromiseLazyInstantiateCallback&) {
+    PromiseLazyInstantiateCallback& operator=(PromiseLazyInstantiateCallback&&) noexcept = default;
+    PromiseLazyInstantiateCallback& operator=(const PromiseLazyInstantiateCallback&) noexcept {
       SkASSERT(false);
       return *this;
     }

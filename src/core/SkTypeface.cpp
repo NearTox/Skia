@@ -88,7 +88,7 @@ class SkEmptyTypeface : public SkTypeface {
 
 }  // namespace
 
-SkFontStyle SkTypeface::FromOldStyle(Style oldStyle) {
+SkFontStyle SkTypeface::FromOldStyle(Style oldStyle) noexcept {
   return SkFontStyle(
       (oldStyle & SkTypeface::kBold) ? SkFontStyle::kBold_Weight : SkFontStyle::kNormal_Weight,
       SkFontStyle::kNormal_Width,

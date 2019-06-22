@@ -24,7 +24,7 @@ class SkBigPicture final : public SkPicture {
   // An array of refcounted const SkPicture pointers.
   class SnapshotArray : ::SkNoncopyable {
    public:
-    SnapshotArray(const SkPicture* pics[], int count) : fPics(pics), fCount(count) {}
+    SnapshotArray(const SkPicture* pics[], int count) noexcept : fPics(pics), fCount(count) {}
     ~SnapshotArray() {
       for (int i = 0; i < fCount; i++) {
         fPics[i]->unref();
@@ -32,7 +32,7 @@ class SkBigPicture final : public SkPicture {
     }
 
     const SkPicture* const* begin() const { return fPics; }
-    int count() const { return fCount; }
+    int count() const noexcept { return fCount; }
 
    private:
     SkAutoTMalloc<const SkPicture*> fPics;
@@ -48,19 +48,19 @@ class SkBigPicture final : public SkPicture {
 
   // SkPicture overrides
   void playback(SkCanvas*, AbortCallback*) const override;
-  SkRect cullRect() const override;
+  SkRect cullRect() const noexcept override;
   int approximateOpCount() const override;
   size_t approximateBytesUsed() const override;
-  const SkBigPicture* asSkBigPicture() const override { return this; }
+  const SkBigPicture* asSkBigPicture() const noexcept override { return this; }
 
   // Used by GrLayerHoister
   void partialPlayback(SkCanvas*, int start, int stop, const SkMatrix& initialCTM) const;
   // Used by GrRecordReplaceDraw
-  const SkBBoxHierarchy* bbh() const { return fBBH.get(); }
-  const SkRecord* record() const { return fRecord.get(); }
+  const SkBBoxHierarchy* bbh() const noexcept { return fBBH.get(); }
+  const SkRecord* record() const noexcept { return fRecord.get(); }
 
  private:
-  int drawableCount() const;
+  int drawableCount() const noexcept;
   SkPicture const* const* drawablePicts() const;
 
   const SkRect fCullRect;

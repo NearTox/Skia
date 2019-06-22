@@ -22,7 +22,7 @@
 #include <utility>
 
 GrTextureDomain::GrTextureDomain(
-    GrTextureProxy* proxy, const SkRect& domain, Mode modeX, Mode modeY, int index)
+    GrTextureProxy* proxy, const SkRect& domain, Mode modeX, Mode modeY, int index) noexcept
     : fModeX(modeX), fModeY(modeY), fIndex(index) {
   if (!proxy) {
     SkASSERT(modeX == kIgnore_Mode && modeY == kIgnore_Mode);
@@ -76,11 +76,12 @@ void GrTextureDomain::GLDomain::sampleTexture(
     const SkString& inCoords, GrGLSLFragmentProcessor::SamplerHandle sampler,
     const char* inModulateColor) {
   SkASSERT(!fHasMode || (textureDomain.modeX() == fModeX && textureDomain.modeY() == fModeY));
-  SkDEBUGCODE(fModeX = textureDomain.modeX();) SkDEBUGCODE(fModeY = textureDomain.modeY();)
-      SkDEBUGCODE(fHasMode = true;)
+  SkDEBUGCODE(fModeX = textureDomain.modeX());
+  SkDEBUGCODE(fModeY = textureDomain.modeY());
+  SkDEBUGCODE(fHasMode = true);
 
-          if ((textureDomain.modeX() != kIgnore_Mode || textureDomain.modeY() != kIgnore_Mode) &&
-              !fDomainUni.isValid()) {
+  if ((textureDomain.modeX() != kIgnore_Mode || textureDomain.modeY() != kIgnore_Mode) &&
+      !fDomainUni.isValid()) {
     // Must include the domain uniform since at least one axis uses it
     const char* name;
     SkString uniName("TexDom");
@@ -275,7 +276,7 @@ GrTextureDomainEffect::GrTextureDomainEffect(
   this->setTextureSamplerCnt(1);
 }
 
-GrTextureDomainEffect::GrTextureDomainEffect(const GrTextureDomainEffect& that)
+GrTextureDomainEffect::GrTextureDomainEffect(const GrTextureDomainEffect& that) noexcept
     : INHERITED(kGrTextureDomainEffect_ClassID, that.optimizationFlags()),
       fCoordTransform(that.fCoordTransform),
       fTextureDomain(that.fTextureDomain),
@@ -285,7 +286,7 @@ GrTextureDomainEffect::GrTextureDomainEffect(const GrTextureDomainEffect& that)
 }
 
 void GrTextureDomainEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   b->add32(GrTextureDomain::GLDomain::DomainKey(fTextureDomain));
 }
 
@@ -320,7 +321,7 @@ GrGLSLFragmentProcessor* GrTextureDomainEffect::onCreateGLSLInstance() const {
   return new GLSLProcessor;
 }
 
-bool GrTextureDomainEffect::onIsEqual(const GrFragmentProcessor& sBase) const {
+bool GrTextureDomainEffect::onIsEqual(const GrFragmentProcessor& sBase) const noexcept {
   const GrTextureDomainEffect& s = sBase.cast<GrTextureDomainEffect>();
   return this->fTextureDomain == s.fTextureDomain;
 }
@@ -377,7 +378,7 @@ GrDeviceSpaceTextureDecalFragmentProcessor::GrDeviceSpaceTextureDecalFragmentPro
 }
 
 GrDeviceSpaceTextureDecalFragmentProcessor::GrDeviceSpaceTextureDecalFragmentProcessor(
-    const GrDeviceSpaceTextureDecalFragmentProcessor& that)
+    const GrDeviceSpaceTextureDecalFragmentProcessor& that) noexcept
     : INHERITED(
           kGrDeviceSpaceTextureDecalFragmentProcessor_ClassID,
           kCompatibleWithCoverageAsAlpha_OptimizationFlag),
@@ -437,7 +438,8 @@ GrGLSLFragmentProcessor* GrDeviceSpaceTextureDecalFragmentProcessor::onCreateGLS
   return new GLSLProcessor;
 }
 
-bool GrDeviceSpaceTextureDecalFragmentProcessor::onIsEqual(const GrFragmentProcessor& fp) const {
+bool GrDeviceSpaceTextureDecalFragmentProcessor::onIsEqual(const GrFragmentProcessor& fp) const
+    noexcept {
   const GrDeviceSpaceTextureDecalFragmentProcessor& dstdfp =
       fp.cast<GrDeviceSpaceTextureDecalFragmentProcessor>();
   return dstdfp.fTextureSampler.proxy()->underlyingUniqueID() ==

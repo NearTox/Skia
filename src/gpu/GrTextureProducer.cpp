@@ -96,7 +96,7 @@ sk_sp<GrTextureProxy> GrTextureProducer::CopyOnGpu(
 GrTextureProducer::DomainMode GrTextureProducer::DetermineDomainMode(
     const SkRect& constraintRect, FilterConstraint filterConstraint,
     bool coordsLimitedToConstraintRect, GrTextureProxy* proxy,
-    const GrSamplerState::Filter* filterModeOrNullForBicubic, SkRect* domainRect) {
+    const GrSamplerState::Filter* filterModeOrNullForBicubic, SkRect* domainRect) noexcept {
   const SkIRect proxyBounds = SkIRect::MakeWH(proxy->width(), proxy->height());
 
   SkASSERT(proxyBounds.contains(constraintRect));

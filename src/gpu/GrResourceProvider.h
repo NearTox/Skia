@@ -233,14 +233,14 @@ class GrResourceProvider {
       const GrBackendSemaphore&, SemaphoreWrapType wrapType,
       GrWrapOwnership = kBorrow_GrWrapOwnership);
 
-  void abandon() {
+  void abandon() noexcept {
     fCache = nullptr;
     fGpu = nullptr;
   }
 
-  uint32_t contextUniqueID() const { return fCache->contextUniqueID(); }
-  const GrCaps* caps() const { return fCaps.get(); }
-  bool overBudget() const { return fCache->overBudget(); }
+  uint32_t contextUniqueID() const noexcept { return fCache->contextUniqueID(); }
+  const GrCaps* caps() const noexcept { return fCaps.get(); }
+  bool overBudget() const noexcept { return fCache->overBudget(); }
 
   inline GrResourceProviderPriv priv();
   inline const GrResourceProviderPriv priv() const;
@@ -258,16 +258,16 @@ class GrResourceProvider {
    */
   sk_sp<GrTexture> getExactScratch(const GrSurfaceDesc&, SkBudgeted, Flags);
 
-  GrResourceCache* cache() { return fCache; }
-  const GrResourceCache* cache() const { return fCache; }
+  GrResourceCache* cache() noexcept { return fCache; }
+  const GrResourceCache* cache() const noexcept { return fCache; }
 
   friend class GrResourceProviderPriv;
 
   // Method made available via GrResourceProviderPriv
-  GrGpu* gpu() { return fGpu; }
-  const GrGpu* gpu() const { return fGpu; }
+  GrGpu* gpu() noexcept { return fGpu; }
+  const GrGpu* gpu() const noexcept { return fGpu; }
 
-  bool isAbandoned() const {
+  bool isAbandoned() const noexcept {
     SkASSERT(SkToBool(fGpu) == SkToBool(fCache));
     return !SkToBool(fCache);
   }
@@ -283,7 +283,7 @@ class GrResourceProvider {
   sk_sp<const GrGpuBuffer> fQuadIndexBuffer;
 
   // In debug builds we guard against improper thread handling
-  SkDEBUGCODE(mutable GrSingleOwner* fSingleOwner;)
+  SkDEBUGCODE(mutable GrSingleOwner* fSingleOwner);
 };
 
 GR_MAKE_BITFIELD_CLASS_OPS(GrResourceProvider::Flags);

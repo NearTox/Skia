@@ -22,9 +22,9 @@ class SkImage_Lazy : public SkImage_Base {
   struct Validator {
     Validator(
         sk_sp<SharedGenerator>, const SkIRect* subset, const SkColorType* colorType,
-        sk_sp<SkColorSpace> colorSpace);
+        sk_sp<SkColorSpace> colorSpace) noexcept;
 
-    operator bool() const { return fSharedGenerator.get(); }
+    operator bool() const noexcept { return fSharedGenerator.get(); }
 
     sk_sp<SharedGenerator> fSharedGenerator;
     SkImageInfo fInfo;
@@ -33,10 +33,10 @@ class SkImage_Lazy : public SkImage_Base {
     uint32_t fUniqueID;
   };
 
-  SkImage_Lazy(Validator* validator);
+  SkImage_Lazy(Validator* validator) noexcept;
   ~SkImage_Lazy() override;
 
-  SkIRect onGetSubset() const override {
+  SkIRect onGetSubset() const noexcept override {
     return SkIRect::MakeXYWH(fOrigin.fX, fOrigin.fY, this->width(), this->height());
   }
 
@@ -51,7 +51,7 @@ class SkImage_Lazy : public SkImage_Base {
   sk_sp<SkData> onRefEncoded() const override;
   sk_sp<SkImage> onMakeSubset(GrRecordingContext*, const SkIRect&) const override;
   bool getROPixels(SkBitmap*, CachingHint) const override;
-  bool onIsLazyGenerated() const override { return true; }
+  bool onIsLazyGenerated() const noexcept override { return true; }
   sk_sp<SkImage> onMakeColorTypeAndColorSpace(
       GrRecordingContext*, SkColorType, sk_sp<SkColorSpace>) const override;
 
@@ -65,7 +65,7 @@ class SkImage_Lazy : public SkImage_Base {
       GrRecordingContext*, const GrUniqueKey& key, SkImage::CachingHint, bool willBeMipped,
       GrTextureMaker::AllowedTexGenType genType) const;
 
-  void makeCacheKeyFromOrigKey(const GrUniqueKey& origKey, GrUniqueKey* cacheKey) const;
+  void makeCacheKeyFromOrigKey(const GrUniqueKey& origKey, GrUniqueKey* cacheKey) const noexcept;
 #endif
 
  private:

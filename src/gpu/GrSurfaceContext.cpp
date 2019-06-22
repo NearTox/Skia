@@ -15,7 +15,7 @@
 #include "src/gpu/SkGr.h"
 
 #define ASSERT_SINGLE_OWNER \
-  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner());)
+  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner()));
 #define RETURN_FALSE_IF_ABANDONED           \
   if (this->fContext->priv().abandoned()) { \
     return false;                           \
@@ -26,7 +26,7 @@
 // stack. When this occurs with a closed GrOpList, a new one will be allocated
 // when the renderTargetContext attempts to use it (via getOpList).
 GrSurfaceContext::GrSurfaceContext(
-    GrRecordingContext* context, GrPixelConfig config, sk_sp<SkColorSpace> colorSpace)
+    GrRecordingContext* context, GrPixelConfig config, sk_sp<SkColorSpace> colorSpace) noexcept
     : fContext(context), fColorSpaceInfo(std::move(colorSpace), config) {}
 
 GrAuditTrail* GrSurfaceContext::auditTrail() { return fContext->priv().auditTrail(); }
@@ -45,8 +45,8 @@ bool GrSurfaceContext::readPixels(
     const SkImageInfo& dstInfo, void* dstBuffer, size_t dstRowBytes, int x, int y, uint32_t flags) {
   ASSERT_SINGLE_OWNER
   RETURN_FALSE_IF_ABANDONED
-  SkDEBUGCODE(this->validate();)
-      GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrSurfaceContext::readPixels");
+  SkDEBUGCODE(this->validate());
+  GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrSurfaceContext::readPixels");
 
   // TODO: this seems to duplicate code in SkImage_Gpu::onReadPixels
   if (kUnpremul_SkAlphaType == dstInfo.alphaType() &&
@@ -73,8 +73,8 @@ bool GrSurfaceContext::writePixels(
     uint32_t flags) {
   ASSERT_SINGLE_OWNER
   RETURN_FALSE_IF_ABANDONED
-  SkDEBUGCODE(this->validate();)
-      GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrSurfaceContext::writePixels");
+  SkDEBUGCODE(this->validate());
+  GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrSurfaceContext::writePixels");
 
   if (kUnpremul_SkAlphaType == srcInfo.alphaType()) {
     flags |= GrContextPriv::kUnpremul_PixelOpsFlag;
@@ -101,8 +101,8 @@ bool GrSurfaceContext::writePixels(
 bool GrSurfaceContext::copy(GrSurfaceProxy* src, const SkIRect& srcRect, const SkIPoint& dstPoint) {
   ASSERT_SINGLE_OWNER
   RETURN_FALSE_IF_ABANDONED
-  SkDEBUGCODE(this->validate();)
-      GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrSurfaceContext::copy");
+  SkDEBUGCODE(this->validate());
+  GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrSurfaceContext::copy");
 
   if (!fContext->priv().caps()->canCopySurface(this->asSurfaceProxy(), src, srcRect, dstPoint)) {
     return false;

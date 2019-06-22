@@ -23,13 +23,13 @@ class GrSamplePatternDictionary {
 
   int findOrAssignSamplePatternKey(const SkTArray<SkPoint>& sampleLocations);
 
-  const SkTArray<SkPoint>& retrieveSampleLocations(int samplePatternKey) const {
+  const SkTArray<SkPoint>& retrieveSampleLocations(int samplePatternKey) const noexcept {
     return *fSampleLocationsArray[samplePatternKey];
   }
 
  private:
   struct LessThan {
-    bool operator()(const SkTArray<SkPoint>&, const SkTArray<SkPoint>&) const;
+    bool operator()(const SkTArray<SkPoint>&, const SkTArray<SkPoint>&) const noexcept;
   };
 
   std::map<SkTArray<SkPoint>, int, LessThan> fSamplePatternKeyMap;

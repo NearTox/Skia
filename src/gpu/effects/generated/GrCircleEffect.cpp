@@ -83,11 +83,11 @@ class GrGLSLCircleEffect : public GrGLSLFragmentProcessor {
 GrGLSLFragmentProcessor* GrCircleEffect::onCreateGLSLInstance() const {
   return new GrGLSLCircleEffect();
 }
-void GrCircleEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+void GrCircleEffect::onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const
+    noexcept {
   b->add32((int32_t)edgeType);
 }
-bool GrCircleEffect::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrCircleEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrCircleEffect& that = other.cast<GrCircleEffect>();
   (void)that;
   if (edgeType != that.edgeType) return false;
@@ -95,7 +95,7 @@ bool GrCircleEffect::onIsEqual(const GrFragmentProcessor& other) const {
   if (radius != that.radius) return false;
   return true;
 }
-GrCircleEffect::GrCircleEffect(const GrCircleEffect& src)
+GrCircleEffect::GrCircleEffect(const GrCircleEffect& src) noexcept
     : INHERITED(kGrCircleEffect_ClassID, src.optimizationFlags()),
       edgeType(src.edgeType),
       center(src.center),

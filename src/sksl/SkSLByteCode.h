@@ -134,7 +134,7 @@ enum class ByteCodeInstruction : uint16_t {
 #undef VECTOR
 
 struct ByteCodeFunction {
-  ByteCodeFunction(const FunctionDeclaration* declaration) : fDeclaration(*declaration) {}
+  ByteCodeFunction(const FunctionDeclaration* declaration) noexcept : fDeclaration(*declaration) {}
 
   const FunctionDeclaration& fDeclaration;
   int fParameterCount = 0;
@@ -152,7 +152,7 @@ struct ByteCode {
   std::vector<uint8_t> fInputSlots;
   std::vector<std::unique_ptr<ByteCodeFunction>> fFunctions;
 
-  const ByteCodeFunction* getFunction(const char* name) const {
+  const ByteCodeFunction* getFunction(const char* name) const noexcept {
     for (const auto& f : fFunctions) {
       if (f->fDeclaration.fName == name) {
         return f.get();

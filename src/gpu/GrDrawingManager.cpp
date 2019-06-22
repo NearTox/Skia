@@ -34,7 +34,7 @@
 #include "src/gpu/text/GrTextContext.h"
 #include "src/image/SkSurface_Gpu.h"
 
-GrDrawingManager::OpListDAG::OpListDAG(bool sortOpLists) : fSortOpLists(sortOpLists) {}
+GrDrawingManager::OpListDAG::OpListDAG(bool sortOpLists) noexcept : fSortOpLists(sortOpLists) {}
 
 GrDrawingManager::OpListDAG::~OpListDAG() {}
 
@@ -47,7 +47,7 @@ void GrDrawingManager::OpListDAG::gatherIDs(SkSTArray<8, uint32_t, true>* idArra
   }
 }
 
-void GrDrawingManager::OpListDAG::reset() { fOpLists.reset(); }
+void GrDrawingManager::OpListDAG::reset() noexcept { fOpLists.reset(); }
 
 void GrDrawingManager::OpListDAG::removeOpList(int index) {
   if (!fOpLists[index]->unique()) {
@@ -77,7 +77,7 @@ bool GrDrawingManager::OpListDAG::isUsed(GrSurfaceProxy* proxy) const {
   return false;
 }
 
-void GrDrawingManager::OpListDAG::add(sk_sp<GrOpList> opList) {
+void GrDrawingManager::OpListDAG::add(sk_sp<GrOpList> opList) noexcept {
   fOpLists.emplace_back(std::move(opList));
 }
 
@@ -85,7 +85,7 @@ void GrDrawingManager::OpListDAG::add(const SkTArray<sk_sp<GrOpList>>& opLists) 
   fOpLists.push_back_n(opLists.count(), opLists.begin());
 }
 
-void GrDrawingManager::OpListDAG::swap(SkTArray<sk_sp<GrOpList>>* opLists) {
+void GrDrawingManager::OpListDAG::swap(SkTArray<sk_sp<GrOpList>>* opLists) noexcept {
   SkASSERT(opLists->empty());
   opLists->swap(fOpLists);
 }
@@ -289,7 +289,7 @@ GrSemaphoresSubmitted GrDrawingManager::flush(
 #if 0
     // Enable this to print out verbose GrOp information
     for (int i = 0; i < fOpLists.count(); ++i) {
-        SkDEBUGCODE(fOpLists[i]->dump();)
+        SkDEBUGCODE(fOpLists[i]->dump());
     }
 #endif
 

@@ -25,15 +25,15 @@ class Interpreter {
 
  public:
   union Value {
-    Value() {}
+    Value() noexcept {}
 
-    Value(float f) : fFloat(f) {}
+    Value(float f) noexcept : fFloat(f) {}
 
-    Value(int32_t s) : fSigned(s) {}
+    Value(int32_t s) noexcept : fSigned(s) {}
 
-    Value(uint32_t u) : fUnsigned(u) {}
+    Value(uint32_t u) noexcept : fUnsigned(u) {}
 
-    Value(bool b) : fBool(b) {}
+    Value(bool b) noexcept : fBool(b) {}
 
     float fFloat;
     int32_t fSigned;

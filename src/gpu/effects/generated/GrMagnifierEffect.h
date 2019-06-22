@@ -22,9 +22,9 @@ class GrMagnifierEffect : public GrFragmentProcessor {
     return std::unique_ptr<GrFragmentProcessor>(
         new GrMagnifierEffect(src, bounds, srcRect, xInvZoom, yInvZoom, xInvInset, yInvInset));
   }
-  GrMagnifierEffect(const GrMagnifierEffect& src);
+  GrMagnifierEffect(const GrMagnifierEffect& src) noexcept;
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const override { return "MagnifierEffect"; }
+  const char* name() const noexcept override { return "MagnifierEffect"; }
   GrCoordTransform srcCoordTransform;
   TextureSampler src;
   SkIRect bounds;
@@ -51,9 +51,9 @@ class GrMagnifierEffect : public GrFragmentProcessor {
     this->addCoordTransform(&srcCoordTransform);
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const override;
-  const TextureSampler& onTextureSampler(int) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+  const TextureSampler& onTextureSampler(int) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

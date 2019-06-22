@@ -49,7 +49,8 @@ HRESULT SkGetGetUserDefaultLocaleNameProc(SkGetUserDefaultLocaleNameProc* proc);
 
 class AutoDWriteTable {
  public:
-  AutoDWriteTable(IDWriteFontFace* fontFace, UINT32 beTag) : fExists(FALSE), fFontFace(fontFace) {
+  AutoDWriteTable(IDWriteFontFace* fontFace, UINT32 beTag) noexcept
+      : fExists(FALSE), fFontFace(fontFace) {
     // Any errors are ignored, user must check fExists anyway.
     fontFace->TryGetFontTable(
         beTag, reinterpret_cast<const void**>(&fData), &fSize, &fLock, &fExists);
@@ -73,17 +74,17 @@ template <typename T>
 class AutoTDWriteTable : public AutoDWriteTable {
  public:
   static const UINT32 tag = DWRITE_MAKE_OPENTYPE_TAG(T::TAG0, T::TAG1, T::TAG2, T::TAG3);
-  AutoTDWriteTable(IDWriteFontFace* fontFace) : AutoDWriteTable(fontFace, tag) {}
+  AutoTDWriteTable(IDWriteFontFace* fontFace) noexcept : AutoDWriteTable(fontFace, tag) {}
 
-  const T* get() const { return reinterpret_cast<const T*>(fData); }
-  const T* operator->() const { return reinterpret_cast<const T*>(fData); }
+  const T* get() const noexcept { return reinterpret_cast<const T*>(fData); }
+  const T* operator->() const noexcept { return reinterpret_cast<const T*>(fData); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 // Style conversion
 
 struct DWriteStyle {
-  explicit DWriteStyle(const SkFontStyle& pattern) {
+  explicit DWriteStyle(const SkFontStyle& pattern) noexcept {
     fWeight = (DWRITE_FONT_WEIGHT)pattern.weight();
     fWidth = (DWRITE_FONT_STRETCH)pattern.width();
     switch (pattern.slant()) {

@@ -172,7 +172,7 @@ class SkNullBlitter : public SkBlitter {
 */
 class SkRectClipBlitter : public SkBlitter {
  public:
-  void init(SkBlitter* blitter, const SkIRect& clipRect) {
+  void init(SkBlitter* blitter, const SkIRect& clipRect) noexcept {
     SkASSERT(!clipRect.isEmpty());
     fBlitter = blitter;
     fClipRect = clipRect;
@@ -202,7 +202,7 @@ class SkRectClipBlitter : public SkBlitter {
 */
 class SkRgnClipBlitter : public SkBlitter {
  public:
-  void init(SkBlitter* blitter, const SkRegion* clipRgn) {
+  void init(SkBlitter* blitter, const SkRegion* clipRgn) noexcept {
     SkASSERT(clipRgn && !clipRgn->isEmpty());
     fBlitter = blitter;
     fRgn = clipRgn;
@@ -263,7 +263,8 @@ class SkRectClipCheckBlitter : public SkBlitter {
 */
 class SkBlitterClipper {
  public:
-  SkBlitter* apply(SkBlitter* blitter, const SkRegion* clip, const SkIRect* bounds = nullptr);
+  SkBlitter* apply(
+      SkBlitter* blitter, const SkRegion* clip, const SkIRect* bounds = nullptr) noexcept;
 
  private:
   SkNullBlitter fNullBlitter;

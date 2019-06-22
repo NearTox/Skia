@@ -145,7 +145,7 @@ struct Swizzle : public Expression {
   typedef Expression INHERITED;
 
  private:
-  Swizzle(const Type& type, std::unique_ptr<Expression> base, std::vector<int> components)
+  Swizzle(const Type& type, std::unique_ptr<Expression> base, std::vector<int> components) noexcept
       : INHERITED(base->fOffset, kSwizzle_Kind, type),
         fBase(std::move(base)),
         fComponents(std::move(components)) {

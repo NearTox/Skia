@@ -37,34 +37,34 @@ class GrMemoryPool {
    * Both sizes is what the pool will end up allocating from the system, and
    * portions of the allocated memory is used for internal bookkeeping.
    */
-  GrMemoryPool(size_t preallocSize, size_t minAllocSize);
+  GrMemoryPool(size_t preallocSize, size_t minAllocSize) noexcept;
 
   ~GrMemoryPool();
 
   /**
    * Allocates memory. The memory must be freed with release().
    */
-  void* allocate(size_t size);
+  void* allocate(size_t size) noexcept;
 
   /**
    * p must have been returned by allocate()
    */
-  void release(void* p);
+  void release(void* p) noexcept;
 
   /**
    * Returns true if there are no unreleased allocations.
    */
-  bool isEmpty() const { return fTail == fHead && !fHead->fLiveCount; }
+  bool isEmpty() const noexcept { return fTail == fHead && !fHead->fLiveCount; }
 
   /**
    * Returns the total allocated size of the GrMemoryPool minus any preallocated amount
    */
-  size_t size() const { return fSize; }
+  size_t size() const noexcept { return fSize; }
 
   /**
    * Returns the preallocated size of the GrMemoryPool
    */
-  size_t preallocSize() const { return fHead->fSize; }
+  size_t preallocSize() const noexcept { return fHead->fSize; }
 
   /**
    * Minimum value of minAllocSize constructor argument.
@@ -74,11 +74,11 @@ class GrMemoryPool {
  private:
   struct BlockHeader;
 
-  static BlockHeader* CreateBlock(size_t size);
+  static BlockHeader* CreateBlock(size_t size) noexcept;
 
-  static void DeleteBlock(BlockHeader* block);
+  static void DeleteBlock(BlockHeader* block) noexcept;
 
-  void validate();
+  void validate() noexcept;
 
   struct BlockHeader {
 #ifdef SK_DEBUG
@@ -130,7 +130,7 @@ class GrOp;
 // ref counting
 class GrOpMemoryPool : public SkRefCnt {
  public:
-  GrOpMemoryPool(size_t preallocSize, size_t minAllocSize)
+  GrOpMemoryPool(size_t preallocSize, size_t minAllocSize) noexcept
       : fMemoryPool(preallocSize, minAllocSize) {}
 
   template <typename Op, typename... OpArgs>
@@ -139,11 +139,11 @@ class GrOpMemoryPool : public SkRefCnt {
     return std::unique_ptr<Op>(new (mem) Op(std::forward<OpArgs>(opArgs)...));
   }
 
-  void* allocate(size_t size) { return fMemoryPool.allocate(size); }
+  void* allocate(size_t size) noexcept { return fMemoryPool.allocate(size); }
 
-  void release(std::unique_ptr<GrOp> op);
+  void release(std::unique_ptr<GrOp> op) noexcept;
 
-  bool isEmpty() const { return fMemoryPool.isEmpty(); }
+  bool isEmpty() const noexcept { return fMemoryPool.isEmpty(); }
 
  private:
   GrMemoryPool fMemoryPool;

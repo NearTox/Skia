@@ -15,7 +15,7 @@ class GrAAConvexPathRenderer : public GrPathRenderer {
   GrAAConvexPathRenderer();
 
  private:
-  CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;
+  CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const noexcept override;
 
   bool onDrawPath(const DrawPathArgs&) override;
 };

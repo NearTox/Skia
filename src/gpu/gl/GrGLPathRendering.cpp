@@ -40,7 +40,7 @@ static void verify_floats(const float* floats, int count) {
 }
 #endif
 
-static GrGLenum gr_stencil_op_to_gl_path_rendering_fill_mode(GrStencilOp op) {
+static GrGLenum gr_stencil_op_to_gl_path_rendering_fill_mode(GrStencilOp op) noexcept {
   switch (op) {
     default:
       SK_ABORT("Unexpected path fill.");
@@ -254,4 +254,4 @@ void GrGLPathRendering::flushPathStencilSettings(const GrStencilSettings& stenci
   }
 }
 
-inline GrGLGpu* GrGLPathRendering::gpu() { return static_cast<GrGLGpu*>(fGpu); }
+inline GrGLGpu* GrGLPathRendering::gpu() noexcept { return static_cast<GrGLGpu*>(fGpu); }

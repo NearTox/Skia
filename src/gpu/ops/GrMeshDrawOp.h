@@ -28,7 +28,7 @@ class GrMeshDrawOp : public GrDrawOp {
   class Target;
 
  protected:
-  GrMeshDrawOp(uint32_t classID);
+  GrMeshDrawOp(uint32_t classID) noexcept;
 
   /** Helper for rendering repeating meshes using a patterned index buffer. This class creates the
       space for the vertices and flushes the draws to the GrMeshDrawOp::Target. */
@@ -43,7 +43,7 @@ class GrMeshDrawOp : public GrDrawOp {
     void recordDraw(
         Target*, sk_sp<const GrGeometryProcessor>, const GrPipeline::FixedDynamicState*) const;
 
-    void* vertices() const { return fVertices; }
+    void* vertices() const noexcept { return fVertices; }
 
    protected:
     PatternHelper() = default;

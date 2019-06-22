@@ -57,7 +57,7 @@ class GrGLSRGBEffect : public GrGLSLFragmentProcessor {
   }
 
   static inline void GenKey(
-      const GrProcessor& processor, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
+      const GrProcessor& processor, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
     const GrSRGBEffect& srgbe = processor.cast<GrSRGBEffect>();
     uint32_t key =
         static_cast<uint32_t>(srgbe.mode()) | (static_cast<uint32_t>(srgbe.alpha()) << 1);
@@ -70,7 +70,7 @@ class GrGLSRGBEffect : public GrGLSLFragmentProcessor {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-GrSRGBEffect::GrSRGBEffect(Mode mode, Alpha alpha)
+GrSRGBEffect::GrSRGBEffect(Mode mode, Alpha alpha) noexcept
     : INHERITED(
           kGrSRGBEffect_ClassID, kPreservesOpaqueInput_OptimizationFlag |
                                      kConstantOutputForConstantInput_OptimizationFlag),
@@ -79,19 +79,20 @@ GrSRGBEffect::GrSRGBEffect(Mode mode, Alpha alpha)
 
 std::unique_ptr<GrFragmentProcessor> GrSRGBEffect::clone() const { return Make(fMode, fAlpha); }
 
-bool GrSRGBEffect::onIsEqual(const GrFragmentProcessor& s) const {
+bool GrSRGBEffect::onIsEqual(const GrFragmentProcessor& s) const noexcept {
   const GrSRGBEffect& other = s.cast<GrSRGBEffect>();
   return other.fMode == fMode;
 }
 
-static inline float srgb_to_linear(float srgb) {
+static inline float srgb_to_linear(float srgb) noexcept {
   return (srgb <= 0.04045f) ? srgb / 12.92f : powf((srgb + 0.055f) / 1.055f, 2.4f);
 }
-static inline float linear_to_srgb(float linear) {
+static inline float linear_to_srgb(float linear) noexcept {
   return (linear <= 0.0031308) ? linear * 12.92f : 1.055f * powf(linear, 1.f / 2.4f) - 0.055f;
 }
 
-SkPMColor4f GrSRGBEffect::constantOutputForConstantInput(const SkPMColor4f& inColor) const {
+SkPMColor4f GrSRGBEffect::constantOutputForConstantInput(const SkPMColor4f& inColor) const
+    noexcept {
   SkColor4f color = inColor.unpremul();
   switch (fMode) {
     case Mode::kLinearToSRGB:
@@ -119,7 +120,8 @@ std::unique_ptr<GrFragmentProcessor> GrSRGBEffect::TestCreate(GrProcessorTestDat
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void GrSRGBEffect::onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+void GrSRGBEffect::onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const
+    noexcept {
   GrGLSRGBEffect::GenKey(*this, caps, b);
 }
 

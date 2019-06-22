@@ -19,9 +19,9 @@ class GrTextureGradientColorizer : public GrFragmentProcessor {
   static std::unique_ptr<GrFragmentProcessor> Make(sk_sp<GrTextureProxy> gradient) {
     return std::unique_ptr<GrFragmentProcessor>(new GrTextureGradientColorizer(gradient));
   }
-  GrTextureGradientColorizer(const GrTextureGradientColorizer& src);
+  GrTextureGradientColorizer(const GrTextureGradientColorizer& src) noexcept;
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const override { return "TextureGradientColorizer"; }
+  const char* name() const noexcept override { return "TextureGradientColorizer"; }
   TextureSampler gradient;
 
  private:
@@ -31,9 +31,9 @@ class GrTextureGradientColorizer : public GrFragmentProcessor {
     this->setTextureSamplerCnt(1);
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const override;
-  const TextureSampler& onTextureSampler(int) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+  const TextureSampler& onTextureSampler(int) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

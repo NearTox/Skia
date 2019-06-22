@@ -312,7 +312,7 @@ bool SkNullBlitter::isNullBlitter() const { return true; }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static int compute_anti_width(const int16_t runs[]) {
+static int compute_anti_width(const int16_t runs[]) noexcept {
   int width = 0;
 
   for (;;) {
@@ -328,11 +328,11 @@ static int compute_anti_width(const int16_t runs[]) {
   return width;
 }
 
-static inline bool y_in_rect(int y, const SkIRect& rect) {
+static inline bool y_in_rect(int y, const SkIRect& rect) noexcept {
   return (unsigned)(y - rect.fTop) < (unsigned)rect.height();
 }
 
-static inline bool x_in_rect(int x, const SkIRect& rect) {
+static inline bool x_in_rect(int x, const SkIRect& rect) noexcept {
   return (unsigned)(x - rect.fLeft) < (unsigned)rect.width();
 }
 
@@ -483,9 +483,9 @@ void SkRgnClipBlitter::blitAntiH(int x, int y, const SkAlpha aa[], const int16_t
   int width = compute_anti_width(runs);
   SkRegion::Spanerator span(*fRgn, y, x, x + width);
   int left, right;
-  SkDEBUGCODE(const SkIRect& bounds = fRgn->getBounds();)
+  SkDEBUGCODE(const SkIRect& bounds = fRgn->getBounds());
 
-      int prevRite = x;
+  int prevRite = x;
   while (span.next(&left, &right)) {
     SkASSERT(x <= left);
     SkASSERT(left < right);
@@ -600,7 +600,8 @@ const SkPixmap* SkRgnClipBlitter::justAnOpaqueColor(uint32_t* value) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkBlitter* SkBlitterClipper::apply(SkBlitter* blitter, const SkRegion* clip, const SkIRect* ir) {
+SkBlitter* SkBlitterClipper::apply(
+    SkBlitter* blitter, const SkRegion* clip, const SkIRect* ir) noexcept {
   if (clip) {
     const SkIRect& clipR = clip->getBounds();
 

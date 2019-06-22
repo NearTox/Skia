@@ -23,15 +23,15 @@ namespace sksg {
  */
 class InvalidationController {
  public:
-  InvalidationController();
+  InvalidationController() noexcept;
   InvalidationController(const InvalidationController&) = delete;
   InvalidationController& operator=(const InvalidationController&) = delete;
 
   void inval(const SkRect&, const SkMatrix& ctm = SkMatrix::I());
 
-  const SkRect& bounds() const { return fBounds; }
-  const SkRect* begin() const { return fRects.begin(); }
-  const SkRect* end() const { return fRects.end(); }
+  const SkRect& bounds() const noexcept { return fBounds; }
+  const SkRect* begin() const noexcept { return fRects.begin(); }
+  const SkRect* end() const noexcept { return fRects.end(); }
 
  private:
   SkTDArray<SkRect> fRects;

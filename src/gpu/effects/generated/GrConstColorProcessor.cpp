@@ -55,17 +55,17 @@ GrGLSLFragmentProcessor* GrConstColorProcessor::onCreateGLSLInstance() const {
   return new GrGLSLConstColorProcessor();
 }
 void GrConstColorProcessor::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   b->add32((int32_t)mode);
 }
-bool GrConstColorProcessor::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrConstColorProcessor::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrConstColorProcessor& that = other.cast<GrConstColorProcessor>();
   (void)that;
   if (color != that.color) return false;
   if (mode != that.mode) return false;
   return true;
 }
-GrConstColorProcessor::GrConstColorProcessor(const GrConstColorProcessor& src)
+GrConstColorProcessor::GrConstColorProcessor(const GrConstColorProcessor& src) noexcept
     : INHERITED(kGrConstColorProcessor_ClassID, src.optimizationFlags()),
       color(src.color),
       mode(src.mode) {}

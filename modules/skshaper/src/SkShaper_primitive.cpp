@@ -31,7 +31,7 @@ std::unique_ptr<SkShaper> SkShaper::MakePrimitive() {
   return skstd::make_unique<SkShaperPrimitive>();
 }
 
-static inline bool is_breaking_whitespace(SkUnichar c) {
+static inline bool is_breaking_whitespace(SkUnichar c) noexcept {
   switch (c) {
     case 0x0020:  // SPACE
     // case 0x00A0: // NO-BREAK SPACE

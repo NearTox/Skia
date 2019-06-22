@@ -20,7 +20,7 @@ class FileOutputStream : public OutputStream {
 
   ~FileOutputStream() override { SkASSERT(!fOpen); }
 
-  bool isValid() const override { return nullptr != fFile; }
+  bool isValid() const noexcept override { return nullptr != fFile; }
 
   void write8(uint8_t b) override {
     SkASSERT(fOpen);

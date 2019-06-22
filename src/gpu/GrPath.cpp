@@ -8,7 +8,7 @@
 #include "src/gpu/GrPath.h"
 #include "src/gpu/GrShape.h"
 
-static inline void write_style_key(uint32_t* key, const GrStyle& style) {
+static inline void write_style_key(uint32_t* key, const GrStyle& style) noexcept {
   // Pass 1 for the scale since the GPU will apply the style not GrStyle::applyToPath().
   GrStyle::WriteKey(key, style, GrStyle::Apply::kPathEffectAndStrokeRec, SK_Scalar1);
 }

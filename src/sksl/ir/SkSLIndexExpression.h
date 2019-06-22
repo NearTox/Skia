@@ -78,7 +78,8 @@ struct IndexExpression : public Expression {
 
  private:
   IndexExpression(
-      std::unique_ptr<Expression> base, std::unique_ptr<Expression> index, const Type* type)
+      std::unique_ptr<Expression> base, std::unique_ptr<Expression> index,
+      const Type* type) noexcept
       : INHERITED(base->fOffset, kIndex_Kind, *type),
         fBase(std::move(base)),
         fIndex(std::move(index)) {}

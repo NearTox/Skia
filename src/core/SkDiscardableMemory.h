@@ -54,7 +54,7 @@ class SK_API SkDiscardableMemory {
    * Returns the current pointer for the discardable memory. This call is ONLY
    * valid when the discardable memory object is locked.
    */
-  virtual void* data() = 0;
+  virtual void* data() noexcept = 0;
 
   /**
    * Unlock the memory so that it can be purged by the system. Must be called

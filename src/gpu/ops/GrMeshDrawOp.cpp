@@ -10,7 +10,7 @@
 #include "src/gpu/GrOpFlushState.h"
 #include "src/gpu/GrResourceProvider.h"
 
-GrMeshDrawOp::GrMeshDrawOp(uint32_t classID) : INHERITED(classID) {}
+GrMeshDrawOp::GrMeshDrawOp(uint32_t classID) noexcept : INHERITED(classID) {}
 
 void GrMeshDrawOp::onPrepare(GrOpFlushState* state) { this->onPrepareDraws(state); }
 

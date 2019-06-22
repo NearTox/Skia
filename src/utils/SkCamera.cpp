@@ -8,7 +8,8 @@
 #include "include/utils/SkCamera.h"
 
 static SkScalar SkScalarDotDiv(
-    int count, const SkScalar a[], int step_a, const SkScalar b[], int step_b, SkScalar denom) {
+    int count, const SkScalar a[], int step_a, const SkScalar b[], int step_b,
+    SkScalar denom) noexcept {
   SkScalar prod = 0;
   for (int i = 0; i < count; i++) {
     prod += a[0] * b[0];
@@ -19,7 +20,7 @@ static SkScalar SkScalarDotDiv(
 }
 
 static SkScalar SkScalarDot(
-    int count, const SkScalar a[], int step_a, const SkScalar b[], int step_b) {
+    int count, const SkScalar a[], int step_a, const SkScalar b[], int step_b) noexcept {
   SkScalar prod = 0;
   for (int i = 0; i < count; i++) {
     prod += a[0] * b[0];
@@ -31,7 +32,7 @@ static SkScalar SkScalarDot(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkScalar SkPoint3D::normalize(SkUnit3D* unit) const {
+SkScalar SkPoint3D::normalize(SkUnit3D* unit) const noexcept {
   SkScalar mag = SkScalarSqrt(fX * fX + fY * fY + fZ * fZ);
   if (mag) {
     SkScalar scale = SkScalarInvert(mag);
@@ -44,11 +45,11 @@ SkScalar SkPoint3D::normalize(SkUnit3D* unit) const {
   return mag;
 }
 
-SkScalar SkUnit3D::Dot(const SkUnit3D& a, const SkUnit3D& b) {
+SkScalar SkUnit3D::Dot(const SkUnit3D& a, const SkUnit3D& b) noexcept {
   return a.fX * b.fX + a.fY * b.fY + a.fZ * b.fZ;
 }
 
-void SkUnit3D::Cross(const SkUnit3D& a, const SkUnit3D& b, SkUnit3D* cross) {
+void SkUnit3D::Cross(const SkUnit3D& a, const SkUnit3D& b, SkUnit3D* cross) noexcept {
   SkASSERT(cross);
 
   // use x,y,z, in case &a == cross or &b == cross
@@ -62,15 +63,15 @@ void SkUnit3D::Cross(const SkUnit3D& a, const SkUnit3D& b, SkUnit3D* cross) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkPatch3D::SkPatch3D() { this->reset(); }
+SkPatch3D::SkPatch3D() noexcept { this->reset(); }
 
-void SkPatch3D::reset() {
+void SkPatch3D::reset() noexcept {
   fOrigin.set(0, 0, 0);
   fU.set(SK_Scalar1, 0, 0);
   fV.set(0, -SK_Scalar1, 0);
 }
 
-void SkPatch3D::transform(const SkMatrix3D& m, SkPatch3D* dst) const {
+void SkPatch3D::transform(const SkMatrix3D& m, SkPatch3D* dst) const noexcept {
   if (dst == nullptr) {
     dst = (SkPatch3D*)this;
   }
@@ -79,7 +80,7 @@ void SkPatch3D::transform(const SkMatrix3D& m, SkPatch3D* dst) const {
   m.mapPoint(fOrigin, &dst->fOrigin);
 }
 
-SkScalar SkPatch3D::dotWith(SkScalar dx, SkScalar dy, SkScalar dz) const {
+SkScalar SkPatch3D::dotWith(SkScalar dx, SkScalar dy, SkScalar dz) const noexcept {
   SkScalar cx = fU.fY * fV.fZ - fU.fZ * fV.fY;
   SkScalar cy = fU.fZ * fV.fX - fU.fX * fV.fY;
   SkScalar cz = fU.fX * fV.fY - fU.fY * fV.fX;
@@ -89,40 +90,40 @@ SkScalar SkPatch3D::dotWith(SkScalar dx, SkScalar dy, SkScalar dz) const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkMatrix3D::reset() {
+void SkMatrix3D::reset() noexcept {
   memset(fMat, 0, sizeof(fMat));
   fMat[0][0] = fMat[1][1] = fMat[2][2] = SK_Scalar1;
 }
 
-void SkMatrix3D::setTranslate(SkScalar x, SkScalar y, SkScalar z) {
+void SkMatrix3D::setTranslate(SkScalar x, SkScalar y, SkScalar z) noexcept {
   memset(fMat, 0, sizeof(fMat));
   fMat[0][0] = x;
   fMat[1][1] = y;
   fMat[2][2] = z;
 }
 
-void SkMatrix3D::setRotateX(SkScalar degX) {
+void SkMatrix3D::setRotateX(SkScalar degX) noexcept {
   SkScalar r = SkDegreesToRadians(degX), s = SkScalarSin(r), c = SkScalarCos(r);
   this->setRow(0, SK_Scalar1, 0, 0);
   this->setRow(1, 0, c, -s);
   this->setRow(2, 0, s, c);
 }
 
-void SkMatrix3D::setRotateY(SkScalar degY) {
+void SkMatrix3D::setRotateY(SkScalar degY) noexcept {
   SkScalar r = SkDegreesToRadians(degY), s = SkScalarSin(r), c = SkScalarCos(r);
   this->setRow(0, c, 0, -s);
   this->setRow(1, 0, SK_Scalar1, 0);
   this->setRow(2, s, 0, c);
 }
 
-void SkMatrix3D::setRotateZ(SkScalar degZ) {
+void SkMatrix3D::setRotateZ(SkScalar degZ) noexcept {
   SkScalar r = SkDegreesToRadians(degZ), s = SkScalarSin(r), c = SkScalarCos(r);
   this->setRow(0, c, -s, 0);
   this->setRow(1, s, c, 0);
   this->setRow(2, 0, 0, SK_Scalar1);
 }
 
-void SkMatrix3D::preTranslate(SkScalar x, SkScalar y, SkScalar z) {
+void SkMatrix3D::preTranslate(SkScalar x, SkScalar y, SkScalar z) noexcept {
   SkScalar col[3] = {x, y, z};
 
   for (int i = 0; i < 3; i++) {
@@ -130,25 +131,25 @@ void SkMatrix3D::preTranslate(SkScalar x, SkScalar y, SkScalar z) {
   }
 }
 
-void SkMatrix3D::preRotateX(SkScalar degX) {
+void SkMatrix3D::preRotateX(SkScalar degX) noexcept {
   SkMatrix3D m;
   m.setRotateX(degX);
   this->setConcat(*this, m);
 }
 
-void SkMatrix3D::preRotateY(SkScalar degY) {
+void SkMatrix3D::preRotateY(SkScalar degY) noexcept {
   SkMatrix3D m;
   m.setRotateY(degY);
   this->setConcat(*this, m);
 }
 
-void SkMatrix3D::preRotateZ(SkScalar degZ) {
+void SkMatrix3D::preRotateZ(SkScalar degZ) noexcept {
   SkMatrix3D m;
   m.setRotateZ(degZ);
   this->setConcat(*this, m);
 }
 
-void SkMatrix3D::setConcat(const SkMatrix3D& a, const SkMatrix3D& b) {
+void SkMatrix3D::setConcat(const SkMatrix3D& a, const SkMatrix3D& b) noexcept {
   SkMatrix3D tmp;
   SkMatrix3D* c = this;
 
@@ -167,14 +168,14 @@ void SkMatrix3D::setConcat(const SkMatrix3D& a, const SkMatrix3D& b) {
   }
 }
 
-void SkMatrix3D::mapPoint(const SkPoint3D& src, SkPoint3D* dst) const {
+void SkMatrix3D::mapPoint(const SkPoint3D& src, SkPoint3D* dst) const noexcept {
   SkScalar x = SkScalarDot(3, &fMat[0][0], 1, &src.fX, 1) + fMat[0][3];
   SkScalar y = SkScalarDot(3, &fMat[1][0], 1, &src.fX, 1) + fMat[1][3];
   SkScalar z = SkScalarDot(3, &fMat[2][0], 1, &src.fX, 1) + fMat[2][3];
   dst->set(x, y, z);
 }
 
-void SkMatrix3D::mapVector(const SkVector3D& src, SkVector3D* dst) const {
+void SkMatrix3D::mapVector(const SkVector3D& src, SkVector3D* dst) const noexcept {
   SkScalar x = SkScalarDot(3, &fMat[0][0], 1, &src.fX, 1);
   SkScalar y = SkScalarDot(3, &fMat[1][0], 1, &src.fX, 1);
   SkScalar z = SkScalarDot(3, &fMat[2][0], 1, &src.fX, 1);
@@ -183,9 +184,9 @@ void SkMatrix3D::mapVector(const SkVector3D& src, SkVector3D* dst) const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkCamera3D::SkCamera3D() { this->reset(); }
+SkCamera3D::SkCamera3D() noexcept { this->reset(); }
 
-void SkCamera3D::reset() {
+void SkCamera3D::reset() noexcept {
   fLocation.set(0, 0, -SkIntToScalar(576));  // 8 inches backward
   fAxis.set(0, 0, SK_Scalar1);               // forward
   fZenith.set(0, -SK_Scalar1, 0);            // up
@@ -195,9 +196,9 @@ void SkCamera3D::reset() {
   fNeedToUpdate = true;
 }
 
-void SkCamera3D::update() { fNeedToUpdate = true; }
+void SkCamera3D::update() noexcept { fNeedToUpdate = true; }
 
-void SkCamera3D::doUpdate() const {
+void SkCamera3D::doUpdate() const noexcept {
   SkUnit3D axis, zenith, cross;
 
   // construct a orthonormal basis of cross (x), zenith (y), and axis (z)
@@ -247,7 +248,7 @@ void SkCamera3D::doUpdate() const {
   }
 }
 
-void SkCamera3D::patchToMatrix(const SkPatch3D& quilt, SkMatrix* matrix) const {
+void SkCamera3D::patchToMatrix(const SkPatch3D& quilt, SkMatrix* matrix) const noexcept {
   if (fNeedToUpdate) {
     this->doUpdate();
     fNeedToUpdate = false;
@@ -292,7 +293,7 @@ void SkCamera3D::patchToMatrix(const SkPatch3D& quilt, SkMatrix* matrix) const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-Sk3DView::Sk3DView() {
+Sk3DView::Sk3DView() noexcept {
   fInitialRec.fMatrix.reset();
   fRec = &fInitialRec;
 }
@@ -313,7 +314,7 @@ void Sk3DView::save() {
   fRec = rec;
 }
 
-void Sk3DView::restore() {
+void Sk3DView::restore() noexcept {
   SkASSERT(fRec != &fInitialRec);
   Rec* next = fRec->fNext;
   delete fRec;
@@ -336,23 +337,23 @@ SkScalar Sk3DView::getCameraLocationY() const { return fCamera.fLocation.fY / 72
 SkScalar Sk3DView::getCameraLocationZ() const { return fCamera.fLocation.fZ / 72.0f; }
 #endif
 
-void Sk3DView::translate(SkScalar x, SkScalar y, SkScalar z) {
+void Sk3DView::translate(SkScalar x, SkScalar y, SkScalar z) noexcept {
   fRec->fMatrix.preTranslate(x, y, z);
 }
 
-void Sk3DView::rotateX(SkScalar deg) { fRec->fMatrix.preRotateX(deg); }
+void Sk3DView::rotateX(SkScalar deg) noexcept { fRec->fMatrix.preRotateX(deg); }
 
-void Sk3DView::rotateY(SkScalar deg) { fRec->fMatrix.preRotateY(deg); }
+void Sk3DView::rotateY(SkScalar deg) noexcept { fRec->fMatrix.preRotateY(deg); }
 
-void Sk3DView::rotateZ(SkScalar deg) { fRec->fMatrix.preRotateZ(deg); }
+void Sk3DView::rotateZ(SkScalar deg) noexcept { fRec->fMatrix.preRotateZ(deg); }
 
-SkScalar Sk3DView::dotWithNormal(SkScalar x, SkScalar y, SkScalar z) const {
+SkScalar Sk3DView::dotWithNormal(SkScalar x, SkScalar y, SkScalar z) const noexcept {
   SkPatch3D patch;
   patch.transform(fRec->fMatrix);
   return patch.dotWith(x, y, z);
 }
 
-void Sk3DView::getMatrix(SkMatrix* matrix) const {
+void Sk3DView::getMatrix(SkMatrix* matrix) const noexcept {
   if (matrix != nullptr) {
     SkPatch3D patch;
     patch.transform(fRec->fMatrix);

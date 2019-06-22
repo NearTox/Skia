@@ -44,14 +44,14 @@ struct SkAnalyticEdge {
 
   static const int kDefaultAccuracy = 2;  // default accuracy for snapping
 
-  static inline SkFixed SnapY(SkFixed y) {
+  static constexpr inline SkFixed SnapY(SkFixed y) noexcept {
     const int accuracy = kDefaultAccuracy;
     // This approach is safer than left shift, round, then right shift
     return ((unsigned)y + (SK_Fixed1 >> (accuracy + 1))) >> (16 - accuracy) << (16 - accuracy);
   }
 
   // Update fX, fY of this edge so fY = y
-  inline void goY(SkFixed y) {
+  inline void goY(SkFixed y) noexcept {
     if (y == fY + SK_Fixed1) {
       fX = fX + fDX;
       fY = y;
@@ -63,24 +63,24 @@ struct SkAnalyticEdge {
     }
   }
 
-  inline void goY(SkFixed y, int yShift) {
+  inline void goY(SkFixed y, int yShift) noexcept {
     SkASSERT(yShift >= 0 && yShift <= kDefaultAccuracy);
     SkASSERT(fDX == 0 || y - fY == SK_Fixed1 >> yShift);
     fY = y;
     fX += fDX >> yShift;
   }
 
-  inline void saveXY(SkFixed x, SkFixed y, SkFixed dY) {
+  inline void saveXY(SkFixed x, SkFixed y, SkFixed dY) noexcept {
     fSavedX = x;
     fSavedY = y;
     fSavedDY = dY;
   }
 
-  bool setLine(const SkPoint& p0, const SkPoint& p1);
-  bool updateLine(SkFixed ax, SkFixed ay, SkFixed bx, SkFixed by, SkFixed slope);
+  bool setLine(const SkPoint& p0, const SkPoint& p1) noexcept;
+  bool updateLine(SkFixed ax, SkFixed ay, SkFixed bx, SkFixed by, SkFixed slope) noexcept;
 
   // return true if we're NOT done with this edge
-  bool update(SkFixed last_y, bool sortY = true);
+  bool update(SkFixed last_y, bool sortY = true) noexcept;
 
 #ifdef SK_DEBUG
   void dump() const {
@@ -106,9 +106,9 @@ struct SkAnalyticQuadraticEdge : public SkAnalyticEdge {
   // snap y to integer points in the middle of the curve to accelerate AAA path filling
   SkFixed fSnappedX, fSnappedY;
 
-  bool setQuadratic(const SkPoint pts[3]);
-  bool updateQuadratic();
-  inline void keepContinuous() {
+  bool setQuadratic(const SkPoint pts[3]) noexcept;
+  bool updateQuadratic() noexcept;
+  inline void keepContinuous() noexcept {
     // We use fX as the starting x to ensure the continuouty.
     // Without it, we may break the sorted edge list.
     SkASSERT(SkAbs32(fX - SkFixedMul(fY - fSnappedY, fDX) - fSnappedX) < SK_Fixed1);
@@ -123,9 +123,9 @@ struct SkAnalyticCubicEdge : public SkAnalyticEdge {
 
   SkFixed fSnappedY;  // to make sure that y is increasing with smooth jump and snapping
 
-  bool setCubic(const SkPoint pts[4], bool sortY = true);
-  bool updateCubic(bool sortY = true);
-  inline void keepContinuous() {
+  bool setCubic(const SkPoint pts[4], bool sortY = true) noexcept;
+  bool updateCubic(bool sortY = true) noexcept;
+  inline void keepContinuous() noexcept {
     SkASSERT(SkAbs32(fX - SkFixedMul(fDX, fY - SnapY(fCEdge.fCy)) - fCEdge.fCx) < SK_Fixed1);
     fCEdge.fCx = fX;
     fSnappedY = fY;
@@ -139,7 +139,7 @@ struct SkBezier {
 
   // See if left shift, covert to SkFDot6, and round has the same top and bottom y.
   // If so, the edge will be empty.
-  static inline bool IsEmpty(SkScalar y0, SkScalar y1, int shift = 2) {
+  static constexpr inline bool IsEmpty(SkScalar y0, SkScalar y1, int shift = 2) noexcept {
 #ifdef SK_RASTERIZE_EVEN_ROUNDING
     return SkScalarRoundToFDot6(y0, shift) == SkScalarRoundToFDot6(y1, shift);
 #else
@@ -150,7 +150,7 @@ struct SkBezier {
 };
 
 struct SkLine : public SkBezier {
-  bool set(const SkPoint pts[2]) {
+  bool set(const SkPoint pts[2]) noexcept {
     if (IsEmpty(pts[0].fY, pts[1].fY)) {
       return false;
     }
@@ -164,7 +164,7 @@ struct SkLine : public SkBezier {
 struct SkQuad : public SkBezier {
   SkPoint fP2;
 
-  bool set(const SkPoint pts[3]) {
+  bool set(const SkPoint pts[3]) noexcept {
     if (IsEmpty(pts[0].fY, pts[2].fY)) {
       return false;
     }
@@ -180,7 +180,7 @@ struct SkCubic : public SkBezier {
   SkPoint fP2;
   SkPoint fP3;
 
-  bool set(const SkPoint pts[4]) {
+  bool set(const SkPoint pts[4]) noexcept {
     // We do not chop at y extrema for cubics so pts[0], pts[1], pts[2], pts[3] may not be
     // monotonic. Therefore, we have to check the emptiness for all three pairs, instead of just
     // checking IsEmpty(pts[0].fY, pts[3].fY).

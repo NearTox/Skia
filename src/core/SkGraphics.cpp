@@ -61,7 +61,7 @@ static const struct {
 } gFlags[] = {{kFontCacheLimitStr, kFontCacheLimitLen, SkGraphics::SetFontCacheLimit}};
 
 /* flags are of the form param; or param=value; */
-void SkGraphics::SetFlags(const char* flags) {
+void SkGraphics::SetFlags(const char* flags) noexcept {
   if (!flags) {
     return;
   }

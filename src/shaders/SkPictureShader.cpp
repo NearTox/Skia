@@ -70,7 +70,7 @@ struct BitmapShaderKey : public SkResourceCache::Key {
   SkImage::BitDepth fBitDepth;
   SkSize fScale;
 
-  SkDEBUGCODE(uint32_t fEndOfStruct;)
+  SkDEBUGCODE(uint32_t fEndOfStruct);
 };
 
 struct BitmapShaderRec : public SkResourceCache::Rec {
@@ -81,11 +81,11 @@ struct BitmapShaderRec : public SkResourceCache::Rec {
   sk_sp<SkShader> fShader;
 
   const Key& getKey() const override { return fKey; }
-  size_t bytesUsed() const override {
+  size_t bytesUsed() const noexcept override {
     // Just the record overhead -- the actual pixels are accounted by SkImage_Lazy.
     return sizeof(fKey) + sizeof(SkImageShader);
   }
-  const char* getCategory() const override { return "bitmap-shader"; }
+  const char* getCategory() const noexcept override { return "bitmap-shader"; }
   SkDiscardableMemory* diagnostic_only_getDiscardable() const override { return nullptr; }
 
   static bool Visitor(const SkResourceCache::Rec& baseRec, void* contextShader) {

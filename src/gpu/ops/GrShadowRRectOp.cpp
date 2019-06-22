@@ -227,7 +227,7 @@ class ShadowCircularRRectOp final : public GrMeshDrawOp {
     }
   }
 
-  const char* name() const override { return "ShadowCircularRRectOp"; }
+  const char* name() const noexcept override { return "ShadowCircularRRectOp"; }
 
 #ifdef SK_DEBUG
   SkString dumpInfo() const override {

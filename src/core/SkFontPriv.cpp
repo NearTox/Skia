@@ -9,9 +9,9 @@
 #include "include/core/SkGraphics.h"
 #include "include/core/SkMatrix.h"
 
-static SkScalar mag2(SkScalar x, SkScalar y) { return x * x + y * y; }
+static constexpr SkScalar mag2(SkScalar x, SkScalar y) noexcept { return x * x + y * y; }
 
-static bool tooBig(const SkMatrix& m, SkScalar ma2max) {
+static bool tooBig(const SkMatrix& m, SkScalar ma2max) noexcept {
   return mag2(m[SkMatrix::kMScaleX], m[SkMatrix::kMSkewY]) > ma2max ||
          mag2(m[SkMatrix::kMSkewX], m[SkMatrix::kMScaleY]) > ma2max;
 }

@@ -33,7 +33,7 @@ struct ASTStatement : public ASTPositionNode {
     kDiscard_Kind
   };
 
-  ASTStatement(int offset, Kind kind) : INHERITED(offset), fKind(kind) {}
+  ASTStatement(int offset, Kind kind) noexcept : INHERITED(offset), fKind(kind) {}
 
   Kind fKind;
 

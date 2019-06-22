@@ -35,13 +35,13 @@ class Context;
 struct Program {
   struct Settings {
     struct Value {
-      Value(bool b) : fKind(kBool_Kind), fValue(b) {}
+      Value(bool b) noexcept : fKind(kBool_Kind), fValue(b) {}
 
-      Value(int i) : fKind(kInt_Kind), fValue(i) {}
+      Value(int i) noexcept : fKind(kInt_Kind), fValue(i) {}
 
-      Value(unsigned int i) : fKind(kInt_Kind), fValue(i) {}
+      Value(unsigned int i) noexcept : fKind(kInt_Kind), fValue(i) {}
 
-      Value(float f) : fKind(kFloat_Kind), fValue(f) {}
+      Value(float f) noexcept : fKind(kFloat_Kind), fValue(f) {}
 
       std::unique_ptr<Expression> literal(const Context& context, int offset) const {
         switch (fKind) {
@@ -95,13 +95,13 @@ struct Program {
     // program will compile to the same code regardless of the flipY setting.
     bool fFlipY;
 
-    void reset() {
+    void reset() noexcept {
       fRTWidth = false;
       fRTHeight = false;
       fFlipY = false;
     }
 
-    bool isEmpty() { return !fRTWidth && !fRTHeight && !fFlipY; }
+    bool isEmpty() noexcept { return !fRTWidth && !fRTHeight && !fFlipY; }
   };
 
   class iterator {
@@ -131,7 +131,7 @@ struct Program {
    private:
     using inner = std::vector<std::unique_ptr<ProgramElement>>::iterator;
 
-    iterator(inner begin1, inner end1, inner begin2, inner end2)
+    iterator(inner begin1, inner end1, inner begin2, inner end2) noexcept
         : fIter1(begin1), fEnd1(end1), fIter2(begin2), fEnd2(end2) {}
 
     inner fIter1;
@@ -169,7 +169,7 @@ struct Program {
    private:
     using inner = std::vector<std::unique_ptr<ProgramElement>>::const_iterator;
 
-    const_iterator(inner begin1, inner end1, inner begin2, inner end2)
+    const_iterator(inner begin1, inner end1, inner begin2, inner end2) noexcept
         : fIter1(begin1), fEnd1(end1), fIter2(begin2), fEnd2(end2) {}
 
     inner fIter1;
@@ -204,7 +204,7 @@ struct Program {
         fInheritedElements(inheritedElements),
         fElements(std::move(elements)) {}
 
-  iterator begin() {
+  iterator begin() noexcept {
     if (fInheritedElements) {
       return iterator(
           fInheritedElements->begin(), fInheritedElements->end(), fElements.begin(),
@@ -213,7 +213,7 @@ struct Program {
     return iterator(fElements.begin(), fElements.end(), fElements.end(), fElements.end());
   }
 
-  iterator end() {
+  iterator end() noexcept {
     if (fInheritedElements) {
       return iterator(
           fInheritedElements->end(), fInheritedElements->end(), fElements.end(), fElements.end());
@@ -221,7 +221,7 @@ struct Program {
     return iterator(fElements.end(), fElements.end(), fElements.end(), fElements.end());
   }
 
-  const_iterator begin() const {
+  const_iterator begin() const noexcept {
     if (fInheritedElements) {
       return const_iterator(
           fInheritedElements->begin(), fInheritedElements->end(), fElements.begin(),
@@ -230,7 +230,7 @@ struct Program {
     return const_iterator(fElements.begin(), fElements.end(), fElements.end(), fElements.end());
   }
 
-  const_iterator end() const {
+  const_iterator end() const noexcept {
     if (fInheritedElements) {
       return const_iterator(
           fInheritedElements->end(), fInheritedElements->end(), fElements.end(), fElements.end());

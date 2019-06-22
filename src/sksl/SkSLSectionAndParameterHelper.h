@@ -94,13 +94,13 @@ class SectionAndParameterHelper {
     return found->second;
   }
 
-  const std::vector<const Variable*>& getParameters() { return fParameters; }
+  const std::vector<const Variable*>& getParameters() noexcept { return fParameters; }
 
-  static bool IsParameter(const Variable& var) {
+  static bool IsParameter(const Variable& var) noexcept {
     return (var.fModifiers.fFlags & Modifiers::kIn_Flag) && -1 == var.fModifiers.fLayout.fBuiltin;
   }
 
-  static bool IsSupportedSection(const char* name) {
+  static bool IsSupportedSection(const char* name) noexcept {
     return !strcmp(name, CLASS_SECTION) || !strcmp(name, CLONE_SECTION) ||
            !strcmp(name, CONSTRUCTOR_SECTION) || !strcmp(name, CONSTRUCTOR_CODE_SECTION) ||
            !strcmp(name, CONSTRUCTOR_PARAMS_SECTION) || !strcmp(name, COORD_TRANSFORM_SECTION) ||
@@ -112,17 +112,17 @@ class SectionAndParameterHelper {
            !strcmp(name, SET_DATA_SECTION) || !strcmp(name, TEST_CODE_SECTION);
   }
 
-  static bool SectionAcceptsArgument(const char* name) {
+  static bool SectionAcceptsArgument(const char* name) noexcept {
     return !strcmp(name, COORD_TRANSFORM_SECTION) || !strcmp(name, SAMPLER_PARAMS_SECTION) ||
            !strcmp(name, SET_DATA_SECTION) || !strcmp(name, TEST_CODE_SECTION);
   }
 
-  static bool SectionRequiresArgument(const char* name) {
+  static bool SectionRequiresArgument(const char* name) noexcept {
     return !strcmp(name, SAMPLER_PARAMS_SECTION) || !strcmp(name, SET_DATA_SECTION) ||
            !strcmp(name, TEST_CODE_SECTION);
   }
 
-  static bool SectionPermitsDuplicates(const char* name) {
+  static bool SectionPermitsDuplicates(const char* name) noexcept {
     return !strcmp(name, COORD_TRANSFORM_SECTION) || !strcmp(name, SAMPLER_PARAMS_SECTION);
   }
 

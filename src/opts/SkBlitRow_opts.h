@@ -40,8 +40,8 @@ static inline __m256i SkPMSrcOver_AVX2(const __m256i& src, const __m256i& dst) {
 #elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
 #include <immintrin.h>
 
-static inline __m128i SkPMSrcOver_SSE2(const __m128i& src, const __m128i& dst) {
-  auto SkAlphaMulQ_SSE2 = [](const __m128i& c, const __m128i& scale) {
+static inline __m128i SkPMSrcOver_SSE2(const __m128i& src, const __m128i& dst) noexcept {
+  auto SkAlphaMulQ_SSE2 = [](const __m128i& c, const __m128i& scale) noexcept {
     const __m128i mask = _mm_set1_epi32(0xFF00FF);
     __m128i s = _mm_or_si128(_mm_slli_epi32(scale, 16), scale);
 

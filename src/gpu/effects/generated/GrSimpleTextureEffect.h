@@ -35,9 +35,9 @@ class GrSimpleTextureEffect : public GrFragmentProcessor {
     return std::unique_ptr<GrFragmentProcessor>(
         new GrSimpleTextureEffect(std::move(proxy), matrix, p));
   }
-  GrSimpleTextureEffect(const GrSimpleTextureEffect& src);
+  GrSimpleTextureEffect(const GrSimpleTextureEffect& src) noexcept;
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const override { return "SimpleTextureEffect"; }
+  const char* name() const noexcept override { return "SimpleTextureEffect"; }
   GrCoordTransform imageCoordTransform;
   TextureSampler image;
   SkMatrix44 matrix;
@@ -58,9 +58,9 @@ class GrSimpleTextureEffect : public GrFragmentProcessor {
     this->addCoordTransform(&imageCoordTransform);
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const override;
-  const TextureSampler& onTextureSampler(int) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+  const TextureSampler& onTextureSampler(int) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

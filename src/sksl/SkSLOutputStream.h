@@ -15,15 +15,15 @@ namespace SkSL {
 
 class OutputStream {
  public:
-  virtual bool isValid() const { return true; }
+  virtual bool isValid() const noexcept { return true; }
 
-  virtual void write8(uint8_t b) = 0;
+  virtual void write8(uint8_t b) noexcept = 0;
 
-  virtual void writeText(const char* s) = 0;
+  virtual void writeText(const char* s) noexcept = 0;
 
-  virtual void write(const void* s, size_t size) = 0;
+  virtual void write(const void* s, size_t size) noexcept = 0;
 
-  void writeString(String s);
+  void writeString(const String& s);
 
   void printf(const char format[], ...) SKSL_PRINTF_LIKE(2, 3);
 

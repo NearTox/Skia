@@ -11,7 +11,7 @@
 #include "src/core/SkMakeUnique.h"
 #include "src/core/SkScalerContext.h"
 
-SkMask SkGlyph::mask() const {
+SkMask SkGlyph::mask() const noexcept {
   // getMetrics had to be called.
   SkASSERT(fMaskFormat != MASK_FORMAT_UNKNOWN);
 
@@ -23,13 +23,13 @@ SkMask SkGlyph::mask() const {
   return mask;
 }
 
-SkMask SkGlyph::mask(SkPoint position) const {
+SkMask SkGlyph::mask(SkPoint position) const noexcept {
   SkMask answer = this->mask();
   answer.fBounds.offset(SkScalarFloorToInt(position.x()), SkScalarFloorToInt(position.y()));
   return answer;
 }
 
-void SkGlyph::zeroMetrics() {
+void SkGlyph::zeroMetrics() noexcept {
   fAdvanceX = 0;
   fAdvanceY = 0;
   fWidth = 0;
@@ -38,9 +38,9 @@ void SkGlyph::zeroMetrics() {
   fLeft = 0;
 }
 
-static size_t bits_to_bytes(size_t bits) { return (bits + 7) >> 3; }
+static constexpr size_t bits_to_bytes(size_t bits) noexcept { return (bits + 7) >> 3; }
 
-static size_t format_alignment(SkMask::Format format) {
+static size_t format_alignment(SkMask::Format format) noexcept {
   switch (format) {
     case SkMask::kBW_Format:
     case SkMask::kA8_Format:
@@ -53,11 +53,11 @@ static size_t format_alignment(SkMask::Format format) {
   return 0;
 }
 
-static size_t format_rowbytes(int width, SkMask::Format format) {
+static size_t format_rowbytes(int width, SkMask::Format format) noexcept {
   return format == SkMask::kBW_Format ? bits_to_bytes(width) : width * format_alignment(format);
 }
 
-size_t SkGlyph::formatAlignment() const {
+size_t SkGlyph::formatAlignment() const noexcept {
   auto format = static_cast<SkMask::Format>(fMaskFormat);
   return format_alignment(format);
 }
@@ -70,13 +70,15 @@ size_t SkGlyph::allocImage(SkArenaAlloc* alloc) {
   return size;
 }
 
-size_t SkGlyph::rowBytes() const { return format_rowbytes(fWidth, (SkMask::Format)fMaskFormat); }
+size_t SkGlyph::rowBytes() const noexcept {
+  return format_rowbytes(fWidth, (SkMask::Format)fMaskFormat);
+}
 
-size_t SkGlyph::rowBytesUsingFormat(SkMask::Format format) const {
+size_t SkGlyph::rowBytesUsingFormat(SkMask::Format format) const noexcept {
   return format_rowbytes(fWidth, format);
 }
 
-size_t SkGlyph::computeImageSize() const {
+size_t SkGlyph::computeImageSize() const noexcept {
   size_t size = this->rowBytes() * fHeight;
 
   if (fMaskFormat == SkMask::k3D_Format) {

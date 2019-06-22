@@ -10,12 +10,12 @@
 
 #include <cstring>
 
-size_t SkPackBits::ComputeMaxSize8(size_t srcSize) {
+size_t SkPackBits::ComputeMaxSize8(size_t srcSize) noexcept {
   // worst case is the number of 8bit values + 1 byte per (up to) 128 entries.
   return ((srcSize + 127) >> 7) + srcSize;
 }
 
-static uint8_t* flush_same8(uint8_t dst[], uint8_t value, size_t count) {
+static uint8_t* flush_same8(uint8_t dst[], uint8_t value, size_t count) noexcept {
   while (count > 0) {
     size_t n = count > 128 ? 128 : count;
     *dst++ = (uint8_t)(n - 1);
@@ -26,7 +26,7 @@ static uint8_t* flush_same8(uint8_t dst[], uint8_t value, size_t count) {
 }
 
 static uint8_t* flush_diff8(
-    uint8_t* SK_RESTRICT dst, const uint8_t* SK_RESTRICT src, size_t count) {
+    uint8_t* SK_RESTRICT dst, const uint8_t* SK_RESTRICT src, size_t count) noexcept {
   while (count > 0) {
     size_t n = count > 128 ? 128 : count;
     *dst++ = (uint8_t)(n + 127);
@@ -39,7 +39,8 @@ static uint8_t* flush_diff8(
 }
 
 size_t SkPackBits::Pack8(
-    const uint8_t* SK_RESTRICT src, size_t srcSize, uint8_t* SK_RESTRICT dst, size_t dstSize) {
+    const uint8_t* SK_RESTRICT src, size_t srcSize, uint8_t* SK_RESTRICT dst,
+    size_t dstSize) noexcept {
   if (dstSize < ComputeMaxSize8(srcSize)) {
     return 0;
   }
@@ -83,7 +84,8 @@ size_t SkPackBits::Pack8(
 }
 
 int SkPackBits::Unpack8(
-    const uint8_t* SK_RESTRICT src, size_t srcSize, uint8_t* SK_RESTRICT dst, size_t dstSize) {
+    const uint8_t* SK_RESTRICT src, size_t srcSize, uint8_t* SK_RESTRICT dst,
+    size_t dstSize) noexcept {
   uint8_t* const origDst = dst;
   uint8_t* const endDst = dst + dstSize;
   const uint8_t* stop = src + srcSize;

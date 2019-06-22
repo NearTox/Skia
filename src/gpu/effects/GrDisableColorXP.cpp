@@ -22,7 +22,7 @@ class DisableColorXP : public GrXferProcessor {
   DisableColorXP() : INHERITED(kDisableColorXP_ClassID) {}
 
  private:
-  const char* name() const override { return "Disable Color"; }
+  const char* name() const noexcept override { return "Disable Color"; }
   bool onIsEqual(const GrXferProcessor& xpBase) const override { return true; }
   void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
     return;  // No key.

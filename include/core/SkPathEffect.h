@@ -126,8 +126,8 @@ class SK_API SkPathEffect : public SkFlattenable {
   };
 
   struct DashInfo {
-    DashInfo() : fIntervals(nullptr), fCount(0), fPhase(0) {}
-    DashInfo(SkScalar* intervals, int32_t count, SkScalar phase)
+    constexpr DashInfo() noexcept : fIntervals(nullptr), fCount(0), fPhase(0) {}
+    DashInfo(SkScalar* intervals, int32_t count, SkScalar phase) noexcept
         : fIntervals(intervals), fCount(count), fPhase(phase) {}
 
     SkScalar* fIntervals;  //!< Length of on/off intervals for dashed lines
@@ -137,13 +137,13 @@ class SK_API SkPathEffect : public SkFlattenable {
                            //   mod the sum of all intervals
   };
 
-  DashType asADash(DashInfo* info) const;
+  DashType asADash(DashInfo* info) const noexcept;
 
   static void RegisterFlattenables();
 
-  static SkFlattenable::Type GetFlattenableType() { return kSkPathEffect_Type; }
+  static SkFlattenable::Type GetFlattenableType() noexcept { return kSkPathEffect_Type; }
 
-  SkFlattenable::Type getFlattenableType() const override { return kSkPathEffect_Type; }
+  SkFlattenable::Type getFlattenableType() const noexcept override { return kSkPathEffect_Type; }
 
   static sk_sp<SkPathEffect> Deserialize(
       const void* data, size_t size, const SkDeserialProcs* procs = nullptr) {
@@ -160,7 +160,7 @@ class SK_API SkPathEffect : public SkFlattenable {
       PointData*, const SkPath&, const SkStrokeRec&, const SkMatrix&, const SkRect*) const {
     return false;
   }
-  virtual DashType onAsADash(DashInfo*) const { return kNone_DashType; }
+  virtual DashType onAsADash(DashInfo*) const noexcept { return kNone_DashType; }
 
  private:
   // illegal

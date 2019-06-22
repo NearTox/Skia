@@ -25,7 +25,7 @@ class GrTiledGradientEffect : public GrFragmentProcessor {
   }
   GrTiledGradientEffect(const GrTiledGradientEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const override { return "TiledGradientEffect"; }
+  const char* name() const noexcept override { return "TiledGradientEffect"; }
   int colorizer_index = -1;
   int gradLayout_index = -1;
   bool mirror;
@@ -54,8 +54,8 @@ class GrTiledGradientEffect : public GrFragmentProcessor {
     this->registerChildProcessor(std::move(gradLayout));
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

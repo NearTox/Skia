@@ -22,11 +22,11 @@
 struct Matrix43 {
   float fMat[12];  // column major
 
-  Sk4f map(float x, float y) const {
+  Sk4f map(float x, float y) const noexcept {
     return Sk4f::Load(&fMat[0]) * x + Sk4f::Load(&fMat[4]) * y + Sk4f::Load(&fMat[8]);
   }
 
-  void setConcat(const Matrix43& a, const SkMatrix& b) {
+  void setConcat(const Matrix43& a, const SkMatrix& b) noexcept {
     fMat[0] = a.dot(0, b.getScaleX(), b.getSkewY());
     fMat[1] = a.dot(1, b.getScaleX(), b.getSkewY());
     fMat[2] = a.dot(2, b.getScaleX(), b.getSkewY());
@@ -44,10 +44,12 @@ struct Matrix43 {
   }
 
  private:
-  float dot(int index, float x, float y) const { return fMat[index + 0] * x + fMat[index + 4] * y; }
+  float dot(int index, float x, float y) const noexcept {
+    return fMat[index + 0] * x + fMat[index + 4] * y;
+  }
 };
 
-static SkScan::HairRCProc ChooseHairProc(bool doAntiAlias) {
+static SkScan::HairRCProc ChooseHairProc(bool doAntiAlias) noexcept {
   return doAntiAlias ? SkScan::AntiHairLine : SkScan::HairLine;
 }
 
@@ -68,13 +70,13 @@ class SkTriColorShader : public SkShaderBase {
  public:
   SkTriColorShader(bool isOpaque) : fIsOpaque(isOpaque) {}
 
-  Matrix43* getMatrix43() { return &fM43; }
+  Matrix43* getMatrix43() noexcept { return &fM43; }
 
-  bool isOpaque() const override { return fIsOpaque; }
+  bool isOpaque() const noexcept override { return fIsOpaque; }
 
  protected:
 #ifdef SK_ENABLE_LEGACY_SHADERCONTEXT
-  Context* onMakeContext(const ContextRec& rec, SkArenaAlloc* alloc) const override {
+  Context* onMakeContext(const ContextRec& rec, SkArenaAlloc* alloc) const noexcept override {
     return nullptr;
   }
 #endif
@@ -86,8 +88,8 @@ class SkTriColorShader : public SkShaderBase {
 
  private:
   // For serialization.  This will never be called.
-  Factory getFactory() const override { return nullptr; }
-  const char* getTypeName() const override { return nullptr; }
+  Factory getFactory() const noexcept override { return nullptr; }
+  const char* getTypeName() const noexcept override { return nullptr; }
 
   Matrix43 fM43;
   const bool fIsOpaque;
@@ -97,7 +99,7 @@ class SkTriColorShader : public SkShaderBase {
 
 static bool SK_WARN_UNUSED_RESULT update_tricolor_matrix(
     const SkMatrix& ctmInv, const SkPoint pts[], const SkPMColor4f colors[], int index0, int index1,
-    int index2, Matrix43* result) {
+    int index2, Matrix43* result) noexcept {
   SkMatrix m, im;
   m.reset();
   m.set(0, pts[index1].fX - pts[index0].fX);
@@ -144,7 +146,7 @@ static SkPMColor4f* convert_colors(
   return dst;
 }
 
-static bool compute_is_opaque(const SkColor colors[], int count) {
+static bool compute_is_opaque(const SkColor colors[], int count) noexcept {
   uint32_t c = ~0;
   for (int i = 0; i < count; ++i) {
     c &= colors[i];

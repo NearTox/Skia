@@ -19,7 +19,7 @@
 struct GrGlyph {
   enum MaskStyle { kCoverage_MaskStyle, kDistance_MaskStyle };
 
-  static GrMaskFormat FormatFromSkGlyph(const SkGlyph& glyph) {
+  static GrMaskFormat FormatFromSkGlyph(const SkGlyph& glyph) noexcept {
     SkMask::Format format = static_cast<SkMask::Format>(glyph.fMaskFormat);
     switch (format) {
       case SkMask::kBW_Format:
@@ -34,11 +34,11 @@ struct GrGlyph {
     }
   }
 
-  static GrIRect16 BoundsFromSkGlyph(const SkGlyph& glyph) {
+  static GrIRect16 BoundsFromSkGlyph(const SkGlyph& glyph) noexcept {
     return GrIRect16::MakeXYWH(glyph.fLeft, glyph.fTop, glyph.fWidth, glyph.fHeight);
   }
 
-  static MaskStyle MaskStyleFromSkGlyph(const SkGlyph& skGlyph) {
+  static MaskStyle MaskStyleFromSkGlyph(const SkGlyph& skGlyph) noexcept {
     return (SkMask::Format)skGlyph.fMaskFormat == SkMask::kSDF_Format
                ? GrGlyph::MaskStyle::kDistance_MaskStyle
                : GrGlyph::MaskStyle::kCoverage_MaskStyle;
@@ -50,13 +50,13 @@ struct GrGlyph {
         fMaskStyle{MaskStyleFromSkGlyph(skGlyph)},
         fBounds{BoundsFromSkGlyph(skGlyph)} {}
 
-  SkRect destRect(SkPoint origin) {
+  SkRect destRect(SkPoint origin) noexcept {
     return SkRect::MakeXYWH(
         SkIntToScalar(fBounds.fLeft) + origin.x(), SkIntToScalar(fBounds.fTop) + origin.y(),
         SkIntToScalar(fBounds.width()), SkIntToScalar(fBounds.height()));
   }
 
-  SkRect destRect(SkPoint origin, SkScalar textScale) {
+  SkRect destRect(SkPoint origin, SkScalar textScale) noexcept {
     if (fMaskStyle == kCoverage_MaskStyle) {
       return SkRect::MakeXYWH(
           SkIntToScalar(fBounds.fLeft) * textScale + origin.x(),
@@ -71,15 +71,15 @@ struct GrGlyph {
     }
   }
 
-  int width() const { return fBounds.width(); }
-  int height() const { return fBounds.height(); }
-  uint32_t pageIndex() const { return GrDrawOpAtlas::GetPageIndexFromID(fID); }
-  MaskStyle maskStyle() const { return fMaskStyle; }
+  int width() const noexcept { return fBounds.width(); }
+  int height() const noexcept { return fBounds.height(); }
+  uint32_t pageIndex() const noexcept { return GrDrawOpAtlas::GetPageIndexFromID(fID); }
+  MaskStyle maskStyle() const noexcept { return fMaskStyle; }
 
   // GetKey and Hash for the the hash table.
-  static const SkPackedGlyphID& GetKey(const GrGlyph& glyph) { return glyph.fPackedID; }
+  static const SkPackedGlyphID& GetKey(const GrGlyph& glyph) noexcept { return glyph.fPackedID; }
 
-  static uint32_t Hash(SkPackedGlyphID key) { return SkChecksum::Mix(key.hash()); }
+  static uint32_t Hash(SkPackedGlyphID key) noexcept { return SkChecksum::Mix(key.hash()); }
 
   const SkPackedGlyphID fPackedID;
   const GrMaskFormat fMaskFormat;

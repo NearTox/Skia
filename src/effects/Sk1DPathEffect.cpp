@@ -147,7 +147,7 @@ static void morphpath(SkPath* dst, const SkPath& src, SkPathMeasure& meas, SkSca
   }
 }
 
-SkScalar SkPath1DPathEffect::begin(SkScalar contourLength) const { return fInitialOffset; }
+SkScalar SkPath1DPathEffect::begin(SkScalar contourLength) const noexcept { return fInitialOffset; }
 
 sk_sp<SkFlattenable> SkPath1DPathEffect::CreateProc(SkReadBuffer& buffer) {
   SkScalar advance = buffer.readScalar();
@@ -158,7 +158,7 @@ sk_sp<SkFlattenable> SkPath1DPathEffect::CreateProc(SkReadBuffer& buffer) {
   return buffer.isValid() ? SkPath1DPathEffect::Make(path, advance, phase, style) : nullptr;
 }
 
-void SkPath1DPathEffect::flatten(SkWriteBuffer& buffer) const {
+void SkPath1DPathEffect::flatten(SkWriteBuffer& buffer) const noexcept {
   buffer.writeScalar(fAdvance);
   buffer.writePath(fPath);
   buffer.writeScalar(fInitialOffset);

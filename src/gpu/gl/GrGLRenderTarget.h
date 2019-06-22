@@ -19,7 +19,7 @@ class GrGLStencilAttachment;
 
 class GrGLRenderTarget : public GrRenderTarget {
  public:
-  bool alwaysClearStencil() const override { return 0 == fRTFBOID; }
+  bool alwaysClearStencil() const noexcept override { return 0 == fRTFBOID; }
 
   // set fTexFBOID to this value to indicate that it is multisampled but
   // Gr doesn't know how to resolve it.
@@ -39,12 +39,12 @@ class GrGLRenderTarget : public GrRenderTarget {
   // The following two functions return the same ID when a texture/render target is not
   // multisampled, and different IDs when it is multisampled.
   // FBO ID used to render into
-  GrGLuint renderFBOID() const { return fRTFBOID; }
+  GrGLuint renderFBOID() const noexcept { return fRTFBOID; }
   // FBO ID that has texture ID attached.
-  GrGLuint textureFBOID() const { return fTexFBOID; }
+  GrGLuint textureFBOID() const noexcept { return fTexFBOID; }
 
   // override of GrRenderTarget
-  ResolveType getResolveType() const override {
+  ResolveType getResolveType() const noexcept override {
     if (GrFSAAType::kUnifiedMSAA != this->fsaaType() || fRTFBOID == fTexFBOID) {
       // catches FBO 0 and non unified-MSAA case
       return kAutoResolves_ResolveType;
@@ -74,23 +74,23 @@ class GrGLRenderTarget : public GrRenderTarget {
   void onAbandon() override;
   void onRelease() override;
 
-  int numSamplesOwnedPerPixel() const { return fNumSamplesOwnedPerPixel; }
+  int numSamplesOwnedPerPixel() const noexcept { return fNumSamplesOwnedPerPixel; }
 
  private:
   // Constructor for instances wrapping backend objects.
   GrGLRenderTarget(
       GrGLGpu*, const GrSurfaceDesc&, GrGLenum format, const IDDesc&, GrGLStencilAttachment*);
 
-  void setFlags(const GrGLCaps&, const IDDesc&);
+  void setFlags(const GrGLCaps&, const IDDesc&) noexcept;
 
-  GrGLGpu* getGLGpu() const;
+  GrGLGpu* getGLGpu() const noexcept;
   bool completeStencilAttachment() override;
 
   size_t onGpuMemorySize() const override;
 
-  int msaaSamples() const;
+  int msaaSamples() const noexcept;
   // The number total number of samples, including both MSAA and resolve texture samples.
-  int totalSamples() const;
+  int totalSamples() const noexcept;
 
   GrGLuint fRTFBOID;
   GrGLuint fTexFBOID;

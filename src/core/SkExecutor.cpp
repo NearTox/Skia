@@ -16,7 +16,7 @@
 
 #if defined(SK_BUILD_FOR_WIN)
 #include "src/core/SkLeanWindows.h"
-static int num_cores() {
+static int num_cores() noexcept {
   SYSTEM_INFO sysinfo;
   GetNativeSystemInfo(&sysinfo);
   return (int)sysinfo.dwNumberOfProcessors;
@@ -59,7 +59,7 @@ static inline std::function<void(void)> pop(std::deque<std::function<void(void)>
   list->pop_front();
   return fn;
 }
-static inline std::function<void(void)> pop(SkTArray<std::function<void(void)>>* list) {
+static inline std::function<void(void)> pop(SkTArray<std::function<void(void)>>* list) noexcept {
   std::function<void(void)> fn = std::move(list->back());
   list->pop_back();
   return fn;

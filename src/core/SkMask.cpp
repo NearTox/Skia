@@ -14,7 +14,7 @@
 /** returns the product if it is positive and fits in 31 bits. Otherwise this
     returns 0.
  */
-static int32_t safeMul32(int32_t a, int32_t b) {
+static int32_t safeMul32(int32_t a, int32_t b) noexcept {
   int64_t size = sk_64_mul(a, b);
   if (size > 0 && SkTFitsIn<int32_t>(size)) {
     return size;
@@ -22,9 +22,9 @@ static int32_t safeMul32(int32_t a, int32_t b) {
   return 0;
 }
 
-size_t SkMask::computeImageSize() const { return safeMul32(fBounds.height(), fRowBytes); }
+size_t SkMask::computeImageSize() const noexcept { return safeMul32(fBounds.height(), fRowBytes); }
 
-size_t SkMask::computeTotalImageSize() const {
+size_t SkMask::computeTotalImageSize() const noexcept {
   size_t size = this->computeImageSize();
   if (fFormat == SkMask::k3D_Format) {
     size = safeMul32(SkToS32(size), 3);
@@ -35,7 +35,7 @@ size_t SkMask::computeTotalImageSize() const {
 /** We explicitly use this allocator for SkBimap pixels, so that we can
     freely assign memory allocated by one class to the other.
 */
-uint8_t* SkMask::AllocImage(size_t size, AllocType at) {
+uint8_t* SkMask::AllocImage(size_t size, AllocType at) noexcept {
   size_t aligned_size = SkSafeMath::Align4(size);
   unsigned flags = SK_MALLOC_THROW;
   if (at == kZeroInit_Alloc) {
@@ -47,7 +47,7 @@ uint8_t* SkMask::AllocImage(size_t size, AllocType at) {
 /** We explicitly use this allocator for SkBimap pixels, so that we can
     freely assign memory allocated by one class to the other.
 */
-void SkMask::FreeImage(void* image) { sk_free(image); }
+void SkMask::FreeImage(void* image) noexcept { sk_free(image); }
 
 SkMask SkMask::PrepareDestination(int radiusX, int radiusY, const SkMask& src) {
   SkSafeMath safe;
@@ -91,13 +91,13 @@ static const int gMaskFormatToShift[] = {
     0,   // SDF
 };
 
-static int maskFormatToShift(SkMask::Format format) {
+static int maskFormatToShift(SkMask::Format format) noexcept {
   SkASSERT((unsigned)format < SK_ARRAY_COUNT(gMaskFormatToShift));
   SkASSERT(SkMask::kBW_Format != format);
   return gMaskFormatToShift[format];
 }
 
-void* SkMask::getAddr(int x, int y) const {
+void* SkMask::getAddr(int x, int y) const noexcept {
   SkASSERT(kBW_Format != fFormat);
   SkASSERT(fBounds.contains(x, y));
   SkASSERT(fImage);

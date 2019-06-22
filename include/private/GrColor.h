@@ -39,7 +39,8 @@ typedef uint32_t GrColor;
 /**
  *  Pack 4 components (RGBA) into a GrColor int
  */
-static inline GrColor GrColorPackRGBA(unsigned r, unsigned g, unsigned b, unsigned a) {
+static constexpr inline GrColor GrColorPackRGBA(
+    unsigned r, unsigned g, unsigned b, unsigned a) noexcept {
   SkASSERT((uint8_t)r == r);
   SkASSERT((uint8_t)g == g);
   SkASSERT((uint8_t)b == b);
@@ -62,18 +63,18 @@ static inline GrColor GrColorPackRGBA(unsigned r, unsigned g, unsigned b, unsign
 #define GrColor_ILLEGAL (~(0xFF << GrColor_SHIFT_A))
 
 /** Normalizes and coverts an uint8_t to a float. [0, 255] -> [0.0, 1.0] */
-static inline float GrNormalizeByteToFloat(uint8_t value) {
+static inline float GrNormalizeByteToFloat(uint8_t value) noexcept {
   static const float ONE_OVER_255 = 1.f / 255.f;
   return value * ONE_OVER_255;
 }
 
 /** Used to pick vertex attribute types. */
-static inline bool SkPMColor4fFitsInBytes(const SkPMColor4f& color) {
+static inline bool SkPMColor4fFitsInBytes(const SkPMColor4f& color) noexcept {
   // Might want to instead check that the components are [0...a] instead of [0...1]?
   return color.fitsInBytes();
 }
 
-static inline uint64_t SkPMColor4f_toFP16(const SkPMColor4f& color) {
+static inline uint64_t SkPMColor4f_toFP16(const SkPMColor4f& color) noexcept {
   uint64_t halfColor;
   SkFloatToHalf_finite_ftz(Sk4f::Load(color.vec())).store(&halfColor);
   return halfColor;
@@ -87,7 +88,8 @@ static inline uint64_t SkPMColor4f_toFP16(const SkPMColor4f& color) {
  */
 class GrVertexColor {
  public:
-  explicit GrVertexColor(const SkPMColor4f& color, bool wideColor) : fWideColor(wideColor) {
+  explicit GrVertexColor(const SkPMColor4f& color, bool wideColor) noexcept
+      : fWideColor(wideColor) {
     if (wideColor) {
       SkFloatToHalf_finite_ftz(Sk4f::Load(color.vec())).store(&fColor);
     } else {
@@ -95,7 +97,7 @@ class GrVertexColor {
     }
   }
 
-  size_t size() const { return fWideColor ? 8 : 4; }
+  size_t size() const noexcept { return fWideColor ? 8 : 4; }
 
  private:
   friend struct GrVertexWriter;

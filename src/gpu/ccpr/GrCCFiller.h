@@ -55,19 +55,19 @@ class GrCCFiller {
   // Every kBeginPath verb has a corresponding PathInfo entry.
   class PathInfo {
    public:
-    PathInfo(GrScissorTest scissorTest, const SkIVector& devToAtlasOffset)
+    PathInfo(GrScissorTest scissorTest, const SkIVector& devToAtlasOffset) noexcept
         : fScissorTest(scissorTest), fDevToAtlasOffset(devToAtlasOffset) {}
 
-    GrScissorTest scissorTest() const { return fScissorTest; }
-    const SkIVector& devToAtlasOffset() const { return fDevToAtlasOffset; }
+    GrScissorTest scissorTest() const noexcept { return fScissorTest; }
+    const SkIVector& devToAtlasOffset() const noexcept { return fDevToAtlasOffset; }
 
     // An empty tessellation fan is also valid; we use negative count to denote not tessellated.
-    bool hasFanTessellation() const { return fFanTessellationCount >= 0; }
-    int fanTessellationCount() const {
+    bool hasFanTessellation() const noexcept { return fFanTessellationCount >= 0; }
+    int fanTessellationCount() const noexcept {
       SkASSERT(this->hasFanTessellation());
       return fFanTessellationCount;
     }
-    const GrTessellator::WindingVertex* fanTessellation() const {
+    const GrTessellator::WindingVertex* fanTessellation() const noexcept {
       SkASSERT(this->hasFanTessellation());
       return fFanTessellation.get();
     }

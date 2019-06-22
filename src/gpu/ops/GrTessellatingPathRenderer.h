@@ -24,7 +24,7 @@ class SK_API GrTessellatingPathRenderer : public GrPathRenderer {
  private:
   CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;
 
-  StencilSupport onGetStencilSupport(const GrShape&) const override {
+  StencilSupport onGetStencilSupport(const GrShape&) const noexcept override {
     return GrPathRenderer::kNoSupport_StencilSupport;
   }
 

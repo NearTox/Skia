@@ -21,7 +21,7 @@
 /**
  *  We are faster in clamp, so always use that tiling when we can.
  */
-static SkTileMode optimize(SkTileMode tm, int dimension) {
+static SkTileMode optimize(SkTileMode tm, int dimension) noexcept {
   SkASSERT(dimension > 0);
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
   // need to update frameworks/base/libs/hwui/tests/unit/SkiaBehaviorTests.cpp:55 to allow
@@ -64,7 +64,7 @@ void SkImageShader::flatten(SkWriteBuffer& buffer) const {
   SkASSERT(fClampAsIfUnpremul == false);
 }
 
-bool SkImageShader::isOpaque() const {
+bool SkImageShader::isOpaque() const noexcept {
   return fImage->isOpaque() && fTileModeX != SkTileMode::kDecal && fTileModeY != SkTileMode::kDecal;
 }
 
@@ -135,7 +135,7 @@ SkShaderBase::Context* SkImageShader::onMakeContext(
 }
 #endif
 
-SkImage* SkImageShader::onIsAImage(SkMatrix* texM, SkTileMode xy[]) const {
+SkImage* SkImageShader::onIsAImage(SkMatrix* texM, SkTileMode xy[]) const noexcept {
   if (texM) {
     *texM = this->getLocalMatrix();
   }
@@ -167,7 +167,7 @@ sk_sp<SkShader> SkImageShader::Make(
 #include "src/gpu/effects/GrBicubicEffect.h"
 #include "src/gpu/effects/generated/GrSimpleTextureEffect.h"
 
-static GrSamplerState::WrapMode tile_mode_to_wrap_mode(const SkTileMode tileMode) {
+static GrSamplerState::WrapMode tile_mode_to_wrap_mode(const SkTileMode tileMode) noexcept {
   switch (tileMode) {
     case SkTileMode::kClamp: return GrSamplerState::WrapMode::kClamp;
     case SkTileMode::kRepeat: return GrSamplerState::WrapMode::kRepeat;

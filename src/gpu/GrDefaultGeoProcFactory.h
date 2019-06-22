@@ -24,9 +24,9 @@ struct Color {
     kPremulWideColorAttribute_Type,
     kUnpremulSkColorAttribute_Type,
   };
-  explicit Color(const SkPMColor4f& color)
+  explicit Color(const SkPMColor4f& color) noexcept
       : fType(kPremulGrColorUniform_Type), fColor(color), fColorSpaceXform(nullptr) {}
-  Color(Type type) : fType(type), fColor(SK_PMColor4fILLEGAL), fColorSpaceXform(nullptr) {
+  Color(Type type) noexcept : fType(type), fColor(SK_PMColor4fILLEGAL), fColorSpaceXform(nullptr) {
     SkASSERT(type != kPremulGrColorUniform_Type);
   }
 
@@ -45,8 +45,11 @@ struct Coverage {
     kAttribute_Type,
     kAttributeTweakAlpha_Type,
   };
-  explicit Coverage(uint8_t coverage) : fType(kUniform_Type), fCoverage(coverage) {}
-  Coverage(Type type) : fType(type), fCoverage(0xff) { SkASSERT(type != kUniform_Type); }
+  constexpr explicit Coverage(uint8_t coverage) noexcept
+      : fType(kUniform_Type), fCoverage(coverage) {}
+  constexpr Coverage(Type type) noexcept : fType(type), fCoverage(0xff) {
+    SkASSERT(type != kUniform_Type);
+  }
 
   Type fType;
   uint8_t fCoverage;
@@ -59,11 +62,11 @@ struct LocalCoords {
     kHasExplicit_Type,
     kHasTransformed_Type,
   };
-  LocalCoords(Type type) : fType(type), fMatrix(nullptr) {}
-  LocalCoords(Type type, const SkMatrix* matrix) : fType(type), fMatrix(matrix) {
+  constexpr LocalCoords(Type type) noexcept : fType(type), fMatrix(nullptr) {}
+  constexpr LocalCoords(Type type, const SkMatrix* matrix) noexcept : fType(type), fMatrix(matrix) {
     SkASSERT(kUnused_Type != type);
   }
-  bool hasLocalMatrix() const { return nullptr != fMatrix; }
+  bool hasLocalMatrix() const noexcept { return nullptr != fMatrix; }
 
   Type fType;
   const SkMatrix* fMatrix;

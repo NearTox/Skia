@@ -222,7 +222,7 @@ class SK_API SkCanvas {
 
       @return  dimensions and SkColorType of SkCanvas
   */
-  SkImageInfo imageInfo() const;
+  SkImageInfo imageInfo() const noexcept;
 
   /** Copies SkSurfaceProps, if SkCanvas is associated with raster surface or
       GPU surface, and returns true. Otherwise, returns false and leave props unchanged.
@@ -230,7 +230,7 @@ class SK_API SkCanvas {
       @param props  storage for writable SkSurfaceProps
       @return       true if SkSurfaceProps was copied
   */
-  bool getProps(SkSurfaceProps* props) const;
+  bool getProps(SkSurfaceProps* props) const noexcept;
 
   /** Triggers the immediate execution of all pending draw operations.
       If SkCanvas is associated with GPU surface, resolves all pending GPU operations.
@@ -499,7 +499,7 @@ class SK_API SkCanvas {
 
       @return  depth of saved stack
   */
-  int save();
+  int save() noexcept;
 
   /** Saves SkMatrix and clip, and allocates a SkBitmap for subsequent drawing.
       Calling restore() discards changes to SkMatrix and clip, and draws the SkBitmap.
@@ -602,7 +602,8 @@ class SK_API SkCanvas {
         @param saveLayerFlags  SaveLayerRec options to modify layer
         @return                SaveLayerRec with empty fBackdrop
     */
-    SaveLayerRec(const SkRect* bounds, const SkPaint* paint, SaveLayerFlags saveLayerFlags = 0)
+    SaveLayerRec(
+        const SkRect* bounds, const SkPaint* paint, SaveLayerFlags saveLayerFlags = 0) noexcept
         : fBounds(bounds), fPaint(paint), fSaveLayerFlags(saveLayerFlags) {}
 
     /** Sets fBounds, fPaint, fBackdrop, and fSaveLayerFlags.
@@ -619,7 +620,7 @@ class SK_API SkCanvas {
     */
     SaveLayerRec(
         const SkRect* bounds, const SkPaint* paint, const SkImageFilter* backdrop,
-        SaveLayerFlags saveLayerFlags)
+        SaveLayerFlags saveLayerFlags) noexcept
         : fBounds(bounds), fPaint(paint), fBackdrop(backdrop), fSaveLayerFlags(saveLayerFlags) {}
 
     /** Experimental. Not ready for general use.
@@ -642,7 +643,7 @@ class SK_API SkCanvas {
     */
     SaveLayerRec(
         const SkRect* bounds, const SkPaint* paint, const SkImageFilter* backdrop,
-        const SkImage* clipMask, const SkMatrix* clipMatrix, SaveLayerFlags saveLayerFlags)
+        const SkImage* clipMask, const SkMatrix* clipMatrix, SaveLayerFlags saveLayerFlags) noexcept
         : fBounds(bounds),
           fPaint(paint),
           fBackdrop(backdrop),
@@ -705,7 +706,7 @@ class SK_API SkCanvas {
 
       @return  depth of save state stack
   */
-  int getSaveCount() const;
+  int getSaveCount() const noexcept;
 
   /** Restores state to SkMatrix and clip values when save(), saveLayer(),
       saveLayerPreserveLCDTextRequests(), or saveLayerAlpha() returned saveCount.
@@ -922,7 +923,7 @@ class SK_API SkCanvas {
   /** Experimental. For testing only.
       Set to simplify clip stack using PathOps.
   */
-  void setAllowSimplifyClip(bool allow) { fAllowSimplifyClip = allow; }
+  void setAllowSimplifyClip(bool allow) noexcept { fAllowSimplifyClip = allow; }
 
   /** Replaces clip with the intersection or difference of clip and SkRegion deviceRgn.
       Resulting clip is aliased; pixels are fully contained by the clip.
@@ -984,7 +985,7 @@ class SK_API SkCanvas {
 
       @return  bounds of clip in SkBaseDevice coordinates
   */
-  SkIRect getDeviceClipBounds() const;
+  SkIRect getDeviceClipBounds() const noexcept;
 
   /** Returns SkIRect bounds of clip, unaffected by SkMatrix. If clip is empty,
       return false, and set bounds to SkRect::MakeEmpty, where all SkRect sides equal zero.
@@ -994,7 +995,7 @@ class SK_API SkCanvas {
       @param bounds  SkRect of clip in device coordinates
       @return        true if clip bounds is not empty
   */
-  bool getDeviceClipBounds(SkIRect* bounds) const {
+  bool getDeviceClipBounds(SkIRect* bounds) const noexcept {
     *bounds = this->getDeviceClipBounds();
     return !bounds->isEmpty();
   }
@@ -1803,16 +1804,16 @@ class SK_API SkCanvas {
   struct SK_API ImageSetEntry {
     ImageSetEntry(
         sk_sp<const SkImage> image, const SkRect& srcRect, const SkRect& dstRect, int matrixIndex,
-        float alpha, unsigned aaFlags, bool hasClip);
+        float alpha, unsigned aaFlags, bool hasClip) noexcept;
 
     ImageSetEntry(
         sk_sp<const SkImage> image, const SkRect& srcRect, const SkRect& dstRect, float alpha,
-        unsigned aaFlags);
+        unsigned aaFlags) noexcept;
 
-    ImageSetEntry();
+    ImageSetEntry() noexcept;
     ~ImageSetEntry();
-    ImageSetEntry(const ImageSetEntry&);
-    ImageSetEntry& operator=(const ImageSetEntry&);
+    ImageSetEntry(const ImageSetEntry&) noexcept;
+    ImageSetEntry& operator=(const ImageSetEntry&) noexcept;
 
     sk_sp<const SkImage> fImage;
     SkRect fSrcRect;
@@ -2331,7 +2332,7 @@ class SK_API SkCanvas {
 
       @return  true if clip is empty
   */
-  virtual bool isClipEmpty() const;
+  virtual bool isClipEmpty() const noexcept;
 
   /** Returns true if clip is SkRect and not empty.
       Returns false if the clip is empty, or if it is not SkRect.
@@ -2345,7 +2346,7 @@ class SK_API SkCanvas {
 
       @return  SkMatrix in SkCanvas
   */
-  const SkMatrix& getTotalMatrix() const;
+  const SkMatrix& getTotalMatrix() const noexcept;
 
   ///////////////////////////////////////////////////////////////////////////
 
@@ -2376,8 +2377,8 @@ class SK_API SkCanvas {
   // default impl defers to its device
   virtual bool onPeekPixels(SkPixmap* pixmap);
   virtual bool onAccessTopLayerPixels(SkPixmap* pixmap);
-  virtual SkImageInfo onImageInfo() const;
-  virtual bool onGetProps(SkSurfaceProps* props) const;
+  virtual SkImageInfo onImageInfo() const noexcept;
+  virtual bool onGetProps(SkSurfaceProps* props) const noexcept;
   virtual void onFlush();
 
   // Subclass save/restore notifiers.
@@ -2488,7 +2489,7 @@ class SK_API SkCanvas {
       const SkRect* bounds, SaveLayerFlags flags, SkIRect* intersection,
       const SkImageFilter* imageFilter = nullptr);
 
-  SkBaseDevice* getTopDevice() const;
+  SkBaseDevice* getTopDevice() const noexcept;
 
  private:
   /** After calling saveLayer(), there can be any number of devices that make
@@ -2500,22 +2501,22 @@ class SK_API SkCanvas {
   class LayerIter /*: SkNoncopyable*/ {
    public:
     /** Initialize iterator with canvas, and set values for 1st device */
-    LayerIter(SkCanvas*);
+    LayerIter(SkCanvas*) noexcept;
     ~LayerIter();
 
     /** Return true if the iterator is done */
-    bool done() const { return fDone; }
+    bool done() const noexcept { return fDone; }
     /** Cycle to the next device */
-    void next();
+    void next() noexcept;
 
     // These reflect the current device in the iterator
 
-    SkBaseDevice* device() const;
-    const SkMatrix& matrix() const;
+    SkBaseDevice* device() const noexcept;
+    const SkMatrix& matrix() const noexcept;
     SkIRect clipBounds() const;
-    const SkPaint& paint() const;
-    int x() const;
-    int y() const;
+    const SkPaint& paint() const noexcept;
+    int x() const noexcept;
+    int y() const noexcept;
 
    private:
     // used to embed the SkDrawIter object directly in our instance, w/o
@@ -2529,7 +2530,7 @@ class SK_API SkCanvas {
     bool fDone;
   };
 
-  static bool BoundsAffectsClip(SaveLayerFlags);
+  static bool BoundsAffectsClip(SaveLayerFlags) noexcept;
 
   static void DrawDeviceWithFilter(
       SkBaseDevice* src, const SkImageFilter* filter, SkBaseDevice* dst, const SkIPoint& dstOrigin,
@@ -2551,7 +2552,7 @@ class SK_API SkCanvas {
         shaderOverrideIsOpaque ? kOpaque_ShaderOverrideOpacity : kNotOpaque_ShaderOverrideOpacity);
   }
 
-  SkBaseDevice* getDevice() const;
+  SkBaseDevice* getDevice() const noexcept;
 
   class MCRec;
 
@@ -2574,8 +2575,8 @@ class SK_API SkCanvas {
   std::unique_ptr<SkRasterHandleAllocator> fAllocator;
 
   SkSurface_Base* fSurfaceBase;
-  SkSurface_Base* getSurfaceBase() const { return fSurfaceBase; }
-  void setSurfaceBase(SkSurface_Base* sb) { fSurfaceBase = sb; }
+  SkSurface_Base* getSurfaceBase() const noexcept { return fSurfaceBase; }
+  void setSurfaceBase(SkSurface_Base* sb) noexcept { fSurfaceBase = sb; }
   friend class SkSurface_Base;
   friend class SkSurface_Gpu;
 
@@ -2583,7 +2584,7 @@ class SK_API SkCanvas {
 
   void doSave();
   void checkForDeferredSave();
-  void internalSetMatrix(const SkMatrix&);
+  void internalSetMatrix(const SkMatrix&) noexcept;
 
   friend class SkAndroidFrameworkUtils;
   friend class SkCanvasPriv;  // needs kDontClipToLayer_PrivateSaveLayerFlag
@@ -2688,7 +2689,9 @@ class SK_API SkCanvas {
 
   class AutoValidateClip {
    public:
-    explicit AutoValidateClip(SkCanvas* canvas) : fCanvas(canvas) { fCanvas->validateClip(); }
+    explicit AutoValidateClip(SkCanvas* canvas) noexcept : fCanvas(canvas) {
+      fCanvas->validateClip();
+    }
     ~AutoValidateClip() { fCanvas->validateClip(); }
 
    private:
@@ -2703,7 +2706,7 @@ class SK_API SkCanvas {
 #ifdef SK_DEBUG
   void validateClip() const;
 #else
-  void validateClip() const {}
+  void validateClip() const noexcept {}
 #endif
 
   std::unique_ptr<SkGlyphRunBuilder> fScratchGlyphRunBuilder;
@@ -2724,7 +2727,7 @@ class SkAutoCanvasRestore {
       @param doSave  call SkCanvas::save()
       @return        utility to restore SkCanvas state on destructor
   */
-  SkAutoCanvasRestore(SkCanvas* canvas, bool doSave) : fCanvas(canvas), fSaveCount(0) {
+  SkAutoCanvasRestore(SkCanvas* canvas, bool doSave) noexcept : fCanvas(canvas), fSaveCount(0) {
     if (fCanvas) {
       fSaveCount = canvas->getSaveCount();
       if (doSave) {

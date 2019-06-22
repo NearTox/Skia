@@ -8,11 +8,11 @@
 #include "include/private/SkHalf.h"
 #include "include/private/SkFloatBits.h"
 
-uint16_t halfMantissa(SkHalf h) { return h & 0x03ff; }
+uint16_t halfMantissa(SkHalf h) noexcept { return h & 0x03ff; }
 
-uint16_t halfExponent(SkHalf h) { return (h >> 10) & 0x001f; }
+uint16_t halfExponent(SkHalf h) noexcept { return (h >> 10) & 0x001f; }
 
-uint16_t halfSign(SkHalf h) { return h >> 15; }
+uint16_t halfSign(SkHalf h) noexcept { return h >> 15; }
 
 union FloatUIntUnion {
   uint32_t fUInt;  // this must come first for the initializations below to work
@@ -21,7 +21,7 @@ union FloatUIntUnion {
 
 // based on Fabien Giesen's float_to_half_fast3()
 // see https://gist.github.com/rygorous/2156668
-SkHalf SkFloatToHalf(float f) {
+SkHalf SkFloatToHalf(float f) noexcept {
   static const uint32_t f32infty = {255 << 23};
   static const uint32_t f16infty = {31 << 23};
   static const FloatUIntUnion magic = {15 << 23};
@@ -63,7 +63,7 @@ SkHalf SkFloatToHalf(float f) {
 
 // based on Fabien Giesen's half_to_float_fast2()
 // see https://fgiesen.wordpress.com/2012/03/28/half-to-float-done-quic/
-float SkHalfToFloat(SkHalf h) {
+float SkHalfToFloat(SkHalf h) noexcept {
   static const FloatUIntUnion magic = {126 << 23};
   FloatUIntUnion o;
 

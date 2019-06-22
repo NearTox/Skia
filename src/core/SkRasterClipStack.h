@@ -16,7 +16,7 @@
 template <typename T>
 class SkTStack {
  public:
-  SkTStack(void* storage, size_t size) : fDeque(sizeof(T), storage, size), fTop(nullptr) {}
+  SkTStack(void* storage, size_t size) noexcept : fDeque(sizeof(T), storage, size), fTop(nullptr) {}
   ~SkTStack() {
     while (!fDeque.empty()) {
       ((T*)fDeque.back())->~T();
@@ -28,29 +28,30 @@ class SkTStack {
 
   int count() const { return fDeque.count(); }
 
-  const T& top() const {
+  const T& top() const noexcept {
     SkASSERT(fTop);
     return *fTop;
   }
 
-  T& top() {
+  T& top() noexcept {
     SkASSERT(fTop);
     return *fTop;
   }
 
-  T* push_raw() { return (T*)fDeque.push_back(); }
+  T* push_raw() noexcept { return (T*)fDeque.push_back(); }
   T& push() {
     fTop = this->push_raw();
     new (fTop) T();
     return *fTop;
   }
-  T& push(const T& src) {
+  T& push(const T& src) noexcept {
+    static_assert(std::is_nothrow_copy_constructible_v<T> == true);
     fTop = this->push_raw();
     new (fTop) T(src);
     return *fTop;
   }
 
-  void pop() {
+  void pop() noexcept {
     fTop->~T();
     fDeque.pop_back();
     fTop = fDeque.empty() ? nullptr : (T*)fDeque.back();
@@ -82,15 +83,15 @@ class SkRasterClipStack : SkNoncopyable {
     rec.fRC.setRect(fRootBounds);
   }
 
-  const SkRasterClip& rc() const { return fStack.top().fRC; }
+  const SkRasterClip& rc() const noexcept { return fStack.top().fRC; }
 
-  void save() {
+  void save() noexcept {
     fCounter += 1;
     SkASSERT(fStack.top().fDeferredCount >= 0);
     fStack.top().fDeferredCount += 1;
   }
 
-  void restore() {
+  void restore() noexcept {
     fCounter -= 1;
     SkASSERT(fCounter >= 0);
     if (--fStack.top().fDeferredCount < 0) {
@@ -128,7 +129,7 @@ class SkRasterClipStack : SkNoncopyable {
     this->writable_rc().setDeviceClipRestriction(mutableClipRestriction);
   }
 
-  void validate() const {
+  void validate() const noexcept {
 #ifdef SK_DEBUG
     const SkRasterClip& clip = this->rc();
     if (fRootBounds.isEmpty()) {
@@ -150,7 +151,7 @@ class SkRasterClipStack : SkNoncopyable {
   SkTStack<Rec> fStack;
   SkIRect fRootBounds;
 
-  SkRasterClip& writable_rc() {
+  SkRasterClip& writable_rc() noexcept {
     SkASSERT(fStack.top().fDeferredCount >= 0);
     if (fStack.top().fDeferredCount > 0) {
       fStack.top().fDeferredCount -= 1;

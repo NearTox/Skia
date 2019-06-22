@@ -27,10 +27,10 @@
     The platform implementation must not return, but should either throw
     an exception or otherwise exit.
 */
-SK_API extern void sk_abort_no_print(void);
+SK_API extern void sk_abort_no_print(void) noexcept;
 
 #ifndef SkDebugf
-SK_API void SkDebugf(const char format[], ...);
+SK_API void SkDebugf(const char format[], ...) noexcept;
 #endif
 
 // SkASSERT, SkASSERTF and SkASSERT_RELEASE can be used as stand alone assertion expressions, e.g.
@@ -44,7 +44,7 @@ SK_API void SkDebugf(const char format[], ...);
 //               x - 4;
 //    }
 #define SkASSERT_RELEASE(cond) \
-  static_cast<void>((cond) ? (void)0 : [] { SK_ABORT("assert(" #cond ")"); }())
+  static_cast<void>((cond) ? (void)0 : []() noexcept { SK_ABORT("assert(" #cond ")"); }())
 
 #ifdef SK_DEBUG
 #define SkASSERT(cond) SkASSERT_RELEASE(cond)
@@ -189,7 +189,7 @@ static constexpr uint32_t SK_InvalidGenID = 0;
  */
 static constexpr uint32_t SK_InvalidUniqueID = 0;
 
-static inline int32_t SkAbs32(int32_t value) {
+static constexpr inline int32_t SkAbs32(int32_t value) noexcept {
   SkASSERT(value != SK_NaN32);  // The most negative int32_t can't be negated.
   if (value < 0) {
     value = -value;
@@ -198,35 +198,35 @@ static inline int32_t SkAbs32(int32_t value) {
 }
 
 template <typename T>
-static inline T SkTAbs(T value) {
+static inline T SkTAbs(T value) noexcept {
   if (value < 0) {
     value = -value;
   }
   return value;
 }
 
-static inline int32_t SkMax32(int32_t a, int32_t b) {
+static constexpr inline int32_t SkMax32(int32_t a, int32_t b) noexcept {
   if (a < b) a = b;
   return a;
 }
 
-static inline int32_t SkMin32(int32_t a, int32_t b) {
+static constexpr inline int32_t SkMin32(int32_t a, int32_t b) noexcept {
   if (a > b) a = b;
   return a;
 }
 
 template <typename T>
-constexpr const T& SkTMin(const T& a, const T& b) {
+constexpr const T& SkTMin(const T& a, const T& b) noexcept {
   return (a < b) ? a : b;
 }
 
 template <typename T>
-constexpr const T& SkTMax(const T& a, const T& b) {
+constexpr const T& SkTMax(const T& a, const T& b) noexcept {
   return (b < a) ? a : b;
 }
 
 template <typename T>
-constexpr const T& SkTClamp(const T& x, const T& lo, const T& hi) {
+constexpr const T& SkTClamp(const T& x, const T& lo, const T& hi) noexcept {
   return (x < lo) ? lo : SkTMin(x, hi);
 }
 

@@ -858,7 +858,7 @@ class QuadPerEdgeAAGeometryProcessor : public GrGeometryProcessor {
         std::move(textureColorSpaceXform)));
   }
 
-  const char* name() const override { return "QuadPerEdgeAAGeometryProcessor"; }
+  const char* name() const noexcept override { return "QuadPerEdgeAAGeometryProcessor"; }
 
   void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const override {
     // texturing, device-dimensions are single bit flags

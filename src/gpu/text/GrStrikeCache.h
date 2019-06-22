@@ -66,19 +66,19 @@ class GrTextStrike : public SkNVRefCnt<GrTextStrike> {
       SkStrike*, GrMaskFormat expectedMaskFormat, bool isScaledGlyph);
 
   // testing
-  int countGlyphs() const { return fCache.count(); }
+  int countGlyphs() const noexcept { return fCache.count(); }
 
   // remove any references to this plot
   void removeID(GrDrawOpAtlas::AtlasID);
 
   // If a TextStrike is abandoned by the cache, then the caller must get a new strike
-  bool isAbandoned() const { return fIsAbandoned; }
+  bool isAbandoned() const noexcept { return fIsAbandoned; }
 
-  static const SkDescriptor& GetKey(const GrTextStrike& strike) {
+  static const SkDescriptor& GetKey(const GrTextStrike& strike) noexcept {
     return *strike.fFontScalerKey.getDesc();
   }
 
-  static uint32_t Hash(const SkDescriptor& desc) { return desc.getChecksum(); }
+  static uint32_t Hash(const SkDescriptor& desc) noexcept { return desc.getChecksum(); }
 
  private:
   SkTDynamicHash<GrGlyph, SkPackedGlyphID> fCache;
@@ -100,7 +100,7 @@ class GrStrikeCache {
   GrStrikeCache(const GrCaps* caps, size_t maxTextureBytes);
   ~GrStrikeCache();
 
-  void setStrikeToPreserve(GrTextStrike* strike) { fPreserveStrike = strike; }
+  void setStrikeToPreserve(GrTextStrike* strike) noexcept { fPreserveStrike = strike; }
 
   // The user of the cache may hold a long-lived ref to the returned strike. However, actions by
   // another client of the cache may cause the strike to be purged while it is still reffed.

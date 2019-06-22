@@ -144,7 +144,7 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
     this->setTransformedBounds(bounds, viewMatrix, HasAABloat::kYes, IsZeroArea::kNo);
   }
 
-  const char* name() const override { return "AAFlatteningConvexPathOp"; }
+  const char* name() const noexcept override { return "AAFlatteningConvexPathOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override { fHelper.visitProxies(func); }
 

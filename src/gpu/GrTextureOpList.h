@@ -54,9 +54,10 @@ class GrTextureOpList final : public GrOpList {
 
   GrTextureOpList* asTextureOpList() override { return this; }
 
-  SkDEBUGCODE(void dump(bool printDependencies) const override;)
+  SkDEBUGCODE(void dump(bool printDependencies) const override);
 
-      private : bool onIsUsed(GrSurfaceProxy*) const override;
+ private:
+  bool onIsUsed(GrSurfaceProxy*) const override;
 
   void deleteOp(int index);
   void deleteOps();

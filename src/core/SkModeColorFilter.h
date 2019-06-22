@@ -17,7 +17,7 @@ class SkModeColorFilter : public SkColorFilter {
     return sk_sp<SkColorFilter>(new SkModeColorFilter(color, mode));
   }
 
-  uint32_t getFlags() const override;
+  uint32_t getFlags() const noexcept override;
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(
@@ -27,8 +27,8 @@ class SkModeColorFilter : public SkColorFilter {
  protected:
   SkModeColorFilter(SkColor color, SkBlendMode mode);
 
-  void flatten(SkWriteBuffer&) const override;
-  bool onAsAColorMode(SkColor*, SkBlendMode*) const override;
+  void flatten(SkWriteBuffer&) const noexcept override;
+  bool onAsAColorMode(SkColor*, SkBlendMode*) const noexcept override;
 
   bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const override;
 

@@ -59,25 +59,25 @@ class GrConvexPolyEffect : public GrFragmentProcessor {
 
   ~GrConvexPolyEffect() override;
 
-  const char* name() const override { return "ConvexPoly"; }
+  const char* name() const noexcept override { return "ConvexPoly"; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override;
 
-  GrClipEdgeType getEdgeType() const { return fEdgeType; }
+  GrClipEdgeType getEdgeType() const noexcept { return fEdgeType; }
 
-  int getEdgeCount() const { return fEdgeCount; }
+  int getEdgeCount() const noexcept { return fEdgeCount; }
 
-  const SkScalar* getEdges() const { return fEdges; }
+  const SkScalar* getEdges() const noexcept { return fEdges; }
 
  private:
-  GrConvexPolyEffect(GrClipEdgeType edgeType, int n, const SkScalar edges[]);
-  GrConvexPolyEffect(const GrConvexPolyEffect&);
+  GrConvexPolyEffect(GrClipEdgeType edgeType, int n, const SkScalar edges[]) noexcept;
+  GrConvexPolyEffect(const GrConvexPolyEffect&) noexcept;
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
 
-  bool onIsEqual(const GrFragmentProcessor& other) const override;
+  bool onIsEqual(const GrFragmentProcessor& other) const noexcept override;
 
   GrClipEdgeType fEdgeType;
   int fEdgeCount;

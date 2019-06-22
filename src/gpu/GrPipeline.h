@@ -71,7 +71,7 @@ class GrPipeline {
    * 2) DynamicStateArrays - use this to specify per mesh values for dynamic state.
    **/
   struct FixedDynamicState {
-    explicit FixedDynamicState(const SkIRect& scissorRect) : fScissorRect(scissorRect) {}
+    explicit FixedDynamicState(const SkIRect& scissorRect) noexcept : fScissorRect(scissorRect) {}
     FixedDynamicState() = default;
     SkIRect fScissorRect = SkIRect::EmptyIRect();
     // Must have GrPrimitiveProcessor::numTextureSamplers() entries. Can be null if no samplers
@@ -113,13 +113,13 @@ class GrPipeline {
   // Make the renderTargetContext's GrOpList be dependent on any GrOpLists in this pipeline
   void addDependenciesTo(GrOpList* recipient, const GrCaps&) const;
 
-  int numColorFragmentProcessors() const { return fNumColorProcessors; }
-  int numCoverageFragmentProcessors() const {
+  int numColorFragmentProcessors() const noexcept { return fNumColorProcessors; }
+  int numCoverageFragmentProcessors() const noexcept {
     return fFragmentProcessors.count() - fNumColorProcessors;
   }
-  int numFragmentProcessors() const { return fFragmentProcessors.count(); }
+  int numFragmentProcessors() const noexcept { return fFragmentProcessors.count(); }
 
-  const GrXferProcessor& getXferProcessor() const {
+  const GrXferProcessor& getXferProcessor() const noexcept {
     if (fXferProcessor) {
       return *fXferProcessor.get();
     } else {
@@ -133,14 +133,14 @@ class GrPipeline {
    * If the GrXferProcessor uses a texture to access the dst color, then this returns that
    * texture and the offset to the dst contents within that texture.
    */
-  GrTextureProxy* dstTextureProxy(SkIPoint* offset = nullptr) const {
+  GrTextureProxy* dstTextureProxy(SkIPoint* offset = nullptr) const noexcept {
     if (offset) {
       *offset = fDstTextureOffset;
     }
     return fDstTextureProxy.get();
   }
 
-  GrTexture* peekDstTexture(SkIPoint* offset = nullptr) const {
+  GrTexture* peekDstTexture(SkIPoint* offset = nullptr) const noexcept {
     if (GrTextureProxy* dstProxy = this->dstTextureProxy(offset)) {
       return dstProxy->peekTexture();
     }
@@ -148,35 +148,35 @@ class GrPipeline {
     return nullptr;
   }
 
-  const GrFragmentProcessor& getColorFragmentProcessor(int idx) const {
+  const GrFragmentProcessor& getColorFragmentProcessor(int idx) const noexcept {
     SkASSERT(idx < this->numColorFragmentProcessors());
     return *fFragmentProcessors[idx].get();
   }
 
-  const GrFragmentProcessor& getCoverageFragmentProcessor(int idx) const {
+  const GrFragmentProcessor& getCoverageFragmentProcessor(int idx) const noexcept {
     SkASSERT(idx < this->numCoverageFragmentProcessors());
     return *fFragmentProcessors[fNumColorProcessors + idx].get();
   }
 
-  const GrFragmentProcessor& getFragmentProcessor(int idx) const {
+  const GrFragmentProcessor& getFragmentProcessor(int idx) const noexcept {
     return *fFragmentProcessors[idx].get();
   }
 
   /// @}
 
-  const GrUserStencilSettings* getUserStencil() const { return fUserStencilSettings; }
+  const GrUserStencilSettings* getUserStencil() const noexcept { return fUserStencilSettings; }
 
-  bool isScissorEnabled() const { return SkToBool(fFlags & Flags::kScissorEnabled); }
+  bool isScissorEnabled() const noexcept { return SkToBool(fFlags & Flags::kScissorEnabled); }
 
-  const GrWindowRectsState& getWindowRectsState() const { return fWindowRectsState; }
+  const GrWindowRectsState& getWindowRectsState() const noexcept { return fWindowRectsState; }
 
-  bool isHWAntialiasState() const { return SkToBool(fFlags & InputFlags::kHWAntialias); }
-  bool snapVerticesToPixelCenters() const {
+  bool isHWAntialiasState() const noexcept { return SkToBool(fFlags & InputFlags::kHWAntialias); }
+  bool snapVerticesToPixelCenters() const noexcept {
     return SkToBool(fFlags & InputFlags::kSnapVerticesToPixelCenters);
   }
-  bool hasStencilClip() const { return SkToBool(fFlags & Flags::kHasStencilClip); }
-  bool isStencilEnabled() const { return SkToBool(fFlags & Flags::kStencilEnabled); }
-  bool isBad() const { return SkToBool(fFlags & Flags::kIsBad); }
+  bool hasStencilClip() const noexcept { return SkToBool(fFlags & Flags::kHasStencilClip); }
+  bool isStencilEnabled() const noexcept { return SkToBool(fFlags & Flags::kStencilEnabled); }
+  bool isBad() const noexcept { return SkToBool(fFlags & Flags::kIsBad); }
 
   GrXferBarrierType xferBarrierType(GrTexture*, const GrCaps&) const;
 
@@ -184,7 +184,7 @@ class GrPipeline {
   uint32_t getBlendInfoKey() const;
 
  private:
-  void markAsBad() { fFlags |= Flags::kIsBad; }
+  void markAsBad() noexcept { fFlags |= Flags::kIsBad; }
 
   static constexpr uint8_t kLastInputFlag = (uint8_t)InputFlags::kSnapVerticesToPixelCenters;
 
@@ -198,7 +198,7 @@ class GrPipeline {
 
   GR_DECL_BITFIELD_CLASS_OPS_FRIENDS(Flags);
 
-  friend bool operator&(Flags, InputFlags);
+  friend bool operator&(Flags, InputFlags) noexcept;
 
   using DstTextureProxy = GrPendingIOResource<GrTextureProxy, kRead_GrIOType>;
   using FragmentProcessorArray = SkAutoSTArray<8, std::unique_ptr<const GrFragmentProcessor>>;
@@ -218,7 +218,7 @@ class GrPipeline {
 GR_MAKE_BITFIELD_CLASS_OPS(GrPipeline::InputFlags);
 GR_MAKE_BITFIELD_CLASS_OPS(GrPipeline::Flags);
 
-inline bool operator&(GrPipeline::Flags flags, GrPipeline::InputFlags inputFlag) {
+inline bool operator&(GrPipeline::Flags flags, GrPipeline::InputFlags inputFlag) noexcept {
   return (flags & (GrPipeline::Flags)inputFlag);
 }
 

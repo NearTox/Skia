@@ -215,7 +215,7 @@ class DashOp final : public GrMeshDrawOp {
         std::move(paint), geometry, cap, aaMode, fullDash, stencilSettings);
   }
 
-  const char* name() const override { return "DashOp"; }
+  const char* name() const noexcept override { return "DashOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override { fProcessorSet.visitProxies(func); }
 
@@ -745,7 +745,7 @@ class DashingCircleEffect : public GrGeometryProcessor {
   static sk_sp<GrGeometryProcessor> Make(
       const SkPMColor4f&, AAMode aaMode, const SkMatrix& localMatrix, bool usesLocalCoords);
 
-  const char* name() const override { return "DashingCircleEffect"; }
+  const char* name() const noexcept override { return "DashingCircleEffect"; }
 
   AAMode aaMode() const { return fAAMode; }
 
@@ -941,7 +941,7 @@ class DashingLineEffect : public GrGeometryProcessor {
   static sk_sp<GrGeometryProcessor> Make(
       const SkPMColor4f&, AAMode aaMode, const SkMatrix& localMatrix, bool usesLocalCoords);
 
-  const char* name() const override { return "DashingEffect"; }
+  const char* name() const noexcept override { return "DashingEffect"; }
 
   AAMode aaMode() const { return fAAMode; }
 

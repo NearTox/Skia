@@ -61,7 +61,7 @@ class SkImageFilterCache : public SkRefCnt {
       const SkImageFilter* filter) = 0;
   virtual void purge() = 0;
   virtual void purgeByImageFilter(const SkImageFilter*) = 0;
-  SkDEBUGCODE(virtual int count() const = 0;)
+  SkDEBUGCODE(virtual int count() const = 0);
 };
 
 #endif

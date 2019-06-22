@@ -43,7 +43,7 @@ class GrMockTexture : public GrTexture {
     return GrBackendFormat::MakeMock(fInfo.fConfig);
   }
 
-  void textureParamsModified() override {}
+  void textureParamsModified() noexcept override {}
 
  protected:
   // constructor for subclasses
@@ -58,7 +58,8 @@ class GrMockTexture : public GrTexture {
 
   void onAbandon() override { INHERITED::onAbandon(); }
 
-  bool onStealBackendTexture(GrBackendTexture*, SkImage::BackendTextureReleaseProc*) override {
+  bool onStealBackendTexture(
+      GrBackendTexture*, SkImage::BackendTextureReleaseProc*) noexcept override {
     return false;
   }
 
@@ -84,9 +85,9 @@ class GrMockRenderTarget : public GrRenderTarget {
     this->registerWithCacheWrapped(GrWrapCacheable::kNo);
   }
 
-  ResolveType getResolveType() const override { return kCanResolve_ResolveType; }
-  bool canAttemptStencilAttachment() const override { return true; }
-  bool completeStencilAttachment() override { return true; }
+  ResolveType getResolveType() const noexcept override { return kCanResolve_ResolveType; }
+  bool canAttemptStencilAttachment() const noexcept override { return true; }
+  bool completeStencilAttachment() noexcept override { return true; }
 
   size_t onGpuMemorySize() const override {
     int numColorSamples = this->numColorSamples();
@@ -144,16 +145,18 @@ class GrMockTextureRenderTarget : public GrMockTexture, public GrMockRenderTarge
     this->registerWithCacheWrapped(cacheble);
   }
 
-  GrTexture* asTexture() override { return this; }
-  GrRenderTarget* asRenderTarget() override { return this; }
-  const GrTexture* asTexture() const override { return this; }
-  const GrRenderTarget* asRenderTarget() const override { return this; }
+  GrTexture* asTexture() noexcept override { return this; }
+  GrRenderTarget* asRenderTarget() noexcept override { return this; }
+  const GrTexture* asTexture() const noexcept override { return this; }
+  const GrRenderTarget* asRenderTarget() const noexcept override { return this; }
 
   GrBackendFormat backendFormat() const override { return GrMockTexture::backendFormat(); }
 
  protected:
   // This avoids an inherits via dominance warning on MSVC.
-  void willRemoveLastRefOrPendingIO() override { GrTexture::willRemoveLastRefOrPendingIO(); }
+  void willRemoveLastRefOrPendingIO() noexcept override {
+    GrTexture::willRemoveLastRefOrPendingIO();
+  }
 
  private:
   void onAbandon() override {

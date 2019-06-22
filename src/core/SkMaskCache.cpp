@@ -20,7 +20,7 @@ static unsigned gRRectBlurKeyNamespaceLabel;
 
 struct RRectBlurKey : public SkResourceCache::Key {
  public:
-  RRectBlurKey(SkScalar sigma, const SkRRect& rrect, SkBlurStyle style)
+  RRectBlurKey(SkScalar sigma, const SkRRect& rrect, SkBlurStyle style) noexcept
       : fSigma(sigma), fStyle(style), fRRect(rrect) {
     this->init(&gRRectBlurKeyNamespaceLabel, 0, sizeof(fSigma) + sizeof(fStyle) + sizeof(fRRect));
   }
@@ -41,14 +41,14 @@ struct RRectBlurRec : public SkResourceCache::Rec {
   RRectBlurKey fKey;
   MaskValue fValue;
 
-  const Key& getKey() const override { return fKey; }
-  size_t bytesUsed() const override { return sizeof(*this) + fValue.fData->size(); }
-  const char* getCategory() const override { return "rrect-blur"; }
-  SkDiscardableMemory* diagnostic_only_getDiscardable() const override {
+  const Key& getKey() const noexcept override { return fKey; }
+  size_t bytesUsed() const noexcept override { return sizeof(*this) + fValue.fData->size(); }
+  const char* getCategory() const noexcept override { return "rrect-blur"; }
+  SkDiscardableMemory* diagnostic_only_getDiscardable() const noexcept override {
     return fValue.fData->diagnostic_only_getDiscardable();
   }
 
-  static bool Visitor(const SkResourceCache::Rec& baseRec, void* contextData) {
+  static bool Visitor(const SkResourceCache::Rec& baseRec, void* contextData) noexcept {
     const RRectBlurRec& rec = static_cast<const RRectBlurRec&>(baseRec);
     MaskValue* result = (MaskValue*)contextData;
 
@@ -92,7 +92,7 @@ static unsigned gRectsBlurKeyNamespaceLabel;
 
 struct RectsBlurKey : public SkResourceCache::Key {
  public:
-  RectsBlurKey(SkScalar sigma, SkBlurStyle style, const SkRect rects[], int count)
+  RectsBlurKey(SkScalar sigma, SkBlurStyle style, const SkRect rects[], int count) noexcept
       : fSigma(sigma), fStyle(style) {
     SkASSERT(1 == count || 2 == count);
     SkIRect ir;
@@ -126,14 +126,14 @@ struct RectsBlurRec : public SkResourceCache::Rec {
   RectsBlurKey fKey;
   MaskValue fValue;
 
-  const Key& getKey() const override { return fKey; }
-  size_t bytesUsed() const override { return sizeof(*this) + fValue.fData->size(); }
-  const char* getCategory() const override { return "rects-blur"; }
-  SkDiscardableMemory* diagnostic_only_getDiscardable() const override {
+  const Key& getKey() const noexcept override { return fKey; }
+  size_t bytesUsed() const noexcept override { return sizeof(*this) + fValue.fData->size(); }
+  const char* getCategory() const noexcept override { return "rects-blur"; }
+  SkDiscardableMemory* diagnostic_only_getDiscardable() const noexcept override {
     return fValue.fData->diagnostic_only_getDiscardable();
   }
 
-  static bool Visitor(const SkResourceCache::Rec& baseRec, void* contextData) {
+  static bool Visitor(const SkResourceCache::Rec& baseRec, void* contextData) noexcept {
     const RectsBlurRec& rec = static_cast<const RectsBlurRec&>(baseRec);
     MaskValue* result = static_cast<MaskValue*>(contextData);
 

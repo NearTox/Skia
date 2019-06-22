@@ -55,11 +55,12 @@ class GrXferProcessor : public GrProcessor, public GrNonAtomicRef<GrXferProcesso
    */
   class DstProxy {
    public:
-    DstProxy() { fOffset.set(0, 0); }
+    DstProxy() noexcept { fOffset.set(0, 0); }
 
-    DstProxy(const DstProxy& other) { *this = other; }
+    DstProxy(const DstProxy& other) noexcept { *this = other; }
 
-    DstProxy(sk_sp<GrTextureProxy> proxy, const SkIPoint& offset) : fProxy(std::move(proxy)) {
+    DstProxy(sk_sp<GrTextureProxy> proxy, const SkIPoint& offset) noexcept
+        : fProxy(std::move(proxy)) {
       if (fProxy) {
         fOffset = offset;
       } else {
@@ -67,25 +68,25 @@ class GrXferProcessor : public GrProcessor, public GrNonAtomicRef<GrXferProcesso
       }
     }
 
-    DstProxy& operator=(const DstProxy& other) {
+    DstProxy& operator=(const DstProxy& other) noexcept {
       fProxy = other.fProxy;
       fOffset = other.fOffset;
       return *this;
     }
 
-    bool operator==(const DstProxy& that) const {
+    bool operator==(const DstProxy& that) const noexcept {
       return fProxy == that.fProxy && fOffset == that.fOffset;
     }
-    bool operator!=(const DstProxy& that) const { return !(*this == that); }
+    bool operator!=(const DstProxy& that) const noexcept { return !(*this == that); }
 
-    const SkIPoint& offset() const { return fOffset; }
+    const SkIPoint& offset() const noexcept { return fOffset; }
 
-    void setOffset(const SkIPoint& offset) { fOffset = offset; }
-    void setOffset(int ox, int oy) { fOffset.set(ox, oy); }
+    void setOffset(const SkIPoint& offset) noexcept { fOffset = offset; }
+    void setOffset(int ox, int oy) noexcept { fOffset.set(ox, oy); }
 
-    GrTextureProxy* proxy() const { return fProxy.get(); }
+    GrTextureProxy* proxy() const noexcept { return fProxy.get(); }
 
-    void setProxy(sk_sp<GrTextureProxy> proxy) {
+    void setProxy(sk_sp<GrTextureProxy> proxy) noexcept {
       fProxy = std::move(proxy);
       if (!fProxy) {
         fOffset = {0, 0};
@@ -119,7 +120,7 @@ class GrXferProcessor : public GrProcessor, public GrNonAtomicRef<GrXferProcesso
   }
 
   struct BlendInfo {
-    void reset() {
+    void reset() noexcept {
       fEquation = kAdd_GrBlendEquation;
       fSrcBlend = kOne_GrBlendCoeff;
       fDstBlend = kZero_GrBlendCoeff;
@@ -127,9 +128,9 @@ class GrXferProcessor : public GrProcessor, public GrNonAtomicRef<GrXferProcesso
       fWriteColor = true;
     }
 
-    SkDEBUGCODE(SkString dump() const;)
+    SkDEBUGCODE(SkString dump() const);
 
-        GrBlendEquation fEquation;
+    GrBlendEquation fEquation;
     GrBlendCoeff fSrcBlend;
     GrBlendCoeff fDstBlend;
     SkPMColor4f fBlendConstant;
@@ -138,14 +139,14 @@ class GrXferProcessor : public GrProcessor, public GrNonAtomicRef<GrXferProcesso
 
   void getBlendInfo(BlendInfo* blendInfo) const;
 
-  bool willReadDstColor() const { return fWillReadDstColor; }
+  bool willReadDstColor() const noexcept { return fWillReadDstColor; }
 
   /**
    * If we are performing a dst read, returns whether the base class will use mixed samples to
    * antialias the shader's final output. If not doing a dst read, the subclass is responsible
    * for antialiasing and this returns false.
    */
-  bool dstReadUsesMixedSamples() const { return fDstReadUsesMixedSamples; }
+  bool dstReadUsesMixedSamples() const noexcept { return fDstReadUsesMixedSamples; }
 
   /**
    * Returns whether or not this xferProcossor will set a secondary output to be used with dual
@@ -153,7 +154,7 @@ class GrXferProcessor : public GrProcessor, public GrNonAtomicRef<GrXferProcesso
    */
   bool hasSecondaryOutput() const;
 
-  bool isLCD() const { return fIsLCD; }
+  bool isLCD() const noexcept { return fIsLCD; }
 
   /** Returns true if this and other processor conservatively draw identically. It can only return
       true when the two processor are of the same subclass (i.e. they return the same object from
@@ -180,9 +181,10 @@ class GrXferProcessor : public GrProcessor, public GrNonAtomicRef<GrXferProcesso
   }
 
  protected:
-  GrXferProcessor(ClassID classID);
+  GrXferProcessor(ClassID classID) noexcept;
   GrXferProcessor(
-      ClassID classID, bool willReadDstColor, bool hasMixedSamples, GrProcessorAnalysisCoverage);
+      ClassID classID, bool willReadDstColor, bool hasMixedSamples,
+      GrProcessorAnalysisCoverage) noexcept;
 
  private:
   /**
@@ -296,7 +298,7 @@ class GrXPFactory {
    */
   virtual AnalysisProperties analysisProperties(
       const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, const GrCaps&,
-      GrClampType) const = 0;
+      GrClampType) const noexcept = 0;
 };
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop

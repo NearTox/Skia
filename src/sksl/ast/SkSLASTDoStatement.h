@@ -17,7 +17,8 @@ namespace SkSL {
  */
 struct ASTDoStatement : public ASTStatement {
   ASTDoStatement(
-      int offset, std::unique_ptr<ASTStatement> statement, std::unique_ptr<ASTExpression> test)
+      int offset, std::unique_ptr<ASTStatement> statement,
+      std::unique_ptr<ASTExpression> test) noexcept
       : INHERITED(offset, kDo_Kind), fStatement(std::move(statement)), fTest(std::move(test)) {}
 
   String description() const override {

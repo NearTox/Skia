@@ -21,7 +21,8 @@ namespace SkDashPath {
  */
 void CalcDashParameters(
     SkScalar phase, const SkScalar intervals[], int32_t count, SkScalar* initialDashLength,
-    int32_t* initialDashIndex, SkScalar* intervalLength, SkScalar* adjustedPhase = nullptr);
+    int32_t* initialDashIndex, SkScalar* intervalLength,
+    SkScalar* adjustedPhase = nullptr) noexcept;
 
 bool FilterDashPath(
     SkPath* dst, const SkPath& src, SkStrokeRec*, const SkRect*,
@@ -47,7 +48,7 @@ bool InternalFilter(
     int32_t initialDashIndex, SkScalar intervalLength,
     StrokeRecApplication = StrokeRecApplication::kAllow);
 
-bool ValidDashPath(SkScalar phase, const SkScalar intervals[], int32_t count);
+bool ValidDashPath(SkScalar phase, const SkScalar intervals[], int32_t count) noexcept;
 }  // namespace SkDashPath
 
 #endif

@@ -40,7 +40,7 @@ class SK_API SkPaint {
 
       @return  default initialized SkPaint
   */
-  SkPaint();
+  SkPaint() noexcept;
 
   /** Constructs SkPaint with default values and the given color.
 
@@ -67,7 +67,7 @@ class SK_API SkPaint {
       @param paint  original to copy
       @return       shallow copy of paint
   */
-  SkPaint(const SkPaint& paint);
+  SkPaint(const SkPaint& paint) noexcept;
 
   /** Implements a move constructor to avoid increasing the reference counts
       of objects referenced by the paint.
@@ -77,7 +77,7 @@ class SK_API SkPaint {
       @param paint  original to move
       @return       content of paint
   */
-  SkPaint(SkPaint&& paint);
+  SkPaint(SkPaint&& paint) noexcept;
 
   /** Decreases SkPaint SkRefCnt of owned objects: SkPathEffect, SkShader,
       SkMaskFilter, SkColorFilter, SkDrawLooper, and SkImageFilter. If the
@@ -95,7 +95,7 @@ class SK_API SkPaint {
       @param paint  original to copy
       @return       content of paint
   */
-  SkPaint& operator=(const SkPaint& paint);
+  SkPaint& operator=(const SkPaint& paint) noexcept;
 
   /** Moves the paint to avoid increasing the reference counts
       of objects referenced by the paint parameter. Objects containing SkRefCnt in the
@@ -107,7 +107,7 @@ class SK_API SkPaint {
       @param paint  original to move
       @return       content of paint
   */
-  SkPaint& operator=(SkPaint&& paint);
+  SkPaint& operator=(SkPaint&& paint) noexcept;
 
   /** Compares a and b, and returns true if a and b are equivalent. May return false
       if SkPathEffect, SkShader, SkMaskFilter, SkColorFilter,
@@ -117,7 +117,7 @@ class SK_API SkPaint {
       @param b  SkPaint to compare
       @return   true if SkPaint pair are equivalent
   */
-  SK_API friend bool operator==(const SkPaint& a, const SkPaint& b);
+  SK_API friend bool operator==(const SkPaint& a, const SkPaint& b) noexcept;
 
   /** Compares a and b, and returns true if a and b are not equivalent. May return true
       if SkPathEffect, SkShader, SkMaskFilter, SkColorFilter,
@@ -127,7 +127,7 @@ class SK_API SkPaint {
       @param b  SkPaint to compare
       @return   true if SkPaint pair are not equivalent
   */
-  friend bool operator!=(const SkPaint& a, const SkPaint& b) { return !(a == b); }
+  friend bool operator!=(const SkPaint& a, const SkPaint& b) noexcept { return !(a == b); }
 
   /** Returns a hash generated from SkPaint values and pointers.
       Identical hashes guarantee that the paints are
@@ -146,28 +146,28 @@ class SK_API SkPaint {
   /** Sets all SkPaint contents to their initial values. This is equivalent to replacing
       SkPaint with the result of SkPaint().
   */
-  void reset();
+  void reset() noexcept;
 
   /** Returns true if pixels on the active edges of SkPath may be drawn with partial transparency.
       @return  antialiasing state
   */
-  bool isAntiAlias() const { return SkToBool(fBitfields.fAntiAlias); }
+  bool isAntiAlias() const noexcept { return SkToBool(fBitfields.fAntiAlias); }
 
   /** Requests, but does not require, that edge pixels draw opaque or with
       partial transparency.
       @param aa  setting for antialiasing
   */
-  void setAntiAlias(bool aa) { fBitfields.fAntiAlias = static_cast<unsigned>(aa); }
+  void setAntiAlias(bool aa) noexcept { fBitfields.fAntiAlias = static_cast<unsigned>(aa); }
 
   /** Returns true if color error may be distributed to smooth color transition.
       @return  dithering state
   */
-  bool isDither() const { return SkToBool(fBitfields.fDither); }
+  bool isDither() const noexcept { return SkToBool(fBitfields.fDither); }
 
   /** Requests, but does not require, to distribute color error.
       @param dither  setting for ditering
   */
-  void setDither(bool dither) { fBitfields.fDither = static_cast<unsigned>(dither); }
+  void setDither(bool dither) noexcept { fBitfields.fDither = static_cast<unsigned>(dither); }
 
   /** Returns SkFilterQuality, the image filtering level. A lower setting
       draws faster; a higher setting looks better when the image is scaled.
@@ -175,7 +175,9 @@ class SK_API SkPaint {
       @return  one of: kNone_SkFilterQuality, kLow_SkFilterQuality,
                kMedium_SkFilterQuality, kHigh_SkFilterQuality
   */
-  SkFilterQuality getFilterQuality() const { return (SkFilterQuality)fBitfields.fFilterQuality; }
+  SkFilterQuality getFilterQuality() const noexcept {
+    return (SkFilterQuality)fBitfields.fFilterQuality;
+  }
 
   /** Sets SkFilterQuality, the image filtering level. A lower setting
       draws faster; a higher setting looks better when the image is scaled.
@@ -184,7 +186,7 @@ class SK_API SkPaint {
       @param quality  one of: kNone_SkFilterQuality, kLow_SkFilterQuality,
                       kMedium_SkFilterQuality, kHigh_SkFilterQuality
   */
-  void setFilterQuality(SkFilterQuality quality);
+  void setFilterQuality(SkFilterQuality quality) noexcept;
 
   /** \enum SkPaint::Style
       Set Style to fill, stroke, or both fill and stroke geometry.
@@ -208,14 +210,14 @@ class SK_API SkPaint {
 
       @return  one of:kFill_Style, kStroke_Style, kStrokeAndFill_Style
   */
-  Style getStyle() const { return (Style)fBitfields.fStyle; }
+  Style getStyle() const noexcept { return (Style)fBitfields.fStyle; }
 
   /** Sets whether the geometry is filled, stroked, or filled and stroked.
       Has no effect if style is not a legal SkPaint::Style value.
 
       @param style  one of: kFill_Style, kStroke_Style, kStrokeAndFill_Style
   */
-  void setStyle(Style style);
+  void setStyle(Style style) noexcept;
 
   /** Retrieves alpha and RGB, unpremultiplied, packed into 32 bits.
       Use helpers SkColorGetA(), SkColorGetR(), SkColorGetG(), and SkColorGetB() to extract
@@ -230,7 +232,7 @@ class SK_API SkPaint {
 
       @return  unpremultiplied RGBA
   */
-  SkColor4f getColor4f() const { return fColor4f; }
+  SkColor4f getColor4f() const noexcept { return fColor4f; }
 
   /** Sets alpha and RGB used when stroking and filling. The color is a 32-bit value,
       unpremultiplied, packing 8-bit components for alpha, red, blue, and green.
@@ -257,10 +259,10 @@ class SK_API SkPaint {
 
       @return  alpha ranging from zero, fully transparent, to 255, fully opaque
   */
-  float getAlphaf() const { return fColor4f.fA; }
+  float getAlphaf() const noexcept { return fColor4f.fA; }
 
   // Helper that scales the alpha by 255.
-  uint8_t getAlpha() const { return sk_float_round2int(this->getAlphaf() * 255); }
+  uint8_t getAlpha() const noexcept { return sk_float_round2int(this->getAlphaf() * 255); }
 
   /** Replaces alpha, leaving RGB
       unchanged. An out of range value triggers an assert in the debug
@@ -270,10 +272,10 @@ class SK_API SkPaint {
 
       @param a  alpha component of color
   */
-  void setAlphaf(float a);
+  void setAlphaf(float a) noexcept;
 
   // Helper that accepts an int between 0 and 255, and divides it by 255.0
-  void setAlpha(U8CPU a) { this->setAlphaf(a * (1.0f / 255)); }
+  void setAlpha(U8CPU a) noexcept { this->setAlphaf(a * (1.0f / 255)); }
 
   /** Sets color used when drawing solid fills. The color components range from 0 to 255.
       The color is unpremultiplied; alpha sets the transparency independent of RGB.
@@ -290,7 +292,7 @@ class SK_API SkPaint {
 
       @return  zero for hairline, greater than zero for pen thickness
   */
-  SkScalar getStrokeWidth() const { return fWidth; }
+  SkScalar getStrokeWidth() const noexcept { return fWidth; }
 
   /** Sets the thickness of the pen used by the paint to
       outline the shape.
@@ -298,13 +300,13 @@ class SK_API SkPaint {
 
       @param width  zero thickness for hairline; greater than zero for pen thickness
   */
-  void setStrokeWidth(SkScalar width);
+  void setStrokeWidth(SkScalar width) noexcept;
 
   /** Returns the limit at which a sharp corner is drawn beveled.
 
       @return  zero and greater miter limit
   */
-  SkScalar getStrokeMiter() const { return fMiterLimit; }
+  SkScalar getStrokeMiter() const noexcept { return fMiterLimit; }
 
   /** Sets the limit at which a sharp corner is drawn beveled.
       Valid values are zero and greater.
@@ -312,7 +314,7 @@ class SK_API SkPaint {
 
       @param miter  zero and greater miter limit
   */
-  void setStrokeMiter(SkScalar miter);
+  void setStrokeMiter(SkScalar miter) noexcept;
 
   /** \enum SkPaint::Cap
       Cap draws at the beginning and end of an open path contour.
@@ -358,27 +360,27 @@ class SK_API SkPaint {
 
       @return  one of: kButt_Cap, kRound_Cap, kSquare_Cap
   */
-  Cap getStrokeCap() const { return (Cap)fBitfields.fCapType; }
+  Cap getStrokeCap() const noexcept { return (Cap)fBitfields.fCapType; }
 
   /** Sets the geometry drawn at the beginning and end of strokes.
 
       @param cap  one of: kButt_Cap, kRound_Cap, kSquare_Cap;
                   has no effect if cap is not valid
   */
-  void setStrokeCap(Cap cap);
+  void setStrokeCap(Cap cap) noexcept;
 
   /** Returns the geometry drawn at the corners of strokes.
 
       @return  one of: kMiter_Join, kRound_Join, kBevel_Join
   */
-  Join getStrokeJoin() const { return (Join)fBitfields.fJoinType; }
+  Join getStrokeJoin() const noexcept { return (Join)fBitfields.fJoinType; }
 
   /** Sets the geometry drawn at the corners of strokes.
 
       @param join  one of: kMiter_Join, kRound_Join, kBevel_Join;
                    otherwise, has no effect
   */
-  void setStrokeJoin(Join join);
+  void setStrokeJoin(Join join) noexcept;
 
   /** Returns the filled equivalent of the stroked path.
 
@@ -411,7 +413,7 @@ class SK_API SkPaint {
 
       @return  SkShader if previously set, nullptr otherwise
   */
-  SkShader* getShader() const { return fShader.get(); }
+  SkShader* getShader() const noexcept { return fShader.get(); }
 
   /** Returns optional colors used when filling a path, such as a gradient.
 
@@ -419,7 +421,7 @@ class SK_API SkPaint {
 
       @return  SkShader if previously set, nullptr otherwise
   */
-  sk_sp<SkShader> refShader() const;
+  sk_sp<SkShader> refShader() const noexcept;
 
   /** Sets optional colors used when filling a path, such as a gradient.
 
@@ -428,21 +430,21 @@ class SK_API SkPaint {
 
       @param shader  how geometry is filled with color; if nullptr, color is used instead
   */
-  void setShader(sk_sp<SkShader> shader);
+  void setShader(sk_sp<SkShader> shader) noexcept;
 
   /** Returns SkColorFilter if set, or nullptr.
       Does not alter SkColorFilter SkRefCnt.
 
       @return  SkColorFilter if previously set, nullptr otherwise
   */
-  SkColorFilter* getColorFilter() const { return fColorFilter.get(); }
+  SkColorFilter* getColorFilter() const noexcept { return fColorFilter.get(); }
 
   /** Returns SkColorFilter if set, or nullptr.
       Increases SkColorFilter SkRefCnt by one.
 
       @return  SkColorFilter if set, or nullptr
   */
-  sk_sp<SkColorFilter> refColorFilter() const;
+  sk_sp<SkColorFilter> refColorFilter() const noexcept;
 
   /** Sets SkColorFilter to filter, decreasing SkRefCnt of the previous
       SkColorFilter. Pass nullptr to clear SkColorFilter.
@@ -451,41 +453,43 @@ class SK_API SkPaint {
 
       @param colorFilter  SkColorFilter to apply to subsequent draw
   */
-  void setColorFilter(sk_sp<SkColorFilter> colorFilter);
+  void setColorFilter(sk_sp<SkColorFilter> colorFilter) noexcept;
 
   /** Returns SkBlendMode.
       By default, returns SkBlendMode::kSrcOver.
 
       @return  mode used to combine source color with destination color
   */
-  SkBlendMode getBlendMode() const { return (SkBlendMode)fBitfields.fBlendMode; }
+  SkBlendMode getBlendMode() const noexcept { return (SkBlendMode)fBitfields.fBlendMode; }
 
   /** Returns true if SkBlendMode is SkBlendMode::kSrcOver, the default.
 
       @return  true if SkBlendMode is SkBlendMode::kSrcOver
   */
-  bool isSrcOver() const { return (SkBlendMode)fBitfields.fBlendMode == SkBlendMode::kSrcOver; }
+  bool isSrcOver() const noexcept {
+    return (SkBlendMode)fBitfields.fBlendMode == SkBlendMode::kSrcOver;
+  }
 
   /** Sets SkBlendMode to mode.
       Does not check for valid input.
 
       @param mode  SkBlendMode used to combine source color and destination
   */
-  void setBlendMode(SkBlendMode mode) { fBitfields.fBlendMode = (unsigned)mode; }
+  void setBlendMode(SkBlendMode mode) noexcept { fBitfields.fBlendMode = (unsigned)mode; }
 
   /** Returns SkPathEffect if set, or nullptr.
       Does not alter SkPathEffect SkRefCnt.
 
       @return  SkPathEffect if previously set, nullptr otherwise
   */
-  SkPathEffect* getPathEffect() const { return fPathEffect.get(); }
+  SkPathEffect* getPathEffect() const noexcept { return fPathEffect.get(); }
 
   /** Returns SkPathEffect if set, or nullptr.
       Increases SkPathEffect SkRefCnt by one.
 
       @return  SkPathEffect if previously set, nullptr otherwise
   */
-  sk_sp<SkPathEffect> refPathEffect() const;
+  sk_sp<SkPathEffect> refPathEffect() const noexcept;
 
   /** Sets SkPathEffect to pathEffect, decreasing SkRefCnt of the previous
       SkPathEffect. Pass nullptr to leave the path geometry unaltered.
@@ -494,14 +498,14 @@ class SK_API SkPaint {
 
       @param pathEffect  replace SkPath with a modification when drawn
   */
-  void setPathEffect(sk_sp<SkPathEffect> pathEffect);
+  void setPathEffect(sk_sp<SkPathEffect> pathEffect) noexcept;
 
   /** Returns SkMaskFilter if set, or nullptr.
       Does not alter SkMaskFilter SkRefCnt.
 
       @return  SkMaskFilter if previously set, nullptr otherwise
   */
-  SkMaskFilter* getMaskFilter() const { return fMaskFilter.get(); }
+  SkMaskFilter* getMaskFilter() const noexcept { return fMaskFilter.get(); }
 
   /** Returns SkMaskFilter if set, or nullptr.
 
@@ -509,7 +513,7 @@ class SK_API SkPaint {
 
       @return  SkMaskFilter if previously set, nullptr otherwise
   */
-  sk_sp<SkMaskFilter> refMaskFilter() const;
+  sk_sp<SkMaskFilter> refMaskFilter() const noexcept;
 
   /** Sets SkMaskFilter to maskFilter, decreasing SkRefCnt of the previous
       SkMaskFilter. Pass nullptr to clear SkMaskFilter and leave SkMaskFilter effect on
@@ -519,21 +523,21 @@ class SK_API SkPaint {
 
       @param maskFilter  modifies clipping mask generated from drawn geometry
   */
-  void setMaskFilter(sk_sp<SkMaskFilter> maskFilter);
+  void setMaskFilter(sk_sp<SkMaskFilter> maskFilter) noexcept;
 
   /** Returns SkImageFilter if set, or nullptr.
       Does not alter SkImageFilter SkRefCnt.
 
       @return  SkImageFilter if previously set, nullptr otherwise
   */
-  SkImageFilter* getImageFilter() const { return fImageFilter.get(); }
+  SkImageFilter* getImageFilter() const noexcept { return fImageFilter.get(); }
 
   /** Returns SkImageFilter if set, or nullptr.
       Increases SkImageFilter SkRefCnt by one.
 
       @return  SkImageFilter if previously set, nullptr otherwise
   */
-  sk_sp<SkImageFilter> refImageFilter() const;
+  sk_sp<SkImageFilter> refImageFilter() const noexcept;
 
   /** Sets SkImageFilter to imageFilter, decreasing SkRefCnt of the previous
       SkImageFilter. Pass nullptr to clear SkImageFilter, and remove SkImageFilter effect
@@ -543,26 +547,26 @@ class SK_API SkPaint {
 
       @param imageFilter  how SkImage is sampled when transformed
   */
-  void setImageFilter(sk_sp<SkImageFilter> imageFilter);
+  void setImageFilter(sk_sp<SkImageFilter> imageFilter) noexcept;
 
   /** Returns SkDrawLooper if set, or nullptr.
       Does not alter SkDrawLooper SkRefCnt.
 
       @return  SkDrawLooper if previously set, nullptr otherwise
   */
-  SkDrawLooper* getDrawLooper() const { return fDrawLooper.get(); }
+  SkDrawLooper* getDrawLooper() const noexcept { return fDrawLooper.get(); }
 
   /** Returns SkDrawLooper if set, or nullptr.
       Increases SkDrawLooper SkRefCnt by one.
 
       @return  SkDrawLooper if previously set, nullptr otherwise
   */
-  sk_sp<SkDrawLooper> refDrawLooper() const;
+  sk_sp<SkDrawLooper> refDrawLooper() const noexcept;
 
   /** Deprecated.
       (see skbug.com/6259)
   */
-  SkDrawLooper* getLooper() const { return fDrawLooper.get(); }
+  SkDrawLooper* getLooper() const noexcept { return fDrawLooper.get(); }
 
   /** Sets SkDrawLooper to drawLooper, decreasing SkRefCnt of the previous
       drawLooper.  Pass nullptr to clear SkDrawLooper and leave SkDrawLooper effect on
@@ -572,12 +576,12 @@ class SK_API SkPaint {
 
       @param drawLooper  iterates through drawing one or more time, altering SkPaint
   */
-  void setDrawLooper(sk_sp<SkDrawLooper> drawLooper);
+  void setDrawLooper(sk_sp<SkDrawLooper> drawLooper) noexcept;
 
   /** Deprecated.
       (see skbug.com/6259)
   */
-  void setLooper(sk_sp<SkDrawLooper> drawLooper);
+  void setLooper(sk_sp<SkDrawLooper> drawLooper) noexcept;
 
   /** Returns true if SkPaint prevents all drawing;
       otherwise, the SkPaint may or may not allow drawing.
@@ -587,7 +591,7 @@ class SK_API SkPaint {
 
       @return  true if SkPaint prevents all drawing
   */
-  bool nothingToDraw() const;
+  bool nothingToDraw() const noexcept;
 
   /**     (to be made private)
       Returns true if SkPaint does not include elements requiring extensive computation

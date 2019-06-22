@@ -34,8 +34,8 @@ struct Bounder {
     }
   }
 
-  bool hasBounds() const { return fHasBounds; }
-  const SkRect* bounds() const { return fHasBounds ? &fBounds : nullptr; }
+  bool hasBounds() const noexcept { return fHasBounds; }
+  const SkRect* bounds() const noexcept { return fHasBounds ? &fBounds : nullptr; }
   operator const SkRect*() const { return this->bounds(); }
 };
 
@@ -120,7 +120,7 @@ class SkDrawTiler {
     }
   }
 
-  bool needsTiling() const { return fNeedsTiling; }
+  bool needsTiling() const noexcept { return fNeedsTiling; }
 
   const SkDraw* next() {
     if (fDone) {
@@ -288,7 +288,7 @@ SkBitmapDevice* SkBitmapDevice::Create(
   return new SkBitmapDevice(bitmap, surfaceProps, hndl, trackCoverage ? &coverage : nullptr);
 }
 
-void SkBitmapDevice::replaceBitmapBackendForRasterSurface(const SkBitmap& bm) {
+void SkBitmapDevice::replaceBitmapBackendForRasterSurface(const SkBitmap& bm) noexcept {
   SkASSERT(bm.width() == fBitmap.width());
   SkASSERT(bm.height() == fBitmap.height());
   fBitmap = bm;  // intent is to use bm's pixelRef (and rowbytes/config)
@@ -308,7 +308,7 @@ bool SkBitmapDevice::onAccessPixels(SkPixmap* pmap) {
   return false;
 }
 
-bool SkBitmapDevice::onPeekPixels(SkPixmap* pmap) {
+bool SkBitmapDevice::onPeekPixels(SkPixmap* pmap) noexcept {
   const SkImageInfo info = fBitmap.info();
   if (fBitmap.getPixels() && (kUnknown_SkColorType != info.colorType())) {
     pmap->reset(fBitmap.info(), fBitmap.getPixels(), fBitmap.rowBytes());
@@ -397,7 +397,7 @@ void SkBitmapDevice::drawBitmap(
   LOOP_TILER(drawBitmap(bitmap, matrix, dstOrNull, paint), bounds)
 }
 
-static inline bool CanApplyDstMatrixAsCTM(const SkMatrix& m, const SkPaint& paint) {
+static inline bool CanApplyDstMatrixAsCTM(const SkMatrix& m, const SkPaint& paint) noexcept {
   if (!paint.getMaskFilter()) {
     return true;
   }
@@ -570,7 +570,7 @@ namespace {
 
 class SkAutoDeviceClipRestore {
  public:
-  SkAutoDeviceClipRestore(SkBaseDevice* device, const SkIRect& clip)
+  SkAutoDeviceClipRestore(SkBaseDevice* device, const SkIRect& clip) noexcept
       : fDevice(device), fPrevCTM(device->ctm()) {
     fDevice->save();
     fDevice->setCTM(SkMatrix::I());
@@ -762,7 +762,7 @@ void SkBitmapDevice::onAsRgnClip(SkRegion* rgn) const {
   }
 }
 
-void SkBitmapDevice::validateDevBounds(const SkIRect& drawClipBounds) {
+void SkBitmapDevice::validateDevBounds(const SkIRect& drawClipBounds) noexcept {
 #ifdef SK_DEBUG
   const SkIRect& stackBounds = fRCStack.rc().getBounds();
   SkASSERT(drawClipBounds == stackBounds);

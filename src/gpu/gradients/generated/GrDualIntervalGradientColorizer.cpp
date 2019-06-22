@@ -101,8 +101,8 @@ GrGLSLFragmentProcessor* GrDualIntervalGradientColorizer::onCreateGLSLInstance()
   return new GrGLSLDualIntervalGradientColorizer();
 }
 void GrDualIntervalGradientColorizer::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrDualIntervalGradientColorizer::onIsEqual(const GrFragmentProcessor& other) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {}
+bool GrDualIntervalGradientColorizer::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrDualIntervalGradientColorizer& that = other.cast<GrDualIntervalGradientColorizer>();
   (void)that;
   if (scale01 != that.scale01) return false;
@@ -113,7 +113,7 @@ bool GrDualIntervalGradientColorizer::onIsEqual(const GrFragmentProcessor& other
   return true;
 }
 GrDualIntervalGradientColorizer::GrDualIntervalGradientColorizer(
-    const GrDualIntervalGradientColorizer& src)
+    const GrDualIntervalGradientColorizer& src) noexcept
     : INHERITED(kGrDualIntervalGradientColorizer_ClassID, src.optimizationFlags()),
       scale01(src.scale01),
       bias01(src.bias01),

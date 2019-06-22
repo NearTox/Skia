@@ -70,7 +70,8 @@
    XXXXXXXXsXXXXsXXXXsXXXXsXXXXXXXXXXXX0
    @return -1 if there was an error, > 0 if success.
  */
-static int format_guid(const GUID& guid, wchar_t* buffer, size_t bufferSize, wchar_t sep = '-') {
+static int format_guid(
+    const GUID& guid, wchar_t* buffer, size_t bufferSize, wchar_t sep = '-') noexcept {
   SkASSERT(bufferSize >= GUID_ID_LEN);
   return swprintf_s(
       buffer, bufferSize, L"%08lX%c%04X%c%04X%c%02X%02X%c%02X%02X%02X%02X%02X%02X", guid.Data1, sep,
@@ -78,7 +79,7 @@ static int format_guid(const GUID& guid, wchar_t* buffer, size_t bufferSize, wch
       guid.Data4[3], guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
 }
 
-HRESULT SkXPSDevice::createId(wchar_t* buffer, size_t bufferSize, wchar_t sep) {
+HRESULT SkXPSDevice::createId(wchar_t* buffer, size_t bufferSize, wchar_t sep) noexcept {
   GUID guid = {};
 #ifdef SK_XPS_USE_DETERMINISTIC_IDS
   guid.Data1 = fNextId++;
@@ -369,7 +370,7 @@ bool SkXPSDevice::endPortfolio() {
   return true;
 }
 
-static XPS_COLOR xps_color(const SkColor skColor) {
+static XPS_COLOR xps_color(const SkColor skColor) noexcept {
   // XPS uses non-pre-multiplied alpha (XPS Spec 11.4).
   XPS_COLOR xpsColor;
   xpsColor.colorType = XPS_COLOR_TYPE_SRGB;
@@ -381,7 +382,7 @@ static XPS_COLOR xps_color(const SkColor skColor) {
   return xpsColor;
 }
 
-static XPS_POINT xps_point(const SkPoint& point) {
+static XPS_POINT xps_point(const SkPoint& point) noexcept {
   XPS_POINT xpsPoint = {
       SkScalarToFLOAT(point.fX),
       SkScalarToFLOAT(point.fY),
@@ -395,7 +396,7 @@ static XPS_POINT xps_point(const SkPoint& point, const SkMatrix& matrix) {
   return xps_point(skTransformedPoint);
 }
 
-static XPS_SPREAD_METHOD xps_spread_method(SkTileMode tileMode) {
+static XPS_SPREAD_METHOD xps_spread_method(SkTileMode tileMode) noexcept {
   switch (tileMode) {
     case SkTileMode::kClamp: return XPS_SPREAD_METHOD_PAD;
     case SkTileMode::kRepeat: return XPS_SPREAD_METHOD_REPEAT;
@@ -537,7 +538,7 @@ static XPS_TILE_MODE gSkToXpsTileMode[kSkTileModeCount + 1][kSkTileModeCount + 1
     /*None  */ {XTM_N, XTM_N, XTM_Y, XTM_N},
 };
 
-static XPS_TILE_MODE SkToXpsTileMode(SkTileMode tmx, SkTileMode tmy) {
+static XPS_TILE_MODE SkToXpsTileMode(SkTileMode tmx, SkTileMode tmy) noexcept {
   return gSkToXpsTileMode[(unsigned)tmx][(unsigned)tmy];
 }
 
@@ -927,7 +928,7 @@ HRESULT SkXPSDevice::createXpsBrush(
   return S_OK;
 }
 
-static bool rect_must_be_pathed(const SkPaint& paint, const SkMatrix& matrix) {
+static bool rect_must_be_pathed(const SkPaint& paint, const SkMatrix& matrix) noexcept {
   const bool zeroWidth = (0 == paint.getStrokeWidth());
   const bool stroke = (SkPaint::kFill_Style != paint.getStyle());
 
@@ -1222,7 +1223,7 @@ HRESULT SkXPSDevice::addXpsPathGeometry(
 
 void SkXPSDevice::convertToPpm(
     const SkMaskFilter* filter, SkMatrix* matrix, SkVector* ppuScale, const SkIRect& clip,
-    SkIRect* clipIRect) {
+    SkIRect* clipIRect) noexcept {
   // This action is in unit space, but the ppm is specified in physical space.
   ppuScale->set(
       fCurrentPixelsPerMeter.fX / fCurrentUnitsPerMeter.fX,

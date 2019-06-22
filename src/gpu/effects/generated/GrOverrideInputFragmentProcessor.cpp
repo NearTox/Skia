@@ -63,7 +63,7 @@ GrGLSLFragmentProcessor* GrOverrideInputFragmentProcessor::onCreateGLSLInstance(
   return new GrGLSLOverrideInputFragmentProcessor();
 }
 void GrOverrideInputFragmentProcessor::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   b->add32((int32_t)useUniform);
   if (!useUniform) {
     uint16_t red = SkFloatToHalf(literalColor.fR);
@@ -74,7 +74,7 @@ void GrOverrideInputFragmentProcessor::onGetGLSLProcessorKey(
     b->add32(((uint32_t)blue << 16) | alpha);
   }
 }
-bool GrOverrideInputFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrOverrideInputFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrOverrideInputFragmentProcessor& that = other.cast<GrOverrideInputFragmentProcessor>();
   (void)that;
   if (useUniform != that.useUniform) return false;

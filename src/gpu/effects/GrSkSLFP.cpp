@@ -94,7 +94,8 @@ const SkSL::Program* GrSkSLFPFactory::getSpecialization(
   return result;
 }
 
-static SkSL::Layout::CType get_ctype(const SkSL::Context& context, const SkSL::Variable& v) {
+static SkSL::Layout::CType get_ctype(
+    const SkSL::Context& context, const SkSL::Variable& v) noexcept {
   SkSL::Layout::CType result = v.fModifiers.fLayout.fCType;
   if (result == SkSL::Layout::CType::kDefault) {
     if (&v.fType == context.fFloat_Type.get()) {
@@ -316,7 +317,7 @@ GrSkSLFP::GrSkSLFP(const GrSkSLFP& other)
   }
 }
 
-const char* GrSkSLFP::name() const { return fName; }
+const char* GrSkSLFP::name() const noexcept { return fName; }
 
 void GrSkSLFP::createFactory() const {
   if (!fFactory) {
@@ -413,7 +414,7 @@ void GrSkSLFP::onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBui
   }
 }
 
-bool GrSkSLFP::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrSkSLFP::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrSkSLFP& sk = other.cast<GrSkSLFP>();
   SkASSERT(fIndex != sk.fIndex || fInputSize == sk.fInputSize);
   return fIndex == sk.fIndex && !memcmp(fInputs.get(), sk.fInputs.get(), fInputSize);

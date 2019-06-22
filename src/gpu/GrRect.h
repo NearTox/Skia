@@ -15,39 +15,40 @@
 struct GrIRect16 {
   int16_t fLeft, fTop, fRight, fBottom;
 
-  static GrIRect16 SK_WARN_UNUSED_RESULT MakeEmpty() {
+  static GrIRect16 SK_WARN_UNUSED_RESULT MakeEmpty() noexcept {
     GrIRect16 r;
     r.setEmpty();
     return r;
   }
 
-  static GrIRect16 SK_WARN_UNUSED_RESULT MakeWH(int16_t w, int16_t h) {
+  static GrIRect16 SK_WARN_UNUSED_RESULT MakeWH(int16_t w, int16_t h) noexcept {
     GrIRect16 r;
     r.set(0, 0, w, h);
     return r;
   }
 
-  static GrIRect16 SK_WARN_UNUSED_RESULT MakeXYWH(int16_t x, int16_t y, int16_t w, int16_t h) {
+  static GrIRect16 SK_WARN_UNUSED_RESULT
+  MakeXYWH(int16_t x, int16_t y, int16_t w, int16_t h) noexcept {
     GrIRect16 r;
     r.set(x, y, x + w, y + h);
     return r;
   }
 
-  int width() const { return fRight - fLeft; }
-  int height() const { return fBottom - fTop; }
-  int area() const { return this->width() * this->height(); }
-  bool isEmpty() const { return fLeft >= fRight || fTop >= fBottom; }
+  int width() const noexcept { return fRight - fLeft; }
+  int height() const noexcept { return fBottom - fTop; }
+  int area() const noexcept { return this->width() * this->height(); }
+  bool isEmpty() const noexcept { return fLeft >= fRight || fTop >= fBottom; }
 
-  void setEmpty() { memset(this, 0, sizeof(*this)); }
+  void setEmpty() noexcept { memset(this, 0, sizeof(*this)); }
 
-  void set(int16_t left, int16_t top, int16_t right, int16_t bottom) {
+  void set(int16_t left, int16_t top, int16_t right, int16_t bottom) noexcept {
     fLeft = left;
     fTop = top;
     fRight = right;
     fBottom = bottom;
   }
 
-  void set(const SkIRect& r) {
+  void set(const SkIRect& r) noexcept {
     fLeft = SkToS16(r.fLeft);
     fTop = SkToS16(r.fTop);
     fRight = SkToS16(r.fRight);
@@ -57,7 +58,7 @@ struct GrIRect16 {
 
 /** Returns true if the rectangles have a nonzero area of overlap. It assumed that rects can be
     infinitely small but not "inverted". */
-static inline bool GrRectsOverlap(const SkRect& a, const SkRect& b) {
+static inline bool GrRectsOverlap(const SkRect& a, const SkRect& b) noexcept {
   // See skbug.com/6607 about the isFinite() checks.
   SkASSERT(!a.isFinite() || (a.fLeft <= a.fRight && a.fTop <= a.fBottom));
   SkASSERT(!b.isFinite() || (b.fLeft <= b.fRight && b.fTop <= b.fBottom));
@@ -66,7 +67,7 @@ static inline bool GrRectsOverlap(const SkRect& a, const SkRect& b) {
 
 /** Returns true if the rectangles overlap or share an edge or corner. It assumed that rects can be
     infinitely small but not "inverted". */
-static inline bool GrRectsTouchOrOverlap(const SkRect& a, const SkRect& b) {
+static inline bool GrRectsTouchOrOverlap(const SkRect& a, const SkRect& b) noexcept {
   // See skbug.com/6607 about the isFinite() checks.
   SkASSERT(!a.isFinite() || (a.fLeft <= a.fRight && a.fTop <= a.fBottom));
   SkASSERT(!b.isFinite() || (b.fLeft <= b.fRight && b.fTop <= b.fBottom));

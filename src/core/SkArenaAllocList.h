@@ -21,30 +21,30 @@ class SkArenaAllocList {
   struct Node;
 
  public:
-  SkArenaAllocList() = default;
+  constexpr SkArenaAllocList() noexcept = default;
 
-  void reset() { fHead = fTail = nullptr; }
+  void reset() noexcept { fHead = fTail = nullptr; }
 
   template <typename... Args>
   inline T& append(SkArenaAlloc* arena, Args... args);
 
   class Iter {
    public:
-    Iter() = default;
-    inline Iter& operator++();
-    T& operator*() const { return fCurr->fT; }
-    T* operator->() const { return &fCurr->fT; }
-    bool operator==(const Iter& that) const { return fCurr == that.fCurr; }
+    constexpr Iter() noexcept = default;
+    inline Iter& operator++() noexcept;
+    T& operator*() const noexcept { return fCurr->fT; }
+    T* operator->() const noexcept { return &fCurr->fT; }
+    bool operator==(const Iter& that) const noexcept { return fCurr == that.fCurr; }
     bool operator!=(const Iter& that) const { return !(*this == that); }
 
    private:
     friend class SkArenaAllocList;
-    explicit Iter(Node* node) : fCurr(node) {}
+    constexpr explicit Iter(Node* node) noexcept : fCurr(node) {}
     Node* fCurr = nullptr;
   };
 
   Iter begin() { return Iter(fHead); }
-  Iter end() { return Iter(); }
+  Iter end() noexcept { return Iter(); }
   Iter tail() { return Iter(fTail); }
 
  private:
@@ -72,7 +72,7 @@ T& SkArenaAllocList<T>::append(SkArenaAlloc* arena, Args... args) {
 }
 
 template <typename T>
-typename SkArenaAllocList<T>::Iter& SkArenaAllocList<T>::Iter::operator++() {
+typename SkArenaAllocList<T>::Iter& SkArenaAllocList<T>::Iter::operator++() noexcept {
   fCurr = fCurr->fNext;
   return *this;
 }

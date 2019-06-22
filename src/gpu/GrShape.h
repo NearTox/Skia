@@ -39,20 +39,20 @@ class GrShape {
   // to have to worry about this. This value is exposed for unit tests.
   static constexpr int kMaxKeyFromDataVerbCnt = 10;
 
-  GrShape() { this->initType(Type::kEmpty); }
+  GrShape() noexcept { this->initType(Type::kEmpty); }
 
-  explicit GrShape(const SkPath& path) : GrShape(path, GrStyle::SimpleFill()) {}
+  explicit GrShape(const SkPath& path) noexcept : GrShape(path, GrStyle::SimpleFill()) {}
 
-  explicit GrShape(const SkRRect& rrect) : GrShape(rrect, GrStyle::SimpleFill()) {}
+  explicit GrShape(const SkRRect& rrect) noexcept : GrShape(rrect, GrStyle::SimpleFill()) {}
 
-  explicit GrShape(const SkRect& rect) : GrShape(rect, GrStyle::SimpleFill()) {}
+  explicit GrShape(const SkRect& rect) noexcept : GrShape(rect, GrStyle::SimpleFill()) {}
 
-  GrShape(const SkPath& path, const GrStyle& style) : fStyle(style) {
+  GrShape(const SkPath& path, const GrStyle& style) noexcept : fStyle(style) {
     this->initType(Type::kPath, &path);
     this->attemptToSimplifyPath();
   }
 
-  GrShape(const SkRRect& rrect, const GrStyle& style) : fStyle(style) {
+  GrShape(const SkRRect& rrect, const GrStyle& style) noexcept : fStyle(style) {
     this->initType(Type::kRRect);
     fRRectData.fRRect = rrect;
     fRRectData.fInverted = false;
@@ -63,7 +63,7 @@ class GrShape {
 
   GrShape(
       const SkRRect& rrect, SkPath::Direction dir, unsigned start, bool inverted,
-      const GrStyle& style)
+      const GrStyle& style) noexcept
       : fStyle(style) {
     this->initType(Type::kRRect);
     fRRectData.fRRect = rrect;
@@ -82,7 +82,7 @@ class GrShape {
     this->attemptToSimplifyRRect();
   }
 
-  GrShape(const SkRect& rect, const GrStyle& style) : fStyle(style) {
+  GrShape(const SkRect& rect, const GrStyle& style) noexcept : fStyle(style) {
     this->initType(Type::kRRect);
     fRRectData.fRRect = SkRRect::MakeRect(rect);
     fRRectData.fInverted = false;
@@ -116,8 +116,8 @@ class GrShape {
       const SkRect& oval, SkScalar startAngleDegrees, SkScalar sweepAngleDegrees, bool useCenter,
       const GrStyle& style);
 
-  GrShape(const GrShape&);
-  GrShape& operator=(const GrShape& that);
+  GrShape(const GrShape&) noexcept;
+  GrShape& operator=(const GrShape& that) noexcept;
 
   ~GrShape() { this->changeType(Type::kEmpty); }
 
@@ -135,7 +135,7 @@ class GrShape {
    */
   static GrShape MakeFilled(const GrShape& original, FillInversion = FillInversion::kPreserve);
 
-  const GrStyle& style() const { return fStyle; }
+  const GrStyle& style() const noexcept { return fStyle; }
 
   /**
    * Returns a shape that has either applied the path effect or path effect and stroking
@@ -146,7 +146,7 @@ class GrShape {
     return GrShape(*this, apply, scale);
   }
 
-  bool isRect() const {
+  bool isRect() const noexcept {
     if (Type::kRRect != fType) {
       return false;
     }
@@ -155,7 +155,8 @@ class GrShape {
   }
 
   /** Returns the unstyled geometry as a rrect if possible. */
-  bool asRRect(SkRRect* rrect, SkPath::Direction* dir, unsigned* start, bool* inverted) const {
+  bool asRRect(SkRRect* rrect, SkPath::Direction* dir, unsigned* start, bool* inverted) const
+      noexcept {
     if (Type::kRRect != fType) {
       return false;
     }
@@ -178,7 +179,7 @@ class GrShape {
    * If the unstyled shape is a straight line segment, returns true and sets pts to the endpoints.
    * An inverse filled line path is still considered a line.
    */
-  bool asLine(SkPoint pts[2], bool* inverted) const {
+  bool asLine(SkPoint pts[2], bool* inverted) const noexcept {
     if (fType != Type::kLine) {
       return false;
     }
@@ -235,7 +236,7 @@ class GrShape {
   }
 
   // Can this shape be drawn as a pair of filled nested rectangles?
-  bool asNestedRects(SkRect rects[2]) const {
+  bool asNestedRects(SkRect rects[2]) const noexcept {
     if (Type::kPath != fType) {
       return false;
     }
@@ -283,13 +284,13 @@ class GrShape {
    * Returns whether the geometry is empty. Note that applying the style could produce a
    * non-empty shape. It also may have an inverse fill.
    */
-  bool isEmpty() const { return Type::kEmpty == fType || Type::kInvertedEmpty == fType; }
+  bool isEmpty() const noexcept { return Type::kEmpty == fType || Type::kInvertedEmpty == fType; }
 
   /**
    * Gets the bounds of the geometry without reflecting the shape's styling. This ignores
    * the inverse fill nature of the geometry.
    */
-  SkRect bounds() const;
+  SkRect bounds() const noexcept;
 
   /**
    * Gets the bounds of the geometry reflecting the shape's styling (ignoring inverse fill
@@ -302,7 +303,7 @@ class GrShape {
    * convex path is considered to be closed if they styling reflects a fill and not otherwise.
    * This is because filling closes all contours in the path.
    */
-  bool knownToBeConvex() const {
+  bool knownToBeConvex() const noexcept {
     switch (fType) {
       case Type::kEmpty: return true;
       case Type::kInvertedEmpty: return true;
@@ -323,7 +324,7 @@ class GrShape {
   }
 
   /** Is the pre-styled geometry inverse filled? */
-  bool inverseFilled() const {
+  bool inverseFilled() const noexcept {
     bool ret = false;
     switch (fType) {
       case Type::kEmpty: ret = false; break;
@@ -343,7 +344,7 @@ class GrShape {
    * because an arbitrary path effect could produce an inverse filled path. In other cases this
    * can be thought of as "inverseFilledAfterStyling()".
    */
-  bool mayBeInverseFilledAfterStyling() const {
+  bool mayBeInverseFilledAfterStyling() const noexcept {
     // An arbitrary path effect can produce an arbitrary output path, which may be inverse
     // filled.
     if (this->style().hasNonDashPathEffect()) {
@@ -356,7 +357,7 @@ class GrShape {
    * Is it known that the unstyled geometry has no unclosed contours. This means that it will
    * not have any caps if stroked (modulo the effect of any path effect).
    */
-  bool knownToBeClosed() const {
+  bool knownToBeClosed() const noexcept {
     switch (fType) {
       case Type::kEmpty: return true;
       case Type::kInvertedEmpty: return true;
@@ -370,7 +371,7 @@ class GrShape {
     return false;
   }
 
-  uint32_t segmentMask() const {
+  uint32_t segmentMask() const noexcept {
     switch (fType) {
       case Type::kEmpty: return 0;
       case Type::kInvertedEmpty: return 0;
@@ -398,16 +399,16 @@ class GrShape {
    * Gets the size of the key for the shape represented by this GrShape (ignoring its styling).
    * A negative value is returned if the shape has no key (shouldn't be cached).
    */
-  int unstyledKeySize() const;
+  int unstyledKeySize() const noexcept;
 
-  bool hasUnstyledKey() const { return this->unstyledKeySize() >= 0; }
+  bool hasUnstyledKey() const noexcept { return this->unstyledKeySize() >= 0; }
 
   /**
    * Writes unstyledKeySize() bytes into the provided pointer. Assumes that there is enough
    * space allocated for the key and that unstyledKeySize() does not return a negative value
    * for this shape.
    */
-  void writeUnstyledKey(uint32_t* key) const;
+  void writeUnstyledKey(uint32_t* key) const noexcept;
 
   /**
    * Adds a listener to the *original* path. Typically used to invalidate cached resources when
@@ -435,12 +436,12 @@ class GrShape {
     kPath,
   };
 
-  void initType(Type type, const SkPath* path = nullptr) {
+  void initType(Type type, const SkPath* path = nullptr) noexcept {
     fType = Type::kEmpty;
     this->changeType(type, path);
   }
 
-  void changeType(Type type, const SkPath* path = nullptr) {
+  void changeType(Type type, const SkPath* path = nullptr) noexcept {
     bool wasPath = Type::kPath == fType;
     fType = type;
     bool isPath = Type::kPath == type;
@@ -460,12 +461,12 @@ class GrShape {
     fPathData.fGenID = 0;
   }
 
-  SkPath& path() {
+  SkPath& path() noexcept {
     SkASSERT(Type::kPath == fType);
     return fPathData.fPath;
   }
 
-  const SkPath& path() const {
+  const SkPath& path() const noexcept {
     SkASSERT(Type::kPath == fType);
     return fPathData.fPath;
   }
@@ -477,17 +478,17 @@ class GrShape {
    * Determines the key we should inherit from the input shape's geometry and style when
    * we are applying the style to create a new shape.
    */
-  void setInheritedKey(const GrShape& parentShape, GrStyle::Apply, SkScalar scale);
+  void setInheritedKey(const GrShape& parentShape, GrStyle::Apply, SkScalar scale) noexcept;
 
-  void attemptToSimplifyPath();
-  void attemptToSimplifyRRect();
-  void attemptToSimplifyLine();
-  void attemptToSimplifyArc();
+  void attemptToSimplifyPath() noexcept;
+  void attemptToSimplifyRRect() noexcept;
+  void attemptToSimplifyLine() noexcept;
+  void attemptToSimplifyArc() noexcept;
 
-  bool attemptToSimplifyStrokedLineToRRect();
+  bool attemptToSimplifyStrokedLineToRRect() noexcept;
 
   /** Gets the path that gen id listeners should be added to. */
-  const SkPath* originalPathForListeners() const;
+  const SkPath* originalPathForListeners() const noexcept;
 
   // Defaults to use when there is no distinction between even/odd and winding fills.
   static constexpr SkPath::FillType kDefaultPathFillType = SkPath::kEvenOdd_FillType;
@@ -497,7 +498,7 @@ class GrShape {
   static constexpr unsigned kDefaultRRectStart = 0;
 
   static unsigned DefaultRectDirAndStartIndex(
-      const SkRect& rect, bool hasPathEffect, SkPath::Direction* dir) {
+      const SkRect& rect, bool hasPathEffect, SkPath::Direction* dir) noexcept {
     *dir = kDefaultRRectDir;
     // This comes from SkPath's interface. The default for adding a SkRect is counter clockwise
     // beginning at index 0 (which happens to correspond to rrect index 0 or 7).
@@ -526,7 +527,7 @@ class GrShape {
   }
 
   static unsigned DefaultRRectDirAndStartIndex(
-      const SkRRect& rrect, bool hasPathEffect, SkPath::Direction* dir) {
+      const SkRRect& rrect, bool hasPathEffect, SkPath::Direction* dir) noexcept {
     // This comes from SkPath's interface. The default for adding a SkRRect to a path is
     // clockwise beginning at starting index 6.
     static constexpr unsigned kPathRRectStartIdx = 6;

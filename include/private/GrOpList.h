@@ -56,7 +56,7 @@ class GrOpList : public SkRefCnt {
   // https://bugs.chromium.org/p/skia/issues/detail?id=7111
   virtual void endFlush();
 
-  bool isClosed() const { return this->isSetFlag(kClosed_Flag); }
+  bool isClosed() const noexcept { return this->isSetFlag(kClosed_Flag); }
 
   /*
    * Notify this GrOpList that it relies on the contents of 'dependedOn'
@@ -78,16 +78,17 @@ class GrOpList : public SkRefCnt {
    */
   virtual GrRenderTargetOpList* asRenderTargetOpList() { return nullptr; }
 
-  uint32_t uniqueID() const { return fUniqueID; }
+  uint32_t uniqueID() const noexcept { return fUniqueID; }
 
   /*
    * Dump out the GrOpList dependency DAG
    */
-  SkDEBUGCODE(virtual void dump(bool printDependencies) const;)
+  SkDEBUGCODE(virtual void dump(bool printDependencies) const);
 
-      SkDEBUGCODE(virtual int numClips() const { return 0; })
+  SkDEBUGCODE(virtual int numClips() const { return 0; });
 
-          protected : bool isInstantiated() const;
+ protected:
+  bool isInstantiated() const;
 
   // In addition to just the GrSurface being allocated, has the stencil buffer been allocated (if
   // it is required)?
@@ -122,8 +123,9 @@ class GrOpList : public SkRefCnt {
 
   void addDependency(GrOpList* dependedOn);
   void addDependent(GrOpList* dependent);
-  SkDEBUGCODE(bool isDependedent(const GrOpList* dependent) const;)
-      SkDEBUGCODE(void validate() const;) void closeThoseWhoDependOnMe(const GrCaps&);
+  SkDEBUGCODE(bool isDependedent(const GrOpList* dependent) const);
+  SkDEBUGCODE(void validate() const);
+  void closeThoseWhoDependOnMe(const GrCaps&);
 
   // Remove all Ops which reference proxies that are not instantiated.
   virtual void purgeOpsWithUninstantiatedProxies() = 0;
@@ -140,26 +142,32 @@ class GrOpList : public SkRefCnt {
     kTempMark_Flag = 0x04,   //!< Flag for topological sorting
   };
 
-  void setFlag(uint32_t flag) { fFlags |= flag; }
+  void setFlag(uint32_t flag) noexcept { fFlags |= flag; }
 
-  void resetFlag(uint32_t flag) { fFlags &= ~flag; }
+  void resetFlag(uint32_t flag) noexcept { fFlags &= ~flag; }
 
-  bool isSetFlag(uint32_t flag) const { return SkToBool(fFlags & flag); }
+  bool isSetFlag(uint32_t flag) const noexcept { return SkToBool(fFlags & flag); }
 
   struct TopoSortTraits {
-    static void Output(GrOpList* opList, int /* index */) {
+    static void Output(GrOpList* opList, int /* index */) noexcept {
       opList->setFlag(GrOpList::kWasOutput_Flag);
     }
-    static bool WasOutput(const GrOpList* opList) {
+    static bool WasOutput(const GrOpList* opList) noexcept {
       return opList->isSetFlag(GrOpList::kWasOutput_Flag);
     }
-    static void SetTempMark(GrOpList* opList) { opList->setFlag(GrOpList::kTempMark_Flag); }
-    static void ResetTempMark(GrOpList* opList) { opList->resetFlag(GrOpList::kTempMark_Flag); }
-    static bool IsTempMarked(const GrOpList* opList) {
+    static void SetTempMark(GrOpList* opList) noexcept {
+      opList->setFlag(GrOpList::kTempMark_Flag);
+    }
+    static void ResetTempMark(GrOpList* opList) noexcept {
+      opList->resetFlag(GrOpList::kTempMark_Flag);
+    }
+    static bool IsTempMarked(const GrOpList* opList) noexcept {
       return opList->isSetFlag(GrOpList::kTempMark_Flag);
     }
-    static int NumDependencies(const GrOpList* opList) { return opList->fDependencies.count(); }
-    static GrOpList* Dependency(GrOpList* opList, int index) {
+    static int NumDependencies(const GrOpList* opList) noexcept {
+      return opList->fDependencies.count();
+    }
+    static GrOpList* Dependency(GrOpList* opList, int index) noexcept {
       return opList->fDependencies[index];
     }
   };

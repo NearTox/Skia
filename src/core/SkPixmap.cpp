@@ -30,13 +30,13 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void SkPixmap::reset() {
+void SkPixmap::reset() noexcept {
   fPixels = nullptr;
   fRowBytes = 0;
   fInfo = SkImageInfo::MakeUnknown();
 }
 
-void SkPixmap::reset(const SkImageInfo& info, const void* addr, size_t rowBytes) {
+void SkPixmap::reset(const SkImageInfo& info, const void* addr, size_t rowBytes) noexcept {
   if (addr) {
     SkASSERT(info.validRowBytes(rowBytes));
   }
@@ -45,7 +45,7 @@ void SkPixmap::reset(const SkImageInfo& info, const void* addr, size_t rowBytes)
   fInfo = info;
 }
 
-bool SkPixmap::reset(const SkMask& src) {
+bool SkPixmap::reset(const SkMask& src) noexcept {
   if (SkMask::kA8_Format == src.fFormat) {
     this->reset(
         SkImageInfo::MakeA8(src.fBounds.width(), src.fBounds.height()), src.fImage, src.fRowBytes);
@@ -55,11 +55,11 @@ bool SkPixmap::reset(const SkMask& src) {
   return false;
 }
 
-void SkPixmap::setColorSpace(sk_sp<SkColorSpace> cs) {
+void SkPixmap::setColorSpace(sk_sp<SkColorSpace> cs) noexcept {
   fInfo = fInfo.makeColorSpace(std::move(cs));
 }
 
-bool SkPixmap::extractSubset(SkPixmap* result, const SkIRect& subset) const {
+bool SkPixmap::extractSubset(SkPixmap* result, const SkIRect& subset) const noexcept {
   SkIRect srcRect, r;
   srcRect.set(0, 0, this->width(), this->height());
   if (!r.intersect(srcRect, subset)) {
@@ -83,7 +83,7 @@ bool SkPixmap::extractSubset(SkPixmap* result, const SkIRect& subset) const {
 // This is the same as SkPixmap::addr(x,y), but this version gets inlined, while the public
 // method does not. Perhaps we could bloat it so it can be inlined, but that would grow code-size
 // everywhere, instead of just here (on behalf of getAlphaf()).
-static const void* fast_getaddr(const SkPixmap& pm, int x, int y) {
+static const void* fast_getaddr(const SkPixmap& pm, int x, int y) noexcept {
   x <<= SkColorTypeShiftPerPixel(pm.colorType());
   return static_cast<const char*>(pm.addr()) + y * pm.rowBytes() + x;
 }
@@ -226,7 +226,7 @@ bool SkPixmap::scalePixels(const SkPixmap& actualDst, SkFilterQuality quality) c
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkColor SkPixmap::getColor(int x, int y) const {
+SkColor SkPixmap::getColor(int x, int y) const noexcept {
   SkASSERT(this->addr());
   SkASSERT((unsigned)x < (unsigned)this->width());
   SkASSERT((unsigned)y < (unsigned)this->height());
@@ -317,7 +317,7 @@ SkColor SkPixmap::getColor(int x, int y) const {
   }
 }
 
-bool SkPixmap::computeIsOpaque() const {
+bool SkPixmap::computeIsOpaque() const noexcept {
   const int height = this->height();
   const int width = this->width();
 
@@ -455,11 +455,11 @@ bool SkPixmapPriv::Orient(const SkPixmap& dst, const SkPixmap& src, SkEncodedOri
   return draw_orientation(dst, src, origin);
 }
 
-bool SkPixmapPriv::ShouldSwapWidthHeight(SkEncodedOrigin origin) {
+bool SkPixmapPriv::ShouldSwapWidthHeight(SkEncodedOrigin origin) noexcept {
   // The last four SkEncodedOrigin values involve 90 degree rotations
   return origin >= kLeftTop_SkEncodedOrigin;
 }
 
-SkImageInfo SkPixmapPriv::SwapWidthHeight(const SkImageInfo& info) {
+SkImageInfo SkPixmapPriv::SwapWidthHeight(const SkImageInfo& info) noexcept {
   return info.makeWH(info.height(), info.width());
 }

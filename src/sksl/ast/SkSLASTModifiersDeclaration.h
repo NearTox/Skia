@@ -19,7 +19,7 @@ namespace SkSL {
  * layout(blend_support_all_equations) out;
  */
 struct ASTModifiersDeclaration : public ASTDeclaration {
-  ASTModifiersDeclaration(Modifiers modifiers)
+  ASTModifiersDeclaration(Modifiers modifiers) noexcept
       : INHERITED(-1, kModifiers_Kind), fModifiers(modifiers) {}
 
   String description() const { return fModifiers.description() + ";"; }

@@ -19,7 +19,7 @@ namespace SkSL {
 struct IfStatement : public Statement {
   IfStatement(
       int offset, bool isStatic, std::unique_ptr<Expression> test,
-      std::unique_ptr<Statement> ifTrue, std::unique_ptr<Statement> ifFalse)
+      std::unique_ptr<Statement> ifTrue, std::unique_ptr<Statement> ifFalse) noexcept
       : INHERITED(offset, kIf_Kind),
         fIsStatic(isStatic),
         fTest(std::move(test)),

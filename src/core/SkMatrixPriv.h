@@ -19,11 +19,11 @@ class SkMatrixPriv {
     kMaxFlattenSize = 9 * sizeof(SkScalar) + sizeof(uint32_t),
   };
 
-  static size_t WriteToMemory(const SkMatrix& matrix, void* buffer) {
+  static size_t WriteToMemory(const SkMatrix& matrix, void* buffer) noexcept {
     return matrix.writeToMemory(buffer);
   }
 
-  static size_t ReadFromMemory(SkMatrix* matrix, const void* buffer, size_t length) {
+  static size_t ReadFromMemory(SkMatrix* matrix, const void* buffer, size_t length) noexcept {
     return matrix->readFromMemory(buffer, length);
   }
 
@@ -145,7 +145,7 @@ class SkMatrixPriv {
 
   static void MapHomogeneousPointsWithStride(
       const SkMatrix& mx, SkPoint3 dst[], size_t dstStride, const SkPoint3 src[], size_t srcStride,
-      int count);
+      int count) noexcept;
 };
 
 #endif

@@ -20,8 +20,8 @@ class SkPixmapPriv {
    */
   static bool Orient(const SkPixmap& dst, const SkPixmap& src, SkEncodedOrigin);
 
-  static bool ShouldSwapWidthHeight(SkEncodedOrigin o);
-  static SkImageInfo SwapWidthHeight(const SkImageInfo& info);
+  static bool ShouldSwapWidthHeight(SkEncodedOrigin o) noexcept;
+  static SkImageInfo SwapWidthHeight(const SkImageInfo& info) noexcept;
 
   /**
    *  Decode an image and then copy into dst, applying origin.
@@ -55,7 +55,7 @@ class SkPixmapPriv {
     return true;
   }
 
-  static void ResetPixmapKeepInfo(SkPixmap* pm, const void* address, size_t rowBytes) {
+  static void ResetPixmapKeepInfo(SkPixmap* pm, const void* address, size_t rowBytes) noexcept {
     pm->fRowBytes = rowBytes;
     pm->fPixels = address;
   }

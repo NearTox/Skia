@@ -43,7 +43,8 @@ struct TessInfo {
 // When the SkPathRef genID changes, invalidate a corresponding GrResource described by key.
 class PathInvalidator : public SkPathRef::GenIDChangeListener {
  public:
-  PathInvalidator(const GrUniqueKey& key, uint32_t contextUniqueID) : fMsg(key, contextUniqueID) {}
+  PathInvalidator(const GrUniqueKey& key, uint32_t contextUniqueID) noexcept
+      : fMsg(key, contextUniqueID) {}
 
  private:
   GrUniqueKeyInvalidatedMessage fMsg;
@@ -51,7 +52,7 @@ class PathInvalidator : public SkPathRef::GenIDChangeListener {
   void onChange() override { SkMessageBus<GrUniqueKeyInvalidatedMessage>::Post(fMsg); }
 };
 
-bool cache_match(GrGpuBuffer* vertexBuffer, SkScalar tol, int* actualCount) {
+bool cache_match(GrGpuBuffer* vertexBuffer, SkScalar tol, int* actualCount) noexcept {
   if (!vertexBuffer) {
     return false;
   }
@@ -67,7 +68,7 @@ bool cache_match(GrGpuBuffer* vertexBuffer, SkScalar tol, int* actualCount) {
 
 class StaticVertexAllocator : public GrTessellator::VertexAllocator {
  public:
-  StaticVertexAllocator(size_t stride, GrResourceProvider* resourceProvider, bool canMapVB)
+  StaticVertexAllocator(size_t stride, GrResourceProvider* resourceProvider, bool canMapVB) noexcept
       : VertexAllocator(stride),
         fResourceProvider(resourceProvider),
         fCanMapVB(canMapVB),
@@ -95,7 +96,7 @@ class StaticVertexAllocator : public GrTessellator::VertexAllocator {
     }
     fVertices = nullptr;
   }
-  sk_sp<GrGpuBuffer> detachVertexBuffer() { return std::move(fVertexBuffer); }
+  sk_sp<GrGpuBuffer> detachVertexBuffer() noexcept { return std::move(fVertexBuffer); }
 
  private:
   sk_sp<GrGpuBuffer> fVertexBuffer;
@@ -106,7 +107,7 @@ class StaticVertexAllocator : public GrTessellator::VertexAllocator {
 
 class DynamicVertexAllocator : public GrTessellator::VertexAllocator {
  public:
-  DynamicVertexAllocator(size_t stride, GrMeshDrawOp::Target* target)
+  DynamicVertexAllocator(size_t stride, GrMeshDrawOp::Target* target) noexcept
       : VertexAllocator(stride), fTarget(target), fVertexBuffer(nullptr), fVertices(nullptr) {}
   void* lock(int vertexCount) override {
     fVertexCount = vertexCount;
@@ -117,8 +118,8 @@ class DynamicVertexAllocator : public GrTessellator::VertexAllocator {
     fTarget->putBackVertices(fVertexCount - actualCount, stride());
     fVertices = nullptr;
   }
-  sk_sp<const GrBuffer> detachVertexBuffer() const { return std::move(fVertexBuffer); }
-  int firstVertex() const { return fFirstVertex; }
+  sk_sp<const GrBuffer> detachVertexBuffer() const noexcept { return std::move(fVertexBuffer); }
+  int firstVertex() const noexcept { return fFirstVertex; }
 
  private:
   GrMeshDrawOp::Target* fTarget;
@@ -178,7 +179,7 @@ class TessellatingPathOp final : public GrMeshDrawOp {
         context, std::move(paint), shape, viewMatrix, devClipBounds, aaType, stencilSettings);
   }
 
-  const char* name() const override { return "TessellatingPathOp"; }
+  const char* name() const noexcept override { return "TessellatingPathOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override { fHelper.visitProxies(func); }
 
@@ -213,7 +214,9 @@ class TessellatingPathOp final : public GrMeshDrawOp {
     this->setBounds(devBounds, HasAABloat::kNo, IsZeroArea::kNo);
   }
 
-  FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
+  FixedFunctionFlags fixedFunctionFlags() const noexcept override {
+    return fHelper.fixedFunctionFlags();
+  }
 
   GrProcessorSet::Analysis finalize(
       const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType,

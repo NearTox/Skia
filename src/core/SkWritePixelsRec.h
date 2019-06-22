@@ -14,10 +14,11 @@
  *  Helper class to package and trim the parameters passed to writePixels()
  */
 struct SkWritePixelsRec {
-  SkWritePixelsRec(const SkImageInfo& info, const void* pixels, size_t rowBytes, int x, int y)
+  SkWritePixelsRec(
+      const SkImageInfo& info, const void* pixels, size_t rowBytes, int x, int y) noexcept
       : fPixels(pixels), fRowBytes(rowBytes), fInfo(info), fX(x), fY(y) {}
 
-  SkWritePixelsRec(const SkPixmap& pm, int x, int y)
+  SkWritePixelsRec(const SkPixmap& pm, int x, int y) noexcept
       : fPixels(pm.addr()), fRowBytes(pm.rowBytes()), fInfo(pm.info()), fX(x), fY(y) {}
 
   const void* fPixels;
@@ -33,7 +34,7 @@ struct SkWritePixelsRec {
    *  On false, leaves self unchanged, but indicates that it does not overlap dst, or
    *  is not valid (e.g. bad fInfo) for writePixels().
    */
-  bool trim(int dstWidth, int dstHeight);
+  bool trim(int dstWidth, int dstHeight) noexcept;
 };
 
 #endif

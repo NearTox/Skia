@@ -104,7 +104,7 @@ SkTwoPointConicalGradient::SkTwoPointConicalGradient(
   }
 }
 
-bool SkTwoPointConicalGradient::isOpaque() const {
+bool SkTwoPointConicalGradient::isOpaque() const noexcept {
   // Because areas outside the cone are left untouched, we cannot treat the
   // shader as opaque even if the gradient itself is opaque.
   // TODO(junov): Compute whether the cone fills the plane crbug.com/222380

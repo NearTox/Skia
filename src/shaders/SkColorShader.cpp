@@ -16,7 +16,7 @@
 
 SkColorShader::SkColorShader(SkColor c) : fColor(c) {}
 
-bool SkColorShader::isOpaque() const { return SkColorGetA(fColor) == 255; }
+bool SkColorShader::isOpaque() const noexcept { return SkColorGetA(fColor) == 255; }
 
 sk_sp<SkFlattenable> SkColorShader::CreateProc(SkReadBuffer& buffer) {
   return sk_make_sp<SkColorShader>(buffer.readColor());
@@ -24,7 +24,7 @@ sk_sp<SkFlattenable> SkColorShader::CreateProc(SkReadBuffer& buffer) {
 
 void SkColorShader::flatten(SkWriteBuffer& buffer) const { buffer.writeColor(fColor); }
 
-SkShader::GradientType SkColorShader::asAGradient(GradientInfo* info) const {
+SkShader::GradientType SkColorShader::asAGradient(GradientInfo* info) const noexcept {
   if (info) {
     if (info->fColors && info->fColorCount >= 1) {
       info->fColors[0] = fColor;

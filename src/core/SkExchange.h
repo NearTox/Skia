@@ -14,7 +14,9 @@ namespace skstd {
 
 // std::exchange is in C++14
 template <typename T, typename U = T>
-inline static T exchange(T& obj, U&& new_val) {
+inline static T exchange(T& obj, U&& new_val) noexcept {
+  static_assert(std::is_nothrow_move_constructible_v<T> == true);
+  static_assert(std::is_nothrow_move_assignable_v<T> == true);
   T old_val = std::move(obj);
   obj = std::forward<U>(new_val);
   return old_val;

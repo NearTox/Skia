@@ -53,9 +53,9 @@ class GrGLSLMixerEffect : public GrGLSLFragmentProcessor {
 GrGLSLFragmentProcessor* GrMixerEffect::onCreateGLSLInstance() const {
   return new GrGLSLMixerEffect();
 }
-void GrMixerEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrMixerEffect::onIsEqual(const GrFragmentProcessor& other) const {
+void GrMixerEffect::onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const
+    noexcept {}
+bool GrMixerEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrMixerEffect& that = other.cast<GrMixerEffect>();
   (void)that;
   if (weight != that.weight) return false;

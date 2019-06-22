@@ -21,29 +21,29 @@ class GrTextureProxyPriv;
 // This class delays the acquisition of textures until they are actually required
 class GrTextureProxy : virtual public GrSurfaceProxy {
  public:
-  GrTextureProxy* asTextureProxy() override { return this; }
-  const GrTextureProxy* asTextureProxy() const override { return this; }
+  GrTextureProxy* asTextureProxy() noexcept override { return this; }
+  const GrTextureProxy* asTextureProxy() const noexcept override { return this; }
 
   // Actually instantiate the backing texture, if necessary
   bool instantiate(GrResourceProvider*) override;
 
-  GrSamplerState::Filter highestFilterMode() const;
+  GrSamplerState::Filter highestFilterMode() const noexcept;
 
   // If we are instantiated and have a target, return the mip state of that target. Otherwise
   // returns the proxy's mip state from creation time. This is useful for lazy proxies which may
   // claim to not need mips at creation time, but the instantiation happens to give us a mipped
   // target. In that case we should use that for our benefit to avoid possible copies/mip
   // generation later.
-  GrMipMapped mipMapped() const;
+  GrMipMapped mipMapped() const noexcept;
 
   // Returns the GrMipMapped value of the proxy from creation time regardless of whether it has
   // been instantiated or not.
-  GrMipMapped proxyMipMapped() const { return fMipMapped; }
+  GrMipMapped proxyMipMapped() const noexcept { return fMipMapped; }
 
-  GrTextureType textureType() const { return this->backendFormat().textureType(); }
+  GrTextureType textureType() const noexcept { return this->backendFormat().textureType(); }
 
   /** If true then the texture does not support MIP maps and only supports clamp wrap mode. */
-  bool hasRestrictedSampling() const {
+  bool hasRestrictedSampling() const noexcept {
     return GrTextureTypeHasRestrictedSampling(this->textureType());
   }
 
@@ -55,7 +55,7 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
   /**
    * Return the texture proxy's unique key. It will be invalid if the proxy doesn't have one.
    */
-  const GrUniqueKey& getUniqueKey() const {
+  const GrUniqueKey& getUniqueKey() const noexcept {
 #ifdef SK_DEBUG
     if (fTarget && fUniqueKey.isValid() && fSyncTargetKey) {
       SkASSERT(fTarget->getUniqueKey().isValid());
@@ -74,12 +74,12 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
    * Internal-only helper class used for manipulations of the resource by the cache.
    */
   class CacheAccess;
-  inline CacheAccess cacheAccess();
-  inline const CacheAccess cacheAccess() const;
+  inline CacheAccess cacheAccess() noexcept;
+  inline const CacheAccess cacheAccess() const noexcept;
 
   // Provides access to special purpose functions.
-  GrTextureProxyPriv texPriv();
-  const GrTextureProxyPriv texPriv() const;
+  GrTextureProxyPriv texPriv() noexcept;
+  const GrTextureProxyPriv texPriv() const noexcept;
 
  protected:
   // DDL TODO: rm the GrSurfaceProxy friending
@@ -120,7 +120,7 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
 
   sk_sp<GrSurface> createSurface(GrResourceProvider*) const override;
 
-  void setTargetKeySync(bool sync) { fSyncTargetKey = sync; }
+  void setTargetKeySync(bool sync) noexcept { fSyncTargetKey = sync; }
 
  private:
   // WARNING: Be careful when adding or removing fields here. ASAN is likely to trigger warnings
@@ -146,15 +146,15 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
 
   // Methods made available via GrTextureProxy::CacheAccess
   void setUniqueKey(GrProxyProvider*, const GrUniqueKey&);
-  void clearUniqueKey();
+  void clearUniqueKey() noexcept;
 
-  SkDEBUGCODE(void onValidateSurface(const GrSurface*) override;)
+  SkDEBUGCODE(void onValidateSurface(const GrSurface*) override);
 
-      // For wrapped proxies the GrTexture pointer is stored in GrIORefProxy.
-      // For deferred proxies that pointer will be filled in when we need to instantiate
-      // the deferred resource
+  // For wrapped proxies the GrTexture pointer is stored in GrIORefProxy.
+  // For deferred proxies that pointer will be filled in when we need to instantiate
+  // the deferred resource
 
-      typedef GrSurfaceProxy INHERITED;
+  typedef GrSurfaceProxy INHERITED;
 };
 
 #endif

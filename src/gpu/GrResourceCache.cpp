@@ -29,11 +29,11 @@ DECLARE_SKMESSAGEBUS_MESSAGE(GrUniqueKeyInvalidatedMessage);
 
 DECLARE_SKMESSAGEBUS_MESSAGE(GrGpuResourceFreedMessage);
 
-#define ASSERT_SINGLE_OWNER SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(fSingleOwner);)
+#define ASSERT_SINGLE_OWNER SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(fSingleOwner));
 
 //////////////////////////////////////////////////////////////////////////////
 
-GrScratchKey::ResourceType GrScratchKey::GenerateResourceType() {
+GrScratchKey::ResourceType GrScratchKey::GenerateResourceType() noexcept {
   static std::atomic<int32_t> nextType{INHERITED::kInvalidDomain + 1};
 
   int32_t type = nextType++;
@@ -44,7 +44,7 @@ GrScratchKey::ResourceType GrScratchKey::GenerateResourceType() {
   return static_cast<ResourceType>(type);
 }
 
-GrUniqueKey::Domain GrUniqueKey::GenerateDomain() {
+GrUniqueKey::Domain GrUniqueKey::GenerateDomain() noexcept {
   static std::atomic<int32_t> nextDomain{INHERITED::kInvalidDomain + 1};
 
   int32_t domain = nextDomain++;
@@ -55,13 +55,15 @@ GrUniqueKey::Domain GrUniqueKey::GenerateDomain() {
   return static_cast<Domain>(domain);
 }
 
-uint32_t GrResourceKeyHash(const uint32_t* data, size_t size) { return SkOpts::hash(data, size); }
+uint32_t GrResourceKeyHash(const uint32_t* data, size_t size) noexcept {
+  return SkOpts::hash(data, size);
+}
 
 //////////////////////////////////////////////////////////////////////////////
 
 class GrResourceCache::AutoValidate : ::SkNoncopyable {
  public:
-  AutoValidate(GrResourceCache* cache) : fCache(cache) { cache->validate(); }
+  AutoValidate(GrResourceCache* cache) noexcept : fCache(cache) { cache->validate(); }
   ~AutoValidate() { fCache->validate(); }
 
  private:
@@ -70,18 +72,20 @@ class GrResourceCache::AutoValidate : ::SkNoncopyable {
 
 //////////////////////////////////////////////////////////////////////////////
 
-inline GrResourceCache::ResourceAwaitingUnref::ResourceAwaitingUnref() = default;
+inline GrResourceCache::ResourceAwaitingUnref::ResourceAwaitingUnref() noexcept = default;
 
-inline GrResourceCache::ResourceAwaitingUnref::ResourceAwaitingUnref(GrGpuResource* resource)
+inline GrResourceCache::ResourceAwaitingUnref::ResourceAwaitingUnref(
+    GrGpuResource* resource) noexcept
     : fResource(resource), fNumUnrefs(1) {}
 
-inline GrResourceCache::ResourceAwaitingUnref::ResourceAwaitingUnref(ResourceAwaitingUnref&& that) {
+inline GrResourceCache::ResourceAwaitingUnref::ResourceAwaitingUnref(
+    ResourceAwaitingUnref&& that) noexcept {
   fResource = skstd::exchange(that.fResource, nullptr);
   fNumUnrefs = skstd::exchange(that.fNumUnrefs, 0);
 }
 
 inline GrResourceCache::ResourceAwaitingUnref& GrResourceCache::ResourceAwaitingUnref::operator=(
-    ResourceAwaitingUnref&& that) {
+    ResourceAwaitingUnref&& that) noexcept {
   fResource = skstd::exchange(that.fResource, nullptr);
   fNumUnrefs = skstd::exchange(that.fNumUnrefs, 0);
   return *this;
@@ -95,15 +99,15 @@ inline GrResourceCache::ResourceAwaitingUnref::~ResourceAwaitingUnref() {
   }
 }
 
-inline void GrResourceCache::ResourceAwaitingUnref::addRef() { ++fNumUnrefs; }
+inline void GrResourceCache::ResourceAwaitingUnref::addRef() noexcept { ++fNumUnrefs; }
 
-inline void GrResourceCache::ResourceAwaitingUnref::unref() {
+inline void GrResourceCache::ResourceAwaitingUnref::unref() noexcept {
   SkASSERT(fNumUnrefs > 0);
   fResource->unref();
   --fNumUnrefs;
 }
 
-inline bool GrResourceCache::ResourceAwaitingUnref::finished() { return !fNumUnrefs; }
+inline bool GrResourceCache::ResourceAwaitingUnref::finished() noexcept { return !fNumUnrefs; }
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -139,7 +143,8 @@ void GrResourceCache::insertResource(GrGpuResource* resource) {
   this->addToNonpurgeableArray(resource);
 
   size_t size = resource->gpuMemorySize();
-  SkDEBUGCODE(++fCount;) fBytes += size;
+  SkDEBUGCODE(++fCount);
+  fBytes += size;
 #if GR_CACHE_STATS
   fHighWaterCount = SkTMax(this->getResourceCount(), fHighWaterCount);
   fHighWaterBytes = SkTMax(fBytes, fHighWaterBytes);
@@ -176,7 +181,8 @@ void GrResourceCache::removeResource(GrGpuResource* resource) {
     this->removeFromNonpurgeableArray(resource);
   }
 
-  SkDEBUGCODE(--fCount;) fBytes -= size;
+  SkDEBUGCODE(--fCount);
+  fBytes -= size;
   if (GrBudgetedType::kBudgeted == resource->resourcePriv().budgetedType()) {
     --fBudgetedCount;
     fBudgetedBytes -= size;
@@ -274,9 +280,9 @@ void GrResourceCache::refResource(GrGpuResource* resource) {
 
 class GrResourceCache::AvailableForScratchUse {
  public:
-  AvailableForScratchUse(bool rejectPendingIO) : fRejectPendingIO(rejectPendingIO) {}
+  AvailableForScratchUse(bool rejectPendingIO) noexcept : fRejectPendingIO(rejectPendingIO) {}
 
-  bool operator()(const GrGpuResource* resource) const {
+  bool operator()(const GrGpuResource* resource) const noexcept {
     SkASSERT(
         !resource->getUniqueKey().isValid() && resource->resourcePriv().getScratchKey().isValid());
     if (resource->internalHasRef() || !resource->cacheAccess().isScratch()) {
@@ -489,7 +495,8 @@ void GrResourceCache::notifyCntReachedZero(GrGpuResource* resource, uint32_t fla
     }
   }
 
-  SkDEBUGCODE(int beforeCount = this->getResourceCount();) resource->cacheAccess().release();
+  SkDEBUGCODE(int beforeCount = this->getResourceCount());
+  resource->cacheAccess().release();
   // We should at least free this resource, perhaps dependent resources as well.
   SkASSERT(this->getResourceCount() < beforeCount);
   this->validate();
@@ -648,7 +655,7 @@ void GrResourceCache::purgeUnlockedResources(size_t bytesToPurge, bool preferScr
     fMaxBytes = cachedByteCount;
   }
 }
-bool GrResourceCache::requestsFlush() const {
+bool GrResourceCache::requestsFlush() const noexcept {
   return this->overBudget() && !fPurgeableQueue.count() &&
          fNumBudgetedResourcesFlushWillMakePurgeable > 0;
 }
@@ -683,13 +690,13 @@ void GrResourceCache::processFreedGpuResources() {
   }
 }
 
-void GrResourceCache::addToNonpurgeableArray(GrGpuResource* resource) {
+void GrResourceCache::addToNonpurgeableArray(GrGpuResource* resource) noexcept {
   int index = fNonpurgeableResources.count();
   *fNonpurgeableResources.append() = resource;
   *resource->cacheAccess().accessCacheIndex() = index;
 }
 
-void GrResourceCache::removeFromNonpurgeableArray(GrGpuResource* resource) {
+void GrResourceCache::removeFromNonpurgeableArray(GrGpuResource* resource) noexcept {
   int* index = resource->cacheAccess().accessCacheIndex();
   // Fill the whole we will create in the array with the tail object, adjust its index, and
   // then pop the array

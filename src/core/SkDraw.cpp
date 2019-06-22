@@ -69,9 +69,9 @@ bool SkDraw::computeConservativeLocalClipBounds(SkRect* localBounds) const {
 ///////////////////////////////////////////////////////////////////////////////
 
 void SkDraw::drawPaint(const SkPaint& paint) const {
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 
-      if (fRC->isEmpty()) {
+  if (fRC->isEmpty()) {
     return;
   }
 
@@ -335,10 +335,10 @@ void SkDraw::drawPoints(
   }
 
   SkASSERT(pts != nullptr);
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 
-      // nothing to draw
-      if (fRC->isEmpty()) {
+  // nothing to draw
+  if (fRC->isEmpty()) {
     return;
   }
 
@@ -581,10 +581,10 @@ static void draw_rect_as_path(
 void SkDraw::drawRect(
     const SkRect& prePaintRect, const SkPaint& paint, const SkMatrix* paintMatrix,
     const SkRect* postPaintRect) const {
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 
-      // nothing to draw
-      if (fRC->isEmpty()) {
+  // nothing to draw
+  if (fRC->isEmpty()) {
     return;
   }
 
@@ -842,10 +842,10 @@ void SkDraw::drawDevPath(
 void SkDraw::drawPath(
     const SkPath& origSrcPath, const SkPaint& origPaint, const SkMatrix* prePathMatrix,
     bool pathIsMutable, bool drawCoverage, SkBlitter* customBlitter) const {
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 
-      // nothing to draw
-      if (fRC->isEmpty()) {
+  // nothing to draw
+  if (fRC->isEmpty()) {
     return;
   }
 
@@ -873,10 +873,9 @@ void SkDraw::drawPath(
     }
   }
   // at this point we're done with prePathMatrix
-  SkDEBUGCODE(prePathMatrix = (const SkMatrix*)0x50FF8001;)
+  SkDEBUGCODE(prePathMatrix = (const SkMatrix*)0x50FF8001);
 
-      SkTCopyOnFirstWrite<SkPaint>
-          paint(origPaint);
+  SkTCopyOnFirstWrite<SkPaint> paint(origPaint);
 
   {
     SkScalar coverage;
@@ -1025,11 +1024,11 @@ static bool clipHandlesSprite(const SkRasterClip& clip, int x, int y, const SkPi
 void SkDraw::drawBitmap(
     const SkBitmap& bitmap, const SkMatrix& prematrix, const SkRect* dstBounds,
     const SkPaint& origPaint) const {
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 
-      // nothing to draw
-      if (fRC->isEmpty() || bitmap.width() == 0 || bitmap.height() == 0 ||
-          bitmap.colorType() == kUnknown_SkColorType) {
+  // nothing to draw
+  if (fRC->isEmpty() || bitmap.width() == 0 || bitmap.height() == 0 ||
+      bitmap.colorType() == kUnknown_SkColorType) {
     return;
   }
 
@@ -1088,11 +1087,11 @@ void SkDraw::drawBitmap(
 }
 
 void SkDraw::drawSprite(const SkBitmap& bitmap, int x, int y, const SkPaint& origPaint) const {
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 
-      // nothing to draw
-      if (fRC->isEmpty() || bitmap.width() == 0 || bitmap.height() == 0 ||
-          bitmap.colorType() == kUnknown_SkColorType) {
+  // nothing to draw
+  if (fRC->isEmpty() || bitmap.width() == 0 || bitmap.height() == 0 ||
+      bitmap.colorType() == kUnknown_SkColorType) {
     return;
   }
 

@@ -98,11 +98,11 @@ class GrTextureProducer : public SkNoncopyable {
 
   virtual ~GrTextureProducer() {}
 
-  int width() const { return fWidth; }
-  int height() const { return fHeight; }
-  bool isAlphaOnly() const { return fIsAlphaOnly; }
-  bool domainNeedsDecal() const { return fDomainNeedsDecal; }
-  virtual SkAlphaType alphaType() const = 0;
+  int width() const noexcept { return fWidth; }
+  int height() const noexcept { return fHeight; }
+  bool isAlphaOnly() const noexcept { return fIsAlphaOnly; }
+  bool domainNeedsDecal() const noexcept { return fDomainNeedsDecal; }
+  virtual SkAlphaType alphaType() const noexcept = 0;
   virtual SkColorSpace* colorSpace() const = 0;
   // If the "texture" samples multiple images that have different resolutions (e.g. YUV420)
   virtual bool hasMixedResolutions() const { return false; }
@@ -111,7 +111,8 @@ class GrTextureProducer : public SkNoncopyable {
   friend class GrTextureProducer_TestAccess;
 
   GrTextureProducer(
-      GrRecordingContext* context, int width, int height, bool isAlphaOnly, bool domainNeedsDecal)
+      GrRecordingContext* context, int width, int height, bool isAlphaOnly,
+      bool domainNeedsDecal) noexcept
       : fContext(context),
         fWidth(width),
         fHeight(height),
@@ -120,7 +121,7 @@ class GrTextureProducer : public SkNoncopyable {
 
   /** Helper for creating a key for a copy from an original key. */
   static void MakeCopyKeyFromOrigKey(
-      const GrUniqueKey& origKey, const CopyParams& copyParams, GrUniqueKey* copyKey) {
+      const GrUniqueKey& origKey, const CopyParams& copyParams, GrUniqueKey* copyKey) noexcept {
     SkASSERT(!copyKey->isValid());
     if (origKey.isValid()) {
       static const GrUniqueKey::Domain kDomain = GrUniqueKey::GenerateDomain();
@@ -158,13 +159,13 @@ class GrTextureProducer : public SkNoncopyable {
   static DomainMode DetermineDomainMode(
       const SkRect& constraintRect, FilterConstraint filterConstraint,
       bool coordsLimitedToConstraintRect, GrTextureProxy*,
-      const GrSamplerState::Filter* filterModeOrNullForBicubic, SkRect* domainRect);
+      const GrSamplerState::Filter* filterModeOrNullForBicubic, SkRect* domainRect) noexcept;
 
   std::unique_ptr<GrFragmentProcessor> createFragmentProcessorForDomainAndFilter(
       sk_sp<GrTextureProxy> proxy, const SkMatrix& textureMatrix, DomainMode, const SkRect& domain,
       const GrSamplerState::Filter* filterOrNullForBicubic);
 
-  GrRecordingContext* context() const { return fContext; }
+  GrRecordingContext* context() const noexcept { return fContext; }
 
  private:
   virtual sk_sp<GrTextureProxy> onRefTextureProxyForParams(

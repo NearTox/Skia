@@ -51,12 +51,12 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
   // To avoid even the initial copy of the struct, we have a getter for the first item which
   // is used to seed the op with its initial geometry.  After seeding, the client should call
   // init() so the op can initialize itself
-  Geometry& geometry() { return fGeoData[0]; }
+  Geometry& geometry() noexcept { return fGeoData[0]; }
 
   /** Called after this->geometry() has been configured. */
   void init();
 
-  const char* name() const override { return "AtlasTextOp"; }
+  const char* name() const noexcept override { return "AtlasTextOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override;
 
@@ -64,7 +64,7 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
   SkString dumpInfo() const override;
 #endif
 
-  FixedFunctionFlags fixedFunctionFlags() const override;
+  FixedFunctionFlags fixedFunctionFlags() const noexcept override;
 
   GrProcessorSet::Analysis finalize(
       const GrCaps&, const GrAppliedClip*, GrFSAAType, GrClampType) override;
@@ -79,7 +79,7 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
     kLCDBGRDistanceField_MaskType,
   };
 
-  MaskType maskType() const { return fMaskType; }
+  MaskType maskType() const noexcept { return fMaskType; }
 
   void finalizeForTextTarget(uint32_t color, const GrCaps&);
   void executeForTextTarget(SkAtlasTextTarget*);
@@ -107,7 +107,7 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
   void onPrepareDraws(Target*) override;
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
 
-  GrMaskFormat maskFormat() const {
+  GrMaskFormat maskFormat() const noexcept {
     switch (fMaskType) {
       case kLCDCoverageMask_MaskType: return kA565_GrMaskFormat;
       case kColorBitmapMask_MaskType: return kARGB_GrMaskFormat;
@@ -120,25 +120,25 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
     return kA8_GrMaskFormat;  // suppress warning
   }
 
-  bool usesDistanceFields() const {
+  bool usesDistanceFields() const noexcept {
     return kAliasedDistanceField_MaskType == fMaskType ||
            kGrayscaleDistanceField_MaskType == fMaskType ||
            kLCDDistanceField_MaskType == fMaskType || kLCDBGRDistanceField_MaskType == fMaskType;
   }
 
-  bool isLCD() const {
+  bool isLCD() const noexcept {
     return kLCDCoverageMask_MaskType == fMaskType || kLCDDistanceField_MaskType == fMaskType ||
            kLCDBGRDistanceField_MaskType == fMaskType;
   }
 
   inline void flush(GrMeshDrawOp::Target* target, FlushInfo* flushInfo) const;
 
-  const SkPMColor4f& color() const {
+  const SkPMColor4f& color() const noexcept {
     SkASSERT(fGeoCount > 0);
     return fGeoData[0].fColor;
   }
-  bool usesLocalCoords() const { return fUsesLocalCoords; }
-  int numGlyphs() const { return fNumGlyphs; }
+  bool usesLocalCoords() const noexcept { return fUsesLocalCoords; }
+  int numGlyphs() const noexcept { return fNumGlyphs; }
 
   CombineResult onCombineIfPossible(GrOp* t, const GrCaps& caps) override;
 

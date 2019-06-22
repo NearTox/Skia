@@ -9,27 +9,27 @@
 #include "include/private/SkColorData.h"
 #include "include/private/SkFixed.h"
 
-SkPMColor SkPreMultiplyARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b) {
+SkPMColor SkPreMultiplyARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b) noexcept {
   return SkPremultiplyARGBInline(a, r, g, b);
 }
 
-SkPMColor SkPreMultiplyColor(SkColor c) {
+SkPMColor SkPreMultiplyColor(SkColor c) noexcept {
   return SkPremultiplyARGBInline(SkColorGetA(c), SkColorGetR(c), SkColorGetG(c), SkColorGetB(c));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static inline SkScalar ByteToScalar(U8CPU x) {
+static constexpr inline SkScalar ByteToScalar(U8CPU x) {
   SkASSERT(x <= 255);
   return SkIntToScalar(x) / 255;
 }
 
-static inline SkScalar ByteDivToScalar(int numer, U8CPU denom) {
+static constexpr inline SkScalar ByteDivToScalar(int numer, U8CPU denom) {
   // cast to keep the answer signed
   return SkIntToScalar(numer) / (int)denom;
 }
 
-void SkRGBToHSV(U8CPU r, U8CPU g, U8CPU b, SkScalar hsv[3]) {
+void SkRGBToHSV(U8CPU r, U8CPU g, U8CPU b, SkScalar hsv[3]) noexcept {
   SkASSERT(hsv);
 
   unsigned min = SkMin32(r, SkMin32(g, b));
@@ -69,7 +69,7 @@ void SkRGBToHSV(U8CPU r, U8CPU g, U8CPU b, SkScalar hsv[3]) {
   hsv[2] = v;
 }
 
-SkColor SkHSVToColor(U8CPU a, const SkScalar hsv[3]) {
+SkColor SkHSVToColor(U8CPU a, const SkScalar hsv[3]) noexcept {
   SkASSERT(hsv);
 
   SkScalar s = SkScalarPin(hsv[1], 0, 1);
@@ -141,12 +141,12 @@ SkColor SkColor4f::toSkColor() const {
 }
 
 template <>
-uint32_t SkColor4f::toBytes_RGBA() const {
+uint32_t SkColor4f::toBytes_RGBA() const noexcept {
   return Sk4f_toL32(Sk4f::Load(this->vec()));
 }
 
 template <>
-SkColor4f SkColor4f::FromBytes_RGBA(uint32_t c) {
+SkColor4f SkColor4f::FromBytes_RGBA(uint32_t c) noexcept {
   SkColor4f color;
   Sk4f_fromL32(c).store(&color);
   return color;
@@ -160,12 +160,12 @@ SkPMColor4f SkPMColor4f::FromPMColor(SkPMColor c) {
 }
 
 template <>
-uint32_t SkPMColor4f::toBytes_RGBA() const {
+uint32_t SkPMColor4f::toBytes_RGBA() const noexcept {
   return Sk4f_toL32(Sk4f::Load(this->vec()));
 }
 
 template <>
-SkPMColor4f SkPMColor4f::FromBytes_RGBA(uint32_t c) {
+SkPMColor4f SkPMColor4f::FromBytes_RGBA(uint32_t c) noexcept {
   SkPMColor4f color;
   Sk4f_fromL32(c).store(&color);
   return color;

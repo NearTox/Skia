@@ -47,7 +47,7 @@ class GrRenderTargetOpList final : public GrOpList {
     INHERITED::makeClosed(caps);
   }
 
-  bool isEmpty() const { return fOpChains.empty(); }
+  bool isEmpty() const noexcept { return fOpChains.empty(); }
 
   /**
    * Empties the draw buffer of any queued up draws.
@@ -93,7 +93,7 @@ class GrRenderTargetOpList final : public GrOpList {
         std::move(op), processorAnalysis, clip.doesClip() ? &clip : nullptr, &dstProxy, caps);
   }
 
-  void discard();
+  void discard() noexcept;
 
   /**
    * Copies a pixel rectangle from one surface to another. This call may finalize
@@ -109,14 +109,14 @@ class GrRenderTargetOpList final : public GrOpList {
       GrRecordingContext*, GrSurfaceProxy* dst, GrSurfaceProxy* src, const SkIRect& srcRect,
       const SkIPoint& dstPoint) override;
 
-  GrRenderTargetOpList* asRenderTargetOpList() override { return this; }
+  GrRenderTargetOpList* asRenderTargetOpList() noexcept override { return this; }
 
-  SkDEBUGCODE(void dump(bool printDependencies) const override;)
-      SkDEBUGCODE(int numClips() const override { return fNumClips; })
-          SkDEBUGCODE(void visitProxies_debugOnly(const GrOp::VisitProxyFunc&) const;)
+  SkDEBUGCODE(void dump(bool printDependencies) const override);
+  SkDEBUGCODE(int numClips() const override { return fNumClips; });
+  SkDEBUGCODE(void visitProxies_debugOnly(const GrOp::VisitProxyFunc&) const);
 
-              private
-      : friend class GrRenderTargetContextPriv;  // for stencil clip state. TODO: this is invasive
+ private:
+  friend class GrRenderTargetContextPriv;  // for stencil clip state. TODO: this is invasive
 
   // The RTC and RTOpList have to work together to handle buffer clears. In most cases, buffer
   // clearing can be done natively, in which case the op list's load ops are sufficient. In other
@@ -127,11 +127,11 @@ class GrRenderTargetOpList final : public GrOpList {
   bool onIsUsed(GrSurfaceProxy*) const override;
 
   // Must only be called if native stencil buffer clearing is enabled
-  void setStencilLoadOp(GrLoadOp op);
+  void setStencilLoadOp(GrLoadOp op) noexcept;
   // Must only be called if native color buffer clearing is enabled.
-  void setColorLoadOp(GrLoadOp op, const SkPMColor4f& color);
+  void setColorLoadOp(GrLoadOp op, const SkPMColor4f& color) noexcept;
   // Sets the clear color to transparent black
-  void setColorLoadOp(GrLoadOp op) {
+  void setColorLoadOp(GrLoadOp op) noexcept {
     static const SkPMColor4f kDefaultClearColor = {0.f, 0.f, 0.f, 0.f};
     this->setColorLoadOp(op, kDefaultClearColor);
   }
@@ -147,7 +147,8 @@ class GrRenderTargetOpList final : public GrOpList {
    public:
     OpChain(const OpChain&) = delete;
     OpChain& operator=(const OpChain&) = delete;
-    OpChain(std::unique_ptr<GrOp>, GrProcessorSet::Analysis, GrAppliedClip*, const DstProxy*);
+    OpChain(
+        std::unique_ptr<GrOp>, GrProcessorSet::Analysis, GrAppliedClip*, const DstProxy*) noexcept;
 
     ~OpChain() {
       // The ops are stored in a GrMemoryPool and must be explicitly deleted via the pool.
@@ -156,11 +157,11 @@ class GrRenderTargetOpList final : public GrOpList {
 
     void visitProxies(const GrOp::VisitProxyFunc&) const;
 
-    GrOp* head() const { return fList.head(); }
+    GrOp* head() const noexcept { return fList.head(); }
 
-    GrAppliedClip* appliedClip() const { return fAppliedClip; }
-    const DstProxy& dstProxy() const { return fDstProxy; }
-    const SkRect& bounds() const { return fBounds; }
+    GrAppliedClip* appliedClip() const noexcept { return fAppliedClip; }
+    const DstProxy& dstProxy() const noexcept { return fDstProxy; }
+    const SkRect& bounds() const noexcept { return fBounds; }
 
     // Deletes all the ops in the chain via the pool.
     void deleteOps(GrOpMemoryPool* pool);
@@ -180,28 +181,28 @@ class GrRenderTargetOpList final : public GrOpList {
    private:
     class List {
      public:
-      List() = default;
-      List(std::unique_ptr<GrOp>);
-      List(List&&);
-      List& operator=(List&& that);
+      List() noexcept = default;
+      List(std::unique_ptr<GrOp>) noexcept;
+      List(List&&) noexcept;
+      List& operator=(List&& that) noexcept;
 
-      bool empty() const { return !SkToBool(fHead); }
-      GrOp* head() const { return fHead.get(); }
-      GrOp* tail() const { return fTail; }
+      bool empty() const noexcept { return !SkToBool(fHead); }
+      GrOp* head() const noexcept { return fHead.get(); }
+      GrOp* tail() const noexcept { return fTail; }
 
       std::unique_ptr<GrOp> popHead();
       std::unique_ptr<GrOp> removeOp(GrOp* op);
       void pushHead(std::unique_ptr<GrOp> op);
       void pushTail(std::unique_ptr<GrOp>);
 
-      void validate() const;
+      void validate() const noexcept;
 
      private:
       std::unique_ptr<GrOp> fHead;
       GrOp* fTail = nullptr;
     };
 
-    void validate() const;
+    void validate() const noexcept;
 
     bool tryConcat(
         List*, GrProcessorSet::Analysis, const DstProxy&, const GrAppliedClip*,
@@ -239,9 +240,9 @@ class GrRenderTargetOpList final : public GrOpList {
   // MDB TODO: 4096 for the first allocation of the clip space will be huge overkill.
   // Gather statistics to determine the correct size.
   SkArenaAlloc fClipAllocator{4096};
-  SkDEBUGCODE(int fNumClips;)
+  SkDEBUGCODE(int fNumClips);
 
-      typedef GrOpList INHERITED;
+  typedef GrOpList INHERITED;
 };
 
 #endif

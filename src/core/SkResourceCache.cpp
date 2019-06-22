@@ -21,7 +21,7 @@
 DECLARE_SKMESSAGEBUS_MESSAGE(SkResourceCache::PurgeSharedIDMessage)
 
 static inline bool SkShouldPostMessageToBus(
-    const SkResourceCache::PurgeSharedIDMessage&, uint32_t) {
+    const SkResourceCache::PurgeSharedIDMessage&, uint32_t) noexcept {
   // SkResourceCache is typically used as a singleton and we don't label Inboxes so all messages
   // go to all inboxes.
   return true;
@@ -38,7 +38,7 @@ static inline bool SkShouldPostMessageToBus(
 #define SK_DEFAULT_IMAGE_CACHE_LIMIT (32 * 1024 * 1024)
 #endif
 
-void SkResourceCache::Key::init(void* nameSpace, uint64_t sharedID, size_t dataSize) {
+void SkResourceCache::Key::init(void* nameSpace, uint64_t sharedID, size_t dataSize) noexcept {
   SkASSERT(SkAlign4(dataSize) == dataSize);
 
   // fCount32 and fHash are not hashed
@@ -64,7 +64,7 @@ void SkResourceCache::Key::init(void* nameSpace, uint64_t sharedID, size_t dataS
 
 namespace {
 struct HashTraits {
-  static uint32_t Hash(const SkResourceCache::Key& key) { return key.hash(); }
+  static uint32_t Hash(const SkResourceCache::Key& key) noexcept { return key.hash(); }
   static const SkResourceCache::Key& GetKey(const SkResourceCache::Rec* rec) {
     return rec->getKey();
   }
@@ -304,7 +304,7 @@ SkCachedData* SkResourceCache::newCachedData(size_t bytes) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkResourceCache::release(Rec* rec) {
+void SkResourceCache::release(Rec* rec) noexcept {
   Rec* prev = rec->fPrev;
   Rec* next = rec->fNext;
 
@@ -324,7 +324,7 @@ void SkResourceCache::release(Rec* rec) {
   rec->fNext = rec->fPrev = nullptr;
 }
 
-void SkResourceCache::moveToHead(Rec* rec) {
+void SkResourceCache::moveToHead(Rec* rec) noexcept {
   if (fHead == rec) {
     return;
   }
@@ -343,7 +343,7 @@ void SkResourceCache::moveToHead(Rec* rec) {
   this->validate();
 }
 
-void SkResourceCache::addToHead(Rec* rec) {
+void SkResourceCache::addToHead(Rec* rec) noexcept {
   this->validate();
 
   rec->fPrev = nullptr;
@@ -408,7 +408,7 @@ void SkResourceCache::validate() const {
 }
 #endif
 
-void SkResourceCache::dump() const {
+void SkResourceCache::dump() const noexcept {
   this->validate();
 
   SkDebugf(
@@ -416,15 +416,17 @@ void SkResourceCache::dump() const {
       fDiscardableFactory ? "discardable" : "malloc");
 }
 
-size_t SkResourceCache::setSingleAllocationByteLimit(size_t newLimit) {
+size_t SkResourceCache::setSingleAllocationByteLimit(size_t newLimit) noexcept {
   size_t oldLimit = fSingleAllocationByteLimit;
   fSingleAllocationByteLimit = newLimit;
   return oldLimit;
 }
 
-size_t SkResourceCache::getSingleAllocationByteLimit() const { return fSingleAllocationByteLimit; }
+size_t SkResourceCache::getSingleAllocationByteLimit() const noexcept {
+  return fSingleAllocationByteLimit;
+}
 
-size_t SkResourceCache::getEffectiveSingleAllocationByteLimit() const {
+size_t SkResourceCache::getEffectiveSingleAllocationByteLimit() const noexcept {
   // fSingleAllocationByteLimit == 0 means the caller is asking for our default
   size_t limit = fSingleAllocationByteLimit;
 
@@ -454,7 +456,7 @@ SK_DECLARE_STATIC_MUTEX(gMutex);
 static SkResourceCache* gResourceCache = nullptr;
 
 /** Must hold gMutex when calling. */
-static SkResourceCache* get_cache() {
+static SkResourceCache* get_cache() noexcept {
   // gMutex is always held when this is called, so we don't need to be fancy in here.
   gMutex.assertHeld();
   if (nullptr == gResourceCache) {
@@ -467,12 +469,12 @@ static SkResourceCache* get_cache() {
   return gResourceCache;
 }
 
-size_t SkResourceCache::GetTotalBytesUsed() {
+size_t SkResourceCache::GetTotalBytesUsed() noexcept {
   SkAutoMutexAcquire am(gMutex);
   return get_cache()->getTotalBytesUsed();
 }
 
-size_t SkResourceCache::GetTotalByteLimit() {
+size_t SkResourceCache::GetTotalByteLimit() noexcept {
   SkAutoMutexAcquire am(gMutex);
   return get_cache()->getTotalByteLimit();
 }
@@ -482,7 +484,7 @@ size_t SkResourceCache::SetTotalByteLimit(size_t newLimit) {
   return get_cache()->setTotalByteLimit(newLimit);
 }
 
-SkResourceCache::DiscardableFactory SkResourceCache::GetDiscardableFactory() {
+SkResourceCache::DiscardableFactory SkResourceCache::GetDiscardableFactory() noexcept {
   SkAutoMutexAcquire am(gMutex);
   return get_cache()->discardableFactory();
 }
@@ -492,22 +494,22 @@ SkCachedData* SkResourceCache::NewCachedData(size_t bytes) {
   return get_cache()->newCachedData(bytes);
 }
 
-void SkResourceCache::Dump() {
+void SkResourceCache::Dump() noexcept {
   SkAutoMutexAcquire am(gMutex);
   get_cache()->dump();
 }
 
-size_t SkResourceCache::SetSingleAllocationByteLimit(size_t size) {
+size_t SkResourceCache::SetSingleAllocationByteLimit(size_t size) noexcept {
   SkAutoMutexAcquire am(gMutex);
   return get_cache()->setSingleAllocationByteLimit(size);
 }
 
-size_t SkResourceCache::GetSingleAllocationByteLimit() {
+size_t SkResourceCache::GetSingleAllocationByteLimit() noexcept {
   SkAutoMutexAcquire am(gMutex);
   return get_cache()->getSingleAllocationByteLimit();
 }
 
-size_t SkResourceCache::GetEffectiveSingleAllocationByteLimit() {
+size_t SkResourceCache::GetEffectiveSingleAllocationByteLimit() noexcept {
   SkAutoMutexAcquire am(gMutex);
   return get_cache()->getEffectiveSingleAllocationByteLimit();
 }
@@ -543,19 +545,23 @@ void SkResourceCache::PostPurgeSharedID(uint64_t sharedID) {
 #include "include/core/SkGraphics.h"
 #include "include/core/SkImageFilter.h"
 
-size_t SkGraphics::GetResourceCacheTotalBytesUsed() { return SkResourceCache::GetTotalBytesUsed(); }
+size_t SkGraphics::GetResourceCacheTotalBytesUsed() noexcept {
+  return SkResourceCache::GetTotalBytesUsed();
+}
 
-size_t SkGraphics::GetResourceCacheTotalByteLimit() { return SkResourceCache::GetTotalByteLimit(); }
+size_t SkGraphics::GetResourceCacheTotalByteLimit() noexcept {
+  return SkResourceCache::GetTotalByteLimit();
+}
 
 size_t SkGraphics::SetResourceCacheTotalByteLimit(size_t newLimit) {
   return SkResourceCache::SetTotalByteLimit(newLimit);
 }
 
-size_t SkGraphics::GetResourceCacheSingleAllocationByteLimit() {
+size_t SkGraphics::GetResourceCacheSingleAllocationByteLimit() noexcept {
   return SkResourceCache::GetSingleAllocationByteLimit();
 }
 
-size_t SkGraphics::SetResourceCacheSingleAllocationByteLimit(size_t newLimit) {
+size_t SkGraphics::SetResourceCacheSingleAllocationByteLimit(size_t newLimit) noexcept {
   return SkResourceCache::SetSingleAllocationByteLimit(newLimit);
 }
 

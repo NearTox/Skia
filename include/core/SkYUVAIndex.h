@@ -29,11 +29,11 @@ enum class SkColorChannel {
     to read from.
 */
 struct SK_API SkYUVAIndex {
-  bool operator==(const SkYUVAIndex& that) const {
+  bool operator==(const SkYUVAIndex& that) const noexcept {
     return this->fIndex == that.fIndex && this->fChannel == that.fChannel;
   }
 
-  bool operator!=(const SkYUVAIndex& that) const { return !(*this == that); }
+  bool operator!=(const SkYUVAIndex& that) const noexcept { return !(*this == that); }
 
   // Index in the array of SkYUVAIndex
   // TODO: rename as Component
@@ -55,7 +55,7 @@ struct SK_API SkYUVAIndex {
    * YUV and NV12 and channel info is ignored. */
   SkColorChannel fChannel;
 
-  static bool AreValidIndices(const SkYUVAIndex yuvaIndices[4], int* numPlanes) {
+  static bool AreValidIndices(const SkYUVAIndex yuvaIndices[4], int* numPlanes) noexcept {
     // Note that 'numPlanes' is always filled in even if the indices are not valid.
     // This means it can always be used to process the backing resources (but be careful
     // of empty intervening slots).

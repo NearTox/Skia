@@ -20,17 +20,17 @@ class GrBlurredEdgeFragmentProcessor : public GrFragmentProcessor {
   static std::unique_ptr<GrFragmentProcessor> Make(Mode mode) {
     return std::unique_ptr<GrFragmentProcessor>(new GrBlurredEdgeFragmentProcessor(mode));
   }
-  GrBlurredEdgeFragmentProcessor(const GrBlurredEdgeFragmentProcessor& src);
+  GrBlurredEdgeFragmentProcessor(const GrBlurredEdgeFragmentProcessor& src) noexcept;
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const override { return "BlurredEdgeFragmentProcessor"; }
+  const char* name() const noexcept override { return "BlurredEdgeFragmentProcessor"; }
   Mode mode;
 
  private:
-  GrBlurredEdgeFragmentProcessor(Mode mode)
+  GrBlurredEdgeFragmentProcessor(Mode mode) noexcept
       : INHERITED(kGrBlurredEdgeFragmentProcessor_ClassID, kNone_OptimizationFlags), mode(mode) {}
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

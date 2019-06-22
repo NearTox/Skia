@@ -16,8 +16,8 @@
 /**
  *  Use this for bitmapcache and mipmapcache entries.
  */
-uint64_t SkMakeResourceCacheSharedIDForBitmap(uint32_t bitmapGenID) {
-  uint64_t sharedID = SkSetFourByteTag('b', 'm', 'a', 'p');
+uint64_t SkMakeResourceCacheSharedIDForBitmap(uint32_t bitmapGenID) noexcept {
+  constexpr uint64_t sharedID = SkSetFourByteTag('b', 'm', 'a', 'p');
   return (sharedID << 32) | bitmapGenID;
 }
 
@@ -27,13 +27,13 @@ void SkNotifyBitmapGenIDIsStale(uint32_t bitmapGenID) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkBitmapCacheDesc SkBitmapCacheDesc::Make(uint32_t imageID, const SkIRect& subset) {
+SkBitmapCacheDesc SkBitmapCacheDesc::Make(uint32_t imageID, const SkIRect& subset) noexcept {
   SkASSERT(imageID);
   SkASSERT(subset.width() > 0 && subset.height() > 0);
   return {imageID, subset};
 }
 
-SkBitmapCacheDesc SkBitmapCacheDesc::Make(const SkImage* image) {
+SkBitmapCacheDesc SkBitmapCacheDesc::Make(const SkImage* image) noexcept {
   SkIRect bounds = SkIRect::MakeWH(image->width(), image->height());
   return Make(image->uniqueID(), bounds);
 }
@@ -43,7 +43,7 @@ static unsigned gBitmapKeyNamespaceLabel;
 
 struct BitmapKey : public SkResourceCache::Key {
  public:
-  BitmapKey(const SkBitmapCacheDesc& desc) : fDesc(desc) {
+  BitmapKey(const SkBitmapCacheDesc& desc) noexcept : fDesc(desc) {
     this->init(
         &gBitmapKeyNamespaceLabel, SkMakeResourceCacheSharedIDForBitmap(fDesc.fImageID),
         sizeof(fDesc));
@@ -57,7 +57,9 @@ struct BitmapKey : public SkResourceCache::Key {
 #include "src/core/SkDiscardableMemory.h"
 #include "src/core/SkNextID.h"
 
-void SkBitmapCache_setImmutableWithID(SkPixelRef* pr, uint32_t id) { pr->setImmutableWithID(id); }
+void SkBitmapCache_setImmutableWithID(SkPixelRef* pr, uint32_t id) noexcept {
+  pr->setImmutableWithID(id);
+}
 
 class SkBitmapCache::Rec : public SkResourceCache::Rec {
  public:
@@ -80,9 +82,11 @@ class SkBitmapCache::Rec : public SkResourceCache::Rec {
     sk_free(fMalloc);  // may be null
   }
 
-  const Key& getKey() const override { return fKey; }
-  size_t bytesUsed() const override { return sizeof(fKey) + fInfo.computeByteSize(fRowBytes); }
-  bool canBePurged() override {
+  const Key& getKey() const noexcept override { return fKey; }
+  size_t bytesUsed() const noexcept override {
+    return sizeof(fKey) + fInfo.computeByteSize(fRowBytes);
+  }
+  bool canBePurged() noexcept override {
     SkAutoMutexExclusive ama(fMutex);
     return fExternalCounter == 0;
   }
@@ -90,8 +94,10 @@ class SkBitmapCache::Rec : public SkResourceCache::Rec {
     SkAssertResult(this->install(static_cast<SkBitmap*>(payload)));
   }
 
-  const char* getCategory() const override { return "bitmap"; }
-  SkDiscardableMemory* diagnostic_only_getDiscardable() const override { return fDM.get(); }
+  const char* getCategory() const noexcept override { return "bitmap"; }
+  SkDiscardableMemory* diagnostic_only_getDiscardable() const noexcept override {
+    return fDM.get();
+  }
 
   static void ReleaseProc(void* addr, void* ctx) {
     Rec* rec = static_cast<Rec*>(ctx);
@@ -161,7 +167,7 @@ class SkBitmapCache::Rec : public SkResourceCache::Rec {
   bool fDiscardableIsLocked = true;
 };
 
-void SkBitmapCache::PrivateDeleteRec(Rec* rec) { delete rec; }
+void SkBitmapCache::PrivateDeleteRec(Rec* rec) noexcept { delete rec; }
 
 SkBitmapCache::RecPtr SkBitmapCache::Alloc(
     const SkBitmapCacheDesc& desc, const SkImageInfo& info, SkPixmap* pmap) {
@@ -211,7 +217,7 @@ static unsigned gMipMapKeyNamespaceLabel;
 
 struct MipMapKey : public SkResourceCache::Key {
  public:
-  MipMapKey(const SkBitmapCacheDesc& desc) : fDesc(desc) {
+  MipMapKey(const SkBitmapCacheDesc& desc) noexcept : fDesc(desc) {
     this->init(
         &gMipMapKeyNamespaceLabel, SkMakeResourceCacheSharedIDForBitmap(fDesc.fImageID),
         sizeof(fDesc));
@@ -227,14 +233,14 @@ struct MipMapRec : public SkResourceCache::Rec {
 
   ~MipMapRec() override { fMipMap->detachFromCacheAndUnref(); }
 
-  const Key& getKey() const override { return fKey; }
-  size_t bytesUsed() const override { return sizeof(fKey) + fMipMap->size(); }
-  const char* getCategory() const override { return "mipmap"; }
-  SkDiscardableMemory* diagnostic_only_getDiscardable() const override {
+  const Key& getKey() const noexcept override { return fKey; }
+  size_t bytesUsed() const noexcept override { return sizeof(fKey) + fMipMap->size(); }
+  const char* getCategory() const noexcept override { return "mipmap"; }
+  SkDiscardableMemory* diagnostic_only_getDiscardable() const noexcept override {
     return fMipMap->diagnostic_only_getDiscardable();
   }
 
-  static bool Finder(const SkResourceCache::Rec& baseRec, void* contextMip) {
+  static bool Finder(const SkResourceCache::Rec& baseRec, void* contextMip) noexcept {
     const MipMapRec& rec = static_cast<const MipMapRec&>(baseRec);
     const SkMipMap* mm = SkRef(rec.fMipMap);
     // the call to ref() above triggers a "lock" in the case of discardable memory,
@@ -265,7 +271,7 @@ const SkMipMap* SkMipMapCache::FindAndRef(
   return result;
 }
 
-static SkResourceCache::DiscardableFactory get_fact(SkResourceCache* localCache) {
+static SkResourceCache::DiscardableFactory get_fact(SkResourceCache* localCache) noexcept {
   return localCache ? localCache->GetDiscardableFactory()
                     : SkResourceCache::GetDiscardableFactory();
 }

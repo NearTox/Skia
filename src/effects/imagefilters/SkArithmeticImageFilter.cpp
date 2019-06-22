@@ -79,7 +79,7 @@ class ArithmeticImageFilterImpl : public SkImageFilter {
  private:
   SK_FLATTENABLE_HOOKS(ArithmeticImageFilterImpl)
 
-  bool affectsTransparentBlack() const override { return !SkScalarNearlyZero(fK[3]); }
+  bool affectsTransparentBlack() const noexcept override { return !SkScalarNearlyZero(fK[3]); }
 
   const float fK[4];
   const bool fEnforcePMColor;
@@ -104,7 +104,7 @@ sk_sp<SkFlattenable> ArithmeticImageFilterImpl::CreateProc(SkReadBuffer& buffer)
       &common.cropRect());
 }
 
-static Sk4f pin(float min, const Sk4f& val, float max) {
+static Sk4f pin(float min, const Sk4f& val, float max) noexcept {
   return Sk4f::Max(min, Sk4f::Min(val, max));
 }
 

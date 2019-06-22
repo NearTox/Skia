@@ -18,7 +18,7 @@ class Type;
 
 class ExternalValue : public Symbol {
  public:
-  ExternalValue(const char* name, const Type& type)
+  ExternalValue(const char* name, const Type& type) noexcept
       : INHERITED(-1, kExternal_Kind, name), fType(type) {}
 
   virtual bool canRead() const { return false; }

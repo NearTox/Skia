@@ -20,11 +20,11 @@ typedef int32_t SkFDot6;
  * _cairo_fixed_from_double. It does banker's rounding
  * (i.e. round to nearest even)
  */
-inline SkFDot6 SkScalarRoundToFDot6(SkScalar x, int shift = 0) {
+constexpr inline SkFDot6 SkScalarRoundToFDot6(SkScalar x, int shift = 0) noexcept {
   union {
     double fDouble;
     int32_t fBits[2];
-  } tmp;
+  } tmp{};
   int fractionalBits = 6 + shift;
   double magic = (1LL << (52 - (fractionalBits))) * 1.5;
 
@@ -54,7 +54,7 @@ inline SkFDot6 SkIntToFDot6(int x) {
 
 #define SkFixedToFDot6(x) ((x) >> 10)
 
-inline SkFixed SkFDot6ToFixed(SkFDot6 x) {
+constexpr inline SkFixed SkFDot6ToFixed(SkFDot6 x) noexcept {
   SkASSERT((SkLeftShift(x, 10) >> 10) == x);
 
   return SkLeftShift(x, 10);
@@ -64,7 +64,7 @@ inline SkFixed SkFDot6ToFixed(SkFDot6 x) {
 #define SkFDot6ToScalar(x) ((SkScalar)(x)*0.015625f)
 #define SkFDot6ToFloat SkFDot6ToScalar
 
-inline SkFixed SkFDot6Div(SkFDot6 a, SkFDot6 b) {
+constexpr inline SkFixed SkFDot6Div(SkFDot6 a, SkFDot6 b) noexcept {
   SkASSERT(b != 0);
 
   if (SkTFitsIn<int16_t>(a)) {

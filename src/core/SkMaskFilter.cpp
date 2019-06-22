@@ -37,7 +37,7 @@ SkMaskFilterBase::NinePatch::~NinePatch() {
 
 bool SkMaskFilterBase::asABlur(BlurRec*) const { return false; }
 
-static void extractMaskSubset(const SkMask& src, SkMask* dst) {
+static void extractMaskSubset(const SkMask& src, SkMask* dst) noexcept {
   SkASSERT(src.fBounds.contains(dst->fBounds));
 
   const int dx = dst->fBounds.left() - src.fBounds.left();
@@ -205,7 +205,7 @@ static void draw_nine(
   }
 }
 
-static int countNestedRects(const SkPath& path, SkRect rects[2]) {
+static int countNestedRects(const SkPath& path, SkRect rects[2]) noexcept {
   if (path.isNestedFillRects(rects)) {
     return 2;
   }
@@ -356,7 +356,7 @@ static inline T join(const T& a, const T& b) {
   return r;
 }
 template <typename T>
-static inline T sect(const T& a, const T& b) {
+static inline T sect(const T& a, const T& b) noexcept {
   T r = a;
   return r.intersect(b) ? r : T::MakeEmpty();
 }
@@ -377,7 +377,7 @@ class SkComposeMF : public SkMaskFilterBase {
     as_MFB(fOuter)->computeFastBounds(tmp, dst);
   }
 
-  SkMask::Format getFormat() const override { return SkMask::kA8_Format; }
+  SkMask::Format getFormat() const noexcept override { return SkMask::kA8_Format; }
 
  protected:
 #if SK_SUPPORT_GPU
@@ -462,7 +462,7 @@ class SkCombineMF : public SkMaskFilterBase {
     *dst = join(srcR, dstR);
   }
 
-  SkMask::Format getFormat() const override { return SkMask::kA8_Format; }
+  SkMask::Format getFormat() const noexcept override { return SkMask::kA8_Format; }
 
   SK_FLATTENABLE_HOOKS(SkCombineMF)
 

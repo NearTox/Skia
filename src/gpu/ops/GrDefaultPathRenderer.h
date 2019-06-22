@@ -21,7 +21,7 @@ class SK_API GrDefaultPathRenderer : public GrPathRenderer {
   GrDefaultPathRenderer();
 
  private:
-  StencilSupport onGetStencilSupport(const GrShape&) const override;
+  StencilSupport onGetStencilSupport(const GrShape&) const noexcept override;
 
   CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;
 

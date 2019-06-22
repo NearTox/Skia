@@ -56,8 +56,8 @@ GrGLSLFragmentProcessor* GrComposeLerpEffect::onCreateGLSLInstance() const {
   return new GrGLSLComposeLerpEffect();
 }
 void GrComposeLerpEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrComposeLerpEffect::onIsEqual(const GrFragmentProcessor& other) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {}
+bool GrComposeLerpEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrComposeLerpEffect& that = other.cast<GrComposeLerpEffect>();
   (void)that;
   if (weight != that.weight) return false;

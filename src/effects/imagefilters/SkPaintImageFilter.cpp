@@ -67,4 +67,4 @@ sk_sp<SkSpecialImage> SkPaintImageFilter::onFilterImage(
   return surf->makeImageSnapshot();
 }
 
-bool SkPaintImageFilter::affectsTransparentBlack() const { return true; }
+bool SkPaintImageFilter::affectsTransparentBlack() const noexcept { return true; }

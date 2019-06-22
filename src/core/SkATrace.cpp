@@ -15,7 +15,7 @@
 #include <dlfcn.h>
 #endif
 
-SkATrace::SkATrace() : fBeginSection(nullptr), fEndSection(nullptr), fIsEnabled(nullptr) {
+SkATrace::SkATrace() noexcept : fBeginSection(nullptr), fEndSection(nullptr), fIsEnabled(nullptr) {
 #if defined(SK_BUILD_FOR_ANDROID_FRAMEWORK)
   fIsEnabled = [] { return static_cast<bool>(CC_UNLIKELY(ATRACE_ENABLED())); };
   fBeginSection = [](const char* name) { ATRACE_BEGIN(name); };
@@ -29,13 +29,14 @@ SkATrace::SkATrace() : fBeginSection(nullptr), fEndSection(nullptr), fIsEnabled(
 #endif
 
   if (!fIsEnabled) {
-    fIsEnabled = [] { return false; };
+    fIsEnabled = []() noexcept { return false; };
   }
 }
 
 SkEventTracer::Handle SkATrace::addTraceEvent(
     char phase, const uint8_t* categoryEnabledFlag, const char* name, uint64_t id, int numArgs,
-    const char** argNames, const uint8_t* argTypes, const uint64_t* argValues, uint8_t flags) {
+    const char** argNames, const uint8_t* argTypes, const uint64_t* argValues,
+    uint8_t flags) noexcept {
   if (fIsEnabled()) {
     if (TRACE_EVENT_PHASE_COMPLETE == phase || TRACE_EVENT_PHASE_INSTANT == phase) {
       fBeginSection(name);
@@ -49,14 +50,14 @@ SkEventTracer::Handle SkATrace::addTraceEvent(
 }
 
 void SkATrace::updateTraceEventDuration(
-    const uint8_t* categoryEnabledFlag, const char* name, SkEventTracer::Handle handle) {
+    const uint8_t* categoryEnabledFlag, const char* name, SkEventTracer::Handle handle) noexcept {
   // This is only ever called from a scoped trace event so we will just end the ATrace section.
   if (fIsEnabled()) {
     fEndSection();
   }
 }
 
-const uint8_t* SkATrace::getCategoryGroupEnabled(const char* name) {
+const uint8_t* SkATrace::getCategoryGroupEnabled(const char* name) noexcept {
   // Chrome tracing is setup to not repeatly call this function once it has been initialized. So
   // we can't use this to do a check for ATrace isEnabled(). Thus we will always return yes here
   // and then check to see if ATrace is enabled when beginning and ending a section.

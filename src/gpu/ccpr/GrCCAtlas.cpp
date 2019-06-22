@@ -25,7 +25,7 @@ class GrCCAtlas::Node {
   Node(std::unique_ptr<Node> previous, int l, int t, int r, int b)
       : fPrevious(std::move(previous)), fX(l), fY(t), fRectanizer(r - l, b - t) {}
 
-  Node* previous() const { return fPrevious.get(); }
+  Node* previous() const noexcept { return fPrevious.get(); }
 
   bool addRect(int w, int h, SkIPoint16* loc, int maxAtlasSize) {
     // Pad all paths except those that are expected to take up an entire physical texture.
@@ -146,19 +146,19 @@ bool GrCCAtlas::internalPlaceRect(int w, int h, SkIPoint16* loc) {
   return true;
 }
 
-void GrCCAtlas::setFillBatchID(int id) {
+void GrCCAtlas::setFillBatchID(int id) noexcept {
   // This can't be called anymore once makeRenderTargetContext() has been called.
   SkASSERT(!fTextureProxy->isInstantiated());
   fFillBatchID = id;
 }
 
-void GrCCAtlas::setStrokeBatchID(int id) {
+void GrCCAtlas::setStrokeBatchID(int id) noexcept {
   // This can't be called anymore once makeRenderTargetContext() has been called.
   SkASSERT(!fTextureProxy->isInstantiated());
   fStrokeBatchID = id;
 }
 
-static uint32_t next_atlas_unique_id() {
+static uint32_t next_atlas_unique_id() noexcept {
   static std::atomic<uint32_t> nextID;
   return nextID++;
 }

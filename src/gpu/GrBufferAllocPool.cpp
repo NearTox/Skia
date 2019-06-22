@@ -71,7 +71,7 @@ void GrBufferAllocPool::CpuBufferCache::releaseAll() {
 #ifdef SK_DEBUG
 #define VALIDATE validate
 #else
-static void VALIDATE(bool = false) {}
+static void VALIDATE(bool = false) noexcept {}
 #endif
 
 #define UNMAP_BUFFER(block)                                                          \
@@ -86,7 +86,7 @@ static void VALIDATE(bool = false) {}
 constexpr size_t GrBufferAllocPool::kDefaultBufferSize;
 
 GrBufferAllocPool::GrBufferAllocPool(
-    GrGpu* gpu, GrGpuBufferType bufferType, sk_sp<CpuBufferCache> cpuBufferCache)
+    GrGpu* gpu, GrGpuBufferType bufferType, sk_sp<CpuBufferCache> cpuBufferCache) noexcept
     : fBlocks(8), fCpuBufferCache(std::move(cpuBufferCache)), fGpu(gpu), fBufferType(bufferType) {}
 
 void GrBufferAllocPool::deleteBlocks() {
@@ -367,7 +367,7 @@ bool GrBufferAllocPool::createBlock(size_t requestSize) {
   return true;
 }
 
-void GrBufferAllocPool::destroyBlock() {
+void GrBufferAllocPool::destroyBlock() noexcept {
   SkASSERT(!fBlocks.empty());
   SkASSERT(
       fBlocks.back().fBuffer->isCpuBuffer() ||
@@ -425,7 +425,8 @@ sk_sp<GrBuffer> GrBufferAllocPool::getBuffer(size_t size) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GrVertexBufferAllocPool::GrVertexBufferAllocPool(GrGpu* gpu, sk_sp<CpuBufferCache> cpuBufferCache)
+GrVertexBufferAllocPool::GrVertexBufferAllocPool(
+    GrGpu* gpu, sk_sp<CpuBufferCache> cpuBufferCache) noexcept
     : GrBufferAllocPool(gpu, GrGpuBufferType::kVertex, std::move(cpuBufferCache)) {}
 
 void* GrVertexBufferAllocPool::makeSpace(
@@ -470,7 +471,8 @@ void* GrVertexBufferAllocPool::makeSpaceAtLeast(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GrIndexBufferAllocPool::GrIndexBufferAllocPool(GrGpu* gpu, sk_sp<CpuBufferCache> cpuBufferCache)
+GrIndexBufferAllocPool::GrIndexBufferAllocPool(
+    GrGpu* gpu, sk_sp<CpuBufferCache> cpuBufferCache) noexcept
     : GrBufferAllocPool(gpu, GrGpuBufferType::kIndex, std::move(cpuBufferCache)) {}
 
 void* GrIndexBufferAllocPool::makeSpace(

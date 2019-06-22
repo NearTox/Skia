@@ -79,9 +79,9 @@ class SkTextBlobBuilderPriv {
 //
 // Extended Textblob runs may be mixed with non-extended runs.
 
-SkDEBUGCODE(static const unsigned kRunRecordMagic = 0xb10bcafe;)
+SkDEBUGCODE(static const unsigned kRunRecordMagic = 0xb10bcafe);
 
-    class SkTextBlob::RunRecord {
+class SkTextBlob::RunRecord {
  public:
   RunRecord(
       uint32_t count, uint32_t textSize, const SkPoint& offset, const SkFont& font,
@@ -96,37 +96,37 @@ SkDEBUGCODE(static const unsigned kRunRecordMagic = 0xb10bcafe;)
     }
   }
 
-  uint32_t glyphCount() const { return fCount; }
+  uint32_t glyphCount() const noexcept { return fCount; }
 
-  const SkPoint& offset() const { return fOffset; }
+  const SkPoint& offset() const noexcept { return fOffset; }
 
-  const SkFont& font() const { return fFont; }
+  const SkFont& font() const noexcept { return fFont; }
 
-  GlyphPositioning positioning() const {
+  GlyphPositioning positioning() const noexcept {
     return static_cast<GlyphPositioning>(fFlags & kPositioning_Mask);
   }
 
-  uint16_t* glyphBuffer() const {
+  uint16_t* glyphBuffer() const noexcept {
     static_assert(SkIsAlignPtr(sizeof(RunRecord)), "");
     // Glyphs are stored immediately following the record.
     return reinterpret_cast<uint16_t*>(const_cast<RunRecord*>(this) + 1);
   }
 
   // can be aliased with pointBuffer() or xformBuffer()
-  SkScalar* posBuffer() const {
+  SkScalar* posBuffer() const noexcept {
     // Position scalars follow the (aligned) glyph buffer.
     return reinterpret_cast<SkScalar*>(
         reinterpret_cast<uint8_t*>(this->glyphBuffer()) + SkAlign4(fCount * sizeof(uint16_t)));
   }
 
   // alias for posBuffer()
-  SkPoint* pointBuffer() const {
+  SkPoint* pointBuffer() const noexcept {
     SkASSERT(this->positioning() == (GlyphPositioning)2);
     return reinterpret_cast<SkPoint*>(this->posBuffer());
   }
 
   // alias for posBuffer()
-  SkRSXform* xformBuffer() const {
+  SkRSXform* xformBuffer() const noexcept {
     SkASSERT(this->positioning() == (GlyphPositioning)3);
     return reinterpret_cast<SkRSXform*>(this->posBuffer());
   }
@@ -170,14 +170,14 @@ SkDEBUGCODE(static const unsigned kRunRecordMagic = 0xb10bcafe;)
 
   void grow(uint32_t count);
 
-  bool isExtended() const { return fFlags & kExtended_Flag; }
+  bool isExtended() const noexcept { return fFlags & kExtended_Flag; }
 
   SkFont fFont;
   uint32_t fCount;
   SkPoint fOffset;
   uint32_t fFlags;
 
-  SkDEBUGCODE(unsigned fMagic;)
+  SkDEBUGCODE(unsigned fMagic);
 };
 
 /**
@@ -197,30 +197,30 @@ class SkTextBlobRunIterator {
     kRSXform_Positioning = 3,     // RSXform positioning -- four scalars per glyph.
   };
 
-  bool done() const { return !fCurrentRun; }
+  bool done() const noexcept { return !fCurrentRun; }
   void next();
 
-  uint32_t glyphCount() const {
+  uint32_t glyphCount() const noexcept {
     SkASSERT(!this->done());
     return fCurrentRun->glyphCount();
   }
-  const uint16_t* glyphs() const {
+  const uint16_t* glyphs() const noexcept {
     SkASSERT(!this->done());
     return fCurrentRun->glyphBuffer();
   }
-  const SkScalar* pos() const {
+  const SkScalar* pos() const noexcept {
     SkASSERT(!this->done());
     return fCurrentRun->posBuffer();
   }
   // alias for pos()
-  const SkPoint* points() const { return fCurrentRun->pointBuffer(); }
+  const SkPoint* points() const noexcept { return fCurrentRun->pointBuffer(); }
   // alias for pos()
-  const SkRSXform* xforms() const { return fCurrentRun->xformBuffer(); }
-  const SkPoint& offset() const {
+  const SkRSXform* xforms() const noexcept { return fCurrentRun->xformBuffer(); }
+  const SkPoint& offset() const noexcept {
     SkASSERT(!this->done());
     return fCurrentRun->offset();
   }
-  const SkFont& font() const {
+  const SkFont& font() const noexcept {
     SkASSERT(!this->done());
     return fCurrentRun->font();
   }
@@ -243,7 +243,7 @@ class SkTextBlobRunIterator {
  private:
   const SkTextBlob::RunRecord* fCurrentRun;
 
-  SkDEBUGCODE(uint8_t* fStorageTop;)
+  SkDEBUGCODE(uint8_t* fStorageTop);
 };
 
 #endif  // SkTextBlobPriv_DEFINED

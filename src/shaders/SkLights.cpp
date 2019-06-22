@@ -48,7 +48,7 @@ sk_sp<SkLights> SkLights::MakeFromBuffer(SkReadBuffer& buf) {
   return builder.finish();
 }
 
-void SkLights::flatten(SkWriteBuffer& buf) const {
+void SkLights::flatten(SkWriteBuffer& buf) const noexcept {
   buf.writeScalarArray(&this->ambientLightColor().fX, 3);
 
   buf.writeInt(this->numLights());

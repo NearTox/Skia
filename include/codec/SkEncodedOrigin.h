@@ -29,7 +29,7 @@ enum SkEncodedOrigin {
  * that transforms the source rectangle [0, 0, w, h] to a correctly oriented destination
  * rectangle, with the upper left corner still at [0, 0].
  */
-static inline SkMatrix SkEncodedOriginToMatrix(SkEncodedOrigin origin, int w, int h) {
+static inline SkMatrix SkEncodedOriginToMatrix(SkEncodedOrigin origin, int w, int h) noexcept {
   switch (origin) {
     case kTopLeft_SkEncodedOrigin: return SkMatrix::I();
     case kTopRight_SkEncodedOrigin: return SkMatrix::MakeAll(-1, 0, w, 0, 1, 0, 0, 0, 1);

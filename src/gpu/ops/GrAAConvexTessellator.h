@@ -41,43 +41,43 @@ class GrAAConvexTessellator {
         fJoin(join),
         fMiterLimit(miterLimit) {}
 
-  SkPointPriv::Side side() const { return fSide; }
+  SkPointPriv::Side side() const noexcept { return fSide; }
 
   bool tessellate(const SkMatrix& m, const SkPath& path);
 
   // The next five should only be called after tessellate to extract the result
-  int numPts() const { return fPts.count(); }
-  int numIndices() const { return fIndices.count(); }
+  int numPts() const noexcept { return fPts.count(); }
+  int numIndices() const noexcept { return fIndices.count(); }
 
-  const SkPoint& lastPoint() const { return fPts.top(); }
-  const SkPoint& point(int index) const { return fPts[index]; }
-  int index(int index) const { return fIndices[index]; }
-  SkScalar coverage(int index) const { return fCoverages[index]; }
+  const SkPoint& lastPoint() const noexcept { return fPts.top(); }
+  const SkPoint& point(int index) const noexcept { return fPts[index]; }
+  int index(int index) const noexcept { return fIndices[index]; }
+  SkScalar coverage(int index) const noexcept { return fCoverages[index]; }
 
 #if GR_AA_CONVEX_TESSELLATOR_VIZ
   void draw(SkCanvas* canvas) const;
 #endif
 
   // The tessellator can be reused for multiple paths by rewinding in between
-  void rewind();
+  void rewind() noexcept;
 
  private:
   // CandidateVerts holds the vertices for the next ring while they are
   // being generated. Its main function is to de-dup the points.
   class CandidateVerts {
    public:
-    void setReserve(int numPts) { fPts.setReserve(numPts); }
-    void rewind() { fPts.rewind(); }
+    void setReserve(int numPts) noexcept { fPts.setReserve(numPts); }
+    void rewind() noexcept { fPts.rewind(); }
 
-    int numPts() const { return fPts.count(); }
+    int numPts() const noexcept { return fPts.count(); }
 
-    const SkPoint& lastPoint() const { return fPts.top().fPt; }
-    const SkPoint& firstPoint() const { return fPts[0].fPt; }
-    const SkPoint& point(int index) const { return fPts[index].fPt; }
+    const SkPoint& lastPoint() const noexcept { return fPts.top().fPt; }
+    const SkPoint& firstPoint() const noexcept { return fPts[0].fPt; }
+    const SkPoint& point(int index) const noexcept { return fPts[index].fPt; }
 
-    int originatingIdx(int index) const { return fPts[index].fOriginatingIdx; }
-    int origEdge(int index) const { return fPts[index].fOrigEdgeId; }
-    bool needsToBeNew(int index) const { return fPts[index].fNeedsToBeNew; }
+    int originatingIdx(int index) const noexcept { return fPts[index].fOriginatingIdx; }
+    int origEdge(int index) const noexcept { return fPts[index].fOrigEdgeId; }
+    bool needsToBeNew(int index) const noexcept { return fPts[index].fNeedsToBeNew; }
 
     int addNewPt(const SkPoint& newPt, int originatingIdx, int origEdge, bool needsToBeNew) {
       struct PointData* pt = fPts.push();
@@ -88,20 +88,20 @@ class GrAAConvexTessellator {
       return fPts.count() - 1;
     }
 
-    int fuseWithPrior(int origEdgeId) {
+    int fuseWithPrior(int origEdgeId) noexcept {
       fPts.top().fOrigEdgeId = origEdgeId;
       fPts.top().fOriginatingIdx = -1;
       fPts.top().fNeedsToBeNew = true;
       return fPts.count() - 1;
     }
 
-    int fuseWithNext() {
+    int fuseWithNext() noexcept {
       fPts[0].fOriginatingIdx = -1;
       fPts[0].fNeedsToBeNew = true;
       return 0;
     }
 
-    int fuseWithBoth() {
+    int fuseWithBoth() noexcept {
       if (fPts.count() > 1) {
         fPts.pop();
       }
@@ -126,10 +126,10 @@ class GrAAConvexTessellator {
   // a single polygon inset.
   class Ring {
    public:
-    void setReserve(int numPts) { fPts.setReserve(numPts); }
-    void rewind() { fPts.rewind(); }
+    void setReserve(int numPts) noexcept { fPts.setReserve(numPts); }
+    void rewind() noexcept { fPts.rewind(); }
 
-    int numPts() const { return fPts.count(); }
+    int numPts() const noexcept { return fPts.count(); }
 
     void addIdx(int index, int origEdgeId) {
       struct PointData* pt = fPts.push();
@@ -138,7 +138,7 @@ class GrAAConvexTessellator {
     }
 
     // Upgrade this ring so that it can behave like an originating ring
-    void makeOriginalRing() {
+    void makeOriginalRing() noexcept {
       for (int i = 0; i < fPts.count(); ++i) {
         fPts[i].fOrigEdgeId = fPts[i].fIndex;
       }
@@ -146,13 +146,13 @@ class GrAAConvexTessellator {
 
     // init should be called after all the indices have been added (via addIdx)
     void init(const GrAAConvexTessellator& tess);
-    void init(const SkTDArray<SkVector>& norms, const SkTDArray<SkVector>& bisectors);
+    void init(const SkTDArray<SkVector>& norms, const SkTDArray<SkVector>& bisectors) noexcept;
 
-    const SkPoint& norm(int index) const { return fPts[index].fNorm; }
-    const SkPoint& bisector(int index) const { return fPts[index].fBisector; }
-    int index(int index) const { return fPts[index].fIndex; }
-    int origEdgeID(int index) const { return fPts[index].fOrigEdgeId; }
-    void setOrigEdgeId(int index, int id) { fPts[index].fOrigEdgeId = id; }
+    const SkPoint& norm(int index) const noexcept { return fPts[index].fNorm; }
+    const SkPoint& bisector(int index) const noexcept { return fPts[index].fBisector; }
+    int index(int index) const noexcept { return fPts[index].fIndex; }
+    int origEdgeID(int index) const noexcept { return fPts[index].fOrigEdgeId; }
+    void setOrigEdgeId(int index, int id) noexcept { fPts[index].fOrigEdgeId = id; }
 
 #if GR_AA_CONVEX_TESSELLATOR_VIZ
     void draw(SkCanvas* canvas, const GrAAConvexTessellator& tess) const;
@@ -162,9 +162,9 @@ class GrAAConvexTessellator {
     void computeNormals(const GrAAConvexTessellator& result);
     void computeBisectors(const GrAAConvexTessellator& tess);
 
-    SkDEBUGCODE(bool isConvex(const GrAAConvexTessellator& tess) const;)
+    SkDEBUGCODE(bool isConvex(const GrAAConvexTessellator& tess) const);
 
-        struct PointData {
+    struct PointData {
       SkPoint fNorm;
       SkPoint fBisector;
       int fIndex;
@@ -186,30 +186,30 @@ class GrAAConvexTessellator {
     kCurve_CurveState
   };
 
-  bool movable(int index) const { return fMovable[index]; }
+  bool movable(int index) const noexcept { return fMovable[index]; }
 
   // Movable points are those that can be slid along their bisector.
   // Basically, a point is immovable if it is part of the original
   // polygon or it results from the fusing of two bisectors.
   int addPt(const SkPoint& pt, SkScalar depth, SkScalar coverage, bool movable, CurveState curve);
-  void popLastPt();
-  void popFirstPtShuffle();
+  void popLastPt() noexcept;
+  void popFirstPtShuffle() noexcept;
 
-  void updatePt(int index, const SkPoint& pt, SkScalar depth, SkScalar coverage);
+  void updatePt(int index, const SkPoint& pt, SkScalar depth, SkScalar coverage) noexcept;
 
   void addTri(int i0, int i1, int i2);
 
-  void reservePts(int count) {
+  void reservePts(int count) noexcept {
     fPts.setReserve(count);
     fCoverages.setReserve(count);
     fMovable.setReserve(count);
   }
 
-  SkScalar computeDepthFromEdge(int edgeIdx, const SkPoint& p) const;
+  SkScalar computeDepthFromEdge(int edgeIdx, const SkPoint& p) const noexcept;
 
   bool computePtAlongBisector(
       int startIdx, const SkPoint& bisector, int edgeIdx, SkScalar desiredDepth,
-      SkPoint* result) const;
+      SkPoint* result) const noexcept;
 
   void lineTo(const SkPoint& p, CurveState curve);
 
@@ -232,7 +232,7 @@ class GrAAConvexTessellator {
 
   void fanRing(const Ring& ring);
 
-  Ring* getNextRing(Ring* lastRing);
+  Ring* getNextRing(Ring* lastRing) noexcept;
 
   void createOuterRing(
       const Ring& previousRing, SkScalar outset, SkScalar coverage, Ring* nextRing);
@@ -245,7 +245,7 @@ class GrAAConvexTessellator {
       const Ring& lastRing, Ring* nextRing, SkScalar initialDepth, SkScalar initialCoverage,
       SkScalar targetDepth, SkScalar targetCoverage, bool forceNew);
 
-  void validate() const;
+  void validate() const noexcept;
 
   // fPts, fCoverages, fMovable & fCurveState should always have the same # of elements
   SkTDArray<SkPoint> fPts;

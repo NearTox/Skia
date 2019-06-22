@@ -24,20 +24,20 @@ class SkTextBlob;
 
 class SkGlyphRun {
  public:
-  SkGlyphRun() = default;
+  SkGlyphRun() noexcept = default;
   SkGlyphRun(
       const SkFont& font, SkSpan<const SkPoint> positions, SkSpan<const SkGlyphID> glyphIDs,
-      SkSpan<const char> text, SkSpan<const uint32_t> clusters);
-  SkGlyphRun(const SkGlyphRun& glyphRun, const SkFont& font);
+      SkSpan<const char> text, SkSpan<const uint32_t> clusters) noexcept;
+  SkGlyphRun(const SkGlyphRun& glyphRun, const SkFont& font) noexcept;
 
-  void filloutGlyphsAndPositions(SkGlyphID* glyphIDs, SkPoint* positions);
+  void filloutGlyphsAndPositions(SkGlyphID* glyphIDs, SkPoint* positions) noexcept;
 
-  size_t runSize() const { return fGlyphIDs.size(); }
-  SkSpan<const SkPoint> positions() const { return fPositions.toConst(); }
-  SkSpan<const SkGlyphID> glyphsIDs() const { return fGlyphIDs; }
-  const SkFont& font() const { return fFont; }
-  SkSpan<const uint32_t> clusters() const { return fClusters; }
-  SkSpan<const char> text() const { return fText; }
+  size_t runSize() const noexcept { return fGlyphIDs.size(); }
+  SkSpan<const SkPoint> positions() const noexcept { return fPositions.toConst(); }
+  SkSpan<const SkGlyphID> glyphsIDs() const noexcept { return fGlyphIDs; }
+  const SkFont& font() const noexcept { return fFont; }
+  SkSpan<const uint32_t> clusters() const noexcept { return fClusters; }
+  SkSpan<const char> text() const noexcept { return fText; }
 
  private:
   // Positions of each glyph.
@@ -61,41 +61,41 @@ class SkGlyphRunList {
   SkSpan<const SkGlyphRun> fGlyphRuns;
 
  public:
-  SkGlyphRunList();
+  SkGlyphRunList() noexcept;
   // Blob maybe null.
   SkGlyphRunList(
       const SkPaint& paint, const SkTextBlob* blob, SkPoint origin,
-      SkSpan<const SkGlyphRun> glyphRunList);
+      SkSpan<const SkGlyphRun> glyphRunList) noexcept;
 
-  SkGlyphRunList(const SkGlyphRun& glyphRun, const SkPaint& paint);
+  SkGlyphRunList(const SkGlyphRun& glyphRun, const SkPaint& paint) noexcept;
 
   uint64_t uniqueID() const;
-  bool anyRunsLCD() const;
-  bool anyRunsSubpixelPositioned() const;
+  bool anyRunsLCD() const noexcept;
+  bool anyRunsSubpixelPositioned() const noexcept;
   void temporaryShuntBlobNotifyAddedToCache(uint32_t cacheID) const;
 
-  bool canCache() const { return fOriginalTextBlob != nullptr; }
-  size_t runCount() const { return fGlyphRuns.size(); }
-  size_t totalGlyphCount() const {
+  bool canCache() const noexcept { return fOriginalTextBlob != nullptr; }
+  size_t runCount() const noexcept { return fGlyphRuns.size(); }
+  size_t totalGlyphCount() const noexcept {
     size_t glyphCount = 0;
     for (const auto& run : fGlyphRuns) {
       glyphCount += run.runSize();
     }
     return glyphCount;
   }
-  bool allFontsFinite() const;
+  bool allFontsFinite() const noexcept;
 
-  SkPoint origin() const { return fOrigin; }
-  const SkPaint& paint() const { return *fOriginalPaint; }
-  const SkTextBlob* blob() const { return fOriginalTextBlob; }
+  SkPoint origin() const noexcept { return fOrigin; }
+  const SkPaint& paint() const noexcept { return *fOriginalPaint; }
+  const SkTextBlob* blob() const noexcept { return fOriginalTextBlob; }
 
-  auto begin() -> decltype(fGlyphRuns.begin()) { return fGlyphRuns.begin(); }
-  auto end() -> decltype(fGlyphRuns.end()) { return fGlyphRuns.end(); }
-  auto begin() const -> decltype(fGlyphRuns.cbegin()) { return fGlyphRuns.cbegin(); }
-  auto end() const -> decltype(fGlyphRuns.cend()) { return fGlyphRuns.cend(); }
-  auto size() const -> decltype(fGlyphRuns.size()) { return fGlyphRuns.size(); }
-  auto empty() const -> decltype(fGlyphRuns.empty()) { return fGlyphRuns.empty(); }
-  auto operator[](size_t i) const -> decltype(fGlyphRuns[i]) { return fGlyphRuns[i]; }
+  auto begin() noexcept -> decltype(fGlyphRuns.begin()) { return fGlyphRuns.begin(); }
+  auto end() noexcept -> decltype(fGlyphRuns.end()) { return fGlyphRuns.end(); }
+  auto begin() const noexcept -> decltype(fGlyphRuns.cbegin()) { return fGlyphRuns.cbegin(); }
+  auto end() const noexcept -> decltype(fGlyphRuns.cend()) { return fGlyphRuns.cend(); }
+  auto size() const noexcept -> decltype(fGlyphRuns.size()) { return fGlyphRuns.size(); }
+  auto empty() const noexcept -> decltype(fGlyphRuns.empty()) { return fGlyphRuns.empty(); }
+  auto operator[](size_t i) const noexcept -> decltype(fGlyphRuns[i]) { return fGlyphRuns[i]; }
 };
 
 class SkGlyphIDSet {
@@ -117,9 +117,9 @@ class SkGlyphRunBuilder {
       const SkPaint&, const SkFont&, SkSpan<const SkGlyphID> glyphIDs, const SkPoint* pos);
   void drawTextBlob(const SkPaint& paint, const SkTextBlob& blob, SkPoint origin, SkBaseDevice*);
 
-  const SkGlyphRunList& useGlyphRunList();
+  const SkGlyphRunList& useGlyphRunList() noexcept;
 
-  bool empty() const { return fGlyphRunListStorage.size() == 0; }
+  bool empty() const noexcept { return fGlyphRunListStorage.size() == 0; }
 
   static void DispatchBlob(
       SkGlyphRunBuilder* builder, const SkPaint& paint, const SkTextBlob& blob, SkPoint origin,
@@ -134,7 +134,7 @@ class SkGlyphRunBuilder {
       const SkFont& font, SkSpan<const SkGlyphID> glyphIDs, SkSpan<const SkPoint> positions,
       SkSpan<const char> text, SkSpan<const uint32_t> clusters);
 
-  void makeGlyphRunList(const SkPaint& paint, const SkTextBlob* blob, SkPoint origin);
+  void makeGlyphRunList(const SkPaint& paint, const SkTextBlob* blob, SkPoint origin) noexcept;
 
   void simplifyDrawText(
       const SkFont& font, SkSpan<const SkGlyphID> glyphIDs, SkPoint origin, SkPoint* positions,

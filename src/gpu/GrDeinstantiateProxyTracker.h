@@ -15,7 +15,7 @@ class GrResourceCache;
 
 class GrDeinstantiateProxyTracker {
  public:
-  GrDeinstantiateProxyTracker(GrResourceCache* cache) : fCache(cache) {}
+  GrDeinstantiateProxyTracker(GrResourceCache* cache) noexcept : fCache(cache) {}
 
   // Adds a proxy which will be deinstantiated at the end of flush. The same proxy may not be
   // added multiple times.

@@ -68,8 +68,8 @@ GrGLSLFragmentProcessor* GrSweepGradientLayout::onCreateGLSLInstance() const {
   return new GrGLSLSweepGradientLayout();
 }
 void GrSweepGradientLayout::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrSweepGradientLayout::onIsEqual(const GrFragmentProcessor& other) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {}
+bool GrSweepGradientLayout::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrSweepGradientLayout& that = other.cast<GrSweepGradientLayout>();
   (void)that;
   if (gradientMatrix != that.gradientMatrix) return false;
@@ -77,7 +77,7 @@ bool GrSweepGradientLayout::onIsEqual(const GrFragmentProcessor& other) const {
   if (scale != that.scale) return false;
   return true;
 }
-GrSweepGradientLayout::GrSweepGradientLayout(const GrSweepGradientLayout& src)
+GrSweepGradientLayout::GrSweepGradientLayout(const GrSweepGradientLayout& src) noexcept
     : INHERITED(kGrSweepGradientLayout_ClassID, src.optimizationFlags()),
       fCoordTransform0(src.fCoordTransform0),
       gradientMatrix(src.gradientMatrix),

@@ -19,7 +19,7 @@ class GrMockStencilAttachment : public GrStencilAttachment {
   }
 
  private:
-  size_t onGpuMemorySize() const override {
+  size_t onGpuMemorySize() const noexcept override {
     return SkTMax(1, (int)(this->bits() / sizeof(char))) * this->width() * this->height();
   }
 

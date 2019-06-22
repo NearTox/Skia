@@ -61,7 +61,7 @@ class GrSmallPathRenderer : public GrPathRenderer, public GrOnFlushCallbackObjec
  private:
   class SmallPathOp;
 
-  StencilSupport onGetStencilSupport(const GrShape&) const override {
+  StencilSupport onGetStencilSupport(const GrShape&) const noexcept override {
     return GrPathRenderer::kNoSupport_StencilSupport;
   }
 

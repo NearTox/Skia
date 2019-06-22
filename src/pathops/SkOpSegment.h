@@ -23,21 +23,21 @@ class SkPathWriter;
 
 class SkOpSegment {
  public:
-  bool operator<(const SkOpSegment& rh) const { return fBounds.fTop < rh.fBounds.fTop; }
+  bool operator<(const SkOpSegment& rh) const noexcept { return fBounds.fTop < rh.fBounds.fTop; }
 
   SkOpAngle* activeAngle(
       SkOpSpanBase* start, SkOpSpanBase** startPtr, SkOpSpanBase** endPtr, bool* done);
   SkOpAngle* activeAngleInner(
-      SkOpSpanBase* start, SkOpSpanBase** startPtr, SkOpSpanBase** endPtr, bool* done);
+      SkOpSpanBase* start, SkOpSpanBase** startPtr, SkOpSpanBase** endPtr, bool* done) noexcept;
   SkOpAngle* activeAngleOther(
       SkOpSpanBase* start, SkOpSpanBase** startPtr, SkOpSpanBase** endPtr, bool* done);
   bool activeOp(SkOpSpanBase* start, SkOpSpanBase* end, int xorMiMask, int xorSuMask, SkPathOp op);
   bool activeOp(
       int xorMiMask, int xorSuMask, SkOpSpanBase* start, SkOpSpanBase* end, SkPathOp op,
-      int* sumMiWinding, int* sumSuWinding);
+      int* sumMiWinding, int* sumSuWinding) noexcept;
 
   bool activeWinding(SkOpSpanBase* start, SkOpSpanBase* end);
-  bool activeWinding(SkOpSpanBase* start, SkOpSpanBase* end, int* sumWinding);
+  bool activeWinding(SkOpSpanBase* start, SkOpSpanBase* end, int* sumWinding) noexcept;
 
   SkOpSegment* addConic(SkPoint pts[3], SkScalar weight, SkOpContour* parent) {
     init(pts, weight, parent, SkPath::kConic_Verb);
@@ -93,9 +93,9 @@ class SkOpSegment {
   SkOpPtT* addT(double t);
   SkOpPtT* addT(double t, const SkPoint& pt);
 
-  const SkPathOpsBounds& bounds() const { return fBounds; }
+  const SkPathOpsBounds& bounds() const noexcept { return fBounds; }
 
-  void bumpCount() { ++fCount; }
+  void bumpCount() noexcept { ++fCount; }
 
   void calcAngles();
   SkOpSpanBase::Collapsed collapsed(double startT, double endT) const;
@@ -110,9 +110,9 @@ class SkOpSegment {
   static void ClearVisited(SkOpSpanBase* span);
   bool contains(double t) const;
 
-  SkOpContour* contour() const { return fContour; }
+  SkOpContour* contour() const noexcept { return fContour; }
 
-  int count() const { return fCount; }
+  int count() const noexcept { return fCount; }
 
   void debugAddAngle(double startT, double endT);
 #if DEBUG_COIN
@@ -130,7 +130,7 @@ class SkOpSegment {
   const SkOpCoincidence* debugCoincidence() const;
   SkOpContour* debugContour(int id) const;
 
-  int debugID() const { return SkDEBUGRELEASE(fID, -1); }
+  int debugID() const noexcept { return SkDEBUGRELEASE(fID, -1); }
 
   SkOpAngle* debugLastAngle();
 #if DEBUG_COIN
@@ -174,12 +174,14 @@ class SkOpSegment {
   double distSq(double t, const SkOpAngle* opp) const;
 #endif
 
-  bool done() const {
+  bool done() const noexcept {
     SkOPASSERT(fDoneCount <= fCount);
     return fDoneCount == fCount;
   }
 
-  bool done(const SkOpAngle* angle) const { return angle->start()->starter(angle->end())->done(); }
+  bool done(const SkOpAngle* angle) const noexcept {
+    return angle->start()->starter(angle->end())->done();
+  }
 
   SkDPoint dPtAtT(double mid) const { return (*CurveDPointAtT[fVerb])(fPts, fWeight, mid); }
 
@@ -201,11 +203,11 @@ class SkOpSegment {
       bool* unsortable);
   SkOpSegment* findNextXor(SkOpSpanBase** nextStart, SkOpSpanBase** nextEnd, bool* unsortable);
   SkOpSpan* findSortableTop(SkOpContour*);
-  SkOpGlobalState* globalState() const;
+  SkOpGlobalState* globalState() const noexcept;
 
-  const SkOpSpan* head() const { return &fHead; }
+  const SkOpSpan* head() const noexcept { return &fHead; }
 
-  SkOpSpan* head() { return &fHead; }
+  SkOpSpan* head() noexcept { return &fHead; }
 
   void init(SkPoint pts[], SkScalar weight, SkOpContour* parent, SkPath::Verb verb);
 
@@ -226,23 +228,25 @@ class SkOpSegment {
 
   bool isClose(double t, const SkOpSegment* opp) const;
 
-  bool isHorizontal() const { return fBounds.fTop == fBounds.fBottom; }
+  bool isHorizontal() const noexcept { return fBounds.fTop == fBounds.fBottom; }
 
   SkOpSegment* isSimple(SkOpSpanBase** end, int* step) const {
     return nextChase(end, step, nullptr, nullptr);
   }
 
-  bool isVertical() const { return fBounds.fLeft == fBounds.fRight; }
+  bool isVertical() const noexcept { return fBounds.fLeft == fBounds.fRight; }
 
   bool isVertical(SkOpSpanBase* start, SkOpSpanBase* end) const {
     return (*CurveIsVertical[fVerb])(fPts, fWeight, start->t(), end->t());
   }
 
-  bool isXor() const;
+  bool isXor() const noexcept;
 
-  void joinEnds(SkOpSegment* start) { fTail.ptT()->addOpp(start->fHead.ptT(), start->fHead.ptT()); }
+  void joinEnds(SkOpSegment* start) noexcept {
+    fTail.ptT()->addOpp(start->fHead.ptT(), start->fHead.ptT());
+  }
 
-  const SkPoint& lastPt() const { return fPts[SkPathOpsVerbToPoints(fVerb)]; }
+  const SkPoint& lastPt() const noexcept { return fPts[SkPathOpsVerbToPoints(fVerb)]; }
 
   void markAllDone();
   bool markAndChaseDone(SkOpSpanBase* start, SkOpSpanBase* end, SkOpSpanBase** found);
@@ -262,23 +266,23 @@ class SkOpSegment {
   bool moveMultiples();
   bool moveNearby();
 
-  SkOpSegment* next() const { return fNext; }
+  SkOpSegment* next() const noexcept { return fNext; }
 
   SkOpSegment* nextChase(SkOpSpanBase**, int* step, SkOpSpan**, SkOpSpanBase** last) const;
-  bool operand() const;
+  bool operand() const noexcept;
 
-  static int OppSign(const SkOpSpanBase* start, const SkOpSpanBase* end) {
+  static int OppSign(const SkOpSpanBase* start, const SkOpSpanBase* end) noexcept {
     int result = start->t() < end->t() ? -start->upCast()->oppValue() : end->upCast()->oppValue();
     return result;
   }
 
-  bool oppXor() const;
+  bool oppXor() const noexcept;
 
-  const SkOpSegment* prev() const { return fPrev; }
+  const SkOpSegment* prev() const noexcept { return fPrev; }
 
   SkPoint ptAtT(double mid) const { return (*CurvePointAtT[fVerb])(fPts, fWeight, mid); }
 
-  const SkPoint* pts() const { return fPts; }
+  const SkPoint* pts() const noexcept { return fPts; }
 
   bool ptsDisjoint(const SkOpPtT& span, const SkOpPtT& test) const {
     SkASSERT(this == span.segment());
@@ -294,21 +298,22 @@ class SkOpSegment {
   bool ptsDisjoint(double t1, const SkPoint& pt1, double t2, const SkPoint& pt2) const;
 
   void rayCheck(const SkOpRayHit& base, SkOpRayDir dir, SkOpRayHit** hits, SkArenaAlloc*);
-  void release(const SkOpSpan*);
+  void release(const SkOpSpan*) noexcept;
 
 #if DEBUG_COIN
   void resetDebugVisited() const { fDebugVisited = false; }
 #endif
 
-  void resetVisited() { fVisited = false; }
+  void resetVisited() noexcept { fVisited = false; }
 
-  void setContour(SkOpContour* contour) { fContour = contour; }
+  void setContour(SkOpContour* contour) noexcept { fContour = contour; }
 
-  void setNext(SkOpSegment* next) { fNext = next; }
+  void setNext(SkOpSegment* next) noexcept { fNext = next; }
 
-  void setPrev(SkOpSegment* prev) { fPrev = prev; }
+  void setPrev(SkOpSegment* prev) noexcept { fPrev = prev; }
 
-  void setUpWinding(SkOpSpanBase* start, SkOpSpanBase* end, int* maxWinding, int* sumWinding) {
+  void setUpWinding(
+      SkOpSpanBase* start, SkOpSpanBase* end, int* maxWinding, int* sumWinding) noexcept {
     int deltaSum = SpanSign(start, end);
     *maxWinding = *sumWinding;
     if (*sumWinding == SK_MinS32) {
@@ -318,47 +323,48 @@ class SkOpSegment {
   }
 
   void setUpWindings(
-      SkOpSpanBase* start, SkOpSpanBase* end, int* sumMiWinding, int* maxWinding, int* sumWinding);
+      SkOpSpanBase* start, SkOpSpanBase* end, int* sumMiWinding, int* maxWinding,
+      int* sumWinding) noexcept;
   void setUpWindings(
       SkOpSpanBase* start, SkOpSpanBase* end, int* sumMiWinding, int* sumSuWinding, int* maxWinding,
-      int* sumWinding, int* oppMaxWinding, int* oppSumWinding);
+      int* sumWinding, int* oppMaxWinding, int* oppSumWinding) noexcept;
   bool sortAngles();
   bool spansNearby(const SkOpSpanBase* ref, const SkOpSpanBase* check, bool* found) const;
 
-  static int SpanSign(const SkOpSpanBase* start, const SkOpSpanBase* end) {
+  static int SpanSign(const SkOpSpanBase* start, const SkOpSpanBase* end) noexcept {
     int result = start->t() < end->t() ? -start->upCast()->windValue() : end->upCast()->windValue();
     return result;
   }
 
-  SkOpAngle* spanToAngle(SkOpSpanBase* start, SkOpSpanBase* end) {
+  SkOpAngle* spanToAngle(SkOpSpanBase* start, SkOpSpanBase* end) noexcept {
     SkASSERT(start != end);
     return start->t() < end->t() ? start->upCast()->toAngle() : start->fromAngle();
   }
 
   bool subDivide(const SkOpSpanBase* start, const SkOpSpanBase* end, SkDCurve* result) const;
 
-  const SkOpSpanBase* tail() const { return &fTail; }
+  const SkOpSpanBase* tail() const noexcept { return &fTail; }
 
-  SkOpSpanBase* tail() { return &fTail; }
+  SkOpSpanBase* tail() noexcept { return &fTail; }
 
   bool testForCoincidence(
       const SkOpPtT* priorPtT, const SkOpPtT* ptT, const SkOpSpanBase* prior,
       const SkOpSpanBase* spanBase, const SkOpSegment* opp) const;
 
-  SkOpSpan* undoneSpan();
-  int updateOppWinding(const SkOpSpanBase* start, const SkOpSpanBase* end) const;
-  int updateOppWinding(const SkOpAngle* angle) const;
-  int updateOppWindingReverse(const SkOpAngle* angle) const;
+  SkOpSpan* undoneSpan() noexcept;
+  int updateOppWinding(const SkOpSpanBase* start, const SkOpSpanBase* end) const noexcept;
+  int updateOppWinding(const SkOpAngle* angle) const noexcept;
+  int updateOppWindingReverse(const SkOpAngle* angle) const noexcept;
   int updateWinding(SkOpSpanBase* start, SkOpSpanBase* end);
   int updateWinding(SkOpAngle* angle);
   int updateWindingReverse(const SkOpAngle* angle);
 
-  static bool UseInnerWinding(int outerWinding, int innerWinding);
+  static bool UseInnerWinding(int outerWinding, int innerWinding) noexcept;
 
-  SkPath::Verb verb() const { return fVerb; }
+  SkPath::Verb verb() const noexcept { return fVerb; }
 
   // look for two different spans that point to the same opposite segment
-  bool visited() {
+  bool visited() noexcept {
     if (!fVisited) {
       fVisited = true;
       return false;
@@ -366,10 +372,10 @@ class SkOpSegment {
     return true;
   }
 
-  SkScalar weight() const { return fWeight; }
+  SkScalar weight() const noexcept { return fWeight; }
 
   SkOpSpan* windingSpanAtT(double tHit);
-  int windSum(const SkOpAngle* angle) const;
+  int windSum(const SkOpAngle* angle) const noexcept;
 
  private:
   SkOpSpan fHead;      // the head span always has its t set to zero

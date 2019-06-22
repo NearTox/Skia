@@ -52,7 +52,7 @@ sk_sp<GrGLBuffer> GrGLBuffer::Make(
 #define DYNAMIC_DRAW_PARAM GR_GL_STREAM_DRAW
 
 inline static GrGLenum gr_to_gl_access_pattern(
-    GrGpuBufferType bufferType, GrAccessPattern accessPattern) {
+    GrGpuBufferType bufferType, GrAccessPattern accessPattern) noexcept {
   auto drawUsage = [](GrAccessPattern pattern) {
     switch (pattern) {
       case kDynamic_GrAccessPattern:
@@ -118,12 +118,12 @@ GrGLBuffer::GrGLBuffer(
   }
 }
 
-inline GrGLGpu* GrGLBuffer::glGpu() const {
+inline GrGLGpu* GrGLBuffer::glGpu() const noexcept {
   SkASSERT(!this->wasDestroyed());
   return static_cast<GrGLGpu*>(this->getGpu());
 }
 
-inline const GrGLCaps& GrGLBuffer::glCaps() const { return this->glGpu()->glCaps(); }
+inline const GrGLCaps& GrGLBuffer::glCaps() const noexcept { return this->glGpu()->glCaps(); }
 
 void GrGLBuffer::onRelease() {
   if (!this->wasDestroyed()) {

@@ -13,9 +13,9 @@
 #if defined(SK_CPU_X86)
 #if defined(SK_BUILD_FOR_WIN)
 #include <intrin.h>
-static void cpuid(uint32_t abcd[4]) { __cpuid((int*)abcd, 1); }
-static void cpuid7(uint32_t abcd[4]) { __cpuidex((int*)abcd, 7, 0); }
-static uint64_t xgetbv(uint32_t xcr) { return _xgetbv(xcr); }
+static void cpuid(uint32_t abcd[4]) noexcept { __cpuid((int*)abcd, 1); }
+static void cpuid7(uint32_t abcd[4]) noexcept { __cpuidex((int*)abcd, 7, 0); }
+static uint64_t xgetbv(uint32_t xcr) noexcept { return _xgetbv(xcr); }
 #else
 #include <cpuid.h>
 #if !defined(__cpuid_count)  // Old Mac Clang doesn't have this defined.
@@ -31,7 +31,7 @@ static uint64_t xgetbv(uint32_t xcr) {
 }
 #endif
 
-static uint32_t read_cpu_features() {
+static uint32_t read_cpu_features() noexcept {
   uint32_t features = 0;
   uint32_t abcd[4] = {0, 0, 0, 0};
 
@@ -201,7 +201,7 @@ static uint32_t read_cpu_features() { return 0; }
 
 uint32_t SkCpu::gCachedFeatures = 0;
 
-void SkCpu::CacheRuntimeFeatures() {
+void SkCpu::CacheRuntimeFeatures() noexcept {
   static SkOnce once;
-  once([] { gCachedFeatures = read_cpu_features(); });
+  once([]() noexcept { gCachedFeatures = read_cpu_features(); });
 }

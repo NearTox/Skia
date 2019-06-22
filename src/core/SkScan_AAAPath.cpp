@@ -346,7 +346,7 @@ class RunBasedAdditiveBlitter : public AdditiveBlitter {
         fRuns.fAlpha[x] = snapAlpha(fRuns.fAlpha[x]);
       }
       if (!fRuns.empty()) {
-        // SkDEBUGCODE(fRuns.dump();)
+        // SkDEBUGCODE(fRuns.dump());
         fRealBlitter->blitAntiH(fLeft, fCurrY, fRuns.fAlpha, fRuns.fRuns);
         this->advanceRuns();
         fOffsetX = 0;

@@ -22,7 +22,7 @@ struct ASTParameter : public ASTPositionNode {
   // e.g. int x[3][1] would have sizes [3, 1].
   ASTParameter(
       int offset, Modifiers modifiers, std::unique_ptr<ASTType> type, StringFragment name,
-      std::vector<int> sizes)
+      std::vector<int> sizes) noexcept
       : INHERITED(offset),
         fModifiers(modifiers),
         fType(std::move(type)),

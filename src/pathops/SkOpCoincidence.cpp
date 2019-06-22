@@ -19,10 +19,10 @@ bool SkCoincidentSpans::collapsed(const SkOpPtT* test) const {
 }
 
 // out of line since this function is referenced by address
-const SkOpPtT* SkCoincidentSpans::coinPtTEnd() const { return fCoinPtTEnd; }
+const SkOpPtT* SkCoincidentSpans::coinPtTEnd() const noexcept { return fCoinPtTEnd; }
 
 // out of line since this function is referenced by address
-const SkOpPtT* SkCoincidentSpans::coinPtTStart() const { return fCoinPtTStart; }
+const SkOpPtT* SkCoincidentSpans::coinPtTStart() const noexcept { return fCoinPtTStart; }
 
 // sets the span's end to the ptT referenced by the previous-next
 void SkCoincidentSpans::correctOneEnd(
@@ -91,7 +91,7 @@ bool SkCoincidentSpans::expand() {
 // increase the range of this span
 bool SkCoincidentSpans::extend(
     const SkOpPtT* coinPtTStart, const SkOpPtT* coinPtTEnd, const SkOpPtT* oppPtTStart,
-    const SkOpPtT* oppPtTEnd) {
+    const SkOpPtT* oppPtTEnd) noexcept {
   bool result = false;
   if (fCoinPtTStart->fT > coinPtTStart->fT ||
       (this->flipped() ? fOppPtTStart->fT < oppPtTStart->fT : fOppPtTStart->fT > oppPtTStart->fT)) {
@@ -109,7 +109,7 @@ bool SkCoincidentSpans::extend(
 // set the range of this span
 void SkCoincidentSpans::set(
     SkCoincidentSpans* next, const SkOpPtT* coinPtTStart, const SkOpPtT* coinPtTEnd,
-    const SkOpPtT* oppPtTStart, const SkOpPtT* oppPtTEnd) {
+    const SkOpPtT* oppPtTStart, const SkOpPtT* oppPtTEnd) noexcept {
   SkASSERT(SkOpCoincidence::Ordered(coinPtTStart, oppPtTStart));
   fNext = next;
   this->setStarts(coinPtTStart, oppPtTStart);
@@ -137,10 +137,10 @@ bool SkCoincidentSpans::contains(const SkOpPtT* s, const SkOpPtT* e) const {
 }
 
 // out of line since this function is referenced by address
-const SkOpPtT* SkCoincidentSpans::oppPtTStart() const { return fOppPtTStart; }
+const SkOpPtT* SkCoincidentSpans::oppPtTStart() const noexcept { return fOppPtTStart; }
 
 // out of line since this function is referenced by address
-const SkOpPtT* SkCoincidentSpans::oppPtTEnd() const { return fOppPtTEnd; }
+const SkOpPtT* SkCoincidentSpans::oppPtTEnd() const noexcept { return fOppPtTEnd; }
 
 // A coincident span is unordered if the pairs of points in the main and opposite curves'
 // t values do not ascend or descend. For instance, if a tightly arced quadratic is
@@ -229,7 +229,7 @@ bool SkOpCoincidence::extend(
 // verifies that the coincidence hasn't already been added
 static void DebugCheckAdd(
     const SkCoincidentSpans* check, const SkOpPtT* coinPtTStart, const SkOpPtT* coinPtTEnd,
-    const SkOpPtT* oppPtTStart, const SkOpPtT* oppPtTEnd) {
+    const SkOpPtT* oppPtTStart, const SkOpPtT* oppPtTEnd) noexcept {
 #if DEBUG_COINCIDENCE
   while (check) {
     SkASSERT(
@@ -1137,7 +1137,7 @@ bool SkOpCoincidence::apply(DEBUG_COIN_DECLARE_ONLY_PARAMS()) {
 }
 
 // Please keep this in sync with debugRelease()
-bool SkOpCoincidence::release(SkCoincidentSpans* coin, SkCoincidentSpans* remove) {
+bool SkOpCoincidence::release(SkCoincidentSpans* coin, SkCoincidentSpans* remove) noexcept {
   SkCoincidentSpans* head = coin;
   SkCoincidentSpans* prev = nullptr;
   SkCoincidentSpans* next;
@@ -1158,7 +1158,7 @@ bool SkOpCoincidence::release(SkCoincidentSpans* coin, SkCoincidentSpans* remove
   return coin != nullptr;
 }
 
-void SkOpCoincidence::releaseDeleted(SkCoincidentSpans* coin) {
+void SkOpCoincidence::releaseDeleted(SkCoincidentSpans* coin) noexcept {
   if (!coin) {
     return;
   }
@@ -1183,7 +1183,7 @@ void SkOpCoincidence::releaseDeleted(SkCoincidentSpans* coin) {
   } while ((coin = next));
 }
 
-void SkOpCoincidence::releaseDeleted() {
+void SkOpCoincidence::releaseDeleted() noexcept {
   this->releaseDeleted(fHead);
   this->releaseDeleted(fTop);
 }
@@ -1274,7 +1274,7 @@ bool SkOpCoincidence::findOverlaps(SkOpCoincidence* overlaps DEBUG_COIN_DECLARE_
   return true;
 }
 
-void SkOpCoincidence::fixUp(SkOpPtT* deleted, const SkOpPtT* kept) {
+void SkOpCoincidence::fixUp(SkOpPtT* deleted, const SkOpPtT* kept) noexcept {
   SkOPASSERT(deleted != kept);
   if (fHead) {
     this->fixUp(fHead, deleted, kept);
@@ -1284,7 +1284,8 @@ void SkOpCoincidence::fixUp(SkOpPtT* deleted, const SkOpPtT* kept) {
   }
 }
 
-void SkOpCoincidence::fixUp(SkCoincidentSpans* coin, SkOpPtT* deleted, const SkOpPtT* kept) {
+void SkOpCoincidence::fixUp(
+    SkCoincidentSpans* coin, SkOpPtT* deleted, const SkOpPtT* kept) noexcept {
   SkCoincidentSpans* head = coin;
   do {
     if (coin->coinPtTStart() == deleted) {
@@ -1388,7 +1389,7 @@ void SkOpCoincidence::markCollapsed(SkOpPtT* test) {
   markCollapsed(fTop, test);
 }
 
-bool SkOpCoincidence::Ordered(const SkOpSegment* coinSeg, const SkOpSegment* oppSeg) {
+bool SkOpCoincidence::Ordered(const SkOpSegment* coinSeg, const SkOpSegment* oppSeg) noexcept {
   if (coinSeg->verb() < oppSeg->verb()) {
     return true;
   }
@@ -1413,7 +1414,7 @@ bool SkOpCoincidence::Ordered(const SkOpSegment* coinSeg, const SkOpSegment* opp
 
 bool SkOpCoincidence::overlap(
     const SkOpPtT* coin1s, const SkOpPtT* coin1e, const SkOpPtT* coin2s, const SkOpPtT* coin2e,
-    double* overS, double* overE) const {
+    double* overS, double* overE) const noexcept {
   SkASSERT(coin1s->segment() == coin2s->segment());
   *overS = SkTMax(SkTMin(coin1s->fT, coin1e->fT), SkTMin(coin2s->fT, coin2e->fT));
   *overE = SkTMin(SkTMax(coin1s->fT, coin1e->fT), SkTMax(coin2s->fT, coin2e->fT));

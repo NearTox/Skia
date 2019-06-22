@@ -14,21 +14,21 @@
 
 class SkBaseSemaphore {
  public:
-  constexpr SkBaseSemaphore(int count = 0) : fCount(count), fOSSemaphore(nullptr) {}
+  constexpr SkBaseSemaphore(int count = 0) noexcept : fCount(count), fOSSemaphore(nullptr) {}
 
   // Increment the counter n times.
   // Generally it's better to call signal(n) instead of signal() n times.
-  void signal(int n = 1);
+  void signal(int n = 1) noexcept;
 
   // Decrement the counter by 1,
   // then if the counter is < 0, sleep this thread until the counter is >= 0.
-  void wait();
+  void wait() noexcept;
 
   // If the counter is positive, decrement it by 1 and return true, otherwise return false.
-  bool try_wait();
+  bool try_wait() noexcept;
 
   // SkBaseSemaphore has no destructor.  Call this to clean it up.
-  void cleanup();
+  void cleanup() noexcept;
 
  private:
   // This implementation follows the general strategy of
@@ -42,8 +42,8 @@ class SkBaseSemaphore {
   // moving the count from >=0 to <0 or vice-versa, i.e. sleeping or waking threads.
   struct OSSemaphore;
 
-  void osSignal(int n);
-  void osWait();
+  void osSignal(int n) noexcept;
+  void osWait() noexcept;
 
   std::atomic<int> fCount;
   SkOnce fOSSemaphoreOnce;
@@ -56,7 +56,7 @@ class SkSemaphore : public SkBaseSemaphore {
   ~SkSemaphore() { this->cleanup(); }
 };
 
-inline void SkBaseSemaphore::signal(int n) {
+inline void SkBaseSemaphore::signal(int n) noexcept {
   int prev = fCount.fetch_add(n, std::memory_order_release);
 
   // We only want to call the OS semaphore when our logical count crosses
@@ -74,7 +74,7 @@ inline void SkBaseSemaphore::signal(int n) {
   }
 }
 
-inline void SkBaseSemaphore::wait() {
+inline void SkBaseSemaphore::wait() noexcept {
   // Since this fetches the value before the subtract, zero and below means that there are no
   // resources left, so the thread needs to wait.
   if (fCount.fetch_sub(1, std::memory_order_acquire) <= 0) {

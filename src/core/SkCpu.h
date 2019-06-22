@@ -47,14 +47,14 @@ struct SkCpu {
     ASIMDHP = 1 << 4,
   };
 
-  static void CacheRuntimeFeatures();
-  static bool Supports(uint32_t);
+  static void CacheRuntimeFeatures() noexcept;
+  static bool Supports(uint32_t) noexcept;
 
  private:
   static uint32_t gCachedFeatures;
 };
 
-inline bool SkCpu::Supports(uint32_t mask) {
+inline bool SkCpu::Supports(uint32_t mask) noexcept {
   uint32_t features = gCachedFeatures;
 
   // If we mask in compile-time known lower limits, the compiler can

@@ -142,7 +142,7 @@ struct Layout {
     return false;
   }
 
-  static const char* CTypeToStr(CType ctype) {
+  static const char* CTypeToStr(CType ctype) noexcept {
     switch (ctype) {
       case CType::kDefault: return nullptr;
       case CType::kFloat: return "float";
@@ -364,7 +364,7 @@ struct Layout {
     return result;
   }
 
-  bool operator==(const Layout& other) const {
+  bool operator==(const Layout& other) const noexcept {
     return fFlags == other.fFlags && fLocation == other.fLocation && fOffset == other.fOffset &&
            fBinding == other.fBinding && fIndex == other.fIndex && fSet == other.fSet &&
            fBuiltin == other.fBuiltin && fInputAttachmentIndex == other.fInputAttachmentIndex &&
@@ -372,7 +372,7 @@ struct Layout {
            fMaxVertices == other.fMaxVertices && fInvocations == other.fInvocations;
   }
 
-  bool operator!=(const Layout& other) const { return !(*this == other); }
+  bool operator!=(const Layout& other) const noexcept { return !(*this == other); }
 
   int fFlags;
   int fLocation;

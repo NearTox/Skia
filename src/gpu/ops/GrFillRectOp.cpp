@@ -85,7 +85,7 @@ class FillRectOp final : public GrMeshDrawOp {
         deviceQuad.bounds(), HasAABloat(aaType == GrAAType::kCoverage), IsZeroArea::kNo);
   }
 
-  const char* name() const override { return "FillRectOp"; }
+  const char* name() const noexcept override { return "FillRectOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     return fHelper.visitProxies(func);

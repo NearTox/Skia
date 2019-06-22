@@ -15,30 +15,31 @@ class SkWBuffer;
 
 class SkRRectPriv {
  public:
-  static bool IsCircle(const SkRRect& rr) {
+  static bool IsCircle(const SkRRect& rr) noexcept {
     return rr.isOval() && SkScalarNearlyEqual(rr.fRadii[0].fX, rr.fRadii[0].fY);
   }
 
-  static SkVector GetSimpleRadii(const SkRRect& rr) {
+  static SkVector GetSimpleRadii(const SkRRect& rr) noexcept {
     SkASSERT(!rr.isComplex());
     return rr.fRadii[0];
   }
 
-  static bool IsSimpleCircular(const SkRRect& rr) {
+  static bool IsSimpleCircular(const SkRRect& rr) noexcept {
     return rr.isSimple() && SkScalarNearlyEqual(rr.fRadii[0].fX, rr.fRadii[0].fY);
   }
 
-  static bool EqualRadii(const SkRRect& rr) {
+  static bool EqualRadii(const SkRRect& rr) noexcept {
     return rr.isRect() || SkRRectPriv::IsCircle(rr) || SkRRectPriv::IsSimpleCircular(rr);
   }
 
-  static const SkVector* GetRadiiArray(const SkRRect& rr) { return rr.fRadii; }
+  static const SkVector* GetRadiiArray(const SkRRect& rr) noexcept { return rr.fRadii; }
 
-  static bool AllCornersCircular(const SkRRect& rr, SkScalar tolerance = SK_ScalarNearlyZero);
+  static bool AllCornersCircular(
+      const SkRRect& rr, SkScalar tolerance = SK_ScalarNearlyZero) noexcept;
 
-  static bool ReadFromBuffer(SkRBuffer* buffer, SkRRect* rr);
+  static bool ReadFromBuffer(SkRBuffer* buffer, SkRRect* rr) noexcept;
 
-  static void WriteToBuffer(const SkRRect& rr, SkWBuffer* buffer);
+  static void WriteToBuffer(const SkRRect& rr, SkWBuffer* buffer) noexcept;
 };
 
 #endif

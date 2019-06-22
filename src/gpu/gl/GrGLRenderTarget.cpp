@@ -35,7 +35,7 @@ GrGLRenderTarget::GrGLRenderTarget(
   this->init(desc, format, idDesc);
 }
 
-inline void GrGLRenderTarget::setFlags(const GrGLCaps& glCaps, const IDDesc& idDesc) {
+inline void GrGLRenderTarget::setFlags(const GrGLCaps& glCaps, const IDDesc& idDesc) noexcept {
   if (idDesc.fIsMixedSampled) {
     SkASSERT(glCaps.usesMixedSamples() && idDesc.fRTFBOID);  // FBO 0 can't be mixed sampled.
     this->setHasMixedSamples();
@@ -176,7 +176,7 @@ void GrGLRenderTarget::onAbandon() {
   INHERITED::onAbandon();
 }
 
-GrGLGpu* GrGLRenderTarget::getGLGpu() const {
+GrGLGpu* GrGLRenderTarget::getGLGpu() const noexcept {
   SkASSERT(!this->wasDestroyed());
   return static_cast<GrGLGpu*>(this->getGpu());
 }
@@ -226,7 +226,7 @@ void GrGLRenderTarget::dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) 
   }
 }
 
-int GrGLRenderTarget::msaaSamples() const {
+int GrGLRenderTarget::msaaSamples() const noexcept {
   if (fTexFBOID == kUnresolvableFBOID || fTexFBOID != fRTFBOID) {
     // If the render target's FBO is external (fTexFBOID == kUnresolvableFBOID), or if we own
     // the render target's FBO (fTexFBOID == fRTFBOID) then we use the provided sample count.
@@ -238,7 +238,7 @@ int GrGLRenderTarget::msaaSamples() const {
   return 0;
 }
 
-int GrGLRenderTarget::totalSamples() const {
+int GrGLRenderTarget::totalSamples() const noexcept {
   int total_samples = this->msaaSamples();
 
   if (fTexFBOID != kUnresolvableFBOID) {

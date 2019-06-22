@@ -24,7 +24,7 @@ namespace SkSL {
 struct ASTVarDeclaration {
   ASTVarDeclaration(
       StringFragment name, std::vector<std::unique_ptr<ASTExpression>> sizes,
-      std::unique_ptr<ASTExpression> value)
+      std::unique_ptr<ASTExpression> value) noexcept
       : fName(name), fSizes(std::move(sizes)), fValue(std::move(value)) {}
 
   String description() const {
@@ -56,7 +56,8 @@ struct ASTVarDeclaration {
  */
 struct ASTVarDeclarations : public ASTDeclaration {
   ASTVarDeclarations(
-      Modifiers modifiers, std::unique_ptr<ASTType> type, std::vector<ASTVarDeclaration> vars)
+      Modifiers modifiers, std::unique_ptr<ASTType> type,
+      std::vector<ASTVarDeclaration> vars) noexcept
       : INHERITED(type->fOffset, kVar_Kind),
         fModifiers(modifiers),
         fType(std::move(type)),

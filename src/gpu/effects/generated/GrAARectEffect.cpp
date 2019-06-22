@@ -73,18 +73,18 @@ class GrGLSLAARectEffect : public GrGLSLFragmentProcessor {
 GrGLSLFragmentProcessor* GrAARectEffect::onCreateGLSLInstance() const {
   return new GrGLSLAARectEffect();
 }
-void GrAARectEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+void GrAARectEffect::onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const
+    noexcept {
   b->add32((int32_t)edgeType);
 }
-bool GrAARectEffect::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrAARectEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrAARectEffect& that = other.cast<GrAARectEffect>();
   (void)that;
   if (edgeType != that.edgeType) return false;
   if (rect != that.rect) return false;
   return true;
 }
-GrAARectEffect::GrAARectEffect(const GrAARectEffect& src)
+GrAARectEffect::GrAARectEffect(const GrAARectEffect& src) noexcept
     : INHERITED(kGrAARectEffect_ClassID, src.optimizationFlags()),
       edgeType(src.edgeType),
       rect(src.rect) {}

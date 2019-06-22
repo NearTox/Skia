@@ -18,18 +18,18 @@
 #include <string.h>
 
 /** MD5 basic transformation. Transforms state based on block. */
-static void transform(uint32_t state[4], const uint8_t block[64]);
+static void transform(uint32_t state[4], const uint8_t block[64]) noexcept;
 
 /** Encodes input into output (4 little endian 32 bit values). */
-static void encode(uint8_t output[16], const uint32_t input[4]);
+static void encode(uint8_t output[16], const uint32_t input[4]) noexcept;
 
 /** Encodes input into output (little endian 64 bit value). */
-static void encode(uint8_t output[8], const uint64_t input);
+static void encode(uint8_t output[8], const uint64_t input) noexcept;
 
 /** Decodes input (4 little endian 32 bit values) into storage, if required. */
-static const uint32_t* decode(uint32_t storage[16], const uint8_t input[64]);
+static const uint32_t* decode(uint32_t storage[16], const uint8_t input[64]) noexcept;
 
-SkMD5::SkMD5() : byteCount(0) {
+SkMD5::SkMD5() noexcept : byteCount(0) {
   // These are magic numbers from the specification.
   this->state[0] = 0x67452301;
   this->state[1] = 0xefcdab89;
@@ -37,7 +37,7 @@ SkMD5::SkMD5() : byteCount(0) {
   this->state[3] = 0x10325476;
 }
 
-bool SkMD5::write(const void* buf, size_t inputLength) {
+bool SkMD5::write(const void* buf, size_t inputLength) noexcept {
   const uint8_t* input = reinterpret_cast<const uint8_t*>(buf);
   unsigned int bufferIndex = (unsigned int)(this->byteCount & 0x3F);
   unsigned int bufferAvailable = 64 - bufferIndex;
@@ -67,7 +67,7 @@ bool SkMD5::write(const void* buf, size_t inputLength) {
   return true;
 }
 
-SkMD5::Digest SkMD5::finish() {
+SkMD5::Digest SkMD5::finish() noexcept {
   SkMD5::Digest digest;
   // Get the number of bits before padding.
   uint8_t bits[8];
@@ -97,38 +97,42 @@ SkMD5::Digest SkMD5::finish() {
 }
 
 struct F {
-  uint32_t operator()(uint32_t x, uint32_t y, uint32_t z) {
+  constexpr uint32_t operator()(uint32_t x, uint32_t y, uint32_t z) noexcept {
     // return (x & y) | ((~x) & z);
     return ((y ^ z) & x) ^ z;  // equivelent but faster
   }
 };
 
 struct G {
-  uint32_t operator()(uint32_t x, uint32_t y, uint32_t z) {
+  constexpr uint32_t operator()(uint32_t x, uint32_t y, uint32_t z) noexcept {
     return (x & z) | (y & (~z));
     // return ((x ^ y) & z) ^ y; //equivelent but slower
   }
 };
 
 struct H {
-  uint32_t operator()(uint32_t x, uint32_t y, uint32_t z) { return x ^ y ^ z; }
+  constexpr uint32_t operator()(uint32_t x, uint32_t y, uint32_t z) noexcept { return x ^ y ^ z; }
 };
 
 struct I {
-  uint32_t operator()(uint32_t x, uint32_t y, uint32_t z) { return y ^ (x | (~z)); }
+  constexpr uint32_t operator()(uint32_t x, uint32_t y, uint32_t z) noexcept {
+    return y ^ (x | (~z));
+  }
 };
 
 /** Rotates x left n bits. */
-static inline uint32_t rotate_left(uint32_t x, uint8_t n) { return (x << n) | (x >> (32 - n)); }
+static constexpr inline uint32_t rotate_left(uint32_t x, uint8_t n) noexcept {
+  return (x << n) | (x >> (32 - n));
+}
 
 template <typename T>
-static inline void operation(
+static constexpr inline void operation(
     T operation, uint32_t& a, uint32_t b, uint32_t c, uint32_t d, uint32_t x, uint8_t s,
-    uint32_t t) {
+    uint32_t t) noexcept {
   a = b + rotate_left(a + operation(b, c, d) + x + t, s);
 }
 
-static void transform(uint32_t state[4], const uint8_t block[64]) {
+static void transform(uint32_t state[4], const uint8_t block[64]) noexcept {
   uint32_t a = state[0], b = state[1], c = state[2], d = state[3];
 
   uint32_t storage[16];
@@ -219,7 +223,7 @@ static void transform(uint32_t state[4], const uint8_t block[64]) {
 #endif
 }
 
-static void encode(uint8_t output[16], const uint32_t input[4]) {
+static void encode(uint8_t output[16], const uint32_t input[4]) noexcept {
   for (size_t i = 0, j = 0; i < 4; i++, j += 4) {
     output[j] = (uint8_t)(input[i] & 0xff);
     output[j + 1] = (uint8_t)((input[i] >> 8) & 0xff);
@@ -228,7 +232,7 @@ static void encode(uint8_t output[16], const uint32_t input[4]) {
   }
 }
 
-static void encode(uint8_t output[8], const uint64_t input) {
+static void encode(uint8_t output[8], const uint64_t input) noexcept {
   output[0] = (uint8_t)(input & 0xff);
   output[1] = (uint8_t)((input >> 8) & 0xff);
   output[2] = (uint8_t)((input >> 16) & 0xff);
@@ -239,11 +243,11 @@ static void encode(uint8_t output[8], const uint64_t input) {
   output[7] = (uint8_t)((input >> 56) & 0xff);
 }
 
-static inline bool is_aligned(const void* pointer, size_t byte_count) {
+static inline bool is_aligned(const void* pointer, size_t byte_count) noexcept {
   return reinterpret_cast<uintptr_t>(pointer) % byte_count == 0;
 }
 
-static const uint32_t* decode(uint32_t storage[16], const uint8_t input[64]) {
+static const uint32_t* decode(uint32_t storage[16], const uint8_t input[64]) noexcept {
 #if defined(SK_CPU_LENDIAN) && defined(SK_CPU_FAST_UNALIGNED_ACCESS)
   return reinterpret_cast<const uint32_t*>(input);
 #else

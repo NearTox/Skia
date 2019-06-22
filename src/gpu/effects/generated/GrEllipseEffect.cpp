@@ -108,10 +108,10 @@ GrGLSLFragmentProcessor* GrEllipseEffect::onCreateGLSLInstance() const {
   return new GrGLSLEllipseEffect();
 }
 void GrEllipseEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   b->add32((int32_t)edgeType);
 }
-bool GrEllipseEffect::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrEllipseEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrEllipseEffect& that = other.cast<GrEllipseEffect>();
   (void)that;
   if (edgeType != that.edgeType) return false;
@@ -119,7 +119,7 @@ bool GrEllipseEffect::onIsEqual(const GrFragmentProcessor& other) const {
   if (radii != that.radii) return false;
   return true;
 }
-GrEllipseEffect::GrEllipseEffect(const GrEllipseEffect& src)
+GrEllipseEffect::GrEllipseEffect(const GrEllipseEffect& src) noexcept
     : INHERITED(kGrEllipseEffect_ClassID, src.optimizationFlags()),
       edgeType(src.edgeType),
       center(src.center),

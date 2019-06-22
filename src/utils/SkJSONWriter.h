@@ -67,7 +67,7 @@ class SkJSONWriter : SkNoncopyable {
   /**
    *  Force all buffered output to be flushed to the underlying stream.
    */
-  void flush() {
+  void flush() noexcept {
     if (fWrite != fBlock) {
       fStream->write(fBlock, fWrite - fBlock);
       fWrite = fBlock;
@@ -79,7 +79,7 @@ class SkJSONWriter : SkNoncopyable {
    *  endObject(). If you have both the name and value of an object member, you can simply call
    *  the two argument versions of the other append functions.
    */
-  void appendName(const char* name) {
+  void appendName(const char* name) noexcept {
     if (!name) {
       return;
     }
@@ -115,7 +115,7 @@ class SkJSONWriter : SkNoncopyable {
   /**
    *  Ends an object that was previously started with beginObject().
    */
-  void endObject() {
+  void endObject() noexcept {
     SkASSERT(Scope::kObject == this->scope());
     SkASSERT(State::kObjectBegin == fState || State::kObjectValue == fState);
     bool emptyObject = State::kObjectBegin == fState;
@@ -147,7 +147,7 @@ class SkJSONWriter : SkNoncopyable {
   /**
    *  Ends an array that was previous started with beginArray().
    */
-  void endArray() {
+  void endArray() noexcept {
     SkASSERT(Scope::kArray == this->scope());
     SkASSERT(State::kArrayBegin == fState || State::kArrayValue == fState);
     bool emptyArray = State::kArrayBegin == fState;
@@ -165,7 +165,7 @@ class SkJSONWriter : SkNoncopyable {
    *  - Between beginArray() and endArray()                                -or-
    *  - Between beginObject() and endObject(), after calling appendName()
    */
-  void appendString(const char* value) {
+  void appendString(const char* value) noexcept {
     this->beginValue();
     this->write("\"", 1);
     if (value) {
@@ -186,11 +186,11 @@ class SkJSONWriter : SkNoncopyable {
     this->write("\"", 1);
   }
 
-  void appendPointer(const void* value) {
+  void appendPointer(const void* value) noexcept {
     this->beginValue();
     this->appendf("\"%p\"", value);
   }
-  void appendBool(bool value) {
+  void appendBool(bool value) noexcept {
     this->beginValue();
     if (value) {
       this->write("true", 4);
@@ -198,42 +198,42 @@ class SkJSONWriter : SkNoncopyable {
       this->write("false", 5);
     }
   }
-  void appendS32(int32_t value) {
+  void appendS32(int32_t value) noexcept {
     this->beginValue();
     this->appendf("%d", value);
   }
-  void appendS64(int64_t value);
-  void appendU32(uint32_t value) {
+  void appendS64(int64_t value) noexcept;
+  void appendU32(uint32_t value) noexcept {
     this->beginValue();
     this->appendf("%u", value);
   }
-  void appendU64(uint64_t value);
-  void appendFloat(float value) {
+  void appendU64(uint64_t value) noexcept;
+  void appendFloat(float value) noexcept {
     this->beginValue();
     this->appendf("%g", value);
   }
-  void appendDouble(double value) {
+  void appendDouble(double value) noexcept {
     this->beginValue();
     this->appendf("%g", value);
   }
-  void appendFloatDigits(float value, int digits) {
+  void appendFloatDigits(float value, int digits) noexcept {
     this->beginValue();
     this->appendf("%.*g", digits, value);
   }
-  void appendDoubleDigits(double value, int digits) {
+  void appendDoubleDigits(double value, int digits) noexcept {
     this->beginValue();
     this->appendf("%.*g", digits, value);
   }
-  void appendHexU32(uint32_t value) {
+  void appendHexU32(uint32_t value) noexcept {
     this->beginValue();
     this->appendf("\"0x%x\"", value);
   }
-  void appendHexU64(uint64_t value);
+  void appendHexU64(uint64_t value) noexcept;
 
-#define DEFINE_NAMED_APPEND(function, type)     \
-  void function(const char* name, type value) { \
-    this->appendName(name);                     \
-    this->function(value);                      \
+#define DEFINE_NAMED_APPEND(function, type)              \
+  void function(const char* name, type value) noexcept { \
+    this->appendName(name);                              \
+    this->function(value);                               \
   }
 
   /**
@@ -254,11 +254,11 @@ class SkJSONWriter : SkNoncopyable {
 
 #undef DEFINE_NAMED_APPEND
 
-  void appendFloatDigits(const char* name, float value, int digits) {
+  void appendFloatDigits(const char* name, float value, int digits) noexcept {
     this->appendName(name);
     this->appendFloatDigits(value, digits);
   }
-  void appendDoubleDigits(const char* name, double value, int digits) {
+  void appendDoubleDigits(const char* name, double value, int digits) noexcept {
     this->appendName(name);
     this->appendDoubleDigits(value, digits);
   }
@@ -283,9 +283,9 @@ class SkJSONWriter : SkNoncopyable {
     kArrayValue,
   };
 
-  void appendf(const char* fmt, ...);
+  void appendf(const char* fmt, ...) noexcept;
 
-  void beginValue(bool structure = false) {
+  void beginValue(bool structure = false) noexcept {
     SkASSERT(
         State::kObjectName == fState || State::kArrayBegin == fState ||
         State::kArrayValue == fState || (structure && State::kStart == fState));
@@ -304,7 +304,7 @@ class SkJSONWriter : SkNoncopyable {
     }
   }
 
-  void separator(bool multiline) {
+  void separator(bool multiline) noexcept {
     if (Mode::kPretty == fMode) {
       if (multiline) {
         this->write("\n", 1);
@@ -317,7 +317,7 @@ class SkJSONWriter : SkNoncopyable {
     }
   }
 
-  void write(const char* buf, size_t length) {
+  void write(const char* buf, size_t length) noexcept {
     if (static_cast<size_t>(fBlockEnd - fWrite) < length) {
       // Don't worry about splitting writes that overflow our block.
       this->flush();
@@ -331,17 +331,17 @@ class SkJSONWriter : SkNoncopyable {
     }
   }
 
-  Scope scope() const {
+  Scope scope() const noexcept {
     SkASSERT(!fScopeStack.empty());
     return fScopeStack.back();
   }
 
-  bool multiline() const {
+  bool multiline() const noexcept {
     SkASSERT(!fNewlineStack.empty());
     return fNewlineStack.back();
   }
 
-  void popScope() {
+  void popScope() noexcept {
     fScopeStack.pop_back();
     fNewlineStack.pop_back();
     switch (this->scope()) {

@@ -117,7 +117,7 @@ SkString GrAtlasTextOp::dumpInfo() const {
 }
 #endif
 
-GrDrawOp::FixedFunctionFlags GrAtlasTextOp::fixedFunctionFlags() const {
+GrDrawOp::FixedFunctionFlags GrAtlasTextOp::fixedFunctionFlags() const noexcept {
   return FixedFunctionFlags::kNone;
 }
 
@@ -150,7 +150,7 @@ GrProcessorSet::Analysis GrAtlasTextOp::finalize(
 
 static void clip_quads(
     const SkIRect& clipRect, char* currVertex, const char* blobVertices, size_t vertexStride,
-    int glyphCount) {
+    int glyphCount) noexcept {
   for (int i = 0; i < glyphCount; ++i) {
     const SkPoint* blobPositionLT = reinterpret_cast<const SkPoint*>(blobVertices);
     const SkPoint* blobPositionRB =

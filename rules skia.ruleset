@@ -24,7 +24,6 @@
     <Rule Id="C26452" Action="None" />
     <Rule Id="C26453" Action="None" />
     <Rule Id="C26454" Action="None" />
-    <Rule Id="C26455" Action="Warning" />
     <Rule Id="C26459" Action="None" />
     <Rule Id="C26495" Action="None" />
     <Rule Id="C26497" Action="Warning" />

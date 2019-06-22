@@ -22,7 +22,7 @@ class GrPathProcessor : public GrPrimitiveProcessor {
     return new GrPathProcessor(color, viewMatrix, localMatrix);
   }
 
-  const char* name() const override { return "PathProcessor"; }
+  const char* name() const noexcept override { return "PathProcessor"; }
 
   const SkPMColor4f& color() const { return fColor; }
   const SkMatrix& viewMatrix() const { return fViewMatrix; }

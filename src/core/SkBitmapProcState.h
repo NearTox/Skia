@@ -29,7 +29,7 @@ typedef SkFixed3232 SkFractionalInt;
 class SkPaint;
 
 struct SkBitmapProcInfo {
-  SkBitmapProcInfo(const SkBitmapProvider&, SkTileMode tmx, SkTileMode tmy);
+  SkBitmapProcInfo(const SkBitmapProvider&, SkTileMode tmx, SkTileMode tmy) noexcept;
   ~SkBitmapProcInfo();
 
   const SkBitmapProvider fProvider;
@@ -55,7 +55,7 @@ struct SkBitmapProcInfo {
 };
 
 struct SkBitmapProcState : public SkBitmapProcInfo {
-  SkBitmapProcState(const SkBitmapProvider& prov, SkTileMode tmx, SkTileMode tmy)
+  SkBitmapProcState(const SkBitmapProvider& prov, SkTileMode tmx, SkTileMode tmy) noexcept
       : SkBitmapProcInfo(prov, tmx, tmy) {}
 
   bool setup(const SkMatrix& inv, const SkPaint& paint) {
@@ -91,18 +91,18 @@ struct SkBitmapProcState : public SkBitmapProcInfo {
       Only valid to call after chooseProcs (setContext) has been called. It is
       safe to call this inside the shader's shadeSpan() method.
    */
-  int maxCountForBufferSize(size_t bufferSize) const;
+  int maxCountForBufferSize(size_t bufferSize) const noexcept;
 
   // If a shader proc is present, then the corresponding matrix/sample procs
   // are ignored
-  ShaderProc32 getShaderProc32() const { return fShaderProc32; }
+  ShaderProc32 getShaderProc32() const noexcept { return fShaderProc32; }
 
 #ifdef SK_DEBUG
   MatrixProc getMatrixProc() const;
 #else
-  MatrixProc getMatrixProc() const { return fMatrixProc; }
+  MatrixProc getMatrixProc() const noexcept { return fMatrixProc; }
 #endif
-  SampleProc32 getSampleProc32() const { return fSampleProc32; }
+  SampleProc32 getSampleProc32() const noexcept { return fSampleProc32; }
 
  private:
   ShaderProc32 fShaderProc32;  // chooseProcs
@@ -112,10 +112,10 @@ struct SkBitmapProcState : public SkBitmapProcInfo {
 
   MatrixProc chooseMatrixProc(bool trivial_matrix);
   bool chooseProcs();  // caller must have called init() first (on our base-class)
-  ShaderProc32 chooseShaderProc32();
+  ShaderProc32 chooseShaderProc32() noexcept;
 
   // Return false if we failed to setup for fast translate (e.g. overflow)
-  bool setupForTranslate();
+  bool setupForTranslate() noexcept;
 
 #ifdef SK_DEBUG
   static void DebugMatrixProc(const SkBitmapProcState&, uint32_t[], int count, int x, int y);
@@ -165,7 +165,7 @@ static inline uint32_t pack_two_shorts(U16CPU pri, U16CPU sec) {
 class SkBitmapProcStateAutoMapper {
  public:
   SkBitmapProcStateAutoMapper(
-      const SkBitmapProcState& s, int x, int y, SkPoint* scalarPoint = nullptr) {
+      const SkBitmapProcState& s, int x, int y, SkPoint* scalarPoint = nullptr) noexcept {
     SkPoint pt;
     s.fInvProc(
         s.fInvMatrix, SkIntToScalar(x) + SK_ScalarHalf, SkIntToScalar(y) + SK_ScalarHalf, &pt);
@@ -194,14 +194,14 @@ class SkBitmapProcStateAutoMapper {
     }
   }
 
-  SkFractionalInt fractionalIntX() const { return fX; }
-  SkFractionalInt fractionalIntY() const { return fY; }
+  SkFractionalInt fractionalIntX() const noexcept { return fX; }
+  SkFractionalInt fractionalIntY() const noexcept { return fY; }
 
-  SkFixed fixedX() const { return SkFractionalIntToFixed(fX); }
-  SkFixed fixedY() const { return SkFractionalIntToFixed(fY); }
+  SkFixed fixedX() const noexcept { return SkFractionalIntToFixed(fX); }
+  SkFixed fixedY() const noexcept { return SkFractionalIntToFixed(fY); }
 
-  int intX() const { return SkFractionalIntToInt(fX); }
-  int intY() const { return SkFractionalIntToInt(fY); }
+  int intX() const noexcept { return SkFractionalIntToInt(fX); }
+  int intY() const noexcept { return SkFractionalIntToInt(fY); }
 
  private:
   SkFractionalInt fX, fY;

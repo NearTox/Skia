@@ -141,7 +141,7 @@ enum SaveBehindFlatFlags {
 // clipparams are packed in 5 bits
 //  doAA:1 | clipOp:4
 
-static inline uint32_t ClipParams_pack(SkClipOp op, bool doAA) {
+static inline uint32_t ClipParams_pack(SkClipOp op, bool doAA) noexcept {
   unsigned doAABit = doAA ? 1 : 0;
   return (doAABit << 4) | static_cast<int>(op);
 }
@@ -159,7 +159,9 @@ static inline SkClipOp ClipParams_unpackRegionOp(SkReadBuffer* buffer, uint32_t 
   return asValidEnum<SkClipOp>(buffer, packed & 0xF);
 }
 
-static inline bool ClipParams_unpackDoAA(uint32_t packed) { return SkToBool((packed >> 4) & 1); }
+static inline bool ClipParams_unpackDoAA(uint32_t packed) noexcept {
+  return SkToBool((packed >> 4) & 1);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -170,14 +172,16 @@ class SkTypefacePlayback {
 
   void setCount(size_t count);
 
-  size_t count() const { return fCount; }
+  size_t count() const noexcept { return fCount; }
 
   sk_sp<SkTypeface>& operator[](size_t index) {
     SkASSERT(index < fCount);
     return fArray[index];
   }
 
-  void setupBuffer(SkReadBuffer& buffer) const { buffer.setTypefaceArray(fArray.get(), fCount); }
+  void setupBuffer(SkReadBuffer& buffer) const noexcept {
+    buffer.setTypefaceArray(fArray.get(), fCount);
+  }
 
  protected:
   size_t fCount;
@@ -190,9 +194,11 @@ class SkFactoryPlayback {
 
   ~SkFactoryPlayback() { delete[] fArray; }
 
-  SkFlattenable::Factory* base() const { return fArray; }
+  SkFlattenable::Factory* base() const noexcept { return fArray; }
 
-  void setupBuffer(SkReadBuffer& buffer) const { buffer.setFactoryPlayback(fArray, fCount); }
+  void setupBuffer(SkReadBuffer& buffer) const noexcept {
+    buffer.setFactoryPlayback(fArray, fCount);
+  }
 
  private:
   int fCount;

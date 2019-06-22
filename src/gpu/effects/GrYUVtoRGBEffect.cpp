@@ -161,7 +161,7 @@ GrGLSLFragmentProcessor* GrYUVtoRGBEffect::onCreateGLSLInstance() const {
   return new GrGLSLYUVtoRGBEffect;
 }
 void GrYUVtoRGBEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   using Domain = GrTextureDomain::GLDomain;
 
   b->add32(this->numTextureSamplers());
@@ -189,7 +189,7 @@ void GrYUVtoRGBEffect::onGetGLSLProcessorKey(
   b->add32(packed);
   b->add32(domain);
 }
-bool GrYUVtoRGBEffect::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrYUVtoRGBEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrYUVtoRGBEffect& that = other.cast<GrYUVtoRGBEffect>();
 
   for (int i = 0; i < 4; ++i) {
@@ -235,7 +235,8 @@ GrYUVtoRGBEffect::GrYUVtoRGBEffect(const GrYUVtoRGBEffect& src)
 std::unique_ptr<GrFragmentProcessor> GrYUVtoRGBEffect::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new GrYUVtoRGBEffect(*this));
 }
-const GrFragmentProcessor::TextureSampler& GrYUVtoRGBEffect::onTextureSampler(int index) const {
+const GrFragmentProcessor::TextureSampler& GrYUVtoRGBEffect::onTextureSampler(int index) const
+    noexcept {
   SkASSERT(index < this->numTextureSamplers());
   return fSamplers[index];
 }

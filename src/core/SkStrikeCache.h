@@ -48,21 +48,21 @@ class SkStrikeCache final : public SkStrikeCacheInterface {
 
   class ExclusiveStrikePtr {
    public:
-    explicit ExclusiveStrikePtr(Node*);
+    explicit ExclusiveStrikePtr(Node*) noexcept;
     ExclusiveStrikePtr();
     ExclusiveStrikePtr(const ExclusiveStrikePtr&) = delete;
     ExclusiveStrikePtr& operator=(const ExclusiveStrikePtr&) = delete;
-    ExclusiveStrikePtr(ExclusiveStrikePtr&&);
-    ExclusiveStrikePtr& operator=(ExclusiveStrikePtr&&);
+    ExclusiveStrikePtr(ExclusiveStrikePtr&&) noexcept;
+    ExclusiveStrikePtr& operator=(ExclusiveStrikePtr&&) noexcept;
     ~ExclusiveStrikePtr();
 
-    SkStrike* get() const;
-    SkStrike* operator->() const;
-    SkStrike& operator*() const;
-    explicit operator bool() const;
-    friend bool operator==(const ExclusiveStrikePtr&, const ExclusiveStrikePtr&);
-    friend bool operator==(const ExclusiveStrikePtr&, decltype(nullptr));
-    friend bool operator==(decltype(nullptr), const ExclusiveStrikePtr&);
+    SkStrike* get() const noexcept;
+    SkStrike* operator->() const noexcept;
+    SkStrike& operator*() const noexcept;
+    explicit operator bool() const noexcept;
+    friend bool operator==(const ExclusiveStrikePtr&, const ExclusiveStrikePtr&) noexcept;
+    friend bool operator==(const ExclusiveStrikePtr&, decltype(nullptr)) noexcept;
+    friend bool operator==(decltype(nullptr), const ExclusiveStrikePtr&) noexcept;
 
    private:
     Node* fNode;
@@ -122,7 +122,7 @@ class SkStrikeCache final : public SkStrikeCacheInterface {
       const SkDescriptor&, const SkScalerContextEffects&, const SkTypeface&);
 
   static void PurgeAll();
-  static void ValidateGlyphCacheDataSize();
+  static void ValidateGlyphCacheDataSize() noexcept;
   static void Dump();
 
   // Dump memory usage statistics of all the attaches caches in the process using the
@@ -134,16 +134,16 @@ class SkStrikeCache final : public SkStrikeCacheInterface {
 
   void purgeAll();  // does not change budget
 
-  int getCacheCountLimit() const;
+  int getCacheCountLimit() const noexcept;
   int setCacheCountLimit(int limit);
-  int getCacheCountUsed() const;
+  int getCacheCountUsed() const noexcept;
 
-  size_t getCacheSizeLimit() const;
+  size_t getCacheSizeLimit() const noexcept;
   size_t setCacheSizeLimit(size_t limit);
-  size_t getTotalMemoryUsed() const;
+  size_t getTotalMemoryUsed() const noexcept;
 
-  int getCachePointSizeLimit() const;
-  int setCachePointSizeLimit(int limit);
+  int getCachePointSizeLimit() const noexcept;
+  int setCachePointSizeLimit(int limit) noexcept;
 
 #ifdef SK_DEBUG
   // A simple accounting of what each glyph cache reports and the strike cache total.
@@ -151,16 +151,16 @@ class SkStrikeCache final : public SkStrikeCacheInterface {
   // Make sure that each glyph cache's memory tracking and actual memory used are in sync.
   void validateGlyphCacheDataSize() const;
 #else
-  void validate() const {}
-  void validateGlyphCacheDataSize() const {}
+  void validate() const noexcept {}
+  void validateGlyphCacheDataSize() const noexcept {}
 #endif
 
  private:
   // The following methods can only be called when mutex is already held.
-  Node* internalGetHead() const SK_REQUIRES(fLock) { return fHead; }
-  Node* internalGetTail() const SK_REQUIRES(fLock) { return fTail; }
-  void internalDetachCache(Node*) SK_REQUIRES(fLock);
-  void internalAttachToHead(Node*) SK_REQUIRES(fLock);
+  Node* internalGetHead() const SK_REQUIRES(fLock) noexcept { return fHead; }
+  Node* internalGetTail() const SK_REQUIRES(fLock) noexcept { return fTail; }
+  void internalDetachCache(Node*) SK_REQUIRES(fLock) noexcept;
+  void internalAttachToHead(Node*) SK_REQUIRES(fLock) noexcept;
 
   // Checkout budgets, modulated by the specified min-bytes-needed-to-purge,
   // and attempt to purge caches to match.

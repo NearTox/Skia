@@ -27,7 +27,7 @@ class DrawVerticesOp final : public GrMeshDrawOp {
       const SkVertices::Bone bones[], int boneCount, GrPrimitiveType, GrAAType,
       sk_sp<GrColorSpaceXform>, const SkMatrix& viewMatrix);
 
-  const char* name() const override { return "DrawVerticesOp"; }
+  const char* name() const noexcept override { return "DrawVerticesOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override { fHelper.visitProxies(func); }
 

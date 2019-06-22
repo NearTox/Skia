@@ -15,22 +15,22 @@
 
 #include "src/utils/SkJSONWriter.h"
 
-void SkJSONWriter::appendS64(int64_t value) {
+void SkJSONWriter::appendS64(int64_t value) noexcept {
   this->beginValue();
   this->appendf("%" PRId64, value);
 }
 
-void SkJSONWriter::appendU64(uint64_t value) {
+void SkJSONWriter::appendU64(uint64_t value) noexcept {
   this->beginValue();
   this->appendf("%" PRIu64, value);
 }
 
-void SkJSONWriter::appendHexU64(uint64_t value) {
+void SkJSONWriter::appendHexU64(uint64_t value) noexcept {
   this->beginValue();
   this->appendf("\"0x%" PRIx64 "\"", value);
 }
 
-void SkJSONWriter::appendf(const char* fmt, ...) {
+void SkJSONWriter::appendf(const char* fmt, ...) noexcept {
   const int kBufferSize = 1024;
   char buffer[kBufferSize];
   va_list argp;

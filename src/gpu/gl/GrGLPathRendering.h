@@ -46,7 +46,7 @@ class GrGLPathRendering : public GrPathRendering {
    */
   void disconnect(GrGpu::DisconnectType);
 
-  bool shouldBindFragmentInputs() const { return fCaps.bindFragmentInputSupport; }
+  bool shouldBindFragmentInputs() const noexcept { return fCaps.bindFragmentInputSupport; }
 
   // Functions for "separable shader" texturing support.
   void setProgramPathFragmentInputTransform(
@@ -81,7 +81,7 @@ class GrGLPathRendering : public GrPathRendering {
     GrSurfaceOrigin fRenderTargetOrigin;
 
     MatrixState() { this->invalidate(); }
-    void invalidate() {
+    void invalidate() noexcept {
       fViewMatrix = SkMatrix::InvalidMatrix();
       fRenderTargetSize.fWidth = -1;
       fRenderTargetSize.fHeight = -1;
@@ -107,7 +107,7 @@ class GrGLPathRendering : public GrPathRendering {
       GrGLSLGetMatrix<Size>(destMatrix, combined);
     }
   };
-  GrGLGpu* gpu();
+  GrGLGpu* gpu() noexcept;
 
   GrGLuint fFirstPreallocatedPathID;
   GrGLsizei fPreallocatedPathCount;

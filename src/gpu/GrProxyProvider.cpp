@@ -32,7 +32,7 @@
 #include "src/image/SkImage_Base.h"
 
 #define ASSERT_SINGLE_OWNER \
-  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(fImageContext->priv().singleOwner());)
+  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(fImageContext->priv().singleOwner()));
 
 GrProxyProvider::GrProxyProvider(GrImageContext* imageContext) : fImageContext(imageContext) {}
 
@@ -741,7 +741,7 @@ sk_sp<GrTextureProxy> GrProxyProvider::MakeFullyLazyProxy(
                 GrMipMapped::kNo, SkBackingFit::kApprox, SkBudgeted::kYes, surfaceFlags));
 }
 
-bool GrProxyProvider::IsFunctionallyExact(GrSurfaceProxy* proxy) {
+bool GrProxyProvider::IsFunctionallyExact(GrSurfaceProxy* proxy) noexcept {
   const bool isInstantiated = proxy->isInstantiated();
   // A proxy is functionally exact if:
   //   it is exact (obvs)
@@ -786,11 +786,13 @@ void GrProxyProvider::processInvalidUniqueKey(
   }
 }
 
-uint32_t GrProxyProvider::contextID() const { return fImageContext->priv().contextID(); }
+uint32_t GrProxyProvider::contextID() const noexcept { return fImageContext->priv().contextID(); }
 
-const GrCaps* GrProxyProvider::caps() const { return fImageContext->priv().caps(); }
+const GrCaps* GrProxyProvider::caps() const noexcept { return fImageContext->priv().caps(); }
 
-sk_sp<const GrCaps> GrProxyProvider::refCaps() const { return fImageContext->priv().refCaps(); }
+sk_sp<const GrCaps> GrProxyProvider::refCaps() const noexcept {
+  return fImageContext->priv().refCaps();
+}
 
 bool GrProxyProvider::isAbandoned() const { return fImageContext->priv().abandoned(); }
 

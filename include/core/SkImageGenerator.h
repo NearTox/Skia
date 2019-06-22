@@ -32,7 +32,7 @@ class SK_API SkImageGenerator {
    */
   virtual ~SkImageGenerator() {}
 
-  uint32_t uniqueID() const { return fUniqueID; }
+  uint32_t uniqueID() const noexcept { return fUniqueID; }
 
   /**
    *  Return a ref to the encoded (i.e. compressed) representation
@@ -46,7 +46,7 @@ class SK_API SkImageGenerator {
   /**
    *  Return the ImageInfo associated with this generator.
    */
-  const SkImageInfo& getInfo() const { return fInfo; }
+  const SkImageInfo& getInfo() const noexcept { return fInfo; }
 
   /**
    *  Can this generator be used to produce images that will be drawable to the specified context

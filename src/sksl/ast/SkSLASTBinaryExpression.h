@@ -19,7 +19,7 @@ namespace SkSL {
  */
 struct ASTBinaryExpression : public ASTExpression {
   ASTBinaryExpression(
-      std::unique_ptr<ASTExpression> left, Token op, std::unique_ptr<ASTExpression> right)
+      std::unique_ptr<ASTExpression> left, Token op, std::unique_ptr<ASTExpression> right) noexcept
       : INHERITED(op.fOffset, kBinary_Kind),
         fLeft(std::move(left)),
         fOperator(op.fKind),

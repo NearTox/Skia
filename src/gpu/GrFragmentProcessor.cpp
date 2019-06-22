@@ -69,10 +69,10 @@ const GrFragmentProcessor::TextureSampler& GrFragmentProcessor::textureSampler(i
   return this->onTextureSampler(i);
 }
 
-void GrFragmentProcessor::addCoordTransform(const GrCoordTransform* transform) {
+void GrFragmentProcessor::addCoordTransform(const GrCoordTransform* transform) noexcept {
   fCoordTransforms.push_back(transform);
   fFlags |= kUsesLocalCoords_Flag;
-  SkDEBUGCODE(transform->setInProcessor();)
+  SkDEBUGCODE(transform->setInProcessor());
 }
 
 bool GrFragmentProcessor::instantiate(GrResourceProvider* resourceProvider) const {
@@ -114,7 +114,7 @@ int GrFragmentProcessor::registerChildProcessor(std::unique_ptr<GrFragmentProces
   return index;
 }
 
-bool GrFragmentProcessor::hasSameTransforms(const GrFragmentProcessor& that) const {
+bool GrFragmentProcessor::hasSameTransforms(const GrFragmentProcessor& that) const noexcept {
   if (this->numCoordTransforms() != that.numCoordTransforms()) {
     return false;
   }
@@ -161,13 +161,13 @@ std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::SwizzleOutput(
       return std::unique_ptr<GrFragmentProcessor>(new SwizzleFragmentProcessor(swizzle));
     }
 
-    const char* name() const override { return "Swizzle"; }
-    const GrSwizzle& swizzle() const { return fSwizzle; }
+    const char* name() const noexcept override { return "Swizzle"; }
+    const GrSwizzle& swizzle() const noexcept { return fSwizzle; }
 
     std::unique_ptr<GrFragmentProcessor> clone() const override { return Make(fSwizzle); }
 
    private:
-    SwizzleFragmentProcessor(const GrSwizzle& swizzle)
+    SwizzleFragmentProcessor(const GrSwizzle& swizzle) noexcept
         : INHERITED(kSwizzleFragmentProcessor_ClassID, kAll_OptimizationFlags), fSwizzle(swizzle) {}
 
     GrGLSLFragmentProcessor* onCreateGLSLInstance() const override {
@@ -185,16 +185,17 @@ std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::SwizzleOutput(
       return new GLFP;
     }
 
-    void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const override {
+    void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const
+        noexcept override {
       b->add32(fSwizzle.asKey());
     }
 
-    bool onIsEqual(const GrFragmentProcessor& other) const override {
+    bool onIsEqual(const GrFragmentProcessor& other) const noexcept override {
       const SwizzleFragmentProcessor& sfp = other.cast<SwizzleFragmentProcessor>();
       return fSwizzle == sfp.fSwizzle;
     }
 
-    SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& input) const override {
+    SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& input) const noexcept override {
       return fSwizzle.applyTo(input);
     }
 
@@ -224,7 +225,7 @@ std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::MakeInputPremulAndMulB
           new PremulFragmentProcessor(std::move(processor)));
     }
 
-    const char* name() const override { return "Premultiply"; }
+    const char* name() const noexcept override { return "Premultiply"; }
 
     std::unique_ptr<GrFragmentProcessor> clone() const override {
       return Make(this->childProcessor(0).clone());
@@ -249,11 +250,12 @@ std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::MakeInputPremulAndMulB
       return new GLFP;
     }
 
-    void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
+    void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const
+        noexcept override {}
 
-    bool onIsEqual(const GrFragmentProcessor&) const override { return true; }
+    bool onIsEqual(const GrFragmentProcessor&) const noexcept override { return true; }
 
-    static OptimizationFlags OptFlags(const GrFragmentProcessor* inner) {
+    static OptimizationFlags OptFlags(const GrFragmentProcessor* inner) noexcept {
       OptimizationFlags flags = kNone_OptimizationFlags;
       if (inner->preservesOpaqueInput()) {
         flags |= kPreservesOpaqueInput_OptimizationFlag;
@@ -298,7 +300,7 @@ std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::RunInSeries(
       return std::unique_ptr<GrFragmentProcessor>(new SeriesFragmentProcessor(children, cnt));
     }
 
-    const char* name() const override { return "Series"; }
+    const char* name() const noexcept override { return "Series"; }
 
     std::unique_ptr<GrFragmentProcessor> clone() const override {
       SkSTArray<4, std::unique_ptr<GrFragmentProcessor>> children(this->numChildProcessors());
@@ -339,16 +341,18 @@ std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::RunInSeries(
       }
     }
 
-    static OptimizationFlags OptFlags(std::unique_ptr<GrFragmentProcessor>* children, int cnt) {
+    static OptimizationFlags OptFlags(
+        std::unique_ptr<GrFragmentProcessor>* children, int cnt) noexcept {
       OptimizationFlags flags = kAll_OptimizationFlags;
       for (int i = 0; i < cnt && flags != kNone_OptimizationFlags; ++i) {
         flags &= children[i]->optimizationFlags();
       }
       return flags;
     }
-    void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
+    void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const
+        noexcept override {}
 
-    bool onIsEqual(const GrFragmentProcessor&) const override { return true; }
+    bool onIsEqual(const GrFragmentProcessor&) const noexcept override { return true; }
 
     SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& inColor) const override {
       SkPMColor4f color = inColor;

@@ -21,14 +21,14 @@ static const signed char decodeData[] = {
     18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1, -1, 26, 27, 28, 29, 30,        31,
     32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50,        51};
 
-SkBase64::SkBase64() : fLength((size_t)-1), fData(nullptr) {}
+SkBase64::SkBase64() noexcept : fLength((size_t)-1), fData(nullptr) {}
 
 #if defined _WIN32  // disable 'two', etc. may be used without having been initialized
 #pragma warning(push)
 #pragma warning(disable : 4701)
 #endif
 
-SkBase64::Error SkBase64::decode(const void* srcPtr, size_t size, bool writeDestination) {
+SkBase64::Error SkBase64::decode(const void* srcPtr, size_t size, bool writeDestination) noexcept {
   unsigned char* dst = (unsigned char*)fData;
   const unsigned char* dstStart = (const unsigned char*)fData;
   const unsigned char* src = (const unsigned char*)srcPtr;
@@ -90,7 +90,8 @@ goHome:
 #pragma warning(pop)
 #endif
 
-size_t SkBase64::Encode(const void* srcPtr, size_t length, void* dstPtr, const char* encodeMap) {
+size_t SkBase64::Encode(
+    const void* srcPtr, size_t length, void* dstPtr, const char* encodeMap) noexcept {
   const char* encode;
   if (nullptr == encodeMap) {
     encode = default_encode;

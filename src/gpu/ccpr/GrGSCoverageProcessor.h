@@ -22,7 +22,7 @@ class GrGSCoverageProcessor : public GrCCCoverageProcessor {
  private:
   void reset(PrimitiveType, GrResourceProvider*) override;
 
-  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const override {
+  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const noexcept override {
     SkDEBUGCODE(this->getDebugBloatKey(b));
     b->add32(((int)fPrimitiveType << 16) | (int)fSubpass);
   }

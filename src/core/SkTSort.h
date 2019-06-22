@@ -17,7 +17,10 @@
 /* A comparison functor which performs the comparison 'a < b'. */
 template <typename T>
 struct SkTCompareLT {
-  bool operator()(const T a, const T b) const { return a < b; }
+  bool operator()(const T a, const T b) const noexcept {
+    static_assert(noexcept(a < b) == true);
+    return a < b;
+  }
 };
 
 /* A comparison functor which performs the comparison '*a < *b'. */

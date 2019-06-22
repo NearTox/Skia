@@ -104,7 +104,7 @@ class GrClip {
   /**
    * Returns the minimal integer rect that counts as containing a given set of bounds.
    */
-  static SkIRect GetPixelIBounds(const SkRect& bounds) {
+  static SkIRect GetPixelIBounds(const SkRect& bounds) noexcept {
     return SkIRect::MakeLTRB(
         SkScalarFloorToInt(bounds.fLeft + kBoundsTolerance),
         SkScalarFloorToInt(bounds.fTop + kBoundsTolerance),
@@ -115,7 +115,7 @@ class GrClip {
   /**
    * Returns the minimal pixel-aligned rect that counts as containing a given set of bounds.
    */
-  static SkRect GetPixelBounds(const SkRect& bounds) {
+  static SkRect GetPixelBounds(const SkRect& bounds) noexcept {
     return SkRect::MakeLTRB(
         SkScalarFloorToScalar(bounds.fLeft + kBoundsTolerance),
         SkScalarFloorToScalar(bounds.fTop + kBoundsTolerance),
@@ -126,7 +126,7 @@ class GrClip {
   /**
    * Returns true if the given rect counts as aligned with pixel boundaries.
    */
-  static bool IsPixelAligned(const SkRect& rect) {
+  static bool IsPixelAligned(const SkRect& rect) noexcept {
     return SkScalarAbs(SkScalarRoundToScalar(rect.fLeft) - rect.fLeft) <= kBoundsTolerance &&
            SkScalarAbs(SkScalarRoundToScalar(rect.fTop) - rect.fTop) <= kBoundsTolerance &&
            SkScalarAbs(SkScalarRoundToScalar(rect.fRight) - rect.fRight) <= kBoundsTolerance &&
@@ -161,17 +161,19 @@ class GrHardClip : public GrClip {
  */
 class GrNoClip final : public GrHardClip {
  private:
-  bool quickContains(const SkRect&) const final { return true; }
-  bool quickContains(const SkRRect&) const final { return true; }
+  bool quickContains(const SkRect&) const noexcept final { return true; }
+  bool quickContains(const SkRRect&) const noexcept final { return true; }
   void getConservativeBounds(
-      int width, int height, SkIRect* devResult, bool* isIntersectionOfRects) const final {
+      int width, int height, SkIRect* devResult, bool* isIntersectionOfRects) const noexcept final {
     devResult->setXYWH(0, 0, width, height);
     if (isIntersectionOfRects) {
       *isIntersectionOfRects = true;
     }
   }
-  bool apply(int rtWidth, int rtHeight, GrAppliedHardClip*, SkRect*) const final { return true; }
-  bool isRRect(const SkRect&, SkRRect*, GrAA*) const override { return false; }
+  bool apply(int rtWidth, int rtHeight, GrAppliedHardClip*, SkRect*) const noexcept final {
+    return true;
+  }
+  bool isRRect(const SkRect&, SkRRect*, GrAA*) const noexcept override { return false; }
 };
 
 #endif

@@ -20,48 +20,49 @@
  */
 class GrAppliedHardClip {
  public:
-  GrAppliedHardClip() = default;
-  GrAppliedHardClip(GrAppliedHardClip&& that) = default;
+  GrAppliedHardClip() noexcept = default;
+  GrAppliedHardClip(GrAppliedHardClip&& that) noexcept = default;
   GrAppliedHardClip(const GrAppliedHardClip&) = delete;
 
-  const GrScissorState& scissorState() const { return fScissorState; }
-  const GrWindowRectsState& windowRectsState() const { return fWindowRectsState; }
-  uint32_t stencilStackID() const { return fStencilStackID; }
-  bool hasStencilClip() const { return SkClipStack::kInvalidGenID != fStencilStackID; }
+  const GrScissorState& scissorState() const noexcept { return fScissorState; }
+  const GrWindowRectsState& windowRectsState() const noexcept { return fWindowRectsState; }
+  uint32_t stencilStackID() const noexcept { return fStencilStackID; }
+  bool hasStencilClip() const noexcept { return SkClipStack::kInvalidGenID != fStencilStackID; }
 
   /**
    * Intersects the applied clip with the provided rect. Returns false if the draw became empty.
    * 'clippedDrawBounds' will be intersected with 'irect'. This returns false if the clip becomes
    * empty or the draw no longer intersects the clip. In either case the draw can be skipped.
    */
-  bool addScissor(const SkIRect& irect, SkRect* clippedDrawBounds) {
+  bool addScissor(const SkIRect& irect, SkRect* clippedDrawBounds) noexcept {
     return fScissorState.intersect(irect) && clippedDrawBounds->intersect(SkRect::Make(irect));
   }
 
-  void addWindowRectangles(const GrWindowRectsState& windowState) {
+  void addWindowRectangles(const GrWindowRectsState& windowState) noexcept {
     SkASSERT(!fWindowRectsState.enabled());
     fWindowRectsState = windowState;
   }
 
-  void addWindowRectangles(const GrWindowRectangles& windows, GrWindowRectsState::Mode mode) {
+  void addWindowRectangles(
+      const GrWindowRectangles& windows, GrWindowRectsState::Mode mode) noexcept {
     SkASSERT(!fWindowRectsState.enabled());
     fWindowRectsState.set(windows, mode);
   }
 
-  void addStencilClip(uint32_t stencilStackID) {
+  void addStencilClip(uint32_t stencilStackID) noexcept {
     SkASSERT(SkClipStack::kInvalidGenID == fStencilStackID);
     fStencilStackID = stencilStackID;
   }
 
-  bool doesClip() const {
+  bool doesClip() const noexcept {
     return fScissorState.enabled() || this->hasStencilClip() || fWindowRectsState.enabled();
   }
 
-  bool operator==(const GrAppliedHardClip& that) const {
+  bool operator==(const GrAppliedHardClip& that) const noexcept {
     return fScissorState == that.fScissorState && fWindowRectsState == that.fWindowRectsState &&
            fStencilStackID == that.fStencilStackID;
   }
-  bool operator!=(const GrAppliedHardClip& that) const { return !(*this == that); }
+  bool operator!=(const GrAppliedHardClip& that) const noexcept { return !(*this == that); }
 
  private:
   GrScissorState fScissorState;
@@ -74,32 +75,34 @@ class GrAppliedHardClip {
  */
 class GrAppliedClip {
  public:
-  GrAppliedClip() = default;
-  GrAppliedClip(GrAppliedClip&& that) = default;
+  GrAppliedClip() noexcept = default;
+  GrAppliedClip(GrAppliedClip&& that) noexcept = default;
   GrAppliedClip(const GrAppliedClip&) = delete;
 
-  const GrScissorState& scissorState() const { return fHardClip.scissorState(); }
-  const GrWindowRectsState& windowRectsState() const { return fHardClip.windowRectsState(); }
-  uint32_t stencilStackID() const { return fHardClip.stencilStackID(); }
-  bool hasStencilClip() const { return fHardClip.hasStencilClip(); }
-  int numClipCoverageFragmentProcessors() const { return fClipCoverageFPs.count(); }
-  const GrFragmentProcessor* clipCoverageFragmentProcessor(int i) const {
+  const GrScissorState& scissorState() const noexcept { return fHardClip.scissorState(); }
+  const GrWindowRectsState& windowRectsState() const noexcept {
+    return fHardClip.windowRectsState();
+  }
+  uint32_t stencilStackID() const noexcept { return fHardClip.stencilStackID(); }
+  bool hasStencilClip() const noexcept { return fHardClip.hasStencilClip(); }
+  int numClipCoverageFragmentProcessors() const noexcept { return fClipCoverageFPs.count(); }
+  const GrFragmentProcessor* clipCoverageFragmentProcessor(int i) const noexcept {
     SkASSERT(fClipCoverageFPs[i]);
     return fClipCoverageFPs[i].get();
   }
-  std::unique_ptr<const GrFragmentProcessor> detachClipCoverageFragmentProcessor(int i) {
+  std::unique_ptr<const GrFragmentProcessor> detachClipCoverageFragmentProcessor(int i) noexcept {
     SkASSERT(fClipCoverageFPs[i]);
     return std::move(fClipCoverageFPs[i]);
   }
 
-  GrAppliedHardClip& hardClip() { return fHardClip; }
+  GrAppliedHardClip& hardClip() noexcept { return fHardClip; }
 
   void addCoverageFP(std::unique_ptr<GrFragmentProcessor> fp) {
     SkASSERT(fp);
     fClipCoverageFPs.push_back(std::move(fp));
   }
 
-  bool doesClip() const { return fHardClip.doesClip() || !fClipCoverageFPs.empty(); }
+  bool doesClip() const noexcept { return fHardClip.doesClip() || !fClipCoverageFPs.empty(); }
 
   bool operator==(const GrAppliedClip& that) const {
     if (fHardClip != that.fHardClip || fClipCoverageFPs.count() != that.fClipCoverageFPs.count()) {

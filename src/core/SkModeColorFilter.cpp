@@ -28,7 +28,7 @@ SkModeColorFilter::SkModeColorFilter(SkColor color, SkBlendMode mode) {
   fMode = mode;
 }
 
-bool SkModeColorFilter::onAsAColorMode(SkColor* color, SkBlendMode* mode) const {
+bool SkModeColorFilter::onAsAColorMode(SkColor* color, SkBlendMode* mode) const noexcept {
   if (color) {
     *color = fColor;
   }
@@ -38,7 +38,7 @@ bool SkModeColorFilter::onAsAColorMode(SkColor* color, SkBlendMode* mode) const 
   return true;
 }
 
-uint32_t SkModeColorFilter::getFlags() const {
+uint32_t SkModeColorFilter::getFlags() const noexcept {
   uint32_t flags = 0;
   switch (fMode) {
     case SkBlendMode::kDst:      //!< [Da, Dc]
@@ -49,7 +49,7 @@ uint32_t SkModeColorFilter::getFlags() const {
   return flags;
 }
 
-void SkModeColorFilter::flatten(SkWriteBuffer& buffer) const {
+void SkModeColorFilter::flatten(SkWriteBuffer& buffer) const noexcept {
   buffer.writeColor(fColor);
   buffer.writeUInt((int)fMode);
 }

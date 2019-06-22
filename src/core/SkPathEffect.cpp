@@ -37,7 +37,9 @@ bool SkPathEffect::asPoints(
   return this->onAsPoints(results, src, rec, mx, rect);
 }
 
-SkPathEffect::DashType SkPathEffect::asADash(DashInfo* info) const { return this->onAsADash(info); }
+SkPathEffect::DashType SkPathEffect::asADash(DashInfo* info) const noexcept {
+  return this->onAsADash(info);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 

@@ -16,12 +16,12 @@
     assignment operator. That could be relaxed. */
 class GrSwizzle {
  public:
-  constexpr GrSwizzle() : GrSwizzle("rgba") {}
+  constexpr GrSwizzle() noexcept : GrSwizzle("rgba") {}
 
-  constexpr GrSwizzle(const GrSwizzle& that)
+  constexpr GrSwizzle(const GrSwizzle& that) noexcept
       : fSwiz{that.fSwiz[0], that.fSwiz[1], that.fSwiz[2], that.fSwiz[3], '\0'}, fKey(that.fKey) {}
 
-  constexpr GrSwizzle& operator=(const GrSwizzle& that) {
+  constexpr GrSwizzle& operator=(const GrSwizzle& that) noexcept {
     fSwiz[0] = that.fSwiz[0];
     fSwiz[1] = that.fSwiz[1];
     fSwiz[2] = that.fSwiz[2];
@@ -48,9 +48,9 @@ class GrSwizzle {
   constexpr uint16_t asKey() const { return fKey; }
 
   /** 4 char null terminated string consisting only of chars 'r', 'g', 'b', 'a'. */
-  const char* c_str() const { return fSwiz; }
+  const char* c_str() const noexcept { return fSwiz; }
 
-  char operator[](int i) const {
+  char operator[](int i) const noexcept {
     SkASSERT(i >= 0 && i < 4);
     return fSwiz[i];
   }
@@ -59,7 +59,7 @@ class GrSwizzle {
   // next int.
   static const int k1KeyValue = 4;
 
-  static float component_idx_to_float(const SkPMColor4f& color, int idx) {
+  static float component_idx_to_float(const SkPMColor4f& color, int idx) noexcept {
     if (idx <= 3) {
       return color[idx];
     }
@@ -71,7 +71,7 @@ class GrSwizzle {
   }
 
   /** Applies this swizzle to the input color and returns the swizzled color. */
-  SkPMColor4f applyTo(const SkPMColor4f& color) const {
+  SkPMColor4f applyTo(const SkPMColor4f& color) const noexcept {
     int idx;
     uint32_t key = fKey;
     // Index of the input color that should be mapped to output r.

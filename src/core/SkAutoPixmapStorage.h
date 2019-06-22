@@ -13,13 +13,13 @@
 
 class SkAutoPixmapStorage : public SkPixmap {
  public:
-  SkAutoPixmapStorage();
+  SkAutoPixmapStorage() noexcept;
   ~SkAutoPixmapStorage();
 
   /**
    * Leave the moved-from object in a free-but-valid state.
    */
-  SkAutoPixmapStorage& operator=(SkAutoPixmapStorage&& other);
+  SkAutoPixmapStorage& operator=(SkAutoPixmapStorage&& other) noexcept;
 
   /**
    *  Try to allocate memory for the pixels needed to match the specified Info. On success
@@ -28,7 +28,7 @@ class SkAutoPixmapStorage : public SkPixmap {
    *
    *  On failure, return false and reset() the pixmap to empty.
    */
-  bool tryAlloc(const SkImageInfo&);
+  bool tryAlloc(const SkImageInfo&) noexcept;
 
   /**
    *  Allocate memory for the pixels needed to match the specified Info and fill out the pixmap
@@ -37,13 +37,13 @@ class SkAutoPixmapStorage : public SkPixmap {
    *
    *  If the memory cannot be allocated, calls SK_ABORT().
    */
-  void alloc(const SkImageInfo&);
+  void alloc(const SkImageInfo&) noexcept;
 
   /**
    * Gets the size and optionally the rowBytes that would be allocated by SkAutoPixmapStorage if
    * alloc/tryAlloc was called.
    */
-  static size_t AllocSize(const SkImageInfo& info, size_t* rowBytes);
+  static size_t AllocSize(const SkImageInfo& info, size_t* rowBytes) noexcept;
 
   /**
    *  Returns an SkData object wrapping the allocated pixels memory, and resets the pixmap.
@@ -53,16 +53,16 @@ class SkAutoPixmapStorage : public SkPixmap {
 
   // We wrap these so we can clear our internal storage
 
-  void reset() {
+  void reset() noexcept {
     this->freeStorage();
     this->INHERITED::reset();
   }
-  void reset(const SkImageInfo& info, const void* addr, size_t rb) {
+  void reset(const SkImageInfo& info, const void* addr, size_t rb) noexcept {
     this->freeStorage();
     this->INHERITED::reset(info, addr, rb);
   }
 
-  bool SK_WARN_UNUSED_RESULT reset(const SkMask& mask) {
+  bool SK_WARN_UNUSED_RESULT reset(const SkMask& mask) noexcept {
     this->freeStorage();
     return this->INHERITED::reset(mask);
   }
@@ -70,7 +70,7 @@ class SkAutoPixmapStorage : public SkPixmap {
  private:
   void* fStorage;
 
-  void freeStorage() {
+  void freeStorage() noexcept {
     sk_free(fStorage);
     fStorage = nullptr;
   }

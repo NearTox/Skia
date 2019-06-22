@@ -14,7 +14,7 @@ struct SkIPoint16;
 
 class GrRectanizer {
  public:
-  GrRectanizer(int width, int height) : fWidth(width), fHeight(height) {
+  constexpr GrRectanizer(int width, int height) noexcept : fWidth(width), fHeight(height) {
     SkASSERT(width >= 0);
     SkASSERT(height >= 0);
   }
@@ -23,8 +23,8 @@ class GrRectanizer {
 
   virtual void reset() = 0;
 
-  int width() const { return fWidth; }
-  int height() const { return fHeight; }
+  int width() const noexcept { return fWidth; }
+  int height() const noexcept { return fHeight; }
 
   // Attempt to add a rect. Return true on success; false on failure. If
   // successful the position in the atlas is returned in 'loc'.

@@ -48,16 +48,16 @@ class GrGpu : public SkRefCnt {
   GrGpu(GrContext* context);
   ~GrGpu() override;
 
-  GrContext* getContext() { return fContext; }
-  const GrContext* getContext() const { return fContext; }
+  GrContext* getContext() noexcept { return fContext; }
+  const GrContext* getContext() const noexcept { return fContext; }
 
   /**
    * Gets the capabilities of the draw target.
    */
-  const GrCaps* caps() const { return fCaps.get(); }
-  sk_sp<const GrCaps> refCaps() const { return fCaps; }
+  const GrCaps* caps() const noexcept { return fCaps.get(); }
+  sk_sp<const GrCaps> refCaps() const noexcept { return fCaps; }
 
-  GrPathRendering* pathRendering() { return fPathRendering.get(); }
+  GrPathRendering* pathRendering() noexcept { return fPathRendering.get(); }
 
   enum class DisconnectType {
     // No cleanup should be attempted, immediately cease making backend API calls
@@ -77,7 +77,7 @@ class GrGpu : public SkRefCnt {
    * the GrGpu that the state was modified and it shouldn't make assumptions
    * about the state.
    */
-  void markContextDirty(uint32_t state = kAll_GrBackendState) { fResetBits |= state; }
+  void markContextDirty(uint32_t state = kAll_GrBackendState) noexcept { fResetBits |= state; }
 
   /**
    * Creates a texture object. If kRenderTarget_GrSurfaceFlag the texture can
@@ -265,7 +265,7 @@ class GrGpu : public SkRefCnt {
   // Returns a timestamp based on the number of times the context was reset.
   // This timestamp can be used to lazily detect when cached 3D context state
   // is dirty.
-  ResetTimestamp getResetTimestamp() const { return fResetTimestamp; }
+  ResetTimestamp getResetTimestamp() const noexcept { return fResetTimestamp; }
 
   // Called to perform a surface to surface copy. Fallbacks to issuing a draw from the src to dst
   // take place at the GrOpList level and this function implement faster copy paths. The rect
@@ -285,7 +285,7 @@ class GrGpu : public SkRefCnt {
   // by-product, the actual number of samples in use. (This may differ from the number of samples
   // requested by the render target.) Sample locations are returned as 0..1 offsets relative to
   // the top-left corner of the pixel.
-  const SkTArray<SkPoint>& retrieveSampleLocations(int samplePatternKey) const {
+  const SkTArray<SkPoint>& retrieveSampleLocations(int samplePatternKey) const noexcept {
     return fSamplePatternDictionary.retrieveSampleLocations(samplePatternKey);
   }
 
@@ -340,29 +340,29 @@ class GrGpu : public SkRefCnt {
 
     void reset() { *this = {}; }
 
-    int renderTargetBinds() const { return fRenderTargetBinds; }
-    void incRenderTargetBinds() { fRenderTargetBinds++; }
-    int shaderCompilations() const { return fShaderCompilations; }
-    void incShaderCompilations() { fShaderCompilations++; }
-    int textureCreates() const { return fTextureCreates; }
-    void incTextureCreates() { fTextureCreates++; }
-    int textureUploads() const { return fTextureUploads; }
-    void incTextureUploads() { fTextureUploads++; }
-    int transfersToTexture() const { return fTransfersToTexture; }
-    int transfersFromSurface() const { return fTransfersFromSurface; }
-    void incTransfersToTexture() { fTransfersToTexture++; }
-    void incTransfersFromSurface() { fTransfersFromSurface++; }
-    void incStencilAttachmentCreates() { fStencilAttachmentCreates++; }
-    void incNumDraws() { fNumDraws++; }
-    void incNumFailedDraws() { ++fNumFailedDraws; }
-    void incNumFinishFlushes() { ++fNumFinishFlushes; }
+    int renderTargetBinds() const noexcept { return fRenderTargetBinds; }
+    void incRenderTargetBinds() noexcept { fRenderTargetBinds++; }
+    int shaderCompilations() const noexcept { return fShaderCompilations; }
+    void incShaderCompilations() noexcept { fShaderCompilations++; }
+    int textureCreates() const noexcept { return fTextureCreates; }
+    void incTextureCreates() noexcept { fTextureCreates++; }
+    int textureUploads() const noexcept { return fTextureUploads; }
+    void incTextureUploads() noexcept { fTextureUploads++; }
+    int transfersToTexture() const noexcept { return fTransfersToTexture; }
+    int transfersFromSurface() const noexcept { return fTransfersFromSurface; }
+    void incTransfersToTexture() noexcept { fTransfersToTexture++; }
+    void incTransfersFromSurface() noexcept { fTransfersFromSurface++; }
+    void incStencilAttachmentCreates() noexcept { fStencilAttachmentCreates++; }
+    void incNumDraws() noexcept { fNumDraws++; }
+    void incNumFailedDraws() noexcept { ++fNumFailedDraws; }
+    void incNumFinishFlushes() noexcept { ++fNumFinishFlushes; }
 #if GR_TEST_UTILS
     void dump(SkString*);
     void dumpKeyValuePairs(SkTArray<SkString>* keys, SkTArray<double>* values);
 #endif
-    int numDraws() const { return fNumDraws; }
-    int numFailedDraws() const { return fNumFailedDraws; }
-    int numFinishFlushes() const { return fNumFinishFlushes; }
+    int numDraws() const noexcept { return fNumDraws; }
+    int numFailedDraws() const noexcept { return fNumFailedDraws; }
+    int numFinishFlushes() const noexcept { return fNumFinishFlushes; }
 
    private:
     int fRenderTargetBinds = 0;
@@ -393,7 +393,7 @@ class GrGpu : public SkRefCnt {
 #endif
   };
 
-  Stats* stats() { return &fStats; }
+  Stats* stats() noexcept { return &fStats; }
   void dumpJSON(SkJSONWriter*) const;
 
   // TODO: remove this method
@@ -449,7 +449,7 @@ class GrGpu : public SkRefCnt {
   // GrSamplerState.
   static bool IsACopyNeededForRepeatWrapMode(
       const GrCaps*, GrTextureProxy* texProxy, int width, int height, GrSamplerState::Filter,
-      GrTextureProducer::CopyParams*, SkScalar scaleAdjust[2]);
+      GrTextureProducer::CopyParams*, SkScalar scaleAdjust[2]) noexcept;
 
   // Determines whether a texture will need to be copied because the draw requires mips but the
   // texutre doesn't have any. This call should be only checked if IsACopyNeededForTextureParams

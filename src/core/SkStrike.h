@@ -106,11 +106,11 @@ class SkStrike final : public SkStrikeInterface {
 
   /** Return the vertical metrics for this strike.
    */
-  const SkFontMetrics& getFontMetrics() const { return fFontMetrics; }
+  const SkFontMetrics& getFontMetrics() const noexcept { return fFontMetrics; }
 
-  SkMask::Format getMaskFormat() const { return fScalerContext->getMaskFormat(); }
+  SkMask::Format getMaskFormat() const noexcept { return fScalerContext->getMaskFormat(); }
 
-  bool isSubpixel() const { return fIsSubpixel; }
+  bool isSubpixel() const noexcept { return fIsSubpixel; }
 
   SkVector rounding() const override;
 
@@ -127,22 +127,22 @@ class SkStrike final : public SkStrikeInterface {
   void onAboutToExitScope() override;
 
   /** Return the approx RAM usage for this cache. */
-  size_t getMemoryUsed() const { return fMemoryUsed; }
+  size_t getMemoryUsed() const noexcept { return fMemoryUsed; }
 
   void dump() const;
 
-  SkScalerContext* getScalerContext() const { return fScalerContext.get(); }
+  SkScalerContext* getScalerContext() const noexcept { return fScalerContext.get(); }
 
 #ifdef SK_DEBUG
   void forceValidate() const;
   void validate() const;
 #else
-  void validate() const {}
+  void validate() const noexcept {}
 #endif
 
   class AutoValidate : SkNoncopyable {
    public:
-    AutoValidate(const SkStrike* cache) : fCache(cache) {
+    AutoValidate(const SkStrike* cache) noexcept : fCache(cache) {
       if (fCache) {
         fCache->validate();
       }
@@ -152,7 +152,7 @@ class SkStrike final : public SkStrikeInterface {
         fCache->validate();
       }
     }
-    void forget() { fCache = nullptr; }
+    void forget() noexcept { fCache = nullptr; }
 
    private:
     const SkStrike* fCache;
@@ -194,8 +194,8 @@ class SkStrike final : public SkStrikeInterface {
 
   class GlyphMapHashTraits {
    public:
-    static SkPackedGlyphID GetKey(const SkGlyph* glyph) { return glyph->getPackedID(); }
-    static uint32_t Hash(SkPackedGlyphID glyphId) { return glyphId.hash(); }
+    static SkPackedGlyphID GetKey(const SkGlyph* glyph) noexcept { return glyph->getPackedID(); }
+    static uint32_t Hash(SkPackedGlyphID glyphId) noexcept { return glyphId.hash(); }
   };
 
   // Map from a combined GlyphID and sub-pixel position to a SkGlyph*.

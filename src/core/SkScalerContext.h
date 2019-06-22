@@ -63,23 +63,23 @@ struct SkScalerContextRec {
   const uint8_t fReservedAlign{0};
 
  public:
-  SkScalar getDeviceGamma() const { return SkIntToScalar(fDeviceGamma) / (1 << 6); }
-  void setDeviceGamma(SkScalar dg) {
+  SkScalar getDeviceGamma() const noexcept { return SkIntToScalar(fDeviceGamma) / (1 << 6); }
+  void setDeviceGamma(SkScalar dg) noexcept {
     SkASSERT(0 <= dg && dg < SkIntToScalar(4));
     fDeviceGamma = SkScalarFloorToInt(dg * (1 << 6));
   }
 
-  SkScalar getPaintGamma() const { return SkIntToScalar(fPaintGamma) / (1 << 6); }
-  void setPaintGamma(SkScalar pg) {
+  SkScalar getPaintGamma() const noexcept { return SkIntToScalar(fPaintGamma) / (1 << 6); }
+  void setPaintGamma(SkScalar pg) noexcept {
     SkASSERT(0 <= pg && pg < SkIntToScalar(4));
     fPaintGamma = SkScalarFloorToInt(pg * (1 << 6));
   }
 
-  SkScalar getContrast() const {
+  SkScalar getContrast() const noexcept {
     sk_ignore_unused_variable(fReservedAlign);
     return SkIntToScalar(fContrast) / ((1 << 8) - 1);
   }
-  void setContrast(SkScalar c) {
+  void setContrast(SkScalar c) noexcept {
     SkASSERT(0 <= c && c <= SK_Scalar1);
     fContrast = SkScalarRoundToInt(c * ((1 << 8) - 1));
   }
@@ -88,7 +88,7 @@ struct SkScalerContextRec {
    *  Causes the luminance color to be ignored, and the paint and device
    *  gamma to be effectively 1.0
    */
-  void ignoreGamma() {
+  void ignoreGamma() noexcept {
     setLuminanceColor(SK_ColorTRANSPARENT);
     setPaintGamma(SK_Scalar1);
     setDeviceGamma(SK_Scalar1);
@@ -98,7 +98,7 @@ struct SkScalerContextRec {
    *  Causes the luminance color and contrast to be ignored, and the
    *  paint and device gamma to be effectively 1.0.
    */
-  void ignorePreBlend() {
+  void ignorePreBlend() noexcept {
     ignoreGamma();
     setContrast(0);
   }
@@ -132,9 +132,9 @@ struct SkScalerContextRec {
     return msg;
   }
 
-  void getMatrixFrom2x2(SkMatrix*) const;
-  void getLocalMatrix(SkMatrix*) const;
-  void getSingleMatrix(SkMatrix*) const;
+  void getMatrixFrom2x2(SkMatrix*) const noexcept;
+  void getLocalMatrix(SkMatrix*) const noexcept;
+  void getSingleMatrix(SkMatrix*) const noexcept;
 
   /** The kind of scale which will be applied by the underlying port (pre-matrix). */
   enum PreMatrixScale {
@@ -180,18 +180,18 @@ struct SkScalerContextRec {
       SkMatrix* remainingWithoutRotation = nullptr, SkMatrix* remainingRotation = nullptr,
       SkMatrix* total = nullptr);
 
-  SkAxisAlignment computeAxisAlignmentForHText() const;
+  SkAxisAlignment computeAxisAlignmentForHText() const noexcept;
 
-  inline SkFontHinting getHinting() const;
-  inline void setHinting(SkFontHinting);
+  inline SkFontHinting getHinting() const noexcept;
+  inline void setHinting(SkFontHinting) noexcept;
 
-  SkMask::Format getFormat() const { return static_cast<SkMask::Format>(fMaskFormat); }
+  SkMask::Format getFormat() const noexcept { return static_cast<SkMask::Format>(fMaskFormat); }
 
-  SkColor getLuminanceColor() const { return fLumBits; }
+  SkColor getLuminanceColor() const noexcept { return fLumBits; }
 
   // setLuminanceColor forces the alpha to be 0xFF because the blitter that draws the glyph
   // will apply the alpha from the paint. Don't apply the alpha twice.
-  void setLuminanceColor(SkColor c);
+  void setLuminanceColor(SkColor c) noexcept;
 
  private:
   // TODO: remove
@@ -241,16 +241,16 @@ class SkScalerContext {
   SkScalerContext(sk_sp<SkTypeface>, const SkScalerContextEffects&, const SkDescriptor*);
   virtual ~SkScalerContext();
 
-  SkTypeface* getTypeface() const { return fTypeface.get(); }
+  SkTypeface* getTypeface() const noexcept { return fTypeface.get(); }
 
-  SkMask::Format getMaskFormat() const { return (SkMask::Format)fRec.fMaskFormat; }
+  SkMask::Format getMaskFormat() const noexcept { return (SkMask::Format)fRec.fMaskFormat; }
 
-  bool isSubpixel() const { return SkToBool(fRec.fFlags & kSubpixelPositioning_Flag); }
+  bool isSubpixel() const noexcept { return SkToBool(fRec.fFlags & kSubpixelPositioning_Flag); }
 
-  bool isLinearMetrics() const { return SkToBool(fRec.fFlags & kLinearMetrics_Flag); }
+  bool isLinearMetrics() const noexcept { return SkToBool(fRec.fFlags & kLinearMetrics_Flag); }
 
   // DEPRECATED
-  bool isVertical() const { return false; }
+  bool isVertical() const noexcept { return false; }
 
   unsigned getGlyphCount() { return this->generateGlyphCount(); }
   void getAdvance(SkGlyph*);
@@ -300,15 +300,17 @@ class SkScalerContext {
 
   static SkMaskGamma::PreBlend GetMaskPreBlend(const SkScalerContextRec& rec);
 
-  const SkScalerContextRec& getRec() const { return fRec; }
+  const SkScalerContextRec& getRec() const noexcept { return fRec; }
 
-  SkScalerContextEffects getEffects() const { return {fPathEffect.get(), fMaskFilter.get()}; }
+  SkScalerContextEffects getEffects() const noexcept {
+    return {fPathEffect.get(), fMaskFilter.get()};
+  }
 
   /**
    *  Return the axis (if any) that the baseline for horizontal text should land on.
    *  As an example, the identity matrix will return kX_SkAxisAlignment
    */
-  SkAxisAlignment computeAxisAlignmentForHText() const;
+  SkAxisAlignment computeAxisAlignmentForHText() const noexcept;
 
   static SkDescriptor* CreateDescriptorAndEffectsUsingPaint(
       const SkFont&, const SkPaint&, const SkSurfaceProps&, SkScalerContextFlags scalerContextFlags,
@@ -352,8 +354,8 @@ class SkScalerContext {
   /** Returns the number of glyphs in the font. */
   virtual unsigned generateGlyphCount() = 0;
 
-  void forceGenerateImageFromPath() { fGenerateImageFromPath = true; }
-  void forceOffGenerateImageFromPath() { fGenerateImageFromPath = false; }
+  void forceGenerateImageFromPath() noexcept { fGenerateImageFromPath = true; }
+  void forceOffGenerateImageFromPath() noexcept { fGenerateImageFromPath = false; }
 
  private:
   friend class RandomScalerContext;  // For debug purposes
@@ -386,12 +388,12 @@ class SkScalerContext {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkFontHinting SkScalerContextRec::getHinting() const {
+SkFontHinting SkScalerContextRec::getHinting() const noexcept {
   unsigned hint = (fFlags & SkScalerContext::kHinting_Mask) >> SkScalerContext::kHinting_Shift;
   return static_cast<SkFontHinting>(hint);
 }
 
-void SkScalerContextRec::setHinting(SkFontHinting hinting) {
+void SkScalerContextRec::setHinting(SkFontHinting hinting) noexcept {
   fFlags = (fFlags & ~SkScalerContext::kHinting_Mask) |
            (static_cast<unsigned>(hinting) << SkScalerContext::kHinting_Shift);
 }

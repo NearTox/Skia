@@ -25,7 +25,7 @@
     or pt >> 8 for antialiasing. This is implemented as pt >> (10 - shift).
 */
 
-static inline SkFixed SkFDot6ToFixedDiv2(SkFDot6 value) {
+static constexpr inline SkFixed SkFDot6ToFixedDiv2(SkFDot6 value) noexcept {
   // we want to return SkFDot6ToFixed(value >> 1), but we don't want to throw
   // away data in value, so just perform a modify up-shift
   return SkLeftShift(value, 16 - 6 - 1);
@@ -33,7 +33,7 @@ static inline SkFixed SkFDot6ToFixedDiv2(SkFDot6 value) {
 
 /////////////////////////////////////////////////////////////////////////
 
-int SkEdge::setLine(const SkPoint& p0, const SkPoint& p1, const SkIRect* clip, int shift) {
+int SkEdge::setLine(const SkPoint& p0, const SkPoint& p1, const SkIRect* clip, int shift) noexcept {
   SkFDot6 x0, y0, x1, y1;
 
   {
@@ -90,7 +90,7 @@ int SkEdge::setLine(const SkPoint& p0, const SkPoint& p1, const SkIRect* clip, i
 }
 
 // called from a curve subclass
-int SkEdge::updateLine(SkFixed x0, SkFixed y0, SkFixed x1, SkFixed y1) {
+int SkEdge::updateLine(SkFixed x0, SkFixed y0, SkFixed x1, SkFixed y1) noexcept {
   SkASSERT(fWinding == 1 || fWinding == -1);
   SkASSERT(fCurveCount != 0);
   //    SkASSERT(fCurveShift != 0);
@@ -122,7 +122,7 @@ int SkEdge::updateLine(SkFixed x0, SkFixed y0, SkFixed x1, SkFixed y1) {
   return 1;
 }
 
-void SkEdge::chopLineWithClip(const SkIRect& clip) {
+void SkEdge::chopLineWithClip(const SkIRect& clip) noexcept {
   int top = fFirstY;
 
   SkASSERT(top < clip.fBottom);
@@ -144,7 +144,7 @@ void SkEdge::chopLineWithClip(const SkIRect& clip) {
 */
 #define MAX_COEFF_SHIFT 6
 
-static inline SkFDot6 cheap_distance(SkFDot6 dx, SkFDot6 dy) {
+static constexpr inline SkFDot6 cheap_distance(SkFDot6 dx, SkFDot6 dy) noexcept {
   dx = SkAbs32(dx);
   dy = SkAbs32(dy);
   // return max + min/2
@@ -155,7 +155,7 @@ static inline SkFDot6 cheap_distance(SkFDot6 dx, SkFDot6 dy) {
   return dx;
 }
 
-static inline int diff_to_shift(SkFDot6 dx, SkFDot6 dy, int shiftAA = 2) {
+static inline int diff_to_shift(SkFDot6 dx, SkFDot6 dy, int shiftAA = 2) noexcept {
   // cheap calc of distance from center of p0-p2 to the center of the curve
   SkFDot6 dist = cheap_distance(dx, dy);
 
@@ -171,7 +171,7 @@ static inline int diff_to_shift(SkFDot6 dx, SkFDot6 dy, int shiftAA = 2) {
   return (32 - SkCLZ(dist)) >> 1;
 }
 
-bool SkQuadraticEdge::setQuadraticWithoutUpdate(const SkPoint pts[3], int shift) {
+bool SkQuadraticEdge::setQuadraticWithoutUpdate(const SkPoint pts[3], int shift) noexcept {
   SkFDot6 x0, y0, x1, y1, x2, y2;
 
   {
@@ -269,14 +269,14 @@ bool SkQuadraticEdge::setQuadraticWithoutUpdate(const SkPoint pts[3], int shift)
   return true;
 }
 
-int SkQuadraticEdge::setQuadratic(const SkPoint pts[3], int shift) {
+int SkQuadraticEdge::setQuadratic(const SkPoint pts[3], int shift) noexcept {
   if (!setQuadraticWithoutUpdate(pts, shift)) {
     return 0;
   }
   return this->updateQuadratic();
 }
 
-int SkQuadraticEdge::updateQuadratic() {
+int SkQuadraticEdge::updateQuadratic() noexcept {
   int success;
   int count = fCurveCount;
   SkFixed oldx = fQx;
@@ -314,7 +314,7 @@ int SkQuadraticEdge::updateQuadratic() {
 
 /////////////////////////////////////////////////////////////////////////
 
-static inline int SkFDot6UpShift(SkFDot6 x, int upShift) {
+static constexpr inline int SkFDot6UpShift(SkFDot6 x, int upShift) noexcept {
   SkASSERT((SkLeftShift(x, upShift) >> upShift) == x);
   return SkLeftShift(x, upShift);
 }
@@ -327,7 +327,8 @@ static inline int SkFDot6UpShift(SkFDot6 x, int upShift) {
 
     use 16/512 to approximate 1/27
 */
-static SkFDot6 cubic_delta_from_line(SkFDot6 a, SkFDot6 b, SkFDot6 c, SkFDot6 d) {
+static constexpr SkFDot6 cubic_delta_from_line(
+    SkFDot6 a, SkFDot6 b, SkFDot6 c, SkFDot6 d) noexcept {
   // since our parameters may be negative, we don't use << to avoid ASAN warnings
   SkFDot6 oneThird = (a * 8 - b * 15 + 6 * c + d) * 19 >> 9;
   SkFDot6 twoThird = (a + 6 * b - c * 15 + d * 8) * 19 >> 9;
@@ -335,7 +336,7 @@ static SkFDot6 cubic_delta_from_line(SkFDot6 a, SkFDot6 b, SkFDot6 c, SkFDot6 d)
   return SkMax32(SkAbs32(oneThird), SkAbs32(twoThird));
 }
 
-bool SkCubicEdge::setCubicWithoutUpdate(const SkPoint pts[4], int shift, bool sortY) {
+bool SkCubicEdge::setCubicWithoutUpdate(const SkPoint pts[4], int shift, bool sortY) noexcept {
   SkFDot6 x0, y0, x1, y1, x2, y2, x3, y3;
 
   {
@@ -433,14 +434,14 @@ bool SkCubicEdge::setCubicWithoutUpdate(const SkPoint pts[4], int shift, bool so
   return true;
 }
 
-int SkCubicEdge::setCubic(const SkPoint pts[4], int shift) {
+int SkCubicEdge::setCubic(const SkPoint pts[4], int shift) noexcept {
   if (!this->setCubicWithoutUpdate(pts, shift)) {
     return 0;
   }
   return this->updateCubic();
 }
 
-int SkCubicEdge::updateCubic() {
+int SkCubicEdge::updateCubic() noexcept {
   int success;
   int count = fCurveCount;
   SkFixed oldx = fCx;

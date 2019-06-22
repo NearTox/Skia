@@ -18,7 +18,7 @@ namespace SkSL {
 struct ASTIfStatement : public ASTStatement {
   ASTIfStatement(
       int offset, bool isStatic, std::unique_ptr<ASTExpression> test,
-      std::unique_ptr<ASTStatement> ifTrue, std::unique_ptr<ASTStatement> ifFalse)
+      std::unique_ptr<ASTStatement> ifTrue, std::unique_ptr<ASTStatement> ifFalse) noexcept
       : INHERITED(offset, kIf_Kind),
         fIsStatic(isStatic),
         fTest(std::move(test)),

@@ -34,19 +34,21 @@ using DstProxy = GrXferProcessor::DstProxy;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static inline bool can_reorder(const SkRect& a, const SkRect& b) { return !GrRectsOverlap(a, b); }
+static inline bool can_reorder(const SkRect& a, const SkRect& b) noexcept {
+  return !GrRectsOverlap(a, b);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline GrRenderTargetOpList::OpChain::List::List(std::unique_ptr<GrOp> op)
+inline GrRenderTargetOpList::OpChain::List::List(std::unique_ptr<GrOp> op) noexcept
     : fHead(std::move(op)), fTail(fHead.get()) {
   this->validate();
 }
 
-inline GrRenderTargetOpList::OpChain::List::List(List&& that) { *this = std::move(that); }
+inline GrRenderTargetOpList::OpChain::List::List(List&& that) noexcept { *this = std::move(that); }
 
 inline GrRenderTargetOpList::OpChain::List& GrRenderTargetOpList::OpChain::List::operator=(
-    List&& that) {
+    List&& that) noexcept {
   fHead = std::move(that.fHead);
   fTail = that.fTail;
   that.fTail = nullptr;
@@ -108,7 +110,7 @@ inline void GrRenderTargetOpList::OpChain::List::pushTail(std::unique_ptr<GrOp> 
   fTail = fTail->nextInChain();
 }
 
-inline void GrRenderTargetOpList::OpChain::List::validate() const {
+inline void GrRenderTargetOpList::OpChain::List::validate() const noexcept {
 #ifdef SK_DEBUG
   if (fHead) {
     SkASSERT(fTail);
@@ -121,7 +123,7 @@ inline void GrRenderTargetOpList::OpChain::List::validate() const {
 
 GrRenderTargetOpList::OpChain::OpChain(
     std::unique_ptr<GrOp> op, GrProcessorSet::Analysis processorAnalysis,
-    GrAppliedClip* appliedClip, const DstProxy* dstProxy)
+    GrAppliedClip* appliedClip, const DstProxy* dstProxy) noexcept
     : fList{std::move(op)}, fProcessorAnalysis(processorAnalysis), fAppliedClip(appliedClip) {
   if (fProcessorAnalysis.requiresDstTexture()) {
     SkASSERT(dstProxy && dstProxy->proxy());
@@ -250,7 +252,8 @@ bool GrRenderTargetOpList::OpChain::tryConcat(
     return false;
   }
 
-  SkDEBUGCODE(bool first = true;) do {
+  SkDEBUGCODE(bool first = true);
+  do {
     switch (fList.tail()->combineIfPossible(list->head(), caps)) {
       case GrOp::CombineResult::kCannotCombine:
         // If an op supports chaining then it is required that chaining is transitive and
@@ -275,9 +278,7 @@ bool GrRenderTargetOpList::OpChain::tryConcat(
       }
     }
     SkDEBUGCODE(first = false);
-  }
-  while (!list->empty())
-    ;
+  } while (!list->empty());
 
   // The new ops were successfully merged and/or chained onto our own.
   fBounds.joinPossiblyEmptyRect(bounds);
@@ -331,7 +332,7 @@ std::unique_ptr<GrOp> GrRenderTargetOpList::OpChain::appendOp(
   return nullptr;
 }
 
-inline void GrRenderTargetOpList::OpChain::validate() const {
+inline void GrRenderTargetOpList::OpChain::validate() const noexcept {
 #ifdef SK_DEBUG
   fList.validate();
   for (const auto& op : GrOp::ChainRange<>(fList.head())) {
@@ -500,7 +501,7 @@ void GrRenderTargetOpList::endFlush() {
   INHERITED::endFlush();
 }
 
-void GrRenderTargetOpList::discard() {
+void GrRenderTargetOpList::discard() noexcept {
   // Discard calls to in-progress opLists are ignored. Calls at the start update the
   // opLists' color & stencil load ops.
   if (this->isEmpty()) {
@@ -509,9 +510,9 @@ void GrRenderTargetOpList::discard() {
   }
 }
 
-void GrRenderTargetOpList::setStencilLoadOp(GrLoadOp op) { fStencilLoadOp = op; }
+void GrRenderTargetOpList::setStencilLoadOp(GrLoadOp op) noexcept { fStencilLoadOp = op; }
 
-void GrRenderTargetOpList::setColorLoadOp(GrLoadOp op, const SkPMColor4f& color) {
+void GrRenderTargetOpList::setColorLoadOp(GrLoadOp op, const SkPMColor4f& color) noexcept {
   fColorLoadOp = op;
   fLoadClearColor = color;
 }
@@ -564,7 +565,7 @@ bool GrRenderTargetOpList::copySurface(
 
 void GrRenderTargetOpList::purgeOpsWithUninstantiatedProxies() {
   bool hasUninstantiatedProxy = false;
-  auto checkInstantiation = [&hasUninstantiatedProxy](GrSurfaceProxy* p, GrMipMapped) {
+  auto checkInstantiation = [&hasUninstantiatedProxy](GrSurfaceProxy * p, GrMipMapped) noexcept {
     if (!p->isInstantiated()) {
       hasUninstantiatedProxy = true;
     }
@@ -638,8 +639,8 @@ void GrRenderTargetOpList::gatherProxyIntervals(GrResourceAllocator* alloc) cons
 void GrRenderTargetOpList::recordOp(
     std::unique_ptr<GrOp> op, GrProcessorSet::Analysis processorAnalysis, GrAppliedClip* clip,
     const DstProxy* dstProxy, const GrCaps& caps) {
-  SkDEBUGCODE(op->validate();)
-      SkASSERT(processorAnalysis.requiresDstTexture() == (dstProxy && dstProxy->proxy()));
+  SkDEBUGCODE(op->validate());
+  SkASSERT(processorAnalysis.requiresDstTexture() == (dstProxy && dstProxy->proxy()));
   SkASSERT(fTarget.get());
 
   // A closed GrOpList should never receive new/more ops
@@ -688,7 +689,7 @@ void GrRenderTargetOpList::recordOp(
   }
   if (clip) {
     clip = fClipAllocator.make<GrAppliedClip>(std::move(*clip));
-    SkDEBUGCODE(fNumClips++;)
+    SkDEBUGCODE(fNumClips++);
   }
   fOpChains.emplace_back(std::move(op), processorAnalysis, clip, dstProxy);
 }

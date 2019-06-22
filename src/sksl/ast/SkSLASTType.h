@@ -18,7 +18,8 @@ namespace SkSL {
 struct ASTType : public ASTPositionNode {
   enum Kind { kIdentifier_Kind, kStruct_Kind };
 
-  ASTType(int offset, StringFragment name, Kind kind, std::vector<int> sizes, bool nullable)
+  ASTType(
+      int offset, StringFragment name, Kind kind, std::vector<int> sizes, bool nullable) noexcept
       : INHERITED(offset),
         fName(name),
         fKind(kind),

@@ -22,11 +22,11 @@ struct BoolLiteral : public Expression {
 
   String description() const override { return String(fValue ? "true" : "false"); }
 
-  bool hasSideEffects() const override { return false; }
+  bool hasSideEffects() const noexcept override { return false; }
 
-  bool isConstant() const override { return true; }
+  bool isConstant() const noexcept override { return true; }
 
-  bool compareConstant(const Context& context, const Expression& other) const override {
+  bool compareConstant(const Context& context, const Expression& other) const noexcept override {
     BoolLiteral& b = (BoolLiteral&)other;
     return fValue == b.fValue;
   }
@@ -40,7 +40,7 @@ struct BoolLiteral : public Expression {
   typedef Expression INHERITED;
 
  private:
-  BoolLiteral(int offset, bool value, const Type* type)
+  BoolLiteral(int offset, bool value, const Type* type) noexcept
       : INHERITED(offset, kBoolLiteral_Kind, *type), fValue(value) {}
 };
 

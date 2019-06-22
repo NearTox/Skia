@@ -13,11 +13,11 @@
 
 class SkBitmapProvider {
  public:
-  explicit SkBitmapProvider(const SkImage* img) : fImage(img) { SkASSERT(img); }
-  SkBitmapProvider(const SkBitmapProvider& other) : fImage(other.fImage) {}
+  explicit SkBitmapProvider(const SkImage* img) noexcept : fImage(img) { SkASSERT(img); }
+  SkBitmapProvider(const SkBitmapProvider& other) noexcept : fImage(other.fImage) {}
 
-  SkBitmapCacheDesc makeCacheDesc() const;
-  void notifyAddedToCache() const;
+  SkBitmapCacheDesc makeCacheDesc() const noexcept;
+  void notifyAddedToCache() const noexcept;
 
   // Only call this if you're sure you need the bits, since it maybe expensive
   // ... cause a decode and cache, or gpu-readback

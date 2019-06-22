@@ -20,12 +20,12 @@ namespace SkSL {
 struct ExternalFunctionCall : public Expression {
   ExternalFunctionCall(
       int offset, const Type& type, ExternalValue* function,
-      std::vector<std::unique_ptr<Expression>> arguments)
+      std::vector<std::unique_ptr<Expression>> arguments) noexcept
       : INHERITED(offset, kExternalFunctionCall_Kind, type),
         fFunction(function),
         fArguments(std::move(arguments)) {}
 
-  bool hasSideEffects() const override { return true; }
+  bool hasSideEffects() const noexcept override { return true; }
 
   std::unique_ptr<Expression> clone() const override {
     std::vector<std::unique_ptr<Expression>> cloned;

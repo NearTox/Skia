@@ -39,7 +39,7 @@ class GrGLProgramBuilder : public GrGLSLProgramBuilder {
       GrRenderTarget*, GrSurfaceOrigin, const GrPrimitiveProcessor&,
       const GrTextureProxy* const primProcProxies[], const GrPipeline&, GrProgramDesc*, GrGLGpu*);
 
-  const GrCaps* caps() const override;
+  const GrCaps* caps() const noexcept override;
 
   GrGLGpu* gpu() const { return fGpu; }
 
@@ -70,9 +70,9 @@ class GrGLProgramBuilder : public GrGLSLProgramBuilder {
   // Subclasses create different programs
   GrGLProgram* createProgram(GrGLuint programID);
 
-  GrGLSLUniformHandler* uniformHandler() override { return &fUniformHandler; }
-  const GrGLSLUniformHandler* uniformHandler() const override { return &fUniformHandler; }
-  GrGLSLVaryingHandler* varyingHandler() override { return &fVaryingHandler; }
+  GrGLSLUniformHandler* uniformHandler() noexcept override { return &fUniformHandler; }
+  const GrGLSLUniformHandler* uniformHandler() const noexcept override { return &fUniformHandler; }
+  GrGLSLVaryingHandler* varyingHandler() noexcept override { return &fVaryingHandler; }
 
   GrGLGpu* fGpu;
   GrGLVaryingHandler fVaryingHandler;

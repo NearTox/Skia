@@ -42,7 +42,7 @@ class SK_API GrDDLContext : public GrContext {
  protected:
   // TODO: Here we're pretending this isn't derived from GrContext. Switch this to be derived from
   // GrRecordingContext!
-  GrContext* asDirectContext() override { return nullptr; }
+  GrContext* asDirectContext() noexcept override { return nullptr; }
 
   bool init(sk_sp<const GrCaps> caps, sk_sp<GrSkSLFPFactoryCache> FPFactoryCache) override {
     SkASSERT(caps && FPFactoryCache);
@@ -61,7 +61,7 @@ class SK_API GrDDLContext : public GrContext {
     return true;
   }
 
-  GrAtlasManager* onGetAtlasManager() override {
+  GrAtlasManager* onGetAtlasManager() noexcept override {
     SkASSERT(0);  // the DDL Recorders should never invoke this
     return nullptr;
   }

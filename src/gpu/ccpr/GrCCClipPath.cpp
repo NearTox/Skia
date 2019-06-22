@@ -52,7 +52,7 @@ void GrCCClipPath::init(
   fAccessRect = accessRect;
 }
 
-void GrCCClipPath::accountForOwnPath(GrCCPerFlushResourceSpecs* specs) const {
+void GrCCClipPath::accountForOwnPath(GrCCPerFlushResourceSpecs* specs) const noexcept {
   SkASSERT(this->isInitialized());
 
   ++specs->fNumClipPaths;

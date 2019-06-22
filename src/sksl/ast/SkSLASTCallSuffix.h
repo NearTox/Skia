@@ -17,7 +17,7 @@ namespace SkSL {
  * A parenthesized list of arguments following an expression, indicating a function call.
  */
 struct ASTCallSuffix : public ASTSuffix {
-  ASTCallSuffix(int offset, std::vector<std::unique_ptr<ASTExpression>> arguments)
+  ASTCallSuffix(int offset, std::vector<std::unique_ptr<ASTExpression>> arguments) noexcept
       : INHERITED(offset, ASTSuffix::kCall_Kind), fArguments(std::move(arguments)) {}
 
   String description() const override {

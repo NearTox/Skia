@@ -16,7 +16,7 @@ namespace SkSL {
  * A 'discard' statement.
  */
 struct ASTDiscardStatement : public ASTStatement {
-  ASTDiscardStatement(int offset) : INHERITED(offset, kDiscard_Kind) {}
+  ASTDiscardStatement(int offset) noexcept : INHERITED(offset, kDiscard_Kind) {}
 
   String description() const override { return String("discard;"); }
 

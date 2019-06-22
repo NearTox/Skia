@@ -118,7 +118,7 @@ class SkTable_ColorFilter : public SkColorFilter {
   }
 
  protected:
-  void flatten(SkWriteBuffer&) const override;
+  void flatten(SkWriteBuffer&) const noexcept override;
 
  private:
   SK_FLATTENABLE_HOOKS(SkTable_ColorFilter)
@@ -139,7 +139,7 @@ static const uint8_t gCountNibBits[] = {0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3
 
 #include "src/effects/SkPackBits.h"
 
-void SkTable_ColorFilter::flatten(SkWriteBuffer& buffer) const {
+void SkTable_ColorFilter::flatten(SkWriteBuffer& buffer) const noexcept {
   uint8_t storage[5 * 256];
   int count = gCountNibBits[fFlags & 0xF];
   size_t size = SkPackBits::Pack8(fStorage, count * 256, storage, sizeof(storage));
@@ -239,7 +239,7 @@ class ColorTableEffect : public GrFragmentProcessor {
 
   ~ColorTableEffect() override {}
 
-  const char* name() const override { return "ColorTableEffect"; }
+  const char* name() const noexcept override { return "ColorTableEffect"; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override {
     return std::unique_ptr<GrFragmentProcessor>(
@@ -249,9 +249,9 @@ class ColorTableEffect : public GrFragmentProcessor {
  private:
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
 
-  bool onIsEqual(const GrFragmentProcessor&) const override { return true; }
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override { return true; }
 
   ColorTableEffect(sk_sp<GrTextureProxy> proxy)
       : INHERITED(
@@ -262,7 +262,7 @@ class ColorTableEffect : public GrFragmentProcessor {
     this->setTextureSamplerCnt(1);
   }
 
-  const TextureSampler& onTextureSampler(int) const override { return fTextureSampler; }
+  const TextureSampler& onTextureSampler(int) const noexcept override { return fTextureSampler; }
 
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 
@@ -275,7 +275,7 @@ class GLColorTableEffect : public GrGLSLFragmentProcessor {
  public:
   void emitCode(EmitArgs&) override;
 
-  static void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) {}
+  static void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) noexcept {}
 
  private:
   typedef GrGLSLFragmentProcessor INHERITED;
@@ -350,7 +350,7 @@ std::unique_ptr<GrFragmentProcessor> ColorTableEffect::Make(
 }
 
 void ColorTableEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   GLColorTableEffect::GenKey(*this, caps, b);
 }
 

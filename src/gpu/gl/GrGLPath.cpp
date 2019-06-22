@@ -11,7 +11,7 @@
 #include "src/gpu/gl/GrGLPathRendering.h"
 
 namespace {
-inline GrGLubyte verb_to_gl_path_cmd(SkPath::Verb verb) {
+inline GrGLubyte verb_to_gl_path_cmd(SkPath::Verb verb) noexcept {
   static const GrGLubyte gTable[] = {
       GR_GL_MOVE_TO,        GR_GL_LINE_TO,        GR_GL_QUADRATIC_CURVE_TO,
       GR_GL_CONIC_CURVE_TO, GR_GL_CUBIC_CURVE_TO, GR_GL_CLOSE_PATH,
@@ -49,7 +49,7 @@ inline int num_coords(SkPath::Verb verb) {
 }
 #endif
 
-inline GrGLenum join_to_gl_join(SkPaint::Join join) {
+inline GrGLenum join_to_gl_join(SkPaint::Join join) noexcept {
   static GrGLenum gSkJoinsToGrGLJoins[] = {GR_GL_MITER_REVERT, GR_GL_ROUND, GR_GL_BEVEL};
   return gSkJoinsToGrGLJoins[join];
   GR_STATIC_ASSERT(0 == SkPaint::kMiter_Join);
@@ -58,7 +58,7 @@ inline GrGLenum join_to_gl_join(SkPaint::Join join) {
   GR_STATIC_ASSERT(SK_ARRAY_COUNT(gSkJoinsToGrGLJoins) == SkPaint::kJoinCount);
 }
 
-inline GrGLenum cap_to_gl_cap(SkPaint::Cap cap) {
+inline GrGLenum cap_to_gl_cap(SkPaint::Cap cap) noexcept {
   static GrGLenum gSkCapsToGrGLCaps[] = {GR_GL_FLAT, GR_GL_ROUND, GR_GL_SQUARE};
   return gSkCapsToGrGLCaps[cap];
   GR_STATIC_ASSERT(0 == SkPaint::kButt_Cap);
@@ -76,7 +76,7 @@ inline void verify_floats(const float* floats, int count) {
 #endif
 
 inline void points_to_coords(
-    const SkPoint points[], size_t first_point, size_t amount, GrGLfloat coords[]) {
+    const SkPoint points[], size_t first_point, size_t amount, GrGLfloat coords[]) noexcept {
   for (size_t i = 0; i < amount; ++i) {
     coords[i * 2] = SkScalarToFloat(points[first_point + i].fX);
     coords[i * 2 + 1] = SkScalarToFloat(points[first_point + i].fY);
@@ -180,7 +180,7 @@ inline bool init_path_object_for_general_path(GrGLGpu* gpu, GrGLuint pathID, con
 /*
  * For now paths only natively support winding and even odd fill types
  */
-static GrPathRendering::FillType convert_skpath_filltype(SkPath::FillType fill) {
+static GrPathRendering::FillType convert_skpath_filltype(SkPath::FillType fill) noexcept {
   switch (fill) {
     default: SK_ABORT("Incomplete Switch\n");
     case SkPath::kWinding_FillType:

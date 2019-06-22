@@ -45,10 +45,10 @@ class SK_API SkLightingImageFilter : public SkImageFilter {
       sk_sp<SkImageFilterLight> light, SkScalar surfaceScale, sk_sp<SkImageFilter> input,
       const CropRect* cropRect);
   void flatten(SkWriteBuffer&) const override;
-  const SkImageFilterLight* light() const { return fLight.get(); }
-  inline sk_sp<const SkImageFilterLight> refLight() const;
-  SkScalar surfaceScale() const { return fSurfaceScale; }
-  bool affectsTransparentBlack() const override { return true; }
+  const SkImageFilterLight* light() const noexcept { return fLight.get(); }
+  inline sk_sp<const SkImageFilterLight> refLight() const noexcept;
+  SkScalar surfaceScale() const noexcept { return fSurfaceScale; }
+  bool affectsTransparentBlack() const noexcept override { return true; }
 
  private:
   sk_sp<SkImageFilterLight> fLight;

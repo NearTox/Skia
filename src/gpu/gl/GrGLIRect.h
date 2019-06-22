@@ -24,7 +24,7 @@ struct GrGLIRect {
   /**
    *  cast-safe way to treat the rect as an array of (4) ints.
    */
-  const int* asInts() const {
+  const int* asInts() const noexcept {
     return &fLeft;
 
     GR_STATIC_ASSERT(0 == offsetof(GrGLIRect, fLeft));
@@ -33,7 +33,7 @@ struct GrGLIRect {
     GR_STATIC_ASSERT(12 == offsetof(GrGLIRect, fHeight));
     GR_STATIC_ASSERT(16 == sizeof(GrGLIRect));  // For an array of GrGLIRect.
   }
-  int* asInts() { return &fLeft; }
+  int* asInts() noexcept { return &fLeft; }
 
   void pushToGLViewport(const GrGLInterface* gl) const {
     GR_GL_CALL(gl, Viewport(fLeft, fBottom, fWidth, fHeight));
@@ -54,13 +54,13 @@ struct GrGLIRect {
   // The GL's viewport will always be the full size of the
   // current render target so we just pass in the rtHeight
   // here.
-  void setRelativeTo(int rtHeight, const SkIRect& devRect, GrSurfaceOrigin org) {
+  void setRelativeTo(int rtHeight, const SkIRect& devRect, GrSurfaceOrigin org) noexcept {
     this->setRelativeTo(rtHeight, devRect.x(), devRect.y(), devRect.width(), devRect.height(), org);
   }
 
   void setRelativeTo(
       int fullHeight, int leftOffset, int topOffset, int width, int height,
-      GrSurfaceOrigin origin) {
+      GrSurfaceOrigin origin) noexcept {
     fLeft = leftOffset;
     fWidth = width;
     if (kBottomLeft_GrSurfaceOrigin == origin) {
@@ -74,18 +74,20 @@ struct GrGLIRect {
     SkASSERT(fHeight >= 0);
   }
 
-  bool contains(int width, int height) const {
+  bool contains(int width, int height) const noexcept {
     return fLeft <= 0 && fBottom <= 0 && fLeft + fWidth >= width && fBottom + fHeight >= height;
   }
 
-  void invalidate() { fLeft = fWidth = fBottom = fHeight = -1; }
-  bool isInvalid() const { return fLeft == -1 && fWidth == -1 && fBottom == -1 && fHeight == -1; }
+  void invalidate() noexcept { fLeft = fWidth = fBottom = fHeight = -1; }
+  bool isInvalid() const noexcept {
+    return fLeft == -1 && fWidth == -1 && fBottom == -1 && fHeight == -1;
+  }
 
-  bool operator==(const GrGLIRect& glRect) const {
+  bool operator==(const GrGLIRect& glRect) const noexcept {
     return 0 == memcmp(this, &glRect, sizeof(GrGLIRect));
   }
 
-  bool operator!=(const GrGLIRect& glRect) const { return !(*this == glRect); }
+  bool operator!=(const GrGLIRect& glRect) const noexcept { return !(*this == glRect); }
 };
 
 #endif

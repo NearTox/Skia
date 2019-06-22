@@ -21,7 +21,7 @@ class CoverageSetOpXP : public GrXferProcessor {
   CoverageSetOpXP(SkRegion::Op regionOp, bool invertCoverage)
       : INHERITED(kCoverageSetOpXP_ClassID), fRegionOp(regionOp), fInvertCoverage(invertCoverage) {}
 
-  const char* name() const override { return "Coverage Set Op"; }
+  const char* name() const noexcept override { return "Coverage Set Op"; }
 
   GrGLSLXferProcessor* createGLSLInstance() const override;
 

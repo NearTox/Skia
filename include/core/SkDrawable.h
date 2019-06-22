@@ -109,9 +109,9 @@ class SK_API SkDrawable : public SkFlattenable {
    */
   void notifyDrawingChanged();
 
-  static SkFlattenable::Type GetFlattenableType() { return kSkDrawable_Type; }
+  static SkFlattenable::Type GetFlattenableType() noexcept { return kSkDrawable_Type; }
 
-  SkFlattenable::Type getFlattenableType() const override { return kSkDrawable_Type; }
+  SkFlattenable::Type getFlattenableType() const noexcept override { return kSkDrawable_Type; }
 
   static sk_sp<SkDrawable> Deserialize(
       const void* data, size_t size, const SkDeserialProcs* procs = nullptr) {
@@ -120,7 +120,7 @@ class SK_API SkDrawable : public SkFlattenable {
   }
 
   Factory getFactory() const override { return nullptr; }
-  const char* getTypeName() const override { return nullptr; }
+  const char* getTypeName() const noexcept override { return nullptr; }
 
  protected:
   SkDrawable();

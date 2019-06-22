@@ -30,16 +30,16 @@ class GrMatrixConvolutionEffect : public GrFragmentProcessor {
       SkScalar gain, SkScalar bias, const SkIPoint& kernelOffset, GrTextureDomain::Mode tileMode,
       bool convolveAlpha, SkScalar sigmaX, SkScalar sigmaY);
 
-  const SkIRect& bounds() const { return fBounds; }
-  const SkISize& kernelSize() const { return fKernelSize; }
-  const float* kernelOffset() const { return fKernelOffset; }
-  const float* kernel() const { return fKernel; }
-  float gain() const { return fGain; }
-  float bias() const { return fBias; }
-  bool convolveAlpha() const { return fConvolveAlpha; }
-  const GrTextureDomain& domain() const { return fDomain; }
+  const SkIRect& bounds() const noexcept { return fBounds; }
+  const SkISize& kernelSize() const noexcept { return fKernelSize; }
+  const float* kernelOffset() const noexcept { return fKernelOffset; }
+  const float* kernel() const noexcept { return fKernel; }
+  float gain() const noexcept { return fGain; }
+  float bias() const noexcept { return fBias; }
+  bool convolveAlpha() const noexcept { return fConvolveAlpha; }
+  const GrTextureDomain& domain() const noexcept { return fDomain; }
 
-  const char* name() const override { return "MatrixConvolution"; }
+  const char* name() const noexcept override { return "MatrixConvolution"; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override;
 
@@ -51,15 +51,15 @@ class GrMatrixConvolutionEffect : public GrFragmentProcessor {
       const SkScalar* kernel, SkScalar gain, SkScalar bias, const SkIPoint& kernelOffset,
       GrTextureDomain::Mode tileMode, bool convolveAlpha);
 
-  GrMatrixConvolutionEffect(const GrMatrixConvolutionEffect&);
+  GrMatrixConvolutionEffect(const GrMatrixConvolutionEffect&) noexcept;
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
 
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
 
-  const TextureSampler& onTextureSampler(int i) const override { return fTextureSampler; }
+  const TextureSampler& onTextureSampler(int i) const noexcept override { return fTextureSampler; }
 
   GrCoordTransform fCoordTransform;
   GrTextureDomain fDomain;

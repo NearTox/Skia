@@ -150,7 +150,7 @@ static const unsigned int gColorNames[] = {
     0xe4ac63ef, 0x1e452b80, 0x009acd32                           // yellowgreen
 };  // original = 2505 : replacement = 1616
 
-const char* SkParse::FindNamedColor(const char* name, size_t len, SkColor* color) {
+const char* SkParse::FindNamedColor(const char* name, size_t len, SkColor* color) noexcept {
   const char* namePtr = name;
   unsigned int sixMatches[4];
   unsigned int* sixMatchPtr = sixMatches;
@@ -227,12 +227,12 @@ const char* SkParse::FindNamedColor(const char* name, size_t len, SkColor* color
 //  return separators;
 //}
 
-static inline unsigned nib2byte(unsigned n) {
+static constexpr inline unsigned nib2byte(unsigned n) noexcept {
   SkASSERT((n & ~0xF) == 0);
   return (n << 4) | n;
 }
 
-const char* SkParse::FindColor(const char* value, SkColor* colorPtr) {
+const char* SkParse::FindColor(const char* value, SkColor* colorPtr) noexcept {
   unsigned int oldAlpha = SkColorGetA(*colorPtr);
   if (value[0] == '#') {
     uint32_t hex;

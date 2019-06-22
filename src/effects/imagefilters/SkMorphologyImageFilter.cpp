@@ -129,14 +129,14 @@ class GrMorphologyEffect : public GrFragmentProcessor {
         new GrMorphologyEffect(std::move(proxy), dir, radius, type, bounds));
   }
 
-  Type type() const { return fType; }
-  bool useRange() const { return fUseRange; }
-  const float* range() const { return fRange; }
-  Direction direction() const { return fDirection; }
-  int radius() const { return fRadius; }
-  int width() const { return 2 * fRadius + 1; }
+  Type type() const noexcept { return fType; }
+  bool useRange() const noexcept { return fUseRange; }
+  const float* range() const noexcept { return fRange; }
+  Direction direction() const noexcept { return fDirection; }
+  int radius() const noexcept { return fRadius; }
+  int width() const noexcept { return 2 * fRadius + 1; }
 
-  const char* name() const override { return "Morphology"; }
+  const char* name() const noexcept override { return "Morphology"; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override {
     return std::unique_ptr<GrFragmentProcessor>(new GrMorphologyEffect(*this));
@@ -153,14 +153,14 @@ class GrMorphologyEffect : public GrFragmentProcessor {
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
 
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
 
-  const TextureSampler& onTextureSampler(int i) const override { return fTextureSampler; }
+  const TextureSampler& onTextureSampler(int i) const noexcept override { return fTextureSampler; }
 
   GrMorphologyEffect(sk_sp<GrTextureProxy>, Direction, int radius, Type, const float range[2]);
-  explicit GrMorphologyEffect(const GrMorphologyEffect&);
+  explicit GrMorphologyEffect(const GrMorphologyEffect&) noexcept;
 
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 
@@ -173,7 +173,8 @@ class GrGLMorphologyEffect : public GrGLSLFragmentProcessor {
  public:
   void emitCode(EmitArgs&) override;
 
-  static inline void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*);
+  static inline void GenKey(
+      const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) noexcept;
 
  protected:
   void onSetData(const GrGLSLProgramDataManager&, const GrFragmentProcessor&) override;
@@ -248,7 +249,7 @@ void GrGLMorphologyEffect::emitCode(EmitArgs& args) {
 }
 
 void GrGLMorphologyEffect::GenKey(
-    const GrProcessor& proc, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
+    const GrProcessor& proc, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
   const GrMorphologyEffect& m = proc.cast<GrMorphologyEffect>();
   uint32_t key = static_cast<uint32_t>(m.radius());
   key |= (static_cast<uint32_t>(m.type()) << 8);
@@ -307,7 +308,7 @@ GrMorphologyEffect::GrMorphologyEffect(
   }
 }
 
-GrMorphologyEffect::GrMorphologyEffect(const GrMorphologyEffect& that)
+GrMorphologyEffect::GrMorphologyEffect(const GrMorphologyEffect& that) noexcept
     : INHERITED(kGrMorphologyEffect_ClassID, that.optimizationFlags()),
       fCoordTransform(that.fCoordTransform),
       fTextureSampler(that.fTextureSampler),
@@ -324,14 +325,14 @@ GrMorphologyEffect::GrMorphologyEffect(const GrMorphologyEffect& that)
 }
 
 void GrMorphologyEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   GrGLMorphologyEffect::GenKey(*this, caps, b);
 }
 
 GrGLSLFragmentProcessor* GrMorphologyEffect::onCreateGLSLInstance() const {
   return new GrGLMorphologyEffect;
 }
-bool GrMorphologyEffect::onIsEqual(const GrFragmentProcessor& sBase) const {
+bool GrMorphologyEffect::onIsEqual(const GrFragmentProcessor& sBase) const noexcept {
   const GrMorphologyEffect& s = sBase.cast<GrMorphologyEffect>();
   return (
       this->radius() == s.radius() && this->direction() == s.direction() &&

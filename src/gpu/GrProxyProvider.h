@@ -183,7 +183,7 @@ class GrProxyProvider {
 
   // 'proxy' is about to be used as a texture src or drawn to. This query can be used to
   // determine if it is going to need a texture domain or a full clear.
-  static bool IsFunctionallyExact(GrSurfaceProxy* proxy);
+  static bool IsFunctionallyExact(GrSurfaceProxy* proxy) noexcept;
 
   enum class InvalidateGPUResource : bool { kNo = false, kYes = true };
 
@@ -203,9 +203,9 @@ class GrProxyProvider {
   void processInvalidUniqueKey(const GrUniqueKey&, GrTextureProxy*, InvalidateGPUResource);
 
   // TODO: remove these entry points - it is a bit sloppy to be getting context info from here
-  uint32_t contextID() const;
-  const GrCaps* caps() const;
-  sk_sp<const GrCaps> refCaps() const;
+  uint32_t contextID() const noexcept;
+  const GrCaps* caps() const noexcept;
+  sk_sp<const GrCaps> refCaps() const noexcept;
 
   int numUniqueKeyProxies_TestOnly() const;
 
@@ -240,9 +240,9 @@ class GrProxyProvider {
   sk_sp<GrTextureProxy> createWrapped(sk_sp<GrTexture> tex, GrSurfaceOrigin origin);
 
   struct UniquelyKeyedProxyHashTraits {
-    static const GrUniqueKey& GetKey(const GrTextureProxy& p) { return p.getUniqueKey(); }
+    static const GrUniqueKey& GetKey(const GrTextureProxy& p) noexcept { return p.getUniqueKey(); }
 
-    static uint32_t Hash(const GrUniqueKey& key) { return key.hash(); }
+    static uint32_t Hash(const GrUniqueKey& key) noexcept { return key.hash(); }
   };
   typedef SkTDynamicHash<GrTextureProxy, GrUniqueKey, UniquelyKeyedProxyHashTraits>
       UniquelyKeyedProxyHash;

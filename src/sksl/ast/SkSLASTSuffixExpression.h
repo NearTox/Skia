@@ -17,7 +17,8 @@ namespace SkSL {
  * An expression with an associated suffix.
  */
 struct ASTSuffixExpression : public ASTExpression {
-  ASTSuffixExpression(std::unique_ptr<ASTExpression> base, std::unique_ptr<ASTSuffix> suffix)
+  ASTSuffixExpression(
+      std::unique_ptr<ASTExpression> base, std::unique_ptr<ASTSuffix> suffix) noexcept
       : INHERITED(base->fOffset, kSuffix_Kind),
         fBase(std::move(base)),
         fSuffix(std::move(suffix)) {}

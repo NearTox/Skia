@@ -19,7 +19,7 @@ namespace SkSL {
  */
 struct FunctionDefinition : public ProgramElement {
   FunctionDefinition(
-      int offset, const FunctionDeclaration& declaration, std::unique_ptr<Statement> body)
+      int offset, const FunctionDeclaration& declaration, std::unique_ptr<Statement> body) noexcept
       : INHERITED(offset, kFunction_Kind), fDeclaration(declaration), fBody(std::move(body)) {}
 
   std::unique_ptr<ProgramElement> clone() const override {

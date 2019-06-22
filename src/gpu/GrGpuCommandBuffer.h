@@ -46,7 +46,7 @@ class GrGpuCommandBuffer {
 
 class GrGpuTextureCommandBuffer : public GrGpuCommandBuffer {
  public:
-  void set(GrTexture* texture, GrSurfaceOrigin origin) {
+  void set(GrTexture* texture, GrSurfaceOrigin origin) noexcept {
     SkASSERT(!fTexture);
 
     fOrigin = origin;
@@ -54,9 +54,10 @@ class GrGpuTextureCommandBuffer : public GrGpuCommandBuffer {
   }
 
  protected:
-  GrGpuTextureCommandBuffer() : fOrigin(kTopLeft_GrSurfaceOrigin), fTexture(nullptr) {}
+  constexpr GrGpuTextureCommandBuffer() noexcept
+      : fOrigin(kTopLeft_GrSurfaceOrigin), fTexture(nullptr) {}
 
-  GrGpuTextureCommandBuffer(GrTexture* texture, GrSurfaceOrigin origin)
+  GrGpuTextureCommandBuffer(GrTexture* texture, GrSurfaceOrigin origin) noexcept
       : fOrigin(origin), fTexture(texture) {}
 
   GrSurfaceOrigin fOrigin;
@@ -87,7 +88,7 @@ class GrGpuRTCommandBuffer : public GrGpuCommandBuffer {
     GrStoreOp fStoreOp;
   };
 
-  GrGpuRTCommandBuffer* asRTCommandBuffer() { return this; }
+  GrGpuRTCommandBuffer* asRTCommandBuffer() noexcept { return this; }
 
   virtual void begin() = 0;
   // Signals the end of recording to the command buffer and that it can now be submitted.
@@ -123,12 +124,13 @@ class GrGpuRTCommandBuffer : public GrGpuCommandBuffer {
   virtual void executeDrawable(std::unique_ptr<SkDrawable::GpuDrawHandler>) {}
 
  protected:
-  GrGpuRTCommandBuffer() : fOrigin(kTopLeft_GrSurfaceOrigin), fRenderTarget(nullptr) {}
+  constexpr GrGpuRTCommandBuffer() noexcept
+      : fOrigin(kTopLeft_GrSurfaceOrigin), fRenderTarget(nullptr) {}
 
-  GrGpuRTCommandBuffer(GrRenderTarget* rt, GrSurfaceOrigin origin)
+  GrGpuRTCommandBuffer(GrRenderTarget* rt, GrSurfaceOrigin origin) noexcept
       : fOrigin(origin), fRenderTarget(rt) {}
 
-  void set(GrRenderTarget* rt, GrSurfaceOrigin origin) {
+  void set(GrRenderTarget* rt, GrSurfaceOrigin origin) noexcept {
     SkASSERT(!fRenderTarget);
 
     fRenderTarget = rt;

@@ -67,7 +67,7 @@ static const char* apply_format_string(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool SkStrEndsWith(const char string[], const char suffixStr[]) {
+bool SkStrEndsWith(const char string[], const char suffixStr[]) noexcept {
   SkASSERT(string);
   SkASSERT(suffixStr);
   size_t strLen = strlen(string);
@@ -75,7 +75,7 @@ bool SkStrEndsWith(const char string[], const char suffixStr[]) {
   return strLen >= suffixLen && !strncmp(string + strLen - suffixLen, suffixStr, suffixLen);
 }
 
-bool SkStrEndsWith(const char string[], const char suffixChar) {
+bool SkStrEndsWith(const char string[], const char suffixChar) noexcept {
   SkASSERT(string);
   size_t strLen = strlen(string);
   if (0 == strLen) {
@@ -85,7 +85,7 @@ bool SkStrEndsWith(const char string[], const char suffixChar) {
   }
 }
 
-int SkStrStartsWithOneOf(const char string[], const char prefixes[]) {
+int SkStrStartsWithOneOf(const char string[], const char prefixes[]) noexcept {
   int index = 0;
   do {
     const char* limit = strchr(prefixes, '\0');
@@ -98,10 +98,10 @@ int SkStrStartsWithOneOf(const char string[], const char prefixes[]) {
   return -1;
 }
 
-char* SkStrAppendU32(char string[], uint32_t dec) {
-  SkDEBUGCODE(char* start = string;)
+char* SkStrAppendU32(char string[], uint32_t dec) noexcept {
+  SkDEBUGCODE(char* start = string);
 
-      char buffer[SkStrAppendU32_MaxSize];
+  char buffer[SkStrAppendU32_MaxSize];
   char* p = buffer + sizeof(buffer);
 
   do {
@@ -118,7 +118,7 @@ char* SkStrAppendU32(char string[], uint32_t dec) {
   return string;
 }
 
-char* SkStrAppendS32(char string[], int32_t dec) {
+char* SkStrAppendS32(char string[], int32_t dec) noexcept {
   uint32_t udec = dec;
   if (dec < 0) {
     *string++ = '-';
@@ -127,10 +127,10 @@ char* SkStrAppendS32(char string[], int32_t dec) {
   return SkStrAppendU32(string, udec);
 }
 
-char* SkStrAppendU64(char string[], uint64_t dec, int minDigits) {
-  SkDEBUGCODE(char* start = string;)
+char* SkStrAppendU64(char string[], uint64_t dec, int minDigits) noexcept {
+  SkDEBUGCODE(char* start = string);
 
-      char buffer[SkStrAppendU64_MaxSize];
+  char buffer[SkStrAppendU64_MaxSize];
   char* p = buffer + sizeof(buffer);
 
   do {
@@ -153,7 +153,7 @@ char* SkStrAppendU64(char string[], uint64_t dec, int minDigits) {
   return string;
 }
 
-char* SkStrAppendS64(char string[], int64_t dec, int minDigits) {
+char* SkStrAppendS64(char string[], int64_t dec, int minDigits) noexcept {
   uint64_t udec = dec;
   if (dec < 0) {
     *string++ = '-';
@@ -162,7 +162,7 @@ char* SkStrAppendS64(char string[], int64_t dec, int minDigits) {
   return SkStrAppendU64(string, udec, minDigits);
 }
 
-char* SkStrAppendFloat(char string[], float value) {
+char* SkStrAppendFloat(char string[], float value) noexcept {
   // since floats have at most 8 significant digits, we limit our %g to that.
   static const char gFormat[] = "%.8g";
   // make it 1 larger for the terminating 0
@@ -179,7 +179,7 @@ const SkString::Rec SkString::gEmptyRec(0, 0);
 
 #define SizeOfRec() (gEmptyRec.data() - (const char*)&gEmptyRec)
 
-static uint32_t trim_size_t_to_u32(size_t value) {
+static constexpr uint32_t trim_size_t_to_u32(size_t value) noexcept {
   if (sizeof(size_t) > sizeof(uint32_t)) {
     if (value > UINT32_MAX) {
       value = UINT32_MAX;
@@ -188,7 +188,7 @@ static uint32_t trim_size_t_to_u32(size_t value) {
   return (uint32_t)value;
 }
 
-static size_t check_add32(size_t base, size_t extra) {
+static constexpr size_t check_add32(size_t base, size_t extra) noexcept {
   SkASSERT(base <= UINT32_MAX);
   if (sizeof(size_t) > sizeof(uint32_t)) {
     if (base + extra > UINT32_MAX) {
@@ -222,14 +222,14 @@ sk_sp<SkString::Rec> SkString::Rec::Make(const char text[], size_t len) {
   return rec;
 }
 
-void SkString::Rec::ref() const {
+void SkString::Rec::ref() const noexcept {
   if (this == &SkString::gEmptyRec) {
     return;
   }
   SkAssertResult(this->fRefCnt.fetch_add(+1, std::memory_order_relaxed));
 }
 
-void SkString::Rec::unref() const {
+void SkString::Rec::unref() const noexcept {
   if (this == &SkString::gEmptyRec) {
     return;
   }
@@ -240,7 +240,7 @@ void SkString::Rec::unref() const {
   }
 }
 
-bool SkString::Rec::unique() const { return fRefCnt.load(std::memory_order_acquire) == 1; }
+bool SkString::Rec::unique() const noexcept { return fRefCnt.load(std::memory_order_acquire) == 1; }
 
 #ifdef SK_DEBUG
 const SkString& SkString::validate() const {
@@ -260,7 +260,7 @@ const SkString& SkString::validate() const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkString::SkString() : fRec(const_cast<Rec*>(&gEmptyRec)) {}
+SkString::SkString() noexcept : fRec(const_cast<Rec*>(&gEmptyRec)) {}
 
 SkString::SkString(size_t len) { fRec = Rec::Make(nullptr, len); }
 
@@ -272,35 +272,35 @@ SkString::SkString(const char text[]) {
 
 SkString::SkString(const char text[], size_t len) { fRec = Rec::Make(text, len); }
 
-SkString::SkString(const SkString& src) : fRec(src.validate().fRec) {}
+SkString::SkString(const SkString& src) noexcept : fRec(src.validate().fRec) {}
 
-SkString::SkString(SkString&& src) : fRec(std::move(src.validate().fRec)) {
+SkString::SkString(SkString&& src) noexcept : fRec(std::move(src.validate().fRec)) {
   src.fRec.reset(const_cast<Rec*>(&gEmptyRec));
 }
 
 SkString::~SkString() { this->validate(); }
 
-bool SkString::equals(const SkString& src) const {
+bool SkString::equals(const SkString& src) const noexcept {
   return fRec == src.fRec || this->equals(src.c_str(), src.size());
 }
 
-bool SkString::equals(const char text[]) const {
+bool SkString::equals(const char text[]) const noexcept {
   return this->equals(text, text ? strlen(text) : 0);
 }
 
-bool SkString::equals(const char text[], size_t len) const {
+bool SkString::equals(const char text[], size_t len) const noexcept {
   SkASSERT(len == 0 || text != nullptr);
 
   return fRec->fLength == len && !memcmp(fRec->data(), text, len);
 }
 
-SkString& SkString::operator=(const SkString& src) {
+SkString& SkString::operator=(const SkString& src) noexcept {
   this->validate();
   fRec = src.fRec;  // sk_sp<Rec>::operator=(const sk_sp<Ref>&) checks for self-assignment.
   return *this;
 }
 
-SkString& SkString::operator=(SkString&& src) {
+SkString& SkString::operator=(SkString&& src) noexcept {
   this->validate();
 
   if (fRec != src.fRec) {
@@ -314,7 +314,7 @@ SkString& SkString::operator=(const char text[]) {
   return *this = SkString(text);
 }
 
-void SkString::reset() {
+void SkString::reset() noexcept {
   this->validate();
   fRec.reset(const_cast<Rec*>(&gEmptyRec));
 }
@@ -541,7 +541,7 @@ void SkString::remove(size_t offset, size_t length) {
   }
 }
 
-void SkString::swap(SkString& other) {
+void SkString::swap(SkString& other) noexcept {
   this->validate();
   other.validate();
 

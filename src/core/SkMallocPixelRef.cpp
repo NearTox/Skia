@@ -11,28 +11,28 @@
 #include "include/private/SkMalloc.h"
 #include "src/core/SkSafeMath.h"
 
-void* sk_calloc_throw(size_t count, size_t elemSize) {
+void* sk_calloc_throw(size_t count, size_t elemSize) noexcept {
   return sk_calloc_throw(SkSafeMath::Mul(count, elemSize));
 }
 
-void* sk_malloc_throw(size_t count, size_t elemSize) {
+void* sk_malloc_throw(size_t count, size_t elemSize) noexcept {
   return sk_malloc_throw(SkSafeMath::Mul(count, elemSize));
 }
 
-void* sk_realloc_throw(void* buffer, size_t count, size_t elemSize) {
+void* sk_realloc_throw(void* buffer, size_t count, size_t elemSize) noexcept {
   return sk_realloc_throw(buffer, SkSafeMath::Mul(count, elemSize));
 }
 
-void* sk_malloc_canfail(size_t count, size_t elemSize) {
+void* sk_malloc_canfail(size_t count, size_t elemSize) noexcept {
   return sk_malloc_canfail(SkSafeMath::Mul(count, elemSize));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 // assumes ptr was allocated via sk_malloc
-static void sk_free_releaseproc(void* ptr, void*) { sk_free(ptr); }
+static void sk_free_releaseproc(void* ptr, void*) noexcept { sk_free(ptr); }
 
-static bool is_valid(const SkImageInfo& info) {
+static bool is_valid(const SkImageInfo& info) noexcept {
   if (info.width() < 0 || info.height() < 0 ||
       (unsigned)info.colorType() > (unsigned)kLastEnum_SkColorType ||
       (unsigned)info.alphaType() > (unsigned)kLastEnum_SkAlphaType) {
@@ -74,7 +74,9 @@ sk_sp<SkPixelRef> SkMallocPixelRef::MakeAllocate(const SkImageInfo& info, size_t
       new SkMallocPixelRef(info, addr, rowBytes, sk_free_releaseproc, nullptr));
 }
 
-static void sk_data_releaseproc(void*, void* dataPtr) { (static_cast<SkData*>(dataPtr))->unref(); }
+static void sk_data_releaseproc(void*, void* dataPtr) noexcept {
+  (static_cast<SkData*>(dataPtr))->unref();
+}
 
 sk_sp<SkPixelRef> SkMallocPixelRef::MakeWithProc(
     const SkImageInfo& info, size_t rowBytes, void* addr, SkMallocPixelRef::ReleaseProc proc,
@@ -112,7 +114,7 @@ sk_sp<SkPixelRef> SkMallocPixelRef::MakeWithData(
 
 SkMallocPixelRef::SkMallocPixelRef(
     const SkImageInfo& info, void* storage, size_t rowBytes, SkMallocPixelRef::ReleaseProc proc,
-    void* context)
+    void* context) noexcept
     : INHERITED(info.width(), info.height(), storage, rowBytes),
       fReleaseProc(proc),
       fReleaseProcContext(context) {}

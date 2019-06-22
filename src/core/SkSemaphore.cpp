@@ -51,10 +51,10 @@ struct SkBaseSemaphore::OSSemaphore {
   }
   ~OSSemaphore() { CloseHandle(fSemaphore); }
 
-  void signal(int n) {
+  void signal(int n) noexcept {
     ReleaseSemaphore(fSemaphore, n, nullptr /*returns previous count, optional*/);
   }
-  void wait() { WaitForSingleObject(fSemaphore, INFINITE /*timeout in ms*/); }
+  void wait() noexcept { WaitForSingleObject(fSemaphore, INFINITE /*timeout in ms*/); }
 };
 #else
 // It's important we test for Mach before this.  This code will compile but not work there.
@@ -81,19 +81,19 @@ struct SkBaseSemaphore::OSSemaphore {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkBaseSemaphore::osSignal(int n) {
-  fOSSemaphoreOnce([this] { fOSSemaphore = new OSSemaphore; });
+void SkBaseSemaphore::osSignal(int n) noexcept {
+  fOSSemaphoreOnce([this]() noexcept { fOSSemaphore = new OSSemaphore; });
   fOSSemaphore->signal(n);
 }
 
-void SkBaseSemaphore::osWait() {
-  fOSSemaphoreOnce([this] { fOSSemaphore = new OSSemaphore; });
+void SkBaseSemaphore::osWait() noexcept {
+  fOSSemaphoreOnce([this]() noexcept { fOSSemaphore = new OSSemaphore; });
   fOSSemaphore->wait();
 }
 
-void SkBaseSemaphore::cleanup() { delete fOSSemaphore; }
+void SkBaseSemaphore::cleanup() noexcept { delete fOSSemaphore; }
 
-bool SkBaseSemaphore::try_wait() {
+bool SkBaseSemaphore::try_wait() noexcept {
   int count = fCount.load(std::memory_order_relaxed);
   if (count > 0) {
     return fCount.compare_exchange_weak(count, count - 1, std::memory_order_acquire);

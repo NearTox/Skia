@@ -16,7 +16,7 @@ class SkColorFilter_Matrix : public SkColorFilter {
   SkColorFilter_Matrix() {}
   explicit SkColorFilter_Matrix(const float array[20]);
 
-  uint32_t getFlags() const override;
+  uint32_t getFlags() const noexcept override;
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(
@@ -27,7 +27,7 @@ class SkColorFilter_Matrix : public SkColorFilter {
 
  protected:
   void flatten(SkWriteBuffer&) const override;
-  bool onAsAColorMatrix(float matrix[20]) const override;
+  bool onAsAColorMatrix(float matrix[20]) const noexcept override;
 
  private:
   SK_FLATTENABLE_HOOKS(SkColorFilter_Matrix)
@@ -37,7 +37,7 @@ class SkColorFilter_Matrix : public SkColorFilter {
   float fMatrix[20];
   uint32_t fFlags;
 
-  void initState();
+  void initState() noexcept;
 
   typedef SkColorFilter INHERITED;
 };

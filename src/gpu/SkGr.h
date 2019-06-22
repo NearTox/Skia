@@ -42,7 +42,7 @@ struct SkIRect;
 ////////////////////////////////////////////////////////////////////////////////
 // Color type conversions
 
-static inline GrColor SkColorToPremulGrColor(SkColor c) {
+static inline GrColor SkColorToPremulGrColor(SkColor c) noexcept {
   SkPMColor pm = SkPreMultiplyColor(c);
   unsigned r = SkGetPackedR32(pm);
   unsigned g = SkGetPackedG32(pm);
@@ -51,7 +51,7 @@ static inline GrColor SkColorToPremulGrColor(SkColor c) {
   return GrColorPackRGBA(r, g, b, a);
 }
 
-static inline GrColor SkColorToUnpremulGrColor(SkColor c) {
+static constexpr inline GrColor SkColorToUnpremulGrColor(SkColor c) noexcept {
   unsigned r = SkColorGetR(c);
   unsigned g = SkColorGetG(c);
   unsigned b = SkColorGetB(c);
@@ -68,7 +68,7 @@ SkColor4f SkColor4fPrepForDst(SkColor4f, const GrColorSpaceInfo&);
 /** Returns true if half-floats are required to store the color in a vertex (and half-floats
     are supported). */
 static inline bool SkPMColor4fNeedsWideColor(
-    SkPMColor4f color, GrClampType clampType, const GrCaps& caps) {
+    SkPMColor4f color, GrClampType clampType, const GrCaps& caps) noexcept {
   return GrClampType::kNone == clampType && caps.halfFloatVertexAttributeSupport() &&
          !color.fitsInBytes();
 }
@@ -122,18 +122,18 @@ bool SkPaintToGrPaintWithTexture(
 // Misc Sk to Gr type conversions
 
 GrSurfaceDesc GrImageInfoToSurfaceDesc(const SkImageInfo&);
-GrPixelConfig SkColorType2GrPixelConfig(const SkColorType);
-GrPixelConfig SkImageInfo2GrPixelConfig(const SkImageInfo& info);
+GrPixelConfig SkColorType2GrPixelConfig(const SkColorType) noexcept;
+GrPixelConfig SkImageInfo2GrPixelConfig(const SkImageInfo& info) noexcept;
 
-bool GrPixelConfigToColorType(GrPixelConfig, SkColorType*);
+bool GrPixelConfigToColorType(GrPixelConfig, SkColorType*) noexcept;
 
 GrSamplerState::Filter GrSkFilterQualityToGrFilterMode(
     SkFilterQuality paintFilterQuality, const SkMatrix& viewM, const SkMatrix& localM,
-    bool sharpenMipmappedTextures, bool* doBicubic);
+    bool sharpenMipmappedTextures, bool* doBicubic) noexcept;
 
 //////////////////////////////////////////////////////////////////////////////
 
-static inline GrPrimitiveType SkVertexModeToGrPrimitiveType(SkVertices::VertexMode mode) {
+static inline GrPrimitiveType SkVertexModeToGrPrimitiveType(SkVertices::VertexMode mode) noexcept {
   switch (mode) {
     case SkVertices::kTriangles_VertexMode: return GrPrimitiveType::kTriangles;
     case SkVertices::kTriangleStrip_VertexMode: return GrPrimitiveType::kTriangleStrip;
@@ -201,7 +201,7 @@ sk_sp<GrTextureProxy> GrMakeCachedImageProxy(
  *
  *  Note: width/height must fit in 16bits for this impl.
  */
-void GrMakeKeyFromImageID(GrUniqueKey* key, uint32_t imageID, const SkIRect& imageBounds);
+void GrMakeKeyFromImageID(GrUniqueKey* key, uint32_t imageID, const SkIRect& imageBounds) noexcept;
 
 /** Call this after installing a GrUniqueKey on texture. It will cause the texture's key to be
     removed should the bitmap's contents change or be destroyed. */

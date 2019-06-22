@@ -244,10 +244,10 @@ GrGLSLFragmentProcessor* GrUnrolledBinaryGradientColorizer::onCreateGLSLInstance
   return new GrGLSLUnrolledBinaryGradientColorizer();
 }
 void GrUnrolledBinaryGradientColorizer::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   b->add32((int32_t)intervalCount);
 }
-bool GrUnrolledBinaryGradientColorizer::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrUnrolledBinaryGradientColorizer::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrUnrolledBinaryGradientColorizer& that = other.cast<GrUnrolledBinaryGradientColorizer>();
   (void)that;
   if (intervalCount != that.intervalCount) return false;
@@ -272,7 +272,7 @@ bool GrUnrolledBinaryGradientColorizer::onIsEqual(const GrFragmentProcessor& oth
   return true;
 }
 GrUnrolledBinaryGradientColorizer::GrUnrolledBinaryGradientColorizer(
-    const GrUnrolledBinaryGradientColorizer& src)
+    const GrUnrolledBinaryGradientColorizer& src) noexcept
     : INHERITED(kGrUnrolledBinaryGradientColorizer_ClassID, src.optimizationFlags()),
       intervalCount(src.intervalCount),
       scale0_1(src.scale0_1),

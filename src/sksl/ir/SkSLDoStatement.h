@@ -17,7 +17,8 @@ namespace SkSL {
  * A 'do' statement.
  */
 struct DoStatement : public Statement {
-  DoStatement(int offset, std::unique_ptr<Statement> statement, std::unique_ptr<Expression> test)
+  DoStatement(
+      int offset, std::unique_ptr<Statement> statement, std::unique_ptr<Expression> test) noexcept
       : INHERITED(offset, kDo_Kind), fStatement(std::move(statement)), fTest(std::move(test)) {}
 
   std::unique_ptr<Statement> clone() const override {

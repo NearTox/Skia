@@ -26,20 +26,20 @@ class SkPathWriter {
   bool deferredLine(const SkOpPtT* pt);
   void deferredMove(const SkOpPtT* pt);
   void finishContour();
-  bool hasMove() const { return !fFirstPtT; }
+  bool hasMove() const noexcept { return !fFirstPtT; }
   void init();
   bool isClosed() const;
-  const SkPath* nativePath() const { return fPathPtr; }
+  const SkPath* nativePath() const noexcept { return fPathPtr; }
   void quadTo(const SkPoint& pt1, const SkOpPtT* pt2);
 
  private:
   bool changedSlopes(const SkOpPtT* pt) const;
   void close();
-  const SkTDArray<const SkOpPtT*>& endPtTs() const { return fEndPtTs; }
+  const SkTDArray<const SkOpPtT*>& endPtTs() const noexcept { return fEndPtTs; }
   void lineTo();
   bool matchedLast(const SkOpPtT*) const;
   void moveTo();
-  const SkTArray<SkPath>& partials() const { return fPartials; }
+  const SkTArray<SkPath>& partials() const noexcept { return fPartials; }
   bool someAssemblyRequired();
   SkPoint update(const SkOpPtT* pt);
 

@@ -11,7 +11,7 @@
 #include "src/core/SkXfermodePriv.h"
 #include "src/shaders/SkShaderBase.h"
 
-static bool changes_alpha(const SkPaint& paint) {
+static bool changes_alpha(const SkPaint& paint) noexcept {
   SkColorFilter* cf = paint.getColorFilter();
   return cf && !(cf->getFlags() & SkColorFilter::kAlphaUnchanged_Flag);
 }

@@ -177,7 +177,7 @@ class GrGLDistanceFieldA8TextGeoProc : public GrGLSLGeometryProcessor {
   }
 
   static inline void GenKey(
-      const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
+      const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
     const GrDistanceFieldA8TextGeoProc& dfTexEffect = gp.cast<GrDistanceFieldA8TextGeoProc>();
     uint32_t key = dfTexEffect.getFlags();
     b->add32(key);
@@ -255,7 +255,7 @@ void GrDistanceFieldA8TextGeoProc::addNewProxies(
 }
 
 void GrDistanceFieldA8TextGeoProc::getGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   GrGLDistanceFieldA8TextGeoProc::GenKey(*this, caps, b);
 }
 
@@ -454,7 +454,7 @@ class GrGLDistanceFieldPathGeoProc : public GrGLSLGeometryProcessor {
   }
 
   static inline void GenKey(
-      const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
+      const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
     const GrDistanceFieldPathGeoProc& dfTexEffect = gp.cast<GrDistanceFieldPathGeoProc>();
 
     uint32_t key = dfTexEffect.getFlags();
@@ -524,7 +524,7 @@ void GrDistanceFieldPathGeoProc::addNewProxies(
 }
 
 void GrDistanceFieldPathGeoProc::getGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   GrGLDistanceFieldPathGeoProc::GenKey(*this, caps, b);
 }
 
@@ -754,7 +754,7 @@ class GrGLDistanceFieldLCDTextGeoProc : public GrGLSLGeometryProcessor {
   }
 
   static inline void GenKey(
-      const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
+      const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
     const GrDistanceFieldLCDTextGeoProc& dfTexEffect = gp.cast<GrDistanceFieldLCDTextGeoProc>();
 
     uint32_t key = dfTexEffect.getFlags();
@@ -827,7 +827,7 @@ void GrDistanceFieldLCDTextGeoProc::addNewProxies(
 }
 
 void GrDistanceFieldLCDTextGeoProc::getGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   GrGLDistanceFieldLCDTextGeoProc::GenKey(*this, caps, b);
 }
 

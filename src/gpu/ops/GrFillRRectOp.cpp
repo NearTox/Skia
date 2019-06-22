@@ -209,7 +209,7 @@ class GrFillRRectOp::Processor : public GrGeometryProcessor {
     }
   }
 
-  const char* name() const override { return "GrFillRRectOp::Processor"; }
+  const char* name() const noexcept override { return "GrFillRRectOp::Processor"; }
 
   void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
     b->add32(((uint32_t)fFlags << 16) | (uint32_t)fAAType);

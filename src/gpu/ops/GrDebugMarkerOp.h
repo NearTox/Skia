@@ -20,7 +20,7 @@ class GrDebugMarkerOp final : public GrOp {
 
   static std::unique_ptr<GrOp> Make(GrRecordingContext*, GrRenderTargetProxy*, const SkString&);
 
-  const char* name() const override { return "DebugMarker"; }
+  const char* name() const noexcept override { return "DebugMarker"; }
 
 #ifdef SK_DEBUG
   SkString dumpInfo() const override {

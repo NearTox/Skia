@@ -20,17 +20,17 @@ class GrBuffer {
 
   // Our subclasses derive from different ref counting base classes. In order to use base
   // class pointers with sk_sp we virtualize ref() and unref().
-  virtual void ref() const = 0;
-  virtual void unref() const = 0;
+  virtual void ref() const noexcept = 0;
+  virtual void unref() const noexcept = 0;
 
   /** Size of the buffer in bytes. */
-  virtual size_t size() const = 0;
+  virtual size_t size() const noexcept = 0;
 
   /** Is this an instance of GrCpuBuffer? Otherwise, an instance of GrGpuBuffer. */
-  virtual bool isCpuBuffer() const = 0;
+  virtual bool isCpuBuffer() const noexcept = 0;
 
  protected:
-  GrBuffer() = default;
+  constexpr GrBuffer() noexcept = default;
 };
 
 #endif

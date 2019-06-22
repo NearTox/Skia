@@ -30,23 +30,23 @@ class GrGLContextInfo {
 
   virtual ~GrGLContextInfo() {}
 
-  GrGLStandard standard() const { return fInterface->fStandard; }
-  GrGLVersion version() const { return fGLVersion; }
-  GrGLSLGeneration glslGeneration() const { return fGLSLGeneration; }
-  GrGLVendor vendor() const { return fVendor; }
-  GrGLRenderer renderer() const { return fRenderer; }
-  GrGLANGLEBackend angleBackend() const { return fANGLEBackend; }
-  GrGLANGLEVendor angleVendor() const { return fANGLEVendor; }
-  GrGLANGLERenderer angleRenderer() const { return fANGLERenderer; }
+  GrGLStandard standard() const noexcept { return fInterface->fStandard; }
+  GrGLVersion version() const noexcept { return fGLVersion; }
+  GrGLSLGeneration glslGeneration() const noexcept { return fGLSLGeneration; }
+  GrGLVendor vendor() const noexcept { return fVendor; }
+  GrGLRenderer renderer() const noexcept { return fRenderer; }
+  GrGLANGLEBackend angleBackend() const noexcept { return fANGLEBackend; }
+  GrGLANGLEVendor angleVendor() const noexcept { return fANGLEVendor; }
+  GrGLANGLERenderer angleRenderer() const noexcept { return fANGLERenderer; }
   /** What driver is running our GL implementation? This is not necessarily related to the vendor.
       (e.g. Intel GPU being driven by Mesa) */
-  GrGLDriver driver() const { return fDriver; }
-  GrGLDriverVersion driverVersion() const { return fDriverVersion; }
-  const GrGLCaps* caps() const { return fGLCaps.get(); }
-  GrGLCaps* caps() { return fGLCaps.get(); }
+  GrGLDriver driver() const noexcept { return fDriver; }
+  GrGLDriverVersion driverVersion() const noexcept { return fDriverVersion; }
+  const GrGLCaps* caps() const noexcept { return fGLCaps.get(); }
+  GrGLCaps* caps() noexcept { return fGLCaps.get(); }
   bool hasExtension(const char* ext) const { return fInterface->hasExtension(ext); }
 
-  const GrGLExtensions& extensions() const { return fInterface->fExtensions; }
+  const GrGLExtensions& extensions() const noexcept { return fInterface->fExtensions; }
 
  protected:
   struct ConstructorArgs {
@@ -89,7 +89,7 @@ class GrGLContext : public GrGLContextInfo {
    */
   static std::unique_ptr<GrGLContext> Make(sk_sp<const GrGLInterface>, const GrContextOptions&);
 
-  const GrGLInterface* interface() const { return fInterface.get(); }
+  const GrGLInterface* interface() const noexcept { return fInterface.get(); }
 
   SkSL::Compiler* compiler() const;
 

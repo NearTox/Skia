@@ -51,13 +51,14 @@ class GrGLSLPrimitiveProcessor {
     void specifyCoordsForCurrCoordTransform(Args&&... args) {
       SkASSERT(!fAddedCoord);
       fTransformedCoordVars->emplace_back(std::forward<Args>(args)...);
-      SkDEBUGCODE(fAddedCoord = true;)
+      SkDEBUGCODE(fAddedCoord = true);
     }
 
    private:
     GrFragmentProcessor::CoordTransformIter fIter;
-    SkDEBUGCODE(bool fAddedCoord = false;) SkDEBUGCODE(
-        const GrCoordTransform* fCurr = nullptr;) SkTArray<GrShaderVar>* fTransformedCoordVars;
+    SkDEBUGCODE(bool fAddedCoord = false);
+    SkDEBUGCODE(const GrCoordTransform* fCurr = nullptr);
+    SkTArray<GrShaderVar>* fTransformedCoordVars;
   };
 
   struct EmitArgs {
@@ -67,7 +68,7 @@ class GrGLSLPrimitiveProcessor {
         GrGLSLUniformHandler* uniformHandler, const GrShaderCaps* caps,
         const GrPrimitiveProcessor& gp, const char* outputColor, const char* outputCoverage,
         const char* rtAdjustName, const SamplerHandle* texSamplers,
-        FPCoordTransformHandler* transformHandler)
+        FPCoordTransformHandler* transformHandler) noexcept
         : fVertBuilder(vertBuilder),
           fGeomBuilder(geomBuilder),
           fFragBuilder(fragBuilder),

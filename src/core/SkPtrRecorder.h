@@ -37,7 +37,7 @@ class SkPtrSet : public SkRefCnt {
   /**
    *  Return the number of (non-null) ptrs in the set.
    */
-  int count() const { return fList.count(); }
+  int count() const noexcept { return fList.count(); }
 
   /**
    *  Copy the ptrs in the set into the specified array (allocated by the
@@ -59,12 +59,14 @@ class SkPtrSet : public SkRefCnt {
    */
   class Iter {
    public:
-    Iter(const SkPtrSet& set) : fSet(set), fIndex(0) {}
+    constexpr Iter(const SkPtrSet& set) noexcept : fSet(set), fIndex(0) {}
 
     /**
      * Return the next ptr in the set or null if the end was reached.
      */
-    void* next() { return fIndex < fSet.fList.count() ? fSet.fList[fIndex++].fPtr : nullptr; }
+    void* next() noexcept {
+      return fIndex < fSet.fList.count() ? fSet.fList[fIndex++].fPtr : nullptr;
+    }
 
    private:
     const SkPtrSet& fSet;

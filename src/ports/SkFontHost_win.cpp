@@ -63,11 +63,11 @@ typedef uint32_t SkGdiRGB;
 // for rotated text, regardless of GDI's notions.
 //#define SK_ENFORCE_ROTATED_TEXT_AA_ON_WINDOWS
 
-static bool isLCD(const SkScalerContextRec& rec) {
+static bool isLCD(const SkScalerContextRec& rec) noexcept {
   return SkMask::kLCD16_Format == rec.fMaskFormat;
 }
 
-static bool bothZero(SkScalar a, SkScalar b) { return 0 == a && 0 == b; }
+static bool bothZero(SkScalar a, SkScalar b) noexcept { return 0 == a && 0 == b; }
 
 // returns false if there is any non-90-rotation or skew
 static bool isAxisAligned(const SkScalerContextRec& rec) {
@@ -75,7 +75,7 @@ static bool isAxisAligned(const SkScalerContextRec& rec) {
                                 bothZero(rec.fPost2x2[0][0], rec.fPost2x2[1][1]));
 }
 
-static bool needToRenderWithSkia(const SkScalerContextRec& rec) {
+static bool needToRenderWithSkia(const SkScalerContextRec& rec) noexcept {
 #ifdef SK_ENFORCE_ROTATED_TEXT_AA_ON_WINDOWS
   // What we really want to catch is when GDI will ignore the AA request and give
   // us BW instead. Smallish rotated text is one heuristic, so this code is just
@@ -119,7 +119,7 @@ static void dcfontname_to_skstring(HDC deviceContext, const LOGFONT& lf, SkStrin
   tchar_to_skstring(fontName.get(), familyName);
 }
 
-static void make_canonical(LOGFONT* lf) {
+static void make_canonical(LOGFONT* lf) noexcept {
   lf->lfHeight = -64;
   lf->lfWidth = 0;  // lfWidth is related to lfHeight, not to the OS/2::usWidthClass.
   lf->lfQuality = CLEARTYPE_QUALITY;  // PROOF_QUALITY;
@@ -127,14 +127,14 @@ static void make_canonical(LOGFONT* lf) {
   //    lf->lfClipPrecision = 64;
 }
 
-static SkFontStyle get_style(const LOGFONT& lf) {
+static SkFontStyle get_style(const LOGFONT& lf) noexcept {
   return SkFontStyle(
       lf.lfWeight, SkFontStyle::kNormal_Width,
       lf.lfItalic ? SkFontStyle::kItalic_Slant : SkFontStyle::kUpright_Slant);
 }
 
-static inline FIXED SkFixedToFIXED(SkFixed x) { return *(FIXED*)(&x); }
-static inline SkFixed SkFIXEDToFixed(FIXED x) { return *(SkFixed*)(&x); }
+static inline FIXED SkFixedToFIXED(SkFixed x) noexcept { return *(FIXED*)(&x); }
+static inline SkFixed SkFIXEDToFixed(FIXED x) noexcept { return *(SkFixed*)(&x); }
 
 static inline FIXED SkScalarToFIXED(SkScalar x) { return SkFixedToFIXED(SkScalarToFixed(x)); }
 
@@ -284,7 +284,7 @@ class FontMemResourceTypeface : public LogFontTypeface {
   }
 
  protected:
-  void weak_dispose() const override {
+  void weak_dispose() const noexcept override {
     RemoveFontMemResourceEx(fFontMemResource);
     // SkTypefaceCache::Remove(this);
     INHERITED::weak_dispose();
@@ -302,12 +302,12 @@ class FontMemResourceTypeface : public LogFontTypeface {
   typedef LogFontTypeface INHERITED;
 };
 
-static const LOGFONT& get_default_font() {
+static const LOGFONT& get_default_font() noexcept {
   static LOGFONT gDefaultFont;
   return gDefaultFont;
 }
 
-static bool FindByLogFont(SkTypeface* face, void* ctx) {
+static bool FindByLogFont(SkTypeface* face, void* ctx) noexcept {
   LogFontTypeface* lface = static_cast<LogFontTypeface*>(face);
   const LOGFONT* lf = reinterpret_cast<const LOGFONT*>(ctx);
 

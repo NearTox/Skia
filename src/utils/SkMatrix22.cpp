@@ -10,7 +10,7 @@
 #include "include/core/SkPoint.h"
 #include "include/core/SkScalar.h"
 
-void SkComputeGivensRotation(const SkVector& h, SkMatrix* G) {
+void SkComputeGivensRotation(const SkVector& h, SkMatrix* G) noexcept {
   const SkScalar& a = h.fX;
   const SkScalar& b = h.fY;
   SkScalar c, s;

@@ -18,7 +18,7 @@ namespace SkSL {
 struct ASTTernaryExpression : public ASTExpression {
   ASTTernaryExpression(
       std::unique_ptr<ASTExpression> test, std::unique_ptr<ASTExpression> ifTrue,
-      std::unique_ptr<ASTExpression> ifFalse)
+      std::unique_ptr<ASTExpression> ifFalse) noexcept
       : INHERITED(test->fOffset, kTernary_Kind),
         fTest(std::move(test)),
         fIfTrue(std::move(ifTrue)),

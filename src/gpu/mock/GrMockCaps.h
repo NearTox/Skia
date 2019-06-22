@@ -35,13 +35,13 @@ class GrMockCaps : public GrCaps {
 
     this->applyOptionsOverrides(contextOptions);
   }
-  bool isConfigTexturable(GrPixelConfig config) const override {
+  bool isConfigTexturable(GrPixelConfig config) const noexcept override {
     return fOptions.fConfigOptions[config].fTexturable;
   }
 
-  bool isConfigCopyable(GrPixelConfig config) const override { return false; }
+  bool isConfigCopyable(GrPixelConfig config) const noexcept override { return false; }
 
-  int getRenderTargetSampleCount(int requestCount, GrPixelConfig config) const override {
+  int getRenderTargetSampleCount(int requestCount, GrPixelConfig config) const noexcept override {
     requestCount = SkTMax(requestCount, 1);
     switch (fOptions.fConfigOptions[config].fRenderability) {
       case GrMockOptions::ConfigOptions::Renderability::kNo: return 0;
@@ -52,7 +52,7 @@ class GrMockCaps : public GrCaps {
     return 0;
   }
 
-  int maxRenderTargetSampleCount(GrPixelConfig config) const override {
+  int maxRenderTargetSampleCount(GrPixelConfig config) const noexcept override {
     switch (fOptions.fConfigOptions[config].fRenderability) {
       case GrMockOptions::ConfigOptions::Renderability::kNo: return 0;
       case GrMockOptions::ConfigOptions::Renderability::kNonMSAA: return 1;
@@ -61,16 +61,16 @@ class GrMockCaps : public GrCaps {
     return 0;
   }
 
-  bool surfaceSupportsReadPixels(const GrSurface*) const override { return true; }
+  bool surfaceSupportsReadPixels(const GrSurface*) const noexcept override { return true; }
 
   bool initDescForDstCopy(
       const GrRenderTargetProxy* src, GrSurfaceDesc* desc, GrSurfaceOrigin*, bool* rectsMustMatch,
-      bool* disallowSubrect) const override {
+      bool* disallowSubrect) const noexcept override {
     return false;
   }
 
-  GrPixelConfig validateBackendRenderTarget(
-      const GrBackendRenderTarget&, SkColorType) const override {
+  GrPixelConfig validateBackendRenderTarget(const GrBackendRenderTarget&, SkColorType) const
+      noexcept override {
     return kUnknown_GrPixelConfig;
   }
 
@@ -100,21 +100,21 @@ class GrMockCaps : public GrCaps {
     return GrBackendFormat::MakeMock(config);
   }
 
-  GrSwizzle getTextureSwizzle(const GrBackendFormat&, GrColorType) const override {
+  GrSwizzle getTextureSwizzle(const GrBackendFormat&, GrColorType) const noexcept override {
     return GrSwizzle();
   }
-  GrSwizzle getOutputSwizzle(const GrBackendFormat&, GrColorType) const override {
+  GrSwizzle getOutputSwizzle(const GrBackendFormat&, GrColorType) const noexcept override {
     return GrSwizzle();
   }
 
  private:
-  bool onSurfaceSupportsWritePixels(const GrSurface*) const override { return true; }
+  bool onSurfaceSupportsWritePixels(const GrSurface*) const noexcept override { return true; }
   bool onCanCopySurface(
       const GrSurfaceProxy* dst, const GrSurfaceProxy* src, const SkIRect& srcRect,
-      const SkIPoint& dstPoint) const override {
+      const SkIPoint& dstPoint) const noexcept override {
     return true;
   }
-  size_t onTransferFromOffsetAlignment(GrColorType bufferColorType) const override {
+  size_t onTransferFromOffsetAlignment(GrColorType bufferColorType) const noexcept override {
     // arbitrary
     return GrSizeAlignUp(GrColorTypeBytesPerPixel(bufferColorType), 4);
   }

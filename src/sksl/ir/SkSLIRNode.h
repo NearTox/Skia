@@ -18,7 +18,7 @@ namespace SkSL {
  * version of the program (all types determined, everything validated), ready for code generation.
  */
 struct IRNode {
-  IRNode(int offset) : fOffset(offset) {}
+  constexpr IRNode(int offset) noexcept : fOffset(offset) {}
 
   virtual ~IRNode() {}
 

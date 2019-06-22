@@ -9,7 +9,7 @@
 #include "src/core/SkCoverageModePriv.h"
 #include "src/core/SkRasterPipeline.h"
 
-bool SkBlendMode_ShouldPreScaleCoverage(SkBlendMode mode, bool rgb_coverage) {
+bool SkBlendMode_ShouldPreScaleCoverage(SkBlendMode mode, bool rgb_coverage) noexcept {
   // The most important things we do here are:
   //   1) never pre-scale with rgb coverage if the blend mode involves a source-alpha term;
   //   2) always pre-scale Plus.
@@ -41,7 +41,7 @@ bool SkBlendMode_ShouldPreScaleCoverage(SkBlendMode mode, bool rgb_coverage) {
 }
 
 // Users of this function may want to switch to the rgb-coverage aware version above.
-bool SkBlendMode_SupportsCoverageAsAlpha(SkBlendMode mode) {
+bool SkBlendMode_SupportsCoverageAsAlpha(SkBlendMode mode) noexcept {
   return SkBlendMode_ShouldPreScaleCoverage(mode, false);
 }
 
@@ -50,7 +50,7 @@ struct CoeffRec {
   SkBlendModeCoeff fDst;
 };
 
-const CoeffRec gCoeffs[] = {
+static constexpr CoeffRec gCoeffs[] = {
     {SkBlendModeCoeff::kZero, SkBlendModeCoeff::kZero},
     {SkBlendModeCoeff::kOne, SkBlendModeCoeff::kZero},
     {SkBlendModeCoeff::kZero, SkBlendModeCoeff::kOne},
@@ -69,7 +69,7 @@ const CoeffRec gCoeffs[] = {
     {SkBlendModeCoeff::kOne, SkBlendModeCoeff::kISC},  // screen
 };
 
-bool SkBlendMode_AsCoeff(SkBlendMode mode, SkBlendModeCoeff* src, SkBlendModeCoeff* dst) {
+bool SkBlendMode_AsCoeff(SkBlendMode mode, SkBlendModeCoeff* src, SkBlendModeCoeff* dst) noexcept {
   if (mode > SkBlendMode::kScreen) {
     return false;
   }
@@ -155,7 +155,7 @@ const SkBlendMode gUncorrelatedCoverageToBlend[] = {
     SkBlendMode::kSrcOut,  SkBlendMode::kDstOut, SkBlendMode::kXor,
 };
 
-SkBlendMode SkUncorrelatedCoverageModeToBlendMode(SkCoverageMode cm) {
+SkBlendMode SkUncorrelatedCoverageModeToBlendMode(SkCoverageMode cm) noexcept {
   unsigned index = static_cast<unsigned>(cm);
   SkASSERT(index < SK_ARRAY_COUNT(gUncorrelatedCoverageToBlend));
   return gUncorrelatedCoverageToBlend[index];

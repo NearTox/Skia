@@ -17,7 +17,7 @@ class GrGLBicubicEffect : public GrGLSLFragmentProcessor {
   void emitCode(EmitArgs&) override;
 
   static inline void GenKey(
-      const GrProcessor& effect, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
+      const GrProcessor& effect, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
     const GrBicubicEffect& bicubicEffect = effect.cast<GrBicubicEffect>();
     b->add32(GrTextureDomain::GLDomain::DomainKey(bicubicEffect.domain()));
     uint32_t bidir = bicubicEffect.direction() == GrBicubicEffect::Direction::kXY ? 1 : 0;
@@ -169,7 +169,7 @@ GrBicubicEffect::GrBicubicEffect(
   this->setTextureSamplerCnt(1);
 }
 
-GrBicubicEffect::GrBicubicEffect(const GrBicubicEffect& that)
+GrBicubicEffect::GrBicubicEffect(const GrBicubicEffect& that) noexcept
     : INHERITED(kGrBicubicEffect_ClassID, that.optimizationFlags()),
       fCoordTransform(that.fCoordTransform),
       fDomain(that.fDomain),
@@ -181,7 +181,7 @@ GrBicubicEffect::GrBicubicEffect(const GrBicubicEffect& that)
 }
 
 void GrBicubicEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   GrGLBicubicEffect::GenKey(*this, caps, b);
 }
 
@@ -189,7 +189,7 @@ GrGLSLFragmentProcessor* GrBicubicEffect::onCreateGLSLInstance() const {
   return new GrGLBicubicEffect;
 }
 
-bool GrBicubicEffect::onIsEqual(const GrFragmentProcessor& sBase) const {
+bool GrBicubicEffect::onIsEqual(const GrFragmentProcessor& sBase) const noexcept {
   const GrBicubicEffect& s = sBase.cast<GrBicubicEffect>();
   return fDomain == s.fDomain && fDirection == s.fDirection && fAlphaType == s.fAlphaType;
 }
@@ -216,7 +216,8 @@ std::unique_ptr<GrFragmentProcessor> GrBicubicEffect::TestCreate(GrProcessorTest
 
 //////////////////////////////////////////////////////////////////////////////
 
-bool GrBicubicEffect::ShouldUseBicubic(const SkMatrix& matrix, GrSamplerState::Filter* filterMode) {
+bool GrBicubicEffect::ShouldUseBicubic(
+    const SkMatrix& matrix, GrSamplerState::Filter* filterMode) noexcept {
   if (matrix.isIdentity()) {
     *filterMode = GrSamplerState::Filter::kNearest;
     return false;

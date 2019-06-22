@@ -40,7 +40,7 @@ class SkFontPriv {
   /**
    *  Return a matrix that applies the paint's text values: size, scale, skew
    */
-  static SkMatrix MakeTextMatrix(SkScalar size, SkScalar scaleX, SkScalar skewX) {
+  static SkMatrix MakeTextMatrix(SkScalar size, SkScalar scaleX, SkScalar skewX) noexcept {
     SkMatrix m = SkMatrix::MakeScale(size * scaleX, size);
     if (skewX) {
       m.postSkew(skewX, 0);
@@ -48,11 +48,11 @@ class SkFontPriv {
     return m;
   }
 
-  static SkMatrix MakeTextMatrix(const SkFont& font) {
+  static SkMatrix MakeTextMatrix(const SkFont& font) noexcept {
     return MakeTextMatrix(font.getSize(), font.getScaleX(), font.getSkewX());
   }
 
-  static void ScaleFontMetrics(SkFontMetrics*, SkScalar);
+  static void ScaleFontMetrics(SkFontMetrics*, SkScalar) noexcept;
 
   /**
       Returns the union of bounds of all glyphs.
@@ -67,7 +67,7 @@ class SkFontPriv {
    */
   static SkRect GetFontBounds(const SkFont&);
 
-  static bool IsFinite(const SkFont& font) {
+  static bool IsFinite(const SkFont& font) noexcept {
     return SkScalarIsFinite(font.getSize()) && SkScalarIsFinite(font.getScaleX()) &&
            SkScalarIsFinite(font.getSkewX());
   }
@@ -95,8 +95,8 @@ class SkAutoToGlyphs {
     }
   }
 
-  int count() const { return fCount; }
-  const uint16_t* glyphs() const { return fGlyphs; }
+  int count() const noexcept { return fCount; }
+  const uint16_t* glyphs() const noexcept { return fGlyphs; }
 
  private:
   SkAutoSTArray<32, uint16_t> fStorage;

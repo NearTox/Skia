@@ -382,41 +382,45 @@ class SK_API GrRenderTargetContext : public GrSurfaceContext {
 
   void insertEventMarker(const SkString&);
 
-  GrFSAAType fsaaType() const { return fRenderTargetProxy->fsaaType(); }
+  GrFSAAType fsaaType() const noexcept { return fRenderTargetProxy->fsaaType(); }
   const GrCaps* caps() const;
-  int width() const { return fRenderTargetProxy->width(); }
-  int height() const { return fRenderTargetProxy->height(); }
-  int numColorSamples() const { return fRenderTargetProxy->numColorSamples(); }
-  int numStencilSamples() const { return fRenderTargetProxy->numStencilSamples(); }
-  const SkSurfaceProps& surfaceProps() const { return fSurfaceProps; }
-  GrSurfaceOrigin origin() const { return fRenderTargetProxy->origin(); }
-  bool wrapsVkSecondaryCB() const { return fRenderTargetProxy->wrapsVkSecondaryCB(); }
+  int width() const noexcept { return fRenderTargetProxy->width(); }
+  int height() const noexcept { return fRenderTargetProxy->height(); }
+  int numColorSamples() const noexcept { return fRenderTargetProxy->numColorSamples(); }
+  int numStencilSamples() const noexcept { return fRenderTargetProxy->numStencilSamples(); }
+  const SkSurfaceProps& surfaceProps() const noexcept { return fSurfaceProps; }
+  GrSurfaceOrigin origin() const noexcept { return fRenderTargetProxy->origin(); }
+  bool wrapsVkSecondaryCB() const noexcept { return fRenderTargetProxy->wrapsVkSecondaryCB(); }
   GrMipMapped mipMapped() const;
 
-  void setNeedsStencil() { fRenderTargetProxy->setNeedsStencil(); }
+  void setNeedsStencil() noexcept { fRenderTargetProxy->setNeedsStencil(); }
 
   // This entry point should only be called if the backing GPU object is known to be
   // instantiated.
-  GrRenderTarget* accessRenderTarget() { return fRenderTargetProxy->peekRenderTarget(); }
+  GrRenderTarget* accessRenderTarget() noexcept { return fRenderTargetProxy->peekRenderTarget(); }
 
-  GrSurfaceProxy* asSurfaceProxy() override { return fRenderTargetProxy.get(); }
-  const GrSurfaceProxy* asSurfaceProxy() const override { return fRenderTargetProxy.get(); }
-  sk_sp<GrSurfaceProxy> asSurfaceProxyRef() override { return fRenderTargetProxy; }
+  GrSurfaceProxy* asSurfaceProxy() noexcept override { return fRenderTargetProxy.get(); }
+  const GrSurfaceProxy* asSurfaceProxy() const noexcept override {
+    return fRenderTargetProxy.get();
+  }
+  sk_sp<GrSurfaceProxy> asSurfaceProxyRef() noexcept override { return fRenderTargetProxy; }
 
-  GrTextureProxy* asTextureProxy() override;
-  const GrTextureProxy* asTextureProxy() const override;
-  sk_sp<GrTextureProxy> asTextureProxyRef() override;
+  GrTextureProxy* asTextureProxy() noexcept override;
+  const GrTextureProxy* asTextureProxy() const noexcept override;
+  sk_sp<GrTextureProxy> asTextureProxyRef() noexcept override;
 
-  GrRenderTargetProxy* asRenderTargetProxy() override { return fRenderTargetProxy.get(); }
-  sk_sp<GrRenderTargetProxy> asRenderTargetProxyRef() override { return fRenderTargetProxy; }
+  GrRenderTargetProxy* asRenderTargetProxy() noexcept override { return fRenderTargetProxy.get(); }
+  sk_sp<GrRenderTargetProxy> asRenderTargetProxyRef() noexcept override {
+    return fRenderTargetProxy;
+  }
 
-  GrRenderTargetContext* asRenderTargetContext() override { return this; }
+  GrRenderTargetContext* asRenderTargetContext() noexcept override { return this; }
 
   // Provides access to functions that aren't part of the public API.
-  GrRenderTargetContextPriv priv();
-  const GrRenderTargetContextPriv priv() const;
+  GrRenderTargetContextPriv priv() noexcept;
+  const GrRenderTargetContextPriv priv() const noexcept;
 
-  GrTextTarget* textTarget() { return fTextTarget.get(); }
+  GrTextTarget* textTarget() noexcept { return fTextTarget.get(); }
 
   bool isWrapped_ForTesting() const;
 
@@ -425,9 +429,10 @@ class SK_API GrRenderTargetContext : public GrSurfaceContext {
       GrRecordingContext*, sk_sp<GrRenderTargetProxy>, sk_sp<SkColorSpace>, const SkSurfaceProps*,
       bool managedOpList = true);
 
-  SkDEBUGCODE(void validate() const override;)
+  SkDEBUGCODE(void validate() const override);
 
-      private : class TextTarget;
+ private:
+  class TextTarget;
 
   GrAAType chooseAAType(GrAA);
 

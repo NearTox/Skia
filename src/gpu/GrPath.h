@@ -35,9 +35,9 @@ class GrPath : public GrGpuResource {
 
   static void ComputeKey(const GrShape&, GrUniqueKey* key, bool* outIsVolatile);
 
-  const SkRect& getBounds() const { return fBounds; }
+  const SkRect& getBounds() const noexcept { return fBounds; }
 
-  GrPathRendering::FillType getFillType() const { return fFillType; }
+  GrPathRendering::FillType getFillType() const noexcept { return fFillType; }
 #ifdef SK_DEBUG
   bool isEqualTo(const SkPath& path, const GrStyle& style) const;
 #endif
@@ -52,7 +52,7 @@ class GrPath : public GrGpuResource {
 #endif
 
  private:
-  const char* getResourceType() const override { return "Path Data"; }
+  const char* getResourceType() const noexcept override { return "Path Data"; }
   typedef GrGpuResource INHERITED;
 };
 

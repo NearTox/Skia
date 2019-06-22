@@ -541,12 +541,12 @@ struct SkOTTableName {
 
   class Iterator {
    public:
-    Iterator(const uint8_t* nameTable, size_t size)
+    constexpr Iterator(const uint8_t* nameTable, size_t size) noexcept
         : fNameTable(nameTable), fNameTableSize(size), fIndex(0), fType(-1) {}
-    Iterator(const uint8_t* nameTable, size_t size, SK_OT_USHORT type)
+    constexpr Iterator(const uint8_t* nameTable, size_t size, SK_OT_USHORT type) noexcept
         : fNameTable(nameTable), fNameTableSize(size), fIndex(0), fType(type) {}
 
-    void reset(SK_OT_USHORT type) {
+    void reset(SK_OT_USHORT type) noexcept {
       fIndex = 0;
       fType = type;
     }

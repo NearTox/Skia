@@ -20,7 +20,7 @@
 #include <new>
 
 template <size_t N>
-static size_t sk_align(size_t s) {
+static constexpr size_t sk_align(size_t s) noexcept {
   return ((s + (N - 1)) / N) * N;
 }
 
@@ -191,7 +191,7 @@ inline std::unique_ptr<GrAtlasTextOp> GrTextBlob::makeOp(
 static void calculate_translation(
     bool applyVM, const SkMatrix& newViewMatrix, SkScalar newX, SkScalar newY,
     const SkMatrix& currentViewMatrix, SkScalar currentX, SkScalar currentY, SkScalar* transX,
-    SkScalar* transY) {
+    SkScalar* transY) noexcept {
   if (applyVM) {
     *transX = newViewMatrix.getTranslateX() + newViewMatrix.getScaleX() * (newX - currentX) +
               newViewMatrix.getSkewX() * (newY - currentY) - currentViewMatrix.getTranslateX();
@@ -355,7 +355,7 @@ std::unique_ptr<GrDrawOp> GrTextBlob::test_makeOp(
       distanceAdjustTable, target);
 }
 
-void GrTextBlob::AssertEqual(const GrTextBlob& l, const GrTextBlob& r) {
+void GrTextBlob::AssertEqual(const GrTextBlob& l, const GrTextBlob& r) noexcept {
   SkASSERT_RELEASE(l.fSize == r.fSize);
 
   SkASSERT_RELEASE(l.fBlurRec.fSigma == r.fBlurRec.fSigma);

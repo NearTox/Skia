@@ -67,11 +67,13 @@ static const SkDescriptor* create_descriptor(
 
 // -- Serializer ----------------------------------------------------------------------------------
 
-size_t pad(size_t size, size_t alignment) { return (size + (alignment - 1)) & ~(alignment - 1); }
+size_t pad(size_t size, size_t alignment) noexcept {
+  return (size + (alignment - 1)) & ~(alignment - 1);
+}
 
 class Serializer {
  public:
-  Serializer(std::vector<uint8_t>* buffer) : fBuffer{buffer} {}
+  Serializer(std::vector<uint8_t>* buffer) noexcept : fBuffer{buffer} {}
 
   template <typename T, typename... Args>
   T* emplace(Args&&... args) {
@@ -111,7 +113,7 @@ class Serializer {
 // Note that the Deserializer is reading untrusted data, we need to guard against invalid data.
 class Deserializer {
  public:
-  Deserializer(const volatile char* memory, size_t memorySize)
+  Deserializer(const volatile char* memory, size_t memorySize) noexcept
       : fMemory(memory), fMemorySize(memorySize) {}
 
   template <typename T>
@@ -144,7 +146,7 @@ class Deserializer {
   }
 
  private:
-  const volatile char* ensureAtLeast(size_t size, size_t alignment) {
+  const volatile char* ensureAtLeast(size_t size, size_t alignment) noexcept {
     size_t padded = pad(fBytesRead, alignment);
 
     // Not enough data.
@@ -184,17 +186,18 @@ bool read_path(Deserializer* deserializer, SkGlyph* glyph, SkStrike* cache) {
   return cache->initializePath(glyph, path, pathSize);
 }
 
-size_t SkDescriptorMapOperators::operator()(const SkDescriptor* key) const {
+size_t SkDescriptorMapOperators::operator()(const SkDescriptor* key) const noexcept {
   return key->getChecksum();
 }
 
-bool SkDescriptorMapOperators::operator()(const SkDescriptor* lhs, const SkDescriptor* rhs) const {
+bool SkDescriptorMapOperators::operator()(const SkDescriptor* lhs, const SkDescriptor* rhs) const
+    noexcept {
   return *lhs == *rhs;
 }
 
 struct StrikeSpec {
-  StrikeSpec() {}
-  StrikeSpec(SkFontID typefaceID_, SkDiscardableHandleId discardableHandleId_)
+  StrikeSpec() noexcept {}
+  StrikeSpec(SkFontID typefaceID_, SkDiscardableHandleId discardableHandleId_) noexcept
       : typefaceID{typefaceID_}, discardableHandleId(discardableHandleId_) {}
   SkFontID typefaceID = 0u;
   SkDiscardableHandleId discardableHandleId = 0u;
@@ -252,11 +255,11 @@ SkTextBlobCacheDiffCanvas::SkTextBlobCacheDiffCanvas(
 SkTextBlobCacheDiffCanvas::~SkTextBlobCacheDiffCanvas() = default;
 
 SkCanvas::SaveLayerStrategy SkTextBlobCacheDiffCanvas::getSaveLayerStrategy(
-    const SaveLayerRec& rec) {
+    const SaveLayerRec& rec) noexcept {
   return kFullLayer_SaveLayerStrategy;
 }
 
-bool SkTextBlobCacheDiffCanvas::onDoSaveBehind(const SkRect*) { return false; }
+bool SkTextBlobCacheDiffCanvas::onDoSaveBehind(const SkRect*) noexcept { return false; }
 
 void SkTextBlobCacheDiffCanvas::onDrawTextBlob(
     const SkTextBlob* blob, SkScalar x, SkScalar y, const SkPaint& paint) {
@@ -265,8 +268,8 @@ void SkTextBlobCacheDiffCanvas::onDrawTextBlob(
 }
 
 struct WireTypeface {
-  WireTypeface() = default;
-  WireTypeface(SkFontID typeface_id, int glyph_count, SkFontStyle style, bool is_fixed)
+  WireTypeface() noexcept = default;
+  WireTypeface(SkFontID typeface_id, int glyph_count, SkFontStyle style, bool is_fixed) noexcept
       : typefaceID(typeface_id), glyphCount(glyph_count), style(style), isFixed(is_fixed) {}
 
   SkFontID typefaceID;
@@ -508,13 +511,13 @@ void SkStrikeServer::SkGlyphCacheState::ensureScalerContext() {
   }
 }
 
-void SkStrikeServer::SkGlyphCacheState::resetScalerContext() {
+void SkStrikeServer::SkGlyphCacheState::resetScalerContext() noexcept {
   fContext.reset();
   fTypeface = nullptr;
 }
 
 void SkStrikeServer::SkGlyphCacheState::setTypefaceAndEffects(
-    const SkTypeface* typeface, SkScalerContextEffects effects) {
+    const SkTypeface* typeface, SkScalerContextEffects effects) noexcept {
   fTypeface = typeface;
   fEffects = effects;
 }
@@ -646,7 +649,7 @@ SkSpan<const SkGlyphPos> SkStrikeServer::SkGlyphCacheState::prepareForDrawing(
 class SkStrikeClient::DiscardableStrikePinner : public SkStrikePinner {
  public:
   DiscardableStrikePinner(
-      SkDiscardableHandleId discardableHandleId, sk_sp<DiscardableHandleManager> manager)
+      SkDiscardableHandleId discardableHandleId, sk_sp<DiscardableHandleManager> manager) noexcept
       : fDiscardableHandleId(discardableHandleId), fManager(std::move(manager)) {}
 
   ~DiscardableStrikePinner() override = default;

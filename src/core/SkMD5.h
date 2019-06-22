@@ -14,24 +14,24 @@
 /* Calculate a 128-bit MD5 message-digest of the bytes sent to this stream. */
 class SkMD5 : public SkWStream {
  public:
-  SkMD5();
+  SkMD5() noexcept;
 
   /** Processes input, adding it to the digest.
       Calling this after finish is undefined.  */
-  bool write(const void* buffer, size_t size) final;
+  bool write(const void* buffer, size_t size) noexcept final;
 
-  size_t bytesWritten() const final { return SkToSizeT(this->byteCount); }
+  size_t bytesWritten() const noexcept final { return SkToSizeT(this->byteCount); }
 
   struct Digest {
     uint8_t data[16];
-    bool operator==(Digest const& other) const {
+    bool operator==(Digest const& other) const noexcept {
       return 0 == memcmp(data, other.data, sizeof(data));
     }
-    bool operator!=(Digest const& other) const { return !(*this == other); }
+    bool operator!=(Digest const& other) const noexcept { return !(*this == other); }
   };
 
   /** Computes and returns the digest. */
-  Digest finish();
+  Digest finish() noexcept;
 
  private:
   uint64_t byteCount;  // number of bytes, modulo 2^64

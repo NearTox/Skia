@@ -90,7 +90,7 @@ class CircleGeometryProcessor : public GrGeometryProcessor {
 
   ~CircleGeometryProcessor() override {}
 
-  const char* name() const override { return "CircleEdge"; }
+  const char* name() const noexcept override { return "CircleEdge"; }
 
   void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
     GLSLProcessor::GenKey(*this, caps, b);
@@ -264,7 +264,7 @@ class ButtCapDashedCircleGeometryProcessor : public GrGeometryProcessor {
 
   ~ButtCapDashedCircleGeometryProcessor() override {}
 
-  const char* name() const override { return "ButtCapDashedCircleGeometryProcessor"; }
+  const char* name() const noexcept override { return "ButtCapDashedCircleGeometryProcessor"; }
 
   void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
     GLSLProcessor::GenKey(*this, caps, b);
@@ -523,7 +523,7 @@ class EllipseGeometryProcessor : public GrGeometryProcessor {
 
   ~EllipseGeometryProcessor() override {}
 
-  const char* name() const override { return "EllipseEdge"; }
+  const char* name() const noexcept override { return "EllipseEdge"; }
 
   void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
     GLSLProcessor::GenKey(*this, caps, b);
@@ -709,7 +709,7 @@ class DIEllipseGeometryProcessor : public GrGeometryProcessor {
 
   ~DIEllipseGeometryProcessor() override {}
 
-  const char* name() const override { return "DIEllipseEdge"; }
+  const char* name() const noexcept override { return "DIEllipseEdge"; }
 
   void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
     GLSLProcessor::GenKey(*this, caps, b);
@@ -1169,7 +1169,7 @@ class CircleOp final : public GrMeshDrawOp {
     fAllFill = !stroked;
   }
 
-  const char* name() const override { return "CircleOp"; }
+  const char* name() const noexcept override { return "CircleOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override { fHelper.visitProxies(func); }
 
@@ -1481,7 +1481,7 @@ class ButtCapDashedCircleOp final : public GrMeshDrawOp {
     fIndexCount = circle_type_to_index_count(true);
   }
 
-  const char* name() const override { return "ButtCappedDashedCircleOp"; }
+  const char* name() const noexcept override { return "ButtCappedDashedCircleOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override { fHelper.visitProxies(func); }
 
@@ -1766,7 +1766,7 @@ class EllipseOp : public GrMeshDrawOp {
     fViewMatrixIfUsingLocalCoords = viewMatrix;
   }
 
-  const char* name() const override { return "EllipseOp"; }
+  const char* name() const noexcept override { return "EllipseOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override { fHelper.visitProxies(func); }
 
@@ -1999,7 +1999,7 @@ class DIEllipseOp : public GrMeshDrawOp {
     this->setTransformedBounds(fEllipses[0].fBounds, viewMatrix, HasAABloat::kYes, IsZeroArea::kNo);
   }
 
-  const char* name() const override { return "DIEllipseOp"; }
+  const char* name() const noexcept override { return "DIEllipseOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override { fHelper.visitProxies(func); }
 
@@ -2308,7 +2308,7 @@ class CircularRRectOp : public GrMeshDrawOp {
     fAllFill = (kFill_RRectType == type);
   }
 
-  const char* name() const override { return "CircularRRectOp"; }
+  const char* name() const noexcept override { return "CircularRRectOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override { fHelper.visitProxies(func); }
 
@@ -2624,7 +2624,7 @@ class EllipticalRRectOp : public GrMeshDrawOp {
     fRRects.emplace_back(RRect{color, devXRadius, devYRadius, innerXRadius, innerYRadius, bounds});
   }
 
-  const char* name() const override { return "EllipticalRRectOp"; }
+  const char* name() const noexcept override { return "EllipticalRRectOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override { fHelper.visitProxies(func); }
 

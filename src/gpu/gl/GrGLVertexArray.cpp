@@ -18,7 +18,7 @@ struct AttribLayout {
 
 GR_STATIC_ASSERT(4 == sizeof(AttribLayout));
 
-static AttribLayout attrib_layout(GrVertexAttribType type) {
+static AttribLayout attrib_layout(GrVertexAttribType type) noexcept {
   switch (type) {
     case kFloat_GrVertexAttribType: return {false, 1, GR_GL_FLOAT};
     case kFloat2_GrVertexAttribType: return {false, 2, GR_GL_FLOAT};
@@ -170,7 +170,7 @@ GrGLAttribArrayState* GrGLVertexArray::bindWithIndexBuffer(GrGLGpu* gpu, const G
   return state;
 }
 
-void GrGLVertexArray::invalidateCachedState() {
+void GrGLVertexArray::invalidateCachedState() noexcept {
   fAttribArrays.invalidate();
   fIndexBufferUniqueID.makeInvalid();
 }

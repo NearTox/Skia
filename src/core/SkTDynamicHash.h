@@ -33,22 +33,22 @@ class SkTDynamicHash {
       SkASSERT(hash);
       ++(*this);
     }
-    bool done() const {
+    bool done() const noexcept {
       SkASSERT(fCurrentIndex <= fHash->fCapacity);
       return fCurrentIndex == fHash->fCapacity;
     }
-    T& operator*() const {
+    T& operator*() const noexcept {
       SkASSERT(!this->done());
       return *this->current();
     }
-    void operator++() {
+    void operator++() noexcept {
       do {
         fCurrentIndex++;
       } while (!this->done() && (this->current() == Empty() || this->current() == Deleted()));
     }
 
    private:
-    T* current() const { return fHash->fArray[fCurrentIndex]; }
+    T* current() const noexcept { return fHash->fArray[fCurrentIndex]; }
 
     SkTDynamicHash* fHash;
     int fCurrentIndex;
@@ -81,7 +81,7 @@ class SkTDynamicHash {
     int fCurrentIndex;
   };
 
-  int count() const { return fCount; }
+  int count() const noexcept { return fCount; }
 
   // Return the entry with this key if we have it, otherwise nullptr.
   T* find(const Key& key) const {
@@ -154,8 +154,8 @@ class SkTDynamicHash {
 
  private:
   // We have two special values to indicate an empty or deleted entry.
-  static T* Empty() { return reinterpret_cast<T*>(0); }    // i.e. nullptr
-  static T* Deleted() { return reinterpret_cast<T*>(1); }  // Also an invalid pointer.
+  static T* Empty() noexcept { return reinterpret_cast<T*>(0); }    // i.e. nullptr
+  static T* Deleted() noexcept { return reinterpret_cast<T*>(1); }  // Also an invalid pointer.
 
   bool validate() const {
 #define SKTDYNAMICHASH_CHECK(x) \
@@ -255,7 +255,8 @@ class SkTDynamicHash {
   }
 
   void resize(int newCapacity) {
-    SkDEBUGCODE(int oldCount = fCount;) int oldCapacity = fCapacity;
+    SkDEBUGCODE(int oldCount = fCount);
+    int oldCapacity = fCapacity;
     SkAutoTMalloc<T*> oldArray(fArray);
 
     fCount = fDeleted = 0;
@@ -272,12 +273,12 @@ class SkTDynamicHash {
   }
 
   // fCapacity is always a power of 2, so this masks the correct low bits to index into our hash.
-  uint32_t hashMask() const { return fCapacity - 1; }
+  uint32_t hashMask() const noexcept { return fCapacity - 1; }
 
   int firstIndex(const Key& key) const { return Hash(key) & this->hashMask(); }
 
   // Given index at round N, what is the index to check at N+1?  round should start at 0.
-  int nextIndex(int index, int round) const {
+  int nextIndex(int index, int round) const noexcept {
     // This will search a power-of-two array fully without repeating an index.
     return (index + round + 1) & this->hashMask();
   }

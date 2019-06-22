@@ -30,7 +30,7 @@ class GrGLTexture : public GrTexture {
     // Just track if it's been invalidated and no longer the default
     bool fBorderColorInvalid = false;
 
-    void invalidate() {
+    void invalidate() noexcept {
       fMinFilter = ~0U;
       fMagFilter = ~0U;
       fWrapS = ~0U;
@@ -47,7 +47,7 @@ class GrGLTexture : public GrTexture {
     uint32_t fSwizzleKey = GrSwizzle::RGBA().asKey();
     GrGLint fBaseMipMapLevel = 0;
     GrGLint fMaxMipMapLevel = 1000;
-    void invalidate() {
+    void invalidate() noexcept {
       fSwizzleKey = ~0U;
       fBaseMipMapLevel = ~0;
       fMaxMipMapLevel = ~0;
@@ -59,7 +59,7 @@ class GrGLTexture : public GrTexture {
     GrBackendObjectOwnership fOwnership;
   };
 
-  static GrTextureType TextureTypeFromTarget(GrGLenum textureTarget);
+  static GrTextureType TextureTypeFromTarget(GrGLenum textureTarget) noexcept;
 
   GrGLTexture(GrGLGpu*, SkBudgeted, const GrSurfaceDesc&, const IDDesc&, GrMipMapsStatus);
 
@@ -69,19 +69,19 @@ class GrGLTexture : public GrTexture {
 
   GrBackendFormat backendFormat() const override;
 
-  void textureParamsModified() override {
+  void textureParamsModified() noexcept override {
     fSamplerParams.invalidate();
     fNonSamplerParams.invalidate();
   }
 
   // These functions are used to track the texture parameters associated with the texture.
-  GrGpu::ResetTimestamp getCachedParamsTimestamp() const { return fParamsTimestamp; }
-  const SamplerParams& getCachedSamplerParams() const { return fSamplerParams; }
-  const NonSamplerParams& getCachedNonSamplerParams() const { return fNonSamplerParams; }
+  GrGpu::ResetTimestamp getCachedParamsTimestamp() const noexcept { return fParamsTimestamp; }
+  const SamplerParams& getCachedSamplerParams() const noexcept { return fSamplerParams; }
+  const NonSamplerParams& getCachedNonSamplerParams() const noexcept { return fNonSamplerParams; }
 
   void setCachedParams(
       const SamplerParams* samplerParams, const NonSamplerParams& nonSamplerParams,
-      GrGpu::ResetTimestamp currTimestamp) {
+      GrGpu::ResetTimestamp currTimestamp) noexcept {
     if (samplerParams) {
       fSamplerParams = *samplerParams;
     }
@@ -89,12 +89,12 @@ class GrGLTexture : public GrTexture {
     fParamsTimestamp = currTimestamp;
   }
 
-  GrGLuint textureID() const { return fID; }
+  GrGLuint textureID() const noexcept { return fID; }
 
-  GrGLenum target() const;
+  GrGLenum target() const noexcept;
 
-  bool hasBaseLevelBeenBoundToFBO() const { return fBaseLevelHasBeenBoundToFBO; }
-  void baseLevelWasBoundToFBO() { fBaseLevelHasBeenBoundToFBO = true; }
+  bool hasBaseLevelBeenBoundToFBO() const noexcept { return fBaseLevelHasBeenBoundToFBO; }
+  void baseLevelWasBoundToFBO() noexcept { fBaseLevelHasBeenBoundToFBO = true; }
 
   static sk_sp<GrGLTexture> MakeWrapped(
       GrGLGpu*, const GrSurfaceDesc&, GrMipMapsStatus, const IDDesc&, GrWrapCacheable, GrIOType);
@@ -109,7 +109,7 @@ class GrGLTexture : public GrTexture {
   GrGLTexture(
       GrGLGpu*, const GrSurfaceDesc&, GrMipMapsStatus, const IDDesc&, GrWrapCacheable, GrIOType);
 
-  void init(const GrSurfaceDesc&, const IDDesc&);
+  void init(const GrSurfaceDesc&, const IDDesc&) noexcept;
 
   void onAbandon() override;
   void onRelease() override;

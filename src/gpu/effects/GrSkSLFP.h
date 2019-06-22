@@ -75,7 +75,7 @@ class GrSkSLFP : public GrFragmentProcessor {
       GrContext_Base* context, int index, const char* name, SkString sksl, const void* inputs,
       size_t inputSize, SkSL::Program::Kind kind = SkSL::Program::kPipelineStage_Kind);
 
-  const char* name() const override;
+  const char* name() const noexcept override;
 
   void addChild(std::unique_ptr<GrFragmentProcessor> child);
 
@@ -93,7 +93,7 @@ class GrSkSLFP : public GrFragmentProcessor {
 
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
 
   void createFactory() const;
 

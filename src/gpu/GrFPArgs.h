@@ -17,7 +17,7 @@ class GrRecordingContext;
 struct GrFPArgs {
   GrFPArgs(
       GrRecordingContext* context, const SkMatrix* viewMatrix, SkFilterQuality filterQuality,
-      const GrColorSpaceInfo* dstColorSpaceInfo)
+      const GrColorSpaceInfo* dstColorSpaceInfo) noexcept
       : fContext(context),
         fViewMatrix(viewMatrix),
         fFilterQuality(filterQuality),
@@ -50,7 +50,7 @@ struct GrFPArgs {
 
 class GrFPArgs::WithPreLocalMatrix final : public GrFPArgs {
  public:
-  WithPreLocalMatrix(const GrFPArgs& args, const SkMatrix& lm) : INHERITED(args) {
+  WithPreLocalMatrix(const GrFPArgs& args, const SkMatrix& lm) noexcept : INHERITED(args) {
     if (!lm.isIdentity()) {
       if (fPreLocalMatrix) {
         fStorage.setConcat(lm, *fPreLocalMatrix);
@@ -72,7 +72,7 @@ class GrFPArgs::WithPreLocalMatrix final : public GrFPArgs {
 
 class GrFPArgs::WithPostLocalMatrix final : public GrFPArgs {
  public:
-  WithPostLocalMatrix(const GrFPArgs& args, const SkMatrix& lm) : INHERITED(args) {
+  WithPostLocalMatrix(const GrFPArgs& args, const SkMatrix& lm) noexcept : INHERITED(args) {
     if (!lm.isIdentity()) {
       if (fPostLocalMatrix) {
         fStorage.setConcat(*fPostLocalMatrix, lm);

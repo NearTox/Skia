@@ -132,7 +132,7 @@ static const GrGLenum gXfermodeCoeff2Blend[] = {
     GR_GL_ZERO,
 };
 
-bool GrGLGpu::BlendCoeffReferencesConstant(GrBlendCoeff coeff) {
+bool GrGLGpu::BlendCoeffReferencesConstant(GrBlendCoeff coeff) noexcept {
   static const bool gCoeffReferencesBlendConst[] = {
       false,
       false,
@@ -187,7 +187,7 @@ bool GrGLGpu::BlendCoeffReferencesConstant(GrBlendCoeff coeff) {
 
 //////////////////////////////////////////////////////////////////////////////
 
-static int gl_target_to_binding_index(GrGLenum target) {
+static int gl_target_to_binding_index(GrGLenum target) noexcept {
   switch (target) {
     case GR_GL_TEXTURE_2D: return 0;
     case GR_GL_TEXTURE_RECTANGLE: return 1;
@@ -197,25 +197,26 @@ static int gl_target_to_binding_index(GrGLenum target) {
   return 0;
 }
 
-GrGpuResource::UniqueID GrGLGpu::TextureUnitBindings::boundID(GrGLenum target) const {
+GrGpuResource::UniqueID GrGLGpu::TextureUnitBindings::boundID(GrGLenum target) const noexcept {
   return fTargetBindings[gl_target_to_binding_index(target)].fBoundResourceID;
 }
 
-bool GrGLGpu::TextureUnitBindings::hasBeenModified(GrGLenum target) const {
+bool GrGLGpu::TextureUnitBindings::hasBeenModified(GrGLenum target) const noexcept {
   return fTargetBindings[gl_target_to_binding_index(target)].fHasBeenModified;
 }
 
-void GrGLGpu::TextureUnitBindings::setBoundID(GrGLenum target, GrGpuResource::UniqueID resourceID) {
+void GrGLGpu::TextureUnitBindings::setBoundID(
+    GrGLenum target, GrGpuResource::UniqueID resourceID) noexcept {
   int targetIndex = gl_target_to_binding_index(target);
   fTargetBindings[targetIndex].fBoundResourceID = resourceID;
   fTargetBindings[targetIndex].fHasBeenModified = true;
 }
 
-void GrGLGpu::TextureUnitBindings::invalidateForScratchUse(GrGLenum target) {
+void GrGLGpu::TextureUnitBindings::invalidateForScratchUse(GrGLenum target) noexcept {
   this->setBoundID(target, GrGpuResource::UniqueID());
 }
 
-void GrGLGpu::TextureUnitBindings::invalidateAllTargets(bool markUnmodified) {
+void GrGLGpu::TextureUnitBindings::invalidateAllTargets(bool markUnmodified) noexcept {
   for (auto& targetBinding : fTargetBindings) {
     targetBinding.fBoundResourceID.makeInvalid();
     if (markUnmodified) {
@@ -226,7 +227,7 @@ void GrGLGpu::TextureUnitBindings::invalidateAllTargets(bool markUnmodified) {
 
 //////////////////////////////////////////////////////////////////////////////
 
-static GrGLenum filter_to_gl_mag_filter(GrSamplerState::Filter filter) {
+static GrGLenum filter_to_gl_mag_filter(GrSamplerState::Filter filter) noexcept {
   switch (filter) {
     case GrSamplerState::Filter::kNearest: return GR_GL_NEAREST;
     case GrSamplerState::Filter::kBilerp: return GR_GL_LINEAR;
@@ -236,7 +237,7 @@ static GrGLenum filter_to_gl_mag_filter(GrSamplerState::Filter filter) {
   return 0;
 }
 
-static GrGLenum filter_to_gl_min_filter(GrSamplerState::Filter filter) {
+static GrGLenum filter_to_gl_min_filter(GrSamplerState::Filter filter) noexcept {
   switch (filter) {
     case GrSamplerState::Filter::kNearest: return GR_GL_NEAREST;
     case GrSamplerState::Filter::kBilerp: return GR_GL_LINEAR;
@@ -246,7 +247,8 @@ static GrGLenum filter_to_gl_min_filter(GrSamplerState::Filter filter) {
   return 0;
 }
 
-static inline GrGLenum wrap_mode_to_gl_wrap(GrSamplerState::WrapMode wrapMode, const GrCaps& caps) {
+static inline GrGLenum wrap_mode_to_gl_wrap(
+    GrSamplerState::WrapMode wrapMode, const GrCaps& caps) noexcept {
   switch (wrapMode) {
     case GrSamplerState::WrapMode::kClamp: return GR_GL_CLAMP_TO_EDGE;
     case GrSamplerState::WrapMode::kRepeat: return GR_GL_REPEAT;
@@ -315,7 +317,7 @@ class GrGLGpu::SamplerObjectCache {
     std::fill_n(fHWBoundSamplers.get(), fNumTextureUnits, 0);
   }
 
-  void abandon() {
+  void abandon() noexcept {
     fHWBoundSamplers.reset();
     fNumTextureUnits = 0;
   }
@@ -332,7 +334,7 @@ class GrGLGpu::SamplerObjectCache {
   }
 
  private:
-  static int StateToIndex(const GrSamplerState& state) {
+  static int StateToIndex(const GrSamplerState& state) noexcept {
     int filter = static_cast<int>(state.filter());
     SkASSERT(filter >= 0 && filter < 3);
     int wrapX = static_cast<int>(state.wrapModeX());
@@ -804,7 +806,7 @@ sk_sp<GrRenderTarget> GrGLGpu::onWrapBackendTextureAsRenderTarget(
   return GrGLRenderTarget::MakeWrapped(this, surfDesc, info.fFormat, rtIDDesc, 0);
 }
 
-static bool check_write_and_transfer_input(GrGLTexture* glTex) {
+static bool check_write_and_transfer_input(GrGLTexture* glTex) noexcept {
   if (!glTex) {
     return false;
   }
@@ -843,7 +845,7 @@ bool GrGLGpu::onWritePixels(
 }
 
 // For GL_[UN]PACK_ALIGNMENT. TODO: This really wants to be GrColorType.
-static inline GrGLint config_alignment(GrPixelConfig config) {
+static inline GrGLint config_alignment(GrPixelConfig config) noexcept {
   SkASSERT(!GrPixelConfigIsCompressed(config));
   switch (config) {
     case kAlpha_8_GrPixelConfig:
@@ -903,9 +905,9 @@ bool GrGLGpu::onTransferPixelsTo(
 
   SkDEBUGCODE(SkIRect subRect = SkIRect::MakeXYWH(left, top, width, height);
               SkIRect bounds = SkIRect::MakeWH(texture->width(), texture->height());
-              SkASSERT(bounds.contains(subRect));)
+              SkASSERT(bounds.contains(subRect)));
 
-      int bpp = GrColorTypeBytesPerPixel(bufferColorType);
+  int bpp = GrColorTypeBytesPerPixel(bufferColorType);
   const size_t trimRowBytes = width * bpp;
   if (!rowBytes) {
     rowBytes = trimRowBytes;
@@ -1168,10 +1170,9 @@ bool GrGLGpu::uploadTexData(
   SkASSERT(this->caps()->isConfigTexturable(texConfig));
   SkDEBUGCODE(SkIRect subRect = SkIRect::MakeXYWH(left, top, width, height);
               SkIRect bounds = SkIRect::MakeWH(texWidth, texHeight);
-              SkASSERT(bounds.contains(subRect));)
-      SkASSERT(
-          1 == mipLevelCount ||
-          (0 == left && 0 == top && width == texWidth && height == texHeight));
+              SkASSERT(bounds.contains(subRect)));
+  SkASSERT(
+      1 == mipLevelCount || (0 == left && 0 == top && width == texWidth && height == texHeight));
 
   this->unbindCpuToGpuXferBuffer();
 
@@ -1488,7 +1489,7 @@ FAILED:
 }
 
 // good to set a break-point here to know when createTexture fails
-static sk_sp<GrTexture> return_null_texture() {
+static sk_sp<GrTexture> return_null_texture() noexcept {
   //    SkDEBUGFAIL("null texture");
   return nullptr;
 }
@@ -1510,7 +1511,7 @@ static GrGLTexture::SamplerParams set_initial_texture_params(
   return params;
 }
 
-size_t GLBytesPerPixel(GrGLenum glFormat) {
+size_t GLBytesPerPixel(GrGLenum glFormat) noexcept {
   switch (glFormat) {
     case GR_GL_LUMINANCE8:
     case GR_GL_ALPHA8:
@@ -2562,7 +2563,7 @@ void GrGLGpu::draw(
 #endif
 }
 
-static GrGLenum gr_primitive_type_to_gl_mode(GrPrimitiveType primitiveType) {
+static GrGLenum gr_primitive_type_to_gl_mode(GrPrimitiveType primitiveType) noexcept {
   switch (primitiveType) {
     case GrPrimitiveType::kTriangles: return GR_GL_TRIANGLES;
     case GrPrimitiveType::kTriangleStrip: return GR_GL_TRIANGLE_STRIP;
@@ -2588,7 +2589,7 @@ void GrGLGpu::sendMeshToGpu(
   fStats.incNumDraws();
 }
 
-static const GrGLvoid* element_ptr(const GrBuffer* indexBuffer, int baseIndex) {
+static const GrGLvoid* element_ptr(const GrBuffer* indexBuffer, int baseIndex) noexcept {
   size_t baseOffset = baseIndex * sizeof(uint16_t);
   if (indexBuffer->isCpuBuffer()) {
     return static_cast<const GrCpuBuffer*>(indexBuffer)->data() + baseOffset;
@@ -2700,7 +2701,7 @@ void GrGLGpu::onResolveRenderTarget(GrRenderTarget* target) {
 
 namespace {
 
-GrGLenum gr_to_gl_stencil_op(GrStencilOp op) {
+GrGLenum gr_to_gl_stencil_op(GrStencilOp op) noexcept {
   static const GrGLenum gTable[kGrStencilOpCount] = {
       GR_GL_KEEP,       // kKeep
       GR_GL_ZERO,       // kZero
@@ -2860,7 +2861,7 @@ void GrGLGpu::flushBlend(const GrXferProcessor::BlendInfo& blendInfo, const GrSw
   }
 }
 
-static void get_gl_swizzle_values(const GrSwizzle& swizzle, GrGLenum glValues[4]) {
+static void get_gl_swizzle_values(const GrSwizzle& swizzle, GrGLenum glValues[4]) noexcept {
   for (int i = 0; i < 4; ++i) {
     switch (swizzle[i]) {
       case 'r': glValues[i] = GR_GL_RED; break;
@@ -3101,7 +3102,7 @@ static inline bool can_blit_framebuffer_for_copy_surface(
       dstPoint);
 }
 
-static bool rt_has_msaa_render_buffer(const GrGLRenderTarget* rt, const GrGLCaps& glCaps) {
+static bool rt_has_msaa_render_buffer(const GrGLRenderTarget* rt, const GrGLCaps& glCaps) noexcept {
   // A RT has a separate MSAA renderbuffer if:
   // 1) It's multisampled
   // 2) We're using an extension with separate MSAA renderbuffers
@@ -3823,7 +3824,7 @@ void GrGLGpu::xferBarrier(GrRenderTarget* rt, GrXferBarrierType type) {
   }
 }
 
-static bool gl_format_to_pixel_config(GrGLenum format, GrPixelConfig* config) {
+static bool gl_format_to_pixel_config(GrGLenum format, GrPixelConfig* config) noexcept {
   GrPixelConfig dontCare;
   if (!config) {
     config = &dontCare;
@@ -4266,7 +4267,7 @@ sk_sp<GrSemaphore> GrGLGpu::prepareTextureForCrossContextUsage(GrTexture* textur
   return semaphore;
 }
 
-int GrGLGpu::TextureToCopyProgramIdx(GrTexture* texture) {
+int GrGLGpu::TextureToCopyProgramIdx(GrTexture* texture) noexcept {
   switch (GrSLCombinedSamplerTypeForTextureType(texture->texturePriv().textureType())) {
     case kTexture2DSampler_GrSLType: return 0;
     case kTexture2DRectSampler_GrSLType: return 1;

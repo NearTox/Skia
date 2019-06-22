@@ -17,7 +17,8 @@ namespace SkSL {
  */
 struct ASTWhileStatement : public ASTStatement {
   ASTWhileStatement(
-      int offset, std::unique_ptr<ASTExpression> test, std::unique_ptr<ASTStatement> statement)
+      int offset, std::unique_ptr<ASTExpression> test,
+      std::unique_ptr<ASTStatement> statement) noexcept
       : INHERITED(offset, kWhile_Kind), fTest(std::move(test)), fStatement(std::move(statement)) {}
 
   String description() const override {

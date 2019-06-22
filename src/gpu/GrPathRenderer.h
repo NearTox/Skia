@@ -111,7 +111,8 @@ class SK_API GrPathRenderer : public SkRefCnt {
    * called when searching for the best path renderer to draw a path.
    */
   CanDrawPath canDrawPath(const CanDrawPathArgs& args) const {
-    SkDEBUGCODE(args.validate();) return this->onCanDrawPath(args);
+    SkDEBUGCODE(args.validate());
+    return this->onCanDrawPath(args);
   }
 
   struct DrawPathArgs {
@@ -165,8 +166,8 @@ class SK_API GrPathRenderer : public SkRefCnt {
    * initialized to zero. The pixels inside the path will have non-zero stencil values afterwards.
    */
   void stencilPath(const StencilPathArgs& args) {
-    SkDEBUGCODE(args.validate();)
-        SkASSERT(kNoSupport_StencilSupport != this->getStencilSupport(*args.fShape));
+    SkDEBUGCODE(args.validate());
+    SkASSERT(kNoSupport_StencilSupport != this->getStencilSupport(*args.fShape));
     this->onStencilPath(args);
   }
 
@@ -184,7 +185,7 @@ class SK_API GrPathRenderer : public SkRefCnt {
   /**
    * Subclass overrides if it has any limitations of stenciling support.
    */
-  virtual StencilSupport onGetStencilSupport(const GrShape&) const {
+  virtual StencilSupport onGetStencilSupport(const GrShape&) const noexcept {
     return kNoRestriction_StencilSupport;
   }
 

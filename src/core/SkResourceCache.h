@@ -35,18 +35,18 @@ class SkResourceCache {
      *  @param sharedID == 0 means ignore this field, does not support group purging.
      *  @param dataSize is size of fields and data of the subclass, must be a multiple of 4.
      */
-    void init(void* nameSpace, uint64_t sharedID, size_t dataSize);
+    void init(void* nameSpace, uint64_t sharedID, size_t dataSize) noexcept;
 
     /** Returns the size of this key. */
-    size_t size() const { return fCount32 << 2; }
+    size_t size() const noexcept { return fCount32 << 2; }
 
-    void* getNamespace() const { return fNamespace; }
-    uint64_t getSharedID() const { return ((uint64_t)fSharedID_hi << 32) | fSharedID_lo; }
+    void* getNamespace() const noexcept { return fNamespace; }
+    uint64_t getSharedID() const noexcept { return ((uint64_t)fSharedID_hi << 32) | fSharedID_lo; }
 
     // This is only valid after having called init().
-    uint32_t hash() const { return fHash; }
+    uint32_t hash() const noexcept { return fHash; }
 
-    bool operator==(const Key& other) const {
+    bool operator==(const Key& other) const noexcept {
       const uint32_t* a = this->as32();
       const uint32_t* b = other.as32();
       for (int i = 0; i < fCount32; ++i) {  // (This checks fCount == other.fCount first.)
@@ -66,7 +66,7 @@ class SkResourceCache {
     void* fNamespace;  // A unique namespace tag. This is hashed.
     /* uint32_t fContents32[] */
 
-    const uint32_t* as32() const { return (const uint32_t*)this; }
+    const uint32_t* as32() const noexcept { return (const uint32_t*)this; }
   };
 
   struct Rec {
@@ -78,12 +78,12 @@ class SkResourceCache {
     uint32_t getHash() const { return this->getKey().hash(); }
 
     virtual const Key& getKey() const = 0;
-    virtual size_t bytesUsed() const = 0;
+    virtual size_t bytesUsed() const noexcept = 0;
 
     // Called if the cache needs to purge/remove/delete the Rec. Default returns true.
     // Subclass may return false if there are outstanding references to it (e.g. bitmaps).
     // Will only be deleted/removed-from-the-cache when this returns true.
-    virtual bool canBePurged() { return true; }
+    virtual bool canBePurged() noexcept { return true; }
 
     // A rec is first created/initialized, and then added to the cache. As part of the add(),
     // the cache will callback into the rec with postAddInstall, passing in whatever payload
@@ -97,7 +97,7 @@ class SkResourceCache {
     virtual void postAddInstall(void*) {}
 
     // for memory usage diagnostics
-    virtual const char* getCategory() const = 0;
+    virtual const char* getCategory() const noexcept = 0;
     virtual SkDiscardableMemory* diagnostic_only_getDiscardable() const { return nullptr; }
 
    private:
@@ -109,7 +109,7 @@ class SkResourceCache {
 
   // Used with SkMessageBus
   struct PurgeSharedIDMessage {
-    PurgeSharedIDMessage(uint64_t sharedID) : fSharedID(sharedID) {}
+    constexpr PurgeSharedIDMessage(uint64_t sharedID) noexcept : fSharedID(sharedID) {}
     uint64_t fSharedID;
   };
 
@@ -154,13 +154,13 @@ class SkResourceCache {
   // Call the visitor for every Rec in the cache.
   static void VisitAll(Visitor, void* context);
 
-  static size_t GetTotalBytesUsed();
-  static size_t GetTotalByteLimit();
+  static size_t GetTotalBytesUsed() noexcept;
+  static size_t GetTotalByteLimit() noexcept;
   static size_t SetTotalByteLimit(size_t newLimit);
 
-  static size_t SetSingleAllocationByteLimit(size_t);
-  static size_t GetSingleAllocationByteLimit();
-  static size_t GetEffectiveSingleAllocationByteLimit();
+  static size_t SetSingleAllocationByteLimit(size_t) noexcept;
+  static size_t GetSingleAllocationByteLimit() noexcept;
+  static size_t GetEffectiveSingleAllocationByteLimit() noexcept;
 
   static void PurgeAll();
 
@@ -174,7 +174,7 @@ class SkResourceCache {
   /**
    *  Returns the DiscardableFactory used by the global cache, or nullptr.
    */
-  static DiscardableFactory GetDiscardableFactory();
+  static DiscardableFactory GetDiscardableFactory() noexcept;
 
   static SkCachedData* NewCachedData(size_t bytes);
 
@@ -183,7 +183,7 @@ class SkResourceCache {
   /**
    *  Call SkDebugf() with diagnostic information about the state of the cache
    */
-  static void Dump();
+  static void Dump() noexcept;
 
   ///////////////////////////////////////////////////////////////////////////
 
@@ -218,19 +218,19 @@ class SkResourceCache {
   void add(Rec*, void* payload = nullptr);
   void visitAll(Visitor, void* context);
 
-  size_t getTotalBytesUsed() const { return fTotalBytesUsed; }
-  size_t getTotalByteLimit() const { return fTotalByteLimit; }
+  size_t getTotalBytesUsed() const noexcept { return fTotalBytesUsed; }
+  size_t getTotalByteLimit() const noexcept { return fTotalByteLimit; }
 
   /**
    *  This is respected by SkBitmapProcState::possiblyScaleImage.
    *  0 is no maximum at all; this is the default.
    *  setSingleAllocationByteLimit() returns the previous value.
    */
-  size_t setSingleAllocationByteLimit(size_t maximumAllocationSize);
-  size_t getSingleAllocationByteLimit() const;
+  size_t setSingleAllocationByteLimit(size_t maximumAllocationSize) noexcept;
+  size_t getSingleAllocationByteLimit() const noexcept;
   // returns the logical single allocation size (pinning against the budget when the cache
   // is not backed by discardable memory.
-  size_t getEffectiveSingleAllocationByteLimit() const;
+  size_t getEffectiveSingleAllocationByteLimit() const noexcept;
 
   /**
    *  Set the maximum number of bytes available to this cache. If the current
@@ -243,14 +243,14 @@ class SkResourceCache {
 
   void purgeAll() { this->purgeAsNeeded(true); }
 
-  DiscardableFactory discardableFactory() const { return fDiscardableFactory; }
+  DiscardableFactory discardableFactory() const noexcept { return fDiscardableFactory; }
 
   SkCachedData* newCachedData(size_t bytes);
 
   /**
    *  Call SkDebugf() with diagnostic information about the state of the cache
    */
-  void dump() const;
+  void dump() const noexcept;
 
  private:
   Rec* fHead;
@@ -272,9 +272,9 @@ class SkResourceCache {
   void purgeAsNeeded(bool forcePurge = false);
 
   // linklist management
-  void moveToHead(Rec*);
-  void addToHead(Rec*);
-  void release(Rec*);
+  void moveToHead(Rec*) noexcept;
+  void addToHead(Rec*) noexcept;
+  void release(Rec*) noexcept;
   void remove(Rec*);
 
   void init();  // called by constructors
@@ -282,7 +282,7 @@ class SkResourceCache {
 #ifdef SK_DEBUG
   void validate() const;
 #else
-  void validate() const {}
+  void validate() const noexcept {}
 #endif
 };
 #endif

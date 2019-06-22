@@ -16,12 +16,12 @@
 /** Describes the color space properties of a surface context. */
 class GrColorSpaceInfo {
  public:
-  GrColorSpaceInfo(sk_sp<SkColorSpace>, GrPixelConfig);
+  GrColorSpaceInfo(sk_sp<SkColorSpace>, GrPixelConfig) noexcept;
 
   bool isLinearlyBlended() const { return fColorSpace && fColorSpace->gammaIsLinear(); }
 
-  SkColorSpace* colorSpace() const { return fColorSpace.get(); }
-  sk_sp<SkColorSpace> refColorSpace() const { return fColorSpace; }
+  SkColorSpace* colorSpace() const noexcept { return fColorSpace.get(); }
+  sk_sp<SkColorSpace> refColorSpace() const noexcept { return fColorSpace; }
 
   GrColorSpaceXform* colorSpaceXformFromSRGB() const;
   sk_sp<GrColorSpaceXform> refColorSpaceXformFromSRGB() const {
@@ -29,7 +29,7 @@ class GrColorSpaceInfo {
   }
 
   // TODO: Remove or replace with SkColorType
-  GrPixelConfig config() const { return fConfig; }
+  GrPixelConfig config() const noexcept { return fConfig; }
 
  private:
   sk_sp<SkColorSpace> fColorSpace;

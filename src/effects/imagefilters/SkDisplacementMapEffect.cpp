@@ -47,13 +47,13 @@ const uint8_t gChannelTypeToShift[] = {
 struct Extractor {
   Extractor(
       SkDisplacementMapEffect::ChannelSelectorType typeX,
-      SkDisplacementMapEffect::ChannelSelectorType typeY)
+      SkDisplacementMapEffect::ChannelSelectorType typeY) noexcept
       : fShiftX(gChannelTypeToShift[typeX]), fShiftY(gChannelTypeToShift[typeY]) {}
 
   unsigned fShiftX, fShiftY;
 
-  unsigned getX(SkColor c) const { return (c >> fShiftX) & 0xFF; }
-  unsigned getY(SkColor c) const { return (c >> fShiftY) & 0xFF; }
+  unsigned getX(SkColor c) const noexcept { return (c >> fShiftX) & 0xFF; }
+  unsigned getY(SkColor c) const noexcept { return (c >> fShiftY) & 0xFF; }
 };
 
 void computeDisplacement(
@@ -83,7 +83,7 @@ void computeDisplacement(
   }
 }
 
-bool channel_selector_type_is_valid(SkDisplacementMapEffect::ChannelSelectorType cst) {
+bool channel_selector_type_is_valid(SkDisplacementMapEffect::ChannelSelectorType cst) noexcept {
   switch (cst) {
     case SkDisplacementMapEffect::kUnknown_ChannelSelectorType:
     case SkDisplacementMapEffect::kR_ChannelSelectorType:
@@ -154,27 +154,28 @@ class GrDisplacementMapEffect : public GrFragmentProcessor {
 
   ~GrDisplacementMapEffect() override;
 
-  SkDisplacementMapEffect::ChannelSelectorType xChannelSelector() const {
+  SkDisplacementMapEffect::ChannelSelectorType xChannelSelector() const noexcept {
     return fXChannelSelector;
   }
-  SkDisplacementMapEffect::ChannelSelectorType yChannelSelector() const {
+  SkDisplacementMapEffect::ChannelSelectorType yChannelSelector() const noexcept {
     return fYChannelSelector;
   }
-  const SkVector& scale() const { return fScale; }
+  const SkVector& scale() const noexcept { return fScale; }
 
-  const char* name() const override { return "DisplacementMap"; }
-  const GrTextureDomain& domain() const { return fDomain; }
+  const char* name() const noexcept override { return "DisplacementMap"; }
+  const GrTextureDomain& domain() const noexcept { return fDomain; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override;
 
  private:
-  GrDisplacementMapEffect(const GrDisplacementMapEffect&);
+  GrDisplacementMapEffect(const GrDisplacementMapEffect&) noexcept;
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-  void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const
+      noexcept override;
 
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
 
   GrDisplacementMapEffect(
       SkDisplacementMapEffect::ChannelSelectorType xChannelSelector,
@@ -182,7 +183,7 @@ class GrDisplacementMapEffect : public GrFragmentProcessor {
       sk_sp<GrTextureProxy> displacement, const SkMatrix& offsetMatrix, sk_sp<GrTextureProxy> color,
       const SkISize& colorDimensions);
 
-  const TextureSampler& onTextureSampler(int i) const override {
+  const TextureSampler& onTextureSampler(int i) const noexcept override {
     return IthTextureSampler(i, fDisplacementSampler, fColorSampler);
   }
 
@@ -368,7 +369,8 @@ class GrGLDisplacementMapEffect : public GrGLSLFragmentProcessor {
  public:
   void emitCode(EmitArgs&) override;
 
-  static inline void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*);
+  static inline void GenKey(
+      const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) noexcept;
 
  protected:
   void onSetData(const GrGLSLProgramDataManager&, const GrFragmentProcessor&) override;
@@ -389,7 +391,7 @@ GrGLSLFragmentProcessor* GrDisplacementMapEffect::onCreateGLSLInstance() const {
 }
 
 void GrDisplacementMapEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   GrGLDisplacementMapEffect::GenKey(*this, caps, b);
 }
 
@@ -416,7 +418,7 @@ GrDisplacementMapEffect::GrDisplacementMapEffect(
   this->setTextureSamplerCnt(2);
 }
 
-GrDisplacementMapEffect::GrDisplacementMapEffect(const GrDisplacementMapEffect& that)
+GrDisplacementMapEffect::GrDisplacementMapEffect(const GrDisplacementMapEffect& that) noexcept
     : INHERITED(kGrDisplacementMapEffect_ClassID, that.optimizationFlags()),
       fDisplacementTransform(that.fDisplacementTransform),
       fDisplacementSampler(that.fDisplacementSampler),
@@ -437,7 +439,7 @@ std::unique_ptr<GrFragmentProcessor> GrDisplacementMapEffect::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new GrDisplacementMapEffect(*this));
 }
 
-bool GrDisplacementMapEffect::onIsEqual(const GrFragmentProcessor& sBase) const {
+bool GrDisplacementMapEffect::onIsEqual(const GrFragmentProcessor& sBase) const noexcept {
   const GrDisplacementMapEffect& s = sBase.cast<GrDisplacementMapEffect>();
   return fXChannelSelector == s.fXChannelSelector && fYChannelSelector == s.fYChannelSelector &&
          fScale == s.fScale;
@@ -545,7 +547,7 @@ void GrGLDisplacementMapEffect::onSetData(
 }
 
 void GrGLDisplacementMapEffect::GenKey(
-    const GrProcessor& proc, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
+    const GrProcessor& proc, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
   const GrDisplacementMapEffect& displacementMap = proc.cast<GrDisplacementMapEffect>();
 
   uint32_t xKey = displacementMap.xChannelSelector();

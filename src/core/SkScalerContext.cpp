@@ -271,7 +271,7 @@ SK_ERROR:
 
 #define SK_SHOW_TEXT_BLIT_COVERAGE 0
 
-static void applyLUTToA8Mask(const SkMask& mask, const uint8_t* lut) {
+static void applyLUTToA8Mask(const SkMask& mask, const uint8_t* lut) noexcept {
   uint8_t* SK_RESTRICT dst = (uint8_t*)mask.fImage;
   unsigned rowBytes = mask.fRowBytes;
 
@@ -398,12 +398,12 @@ static void pack4xHToLCD16(
   }
 }
 
-static inline int convert_8_to_1(unsigned byte) {
+static constexpr inline int convert_8_to_1(unsigned byte) noexcept {
   SkASSERT(byte <= 0xFF);
   return byte >> 7;
 }
 
-static uint8_t pack_8_to_1(const uint8_t alpha[8]) {
+static uint8_t pack_8_to_1(const uint8_t alpha[8]) noexcept {
   unsigned bits = 0;
   for (int i = 0; i < 8; ++i) {
     bits <<= 1;
@@ -412,7 +412,7 @@ static uint8_t pack_8_to_1(const uint8_t alpha[8]) {
   return SkToU8(bits);
 }
 
-static void packA8ToA1(const SkMask& mask, const uint8_t* src, size_t srcRB) {
+static void packA8ToA1(const SkMask& mask, const uint8_t* src, size_t srcRB) noexcept {
   const int height = mask.fBounds.height();
   const int width = mask.fBounds.width();
   const int octs = width >> 3;
@@ -675,15 +675,15 @@ bool SkScalerContext::internalGetPath(SkPackedGlyphID glyphID, SkPath* devPath) 
   return true;
 }
 
-void SkScalerContextRec::getMatrixFrom2x2(SkMatrix* dst) const {
+void SkScalerContextRec::getMatrixFrom2x2(SkMatrix* dst) const noexcept {
   dst->setAll(fPost2x2[0][0], fPost2x2[0][1], 0, fPost2x2[1][0], fPost2x2[1][1], 0, 0, 0, 1);
 }
 
-void SkScalerContextRec::getLocalMatrix(SkMatrix* m) const {
+void SkScalerContextRec::getLocalMatrix(SkMatrix* m) const noexcept {
   *m = SkFontPriv::MakeTextMatrix(fTextSize, fPreScaleX, fPreSkewX);
 }
 
-void SkScalerContextRec::getSingleMatrix(SkMatrix* m) const {
+void SkScalerContextRec::getSingleMatrix(SkMatrix* m) const noexcept {
   this->getLocalMatrix(m);
 
   //  now concat the device matrix
@@ -804,11 +804,11 @@ bool SkScalerContextRec::computeMatrices(
   return true;
 }
 
-SkAxisAlignment SkScalerContext::computeAxisAlignmentForHText() const {
+SkAxisAlignment SkScalerContext::computeAxisAlignmentForHText() const noexcept {
   return fRec.computeAxisAlignmentForHText();
 }
 
-SkAxisAlignment SkScalerContextRec::computeAxisAlignmentForHText() const {
+SkAxisAlignment SkScalerContextRec::computeAxisAlignmentForHText() const noexcept {
   // Why fPost2x2 can be used here.
   // getSingleMatrix multiplies in getLocalMatrix, which consists of
   // * fTextSize (a scale, which has no effect)
@@ -828,7 +828,7 @@ SkAxisAlignment SkScalerContextRec::computeAxisAlignmentForHText() const {
   return kNone_SkAxisAlignment;
 }
 
-void SkScalerContextRec::setLuminanceColor(SkColor c) {
+void SkScalerContextRec::setLuminanceColor(SkColor c) noexcept {
   fLumBits =
       SkMaskGamma::CanonicalColor(SkColorSetRGB(SkColorGetR(c), SkColorGetG(c), SkColorGetB(c)));
 }
@@ -842,7 +842,7 @@ class SkScalerContext_Empty : public SkScalerContext {
       : SkScalerContext(std::move(typeface), effects, desc) {}
 
  protected:
-  unsigned generateGlyphCount() override { return 0; }
+  unsigned generateGlyphCount() noexcept override { return 0; }
   bool generateAdvance(SkGlyph* glyph) override {
     glyph->zeroMetrics();
     return true;
@@ -851,12 +851,12 @@ class SkScalerContext_Empty : public SkScalerContext {
     glyph->fMaskFormat = fRec.fMaskFormat;
     glyph->zeroMetrics();
   }
-  void generateImage(const SkGlyph& glyph) override {}
-  bool generatePath(SkGlyphID glyph, SkPath* path) override {
+  void generateImage(const SkGlyph& glyph) noexcept override {}
+  bool generatePath(SkGlyphID glyph, SkPath* path) noexcept override {
     path->reset();
     return false;
   }
-  void generateFontMetrics(SkFontMetrics* metrics) override {
+  void generateFontMetrics(SkFontMetrics* metrics) noexcept override {
     if (metrics) {
       sk_bzero(metrics, sizeof(*metrics));
     }
@@ -884,12 +884,12 @@ std::unique_ptr<SkScalerContext> SkTypeface::createScalerContext(
  *  that vary only slightly when we create our key into the font cache, since the font scaler
  *  typically returns the same looking resuts for tiny changes in the matrix.
  */
-static SkScalar sk_relax(SkScalar x) {
+static SkScalar sk_relax(SkScalar x) noexcept {
   SkScalar n = SkScalarRoundToScalar(x * 1024);
   return n / 1024.0f;
 }
 
-static SkMask::Format compute_mask_format(const SkFont& font) {
+static SkMask::Format compute_mask_format(const SkFont& font) noexcept {
   switch (font.getEdging()) {
     case SkFont::Edging::kAlias: return SkMask::kBW_Format;
     case SkFont::Edging::kAntiAlias: return SkMask::kA8_Format;
@@ -907,7 +907,7 @@ static SkMask::Format compute_mask_format(const SkFont& font) {
 
 const SkScalar gMaxSize2ForLCDText = SK_MAX_SIZE_FOR_LCDTEXT * SK_MAX_SIZE_FOR_LCDTEXT;
 
-static bool too_big_for_lcd(const SkScalerContextRec& rec, bool checkPost2x2) {
+static bool too_big_for_lcd(const SkScalerContextRec& rec, bool checkPost2x2) noexcept {
   if (checkPost2x2) {
     SkScalar area =
         rec.fPost2x2[0][0] * rec.fPost2x2[1][1] - rec.fPost2x2[1][0] * rec.fPost2x2[0][1];

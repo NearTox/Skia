@@ -16,15 +16,15 @@
 #include "src/gpu/GrFragmentProcessor.h"
 class GrPremulInputFragmentProcessor : public GrFragmentProcessor {
  public:
-  SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& input) const override {
+  SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& input) const noexcept override {
     return SkColor4f{input.fR, input.fG, input.fB, input.fA}.premul();
   }
   static std::unique_ptr<GrFragmentProcessor> Make() {
     return std::unique_ptr<GrFragmentProcessor>(new GrPremulInputFragmentProcessor());
   }
-  GrPremulInputFragmentProcessor(const GrPremulInputFragmentProcessor& src);
+  GrPremulInputFragmentProcessor(const GrPremulInputFragmentProcessor& src) noexcept;
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const override { return "PremulInputFragmentProcessor"; }
+  const char* name() const noexcept override { return "PremulInputFragmentProcessor"; }
 
  private:
   GrPremulInputFragmentProcessor()
@@ -33,8 +33,8 @@ class GrPremulInputFragmentProcessor : public GrFragmentProcessor {
             (OptimizationFlags)kPreservesOpaqueInput_OptimizationFlag |
                 kConstantOutputForConstantInput_OptimizationFlag) {}
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

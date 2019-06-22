@@ -33,20 +33,20 @@ class GrGLSLProgramBuilder {
 
   virtual ~GrGLSLProgramBuilder() {}
 
-  virtual const GrCaps* caps() const = 0;
-  const GrShaderCaps* shaderCaps() const { return this->caps()->shaderCaps(); }
+  virtual const GrCaps* caps() const noexcept = 0;
+  const GrShaderCaps* shaderCaps() const noexcept { return this->caps()->shaderCaps(); }
 
-  const GrPrimitiveProcessor& primitiveProcessor() const { return fPrimProc; }
-  const GrTextureProxy* const* primProcProxies() const { return fPrimProcProxies; }
-  const GrRenderTarget* renderTarget() const { return fRenderTarget; }
-  GrPixelConfig config() const { return fRenderTarget->config(); }
+  const GrPrimitiveProcessor& primitiveProcessor() const noexcept { return fPrimProc; }
+  const GrTextureProxy* const* primProcProxies() const noexcept { return fPrimProcProxies; }
+  const GrRenderTarget* renderTarget() const noexcept { return fRenderTarget; }
+  GrPixelConfig config() const noexcept { return fRenderTarget->config(); }
   int effectiveSampleCnt() const {
     SkASSERT(GrProcessor::CustomFeatures::kSampleLocations & header().processorFeatures());
     return fRenderTarget->renderTargetPriv().getSampleLocations().count();
   }
-  GrSurfaceOrigin origin() const { return fOrigin; }
-  const GrPipeline& pipeline() const { return fPipeline; }
-  GrProgramDesc* desc() { return fDesc; }
+  GrSurfaceOrigin origin() const noexcept { return fOrigin; }
+  const GrPipeline& pipeline() const noexcept { return fPipeline; }
+  GrProgramDesc* desc() noexcept { return fDesc; }
   const GrProgramDesc::KeyHeader& header() const { return fDesc->header(); }
 
   void appendUniformDecls(GrShaderFlags visibility, SkString*) const;
@@ -72,14 +72,14 @@ class GrGLSLProgramBuilder {
   // explicitly asked not to.
   void nameVariable(SkString* out, char prefix, const char* name, bool mangle = true);
 
-  virtual GrGLSLUniformHandler* uniformHandler() = 0;
-  virtual const GrGLSLUniformHandler* uniformHandler() const = 0;
-  virtual GrGLSLVaryingHandler* varyingHandler() = 0;
+  virtual GrGLSLUniformHandler* uniformHandler() noexcept = 0;
+  virtual const GrGLSLUniformHandler* uniformHandler() const noexcept = 0;
+  virtual GrGLSLVaryingHandler* varyingHandler() noexcept = 0;
 
   // Used for backend customization of the output color and secondary color variables from the
   // fragment processor. Only used if the outputs are explicitly declared in the shaders
-  virtual void finalizeFragmentOutputColor(GrShaderVar& outputColor) {}
-  virtual void finalizeFragmentSecondaryColor(GrShaderVar& outputColor) {}
+  virtual void finalizeFragmentOutputColor(GrShaderVar& outputColor) noexcept {}
+  virtual void finalizeFragmentSecondaryColor(GrShaderVar& outputColor) noexcept {}
 
   // number of each input/output type in a single allocation block, used by many builders
   static const int kVarsPerBlock;
@@ -122,11 +122,11 @@ class GrGLSLProgramBuilder {
   // reset is called by program creator between each processor's emit code.  It increments the
   // stage offset for variable name mangling, and also ensures verfication variables in the
   // fragment shader are cleared.
-  void reset() {
+  void reset() noexcept {
     this->addStage();
-    SkDEBUGCODE(fFS.debugOnly_resetPerStageVerification();)
+    SkDEBUGCODE(fFS.debugOnly_resetPerStageVerification());
   }
-  void addStage() { fStageIndex++; }
+  void addStage() noexcept { fStageIndex++; }
 
   class AutoStageAdvance {
    public:
@@ -151,7 +151,7 @@ class GrGLSLProgramBuilder {
       SkString output, SkTArray<std::unique_ptr<GrGLSLFragmentProcessor>>*);
   void emitAndInstallXferProc(const SkString& colorIn, const SkString& coverageIn);
   SamplerHandle emitSampler(const GrTexture*, const GrSamplerState&, const char* name);
-  bool checkSamplerCounts();
+  bool checkSamplerCounts() noexcept;
 
 #ifdef SK_DEBUG
   void verify(const GrPrimitiveProcessor&);

@@ -41,7 +41,7 @@ class SkHighContrast_Filter : public SkColorFilter {
   bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const override;
 
  protected:
-  void flatten(SkWriteBuffer&) const override;
+  void flatten(SkWriteBuffer&) const noexcept override;
 
  private:
   SK_FLATTENABLE_HOOKS(SkHighContrast_Filter)
@@ -126,7 +126,7 @@ bool SkHighContrast_Filter::onAppendStages(const SkStageRec& rec, bool shaderIsO
   return true;
 }
 
-void SkHighContrast_Filter::flatten(SkWriteBuffer& buffer) const {
+void SkHighContrast_Filter::flatten(SkWriteBuffer& buffer) const noexcept {
   buffer.writeBool(fConfig.fGrayscale);
   buffer.writeInt(static_cast<int>(fConfig.fInvertStyle));
   buffer.writeScalar(fConfig.fContrast);
@@ -160,25 +160,25 @@ class HighContrastFilterEffect : public GrFragmentProcessor {
     return std::unique_ptr<GrFragmentProcessor>(new HighContrastFilterEffect(config, linearize));
   }
 
-  const char* name() const override { return "HighContrastFilter"; }
+  const char* name() const noexcept override { return "HighContrastFilter"; }
 
-  const SkHighContrastConfig& config() const { return fConfig; }
-  bool linearize() const { return fLinearize; }
+  const SkHighContrastConfig& config() const noexcept { return fConfig; }
+  bool linearize() const noexcept { return fLinearize; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override { return Make(fConfig, fLinearize); }
 
  private:
-  HighContrastFilterEffect(const SkHighContrastConfig& config, bool linearize)
+  HighContrastFilterEffect(const SkHighContrastConfig& config, bool linearize) noexcept
       : INHERITED(kHighContrastFilterEffect_ClassID, kNone_OptimizationFlags),
         fConfig(config),
         fLinearize(linearize) {}
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-  virtual void onGetGLSLProcessorKey(
-      const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
+  virtual void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const
+      noexcept override;
 
-  bool onIsEqual(const GrFragmentProcessor& other) const override {
+  bool onIsEqual(const GrFragmentProcessor& other) const noexcept override {
     const HighContrastFilterEffect& that = other.cast<HighContrastFilterEffect>();
     return fConfig.fGrayscale == that.fConfig.fGrayscale &&
            fConfig.fInvertStyle == that.fConfig.fInvertStyle &&
@@ -193,7 +193,7 @@ class HighContrastFilterEffect : public GrFragmentProcessor {
 
 class GLHighContrastFilterEffect : public GrGLSLFragmentProcessor {
  public:
-  static void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*);
+  static void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) noexcept;
 
  protected:
   void onSetData(const GrGLSLProgramDataManager&, const GrFragmentProcessor&) override;
@@ -210,7 +210,7 @@ GrGLSLFragmentProcessor* HighContrastFilterEffect::onCreateGLSLInstance() const 
 }
 
 void HighContrastFilterEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   GLHighContrastFilterEffect::GenKey(*this, caps, b);
 }
 
@@ -221,7 +221,7 @@ void GLHighContrastFilterEffect::onSetData(
 }
 
 void GLHighContrastFilterEffect::GenKey(
-    const GrProcessor& proc, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
+    const GrProcessor& proc, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
   const HighContrastFilterEffect& hcfe = proc.cast<HighContrastFilterEffect>();
   b->add32(static_cast<uint32_t>(hcfe.config().fGrayscale));
   b->add32(static_cast<uint32_t>(hcfe.config().fInvertStyle));

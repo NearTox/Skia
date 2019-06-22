@@ -63,7 +63,7 @@ class SkProcCoeffXfermode : public SkXfermode {
   typedef SkXfermode INHERITED;
 };
 
-const char* SkBlendMode_Name(SkBlendMode mode) {
+const char* SkBlendMode_Name(SkBlendMode mode) noexcept {
   SkASSERT((unsigned)mode <= (unsigned)SkBlendMode::kLastMode);
   const char* gModeStrings[] = {"Clear",     "Src",        "Dst",        "SrcOver",    "DstOver",
                                 "SrcIn",     "DstIn",      "SrcOut",     "DstOut",     "SrcATop",
@@ -104,7 +104,7 @@ sk_sp<SkXfermode> SkXfermode::Make(SkBlendMode mode) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool SkXfermode::IsOpaque(SkBlendMode mode, SrcColorOpacity opacityType) {
+bool SkXfermode::IsOpaque(SkBlendMode mode, SrcColorOpacity opacityType) noexcept {
   SkBlendModeCoeff src, dst;
   if (!SkBlendMode_AsCoeff(mode, &src, &dst)) {
     return false;
@@ -131,7 +131,7 @@ bool SkXfermode::IsOpaque(SkBlendMode mode, SrcColorOpacity opacityType) {
 }
 
 #if SK_SUPPORT_GPU
-const GrXPFactory* SkBlendMode_AsXPFactory(SkBlendMode mode) {
+const GrXPFactory* SkBlendMode_AsXPFactory(SkBlendMode mode) noexcept {
   if (SkBlendMode_AsCoeff(mode, nullptr, nullptr)) {
     const GrXPFactory* result = GrPorterDuffXPFactory::Get(mode);
     SkASSERT(result);

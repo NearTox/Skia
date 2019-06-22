@@ -45,7 +45,7 @@ class GrShaderVar {
         fCount(kNonArray),
         fUseUniformFloatArrays(USE_UNIFORM_FLOAT_ARRAYS) {}
 
-  GrShaderVar(const SkString& name, GrSLType type, int arrayCount = kNonArray)
+  GrShaderVar(const SkString& name, GrSLType type, int arrayCount = kNonArray) noexcept
       : fType(type),
         fTypeModifier(kNone_TypeModifier),
         fCount(arrayCount),
@@ -83,7 +83,7 @@ class GrShaderVar {
     SkASSERT(kVoid_GrSLType != type);
   }
 
-  GrShaderVar(const GrShaderVar& that)
+  GrShaderVar(const GrShaderVar& that) noexcept
       : fType(that.fType),
         fTypeModifier(that.fTypeModifier),
         fCount(that.fCount),
@@ -173,59 +173,59 @@ class GrShaderVar {
   /**
    * Is the var an array.
    */
-  bool isArray() const { return kNonArray != fCount; }
+  bool isArray() const noexcept { return kNonArray != fCount; }
   /**
    * Is this an unsized array, (i.e. declared with []).
    */
-  bool isUnsizedArray() const { return kUnsizedArray == fCount; }
+  bool isUnsizedArray() const noexcept { return kUnsizedArray == fCount; }
   /**
    * Get the array length of the var.
    */
-  int getArrayCount() const { return fCount; }
+  int getArrayCount() const noexcept { return fCount; }
   /**
    * Set the array length of the var
    */
-  void setArrayCount(int count) { fCount = count; }
+  void setArrayCount(int count) noexcept { fCount = count; }
   /**
    * Set to be a non-array.
    */
-  void setNonArray() { fCount = kNonArray; }
+  void setNonArray() noexcept { fCount = kNonArray; }
   /**
    * Set to be an unsized array.
    */
-  void setUnsizedArray() { fCount = kUnsizedArray; }
+  void setUnsizedArray() noexcept { fCount = kUnsizedArray; }
 
   /**
    * Access the var name as a writable string
    */
-  SkString* accessName() { return &fName; }
+  SkString* accessName() noexcept { return &fName; }
   /**
    * Set the var name
    */
-  void setName(const SkString& n) { fName = n; }
+  void setName(const SkString& n) noexcept { fName = n; }
   void setName(const char* n) { fName = n; }
 
   /**
    * Get the var name.
    */
-  const SkString& getName() const { return fName; }
+  const SkString& getName() const noexcept { return fName; }
 
   /**
    * Shortcut for this->getName().c_str();
    */
-  const char* c_str() const { return this->getName().c_str(); }
+  const char* c_str() const noexcept { return this->getName().c_str(); }
 
   /**
    * Get the type of the var
    */
-  GrSLType getType() const { return fType; }
+  GrSLType getType() const noexcept { return fType; }
   /**
    * Set the type of the var
    */
-  void setType(GrSLType type) { fType = type; }
+  void setType(GrSLType type) noexcept { fType = type; }
 
-  TypeModifier getTypeModifier() const { return fTypeModifier; }
-  void setTypeModifier(TypeModifier type) { fTypeModifier = type; }
+  TypeModifier getTypeModifier() const noexcept { return fTypeModifier; }
+  void setTypeModifier(TypeModifier type) noexcept { fTypeModifier = type; }
 
   /**
    * Appends to the layout qualifier

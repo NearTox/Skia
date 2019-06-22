@@ -17,7 +17,7 @@
 
 // Some of the cpu implementations of blend modes differ too much from the GPU enough that
 // we can't use the cpu implementation to implement constantOutputForConstantInput.
-static inline bool does_cpu_blend_impl_match_gpu(SkBlendMode mode) {
+static constexpr inline bool does_cpu_blend_impl_match_gpu(SkBlendMode mode) noexcept {
   // The non-seperable modes differ too much. So does SoftLight. ColorBurn differs too much on our
   // test iOS device (but we just disable it across the aboard since it may happen on untested
   // GPUs).
@@ -36,7 +36,7 @@ class ComposeTwoFragmentProcessor : public GrFragmentProcessor {
         new ComposeTwoFragmentProcessor(std::move(src), std::move(dst), mode));
   }
 
-  const char* name() const override { return "ComposeTwo"; }
+  const char* name() const noexcept override { return "ComposeTwo"; }
 
 #ifdef SK_DEBUG
   SkString dumpInfo() const override {
@@ -54,7 +54,7 @@ class ComposeTwoFragmentProcessor : public GrFragmentProcessor {
 
   std::unique_ptr<GrFragmentProcessor> clone() const override;
 
-  SkBlendMode getMode() const { return fMode; }
+  SkBlendMode getMode() const noexcept { return fMode; }
 
  private:
   ComposeTwoFragmentProcessor(
@@ -69,7 +69,7 @@ class ComposeTwoFragmentProcessor : public GrFragmentProcessor {
   }
 
   static OptimizationFlags OptFlags(
-      const GrFragmentProcessor* src, const GrFragmentProcessor* dst, SkBlendMode mode) {
+      const GrFragmentProcessor* src, const GrFragmentProcessor* dst, SkBlendMode mode) noexcept {
     OptimizationFlags flags;
     switch (mode) {
       case SkBlendMode::kClear:
@@ -137,11 +137,12 @@ class ComposeTwoFragmentProcessor : public GrFragmentProcessor {
     return flags;
   }
 
-  void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
+  void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const
+      noexcept override {
     b->add32((int)fMode);
   }
 
-  bool onIsEqual(const GrFragmentProcessor& other) const override {
+  bool onIsEqual(const GrFragmentProcessor& other) const noexcept override {
     const ComposeTwoFragmentProcessor& cs = other.cast<ComposeTwoFragmentProcessor>();
     return fMode == cs.fMode;
   }
@@ -265,7 +266,7 @@ class ComposeOneFragmentProcessor : public GrFragmentProcessor {
         new ComposeOneFragmentProcessor(std::move(fp), mode, child));
   }
 
-  const char* name() const override { return "ComposeOne"; }
+  const char* name() const noexcept override { return "ComposeOne"; }
 
 #ifdef SK_DEBUG
   SkString dumpInfo() const override {
@@ -284,12 +285,13 @@ class ComposeOneFragmentProcessor : public GrFragmentProcessor {
 
   std::unique_ptr<GrFragmentProcessor> clone() const override;
 
-  SkBlendMode mode() const { return fMode; }
+  SkBlendMode mode() const noexcept { return fMode; }
 
-  Child child() const { return fChild; }
+  Child child() const noexcept { return fChild; }
 
  private:
-  OptimizationFlags OptFlags(const GrFragmentProcessor* fp, SkBlendMode mode, Child child) {
+  OptimizationFlags OptFlags(
+      const GrFragmentProcessor* fp, SkBlendMode mode, Child child) noexcept {
     OptimizationFlags flags;
     switch (mode) {
       case SkBlendMode::kClear:
@@ -370,12 +372,13 @@ class ComposeOneFragmentProcessor : public GrFragmentProcessor {
     return flags;
   }
 
-  void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
+  void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const
+      noexcept override {
     GR_STATIC_ASSERT(((int)SkBlendMode::kLastMode & UINT16_MAX) == (int)SkBlendMode::kLastMode);
     b->add32((int)fMode | (fChild << 16));
   }
 
-  bool onIsEqual(const GrFragmentProcessor& that) const override {
+  bool onIsEqual(const GrFragmentProcessor& that) const noexcept override {
     return fMode == that.cast<ComposeOneFragmentProcessor>().fMode;
   }
 

@@ -15,7 +15,8 @@ namespace sksg {
 
 class Node::ScopedFlag {
  public:
-  ScopedFlag(Node* node, uint32_t flag) : fNode(node), fFlag(flag), fWasSet(node->fFlags & flag) {
+  ScopedFlag(Node* node, uint32_t flag) noexcept
+      : fNode(node), fFlag(flag), fWasSet(node->fFlags & flag) {
     node->fFlags |= flag;
   }
   ~ScopedFlag() {
@@ -24,7 +25,7 @@ class Node::ScopedFlag {
     }
   }
 
-  bool wasSet() const { return fWasSet; }
+  bool wasSet() const noexcept { return fWasSet; }
 
  private:
   Node* fNode;
@@ -36,7 +37,7 @@ class Node::ScopedFlag {
   ScopedFlag traversal_guard(this, kInTraversal_Flag); \
   if (traversal_guard.wasSet()) return
 
-Node::Node(uint32_t invalTraits)
+Node::Node(uint32_t invalTraits) noexcept
     : fInvalObserver(nullptr),
       fBounds(SkRectPriv::MakeLargeS32()),
       fInvalTraits(invalTraits),

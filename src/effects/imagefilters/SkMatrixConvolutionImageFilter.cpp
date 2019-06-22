@@ -119,14 +119,14 @@ SkMatrixConvolutionImageFilter::~SkMatrixConvolutionImageFilter() { delete[] fKe
 
 class UncheckedPixelFetcher {
  public:
-  static inline SkPMColor fetch(const SkBitmap& src, int x, int y, const SkIRect& bounds) {
+  static inline SkPMColor fetch(const SkBitmap& src, int x, int y, const SkIRect& bounds) noexcept {
     return *src.getAddr32(x, y);
   }
 };
 
 class ClampPixelFetcher {
  public:
-  static inline SkPMColor fetch(const SkBitmap& src, int x, int y, const SkIRect& bounds) {
+  static inline SkPMColor fetch(const SkBitmap& src, int x, int y, const SkIRect& bounds) noexcept {
     x = SkTPin(x, bounds.fLeft, bounds.fRight - 1);
     y = SkTPin(y, bounds.fTop, bounds.fBottom - 1);
     return *src.getAddr32(x, y);
@@ -135,7 +135,7 @@ class ClampPixelFetcher {
 
 class RepeatPixelFetcher {
  public:
-  static inline SkPMColor fetch(const SkBitmap& src, int x, int y, const SkIRect& bounds) {
+  static inline SkPMColor fetch(const SkBitmap& src, int x, int y, const SkIRect& bounds) noexcept {
     x = (x - bounds.left()) % bounds.width() + bounds.left();
     y = (y - bounds.top()) % bounds.height() + bounds.top();
     if (x < bounds.left()) {
@@ -150,7 +150,7 @@ class RepeatPixelFetcher {
 
 class ClampToBlackPixelFetcher {
  public:
-  static inline SkPMColor fetch(const SkBitmap& src, int x, int y, const SkIRect& bounds) {
+  static inline SkPMColor fetch(const SkBitmap& src, int x, int y, const SkIRect& bounds) noexcept {
     if (x < bounds.fLeft || x >= bounds.fRight || y < bounds.fTop || y >= bounds.fBottom) {
       return 0;
     } else {
@@ -265,7 +265,8 @@ static SkBitmap unpremultiply_bitmap(const SkBitmap& src) {
 
 #if SK_SUPPORT_GPU
 
-static GrTextureDomain::Mode convert_tilemodes(SkMatrixConvolutionImageFilter::TileMode tileMode) {
+static GrTextureDomain::Mode convert_tilemodes(
+    SkMatrixConvolutionImageFilter::TileMode tileMode) noexcept {
   switch (tileMode) {
     case SkMatrixConvolutionImageFilter::kClamp_TileMode: return GrTextureDomain::kClamp_Mode;
     case SkMatrixConvolutionImageFilter::kRepeat_TileMode: return GrTextureDomain::kRepeat_Mode;
@@ -399,7 +400,8 @@ sk_sp<SkSpecialImage> SkMatrixConvolutionImageFilter::onFilterImage(
 }
 
 SkIRect SkMatrixConvolutionImageFilter::onFilterNodeBounds(
-    const SkIRect& src, const SkMatrix& ctm, MapDirection dir, const SkIRect* inputRect) const {
+    const SkIRect& src, const SkMatrix& ctm, MapDirection dir, const SkIRect* inputRect) const
+    noexcept {
   if (kReverse_MapDirection == dir && kRepeat_TileMode == fTileMode && inputRect) {
     SkASSERT(inputRect);
     return DetermineRepeatedSrcBound(src, fKernelOffset, fKernelSize, *inputRect);
@@ -416,7 +418,7 @@ SkIRect SkMatrixConvolutionImageFilter::onFilterNodeBounds(
   return dst;
 }
 
-bool SkMatrixConvolutionImageFilter::affectsTransparentBlack() const {
+bool SkMatrixConvolutionImageFilter::affectsTransparentBlack() const noexcept {
   // It seems that the only rational way for repeat sample mode to work is if the caller
   // explicitly restricts the input in which case the input range is explicitly known and
   // specified.

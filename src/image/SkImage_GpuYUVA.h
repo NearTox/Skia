@@ -34,15 +34,15 @@ class SkImage_GpuYUVA : public SkImage_GpuBase {
 
   // This returns the single backing proxy if the YUV channels have already been flattened but
   // nullptr if they have not.
-  GrTextureProxy* peekProxy() const override;
+  GrTextureProxy* peekProxy() const noexcept override;
   sk_sp<GrTextureProxy> asTextureProxyRef(GrRecordingContext*) const override;
 
-  virtual bool onIsTextureBacked() const override { return fProxies[0] || fRGBProxy; }
+  virtual bool onIsTextureBacked() const noexcept override { return fProxies[0] || fRGBProxy; }
 
   sk_sp<SkImage> onMakeColorTypeAndColorSpace(
       GrRecordingContext*, SkColorType, sk_sp<SkColorSpace>) const final;
 
-  virtual bool isYUVA() const override { return true; }
+  virtual bool isYUVA() const noexcept override { return true; }
 
   bool setupMipmapsForPlanes(GrRecordingContext*) const;
 

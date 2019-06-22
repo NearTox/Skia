@@ -24,8 +24,8 @@ class SkAAClip {
 
   void swap(SkAAClip&);
 
-  bool isEmpty() const { return nullptr == fRunHead; }
-  const SkIRect& getBounds() const { return fBounds; }
+  bool isEmpty() const noexcept { return nullptr == fRunHead; }
+  const SkIRect& getBounds() const noexcept { return fBounds; }
 
   // Returns true iff the clip is not empty, and is just a hard-edged rect (no partial alpha).
   // If true, getBounds() can be used in place of this clip.
@@ -73,8 +73,8 @@ class SkAAClip {
   void validate() const;
   void debug(bool compress_y = false) const;
 #else
-  void validate() const {}
-  void debug(bool compress_y = false) const {}
+  void validate() const noexcept {}
+  void debug(bool compress_y = false) const noexcept {}
 #endif
 
  private:
@@ -98,7 +98,7 @@ class SkAAClipBlitter : public SkBlitter {
   SkAAClipBlitter() : fScanlineScratch(nullptr) {}
   ~SkAAClipBlitter() override;
 
-  void init(SkBlitter* blitter, const SkAAClip* aaclip) {
+  void init(SkBlitter* blitter, const SkAAClip* aaclip) noexcept {
     SkASSERT(aaclip && !aaclip->isEmpty());
     fBlitter = blitter;
     fAAClip = aaclip;

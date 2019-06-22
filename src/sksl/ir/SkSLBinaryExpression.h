@@ -20,7 +20,7 @@ namespace SkSL {
 struct BinaryExpression : public Expression {
   BinaryExpression(
       int offset, std::unique_ptr<Expression> left, Token::Kind op,
-      std::unique_ptr<Expression> right, const Type& type)
+      std::unique_ptr<Expression> right, const Type& type) noexcept
       : INHERITED(offset, kBinary_Kind, type),
         fLeft(std::move(left)),
         fOperator(op),

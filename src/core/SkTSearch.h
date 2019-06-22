@@ -126,8 +126,8 @@ class SkAutoAsciiToLC {
   SkAutoAsciiToLC(const char str[], size_t len = (size_t)-1);
   ~SkAutoAsciiToLC();
 
-  const char* lc() const { return fLC; }
-  size_t length() const { return fLength; }
+  const char* lc() const noexcept { return fLC; }
+  size_t length() const noexcept { return fLength; }
 
  private:
   char* fLC;  // points to either the heap or fStorage

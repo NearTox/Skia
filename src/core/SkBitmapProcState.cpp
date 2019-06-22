@@ -25,7 +25,7 @@
 //   - and no extra alpha applied (_opaque_),
 //   - sampling from 8888 (_S32_) and drawing to 8888 (_S32_).
 static void Clamp_S32_opaque_D32_nofilter_DX_shaderproc(
-    const void* sIn, int x, int y, SkPMColor* dst, int count) {
+    const void* sIn, int x, int y, SkPMColor* dst, int count) noexcept {
   const SkBitmapProcState& s = *static_cast<const SkBitmapProcState*>(sIn);
   SkASSERT((s.fInvType & ~(SkMatrix::kTranslate_Mask | SkMatrix::kScale_Mask)) == 0);
   SkASSERT(s.fAlphaScale == 256);
@@ -120,13 +120,14 @@ static void S32_alpha_D32_nofilter_DX(
   }
 }
 
-SkBitmapProcInfo::SkBitmapProcInfo(const SkBitmapProvider& provider, SkTileMode tmx, SkTileMode tmy)
+SkBitmapProcInfo::SkBitmapProcInfo(
+    const SkBitmapProvider& provider, SkTileMode tmx, SkTileMode tmy) noexcept
     : fProvider(provider), fTileModeX(tmx), fTileModeY(tmy), fBMState(nullptr) {}
 
 SkBitmapProcInfo::~SkBitmapProcInfo() {}
 
 // true iff the matrix has a scale and no more than an optional translate.
-static bool matrix_only_scale_translate(const SkMatrix& m) {
+static bool matrix_only_scale_translate(const SkMatrix& m) noexcept {
   return (m.getType() & ~SkMatrix::kTranslate_Mask) == SkMatrix::kScale_Mask;
 }
 
@@ -134,7 +135,7 @@ static bool matrix_only_scale_translate(const SkMatrix& m) {
  *  For the purposes of drawing bitmaps, if a matrix is "almost" translate
  *  go ahead and treat it as if it were, so that subsequent code can go fast.
  */
-static bool just_trans_general(const SkMatrix& matrix) {
+static bool just_trans_general(const SkMatrix& matrix) noexcept {
   SkASSERT(matrix_only_scale_translate(matrix));
 
   const SkScalar tol = SK_Scalar1 / 32768;
@@ -147,7 +148,7 @@ static bool just_trans_general(const SkMatrix& matrix) {
  *  Determine if the matrix can be treated as integral-only-translate,
  *  for the purpose of filtering.
  */
-static bool just_trans_integral(const SkMatrix& m) {
+static bool just_trans_integral(const SkMatrix& m) noexcept {
   static constexpr SkScalar tol = SK_Scalar1 / 256;
 
   return m.getType() <= SkMatrix::kTranslate_Mask &&
@@ -155,7 +156,7 @@ static bool just_trans_integral(const SkMatrix& m) {
          SkScalarNearlyEqual(m.getTranslateY(), SkScalarRoundToScalar(m.getTranslateY()), tol);
 }
 
-static bool valid_for_filtering(unsigned dimension) {
+static constexpr bool valid_for_filtering(unsigned dimension) noexcept {
   // for filtering, width and height must fit in 14bits, since we use steal
   // 2 bits from each to store our 4bit subpixel data
   return (dimension & ~0x3FFF) == 0;
@@ -314,7 +315,7 @@ static void Clamp_S32_D32_nofilter_trans_shaderproc(
   sk_memset32(colors, row[maxX], count);
 }
 
-static inline int sk_int_mod(int x, int n) {
+static constexpr inline int sk_int_mod(int x, int n) noexcept {
   SkASSERT(n > 0);
   if ((unsigned)x >= (unsigned)n) {
     if (x < 0) {
@@ -326,7 +327,7 @@ static inline int sk_int_mod(int x, int n) {
   return x;
 }
 
-static inline int sk_int_mirror(int x, int n) {
+static constexpr inline int sk_int_mirror(int x, int n) noexcept {
   x = sk_int_mod(x, 2 * n);
   if (x >= n) {
     x = n + ~(x - n);
@@ -335,7 +336,7 @@ static inline int sk_int_mirror(int x, int n) {
 }
 
 static void Repeat_S32_D32_nofilter_trans_shaderproc(
-    const void* sIn, int x, int y, SkPMColor* colors, int count) {
+    const void* sIn, int x, int y, SkPMColor* colors, int count) noexcept {
   const SkBitmapProcState& s = *static_cast<const SkBitmapProcState*>(sIn);
   SkASSERT(((s.fInvType & ~SkMatrix::kTranslate_Mask)) == 0);
   SkASSERT(s.fInvKy == 0);
@@ -362,7 +363,8 @@ static void Repeat_S32_D32_nofilter_trans_shaderproc(
 }
 
 static inline void filter_32_alpha(
-    unsigned t, SkPMColor color0, SkPMColor color1, SkPMColor* dstColor, unsigned alphaScale) {
+    unsigned t, SkPMColor color0, SkPMColor color1, SkPMColor* dstColor,
+    unsigned alphaScale) noexcept {
   SkASSERT((unsigned)t <= 0xF);
   SkASSERT(alphaScale <= 256);
 
@@ -476,7 +478,7 @@ static void DoNothing_shaderproc(const void*, int x, int y, SkPMColor* colors, i
   sk_memset32(colors, 0, count);
 }
 
-bool SkBitmapProcState::setupForTranslate() {
+bool SkBitmapProcState::setupForTranslate() noexcept {
   SkPoint pt;
   const SkBitmapProcStateAutoMapper mapper(*this, 0, 0, &pt);
 
@@ -499,7 +501,7 @@ bool SkBitmapProcState::setupForTranslate() {
   return true;
 }
 
-SkBitmapProcState::ShaderProc32 SkBitmapProcState::chooseShaderProc32() {
+SkBitmapProcState::ShaderProc32 SkBitmapProcState::chooseShaderProc32() noexcept {
   if (kN32_SkColorType != fPixmap.colorType()) {
     return nullptr;
   }
@@ -599,7 +601,7 @@ SkBitmapProcState::MatrixProc SkBitmapProcState::getMatrixProc() const { return 
     scale/translate     filter        Y Y + N * (X X)
     affine              filter        N * (Y Y X X)
  */
-int SkBitmapProcState::maxCountForBufferSize(size_t bufferSize) const {
+int SkBitmapProcState::maxCountForBufferSize(size_t bufferSize) const noexcept {
   int32_t size = static_cast<int32_t>(bufferSize);
 
   size &= ~3;  // only care about 4-byte aligned chunks

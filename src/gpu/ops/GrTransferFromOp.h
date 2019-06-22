@@ -23,7 +23,7 @@ class GrTransferFromOp final : public GrOp {
       GrRecordingContext*, const SkIRect& srcRect, GrColorType dstColorType,
       sk_sp<GrGpuBuffer> dstBuffer, size_t dstOffset);
 
-  const char* name() const override { return "TransferFromOp"; }
+  const char* name() const noexcept override { return "TransferFromOp"; }
 
 #ifdef SK_DEBUG
   SkString dumpInfo() const override {

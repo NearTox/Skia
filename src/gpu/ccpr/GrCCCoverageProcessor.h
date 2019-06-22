@@ -42,7 +42,7 @@ class GrCCCoverageProcessor : public GrGeometryProcessor {
     kCubics,
     kConics
   };
-  static const char* PrimitiveTypeName(PrimitiveType);
+  static const char* PrimitiveTypeName(PrimitiveType) noexcept;
 
   // Defines a single primitive shape with 3 input points (i.e. Triangles and Quadratics).
   // X,Y point values are transposed.
@@ -52,7 +52,7 @@ class GrCCCoverageProcessor : public GrGeometryProcessor {
 
     void set(const SkPoint[3], const Sk2f& trans);
     void set(const SkPoint&, const SkPoint&, const SkPoint&, const Sk2f& trans);
-    void set(const Sk2f& P0, const Sk2f& P1, const Sk2f& P2, const Sk2f& trans);
+    void set(const Sk2f& P0, const Sk2f& P1, const Sk2f& P2, const Sk2f& trans) noexcept;
   };
 
   // Defines a single primitive shape with 4 input points, or 3 input points plus a "weight"
@@ -62,37 +62,37 @@ class GrCCCoverageProcessor : public GrGeometryProcessor {
     float fX[4];
     float fY[4];
 
-    void set(const SkPoint[4], float dx, float dy);
+    void set(const SkPoint[4], float dx, float dy) noexcept;
     void setW(const SkPoint[3], const Sk2f& trans, float w);
     void setW(const SkPoint&, const SkPoint&, const SkPoint&, const Sk2f& trans, float w);
-    void setW(const Sk2f& P0, const Sk2f& P1, const Sk2f& P2, const Sk2f& trans, float w);
+    void setW(const Sk2f& P0, const Sk2f& P1, const Sk2f& P2, const Sk2f& trans, float w) noexcept;
   };
 
   virtual void reset(PrimitiveType, GrResourceProvider*) = 0;
 
-  PrimitiveType primitiveType() const { return fPrimitiveType; }
+  PrimitiveType primitiveType() const noexcept { return fPrimitiveType; }
 
   // Number of bezier points for curves, or 3 for triangles.
-  int numInputPoints() const { return PrimitiveType::kCubics == fPrimitiveType ? 4 : 3; }
+  int numInputPoints() const noexcept { return PrimitiveType::kCubics == fPrimitiveType ? 4 : 3; }
 
-  bool isTriangles() const {
+  bool isTriangles() const noexcept {
     return PrimitiveType::kTriangles == fPrimitiveType ||
            PrimitiveType::kWeightedTriangles == fPrimitiveType;
   }
 
-  int hasInputWeight() const {
+  int hasInputWeight() const noexcept {
     return PrimitiveType::kWeightedTriangles == fPrimitiveType ||
            PrimitiveType::kConics == fPrimitiveType;
   }
 
   // GrPrimitiveProcessor overrides.
-  const char* name() const override { return PrimitiveTypeName(fPrimitiveType); }
+  const char* name() const noexcept override { return PrimitiveTypeName(fPrimitiveType); }
 #ifdef SK_DEBUG
   SkString dumpInfo() const override {
     return SkStringPrintf("%s\n%s", this->name(), this->INHERITED::dumpInfo().c_str());
   }
 #endif
-  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const override {
+  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const noexcept override {
     SkDEBUGCODE(this->getDebugBloatKey(b));
     b->add32((int)fPrimitiveType);
   }
@@ -201,14 +201,14 @@ class GrCCCoverageProcessor : public GrGeometryProcessor {
 
     // Returns the name of a Shader's internal varying at the point where where its value is
     // assigned. This is intended to work whether called for a vertex or a geometry shader.
-    const char* OutName(const GrGLSLVarying& varying) const {
+    const char* OutName(const GrGLSLVarying& varying) const noexcept {
       using Scope = GrGLSLVarying::Scope;
       SkASSERT(Scope::kVertToGeo != varying.scope());
       return Scope::kGeoToFrag == varying.scope() ? varying.gsOut() : varying.vsOut();
     }
 
     // Our friendship with GrGLSLShaderBuilder does not propagate to subclasses.
-    inline static SkString& AccessCodeString(GrGLSLShaderBuilder* s) { return s->code(); }
+    inline static SkString& AccessCodeString(GrGLSLShaderBuilder* s) noexcept { return s->code(); }
   };
 
  protected:
@@ -221,7 +221,7 @@ class GrCCCoverageProcessor : public GrGeometryProcessor {
   virtual GrGLSLPrimitiveProcessor* onCreateGLSLInstance(std::unique_ptr<Shader>) const = 0;
 
   // Our friendship with GrGLSLShaderBuilder does not propagate to subclasses.
-  inline static SkString& AccessCodeString(GrGLSLShaderBuilder* s) { return s->code(); }
+  inline static SkString& AccessCodeString(GrGLSLShaderBuilder* s) noexcept { return s->code(); }
 
   PrimitiveType fPrimitiveType;
   SkDEBUGCODE(float fDebugBloat = 0);
@@ -231,7 +231,7 @@ class GrCCCoverageProcessor : public GrGeometryProcessor {
   typedef GrGeometryProcessor INHERITED;
 };
 
-inline const char* GrCCCoverageProcessor::PrimitiveTypeName(PrimitiveType type) {
+inline const char* GrCCCoverageProcessor::PrimitiveTypeName(PrimitiveType type) noexcept {
   switch (type) {
     case PrimitiveType::kTriangles: return "kTriangles";
     case PrimitiveType::kWeightedTriangles: return "kWeightedTriangles";
@@ -256,11 +256,12 @@ inline void GrCCCoverageProcessor::TriPointInstance::set(
 }
 
 inline void GrCCCoverageProcessor::TriPointInstance::set(
-    const Sk2f& P0, const Sk2f& P1, const Sk2f& P2, const Sk2f& trans) {
+    const Sk2f& P0, const Sk2f& P1, const Sk2f& P2, const Sk2f& trans) noexcept {
   Sk2f::Store3(this, P0 + trans, P1 + trans, P2 + trans);
 }
 
-inline void GrCCCoverageProcessor::QuadPointInstance::set(const SkPoint p[4], float dx, float dy) {
+inline void GrCCCoverageProcessor::QuadPointInstance::set(
+    const SkPoint p[4], float dx, float dy) noexcept {
   Sk4f X, Y;
   Sk4f::Load2(p, &X, &Y);
   (X + dx).store(&fX);
@@ -281,7 +282,7 @@ inline void GrCCCoverageProcessor::QuadPointInstance::setW(
 }
 
 inline void GrCCCoverageProcessor::QuadPointInstance::setW(
-    const Sk2f& P0, const Sk2f& P1, const Sk2f& P2, const Sk2f& trans, float w) {
+    const Sk2f& P0, const Sk2f& P1, const Sk2f& P2, const Sk2f& trans, float w) noexcept {
   Sk2f W = Sk2f(w);
   Sk2f::Store4(this, P0 + trans, P1 + trans, P2 + trans, W);
 }

@@ -64,7 +64,8 @@ class GrOnFlushCallbackObject {
  */
 class GrOnFlushResourceProvider {
  public:
-  explicit GrOnFlushResourceProvider(GrDrawingManager* drawingMgr) : fDrawingMgr(drawingMgr) {}
+  explicit GrOnFlushResourceProvider(GrDrawingManager* drawingMgr) noexcept
+      : fDrawingMgr(drawingMgr) {}
 
   sk_sp<GrRenderTargetContext> makeRenderTargetContext(
       sk_sp<GrSurfaceProxy>, sk_sp<SkColorSpace>, const SkSurfaceProps*);

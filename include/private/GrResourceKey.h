@@ -17,7 +17,7 @@
 
 #include <new>
 
-uint32_t GrResourceKeyHash(const uint32_t* data, size_t size);
+uint32_t GrResourceKeyHash(const uint32_t* data, size_t size) noexcept;
 
 /**
  * Base class for all GrGpuResource cache keys. There are two types of cache keys. Refer to the
@@ -25,12 +25,12 @@ uint32_t GrResourceKeyHash(const uint32_t* data, size_t size);
  */
 class GrResourceKey {
  public:
-  uint32_t hash() const {
+  uint32_t hash() const noexcept {
     this->validate();
     return fKey[kHash_MetaDataIdx];
   }
 
-  size_t size() const {
+  size_t size() const noexcept {
     this->validate();
     SkASSERT(this->isValid());
     return this->internalSize();
@@ -42,21 +42,21 @@ class GrResourceKey {
   GrResourceKey() { this->reset(); }
 
   /** Reset to an invalid key. */
-  void reset() {
+  void reset() noexcept {
     GR_STATIC_ASSERT((uint16_t)kInvalidDomain == kInvalidDomain);
     fKey.reset(kMetaDataCnt);
     fKey[kHash_MetaDataIdx] = 0;
     fKey[kDomainAndSize_MetaDataIdx] = kInvalidDomain;
   }
 
-  bool operator==(const GrResourceKey& that) const {
+  bool operator==(const GrResourceKey& that) const noexcept {
     return this->hash() == that.hash() &&
            0 == memcmp(
                     &fKey[kHash_MetaDataIdx + 1], &that.fKey[kHash_MetaDataIdx + 1],
                     this->internalSize() - sizeof(uint32_t));
   }
 
-  GrResourceKey& operator=(const GrResourceKey& that) {
+  GrResourceKey& operator=(const GrResourceKey& that) noexcept {
     if (this != &that) {
       if (!that.isValid()) {
         this->reset();
@@ -71,15 +71,15 @@ class GrResourceKey {
     return *this;
   }
 
-  bool isValid() const { return kInvalidDomain != this->domain(); }
+  bool isValid() const noexcept { return kInvalidDomain != this->domain(); }
 
-  uint32_t domain() const { return fKey[kDomainAndSize_MetaDataIdx] & 0xffff; }
+  uint32_t domain() const noexcept { return fKey[kDomainAndSize_MetaDataIdx] & 0xffff; }
 
   /** size of the key data, excluding meta-data (hash, domain, etc).  */
-  size_t dataSize() const { return this->size() - 4 * kMetaDataCnt; }
+  size_t dataSize() const noexcept { return this->size() - 4 * kMetaDataCnt; }
 
   /** ptr to the key data, excluding meta-data (hash, domain, etc).  */
-  const uint32_t* data() const {
+  const uint32_t* data() const noexcept {
     this->validate();
     return &fKey[kMetaDataCnt];
   }
@@ -103,7 +103,7 @@ class GrResourceKey {
   /** Used to initialize a key. */
   class Builder {
    public:
-    Builder(GrResourceKey* key, uint32_t domain, int data32Count) : fKey(key) {
+    Builder(GrResourceKey* key, uint32_t domain, int data32Count) noexcept : fKey(key) {
       SkASSERT(data32Count >= 0);
       SkASSERT(domain != kInvalidDomain);
       key->fKey.reset(kMetaDataCnt + data32Count);
@@ -115,7 +115,7 @@ class GrResourceKey {
 
     ~Builder() { this->finish(); }
 
-    void finish() {
+    void finish() noexcept {
       if (nullptr == fKey) {
         return;
       }
@@ -126,10 +126,10 @@ class GrResourceKey {
       fKey = nullptr;
     }
 
-    uint32_t& operator[](int dataIdx) {
+    uint32_t& operator[](int dataIdx) noexcept {
       SkASSERT(fKey);
-      SkDEBUGCODE(size_t dataCount = fKey->internalSize() / sizeof(uint32_t) - kMetaDataCnt;)
-          SkASSERT(SkToU32(dataIdx) < dataCount);
+      SkDEBUGCODE(size_t dataCount = fKey->internalSize() / sizeof(uint32_t) - kMetaDataCnt);
+      SkASSERT(SkToU32(dataIdx) < dataCount);
       return fKey->fKey[kMetaDataCnt + dataIdx];
     }
 
@@ -147,9 +147,9 @@ class GrResourceKey {
   };
   static const uint32_t kMetaDataCnt = kLastMetaDataIdx + 1;
 
-  size_t internalSize() const { return fKey[kDomainAndSize_MetaDataIdx] >> 16; }
+  size_t internalSize() const noexcept { return fKey[kDomainAndSize_MetaDataIdx] >> 16; }
 
-  void validate() const {
+  void validate() const noexcept {
     SkASSERT(this->isValid());
     SkASSERT(
         fKey[kHash_MetaDataIdx] ==
@@ -193,10 +193,10 @@ class GrScratchKey : public GrResourceKey {
   typedef uint32_t ResourceType;
 
   /** Generate a unique ResourceType. */
-  static ResourceType GenerateResourceType();
+  static ResourceType GenerateResourceType() noexcept;
 
   /** Creates an invalid scratch key. It must be initialized using a Builder object before use. */
-  GrScratchKey() {}
+  GrScratchKey() noexcept {}
 
   GrScratchKey(const GrScratchKey& that) { *this = that; }
 
@@ -205,19 +205,21 @@ class GrScratchKey : public GrResourceKey {
 
   using INHERITED::isValid;
 
-  ResourceType resourceType() const { return this->domain(); }
+  ResourceType resourceType() const noexcept { return this->domain(); }
 
-  GrScratchKey& operator=(const GrScratchKey& that) {
+  GrScratchKey& operator=(const GrScratchKey& that) noexcept {
     this->INHERITED::operator=(that);
     return *this;
   }
 
-  bool operator==(const GrScratchKey& that) const { return this->INHERITED::operator==(that); }
-  bool operator!=(const GrScratchKey& that) const { return !(*this == that); }
+  bool operator==(const GrScratchKey& that) const noexcept {
+    return this->INHERITED::operator==(that);
+  }
+  bool operator!=(const GrScratchKey& that) const noexcept { return !(*this == that); }
 
   class Builder : public INHERITED::Builder {
    public:
-    Builder(GrScratchKey* key, ResourceType type, int data32Count)
+    Builder(GrScratchKey* key, ResourceType type, int data32Count) noexcept
         : INHERITED::Builder(key, type, data32Count) {}
   };
 };
@@ -243,32 +245,34 @@ class GrUniqueKey : public GrResourceKey {
  public:
   typedef uint32_t Domain;
   /** Generate a Domain for unique keys. */
-  static Domain GenerateDomain();
+  static Domain GenerateDomain() noexcept;
 
   /** Creates an invalid unique key. It must be initialized using a Builder object before use. */
-  GrUniqueKey() : fTag(nullptr) {}
+  GrUniqueKey() noexcept : fTag(nullptr) {}
 
-  GrUniqueKey(const GrUniqueKey& that) { *this = that; }
+  GrUniqueKey(const GrUniqueKey& that) noexcept { *this = that; }
 
   /** reset() returns the key to the invalid state. */
   using INHERITED::reset;
 
   using INHERITED::isValid;
 
-  GrUniqueKey& operator=(const GrUniqueKey& that) {
+  GrUniqueKey& operator=(const GrUniqueKey& that) noexcept {
     this->INHERITED::operator=(that);
     this->setCustomData(sk_ref_sp(that.getCustomData()));
     fTag = that.fTag;
     return *this;
   }
 
-  bool operator==(const GrUniqueKey& that) const { return this->INHERITED::operator==(that); }
-  bool operator!=(const GrUniqueKey& that) const { return !(*this == that); }
+  bool operator==(const GrUniqueKey& that) const noexcept {
+    return this->INHERITED::operator==(that);
+  }
+  bool operator!=(const GrUniqueKey& that) const noexcept { return !(*this == that); }
 
-  void setCustomData(sk_sp<SkData> data) { fData = std::move(data); }
-  SkData* getCustomData() const { return fData.get(); }
+  void setCustomData(sk_sp<SkData> data) noexcept { fData = std::move(data); }
+  SkData* getCustomData() const noexcept { return fData.get(); }
 
-  const char* tag() const { return fTag; }
+  const char* tag() const noexcept { return fTag; }
 
 #ifdef SK_DEBUG
   void dump(const char* label) const {
@@ -279,7 +283,7 @@ class GrUniqueKey : public GrResourceKey {
 
   class Builder : public INHERITED::Builder {
    public:
-    Builder(GrUniqueKey* key, Domain type, int data32Count, const char* tag = nullptr)
+    Builder(GrUniqueKey* key, Domain type, int data32Count, const char* tag = nullptr) noexcept
         : INHERITED::Builder(key, type, data32Count) {
       key->fTag = tag;
     }
@@ -287,7 +291,7 @@ class GrUniqueKey : public GrResourceKey {
     /** Used to build a key that wraps another key and adds additional data. */
     Builder(
         GrUniqueKey* key, const GrUniqueKey& innerKey, Domain domain, int extraData32Cnt,
-        const char* tag = nullptr)
+        const char* tag = nullptr) noexcept
         : INHERITED::Builder(key, domain, Data32CntForInnerKey(innerKey) + extraData32Cnt) {
       SkASSERT(&innerKey != key);
       // add the inner key to the end of the key so that op[] can be indexed normally.
@@ -299,7 +303,7 @@ class GrUniqueKey : public GrResourceKey {
     }
 
    private:
-    static int Data32CntForInnerKey(const GrUniqueKey& innerKey) {
+    static int Data32CntForInnerKey(const GrUniqueKey& innerKey) noexcept {
       // key data + domain
       return SkToInt((innerKey.dataSize() >> 2) + 1);
     }
@@ -325,7 +329,8 @@ class GrUniqueKey : public GrResourceKey {
   name##_once(gr_init_static_unique_key_once, &name##_storage); \
   static const GrUniqueKey& name = *reinterpret_cast<GrUniqueKey*>(name##_storage.get())
 
-static inline void gr_init_static_unique_key_once(SkAlignedSTStorage<1, GrUniqueKey>* keyStorage) {
+static inline void gr_init_static_unique_key_once(
+    SkAlignedSTStorage<1, GrUniqueKey>* keyStorage) noexcept {
   GrUniqueKey* key = new (keyStorage->get()) GrUniqueKey;
   GrUniqueKey::Builder builder(key, GrUniqueKey::GenerateDomain(), 0);
 }
@@ -334,7 +339,7 @@ static inline void gr_init_static_unique_key_once(SkAlignedSTStorage<1, GrUnique
 class GrUniqueKeyInvalidatedMessage {
  public:
   GrUniqueKeyInvalidatedMessage() = default;
-  GrUniqueKeyInvalidatedMessage(const GrUniqueKey& key, uint32_t contextUniqueID)
+  GrUniqueKeyInvalidatedMessage(const GrUniqueKey& key, uint32_t contextUniqueID) noexcept
       : fKey(key), fContextID(contextUniqueID) {
     SkASSERT(SK_InvalidUniqueID != contextUniqueID);
   }
@@ -343,8 +348,8 @@ class GrUniqueKeyInvalidatedMessage {
 
   GrUniqueKeyInvalidatedMessage& operator=(const GrUniqueKeyInvalidatedMessage&) = default;
 
-  const GrUniqueKey& key() const { return fKey; }
-  uint32_t contextID() const { return fContextID; }
+  const GrUniqueKey& key() const noexcept { return fKey; }
+  uint32_t contextID() const noexcept { return fContextID; }
 
  private:
   GrUniqueKey fKey;
@@ -352,7 +357,7 @@ class GrUniqueKeyInvalidatedMessage {
 };
 
 static inline bool SkShouldPostMessageToBus(
-    const GrUniqueKeyInvalidatedMessage& msg, uint32_t msgBusUniqueID) {
+    const GrUniqueKeyInvalidatedMessage& msg, uint32_t msgBusUniqueID) noexcept {
   return msg.contextID() == msgBusUniqueID;
 }
 

@@ -22,7 +22,7 @@ class GrStencilAndCoverPathRenderer : public GrPathRenderer {
   static GrPathRenderer* Create(GrResourceProvider*, const GrCaps&);
 
  private:
-  StencilSupport onGetStencilSupport(const GrShape&) const override {
+  StencilSupport onGetStencilSupport(const GrShape&) const noexcept override {
     return GrPathRenderer::kStencilOnly_StencilSupport;
   }
 

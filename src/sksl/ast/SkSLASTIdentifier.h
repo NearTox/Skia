@@ -16,7 +16,7 @@ namespace SkSL {
  * An identifier in an expression context.
  */
 struct ASTIdentifier : public ASTExpression {
-  ASTIdentifier(int offset, StringFragment text)
+  ASTIdentifier(int offset, StringFragment text) noexcept
       : INHERITED(offset, kIdentifier_Kind), fText(text) {}
 
   String description() const override { return String(fText); }

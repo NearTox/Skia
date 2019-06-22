@@ -36,13 +36,13 @@ class SkImage_Base : public SkImage {
 
   virtual bool onPeekPixels(SkPixmap*) const { return false; }
 
-  virtual const SkBitmap* onPeekBitmap() const { return nullptr; }
+  virtual const SkBitmap* onPeekBitmap() const noexcept { return nullptr; }
 
   virtual bool onReadPixels(
       const SkImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes, int srcX, int srcY,
       CachingHint) const = 0;
 
-  virtual GrContext* context() const { return nullptr; }
+  virtual GrContext* context() const noexcept { return nullptr; }
 
 #if SK_SUPPORT_GPU
   virtual GrSemaphoresSubmitted onFlush(GrContext* context, const GrFlushInfo&) {
@@ -52,7 +52,7 @@ class SkImage_Base : public SkImage {
   // Return the proxy if this image is backed by a single proxy. For YUVA images, this
   // will return nullptr unless the YUVA planes have been converted to RGBA in which case
   // that single backing proxy will be returned.
-  virtual GrTextureProxy* peekProxy() const { return nullptr; }
+  virtual GrTextureProxy* peekProxy() const noexcept { return nullptr; }
   virtual sk_sp<GrTextureProxy> asTextureProxyRef(GrRecordingContext*) const { return nullptr; }
   virtual sk_sp<GrTextureProxy> asTextureProxyRef(
       GrRecordingContext*, const GrSamplerState&, SkScalar scaleAdjust[2]) const = 0;
@@ -60,7 +60,7 @@ class SkImage_Base : public SkImage {
       GrRecordingContext*, uint32_t* uniqueID) const {
     return nullptr;
   }
-  virtual bool isYUVA() const { return false; }
+  virtual bool isYUVA() const noexcept { return false; }
   virtual GrTexture* onGetTexture() const { return nullptr; }
 #endif
   virtual GrBackendTexture onGetBackendTexture(
@@ -79,14 +79,14 @@ class SkImage_Base : public SkImage {
   virtual bool onAsLegacyBitmap(SkBitmap*) const;
 
   // True for picture-backed and codec-backed
-  virtual bool onIsLazyGenerated() const { return false; }
+  virtual bool onIsLazyGenerated() const noexcept { return false; }
 
   // True for images instantiated in GPU memory
-  virtual bool onIsTextureBacked() const { return false; }
+  virtual bool onIsTextureBacked() const noexcept { return false; }
 
   // Call when this image is part of the key to a resourcecache entry. This allows the cache
   // to know automatically those entries can be purged when this SkImage deleted.
-  virtual void notifyAddedToRasterCache() const { fAddedToRasterCache.store(true); }
+  virtual void notifyAddedToRasterCache() const noexcept { fAddedToRasterCache.store(true); }
 
   virtual bool onIsValid(GrContext*) const = 0;
 
@@ -97,7 +97,7 @@ class SkImage_Base : public SkImage {
       GrRecordingContext*, SkColorType, sk_sp<SkColorSpace>) const = 0;
 
  protected:
-  SkImage_Base(const SkImageInfo& info, uint32_t uniqueID);
+  SkImage_Base(const SkImageInfo& info, uint32_t uniqueID) noexcept;
 
  private:
   // Set true by caches when they cache content that's derived from the current pixels.
@@ -106,13 +106,15 @@ class SkImage_Base : public SkImage {
   typedef SkImage INHERITED;
 };
 
-static inline SkImage_Base* as_IB(SkImage* image) { return static_cast<SkImage_Base*>(image); }
+static inline SkImage_Base* as_IB(SkImage* image) noexcept {
+  return static_cast<SkImage_Base*>(image);
+}
 
-static inline SkImage_Base* as_IB(const sk_sp<SkImage>& image) {
+static inline SkImage_Base* as_IB(const sk_sp<SkImage>& image) noexcept {
   return static_cast<SkImage_Base*>(image.get());
 }
 
-static inline const SkImage_Base* as_IB(const SkImage* image) {
+static inline const SkImage_Base* as_IB(const SkImage* image) noexcept {
   return static_cast<const SkImage_Base*>(image);
 }
 

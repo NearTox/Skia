@@ -32,7 +32,7 @@ class GrImageTextureMaker : public GrTextureMaker {
   void makeCopyKey(const CopyParams& stretch, GrUniqueKey* paramsCopyKey) override;
   void didCacheCopy(const GrUniqueKey& copyKey, uint32_t contextUniqueID) override {}
 
-  SkAlphaType alphaType() const override;
+  SkAlphaType alphaType() const noexcept override;
   SkColorSpace* colorSpace() const override;
 
  private:
@@ -50,7 +50,7 @@ class GrYUVAImageTextureMaker : public GrTextureMaker {
 
   // This could be made more nuanced and compare all of the texture proxy resolutions, but
   // it's probably not worth the effort.
-  bool hasMixedResolutions() const override { return true; }
+  bool hasMixedResolutions() const noexcept override { return true; }
 
  protected:
   // TODO: consider overriding this, for the case where the underlying generator might be
@@ -67,7 +67,7 @@ class GrYUVAImageTextureMaker : public GrTextureMaker {
       FilterConstraint filterConstraint, bool coordsLimitedToConstraintRect,
       const GrSamplerState::Filter* filterOrNullForBicubic) override;
 
-  SkAlphaType alphaType() const override;
+  SkAlphaType alphaType() const noexcept override;
   SkColorSpace* colorSpace() const override;
 
  private:

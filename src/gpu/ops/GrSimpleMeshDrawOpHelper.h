@@ -45,14 +45,14 @@ class GrSimpleMeshDrawOpHelper {
   };
   GR_DECL_BITFIELD_CLASS_OPS_FRIENDS(InputFlags);
 
-  GrSimpleMeshDrawOpHelper(const MakeArgs&, GrAAType, InputFlags = InputFlags::kNone);
+  GrSimpleMeshDrawOpHelper(const MakeArgs&, GrAAType, InputFlags = InputFlags::kNone) noexcept;
   ~GrSimpleMeshDrawOpHelper();
 
   GrSimpleMeshDrawOpHelper() = delete;
   GrSimpleMeshDrawOpHelper(const GrSimpleMeshDrawOpHelper&) = delete;
   GrSimpleMeshDrawOpHelper& operator=(const GrSimpleMeshDrawOpHelper&) = delete;
 
-  GrDrawOp::FixedFunctionFlags fixedFunctionFlags() const;
+  GrDrawOp::FixedFunctionFlags fixedFunctionFlags() const noexcept;
 
   // noneAACompatibleWithCoverage should be set to true if the op can properly render a non-AA
   // primitive merged into a coverage-based op.
@@ -87,18 +87,18 @@ class GrSimpleMeshDrawOpHelper {
       const GrCaps&, const GrAppliedClip*, GrFSAAType, GrClampType,
       GrProcessorAnalysisCoverage geometryCoverage, SkPMColor4f* geometryColor, bool* wideColor);
 
-  bool isTrivial() const { return fProcessors == nullptr; }
+  bool isTrivial() const noexcept { return fProcessors == nullptr; }
 
-  bool usesLocalCoords() const {
+  bool usesLocalCoords() const noexcept {
     SkASSERT(fDidAnalysis);
     return fUsesLocalCoords;
   }
 
-  bool compatibleWithCoverageAsAlpha() const { return fCompatibleWithCoverageAsAlpha; }
+  bool compatibleWithCoverageAsAlpha() const noexcept { return fCompatibleWithCoverageAsAlpha; }
 
   struct MakeArgs {
    private:
-    MakeArgs() = default;
+    MakeArgs() noexcept = default;
 
     GrProcessorSet* fProcessorSet;
 
@@ -114,14 +114,14 @@ class GrSimpleMeshDrawOpHelper {
 #ifdef SK_DEBUG
   SkString dumpInfo() const;
 #endif
-  GrAAType aaType() const { return static_cast<GrAAType>(fAAType); }
+  GrAAType aaType() const noexcept { return static_cast<GrAAType>(fAAType); }
 
-  void setAAType(GrAAType aaType) { fAAType = static_cast<unsigned>(aaType); }
+  void setAAType(GrAAType aaType) noexcept { fAAType = static_cast<unsigned>(aaType); }
 
   void executeDrawsAndUploads(const GrOp*, GrOpFlushState*, const SkRect& chainBounds);
 
  protected:
-  GrPipeline::InputFlags pipelineFlags() const { return fPipelineFlags; }
+  GrPipeline::InputFlags pipelineFlags() const noexcept { return fPipelineFlags; }
 
   GrProcessorSet::Analysis finalizeProcessors(
       const GrCaps& caps, const GrAppliedClip*, const GrUserStencilSettings*, GrFSAAType,
@@ -133,7 +133,8 @@ class GrSimpleMeshDrawOpHelper {
   unsigned fAAType : 2;
   unsigned fUsesLocalCoords : 1;
   unsigned fCompatibleWithCoverageAsAlpha : 1;
-  SkDEBUGCODE(unsigned fMadePipeline : 1;) SkDEBUGCODE(unsigned fDidAnalysis : 1;)
+  SkDEBUGCODE(unsigned fMadePipeline : 1);
+  SkDEBUGCODE(unsigned fDidAnalysis : 1);
 };
 
 /**
@@ -157,9 +158,10 @@ class GrSimpleMeshDrawOpHelperWithStencil : private GrSimpleMeshDrawOpHelper {
   }
 
   GrSimpleMeshDrawOpHelperWithStencil(
-      const MakeArgs&, GrAAType, const GrUserStencilSettings*, InputFlags = InputFlags::kNone);
+      const MakeArgs&, GrAAType, const GrUserStencilSettings*,
+      InputFlags = InputFlags::kNone) noexcept;
 
-  GrDrawOp::FixedFunctionFlags fixedFunctionFlags() const;
+  GrDrawOp::FixedFunctionFlags fixedFunctionFlags() const noexcept;
 
   GrProcessorSet::Analysis finalizeProcessors(
       const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType, GrClampType clampType,

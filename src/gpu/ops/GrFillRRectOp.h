@@ -20,7 +20,7 @@ class GrFillRRectOp : public GrDrawOp {
       GrRecordingContext*, GrAAType, const SkMatrix& viewMatrix, const SkRRect&, const GrCaps&,
       GrPaint&&);
 
-  const char* name() const override { return "GrFillRRectOp"; }
+  const char* name() const noexcept override { return "GrFillRRectOp"; }
   FixedFunctionFlags fixedFunctionFlags() const override {
     return (GrAAType::kMSAA == fAAType) ? FixedFunctionFlags::kUsesHWAA : FixedFunctionFlags::kNone;
   }

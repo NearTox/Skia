@@ -24,7 +24,7 @@ class GrComposeLerpRedEffect : public GrFragmentProcessor {
   }
   GrComposeLerpRedEffect(const GrComposeLerpRedEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const override { return "ComposeLerpRedEffect"; }
+  const char* name() const noexcept override { return "ComposeLerpRedEffect"; }
   int child1_index = -1;
   int child2_index = -1;
   int lerp_index = -1;
@@ -47,8 +47,8 @@ class GrComposeLerpRedEffect : public GrFragmentProcessor {
     this->registerChildProcessor(std::move(lerp));
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

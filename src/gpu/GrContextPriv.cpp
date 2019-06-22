@@ -27,7 +27,7 @@
 #define ASSERT_OWNED_PROXY(P) \
   SkASSERT(!(P) || !((P)->peekTexture()) || (P)->peekTexture()->getContext() == fContext)
 #define ASSERT_SINGLE_OWNER \
-  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(fContext->singleOwner());)
+  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(fContext->singleOwner()));
 #define RETURN_VALUE_IF_ABANDONED(value) \
   if (fContext->abandoned()) {           \
     return (value);                      \
@@ -168,7 +168,7 @@ void GrContextPriv::flushSurface(GrSurfaceProxy* proxy) {
   this->flushSurfaces(proxy ? &proxy : nullptr, proxy ? 1 : 0, {});
 }
 
-static bool valid_premul_color_type(GrColorType ct) {
+static bool valid_premul_color_type(GrColorType ct) noexcept {
   switch (ct) {
     case GrColorType::kUnknown: return false;
     case GrColorType::kAlpha_8: return false;
@@ -193,7 +193,7 @@ static bool valid_premul_color_type(GrColorType ct) {
 
 // TODO: This will be removed when GrSurfaceContexts are aware of their color types.
 // (skbug.com/6718)
-static bool valid_premul_config(GrPixelConfig config) {
+static bool valid_premul_config(GrPixelConfig config) noexcept {
   switch (config) {
     case kUnknown_GrPixelConfig: return false;
     case kAlpha_8_GrPixelConfig: return false;
@@ -225,7 +225,7 @@ static bool valid_premul_config(GrPixelConfig config) {
 }
 
 static bool valid_pixel_conversion(
-    GrColorType cpuColorType, GrPixelConfig gpuConfig, bool premulConversion) {
+    GrColorType cpuColorType, GrPixelConfig gpuConfig, bool premulConversion) noexcept {
   // We only allow premul <-> unpremul conversions for some formats
   if (premulConversion &&
       (!valid_premul_color_type(cpuColorType) || !valid_premul_config(gpuConfig))) {

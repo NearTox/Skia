@@ -29,17 +29,17 @@ class GrBicubicEffect : public GrFragmentProcessor {
     kXY
   };
 
-  const char* name() const override { return "Bicubic"; }
+  const char* name() const noexcept override { return "Bicubic"; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override {
     return std::unique_ptr<GrFragmentProcessor>(new GrBicubicEffect(*this));
   }
 
-  const GrTextureDomain& domain() const { return fDomain; }
+  const GrTextureDomain& domain() const noexcept { return fDomain; }
 
-  Direction direction() const { return fDirection; }
+  Direction direction() const noexcept { return fDirection; }
 
-  SkAlphaType alphaType() const { return fAlphaType; }
+  SkAlphaType alphaType() const noexcept { return fAlphaType; }
 
   /**
    * Create a Mitchell filter effect with specified texture matrix with clamp wrap mode.
@@ -106,22 +106,22 @@ class GrBicubicEffect : public GrFragmentProcessor {
    * kNearest).
    */
   static bool ShouldUseBicubic(
-      const SkMatrix& localCoordsToDevice, GrSamplerState::Filter* filterMode);
+      const SkMatrix& localCoordsToDevice, GrSamplerState::Filter* filterMode) noexcept;
 
  private:
   GrBicubicEffect(
       sk_sp<GrTextureProxy>, const SkMatrix& matrix, const SkRect& domain,
       const GrSamplerState::WrapMode wrapModes[2], GrTextureDomain::Mode modeX,
       GrTextureDomain::Mode modeY, Direction direction, SkAlphaType alphaType);
-  explicit GrBicubicEffect(const GrBicubicEffect&);
+  explicit GrBicubicEffect(const GrBicubicEffect&) noexcept;
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
 
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
 
-  const TextureSampler& onTextureSampler(int) const override { return fTextureSampler; }
+  const TextureSampler& onTextureSampler(int) const noexcept override { return fTextureSampler; }
 
   GrCoordTransform fCoordTransform;
   GrTextureDomain fDomain;

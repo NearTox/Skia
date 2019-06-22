@@ -40,14 +40,14 @@ struct YUVPlanesRec : public SkResourceCache::Rec {
   YUVPlanesKey fKey;
   YUVValue fValue;
 
-  const Key& getKey() const override { return fKey; }
-  size_t bytesUsed() const override { return sizeof(*this) + fValue.fData->size(); }
-  const char* getCategory() const override { return "yuv-planes"; }
-  SkDiscardableMemory* diagnostic_only_getDiscardable() const override {
+  const Key& getKey() const noexcept override { return fKey; }
+  size_t bytesUsed() const noexcept override { return sizeof(*this) + fValue.fData->size(); }
+  const char* getCategory() const noexcept override { return "yuv-planes"; }
+  SkDiscardableMemory* diagnostic_only_getDiscardable() const noexcept override {
     return fValue.fData->diagnostic_only_getDiscardable();
   }
 
-  static bool Visitor(const SkResourceCache::Rec& baseRec, void* contextData) {
+  static bool Visitor(const SkResourceCache::Rec& baseRec, void* contextData) noexcept {
     const YUVPlanesRec& rec = static_cast<const YUVPlanesRec&>(baseRec);
     YUVValue* result = static_cast<YUVValue*>(contextData);
 

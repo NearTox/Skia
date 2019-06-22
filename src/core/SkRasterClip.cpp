@@ -15,7 +15,7 @@ enum MutateResult {
   kContinue_MutateResult,
 };
 
-static MutateResult mutate_conservative_op(SkRegion::Op* op, bool inverseFilled) {
+static MutateResult mutate_conservative_op(SkRegion::Op* op, bool inverseFilled) noexcept {
   if (inverseFilled) {
     switch (*op) {
       case SkRegion::kIntersect_Op:
@@ -120,7 +120,7 @@ void SkConservativeClip::opIRect(const SkIRect& devRect, SkRegion::Op op) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkRasterClip::SkRasterClip(const SkRasterClip& src) {
+SkRasterClip::SkRasterClip(const SkRasterClip& src) noexcept {
   AUTO_RASTERCLIP_VALIDATE(src);
 
   fIsBW = src.fIsBW;
@@ -133,31 +133,31 @@ SkRasterClip::SkRasterClip(const SkRasterClip& src) {
   fIsEmpty = src.isEmpty();
   fIsRect = src.isRect();
   fClipRestrictionRect = src.fClipRestrictionRect;
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 }
 
 SkRasterClip::SkRasterClip(const SkRegion& rgn) : fBW(rgn) {
   fIsBW = true;
   fIsEmpty = this->computeIsEmpty();  // bounds might be empty, so compute
   fIsRect = !fIsEmpty;
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 }
 
 SkRasterClip::SkRasterClip(const SkIRect& bounds) : fBW(bounds) {
   fIsBW = true;
   fIsEmpty = this->computeIsEmpty();  // bounds might be empty, so compute
   fIsRect = !fIsEmpty;
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 }
 
 SkRasterClip::SkRasterClip() {
   fIsBW = true;
   fIsEmpty = true;
   fIsRect = false;
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 }
 
-SkRasterClip::~SkRasterClip() { SkDEBUGCODE(this->validate();) }
+SkRasterClip::~SkRasterClip() { SkDEBUGCODE(this->validate()); }
 
 bool SkRasterClip::operator==(const SkRasterClip& other) const {
   if (fIsBW != other.fIsBW) {
@@ -343,7 +343,7 @@ bool SkRasterClip::op(const SkRasterClip& clip, SkRegion::Op op) {
  *  axis. Thus we can treat an axis coordinate as an integer if it differs
  *  from its nearest int by < half of that value (1.8 in this case).
  */
-static bool nearly_integral(SkScalar x) {
+static bool nearly_integral(SkScalar x) noexcept {
   static const SkScalar domain = SK_Scalar1 / 4;
   static const SkScalar halfDomain = domain / 2;
 
@@ -463,7 +463,8 @@ void SkRasterClip::validate() const {
 ///////////////////////////////////////////////////////////////////////////////
 
 SkAAClipBlitterWrapper::SkAAClipBlitterWrapper() {
-  SkDEBUGCODE(fClipRgn = nullptr;) SkDEBUGCODE(fBlitter = nullptr;)
+  SkDEBUGCODE(fClipRgn = nullptr);
+  SkDEBUGCODE(fBlitter = nullptr);
 }
 
 SkAAClipBlitterWrapper::SkAAClipBlitterWrapper(const SkRasterClip& clip, SkBlitter* blitter) {

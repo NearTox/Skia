@@ -25,7 +25,7 @@ class SkStyleSet_Indirect : public SkFontStyleSet {
  public:
   /** Takes ownership of the SkRemotableFontIdentitySet. */
   SkStyleSet_Indirect(
-      const SkFontMgr_Indirect* owner, int familyIndex, SkRemotableFontIdentitySet* data)
+      const SkFontMgr_Indirect* owner, int familyIndex, SkRemotableFontIdentitySet* data) noexcept
       : fOwner(SkRef(owner)), fFamilyIndex(familyIndex), fData(data) {}
 
   int count() override { return fData->count(); }
@@ -59,13 +59,13 @@ class SkStyleSet_Indirect : public SkFontStyleSet {
   sk_sp<SkRemotableFontIdentitySet> fData;
 };
 
-int SkFontMgr_Indirect::onCountFamilies() const { return 0; }
+int SkFontMgr_Indirect::onCountFamilies() const noexcept { return 0; }
 
-void SkFontMgr_Indirect::onGetFamilyName(int index, SkString* familyName) const {
+void SkFontMgr_Indirect::onGetFamilyName(int index, SkString* familyName) const noexcept {
   SK_ABORT("Not implemented");
 }
 
-SkFontStyleSet* SkFontMgr_Indirect::onCreateStyleSet(int index) const {
+SkFontStyleSet* SkFontMgr_Indirect::onCreateStyleSet(int index) const noexcept {
   SK_ABORT("Not implemented");
   return nullptr;
 }

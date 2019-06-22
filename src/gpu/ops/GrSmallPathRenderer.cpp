@@ -51,19 +51,19 @@ static const SkScalar kMaxSize = 2 * kMaxMIP;
 
 class ShapeDataKey {
  public:
-  ShapeDataKey() {}
-  ShapeDataKey(const ShapeDataKey& that) { *this = that; }
-  ShapeDataKey(const GrShape& shape, uint32_t dim) { this->set(shape, dim); }
-  ShapeDataKey(const GrShape& shape, const SkMatrix& ctm) { this->set(shape, ctm); }
+  ShapeDataKey() noexcept {}
+  ShapeDataKey(const ShapeDataKey& that) noexcept { *this = that; }
+  ShapeDataKey(const GrShape& shape, uint32_t dim) noexcept { this->set(shape, dim); }
+  ShapeDataKey(const GrShape& shape, const SkMatrix& ctm) noexcept { this->set(shape, ctm); }
 
-  ShapeDataKey& operator=(const ShapeDataKey& that) {
+  ShapeDataKey& operator=(const ShapeDataKey& that) noexcept {
     fKey.reset(that.fKey.count());
     memcpy(fKey.get(), that.fKey.get(), fKey.count() * sizeof(uint32_t));
     return *this;
   }
 
   // for SDF paths
-  void set(const GrShape& shape, uint32_t dim) {
+  void set(const GrShape& shape, uint32_t dim) noexcept {
     // Shapes' keys are for their pre-style geometry, but by now we shouldn't have any
     // relevant styling information.
     SkASSERT(shape.style().isSimpleFill());
@@ -75,7 +75,7 @@ class ShapeDataKey {
   }
 
   // for bitmap paths
-  void set(const GrShape& shape, const SkMatrix& ctm) {
+  void set(const GrShape& shape, const SkMatrix& ctm) noexcept {
     // Shapes' keys are for their pre-style geometry, but by now we shouldn't have any
     // relevant styling information.
     SkASSERT(shape.style().isSimpleFill());
@@ -102,13 +102,13 @@ class ShapeDataKey {
     shape.writeUnstyledKey(&fKey[5]);
   }
 
-  bool operator==(const ShapeDataKey& that) const {
+  bool operator==(const ShapeDataKey& that) const noexcept {
     return fKey.count() == that.fKey.count() &&
            0 == memcmp(fKey.get(), that.fKey.get(), sizeof(uint32_t) * fKey.count());
   }
 
-  int count32() const { return fKey.count(); }
-  const uint32_t* data() const { return fKey.get(); }
+  int count32() const noexcept { return fKey.count(); }
+  const uint32_t* data() const noexcept { return fKey.get(); }
 
  private:
   // The key is composed of the GrShape's key, and either the dimensions of the DF
@@ -125,7 +125,7 @@ class ShapeData {
   GrIRect16 fTextureCoords;
   SK_DECLARE_INTERNAL_LLIST_INTERFACE(ShapeData);
 
-  static inline const ShapeDataKey& GetKey(const ShapeData& data) { return data.fKey; }
+  static inline const ShapeDataKey& GetKey(const ShapeData& data) noexcept { return data.fKey; }
 
   static inline uint32_t Hash(const ShapeDataKey& key) {
     return SkOpts::hash(key.data(), sizeof(uint32_t) * key.count32());
@@ -261,7 +261,7 @@ class GrSmallPathRenderer::SmallPathOp final : public GrMeshDrawOp {
     fGammaCorrect = gammaCorrect;
   }
 
-  const char* name() const override { return "SmallPathOp"; }
+  const char* name() const noexcept override { return "SmallPathOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     fHelper.visitProxies(func);
@@ -285,7 +285,9 @@ class GrSmallPathRenderer::SmallPathOp final : public GrMeshDrawOp {
   }
 #endif
 
-  FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
+  FixedFunctionFlags fixedFunctionFlags() const noexcept override {
+    return fHelper.fixedFunctionFlags();
+  }
 
   GrProcessorSet::Analysis finalize(
       const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType,
@@ -776,8 +778,8 @@ class GrSmallPathRenderer::SmallPathOp final : public GrMeshDrawOp {
     fHelper.executeDrawsAndUploads(this, flushState, chainBounds);
   }
 
-  const SkPMColor4f& color() const { return fShapes[0].fColor; }
-  bool usesDistanceField() const { return fUsesDistanceField; }
+  const SkPMColor4f& color() const noexcept { return fShapes[0].fColor; }
+  bool usesDistanceField() const noexcept { return fUsesDistanceField; }
 
   CombineResult onCombineIfPossible(GrOp* t, const GrCaps& caps) override {
     SmallPathOp* that = t->cast<SmallPathOp>();

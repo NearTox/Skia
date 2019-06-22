@@ -14,7 +14,7 @@ namespace SkSL {
 struct ASTEnum : public ASTDeclaration {
   ASTEnum(
       int offset, StringFragment typeName, std::vector<StringFragment> names,
-      std::vector<std::unique_ptr<ASTExpression>> values)
+      std::vector<std::unique_ptr<ASTExpression>> values) noexcept
       : INHERITED(offset, kEnum_Kind),
         fTypeName(typeName),
         fNames(std::move(names)),

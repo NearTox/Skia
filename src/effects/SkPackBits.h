@@ -15,7 +15,7 @@ class SkPackBits {
   /** Given the number of 8bit values that will be passed to Pack8,
       returns the worst-case size needed for the dst[] buffer.
   */
-  static size_t ComputeMaxSize8(size_t srcSize);
+  static size_t ComputeMaxSize8(size_t srcSize) noexcept;
 
   /** Write the src array into a packed format. The packing process may end
       up writing more bytes than it read, so dst[] must be large enough.
@@ -26,7 +26,7 @@ class SkPackBits {
       @param dstSize  Number of bytes in the output buffer.
       @return the number of bytes written to dst[]
   */
-  static size_t Pack8(const uint8_t src[], size_t srcSize, uint8_t dst[], size_t dstSize);
+  static size_t Pack8(const uint8_t src[], size_t srcSize, uint8_t dst[], size_t dstSize) noexcept;
 
   /** Unpack the data in src[], and expand it into dst[]. The src[] data was
       written by a previous call to Pack8.
@@ -36,7 +36,7 @@ class SkPackBits {
       @param dstSize  Number of bytes in the output buffer.
       @return the number of bytes written into dst, or 0 if srcSize or dstSize are too small.
   */
-  static int Unpack8(const uint8_t src[], size_t srcSize, uint8_t dst[], size_t dstSize);
+  static int Unpack8(const uint8_t src[], size_t srcSize, uint8_t dst[], size_t dstSize) noexcept;
 };
 
 #endif

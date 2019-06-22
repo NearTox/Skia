@@ -52,7 +52,7 @@
 #include "src/utils/SkUTF.h"
 
 #define ASSERT_SINGLE_OWNER \
-  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(fContext->priv().singleOwner());)
+  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(fContext->priv().singleOwner()));
 
 ///////////////////////////////////////////////////////////////////////////////
 

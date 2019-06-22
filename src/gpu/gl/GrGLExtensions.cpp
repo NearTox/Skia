@@ -15,7 +15,7 @@
 #include "src/utils/SkJSONWriter.h"
 
 namespace {  // This cannot be static because it is used as a template parameter.
-inline bool extension_compare(const SkString& a, const SkString& b) {
+inline bool extension_compare(const SkString& a, const SkString& b) noexcept {
   return strcmp(a.c_str(), b.c_str()) < 0;
 }
 }  // namespace
@@ -31,9 +31,9 @@ static int find_string(const SkTArray<SkString>& strings, const char ext[]) {
   return idx;
 }
 
-GrGLExtensions::GrGLExtensions(const GrGLExtensions& that) { *this = that; }
+GrGLExtensions::GrGLExtensions(const GrGLExtensions& that) noexcept { *this = that; }
 
-GrGLExtensions& GrGLExtensions::operator=(const GrGLExtensions& that) {
+GrGLExtensions& GrGLExtensions::operator=(const GrGLExtensions& that) noexcept {
   if (this != &that) {
     fStrings = that.fStrings;
     fInitialized = that.fInitialized;

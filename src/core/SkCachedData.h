@@ -16,29 +16,29 @@ class SkDiscardableMemory;
 
 class SkCachedData : ::SkNoncopyable {
  public:
-  SkCachedData(void* mallocData, size_t size);
-  SkCachedData(size_t size, SkDiscardableMemory*);
+  SkCachedData(void* mallocData, size_t size) noexcept;
+  SkCachedData(size_t size, SkDiscardableMemory*) noexcept;
   virtual ~SkCachedData();
 
-  size_t size() const { return fSize; }
-  const void* data() const { return fData; }
+  size_t size() const noexcept { return fSize; }
+  const void* data() const noexcept { return fData; }
 
-  void* writable_data() { return fData; }
+  void* writable_data() noexcept { return fData; }
 
-  void ref() const { this->internalRef(false); }
-  void unref() const { this->internalUnref(false); }
+  void ref() const noexcept { this->internalRef(false); }
+  void unref() const noexcept { this->internalUnref(false); }
 
-  int testing_only_getRefCnt() const { return fRefCnt; }
-  bool testing_only_isLocked() const { return fIsLocked; }
-  bool testing_only_isInCache() const { return fInCache; }
+  int testing_only_getRefCnt() const noexcept { return fRefCnt; }
+  bool testing_only_isLocked() const noexcept { return fIsLocked; }
+  bool testing_only_isInCache() const noexcept { return fInCache; }
 
-  SkDiscardableMemory* diagnostic_only_getDiscardable() const {
+  SkDiscardableMemory* diagnostic_only_getDiscardable() const noexcept {
     return kDiscardableMemory_StorageType == fStorageType ? fStorage.fDM : nullptr;
   }
 
  protected:
   // called when fData changes. could be nullptr.
-  virtual void onDataChange(void* oldData, void* newData) {}
+  virtual void onDataChange(void* oldData, void* newData) noexcept {}
 
  private:
   SkMutex fMutex;  // could use a pool of these...
@@ -56,8 +56,8 @@ class SkCachedData : ::SkNoncopyable {
   bool fInCache;
   bool fIsLocked;
 
-  void internalRef(bool fromCache) const;
-  void internalUnref(bool fromCache) const;
+  void internalRef(bool fromCache) const noexcept;
+  void internalUnref(bool fromCache) const noexcept;
 
   void inMutexRef(bool fromCache);
   bool inMutexUnref(bool fromCache);  // returns true if we should delete "this"
@@ -65,7 +65,7 @@ class SkCachedData : ::SkNoncopyable {
   void inMutexUnlock();
 
   // called whenever our fData might change (lock or unlock)
-  void setData(void* newData) {
+  void setData(void* newData) noexcept {
     if (newData != fData) {
       // notify our subclasses of the change
       this->onDataChange(fData, newData);
@@ -79,7 +79,7 @@ class SkCachedData : ::SkNoncopyable {
 #ifdef SK_DEBUG
   void validate() const;
 #else
-  void validate() const {}
+  void validate() const noexcept {}
 #endif
 
   /*
@@ -98,13 +98,13 @@ class SkCachedData : ::SkNoncopyable {
    *  Call when adding this instance to a SkResourceCache::Rec subclass
    *  (typically in the Rec's constructor).
    */
-  void attachToCacheAndRef() const { this->internalRef(true); }
+  void attachToCacheAndRef() const noexcept { this->internalRef(true); }
 
   /*
    *  Call when removing this instance from a SkResourceCache::Rec subclass
    *  (typically in the Rec's destructor).
    */
-  void detachFromCacheAndUnref() const { this->internalUnref(true); }
+  void detachFromCacheAndUnref() const noexcept { this->internalUnref(true); }
 };
 
 #endif

@@ -14,14 +14,14 @@
 #include "src/gpu/GrGpuResourcePriv.h"
 #include "src/gpu/GrResourceCache.h"
 
-static inline GrResourceCache* get_resource_cache(GrGpu* gpu) {
+static inline GrResourceCache* get_resource_cache(GrGpu* gpu) noexcept {
   SkASSERT(gpu);
   SkASSERT(gpu->getContext());
   SkASSERT(gpu->getContext()->priv().getResourceCache());
   return gpu->getContext()->priv().getResourceCache();
 }
 
-GrGpuResource::GrGpuResource(GrGpu* gpu) : fGpu(gpu), fUniqueID(CreateUniqueID()) {
+GrGpuResource::GrGpuResource(GrGpu* gpu) noexcept : fGpu(gpu), fUniqueID(CreateUniqueID()) {
   SkDEBUGCODE(fCacheArrayIndex = -1);
 }
 
@@ -93,18 +93,18 @@ void GrGpuResource::dumpMemoryStatisticsPriv(
   this->setMemoryBacking(traceMemoryDump, resourceName);
 }
 
-bool GrGpuResource::isPurgeable() const {
+bool GrGpuResource::isPurgeable() const noexcept {
   // Resources in the kUnbudgetedCacheable state are never purgeable when they have a unique
   // key. The key must be removed/invalidated to make them purgeable.
   return !this->hasRefOrPendingIO() &&
          !(fBudgetedType == GrBudgetedType::kUnbudgetedCacheable && fUniqueKey.isValid());
 }
 
-bool GrGpuResource::hasRefOrPendingIO() const {
+bool GrGpuResource::hasRefOrPendingIO() const noexcept {
   return this->internalHasRef() || this->internalHasPendingIO();
 }
 
-bool GrGpuResource::hasRef() const { return this->internalHasRef(); }
+bool GrGpuResource::hasRef() const noexcept { return this->internalHasRef(); }
 
 SkString GrGpuResource::getResourceName() const {
   // Dump resource as "skia/gpu_resources/resource_#".
@@ -113,7 +113,7 @@ SkString GrGpuResource::getResourceName() const {
   return resourceName;
 }
 
-const GrContext* GrGpuResource::getContext() const {
+const GrContext* GrGpuResource::getContext() const noexcept {
   if (fGpu) {
     return fGpu->getContext();
   } else {
@@ -121,7 +121,7 @@ const GrContext* GrGpuResource::getContext() const {
   }
 }
 
-GrContext* GrGpuResource::getContext() {
+GrContext* GrGpuResource::getContext() noexcept {
   if (fGpu) {
     return fGpu->getContext();
   } else {
@@ -157,12 +157,12 @@ void GrGpuResource::setUniqueKey(const GrUniqueKey& key) {
   get_resource_cache(fGpu)->resourceAccess().changeUniqueKey(this, key);
 }
 
-void GrGpuResource::notifyAllCntsWillBeZero() const {
+void GrGpuResource::notifyAllCntsWillBeZero() const noexcept {
   GrGpuResource* mutableThis = const_cast<GrGpuResource*>(this);
   mutableThis->willRemoveLastRefOrPendingIO();
 }
 
-void GrGpuResource::notifyAllCntsAreZero(CntType lastCntTypeToReachZero) const {
+void GrGpuResource::notifyAllCntsAreZero(CntType lastCntTypeToReachZero) const noexcept {
   if (this->wasDestroyed()) {
     // We've already been removed from the cache. Goodbye cruel world!
     delete this;
@@ -178,7 +178,7 @@ void GrGpuResource::notifyAllCntsAreZero(CntType lastCntTypeToReachZero) const {
   get_resource_cache(fGpu)->resourceAccess().notifyCntReachedZero(mutableThis, kFlag);
 }
 
-bool GrGpuResource::notifyRefCountIsZero() const {
+bool GrGpuResource::notifyRefCountIsZero() const noexcept {
   if (this->wasDestroyed()) {
     // handle this in notifyAllCntsAreZero().
     return true;
@@ -223,7 +223,7 @@ void GrGpuResource::makeUnbudgeted() {
   }
 }
 
-uint32_t GrGpuResource::CreateUniqueID() {
+uint32_t GrGpuResource::CreateUniqueID() noexcept {
   static std::atomic<uint32_t> nextID{1};
   uint32_t id;
   do {

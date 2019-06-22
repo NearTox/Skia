@@ -178,7 +178,7 @@ sk_sp<GrSurface> GrSurfaceProxy::createSurfaceImpl(
   return surface;
 }
 
-bool GrSurfaceProxy::canSkipResourceAllocator() const {
+bool GrSurfaceProxy::canSkipResourceAllocator() const noexcept {
   if (this->ignoredByResourceAllocator()) {
     // Usually an atlas or onFlush proxy
     return true;
@@ -193,12 +193,12 @@ bool GrSurfaceProxy::canSkipResourceAllocator() const {
   return !peek->resourcePriv().getScratchKey().isValid();
 }
 
-void GrSurfaceProxy::assign(sk_sp<GrSurface> surface) {
+void GrSurfaceProxy::assign(sk_sp<GrSurface> surface) noexcept {
   SkASSERT(!fTarget && surface);
 
-  SkDEBUGCODE(this->validateSurface(surface.get());)
+  SkDEBUGCODE(this->validateSurface(surface.get()));
 
-      fTarget = surface.release();
+  fTarget = surface.release();
 
   this->INHERITED::transferRefs();
 
@@ -244,7 +244,7 @@ bool GrSurfaceProxy::instantiateImpl(
   return true;
 }
 
-void GrSurfaceProxy::deinstantiate() {
+void GrSurfaceProxy::deinstantiate() noexcept {
   SkASSERT(this->isInstantiated());
 
   this->release();
@@ -271,7 +271,7 @@ void GrSurfaceProxy::computeScratchKey(GrScratchKey* key) const {
       this->config(), width, height, SkToBool(rtp), sampleCount, mipMapped, key);
 }
 
-void GrSurfaceProxy::setLastOpList(GrOpList* opList) {
+void GrSurfaceProxy::setLastOpList(GrOpList* opList) noexcept {
 #ifdef SK_DEBUG
   if (fLastOpList) {
     SkASSERT(fLastOpList->isClosed());
@@ -290,7 +290,7 @@ GrTextureOpList* GrSurfaceProxy::getLastTextureOpList() {
   return fLastOpList ? fLastOpList->asTextureOpList() : nullptr;
 }
 
-int GrSurfaceProxy::worstCaseWidth() const {
+int GrSurfaceProxy::worstCaseWidth() const noexcept {
   SkASSERT(LazyState::kFully != this->lazyInstantiationState());
   if (fTarget) {
     return fTarget->width();
@@ -302,7 +302,7 @@ int GrSurfaceProxy::worstCaseWidth() const {
   return SkTMax(GrResourceProvider::kMinScratchTextureSize, GrNextPow2(fWidth));
 }
 
-int GrSurfaceProxy::worstCaseHeight() const {
+int GrSurfaceProxy::worstCaseHeight() const noexcept {
   SkASSERT(LazyState::kFully != this->lazyInstantiationState());
   if (fTarget) {
     return fTarget->height();
@@ -385,7 +385,7 @@ sk_sp<GrSurfaceContext> GrSurfaceProxy::TestCopy(
   return dstContext;
 }
 
-void GrSurfaceProxyPriv::exactify() {
+void GrSurfaceProxyPriv::exactify() noexcept {
   SkASSERT(GrSurfaceProxy::LazyState::kFully != fProxy->lazyInstantiationState());
   if (this->isExact()) {
     return;

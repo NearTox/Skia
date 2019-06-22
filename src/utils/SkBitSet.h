@@ -12,7 +12,7 @@
 
 class SkBitSet {
  public:
-  explicit SkBitSet(int numberOfBits) {
+  explicit SkBitSet(int numberOfBits) noexcept {
     SkASSERT(numberOfBits >= 0);
     fDwordCount = (numberOfBits + 31) / 32;  // Round up size to 32-bit boundary.
     if (fDwordCount > 0) {
@@ -54,7 +54,7 @@ class SkBitSet {
   std::unique_ptr<uint32_t, SkFunctionWrapper<void, void, sk_free>> fBitData;
   size_t fDwordCount;  // Dword (32-bit) count of the bitset.
 
-  uint32_t* internalGet(int index) const {
+  uint32_t* internalGet(int index) const noexcept {
     size_t internalIndex = index / 32;
     if (internalIndex >= fDwordCount) {
       return nullptr;

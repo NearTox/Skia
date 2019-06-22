@@ -43,7 +43,7 @@ class GrCCPathProcessor : public GrGeometryProcessor {
 
     void set(
         const GrOctoBounds&, const SkIVector& devToAtlasOffset, uint64_t,
-        DoEvenOddFill = DoEvenOddFill::kNo);
+        DoEvenOddFill = DoEvenOddFill::kNo) noexcept;
     void set(
         const GrCCPathCacheEntry&, const SkIVector& shift, uint64_t,
         DoEvenOddFill = DoEvenOddFill::kNo);
@@ -58,8 +58,8 @@ class GrCCPathProcessor : public GrGeometryProcessor {
       const GrTexture* atlasTexture, GrSurfaceOrigin atlasOrigin,
       const SkMatrix& viewMatrixIfUsingLocalCoords = SkMatrix::I());
 
-  const char* name() const override { return "GrCCPathProcessor"; }
-  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
+  const char* name() const noexcept override { return "GrCCPathProcessor"; }
+  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override {}
   GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
 
   void drawPaths(
@@ -67,7 +67,7 @@ class GrCCPathProcessor : public GrGeometryProcessor {
       const GrCCPerFlushResources&, int baseInstance, int endInstance, const SkRect& bounds) const;
 
  private:
-  const TextureSampler& onTextureSampler(int) const override { return fAtlasAccess; }
+  const TextureSampler& onTextureSampler(int) const noexcept override { return fAtlasAccess; }
 
   const TextureSampler fAtlasAccess;
   SkISize fAtlasSize;
@@ -90,7 +90,7 @@ class GrCCPathProcessor : public GrGeometryProcessor {
 
 inline void GrCCPathProcessor::Instance::set(
     const GrOctoBounds& octoBounds, const SkIVector& devToAtlasOffset, uint64_t color,
-    DoEvenOddFill doEvenOddFill) {
+    DoEvenOddFill doEvenOddFill) noexcept {
   if (DoEvenOddFill::kNo == doEvenOddFill) {
     // We cover "nonzero" paths with clockwise triangles, which is the default result from
     // normal octo bounds.

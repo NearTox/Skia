@@ -22,10 +22,10 @@ class SkImage_GpuBase : public SkImage_Base {
  public:
   SkImage_GpuBase(
       sk_sp<GrContext>, int width, int height, uint32_t uniqueID, SkColorType, SkAlphaType,
-      sk_sp<SkColorSpace>);
+      sk_sp<SkColorSpace>) noexcept;
   ~SkImage_GpuBase() override;
 
-  GrContext* context() const final { return fContext.get(); }
+  GrContext* context() const noexcept final { return fContext.get(); }
 
   bool getROPixels(SkBitmap*, CachingHint) const final;
   sk_sp<SkImage> onMakeSubset(GrRecordingContext*, const SkIRect& subset) const final;
@@ -53,7 +53,7 @@ class SkImage_GpuBase : public SkImage_Base {
 
   GrTexture* onGetTexture() const final;
 
-  bool onIsValid(GrContext*) const final;
+  bool onIsValid(GrContext*) const noexcept final;
 
 #if GR_TEST_UTILS
   void resetContext(sk_sp<GrContext> newContext);
@@ -66,7 +66,7 @@ class SkImage_GpuBase : public SkImage_Base {
       GrContext* ctx, const GrBackendTexture yuvaTextures[], int numTextures, const SkYUVAIndex[4],
       GrSurfaceOrigin imageOrigin, sk_sp<GrTextureProxy> tempTextureProxies[4]);
 
-  static SkAlphaType GetAlphaTypeFromYUVAIndices(const SkYUVAIndex yuvaIndices[4]) {
+  static SkAlphaType GetAlphaTypeFromYUVAIndices(const SkYUVAIndex yuvaIndices[4]) noexcept {
     return -1 != yuvaIndices[SkYUVAIndex::kA_Index].fIndex ? kPremul_SkAlphaType
                                                            : kOpaque_SkAlphaType;
   }

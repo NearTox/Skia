@@ -45,15 +45,15 @@ struct Segment {
   // sharp. If so, fMid is a normalized bisector facing outward.
   SkVector fMid;
 
-  int countPoints() {
+  int countPoints() noexcept {
     GR_STATIC_ASSERT(0 == kLine && 1 == kQuad);
     return fType + 1;
   }
-  const SkPoint& endPt() const {
+  const SkPoint& endPt() const noexcept {
     GR_STATIC_ASSERT(0 == kLine && 1 == kQuad);
     return fPts[fType];
   }
-  const SkPoint& endNorm() const {
+  const SkPoint& endNorm() const noexcept {
     GR_STATIC_ASSERT(0 == kLine && 1 == kQuad);
     return fNorms[fType];
   }
@@ -61,7 +61,7 @@ struct Segment {
 
 typedef SkTArray<Segment, true> SegmentArray;
 
-static bool center_of_mass(const SegmentArray& segments, SkPoint* c) {
+static bool center_of_mass(const SegmentArray& segments, SkPoint* c) noexcept {
   SkScalar area = 0;
   SkPoint center = {0, 0};
   int count = segments.count();
@@ -113,7 +113,7 @@ static bool center_of_mass(const SegmentArray& segments, SkPoint* c) {
 
 static bool compute_vectors(
     SegmentArray* segments, SkPoint* fanPt, SkPathPriv::FirstDirection dir, int* vCount,
-    int* iCount) {
+    int* iCount) noexcept {
   if (!center_of_mass(*segments, fanPt)) {
     return false;
   }
@@ -174,7 +174,7 @@ static bool compute_vectors(
 
 struct DegenerateTestData {
   DegenerateTestData() { fStage = kInitial; }
-  bool isDegenerate() const { return kNonDegenerate != fStage; }
+  bool isDegenerate() const noexcept { return kNonDegenerate != fStage; }
   enum { kInitial, kPoint, kLine, kNonDegenerate } fStage;
   SkPoint fFirstPoint;
   SkVector fLineNormal;
@@ -184,7 +184,7 @@ struct DegenerateTestData {
 static const SkScalar kClose = (SK_Scalar1 / 16);
 static const SkScalar kCloseSqd = kClose * kClose;
 
-static void update_degenerate_test(DegenerateTestData* data, const SkPoint& pt) {
+static void update_degenerate_test(DegenerateTestData* data, const SkPoint& pt) noexcept {
   switch (data->fStage) {
     case DegenerateTestData::kInitial:
       data->fFirstPoint = pt;
@@ -209,7 +209,7 @@ static void update_degenerate_test(DegenerateTestData* data, const SkPoint& pt) 
 }
 
 static inline bool get_direction(
-    const SkPath& path, const SkMatrix& m, SkPathPriv::FirstDirection* dir) {
+    const SkPath& path, const SkMatrix& m, SkPathPriv::FirstDirection* dir) noexcept {
   if (!SkPathPriv::CheapComputeFirstDirection(path, dir)) {
     return false;
   }
@@ -494,7 +494,7 @@ class QuadEdgeEffect : public GrGeometryProcessor {
 
   ~QuadEdgeEffect() override {}
 
-  const char* name() const override { return "QuadEdge"; }
+  const char* name() const noexcept override { return "QuadEdge"; }
 
   class GLSLProcessor : public GrGLSLGeometryProcessor {
    public:
@@ -548,7 +548,7 @@ class QuadEdgeEffect : public GrGeometryProcessor {
     }
 
     static inline void GenKey(
-        const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
+        const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
       const QuadEdgeEffect& qee = gp.cast<QuadEdgeEffect>();
       b->add32(SkToBool(qee.fUsesLocalCoords && qee.fLocalMatrix.hasPerspective()));
     }
@@ -609,8 +609,8 @@ sk_sp<GrGeometryProcessor> QuadEdgeEffect::TestCreate(GrProcessorTestData* d) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-GrPathRenderer::CanDrawPath GrAAConvexPathRenderer::onCanDrawPath(
-    const CanDrawPathArgs& args) const {
+GrPathRenderer::CanDrawPath GrAAConvexPathRenderer::onCanDrawPath(const CanDrawPathArgs& args) const
+    noexcept {
   if (args.fCaps->shaderCaps()->shaderDerivativeSupport() &&
       (AATypeFlags::kCoverage & args.fAATypeFlags) && args.fShape->style().isSimpleFill() &&
       !args.fShape->inverseFilled() && args.fShape->knownToBeConvex()) {
@@ -643,7 +643,7 @@ class AAConvexPathOp final : public GrMeshDrawOp {
     this->setTransformedBounds(path.getBounds(), viewMatrix, HasAABloat::kYes, IsZeroArea::kNo);
   }
 
-  const char* name() const override { return "AAConvexPathOp"; }
+  const char* name() const noexcept override { return "AAConvexPathOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override { fHelper.visitProxies(func); }
 

@@ -103,7 +103,7 @@ GrGLSLFragmentProcessor* GrTwoPointConicalGradientLayout::onCreateGLSLInstance()
   return new GrGLSLTwoPointConicalGradientLayout();
 }
 void GrTwoPointConicalGradientLayout::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   b->add32((int32_t)type);
   b->add32((int32_t)isRadiusIncreasing);
   b->add32((int32_t)isFocalOnCircle);
@@ -111,7 +111,7 @@ void GrTwoPointConicalGradientLayout::onGetGLSLProcessorKey(
   b->add32((int32_t)isSwapped);
   b->add32((int32_t)isNativelyFocal);
 }
-bool GrTwoPointConicalGradientLayout::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrTwoPointConicalGradientLayout::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrTwoPointConicalGradientLayout& that = other.cast<GrTwoPointConicalGradientLayout>();
   (void)that;
   if (gradientMatrix != that.gradientMatrix) return false;
@@ -125,7 +125,7 @@ bool GrTwoPointConicalGradientLayout::onIsEqual(const GrFragmentProcessor& other
   return true;
 }
 GrTwoPointConicalGradientLayout::GrTwoPointConicalGradientLayout(
-    const GrTwoPointConicalGradientLayout& src)
+    const GrTwoPointConicalGradientLayout& src) noexcept
     : INHERITED(kGrTwoPointConicalGradientLayout_ClassID, src.optimizationFlags()),
       fCoordTransform0(src.fCoordTransform0),
       gradientMatrix(src.gradientMatrix),
@@ -222,7 +222,7 @@ std::unique_ptr<GrFragmentProcessor> GrTwoPointConicalGradientLayout::TestCreate
 
 // .fp files do not let you reference outside enum definitions, so we have to explicitly map
 // between the two compatible enum defs
-GrTwoPointConicalGradientLayout::Type convert_type(SkTwoPointConicalGradient::Type type) {
+GrTwoPointConicalGradientLayout::Type convert_type(SkTwoPointConicalGradient::Type type) noexcept {
   switch (type) {
     case SkTwoPointConicalGradient::Type::kRadial:
       return GrTwoPointConicalGradientLayout::Type::kRadial;

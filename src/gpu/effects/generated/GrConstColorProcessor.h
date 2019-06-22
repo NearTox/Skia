@@ -20,7 +20,7 @@ class GrConstColorProcessor : public GrFragmentProcessor {
 
   static const int kInputModeCnt = (int)InputMode::kLast + 1;
 
-  static OptimizationFlags OptFlags(const SkPMColor4f& color, InputMode mode) {
+  static OptimizationFlags OptFlags(const SkPMColor4f& color, InputMode mode) noexcept {
     OptimizationFlags flags = kConstantOutputForConstantInput_OptimizationFlag;
     if (mode != InputMode::kIgnore) {
       flags |= kCompatibleWithCoverageAsAlpha_OptimizationFlag;
@@ -31,7 +31,7 @@ class GrConstColorProcessor : public GrFragmentProcessor {
     return flags;
   }
 
-  SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& input) const override {
+  SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& input) const noexcept override {
     switch (mode) {
       case InputMode::kIgnore: return color;
       case InputMode::kModulateA: return color * input.fA;
@@ -43,20 +43,20 @@ class GrConstColorProcessor : public GrFragmentProcessor {
   static std::unique_ptr<GrFragmentProcessor> Make(SkPMColor4f color, InputMode mode) {
     return std::unique_ptr<GrFragmentProcessor>(new GrConstColorProcessor(color, mode));
   }
-  GrConstColorProcessor(const GrConstColorProcessor& src);
+  GrConstColorProcessor(const GrConstColorProcessor& src) noexcept;
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const override { return "ConstColorProcessor"; }
+  const char* name() const noexcept override { return "ConstColorProcessor"; }
   SkPMColor4f color;
   InputMode mode;
 
  private:
-  GrConstColorProcessor(SkPMColor4f color, InputMode mode)
+  GrConstColorProcessor(SkPMColor4f color, InputMode mode) noexcept
       : INHERITED(kGrConstColorProcessor_ClassID, (OptimizationFlags)OptFlags(color, mode)),
         color(color),
         mode(mode) {}
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

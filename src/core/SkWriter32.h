@@ -37,13 +37,13 @@ class SK_API SkWriter32 : SkNoncopyable {
   }
 
   // return the current offset (will always be a multiple of 4)
-  size_t bytesWritten() const { return fUsed; }
+  size_t bytesWritten() const noexcept { return fUsed; }
 
   // Returns true iff all of the bytes written so far are stored in the initial storage
   // buffer provided in the constructor or the most recent call to reset.
-  bool usingInitialStorage() const { return fData == fExternal; }
+  bool usingInitialStorage() const noexcept { return fData == fExternal; }
 
-  void reset(void* external = nullptr, size_t externalBytes = 0) {
+  void reset(void* external = nullptr, size_t externalBytes = 0) noexcept {
     // we cast this pointer to int* and float* at times, so assert that it is aligned.
     SkASSERT(SkIsAlign4((uintptr_t)external));
     // we always write multiples of 4-bytes, so truncate down the size to match that
@@ -56,7 +56,7 @@ class SK_API SkWriter32 : SkNoncopyable {
   }
 
   // size MUST be multiple of 4
-  uint32_t* reserve(size_t size) {
+  uint32_t* reserve(size_t size) noexcept {
     SkASSERT(SkAlign4(size) == size);
     size_t offset = fUsed;
     size_t totalRequired = fUsed + size;
@@ -83,67 +83,68 @@ class SK_API SkWriter32 : SkNoncopyable {
    *  was written atomically using the write methods below.
    */
   template <typename T>
-  void overwriteTAt(size_t offset, const T& value) {
+  void overwriteTAt(size_t offset, const T& value) noexcept {
+    static_assert(std::is_nothrow_copy_assignable_v<T> == true);
     SkASSERT(SkAlign4(offset) == offset);
     SkASSERT(offset < fUsed);
     *(T*)(fData + offset) = value;
   }
 
-  bool writeBool(bool value) {
+  bool writeBool(bool value) noexcept {
     this->write32(value);
     return value;
   }
 
-  void writeInt(int32_t value) { this->write32(value); }
+  void writeInt(int32_t value) noexcept { this->write32(value); }
 
-  void write8(int32_t value) { *(int32_t*)this->reserve(sizeof(value)) = value & 0xFF; }
+  void write8(int32_t value) noexcept { *(int32_t*)this->reserve(sizeof(value)) = value & 0xFF; }
 
-  void write16(int32_t value) { *(int32_t*)this->reserve(sizeof(value)) = value & 0xFFFF; }
+  void write16(int32_t value) noexcept { *(int32_t*)this->reserve(sizeof(value)) = value & 0xFFFF; }
 
-  void write32(int32_t value) { *(int32_t*)this->reserve(sizeof(value)) = value; }
+  void write32(int32_t value) noexcept { *(int32_t*)this->reserve(sizeof(value)) = value; }
 
-  void writePtr(void* value) {
+  void writePtr(void* value) noexcept {
     // this->reserve() only returns 4-byte aligned pointers,
     // so this may be an under-aligned write if we were to do this like the others.
     memcpy(this->reserve(sizeof(value)), &value, sizeof(value));
   }
 
-  void writeScalar(SkScalar value) { *(SkScalar*)this->reserve(sizeof(value)) = value; }
+  void writeScalar(SkScalar value) noexcept { *(SkScalar*)this->reserve(sizeof(value)) = value; }
 
-  void writePoint(const SkPoint& pt) { *(SkPoint*)this->reserve(sizeof(pt)) = pt; }
+  void writePoint(const SkPoint& pt) noexcept { *(SkPoint*)this->reserve(sizeof(pt)) = pt; }
 
-  void writePoint3(const SkPoint3& pt) { *(SkPoint3*)this->reserve(sizeof(pt)) = pt; }
+  void writePoint3(const SkPoint3& pt) noexcept { *(SkPoint3*)this->reserve(sizeof(pt)) = pt; }
 
-  void writeRect(const SkRect& rect) { *(SkRect*)this->reserve(sizeof(rect)) = rect; }
+  void writeRect(const SkRect& rect) noexcept { *(SkRect*)this->reserve(sizeof(rect)) = rect; }
 
-  void writeIRect(const SkIRect& rect) { *(SkIRect*)this->reserve(sizeof(rect)) = rect; }
+  void writeIRect(const SkIRect& rect) noexcept { *(SkIRect*)this->reserve(sizeof(rect)) = rect; }
 
-  void writeRRect(const SkRRect& rrect) {
+  void writeRRect(const SkRRect& rrect) noexcept {
     rrect.writeToMemory(this->reserve(SkRRect::kSizeInMemory));
   }
 
-  void writePath(const SkPath& path) {
+  void writePath(const SkPath& path) noexcept {
     size_t size = path.writeToMemory(nullptr);
     SkASSERT(SkAlign4(size) == size);
     path.writeToMemory(this->reserve(size));
   }
 
-  void writeMatrix(const SkMatrix& matrix);
+  void writeMatrix(const SkMatrix& matrix) noexcept;
 
-  void writeRegion(const SkRegion& rgn) {
+  void writeRegion(const SkRegion& rgn) noexcept {
     size_t size = rgn.writeToMemory(nullptr);
     SkASSERT(SkAlign4(size) == size);
     rgn.writeToMemory(this->reserve(size));
   }
 
   // write count bytes (must be a multiple of 4)
-  void writeMul4(const void* values, size_t size) { this->write(values, size); }
+  void writeMul4(const void* values, size_t size) noexcept { this->write(values, size); }
 
   /**
    *  Write size bytes from values. size must be a multiple of 4, though
    *  values need not be 4-byte aligned.
    */
-  void write(const void* values, size_t size) {
+  void write(const void* values, size_t size) noexcept {
     SkASSERT(SkAlign4(size) == size);
     sk_careful_memcpy(this->reserve(size), values, size);
   }
@@ -152,7 +153,7 @@ class SK_API SkWriter32 : SkNoncopyable {
    *  Reserve size bytes. Does not need to be 4 byte aligned. The remaining space (if any) will be
    *  filled in with zeroes.
    */
-  uint32_t* reservePad(size_t size) {
+  uint32_t* reservePad(size_t size) noexcept {
     size_t alignedSize = SkAlign4(size);
     uint32_t* p = this->reserve(alignedSize);
     if (alignedSize != size) {
@@ -165,7 +166,7 @@ class SK_API SkWriter32 : SkNoncopyable {
   /**
    *  Write size bytes from src, and pad to 4 byte alignment with zeroes.
    */
-  void writePad(const void* src, size_t size) {
+  void writePad(const void* src, size_t size) noexcept {
     sk_careful_memcpy(this->reservePad(size), src, size);
   }
 
@@ -177,16 +178,16 @@ class SK_API SkWriter32 : SkNoncopyable {
    *
    *  If you write NULL, it will be read as "".
    */
-  void writeString(const char* str, size_t len = (size_t)-1);
+  void writeString(const char* str, size_t len = (size_t)-1) noexcept;
 
   /**
    *  Computes the size (aligned to multiple of 4) need to write the string
    *  in a call to writeString(). If the length is not specified, it will be
    *  computed by calling strlen().
    */
-  static size_t WriteStringSize(const char* str, size_t len = (size_t)-1);
+  static size_t WriteStringSize(const char* str, size_t len = (size_t)-1) noexcept;
 
-  void writeData(const SkData* data) {
+  void writeData(const SkData* data) noexcept {
     uint32_t len = data ? SkToU32(data->size()) : 0;
     this->write32(len);
     if (data) {
@@ -194,26 +195,28 @@ class SK_API SkWriter32 : SkNoncopyable {
     }
   }
 
-  static size_t WriteDataSize(const SkData* data) { return 4 + SkAlign4(data ? data->size() : 0); }
+  static size_t WriteDataSize(const SkData* data) noexcept {
+    return 4 + SkAlign4(data ? data->size() : 0);
+  }
 
   /**
    *  Move the cursor back to offset bytes from the beginning.
    *  offset must be a multiple of 4 no greater than size().
    */
-  void rewindToOffset(size_t offset) {
+  void rewindToOffset(size_t offset) noexcept {
     SkASSERT(SkAlign4(offset) == offset);
     SkASSERT(offset <= bytesWritten());
     fUsed = offset;
   }
 
   // copy into a single buffer (allocated by caller). Must be at least size()
-  void flatten(void* dst) const { memcpy(dst, fData, fUsed); }
+  void flatten(void* dst) const noexcept { memcpy(dst, fData, fUsed); }
 
-  bool writeToStream(SkWStream* stream) const { return stream->write(fData, fUsed); }
+  bool writeToStream(SkWStream* stream) const noexcept { return stream->write(fData, fUsed); }
 
   // read from the stream, and write up to length bytes. Return the actual
   // number of bytes written.
-  size_t readFromStream(SkStream* stream, size_t length) {
+  size_t readFromStream(SkStream* stream, size_t length) noexcept {
     return stream->read(this->reservePad(length), length);
   }
 
@@ -223,7 +226,7 @@ class SK_API SkWriter32 : SkNoncopyable {
   sk_sp<SkData> snapshotAsData() const;
 
  private:
-  void growToAtLeast(size_t size);
+  void growToAtLeast(size_t size) noexcept;
 
   uint8_t* fData;                    // Points to either fInternal or fExternal.
   size_t fCapacity;                  // Number of bytes we can write to fData.

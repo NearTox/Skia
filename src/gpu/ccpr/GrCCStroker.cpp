@@ -78,7 +78,7 @@ class LinearStrokeProcessor : public GrGeometryProcessor {
   }
 
  private:
-  const char* name() const override { return "LinearStrokeProcessor"; }
+  const char* name() const noexcept override { return "LinearStrokeProcessor"; }
   void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
 
   static constexpr Attribute kInstanceAttribs[2] = {
@@ -173,7 +173,7 @@ class CubicStrokeProcessor : public GrGeometryProcessor {
   }
 
  private:
-  const char* name() const override { return "CubicStrokeProcessor"; }
+  const char* name() const noexcept override { return "CubicStrokeProcessor"; }
   void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
 
   static constexpr Attribute kInstanceAttribs[3] = {

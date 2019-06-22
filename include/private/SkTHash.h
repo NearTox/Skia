@@ -25,13 +25,13 @@
 template <typename T, typename K, typename Traits = T>
 class SkTHashTable {
  public:
-  SkTHashTable() : fCount(0), fCapacity(0) {}
-  SkTHashTable(SkTHashTable&& other)
+  SkTHashTable() noexcept : fCount(0), fCapacity(0) {}
+  SkTHashTable(SkTHashTable&& other) noexcept
       : fCount(other.fCount), fCapacity(other.fCapacity), fSlots(std::move(other.fSlots)) {
     other.fCount = other.fCapacity = 0;
   }
 
-  SkTHashTable& operator=(SkTHashTable&& other) {
+  SkTHashTable& operator=(SkTHashTable&& other) noexcept {
     if (this != &other) {
       this->~SkTHashTable();
       new (this) SkTHashTable(std::move(other));
@@ -40,10 +40,10 @@ class SkTHashTable {
   }
 
   // Clear the table.
-  void reset() { *this = SkTHashTable(); }
+  void reset() noexcept { *this = SkTHashTable(); }
 
   // How many entries are in the table?
-  int count() const { return fCount; }
+  int count() const noexcept { return fCount; }
 
   // Approximately how many bytes of memory do we use beyond sizeof(*this)?
   size_t approxBytesUsed() const { return fCapacity * sizeof(Slot); }
@@ -204,7 +204,7 @@ class SkTHashTable {
     SkASSERT(fCount == oldCount);
   }
 
-  int next(int index) const {
+  int next(int index) const noexcept {
     index--;
     if (index < 0) {
       index += fCapacity;
@@ -219,15 +219,16 @@ class SkTHashTable {
 
   struct Slot {
     Slot() : hash(0) {}
-    Slot(T&& v, uint32_t h) : val(std::move(v)), hash(h) {}
-    Slot(Slot&& o) { *this = std::move(o); }
-    Slot& operator=(Slot&& o) {
+    Slot(T&& v, uint32_t h) noexcept : val(std::move(v)), hash(h) {}
+    Slot(Slot&& o) noexcept { *this = std::move(o); }
+    Slot& operator=(Slot&& o) noexcept {
+      static_assert(std::is_nothrow_move_assignable_v<T> == true);
       val = std::move(o.val);
       hash = o.hash;
       return *this;
     }
 
-    bool empty() const { return this->hash == 0; }
+    bool empty() const noexcept { return this->hash == 0; }
 
     T val;
     uint32_t hash;
@@ -245,15 +246,15 @@ class SkTHashTable {
 template <typename K, typename V, typename HashK = SkGoodHash>
 class SkTHashMap {
  public:
-  SkTHashMap() {}
-  SkTHashMap(SkTHashMap&&) = default;
-  SkTHashMap& operator=(SkTHashMap&&) = default;
+  SkTHashMap() noexcept {}
+  SkTHashMap(SkTHashMap&&) noexcept = default;
+  SkTHashMap& operator=(SkTHashMap&&) noexcept = default;
 
   // Clear the map.
-  void reset() { fTable.reset(); }
+  void reset() noexcept { fTable.reset(); }
 
   // How many key/value pairs are in the table?
-  int count() const { return fTable.count(); }
+  int count() const noexcept { return fTable.count(); }
 
   // Approximately how many bytes of memory do we use beyond sizeof(*this)?
   size_t approxBytesUsed() const { return fTable.approxBytesUsed(); }
@@ -298,7 +299,7 @@ class SkTHashMap {
   struct Pair {
     K key;
     V val;
-    static const K& GetKey(const Pair& p) { return p.key; }
+    static const K& GetKey(const Pair& p) noexcept { return p.key; }
     static uint32_t Hash(const K& key) { return HashK()(key); }
   };
 
