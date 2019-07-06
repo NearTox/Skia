@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
+#include "include/private/SkMalloc.h"
 #include "src/core/SkBuffer.h"
 #include <string.h>
-#include "include/private/SkMalloc.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-const void* SkRBuffer::skip(size_t size) noexcept {
+const void* SkRBuffer::skip(size_t size) {
   if (fValid && size <= this->available()) {
     const void* pos = fPos;
     fPos += size;
@@ -21,7 +21,7 @@ const void* SkRBuffer::skip(size_t size) noexcept {
   return nullptr;
 }
 
-bool SkRBuffer::read(void* buffer, size_t size) noexcept {
+bool SkRBuffer::read(void* buffer, size_t size) {
   if (const void* src = this->skip(size)) {
     sk_careful_memcpy(buffer, src, size);
     return true;
@@ -29,7 +29,7 @@ bool SkRBuffer::read(void* buffer, size_t size) noexcept {
   return false;
 }
 
-bool SkRBuffer::skipToAlign4() noexcept {
+bool SkRBuffer::skipToAlign4() {
   intptr_t pos = reinterpret_cast<intptr_t>(fPos);
   size_t n = SkAlign4(pos) - pos;
   if (fValid && n <= this->available()) {
@@ -43,13 +43,13 @@ bool SkRBuffer::skipToAlign4() noexcept {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void* SkWBuffer::skip(size_t size) noexcept {
+void* SkWBuffer::skip(size_t size) {
   void* result = fPos;
   writeNoSizeCheck(nullptr, size);
   return fData == nullptr ? nullptr : result;
 }
 
-void SkWBuffer::writeNoSizeCheck(const void* buffer, size_t size) noexcept {
+void SkWBuffer::writeNoSizeCheck(const void* buffer, size_t size) {
   SkASSERT(fData == nullptr || fStop == nullptr || fPos + size <= fStop);
   if (fData && buffer) {
     sk_careful_memcpy(fPos, buffer, size);
@@ -57,7 +57,7 @@ void SkWBuffer::writeNoSizeCheck(const void* buffer, size_t size) noexcept {
   fPos += size;
 }
 
-size_t SkWBuffer::padToAlign4() noexcept {
+size_t SkWBuffer::padToAlign4() {
   size_t pos = this->pos();
   size_t n = SkAlign4(pos) - pos;
 
@@ -80,7 +80,7 @@ size_t SkWBuffer::padToAlign4() noexcept {
         SkASSERT(((size_t)buffer & 3) == 0);
     }
 #else
-#define AssertBuffer32(buffer)
+#    define AssertBuffer32(buffer)
 #endif
 
 #endif

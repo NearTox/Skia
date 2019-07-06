@@ -74,9 +74,7 @@ class GrTextContext {
   // Determines if we need to use fake gamma (and contrast boost):
   static SkScalerContextFlags ComputeScalerContextFlags(const GrColorSpaceInfo&);
 
-  const GrDistanceFieldAdjustTable* dfAdjustTable() const noexcept {
-    return fDistanceAdjustTable.get();
-  }
+  const GrDistanceFieldAdjustTable* dfAdjustTable() const { return fDistanceAdjustTable.get(); }
 
   sk_sp<const GrDistanceFieldAdjustTable> fDistanceAdjustTable;
 

@@ -43,7 +43,7 @@ void GrGpu::disconnect(DisconnectType) {}
 bool GrGpu::IsACopyNeededForRepeatWrapMode(
     const GrCaps* caps, GrTextureProxy* texProxy, int width, int height,
     GrSamplerState::Filter filter, GrTextureProducer::CopyParams* copyParams,
-    SkScalar scaleAdjust[2]) noexcept {
+    SkScalar scaleAdjust[2]) {
   if (!caps->npotTextureTileSupport() && (!SkIsPow2(width) || !SkIsPow2(height))) {
     SkASSERT(scaleAdjust);
     copyParams->fWidth = GrNextPow2(width);

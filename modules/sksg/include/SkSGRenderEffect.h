@@ -31,7 +31,7 @@ class Shader : public Node {
  public:
   ~Shader() override;
 
-  const sk_sp<SkShader>& getShader() const noexcept {
+  const sk_sp<SkShader>& getShader() const {
     SkASSERT(!this->hasInval());
     return fShader;
   }
@@ -80,7 +80,7 @@ class ImageFilter : public Node {
  public:
   ~ImageFilter() override;
 
-  const sk_sp<SkImageFilter>& getFilter() const noexcept {
+  const sk_sp<SkImageFilter>& getFilter() const {
     SkASSERT(!this->hasInval());
     return fFilter;
   }

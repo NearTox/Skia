@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "src/utils/SkMatrix22.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkPoint.h"
 #include "include/core/SkScalar.h"
+#include "src/utils/SkMatrix22.h"
 
-void SkComputeGivensRotation(const SkVector& h, SkMatrix* G) noexcept {
+void SkComputeGivensRotation(const SkVector& h, SkMatrix* G) {
   const SkScalar& a = h.fX;
   const SkScalar& b = h.fY;
   SkScalar c, s;

@@ -82,7 +82,7 @@ class GraphicsPort {
 
 #ifdef SK_BUILD_FOR_MAC
 
-#include "include/utils/mac/SkCGUtils.h"
+#  include "include/utils/mac/SkCGUtils.h"
 class CGGraphicsPort : public GraphicsPort {
  public:
   CGGraphicsPort(SkCanvas* canvas) : GraphicsPort(canvas) {}
@@ -139,8 +139,8 @@ class Allocator_CG : public SkRasterHandleAllocator {
   }
 };
 
-#define MyPort CGGraphicsPort
-#define MyAllocator Allocator_CG
+#  define MyPort CGGraphicsPort
+#  define MyAllocator Allocator_CG
 
 #elif defined(WIN32)
 
@@ -245,8 +245,8 @@ class GDIAllocator : public SkRasterHandleAllocator {
   }
 };
 
-#define MyPort GDIGraphicsPort
-#define MyAllocator GDIAllocator
+#  define MyPort GDIGraphicsPort
+#  define MyAllocator GDIAllocator
 
 #endif
 

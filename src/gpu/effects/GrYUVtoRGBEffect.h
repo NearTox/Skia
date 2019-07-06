@@ -30,12 +30,12 @@ class GrYUVtoRGBEffect : public GrFragmentProcessor {
   SkString dumpInfo() const override;
 #endif
 
-  SkYUVColorSpace yuvColorSpace() const noexcept { return fYUVColorSpace; }
-  const SkYUVAIndex& yuvaIndex(int i) const noexcept { return fYUVAIndices[i]; }
+  SkYUVColorSpace yuvColorSpace() const { return fYUVColorSpace; }
+  const SkYUVAIndex& yuvaIndex(int i) const { return fYUVAIndices[i]; }
 
   GrYUVtoRGBEffect(const GrYUVtoRGBEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const noexcept override { return "YUVtoRGBEffect"; }
+  const char* name() const override { return "YUVtoRGBEffect"; }
 
  private:
   GrYUVtoRGBEffect(
@@ -77,9 +77,9 @@ class GrYUVtoRGBEffect : public GrFragmentProcessor {
     memcpy(fYUVAIndices, yuvaIndices, sizeof(fYUVAIndices));
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
-  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
-  const TextureSampler& onTextureSampler(int) const noexcept override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const override;
+  const TextureSampler& onTextureSampler(int) const override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 
   TextureSampler fSamplers[4];

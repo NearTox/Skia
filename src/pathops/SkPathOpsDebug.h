@@ -11,8 +11,8 @@
 #include "include/core/SkTypes.h"
 #include "include/pathops/SkPathOps.h"
 
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 enum class SkOpPhase : char;
 struct SkDQuad;
@@ -61,14 +61,14 @@ DummyClasses(Cubic, Cubic);
 #define ONE_OFF_DEBUG_MATHEMATICA 0
 
 #if defined(SK_BUILD_FOR_WIN) || defined(SK_BUILD_FOR_ANDROID)
-#define SK_RAND(seed) rand()
+#  define SK_RAND(seed) rand()
 #else
-#define SK_RAND(seed) rand_r(&seed)
+#  define SK_RAND(seed) rand_r(&seed)
 #endif
 #ifdef SK_BUILD_FOR_WIN
-#define SK_SNPRINTF _snprintf
+#  define SK_SNPRINTF _snprintf
 #else
-#define SK_SNPRINTF snprintf
+#  define SK_SNPRINTF snprintf
 #endif
 
 #define WIND_AS_STRING(x)            \
@@ -87,27 +87,27 @@ DummyClasses(Cubic, Cubic);
 #define DEBUG_ALIGNMENT 0
 #define DEBUG_ANGLE 0
 #define DEBUG_ASSEMBLE 0
-#define DEBUG_COINCIDENCE 0          // sanity checking
-#define DEBUG_COINCIDENCE_DUMP 0     // accumulate and dump which algorithms fired
-#define DEBUG_COINCIDENCE_ORDER 0    // for well behaved curves, check if pairs match up in t-order
-#define DEBUG_COINCIDENCE_VERBOSE 0  // usually whether the next function generates coincidence
-#define DEBUG_CUBIC_BINARY_SEARCH 0
-#define DEBUG_CUBIC_SPLIT 0
-#define DEBUG_DUMP_SEGMENTS 0
-#define DEBUG_DUMP_VERIFY 0
-#define DEBUG_FLOW 0
-#define DEBUG_LIMIT_WIND_SUM 0
-#define DEBUG_MARK_DONE 0
-#define DEBUG_PATH_CONSTRUCTION 0
-#define DEBUG_PERP 0
-#define DEBUG_SHOW_TEST_NAME 0
-#define DEBUG_SORT 0
-#define DEBUG_T_SECT 0
-#define DEBUG_T_SECT_DUMP 0
-#define DEBUG_T_SECT_LOOP_COUNT 0
-#define DEBUG_VALIDATE 0
-#define DEBUG_WINDING 0
-#define DEBUG_WINDING_AT_T 0
+#  define DEBUG_COINCIDENCE 0        // sanity checking
+#  define DEBUG_COINCIDENCE_DUMP 0   // accumulate and dump which algorithms fired
+#  define DEBUG_COINCIDENCE_ORDER 0  // for well behaved curves, check if pairs match up in t-order
+#  define DEBUG_COINCIDENCE_VERBOSE 0  // usually whether the next function generates coincidence
+#  define DEBUG_CUBIC_BINARY_SEARCH 0
+#  define DEBUG_CUBIC_SPLIT 0
+#  define DEBUG_DUMP_SEGMENTS 0
+#  define DEBUG_DUMP_VERIFY 0
+#  define DEBUG_FLOW 0
+#  define DEBUG_LIMIT_WIND_SUM 0
+#  define DEBUG_MARK_DONE 0
+#  define DEBUG_PATH_CONSTRUCTION 0
+#  define DEBUG_PERP 0
+#  define DEBUG_SHOW_TEST_NAME 0
+#  define DEBUG_SORT 0
+#  define DEBUG_T_SECT 0
+#  define DEBUG_T_SECT_DUMP 0
+#  define DEBUG_T_SECT_LOOP_COUNT 0
+#  define DEBUG_VALIDATE 0
+#  define DEBUG_WINDING 0
+#  define DEBUG_WINDING_AT_T 0
 
 #else
 
@@ -133,37 +133,37 @@ DummyClasses(Cubic, Cubic);
 #define DEBUG_PERP 1
 #define DEBUG_SHOW_TEST_NAME 1
 #define DEBUG_SORT 1
-#define DEBUG_T_SECT 0       // enabling may trigger validate asserts even though op does not fail
-#define DEBUG_T_SECT_DUMP 0  // Use 1 normally. Use 2 to number segments, 3 for script output
-#define DEBUG_T_SECT_LOOP_COUNT 0
-#define DEBUG_VALIDATE 1
-#define DEBUG_WINDING 1
-#define DEBUG_WINDING_AT_T 1
+#  define DEBUG_T_SECT 0       // enabling may trigger validate asserts even though op does not fail
+#  define DEBUG_T_SECT_DUMP 0  // Use 1 normally. Use 2 to number segments, 3 for script output
+#  define DEBUG_T_SECT_LOOP_COUNT 0
+#  define DEBUG_VALIDATE 1
+#  define DEBUG_WINDING 1
+#  define DEBUG_WINDING_AT_T 1
 
 #endif
 
 #ifdef SK_RELEASE
-#define SkDEBUGRELEASE(a, b) b
-#define SkDEBUGPARAMS(...)
+#  define SkDEBUGRELEASE(a, b) b
+#  define SkDEBUGPARAMS(...)
 #else
-#define SkDEBUGRELEASE(a, b) a
-#define SkDEBUGPARAMS(...) , __VA_ARGS__
+#  define SkDEBUGRELEASE(a, b) a
+#  define SkDEBUGPARAMS(...) , __VA_ARGS__
 #endif
 
 #if DEBUG_VALIDATE == 0
-#define PATH_OPS_DEBUG_VALIDATE_PARAMS(...)
+#  define PATH_OPS_DEBUG_VALIDATE_PARAMS(...)
 #else
-#define PATH_OPS_DEBUG_VALIDATE_PARAMS(...) , __VA_ARGS__
+#  define PATH_OPS_DEBUG_VALIDATE_PARAMS(...) , __VA_ARGS__
 #endif
 
 #if DEBUG_T_SECT == 0
-#define PATH_OPS_DEBUG_T_SECT_RELEASE(a, b) b
-#define PATH_OPS_DEBUG_T_SECT_PARAMS(...)
-#define PATH_OPS_DEBUG_T_SECT_CODE(...)
+#  define PATH_OPS_DEBUG_T_SECT_RELEASE(a, b) b
+#  define PATH_OPS_DEBUG_T_SECT_PARAMS(...)
+#  define PATH_OPS_DEBUG_T_SECT_CODE(...)
 #else
-#define PATH_OPS_DEBUG_T_SECT_RELEASE(a, b) a
-#define PATH_OPS_DEBUG_T_SECT_PARAMS(...) , __VA_ARGS__
-#define PATH_OPS_DEBUG_T_SECT_CODE(...) __VA_ARGS__
+#  define PATH_OPS_DEBUG_T_SECT_RELEASE(a, b) a
+#  define PATH_OPS_DEBUG_T_SECT_PARAMS(...) , __VA_ARGS__
+#  define PATH_OPS_DEBUG_T_SECT_CODE(...) __VA_ARGS__
 #endif
 
 #if DEBUG_T_SECT_DUMP > 1
@@ -171,45 +171,45 @@ extern int gDumpTSectNum;
 #endif
 
 #if DEBUG_COINCIDENCE || DEBUG_COINCIDENCE_DUMP
-#define DEBUG_COIN 1
+#  define DEBUG_COIN 1
 #else
-#define DEBUG_COIN 0
+#  define DEBUG_COIN 0
 #endif
 
 #if DEBUG_COIN
-#define DEBUG_COIN_DECLARE_ONLY_PARAMS() int lineNo, SkOpPhase phase, int iteration
-#define DEBUG_COIN_DECLARE_PARAMS() , DEBUG_COIN_DECLARE_ONLY_PARAMS()
-#define DEBUG_COIN_ONLY_PARAMS() __LINE__, SkOpPhase::kNoChange, 0
-#define DEBUG_COIN_PARAMS() , DEBUG_COIN_ONLY_PARAMS()
-#define DEBUG_ITER_ONLY_PARAMS(iteration) __LINE__, SkOpPhase::kNoChange, iteration
-#define DEBUG_ITER_PARAMS(iteration) , DEBUG_ITER_ONLY_PARAMS(iteration)
-#define DEBUG_PHASE_ONLY_PARAMS(phase) __LINE__, SkOpPhase::phase, 0
-#define DEBUG_PHASE_PARAMS(phase) , DEBUG_PHASE_ONLY_PARAMS(phase)
-#define DEBUG_SET_PHASE() this->globalState()->debugSetPhase(__func__, lineNo, phase, iteration)
-#define DEBUG_STATIC_SET_PHASE(obj) \
-  obj->globalState()->debugSetPhase(__func__, lineNo, phase, iteration)
+#  define DEBUG_COIN_DECLARE_ONLY_PARAMS() int lineNo, SkOpPhase phase, int iteration
+#  define DEBUG_COIN_DECLARE_PARAMS() , DEBUG_COIN_DECLARE_ONLY_PARAMS()
+#  define DEBUG_COIN_ONLY_PARAMS() __LINE__, SkOpPhase::kNoChange, 0
+#  define DEBUG_COIN_PARAMS() , DEBUG_COIN_ONLY_PARAMS()
+#  define DEBUG_ITER_ONLY_PARAMS(iteration) __LINE__, SkOpPhase::kNoChange, iteration
+#  define DEBUG_ITER_PARAMS(iteration) , DEBUG_ITER_ONLY_PARAMS(iteration)
+#  define DEBUG_PHASE_ONLY_PARAMS(phase) __LINE__, SkOpPhase::phase, 0
+#  define DEBUG_PHASE_PARAMS(phase) , DEBUG_PHASE_ONLY_PARAMS(phase)
+#  define DEBUG_SET_PHASE() this->globalState()->debugSetPhase(__func__, lineNo, phase, iteration)
+#  define DEBUG_STATIC_SET_PHASE(obj) \
+    obj->globalState()->debugSetPhase(__func__, lineNo, phase, iteration)
 #elif DEBUG_VALIDATE
-#define DEBUG_COIN_DECLARE_ONLY_PARAMS() SkOpPhase phase
-#define DEBUG_COIN_DECLARE_PARAMS() , DEBUG_COIN_DECLARE_ONLY_PARAMS()
-#define DEBUG_COIN_ONLY_PARAMS() SkOpPhase::kNoChange
-#define DEBUG_COIN_PARAMS() , DEBUG_COIN_ONLY_PARAMS()
-#define DEBUG_ITER_ONLY_PARAMS(iteration) SkOpPhase::kNoChange
-#define DEBUG_ITER_PARAMS(iteration) , DEBUG_ITER_ONLY_PARAMS(iteration)
-#define DEBUG_PHASE_ONLY_PARAMS(phase) SkOpPhase::phase
-#define DEBUG_PHASE_PARAMS(phase) , DEBUG_PHASE_ONLY_PARAMS(phase)
-#define DEBUG_SET_PHASE() this->globalState()->debugSetPhase(phase)
-#define DEBUG_STATIC_SET_PHASE(obj) obj->globalState()->debugSetPhase(phase)
+#  define DEBUG_COIN_DECLARE_ONLY_PARAMS() SkOpPhase phase
+#  define DEBUG_COIN_DECLARE_PARAMS() , DEBUG_COIN_DECLARE_ONLY_PARAMS()
+#  define DEBUG_COIN_ONLY_PARAMS() SkOpPhase::kNoChange
+#  define DEBUG_COIN_PARAMS() , DEBUG_COIN_ONLY_PARAMS()
+#  define DEBUG_ITER_ONLY_PARAMS(iteration) SkOpPhase::kNoChange
+#  define DEBUG_ITER_PARAMS(iteration) , DEBUG_ITER_ONLY_PARAMS(iteration)
+#  define DEBUG_PHASE_ONLY_PARAMS(phase) SkOpPhase::phase
+#  define DEBUG_PHASE_PARAMS(phase) , DEBUG_PHASE_ONLY_PARAMS(phase)
+#  define DEBUG_SET_PHASE() this->globalState()->debugSetPhase(phase)
+#  define DEBUG_STATIC_SET_PHASE(obj) obj->globalState()->debugSetPhase(phase)
 #else
-#define DEBUG_COIN_DECLARE_ONLY_PARAMS()
-#define DEBUG_COIN_DECLARE_PARAMS()
-#define DEBUG_COIN_ONLY_PARAMS()
-#define DEBUG_COIN_PARAMS()
-#define DEBUG_ITER_ONLY_PARAMS(iteration)
-#define DEBUG_ITER_PARAMS(iteration)
-#define DEBUG_PHASE_ONLY_PARAMS(phase)
-#define DEBUG_PHASE_PARAMS(phase)
-#define DEBUG_SET_PHASE()
-#define DEBUG_STATIC_SET_PHASE(obj)
+#  define DEBUG_COIN_DECLARE_ONLY_PARAMS()
+#  define DEBUG_COIN_DECLARE_PARAMS()
+#  define DEBUG_COIN_ONLY_PARAMS()
+#  define DEBUG_COIN_PARAMS()
+#  define DEBUG_ITER_ONLY_PARAMS(iteration)
+#  define DEBUG_ITER_PARAMS(iteration)
+#  define DEBUG_PHASE_ONLY_PARAMS(phase)
+#  define DEBUG_PHASE_PARAMS(phase)
+#  define DEBUG_SET_PHASE()
+#  define DEBUG_STATIC_SET_PHASE(obj)
 #endif
 
 #define CUBIC_DEBUG_STR "{{{%1.9g,%1.9g}, {%1.9g,%1.9g}, {%1.9g,%1.9g}, {%1.9g,%1.9g}}}"
@@ -356,10 +356,10 @@ class SkPathOpsDebug {
 #if DEBUG_SHOW_TEST_NAME
   static void* CreateNameStr();
   static void DeleteNameStr(void* v);
-#define DEBUG_FILENAME_STRING_LENGTH 64
-#define DEBUG_FILENAME_STRING \
-  (reinterpret_cast<char*>(   \
-      SkTLS::Get(SkPathOpsDebug::CreateNameStr, SkPathOpsDebug::DeleteNameStr)))
+#  define DEBUG_FILENAME_STRING_LENGTH 64
+#  define DEBUG_FILENAME_STRING \
+    (reinterpret_cast<char*>(   \
+        SkTLS::Get(SkPathOpsDebug::CreateNameStr, SkPathOpsDebug::DeleteNameStr)))
   static void BumpTestName(char*);
 #endif
   static void ShowActiveSpans(SkOpContourHead* contourList);

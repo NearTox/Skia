@@ -12,11 +12,11 @@
 #include "src/core/SkDiscardableMemory.h"
 
 #ifndef SK_LAZY_CACHE_STATS
-#ifdef SK_DEBUG
-#define SK_LAZY_CACHE_STATS 1
-#else
-#define SK_LAZY_CACHE_STATS 0
-#endif
+#  ifdef SK_DEBUG
+#    define SK_LAZY_CACHE_STATS 1
+#  else
+#    define SK_LAZY_CACHE_STATS 0
+#  endif
 #endif
 
 /**

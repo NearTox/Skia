@@ -34,19 +34,19 @@
 // but not all of them (see frexpf, hypothf, ldexpf...).  So to
 // be safe, 32- and 64-bit builds both get this treatment.
 
-#define __inline static __inline
-#include <math.h>
-#undef __inline
+#    define __inline static __inline
+#    include <math.h>
+#    undef __inline
 
-#if !defined(_INC_MATH)
-#error Hmm.  Looks like math.h has changed its header guards.
-#endif
+#    if !defined(_INC_MATH)
+#      error Hmm.  Looks like math.h has changed its header guards.
+#    endif
 
-#define INC_MATH_IS_SAFE_NOW
+#    define INC_MATH_IS_SAFE_NOW
 
-#else
-#include <math.h>
+#  else
+#    include <math.h>
 
-#endif
+#  endif
 
 #endif  // SkSafe_math_DEFINED

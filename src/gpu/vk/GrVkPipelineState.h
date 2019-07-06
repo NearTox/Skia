@@ -89,9 +89,11 @@ class GrVkPipelineState : public SkRefCnt {
     }
 
     /**
-     * Gets a float4 that adjusts the position from Skia device coords to Vulkans normalized
-     * device coords. Assuming the transformed position, pos, is a homogeneous float3, the vec,
-     * v, is applied as such: pos.x = dot(v.xy, pos.xz) pos.y = dot(v.zw, pos.yz)
+     * Gets a float4 that adjusts the position from Skia device coords to Vulkans normalized device
+     * coords. Assuming the transformed position, pos, is a homogeneous float3, the vec, v, is
+     * applied as such:
+     * pos.x = dot(v.xy, pos.xz)
+     * pos.y = dot(v.zw, pos.yz)
      */
     void getRTAdjustmentVec(float* destVec) {
       destVec[0] = 2.f / fRenderTargetSize.fWidth;

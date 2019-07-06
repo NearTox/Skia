@@ -24,7 +24,7 @@ class SK_API SkGraphics {
   static void Init();
 
   // We're in the middle of cleaning this up.
-  static void Term() noexcept {}
+  static void Term() {}
 
   /**
    *  Return the max number of bytes that should be used by the font cache.
@@ -104,14 +104,14 @@ class SK_API SkGraphics {
    *
    *  This function returns the memory usage of the Scaled Image Cache.
    */
-  static size_t GetResourceCacheTotalBytesUsed() noexcept;
+  static size_t GetResourceCacheTotalBytesUsed();
 
   /**
    *  These functions get/set the memory usage limit for the resource cache, used for temporary
    *  bitmaps and other resources. Entries are purged from the cache when the memory useage
    *  exceeds this limit.
    */
-  static size_t GetResourceCacheTotalByteLimit() noexcept;
+  static size_t GetResourceCacheTotalByteLimit();
   static size_t SetResourceCacheTotalByteLimit(size_t newLimit);
 
   /**
@@ -128,8 +128,8 @@ class SK_API SkGraphics {
    *
    *  Zero is the default value, meaning we always attempt to cache entries.
    */
-  static size_t GetResourceCacheSingleAllocationByteLimit() noexcept;
-  static size_t SetResourceCacheSingleAllocationByteLimit(size_t newLimit) noexcept;
+  static size_t GetResourceCacheSingleAllocationByteLimit();
+  static size_t SetResourceCacheSingleAllocationByteLimit(size_t newLimit);
 
   /**
    *  Dumps memory usage of caches using the SkTraceMemoryDump interface. See SkTraceMemoryDump
@@ -153,7 +153,7 @@ class SK_API SkGraphics {
    *  The flags format is name=value[;name=value...] with no spaces.
    *  This format is subject to change.
    */
-  static void SetFlags(const char* flags) noexcept;
+  static void SetFlags(const char* flags);
 
   typedef std::unique_ptr<SkImageGenerator> (*ImageGeneratorFromEncodedDataFactory)(sk_sp<SkData>);
 

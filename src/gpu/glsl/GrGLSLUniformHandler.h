@@ -65,8 +65,7 @@ class GrGLSLUniformHandler {
   virtual const char* getUniformCStr(UniformHandle u) const = 0;
 
  protected:
-  explicit GrGLSLUniformHandler(GrGLSLProgramBuilder* program) noexcept
-      : fProgramBuilder(program) {}
+  explicit GrGLSLUniformHandler(GrGLSLProgramBuilder* program) : fProgramBuilder(program) {}
 
   // This is not owned by the class
   GrGLSLProgramBuilder* fProgramBuilder;

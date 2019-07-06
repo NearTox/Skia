@@ -5,17 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/GrSurfaceContext.h"
 #include "include/private/GrAuditTrail.h"
 #include "include/private/GrOpList.h"
 #include "include/private/GrRecordingContext.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrDrawingManager.h"
 #include "src/gpu/GrRecordingContextPriv.h"
+#include "src/gpu/GrSurfaceContext.h"
 #include "src/gpu/SkGr.h"
 
 #define ASSERT_SINGLE_OWNER \
-  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner()));
+  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner());)
 #define RETURN_FALSE_IF_ABANDONED           \
   if (this->fContext->priv().abandoned()) { \
     return false;                           \
@@ -26,7 +26,7 @@
 // stack. When this occurs with a closed GrOpList, a new one will be allocated
 // when the renderTargetContext attempts to use it (via getOpList).
 GrSurfaceContext::GrSurfaceContext(
-    GrRecordingContext* context, GrPixelConfig config, sk_sp<SkColorSpace> colorSpace) noexcept
+    GrRecordingContext* context, GrPixelConfig config, sk_sp<SkColorSpace> colorSpace)
     : fContext(context), fColorSpaceInfo(std::move(colorSpace), config) {}
 
 GrAuditTrail* GrSurfaceContext::auditTrail() { return fContext->priv().auditTrail(); }

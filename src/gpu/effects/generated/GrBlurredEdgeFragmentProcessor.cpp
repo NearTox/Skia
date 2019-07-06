@@ -34,24 +34,24 @@ class GrGLSLBlurredEdgeFragmentProcessor : public GrGLSLFragmentProcessor {
   }
 
  private:
-  void onSetData(
-      const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) noexcept override {}
+  void onSetData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) override {
+  }
 };
 GrGLSLFragmentProcessor* GrBlurredEdgeFragmentProcessor::onCreateGLSLInstance() const {
   return new GrGLSLBlurredEdgeFragmentProcessor();
 }
 void GrBlurredEdgeFragmentProcessor::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   b->add32((int32_t)mode);
 }
-bool GrBlurredEdgeFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrBlurredEdgeFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const {
   const GrBlurredEdgeFragmentProcessor& that = other.cast<GrBlurredEdgeFragmentProcessor>();
   (void)that;
   if (mode != that.mode) return false;
   return true;
 }
 GrBlurredEdgeFragmentProcessor::GrBlurredEdgeFragmentProcessor(
-    const GrBlurredEdgeFragmentProcessor& src) noexcept
+    const GrBlurredEdgeFragmentProcessor& src)
     : INHERITED(kGrBlurredEdgeFragmentProcessor_ClassID, src.optimizationFlags()), mode(src.mode) {}
 std::unique_ptr<GrFragmentProcessor> GrBlurredEdgeFragmentProcessor::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new GrBlurredEdgeFragmentProcessor(*this));

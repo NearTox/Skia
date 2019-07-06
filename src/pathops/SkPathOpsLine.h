@@ -12,16 +12,16 @@
 struct SkDLine {
   SkDPoint fPts[2];
 
-  const SkDPoint& operator[](int n) const noexcept {
+  const SkDPoint& operator[](int n) const {
     SkASSERT(n >= 0 && n < 2);
     return fPts[n];
   }
-  SkDPoint& operator[](int n) noexcept {
+  SkDPoint& operator[](int n) {
     SkASSERT(n >= 0 && n < 2);
     return fPts[n];
   }
 
-  const SkDLine& set(const SkPoint pts[2]) noexcept {
+  const SkDLine& set(const SkPoint pts[2]) {
     fPts[0] = pts[0];
     fPts[1] = pts[1];
     return *this;

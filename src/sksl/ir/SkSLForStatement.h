@@ -21,7 +21,7 @@ struct ForStatement : public Statement {
   ForStatement(
       int offset, std::unique_ptr<Statement> initializer, std::unique_ptr<Expression> test,
       std::unique_ptr<Expression> next, std::unique_ptr<Statement> statement,
-      std::shared_ptr<SymbolTable> symbols) noexcept
+      std::shared_ptr<SymbolTable> symbols)
       : INHERITED(offset, kFor_Kind),
         fSymbols(symbols),
         fInitializer(std::move(initializer)),

@@ -95,9 +95,9 @@ class SK_API SkDrawLooper : public SkFlattenable {
    */
   virtual bool asABlurShadow(BlurShadowRec*) const;
 
-  static SkFlattenable::Type GetFlattenableType() noexcept { return kSkDrawLooper_Type; }
+  static SkFlattenable::Type GetFlattenableType() { return kSkDrawLooper_Type; }
 
-  SkFlattenable::Type getFlattenableType() const noexcept override { return kSkDrawLooper_Type; }
+  SkFlattenable::Type getFlattenableType() const override { return kSkDrawLooper_Type; }
 
   static sk_sp<SkDrawLooper> Deserialize(
       const void* data, size_t size, const SkDeserialProcs* procs = nullptr) {

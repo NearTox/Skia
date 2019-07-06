@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "include/gpu/GrTexture.h"
 #include "include/core/SkMath.h"
 #include "include/core/SkTypes.h"
 #include "include/gpu/GrContext.h"
 #include "include/gpu/GrRenderTarget.h"
+#include "include/gpu/GrTexture.h"
 #include "include/gpu/GrTypes.h"
 #include "include/private/GrResourceKey.h"
 #include "src/core/SkMipMap.h"
@@ -19,13 +19,13 @@
 #include "src/gpu/GrSurfacePriv.h"
 #include "src/gpu/GrTexturePriv.h"
 
-void GrTexture::markMipMapsDirty() noexcept {
+void GrTexture::markMipMapsDirty() {
   if (GrMipMapsStatus::kValid == fMipMapsStatus) {
     fMipMapsStatus = GrMipMapsStatus::kDirty;
   }
 }
 
-void GrTexture::markMipMapsClean() noexcept {
+void GrTexture::markMipMapsClean() {
   SkASSERT(GrMipMapsStatus::kNotAllocated != fMipMapsStatus);
   fMipMapsStatus = GrMipMapsStatus::kValid;
 }

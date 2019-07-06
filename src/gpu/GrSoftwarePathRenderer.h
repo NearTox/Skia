@@ -45,11 +45,11 @@ class GrSoftwarePathRenderer : public GrPathRenderer {
       const SkMatrix& viewMatrix, const SkIPoint& textureOriginInDeviceSpace,
       const SkIRect& deviceSpaceRectToDraw);
 
-  StencilSupport onGetStencilSupport(const GrShape&) const noexcept override {
+  StencilSupport onGetStencilSupport(const GrShape&) const override {
     return GrPathRenderer::kNoSupport_StencilSupport;
   }
 
-  CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const noexcept override;
+  CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;
 
   bool onDrawPath(const DrawPathArgs&) override;
 

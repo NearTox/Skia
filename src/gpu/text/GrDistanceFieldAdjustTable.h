@@ -21,7 +21,7 @@ struct GrDistanceFieldAdjustTable : public SkNVRefCnt<GrDistanceFieldAdjustTable
     delete[] fGammaCorrectTable;
   }
 
-  const SkScalar& getAdjustment(int i, bool useGammaCorrectTable) const noexcept {
+  const SkScalar& getAdjustment(int i, bool useGammaCorrectTable) const {
     return useGammaCorrectTable ? fGammaCorrectTable[i] : fTable[i];
   }
 

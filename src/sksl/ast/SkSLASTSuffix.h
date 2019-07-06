@@ -20,7 +20,7 @@ namespace SkSL {
 struct ASTSuffix : public ASTPositionNode {
   enum Kind { kIndex_Kind, kCall_Kind, kField_Kind, kPostIncrement_Kind, kPostDecrement_Kind };
 
-  ASTSuffix(int offset, Kind kind) noexcept : INHERITED(offset), fKind(kind) {}
+  ASTSuffix(int offset, Kind kind) : INHERITED(offset), fKind(kind) {}
 
   String description() const override {
     switch (fKind) {

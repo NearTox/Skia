@@ -72,12 +72,12 @@ or revised. This service is offered free of charge; please provide us with your
 mailing address.
 */
 
-#include "third_party/gif/SkGifImageReader.h"
 #include "include/core/SkColorPriv.h"
 #include "src/codec/SkGifCodec.h"
+#include "third_party/gif/SkGifImageReader.h"
 
-#include <string.h>
 #include <algorithm>
+#include <string.h>
 
 // GETN(n, s) requests at least 'n' bytes available from 'q', at start of state 's'.
 //

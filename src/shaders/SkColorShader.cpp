@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/shaders/SkColorShader.h"
 #include "include/core/SkColorSpace.h"
 #include "src/core/SkArenaAlloc.h"
 #include "src/core/SkColorSpacePriv.h"
@@ -13,10 +12,11 @@
 #include "src/core/SkRasterPipeline.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkUtils.h"
+#include "src/shaders/SkColorShader.h"
 
 SkColorShader::SkColorShader(SkColor c) : fColor(c) {}
 
-bool SkColorShader::isOpaque() const noexcept { return SkColorGetA(fColor) == 255; }
+bool SkColorShader::isOpaque() const { return SkColorGetA(fColor) == 255; }
 
 sk_sp<SkFlattenable> SkColorShader::CreateProc(SkReadBuffer& buffer) {
   return sk_make_sp<SkColorShader>(buffer.readColor());
@@ -24,7 +24,7 @@ sk_sp<SkFlattenable> SkColorShader::CreateProc(SkReadBuffer& buffer) {
 
 void SkColorShader::flatten(SkWriteBuffer& buffer) const { buffer.writeColor(fColor); }
 
-SkShader::GradientType SkColorShader::asAGradient(GradientInfo* info) const noexcept {
+SkShader::GradientType SkColorShader::asAGradient(GradientInfo* info) const {
   if (info) {
     if (info->fColors && info->fColorCount >= 1) {
       info->fColors[0] = fColor;

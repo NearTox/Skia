@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "src/shaders/gradients/SkRadialGradient.h"
 #include "src/core/SkRasterPipeline.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
+#include "src/shaders/gradients/SkRadialGradient.h"
 
 namespace {
 

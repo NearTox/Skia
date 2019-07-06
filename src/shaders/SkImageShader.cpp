@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/shaders/SkImageShader.h"
 #include "src/core/SkArenaAlloc.h"
 #include "src/core/SkBitmapController.h"
 #include "src/core/SkBitmapProvider.h"
@@ -17,11 +16,12 @@
 #include "src/image/SkImage_Base.h"
 #include "src/shaders/SkBitmapProcShader.h"
 #include "src/shaders/SkEmptyShader.h"
+#include "src/shaders/SkImageShader.h"
 
 /**
  *  We are faster in clamp, so always use that tiling when we can.
  */
-static SkTileMode optimize(SkTileMode tm, int dimension) noexcept {
+static SkTileMode optimize(SkTileMode tm, int dimension) {
   SkASSERT(dimension > 0);
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
   // need to update frameworks/base/libs/hwui/tests/unit/SkiaBehaviorTests.cpp:55 to allow
@@ -64,7 +64,7 @@ void SkImageShader::flatten(SkWriteBuffer& buffer) const {
   SkASSERT(fClampAsIfUnpremul == false);
 }
 
-bool SkImageShader::isOpaque() const noexcept {
+bool SkImageShader::isOpaque() const {
   return fImage->isOpaque() && fTileModeX != SkTileMode::kDecal && fTileModeY != SkTileMode::kDecal;
 }
 
@@ -135,7 +135,7 @@ SkShaderBase::Context* SkImageShader::onMakeContext(
 }
 #endif
 
-SkImage* SkImageShader::onIsAImage(SkMatrix* texM, SkTileMode xy[]) const noexcept {
+SkImage* SkImageShader::onIsAImage(SkMatrix* texM, SkTileMode xy[]) const {
   if (texM) {
     *texM = this->getLocalMatrix();
   }
@@ -167,7 +167,7 @@ sk_sp<SkShader> SkImageShader::Make(
 #include "src/gpu/effects/GrBicubicEffect.h"
 #include "src/gpu/effects/generated/GrSimpleTextureEffect.h"
 
-static GrSamplerState::WrapMode tile_mode_to_wrap_mode(const SkTileMode tileMode) noexcept {
+static GrSamplerState::WrapMode tile_mode_to_wrap_mode(const SkTileMode tileMode) {
   switch (tileMode) {
     case SkTileMode::kClamp: return GrSamplerState::WrapMode::kClamp;
     case SkTileMode::kRepeat: return GrSamplerState::WrapMode::kRepeat;

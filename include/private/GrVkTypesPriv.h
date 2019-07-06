@@ -20,7 +20,7 @@ class GrVkImageLayout;
 // current VkImageLayout which can be shared with an internal GrVkImage so that layout updates can
 // be seen by all users of the image.
 struct GrVkBackendSurfaceInfo {
-  GrVkBackendSurfaceInfo(GrVkImageInfo info, GrVkImageLayout* layout) noexcept
+  GrVkBackendSurfaceInfo(GrVkImageInfo info, GrVkImageLayout* layout)
       : fImageInfo(info), fLayout(layout) {}
 
   void cleanup();

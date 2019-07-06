@@ -14,13 +14,13 @@
 
 class SkRasterPipeline;
 
-bool SkBlendMode_SupportsCoverageAsAlpha(SkBlendMode) noexcept;
+bool SkBlendMode_SupportsCoverageAsAlpha(SkBlendMode);
 
-static constexpr inline bool SkBlendMode_CaresAboutRBOrder(SkBlendMode mode) noexcept {
+static inline bool SkBlendMode_CaresAboutRBOrder(SkBlendMode mode) {
   return (mode > SkBlendMode::kLastSeparableMode);
 }
 
-bool SkBlendMode_ShouldPreScaleCoverage(SkBlendMode, bool rgb_coverage) noexcept;
+bool SkBlendMode_ShouldPreScaleCoverage(SkBlendMode, bool rgb_coverage);
 void SkBlendMode_AppendStages(SkBlendMode, SkRasterPipeline*);
 
 enum class SkBlendModeCoeff {
@@ -38,13 +38,13 @@ enum class SkBlendModeCoeff {
   kCoeffCount
 };
 
-bool SkBlendMode_AsCoeff(SkBlendMode mode, SkBlendModeCoeff* src, SkBlendModeCoeff* dst) noexcept;
+bool SkBlendMode_AsCoeff(SkBlendMode mode, SkBlendModeCoeff* src, SkBlendModeCoeff* dst);
 
 SkPMColor4f SkBlendMode_Apply(SkBlendMode, const SkPMColor4f& src, const SkPMColor4f& dst);
 
 #if SK_SUPPORT_GPU
 #include "src/gpu/GrXferProcessor.h"
-const GrXPFactory* SkBlendMode_AsXPFactory(SkBlendMode) noexcept;
+const GrXPFactory* SkBlendMode_AsXPFactory(SkBlendMode);
 #endif
 
 #endif

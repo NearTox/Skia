@@ -25,9 +25,9 @@ void SkStrokeSegment::dump() const {
         SkDebugf(", {%1.9g,%1.9g}", fPts[2].fX, fPts[2].fY);
     }
     SkDebugf("}}");
-#ifdef SK_DEBUG
+#  ifdef SK_DEBUG
     SkDebugf(" id=%d", fDebugID);
-#endif
+#  endif
     SkDebugf("\n");
 }
 
@@ -50,9 +50,9 @@ void SkStrokeTriple::dump() const {
         SkDebugf(", %1.9g", weight());
     }
     SkDebugf("}}");
-#ifdef SK_DEBUG
+#  ifdef SK_DEBUG
     SkDebugf(" triple id=%d", fDebugID);
-#endif
+#  endif
     SkDebugf("\ninner:\n");
     fInner->dumpAll();
     SkDebugf("outer:\n");
@@ -70,9 +70,9 @@ void SkStrokeTriple::dumpAll() const {
 }
 
 void SkStrokeContour::dump() const {
-#ifdef SK_DEBUG
+#  ifdef SK_DEBUG
     SkDebugf("id=%d ", fDebugID);
-#endif
+#  endif
     SkDebugf("head:\n");
     fHead->dumpAll();
     SkDebugf("head cap:\n");

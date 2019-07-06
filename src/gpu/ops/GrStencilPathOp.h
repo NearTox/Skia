@@ -25,7 +25,7 @@ class GrStencilPathOp final : public GrOp {
       GrPathRendering::FillType fillType, bool hasStencilClip, const GrScissorState& scissor,
       const GrPath* path);
 
-  const char* name() const noexcept override { return "StencilPathOp"; }
+  const char* name() const override { return "StencilPathOp"; }
 
 #ifdef SK_DEBUG
   SkString dumpInfo() const override {

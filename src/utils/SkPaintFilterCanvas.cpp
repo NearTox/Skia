@@ -22,9 +22,9 @@ class SkPaintFilterCanvas::AutoPaintFilter {
   AutoPaintFilter(const SkPaintFilterCanvas* canvas, const SkPaint& paint)
       : AutoPaintFilter(canvas, &paint) {}
 
-  const SkPaint& paint() const noexcept { return fPaint; }
+  const SkPaint& paint() const { return fPaint; }
 
-  bool shouldDraw() const noexcept { return fShouldDraw; }
+  bool shouldDraw() const { return fShouldDraw; }
 
  private:
   SkPaint fPaint;
@@ -284,8 +284,8 @@ bool SkPaintFilterCanvas::onAccessTopLayerPixels(SkPixmap* pixmap) {
   return true;
 }
 
-SkImageInfo SkPaintFilterCanvas::onImageInfo() const noexcept { return proxy()->imageInfo(); }
+SkImageInfo SkPaintFilterCanvas::onImageInfo() const { return proxy()->imageInfo(); }
 
-bool SkPaintFilterCanvas::onGetProps(SkSurfaceProps* props) const noexcept {
+bool SkPaintFilterCanvas::onGetProps(SkSurfaceProps* props) const {
   return proxy()->getProps(props);
 }

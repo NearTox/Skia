@@ -43,7 +43,7 @@ static inline int SmallDot6Scale(int value, int dot6) {
 
 #ifdef TEST_GAMMA
 static uint8_t gGammaTable[256];
-#define ApplyGamma(table, alpha) (table)[alpha]
+#  define ApplyGamma(table, alpha) (table)[alpha]
 
 static void build_gamma_table() {
   static bool gInit = false;
@@ -62,7 +62,7 @@ static void build_gamma_table() {
   }
 }
 #else
-#define ApplyGamma(table, alpha) SkToU8(alpha)
+#  define ApplyGamma(table, alpha) SkToU8(alpha)
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////

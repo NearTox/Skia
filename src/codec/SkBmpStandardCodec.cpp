@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "src/codec/SkBmpStandardCodec.h"
 #include "include/core/SkStream.h"
 #include "include/private/SkColorData.h"
+#include "src/codec/SkBmpStandardCodec.h"
 #include "src/codec/SkCodecPriv.h"
 #include "src/core/SkMathPriv.h"
 

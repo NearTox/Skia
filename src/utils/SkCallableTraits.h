@@ -28,11 +28,11 @@ struct sk_base_callable_traits {
   SK_CALLABLE_TRAITS__INSTANCE(quals, SK_CALLABLE_TRAITS__COMMA...)
 
 #ifdef __cpp_noexcept_function_type
-#define SK_CALLABLE_TRAITS__NE_VARARGS(quals, _) \
-  SK_CALLABLE_TRAITS__VARARGS(quals, )           \
-  SK_CALLABLE_TRAITS__VARARGS(quals noexcept, )
+#  define SK_CALLABLE_TRAITS__NE_VARARGS(quals, _) \
+    SK_CALLABLE_TRAITS__VARARGS(quals, )           \
+    SK_CALLABLE_TRAITS__VARARGS(quals noexcept, )
 #else
-#define SK_CALLABLE_TRAITS__NE_VARARGS(quals, _) SK_CALLABLE_TRAITS__VARARGS(quals, )
+#  define SK_CALLABLE_TRAITS__NE_VARARGS(quals, _) SK_CALLABLE_TRAITS__VARARGS(quals, )
 #endif
 
 #define SK_CALLABLE_TRAITS__REF_NE_VARARGS(quals, _) \

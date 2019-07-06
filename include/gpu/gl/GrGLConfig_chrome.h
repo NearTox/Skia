@@ -16,7 +16,7 @@
 #define GR_GL_CHECK_ALLOC_WITH_GET_ERROR 0
 
 #if !defined(GR_GL_IGNORE_ES3_MSAA)
-#define GR_GL_IGNORE_ES3_MSAA 1
+#  define GR_GL_IGNORE_ES3_MSAA 1
 #endif
 
 #endif

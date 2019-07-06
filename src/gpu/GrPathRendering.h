@@ -45,7 +45,7 @@ class GrPathRendering {
     kLast_PathTransformType = kAffine_PathTransformType
   };
 
-  static inline int PathTransformSize(PathTransformType type) noexcept {
+  static inline int PathTransformSize(PathTransformType type) {
     switch (type) {
       case kNone_PathTransformType: return 0;
       case kTranslateX_PathTransformType:
@@ -85,7 +85,7 @@ class GrPathRendering {
   struct StencilPathArgs {
     StencilPathArgs(
         bool useHWAA, GrRenderTargetProxy* proxy, const SkMatrix* viewMatrix,
-        const GrScissorState* scissor, const GrStencilSettings* stencil) noexcept
+        const GrScissorState* scissor, const GrStencilSettings* stencil)
         : fUseHWAA(useHWAA),
           fProxy(proxy),
           fViewMatrix(viewMatrix),
@@ -107,7 +107,7 @@ class GrPathRendering {
       const GrPath* path);
 
  protected:
-  GrPathRendering(GrGpu* gpu) noexcept : fGpu(gpu) {}
+  GrPathRendering(GrGpu* gpu) : fGpu(gpu) {}
 
   virtual void onStencilPath(const StencilPathArgs&, const GrPath*) = 0;
   virtual void onDrawPath(

@@ -67,9 +67,9 @@ class SK_API Compiler : public ErrorReporter {
   struct FormatArg {
     enum class Kind { kInput, kOutput, kUniform, kChildProcessor };
 
-    FormatArg(Kind kind) noexcept : fKind(kind) {}
+    FormatArg(Kind kind) : fKind(kind) {}
 
-    constexpr FormatArg(Kind kind, int index) noexcept : fKind(kind), fIndex(index) {}
+    FormatArg(Kind kind, int index) : fKind(kind), fIndex(index) {}
 
     Kind fKind;
 
@@ -128,9 +128,9 @@ class SK_API Compiler : public ErrorReporter {
 
   void writeErrorCount();
 
-  int errorCount() noexcept override { return fErrorCount; }
+  int errorCount() override { return fErrorCount; }
 
-  Context& context() noexcept { return *fContext; }
+  Context& context() { return *fContext; }
 
   static const char* OperatorName(Token::Kind token);
 

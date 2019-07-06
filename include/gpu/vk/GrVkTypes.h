@@ -34,7 +34,7 @@ struct GrVkAlloc {
         fBackendMemory(0),
         fUsesSystemHeap(false) {}
 
-  GrVkAlloc(VkDeviceMemory memory, VkDeviceSize offset, VkDeviceSize size, uint32_t flags) noexcept
+  GrVkAlloc(VkDeviceMemory memory, VkDeviceSize offset, VkDeviceSize size, uint32_t flags)
       : fMemory(memory),
         fOffset(offset),
         fSize(size),
@@ -53,7 +53,7 @@ struct GrVkAlloc {
     kMappable_Flag = 0x2,     // memory is able to be mapped.
   };
 
-  bool operator==(const GrVkAlloc& that) const noexcept {
+  bool operator==(const GrVkAlloc& that) const {
     return fMemory == that.fMemory && fOffset == that.fOffset && fSize == that.fSize &&
            fFlags == that.fFlags && fUsesSystemHeap == that.fUsesSystemHeap;
   }
@@ -80,7 +80,7 @@ struct GrVkYcbcrConversionInfo {
       VkSamplerYcbcrModelConversion ycbcrModel, VkSamplerYcbcrRange ycbcrRange,
       VkChromaLocation xChromaOffset, VkChromaLocation yChromaOffset, VkFilter chromaFilter,
       VkBool32 forceExplicitReconstruction, uint64_t externalFormat,
-      VkFormatFeatureFlags externalFormatFeatures) noexcept
+      VkFormatFeatureFlags externalFormatFeatures)
       : fYcbcrModel(ycbcrModel),
         fYcbcrRange(ycbcrRange),
         fXChromaOffset(xChromaOffset),
@@ -92,7 +92,7 @@ struct GrVkYcbcrConversionInfo {
     SkASSERT(fExternalFormat);
   }
 
-  bool operator==(const GrVkYcbcrConversionInfo& that) const noexcept {
+  bool operator==(const GrVkYcbcrConversionInfo& that) const {
     // Invalid objects are not required to have all other fields intialized or matching.
     if (!this->isValid() && !that.isValid()) {
       return true;
@@ -106,9 +106,9 @@ struct GrVkYcbcrConversionInfo {
     // We don't check fExternalFormatFeatures here since all matching external formats must have
     // the same format features at least in terms of how they effect ycbcr sampler conversion.
   }
-  bool operator!=(const GrVkYcbcrConversionInfo& that) const noexcept { return !(*this == that); }
+  bool operator!=(const GrVkYcbcrConversionInfo& that) const { return !(*this == that); }
 
-  bool isValid() const noexcept { return fExternalFormat != 0; }
+  bool isValid() const { return fExternalFormat != 0; }
 
   VkSamplerYcbcrModelConversion fYcbcrModel;
   VkSamplerYcbcrRange fYcbcrRange;
@@ -156,7 +156,7 @@ struct GrVkImageInfo {
         fCurrentQueueFamily(currentQueueFamily),
         fYcbcrConversionInfo(ycbcrConversionInfo) {}
 
-  GrVkImageInfo(const GrVkImageInfo& info, VkImageLayout layout) noexcept
+  GrVkImageInfo(const GrVkImageInfo& info, VkImageLayout layout)
       : fImage(info.fImage),
         fAlloc(info.fAlloc),
         fImageTiling(info.fImageTiling),
@@ -169,9 +169,9 @@ struct GrVkImageInfo {
   // This gives a way for a client to update the layout of the Image if they change the layout
   // while we're still holding onto the wrapped texture. They will first need to get a handle
   // to our internal GrVkImageInfo by calling getTextureHandle on a GrVkTexture.
-  void updateImageLayout(VkImageLayout layout) noexcept { fImageLayout = layout; }
+  void updateImageLayout(VkImageLayout layout) { fImageLayout = layout; }
 
-  bool operator==(const GrVkImageInfo& that) const noexcept {
+  bool operator==(const GrVkImageInfo& that) const {
     return fImage == that.fImage && fAlloc == that.fAlloc && fImageTiling == that.fImageTiling &&
            fImageLayout == that.fImageLayout && fFormat == that.fFormat &&
            fLevelCount == that.fLevelCount && fCurrentQueueFamily == that.fCurrentQueueFamily &&

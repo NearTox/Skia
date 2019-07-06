@@ -15,7 +15,7 @@ struct GrMockTextureInfo {
   GrPixelConfig fConfig;
   int fID;
 
-  bool operator==(const GrMockTextureInfo& that) const noexcept {
+  bool operator==(const GrMockTextureInfo& that) const {
     return fConfig == that.fConfig && fID == that.fID;
   }
 };
@@ -24,7 +24,7 @@ struct GrMockRenderTargetInfo {
   GrPixelConfig fConfig;
   int fID;
 
-  bool operator==(const GrMockRenderTargetInfo& that) const noexcept {
+  bool operator==(const GrMockRenderTargetInfo& that) const {
     return fConfig == that.fConfig && fID == that.fID;
   }
 };

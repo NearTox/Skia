@@ -29,21 +29,21 @@ class GrGLSLPremulInputFragmentProcessor : public GrGLSLFragmentProcessor {
   }
 
  private:
-  void onSetData(
-      const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) noexcept override {}
+  void onSetData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) override {
+  }
 };
 GrGLSLFragmentProcessor* GrPremulInputFragmentProcessor::onCreateGLSLInstance() const {
   return new GrGLSLPremulInputFragmentProcessor();
 }
 void GrPremulInputFragmentProcessor::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {}
-bool GrPremulInputFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
+bool GrPremulInputFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const {
   const GrPremulInputFragmentProcessor& that = other.cast<GrPremulInputFragmentProcessor>();
   (void)that;
   return true;
 }
 GrPremulInputFragmentProcessor::GrPremulInputFragmentProcessor(
-    const GrPremulInputFragmentProcessor& src) noexcept
+    const GrPremulInputFragmentProcessor& src)
     : INHERITED(kGrPremulInputFragmentProcessor_ClassID, src.optimizationFlags()) {}
 std::unique_ptr<GrFragmentProcessor> GrPremulInputFragmentProcessor::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new GrPremulInputFragmentProcessor(*this));

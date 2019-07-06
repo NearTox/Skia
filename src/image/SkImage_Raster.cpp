@@ -25,7 +25,7 @@
 #endif
 
 // fixes https://bug.skia.org/5096
-static bool is_not_subset(const SkBitmap& bm) noexcept {
+static bool is_not_subset(const SkBitmap& bm) {
   SkASSERT(bm.pixelRef());
   SkISize dim = SkISize::Make(bm.pixelRef()->width(), bm.pixelRef()->height());
   SkASSERT(dim != bm.dimensions() || bm.pixelRefOrigin().isZero());
@@ -34,7 +34,7 @@ static bool is_not_subset(const SkBitmap& bm) noexcept {
 
 class SkImage_Raster : public SkImage_Base {
  public:
-  static bool ValidArgs(const SkImageInfo& info, size_t rowBytes, size_t* minSize) noexcept {
+  static bool ValidArgs(const SkImageInfo& info, size_t rowBytes, size_t* minSize) {
     const int maxDimension = SK_MaxS32 >> 2;
 
     if (info.width() <= 0 || info.height() <= 0) {
@@ -73,22 +73,22 @@ class SkImage_Raster : public SkImage_Base {
 
   bool onReadPixels(
       const SkImageInfo&, void*, size_t, int srcX, int srcY, CachingHint) const override;
-  bool onPeekPixels(SkPixmap*) const noexcept override;
-  const SkBitmap* onPeekBitmap() const noexcept override { return &fBitmap; }
+  bool onPeekPixels(SkPixmap*) const override;
+  const SkBitmap* onPeekBitmap() const override { return &fBitmap; }
 
 #if SK_SUPPORT_GPU
   sk_sp<GrTextureProxy> asTextureProxyRef(
       GrRecordingContext*, const GrSamplerState&, SkScalar scaleAdjust[2]) const override;
 #endif
 
-  bool getROPixels(SkBitmap*, CachingHint) const noexcept override;
+  bool getROPixels(SkBitmap*, CachingHint) const override;
   sk_sp<SkImage> onMakeSubset(GrRecordingContext*, const SkIRect&) const override;
 
-  SkPixelRef* getPixelRef() const noexcept { return fBitmap.pixelRef(); }
+  SkPixelRef* getPixelRef() const { return fBitmap.pixelRef(); }
 
   bool onAsLegacyBitmap(SkBitmap*) const override;
 
-  SkImage_Raster(const SkBitmap& bm, bool bitmapMayBeMutable = false) noexcept
+  SkImage_Raster(const SkBitmap& bm, bool bitmapMayBeMutable = false)
       : INHERITED(
             bm.info(), is_not_subset(bm) ? bm.getGenerationID() : (uint32_t)kNeedNewImageUniqueID),
         fBitmap(bm) {
@@ -98,8 +98,8 @@ class SkImage_Raster : public SkImage_Base {
   sk_sp<SkImage> onMakeColorTypeAndColorSpace(
       GrRecordingContext*, SkColorType, sk_sp<SkColorSpace>) const override;
 
-  bool onIsValid(GrContext* context) const noexcept override { return true; }
-  void notifyAddedToRasterCache() const noexcept override {
+  bool onIsValid(GrContext* context) const override { return true; }
+  void notifyAddedToRasterCache() const override {
     // We explicitly DON'T want to call INHERITED::notifyAddedToRasterCache. That ties the
     // lifetime of derived/cached resources to the image. In this case, we only want cached
     // data (eg mips) tied to the lifetime of the underlying pixelRef.
@@ -108,10 +108,10 @@ class SkImage_Raster : public SkImage_Base {
   }
 
 #if SK_SUPPORT_GPU
-  sk_sp<GrTextureProxy> refPinnedTextureProxy(GrRecordingContext*, uint32_t* uniqueID) const
-      noexcept override;
+  sk_sp<GrTextureProxy> refPinnedTextureProxy(
+      GrRecordingContext*, uint32_t* uniqueID) const override;
   bool onPinAsTexture(GrContext*) const override;
-  void onUnpinAsTexture(GrContext*) const noexcept override;
+  void onUnpinAsTexture(GrContext*) const override;
 #endif
 
  private:
@@ -128,7 +128,7 @@ class SkImage_Raster : public SkImage_Base {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static void release_data(void* addr, void* context) noexcept {
+static void release_data(void* addr, void* context) {
   SkData* data = static_cast<SkData*>(context);
   data->unref();
 }
@@ -155,9 +155,9 @@ bool SkImage_Raster::onReadPixels(
   return shallowCopy.readPixels(dstInfo, dstPixels, dstRowBytes, srcX, srcY);
 }
 
-bool SkImage_Raster::onPeekPixels(SkPixmap* pm) const noexcept { return fBitmap.peekPixels(pm); }
+bool SkImage_Raster::onPeekPixels(SkPixmap* pm) const { return fBitmap.peekPixels(pm); }
 
-bool SkImage_Raster::getROPixels(SkBitmap* dst, CachingHint) const noexcept {
+bool SkImage_Raster::getROPixels(SkBitmap* dst, CachingHint) const {
   *dst = fBitmap;
   return true;
 }
@@ -184,7 +184,7 @@ sk_sp<GrTextureProxy> SkImage_Raster::asTextureProxyRef(
 #if SK_SUPPORT_GPU
 
 sk_sp<GrTextureProxy> SkImage_Raster::refPinnedTextureProxy(
-    GrRecordingContext*, uint32_t* uniqueID) const noexcept {
+    GrRecordingContext*, uint32_t* uniqueID) const {
   if (fPinnedProxy) {
     SkASSERT(fPinnedCount > 0);
     SkASSERT(fPinnedUniqueID != 0);
@@ -213,7 +213,7 @@ bool SkImage_Raster::onPinAsTexture(GrContext* ctx) const {
   return true;
 }
 
-void SkImage_Raster::onUnpinAsTexture(GrContext* ctx) const noexcept {
+void SkImage_Raster::onUnpinAsTexture(GrContext* ctx) const {
   // Note: we always decrement, even if fPinnedTexture is null
   SkASSERT(fPinnedCount > 0);
   SkASSERT(fPinnedUniqueID != 0);
@@ -310,7 +310,7 @@ sk_sp<SkImage> SkMakeImageFromRasterBitmap(const SkBitmap& bm, SkCopyPixelsMode 
   return SkMakeImageFromRasterBitmapPriv(bm, cpm, kNeedNewImageUniqueID);
 }
 
-const SkPixelRef* SkBitmapImageGetPixelRef(const SkImage* image) noexcept {
+const SkPixelRef* SkBitmapImageGetPixelRef(const SkImage* image) {
   return ((const SkImage_Raster*)image)->getPixelRef();
 }
 

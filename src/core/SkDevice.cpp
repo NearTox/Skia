@@ -32,19 +32,19 @@
 #include "src/shaders/SkLocalMatrixShader.h"
 #include "src/utils/SkPatchUtils.h"
 
-SkBaseDevice::SkBaseDevice(const SkImageInfo& info, const SkSurfaceProps& surfaceProps) noexcept
+SkBaseDevice::SkBaseDevice(const SkImageInfo& info, const SkSurfaceProps& surfaceProps)
     : fInfo(info), fSurfaceProps(surfaceProps) {
   fOrigin = {0, 0};
   fCTM.reset();
 }
 
-void SkBaseDevice::setOrigin(const SkMatrix& globalCTM, int x, int y) noexcept {
+void SkBaseDevice::setOrigin(const SkMatrix& globalCTM, int x, int y) {
   fOrigin.set(x, y);
   fCTM = globalCTM;
   fCTM.postTranslate(SkIntToScalar(-x), SkIntToScalar(-y));
 }
 
-void SkBaseDevice::setGlobalCTM(const SkMatrix& ctm) noexcept {
+void SkBaseDevice::setGlobalCTM(const SkMatrix& ctm) {
   fCTM = ctm;
   if (fOrigin.fX | fOrigin.fY) {
     fCTM.postTranslate(-SkIntToScalar(fOrigin.fX), -SkIntToScalar(fOrigin.fY));
@@ -63,8 +63,7 @@ bool SkBaseDevice::clipIsWideOpen() const {
 }
 
 SkPixelGeometry SkBaseDevice::CreateInfo::AdjustGeometry(
-    const SkImageInfo& info, TileUsage tileUsage, SkPixelGeometry geo,
-    bool preserveLCDText) noexcept {
+    const SkImageInfo& info, TileUsage tileUsage, SkPixelGeometry geo, bool preserveLCDText) {
   switch (tileUsage) {
     case kPossible_TileUsage:
       // (we think) for compatibility with old clients, we assume this layer can support LCD
@@ -80,7 +79,7 @@ SkPixelGeometry SkBaseDevice::CreateInfo::AdjustGeometry(
   return geo;
 }
 
-static inline bool is_int(float x) noexcept { return x == (float)sk_float_round2int(x); }
+static inline bool is_int(float x) { return x == (float)sk_float_round2int(x); }
 
 void SkBaseDevice::drawRegion(const SkRegion& region, const SkPaint& paint) {
   const SkMatrix& ctm = this->ctm();
@@ -200,7 +199,7 @@ void SkBaseDevice::drawBitmapLattice(
   }
 }
 
-static SkPoint* quad_to_tris(SkPoint tris[6], const SkPoint quad[4]) noexcept {
+static SkPoint* quad_to_tris(SkPoint tris[6], const SkPoint quad[4]) {
   tris[0] = quad[0];
   tris[1] = quad[1];
   tris[2] = quad[2];
@@ -410,7 +409,7 @@ sk_sp<SkSpecialImage> SkBaseDevice::snapBackImage(const SkIRect&) { return nullp
 //////////////////////////////////////////////////////////////////////////////////////////
 
 void SkBaseDevice::LogDrawScaleFactor(
-    const SkMatrix& view, const SkMatrix& srcToDst, SkFilterQuality filterQuality) noexcept {
+    const SkMatrix& view, const SkMatrix& srcToDst, SkFilterQuality filterQuality) {
 #if SK_HISTOGRAMS_ENABLED
   SkMatrix matrix = SkMatrix::Concat(view, srcToDst);
   enum ScaleFactor {

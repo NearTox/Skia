@@ -21,29 +21,29 @@ class GrTextureProxyPriv;
 // This class delays the acquisition of textures until they are actually required
 class GrTextureProxy : virtual public GrSurfaceProxy {
  public:
-  GrTextureProxy* asTextureProxy() noexcept override { return this; }
-  const GrTextureProxy* asTextureProxy() const noexcept override { return this; }
+  GrTextureProxy* asTextureProxy() override { return this; }
+  const GrTextureProxy* asTextureProxy() const override { return this; }
 
   // Actually instantiate the backing texture, if necessary
   bool instantiate(GrResourceProvider*) override;
 
-  GrSamplerState::Filter highestFilterMode() const noexcept;
+  GrSamplerState::Filter highestFilterMode() const;
 
   // If we are instantiated and have a target, return the mip state of that target. Otherwise
   // returns the proxy's mip state from creation time. This is useful for lazy proxies which may
   // claim to not need mips at creation time, but the instantiation happens to give us a mipped
   // target. In that case we should use that for our benefit to avoid possible copies/mip
   // generation later.
-  GrMipMapped mipMapped() const noexcept;
+  GrMipMapped mipMapped() const;
 
   // Returns the GrMipMapped value of the proxy from creation time regardless of whether it has
   // been instantiated or not.
-  GrMipMapped proxyMipMapped() const noexcept { return fMipMapped; }
+  GrMipMapped proxyMipMapped() const { return fMipMapped; }
 
-  GrTextureType textureType() const noexcept { return this->backendFormat().textureType(); }
+  GrTextureType textureType() const { return this->backendFormat().textureType(); }
 
   /** If true then the texture does not support MIP maps and only supports clamp wrap mode. */
-  bool hasRestrictedSampling() const noexcept {
+  bool hasRestrictedSampling() const {
     return GrTextureTypeHasRestrictedSampling(this->textureType());
   }
 
@@ -55,7 +55,7 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
   /**
    * Return the texture proxy's unique key. It will be invalid if the proxy doesn't have one.
    */
-  const GrUniqueKey& getUniqueKey() const noexcept {
+  const GrUniqueKey& getUniqueKey() const {
 #ifdef SK_DEBUG
     if (fTarget && fUniqueKey.isValid() && fSyncTargetKey) {
       SkASSERT(fTarget->getUniqueKey().isValid());
@@ -74,12 +74,12 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
    * Internal-only helper class used for manipulations of the resource by the cache.
    */
   class CacheAccess;
-  inline CacheAccess cacheAccess() noexcept;
-  inline const CacheAccess cacheAccess() const noexcept;
+  inline CacheAccess cacheAccess();
+  inline const CacheAccess cacheAccess() const;
 
   // Provides access to special purpose functions.
-  GrTextureProxyPriv texPriv() noexcept;
-  const GrTextureProxyPriv texPriv() const noexcept;
+  GrTextureProxyPriv texPriv();
+  const GrTextureProxyPriv texPriv() const;
 
  protected:
   // DDL TODO: rm the GrSurfaceProxy friending
@@ -120,7 +120,7 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
 
   sk_sp<GrSurface> createSurface(GrResourceProvider*) const override;
 
-  void setTargetKeySync(bool sync) noexcept { fSyncTargetKey = sync; }
+  void setTargetKeySync(bool sync) { fSyncTargetKey = sync; }
 
  private:
   // WARNING: Be careful when adding or removing fields here. ASAN is likely to trigger warnings
@@ -146,7 +146,7 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
 
   // Methods made available via GrTextureProxy::CacheAccess
   void setUniqueKey(GrProxyProvider*, const GrUniqueKey&);
-  void clearUniqueKey() noexcept;
+  void clearUniqueKey();
 
   SkDEBUGCODE(void onValidateSurface(const GrSurface*) override);
 

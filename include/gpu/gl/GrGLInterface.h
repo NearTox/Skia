@@ -195,28 +195,26 @@ struct SK_API GrGLInterface : public SkRefCnt {
     //  and ES3 adds MSAA support to the standard. On an ES3 driver we may still use the
     //  older extensions for performance reasons or due to ES3 driver bugs. We want the function
     //  that creates the GrGLInterface to provide all available functions and internally
-    //  we will select among them. They all have a method called
-    //  glRenderbufferStorageMultisample*. So we have separate function pointers for
-    //  GL_IMG/EXT_multisampled_to_texture, GL_CHROMIUM/ANGLE_framebuffer_multisample/ES3, and
-    //  GL_APPLE_framebuffer_multisample variations.
+    //  we will select among them. They all have a method called glRenderbufferStorageMultisample*.
+    //  So we have separate function pointers for GL_IMG/EXT_multisampled_to_texture,
+    //  GL_CHROMIUM/ANGLE_framebuffer_multisample/ES3, and GL_APPLE_framebuffer_multisample
+    //  variations.
     //
-    //  If a driver supports multiple GL_ARB_framebuffer_multisample-style extensions then we
-    //  will assume the function pointers for the standard (or equivalent GL_ARB) version have
+    //  If a driver supports multiple GL_ARB_framebuffer_multisample-style extensions then we will
+    //  assume the function pointers for the standard (or equivalent GL_ARB) version have
     //  been preferred over GL_EXT, GL_CHROMIUM, or GL_ANGLE variations that have reduced
     //  functionality.
 
-    //  GL_EXT_multisampled_render_to_texture (preferred) or
-    //  GL_IMG_multisampled_render_to_texture
+    //  GL_EXT_multisampled_render_to_texture (preferred) or GL_IMG_multisampled_render_to_texture
     GrGLFunction<GrGLRenderbufferStorageMultisampleFn> fRenderbufferStorageMultisampleES2EXT;
     //  GL_APPLE_framebuffer_multisample
     GrGLFunction<GrGLRenderbufferStorageMultisampleFn> fRenderbufferStorageMultisampleES2APPLE;
 
-    //  This is used to store the pointer for GL_ARB/EXT/ANGLE/CHROMIUM_framebuffer_multisample
-    //  or the standard function in ES3+ or GL 3.0+.
+    //  This is used to store the pointer for GL_ARB/EXT/ANGLE/CHROMIUM_framebuffer_multisample or
+    //  the standard function in ES3+ or GL 3.0+.
     GrGLFunction<GrGLRenderbufferStorageMultisampleFn> fRenderbufferStorageMultisample;
 
-    // Pointer to BindUniformLocationCHROMIUM from the GL_CHROMIUM_bind_uniform_location
-    // extension.
+    // Pointer to BindUniformLocationCHROMIUM from the GL_CHROMIUM_bind_uniform_location extension.
     GrGLFunction<GrGLBindUniformLocationFn> fBindUniformLocation;
 
     GrGLFunction<GrGLResolveMultisampleFramebufferFn> fResolveMultisampleFramebuffer;

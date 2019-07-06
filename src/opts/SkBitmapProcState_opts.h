@@ -20,9 +20,9 @@
 // all migrated to be normal code inside SkBitmapProcState.cpp.
 
 #if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
-#include <immintrin.h>
+#  include <immintrin.h>
 #elif defined(SK_ARM_HAS_NEON)
-#include <arm_neon.h>
+#  include <arm_neon.h>
 #endif
 
 namespace SK_OPTS_NS {
@@ -230,7 +230,7 @@ static inline __m128i interpolate_in_x_and_y(
 // The NEON code only actually differs from the portable code in the
 // filtering step after we've loaded all four pixels we want to bilerp.
 
-#if defined(SK_ARM_HAS_NEON)
+#  if defined(SK_ARM_HAS_NEON)
 static void filter_and_scale_by_alpha(
     unsigned x, unsigned y, SkPMColor a00, SkPMColor a01, SkPMColor a10, SkPMColor a11,
     SkPMColor* dst, uint16_t scale) {
@@ -269,7 +269,7 @@ static void filter_and_scale_by_alpha(
   vres = vshrn_n_u16(vcombine_u16(tmp, vcreate_u16(0)), 8);  // shift down result by 8
   vst1_lane_u32(dst, vreinterpret_u32_u8(vres), 0);          // store result
 }
-#else
+#  else
 static void filter_and_scale_by_alpha(
     unsigned x, unsigned y, SkPMColor a00, SkPMColor a01, SkPMColor a10, SkPMColor a11,
     SkPMColor* dstColor, unsigned alphaScale) {
@@ -302,7 +302,7 @@ static void filter_and_scale_by_alpha(
 
   *dstColor = ((lo >> 8) & mask) | (hi & ~mask);
 }
-#endif
+#  endif
 
 /*not static*/ inline void S32_alpha_D32_filter_DX(
     const SkBitmapProcState& s, const uint32_t* xy, int count, SkPMColor* colors) {

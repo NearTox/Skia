@@ -30,47 +30,47 @@ static constexpr F F0 = 0.0f, F1 = 1.0f;
 // Same deal for __F16C__ and __AVX2__ ~~~> USING_AVX_F16C, USING_AVX2.
 
 #if !defined(USING_AVX) && N == 8 && defined(__AVX__)
-#define USING_AVX
+#  define USING_AVX
 #endif
 #if !defined(USING_AVX_F16C) && defined(USING_AVX) && defined(__F16C__)
-#define USING AVX_F16C
+#  define USING AVX_F16C
 #endif
 #if !defined(USING_AVX2) && defined(USING_AVX) && defined(__AVX2__)
-#define USING_AVX2
+#  define USING_AVX2
 #endif
 #if !defined(USING_AVX512F) && N == 16 && defined(__AVX512F__)
-#define USING_AVX512F
+#  define USING_AVX512F
 #endif
 
 // Similar to the AVX+ features, we define USING_NEON and USING_NEON_F16C.
 // This is more for organizational clarity... skcms.cc doesn't force these.
 #if N > 1 && defined(__ARM_NEON)
-#define USING_NEON
-#if __ARM_FP & 2
-#define USING_NEON_F16C
-#endif
-#if defined(__ARM_FEATURE_FP16_VECTOR_ARITHMETIC) && defined(SKCMS_OPT_INTO_NEON_FP16)
-#define USING_NEON_FP16
-#endif
+#  define USING_NEON
+#  if __ARM_FP & 2
+#    define USING_NEON_F16C
+#  endif
+#  if defined(__ARM_FEATURE_FP16_VECTOR_ARITHMETIC) && defined(SKCMS_OPT_INTO_NEON_FP16)
+#    define USING_NEON_FP16
+#  endif
 #endif
 
 // These -Wvector-conversion warnings seem to trigger in very bogus situations,
 // like vst3q_f32() expecting a 16x char rather than a 4x float vector.  :/
 #if defined(USING_NEON) && defined(__clang__)
-#pragma clang diagnostic ignored "-Wvector-conversion"
+#  pragma clang diagnostic ignored "-Wvector-conversion"
 #endif
 
 // GCC warns us about returning U64 on x86 because it's larger than a register.
 // You'd see warnings like, "using AVX even though AVX is not enabled".
 // We stifle these warnings... our helpers that return U64 are always inlined.
 #if defined(__SSE__) && defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic ignored "-Wpsabi"
+#  pragma GCC diagnostic ignored "-Wpsabi"
 #endif
 
 #if defined(__clang__)
-#define FALLTHROUGH [[clang::fallthrough]]
+#  define FALLTHROUGH [[clang::fallthrough]]
 #else
-#define FALLTHROUGH
+#  define FALLTHROUGH
 #endif
 
 // We tag most helper functions as SI, to enforce good code generation
@@ -81,9 +81,9 @@ static constexpr F F0 = 0.0f, F1 = 1.0f;
 //
 // It helps codegen to call __builtin_memcpy() when we know the byte count at compile time.
 #if defined(__clang__) || defined(__GNUC__)
-#define SI static inline __attribute__((always_inline))
+#  define SI static inline __attribute__((always_inline))
 #else
-#define SI static inline
+#  define SI static inline
 #endif
 
 template <typename T, typename P>
@@ -471,11 +471,11 @@ SI U32 gather_24(const uint8_t* p, I32 ix) {
     // but the intrinsic takes a const int*.
     const int* p4 = bit_pun<const int*>(p);
     I32 zero = {0, 0, 0, 0, 0, 0, 0, 0}, mask = {-1, -1, -1, -1, -1, -1, -1, -1};
-#if defined(__clang__)
+#  if defined(__clang__)
     U32 v = (U32)__builtin_ia32_gatherd_d256(zero, p4, 3 * ix, mask, 1);
-#elif defined(__GNUC__)
+#  elif defined(__GNUC__)
     U32 v = (U32)__builtin_ia32_gathersiv8si(zero, p4, 3 * ix, mask, 1);
-#endif
+#  endif
 #elif N == 16
     (void)load_24_32;
     // The intrinsic is supposed to take const void* now, but it takes const int*, just like AVX2.
@@ -496,21 +496,21 @@ SI void gather_48(const uint8_t* p, I32 ix, U64* v) {
   // Load the i'th 48-bit value from p, and 2 extra bytes.
   auto load_48_64 = [p](int i) { return load<uint64_t>(p + 6 * i); };
 
-#if N == 1
+#  if N == 1
   *v = load_48_64(ix);
-#elif N == 4
+#  elif N == 4
   *v = U64{
       load_48_64(ix[0]),
       load_48_64(ix[1]),
       load_48_64(ix[2]),
       load_48_64(ix[3]),
   };
-#elif N == 8 && !defined(USING_AVX2)
+#  elif N == 8 && !defined(USING_AVX2)
   *v = U64{
       load_48_64(ix[0]), load_48_64(ix[1]), load_48_64(ix[2]), load_48_64(ix[3]),
       load_48_64(ix[4]), load_48_64(ix[5]), load_48_64(ix[6]), load_48_64(ix[7]),
   };
-#elif N == 8
+#  elif N == 8
   (void)load_48_64;
   typedef int32_t __attribute__((vector_size(16))) Half_I32;
   typedef long long __attribute__((vector_size(32))) Half_I64;
@@ -524,23 +524,23 @@ SI void gather_48(const uint8_t* p, I32 ix, U64* v) {
   ix *= 6;
   Half_I32 ix_lo = {ix[0], ix[1], ix[2], ix[3]}, ix_hi = {ix[4], ix[5], ix[6], ix[7]};
 
-#if defined(__clang__)
+#    if defined(__clang__)
   Half_I64 lo = (Half_I64)__builtin_ia32_gatherd_q256(zero, p8, ix_lo, mask, 1),
            hi = (Half_I64)__builtin_ia32_gatherd_q256(zero, p8, ix_hi, mask, 1);
-#elif defined(__GNUC__)
+#    elif defined(__GNUC__)
   Half_I64 lo = (Half_I64)__builtin_ia32_gathersiv4di(zero, p8, ix_lo, mask, 1),
            hi = (Half_I64)__builtin_ia32_gathersiv4di(zero, p8, ix_hi, mask, 1);
-#endif
+#    endif
   store((char*)v + 0, lo);
   store((char*)v + 32, hi);
-#elif N == 16
+#  elif N == 16
   (void)load_48_64;
   const long long int* p8 = bit_pun<const long long int*>(p);
   __m512i lo = _mm512_i32gather_epi64(_mm512_extracti32x8_epi32((__m512i)(6 * ix), 0), p8, 1),
           hi = _mm512_i32gather_epi64(_mm512_extracti32x8_epi32((__m512i)(6 * ix), 1), p8, 1);
   store((char*)v + 0, lo);
   store((char*)v + 64, hi);
-#endif
+#  endif
 
   *v >>= 16;
 }
@@ -551,8 +551,8 @@ SI F F_from_U8(U8 v) { return cast<F>(v) * (1 / 255.0f); }
 SI F F_from_U16_BE(U16 v) {
     // All 16-bit ICC values are big-endian, so we byte swap before converting to float.
     // MSVC catches the "loss" of data here in the portable path, so we also make sure to mask.
-    v = (U16)(((v << 8) | (v >> 8)) & 0xffff);
-    return cast<F>(v) * (1 / 65535.0f);
+    U16 lo = (v >> 8), hi = (v << 8) & 0xffff;
+    return cast<F>(lo | hi) * (1 / 65535.0f);
 }
 
 SI U16 U16_from_F(F v) {
@@ -618,11 +618,12 @@ SI void sample_clut_16(const skcms_A2B* a2b, I32 ix, F* r, F* g, F* b) {
 }
 
 // GCC 7.2.0 hits an internal compiler error with -finline-functions (or -O3)
-// when targeting MIPS 64,  I think attempting to inline clut() into exec_ops().
-#if 1 && defined(__GNUC__) && !defined(__clang__) && defined(__mips64)
-#define MAYBE_NOINLINE __attribute__((noinline))
+// when targeting MIPS 64, i386, or s390x,  I think attempting to inline clut() into exec_ops().
+#if 1 && defined(__GNUC__) && !defined(__clang__) && \
+    (defined(__mips64) || defined(__i386) || defined(__s390x__))
+#  define MAYBE_NOINLINE __attribute__((noinline))
 #else
-#define MAYBE_NOINLINE
+#  define MAYBE_NOINLINE
 #endif
 
 MAYBE_NOINLINE
@@ -1427,26 +1428,26 @@ static void run_program(
 
 // Clean up any #defines we may have set so that we can be #included again.
 #if defined(USING_AVX)
-#undef USING_AVX
+#  undef USING_AVX
 #endif
 #if defined(USING_AVX_F16C)
-#undef USING_AVX_F16C
+#  undef USING_AVX_F16C
 #endif
 #if defined(USING_AVX2)
-#undef USING_AVX2
+#  undef USING_AVX2
 #endif
 #if defined(USING_AVX512F)
-#undef USING_AVX512F
+#  undef USING_AVX512F
 #endif
 
 #if defined(USING_NEON)
-#undef USING_NEON
+#  undef USING_NEON
 #endif
 #if defined(USING_NEON_F16C)
-#undef USING_NEON_F16C
+#  undef USING_NEON_F16C
 #endif
 #if defined(USING_NEON_FP16)
-#undef USING_NEON_FP16
+#  undef USING_NEON_FP16
 #endif
 
 #undef FALLTHROUGH

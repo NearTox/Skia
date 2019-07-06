@@ -88,7 +88,7 @@ DEF_GM(return new StringArtGM;)
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if 0
-#include "modules/skottie/include/Skottie.h"
+#  include "modules/skottie/include/Skottie.h"
 
 class SkottieGM : public skiagm::GM {
     enum {

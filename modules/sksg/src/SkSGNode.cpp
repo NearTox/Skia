@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "modules/sksg/include/SkSGNode.h"
 #include "modules/sksg/include/SkSGInvalidationController.h"
+#include "modules/sksg/include/SkSGNode.h"
 #include "src/core/SkRectPriv.h"
 
 #include <algorithm>
@@ -15,8 +15,7 @@ namespace sksg {
 
 class Node::ScopedFlag {
  public:
-  ScopedFlag(Node* node, uint32_t flag) noexcept
-      : fNode(node), fFlag(flag), fWasSet(node->fFlags & flag) {
+  ScopedFlag(Node* node, uint32_t flag) : fNode(node), fFlag(flag), fWasSet(node->fFlags & flag) {
     node->fFlags |= flag;
   }
   ~ScopedFlag() {
@@ -25,7 +24,7 @@ class Node::ScopedFlag {
     }
   }
 
-  bool wasSet() const noexcept { return fWasSet; }
+  bool wasSet() const { return fWasSet; }
 
  private:
   Node* fNode;
@@ -37,7 +36,7 @@ class Node::ScopedFlag {
   ScopedFlag traversal_guard(this, kInTraversal_Flag); \
   if (traversal_guard.wasSet()) return
 
-Node::Node(uint32_t invalTraits) noexcept
+Node::Node(uint32_t invalTraits)
     : fInvalObserver(nullptr),
       fBounds(SkRectPriv::MakeLargeS32()),
       fInvalTraits(invalTraits),

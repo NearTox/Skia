@@ -135,8 +135,8 @@ class QuadStrokerView : public Sample {
   bool fDrawTangents;
   bool fDrawTDivs;
 #ifdef SK_DEBUG
-#define kStrokerErrorMin 0.001f
-#define kStrokerErrorMax 5
+#  define kStrokerErrorMin 0.001f
+#  define kStrokerErrorMax 5
 #endif
 #define kWidthMin 1
 #define kWidthMax 100

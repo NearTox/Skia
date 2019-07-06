@@ -23,10 +23,10 @@ class SkColorShader : public SkShaderBase {
   */
   explicit SkColorShader(SkColor c);
 
-  bool isOpaque() const noexcept override;
-  bool isConstant() const noexcept override { return true; }
+  bool isOpaque() const override;
+  bool isConstant() const override { return true; }
 
-  GradientType asAGradient(GradientInfo* info) const noexcept override;
+  GradientType asAGradient(GradientInfo* info) const override;
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
@@ -37,7 +37,7 @@ class SkColorShader : public SkShaderBase {
 
   void flatten(SkWriteBuffer&) const override;
 
-  bool onAsLuminanceColor(SkColor* lum) const noexcept override {
+  bool onAsLuminanceColor(SkColor* lum) const override {
     *lum = fColor;
     return true;
   }
@@ -51,8 +51,8 @@ class SkColor4Shader : public SkShaderBase {
  public:
   SkColor4Shader(const SkColor4f&, sk_sp<SkColorSpace>);
 
-  bool isOpaque() const noexcept override { return fColor.isOpaque(); }
-  bool isConstant() const noexcept override { return true; }
+  bool isOpaque() const override { return fColor.isOpaque(); }
+  bool isConstant() const override { return true; }
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;

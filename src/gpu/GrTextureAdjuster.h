@@ -34,13 +34,13 @@ class GrTextureAdjuster : public GrTextureProducer {
       bool useDecal = false);
 
  protected:
-  SkAlphaType alphaType() const noexcept override { return fAlphaType; }
-  SkColorSpace* colorSpace() const noexcept override { return fColorSpace; }
+  SkAlphaType alphaType() const override { return fAlphaType; }
+  SkColorSpace* colorSpace() const override { return fColorSpace; }
   void makeCopyKey(const CopyParams& params, GrUniqueKey* copyKey) override;
   void didCacheCopy(const GrUniqueKey& copyKey, uint32_t contextUniqueID) override;
 
-  GrTextureProxy* originalProxy() const noexcept { return fOriginal.get(); }
-  sk_sp<GrTextureProxy> originalProxyRef() const noexcept { return fOriginal; }
+  GrTextureProxy* originalProxy() const { return fOriginal.get(); }
+  sk_sp<GrTextureProxy> originalProxyRef() const { return fOriginal; }
 
  private:
   sk_sp<GrTextureProxy> onRefTextureProxyForParams(

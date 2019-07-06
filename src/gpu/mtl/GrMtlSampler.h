@@ -10,8 +10,8 @@
 
 #import <metal/metal.h>
 
-#include <atomic>
 #include "src/core/SkOpts.h"
+#include <atomic>
 
 class GrSamplerState;
 class GrMtlGpu;

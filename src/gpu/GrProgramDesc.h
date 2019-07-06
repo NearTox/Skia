@@ -44,10 +44,10 @@ class GrProgramDesc {
       const GrPipeline&, GrGpu*);
 
   // Returns this as a uint32_t array to be used as a key in the program cache.
-  const uint32_t* asKey() const noexcept { return reinterpret_cast<const uint32_t*>(fKey.begin()); }
+  const uint32_t* asKey() const { return reinterpret_cast<const uint32_t*>(fKey.begin()); }
 
   // Gets the number of bytes in asKey(). It will be a 4-byte aligned value.
-  uint32_t keyLength() const noexcept {
+  uint32_t keyLength() const {
     SkASSERT(0 == (fKey.count() % 4));
     return fKey.count();
   }
@@ -59,7 +59,7 @@ class GrProgramDesc {
     return *this;
   }
 
-  bool operator==(const GrProgramDesc& that) const noexcept {
+  bool operator==(const GrProgramDesc& that) const {
     if (this->keyLength() != that.keyLength()) {
       return false;
     }
@@ -76,7 +76,7 @@ class GrProgramDesc {
     return true;
   }
 
-  bool operator!=(const GrProgramDesc& other) const noexcept { return !(*this == other); }
+  bool operator!=(const GrProgramDesc& other) const { return !(*this == other); }
 
   void setSurfaceOriginKey(int key) {
     KeyHeader* header = this->atOffset<KeyHeader, kHeaderOffset>();
@@ -84,8 +84,8 @@ class GrProgramDesc {
   }
 
   struct KeyHeader {
-    bool hasSurfaceOriginKey() const noexcept { return SkToBool(fSurfaceOriginKey); }
-    GrProcessor::CustomFeatures processorFeatures() const noexcept {
+    bool hasSurfaceOriginKey() const { return SkToBool(fSurfaceOriginKey); }
+    GrProcessor::CustomFeatures processorFeatures() const {
       return (GrProcessor::CustomFeatures)fProcessorFeatures;
     }
 
@@ -136,8 +136,8 @@ class GrProgramDesc {
         kHeaderOffset + kHeaderSize + kMaxPreallocProcessors * sizeof(uint32_t) * kIntsPerProcessor,
   };
 
-  SkSTArray<kPreAllocSize, uint8_t, true>& key() noexcept { return fKey; }
-  const SkSTArray<kPreAllocSize, uint8_t, true>& key() const noexcept { return fKey; }
+  SkSTArray<kPreAllocSize, uint8_t, true>& key() { return fKey; }
+  const SkSTArray<kPreAllocSize, uint8_t, true>& key() const { return fKey; }
 
  private:
   SkSTArray<kPreAllocSize, uint8_t, true> fKey;

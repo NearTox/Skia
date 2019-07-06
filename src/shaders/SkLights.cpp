@@ -6,8 +6,8 @@
  * found in the LICENSE file.
  */
 
-#include "src/shaders/SkLights.h"
 #include "src/core/SkReadBuffer.h"
+#include "src/shaders/SkLights.h"
 
 sk_sp<SkLights> SkLights::MakeFromBuffer(SkReadBuffer& buf) {
   Builder builder;
@@ -48,7 +48,7 @@ sk_sp<SkLights> SkLights::MakeFromBuffer(SkReadBuffer& buf) {
   return builder.finish();
 }
 
-void SkLights::flatten(SkWriteBuffer& buf) const noexcept {
+void SkLights::flatten(SkWriteBuffer& buf) const {
   buf.writeScalarArray(&this->ambientLightColor().fX, 3);
 
   buf.writeInt(this->numLights());

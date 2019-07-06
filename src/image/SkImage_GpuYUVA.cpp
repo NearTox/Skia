@@ -129,7 +129,7 @@ GrSemaphoresSubmitted SkImage_GpuYUVA::onFlush(GrContext* context, const GrFlush
   return context->priv().flushSurfaces(proxies, numProxies, info);
 }
 
-GrTextureProxy* SkImage_GpuYUVA::peekProxy() const noexcept { return fRGBProxy.get(); }
+GrTextureProxy* SkImage_GpuYUVA::peekProxy() const { return fRGBProxy.get(); }
 
 sk_sp<GrTextureProxy> SkImage_GpuYUVA::asTextureProxyRef(GrRecordingContext* context) const {
   if (fRGBProxy) {

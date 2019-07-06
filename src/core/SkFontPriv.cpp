@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkFontPriv.h"
 #include "include/core/SkGraphics.h"
 #include "include/core/SkMatrix.h"
+#include "src/core/SkFontPriv.h"
 
-static constexpr SkScalar mag2(SkScalar x, SkScalar y) noexcept { return x * x + y * y; }
+static SkScalar mag2(SkScalar x, SkScalar y) { return x * x + y * y; }
 
-static bool tooBig(const SkMatrix& m, SkScalar ma2max) noexcept {
+static bool tooBig(const SkMatrix& m, SkScalar ma2max) {
   return mag2(m[SkMatrix::kMScaleX], m[SkMatrix::kMSkewY]) > ma2max ||
          mag2(m[SkMatrix::kMSkewX], m[SkMatrix::kMScaleY]) > ma2max;
 }

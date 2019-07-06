@@ -36,7 +36,7 @@ bool Merge::onContains(const SkPoint& p) const { return fMerged.contains(p.x(), 
 
 SkPath Merge::onAsPath() const { return fMerged; }
 
-static SkPathOp mode_to_op(Merge::Mode mode) noexcept {
+static SkPathOp mode_to_op(Merge::Mode mode) {
   switch (mode) {
     case Merge::Mode::kUnion: return kUnion_SkPathOp;
     case Merge::Mode::kIntersect: return kIntersect_SkPathOp;

@@ -11,13 +11,13 @@
 // IWYU pragma: begin_exports
 #include "include/core/SkPreConfig.h"
 #if defined(SK_USER_CONFIG_HEADER)
-#include SK_USER_CONFIG_HEADER
+#  include SK_USER_CONFIG_HEADER
 #else
-#include "include/config/SkUserConfig.h"
+#  include "include/config/SkUserConfig.h"
 #endif
+#include "include/core/SkPostConfig.h"
 #include <stddef.h>
 #include <stdint.h>
-#include "include/core/SkPostConfig.h"
 // IWYU pragma: end_exports
 
 /** \file SkTypes.h
@@ -27,10 +27,10 @@
     The platform implementation must not return, but should either throw
     an exception or otherwise exit.
 */
-SK_API extern void sk_abort_no_print(void) noexcept;
+SK_API extern void sk_abort_no_print(void);
 
 #ifndef SkDebugf
-SK_API void SkDebugf(const char format[], ...) noexcept;
+SK_API void SkDebugf(const char format[], ...);
 #endif
 
 // SkASSERT, SkASSERTF and SkASSERT_RELEASE can be used as stand alone assertion expressions, e.g.
@@ -44,35 +44,35 @@ SK_API void SkDebugf(const char format[], ...) noexcept;
 //               x - 4;
 //    }
 #define SkASSERT_RELEASE(cond) \
-  static_cast<void>((cond) ? (void)0 : []() noexcept { SK_ABORT("assert(" #cond ")"); }())
+  static_cast<void>((cond) ? (void)0 : [] { SK_ABORT("assert(" #cond ")"); }())
 
 #ifdef SK_DEBUG
-#define SkASSERT(cond) SkASSERT_RELEASE(cond)
-#define SkASSERTF(cond, fmt, ...)            \
-  static_cast<void>((cond) ? (void)0 : [&] { \
-    SkDebugf(fmt "\n", __VA_ARGS__);         \
-    SK_ABORT("assert(" #cond ")");           \
-  }())
-#define SkDEBUGFAIL(message) SK_ABORT(message)
-#define SkDEBUGFAILF(fmt, ...) SkASSERTF(false, fmt, ##__VA_ARGS__)
-#define SkDEBUGCODE(...) __VA_ARGS__
-#define SkDEBUGF(...) SkDebugf(__VA_ARGS__)
-#define SkAssertResult(cond) SkASSERT(cond)
+#  define SkASSERT(cond) SkASSERT_RELEASE(cond)
+#  define SkASSERTF(cond, fmt, ...)            \
+    static_cast<void>((cond) ? (void)0 : [&] { \
+      SkDebugf(fmt "\n", __VA_ARGS__);         \
+      SK_ABORT("assert(" #cond ")");           \
+    }())
+#  define SkDEBUGFAIL(message) SK_ABORT(message)
+#  define SkDEBUGFAILF(fmt, ...) SkASSERTF(false, fmt, ##__VA_ARGS__)
+#  define SkDEBUGCODE(...) __VA_ARGS__
+#  define SkDEBUGF(...) SkDebugf(__VA_ARGS__)
+#  define SkAssertResult(cond) SkASSERT(cond)
 #else
-#define SkASSERT(cond) static_cast<void>(0)
-#define SkASSERTF(cond, fmt, ...) static_cast<void>(0)
-#define SkDEBUGFAIL(message)
-#define SkDEBUGFAILF(fmt, ...)
-#define SkDEBUGCODE(...)
-#define SkDEBUGF(...)
+#  define SkASSERT(cond) static_cast<void>(0)
+#  define SkASSERTF(cond, fmt, ...) static_cast<void>(0)
+#  define SkDEBUGFAIL(message)
+#  define SkDEBUGFAILF(fmt, ...)
+#  define SkDEBUGCODE(...)
+#  define SkDEBUGF(...)
 
 // unlike SkASSERT, this macro executes its condition in the non-debug build.
 // The if is present so that this can be used with functions marked SK_WARN_UNUSED_RESULT.
-#define SkAssertResult(cond) \
-  if (cond) {                \
-  }                          \
-  do {                       \
-  } while (false)
+#  define SkAssertResult(cond) \
+    if (cond) {                \
+    }                          \
+    do {                       \
+    } while (false)
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -189,7 +189,7 @@ static constexpr uint32_t SK_InvalidGenID = 0;
  */
 static constexpr uint32_t SK_InvalidUniqueID = 0;
 
-static constexpr inline int32_t SkAbs32(int32_t value) noexcept {
+static inline int32_t SkAbs32(int32_t value) {
   SkASSERT(value != SK_NaN32);  // The most negative int32_t can't be negated.
   if (value < 0) {
     value = -value;
@@ -198,35 +198,35 @@ static constexpr inline int32_t SkAbs32(int32_t value) noexcept {
 }
 
 template <typename T>
-static inline T SkTAbs(T value) noexcept {
+static inline T SkTAbs(T value) {
   if (value < 0) {
     value = -value;
   }
   return value;
 }
 
-static constexpr inline int32_t SkMax32(int32_t a, int32_t b) noexcept {
+static inline int32_t SkMax32(int32_t a, int32_t b) {
   if (a < b) a = b;
   return a;
 }
 
-static constexpr inline int32_t SkMin32(int32_t a, int32_t b) noexcept {
+static inline int32_t SkMin32(int32_t a, int32_t b) {
   if (a > b) a = b;
   return a;
 }
 
 template <typename T>
-constexpr const T& SkTMin(const T& a, const T& b) noexcept {
+constexpr const T& SkTMin(const T& a, const T& b) {
   return (a < b) ? a : b;
 }
 
 template <typename T>
-constexpr const T& SkTMax(const T& a, const T& b) noexcept {
+constexpr const T& SkTMax(const T& a, const T& b) {
   return (b < a) ? a : b;
 }
 
 template <typename T>
-constexpr const T& SkTClamp(const T& x, const T& lo, const T& hi) noexcept {
+constexpr const T& SkTClamp(const T& x, const T& lo, const T& hi) {
   return (x < lo) ? lo : SkTMin(x, hi);
 }
 

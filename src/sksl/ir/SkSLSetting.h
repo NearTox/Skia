@@ -18,7 +18,7 @@ namespace SkSL {
  * collapsed down to their constant representations during the compilation process.
  */
 struct Setting : public Expression {
-  Setting(int offset, String name, std::unique_ptr<Expression> value) noexcept
+  Setting(int offset, String name, std::unique_ptr<Expression> value)
       : INHERITED(offset, kSetting_Kind, value->fType),
         fName(std::move(name)),
         fValue(std::move(value)) {
@@ -32,11 +32,11 @@ struct Setting : public Expression {
     return std::unique_ptr<Expression>(new Setting(fOffset, fName, fValue->clone()));
   }
 
-  String description() const noexcept override { return fName; }
+  String description() const override { return fName; }
 
-  bool hasSideEffects() const noexcept override { return false; }
+  bool hasSideEffects() const override { return false; }
 
-  bool isConstant() const noexcept override { return true; }
+  bool isConstant() const override { return true; }
 
   const String fName;
   std::unique_ptr<Expression> fValue;

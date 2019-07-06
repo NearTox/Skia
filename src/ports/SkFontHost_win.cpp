@@ -37,9 +37,9 @@
 #include "src/utils/SkMatrix22.h"
 #include "src/utils/win/SkHRESULT.h"
 
-#include <objbase.h>
 #include <tchar.h>
 #include <usp10.h>
+#  include <objbase.h>
 
 static void (*gEnsureLOGFONTAccessibleProc)(const LOGFONT&);
 
@@ -63,11 +63,11 @@ typedef uint32_t SkGdiRGB;
 // for rotated text, regardless of GDI's notions.
 //#define SK_ENFORCE_ROTATED_TEXT_AA_ON_WINDOWS
 
-static bool isLCD(const SkScalerContextRec& rec) noexcept {
+static bool isLCD(const SkScalerContextRec& rec) {
   return SkMask::kLCD16_Format == rec.fMaskFormat;
 }
 
-static bool bothZero(SkScalar a, SkScalar b) noexcept { return 0 == a && 0 == b; }
+static bool bothZero(SkScalar a, SkScalar b) { return 0 == a && 0 == b; }
 
 // returns false if there is any non-90-rotation or skew
 static bool isAxisAligned(const SkScalerContextRec& rec) {
@@ -75,8 +75,8 @@ static bool isAxisAligned(const SkScalerContextRec& rec) {
                                 bothZero(rec.fPost2x2[0][0], rec.fPost2x2[1][1]));
 }
 
-static bool needToRenderWithSkia(const SkScalerContextRec& rec) noexcept {
-#ifdef SK_ENFORCE_ROTATED_TEXT_AA_ON_WINDOWS
+static bool needToRenderWithSkia(const SkScalerContextRec& rec) {
+#  ifdef SK_ENFORCE_ROTATED_TEXT_AA_ON_WINDOWS
   // What we really want to catch is when GDI will ignore the AA request and give
   // us BW instead. Smallish rotated text is one heuristic, so this code is just
   // an approximation. We shouldn't need to do this for larger sizes, but at those
@@ -85,7 +85,7 @@ static bool needToRenderWithSkia(const SkScalerContextRec& rec) noexcept {
   if (SkMask::kA8_Format == rec.fMaskFormat && !isAxisAligned(rec)) {
     return true;
   }
-#endif
+#  endif
   return rec.getHinting() == SkFontHinting::kNone || rec.getHinting() == SkFontHinting::kSlight;
 }
 
@@ -94,9 +94,9 @@ static void tchar_to_skstring(const TCHAR t[], SkString* s) {
   size_t sSize = WideCharToMultiByte(CP_UTF8, 0, t, -1, nullptr, 0, nullptr, nullptr);
   s->resize(sSize);
   WideCharToMultiByte(CP_UTF8, 0, t, -1, s->writable_str(), sSize, nullptr, nullptr);
-#else
+#  else
   s->set(t);
-#endif
+#  endif
 }
 
 static void dcfontname_to_skstring(HDC deviceContext, const LOGFONT& lf, SkString* familyName) {
@@ -119,7 +119,7 @@ static void dcfontname_to_skstring(HDC deviceContext, const LOGFONT& lf, SkStrin
   tchar_to_skstring(fontName.get(), familyName);
 }
 
-static void make_canonical(LOGFONT* lf) noexcept {
+static void make_canonical(LOGFONT* lf) {
   lf->lfHeight = -64;
   lf->lfWidth = 0;  // lfWidth is related to lfHeight, not to the OS/2::usWidthClass.
   lf->lfQuality = CLEARTYPE_QUALITY;  // PROOF_QUALITY;
@@ -127,14 +127,14 @@ static void make_canonical(LOGFONT* lf) noexcept {
   //    lf->lfClipPrecision = 64;
 }
 
-static SkFontStyle get_style(const LOGFONT& lf) noexcept {
+static SkFontStyle get_style(const LOGFONT& lf) {
   return SkFontStyle(
       lf.lfWeight, SkFontStyle::kNormal_Width,
       lf.lfItalic ? SkFontStyle::kItalic_Slant : SkFontStyle::kUpright_Slant);
 }
 
-static inline FIXED SkFixedToFIXED(SkFixed x) noexcept { return *(FIXED*)(&x); }
-static inline SkFixed SkFIXEDToFixed(FIXED x) noexcept { return *(SkFixed*)(&x); }
+static inline FIXED SkFixedToFIXED(SkFixed x) { return *(FIXED*)(&x); }
+static inline SkFixed SkFIXEDToFixed(FIXED x) { return *(SkFixed*)(&x); }
 
 static inline FIXED SkScalarToFIXED(SkScalar x) { return SkFixedToFIXED(SkScalarToFixed(x)); }
 
@@ -284,7 +284,7 @@ class FontMemResourceTypeface : public LogFontTypeface {
   }
 
  protected:
-  void weak_dispose() const noexcept override {
+  void weak_dispose() const override {
     RemoveFontMemResourceEx(fFontMemResource);
     // SkTypefaceCache::Remove(this);
     INHERITED::weak_dispose();
@@ -302,12 +302,12 @@ class FontMemResourceTypeface : public LogFontTypeface {
   typedef LogFontTypeface INHERITED;
 };
 
-static const LOGFONT& get_default_font() noexcept {
+static const LOGFONT& get_default_font() {
   static LOGFONT gDefaultFont;
   return gDefaultFont;
 }
 
-static bool FindByLogFont(SkTypeface* face, void* ctx) noexcept {
+static bool FindByLogFont(SkTypeface* face, void* ctx) {
   LogFontTypeface* lface = static_cast<LogFontTypeface*>(face);
   const LOGFONT* lf = reinterpret_cast<const LOGFONT*>(ctx);
 
@@ -884,9 +884,9 @@ void SkScalerContext_GDI::generateFontMetrics(SkFontMetrics* metrics) {
 
   SkASSERT(fDDC);
 
-#ifndef SK_GDI_ALWAYS_USE_TEXTMETRICS_FOR_FONT_METRICS
+#  ifndef SK_GDI_ALWAYS_USE_TEXTMETRICS_FOR_FONT_METRICS
   if (fType == SkScalerContext_GDI::kBitmap_Type || fType == SkScalerContext_GDI::kLine_Type) {
-#endif
+#  endif
     metrics->fTop = SkIntToScalar(-fTM.tmAscent);
     metrics->fAscent = SkIntToScalar(-fTM.tmAscent);
     metrics->fDescent = SkIntToScalar(fTM.tmDescent);
@@ -897,7 +897,7 @@ void SkScalerContext_GDI::generateFontMetrics(SkFontMetrics* metrics) {
     metrics->fXMin = 0;
     metrics->fXMax = metrics->fMaxCharWidth;
     // metrics->fXHeight = 0;
-#ifndef SK_GDI_ALWAYS_USE_TEXTMETRICS_FOR_FONT_METRICS
+#  ifndef SK_GDI_ALWAYS_USE_TEXTMETRICS_FOR_FONT_METRICS
     return;
   }
 #endif
@@ -923,7 +923,7 @@ void SkScalerContext_GDI::generateFontMetrics(SkFontMetrics* metrics) {
   metrics->fMaxCharWidth = SkIntToScalar(otm.otmTextMetrics.tmMaxCharWidth);
   metrics->fXMin = SkIntToScalar(otm.otmrcFontBox.left);
   metrics->fXMax = SkIntToScalar(otm.otmrcFontBox.right);
-#endif
+#  endif
   metrics->fUnderlineThickness = SkIntToScalar(otm.otmsUnderscoreSize);
   metrics->fUnderlinePosition = -SkIntToScalar(otm.otmsUnderscorePosition);
 
@@ -1008,11 +1008,11 @@ static inline uint16_t rgb_to_lcd16(
   U8CPU r = sk_apply_lut_if<APPLY_PREBLEND>((rgb >> 16) & 0xFF, tableR);
   U8CPU g = sk_apply_lut_if<APPLY_PREBLEND>((rgb >> 8) & 0xFF, tableG);
   U8CPU b = sk_apply_lut_if<APPLY_PREBLEND>((rgb >> 0) & 0xFF, tableB);
-#if SK_SHOW_TEXT_BLIT_COVERAGE
+#  if SK_SHOW_TEXT_BLIT_COVERAGE
   r = SkMax32(r, 10);
   g = SkMax32(g, 10);
   b = SkMax32(b, 10);
-#endif
+#  endif
   return SkPack888ToRGB16(r, g, b);
 }
 
@@ -1026,9 +1026,9 @@ static void rgb_to_a8(
   for (int y = 0; y < glyph.fHeight; y++) {
     for (int i = 0; i < width; i++) {
       dst[i] = rgb_to_a8<APPLY_PREBLEND>(src[i], table8);
-#if SK_SHOW_TEXT_BLIT_COVERAGE
+#  if SK_SHOW_TEXT_BLIT_COVERAGE
       dst[i] = SkMax32(dst[i], 10);
-#endif
+#  endif
     }
     src = SkTAddOffset<const SkGdiRGB>(src, srcRB);
     dst -= dstRB;
@@ -1067,70 +1067,70 @@ void SkScalerContext_GDI::generateImage(const SkGlyph& glyph) {
       sk_bzero(glyph.fImage, glyph.computeImageSize());
       return;
     }
-  }
-
-  if (!isBW) {
-    const uint8_t* table;
-    // The offscreen contains a GDI blit if isAA and kGenA8FromLCD_Flag is not set.
-    // Otherwise the offscreen contains a ClearType blit.
-    if (isAA && !(fRec.fFlags & SkScalerContext::kGenA8FromLCD_Flag)) {
-      table = getInverseGammaTableGDI();
-    } else {
-      table = getInverseGammaTableClearType();
     }
-    // Note that the following cannot really be integrated into the
-    // pre-blend, since we may not be applying the pre-blend; when we aren't
-    // applying the pre-blend it means that a filter wants linear anyway.
-    // Other code may also be applying the pre-blend, so we'd need another
-    // one with this and one without.
-    SkGdiRGB* addr = (SkGdiRGB*)bits;
-    for (int y = 0; y < glyph.fHeight; ++y) {
-      for (int x = 0; x < glyph.fWidth; ++x) {
-        int r = (addr[x] >> 16) & 0xFF;
-        int g = (addr[x] >> 8) & 0xFF;
-        int b = (addr[x] >> 0) & 0xFF;
-        addr[x] = (table[r] << 16) | (table[g] << 8) | table[b];
+
+    if (!isBW) {
+      const uint8_t* table;
+      // The offscreen contains a GDI blit if isAA and kGenA8FromLCD_Flag is not set.
+      // Otherwise the offscreen contains a ClearType blit.
+      if (isAA && !(fRec.fFlags & SkScalerContext::kGenA8FromLCD_Flag)) {
+        table = getInverseGammaTableGDI();
+      } else {
+        table = getInverseGammaTableClearType();
       }
-      addr = SkTAddOffset<SkGdiRGB>(addr, srcRB);
+      // Note that the following cannot really be integrated into the
+      // pre-blend, since we may not be applying the pre-blend; when we aren't
+      // applying the pre-blend it means that a filter wants linear anyway.
+      // Other code may also be applying the pre-blend, so we'd need another
+      // one with this and one without.
+      SkGdiRGB* addr = (SkGdiRGB*)bits;
+      for (int y = 0; y < glyph.fHeight; ++y) {
+        for (int x = 0; x < glyph.fWidth; ++x) {
+          int r = (addr[x] >> 16) & 0xFF;
+          int g = (addr[x] >> 8) & 0xFF;
+          int b = (addr[x] >> 0) & 0xFF;
+          addr[x] = (table[r] << 16) | (table[g] << 8) | table[b];
+        }
+        addr = SkTAddOffset<SkGdiRGB>(addr, srcRB);
+      }
     }
-  }
 
-  size_t dstRB = glyph.rowBytes();
-  if (isBW) {
-    const uint8_t* src = (const uint8_t*)bits;
-    uint8_t* dst = (uint8_t*)((char*)glyph.fImage + (glyph.fHeight - 1) * dstRB);
-    for (int y = 0; y < glyph.fHeight; y++) {
-      memcpy(dst, src, dstRB);
-      src += srcRB;
-      dst -= dstRB;
-    }
+    size_t dstRB = glyph.rowBytes();
+    if (isBW) {
+      const uint8_t* src = (const uint8_t*)bits;
+      uint8_t* dst = (uint8_t*)((char*)glyph.fImage + (glyph.fHeight - 1) * dstRB);
+      for (int y = 0; y < glyph.fHeight; y++) {
+        memcpy(dst, src, dstRB);
+        src += srcRB;
+        dst -= dstRB;
+      }
 #if SK_SHOW_TEXT_BLIT_COVERAGE
-    if (glyph.fWidth > 0 && glyph.fHeight > 0) {
-      int bitCount = glyph.fWidth & 7;
-      uint8_t* first = (uint8_t*)glyph.fImage;
-      uint8_t* last = (uint8_t*)((char*)glyph.fImage + glyph.fHeight * dstRB - 1);
-      *first |= 1 << 7;
-      *last |= bitCount == 0 ? 1 : 1 << (8 - bitCount);
-    }
+      if (glyph.fWidth > 0 && glyph.fHeight > 0) {
+        int bitCount = glyph.fWidth & 7;
+        uint8_t* first = (uint8_t*)glyph.fImage;
+        uint8_t* last = (uint8_t*)((char*)glyph.fImage + glyph.fHeight * dstRB - 1);
+        *first |= 1 << 7;
+        *last |= bitCount == 0 ? 1 : 1 << (8 - bitCount);
+      }
 #endif
-  } else if (isAA) {
-    // since the caller may require A8 for maskfilters, we can't check for BW
-    // ... until we have the caller tell us that explicitly
-    const SkGdiRGB* src = (const SkGdiRGB*)bits;
-    if (fPreBlend.isApplicable()) {
-      rgb_to_a8<true>(src, srcRB, glyph, fPreBlend.fG);
-    } else {
-      rgb_to_a8<false>(src, srcRB, glyph, fPreBlend.fG);
+    } else if (isAA) {
+      // since the caller may require A8 for maskfilters, we can't check for BW
+      // ... until we have the caller tell us that explicitly
+      const SkGdiRGB* src = (const SkGdiRGB*)bits;
+      if (fPreBlend.isApplicable()) {
+        rgb_to_a8<true>(src, srcRB, glyph, fPreBlend.fG);
+      } else {
+        rgb_to_a8<false>(src, srcRB, glyph, fPreBlend.fG);
+      }
+    } else {  // LCD16
+      const SkGdiRGB* src = (const SkGdiRGB*)bits;
+      SkASSERT(SkMask::kLCD16_Format == glyph.fMaskFormat);
+      if (fPreBlend.isApplicable()) {
+        rgb_to_lcd16<true>(src, srcRB, glyph, fPreBlend.fR, fPreBlend.fG, fPreBlend.fB);
+      } else {
+        rgb_to_lcd16<false>(src, srcRB, glyph, fPreBlend.fR, fPreBlend.fG, fPreBlend.fB);
+      }
     }
-  } else {  // LCD16
-    const SkGdiRGB* src = (const SkGdiRGB*)bits;
-    SkASSERT(SkMask::kLCD16_Format == glyph.fMaskFormat);
-    if (fPreBlend.isApplicable()) {
-      rgb_to_lcd16<true>(src, srcRB, glyph, fPreBlend.fR, fPreBlend.fG, fPreBlend.fB);
-    } else {
-      rgb_to_lcd16<false>(src, srcRB, glyph, fPreBlend.fR, fPreBlend.fG, fPreBlend.fB);
-    }
-  }
 }
 
 class GDIGlyphbufferPointIter {
@@ -1320,11 +1320,11 @@ static void sk_path_from_gdi_path(SkPath* path, const uint8_t* glyphbuf, DWORD t
   }
 }
 
-#define move_next_expected_hinted_point(iter, pElem) \
-  do {                                               \
-    pElem = iter.next();                             \
-    if (nullptr == pElem) return false;              \
-  } while (0)
+#  define move_next_expected_hinted_point(iter, pElem) \
+    do {                                               \
+      pElem = iter.next();                             \
+      if (nullptr == pElem) return false;              \
+    } while (0)
 
 // It is possible for the hinted and unhinted versions of the same path to have
 // a different number of points due to GDI's handling of flipped points.
@@ -1483,7 +1483,7 @@ bool SkScalerContext_GDI::generatePath(SkGlyphID glyph, SkPath* path) {
 
 static void logfont_for_name(const char* familyName, LOGFONT* lf) {
   sk_bzero(lf, sizeof(LOGFONT));
-#ifdef UNICODE
+#  ifdef UNICODE
   // Get the buffer size needed first.
   size_t str_len = ::MultiByteToWideChar(CP_UTF8, 0, familyName, -1, nullptr, 0);
   // Allocate a buffer (str_len already has terminating null
@@ -1494,10 +1494,10 @@ static void logfont_for_name(const char* familyName, LOGFONT* lf) {
   ::wcsncpy(lf->lfFaceName, wideFamilyName, LF_FACESIZE - 1);
   delete[] wideFamilyName;
   lf->lfFaceName[LF_FACESIZE - 1] = L'\0';
-#else
+#  else
   ::strncpy(lf->lfFaceName, familyName, LF_FACESIZE - 1);
   lf->lfFaceName[LF_FACESIZE - 1] = '\0';
-#endif
+#  endif
 }
 
 void LogFontTypeface::onGetFamilyName(SkString* familyName) const {
@@ -1649,9 +1649,9 @@ ReturnInfo:
 }
 
 // Dummy representation of a Base64 encoded GUID from create_unique_font_name.
-#define BASE64_GUID_ID "XXXXXXXXXXXXXXXXXXXXXXXX"
+#  define BASE64_GUID_ID "XXXXXXXXXXXXXXXXXXXXXXXX"
 // Length of GUID representation from create_id, including nullptr terminator.
-#define BASE64_GUID_ID_LEN SK_ARRAY_COUNT(BASE64_GUID_ID)
+#  define BASE64_GUID_ID_LEN SK_ARRAY_COUNT(BASE64_GUID_ID)
 
 static_assert(BASE64_GUID_ID_LEN < LF_FACESIZE, "GUID_longer_than_facesize");
 

@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/image/SkImage_GpuBase.h"
 #include "include/core/SkPromiseImageTexture.h"
 #include "include/gpu/GrBackendSurface.h"
 #include "include/gpu/GrContext.h"
@@ -20,11 +19,12 @@
 #include "src/gpu/GrTextureAdjuster.h"
 #include "src/gpu/effects/GrYUVtoRGBEffect.h"
 #include "src/image/SkImage_Gpu.h"
+#include "src/image/SkImage_GpuBase.h"
 #include "src/image/SkReadPixelsRec.h"
 
 SkImage_GpuBase::SkImage_GpuBase(
     sk_sp<GrContext> context, int width, int height, uint32_t uniqueID, SkColorType ct,
-    SkAlphaType at, sk_sp<SkColorSpace> cs) noexcept
+    SkAlphaType at, sk_sp<SkColorSpace> cs)
     : INHERITED(SkImageInfo::Make(width, height, ct, at, std::move(cs)), uniqueID),
       fContext(std::move(context)) {}
 
@@ -140,7 +140,7 @@ sk_sp<SkImage> SkImage_GpuBase::onMakeSubset(
       this->refColorSpace());
 }
 
-static void apply_premul(const SkImageInfo& info, void* pixels, size_t rowBytes) noexcept {
+static void apply_premul(const SkImageInfo& info, void* pixels, size_t rowBytes) {
   switch (info.colorType()) {
     case kRGBA_8888_SkColorType:
     case kBGRA_8888_SkColorType: break;
@@ -277,7 +277,7 @@ GrTexture* SkImage_GpuBase::onGetTexture() const {
   return proxyRef->peekTexture();
 }
 
-bool SkImage_GpuBase::onIsValid(GrContext* context) const noexcept {
+bool SkImage_GpuBase::onIsValid(GrContext* context) const {
   // The base class has already checked that context isn't abandoned (if it's not nullptr)
   if (fContext->priv().abandoned()) {
     return false;
@@ -420,14 +420,14 @@ sk_sp<GrTextureProxy> SkImage_GpuBase::MakePromiseImageLazyProxy(
         : fFulfillProc(fulfillProc), fReleaseProc(releaseProc), fConfig(config), fVersion(version) {
       fDoneCallback = sk_make_sp<GrRefCntedCallback>(doneProc, context);
     }
-    PromiseLazyInstantiateCallback(PromiseLazyInstantiateCallback&&) noexcept = default;
-    PromiseLazyInstantiateCallback(const PromiseLazyInstantiateCallback&) noexcept {
+    PromiseLazyInstantiateCallback(PromiseLazyInstantiateCallback&&) = default;
+    PromiseLazyInstantiateCallback(const PromiseLazyInstantiateCallback&) {
       // Because we get wrapped in std::function we must be copyable. But we should never
       // be copied.
       SkASSERT(false);
     }
-    PromiseLazyInstantiateCallback& operator=(PromiseLazyInstantiateCallback&&) noexcept = default;
-    PromiseLazyInstantiateCallback& operator=(const PromiseLazyInstantiateCallback&) noexcept {
+    PromiseLazyInstantiateCallback& operator=(PromiseLazyInstantiateCallback&&) = default;
+    PromiseLazyInstantiateCallback& operator=(const PromiseLazyInstantiateCallback&) {
       SkASSERT(false);
       return *this;
     }

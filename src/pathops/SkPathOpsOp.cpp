@@ -244,7 +244,7 @@ bool OpDebug(
 #if DEBUG_DUMP_VERIFY
 #ifndef SK_DEBUG
   const char* testName = "release";
-#endif
+#  endif
   if (SkPathOpsDebug::gDumpOp) {
     SkPathOpsDebug::DumpOp(one, two, op, testName);
   }

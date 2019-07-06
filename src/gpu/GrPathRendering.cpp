@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/GrPathRendering.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkTypeface.h"
 #include "include/gpu/GrRenderTarget.h"
@@ -13,6 +12,7 @@
 #include "src/core/SkGlyph.h"
 #include "src/core/SkScalerContext.h"
 #include "src/gpu/GrGpu.h"
+#include "src/gpu/GrPathRendering.h"
 
 const GrUserStencilSettings& GrPathRendering::GetStencilPassSettings(FillType fill) {
   switch (fill) {

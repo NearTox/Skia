@@ -26,7 +26,7 @@ class GrClampedGradientEffect : public GrFragmentProcessor {
   }
   GrClampedGradientEffect(const GrClampedGradientEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const noexcept override { return "ClampedGradientEffect"; }
+  const char* name() const override { return "ClampedGradientEffect"; }
   int colorizer_index = -1;
   int gradLayout_index = -1;
   SkPMColor4f leftBorderColor;
@@ -57,8 +57,8 @@ class GrClampedGradientEffect : public GrFragmentProcessor {
     this->registerChildProcessor(std::move(gradLayout));
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
-  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

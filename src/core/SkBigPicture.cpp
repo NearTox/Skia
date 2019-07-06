@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkBigPicture.h"
 #include "src/core/SkBBoxHierarchy.h"
+#include "src/core/SkBigPicture.h"
 #include "src/core/SkPictureCommon.h"
 #include "src/core/SkRecord.h"
 #include "src/core/SkRecordDraw.h"
@@ -42,7 +42,7 @@ void SkBigPicture::partialPlayback(
       *fRecord, canvas, this->drawablePicts(), this->drawableCount(), start, stop, initialCTM);
 }
 
-SkRect SkBigPicture::cullRect() const noexcept { return fCullRect; }
+SkRect SkBigPicture::cullRect() const { return fCullRect; }
 int SkBigPicture::approximateOpCount() const { return fRecord->count(); }
 size_t SkBigPicture::approximateBytesUsed() const {
   size_t bytes = sizeof(*this) + fRecord->bytesUsed() + fApproxBytesUsedBySubPictures;
@@ -52,9 +52,7 @@ size_t SkBigPicture::approximateBytesUsed() const {
   return bytes;
 }
 
-int SkBigPicture::drawableCount() const noexcept {
-  return fDrawablePicts ? fDrawablePicts->count() : 0;
-}
+int SkBigPicture::drawableCount() const { return fDrawablePicts ? fDrawablePicts->count() : 0; }
 
 SkPicture const* const* SkBigPicture::drawablePicts() const {
   return fDrawablePicts ? fDrawablePicts->begin() : nullptr;

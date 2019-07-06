@@ -173,16 +173,14 @@ class SK_API SkCodec : SkNoncopyable {
    */
   SkImageInfo getInfo() const { return fEncodedInfo.makeImageInfo(); }
 
-  SkISize dimensions() const noexcept { return {fEncodedInfo.width(), fEncodedInfo.height()}; }
-  SkIRect bounds() const noexcept {
-    return SkIRect::MakeWH(fEncodedInfo.width(), fEncodedInfo.height());
-  }
+  SkISize dimensions() const { return {fEncodedInfo.width(), fEncodedInfo.height()}; }
+  SkIRect bounds() const { return SkIRect::MakeWH(fEncodedInfo.width(), fEncodedInfo.height()); }
 
   /**
    *  Returns the image orientation stored in the EXIF data.
    *  If there is no EXIF data, or if we cannot read the EXIF data, returns kTopLeft.
    */
-  SkEncodedOrigin getOrigin() const noexcept { return fOrigin; }
+  SkEncodedOrigin getOrigin() const { return fOrigin; }
 
   /**
    *  Return a size that approximately supports the desired scale factor.
@@ -693,7 +691,7 @@ class SK_API SkCodec : SkNoncopyable {
       std::unique_ptr<SkCodec> (*make)(std::unique_ptr<SkStream>, SkCodec::Result*));
 
  protected:
-  const SkEncodedInfo& getEncodedInfo() const noexcept { return fEncodedInfo; }
+  const SkEncodedInfo& getEncodedInfo() const { return fEncodedInfo; }
 
   using XformFormat = skcms_PixelFormat;
 
@@ -758,7 +756,7 @@ class SK_API SkCodec : SkNoncopyable {
   /**
    * Get method for the input stream
    */
-  SkStream* stream() noexcept { return fStream.get(); }
+  SkStream* stream() { return fStream.get(); }
 
   /**
    *  The remaining functions revolve around decoding scanlines.
@@ -769,9 +767,9 @@ class SK_API SkCodec : SkNoncopyable {
    */
   virtual SkScanlineOrder onGetScanlineOrder() const { return kTopDown_SkScanlineOrder; }
 
-  const SkImageInfo& dstInfo() const noexcept { return fDstInfo; }
+  const SkImageInfo& dstInfo() const { return fDstInfo; }
 
-  const Options& options() const noexcept { return fOptions; }
+  const Options& options() const { return fOptions; }
 
   /**
    *  Returns the number of scanlines that have been decoded so far.
@@ -779,7 +777,7 @@ class SK_API SkCodec : SkNoncopyable {
    *
    *  Returns -1 if we have not started a scanline decode.
    */
-  int currScanline() const noexcept { return fCurrScanline; }
+  int currScanline() const { return fCurrScanline; }
 
   virtual int onOutputScanline(int inputScanline) const;
 
@@ -796,8 +794,8 @@ class SK_API SkCodec : SkNoncopyable {
   virtual bool usesColorXform() const { return true; }
   void applyColorXform(void* dst, const void* src, int count) const;
 
-  bool colorXform() const noexcept { return fXformTime != kNo_XformTime; }
-  bool xformOnDecode() const noexcept { return fXformTime == kDecodeRow_XformTime; }
+  bool colorXform() const { return fXformTime != kNo_XformTime; }
+  bool xformOnDecode() const { return fXformTime == kDecodeRow_XformTime; }
 
   virtual int onGetFrameCount() { return 1; }
 

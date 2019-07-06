@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/GrResourceProvider.h"
 #include "include/gpu/GrBackendSemaphore.h"
 #include "include/gpu/GrContext.h"
 #include "include/private/GrResourceKey.h"
@@ -20,6 +19,7 @@
 #include "src/gpu/GrProxyProvider.h"
 #include "src/gpu/GrRenderTargetPriv.h"
 #include "src/gpu/GrResourceCache.h"
+#include "src/gpu/GrResourceProvider.h"
 #include "src/gpu/GrSemaphore.h"
 #include "src/gpu/GrStencilAttachment.h"
 #include "src/gpu/GrTexturePriv.h"
@@ -27,7 +27,7 @@
 
 const uint32_t GrResourceProvider::kMinScratchTextureSize = 16;
 
-#define ASSERT_SINGLE_OWNER SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(fSingleOwner));
+#define ASSERT_SINGLE_OWNER SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(fSingleOwner);)
 
 GrResourceProvider::GrResourceProvider(GrGpu* gpu, GrResourceCache* cache, GrSingleOwner* owner)
     : fCache(cache),

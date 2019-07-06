@@ -8,7 +8,7 @@
 #include "src/gpu/GrSamplePatternDictionary.h"
 
 bool GrSamplePatternDictionary::LessThan::operator()(
-    const SkTArray<SkPoint>& a, const SkTArray<SkPoint>& b) const noexcept {
+    const SkTArray<SkPoint>& a, const SkTArray<SkPoint>& b) const {
   if (a.count() != b.count()) {
     return a.count() < b.count();
   }

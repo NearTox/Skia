@@ -20,7 +20,7 @@ class GrGLSLFPFragmentBuilder;
 
 class GrGLSLFragmentProcessor {
  public:
-  GrGLSLFragmentProcessor() noexcept {}
+  GrGLSLFragmentProcessor() {}
 
   virtual ~GrGLSLFragmentProcessor() {
     for (int i = 0; i < fChildProcessors.count(); ++i) {
@@ -41,9 +41,9 @@ class GrGLSLFragmentProcessor {
   template <typename T, int (GrFragmentProcessor::*COUNT)() const>
   class BuilderInputProvider {
    public:
-    BuilderInputProvider(const GrFragmentProcessor* fp, const T* ts) noexcept : fFP(fp), fTs(ts) {}
+    BuilderInputProvider(const GrFragmentProcessor* fp, const T* ts) : fFP(fp), fTs(ts) {}
 
-    const T& operator[](int i) const noexcept {
+    const T& operator[](int i) const {
       SkASSERT(i >= 0 && i < (fFP->*COUNT)());
       return fTs[i];
     }
@@ -102,7 +102,7 @@ class GrGLSLFragmentProcessor {
         GrGLSLFPFragmentBuilder* fragBuilder, GrGLSLUniformHandler* uniformHandler,
         const GrShaderCaps* caps, const GrFragmentProcessor& fp, const char* outputColor,
         const char* inputColor, const TransformedCoordVars& transformedCoordVars,
-        const TextureSamplers& textureSamplers) noexcept
+        const TextureSamplers& textureSamplers)
         : fFragBuilder(fragBuilder),
           fUniformHandler(uniformHandler),
           fShaderCaps(caps),
@@ -127,9 +127,9 @@ class GrGLSLFragmentProcessor {
   // is the responsibility of the caller.
   void setData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& processor);
 
-  int numChildProcessors() const noexcept { return fChildProcessors.count(); }
+  int numChildProcessors() const { return fChildProcessors.count(); }
 
-  GrGLSLFragmentProcessor* childProcessor(int index) noexcept { return fChildProcessors[index]; }
+  GrGLSLFragmentProcessor* childProcessor(int index) { return fChildProcessors[index]; }
 
   // Emit the child with the default input color (solid white)
   inline void emitChild(int childIndex, SkString* outputColor, EmitArgs& parentArgs) {

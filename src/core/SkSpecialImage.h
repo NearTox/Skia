@@ -44,14 +44,14 @@ class SkSpecialImage : public SkRefCnt {
   typedef void* ReleaseContext;
   typedef void (*RasterReleaseProc)(void* pixels, ReleaseContext);
 
-  const SkSurfaceProps& props() const noexcept { return fProps; }
+  const SkSurfaceProps& props() const { return fProps; }
 
-  int width() const noexcept { return fSubset.width(); }
-  int height() const noexcept { return fSubset.height(); }
-  const SkIRect& subset() const noexcept { return fSubset; }
+  int width() const { return fSubset.width(); }
+  int height() const { return fSubset.height(); }
+  const SkIRect& subset() const { return fSubset; }
   SkColorSpace* getColorSpace() const;
 
-  uint32_t uniqueID() const noexcept { return fUniqueID; }
+  uint32_t uniqueID() const { return fUniqueID; }
   virtual SkAlphaType alphaType() const = 0;
   virtual size_t getSize() const = 0;
 

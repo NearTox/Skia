@@ -90,9 +90,9 @@ class GrRectBlurEffect : public GrFragmentProcessor {
         rect, sigma, std::move(blurProfile),
         GrSamplerState(GrSamplerState::WrapMode::kClamp, GrSamplerState::Filter::kBilerp)));
   }
-  GrRectBlurEffect(const GrRectBlurEffect& src) noexcept;
+  GrRectBlurEffect(const GrRectBlurEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const noexcept override { return "RectBlurEffect"; }
+  const char* name() const override { return "RectBlurEffect"; }
   SkRect rect;
   float sigma;
   TextureSampler blurProfile;
@@ -109,9 +109,9 @@ class GrRectBlurEffect : public GrFragmentProcessor {
     this->setTextureSamplerCnt(1);
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
-  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
-  const TextureSampler& onTextureSampler(int) const noexcept override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const override;
+  const TextureSampler& onTextureSampler(int) const override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

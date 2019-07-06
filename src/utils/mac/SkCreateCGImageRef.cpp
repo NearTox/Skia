@@ -49,18 +49,18 @@ static bool getBitmapInfo(
 
   switch (bm.colorType()) {
     case kRGB_565_SkColorType:
-#if 0
+#  if 0
             // doesn't see quite right. Are they thinking 1555?
             *bitsPerComponent = 5;
             *info = kCGBitmapByteOrder16Little | kCGImageAlphaNone;
-#else
+#  else
       if (upscaleTo32) {
         *upscaleTo32 = true;
       }
       // now treat like RGBA
       *bitsPerComponent = 8;
       *info = ComputeCGAlphaInfo_RGBA(kOpaque_SkAlphaType);
-#endif
+#  endif
       break;
     case kRGBA_8888_SkColorType:
       *bitsPerComponent = 8;

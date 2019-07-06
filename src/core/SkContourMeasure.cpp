@@ -13,13 +13,13 @@
 
 #define kMaxTValue 0x3FFFFFFF
 
-static constexpr inline SkScalar tValue2Scalar(int t) noexcept {
+static inline SkScalar tValue2Scalar(int t) {
   SkASSERT((unsigned)t <= kMaxTValue);
   const SkScalar kMaxTReciprocal = 1.0f / kMaxTValue;
   return t * kMaxTReciprocal;
 }
 
-SkScalar SkContourMeasure::Segment::getScalarT() const noexcept { return tValue2Scalar(fTValue); }
+SkScalar SkContourMeasure::Segment::getScalarT() const { return tValue2Scalar(fTValue); }
 
 void SkContourMeasure_segTo(
     const SkPoint pts[], unsigned segType, SkScalar startT, SkScalar stopT, SkPath* dst) {
@@ -117,7 +117,7 @@ void SkContourMeasure_segTo(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static constexpr inline int tspan_big_enough(int tspan) noexcept {
+static inline int tspan_big_enough(int tspan) {
   SkASSERT((unsigned)tspan <= kMaxTValue);
   return tspan >> 10;
 }
@@ -127,7 +127,7 @@ static constexpr inline int tspan_big_enough(int tspan) noexcept {
 // so we compare midpoints
 #define CHEAP_DIST_LIMIT (SK_Scalar1 / 2)  // just made this value up
 
-static bool quad_too_curvy(const SkPoint pts[3], SkScalar tolerance) noexcept {
+static bool quad_too_curvy(const SkPoint pts[3], SkScalar tolerance) {
   // diff = (a/4 + b/2 + c/4) - (a/2 + c/2)
   // diff = -a/4 + b/2 - c/4
   SkScalar dx = SkScalarHalf(pts[1].fX) - SkScalarHalf(SkScalarHalf(pts[0].fX + pts[2].fX));
@@ -138,8 +138,7 @@ static bool quad_too_curvy(const SkPoint pts[3], SkScalar tolerance) noexcept {
 }
 
 static bool conic_too_curvy(
-    const SkPoint& firstPt, const SkPoint& midTPt, const SkPoint& lastPt,
-    SkScalar tolerance) noexcept {
+    const SkPoint& firstPt, const SkPoint& midTPt, const SkPoint& lastPt, SkScalar tolerance) {
   SkPoint midEnds = firstPt + lastPt;
   midEnds *= 0.5f;
   SkVector dxy = midTPt - midEnds;
@@ -148,13 +147,13 @@ static bool conic_too_curvy(
 }
 
 static bool cheap_dist_exceeds_limit(
-    const SkPoint& pt, SkScalar x, SkScalar y, SkScalar tolerance) noexcept {
+    const SkPoint& pt, SkScalar x, SkScalar y, SkScalar tolerance) {
   SkScalar dist = SkMaxScalar(SkScalarAbs(x - pt.fX), SkScalarAbs(y - pt.fY));
   // just made up the 1/2
   return dist > tolerance;
 }
 
-static bool cubic_too_curvy(const SkPoint pts[4], SkScalar tolerance) noexcept {
+static bool cubic_too_curvy(const SkPoint pts[4], SkScalar tolerance) {
   return cheap_dist_exceeds_limit(
              pts[1], SkScalarInterp(pts[0].fX, pts[3].fX, SK_Scalar1 / 3),
              SkScalarInterp(pts[0].fY, pts[3].fY, SK_Scalar1 / 3), tolerance) ||
@@ -241,7 +240,7 @@ SkScalar SkContourMeasureIter::compute_cubic_segs(
 }
 
 SkScalar SkContourMeasureIter::compute_line_seg(
-    SkPoint p0, SkPoint p1, SkScalar distance, unsigned ptIndex) noexcept {
+    SkPoint p0, SkPoint p1, SkScalar distance, unsigned ptIndex) {
   SkScalar d = SkPoint::Distance(p0, p1);
   SkASSERT(d >= 0);
   SkScalar prevD = distance;
@@ -390,7 +389,7 @@ SkContourMeasure* SkContourMeasureIter::buildSegments() {
 }
 
 static void compute_pos_tan(
-    const SkPoint pts[], unsigned segType, SkScalar t, SkPoint* pos, SkVector* tangent) noexcept {
+    const SkPoint pts[], unsigned segType, SkScalar t, SkPoint* pos, SkVector* tangent) {
   switch (segType) {
     case kLine_SegType:
       if (pos) {
@@ -431,7 +430,7 @@ SkContourMeasureIter::SkContourMeasureIter() {
 }
 
 SkContourMeasureIter::SkContourMeasureIter(
-    const SkPath& path, bool forceClosed, SkScalar resScale) noexcept {
+    const SkPath& path, bool forceClosed, SkScalar resScale) {
   fPath = path.isFinite() ? path : SkPath();
   fTolerance = CHEAP_DIST_LIMIT * SkScalarInvert(resScale);
   fForceClosed = forceClosed;
@@ -443,7 +442,7 @@ SkContourMeasureIter::~SkContourMeasureIter() {}
 
 /** Assign a new path, or null to have none.
  */
-void SkContourMeasureIter::reset(const SkPath& path, bool forceClosed, SkScalar resScale) noexcept {
+void SkContourMeasureIter::reset(const SkPath& path, bool forceClosed, SkScalar resScale) {
   if (path.isFinite()) {
     fPath = path;
   } else {
@@ -469,11 +468,11 @@ sk_sp<SkContourMeasure> SkContourMeasureIter::next() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 SkContourMeasure::SkContourMeasure(
-    SkTDArray<Segment>&& segs, SkTDArray<SkPoint>&& pts, SkScalar length, bool isClosed) noexcept
+    SkTDArray<Segment>&& segs, SkTDArray<SkPoint>&& pts, SkScalar length, bool isClosed)
     : fSegments(std::move(segs)), fPts(std::move(pts)), fLength(length), fIsClosed(isClosed) {}
 
 template <typename T, typename K>
-int SkTKSearch(const T base[], int count, const K& key) noexcept {
+int SkTKSearch(const T base[], int count, const K& key) {
   SkASSERT(count >= 0);
   if (count <= 0) {
     return ~0;
@@ -503,7 +502,7 @@ int SkTKSearch(const T base[], int count, const K& key) noexcept {
 }
 
 const SkContourMeasure::Segment* SkContourMeasure::distanceToSegment(
-    SkScalar distance, SkScalar* t) const noexcept {
+    SkScalar distance, SkScalar* t) const {
   SkDEBUGCODE(SkScalar length =) this->length();
   SkASSERT(distance >= 0 && distance <= length);
 
@@ -534,8 +533,7 @@ const SkContourMeasure::Segment* SkContourMeasure::distanceToSegment(
   return seg;
 }
 
-bool SkContourMeasure::getPosTan(SkScalar distance, SkPoint* pos, SkVector* tangent) const
-    noexcept {
+bool SkContourMeasure::getPosTan(SkScalar distance, SkPoint* pos, SkVector* tangent) const {
   if (SkScalarIsNaN(distance)) {
     return false;
   }
@@ -561,8 +559,7 @@ bool SkContourMeasure::getPosTan(SkScalar distance, SkPoint* pos, SkVector* tang
   return true;
 }
 
-bool SkContourMeasure::getMatrix(SkScalar distance, SkMatrix* matrix, MatrixFlags flags) const
-    noexcept {
+bool SkContourMeasure::getMatrix(SkScalar distance, SkMatrix* matrix, MatrixFlags flags) const {
   SkPoint position;
   SkVector tangent;
 

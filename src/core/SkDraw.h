@@ -151,7 +151,7 @@ class SkDraw : public SkGlyphRunListPainter::BitmapDevicePainter {
 #ifdef SK_DEBUG
   void validate() const;
 #else
-  void validate() const noexcept {}
+  void validate() const {}
 #endif
 };
 

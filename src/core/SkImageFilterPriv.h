@@ -45,6 +45,6 @@ sk_sp<SkImageFilter> SkApplyCTMToFilter(
 sk_sp<SkImageFilter> SkApplyCTMToBackdropFilter(
     const SkImageFilter* filter, const SkMatrix& ctm, SkMatrix* remainder);
 
-bool SkIsSameFilter(const SkImageFilter* a, const SkImageFilter* b) noexcept;
+bool SkIsSameFilter(const SkImageFilter* a, const SkImageFilter* b);
 
 #endif

@@ -15,24 +15,24 @@ struct SkDeque::Block {
   char* fEnd;    // end of used section in this chunk
   char* fStop;   // end of the allocated chunk
 
-  char* start() noexcept { return (char*)(this + 1); }
-  const char* start() const noexcept { return (const char*)(this + 1); }
+  char* start() { return (char*)(this + 1); }
+  const char* start() const { return (const char*)(this + 1); }
 
-  void init(size_t size) noexcept {
+  void init(size_t size) {
     fNext = fPrev = nullptr;
     fBegin = fEnd = nullptr;
     fStop = (char*)this + size;
   }
 };
 
-SkDeque::SkDeque(size_t elemSize, int allocCount) noexcept
+SkDeque::SkDeque(size_t elemSize, int allocCount)
     : fElemSize(elemSize), fInitialStorage(nullptr), fCount(0), fAllocCount(allocCount) {
   SkASSERT(allocCount >= 1);
   fFrontBlock = fBackBlock = nullptr;
   fFront = fBack = nullptr;
 }
 
-SkDeque::SkDeque(size_t elemSize, void* storage, size_t storageSize, int allocCount) noexcept
+SkDeque::SkDeque(size_t elemSize, void* storage, size_t storageSize, int allocCount)
     : fElemSize(elemSize), fInitialStorage(storage), fCount(0), fAllocCount(allocCount) {
   SkASSERT(storageSize == 0 || storage != nullptr);
   SkASSERT(allocCount >= 1);
@@ -60,7 +60,7 @@ SkDeque::~SkDeque() {
   }
 }
 
-void* SkDeque::push_front() noexcept {
+void* SkDeque::push_front() {
   fCount += 1;
 
   if (nullptr == fFrontBlock) {
@@ -100,7 +100,7 @@ void* SkDeque::push_front() noexcept {
   return begin;
 }
 
-void* SkDeque::push_back() noexcept {
+void* SkDeque::push_back() {
   fCount += 1;
 
   if (nullptr == fBackBlock) {
@@ -141,7 +141,7 @@ void* SkDeque::push_back() noexcept {
   return end;
 }
 
-void SkDeque::pop_front() noexcept {
+void SkDeque::pop_front() {
   SkASSERT(fCount > 0);
   fCount -= 1;
 
@@ -175,7 +175,7 @@ void SkDeque::pop_front() noexcept {
   }
 }
 
-void SkDeque::pop_back() noexcept {
+void SkDeque::pop_back() {
   SkASSERT(fCount > 0);
   fCount -= 1;
 
@@ -209,7 +209,7 @@ void SkDeque::pop_back() noexcept {
   }
 }
 
-int SkDeque::numBlocksAllocated() const noexcept {
+int SkDeque::numBlocksAllocated() const {
   int numBlocks = 0;
 
   for (const Block* temp = fFrontBlock; temp; temp = temp->fNext) {
@@ -219,23 +219,23 @@ int SkDeque::numBlocksAllocated() const noexcept {
   return numBlocks;
 }
 
-SkDeque::Block* SkDeque::allocateBlock(int allocCount) noexcept {
+SkDeque::Block* SkDeque::allocateBlock(int allocCount) {
   Block* newBlock = (Block*)sk_malloc_throw(sizeof(Block) + allocCount * fElemSize);
   newBlock->init(sizeof(Block) + allocCount * fElemSize);
   return newBlock;
 }
 
-void SkDeque::freeBlock(Block* block) noexcept { sk_free(block); }
+void SkDeque::freeBlock(Block* block) { sk_free(block); }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkDeque::Iter::Iter() noexcept : fCurBlock(nullptr), fPos(nullptr), fElemSize(0) {}
+SkDeque::Iter::Iter() : fCurBlock(nullptr), fPos(nullptr), fElemSize(0) {}
 
-SkDeque::Iter::Iter(const SkDeque& d, IterStart startLoc) noexcept { this->reset(d, startLoc); }
+SkDeque::Iter::Iter(const SkDeque& d, IterStart startLoc) { this->reset(d, startLoc); }
 
 // Due to how reset and next work, next actually returns the current element
 // pointed to by fPos and then updates fPos to point to the next one.
-void* SkDeque::Iter::next() noexcept {
+void* SkDeque::Iter::next() {
   char* pos = fPos;
 
   if (pos) {  // if we were valid, try to move to the next setting
@@ -254,7 +254,7 @@ void* SkDeque::Iter::next() noexcept {
 
 // Like next, prev actually returns the current element pointed to by fPos and
 // then makes fPos point to the previous element.
-void* SkDeque::Iter::prev() noexcept {
+void* SkDeque::Iter::prev() {
   char* pos = fPos;
 
   if (pos) {  // if we were valid, try to move to the prior setting
@@ -276,7 +276,7 @@ void* SkDeque::Iter::prev() noexcept {
 // member is then set to the first (or last) element in the block. If
 // there are no elements in the deque both fCurBlock and fPos will come
 // out of this routine nullptr.
-void SkDeque::Iter::reset(const SkDeque& d, IterStart startLoc) noexcept {
+void SkDeque::Iter::reset(const SkDeque& d, IterStart startLoc) {
   fElemSize = d.fElemSize;
 
   if (kFront_IterStart == startLoc) {

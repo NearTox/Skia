@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/GrShaderUtils.h"
 #include "include/core/SkString.h"
 #include "include/gpu/GrContextOptions.h"
+#include "src/gpu/GrShaderUtils.h"
 #include "src/sksl/SkSLString.h"
 
 namespace GrShaderUtils {

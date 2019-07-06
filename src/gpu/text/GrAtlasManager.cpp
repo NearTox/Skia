@@ -65,10 +65,10 @@ void GrAtlasManager::addGlyphToBulkAndSetUseToken(
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrSurfaceContext.h"
 
-#include <stdio.h>
 #include "include/core/SkBitmap.h"
 #include "include/core/SkImageEncoder.h"
 #include "include/core/SkStream.h"
+#  include <stdio.h>
 
 /**
  * Write the contents of the surface proxy to a PNG. Returns true if successful.
@@ -124,11 +124,11 @@ void GrAtlasManager::dump(GrContext* context) const {
       for (uint32_t pageIdx = 0; pageIdx < fAtlases[i]->numActivePages(); ++pageIdx) {
         SkASSERT(proxies[pageIdx]);
         SkString filename;
-#ifdef SK_BUILD_FOR_ANDROID
+#  ifdef SK_BUILD_FOR_ANDROID
         filename.printf("/sdcard/fontcache_%d%d%d.png", gDumpCount, i, pageIdx);
-#else
+#  else
         filename.printf("fontcache_%d%d%d.png", gDumpCount, i, pageIdx);
-#endif
+#  endif
 
         save_pixels(context, proxies[pageIdx].get(), filename.c_str());
       }

@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkClipStack.h"
-#include <atomic>
-#include <new>
 #include "include/core/SkCanvas.h"
 #include "include/core/SkPath.h"
 #include "include/pathops/SkPathOps.h"
 #include "src/core/SkClipOpPriv.h"
+#include "src/core/SkClipStack.h"
+#include <atomic>
+#include <new>
 
 #if SK_SUPPORT_GPU
 #include "src/gpu/GrProxyProvider.h"
@@ -50,7 +50,7 @@ SkClipStack::Element::~Element() {
 #endif
 }
 
-bool SkClipStack::Element::operator==(const Element& element) const noexcept {
+bool SkClipStack::Element::operator==(const Element& element) const {
   if (this == &element) {
     return true;
   }
@@ -122,7 +122,7 @@ void SkClipStack::Element::invertShapeFillType() {
   }
 }
 
-void SkClipStack::Element::initCommon(int saveCount, SkClipOp op, bool doAA) noexcept {
+void SkClipStack::Element::initCommon(int saveCount, SkClipOp op, bool doAA) {
   fSaveCount = saveCount;
   fOp = op;
   fDoAA = doAA;
@@ -222,7 +222,7 @@ void SkClipStack::Element::setEmpty() {
   SkDEBUGCODE(this->checkEmpty());
 }
 
-void SkClipStack::Element::checkEmpty() const noexcept {
+void SkClipStack::Element::checkEmpty() const {
   SkASSERT(fFiniteBound.isEmpty());
   SkASSERT(kNormal_BoundsType == fFiniteBoundType);
   SkASSERT(!fIsIntersectionOfRects);
@@ -231,7 +231,7 @@ void SkClipStack::Element::checkEmpty() const noexcept {
   SkASSERT(!fDeviceSpacePath.isValid());
 }
 
-bool SkClipStack::Element::canBeIntersectedInPlace(int saveCount, SkClipOp op) const noexcept {
+bool SkClipStack::Element::canBeIntersectedInPlace(int saveCount, SkClipOp op) const {
   if (DeviceSpaceType::kEmpty == fDeviceSpaceType &&
       (kDifference_SkClipOp == op || kIntersect_SkClipOp == op)) {
     return true;
@@ -242,7 +242,7 @@ bool SkClipStack::Element::canBeIntersectedInPlace(int saveCount, SkClipOp op) c
          (kIntersect_SkClipOp == fOp || kReplace_SkClipOp == fOp);
 }
 
-bool SkClipStack::Element::rectRectIntersectAllowed(const SkRect& newR, bool newAA) const noexcept {
+bool SkClipStack::Element::rectRectIntersectAllowed(const SkRect& newR, bool newAA) const {
   SkASSERT(DeviceSpaceType::kRect == fDeviceSpaceType);
 
   if (fDoAA == newAA) {
@@ -520,7 +520,7 @@ static const int kDefaultElementAllocCnt = 8;
 
 SkClipStack::SkClipStack() : fDeque(sizeof(Element), kDefaultElementAllocCnt), fSaveCount(0) {}
 
-SkClipStack::SkClipStack(void* storage, size_t size) noexcept
+SkClipStack::SkClipStack(void* storage, size_t size)
     : fDeque(sizeof(Element), storage, size, kDefaultElementAllocCnt), fSaveCount(0) {}
 
 SkClipStack::SkClipStack(const SkClipStack& b) : fDeque(sizeof(Element), kDefaultElementAllocCnt) {
@@ -545,7 +545,7 @@ SkClipStack& SkClipStack::operator=(const SkClipStack& b) {
   return *this;
 }
 
-bool SkClipStack::operator==(const SkClipStack& b) const noexcept {
+bool SkClipStack::operator==(const SkClipStack& b) const {
   if (this->getTopmostGenID() == b.getTopmostGenID()) {
     return true;
   }
@@ -567,7 +567,7 @@ bool SkClipStack::operator==(const SkClipStack& b) const noexcept {
   return myElement == nullptr && bElement == nullptr;
 }
 
-void SkClipStack::reset() noexcept {
+void SkClipStack::reset() {
   // We used a placement new for each object in fDeque, so we're responsible
   // for calling the destructor on each of them as well.
   while (!fDeque.empty()) {
@@ -579,14 +579,14 @@ void SkClipStack::reset() noexcept {
   fSaveCount = 0;
 }
 
-void SkClipStack::save() noexcept { fSaveCount += 1; }
+void SkClipStack::save() { fSaveCount += 1; }
 
-void SkClipStack::restore() noexcept {
+void SkClipStack::restore() {
   fSaveCount -= 1;
   restoreTo(fSaveCount);
 }
 
-void SkClipStack::restoreTo(int saveCount) noexcept {
+void SkClipStack::restoreTo(int saveCount) {
   while (!fDeque.empty()) {
     Element* element = (Element*)fDeque.back();
     if (element->fSaveCount <= saveCount) {
@@ -612,7 +612,7 @@ SkRect SkClipStack::bounds(const SkIRect& deviceBounds) const {
 bool SkClipStack::isEmpty(const SkIRect& r) const { return this->bounds(r).isEmpty(); }
 
 void SkClipStack::getBounds(
-    SkRect* canvFiniteBound, BoundsType* boundType, bool* isIntersectionOfRects) const noexcept {
+    SkRect* canvFiniteBound, BoundsType* boundType, bool* isIntersectionOfRects) const {
   SkASSERT(canvFiniteBound && boundType);
 
   Element* element = (Element*)fDeque.back();
@@ -799,19 +799,19 @@ void SkClipStack::clipEmpty() {
 
 SkClipStack::Iter::Iter() : fStack(nullptr) {}
 
-SkClipStack::Iter::Iter(const SkClipStack& stack, IterStart startLoc) noexcept : fStack(&stack) {
+SkClipStack::Iter::Iter(const SkClipStack& stack, IterStart startLoc) : fStack(&stack) {
   this->reset(stack, startLoc);
 }
 
-const SkClipStack::Element* SkClipStack::Iter::next() noexcept {
+const SkClipStack::Element* SkClipStack::Iter::next() {
   return (const SkClipStack::Element*)fIter.next();
 }
 
-const SkClipStack::Element* SkClipStack::Iter::prev() noexcept {
+const SkClipStack::Element* SkClipStack::Iter::prev() {
   return (const SkClipStack::Element*)fIter.prev();
 }
 
-const SkClipStack::Element* SkClipStack::Iter::skipToTopmost(SkClipOp op) noexcept {
+const SkClipStack::Element* SkClipStack::Iter::skipToTopmost(SkClipOp op) {
   if (nullptr == fStack) {
     return nullptr;
   }
@@ -847,7 +847,7 @@ const SkClipStack::Element* SkClipStack::Iter::skipToTopmost(SkClipOp op) noexce
   return this->next();
 }
 
-void SkClipStack::Iter::reset(const SkClipStack& stack, IterStart startLoc) noexcept {
+void SkClipStack::Iter::reset(const SkClipStack& stack, IterStart startLoc) {
   fStack = &stack;
   fIter.reset(stack.fDeque, static_cast<SkDeque::Iter::IterStart>(startLoc));
 }
@@ -931,7 +931,7 @@ bool SkClipStack::isRRect(const SkRect& bounds, SkRRect* rrect, bool* aa) const 
   return false;
 }
 
-uint32_t SkClipStack::GetNextGenID() noexcept {
+uint32_t SkClipStack::GetNextGenID() {
   // 0-2 are reserved for invalid, empty & wide-open
   static const uint32_t kFirstUnreservedGenID = 3;
   static std::atomic<uint32_t> nextID{kFirstUnreservedGenID};
@@ -943,7 +943,7 @@ uint32_t SkClipStack::GetNextGenID() noexcept {
   return id;
 }
 
-uint32_t SkClipStack::getTopmostGenID() const noexcept {
+uint32_t SkClipStack::getTopmostGenID() const {
   if (fDeque.empty()) {
     return kWideOpenGenID;
   }

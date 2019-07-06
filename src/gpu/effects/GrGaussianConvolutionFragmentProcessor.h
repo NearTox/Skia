@@ -29,17 +29,17 @@ class GrGaussianConvolutionFragmentProcessor : public GrFragmentProcessor {
         std::move(proxy), dir, halfWidth, gaussianSigma, mode, bounds));
   }
 
-  const float* kernel() const noexcept { return fKernel; }
+  const float* kernel() const { return fKernel; }
 
-  const int* bounds() const noexcept { return fBounds; }
-  bool useBounds() const noexcept { return fMode != GrTextureDomain::kIgnore_Mode; }
-  int radius() const noexcept { return fRadius; }
-  int width() const noexcept { return 2 * fRadius + 1; }
-  Direction direction() const noexcept { return fDirection; }
+  const int* bounds() const { return fBounds; }
+  bool useBounds() const { return fMode != GrTextureDomain::kIgnore_Mode; }
+  int radius() const { return fRadius; }
+  int width() const { return 2 * fRadius + 1; }
+  Direction direction() const { return fDirection; }
 
-  GrTextureDomain::Mode mode() const noexcept { return fMode; }
+  GrTextureDomain::Mode mode() const { return fMode; }
 
-  const char* name() const noexcept override { return "GaussianConvolution"; }
+  const char* name() const override { return "GaussianConvolution"; }
 
 #ifdef SK_DEBUG
   SkString dumpInfo() const override {
@@ -70,16 +70,15 @@ class GrGaussianConvolutionFragmentProcessor : public GrFragmentProcessor {
       sk_sp<GrTextureProxy>, Direction, int halfWidth, float gaussianSigma,
       GrTextureDomain::Mode mode, int bounds[2]);
 
-  explicit GrGaussianConvolutionFragmentProcessor(
-      const GrGaussianConvolutionFragmentProcessor&) noexcept;
+  explicit GrGaussianConvolutionFragmentProcessor(const GrGaussianConvolutionFragmentProcessor&);
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
-  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor&) const override;
 
-  const TextureSampler& onTextureSampler(int) const noexcept override { return fTextureSampler; }
+  const TextureSampler& onTextureSampler(int) const override { return fTextureSampler; }
 
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 

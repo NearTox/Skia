@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/gl/GrGLProgramDataManager.h"
 #include "include/core/SkMatrix.h"
 #include "src/gpu/gl/GrGLGpu.h"
+#include "src/gpu/gl/GrGLProgramDataManager.h"
 #include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
 #define ASSERT_ARRAY_UPLOAD_IN_BOUNDS(UNI, COUNT) \

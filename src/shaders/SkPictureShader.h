@@ -8,9 +8,9 @@
 #ifndef SkPictureShader_DEFINED
 #define SkPictureShader_DEFINED
 
-#include <atomic>
 #include "include/core/SkTileMode.h"
 #include "src/shaders/SkShaderBase.h"
+#include <atomic>
 
 class SkArenaAlloc;
 class SkBitmap;

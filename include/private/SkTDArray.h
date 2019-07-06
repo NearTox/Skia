@@ -18,8 +18,8 @@
 template <typename T>
 class SkTDArray {
  public:
-  constexpr SkTDArray() noexcept : fArray(nullptr), fReserve(0), fCount(0) {}
-  SkTDArray(const T src[], int count) noexcept {
+  SkTDArray() : fArray(nullptr), fReserve(0), fCount(0) {}
+  SkTDArray(const T src[], int count) {
     SkASSERT(src || count == 0);
 
     fReserve = fCount = 0;
@@ -30,17 +30,15 @@ class SkTDArray {
       fReserve = fCount = count;
     }
   }
-  SkTDArray(const std::initializer_list<T>& list) noexcept : SkTDArray(list.begin(), list.size()) {}
-  SkTDArray(const SkTDArray<T>& src) noexcept : fArray(nullptr), fReserve(0), fCount(0) {
+  SkTDArray(const std::initializer_list<T>& list) : SkTDArray(list.begin(), list.size()) {}
+  SkTDArray(const SkTDArray<T>& src) : fArray(nullptr), fReserve(0), fCount(0) {
     SkTDArray<T> tmp(src.fArray, src.fCount);
     this->swap(tmp);
   }
-  SkTDArray(SkTDArray<T>&& src) noexcept : fArray(nullptr), fReserve(0), fCount(0) {
-    this->swap(src);
-  }
+  SkTDArray(SkTDArray<T>&& src) : fArray(nullptr), fReserve(0), fCount(0) { this->swap(src); }
   ~SkTDArray() { sk_free(fArray); }
 
-  SkTDArray<T>& operator=(const SkTDArray<T>& src) noexcept {
+  SkTDArray<T>& operator=(const SkTDArray<T>& src) {
     if (this != &src) {
       if (src.fCount > fReserve) {
         SkTDArray<T> tmp(src.fArray, src.fCount);
@@ -52,7 +50,7 @@ class SkTDArray {
     }
     return *this;
   }
-  SkTDArray<T>& operator=(SkTDArray<T>&& src) noexcept {
+  SkTDArray<T>& operator=(SkTDArray<T>&& src) {
     if (this != &src) {
       this->swap(src);
       src.reset();
@@ -60,15 +58,13 @@ class SkTDArray {
     return *this;
   }
 
-  friend bool operator==(const SkTDArray<T>& a, const SkTDArray<T>& b) noexcept {
+  friend bool operator==(const SkTDArray<T>& a, const SkTDArray<T>& b) {
     return a.fCount == b.fCount &&
            (a.fCount == 0 || !memcmp(a.fArray, b.fArray, a.fCount * sizeof(T)));
   }
-  friend bool operator!=(const SkTDArray<T>& a, const SkTDArray<T>& b) noexcept {
-    return !(a == b);
-  }
+  friend bool operator!=(const SkTDArray<T>& a, const SkTDArray<T>& b) { return !(a == b); }
 
-  void swap(SkTDArray<T>& that) noexcept {
+  void swap(SkTDArray<T>& that) {
     using std::swap;
     swap(fArray, that.fArray);
     swap(fReserve, that.fReserve);
@@ -81,7 +77,7 @@ class SkTDArray {
   /**
    *  Return the number of elements in the array
    */
-  int count() const noexcept { return fCount; }
+  int count() const { return fCount; }
   size_t size() const { return fCount; }
 
   /**
@@ -94,25 +90,25 @@ class SkTDArray {
   /**
    *  return the number of bytes in the array: count * sizeof(T)
    */
-  size_t bytes() const noexcept { return fCount * sizeof(T); }
+  size_t bytes() const { return fCount * sizeof(T); }
 
-  T* begin() noexcept { return fArray; }
-  const T* begin() const noexcept { return fArray; }
-  T* end() noexcept { return fArray ? fArray + fCount : nullptr; }
-  const T* end() const noexcept { return fArray ? fArray + fCount : nullptr; }
+  T* begin() { return fArray; }
+  const T* begin() const { return fArray; }
+  T* end() { return fArray ? fArray + fCount : nullptr; }
+  const T* end() const { return fArray ? fArray + fCount : nullptr; }
 
-  T& operator[](int index) noexcept {
+  T& operator[](int index) {
     SkASSERT(index < fCount);
     return fArray[index];
   }
-  const T& operator[](int index) const noexcept {
+  const T& operator[](int index) const {
     SkASSERT(index < fCount);
     return fArray[index];
   }
 
-  T& getAt(int index) noexcept { return (*this)[index]; }
+  T& getAt(int index) { return (*this)[index]; }
 
-  void reset() noexcept {
+  void reset() {
     if (fArray) {
       sk_free(fArray);
       fArray = nullptr;
@@ -122,7 +118,7 @@ class SkTDArray {
     }
   }
 
-  void rewind() noexcept {
+  void rewind() {
     // same as setCount(0)
     fCount = 0;
   }
@@ -133,7 +129,7 @@ class SkTDArray {
    *  the storage allocated to some amount greater than that required.
    *  It will never shrink the storage.
    */
-  void setCount(int count) noexcept {
+  void setCount(int count) {
     SkASSERT(count >= 0);
     if (count > fReserve) {
       this->resizeStorageToAtLeast(count);
@@ -141,7 +137,7 @@ class SkTDArray {
     fCount = count;
   }
 
-  void setReserve(int reserve) noexcept {
+  void setReserve(int reserve) {
     SkASSERT(reserve >= 0);
     if (reserve > fReserve) {
       this->resizeStorageToAtLeast(reserve);
@@ -158,8 +154,8 @@ class SkTDArray {
     return fArray;
   }
 
-  T* append() noexcept { return this->append(1, nullptr); }
-  T* append(int count, const T* src = nullptr) noexcept {
+  T* append() { return this->append(1, nullptr); }
+  T* append(int count, const T* src = nullptr) {
     int oldCount = fCount;
     if (count) {
       SkASSERT(
@@ -187,13 +183,13 @@ class SkTDArray {
     return dst;
   }
 
-  void remove(int index, int count = 1) noexcept {
+  void remove(int index, int count = 1) {
     SkASSERT(index + count <= fCount);
     fCount = fCount - count;
     memmove(fArray + index, fArray + index + count, sizeof(T) * (fCount - index));
   }
 
-  void removeShuffle(int index) noexcept {
+  void removeShuffle(int index) {
     SkASSERT(index < fCount);
     int newCount = fCount - 1;
     fCount = newCount;
@@ -249,21 +245,21 @@ class SkTDArray {
   void copy(T* dst) const { this->copyRange(dst, 0, fCount); }
 
   // routines to treat the array like a stack
-  void push_back(const T& v) noexcept { *this->append() = v; }
+  void push_back(const T& v) { *this->append() = v; }
   T* push() { return this->append(); }
-  const T& top() const noexcept { return (*this)[fCount - 1]; }
-  T& top() noexcept { return (*this)[fCount - 1]; }
+  const T& top() const { return (*this)[fCount - 1]; }
+  T& top() { return (*this)[fCount - 1]; }
   void pop(T* elem) {
     SkASSERT(fCount > 0);
     if (elem) *elem = (*this)[fCount - 1];
     --fCount;
   }
-  void pop() noexcept {
+  void pop() {
     SkASSERT(fCount > 0);
     --fCount;
   }
 
-  void deleteAll() noexcept {
+  void deleteAll() {
     T* iter = fArray;
     T* stop = fArray + fCount;
     while (iter < stop) {
@@ -310,7 +306,7 @@ class SkTDArray {
   }
 #endif
 
-  void shrinkToFit() noexcept {
+  void shrinkToFit() {
     fReserve = fCount;
     fArray = (T*)sk_realloc_throw(fArray, fReserve * sizeof(T));
   }
@@ -324,7 +320,7 @@ class SkTDArray {
    *  Adjusts the number of elements in the array.
    *  This is the same as calling setCount(count() + delta).
    */
-  void adjustCount(int delta) noexcept {
+  void adjustCount(int delta) {
     SkASSERT(delta > 0);
 
     // We take care to avoid overflow here.
@@ -343,7 +339,7 @@ class SkTDArray {
    *
    *  note: does NOT modify fCount
    */
-  void resizeStorageToAtLeast(int count) noexcept {
+  void resizeStorageToAtLeast(int count) {
     SkASSERT(count > fReserve);
 
     // We take care to avoid overflow here.

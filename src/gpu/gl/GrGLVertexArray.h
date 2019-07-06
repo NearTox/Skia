@@ -45,7 +45,7 @@ class GrGLAttribArrayState {
   void enableVertexArrays(
       const GrGLGpu*, int enabledCount, GrPrimitiveRestart = GrPrimitiveRestart::kNo);
 
-  void invalidate() noexcept {
+  void invalidate() {
     int count = fAttribArrayStates.count();
     for (int i = 0; i < count; ++i) {
       fAttribArrayStates[i].invalidate();
@@ -56,7 +56,7 @@ class GrGLAttribArrayState {
   /**
    * The number of attrib arrays that this object is configured to track.
    */
-  int count() const noexcept { return fAttribArrayStates.count(); }
+  int count() const { return fAttribArrayStates.count(); }
 
  private:
   static constexpr int kInvalidDivisor = -1;
@@ -65,7 +65,7 @@ class GrGLAttribArrayState {
    * Tracks the state of glVertexAttribArray for an attribute index.
    */
   struct AttribArrayState {
-    void invalidate() noexcept {
+    void invalidate() {
       fVertexBufferUniqueID.makeInvalid();
       fDivisor = kInvalidDivisor;
       fUsingCpuBuffer = false;
@@ -107,9 +107,9 @@ class GrGLVertexArray {
    */
   GrGLAttribArrayState* bindWithIndexBuffer(GrGLGpu* gpu, const GrBuffer* indexBuffer);
 
-  GrGLuint arrayID() const noexcept { return fID; }
+  GrGLuint arrayID() const { return fID; }
 
-  void invalidateCachedState() noexcept;
+  void invalidateCachedState();
 
  private:
   GrGLuint fID;

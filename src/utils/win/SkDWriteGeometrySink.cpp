@@ -12,8 +12,8 @@
 #include "src/utils/SkFloatUtils.h"
 #include "src/utils/win/SkDWriteGeometrySink.h"
 
-#include <d2d1.h>
 #include <dwrite.h>
+#  include <d2d1.h>
 
 SkDWriteGeometrySink::SkDWriteGeometrySink(SkPath* path) : fRefCount(1), fPath(path) {}
 

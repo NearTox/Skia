@@ -56,7 +56,7 @@ class GrOpList : public SkRefCnt {
   // https://bugs.chromium.org/p/skia/issues/detail?id=7111
   virtual void endFlush();
 
-  bool isClosed() const noexcept { return this->isSetFlag(kClosed_Flag); }
+  bool isClosed() const { return this->isSetFlag(kClosed_Flag); }
 
   /*
    * Notify this GrOpList that it relies on the contents of 'dependedOn'
@@ -78,7 +78,7 @@ class GrOpList : public SkRefCnt {
    */
   virtual GrRenderTargetOpList* asRenderTargetOpList() { return nullptr; }
 
-  uint32_t uniqueID() const noexcept { return fUniqueID; }
+  uint32_t uniqueID() const { return fUniqueID; }
 
   /*
    * Dump out the GrOpList dependency DAG
@@ -142,32 +142,26 @@ class GrOpList : public SkRefCnt {
     kTempMark_Flag = 0x04,   //!< Flag for topological sorting
   };
 
-  void setFlag(uint32_t flag) noexcept { fFlags |= flag; }
+  void setFlag(uint32_t flag) { fFlags |= flag; }
 
-  void resetFlag(uint32_t flag) noexcept { fFlags &= ~flag; }
+  void resetFlag(uint32_t flag) { fFlags &= ~flag; }
 
-  bool isSetFlag(uint32_t flag) const noexcept { return SkToBool(fFlags & flag); }
+  bool isSetFlag(uint32_t flag) const { return SkToBool(fFlags & flag); }
 
   struct TopoSortTraits {
-    static void Output(GrOpList* opList, int /* index */) noexcept {
+    static void Output(GrOpList* opList, int /* index */) {
       opList->setFlag(GrOpList::kWasOutput_Flag);
     }
-    static bool WasOutput(const GrOpList* opList) noexcept {
+    static bool WasOutput(const GrOpList* opList) {
       return opList->isSetFlag(GrOpList::kWasOutput_Flag);
     }
-    static void SetTempMark(GrOpList* opList) noexcept {
-      opList->setFlag(GrOpList::kTempMark_Flag);
-    }
-    static void ResetTempMark(GrOpList* opList) noexcept {
-      opList->resetFlag(GrOpList::kTempMark_Flag);
-    }
-    static bool IsTempMarked(const GrOpList* opList) noexcept {
+    static void SetTempMark(GrOpList* opList) { opList->setFlag(GrOpList::kTempMark_Flag); }
+    static void ResetTempMark(GrOpList* opList) { opList->resetFlag(GrOpList::kTempMark_Flag); }
+    static bool IsTempMarked(const GrOpList* opList) {
       return opList->isSetFlag(GrOpList::kTempMark_Flag);
     }
-    static int NumDependencies(const GrOpList* opList) noexcept {
-      return opList->fDependencies.count();
-    }
-    static GrOpList* Dependency(GrOpList* opList, int index) noexcept {
+    static int NumDependencies(const GrOpList* opList) { return opList->fDependencies.count(); }
+    static GrOpList* Dependency(GrOpList* opList, int index) {
       return opList->fDependencies[index];
     }
   };

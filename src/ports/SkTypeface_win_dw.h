@@ -24,7 +24,7 @@
 class SkFontDescriptor;
 struct SkScalerContextRec;
 
-static SkFontStyle get_style(IDWriteFont* font) noexcept {
+static SkFontStyle get_style(IDWriteFont* font) {
   int weight = font->GetWeight();
   int width = font->GetStretch();
   SkFontStyle::Slant slant = SkFontStyle::kUpright_Slant;
@@ -89,7 +89,7 @@ class DWriteFontTypeface : public SkTypeface {
   }
 
  protected:
-  void weak_dispose() const noexcept override {
+  void weak_dispose() const override {
     if (fDWriteFontCollectionLoader.get()) {
       HRV(fFactory->UnregisterFontCollectionLoader(fDWriteFontCollectionLoader.get()));
     }

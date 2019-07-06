@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/mock/GrMockGpu.h"
-#include <atomic>
 #include "src/gpu/mock/GrMockBuffer.h"
 #include "src/gpu/mock/GrMockCaps.h"
+#include "src/gpu/mock/GrMockGpu.h"
 #include "src/gpu/mock/GrMockGpuCommandBuffer.h"
 #include "src/gpu/mock/GrMockStencilAttachment.h"
 #include "src/gpu/mock/GrMockTexture.h"
+#include <atomic>
 
-int GrMockGpu::NextInternalTextureID() noexcept {
+int GrMockGpu::NextInternalTextureID() {
   static std::atomic<int> nextID{1};
   int id;
   do {
@@ -22,21 +22,21 @@ int GrMockGpu::NextInternalTextureID() noexcept {
   return id;
 }
 
-int GrMockGpu::NextExternalTextureID() noexcept {
+int GrMockGpu::NextExternalTextureID() {
   // We use negative ints for the "testing only external textures" so they can easily be
   // identified when debugging.
   static std::atomic<int> nextID{-1};
   return nextID--;
 }
 
-int GrMockGpu::NextInternalRenderTargetID() noexcept {
+int GrMockGpu::NextInternalRenderTargetID() {
   // We start off with large numbers to differentiate from texture IDs, even though they're
   // technically in a different space.
   static std::atomic<int> nextID{SK_MaxS32};
   return nextID--;
 }
 
-int GrMockGpu::NextExternalRenderTargetID() noexcept {
+int GrMockGpu::NextExternalRenderTargetID() {
   // We use large negative ints for the "testing only external render targets" so they can easily
   // be identified when debugging.
   static std::atomic<int> nextID{SK_MinS32};
@@ -71,7 +71,7 @@ void GrMockGpu::submit(GrGpuCommandBuffer* buffer) {
   delete buffer;
 }
 
-void GrMockGpu::submitCommandBuffer(const GrMockGpuRTCommandBuffer* cmdBuffer) noexcept {
+void GrMockGpu::submitCommandBuffer(const GrMockGpuRTCommandBuffer* cmdBuffer) {
   for (int i = 0; i < cmdBuffer->numDraws(); ++i) {
     fStats.incNumDraws();
   }

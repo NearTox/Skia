@@ -85,14 +85,11 @@ class GrTextBlob : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainterInterf
     bool fHasBlur;
     uint32_t fScalerContextFlags;
 
-    bool operator==(const Key& other) const noexcept {
-      return 0 == memcmp(this, &other, sizeof(Key));
-    }
+    bool operator==(const Key& other) const { return 0 == memcmp(this, &other, sizeof(Key)); }
   };
 
   void setupKey(
-      const GrTextBlob::Key& key, const SkMaskFilterBase::BlurRec& blurRec,
-      const SkPaint& paint) noexcept {
+      const GrTextBlob::Key& key, const SkMaskFilterBase::BlurRec& blurRec, const SkPaint& paint) {
     fKey = key;
     if (key.fHasBlur) {
       fBlurRec = blurRec;
@@ -104,27 +101,25 @@ class GrTextBlob : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainterInterf
     }
   }
 
-  static const Key& GetKey(const GrTextBlob& blob) noexcept { return blob.fKey; }
+  static const Key& GetKey(const GrTextBlob& blob) { return blob.fKey; }
 
   static uint32_t Hash(const Key& key) { return SkOpts::hash(&key, sizeof(Key)); }
 
   void operator delete(void* p) { ::operator delete(p); }
 
-  void* operator new(size_t) noexcept {
+  void* operator new(size_t) {
     SK_ABORT("All blobs are created by placement new.");
     return sk_malloc_throw(0);
   }
 
-  void* operator new(size_t, void* p) noexcept { return p; }
+  void* operator new(size_t, void* p) { return p; }
 
-  bool hasDistanceField() const noexcept {
-    return SkToBool(fTextType & kHasDistanceField_TextType);
-  }
-  bool hasBitmap() const noexcept { return SkToBool(fTextType & kHasBitmap_TextType); }
-  void setHasDistanceField() noexcept { fTextType |= kHasDistanceField_TextType; }
-  void setHasBitmap() noexcept { fTextType |= kHasBitmap_TextType; }
+  bool hasDistanceField() const { return SkToBool(fTextType & kHasDistanceField_TextType); }
+  bool hasBitmap() const { return SkToBool(fTextType & kHasBitmap_TextType); }
+  void setHasDistanceField() { fTextType |= kHasDistanceField_TextType; }
+  void setHasBitmap() { fTextType |= kHasBitmap_TextType; }
 
-  int runCountLimit() const noexcept { return fRunCountLimit; }
+  int runCountLimit() const { return fRunCountLimit; }
 
   Run* pushBackRun() {
     SkASSERT(fRunCount < fRunCountLimit);
@@ -140,13 +135,13 @@ class GrTextBlob : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainterInterf
     return this->currentRun();
   }
 
-  void setMinAndMaxScale(SkScalar scaledMin, SkScalar scaledMax) noexcept {
+  void setMinAndMaxScale(SkScalar scaledMin, SkScalar scaledMax) {
     // we init fMaxMinScale and fMinMaxScale in the constructor
     fMaxMinScale = SkMaxScalar(scaledMin, fMaxMinScale);
     fMinMaxScale = SkMinScalar(scaledMax, fMinMaxScale);
   }
 
-  static size_t GetVertexStride(GrMaskFormat maskFormat, bool hasWCoord) noexcept {
+  static size_t GetVertexStride(GrMaskFormat maskFormat, bool hasWCoord) {
     switch (maskFormat) {
       case kA8_GrMaskFormat: return hasWCoord ? kGrayTextDFPerspectiveVASize : kGrayTextVASize;
       case kARGB_GrMaskFormat: return hasWCoord ? kColorTextPerspectiveVASize : kColorTextVASize;
@@ -207,24 +202,24 @@ class GrTextBlob : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainterInterf
   static const size_t kMaxVASize = kGrayTextDFPerspectiveVASize;
   static const int kVerticesPerGlyph = 4;
 
-  static void AssertEqual(const GrTextBlob&, const GrTextBlob&) noexcept;
+  static void AssertEqual(const GrTextBlob&, const GrTextBlob&);
 
   // The color here is the GrPaint color, and it is used to determine whether we
   // have to regenerate LCD text blobs.
   // We use this color vs the SkPaint color because it has the colorfilter applied.
   void initReusableBlob(
-      SkColor luminanceColor, const SkMatrix& viewMatrix, SkScalar x, SkScalar y) noexcept {
+      SkColor luminanceColor, const SkMatrix& viewMatrix, SkScalar x, SkScalar y) {
     fLuminanceColor = luminanceColor;
     this->setupViewMatrix(viewMatrix, x, y);
   }
 
-  void initThrowawayBlob(const SkMatrix& viewMatrix, SkScalar x, SkScalar y) noexcept {
+  void initThrowawayBlob(const SkMatrix& viewMatrix, SkScalar x, SkScalar y) {
     this->setupViewMatrix(viewMatrix, x, y);
   }
 
-  const Key& key() const noexcept { return fKey; }
+  const Key& key() const { return fKey; }
 
-  size_t size() const noexcept { return fSize; }
+  size_t size() const { return fSize; }
 
   ~GrTextBlob() override {
     for (int i = 0; i < fRunCountLimit; i++) {
@@ -246,7 +241,7 @@ class GrTextBlob : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainterInterf
   // initial view matrix and initial offsets(x,y), because we record vertex bounds relative to
   // these numbers.  When blobs are reused with new matrices, we need to return to model space so
   // we can update the vertex bounds appropriately.
-  void setupViewMatrix(const SkMatrix& viewMatrix, SkScalar x, SkScalar y) noexcept {
+  void setupViewMatrix(const SkMatrix& viewMatrix, SkScalar x, SkScalar y) {
     fInitialViewMatrix = viewMatrix;
     if (!viewMatrix.invert(&fInitialViewMatrixInverse)) {
       fInitialViewMatrixInverse = SkMatrix::I();
@@ -262,7 +257,7 @@ class GrTextBlob : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainterInterf
 
   class SubRun {
    public:
-    SubRun(Run* run, const SkStrikeSpecStorage& strikeSpec, GrColor color) noexcept
+    SubRun(Run* run, const SkStrikeSpecStorage& strikeSpec, GrColor color)
         : fColor{color}, fRun{run}, fStrikeSpec{strikeSpec} {}
 
     // When used with emplace_back, this constructs a SubRun from the last SubRun in an array.
@@ -272,30 +267,28 @@ class GrTextBlob : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainterInterf
     void appendGlyph(GrGlyph* glyph, SkRect dstRect);
 
     // TODO when this object is more internal, drop the privacy
-    void resetBulkUseToken() noexcept { fBulkUseToken.reset(); }
-    GrDrawOpAtlas::BulkUseTokenUpdater* bulkUseToken() noexcept { return &fBulkUseToken; }
-    void setStrike(sk_sp<GrTextStrike> strike) noexcept { fStrike = std::move(strike); }
-    GrTextStrike* strike() const noexcept { return fStrike.get(); }
-    sk_sp<GrTextStrike> refStrike() const noexcept { return fStrike; }
+    void resetBulkUseToken() { fBulkUseToken.reset(); }
+    GrDrawOpAtlas::BulkUseTokenUpdater* bulkUseToken() { return &fBulkUseToken; }
+    void setStrike(sk_sp<GrTextStrike> strike) { fStrike = std::move(strike); }
+    GrTextStrike* strike() const { return fStrike.get(); }
+    sk_sp<GrTextStrike> refStrike() const { return fStrike; }
 
-    void setAtlasGeneration(uint64_t atlasGeneration) noexcept {
-      fAtlasGeneration = atlasGeneration;
-    }
-    uint64_t atlasGeneration() const noexcept { return fAtlasGeneration; }
+    void setAtlasGeneration(uint64_t atlasGeneration) { fAtlasGeneration = atlasGeneration; }
+    uint64_t atlasGeneration() const { return fAtlasGeneration; }
 
-    size_t byteCount() const noexcept { return fVertexEndIndex - fVertexStartIndex; }
-    size_t vertexStartIndex() const noexcept { return fVertexStartIndex; }
-    size_t vertexEndIndex() const noexcept { return fVertexEndIndex; }
+    size_t byteCount() const { return fVertexEndIndex - fVertexStartIndex; }
+    size_t vertexStartIndex() const { return fVertexStartIndex; }
+    size_t vertexEndIndex() const { return fVertexEndIndex; }
 
-    uint32_t glyphCount() const noexcept { return fGlyphEndIndex - fGlyphStartIndex; }
-    uint32_t glyphStartIndex() const noexcept { return fGlyphStartIndex; }
-    uint32_t glyphEndIndex() const noexcept { return fGlyphEndIndex; }
-    void setColor(GrColor color) noexcept { fColor = color; }
-    GrColor color() const noexcept { return fColor; }
-    void setMaskFormat(GrMaskFormat format) noexcept { fMaskFormat = format; }
-    GrMaskFormat maskFormat() const noexcept { return fMaskFormat; }
+    uint32_t glyphCount() const { return fGlyphEndIndex - fGlyphStartIndex; }
+    uint32_t glyphStartIndex() const { return fGlyphStartIndex; }
+    uint32_t glyphEndIndex() const { return fGlyphEndIndex; }
+    void setColor(GrColor color) { fColor = color; }
+    GrColor color() const { return fColor; }
+    void setMaskFormat(GrMaskFormat format) { fMaskFormat = format; }
+    GrMaskFormat maskFormat() const { return fMaskFormat; }
 
-    void setAsSuccessor(const SubRun& prev) noexcept {
+    void setAsSuccessor(const SubRun& prev) {
       fGlyphStartIndex = prev.glyphEndIndex();
       fGlyphEndIndex = fGlyphStartIndex;
 
@@ -306,12 +299,10 @@ class GrTextBlob : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainterInterf
       this->init(prev.fCurrentViewMatrix, prev.fX, prev.fY);
     }
 
-    const SkRect& vertexBounds() const noexcept { return fVertexBounds; }
-    void joinGlyphBounds(const SkRect& glyphBounds) noexcept {
-      fVertexBounds.joinNonEmptyArg(glyphBounds);
-    }
+    const SkRect& vertexBounds() const { return fVertexBounds; }
+    void joinGlyphBounds(const SkRect& glyphBounds) { fVertexBounds.joinNonEmptyArg(glyphBounds); }
 
-    void init(const SkMatrix& viewMatrix, SkScalar x, SkScalar y) noexcept {
+    void init(const SkMatrix& viewMatrix, SkScalar x, SkScalar y) {
       fCurrentViewMatrix = viewMatrix;
       fX = x;
       fY = y;
@@ -322,20 +313,20 @@ class GrTextBlob : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainterInterf
         const SkMatrix& viewMatrix, SkScalar x, SkScalar y, SkScalar* transX, SkScalar* transY);
 
     // df properties
-    void setDrawAsDistanceFields() noexcept { fFlags.drawAsSdf = true; }
-    bool drawAsDistanceFields() const noexcept { return fFlags.drawAsSdf; }
-    void setUseLCDText(bool useLCDText) noexcept { fFlags.useLCDText = useLCDText; }
-    bool hasUseLCDText() const noexcept { return fFlags.useLCDText; }
-    void setAntiAliased(bool antiAliased) noexcept { fFlags.antiAliased = antiAliased; }
-    bool isAntiAliased() const noexcept { return fFlags.antiAliased; }
-    void setHasWCoord(bool hasW) noexcept { fFlags.hasWCoord = hasW; }
-    bool hasWCoord() const noexcept { return fFlags.hasWCoord; }
-    void setNeedsTransform(bool needsTransform) noexcept { fFlags.needsTransform = needsTransform; }
-    bool needsTransform() const noexcept { return fFlags.needsTransform; }
-    void setFallback() noexcept { fFlags.argbFallback = true; }
-    bool isFallback() noexcept { return fFlags.argbFallback; }
+    void setDrawAsDistanceFields() { fFlags.drawAsSdf = true; }
+    bool drawAsDistanceFields() const { return fFlags.drawAsSdf; }
+    void setUseLCDText(bool useLCDText) { fFlags.useLCDText = useLCDText; }
+    bool hasUseLCDText() const { return fFlags.useLCDText; }
+    void setAntiAliased(bool antiAliased) { fFlags.antiAliased = antiAliased; }
+    bool isAntiAliased() const { return fFlags.antiAliased; }
+    void setHasWCoord(bool hasW) { fFlags.hasWCoord = hasW; }
+    bool hasWCoord() const { return fFlags.hasWCoord; }
+    void setNeedsTransform(bool needsTransform) { fFlags.needsTransform = needsTransform; }
+    bool needsTransform() const { return fFlags.needsTransform; }
+    void setFallback() { fFlags.argbFallback = true; }
+    bool isFallback() { return fFlags.argbFallback; }
 
-    const SkStrikeSpecStorage& strikeSpec() const noexcept { return fStrikeSpec; }
+    const SkStrikeSpecStorage& strikeSpec() const { return fStrikeSpec; }
 
    private:
     GrDrawOpAtlas::BulkUseTokenUpdater fBulkUseToken;
@@ -393,7 +384,7 @@ class GrTextBlob : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainterInterf
     }
 
     // sets the last subrun of runIndex to use w values
-    void setSubRunHasW(bool hasWCoord) noexcept {
+    void setSubRunHasW(bool hasWCoord) {
       SubRun& subRun = this->fSubRunInfo.back();
       subRun.setHasWCoord(hasWCoord);
     }
@@ -429,10 +420,10 @@ class GrTextBlob : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainterInterf
 
     void setupFont(const SkStrikeSpecStorage& strikeSpec);
 
-    void setRunFontAntiAlias(bool aa) noexcept { fAntiAlias = aa; }
+    void setRunFontAntiAlias(bool aa) { fAntiAlias = aa; }
 
     // sets the last subrun of runIndex to use distance field text
-    void setSubRunHasDistanceFields(bool hasLCD, bool isAntiAlias, bool hasWCoord) noexcept {
+    void setSubRunHasDistanceFields(bool hasLCD, bool isAntiAlias, bool hasWCoord) {
       SubRun& subRun = fSubRunInfo.back();
       subRun.setUseLCDText(hasLCD);
       subRun.setAntiAliased(isAntiAlias);
@@ -440,7 +431,7 @@ class GrTextBlob : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainterInterf
       subRun.setHasWCoord(hasWCoord);
     }
 
-    SubRun* pushBackSubRun(const SkStrikeSpecStorage& desc, GrColor color) noexcept {
+    SubRun* pushBackSubRun(const SkStrikeSpecStorage& desc, GrColor color) {
       // Forward glyph / vertex information to seed the new sub run
       SubRun& newSubRun = fSubRunInfo.emplace_back(this, desc, color);
 
@@ -454,8 +445,7 @@ class GrTextBlob : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainterInterf
     // Any glyphs that can't be rendered with the base or override descriptor
     // are rendered as paths
     struct PathGlyph {
-      PathGlyph(
-          const SkPath& path, SkScalar x, SkScalar y, SkScalar scale, bool preXformed) noexcept
+      PathGlyph(const SkPath& path, SkScalar x, SkScalar y, SkScalar scale, bool preXformed)
           : fPath(path), fX(x), fY(y), fScale(scale), fPreTransformed(preXformed) {}
       SkPath fPath;
       SkScalar fX;

@@ -9,7 +9,7 @@
 
 namespace SkSL {
 
-void OutputStream::writeString(const String& s) { this->write(s.c_str(), s.size()); }
+void OutputStream::writeString(String s) { this->write(s.c_str(), s.size()); }
 
 void OutputStream::printf(const char format[], ...) {
   va_list args;

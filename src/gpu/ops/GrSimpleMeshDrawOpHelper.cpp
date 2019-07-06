@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 #include "src/gpu/GrAppliedClip.h"
 #include "src/gpu/GrProcessorSet.h"
 #include "src/gpu/GrRect.h"
 #include "src/gpu/GrUserStencilSettings.h"
 #include "src/gpu/SkGr.h"
+#include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 
 GrSimpleMeshDrawOpHelper::GrSimpleMeshDrawOpHelper(
-    const MakeArgs& args, GrAAType aaType, InputFlags inputFlags) noexcept
+    const MakeArgs& args, GrAAType aaType, InputFlags inputFlags)
     : fProcessors(args.fProcessorSet),
       fPipelineFlags((GrPipeline::InputFlags)inputFlags),
       fAAType((int)aaType),
@@ -32,12 +32,12 @@ GrSimpleMeshDrawOpHelper::~GrSimpleMeshDrawOpHelper() {
   }
 }
 
-GrDrawOp::FixedFunctionFlags GrSimpleMeshDrawOpHelper::fixedFunctionFlags() const noexcept {
+GrDrawOp::FixedFunctionFlags GrSimpleMeshDrawOpHelper::fixedFunctionFlags() const {
   return GrAATypeIsHW((this->aaType())) ? GrDrawOp::FixedFunctionFlags::kUsesHWAA
                                         : GrDrawOp::FixedFunctionFlags::kNone;
 }
 
-static constexpr bool none_as_coverage_aa_compatible(GrAAType aa1, GrAAType aa2) noexcept {
+static bool none_as_coverage_aa_compatible(GrAAType aa1, GrAAType aa2) {
   return (aa1 == GrAAType::kNone && aa2 == GrAAType::kCoverage) ||
          (aa1 == GrAAType::kCoverage && aa2 == GrAAType::kNone);
 }
@@ -150,12 +150,11 @@ SkString GrSimpleMeshDrawOpHelper::dumpInfo() const {
 
 GrSimpleMeshDrawOpHelperWithStencil::GrSimpleMeshDrawOpHelperWithStencil(
     const MakeArgs& args, GrAAType aaType, const GrUserStencilSettings* stencilSettings,
-    InputFlags inputFlags) noexcept
+    InputFlags inputFlags)
     : INHERITED(args, aaType, inputFlags),
       fStencilSettings(stencilSettings ? stencilSettings : &GrUserStencilSettings::kUnused) {}
 
-GrDrawOp::FixedFunctionFlags GrSimpleMeshDrawOpHelperWithStencil::fixedFunctionFlags() const
-    noexcept {
+GrDrawOp::FixedFunctionFlags GrSimpleMeshDrawOpHelperWithStencil::fixedFunctionFlags() const {
   GrDrawOp::FixedFunctionFlags flags = INHERITED::fixedFunctionFlags();
   if (fStencilSettings != &GrUserStencilSettings::kUnused) {
     flags |= GrDrawOp::FixedFunctionFlags::kUsesStencil;

@@ -18,11 +18,11 @@
  */
 class SkQuadClipper {
  public:
-  SkQuadClipper() noexcept;
+  SkQuadClipper();
 
-  void setClip(const SkIRect& clip) noexcept;
+  void setClip(const SkIRect& clip);
 
-  bool clipQuad(const SkPoint src[3], SkPoint dst[3]) noexcept;
+  bool clipQuad(const SkPoint src[3], SkPoint dst[3]);
 
  private:
   SkRect fClip;
@@ -58,8 +58,8 @@ class SkQuadClipper2 {
 void sk_assert_monotonic_x(const SkPoint pts[], int count);
 void sk_assert_monotonic_y(const SkPoint pts[], int count);
 #else
-#define sk_assert_monotonic_x(pts, count)
-#define sk_assert_monotonic_y(pts, count)
+#  define sk_assert_monotonic_x(pts, count)
+#  define sk_assert_monotonic_y(pts, count)
 #endif
 
 #endif

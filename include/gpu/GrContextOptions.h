@@ -195,7 +195,7 @@ struct SK_API GrContextOptions {
    */
   ShaderErrorHandler* fShaderErrorHandler = nullptr;
 
-#if GR_TEST_UTILS
+#  if GR_TEST_UTILS
   /**
    * Private options that are only meant for testing within Skia's tools.
    */
@@ -235,15 +235,15 @@ struct SK_API GrContextOptions {
    * Include or exclude specific GPU path renderers.
    */
   GpuPathRenderers fGpuPathRenderers = GpuPathRenderers::kAll;
-#endif
+#  endif
 
-#if SK_SUPPORT_ATLAS_TEXT
+#  if SK_SUPPORT_ATLAS_TEXT
   /**
    * Controls whether distance field glyph vertices always have 3 components even when the view
    * matrix does not have perspective.
    */
   Enable fDistanceFieldGlyphVerticesAlwaysHaveW = Enable::kDefault;
-#endif
+#  endif
 
   GrDriverBugWorkarounds fDriverBugWorkarounds;
 };

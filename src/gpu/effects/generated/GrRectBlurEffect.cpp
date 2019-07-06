@@ -126,8 +126,8 @@ GrGLSLFragmentProcessor* GrRectBlurEffect::onCreateGLSLInstance() const {
   return new GrGLSLRectBlurEffect();
 }
 void GrRectBlurEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {}
-bool GrRectBlurEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
+bool GrRectBlurEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrRectBlurEffect& that = other.cast<GrRectBlurEffect>();
   (void)that;
   if (rect != that.rect) return false;
@@ -135,7 +135,7 @@ bool GrRectBlurEffect::onIsEqual(const GrFragmentProcessor& other) const noexcep
   if (blurProfile != that.blurProfile) return false;
   return true;
 }
-GrRectBlurEffect::GrRectBlurEffect(const GrRectBlurEffect& src) noexcept
+GrRectBlurEffect::GrRectBlurEffect(const GrRectBlurEffect& src)
     : INHERITED(kGrRectBlurEffect_ClassID, src.optimizationFlags()),
       rect(src.rect),
       sigma(src.sigma),
@@ -145,8 +145,7 @@ GrRectBlurEffect::GrRectBlurEffect(const GrRectBlurEffect& src) noexcept
 std::unique_ptr<GrFragmentProcessor> GrRectBlurEffect::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new GrRectBlurEffect(*this));
 }
-const GrFragmentProcessor::TextureSampler& GrRectBlurEffect::onTextureSampler(int index) const
-    noexcept {
+const GrFragmentProcessor::TextureSampler& GrRectBlurEffect::onTextureSampler(int index) const {
   return IthTextureSampler(index, blurProfile);
 }
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(GrRectBlurEffect);

@@ -47,7 +47,7 @@ void SkTime::GetDateTime(DateTime* dt) {
 
 #else  // SK_BUILD_FOR_WIN
 
-#include <time.h>
+#  include <time.h>
 void SkTime::GetDateTime(DateTime* dt) {
   if (dt) {
     time_t m_time;
@@ -67,7 +67,7 @@ void SkTime::GetDateTime(DateTime* dt) {
 #endif  // SK_BUILD_FOR_WIN
 
 #if !defined(__has_feature)
-#define __has_feature(x) 0
+#  define __has_feature(x) 0
 #endif
 
 double SkTime::GetNSecs() {

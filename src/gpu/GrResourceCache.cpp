@@ -29,11 +29,11 @@ DECLARE_SKMESSAGEBUS_MESSAGE(GrUniqueKeyInvalidatedMessage);
 
 DECLARE_SKMESSAGEBUS_MESSAGE(GrGpuResourceFreedMessage);
 
-#define ASSERT_SINGLE_OWNER SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(fSingleOwner));
+#define ASSERT_SINGLE_OWNER SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(fSingleOwner);)
 
 //////////////////////////////////////////////////////////////////////////////
 
-GrScratchKey::ResourceType GrScratchKey::GenerateResourceType() noexcept {
+GrScratchKey::ResourceType GrScratchKey::GenerateResourceType() {
   static std::atomic<int32_t> nextType{INHERITED::kInvalidDomain + 1};
 
   int32_t type = nextType++;
@@ -44,7 +44,7 @@ GrScratchKey::ResourceType GrScratchKey::GenerateResourceType() noexcept {
   return static_cast<ResourceType>(type);
 }
 
-GrUniqueKey::Domain GrUniqueKey::GenerateDomain() noexcept {
+GrUniqueKey::Domain GrUniqueKey::GenerateDomain() {
   static std::atomic<int32_t> nextDomain{INHERITED::kInvalidDomain + 1};
 
   int32_t domain = nextDomain++;
@@ -55,15 +55,13 @@ GrUniqueKey::Domain GrUniqueKey::GenerateDomain() noexcept {
   return static_cast<Domain>(domain);
 }
 
-uint32_t GrResourceKeyHash(const uint32_t* data, size_t size) noexcept {
-  return SkOpts::hash(data, size);
-}
+uint32_t GrResourceKeyHash(const uint32_t* data, size_t size) { return SkOpts::hash(data, size); }
 
 //////////////////////////////////////////////////////////////////////////////
 
 class GrResourceCache::AutoValidate : ::SkNoncopyable {
  public:
-  AutoValidate(GrResourceCache* cache) noexcept : fCache(cache) { cache->validate(); }
+  AutoValidate(GrResourceCache* cache) : fCache(cache) { cache->validate(); }
   ~AutoValidate() { fCache->validate(); }
 
  private:
@@ -72,20 +70,18 @@ class GrResourceCache::AutoValidate : ::SkNoncopyable {
 
 //////////////////////////////////////////////////////////////////////////////
 
-inline GrResourceCache::ResourceAwaitingUnref::ResourceAwaitingUnref() noexcept = default;
+inline GrResourceCache::ResourceAwaitingUnref::ResourceAwaitingUnref() = default;
 
-inline GrResourceCache::ResourceAwaitingUnref::ResourceAwaitingUnref(
-    GrGpuResource* resource) noexcept
+inline GrResourceCache::ResourceAwaitingUnref::ResourceAwaitingUnref(GrGpuResource* resource)
     : fResource(resource), fNumUnrefs(1) {}
 
-inline GrResourceCache::ResourceAwaitingUnref::ResourceAwaitingUnref(
-    ResourceAwaitingUnref&& that) noexcept {
+inline GrResourceCache::ResourceAwaitingUnref::ResourceAwaitingUnref(ResourceAwaitingUnref&& that) {
   fResource = skstd::exchange(that.fResource, nullptr);
   fNumUnrefs = skstd::exchange(that.fNumUnrefs, 0);
 }
 
 inline GrResourceCache::ResourceAwaitingUnref& GrResourceCache::ResourceAwaitingUnref::operator=(
-    ResourceAwaitingUnref&& that) noexcept {
+    ResourceAwaitingUnref&& that) {
   fResource = skstd::exchange(that.fResource, nullptr);
   fNumUnrefs = skstd::exchange(that.fNumUnrefs, 0);
   return *this;
@@ -99,15 +95,15 @@ inline GrResourceCache::ResourceAwaitingUnref::~ResourceAwaitingUnref() {
   }
 }
 
-inline void GrResourceCache::ResourceAwaitingUnref::addRef() noexcept { ++fNumUnrefs; }
+inline void GrResourceCache::ResourceAwaitingUnref::addRef() { ++fNumUnrefs; }
 
-inline void GrResourceCache::ResourceAwaitingUnref::unref() noexcept {
+inline void GrResourceCache::ResourceAwaitingUnref::unref() {
   SkASSERT(fNumUnrefs > 0);
   fResource->unref();
   --fNumUnrefs;
 }
 
-inline bool GrResourceCache::ResourceAwaitingUnref::finished() noexcept { return !fNumUnrefs; }
+inline bool GrResourceCache::ResourceAwaitingUnref::finished() { return !fNumUnrefs; }
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -280,9 +276,9 @@ void GrResourceCache::refResource(GrGpuResource* resource) {
 
 class GrResourceCache::AvailableForScratchUse {
  public:
-  AvailableForScratchUse(bool rejectPendingIO) noexcept : fRejectPendingIO(rejectPendingIO) {}
+  AvailableForScratchUse(bool rejectPendingIO) : fRejectPendingIO(rejectPendingIO) {}
 
-  bool operator()(const GrGpuResource* resource) const noexcept {
+  bool operator()(const GrGpuResource* resource) const {
     SkASSERT(
         !resource->getUniqueKey().isValid() && resource->resourcePriv().getScratchKey().isValid());
     if (resource->internalHasRef() || !resource->cacheAccess().isScratch()) {
@@ -655,7 +651,7 @@ void GrResourceCache::purgeUnlockedResources(size_t bytesToPurge, bool preferScr
     fMaxBytes = cachedByteCount;
   }
 }
-bool GrResourceCache::requestsFlush() const noexcept {
+bool GrResourceCache::requestsFlush() const {
   return this->overBudget() && !fPurgeableQueue.count() &&
          fNumBudgetedResourcesFlushWillMakePurgeable > 0;
 }
@@ -690,13 +686,13 @@ void GrResourceCache::processFreedGpuResources() {
   }
 }
 
-void GrResourceCache::addToNonpurgeableArray(GrGpuResource* resource) noexcept {
+void GrResourceCache::addToNonpurgeableArray(GrGpuResource* resource) {
   int index = fNonpurgeableResources.count();
   *fNonpurgeableResources.append() = resource;
   *resource->cacheAccess().accessCacheIndex() = index;
 }
 
-void GrResourceCache::removeFromNonpurgeableArray(GrGpuResource* resource) noexcept {
+void GrResourceCache::removeFromNonpurgeableArray(GrGpuResource* resource) {
   int* index = resource->cacheAccess().accessCacheIndex();
   // Fill the whole we will create in the array with the tail object, adjust its index, and
   // then pop the array
@@ -826,7 +822,7 @@ void GrResourceCache::dumpStatsKeyValuePairs(
   keys->push_back(SkString("gpu_cache_purgable_entries"));
   values->push_back(stats.fNumPurgeable);
 }
-#endif
+#  endif
 
 #endif
 
@@ -948,14 +944,14 @@ void GrResourceCache::validate() const {
   SkASSERT(stats.fBudgetedBytes == fBudgetedBytes);
   SkASSERT(stats.fBudgetedCount == fBudgetedCount);
   SkASSERT(purgeableBytes == fPurgeableBytes);
-#if GR_CACHE_STATS
+#  if GR_CACHE_STATS
   SkASSERT(fBudgetedHighWaterCount <= fHighWaterCount);
   SkASSERT(fBudgetedHighWaterBytes <= fHighWaterBytes);
   SkASSERT(fBytes <= fHighWaterBytes);
   SkASSERT(fCount <= fHighWaterCount);
   SkASSERT(fBudgetedBytes <= fBudgetedHighWaterBytes);
   SkASSERT(fBudgetedCount <= fBudgetedHighWaterCount);
-#endif
+#  endif
   SkASSERT(stats.fContent == fUniqueHash.count());
   SkASSERT(stats.fScratch + stats.fCouldBeScratch == fScratchMap.count());
 

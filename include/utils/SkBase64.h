@@ -14,19 +14,18 @@ struct SkBase64 {
  public:
   enum Error { kNoError, kPadError, kBadCharError };
 
-  SkBase64() noexcept;
+  SkBase64();
   Error decode(const char* src, size_t length);
-  char* getData() noexcept { return fData; }
+  char* getData() { return fData; }
   /**
      Base64 encodes src into dst. encode is a pointer to at least 65 chars.
      encode[64] will be used as the pad character. Encodings other than the
      default encoding cannot be decoded.
   */
-  static size_t Encode(
-      const void* src, size_t length, void* dest, const char* encode = nullptr) noexcept;
+  static size_t Encode(const void* src, size_t length, void* dest, const char* encode = nullptr);
 
  private:
-  Error decode(const void* srcPtr, size_t length, bool writeDestination) noexcept;
+  Error decode(const void* srcPtr, size_t length, bool writeDestination);
 
   size_t fLength;
   char* fData;

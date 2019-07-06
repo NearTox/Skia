@@ -22,16 +22,16 @@ struct IntLiteral : public Expression {
   IntLiteral(const Context& context, int offset, int64_t value)
       : INHERITED(offset, kIntLiteral_Kind, *context.fInt_Type), fValue(value) {}
 
-  IntLiteral(int offset, int64_t value, const Type* type = nullptr) noexcept
+  IntLiteral(int offset, int64_t value, const Type* type = nullptr)
       : INHERITED(offset, kIntLiteral_Kind, *type), fValue(value) {}
 
   String description() const override { return to_string(fValue); }
 
-  bool hasSideEffects() const noexcept override { return false; }
+  bool hasSideEffects() const override { return false; }
 
-  bool isConstant() const noexcept override { return true; }
+  bool isConstant() const override { return true; }
 
-  bool compareConstant(const Context& context, const Expression& other) const noexcept override {
+  bool compareConstant(const Context& context, const Expression& other) const override {
     IntLiteral& i = (IntLiteral&)other;
     return fValue == i.fValue;
   }
@@ -43,7 +43,7 @@ struct IntLiteral : public Expression {
     return INHERITED::coercionCost(target);
   }
 
-  int64_t getConstantInt() const noexcept override { return fValue; }
+  int64_t getConstantInt() const override { return fValue; }
 
   std::unique_ptr<Expression> clone() const override {
     return std::unique_ptr<Expression>(new IntLiteral(fOffset, fValue, &fType));

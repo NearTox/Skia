@@ -8,11 +8,11 @@
 #ifndef SkTaskGroup_DEFINED
 #define SkTaskGroup_DEFINED
 
-#include <atomic>
-#include <functional>
 #include "include/core/SkExecutor.h"
 #include "include/core/SkTypes.h"
 #include "include/private/SkNoncopyable.h"
+#include <atomic>
+#include <functional>
 
 class SkTaskGroup : SkNoncopyable {
  public:

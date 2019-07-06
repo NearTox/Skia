@@ -25,7 +25,7 @@ class GrClearOp final : public GrOp {
   static std::unique_ptr<GrClearOp> Make(
       GrRecordingContext* context, const SkIRect& rect, const SkPMColor4f& color, bool fullScreen);
 
-  const char* name() const noexcept override { return "Clear"; }
+  const char* name() const override { return "Clear"; }
 
 #ifdef SK_DEBUG
   SkString dumpInfo() const override {

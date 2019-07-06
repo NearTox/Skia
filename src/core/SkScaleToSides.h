@@ -20,7 +20,7 @@ class SkScaleToSides {
   // of a and b will fit in a float. The side of the rectangle may be larger than a float.
   // Scale must be less than or equal to the ratio limit / (*a + *b).
   // This code assumes that NaN and Inf are never passed in.
-  static void AdjustRadii(double limit, double scale, SkScalar* a, SkScalar* b) noexcept {
+  static void AdjustRadii(double limit, double scale, SkScalar* a, SkScalar* b) {
     SkASSERTF(scale < 1.0 && scale > 0.0, "scale: %g", scale);
 
     *a = (float)((double)*a * scale);

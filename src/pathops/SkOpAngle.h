@@ -32,7 +32,7 @@ class SkOpAngle {
   const SkOpCoincidence* debugCoincidence() const;
   SkOpContour* debugContour(int id) const;
 
-  int debugID() const noexcept { return SkDEBUGRELEASE(fID, -1); }
+  int debugID() const { return SkDEBUGRELEASE(fID, -1); }
 
 #if DEBUG_SORT
   void debugLoop() const;
@@ -58,28 +58,28 @@ class SkOpAngle {
   void dumpTo(const SkOpSegment* fromSeg, const SkOpAngle*) const;
   void dumpTest() const;
 
-  SkOpSpanBase* end() const noexcept { return fEnd; }
+  SkOpSpanBase* end() const { return fEnd; }
 
   bool insert(SkOpAngle*);
   SkOpSpanBase* lastMarked() const;
   bool loopContains(const SkOpAngle*) const;
   int loopCount() const;
 
-  SkOpAngle* next() const noexcept { return fNext; }
+  SkOpAngle* next() const { return fNext; }
 
   SkOpAngle* previous() const;
   SkOpSegment* segment() const;
   void set(SkOpSpanBase* start, SkOpSpanBase* end);
 
-  void setLastMarked(SkOpSpanBase* marked) noexcept { fLastMarked = marked; }
+  void setLastMarked(SkOpSpanBase* marked) { fLastMarked = marked; }
 
-  SkOpSpanBase* start() const noexcept { return fStart; }
+  SkOpSpanBase* start() const { return fStart; }
 
   SkOpSpan* starter();
 
-  bool tangentsAmbiguous() const noexcept { return fTangentsAmbiguous; }
+  bool tangentsAmbiguous() const { return fTangentsAmbiguous; }
 
-  bool unorderable() const noexcept { return fUnorderable; }
+  bool unorderable() const { return fUnorderable; }
 
  private:
   bool after(SkOpAngle* test);

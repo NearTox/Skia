@@ -24,7 +24,7 @@ class GrDrawableOp final : public GrOp {
       GrRecordingContext*, std::unique_ptr<SkDrawable::GpuDrawHandler> drawable,
       const SkRect& bounds);
 
-  const char* name() const noexcept override { return "Drawable"; }
+  const char* name() const override { return "Drawable"; }
 
 #ifdef SK_DEBUG
   SkString dumpInfo() const override { return INHERITED::dumpInfo(); }

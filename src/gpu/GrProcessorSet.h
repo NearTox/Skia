@@ -24,43 +24,43 @@ class GrProcessorSet {
   enum class Empty { kEmpty };
 
  public:
-  GrProcessorSet(GrPaint&&) noexcept;
-  GrProcessorSet(SkBlendMode) noexcept;
-  GrProcessorSet(std::unique_ptr<GrFragmentProcessor> colorFP) noexcept;
-  GrProcessorSet(GrProcessorSet&&) noexcept;
+  GrProcessorSet(GrPaint&&);
+  GrProcessorSet(SkBlendMode);
+  GrProcessorSet(std::unique_ptr<GrFragmentProcessor> colorFP);
+  GrProcessorSet(GrProcessorSet&&);
   GrProcessorSet(const GrProcessorSet&) = delete;
   GrProcessorSet& operator=(const GrProcessorSet&) = delete;
 
   ~GrProcessorSet();
 
-  int numColorFragmentProcessors() const noexcept { return fColorFragmentProcessorCnt; }
-  int numCoverageFragmentProcessors() const noexcept {
+  int numColorFragmentProcessors() const { return fColorFragmentProcessorCnt; }
+  int numCoverageFragmentProcessors() const {
     return this->numFragmentProcessors() - fColorFragmentProcessorCnt;
   }
 
-  const GrFragmentProcessor* colorFragmentProcessor(int idx) const noexcept {
+  const GrFragmentProcessor* colorFragmentProcessor(int idx) const {
     SkASSERT(idx < fColorFragmentProcessorCnt);
     return fFragmentProcessors[idx + fFragmentProcessorOffset].get();
   }
-  const GrFragmentProcessor* coverageFragmentProcessor(int idx) const noexcept {
+  const GrFragmentProcessor* coverageFragmentProcessor(int idx) const {
     return fFragmentProcessors[idx + fColorFragmentProcessorCnt + fFragmentProcessorOffset].get();
   }
 
-  const GrXferProcessor* xferProcessor() const noexcept {
+  const GrXferProcessor* xferProcessor() const {
     SkASSERT(this->isFinalized());
     return fXP.fProcessor;
   }
-  sk_sp<const GrXferProcessor> refXferProcessor() const noexcept {
+  sk_sp<const GrXferProcessor> refXferProcessor() const {
     SkASSERT(this->isFinalized());
     return sk_ref_sp(fXP.fProcessor);
   }
 
-  std::unique_ptr<const GrFragmentProcessor> detachColorFragmentProcessor(int idx) noexcept {
+  std::unique_ptr<const GrFragmentProcessor> detachColorFragmentProcessor(int idx) {
     SkASSERT(idx < fColorFragmentProcessorCnt);
     return std::move(fFragmentProcessors[idx + fFragmentProcessorOffset]);
   }
 
-  std::unique_ptr<const GrFragmentProcessor> detachCoverageFragmentProcessor(int idx) noexcept {
+  std::unique_ptr<const GrFragmentProcessor> detachCoverageFragmentProcessor(int idx) {
     return std::move(
         fFragmentProcessors[idx + fFragmentProcessorOffset + fColorFragmentProcessorCnt]);
   }
@@ -75,21 +75,19 @@ class GrProcessorSet {
    */
   class Analysis {
    public:
-    Analysis(const Analysis&) noexcept = default;
+    Analysis(const Analysis&) = default;
     Analysis() { *reinterpret_cast<uint32_t*>(this) = 0; }
 
-    bool isInitialized() const noexcept { return fIsInitialized; }
-    bool usesLocalCoords() const noexcept { return fUsesLocalCoords; }
-    bool requiresDstTexture() const noexcept { return fRequiresDstTexture; }
-    bool requiresNonOverlappingDraws() const noexcept { return fRequiresNonOverlappingDraws; }
-    bool isCompatibleWithCoverageAsAlpha() const noexcept { return fCompatibleWithCoverageAsAlpha; }
+    bool isInitialized() const { return fIsInitialized; }
+    bool usesLocalCoords() const { return fUsesLocalCoords; }
+    bool requiresDstTexture() const { return fRequiresDstTexture; }
+    bool requiresNonOverlappingDraws() const { return fRequiresNonOverlappingDraws; }
+    bool isCompatibleWithCoverageAsAlpha() const { return fCompatibleWithCoverageAsAlpha; }
     // Indicates whether all color fragment processors were eliminated in the analysis.
-    bool hasColorFragmentProcessor() const noexcept { return fHasColorFragmentProcessor; }
+    bool hasColorFragmentProcessor() const { return fHasColorFragmentProcessor; }
 
-    bool inputColorIsIgnored() const noexcept { return fInputColorType == kIgnored_InputColorType; }
-    bool inputColorIsOverridden() const noexcept {
-      return fInputColorType == kOverridden_InputColorType;
-    }
+    bool inputColorIsIgnored() const { return fInputColorType == kIgnored_InputColorType; }
+    bool inputColorIsOverridden() const { return fInputColorType == kOverridden_InputColorType; }
 
    private:
     constexpr Analysis(Empty)
@@ -141,11 +139,11 @@ class GrProcessorSet {
       const GrUserStencilSettings*, GrFSAAType, const GrCaps&, GrClampType,
       SkPMColor4f* inputColorOverride);
 
-  bool isFinalized() const noexcept { return SkToBool(kFinalized_Flag & fFlags); }
+  bool isFinalized() const { return SkToBool(kFinalized_Flag & fFlags); }
 
   /** These are valid only for non-LCD coverage. */
-  static const GrProcessorSet& EmptySet() noexcept;
-  static GrProcessorSet MakeEmptySet() noexcept;
+  static const GrProcessorSet& EmptySet();
+  static GrProcessorSet MakeEmptySet();
   static constexpr const Analysis EmptySetAnalysis() { return Analysis(Empty::kEmpty); }
 
 #ifdef SK_DEBUG
@@ -163,13 +161,13 @@ class GrProcessorSet {
   }
 
  private:
-  GrProcessorSet(Empty) noexcept : fXP((const GrXferProcessor*)nullptr), fFlags(kFinalized_Flag) {}
+  GrProcessorSet(Empty) : fXP((const GrXferProcessor*)nullptr), fFlags(kFinalized_Flag) {}
 
-  int numFragmentProcessors() const noexcept {
+  int numFragmentProcessors() const {
     return fFragmentProcessors.count() - fFragmentProcessorOffset;
   }
 
-  const GrFragmentProcessor* fragmentProcessor(int idx) const noexcept {
+  const GrFragmentProcessor* fragmentProcessor(int idx) const {
     return fFragmentProcessors[idx + fFragmentProcessorOffset].get();
   }
 
@@ -179,9 +177,9 @@ class GrProcessorSet {
   enum Flags : uint16_t { kFinalized_Flag = 0x1 };
 
   union XP {
-    XP(const GrXPFactory* factory) noexcept : fFactory(factory) {}
-    XP(const GrXferProcessor* processor) noexcept : fProcessor(processor) {}
-    explicit XP(XP&& that) noexcept : fProcessor(that.fProcessor) {
+    XP(const GrXPFactory* factory) : fFactory(factory) {}
+    XP(const GrXferProcessor* processor) : fProcessor(processor) {}
+    explicit XP(XP&& that) : fProcessor(that.fProcessor) {
       SkASSERT(fProcessor == that.fProcessor);
       that.fProcessor = nullptr;
     }
@@ -189,7 +187,7 @@ class GrProcessorSet {
     const GrXferProcessor* fProcessor;
   };
 
-  const GrXPFactory* xpFactory() const noexcept {
+  const GrXPFactory* xpFactory() const {
     SkASSERT(!this->isFinalized());
     return fXP.fFactory;
   }

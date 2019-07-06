@@ -57,7 +57,7 @@ extern SK_API sk_sp<SkImage> SkMakeImageFromRasterBitmap(const SkBitmap&, SkCopy
 // Given an image created from SkNewImageFromBitmap, return its pixelref. This
 // may be called to see if the surface and the image share the same pixelref,
 // in which case the surface may need to perform a copy-on-write.
-extern const SkPixelRef* SkBitmapImageGetPixelRef(const SkImage* rasterImage) noexcept;
+extern const SkPixelRef* SkBitmapImageGetPixelRef(const SkImage* rasterImage);
 
 /**
  *  Will attempt to upload and lock the contents of the image as a texture, so that subsequent

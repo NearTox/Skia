@@ -17,7 +17,7 @@
 
 GrOpFlushState::GrOpFlushState(
     GrGpu* gpu, GrResourceProvider* resourceProvider, GrResourceCache* cache,
-    GrTokenTracker* tokenTracker, sk_sp<GrBufferAllocPool::CpuBufferCache> cpuBufferCache) noexcept
+    GrTokenTracker* tokenTracker, sk_sp<GrBufferAllocPool::CpuBufferCache> cpuBufferCache)
     : fVertexPool(gpu, cpuBufferCache),
       fIndexPool(gpu, std::move(cpuBufferCache)),
       fGpu(gpu),
@@ -25,7 +25,7 @@ GrOpFlushState::GrOpFlushState(
       fTokenTracker(tokenTracker),
       fDeinstantiateProxyTracker(cache) {}
 
-const GrCaps& GrOpFlushState::caps() const noexcept { return *fGpu->caps(); }
+const GrCaps& GrOpFlushState::caps() const { return *fGpu->caps(); }
 
 GrGpuRTCommandBuffer* GrOpFlushState::rtCommandBuffer() {
   return fCommandBuffer->asRTCommandBuffer();
@@ -171,11 +171,11 @@ void GrOpFlushState::putBackVertices(int vertices, size_t vertexStride) {
   fVertexPool.putBack(vertices * vertexStride);
 }
 
-GrAppliedClip GrOpFlushState::detachAppliedClip() noexcept {
+GrAppliedClip GrOpFlushState::detachAppliedClip() {
   return fOpArgs->fAppliedClip ? std::move(*fOpArgs->fAppliedClip) : GrAppliedClip();
 }
 
-GrStrikeCache* GrOpFlushState::glyphCache() const noexcept {
+GrStrikeCache* GrOpFlushState::glyphCache() const {
   return fGpu->getContext()->priv().getGrStrikeCache();
 }
 

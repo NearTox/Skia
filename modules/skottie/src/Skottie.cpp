@@ -249,8 +249,7 @@ sk_sp<sksg::Path> AnimationBuilder::attachPath(
   return this->bindProperty<ShapeValue>(
              jpath, ascope,
              [path_node](const ShapeValue& p) {
-               // FillType is tracked in the SG node, not in keyframes -- make sure we preserve
-               // it.
+               // FillType is tracked in the SG node, not in keyframes -- make sure we preserve it.
                auto path = ValueTraits<ShapeValue>::As<SkPath>(p);
                path.setFillType(path_node->getFillType());
                path_node->setPath(path);

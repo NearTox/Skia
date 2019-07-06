@@ -17,25 +17,23 @@
     implemented privately in GrTexture with a inline public method here). */
 class GrTexturePriv {
  public:
-  void markMipMapsDirty() noexcept { fTexture->markMipMapsDirty(); }
+  void markMipMapsDirty() { fTexture->markMipMapsDirty(); }
 
-  void markMipMapsClean() noexcept { fTexture->markMipMapsClean(); }
+  void markMipMapsClean() { fTexture->markMipMapsClean(); }
 
-  bool mipMapsAreDirty() const noexcept {
-    return GrMipMapsStatus::kValid != fTexture->fMipMapsStatus;
-  }
+  bool mipMapsAreDirty() const { return GrMipMapsStatus::kValid != fTexture->fMipMapsStatus; }
 
-  GrMipMapped mipMapped() const noexcept {
+  GrMipMapped mipMapped() const {
     if (GrMipMapsStatus::kNotAllocated != fTexture->fMipMapsStatus) {
       return GrMipMapped::kYes;
     }
     return GrMipMapped::kNo;
   }
 
-  int maxMipMapLevel() const noexcept { return fTexture->fMaxMipMapLevel; }
+  int maxMipMapLevel() const { return fTexture->fMaxMipMapLevel; }
 
-  GrTextureType textureType() const noexcept { return fTexture->fTextureType; }
-  bool hasRestrictedSampling() const noexcept {
+  GrTextureType textureType() const { return fTexture->fTextureType; }
+  bool hasRestrictedSampling() const {
     return GrTextureTypeHasRestrictedSampling(this->textureType());
   }
   /** Filtering is clamped to this value. */
@@ -50,8 +48,8 @@ class GrTexturePriv {
       GrScratchKey* key);
 
  private:
-  GrTexturePriv(GrTexture* texture) noexcept : fTexture(texture) {}
-  GrTexturePriv(const GrTexturePriv& that) noexcept : fTexture(that.fTexture) {}
+  GrTexturePriv(GrTexture* texture) : fTexture(texture) {}
+  GrTexturePriv(const GrTexturePriv& that) : fTexture(that.fTexture) {}
   GrTexturePriv& operator=(const GrTexturePriv&);  // unimpl
 
   // No taking addresses of this type.
@@ -63,9 +61,9 @@ class GrTexturePriv {
   friend class GrTexture;  // to construct/copy this type.
 };
 
-inline GrTexturePriv GrTexture::texturePriv() noexcept { return GrTexturePriv(this); }
+inline GrTexturePriv GrTexture::texturePriv() { return GrTexturePriv(this); }
 
-inline const GrTexturePriv GrTexture::texturePriv() const noexcept {
+inline const GrTexturePriv GrTexture::texturePriv() const {
   return GrTexturePriv(const_cast<GrTexture*>(this));
 }
 

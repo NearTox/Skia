@@ -29,7 +29,7 @@ struct GrCCRenderedPathStats {
   int fNumTotalSkVerbs = 0;
   int fNumTotalConicWeights = 0;
 
-  void statPath(const SkPath&) noexcept;
+  void statPath(const SkPath&);
 };
 
 /**
@@ -51,7 +51,7 @@ struct GrCCPerFlushResourceSpecs {
   GrCCRenderedPathStats fRenderedPathStats[2];
   GrCCAtlas::Specs fRenderedAtlasSpecs;
 
-  bool isEmpty() const noexcept {
+  bool isEmpty() const {
     return 0 == fNumCachedPaths + fNumCopiedPaths[kFillIdx] + fNumCopiedPaths[kStrokeIdx] +
                     fNumRenderedPaths[kFillIdx] + fNumRenderedPaths[kStrokeIdx] + fNumClipPaths;
   }
@@ -68,7 +68,7 @@ class GrCCPerFlushResources : public GrNonAtomicRef<GrCCPerFlushResources> {
  public:
   GrCCPerFlushResources(GrOnFlushResourceProvider*, const GrCCPerFlushResourceSpecs&);
 
-  bool isMapped() const noexcept { return SkToBool(fPathInstanceData); }
+  bool isMapped() const { return SkToBool(fPathInstanceData); }
 
   // Copies a coverage-counted path out of the given texture proxy, and into a cached, 8-bit,
   // literal coverage atlas. Updates the cache entry to reference the new atlas.
@@ -90,12 +90,12 @@ class GrCCPerFlushResources : public GrNonAtomicRef<GrCCPerFlushResources> {
 
   // Returns the index in instanceBuffer() of the next instance that will be added by
   // appendDrawPathInstance().
-  int nextPathInstanceIdx() const noexcept { return fNextPathInstanceIdx; }
+  int nextPathInstanceIdx() const { return fNextPathInstanceIdx; }
 
   // Appends an instance to instanceBuffer() that will draw a path to the destination render
   // target. The caller is responsible to call set() on the returned instance, to keep track of
   // its atlas and index (see nextPathInstanceIdx()), and to issue the actual draw call.
-  GrCCPathProcessor::Instance& appendDrawPathInstance() noexcept {
+  GrCCPathProcessor::Instance& appendDrawPathInstance() {
     SkASSERT(this->isMapped());
     SkASSERT(fNextPathInstanceIdx < fEndPathInstance);
     return fPathInstanceData[fNextPathInstanceIdx++];
@@ -105,23 +105,23 @@ class GrCCPerFlushResources : public GrNonAtomicRef<GrCCPerFlushResources> {
   bool finalize(GrOnFlushResourceProvider*, SkTArray<sk_sp<GrRenderTargetContext>>* out);
 
   // Accessors used by draw calls, once the resources have been finalized.
-  const GrCCFiller& filler() const noexcept {
+  const GrCCFiller& filler() const {
     SkASSERT(!this->isMapped());
     return fFiller;
   }
-  const GrCCStroker& stroker() const noexcept {
+  const GrCCStroker& stroker() const {
     SkASSERT(!this->isMapped());
     return fStroker;
   }
-  sk_sp<const GrGpuBuffer> refIndexBuffer() const noexcept {
+  sk_sp<const GrGpuBuffer> refIndexBuffer() const {
     SkASSERT(!this->isMapped());
     return fIndexBuffer;
   }
-  sk_sp<const GrGpuBuffer> refVertexBuffer() const noexcept {
+  sk_sp<const GrGpuBuffer> refVertexBuffer() const {
     SkASSERT(!this->isMapped());
     return fVertexBuffer;
   }
-  sk_sp<const GrGpuBuffer> refInstanceBuffer() const noexcept {
+  sk_sp<const GrGpuBuffer> refInstanceBuffer() const {
     SkASSERT(!this->isMapped());
     return fInstanceBuffer;
   }
@@ -153,8 +153,8 @@ class GrCCPerFlushResources : public GrNonAtomicRef<GrCCPerFlushResources> {
   // instances that copy a path mask from a 16-bit coverage count atlas into an 8-bit literal
   // coverage atlas.)
   struct CopyPathRange {
-    CopyPathRange() noexcept = default;
-    CopyPathRange(sk_sp<GrTextureProxy> srcProxy, int count) noexcept
+    CopyPathRange() = default;
+    CopyPathRange(sk_sp<GrTextureProxy> srcProxy, int count)
         : fSrcProxy(std::move(srcProxy)), fCount(count) {}
     sk_sp<GrTextureProxy> fSrcProxy;
     int fCount;
@@ -174,7 +174,7 @@ class GrCCPerFlushResources : public GrNonAtomicRef<GrCCPerFlushResources> {
   const GrTexture* testingOnly_frontRenderedAtlasTexture() const;
 };
 
-inline void GrCCRenderedPathStats::statPath(const SkPath& path) noexcept {
+inline void GrCCRenderedPathStats::statPath(const SkPath& path) {
   fMaxPointsPerPath = SkTMax(fMaxPointsPerPath, path.countPoints());
   fNumTotalSkPoints += path.countPoints();
   fNumTotalSkVerbs += path.countVerbs();

@@ -43,7 +43,7 @@ class DefaultGeoProc : public GrGeometryProcessor {
         coverage, localCoordsWillBeRead));
   }
 
-  const char* name() const noexcept override { return "DefaultGeometryProcessor"; }
+  const char* name() const override { return "DefaultGeometryProcessor"; }
 
   const SkPMColor4f& color() const { return fColor; }
   bool hasVertexColor() const { return fInColor.isInitialized(); }

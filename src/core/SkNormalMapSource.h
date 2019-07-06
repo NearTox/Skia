@@ -12,7 +12,7 @@
 
 class SkNormalMapSourceImpl : public SkNormalSource {
  public:
-  SkNormalMapSourceImpl(sk_sp<SkShader> mapShader, const SkMatrix& invCTM) noexcept
+  SkNormalMapSourceImpl(sk_sp<SkShader> mapShader, const SkMatrix& invCTM)
       : fMapShader(std::move(mapShader)), fInvCTM(invCTM) {}
 
 #if SK_SUPPORT_GPU
@@ -26,14 +26,14 @@ class SkNormalMapSourceImpl : public SkNormalSource {
   void flatten(SkWriteBuffer& buf) const override;
 
   bool computeNormTotalInverse(
-      const SkShaderBase::ContextRec& rec, SkMatrix* normTotalInverse) const noexcept;
+      const SkShaderBase::ContextRec& rec, SkMatrix* normTotalInverse) const;
 
  private:
   SK_FLATTENABLE_HOOKS(SkNormalMapSourceImpl)
 
   class Provider : public SkNormalSource::Provider {
    public:
-    Provider(const SkNormalMapSourceImpl& source, SkShaderBase::Context* mapContext) noexcept;
+    Provider(const SkNormalMapSourceImpl& source, SkShaderBase::Context* mapContext);
 
     void fillScanLine(int x, int y, SkPoint3 output[], int count) const override;
 

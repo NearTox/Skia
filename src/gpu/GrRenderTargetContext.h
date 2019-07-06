@@ -382,45 +382,41 @@ class SK_API GrRenderTargetContext : public GrSurfaceContext {
 
   void insertEventMarker(const SkString&);
 
-  GrFSAAType fsaaType() const noexcept { return fRenderTargetProxy->fsaaType(); }
+  GrFSAAType fsaaType() const { return fRenderTargetProxy->fsaaType(); }
   const GrCaps* caps() const;
-  int width() const noexcept { return fRenderTargetProxy->width(); }
-  int height() const noexcept { return fRenderTargetProxy->height(); }
-  int numColorSamples() const noexcept { return fRenderTargetProxy->numColorSamples(); }
-  int numStencilSamples() const noexcept { return fRenderTargetProxy->numStencilSamples(); }
-  const SkSurfaceProps& surfaceProps() const noexcept { return fSurfaceProps; }
-  GrSurfaceOrigin origin() const noexcept { return fRenderTargetProxy->origin(); }
-  bool wrapsVkSecondaryCB() const noexcept { return fRenderTargetProxy->wrapsVkSecondaryCB(); }
+  int width() const { return fRenderTargetProxy->width(); }
+  int height() const { return fRenderTargetProxy->height(); }
+  int numColorSamples() const { return fRenderTargetProxy->numColorSamples(); }
+  int numStencilSamples() const { return fRenderTargetProxy->numStencilSamples(); }
+  const SkSurfaceProps& surfaceProps() const { return fSurfaceProps; }
+  GrSurfaceOrigin origin() const { return fRenderTargetProxy->origin(); }
+  bool wrapsVkSecondaryCB() const { return fRenderTargetProxy->wrapsVkSecondaryCB(); }
   GrMipMapped mipMapped() const;
 
-  void setNeedsStencil() noexcept { fRenderTargetProxy->setNeedsStencil(); }
+  void setNeedsStencil() { fRenderTargetProxy->setNeedsStencil(); }
 
   // This entry point should only be called if the backing GPU object is known to be
   // instantiated.
-  GrRenderTarget* accessRenderTarget() noexcept { return fRenderTargetProxy->peekRenderTarget(); }
+  GrRenderTarget* accessRenderTarget() { return fRenderTargetProxy->peekRenderTarget(); }
 
-  GrSurfaceProxy* asSurfaceProxy() noexcept override { return fRenderTargetProxy.get(); }
-  const GrSurfaceProxy* asSurfaceProxy() const noexcept override {
-    return fRenderTargetProxy.get();
-  }
-  sk_sp<GrSurfaceProxy> asSurfaceProxyRef() noexcept override { return fRenderTargetProxy; }
+  GrSurfaceProxy* asSurfaceProxy() override { return fRenderTargetProxy.get(); }
+  const GrSurfaceProxy* asSurfaceProxy() const override { return fRenderTargetProxy.get(); }
+  sk_sp<GrSurfaceProxy> asSurfaceProxyRef() override { return fRenderTargetProxy; }
 
-  GrTextureProxy* asTextureProxy() noexcept override;
-  const GrTextureProxy* asTextureProxy() const noexcept override;
-  sk_sp<GrTextureProxy> asTextureProxyRef() noexcept override;
+  GrTextureProxy* asTextureProxy() override;
+  const GrTextureProxy* asTextureProxy() const override;
+  sk_sp<GrTextureProxy> asTextureProxyRef() override;
 
-  GrRenderTargetProxy* asRenderTargetProxy() noexcept override { return fRenderTargetProxy.get(); }
-  sk_sp<GrRenderTargetProxy> asRenderTargetProxyRef() noexcept override {
-    return fRenderTargetProxy;
-  }
+  GrRenderTargetProxy* asRenderTargetProxy() override { return fRenderTargetProxy.get(); }
+  sk_sp<GrRenderTargetProxy> asRenderTargetProxyRef() override { return fRenderTargetProxy; }
 
-  GrRenderTargetContext* asRenderTargetContext() noexcept override { return this; }
+  GrRenderTargetContext* asRenderTargetContext() override { return this; }
 
   // Provides access to functions that aren't part of the public API.
-  GrRenderTargetContextPriv priv() noexcept;
-  const GrRenderTargetContextPriv priv() const noexcept;
+  GrRenderTargetContextPriv priv();
+  const GrRenderTargetContextPriv priv() const;
 
-  GrTextTarget* textTarget() noexcept { return fTextTarget.get(); }
+  GrTextTarget* textTarget() { return fTextTarget.get(); }
 
   bool isWrapped_ForTesting() const;
 

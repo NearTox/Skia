@@ -101,18 +101,18 @@ class SK_API SkPaintFilterCanvas : public SkCanvasVirtualEnforcer<SkNWayCanvas> 
   sk_sp<SkSurface> onNewSurface(const SkImageInfo&, const SkSurfaceProps&) override;
   bool onPeekPixels(SkPixmap* pixmap) override;
   bool onAccessTopLayerPixels(SkPixmap* pixmap) override;
-  SkImageInfo onImageInfo() const noexcept override;
-  bool onGetProps(SkSurfaceProps* props) const noexcept override;
+  SkImageInfo onImageInfo() const override;
+  bool onGetProps(SkSurfaceProps* props) const override;
 
  private:
   class AutoPaintFilter;
 
-  SkCanvas* proxy() const noexcept {
+  SkCanvas* proxy() const {
     SkASSERT(fList.count() == 1);
     return fList[0];
   }
 
-  SkPaintFilterCanvas* internal_private_asPaintFilterCanvas() const noexcept override {
+  SkPaintFilterCanvas* internal_private_asPaintFilterCanvas() const override {
     return const_cast<SkPaintFilterCanvas*>(this);
   }
 

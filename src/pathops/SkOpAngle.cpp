@@ -4,8 +4,8 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "src/pathops/SkOpAngle.h"
 #include "src/core/SkTSort.h"
+#include "src/pathops/SkOpAngle.h"
 #include "src/pathops/SkOpSegment.h"
 #include "src/pathops/SkPathOpsCurve.h"
 
@@ -22,10 +22,10 @@ static bool CompareResult(
   return compare;
 }
 
-#define COMPARE_RESULT(append, compare) \
-  CompareResult(__FUNCTION__, &bugOut, bugPart, append, compare)
+#  define COMPARE_RESULT(append, compare) \
+    CompareResult(__FUNCTION__, &bugOut, bugPart, append, compare)
 #else
-#define COMPARE_RESULT(append, compare) compare
+#  define COMPARE_RESULT(append, compare) compare
 #endif
 
 /*             quarter angle values for sector
@@ -395,25 +395,25 @@ bool SkOpAngle::computeSector() {
     fUnorderable = true;
     return false;
   }
-  do {
-    // advance end
-    const SkOpSegment* other = checkEnd->segment();
-    const SkOpSpanBase* oSpan = other->head();
     do {
-      if (oSpan->segment() != segment()) {
-        continue;
-      }
-      if (oSpan == checkEnd) {
-        continue;
-      }
-      if (!approximately_equal(oSpan->t(), checkEnd->t())) {
-        continue;
-      }
-      goto recomputeSector;
-    } while (!oSpan->final() && (oSpan = oSpan->upCast()->next()));
-    checkEnd =
-        stepUp ? !checkEnd->final() ? checkEnd->upCast()->next() : nullptr : checkEnd->prev();
-  } while (checkEnd);
+      // advance end
+      const SkOpSegment* other = checkEnd->segment();
+      const SkOpSpanBase* oSpan = other->head();
+      do {
+        if (oSpan->segment() != segment()) {
+          continue;
+        }
+        if (oSpan == checkEnd) {
+          continue;
+        }
+        if (!approximately_equal(oSpan->t(), checkEnd->t())) {
+          continue;
+        }
+        goto recomputeSector;
+      } while (!oSpan->final() && (oSpan = oSpan->upCast()->next()));
+      checkEnd =
+          stepUp ? !checkEnd->final() ? checkEnd->upCast()->next() : nullptr : checkEnd->prev();
+    } while (checkEnd);
 recomputeSector:
   SkOpSpanBase* computedEnd = stepUp
                                   ? checkEnd ? checkEnd->prev() : fEnd->segment()->head()

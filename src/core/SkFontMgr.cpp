@@ -16,15 +16,15 @@ class SkTypeface;
 
 class SkEmptyFontStyleSet : public SkFontStyleSet {
  public:
-  int count() noexcept override { return 0; }
-  void getStyle(int, SkFontStyle*, SkString*) noexcept override {
+  int count() override { return 0; }
+  void getStyle(int, SkFontStyle*, SkString*) override {
     SkDEBUGFAIL("SkFontStyleSet::getStyle called on empty set");
   }
-  SkTypeface* createTypeface(int index) noexcept override {
+  SkTypeface* createTypeface(int index) override {
     SkDEBUGFAIL("SkFontStyleSet::createTypeface called on empty set");
     return nullptr;
   }
-  SkTypeface* matchStyle(const SkFontStyle&) noexcept override { return nullptr; }
+  SkTypeface* matchStyle(const SkFontStyle&) override { return nullptr; }
 };
 
 SkFontStyleSet* SkFontStyleSet::CreateEmpty() { return new SkEmptyFontStyleSet; }
@@ -33,11 +33,11 @@ SkFontStyleSet* SkFontStyleSet::CreateEmpty() { return new SkEmptyFontStyleSet; 
 
 class SkEmptyFontMgr : public SkFontMgr {
  protected:
-  int onCountFamilies() const noexcept override { return 0; }
-  void onGetFamilyName(int index, SkString* familyName) const noexcept override {
+  int onCountFamilies() const override { return 0; }
+  void onGetFamilyName(int index, SkString* familyName) const override {
     SkDEBUGFAIL("onGetFamilyName called with bad index");
   }
-  SkFontStyleSet* onCreateStyleSet(int index) const noexcept override {
+  SkFontStyleSet* onCreateStyleSet(int index) const override {
     SkDEBUGFAIL("onCreateStyleSet called with bad index");
     return nullptr;
   }
@@ -45,32 +45,31 @@ class SkEmptyFontMgr : public SkFontMgr {
     return SkFontStyleSet::CreateEmpty();
   }
 
-  SkTypeface* onMatchFamilyStyle(const char[], const SkFontStyle&) const noexcept override {
+  SkTypeface* onMatchFamilyStyle(const char[], const SkFontStyle&) const override {
     return nullptr;
   }
   SkTypeface* onMatchFamilyStyleCharacter(
       const char familyName[], const SkFontStyle& style, const char* bcp47[], int bcp47Count,
-      SkUnichar character) const noexcept override {
+      SkUnichar character) const override {
     return nullptr;
   }
-  SkTypeface* onMatchFaceStyle(const SkTypeface*, const SkFontStyle&) const noexcept override {
+  SkTypeface* onMatchFaceStyle(const SkTypeface*, const SkFontStyle&) const override {
     return nullptr;
   }
 
-  sk_sp<SkTypeface> onMakeFromData(sk_sp<SkData>, int) const noexcept override { return nullptr; }
-  sk_sp<SkTypeface> onMakeFromStreamIndex(std::unique_ptr<SkStreamAsset>, int) const
-      noexcept override {
+  sk_sp<SkTypeface> onMakeFromData(sk_sp<SkData>, int) const override { return nullptr; }
+  sk_sp<SkTypeface> onMakeFromStreamIndex(std::unique_ptr<SkStreamAsset>, int) const override {
     return nullptr;
   }
   sk_sp<SkTypeface> onMakeFromStreamArgs(
-      std::unique_ptr<SkStreamAsset>, const SkFontArguments&) const noexcept override {
+      std::unique_ptr<SkStreamAsset>, const SkFontArguments&) const override {
     return nullptr;
   }
-  sk_sp<SkTypeface> onMakeFromFontData(std::unique_ptr<SkFontData>) const noexcept override {
+  sk_sp<SkTypeface> onMakeFromFontData(std::unique_ptr<SkFontData>) const override {
     return nullptr;
   }
-  sk_sp<SkTypeface> onMakeFromFile(const char[], int) const noexcept override { return nullptr; }
-  sk_sp<SkTypeface> onLegacyMakeTypeface(const char[], SkFontStyle) const noexcept override {
+  sk_sp<SkTypeface> onMakeFromFile(const char[], int) const override { return nullptr; }
+  sk_sp<SkTypeface> onLegacyMakeTypeface(const char[], SkFontStyle) const override {
     return nullptr;
   }
 };
@@ -208,15 +207,15 @@ SkTypeface* SkFontStyleSet::matchStyleCSS3(const SkFontStyle& pattern) {
   struct Score {
     int score;
     int index;
-    Score& operator+=(int rhs) noexcept {
+    Score& operator+=(int rhs) {
       this->score += rhs;
       return *this;
     }
-    Score& operator<<=(int rhs) noexcept {
+    Score& operator<<=(int rhs) {
       this->score <<= rhs;
       return *this;
     }
-    bool operator<(const Score& that) noexcept { return this->score < that.score; }
+    bool operator<(const Score& that) { return this->score < that.score; }
   };
 
   Score maxScore = {0, 0};

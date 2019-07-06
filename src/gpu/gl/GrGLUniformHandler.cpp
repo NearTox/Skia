@@ -16,7 +16,7 @@
 #define GL_CALL(X) GR_GL_CALL(this->glGpu()->glInterface(), X)
 #define GL_CALL_RET(R, X) GR_GL_CALL_RET(this->glGpu()->glInterface(), R, X)
 
-bool valid_name(const char* name) noexcept {
+bool valid_name(const char* name) {
   // disallow unknown names that start with "sk_"
   if (!strncmp(name, GR_NO_MANGLE_PREFIX, strlen(GR_NO_MANGLE_PREFIX))) {
     return !strcmp(name, SkSL::Compiler::RTADJUST_NAME);

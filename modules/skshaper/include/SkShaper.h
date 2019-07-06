@@ -90,8 +90,8 @@ class SkShaper {
     virtual ~RunHandler() = default;
 
     struct Range {
-      constexpr Range() noexcept : fBegin(0), fSize(0) {}
-      constexpr Range(size_t begin, size_t size) noexcept : fBegin(begin), fSize(size) {}
+      constexpr Range() : fBegin(0), fSize(0) {}
+      constexpr Range(size_t begin, size_t size) : fBegin(begin), fSize(size) {}
       size_t fBegin;
       size_t fSize;
       constexpr size_t begin() const { return fBegin; }
@@ -155,14 +155,14 @@ class SkTextBlobBuilderRunHandler final : public SkShaper::RunHandler {
   SkTextBlobBuilderRunHandler(const char* utf8Text, SkPoint offset)
       : fUtf8Text(utf8Text), fOffset(offset) {}
   sk_sp<SkTextBlob> makeBlob();
-  SkPoint endPoint() noexcept { return fOffset; }
+  SkPoint endPoint() { return fOffset; }
 
-  void beginLine() noexcept override;
+  void beginLine() override;
   void runInfo(const RunInfo&) override;
-  void commitRunInfo() noexcept override;
+  void commitRunInfo() override;
   Buffer runBuffer(const RunInfo&) override;
-  void commitRunBuffer(const RunInfo&) noexcept override;
-  void commitLine() noexcept override;
+  void commitRunBuffer(const RunInfo&) override;
+  void commitLine() override;
 
  private:
   SkTextBlobBuilder fBuilder;

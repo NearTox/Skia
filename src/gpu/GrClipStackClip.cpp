@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/GrClipStackClip.h"
 #include "include/private/GrTextureProxy.h"
 #include "include/private/SkTo.h"
 #include "src/core/SkClipOpPriv.h"
@@ -13,6 +12,7 @@
 #include "src/core/SkTaskGroup.h"
 #include "src/core/SkTraceEvent.h"
 #include "src/gpu/GrAppliedClip.h"
+#include "src/gpu/GrClipStackClip.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrDeferredProxyUploader.h"
 #include "src/gpu/GrDrawingManager.h"

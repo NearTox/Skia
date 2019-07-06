@@ -81,8 +81,8 @@ struct SkOTTableEmbeddedBitmapLocation {
     SK_OT_USHORT firstGlyphIndex;  // first glyph code of this range
     SK_OT_USHORT lastGlyphIndex;   // last glyph code of this range (inclusive)
     SK_OT_ULONG
-    additionalOffsetToIndexSubtable;  // add to BitmapSizeTable::indexSubTableArrayOffset to
-                                      // get offset from beginning of 'EBLC'
+    additionalOffsetToIndexSubtable;  // add to BitmapSizeTable::indexSubTableArrayOffset to get
+                                      // offset from beginning of 'EBLC'
   };  // indexSubTableArray[BitmapSizeTable::numberOfIndexSubTables];
 
   struct IndexSubHeader {
@@ -94,8 +94,8 @@ struct SkOTTableEmbeddedBitmapLocation {
   // Variable metrics glyphs with 4 byte offsets
   struct IndexSubTable1 {
     IndexSubHeader header;
-    // SK_OT_ULONG offsetArray[lastGlyphIndex - firstGlyphIndex + 1 + 1]; //last element points
-    // to one past end of last glyph glyphData = offsetArray[glyphIndex - firstGlyphIndex] +
+    // SK_OT_ULONG offsetArray[lastGlyphIndex - firstGlyphIndex + 1 + 1]; //last element points to
+    // one past end of last glyph glyphData = offsetArray[glyphIndex - firstGlyphIndex] +
     // imageDataOffset
   };
 
@@ -111,9 +111,9 @@ struct SkOTTableEmbeddedBitmapLocation {
   // Variable metrics glyphs with 2 byte offsets
   struct IndexSubTable3 {
     IndexSubHeader header;
-    // SK_OT_USHORT offsetArray[lastGlyphIndex - firstGlyphIndex + 1 + 1]; //last element points
-    // to one past end of last glyph, may have extra element to force even number of elements
-    // glyphData = offsetArray[glyphIndex - firstGlyphIndex] + imageDataOffset
+    // SK_OT_USHORT offsetArray[lastGlyphIndex - firstGlyphIndex + 1 + 1]; //last element points to
+    // one past end of last glyph, may have extra element to force even number of elements glyphData
+    // = offsetArray[glyphIndex - firstGlyphIndex] + imageDataOffset
   };
 
   // Variable metrics glyphs with sparse glyph codes
@@ -130,8 +130,7 @@ struct SkOTTableEmbeddedBitmapLocation {
   struct IndexSubTable5 {
     IndexSubHeader header;
     SK_OT_ULONG imageSize;                                    // all glyphs have the same data size
-    SkOTTableEmbeddedBitmapData::BigGlyphMetrics bigMetrics;  // all glyphs have the same
-                                                              // metrics
+    SkOTTableEmbeddedBitmapData::BigGlyphMetrics bigMetrics;  // all glyphs have the same metrics
     SK_OT_ULONG numGlyphs;
     // SK_OT_USHORT glyphCodeArray[numGlyphs] //must have even number of entries (set pad to 0)
   };

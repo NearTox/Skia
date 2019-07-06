@@ -48,8 +48,7 @@ class SkMaskFilterBase : public SkMaskFilter {
       but do fill out the other fields in dstMask.
       If you do allocate a dst image, use SkMask::AllocImage()
       If this returns false, dst mask is ignored.
-      @param  dst the result of the filter. If src.fImage == null, dst should not allocate its
-     image
+      @param  dst the result of the filter. If src.fImage == null, dst should not allocate its image
       @param src the original image to be filtered.
       @param matrix the CTM
       @param margin   if not null, return the buffer dx/dy need when calculating the effect. Used
@@ -213,15 +212,13 @@ class SkMaskFilterBase : public SkMaskFilter {
   typedef SkFlattenable INHERITED;
 };
 
-inline SkMaskFilterBase* as_MFB(SkMaskFilter* mf) noexcept {
-  return static_cast<SkMaskFilterBase*>(mf);
-}
+inline SkMaskFilterBase* as_MFB(SkMaskFilter* mf) { return static_cast<SkMaskFilterBase*>(mf); }
 
-inline const SkMaskFilterBase* as_MFB(const SkMaskFilter* mf) noexcept {
+inline const SkMaskFilterBase* as_MFB(const SkMaskFilter* mf) {
   return static_cast<const SkMaskFilterBase*>(mf);
 }
 
-inline const SkMaskFilterBase* as_MFB(const sk_sp<SkMaskFilter>& mf) noexcept {
+inline const SkMaskFilterBase* as_MFB(const sk_sp<SkMaskFilter>& mf) {
   return static_cast<SkMaskFilterBase*>(mf.get());
 }
 

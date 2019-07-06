@@ -126,10 +126,10 @@ class SkXPSDevice : public SkClipStackDevice {
       The string may begin with a digit,
       and so may not be suitable as a bare resource key.
    */
-  HRESULT createId(wchar_t* buffer, size_t bufferSize, wchar_t sep = '-') noexcept;
-#ifdef SK_XPS_USE_DETERMINISTIC_IDS
+  HRESULT createId(wchar_t* buffer, size_t bufferSize, wchar_t sep = '-');
+#  ifdef SK_XPS_USE_DETERMINISTIC_IDS
   decltype(GUID::Data1) fNextId = 0;
-#endif
+#  endif
 
   HRESULT initXpsDocumentWriter(IXpsOMImageResource* image);
 
@@ -200,7 +200,7 @@ class SkXPSDevice : public SkClipStackDevice {
 
   void convertToPpm(
       const SkMaskFilter* filter, SkMatrix* matrix, SkVector* ppuScale, const SkIRect& clip,
-      SkIRect* clipIRect) noexcept;
+      SkIRect* clipIRect);
 
   HRESULT applyMask(const SkMask& mask, const SkVector& ppuScale, IXpsOMPath* shadedPath);
 

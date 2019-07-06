@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/gl/GrGLProgram.h"
 #include "src/gpu/GrAllocator.h"
 #include "src/gpu/GrCoordTransform.h"
 #include "src/gpu/GrPathProcessor.h"
@@ -16,6 +15,7 @@
 #include "src/gpu/gl/GrGLBuffer.h"
 #include "src/gpu/gl/GrGLGpu.h"
 #include "src/gpu/gl/GrGLPathRendering.h"
+#include "src/gpu/gl/GrGLProgram.h"
 #include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
 #include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
 #include "src/gpu/glsl/GrGLSLXferProcessor.h"

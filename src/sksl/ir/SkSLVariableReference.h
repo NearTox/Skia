@@ -35,13 +35,13 @@ struct VariableReference : public Expression {
 
   ~VariableReference() override;
 
-  RefKind refKind() const noexcept { return fRefKind; }
+  RefKind refKind() const { return fRefKind; }
 
   void setRefKind(RefKind refKind);
 
-  bool hasSideEffects() const noexcept override { return false; }
+  bool hasSideEffects() const override { return false; }
 
-  bool isConstant() const noexcept override {
+  bool isConstant() const override {
     return 0 != (fVariable.fModifiers.fFlags & Modifiers::kConst_Flag);
   }
 

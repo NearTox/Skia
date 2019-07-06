@@ -50,7 +50,7 @@ bool SkAndroidFrameworkUtils::clipWithStencil(SkCanvas* canvas) {
       &kDrawToStencil);
   return true;
 }
-#endif  // SK_SUPPORT_GPU
+#  endif  // SK_SUPPORT_GPU
 
 void SkAndroidFrameworkUtils::SafetyNetLog(const char* bugNumber) {
   android_errorWriteLog(0x534e4554, bugNumber);

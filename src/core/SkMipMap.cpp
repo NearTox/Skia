@@ -7,7 +7,6 @@
 
 #include "src/core/SkMipMap.h"
 
-#include <new>
 #include "include/core/SkBitmap.h"
 #include "include/core/SkTypes.h"
 #include "include/private/SkColorData.h"
@@ -16,6 +15,7 @@
 #include "include/private/SkNx.h"
 #include "include/private/SkTo.h"
 #include "src/core/SkMathPriv.h"
+#include <new>
 
 //
 // ColorTypeFilter is the "Type" we pass to some downsample template functions.
@@ -26,8 +26,8 @@
 
 struct ColorTypeFilter_8888 {
   typedef uint32_t Type;
-  static Sk4h Expand(uint32_t x) noexcept { return SkNx_cast<uint16_t>(Sk4b::Load(&x)); }
-  static uint32_t Compact(const Sk4h& x) noexcept {
+  static Sk4h Expand(uint32_t x) { return SkNx_cast<uint16_t>(Sk4b::Load(&x)); }
+  static uint32_t Compact(const Sk4h& x) {
     uint32_t r;
     SkNx_cast<uint8_t>(x).store(&r);
     return r;
@@ -36,34 +36,30 @@ struct ColorTypeFilter_8888 {
 
 struct ColorTypeFilter_565 {
   typedef uint16_t Type;
-  static constexpr uint32_t Expand(uint16_t x) noexcept {
+  static uint32_t Expand(uint16_t x) {
     return (x & ~SK_G16_MASK_IN_PLACE) | ((x & SK_G16_MASK_IN_PLACE) << 16);
   }
-  static constexpr uint16_t Compact(uint32_t x) noexcept {
+  static uint16_t Compact(uint32_t x) {
     return ((x & ~SK_G16_MASK_IN_PLACE) & 0xFFFF) | ((x >> 16) & SK_G16_MASK_IN_PLACE);
   }
 };
 
 struct ColorTypeFilter_4444 {
   typedef uint16_t Type;
-  static constexpr uint32_t Expand(uint16_t x) noexcept {
-    return (x & 0xF0F) | ((x & ~0xF0F) << 12);
-  }
-  static constexpr uint16_t Compact(uint32_t x) noexcept {
-    return (x & 0xF0F) | ((x >> 12) & ~0xF0F);
-  }
+  static uint32_t Expand(uint16_t x) { return (x & 0xF0F) | ((x & ~0xF0F) << 12); }
+  static uint16_t Compact(uint32_t x) { return (x & 0xF0F) | ((x >> 12) & ~0xF0F); }
 };
 
 struct ColorTypeFilter_8 {
   typedef uint8_t Type;
-  static constexpr unsigned Expand(unsigned x) noexcept { return x; }
-  static constexpr uint8_t Compact(unsigned x) noexcept { return (uint8_t)x; }
+  static unsigned Expand(unsigned x) { return x; }
+  static uint8_t Compact(unsigned x) { return (uint8_t)x; }
 };
 
 struct ColorTypeFilter_F16 {
   typedef uint64_t Type;  // SkHalf x4
-  static Sk4f Expand(uint64_t x) noexcept { return SkHalfToFloat_finite_ftz(x); }
-  static uint64_t Compact(const Sk4f& x) noexcept {
+  static Sk4f Expand(uint64_t x) { return SkHalfToFloat_finite_ftz(x); }
+  static uint64_t Compact(const Sk4f& x) {
     uint64_t r;
     SkFloatToHalf_finite_ftz(x).store(&r);
     return r;
@@ -71,23 +67,23 @@ struct ColorTypeFilter_F16 {
 };
 
 template <typename T>
-T add_121(const T& a, const T& b, const T& c) noexcept {
+T add_121(const T& a, const T& b, const T& c) {
   return a + b + b + c;
 }
 
 template <typename T>
-T shift_right(const T& x, int bits) noexcept {
+T shift_right(const T& x, int bits) {
   return x >> bits;
 }
 
-Sk4f shift_right(const Sk4f& x, int bits) noexcept { return x * (1.0f / (1 << bits)); }
+Sk4f shift_right(const Sk4f& x, int bits) { return x * (1.0f / (1 << bits)); }
 
 template <typename T>
-T shift_left(const T& x, int bits) noexcept {
+T shift_left(const T& x, int bits) {
   return x << bits;
 }
 
-Sk4f shift_left(const Sk4f& x, int bits) noexcept { return x * (1 << bits); }
+Sk4f shift_left(const Sk4f& x, int bits) { return x * (1 << bits); }
 
 //
 //  To produce each mip level, we need to filter down by 1/2 (e.g. 100x100 -> 50,50)
@@ -103,7 +99,7 @@ Sk4f shift_left(const Sk4f& x, int bits) noexcept { return x * (1 << bits); }
 //  Because of this, we need 4 more anisotropic filters: 1x2, 1x3, 2x1, 3x1.
 
 template <typename F>
-void downsample_1_2(void* dst, const void* src, size_t srcRB, int count) noexcept {
+void downsample_1_2(void* dst, const void* src, size_t srcRB, int count) {
   SkASSERT(count > 0);
   auto p0 = static_cast<const typename F::Type*>(src);
   auto p1 = (const typename F::Type*)((const char*)p0 + srcRB);
@@ -121,7 +117,7 @@ void downsample_1_2(void* dst, const void* src, size_t srcRB, int count) noexcep
 }
 
 template <typename F>
-void downsample_1_3(void* dst, const void* src, size_t srcRB, int count) noexcept {
+void downsample_1_3(void* dst, const void* src, size_t srcRB, int count) {
   SkASSERT(count > 0);
   auto p0 = static_cast<const typename F::Type*>(src);
   auto p1 = (const typename F::Type*)((const char*)p0 + srcRB);
@@ -142,7 +138,7 @@ void downsample_1_3(void* dst, const void* src, size_t srcRB, int count) noexcep
 }
 
 template <typename F>
-void downsample_2_1(void* dst, const void* src, size_t srcRB, int count) noexcept {
+void downsample_2_1(void* dst, const void* src, size_t srcRB, int count) {
   SkASSERT(count > 0);
   auto p0 = static_cast<const typename F::Type*>(src);
   auto d = static_cast<typename F::Type*>(dst);
@@ -158,7 +154,7 @@ void downsample_2_1(void* dst, const void* src, size_t srcRB, int count) noexcep
 }
 
 template <typename F>
-void downsample_2_2(void* dst, const void* src, size_t srcRB, int count) noexcept {
+void downsample_2_2(void* dst, const void* src, size_t srcRB, int count) {
   SkASSERT(count > 0);
   auto p0 = static_cast<const typename F::Type*>(src);
   auto p1 = (const typename F::Type*)((const char*)p0 + srcRB);
@@ -178,7 +174,7 @@ void downsample_2_2(void* dst, const void* src, size_t srcRB, int count) noexcep
 }
 
 template <typename F>
-void downsample_2_3(void* dst, const void* src, size_t srcRB, int count) noexcept {
+void downsample_2_3(void* dst, const void* src, size_t srcRB, int count) {
   SkASSERT(count > 0);
   auto p0 = static_cast<const typename F::Type*>(src);
   auto p1 = (const typename F::Type*)((const char*)p0 + srcRB);
@@ -202,7 +198,7 @@ void downsample_2_3(void* dst, const void* src, size_t srcRB, int count) noexcep
 }
 
 template <typename F>
-void downsample_3_1(void* dst, const void* src, size_t srcRB, int count) noexcept {
+void downsample_3_1(void* dst, const void* src, size_t srcRB, int count) {
   SkASSERT(count > 0);
   auto p0 = static_cast<const typename F::Type*>(src);
   auto d = static_cast<typename F::Type*>(dst);
@@ -220,7 +216,7 @@ void downsample_3_1(void* dst, const void* src, size_t srcRB, int count) noexcep
 }
 
 template <typename F>
-void downsample_3_2(void* dst, const void* src, size_t srcRB, int count) noexcept {
+void downsample_3_2(void* dst, const void* src, size_t srcRB, int count) {
   SkASSERT(count > 0);
   auto p0 = static_cast<const typename F::Type*>(src);
   auto p1 = (const typename F::Type*)((const char*)p0 + srcRB);
@@ -256,7 +252,7 @@ void downsample_3_2(void* dst, const void* src, size_t srcRB, int count) noexcep
 }
 
 template <typename F>
-void downsample_3_3(void* dst, const void* src, size_t srcRB, int count) noexcept {
+void downsample_3_3(void* dst, const void* src, size_t srcRB, int count) {
   SkASSERT(count > 0);
   auto p0 = static_cast<const typename F::Type*>(src);
   auto p1 = (const typename F::Type*)((const char*)p0 + srcRB);
@@ -299,7 +295,7 @@ void downsample_3_3(void* dst, const void* src, size_t srcRB, int count) noexcep
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-size_t SkMipMap::AllocLevelsSize(int levelCount, size_t pixelSize) noexcept {
+size_t SkMipMap::AllocLevelsSize(int levelCount, size_t pixelSize) {
   if (levelCount < 0) {
     return 0;
   }
@@ -488,7 +484,7 @@ SkMipMap* SkMipMap::Build(const SkPixmap& src, SkDiscardableFactoryProc fact) {
   return mipmap;
 }
 
-int SkMipMap::ComputeLevelCount(int baseWidth, int baseHeight) noexcept {
+int SkMipMap::ComputeLevelCount(int baseWidth, int baseHeight) {
   if (baseWidth < 1 || baseHeight < 1) {
     return 0;
   }
@@ -522,7 +518,7 @@ int SkMipMap::ComputeLevelCount(int baseWidth, int baseHeight) noexcept {
   return mipLevelCount;
 }
 
-SkISize SkMipMap::ComputeLevelSize(int baseWidth, int baseHeight, int level) noexcept {
+SkISize SkMipMap::ComputeLevelSize(int baseWidth, int baseHeight, int level) {
   if (baseWidth < 1 || baseHeight < 1) {
     return SkISize::Make(0, 0);
   }
@@ -547,7 +543,7 @@ SkISize SkMipMap::ComputeLevelSize(int baseWidth, int baseHeight, int level) noe
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool SkMipMap::extractLevel(const SkSize& scaleSize, Level* levelPtr) const noexcept {
+bool SkMipMap::extractLevel(const SkSize& scaleSize, Level* levelPtr) const {
   if (nullptr == fLevels) {
     return false;
   }
@@ -601,9 +597,9 @@ SkMipMap* SkMipMap::Build(const SkBitmap& src, SkDiscardableFactoryProc fact) {
   return Build(srcPixmap, fact);
 }
 
-int SkMipMap::countLevels() const noexcept { return fCount; }
+int SkMipMap::countLevels() const { return fCount; }
 
-bool SkMipMap::getLevel(int index, Level* levelPtr) const noexcept {
+bool SkMipMap::getLevel(int index, Level* levelPtr) const {
   if (nullptr == fLevels) {
     return false;
   }

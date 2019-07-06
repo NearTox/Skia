@@ -27,21 +27,20 @@ struct SkFontArguments {
     float fStyleValue;
   };
 
-  constexpr SkFontArguments() noexcept
-      : fCollectionIndex(0), fVariationDesignPosition{nullptr, 0} {}
+  SkFontArguments() : fCollectionIndex(0), fVariationDesignPosition{nullptr, 0} {}
 
   /** Specify the index of the desired font.
    *
    *  Font formats like ttc, dfont, cff, cid, pfr, t42, t1, and fon may actually be indexed
    *  collections of fonts.
    */
-  SkFontArguments& setCollectionIndex(int collectionIndex) noexcept {
+  SkFontArguments& setCollectionIndex(int collectionIndex) {
     fCollectionIndex = collectionIndex;
     return *this;
   }
 
   // deprecated, use setVariationDesignPosition instead.
-  SkFontArguments& setAxes(const Axis* axes, int axisCount) noexcept {
+  SkFontArguments& setAxes(const Axis* axes, int axisCount) {
     fVariationDesignPosition.coordinates =
         reinterpret_cast<const VariationPosition::Coordinate*>(axes);
     fVariationDesignPosition.coordinateCount = axisCount;
@@ -55,19 +54,19 @@ struct SkFontArguments {
    *
    *  @param position not copied. The value must remain valid for life of SkFontArguments.
    */
-  SkFontArguments& setVariationDesignPosition(VariationPosition position) noexcept {
+  SkFontArguments& setVariationDesignPosition(VariationPosition position) {
     fVariationDesignPosition.coordinates = position.coordinates;
     fVariationDesignPosition.coordinateCount = position.coordinateCount;
     return *this;
   }
 
-  int getCollectionIndex() const noexcept { return fCollectionIndex; }
+  int getCollectionIndex() const { return fCollectionIndex; }
   // deprecated, use getVariationDesignPosition instead.
-  const Axis* getAxes(int* axisCount) const noexcept {
+  const Axis* getAxes(int* axisCount) const {
     *axisCount = fVariationDesignPosition.coordinateCount;
     return reinterpret_cast<const Axis*>(fVariationDesignPosition.coordinates);
   }
-  VariationPosition getVariationDesignPosition() const noexcept { return fVariationDesignPosition; }
+  VariationPosition getVariationDesignPosition() const { return fVariationDesignPosition; }
 
  private:
   int fCollectionIndex;

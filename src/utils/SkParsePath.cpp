@@ -4,8 +4,8 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "include/utils/SkParsePath.h"
 #include "include/utils/SkParse.h"
+#include "include/utils/SkParsePath.h"
 
 static inline bool is_between(int c, int min, int max) {
   return (unsigned)(c - min) <= (unsigned)(max - min);

@@ -29,13 +29,13 @@ class GrRenderTarget : virtual public GrSurface {
   virtual bool alwaysClearStencil() const { return false; }
 
   // GrSurface overrides
-  GrRenderTarget* asRenderTarget() noexcept override { return this; }
-  const GrRenderTarget* asRenderTarget() const noexcept override { return this; }
+  GrRenderTarget* asRenderTarget() override { return this; }
+  const GrRenderTarget* asRenderTarget() const override { return this; }
 
   // GrRenderTarget
-  bool isStencilBufferMultisampled() const noexcept { return fSampleCnt > 1; }
+  bool isStencilBufferMultisampled() const { return fSampleCnt > 1; }
 
-  GrFSAAType fsaaType() const noexcept {
+  GrFSAAType fsaaType() const {
     SkASSERT(fSampleCnt >= 1);
     if (fSampleCnt <= 1) {
       SkASSERT(!this->hasMixedSamples());
@@ -47,12 +47,12 @@ class GrRenderTarget : virtual public GrSurface {
   /**
    * Returns the number of samples/pixel in the stencil buffer (One if non-MSAA).
    */
-  int numStencilSamples() const noexcept { return fSampleCnt; }
+  int numStencilSamples() const { return fSampleCnt; }
 
   /**
    * Returns the number of samples/pixel in the color buffer (One if non-MSAA or mixed sampled).
    */
-  int numColorSamples() const noexcept {
+  int numColorSamples() const {
     return GrFSAAType::kMixedSamples == this->fsaaType() ? 1 : fSampleCnt;
   }
 
@@ -71,23 +71,23 @@ class GrRenderTarget : virtual public GrSurface {
   /**
    * Call to override the region that needs to be resolved.
    */
-  void overrideResolveRect(const SkIRect rect) noexcept;
+  void overrideResolveRect(const SkIRect rect);
 
   /**
    * Call to indicate that GrRenderTarget was externally resolved. This may
    * allow Gr to skip a redundant resolve step.
    */
-  void flagAsResolved() noexcept;
+  void flagAsResolved();
 
   /**
    * @return true if the GrRenderTarget requires MSAA resolving
    */
-  bool needsResolve() const noexcept { return !fResolveRect.isEmpty(); }
+  bool needsResolve() const { return !fResolveRect.isEmpty(); }
 
   /**
    * Returns a rect bounding the region needing resolving.
    */
-  const SkIRect& getResolveRect() const noexcept { return fResolveRect; }
+  const SkIRect& getResolveRect() const { return fResolveRect; }
 
   // a MSAA RT may require explicit resolving , it may auto-resolve (e.g. FBO
   // 0 in GL), or be unresolvable because the client didn't give us the
@@ -105,8 +105,8 @@ class GrRenderTarget : virtual public GrSurface {
   virtual bool canAttemptStencilAttachment() const = 0;
 
   // Provides access to functions that aren't part of the public API.
-  GrRenderTargetPriv renderTargetPriv() noexcept;
-  const GrRenderTargetPriv renderTargetPriv() const noexcept;
+  GrRenderTargetPriv renderTargetPriv();
+  const GrRenderTargetPriv renderTargetPriv() const;
 
  protected:
   GrRenderTarget(GrGpu*, const GrSurfaceDesc&, GrStencilAttachment* = nullptr);

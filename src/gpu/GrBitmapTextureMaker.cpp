@@ -17,12 +17,10 @@
 #include "src/gpu/GrSurfaceContext.h"
 #include "src/gpu/SkGr.h"
 
-static bool bmp_is_alpha_only(const SkBitmap& bm) noexcept {
-  return kAlpha_8_SkColorType == bm.colorType();
-}
+static bool bmp_is_alpha_only(const SkBitmap& bm) { return kAlpha_8_SkColorType == bm.colorType(); }
 
 GrBitmapTextureMaker::GrBitmapTextureMaker(
-    GrRecordingContext* context, const SkBitmap& bitmap, bool useDecal) noexcept
+    GrRecordingContext* context, const SkBitmap& bitmap, bool useDecal)
     : INHERITED(context, bitmap.width(), bitmap.height(), bmp_is_alpha_only(bitmap), useDecal),
       fBitmap(bitmap) {
   if (!bitmap.isVolatile()) {
@@ -97,8 +95,7 @@ sk_sp<GrTextureProxy> GrBitmapTextureMaker::refOriginalTextureProxy(
   return nullptr;
 }
 
-void GrBitmapTextureMaker::makeCopyKey(
-    const CopyParams& copyParams, GrUniqueKey* copyKey) noexcept {
+void GrBitmapTextureMaker::makeCopyKey(const CopyParams& copyParams, GrUniqueKey* copyKey) {
   // Destination color space is irrelevant - we always upload the bitmap's contents as-is
   if (fOriginalKey.isValid()) {
     MakeCopyKeyFromOrigKey(fOriginalKey, copyParams, copyKey);
@@ -109,6 +106,6 @@ void GrBitmapTextureMaker::didCacheCopy(const GrUniqueKey& copyKey, uint32_t con
   GrInstallBitmapUniqueKeyInvalidator(copyKey, contextUniqueID, fBitmap.pixelRef());
 }
 
-SkAlphaType GrBitmapTextureMaker::alphaType() const noexcept { return fBitmap.alphaType(); }
+SkAlphaType GrBitmapTextureMaker::alphaType() const { return fBitmap.alphaType(); }
 
-SkColorSpace* GrBitmapTextureMaker::colorSpace() const noexcept { return fBitmap.colorSpace(); }
+SkColorSpace* GrBitmapTextureMaker::colorSpace() const { return fBitmap.colorSpace(); }

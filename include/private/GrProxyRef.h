@@ -19,19 +19,19 @@
 template <typename T>
 class GrProxyRef {
  public:
-  GrProxyRef() noexcept = default;
+  GrProxyRef() = default;
   GrProxyRef(const GrProxyRef&) = delete;
   GrProxyRef& operator=(const GrProxyRef&) = delete;
 
   /** ioType expresses what type of IO operations will be marked as pending on the proxy when
       markPendingIO is called. */
-  GrProxyRef(sk_sp<T> proxy, GrIOType ioType) noexcept { this->setProxy(std::move(proxy), ioType); }
+  GrProxyRef(sk_sp<T> proxy, GrIOType ioType) { this->setProxy(std::move(proxy), ioType); }
 
   ~GrProxyRef() { this->reset(); }
 
   /** ioType expresses what type of IO operations will be marked as
       pending on the proxy when markPendingIO is called. */
-  void setProxy(sk_sp<T> proxy, GrIOType ioType) noexcept {
+  void setProxy(sk_sp<T> proxy, GrIOType ioType) {
     SkASSERT(!fPendingIO);
     SkASSERT(SkToBool(fProxy) == fOwnRef);
     SkSafeUnref(fProxy);
@@ -45,18 +45,18 @@ class GrProxyRef {
     }
   }
 
-  T* get() const noexcept { return fProxy; }
+  T* get() const { return fProxy; }
 
   /** Does this object own a pending read or write on the resource it is wrapping. */
   bool ownsPendingIO() const { return fPendingIO; }
 
   /** What type of IO does this represent? This is independent of whether a normal ref or a
       pending IO is currently held. */
-  GrIOType ioType() const noexcept { return fIOType; }
+  GrIOType ioType() const { return fIOType; }
 
   /** Shortcut for calling setProxy() with NULL. It cannot be called after markingPendingIO
       is called. */
-  void reset() noexcept {
+  void reset() {
     if (fPendingIO) {
       SkASSERT(fProxy);
       switch (fIOType) {
@@ -101,7 +101,7 @@ class GrProxyRef {
       This lets the cache know that the drawing code will no longer schedule additional reads or
       writes to the resource using the program element or draw state. It can only be called once.
     */
-  void removeRef() const noexcept {
+  void removeRef() const {
     SkASSERT(fOwnRef);
     SkASSERT(fPendingIO);
     SkASSERT(fProxy);

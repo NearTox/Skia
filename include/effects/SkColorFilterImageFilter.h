@@ -20,9 +20,9 @@ class SK_API SkColorFilterImageFilter : public SkImageFilter {
   void flatten(SkWriteBuffer&) const override;
   sk_sp<SkSpecialImage> onFilterImage(
       SkSpecialImage* source, const Context&, SkIPoint* offset) const override;
-  bool onIsColorFilterNode(SkColorFilter**) const noexcept override;
-  bool onCanHandleComplexCTM() const noexcept override { return true; }
-  bool affectsTransparentBlack() const noexcept override;
+  bool onIsColorFilterNode(SkColorFilter**) const override;
+  bool onCanHandleComplexCTM() const override { return true; }
+  bool affectsTransparentBlack() const override;
 
  private:
   SK_FLATTENABLE_HOOKS(SkColorFilterImageFilter)

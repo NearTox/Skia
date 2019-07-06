@@ -20,9 +20,9 @@ class SkSweepGradient final : public SkGradientShaderBase {
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
 #endif
 
-  SkScalar getTBias() const noexcept { return fTBias; }
+  SkScalar getTBias() const { return fTBias; }
 
-  SkScalar getTScale() const noexcept { return fTScale; }
+  SkScalar getTScale() const { return fTScale; }
 
  protected:
   void flatten(SkWriteBuffer& buffer) const override;

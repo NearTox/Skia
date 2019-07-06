@@ -16,23 +16,23 @@
 class GrBaseContextPriv {
  public:
   // from GrContext_Base
-  uint32_t contextID() const noexcept { return fContext->contextID(); }
+  uint32_t contextID() const { return fContext->contextID(); }
 
-  bool matches(GrContext_Base* candidate) const noexcept { return fContext->matches(candidate); }
+  bool matches(GrContext_Base* candidate) const { return fContext->matches(candidate); }
 
-  const GrContextOptions& options() const noexcept { return fContext->options(); }
+  const GrContextOptions& options() const { return fContext->options(); }
 
-  const GrCaps* caps() const noexcept { return fContext->caps(); }
-  sk_sp<const GrCaps> refCaps() const noexcept;
+  const GrCaps* caps() const { return fContext->caps(); }
+  sk_sp<const GrCaps> refCaps() const;
 
-  sk_sp<GrSkSLFPFactoryCache> fpFactoryCache() noexcept;
+  sk_sp<GrSkSLFPFactoryCache> fpFactoryCache();
 
   GrImageContext* asImageContext() { return fContext->asImageContext(); }
   GrRecordingContext* asRecordingContext() { return fContext->asRecordingContext(); }
   GrContext* asDirectContext() { return fContext->asDirectContext(); }
 
  private:
-  explicit GrBaseContextPriv(GrContext_Base* context) noexcept : fContext(context) {}
+  explicit GrBaseContextPriv(GrContext_Base* context) : fContext(context) {}
   GrBaseContextPriv(const GrBaseContextPriv&);             // unimpl
   GrBaseContextPriv& operator=(const GrBaseContextPriv&);  // unimpl
 
@@ -45,9 +45,9 @@ class GrBaseContextPriv {
   friend class GrContext_Base;  // to construct/copy this type.
 };
 
-inline GrBaseContextPriv GrContext_Base::priv() noexcept { return GrBaseContextPriv(this); }
+inline GrBaseContextPriv GrContext_Base::priv() { return GrBaseContextPriv(this); }
 
-inline const GrBaseContextPriv GrContext_Base::priv() const noexcept {
+inline const GrBaseContextPriv GrContext_Base::priv() const {
   return GrBaseContextPriv(const_cast<GrContext_Base*>(this));
 }
 

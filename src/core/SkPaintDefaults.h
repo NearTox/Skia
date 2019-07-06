@@ -17,15 +17,15 @@
  */
 
 #ifndef SkPaintDefaults_TextSize
-#define SkPaintDefaults_TextSize SkIntToScalar(12)
+#  define SkPaintDefaults_TextSize SkIntToScalar(12)
 #endif
 
 #ifndef SkPaintDefaults_Hinting
-#define SkPaintDefaults_Hinting SkFontHinting::kNormal
+#  define SkPaintDefaults_Hinting SkFontHinting::kNormal
 #endif
 
 #ifndef SkPaintDefaults_MiterLimit
-#define SkPaintDefaults_MiterLimit SkIntToScalar(4)
+#  define SkPaintDefaults_MiterLimit SkIntToScalar(4)
 #endif
 
 #endif

@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "include/private/SkDeferredDisplayList.h"
-#include <utility>
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkTypes.h"
+#include "include/private/SkDeferredDisplayList.h"
+#include <utility>
 class SkSurfaceCharacterization;
 
 #if SK_SUPPORT_GPU

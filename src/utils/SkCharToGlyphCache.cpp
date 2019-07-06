@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "src/utils/SkCharToGlyphCache.h"
 #include "include/private/SkTFitsIn.h"
+#include "src/utils/SkCharToGlyphCache.h"
 
 SkCharToGlyphCache::SkCharToGlyphCache() { this->reset(); }
 
@@ -65,8 +65,7 @@ static int find_with_slope(const SkUnichar base[], int count, SkUnichar value, d
     }
   } else {
     // make our guess based on the "slope" of the current values
-    //        index = 1 + (int64_t)(count - 2) * (value - base[1]) / (base[count - 2] -
-    //        base[1]);
+    //        index = 1 + (int64_t)(count - 2) * (value - base[1]) / (base[count - 2] - base[1]);
     index = 1 + (int)(denom * (count - 2) * (value - base[1]));
     SkASSERT(index >= 1 && index <= count - 2);
 

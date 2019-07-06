@@ -33,15 +33,14 @@ class SK_API SkPathMeasure : SkNoncopyable {
   /** Return the total length of the current contour, or 0 if no path
       is associated (e.g. resetPath(null))
   */
-  SkScalar getLength() noexcept;
+  SkScalar getLength();
 
   /** Pins distance to 0 <= distance <= getLength(), and then computes
       the corresponding position and tangent.
       Returns false if there is no path, or a zero-length path was specified, in which case
       position and tangent are unchanged.
   */
-  bool SK_WARN_UNUSED_RESULT
-  getPosTan(SkScalar distance, SkPoint* position, SkVector* tangent) noexcept;
+  bool SK_WARN_UNUSED_RESULT getPosTan(SkScalar distance, SkPoint* position, SkVector* tangent);
 
   enum MatrixFlags {
     kGetPosition_MatrixFlag = 0x01,
@@ -54,8 +53,8 @@ class SK_API SkPathMeasure : SkNoncopyable {
       Returns false if there is no path, or a zero-length path was specified, in which case
       matrix is unchanged.
   */
-  bool SK_WARN_UNUSED_RESULT getMatrix(
-      SkScalar distance, SkMatrix* matrix, MatrixFlags flags = kGetPosAndTan_MatrixFlag) noexcept;
+  bool SK_WARN_UNUSED_RESULT
+  getMatrix(SkScalar distance, SkMatrix* matrix, MatrixFlags flags = kGetPosAndTan_MatrixFlag);
 
   /** Given a start and stop distance, return in dst the intervening segment(s).
       If the segment is zero-length, return false, else return true.
@@ -67,7 +66,7 @@ class SK_API SkPathMeasure : SkNoncopyable {
 
   /** Return true if the current contour is closed()
    */
-  bool isClosed() noexcept;
+  bool isClosed();
 
   /** Move to the next contour in the path. Return true if one exists, or false if
       we're done with the path.

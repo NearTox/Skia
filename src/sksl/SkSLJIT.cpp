@@ -11,7 +11,6 @@
 
 #include "src/sksl/SkSLJIT.h"
 
-#include "llvm/ExecutionEngine/RTDyldMemoryManager.h"
 #include "src/core/SkCpu.h"
 #include "src/core/SkRasterPipeline.h"
 #include "src/sksl/ir/SkSLAppendStage.h"
@@ -21,6 +20,7 @@
 #include "src/sksl/ir/SkSLIndexExpression.h"
 #include "src/sksl/ir/SkSLProgram.h"
 #include "src/sksl/ir/SkSLUnresolvedFunction.h"
+#    include "llvm/ExecutionEngine/RTDyldMemoryManager.h"
 
 static constexpr int MAX_VECTOR_COUNT = 16;
 
@@ -454,46 +454,46 @@ void JIT::vectorize(
 }
 
 LLVMValueRef JIT::compileBinary(LLVMBuilderRef builder, const BinaryExpression& b) {
-#define BINARY(SFunc, UFunc, FFunc)                                       \
-  {                                                                       \
-    LLVMValueRef left = this->compileExpression(builder, *b.fLeft);       \
-    LLVMValueRef right = this->compileExpression(builder, *b.fRight);     \
-    this->vectorize(builder, b, &left, &right);                           \
-    switch (this->typeKind(b.fLeft->fType)) {                             \
-      case kInt_TypeKind: return SFunc(builder, left, right, "binary");   \
-      case kUInt_TypeKind: return UFunc(builder, left, right, "binary");  \
-      case kFloat_TypeKind: return FFunc(builder, left, right, "binary"); \
-      default: ABORT("unsupported typeKind");                             \
-    }                                                                     \
-  }
-#define COMPOUND(SFunc, UFunc, FFunc)                                              \
-  {                                                                                \
-    std::unique_ptr<LValue> lvalue = this->getLValue(builder, *b.fLeft);           \
-    LLVMValueRef left = lvalue->load(builder);                                     \
-    LLVMValueRef right = this->compileExpression(builder, *b.fRight);              \
-    this->vectorize(builder, b, &left, &right);                                    \
-    LLVMValueRef result;                                                           \
-    switch (this->typeKind(b.fLeft->fType)) {                                      \
-      case kInt_TypeKind: result = SFunc(builder, left, right, "binary"); break;   \
-      case kUInt_TypeKind: result = UFunc(builder, left, right, "binary"); break;  \
-      case kFloat_TypeKind: result = FFunc(builder, left, right, "binary"); break; \
-      default: ABORT("unsupported typeKind");                                      \
-    }                                                                              \
-    lvalue->store(builder, result);                                                \
-    return result;                                                                 \
-  }
-#define COMPARE(SFunc, SOp, UFunc, UOp, FFunc, FOp)                            \
-  {                                                                            \
-    LLVMValueRef left = this->compileExpression(builder, *b.fLeft);            \
-    LLVMValueRef right = this->compileExpression(builder, *b.fRight);          \
-    this->vectorize(builder, b, &left, &right);                                \
-    switch (this->typeKind(b.fLeft->fType)) {                                  \
-      case kInt_TypeKind: return SFunc(builder, SOp, left, right, "binary");   \
-      case kUInt_TypeKind: return UFunc(builder, UOp, left, right, "binary");  \
-      case kFloat_TypeKind: return FFunc(builder, FOp, left, right, "binary"); \
-      default: ABORT("unsupported typeKind");                                  \
-    }                                                                          \
-  }
+#    define BINARY(SFunc, UFunc, FFunc)                                       \
+      {                                                                       \
+        LLVMValueRef left = this->compileExpression(builder, *b.fLeft);       \
+        LLVMValueRef right = this->compileExpression(builder, *b.fRight);     \
+        this->vectorize(builder, b, &left, &right);                           \
+        switch (this->typeKind(b.fLeft->fType)) {                             \
+          case kInt_TypeKind: return SFunc(builder, left, right, "binary");   \
+          case kUInt_TypeKind: return UFunc(builder, left, right, "binary");  \
+          case kFloat_TypeKind: return FFunc(builder, left, right, "binary"); \
+          default: ABORT("unsupported typeKind");                             \
+        }                                                                     \
+      }
+#    define COMPOUND(SFunc, UFunc, FFunc)                                              \
+      {                                                                                \
+        std::unique_ptr<LValue> lvalue = this->getLValue(builder, *b.fLeft);           \
+        LLVMValueRef left = lvalue->load(builder);                                     \
+        LLVMValueRef right = this->compileExpression(builder, *b.fRight);              \
+        this->vectorize(builder, b, &left, &right);                                    \
+        LLVMValueRef result;                                                           \
+        switch (this->typeKind(b.fLeft->fType)) {                                      \
+          case kInt_TypeKind: result = SFunc(builder, left, right, "binary"); break;   \
+          case kUInt_TypeKind: result = UFunc(builder, left, right, "binary"); break;  \
+          case kFloat_TypeKind: result = FFunc(builder, left, right, "binary"); break; \
+          default: ABORT("unsupported typeKind");                                      \
+        }                                                                              \
+        lvalue->store(builder, result);                                                \
+        return result;                                                                 \
+      }
+#    define COMPARE(SFunc, SOp, UFunc, UOp, FFunc, FOp)                            \
+      {                                                                            \
+        LLVMValueRef left = this->compileExpression(builder, *b.fLeft);            \
+        LLVMValueRef right = this->compileExpression(builder, *b.fRight);          \
+        this->vectorize(builder, b, &left, &right);                                \
+        switch (this->typeKind(b.fLeft->fType)) {                                  \
+          case kInt_TypeKind: return SFunc(builder, SOp, left, right, "binary");   \
+          case kUInt_TypeKind: return UFunc(builder, UOp, left, right, "binary");  \
+          case kFloat_TypeKind: return FFunc(builder, FOp, left, right, "binary"); \
+          default: ABORT("unsupported typeKind");                                  \
+        }                                                                          \
+      }
   switch (b.fOperator) {
     case Token::EQ: {
       std::unique_ptr<LValue> lvalue = this->getLValue(builder, *b.fLeft);
@@ -1238,21 +1238,21 @@ bool JIT::compileVectorBinary(
     LLVMBuilderRef builder, const BinaryExpression& b, LLVMValueRef out[CHANNELS]) {
   LLVMValueRef left[CHANNELS];
   LLVMValueRef right[CHANNELS];
-#define VECTOR_BINARY(signedOp, unsignedOp, floatOp)                                           \
-  {                                                                                            \
-    if (!this->getVectorBinaryOperands(builder, *b.fLeft, left, *b.fRight, right)) {           \
-      return false;                                                                            \
-    }                                                                                          \
-    for (int i = 0; i < b.fLeft->fType.columns(); ++i) {                                       \
-      switch (this->typeKind(b.fLeft->fType)) {                                                \
-        case kInt_TypeKind: out[i] = signedOp(builder, left[i], right[i], "binary"); break;    \
-        case kUInt_TypeKind: out[i] = unsignedOp(builder, left[i], right[i], "binary"); break; \
-        case kFloat_TypeKind: out[i] = floatOp(builder, left[i], right[i], "binary"); break;   \
-        case kBool_TypeKind: SkASSERT(false); break;                                           \
-      }                                                                                        \
-    }                                                                                          \
-    return true;                                                                               \
-  }
+#    define VECTOR_BINARY(signedOp, unsignedOp, floatOp)                                           \
+      {                                                                                            \
+        if (!this->getVectorBinaryOperands(builder, *b.fLeft, left, *b.fRight, right)) {           \
+          return false;                                                                            \
+        }                                                                                          \
+        for (int i = 0; i < b.fLeft->fType.columns(); ++i) {                                       \
+          switch (this->typeKind(b.fLeft->fType)) {                                                \
+            case kInt_TypeKind: out[i] = signedOp(builder, left[i], right[i], "binary"); break;    \
+            case kUInt_TypeKind: out[i] = unsignedOp(builder, left[i], right[i], "binary"); break; \
+            case kFloat_TypeKind: out[i] = floatOp(builder, left[i], right[i], "binary"); break;   \
+            case kBool_TypeKind: SkASSERT(false); break;                                           \
+          }                                                                                        \
+        }                                                                                          \
+        return true;                                                                               \
+      }
   switch (b.fOperator) {
     case Token::EQ: {
       if (!this->getVectorLValue(builder, *b.fLeft, left)) {
@@ -1289,16 +1289,17 @@ bool JIT::compileVectorConstructor(
       if (!this->compileVectorExpression(builder, *c.fArguments[0], base)) {
         return false;
       }
-#define CONSTRUCT(fn)                                                                             \
-  out[0] = LLVMGetUndef(LLVMVectorType(this->getType(c.fType), fVectorCount));                    \
-  for (int i = 0; i < fVectorCount; ++i) {                                                        \
-    LLVMValueRef index = LLVMConstInt(fInt32Type, i, false);                                      \
-    LLVMValueRef baseVal = LLVMBuildExtractElement(builder, base[0], index, "construct extract"); \
-    out[0] = LLVMBuildInsertElement(                                                              \
-        builder, out[0], fn(builder, baseVal, this->getType(c.fType), "cast"), index,             \
-        "construct insert");                                                                      \
-  }                                                                                               \
-  return true;
+#    define CONSTRUCT(fn)                                                                 \
+      out[0] = LLVMGetUndef(LLVMVectorType(this->getType(c.fType), fVectorCount));        \
+      for (int i = 0; i < fVectorCount; ++i) {                                            \
+        LLVMValueRef index = LLVMConstInt(fInt32Type, i, false);                          \
+        LLVMValueRef baseVal =                                                            \
+            LLVMBuildExtractElement(builder, base[0], index, "construct extract");        \
+        out[0] = LLVMBuildInsertElement(                                                  \
+            builder, out[0], fn(builder, baseVal, this->getType(c.fType), "cast"), index, \
+            "construct insert");                                                          \
+      }                                                                                   \
+      return true;
       if (kFloat_TypeKind == to) {
         if (kInt_TypeKind == from) {
           CONSTRUCT(LLVMBuildSIToFP);
@@ -1684,6 +1685,6 @@ void* JIT::Module::getJumperStage(const char* name) {
 
 }  // namespace SkSL
 
-#endif  // SK_LLVM_AVAILABLE
+#  endif  // SK_LLVM_AVAILABLE
 
 #endif  // SKSL_STANDALONE

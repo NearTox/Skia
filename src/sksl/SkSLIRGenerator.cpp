@@ -7,8 +7,8 @@
 
 #include "src/sksl/SkSLIRGenerator.h"
 
-#include <unordered_set>
 #include "limits.h"
+#include <unordered_set>
 
 #include "src/sksl/SkSLCompiler.h"
 #include "src/sksl/SkSLParser.h"
@@ -458,50 +458,50 @@ std::unique_ptr<Statement> IRGenerator::convertSwitch(const ASTSwitchStatement& 
   std::unique_ptr<Expression> value = this->convertExpression(*s.fValue);
   if (!value) {
     return nullptr;
-  }
-  if (value->fType != *fContext.fUInt_Type && value->fType.kind() != Type::kEnum_Kind) {
-    value = this->coerce(std::move(value), *fContext.fInt_Type);
-    if (!value) {
-      return nullptr;
     }
-  }
-  AutoSymbolTable table(this);
-  std::unordered_set<int> caseValues;
-  std::vector<std::unique_ptr<SwitchCase>> cases;
-  for (const auto& c : s.fCases) {
-    std::unique_ptr<Expression> caseValue;
-    if (c->fValue) {
-      caseValue = this->convertExpression(*c->fValue);
-      if (!caseValue) {
+    if (value->fType != *fContext.fUInt_Type && value->fType.kind() != Type::kEnum_Kind) {
+      value = this->coerce(std::move(value), *fContext.fInt_Type);
+      if (!value) {
         return nullptr;
       }
-      caseValue = this->coerce(std::move(caseValue), value->fType);
-      if (!caseValue) {
-        return nullptr;
-      }
-      if (!caseValue->isConstant()) {
-        fErrors.error(caseValue->fOffset, "case value must be a constant");
-        return nullptr;
-      }
-      int64_t v;
-      this->getConstantInt(*caseValue, &v);
-      if (caseValues.find(v) != caseValues.end()) {
-        fErrors.error(caseValue->fOffset, "duplicate case value");
-      }
-      caseValues.insert(v);
     }
-    std::vector<std::unique_ptr<Statement>> statements;
-    for (const auto& s : c->fStatements) {
-      std::unique_ptr<Statement> converted = this->convertStatement(*s);
-      if (!converted) {
-        return nullptr;
+    AutoSymbolTable table(this);
+    std::unordered_set<int> caseValues;
+    std::vector<std::unique_ptr<SwitchCase>> cases;
+    for (const auto& c : s.fCases) {
+      std::unique_ptr<Expression> caseValue;
+      if (c->fValue) {
+        caseValue = this->convertExpression(*c->fValue);
+        if (!caseValue) {
+          return nullptr;
+        }
+        caseValue = this->coerce(std::move(caseValue), value->fType);
+        if (!caseValue) {
+          return nullptr;
+        }
+        if (!caseValue->isConstant()) {
+          fErrors.error(caseValue->fOffset, "case value must be a constant");
+          return nullptr;
+        }
+        int64_t v;
+        this->getConstantInt(*caseValue, &v);
+        if (caseValues.find(v) != caseValues.end()) {
+          fErrors.error(caseValue->fOffset, "duplicate case value");
+        }
+        caseValues.insert(v);
       }
-      statements.push_back(std::move(converted));
+      std::vector<std::unique_ptr<Statement>> statements;
+      for (const auto& s : c->fStatements) {
+        std::unique_ptr<Statement> converted = this->convertStatement(*s);
+        if (!converted) {
+          return nullptr;
+        }
+        statements.push_back(std::move(converted));
+      }
+      cases.emplace_back(new SwitchCase(c->fOffset, std::move(caseValue), std::move(statements)));
     }
-    cases.emplace_back(new SwitchCase(c->fOffset, std::move(caseValue), std::move(statements)));
-  }
-  return std::unique_ptr<Statement>(new SwitchStatement(
-      s.fOffset, s.fIsStatic, std::move(value), std::move(cases), fSymbolTable));
+    return std::unique_ptr<Statement>(new SwitchStatement(
+        s.fOffset, s.fIsStatic, std::move(value), std::move(cases), fSymbolTable));
 }
 
 std::unique_ptr<Statement> IRGenerator::convertExpressionStatement(

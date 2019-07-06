@@ -27,9 +27,9 @@ class SK_API SkFontLCDConfig {
   };
 
   /** @deprecated set on Device creation. */
-  static void SetSubpixelOrientation(LCDOrientation orientation) noexcept;
+  static void SetSubpixelOrientation(LCDOrientation orientation);
   /** @deprecated get from Device. */
-  static LCDOrientation GetSubpixelOrientation() noexcept;
+  static LCDOrientation GetSubpixelOrientation();
 
   /** LCD color elements can vary in order. For subpixel text we need to know
       the order which the LCDs uses so that the color fringes are in the
@@ -50,9 +50,9 @@ class SK_API SkFontLCDConfig {
   };
 
   /** @deprecated set on Device creation. */
-  static void SetSubpixelOrder(LCDOrder order) noexcept;
+  static void SetSubpixelOrder(LCDOrder order);
   /** @deprecated get from Device. */
-  static LCDOrder GetSubpixelOrder() noexcept;
+  static LCDOrder GetSubpixelOrder();
 };
 
 #endif

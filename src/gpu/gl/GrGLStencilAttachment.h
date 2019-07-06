@@ -35,9 +35,9 @@ class GrGLStencilAttachment : public GrStencilAttachment {
     this->registerWithCache(SkBudgeted::kYes);
   }
 
-  GrGLuint renderbufferID() const noexcept { return fRenderbufferID; }
+  GrGLuint renderbufferID() const { return fRenderbufferID; }
 
-  const Format& format() const noexcept { return fFormat; }
+  const Format& format() const { return fFormat; }
 
  protected:
   // overrides of GrResource
@@ -47,7 +47,7 @@ class GrGLStencilAttachment : public GrStencilAttachment {
       SkTraceMemoryDump* traceMemoryDump, const SkString& dumpName) const override;
 
  private:
-  size_t onGpuMemorySize() const noexcept override;
+  size_t onGpuMemorySize() const override;
 
   Format fFormat;
   // may be zero for external SBs associated with external RTs

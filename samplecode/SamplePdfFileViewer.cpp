@@ -9,22 +9,22 @@
 
 #ifdef SAMPLE_PDF_FILE_VIEWER
 
-#include "SkPdfRenderer.h"
-#include "include/core/SkCanvas.h"
-#include "include/core/SkColorFilter.h"
-#include "include/core/SkColorPriv.h"
-#include "include/core/SkGraphics.h"
-#include "include/core/SkPath.h"
-#include "include/core/SkPicture.h"
-#include "include/core/SkRegion.h"
-#include "include/core/SkShader.h"
-#include "include/core/SkTime.h"
-#include "include/core/SkTypeface.h"
-#include "include/effects/SkGradientShader.h"
-#include "include/utils/SkRandom.h"
-#include "samplecode/Sample.h"
-#include "src/core/SkOSFile.h"
-#include "src/utils/SkUTF.h"
+#  include "SkPdfRenderer.h"
+#  include "include/core/SkCanvas.h"
+#  include "include/core/SkColorFilter.h"
+#  include "include/core/SkColorPriv.h"
+#  include "include/core/SkGraphics.h"
+#  include "include/core/SkPath.h"
+#  include "include/core/SkPicture.h"
+#  include "include/core/SkRegion.h"
+#  include "include/core/SkShader.h"
+#  include "include/core/SkTime.h"
+#  include "include/core/SkTypeface.h"
+#  include "include/effects/SkGradientShader.h"
+#  include "include/utils/SkRandom.h"
+#  include "samplecode/Sample.h"
+#  include "src/core/SkOSFile.h"
+#  include "src/utils/SkUTF.h"
 
 class PdfFileViewer : public Sample {
  private:
@@ -87,9 +87,9 @@ Sample* CreateSamplePdfFileViewer(const char filename[]) { return new PdfFileVie
 
 //////////////////////////////////////////////////////////////////////////////
 
-#if 0
+#  if 0
 static Sample* MyFactory() { return new PdfFileViewer; }
 static SampleRegister reg(MyFactory);
-#endif
+#  endif
 
 #endif  // SAMPLE_PDF_FILE_VIEWER

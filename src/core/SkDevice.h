@@ -26,18 +26,18 @@ class SkSpecialImage;
 
 class SkBaseDevice : public SkRefCnt {
  public:
-  SkBaseDevice(const SkImageInfo&, const SkSurfaceProps&) noexcept;
+  SkBaseDevice(const SkImageInfo&, const SkSurfaceProps&);
 
   /**
    *  Return ImageInfo for this device. If the canvas is not backed by pixels
    *  (cpu or gpu), then the info's ColorType will be kUnknown_SkColorType.
    */
-  const SkImageInfo& imageInfo() const noexcept { return fInfo; }
+  const SkImageInfo& imageInfo() const { return fInfo; }
 
   /**
    *  Return SurfaceProps for this device.
    */
-  const SkSurfaceProps& surfaceProps() const noexcept { return fSurfaceProps; }
+  const SkSurfaceProps& surfaceProps() const { return fSurfaceProps; }
 
   /**
    *  Return the bounds of the device in the coordinate space of the root
@@ -56,11 +56,11 @@ class SkBaseDevice : public SkRefCnt {
     return bounds;
   }
 
-  int width() const noexcept { return this->imageInfo().width(); }
+  int width() const { return this->imageInfo().width(); }
 
-  int height() const noexcept { return this->imageInfo().height(); }
+  int height() const { return this->imageInfo().height(); }
 
-  bool isOpaque() const noexcept { return this->imageInfo().isOpaque(); }
+  bool isOpaque() const { return this->imageInfo().isOpaque(); }
 
   bool writePixels(const SkPixmap&, int x, int y);
 
@@ -85,7 +85,7 @@ class SkBaseDevice : public SkRefCnt {
    *  Return the device's origin: its offset in device coordinates from
    *  the default origin in its canvas' matrix/clip
    */
-  const SkIPoint& getOrigin() const noexcept { return fOrigin; }
+  const SkIPoint& getOrigin() const { return fOrigin; }
 
   virtual void* getRasterHandle() const { return nullptr; }
 
@@ -103,9 +103,9 @@ class SkBaseDevice : public SkRefCnt {
   }
   bool clipIsWideOpen() const;
 
-  const SkMatrix& ctm() const noexcept { return fCTM; }
-  void setCTM(const SkMatrix& ctm) noexcept { fCTM = ctm; }
-  void setGlobalCTM(const SkMatrix& ctm) noexcept;
+  const SkMatrix& ctm() const { return fCTM; }
+  void setCTM(const SkMatrix& ctm) { fCTM = ctm; }
+  void setGlobalCTM(const SkMatrix& ctm);
   virtual void validateDevBounds(const SkIRect&) {}
 
  protected:
@@ -233,7 +233,7 @@ class SkBaseDevice : public SkRefCnt {
 
   ///////////////////////////////////////////////////////////////////////////
 
-  virtual GrContext* context() const noexcept { return nullptr; }
+  virtual GrContext* context() const { return nullptr; }
 
   virtual sk_sp<SkSurface> makeSurface(const SkImageInfo&, const SkSurfaceProps&);
   virtual bool onPeekPixels(SkPixmap*) { return false; }
@@ -258,7 +258,7 @@ class SkBaseDevice : public SkRefCnt {
 
   struct CreateInfo {
     static SkPixelGeometry AdjustGeometry(
-        const SkImageInfo&, TileUsage, SkPixelGeometry, bool preserveLCDText) noexcept;
+        const SkImageInfo&, TileUsage, SkPixelGeometry, bool preserveLCDText);
 
     // The constructor may change the pixel geometry based on other parameters.
     CreateInfo(const SkImageInfo& info, TileUsage tileUsage, SkPixelGeometry geo)
@@ -296,8 +296,7 @@ class SkBaseDevice : public SkRefCnt {
   virtual SkBaseDevice* onCreateDevice(const CreateInfo&, const SkPaint*) { return nullptr; }
 
   // A helper function used by derived classes to log the scale factor of a bitmap or image draw.
-  static void LogDrawScaleFactor(
-      const SkMatrix& view, const SkMatrix& srcToDst, SkFilterQuality) noexcept;
+  static void LogDrawScaleFactor(const SkMatrix& view, const SkMatrix& srcToDst, SkFilterQuality);
 
  private:
   friend class SkAndroidFrameworkUtils;
@@ -327,7 +326,7 @@ class SkBaseDevice : public SkRefCnt {
   virtual GrRenderTargetContext* accessRenderTargetContext() { return nullptr; }
 
   // just called by SkCanvas when built as a layer
-  void setOrigin(const SkMatrix& ctm, int x, int y) noexcept;
+  void setOrigin(const SkMatrix& ctm, int x, int y);
 
   /** Causes any deferred drawing to the device to be completed.
    */
@@ -337,9 +336,7 @@ class SkBaseDevice : public SkRefCnt {
 
   friend class SkNoPixelsDevice;
   friend class SkBitmapDevice;
-  void privateResize(int w, int h) noexcept {
-    *const_cast<SkImageInfo*>(&fInfo) = fInfo.makeWH(w, h);
-  }
+  void privateResize(int w, int h) { *const_cast<SkImageInfo*>(&fInfo) = fInfo.makeWH(w, h); }
 
   SkIPoint fOrigin;
   const SkImageInfo fInfo;

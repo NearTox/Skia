@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "include/core/SkPictureRecorder.h"
 #include "include/core/SkData.h"
 #include "include/core/SkDrawable.h"
+#include "include/core/SkPictureRecorder.h"
 #include "include/core/SkTypes.h"
 #include "src/core/SkBigPicture.h"
 #include "src/core/SkMiniRecorder.h"

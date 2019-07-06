@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/effects/SkEmbossMaskFilter.h"
 #include "include/core/SkColorPriv.h"
 #include "include/core/SkString.h"
 #include "include/effects/SkBlurMaskFilter.h"
@@ -13,8 +12,9 @@
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
 #include "src/effects/SkEmbossMask.h"
+#include "src/effects/SkEmbossMaskFilter.h"
 
-static void normalize3(SkScalar dst[3], const SkScalar src[3]) noexcept {
+static void normalize3(SkScalar dst[3], const SkScalar src[3]) {
   SkScalar mag = SkScalarSquare(src[0]) + SkScalarSquare(src[1]) + SkScalarSquare(src[2]);
   SkScalar scale = SkScalarInvert(SkScalarSqrt(mag));
 
@@ -65,7 +65,7 @@ SkEmbossMaskFilter::SkEmbossMaskFilter(SkScalar blurSigma, const Light& light)
   SkASSERT(SkScalarsAreFinite(fLight.fDirection, 3));
 }
 
-SkMask::Format SkEmbossMaskFilter::getFormat() const noexcept { return SkMask::k3D_Format; }
+SkMask::Format SkEmbossMaskFilter::getFormat() const { return SkMask::k3D_Format; }
 
 bool SkEmbossMaskFilter::filterMask(
     SkMask* dst, const SkMask& src, const SkMatrix& matrix, SkIPoint* margin) const {

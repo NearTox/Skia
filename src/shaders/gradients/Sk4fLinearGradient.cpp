@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "src/shaders/gradients/Sk4fLinearGradient.h"
 #include "include/core/SkPaint.h"
+#include "src/shaders/gradients/Sk4fLinearGradient.h"
 
 #include <cmath>
 #include <utility>

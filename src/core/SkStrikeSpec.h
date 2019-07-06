@@ -62,8 +62,8 @@ class SkStrikeSpecStorage {
   SkExclusiveStrikePtr findOrCreateExclusiveStrike(
       SkStrikeCache* cache = SkStrikeCache::GlobalStrikeCache()) const;
 
-  SkScalar strikeToSourceRatio() const noexcept { return fStrikeToSourceRatio; }
-  const SkDescriptor& descriptor() const noexcept { return *fAutoDescriptor.getDesc(); }
+  SkScalar strikeToSourceRatio() const { return fStrikeToSourceRatio; }
+  const SkDescriptor& descriptor() const { return *fAutoDescriptor.getDesc(); }
 
  private:
   void commonSetup(

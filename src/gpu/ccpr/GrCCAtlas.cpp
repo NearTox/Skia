@@ -7,7 +7,6 @@
 
 #include "src/gpu/ccpr/GrCCAtlas.h"
 
-#include <atomic>
 #include "include/gpu/GrTexture.h"
 #include "include/private/GrTextureProxy.h"
 #include "src/core/SkIPoint16.h"
@@ -19,13 +18,14 @@
 #include "src/gpu/GrRectanizer_skyline.h"
 #include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/ccpr/GrCCPathCache.h"
+#include <atomic>
 
 class GrCCAtlas::Node {
  public:
   Node(std::unique_ptr<Node> previous, int l, int t, int r, int b)
       : fPrevious(std::move(previous)), fX(l), fY(t), fRectanizer(r - l, b - t) {}
 
-  Node* previous() const noexcept { return fPrevious.get(); }
+  Node* previous() const { return fPrevious.get(); }
 
   bool addRect(int w, int h, SkIPoint16* loc, int maxAtlasSize) {
     // Pad all paths except those that are expected to take up an entire physical texture.
@@ -146,19 +146,19 @@ bool GrCCAtlas::internalPlaceRect(int w, int h, SkIPoint16* loc) {
   return true;
 }
 
-void GrCCAtlas::setFillBatchID(int id) noexcept {
+void GrCCAtlas::setFillBatchID(int id) {
   // This can't be called anymore once makeRenderTargetContext() has been called.
   SkASSERT(!fTextureProxy->isInstantiated());
   fFillBatchID = id;
 }
 
-void GrCCAtlas::setStrokeBatchID(int id) noexcept {
+void GrCCAtlas::setStrokeBatchID(int id) {
   // This can't be called anymore once makeRenderTargetContext() has been called.
   SkASSERT(!fTextureProxy->isInstantiated());
   fStrokeBatchID = id;
 }
 
-static uint32_t next_atlas_unique_id() noexcept {
+static uint32_t next_atlas_unique_id() {
   static std::atomic<uint32_t> nextID;
   return nextID++;
 }

@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "include/ports/SkFontMgr_indirect.h"
 #include "include/core/SkFontMgr.h"
 #include "include/core/SkFontStyle.h"
 #include "include/core/SkRefCnt.h"
@@ -13,6 +12,7 @@
 #include "include/core/SkString.h"
 #include "include/core/SkTypeface.h"
 #include "include/core/SkTypes.h"
+#include "include/ports/SkFontMgr_indirect.h"
 #include "include/ports/SkRemotableFontMgr.h"
 #include "include/private/SkMutex.h"
 #include "include/private/SkOnce.h"
@@ -25,7 +25,7 @@ class SkStyleSet_Indirect : public SkFontStyleSet {
  public:
   /** Takes ownership of the SkRemotableFontIdentitySet. */
   SkStyleSet_Indirect(
-      const SkFontMgr_Indirect* owner, int familyIndex, SkRemotableFontIdentitySet* data) noexcept
+      const SkFontMgr_Indirect* owner, int familyIndex, SkRemotableFontIdentitySet* data)
       : fOwner(SkRef(owner)), fFamilyIndex(familyIndex), fData(data) {}
 
   int count() override { return fData->count(); }
@@ -59,13 +59,13 @@ class SkStyleSet_Indirect : public SkFontStyleSet {
   sk_sp<SkRemotableFontIdentitySet> fData;
 };
 
-int SkFontMgr_Indirect::onCountFamilies() const noexcept { return 0; }
+int SkFontMgr_Indirect::onCountFamilies() const { return 0; }
 
-void SkFontMgr_Indirect::onGetFamilyName(int index, SkString* familyName) const noexcept {
+void SkFontMgr_Indirect::onGetFamilyName(int index, SkString* familyName) const {
   SK_ABORT("Not implemented");
 }
 
-SkFontStyleSet* SkFontMgr_Indirect::onCreateStyleSet(int index) const noexcept {
+SkFontStyleSet* SkFontMgr_Indirect::onCreateStyleSet(int index) const {
   SK_ABORT("Not implemented");
   return nullptr;
 }

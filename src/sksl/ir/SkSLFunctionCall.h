@@ -19,7 +19,7 @@ namespace SkSL {
 struct FunctionCall : public Expression {
   FunctionCall(
       int offset, const Type& type, const FunctionDeclaration& function,
-      std::vector<std::unique_ptr<Expression>> arguments) noexcept
+      std::vector<std::unique_ptr<Expression>> arguments)
       : INHERITED(offset, kFunctionCall_Kind, type),
         fFunction(std::move(function)),
         fArguments(std::move(arguments)) {}

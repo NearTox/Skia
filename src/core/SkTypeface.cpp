@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "include/core/SkTypeface.h"
 #include "include/core/SkFontMetrics.h"
 #include "include/core/SkFontMgr.h"
 #include "include/core/SkStream.h"
+#include "include/core/SkTypeface.h"
 #include "include/private/SkMutex.h"
 #include "include/private/SkOnce.h"
 #include "src/core/SkAdvancedTypefaceMetrics.h"
@@ -26,7 +26,7 @@ SkTypeface::~SkTypeface() {}
 
 #ifdef SK_WHITELIST_SERIALIZED_TYPEFACES
 extern void WhitelistSerializeTypeface(const SkTypeface*, SkWStream*);
-#define SK_TYPEFACE_DELEGATE WhitelistSerializeTypeface
+#  define SK_TYPEFACE_DELEGATE WhitelistSerializeTypeface
 #else
 #define SK_TYPEFACE_DELEGATE nullptr
 #endif
@@ -88,7 +88,7 @@ class SkEmptyTypeface : public SkTypeface {
 
 }  // namespace
 
-SkFontStyle SkTypeface::FromOldStyle(Style oldStyle) noexcept {
+SkFontStyle SkTypeface::FromOldStyle(Style oldStyle) {
   return SkFontStyle(
       (oldStyle & SkTypeface::kBold) ? SkFontStyle::kBold_Weight : SkFontStyle::kNormal_Weight,
       SkFontStyle::kNormal_Width,

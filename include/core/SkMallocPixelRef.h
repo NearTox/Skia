@@ -71,8 +71,7 @@ class SK_API SkMallocPixelRef : public SkPixelRef {
   ReleaseProc fReleaseProc;
   void* fReleaseProcContext;
 
-  SkMallocPixelRef(
-      const SkImageInfo&, void* addr, size_t rb, ReleaseProc proc, void* context) noexcept;
+  SkMallocPixelRef(const SkImageInfo&, void* addr, size_t rb, ReleaseProc proc, void* context);
 
   typedef SkPixelRef INHERITED;
 };

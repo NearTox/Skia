@@ -104,8 +104,8 @@ class SK_API SkGradientShader {
       @param  radius  Must be positive. The radius of the circle for this gradient
       @param  colors  The array[count] of colors, to be distributed between the center and edge of
      the circle
-      @param  pos     May be NULL. The array[count] of SkScalars, or NULL, of the relative
-     position of each corresponding color in the colors array. If this is NULL, the the colors are
+      @param  pos     May be NULL. The array[count] of SkScalars, or NULL, of the relative position
+     of each corresponding color in the colors array. If this is NULL, the the colors are
      distributed evenly between the center and edge of the circle. If this is not null, the values
      must begin with 0, end with 1.0, and intermediate values must be strictly increasing.
       @param  count   Must be >= 2. The number of colors (and pos if not NULL) entries
@@ -126,8 +126,8 @@ class SK_API SkGradientShader {
       @param  radius  Must be positive. The radius of the circle for this gradient
       @param  colors  The array[count] of colors, to be distributed between the center and edge of
      the circle
-      @param  pos     May be NULL. The array[count] of SkScalars, or NULL, of the relative
-     position of each corresponding color in the colors array. If this is NULL, the the colors are
+      @param  pos     May be NULL. The array[count] of SkScalars, or NULL, of the relative position
+     of each corresponding color in the colors array. If this is NULL, the the colors are
      distributed evenly between the center and edge of the circle. If this is not null, the values
      must begin with 0, end with 1.0, and intermediate values must be strictly increasing.
       @param  count   Must be >= 2. The number of colors (and pos if not NULL) entries

@@ -131,7 +131,7 @@ void GrOctoBounds::validateBoundsAreTight(
   float r = fBounds.right(), r45 = fBounds45.right();
   float b = fBounds.bottom(), b45 = fBounds45.bottom();
 
-#define VALIDATE(CODE) validateFn(CODE, __FILE__, __LINE__, #CODE)
+#  define VALIDATE(CODE) validateFn(CODE, __FILE__, __LINE__, #  CODE)
   // Verify diagonals are inside far corners of the dev bounds.
   VALIDATE(l45 >= Get_x45(l, b) - epsilon);
   VALIDATE(t45 >= Get_y45(l, t) - epsilon);
@@ -160,6 +160,6 @@ void GrOctoBounds::validateBoundsAreTight(
   VALIDATE(r >= Get_x(l45, b45) - epsilon);
   VALIDATE(b >= Get_y(l45, t45) - epsilon);
   VALIDATE(b >= Get_y(r45, b45) - epsilon);
-#undef VALIDATE
+#  undef VALIDATE
 }
 #endif

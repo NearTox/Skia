@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/ops/GrDrawPathOp.h"
 #include "include/private/GrRecordingContext.h"
 #include "include/private/SkTemplates.h"
 #include "src/gpu/GrAppliedClip.h"
@@ -13,6 +12,7 @@
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/GrRenderTargetPriv.h"
+#include "src/gpu/ops/GrDrawPathOp.h"
 
 static constexpr GrUserStencilSettings kCoverPass{GrUserStencilSettings::StaticInit<
     0x0000, GrUserStencilTest::kNotEqual, 0xffff, GrUserStencilOp::kZero, GrUserStencilOp::kKeep,

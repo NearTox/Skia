@@ -23,7 +23,7 @@
 
 // This warning triggers false postives way too often in here.
 #if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic ignored "-Wclobbered"
+#  pragma GCC diagnostic ignored "-Wclobbered"
 #endif
 
 extern "C" {

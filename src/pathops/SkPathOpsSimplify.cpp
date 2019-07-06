@@ -158,7 +158,7 @@ bool SimplifyDebug(
 #if DEBUG_DUMP_VERIFY
 #ifndef SK_DEBUG
   const char* testName = "release";
-#endif
+#  endif
   if (SkPathOpsDebug::gDumpOp) {
     SkPathOpsDebug::DumpSimplify(path, testName);
   }

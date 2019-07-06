@@ -21,8 +21,7 @@ namespace SkSL {
 struct ASTFunction : public ASTDeclaration {
   ASTFunction(
       int offset, Modifiers modifiers, std::unique_ptr<ASTType> returnType, StringFragment name,
-      std::vector<std::unique_ptr<ASTParameter>> parameters,
-      std::unique_ptr<ASTBlock> body) noexcept
+      std::vector<std::unique_ptr<ASTParameter>> parameters, std::unique_ptr<ASTBlock> body)
       : INHERITED(offset, kFunction_Kind),
         fModifiers(modifiers),
         fReturnType(std::move(returnType)),

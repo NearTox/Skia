@@ -38,8 +38,8 @@ struct WireTypeface;
 class SkStrikeServer;
 
 struct SkDescriptorMapOperators {
-  size_t operator()(const SkDescriptor* key) const noexcept;
-  bool operator()(const SkDescriptor* lhs, const SkDescriptor* rhs) const noexcept;
+  size_t operator()(const SkDescriptor* key) const;
+  bool operator()(const SkDescriptor* lhs, const SkDescriptor* rhs) const;
 };
 
 template <typename T>
@@ -74,8 +74,8 @@ class SK_API SkTextBlobCacheDiffCanvas : public SkNoDrawCanvas {
   ~SkTextBlobCacheDiffCanvas() override;
 
  protected:
-  SkCanvas::SaveLayerStrategy getSaveLayerStrategy(const SaveLayerRec& rec) noexcept override;
-  bool onDoSaveBehind(const SkRect*) noexcept override;
+  SkCanvas::SaveLayerStrategy getSaveLayerStrategy(const SaveLayerRec& rec) override;
+  bool onDoSaveBehind(const SkRect*) override;
   void onDrawTextBlob(
       const SkTextBlob* blob, SkScalar x, SkScalar y, const SkPaint& paint) override;
 

@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkBitmapController.h"
 #include "include/core/SkBitmap.h"
 #include "include/core/SkMatrix.h"
 #include "include/private/SkTemplates.h"
 #include "src/core/SkArenaAlloc.h"
 #include "src/core/SkBitmapCache.h"
+#include "src/core/SkBitmapController.h"
 #include "src/core/SkBitmapProvider.h"
 #include "src/core/SkMipMap.h"
 

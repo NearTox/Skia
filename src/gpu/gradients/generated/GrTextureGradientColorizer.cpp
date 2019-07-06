@@ -31,22 +31,21 @@ class GrGLSLTextureGradientColorizer : public GrGLSLFragmentProcessor {
   }
 
  private:
-  void onSetData(
-      const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) noexcept override {}
+  void onSetData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) override {
+  }
 };
 GrGLSLFragmentProcessor* GrTextureGradientColorizer::onCreateGLSLInstance() const {
   return new GrGLSLTextureGradientColorizer();
 }
 void GrTextureGradientColorizer::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {}
-bool GrTextureGradientColorizer::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
+bool GrTextureGradientColorizer::onIsEqual(const GrFragmentProcessor& other) const {
   const GrTextureGradientColorizer& that = other.cast<GrTextureGradientColorizer>();
   (void)that;
   if (gradient != that.gradient) return false;
   return true;
 }
-GrTextureGradientColorizer::GrTextureGradientColorizer(
-    const GrTextureGradientColorizer& src) noexcept
+GrTextureGradientColorizer::GrTextureGradientColorizer(const GrTextureGradientColorizer& src)
     : INHERITED(kGrTextureGradientColorizer_ClassID, src.optimizationFlags()),
       gradient(src.gradient) {
   this->setTextureSamplerCnt(1);
@@ -55,6 +54,6 @@ std::unique_ptr<GrFragmentProcessor> GrTextureGradientColorizer::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new GrTextureGradientColorizer(*this));
 }
 const GrFragmentProcessor::TextureSampler& GrTextureGradientColorizer::onTextureSampler(
-    int index) const noexcept {
+    int index) const {
   return IthTextureSampler(index, gradient);
 }

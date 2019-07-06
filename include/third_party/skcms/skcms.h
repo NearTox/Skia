@@ -10,7 +10,7 @@
 // skcms.h contains the entire public API for skcms.
 
 #ifndef SKCMS_API
-#define SKCMS_API
+#  define SKCMS_API
 #endif
 
 #include <stdbool.h>

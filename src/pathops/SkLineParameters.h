@@ -27,7 +27,7 @@
 
 class SkLineParameters {
  public:
-  bool cubicEndPoints(const SkDCubic& pts) noexcept {
+  bool cubicEndPoints(const SkDCubic& pts) {
     int endIndex = 1;
     cubicEndPoints(pts, 0, endIndex);
     if (dy() != 0) {
@@ -67,7 +67,7 @@ class SkLineParameters {
     return true;
   }
 
-  void cubicEndPoints(const SkDCubic& pts, int s, int e) noexcept {
+  void cubicEndPoints(const SkDCubic& pts, int s, int e) {
     fA = pts[s].fY - pts[e].fY;
     fB = pts[e].fX - pts[s].fX;
     fC = pts[s].fX * pts[e].fY - pts[e].fX * pts[s].fY;
@@ -81,13 +81,13 @@ class SkLineParameters {
     return pointDistance(part[2]);
   }
 
-  void lineEndPoints(const SkDLine& pts) noexcept {
+  void lineEndPoints(const SkDLine& pts) {
     fA = pts[0].fY - pts[1].fY;
     fB = pts[1].fX - pts[0].fX;
     fC = pts[0].fX * pts[1].fY - pts[1].fX * pts[0].fY;
   }
 
-  bool quadEndPoints(const SkDQuad& pts) noexcept {
+  bool quadEndPoints(const SkDQuad& pts) {
     quadEndPoints(pts, 0, 1);
     if (dy() != 0) {
       return true;
@@ -106,20 +106,20 @@ class SkLineParameters {
     return true;
   }
 
-  void quadEndPoints(const SkDQuad& pts, int s, int e) noexcept {
+  void quadEndPoints(const SkDQuad& pts, int s, int e) {
     fA = pts[s].fY - pts[e].fY;
     fB = pts[e].fX - pts[s].fX;
     fC = pts[s].fX * pts[e].fY - pts[e].fX * pts[s].fY;
   }
 
-  double quadPart(const SkDQuad& part) noexcept {
+  double quadPart(const SkDQuad& part) {
     quadEndPoints(part);
     return pointDistance(part[2]);
   }
 
-  double normalSquared() const noexcept { return fA * fA + fB * fB; }
+  double normalSquared() const { return fA * fA + fB * fB; }
 
-  bool normalize() noexcept {
+  bool normalize() {
     double normal = sqrt(normalSquared());
     if (approximately_zero(normal)) {
       fA = fB = fC = 0;
@@ -132,7 +132,7 @@ class SkLineParameters {
     return true;
   }
 
-  void cubicDistanceY(const SkDCubic& pts, SkDCubic& distance) const noexcept {
+  void cubicDistanceY(const SkDCubic& pts, SkDCubic& distance) const {
     double oneThird = 1 / 3.0;
     for (int index = 0; index < 4; ++index) {
       distance[index].fX = index * oneThird;
@@ -140,7 +140,7 @@ class SkLineParameters {
     }
   }
 
-  void quadDistanceY(const SkDQuad& pts, SkDQuad& distance) const noexcept {
+  void quadDistanceY(const SkDQuad& pts, SkDQuad& distance) const {
     double oneHalf = 1 / 2.0;
     for (int index = 0; index < 3; ++index) {
       distance[index].fX = index * oneHalf;
@@ -148,20 +148,20 @@ class SkLineParameters {
     }
   }
 
-  double controlPtDistance(const SkDCubic& pts, int index) const noexcept {
+  double controlPtDistance(const SkDCubic& pts, int index) const {
     SkASSERT(index == 1 || index == 2);
     return fA * pts[index].fX + fB * pts[index].fY + fC;
   }
 
-  double controlPtDistance(const SkDQuad& pts) const noexcept {
+  double controlPtDistance(const SkDQuad& pts) const {
     return fA * pts[1].fX + fB * pts[1].fY + fC;
   }
 
-  double pointDistance(const SkDPoint& pt) const noexcept { return fA * pt.fX + fB * pt.fY + fC; }
+  double pointDistance(const SkDPoint& pt) const { return fA * pt.fX + fB * pt.fY + fC; }
 
-  double dx() const noexcept { return fB; }
+  double dx() const { return fB; }
 
-  double dy() const noexcept { return -fA; }
+  double dy() const { return -fA; }
 
  private:
   double fA;

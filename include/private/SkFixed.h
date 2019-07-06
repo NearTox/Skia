@@ -48,7 +48,7 @@ static inline SkFixed SkFloatToFixed_Check(float x) {
   return n32;
 }
 #else
-#define SkFloatToFixed_Check(x) SkFloatToFixed(x)
+#  define SkFloatToFixed_Check(x) SkFloatToFixed(x)
 #endif
 
 #define SkFixedToDouble(x) ((x)*1.52587890625e-5)
@@ -68,20 +68,16 @@ inline SkFixed SkIntToFixed(int n) {
 // Left shifting a negative value has undefined behavior in C, so we cast to unsigned before
 // shifting. Then we force the cast to SkFixed to ensure that the answer is signed (like the
 // debug version).
-#define SkIntToFixed(n) (SkFixed)((unsigned)(n) << 16)
+#  define SkIntToFixed(n) (SkFixed)((unsigned)(n) << 16)
 #endif
 
 #define SkFixedRoundToInt(x) (((x) + SK_FixedHalf) >> 16)
 #define SkFixedCeilToInt(x) (((x) + SK_Fixed1 - 1) >> 16)
 #define SkFixedFloorToInt(x) ((x) >> 16)
 
-static constexpr inline SkFixed SkFixedRoundToFixed(SkFixed x) {
-  return (x + SK_FixedHalf) & 0xFFFF0000;
-}
-static constexpr inline SkFixed SkFixedCeilToFixed(SkFixed x) {
-  return (x + SK_Fixed1 - 1) & 0xFFFF0000;
-}
-static constexpr inline SkFixed SkFixedFloorToFixed(SkFixed x) { return x & 0xFFFF0000; }
+static inline SkFixed SkFixedRoundToFixed(SkFixed x) { return (x + SK_FixedHalf) & 0xFFFF0000; }
+static inline SkFixed SkFixedCeilToFixed(SkFixed x) { return (x + SK_Fixed1 - 1) & 0xFFFF0000; }
+static inline SkFixed SkFixedFloorToFixed(SkFixed x) { return x & 0xFFFF0000; }
 
 #define SkFixedAbs(x) SkAbs32(x)
 #define SkFixedAve(a, b) (((a) + (b)) >> 1)
@@ -90,9 +86,7 @@ static constexpr inline SkFixed SkFixedFloorToFixed(SkFixed x) { return x & 0xFF
 #define SkFixedDiv(numer, denom) \
   SkToS32(SkTPin<int64_t>((SkLeftShift((int64_t)(numer), 16) / (denom)), SK_MinS32, SK_MaxS32))
 
-static constexpr inline SkFixed SkFixedMul(SkFixed a, SkFixed b) {
-  return (SkFixed)((int64_t)a * b >> 16);
-}
+static inline SkFixed SkFixedMul(SkFixed a, SkFixed b) { return (SkFixed)((int64_t)a * b >> 16); }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Platform-specific alternatives to our portable versions.
@@ -109,8 +103,8 @@ SK_ALWAYS_INLINE SkFixed SkFloatToFixed_arm(float x) {
   memcpy(&y, &x, sizeof(y));
   return y;
 }
-#undef SkFloatToFixed
-#define SkFloatToFixed(x) SkFloatToFixed_arm(x)
+#  undef SkFloatToFixed
+#  define SkFloatToFixed(x) SkFloatToFixed_arm(x)
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////

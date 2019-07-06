@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/GrDistanceFieldGenFromVector.h"
 #include "src/core/SkDistanceFieldGen.h"
+#include "src/gpu/GrDistanceFieldGenFromVector.h"
 
 #include "include/core/SkMatrix.h"
 #include "include/gpu/GrConfig.h"

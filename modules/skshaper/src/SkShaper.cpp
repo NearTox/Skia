@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "modules/skshaper/include/SkShaper.h"
 #include "include/core/SkFont.h"
 #include "include/core/SkFontMetrics.h"
 #include "include/core/SkFontMgr.h"
 #include "include/core/SkString.h"
 #include "include/core/SkTypeface.h"
 #include "include/private/SkTFitsIn.h"
+#include "modules/skshaper/include/SkShaper.h"
 #include "src/core/SkMakeUnique.h"
 #include "src/core/SkTextBlobPriv.h"
 #include "src/utils/SkUTF.h"
@@ -97,10 +97,10 @@ class FontMgrRunIterator final : public SkShaper::FontRunIterator {
       }
     }
   }
-  size_t endOfCurrentRun() const noexcept override { return fCurrent - fBegin; }
-  bool atEnd() const noexcept override { return fCurrent == fEnd; }
+  size_t endOfCurrentRun() const override { return fCurrent - fBegin; }
+  bool atEnd() const override { return fCurrent == fEnd; }
 
-  const SkFont& currentFont() const noexcept override { return *fCurrentFont; }
+  const SkFont& currentFont() const override { return *fCurrentFont; }
 
  private:
   char const* fCurrent;
@@ -124,15 +124,15 @@ class StdLanguageRunIterator final : public SkShaper::LanguageRunIterator {
         fBegin(utf8),
         fEnd(fCurrent + utf8Bytes),
         fLanguage(std::locale().name().c_str()) {}
-  void consume() noexcept override {
+  void consume() override {
     // Ideally something like cld2/3 could be used, or user signals.
     SkASSERT(fCurrent < fEnd);
     fCurrent = fEnd;
   }
-  size_t endOfCurrentRun() const noexcept override { return fCurrent - fBegin; }
-  bool atEnd() const noexcept override { return fCurrent == fEnd; }
+  size_t endOfCurrentRun() const override { return fCurrent - fBegin; }
+  bool atEnd() const override { return fCurrent == fEnd; }
 
-  const char* currentLanguage() const noexcept override { return fLanguage.c_str(); }
+  const char* currentLanguage() const override { return fLanguage.c_str(); }
 
  private:
   char const* fCurrent;
@@ -146,7 +146,7 @@ std::unique_ptr<SkShaper::LanguageRunIterator> SkShaper::MakeStdLanguageRunItera
   return skstd::make_unique<StdLanguageRunIterator>(utf8, utf8Bytes);
 }
 
-void SkTextBlobBuilderRunHandler::beginLine() noexcept {
+void SkTextBlobBuilderRunHandler::beginLine() {
   fCurrentPosition = fOffset;
   fMaxRunAscent = 0;
   fMaxRunDescent = 0;
@@ -160,7 +160,7 @@ void SkTextBlobBuilderRunHandler::runInfo(const RunInfo& info) {
   fMaxRunLeading = SkTMax(fMaxRunLeading, metrics.fLeading);
 }
 
-void SkTextBlobBuilderRunHandler::commitRunInfo() noexcept { fCurrentPosition.fY -= fMaxRunAscent; }
+void SkTextBlobBuilderRunHandler::commitRunInfo() { fCurrentPosition.fY -= fMaxRunAscent; }
 
 SkShaper::RunHandler::Buffer SkTextBlobBuilderRunHandler::runBuffer(const RunInfo& info) {
   int glyphCount = SkTFitsIn<int>(info.glyphCount) ? info.glyphCount : INT_MAX;
@@ -178,7 +178,7 @@ SkShaper::RunHandler::Buffer SkTextBlobBuilderRunHandler::runBuffer(const RunInf
   return {runBuffer.glyphs, runBuffer.points(), nullptr, runBuffer.clusters, fCurrentPosition};
 }
 
-void SkTextBlobBuilderRunHandler::commitRunBuffer(const RunInfo& info) noexcept {
+void SkTextBlobBuilderRunHandler::commitRunBuffer(const RunInfo& info) {
   SkASSERT(0 <= fClusterOffset);
   for (int i = 0; i < fGlyphCount; ++i) {
     SkASSERT(fClusters[i] >= (unsigned)fClusterOffset);
@@ -186,7 +186,7 @@ void SkTextBlobBuilderRunHandler::commitRunBuffer(const RunInfo& info) noexcept 
   }
   fCurrentPosition += info.fAdvance;
 }
-void SkTextBlobBuilderRunHandler::commitLine() noexcept {
+void SkTextBlobBuilderRunHandler::commitLine() {
   fOffset += {0, fMaxRunDescent + fMaxRunLeading - fMaxRunAscent};
 }
 

@@ -5,15 +5,15 @@
  * found in the LICENSE file
  */
 
-#include "src/core/SkSpecialImage.h"
-#include <atomic>
 #include "include/core/SkBitmap.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkImage.h"
 #include "src/core/SkBitmapCache.h"
+#include "src/core/SkSpecialImage.h"
 #include "src/core/SkSpecialSurface.h"
 #include "src/core/SkSurfacePriv.h"
 #include "src/image/SkImage_Base.h"
+#include <atomic>
 
 #if SK_SUPPORT_GPU
 #include "include/gpu/GrContext.h"

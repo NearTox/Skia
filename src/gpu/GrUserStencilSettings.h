@@ -186,19 +186,19 @@ struct GrUserStencilSettings {
   GrUserStencilSettings() = delete;
   GrUserStencilSettings(const GrUserStencilSettings&) = delete;
 
-  uint16_t flags(bool hasStencilClip) const noexcept {
+  uint16_t flags(bool hasStencilClip) const {
     return fFrontFlags[hasStencilClip] & fBackFlags[hasStencilClip];
   }
-  bool isDisabled(bool hasStencilClip) const noexcept {
+  bool isDisabled(bool hasStencilClip) const {
     return this->flags(hasStencilClip) & kDisabled_StencilFlag;
   }
-  bool testAlwaysPasses(bool hasStencilClip) const noexcept {
+  bool testAlwaysPasses(bool hasStencilClip) const {
     return this->flags(hasStencilClip) & kTestAlwaysPasses_StencilFlag;
   }
-  bool isTwoSided(bool hasStencilClip) const noexcept {
+  bool isTwoSided(bool hasStencilClip) const {
     return !(this->flags(hasStencilClip) & kSingleSided_StencilFlag);
   }
-  bool usesWrapOp(bool hasStencilClip) const noexcept {
+  bool usesWrapOp(bool hasStencilClip) const {
     return !(this->flags(hasStencilClip) & kNoWrapOps_StencilFlag);
   }
 
@@ -209,7 +209,7 @@ struct GrUserStencilSettings {
 
   static const GrUserStencilSettings& kUnused;
 
-  bool isUnused() const noexcept { return this == &kUnused; }
+  bool isUnused() const { return this == &kUnused; }
 };
 
 template <GrUserStencilTest Test, GrUserStencilOp PassOp, GrUserStencilOp FailOp>

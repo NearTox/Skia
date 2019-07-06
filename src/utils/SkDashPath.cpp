@@ -12,10 +12,10 @@
 
 #include <utility>
 
-static constexpr inline int is_even(int x) noexcept { return !(x & 1); }
+static inline int is_even(int x) { return !(x & 1); }
 
 static SkScalar find_first_interval(
-    const SkScalar intervals[], SkScalar phase, int32_t* index, int count) noexcept {
+    const SkScalar intervals[], SkScalar phase, int32_t* index, int count) {
   for (int i = 0; i < count; ++i) {
     SkScalar gap = intervals[i];
     if (phase > gap || (phase == gap && gap)) {
@@ -35,7 +35,7 @@ static SkScalar find_first_interval(
 
 void SkDashPath::CalcDashParameters(
     SkScalar phase, const SkScalar intervals[], int32_t count, SkScalar* initialDashLength,
-    int32_t* initialDashIndex, SkScalar* intervalLength, SkScalar* adjustedPhase) noexcept {
+    int32_t* initialDashIndex, SkScalar* intervalLength, SkScalar* adjustedPhase) {
   SkScalar len = 0;
   for (int i = 0; i < count; i++) {
     len += intervals[i];
@@ -71,7 +71,7 @@ void SkDashPath::CalcDashParameters(
   SkASSERT(*initialDashIndex >= 0 && *initialDashIndex < count);
 }
 
-static void outset_for_stroke(SkRect* rect, const SkStrokeRec& rec) noexcept {
+static void outset_for_stroke(SkRect* rect, const SkStrokeRec& rec) {
   SkScalar radius = SkScalarHalf(rec.getWidth());
   if (0 == radius) {
     radius = SK_Scalar1;  // hairlines
@@ -87,13 +87,13 @@ static void outset_for_stroke(SkRect* rect, const SkStrokeRec& rec) noexcept {
 // SkPoint::Distance() computes a non-zero length.
 // Offsets SK_ScalarNearlyZero or smaller create empty paths when Iter measures length.
 // Large values are scaled by SK_ScalarNearlyZero so significant bits change.
-static void adjust_zero_length_line(SkPoint pts[2]) noexcept {
+static void adjust_zero_length_line(SkPoint pts[2]) {
   SkASSERT(pts[0] == pts[1]);
   pts[1].fX += SkTMax(1.001f, pts[1].fX) * SK_ScalarNearlyZero;
 }
 
 static bool clip_line(
-    SkPoint pts[2], const SkRect& bounds, SkScalar intervalLength, SkScalar priorPhase) noexcept {
+    SkPoint pts[2], const SkRect& bounds, SkScalar intervalLength, SkScalar priorPhase) {
   SkVector dxy = pts[1] - pts[0];
 
   // only horizontal or vertical lines
@@ -148,7 +148,7 @@ static bool clip_line(
   return true;
 }
 
-static bool contains_inclusive(const SkRect& rect, const SkPoint& pt) noexcept {
+static bool contains_inclusive(const SkRect& rect, const SkPoint& pt) {
   return rect.fLeft <= pt.fX && pt.fX <= rect.fRight && rect.fTop <= pt.fY && pt.fY <= rect.fBottom;
 }
 
@@ -158,7 +158,7 @@ static bool contains_inclusive(const SkRect& rect, const SkPoint& pt) noexcept {
 // If the numbers are very small, the optimization may return the wrong result
 // because the multiply may generate a zero where the simple compare does not.
 // For this reason the assert does not fire when all three numbers are near zero.
-static constexpr bool between(SkScalar a, SkScalar b, SkScalar c) noexcept {
+static bool between(SkScalar a, SkScalar b, SkScalar c) {
   SkASSERT(
       ((a <= b && b <= c) || (a >= b && b >= c)) == ((a - b) * (c - b) <= 0) ||
       (SkScalarNearlyZero(a) && SkScalarNearlyZero(b) && SkScalarNearlyZero(c)));
@@ -446,7 +446,7 @@ bool SkDashPath::FilterDashPath(
       intervalLength);
 }
 
-bool SkDashPath::ValidDashPath(SkScalar phase, const SkScalar intervals[], int32_t count) noexcept {
+bool SkDashPath::ValidDashPath(SkScalar phase, const SkScalar intervals[], int32_t count) {
   if (count < 2 || !SkIsAlign2(count)) {
     return false;
   }

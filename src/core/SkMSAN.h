@@ -20,9 +20,9 @@ void __msan_unpoison(const volatile void*, size_t);
 // the blame for use of uninitialized data belongs further up the call stack.
 static inline void sk_msan_assert_initialized(const void* begin, const void* end) {
 #if defined(__has_feature)
-#if __has_feature(memory_sanitizer)
+#  if __has_feature(memory_sanitizer)
   __msan_check_mem_is_initialized(begin, (const char*)end - (const char*)begin);
-#endif
+#  endif
 #endif
 }
 
@@ -31,9 +31,9 @@ static inline void sk_msan_assert_initialized(const void* begin, const void* end
 static inline void sk_msan_mark_initialized(const void* begin, const void* end, const char* skbug) {
   SkASSERT(skbug && 0 != strcmp(skbug, ""));
 #if defined(__has_feature)
-#if __has_feature(memory_sanitizer)
+#  if __has_feature(memory_sanitizer)
   __msan_unpoison(begin, (const char*)end - (const char*)begin);
-#endif
+#  endif
 #endif
 }
 

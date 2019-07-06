@@ -30,12 +30,12 @@ class GrSurfacePriv {
   bool hasPendingRead() const { return fSurface->hasPendingRead(); }
   bool hasPendingWrite() const { return fSurface->hasPendingWrite(); }
   bool hasPendingIO() const { return fSurface->hasPendingIO(); }
-  bool hasUniqueRef() const noexcept { return fSurface->internalHasUniqueRef(); }
+  bool hasUniqueRef() const { return fSurface->internalHasUniqueRef(); }
 
-  GrInternalSurfaceFlags flags() const noexcept { return fSurface->fSurfaceFlags; }
+  GrInternalSurfaceFlags flags() const { return fSurface->fSurfaceFlags; }
 
  private:
-  constexpr explicit GrSurfacePriv(GrSurface* surface) noexcept : fSurface(surface) {}
+  explicit GrSurfacePriv(GrSurface* surface) : fSurface(surface) {}
   GrSurfacePriv(const GrSurfacePriv&);             // unimpl
   GrSurfacePriv& operator=(const GrSurfacePriv&);  // unimpl
 
@@ -48,9 +48,9 @@ class GrSurfacePriv {
   friend class GrSurface;  // to construct/copy this type.
 };
 
-inline GrSurfacePriv GrSurface::surfacePriv() noexcept { return GrSurfacePriv(this); }
+inline GrSurfacePriv GrSurface::surfacePriv() { return GrSurfacePriv(this); }
 
-inline const GrSurfacePriv GrSurface::surfacePriv() const noexcept {
+inline const GrSurfacePriv GrSurface::surfacePriv() const {
   return GrSurfacePriv(const_cast<GrSurface*>(this));
 }
 

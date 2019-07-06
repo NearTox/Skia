@@ -4,15 +4,15 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "src/pathops/SkPathOpsConic.h"
 #include "src/pathops/SkIntersections.h"
 #include "src/pathops/SkLineParameters.h"
+#include "src/pathops/SkPathOpsConic.h"
 #include "src/pathops/SkPathOpsCubic.h"
 #include "src/pathops/SkPathOpsQuad.h"
 #include "src/pathops/SkPathOpsRect.h"
 
 // cribbed from the float version in SkGeometry.cpp
-static void conic_deriv_coeff(const double src[], SkScalar w, double coeff[3]) noexcept {
+static void conic_deriv_coeff(const double src[], SkScalar w, double coeff[3]) {
   const double P20 = src[4] - src[0];
   const double P10 = src[2] - src[0];
   const double wP10 = w * P10;
@@ -21,13 +21,13 @@ static void conic_deriv_coeff(const double src[], SkScalar w, double coeff[3]) n
   coeff[2] = wP10;
 }
 
-static double conic_eval_tan(const double coord[], SkScalar w, double t) noexcept {
+static double conic_eval_tan(const double coord[], SkScalar w, double t) {
   double coeff[3];
   conic_deriv_coeff(coord, w, coeff);
   return t * (t * coeff[0] + coeff[1]) + coeff[2];
 }
 
-int SkDConic::FindExtrema(const double src[], SkScalar w, double t[1]) noexcept {
+int SkDConic::FindExtrema(const double src[], SkScalar w, double t[1]) {
   double coeff[3];
   conic_deriv_coeff(src, w, coeff);
 
@@ -45,7 +45,7 @@ int SkDConic::FindExtrema(const double src[], SkScalar w, double t[1]) noexcept 
   return 0;
 }
 
-SkDVector SkDConic::dxdyAtT(double t) const noexcept {
+SkDVector SkDConic::dxdyAtT(double t) const {
   SkDVector result = {conic_eval_tan(&fPts[0].fX, fWeight, t),
                       conic_eval_tan(&fPts[0].fY, fWeight, t)};
   if (result.fX == 0 && result.fY == 0) {
@@ -59,7 +59,7 @@ SkDVector SkDConic::dxdyAtT(double t) const noexcept {
   return result;
 }
 
-static double conic_eval_numerator(const double src[], SkScalar w, double t) noexcept {
+static double conic_eval_numerator(const double src[], SkScalar w, double t) {
   SkASSERT(src);
   SkASSERT(t >= 0 && t <= 1);
   double src2w = src[2] * w;
@@ -69,18 +69,18 @@ static double conic_eval_numerator(const double src[], SkScalar w, double t) noe
   return (A * t + B) * t + C;
 }
 
-static constexpr double conic_eval_denominator(SkScalar w, double t) noexcept {
+static double conic_eval_denominator(SkScalar w, double t) {
   double B = 2 * (w - 1);
   double C = 1;
   double A = -B;
   return (A * t + B) * t + C;
 }
 
-bool SkDConic::hullIntersects(const SkDCubic& cubic, bool* isLinear) const noexcept {
+bool SkDConic::hullIntersects(const SkDCubic& cubic, bool* isLinear) const {
   return cubic.hullIntersects(*this, isLinear);
 }
 
-SkDPoint SkDConic::ptAtT(double t) const noexcept {
+SkDPoint SkDConic::ptAtT(double t) const {
   if (t == 0) {
     return fPts[0];
   }
@@ -115,7 +115,7 @@ SkDPoint SkDConic::ptAtT(double t) const noexcept {
     Thus, w is the ratio of the distance from the mid of end points to the on-curve point, and the
     distance of the on-curve point to the control point.
  */
-SkDConic SkDConic::subDivide(double t1, double t2) const noexcept {
+SkDConic SkDConic::subDivide(double t1, double t2) const {
   double ax, ay, az;
   if (t1 == 0) {
     ax = fPts[0].fX;
@@ -161,7 +161,7 @@ SkDConic SkDConic::subDivide(double t1, double t2) const noexcept {
 }
 
 SkDPoint SkDConic::subDivide(
-    const SkDPoint& a, const SkDPoint& c, double t1, double t2, SkScalar* weight) const noexcept {
+    const SkDPoint& a, const SkDPoint& c, double t1, double t2, SkScalar* weight) const {
   SkDConic chopped = this->subDivide(t1, t2);
   *weight = chopped.fWeight;
   return chopped[1];
@@ -171,12 +171,12 @@ int SkTConic::intersectRay(SkIntersections* i, const SkDLine& line) const {
   return i->intersectRay(fConic, line);
 }
 
-bool SkTConic::hullIntersects(const SkDQuad& quad, bool* isLinear) const noexcept {
+bool SkTConic::hullIntersects(const SkDQuad& quad, bool* isLinear) const {
   return quad.hullIntersects(fConic, isLinear);
 }
 
-bool SkTConic::hullIntersects(const SkDCubic& cubic, bool* isLinear) const noexcept {
+bool SkTConic::hullIntersects(const SkDCubic& cubic, bool* isLinear) const {
   return cubic.hullIntersects(fConic, isLinear);
 }
 
-void SkTConic::setBounds(SkDRect* rect) const noexcept { rect->setBounds(fConic); }
+void SkTConic::setBounds(SkDRect* rect) const { rect->setBounds(fConic); }

@@ -20,21 +20,21 @@ class GrStencilAttachment : public GrGpuResource {
     // TODO: allow SB to be purged and detach itself from rts
   }
 
-  int width() const noexcept { return fWidth; }
-  int height() const noexcept { return fHeight; }
-  int bits() const noexcept { return fBits; }
-  int numSamples() const noexcept { return fSampleCnt; }
-  bool isDirty() const noexcept { return fIsDirty; }
+  int width() const { return fWidth; }
+  int height() const { return fHeight; }
+  int bits() const { return fBits; }
+  int numSamples() const { return fSampleCnt; }
+  bool isDirty() const { return fIsDirty; }
 
-  void cleared() noexcept { fIsDirty = false; }
+  void cleared() { fIsDirty = false; }
 
   // We create a unique stencil buffer at each width, height and sampleCnt and share it for
   // all render targets that require a stencil with those params.
   static void ComputeSharedStencilAttachmentKey(
-      int width, int height, int sampleCnt, GrUniqueKey* key) noexcept;
+      int width, int height, int sampleCnt, GrUniqueKey* key);
 
  protected:
-  GrStencilAttachment(GrGpu* gpu, int width, int height, int bits, int sampleCnt) noexcept
+  GrStencilAttachment(GrGpu* gpu, int width, int height, int bits, int sampleCnt)
       : INHERITED(gpu),
         fWidth(width),
         fHeight(height),
@@ -43,7 +43,7 @@ class GrStencilAttachment : public GrGpuResource {
         fIsDirty(true) {}
 
  private:
-  const char* getResourceType() const noexcept override { return "Stencil"; }
+  const char* getResourceType() const override { return "Stencil"; }
 
   int fWidth;
   int fHeight;

@@ -27,13 +27,13 @@ class SK_API SkFontMgr_Indirect : public SkFontMgr {
   // TODO: The SkFontMgr is only used for createFromStream/File/Data.
   // In the future these calls should be broken out into their own interface
   // with a name like SkFontRenderer.
-  SkFontMgr_Indirect(sk_sp<SkFontMgr> impl, sk_sp<SkRemotableFontMgr> proxy) noexcept
+  SkFontMgr_Indirect(sk_sp<SkFontMgr> impl, sk_sp<SkRemotableFontMgr> proxy)
       : fImpl(std::move(impl)), fProxy(std::move(proxy)) {}
 
  protected:
-  int onCountFamilies() const noexcept override;
-  void onGetFamilyName(int index, SkString* familyName) const noexcept override;
-  SkFontStyleSet* onCreateStyleSet(int index) const noexcept override;
+  int onCountFamilies() const override;
+  void onGetFamilyName(int index, SkString* familyName) const override;
+  SkFontStyleSet* onCreateStyleSet(int index) const override;
 
   SkFontStyleSet* onMatchFamily(const char familyName[]) const override;
 
@@ -64,9 +64,9 @@ class SK_API SkFontMgr_Indirect : public SkFontMgr {
     uint32_t fTtcIndex;     // key2
     SkTypeface* fTypeface;  // value: weak ref to typeface
 
-    DataEntry() noexcept {}
+    DataEntry() {}
 
-    DataEntry(DataEntry&& that) noexcept
+    DataEntry(DataEntry&& that)
         : fDataId(that.fDataId), fTtcIndex(that.fTtcIndex), fTypeface(that.fTypeface) {
       SkDEBUGCODE(that.fDataId = SkFontIdentity::kInvalidDataId);
       SkDEBUGCODE(that.fTtcIndex = 0xbbadbeef);

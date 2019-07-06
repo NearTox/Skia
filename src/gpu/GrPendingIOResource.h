@@ -45,11 +45,11 @@ class GrPendingIOResource : SkNoncopyable {
     fResource = resource;
   }
 
-  explicit operator bool() const noexcept { return SkToBool(fResource); }
+  explicit operator bool() const { return SkToBool(fResource); }
 
   bool operator==(const GrPendingIOResource& other) const { return fResource == other.fResource; }
 
-  T* get() const noexcept { return fResource; }
+  T* get() const { return fResource; }
   T* operator*() const { return *fResource; }
   T* operator->() const { return fResource; }
 

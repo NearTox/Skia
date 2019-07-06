@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/ops/GrAAConvexTessellator.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkPath.h"
 #include "include/core/SkPoint.h"
 #include "include/core/SkString.h"
 #include "src/gpu/GrPathUtils.h"
+#include "src/gpu/ops/GrAAConvexTessellator.h"
 
 // Next steps:
 //  add an interactive sample app slide
@@ -33,8 +33,7 @@ static const SkScalar kRoundCapThreshold = 0.8f;
 static const SkScalar kCurveConnectionThreshold = 0.8f;
 
 static bool intersect(
-    const SkPoint& p0, const SkPoint& n0, const SkPoint& p1, const SkPoint& n1,
-    SkScalar* t) noexcept {
+    const SkPoint& p0, const SkPoint& n0, const SkPoint& p1, const SkPoint& n1, SkScalar* t) {
   const SkPoint v = p1 - p0;
   SkScalar perpDot = n0.fX * n1.fY - n0.fY * n1.fX;
   if (SkScalarNearlyZero(perpDot)) {
@@ -48,19 +47,19 @@ static bool intersect(
 // This is a special case version of intersect where we have the vector
 // perpendicular to the second line rather than the vector parallel to it.
 static SkScalar perp_intersect(
-    const SkPoint& p0, const SkPoint& n0, const SkPoint& p1, const SkPoint& perp) noexcept {
+    const SkPoint& p0, const SkPoint& n0, const SkPoint& p1, const SkPoint& perp) {
   const SkPoint v = p1 - p0;
   SkScalar perpDot = n0.dot(perp);
   return v.dot(perp) / perpDot;
 }
 
-static bool duplicate_pt(const SkPoint& p0, const SkPoint& p1) noexcept {
+static bool duplicate_pt(const SkPoint& p0, const SkPoint& p1) {
   SkScalar distSq = SkPointPriv::DistanceToSqd(p0, p1);
   return distSq < kCloseSqd;
 }
 
 static bool points_are_colinear_and_b_is_middle(
-    const SkPoint& a, const SkPoint& b, const SkPoint& c) noexcept {
+    const SkPoint& a, const SkPoint& b, const SkPoint& c) {
   // 'area' is twice the area of the triangle with corners a, b, and c.
   SkScalar area = a.fX * (b.fY - c.fY) + b.fX * (c.fY - a.fY) + c.fX * (a.fY - b.fY);
   if (SkScalarAbs(area) >= 2 * kCloseSqd) {
@@ -84,7 +83,7 @@ int GrAAConvexTessellator::addPt(
   return index;
 }
 
-void GrAAConvexTessellator::popLastPt() noexcept {
+void GrAAConvexTessellator::popLastPt() {
   this->validate();
 
   fPts.pop();
@@ -95,7 +94,7 @@ void GrAAConvexTessellator::popLastPt() noexcept {
   this->validate();
 }
 
-void GrAAConvexTessellator::popFirstPtShuffle() noexcept {
+void GrAAConvexTessellator::popFirstPtShuffle() {
   this->validate();
 
   fPts.removeShuffle(0);
@@ -107,7 +106,7 @@ void GrAAConvexTessellator::popFirstPtShuffle() noexcept {
 }
 
 void GrAAConvexTessellator::updatePt(
-    int index, const SkPoint& pt, SkScalar depth, SkScalar coverage) noexcept {
+    int index, const SkPoint& pt, SkScalar depth, SkScalar coverage) {
   this->validate();
   SkASSERT(fMovable[index]);
 
@@ -125,7 +124,7 @@ void GrAAConvexTessellator::addTri(int i0, int i1, int i2) {
   *fIndices.push() = i2;
 }
 
-void GrAAConvexTessellator::rewind() noexcept {
+void GrAAConvexTessellator::rewind() {
   fPts.rewind();
   fCoverages.rewind();
   fMovable.rewind();
@@ -319,7 +318,7 @@ bool GrAAConvexTessellator::tessellate(const SkMatrix& m, const SkPath& path) {
   return true;
 }
 
-SkScalar GrAAConvexTessellator::computeDepthFromEdge(int edgeIdx, const SkPoint& p) const noexcept {
+SkScalar GrAAConvexTessellator::computeDepthFromEdge(int edgeIdx, const SkPoint& p) const {
   SkASSERT(edgeIdx < fNorms.count());
 
   SkPoint v = p - fPts[edgeIdx];
@@ -331,7 +330,7 @@ SkScalar GrAAConvexTessellator::computeDepthFromEdge(int edgeIdx, const SkPoint&
 // along the 'bisector' from the 'startIdx'-th point.
 bool GrAAConvexTessellator::computePtAlongBisector(
     int startIdx, const SkVector& bisector, int edgeIdx, SkScalar desiredDepth,
-    SkPoint* result) const noexcept {
+    SkPoint* result) const {
   const SkPoint& norm = fNorms[edgeIdx];
 
   // First find the point where the edge and the bisector intersect
@@ -456,7 +455,7 @@ bool GrAAConvexTessellator::extractFromPath(const SkMatrix& m, const SkPath& pat
   return true;
 }
 
-GrAAConvexTessellator::Ring* GrAAConvexTessellator::getNextRing(Ring* lastRing) noexcept {
+GrAAConvexTessellator::Ring* GrAAConvexTessellator::getNextRing(Ring* lastRing) {
 #if GR_AA_CONVEX_TESSELLATOR_VIZ
   Ring* ring = *fRings.push() = new Ring;
   ring->setReserve(fInitialRing.numPts());
@@ -630,7 +629,7 @@ void GrAAConvexTessellator::terminate(const Ring& ring) {
 
 static SkScalar compute_coverage(
     SkScalar depth, SkScalar initialDepth, SkScalar initialCoverage, SkScalar targetDepth,
-    SkScalar targetCoverage) noexcept {
+    SkScalar targetCoverage) {
   if (SkScalarNearlyEqual(initialDepth, targetDepth)) {
     return targetCoverage;
   }
@@ -795,7 +794,7 @@ bool GrAAConvexTessellator::createInsetRing(
   return done;
 }
 
-void GrAAConvexTessellator::validate() const noexcept {
+void GrAAConvexTessellator::validate() const {
   SkASSERT(fPts.count() == fMovable.count());
   SkASSERT(fPts.count() == fCoverages.count());
   SkASSERT(fPts.count() == fCurveState.count());
@@ -810,7 +809,7 @@ void GrAAConvexTessellator::Ring::init(const GrAAConvexTessellator& tess) {
 }
 
 void GrAAConvexTessellator::Ring::init(
-    const SkTDArray<SkVector>& norms, const SkTDArray<SkVector>& bisectors) noexcept {
+    const SkTDArray<SkVector>& norms, const SkTDArray<SkVector>& bisectors) {
   for (int i = 0; i < fPts.count(); ++i) {
     fPts[i].fNorm = norms[i];
     fPts[i].fBisector = bisectors[i];

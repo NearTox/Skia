@@ -23,17 +23,17 @@ class SK_API GrSurface : public GrGpuResource {
   /**
    * Retrieves the width of the surface.
    */
-  int width() const noexcept { return fWidth; }
+  int width() const { return fWidth; }
 
   /**
    * Retrieves the height of the surface.
    */
-  int height() const noexcept { return fHeight; }
+  int height() const { return fHeight; }
 
   /**
    * Helper that gets the width and height of the surface as a bounding rectangle.
    */
-  SkRect getBoundsRect() const noexcept { return SkRect::MakeIWH(this->width(), this->height()); }
+  SkRect getBoundsRect() const { return SkRect::MakeIWH(this->width(), this->height()); }
 
   /**
    * Retrieves the pixel config specified when the surface was created.
@@ -41,7 +41,7 @@ class SK_API GrSurface : public GrGpuResource {
    * if client asked us to render to a target that has a pixel
    * config that isn't equivalent with one of our configs.
    */
-  GrPixelConfig config() const noexcept { return fConfig; }
+  GrPixelConfig config() const { return fConfig; }
 
   virtual GrBackendFormat backendFormat() const = 0;
 
@@ -62,18 +62,18 @@ class SK_API GrSurface : public GrGpuResource {
   /**
    * @return the texture associated with the surface, may be null.
    */
-  virtual GrTexture* asTexture() noexcept { return nullptr; }
-  virtual const GrTexture* asTexture() const noexcept { return nullptr; }
+  virtual GrTexture* asTexture() { return nullptr; }
+  virtual const GrTexture* asTexture() const { return nullptr; }
 
   /**
    * @return the render target underlying this surface, may be null.
    */
-  virtual GrRenderTarget* asRenderTarget() noexcept { return nullptr; }
-  virtual const GrRenderTarget* asRenderTarget() const noexcept { return nullptr; }
+  virtual GrRenderTarget* asRenderTarget() { return nullptr; }
+  virtual const GrRenderTarget* asRenderTarget() const { return nullptr; }
 
   /** Access methods that are only to be used within Skia code. */
-  inline GrSurfacePriv surfacePriv() noexcept;
-  inline const GrSurfacePriv surfacePriv() const noexcept;
+  inline GrSurfacePriv surfacePriv();
+  inline const GrSurfacePriv surfacePriv() const;
 
   static size_t WorstCaseSize(const GrSurfaceDesc& desc, bool useNextPow2 = false);
   static size_t ComputeSize(
@@ -84,26 +84,22 @@ class SK_API GrSurface : public GrGpuResource {
    * The pixel values of this surface cannot be modified (e.g. doesn't support write pixels or
    * MIP map level regen).
    */
-  bool readOnly() const noexcept { return fSurfaceFlags & GrInternalSurfaceFlags::kReadOnly; }
+  bool readOnly() const { return fSurfaceFlags & GrInternalSurfaceFlags::kReadOnly; }
 
  protected:
-  void setHasMixedSamples() noexcept {
+  void setHasMixedSamples() {
     SkASSERT(this->asRenderTarget());
     fSurfaceFlags |= GrInternalSurfaceFlags::kMixedSampled;
   }
-  bool hasMixedSamples() const noexcept {
-    return fSurfaceFlags & GrInternalSurfaceFlags::kMixedSampled;
-  }
+  bool hasMixedSamples() const { return fSurfaceFlags & GrInternalSurfaceFlags::kMixedSampled; }
 
-  void setGLRTFBOIDIs0() noexcept {
+  void setGLRTFBOIDIs0() {
     SkASSERT(this->asRenderTarget());
     fSurfaceFlags |= GrInternalSurfaceFlags::kGLRTFBOIDIs0;
   }
-  bool glRTFBOIDis0() const noexcept {
-    return fSurfaceFlags & GrInternalSurfaceFlags::kGLRTFBOIDIs0;
-  }
+  bool glRTFBOIDis0() const { return fSurfaceFlags & GrInternalSurfaceFlags::kGLRTFBOIDIs0; }
 
-  void setReadOnly() noexcept {
+  void setReadOnly() {
     SkASSERT(!this->asRenderTarget());
     fSurfaceFlags |= GrInternalSurfaceFlags::kReadOnly;
   }
@@ -116,7 +112,7 @@ class SK_API GrSurface : public GrGpuResource {
   // Provides access to methods that should be public within Skia code.
   friend class GrSurfacePriv;
 
-  GrSurface(GrGpu* gpu, const GrSurfaceDesc& desc) noexcept
+  GrSurface(GrGpu* gpu, const GrSurfaceDesc& desc)
       : INHERITED(gpu),
         fConfig(desc.fConfig),
         fWidth(desc.fWidth),
@@ -132,13 +128,13 @@ class SK_API GrSurface : public GrGpuResource {
   void onAbandon() override;
 
  private:
-  const char* getResourceType() const noexcept override { return "Surface"; }
+  const char* getResourceType() const override { return "Surface"; }
 
   // Unmanaged backends (e.g. Vulkan) may want to specially handle the release proc in order to
   // ensure it isn't called until GPU work related to the resource is completed.
   virtual void onSetRelease(sk_sp<GrRefCntedCallback>) {}
 
-  void invokeReleaseProc() noexcept {
+  void invokeReleaseProc() {
     // Depending on the ref count of fReleaseHelper this may or may not actually trigger the
     // ReleaseProc to be called.
     fReleaseHelper.reset();

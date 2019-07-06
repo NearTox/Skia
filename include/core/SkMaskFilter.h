@@ -53,9 +53,9 @@ class SK_API SkMaskFilter : public SkFlattenable {
    */
   sk_sp<SkMaskFilter> makeWithMatrix(const SkMatrix&) const;
 
-  static SkFlattenable::Type GetFlattenableType() noexcept { return kSkMaskFilter_Type; }
+  static SkFlattenable::Type GetFlattenableType() { return kSkMaskFilter_Type; }
 
-  SkFlattenable::Type getFlattenableType() const noexcept override { return kSkMaskFilter_Type; }
+  SkFlattenable::Type getFlattenableType() const override { return kSkMaskFilter_Type; }
 
   static sk_sp<SkMaskFilter> Deserialize(
       const void* data, size_t size, const SkDeserialProcs* procs = nullptr) {

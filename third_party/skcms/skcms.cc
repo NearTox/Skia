@@ -6,30 +6,30 @@
  */
 
 #include "skcms.h"
+#include "skcms_internal.h"
 #include <assert.h>
 #include <float.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
-#include "skcms_internal.h"
 
 #if defined(__ARM_NEON)
-#include <arm_neon.h>
+#  include <arm_neon.h>
 #elif defined(__SSE__)
-#include <immintrin.h>
+#  include <immintrin.h>
 
-#if defined(__clang__)
+#  if defined(__clang__)
 // That #include <immintrin.h> is usually enough, but Clang's headers
 // "helpfully" skip including the whole kitchen sink when _MSC_VER is
 // defined, because lots of programs on Windows would include that and
 // it'd be a lot slower.  But we want all those headers included so we
 // can use their features after runtime checks later.
-#include <avx2intrin.h>
-#include <avx512dqintrin.h>
-#include <avx512fintrin.h>
-#include <avxintrin.h>
-#include <smmintrin.h>
-#endif
+#    include <smmintrin.h>
+#    include <avxintrin.h>
+#    include <avx2intrin.h>
+#    include <avx512fintrin.h>
+#    include <avx512dqintrin.h>
+#  endif
 #endif
 
 // sizeof(x) will return size_t, which is 32-bit on some machines and 64-bit on others.
@@ -1339,9 +1339,9 @@ skcms_Matrix3x3 skcms_Matrix3x3_concat(const skcms_Matrix3x3* A, const skcms_Mat
 }
 
 #if defined(__clang__) || defined(__GNUC__)
-#define small_memcpy __builtin_memcpy
+#  define small_memcpy __builtin_memcpy
 #else
-#define small_memcpy memcpy
+#  define small_memcpy memcpy
 #endif
 
 static float log2f_(float x) {
@@ -1384,14 +1384,9 @@ float skcms_TransferFunction_eval(const skcms_TransferFunction* tf, float x) {
 }
 
 #if defined(__clang__)
-[
-        [clang::no_sanitize("float-divide-by-zero")]]  // Checked for by tf_is_valid() on the way
-                                                       // out.
+[[clang::no_sanitize("float-divide-by-zero")]]  // Checked for by tf_is_valid() on the way out.
 #endif
-                                                       bool
-                                                       skcms_TransferFunction_invert(
-                                                               const skcms_TransferFunction* src,
-                                                               skcms_TransferFunction* dst) {
+bool skcms_TransferFunction_invert(const skcms_TransferFunction* src, skcms_TransferFunction* dst) {
     if (!tf_is_valid(src)) {
         return false;
     }
@@ -1790,27 +1785,27 @@ using Vec = typename VecHelper<N, T>::V;
 namespace baseline {
 #if defined(SKCMS_PORTABLE) || !(defined(__clang__) || defined(__GNUC__)) || \
     (defined(__EMSCRIPTEN_major__) && !defined(__wasm_simd128__))
-#define N 1
+#  define N 1
 template <typename T>
 using V = T;
 using Color = float;
 #elif defined(__AVX512F__)
-#define N 16
+#  define N 16
 template <typename T>
 using V = Vec<N, T>;
 using Color = float;
 #elif defined(__AVX__)
-#define N 8
+#  define N 8
 template <typename T>
 using V = Vec<N, T>;
 using Color = float;
 #elif defined(__ARM_FEATURE_FP16_VECTOR_ARITHMETIC) && defined(SKCMS_OPT_INTO_NEON_FP16)
-#define N 8
+#  define N 8
 template <typename T>
 using V = Vec<N, T>;
 using Color = _Float16;
 #else
-#define N 4
+#  define N 4
 template <typename T>
 using V = Vec<N, T>;
 using Color = float;
@@ -1826,121 +1821,119 @@ using Color = float;
      (!defined(__clang__) && defined(__GNUC__))) &&                         \
     defined(__x86_64__)
 
-#if !defined(__AVX2__)
-#if defined(__clang__)
-#pragma clang attribute push(__attribute__((target("avx2,f16c"))), apply_to = function)
-#elif defined(__GNUC__)
-#pragma GCC push_options
-#pragma GCC target("avx2,f16c")
-#endif
+#  if !defined(__AVX2__)
+#    if defined(__clang__)
+#      pragma clang attribute push(__attribute__((target("avx2,f16c"))), apply_to = function)
+#    elif defined(__GNUC__)
+#      pragma GCC push_options
+#      pragma GCC target("avx2,f16c")
+#    endif
 
 namespace hsw {
-#define USING_AVX
-#define USING_AVX_F16C
-#define USING_AVX2
-#define N 8
+#    define USING_AVX
+#    define USING_AVX_F16C
+#    define USING_AVX2
+#    define N 8
 template <typename T>
 using V = Vec<N, T>;
 using Color = float;
 
-#include "src/Transform_inl.h"
+#    include "src/Transform_inl.h"
 
 // src/Transform_inl.h will undefine USING_* for us.
-#undef N
+#    undef N
 }  // namespace hsw
 
-#if defined(__clang__)
-#pragma clang attribute pop
-#elif defined(__GNUC__)
-#pragma GCC pop_options
-#endif
+#    if defined(__clang__)
+#      pragma clang attribute pop
+#    elif defined(__GNUC__)
+#      pragma GCC pop_options
+#    endif
 
-#define TEST_FOR_HSW
-#endif
+#    define TEST_FOR_HSW
+#  endif
 
-#if !defined(__AVX512F__)
-#if defined(__clang__)
-#pragma clang attribute push(                                                   \
-        __attribute__((target("avx512f,avx512dq,avx512cd,avx512bw,avx512vl"))), \
-        apply_to = function)
-#elif defined(__GNUC__)
-#pragma GCC push_options
-#pragma GCC target("avx512f,avx512dq,avx512cd,avx512bw,avx512vl")
-#endif
+#  if !defined(__AVX512F__)
+#    if defined(__clang__)
+#      pragma clang attribute push(                                               \
+          __attribute__((target("avx512f,avx512dq,avx512cd,avx512bw,avx512vl"))), \
+          apply_to = function)
+#    elif defined(__GNUC__)
+#      pragma GCC push_options
+#      pragma GCC target("avx512f,avx512dq,avx512cd,avx512bw,avx512vl")
+#    endif
 
 namespace skx {
-#define USING_AVX512F
-#define N 16
+#    define USING_AVX512F
+#    define N 16
 template <typename T>
 using V = Vec<N, T>;
 using Color = float;
 
-#include "src/Transform_inl.h"
+#    include "src/Transform_inl.h"
 
 // src/Transform_inl.h will undefine USING_* for us.
-#undef N
+#    undef N
 }  // namespace skx
 
-#if defined(__clang__)
-#pragma clang attribute pop
-#elif defined(__GNUC__)
-#pragma GCC pop_options
-#endif
+#    if defined(__clang__)
+#      pragma clang attribute pop
+#    elif defined(__GNUC__)
+#      pragma GCC pop_options
+#    endif
 
-#define TEST_FOR_SKX
-#endif
+#    define TEST_FOR_SKX
+#  endif
 
-#if defined(TEST_FOR_HSW) || defined(TEST_FOR_SKX)
+#  if defined(TEST_FOR_HSW) || defined(TEST_FOR_SKX)
 enum class CpuType { None, HSW, SKX };
 static CpuType cpu_type() {
-    static const CpuType type = [] {
-        // See http://www.sandpile.org/x86/cpuid.htm
+  static const CpuType type = [] {
+    // See http://www.sandpile.org/x86/cpuid.htm
 
-        // First, a basic cpuid(1) lets us check prerequisites for HSW, SKX.
-        uint32_t eax, ebx, ecx, edx;
-        __asm__ __volatile__("cpuid" : "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx) : "0"(1), "2"(0));
-        if ((edx & (1u << 25)) &&  // SSE
-            (edx & (1u << 26)) &&  // SSE2
-            (ecx & (1u << 0)) &&   // SSE3
-            (ecx & (1u << 9)) &&   // SSSE3
-            (ecx & (1u << 12)) &&  // FMA (N.B. not used, avoided even)
-            (ecx & (1u << 19)) &&  // SSE4.1
-            (ecx & (1u << 20)) &&  // SSE4.2
-            (ecx & (1u << 26)) &&  // XSAVE
-            (ecx & (1u << 27)) &&  // OSXSAVE
-            (ecx & (1u << 28)) &&  // AVX
-            (ecx & (1u << 29))) {  // F16C
+    // First, a basic cpuid(1) lets us check prerequisites for HSW, SKX.
+    uint32_t eax, ebx, ecx, edx;
+    __asm__ __volatile__("cpuid" : "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx) : "0"(1), "2"(0));
+    if ((edx & (1u << 25)) &&  // SSE
+        (edx & (1u << 26)) &&  // SSE2
+        (ecx & (1u << 0)) &&   // SSE3
+        (ecx & (1u << 9)) &&   // SSSE3
+        (ecx & (1u << 12)) &&  // FMA (N.B. not used, avoided even)
+        (ecx & (1u << 19)) &&  // SSE4.1
+        (ecx & (1u << 20)) &&  // SSE4.2
+        (ecx & (1u << 26)) &&  // XSAVE
+        (ecx & (1u << 27)) &&  // OSXSAVE
+        (ecx & (1u << 28)) &&  // AVX
+        (ecx & (1u << 29))) {  // F16C
 
-            // Call cpuid(7) to check for AVX2 and AVX-512 bits.
-            __asm__ __volatile__("cpuid"
-                                 : "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx)
-                                 : "0"(7), "2"(0));
-            // eax from xgetbv(0) will tell us whether XMM, YMM, and ZMM state is saved.
-            uint32_t xcr0, dont_need_edx;
-            __asm__ __volatile__("xgetbv" : "=a"(xcr0), "=d"(dont_need_edx) : "c"(0));
+      // Call cpuid(7) to check for AVX2 and AVX-512 bits.
+      __asm__ __volatile__("cpuid" : "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx) : "0"(7), "2"(0));
+      // eax from xgetbv(0) will tell us whether XMM, YMM, and ZMM state is saved.
+      uint32_t xcr0, dont_need_edx;
+      __asm__ __volatile__("xgetbv" : "=a"(xcr0), "=d"(dont_need_edx) : "c"(0));
 
-            if ((xcr0 & (1u << 1)) &&  // XMM register state saved?
-                (xcr0 & (1u << 2)) &&  // YMM register state saved?
-                (ebx & (1u << 5))) {   // AVX2
-                // At this point we're at least HSW.  Continue checking for SKX.
-                if ((xcr0 & (1u << 5)) &&  // Opmasks state saved?
-                    (xcr0 & (1u << 6)) &&  // First 16 ZMM registers saved?
-                    (xcr0 & (1u << 7)) &&  // High 16 ZMM registers saved?
-                    (ebx & (1u << 16)) &&  // AVX512F
-                    (ebx & (1u << 17)) &&  // AVX512DQ
-                    (ebx & (1u << 28)) &&  // AVX512CD
-                    (ebx & (1u << 30)) &&  // AVX512BW
-                    (ebx & (1u << 31))) {  // AVX512VL
-                    return CpuType::SKX;
-                }
-                return CpuType::HSW;
-            }
+      if ((xcr0 & (1u << 1)) &&  // XMM register state saved?
+          (xcr0 & (1u << 2)) &&  // YMM register state saved?
+          (ebx & (1u << 5))) {   // AVX2
+        // At this point we're at least HSW.  Continue checking for SKX.
+        if ((xcr0 & (1u << 5)) &&  // Opmasks state saved?
+            (xcr0 & (1u << 6)) &&  // First 16 ZMM registers saved?
+            (xcr0 & (1u << 7)) &&  // High 16 ZMM registers saved?
+            (ebx & (1u << 16)) &&  // AVX512F
+            (ebx & (1u << 17)) &&  // AVX512DQ
+            (ebx & (1u << 28)) &&  // AVX512CD
+            (ebx & (1u << 30)) &&  // AVX512BW
+            (ebx & (1u << 31))) {  // AVX512VL
+          return CpuType::SKX;
         }
-        return CpuType::None;
-    }();
-    return type;
+        return CpuType::HSW;
+      }
+    }
+    return CpuType::None;
+  }();
+  return type;
 }
-#endif
+#  endif
 
 #endif
 
@@ -2258,25 +2251,16 @@ bool skcms_TransformWithPalette(
   auto run = baseline::run_program;
 #if defined(TEST_FOR_HSW)
     switch (cpu_type()) {
-        case CpuType::None:
-            break;
-        case CpuType::HSW:
-            run = hsw::run_program;
-            break;
-        case CpuType::SKX:
-            run = hsw::run_program;
-            break;
+      case CpuType::None: break;
+      case CpuType::HSW: run = hsw::run_program; break;
+      case CpuType::SKX: run = hsw::run_program; break;
     }
 #endif
 #if defined(TEST_FOR_SKX)
     switch (cpu_type()) {
-        case CpuType::None:
-            break;
-        case CpuType::HSW:
-            break;
-        case CpuType::SKX:
-            run = skx::run_program;
-            break;
+      case CpuType::None: break;
+      case CpuType::HSW: break;
+      case CpuType::SKX: run = skx::run_program; break;
     }
 #endif
     run(program, arguments, (const char*)src, (char*)dst, n, src_bpp, dst_bpp);

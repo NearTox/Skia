@@ -32,21 +32,21 @@ class GrGLSLRadialGradientLayout : public GrGLSLFragmentProcessor {
   }
 
  private:
-  void onSetData(
-      const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) noexcept override {}
+  void onSetData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) override {
+  }
 };
 GrGLSLFragmentProcessor* GrRadialGradientLayout::onCreateGLSLInstance() const {
   return new GrGLSLRadialGradientLayout();
 }
 void GrRadialGradientLayout::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {}
-bool GrRadialGradientLayout::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
+bool GrRadialGradientLayout::onIsEqual(const GrFragmentProcessor& other) const {
   const GrRadialGradientLayout& that = other.cast<GrRadialGradientLayout>();
   (void)that;
   if (gradientMatrix != that.gradientMatrix) return false;
   return true;
 }
-GrRadialGradientLayout::GrRadialGradientLayout(const GrRadialGradientLayout& src) noexcept
+GrRadialGradientLayout::GrRadialGradientLayout(const GrRadialGradientLayout& src)
     : INHERITED(kGrRadialGradientLayout_ClassID, src.optimizationFlags()),
       fCoordTransform0(src.fCoordTransform0),
       gradientMatrix(src.gradientMatrix) {

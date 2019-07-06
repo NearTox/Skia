@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "src/atlastext/SkInternalAtlasTextContext.h"
 #include "include/atlastext/SkAtlasTextContext.h"
 #include "include/atlastext/SkAtlasTextRenderer.h"
 #include "include/gpu/GrContext.h"
+#include "src/atlastext/SkInternalAtlasTextContext.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/text/GrStrikeCache.h"
 

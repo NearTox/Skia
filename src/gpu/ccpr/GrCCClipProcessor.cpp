@@ -33,12 +33,11 @@ std::unique_ptr<GrFragmentProcessor> GrCCClipProcessor::clone() const {
       fClipPath, MustCheckBounds(fMustCheckBounds), fOverrideFillType);
 }
 
-void GrCCClipProcessor::onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const
-    noexcept {
+void GrCCClipProcessor::onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const {
   b->add32((fOverrideFillType << 1) | (int)fMustCheckBounds);
 }
 
-bool GrCCClipProcessor::onIsEqual(const GrFragmentProcessor& fp) const noexcept {
+bool GrCCClipProcessor::onIsEqual(const GrFragmentProcessor& fp) const {
   const GrCCClipProcessor& that = fp.cast<GrCCClipProcessor>();
   // Each ClipPath path has a unique atlas proxy, so hasSameSamplersAndAccesses should have
   // already weeded out FPs with different ClipPaths.

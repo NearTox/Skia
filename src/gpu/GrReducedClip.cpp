@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/GrReducedClip.h"
 #include "include/private/GrColor.h"
 #include "src/core/SkClipOpPriv.h"
 #include "src/gpu/GrAppliedClip.h"
@@ -14,6 +13,7 @@
 #include "src/gpu/GrFixedClip.h"
 #include "src/gpu/GrPathRenderer.h"
 #include "src/gpu/GrRecordingContextPriv.h"
+#include "src/gpu/GrReducedClip.h"
 #include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/GrRenderTargetContextPriv.h"
 #include "src/gpu/GrShape.h"
@@ -945,9 +945,10 @@ bool GrReducedClip::drawStencilClipMask(
 std::unique_ptr<GrFragmentProcessor> GrReducedClip::finishAndDetachAnalyticFPs(
     GrCoverageCountingPathRenderer* ccpr, uint32_t opListID, int rtWidth, int rtHeight) {
   // Make sure finishAndDetachAnalyticFPs hasn't been called already.
-  SkDEBUGCODE(for (const auto& fp : fAnalyticFPs) { SkASSERT(fp); });
+  SkDEBUGCODE(for (const auto& fp
+                   : fAnalyticFPs) { SkASSERT(fp); })
 
-  if (!fCCPRClipPaths.empty()) {
+      if (!fCCPRClipPaths.empty()) {
     fAnalyticFPs.reserve(fAnalyticFPs.count() + fCCPRClipPaths.count());
     for (const SkPath& ccprClipPath : fCCPRClipPaths) {
       SkASSERT(ccpr);

@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/shaders/SkComposeShader.h"
 #include "include/core/SkColorFilter.h"
 #include "include/core/SkString.h"
 #include "include/private/SkColorData.h"
@@ -15,6 +14,7 @@
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
 #include "src/shaders/SkColorShader.h"
+#include "src/shaders/SkComposeShader.h"
 
 sk_sp<SkShader> SkShaders::Blend(SkBlendMode mode, sk_sp<SkShader> dst, sk_sp<SkShader> src) {
   switch (mode) {

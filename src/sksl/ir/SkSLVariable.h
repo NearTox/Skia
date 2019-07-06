@@ -27,7 +27,7 @@ struct Variable : public Symbol {
 
   Variable(
       int offset, Modifiers modifiers, StringFragment name, const Type& type, Storage storage,
-      Expression* initialValue = nullptr) noexcept
+      Expression* initialValue = nullptr)
       : INHERITED(offset, kVariable_Kind, name),
         fModifiers(modifiers),
         fType(type),
@@ -48,7 +48,7 @@ struct Variable : public Symbol {
     return fModifiers.description() + fType.fName + " " + fName;
   }
 
-  bool dead() const noexcept {
+  bool dead() const {
     if (fModifiers.fFlags &
         (Modifiers::kIn_Flag | Modifiers::kOut_Flag | Modifiers::kUniform_Flag)) {
       return false;

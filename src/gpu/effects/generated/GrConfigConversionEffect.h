@@ -140,18 +140,18 @@ class GrConfigConversionEffect : public GrFragmentProcessor {
     std::unique_ptr<GrFragmentProcessor> fpPipeline[] = {std::move(fp), std::move(ccFP)};
     return GrFragmentProcessor::RunInSeries(fpPipeline, 2);
   }
-  GrConfigConversionEffect(const GrConfigConversionEffect& src) noexcept;
+  GrConfigConversionEffect(const GrConfigConversionEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const noexcept override { return "ConfigConversionEffect"; }
+  const char* name() const override { return "ConfigConversionEffect"; }
   PMConversion pmConversion;
 
  private:
-  GrConfigConversionEffect(PMConversion pmConversion) noexcept
+  GrConfigConversionEffect(PMConversion pmConversion)
       : INHERITED(kGrConfigConversionEffect_ClassID, kNone_OptimizationFlags),
         pmConversion(pmConversion) {}
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
-  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

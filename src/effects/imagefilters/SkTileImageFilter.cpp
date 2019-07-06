@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "include/effects/SkTileImageFilter.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkImage.h"
 #include "include/core/SkMatrix.h"
@@ -13,6 +12,7 @@
 #include "include/core/SkShader.h"
 #include "include/core/SkSurface.h"
 #include "include/effects/SkOffsetImageFilter.h"
+#include "include/effects/SkTileImageFilter.h"
 #include "src/core/SkImageFilterPriv.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkSpecialImage.h"

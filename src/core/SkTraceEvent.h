@@ -10,18 +10,18 @@
 #ifndef SkTraceEvent_DEFINED
 #define SkTraceEvent_DEFINED
 
-#include <atomic>
 #include "include/utils/SkEventTracer.h"
 #include "src/core/SkTraceEventCommon.h"
+#include <atomic>
 
 ////////////////////////////////////////////////////////////////////////////////
 // Implementation specific tracing API definitions.
 
 // Makes it easier to add traces with a simple TRACE_EVENT0("skia", TRACE_FUNC).
 #if defined(_MSC_VER)
-#define TRACE_FUNC __FUNCSIG__
+#  define TRACE_FUNC __FUNCSIG__
 #else
-#define TRACE_FUNC __PRETTY_FUNCTION__
+#  define TRACE_FUNC __PRETTY_FUNCTION__
 #endif
 
 // By default, const char* argument values are assumed to have long-lived scope
@@ -158,29 +158,21 @@ const uint64_t kNoEventId = 0;
 // collide when the same pointer is used on different processes.
 class TraceID {
  public:
-  TraceID(const void* id, unsigned char* flags) noexcept
+  TraceID(const void* id, unsigned char* flags)
       : data_(static_cast<uint64_t>(reinterpret_cast<uintptr_t>(id))) {
     *flags |= TRACE_EVENT_FLAG_MANGLE_ID;
   }
-  TraceID(uint64_t id, unsigned char* flags) noexcept : data_(id) { (void)flags; }
-  TraceID(unsigned int id, unsigned char* flags) noexcept : data_(id) { (void)flags; }
-  TraceID(unsigned short id, unsigned char* flags) noexcept : data_(id) { (void)flags; }
-  TraceID(unsigned char id, unsigned char* flags) noexcept : data_(id) { (void)flags; }
-  TraceID(long long id, unsigned char* flags) noexcept : data_(static_cast<uint64_t>(id)) {
-    (void)flags;
-  }
-  TraceID(long id, unsigned char* flags) noexcept : data_(static_cast<uint64_t>(id)) {
-    (void)flags;
-  }
-  TraceID(int id, unsigned char* flags) noexcept : data_(static_cast<uint64_t>(id)) { (void)flags; }
-  TraceID(short id, unsigned char* flags) noexcept : data_(static_cast<uint64_t>(id)) {
-    (void)flags;
-  }
-  TraceID(signed char id, unsigned char* flags) noexcept : data_(static_cast<uint64_t>(id)) {
-    (void)flags;
-  }
+  TraceID(uint64_t id, unsigned char* flags) : data_(id) { (void)flags; }
+  TraceID(unsigned int id, unsigned char* flags) : data_(id) { (void)flags; }
+  TraceID(unsigned short id, unsigned char* flags) : data_(id) { (void)flags; }
+  TraceID(unsigned char id, unsigned char* flags) : data_(id) { (void)flags; }
+  TraceID(long long id, unsigned char* flags) : data_(static_cast<uint64_t>(id)) { (void)flags; }
+  TraceID(long id, unsigned char* flags) : data_(static_cast<uint64_t>(id)) { (void)flags; }
+  TraceID(int id, unsigned char* flags) : data_(static_cast<uint64_t>(id)) { (void)flags; }
+  TraceID(short id, unsigned char* flags) : data_(static_cast<uint64_t>(id)) { (void)flags; }
+  TraceID(signed char id, unsigned char* flags) : data_(static_cast<uint64_t>(id)) { (void)flags; }
 
-  uint64_t data() const noexcept { return data_; }
+  uint64_t data() const { return data_; }
 
  private:
   uint64_t data_;
@@ -199,8 +191,8 @@ union TraceValueUnion {
 // Simple container for const char* that should be copied instead of retained.
 class TraceStringWithCopy {
  public:
-  explicit TraceStringWithCopy(const char* str) noexcept : str_(str) {}
-  operator const char*() const noexcept { return str_; }
+  explicit TraceStringWithCopy(const char* str) : str_(str) {}
+  operator const char*() const { return str_; }
 
  private:
   const char* str_;
@@ -209,20 +201,18 @@ class TraceStringWithCopy {
 // Define SetTraceValue for each allowed type. It stores the type and
 // value in the return arguments. This allows this API to avoid declaring any
 // structures so that it is portable to third_party libraries.
-#define INTERNAL_DECLARE_SET_TRACE_VALUE(actual_type, union_member, value_type_id) \
-  static inline void SetTraceValue(                                                \
-      actual_type arg, unsigned char* type, uint64_t* value) noexcept {            \
-    TraceValueUnion type_value;                                                    \
-    type_value.union_member = arg;                                                 \
-    *type = value_type_id;                                                         \
-    *value = type_value.as_uint;                                                   \
+#define INTERNAL_DECLARE_SET_TRACE_VALUE(actual_type, union_member, value_type_id)          \
+  static inline void SetTraceValue(actual_type arg, unsigned char* type, uint64_t* value) { \
+    TraceValueUnion type_value;                                                             \
+    type_value.union_member = arg;                                                          \
+    *type = value_type_id;                                                                  \
+    *value = type_value.as_uint;                                                            \
   }
 // Simpler form for int types that can be safely casted.
-#define INTERNAL_DECLARE_SET_TRACE_VALUE_INT(actual_type, value_type_id) \
-  static inline void SetTraceValue(                                      \
-      actual_type arg, unsigned char* type, uint64_t* value) noexcept {  \
-    *type = value_type_id;                                               \
-    *value = static_cast<uint64_t>(arg);                                 \
+#define INTERNAL_DECLARE_SET_TRACE_VALUE_INT(actual_type, value_type_id)                    \
+  static inline void SetTraceValue(actual_type arg, unsigned char* type, uint64_t* value) { \
+    *type = value_type_id;                                                                  \
+    *value = static_cast<uint64_t>(arg);                                                    \
   }
 
 INTERNAL_DECLARE_SET_TRACE_VALUE_INT(uint64_t, TRACE_VALUE_TYPE_UINT)
@@ -252,7 +242,7 @@ INTERNAL_DECLARE_SET_TRACE_VALUE(
 
 static inline SkEventTracer::Handle AddTraceEvent(
     char phase, const uint8_t* category_group_enabled, const char* name, uint64_t id,
-    unsigned char flags) noexcept {
+    unsigned char flags) {
   return TRACE_EVENT_API_ADD_TRACE_EVENT(
       phase, category_group_enabled, name, id, kZeroNumArgs, nullptr, nullptr, nullptr, flags);
 }
@@ -288,7 +278,7 @@ static inline SkEventTracer::Handle AddTraceEvent(
 class TRACE_EVENT_API_CLASS_EXPORT ScopedTracer {
  public:
   // Note: members of data_ intentionally left uninitialized. See Initialize.
-  ScopedTracer() noexcept : p_data_(nullptr) {}
+  ScopedTracer() : p_data_(nullptr) {}
 
   ~ScopedTracer() {
     if (p_data_ && *data_.category_group_enabled)
@@ -297,8 +287,7 @@ class TRACE_EVENT_API_CLASS_EXPORT ScopedTracer {
   }
 
   void Initialize(
-      const uint8_t* category_group_enabled, const char* name,
-      SkEventTracer::Handle event_handle) noexcept {
+      const uint8_t* category_group_enabled, const char* name, SkEventTracer::Handle event_handle) {
     data_.category_group_enabled = category_group_enabled;
     data_.name = name;
     data_.event_handle = event_handle;

@@ -7,8 +7,6 @@
 
 #include "src/core/SkAAClip.h"
 
-#include <atomic>
-#include <utility>
 #include "include/core/SkPath.h"
 #include "include/private/SkColorData.h"
 #include "include/private/SkMacros.h"
@@ -17,6 +15,8 @@
 #include "src/core/SkRectPriv.h"
 #include "src/core/SkScan.h"
 #include "src/utils/SkUTF.h"
+#include <atomic>
+#include <utility>
 
 class AutoAAClipValidate {
  public:
@@ -28,9 +28,9 @@ class AutoAAClipValidate {
 };
 
 #ifdef SK_DEBUG
-#define AUTO_AACLIP_VALIDATE(clip) AutoAAClipValidate acv(clip)
+#  define AUTO_AACLIP_VALIDATE(clip) AutoAAClipValidate acv(clip)
 #else
-#define AUTO_AACLIP_VALIDATE(clip)
+#  define AUTO_AACLIP_VALIDATE(clip)
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////

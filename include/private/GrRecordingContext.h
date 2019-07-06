@@ -24,8 +24,8 @@ class SK_API GrRecordingContext : public GrImageContext {
   ~GrRecordingContext() override;
 
   // Provides access to functions that aren't part of the public API.
-  GrRecordingContextPriv priv() noexcept;
-  const GrRecordingContextPriv priv() const noexcept;
+  GrRecordingContextPriv priv();
+  const GrRecordingContextPriv priv() const;
 
  protected:
   friend class GrRecordingContextPriv;  // for hidden functions
@@ -41,7 +41,7 @@ class SK_API GrRecordingContext : public GrImageContext {
   sk_sp<GrOpMemoryPool> refOpMemoryPool();
   GrOpMemoryPool* opMemoryPool();
 
-  GrStrikeCache* getGrStrikeCache() noexcept { return fStrikeCache.get(); }
+  GrStrikeCache* getGrStrikeCache() { return fStrikeCache.get(); }
   GrTextBlobCache* getTextBlobCache();
   const GrTextBlobCache* getTextBlobCache() const;
 
@@ -83,9 +83,9 @@ class SK_API GrRecordingContext : public GrImageContext {
       GrSurfaceOrigin origin = kBottomLeft_GrSurfaceOrigin,
       const SkSurfaceProps* surfaceProps = nullptr, SkBudgeted budgeted = SkBudgeted::kYes);
 
-  GrAuditTrail* auditTrail() noexcept { return &fAuditTrail; }
+  GrAuditTrail* auditTrail() { return &fAuditTrail; }
 
-  GrRecordingContext* asRecordingContext() noexcept override { return this; }
+  GrRecordingContext* asRecordingContext() override { return this; }
 
  private:
   std::unique_ptr<GrDrawingManager> fDrawingManager;

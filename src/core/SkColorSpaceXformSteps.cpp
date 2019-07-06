@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkColorSpaceXformSteps.h"
 #include "include/third_party/skcms/skcms.h"
 #include "src/core/SkColorSpacePriv.h"
+#include "src/core/SkColorSpaceXformSteps.h"
 #include "src/core/SkRasterPipeline.h"
 
 // TODO(mtklein): explain the logic of this file

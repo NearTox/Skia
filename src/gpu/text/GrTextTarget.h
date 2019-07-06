@@ -24,11 +24,11 @@ class GrTextTarget {
  public:
   virtual ~GrTextTarget() = default;
 
-  int width() const noexcept { return fWidth; }
+  int width() const { return fWidth; }
 
-  int height() const noexcept { return fHeight; }
+  int height() const { return fHeight; }
 
-  const GrColorSpaceInfo& colorSpaceInfo() const noexcept { return fColorSpaceInfo; }
+  const GrColorSpaceInfo& colorSpaceInfo() const { return fColorSpaceInfo; }
 
   virtual void addDrawOp(const GrClip&, std::unique_ptr<GrAtlasTextOp> op) = 0;
 
@@ -42,7 +42,7 @@ class GrTextTarget {
   virtual SkGlyphRunListPainter* glyphPainter() = 0;
 
  protected:
-  GrTextTarget(int width, int height, const GrColorSpaceInfo& colorSpaceInfo) noexcept
+  GrTextTarget(int width, int height, const GrColorSpaceInfo& colorSpaceInfo)
       : fWidth(width), fHeight(height), fColorSpaceInfo(colorSpaceInfo) {}
 
  private:

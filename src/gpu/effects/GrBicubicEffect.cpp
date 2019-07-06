@@ -17,7 +17,7 @@ class GrGLBicubicEffect : public GrGLSLFragmentProcessor {
   void emitCode(EmitArgs&) override;
 
   static inline void GenKey(
-      const GrProcessor& effect, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
+      const GrProcessor& effect, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
     const GrBicubicEffect& bicubicEffect = effect.cast<GrBicubicEffect>();
     b->add32(GrTextureDomain::GLDomain::DomainKey(bicubicEffect.domain()));
     uint32_t bidir = bicubicEffect.direction() == GrBicubicEffect::Direction::kXY ? 1 : 0;
@@ -169,7 +169,7 @@ GrBicubicEffect::GrBicubicEffect(
   this->setTextureSamplerCnt(1);
 }
 
-GrBicubicEffect::GrBicubicEffect(const GrBicubicEffect& that) noexcept
+GrBicubicEffect::GrBicubicEffect(const GrBicubicEffect& that)
     : INHERITED(kGrBicubicEffect_ClassID, that.optimizationFlags()),
       fCoordTransform(that.fCoordTransform),
       fDomain(that.fDomain),
@@ -181,7 +181,7 @@ GrBicubicEffect::GrBicubicEffect(const GrBicubicEffect& that) noexcept
 }
 
 void GrBicubicEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   GrGLBicubicEffect::GenKey(*this, caps, b);
 }
 
@@ -189,7 +189,7 @@ GrGLSLFragmentProcessor* GrBicubicEffect::onCreateGLSLInstance() const {
   return new GrGLBicubicEffect;
 }
 
-bool GrBicubicEffect::onIsEqual(const GrFragmentProcessor& sBase) const noexcept {
+bool GrBicubicEffect::onIsEqual(const GrFragmentProcessor& sBase) const {
   const GrBicubicEffect& s = sBase.cast<GrBicubicEffect>();
   return fDomain == s.fDomain && fDirection == s.fDirection && fAlphaType == s.fAlphaType;
 }
@@ -216,8 +216,7 @@ std::unique_ptr<GrFragmentProcessor> GrBicubicEffect::TestCreate(GrProcessorTest
 
 //////////////////////////////////////////////////////////////////////////////
 
-bool GrBicubicEffect::ShouldUseBicubic(
-    const SkMatrix& matrix, GrSamplerState::Filter* filterMode) noexcept {
+bool GrBicubicEffect::ShouldUseBicubic(const SkMatrix& matrix, GrSamplerState::Filter* filterMode) {
   if (matrix.isIdentity()) {
     *filterMode = GrSamplerState::Filter::kNearest;
     return false;

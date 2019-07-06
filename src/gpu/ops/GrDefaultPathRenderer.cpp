@@ -33,7 +33,7 @@ GrDefaultPathRenderer::GrDefaultPathRenderer() {}
 
 #define STENCIL_OFF 0  // Always disable stencil (even when needed)
 
-static inline bool single_pass_shape(const GrShape& shape) noexcept {
+static inline bool single_pass_shape(const GrShape& shape) {
 #if STENCIL_OFF
   return true;
 #else
@@ -52,7 +52,7 @@ static inline bool single_pass_shape(const GrShape& shape) noexcept {
 }
 
 GrPathRenderer::StencilSupport GrDefaultPathRenderer::onGetStencilSupport(
-    const GrShape& shape) const noexcept {
+    const GrShape& shape) const {
   if (single_pass_shape(shape)) {
     return GrPathRenderer::kNoRestriction_StencilSupport;
   } else {
@@ -163,7 +163,7 @@ class PathGeoBuilder {
     }
   }
 
-  static bool PathHasMultipleSubpaths(const SkPath& path) noexcept {
+  static bool PathHasMultipleSubpaths(const SkPath& path) {
     bool first = true;
 
     SkPath::Iter iter(path, false);
@@ -184,15 +184,15 @@ class PathGeoBuilder {
    *  Derived properties
    *  TODO: Cache some of these for better performance, rather than re-computing?
    */
-  bool isIndexed() const noexcept {
+  bool isIndexed() const {
     return GrPrimitiveType::kLines == fPrimitiveType ||
            GrPrimitiveType::kTriangles == fPrimitiveType;
   }
-  bool isHairline() const noexcept {
+  bool isHairline() const {
     return GrPrimitiveType::kLines == fPrimitiveType ||
            GrPrimitiveType::kLineStrip == fPrimitiveType;
   }
-  int indexScale() const noexcept {
+  int indexScale() const {
     switch (fPrimitiveType) {
       case GrPrimitiveType::kLines: return 2;
       case GrPrimitiveType::kTriangles: return 3;
@@ -200,7 +200,7 @@ class PathGeoBuilder {
     }
   }
 
-  uint16_t currentIndex() const noexcept { return fCurVert - fVertices; }
+  uint16_t currentIndex() const { return fCurVert - fVertices; }
 
   // Allocate vertex and (possibly) index buffers
   void allocNewBuffers() {
@@ -232,7 +232,7 @@ class PathGeoBuilder {
     fSubpathIndexStart = 0;
   }
 
-  void appendCountourEdgeIndices(uint16_t edgeV0Idx) noexcept {
+  void appendCountourEdgeIndices(uint16_t edgeV0Idx) {
     // When drawing lines we're appending line segments along the countour. When applying the
     // other fill rules we're drawing triangle fans around the start of the current (sub)path.
     if (!this->isHairline()) {
@@ -327,7 +327,7 @@ class DefaultPathOp final : public GrMeshDrawOp {
         devBounds, stencilSettings);
   }
 
-  const char* name() const noexcept override { return "DefaultPathOp"; }
+  const char* name() const override { return "DefaultPathOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override { fHelper.visitProxies(func); }
 
@@ -347,8 +347,7 @@ class DefaultPathOp final : public GrMeshDrawOp {
   DefaultPathOp(
       const Helper::MakeArgs& helperArgs, const SkPMColor4f& color, const SkPath& path,
       SkScalar tolerance, uint8_t coverage, const SkMatrix& viewMatrix, bool isHairline,
-      GrAAType aaType, const SkRect& devBounds,
-      const GrUserStencilSettings* stencilSettings) noexcept
+      GrAAType aaType, const SkRect& devBounds, const GrUserStencilSettings* stencilSettings)
       : INHERITED(ClassID()),
         fHelper(helperArgs, aaType, stencilSettings),
         fColor(color),
@@ -360,9 +359,7 @@ class DefaultPathOp final : public GrMeshDrawOp {
     this->setBounds(devBounds, HasAABloat::kNo, isHairline ? IsZeroArea::kYes : IsZeroArea::kNo);
   }
 
-  FixedFunctionFlags fixedFunctionFlags() const noexcept override {
-    return fHelper.fixedFunctionFlags();
-  }
+  FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
   GrProcessorSet::Analysis finalize(
       const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType,
@@ -442,10 +439,10 @@ class DefaultPathOp final : public GrMeshDrawOp {
     return CombineResult::kMerged;
   }
 
-  const SkPMColor4f& color() const noexcept { return fColor; }
-  uint8_t coverage() const noexcept { return fCoverage; }
-  const SkMatrix& viewMatrix() const noexcept { return fViewMatrix; }
-  bool isHairline() const noexcept { return fIsHairline; }
+  const SkPMColor4f& color() const { return fColor; }
+  uint8_t coverage() const { return fCoverage; }
+  const SkMatrix& viewMatrix() const { return fViewMatrix; }
+  bool isHairline() const { return fIsHairline; }
 
   struct PathData {
     SkPath fPath;

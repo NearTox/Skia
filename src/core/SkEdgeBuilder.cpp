@@ -5,19 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkEdgeBuilder.h"
 #include "include/core/SkPath.h"
 #include "include/private/SkTo.h"
 #include "src/core/SkAnalyticEdge.h"
 #include "src/core/SkEdge.h"
+#include "src/core/SkEdgeBuilder.h"
 #include "src/core/SkEdgeClipper.h"
 #include "src/core/SkGeometry.h"
 #include "src/core/SkLineClipper.h"
 #include "src/core/SkPathPriv.h"
 #include "src/core/SkSafeMath.h"
 
-SkEdgeBuilder::Combine SkBasicEdgeBuilder::combineVertical(
-    const SkEdge* edge, SkEdge* last) noexcept {
+SkEdgeBuilder::Combine SkBasicEdgeBuilder::combineVertical(const SkEdge* edge, SkEdge* last) {
   if (last->fCurveCount || last->fDX || edge->fX != last->fX) {
     return kNo_Combine;
   }
@@ -59,7 +58,7 @@ SkEdgeBuilder::Combine SkBasicEdgeBuilder::combineVertical(
 }
 
 SkEdgeBuilder::Combine SkAnalyticEdgeBuilder::combineVertical(
-    const SkAnalyticEdge* edge, SkAnalyticEdge* last) noexcept {
+    const SkAnalyticEdge* edge, SkAnalyticEdge* last) {
   auto approximately_equal = [](SkFixed a, SkFixed b) { return SkAbs32(a - b) < 0x100; };
 
   if (last->fCurveCount || last->fDX || edge->fX != last->fX) {
@@ -107,7 +106,7 @@ SkEdgeBuilder::Combine SkAnalyticEdgeBuilder::combineVertical(
 }
 
 template <typename Edge>
-static bool is_vertical(const Edge* edge) noexcept {
+static bool is_vertical(const Edge* edge) {
   return edge->fDX == 0 && edge->fCurveCount == 0;
 }
 
@@ -171,7 +170,7 @@ void SkAnalyticEdgeBuilder::addCubic(const SkPoint pts[]) {
 // TODO: merge addLine() and addPolyLine()?
 
 SkEdgeBuilder::Combine SkBasicEdgeBuilder::addPolyLine(
-    SkPoint pts[], char* arg_edge, char** arg_edgePtr) noexcept {
+    SkPoint pts[], char* arg_edge, char** arg_edgePtr) {
   auto edge = (SkEdge*)arg_edge;
   auto edgePtr = (SkEdge**)arg_edgePtr;
 
@@ -195,7 +194,7 @@ SkEdgeBuilder::Combine SkAnalyticEdgeBuilder::addPolyLine(
   return SkEdgeBuilder::kPartial_Combine;  // As above.
 }
 
-SkRect SkBasicEdgeBuilder::recoverClip(const SkIRect& src) const noexcept {
+SkRect SkBasicEdgeBuilder::recoverClip(const SkIRect& src) const {
   return {
       SkIntToScalar(src.fLeft >> fClipShift),
       SkIntToScalar(src.fTop >> fClipShift),
@@ -203,9 +202,7 @@ SkRect SkBasicEdgeBuilder::recoverClip(const SkIRect& src) const noexcept {
       SkIntToScalar(src.fBottom >> fClipShift),
   };
 }
-SkRect SkAnalyticEdgeBuilder::recoverClip(const SkIRect& src) const noexcept {
-  return SkRect::Make(src);
-}
+SkRect SkAnalyticEdgeBuilder::recoverClip(const SkIRect& src) const { return SkRect::Make(src); }
 
 char* SkBasicEdgeBuilder::allocEdges(size_t n, size_t* size) {
   *size = sizeof(SkEdge);

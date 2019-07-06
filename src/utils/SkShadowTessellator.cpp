@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/utils/SkShadowTessellator.h"
 #include "include/core/SkPath.h"
 #include "include/core/SkPoint3.h"
 #include "include/core/SkVertices.h"
@@ -14,6 +13,7 @@
 #include "src/core/SkGeometry.h"
 #include "src/core/SkPointPriv.h"
 #include "src/utils/SkPolyUtils.h"
+#include "src/utils/SkShadowTessellator.h"
 
 #if SK_SUPPORT_GPU
 #include "src/gpu/GrPathUtils.h"

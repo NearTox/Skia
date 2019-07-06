@@ -41,14 +41,15 @@ class SK_API GrPathRenderer : public SkRefCnt {
    * rendered into the stencil.
    *
    * A GrPathRenderer can provide three levels of support for stenciling paths:
-   * 1) kNoRestriction: This is the most general. The caller passes a GrPaint and calls
-   * drawPath(). The path is rendered exactly as the draw state indicates including support for
-   * simultaneous color and stenciling with arbitrary stenciling rules. Pixels partially covered
-   * by AA paths are affected by the stencil settings. 2) kStencilOnly: The path renderer cannot
-   * apply arbitrary stencil rules nor shade and stencil simultaneously. The path renderer does
-   * support the stencilPath() function which performs no color writes and writes a non-zero
-   * stencil value to pixels covered by the path. 3) kNoSupport: This path renderer cannot be used
-   * to stencil the path.
+   * 1) kNoRestriction: This is the most general. The caller passes a GrPaint and calls drawPath().
+   *                    The path is rendered exactly as the draw state indicates including support
+   *                    for simultaneous color and stenciling with arbitrary stenciling rules.
+   *                    Pixels partially covered by AA paths are affected by the stencil settings.
+   * 2) kStencilOnly: The path renderer cannot apply arbitrary stencil rules nor shade and stencil
+   *                  simultaneously. The path renderer does support the stencilPath() function
+   *                  which performs no color writes and writes a non-zero stencil value to pixels
+   *                  covered by the path.
+   * 3) kNoSupport: This path renderer cannot be used to stencil the path.
    */
   enum StencilSupport {
     kNoSupport_StencilSupport,
@@ -185,7 +186,7 @@ class SK_API GrPathRenderer : public SkRefCnt {
   /**
    * Subclass overrides if it has any limitations of stenciling support.
    */
-  virtual StencilSupport onGetStencilSupport(const GrShape&) const noexcept {
+  virtual StencilSupport onGetStencilSupport(const GrShape&) const {
     return kNoRestriction_StencilSupport;
   }
 

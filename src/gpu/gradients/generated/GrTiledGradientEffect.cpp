@@ -50,18 +50,18 @@ class GrGLSLTiledGradientEffect : public GrGLSLFragmentProcessor {
   }
 
  private:
-  void onSetData(
-      const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) noexcept override {}
+  void onSetData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) override {
+  }
 };
 GrGLSLFragmentProcessor* GrTiledGradientEffect::onCreateGLSLInstance() const {
   return new GrGLSLTiledGradientEffect();
 }
 void GrTiledGradientEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   b->add32((int32_t)mirror);
   b->add32((int32_t)makePremul);
 }
-bool GrTiledGradientEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrTiledGradientEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrTiledGradientEffect& that = other.cast<GrTiledGradientEffect>();
   (void)that;
   if (mirror != that.mirror) return false;

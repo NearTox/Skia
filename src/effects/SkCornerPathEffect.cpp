@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "include/effects/SkCornerPathEffect.h"
 #include "include/core/SkPath.h"
 #include "include/core/SkPoint.h"
+#include "include/effects/SkCornerPathEffect.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
 

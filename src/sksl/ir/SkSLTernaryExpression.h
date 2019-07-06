@@ -19,7 +19,7 @@ namespace SkSL {
 struct TernaryExpression : public Expression {
   TernaryExpression(
       int offset, std::unique_ptr<Expression> test, std::unique_ptr<Expression> ifTrue,
-      std::unique_ptr<Expression> ifFalse) noexcept
+      std::unique_ptr<Expression> ifFalse)
       : INHERITED(offset, kTernary_Kind, ifTrue->fType),
         fTest(std::move(test)),
         fIfTrue(std::move(ifTrue)),

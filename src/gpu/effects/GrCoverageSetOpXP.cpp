@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/effects/GrCoverageSetOpXP.h"
 #include "include/private/GrColor.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrPipeline.h"
 #include "src/gpu/GrProcessor.h"
 #include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/effects/GrCoverageSetOpXP.h"
 #include "src/gpu/glsl/GrGLSLBlend.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #include "src/gpu/glsl/GrGLSLUniformHandler.h"
@@ -21,7 +21,7 @@ class CoverageSetOpXP : public GrXferProcessor {
   CoverageSetOpXP(SkRegion::Op regionOp, bool invertCoverage)
       : INHERITED(kCoverageSetOpXP_ClassID), fRegionOp(regionOp), fInvertCoverage(invertCoverage) {}
 
-  const char* name() const noexcept override { return "Coverage Set Op"; }
+  const char* name() const override { return "Coverage Set Op"; }
 
   GrGLSLXferProcessor* createGLSLInstance() const override;
 

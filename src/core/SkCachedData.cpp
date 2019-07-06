@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkCachedData.h"
 #include "include/private/SkMalloc.h"
+#include "src/core/SkCachedData.h"
 #include "src/core/SkDiscardableMemory.h"
 
-SkCachedData::SkCachedData(void* data, size_t size) noexcept
+SkCachedData::SkCachedData(void* data, size_t size)
     : fData(data),
       fSize(size),
       fRefCnt(1),
@@ -19,7 +19,7 @@ SkCachedData::SkCachedData(void* data, size_t size) noexcept
   fStorage.fMalloc = data;
 }
 
-SkCachedData::SkCachedData(size_t size, SkDiscardableMemory* dm) noexcept
+SkCachedData::SkCachedData(size_t size, SkDiscardableMemory* dm)
     : fData(dm->data()),
       fSize(size),
       fRefCnt(1),
@@ -38,7 +38,7 @@ SkCachedData::~SkCachedData() {
 
 class SkCachedData::AutoMutexWritable {
  public:
-  AutoMutexWritable(const SkCachedData* cd) noexcept : fCD(const_cast<SkCachedData*>(cd)) {
+  AutoMutexWritable(const SkCachedData* cd) : fCD(const_cast<SkCachedData*>(cd)) {
     fCD->fMutex.acquire();
     fCD->validate();
   }
@@ -47,18 +47,18 @@ class SkCachedData::AutoMutexWritable {
     fCD->fMutex.release();
   }
 
-  SkCachedData* get() noexcept { return fCD; }
-  SkCachedData* operator->() noexcept { return fCD; }
+  SkCachedData* get() { return fCD; }
+  SkCachedData* operator->() { return fCD; }
 
  private:
   SkCachedData* fCD;
 };
 
-void SkCachedData::internalRef(bool fromCache) const noexcept {
+void SkCachedData::internalRef(bool fromCache) const {
   AutoMutexWritable(this)->inMutexRef(fromCache);
 }
 
-void SkCachedData::internalUnref(bool fromCache) const noexcept {
+void SkCachedData::internalUnref(bool fromCache) const {
   if (AutoMutexWritable(this)->inMutexUnref(fromCache)) {
     // can't delete inside doInternalUnref, since it is locking a mutex (which we own)
     delete this;

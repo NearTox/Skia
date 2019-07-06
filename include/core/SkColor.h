@@ -152,7 +152,7 @@ constexpr SkColor SK_ColorMAGENTA = SkColorSetARGB(0xFF, 0xFF, 0x00, 0xFF);
     @param blue   blue component value from zero to 255
     @param hsv    three element array which holds the resulting HSV components
 */
-SK_API void SkRGBToHSV(U8CPU red, U8CPU green, U8CPU blue, SkScalar hsv[3]) noexcept;
+SK_API void SkRGBToHSV(U8CPU red, U8CPU green, U8CPU blue, SkScalar hsv[3]);
 
 /** Converts ARGB to its HSV components. Alpha in ARGB is ignored.
     hsv[0] contains hsv hue, and is assigned a value from zero to less than 360.
@@ -162,7 +162,7 @@ SK_API void SkRGBToHSV(U8CPU red, U8CPU green, U8CPU blue, SkScalar hsv[3]) noex
     @param color  ARGB color to convert
     @param hsv    three element array which holds the resulting HSV components
 */
-static inline void SkColorToHSV(SkColor color, SkScalar hsv[3]) noexcept {
+static inline void SkColorToHSV(SkColor color, SkScalar hsv[3]) {
   SkRGBToHSV(SkColorGetR(color), SkColorGetG(color), SkColorGetB(color), hsv);
 }
 
@@ -177,7 +177,7 @@ static inline void SkColorToHSV(SkColor color, SkScalar hsv[3]) noexcept {
     @param hsv    three element array which holds the input HSV components
     @return       ARGB equivalent to HSV
 */
-SK_API SkColor SkHSVToColor(U8CPU alpha, const SkScalar hsv[3]) noexcept;
+SK_API SkColor SkHSVToColor(U8CPU alpha, const SkScalar hsv[3]);
 
 /** Converts HSV components to an ARGB color. Alpha is set to 255.
     hsv[0] represents hsv hue, an angle from zero to less than 360.
@@ -189,9 +189,7 @@ SK_API SkColor SkHSVToColor(U8CPU alpha, const SkScalar hsv[3]) noexcept;
     @param hsv  three element array which holds the input HSV components
     @return     RGB equivalent to HSV
 */
-static inline SkColor SkHSVToColor(const SkScalar hsv[3]) noexcept {
-  return SkHSVToColor(0xFF, hsv);
-}
+static inline SkColor SkHSVToColor(const SkScalar hsv[3]) { return SkHSVToColor(0xFF, hsv); }
 
 /** 32-bit ARGB color value, premultiplied. The byte order for this value is
     configuration dependent, matching the format of kBGRA_8888_SkColorType bitmaps.
@@ -208,7 +206,7 @@ typedef uint32_t SkPMColor;
     @param b  amount of blue, from no blue (0) to full blue (255)
     @return   premultiplied color
 */
-SK_API SkPMColor SkPreMultiplyARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b) noexcept;
+SK_API SkPMColor SkPreMultiplyARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b);
 
 /** Returns pmcolor closest to color c. Multiplies c RGB components by the c alpha,
     and arranges the bytes to match the format of kN32_SkColorType.
@@ -216,7 +214,7 @@ SK_API SkPMColor SkPreMultiplyARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b) noexcept;
     @param c  unpremultiplied ARGB color
     @return   premultiplied color
 */
-SK_API SkPMColor SkPreMultiplyColor(SkColor c) noexcept;
+SK_API SkPMColor SkPreMultiplyColor(SkColor c);
 
 /** \struct SkRGBA4f
     RGBA color value, holding four floating point components. Color components are always in
@@ -239,7 +237,7 @@ struct SkRGBA4f {
       @param other  SkRGBA4f to compare
       @return       true if SkRGBA4f equals other
   */
-  bool operator==(const SkRGBA4f& other) const noexcept {
+  bool operator==(const SkRGBA4f& other) const {
     return fA == other.fA && fR == other.fR && fG == other.fG && fB == other.fB;
   }
 
@@ -248,23 +246,21 @@ struct SkRGBA4f {
       @param other  SkRGBA4f to compare
       @return       true if SkRGBA4f is not equal to other
   */
-  bool operator!=(const SkRGBA4f& other) const noexcept { return !(*this == other); }
+  bool operator!=(const SkRGBA4f& other) const { return !(*this == other); }
 
   /** Returns SkRGBA4f multiplied by scale.
 
       @param scale  value to multiply by
       @return       SkRGBA4f as (fR * scale, fG * scale, fB * scale, fA * scale)
   */
-  SkRGBA4f operator*(float scale) const noexcept {
-    return {fR * scale, fG * scale, fB * scale, fA * scale};
-  }
+  SkRGBA4f operator*(float scale) const { return {fR * scale, fG * scale, fB * scale, fA * scale}; }
 
   /** Returns SkRGBA4f multiplied component-wise by scale.
 
       @param scale  SkRGBA4f to multiply by
       @return       SkRGBA4f as (fR * scale.fR, fG * scale.fG, fB * scale.fB, fA * scale.fA)
   */
-  SkRGBA4f operator*(const SkRGBA4f& scale) const noexcept {
+  SkRGBA4f operator*(const SkRGBA4f& scale) const {
     return {fR * scale.fR, fG * scale.fG, fB * scale.fB, fA * scale.fA};
   }
 
@@ -272,20 +268,20 @@ struct SkRGBA4f {
 
       @return       pointer to array [fR, fG, fB, fA]
   */
-  const float* vec() const noexcept { return &fR; }
+  const float* vec() const { return &fR; }
 
   /** Returns a pointer to components of SkRGBA4f, for array access.
 
       @return       pointer to array [fR, fG, fB, fA]
   */
-  float* vec() noexcept { return &fR; }
+  float* vec() { return &fR; }
 
   /** Returns one component. Asserts if index is out of range and SK_DEBUG is defined.
 
       @param index  one of: 0 (fR), 1 (fG), 2 (fB), 3 (fA)
       @return       value corresponding to index
   */
-  float operator[](int index) const noexcept {
+  float operator[](int index) const {
     SkASSERT(index >= 0 && index < 4);
     return this->vec()[index];
   }
@@ -305,13 +301,13 @@ struct SkRGBA4f {
 
       @return       true if SkRGBA4f is opaque
   */
-  bool isOpaque() const noexcept {
+  bool isOpaque() const {
     SkASSERT(fA <= 1.0f && fA >= 0.0f);
     return fA == 1.0f;
   }
 
   /** Returns true if all channels are in [0, 1]. */
-  bool fitsInBytes() const noexcept {
+  bool fitsInBytes() const {
     SkASSERT(fA >= 0.0f && fA <= 1.0f);
     return fR >= 0.0f && fR <= 1.0f && fG >= 0.0f && fG <= 1.0f && fB >= 0.0f && fB <= 1.0f;
   }
@@ -340,7 +336,7 @@ struct SkRGBA4f {
 
       @return       premultiplied color
   */
-  SkRGBA4f<kPremul_SkAlphaType> premul() const noexcept {
+  SkRGBA4f<kPremul_SkAlphaType> premul() const {
     static_assert(kAT == kUnpremul_SkAlphaType, "");
     return {fR * fA, fG * fA, fB * fA, fA};
   }
@@ -350,7 +346,7 @@ struct SkRGBA4f {
 
       @return       unpremultiplied color
   */
-  SkRGBA4f<kUnpremul_SkAlphaType> unpremul() const noexcept {
+  SkRGBA4f<kUnpremul_SkAlphaType> unpremul() const {
     static_assert(kAT == kPremul_SkAlphaType, "");
 
     if (fA == 0.0f) {
@@ -362,10 +358,10 @@ struct SkRGBA4f {
   }
 
   // This produces bytes in RGBA order (eg GrColor). Impl. is the same, regardless of kAT
-  uint32_t toBytes_RGBA() const noexcept;
-  static SkRGBA4f FromBytes_RGBA(uint32_t color) noexcept;
+  uint32_t toBytes_RGBA() const;
+  static SkRGBA4f FromBytes_RGBA(uint32_t color);
 
-  SkRGBA4f makeOpaque() const noexcept { return {fR, fG, fB, 1.0f}; }
+  SkRGBA4f makeOpaque() const { return {fR, fG, fB, 1.0f}; }
 };
 
 /** \struct SkColor4f

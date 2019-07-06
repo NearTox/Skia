@@ -42,7 +42,7 @@ bool SkDashImpl::onFilterPath(
       fIntervalLength);
 }
 
-static void outset_for_stroke(SkRect* rect, const SkStrokeRec& rec) noexcept {
+static void outset_for_stroke(SkRect* rect, const SkStrokeRec& rec) {
   SkScalar radius = SkScalarHalf(rec.getWidth());
   if (0 == radius) {
     radius = SK_Scalar1;  // hairlines
@@ -349,7 +349,7 @@ bool SkDashImpl::onAsPoints(
   return true;
 }
 
-SkPathEffect::DashType SkDashImpl::onAsADash(DashInfo* info) const noexcept {
+SkPathEffect::DashType SkDashImpl::onAsADash(DashInfo* info) const {
   if (info) {
     if (info->fCount >= fCount && info->fIntervals) {
       memcpy(info->fIntervals, fIntervals, fCount * sizeof(SkScalar));

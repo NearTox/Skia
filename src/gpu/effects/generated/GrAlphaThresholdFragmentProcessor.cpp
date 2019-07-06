@@ -11,7 +11,7 @@
 #include "GrAlphaThresholdFragmentProcessor.h"
 
 inline GrFragmentProcessor::OptimizationFlags GrAlphaThresholdFragmentProcessor::optFlags(
-    float outerThreshold) noexcept {
+    float outerThreshold) {
   if (outerThreshold >= 1.0) {
     return kPreservesOpaqueInput_OptimizationFlag | kCompatibleWithCoverageAsAlpha_OptimizationFlag;
   } else {
@@ -75,8 +75,8 @@ GrGLSLFragmentProcessor* GrAlphaThresholdFragmentProcessor::onCreateGLSLInstance
   return new GrGLSLAlphaThresholdFragmentProcessor();
 }
 void GrAlphaThresholdFragmentProcessor::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {}
-bool GrAlphaThresholdFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
+bool GrAlphaThresholdFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const {
   const GrAlphaThresholdFragmentProcessor& that = other.cast<GrAlphaThresholdFragmentProcessor>();
   (void)that;
   if (mask != that.mask) return false;
@@ -85,7 +85,7 @@ bool GrAlphaThresholdFragmentProcessor::onIsEqual(const GrFragmentProcessor& oth
   return true;
 }
 GrAlphaThresholdFragmentProcessor::GrAlphaThresholdFragmentProcessor(
-    const GrAlphaThresholdFragmentProcessor& src) noexcept
+    const GrAlphaThresholdFragmentProcessor& src)
     : INHERITED(kGrAlphaThresholdFragmentProcessor_ClassID, src.optimizationFlags()),
       maskCoordTransform(src.maskCoordTransform),
       mask(src.mask),
@@ -98,7 +98,7 @@ std::unique_ptr<GrFragmentProcessor> GrAlphaThresholdFragmentProcessor::clone() 
   return std::unique_ptr<GrFragmentProcessor>(new GrAlphaThresholdFragmentProcessor(*this));
 }
 const GrFragmentProcessor::TextureSampler& GrAlphaThresholdFragmentProcessor::onTextureSampler(
-    int index) const noexcept {
+    int index) const {
   return IthTextureSampler(index, mask);
 }
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(GrAlphaThresholdFragmentProcessor);

@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/GrBufferAllocPool.h"
 #include "include/gpu/GrContext.h"
 #include "include/gpu/GrTypes.h"
 #include "include/private/SkMacros.h"
 #include "src/core/SkSafeMath.h"
 #include "src/core/SkTraceEvent.h"
+#include "src/gpu/GrBufferAllocPool.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrCpuBuffer.h"
@@ -69,9 +69,9 @@ void GrBufferAllocPool::CpuBufferCache::releaseAll() {
 //////////////////////////////////////////////////////////////////////////////
 
 #ifdef SK_DEBUG
-#define VALIDATE validate
+#  define VALIDATE validate
 #else
-static void VALIDATE(bool = false) noexcept {}
+static void VALIDATE(bool = false) {}
 #endif
 
 #define UNMAP_BUFFER(block)                                                          \
@@ -86,7 +86,7 @@ static void VALIDATE(bool = false) noexcept {}
 constexpr size_t GrBufferAllocPool::kDefaultBufferSize;
 
 GrBufferAllocPool::GrBufferAllocPool(
-    GrGpu* gpu, GrGpuBufferType bufferType, sk_sp<CpuBufferCache> cpuBufferCache) noexcept
+    GrGpu* gpu, GrGpuBufferType bufferType, sk_sp<CpuBufferCache> cpuBufferCache)
     : fBlocks(8), fCpuBufferCache(std::move(cpuBufferCache)), fGpu(gpu), fBufferType(bufferType) {}
 
 void GrBufferAllocPool::deleteBlocks() {
@@ -367,7 +367,7 @@ bool GrBufferAllocPool::createBlock(size_t requestSize) {
   return true;
 }
 
-void GrBufferAllocPool::destroyBlock() noexcept {
+void GrBufferAllocPool::destroyBlock() {
   SkASSERT(!fBlocks.empty());
   SkASSERT(
       fBlocks.back().fBuffer->isCpuBuffer() ||
@@ -425,8 +425,7 @@ sk_sp<GrBuffer> GrBufferAllocPool::getBuffer(size_t size) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GrVertexBufferAllocPool::GrVertexBufferAllocPool(
-    GrGpu* gpu, sk_sp<CpuBufferCache> cpuBufferCache) noexcept
+GrVertexBufferAllocPool::GrVertexBufferAllocPool(GrGpu* gpu, sk_sp<CpuBufferCache> cpuBufferCache)
     : GrBufferAllocPool(gpu, GrGpuBufferType::kVertex, std::move(cpuBufferCache)) {}
 
 void* GrVertexBufferAllocPool::makeSpace(
@@ -471,8 +470,7 @@ void* GrVertexBufferAllocPool::makeSpaceAtLeast(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GrIndexBufferAllocPool::GrIndexBufferAllocPool(
-    GrGpu* gpu, sk_sp<CpuBufferCache> cpuBufferCache) noexcept
+GrIndexBufferAllocPool::GrIndexBufferAllocPool(GrGpu* gpu, sk_sp<CpuBufferCache> cpuBufferCache)
     : GrBufferAllocPool(gpu, GrGpuBufferType::kIndex, std::move(cpuBufferCache)) {}
 
 void* GrIndexBufferAllocPool::makeSpace(

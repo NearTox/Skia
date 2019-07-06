@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "src/pathops/SkPathOpsDebug.h"
 #include "include/core/SkPath.h"
 #include "include/core/SkString.h"
 #include "include/private/SkMutex.h"
 #include "src/core/SkOSFile.h"
 #include "src/pathops/SkOpCoincidence.h"
 #include "src/pathops/SkOpContour.h"
+#include "src/pathops/SkPathOpsDebug.h"
 
 #include <utility>
 
@@ -285,7 +285,7 @@ static void move_nearby(SkPathOpsDebug::GlitchLog* glitches, const SkOpContourHe
 void SkOpGlobalState::debugAddToCoinChangedDict() {
 #if DEBUG_COINCIDENCE
   SkPathOpsDebug::CheckHealth(fContourHead);
-#endif
+#  endif
   // see if next coincident operation makes a change; if so, record it
   SkPathOpsDebug::GlitchLog glitches;
   const char* funcName = fCoinDictEntry.fFunctionName;
@@ -347,8 +347,8 @@ void SkPathOpsDebug::ShowActiveSpans(SkOpContourHead* contourList) {
 void SkPathOpsDebug::CheckHealth(SkOpContourHead* contourList) {
 #if DEBUG_COINCIDENCE
   contourList->globalState()->debugSetCheckHealth(true);
-#endif
-#if DEBUG_COIN
+#  endif
+#  if DEBUG_COIN
   GlitchLog glitches;
   const SkOpContour* contour = contourList;
   const SkOpCoincidence* coincidence = contour->globalState()->coincidence();
@@ -421,14 +421,14 @@ void SkPathOpsDebug::CheckHealth(SkOpContourHead* contourList) {
     DumpGlitchType(glitch.fType);
     SkDebugf("\n");
   }
-#if DEBUG_COINCIDENCE
+#    if DEBUG_COINCIDENCE
   contourList->globalState()->debugSetCheckHealth(false);
-#endif
-#if 01 && DEBUG_ACTIVE_SPANS
+#    endif
+#    if 01 && DEBUG_ACTIVE_SPANS
   //    SkDebugf("active after %s:\n", id);
   ShowActiveSpans(contourList);
-#endif
-#endif
+#    endif
+#  endif
 }
 #endif
 
@@ -670,10 +670,10 @@ bool SkOpGlobalState::DebugRunFail() { return SkPathOpsDebug::gRunFail; }
 #if DEBUG_VALIDATE || DEBUG_COIN
 void SkOpGlobalState::debugSetPhase(const char* funcName DEBUG_COIN_DECLARE_PARAMS()) const {
   auto writable = const_cast<SkOpGlobalState*>(this);
-#if DEBUG_VALIDATE
+#  if DEBUG_VALIDATE
   writable->setPhase(phase);
-#endif
-#if DEBUG_COIN
+#  endif
+#  if DEBUG_COIN
   SkPathOpsDebug::CoinDictEntry* entry = &writable->fCoinDictEntry;
   writable->fPreviousFuncName = entry->fFunctionName;
   entry->fIteration = iteration;
@@ -682,7 +682,7 @@ void SkOpGlobalState::debugSetPhase(const char* funcName DEBUG_COIN_DECLARE_PARA
   entry->fFunctionName = funcName;
   writable->fCoinVisitedDict.add(*entry);
   writable->debugAddToCoinChangedDict();
-#endif
+#  endif
 }
 #endif
 
@@ -932,7 +932,7 @@ void SkOpSegment::debugMissingCoincidence(SkPathOpsDebug::GlitchLog* log) const 
       }
       if (testForCoincidence(rootPriorPtT, rootPtT, prior, spanBase, opp)) {
         // mark coincidence
-#if DEBUG_COINCIDENCE_VERBOSE
+#  if DEBUG_COINCIDENCE_VERBOSE
 //                 SkDebugf("%s coinSpan=%d endSpan=%d oppSpan=%d oppEndSpan=%d\n", __FUNCTION__,
 //                         rootPriorPtT->debugID(), rootPtT->debugID(), rootOppStart->debugID(),
 //                         rootOppEnd->debugID());
@@ -942,7 +942,7 @@ void SkOpSegment::debugMissingCoincidence(SkPathOpsDebug::GlitchLog* log) const 
         // }
 #if DEBUG_COINCIDENCE
 //                SkASSERT(coincidences->contains(rootPriorPtT, rootPtT, rootOppStart, rootOppEnd);
-#endif
+#  endif
         // result = true;
       }
     swapBack:
@@ -1859,17 +1859,17 @@ void SkOpCoincidence::debugAddOrOverlap(
       log->record(
           SkPathOpsDebug::kAddMissingExtend_Glitch, oppSeg, oppTs, oppTe, coinSeg, coinTs, coinTe);
     }
-#if 0 && DEBUG_COINCIDENCE_VERBOSE
+#  if 0 && DEBUG_COINCIDENCE_VERBOSE
         if (result) {
              overlap->debugShow();
         }
-#endif
+#  endif
   } else {
     log->record(
         SkPathOpsDebug::kAddMissingCoin_Glitch, coinSeg, coinTs, coinTe, oppSeg, oppTs, oppTe);
-#if 0 && DEBUG_COINCIDENCE_VERBOSE
+#  if 0 && DEBUG_COINCIDENCE_VERBOSE
         fHead->debugShow();
-#endif
+#  endif
   }
   this->debugValidate();
   return (void)result;
@@ -2310,7 +2310,7 @@ void SkOpCoincidence::debugCheckValid(SkPathOpsDebug::GlitchLog* log) const {
 #if DEBUG_VALIDATE
   DebugValidate(fHead, fTop, log);
   DebugValidate(fTop, nullptr, log);
-#endif
+#  endif
 }
 
 void SkOpCoincidence::debugCorrectEnds(SkPathOpsDebug::GlitchLog* log) const {
@@ -2436,8 +2436,7 @@ void SkOpSpanBase::debugCheckForCollapsedCoincidence(SkPathOpsDebug::GlitchLog* 
   }
   // the insert above may have put both ends of a coincident run in the same span
   // for each coincident ptT in loop; see if its opposite in is also in the loop
-  // this implementation is the motivation for marking that a ptT is referenced by a coincident
-  // span
+  // this implementation is the motivation for marking that a ptT is referenced by a coincident span
   const SkOpPtT* head = this->ptT();
   const SkOpPtT* test = head;
   do {
@@ -2538,7 +2537,7 @@ void SkOpSpanBase::debugMergeMatches(
           //                        inner->setDeleted();
         }
       }
-#ifdef SK_DEBUG  // assert if another undeleted entry points to segment
+#  ifdef SK_DEBUG  // assert if another undeleted entry points to segment
       const SkOpPtT* debugInner = inner;
       while ((debugInner = debugInner->next()) != innerStop) {
         if (debugInner->segment() != segment) {
@@ -2549,7 +2548,7 @@ void SkOpSpanBase::debugMergeMatches(
         }
         SkOPASSERT(0);
       }
-#endif
+#  endif
       break;
       //            }
       break;
@@ -2687,9 +2686,9 @@ void SkOpSpan::debugInsertCoincidence(
       return;
     }
   }
-#if DEBUG_COIN
+#  if DEBUG_COIN
   log->record(SkPathOpsDebug::kMarkCoinMissing_Glitch, segment, this);
-#endif
+#  endif
   return;
 }
 #endif

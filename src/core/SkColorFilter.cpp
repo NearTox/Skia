@@ -79,7 +79,7 @@ SkColor4f SkColorFilter::filterColor4f(const SkColor4f& c, SkColorSpace* colorSp
 
 class SkComposeColorFilter : public SkColorFilter {
  public:
-  uint32_t getFlags() const noexcept override {
+  uint32_t getFlags() const override {
     // Can only claim alphaunchanged support if both our proxys do.
     return fOuter->getFlags() & fInner->getFlags();
   }
@@ -123,7 +123,7 @@ class SkComposeColorFilter : public SkColorFilter {
     SkASSERT(composedFilterCount <= SK_MAX_COMPOSE_COLORFILTER_COUNT);
   }
 
-  int privateComposedFilterCount() const noexcept override { return fComposedFilterCount; }
+  int privateComposedFilterCount() const override { return fComposedFilterCount; }
 
   sk_sp<SkColorFilter> fOuter;
   sk_sp<SkColorFilter> fInner;
@@ -253,7 +253,7 @@ class SkMixerColorFilter : public SkColorFilter {
     SkASSERT(fWeight >= 0 && fWeight <= 1);
   }
 
-  uint32_t getFlags() const noexcept override {
+  uint32_t getFlags() const override {
     uint32_t f0 = fCF0->getFlags();
     uint32_t f1 = fCF1 ? fCF1->getFlags() : ~0U;
     return f0 & f1;
@@ -365,7 +365,7 @@ class SkRuntimeColorFilter : public SkColorFilter {
         fInputs(std::move(inputs)),
         fCpuFunction(cpuFunction) {}
 
-#if SK_SUPPORT_GPU
+#  if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(
       GrRecordingContext* context, const GrColorSpaceInfo&) const override {
     return GrSkSLFP::Make(

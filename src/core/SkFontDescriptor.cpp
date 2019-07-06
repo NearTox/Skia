@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkFontDescriptor.h"
 #include "include/core/SkData.h"
 #include "include/core/SkStream.h"
+#include "src/core/SkFontDescriptor.h"
 #include "src/core/SkMakeUnique.h"
 
 enum {
@@ -42,7 +42,7 @@ static bool SK_WARN_UNUSED_RESULT read_string(SkStream* stream, SkString* string
   return true;
 }
 
-static bool write_string(SkWStream* stream, const SkString& string, uint32_t id) noexcept {
+static bool write_string(SkWStream* stream, const SkString& string, uint32_t id) {
   if (string.isEmpty()) {
     return true;
   }
@@ -50,11 +50,11 @@ static bool write_string(SkWStream* stream, const SkString& string, uint32_t id)
          stream->write(string.c_str(), string.size());
 }
 
-static bool write_uint(SkWStream* stream, size_t n, uint32_t id) noexcept {
+static bool write_uint(SkWStream* stream, size_t n, uint32_t id) {
   return stream->writePackedUInt(id) && stream->writePackedUInt(n);
 }
 
-static size_t SK_WARN_UNUSED_RESULT read_id(SkStream* stream) noexcept {
+static size_t SK_WARN_UNUSED_RESULT read_id(SkStream* stream) {
   size_t i;
   if (!stream->readPackedUInt(&i)) {
     return kInvalid;
@@ -140,7 +140,7 @@ bool SkFontDescriptor::Deserialize(SkStream* stream, SkFontDescriptor* result) {
   return true;
 }
 
-void SkFontDescriptor::serialize(SkWStream* stream) const noexcept {
+void SkFontDescriptor::serialize(SkWStream* stream) const {
   uint32_t styleBits = (fStyle.weight() << 16) | (fStyle.width() << 8) | (fStyle.slant());
   stream->writePackedUInt(styleBits);
 

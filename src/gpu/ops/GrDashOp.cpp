@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/ops/GrDashOp.h"
 #include "include/private/GrRecordingContext.h"
 #include "src/core/SkMatrixPriv.h"
 #include "src/core/SkPointPriv.h"
@@ -29,6 +28,7 @@
 #include "src/gpu/glsl/GrGLSLUniformHandler.h"
 #include "src/gpu/glsl/GrGLSLVarying.h"
 #include "src/gpu/glsl/GrGLSLVertexGeoBuilder.h"
+#include "src/gpu/ops/GrDashOp.h"
 #include "src/gpu/ops/GrMeshDrawOp.h"
 
 using AAMode = GrDashOp::AAMode;
@@ -215,7 +215,7 @@ class DashOp final : public GrMeshDrawOp {
         std::move(paint), geometry, cap, aaMode, fullDash, stencilSettings);
   }
 
-  const char* name() const noexcept override { return "DashOp"; }
+  const char* name() const override { return "DashOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override { fProcessorSet.visitProxies(func); }
 
@@ -745,7 +745,7 @@ class DashingCircleEffect : public GrGeometryProcessor {
   static sk_sp<GrGeometryProcessor> Make(
       const SkPMColor4f&, AAMode aaMode, const SkMatrix& localMatrix, bool usesLocalCoords);
 
-  const char* name() const noexcept override { return "DashingCircleEffect"; }
+  const char* name() const override { return "DashingCircleEffect"; }
 
   AAMode aaMode() const { return fAAMode; }
 
@@ -941,7 +941,7 @@ class DashingLineEffect : public GrGeometryProcessor {
   static sk_sp<GrGeometryProcessor> Make(
       const SkPMColor4f&, AAMode aaMode, const SkMatrix& localMatrix, bool usesLocalCoords);
 
-  const char* name() const noexcept override { return "DashingEffect"; }
+  const char* name() const override { return "DashingEffect"; }
 
   AAMode aaMode() const { return fAAMode; }
 

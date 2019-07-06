@@ -17,9 +17,9 @@ namespace SkSL {
  * A 'return' statement.
  */
 struct ReturnStatement : public Statement {
-  ReturnStatement(int offset) noexcept : INHERITED(offset, kReturn_Kind) {}
+  ReturnStatement(int offset) : INHERITED(offset, kReturn_Kind) {}
 
-  ReturnStatement(std::unique_ptr<Expression> expression) noexcept
+  ReturnStatement(std::unique_ptr<Expression> expression)
       : INHERITED(expression->fOffset, kReturn_Kind), fExpression(std::move(expression)) {}
 
   std::unique_ptr<Statement> clone() const override {

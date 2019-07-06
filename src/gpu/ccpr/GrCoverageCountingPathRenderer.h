@@ -82,7 +82,7 @@ class GrCoverageCountingPathRenderer : public GrPathRenderer, public GrOnFlushCa
   GrCoverageCountingPathRenderer(AllowCaching, uint32_t contextUniqueID);
 
   // GrPathRenderer overrides.
-  StencilSupport onGetStencilSupport(const GrShape&) const noexcept override {
+  StencilSupport onGetStencilSupport(const GrShape&) const override {
     return GrPathRenderer::kNoSupport_StencilSupport;
   }
   CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;

@@ -5,35 +5,35 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkOpts.h"
 #include "include/private/SkHalf.h"
 #include "include/private/SkOnce.h"
 #include "src/core/SkCpu.h"
+#include "src/core/SkOpts.h"
 
 #if defined(SK_ARM_HAS_NEON)
-#if defined(SK_ARM_HAS_CRC32)
-#define SK_OPTS_NS neon_and_crc32
-#else
-#define SK_OPTS_NS neon
-#endif
+#  if defined(SK_ARM_HAS_CRC32)
+#    define SK_OPTS_NS neon_and_crc32
+#  else
+#    define SK_OPTS_NS neon
+#  endif
 #elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_AVX2
-#define SK_OPTS_NS avx2
+#  define SK_OPTS_NS avx2
 #elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_AVX
-#define SK_OPTS_NS avx
+#  define SK_OPTS_NS avx
 #elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE42
-#define SK_OPTS_NS sse42
+#  define SK_OPTS_NS sse42
 #elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE41
-#define SK_OPTS_NS sse41
+#  define SK_OPTS_NS sse41
 #elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSSE3
-#define SK_OPTS_NS ssse3
+#  define SK_OPTS_NS ssse3
 #elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE3
-#define SK_OPTS_NS sse3
+#  define SK_OPTS_NS sse3
 #elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
-#define SK_OPTS_NS sse2
+#  define SK_OPTS_NS sse2
 #elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE1
-#define SK_OPTS_NS sse
+#  define SK_OPTS_NS sse
 #else
-#define SK_OPTS_NS portable
+#  define SK_OPTS_NS portable
 #endif
 
 #include "src/opts/SkBitmapProcState_opts.h"
@@ -105,40 +105,40 @@ void Init_crc32();
 
 static void init() {
 #if !defined(SK_BUILD_NO_OPTS)
-#if defined(SK_CPU_X86)
-#if SK_CPU_SSE_LEVEL < SK_CPU_SSE_LEVEL_SSSE3
+#  if defined(SK_CPU_X86)
+#    if SK_CPU_SSE_LEVEL < SK_CPU_SSE_LEVEL_SSSE3
   if (SkCpu::Supports(SkCpu::SSSE3)) {
     Init_ssse3();
   }
-#endif
+#    endif
 
-#if SK_CPU_SSE_LEVEL < SK_CPU_SSE_LEVEL_SSE41
+#    if SK_CPU_SSE_LEVEL < SK_CPU_SSE_LEVEL_SSE41
   if (SkCpu::Supports(SkCpu::SSE41)) {
     Init_sse41();
   }
-#endif
+#    endif
 
-#if SK_CPU_SSE_LEVEL < SK_CPU_SSE_LEVEL_SSE42
+#    if SK_CPU_SSE_LEVEL < SK_CPU_SSE_LEVEL_SSE42
   if (SkCpu::Supports(SkCpu::SSE42)) {
     Init_sse42();
   }
-#endif
+#    endif
 
-#if SK_CPU_SSE_LEVEL < SK_CPU_SSE_LEVEL_AVX
+#    if SK_CPU_SSE_LEVEL < SK_CPU_SSE_LEVEL_AVX
   if (SkCpu::Supports(SkCpu::AVX)) {
     Init_avx();
   }
   if (SkCpu::Supports(SkCpu::HSW)) {
     Init_hsw();
   }
-#endif
+#    endif
 
-#elif defined(SK_CPU_ARM64)
+#  elif defined(SK_CPU_ARM64)
   if (SkCpu::Supports(SkCpu::CRC32)) {
     Init_crc32();
   }
 
-#endif
+#  endif
 #endif
 }
 

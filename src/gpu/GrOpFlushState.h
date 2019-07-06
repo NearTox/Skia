@@ -31,7 +31,7 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
   // vertices/indices when a buffer larger than kDefaultBufferSize is required.
   GrOpFlushState(
       GrGpu*, GrResourceProvider*, GrResourceCache*, GrTokenTracker*,
-      sk_sp<GrBufferAllocPool::CpuBufferCache> = nullptr) noexcept;
+      sk_sp<GrBufferAllocPool::CpuBufferCache> = nullptr);
 
   ~GrOpFlushState() final { this->reset(); }
 
@@ -47,19 +47,19 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
       GrPipeline::InputFlags = GrPipeline::InputFlags::kNone,
       const GrUserStencilSettings* = &GrUserStencilSettings::kUnused);
 
-  GrGpuCommandBuffer* commandBuffer() noexcept { return fCommandBuffer; }
+  GrGpuCommandBuffer* commandBuffer() { return fCommandBuffer; }
   // Helper function used by Ops that are only called via RenderTargetOpLists
   GrGpuRTCommandBuffer* rtCommandBuffer();
-  void setCommandBuffer(GrGpuCommandBuffer* buffer) noexcept { fCommandBuffer = buffer; }
+  void setCommandBuffer(GrGpuCommandBuffer* buffer) { fCommandBuffer = buffer; }
 
-  GrGpu* gpu() noexcept { return fGpu; }
+  GrGpu* gpu() { return fGpu; }
 
   void reset();
 
   /** Additional data required on a per-op basis when executing GrOps. */
   struct OpArgs {
-    GrSurfaceOrigin origin() const noexcept { return fProxy->origin(); }
-    GrRenderTarget* renderTarget() const noexcept { return fProxy->peekRenderTarget(); }
+    GrSurfaceOrigin origin() const { return fProxy->origin(); }
+    GrRenderTarget* renderTarget() const { return fProxy->peekRenderTarget(); }
 
     GrOp* fOp;
     // TODO: do we still need the dst proxy here?
@@ -68,9 +68,9 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
     GrXferProcessor::DstProxy fDstProxy;
   };
 
-  void setOpArgs(OpArgs* opArgs) noexcept { fOpArgs = opArgs; }
+  void setOpArgs(OpArgs* opArgs) { fOpArgs = opArgs; }
 
-  const OpArgs& drawOpArgs() const noexcept {
+  const OpArgs& drawOpArgs() const {
     SkASSERT(fOpArgs);
     SkASSERT(fOpArgs->fOp);
     return *fOpArgs;
@@ -78,7 +78,7 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
 
   /** Overrides of GrDeferredUploadTarget. */
 
-  const GrTokenTracker* tokenTracker() noexcept final { return fTokenTracker; }
+  const GrTokenTracker* tokenTracker() final { return fTokenTracker; }
   GrDeferredUploadToken addInlineUpload(GrDeferredTextureUploadFn&&) final;
   GrDeferredUploadToken addASAPUpload(GrDeferredTextureUploadFn&&) final;
 
@@ -97,23 +97,21 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
       int* actualIndexCount) final;
   void putBackIndices(int indexCount) final;
   void putBackVertices(int vertices, size_t vertexStride) final;
-  GrRenderTargetProxy* proxy() const noexcept final { return fOpArgs->fProxy; }
-  const GrAppliedClip* appliedClip() noexcept final { return fOpArgs->fAppliedClip; }
-  GrAppliedClip detachAppliedClip() noexcept final;
-  const GrXferProcessor::DstProxy& dstProxy() const noexcept final { return fOpArgs->fDstProxy; }
-  GrDeferredUploadTarget* deferredUploadTarget() noexcept final { return this; }
-  const GrCaps& caps() const noexcept final;
-  GrResourceProvider* resourceProvider() const noexcept final { return fResourceProvider; }
+  GrRenderTargetProxy* proxy() const final { return fOpArgs->fProxy; }
+  const GrAppliedClip* appliedClip() final { return fOpArgs->fAppliedClip; }
+  GrAppliedClip detachAppliedClip() final;
+  const GrXferProcessor::DstProxy& dstProxy() const final { return fOpArgs->fDstProxy; }
+  GrDeferredUploadTarget* deferredUploadTarget() final { return this; }
+  const GrCaps& caps() const final;
+  GrResourceProvider* resourceProvider() const final { return fResourceProvider; }
 
-  GrStrikeCache* glyphCache() const noexcept final;
+  GrStrikeCache* glyphCache() const final;
 
   // At this point we know we're flushing so full access to the GrAtlasManager is required (and
   // permissible).
   GrAtlasManager* atlasManager() const final;
 
-  GrDeinstantiateProxyTracker* deinstantiateProxyTracker() noexcept {
-    return &fDeinstantiateProxyTracker;
-  }
+  GrDeinstantiateProxyTracker* deinstantiateProxyTracker() { return &fDeinstantiateProxyTracker; }
 
  private:
   /** GrMeshDrawOp::Target override. */

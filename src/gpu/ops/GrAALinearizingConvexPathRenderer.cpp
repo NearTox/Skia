@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/ops/GrAALinearizingConvexPathRenderer.h"
 #include "include/core/SkString.h"
 #include "src/core/SkGeometry.h"
 #include "src/core/SkPathPriv.h"
@@ -23,6 +22,7 @@
 #include "src/gpu/GrVertexWriter.h"
 #include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
 #include "src/gpu/ops/GrAAConvexTessellator.h"
+#include "src/gpu/ops/GrAALinearizingConvexPathRenderer.h"
 #include "src/gpu/ops/GrMeshDrawOp.h"
 #include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 
@@ -144,7 +144,7 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
     this->setTransformedBounds(bounds, viewMatrix, HasAABloat::kYes, IsZeroArea::kNo);
   }
 
-  const char* name() const noexcept override { return "AAFlatteningConvexPathOp"; }
+  const char* name() const override { return "AAFlatteningConvexPathOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override { fHelper.visitProxies(func); }
 

@@ -91,7 +91,7 @@ sk_sp<const GrGLInterface> GrGLMakeNativeInterface() {
   return nullptr;
 }
 
-#endif  // ARM64
+#  endif  // ARM64
 
 const GrGLInterface* GrGLCreateNativeInterface() { return GrGLMakeNativeInterface().release(); }
 

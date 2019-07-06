@@ -45,7 +45,7 @@ config("common") {
       "GL_API=__attribute__((visibility(\"default\")))",
       "EGLAPI=__attribute__((visibility(\"default\")))",
     ]
-    cflags_cc += [ "-std=c++14" ]
+    cflags_cc += [ "-std=c++17" ]
   } else if (is_win) {
     defines += [
       "ANGLE_ENABLE_D3D11",

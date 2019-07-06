@@ -19,14 +19,14 @@ class SkPixmap;
 
 class SkAutoBlitterChoose : SkNoncopyable {
  public:
-  SkAutoBlitterChoose() noexcept {}
+  SkAutoBlitterChoose() {}
   SkAutoBlitterChoose(
       const SkDraw& draw, const SkMatrix* matrix, const SkPaint& paint, bool drawCoverage = false) {
     this->choose(draw, matrix, paint, drawCoverage);
   }
 
-  SkBlitter* operator->() noexcept { return fBlitter; }
-  SkBlitter* get() const noexcept { return fBlitter; }
+  SkBlitter* operator->() { return fBlitter; }
+  SkBlitter* get() const { return fBlitter; }
 
   SkBlitter* choose(
       const SkDraw& draw, const SkMatrix* matrix, const SkPaint& paint, bool drawCoverage = false) {

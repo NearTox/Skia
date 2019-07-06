@@ -7,13 +7,13 @@
 
 #include "include/private/GrOpList.h"
 
-#include <atomic>
 #include "include/gpu/GrContext.h"
 #include "include/private/GrSurfaceProxy.h"
 #include "src/gpu/GrDeferredProxyUploader.h"
 #include "src/gpu/GrMemoryPool.h"
 #include "src/gpu/GrRenderTargetPriv.h"
 #include "src/gpu/GrTextureProxyPriv.h"
+#include <atomic>
 
 uint32_t GrOpList::CreateUniqueID() {
   static std::atomic<uint32_t> nextID{1};

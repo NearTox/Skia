@@ -10,15 +10,14 @@
 #include "src/gpu/GrAppliedClip.h"
 #include "src/gpu/GrRenderTargetContext.h"
 
-bool GrFixedClip::quickContains(const SkRect& rect) const noexcept {
+bool GrFixedClip::quickContains(const SkRect& rect) const {
   if (fWindowRectsState.enabled()) {
     return false;
   }
   return !fScissorState.enabled() || GrClip::IsInsideClip(fScissorState.rect(), rect);
 }
 
-void GrFixedClip::getConservativeBounds(int w, int h, SkIRect* devResult, bool* iior) const
-    noexcept {
+void GrFixedClip::getConservativeBounds(int w, int h, SkIRect* devResult, bool* iior) const {
   devResult->setXYWH(0, 0, w, h);
   if (fScissorState.enabled()) {
     if (!devResult->intersect(fScissorState.rect())) {
@@ -30,7 +29,7 @@ void GrFixedClip::getConservativeBounds(int w, int h, SkIRect* devResult, bool* 
   }
 }
 
-bool GrFixedClip::isRRect(const SkRect& rtBounds, SkRRect* rr, GrAA* aa) const noexcept {
+bool GrFixedClip::isRRect(const SkRect& rtBounds, SkRRect* rr, GrAA* aa) const {
   if (fWindowRectsState.enabled()) {
     return false;
   }
@@ -46,8 +45,7 @@ bool GrFixedClip::isRRect(const SkRect& rtBounds, SkRRect* rr, GrAA* aa) const n
   return false;
 };
 
-bool GrFixedClip::apply(int rtWidth, int rtHeight, GrAppliedHardClip* out, SkRect* bounds) const
-    noexcept {
+bool GrFixedClip::apply(int rtWidth, int rtHeight, GrAppliedHardClip* out, SkRect* bounds) const {
   if (fScissorState.enabled()) {
     SkIRect tightScissor = SkIRect::MakeWH(rtWidth, rtHeight);
     if (!tightScissor.intersect(fScissorState.rect())) {
@@ -68,7 +66,7 @@ bool GrFixedClip::apply(int rtWidth, int rtHeight, GrAppliedHardClip* out, SkRec
   return true;
 }
 
-const GrFixedClip& GrFixedClip::Disabled() noexcept {
+const GrFixedClip& GrFixedClip::Disabled() {
   static const GrFixedClip disabled = GrFixedClip();
   return disabled;
 }

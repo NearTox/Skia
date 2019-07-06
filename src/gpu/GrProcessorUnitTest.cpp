@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/GrProcessorUnitTest.h"
 #include "src/gpu/GrFragmentProcessor.h"
+#include "src/gpu/GrProcessorUnitTest.h"
 
 #if GR_TEST_UTILS
 
@@ -18,9 +18,9 @@ std::unique_ptr<GrFragmentProcessor> GrProcessorUnitTest::MakeChildFP(GrProcesso
     SkASSERT(fp);
   } while (fp->numChildProcessors() != 0);
   return fp;
-#else
+#  else
   SK_ABORT("Should not be called if !SK_ALLOW_STATIC_GLOBAL_INITIALIZERS");
   return nullptr;
-#endif
+#  endif
 }
 #endif

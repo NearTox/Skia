@@ -22,10 +22,9 @@ class SkTypeface;
 
 // TODO: rename SkScalerContextEffects -> SkStrikeEffects
 struct SkScalerContextEffects {
-  constexpr SkScalerContextEffects() noexcept : fPathEffect(nullptr), fMaskFilter(nullptr) {}
-  SkScalerContextEffects(SkPathEffect* pe, SkMaskFilter* mf) noexcept
-      : fPathEffect(pe), fMaskFilter(mf) {}
-  explicit SkScalerContextEffects(const SkPaint& paint) noexcept
+  SkScalerContextEffects() : fPathEffect(nullptr), fMaskFilter(nullptr) {}
+  SkScalerContextEffects(SkPathEffect* pe, SkMaskFilter* mf) : fPathEffect(pe), fMaskFilter(mf) {}
+  explicit SkScalerContextEffects(const SkPaint& paint)
       : fPathEffect(paint.getPathEffect()), fMaskFilter(paint.getMaskFilter()) {}
 
   SkPathEffect* fPathEffect;

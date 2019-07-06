@@ -99,9 +99,9 @@ class GrRenderTargetContext::TextTarget : public GrTextTarget {
     }
   }
 
-  GrRecordingContext* getContext() noexcept override { return fRenderTargetContext->fContext; }
+  GrRecordingContext* getContext() override { return fRenderTargetContext->fContext; }
 
-  SkGlyphRunListPainter* glyphPainter() noexcept override { return &fGlyphPainter; }
+  SkGlyphRunListPainter* glyphPainter() override { return &fGlyphPainter; }
 
  private:
   GrRenderTargetContext* fRenderTargetContext;
@@ -111,9 +111,9 @@ class GrRenderTargetContext::TextTarget : public GrTextTarget {
 #define ASSERT_OWNED_RESOURCE(R) \
   SkASSERT(!(R) || (R)->getContext() == this->drawingManager()->getContext())
 #define ASSERT_SINGLE_OWNER \
-  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner()));
+  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner());)
 #define ASSERT_SINGLE_OWNER_PRIV \
-  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(fRenderTargetContext->singleOwner()));
+  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(fRenderTargetContext->singleOwner());)
 #define RETURN_IF_ABANDONED           \
   if (fContext->priv().abandoned()) { \
     return;                           \
@@ -139,7 +139,7 @@ class GrRenderTargetContext::TextTarget : public GrTextTarget {
 
 class AutoCheckFlush {
  public:
-  AutoCheckFlush(GrDrawingManager* drawingManager) noexcept : fDrawingManager(drawingManager) {
+  AutoCheckFlush(GrDrawingManager* drawingManager) : fDrawingManager(drawingManager) {
     SkASSERT(fDrawingManager);
   }
   ~AutoCheckFlush() { fDrawingManager->flushIfNecessary(); }
@@ -197,7 +197,7 @@ inline GrAAType GrRenderTargetContext::chooseAAType(GrAA aa) {
 }
 
 static inline GrPathRenderer::AATypeFlags choose_path_aa_type_flags(
-    GrAA aa, GrFSAAType fsaaType, const GrCaps& caps) noexcept {
+    GrAA aa, GrFSAAType fsaaType, const GrCaps& caps) {
   using AATypeFlags = GrPathRenderer::AATypeFlags;
   if (GrAA::kNo == aa) {
     // On some devices we cannot disable MSAA if it is enabled so we make the AA type flags
@@ -217,15 +217,15 @@ static inline GrPathRenderer::AATypeFlags choose_path_aa_type_flags(
   return AATypeFlags::kNone;
 }
 
-GrTextureProxy* GrRenderTargetContext::asTextureProxy() noexcept {
+GrTextureProxy* GrRenderTargetContext::asTextureProxy() {
   return fRenderTargetProxy->asTextureProxy();
 }
 
-const GrTextureProxy* GrRenderTargetContext::asTextureProxy() const noexcept {
+const GrTextureProxy* GrRenderTargetContext::asTextureProxy() const {
   return fRenderTargetProxy->asTextureProxy();
 }
 
-sk_sp<GrTextureProxy> GrRenderTargetContext::asTextureProxyRef() noexcept {
+sk_sp<GrTextureProxy> GrRenderTargetContext::asTextureProxyRef() {
   return sk_ref_sp(fRenderTargetProxy->asTextureProxy());
 }
 
@@ -508,7 +508,7 @@ void GrRenderTargetContext::drawPaint(
   this->addDrawOp(clip, std::move(op));
 }
 
-static inline bool rect_contains_inclusive(const SkRect& rect, const SkPoint& point) noexcept {
+static inline bool rect_contains_inclusive(const SkRect& rect, const SkPoint& point) {
   return point.fX >= rect.fLeft && point.fX <= rect.fRight && point.fY >= rect.fTop &&
          point.fY <= rect.fBottom;
 }
@@ -564,8 +564,7 @@ static bool crop_filled_rect(
   return rect->intersect(clipBounds);
 }
 
-GrQuadAAFlags set_edge_flag(
-    GrQuadAAFlags currentFlags, GrQuadAAFlags edge, GrAA edgeState) noexcept {
+GrQuadAAFlags set_edge_flag(GrQuadAAFlags currentFlags, GrQuadAAFlags edge, GrAA edgeState) {
   if (edgeState == GrAA::kNo) {
     // Turn off 'edge' in currentFlags
     return currentFlags & (~edge);
@@ -2338,7 +2337,7 @@ void GrRenderTargetContext::drawShapeUsingPathRenderer(
   pr->drawPath(args);
 }
 
-static void op_bounds(SkRect* bounds, const GrOp* op) noexcept {
+static void op_bounds(SkRect* bounds, const GrOp* op) {
   *bounds = op->bounds();
   if (op->hasZeroArea()) {
     if (op->hasAABloat()) {

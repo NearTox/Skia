@@ -61,7 +61,7 @@ class GrGLSLGeometryProcessor : public GrGLSLPrimitiveProcessor {
       GrGLSLVertexBuilder*, GrGLSLUniformHandler* uniformHandler, GrGPArgs*, const char* posName,
       const SkMatrix& mat, UniformHandle* viewMatrixUniform);
 
-  static uint32_t ComputePosKey(const SkMatrix& mat) noexcept {
+  static uint32_t ComputePosKey(const SkMatrix& mat) {
     if (mat.isIdentity()) {
       return 0x0;
     } else if (!mat.hasPerspective()) {

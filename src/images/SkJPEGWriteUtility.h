@@ -12,8 +12,8 @@
 #include "src/codec/SkJpegPriv.h"
 
 extern "C" {
-#include "jerror.h"
 #include "jpeglib.h"
+#include "jerror.h"
 }
 
 #include <setjmp.h>

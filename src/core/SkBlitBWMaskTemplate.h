@@ -10,7 +10,7 @@
 
 #ifndef ClearLow3Bits_DEFINED
 #define ClearLow3Bits_DEFINED
-#define ClearLow3Bits(x) ((unsigned)(x) >> 3 << 3)
+#  define ClearLow3Bits(x) ((unsigned)(x) >> 3 << 3)
 #endif
 
 /*

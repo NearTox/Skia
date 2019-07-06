@@ -5,9 +5,9 @@
  * found in the LICENSE file
  */
 
-#include "src/core/SkSpecialSurface.h"
 #include "include/core/SkCanvas.h"
 #include "src/core/SkSpecialImage.h"
+#include "src/core/SkSpecialSurface.h"
 #include "src/core/SkSurfacePriv.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -133,9 +133,9 @@ class SkSpecialSurface_Gpu : public SkSpecialSurface_Base {
 
     fCanvas.reset(new SkCanvas(device));
     fCanvas->clipRect(SkRect::Make(subset));
-#ifdef SK_IS_BOT
+#  ifdef SK_IS_BOT
     fCanvas->clear(SK_ColorRED);  // catch any imageFilter sloppiness
-#endif
+#  endif
   }
 
   ~SkSpecialSurface_Gpu() override {}

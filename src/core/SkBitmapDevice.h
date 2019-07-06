@@ -118,7 +118,7 @@ class SkBitmapDevice : public SkBaseDevice {
 
   bool onReadPixels(const SkPixmap&, int x, int y) override;
   bool onWritePixels(const SkPixmap&, int, int) override;
-  bool onPeekPixels(SkPixmap*) noexcept override;
+  bool onPeekPixels(SkPixmap*) override;
   bool onAccessPixels(SkPixmap*) override;
 
   void onSave() override;
@@ -130,7 +130,7 @@ class SkBitmapDevice : public SkBaseDevice {
   void onSetDeviceClipRestriction(SkIRect* mutableClipRestriction) override;
   bool onClipIsAA() const override;
   void onAsRgnClip(SkRegion*) const override;
-  void validateDevBounds(const SkIRect& r) noexcept override;
+  void validateDevBounds(const SkIRect& r) override;
   ClipType onGetClipType() const override;
 
   virtual void drawBitmap(
@@ -149,7 +149,7 @@ class SkBitmapDevice : public SkBaseDevice {
   // used to change the backend's pixels (and possibly config/rowbytes)
   // but cannot change the width/height, so there should be no change to
   // any clip information.
-  void replaceBitmapBackendForRasterSurface(const SkBitmap&) noexcept override;
+  void replaceBitmapBackendForRasterSurface(const SkBitmap&) override;
 
   SkBaseDevice* onCreateDevice(const CreateInfo&, const SkPaint*) override;
 

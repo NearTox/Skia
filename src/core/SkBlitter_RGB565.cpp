@@ -7,6 +7,7 @@
 
 #include "include/core/SkShader.h"
 #include "include/private/SkColorData.h"
+#include "include/private/SkColorData.h"
 #include "src/core/SkCoreBlitters.h"
 #include "src/core/SkXfermodePriv.h"
 #include "src/utils/SkUTF.h"

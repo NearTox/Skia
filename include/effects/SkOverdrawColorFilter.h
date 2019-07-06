@@ -30,7 +30,7 @@ class SK_API SkOverdrawColorFilter : public SkColorFilter {
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(
       GrRecordingContext*, const GrColorSpaceInfo&) const override;
-#endif
+#  endif
 
   static void RegisterFlattenables();
 

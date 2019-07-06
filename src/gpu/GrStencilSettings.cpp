@@ -19,7 +19,7 @@ GR_STATIC_ASSERT(kAll_StencilFlags == (gUnused.fFrontFlags[0] & gUnused.fBackFla
 const GrUserStencilSettings& GrUserStencilSettings::kUnused = gUnused;
 
 void GrStencilSettings::reset(
-    const GrUserStencilSettings& user, bool hasStencilClip, int numStencilBits) noexcept {
+    const GrUserStencilSettings& user, bool hasStencilClip, int numStencilBits) {
   uint16_t frontFlags = user.fFrontFlags[hasStencilClip];
   if (frontFlags & kSingleSided_StencilFlag) {
     SkASSERT(frontFlags == user.fBackFlags[hasStencilClip]);
@@ -47,7 +47,7 @@ void GrStencilSettings::reset(
   }
 }
 
-void GrStencilSettings::reset(const GrStencilSettings& that) noexcept {
+void GrStencilSettings::reset(const GrStencilSettings& that) {
   fFlags = that.fFlags;
   if ((kInvalid_PrivateFlag | kDisabled_StencilFlag) & fFlags) {
     return;
@@ -61,7 +61,7 @@ void GrStencilSettings::reset(const GrStencilSettings& that) noexcept {
   }
 }
 
-bool GrStencilSettings::operator==(const GrStencilSettings& that) const noexcept {
+bool GrStencilSettings::operator==(const GrStencilSettings& that) const {
   if ((kInvalid_PrivateFlag | kDisabled_StencilFlag) & (fFlags | that.fFlags)) {
     // At least one is invalid and/or disabled.
     if (kInvalid_PrivateFlag & (fFlags | that.fFlags)) {
@@ -153,7 +153,7 @@ GR_STATIC_ASSERT(11 == (int)GrUserStencilOp::kSetClipAndReplaceUserBits);
 GR_STATIC_ASSERT(12 == (int)GrUserStencilOp::kZeroClipAndUserBits);
 
 void GrStencilSettings::Face::reset(
-    const GrUserStencilSettings::Face& user, bool hasStencilClip, int numStencilBits) noexcept {
+    const GrUserStencilSettings::Face& user, bool hasStencilClip, int numStencilBits) {
   SkASSERT(user.fTest < (GrUserStencilTest)kGrUserStencilTestCount);
   SkASSERT(user.fPassOp < (GrUserStencilOp)kGrUserStencilOpCount);
   SkASSERT(user.fFailOp < (GrUserStencilOp)kGrUserStencilOpCount);
@@ -199,7 +199,7 @@ void GrStencilSettings::Face::reset(
   fRef = (clipBit | user.fRef) & (fTestMask | fWriteMask);
 }
 
-void GrStencilSettings::Face::setDisabled() noexcept {
+void GrStencilSettings::Face::setDisabled() {
   memset(this, 0, sizeof(*this));
   GR_STATIC_ASSERT(0 == (int)GrStencilTest::kAlways);
   GR_STATIC_ASSERT(0 == (int)GrStencilOp::kKeep);
@@ -354,7 +354,7 @@ GR_STATIC_ASSERT(4 == SkRegion::kReverseDifference_Op);
 GR_STATIC_ASSERT(5 == SkRegion::kReplace_Op);
 
 GrUserStencilSettings const* const* GrStencilSettings::GetClipPasses(
-    SkRegion::Op op, bool canBeDirect, bool invertedFill, bool* drawDirectToClip) noexcept {
+    SkRegion::Op op, bool canBeDirect, bool invertedFill, bool* drawDirectToClip) {
   SkASSERT((unsigned)op <= SkRegion::kLastOp);
   if (canBeDirect && !invertedFill) {  // TODO: inverse fill + intersect op can be direct.
     GrUserStencilSettings const* const* directPass = gDirectDrawTable[op];
@@ -372,7 +372,7 @@ static constexpr GrUserStencilSettings gZeroStencilClipBit(
         0x0000, GrUserStencilTest::kAlways, 0xffff, GrUserStencilOp::kZeroClipBit,
         GrUserStencilOp::kZeroClipBit, 0x0000>());
 
-const GrUserStencilSettings* GrStencilSettings::SetClipBitSettings(bool setToInside) noexcept {
+const GrUserStencilSettings* GrStencilSettings::SetClipBitSettings(bool setToInside) {
   return setToInside ? &gReplaceClip : &gZeroStencilClipBit;
 }
 

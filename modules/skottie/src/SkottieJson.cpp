@@ -7,7 +7,6 @@
 
 #include "modules/skottie/src/SkottieJson.h"
 
-#include <vector>
 #include "include/core/SkData.h"
 #include "include/core/SkPath.h"
 #include "include/core/SkPoint.h"
@@ -15,6 +14,7 @@
 #include "include/core/SkStream.h"
 #include "include/core/SkString.h"
 #include "modules/skottie/src/SkottieValue.h"
+#include <vector>
 
 namespace skottie {
 

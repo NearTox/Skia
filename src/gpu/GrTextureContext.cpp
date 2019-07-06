@@ -14,7 +14,7 @@
 #include "include/private/GrAuditTrail.h"
 
 #define ASSERT_SINGLE_OWNER \
-  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner()));
+  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner());)
 #define RETURN_FALSE_IF_ABANDONED               \
   if (this->drawingManager()->wasAbandoned()) { \
     return false;                               \
@@ -41,13 +41,13 @@ void GrTextureContext::validate() const {
 
 GrTextureContext::~GrTextureContext(){ASSERT_SINGLE_OWNER}
 
-GrRenderTargetProxy* GrTextureContext::asRenderTargetProxy() noexcept {
+GrRenderTargetProxy* GrTextureContext::asRenderTargetProxy() {
   // If the proxy can return an RTProxy it should've been wrapped in a RTContext
   SkASSERT(!fTextureProxy->asRenderTargetProxy());
   return nullptr;
 }
 
-sk_sp<GrRenderTargetProxy> GrTextureContext::asRenderTargetProxyRef() noexcept {
+sk_sp<GrRenderTargetProxy> GrTextureContext::asRenderTargetProxyRef() {
   // If the proxy can return an RTProxy it should've been wrapped in a RTContext
   SkASSERT(!fTextureProxy->asRenderTargetProxy());
   return nullptr;

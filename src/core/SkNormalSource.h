@@ -68,8 +68,8 @@ class SK_API SkNormalSource : public SkFlattenable {
    */
   static sk_sp<SkNormalSource> MakeFlat();
 
-  static Type GetFlattenableType() noexcept { return kSkNormalSource_Type; }
-  Type getFlattenableType() const noexcept override { return GetFlattenableType(); }
+  static Type GetFlattenableType() { return kSkNormalSource_Type; }
+  Type getFlattenableType() const override { return GetFlattenableType(); }
 
   static sk_sp<SkNormalSource> Deserialize(
       const void* data, size_t size, const SkDeserialProcs* procs = nullptr) {

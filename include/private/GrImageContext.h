@@ -19,8 +19,8 @@ class SK_API GrImageContext : public GrContext_Base {
   ~GrImageContext() override;
 
   // Provides access to functions that aren't part of the public API.
-  GrImageContextPriv priv() noexcept;
-  const GrImageContextPriv priv() const noexcept;
+  GrImageContextPriv priv();
+  const GrImageContextPriv priv() const;
 
  protected:
   friend class GrImageContextPriv;  // for hidden functions
@@ -28,15 +28,15 @@ class SK_API GrImageContext : public GrContext_Base {
   GrImageContext(GrBackendApi, const GrContextOptions&, uint32_t contextID);
 
   virtual void abandonContext();
-  bool abandoned() const noexcept;
+  bool abandoned() const;
 
-  GrProxyProvider* proxyProvider() noexcept { return fProxyProvider.get(); }
-  const GrProxyProvider* proxyProvider() const noexcept { return fProxyProvider.get(); }
+  GrProxyProvider* proxyProvider() { return fProxyProvider.get(); }
+  const GrProxyProvider* proxyProvider() const { return fProxyProvider.get(); }
 
   /** This is only useful for debug purposes */
-  GrSingleOwner* singleOwner() const noexcept { return &fSingleOwner; }
+  GrSingleOwner* singleOwner() const { return &fSingleOwner; }
 
-  GrImageContext* asImageContext() noexcept override { return this; }
+  GrImageContext* asImageContext() override { return this; }
 
  private:
   std::unique_ptr<GrProxyProvider> fProxyProvider;

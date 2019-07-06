@@ -16,52 +16,52 @@
 #ifndef _UNICODE
 #define _UNICODE
 #endif
-#include <FontSub.h>
 #include <ObjBase.h>
-#include <T2EmbApi.h>
 #include <XpsObjectModel.h>
-#include <limits>
+#  include <T2EmbApi.h>
+#  include <FontSub.h>
+#  include <limits>
 
-#include "include/core/SkColor.h"
-#include "include/core/SkData.h"
-#include "include/core/SkImage.h"
-#include "include/core/SkImageEncoder.h"
-#include "include/core/SkPaint.h"
-#include "include/core/SkPathEffect.h"
-#include "include/core/SkPoint.h"
-#include "include/core/SkShader.h"
-#include "include/core/SkSize.h"
-#include "include/core/SkStream.h"
-#include "include/core/SkVertices.h"
-#include "include/pathops/SkPathOps.h"
-#include "include/private/SkTDArray.h"
-#include "include/private/SkTo.h"
-#include "src/core/SkDraw.h"
-#include "src/core/SkEndian.h"
-#include "src/core/SkGeometry.h"
-#include "src/core/SkImagePriv.h"
-#include "src/core/SkMaskFilterBase.h"
-#include "src/core/SkRasterClip.h"
-#include "src/core/SkStrikeCache.h"
-#include "src/core/SkTLazy.h"
-#include "src/core/SkTypefacePriv.h"
-#include "src/core/SkUtils.h"
-#include "src/sfnt/SkSFNTHeader.h"
-#include "src/sfnt/SkTTCFHeader.h"
-#include "src/shaders/SkShaderBase.h"
-#include "src/utils/win/SkHRESULT.h"
-#include "src/utils/win/SkIStream.h"
-#include "src/utils/win/SkTScopedComPtr.h"
-#include "src/xps/SkXPSDevice.h"
+#  include "include/core/SkColor.h"
+#  include "include/core/SkData.h"
+#  include "include/core/SkImage.h"
+#  include "include/core/SkImageEncoder.h"
+#  include "include/core/SkPaint.h"
+#  include "include/core/SkPathEffect.h"
+#  include "include/core/SkPoint.h"
+#  include "include/core/SkShader.h"
+#  include "include/core/SkSize.h"
+#  include "include/core/SkStream.h"
+#  include "include/core/SkVertices.h"
+#  include "include/pathops/SkPathOps.h"
+#  include "include/private/SkTDArray.h"
+#  include "include/private/SkTo.h"
+#  include "src/core/SkDraw.h"
+#  include "src/core/SkEndian.h"
+#  include "src/core/SkGeometry.h"
+#  include "src/core/SkImagePriv.h"
+#  include "src/core/SkMaskFilterBase.h"
+#  include "src/core/SkRasterClip.h"
+#  include "src/core/SkStrikeCache.h"
+#  include "src/core/SkTLazy.h"
+#  include "src/core/SkTypefacePriv.h"
+#  include "src/core/SkUtils.h"
+#  include "src/sfnt/SkSFNTHeader.h"
+#  include "src/sfnt/SkTTCFHeader.h"
+#  include "src/shaders/SkShaderBase.h"
+#  include "src/utils/win/SkHRESULT.h"
+#  include "src/utils/win/SkIStream.h"
+#  include "src/utils/win/SkTScopedComPtr.h"
+#  include "src/xps/SkXPSDevice.h"
 
 // Windows defines a FLOAT type,
 // make it clear when converting a scalar that this is what is wanted.
-#define SkScalarToFLOAT(n) SkScalarToFloat(n)
+#  define SkScalarToFLOAT(n) SkScalarToFloat(n)
 
 // Dummy representation of a GUID from createId.
-#define L_GUID_ID L"XXXXXXXXsXXXXsXXXXsXXXXsXXXXXXXXXXXX"
+#  define L_GUID_ID L"XXXXXXXXsXXXXsXXXXsXXXXsXXXXXXXXXXXX"
 // Length of GUID representation from createId, including nullptr terminator.
-#define GUID_ID_LEN SK_ARRAY_COUNT(L_GUID_ID)
+#  define GUID_ID_LEN SK_ARRAY_COUNT(L_GUID_ID)
 
 /**
    Formats a GUID and places it into buffer.
@@ -70,8 +70,7 @@
    XXXXXXXXsXXXXsXXXXsXXXXsXXXXXXXXXXXX0
    @return -1 if there was an error, > 0 if success.
  */
-static int format_guid(
-    const GUID& guid, wchar_t* buffer, size_t bufferSize, wchar_t sep = '-') noexcept {
+static int format_guid(const GUID& guid, wchar_t* buffer, size_t bufferSize, wchar_t sep = '-') {
   SkASSERT(bufferSize >= GUID_ID_LEN);
   return swprintf_s(
       buffer, bufferSize, L"%08lX%c%04X%c%04X%c%02X%02X%c%02X%02X%02X%02X%02X%02X", guid.Data1, sep,
@@ -79,16 +78,16 @@ static int format_guid(
       guid.Data4[3], guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
 }
 
-HRESULT SkXPSDevice::createId(wchar_t* buffer, size_t bufferSize, wchar_t sep) noexcept {
+HRESULT SkXPSDevice::createId(wchar_t* buffer, size_t bufferSize, wchar_t sep) {
   GUID guid = {};
-#ifdef SK_XPS_USE_DETERMINISTIC_IDS
+#  ifdef SK_XPS_USE_DETERMINISTIC_IDS
   guid.Data1 = fNextId++;
   // The following make this a valid Type4 UUID.
   guid.Data3 = 0x4000;
   guid.Data4[0] = 0x80;
-#else
+#  else
   HRM(CoCreateGuid(&guid), "Could not create GUID for id.");
-#endif
+#  endif
 
   if (format_guid(guid, buffer, bufferSize, sep) == -1) {
     HRM(E_UNEXPECTED, "Could not format GUID into id.");
@@ -370,7 +369,7 @@ bool SkXPSDevice::endPortfolio() {
   return true;
 }
 
-static XPS_COLOR xps_color(const SkColor skColor) noexcept {
+static XPS_COLOR xps_color(const SkColor skColor) {
   // XPS uses non-pre-multiplied alpha (XPS Spec 11.4).
   XPS_COLOR xpsColor;
   xpsColor.colorType = XPS_COLOR_TYPE_SRGB;
@@ -382,7 +381,7 @@ static XPS_COLOR xps_color(const SkColor skColor) noexcept {
   return xpsColor;
 }
 
-static XPS_POINT xps_point(const SkPoint& point) noexcept {
+static XPS_POINT xps_point(const SkPoint& point) {
   XPS_POINT xpsPoint = {
       SkScalarToFLOAT(point.fX),
       SkScalarToFLOAT(point.fY),
@@ -396,7 +395,7 @@ static XPS_POINT xps_point(const SkPoint& point, const SkMatrix& matrix) {
   return xps_point(skTransformedPoint);
 }
 
-static XPS_SPREAD_METHOD xps_spread_method(SkTileMode tileMode) noexcept {
+static XPS_SPREAD_METHOD xps_spread_method(SkTileMode tileMode) {
   switch (tileMode) {
     case SkTileMode::kClamp: return XPS_SPREAD_METHOD_PAD;
     case SkTileMode::kRepeat: return XPS_SPREAD_METHOD_REPEAT;
@@ -538,7 +537,7 @@ static XPS_TILE_MODE gSkToXpsTileMode[kSkTileModeCount + 1][kSkTileModeCount + 1
     /*None  */ {XTM_N, XTM_N, XTM_Y, XTM_N},
 };
 
-static XPS_TILE_MODE SkToXpsTileMode(SkTileMode tmx, SkTileMode tmy) noexcept {
+static XPS_TILE_MODE SkToXpsTileMode(SkTileMode tmx, SkTileMode tmy) {
   return gSkToXpsTileMode[(unsigned)tmx][(unsigned)tmy];
 }
 
@@ -928,7 +927,7 @@ HRESULT SkXPSDevice::createXpsBrush(
   return S_OK;
 }
 
-static bool rect_must_be_pathed(const SkPaint& paint, const SkMatrix& matrix) noexcept {
+static bool rect_must_be_pathed(const SkPaint& paint, const SkMatrix& matrix) {
   const bool zeroWidth = (0 == paint.getStrokeWidth());
   const bool stroke = (SkPaint::kFill_Style != paint.getStyle());
 
@@ -1223,7 +1222,7 @@ HRESULT SkXPSDevice::addXpsPathGeometry(
 
 void SkXPSDevice::convertToPpm(
     const SkMaskFilter* filter, SkMatrix* matrix, SkVector* ppuScale, const SkIRect& clip,
-    SkIRect* clipIRect) noexcept {
+    SkIRect* clipIRect) {
   // This action is in unit space, but the ppm is specified in physical space.
   ppuScale->set(
       fCurrentPixelsPerMeter.fX / fCurrentUnitsPerMeter.fX,
@@ -1840,7 +1839,7 @@ void SkXPSDevice::drawDevice(SkBaseDevice* dev, int x, int y, const SkPaint&) {
 
 SkBaseDevice* SkXPSDevice::onCreateDevice(const CreateInfo& info, const SkPaint*) {
 // Conditional for bug compatibility with PDF device.
-#if 0
+#  if 0
     if (SkBaseDevice::kGeneral_Usage == info.fUsage) {
         return nullptr;
         //To what stream do we write?
@@ -1849,7 +1848,7 @@ SkBaseDevice* SkXPSDevice::onCreateDevice(const CreateInfo& info, const SkPaint*
         //dev->BeginCanvas(s, s, SkMatrix::I());
         //return dev;
     }
-#endif
+#  endif
   SkXPSDevice* dev = new SkXPSDevice(info.fInfo.dimensions());
   // TODO(halcanary) implement copy constructor on SkTScopedCOmPtr
   dev->fXpsFactory.reset(SkRefComPtr(fXpsFactory.get()));

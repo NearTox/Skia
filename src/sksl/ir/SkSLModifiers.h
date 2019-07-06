@@ -95,11 +95,11 @@ struct Modifiers {
     return result;
   }
 
-  bool operator==(const Modifiers& other) const noexcept {
+  bool operator==(const Modifiers& other) const {
     return fLayout == other.fLayout && fFlags == other.fFlags;
   }
 
-  bool operator!=(const Modifiers& other) const noexcept { return !(*this == other); }
+  bool operator!=(const Modifiers& other) const { return !(*this == other); }
 
   Layout fLayout;
   int fFlags;

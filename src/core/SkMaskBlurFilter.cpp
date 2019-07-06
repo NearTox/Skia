@@ -15,8 +15,8 @@
 #include "src/core/SkArenaAlloc.h"
 #include "src/core/SkGaussFilter.h"
 
-#include <climits>
 #include <cmath>
+#include <climits>
 
 namespace {
 static const double kPi = 3.14159265358979323846264338327950288;

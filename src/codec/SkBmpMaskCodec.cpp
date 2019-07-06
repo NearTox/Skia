@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "src/codec/SkBmpMaskCodec.h"
 #include "include/private/SkColorData.h"
+#include "src/codec/SkBmpMaskCodec.h"
 #include "src/codec/SkCodecPriv.h"
 
 /*

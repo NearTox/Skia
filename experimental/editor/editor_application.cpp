@@ -74,9 +74,11 @@ static SkString modifiers_desc(uint32_t m) {
   }
   M(Shift)
   M(Control)
-  M(Option) M(Command) M(FirstPress)
+  M(Option)
+  M(Command)
+  M(FirstPress)
 #undef M
-      return s;
+  return s;
 }
 
 static void debug_on_char(SkUnichar c, uint32_t modifiers) {

@@ -25,14 +25,14 @@ class SkDWriteFontFileStream : public SkStreamMemory {
   explicit SkDWriteFontFileStream(IDWriteFontFileStream* fontFileStream);
   ~SkDWriteFontFileStream() override;
 
-  size_t read(void* buffer, size_t size) noexcept override;
-  bool isAtEnd() const noexcept override;
-  bool rewind() noexcept override;
-  size_t getPosition() const noexcept override;
-  bool seek(size_t position) noexcept override;
-  bool move(long offset) noexcept override;
-  size_t getLength() const noexcept override;
-  const void* getMemoryBase() noexcept override;
+  size_t read(void* buffer, size_t size) override;
+  bool isAtEnd() const override;
+  bool rewind() override;
+  size_t getPosition() const override;
+  bool seek(size_t position) override;
+  bool move(long offset) override;
+  size_t getLength() const override;
+  const void* getMemoryBase() override;
 
   std::unique_ptr<SkDWriteFontFileStream> duplicate() const {
     return std::unique_ptr<SkDWriteFontFileStream>(this->onDuplicate());
@@ -66,15 +66,15 @@ class SkDWriteFontFileStreamWrapper : public IDWriteFontFileStream {
   virtual HRESULT STDMETHODCALLTYPE ReadFileFragment(
       void const** fragmentStart, UINT64 fileOffset, UINT64 fragmentSize, void** fragmentContext);
 
-  virtual void STDMETHODCALLTYPE ReleaseFileFragment(void* fragmentContext) noexcept;
-  virtual HRESULT STDMETHODCALLTYPE GetFileSize(UINT64* fileSize) noexcept;
-  virtual HRESULT STDMETHODCALLTYPE GetLastWriteTime(UINT64* lastWriteTime) noexcept;
+  virtual void STDMETHODCALLTYPE ReleaseFileFragment(void* fragmentContext);
+  virtual HRESULT STDMETHODCALLTYPE GetFileSize(UINT64* fileSize);
+  virtual HRESULT STDMETHODCALLTYPE GetLastWriteTime(UINT64* lastWriteTime);
 
   static HRESULT Create(
       SkStreamAsset* stream, SkDWriteFontFileStreamWrapper** streamFontFileStream);
 
  private:
-  explicit SkDWriteFontFileStreamWrapper(SkStreamAsset* stream) noexcept;
+  explicit SkDWriteFontFileStreamWrapper(SkStreamAsset* stream);
   virtual ~SkDWriteFontFileStreamWrapper() {}
 
   ULONG fRefCount;

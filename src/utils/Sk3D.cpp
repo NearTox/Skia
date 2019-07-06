@@ -7,13 +7,13 @@
 
 #include "include/utils/Sk3D.h"
 
-static void set_col(SkMatrix44* m, int col, const SkPoint3& v) noexcept {
+static void set_col(SkMatrix44* m, int col, const SkPoint3& v) {
   m->set(0, col, v.fX);
   m->set(1, col, v.fY);
   m->set(2, col, v.fZ);
 }
 
-static SkPoint3 cross(const SkPoint3& a, const SkPoint3& b) noexcept {
+static SkPoint3 cross(const SkPoint3& a, const SkPoint3& b) {
   return {
       a.fY * b.fZ - a.fZ * b.fY,
       a.fZ * b.fX - a.fX * b.fZ,
@@ -21,8 +21,7 @@ static SkPoint3 cross(const SkPoint3& a, const SkPoint3& b) noexcept {
   };
 }
 
-void Sk3LookAt(
-    SkMatrix44* dst, const SkPoint3& eye, const SkPoint3& center, const SkPoint3& up) noexcept {
+void Sk3LookAt(SkMatrix44* dst, const SkPoint3& eye, const SkPoint3& center, const SkPoint3& up) {
   SkPoint3 f = center - eye;
   f.normalize();
   SkPoint3 u = up;
@@ -39,7 +38,7 @@ void Sk3LookAt(
   dst->invert(dst);
 }
 
-bool Sk3Perspective(SkMatrix44* dst, float near, float far, float angle) noexcept {
+bool Sk3Perspective(SkMatrix44* dst, float near, float far, float angle) {
   SkASSERT(far > near);
 
   float denomInv = sk_ieee_float_divide(1, far - near);
@@ -55,7 +54,7 @@ bool Sk3Perspective(SkMatrix44* dst, float near, float far, float angle) noexcep
   return true;
 }
 
-void Sk3MapPts(SkPoint dst[], const SkMatrix44& m4, const SkPoint3 src[], int count) noexcept {
+void Sk3MapPts(SkPoint dst[], const SkMatrix44& m4, const SkPoint3 src[], int count) {
   for (int i = 0; i < count; ++i) {
     SkVector4 v = m4 * SkVector4{src[i].fX, src[i].fY, src[i].fZ, 1};
     // clip v;

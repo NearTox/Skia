@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkLineClipper.h"
 #include "include/private/SkTo.h"
+#include "src/core/SkLineClipper.h"
 
 #include <utility>
 

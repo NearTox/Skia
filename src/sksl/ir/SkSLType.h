@@ -8,14 +8,14 @@
 #ifndef SKIASL_TYPE
 #define SKIASL_TYPE
 
-#include <climits>
-#include <memory>
-#include <vector>
 #include "src/sksl/SkSLPosition.h"
 #include "src/sksl/SkSLUtil.h"
 #include "src/sksl/ir/SkSLModifiers.h"
 #include "src/sksl/ir/SkSLSymbol.h"
 #include "src/sksl/spirv.h"
+#include <climits>
+#include <vector>
+#include <memory>
 
 namespace SkSL {
 
@@ -204,7 +204,7 @@ class Type : public Symbol {
     fName.fLength = fNameString.size();
   }
 
-  const String& name() const noexcept { return fNameString; }
+  const String& name() const { return fNameString; }
 
   String description() const override {
     if (fNameString == "$floatLiteral") {
@@ -216,45 +216,45 @@ class Type : public Symbol {
     return fNameString;
   }
 
-  bool operator==(const Type& other) const noexcept { return fName == other.fName; }
+  bool operator==(const Type& other) const { return fName == other.fName; }
 
-  bool operator!=(const Type& other) const noexcept { return fName != other.fName; }
+  bool operator!=(const Type& other) const { return fName != other.fName; }
 
   /**
    * Returns the category (scalar, vector, matrix, etc.) of this type.
    */
-  Kind kind() const noexcept { return fTypeKind; }
+  Kind kind() const { return fTypeKind; }
 
   /**
    * Returns true if this is a numeric scalar type.
    */
-  bool isNumber() const noexcept { return fNumberKind != kNonnumeric_NumberKind; }
+  bool isNumber() const { return fNumberKind != kNonnumeric_NumberKind; }
 
   /**
    * Returns true if this is a floating-point scalar type (float, half, or double).
    */
-  bool isFloat() const noexcept { return fNumberKind == kFloat_NumberKind; }
+  bool isFloat() const { return fNumberKind == kFloat_NumberKind; }
 
   /**
    * Returns true if this is a signed scalar type (int or short).
    */
-  bool isSigned() const noexcept { return fNumberKind == kSigned_NumberKind; }
+  bool isSigned() const { return fNumberKind == kSigned_NumberKind; }
 
   /**
    * Returns true if this is an unsigned scalar type (uint or ushort).
    */
-  bool isUnsigned() const noexcept { return fNumberKind == kUnsigned_NumberKind; }
+  bool isUnsigned() const { return fNumberKind == kUnsigned_NumberKind; }
 
   /**
    * Returns true if this is a signed or unsigned integer.
    */
-  bool isInteger() const noexcept { return isSigned() || isUnsigned(); }
+  bool isInteger() const { return isSigned() || isUnsigned(); }
 
   /**
    * Returns the "priority" of a number type, in order of double > float > half > int > short.
    * When operating on two number types, the result is the higher-priority type.
    */
-  int priority() const noexcept { return fPriority; }
+  int priority() const { return fPriority; }
 
   /**
    * Returns true if an instance of this type can be freely coerced (implicitly converted) to
@@ -273,7 +273,7 @@ class Type : public Symbol {
    * For matrices and vectors, returns the type of individual cells (e.g. mat2 has a component
    * type of kFloat_Type). For all other types, causes an SkASSERTion failure.
    */
-  const Type& componentType() const noexcept {
+  const Type& componentType() const {
     SkASSERT(fComponentType);
     return *fComponentType;
   }
@@ -281,7 +281,7 @@ class Type : public Symbol {
   /**
    * For nullable types, returns the base type, otherwise returns the type itself.
    */
-  const Type& nonnullable() const noexcept {
+  const Type& nonnullable() const {
     if (fTypeKind == kNullable_Kind) {
       return this->componentType();
     }
@@ -293,7 +293,7 @@ class Type : public Symbol {
    * For scalars, returns 1. For arrays, returns either the size of the array (if known) or -1.
    * For all other types, causes an SkASSERTion failure.
    */
-  int columns() const noexcept {
+  int columns() const {
     SkASSERT(
         fTypeKind == kScalar_Kind || fTypeKind == kVector_Kind || fTypeKind == kMatrix_Kind ||
         fTypeKind == kArray_Kind);
@@ -304,12 +304,12 @@ class Type : public Symbol {
    * For matrices, returns the number of rows (e.g. mat2x4 returns 4). For vectors and scalars,
    * returns 1. For all other types, causes an SkASSERTion failure.
    */
-  int rows() const noexcept {
+  int rows() const {
     SkASSERT(fRows > 0);
     return fRows;
   }
 
-  const std::vector<Field>& fields() const noexcept {
+  const std::vector<Field>& fields() const {
     SkASSERT(fTypeKind == kStruct_Kind || fTypeKind == kOther_Kind);
     return fFields;
   }
@@ -318,32 +318,32 @@ class Type : public Symbol {
    * For generic types, returns the types that this generic type can substitute for. For other
    * types, returns a list of other types that this type can be coerced into.
    */
-  const std::vector<const Type*>& coercibleTypes() const noexcept {
+  const std::vector<const Type*>& coercibleTypes() const {
     SkASSERT(fCoercibleTypes.size() > 0);
     return fCoercibleTypes;
   }
 
-  SpvDim_ dimensions() const noexcept {
+  SpvDim_ dimensions() const {
     SkASSERT(kSampler_Kind == fTypeKind);
     return fDimensions;
   }
 
-  bool isDepth() const noexcept {
+  bool isDepth() const {
     SkASSERT(kSampler_Kind == fTypeKind);
     return fIsDepth;
   }
 
-  bool isArrayed() const noexcept {
+  bool isArrayed() const {
     SkASSERT(kSampler_Kind == fTypeKind);
     return fIsArrayed;
   }
 
-  bool isMultisampled() const noexcept {
+  bool isMultisampled() const {
     SkASSERT(kSampler_Kind == fTypeKind);
     return fIsMultisampled;
   }
 
-  bool isSampled() const noexcept {
+  bool isSampled() const {
     SkASSERT(kSampler_Kind == fTypeKind);
     return fIsSampled;
   }

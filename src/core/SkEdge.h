@@ -33,13 +33,13 @@ struct SkEdge {
   uint8_t fCubicDShift;  // applied to fCDx and fCDy only in cubic
   int8_t fWinding;       // 1 or -1
 
-  int setLine(const SkPoint& p0, const SkPoint& p1, const SkIRect* clip, int shiftUp) noexcept;
+  int setLine(const SkPoint& p0, const SkPoint& p1, const SkIRect* clip, int shiftUp);
   // call this version if you know you don't have a clip
-  inline int setLine(const SkPoint& p0, const SkPoint& p1, int shiftUp) noexcept;
-  inline int updateLine(SkFixed ax, SkFixed ay, SkFixed bx, SkFixed by) noexcept;
-  void chopLineWithClip(const SkIRect& clip) noexcept;
+  inline int setLine(const SkPoint& p0, const SkPoint& p1, int shiftUp);
+  inline int updateLine(SkFixed ax, SkFixed ay, SkFixed bx, SkFixed by);
+  void chopLineWithClip(const SkIRect& clip);
 
-  inline bool intersectsClip(const SkIRect& clip) const noexcept {
+  inline bool intersectsClip(const SkIRect& clip) const {
     SkASSERT(fFirstY < clip.fBottom);
     return fLastY >= clip.fTop;
   }
@@ -68,9 +68,9 @@ struct SkQuadraticEdge : public SkEdge {
   SkFixed fQDDx, fQDDy;
   SkFixed fQLastX, fQLastY;
 
-  bool setQuadraticWithoutUpdate(const SkPoint pts[3], int shiftUp) noexcept;
-  int setQuadratic(const SkPoint pts[3], int shiftUp) noexcept;
-  int updateQuadratic() noexcept;
+  bool setQuadraticWithoutUpdate(const SkPoint pts[3], int shiftUp);
+  int setQuadratic(const SkPoint pts[3], int shiftUp);
+  int updateQuadratic();
 };
 
 struct SkCubicEdge : public SkEdge {
@@ -80,12 +80,12 @@ struct SkCubicEdge : public SkEdge {
   SkFixed fCDDDx, fCDDDy;
   SkFixed fCLastX, fCLastY;
 
-  bool setCubicWithoutUpdate(const SkPoint pts[4], int shiftUp, bool sortY = true) noexcept;
-  int setCubic(const SkPoint pts[4], int shiftUp) noexcept;
-  int updateCubic() noexcept;
+  bool setCubicWithoutUpdate(const SkPoint pts[4], int shiftUp, bool sortY = true);
+  int setCubic(const SkPoint pts[4], int shiftUp);
+  int updateCubic();
 };
 
-int SkEdge::setLine(const SkPoint& p0, const SkPoint& p1, int shift) noexcept {
+int SkEdge::setLine(const SkPoint& p0, const SkPoint& p1, int shift) {
   SkFDot6 x0, y0, x1, y1;
 
   {

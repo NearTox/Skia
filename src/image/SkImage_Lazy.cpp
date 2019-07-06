@@ -36,11 +36,10 @@ class SharedGenerator final : public SkNVRefCnt<SharedGenerator> {
   }
 
   // This is thread safe.  It is a const field set in the constructor.
-  const SkImageInfo& getInfo() noexcept { return fGenerator->getInfo(); }
+  const SkImageInfo& getInfo() { return fGenerator->getInfo(); }
 
  private:
-  explicit SharedGenerator(std::unique_ptr<SkImageGenerator> gen) noexcept
-      : fGenerator(std::move(gen)) {
+  explicit SharedGenerator(std::unique_ptr<SkImageGenerator> gen) : fGenerator(std::move(gen)) {
     SkASSERT(fGenerator);
   }
 
@@ -55,7 +54,7 @@ class SharedGenerator final : public SkNVRefCnt<SharedGenerator> {
 
 SkImage_Lazy::Validator::Validator(
     sk_sp<SharedGenerator> gen, const SkIRect* subset, const SkColorType* colorType,
-    sk_sp<SkColorSpace> colorSpace) noexcept
+    sk_sp<SkColorSpace> colorSpace)
     : fSharedGenerator(std::move(gen)) {
   if (!fSharedGenerator) {
     return;
@@ -102,15 +101,15 @@ SkImage_Lazy::Validator::Validator(
 // Helper for exclusive access to a shared generator.
 class SkImage_Lazy::ScopedGenerator {
  public:
-  ScopedGenerator(const sk_sp<SharedGenerator>& gen) noexcept
+  ScopedGenerator(const sk_sp<SharedGenerator>& gen)
       : fSharedGenerator(gen), fAutoAquire(gen->fMutex) {}
 
-  SkImageGenerator* operator->() const noexcept {
+  SkImageGenerator* operator->() const {
     fSharedGenerator->fMutex.assertHeld();
     return fSharedGenerator->fGenerator.get();
   }
 
-  operator SkImageGenerator*() const noexcept {
+  operator SkImageGenerator*() const {
     fSharedGenerator->fMutex.assertHeld();
     return fSharedGenerator->fGenerator.get();
   }
@@ -122,7 +121,7 @@ class SkImage_Lazy::ScopedGenerator {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkImage_Lazy::SkImage_Lazy(Validator* validator) noexcept
+SkImage_Lazy::SkImage_Lazy(Validator* validator)
     : INHERITED(validator->fInfo, validator->fUniqueID),
       fSharedGenerator(std::move(validator->fSharedGenerator)),
       fOrigin(validator->fOrigin) {
@@ -288,8 +287,8 @@ sk_sp<SkImage> SkImage::MakeFromGenerator(
 
 #if SK_SUPPORT_GPU
 
-void SkImage_Lazy::makeCacheKeyFromOrigKey(const GrUniqueKey& origKey, GrUniqueKey* cacheKey) const
-    noexcept {
+void SkImage_Lazy::makeCacheKeyFromOrigKey(
+    const GrUniqueKey& origKey, GrUniqueKey* cacheKey) const {
   SkASSERT(!cacheKey->isValid());
   if (origKey.isValid()) {
     static const GrUniqueKey::Domain kDomain = GrUniqueKey::GenerateDomain();
@@ -299,10 +298,10 @@ void SkImage_Lazy::makeCacheKeyFromOrigKey(const GrUniqueKey& origKey, GrUniqueK
 
 class Generator_GrYUVProvider : public GrYUVProvider {
  public:
-  Generator_GrYUVProvider(SkImageGenerator* gen) noexcept : fGen(gen) {}
+  Generator_GrYUVProvider(SkImageGenerator* gen) : fGen(gen) {}
 
  private:
-  uint32_t onGetID() const noexcept override { return fGen->uniqueID(); }
+  uint32_t onGetID() const override { return fGen->uniqueID(); }
   bool onQueryYUVA8(
       SkYUVASizeInfo* sizeInfo, SkYUVAIndex yuvaIndices[SkYUVAIndex::kIndexCount],
       SkYUVColorSpace* colorSpace) const override {

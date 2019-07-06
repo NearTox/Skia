@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "include/effects/SkDiscretePathEffect.h"
 #include "include/core/SkPathMeasure.h"
 #include "include/core/SkStrokeRec.h"
+#include "include/effects/SkDiscretePathEffect.h"
 #include "include/private/SkFixed.h"
 #include "src/core/SkPointPriv.h"
 #include "src/core/SkReadBuffer.h"

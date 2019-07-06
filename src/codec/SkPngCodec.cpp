@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/codec/SkPngCodec.h"
 #include "include/core/SkBitmap.h"
 #include "include/core/SkColorSpace.h"
 #include "include/core/SkMath.h"
@@ -17,21 +16,22 @@
 #include "include/private/SkTemplates.h"
 #include "src/codec/SkCodecPriv.h"
 #include "src/codec/SkColorTable.h"
+#include "src/codec/SkPngCodec.h"
 #include "src/codec/SkPngPriv.h"
 #include "src/codec/SkSwizzler.h"
 #include "src/core/SkOpts.h"
 #include "src/core/SkUtils.h"
 
-#include <algorithm>
 #include "png.h"
+#include <algorithm>
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
-#include "include/android/SkAndroidFrameworkUtils.h"
+#  include "include/android/SkAndroidFrameworkUtils.h"
 #endif
 
 // This warning triggers false postives way too often in here.
 #if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic ignored "-Wclobbered"
+#  pragma GCC diagnostic ignored "-Wclobbered"
 #endif
 
 // FIXME (scroggo): We can use png_jumpbuf directly once Google3 is on 1.6

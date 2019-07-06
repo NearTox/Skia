@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/glsl/GrGLSLBlend.h"
 #include "src/core/SkBlendModePriv.h"
+#include "src/gpu/glsl/GrGLSLBlend.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #include "src/gpu/glsl/GrGLSLProgramBuilder.h"
 

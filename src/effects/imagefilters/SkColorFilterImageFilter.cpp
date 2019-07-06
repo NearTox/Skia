@@ -108,7 +108,7 @@ sk_sp<SkSpecialImage> SkColorFilterImageFilter::onFilterImage(
   return surf->makeImageSnapshot();
 }
 
-bool SkColorFilterImageFilter::onIsColorFilterNode(SkColorFilter** filter) const noexcept {
+bool SkColorFilterImageFilter::onIsColorFilterNode(SkColorFilter** filter) const {
   SkASSERT(1 == this->countInputs());
   if (!this->cropRectIsSet()) {
     if (filter) {
@@ -119,6 +119,6 @@ bool SkColorFilterImageFilter::onIsColorFilterNode(SkColorFilter** filter) const
   return false;
 }
 
-bool SkColorFilterImageFilter::affectsTransparentBlack() const noexcept {
+bool SkColorFilterImageFilter::affectsTransparentBlack() const {
   return fColorFilter->affectsTransparentBlack();
 }

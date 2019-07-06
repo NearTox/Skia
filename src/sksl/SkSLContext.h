@@ -382,9 +382,9 @@ class Context {
  private:
   class Defined : public Expression {
    public:
-    Defined(const Type& type) noexcept : INHERITED(-1, kDefined_Kind, type) {}
+    Defined(const Type& type) : INHERITED(-1, kDefined_Kind, type) {}
 
-    bool hasSideEffects() const noexcept override { return false; }
+    bool hasSideEffects() const override { return false; }
 
     String description() const override { return "<defined>"; }
 

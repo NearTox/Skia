@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "include/ports/SkImageGeneratorWIC.h"
 #include "include/core/SkStream.h"
+#include "include/ports/SkImageGeneratorWIC.h"
 #include "include/private/SkTemplates.h"
 #include "src/utils/win/SkIStream.h"
 #include "src/utils/win/SkTScopedComPtr.h"
@@ -19,7 +19,7 @@
 // Undo this #define if it has been done so that we link against the symbols
 // we intended to link against on all SDKs.
 #if defined(CLSID_WICImagingFactory)
-#undef CLSID_WICImagingFactory
+#  undef CLSID_WICImagingFactory
 #endif
 
 namespace {

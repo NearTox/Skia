@@ -20,7 +20,7 @@
 #include "src/gpu/glsl/GrGLSLUniformHandler.h"
 #include "src/gpu/glsl/GrGLSLXferProcessor.h"
 
-bool GrCustomXfermode::IsSupportedMode(SkBlendMode mode) noexcept {
+bool GrCustomXfermode::IsSupportedMode(SkBlendMode mode) {
   return (int)mode > (int)SkBlendMode::kLastCoeffMode && (int)mode <= (int)SkBlendMode::kLastMode;
 }
 
@@ -54,7 +54,7 @@ static constexpr GrBlendEquation hw_blend_equation(SkBlendMode mode) {
 }
 
 static bool can_use_hw_blend_equation(
-    GrBlendEquation equation, GrProcessorAnalysisCoverage coverage, const GrCaps& caps) noexcept {
+    GrBlendEquation equation, GrProcessorAnalysisCoverage coverage, const GrCaps& caps) {
   if (!caps.advancedBlendEquationSupport()) {
     return false;
   }
@@ -73,34 +73,34 @@ static bool can_use_hw_blend_equation(
 
 class CustomXP : public GrXferProcessor {
  public:
-  CustomXP(SkBlendMode mode, GrBlendEquation hwBlendEquation) noexcept
+  CustomXP(SkBlendMode mode, GrBlendEquation hwBlendEquation)
       : INHERITED(kCustomXP_ClassID), fMode(mode), fHWBlendEquation(hwBlendEquation) {}
 
-  CustomXP(bool hasMixedSamples, SkBlendMode mode, GrProcessorAnalysisCoverage coverage) noexcept
+  CustomXP(bool hasMixedSamples, SkBlendMode mode, GrProcessorAnalysisCoverage coverage)
       : INHERITED(kCustomXP_ClassID, true, hasMixedSamples, coverage),
         fMode(mode),
         fHWBlendEquation(kIllegal_GrBlendEquation) {}
 
-  const char* name() const noexcept override { return "Custom Xfermode"; }
+  const char* name() const override { return "Custom Xfermode"; }
 
   GrGLSLXferProcessor* createGLSLInstance() const override;
 
-  SkBlendMode mode() const noexcept { return fMode; }
-  bool hasHWBlendEquation() const noexcept { return kIllegal_GrBlendEquation != fHWBlendEquation; }
+  SkBlendMode mode() const { return fMode; }
+  bool hasHWBlendEquation() const { return kIllegal_GrBlendEquation != fHWBlendEquation; }
 
-  GrBlendEquation hwBlendEquation() const noexcept {
+  GrBlendEquation hwBlendEquation() const {
     SkASSERT(this->hasHWBlendEquation());
     return fHWBlendEquation;
   }
 
-  GrXferBarrierType xferBarrierType(const GrCaps&) const noexcept override;
+  GrXferBarrierType xferBarrierType(const GrCaps&) const override;
 
  private:
   void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
 
-  void onGetBlendInfo(BlendInfo*) const noexcept override;
+  void onGetBlendInfo(BlendInfo*) const override;
 
-  bool onIsEqual(const GrXferProcessor& xpBase) const noexcept override;
+  bool onIsEqual(const GrXferProcessor& xpBase) const override;
 
   const SkBlendMode fMode;
   const GrBlendEquation fHWBlendEquation;
@@ -115,8 +115,7 @@ class GLCustomXP : public GrGLSLXferProcessor {
   GLCustomXP(const GrXferProcessor&) {}
   ~GLCustomXP() override {}
 
-  static void GenKey(
-      const GrXferProcessor& p, const GrShaderCaps& caps, GrProcessorKeyBuilder* b) noexcept {
+  static void GenKey(const GrXferProcessor& p, const GrShaderCaps& caps, GrProcessorKeyBuilder* b) {
     const CustomXP& xp = p.cast<CustomXP>();
     uint32_t key = 0;
     if (xp.hasHWBlendEquation()) {
@@ -158,7 +157,7 @@ class GLCustomXP : public GrGLSLXferProcessor {
         fragBuilder, srcCoverage, dstColor, outColor, outColorSecondary, xp);
   }
 
-  void onSetData(const GrGLSLProgramDataManager&, const GrXferProcessor&) noexcept override {}
+  void onSetData(const GrGLSLProgramDataManager&, const GrXferProcessor&) override {}
 
   typedef GrGLSLXferProcessor INHERITED;
 };
@@ -174,19 +173,19 @@ GrGLSLXferProcessor* CustomXP::createGLSLInstance() const {
   return new GLCustomXP(*this);
 }
 
-bool CustomXP::onIsEqual(const GrXferProcessor& other) const noexcept {
+bool CustomXP::onIsEqual(const GrXferProcessor& other) const {
   const CustomXP& s = other.cast<CustomXP>();
   return fMode == s.fMode && fHWBlendEquation == s.fHWBlendEquation;
 }
 
-GrXferBarrierType CustomXP::xferBarrierType(const GrCaps& caps) const noexcept {
+GrXferBarrierType CustomXP::xferBarrierType(const GrCaps& caps) const {
   if (this->hasHWBlendEquation() && !caps.advancedCoherentBlendEquationSupport()) {
     return kBlend_GrXferBarrierType;
   }
   return kNone_GrXferBarrierType;
 }
 
-void CustomXP::onGetBlendInfo(BlendInfo* blendInfo) const noexcept {
+void CustomXP::onGetBlendInfo(BlendInfo* blendInfo) const {
   if (this->hasHWBlendEquation()) {
     blendInfo->fEquation = this->hwBlendEquation();
   }
@@ -215,7 +214,7 @@ class CustomXPFactory : public GrXPFactory {
 
   AnalysisProperties analysisProperties(
       const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, const GrCaps&,
-      GrClampType) const noexcept override;
+      GrClampType) const override;
 
   GR_DECLARE_XP_FACTORY_TEST
 
@@ -243,7 +242,7 @@ sk_sp<const GrXferProcessor> CustomXPFactory::makeXferProcessor(
 
 GrXPFactory::AnalysisProperties CustomXPFactory::analysisProperties(
     const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage& coverage,
-    const GrCaps& caps, GrClampType clampType) const noexcept {
+    const GrCaps& caps, GrClampType clampType) const {
   /*
     The general SVG blend equation is defined in the spec as follows:
 
@@ -362,7 +361,7 @@ const GrXPFactory* CustomXPFactory::TestGet(GrProcessorTestData* d) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-const GrXPFactory* GrCustomXfermode::Get(SkBlendMode mode) noexcept {
+const GrXPFactory* GrCustomXfermode::Get(SkBlendMode mode) {
   // If these objects are constructed as static constexpr by cl.exe (2015 SP2) the vtables are
   // null.
 #ifdef SK_BUILD_FOR_WIN

@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkModeColorFilter.h"
 #include "include/core/SkColorFilter.h"
 #include "include/core/SkString.h"
 #include "include/private/SkColorData.h"
@@ -15,6 +14,7 @@
 #include "src/core/SkBlitRow.h"
 #include "src/core/SkColorSpacePriv.h"
 #include "src/core/SkColorSpaceXformSteps.h"
+#include "src/core/SkModeColorFilter.h"
 #include "src/core/SkRasterPipeline.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkValidationUtils.h"
@@ -28,7 +28,7 @@ SkModeColorFilter::SkModeColorFilter(SkColor color, SkBlendMode mode) {
   fMode = mode;
 }
 
-bool SkModeColorFilter::onAsAColorMode(SkColor* color, SkBlendMode* mode) const noexcept {
+bool SkModeColorFilter::onAsAColorMode(SkColor* color, SkBlendMode* mode) const {
   if (color) {
     *color = fColor;
   }
@@ -38,7 +38,7 @@ bool SkModeColorFilter::onAsAColorMode(SkColor* color, SkBlendMode* mode) const 
   return true;
 }
 
-uint32_t SkModeColorFilter::getFlags() const noexcept {
+uint32_t SkModeColorFilter::getFlags() const {
   uint32_t flags = 0;
   switch (fMode) {
     case SkBlendMode::kDst:      //!< [Da, Dc]
@@ -49,7 +49,7 @@ uint32_t SkModeColorFilter::getFlags() const noexcept {
   return flags;
 }
 
-void SkModeColorFilter::flatten(SkWriteBuffer& buffer) const noexcept {
+void SkModeColorFilter::flatten(SkWriteBuffer& buffer) const {
   buffer.writeColor(fColor);
   buffer.writeUInt((int)fMode);
 }
@@ -90,13 +90,13 @@ std::unique_ptr<GrFragmentProcessor> SkModeColorFilter::asFragmentProcessor(
   if (!fp) {
     return nullptr;
   }
-#ifdef SK_DEBUG
+#  ifdef SK_DEBUG
   // With a solid color input this should always be able to compute the blended color
   // (at least for coeff modes)
   if ((unsigned)fMode <= (unsigned)SkBlendMode::kLastCoeffMode) {
     SkASSERT(fp->hasConstantOutputForConstantInput());
   }
-#endif
+#  endif
   return fp;
 }
 

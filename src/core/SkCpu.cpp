@@ -5,23 +5,23 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkCpu.h"
 #include "include/core/SkStream.h"
 #include "include/core/SkString.h"
 #include "include/private/SkOnce.h"
+#include "src/core/SkCpu.h"
 
 #if defined(SK_CPU_X86)
-#if defined(SK_BUILD_FOR_WIN)
-#include <intrin.h>
-static void cpuid(uint32_t abcd[4]) noexcept { __cpuid((int*)abcd, 1); }
-static void cpuid7(uint32_t abcd[4]) noexcept { __cpuidex((int*)abcd, 7, 0); }
-static uint64_t xgetbv(uint32_t xcr) noexcept { return _xgetbv(xcr); }
-#else
-#include <cpuid.h>
-#if !defined(__cpuid_count)  // Old Mac Clang doesn't have this defined.
-#define __cpuid_count(eax, ecx, a, b, c, d) \
-  __asm__("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "0"(eax), "2"(ecx))
-#endif
+#  if defined(SK_BUILD_FOR_WIN)
+#    include <intrin.h>
+static void cpuid(uint32_t abcd[4]) { __cpuid((int*)abcd, 1); }
+static void cpuid7(uint32_t abcd[4]) { __cpuidex((int*)abcd, 7, 0); }
+static uint64_t xgetbv(uint32_t xcr) { return _xgetbv(xcr); }
+#  else
+#    include <cpuid.h>
+#    if !defined(__cpuid_count)  // Old Mac Clang doesn't have this defined.
+#      define __cpuid_count(eax, ecx, a, b, c, d) \
+        __asm__("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "0"(eax), "2"(ecx))
+#    endif
 static void cpuid(uint32_t abcd[4]) { __get_cpuid(1, abcd + 0, abcd + 1, abcd + 2, abcd + 3); }
 static void cpuid7(uint32_t abcd[4]) { __cpuid_count(7, 0, abcd[0], abcd[1], abcd[2], abcd[3]); }
 static uint64_t xgetbv(uint32_t xcr) {
@@ -29,9 +29,9 @@ static uint64_t xgetbv(uint32_t xcr) {
   __asm__ __volatile__("xgetbv" : "=a"(eax), "=d"(edx) : "c"(xcr));
   return (uint64_t)(edx) << 32 | eax;
 }
-#endif
+#  endif
 
-static uint32_t read_cpu_features() noexcept {
+static uint32_t read_cpu_features() {
   uint32_t features = 0;
   uint32_t abcd[4] = {0, 0, 0, 0};
 
@@ -111,7 +111,7 @@ static uint32_t read_cpu_features() noexcept {
 }
 
 #elif defined(SK_CPU_ARM64) && __has_include(<sys/auxv.h>)
-#include <sys/auxv.h>
+#  include <sys/auxv.h>
 
 static uint32_t read_cpu_features() {
   const uint32_t kHWCAP_CRC32 = (1 << 7), kHWCAP_ASIMDHP = (1 << 10);
@@ -159,7 +159,7 @@ static uint32_t read_cpu_features() {
     (!defined(__ANDROID_API__) || __ANDROID_API__ >= 18)
 // sys/auxv.h will always be present in the Android NDK due to unified
 // headers, but getauxval is only defined for API >= 18.
-#include <sys/auxv.h>
+#  include <sys/auxv.h>
 
 static uint32_t read_cpu_features() {
   const uint32_t kHWCAP_NEON = (1 << 12);
@@ -177,7 +177,7 @@ static uint32_t read_cpu_features() {
 }
 
 #elif defined(SK_CPU_ARM32) && __has_include(<cpu-features.h>)
-#include <cpu-features.h>
+#  include <cpu-features.h>
 
 static uint32_t read_cpu_features() {
   uint32_t features = 0;
@@ -201,7 +201,7 @@ static uint32_t read_cpu_features() { return 0; }
 
 uint32_t SkCpu::gCachedFeatures = 0;
 
-void SkCpu::CacheRuntimeFeatures() noexcept {
+void SkCpu::CacheRuntimeFeatures() {
   static SkOnce once;
-  once([]() noexcept { gCachedFeatures = read_cpu_features(); });
+  once([] { gCachedFeatures = read_cpu_features(); });
 }

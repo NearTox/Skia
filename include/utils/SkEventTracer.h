@@ -27,13 +27,13 @@ class SK_API SkEventTracer {
    * installed and true is returned. Otherwise, false is returned. In either case ownership of the
    * tracer is transferred and it will be deleted when no longer needed.
    */
-  static bool SetInstance(SkEventTracer*) noexcept;
+  static bool SetInstance(SkEventTracer*);
 
   /**
    * Gets the event tracer. If this is the first call to SetInstance or GetIntance then a default
    * event tracer is installed and returned.
    */
-  static SkEventTracer* GetInstance() noexcept;
+  static SkEventTracer* GetInstance();
 
   virtual ~SkEventTracer() {}
 
@@ -50,17 +50,16 @@ class SK_API SkEventTracer {
     kEnabledForEventCallback_CategoryGroupEnabledFlags = 1 << 2,
   };
 
-  virtual const uint8_t* getCategoryGroupEnabled(const char* name) noexcept = 0;
-  virtual const char* getCategoryGroupName(const uint8_t* categoryEnabledFlag) noexcept = 0;
+  virtual const uint8_t* getCategoryGroupEnabled(const char* name) = 0;
+  virtual const char* getCategoryGroupName(const uint8_t* categoryEnabledFlag) = 0;
 
   virtual SkEventTracer::Handle addTraceEvent(
       char phase, const uint8_t* categoryEnabledFlag, const char* name, uint64_t id,
       int32_t numArgs, const char** argNames, const uint8_t* argTypes, const uint64_t* argValues,
-      uint8_t flags) noexcept = 0;
+      uint8_t flags) = 0;
 
   virtual void updateTraceEventDuration(
-      const uint8_t* categoryEnabledFlag, const char* name,
-      SkEventTracer::Handle handle) noexcept = 0;
+      const uint8_t* categoryEnabledFlag, const char* name, SkEventTracer::Handle handle) = 0;
 };
 
 #endif  // SkEventTracer_DEFINED

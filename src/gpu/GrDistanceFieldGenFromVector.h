@@ -13,7 +13,7 @@
 class SkMatrix;
 
 #ifndef SK_USE_LEGACY_DISTANCE_FIELDS
-#define SK_USE_LEGACY_DISTANCE_FIELDS
+#  define SK_USE_LEGACY_DISTANCE_FIELDS
 #endif
 
 /** Given a vector path, generate the associated distance field.

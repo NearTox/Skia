@@ -23,7 +23,7 @@ class SK_API Sk1DPathEffect : public SkPathEffect {
   /** Called at the start of each contour, returns the initial offset
       into that contour.
   */
-  virtual SkScalar begin(SkScalar contourLength) const noexcept = 0;
+  virtual SkScalar begin(SkScalar contourLength) const = 0;
   /** Called with the current distance along the path, with the current matrix
       for the point/tangent at the specified distance.
       Return the distance to travel for the next call. If return <= 0, then that
@@ -56,11 +56,11 @@ class SK_API SkPath1DPathEffect : public Sk1DPathEffect {
 
  protected:
   SkPath1DPathEffect(const SkPath& path, SkScalar advance, SkScalar phase, Style);
-  void flatten(SkWriteBuffer&) const noexcept override;
+  void flatten(SkWriteBuffer&) const override;
   bool onFilterPath(SkPath*, const SkPath&, SkStrokeRec*, const SkRect*) const override;
 
   // overrides from Sk1DPathEffect
-  SkScalar begin(SkScalar contourLength) const noexcept override;
+  SkScalar begin(SkScalar contourLength) const override;
   SkScalar next(SkPath*, SkScalar, SkPathMeasure&) const override;
 
  private:

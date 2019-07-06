@@ -16,8 +16,8 @@ class SkClipStackDevice : public SkBaseDevice {
   SkClipStackDevice(const SkImageInfo& info, const SkSurfaceProps& props)
       : SkBaseDevice(info, props), fClipStack(fStorage, sizeof(fStorage)) {}
 
-  SkClipStack& cs() noexcept { return fClipStack; }
-  const SkClipStack& cs() const noexcept { return fClipStack; }
+  SkClipStack& cs() { return fClipStack; }
+  const SkClipStack& cs() const { return fClipStack; }
 
   SkIRect devClipBounds() const;
 

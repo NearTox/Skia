@@ -9,27 +9,27 @@
 
 #if SK_SUPPORT_GPU
 
-#include "include/core/SkCanvas.h"
-#include "include/core/SkPaint.h"
-#include "include/core/SkPath.h"
-#include "samplecode/Sample.h"
-#include "src/core/SkMakeUnique.h"
-#include "src/core/SkRectPriv.h"
-#include "src/gpu/GrClip.h"
-#include "src/gpu/GrContextPriv.h"
-#include "src/gpu/GrMemoryPool.h"
-#include "src/gpu/GrPathUtils.h"
-#include "src/gpu/GrRenderTargetContext.h"
-#include "src/gpu/GrRenderTargetContextPriv.h"
-#include "src/gpu/GrResourceProvider.h"
-#include "src/gpu/ccpr/GrCCCoverageProcessor.h"
-#include "src/gpu/ccpr/GrCCFillGeometry.h"
-#include "src/gpu/ccpr/GrCCStroker.h"
-#include "src/gpu/ccpr/GrGSCoverageProcessor.h"
-#include "src/gpu/ccpr/GrVSCoverageProcessor.h"
-#include "src/gpu/gl/GrGLGpu.h"
-#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
-#include "src/gpu/ops/GrDrawOp.h"
+#  include "include/core/SkCanvas.h"
+#  include "include/core/SkPaint.h"
+#  include "include/core/SkPath.h"
+#  include "samplecode/Sample.h"
+#  include "src/core/SkMakeUnique.h"
+#  include "src/core/SkRectPriv.h"
+#  include "src/gpu/GrClip.h"
+#  include "src/gpu/GrContextPriv.h"
+#  include "src/gpu/GrMemoryPool.h"
+#  include "src/gpu/GrPathUtils.h"
+#  include "src/gpu/GrRenderTargetContext.h"
+#  include "src/gpu/GrRenderTargetContextPriv.h"
+#  include "src/gpu/GrResourceProvider.h"
+#  include "src/gpu/ccpr/GrCCCoverageProcessor.h"
+#  include "src/gpu/ccpr/GrCCFillGeometry.h"
+#  include "src/gpu/ccpr/GrCCStroker.h"
+#  include "src/gpu/ccpr/GrGSCoverageProcessor.h"
+#  include "src/gpu/ccpr/GrVSCoverageProcessor.h"
+#  include "src/gpu/gl/GrGLGpu.h"
+#  include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#  include "src/gpu/ops/GrDrawOp.h"
 
 using TriPointInstance = GrCCCoverageProcessor::TriPointInstance;
 using QuadPointInstance = GrCCCoverageProcessor::QuadPointInstance;
@@ -167,7 +167,7 @@ void CCPRGeometryView::onDrawContent(SkCanvas* canvas) {
     canvas->drawPath(fPath, outlinePaint);
   }
 
-#if 0
+#  if 0
     SkPaint gridPaint;
     gridPaint.setColor(0x10000000);
     gridPaint.setStyle(SkPaint::kStroke_Style);
@@ -179,7 +179,7 @@ void CCPRGeometryView::onDrawContent(SkCanvas* canvas) {
     for (int x = 0; x < this->width(); x += kDebugBloat) {
         canvas->drawLine(x, 0, x, this->height(), outlinePaint);
     }
-#endif
+#  endif
 
   SkString caption;
   if (GrRenderTargetContext* rtc = canvas->internal_private_accessTopLayerRenderTargetContext()) {

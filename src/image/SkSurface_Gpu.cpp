@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/image/SkSurface_Gpu.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkSurfaceCharacterization.h"
 #include "include/gpu/GrBackendSurface.h"
@@ -25,6 +24,7 @@
 #include "src/image/SkImage_Base.h"
 #include "src/image/SkImage_Gpu.h"
 #include "src/image/SkSurface_Base.h"
+#include "src/image/SkSurface_Gpu.h"
 
 #if SK_SUPPORT_GPU
 
@@ -366,12 +366,12 @@ sk_sp<SkSurface> SkSurface::MakeRenderTarget(
   }
 
   sk_sp<SkSurface> s = sk_make_sp<SkSurface_Gpu>(std::move(device));
-#ifdef SK_DEBUG
+#  ifdef SK_DEBUG
   if (s) {
     SkSurface_Gpu* gpuSurface = static_cast<SkSurface_Gpu*>(s.get());
     SkASSERT(gpuSurface->isCompatible(c));
   }
-#endif
+#  endif
 
   return s;
 }
@@ -636,7 +636,7 @@ sk_sp<SkSurface> SkSurface::MakeFromBackendTextureAsRenderTarget(
   return sk_make_sp<SkSurface_Gpu>(std::move(device));
 }
 
-#if defined(SK_BUILD_FOR_ANDROID) && __ANDROID_API__ >= 26
+#  if defined(SK_BUILD_FOR_ANDROID) && __ANDROID_API__ >= 26
 sk_sp<SkSurface> SkSurface::MakeFromAHardwareBuffer(
     GrContext* context, AHardwareBuffer* hardwareBuffer, GrSurfaceOrigin origin,
     sk_sp<SkColorSpace> colorSpace, const SkSurfaceProps* surfaceProps) {
@@ -688,6 +688,6 @@ sk_sp<SkSurface> SkSurface::MakeFromAHardwareBuffer(
     return nullptr;
   }
 }
-#endif
+#  endif
 
 #endif

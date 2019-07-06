@@ -34,18 +34,18 @@ static constexpr auto kAmbientGeomFactor = 64.0f;
 // We'll round up to 300 to keep it simple.
 static constexpr auto kMaxAmbientRadius = 300 * kAmbientHeightFactor * kAmbientGeomFactor;
 
-static inline float divide_and_pin(float numer, float denom, float min, float max) noexcept {
+static inline float divide_and_pin(float numer, float denom, float min, float max) {
   float result = SkTPin(sk_ieee_float_divide(numer, denom), min, max);
   // ensure that SkTPin handled non-finites correctly
   SkASSERT(result >= min && result <= max);
   return result;
 }
 
-inline SkScalar AmbientBlurRadius(SkScalar height) noexcept {
+inline SkScalar AmbientBlurRadius(SkScalar height) {
   return SkTMin(height * kAmbientHeightFactor * kAmbientGeomFactor, kMaxAmbientRadius);
 }
 
-inline SkScalar AmbientRecipAlpha(SkScalar height) noexcept {
+inline SkScalar AmbientRecipAlpha(SkScalar height) {
   return 1.0f + SkTMax(height * kAmbientHeightFactor, 0.0f);
 }
 

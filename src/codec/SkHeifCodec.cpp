@@ -15,9 +15,9 @@
 #include "src/codec/SkHeifCodec.h"
 #include "src/core/SkEndian.h"
 
-#define FOURCC(c1, c2, c3, c4) ((c1) << 24 | (c2) << 16 | (c3) << 8 | (c4))
+#  define FOURCC(c1, c2, c3, c4) ((c1) << 24 | (c2) << 16 | (c3) << 8 | (c4))
 
-bool SkHeifCodec::IsHeif(const void* buffer, size_t bytesRead) noexcept {
+bool SkHeifCodec::IsHeif(const void* buffer, size_t bytesRead) {
   // Parse the ftyp box up to bytesRead to determine if this is HEIF.
   // Any valid ftyp box should have at least 8 bytes.
   if (bytesRead < 8) {
@@ -78,7 +78,7 @@ bool SkHeifCodec::IsHeif(const void* buffer, size_t bytesRead) noexcept {
   return false;
 }
 
-static SkEncodedOrigin get_orientation(const HeifFrameInfo& frameInfo) noexcept {
+static SkEncodedOrigin get_orientation(const HeifFrameInfo& frameInfo) {
   switch (frameInfo.mRotationAngle) {
     case 0: return kTopLeft_SkEncodedOrigin;
     case 90: return kRightTop_SkEncodedOrigin;
@@ -89,19 +89,19 @@ static SkEncodedOrigin get_orientation(const HeifFrameInfo& frameInfo) noexcept 
 }
 
 struct SkHeifStreamWrapper : public HeifStream {
-  SkHeifStreamWrapper(SkStream* stream) noexcept : fStream(stream) {}
+  SkHeifStreamWrapper(SkStream* stream) : fStream(stream) {}
 
   ~SkHeifStreamWrapper() override {}
 
-  size_t read(void* buffer, size_t size) noexcept override { return fStream->read(buffer, size); }
+  size_t read(void* buffer, size_t size) override { return fStream->read(buffer, size); }
 
-  bool rewind() noexcept override { return fStream->rewind(); }
+  bool rewind() override { return fStream->rewind(); }
 
-  bool seek(size_t position) noexcept override { return fStream->seek(position); }
+  bool seek(size_t position) override { return fStream->seek(position); }
 
-  bool hasLength() const noexcept override { return fStream->hasLength(); }
+  bool hasLength() const override { return fStream->hasLength(); }
 
-  size_t getLength() const noexcept override { return fStream->getLength(); }
+  size_t getLength() const override { return fStream->getLength(); }
 
  private:
   std::unique_ptr<SkStream> fStream;
@@ -149,7 +149,7 @@ SkHeifCodec::SkHeifCodec(SkEncodedInfo&& info, HeifDecoder* heifDecoder, SkEncod
       fColorXformSrcRow(nullptr) {}
 
 bool SkHeifCodec::conversionSupported(
-    const SkImageInfo& dstInfo, bool srcIsOpaque, bool needsColorXform) noexcept {
+    const SkImageInfo& dstInfo, bool srcIsOpaque, bool needsColorXform) {
   SkASSERT(srcIsOpaque);
 
   if (kUnknown_SkAlphaType == dstInfo.alphaType()) {
@@ -263,7 +263,7 @@ SkCodec::Result SkHeifCodec::onGetPixels(
   return kSuccess;
 }
 
-void SkHeifCodec::allocateStorage(const SkImageInfo& dstInfo) noexcept {
+void SkHeifCodec::allocateStorage(const SkImageInfo& dstInfo) {
   int dstWidth = dstInfo.width();
 
   size_t swizzleBytes = 0;
@@ -315,7 +315,7 @@ SkSampler* SkHeifCodec::getSampler(bool createIfNecessary) {
   return fSwizzler.get();
 }
 
-bool SkHeifCodec::onRewind() noexcept {
+bool SkHeifCodec::onRewind() {
   fSwizzler.reset(nullptr);
   fSwizzleSrcRow = nullptr;
   fColorXformSrcRow = nullptr;
@@ -348,7 +348,7 @@ int SkHeifCodec::onGetScanlines(void* dst, int count, size_t dstRowBytes) {
   return this->readRows(this->dstInfo(), dst, dstRowBytes, count, this->options());
 }
 
-bool SkHeifCodec::onSkipScanlines(int count) noexcept {
+bool SkHeifCodec::onSkipScanlines(int count) {
   return count == (int)fHeifDecoder->skipScanlines(count);
 }
 

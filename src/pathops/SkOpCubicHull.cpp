@@ -6,7 +6,7 @@
  */
 #include "src/pathops/SkPathOpsCubic.h"
 
-static bool rotate(const SkDCubic& cubic, int zero, int index, SkDCubic& rotPath) noexcept {
+static bool rotate(const SkDCubic& cubic, int zero, int index, SkDCubic& rotPath) {
   double dy = cubic[index].fY - cubic[zero].fY;
   double dx = cubic[index].fX - cubic[zero].fX;
   if (approximately_zero(dy)) {
@@ -36,7 +36,7 @@ static bool rotate(const SkDCubic& cubic, int zero, int index, SkDCubic& rotPath
 }
 
 // Returns 0 if negative, 1 if zero, 2 if positive
-static constexpr int side(double x) noexcept { return (x > 0) + (x >= 0); }
+static int side(double x) { return (x > 0) + (x >= 0); }
 
 /* Given a cubic, find the convex hull described by the end and control points.
    The hull may have 3 or 4 points. Cubics that degenerate into a point or line
@@ -49,7 +49,7 @@ static constexpr int side(double x) noexcept { return (x > 0) + (x >= 0); }
 
    The indices returned in order describe the convex hull.
 */
-int SkDCubic::convexHull(char order[4]) const noexcept {
+int SkDCubic::convexHull(char order[4]) const {
   size_t index;
   // find top point
   size_t yMin = 0;

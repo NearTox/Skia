@@ -5,22 +5,21 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkQuadClipper.h"
 #include "src/core/SkGeometry.h"
+#include "src/core/SkQuadClipper.h"
 
 #include <utility>
 
-SkQuadClipper::SkQuadClipper() noexcept { fClip.setEmpty(); }
+SkQuadClipper::SkQuadClipper() { fClip.setEmpty(); }
 
-void SkQuadClipper::setClip(const SkIRect& clip) noexcept {
+void SkQuadClipper::setClip(const SkIRect& clip) {
   // conver to scalars, since that's where we'll see the points
   fClip.set(clip);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static bool chopMonoQuadAt(
-    SkScalar c0, SkScalar c1, SkScalar c2, SkScalar target, SkScalar* t) noexcept {
+static bool chopMonoQuadAt(SkScalar c0, SkScalar c1, SkScalar c2, SkScalar target, SkScalar* t) {
   /* Solve F(t) = y where F(t) := [0](1-t)^2 + 2[1]t(1-t) + [2]t^2
    *  We solve for t, using quadratic equation, hence we have to rearrange
    * our cooefficents to look like At^2 + Bt + C
@@ -38,7 +37,7 @@ static bool chopMonoQuadAt(
   return false;
 }
 
-static bool chopMonoQuadAtY(SkPoint pts[3], SkScalar y, SkScalar* t) noexcept {
+static bool chopMonoQuadAtY(SkPoint pts[3], SkScalar y, SkScalar* t) {
   return chopMonoQuadAt(pts[0].fY, pts[1].fY, pts[2].fY, y, t);
 }
 
@@ -48,7 +47,7 @@ static bool chopMonoQuadAtY(SkPoint pts[3], SkScalar y, SkScalar* t) noexcept {
  communicate that to setQuadratic, and then avoid having to flip it back
  here (only to have setQuadratic do the flip again)
  */
-bool SkQuadClipper::clipQuad(const SkPoint srcPts[3], SkPoint dst[3]) noexcept {
+bool SkQuadClipper::clipQuad(const SkPoint srcPts[3], SkPoint dst[3]) {
   bool reverse;
 
   // we need the data to be monotonically increasing in Y

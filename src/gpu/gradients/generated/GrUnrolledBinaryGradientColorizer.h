@@ -20,9 +20,9 @@ class GrUnrolledBinaryGradientColorizer : public GrFragmentProcessor {
 
   static std::unique_ptr<GrFragmentProcessor> Make(
       const SkPMColor4f* colors, const SkScalar* positions, int count);
-  GrUnrolledBinaryGradientColorizer(const GrUnrolledBinaryGradientColorizer& src) noexcept;
+  GrUnrolledBinaryGradientColorizer(const GrUnrolledBinaryGradientColorizer& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const noexcept override { return "UnrolledBinaryGradientColorizer"; }
+  const char* name() const override { return "UnrolledBinaryGradientColorizer"; }
   int32_t intervalCount;
   SkPMColor4f scale0_1;
   SkPMColor4f scale2_3;
@@ -49,7 +49,7 @@ class GrUnrolledBinaryGradientColorizer : public GrFragmentProcessor {
       SkPMColor4f scale6_7, SkPMColor4f scale8_9, SkPMColor4f scale10_11, SkPMColor4f scale12_13,
       SkPMColor4f scale14_15, SkPMColor4f bias0_1, SkPMColor4f bias2_3, SkPMColor4f bias4_5,
       SkPMColor4f bias6_7, SkPMColor4f bias8_9, SkPMColor4f bias10_11, SkPMColor4f bias12_13,
-      SkPMColor4f bias14_15, SkRect thresholds1_7, SkRect thresholds9_13) noexcept
+      SkPMColor4f bias14_15, SkRect thresholds1_7, SkRect thresholds9_13)
       : INHERITED(kGrUnrolledBinaryGradientColorizer_ClassID, kNone_OptimizationFlags),
         intervalCount(intervalCount),
         scale0_1(scale0_1),
@@ -71,8 +71,8 @@ class GrUnrolledBinaryGradientColorizer : public GrFragmentProcessor {
         thresholds1_7(thresholds1_7),
         thresholds9_13(thresholds9_13) {}
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
-  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

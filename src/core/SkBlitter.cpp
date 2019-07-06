@@ -312,7 +312,7 @@ bool SkNullBlitter::isNullBlitter() const { return true; }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static int compute_anti_width(const int16_t runs[]) noexcept {
+static int compute_anti_width(const int16_t runs[]) {
   int width = 0;
 
   for (;;) {
@@ -328,11 +328,11 @@ static int compute_anti_width(const int16_t runs[]) noexcept {
   return width;
 }
 
-static inline bool y_in_rect(int y, const SkIRect& rect) noexcept {
+static inline bool y_in_rect(int y, const SkIRect& rect) {
   return (unsigned)(y - rect.fTop) < (unsigned)rect.height();
 }
 
-static inline bool x_in_rect(int x, const SkIRect& rect) noexcept {
+static inline bool x_in_rect(int x, const SkIRect& rect) {
   return (unsigned)(x - rect.fLeft) < (unsigned)rect.width();
 }
 
@@ -600,8 +600,7 @@ const SkPixmap* SkRgnClipBlitter::justAnOpaqueColor(uint32_t* value) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkBlitter* SkBlitterClipper::apply(
-    SkBlitter* blitter, const SkRegion* clip, const SkIRect* ir) noexcept {
+SkBlitter* SkBlitterClipper::apply(SkBlitter* blitter, const SkRegion* clip, const SkIRect* ir) {
   if (clip) {
     const SkIRect& clipR = clip->getBounds();
 
@@ -810,10 +809,10 @@ void SkRectClipCheckBlitter::blitAntiRect(
     int x, int y, int width, int height, SkAlpha leftAlpha, SkAlpha rightAlpha) {
   bool skipLeft = !leftAlpha;
   bool skipRight = !rightAlpha;
-#ifdef SK_DEBUG
+#  ifdef SK_DEBUG
   SkIRect r = SkIRect::MakeXYWH(x + skipLeft, y, width + 2 - skipRight - skipLeft, height);
   SkASSERT(r.isEmpty() || fClipRect.contains(r));
-#endif
+#  endif
   fBlitter->blitAntiRect(x, y, width, height, leftAlpha, rightAlpha);
 }
 

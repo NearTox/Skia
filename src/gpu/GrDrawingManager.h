@@ -50,7 +50,7 @@ class GrDrawingManager {
   sk_sp<GrRenderTargetOpList> newRTOpList(sk_sp<GrRenderTargetProxy>, bool managedOpList);
   sk_sp<GrTextureOpList> newTextureOpList(sk_sp<GrTextureProxy>);
 
-  GrRecordingContext* getContext() noexcept { return fContext; }
+  GrRecordingContext* getContext() { return fContext; }
 
   GrTextContext* getTextContext();
 
@@ -90,7 +90,7 @@ class GrDrawingManager {
   // This class encapsulates maintenance and manipulation of the drawing manager's DAG of opLists.
   class OpListDAG {
    public:
-    OpListDAG(bool sortOpLists) noexcept;
+    OpListDAG(bool sortOpLists);
     ~OpListDAG();
 
     // Currently, when explicitly allocating resources, this call will topologically sort the
@@ -105,7 +105,7 @@ class GrDrawingManager {
 
     void gatherIDs(SkSTArray<8, uint32_t, true>* idArray) const;
 
-    void reset() noexcept;
+    void reset();
 
     // These calls forceably remove an opList from the DAG. They are problematic bc they just
     // remove the opList but don't cleanup any refering pointers (i.e., dependency pointers
@@ -114,23 +114,23 @@ class GrDrawingManager {
     void removeOpList(int index);
     void removeOpLists(int startIndex, int stopIndex);
 
-    bool empty() const noexcept { return fOpLists.empty(); }
-    int numOpLists() const noexcept { return fOpLists.count(); }
+    bool empty() const { return fOpLists.empty(); }
+    int numOpLists() const { return fOpLists.count(); }
 
     bool isUsed(GrSurfaceProxy*) const;
 
-    GrOpList* opList(int index) noexcept { return fOpLists[index].get(); }
-    const GrOpList* opList(int index) const noexcept { return fOpLists[index].get(); }
+    GrOpList* opList(int index) { return fOpLists[index].get(); }
+    const GrOpList* opList(int index) const { return fOpLists[index].get(); }
 
-    GrOpList* back() noexcept { return fOpLists.back().get(); }
-    const GrOpList* back() const noexcept { return fOpLists.back().get(); }
+    GrOpList* back() { return fOpLists.back().get(); }
+    const GrOpList* back() const { return fOpLists.back().get(); }
 
-    void add(sk_sp<GrOpList>) noexcept;
+    void add(sk_sp<GrOpList>);
     void add(const SkTArray<sk_sp<GrOpList>>&);
 
-    void swap(SkTArray<sk_sp<GrOpList>>* opLists) noexcept;
+    void swap(SkTArray<sk_sp<GrOpList>>* opLists);
 
-    bool sortingOpLists() const noexcept { return fSortOpLists; }
+    bool sortingOpLists() const { return fSortOpLists; }
 
    private:
     SkTArray<sk_sp<GrOpList>> fOpLists;
@@ -190,7 +190,7 @@ class GrDrawingManager {
 
   void addDDLTarget(GrSurfaceProxy* proxy) { fDDLTargets.insert(proxy); }
   bool isDDLTarget(GrSurfaceProxy* proxy) { return fDDLTargets.find(proxy) != fDDLTargets.end(); }
-  void clearDDLTargets() noexcept { fDDLTargets.clear(); }
+  void clearDDLTargets() { fDDLTargets.clear(); }
 
   // We play a trick with lazy proxies to retarget the base target of a DDL to the SkSurface
   // it is replayed on. Because of this remapping we need to explicitly store the targets of

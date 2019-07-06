@@ -70,7 +70,7 @@ class CopyAtlasOp : public AtlasOp {
         std::move(resources), std::move(copyProxy), baseInstance, endInstance, drawBounds);
   }
 
-  const char* name() const noexcept override { return "CopyAtlasOp (CCPR)"; }
+  const char* name() const override { return "CopyAtlasOp (CCPR)"; }
 
   void visitProxies(const VisitProxyFunc& fn) const override {
     fn(fSrcProxy.get(), GrMipMapped::kNo);
@@ -123,7 +123,7 @@ class RenderAtlasOp : public AtlasOp {
   }
 
   // GrDrawOp interface.
-  const char* name() const noexcept override { return "RenderAtlasOp (CCPR)"; }
+  const char* name() const override { return "RenderAtlasOp (CCPR)"; }
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
     ProcessorType proc;

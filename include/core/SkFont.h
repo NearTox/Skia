@@ -34,7 +34,7 @@ class SK_API SkFont {
 
       @return  default initialized SkFont
   */
-  SkFont() noexcept;
+  SkFont();
 
   /** Constructs SkFont with default values with SkTypeface and size in points.
 
@@ -42,14 +42,14 @@ class SK_API SkFont {
       @param size      typographic height of text
       @return          initialized SkFont
   */
-  SkFont(sk_sp<SkTypeface> typeface, SkScalar size) noexcept;
+  SkFont(sk_sp<SkTypeface> typeface, SkScalar size);
 
   /** Constructs SkFont with default values with SkTypeface.
 
       @param typeface  font and style used to draw and measure text
       @return          initialized SkFont
   */
-  explicit SkFont(sk_sp<SkTypeface> typeface) noexcept;
+  explicit SkFont(sk_sp<SkTypeface> typeface);
 
   /** Constructs SkFont with default values with SkTypeface and size in points,
       horizontal scale, and horizontal skew. Horizontal scale emulates condensed
@@ -61,7 +61,7 @@ class SK_API SkFont {
       @param skewX     additional shear on x-axis relative to y-axis
       @return          initialized SkFont
   */
-  SkFont(sk_sp<SkTypeface> typeface, SkScalar size, SkScalar scaleX, SkScalar skewX) noexcept;
+  SkFont(sk_sp<SkTypeface> typeface, SkScalar size, SkScalar scaleX, SkScalar skewX);
 
   /** Compares SkFont and font, and returns true if they are equivalent.
       May return false if SkTypeface has identical contents but different pointers.
@@ -69,7 +69,7 @@ class SK_API SkFont {
       @param font  font to compare
       @return      true if SkFont pair are equivalent
   */
-  bool operator==(const SkFont& font) const noexcept;
+  bool operator==(const SkFont& font) const;
 
   /** Compares SkFont and font, and returns true if they are not equivalent.
       May return true if SkTypeface has identical contents but different pointers.
@@ -77,39 +77,39 @@ class SK_API SkFont {
       @param font  font to compare
       @return      true if SkFont pair are not equivalent
   */
-  bool operator!=(const SkFont& font) const noexcept { return !(*this == font); }
+  bool operator!=(const SkFont& font) const { return !(*this == font); }
 
   /** If true, instructs the font manager to always hint glyphs.
       Returned value is only meaningful if platform uses FreeType as the font manager.
 
       @return  true if all glyphs are hinted
   */
-  bool isForceAutoHinting() const noexcept { return SkToBool(fFlags & kForceAutoHinting_PrivFlag); }
+  bool isForceAutoHinting() const { return SkToBool(fFlags & kForceAutoHinting_PrivFlag); }
 
   /** Returns true if font engine may return glyphs from font bitmaps instead of from outlines.
 
       @return  true if glyphs may be font bitmaps
   */
-  bool isEmbeddedBitmaps() const noexcept { return SkToBool(fFlags & kEmbeddedBitmaps_PrivFlag); }
+  bool isEmbeddedBitmaps() const { return SkToBool(fFlags & kEmbeddedBitmaps_PrivFlag); }
 
   /** Returns true if glyphs may be drawn at sub-pixel offsets.
 
       @return  true if glyphs may be drawn at sub-pixel offsets.
   */
-  bool isSubpixel() const noexcept { return SkToBool(fFlags & kSubpixel_PrivFlag); }
+  bool isSubpixel() const { return SkToBool(fFlags & kSubpixel_PrivFlag); }
 
   /** Returns true if font and glyph metrics are requested to be linearly scalable.
 
       @return  true if font and glyph metrics are requested to be linearly scalable.
   */
-  bool isLinearMetrics() const noexcept { return SkToBool(fFlags & kLinearMetrics_PrivFlag); }
+  bool isLinearMetrics() const { return SkToBool(fFlags & kLinearMetrics_PrivFlag); }
 
   /** Returns true if bold is approximated by increasing the stroke width when creating glyph
       bitmaps from outlines.
 
       @return  bold is approximated through stroke width
   */
-  bool isEmbolden() const noexcept { return SkToBool(fFlags & kEmbolden_PrivFlag); }
+  bool isEmbolden() const { return SkToBool(fFlags & kEmbolden_PrivFlag); }
 
   /** Sets whether to always hint glyphs.
       If forceAutoHinting is set, instructs the font manager to always hint glyphs.
@@ -118,19 +118,19 @@ class SK_API SkFont {
 
       @param forceAutoHinting  setting to always hint glyphs
   */
-  void setForceAutoHinting(bool forceAutoHinting) noexcept;
+  void setForceAutoHinting(bool forceAutoHinting);
 
   /** Requests, but does not require, to use bitmaps in fonts instead of outlines.
 
       @param embeddedBitmaps  setting to use bitmaps in fonts
   */
-  void setEmbeddedBitmaps(bool embeddedBitmaps) noexcept;
+  void setEmbeddedBitmaps(bool embeddedBitmaps);
 
   /** Requests, but does not require, that glyphs respect sub-pixel positioning.
 
       @param subpixel  setting for sub-pixel positioning
   */
-  void setSubpixel(bool subpixel) noexcept;
+  void setSubpixel(bool subpixel);
 
   /** Requests, but does not require, linearly scalable font and glyph metrics.
 
@@ -139,26 +139,26 @@ class SK_API SkFont {
 
       @param linearMetrics  setting for linearly scalable font and glyph metrics.
   */
-  void setLinearMetrics(bool linearMetrics) noexcept;
+  void setLinearMetrics(bool linearMetrics);
 
   /** Increases stroke width when creating glyph bitmaps to approximate a bold typeface.
 
       @param embolden  setting for bold approximation
   */
-  void setEmbolden(bool embolden) noexcept;
+  void setEmbolden(bool embolden);
 
   /** Whether edge pixels draw opaque or with partial transparency.
 
       @return  one of: Edging::kAlias, Edging::kAntiAlias, Edging::kSubpixelAntiAlias
   */
-  Edging getEdging() const noexcept { return (Edging)fEdging; }
+  Edging getEdging() const { return (Edging)fEdging; }
 
   /** Requests, but does not require, that edge pixels draw opaque or with
       partial transparency.
 
       @param edging  one of: Edging::kAlias, Edging::kAntiAlias, Edging::kSubpixelAntiAlias
   */
-  void setEdging(Edging edging) noexcept;
+  void setEdging(Edging edging);
 
   /** Sets level of glyph outline adjustment.
       Does not check for valid values of hintingLevel.
@@ -166,14 +166,14 @@ class SK_API SkFont {
       @param hintingLevel  one of: SkFontHinting::kNone, SkFontHinting::kSlight,
                                    SkFontHinting::kNormal, SkFontHinting::kFull
   */
-  void setHinting(SkFontHinting hintingLevel) noexcept;
+  void setHinting(SkFontHinting hintingLevel);
 
   /** Returns level of glyph outline adjustment.
 
       @return  one of: SkFontHinting::kNone, SkFontHinting::kSlight, SkFontHinting::kNormal,
                        SkFontHinting::kFull
    */
-  SkFontHinting getHinting() const noexcept { return (SkFontHinting)fHinting; }
+  SkFontHinting getHinting() const { return (SkFontHinting)fHinting; }
 
   /** Returns a font with the same attributes of this font, but with the specified size.
       Returns nullptr if size is less than zero, infinite, or NaN.
@@ -181,14 +181,14 @@ class SK_API SkFont {
       @param size  typographic height of text
       @return      initialized SkFont
    */
-  SkFont makeWithSize(SkScalar size) const noexcept;
+  SkFont makeWithSize(SkScalar size) const;
 
   /** Returns SkTypeface if set, or nullptr.
       Does not alter SkTypeface SkRefCnt.
 
       @return  SkTypeface if previously set, nullptr otherwise
   */
-  SkTypeface* getTypeface() const noexcept { return fTypeface.get(); }
+  SkTypeface* getTypeface() const { return fTypeface.get(); }
 
   /** Returns SkTypeface if set, or the default typeface.
       Does not alter SkTypeface SkRefCnt.
@@ -202,27 +202,27 @@ class SK_API SkFont {
 
       @return  typographic height of text
   */
-  SkScalar getSize() const noexcept { return fSize; }
+  SkScalar getSize() const { return fSize; }
 
   /** Returns text scale on x-axis.
       Default value is 1.
 
       @return  text horizontal scale
   */
-  SkScalar getScaleX() const noexcept { return fScaleX; }
+  SkScalar getScaleX() const { return fScaleX; }
 
   /** Returns text skew on x-axis.
       Default value is zero.
 
       @return  additional shear on x-axis relative to y-axis
   */
-  SkScalar getSkewX() const noexcept { return fSkewX; }
+  SkScalar getSkewX() const { return fSkewX; }
 
   /** Increases SkTypeface SkRefCnt by one.
 
       @return  SkTypeface if previously set, nullptr otherwise
   */
-  sk_sp<SkTypeface> refTypeface() const noexcept { return fTypeface; }
+  sk_sp<SkTypeface> refTypeface() const { return fTypeface; }
 
   /** Increases SkTypeface SkRefCnt by one.
 
@@ -237,28 +237,28 @@ class SK_API SkFont {
 
       @param tf  font and style used to draw text
   */
-  void setTypeface(sk_sp<SkTypeface> tf) noexcept { fTypeface = tf; }
+  void setTypeface(sk_sp<SkTypeface> tf) { fTypeface = tf; }
 
   /** Sets text size in points.
       Has no effect if textSize is not greater than or equal to zero.
 
       @param textSize  typographic height of text
   */
-  void setSize(SkScalar textSize) noexcept;
+  void setSize(SkScalar textSize);
 
   /** Sets text scale on x-axis.
       Default value is 1.
 
       @param scaleX  text horizontal scale
   */
-  void setScaleX(SkScalar scaleX) noexcept;
+  void setScaleX(SkScalar scaleX);
 
   /** Sets text skew on x-axis.
       Default value is zero.
 
       @param skewX  additional shear on x-axis relative to y-axis
   */
-  void setSkewX(SkScalar skewX) noexcept;
+  void setSkewX(SkScalar skewX);
 
   /** Converts text into glyph indices.
       Returns the number of glyph indices represented by text.
@@ -485,7 +485,7 @@ class SK_API SkFont {
   /** Dumps fields of the font to SkDebugf. May change its output over time, so clients should
    *  not rely on this for anything specific. Used to aid in debugging.
    */
-  void dump() const noexcept;
+  void dump() const;
 
  private:
   enum PrivFlags {
@@ -506,8 +506,8 @@ class SK_API SkFont {
   uint8_t fEdging;
   uint8_t fHinting;
 
-  SkScalar setupForAsPaths(SkPaint*) noexcept;
-  bool hasSomeAntiAliasing() const noexcept;
+  SkScalar setupForAsPaths(SkPaint*);
+  bool hasSomeAntiAliasing() const;
 
   friend class GrTextBlob;
   friend class SkCanonicalizeFont;

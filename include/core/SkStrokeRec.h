@@ -17,43 +17,43 @@ SK_BEGIN_REQUIRE_DENSE
 class SK_API SkStrokeRec {
  public:
   enum InitStyle { kHairline_InitStyle, kFill_InitStyle };
-  SkStrokeRec(InitStyle style) noexcept;
-  SkStrokeRec(const SkPaint&, SkPaint::Style, SkScalar resScale = 1) noexcept;
-  explicit SkStrokeRec(const SkPaint&, SkScalar resScale = 1) noexcept;
+  SkStrokeRec(InitStyle style);
+  SkStrokeRec(const SkPaint&, SkPaint::Style, SkScalar resScale = 1);
+  explicit SkStrokeRec(const SkPaint&, SkScalar resScale = 1);
 
   enum Style { kHairline_Style, kFill_Style, kStroke_Style, kStrokeAndFill_Style };
 
   static constexpr int kStyleCount = kStrokeAndFill_Style + 1;
 
-  Style getStyle() const noexcept;
-  SkScalar getWidth() const noexcept { return fWidth; }
-  SkScalar getMiter() const noexcept { return fMiterLimit; }
-  SkPaint::Cap getCap() const noexcept { return (SkPaint::Cap)fCap; }
-  SkPaint::Join getJoin() const noexcept { return (SkPaint::Join)fJoin; }
+  Style getStyle() const;
+  SkScalar getWidth() const { return fWidth; }
+  SkScalar getMiter() const { return fMiterLimit; }
+  SkPaint::Cap getCap() const { return (SkPaint::Cap)fCap; }
+  SkPaint::Join getJoin() const { return (SkPaint::Join)fJoin; }
 
-  bool isHairlineStyle() const noexcept { return kHairline_Style == this->getStyle(); }
+  bool isHairlineStyle() const { return kHairline_Style == this->getStyle(); }
 
-  bool isFillStyle() const noexcept { return kFill_Style == this->getStyle(); }
+  bool isFillStyle() const { return kFill_Style == this->getStyle(); }
 
-  void setFillStyle() noexcept;
-  void setHairlineStyle() noexcept;
+  void setFillStyle();
+  void setHairlineStyle();
   /**
    *  Specify the strokewidth, and optionally if you want stroke + fill.
    *  Note, if width==0, then this request is taken to mean:
    *      strokeAndFill==true -> new style will be Fill
    *      strokeAndFill==false -> new style will be Hairline
    */
-  void setStrokeStyle(SkScalar width, bool strokeAndFill = false) noexcept;
+  void setStrokeStyle(SkScalar width, bool strokeAndFill = false);
 
-  void setStrokeParams(SkPaint::Cap cap, SkPaint::Join join, SkScalar miterLimit) noexcept {
+  void setStrokeParams(SkPaint::Cap cap, SkPaint::Join join, SkScalar miterLimit) {
     fCap = cap;
     fJoin = join;
     fMiterLimit = miterLimit;
   }
 
-  SkScalar getResScale() const noexcept { return fResScale; }
+  SkScalar getResScale() const { return fResScale; }
 
-  void setResScale(SkScalar rs) noexcept {
+  void setResScale(SkScalar rs) {
     SkASSERT(rs > 0 && SkScalarIsFinite(rs));
     fResScale = rs;
   }
@@ -62,7 +62,7 @@ class SK_API SkStrokeRec {
    *  Returns true if this specifes any thick stroking, i.e. applyToPath()
    *  will return true.
    */
-  bool needToApply() const noexcept {
+  bool needToApply() const {
     Style style = this->getStyle();
     return (kStroke_Style == style) || (kStrokeAndFill_Style == style);
   }
@@ -82,14 +82,14 @@ class SK_API SkStrokeRec {
   /**
    *  Apply these stroke parameters to a paint.
    */
-  void applyToPaint(SkPaint* paint) const noexcept;
+  void applyToPaint(SkPaint* paint) const;
 
   /**
    * Gives a conservative value for the outset that should applied to a
    * geometries bounds to account for any inflation due to applying this
    * strokeRec to the geometry.
    */
-  SkScalar getInflationRadius() const noexcept;
+  SkScalar getInflationRadius() const;
 
   /**
    * Equivalent to:
@@ -98,17 +98,17 @@ class SK_API SkStrokeRec {
    * This does not account for other effects on the paint (i.e. path
    * effect).
    */
-  static SkScalar GetInflationRadius(const SkPaint&, SkPaint::Style) noexcept;
+  static SkScalar GetInflationRadius(const SkPaint&, SkPaint::Style);
 
   static SkScalar GetInflationRadius(
-      SkPaint::Join, SkScalar miterLimit, SkPaint::Cap, SkScalar strokeWidth) noexcept;
+      SkPaint::Join, SkScalar miterLimit, SkPaint::Cap, SkScalar strokeWidth);
 
   /**
    * Compare if two SkStrokeRecs have an equal effect on a path.
    * Equal SkStrokeRecs produce equal paths. Equality of produced
    * paths does not take the ResScale parameter into account.
    */
-  bool hasEqualEffect(const SkStrokeRec& other) const noexcept {
+  bool hasEqualEffect(const SkStrokeRec& other) const {
     if (!this->needToApply()) {
       return this->getStyle() == other.getStyle();
     }
@@ -117,7 +117,7 @@ class SK_API SkStrokeRec {
   }
 
  private:
-  void init(const SkPaint&, SkPaint::Style, SkScalar resScale) noexcept;
+  void init(const SkPaint&, SkPaint::Style, SkScalar resScale);
 
   SkScalar fResScale;
   SkScalar fWidth;

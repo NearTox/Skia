@@ -31,7 +31,6 @@
 #include "src/sksl/ir/SkSLVariableReference.h"
 #include "src/sksl/ir/SkSLWhileStatement.h"
 
-#include <stack>
 #include "llvm-c/Analysis.h"
 #include "llvm-c/Core.h"
 #include "llvm-c/OrcBindings.h"
@@ -39,6 +38,7 @@
 #include "llvm-c/Target.h"
 #include "llvm-c/Transforms/PassManagerBuilder.h"
 #include "llvm-c/Types.h"
+#  include <stack>
 
 class SkRasterPipeline;
 

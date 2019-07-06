@@ -186,13 +186,13 @@ class StrokePathView : public Sample {
     float r = rand.nextUScalar1() + 0.5f;
     SkScalar x = 0, y = 0;
     p.moveTo(x, y);
-#if 0
+#  if 0
         p.cubicTo(x-75*r, y+75*r, x-40*r, y+125*r, x, y+85*r);
         p.cubicTo(x+40*r, y+125*r, x+75*r, y+75*r, x, y);
-#else
+#  else
     p.cubicTo(x + 75 * r, y + 75 * r, x + 40 * r, y + 125 * r, x, y + 85 * r);
     p.cubicTo(x - 40 * r, y + 125 * r, x - 75 * r, y + 75 * r, x, y);
-#endif
+#  endif
     p.close();
     fPath = p;
     fPath.offset(100, 0);

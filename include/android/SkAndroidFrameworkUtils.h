@@ -22,7 +22,7 @@ class SkSurface;
  */
 class SkAndroidFrameworkUtils {
  public:
-#if SK_SUPPORT_GPU
+#  if SK_SUPPORT_GPU
   /**
    *  clipWithStencil draws the current clip into a stencil buffer with reference value and mask
    *  set to 0x1. This function works only on a GPU canvas.
@@ -32,7 +32,7 @@ class SkAndroidFrameworkUtils {
    *  @return true on success or false if clip is empty or not a GPU canvas.
    */
   static bool clipWithStencil(SkCanvas* canvas);
-#endif  // SK_SUPPORT_GPU
+#  endif  // SK_SUPPORT_GPU
 
   static void SafetyNetLog(const char*);
 

@@ -5,8 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "include/utils/SkShadowUtils.h"
-#include <new>
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColorFilter.h"
 #include "include/core/SkMaskFilter.h"
@@ -15,6 +13,7 @@
 #include "include/core/SkVertices.h"
 #include "include/private/SkColorData.h"
 #include "include/utils/SkRandom.h"
+#include "include/utils/SkShadowUtils.h"
 #include "src/core/SkBlurMask.h"
 #include "src/core/SkDevice.h"
 #include "src/core/SkDrawShadowInfo.h"
@@ -24,6 +23,7 @@
 #include "src/core/SkResourceCache.h"
 #include "src/core/SkTLazy.h"
 #include "src/utils/SkShadowTessellator.h"
+#include <new>
 #if SK_SUPPORT_GPU
 #include "src/gpu/GrShape.h"
 #include "src/gpu/effects/generated/GrBlurredEdgeFragmentProcessor.h"
@@ -45,7 +45,7 @@ class SkGaussianColorFilter : public SkColorFilter {
 #endif
 
  protected:
-  void flatten(SkWriteBuffer&) const noexcept override {}
+  void flatten(SkWriteBuffer&) const override {}
   bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const override {
     rec.fPipeline->append(SkRasterPipeline::gauss_a_to_rgba);
     return true;
@@ -73,7 +73,7 @@ std::unique_ptr<GrFragmentProcessor> SkGaussianColorFilter::asFragmentProcessor(
 
 namespace {
 
-uint64_t resource_cache_shared_id() noexcept {
+uint64_t resource_cache_shared_id() {
   return 0x2020776f64616873llu;  // 'shadow  '
 }
 
@@ -83,7 +83,7 @@ struct AmbientVerticesFactory {
   bool fTransparent;
   SkVector fOffset;
 
-  bool isCompatible(const AmbientVerticesFactory& that, SkVector* translate) const noexcept {
+  bool isCompatible(const AmbientVerticesFactory& that, SkVector* translate) const {
     if (fOccluderHeight != that.fOccluderHeight || fTransparent != that.fTransparent) {
       return false;
     }
@@ -124,7 +124,7 @@ struct SpotVerticesFactory {
   SkScalar fLightRadius;
   OccluderType fOccluderType;
 
-  bool isCompatible(const SpotVerticesFactory& that, SkVector* translate) const noexcept {
+  bool isCompatible(const SpotVerticesFactory& that, SkVector* translate) const {
     if (fOccluderHeight != that.fOccluderHeight || fDevLightPos.fZ != that.fDevLightPos.fZ ||
         fLightRadius != that.fLightRadius || fOccluderType != that.fOccluderType) {
       return false;
@@ -180,11 +180,10 @@ struct SpotVerticesFactory {
  */
 class CachedTessellations : public SkRefCnt {
  public:
-  size_t size() const noexcept { return fAmbientSet.size() + fSpotSet.size(); }
+  size_t size() const { return fAmbientSet.size() + fSpotSet.size(); }
 
   sk_sp<SkVertices> find(
-      const AmbientVerticesFactory& ambient, const SkMatrix& matrix, SkVector* translate) const
-      noexcept {
+      const AmbientVerticesFactory& ambient, const SkMatrix& matrix, SkVector* translate) const {
     return fAmbientSet.find(ambient, matrix, translate);
   }
 
@@ -195,7 +194,7 @@ class CachedTessellations : public SkRefCnt {
   }
 
   sk_sp<SkVertices> find(
-      const SpotVerticesFactory& spot, const SkMatrix& matrix, SkVector* translate) const noexcept {
+      const SpotVerticesFactory& spot, const SkMatrix& matrix, SkVector* translate) const {
     return fSpotSet.find(spot, matrix, translate);
   }
 
@@ -209,10 +208,10 @@ class CachedTessellations : public SkRefCnt {
   template <typename FACTORY, int MAX_ENTRIES>
   class Set {
    public:
-    size_t size() const noexcept { return fSize; }
+    size_t size() const { return fSize; }
 
     sk_sp<SkVertices> find(
-        const FACTORY& factory, const SkMatrix& matrix, SkVector* translate) const noexcept {
+        const FACTORY& factory, const SkMatrix& matrix, SkVector* translate) const {
       for (int i = 0; i < MAX_ENTRIES; ++i) {
         if (fEntries[i].fFactory.isCompatible(factory, translate)) {
           const SkMatrix& m = fEntries[i].fMatrix;
@@ -279,19 +278,19 @@ class CachedTessellationsRec : public SkResourceCache::Rec {
     memcpy(fKey.get(), &key, key.size());
   }
 
-  const Key& getKey() const noexcept override {
+  const Key& getKey() const override {
     return *reinterpret_cast<SkResourceCache::Key*>(fKey.get());
   }
 
-  size_t bytesUsed() const noexcept override { return fTessellations->size(); }
+  size_t bytesUsed() const override { return fTessellations->size(); }
 
-  const char* getCategory() const noexcept override { return "tessellated shadow masks"; }
+  const char* getCategory() const override { return "tessellated shadow masks"; }
 
-  sk_sp<CachedTessellations> refTessellations() const noexcept { return fTessellations; }
+  sk_sp<CachedTessellations> refTessellations() const { return fTessellations; }
 
   template <typename FACTORY>
-  sk_sp<SkVertices> find(const FACTORY& factory, const SkMatrix& matrix, SkVector* translate) const
-      noexcept {
+  sk_sp<SkVertices> find(
+      const FACTORY& factory, const SkMatrix& matrix, SkVector* translate) const {
     return fTessellations->find(factory, matrix, translate);
   }
 
@@ -308,7 +307,7 @@ class CachedTessellationsRec : public SkResourceCache::Rec {
  */
 template <typename FACTORY>
 struct FindContext {
-  FindContext(const SkMatrix* viewMatrix, const FACTORY* factory) noexcept
+  FindContext(const SkMatrix* viewMatrix, const FACTORY* factory)
       : fViewMatrix(viewMatrix), fFactory(factory) {}
   const SkMatrix* const fViewMatrix;
   // If this is valid after Find is called then we found the vertices and they should be drawn
@@ -345,7 +344,7 @@ bool FindVisitor(const SkResourceCache::Rec& baseRec, void* ctx) {
 
 class ShadowedPath {
  public:
-  ShadowedPath(const SkPath* path, const SkMatrix* viewMatrix) noexcept
+  ShadowedPath(const SkPath* path, const SkMatrix* viewMatrix)
       : fPath(path),
         fViewMatrix(viewMatrix)
 #if SK_SUPPORT_GPU
@@ -355,17 +354,15 @@ class ShadowedPath {
   {
   }
 
-  const SkPath& path() const noexcept { return *fPath; }
-  const SkMatrix& viewMatrix() const noexcept { return *fViewMatrix; }
+  const SkPath& path() const { return *fPath; }
+  const SkMatrix& viewMatrix() const { return *fViewMatrix; }
 #if SK_SUPPORT_GPU
   /** Negative means the vertices should not be cached for this path. */
-  int keyBytes() const noexcept { return fShapeForKey.unstyledKeySize() * sizeof(uint32_t); }
-  void writeKey(void* key) const noexcept {
+  int keyBytes() const { return fShapeForKey.unstyledKeySize() * sizeof(uint32_t); }
+  void writeKey(void* key) const {
     fShapeForKey.writeUnstyledKey(reinterpret_cast<uint32_t*>(key));
   }
-  bool isRRect(SkRRect* rrect) noexcept {
-    return fShapeForKey.asRRect(rrect, nullptr, nullptr, nullptr);
-  }
+  bool isRRect(SkRRect* rrect) { return fShapeForKey.asRRect(rrect, nullptr, nullptr, nullptr); }
 #else
   int keyBytes() const { return -1; }
   void writeKey(void* key) const { SK_ABORT("Should never be called"); }
@@ -392,12 +389,12 @@ class ShadowInvalidator : public SkPathRef::GenIDChangeListener {
   }
 
  private:
-  const SkResourceCache::Key& getKey() const noexcept {
+  const SkResourceCache::Key& getKey() const {
     return *reinterpret_cast<SkResourceCache::Key*>(fKey.get());
   }
 
   // always purge
-  static bool FindVisitor(const SkResourceCache::Rec&, void*) noexcept { return false; }
+  static bool FindVisitor(const SkResourceCache::Rec&, void*) { return false; }
 
   void onChange() override {
     SkResourceCache::Find(this->getKey(), ShadowInvalidator::FindVisitor, nullptr);
@@ -473,7 +470,7 @@ bool draw_shadow(
 }
 }  // namespace
 
-static bool tilted(const SkPoint3& zPlaneParams) noexcept {
+static bool tilted(const SkPoint3& zPlaneParams) {
   return !SkScalarNearlyZero(zPlaneParams.fX) || !SkScalarNearlyZero(zPlaneParams.fY);
 }
 
@@ -485,8 +482,7 @@ static SkPoint3 map(const SkMatrix& m, const SkPoint3& pt) {
 }
 
 void SkShadowUtils::ComputeTonalColors(
-    SkColor inAmbientColor, SkColor inSpotColor, SkColor* outAmbientColor,
-    SkColor* outSpotColor) noexcept {
+    SkColor inAmbientColor, SkColor inSpotColor, SkColor* outAmbientColor, SkColor* outSpotColor) {
   // For tonal color we only compute color values for the spot shadow.
   // The ambient shadow is greyscale only.
 
@@ -559,7 +555,7 @@ void SkShadowUtils::DrawShadow(
   canvas->private_draw_shadow_rec(path, rec);
 }
 
-static bool validate_rec(const SkDrawShadowRec& rec) noexcept {
+static bool validate_rec(const SkDrawShadowRec& rec) {
   return rec.fLightPos.isFinite() && rec.fZPlaneParams.isFinite() &&
          SkScalarIsFinite(rec.fLightRadius);
 }

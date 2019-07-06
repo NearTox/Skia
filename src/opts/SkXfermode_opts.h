@@ -24,11 +24,11 @@ namespace SK_OPTS_NS {
 namespace {  // NOLINT(google-build-namespaces)
 
 // Most xfermodes can be done most efficiently 4 pixels at a time in 8 or 16-bit fixed point.
-#define XFERMODE(Xfermode)                              \
-  struct Xfermode {                                     \
-    Sk4px operator()(const Sk4px&, const Sk4px&) const; \
-  };                                                    \
-  inline Sk4px Xfermode::operator()(const Sk4px& d, const Sk4px& s) const
+#  define XFERMODE(Xfermode)                              \
+    struct Xfermode {                                     \
+      Sk4px operator()(const Sk4px&, const Sk4px&) const; \
+    };                                                    \
+    inline Sk4px Xfermode::operator()(const Sk4px& d, const Sk4px& s) const
 
 XFERMODE(Clear) { return Sk4px::DupPMColor(0); }
 XFERMODE(Src) { return s; }
@@ -56,7 +56,7 @@ XFERMODE(Screen) {
   return s + d.approxMulDiv255(s.inv());
 }
 
-#undef XFERMODE
+#  undef XFERMODE
 
 // A reasonable fallback mode for doing AA is to simply apply the transfermode first,
 // then linearly interpolate the AA.
@@ -67,16 +67,16 @@ static Sk4px xfer_aa(const Sk4px& d, const Sk4px& s, const Sk4px& aa) {
 }
 
 // For some transfermodes we specialize AA, either for correctness or performance.
-#define XFERMODE_AA(Xfermode) \
-  template <>                 \
-  Sk4px xfer_aa<Xfermode>(const Sk4px& d, const Sk4px& s, const Sk4px& aa)
+#  define XFERMODE_AA(Xfermode) \
+    template <>                 \
+    Sk4px xfer_aa<Xfermode>(const Sk4px& d, const Sk4px& s, const Sk4px& aa)
 
 // Plus' clamp needs to happen after AA.  skia:3852
 XFERMODE_AA(Plus) {  // [ clamp( (1-AA)D + (AA)(S+D) ) == clamp(D + AA*S) ]
   return d.saturatedAdd(s.approxMulDiv255(aa));
 }
 
-#undef XFERMODE_AA
+#  undef XFERMODE_AA
 
 // Src and Clear modes are safe to use with unitialized dst buffers,
 // even if the implementation branches based on bytes from dst (e.g. asserts in Debug mode).
@@ -113,9 +113,9 @@ namespace SK_OPTS_NS {
 
 /*not static*/ inline SkXfermode* create_xfermode(SkBlendMode mode) {
   switch (mode) {
-#define CASE(Xfermode)           \
-  case SkBlendMode::k##Xfermode: \
-    return new Sk4pxXfermode<Xfermode>()
+#  define CASE(Xfermode)           \
+    case SkBlendMode::k##Xfermode: \
+      return new Sk4pxXfermode<Xfermode>()
     CASE(Clear);
     CASE(Src);
     CASE(Dst);
@@ -131,7 +131,7 @@ namespace SK_OPTS_NS {
     CASE(Plus);
     CASE(Modulate);
     CASE(Screen);
-#undef CASE
+#  undef CASE
 
     default: break;
   }

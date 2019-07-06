@@ -40,7 +40,7 @@ class GrCoverageSetOpXPFactory : public GrXPFactory {
 
   AnalysisProperties analysisProperties(
       const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, const GrCaps&,
-      GrClampType) const noexcept override {
+      GrClampType) const override {
     return AnalysisProperties::kIgnoresInputColor;
   }
 

@@ -49,19 +49,19 @@ struct SkPackedGlyphID {
 
   constexpr SkPackedGlyphID() : fID{kImpossibleID} {}
 
-  bool operator==(const SkPackedGlyphID& that) const noexcept { return fID == that.fID; }
-  bool operator!=(const SkPackedGlyphID& that) const noexcept { return !(*this == that); }
-  bool operator<(SkPackedGlyphID that) const noexcept { return this->fID < that.fID; }
+  bool operator==(const SkPackedGlyphID& that) const { return fID == that.fID; }
+  bool operator!=(const SkPackedGlyphID& that) const { return !(*this == that); }
+  bool operator<(SkPackedGlyphID that) const { return this->fID < that.fID; }
 
-  uint32_t code() const noexcept { return fID & kCodeMask; }
+  uint32_t code() const { return fID & kCodeMask; }
 
-  uint32_t value() const noexcept { return fID; }
+  uint32_t value() const { return fID; }
 
-  SkFixed getSubXFixed() const noexcept { return SubToFixed(ID2SubX(fID)); }
+  SkFixed getSubXFixed() const { return SubToFixed(ID2SubX(fID)); }
 
-  SkFixed getSubYFixed() const noexcept { return SubToFixed(ID2SubY(fID)); }
+  SkFixed getSubYFixed() const { return SubToFixed(ID2SubY(fID)); }
 
-  uint32_t hash() const noexcept { return SkChecksum::CheapMix(fID); }
+  uint32_t hash() const { return SkChecksum::CheapMix(fID); }
 
   SkString dump() const {
     SkString str;
@@ -95,44 +95,44 @@ class SkGlyph {
   struct PathData;
 
  public:
-  constexpr explicit SkGlyph(SkPackedGlyphID id) noexcept : fID{id} {}
+  constexpr explicit SkGlyph(SkPackedGlyphID id) : fID{id} {}
   static constexpr SkFixed kSubpixelRound = SK_FixedHalf >> SkPackedGlyphID::kSubBits;
 
-  bool isEmpty() const noexcept { return fWidth == 0 || fHeight == 0; }
-  bool isJustAdvance() const noexcept { return MASK_FORMAT_JUST_ADVANCE == fMaskFormat; }
-  bool isFullMetrics() const noexcept { return MASK_FORMAT_JUST_ADVANCE != fMaskFormat; }
-  SkGlyphID getGlyphID() const noexcept { return fID.code(); }
-  SkPackedGlyphID getPackedID() const noexcept { return fID; }
-  SkFixed getSubXFixed() const noexcept { return fID.getSubXFixed(); }
-  SkFixed getSubYFixed() const noexcept { return fID.getSubYFixed(); }
+  bool isEmpty() const { return fWidth == 0 || fHeight == 0; }
+  bool isJustAdvance() const { return MASK_FORMAT_JUST_ADVANCE == fMaskFormat; }
+  bool isFullMetrics() const { return MASK_FORMAT_JUST_ADVANCE != fMaskFormat; }
+  SkGlyphID getGlyphID() const { return fID.code(); }
+  SkPackedGlyphID getPackedID() const { return fID; }
+  SkFixed getSubXFixed() const { return fID.getSubXFixed(); }
+  SkFixed getSubYFixed() const { return fID.getSubYFixed(); }
 
-  size_t formatAlignment() const noexcept;
+  size_t formatAlignment() const;
   size_t allocImage(SkArenaAlloc* alloc);
-  size_t rowBytes() const noexcept;
-  size_t computeImageSize() const noexcept;
-  size_t rowBytesUsingFormat(SkMask::Format format) const noexcept;
+  size_t rowBytes() const;
+  size_t computeImageSize() const;
+  size_t rowBytesUsingFormat(SkMask::Format format) const;
 
   // Call this to set all of the metrics fields to 0 (e.g. if the scaler
   // encounters an error measuring a glyph). Note: this does not alter the
   // fImage, fPath, fID, fMaskFormat fields.
-  void zeroMetrics() noexcept;
+  void zeroMetrics();
 
-  bool hasImage() const noexcept {
+  bool hasImage() const {
     SkASSERT(fMaskFormat != MASK_FORMAT_UNKNOWN);
     return fImage != nullptr;
   }
 
-  SkMask mask() const noexcept;
+  SkMask mask() const;
 
-  SkMask mask(SkPoint position) const noexcept;
+  SkMask mask(SkPoint position) const;
 
   SkPath* addPath(SkScalerContext*, SkArenaAlloc*);
 
-  SkPath* path() const noexcept {
+  SkPath* path() const {
     return fPathData != nullptr && fPathData->fHasPath ? &fPathData->fPath : nullptr;
   }
 
-  bool hasPath() const noexcept {
+  bool hasPath() const {
     // Need to have called getMetrics before calling findPath.
     SkASSERT(fMaskFormat != MASK_FORMAT_UNKNOWN);
 
@@ -142,7 +142,7 @@ class SkGlyph {
     return fPathData != nullptr && fPathData->fHasPath;
   }
 
-  int maxDimension() const noexcept {
+  int maxDimension() const {
     // width and height are only defined if a metrics call was made.
     SkASSERT(fMaskFormat != MASK_FORMAT_UNKNOWN);
 

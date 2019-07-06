@@ -32,7 +32,7 @@ struct GrGpuResourceFreedMessage {
 };
 
 static inline bool SkShouldPostMessageToBus(
-    const GrGpuResourceFreedMessage& msg, uint32_t msgBusUniqueID) noexcept {
+    const GrGpuResourceFreedMessage& msg, uint32_t msgBusUniqueID) {
   // The inbox's ID is the unique ID of the owning GrContext.
   return msgBusUniqueID == msg.fOwningUniqueID;
 }
@@ -66,10 +66,10 @@ class GrResourceCache {
 
   /** Used to access functionality needed by GrGpuResource for lifetime management. */
   class ResourceAccess;
-  ResourceAccess resourceAccess() noexcept;
+  ResourceAccess resourceAccess();
 
   /** Unique ID of the owning GrContext. */
-  uint32_t contextUniqueID() const noexcept { return fContextUniqueID; }
+  uint32_t contextUniqueID() const { return fContextUniqueID; }
 
   /** Sets the cache limits in terms of number of resources and max gpu memory byte size. */
   void setLimits(int count, size_t bytes);
@@ -77,39 +77,37 @@ class GrResourceCache {
   /**
    * Returns the number of resources.
    */
-  int getResourceCount() const noexcept {
-    return fPurgeableQueue.count() + fNonpurgeableResources.count();
-  }
+  int getResourceCount() const { return fPurgeableQueue.count() + fNonpurgeableResources.count(); }
 
   /**
    * Returns the number of resources that count against the budget.
    */
-  int getBudgetedResourceCount() const noexcept { return fBudgetedCount; }
+  int getBudgetedResourceCount() const { return fBudgetedCount; }
 
   /**
    * Returns the number of bytes consumed by resources.
    */
-  size_t getResourceBytes() const noexcept { return fBytes; }
+  size_t getResourceBytes() const { return fBytes; }
 
   /**
    * Returns the number of bytes held by unlocked reosources which are available for purging.
    */
-  size_t getPurgeableBytes() const noexcept { return fPurgeableBytes; }
+  size_t getPurgeableBytes() const { return fPurgeableBytes; }
 
   /**
    * Returns the number of bytes consumed by budgeted resources.
    */
-  size_t getBudgetedResourceBytes() const noexcept { return fBudgetedBytes; }
+  size_t getBudgetedResourceBytes() const { return fBudgetedBytes; }
 
   /**
    * Returns the cached resources count budget.
    */
-  int getMaxResourceCount() const noexcept { return fMaxCount; }
+  int getMaxResourceCount() const { return fMaxCount; }
 
   /**
    * Returns the number of bytes consumed by cached resources.
    */
-  size_t getMaxResourceBytes() const noexcept { return fMaxBytes; }
+  size_t getMaxResourceBytes() const { return fMaxBytes; }
 
   /**
    * Abandons the backend API resources owned by all GrGpuResource objects and removes them from
@@ -175,9 +173,7 @@ class GrResourceCache {
   /** Purge all resources not used since the passed in time. */
   void purgeResourcesNotUsedSince(GrStdSteadyClock::time_point);
 
-  bool overBudget() const noexcept {
-    return fBudgetedBytes > fMaxBytes || fBudgetedCount > fMaxCount;
-  }
+  bool overBudget() const { return fBudgetedBytes > fMaxBytes || fBudgetedCount > fMaxCount; }
 
   /**
    * Purge unlocked resources from the cache until the the provided byte count has been reached
@@ -193,7 +189,7 @@ class GrResourceCache {
 
   /** Returns true if the cache would like a flush to occur in order to make more resources
       purgeable. */
-  bool requestsFlush() const noexcept;
+  bool requestsFlush() const;
 
   /** Maintain a ref to this resource until we receive a GrGpuResourceFreedMessage. */
   void insertDelayedResourceUnref(GrGpuResource* resource);
@@ -234,11 +230,11 @@ class GrResourceCache {
 
   void getStats(Stats*) const;
 
-#if GR_TEST_UTILS
+#  if GR_TEST_UTILS
   void dumpStats(SkString*) const;
 
   void dumpStatsKeyValuePairs(SkTArray<SkString>* keys, SkTArray<double>* value) const;
-#endif
+#  endif
 
 #endif
 
@@ -252,7 +248,7 @@ class GrResourceCache {
   // Enumerates all cached resources and dumps their details to traceMemoryDump.
   void dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const;
 
-  void setProxyProvider(GrProxyProvider* proxyProvider) noexcept { fProxyProvider = proxyProvider; }
+  void setProxyProvider(GrProxyProvider* proxyProvider) { fProxyProvider = proxyProvider; }
 
  private:
   ///////////////////////////////////////////////////////////////////////////
@@ -270,10 +266,10 @@ class GrResourceCache {
 
   void refAndMakeResourceMRU(GrGpuResource*);
   void processFreedGpuResources();
-  void addToNonpurgeableArray(GrGpuResource*) noexcept;
-  void removeFromNonpurgeableArray(GrGpuResource*) noexcept;
+  void addToNonpurgeableArray(GrGpuResource*);
+  void removeFromNonpurgeableArray(GrGpuResource*);
 
-  bool wouldFit(size_t bytes) noexcept {
+  bool wouldFit(size_t bytes) {
     return fBudgetedBytes + bytes <= fMaxBytes && fBudgetedCount + 1 <= fMaxCount;
   }
 
@@ -283,7 +279,7 @@ class GrResourceCache {
   bool isInCache(const GrGpuResource* r) const;
   void validate() const;
 #else
-  void validate() const noexcept {}
+  void validate() const {}
 #endif
 
   class AutoValidate;
@@ -291,34 +287,34 @@ class GrResourceCache {
   class AvailableForScratchUse;
 
   struct ScratchMapTraits {
-    static const GrScratchKey& GetKey(const GrGpuResource& r) noexcept {
+    static const GrScratchKey& GetKey(const GrGpuResource& r) {
       return r.resourcePriv().getScratchKey();
     }
 
-    static uint32_t Hash(const GrScratchKey& key) noexcept { return key.hash(); }
-    static void OnFree(GrGpuResource*) noexcept {}
+    static uint32_t Hash(const GrScratchKey& key) { return key.hash(); }
+    static void OnFree(GrGpuResource*) {}
   };
   typedef SkTMultiMap<GrGpuResource, GrScratchKey, ScratchMapTraits> ScratchMap;
 
   struct UniqueHashTraits {
-    static const GrUniqueKey& GetKey(const GrGpuResource& r) noexcept { return r.getUniqueKey(); }
+    static const GrUniqueKey& GetKey(const GrGpuResource& r) { return r.getUniqueKey(); }
 
-    static uint32_t Hash(const GrUniqueKey& key) noexcept { return key.hash(); }
+    static uint32_t Hash(const GrUniqueKey& key) { return key.hash(); }
   };
   typedef SkTDynamicHash<GrGpuResource, GrUniqueKey, UniqueHashTraits> UniqueHash;
 
   class ResourceAwaitingUnref {
    public:
-    ResourceAwaitingUnref() noexcept;
-    ResourceAwaitingUnref(GrGpuResource* resource) noexcept;
+    ResourceAwaitingUnref();
+    ResourceAwaitingUnref(GrGpuResource* resource);
     ResourceAwaitingUnref(const ResourceAwaitingUnref&) = delete;
     ResourceAwaitingUnref& operator=(const ResourceAwaitingUnref&) = delete;
-    ResourceAwaitingUnref(ResourceAwaitingUnref&&) noexcept;
-    ResourceAwaitingUnref& operator=(ResourceAwaitingUnref&&) noexcept;
+    ResourceAwaitingUnref(ResourceAwaitingUnref&&);
+    ResourceAwaitingUnref& operator=(ResourceAwaitingUnref&&);
     ~ResourceAwaitingUnref();
-    void addRef() noexcept;
-    void unref() noexcept;
-    bool finished() noexcept;
+    void addRef();
+    void unref();
+    bool finished();
 
    private:
     GrGpuResource* fResource = nullptr;
@@ -326,11 +322,11 @@ class GrResourceCache {
   };
   using ReourcesAwaitingUnref = SkTHashMap<uint32_t, ResourceAwaitingUnref>;
 
-  static bool CompareTimestamp(GrGpuResource* const& a, GrGpuResource* const& b) noexcept {
+  static bool CompareTimestamp(GrGpuResource* const& a, GrGpuResource* const& b) {
     return a->cacheAccess().timestamp() < b->cacheAccess().timestamp();
   }
 
-  static int* AccessResourceIndex(GrGpuResource* const& res) noexcept {
+  static int* AccessResourceIndex(GrGpuResource* const& res) {
     return res->cacheAccess().accessCacheIndex();
   }
 
@@ -391,8 +387,8 @@ GR_MAKE_BITFIELD_CLASS_OPS(GrResourceCache::ScratchFlags);
 
 class GrResourceCache::ResourceAccess {
  private:
-  ResourceAccess(GrResourceCache* cache) noexcept : fCache(cache) {}
-  ResourceAccess(const ResourceAccess& that) noexcept : fCache(that.fCache) {}
+  ResourceAccess(GrResourceCache* cache) : fCache(cache) {}
+  ResourceAccess(const ResourceAccess& that) : fCache(that.fCache) {}
   ResourceAccess& operator=(const ResourceAccess&);  // unimpl
 
   /**
@@ -467,7 +463,7 @@ class GrResourceCache::ResourceAccess {
   friend class GrResourceCache;  // To create this type.
 };
 
-inline GrResourceCache::ResourceAccess GrResourceCache::resourceAccess() noexcept {
+inline GrResourceCache::ResourceAccess GrResourceCache::resourceAccess() {
   return ResourceAccess(this);
 }
 

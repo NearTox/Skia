@@ -35,7 +35,7 @@ class SkMessageBus : SkNoncopyable {
     Inbox(uint32_t uniqueID = SK_InvalidUniqueID);
     ~Inbox();
 
-    uint32_t uniqueID() const noexcept { return fUniqueID; }
+    uint32_t uniqueID() const { return fUniqueID; }
 
     // Overwrite out with all the messages we've received since the last call.  Threadsafe.
     void poll(SkTArray<Message>* out);

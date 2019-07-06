@@ -34,22 +34,22 @@ class GrGLSLSimpleTextureEffect : public GrGLSLFragmentProcessor {
   }
 
  private:
-  void onSetData(
-      const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) noexcept override {}
+  void onSetData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) override {
+  }
 };
 GrGLSLFragmentProcessor* GrSimpleTextureEffect::onCreateGLSLInstance() const {
   return new GrGLSLSimpleTextureEffect();
 }
 void GrSimpleTextureEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {}
-bool GrSimpleTextureEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
+bool GrSimpleTextureEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrSimpleTextureEffect& that = other.cast<GrSimpleTextureEffect>();
   (void)that;
   if (image != that.image) return false;
   if (matrix != that.matrix) return false;
   return true;
 }
-GrSimpleTextureEffect::GrSimpleTextureEffect(const GrSimpleTextureEffect& src) noexcept
+GrSimpleTextureEffect::GrSimpleTextureEffect(const GrSimpleTextureEffect& src)
     : INHERITED(kGrSimpleTextureEffect_ClassID, src.optimizationFlags()),
       imageCoordTransform(src.imageCoordTransform),
       image(src.image),
@@ -60,8 +60,8 @@ GrSimpleTextureEffect::GrSimpleTextureEffect(const GrSimpleTextureEffect& src) n
 std::unique_ptr<GrFragmentProcessor> GrSimpleTextureEffect::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new GrSimpleTextureEffect(*this));
 }
-const GrFragmentProcessor::TextureSampler& GrSimpleTextureEffect::onTextureSampler(int index) const
-    noexcept {
+const GrFragmentProcessor::TextureSampler& GrSimpleTextureEffect::onTextureSampler(
+    int index) const {
   return IthTextureSampler(index, image);
 }
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(GrSimpleTextureEffect);

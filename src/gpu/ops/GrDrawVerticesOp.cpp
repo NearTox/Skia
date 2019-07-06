@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/ops/GrDrawVerticesOp.h"
 #include "src/core/SkRectPriv.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrDefaultGeoProcFactory.h"
 #include "src/gpu/GrOpFlushState.h"
 #include "src/gpu/SkGr.h"
+#include "src/gpu/ops/GrDrawVerticesOp.h"
 #include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 
 namespace {
@@ -27,7 +27,7 @@ class DrawVerticesOp final : public GrMeshDrawOp {
       const SkVertices::Bone bones[], int boneCount, GrPrimitiveType, GrAAType,
       sk_sp<GrColorSpaceXform>, const SkMatrix& viewMatrix);
 
-  const char* name() const noexcept override { return "DrawVerticesOp"; }
+  const char* name() const override { return "DrawVerticesOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override { fHelper.visitProxies(func); }
 

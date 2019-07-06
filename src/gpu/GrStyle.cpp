@@ -8,7 +8,7 @@
 #include "src/gpu/GrStyle.h"
 #include "src/utils/SkDashPathPriv.h"
 
-int GrStyle::KeySize(const GrStyle& style, Apply apply, uint32_t flags) noexcept {
+int GrStyle::KeySize(const GrStyle& style, Apply apply, uint32_t flags) {
   GR_STATIC_ASSERT(sizeof(uint32_t) == sizeof(SkScalar));
   int size = 0;
   if (style.isDashed()) {
@@ -31,7 +31,7 @@ int GrStyle::KeySize(const GrStyle& style, Apply apply, uint32_t flags) noexcept
 }
 
 void GrStyle::WriteKey(
-    uint32_t* key, const GrStyle& style, Apply apply, SkScalar scale, uint32_t flags) noexcept {
+    uint32_t* key, const GrStyle& style, Apply apply, SkScalar scale, uint32_t flags) {
   SkASSERT(key);
   SkASSERT(KeySize(style, apply) >= 0);
   GR_STATIC_ASSERT(sizeof(uint32_t) == sizeof(SkScalar));
@@ -101,7 +101,7 @@ void GrStyle::WriteKey(
   SkASSERT(KeySize(style, apply) == i);
 }
 
-void GrStyle::initPathEffect(sk_sp<SkPathEffect> pe) noexcept {
+void GrStyle::initPathEffect(sk_sp<SkPathEffect> pe) {
   SkASSERT(!fPathEffect);
   SkASSERT(SkPathEffect::kNone_DashType == fDashInfo.fType);
   SkASSERT(0 == fDashInfo.fIntervals.count());

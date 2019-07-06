@@ -79,10 +79,10 @@ GrGLSLFragmentProcessor* GrClampedGradientEffect::onCreateGLSLInstance() const {
   return new GrGLSLClampedGradientEffect();
 }
 void GrClampedGradientEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   b->add32((int32_t)makePremul);
 }
-bool GrClampedGradientEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrClampedGradientEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrClampedGradientEffect& that = other.cast<GrClampedGradientEffect>();
   (void)that;
   if (leftBorderColor != that.leftBorderColor) return false;

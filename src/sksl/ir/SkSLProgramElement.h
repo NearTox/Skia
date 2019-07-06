@@ -26,7 +26,7 @@ struct ProgramElement : public IRNode {
     kVar_Kind
   };
 
-  ProgramElement(int offset, Kind kind) noexcept : INHERITED(offset), fKind(kind) {}
+  ProgramElement(int offset, Kind kind) : INHERITED(offset), fKind(kind) {}
 
   Kind fKind;
 

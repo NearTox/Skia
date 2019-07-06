@@ -149,63 +149,63 @@ class GrXPFactoryTestFactory : private SkNoncopyable {
 /** GrProcessor subclasses should insert this macro in their declaration to be included in the
  *  program generation unit test.
  */
-#define GR_DECLARE_GEOMETRY_PROCESSOR_TEST                      \
-  static GrGeometryProcessorTestFactory gTestFactory SK_UNUSED; \
-  static sk_sp<GrGeometryProcessor> TestCreate(GrProcessorTestData*);
+#    define GR_DECLARE_GEOMETRY_PROCESSOR_TEST                      \
+      static GrGeometryProcessorTestFactory gTestFactory SK_UNUSED; \
+      static sk_sp<GrGeometryProcessor> TestCreate(GrProcessorTestData*);
 
-#define GR_DECLARE_FRAGMENT_PROCESSOR_TEST                      \
-  static GrFragmentProcessorTestFactory gTestFactory SK_UNUSED; \
-  static std::unique_ptr<GrFragmentProcessor> TestCreate(GrProcessorTestData*);
+#    define GR_DECLARE_FRAGMENT_PROCESSOR_TEST                      \
+      static GrFragmentProcessorTestFactory gTestFactory SK_UNUSED; \
+      static std::unique_ptr<GrFragmentProcessor> TestCreate(GrProcessorTestData*);
 
-#define GR_DECLARE_XP_FACTORY_TEST                      \
-  static GrXPFactoryTestFactory gTestFactory SK_UNUSED; \
-  static const GrXPFactory* TestGet(GrProcessorTestData*);
+#    define GR_DECLARE_XP_FACTORY_TEST                      \
+      static GrXPFactoryTestFactory gTestFactory SK_UNUSED; \
+      static const GrXPFactory* TestGet(GrProcessorTestData*);
 
 /** GrProcessor subclasses should insert this macro in their implementation file. They must then
  *  also implement this static function:
  *      GrProcessor* TestCreate(GrProcessorTestData*);
  */
-#define GR_DEFINE_FRAGMENT_PROCESSOR_TEST(Effect) \
-  GrFragmentProcessorTestFactory Effect::gTestFactory(Effect::TestCreate)
+#    define GR_DEFINE_FRAGMENT_PROCESSOR_TEST(Effect) \
+      GrFragmentProcessorTestFactory Effect::gTestFactory(Effect::TestCreate)
 
-#define GR_DEFINE_GEOMETRY_PROCESSOR_TEST(Effect) \
-  GrGeometryProcessorTestFactory Effect::gTestFactory(Effect::TestCreate)
+#    define GR_DEFINE_GEOMETRY_PROCESSOR_TEST(Effect) \
+      GrGeometryProcessorTestFactory Effect::gTestFactory(Effect::TestCreate)
 
-#define GR_DEFINE_XP_FACTORY_TEST(Factory) \
-  GrXPFactoryTestFactory Factory::gTestFactory(Factory::TestGet)
+#    define GR_DEFINE_XP_FACTORY_TEST(Factory) \
+      GrXPFactoryTestFactory Factory::gTestFactory(Factory::TestGet)
 
-#else  // !SK_ALLOW_STATIC_GLOBAL_INITIALIZERS
-
-// The unit test relies on static initializers. Just declare the TestCreate function so that
-// its definitions will compile.
-#define GR_DECLARE_FRAGMENT_PROCESSOR_TEST \
-  static std::unique_ptr<GrFragmentProcessor> TestCreate(GrProcessorTestData*);
-#define GR_DEFINE_FRAGMENT_PROCESSOR_TEST(X)
+#  else  // !SK_ALLOW_STATIC_GLOBAL_INITIALIZERS
 
 // The unit test relies on static initializers. Just declare the TestCreate function so that
 // its definitions will compile.
-#define GR_DECLARE_GEOMETRY_PROCESSOR_TEST \
-  static sk_sp<GrGeometryProcessor> TestCreate(GrProcessorTestData*);
-#define GR_DEFINE_GEOMETRY_PROCESSOR_TEST(X)
+#    define GR_DECLARE_FRAGMENT_PROCESSOR_TEST \
+      static std::unique_ptr<GrFragmentProcessor> TestCreate(GrProcessorTestData*);
+#    define GR_DEFINE_FRAGMENT_PROCESSOR_TEST(X)
+
+// The unit test relies on static initializers. Just declare the TestCreate function so that
+// its definitions will compile.
+#    define GR_DECLARE_GEOMETRY_PROCESSOR_TEST \
+      static sk_sp<GrGeometryProcessor> TestCreate(GrProcessorTestData*);
+#    define GR_DEFINE_GEOMETRY_PROCESSOR_TEST(X)
 
 // The unit test relies on static initializers. Just declare the TestGet function so that
 // its definitions will compile.
-#define GR_DECLARE_XP_FACTORY_TEST const GrXPFactory* TestGet(GrProcessorTestData*);
-#define GR_DEFINE_XP_FACTORY_TEST(X)
+#    define GR_DECLARE_XP_FACTORY_TEST const GrXPFactory* TestGet(GrProcessorTestData*);
+#    define GR_DEFINE_XP_FACTORY_TEST(X)
 
-#endif  // !SK_ALLOW_STATIC_GLOBAL_INITIALIZERS
+#  endif  // !SK_ALLOW_STATIC_GLOBAL_INITIALIZERS
 #else   // GR_TEST_UTILS
-#define GR_DECLARE_GEOMETRY_PROCESSOR_TEST
-#define GR_DECLARE_FRAGMENT_PROCESSOR_TEST
-#define GR_DECLARE_XP_FACTORY_TEST
-#define GR_DEFINE_FRAGMENT_PROCESSOR_TEST(...)
-#define GR_DEFINE_GEOMETRY_PROCESSOR_TEST(...)
-#define GR_DEFINE_XP_FACTORY_TEST(...)
-#define GR_DECLARE_FRAGMENT_PROCESSOR_TEST
-#define GR_DEFINE_FRAGMENT_PROCESSOR_TEST(...)
-#define GR_DECLARE_GEOMETRY_PROCESSOR_TEST
-#define GR_DEFINE_GEOMETRY_PROCESSOR_TEST(...)
-#define GR_DECLARE_XP_FACTORY_TEST
-#define GR_DEFINE_XP_FACTORY_TEST(...)
+#  define GR_DECLARE_GEOMETRY_PROCESSOR_TEST
+#  define GR_DECLARE_FRAGMENT_PROCESSOR_TEST
+#  define GR_DECLARE_XP_FACTORY_TEST
+#  define GR_DEFINE_FRAGMENT_PROCESSOR_TEST(...)
+#  define GR_DEFINE_GEOMETRY_PROCESSOR_TEST(...)
+#  define GR_DEFINE_XP_FACTORY_TEST(...)
+#  define GR_DECLARE_FRAGMENT_PROCESSOR_TEST
+#  define GR_DEFINE_FRAGMENT_PROCESSOR_TEST(...)
+#  define GR_DECLARE_GEOMETRY_PROCESSOR_TEST
+#  define GR_DEFINE_GEOMETRY_PROCESSOR_TEST(...)
+#  define GR_DECLARE_XP_FACTORY_TEST
+#  define GR_DEFINE_XP_FACTORY_TEST(...)
 #endif  // GR_TEST_UTILS
 #endif  // GrProcessorUnitTest_DEFINED

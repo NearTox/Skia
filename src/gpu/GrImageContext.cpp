@@ -13,7 +13,7 @@
 #include "src/gpu/GrProxyProvider.h"
 
 #define ASSERT_SINGLE_OWNER \
-  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner()));
+  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner());)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 GrImageContext::GrImageContext(
@@ -30,15 +30,15 @@ void GrImageContext::abandonContext() {
   fAbandoned = true;
 }
 
-bool GrImageContext::abandoned() const noexcept {
+bool GrImageContext::abandoned() const {
   ASSERT_SINGLE_OWNER
 
   return fAbandoned;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-sk_sp<const GrCaps> GrImageContextPriv::refCaps() const noexcept { return fContext->refCaps(); }
+sk_sp<const GrCaps> GrImageContextPriv::refCaps() const { return fContext->refCaps(); }
 
-sk_sp<GrSkSLFPFactoryCache> GrImageContextPriv::fpFactoryCache() noexcept {
+sk_sp<GrSkSLFPFactoryCache> GrImageContextPriv::fpFactoryCache() {
   return fContext->fpFactoryCache();
 }

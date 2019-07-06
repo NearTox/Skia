@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/GrTextureAdjuster.h"
 #include "include/private/GrRecordingContext.h"
 #include "src/gpu/GrColorSpaceXform.h"
 #include "src/gpu/GrGpu.h"
 #include "src/gpu/GrProxyProvider.h"
 #include "src/gpu/GrRecordingContextPriv.h"
+#include "src/gpu/GrTextureAdjuster.h"
 #include "src/gpu/SkGr.h"
 
 GrTextureAdjuster::GrTextureAdjuster(

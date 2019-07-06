@@ -9,7 +9,6 @@
 
 #ifdef SK_HAS_PNG_LIBRARY
 
-#include <vector>
 #include "include/core/SkStream.h"
 #include "include/core/SkString.h"
 #include "include/encode/SkPngEncoder.h"
@@ -17,8 +16,9 @@
 #include "src/codec/SkColorTable.h"
 #include "src/codec/SkPngPriv.h"
 #include "src/images/SkImageEncoderFns.h"
+#  include <vector>
 
-#include "png.h"
+#  include "png.h"
 
 static_assert(PNG_FILTER_NONE == (int)SkPngEncoder::FilterFlag::kNone, "Skia libpng filter err.");
 static_assert(PNG_FILTER_SUB == (int)SkPngEncoder::FilterFlag::kSub, "Skia libpng filter err.");
@@ -287,11 +287,11 @@ static void set_icc(png_structp png_ptr, png_infop info_ptr, const SkImageInfo& 
 #if PNG_LIBPNG_VER_MAJOR > 1 || (PNG_LIBPNG_VER_MAJOR == 1 && PNG_LIBPNG_VER_MINOR >= 5)
   const char* name = "Skia";
   png_const_bytep iccPtr = icc->bytes();
-#else
+#  else
   SkString str("Skia");
   char* name = str.writable_str();
   png_charp iccPtr = (png_charp)icc->writable_data();
-#endif
+#  endif
   png_set_iCCP(png_ptr, info_ptr, name, 0, iccPtr, icc->size());
 }
 

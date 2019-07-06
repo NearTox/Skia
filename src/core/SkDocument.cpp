@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "include/core/SkDocument.h"
 #include "include/core/SkCanvas.h"
+#include "include/core/SkDocument.h"
 #include "include/core/SkStream.h"
 
 SkDocument::SkDocument(SkWStream* stream) : fStream(stream), fState(kBetweenPages_State) {}

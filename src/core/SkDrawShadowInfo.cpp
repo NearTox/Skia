@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkDrawShadowInfo.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkPath.h"
 #include "include/core/SkRect.h"
+#include "src/core/SkDrawShadowInfo.h"
 #include "src/utils/SkPolyUtils.h"
 
 namespace SkDrawShadowMetrics {
 
-static SkScalar compute_z(SkScalar x, SkScalar y, const SkPoint3& params) noexcept {
+static SkScalar compute_z(SkScalar x, SkScalar y, const SkPoint3& params) {
   return x * params.fX + y * params.fY + params.fZ;
 }
 
@@ -188,5 +188,4 @@ void GetLocalBounds(
     }
   }
 }
-
 }  // namespace SkDrawShadowMetrics

@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/text/GrStrikeCache.h"
 #include "include/private/GrColor.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrDistanceFieldGenFromVector.h"
 #include "src/gpu/text/GrAtlasManager.h"
+#include "src/gpu/text/GrStrikeCache.h"
 
 #include "src/core/SkAutoMalloc.h"
 #include "src/core/SkDistanceFieldGen.h"

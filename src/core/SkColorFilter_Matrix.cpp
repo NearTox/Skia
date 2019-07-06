@@ -5,18 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkColorFilter_Matrix.h"
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkString.h"
 #include "include/core/SkUnPreMultiply.h"
 #include "include/effects/SkColorMatrix.h"
 #include "include/private/SkColorData.h"
 #include "include/private/SkNx.h"
+#include "src/core/SkColorFilter_Matrix.h"
 #include "src/core/SkRasterPipeline.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
 
-void SkColorFilter_Matrix::initState() noexcept {
+void SkColorFilter_Matrix::initState() {
   const float* srcA = fMatrix + 15;
   fFlags = (srcA[0] == 0 && srcA[1] == 0 && srcA[2] == 0 && srcA[3] == 1 && srcA[4] == 0)
                ? kAlphaUnchanged_Flag
@@ -28,9 +28,7 @@ SkColorFilter_Matrix::SkColorFilter_Matrix(const float array[20]) {
   this->initState();
 }
 
-uint32_t SkColorFilter_Matrix::getFlags() const noexcept {
-  return this->INHERITED::getFlags() | fFlags;
-}
+uint32_t SkColorFilter_Matrix::getFlags() const { return this->INHERITED::getFlags() | fFlags; }
 
 void SkColorFilter_Matrix::flatten(SkWriteBuffer& buffer) const {
   SkASSERT(sizeof(fMatrix) / sizeof(float) == 20);
@@ -45,7 +43,7 @@ sk_sp<SkFlattenable> SkColorFilter_Matrix::CreateProc(SkReadBuffer& buffer) {
   return nullptr;
 }
 
-bool SkColorFilter_Matrix::onAsAColorMatrix(float matrix[20]) const noexcept {
+bool SkColorFilter_Matrix::onAsAColorMatrix(float matrix[20]) const {
   if (matrix) {
     memcpy(matrix, fMatrix, 20 * sizeof(float));
   }
@@ -87,7 +85,7 @@ class ColorMatrixEffect : public GrFragmentProcessor {
     return std::unique_ptr<GrFragmentProcessor>(new ColorMatrixEffect(matrix));
   }
 
-  const char* name() const noexcept override { return "Color Matrix"; }
+  const char* name() const override { return "Color Matrix"; }
 
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 
@@ -97,7 +95,7 @@ class ColorMatrixEffect : public GrFragmentProcessor {
   class GLSLProcessor : public GrGLSLFragmentProcessor {
    public:
     // this class always generates the same code.
-    static void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) noexcept {}
+    static void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) {}
 
     void emitCode(EmitArgs& args) override {
       GrGLSLUniformHandler* uniformHandler = args.fUniformHandler;
@@ -148,19 +146,19 @@ class ColorMatrixEffect : public GrFragmentProcessor {
 
   // We could implement the constant input->constant output optimization but haven't. Other
   // optimizations would be matrix-dependent.
-  ColorMatrixEffect(const float matrix[20]) noexcept
+  ColorMatrixEffect(const float matrix[20])
       : INHERITED(kColorMatrixEffect_ClassID, kNone_OptimizationFlags) {
     memcpy(fMatrix, matrix, sizeof(float) * 20);
   }
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override { return new GLSLProcessor; }
 
-  virtual void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const
-      noexcept override {
+  virtual void onGetGLSLProcessorKey(
+      const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
     GLSLProcessor::GenKey(*this, caps, b);
   }
 
-  bool onIsEqual(const GrFragmentProcessor& s) const noexcept override {
+  bool onIsEqual(const GrFragmentProcessor& s) const override {
     const ColorMatrixEffect& cme = s.cast<ColorMatrixEffect>();
     return 0 == memcmp(fMatrix, cme.fMatrix, sizeof(fMatrix));
   }

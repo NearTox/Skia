@@ -30,7 +30,7 @@
  *  Note that this does *not* prevent the local variable from being optimized away.
  */
 template <typename T>
-inline void sk_ignore_unused_variable(const T&) noexcept {}
+inline void sk_ignore_unused_variable(const T&) {}
 
 /**
  *  Returns a pointer to a D which comes immediately after S[count].
@@ -44,7 +44,7 @@ static D* SkTAfter(S* ptr, size_t count = 1) {
  *  Returns a pointer to a D which comes byteOffset bytes after S.
  */
 template <typename D, typename S>
-static D* SkTAddOffset(S* ptr, size_t byteOffset) noexcept {
+static D* SkTAddOffset(S* ptr, size_t byteOffset) {
   // The intermediate char* has the same cv-ness as D as this produces better error messages.
   // This relies on the fact that reinterpret_cast can add constness, but cannot remove it.
   return reinterpret_cast<D*>(reinterpret_cast<sknonstd::same_cv_t<char, D>*>(ptr) + byteOffset);
@@ -52,7 +52,7 @@ static D* SkTAddOffset(S* ptr, size_t byteOffset) noexcept {
 
 template <typename R, typename T, R (*P)(T*)>
 struct SkFunctionWrapper {
-  R operator()(T* t) noexcept(noexcept(P(t))) { return P(t); }
+  R operator()(T* t) { return P(t); }
 };
 
 /** \class SkAutoTCallVProc
@@ -76,7 +76,7 @@ class SkAutoTCallVProc : public std::unique_ptr<T, SkFunctionWrapper<void, T, P>
 template <typename T>
 class SkAutoTArray {
  public:
-  SkAutoTArray() noexcept {}
+  SkAutoTArray() {}
   /** Allocate count number of T elements
    */
   explicit SkAutoTArray(int count) {
@@ -87,10 +87,10 @@ class SkAutoTArray {
     SkDEBUGCODE(fCount = count);
   }
 
-  SkAutoTArray(SkAutoTArray&& other) noexcept : fArray(std::move(other.fArray)) {
+  SkAutoTArray(SkAutoTArray&& other) : fArray(std::move(other.fArray)) {
     SkDEBUGCODE(fCount = other.fCount; other.fCount = 0);
   }
-  SkAutoTArray& operator=(SkAutoTArray&& other) noexcept {
+  SkAutoTArray& operator=(SkAutoTArray&& other) {
     if (this != &other) {
       fArray = std::move(other.fArray);
       SkDEBUGCODE(fCount = other.fCount; other.fCount = 0);
@@ -104,7 +104,7 @@ class SkAutoTArray {
 
   /** Return the array of T elements. Will be NULL if count == 0
    */
-  T* get() const noexcept { return fArray.get(); }
+  T* get() const { return fArray.get(); }
 
   /** Return the nth element in the array
    */
@@ -129,14 +129,14 @@ class SkAutoSTArray {
   SkAutoSTArray& operator=(const SkAutoSTArray&) = delete;
 
   /** Initialize with no objects */
-  SkAutoSTArray() noexcept {
+  SkAutoSTArray() {
     fArray = nullptr;
     fCount = 0;
   }
 
   /** Allocate count number of T elements
    */
-  SkAutoSTArray(int count) noexcept {
+  SkAutoSTArray(int count) {
     fArray = nullptr;
     fCount = 0;
     this->reset(count);
@@ -145,7 +145,7 @@ class SkAutoSTArray {
   ~SkAutoSTArray() { this->reset(0); }
 
   /** Destroys previous objects in the array and default constructs count number of objects */
-  void reset(int count) noexcept {
+  void reset(int count) {
     T* start = fArray;
     T* iter = start + fCount;
     while (iter > start) {
@@ -180,11 +180,11 @@ class SkAutoSTArray {
 
   /** Return the number of T elements in the array
    */
-  int count() const noexcept { return fCount; }
+  int count() const { return fCount; }
 
   /** Return the array of T elements. Will be NULL if count == 0
    */
-  T* get() const noexcept { return fArray; }
+  T* get() const { return fArray; }
 
   T* begin() { return fArray; }
 
@@ -196,7 +196,7 @@ class SkAutoSTArray {
 
   /** Return the nth element in the array
    */
-  T& operator[](int index) const noexcept {
+  T& operator[](int index) const {
     SkASSERT(index < fCount);
     return fArray[index];
   }
@@ -225,33 +225,33 @@ template <typename T>
 class SkAutoTMalloc {
  public:
   /** Takes ownership of the ptr. The ptr must be a value which can be passed to sk_free. */
-  explicit SkAutoTMalloc(T* ptr = nullptr) noexcept : fPtr(ptr) {}
+  explicit SkAutoTMalloc(T* ptr = nullptr) : fPtr(ptr) {}
 
   /** Allocates space for 'count' Ts. */
-  explicit SkAutoTMalloc(size_t count) noexcept
+  explicit SkAutoTMalloc(size_t count)
       : fPtr(count ? (T*)sk_malloc_throw(count, sizeof(T)) : nullptr) {}
 
-  SkAutoTMalloc(SkAutoTMalloc&&) noexcept = default;
-  SkAutoTMalloc& operator=(SkAutoTMalloc&&) noexcept = default;
+  SkAutoTMalloc(SkAutoTMalloc&&) = default;
+  SkAutoTMalloc& operator=(SkAutoTMalloc&&) = default;
 
   /** Resize the memory area pointed to by the current ptr preserving contents. */
-  void realloc(size_t count) noexcept {
+  void realloc(size_t count) {
     fPtr.reset(count ? (T*)sk_realloc_throw(fPtr.release(), count * sizeof(T)) : nullptr);
   }
 
   /** Resize the memory area pointed to by the current ptr without preserving contents. */
-  T* reset(size_t count = 0) noexcept {
+  T* reset(size_t count = 0) {
     fPtr.reset(count ? (T*)sk_malloc_throw(count, sizeof(T)) : nullptr);
     return this->get();
   }
 
-  T* get() const noexcept { return fPtr.get(); }
+  T* get() const { return fPtr.get(); }
 
-  operator T*() noexcept { return fPtr.get(); }
+  operator T*() { return fPtr.get(); }
 
   operator const T*() const { return fPtr.get(); }
 
-  T& operator[](int index) noexcept { return fPtr.get()[index]; }
+  T& operator[](int index) { return fPtr.get()[index]; }
 
   const T& operator[](int index) const { return fPtr.get()[index]; }
 
@@ -260,7 +260,7 @@ class SkAutoTMalloc {
    *  pointer to NULL. Note that this differs from get(), which also returns
    *  the pointer, but it does not transfer ownership.
    */
-  T* release() noexcept { return fPtr.release(); }
+  T* release() { return fPtr.release(); }
 
  private:
   std::unique_ptr<T, SkFunctionWrapper<void, void, sk_free>> fPtr;
@@ -269,9 +269,9 @@ class SkAutoTMalloc {
 template <size_t kCountRequested, typename T>
 class SkAutoSTMalloc {
  public:
-  SkAutoSTMalloc() noexcept : fPtr(fTStorage) {}
+  SkAutoSTMalloc() : fPtr(fTStorage) {}
 
-  SkAutoSTMalloc(size_t count) noexcept {
+  SkAutoSTMalloc(size_t count) {
     if (count > kCount) {
       fPtr = (T*)sk_malloc_throw(count, sizeof(T));
     } else if (count) {
@@ -293,7 +293,7 @@ class SkAutoSTMalloc {
   }
 
   // doesn't preserve contents
-  T* reset(size_t count) noexcept {
+  T* reset(size_t count) {
     if (fPtr != fTStorage) {
       sk_free(fPtr);
     }
@@ -307,18 +307,18 @@ class SkAutoSTMalloc {
     return fPtr;
   }
 
-  T* get() const noexcept { return fPtr; }
+  T* get() const { return fPtr; }
 
-  operator T*() noexcept { return fPtr; }
+  operator T*() { return fPtr; }
 
-  operator const T*() const noexcept { return fPtr; }
+  operator const T*() const { return fPtr; }
 
-  T& operator[](int index) noexcept { return fPtr[index]; }
+  T& operator[](int index) { return fPtr[index]; }
 
-  const T& operator[](int index) const noexcept { return fPtr[index]; }
+  const T& operator[](int index) const { return fPtr[index]; }
 
   // Reallocs the array, can be used to shrink the allocation.  Makes no attempt to be intelligent
-  void realloc(size_t count) noexcept {
+  void realloc(size_t count) {
     if (count > kCount) {
       if (fPtr == fTStorage) {
         fPtr = (T*)sk_malloc_throw(count, sizeof(T));
@@ -390,15 +390,15 @@ T* SkInPlaceNewCheck(void* storage, size_t size, Args&&... args) {
 template <size_t N>
 class SkAlignedSStorage {
  public:
-  SkAlignedSStorage() noexcept {}
+  SkAlignedSStorage() {}
   SkAlignedSStorage(SkAlignedSStorage&&) = delete;
   SkAlignedSStorage(const SkAlignedSStorage&) = delete;
   SkAlignedSStorage& operator=(SkAlignedSStorage&&) = delete;
   SkAlignedSStorage& operator=(const SkAlignedSStorage&) = delete;
 
-  constexpr size_t size() const noexcept { return N; }
-  void* get() noexcept { return fData; }
-  const void* get() const noexcept { return fData; }
+  size_t size() const { return N; }
+  void* get() { return fData; }
+  const void* get() const { return fData; }
 
  private:
   union {
@@ -417,7 +417,7 @@ class SkAlignedSStorage {
 template <int N, typename T>
 class SkAlignedSTStorage {
  public:
-  SkAlignedSTStorage() noexcept {}
+  SkAlignedSTStorage() {}
   SkAlignedSTStorage(SkAlignedSTStorage&&) = delete;
   SkAlignedSTStorage(const SkAlignedSTStorage&) = delete;
   SkAlignedSTStorage& operator=(SkAlignedSTStorage&&) = delete;
@@ -427,8 +427,8 @@ class SkAlignedSTStorage {
    * Returns void* because this object does not initialize the
    * memory. Use placement new for types that require a cons.
    */
-  void* get() noexcept { return fStorage.get(); }
-  const void* get() const noexcept { return fStorage.get(); }
+  void* get() { return fStorage.get(); }
+  const void* get() const { return fStorage.get(); }
 
  private:
   SkAlignedSStorage<sizeof(T) * N> fStorage;

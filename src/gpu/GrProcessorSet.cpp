@@ -5,24 +5,24 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/GrProcessorSet.h"
 #include "src/core/SkBlendModePriv.h"
 #include "src/gpu/GrAppliedClip.h"
 #include "src/gpu/GrCaps.h"
+#include "src/gpu/GrProcessorSet.h"
 #include "src/gpu/GrUserStencilSettings.h"
 #include "src/gpu/GrXferProcessor.h"
 #include "src/gpu/effects/GrPorterDuffXferProcessor.h"
 
-const GrProcessorSet& GrProcessorSet::EmptySet() noexcept {
+const GrProcessorSet& GrProcessorSet::EmptySet() {
   static GrProcessorSet gEmpty(GrProcessorSet::Empty::kEmpty);
   return gEmpty;
 }
 
-GrProcessorSet GrProcessorSet::MakeEmptySet() noexcept {
+GrProcessorSet GrProcessorSet::MakeEmptySet() {
   return GrProcessorSet(GrProcessorSet::Empty::kEmpty);
 }
 
-GrProcessorSet::GrProcessorSet(GrPaint&& paint) noexcept : fXP(paint.getXPFactory()) {
+GrProcessorSet::GrProcessorSet(GrPaint&& paint) : fXP(paint.getXPFactory()) {
   fFlags = 0;
   if (paint.numColorFragmentProcessors() <= kMaxColorProcessors) {
     fColorFragmentProcessorCnt = paint.numColorFragmentProcessors();
@@ -43,13 +43,13 @@ GrProcessorSet::GrProcessorSet(GrPaint&& paint) noexcept : fXP(paint.getXPFactor
   SkDEBUGCODE(paint.fAlive = false);
 }
 
-GrProcessorSet::GrProcessorSet(SkBlendMode mode) noexcept
+GrProcessorSet::GrProcessorSet(SkBlendMode mode)
     : fXP(SkBlendMode_AsXPFactory(mode)),
       fColorFragmentProcessorCnt(0),
       fFragmentProcessorOffset(0),
       fFlags(0) {}
 
-GrProcessorSet::GrProcessorSet(std::unique_ptr<GrFragmentProcessor> colorFP) noexcept
+GrProcessorSet::GrProcessorSet(std::unique_ptr<GrFragmentProcessor> colorFP)
     : fFragmentProcessors(1),
       fXP((const GrXPFactory*)nullptr),
       fColorFragmentProcessorCnt(1),
@@ -59,7 +59,7 @@ GrProcessorSet::GrProcessorSet(std::unique_ptr<GrFragmentProcessor> colorFP) noe
   fFragmentProcessors[0] = std::move(colorFP);
 }
 
-GrProcessorSet::GrProcessorSet(GrProcessorSet&& that) noexcept
+GrProcessorSet::GrProcessorSet(GrProcessorSet&& that)
     : fXP(std::move(that.fXP)),
       fColorFragmentProcessorCnt(that.fColorFragmentProcessorCnt),
       fFragmentProcessorOffset(0),

@@ -7,7 +7,6 @@
 
 #include "include/core/SkPicture.h"
 
-#include <atomic>
 #include "include/core/SkImageGenerator.h"
 #include "include/core/SkPictureRecorder.h"
 #include "include/core/SkSerialProcs.h"
@@ -18,6 +17,7 @@
 #include "src/core/SkPicturePlayback.h"
 #include "src/core/SkPicturePriv.h"
 #include "src/core/SkPictureRecord.h"
+#include <atomic>
 
 // When we read/write the SkPictInfo via a stream, we have a sentinel byte right after the info.
 // Note: in the read/write buffer versions, we have a slightly different convention:

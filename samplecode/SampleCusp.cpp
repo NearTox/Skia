@@ -223,14 +223,14 @@ class CuspView : public Sample {
     p.setAntiAlias(true);
     p.setStyle(SkPaint::kStroke_Style);
     p.setStrokeWidth(20);
-#if 0  // enable to play through the stream above backwards.
+#if 0    // enable to play through the stream above backwards.
         SkPath path;
         int i;
-#if 0  // disable to draw only one problematic cubic
+#  if 0  // disable to draw only one problematic cubic
         i = --datCount;
-#else
+#  else
         i = 14; // index into dat of  problematic cubic
-#endif
+#  endif
         path.moveTo( SkBits2Float(dat[i].pt[0].fX), SkBits2Float(dat[i].pt[0].fY));
         path.cubicTo(SkBits2Float(dat[i].pt[1].fX), SkBits2Float(dat[i].pt[1].fY),
                      SkBits2Float(dat[i].pt[2].fX), SkBits2Float(dat[i].pt[2].fY),

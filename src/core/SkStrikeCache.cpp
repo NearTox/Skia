@@ -56,18 +56,16 @@ SkStrikeCache* SkStrikeCache::GlobalStrikeCache() {
   return cache;
 }
 
-SkStrikeCache::ExclusiveStrikePtr::ExclusiveStrikePtr(SkStrikeCache::Node* node) noexcept
-    : fNode{node} {}
+SkStrikeCache::ExclusiveStrikePtr::ExclusiveStrikePtr(SkStrikeCache::Node* node) : fNode{node} {}
 
 SkStrikeCache::ExclusiveStrikePtr::ExclusiveStrikePtr() : fNode{nullptr} {}
 
-SkStrikeCache::ExclusiveStrikePtr::ExclusiveStrikePtr(ExclusiveStrikePtr&& o) noexcept
-    : fNode{o.fNode} {
+SkStrikeCache::ExclusiveStrikePtr::ExclusiveStrikePtr(ExclusiveStrikePtr&& o) : fNode{o.fNode} {
   o.fNode = nullptr;
 }
 
 SkStrikeCache::ExclusiveStrikePtr& SkStrikeCache::ExclusiveStrikePtr::operator=(
-    ExclusiveStrikePtr&& o) noexcept {
+    ExclusiveStrikePtr&& o) {
   if (fNode != nullptr) {
     fNode->fStrikeCache->attachNode(fNode);
   }
@@ -82,25 +80,24 @@ SkStrikeCache::ExclusiveStrikePtr::~ExclusiveStrikePtr() {
   }
 }
 
-SkStrike* SkStrikeCache::ExclusiveStrikePtr::get() const noexcept { return &fNode->fStrike; }
+SkStrike* SkStrikeCache::ExclusiveStrikePtr::get() const { return &fNode->fStrike; }
 
-SkStrike* SkStrikeCache::ExclusiveStrikePtr::operator->() const noexcept { return this->get(); }
+SkStrike* SkStrikeCache::ExclusiveStrikePtr::operator->() const { return this->get(); }
 
-SkStrike& SkStrikeCache::ExclusiveStrikePtr::operator*() const noexcept { return *this->get(); }
+SkStrike& SkStrikeCache::ExclusiveStrikePtr::operator*() const { return *this->get(); }
 
-SkStrikeCache::ExclusiveStrikePtr::operator bool() const noexcept { return fNode != nullptr; }
+SkStrikeCache::ExclusiveStrikePtr::operator bool() const { return fNode != nullptr; }
 
 bool operator==(
-    const SkStrikeCache::ExclusiveStrikePtr& lhs,
-    const SkStrikeCache::ExclusiveStrikePtr& rhs) noexcept {
+    const SkStrikeCache::ExclusiveStrikePtr& lhs, const SkStrikeCache::ExclusiveStrikePtr& rhs) {
   return lhs.fNode == rhs.fNode;
 }
 
-bool operator==(const SkStrikeCache::ExclusiveStrikePtr& lhs, decltype(nullptr)) noexcept {
+bool operator==(const SkStrikeCache::ExclusiveStrikePtr& lhs, decltype(nullptr)) {
   return lhs.fNode == nullptr;
 }
 
-bool operator==(decltype(nullptr), const SkStrikeCache::ExclusiveStrikePtr& rhs) noexcept {
+bool operator==(decltype(nullptr), const SkStrikeCache::ExclusiveStrikePtr& rhs) {
   return nullptr == rhs.fNode;
 }
 
@@ -406,17 +403,17 @@ void SkStrikeCache::purgeAll() {
   this->internalPurge(fTotalMemoryUsed);
 }
 
-size_t SkStrikeCache::getTotalMemoryUsed() const noexcept {
+size_t SkStrikeCache::getTotalMemoryUsed() const {
   SkAutoSpinlock ac(fLock);
   return fTotalMemoryUsed;
 }
 
-int SkStrikeCache::getCacheCountUsed() const noexcept {
+int SkStrikeCache::getCacheCountUsed() const {
   SkAutoSpinlock ac(fLock);
   return fCacheCount;
 }
 
-int SkStrikeCache::getCacheCountLimit() const noexcept {
+int SkStrikeCache::getCacheCountLimit() const {
   SkAutoSpinlock ac(fLock);
   return fCacheCountLimit;
 }
@@ -435,7 +432,7 @@ size_t SkStrikeCache::setCacheSizeLimit(size_t newLimit) {
   return prevLimit;
 }
 
-size_t SkStrikeCache::getCacheSizeLimit() const noexcept {
+size_t SkStrikeCache::getCacheSizeLimit() const {
   SkAutoSpinlock ac(fLock);
   return fCacheSizeLimit;
 }
@@ -453,12 +450,12 @@ int SkStrikeCache::setCacheCountLimit(int newCount) {
   return prevCount;
 }
 
-int SkStrikeCache::getCachePointSizeLimit() const noexcept {
+int SkStrikeCache::getCachePointSizeLimit() const {
   SkAutoSpinlock ac(fLock);
   return fPointSizeLimit;
 }
 
-int SkStrikeCache::setCachePointSizeLimit(int newLimit) noexcept {
+int SkStrikeCache::setCachePointSizeLimit(int newLimit) {
   if (newLimit < 0) {
     newLimit = 0;
   }
@@ -535,7 +532,7 @@ size_t SkStrikeCache::internalPurge(size_t minBytesNeeded) {
   return bytesFreed;
 }
 
-void SkStrikeCache::internalAttachToHead(Node* node) noexcept {
+void SkStrikeCache::internalAttachToHead(Node* node) {
   SkASSERT(nullptr == node->fPrev && nullptr == node->fNext);
   if (fHead) {
     fHead->fPrev = node;
@@ -551,7 +548,7 @@ void SkStrikeCache::internalAttachToHead(Node* node) noexcept {
   fTotalMemoryUsed += node->fStrike.getMemoryUsed();
 }
 
-void SkStrikeCache::internalDetachCache(Node* node) noexcept {
+void SkStrikeCache::internalDetachCache(Node* node) {
   SkASSERT(fCacheCount > 0);
   fCacheCount -= 1;
   fTotalMemoryUsed -= node->fStrike.getMemoryUsed();
@@ -569,7 +566,7 @@ void SkStrikeCache::internalDetachCache(Node* node) noexcept {
   node->fPrev = node->fNext = nullptr;
 }
 
-void SkStrikeCache::ValidateGlyphCacheDataSize() noexcept {
+void SkStrikeCache::ValidateGlyphCacheDataSize() {
 #ifdef SK_DEBUG
   GlobalStrikeCache()->validateGlyphCacheDataSize();
 #endif

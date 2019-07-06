@@ -8,9 +8,9 @@
 #ifndef GrCCSTLList_DEFINED
 #define GrCCSTLList_DEFINED
 
-#include <new>
 #include "include/private/SkNoncopyable.h"
 #include "src/core/SkArenaAlloc.h"
+#include <new>
 
 /**
  * A singly-linked list whose head element is a local class member. This is required by

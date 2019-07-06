@@ -5,10 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkScalerContext.h"
 #include "include/core/SkPaint.h"
+#include "src/core/SkScalerContext.h"
 
-#include <new>
 #include "include/core/SkFontMetrics.h"
 #include "include/core/SkMaskFilter.h"
 #include "include/core/SkPathEffect.h"
@@ -33,11 +32,12 @@
 #include "src/core/SkTextFormatParams.h"
 #include "src/core/SkWriteBuffer.h"
 #include "src/utils/SkMatrix22.h"
+#include <new>
 
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef SK_DEBUG
-#define DUMP_RECx
+#  define DUMP_RECx
 #endif
 
 SkScalerContextRec SkScalerContext::PreprocessRec(
@@ -271,7 +271,7 @@ SK_ERROR:
 
 #define SK_SHOW_TEXT_BLIT_COVERAGE 0
 
-static void applyLUTToA8Mask(const SkMask& mask, const uint8_t* lut) noexcept {
+static void applyLUTToA8Mask(const SkMask& mask, const uint8_t* lut) {
   uint8_t* SK_RESTRICT dst = (uint8_t*)mask.fImage;
   unsigned rowBytes = mask.fRowBytes;
 
@@ -398,12 +398,12 @@ static void pack4xHToLCD16(
   }
 }
 
-static constexpr inline int convert_8_to_1(unsigned byte) noexcept {
+static inline int convert_8_to_1(unsigned byte) {
   SkASSERT(byte <= 0xFF);
   return byte >> 7;
 }
 
-static uint8_t pack_8_to_1(const uint8_t alpha[8]) noexcept {
+static uint8_t pack_8_to_1(const uint8_t alpha[8]) {
   unsigned bits = 0;
   for (int i = 0; i < 8; ++i) {
     bits <<= 1;
@@ -412,7 +412,7 @@ static uint8_t pack_8_to_1(const uint8_t alpha[8]) noexcept {
   return SkToU8(bits);
 }
 
-static void packA8ToA1(const SkMask& mask, const uint8_t* src, size_t srcRB) noexcept {
+static void packA8ToA1(const SkMask& mask, const uint8_t* src, size_t srcRB) {
   const int height = mask.fBounds.height();
   const int width = mask.fBounds.width();
   const int octs = width >> 3;
@@ -675,15 +675,15 @@ bool SkScalerContext::internalGetPath(SkPackedGlyphID glyphID, SkPath* devPath) 
   return true;
 }
 
-void SkScalerContextRec::getMatrixFrom2x2(SkMatrix* dst) const noexcept {
+void SkScalerContextRec::getMatrixFrom2x2(SkMatrix* dst) const {
   dst->setAll(fPost2x2[0][0], fPost2x2[0][1], 0, fPost2x2[1][0], fPost2x2[1][1], 0, 0, 0, 1);
 }
 
-void SkScalerContextRec::getLocalMatrix(SkMatrix* m) const noexcept {
+void SkScalerContextRec::getLocalMatrix(SkMatrix* m) const {
   *m = SkFontPriv::MakeTextMatrix(fTextSize, fPreScaleX, fPreSkewX);
 }
 
-void SkScalerContextRec::getSingleMatrix(SkMatrix* m) const noexcept {
+void SkScalerContextRec::getSingleMatrix(SkMatrix* m) const {
   this->getLocalMatrix(m);
 
   //  now concat the device matrix
@@ -804,11 +804,11 @@ bool SkScalerContextRec::computeMatrices(
   return true;
 }
 
-SkAxisAlignment SkScalerContext::computeAxisAlignmentForHText() const noexcept {
+SkAxisAlignment SkScalerContext::computeAxisAlignmentForHText() const {
   return fRec.computeAxisAlignmentForHText();
 }
 
-SkAxisAlignment SkScalerContextRec::computeAxisAlignmentForHText() const noexcept {
+SkAxisAlignment SkScalerContextRec::computeAxisAlignmentForHText() const {
   // Why fPost2x2 can be used here.
   // getSingleMatrix multiplies in getLocalMatrix, which consists of
   // * fTextSize (a scale, which has no effect)
@@ -828,7 +828,7 @@ SkAxisAlignment SkScalerContextRec::computeAxisAlignmentForHText() const noexcep
   return kNone_SkAxisAlignment;
 }
 
-void SkScalerContextRec::setLuminanceColor(SkColor c) noexcept {
+void SkScalerContextRec::setLuminanceColor(SkColor c) {
   fLumBits =
       SkMaskGamma::CanonicalColor(SkColorSetRGB(SkColorGetR(c), SkColorGetG(c), SkColorGetB(c)));
 }
@@ -842,7 +842,7 @@ class SkScalerContext_Empty : public SkScalerContext {
       : SkScalerContext(std::move(typeface), effects, desc) {}
 
  protected:
-  unsigned generateGlyphCount() noexcept override { return 0; }
+  unsigned generateGlyphCount() override { return 0; }
   bool generateAdvance(SkGlyph* glyph) override {
     glyph->zeroMetrics();
     return true;
@@ -851,12 +851,12 @@ class SkScalerContext_Empty : public SkScalerContext {
     glyph->fMaskFormat = fRec.fMaskFormat;
     glyph->zeroMetrics();
   }
-  void generateImage(const SkGlyph& glyph) noexcept override {}
-  bool generatePath(SkGlyphID glyph, SkPath* path) noexcept override {
+  void generateImage(const SkGlyph& glyph) override {}
+  bool generatePath(SkGlyphID glyph, SkPath* path) override {
     path->reset();
     return false;
   }
-  void generateFontMetrics(SkFontMetrics* metrics) noexcept override {
+  void generateFontMetrics(SkFontMetrics* metrics) override {
     if (metrics) {
       sk_bzero(metrics, sizeof(*metrics));
     }
@@ -884,12 +884,12 @@ std::unique_ptr<SkScalerContext> SkTypeface::createScalerContext(
  *  that vary only slightly when we create our key into the font cache, since the font scaler
  *  typically returns the same looking resuts for tiny changes in the matrix.
  */
-static SkScalar sk_relax(SkScalar x) noexcept {
+static SkScalar sk_relax(SkScalar x) {
   SkScalar n = SkScalarRoundToScalar(x * 1024);
   return n / 1024.0f;
 }
 
-static SkMask::Format compute_mask_format(const SkFont& font) noexcept {
+static SkMask::Format compute_mask_format(const SkFont& font) {
   switch (font.getEdging()) {
     case SkFont::Edging::kAlias: return SkMask::kBW_Format;
     case SkFont::Edging::kAntiAlias: return SkMask::kA8_Format;
@@ -902,12 +902,12 @@ static SkMask::Format compute_mask_format(const SkFont& font) noexcept {
 // Beyond this size, LCD doesn't appreciably improve quality, but it always
 // cost more RAM and draws slower, so we set a cap.
 #ifndef SK_MAX_SIZE_FOR_LCDTEXT
-#define SK_MAX_SIZE_FOR_LCDTEXT 48
+#  define SK_MAX_SIZE_FOR_LCDTEXT 48
 #endif
 
 const SkScalar gMaxSize2ForLCDText = SK_MAX_SIZE_FOR_LCDTEXT * SK_MAX_SIZE_FOR_LCDTEXT;
 
-static bool too_big_for_lcd(const SkScalerContextRec& rec, bool checkPost2x2) noexcept {
+static bool too_big_for_lcd(const SkScalerContextRec& rec, bool checkPost2x2) {
   if (checkPost2x2) {
     SkScalar area =
         rec.fPost2x2[0][0] * rec.fPost2x2[1][1] - rec.fPost2x2[1][0] * rec.fPost2x2[0][1];

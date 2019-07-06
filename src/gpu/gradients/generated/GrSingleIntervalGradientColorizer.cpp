@@ -62,8 +62,8 @@ GrGLSLFragmentProcessor* GrSingleIntervalGradientColorizer::onCreateGLSLInstance
   return new GrGLSLSingleIntervalGradientColorizer();
 }
 void GrSingleIntervalGradientColorizer::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {}
-bool GrSingleIntervalGradientColorizer::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
+bool GrSingleIntervalGradientColorizer::onIsEqual(const GrFragmentProcessor& other) const {
   const GrSingleIntervalGradientColorizer& that = other.cast<GrSingleIntervalGradientColorizer>();
   (void)that;
   if (start != that.start) return false;
@@ -71,7 +71,7 @@ bool GrSingleIntervalGradientColorizer::onIsEqual(const GrFragmentProcessor& oth
   return true;
 }
 GrSingleIntervalGradientColorizer::GrSingleIntervalGradientColorizer(
-    const GrSingleIntervalGradientColorizer& src) noexcept
+    const GrSingleIntervalGradientColorizer& src)
     : INHERITED(kGrSingleIntervalGradientColorizer_ClassID, src.optimizationFlags()),
       start(src.start),
       end(src.end) {}

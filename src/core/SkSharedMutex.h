@@ -8,15 +8,15 @@
 #ifndef SkSharedLock_DEFINED
 #define SkSharedLock_DEFINED
 
-#include <atomic>
 #include "include/core/SkTypes.h"
 #include "include/private/SkMacros.h"
 #include "include/private/SkSemaphore.h"
 #include "include/private/SkThreadAnnotations.h"
+#include <atomic>
 
 #ifdef SK_DEBUG
-#include <memory>
-#include "include/private/SkMutex.h"
+#  include "include/private/SkMutex.h"
+#  include <memory>
 #endif  // SK_DEBUG
 
 // There are two shared lock implementations one debug the other is high performance. They implement

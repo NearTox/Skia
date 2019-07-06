@@ -45,15 +45,15 @@ class GrGLSLComposeLerpRedEffect : public GrGLSLFragmentProcessor {
   }
 
  private:
-  void onSetData(
-      const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) noexcept override {}
+  void onSetData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) override {
+  }
 };
 GrGLSLFragmentProcessor* GrComposeLerpRedEffect::onCreateGLSLInstance() const {
   return new GrGLSLComposeLerpRedEffect();
 }
 void GrComposeLerpRedEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {}
-bool GrComposeLerpRedEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
+bool GrComposeLerpRedEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrComposeLerpRedEffect& that = other.cast<GrComposeLerpRedEffect>();
   (void)that;
   return true;

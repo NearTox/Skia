@@ -29,21 +29,21 @@ class GrSRGBEffect : public GrFragmentProcessor {
     return std::unique_ptr<GrFragmentProcessor>(new GrSRGBEffect(mode, alpha));
   }
 
-  const char* name() const noexcept override { return "sRGB"; }
+  const char* name() const override { return "sRGB"; }
 
-  Mode mode() const noexcept { return fMode; }
-  Alpha alpha() const noexcept { return fAlpha; }
+  Mode mode() const { return fMode; }
+  Alpha alpha() const { return fAlpha; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override;
 
  private:
-  GrSRGBEffect(Mode mode, Alpha) noexcept;
+  GrSRGBEffect(Mode mode, Alpha);
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
-  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const override;
 
-  SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& input) const noexcept override;
+  SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& input) const override;
 
   Mode fMode;
   Alpha fAlpha;

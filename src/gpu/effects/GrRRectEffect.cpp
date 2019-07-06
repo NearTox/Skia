@@ -49,24 +49,24 @@ class CircularRRectEffect : public GrFragmentProcessor {
 
   ~CircularRRectEffect() override {}
 
-  const char* name() const noexcept override { return "CircularRRect"; }
+  const char* name() const override { return "CircularRRect"; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override;
 
-  const SkRRect& getRRect() const noexcept { return fRRect; }
+  const SkRRect& getRRect() const { return fRRect; }
 
-  uint32_t getCircularCornerFlags() const noexcept { return fCircularCornerFlags; }
+  uint32_t getCircularCornerFlags() const { return fCircularCornerFlags; }
 
-  GrClipEdgeType getEdgeType() const noexcept { return fEdgeType; }
+  GrClipEdgeType getEdgeType() const { return fEdgeType; }
 
  private:
-  CircularRRectEffect(GrClipEdgeType, uint32_t circularCornerFlags, const SkRRect&) noexcept;
+  CircularRRectEffect(GrClipEdgeType, uint32_t circularCornerFlags, const SkRRect&);
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
-  bool onIsEqual(const GrFragmentProcessor& other) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor& other) const override;
 
   SkRRect fRRect;
   GrClipEdgeType fEdgeType;
@@ -87,7 +87,7 @@ std::unique_ptr<GrFragmentProcessor> CircularRRectEffect::Make(
 }
 
 CircularRRectEffect::CircularRRectEffect(
-    GrClipEdgeType edgeType, uint32_t circularCornerFlags, const SkRRect& rrect) noexcept
+    GrClipEdgeType edgeType, uint32_t circularCornerFlags, const SkRRect& rrect)
     : INHERITED(kCircularRRectEffect_ClassID, kCompatibleWithCoverageAsAlpha_OptimizationFlag),
       fRRect(rrect),
       fEdgeType(edgeType),
@@ -98,7 +98,7 @@ std::unique_ptr<GrFragmentProcessor> CircularRRectEffect::clone() const {
       new CircularRRectEffect(fEdgeType, fCircularCornerFlags, fRRect));
 }
 
-bool CircularRRectEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool CircularRRectEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const CircularRRectEffect& crre = other.cast<CircularRRectEffect>();
   // The corner flags are derived from fRRect, so no need to check them.
   return fEdgeType == crre.fEdgeType && fRRect == crre.fRRect;
@@ -132,8 +132,7 @@ class GLCircularRRectEffect : public GrGLSLFragmentProcessor {
 
   virtual void emitCode(EmitArgs&) override;
 
-  static inline void GenKey(
-      const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) noexcept;
+  static inline void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*);
 
  protected:
   void onSetData(const GrGLSLProgramDataManager&, const GrFragmentProcessor&) override;
@@ -272,7 +271,7 @@ void GLCircularRRectEffect::emitCode(EmitArgs& args) {
 }
 
 void GLCircularRRectEffect::GenKey(
-    const GrProcessor& processor, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
+    const GrProcessor& processor, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
   const CircularRRectEffect& crre = processor.cast<CircularRRectEffect>();
   GR_STATIC_ASSERT(kGrClipEdgeTypeCnt <= 8);
   b->add32((crre.getCircularCornerFlags() << 3) | (int)crre.getEdgeType());
@@ -360,7 +359,7 @@ void GLCircularRRectEffect::onSetData(
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void CircularRRectEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   GLCircularRRectEffect::GenKey(*this, caps, b);
 }
 
@@ -376,22 +375,22 @@ class EllipticalRRectEffect : public GrFragmentProcessor {
 
   ~EllipticalRRectEffect() override {}
 
-  const char* name() const noexcept override { return "EllipticalRRect"; }
+  const char* name() const override { return "EllipticalRRect"; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override;
 
-  const SkRRect& getRRect() const noexcept { return fRRect; }
+  const SkRRect& getRRect() const { return fRRect; }
 
-  GrClipEdgeType getEdgeType() const noexcept { return fEdgeType; }
+  GrClipEdgeType getEdgeType() const { return fEdgeType; }
 
  private:
-  EllipticalRRectEffect(GrClipEdgeType, const SkRRect&) noexcept;
+  EllipticalRRectEffect(GrClipEdgeType, const SkRRect&);
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
-  bool onIsEqual(const GrFragmentProcessor& other) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor& other) const override;
 
   SkRRect fRRect;
   GrClipEdgeType fEdgeType;
@@ -409,7 +408,7 @@ std::unique_ptr<GrFragmentProcessor> EllipticalRRectEffect::Make(
   return std::unique_ptr<GrFragmentProcessor>(new EllipticalRRectEffect(edgeType, rrect));
 }
 
-EllipticalRRectEffect::EllipticalRRectEffect(GrClipEdgeType edgeType, const SkRRect& rrect) noexcept
+EllipticalRRectEffect::EllipticalRRectEffect(GrClipEdgeType edgeType, const SkRRect& rrect)
     : INHERITED(kEllipticalRRectEffect_ClassID, kCompatibleWithCoverageAsAlpha_OptimizationFlag),
       fRRect(rrect),
       fEdgeType(edgeType) {}
@@ -418,7 +417,7 @@ std::unique_ptr<GrFragmentProcessor> EllipticalRRectEffect::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new EllipticalRRectEffect(fEdgeType, fRRect));
 }
 
-bool EllipticalRRectEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool EllipticalRRectEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const EllipticalRRectEffect& erre = other.cast<EllipticalRRectEffect>();
   return fEdgeType == erre.fEdgeType && fRRect == erre.fRRect;
 }
@@ -472,8 +471,7 @@ class GLEllipticalRRectEffect : public GrGLSLFragmentProcessor {
 
   void emitCode(EmitArgs&) override;
 
-  static inline void GenKey(
-      const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) noexcept;
+  static inline void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*);
 
  protected:
   void onSetData(const GrGLSLProgramDataManager&, const GrFragmentProcessor&) override;
@@ -574,7 +572,7 @@ void GLEllipticalRRectEffect::emitCode(EmitArgs& args) {
 }
 
 void GLEllipticalRRectEffect::GenKey(
-    const GrProcessor& effect, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
+    const GrProcessor& effect, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
   const EllipticalRRectEffect& erre = effect.cast<EllipticalRRectEffect>();
   GR_STATIC_ASSERT((int)GrClipEdgeType::kLast < (1 << 3));
   b->add32(erre.getRRect().getType() | (int)erre.getEdgeType() << 3);
@@ -638,7 +636,7 @@ void GLEllipticalRRectEffect::onSetData(
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void EllipticalRRectEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   GLEllipticalRRectEffect::GenKey(*this, caps, b);
 }
 

@@ -15,6 +15,7 @@
 #include "src/gpu/ccpr/GrCCQuadraticShader.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #include "src/gpu/glsl/GrGLSLVertexGeoBuilder.h"
+#include "src/gpu/glsl/GrGLSLVertexGeoBuilder.h"
 
 class GrCCCoverageProcessor::TriangleShader : public GrCCCoverageProcessor::Shader {
   void onEmitVaryings(

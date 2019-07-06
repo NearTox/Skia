@@ -12,8 +12,8 @@
 
 class SkPath;
 
-#include <d2d1.h>
 #include <dwrite.h>
+#include <d2d1.h>
 
 class SkDWriteGeometrySink : public IDWriteGeometrySink {
  private:

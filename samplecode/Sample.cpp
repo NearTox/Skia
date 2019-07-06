@@ -10,7 +10,7 @@
 #include "include/core/SkString.h"
 
 #if SK_SUPPORT_GPU
-#include "include/gpu/GrContext.h"
+#  include "include/gpu/GrContext.h"
 #else
 class GrContext;
 #endif

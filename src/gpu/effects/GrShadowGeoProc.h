@@ -23,7 +23,7 @@ class GrRRectShadowGeoProc : public GrGeometryProcessor {
     return sk_sp<GrGeometryProcessor>(new GrRRectShadowGeoProc());
   }
 
-  const char* name() const noexcept override { return "RRectShadow"; }
+  const char* name() const override { return "RRectShadow"; }
 
   const Attribute& inPosition() const { return fInPosition; }
   const Attribute& inColor() const { return fInColor; }

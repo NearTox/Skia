@@ -25,7 +25,7 @@ class SK_API SkPaintImageFilter : public SkImageFilter {
    */
   static sk_sp<SkImageFilter> Make(const SkPaint& paint, const CropRect* cropRect = nullptr);
 
-  bool affectsTransparentBlack() const noexcept override;
+  bool affectsTransparentBlack() const override;
 
  protected:
   void flatten(SkWriteBuffer&) const override;

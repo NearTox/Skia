@@ -21,8 +21,8 @@ class GrTexturePriv;
 
 class SK_API GrTexture : virtual public GrSurface {
  public:
-  GrTexture* asTexture() noexcept override { return this; }
-  const GrTexture* asTexture() const noexcept override { return this; }
+  GrTexture* asTexture() override { return this; }
+  const GrTexture* asTexture() const override { return this; }
 
   virtual GrBackendTexture getBackendTexture() const = 0;
 
@@ -70,8 +70,8 @@ class SK_API GrTexture : virtual public GrSurface {
   }
 
   /** Access methods that are only to be used within Skia code. */
-  inline GrTexturePriv texturePriv() noexcept;
-  inline const GrTexturePriv texturePriv() const noexcept;
+  inline GrTexturePriv texturePriv();
+  inline const GrTexturePriv texturePriv() const;
 
  protected:
   GrTexture(GrGpu*, const GrSurfaceDesc&, GrTextureType, GrMipMapsStatus);
@@ -80,7 +80,7 @@ class SK_API GrTexture : virtual public GrSurface {
 
   SkTArray<sk_sp<GrRefCntedCallback>> fIdleProcs;
 
-  void willRemoveLastRefOrPendingIO() noexcept override {
+  void willRemoveLastRefOrPendingIO() override {
     // We're about to be idle in the resource cache. Do our part to trigger the idle callbacks.
     fIdleProcs.reset();
   }
@@ -88,8 +88,8 @@ class SK_API GrTexture : virtual public GrSurface {
  private:
   void computeScratchKey(GrScratchKey*) const override;
   size_t onGpuMemorySize() const override;
-  void markMipMapsDirty() noexcept;
-  void markMipMapsClean() noexcept;
+  void markMipMapsDirty();
+  void markMipMapsClean();
 
   GrTextureType fTextureType;
   GrMipMapsStatus fMipMapsStatus;

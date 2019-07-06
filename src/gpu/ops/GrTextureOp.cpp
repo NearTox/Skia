@@ -171,7 +171,7 @@ class TextureOp final : public GrMeshDrawOp {
     }
   }
 
-  const char* name() const noexcept override { return "TextureOp"; }
+  const char* name() const override { return "TextureOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     for (unsigned p = 0; p < fProxyCnt; ++p) {

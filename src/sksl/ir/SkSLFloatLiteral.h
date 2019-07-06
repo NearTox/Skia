@@ -20,14 +20,14 @@ struct FloatLiteral : public Expression {
   FloatLiteral(const Context& context, int offset, double value)
       : INHERITED(offset, kFloatLiteral_Kind, *context.fFloatLiteral_Type), fValue(value) {}
 
-  FloatLiteral(int offset, double value, const Type* type) noexcept
+  FloatLiteral(int offset, double value, const Type* type)
       : INHERITED(offset, kFloatLiteral_Kind, *type), fValue(value) {}
 
   String description() const override { return to_string(fValue); }
 
-  bool hasSideEffects() const noexcept override { return false; }
+  bool hasSideEffects() const override { return false; }
 
-  bool isConstant() const noexcept override { return true; }
+  bool isConstant() const override { return true; }
 
   int coercionCost(const Type& target) const override {
     if (target.isFloat()) {
@@ -36,12 +36,12 @@ struct FloatLiteral : public Expression {
     return INHERITED::coercionCost(target);
   }
 
-  bool compareConstant(const Context& context, const Expression& other) const noexcept override {
+  bool compareConstant(const Context& context, const Expression& other) const override {
     FloatLiteral& f = (FloatLiteral&)other;
     return fValue == f.fValue;
   }
 
-  double getConstantFloat() const noexcept override { return fValue; }
+  double getConstantFloat() const override { return fValue; }
 
   std::unique_ptr<Expression> clone() const override {
     return std::unique_ptr<Expression>(new FloatLiteral(fOffset, fValue, &fType));

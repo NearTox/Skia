@@ -21,7 +21,6 @@ class GrContext;
 class SkBitmap;
 class SkCanvas;
 class SkSpecialImage;
-class GrRecordingContext;
 
 /**
  * SkSpecialSurface is a restricted form of SkSurface solely for internal use. It differs
@@ -33,10 +32,10 @@ class GrRecordingContext;
  */
 class SkSpecialSurface : public SkRefCnt {
  public:
-  const SkSurfaceProps& props() const noexcept { return fProps; }
+  const SkSurfaceProps& props() const { return fProps; }
 
-  int width() const noexcept { return fSubset.width(); }
-  int height() const noexcept { return fSubset.height(); }
+  int width() const { return fSubset.width(); }
+  int height() const { return fSubset.height(); }
 
   /**
    *  Return a canvas that will draw into this surface. This will always
@@ -86,7 +85,7 @@ class SkSpecialSurface : public SkRefCnt {
 
   // For testing only
   friend class TestingSpecialSurfaceAccess;
-  const SkIRect& subset() const noexcept { return fSubset; }
+  const SkIRect& subset() const { return fSubset; }
 
  private:
   const SkSurfaceProps fProps;

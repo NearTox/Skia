@@ -320,8 +320,8 @@ class SK_API GrContext : public GrRecordingContext {
   void checkAsyncWorkCompletion();
 
   // Provides access to functions that aren't part of the public API.
-  GrContextPriv priv() noexcept;
-  const GrContextPriv priv() const noexcept;
+  GrContextPriv priv();
+  const GrContextPriv priv() const;
 
   /** Enumerates all cached GPU resources and dumps their memory to traceMemoryDump. */
   // Chrome is using this!
@@ -365,7 +365,7 @@ class SK_API GrContext : public GrRecordingContext {
 
   bool init(sk_sp<const GrCaps>, sk_sp<GrSkSLFPFactoryCache>) override;
 
-  GrContext* asDirectContext() noexcept override { return this; }
+  GrContext* asDirectContext() override { return this; }
 
   virtual GrAtlasManager* onGetAtlasManager() = 0;
 

@@ -68,7 +68,7 @@ class GrTextBlobCache {
     }
   }
 
-  void makeMRU(GrTextBlob* blob) noexcept {
+  void makeMRU(GrTextBlob* blob) {
     if (fBlobList.head() == blob) {
       return;
     }
@@ -93,7 +93,7 @@ class GrTextBlobCache {
   }
 
   struct PurgeBlobMessage {
-    PurgeBlobMessage(uint32_t blobID, uint32_t contextUniqueID) noexcept
+    PurgeBlobMessage(uint32_t blobID, uint32_t contextUniqueID)
         : fBlobID(blobID), fContextID(contextUniqueID) {}
 
     uint32_t fBlobID;
@@ -104,18 +104,18 @@ class GrTextBlobCache {
 
   void purgeStaleBlobs();
 
-  size_t usedBytes() const noexcept { return fCurrentSize; }
+  size_t usedBytes() const { return fCurrentSize; }
 
  private:
   using BitmapBlobList = SkTInternalLList<GrTextBlob>;
 
   struct BlobIDCacheEntry {
-    BlobIDCacheEntry() noexcept : fID(SK_InvalidGenID) {}
-    explicit BlobIDCacheEntry(uint32_t id) noexcept : fID(id) {}
+    BlobIDCacheEntry() : fID(SK_InvalidGenID) {}
+    explicit BlobIDCacheEntry(uint32_t id) : fID(id) {}
 
-    static uint32_t GetKey(const BlobIDCacheEntry& entry) noexcept { return entry.fID; }
+    static uint32_t GetKey(const BlobIDCacheEntry& entry) { return entry.fID; }
 
-    void addBlob(sk_sp<GrTextBlob> blob) noexcept {
+    void addBlob(sk_sp<GrTextBlob> blob) {
       SkASSERT(blob);
       SkASSERT(GrTextBlob::GetKey(*blob).fUniqueID == fID);
       SkASSERT(!this->find(GrTextBlob::GetKey(*blob)));
@@ -138,7 +138,7 @@ class GrTextBlobCache {
       return index < 0 ? nullptr : fBlobs[index];
     }
 
-    int findBlobIndex(const GrTextBlob::Key& key) const noexcept {
+    int findBlobIndex(const GrTextBlob::Key& key) const {
       for (int i = 0; i < fBlobs.count(); ++i) {
         if (GrTextBlob::GetKey(*fBlobs[i]) == key) {
           return i;

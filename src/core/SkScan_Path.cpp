@@ -38,7 +38,7 @@ static void validate_sort(const SkEdge* edge) {
   }
 }
 #else
-#define validate_sort(edge)
+#  define validate_sort(edge)
 #endif
 
 static void insert_new_edges(SkEdge* newEdge, int curr_y) {
@@ -85,12 +85,12 @@ static void validate_edges_for_y(const SkEdge* edge, int curr_y) {
   }
 }
 #else
-#define validate_edges_for_y(edge, curr_y)
+#  define validate_edges_for_y(edge, curr_y)
 #endif
 
 #if defined _WIN32  // disable warning : local variable used without having been initialized
-#pragma warning(push)
-#pragma warning(disable : 4701)
+#  pragma warning(push)
+#  pragma warning(disable : 4701)
 #endif
 
 typedef void (*PrePostProc)(SkBlitter* blitter, int y, bool isStartOfScanline);
@@ -360,7 +360,7 @@ static void PrePostInverseBlitterProc(SkBlitter* blitter, int y, bool isStart) {
 ///////////////////////////////////////////////////////////////////////////////
 
 #if defined _WIN32
-#pragma warning(pop)
+#  pragma warning(pop)
 #endif
 
 static bool operator<(const SkEdge& a, const SkEdge& b) {

@@ -104,8 +104,7 @@ sk_sp<GrSurface> GrTextureProxy::createSurface(GrResourceProvider* resourceProvi
   return surface;
 }
 
-void GrTextureProxyPriv::setDeferredUploader(
-    std::unique_ptr<GrDeferredProxyUploader> uploader) noexcept {
+void GrTextureProxyPriv::setDeferredUploader(std::unique_ptr<GrDeferredProxyUploader> uploader) {
   SkASSERT(!fTextureProxy->fDeferredUploader);
   fTextureProxy->fDeferredUploader = std::move(uploader);
 }
@@ -117,17 +116,17 @@ void GrTextureProxyPriv::scheduleUpload(GrOpFlushState* flushState) {
   }
 }
 
-void GrTextureProxyPriv::resetDeferredUploader() noexcept {
+void GrTextureProxyPriv::resetDeferredUploader() {
   SkASSERT(fTextureProxy->fDeferredUploader);
   fTextureProxy->fDeferredUploader.reset();
 }
 
-GrSamplerState::Filter GrTextureProxy::highestFilterMode() const noexcept {
+GrSamplerState::Filter GrTextureProxy::highestFilterMode() const {
   return this->hasRestrictedSampling() ? GrSamplerState::Filter::kBilerp
                                        : GrSamplerState::Filter::kMipMap;
 }
 
-GrMipMapped GrTextureProxy::mipMapped() const noexcept {
+GrMipMapped GrTextureProxy::mipMapped() const {
   if (this->isInstantiated()) {
     return this->peekTexture()->texturePriv().mipMapped();
   }
@@ -161,7 +160,7 @@ void GrTextureProxy::setUniqueKey(GrProxyProvider* proxyProvider, const GrUnique
   fProxyProvider = proxyProvider;
 }
 
-void GrTextureProxy::clearUniqueKey() noexcept {
+void GrTextureProxy::clearUniqueKey() {
   fUniqueKey.reset();
   fProxyProvider = nullptr;
 }

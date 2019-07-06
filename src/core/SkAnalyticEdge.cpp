@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkAnalyticEdge.h"
-#include <utility>
 #include "include/private/SkTo.h"
+#include "src/core/SkAnalyticEdge.h"
 #include "src/core/SkFDot6.h"
 #include "src/core/SkMathPriv.h"
+#include <utility>
 
 static const int kInverseTableSize = 1024;  // SK_FDot6One * 16
 
-static inline SkFixed quick_inverse(SkFDot6 x) noexcept {
+static inline SkFixed quick_inverse(SkFDot6 x) {
   SkASSERT(SkAbs32(x) < kInverseTableSize);
   static const int32_t table[kInverseTableSize * 2] = {
       -4096,    -4100,    -4104,    -4108,    -4112,   -4116,   -4120,   -4124,   -4128,   -4132,
@@ -224,7 +224,7 @@ static inline SkFixed quick_inverse(SkFDot6 x) noexcept {
   return table[kInverseTableSize + x];
 }
 
-static inline SkFixed quick_div(SkFDot6 a, SkFDot6 b) noexcept {
+static inline SkFixed quick_div(SkFDot6 a, SkFDot6 b) {
   const int kMinBits = 3;   // abs(b) should be at least (1 << kMinBits) for quick division
   const int kMaxBits = 31;  // Number of bits available in signed int
   // Given abs(b) <= (1 << kMinBits), the inverse of abs(b) is at most 1 << (22 - kMinBits) in
@@ -244,7 +244,7 @@ static inline SkFixed quick_div(SkFDot6 a, SkFDot6 b) noexcept {
   return SkFDot6Div(a, b);
 }
 
-bool SkAnalyticEdge::setLine(const SkPoint& p0, const SkPoint& p1) noexcept {
+bool SkAnalyticEdge::setLine(const SkPoint& p0, const SkPoint& p1) {
   fRiteE = nullptr;
 
   // We must set X/Y using the same way (e.g., times 4, to FDot6, then to Fixed) as Quads/Cubics.
@@ -300,8 +300,7 @@ bool SkAnalyticEdge::setLine(const SkPoint& p0, const SkPoint& p1) noexcept {
 // This will become a bottleneck for small ovals rendering if we call SkFixedDiv twice here.
 // Therefore, we'll let the outter function compute the slope once and send in the value.
 // Moreover, we'll compute fDY by quickly lookup the inverse table (if possible).
-bool SkAnalyticEdge::updateLine(
-    SkFixed x0, SkFixed y0, SkFixed x1, SkFixed y1, SkFixed slope) noexcept {
+bool SkAnalyticEdge::updateLine(SkFixed x0, SkFixed y0, SkFixed x1, SkFixed y1, SkFixed slope) {
   // Since we send in the slope, we can no longer snap y inside this function.
   // If we don't send in the slope, or we do some more sophisticated snapping, this function
   // could be a performance bottleneck.
@@ -343,7 +342,7 @@ bool SkAnalyticEdge::updateLine(
   return true;
 }
 
-bool SkAnalyticEdge::update(SkFixed last_y, bool sortY) noexcept {
+bool SkAnalyticEdge::update(SkFixed last_y, bool sortY) {
   SkASSERT(last_y >= fLowerY);  // we shouldn't update edge if last_y < fLowerY
   if (fCurveCount < 0) {
     return static_cast<SkAnalyticCubicEdge*>(this)->updateCubic(sortY);
@@ -353,7 +352,7 @@ bool SkAnalyticEdge::update(SkFixed last_y, bool sortY) noexcept {
   return false;
 }
 
-bool SkAnalyticQuadraticEdge::setQuadratic(const SkPoint pts[3]) noexcept {
+bool SkAnalyticQuadraticEdge::setQuadratic(const SkPoint pts[3]) {
   fRiteE = nullptr;
 
   if (!fQEdge.setQuadraticWithoutUpdate(pts, kDefaultAccuracy)) {
@@ -380,7 +379,7 @@ bool SkAnalyticQuadraticEdge::setQuadratic(const SkPoint pts[3]) noexcept {
   return this->updateQuadratic();
 }
 
-bool SkAnalyticQuadraticEdge::updateQuadratic() noexcept {
+bool SkAnalyticQuadraticEdge::updateQuadratic() {
   int success = 0;  // initialize to fail!
   int count = fCurveCount;
   SkFixed oldx = fQEdge.fQx;
@@ -438,7 +437,7 @@ bool SkAnalyticQuadraticEdge::updateQuadratic() noexcept {
   return success;
 }
 
-bool SkAnalyticCubicEdge::setCubic(const SkPoint pts[4], bool sortY) noexcept {
+bool SkAnalyticCubicEdge::setCubic(const SkPoint pts[4], bool sortY) {
   fRiteE = nullptr;
 
   if (!fCEdge.setCubicWithoutUpdate(pts, kDefaultAccuracy, sortY)) {
@@ -468,7 +467,7 @@ bool SkAnalyticCubicEdge::setCubic(const SkPoint pts[4], bool sortY) noexcept {
   return this->updateCubic(sortY);
 }
 
-bool SkAnalyticCubicEdge::updateCubic(bool sortY) noexcept {
+bool SkAnalyticCubicEdge::updateCubic(bool sortY) {
   int success;
   int count = fCurveCount;
   SkFixed oldx = fCEdge.fCx;

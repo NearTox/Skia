@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkRecordDraw.h"
 #include "include/core/SkImage.h"
 #include "src/core/SkCanvasPriv.h"
+#include "src/core/SkRecordDraw.h"
 #include "src/utils/SkPatchUtils.h"
 
 void SkRecordDraw(

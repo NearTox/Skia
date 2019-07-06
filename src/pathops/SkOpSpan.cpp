@@ -272,8 +272,7 @@ void SkOpSpanBase::checkForCollapsedCoincidence() {
   }
   // the insert above may have put both ends of a coincident run in the same span
   // for each coincident ptT in loop; see if its opposite in is also in the loop
-  // this implementation is the motivation for marking that a ptT is referenced by a coincident
-  // span
+  // this implementation is the motivation for marking that a ptT is referenced by a coincident span
   SkOpPtT* head = this->ptT();
   SkOpPtT* test = head;
   do {

@@ -25,7 +25,7 @@
 #include "tools/Resources.h"
 
 #if defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS) || defined(SK_BUILD_FOR_WIN)
-#include "src/images/SkImageEncoderPriv.h"
+#  include "src/images/SkImageEncoderPriv.h"
 #endif
 
 namespace skiagm {

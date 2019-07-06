@@ -11,7 +11,7 @@
 #include "src/gpu/GrBaseContextPriv.h"
 #include "src/gpu/GrCaps.h"
 
-static int32_t next_id() noexcept {
+static int32_t next_id() {
   static std::atomic<int32_t> nextID{1};
   int32_t id;
   do {
@@ -21,7 +21,7 @@ static int32_t next_id() noexcept {
 }
 
 GrContext_Base::GrContext_Base(
-    GrBackendApi backend, const GrContextOptions& options, uint32_t contextID) noexcept
+    GrBackendApi backend, const GrContextOptions& options, uint32_t contextID)
     : fBackend(backend),
       fOptions(options),
       fContextID(SK_InvalidGenID == contextID ? next_id() : contextID) {}
@@ -36,14 +36,14 @@ bool GrContext_Base::init(sk_sp<const GrCaps> caps, sk_sp<GrSkSLFPFactoryCache> 
   return true;
 }
 
-const GrCaps* GrContext_Base::caps() const noexcept { return fCaps.get(); }
-sk_sp<const GrCaps> GrContext_Base::refCaps() const noexcept { return fCaps; }
+const GrCaps* GrContext_Base::caps() const { return fCaps.get(); }
+sk_sp<const GrCaps> GrContext_Base::refCaps() const { return fCaps; }
 
-sk_sp<GrSkSLFPFactoryCache> GrContext_Base::fpFactoryCache() noexcept { return fFPFactoryCache; }
+sk_sp<GrSkSLFPFactoryCache> GrContext_Base::fpFactoryCache() { return fFPFactoryCache; }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-sk_sp<const GrCaps> GrBaseContextPriv::refCaps() const noexcept { return fContext->refCaps(); }
+sk_sp<const GrCaps> GrBaseContextPriv::refCaps() const { return fContext->refCaps(); }
 
-sk_sp<GrSkSLFPFactoryCache> GrBaseContextPriv::fpFactoryCache() noexcept {
+sk_sp<GrSkSLFPFactoryCache> GrBaseContextPriv::fpFactoryCache() {
   return fContext->fpFactoryCache();
 }

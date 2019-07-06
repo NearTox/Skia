@@ -213,7 +213,7 @@ void SkGradientShaderBase::flatten(SkWriteBuffer& buffer) const {
 }
 
 static void add_stop_color(
-    SkRasterPipeline_GradientCtx* ctx, size_t stop, SkPMColor4f Fs, SkPMColor4f Bs) noexcept {
+    SkRasterPipeline_GradientCtx* ctx, size_t stop, SkPMColor4f Fs, SkPMColor4f Bs) {
   (ctx->fs[0])[stop] = Fs.fR;
   (ctx->fs[1])[stop] = Fs.fG;
   (ctx->fs[2])[stop] = Fs.fB;
@@ -224,8 +224,7 @@ static void add_stop_color(
   (ctx->bs[3])[stop] = Bs.fA;
 }
 
-static void add_const_color(
-    SkRasterPipeline_GradientCtx* ctx, size_t stop, SkPMColor4f color) noexcept {
+static void add_const_color(SkRasterPipeline_GradientCtx* ctx, size_t stop, SkPMColor4f color) {
   add_stop_color(ctx, stop, {0, 0, 0, 0}, color);
 }
 
@@ -233,7 +232,7 @@ static void add_const_color(
 // the stop. Assume that the distance between stops is 1/gapCount.
 static void init_stop_evenly(
     SkRasterPipeline_GradientCtx* ctx, float gapCount, size_t stop, SkPMColor4f c_l,
-    SkPMColor4f c_r) noexcept {
+    SkPMColor4f c_r) {
   // Clankium's GCC 4.9 targeting ARMv7 is barfing when we use Sk4f math here, so go scalar...
   SkPMColor4f Fs = {
       (c_r.fR - c_l.fR) * gapCount,
@@ -254,7 +253,7 @@ static void init_stop_evenly(
 // for any t between stops n and n+1, the color we want is B[n] + F[n]*t.
 static void init_stop_pos(
     SkRasterPipeline_GradientCtx* ctx, size_t stop, float t_l, float t_r, SkPMColor4f c_l,
-    SkPMColor4f c_r) noexcept {
+    SkPMColor4f c_r) {
   // See note about Clankium's old compiler in init_stop_evenly().
   SkPMColor4f Fs = {
       (c_r.fR - c_l.fR) / (t_r - t_l),
@@ -415,11 +414,11 @@ bool SkGradientShaderBase::onAppendStages(const SkStageRec& rec) const {
   return true;
 }
 
-bool SkGradientShaderBase::isOpaque() const noexcept {
+bool SkGradientShaderBase::isOpaque() const {
   return fColorsAreOpaque && (this->getTileMode() != SkTileMode::kDecal);
 }
 
-static constexpr unsigned rounded_divide(unsigned numer, unsigned denom) noexcept {
+static unsigned rounded_divide(unsigned numer, unsigned denom) {
   return (numer + (denom >> 1)) / denom;
 }
 
@@ -485,14 +484,14 @@ void SkGradientShaderBase::commonAsAGradient(GradientInfo* info) const {
 // Return true if these parameters are valid/legal/safe to construct a gradient
 //
 static bool valid_grad(
-    const SkColor4f colors[], const SkScalar pos[], int count, SkTileMode tileMode) noexcept {
+    const SkColor4f colors[], const SkScalar pos[], int count, SkTileMode tileMode) {
   return nullptr != colors && count >= 1 && (unsigned)tileMode < kSkTileModeCount;
 }
 
 static void desc_init(
     SkGradientShaderBase::Descriptor* desc, const SkColor4f colors[],
     sk_sp<SkColorSpace> colorSpace, const SkScalar pos[], int colorCount, SkTileMode mode,
-    uint32_t flags, const SkMatrix* localMatrix) noexcept {
+    uint32_t flags, const SkMatrix* localMatrix) {
   SkASSERT(colorCount > 1);
 
   desc->fColors = colors;
@@ -505,7 +504,7 @@ static void desc_init(
 }
 
 static SkColor4f average_gradient_color(
-    const SkColor4f colors[], const SkScalar pos[], int colorCount) noexcept {
+    const SkColor4f colors[], const SkScalar pos[], int colorCount) {
   // The gradient is a piecewise linear interpolation between colors. For a given interval,
   // the integral between the two endpoints is 0.5 * (ci + cj) * (pj - pi), which provides that
   // intervals average color. The overall average color is thus the sum of each piece. The thing
@@ -588,8 +587,7 @@ static sk_sp<SkShader> make_degenerate_gradient(
   } while (0)
 
 struct ColorStopOptimizer {
-  ColorStopOptimizer(
-      const SkColor4f* colors, const SkScalar* pos, int count, SkTileMode mode) noexcept
+  ColorStopOptimizer(const SkColor4f* colors, const SkScalar* pos, int count, SkTileMode mode)
       : fColors(colors), fPos(pos), fCount(count) {
     if (!pos || count != 3) {
       return;

@@ -27,34 +27,33 @@ class GrMesh {
     SkDEBUGCODE(fNonIndexNonInstanceData.fVertexCount = -1);
   }
 
-  void setPrimitiveType(GrPrimitiveType type) noexcept { fPrimitiveType = type; }
-  GrPrimitiveType primitiveType() const noexcept { return fPrimitiveType; }
+  void setPrimitiveType(GrPrimitiveType type) { fPrimitiveType = type; }
+  GrPrimitiveType primitiveType() const { return fPrimitiveType; }
 
-  bool isIndexed() const noexcept { return SkToBool(fIndexBuffer.get()); }
-  GrPrimitiveRestart primitiveRestart() const noexcept {
+  bool isIndexed() const { return SkToBool(fIndexBuffer.get()); }
+  GrPrimitiveRestart primitiveRestart() const {
     return GrPrimitiveRestart(fFlags & Flags::kUsePrimitiveRestart);
   }
-  bool isInstanced() const noexcept { return fFlags & Flags::kIsInstanced; }
-  bool hasInstanceData() const noexcept { return SkToBool(fInstanceBuffer.get()); }
-  bool hasVertexData() const noexcept { return SkToBool(fVertexBuffer.get()); }
+  bool isInstanced() const { return fFlags & Flags::kIsInstanced; }
+  bool hasInstanceData() const { return SkToBool(fInstanceBuffer.get()); }
+  bool hasVertexData() const { return SkToBool(fVertexBuffer.get()); }
 
-  void setNonIndexedNonInstanced(int vertexCount) noexcept;
+  void setNonIndexedNonInstanced(int vertexCount);
 
   void setIndexed(
       sk_sp<const GrBuffer> indexBuffer, int indexCount, int baseIndex, uint16_t minIndexValue,
-      uint16_t maxIndexValue, GrPrimitiveRestart) noexcept;
+      uint16_t maxIndexValue, GrPrimitiveRestart);
   void setIndexedPatterned(
       sk_sp<const GrBuffer> indexBuffer, int indexCount, int vertexCount, int patternRepeatCount,
-      int maxPatternRepetitionsInIndexBuffer) noexcept;
+      int maxPatternRepetitionsInIndexBuffer);
 
   void setInstanced(
-      sk_sp<const GrBuffer> instanceBuffer, int instanceCount, int baseInstance,
-      int vertexCount) noexcept;
+      sk_sp<const GrBuffer> instanceBuffer, int instanceCount, int baseInstance, int vertexCount);
   void setIndexedInstanced(
       sk_sp<const GrBuffer> indexBuffer, int indexCount, sk_sp<const GrBuffer> instanceBuffer,
-      int instanceCount, int baseInstance, GrPrimitiveRestart) noexcept;
+      int instanceCount, int baseInstance, GrPrimitiveRestart);
 
-  void setVertexData(sk_sp<const GrBuffer> vertexBuffer, int baseVertex = 0) noexcept;
+  void setVertexData(sk_sp<const GrBuffer> vertexBuffer, int baseVertex = 0);
 
   class SendToGpuImpl {
    public:
@@ -144,7 +143,7 @@ class GrMesh {
 
 GR_MAKE_BITFIELD_CLASS_OPS(GrMesh::Flags);
 
-inline void GrMesh::setNonIndexedNonInstanced(int vertexCount) noexcept {
+inline void GrMesh::setNonIndexedNonInstanced(int vertexCount) {
   fIndexBuffer.reset();
   fInstanceBuffer.reset();
   fNonIndexNonInstanceData.fVertexCount = vertexCount;
@@ -153,7 +152,7 @@ inline void GrMesh::setNonIndexedNonInstanced(int vertexCount) noexcept {
 
 inline void GrMesh::setIndexed(
     sk_sp<const GrBuffer> indexBuffer, int indexCount, int baseIndex, uint16_t minIndexValue,
-    uint16_t maxIndexValue, GrPrimitiveRestart primitiveRestart) noexcept {
+    uint16_t maxIndexValue, GrPrimitiveRestart primitiveRestart) {
   SkASSERT(indexBuffer);
   SkASSERT(indexCount >= 1);
   SkASSERT(baseIndex >= 0);
@@ -170,7 +169,7 @@ inline void GrMesh::setIndexed(
 
 inline void GrMesh::setIndexedPatterned(
     sk_sp<const GrBuffer> indexBuffer, int indexCount, int vertexCount, int patternRepeatCount,
-    int maxPatternRepetitionsInIndexBuffer) noexcept {
+    int maxPatternRepetitionsInIndexBuffer) {
   SkASSERT(indexBuffer);
   SkASSERT(indexCount >= 1);
   SkASSERT(vertexCount >= 1);
@@ -186,8 +185,7 @@ inline void GrMesh::setIndexedPatterned(
 }
 
 inline void GrMesh::setInstanced(
-    sk_sp<const GrBuffer> instanceBuffer, int instanceCount, int baseInstance,
-    int vertexCount) noexcept {
+    sk_sp<const GrBuffer> instanceBuffer, int instanceCount, int baseInstance, int vertexCount) {
   SkASSERT(instanceCount >= 1);
   SkASSERT(baseInstance >= 0);
   fIndexBuffer.reset();
@@ -200,7 +198,7 @@ inline void GrMesh::setInstanced(
 
 inline void GrMesh::setIndexedInstanced(
     sk_sp<const GrBuffer> indexBuffer, int indexCount, sk_sp<const GrBuffer> instanceBuffer,
-    int instanceCount, int baseInstance, GrPrimitiveRestart primitiveRestart) noexcept {
+    int instanceCount, int baseInstance, GrPrimitiveRestart primitiveRestart) {
   SkASSERT(indexBuffer);
   SkASSERT(indexCount >= 1);
   SkASSERT(instanceCount >= 1);
@@ -213,7 +211,7 @@ inline void GrMesh::setIndexedInstanced(
   fFlags = Flags::kIsInstanced | Flags(primitiveRestart);
 }
 
-inline void GrMesh::setVertexData(sk_sp<const GrBuffer> vertexBuffer, int baseVertex) noexcept {
+inline void GrMesh::setVertexData(sk_sp<const GrBuffer> vertexBuffer, int baseVertex) {
   SkASSERT(baseVertex >= 0);
   fVertexBuffer = std::move(vertexBuffer);
   fBaseVertex = baseVertex;

@@ -17,7 +17,7 @@ class GrVkGpu;
 #ifdef SK_BUILD_FOR_WIN
 // Windows gives bogus warnings about inheriting asTexture/asRenderTarget via dominance.
 #pragma warning(push)
-#pragma warning(disable : 4250)
+#  pragma warning(disable : 4250)
 #endif
 
 class GrVkImageView;

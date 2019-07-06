@@ -46,10 +46,10 @@ class GrPaint {
   /**
    * The initial color of the drawn primitive. Defaults to solid white.
    */
-  void setColor4f(const SkPMColor4f& color) noexcept { fColor = color; }
-  const SkPMColor4f& getColor4f() const noexcept { return fColor; }
+  void setColor4f(const SkPMColor4f& color) { fColor = color; }
+  const SkPMColor4f& getColor4f() const { return fColor; }
 
-  void setXPFactory(const GrXPFactory* xpFactory) noexcept {
+  void setXPFactory(const GrXPFactory* xpFactory) {
     fXPFactory = xpFactory;
     fTrivial &= !SkToBool(xpFactory);
   }
@@ -86,18 +86,18 @@ class GrPaint {
   void addCoverageTextureProcessor(sk_sp<GrTextureProxy>, const SkMatrix&);
   void addCoverageTextureProcessor(sk_sp<GrTextureProxy>, const SkMatrix&, const GrSamplerState&);
 
-  int numColorFragmentProcessors() const noexcept { return fColorFragmentProcessors.count(); }
-  int numCoverageFragmentProcessors() const noexcept { return fCoverageFragmentProcessors.count(); }
-  int numTotalFragmentProcessors() const noexcept {
+  int numColorFragmentProcessors() const { return fColorFragmentProcessors.count(); }
+  int numCoverageFragmentProcessors() const { return fCoverageFragmentProcessors.count(); }
+  int numTotalFragmentProcessors() const {
     return this->numColorFragmentProcessors() + this->numCoverageFragmentProcessors();
   }
 
-  const GrXPFactory* getXPFactory() const noexcept { return fXPFactory; }
+  const GrXPFactory* getXPFactory() const { return fXPFactory; }
 
-  GrFragmentProcessor* getColorFragmentProcessor(int i) const noexcept {
+  GrFragmentProcessor* getColorFragmentProcessor(int i) const {
     return fColorFragmentProcessors[i].get();
   }
-  GrFragmentProcessor* getCoverageFragmentProcessor(int i) const noexcept {
+  GrFragmentProcessor* getCoverageFragmentProcessor(int i) const {
     return fCoverageFragmentProcessors[i].get();
   }
 
@@ -113,9 +113,9 @@ class GrPaint {
    * A trivial paint is one that uses src-over and has no fragment processors.
    * It may have variable sRGB settings.
    **/
-  bool isTrivial() const noexcept { return fTrivial; }
+  bool isTrivial() const { return fTrivial; }
 
-  friend void assert_alive(GrPaint& p) noexcept { SkASSERT(p.fAlive); }
+  friend void assert_alive(GrPaint& p) { SkASSERT(p.fAlive); }
 
  private:
   // Since paint copying is expensive if there are fragment processors, we require going through

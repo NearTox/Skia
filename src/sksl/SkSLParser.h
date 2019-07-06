@@ -8,10 +8,10 @@
 #ifndef SKSL_PARSER
 #define SKSL_PARSER
 
+#include <vector>
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
-#include <vector>
 #include "src/sksl/SkSLErrorReporter.h"
 #include "src/sksl/SkSLLexer.h"
 #include "src/sksl/ir/SkSLLayout.h"

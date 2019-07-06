@@ -8,10 +8,10 @@
 #ifndef GrVertexWriter_DEFINED
 #define GrVertexWriter_DEFINED
 
-#include <type_traits>
 #include "include/private/GrColor.h"
 #include "include/private/SkTemplates.h"
 #include "src/gpu/GrQuad.h"
+#include <type_traits>
 
 /**
  * Helper for writing vertex data to a buffer. Usage:

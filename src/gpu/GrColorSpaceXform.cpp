@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/GrColorSpaceXform.h"
 #include "include/core/SkColorSpace.h"
 #include "src/core/SkColorSpacePriv.h"
+#include "src/gpu/GrColorSpaceXform.h"
 #include "src/gpu/glsl/GrGLSLColorSpaceXformHelper.h"
 #include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
@@ -19,7 +19,7 @@ sk_sp<GrColorSpaceXform> GrColorSpaceXform::Make(
                                  : sk_make_sp<GrColorSpaceXform>(steps);
 }
 
-bool GrColorSpaceXform::Equals(const GrColorSpaceXform* a, const GrColorSpaceXform* b) noexcept {
+bool GrColorSpaceXform::Equals(const GrColorSpaceXform* a, const GrColorSpaceXform* b) {
   if (a == b) {
     return true;
   }
@@ -110,13 +110,13 @@ std::unique_ptr<GrFragmentProcessor> GrColorSpaceXformEffect::clone() const {
       new GrColorSpaceXformEffect(std::move(child), fColorXform));
 }
 
-bool GrColorSpaceXformEffect::onIsEqual(const GrFragmentProcessor& s) const noexcept {
+bool GrColorSpaceXformEffect::onIsEqual(const GrFragmentProcessor& s) const {
   const GrColorSpaceXformEffect& other = s.cast<GrColorSpaceXformEffect>();
   return GrColorSpaceXform::Equals(fColorXform.get(), other.fColorXform.get());
 }
 
 void GrColorSpaceXformEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   b->add32(GrColorSpaceXform::XformKey(fColorXform.get()));
 }
 
@@ -125,7 +125,7 @@ GrGLSLFragmentProcessor* GrColorSpaceXformEffect::onCreateGLSLInstance() const {
 }
 
 GrFragmentProcessor::OptimizationFlags GrColorSpaceXformEffect::OptFlags(
-    const GrFragmentProcessor* child) noexcept {
+    const GrFragmentProcessor* child) {
   // TODO: Implement constant output for constant input
   if (child) {
     OptimizationFlags flags = kNone_OptimizationFlags;

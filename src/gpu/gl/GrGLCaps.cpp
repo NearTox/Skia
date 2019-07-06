@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/gl/GrGLCaps.h"
 #include "include/gpu/GrContextOptions.h"
 #include "src/core/SkTSearch.h"
 #include "src/core/SkTSort.h"
@@ -14,6 +13,7 @@
 #include "src/gpu/GrSurfaceProxyPriv.h"
 #include "src/gpu/GrTextureProxyPriv.h"
 #include "src/gpu/SkGr.h"
+#include "src/gpu/gl/GrGLCaps.h"
 #include "src/gpu/gl/GrGLContext.h"
 #include "src/gpu/gl/GrGLRenderTarget.h"
 #include "src/gpu/gl/GrGLTexture.h"
@@ -671,7 +671,7 @@ void GrGLCaps::init(
 }
 
 const char* get_glsl_version_decl_string(
-    GrGLStandard standard, GrGLSLGeneration generation, bool isCoreProfile) noexcept {
+    GrGLStandard standard, GrGLSLGeneration generation, bool isCoreProfile) {
   if (GR_IS_GR_GL(standard)) {
     switch (generation) {
       case k110_GrGLSLGeneration: return "#version 110\n";
@@ -1252,13 +1252,13 @@ void GrGLCaps::onDumpJSON(SkJSONWriter* writer) const {
 void GrGLCaps::onDumpJSON(SkJSONWriter* writer) const {}
 #endif
 
-bool GrGLCaps::bgraIsInternalFormat() const noexcept {
+bool GrGLCaps::bgraIsInternalFormat() const {
   return fConfigTable[kBGRA_8888_GrPixelConfig].fFormats.fBaseInternalFormat == GR_GL_BGRA;
 }
 
 bool GrGLCaps::getTexImageFormats(
     GrPixelConfig surfaceConfig, GrPixelConfig externalConfig, GrGLenum* internalFormat,
-    GrGLenum* externalFormat, GrGLenum* externalType) const noexcept {
+    GrGLenum* externalFormat, GrGLenum* externalType) const {
   if (!this->getExternalFormat(
           surfaceConfig, externalConfig, kTexImage_ExternalFormatUsage, externalFormat,
           externalType)) {
@@ -1269,7 +1269,7 @@ bool GrGLCaps::getTexImageFormats(
 }
 
 bool GrGLCaps::getCompressedTexImageFormats(
-    GrPixelConfig surfaceConfig, GrGLenum* internalFormat) const noexcept {
+    GrPixelConfig surfaceConfig, GrGLenum* internalFormat) const {
   if (!GrPixelConfigIsCompressed(surfaceConfig)) {
     return false;
   }
@@ -1279,7 +1279,7 @@ bool GrGLCaps::getCompressedTexImageFormats(
 
 bool GrGLCaps::getReadPixelsFormat(
     GrPixelConfig surfaceConfig, GrPixelConfig externalConfig, GrGLenum* externalFormat,
-    GrGLenum* externalType) const noexcept {
+    GrGLenum* externalType) const {
   if (!this->getExternalFormat(
           surfaceConfig, externalConfig, kReadPixels_ExternalFormatUsage, externalFormat,
           externalType)) {
@@ -1288,20 +1288,18 @@ bool GrGLCaps::getReadPixelsFormat(
   return true;
 }
 
-void GrGLCaps::getRenderbufferFormat(GrPixelConfig config, GrGLenum* internalFormat) const
-    noexcept {
+void GrGLCaps::getRenderbufferFormat(GrPixelConfig config, GrGLenum* internalFormat) const {
   SkASSERT(!GrPixelConfigIsCompressed(config));
   *internalFormat = fConfigTable[config].fFormats.fInternalFormatRenderbuffer;
 }
 
-void GrGLCaps::getSizedInternalFormat(GrPixelConfig config, GrGLenum* internalFormat) const
-    noexcept {
+void GrGLCaps::getSizedInternalFormat(GrPixelConfig config, GrGLenum* internalFormat) const {
   *internalFormat = fConfigTable[config].fFormats.fSizedInternalFormat;
 }
 
 bool GrGLCaps::getExternalFormat(
     GrPixelConfig surfaceConfig, GrPixelConfig memoryConfig, ExternalFormatUsage usage,
-    GrGLenum* externalFormat, GrGLenum* externalType) const noexcept {
+    GrGLenum* externalFormat, GrGLenum* externalType) const {
   SkASSERT(externalFormat && externalType);
   if (GrPixelConfigIsCompressed(memoryConfig)) {
     return false;
@@ -2278,7 +2276,7 @@ bool GrGLCaps::canCopyTexSubImage(
     GrPixelConfig dstConfig, bool dstHasMSAARenderBuffer, bool dstIsTextureable,
     bool dstIsGLTexture2D, GrSurfaceOrigin dstOrigin, GrPixelConfig srcConfig,
     bool srcHasMSAARenderBuffer, bool srcIsTextureable, bool srcIsGLTexture2D,
-    GrSurfaceOrigin srcOrigin) const noexcept {
+    GrSurfaceOrigin srcOrigin) const {
   // Table 3.9 of the ES2 spec indicates the supported formats with CopyTexSubImage
   // and BGRA isn't in the spec. There doesn't appear to be any extension that adds it. Perhaps
   // many drivers would allow it to work, but ANGLE does not.
@@ -2312,7 +2310,7 @@ bool GrGLCaps::canCopyAsBlit(
     GrPixelConfig dstConfig, int dstSampleCnt, bool dstIsTextureable, bool dstIsGLTexture2D,
     GrSurfaceOrigin dstOrigin, GrPixelConfig srcConfig, int srcSampleCnt, bool srcIsTextureable,
     bool srcIsGLTexture2D, GrSurfaceOrigin srcOrigin, const SkRect& srcBounds,
-    const SkIRect& srcRect, const SkIPoint& dstPoint) const noexcept {
+    const SkIRect& srcRect, const SkIPoint& dstPoint) const {
   auto blitFramebufferFlags = this->blitFramebufferSupportFlags();
   if (!this->canConfigBeFBOColorAttachment(dstConfig) ||
       !this->canConfigBeFBOColorAttachment(srcConfig)) {
@@ -2377,7 +2375,7 @@ bool GrGLCaps::canCopyAsBlit(
   return true;
 }
 
-bool GrGLCaps::canCopyAsDraw(GrPixelConfig dstConfig, bool srcIsTextureable) const noexcept {
+bool GrGLCaps::canCopyAsDraw(GrPixelConfig dstConfig, bool srcIsTextureable) const {
   return this->canConfigBeFBOColorAttachment(dstConfig) && srcIsTextureable;
 }
 
@@ -2597,7 +2595,7 @@ void GrGLCaps::applyDriverCorrectnessWorkarounds(
   fMapBufferFlags = kNone_MapFlags;
   fTransferBufferSupport = false;
   fTransferBufferType = kNone_TransferBufferType;
-#endif
+#  endif
 #endif
 
   // We found that the Galaxy J5 with an Adreno 306 running 6.0.1 has a bug where
@@ -2961,7 +2959,7 @@ void GrGLCaps::applyDriverCorrectnessWorkarounds(
 #endif
 }
 
-void GrGLCaps::onApplyOptionsOverrides(const GrContextOptions& options) noexcept {
+void GrGLCaps::onApplyOptionsOverrides(const GrContextOptions& options) {
   if (options.fDisableDriverCorrectnessWorkarounds) {
     SkASSERT(!fDoManualMipmapping);
     SkASSERT(!fClearToBoundaryValuesIsBroken);
@@ -2985,7 +2983,7 @@ void GrGLCaps::onApplyOptionsOverrides(const GrContextOptions& options) noexcept
 #endif
 }
 
-bool GrGLCaps::onSurfaceSupportsWritePixels(const GrSurface* surface) const noexcept {
+bool GrGLCaps::onSurfaceSupportsWritePixels(const GrSurface* surface) const {
   if (fDisallowTexSubImageForUnormConfigTexturesEverBoundToFBO) {
     if (auto tex = static_cast<const GrGLTexture*>(surface->asTexture())) {
       if (tex->hasBaseLevelBeenBoundToFBO()) {
@@ -3005,7 +3003,7 @@ bool GrGLCaps::onSurfaceSupportsWritePixels(const GrSurface* surface) const noex
   return true;
 }
 
-bool GrGLCaps::surfaceSupportsReadPixels(const GrSurface* surface) const noexcept {
+bool GrGLCaps::surfaceSupportsReadPixels(const GrSurface* surface) const {
   if (auto tex = static_cast<const GrGLTexture*>(surface->asTexture())) {
     // We don't support reading pixels directly from EXTERNAL textures as it would require
     // binding the texture to a FBO.
@@ -3017,7 +3015,7 @@ bool GrGLCaps::surfaceSupportsReadPixels(const GrSurface* surface) const noexcep
 }
 
 GrColorType GrGLCaps::supportedReadPixelsColorType(
-    GrPixelConfig config, GrColorType dstColorType) const noexcept {
+    GrPixelConfig config, GrColorType dstColorType) const {
   // For now, we mostly report the read back format that is required by the ES spec without
   // checking for implementation allowed formats or consider laxer rules in non-ES GL. TODO: Relax
   // this as makes sense to increase performance and correctness.
@@ -3048,7 +3046,7 @@ bool GrGLCaps::onIsWindowRectanglesSupportedForRT(const GrBackendRenderTarget& b
   return fbInfo.fFBOID != 0;
 }
 
-int GrGLCaps::getRenderTargetSampleCount(int requestedCount, GrPixelConfig config) const noexcept {
+int GrGLCaps::getRenderTargetSampleCount(int requestedCount, GrPixelConfig config) const {
   requestedCount = SkTMax(1, requestedCount);
   int count = fConfigTable[config].fColorSampleCounts.count();
   if (!count) {
@@ -3071,7 +3069,7 @@ int GrGLCaps::getRenderTargetSampleCount(int requestedCount, GrPixelConfig confi
   return 0;
 }
 
-int GrGLCaps::maxRenderTargetSampleCount(GrPixelConfig config) const noexcept {
+int GrGLCaps::maxRenderTargetSampleCount(GrPixelConfig config) const {
   const auto& table = fConfigTable[config].fColorSampleCounts;
   if (!table.count()) {
     return 0;
@@ -3083,8 +3081,7 @@ int GrGLCaps::maxRenderTargetSampleCount(GrPixelConfig config) const noexcept {
   return count;
 }
 
-GrPixelConfig validate_sized_format(
-    GrGLenum format, SkColorType ct, GrGLStandard standard) noexcept {
+GrPixelConfig validate_sized_format(GrGLenum format, SkColorType ct, GrGLStandard standard) {
   switch (ct) {
     case kUnknown_SkColorType: return kUnknown_GrPixelConfig;
     case kAlpha_8_SkColorType:
@@ -3182,7 +3179,7 @@ GrPixelConfig GrGLCaps::getConfigFromBackendFormat(
   return validate_sized_format(*glFormat, ct, fStandard);
 }
 
-static constexpr GrPixelConfig get_yuva_config(GrGLenum format) noexcept {
+static GrPixelConfig get_yuva_config(GrGLenum format) {
   GrPixelConfig config = kUnknown_GrPixelConfig;
 
   switch (format) {
@@ -3296,7 +3293,7 @@ GrSwizzle GrGLCaps::getOutputSwizzle(const GrBackendFormat& format, GrColorType 
   return get_swizzle(format, colorType, true);
 }
 
-size_t GrGLCaps::onTransferFromOffsetAlignment(GrColorType bufferColorType) const noexcept {
+size_t GrGLCaps::onTransferFromOffsetAlignment(GrColorType bufferColorType) const {
   // This implementation is highly coupled with decisions made in initConfigTable and GrGLGpu's
   // read pixels implementation and may not be correct for all types. TODO(bsalomon): This will be
   // cleaned up/unified as part of removing GrPixelConfig.

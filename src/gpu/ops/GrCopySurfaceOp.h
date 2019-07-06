@@ -21,7 +21,7 @@ class GrCopySurfaceOp final : public GrOp {
       GrRecordingContext*, GrSurfaceProxy* dst, GrSurfaceProxy* src, const SkIRect& srcRect,
       const SkIPoint& dstPoint);
 
-  const char* name() const noexcept override { return "CopySurface"; }
+  const char* name() const override { return "CopySurface"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     func(fSrc.get(), GrMipMapped::kNo);

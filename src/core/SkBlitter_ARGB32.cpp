@@ -12,12 +12,12 @@
 #include "src/core/SkUtils.h"
 #include "src/core/SkXfermodePriv.h"
 
-static constexpr inline int upscale_31_to_32(int value) noexcept {
+static inline int upscale_31_to_32(int value) {
   SkASSERT((unsigned)value <= 31);
   return value + (value >> 4);
 }
 
-static constexpr inline int blend_32(int src, int dst, int scale) noexcept {
+static inline int blend_32(int src, int dst, int scale) {
   SkASSERT((unsigned)src <= 0xFF);
   SkASSERT((unsigned)dst <= 0xFF);
   SkASSERT((unsigned)scale <= 32);
@@ -25,7 +25,7 @@ static constexpr inline int blend_32(int src, int dst, int scale) noexcept {
 }
 
 static inline SkPMColor blend_lcd16(
-    int srcA, int srcR, int srcG, int srcB, SkPMColor dst, uint16_t mask) noexcept {
+    int srcA, int srcR, int srcG, int srcB, SkPMColor dst, uint16_t mask) {
   if (mask == 0) {
     return dst;
   }
@@ -58,7 +58,7 @@ static inline SkPMColor blend_lcd16(
 }
 
 static inline SkPMColor blend_lcd16_opaque(
-    int srcR, int srcG, int srcB, SkPMColor dst, uint16_t mask, SkPMColor opaqueDst) noexcept {
+    int srcR, int srcG, int srcB, SkPMColor dst, uint16_t mask, SkPMColor opaqueDst) {
   if (mask == 0) {
     return dst;
   }
@@ -92,40 +92,40 @@ static inline SkPMColor blend_lcd16_opaque(
 // TODO: rewrite at least the SSE code here.  It's miserable.
 
 #if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
-#include <emmintrin.h>
+#  include <emmintrin.h>
 
 // The following (left) shifts cause the top 5 bits of the mask components to
 // line up with the corresponding components in an SkPMColor.
 // Note that the mask's RGB16 order may differ from the SkPMColor order.
-#define SK_R16x5_R32x5_SHIFT (SK_R32_SHIFT - SK_R16_SHIFT - SK_R16_BITS + 5)
-#define SK_G16x5_G32x5_SHIFT (SK_G32_SHIFT - SK_G16_SHIFT - SK_G16_BITS + 5)
-#define SK_B16x5_B32x5_SHIFT (SK_B32_SHIFT - SK_B16_SHIFT - SK_B16_BITS + 5)
+#  define SK_R16x5_R32x5_SHIFT (SK_R32_SHIFT - SK_R16_SHIFT - SK_R16_BITS + 5)
+#  define SK_G16x5_G32x5_SHIFT (SK_G32_SHIFT - SK_G16_SHIFT - SK_G16_BITS + 5)
+#  define SK_B16x5_B32x5_SHIFT (SK_B32_SHIFT - SK_B16_SHIFT - SK_B16_BITS + 5)
 
-#if SK_R16x5_R32x5_SHIFT == 0
-#define SkPackedR16x5ToUnmaskedR32x5_SSE2(x) (x)
-#elif SK_R16x5_R32x5_SHIFT > 0
-#define SkPackedR16x5ToUnmaskedR32x5_SSE2(x) (_mm_slli_epi32(x, SK_R16x5_R32x5_SHIFT))
-#else
-#define SkPackedR16x5ToUnmaskedR32x5_SSE2(x) (_mm_srli_epi32(x, -SK_R16x5_R32x5_SHIFT))
-#endif
+#  if SK_R16x5_R32x5_SHIFT == 0
+#    define SkPackedR16x5ToUnmaskedR32x5_SSE2(x) (x)
+#  elif SK_R16x5_R32x5_SHIFT > 0
+#    define SkPackedR16x5ToUnmaskedR32x5_SSE2(x) (_mm_slli_epi32(x, SK_R16x5_R32x5_SHIFT))
+#  else
+#    define SkPackedR16x5ToUnmaskedR32x5_SSE2(x) (_mm_srli_epi32(x, -SK_R16x5_R32x5_SHIFT))
+#  endif
 
-#if SK_G16x5_G32x5_SHIFT == 0
-#define SkPackedG16x5ToUnmaskedG32x5_SSE2(x) (x)
-#elif SK_G16x5_G32x5_SHIFT > 0
-#define SkPackedG16x5ToUnmaskedG32x5_SSE2(x) (_mm_slli_epi32(x, SK_G16x5_G32x5_SHIFT))
-#else
-#define SkPackedG16x5ToUnmaskedG32x5_SSE2(x) (_mm_srli_epi32(x, -SK_G16x5_G32x5_SHIFT))
-#endif
+#  if SK_G16x5_G32x5_SHIFT == 0
+#    define SkPackedG16x5ToUnmaskedG32x5_SSE2(x) (x)
+#  elif SK_G16x5_G32x5_SHIFT > 0
+#    define SkPackedG16x5ToUnmaskedG32x5_SSE2(x) (_mm_slli_epi32(x, SK_G16x5_G32x5_SHIFT))
+#  else
+#    define SkPackedG16x5ToUnmaskedG32x5_SSE2(x) (_mm_srli_epi32(x, -SK_G16x5_G32x5_SHIFT))
+#  endif
 
-#if SK_B16x5_B32x5_SHIFT == 0
-#define SkPackedB16x5ToUnmaskedB32x5_SSE2(x) (x)
-#elif SK_B16x5_B32x5_SHIFT > 0
-#define SkPackedB16x5ToUnmaskedB32x5_SSE2(x) (_mm_slli_epi32(x, SK_B16x5_B32x5_SHIFT))
-#else
-#define SkPackedB16x5ToUnmaskedB32x5_SSE2(x) (_mm_srli_epi32(x, -SK_B16x5_B32x5_SHIFT))
-#endif
+#  if SK_B16x5_B32x5_SHIFT == 0
+#    define SkPackedB16x5ToUnmaskedB32x5_SSE2(x) (x)
+#  elif SK_B16x5_B32x5_SHIFT > 0
+#    define SkPackedB16x5ToUnmaskedB32x5_SSE2(x) (_mm_slli_epi32(x, SK_B16x5_B32x5_SHIFT))
+#  else
+#    define SkPackedB16x5ToUnmaskedB32x5_SSE2(x) (_mm_srli_epi32(x, -SK_B16x5_B32x5_SHIFT))
+#  endif
 
-static __m128i blend_lcd16_sse2(__m128i& src, __m128i& dst, __m128i& mask, __m128i& srcA) noexcept {
+static __m128i blend_lcd16_sse2(__m128i& src, __m128i& dst, __m128i& mask, __m128i& srcA) {
   // In the following comments, the components of src, dst and mask are
   // abbreviated as (s)rc, (d)st, and (m)ask. Color components are marked
   // by an R, G, B, or A suffix. Components of one of the four pixels that
@@ -212,7 +212,7 @@ static __m128i blend_lcd16_sse2(__m128i& src, __m128i& dst, __m128i& mask, __m12
   return _mm_packus_epi16(resultLo, resultHi);
 }
 
-static __m128i blend_lcd16_opaque_sse2(__m128i& src, __m128i& dst, __m128i& mask) noexcept {
+static __m128i blend_lcd16_opaque_sse2(__m128i& src, __m128i& dst, __m128i& mask) {
   // In the following comments, the components of src, dst and mask are
   // abbreviated as (s)rc, (d)st, and (m)ask. Color components are marked
   // by an R, G, B, or A suffix. Components of one of the four pixels that
@@ -290,8 +290,7 @@ static __m128i blend_lcd16_opaque_sse2(__m128i& src, __m128i& dst, __m128i& mask
       _mm_packus_epi16(resultLo, resultHi), _mm_set1_epi32(SK_A32_MASK << SK_A32_SHIFT));
 }
 
-void blit_row_lcd16(
-    SkPMColor dst[], const uint16_t mask[], SkColor src, int width, SkPMColor) noexcept {
+void blit_row_lcd16(SkPMColor dst[], const uint16_t mask[], SkColor src, int width, SkPMColor) {
   if (width <= 0) {
     return;
   }
@@ -360,7 +359,7 @@ void blit_row_lcd16(
 }
 
 void blit_row_lcd16_opaque(
-    SkPMColor dst[], const uint16_t mask[], SkColor src, int width, SkPMColor opaqueDst) noexcept {
+    SkPMColor dst[], const uint16_t mask[], SkColor src, int width, SkPMColor opaqueDst) {
   if (width <= 0) {
     return;
   }
@@ -424,12 +423,12 @@ void blit_row_lcd16_opaque(
 }
 
 #elif defined(SK_ARM_HAS_NEON)
-#include <arm_neon.h>
+#  include <arm_neon.h>
 
-#define NEON_A (SK_A32_SHIFT / 8)
-#define NEON_R (SK_R32_SHIFT / 8)
-#define NEON_G (SK_G32_SHIFT / 8)
-#define NEON_B (SK_B32_SHIFT / 8)
+#  define NEON_A (SK_A32_SHIFT / 8)
+#  define NEON_R (SK_R32_SHIFT / 8)
+#  define NEON_G (SK_G32_SHIFT / 8)
+#  define NEON_B (SK_B32_SHIFT / 8)
 
 static inline uint8x8_t blend_32_neon(uint8x8_t src, uint8x8_t dst, uint16x8_t scale) {
   int16x8_t src_wide, dst_wide;
@@ -672,8 +671,8 @@ const SkPixmap* SkARGB32_Blitter::justAnOpaqueColor(uint32_t* value) {
 }
 
 #if defined _WIN32  // disable warning : local variable used without having been initialized
-#pragma warning(push)
-#pragma warning(disable : 4701)
+#  pragma warning(push)
+#  pragma warning(disable : 4701)
 #endif
 
 void SkARGB32_Blitter::blitH(int x, int y, int width) {
@@ -882,7 +881,7 @@ void SkARGB32_Blitter::blitRect(int x, int y, int width, int height) {
 }
 
 #if defined _WIN32
-#pragma warning(pop)
+#  pragma warning(pop)
 #endif
 
 ///////////////////////////////////////////////////////////////////////
@@ -940,8 +939,7 @@ void SkARGB32_Black_Blitter::blitAntiV2(int x, int y, U8CPU a0, U8CPU a1) {
 // Special version of SkBlitRow::Factory32 that knows we're in kSrc_Mode,
 // instead of kSrcOver_Mode
 static void blend_srcmode(
-    SkPMColor* SK_RESTRICT device, const SkPMColor* SK_RESTRICT span, int count,
-    U8CPU aa) noexcept {
+    SkPMColor* SK_RESTRICT device, const SkPMColor* SK_RESTRICT span, int count, U8CPU aa) {
   int aa256 = SkAlpha255To256(aa);
   for (int i = 0; i < count; ++i) {
     device[i] = SkFourByteInterp256(span[i], device[i], aa256);
@@ -1167,7 +1165,7 @@ static void drive(
 }
 #endif
 
-static void blend_row_A8(SkPMColor* dst, const void* mask, const SkPMColor* src, int n) noexcept {
+static void blend_row_A8(SkPMColor* dst, const void* mask, const SkPMColor* src, int n) {
   auto cov = (const uint8_t*)mask;
 
 #ifdef SK_SUPPORT_LEGACY_A8_MASKBLITTER
@@ -1177,17 +1175,15 @@ static void blend_row_A8(SkPMColor* dst, const void* mask, const SkPMColor* src,
     }
   }
 #else
-  drive(
-      dst, src, cov, n, [](U8x4 d, U8x4 s, U8x4 c) noexcept {
-        U8x4 s_aa = skvx::approx_scale(s, c),
-             alpha = skvx::shuffle<3, 3, 3, 3, 7, 7, 7, 7, 11, 11, 11, 11, 15, 15, 15, 15>(s_aa);
-        return s_aa + skvx::approx_scale(d, 255 - alpha);
-      });
+  drive(dst, src, cov, n, [](U8x4 d, U8x4 s, U8x4 c) {
+    U8x4 s_aa = skvx::approx_scale(s, c),
+         alpha = skvx::shuffle<3, 3, 3, 3, 7, 7, 7, 7, 11, 11, 11, 11, 15, 15, 15, 15>(s_aa);
+    return s_aa + skvx::approx_scale(d, 255 - alpha);
+  });
 #endif
 }
 
-static void blend_row_A8_opaque(
-    SkPMColor* dst, const void* mask, const SkPMColor* src, int n) noexcept {
+static void blend_row_A8_opaque(SkPMColor* dst, const void* mask, const SkPMColor* src, int n) {
   auto cov = (const uint8_t*)mask;
 
 #ifdef SK_SUPPORT_LEGACY_A8_MASKBLITTER
@@ -1198,17 +1194,15 @@ static void blend_row_A8_opaque(
     }
   }
 #else
-  drive(
-      dst, src, cov, n, [](U8x4 d, U8x4 s, U8x4 c) noexcept {
-        return skvx::div255(
-            skvx::cast<uint16_t>(s) * skvx::cast<uint16_t>(c) +
-            skvx::cast<uint16_t>(d) * skvx::cast<uint16_t>(255 - c));
-      });
+  drive(dst, src, cov, n, [](U8x4 d, U8x4 s, U8x4 c) {
+    return skvx::div255(
+        skvx::cast<uint16_t>(s) * skvx::cast<uint16_t>(c) +
+        skvx::cast<uint16_t>(d) * skvx::cast<uint16_t>(255 - c));
+  });
 #endif
 }
 
-static void blend_row_lcd16(
-    SkPMColor* dst, const void* vmask, const SkPMColor* src, int n) noexcept {
+static void blend_row_lcd16(SkPMColor* dst, const void* vmask, const SkPMColor* src, int n) {
   auto src_alpha_blend = [](int s, int d, int sa, int m) {
     return d + SkAlphaMul(s - SkAlphaMul(sa, d), m);
   };
@@ -1250,8 +1244,7 @@ static void blend_row_lcd16(
   }
 }
 
-static void blend_row_LCD16_opaque(
-    SkPMColor* dst, const void* vmask, const SkPMColor* src, int n) noexcept {
+static void blend_row_LCD16_opaque(SkPMColor* dst, const void* vmask, const SkPMColor* src, int n) {
   auto mask = (const uint16_t*)vmask;
 
   for (int i = 0; i < n; ++i) {

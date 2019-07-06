@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/ops/GrMeshDrawOp.h"
 #include "src/gpu/GrGpuCommandBuffer.h"
 #include "src/gpu/GrOpFlushState.h"
 #include "src/gpu/GrResourceProvider.h"
+#include "src/gpu/ops/GrMeshDrawOp.h"
 
-GrMeshDrawOp::GrMeshDrawOp(uint32_t classID) noexcept : INHERITED(classID) {}
+GrMeshDrawOp::GrMeshDrawOp(uint32_t classID) : INHERITED(classID) {}
 
 void GrMeshDrawOp::onPrepare(GrOpFlushState* state) { this->onPrepareDraws(state); }
 

@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/gl/GrGLTextureRenderTarget.h"
 #include "include/core/SkTraceMemoryDump.h"
 #include "include/gpu/GrContext.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrTexturePriv.h"
 #include "src/gpu/gl/GrGLGpu.h"
+#include "src/gpu/gl/GrGLTextureRenderTarget.h"
 
 GrGLTextureRenderTarget::GrGLTextureRenderTarget(
     GrGLGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc,

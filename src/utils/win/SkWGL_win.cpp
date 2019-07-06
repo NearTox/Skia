@@ -141,9 +141,9 @@ int SkWGLExtensions::selectFormat(
 namespace {
 
 #if defined(UNICODE)
-#define STR_LIT(X) L## #X
+#    define STR_LIT(X) L## #    X
 #else
-#define STR_LIT(X) #X
+#    define STR_LIT(X) #    X
 #endif
 
 #define DUMMY_CLASS STR_LIT("DummyClass")
@@ -198,7 +198,7 @@ void destroy_dummy_window(HWND dummy) {
 }
 }  // namespace
 
-#define GET_PROC(NAME, SUFFIX) f##NAME = (NAME##Proc)wglGetProcAddress("wgl" #NAME #SUFFIX)
+#  define GET_PROC(NAME, SUFFIX) f##NAME = (NAME##Proc)wglGetProcAddress("wgl" #  NAME #  SUFFIX)
 
 SkWGLExtensions::GetExtensionsStringProc SkWGLExtensions::fGetExtensionsString = nullptr;
 SkWGLExtensions::ChoosePixelFormatProc SkWGLExtensions::fChoosePixelFormat = nullptr;

@@ -7,7 +7,6 @@
 
 #include "src/gpu/ccpr/GrCCFiller.h"
 
-#include <stdlib.h>
 #include "include/core/SkPath.h"
 #include "include/core/SkPoint.h"
 #include "src/core/SkMathPriv.h"
@@ -16,6 +15,7 @@
 #include "src/gpu/GrGpuCommandBuffer.h"
 #include "src/gpu/GrOnFlushResourceProvider.h"
 #include "src/gpu/GrOpFlushState.h"
+#include <stdlib.h>
 
 using TriPointInstance = GrCCCoverageProcessor::TriPointInstance;
 using QuadPointInstance = GrCCCoverageProcessor::QuadPointInstance;

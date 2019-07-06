@@ -17,9 +17,9 @@ namespace SkSL {
  * ignored.
  */
 struct Position {
-  constexpr Position() noexcept : fLine(-1), fColumn(-1) {}
+  Position() : fLine(-1), fColumn(-1) {}
 
-  constexpr Position(int line, int column) noexcept : fLine(line), fColumn(column) {}
+  Position(int line, int column) : fLine(line), fColumn(column) {}
 
   String description() const { return to_string(fLine); }
 

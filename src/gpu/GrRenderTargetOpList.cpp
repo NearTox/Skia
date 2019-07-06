@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/GrRenderTargetOpList.h"
 #include "include/private/GrAuditTrail.h"
 #include "include/private/GrRecordingContext.h"
 #include "src/core/SkExchange.h"
@@ -18,6 +17,7 @@
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrRect.h"
 #include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/GrRenderTargetOpList.h"
 #include "src/gpu/GrResourceAllocator.h"
 #include "src/gpu/ops/GrClearOp.h"
 #include "src/gpu/ops/GrCopySurfaceOp.h"
@@ -34,21 +34,19 @@ using DstProxy = GrXferProcessor::DstProxy;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static inline bool can_reorder(const SkRect& a, const SkRect& b) noexcept {
-  return !GrRectsOverlap(a, b);
-}
+static inline bool can_reorder(const SkRect& a, const SkRect& b) { return !GrRectsOverlap(a, b); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline GrRenderTargetOpList::OpChain::List::List(std::unique_ptr<GrOp> op) noexcept
+inline GrRenderTargetOpList::OpChain::List::List(std::unique_ptr<GrOp> op)
     : fHead(std::move(op)), fTail(fHead.get()) {
   this->validate();
 }
 
-inline GrRenderTargetOpList::OpChain::List::List(List&& that) noexcept { *this = std::move(that); }
+inline GrRenderTargetOpList::OpChain::List::List(List&& that) { *this = std::move(that); }
 
 inline GrRenderTargetOpList::OpChain::List& GrRenderTargetOpList::OpChain::List::operator=(
-    List&& that) noexcept {
+    List&& that) {
   fHead = std::move(that.fHead);
   fTail = that.fTail;
   that.fTail = nullptr;
@@ -110,7 +108,7 @@ inline void GrRenderTargetOpList::OpChain::List::pushTail(std::unique_ptr<GrOp> 
   fTail = fTail->nextInChain();
 }
 
-inline void GrRenderTargetOpList::OpChain::List::validate() const noexcept {
+inline void GrRenderTargetOpList::OpChain::List::validate() const {
 #ifdef SK_DEBUG
   if (fHead) {
     SkASSERT(fTail);
@@ -123,7 +121,7 @@ inline void GrRenderTargetOpList::OpChain::List::validate() const noexcept {
 
 GrRenderTargetOpList::OpChain::OpChain(
     std::unique_ptr<GrOp> op, GrProcessorSet::Analysis processorAnalysis,
-    GrAppliedClip* appliedClip, const DstProxy* dstProxy) noexcept
+    GrAppliedClip* appliedClip, const DstProxy* dstProxy)
     : fList{std::move(op)}, fProcessorAnalysis(processorAnalysis), fAppliedClip(appliedClip) {
   if (fProcessorAnalysis.requiresDstTexture()) {
     SkASSERT(dstProxy && dstProxy->proxy());
@@ -332,7 +330,7 @@ std::unique_ptr<GrOp> GrRenderTargetOpList::OpChain::appendOp(
   return nullptr;
 }
 
-inline void GrRenderTargetOpList::OpChain::validate() const noexcept {
+inline void GrRenderTargetOpList::OpChain::validate() const {
 #ifdef SK_DEBUG
   fList.validate();
   for (const auto& op : GrOp::ChainRange<>(fList.head())) {
@@ -501,7 +499,7 @@ void GrRenderTargetOpList::endFlush() {
   INHERITED::endFlush();
 }
 
-void GrRenderTargetOpList::discard() noexcept {
+void GrRenderTargetOpList::discard() {
   // Discard calls to in-progress opLists are ignored. Calls at the start update the
   // opLists' color & stencil load ops.
   if (this->isEmpty()) {
@@ -510,9 +508,9 @@ void GrRenderTargetOpList::discard() noexcept {
   }
 }
 
-void GrRenderTargetOpList::setStencilLoadOp(GrLoadOp op) noexcept { fStencilLoadOp = op; }
+void GrRenderTargetOpList::setStencilLoadOp(GrLoadOp op) { fStencilLoadOp = op; }
 
-void GrRenderTargetOpList::setColorLoadOp(GrLoadOp op, const SkPMColor4f& color) noexcept {
+void GrRenderTargetOpList::setColorLoadOp(GrLoadOp op, const SkPMColor4f& color) {
   fColorLoadOp = op;
   fLoadClearColor = color;
 }
@@ -565,7 +563,7 @@ bool GrRenderTargetOpList::copySurface(
 
 void GrRenderTargetOpList::purgeOpsWithUninstantiatedProxies() {
   bool hasUninstantiatedProxy = false;
-  auto checkInstantiation = [&hasUninstantiatedProxy](GrSurfaceProxy * p, GrMipMapped) noexcept {
+  auto checkInstantiation = [&hasUninstantiatedProxy](GrSurfaceProxy* p, GrMipMapped) {
     if (!p->isInstantiated()) {
       hasUninstantiatedProxy = true;
     }

@@ -14,7 +14,7 @@
 #ifdef SK_BUILD_FOR_WIN
 // Windows gives warnings about inheriting asTextureProxy/asRenderTargetProxy via dominance.
 #pragma warning(push)
-#pragma warning(disable : 4250)
+#  pragma warning(disable : 4250)
 #endif
 
 // This class delays the acquisition of RenderTargets that are also textures until

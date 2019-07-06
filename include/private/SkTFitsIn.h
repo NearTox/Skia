@@ -8,8 +8,8 @@
 #ifndef SkTFitsIn_DEFINED
 #define SkTFitsIn_DEFINED
 
-#include <stdint.h>
 #include <limits>
+#include <stdint.h>
 #include <type_traits>
 
 /**

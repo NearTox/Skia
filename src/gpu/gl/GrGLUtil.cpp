@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/gl/GrGLUtil.h"
-#include <stdio.h>
 #include "include/core/SkMatrix.h"
 #include "include/private/GrTypesPriv.h"
+#include "src/gpu/gl/GrGLUtil.h"
+#include <stdio.h>
 
 void GrGLClearErr(const GrGLInterface* gl) {
   while (GR_GL_NO_ERROR != gl->fFunctions.fGetError()) {
@@ -191,8 +191,7 @@ void GrGLGetDriverInfo(
     // We presume we're on the Intel driver since it hasn't identified itself as Mesa.
     *outDriver = kIntel_GrGLDriver;
 
-    // This is how the macOS version strings are structured. This might be different on
-    // different
+    // This is how the macOS version strings are structured. This might be different on different
     // OSes.
     int n = sscanf(
         versionString, "%d.%d INTEL-%d.%d.%d", &major, &minor, &driverMajor, &driverMinor,

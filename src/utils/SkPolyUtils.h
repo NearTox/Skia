@@ -62,7 +62,7 @@ bool SkOffsetSimplePolygon(
  */
 bool SkComputeRadialSteps(
     const SkVector& offset0, const SkVector& offset1, SkScalar offset, SkScalar* rotSin,
-    SkScalar* rotCos, int* n) noexcept;
+    SkScalar* rotCos, int* n);
 
 /**
  * Determine winding direction for a polygon.
@@ -73,7 +73,7 @@ bool SkComputeRadialSteps(
  * @return 1 for cw, -1 for ccw, and 0 if zero signed area (either degenerate or self-intersecting).
  *         The y-axis is assumed to be pointing down.
  */
-int SkGetPolygonWinding(const SkPoint* polygonVerts, int polygonSize) noexcept;
+int SkGetPolygonWinding(const SkPoint* polygonVerts, int polygonSize);
 
 /**
  * Determine whether a polygon is convex or not.
@@ -82,7 +82,7 @@ int SkGetPolygonWinding(const SkPoint* polygonVerts, int polygonSize) noexcept;
  * @param polygonSize  Number of vertices in the polygon.
  * @return true if the polygon is convex, false otherwise.
  */
-bool SkIsConvexPolygon(const SkPoint* polygonVerts, int polygonSize) noexcept;
+bool SkIsConvexPolygon(const SkPoint* polygonVerts, int polygonSize);
 
 /**
  * Determine whether a polygon is simple (i.e., not self-intersecting) or not.

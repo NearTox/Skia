@@ -21,27 +21,24 @@
 
 namespace {  // NOLINT(google-build-namespaces)
 
+// The default SkNx<N,T> just proxies down to a pair of SkNx<N/2, T>.
 template <int N, typename T>
 struct SkNx {
   typedef SkNx<N / 2, T> Half;
 
   Half fLo, fHi;
 
-  constexpr AI SkNx() noexcept : fLo(), fHi() {}
-  constexpr AI SkNx(const Half& lo, const Half& hi) noexcept : fLo(lo), fHi(hi) {}
+  AI SkNx() = default;
+  AI SkNx(const Half& lo, const Half& hi) : fLo(lo), fHi(hi) {}
 
-  constexpr AI SkNx(T v) noexcept : fLo(v), fHi(v) {}
+  AI SkNx(T v) : fLo(v), fHi(v) {}
 
-  constexpr AI SkNx(T a, T b) noexcept : fLo(a), fHi(b) { static_assert(N == 2, ""); }
-  constexpr AI SkNx(T a, T b, T c, T d) noexcept : fLo(a, b), fHi(c, d) {
-    static_assert(N == 4, "");
-  }
-  constexpr AI SkNx(T a, T b, T c, T d, T e, T f, T g, T h) noexcept
-      : fLo(a, b, c, d), fHi(e, f, g, h) {
+  AI SkNx(T a, T b) : fLo(a), fHi(b) { static_assert(N == 2, ""); }
+  AI SkNx(T a, T b, T c, T d) : fLo(a, b), fHi(c, d) { static_assert(N == 4, ""); }
+  AI SkNx(T a, T b, T c, T d, T e, T f, T g, T h) : fLo(a, b, c, d), fHi(e, f, g, h) {
     static_assert(N == 8, "");
   }
-  constexpr AI SkNx(
-      T a, T b, T c, T d, T e, T f, T g, T h, T i, T j, T k, T l, T m, T n, T o, T p) noexcept
+  AI SkNx(T a, T b, T c, T d, T e, T f, T g, T h, T i, T j, T k, T l, T m, T n, T o, T p)
       : fLo(a, b, c, d, e, f, g, h), fHi(i, j, k, l, m, n, o, p) {
     static_assert(N == 16, "");
   }
@@ -159,8 +156,8 @@ template <typename T>
 struct SkNx<1, T> {
   T fVal;
 
-  constexpr AI SkNx() noexcept : fVal() {}
-  constexpr AI SkNx(T v) noexcept : fVal(v) {}
+  AI SkNx() = default;
+  AI SkNx(T v) : fVal(v) {}
 
   // Android complains against unused parameters, so we guard it
   AI T operator[](int SkDEBUGCODE(k)) const {
@@ -305,52 +302,52 @@ struct SkNx<1, T> {
 #define V                      \
   template <int N, typename T> \
   AI static SkNx<N, T>
-V operator+(T x, const SkNx<N, T>& y) noexcept { return SkNx<N, T>(x) + y; }
-V operator-(T x, const SkNx<N, T>& y) noexcept { return SkNx<N, T>(x) - y; }
-V operator*(T x, const SkNx<N, T>& y) noexcept { return SkNx<N, T>(x) * y; }
-V operator/(T x, const SkNx<N, T>& y) noexcept { return SkNx<N, T>(x) / y; }
-V operator&(T x, const SkNx<N, T>& y) noexcept { return SkNx<N, T>(x) & y; }
-V operator|(T x, const SkNx<N, T>& y) noexcept { return SkNx<N, T>(x) | y; }
-V operator^(T x, const SkNx<N, T>& y) noexcept { return SkNx<N, T>(x) ^ y; }
-V operator==(T x, const SkNx<N, T>& y) noexcept { return SkNx<N, T>(x) == y; }
-V operator!=(T x, const SkNx<N, T>& y) noexcept { return SkNx<N, T>(x) != y; }
-V operator<=(T x, const SkNx<N, T>& y) noexcept { return SkNx<N, T>(x) <= y; }
-V operator>=(T x, const SkNx<N, T>& y) noexcept { return SkNx<N, T>(x) >= y; }
-V operator<(T x, const SkNx<N, T>& y) noexcept { return SkNx<N, T>(x) < y; }
-V operator>(T x, const SkNx<N, T>& y) noexcept { return SkNx<N, T>(x) > y; }
+V operator+(T x, const SkNx<N, T>& y) { return SkNx<N, T>(x) + y; }
+V operator-(T x, const SkNx<N, T>& y) { return SkNx<N, T>(x) - y; }
+V operator*(T x, const SkNx<N, T>& y) { return SkNx<N, T>(x) * y; }
+V operator/(T x, const SkNx<N, T>& y) { return SkNx<N, T>(x) / y; }
+V operator&(T x, const SkNx<N, T>& y) { return SkNx<N, T>(x) & y; }
+V operator|(T x, const SkNx<N, T>& y) { return SkNx<N, T>(x) | y; }
+V operator^(T x, const SkNx<N, T>& y) { return SkNx<N, T>(x) ^ y; }
+V operator==(T x, const SkNx<N, T>& y) { return SkNx<N, T>(x) == y; }
+V operator!=(T x, const SkNx<N, T>& y) { return SkNx<N, T>(x) != y; }
+V operator<=(T x, const SkNx<N, T>& y) { return SkNx<N, T>(x) <= y; }
+V operator>=(T x, const SkNx<N, T>& y) { return SkNx<N, T>(x) >= y; }
+V operator<(T x, const SkNx<N, T>& y) { return SkNx<N, T>(x) < y; }
+V operator>(T x, const SkNx<N, T>& y) { return SkNx<N, T>(x) > y; }
 
-V operator+(const SkNx<N, T>& x, T y) noexcept { return x + SkNx<N, T>(y); }
-V operator-(const SkNx<N, T>& x, T y) noexcept { return x - SkNx<N, T>(y); }
-V operator*(const SkNx<N, T>& x, T y) noexcept { return x * SkNx<N, T>(y); }
-V operator/(const SkNx<N, T>& x, T y) noexcept { return x / SkNx<N, T>(y); }
-V operator&(const SkNx<N, T>& x, T y) noexcept { return x & SkNx<N, T>(y); }
-V operator|(const SkNx<N, T>& x, T y) noexcept { return x | SkNx<N, T>(y); }
-V operator^(const SkNx<N, T>& x, T y) noexcept { return x ^ SkNx<N, T>(y); }
-V operator==(const SkNx<N, T>& x, T y) noexcept { return x == SkNx<N, T>(y); }
-V operator!=(const SkNx<N, T>& x, T y) noexcept { return x != SkNx<N, T>(y); }
-V operator<=(const SkNx<N, T>& x, T y) noexcept { return x <= SkNx<N, T>(y); }
-V operator>=(const SkNx<N, T>& x, T y) noexcept { return x >= SkNx<N, T>(y); }
-V operator<(const SkNx<N, T>& x, T y) noexcept { return x < SkNx<N, T>(y); }
-V operator>(const SkNx<N, T>& x, T y) noexcept { return x > SkNx<N, T>(y); }
+V operator+(const SkNx<N, T>& x, T y) { return x + SkNx<N, T>(y); }
+V operator-(const SkNx<N, T>& x, T y) { return x - SkNx<N, T>(y); }
+V operator*(const SkNx<N, T>& x, T y) { return x * SkNx<N, T>(y); }
+V operator/(const SkNx<N, T>& x, T y) { return x / SkNx<N, T>(y); }
+V operator&(const SkNx<N, T>& x, T y) { return x & SkNx<N, T>(y); }
+V operator|(const SkNx<N, T>& x, T y) { return x | SkNx<N, T>(y); }
+V operator^(const SkNx<N, T>& x, T y) { return x ^ SkNx<N, T>(y); }
+V operator==(const SkNx<N, T>& x, T y) { return x == SkNx<N, T>(y); }
+V operator!=(const SkNx<N, T>& x, T y) { return x != SkNx<N, T>(y); }
+V operator<=(const SkNx<N, T>& x, T y) { return x <= SkNx<N, T>(y); }
+V operator>=(const SkNx<N, T>& x, T y) { return x >= SkNx<N, T>(y); }
+V operator<(const SkNx<N, T>& x, T y) { return x < SkNx<N, T>(y); }
+V operator>(const SkNx<N, T>& x, T y) { return x > SkNx<N, T>(y); }
 
-V& operator<<=(SkNx<N, T>& x, int bits) noexcept { return (x = x << bits); }
-V& operator>>=(SkNx<N, T>& x, int bits) noexcept { return (x = x >> bits); }
+V& operator<<=(SkNx<N, T>& x, int bits) { return (x = x << bits); }
+V& operator>>=(SkNx<N, T>& x, int bits) { return (x = x >> bits); }
 
-V& operator+=(SkNx<N, T>& x, const SkNx<N, T>& y) noexcept { return (x = x + y); }
-V& operator-=(SkNx<N, T>& x, const SkNx<N, T>& y) noexcept { return (x = x - y); }
-V& operator*=(SkNx<N, T>& x, const SkNx<N, T>& y) noexcept { return (x = x * y); }
-V& operator/=(SkNx<N, T>& x, const SkNx<N, T>& y) noexcept { return (x = x / y); }
-V& operator&=(SkNx<N, T>& x, const SkNx<N, T>& y) noexcept { return (x = x & y); }
-V& operator|=(SkNx<N, T>& x, const SkNx<N, T>& y) noexcept { return (x = x | y); }
-V& operator^=(SkNx<N, T>& x, const SkNx<N, T>& y) noexcept { return (x = x ^ y); }
+V& operator+=(SkNx<N, T>& x, const SkNx<N, T>& y) { return (x = x + y); }
+V& operator-=(SkNx<N, T>& x, const SkNx<N, T>& y) { return (x = x - y); }
+V& operator*=(SkNx<N, T>& x, const SkNx<N, T>& y) { return (x = x * y); }
+V& operator/=(SkNx<N, T>& x, const SkNx<N, T>& y) { return (x = x / y); }
+V& operator&=(SkNx<N, T>& x, const SkNx<N, T>& y) { return (x = x & y); }
+V& operator|=(SkNx<N, T>& x, const SkNx<N, T>& y) { return (x = x | y); }
+V& operator^=(SkNx<N, T>& x, const SkNx<N, T>& y) { return (x = x ^ y); }
 
-V& operator+=(SkNx<N, T>& x, T y) noexcept { return (x = x + SkNx<N, T>(y)); }
-V& operator-=(SkNx<N, T>& x, T y) noexcept { return (x = x - SkNx<N, T>(y)); }
-V& operator*=(SkNx<N, T>& x, T y) noexcept { return (x = x * SkNx<N, T>(y)); }
-V& operator/=(SkNx<N, T>& x, T y) noexcept { return (x = x / SkNx<N, T>(y)); }
-V& operator&=(SkNx<N, T>& x, T y) noexcept { return (x = x & SkNx<N, T>(y)); }
-V& operator|=(SkNx<N, T>& x, T y) noexcept { return (x = x | SkNx<N, T>(y)); }
-V& operator^=(SkNx<N, T>& x, T y) noexcept { return (x = x ^ SkNx<N, T>(y)); }
+V& operator+=(SkNx<N, T>& x, T y) { return (x = x + SkNx<N, T>(y)); }
+V& operator-=(SkNx<N, T>& x, T y) { return (x = x - SkNx<N, T>(y)); }
+V& operator*=(SkNx<N, T>& x, T y) { return (x = x * SkNx<N, T>(y)); }
+V& operator/=(SkNx<N, T>& x, T y) { return (x = x / SkNx<N, T>(y)); }
+V& operator&=(SkNx<N, T>& x, T y) { return (x = x & SkNx<N, T>(y)); }
+V& operator|=(SkNx<N, T>& x, T y) { return (x = x | SkNx<N, T>(y)); }
+V& operator^=(SkNx<N, T>& x, T y) { return (x = x ^ SkNx<N, T>(y)); }
 #undef V
 
 // SkNx<N,T> ~~> SkNx<N/2,T> + SkNx<N/2,T>
@@ -418,9 +415,9 @@ typedef SkNx<4, uint32_t> Sk4u;
 
 // Include platform specific specializations if available.
 #if !defined(SKNX_NO_SIMD) && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
-#include "include/private/SkNx_sse.h"
+#  include "include/private/SkNx_sse.h"
 #elif !defined(SKNX_NO_SIMD) && defined(SK_ARM_HAS_NEON)
-#include "include/private/SkNx_neon.h"
+#  include "include/private/SkNx_neon.h"
 #else
 
 AI static Sk4i Sk4f_round(const Sk4f& x) {

@@ -17,8 +17,8 @@
 #include "tools/timer/Timer.h"
 
 #if SK_SUPPORT_GPU
-#include "include/gpu/GrContext.h"
-#include "src/gpu/GrContextPriv.h"
+#  include "include/gpu/GrContext.h"
+#  include "src/gpu/GrContextPriv.h"
 #endif
 
 SkRandom gRand;

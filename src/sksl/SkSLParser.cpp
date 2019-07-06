@@ -5,6 +5,7 @@
  * found in the LICENSE file.
  */
 
+#include "stdio.h"
 #include "src/sksl/SkSLParser.h"
 #include "src/sksl/ast/SkSLASTBinaryExpression.h"
 #include "src/sksl/ast/SkSLASTBlock.h"
@@ -45,7 +46,6 @@
 #include "src/sksl/ir/SkSLModifiers.h"
 #include "src/sksl/ir/SkSLSymbolTable.h"
 #include "src/sksl/ir/SkSLType.h"
-#include "stdio.h"
 
 #ifndef SKSL_STANDALONE
 #include "include/private/SkOnce.h"

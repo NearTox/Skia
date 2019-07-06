@@ -10,20 +10,20 @@
 
 #include <cstdarg>
 #include <memory>
+#include "stdlib.h"
+#include "string.h"
 #include "src/sksl/SkSLDefines.h"
 #include "src/sksl/SkSLLexer.h"
 #include "src/sksl/SkSLString.h"
 #include "src/sksl/SkSLStringStream.h"
-#include "stdlib.h"
-#include "string.h"
 
 #ifndef SKSL_STANDALONE
 #include "include/core/SkTypes.h"
 #if SK_SUPPORT_GPU
 #include "include/gpu/GrContextOptions.h"
 #include "src/gpu/GrShaderCaps.h"
-#endif  // SK_SUPPORT_GPU
-#endif  // SKSL_STANDALONE
+#  endif  // SK_SUPPORT_GPU
+#endif    // SKSL_STANDALONE
 
 class GrShaderCaps;
 
@@ -51,7 +51,7 @@ enum GrGLSLGeneration {
   k320es_GrGLSLGeneration,
 };
 
-#define SKSL_CAPS_CLASS StandaloneShaderCaps
+#  define SKSL_CAPS_CLASS StandaloneShaderCaps
 class StandaloneShaderCaps {
  public:
   GrGLSLGeneration generation() const { return k400_GrGLSLGeneration; }

@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/effects/GrConvexPolyEffect.h"
 #include "src/core/SkPathPriv.h"
+#include "src/gpu/effects/GrConvexPolyEffect.h"
 #include "src/gpu/effects/generated/GrAARectEffect.h"
 #include "src/gpu/effects/generated/GrConstColorProcessor.h"
 #include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
@@ -26,8 +26,7 @@ class GrGLConvexPolyEffect : public GrGLSLFragmentProcessor {
 
   void emitCode(EmitArgs&) override;
 
-  static inline void GenKey(
-      const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) noexcept;
+  static inline void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*);
 
  protected:
   void onSetData(const GrGLSLProgramDataManager&, const GrFragmentProcessor&) override;
@@ -78,7 +77,7 @@ void GrGLConvexPolyEffect::onSetData(
 }
 
 void GrGLConvexPolyEffect::GenKey(
-    const GrProcessor& processor, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
+    const GrProcessor& processor, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
   const GrConvexPolyEffect& cpe = processor.cast<GrConvexPolyEffect>();
   GR_STATIC_ASSERT(kGrClipEdgeTypeCnt <= 8);
   uint32_t key = (cpe.getEdgeCount() << 3) | (int)cpe.getEdgeType();
@@ -165,7 +164,7 @@ std::unique_ptr<GrFragmentProcessor> GrConvexPolyEffect::Make(
 GrConvexPolyEffect::~GrConvexPolyEffect() {}
 
 void GrConvexPolyEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   GrGLConvexPolyEffect::GenKey(*this, caps, b);
 }
 
@@ -173,8 +172,7 @@ GrGLSLFragmentProcessor* GrConvexPolyEffect::onCreateGLSLInstance() const {
   return new GrGLConvexPolyEffect;
 }
 
-GrConvexPolyEffect::GrConvexPolyEffect(
-    GrClipEdgeType edgeType, int n, const SkScalar edges[]) noexcept
+GrConvexPolyEffect::GrConvexPolyEffect(GrClipEdgeType edgeType, int n, const SkScalar edges[])
     : INHERITED(kGrConvexPolyEffect_ClassID, kCompatibleWithCoverageAsAlpha_OptimizationFlag),
       fEdgeType(edgeType),
       fEdgeCount(n) {
@@ -188,7 +186,7 @@ GrConvexPolyEffect::GrConvexPolyEffect(
   }
 }
 
-GrConvexPolyEffect::GrConvexPolyEffect(const GrConvexPolyEffect& that) noexcept
+GrConvexPolyEffect::GrConvexPolyEffect(const GrConvexPolyEffect& that)
     : INHERITED(kGrConvexPolyEffect_ClassID, kCompatibleWithCoverageAsAlpha_OptimizationFlag),
       fEdgeType(that.fEdgeType),
       fEdgeCount(that.fEdgeCount) {
@@ -199,7 +197,7 @@ std::unique_ptr<GrFragmentProcessor> GrConvexPolyEffect::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new GrConvexPolyEffect(*this));
 }
 
-bool GrConvexPolyEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrConvexPolyEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrConvexPolyEffect& cpe = other.cast<GrConvexPolyEffect>();
   // ignore the fact that 0 == -0 and just use memcmp.
   return (

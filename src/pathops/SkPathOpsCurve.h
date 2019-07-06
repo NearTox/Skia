@@ -20,14 +20,14 @@ struct SkOpCurve {
   SkScalar fWeight;
   SkDEBUGCODE(SkPath::Verb fVerb);
 
-  const SkPoint& operator[](int n) const noexcept {
+  const SkPoint& operator[](int n) const {
     SkASSERT(n >= 0 && n <= SkPathOpsVerbToPoints(fVerb));
     return fPts[n];
   }
 
   void dump() const;
 
-  void set(const SkDQuad& quad) noexcept {
+  void set(const SkDQuad& quad) {
     for (int index = 0; index < SkDQuad::kPointCount; ++index) {
       fPts[index] = quad[index].asSkPoint();
     }
@@ -35,7 +35,7 @@ struct SkOpCurve {
     SkDEBUGCODE(fVerb = SkPath::kQuad_Verb);
   }
 
-  void set(const SkDCubic& cubic) noexcept {
+  void set(const SkDCubic& cubic) {
     for (int index = 0; index < SkDCubic::kPointCount; ++index) {
       fPts[index] = cubic[index].asSkPoint();
     }
@@ -53,12 +53,12 @@ struct SkDCurve {
   };
   SkDEBUGCODE(SkPath::Verb fVerb);
 
-  const SkDPoint& operator[](int n) const noexcept {
+  const SkDPoint& operator[](int n) const {
     SkASSERT(n >= 0 && n <= SkPathOpsVerbToPoints(fVerb));
     return fCubic[n];
   }
 
-  SkDPoint& operator[](int n) noexcept {
+  SkDPoint& operator[](int n) {
     SkASSERT(n >= 0 && n <= SkPathOpsVerbToPoints(fVerb));
     return fCubic[n];
   }
@@ -80,8 +80,8 @@ struct SkDCurve {
 
 class SkDCurveSweep {
  public:
-  bool isCurve() const noexcept { return fIsCurve; }
-  bool isOrdered() const noexcept { return fOrdered; }
+  bool isCurve() const { return fIsCurve; }
+  bool isOrdered() const { return fOrdered; }
   void setCurveHullSweep(SkPath::Verb verb);
 
   SkDCurve fCurve;
@@ -101,19 +101,19 @@ static SkDPoint dline_xy_at_t(const SkPoint a[2], SkScalar, double t) {
   return line.ptAtT(t);
 }
 
-static SkDPoint dquad_xy_at_t(const SkPoint a[3], SkScalar, double t) noexcept {
+static SkDPoint dquad_xy_at_t(const SkPoint a[3], SkScalar, double t) {
   SkDQuad quad;
   quad.set(a);
   return quad.ptAtT(t);
 }
 
-static SkDPoint dconic_xy_at_t(const SkPoint a[3], SkScalar weight, double t) noexcept {
+static SkDPoint dconic_xy_at_t(const SkPoint a[3], SkScalar weight, double t) {
   SkDConic conic;
   conic.set(a, weight);
   return conic.ptAtT(t);
 }
 
-static SkDPoint dcubic_xy_at_t(const SkPoint a[4], SkScalar, double t) noexcept {
+static SkDPoint dcubic_xy_at_t(const SkPoint a[4], SkScalar, double t) {
   SkDCubic cubic;
   cubic.set(a);
   return cubic.ptAtT(t);
@@ -124,11 +124,11 @@ static SkDPoint (*const CurveDPointAtT[])(const SkPoint[], SkScalar, double) = {
 
 static SkDPoint ddline_xy_at_t(const SkDCurve& c, double t) { return c.fLine.ptAtT(t); }
 
-static SkDPoint ddquad_xy_at_t(const SkDCurve& c, double t) noexcept { return c.fQuad.ptAtT(t); }
+static SkDPoint ddquad_xy_at_t(const SkDCurve& c, double t) { return c.fQuad.ptAtT(t); }
 
-static SkDPoint ddconic_xy_at_t(const SkDCurve& c, double t) noexcept { return c.fConic.ptAtT(t); }
+static SkDPoint ddconic_xy_at_t(const SkDCurve& c, double t) { return c.fConic.ptAtT(t); }
 
-static SkDPoint ddcubic_xy_at_t(const SkDCurve& c, double t) noexcept { return c.fCubic.ptAtT(t); }
+static SkDPoint ddcubic_xy_at_t(const SkDCurve& c, double t) { return c.fCubic.ptAtT(t); }
 
 static SkDPoint (*const CurveDDPointAtT[])(const SkDCurve&, double) = {
     nullptr, ddline_xy_at_t, ddquad_xy_at_t, ddconic_xy_at_t, ddcubic_xy_at_t};
@@ -137,40 +137,40 @@ static SkPoint fline_xy_at_t(const SkPoint a[2], SkScalar weight, double t) {
   return dline_xy_at_t(a, weight, t).asSkPoint();
 }
 
-static SkPoint fquad_xy_at_t(const SkPoint a[3], SkScalar weight, double t) noexcept {
+static SkPoint fquad_xy_at_t(const SkPoint a[3], SkScalar weight, double t) {
   return dquad_xy_at_t(a, weight, t).asSkPoint();
 }
 
-static SkPoint fconic_xy_at_t(const SkPoint a[3], SkScalar weight, double t) noexcept {
+static SkPoint fconic_xy_at_t(const SkPoint a[3], SkScalar weight, double t) {
   return dconic_xy_at_t(a, weight, t).asSkPoint();
 }
 
-static SkPoint fcubic_xy_at_t(const SkPoint a[4], SkScalar weight, double t) noexcept {
+static SkPoint fcubic_xy_at_t(const SkPoint a[4], SkScalar weight, double t) {
   return dcubic_xy_at_t(a, weight, t).asSkPoint();
 }
 
 static SkPoint (*const CurvePointAtT[])(const SkPoint[], SkScalar, double) = {
     nullptr, fline_xy_at_t, fquad_xy_at_t, fconic_xy_at_t, fcubic_xy_at_t};
 
-static SkDVector dline_dxdy_at_t(const SkPoint a[2], SkScalar, double) noexcept {
+static SkDVector dline_dxdy_at_t(const SkPoint a[2], SkScalar, double) {
   SkDLine line;
   line.set(a);
   return line[1] - line[0];
 }
 
-static SkDVector dquad_dxdy_at_t(const SkPoint a[3], SkScalar, double t) noexcept {
+static SkDVector dquad_dxdy_at_t(const SkPoint a[3], SkScalar, double t) {
   SkDQuad quad;
   quad.set(a);
   return quad.dxdyAtT(t);
 }
 
-static SkDVector dconic_dxdy_at_t(const SkPoint a[3], SkScalar weight, double t) noexcept {
+static SkDVector dconic_dxdy_at_t(const SkPoint a[3], SkScalar weight, double t) {
   SkDConic conic;
   conic.set(a, weight);
   return conic.dxdyAtT(t);
 }
 
-static SkDVector dcubic_dxdy_at_t(const SkPoint a[4], SkScalar, double t) noexcept {
+static SkDVector dcubic_dxdy_at_t(const SkPoint a[4], SkScalar, double t) {
   SkDCubic cubic;
   cubic.set(a);
   return cubic.dxdyAtT(t);
@@ -179,38 +179,30 @@ static SkDVector dcubic_dxdy_at_t(const SkPoint a[4], SkScalar, double t) noexce
 static SkDVector (*const CurveDSlopeAtT[])(const SkPoint[], SkScalar, double) = {
     nullptr, dline_dxdy_at_t, dquad_dxdy_at_t, dconic_dxdy_at_t, dcubic_dxdy_at_t};
 
-static SkDVector ddline_dxdy_at_t(const SkDCurve& c, double) noexcept {
+static SkDVector ddline_dxdy_at_t(const SkDCurve& c, double) {
   return c.fLine.fPts[1] - c.fLine.fPts[0];
 }
 
-static SkDVector ddquad_dxdy_at_t(const SkDCurve& c, double t) noexcept {
-  return c.fQuad.dxdyAtT(t);
-}
+static SkDVector ddquad_dxdy_at_t(const SkDCurve& c, double t) { return c.fQuad.dxdyAtT(t); }
 
-static SkDVector ddconic_dxdy_at_t(const SkDCurve& c, double t) noexcept {
-  return c.fConic.dxdyAtT(t);
-}
+static SkDVector ddconic_dxdy_at_t(const SkDCurve& c, double t) { return c.fConic.dxdyAtT(t); }
 
-static SkDVector ddcubic_dxdy_at_t(const SkDCurve& c, double t) noexcept {
-  return c.fCubic.dxdyAtT(t);
-}
+static SkDVector ddcubic_dxdy_at_t(const SkDCurve& c, double t) { return c.fCubic.dxdyAtT(t); }
 
 static SkDVector (*const CurveDDSlopeAtT[])(const SkDCurve&, double) = {
     nullptr, ddline_dxdy_at_t, ddquad_dxdy_at_t, ddconic_dxdy_at_t, ddcubic_dxdy_at_t};
 
-static SkVector fline_dxdy_at_t(const SkPoint a[2], SkScalar, double) noexcept {
-  return a[1] - a[0];
-}
+static SkVector fline_dxdy_at_t(const SkPoint a[2], SkScalar, double) { return a[1] - a[0]; }
 
-static SkVector fquad_dxdy_at_t(const SkPoint a[3], SkScalar weight, double t) noexcept {
+static SkVector fquad_dxdy_at_t(const SkPoint a[3], SkScalar weight, double t) {
   return dquad_dxdy_at_t(a, weight, t).asSkVector();
 }
 
-static SkVector fconic_dxdy_at_t(const SkPoint a[3], SkScalar weight, double t) noexcept {
+static SkVector fconic_dxdy_at_t(const SkPoint a[3], SkScalar weight, double t) {
   return dconic_dxdy_at_t(a, weight, t).asSkVector();
 }
 
-static SkVector fcubic_dxdy_at_t(const SkPoint a[4], SkScalar weight, double t) noexcept {
+static SkVector fcubic_dxdy_at_t(const SkPoint a[4], SkScalar weight, double t) {
   return dcubic_dxdy_at_t(a, weight, t).asSkVector();
 }
 
@@ -224,22 +216,21 @@ static bool line_is_vertical(const SkPoint a[2], SkScalar, double startT, double
   return AlmostEqualUlps(dst[0].fX, dst[1].fX);
 }
 
-static bool quad_is_vertical(const SkPoint a[3], SkScalar, double startT, double endT) noexcept {
+static bool quad_is_vertical(const SkPoint a[3], SkScalar, double startT, double endT) {
   SkDQuad quad;
   quad.set(a);
   SkDQuad dst = quad.subDivide(startT, endT);
   return AlmostEqualUlps(dst[0].fX, dst[1].fX) && AlmostEqualUlps(dst[1].fX, dst[2].fX);
 }
 
-static bool conic_is_vertical(
-    const SkPoint a[3], SkScalar weight, double startT, double endT) noexcept {
+static bool conic_is_vertical(const SkPoint a[3], SkScalar weight, double startT, double endT) {
   SkDConic conic;
   conic.set(a, weight);
   SkDConic dst = conic.subDivide(startT, endT);
   return AlmostEqualUlps(dst[0].fX, dst[1].fX) && AlmostEqualUlps(dst[1].fX, dst[2].fX);
 }
 
-static bool cubic_is_vertical(const SkPoint a[4], SkScalar, double startT, double endT) noexcept {
+static bool cubic_is_vertical(const SkPoint a[4], SkScalar, double startT, double endT) {
   SkDCubic cubic;
   cubic.set(a);
   SkDCubic dst = cubic.subDivide(startT, endT);

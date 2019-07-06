@@ -33,17 +33,17 @@ class GrBitmapTextGeoProc : public GrGeometryProcessor {
 
   ~GrBitmapTextGeoProc() override {}
 
-  const char* name() const noexcept override { return "Texture"; }
+  const char* name() const override { return "Texture"; }
 
-  const Attribute& inPosition() const noexcept { return fInPosition; }
-  const Attribute& inColor() const noexcept { return fInColor; }
-  const Attribute& inTextureCoords() const noexcept { return fInTextureCoords; }
-  GrMaskFormat maskFormat() const noexcept { return fMaskFormat; }
-  const SkPMColor4f& color() const noexcept { return fColor; }
-  bool hasVertexColor() const noexcept { return fInColor.isInitialized(); }
-  const SkMatrix& localMatrix() const noexcept { return fLocalMatrix; }
-  bool usesW() const noexcept { return fUsesW; }
-  const SkISize& atlasSize() const noexcept { return fAtlasSize; }
+  const Attribute& inPosition() const { return fInPosition; }
+  const Attribute& inColor() const { return fInColor; }
+  const Attribute& inTextureCoords() const { return fInTextureCoords; }
+  GrMaskFormat maskFormat() const { return fMaskFormat; }
+  const SkPMColor4f& color() const { return fColor; }
+  bool hasVertexColor() const { return fInColor.isInitialized(); }
+  const SkMatrix& localMatrix() const { return fLocalMatrix; }
+  bool usesW() const { return fUsesW; }
+  const SkISize& atlasSize() const { return fAtlasSize; }
 
   void addNewProxies(const sk_sp<GrTextureProxy>*, int numActiveProxies, const GrSamplerState&);
 
@@ -57,9 +57,7 @@ class GrBitmapTextGeoProc : public GrGeometryProcessor {
       int numProxies, const GrSamplerState& params, GrMaskFormat format,
       const SkMatrix& localMatrix, bool usesW);
 
-  const TextureSampler& onTextureSampler(int i) const noexcept override {
-    return fTextureSamplers[i];
-  }
+  const TextureSampler& onTextureSampler(int i) const override { return fTextureSamplers[i]; }
 
   SkPMColor4f fColor;
   SkMatrix fLocalMatrix;

@@ -27,7 +27,7 @@ struct ASTDeclaration : public ASTPositionNode {
     kEnum_Kind
   };
 
-  ASTDeclaration(int offset, Kind kind) noexcept : INHERITED(offset), fKind(kind) {}
+  ASTDeclaration(int offset, Kind kind) : INHERITED(offset), fKind(kind) {}
 
   Kind fKind;
 

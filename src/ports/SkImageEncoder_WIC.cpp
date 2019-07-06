@@ -9,7 +9,6 @@
 
 #if defined(SK_BUILD_FOR_WIN)
 
-#include <wincodec.h>
 #include "include/core/SkBitmap.h"
 #include "include/core/SkImageEncoder.h"
 #include "include/core/SkStream.h"
@@ -20,15 +19,16 @@
 #include "src/utils/win/SkAutoCoInitialize.h"
 #include "src/utils/win/SkIStream.h"
 #include "src/utils/win/SkTScopedComPtr.h"
+#  include <wincodec.h>
 
 // All Windows SDKs back to XPSP2 export the CLSID_WICImagingFactory symbol.
 // In the Windows8 SDK the CLSID_WICImagingFactory symbol is still exported
 // but CLSID_WICImagingFactory is then #defined to CLSID_WICImagingFactory2.
 // Undo this #define if it has been done so that we link against the symbols
 // we intended to link against on all SDKs.
-#if defined(CLSID_WICImagingFactory)
-#undef CLSID_WICImagingFactory
-#endif
+#  if defined(CLSID_WICImagingFactory)
+#    undef CLSID_WICImagingFactory
+#  endif
 
 bool SkEncodeImageWithWIC(
     SkWStream* stream, const SkPixmap& pixmap, SkEncodedImageFormat format, int quality) {

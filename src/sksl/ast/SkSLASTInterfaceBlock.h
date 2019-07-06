@@ -26,7 +26,7 @@ struct ASTInterfaceBlock : public ASTDeclaration {
   ASTInterfaceBlock(
       int offset, Modifiers modifiers, StringFragment typeName,
       std::vector<std::unique_ptr<ASTVarDeclarations>> declarations, StringFragment instanceName,
-      std::vector<std::unique_ptr<ASTExpression>> sizes) noexcept
+      std::vector<std::unique_ptr<ASTExpression>> sizes)
       : INHERITED(offset, kInterfaceBlock_Kind),
         fModifiers(modifiers),
         fTypeName(typeName),

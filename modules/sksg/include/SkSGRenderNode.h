@@ -52,19 +52,19 @@ class RenderNode : public Node {
     SkBlendMode fBlendMode = SkBlendMode::kSrcOver;
 
     // Returns true if the paint overrides require a layer when applied to non-atomic draws.
-    bool requiresIsolation() const noexcept;
+    bool requiresIsolation() const;
 
     void modulatePaint(const SkMatrix& ctm, SkPaint*) const;
   };
 
   class ScopedRenderContext final {
    public:
-    ScopedRenderContext(SkCanvas*, const RenderContext*) noexcept;
+    ScopedRenderContext(SkCanvas*, const RenderContext*);
     ~ScopedRenderContext();
 
-    ScopedRenderContext(ScopedRenderContext&& that) noexcept { *this = std::move(that); }
+    ScopedRenderContext(ScopedRenderContext&& that) { *this = std::move(that); }
 
-    ScopedRenderContext& operator=(ScopedRenderContext&& that) noexcept {
+    ScopedRenderContext& operator=(ScopedRenderContext&& that) {
       fCanvas = that.fCanvas;
       fCtx = std::move(that.fCtx);
       fRestoreCount = that.fRestoreCount;
@@ -75,13 +75,13 @@ class RenderNode : public Node {
       return *this;
     }
 
-    operator const RenderContext*() const noexcept { return &fCtx; }
+    operator const RenderContext*() const { return &fCtx; }
 
     // Add (cumulative) paint overrides to a render node sub-DAG.
-    ScopedRenderContext&& modulateOpacity(float opacity) noexcept;
+    ScopedRenderContext&& modulateOpacity(float opacity);
     ScopedRenderContext&& modulateColorFilter(sk_sp<SkColorFilter>);
-    ScopedRenderContext&& modulateShader(sk_sp<SkShader>, const SkMatrix& shader_ctm) noexcept;
-    ScopedRenderContext&& modulateBlendMode(SkBlendMode) noexcept;
+    ScopedRenderContext&& modulateShader(sk_sp<SkShader>, const SkMatrix& shader_ctm);
+    ScopedRenderContext&& modulateBlendMode(SkBlendMode);
 
     // Force content isolation for a node sub-DAG by applying the RenderContext
     // overrides via a layer.

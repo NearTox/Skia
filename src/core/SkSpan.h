@@ -15,14 +15,14 @@ template <typename T>
 class SkSpan {
  public:
   template <size_t N>
-  constexpr SkSpan(T (&t)[N]) noexcept : fPtr(t), fSize(N) {}
-  constexpr SkSpan() noexcept : fPtr{nullptr}, fSize{0} {}
-  constexpr SkSpan(T* ptr, size_t size) noexcept : fPtr{ptr}, fSize{size} {}
+  constexpr SkSpan(T (&t)[N]) : fPtr(t), fSize(N) {}
+  constexpr SkSpan() : fPtr{nullptr}, fSize{0} {}
+  constexpr SkSpan(T* ptr, size_t size) : fPtr{ptr}, fSize{size} {}
   template <typename U>
-  constexpr explicit SkSpan(std::vector<U>& v) noexcept : fPtr{v.data()}, fSize{v.size()} {}
-  constexpr explicit SkSpan(std::string& s) noexcept : fPtr{s.c_str()}, fSize{s.size()} {}
-  constexpr SkSpan(const SkSpan& o) noexcept = default;
-  constexpr SkSpan& operator=(const SkSpan& that) noexcept {
+  constexpr explicit SkSpan(std::vector<U>& v) : fPtr{v.data()}, fSize{v.size()} {}
+  constexpr explicit SkSpan(std::string& s) : fPtr{s.c_str()}, fSize{s.size()} {}
+  constexpr SkSpan(const SkSpan& o) = default;
+  constexpr SkSpan& operator=(const SkSpan& that) {
     fPtr = that.fPtr;
     fSize = that.fSize;
     return *this;

@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkPaintPriv.h"
 #include "include/core/SkColorFilter.h"
 #include "include/core/SkPaint.h"
+#include "src/core/SkPaintPriv.h"
 #include "src/core/SkXfermodePriv.h"
 #include "src/shaders/SkShaderBase.h"
 
-static bool changes_alpha(const SkPaint& paint) noexcept {
+static bool changes_alpha(const SkPaint& paint) {
   SkColorFilter* cf = paint.getColorFilter();
   return cf && !(cf->getFlags() & SkColorFilter::kAlphaUnchanged_Flag);
 }

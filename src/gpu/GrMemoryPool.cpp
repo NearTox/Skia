@@ -5,20 +5,20 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/GrMemoryPool.h"
 #include "include/private/SkMalloc.h"
+#include "src/gpu/GrMemoryPool.h"
 #include "src/gpu/ops/GrOp.h"
 #ifdef SK_DEBUG
-#include <atomic>
+#  include <atomic>
 #endif
 
 #ifdef SK_DEBUG
-#define VALIDATE this->validate()
+#  define VALIDATE this->validate()
 #else
-#define VALIDATE
+#  define VALIDATE
 #endif
 
-void GrOpMemoryPool::release(std::unique_ptr<GrOp> op) noexcept {
+void GrOpMemoryPool::release(std::unique_ptr<GrOp> op) {
   GrOp* tmp = op.release();
   SkASSERT(tmp);
   tmp->~GrOp();
@@ -27,7 +27,7 @@ void GrOpMemoryPool::release(std::unique_ptr<GrOp> op) noexcept {
 
 constexpr size_t GrMemoryPool::kSmallestMinAllocSize;
 
-GrMemoryPool::GrMemoryPool(size_t preallocSize, size_t minAllocSize) noexcept {
+GrMemoryPool::GrMemoryPool(size_t preallocSize, size_t minAllocSize) {
   SkDEBUGCODE(fAllocationCnt = 0);
   SkDEBUGCODE(fAllocBlockCnt = 0);
 
@@ -65,7 +65,7 @@ GrMemoryPool::~GrMemoryPool() {
   DeleteBlock(fHead);
 };
 
-void* GrMemoryPool::allocate(size_t size) noexcept {
+void* GrMemoryPool::allocate(size_t size) {
   VALIDATE;
   size += kPerAllocPad;
   size = GrSizeAlignUp(size, kAlignment);
@@ -106,7 +106,7 @@ void* GrMemoryPool::allocate(size_t size) noexcept {
   return reinterpret_cast<void*>(ptr);
 }
 
-void GrMemoryPool::release(void* p) noexcept {
+void GrMemoryPool::release(void* p) {
   VALIDATE;
   intptr_t ptr = reinterpret_cast<intptr_t>(p) - kPerAllocPad;
   AllocHeader* allocData = reinterpret_cast<AllocHeader*>(ptr);
@@ -148,7 +148,7 @@ void GrMemoryPool::release(void* p) noexcept {
   VALIDATE;
 }
 
-GrMemoryPool::BlockHeader* GrMemoryPool::CreateBlock(size_t blockSize) noexcept {
+GrMemoryPool::BlockHeader* GrMemoryPool::CreateBlock(size_t blockSize) {
   blockSize = SkTMax<size_t>(blockSize, kHeaderSize);
   BlockHeader* block = reinterpret_cast<BlockHeader*>(sk_malloc_throw(blockSize));
   // we assume malloc gives us aligned memory
@@ -162,13 +162,13 @@ GrMemoryPool::BlockHeader* GrMemoryPool::CreateBlock(size_t blockSize) noexcept 
   return block;
 }
 
-void GrMemoryPool::DeleteBlock(BlockHeader* block) noexcept {
+void GrMemoryPool::DeleteBlock(BlockHeader* block) {
   SkASSERT(kAssignedMarker == block->fBlockSentinal);
   SkDEBUGCODE(block->fBlockSentinal = kFreedMarker);  // FWIW
   sk_free(block);
 }
 
-void GrMemoryPool::validate() noexcept {
+void GrMemoryPool::validate() {
 #ifdef SK_DEBUG
   BlockHeader* block = fHead;
   BlockHeader* prev = nullptr;

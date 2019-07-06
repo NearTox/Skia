@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/effects/GrBezierEffect.h"
 #include "src/gpu/GrShaderCaps.h"
+#include "src/gpu/effects/GrBezierEffect.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
 #include "src/gpu/glsl/GrGLSLProgramDataManager.h"
@@ -22,7 +22,7 @@ class GrGLConicEffect : public GrGLSLGeometryProcessor {
   void onEmitCode(EmitArgs&, GrGPArgs*) override;
 
   static inline void GenKey(
-      const GrGeometryProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) noexcept;
+      const GrGeometryProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*);
 
   void setData(
       const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& primProc,
@@ -182,7 +182,7 @@ void GrGLConicEffect::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
 }
 
 void GrGLConicEffect::GenKey(
-    const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
+    const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
   const GrConicEffect& ce = gp.cast<GrConicEffect>();
   uint32_t key = ce.isAntiAliased() ? (ce.isFilled() ? 0x0 : 0x1) : 0x2;
   key |= 0xff != ce.coverageScale() ? 0x8 : 0x0;
@@ -247,7 +247,7 @@ class GrGLQuadEffect : public GrGLSLGeometryProcessor {
   void onEmitCode(EmitArgs&, GrGPArgs*) override;
 
   static inline void GenKey(
-      const GrGeometryProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) noexcept;
+      const GrGeometryProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*);
 
   void setData(
       const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& primProc,
@@ -371,7 +371,7 @@ void GrGLQuadEffect::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
 }
 
 void GrGLQuadEffect::GenKey(
-    const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
+    const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
   const GrQuadEffect& ce = gp.cast<GrQuadEffect>();
   uint32_t key = ce.isAntiAliased() ? (ce.isFilled() ? 0x0 : 0x1) : 0x2;
   key |= ce.coverageScale() != 0xff ? 0x8 : 0x0;

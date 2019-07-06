@@ -48,18 +48,18 @@ class SkBasicEdgeBuilder final : public SkEdgeBuilder {
  public:
   explicit SkBasicEdgeBuilder(int clipShift) : fClipShift(clipShift) {}
 
-  SkEdge** edgeList() noexcept { return (SkEdge**)fEdgeList; }
+  SkEdge** edgeList() { return (SkEdge**)fEdgeList; }
 
  private:
-  Combine combineVertical(const SkEdge* edge, SkEdge* last) noexcept;
+  Combine combineVertical(const SkEdge* edge, SkEdge* last);
 
   char* allocEdges(size_t, size_t*) override;
-  SkRect recoverClip(const SkIRect&) const noexcept override;
+  SkRect recoverClip(const SkIRect&) const override;
 
   void addLine(const SkPoint pts[]) override;
   void addQuad(const SkPoint pts[]) override;
   void addCubic(const SkPoint pts[]) override;
-  Combine addPolyLine(SkPoint pts[], char* edge, char** edgePtr) noexcept override;
+  Combine addPolyLine(SkPoint pts[], char* edge, char** edgePtr) override;
 
   const int fClipShift;
 };
@@ -68,13 +68,13 @@ class SkAnalyticEdgeBuilder final : public SkEdgeBuilder {
  public:
   SkAnalyticEdgeBuilder() {}
 
-  SkAnalyticEdge** analyticEdgeList() noexcept { return (SkAnalyticEdge**)fEdgeList; }
+  SkAnalyticEdge** analyticEdgeList() { return (SkAnalyticEdge**)fEdgeList; }
 
  private:
-  Combine combineVertical(const SkAnalyticEdge* edge, SkAnalyticEdge* last) noexcept;
+  Combine combineVertical(const SkAnalyticEdge* edge, SkAnalyticEdge* last);
 
   char* allocEdges(size_t, size_t*) override;
-  SkRect recoverClip(const SkIRect&) const noexcept override;
+  SkRect recoverClip(const SkIRect&) const override;
 
   void addLine(const SkPoint pts[]) override;
   void addQuad(const SkPoint pts[]) override;

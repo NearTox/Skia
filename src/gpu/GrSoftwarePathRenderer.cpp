@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/GrSoftwarePathRenderer.h"
 #include "include/private/GrAuditTrail.h"
 #include "include/private/GrOpList.h"
 #include "include/private/SkSemaphore.h"
@@ -23,12 +22,13 @@
 #include "src/gpu/GrRenderTargetContextPriv.h"
 #include "src/gpu/GrSWMaskHelper.h"
 #include "src/gpu/GrShape.h"
+#include "src/gpu/GrSoftwarePathRenderer.h"
 #include "src/gpu/GrSurfaceContextPriv.h"
 #include "src/gpu/ops/GrDrawOp.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-GrPathRenderer::CanDrawPath GrSoftwarePathRenderer::onCanDrawPath(const CanDrawPathArgs& args) const
-    noexcept {
+GrPathRenderer::CanDrawPath GrSoftwarePathRenderer::onCanDrawPath(
+    const CanDrawPathArgs& args) const {
   // Pass on any style that applies. The caller will apply the style if a suitable renderer is
   // not found and try again with the new GrShape.
   if (!args.fShape->style().applies() && SkToBool(fProxyProvider) &&
@@ -185,13 +185,13 @@ namespace {
 class SoftwarePathData {
  public:
   SoftwarePathData(
-      const SkIRect& maskBounds, const SkMatrix& viewMatrix, const GrShape& shape, GrAA aa) noexcept
+      const SkIRect& maskBounds, const SkMatrix& viewMatrix, const GrShape& shape, GrAA aa)
       : fMaskBounds(maskBounds), fViewMatrix(viewMatrix), fShape(shape), fAA(aa) {}
 
-  const SkIRect& getMaskBounds() const noexcept { return fMaskBounds; }
-  const SkMatrix* getViewMatrix() const noexcept { return &fViewMatrix; }
-  const GrShape& getShape() const noexcept { return fShape; }
-  GrAA getAA() const noexcept { return fAA; }
+  const SkIRect& getMaskBounds() const { return fMaskBounds; }
+  const SkMatrix* getViewMatrix() const { return &fViewMatrix; }
+  const GrShape& getShape() const { return fShape; }
+  GrAA getAA() const { return fAA; }
 
  private:
   SkIRect fMaskBounds;
@@ -203,8 +203,7 @@ class SoftwarePathData {
 // When the SkPathRef genID changes, invalidate a corresponding GrResource described by key.
 class PathInvalidator : public SkPathRef::GenIDChangeListener {
  public:
-  PathInvalidator(const GrUniqueKey& key, uint32_t contextUniqueID) noexcept
-      : fMsg(key, contextUniqueID) {}
+  PathInvalidator(const GrUniqueKey& key, uint32_t contextUniqueID) : fMsg(key, contextUniqueID) {}
 
  private:
   GrUniqueKeyInvalidatedMessage fMsg;

@@ -5,30 +5,30 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/gl/GrGLBuffer.h"
 #include "include/core/SkTraceMemoryDump.h"
 #include "src/gpu/GrGpuResourcePriv.h"
+#include "src/gpu/gl/GrGLBuffer.h"
 #include "src/gpu/gl/GrGLGpu.h"
 
 #define GL_CALL(X) GR_GL_CALL(this->glGpu()->glInterface(), X)
 #define GL_CALL_RET(RET, X) GR_GL_CALL_RET(this->glGpu()->glInterface(), RET, X)
 
 #if GR_GL_CHECK_ALLOC_WITH_GET_ERROR
-#define CLEAR_ERROR_BEFORE_ALLOC(iface) GrGLClearErr(iface)
-#define GL_ALLOC_CALL(iface, call) GR_GL_CALL_NOERRCHECK(iface, call)
-#define CHECK_ALLOC_ERROR(iface) GR_GL_GET_ERROR(iface)
+#  define CLEAR_ERROR_BEFORE_ALLOC(iface) GrGLClearErr(iface)
+#  define GL_ALLOC_CALL(iface, call) GR_GL_CALL_NOERRCHECK(iface, call)
+#  define CHECK_ALLOC_ERROR(iface) GR_GL_GET_ERROR(iface)
 #else
-#define CLEAR_ERROR_BEFORE_ALLOC(iface)
-#define GL_ALLOC_CALL(iface, call) GR_GL_CALL(iface, call)
-#define CHECK_ALLOC_ERROR(iface) GR_GL_NO_ERROR
+#  define CLEAR_ERROR_BEFORE_ALLOC(iface)
+#  define GL_ALLOC_CALL(iface, call) GR_GL_CALL(iface, call)
+#  define CHECK_ALLOC_ERROR(iface) GR_GL_NO_ERROR
 #endif
 
 #ifdef SK_DEBUG
 #define VALIDATE() this->validate()
 #else
-#define VALIDATE() \
-  do {             \
-  } while (false)
+#  define VALIDATE() \
+    do {             \
+    } while (false)
 #endif
 
 sk_sp<GrGLBuffer> GrGLBuffer::Make(
@@ -52,7 +52,7 @@ sk_sp<GrGLBuffer> GrGLBuffer::Make(
 #define DYNAMIC_DRAW_PARAM GR_GL_STREAM_DRAW
 
 inline static GrGLenum gr_to_gl_access_pattern(
-    GrGpuBufferType bufferType, GrAccessPattern accessPattern) noexcept {
+    GrGpuBufferType bufferType, GrAccessPattern accessPattern) {
   auto drawUsage = [](GrAccessPattern pattern) {
     switch (pattern) {
       case kDynamic_GrAccessPattern:
@@ -118,12 +118,12 @@ GrGLBuffer::GrGLBuffer(
   }
 }
 
-inline GrGLGpu* GrGLBuffer::glGpu() const noexcept {
+inline GrGLGpu* GrGLBuffer::glGpu() const {
   SkASSERT(!this->wasDestroyed());
   return static_cast<GrGLGpu*>(this->getGpu());
 }
 
-inline const GrGLCaps& GrGLBuffer::glCaps() const noexcept { return this->glGpu()->glCaps(); }
+inline const GrGLCaps& GrGLBuffer::glCaps() const { return this->glGpu()->glCaps(); }
 
 void GrGLBuffer::onRelease() {
   if (!this->wasDestroyed()) {

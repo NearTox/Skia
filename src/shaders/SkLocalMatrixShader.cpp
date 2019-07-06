@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "src/shaders/SkLocalMatrixShader.h"
 #include "src/core/SkTLazy.h"
+#include "src/shaders/SkLocalMatrixShader.h"
 
 #if SK_SUPPORT_GPU
 #include "src/gpu/GrFragmentProcessor.h"

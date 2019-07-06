@@ -19,10 +19,10 @@ bool SkCoincidentSpans::collapsed(const SkOpPtT* test) const {
 }
 
 // out of line since this function is referenced by address
-const SkOpPtT* SkCoincidentSpans::coinPtTEnd() const noexcept { return fCoinPtTEnd; }
+const SkOpPtT* SkCoincidentSpans::coinPtTEnd() const { return fCoinPtTEnd; }
 
 // out of line since this function is referenced by address
-const SkOpPtT* SkCoincidentSpans::coinPtTStart() const noexcept { return fCoinPtTStart; }
+const SkOpPtT* SkCoincidentSpans::coinPtTStart() const { return fCoinPtTStart; }
 
 // sets the span's end to the ptT referenced by the previous-next
 void SkCoincidentSpans::correctOneEnd(
@@ -91,7 +91,7 @@ bool SkCoincidentSpans::expand() {
 // increase the range of this span
 bool SkCoincidentSpans::extend(
     const SkOpPtT* coinPtTStart, const SkOpPtT* coinPtTEnd, const SkOpPtT* oppPtTStart,
-    const SkOpPtT* oppPtTEnd) noexcept {
+    const SkOpPtT* oppPtTEnd) {
   bool result = false;
   if (fCoinPtTStart->fT > coinPtTStart->fT ||
       (this->flipped() ? fOppPtTStart->fT < oppPtTStart->fT : fOppPtTStart->fT > oppPtTStart->fT)) {
@@ -109,7 +109,7 @@ bool SkCoincidentSpans::extend(
 // set the range of this span
 void SkCoincidentSpans::set(
     SkCoincidentSpans* next, const SkOpPtT* coinPtTStart, const SkOpPtT* coinPtTEnd,
-    const SkOpPtT* oppPtTStart, const SkOpPtT* oppPtTEnd) noexcept {
+    const SkOpPtT* oppPtTStart, const SkOpPtT* oppPtTEnd) {
   SkASSERT(SkOpCoincidence::Ordered(coinPtTStart, oppPtTStart));
   fNext = next;
   this->setStarts(coinPtTStart, oppPtTStart);
@@ -137,10 +137,10 @@ bool SkCoincidentSpans::contains(const SkOpPtT* s, const SkOpPtT* e) const {
 }
 
 // out of line since this function is referenced by address
-const SkOpPtT* SkCoincidentSpans::oppPtTStart() const noexcept { return fOppPtTStart; }
+const SkOpPtT* SkCoincidentSpans::oppPtTStart() const { return fOppPtTStart; }
 
 // out of line since this function is referenced by address
-const SkOpPtT* SkCoincidentSpans::oppPtTEnd() const noexcept { return fOppPtTEnd; }
+const SkOpPtT* SkCoincidentSpans::oppPtTEnd() const { return fOppPtTEnd; }
 
 // A coincident span is unordered if the pairs of points in the main and opposite curves'
 // t values do not ascend or descend. For instance, if a tightly arced quadratic is
@@ -152,33 +152,33 @@ bool SkCoincidentSpans::ordered(bool* result) const {
   if (next == end) {
     *result = true;
     return true;
-  }
-  bool flipped = this->flipped();
-  const SkOpSegment* oppSeg = this->oppPtTStart()->segment();
-  double oppLastT = fOppPtTStart->fT;
-  do {
-    const SkOpPtT* opp = next->contains(oppSeg);
-    if (!opp) {
-      //            SkOPOBJASSERT(start, 0);  // may assert if coincident span isn't fully
-      //            processed
-      return false;
     }
-    if ((oppLastT > opp->fT) != flipped) {
-      *result = false;
-      return true;
-    }
-    oppLastT = opp->fT;
-    if (next == end) {
-      break;
-    }
-    if (!next->upCastable()) {
-      *result = false;
-      return true;
-    }
-    next = next->upCast()->next();
-  } while (true);
-  *result = true;
-  return true;
+    bool flipped = this->flipped();
+    const SkOpSegment* oppSeg = this->oppPtTStart()->segment();
+    double oppLastT = fOppPtTStart->fT;
+    do {
+      const SkOpPtT* opp = next->contains(oppSeg);
+      if (!opp) {
+        //            SkOPOBJASSERT(start, 0);  // may assert if coincident span isn't fully
+        //            processed
+        return false;
+      }
+      if ((oppLastT > opp->fT) != flipped) {
+        *result = false;
+        return true;
+      }
+      oppLastT = opp->fT;
+      if (next == end) {
+        break;
+      }
+      if (!next->upCastable()) {
+        *result = false;
+        return true;
+      }
+      next = next->upCast()->next();
+    } while (true);
+    *result = true;
+    return true;
 }
 
 // if there is an existing pair that overlaps the addition, extend it
@@ -229,7 +229,7 @@ bool SkOpCoincidence::extend(
 // verifies that the coincidence hasn't already been added
 static void DebugCheckAdd(
     const SkCoincidentSpans* check, const SkOpPtT* coinPtTStart, const SkOpPtT* coinPtTEnd,
-    const SkOpPtT* oppPtTStart, const SkOpPtT* oppPtTEnd) noexcept {
+    const SkOpPtT* oppPtTStart, const SkOpPtT* oppPtTEnd) {
 #if DEBUG_COINCIDENCE
   while (check) {
     SkASSERT(
@@ -1009,135 +1009,135 @@ bool SkOpCoincidence::apply(DEBUG_COIN_DECLARE_ONLY_PARAMS()) {
   if (!coin) {
     return true;
   }
-  do {
-    SkOpSpanBase* startSpan = coin->coinPtTStartWritable()->span();
-    FAIL_IF(!startSpan->upCastable());
-    SkOpSpan* start = startSpan->upCast();
-    if (start->deleted()) {
-      continue;
-    }
-    const SkOpSpanBase* end = coin->coinPtTEnd()->span();
-    FAIL_IF(start != start->starter(end));
-    bool flipped = coin->flipped();
-    SkOpSpanBase* oStartBase =
-        (flipped ? coin->oppPtTEndWritable() : coin->oppPtTStartWritable())->span();
-    FAIL_IF(!oStartBase->upCastable());
-    SkOpSpan* oStart = oStartBase->upCast();
-    if (oStart->deleted()) {
-      continue;
-    }
-    const SkOpSpanBase* oEnd = (flipped ? coin->oppPtTStart() : coin->oppPtTEnd())->span();
-    SkASSERT(oStart == oStart->starter(oEnd));
-    SkOpSegment* segment = start->segment();
-    SkOpSegment* oSegment = oStart->segment();
-    bool operandSwap = segment->operand() != oSegment->operand();
-    if (flipped) {
-      if (oEnd->deleted()) {
+    do {
+      SkOpSpanBase* startSpan = coin->coinPtTStartWritable()->span();
+      FAIL_IF(!startSpan->upCastable());
+      SkOpSpan* start = startSpan->upCast();
+      if (start->deleted()) {
         continue;
       }
+      const SkOpSpanBase* end = coin->coinPtTEnd()->span();
+      FAIL_IF(start != start->starter(end));
+      bool flipped = coin->flipped();
+      SkOpSpanBase* oStartBase =
+          (flipped ? coin->oppPtTEndWritable() : coin->oppPtTStartWritable())->span();
+      FAIL_IF(!oStartBase->upCastable());
+      SkOpSpan* oStart = oStartBase->upCast();
+      if (oStart->deleted()) {
+        continue;
+      }
+      const SkOpSpanBase* oEnd = (flipped ? coin->oppPtTStart() : coin->oppPtTEnd())->span();
+      SkASSERT(oStart == oStart->starter(oEnd));
+      SkOpSegment* segment = start->segment();
+      SkOpSegment* oSegment = oStart->segment();
+      bool operandSwap = segment->operand() != oSegment->operand();
+      if (flipped) {
+        if (oEnd->deleted()) {
+          continue;
+        }
+        do {
+          SkOpSpanBase* oNext = oStart->next();
+          if (oNext == oEnd) {
+            break;
+          }
+          FAIL_IF(!oNext->upCastable());
+          oStart = oNext->upCast();
+        } while (true);
+      }
       do {
-        SkOpSpanBase* oNext = oStart->next();
-        if (oNext == oEnd) {
-          break;
+        int windValue = start->windValue();
+        int oppValue = start->oppValue();
+        int oWindValue = oStart->windValue();
+        int oOppValue = oStart->oppValue();
+        // winding values are added or subtracted depending on direction and wind type
+        // same or opposite values are summed depending on the operand value
+        int windDiff = operandSwap ? oOppValue : oWindValue;
+        int oWindDiff = operandSwap ? oppValue : windValue;
+        if (!flipped) {
+          windDiff = -windDiff;
+          oWindDiff = -oWindDiff;
         }
-        FAIL_IF(!oNext->upCastable());
-        oStart = oNext->upCast();
-      } while (true);
-    }
-    do {
-      int windValue = start->windValue();
-      int oppValue = start->oppValue();
-      int oWindValue = oStart->windValue();
-      int oOppValue = oStart->oppValue();
-      // winding values are added or subtracted depending on direction and wind type
-      // same or opposite values are summed depending on the operand value
-      int windDiff = operandSwap ? oOppValue : oWindValue;
-      int oWindDiff = operandSwap ? oppValue : windValue;
-      if (!flipped) {
-        windDiff = -windDiff;
-        oWindDiff = -oWindDiff;
-      }
-      bool addToStart =
-          windValue && (windValue > windDiff || (windValue == windDiff && oWindValue <= oWindDiff));
-      if (addToStart ? start->done() : oStart->done()) {
-        addToStart ^= true;
-      }
-      if (addToStart) {
-        if (operandSwap) {
-          using std::swap;
-          swap(oWindValue, oOppValue);
+        bool addToStart = windValue && (windValue > windDiff ||
+                                        (windValue == windDiff && oWindValue <= oWindDiff));
+        if (addToStart ? start->done() : oStart->done()) {
+          addToStart ^= true;
         }
-        if (flipped) {
-          windValue -= oWindValue;
-          oppValue -= oOppValue;
+        if (addToStart) {
+          if (operandSwap) {
+            using std::swap;
+            swap(oWindValue, oOppValue);
+          }
+          if (flipped) {
+            windValue -= oWindValue;
+            oppValue -= oOppValue;
+          } else {
+            windValue += oWindValue;
+            oppValue += oOppValue;
+          }
+          if (segment->isXor()) {
+            windValue &= 1;
+          }
+          if (segment->oppXor()) {
+            oppValue &= 1;
+          }
+          oWindValue = oOppValue = 0;
         } else {
-          windValue += oWindValue;
-          oppValue += oOppValue;
+          if (operandSwap) {
+            using std::swap;
+            swap(windValue, oppValue);
+          }
+          if (flipped) {
+            oWindValue -= windValue;
+            oOppValue -= oppValue;
+          } else {
+            oWindValue += windValue;
+            oOppValue += oppValue;
+          }
+          if (oSegment->isXor()) {
+            oWindValue &= 1;
+          }
+          if (oSegment->oppXor()) {
+            oOppValue &= 1;
+          }
+          windValue = oppValue = 0;
         }
-        if (segment->isXor()) {
-          windValue &= 1;
-        }
-        if (segment->oppXor()) {
-          oppValue &= 1;
-        }
-        oWindValue = oOppValue = 0;
-      } else {
-        if (operandSwap) {
-          using std::swap;
-          swap(windValue, oppValue);
-        }
-        if (flipped) {
-          oWindValue -= windValue;
-          oOppValue -= oppValue;
-        } else {
-          oWindValue += windValue;
-          oOppValue += oppValue;
-        }
-        if (oSegment->isXor()) {
-          oWindValue &= 1;
-        }
-        if (oSegment->oppXor()) {
-          oOppValue &= 1;
-        }
-        windValue = oppValue = 0;
-      }
 #if 0 && DEBUG_COINCIDENCE
             SkDebugf("seg=%d span=%d windValue=%d oppValue=%d\n", segment->debugID(),
                     start->debugID(), windValue, oppValue);
             SkDebugf("seg=%d span=%d windValue=%d oppValue=%d\n", oSegment->debugID(),
                     oStart->debugID(), oWindValue, oOppValue);
 #endif
-      FAIL_IF(windValue <= -1);
-      start->setWindValue(windValue);
-      start->setOppValue(oppValue);
-      FAIL_IF(oWindValue <= -1);
-      oStart->setWindValue(oWindValue);
-      oStart->setOppValue(oOppValue);
-      if (!windValue && !oppValue) {
-        segment->markDone(start);
-      }
-      if (!oWindValue && !oOppValue) {
-        oSegment->markDone(oStart);
-      }
-      SkOpSpanBase* next = start->next();
-      SkOpSpanBase* oNext = flipped ? oStart->prev() : oStart->next();
-      if (next == end) {
-        break;
-      }
-      FAIL_IF(!next->upCastable());
-      start = next->upCast();
-      // if the opposite ran out too soon, just reuse the last span
-      if (!oNext || !oNext->upCastable()) {
-        oNext = oStart;
-      }
-      oStart = oNext->upCast();
-    } while (true);
-  } while ((coin = coin->next()));
-  return true;
+        FAIL_IF(windValue <= -1);
+        start->setWindValue(windValue);
+        start->setOppValue(oppValue);
+        FAIL_IF(oWindValue <= -1);
+        oStart->setWindValue(oWindValue);
+        oStart->setOppValue(oOppValue);
+        if (!windValue && !oppValue) {
+          segment->markDone(start);
+        }
+        if (!oWindValue && !oOppValue) {
+          oSegment->markDone(oStart);
+        }
+        SkOpSpanBase* next = start->next();
+        SkOpSpanBase* oNext = flipped ? oStart->prev() : oStart->next();
+        if (next == end) {
+          break;
+        }
+        FAIL_IF(!next->upCastable());
+        start = next->upCast();
+        // if the opposite ran out too soon, just reuse the last span
+        if (!oNext || !oNext->upCastable()) {
+          oNext = oStart;
+        }
+        oStart = oNext->upCast();
+      } while (true);
+    } while ((coin = coin->next()));
+    return true;
 }
 
 // Please keep this in sync with debugRelease()
-bool SkOpCoincidence::release(SkCoincidentSpans* coin, SkCoincidentSpans* remove) noexcept {
+bool SkOpCoincidence::release(SkCoincidentSpans* coin, SkCoincidentSpans* remove) {
   SkCoincidentSpans* head = coin;
   SkCoincidentSpans* prev = nullptr;
   SkCoincidentSpans* next;
@@ -1158,7 +1158,7 @@ bool SkOpCoincidence::release(SkCoincidentSpans* coin, SkCoincidentSpans* remove
   return coin != nullptr;
 }
 
-void SkOpCoincidence::releaseDeleted(SkCoincidentSpans* coin) noexcept {
+void SkOpCoincidence::releaseDeleted(SkCoincidentSpans* coin) {
   if (!coin) {
     return;
   }
@@ -1183,7 +1183,7 @@ void SkOpCoincidence::releaseDeleted(SkCoincidentSpans* coin) noexcept {
   } while ((coin = next));
 }
 
-void SkOpCoincidence::releaseDeleted() noexcept {
+void SkOpCoincidence::releaseDeleted() {
   this->releaseDeleted(fHead);
   this->releaseDeleted(fTop);
 }
@@ -1274,7 +1274,7 @@ bool SkOpCoincidence::findOverlaps(SkOpCoincidence* overlaps DEBUG_COIN_DECLARE_
   return true;
 }
 
-void SkOpCoincidence::fixUp(SkOpPtT* deleted, const SkOpPtT* kept) noexcept {
+void SkOpCoincidence::fixUp(SkOpPtT* deleted, const SkOpPtT* kept) {
   SkOPASSERT(deleted != kept);
   if (fHead) {
     this->fixUp(fHead, deleted, kept);
@@ -1284,8 +1284,7 @@ void SkOpCoincidence::fixUp(SkOpPtT* deleted, const SkOpPtT* kept) noexcept {
   }
 }
 
-void SkOpCoincidence::fixUp(
-    SkCoincidentSpans* coin, SkOpPtT* deleted, const SkOpPtT* kept) noexcept {
+void SkOpCoincidence::fixUp(SkCoincidentSpans* coin, SkOpPtT* deleted, const SkOpPtT* kept) {
   SkCoincidentSpans* head = coin;
   do {
     if (coin->coinPtTStart() == deleted) {
@@ -1389,7 +1388,7 @@ void SkOpCoincidence::markCollapsed(SkOpPtT* test) {
   markCollapsed(fTop, test);
 }
 
-bool SkOpCoincidence::Ordered(const SkOpSegment* coinSeg, const SkOpSegment* oppSeg) noexcept {
+bool SkOpCoincidence::Ordered(const SkOpSegment* coinSeg, const SkOpSegment* oppSeg) {
   if (coinSeg->verb() < oppSeg->verb()) {
     return true;
   }
@@ -1414,7 +1413,7 @@ bool SkOpCoincidence::Ordered(const SkOpSegment* coinSeg, const SkOpSegment* opp
 
 bool SkOpCoincidence::overlap(
     const SkOpPtT* coin1s, const SkOpPtT* coin1e, const SkOpPtT* coin2s, const SkOpPtT* coin2e,
-    double* overS, double* overE) const noexcept {
+    double* overS, double* overE) const {
   SkASSERT(coin1s->segment() == coin2s->segment());
   *overS = SkTMax(SkTMin(coin1s->fT, coin1e->fT), SkTMin(coin2s->fT, coin2e->fT));
   *overE = SkTMin(SkTMax(coin1s->fT, coin1e->fT), SkTMax(coin2s->fT, coin2e->fT));

@@ -8,9 +8,9 @@
 #ifndef SkJpegDecoderMgr_DEFINED
 #define SkJpegDecoderMgr_DEFINED
 
-#include <stdio.h>
 #include "include/codec/SkCodec.h"
 #include "src/codec/SkCodecPriv.h"
+#include <stdio.h>
 #include "src/codec/SkJpegUtility.h"
 
 extern "C" {

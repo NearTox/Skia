@@ -439,7 +439,7 @@ void CFGGenerator::addLValue(CFG& cfg, std::unique_ptr<Expression>* e) {
   }
 }
 
-static bool is_true(Expression& expr) noexcept {
+static bool is_true(Expression& expr) {
   return expr.fKind == Expression::kBoolLiteral_Kind && ((BoolLiteral&)expr).fValue;
 }
 

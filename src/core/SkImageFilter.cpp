@@ -71,7 +71,7 @@ void SkImageFilter::CropRect::applyTo(
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-static int32_t next_image_filter_unique_id() noexcept {
+static int32_t next_image_filter_unique_id() {
   static std::atomic<int32_t> nextID{1};
 
   int32_t id;
@@ -111,7 +111,7 @@ bool SkImageFilter::Common::unflatten(SkReadBuffer& buffer, int expectedCount) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 void SkImageFilter::init(
-    sk_sp<SkImageFilter> const* inputs, int inputCount, const CropRect* cropRect) noexcept {
+    sk_sp<SkImageFilter> const* inputs, int inputCount, const CropRect* cropRect) {
   fCropRect = cropRect ? *cropRect : CropRect(SkRect(), 0x0);
 
   fInputs.reset(inputCount);
@@ -454,7 +454,7 @@ void SkImageFilter::PurgeCache() { SkImageFilterCache::Get()->purge(); }
 // opposite side be preserved.
 SkIRect SkImageFilter::DetermineRepeatedSrcBound(
     const SkIRect& srcBounds, const SkIVector& filterOffset, const SkISize& filterSize,
-    const SkIRect& originalSrcBounds) noexcept {
+    const SkIRect& originalSrcBounds) {
   SkIRect tmp = srcBounds;
   tmp.adjust(
       -filterOffset.fX, -filterOffset.fY, filterSize.fWidth - filterOffset.fX,
@@ -531,7 +531,7 @@ sk_sp<SkImageFilter> SkApplyCTMToBackdropFilter(
   return apply_ctm_to_filter(sk_ref_sp(filter), ctm, remainder, true);
 }
 
-bool SkIsSameFilter(const SkImageFilter* a, const SkImageFilter* b) noexcept {
+bool SkIsSameFilter(const SkImageFilter* a, const SkImageFilter* b) {
   if (!a || !b) {
     // The filters are the "same" if they're both null
     return !a && !b;

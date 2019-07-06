@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/ops/GrStencilAndCoverPathRenderer.h"
 #include "include/private/GrRecordingContext.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrFixedClip.h"
@@ -17,6 +16,7 @@
 #include "src/gpu/GrStencilClip.h"
 #include "src/gpu/GrStyle.h"
 #include "src/gpu/ops/GrDrawPathOp.h"
+#include "src/gpu/ops/GrStencilAndCoverPathRenderer.h"
 #include "src/gpu/ops/GrStencilPathOp.h"
 
 GrPathRenderer* GrStencilAndCoverPathRenderer::Create(
@@ -57,22 +57,22 @@ static sk_sp<GrPath> get_gr_path(GrResourceProvider* resourceProvider, const GrS
   sk_sp<GrPath> path;
   if (!isVolatile) {
     path = resourceProvider->findByUniqueKey<GrPath>(key);
-  }
-  if (!path) {
-    SkPath skPath;
-    shape.asPath(&skPath);
-    path = resourceProvider->createPath(skPath, shape.style());
-    if (!isVolatile) {
-      resourceProvider->assignUniqueKeyToResource(key, path.get());
     }
-  } else {
+    if (!path) {
+      SkPath skPath;
+      shape.asPath(&skPath);
+      path = resourceProvider->createPath(skPath, shape.style());
+      if (!isVolatile) {
+        resourceProvider->assignUniqueKeyToResource(key, path.get());
+      }
+    } else {
 #ifdef SK_DEBUG
-    SkPath skPath;
-    shape.asPath(&skPath);
-    SkASSERT(path->isEqualTo(skPath, shape.style()));
+      SkPath skPath;
+      shape.asPath(&skPath);
+      SkASSERT(path->isEqualTo(skPath, shape.style()));
 #endif
-  }
-  return path;
+    }
+    return path;
 }
 
 void GrStencilAndCoverPathRenderer::onStencilPath(const StencilPathArgs& args) {

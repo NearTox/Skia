@@ -15,11 +15,11 @@
 #include "include/private/SkTo.h"
 #include "src/core/SkMakeUnique.h"
 
-#include <memory>
 #include <new>
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <memory>
 
 class SkData;
 class SkPDFArray;

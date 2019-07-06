@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkRasterClip.h"
 #include "include/core/SkPath.h"
+#include "src/core/SkRasterClip.h"
 #include "src/core/SkRegionPriv.h"
 
 enum MutateResult {
@@ -15,7 +15,7 @@ enum MutateResult {
   kContinue_MutateResult,
 };
 
-static MutateResult mutate_conservative_op(SkRegion::Op* op, bool inverseFilled) noexcept {
+static MutateResult mutate_conservative_op(SkRegion::Op* op, bool inverseFilled) {
   if (inverseFilled) {
     switch (*op) {
       case SkRegion::kIntersect_Op:
@@ -120,7 +120,7 @@ void SkConservativeClip::opIRect(const SkIRect& devRect, SkRegion::Op op) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkRasterClip::SkRasterClip(const SkRasterClip& src) noexcept {
+SkRasterClip::SkRasterClip(const SkRasterClip& src) {
   AUTO_RASTERCLIP_VALIDATE(src);
 
   fIsBW = src.fIsBW;
@@ -157,7 +157,7 @@ SkRasterClip::SkRasterClip() {
   SkDEBUGCODE(this->validate());
 }
 
-SkRasterClip::~SkRasterClip() { SkDEBUGCODE(this->validate()); }
+SkRasterClip::~SkRasterClip() { SkDEBUGCODE(this->validate();) }
 
 bool SkRasterClip::operator==(const SkRasterClip& other) const {
   if (fIsBW != other.fIsBW) {
@@ -343,7 +343,7 @@ bool SkRasterClip::op(const SkRasterClip& clip, SkRegion::Op op) {
  *  axis. Thus we can treat an axis coordinate as an integer if it differs
  *  from its nearest int by < half of that value (1.8 in this case).
  */
-static bool nearly_integral(SkScalar x) noexcept {
+static bool nearly_integral(SkScalar x) {
   static const SkScalar domain = SK_Scalar1 / 4;
   static const SkScalar halfDomain = domain / 2;
 

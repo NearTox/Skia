@@ -11,9 +11,9 @@
 // This stub implementation of HeifDecoderAPI.h lets us compile SkHeifCodec.cpp
 // even when libheif is not available.  It, of course, does nothing and fails to decode.
 
+#include <memory>
 #include <stddef.h>
 #include <stdint.h>
-#include <memory>
 
 enum HeifColorFormat {
   kHeifColorFormat_RGB565,
@@ -24,11 +24,11 @@ enum HeifColorFormat {
 struct HeifStream {
   virtual ~HeifStream() {}
 
-  virtual size_t read(void*, size_t) noexcept = 0;
-  virtual bool rewind() noexcept = 0;
-  virtual bool seek(size_t) noexcept = 0;
-  virtual bool hasLength() const noexcept = 0;
-  virtual size_t getLength() const noexcept = 0;
+  virtual size_t read(void*, size_t) = 0;
+  virtual bool rewind() = 0;
+  virtual bool seek(size_t) = 0;
+  virtual bool hasLength() const = 0;
+  virtual size_t getLength() const = 0;
 };
 
 struct HeifFrameInfo {
@@ -42,18 +42,18 @@ struct HeifFrameInfo {
 };
 
 struct HeifDecoder {
-  bool init(HeifStream* stream, HeifFrameInfo*) noexcept {
+  bool init(HeifStream* stream, HeifFrameInfo*) {
     delete stream;
     return false;
   }
 
-  bool decode(HeifFrameInfo*) noexcept { return false; }
+  bool decode(HeifFrameInfo*) { return false; }
 
-  bool setOutputColor(HeifColorFormat) noexcept { return false; }
+  bool setOutputColor(HeifColorFormat) { return false; }
 
-  bool getScanline(uint8_t*) noexcept { return false; }
+  bool getScanline(uint8_t*) { return false; }
 
-  int skipScanlines(int) noexcept { return 0; }
+  int skipScanlines(int) { return 0; }
 };
 
 static inline HeifDecoder* createHeifDecoder() { return new HeifDecoder; }

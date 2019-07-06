@@ -20,7 +20,7 @@
 #include "src/gpu/text/GrTextBlobCache.h"
 
 #define ASSERT_SINGLE_OWNER_PRIV \
-  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner()));
+  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner());)
 
 GrRecordingContext::GrRecordingContext(
     GrBackendApi backend, const GrContextOptions& options, uint32_t contextID)

@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/ops/GrLatticeOp.h"
 #include "include/core/SkBitmap.h"
 #include "include/core/SkRect.h"
 #include "src/core/SkLatticeIter.h"
@@ -21,6 +20,7 @@
 #include "src/gpu/glsl/GrGLSLColorSpaceXformHelper.h"
 #include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
 #include "src/gpu/glsl/GrGLSLVarying.h"
+#include "src/gpu/ops/GrLatticeOp.h"
 #include "src/gpu/ops/GrMeshDrawOp.h"
 #include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 
@@ -35,7 +35,7 @@ class LatticeGP : public GrGeometryProcessor {
         new LatticeGP(gpu, proxy, std::move(csxf), filter, wideColor));
   }
 
-  const char* name() const noexcept override { return "LatticeGP"; }
+  const char* name() const override { return "LatticeGP"; }
 
   void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const override {
     b->add32(GrColorSpaceXform::XformKey(fColorSpaceXform.get()));
@@ -153,7 +153,7 @@ class NonAALatticeOp final : public GrMeshDrawOp {
     this->setTransformedBounds(patch.fDst, viewMatrix, HasAABloat::kNo, IsZeroArea::kNo);
   }
 
-  const char* name() const noexcept override { return "NonAALatticeOp"; }
+  const char* name() const override { return "NonAALatticeOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     bool mipped = (GrSamplerState::Filter::kMipMap == fFilter);

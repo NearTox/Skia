@@ -10,9 +10,9 @@
 
 #import <metal/metal.h>
 
-#include <atomic>
 #include "include/gpu/GrTypes.h"
 #include "src/core/SkOpts.h"
+#include <atomic>
 
 class GrMtlGpu;
 class GrStencilSettings;

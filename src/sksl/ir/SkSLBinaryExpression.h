@@ -11,6 +11,7 @@
 #include "src/sksl/SkSLIRGenerator.h"
 #include "src/sksl/SkSLLexer.h"
 #include "src/sksl/ir/SkSLExpression.h"
+#include "src/sksl/ir/SkSLExpression.h"
 
 namespace SkSL {
 
@@ -20,7 +21,7 @@ namespace SkSL {
 struct BinaryExpression : public Expression {
   BinaryExpression(
       int offset, std::unique_ptr<Expression> left, Token::Kind op,
-      std::unique_ptr<Expression> right, const Type& type) noexcept
+      std::unique_ptr<Expression> right, const Type& type)
       : INHERITED(offset, kBinary_Kind, type),
         fLeft(std::move(left)),
         fOperator(op),

@@ -4,13 +4,13 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "include/effects/SkLayerDrawLooper.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
 #include "include/core/SkMaskFilter.h"
 #include "include/core/SkString.h"
 #include "include/core/SkUnPreMultiply.h"
 #include "include/effects/SkBlurDrawLooper.h"
+#include "include/effects/SkLayerDrawLooper.h"
 #include "src/core/SkArenaAlloc.h"
 #include "src/core/SkBlendModePriv.h"
 #include "src/core/SkColorSpacePriv.h"

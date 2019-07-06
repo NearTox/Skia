@@ -7,16 +7,16 @@
 
 #include "include/core/SkVertices.h"
 
-#include <atomic>
-#include <new>
 #include "include/core/SkData.h"
 #include "include/private/SkTo.h"
 #include "src/core/SkReader32.h"
 #include "src/core/SkSafeMath.h"
 #include "src/core/SkSafeRange.h"
 #include "src/core/SkWriter32.h"
+#include <atomic>
+#include <new>
 
-static int32_t next_id() noexcept {
+static int32_t next_id() {
   static std::atomic<int32_t> nextID{1};
 
   int32_t id;
@@ -29,7 +29,7 @@ static int32_t next_id() noexcept {
 struct SkVertices::Sizes {
   Sizes(
       SkVertices::VertexMode mode, int vertexCount, int indexCount, bool hasTexs, bool hasColors,
-      bool hasBones) noexcept {
+      bool hasBones) {
     SkSafeMath safe;
 
     fVSize = safe.mul(vertexCount, sizeof(SkPoint));
@@ -74,7 +74,7 @@ struct SkVertices::Sizes {
     }
   }
 
-  bool isValid() const noexcept { return fTotal != 0; }
+  bool isValid() const { return fTotal != 0; }
 
   size_t fTotal;   // size of entire SkVertices allocation (obj + arrays)
   size_t fArrays;  // size of all the arrays (V + T + C + BI + BW + I)
@@ -173,39 +173,33 @@ sk_sp<SkVertices> SkVertices::Builder::detach() {
   return nullptr;
 }
 
-int SkVertices::Builder::vertexCount() const noexcept {
-  return fVertices ? fVertices->vertexCount() : 0;
-}
+int SkVertices::Builder::vertexCount() const { return fVertices ? fVertices->vertexCount() : 0; }
 
-int SkVertices::Builder::indexCount() const noexcept {
-  return fVertices ? fVertices->indexCount() : 0;
-}
+int SkVertices::Builder::indexCount() const { return fVertices ? fVertices->indexCount() : 0; }
 
-bool SkVertices::Builder::isVolatile() const noexcept {
-  return fVertices ? fVertices->isVolatile() : true;
-}
+bool SkVertices::Builder::isVolatile() const { return fVertices ? fVertices->isVolatile() : true; }
 
-SkPoint* SkVertices::Builder::positions() noexcept {
+SkPoint* SkVertices::Builder::positions() {
   return fVertices ? const_cast<SkPoint*>(fVertices->positions()) : nullptr;
 }
 
-SkPoint* SkVertices::Builder::texCoords() noexcept {
+SkPoint* SkVertices::Builder::texCoords() {
   return fVertices ? const_cast<SkPoint*>(fVertices->texCoords()) : nullptr;
 }
 
-SkColor* SkVertices::Builder::colors() noexcept {
+SkColor* SkVertices::Builder::colors() {
   return fVertices ? const_cast<SkColor*>(fVertices->colors()) : nullptr;
 }
 
-SkVertices::BoneIndices* SkVertices::Builder::boneIndices() noexcept {
+SkVertices::BoneIndices* SkVertices::Builder::boneIndices() {
   return fVertices ? const_cast<BoneIndices*>(fVertices->boneIndices()) : nullptr;
 }
 
-SkVertices::BoneWeights* SkVertices::Builder::boneWeights() noexcept {
+SkVertices::BoneWeights* SkVertices::Builder::boneWeights() {
   return fVertices ? const_cast<BoneWeights*>(fVertices->boneWeights()) : nullptr;
 }
 
-uint16_t* SkVertices::Builder::indices() noexcept {
+uint16_t* SkVertices::Builder::indices() {
   if (!fVertices) {
     return nullptr;
   }
@@ -299,7 +293,7 @@ sk_sp<SkVertices> SkVertices::MakeCopy(
   return builder.detach();
 }
 
-size_t SkVertices::approximateSize() const noexcept {
+size_t SkVertices::approximateSize() const {
   Sizes sizes(
       fMode, fVertexCnt, fIndexCnt, this->hasTexCoords(), this->hasColors(), this->hasBones());
   SkASSERT(sizes.isValid());

@@ -1025,7 +1025,7 @@ void SkDraw::drawBitmap(
     const SkBitmap& bitmap, const SkMatrix& prematrix, const SkRect* dstBounds,
     const SkPaint& origPaint) const {
   SkDEBUGCODE(this->validate());
-
+);
   // nothing to draw
   if (fRC->isEmpty() || bitmap.width() == 0 || bitmap.height() == 0 ||
       bitmap.colorType() == kUnknown_SkColorType) {
@@ -1088,7 +1088,7 @@ void SkDraw::drawBitmap(
 
 void SkDraw::drawSprite(const SkBitmap& bitmap, int x, int y, const SkPaint& origPaint) const {
   SkDEBUGCODE(this->validate());
-
+);
   // nothing to draw
   if (fRC->isEmpty() || bitmap.width() == 0 || bitmap.height() == 0 ||
       bitmap.colorType() == kUnknown_SkColorType) {

@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "include/effects/SkLumaColorFilter.h"
 #include "include/core/SkString.h"
+#include "include/effects/SkLumaColorFilter.h"
 #include "include/private/SkColorData.h"
 #include "src/core/SkEffectPriv.h"
 #include "src/core/SkRasterPipeline.h"

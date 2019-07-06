@@ -25,22 +25,21 @@ typedef uint32_t GrColor;
 // ES doesn't allow BGRA vertex attrib order so if they were not in this order
 // we'd have to swizzle in shaders.
 #ifdef SK_CPU_BENDIAN
-#define GrColor_SHIFT_R 24
-#define GrColor_SHIFT_G 16
-#define GrColor_SHIFT_B 8
-#define GrColor_SHIFT_A 0
+#  define GrColor_SHIFT_R 24
+#  define GrColor_SHIFT_G 16
+#  define GrColor_SHIFT_B 8
+#  define GrColor_SHIFT_A 0
 #else
-#define GrColor_SHIFT_R 0
-#define GrColor_SHIFT_G 8
-#define GrColor_SHIFT_B 16
-#define GrColor_SHIFT_A 24
+#  define GrColor_SHIFT_R 0
+#  define GrColor_SHIFT_G 8
+#  define GrColor_SHIFT_B 16
+#  define GrColor_SHIFT_A 24
 #endif
 
 /**
  *  Pack 4 components (RGBA) into a GrColor int
  */
-static constexpr inline GrColor GrColorPackRGBA(
-    unsigned r, unsigned g, unsigned b, unsigned a) noexcept {
+static inline GrColor GrColorPackRGBA(unsigned r, unsigned g, unsigned b, unsigned a) {
   SkASSERT((uint8_t)r == r);
   SkASSERT((uint8_t)g == g);
   SkASSERT((uint8_t)b == b);
@@ -63,18 +62,18 @@ static constexpr inline GrColor GrColorPackRGBA(
 #define GrColor_ILLEGAL (~(0xFF << GrColor_SHIFT_A))
 
 /** Normalizes and coverts an uint8_t to a float. [0, 255] -> [0.0, 1.0] */
-static inline float GrNormalizeByteToFloat(uint8_t value) noexcept {
+static inline float GrNormalizeByteToFloat(uint8_t value) {
   static const float ONE_OVER_255 = 1.f / 255.f;
   return value * ONE_OVER_255;
 }
 
 /** Used to pick vertex attribute types. */
-static inline bool SkPMColor4fFitsInBytes(const SkPMColor4f& color) noexcept {
+static inline bool SkPMColor4fFitsInBytes(const SkPMColor4f& color) {
   // Might want to instead check that the components are [0...a] instead of [0...1]?
   return color.fitsInBytes();
 }
 
-static inline uint64_t SkPMColor4f_toFP16(const SkPMColor4f& color) noexcept {
+static inline uint64_t SkPMColor4f_toFP16(const SkPMColor4f& color) {
   uint64_t halfColor;
   SkFloatToHalf_finite_ftz(Sk4f::Load(color.vec())).store(&halfColor);
   return halfColor;
@@ -88,8 +87,7 @@ static inline uint64_t SkPMColor4f_toFP16(const SkPMColor4f& color) noexcept {
  */
 class GrVertexColor {
  public:
-  explicit GrVertexColor(const SkPMColor4f& color, bool wideColor) noexcept
-      : fWideColor(wideColor) {
+  explicit GrVertexColor(const SkPMColor4f& color, bool wideColor) : fWideColor(wideColor) {
     if (wideColor) {
       SkFloatToHalf_finite_ftz(Sk4f::Load(color.vec())).store(&fColor);
     } else {
@@ -97,7 +95,7 @@ class GrVertexColor {
     }
   }
 
-  size_t size() const noexcept { return fWideColor ? 8 : 4; }
+  size_t size() const { return fWideColor ? 8 : 4; }
 
  private:
   friend struct GrVertexWriter;

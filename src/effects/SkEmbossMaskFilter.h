@@ -27,7 +27,7 @@ class SK_API SkEmbossMaskFilter : public SkMaskFilterBase {
 
   // overrides from SkMaskFilter
   //  This method is not exported to java.
-  SkMask::Format getFormat() const noexcept override;
+  SkMask::Format getFormat() const override;
   //  This method is not exported to java.
   bool filterMask(SkMask* dst, const SkMask& src, const SkMatrix&, SkIPoint* margin) const override;
 

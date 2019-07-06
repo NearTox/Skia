@@ -81,7 +81,7 @@ GrBackendFormat GetBackendFormat(
         }
     }
   } else if (backend == GrBackendApi::kVulkan) {
-#ifdef SK_VULKAN
+#  ifdef SK_VULKAN
     switch (bufferFormat) {
       case AHARDWAREBUFFER_FORMAT_R8G8B8A8_UNORM:
         return GrBackendFormat::MakeVk(VK_FORMAT_R8G8B8A8_UNORM);
@@ -144,9 +144,9 @@ GrBackendFormat GetBackendFormat(
         }
       }
     }
-#else
+#  else
     return GrBackendFormat();
-#endif
+#  endif
   }
   return GrBackendFormat();
 }
@@ -230,7 +230,7 @@ static GrBackendTexture make_gl_backend_texture(
   return GrBackendTexture(width, height, GrMipMapped::kNo, textureInfo);
 }
 
-#ifdef SK_VULKAN
+#  ifdef SK_VULKAN
 class VulkanCleanupHelper {
  public:
   VulkanCleanupHelper(GrVkGpu* gpu, VkImage image, VkDeviceMemory memory)
@@ -445,7 +445,7 @@ static GrBackendTexture make_vk_backend_texture(
 
   return GrBackendTexture(width, height, imageInfo);
 }
-#endif
+#  endif
 
 static bool can_import_protected_content_eglimpl() {
   EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
@@ -485,15 +485,15 @@ GrBackendTexture MakeBackendTexture(
         backendFormat, isRenderable);
   } else {
     SkASSERT(GrBackendApi::kVulkan == context->backend());
-#ifdef SK_VULKAN
+#  ifdef SK_VULKAN
     // Currently we don't support protected images on vulkan
     SkASSERT(!createProtectedImage);
     return make_vk_backend_texture(
         context, hardwareBuffer, width, height, deleteProc, deleteCtx, createProtectedImage,
         backendFormat, isRenderable);
-#else
+#  else
     return GrBackendTexture();
-#endif
+#  endif
   }
 }
 

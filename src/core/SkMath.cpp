@@ -16,7 +16,7 @@
   zeros -= n;                  \
   x >>= n
 
-int SkCLZ_portable(uint32_t x) noexcept {
+int SkCLZ_portable(uint32_t x) {
   if (x == 0) {
     return 32;
   }
@@ -45,7 +45,7 @@ int SkCLZ_portable(uint32_t x) noexcept {
 
 /* www.worldserver.com/turk/computergraphics/FixedSqrt.pdf
  */
-int32_t SkSqrtBits(int32_t x, int count) noexcept {
+int32_t SkSqrtBits(int32_t x, int count) {
   SkASSERT(x >= 0 && count > 0 && (unsigned)count <= 30);
 
   uint32_t root = 0;
@@ -70,13 +70,13 @@ int32_t SkSqrtBits(int32_t x, int count) noexcept {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-size_t SkSafeMath::Add(size_t x, size_t y) noexcept {
+size_t SkSafeMath::Add(size_t x, size_t y) {
   SkSafeMath tmp;
   size_t sum = tmp.add(x, y);
   return tmp.ok() ? sum : SIZE_MAX;
 }
 
-size_t SkSafeMath::Mul(size_t x, size_t y) noexcept {
+size_t SkSafeMath::Mul(size_t x, size_t y) {
   SkSafeMath tmp;
   size_t prod = tmp.mul(x, y);
   return tmp.ok() ? prod : SIZE_MAX;
@@ -84,7 +84,7 @@ size_t SkSafeMath::Mul(size_t x, size_t y) noexcept {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool sk_floats_are_unit(const float array[], size_t count) noexcept {
+bool sk_floats_are_unit(const float array[], size_t count) {
   bool is_unit = true;
   for (size_t i = 0; i < count; ++i) {
     is_unit &= (array[i] >= 0) & (array[i] <= 1);

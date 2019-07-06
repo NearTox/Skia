@@ -117,7 +117,7 @@ SkTypeface::LocalizedStrings* DWriteFontTypeface::onCreateFamilyNameIterator() c
 
 int DWriteFontTypeface::onGetVariationDesignPosition(
     SkFontArguments::VariationPosition::Coordinate coordinates[], int coordinateCount) const {
-#if defined(NTDDI_WIN10_RS3) && NTDDI_VERSION >= NTDDI_WIN10_RS3
+#  if defined(NTDDI_WIN10_RS3) && NTDDI_VERSION >= NTDDI_WIN10_RS3
 
   SkTScopedComPtr<IDWriteFontFace5> fontFace5;
   if (FAILED(fDWriteFontFace->QueryInterface(&fontFace5))) {
@@ -156,14 +156,14 @@ int DWriteFontTypeface::onGetVariationDesignPosition(
 
   return variableAxisCount;
 
-#endif
+#  endif
 
   return -1;
 }
 
 int DWriteFontTypeface::onGetVariationDesignParameters(
     SkFontParameters::Variation::Axis parameters[], int parameterCount) const {
-#if defined(NTDDI_WIN10_RS3) && NTDDI_VERSION >= NTDDI_WIN10_RS3
+#  if defined(NTDDI_WIN10_RS3) && NTDDI_VERSION >= NTDDI_WIN10_RS3
 
   SkTScopedComPtr<IDWriteFontFace5> fontFace5;
   if (FAILED(fDWriteFontFace->QueryInterface(&fontFace5))) {
@@ -210,7 +210,7 @@ int DWriteFontTypeface::onGetVariationDesignParameters(
 
   return variableAxisCount;
 
-#endif
+#  endif
 
   return -1;
 }
@@ -340,7 +340,7 @@ void DWriteFontTypeface::onFilterRec(SkScalerContextRec* rec) const {
   }
   rec->setHinting(h);
 
-#if defined(SK_FONT_HOST_USE_SYSTEM_SETTINGS)
+#  if defined(SK_FONT_HOST_USE_SYSTEM_SETTINGS)
   IDWriteFactory* factory = sk_get_dwrite_factory();
   if (factory != nullptr) {
     SkTScopedComPtr<IDWriteRenderingParams> defaultRenderingParams;

@@ -21,29 +21,29 @@
 // -- SkGlyphRun -----------------------------------------------------------------------------------
 SkGlyphRun::SkGlyphRun(
     const SkFont& font, SkSpan<const SkPoint> positions, SkSpan<const SkGlyphID> glyphIDs,
-    SkSpan<const char> text, SkSpan<const uint32_t> clusters) noexcept
+    SkSpan<const char> text, SkSpan<const uint32_t> clusters)
     : fPositions{positions}, fGlyphIDs{glyphIDs}, fText{text}, fClusters{clusters}, fFont{font} {}
 
-SkGlyphRun::SkGlyphRun(const SkGlyphRun& that, const SkFont& font) noexcept
+SkGlyphRun::SkGlyphRun(const SkGlyphRun& that, const SkFont& font)
     : fPositions{that.fPositions},
       fGlyphIDs{that.fGlyphIDs},
       fText{that.fText},
       fClusters{that.fClusters},
       fFont{font} {}
 
-void SkGlyphRun::filloutGlyphsAndPositions(SkGlyphID* glyphIDs, SkPoint* positions) noexcept {
+void SkGlyphRun::filloutGlyphsAndPositions(SkGlyphID* glyphIDs, SkPoint* positions) {
   memcpy(glyphIDs, fGlyphIDs.data(), fGlyphIDs.size_bytes());
   memcpy(positions, fPositions.data(), fPositions.size_bytes());
 }
 
 // -- SkGlyphRunList -------------------------------------------------------------------------------
-SkGlyphRunList::SkGlyphRunList() noexcept = default;
+SkGlyphRunList::SkGlyphRunList() = default;
 SkGlyphRunList::SkGlyphRunList(
     const SkPaint& paint, const SkTextBlob* blob, SkPoint origin,
-    SkSpan<const SkGlyphRun> glyphRunList) noexcept
+    SkSpan<const SkGlyphRun> glyphRunList)
     : fOriginalPaint{&paint}, fOriginalTextBlob{blob}, fOrigin{origin}, fGlyphRuns{glyphRunList} {}
 
-SkGlyphRunList::SkGlyphRunList(const SkGlyphRun& glyphRun, const SkPaint& paint) noexcept
+SkGlyphRunList::SkGlyphRunList(const SkGlyphRun& glyphRun, const SkPaint& paint)
     : fOriginalPaint{&paint},
       fOriginalTextBlob{nullptr},
       fOrigin{SkPoint::Make(0, 0)},
@@ -53,7 +53,7 @@ uint64_t SkGlyphRunList::uniqueID() const {
   return fOriginalTextBlob != nullptr ? fOriginalTextBlob->uniqueID() : SK_InvalidUniqueID;
 }
 
-bool SkGlyphRunList::anyRunsLCD() const noexcept {
+bool SkGlyphRunList::anyRunsLCD() const {
   for (const auto& r : fGlyphRuns) {
     if (r.font().getEdging() == SkFont::Edging::kSubpixelAntiAlias) {
       return true;
@@ -62,7 +62,7 @@ bool SkGlyphRunList::anyRunsLCD() const noexcept {
   return false;
 }
 
-bool SkGlyphRunList::anyRunsSubpixelPositioned() const noexcept {
+bool SkGlyphRunList::anyRunsSubpixelPositioned() const {
   for (const auto& r : fGlyphRuns) {
     if (r.font().isSubpixel()) {
       return true;
@@ -71,7 +71,7 @@ bool SkGlyphRunList::anyRunsSubpixelPositioned() const noexcept {
   return false;
 }
 
-bool SkGlyphRunList::allFontsFinite() const noexcept {
+bool SkGlyphRunList::allFontsFinite() const {
   for (const auto& r : fGlyphRuns) {
     if (!SkFontPriv::IsFinite(r.font())) {
       return false;
@@ -225,7 +225,7 @@ void SkGlyphRunBuilder::drawGlyphsWithPositions(
   }
 }
 
-const SkGlyphRunList& SkGlyphRunBuilder::useGlyphRunList() noexcept { return fGlyphRunList; }
+const SkGlyphRunList& SkGlyphRunBuilder::useGlyphRunList() { return fGlyphRunList; }
 
 void SkGlyphRunBuilder::initialize(size_t totalRunSize) {
   if (totalRunSize > fMaxTotalRunSize) {
@@ -262,7 +262,7 @@ void SkGlyphRunBuilder::makeGlyphRun(
 }
 
 void SkGlyphRunBuilder::makeGlyphRunList(
-    const SkPaint& paint, const SkTextBlob* blob, SkPoint origin) noexcept {
+    const SkPaint& paint, const SkTextBlob* blob, SkPoint origin) {
   fGlyphRunList.~SkGlyphRunList();
   new (&fGlyphRunList)
       SkGlyphRunList{paint, blob, origin, SkSpan<const SkGlyphRun>{fGlyphRunListStorage}};

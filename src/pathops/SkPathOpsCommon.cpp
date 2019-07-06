@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "src/pathops/SkPathOpsCommon.h"
 #include "include/private/SkMacros.h"
 #include "src/core/SkTSort.h"
 #include "src/pathops/SkAddIntersections.h"
 #include "src/pathops/SkOpCoincidence.h"
 #include "src/pathops/SkOpEdgeBuilder.h"
+#include "src/pathops/SkPathOpsCommon.h"
 #include "src/pathops/SkPathWriter.h"
 
 const SkOpAngle* AngleWinding(

@@ -109,7 +109,7 @@ class GrAtlasManager : public GrOnFlushCallbackObject {
 
   // The AtlasGlyph cache always survives freeGpuResources so we want it to remain in the active
   // OnFlushCallbackObject list
-  bool retainOnFreeGpuResources() noexcept override { return true; }
+  bool retainOnFreeGpuResources() override { return true; }
 
   ///////////////////////////////////////////////////////////////////////////
   // Functions intended debug only
@@ -124,7 +124,7 @@ class GrAtlasManager : public GrOnFlushCallbackObject {
   bool initAtlas(GrMaskFormat);
 
   // There is a 1:1 mapping between GrMaskFormats and atlas indices
-  static int MaskFormatToAtlasIndex(GrMaskFormat format) noexcept {
+  static int MaskFormatToAtlasIndex(GrMaskFormat format) {
     static const int sAtlasIndices[] = {
         kA8_GrMaskFormat,
         kA565_GrMaskFormat,

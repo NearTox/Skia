@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "include/core/SkDrawLooper.h"
 #include "include/core/SkCanvas.h"
+#include "include/core/SkDrawLooper.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkPaint.h"
 #include "include/core/SkRect.h"

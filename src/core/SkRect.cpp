@@ -9,7 +9,7 @@
 
 #include "include/private/SkMalloc.h"
 
-void SkIRect::join(int32_t left, int32_t top, int32_t right, int32_t bottom) noexcept {
+void SkIRect::join(int32_t left, int32_t top, int32_t right, int32_t bottom) {
   // do nothing if the params are empty
   if (left >= right || top >= bottom) {
     return;
@@ -28,7 +28,7 @@ void SkIRect::join(int32_t left, int32_t top, int32_t right, int32_t bottom) noe
 
 /////////////////////////////////////////////////////////////////////////////
 
-void SkRect::toQuad(SkPoint quad[4]) const noexcept {
+void SkRect::toQuad(SkPoint quad[4]) const {
   SkASSERT(quad);
 
   quad[0].set(fLeft, fTop);
@@ -39,7 +39,7 @@ void SkRect::toQuad(SkPoint quad[4]) const noexcept {
 
 #include "include/private/SkNx.h"
 
-bool SkRect::setBoundsCheck(const SkPoint pts[], int count) noexcept {
+bool SkRect::setBoundsCheck(const SkPoint pts[], int count) {
   SkASSERT((pts && count > 0) || count == 0);
 
   if (count <= 0) {
@@ -79,7 +79,7 @@ bool SkRect::setBoundsCheck(const SkPoint pts[], int count) noexcept {
   return all_finite;
 }
 
-void SkRect::setBoundsNoCheck(const SkPoint pts[], int count) noexcept {
+void SkRect::setBoundsNoCheck(const SkPoint pts[], int count) {
   if (!this->setBoundsCheck(pts, count)) {
     this->set(SK_ScalarNaN, SK_ScalarNaN, SK_ScalarNaN, SK_ScalarNaN);
   }
@@ -95,23 +95,23 @@ void SkRect::setBoundsNoCheck(const SkPoint pts[], int count) noexcept {
   } while (0)
 // do the !(opposite) check so we return false if either arg is NaN
 
-bool SkRect::intersect(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) noexcept {
+bool SkRect::intersect(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) {
   CHECK_INTERSECT(left, top, right, bottom, fLeft, fTop, fRight, fBottom);
   this->setLTRB(L, T, R, B);
   return true;
 }
 
-bool SkRect::intersect(const SkRect& r) noexcept {
+bool SkRect::intersect(const SkRect& r) {
   return this->intersect(r.fLeft, r.fTop, r.fRight, r.fBottom);
 }
 
-bool SkRect::intersect(const SkRect& a, const SkRect& b) noexcept {
+bool SkRect::intersect(const SkRect& a, const SkRect& b) {
   CHECK_INTERSECT(a.fLeft, a.fTop, a.fRight, a.fBottom, b.fLeft, b.fTop, b.fRight, b.fBottom);
   this->setLTRB(L, T, R, B);
   return true;
 }
 
-void SkRect::join(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) noexcept {
+void SkRect::join(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) {
   // do nothing if the params are empty
   if (left >= right || top >= bottom) {
     return;

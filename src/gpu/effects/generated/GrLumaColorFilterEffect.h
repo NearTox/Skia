@@ -18,7 +18,7 @@ class GrLumaColorFilterEffect : public GrFragmentProcessor {
  public:
 #include "include/private/SkColorData.h"
 
-  SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& input) const noexcept override {
+  SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& input) const override {
     float luma = SK_ITU_BT709_LUM_COEFF_R * input.fR + SK_ITU_BT709_LUM_COEFF_G * input.fG +
                  SK_ITU_BT709_LUM_COEFF_B * input.fB;
     return {0, 0, 0, SkTPin(luma, 0.0f, 1.0f)};
@@ -26,16 +26,16 @@ class GrLumaColorFilterEffect : public GrFragmentProcessor {
   static std::unique_ptr<GrFragmentProcessor> Make() {
     return std::unique_ptr<GrFragmentProcessor>(new GrLumaColorFilterEffect());
   }
-  GrLumaColorFilterEffect(const GrLumaColorFilterEffect& src) noexcept;
+  GrLumaColorFilterEffect(const GrLumaColorFilterEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const noexcept override { return "LumaColorFilterEffect"; }
+  const char* name() const override { return "LumaColorFilterEffect"; }
 
  private:
   GrLumaColorFilterEffect()
       : INHERITED(kGrLumaColorFilterEffect_ClassID, kNone_OptimizationFlags) {}
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
-  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

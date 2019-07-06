@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "include/core/SkPathEffect.h"
 #include "include/core/SkPath.h"
+#include "include/core/SkPathEffect.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
 
@@ -37,9 +37,7 @@ bool SkPathEffect::asPoints(
   return this->onAsPoints(results, src, rec, mx, rect);
 }
 
-SkPathEffect::DashType SkPathEffect::asADash(DashInfo* info) const noexcept {
-  return this->onAsADash(info);
-}
+SkPathEffect::DashType SkPathEffect::asADash(DashInfo* info) const { return this->onAsADash(info); }
 
 ///////////////////////////////////////////////////////////////////////////////
 

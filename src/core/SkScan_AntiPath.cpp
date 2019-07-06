@@ -638,7 +638,7 @@ static bool ShouldUseAAA(const SkPath& path, SkScalar avgLength, SkScalar comple
     return true;
   }
 
-#ifdef SK_SUPPORT_LEGACY_AAA_CHOICE
+#  ifdef SK_SUPPORT_LEGACY_AAA_CHOICE
   const SkRect& bounds = path.getBounds();
   // When the path have so many points compared to the size of its
   // bounds/resolution, it indicates that the path is not quite smooth in
@@ -647,7 +647,7 @@ static bool ShouldUseAAA(const SkPath& path, SkScalar avgLength, SkScalar comple
   // Aanlytic AA is not likely to produce visible quality improvements,
   // and Analytic AA might be slower than supersampling.
   return path.countPoints() < SkTMax(bounds.width(), bounds.height()) / 2 - 10;
-#else
+#  else
   if (path.countPoints() >= path.getBounds().height()) {
     // SAA is faster than AAA in this case even if there are no
     // intersections because AAA will have too many scan lines. See
@@ -656,7 +656,7 @@ static bool ShouldUseAAA(const SkPath& path, SkScalar avgLength, SkScalar comple
   }
   // We will use AAA if the number of verbs < kSampleSize and therefore complexity < 0
   return complexity < kComplexityThreshold;
-#endif
+#  endif
 #endif
 }
 

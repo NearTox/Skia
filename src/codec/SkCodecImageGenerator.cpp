@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "src/codec/SkCodecImageGenerator.h"
 #include "include/core/SkYUVAIndex.h"
+#include "src/codec/SkCodecImageGenerator.h"
 #include "src/core/SkMakeUnique.h"
 #include "src/core/SkPixmapPriv.h"
 

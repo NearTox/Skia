@@ -409,13 +409,13 @@ class SK_API SkSurface : public SkRefCnt {
 
       @return  number of pixel columns
   */
-  int width() const noexcept { return fWidth; }
+  int width() const { return fWidth; }
 
   /** Returns pixel row count; may be zero or greater.
 
       @return  number of pixel rows
   */
-  int height() const noexcept { return fHeight; }
+  int height() const { return fHeight; }
 
   /** Returns unique value identifying the content of SkSurface. Returned value changes
       each time the content changes. Content is changed by drawing, or by calling
@@ -423,7 +423,7 @@ class SK_API SkSurface : public SkRefCnt {
 
       @return  unique content identifier
   */
-  uint32_t generationID() noexcept;
+  uint32_t generationID();
 
   /** \enum SkSurface::ContentChangeMode
       ContentChangeMode members are parameters to notifyContentWillChange().
@@ -728,7 +728,7 @@ class SK_API SkSurface : public SkRefCnt {
 
       @return  LCD striping orientation and setting for device independent fonts
   */
-  const SkSurfaceProps& props() const noexcept { return fProps; }
+  const SkSurfaceProps& props() const { return fProps; }
 
   /** Issues pending SkSurface commands to the GPU-backed API and resolves any SkSurface MSAA.
 
@@ -834,7 +834,7 @@ class SK_API SkSurface : public SkRefCnt {
   SkSurface(const SkImageInfo& imageInfo, const SkSurfaceProps* surfaceProps);
 
   // called by subclass if their contents have changed
-  void dirtyGenerationID() noexcept { fGenerationID = 0; }
+  void dirtyGenerationID() { fGenerationID = 0; }
 
  private:
   const SkSurfaceProps fProps;

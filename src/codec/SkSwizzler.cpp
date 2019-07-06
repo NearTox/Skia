@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "src/codec/SkSwizzler.h"
 #include "include/private/SkColorData.h"
 #include "include/private/SkHalf.h"
 #include "include/private/SkTemplates.h"
 #include "src/codec/SkCodecPriv.h"
+#include "src/codec/SkSwizzler.h"
 #include "src/core/SkOpts.h"
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
-#include "include/android/SkAndroidFrameworkUtils.h"
+#  include "include/android/SkAndroidFrameworkUtils.h"
 #endif
 
 static void copy(

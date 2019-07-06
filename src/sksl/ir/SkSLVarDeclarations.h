@@ -23,7 +23,7 @@ namespace SkSL {
 struct VarDeclaration : public Statement {
   VarDeclaration(
       const Variable* var, std::vector<std::unique_ptr<Expression>> sizes,
-      std::unique_ptr<Expression> value) noexcept
+      std::unique_ptr<Expression> value)
       : INHERITED(var->fOffset, Statement::kVarDeclaration_Kind),
         fVar(var),
         fSizes(std::move(sizes)),

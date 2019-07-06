@@ -48,7 +48,7 @@ class SkAutoMalloc : SkNoncopyable {
   /**
    *  Reallocates the block to a new size. The ptr may or may not change.
    */
-  void* reset(size_t size = 0, OnShrink shrink = kAlloc_OnShrink) noexcept {
+  void* reset(size_t size = 0, OnShrink shrink = kAlloc_OnShrink) {
     if (size != fSize && (size > fSize || kReuse_OnShrink != shrink)) {
       fPtr.reset(size ? sk_malloc_throw(size) : nullptr);
       fSize = size;
@@ -59,21 +59,21 @@ class SkAutoMalloc : SkNoncopyable {
   /**
    *  Return the allocated block.
    */
-  void* get() noexcept { return fPtr.get(); }
-  const void* get() const noexcept { return fPtr.get(); }
+  void* get() { return fPtr.get(); }
+  const void* get() const { return fPtr.get(); }
 
   /** Transfer ownership of the current ptr to the caller, setting the
       internal reference to null. Note the caller is reponsible for calling
       sk_free on the returned address.
    */
-  void* release() noexcept {
+  void* release() {
     fSize = 0;
     return fPtr.release();
   }
 
  private:
   struct WrapFree {
-    void operator()(void* p) noexcept { sk_free(p); }
+    void operator()(void* p) { sk_free(p); }
   };
   std::unique_ptr<void, WrapFree> fPtr;
   size_t fSize;  // can be larger than the requested size (see kReuse)
@@ -123,7 +123,7 @@ class SkAutoSMalloc : SkNoncopyable {
    *  this may be on the stack or dynamically allocated, the caller must not call sk_free() on it,
    *  but must rely on SkAutoSMalloc to manage it.
    */
-  void* get() const noexcept { return fPtr; }
+  void* get() const { return fPtr; }
 
   /**
    *  Return a new block of the requested size, freeing (as necessary) any previously allocated
@@ -132,7 +132,7 @@ class SkAutoSMalloc : SkNoncopyable {
    */
   void* reset(
       size_t size, SkAutoMalloc::OnShrink shrink = SkAutoMalloc::kAlloc_OnShrink,
-      bool* didChangeAlloc = nullptr) noexcept {
+      bool* didChangeAlloc = nullptr) {
     size = (size < kSize) ? kSize : size;
     bool alloc = size != fSize && (SkAutoMalloc::kAlloc_OnShrink == shrink || size > fSize);
     if (didChangeAlloc) {
@@ -161,8 +161,8 @@ class SkAutoSMalloc : SkNoncopyable {
   // Align up to 32 bits.
   static const size_t kSizeAlign4 = SkAlign4(kSizeRequested);
 #if defined(SK_BUILD_FOR_GOOGLE3)
-  // Stack frame size is limited for SK_BUILD_FOR_GOOGLE3. 4k is less than the actual max, but
-  // some functions have multiple large stack allocations.
+  // Stack frame size is limited for SK_BUILD_FOR_GOOGLE3. 4k is less than the actual max, but some
+  // functions have multiple large stack allocations.
   static const size_t kMaxBytes = 4 * 1024;
   static const size_t kSize = kSizeRequested > kMaxBytes ? kMaxBytes : kSizeAlign4;
 #else

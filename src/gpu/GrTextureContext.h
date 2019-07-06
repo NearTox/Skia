@@ -27,16 +27,16 @@ class SK_API GrTextureContext : public GrSurfaceContext {
  public:
   ~GrTextureContext() override;
 
-  GrSurfaceProxy* asSurfaceProxy() noexcept override { return fTextureProxy.get(); }
-  const GrSurfaceProxy* asSurfaceProxy() const noexcept override { return fTextureProxy.get(); }
-  sk_sp<GrSurfaceProxy> asSurfaceProxyRef() noexcept override { return fTextureProxy; }
+  GrSurfaceProxy* asSurfaceProxy() override { return fTextureProxy.get(); }
+  const GrSurfaceProxy* asSurfaceProxy() const override { return fTextureProxy.get(); }
+  sk_sp<GrSurfaceProxy> asSurfaceProxyRef() override { return fTextureProxy; }
 
-  GrTextureProxy* asTextureProxy() noexcept override { return fTextureProxy.get(); }
-  const GrTextureProxy* asTextureProxy() const noexcept override { return fTextureProxy.get(); }
-  sk_sp<GrTextureProxy> asTextureProxyRef() noexcept override { return fTextureProxy; }
+  GrTextureProxy* asTextureProxy() override { return fTextureProxy.get(); }
+  const GrTextureProxy* asTextureProxy() const override { return fTextureProxy.get(); }
+  sk_sp<GrTextureProxy> asTextureProxyRef() override { return fTextureProxy; }
 
-  GrRenderTargetProxy* asRenderTargetProxy() noexcept override;
-  sk_sp<GrRenderTargetProxy> asRenderTargetProxyRef() noexcept override;
+  GrRenderTargetProxy* asRenderTargetProxy() override;
+  sk_sp<GrRenderTargetProxy> asRenderTargetProxyRef() override;
 
  protected:
   GrTextureContext(GrRecordingContext*, sk_sp<GrTextureProxy>, sk_sp<SkColorSpace>);

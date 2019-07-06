@@ -7,11 +7,11 @@
 
 #include "src/gpu/ccpr/GrCCFillGeometry.h"
 
+#include "include/gpu/GrTypes.h"
+#include "src/core/SkGeometry.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
-#include "include/gpu/GrTypes.h"
-#include "src/core/SkGeometry.h"
 
 static constexpr float kFlatnessThreshold = 1 / 16.f;  // 1/16 of a pixel.
 

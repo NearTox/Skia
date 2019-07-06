@@ -23,7 +23,7 @@ namespace SkSL {
 struct FunctionDeclaration : public Symbol {
   FunctionDeclaration(
       int offset, Modifiers modifiers, StringFragment name, std::vector<const Variable*> parameters,
-      const Type& returnType) noexcept
+      const Type& returnType)
       : INHERITED(offset, kFunctionDeclaration_Kind, std::move(name)),
         fDefined(false),
         fBuiltin(false),

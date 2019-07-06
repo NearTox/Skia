@@ -24,14 +24,14 @@ class SkStrikeServer::SkGlyphCacheState : public SkStrikeInterface {
 
   void addGlyph(SkPackedGlyphID, bool pathOnly);
   void writePendingGlyphs(Serializer* serializer);
-  SkDiscardableHandleId discardableHandleId() const noexcept { return fDiscardableHandleId; }
+  SkDiscardableHandleId discardableHandleId() const { return fDiscardableHandleId; }
 
   bool isSubpixel() const { return fIsSubpixel; }
-  SkAxisAlignment axisAlignmentForHText() const noexcept { return fAxisAlignmentForHText; }
+  SkAxisAlignment axisAlignmentForHText() const { return fAxisAlignmentForHText; }
 
-  const SkDescriptor& getDescriptor() const noexcept override { return *fDescriptor.getDesc(); }
+  const SkDescriptor& getDescriptor() const override { return *fDescriptor.getDesc(); }
 
-  void setTypefaceAndEffects(const SkTypeface* typeface, SkScalerContextEffects effects) noexcept;
+  void setTypefaceAndEffects(const SkTypeface* typeface, SkScalerContextEffects effects);
 
   SkVector rounding() const override;
 
@@ -43,16 +43,16 @@ class SkStrikeServer::SkGlyphCacheState : public SkStrikeInterface {
 
   void generatePath(const SkGlyph& glyph) override;
 
-  void onAboutToExitScope() noexcept override {}
+  void onAboutToExitScope() override {}
 
  private:
-  bool hasPendingGlyphs() const noexcept {
+  bool hasPendingGlyphs() const {
     return !fPendingGlyphImages.empty() || !fPendingGlyphPaths.empty();
   }
   void writeGlyphPath(const SkPackedGlyphID& glyphID, Serializer* serializer) const;
 
   void ensureScalerContext();
-  void resetScalerContext() noexcept;
+  void resetScalerContext();
 
   // The set of glyphs cached on the remote client.
   SkTHashSet<SkPackedGlyphID> fCachedGlyphImages;
@@ -81,8 +81,8 @@ class SkStrikeServer::SkGlyphCacheState : public SkStrikeInterface {
 
   class GlyphMapHashTraits {
    public:
-    static SkPackedGlyphID GetKey(const SkGlyph* glyph) noexcept { return glyph->getPackedID(); }
-    static uint32_t Hash(SkPackedGlyphID glyphId) noexcept { return glyphId.hash(); }
+    static SkPackedGlyphID GetKey(const SkGlyph* glyph) { return glyph->getPackedID(); }
+    static uint32_t Hash(SkPackedGlyphID glyphId) { return glyphId.hash(); }
   };
 
   // FallbackTextHelper cases require glyph metrics when analyzing a glyph run, in which case

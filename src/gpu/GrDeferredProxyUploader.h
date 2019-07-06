@@ -75,10 +75,10 @@ class GrDeferredProxyUploader : public SkNoncopyable {
     fPixelsReady.signal();
   }
 
-  SkAutoPixmapStorage* getPixels() noexcept { return &fPixels; }
+  SkAutoPixmapStorage* getPixels() { return &fPixels; }
 
  protected:
-  void wait() noexcept {
+  void wait() {
     if (!fWaited) {
       fPixelsReady.wait();
       fWaited = true;
@@ -111,7 +111,7 @@ class GrTDeferredProxyUploader : public GrDeferredProxyUploader {
   T& data() { return *fData; }
 
  private:
-  void freeData() noexcept override { fData.reset(); }
+  void freeData() override { fData.reset(); }
 
   std::unique_ptr<T> fData;
 };

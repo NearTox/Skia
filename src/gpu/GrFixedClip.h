@@ -17,39 +17,38 @@
  */
 class GrFixedClip final : public GrHardClip {
  public:
-  GrFixedClip() noexcept = default;
-  explicit GrFixedClip(const SkIRect& scissorRect) noexcept : fScissorState(scissorRect) {}
+  GrFixedClip() = default;
+  explicit GrFixedClip(const SkIRect& scissorRect) : fScissorState(scissorRect) {}
 
-  const GrScissorState& scissorState() const noexcept { return fScissorState; }
-  bool scissorEnabled() const noexcept { return fScissorState.enabled(); }
-  const SkIRect& scissorRect() const noexcept {
+  const GrScissorState& scissorState() const { return fScissorState; }
+  bool scissorEnabled() const { return fScissorState.enabled(); }
+  const SkIRect& scissorRect() const {
     SkASSERT(scissorEnabled());
     return fScissorState.rect();
   }
 
-  void disableScissor() noexcept { fScissorState.setDisabled(); }
+  void disableScissor() { fScissorState.setDisabled(); }
 
-  void setScissor(const SkIRect& irect) noexcept { fScissorState.set(irect); }
-  bool SK_WARN_UNUSED_RESULT intersect(const SkIRect& irect) noexcept {
+  void setScissor(const SkIRect& irect) { fScissorState.set(irect); }
+  bool SK_WARN_UNUSED_RESULT intersect(const SkIRect& irect) {
     return fScissorState.intersect(irect);
   }
 
-  const GrWindowRectsState& windowRectsState() const noexcept { return fWindowRectsState; }
-  bool hasWindowRectangles() const noexcept { return fWindowRectsState.enabled(); }
+  const GrWindowRectsState& windowRectsState() const { return fWindowRectsState; }
+  bool hasWindowRectangles() const { return fWindowRectsState.enabled(); }
 
-  void disableWindowRectangles() noexcept { fWindowRectsState.setDisabled(); }
+  void disableWindowRectangles() { fWindowRectsState.setDisabled(); }
 
-  void setWindowRectangles(
-      const GrWindowRectangles& windows, GrWindowRectsState::Mode mode) noexcept {
+  void setWindowRectangles(const GrWindowRectangles& windows, GrWindowRectsState::Mode mode) {
     fWindowRectsState.set(windows, mode);
   }
 
-  bool quickContains(const SkRect&) const noexcept override;
-  void getConservativeBounds(int w, int h, SkIRect* devResult, bool* iior) const noexcept override;
-  bool isRRect(const SkRect& rtBounds, SkRRect* rr, GrAA*) const noexcept override;
-  bool apply(int rtWidth, int rtHeight, GrAppliedHardClip*, SkRect*) const noexcept override;
+  bool quickContains(const SkRect&) const override;
+  void getConservativeBounds(int w, int h, SkIRect* devResult, bool* iior) const override;
+  bool isRRect(const SkRect& rtBounds, SkRRect* rr, GrAA*) const override;
+  bool apply(int rtWidth, int rtHeight, GrAppliedHardClip*, SkRect*) const override;
 
-  static const GrFixedClip& Disabled() noexcept;
+  static const GrFixedClip& Disabled();
 
  private:
   GrScissorState fScissorState;

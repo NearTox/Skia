@@ -36,36 +36,36 @@ class GrCCClipPath {
     SkASSERT(!fAtlasLazyProxy || fAtlasLazyProxy->isUnique_debugOnly());
   }
 
-  bool isInitialized() const noexcept { return fAtlasLazyProxy != nullptr; }
+  bool isInitialized() const { return fAtlasLazyProxy != nullptr; }
   void init(
       const SkPath& deviceSpacePath, const SkIRect& accessRect, int rtWidth, int rtHeight,
       const GrCaps&);
 
-  void addAccess(const SkIRect& accessRect) noexcept {
+  void addAccess(const SkIRect& accessRect) {
     SkASSERT(this->isInitialized());
     fAccessRect.join(accessRect);
   }
-  GrTextureProxy* atlasLazyProxy() const noexcept {
+  GrTextureProxy* atlasLazyProxy() const {
     SkASSERT(this->isInitialized());
     return fAtlasLazyProxy.get();
   }
-  const SkPath& deviceSpacePath() const noexcept {
+  const SkPath& deviceSpacePath() const {
     SkASSERT(this->isInitialized());
     return fDeviceSpacePath;
   }
-  const SkIRect& pathDevIBounds() const noexcept {
+  const SkIRect& pathDevIBounds() const {
     SkASSERT(this->isInitialized());
     return fPathDevIBounds;
   }
 
-  void accountForOwnPath(GrCCPerFlushResourceSpecs*) const noexcept;
+  void accountForOwnPath(GrCCPerFlushResourceSpecs*) const;
   void renderPathInAtlas(GrCCPerFlushResources*, GrOnFlushResourceProvider*);
 
-  const SkVector& atlasScale() const noexcept {
+  const SkVector& atlasScale() const {
     SkASSERT(fHasAtlasTransform);
     return fAtlasScale;
   }
-  const SkVector& atlasTranslate() const noexcept {
+  const SkVector& atlasTranslate() const {
     SkASSERT(fHasAtlasTransform);
     return fAtlasTranslate;
   }

@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
+#include "src/core/SkOpts.h"
 #include "src/core/SkRasterPipeline.h"
 #include <algorithm>
-#include "src/core/SkOpts.h"
 
-SkRasterPipeline::SkRasterPipeline(SkArenaAlloc* alloc) noexcept : fAlloc(alloc) { this->reset(); }
-void SkRasterPipeline::reset() noexcept {
+SkRasterPipeline::SkRasterPipeline(SkArenaAlloc* alloc) : fAlloc(alloc) { this->reset(); }
+void SkRasterPipeline::reset() {
   fStages = nullptr;
   fNumStages = 0;
   fSlotsNeeded = 1;  // We always need one extra slot for just_return().
@@ -265,7 +265,7 @@ void SkRasterPipeline::append_gamut_clamp_if_normalized(const SkImageInfo& dstIn
   }
 }
 
-SkRasterPipeline::StartPipelineFn SkRasterPipeline::build_pipeline(void** ip) const noexcept {
+SkRasterPipeline::StartPipelineFn SkRasterPipeline::build_pipeline(void** ip) const {
   // We'll try to build a lowp pipeline, but if that fails fallback to a highp float pipeline.
   void** reset_point = ip;
 
@@ -301,7 +301,7 @@ SkRasterPipeline::StartPipelineFn SkRasterPipeline::build_pipeline(void** ip) co
   return SkOpts::start_pipeline_highp;
 }
 
-void SkRasterPipeline::run(size_t x, size_t y, size_t w, size_t h) const noexcept {
+void SkRasterPipeline::run(size_t x, size_t y, size_t w, size_t h) const {
   if (this->empty()) {
     return;
   }

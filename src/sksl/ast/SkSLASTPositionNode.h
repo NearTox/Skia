@@ -17,7 +17,7 @@ namespace SkSL {
  * An AST node with an associated position in the source.
  */
 struct ASTPositionNode : public ASTNode {
-  constexpr ASTPositionNode(int offset) noexcept : fOffset(offset) {}
+  ASTPositionNode(int offset) : fOffset(offset) {}
 
   // character offset of this element within the program being compiled, for error reporting
   // purposes

@@ -300,7 +300,7 @@ std::unique_ptr<SkCanvas> SkCanvasStateUtils::MakeFromCanvasState(const SkCanvas
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SkCanvasStateUtils::ReleaseCanvasState(SkCanvasState* state) noexcept {
+void SkCanvasStateUtils::ReleaseCanvasState(SkCanvasState* state) {
   SkASSERT(!state || SkCanvasState_v1::kVersion == state->version);
   // Upcast to the correct version of SkCanvasState. This avoids having a virtual destructor on
   // SkCanvasState. That would be strange since SkCanvasState has no other virtual functions, and

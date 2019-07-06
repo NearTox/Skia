@@ -53,14 +53,14 @@ class GrIORef : public SkNoncopyable {
   // templated helper classes (e.g. sk_sp). However, we have different categories of
   // refs (e.g. pending reads). We also don't require thread safety as GrCacheable objects are
   // not intended to cross thread boundaries.
-  void ref() const noexcept {
+  void ref() const {
     // Only the cache should be able to add the first ref to a resource.
     SkASSERT(fRefCnt > 0);
     this->validate();
     ++fRefCnt;
   }
 
-  void unref() const noexcept {
+  void unref() const {
     this->validate();
 
     if (fRefCnt == 1) {
@@ -78,7 +78,7 @@ class GrIORef : public SkNoncopyable {
     this->didRemoveRefOrPendingIO(kRef_CntType);
   }
 
-  void validate() const noexcept {
+  void validate() const {
 #ifdef SK_DEBUG
     SkASSERT(fRefCnt >= 0);
     SkASSERT(fPendingReads >= 0);
@@ -88,7 +88,7 @@ class GrIORef : public SkNoncopyable {
   }
 
  protected:
-  constexpr GrIORef() noexcept : fRefCnt(1), fPendingReads(0), fPendingWrites(0) {}
+  GrIORef() : fRefCnt(1), fPendingReads(0), fPendingWrites(0) {}
 
   enum CntType {
     kRef_CntType,
@@ -98,13 +98,13 @@ class GrIORef : public SkNoncopyable {
 
   bool internalHasPendingRead() const { return SkToBool(fPendingReads); }
   bool internalHasPendingWrite() const { return SkToBool(fPendingWrites); }
-  bool internalHasPendingIO() const noexcept { return SkToBool(fPendingWrites | fPendingReads); }
+  bool internalHasPendingIO() const { return SkToBool(fPendingWrites | fPendingReads); }
 
-  bool internalHasRef() const noexcept { return SkToBool(fRefCnt); }
-  bool internalHasUniqueRef() const noexcept { return fRefCnt == 1; }
+  bool internalHasRef() const { return SkToBool(fRefCnt); }
+  bool internalHasUniqueRef() const { return fRefCnt == 1; }
 
   // Privileged method that allows going from ref count = 0 to ref count = 1.
-  void addInitialRef() const noexcept {
+  void addInitialRef() const {
     this->validate();
     ++fRefCnt;
   }
@@ -114,12 +114,12 @@ class GrIORef : public SkNoncopyable {
   template <typename T>
   friend void testingOnly_getIORefCnts(const T*, int* refCnt, int* readCnt, int* writeCnt);
 
-  void addPendingRead() const noexcept {
+  void addPendingRead() const {
     this->validate();
     ++fPendingReads;
   }
 
-  void completedRead() const noexcept {
+  void completedRead() const {
     this->validate();
     if (fPendingReads == 1 && !fPendingWrites && !fRefCnt) {
       static_cast<const DERIVED*>(this)->notifyAllCntsWillBeZero();
@@ -128,12 +128,12 @@ class GrIORef : public SkNoncopyable {
     this->didRemoveRefOrPendingIO(kPendingRead_CntType);
   }
 
-  void addPendingWrite() const noexcept {
+  void addPendingWrite() const {
     this->validate();
     ++fPendingWrites;
   }
 
-  void completedWrite() const noexcept {
+  void completedWrite() const {
     this->validate();
     if (fPendingWrites == 1 && !fPendingReads && !fRefCnt) {
       static_cast<const DERIVED*>(this)->notifyAllCntsWillBeZero();
@@ -142,7 +142,7 @@ class GrIORef : public SkNoncopyable {
     this->didRemoveRefOrPendingIO(kPendingWrite_CntType);
   }
 
-  void didRemoveRefOrPendingIO(CntType cntTypeRemoved) const noexcept {
+  void didRemoveRefOrPendingIO(CntType cntTypeRemoved) const {
     if (0 == fPendingReads && 0 == fPendingWrites && 0 == fRefCnt) {
       static_cast<const DERIVED*>(this)->notifyAllCntsAreZero(cntTypeRemoved);
     }
@@ -174,7 +174,7 @@ class SK_API GrGpuResource : public GrIORef<GrGpuResource> {
    * @return true if the object has been released or abandoned,
    *         false otherwise.
    */
-  bool wasDestroyed() const noexcept { return nullptr == fGpu; }
+  bool wasDestroyed() const { return nullptr == fGpu; }
 
   /**
    * Retrieves the context that owns the object. Note that it is possible for
@@ -182,8 +182,8 @@ class SK_API GrGpuResource : public GrIORef<GrGpuResource> {
    * they no longer have an owning context. Destroying a GrContext
    * automatically releases all its resources.
    */
-  const GrContext* getContext() const noexcept;
-  GrContext* getContext() noexcept;
+  const GrContext* getContext() const;
+  GrContext* getContext();
 
   /**
    * Retrieves the amount of GPU memory used by this resource in bytes. It is
@@ -202,17 +202,17 @@ class SK_API GrGpuResource : public GrIORef<GrGpuResource> {
 
   class UniqueID {
    public:
-    constexpr UniqueID() noexcept = default;
+    UniqueID() = default;
 
-    constexpr explicit UniqueID(uint32_t id) noexcept : fID(id) {}
+    explicit UniqueID(uint32_t id) : fID(id) {}
 
-    uint32_t asUInt() const noexcept { return fID; }
+    uint32_t asUInt() const { return fID; }
 
-    bool operator==(const UniqueID& other) const noexcept { return fID == other.fID; }
-    bool operator!=(const UniqueID& other) const noexcept { return !(*this == other); }
+    bool operator==(const UniqueID& other) const { return fID == other.fID; }
+    bool operator!=(const UniqueID& other) const { return !(*this == other); }
 
-    void makeInvalid() noexcept { fID = SK_InvalidUniqueID; }
-    bool isInvalid() const noexcept { return fID == SK_InvalidUniqueID; }
+    void makeInvalid() { fID = SK_InvalidUniqueID; }
+    bool isInvalid() const { return fID == SK_InvalidUniqueID; }
 
    protected:
     uint32_t fID = SK_InvalidUniqueID;
@@ -223,31 +223,31 @@ class SK_API GrGpuResource : public GrIORef<GrGpuResource> {
    * not change when the content of the GrGpuResource object changes. This will never return
    * 0.
    */
-  UniqueID uniqueID() const noexcept { return fUniqueID; }
+  UniqueID uniqueID() const { return fUniqueID; }
 
   /** Returns the current unique key for the resource. It will be invalid if the resource has no
       associated unique key. */
-  const GrUniqueKey& getUniqueKey() const noexcept { return fUniqueKey; }
+  const GrUniqueKey& getUniqueKey() const { return fUniqueKey; }
 
   /**
    * Internal-only helper class used for manipulations of the resource by the cache.
    */
   class CacheAccess;
-  inline CacheAccess cacheAccess() noexcept;
-  inline const CacheAccess cacheAccess() const noexcept;
+  inline CacheAccess cacheAccess();
+  inline const CacheAccess cacheAccess() const;
 
   /**
    * Internal-only helper class used for manipulations of the resource by GrSurfaceProxy.
    */
   class ProxyAccess;
-  inline ProxyAccess proxyAccess() noexcept;
+  inline ProxyAccess proxyAccess();
 
   /**
    * Internal-only helper class used for manipulations of the resource by internal code.
    */
   class ResourcePriv;
-  inline ResourcePriv resourcePriv() noexcept;
-  inline const ResourcePriv resourcePriv() const noexcept;
+  inline ResourcePriv resourcePriv();
+  inline const ResourcePriv resourcePriv() const;
 
   /**
    * Dumps memory usage information for this GrGpuResource to traceMemoryDump.
@@ -265,7 +265,7 @@ class SK_API GrGpuResource : public GrIORef<GrGpuResource> {
    */
   virtual const char* getResourceType() const = 0;
 
-  static uint32_t CreateUniqueID() noexcept;
+  static uint32_t CreateUniqueID();
 
  protected:
   // This must be called by every non-wrapped GrGpuObject. It should be called once the object is
@@ -277,10 +277,10 @@ class SK_API GrGpuResource : public GrIORef<GrGpuResource> {
   // final class).
   void registerWithCacheWrapped(GrWrapCacheable);
 
-  GrGpuResource(GrGpu*) noexcept;
+  GrGpuResource(GrGpu*);
   virtual ~GrGpuResource();
 
-  GrGpu* getGpu() const noexcept { return fGpu; }
+  GrGpu* getGpu() const { return fGpu; }
 
   /** Overridden to free GPU resources in the backend API. */
   virtual void onRelease() {}
@@ -309,9 +309,9 @@ class SK_API GrGpuResource : public GrIORef<GrGpuResource> {
       size_t size) const;
 
  private:
-  bool isPurgeable() const noexcept;
-  bool hasRef() const noexcept;
-  bool hasRefOrPendingIO() const noexcept;
+  bool isPurgeable() const;
+  bool hasRef() const;
+  bool hasRefOrPendingIO() const;
 
   /**
    * Called by the registerWithCache if the resource is available to be used as scratch.
@@ -342,9 +342,9 @@ class SK_API GrGpuResource : public GrIORef<GrGpuResource> {
   // See comments in CacheAccess and ResourcePriv.
   void setUniqueKey(const GrUniqueKey&);
   void removeUniqueKey();
-  void notifyAllCntsWillBeZero() const noexcept;
-  void notifyAllCntsAreZero(CntType) const noexcept;
-  bool notifyRefCountIsZero() const noexcept;
+  void notifyAllCntsWillBeZero() const;
+  void notifyAllCntsAreZero(CntType) const;
+  bool notifyRefCountIsZero() const;
   void removeScratchKey();
   void makeBudgeted();
   void makeUnbudgeted();
@@ -380,7 +380,7 @@ class SK_API GrGpuResource : public GrIORef<GrGpuResource> {
 
 class GrGpuResource::ProxyAccess {
  private:
-  constexpr ProxyAccess(GrGpuResource* resource) noexcept : fResource(resource) {}
+  ProxyAccess(GrGpuResource* resource) : fResource(resource) {}
 
   /** Proxies are allowed to take a resource from no refs to one ref. */
   void ref(GrResourceCache* cache);
@@ -396,8 +396,6 @@ class GrGpuResource::ProxyAccess {
   friend class GrIORefProxy;
 };
 
-inline GrGpuResource::ProxyAccess GrGpuResource::proxyAccess() noexcept {
-  return ProxyAccess(this);
-}
+inline GrGpuResource::ProxyAccess GrGpuResource::proxyAccess() { return ProxyAccess(this); }
 
 #endif

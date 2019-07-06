@@ -39,7 +39,7 @@ class SkShaderBase : public SkShader {
    */
   virtual bool isConstant() const { return false; }
 
-  const SkMatrix& getLocalMatrix() const noexcept { return fLocalMatrix; }
+  const SkMatrix& getLocalMatrix() const { return fLocalMatrix; }
 
   enum Flags {
     //!< set if all of the colors will be opaque
@@ -63,7 +63,7 @@ class SkShaderBase : public SkShader {
   struct ContextRec {
     ContextRec(
         const SkPaint& paint, const SkMatrix& matrix, const SkMatrix* localM,
-        SkColorType dstColorType, SkColorSpace* dstColorSpace) noexcept
+        SkColorType dstColorType, SkColorSpace* dstColorSpace)
         : fPaint(&paint),
           fMatrix(&matrix),
           fLocalMatrix(localM),
@@ -105,9 +105,9 @@ class SkShaderBase : public SkShader {
     // Reference to shader, so we don't have to dupe information.
     const SkShaderBase& fShader;
 
-    uint8_t getPaintAlpha() const noexcept { return fPaintAlpha; }
-    const SkMatrix& getTotalInverse() const noexcept { return fTotalInverse; }
-    const SkMatrix& getCTM() const noexcept { return fCTM; }
+    uint8_t getPaintAlpha() const { return fPaintAlpha; }
+    const SkMatrix& getTotalInverse() const { return fTotalInverse; }
+    const SkMatrix& getCTM() const { return fCTM; }
 
    private:
     SkMatrix fCTM;
@@ -166,7 +166,7 @@ class SkShaderBase : public SkShader {
 
   virtual SkImage* onIsAImage(SkMatrix*, SkTileMode[2]) const { return nullptr; }
 
-  static Type GetFlattenableType() noexcept { return kSkShaderBase_Type; }
+  static Type GetFlattenableType() { return kSkShaderBase_Type; }
   Type getFlattenableType() const override { return GetFlattenableType(); }
 
   static sk_sp<SkShaderBase> Deserialize(
@@ -214,13 +214,13 @@ class SkShaderBase : public SkShader {
   typedef SkShader INHERITED;
 };
 
-inline SkShaderBase* as_SB(SkShader* shader) noexcept { return static_cast<SkShaderBase*>(shader); }
+inline SkShaderBase* as_SB(SkShader* shader) { return static_cast<SkShaderBase*>(shader); }
 
-inline const SkShaderBase* as_SB(const SkShader* shader) noexcept {
+inline const SkShaderBase* as_SB(const SkShader* shader) {
   return static_cast<const SkShaderBase*>(shader);
 }
 
-inline const SkShaderBase* as_SB(const sk_sp<SkShader>& shader) noexcept {
+inline const SkShaderBase* as_SB(const sk_sp<SkShader>& shader) {
   return static_cast<SkShaderBase*>(shader.get());
 }
 

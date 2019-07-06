@@ -65,8 +65,8 @@ class SK_API GrBackendFormat {
   bool operator==(const GrBackendFormat& that) const;
   bool operator!=(const GrBackendFormat& that) const { return !(*this == that); }
 
-  GrBackendApi backend() const noexcept { return fBackend; }
-  GrTextureType textureType() const noexcept { return fTextureType; }
+  GrBackendApi backend() const { return fBackend; }
+  GrTextureType textureType() const { return fTextureType; }
 
   // If the backend API is GL, these return a pointer to the format and target. Otherwise
   // it returns nullptr.
@@ -95,7 +95,7 @@ class SK_API GrBackendFormat {
   GrBackendFormat makeTexture2D() const;
 
   // Returns true if the backend format has been initialized.
-  bool isValid() const noexcept { return fValid; }
+  bool isValid() const { return fValid; }
 
  private:
   GrBackendFormat(GrGLenum format, GrGLenum target);
@@ -147,10 +147,10 @@ class SK_API GrBackendTexture {
 
   GrBackendTexture& operator=(const GrBackendTexture& that);
 
-  int width() const noexcept { return fWidth; }
-  int height() const noexcept { return fHeight; }
-  bool hasMipMaps() const noexcept { return GrMipMapped::kYes == fMipMapped; }
-  GrBackendApi backend() const noexcept { return fBackend; }
+  int width() const { return fWidth; }
+  int height() const { return fHeight; }
+  bool hasMipMaps() const { return GrMipMapped::kYes == fMipMapped; }
+  GrBackendApi backend() const { return fBackend; }
 
   // If the backend API is GL, copies a snapshot of the GrGLTextureInfo struct into the passed in
   // pointer and returns true. Otherwise returns false if the backend API is not GL.
@@ -179,7 +179,7 @@ class SK_API GrBackendTexture {
   bool getMockTextureInfo(GrMockTextureInfo*) const;
 
   // Returns true if the backend texture has been initialized.
-  bool isValid() const noexcept { return fIsValid; }
+  bool isValid() const { return fIsValid; }
 
   // Returns true if both textures are valid and refer to the same API texture.
   bool isSameTexture(const GrBackendTexture&);
@@ -212,7 +212,7 @@ class SK_API GrBackendTexture {
   friend class GrMtlGpu;
   friend class PromiseImageHelper;
 
-  GrPixelConfig config() const noexcept { return fConfig; }
+  GrPixelConfig config() const { return fConfig; }
 
   // Requires friending of GrVkGpu (done above already)
   sk_sp<GrVkImageLayout> getGrVkImageLayout() const;
@@ -270,11 +270,11 @@ class SK_API GrBackendRenderTarget {
   GrBackendRenderTarget(const GrBackendRenderTarget& that);
   GrBackendRenderTarget& operator=(const GrBackendRenderTarget&);
 
-  int width() const noexcept { return fWidth; }
-  int height() const noexcept { return fHeight; }
-  int sampleCnt() const noexcept { return fSampleCnt; }
-  int stencilBits() const noexcept { return fStencilBits; }
-  GrBackendApi backend() const noexcept { return fBackend; }
+  int width() const { return fWidth; }
+  int height() const { return fHeight; }
+  int sampleCnt() const { return fSampleCnt; }
+  int stencilBits() const { return fStencilBits; }
+  GrBackendApi backend() const { return fBackend; }
 
   // If the backend API is GL, copies a snapshot of the GrGLFramebufferInfo struct into the passed
   // in pointer and returns true. Otherwise returns false if the backend API is not GL.
@@ -300,7 +300,7 @@ class SK_API GrBackendRenderTarget {
   bool getMockRenderTargetInfo(GrMockRenderTargetInfo*) const;
 
   // Returns true if the backend texture has been initialized.
-  bool isValid() const noexcept { return fIsValid; }
+  bool isValid() const { return fIsValid; }
 
 #if GR_TEST_UTILS
   // We can remove the pixelConfig getter and setter once we remove the pixel config from the
@@ -322,7 +322,7 @@ class SK_API GrBackendRenderTarget {
   friend class GrProxyProvider;
   friend class GrVkGpu;
   friend class GrMtlGpu;
-  GrPixelConfig config() const noexcept { return fConfig; }
+  GrPixelConfig config() const { return fConfig; }
 
   // Requires friending of GrVkGpu (done above already)
   sk_sp<GrVkImageLayout> getGrVkImageLayout() const;

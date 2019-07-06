@@ -68,7 +68,7 @@ class GrGLSLPrimitiveProcessor {
         GrGLSLUniformHandler* uniformHandler, const GrShaderCaps* caps,
         const GrPrimitiveProcessor& gp, const char* outputColor, const char* outputCoverage,
         const char* rtAdjustName, const SamplerHandle* texSamplers,
-        FPCoordTransformHandler* transformHandler) noexcept
+        FPCoordTransformHandler* transformHandler)
         : fVertBuilder(vertBuilder),
           fGeomBuilder(geomBuilder),
           fFragBuilder(fragBuilder),

@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "src/codec/SkIcoCodec.h"
 #include "include/core/SkData.h"
 #include "include/core/SkStream.h"
 #include "include/private/SkColorData.h"
 #include "include/private/SkTDArray.h"
 #include "src/codec/SkBmpCodec.h"
 #include "src/codec/SkCodecPriv.h"
+#include "src/codec/SkIcoCodec.h"
 #include "src/codec/SkPngCodec.h"
 #include "src/core/SkTSort.h"
 

@@ -35,15 +35,15 @@ class SkIntersections {
 
   class TArray {
    public:
-    explicit TArray(const double ts[10]) noexcept : fTArray(ts) {}
-    double operator[](int n) const noexcept { return fTArray[n]; }
+    explicit TArray(const double ts[10]) : fTArray(ts) {}
+    double operator[](int n) const { return fTArray[n]; }
     const double* fTArray;
   };
-  TArray operator[](int n) const noexcept { return TArray(fT[n]); }
+  TArray operator[](int n) const { return TArray(fT[n]); }
 
-  void allowNear(bool nearAllowed) noexcept { fAllowNear = nearAllowed; }
+  void allowNear(bool nearAllowed) { fAllowNear = nearAllowed; }
 
-  void clearCoincidence(int index) noexcept {
+  void clearCoincidence(int index) {
     SkASSERT(index >= 0);
     int bit = 1 << index;
     fIsCoincident[0] &= ~bit;
@@ -104,12 +104,12 @@ class SkIntersections {
   SkOpGlobalState* globalState() const { return fDebugGlobalState; }
 #endif
 
-  bool hasT(double t) const noexcept {
+  bool hasT(double t) const {
     SkASSERT(t == 0 || t == 1);
     return fUsed > 0 && (t == 0 ? fT[0][0] == 0 : fT[0][fUsed - 1] == 1);
   }
 
-  bool hasOppT(double t) const noexcept {
+  bool hasOppT(double t) const {
     SkASSERT(t == 0 || t == 1);
     return fUsed > 0 && (fT[1][0] == t || fT[1][fUsed - 1] == t);
   }
@@ -122,7 +122,7 @@ class SkIntersections {
     }
   }
 
-  bool isCoincident(int index) noexcept { return (fIsCoincident[0] & 1 << index) != 0; }
+  bool isCoincident(int index) { return (fIsCoincident[0] & 1 << index) != 0; }
 
   int lineHorizontal(const SkPoint a[2], SkScalar left, SkScalar right, SkScalar y, bool flipped) {
     SkDLine line;
@@ -146,14 +146,14 @@ class SkIntersections {
     return intersect(aLine, bLine);
   }
 
-  bool nearlySame(int index) const noexcept {
+  bool nearlySame(int index) const {
     SkASSERT(index == 0 || index == 1);
     return fNearlySame[index];
   }
 
-  const SkDPoint& pt(int index) const noexcept { return fPt[index]; }
+  const SkDPoint& pt(int index) const { return fPt[index]; }
 
-  const SkDPoint& pt2(int index) const noexcept { return fPt2[index]; }
+  const SkDPoint& pt2(int index) const { return fPt2[index]; }
 
   int quadHorizontal(const SkPoint a[3], SkScalar left, SkScalar right, SkScalar y, bool flipped) {
     SkDQuad quad;
@@ -178,28 +178,28 @@ class SkIntersections {
   }
 
   // leaves swap, max alone
-  void reset() noexcept {
+  void reset() {
     fAllowNear = true;
     fUsed = 0;
     sk_bzero(fIsCoincident, sizeof(fIsCoincident));
   }
 
-  void set(bool swap, int tIndex, double t) noexcept { fT[(int)swap][tIndex] = t; }
+  void set(bool swap, int tIndex, double t) { fT[(int)swap][tIndex] = t; }
 
-  void setMax(int max) noexcept {
+  void setMax(int max) {
     SkASSERT(max <= (int)SK_ARRAY_COUNT(fPt));
     fMax = max;
   }
 
-  void swap() noexcept { fSwap ^= true; }
+  void swap() { fSwap ^= true; }
 
-  bool swapped() const noexcept { return fSwap; }
+  bool swapped() const { return fSwap; }
 
-  int used() const noexcept { return fUsed; }
+  int used() const { return fUsed; }
 
-  void downDepth() noexcept { SkASSERT(--fDepth >= 0); }
+  void downDepth() { SkASSERT(--fDepth >= 0); }
 
-  bool unBumpT(int index) noexcept {
+  bool unBumpT(int index) {
     SkASSERT(fUsed == 1);
     fT[0][index] = fT[0][index] * (1 + BUMP_EPSILON * 2) - BUMP_EPSILON;
     if (!between(0, fT[0][index], 1)) {
@@ -209,7 +209,7 @@ class SkIntersections {
     return true;
   }
 
-  void upDepth() noexcept { SkASSERT(++fDepth < 16); }
+  void upDepth() { SkASSERT(++fDepth < 16); }
 
   void alignQuadPts(const SkPoint a[3], const SkPoint b[3]);
   int cleanUpCoincidence();
@@ -262,7 +262,7 @@ class SkIntersections {
   static int VerticalIntercept(const SkDQuad& quad, SkScalar x, double* roots);
   static int VerticalIntercept(const SkDConic& conic, SkScalar x, double* roots);
 
-  int depth() const noexcept {
+  int depth() const {
 #ifdef SK_DEBUG
     return fDepth;
 #else

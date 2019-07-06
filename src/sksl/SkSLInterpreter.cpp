@@ -7,26 +7,26 @@
 
 #ifndef SKSL_STANDALONE
 
-#include "src/sksl/SkSLInterpreter.h"
 #include "include/core/SkPoint3.h"
 #include "src/core/SkRasterPipeline.h"
 #include "src/sksl/SkSLByteCodeGenerator.h"
 #include "src/sksl/SkSLExternalValue.h"
-#include "src/sksl/ir/SkSLBinaryExpression.h"
-#include "src/sksl/ir/SkSLExpressionStatement.h"
-#include "src/sksl/ir/SkSLForStatement.h"
-#include "src/sksl/ir/SkSLFunctionCall.h"
-#include "src/sksl/ir/SkSLFunctionReference.h"
-#include "src/sksl/ir/SkSLIfStatement.h"
-#include "src/sksl/ir/SkSLIndexExpression.h"
-#include "src/sksl/ir/SkSLPostfixExpression.h"
-#include "src/sksl/ir/SkSLPrefixExpression.h"
-#include "src/sksl/ir/SkSLProgram.h"
-#include "src/sksl/ir/SkSLStatement.h"
-#include "src/sksl/ir/SkSLTernaryExpression.h"
-#include "src/sksl/ir/SkSLVarDeclarations.h"
-#include "src/sksl/ir/SkSLVarDeclarationsStatement.h"
-#include "src/sksl/ir/SkSLVariableReference.h"
+#  include "src/sksl/SkSLInterpreter.h"
+#  include "src/sksl/ir/SkSLBinaryExpression.h"
+#  include "src/sksl/ir/SkSLExpressionStatement.h"
+#  include "src/sksl/ir/SkSLForStatement.h"
+#  include "src/sksl/ir/SkSLFunctionCall.h"
+#  include "src/sksl/ir/SkSLFunctionReference.h"
+#  include "src/sksl/ir/SkSLIfStatement.h"
+#  include "src/sksl/ir/SkSLIndexExpression.h"
+#  include "src/sksl/ir/SkSLPostfixExpression.h"
+#  include "src/sksl/ir/SkSLPrefixExpression.h"
+#  include "src/sksl/ir/SkSLProgram.h"
+#  include "src/sksl/ir/SkSLStatement.h"
+#  include "src/sksl/ir/SkSLTernaryExpression.h"
+#  include "src/sksl/ir/SkSLVarDeclarations.h"
+#  include "src/sksl/ir/SkSLVarDeclarationsStatement.h"
+#  include "src/sksl/ir/SkSLVariableReference.h"
 
 namespace SkSL {
 
@@ -49,9 +49,9 @@ void Interpreter::setInputs(Interpreter::Value inputs[]) {
 
 void Interpreter::run(
     const ByteCodeFunction& f, Interpreter::Value args[], Interpreter::Value* outReturn) {
-#ifdef TRACE
+#  ifdef TRACE
   this->disassemble(f);
-#endif
+#  endif
   Value smallStack[128];
   std::unique_ptr<Value[]> largeStack;
   Value* stack = smallStack;
@@ -86,20 +86,20 @@ static T unaligned_load(const void* ptr) {
 #define READ16() (ip += 2, unaligned_load<uint16_t>(ip - 2))
 #define READ32() (ip += 4, unaligned_load<uint32_t>(ip - 4))
 
-#define VECTOR_DISASSEMBLE(op, text)                        \
-  case ByteCodeInstruction::op: printf(text); break;        \
-  case ByteCodeInstruction::op##2: printf(text "2"); break; \
-  case ByteCodeInstruction::op##3: printf(text "3"); break; \
-  case ByteCodeInstruction::op##4:                          \
-    printf(text "4");                                       \
-    break;
+#  define VECTOR_DISASSEMBLE(op, text)                        \
+    case ByteCodeInstruction::op: printf(text); break;        \
+    case ByteCodeInstruction::op##2: printf(text "2"); break; \
+    case ByteCodeInstruction::op##3: printf(text "3"); break; \
+    case ByteCodeInstruction::op##4:                          \
+      printf(text "4");                                       \
+      break;
 
-#define VECTOR_MATRIX_DISASSEMBLE(op, text)                 \
-  case ByteCodeInstruction::op: printf(text); break;        \
-  case ByteCodeInstruction::op##2: printf(text "2"); break; \
-  case ByteCodeInstruction::op##3: printf(text "3"); break; \
-  case ByteCodeInstruction::op##4: printf(text "4"); break; \
-  case ByteCodeInstruction::op##N: printf(text "N %d", READ8()); break;
+#  define VECTOR_MATRIX_DISASSEMBLE(op, text)                 \
+    case ByteCodeInstruction::op: printf(text); break;        \
+    case ByteCodeInstruction::op##2: printf(text "2"); break; \
+    case ByteCodeInstruction::op##3: printf(text "3"); break; \
+    case ByteCodeInstruction::op##4: printf(text "4"); break; \
+    case ByteCodeInstruction::op##N: printf(text "N %d", READ8()); break;
 
 static const uint8_t* disassemble_instruction(const uint8_t* ip) {
   switch ((ByteCodeInstruction)READ16()) {
@@ -301,66 +301,66 @@ void Interpreter::disassemble(const ByteCodeFunction& f) {
   }
 }
 
-#define VECTOR_BINARY_OP(base, field, op)                       \
-  case ByteCodeInstruction::base##4:                            \
-    sp[-4] = sp[-4].field op sp[0].field;                       \
-    POP();                                                      \
-    /* fall through */                                          \
-  case ByteCodeInstruction::base##3: {                          \
-    int count = (int)ByteCodeInstruction::base - (int)inst - 1; \
-    sp[count] = sp[count].field op sp[0].field;                 \
-    POP();                                                      \
-  } /* fall through */                                          \
-  case ByteCodeInstruction::base##2: {                          \
-    int count = (int)ByteCodeInstruction::base - (int)inst - 1; \
-    sp[count] = sp[count].field op sp[0].field;                 \
-    POP();                                                      \
-  } /* fall through */                                          \
-  case ByteCodeInstruction::base: {                             \
-    int count = (int)ByteCodeInstruction::base - (int)inst - 1; \
-    sp[count] = sp[count].field op sp[0].field;                 \
-    POP();                                                      \
-    break;                                                      \
-  }
+#  define VECTOR_BINARY_OP(base, field, op)                       \
+    case ByteCodeInstruction::base##4:                            \
+      sp[-4] = sp[-4].field op sp[0].field;                       \
+      POP();                                                      \
+      /* fall through */                                          \
+    case ByteCodeInstruction::base##3: {                          \
+      int count = (int)ByteCodeInstruction::base - (int)inst - 1; \
+      sp[count] = sp[count].field op sp[0].field;                 \
+      POP();                                                      \
+    } /* fall through */                                          \
+    case ByteCodeInstruction::base##2: {                          \
+      int count = (int)ByteCodeInstruction::base - (int)inst - 1; \
+      sp[count] = sp[count].field op sp[0].field;                 \
+      POP();                                                      \
+    } /* fall through */                                          \
+    case ByteCodeInstruction::base: {                             \
+      int count = (int)ByteCodeInstruction::base - (int)inst - 1; \
+      sp[count] = sp[count].field op sp[0].field;                 \
+      POP();                                                      \
+      break;                                                      \
+    }
 
-#define VECTOR_MATRIX_BINARY_OP(base, field, op)    \
-  VECTOR_BINARY_OP(base, field, op)                 \
-  case ByteCodeInstruction::base##N: {              \
-    int count = READ8();                            \
-    for (int i = count; i > 0; --i) {               \
-      sp[-count] = sp[-count].field op sp[0].field; \
-      POP();                                        \
-    }                                               \
-    break;                                          \
-  }
+#  define VECTOR_MATRIX_BINARY_OP(base, field, op)    \
+    VECTOR_BINARY_OP(base, field, op)                 \
+    case ByteCodeInstruction::base##N: {              \
+      int count = READ8();                            \
+      for (int i = count; i > 0; --i) {               \
+        sp[-count] = sp[-count].field op sp[0].field; \
+        POP();                                        \
+      }                                               \
+      break;                                          \
+    }
 
-#define VECTOR_BINARY_FN(base, field, fn)                        \
-  case ByteCodeInstruction::base##4:                             \
-    sp[-4] = fn(sp[-4].field, sp[0].field);                      \
-    POP();                                                       \
-    /* fall through */                                           \
-  case ByteCodeInstruction::base##3: {                           \
-    int target = (int)ByteCodeInstruction::base - (int)inst - 1; \
-    sp[target] = fn(sp[target].field, sp[0].field);              \
-    POP();                                                       \
-  } /* fall through */                                           \
-  case ByteCodeInstruction::base##2: {                           \
-    int target = (int)ByteCodeInstruction::base - (int)inst - 1; \
-    sp[target] = fn(sp[target].field, sp[0].field);              \
-    POP();                                                       \
-  } /* fall through */                                           \
-  case ByteCodeInstruction::base: {                              \
-    int target = (int)ByteCodeInstruction::base - (int)inst - 1; \
-    sp[target] = fn(sp[target].field, sp[0].field);              \
-    POP();                                                       \
-    break;                                                       \
-  }
+#  define VECTOR_BINARY_FN(base, field, fn)                        \
+    case ByteCodeInstruction::base##4:                             \
+      sp[-4] = fn(sp[-4].field, sp[0].field);                      \
+      POP();                                                       \
+      /* fall through */                                           \
+    case ByteCodeInstruction::base##3: {                           \
+      int target = (int)ByteCodeInstruction::base - (int)inst - 1; \
+      sp[target] = fn(sp[target].field, sp[0].field);              \
+      POP();                                                       \
+    } /* fall through */                                           \
+    case ByteCodeInstruction::base##2: {                           \
+      int target = (int)ByteCodeInstruction::base - (int)inst - 1; \
+      sp[target] = fn(sp[target].field, sp[0].field);              \
+      POP();                                                       \
+    } /* fall through */                                           \
+    case ByteCodeInstruction::base: {                              \
+      int target = (int)ByteCodeInstruction::base - (int)inst - 1; \
+      sp[target] = fn(sp[target].field, sp[0].field);              \
+      POP();                                                       \
+      break;                                                       \
+    }
 
-#define VECTOR_UNARY_FN(base, fn, field)                        \
-  case ByteCodeInstruction::base##4: sp[-3] = fn(sp[-3].field); \
-  case ByteCodeInstruction::base##3: sp[-2] = fn(sp[-2].field); \
-  case ByteCodeInstruction::base##2: sp[-1] = fn(sp[-1].field); \
-  case ByteCodeInstruction::base: sp[0] = fn(sp[0].field); break;
+#  define VECTOR_UNARY_FN(base, fn, field)                        \
+    case ByteCodeInstruction::base##4: sp[-3] = fn(sp[-3].field); \
+    case ByteCodeInstruction::base##3: sp[-2] = fn(sp[-2].field); \
+    case ByteCodeInstruction::base##2: sp[-1] = fn(sp[-1].field); \
+    case ByteCodeInstruction::base: sp[0] = fn(sp[0].field); break;
 
 struct StackFrame {
   const uint8_t* fCode;
@@ -387,11 +387,11 @@ void Interpreter::innerRun(const ByteCodeFunction& f, Value* stack, Value* outRe
   std::vector<StackFrame> frames;
 
   for (;;) {
-#ifdef TRACE
+#  ifdef TRACE
     printf("at %3d  ", (int)(ip - code));
     disassemble_instruction(ip);
     printf("\n");
-#endif
+#  endif
     ByteCodeInstruction inst = (ByteCodeInstruction)READ16();
     switch (inst) {
       VECTOR_BINARY_OP(kAddI, fSigned, +)

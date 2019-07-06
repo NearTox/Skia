@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkFontStream.h"
 #include "include/core/SkStream.h"
 #include "src/core/SkAutoMalloc.h"
 #include "src/core/SkEndian.h"
+#include "src/core/SkFontStream.h"
 
 struct SkSFNTHeader {
   uint32_t fVersion;

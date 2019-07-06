@@ -16,8 +16,8 @@
 #include "src/pdf/SkPDFTag.h"
 
 #include <atomic>
-#include <memory>
 #include <vector>
+#include <memory>
 
 class SkExecutor;
 class SkPDFDevice;

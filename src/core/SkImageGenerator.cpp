@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "include/core/SkImageGenerator.h"
 #include "include/core/SkImage.h"
+#include "include/core/SkImageGenerator.h"
 #include "include/core/SkYUVAIndex.h"
 #include "src/core/SkNextID.h"
 

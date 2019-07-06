@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/GrBackendTextureImageGenerator.h"
 #include "include/gpu/GrContext.h"
 #include "include/gpu/GrTexture.h"
 #include "include/private/GrRecordingContext.h"
 #include "src/core/SkMessageBus.h"
+#include "src/gpu/GrBackendTextureImageGenerator.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrGpu.h"
 #include "src/gpu/GrProxyProvider.h"

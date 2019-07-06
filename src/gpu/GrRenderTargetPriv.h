@@ -21,7 +21,7 @@ class GrRenderTargetPriv {
   /**
    * GrStencilAttachment is not part of the public API.
    */
-  GrStencilAttachment* getStencilAttachment() const noexcept {
+  GrStencilAttachment* getStencilAttachment() const {
     return fRenderTarget->fStencilAttachment.get();
   }
 
@@ -51,9 +51,8 @@ class GrRenderTargetPriv {
   }
 
  private:
-  explicit GrRenderTargetPriv(GrRenderTarget* renderTarget) noexcept
-      : fRenderTarget(renderTarget) {}
-  GrRenderTargetPriv(const GrRenderTargetPriv&) noexcept {}  // unimpl
+  explicit GrRenderTargetPriv(GrRenderTarget* renderTarget) : fRenderTarget(renderTarget) {}
+  GrRenderTargetPriv(const GrRenderTargetPriv&) {}           // unimpl
   GrRenderTargetPriv& operator=(const GrRenderTargetPriv&);  // unimpl
 
   // No taking addresses of this type.
@@ -65,11 +64,9 @@ class GrRenderTargetPriv {
   friend class GrRenderTarget;  // to construct/copy this type.
 };
 
-inline GrRenderTargetPriv GrRenderTarget::renderTargetPriv() noexcept {
-  return GrRenderTargetPriv(this);
-}
+inline GrRenderTargetPriv GrRenderTarget::renderTargetPriv() { return GrRenderTargetPriv(this); }
 
-inline const GrRenderTargetPriv GrRenderTarget::renderTargetPriv() const noexcept {
+inline const GrRenderTargetPriv GrRenderTarget::renderTargetPriv() const {
   return GrRenderTargetPriv(const_cast<GrRenderTarget*>(this));
 }
 

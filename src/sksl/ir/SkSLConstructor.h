@@ -26,8 +26,7 @@ namespace SkSL {
  * collection of vectors and scalars totalling exactly the right number of scalar components.
  */
 struct Constructor : public Expression {
-  Constructor(
-      int offset, const Type& type, std::vector<std::unique_ptr<Expression>> arguments) noexcept
+  Constructor(int offset, const Type& type, std::vector<std::unique_ptr<Expression>> arguments)
       : INHERITED(offset, kConstructor_Kind, type), fArguments(std::move(arguments)) {}
 
   std::unique_ptr<Expression> constantPropagate(

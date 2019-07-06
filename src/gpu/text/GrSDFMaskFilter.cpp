@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/text/GrSDFMaskFilter.h"
 #include "include/core/SkString.h"
 #include "src/core/SkDistanceFieldGen.h"
 #include "src/core/SkMaskFilterBase.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkSafeMath.h"
 #include "src/core/SkWriteBuffer.h"
+#include "src/gpu/text/GrSDFMaskFilter.h"
 
 class SK_API GrSDFMaskFilterImpl : public SkMaskFilterBase {
  public:

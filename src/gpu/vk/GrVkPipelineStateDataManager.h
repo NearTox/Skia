@@ -65,7 +65,7 @@ class GrVkPipelineStateDataManager : public GrGLSLProgramDataManager {
   struct Uniform {
     uint32_t fBinding;
     uint32_t fOffset;
-    SkDEBUGCODE(GrSLType fType; int fArrayCount;);
+    SkDEBUGCODE(GrSLType fType; int fArrayCount);
   };
 
   template <int N>

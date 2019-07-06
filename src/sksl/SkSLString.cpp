@@ -7,13 +7,13 @@
 
 #include "src/sksl/SkSLString.h"
 
+#include "src/sksl/SkSLUtil.h"
+#include <algorithm>
 #include <errno.h>
 #include <limits.h>
-#include <algorithm>
 #include <locale>
 #include <sstream>
 #include <string>
-#include "src/sksl/SkSLUtil.h"
 
 namespace SkSL {
 
@@ -34,9 +34,9 @@ void String::appendf(const char* fmt, ...) {
   va_end(args);
 }
 
-void String::reset() noexcept { this->clear(); }
+void String::reset() { this->clear(); }
 
-int String::findLastOf(const char c) const noexcept {
+int String::findLastOf(const char c) const {
   // Rely on find_last_of and remap the output
   size_t index = this->find_last_of(c);
   return (index == std::string::npos ? -1 : index);
@@ -45,9 +45,9 @@ int String::findLastOf(const char c) const noexcept {
 
 void String::vappendf(const char* fmt, va_list args) {
 #ifdef SKSL_BUILD_FOR_WIN
-#define VSNPRINTF _vsnprintf
+#  define VSNPRINTF _vsnprintf
 #else
-#define VSNPRINTF vsnprintf
+#  define VSNPRINTF vsnprintf
 #endif
 #define BUFFER_SIZE 256
   char buffer[BUFFER_SIZE];
@@ -64,9 +64,9 @@ void String::vappendf(const char* fmt, va_list args) {
   va_end(reuse);
 }
 
-bool String::startsWith(const char* s) const noexcept { return !strncmp(c_str(), s, strlen(s)); }
+bool String::startsWith(const char* s) const { return !strncmp(c_str(), s, strlen(s)); }
 
-bool String::endsWith(const char* s) const noexcept {
+bool String::endsWith(const char* s) const {
   size_t len = strlen(s);
   if (size() < len) {
     return false;
@@ -74,11 +74,11 @@ bool String::endsWith(const char* s) const noexcept {
   return !strncmp(c_str() + size() - len, s, len);
 }
 
-int String::find(const String& substring, int fromPos) const noexcept {
+int String::find(const String& substring, int fromPos) const {
   return find(substring.c_str(), fromPos);
 }
 
-int String::find(const char* substring, int fromPos) const noexcept {
+int String::find(const char* substring, int fromPos) const {
   SkASSERT(fromPos >= 0);
 #ifdef SKSL_USE_STD_STRING
   // use std::string find() and check it against npos for not found, and find() natively supports
@@ -140,17 +140,17 @@ String& String::operator+=(StringFragment s) {
   return *this;
 }
 
-bool String::operator==(const String& s) const noexcept {
+bool String::operator==(const String& s) const {
   return this->size() == s.size() && !memcmp(c_str(), s.c_str(), this->size());
 }
 
-bool String::operator!=(const String& s) const noexcept { return !(*this == s); }
+bool String::operator!=(const String& s) const { return !(*this == s); }
 
-bool String::operator==(const char* s) const noexcept {
+bool String::operator==(const char* s) const {
   return this->size() == strlen(s) && !memcmp(c_str(), s, this->size());
 }
 
-bool String::operator!=(const char* s) const noexcept { return !(*this == s); }
+bool String::operator!=(const char* s) const { return !(*this == s); }
 
 String operator+(const char* s1, const String& s2) {
   String result(s1);
@@ -158,25 +158,25 @@ String operator+(const char* s1, const String& s2) {
   return result;
 }
 
-bool operator==(const char* s1, const String& s2) noexcept { return s2 == s1; }
+bool operator==(const char* s1, const String& s2) { return s2 == s1; }
 
-bool operator!=(const char* s1, const String& s2) noexcept { return s2 != s1; }
+bool operator!=(const char* s1, const String& s2) { return s2 != s1; }
 
-bool StringFragment::operator==(StringFragment s) const noexcept {
+bool StringFragment::operator==(StringFragment s) const {
   if (fLength != s.fLength) {
     return false;
   }
   return !memcmp(fChars, s.fChars, fLength);
 }
 
-bool StringFragment::operator!=(StringFragment s) const noexcept {
+bool StringFragment::operator!=(StringFragment s) const {
   if (fLength != s.fLength) {
     return true;
   }
   return memcmp(fChars, s.fChars, fLength);
 }
 
-bool StringFragment::operator==(const char* s) const noexcept {
+bool StringFragment::operator==(const char* s) const {
   for (size_t i = 0; i < fLength; ++i) {
     if (fChars[i] != s[i]) {
       return false;
@@ -185,7 +185,7 @@ bool StringFragment::operator==(const char* s) const noexcept {
   return 0 == s[fLength];
 }
 
-bool StringFragment::operator!=(const char* s) const noexcept {
+bool StringFragment::operator!=(const char* s) const {
   for (size_t i = 0; i < fLength; ++i) {
     if (fChars[i] != s[i]) {
       return true;
@@ -194,7 +194,7 @@ bool StringFragment::operator!=(const char* s) const noexcept {
   return 0 != s[fLength];
 }
 
-bool StringFragment::operator<(StringFragment other) const noexcept {
+bool StringFragment::operator<(StringFragment other) const {
   int comparison = strncmp(fChars, other.fChars, std::min(fLength, other.fLength));
   if (comparison) {
     return comparison < 0;
@@ -202,9 +202,9 @@ bool StringFragment::operator<(StringFragment other) const noexcept {
   return fLength < other.fLength;
 }
 
-bool operator==(const char* s1, StringFragment s2) noexcept { return s2 == s1; }
+bool operator==(const char* s1, StringFragment s2) { return s2 == s1; }
 
-bool operator!=(const char* s1, StringFragment s2) noexcept { return s2 != s1; }
+bool operator!=(const char* s1, StringFragment s2) { return s2 != s1; }
 
 String to_string(int32_t value) { return SkSL::String::printf("%d", value); }
 
@@ -242,7 +242,7 @@ String to_string(double value) {
   return String(buffer.str().c_str());
 }
 
-int stoi(const String& s) noexcept {
+int stoi(const String& s) {
   char* p;
   SkDEBUGCODE(errno = 0);
   long result = strtoul(s.c_str(), &p, 0);
@@ -261,7 +261,7 @@ double stod(const String& s) {
   return result;
 }
 
-long stol(const String& s) noexcept {
+long stol(const String& s) {
   char* p;
   SkDEBUGCODE(errno = 0);
   long result = strtoul(s.c_str(), &p, 0);

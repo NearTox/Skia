@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "include/effects/SkShaderMaskFilter.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkString.h"
+#include "include/effects/SkShaderMaskFilter.h"
 #include "src/core/SkMaskFilterBase.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/shaders/SkShaderBase.h"

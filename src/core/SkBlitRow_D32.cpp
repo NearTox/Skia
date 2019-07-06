@@ -11,8 +11,7 @@
 #include "src/core/SkUtils.h"
 
 // Everyone agrees memcpy() is the best way to do this.
-static void blit_row_s32_opaque(
-    SkPMColor* dst, const SkPMColor* src, int count, U8CPU alpha) noexcept {
+static void blit_row_s32_opaque(SkPMColor* dst, const SkPMColor* src, int count, U8CPU alpha) {
   SkASSERT(255 == alpha);
   memcpy(dst, src, count * sizeof(SkPMColor));
 }
@@ -23,10 +22,10 @@ static void blit_row_s32_opaque(
 // TODO(mtklein): can we do better in NEON than 2 pixels at a time?
 
 #if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
-#include <emmintrin.h>
+#  include <emmintrin.h>
 
 static inline __m128i SkPMLerp_SSE2(
-    const __m128i& src, const __m128i& dst, const unsigned src_scale) noexcept {
+    const __m128i& src, const __m128i& dst, const unsigned src_scale) {
   // Computes dst + (((src - dst)*src_scale)>>8)
   const __m128i mask = _mm_set1_epi32(0x00FF00FF);
 
@@ -52,8 +51,7 @@ static inline __m128i SkPMLerp_SSE2(
   return _mm_add_epi8(dst, diff);
 }
 
-static void blit_row_s32_blend(
-    SkPMColor* dst, const SkPMColor* src, int count, U8CPU alpha) noexcept {
+static void blit_row_s32_blend(SkPMColor* dst, const SkPMColor* src, int count, U8CPU alpha) {
   SkASSERT(alpha <= 255);
 
   auto src4 = (const __m128i*)src;
@@ -78,7 +76,7 @@ static void blit_row_s32_blend(
 }
 
 static inline __m128i SkBlendARGB32_SSE2(
-    const __m128i& src, const __m128i& dst, const unsigned aa) noexcept {
+    const __m128i& src, const __m128i& dst, const unsigned aa) {
   unsigned alpha = SkAlpha255To256(aa);
   __m128i src_scale = _mm_set1_epi16(alpha);
   // SkAlphaMulInv256(SkGetPackedA32(src), src_scale)
@@ -116,8 +114,7 @@ static inline __m128i SkBlendARGB32_SSE2(
   return _mm_or_si128(dst_rb, dst_ag);
 }
 
-static void blit_row_s32a_blend(
-    SkPMColor* dst, const SkPMColor* src, int count, U8CPU alpha) noexcept {
+static void blit_row_s32a_blend(SkPMColor* dst, const SkPMColor* src, int count, U8CPU alpha) {
   SkASSERT(alpha <= 255);
 
   auto src4 = (const __m128i*)src;
@@ -141,7 +138,7 @@ static void blit_row_s32a_blend(
 }
 
 #elif defined(SK_ARM_HAS_NEON)
-#include <arm_neon.h>
+#  include <arm_neon.h>
 
 static void blit_row_s32_blend(SkPMColor* dst, const SkPMColor* src, int count, U8CPU alpha) {
   SkASSERT(alpha <= 255);

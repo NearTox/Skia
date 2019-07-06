@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "include/effects/SkPaintImageFilter.h"
 #include "include/core/SkCanvas.h"
+#include "include/effects/SkPaintImageFilter.h"
 #include "src/core/SkImageFilterPriv.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkSpecialImage.h"
@@ -67,4 +67,4 @@ sk_sp<SkSpecialImage> SkPaintImageFilter::onFilterImage(
   return surf->makeImageSnapshot();
 }
 
-bool SkPaintImageFilter::affectsTransparentBlack() const noexcept { return true; }
+bool SkPaintImageFilter::affectsTransparentBlack() const { return true; }

@@ -31,7 +31,7 @@ SkDWriteFontFileStream::~SkDWriteFontFileStream() {
   }
 }
 
-size_t SkDWriteFontFileStream::read(void* buffer, size_t size) noexcept {
+size_t SkDWriteFontFileStream::read(void* buffer, size_t size) {
   HRESULT hr = S_OK;
 
   if (nullptr == buffer) {
@@ -76,9 +76,9 @@ size_t SkDWriteFontFileStream::read(void* buffer, size_t size) noexcept {
   return 0;
 }
 
-bool SkDWriteFontFileStream::isAtEnd() const noexcept { return fPos == this->getLength(); }
+bool SkDWriteFontFileStream::isAtEnd() const { return fPos == this->getLength(); }
 
-bool SkDWriteFontFileStream::rewind() noexcept {
+bool SkDWriteFontFileStream::rewind() {
   fPos = 0;
   return true;
 }
@@ -87,15 +87,15 @@ SkDWriteFontFileStream* SkDWriteFontFileStream::onDuplicate() const {
   return new SkDWriteFontFileStream(fFontFileStream.get());
 }
 
-size_t SkDWriteFontFileStream::getPosition() const noexcept { return fPos; }
+size_t SkDWriteFontFileStream::getPosition() const { return fPos; }
 
-bool SkDWriteFontFileStream::seek(size_t position) noexcept {
+bool SkDWriteFontFileStream::seek(size_t position) {
   size_t length = this->getLength();
   fPos = (position > length) ? length : position;
   return true;
 }
 
-bool SkDWriteFontFileStream::move(long offset) noexcept { return seek(fPos + offset); }
+bool SkDWriteFontFileStream::move(long offset) { return seek(fPos + offset); }
 
 SkDWriteFontFileStream* SkDWriteFontFileStream::onFork() const {
   std::unique_ptr<SkDWriteFontFileStream> that(this->duplicate());
@@ -103,7 +103,7 @@ SkDWriteFontFileStream* SkDWriteFontFileStream::onFork() const {
   return that.release();
 }
 
-size_t SkDWriteFontFileStream::getLength() const noexcept {
+size_t SkDWriteFontFileStream::getLength() const {
   HRESULT hr = S_OK;
   UINT64 realFileSize = 0;
   hr = fFontFileStream->GetFileSize(&realFileSize);
@@ -113,7 +113,7 @@ size_t SkDWriteFontFileStream::getLength() const noexcept {
   return static_cast<size_t>(realFileSize);
 }
 
-const void* SkDWriteFontFileStream::getMemoryBase() noexcept {
+const void* SkDWriteFontFileStream::getMemoryBase() {
   if (fLockedMemory) {
     return fLockedMemory;
   }
@@ -138,7 +138,7 @@ HRESULT SkDWriteFontFileStreamWrapper::Create(
   return S_OK;
 }
 
-SkDWriteFontFileStreamWrapper::SkDWriteFontFileStreamWrapper(SkStreamAsset* stream) noexcept
+SkDWriteFontFileStreamWrapper::SkDWriteFontFileStreamWrapper(SkStreamAsset* stream)
     : fRefCount(1), fStream(stream) {}
 
 HRESULT STDMETHODCALLTYPE
@@ -206,18 +206,16 @@ HRESULT STDMETHODCALLTYPE SkDWriteFontFileStreamWrapper::ReadFileFragment(
   return S_OK;
 }
 
-void STDMETHODCALLTYPE
-SkDWriteFontFileStreamWrapper::ReleaseFileFragment(void* fragmentContext) noexcept {
+void STDMETHODCALLTYPE SkDWriteFontFileStreamWrapper::ReleaseFileFragment(void* fragmentContext) {
   sk_free(fragmentContext);
 }
 
-HRESULT STDMETHODCALLTYPE SkDWriteFontFileStreamWrapper::GetFileSize(UINT64* fileSize) noexcept {
+HRESULT STDMETHODCALLTYPE SkDWriteFontFileStreamWrapper::GetFileSize(UINT64* fileSize) {
   *fileSize = fStream->getLength();
   return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE
-SkDWriteFontFileStreamWrapper::GetLastWriteTime(UINT64* lastWriteTime) noexcept {
+HRESULT STDMETHODCALLTYPE SkDWriteFontFileStreamWrapper::GetLastWriteTime(UINT64* lastWriteTime) {
   // The concept of last write time does not apply to this loader.
   *lastWriteTime = 0;
   return E_NOTIMPL;

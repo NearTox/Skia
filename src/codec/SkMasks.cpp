@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "src/codec/SkMasks.h"
 #include "include/core/SkTypes.h"
 #include "src/codec/SkCodecPriv.h"
+#include "src/codec/SkMasks.h"
 
 /*
  *
@@ -45,7 +45,7 @@ static constexpr uint8_t n_bit_to_8_bit_lookup_table[] = {
  * Convert an n bit component to an 8-bit component
  *
  */
-static uint8_t convert_to_8(uint8_t component, uint32_t n) noexcept {
+static uint8_t convert_to_8(uint8_t component, uint32_t n) {
   if (0 == n) {
     return 0;
   } else if (8 > n) {
@@ -56,7 +56,7 @@ static uint8_t convert_to_8(uint8_t component, uint32_t n) noexcept {
   }
 }
 
-static uint8_t get_comp(uint32_t pixel, uint32_t mask, uint32_t shift, uint32_t size) noexcept {
+static uint8_t get_comp(uint32_t pixel, uint32_t mask, uint32_t shift, uint32_t size) {
   return convert_to_8((pixel & mask) >> shift, size);
 }
 
@@ -65,16 +65,16 @@ static uint8_t get_comp(uint32_t pixel, uint32_t mask, uint32_t shift, uint32_t 
  * Get a color component
  *
  */
-uint8_t SkMasks::getRed(uint32_t pixel) const noexcept {
+uint8_t SkMasks::getRed(uint32_t pixel) const {
   return get_comp(pixel, fRed.mask, fRed.shift, fRed.size);
 }
-uint8_t SkMasks::getGreen(uint32_t pixel) const noexcept {
+uint8_t SkMasks::getGreen(uint32_t pixel) const {
   return get_comp(pixel, fGreen.mask, fGreen.shift, fGreen.size);
 }
-uint8_t SkMasks::getBlue(uint32_t pixel) const noexcept {
+uint8_t SkMasks::getBlue(uint32_t pixel) const {
   return get_comp(pixel, fBlue.mask, fBlue.shift, fBlue.size);
 }
-uint8_t SkMasks::getAlpha(uint32_t pixel) const noexcept {
+uint8_t SkMasks::getAlpha(uint32_t pixel) const {
   return get_comp(pixel, fAlpha.mask, fAlpha.shift, fAlpha.size);
 }
 
@@ -83,7 +83,7 @@ uint8_t SkMasks::getAlpha(uint32_t pixel) const noexcept {
  * Process an input mask to obtain the necessary information
  *
  */
-static constexpr const SkMasks::MaskInfo process_mask(uint32_t mask) noexcept {
+static const SkMasks::MaskInfo process_mask(uint32_t mask) {
   // Determine properties of the mask
   uint32_t tempMask = mask;
   uint32_t shift = 0;
@@ -146,6 +146,5 @@ SkMasks* SkMasks::CreateMasks(InputMasks masks, int bytesPerPixel) {
 }
 
 SkMasks::SkMasks(
-    const MaskInfo& red, const MaskInfo& green, const MaskInfo& blue,
-    const MaskInfo& alpha) noexcept
+    const MaskInfo& red, const MaskInfo& green, const MaskInfo& blue, const MaskInfo& alpha)
     : fRed(red), fGreen(green), fBlue(blue), fAlpha(alpha) {}

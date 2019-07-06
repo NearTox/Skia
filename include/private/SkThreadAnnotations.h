@@ -12,9 +12,9 @@
 // http://clang.llvm.org/docs/ThreadSafetyAnalysis.html
 
 #if defined(__clang__) && (!defined(SWIG))
-#define SK_THREAD_ANNOTATION_ATTRIBUTE(x) __attribute__((x))
+#  define SK_THREAD_ANNOTATION_ATTRIBUTE(x) __attribute__((x))
 #else
-#define SK_THREAD_ANNOTATION_ATTRIBUTE(x)  // no-op
+#  define SK_THREAD_ANNOTATION_ATTRIBUTE(x)  // no-op
 #endif
 
 #define SK_CAPABILITY(x) SK_THREAD_ANNOTATION_ATTRIBUTE(capability(x))

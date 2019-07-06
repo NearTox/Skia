@@ -100,6 +100,6 @@ class SK_API SkFlattenable : public SkRefCnt {
   static sk_sp<SkFlattenable> CreateProc(SkReadBuffer&);           \
   friend class SkFlattenable::PrivateInitializer;                  \
   Factory getFactory() const override { return type::CreateProc; } \
-  const char* getTypeName() const noexcept override { return #type; }
+  const char* getTypeName() const override { return #type; }
 
 #endif

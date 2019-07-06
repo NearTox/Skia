@@ -30,8 +30,8 @@ bool SkDraw::ShouldDrawTextAsPaths(
 
 // disable warning : local variable used without having been initialized
 #if defined _WIN32
-#pragma warning(push)
-#pragma warning(disable : 4701)
+#  pragma warning(push)
+#  pragma warning(disable : 4701)
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -118,5 +118,5 @@ void SkDraw::drawGlyphRunList(
 }
 
 #if defined _WIN32
-#pragma warning(pop)
+#  pragma warning(pop)
 #endif

@@ -22,8 +22,7 @@ class GrGLConvolutionEffect : public GrGLSLFragmentProcessor {
  public:
   void emitCode(EmitArgs&) override;
 
-  static inline void GenKey(
-      const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) noexcept;
+  static inline void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*);
 
  protected:
   void onSetData(const GrGLSLProgramDataManager&, const GrFragmentProcessor&) override;
@@ -168,7 +167,7 @@ void GrGLConvolutionEffect::onSetData(
 }
 
 void GrGLConvolutionEffect::GenKey(
-    const GrProcessor& processor, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
+    const GrProcessor& processor, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
   const GrGaussianConvolutionFragmentProcessor& conv =
       processor.cast<GrGaussianConvolutionFragmentProcessor>();
   uint32_t key = conv.radius();
@@ -179,8 +178,7 @@ void GrGLConvolutionEffect::GenKey(
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-static void fill_in_1D_gaussian_kernel(
-    float* kernel, int width, float gaussianSigma, int radius) noexcept {
+static void fill_in_1D_gaussian_kernel(float* kernel, int width, float gaussianSigma, int radius) {
   const float twoSigmaSqrd = 2.0f * gaussianSigma * gaussianSigma;
   if (SkScalarNearlyZero(twoSigmaSqrd, SK_ScalarNearlyZero)) {
     for (int i = 0; i < width; ++i) {
@@ -231,7 +229,7 @@ GrGaussianConvolutionFragmentProcessor::GrGaussianConvolutionFragmentProcessor(
 }
 
 GrGaussianConvolutionFragmentProcessor::GrGaussianConvolutionFragmentProcessor(
-    const GrGaussianConvolutionFragmentProcessor& that) noexcept
+    const GrGaussianConvolutionFragmentProcessor& that)
     : INHERITED(kGrGaussianConvolutionFragmentProcessor_ClassID, that.optimizationFlags()),
       fCoordTransform(that.fCoordTransform),
       fTextureSampler(that.fTextureSampler),
@@ -253,8 +251,7 @@ GrGLSLFragmentProcessor* GrGaussianConvolutionFragmentProcessor::onCreateGLSLIns
   return new GrGLConvolutionEffect;
 }
 
-bool GrGaussianConvolutionFragmentProcessor::onIsEqual(const GrFragmentProcessor& sBase) const
-    noexcept {
+bool GrGaussianConvolutionFragmentProcessor::onIsEqual(const GrFragmentProcessor& sBase) const {
   const GrGaussianConvolutionFragmentProcessor& s =
       sBase.cast<GrGaussianConvolutionFragmentProcessor>();
   return (

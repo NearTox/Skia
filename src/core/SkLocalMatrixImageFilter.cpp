@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkLocalMatrixImageFilter.h"
 #include "include/core/SkString.h"
 #include "src/core/SkImageFilterPriv.h"
+#include "src/core/SkLocalMatrixImageFilter.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkSpecialImage.h"
 

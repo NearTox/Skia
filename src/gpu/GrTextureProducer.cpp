@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/GrTextureProducer.h"
 #include "include/private/GrRecordingContext.h"
 #include "include/private/GrTextureProxy.h"
 #include "src/core/SkMipMap.h"
@@ -15,6 +14,7 @@
 #include "src/gpu/GrProxyProvider.h"
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/GrTextureProducer.h"
 #include "src/gpu/SkGr.h"
 #include "src/gpu/effects/GrBicubicEffect.h"
 #include "src/gpu/effects/GrTextureDomain.h"
@@ -96,7 +96,7 @@ sk_sp<GrTextureProxy> GrTextureProducer::CopyOnGpu(
 GrTextureProducer::DomainMode GrTextureProducer::DetermineDomainMode(
     const SkRect& constraintRect, FilterConstraint filterConstraint,
     bool coordsLimitedToConstraintRect, GrTextureProxy* proxy,
-    const GrSamplerState::Filter* filterModeOrNullForBicubic, SkRect* domainRect) noexcept {
+    const GrSamplerState::Filter* filterModeOrNullForBicubic, SkRect* domainRect) {
   const SkIRect proxyBounds = SkIRect::MakeWH(proxy->width(), proxy->height());
 
   SkASSERT(proxyBounds.contains(constraintRect));

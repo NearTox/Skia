@@ -42,9 +42,9 @@ class SK_API SkPromiseImageTexture : public SkNVRefCnt<SkPromiseImageTexture> {
   void addKeyToInvalidate(uint32_t contextID, const GrUniqueKey& key);
   uint32_t uniqueID() const { return fUniqueID; }
 
-#if GR_TEST_UTILS
+#  if GR_TEST_UTILS
   SkTArray<GrUniqueKey> testingOnly_uniqueKeysToInvalidate() const;
-#endif
+#  endif
 
  private:
   explicit SkPromiseImageTexture(const GrBackendTexture& backendTexture);

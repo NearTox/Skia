@@ -39,11 +39,11 @@ namespace SkSL {
 
 class StringStream : public OutputStream {
  public:
-  void write8(uint8_t b) noexcept override { fStream.write8(b); }
+  void write8(uint8_t b) override { fStream.write8(b); }
 
-  void writeText(const char* s) noexcept override { fStream.writeText(s); }
+  void writeText(const char* s) override { fStream.writeText(s); }
 
-  void write(const void* s, size_t size) noexcept override { fStream.write(s, size); }
+  void write(const void* s, size_t size) override { fStream.write(s, size); }
 
   const String& str() const {
     if (!fString.size()) {

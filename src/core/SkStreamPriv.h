@@ -29,6 +29,6 @@ sk_sp<SkData> SkCopyStreamToData(SkStream* stream);
  *  Copies the input stream from the current position to the end.
  *  Does not rewind the input stream.
  */
-bool SkStreamCopy(SkWStream* out, SkStream* input) noexcept;
+bool SkStreamCopy(SkWStream* out, SkStream* input);
 
 #endif  // SkStreamPriv_DEFINED

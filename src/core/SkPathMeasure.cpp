@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "include/core/SkPathMeasure.h"
 #include "include/core/SkContourMeasure.h"
+#include "include/core/SkPathMeasure.h"
 
 SkPathMeasure::SkPathMeasure() {}
 
@@ -22,13 +22,13 @@ void SkPathMeasure::setPath(const SkPath* path, bool forceClosed) {
   fContour = fIter.next();
 }
 
-SkScalar SkPathMeasure::getLength() noexcept { return fContour ? fContour->length() : 0; }
+SkScalar SkPathMeasure::getLength() { return fContour ? fContour->length() : 0; }
 
-bool SkPathMeasure::getPosTan(SkScalar distance, SkPoint* position, SkVector* tangent) noexcept {
+bool SkPathMeasure::getPosTan(SkScalar distance, SkPoint* position, SkVector* tangent) {
   return fContour && fContour->getPosTan(distance, position, tangent);
 }
 
-bool SkPathMeasure::getMatrix(SkScalar distance, SkMatrix* matrix, MatrixFlags flags) noexcept {
+bool SkPathMeasure::getMatrix(SkScalar distance, SkMatrix* matrix, MatrixFlags flags) {
   return fContour && fContour->getMatrix(distance, matrix, (SkContourMeasure::MatrixFlags)flags);
 }
 
@@ -36,7 +36,7 @@ bool SkPathMeasure::getSegment(SkScalar startD, SkScalar stopD, SkPath* dst, boo
   return fContour && fContour->getSegment(startD, stopD, dst, startWithMoveTo);
 }
 
-bool SkPathMeasure::isClosed() noexcept { return fContour && fContour->isClosed(); }
+bool SkPathMeasure::isClosed() { return fContour && fContour->isClosed(); }
 
 bool SkPathMeasure::nextContour() {
   fContour = fIter.next();

@@ -44,7 +44,7 @@ struct AppendStage : public Expression {
     return result;
   }
 
-  bool hasSideEffects() const noexcept override { return true; }
+  bool hasSideEffects() const override { return true; }
 
   SkRasterPipeline::StockStage fStage;
 
@@ -55,7 +55,7 @@ struct AppendStage : public Expression {
  private:
   AppendStage(
       int offset, SkRasterPipeline::StockStage stage,
-      std::vector<std::unique_ptr<Expression>> arguments, const Type* type) noexcept
+      std::vector<std::unique_ptr<Expression>> arguments, const Type* type)
       : INHERITED(offset, kAppendStage_Kind, *type),
         fStage(stage),
         fArguments(std::move(arguments)) {}

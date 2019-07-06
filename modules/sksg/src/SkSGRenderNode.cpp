@@ -26,11 +26,11 @@ const RenderNode* RenderNode::nodeAt(const SkPoint& p) const {
   return this->bounds().contains(p.x(), p.y()) ? this->onNodeAt(p) : nullptr;
 }
 
-static SkAlpha ScaleAlpha(SkAlpha alpha, float opacity) noexcept {
+static SkAlpha ScaleAlpha(SkAlpha alpha, float opacity) {
   return SkToU8(sk_float_round2int(alpha * opacity));
 }
 
-bool RenderNode::RenderContext::requiresIsolation() const noexcept {
+bool RenderNode::RenderContext::requiresIsolation() const {
   // Note: fShader is never applied on isolation layers.
   return ScaleAlpha(SK_AlphaOPAQUE, fOpacity) != SK_AlphaOPAQUE || fColorFilter ||
          fBlendMode != SkBlendMode::kSrcOver;
@@ -65,8 +65,7 @@ void RenderNode::RenderContext::modulatePaint(const SkMatrix& ctm, SkPaint* pain
   paint->setBlendMode(fBlendMode);
 }
 
-RenderNode::ScopedRenderContext::ScopedRenderContext(
-    SkCanvas* canvas, const RenderContext* ctx) noexcept
+RenderNode::ScopedRenderContext::ScopedRenderContext(SkCanvas* canvas, const RenderContext* ctx)
     : fCanvas(canvas), fCtx(ctx ? *ctx : RenderContext()), fRestoreCount(canvas->getSaveCount()) {}
 
 RenderNode::ScopedRenderContext::~ScopedRenderContext() {
@@ -75,8 +74,7 @@ RenderNode::ScopedRenderContext::~ScopedRenderContext() {
   }
 }
 
-RenderNode::ScopedRenderContext&& RenderNode::ScopedRenderContext::modulateOpacity(
-    float opacity) noexcept {
+RenderNode::ScopedRenderContext&& RenderNode::ScopedRenderContext::modulateOpacity(float opacity) {
   SkASSERT(opacity >= 0 && opacity <= 1);
   fCtx.fOpacity *= opacity;
   return std::move(*this);
@@ -89,7 +87,7 @@ RenderNode::ScopedRenderContext&& RenderNode::ScopedRenderContext::modulateColor
 }
 
 RenderNode::ScopedRenderContext&& RenderNode::ScopedRenderContext::modulateShader(
-    sk_sp<SkShader> sh, const SkMatrix& shader_ctm) noexcept {
+    sk_sp<SkShader> sh, const SkMatrix& shader_ctm) {
   // Topmost shader takes precedence.
   if (!fCtx.fShader) {
     fCtx.fShader = std::move(sh);
@@ -100,7 +98,7 @@ RenderNode::ScopedRenderContext&& RenderNode::ScopedRenderContext::modulateShade
 }
 
 RenderNode::ScopedRenderContext&& RenderNode::ScopedRenderContext::modulateBlendMode(
-    SkBlendMode mode) noexcept {
+    SkBlendMode mode) {
   fCtx.fBlendMode = mode;
   return std::move(*this);
 }

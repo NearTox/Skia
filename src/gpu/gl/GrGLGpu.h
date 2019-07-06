@@ -44,14 +44,14 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
 
   const GrGLContext& glContext() const { return *fGLContext; }
 
-  const GrGLInterface* glInterface() const noexcept { return fGLContext->interface(); }
+  const GrGLInterface* glInterface() const { return fGLContext->interface(); }
   const GrGLContextInfo& ctxInfo() const { return *fGLContext; }
-  GrGLStandard glStandard() const noexcept { return fGLContext->standard(); }
-  GrGLVersion glVersion() const noexcept { return fGLContext->version(); }
-  GrGLSLGeneration glslGeneration() const noexcept { return fGLContext->glslGeneration(); }
-  const GrGLCaps& glCaps() const noexcept { return *fGLContext->caps(); }
+  GrGLStandard glStandard() const { return fGLContext->standard(); }
+  GrGLVersion glVersion() const { return fGLContext->version(); }
+  GrGLSLGeneration glslGeneration() const { return fGLContext->glslGeneration(); }
+  const GrGLCaps& glCaps() const { return *fGLContext->caps(); }
 
-  GrGLPathRendering* glPathRendering() noexcept {
+  GrGLPathRendering* glPathRendering() {
     SkASSERT(glCaps().shaderCaps()->pathRenderingSupport());
     return static_cast<GrGLPathRendering*>(pathRendering());
   }
@@ -65,9 +65,7 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
 
   // These callbacks update state tracking when GL objects are deleted. They are called from
   // GrGLResource onRelease functions.
-  void notifyVertexArrayDelete(GrGLuint id) noexcept {
-    fHWVertexArrayState.notifyVertexArrayDelete(id);
-  }
+  void notifyVertexArrayDelete(GrGLuint id) { fHWVertexArrayState.notifyVertexArrayDelete(id); }
 
   // Binds a buffer to the GL target corresponding to 'type', updates internal state tracking, and
   // returns the GL target the buffer was bound to.
@@ -124,7 +122,7 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
 
   GrGpuTextureCommandBuffer* getCommandBuffer(GrTexture*, GrSurfaceOrigin) override;
 
-  void invalidateBoundRenderTarget() noexcept { fHWBoundRenderTargetUniqueID.makeInvalid(); }
+  void invalidateBoundRenderTarget() { fHWBoundRenderTargetUniqueID.makeInvalid(); }
 
   GrStencilAttachment* createStencilAttachmentForRenderTarget(
       const GrRenderTarget* rt, int width, int height) override;
@@ -305,7 +303,7 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
       GrSurface* dst, GrSurfaceOrigin dstOrigin, GrSurface* src, GrSurfaceOrigin srcOrigin,
       const SkIRect& srcRect, const SkIPoint& dstPoint);
 
-  static bool BlendCoeffReferencesConstant(GrBlendCoeff coeff) noexcept;
+  static bool BlendCoeffReferencesConstant(GrBlendCoeff coeff);
 
   class ProgramCache : public ::SkNoncopyable {
    public:
@@ -358,7 +356,7 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
   void flushWindowRectangles(const GrWindowRectsState&, const GrGLRenderTarget*, GrSurfaceOrigin);
   void disableWindowRectangles();
 
-  int numTextureUnits() const noexcept { return this->caps()->shaderCaps()->maxFragmentSamplers(); }
+  int numTextureUnits() const { return this->caps()->shaderCaps()->maxFragmentSamplers(); }
 
   // Binds a texture to a target on the "scratch" texture unit to use for texture operations
   // other than usual draw flow (i.e. a GrGLProgram derived from a GrPipeline used to draw
@@ -446,7 +444,7 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
   struct {
     TriState fEnabled;
     GrGLIRect fRect;
-    void invalidate() noexcept {
+    void invalidate() {
       fEnabled = kUnknown_TriState;
       fRect.invalidate();
     }
@@ -454,17 +452,16 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
 
   class {
    public:
-    bool valid() const noexcept { return kInvalidSurfaceOrigin != fRTOrigin; }
-    void invalidate() noexcept { fRTOrigin = kInvalidSurfaceOrigin; }
-    bool knownDisabled() const noexcept { return this->valid() && !fWindowState.enabled(); }
-    void setDisabled() noexcept {
+    bool valid() const { return kInvalidSurfaceOrigin != fRTOrigin; }
+    void invalidate() { fRTOrigin = kInvalidSurfaceOrigin; }
+    bool knownDisabled() const { return this->valid() && !fWindowState.enabled(); }
+    void setDisabled() {
       fRTOrigin = kTopLeft_GrSurfaceOrigin;
       fWindowState.setDisabled();
     }
 
     void set(
-        GrSurfaceOrigin rtOrigin, int width, int height,
-        const GrWindowRectsState& windowState) noexcept {
+        GrSurfaceOrigin rtOrigin, int width, int height, const GrWindowRectsState& windowState) {
       fRTOrigin = rtOrigin;
       fWidth = width;
       fHeight = height;
@@ -473,7 +470,7 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
 
     bool knownEqualTo(
         GrSurfaceOrigin rtOrigin, int width, int height,
-        const GrWindowRectsState& windowState) const noexcept {
+        const GrWindowRectsState& windowState) const {
       if (!this->valid()) {
         return false;
       }
@@ -504,7 +501,7 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
 
     ~HWVertexArrayState() { delete fCoreProfileVertexArray; }
 
-    void invalidate() noexcept {
+    void invalidate() {
       fBoundVertexArrayIDIsValid = false;
       fDefaultVertexArrayAttribState.invalidate();
       if (fCoreProfileVertexArray) {
@@ -512,7 +509,7 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
       }
     }
 
-    void notifyVertexArrayDelete(GrGLuint id) noexcept {
+    void notifyVertexArrayDelete(GrGLuint id) {
       if (fBoundVertexArrayIDIsValid && fBoundVertexArrayID == id) {
         // Does implicit bind to 0
         fBoundVertexArrayID = 0;
@@ -561,13 +558,13 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
     GrGpuResource::UniqueID fBoundBufferUniqueID;
     bool fBufferZeroKnownBound;
 
-    void invalidate() noexcept {
+    void invalidate() {
       fBoundBufferUniqueID.makeInvalid();
       fBufferZeroKnownBound = false;
     }
   } fHWBufferState[kGrGpuBufferTypeCount];
 
-  auto* hwBufferState(GrGpuBufferType type) noexcept {
+  auto* hwBufferState(GrGpuBufferType type) {
     unsigned typeAsUInt = static_cast<unsigned>(type);
     SkASSERT(typeAsUInt < SK_ARRAY_COUNT(fHWBufferState));
     return &fHWBufferState[typeAsUInt];
@@ -581,7 +578,7 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
     bool fConstColorValid;
     TriState fEnabled;
 
-    void invalidate() noexcept {
+    void invalidate() {
       fEquation = kIllegal_GrBlendEquation;
       fSrcCoeff = kIllegal_GrBlendCoeff;
       fDstCoeff = kIllegal_GrBlendCoeff;
@@ -602,15 +599,15 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
 
   class TextureUnitBindings {
    public:
-    TextureUnitBindings() noexcept = default;
+    TextureUnitBindings() = default;
     TextureUnitBindings(const TextureUnitBindings&) = delete;
     TextureUnitBindings& operator=(const TextureUnitBindings&) = delete;
 
-    GrGpuResource::UniqueID boundID(GrGLenum target) const noexcept;
-    bool hasBeenModified(GrGLenum target) const noexcept;
-    void setBoundID(GrGLenum target, GrGpuResource::UniqueID) noexcept;
-    void invalidateForScratchUse(GrGLenum target) noexcept;
-    void invalidateAllTargets(bool markUnmodified) noexcept;
+    GrGpuResource::UniqueID boundID(GrGLenum target) const;
+    bool hasBeenModified(GrGLenum target) const;
+    void setBoundID(GrGLenum target, GrGpuResource::UniqueID);
+    void invalidateForScratchUse(GrGLenum target);
+    void invalidateAllTargets(bool markUnmodified);
 
    private:
     struct TargetBinding {
@@ -642,9 +639,9 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
   } fMipmapPrograms[4];
   sk_sp<GrGLBuffer> fMipmapProgramArrayBuffer;
 
-  static int TextureToCopyProgramIdx(GrTexture* texture) noexcept;
+  static int TextureToCopyProgramIdx(GrTexture* texture);
 
-  static int TextureSizeToMipmapProgramIdx(int width, int height) noexcept {
+  static int TextureSizeToMipmapProgramIdx(int width, int height) {
     const bool wide = (width > 1) && SkToBool(width & 0x1);
     const bool tall = (height > 1) && SkToBool(height & 0x1);
     return (wide ? 0x2 : 0x0) | (tall ? 0x1 : 0x0);

@@ -51,10 +51,10 @@ class SkMasks {
    * Get a color component
    *
    */
-  uint8_t getRed(uint32_t pixel) const noexcept;
-  uint8_t getGreen(uint32_t pixel) const noexcept;
-  uint8_t getBlue(uint32_t pixel) const noexcept;
-  uint8_t getAlpha(uint32_t pixel) const noexcept;
+  uint8_t getRed(uint32_t pixel) const;
+  uint8_t getGreen(uint32_t pixel) const;
+  uint8_t getBlue(uint32_t pixel) const;
+  uint8_t getAlpha(uint32_t pixel) const;
 
   /*
    *
@@ -62,7 +62,7 @@ class SkMasks {
    * The alpha mask may be used in other decoding modes
    *
    */
-  uint32_t getAlphaMask() const noexcept { return fAlpha.mask; }
+  uint32_t getAlphaMask() const { return fAlpha.mask; }
 
  private:
   /*
@@ -70,9 +70,7 @@ class SkMasks {
    * Constructor
    *
    */
-  SkMasks(
-      const MaskInfo& red, const MaskInfo& green, const MaskInfo& blue,
-      const MaskInfo& alpha) noexcept;
+  SkMasks(const MaskInfo& red, const MaskInfo& green, const MaskInfo& blue, const MaskInfo& alpha);
 
   const MaskInfo fRed;
   const MaskInfo fGreen;

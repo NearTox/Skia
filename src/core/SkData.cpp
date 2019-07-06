@@ -6,14 +6,14 @@
  */
 
 #include "include/core/SkData.h"
-#include <new>
 #include "include/core/SkStream.h"
 #include "include/private/SkOnce.h"
 #include "src/core/SkOSFile.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
+#include <new>
 
-SkData::SkData(const void* ptr, size_t size, ReleaseProc proc, void* context) noexcept {
+SkData::SkData(const void* ptr, size_t size, ReleaseProc proc, void* context) {
   fPtr = const_cast<void*>(ptr);
   fSize = size;
   fReleaseProc = proc;
@@ -23,7 +23,7 @@ SkData::SkData(const void* ptr, size_t size, ReleaseProc proc, void* context) no
 /** This constructor means we are inline with our fPtr's contents.
  *  Thus we set fPtr to point right after this.
  */
-SkData::SkData(size_t size) noexcept {
+SkData::SkData(size_t size) {
   fPtr = (char*)(this + 1);  // contents are immediately after this
   fSize = size;
   fReleaseProc = nullptr;
@@ -36,7 +36,7 @@ SkData::~SkData() {
   }
 }
 
-bool SkData::equals(const SkData* other) const noexcept {
+bool SkData::equals(const SkData* other) const {
   if (nullptr == other) {
     return false;
   }
@@ -44,7 +44,7 @@ bool SkData::equals(const SkData* other) const noexcept {
   return fSize == other->fSize && !memcmp(fPtr, other->fPtr, fSize);
 }
 
-size_t SkData::copyRange(size_t offset, size_t length, void* buffer) const noexcept {
+size_t SkData::copyRange(size_t offset, size_t length, void* buffer) const {
   size_t available = fSize;
   if (offset >= available || 0 == length) {
     return 0;
@@ -90,7 +90,7 @@ sk_sp<SkData> SkData::MakeEmpty() {
 }
 
 // assumes fPtr was allocated via sk_malloc
-static void sk_free_releaseproc(const void* ptr, void*) noexcept { sk_free((void*)ptr); }
+static void sk_free_releaseproc(const void* ptr, void*) { sk_free((void*)ptr); }
 
 sk_sp<SkData> SkData::MakeFromMalloc(const void* data, size_t length) {
   return sk_sp<SkData>(new SkData(data, length, sk_free_releaseproc, nullptr));
@@ -145,7 +145,7 @@ sk_sp<SkData> SkData::MakeFromFD(int fd) {
 }
 
 // assumes context is a SkData
-static void sk_dataref_releaseproc(const void*, void* context) noexcept {
+static void sk_dataref_releaseproc(const void*, void* context) {
   SkData* src = reinterpret_cast<SkData*>(context);
   src->unref();
 }

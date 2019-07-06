@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/effects/GrDistanceFieldGeoProc.h"
 #include "include/gpu/GrTexture.h"
 #include "src/core/SkDistanceFieldGen.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrShaderCaps.h"
 #include "src/gpu/effects/GrAtlasedShaderHelpers.h"
+#include "src/gpu/effects/GrDistanceFieldGeoProc.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
 #include "src/gpu/glsl/GrGLSLProgramDataManager.h"
@@ -177,7 +177,7 @@ class GrGLDistanceFieldA8TextGeoProc : public GrGLSLGeometryProcessor {
   }
 
   static inline void GenKey(
-      const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
+      const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
     const GrDistanceFieldA8TextGeoProc& dfTexEffect = gp.cast<GrDistanceFieldA8TextGeoProc>();
     uint32_t key = dfTexEffect.getFlags();
     b->add32(key);
@@ -255,7 +255,7 @@ void GrDistanceFieldA8TextGeoProc::addNewProxies(
 }
 
 void GrDistanceFieldA8TextGeoProc::getGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   GrGLDistanceFieldA8TextGeoProc::GenKey(*this, caps, b);
 }
 
@@ -287,14 +287,14 @@ sk_sp<GrGeometryProcessor> GrDistanceFieldA8TextGeoProc::TestCreate(GrProcessorT
     flags |= d->fRandom->nextBool() ? kScaleOnly_DistanceFieldEffectFlag : 0;
   }
   SkMatrix localMatrix = GrTest::TestMatrix(d->fRandom);
-#ifdef SK_GAMMA_APPLY_TO_A8
+#  ifdef SK_GAMMA_APPLY_TO_A8
   float lum = d->fRandom->nextF();
-#endif
+#  endif
   return GrDistanceFieldA8TextGeoProc::Make(
       *d->caps()->shaderCaps(), proxies, 1, samplerState,
-#ifdef SK_GAMMA_APPLY_TO_A8
+#  ifdef SK_GAMMA_APPLY_TO_A8
       lum,
-#endif
+#  endif
       flags, localMatrix);
 }
 #endif
@@ -454,7 +454,7 @@ class GrGLDistanceFieldPathGeoProc : public GrGLSLGeometryProcessor {
   }
 
   static inline void GenKey(
-      const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
+      const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
     const GrDistanceFieldPathGeoProc& dfTexEffect = gp.cast<GrDistanceFieldPathGeoProc>();
 
     uint32_t key = dfTexEffect.getFlags();
@@ -524,7 +524,7 @@ void GrDistanceFieldPathGeoProc::addNewProxies(
 }
 
 void GrDistanceFieldPathGeoProc::getGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   GrGLDistanceFieldPathGeoProc::GenKey(*this, caps, b);
 }
 
@@ -754,7 +754,7 @@ class GrGLDistanceFieldLCDTextGeoProc : public GrGLSLGeometryProcessor {
   }
 
   static inline void GenKey(
-      const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
+      const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
     const GrDistanceFieldLCDTextGeoProc& dfTexEffect = gp.cast<GrDistanceFieldLCDTextGeoProc>();
 
     uint32_t key = dfTexEffect.getFlags();
@@ -827,7 +827,7 @@ void GrDistanceFieldLCDTextGeoProc::addNewProxies(
 }
 
 void GrDistanceFieldLCDTextGeoProc::getGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   GrGLDistanceFieldLCDTextGeoProc::GenKey(*this, caps, b);
 }
 

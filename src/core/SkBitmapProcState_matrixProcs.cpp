@@ -203,7 +203,7 @@ static const SkBitmapProcState::MatrixProc MirrorX_MirrorY_Procs[] = {
 
 // Clamp/Clamp and Repeat/Repeat have NEON or portable implementations.
 #if defined(SK_ARM_HAS_NEON)
-#include <arm_neon.h>
+#  include <arm_neon.h>
 
 // TODO: this is a fine drop-in for decal_nofilter_scale() generally.
 static void decal_nofilter_scale_neon(uint32_t dst[], SkFixed fx, SkFixed dx, int count) {

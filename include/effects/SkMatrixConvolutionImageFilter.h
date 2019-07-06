@@ -73,9 +73,8 @@ class SK_API SkMatrixConvolutionImageFilter : public SkImageFilter {
   sk_sp<SkSpecialImage> onFilterImage(
       SkSpecialImage* source, const Context&, SkIPoint* offset) const override;
   SkIRect onFilterNodeBounds(
-      const SkIRect&, const SkMatrix& ctm, MapDirection, const SkIRect* inputRect) const
-      noexcept override;
-  bool affectsTransparentBlack() const noexcept override;
+      const SkIRect&, const SkMatrix& ctm, MapDirection, const SkIRect* inputRect) const override;
+  bool affectsTransparentBlack() const override;
 
  private:
   SK_FLATTENABLE_HOOKS(SkMatrixConvolutionImageFilter)

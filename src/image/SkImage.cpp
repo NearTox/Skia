@@ -32,7 +32,7 @@
 #endif
 #include "include/gpu/GrBackendSurface.h"
 
-SkImage::SkImage(const SkImageInfo& info, uint32_t uniqueID) noexcept
+SkImage::SkImage(const SkImageInfo& info, uint32_t uniqueID)
     : fInfo(info), fUniqueID(kNeedNewImageUniqueID == uniqueID ? SkNextID::ImageID() : uniqueID) {
   SkASSERT(info.width() > 0);
   SkASSERT(info.height() > 0);
@@ -74,13 +74,13 @@ bool SkImage::scalePixels(const SkPixmap& dst, SkFilterQuality quality, CachingH
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkColorType SkImage::colorType() const noexcept { return fInfo.colorType(); }
+SkColorType SkImage::colorType() const { return fInfo.colorType(); }
 
-SkAlphaType SkImage::alphaType() const noexcept { return fInfo.alphaType(); }
+SkAlphaType SkImage::alphaType() const { return fInfo.alphaType(); }
 
-SkColorSpace* SkImage::colorSpace() const noexcept { return fInfo.colorSpace(); }
+SkColorSpace* SkImage::colorSpace() const { return fInfo.colorSpace(); }
 
-sk_sp<SkColorSpace> SkImage::refColorSpace() const noexcept { return fInfo.refColorSpace(); }
+sk_sp<SkColorSpace> SkImage::refColorSpace() const { return fInfo.refColorSpace(); }
 
 sk_sp<SkShader> SkImage::makeShader(
     SkTileMode tmx, SkTileMode tmy, const SkMatrix* localMatrix) const {
@@ -189,7 +189,7 @@ void SkImage::flush(GrContext*) {}
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkImage_Base::SkImage_Base(const SkImageInfo& info, uint32_t uniqueID) noexcept
+SkImage_Base::SkImage_Base(const SkImageInfo& info, uint32_t uniqueID)
     : INHERITED(info, uniqueID), fAddedToRasterCache(false) {}
 
 SkImage_Base::~SkImage_Base() {
@@ -297,7 +297,7 @@ sk_sp<SkImage> SkImage::makeWithFilter(
 
 bool SkImage::isLazyGenerated() const { return as_IB(this)->onIsLazyGenerated(); }
 
-bool SkImage::isAlphaOnly() const noexcept { return SkColorTypeIsAlphaOnly(fInfo.colorType()); }
+bool SkImage::isAlphaOnly() const { return SkColorTypeIsAlphaOnly(fInfo.colorType()); }
 
 sk_sp<SkImage> SkImage::makeColorSpace(sk_sp<SkColorSpace> target) const {
   if (!target) {

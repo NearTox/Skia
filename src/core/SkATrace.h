@@ -20,20 +20,19 @@
  */
 class SkATrace : public SkEventTracer {
  public:
-  SkATrace() noexcept;
+  SkATrace();
 
   SkEventTracer::Handle addTraceEvent(
       char phase, const uint8_t* categoryEnabledFlag, const char* name, uint64_t id, int numArgs,
       const char** argNames, const uint8_t* argTypes, const uint64_t* argValues,
-      uint8_t flags) noexcept override;
+      uint8_t flags) override;
 
   void updateTraceEventDuration(
-      const uint8_t* categoryEnabledFlag, const char* name,
-      SkEventTracer::Handle handle) noexcept override;
+      const uint8_t* categoryEnabledFlag, const char* name, SkEventTracer::Handle handle) override;
 
-  const uint8_t* getCategoryGroupEnabled(const char* name) noexcept override;
+  const uint8_t* getCategoryGroupEnabled(const char* name) override;
 
-  const char* getCategoryGroupName(const uint8_t* categoryEnabledFlag) noexcept override {
+  const char* getCategoryGroupName(const uint8_t* categoryEnabledFlag) override {
     static const char* category = "skiaATrace";
     return category;
   }

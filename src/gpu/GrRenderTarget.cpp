@@ -43,7 +43,7 @@ void GrRenderTarget::flagAsNeedingResolve(const SkIRect* rect) {
   }
 }
 
-void GrRenderTarget::overrideResolveRect(const SkIRect rect) noexcept {
+void GrRenderTarget::overrideResolveRect(const SkIRect rect) {
   fResolveRect = rect;
   if (fResolveRect.isEmpty()) {
     fResolveRect = SkRectPriv::MakeILargestInverted();
@@ -54,9 +54,7 @@ void GrRenderTarget::overrideResolveRect(const SkIRect rect) noexcept {
   }
 }
 
-void GrRenderTarget::flagAsResolved() noexcept {
-  fResolveRect = SkRectPriv::MakeILargestInverted();
-}
+void GrRenderTarget::flagAsResolved() { fResolveRect = SkRectPriv::MakeILargestInverted(); }
 
 void GrRenderTarget::onRelease() {
   fStencilAttachment = nullptr;

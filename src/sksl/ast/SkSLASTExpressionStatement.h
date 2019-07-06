@@ -16,7 +16,7 @@ namespace SkSL {
  * A lone expression being used as a statement.
  */
 struct ASTExpressionStatement : public ASTStatement {
-  ASTExpressionStatement(std::unique_ptr<ASTExpression> expression) noexcept
+  ASTExpressionStatement(std::unique_ptr<ASTExpression> expression)
       : INHERITED(expression->fOffset, kExpression_Kind), fExpression(std::move(expression)) {}
 
   String description() const override { return fExpression->description() + ";"; }

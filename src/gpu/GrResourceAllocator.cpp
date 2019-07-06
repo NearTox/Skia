@@ -19,7 +19,7 @@
 #include "src/gpu/GrSurfaceProxyPriv.h"
 
 #if GR_TRACK_INTERVAL_CREATION
-#include <atomic>
+#  include <atomic>
 
 uint32_t GrResourceAllocator::Interval::CreateUniqueID() {
   static std::atomic<uint32_t> nextID{1};

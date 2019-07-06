@@ -31,7 +31,7 @@ class GrGLSLXferProcessor {
         const GrShaderCaps* caps, const GrXferProcessor& xp, const char* inputColor,
         const char* inputCoverage, const char* outputPrimary, const char* outputSecondary,
         const SamplerHandle dstTextureSamplerHandle, GrSurfaceOrigin dstTextureOrigin,
-        uint16_t outputSwizzleKey) noexcept
+        uint16_t outputSwizzleKey)
         : fXPFragBuilder(fragBuilder),
           fUniformHandler(uniformHandler),
           fShaderCaps(caps),

@@ -58,28 +58,28 @@ class SK_API SkSurfaceCharacterization {
 
   SkSurfaceCharacterization createResized(int width, int height) const;
 
-  GrContextThreadSafeProxy* contextInfo() const noexcept { return fContextInfo.get(); }
-  sk_sp<GrContextThreadSafeProxy> refContextInfo() const noexcept { return fContextInfo; }
-  size_t cacheMaxResourceBytes() const noexcept { return fCacheMaxResourceBytes; }
+  GrContextThreadSafeProxy* contextInfo() const { return fContextInfo.get(); }
+  sk_sp<GrContextThreadSafeProxy> refContextInfo() const { return fContextInfo; }
+  size_t cacheMaxResourceBytes() const { return fCacheMaxResourceBytes; }
 
-  bool isValid() const noexcept { return kUnknown_SkColorType != fImageInfo.colorType(); }
+  bool isValid() const { return kUnknown_SkColorType != fImageInfo.colorType(); }
 
-  const SkImageInfo& imageInfo() const noexcept { return fImageInfo; }
-  GrSurfaceOrigin origin() const noexcept { return fOrigin; }
-  int width() const noexcept { return fImageInfo.width(); }
-  int height() const noexcept { return fImageInfo.height(); }
-  SkColorType colorType() const noexcept { return fImageInfo.colorType(); }
-  GrFSAAType fsaaType() const noexcept { return fFSAAType; }
-  int stencilCount() const noexcept { return fStencilCnt; }
-  bool isTextureable() const noexcept { return Textureable::kYes == fIsTextureable; }
-  bool isMipMapped() const noexcept { return MipMapped::kYes == fIsMipMapped; }
-  bool usesGLFBO0() const noexcept { return UsesGLFBO0::kYes == fUsesGLFBO0; }
-  bool vulkanSecondaryCBCompatible() const noexcept {
+  const SkImageInfo& imageInfo() const { return fImageInfo; }
+  GrSurfaceOrigin origin() const { return fOrigin; }
+  int width() const { return fImageInfo.width(); }
+  int height() const { return fImageInfo.height(); }
+  SkColorType colorType() const { return fImageInfo.colorType(); }
+  GrFSAAType fsaaType() const { return fFSAAType; }
+  int stencilCount() const { return fStencilCnt; }
+  bool isTextureable() const { return Textureable::kYes == fIsTextureable; }
+  bool isMipMapped() const { return MipMapped::kYes == fIsMipMapped; }
+  bool usesGLFBO0() const { return UsesGLFBO0::kYes == fUsesGLFBO0; }
+  bool vulkanSecondaryCBCompatible() const {
     return VulkanSecondaryCBCompatible::kYes == fVulkanSecondaryCBCompatible;
   }
-  SkColorSpace* colorSpace() const noexcept { return fImageInfo.colorSpace(); }
-  sk_sp<SkColorSpace> refColorSpace() const noexcept { return fImageInfo.refColorSpace(); }
-  const SkSurfaceProps& surfaceProps() const noexcept { return fSurfaceProps; }
+  SkColorSpace* colorSpace() const { return fImageInfo.colorSpace(); }
+  sk_sp<SkColorSpace> refColorSpace() const { return fImageInfo.refColorSpace(); }
+  const SkSurfaceProps& surfaceProps() const { return fSurfaceProps; }
 
  private:
   friend class SkSurface_Gpu;                  // for 'set' & 'config'
@@ -88,7 +88,7 @@ class SK_API SkSurfaceCharacterization {
   friend class SkDeferredDisplayListRecorder;  // for 'config'
   friend class SkSurface;                      // for 'config'
 
-  GrPixelConfig config() const noexcept { return fConfig; }
+  GrPixelConfig config() const { return fConfig; }
 
   SkSurfaceCharacterization(
       sk_sp<GrContextThreadSafeProxy> contextInfo, size_t cacheMaxResourceBytes,
@@ -112,8 +112,7 @@ class SK_API SkSurfaceCharacterization {
       sk_sp<GrContextThreadSafeProxy> contextInfo, size_t cacheMaxResourceBytes,
       const SkImageInfo& ii, GrSurfaceOrigin origin, GrPixelConfig config, GrFSAAType fsaaType,
       int stencilCnt, Textureable isTextureable, MipMapped isMipMapped, UsesGLFBO0 usesGLFBO0,
-      VulkanSecondaryCBCompatible vulkanSecondaryCBCompatible,
-      const SkSurfaceProps& surfaceProps) noexcept {
+      VulkanSecondaryCBCompatible vulkanSecondaryCBCompatible, const SkSurfaceProps& surfaceProps) {
     SkASSERT(MipMapped::kNo == isMipMapped || Textureable::kYes == isTextureable);
     SkASSERT(Textureable::kNo == isTextureable || UsesGLFBO0::kNo == usesGLFBO0);
 
@@ -167,7 +166,7 @@ class SK_API SkSurfaceCharacterization {
 
   size_t cacheMaxResourceBytes() const { return 0; }
 
-  bool isValid() const noexcept { return false; }
+  bool isValid() const { return false; }
 
   int width() const { return 0; }
   int height() const { return 0; }

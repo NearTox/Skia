@@ -15,14 +15,14 @@
 #include "src/codec/SkSwizzler.h"
 
 #if __has_include("HeifDecoderAPI.h")
-#include "HeifDecoderAPI.h"
+#  include "HeifDecoderAPI.h"
 #else
-#include "src/codec/SkStubHeifDecoderAPI.h"
+#  include "src/codec/SkStubHeifDecoderAPI.h"
 #endif
 
 class SkHeifCodec : public SkCodec {
  public:
-  static bool IsHeif(const void*, size_t) noexcept;
+  static bool IsHeif(const void*, size_t);
 
   /*
    * Assumes IsHeif was called and returned true.
@@ -34,13 +34,11 @@ class SkHeifCodec : public SkCodec {
       const SkImageInfo& dstInfo, void* dst, size_t dstRowBytes, const Options& options,
       int* rowsDecoded) override;
 
-  SkEncodedImageFormat onGetEncodedFormat() const noexcept override {
-    return SkEncodedImageFormat::kHEIF;
-  }
+  SkEncodedImageFormat onGetEncodedFormat() const override { return SkEncodedImageFormat::kHEIF; }
 
-  bool conversionSupported(const SkImageInfo&, bool, bool) noexcept override;
+  bool conversionSupported(const SkImageInfo&, bool, bool) override;
 
-  bool onRewind() noexcept override;
+  bool onRewind() override;
 
  private:
   /*
@@ -50,7 +48,7 @@ class SkHeifCodec : public SkCodec {
   SkHeifCodec(SkEncodedInfo&&, HeifDecoder*, SkEncodedOrigin);
 
   void initializeSwizzler(const SkImageInfo& dstInfo, const Options& options);
-  void allocateStorage(const SkImageInfo& dstInfo) noexcept;
+  void allocateStorage(const SkImageInfo& dstInfo);
   int readRows(const SkImageInfo& dstInfo, void* dst, size_t rowBytes, int count, const Options&);
 
   /*
@@ -59,7 +57,7 @@ class SkHeifCodec : public SkCodec {
   SkSampler* getSampler(bool createIfNecessary) override;
   Result onStartScanlineDecode(const SkImageInfo& dstInfo, const Options& options) override;
   int onGetScanlines(void* dst, int count, size_t rowBytes) override;
-  bool onSkipScanlines(int count) noexcept override;
+  bool onSkipScanlines(int count) override;
 
   std::unique_ptr<HeifDecoder> fHeifDecoder;
   HeifFrameInfo fFrameInfo;

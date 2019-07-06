@@ -25,28 +25,28 @@ struct BasicBlock {
 
     Node(
         Kind kind, bool constantPropagation, std::unique_ptr<Expression>* expression,
-        std::unique_ptr<Statement>* statement) noexcept
+        std::unique_ptr<Statement>* statement)
         : fKind(kind),
           fConstantPropagation(constantPropagation),
           fExpression(expression),
           fStatement(statement) {}
 
-    std::unique_ptr<Expression>* expression() const noexcept {
+    std::unique_ptr<Expression>* expression() const {
       SkASSERT(fKind == kExpression_Kind);
       return fExpression;
     }
 
-    void setExpression(std::unique_ptr<Expression> expr) noexcept {
+    void setExpression(std::unique_ptr<Expression> expr) {
       SkASSERT(fKind == kExpression_Kind);
       *fExpression = std::move(expr);
     }
 
-    std::unique_ptr<Statement>* statement() const noexcept {
+    std::unique_ptr<Statement>* statement() const {
       SkASSERT(fKind == kStatement_Kind);
       return fStatement;
     }
 
-    void setStatement(std::unique_ptr<Statement> stmt) noexcept {
+    void setStatement(std::unique_ptr<Statement> stmt) {
       SkASSERT(fKind == kStatement_Kind);
       *fStatement = std::move(stmt);
     }

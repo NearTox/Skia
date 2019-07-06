@@ -60,6 +60,6 @@ enum class SkBlendMode {
                       SkBlendMode::kColor, SkBlendMode::kLuminosity
     @return           C string
 */
-SK_API const char* SkBlendMode_Name(SkBlendMode blendMode) noexcept;
+SK_API const char* SkBlendMode_Name(SkBlendMode blendMode);
 
 #endif

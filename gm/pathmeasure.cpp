@@ -55,7 +55,7 @@ static SK_UNUSED void path_measure_explosion(SkCanvas* canvas) {
 }
 
 #if 0
-#include "gm/gm.h"
+#  include "gm/gm.h"
 DEF_SIMPLE_GM(PathMeasure_explosion, canvas, 500,500) {
     path_measure_explosion(canvas);
 }

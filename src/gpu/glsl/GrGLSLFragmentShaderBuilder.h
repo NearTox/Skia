@@ -143,14 +143,14 @@ class GrGLSLFragmentShaderBuilder : public GrGLSLFPFragmentBuilder, public GrGLS
   const char* sampleOffsets() override;
   void maskOffMultisampleCoverage(const char* mask, ScopeFlags) override;
   void applyFnToMultisampleMask(const char* fn, const char* grad, ScopeFlags) override;
-  const SkString& getMangleString() const noexcept override { return fMangleString; }
+  const SkString& getMangleString() const override { return fMangleString; }
   void onBeforeChildProcEmitCode() override;
   void onAfterChildProcEmitCode() override;
-  void forceHighPrecision() noexcept override { fForceHighPrecision = true; }
+  void forceHighPrecision() override { fForceHighPrecision = true; }
 
   // GrGLSLXPFragmentBuilder interface.
-  bool hasCustomColorOutput() const noexcept override { return fHasCustomColorOutput; }
-  bool hasSecondaryOutput() const noexcept override { return fHasSecondaryOutput; }
+  bool hasCustomColorOutput() const override { return fHasCustomColorOutput; }
+  bool hasSecondaryOutput() const override { return fHasSecondaryOutput; }
   const char* dstColor() override;
   void enableAdvancedBlendEquationIfNeeded(GrBlendEquation) override;
 
@@ -177,8 +177,8 @@ class GrGLSLFragmentShaderBuilder : public GrGLSLFPFragmentBuilder, public GrGLS
   }
 #endif
 
-  static const char* DeclaredColorOutputName() noexcept { return "sk_FragColor"; }
-  static const char* DeclaredSecondaryColorOutputName() noexcept { return "fsSecondaryColorOut"; }
+  static const char* DeclaredColorOutputName() { return "sk_FragColor"; }
+  static const char* DeclaredSecondaryColorOutputName() { return "fsSecondaryColorOut"; }
 
   GrSurfaceOrigin getSurfaceOrigin() const;
 

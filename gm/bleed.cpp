@@ -394,8 +394,8 @@ class BleedGM : public skiagm::GM {
         this->drawCase5(
             canvas, kCol2X, kRow4Y, aa, SkCanvas::kStrict_SrcRectConstraint, kHigh_SkFilterQuality);
 
-        // Then draw a column with bleeding and no filtering (bleed should have no effect
-        // w/out blur)
+        // Then draw a column with bleeding and no filtering (bleed should have no effect w/out
+        // blur)
         this->drawCase1(
             canvas, kCol3X, kRow0Y, aa, SkCanvas::kFast_SrcRectConstraint, kNone_SkFilterQuality);
         this->drawCase2(

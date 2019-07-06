@@ -8,11 +8,11 @@
 #ifndef GrMeshDrawOp_DEFINED
 #define GrMeshDrawOp_DEFINED
 
-#include <type_traits>
 #include "src/gpu/GrAppliedClip.h"
 #include "src/gpu/GrGeometryProcessor.h"
 #include "src/gpu/GrMesh.h"
 #include "src/gpu/ops/GrDrawOp.h"
+#include <type_traits>
 
 class GrAtlasManager;
 class GrCaps;
@@ -28,7 +28,7 @@ class GrMeshDrawOp : public GrDrawOp {
   class Target;
 
  protected:
-  GrMeshDrawOp(uint32_t classID) noexcept;
+  GrMeshDrawOp(uint32_t classID);
 
   /** Helper for rendering repeating meshes using a patterned index buffer. This class creates the
       space for the vertices and flushes the draws to the GrMeshDrawOp::Target. */
@@ -43,7 +43,7 @@ class GrMeshDrawOp : public GrDrawOp {
     void recordDraw(
         Target*, sk_sp<const GrGeometryProcessor>, const GrPipeline::FixedDynamicState*) const;
 
-    void* vertices() const noexcept { return fVertices; }
+    void* vertices() const { return fVertices; }
 
    protected:
     PatternHelper() = default;

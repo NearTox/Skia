@@ -19,13 +19,13 @@ class SK_API SkContourMeasure : public SkRefCnt {
  public:
   /** Return the length of the contour.
    */
-  SkScalar length() const noexcept { return fLength; }
+  SkScalar length() const { return fLength; }
 
   /** Pins distance to 0 <= distance <= length(), and then computes the corresponding
    *  position and tangent.
    */
   bool SK_WARN_UNUSED_RESULT
-  getPosTan(SkScalar distance, SkPoint* position, SkVector* tangent) const noexcept;
+  getPosTan(SkScalar distance, SkPoint* position, SkVector* tangent) const;
 
   enum MatrixFlags {
     kGetPosition_MatrixFlag = 0x01,
@@ -38,9 +38,8 @@ class SK_API SkContourMeasure : public SkRefCnt {
    Returns false if there is no path, or a zero-length path was specified, in which case
    matrix is unchanged.
    */
-  bool SK_WARN_UNUSED_RESULT
-  getMatrix(SkScalar distance, SkMatrix* matrix, MatrixFlags flags = kGetPosAndTan_MatrixFlag) const
-      noexcept;
+  bool SK_WARN_UNUSED_RESULT getMatrix(
+      SkScalar distance, SkMatrix* matrix, MatrixFlags flags = kGetPosAndTan_MatrixFlag) const;
 
   /** Given a start and stop distance, return in dst the intervening segment(s).
    If the segment is zero-length, return false, else return true.
@@ -53,7 +52,7 @@ class SK_API SkContourMeasure : public SkRefCnt {
 
   /** Return true if the contour is closed()
    */
-  bool isClosed() const noexcept { return fIsClosed; }
+  bool isClosed() const { return fIsClosed; }
 
  private:
   struct Segment {
@@ -63,9 +62,9 @@ class SK_API SkContourMeasure : public SkRefCnt {
     unsigned fType : 2;  // actually the enum SkSegType
     // See SkPathMeasurePriv.h
 
-    SkScalar getScalarT() const noexcept;
+    SkScalar getScalarT() const;
 
-    static const Segment* Next(const Segment* seg) noexcept {
+    static const Segment* Next(const Segment* seg) {
       unsigned ptIndex = seg->fPtIndex;
       do {
         ++seg;
@@ -81,10 +80,10 @@ class SK_API SkContourMeasure : public SkRefCnt {
   const bool fIsClosed;
 
   SkContourMeasure(
-      SkTDArray<Segment>&& segs, SkTDArray<SkPoint>&& pts, SkScalar length, bool isClosed) noexcept;
+      SkTDArray<Segment>&& segs, SkTDArray<SkPoint>&& pts, SkScalar length, bool isClosed);
   ~SkContourMeasure() override {}
 
-  const Segment* distanceToSegment(SkScalar distance, SkScalar* t) const noexcept;
+  const Segment* distanceToSegment(SkScalar distance, SkScalar* t) const;
 
   friend class SkContourMeasureIter;
 };
@@ -97,7 +96,7 @@ class SK_API SkContourMeasureIter : SkNoncopyable {
    *  The parts of the path that are needed are copied, so the client is free to modify/delete
    *  the path after this call.
    */
-  SkContourMeasureIter(const SkPath& path, bool forceClosed, SkScalar resScale = 1) noexcept;
+  SkContourMeasureIter(const SkPath& path, bool forceClosed, SkScalar resScale = 1);
   ~SkContourMeasureIter();
 
   /**
@@ -105,7 +104,7 @@ class SK_API SkContourMeasureIter : SkNoncopyable {
    *  The parts of the path that are needed are copied, so the client is free to modify/delete
    *  the path after this call.
    */
-  void reset(const SkPath& path, bool forceClosed, SkScalar resScale = 1) noexcept;
+  void reset(const SkPath& path, bool forceClosed, SkScalar resScale = 1);
 
   /**
    *  Iterates through contours in path, returning a contour-measure object for each contour
@@ -132,7 +131,7 @@ class SK_API SkContourMeasureIter : SkNoncopyable {
 
   SkContourMeasure* buildSegments();
 
-  SkScalar compute_line_seg(SkPoint p0, SkPoint p1, SkScalar distance, unsigned ptIndex) noexcept;
+  SkScalar compute_line_seg(SkPoint p0, SkPoint p1, SkScalar distance, unsigned ptIndex);
   SkScalar compute_quad_segs(
       const SkPoint pts[3], SkScalar distance, int mint, int maxt, unsigned ptIndex);
   SkScalar compute_conic_segs(

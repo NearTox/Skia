@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/shaders/SkLightingShader.h"
 #include "include/core/SkColor.h"
 #include "include/core/SkPoint3.h"
 #include "include/core/SkUnPreMultiply.h"
@@ -17,6 +16,7 @@
 #include "src/core/SkWriteBuffer.h"
 #include "src/shaders/SkBitmapProcShader.h"
 #include "src/shaders/SkEmptyShader.h"
+#include "src/shaders/SkLightingShader.h"
 #include "src/shaders/SkShaderBase.h"
 
 ////////////////////////////////////////////////////////////////////////////
@@ -49,7 +49,7 @@ class SkLightingShaderImpl : public SkShaderBase {
         fNormalSource(std::move(normalSource)),
         fLights(std::move(lights)) {}
 
-  bool isOpaque() const noexcept override;
+  bool isOpaque() const override;
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
@@ -65,7 +65,7 @@ class SkLightingShaderImpl : public SkShaderBase {
 
     void shadeSpan(int x, int y, SkPMColor[], int count) override;
 
-    uint32_t getFlags() const noexcept override { return fFlags; }
+    uint32_t getFlags() const override { return fFlags; }
 
    private:
     SkShaderBase::Context* fDiffuseContext;
@@ -117,14 +117,14 @@ class LightingFP : public GrFragmentProcessor {
         new LightingFP(std::move(normalFP), std::move(lights)));
   }
 
-  const char* name() const noexcept override { return "LightingFP"; }
+  const char* name() const override { return "LightingFP"; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override {
     return std::unique_ptr<GrFragmentProcessor>(new LightingFP(*this));
   }
 
-  const SkTArray<SkLights::Light>& directionalLights() const noexcept { return fDirectionalLights; }
-  const SkColor3f& ambientColor() const noexcept { return fAmbientColor; }
+  const SkTArray<SkLights::Light>& directionalLights() const { return fDirectionalLights; }
+  const SkColor3f& ambientColor() const { return fAmbientColor; }
 
  private:
   class GLSLLightingFP : public GrGLSLFragmentProcessor {
@@ -182,8 +182,7 @@ class LightingFP : public GrFragmentProcessor {
           args.fOutputColor);
     }
 
-    static void GenKey(
-        const GrProcessor& proc, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
+    static void GenKey(const GrProcessor& proc, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
       const LightingFP& lightingFP = proc.cast<LightingFP>();
       b->add32(lightingFP.fDirectionalLights.count());
     }
@@ -224,8 +223,7 @@ class LightingFP : public GrFragmentProcessor {
     GrGLSLProgramDataManager::UniformHandle fAmbientColorUni;
   };
 
-  void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const
-      noexcept override {
+  void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
     GLSLLightingFP::GenKey(*this, caps, b);
   }
 
@@ -254,7 +252,7 @@ class LightingFP : public GrFragmentProcessor {
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override { return new GLSLLightingFP; }
 
-  bool onIsEqual(const GrFragmentProcessor& proc) const noexcept override {
+  bool onIsEqual(const GrFragmentProcessor& proc) const override {
     const LightingFP& lightingFP = proc.cast<LightingFP>();
     return fDirectionalLights == lightingFP.fDirectionalLights &&
            fAmbientColor == lightingFP.fAmbientColor;
@@ -298,7 +296,7 @@ std::unique_ptr<GrFragmentProcessor> SkLightingShaderImpl::asFragmentProcessor(
 
 ////////////////////////////////////////////////////////////////////////////
 
-bool SkLightingShaderImpl::isOpaque() const noexcept {
+bool SkLightingShaderImpl::isOpaque() const {
   return (fDiffuseShader ? fDiffuseShader->isOpaque() : false);
 }
 
@@ -319,7 +317,7 @@ SkLightingShaderImpl::LightingShaderContext::LightingShaderContext(
   fFlags = flags;
 }
 
-static inline SkPMColor convert(SkColor3f color, U8CPU a) noexcept {
+static inline SkPMColor convert(SkColor3f color, U8CPU a) {
   if (color.fX <= 0.0f) {
     color.fX = 0.0f;
   } else if (color.fX >= 255.0f) {

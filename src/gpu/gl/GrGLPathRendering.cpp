@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/gl/GrGLPathRendering.h"
 #include "src/gpu/gl/GrGLGpu.h"
+#include "src/gpu/gl/GrGLPathRendering.h"
 #include "src/gpu/gl/GrGLUtil.h"
 
 #include "include/private/GrRenderTargetProxy.h"
@@ -40,7 +40,7 @@ static void verify_floats(const float* floats, int count) {
 }
 #endif
 
-static GrGLenum gr_stencil_op_to_gl_path_rendering_fill_mode(GrStencilOp op) noexcept {
+static GrGLenum gr_stencil_op_to_gl_path_rendering_fill_mode(GrStencilOp op) {
   switch (op) {
     default:
       SK_ABORT("Unexpected path fill.");
@@ -254,4 +254,4 @@ void GrGLPathRendering::flushPathStencilSettings(const GrStencilSettings& stenci
   }
 }
 
-inline GrGLGpu* GrGLPathRendering::gpu() noexcept { return static_cast<GrGLGpu*>(fGpu); }
+inline GrGLGpu* GrGLPathRendering::gpu() { return static_cast<GrGLGpu*>(fGpu); }

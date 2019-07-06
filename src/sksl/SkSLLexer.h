@@ -215,9 +215,9 @@ struct Token {
     INVALID,
   };
 
-  constexpr Token() noexcept : fKind(Kind::INVALID), fOffset(-1), fLength(-1) {}
+  Token() : fKind(Kind::INVALID), fOffset(-1), fLength(-1) {}
 
-  constexpr Token(Kind kind, int32_t offset, int32_t length) noexcept
+  Token(Kind kind, int32_t offset, int32_t length)
       : fKind(kind), fOffset(offset), fLength(length) {}
 
   Kind fKind;
@@ -227,7 +227,7 @@ struct Token {
 
 class Lexer {
  public:
-  void start(const char* text, int32_t length) noexcept {
+  void start(const char* text, int32_t length) {
     fText = text;
     fLength = length;
     fOffset = 0;

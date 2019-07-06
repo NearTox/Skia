@@ -262,15 +262,15 @@ class Sk4px : public Sk16b {
 }  // namespace
 
 #ifdef SKNX_NO_SIMD
-#include "src/opts/Sk4px_none.h"
+#  include "src/opts/Sk4px_none.h"
 #else
-#if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
-#include "src/opts/Sk4px_SSE2.h"
-#elif defined(SK_ARM_HAS_NEON)
-#include "src/opts/Sk4px_NEON.h"
-#else
-#include "src/opts/Sk4px_none.h"
-#endif
+#  if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
+#    include "src/opts/Sk4px_SSE2.h"
+#  elif defined(SK_ARM_HAS_NEON)
+#    include "src/opts/Sk4px_NEON.h"
+#  else
+#    include "src/opts/Sk4px_none.h"
+#  endif
 #endif
 
 #endif  // Sk4px_DEFINED

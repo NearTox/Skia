@@ -21,7 +21,7 @@ struct TypeReference : public Expression {
   TypeReference(const Context& context, int offset, const Type& value)
       : INHERITED(offset, kTypeReference_Kind, *context.fInvalid_Type), fValue(value) {}
 
-  bool hasSideEffects() const noexcept override { return false; }
+  bool hasSideEffects() const override { return false; }
 
   String description() const override { return String(fValue.fName); }
 
@@ -34,7 +34,7 @@ struct TypeReference : public Expression {
   typedef Expression INHERITED;
 
  private:
-  TypeReference(int offset, const Type& value, const Type* type) noexcept
+  TypeReference(int offset, const Type& value, const Type* type)
       : INHERITED(offset, kTypeReference_Kind, *type), fValue(value) {}
 };
 

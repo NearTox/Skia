@@ -7,7 +7,6 @@
 
 #include "src/core/SkStrike.h"
 
-#include <cctype>
 #include "include/core/SkGraphics.h"
 #include "include/core/SkPath.h"
 #include "include/core/SkTypeface.h"
@@ -15,6 +14,7 @@
 #include "include/private/SkOnce.h"
 #include "include/private/SkTemplates.h"
 #include "src/core/SkMakeUnique.h"
+#include <cctype>
 
 namespace {
 size_t compute_path_size(const SkPath& path) {
@@ -37,7 +37,7 @@ SkStrike::SkStrike(
 const SkDescriptor& SkStrike::getDescriptor() const { return *fDesc.getDesc(); }
 
 #ifdef SK_DEBUG
-#define VALIDATE() AutoValidate av(this)
+#  define VALIDATE() AutoValidate av(this)
 #else
 #define VALIDATE()
 #endif
@@ -463,6 +463,6 @@ void SkStrike::forceValidate() const {
 void SkStrike::validate() const {
 #ifdef SK_DEBUG_GLYPH_CACHE
   forceValidate();
-#endif
+#  endif
 }
 #endif  // SK_DEBUG

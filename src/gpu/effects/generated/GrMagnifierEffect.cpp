@@ -131,8 +131,8 @@ GrGLSLFragmentProcessor* GrMagnifierEffect::onCreateGLSLInstance() const {
   return new GrGLSLMagnifierEffect();
 }
 void GrMagnifierEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {}
-bool GrMagnifierEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
+bool GrMagnifierEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrMagnifierEffect& that = other.cast<GrMagnifierEffect>();
   (void)that;
   if (src != that.src) return false;
@@ -144,7 +144,7 @@ bool GrMagnifierEffect::onIsEqual(const GrFragmentProcessor& other) const noexce
   if (yInvInset != that.yInvInset) return false;
   return true;
 }
-GrMagnifierEffect::GrMagnifierEffect(const GrMagnifierEffect& src) noexcept
+GrMagnifierEffect::GrMagnifierEffect(const GrMagnifierEffect& src)
     : INHERITED(kGrMagnifierEffect_ClassID, src.optimizationFlags()),
       srcCoordTransform(src.srcCoordTransform),
       src(src.src),
@@ -160,8 +160,7 @@ GrMagnifierEffect::GrMagnifierEffect(const GrMagnifierEffect& src) noexcept
 std::unique_ptr<GrFragmentProcessor> GrMagnifierEffect::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new GrMagnifierEffect(*this));
 }
-const GrFragmentProcessor::TextureSampler& GrMagnifierEffect::onTextureSampler(int index) const
-    noexcept {
+const GrFragmentProcessor::TextureSampler& GrMagnifierEffect::onTextureSampler(int index) const {
   return IthTextureSampler(index, src);
 }
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(GrMagnifierEffect);

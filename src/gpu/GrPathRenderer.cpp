@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/GrPathRenderer.h"
 #include "src/core/SkDrawProcs.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrPaint.h"
+#include "src/gpu/GrPathRenderer.h"
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/GrShape.h"

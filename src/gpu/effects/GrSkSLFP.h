@@ -8,7 +8,6 @@
 #ifndef GrSkSLFP_DEFINED
 #define GrSkSLFP_DEFINED
 
-#include <atomic>
 #include "include/core/SkRefCnt.h"
 #include "include/private/GrSkSLFPFactoryCache.h"
 #include "src/gpu/GrCaps.h"
@@ -17,6 +16,7 @@
 #include "src/gpu/GrShaderCaps.h"
 #include "src/sksl/SkSLCompiler.h"
 #include "src/sksl/SkSLPipelineStageCodeGenerator.h"
+#include <atomic>
 
 #if GR_TEST_UTILS
 #define GR_FP_SRC_STRING const char*
@@ -75,7 +75,7 @@ class GrSkSLFP : public GrFragmentProcessor {
       GrContext_Base* context, int index, const char* name, SkString sksl, const void* inputs,
       size_t inputSize, SkSL::Program::Kind kind = SkSL::Program::kPipelineStage_Kind);
 
-  const char* name() const noexcept override;
+  const char* name() const override;
 
   void addChild(std::unique_ptr<GrFragmentProcessor> child);
 
@@ -93,7 +93,7 @@ class GrSkSLFP : public GrFragmentProcessor {
 
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
-  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor&) const override;
 
   void createFactory() const;
 

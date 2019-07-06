@@ -12,9 +12,9 @@
 
 // Every function in this file should be marked static and inline using SI.
 #if defined(__clang__)
-#define SI __attribute__((always_inline)) static inline
+#  define SI __attribute__((always_inline)) static inline
 #else
-#define SI static inline
+#  define SI static inline
 #endif
 
 template <typename T, typename P>
@@ -80,43 +80,43 @@ struct Ctx {
 };
 
 #if !defined(__clang__)
-#define JUMPER_IS_SCALAR
+#  define JUMPER_IS_SCALAR
 #elif defined(SK_ARM_HAS_NEON)
-#define JUMPER_IS_NEON
+#  define JUMPER_IS_NEON
 #elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_AVX512
-#define JUMPER_IS_AVX512
+#  define JUMPER_IS_AVX512
 #elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_AVX2
-#define JUMPER_IS_HSW
+#  define JUMPER_IS_HSW
 #elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_AVX
-#define JUMPER_IS_AVX
+#  define JUMPER_IS_AVX
 #elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE41
-#define JUMPER_IS_SSE41
+#  define JUMPER_IS_SSE41
 #elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
-#define JUMPER_IS_SSE2
+#  define JUMPER_IS_SSE2
 #else
-#define JUMPER_IS_SCALAR
+#  define JUMPER_IS_SCALAR
 #endif
 
 // Older Clangs seem to crash when generating non-optimized NEON code for ARMv7.
 #if defined(__clang__) && !defined(__OPTIMIZE__) && defined(SK_CPU_ARM32)
 // Apple Clang 9 and vanilla Clang 5 are fine, and may even be conservative.
-#if defined(__apple_build_version__) && __clang_major__ < 9
-#define JUMPER_IS_SCALAR
-#elif __clang_major__ < 5
-#define JUMPER_IS_SCALAR
-#endif
+#  if defined(__apple_build_version__) && __clang_major__ < 9
+#    define JUMPER_IS_SCALAR
+#  elif __clang_major__ < 5
+#    define JUMPER_IS_SCALAR
+#  endif
 
-#if defined(JUMPER_IS_NEON) && defined(JUMPER_IS_SCALAR)
-#undef JUMPER_IS_NEON
-#endif
+#  if defined(JUMPER_IS_NEON) && defined(JUMPER_IS_SCALAR)
+#    undef JUMPER_IS_NEON
+#  endif
 #endif
 
 #if defined(JUMPER_IS_SCALAR)
-#include <math.h>
+#  include <math.h>
 #elif defined(JUMPER_IS_NEON)
-#include <arm_neon.h>
+#  include <arm_neon.h>
 #else
-#include <immintrin.h>
+#  include <immintrin.h>
 #endif
 
 namespace SK_OPTS_NS {
@@ -208,12 +208,12 @@ SI U8 pack(U16 v) { return __builtin_convertvector(v, U8); }
 
 SI F if_then_else(I32 c, F t, F e) { return vbslq_f32((U32)c, t, e); }
 
-#if defined(SK_CPU_ARM64)
+#  if defined(SK_CPU_ARM64)
 SI F mad(F f, F m, F a) { return vfmaq_f32(a, f, m); }
 SI F floor_(F v) { return vrndmq_f32(v); }
 SI F sqrt_(F v) { return vsqrtq_f32(v); }
 SI U32 round(F v, F scale) { return vcvtnq_u32_f32(v * scale); }
-#else
+#  else
 SI F mad(F f, F m, F a) { return vmlaq_f32(a, f, m); }
 SI F floor_(F v) {
   F roundtrip = vcvtq_f32_s32(vcvtq_s32_f32(v));
@@ -228,7 +228,7 @@ SI F sqrt_(F v) {
 }
 
 SI U32 round(F v, F scale) { return vcvtq_u32_f32(mad(v, scale, 0.5f)); }
-#endif
+#  endif
 
 template <typename T>
 SI V<T> gather(const T* p, U32 ix) {
@@ -337,11 +337,11 @@ using U16 = V<uint16_t>;
 using U8 = V<uint8_t>;
 
 SI F mad(F f, F m, F a) {
-#if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
   return _mm256_fmadd_ps(f, m, a);
-#else
+#  else
   return f * m + a;
-#endif
+#  endif
 }
 
 SI F min(F a, F b) { return _mm256_min_ps(a, b); }
@@ -369,7 +369,7 @@ SI V<T> gather(const T* p, U32 ix) {
       p[ix[0]], p[ix[1]], p[ix[2]], p[ix[3]], p[ix[4]], p[ix[5]], p[ix[6]], p[ix[7]],
   };
 }
-#if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
 SI F gather(const float* p, U32 ix) { return _mm256_i32gather_ps(p, ix, 4); }
 SI U32 gather(const uint32_t* p, U32 ix) { return _mm256_i32gather_epi32(p, ix, 4); }
 SI U64 gather(const uint64_t* p, U32 ix) {
@@ -379,7 +379,7 @@ SI U64 gather(const uint64_t* p, U32 ix) {
   };
   return bit_cast<U64>(parts);
 }
-#endif
+#  endif
 
 SI void load3(const uint16_t* ptr, size_t tail, U16* r, U16* g, U16* b) {
   __m128i _0, _1, _2, _3, _4, _5, _6, _7;
@@ -611,13 +611,13 @@ SI F sqrt_(F v) { return _mm_sqrt_ps(v); }
 SI U32 round(F v, F scale) { return _mm_cvtps_epi32(v * scale); }
 
 SI U16 pack(U32 v) {
-#if defined(JUMPER_IS_SSE41)
+#  if defined(JUMPER_IS_SSE41)
   auto p = _mm_packus_epi32(v, v);
-#else
+#  else
   // Sign extend so that _mm_packs_epi32() does the pack we want.
   auto p = _mm_srai_epi32(_mm_slli_epi32(v, 16), 16);
   p = _mm_packs_epi32(p, p);
-#endif
+#  endif
   return unaligned_load<U16>(&p);  // We have two copies.  Return (the lower) one.
 }
 SI U8 pack(U16 v) {
@@ -629,12 +629,12 @@ SI U8 pack(U16 v) {
 SI F if_then_else(I32 c, F t, F e) { return _mm_or_ps(_mm_and_ps(c, t), _mm_andnot_ps(c, e)); }
 
 SI F floor_(F v) {
-#if defined(JUMPER_IS_SSE41)
+#  if defined(JUMPER_IS_SSE41)
   return _mm_floor_ps(v);
-#else
+#  else
   F roundtrip = _mm_cvtepi32_ps(_mm_cvttps_epi32(v));
   return roundtrip - if_then_else(roundtrip > v, 1, 0);
-#endif
+#  endif
 }
 
 template <typename T>
@@ -892,27 +892,27 @@ static const size_t N = sizeof(F) / sizeof(float);
 #if defined(SK_CPU_ARM32) && defined(JUMPER_IS_NEON)
 // This lets us pass vectors more efficiently on 32-bit ARM.
 // We can still only pass 16 floats, so best as 4x {r,g,b,a}.
-#define ABI __attribute__((pcs("aapcs-vfp")))
-#define JUMPER_NARROW_STAGES 1
+#  define ABI __attribute__((pcs("aapcs-vfp")))
+#  define JUMPER_NARROW_STAGES 1
 #elif 0 && defined(_MSC_VER) && defined(__clang__) && defined(__x86_64__)
 // SysV ABI makes it very sensible to use wide stages with clang-cl.
 // TODO: crashes during compilation  :(
-#define ABI __attribute__((sysv_abi))
-#define JUMPER_NARROW_STAGES 0
+#  define ABI __attribute__((sysv_abi))
+#  define JUMPER_NARROW_STAGES 0
 #elif defined(_MSC_VER)
 // Even if not vectorized, this lets us pass {r,g,b,a} as registers,
 // instead of {b,a} on the stack.  Narrow stages work best for __vectorcall.
-#define ABI __vectorcall
-#define JUMPER_NARROW_STAGES 1
+#  define ABI __vectorcall
+#  define JUMPER_NARROW_STAGES 1
 #elif defined(__x86_64__) || defined(SK_CPU_ARM64)
 // These platforms are ideal for wider stages, and their default ABI is ideal.
-#define ABI
-#define JUMPER_NARROW_STAGES 0
+#  define ABI
+#  define JUMPER_NARROW_STAGES 0
 #else
 // 32-bit or unknown... shunt them down the narrow path.
 // Odds are these have few registers and are better off there.
-#define ABI
-#define JUMPER_NARROW_STAGES 1
+#  define ABI
+#  define JUMPER_NARROW_STAGES 1
 #endif
 
 #if JUMPER_NARROW_STAGES
@@ -954,35 +954,35 @@ static void start_pipeline(size_t dx, size_t dy, size_t xlimit, size_t ylimit, v
 }
 
 #if JUMPER_NARROW_STAGES
-#define STAGE(name, ...)                                                                           \
-  SI void name##_k(                                                                                \
-      __VA_ARGS__, size_t dx, size_t dy, size_t tail, F& r, F& g, F& b, F& a, F& dr, F& dg, F& db, \
-      F& da);                                                                                      \
-  static void ABI name(Params* params, void** program, F r, F g, F b, F a) {                       \
-    name##_k(                                                                                      \
-        Ctx{program}, params->dx, params->dy, params->tail, r, g, b, a, params->dr, params->dg,    \
-        params->db, params->da);                                                                   \
-    auto next = (Stage)load_and_inc(program);                                                      \
-    next(params, program, r, g, b, a);                                                             \
-  }                                                                                                \
-  SI void name##_k(                                                                                \
-      __VA_ARGS__, size_t dx, size_t dy, size_t tail, F& r, F& g, F& b, F& a, F& dr, F& dg, F& db, \
-      F& da)
+#  define STAGE(name, ...)                                                                        \
+    SI void name##_k(                                                                             \
+        __VA_ARGS__, size_t dx, size_t dy, size_t tail, F& r, F& g, F& b, F& a, F& dr, F& dg,     \
+        F& db, F& da);                                                                            \
+    static void ABI name(Params* params, void** program, F r, F g, F b, F a) {                    \
+      name##_k(                                                                                   \
+          Ctx{program}, params->dx, params->dy, params->tail, r, g, b, a, params->dr, params->dg, \
+          params->db, params->da);                                                                \
+      auto next = (Stage)load_and_inc(program);                                                   \
+      next(params, program, r, g, b, a);                                                          \
+    }                                                                                             \
+    SI void name##_k(                                                                             \
+        __VA_ARGS__, size_t dx, size_t dy, size_t tail, F& r, F& g, F& b, F& a, F& dr, F& dg,     \
+        F& db, F& da)
 #else
-#define STAGE(name, ...)                                                                           \
-  SI void name##_k(                                                                                \
-      __VA_ARGS__, size_t dx, size_t dy, size_t tail, F& r, F& g, F& b, F& a, F& dr, F& dg, F& db, \
-      F& da);                                                                                      \
-  static void ABI name(                                                                            \
-      size_t tail, void** program, size_t dx, size_t dy, F r, F g, F b, F a, F dr, F dg, F db,     \
-      F da) {                                                                                      \
-    name##_k(Ctx{program}, dx, dy, tail, r, g, b, a, dr, dg, db, da);                              \
-    auto next = (Stage)load_and_inc(program);                                                      \
-    next(tail, program, dx, dy, r, g, b, a, dr, dg, db, da);                                       \
-  }                                                                                                \
-  SI void name##_k(                                                                                \
-      __VA_ARGS__, size_t dx, size_t dy, size_t tail, F& r, F& g, F& b, F& a, F& dr, F& dg, F& db, \
-      F& da)
+#  define STAGE(name, ...)                                                                       \
+    SI void name##_k(                                                                            \
+        __VA_ARGS__, size_t dx, size_t dy, size_t tail, F& r, F& g, F& b, F& a, F& dr, F& dg,    \
+        F& db, F& da);                                                                           \
+    static void ABI name(                                                                        \
+        size_t tail, void** program, size_t dx, size_t dy, F r, F g, F b, F a, F dr, F dg, F db, \
+        F da) {                                                                                  \
+      name##_k(Ctx{program}, dx, dy, tail, r, g, b, a, dr, dg, db, da);                          \
+      auto next = (Stage)load_and_inc(program);                                                  \
+      next(tail, program, dx, dy, r, g, b, a, dr, dg, db, da);                                   \
+    }                                                                                            \
+    SI void name##_k(                                                                            \
+        __VA_ARGS__, size_t dx, size_t dy, size_t tail, F& r, F& g, F& b, F& a, F& dr, F& dg,    \
+        F& db, F& da)
 #endif
 
 // just_return() is a simple no-op stage that only exists to end the chain,
@@ -2336,9 +2336,9 @@ namespace lowp {
 // If we're not compiled by Clang, or otherwise switched into scalar mode (old Clang, manually),
 // we don't generate lowp stages.  All these nullptrs will tell SkJumper.cpp to always use the
 // highp float pipeline.
-#define M(st) static void (*st)(void) = nullptr;
+#  define M(st) static void (*st)(void) = nullptr;
 SK_RASTER_PIPELINE_STAGES(M)
-#undef M
+#  undef M
 static void (*just_return)(void) = nullptr;
 
 static void start_pipeline(size_t, size_t, size_t, size_t, void**) {}
@@ -2383,7 +2383,7 @@ static void start_pipeline(
     const size_t x0, const size_t y0, const size_t xlimit, const size_t ylimit, void** program) {
   auto start = (Stage)load_and_inc(program);
   for (size_t dy = y0; dy < ylimit; dy++) {
-#if JUMPER_NARROW_STAGES
+#  if JUMPER_NARROW_STAGES
     Params params = {x0, dy, 0, 0, 0, 0, 0};
     for (; params.dx + N <= xlimit; params.dx += N) {
       start(&params, program, 0, 0, 0, 0);
@@ -2392,7 +2392,7 @@ static void start_pipeline(
       params.tail = tail;
       start(&params, program, 0, 0, 0, 0);
     }
-#else
+#  else
     size_t dx = x0;
     for (; dx + N <= xlimit; dx += N) {
       start(0, program, dx, dy, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -2400,16 +2400,16 @@ static void start_pipeline(
     if (size_t tail = xlimit - dx) {
       start(tail, program, dx, dy, 0, 0, 0, 0, 0, 0, 0, 0);
     }
-#endif
+#  endif
   }
 }
 
-#if JUMPER_NARROW_STAGES
+#  if JUMPER_NARROW_STAGES
 static void ABI just_return(Params*, void**, U16, U16, U16, U16) {}
-#else
+#  else
 static void ABI
 just_return(size_t, void**, size_t, size_t, U16, U16, U16, U16, U16, U16, U16, U16) {}
-#endif
+#  endif
 
 // All stages use the same function call ABI to chain into each other, but there are three types:
 //   GG: geometry in, geometry out  -- think, a matrix
@@ -2421,109 +2421,109 @@ just_return(size_t, void**, size_t, size_t, U16, U16, U16, U16, U16, U16, U16, U
 // These three STAGE_ macros let you define each type of stage,
 // and will have (x,y) geometry and/or (r,g,b,a, dr,dg,db,da) pixel arguments as appropriate.
 
-#if JUMPER_NARROW_STAGES
-#define STAGE_GG(name, ...)                                                          \
-  SI void name##_k(__VA_ARGS__, size_t dx, size_t dy, size_t tail, F& x, F& y);      \
-  static void ABI name(Params* params, void** program, U16 r, U16 g, U16 b, U16 a) { \
-    auto x = join<F>(r, g), y = join<F>(b, a);                                       \
-    name##_k(Ctx{program}, params->dx, params->dy, params->tail, x, y);              \
-    split(x, &r, &g);                                                                \
-    split(y, &b, &a);                                                                \
-    auto next = (Stage)load_and_inc(program);                                        \
-    next(params, program, r, g, b, a);                                               \
-  }                                                                                  \
-  SI void name##_k(__VA_ARGS__, size_t dx, size_t dy, size_t tail, F& x, F& y)
+#  if JUMPER_NARROW_STAGES
+#    define STAGE_GG(name, ...)                                                          \
+      SI void name##_k(__VA_ARGS__, size_t dx, size_t dy, size_t tail, F& x, F& y);      \
+      static void ABI name(Params* params, void** program, U16 r, U16 g, U16 b, U16 a) { \
+        auto x = join<F>(r, g), y = join<F>(b, a);                                       \
+        name##_k(Ctx{program}, params->dx, params->dy, params->tail, x, y);              \
+        split(x, &r, &g);                                                                \
+        split(y, &b, &a);                                                                \
+        auto next = (Stage)load_and_inc(program);                                        \
+        next(params, program, r, g, b, a);                                               \
+      }                                                                                  \
+      SI void name##_k(__VA_ARGS__, size_t dx, size_t dy, size_t tail, F& x, F& y)
 
-#define STAGE_GP(name, ...)                                                                     \
-  SI void name##_k(                                                                             \
-      __VA_ARGS__, size_t dx, size_t dy, size_t tail, F x, F y, U16& r, U16& g, U16& b, U16& a, \
-      U16& dr, U16& dg, U16& db, U16& da);                                                      \
-  static void ABI name(Params* params, void** program, U16 r, U16 g, U16 b, U16 a) {            \
-    auto x = join<F>(r, g), y = join<F>(b, a);                                                  \
-    name##_k(                                                                                   \
-        Ctx{program}, params->dx, params->dy, params->tail, x, y, r, g, b, a, params->dr,       \
-        params->dg, params->db, params->da);                                                    \
-    auto next = (Stage)load_and_inc(program);                                                   \
-    next(params, program, r, g, b, a);                                                          \
-  }                                                                                             \
-  SI void name##_k(                                                                             \
-      __VA_ARGS__, size_t dx, size_t dy, size_t tail, F x, F y, U16& r, U16& g, U16& b, U16& a, \
-      U16& dr, U16& dg, U16& db, U16& da)
+#    define STAGE_GP(name, ...)                                                               \
+      SI void name##_k(                                                                       \
+          __VA_ARGS__, size_t dx, size_t dy, size_t tail, F x, F y, U16& r, U16& g, U16& b,   \
+          U16& a, U16& dr, U16& dg, U16& db, U16& da);                                        \
+      static void ABI name(Params* params, void** program, U16 r, U16 g, U16 b, U16 a) {      \
+        auto x = join<F>(r, g), y = join<F>(b, a);                                            \
+        name##_k(                                                                             \
+            Ctx{program}, params->dx, params->dy, params->tail, x, y, r, g, b, a, params->dr, \
+            params->dg, params->db, params->da);                                              \
+        auto next = (Stage)load_and_inc(program);                                             \
+        next(params, program, r, g, b, a);                                                    \
+      }                                                                                       \
+      SI void name##_k(                                                                       \
+          __VA_ARGS__, size_t dx, size_t dy, size_t tail, F x, F y, U16& r, U16& g, U16& b,   \
+          U16& a, U16& dr, U16& dg, U16& db, U16& da)
 
-#define STAGE_PP(name, ...)                                                                     \
-  SI void name##_k(                                                                             \
-      __VA_ARGS__, size_t dx, size_t dy, size_t tail, U16& r, U16& g, U16& b, U16& a, U16& dr,  \
-      U16& dg, U16& db, U16& da);                                                               \
-  static void ABI name(Params* params, void** program, U16 r, U16 g, U16 b, U16 a) {            \
-    name##_k(                                                                                   \
-        Ctx{program}, params->dx, params->dy, params->tail, r, g, b, a, params->dr, params->dg, \
-        params->db, params->da);                                                                \
-    auto next = (Stage)load_and_inc(program);                                                   \
-    next(params, program, r, g, b, a);                                                          \
-  }                                                                                             \
-  SI void name##_k(                                                                             \
-      __VA_ARGS__, size_t dx, size_t dy, size_t tail, U16& r, U16& g, U16& b, U16& a, U16& dr,  \
-      U16& dg, U16& db, U16& da)
-#else
-#define STAGE_GG(name, ...)                                                                  \
-  SI void name##_k(__VA_ARGS__, size_t dx, size_t dy, size_t tail, F& x, F& y);              \
-  static void ABI name(                                                                      \
-      size_t tail, void** program, size_t dx, size_t dy, U16 r, U16 g, U16 b, U16 a, U16 dr, \
-      U16 dg, U16 db, U16 da) {                                                              \
-    auto x = join<F>(r, g), y = join<F>(b, a);                                               \
-    name##_k(Ctx{program}, dx, dy, tail, x, y);                                              \
-    split(x, &r, &g);                                                                        \
-    split(y, &b, &a);                                                                        \
-    auto next = (Stage)load_and_inc(program);                                                \
-    next(tail, program, dx, dy, r, g, b, a, dr, dg, db, da);                                 \
-  }                                                                                          \
-  SI void name##_k(__VA_ARGS__, size_t dx, size_t dy, size_t tail, F& x, F& y)
+#    define STAGE_PP(name, ...)                                                                    \
+      SI void name##_k(                                                                            \
+          __VA_ARGS__, size_t dx, size_t dy, size_t tail, U16& r, U16& g, U16& b, U16& a, U16& dr, \
+          U16& dg, U16& db, U16& da);                                                              \
+      static void ABI name(Params* params, void** program, U16 r, U16 g, U16 b, U16 a) {           \
+        name##_k(                                                                                  \
+            Ctx{program}, params->dx, params->dy, params->tail, r, g, b, a, params->dr,            \
+            params->dg, params->db, params->da);                                                   \
+        auto next = (Stage)load_and_inc(program);                                                  \
+        next(params, program, r, g, b, a);                                                         \
+      }                                                                                            \
+      SI void name##_k(                                                                            \
+          __VA_ARGS__, size_t dx, size_t dy, size_t tail, U16& r, U16& g, U16& b, U16& a, U16& dr, \
+          U16& dg, U16& db, U16& da)
+#  else
+#    define STAGE_GG(name, ...)                                                                  \
+      SI void name##_k(__VA_ARGS__, size_t dx, size_t dy, size_t tail, F& x, F& y);              \
+      static void ABI name(                                                                      \
+          size_t tail, void** program, size_t dx, size_t dy, U16 r, U16 g, U16 b, U16 a, U16 dr, \
+          U16 dg, U16 db, U16 da) {                                                              \
+        auto x = join<F>(r, g), y = join<F>(b, a);                                               \
+        name##_k(Ctx{program}, dx, dy, tail, x, y);                                              \
+        split(x, &r, &g);                                                                        \
+        split(y, &b, &a);                                                                        \
+        auto next = (Stage)load_and_inc(program);                                                \
+        next(tail, program, dx, dy, r, g, b, a, dr, dg, db, da);                                 \
+      }                                                                                          \
+      SI void name##_k(__VA_ARGS__, size_t dx, size_t dy, size_t tail, F& x, F& y)
 
-#define STAGE_GP(name, ...)                                                                     \
-  SI void name##_k(                                                                             \
-      __VA_ARGS__, size_t dx, size_t dy, size_t tail, F x, F y, U16& r, U16& g, U16& b, U16& a, \
-      U16& dr, U16& dg, U16& db, U16& da);                                                      \
-  static void ABI name(                                                                         \
-      size_t tail, void** program, size_t dx, size_t dy, U16 r, U16 g, U16 b, U16 a, U16 dr,    \
-      U16 dg, U16 db, U16 da) {                                                                 \
-    auto x = join<F>(r, g), y = join<F>(b, a);                                                  \
-    name##_k(Ctx{program}, dx, dy, tail, x, y, r, g, b, a, dr, dg, db, da);                     \
-    auto next = (Stage)load_and_inc(program);                                                   \
-    next(tail, program, dx, dy, r, g, b, a, dr, dg, db, da);                                    \
-  }                                                                                             \
-  SI void name##_k(                                                                             \
-      __VA_ARGS__, size_t dx, size_t dy, size_t tail, F x, F y, U16& r, U16& g, U16& b, U16& a, \
-      U16& dr, U16& dg, U16& db, U16& da)
+#    define STAGE_GP(name, ...)                                                                  \
+      SI void name##_k(                                                                          \
+          __VA_ARGS__, size_t dx, size_t dy, size_t tail, F x, F y, U16& r, U16& g, U16& b,      \
+          U16& a, U16& dr, U16& dg, U16& db, U16& da);                                           \
+      static void ABI name(                                                                      \
+          size_t tail, void** program, size_t dx, size_t dy, U16 r, U16 g, U16 b, U16 a, U16 dr, \
+          U16 dg, U16 db, U16 da) {                                                              \
+        auto x = join<F>(r, g), y = join<F>(b, a);                                               \
+        name##_k(Ctx{program}, dx, dy, tail, x, y, r, g, b, a, dr, dg, db, da);                  \
+        auto next = (Stage)load_and_inc(program);                                                \
+        next(tail, program, dx, dy, r, g, b, a, dr, dg, db, da);                                 \
+      }                                                                                          \
+      SI void name##_k(                                                                          \
+          __VA_ARGS__, size_t dx, size_t dy, size_t tail, F x, F y, U16& r, U16& g, U16& b,      \
+          U16& a, U16& dr, U16& dg, U16& db, U16& da)
 
-#define STAGE_PP(name, ...)                                                                    \
-  SI void name##_k(                                                                            \
-      __VA_ARGS__, size_t dx, size_t dy, size_t tail, U16& r, U16& g, U16& b, U16& a, U16& dr, \
-      U16& dg, U16& db, U16& da);                                                              \
-  static void ABI name(                                                                        \
-      size_t tail, void** program, size_t dx, size_t dy, U16 r, U16 g, U16 b, U16 a, U16 dr,   \
-      U16 dg, U16 db, U16 da) {                                                                \
-    name##_k(Ctx{program}, dx, dy, tail, r, g, b, a, dr, dg, db, da);                          \
-    auto next = (Stage)load_and_inc(program);                                                  \
-    next(tail, program, dx, dy, r, g, b, a, dr, dg, db, da);                                   \
-  }                                                                                            \
-  SI void name##_k(                                                                            \
-      __VA_ARGS__, size_t dx, size_t dy, size_t tail, U16& r, U16& g, U16& b, U16& a, U16& dr, \
-      U16& dg, U16& db, U16& da)
-#endif
+#    define STAGE_PP(name, ...)                                                                    \
+      SI void name##_k(                                                                            \
+          __VA_ARGS__, size_t dx, size_t dy, size_t tail, U16& r, U16& g, U16& b, U16& a, U16& dr, \
+          U16& dg, U16& db, U16& da);                                                              \
+      static void ABI name(                                                                        \
+          size_t tail, void** program, size_t dx, size_t dy, U16 r, U16 g, U16 b, U16 a, U16 dr,   \
+          U16 dg, U16 db, U16 da) {                                                                \
+        name##_k(Ctx{program}, dx, dy, tail, r, g, b, a, dr, dg, db, da);                          \
+        auto next = (Stage)load_and_inc(program);                                                  \
+        next(tail, program, dx, dy, r, g, b, a, dr, dg, db, da);                                   \
+      }                                                                                            \
+      SI void name##_k(                                                                            \
+          __VA_ARGS__, size_t dx, size_t dy, size_t tail, U16& r, U16& g, U16& b, U16& a, U16& dr, \
+          U16& dg, U16& db, U16& da)
+#  endif
 
 // ~~~~~~ Commonly used helper functions ~~~~~~ //
 
 SI U16 div255(U16 v) {
-#if 0
+#  if 0
     return (v+127)/255;  // The ideal rounding divide by 255.
-#elif 1 && defined(JUMPER_IS_NEON)
+#  elif 1 && defined(JUMPER_IS_NEON)
   // With NEON we can compute (v+127)/255 as (v + ((v+128)>>8) + 128)>>8
   // just as fast as we can do the approximation below, so might as well be correct!
   // First we compute v + ((v+128)>>8), then one more round of (...+128)>>8 to finish up.
   return vrshrq_n_u16(vrsraq_n_u16(v, v, 8), 8);
-#else
+#  else
   return (v + 255) / 256;  // A good approximation of (v+127)/255.
-#endif
+#  endif
 }
 
 SI U16 inv(U16 v) { return 255 - v; }
@@ -2570,15 +2570,15 @@ SI F mad(F f, F m, F a) { return f * m + a; }
 SI U32 trunc_(F x) { return (U32)cast<I32>(x); }
 
 SI F rcp(F x) {
-#if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
   __m256 lo, hi;
   split(x, &lo, &hi);
   return join<F>(_mm256_rcp_ps(lo), _mm256_rcp_ps(hi));
-#elif defined(JUMPER_IS_SSE2) || defined(JUMPER_IS_SSE41) || defined(JUMPER_IS_AVX)
+#  elif defined(JUMPER_IS_SSE2) || defined(JUMPER_IS_SSE41) || defined(JUMPER_IS_AVX)
   __m128 lo, hi;
   split(x, &lo, &hi);
   return join<F>(_mm_rcp_ps(lo), _mm_rcp_ps(hi));
-#elif defined(JUMPER_IS_NEON)
+#  elif defined(JUMPER_IS_NEON)
   auto rcp = [](float32x4_t v) {
     auto est = vrecpeq_f32(v);
     return vrecpsq_f32(v, est) * est;
@@ -2586,24 +2586,24 @@ SI F rcp(F x) {
   float32x4_t lo, hi;
   split(x, &lo, &hi);
   return join<F>(rcp(lo), rcp(hi));
-#else
+#  else
   return 1.0f / x;
-#endif
+#  endif
 }
 SI F sqrt_(F x) {
-#if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
   __m256 lo, hi;
   split(x, &lo, &hi);
   return join<F>(_mm256_sqrt_ps(lo), _mm256_sqrt_ps(hi));
-#elif defined(JUMPER_IS_SSE2) || defined(JUMPER_IS_SSE41) || defined(JUMPER_IS_AVX)
+#  elif defined(JUMPER_IS_SSE2) || defined(JUMPER_IS_SSE41) || defined(JUMPER_IS_AVX)
   __m128 lo, hi;
   split(x, &lo, &hi);
   return join<F>(_mm_sqrt_ps(lo), _mm_sqrt_ps(hi));
-#elif defined(SK_CPU_ARM64)
+#  elif defined(SK_CPU_ARM64)
   float32x4_t lo, hi;
   split(x, &lo, &hi);
   return join<F>(vsqrtq_f32(lo), vsqrtq_f32(hi));
-#elif defined(JUMPER_IS_NEON)
+#  elif defined(JUMPER_IS_NEON)
   auto sqrt = [](float32x4_t v) {
     auto est = vrsqrteq_f32(v);  // Estimate and two refinement steps for est = rsqrt(v).
     est *= vrsqrtsq_f32(v, est * est);
@@ -2613,31 +2613,31 @@ SI F sqrt_(F x) {
   float32x4_t lo, hi;
   split(x, &lo, &hi);
   return join<F>(sqrt(lo), sqrt(hi));
-#else
+#  else
   return F{
       sqrtf(x[0]), sqrtf(x[1]), sqrtf(x[2]), sqrtf(x[3]),
       sqrtf(x[4]), sqrtf(x[5]), sqrtf(x[6]), sqrtf(x[7]),
   };
-#endif
+#  endif
 }
 
 SI F floor_(F x) {
-#if defined(SK_CPU_ARM64)
+#  if defined(SK_CPU_ARM64)
   float32x4_t lo, hi;
   split(x, &lo, &hi);
   return join<F>(vrndmq_f32(lo), vrndmq_f32(hi));
-#elif defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#  elif defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
   __m256 lo, hi;
   split(x, &lo, &hi);
   return join<F>(_mm256_floor_ps(lo), _mm256_floor_ps(hi));
-#elif defined(JUMPER_IS_SSE41) || defined(JUMPER_IS_AVX)
+#  elif defined(JUMPER_IS_SSE41) || defined(JUMPER_IS_AVX)
   __m128 lo, hi;
   split(x, &lo, &hi);
   return join<F>(_mm_floor_ps(lo), _mm_floor_ps(hi));
-#else
+#  else
   F roundtrip = cast<F>(cast<I32>(x));
   return roundtrip - if_then_else(roundtrip > x, F(1), F(0));
-#endif
+#  endif
 }
 SI F fract(F x) { return x - floor_(x); }
 SI F abs_(F x) { return bit_cast<F>(bit_cast<I32>(x) & 0x7fffffff); }
@@ -2753,15 +2753,15 @@ STAGE_PP(move_dst_src, Ctx::None) {
 // ~~~~~~ Blend modes ~~~~~~ //
 
 // The same logic applied to all 4 channels.
-#define BLEND_MODE(name)                               \
-  SI U16 name##_channel(U16 s, U16 d, U16 sa, U16 da); \
-  STAGE_PP(name, Ctx::None) {                          \
-    r = name##_channel(r, dr, a, da);                  \
-    g = name##_channel(g, dg, a, da);                  \
-    b = name##_channel(b, db, a, da);                  \
-    a = name##_channel(a, da, a, da);                  \
-  }                                                    \
-  SI U16 name##_channel(U16 s, U16 d, U16 sa, U16 da)
+#  define BLEND_MODE(name)                               \
+    SI U16 name##_channel(U16 s, U16 d, U16 sa, U16 da); \
+    STAGE_PP(name, Ctx::None) {                          \
+      r = name##_channel(r, dr, a, da);                  \
+      g = name##_channel(g, dg, a, da);                  \
+      b = name##_channel(b, db, a, da);                  \
+      a = name##_channel(a, da, a, da);                  \
+    }                                                    \
+    SI U16 name##_channel(U16 s, U16 d, U16 sa, U16 da)
 
 BLEND_MODE(clear) { return 0; }
 BLEND_MODE(srcatop) { return div255(s * da + d * inv(sa)); }
@@ -2777,18 +2777,18 @@ BLEND_MODE(multiply) { return div255(s * inv(da) + d * inv(sa) + s * d); }
 BLEND_MODE(plus_) { return min(s + d, 255); }
 BLEND_MODE(screen) { return s + d - div255(s * d); }
 BLEND_MODE(xor_) { return div255(s * inv(da) + d * inv(sa)); }
-#undef BLEND_MODE
+#  undef BLEND_MODE
 
 // The same logic applied to color, and srcover for alpha.
-#define BLEND_MODE(name)                               \
-  SI U16 name##_channel(U16 s, U16 d, U16 sa, U16 da); \
-  STAGE_PP(name, Ctx::None) {                          \
-    r = name##_channel(r, dr, a, da);                  \
-    g = name##_channel(g, dg, a, da);                  \
-    b = name##_channel(b, db, a, da);                  \
-    a = a + div255(da * inv(a));                       \
-  }                                                    \
-  SI U16 name##_channel(U16 s, U16 d, U16 sa, U16 da)
+#  define BLEND_MODE(name)                               \
+    SI U16 name##_channel(U16 s, U16 d, U16 sa, U16 da); \
+    STAGE_PP(name, Ctx::None) {                          \
+      r = name##_channel(r, dr, a, da);                  \
+      g = name##_channel(g, dg, a, da);                  \
+      b = name##_channel(b, db, a, da);                  \
+      a = a + div255(da * inv(a));                       \
+    }                                                    \
+    SI U16 name##_channel(U16 s, U16 d, U16 sa, U16 da)
 
 BLEND_MODE(darken) { return s + d - div255(max(s * da, d * sa)); }
 BLEND_MODE(lighten) { return s + d - div255(min(s * da, d * sa)); }
@@ -2805,7 +2805,7 @@ BLEND_MODE(overlay) {
       s * inv(da) + d * inv(sa) +
       if_then_else(2 * d <= da, 2 * s * d, sa * da - 2 * (sa - s) * (da - d)));
 }
-#undef BLEND_MODE
+#  undef BLEND_MODE
 
 // ~~~~~~ Helpers for interacting with memory ~~~~~~ //
 
@@ -2832,7 +2832,7 @@ SI V load(const T* ptr, size_t tail) {
   V v = 0;
   switch (tail & (N - 1)) {
     case 0: memcpy(&v, ptr, sizeof(v)); break;
-#if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
     case 15: v[14] = ptr[14];
     case 14: v[13] = ptr[13];
     case 13: v[12] = ptr[12];
@@ -2841,7 +2841,7 @@ SI V load(const T* ptr, size_t tail) {
     case 10: v[9] = ptr[9];
     case 9: v[8] = ptr[8];
     case 8: memcpy(&v, ptr, 8 * sizeof(T)); break;
-#endif
+#  endif
     case 7: v[6] = ptr[6];
     case 6: v[5] = ptr[5];
     case 5: v[4] = ptr[4];
@@ -2856,7 +2856,7 @@ template <typename V, typename T>
 SI void store(T* ptr, size_t tail, V v) {
   switch (tail & (N - 1)) {
     case 0: memcpy(ptr, &v, sizeof(v)); break;
-#if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
     case 15: ptr[14] = v[14];
     case 14: ptr[13] = v[13];
     case 13: ptr[12] = v[12];
@@ -2865,7 +2865,7 @@ SI void store(T* ptr, size_t tail, V v) {
     case 10: ptr[9] = v[9];
     case 9: ptr[8] = v[8];
     case 8: memcpy(ptr, &v, 8 * sizeof(T)); break;
-#endif
+#  endif
     case 7: ptr[6] = v[6];
     case 6: ptr[5] = v[5];
     case 5: ptr[4] = v[4];
@@ -2876,7 +2876,7 @@ SI void store(T* ptr, size_t tail, V v) {
   }
 }
 
-#if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
 template <typename V, typename T>
 SI V gather(const T* ptr, U32 ix) {
   return V{
@@ -2901,7 +2901,7 @@ U32 gather(const uint32_t* ptr, U32 ix) {
 
   return join<U32>(_mm256_i32gather_epi32(ptr, lo, 4), _mm256_i32gather_epi32(ptr, hi, 4));
 }
-#else
+#  else
 template <typename V, typename T>
 SI V gather(const T* ptr, U32 ix) {
   return V{
@@ -2909,12 +2909,12 @@ SI V gather(const T* ptr, U32 ix) {
       ptr[ix[4]], ptr[ix[5]], ptr[ix[6]], ptr[ix[7]],
   };
 }
-#endif
+#  endif
 
 // ~~~~~~ 32-bit memory loads and stores ~~~~~~ //
 
 SI void from_8888(U32 rgba, U16* r, U16* g, U16* b, U16* a) {
-#if 1 && defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#  if 1 && defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
   // Swap the middle 128-bit lanes to make _mm256_packus_epi32() in cast_U16() work out nicely.
   __m256i _01, _23;
   split(rgba, &_01, &_23);
@@ -2927,9 +2927,9 @@ SI void from_8888(U32 rgba, U16* r, U16* g, U16* b, U16* a) {
     split(v, &_02, &_13);
     return _mm256_packus_epi32(_02, _13);
   };
-#else
+#  else
   auto cast_U16 = [](U32 v) -> U16 { return cast<U16>(v); };
-#endif
+#  endif
   *r = cast_U16(rgba & 65535) & 255;
   *g = cast_U16(rgba & 65535) >> 8;
   *b = cast_U16(rgba >> 16) & 255;
@@ -2937,7 +2937,7 @@ SI void from_8888(U32 rgba, U16* r, U16* g, U16* b, U16* a) {
 }
 
 SI void load_8888_(const uint32_t* ptr, size_t tail, U16* r, U16* g, U16* b, U16* a) {
-#if 1 && defined(JUMPER_IS_NEON)
+#  if 1 && defined(JUMPER_IS_NEON)
   uint8x8x4_t rgba;
   switch (tail & (N - 1)) {
     case 0: rgba = vld4_u8((const uint8_t*)(ptr + 0)); break;
@@ -2953,12 +2953,12 @@ SI void load_8888_(const uint32_t* ptr, size_t tail, U16* r, U16* g, U16* b, U16
   *g = cast<U16>(rgba.val[1]);
   *b = cast<U16>(rgba.val[2]);
   *a = cast<U16>(rgba.val[3]);
-#else
+#  else
   from_8888(load<U32>(ptr, tail), r, g, b, a);
-#endif
+#  endif
 }
 SI void store_8888_(uint32_t* ptr, size_t tail, U16 r, U16 g, U16 b, U16 a) {
-#if 1 && defined(JUMPER_IS_NEON)
+#  if 1 && defined(JUMPER_IS_NEON)
   uint8x8x4_t rgba = {{
       cast<U8>(r),
       cast<U8>(g),
@@ -2975,9 +2975,9 @@ SI void store_8888_(uint32_t* ptr, size_t tail, U16 r, U16 g, U16 b, U16 a) {
     case 2: vst4_lane_u8((uint8_t*)(ptr + 1), rgba, 1);
     case 1: vst4_lane_u8((uint8_t*)(ptr + 0), rgba, 0);
   }
-#else
+#  else
   store(ptr, tail, cast<U32>(r | (g << 8)) << 0 | cast<U32>(b | (a << 8)) << 16);
-#endif
+#  endif
 }
 
 STAGE_PP(load_8888, const SkRasterPipeline_MemoryCtx* ctx) {
@@ -3259,7 +3259,7 @@ SI void round_F_to_U16(
 SI void gradient_lookup(
     const SkRasterPipeline_GradientCtx* c, U32 idx, F t, U16* r, U16* g, U16* b, U16* a) {
   F fr, fg, fb, fa, br, bg, bb, ba;
-#if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
   if (c->stopCount <= 8) {
     __m256i lo, hi;
     split(idx, &lo, &hi);
@@ -3289,7 +3289,7 @@ SI void gradient_lookup(
         _mm256_permutevar8x32_ps(_mm256_loadu_ps(c->bs[3]), lo),
         _mm256_permutevar8x32_ps(_mm256_loadu_ps(c->bs[3]), hi));
   } else
-#endif
+#  endif
   {
     fr = gather<F>(c->fs[0], idx);
     fg = gather<F>(c->fs[1], idx);
@@ -3366,9 +3366,9 @@ STAGE_PP(srcover_rgba_8888, const SkRasterPipeline_MemoryCtx* ctx) {
   store_8888_(ptr, tail, r, g, b, a);
 }
 
-#if defined(SK_DISABLE_LOWP_BILERP_CLAMP_CLAMP_STAGE)
+#  if defined(SK_DISABLE_LOWP_BILERP_CLAMP_CLAMP_STAGE)
 static void (*bilerp_clamp_8888)(void) = nullptr;
-#else
+#  else
 STAGE_GP(bilerp_clamp_8888, const SkRasterPipeline_GatherCtx* ctx) {
   // (cx,cy) are the center of our sample.
   F cx = x, cy = y;
@@ -3426,11 +3426,11 @@ STAGE_GP(bilerp_clamp_8888, const SkRasterPipeline_GatherCtx* ctx) {
   b = (b + bias / 2) / bias;
   a = (a + bias / 2) / bias;
 }
-#endif
+#  endif
 
 // Now we'll add null stand-ins for stages we haven't implemented in lowp.
 // If a pipeline uses these stages, it'll boot it out of lowp into highp.
-#define NOT_IMPLEMENTED(st) static void (*st)(void) = nullptr;
+#  define NOT_IMPLEMENTED(st) static void (*st)(void) = nullptr;
 NOT_IMPLEMENTED(callback)
 NOT_IMPLEMENTED(unbounded_set_rgb)
 NOT_IMPLEMENTED(unbounded_uniform_color)
@@ -3497,7 +3497,7 @@ NOT_IMPLEMENTED(alter_2pt_conical_unswap)
 NOT_IMPLEMENTED(mask_2pt_conical_nan)
 NOT_IMPLEMENTED(mask_2pt_conical_degenerates)
 NOT_IMPLEMENTED(apply_vector_mask)
-#undef NOT_IMPLEMENTED
+#  undef NOT_IMPLEMENTED
 
 #endif  // defined(JUMPER_IS_SCALAR) controlling whether we build lowp stages
 }  // namespace lowp

@@ -8,12 +8,12 @@
 #ifndef GrAllocator_DEFINED
 #define GrAllocator_DEFINED
 
-#include <new>
 #include "include/core/SkTypes.h"
 #include "include/gpu/GrConfig.h"
 #include "include/gpu/GrTypes.h"
 #include "include/private/SkNoncopyable.h"
 #include "include/private/SkTArray.h"
+#include <new>
 
 class GrAllocator : SkNoncopyable {
  public:
@@ -65,7 +65,7 @@ class GrAllocator : SkNoncopyable {
   /**
    * Remove the last item, only call if count() != 0
    */
-  void pop_back() noexcept {
+  void pop_back() {
     SkASSERT(fCount);
     SkASSERT(fInsertionIndexInBlock > 0);
     --fInsertionIndexInBlock;
@@ -83,7 +83,7 @@ class GrAllocator : SkNoncopyable {
   /**
    * Removes all added items.
    */
-  void reset() noexcept {
+  void reset() {
     int firstBlockToFree = fOwnFirstBlock ? 0 : 1;
     for (int i = firstBlockToFree; i < fBlocks.count(); ++i) {
       sk_free(fBlocks[i]);
@@ -102,17 +102,17 @@ class GrAllocator : SkNoncopyable {
   /**
    * Returns the item count.
    */
-  int count() const noexcept { return fCount; }
+  int count() const { return fCount; }
 
   /**
    * Is the count 0?
    */
-  bool empty() const noexcept { return 0 == fCount; }
+  bool empty() const { return 0 == fCount; }
 
   /**
    * Access first item, only call if count() != 0
    */
-  void* front() noexcept {
+  void* front() {
     SkASSERT(fCount);
     SkASSERT(fInsertionIndexInBlock > 0);
     return (char*)(fBlocks.front());
@@ -121,7 +121,7 @@ class GrAllocator : SkNoncopyable {
   /**
    * Access first item, only call if count() != 0
    */
-  const void* front() const noexcept {
+  const void* front() const {
     SkASSERT(fCount);
     SkASSERT(fInsertionIndexInBlock > 0);
     return (const char*)(fBlocks.front());
@@ -130,7 +130,7 @@ class GrAllocator : SkNoncopyable {
   /**
    * Access last item, only call if count() != 0
    */
-  void* back() noexcept {
+  void* back() {
     SkASSERT(fCount);
     SkASSERT(fInsertionIndexInBlock > 0);
     return (char*)(fBlocks.back()) + (fInsertionIndexInBlock - 1) * fItemSize;
@@ -139,7 +139,7 @@ class GrAllocator : SkNoncopyable {
   /**
    * Access last item, only call if count() != 0
    */
-  const void* back() const noexcept {
+  const void* back() const {
     SkASSERT(fCount);
     SkASSERT(fInsertionIndexInBlock > 0);
     return (const char*)(fBlocks.back()) + (fInsertionIndexInBlock - 1) * fItemSize;
@@ -154,7 +154,7 @@ class GrAllocator : SkNoncopyable {
     /**
      * Initializes the iterator. next() must be called before get().
      */
-    Iter(const GrAllocator* allocator) noexcept
+    Iter(const GrAllocator* allocator)
         : fAllocator(allocator),
           fBlockIndex(-1),
           fIndexInBlock(allocator->fItemsPerBlock - 1),
@@ -163,7 +163,7 @@ class GrAllocator : SkNoncopyable {
     /**
      * Advances the iterator. Iteration is finished when next() returns false.
      */
-    bool next() noexcept {
+    bool next() {
       ++fIndexInBlock;
       ++fItemIndex;
       if (fIndexInBlock == fAllocator->fItemsPerBlock) {
@@ -177,7 +177,7 @@ class GrAllocator : SkNoncopyable {
      * Gets the current iterator value. Call next() at least once before calling. Don't call
      * after next() returns false.
      */
-    void* get() const noexcept {
+    void* get() const {
       SkASSERT(fItemIndex >= 0 && fItemIndex < fAllocator->fCount);
       return (char*)fAllocator->fBlocks[fBlockIndex] + fIndexInBlock * fAllocator->fItemSize;
     }
@@ -192,7 +192,7 @@ class GrAllocator : SkNoncopyable {
   /**
    * Access item by index.
    */
-  void* operator[](int i) noexcept {
+  void* operator[](int i) {
     SkASSERT(i >= 0 && i < fCount);
     return (char*)fBlocks[i / fItemsPerBlock] + fItemSize * (i % fItemsPerBlock);
   }
@@ -200,7 +200,7 @@ class GrAllocator : SkNoncopyable {
   /**
    * Access item by index.
    */
-  const void* operator[](int i) const noexcept {
+  const void* operator[](int i) const {
     SkASSERT(i >= 0 && i < fCount);
     return (const char*)fBlocks[i / fItemsPerBlock] + fItemSize * (i % fItemsPerBlock);
   }
@@ -296,7 +296,7 @@ class GrTAllocator : SkNoncopyable {
   /**
    * Removes all added items.
    */
-  void reset() noexcept {
+  void reset() {
     int c = fAllocator.count();
     for (int i = 0; i < c; ++i) {
       ((T*)fAllocator[i])->~T();
@@ -307,27 +307,27 @@ class GrTAllocator : SkNoncopyable {
   /**
    * Returns the item count.
    */
-  int count() const noexcept { return fAllocator.count(); }
+  int count() const { return fAllocator.count(); }
 
   /**
    * Is the count 0?
    */
-  bool empty() const noexcept { return fAllocator.empty(); }
+  bool empty() const { return fAllocator.empty(); }
 
   /**
    * Access first item, only call if count() != 0
    */
-  T& front() noexcept { return *(T*)fAllocator.front(); }
+  T& front() { return *(T*)fAllocator.front(); }
 
   /**
    * Access first item, only call if count() != 0
    */
-  const T& front() const noexcept { return *(T*)fAllocator.front(); }
+  const T& front() const { return *(T*)fAllocator.front(); }
 
   /**
    * Access last item, only call if count() != 0
    */
-  T& back() noexcept { return *(T*)fAllocator.back(); }
+  T& back() { return *(T*)fAllocator.back(); }
 
   /**
    * Access last item, only call if count() != 0
@@ -343,18 +343,18 @@ class GrTAllocator : SkNoncopyable {
     /**
      * Initializes the iterator. next() must be called before get() or ops * and ->.
      */
-    Iter(const GrTAllocator* allocator) noexcept : fImpl(&allocator->fAllocator) {}
+    Iter(const GrTAllocator* allocator) : fImpl(&allocator->fAllocator) {}
 
     /**
      * Advances the iterator. Iteration is finished when next() returns false.
      */
-    bool next() noexcept { return fImpl.next(); }
+    bool next() { return fImpl.next(); }
 
     /**
      * Gets the current iterator value. Call next() at least once before calling. Don't call
      * after next() returns false.
      */
-    T* get() const noexcept { return (T*)fImpl.get(); }
+    T* get() const { return (T*)fImpl.get(); }
 
     /**
      * Convenience operators. Same rules for calling apply as get().
@@ -369,12 +369,12 @@ class GrTAllocator : SkNoncopyable {
   /**
    * Access item by index.
    */
-  T& operator[](int i) noexcept { return *(T*)(fAllocator[i]); }
+  T& operator[](int i) { return *(T*)(fAllocator[i]); }
 
   /**
    * Access item by index.
    */
-  const T& operator[](int i) const noexcept { return *(const T*)(fAllocator[i]); }
+  const T& operator[](int i) const { return *(const T*)(fAllocator[i]); }
 
  protected:
   /*

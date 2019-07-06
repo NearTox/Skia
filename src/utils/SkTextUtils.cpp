@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "include/utils/SkTextUtils.h"
 #include "include/core/SkPath.h"
 #include "include/core/SkTextBlob.h"
+#include "include/utils/SkTextUtils.h"
 #include "src/core/SkFontPriv.h"
 
 void SkTextUtils::Draw(

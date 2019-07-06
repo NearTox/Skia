@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "src/codec/SkSampler.h"
 #include "include/codec/SkCodec.h"
 #include "src/codec/SkCodecPriv.h"
+#include "src/codec/SkSampler.h"
 #include "src/core/SkUtils.h"
 
 void SkSampler::Fill(

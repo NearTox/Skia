@@ -29,9 +29,9 @@
 #include "src/core/SkTDPQueue.h"
 #include "src/utils/SkUTF.h"
 
+#include <hb.h>
 #include <hb-icu.h>
 #include <hb-ot.h>
-#include <hb.h>
 #include <unicode/ubidi.h>
 #include <unicode/ubrk.h>
 #include <unicode/umachine.h>
@@ -47,7 +47,7 @@
 #include <utility>
 
 #if defined(SK_USING_THIRD_PARTY_ICU)
-#include "SkLoadICU.h"
+#  include "SkLoadICU.h"
 #endif
 
 namespace skstd {
@@ -83,7 +83,7 @@ HBBlob stream_to_blob(std::unique_ptr<SkStreamAsset> asset) {
   return blob;
 }
 
-hb_position_t skhb_position(SkScalar value) noexcept {
+hb_position_t skhb_position(SkScalar value) {
   // Treat HarfBuzz hb_position_t as 16.16 fixed-point.
   constexpr int kHbPosition1 = 1 << 16;
   return SkScalarRoundToInt(value * kHbPosition1);
@@ -332,12 +332,10 @@ class IcuBiDiRunIterator final : public SkShaper::BiDiRunIterator {
       fUTF16LogicalPosition += SkUTF::ToUTF16(u);
     }
   }
-  size_t endOfCurrentRun() const noexcept override { return fEndOfCurrentRun - fBegin; }
-  bool atEnd() const noexcept override {
-    return fUTF16LogicalPosition == ubidi_getLength(fBidi.get());
-  }
+  size_t endOfCurrentRun() const override { return fEndOfCurrentRun - fBegin; }
+  bool atEnd() const override { return fUTF16LogicalPosition == ubidi_getLength(fBidi.get()); }
 
-  UBiDiLevel currentLevel() const noexcept override { return fLevel; }
+  UBiDiLevel currentLevel() const override { return fLevel; }
 
  private:
   ICUBiDi fBidi;
@@ -350,7 +348,7 @@ class IcuBiDiRunIterator final : public SkShaper::BiDiRunIterator {
 
 class HbIcuScriptRunIterator final : public SkShaper::ScriptRunIterator {
  public:
-  HbIcuScriptRunIterator(const char* utf8, size_t utf8Bytes) noexcept
+  HbIcuScriptRunIterator(const char* utf8, size_t utf8Bytes)
       : fCurrent(utf8),
         fBegin(utf8),
         fEnd(fCurrent + utf8Bytes),
@@ -388,10 +386,10 @@ class HbIcuScriptRunIterator final : public SkShaper::ScriptRunIterator {
       fCurrentScript = HB_SCRIPT_COMMON;
     }
   }
-  size_t endOfCurrentRun() const noexcept override { return fCurrent - fBegin; }
-  bool atEnd() const noexcept override { return fCurrent == fEnd; }
+  size_t endOfCurrentRun() const override { return fCurrent - fBegin; }
+  bool atEnd() const override { return fCurrent == fEnd; }
 
-  SkFourByteTag currentScript() const noexcept override {
+  SkFourByteTag currentScript() const override {
     return SkSetFourByteTag(HB_UNTAG(fCurrentScript));
   }
 
@@ -457,7 +455,7 @@ struct ShapedGlyph {
 struct ShapedRun {
   ShapedRun(
       SkShaper::RunHandler::Range utf8Range, const SkFont& font, UBiDiLevel level,
-      std::unique_ptr<ShapedGlyph[]> glyphs, size_t numGlyphs, SkVector advance = {0, 0}) noexcept
+      std::unique_ptr<ShapedGlyph[]> glyphs, size_t numGlyphs, SkVector advance = {0, 0})
       : fUtf8Range(utf8Range),
         fFont(font),
         fLevel(level),
@@ -544,15 +542,15 @@ void emit(const ShapedLine& line, SkShaper::RunHandler* handler) {
 }
 
 struct ShapedRunGlyphIterator {
-  ShapedRunGlyphIterator(const SkTArray<ShapedRun>& origRuns) noexcept
+  ShapedRunGlyphIterator(const SkTArray<ShapedRun>& origRuns)
       : fRuns(&origRuns), fRunIndex(0), fGlyphIndex(0) {}
 
   ShapedRunGlyphIterator(const ShapedRunGlyphIterator& that) = default;
   ShapedRunGlyphIterator& operator=(const ShapedRunGlyphIterator& that) = default;
-  bool operator==(const ShapedRunGlyphIterator& that) const noexcept {
+  bool operator==(const ShapedRunGlyphIterator& that) const {
     return fRuns == that.fRuns && fRunIndex == that.fRunIndex && fGlyphIndex == that.fGlyphIndex;
   }
-  bool operator!=(const ShapedRunGlyphIterator& that) const noexcept {
+  bool operator!=(const ShapedRunGlyphIterator& that) const {
     return fRuns != that.fRuns || fRunIndex != that.fRunIndex || fGlyphIndex != that.fGlyphIndex;
   }
 

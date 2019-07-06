@@ -178,7 +178,7 @@ sk_sp<GrSurface> GrSurfaceProxy::createSurfaceImpl(
   return surface;
 }
 
-bool GrSurfaceProxy::canSkipResourceAllocator() const noexcept {
+bool GrSurfaceProxy::canSkipResourceAllocator() const {
   if (this->ignoredByResourceAllocator()) {
     // Usually an atlas or onFlush proxy
     return true;
@@ -193,7 +193,7 @@ bool GrSurfaceProxy::canSkipResourceAllocator() const noexcept {
   return !peek->resourcePriv().getScratchKey().isValid();
 }
 
-void GrSurfaceProxy::assign(sk_sp<GrSurface> surface) noexcept {
+void GrSurfaceProxy::assign(sk_sp<GrSurface> surface) {
   SkASSERT(!fTarget && surface);
 
   SkDEBUGCODE(this->validateSurface(surface.get()));
@@ -244,7 +244,7 @@ bool GrSurfaceProxy::instantiateImpl(
   return true;
 }
 
-void GrSurfaceProxy::deinstantiate() noexcept {
+void GrSurfaceProxy::deinstantiate() {
   SkASSERT(this->isInstantiated());
 
   this->release();
@@ -271,7 +271,7 @@ void GrSurfaceProxy::computeScratchKey(GrScratchKey* key) const {
       this->config(), width, height, SkToBool(rtp), sampleCount, mipMapped, key);
 }
 
-void GrSurfaceProxy::setLastOpList(GrOpList* opList) noexcept {
+void GrSurfaceProxy::setLastOpList(GrOpList* opList) {
 #ifdef SK_DEBUG
   if (fLastOpList) {
     SkASSERT(fLastOpList->isClosed());
@@ -290,7 +290,7 @@ GrTextureOpList* GrSurfaceProxy::getLastTextureOpList() {
   return fLastOpList ? fLastOpList->asTextureOpList() : nullptr;
 }
 
-int GrSurfaceProxy::worstCaseWidth() const noexcept {
+int GrSurfaceProxy::worstCaseWidth() const {
   SkASSERT(LazyState::kFully != this->lazyInstantiationState());
   if (fTarget) {
     return fTarget->width();
@@ -302,7 +302,7 @@ int GrSurfaceProxy::worstCaseWidth() const noexcept {
   return SkTMax(GrResourceProvider::kMinScratchTextureSize, GrNextPow2(fWidth));
 }
 
-int GrSurfaceProxy::worstCaseHeight() const noexcept {
+int GrSurfaceProxy::worstCaseHeight() const {
   SkASSERT(LazyState::kFully != this->lazyInstantiationState());
   if (fTarget) {
     return fTarget->height();
@@ -385,7 +385,7 @@ sk_sp<GrSurfaceContext> GrSurfaceProxy::TestCopy(
   return dstContext;
 }
 
-void GrSurfaceProxyPriv::exactify() noexcept {
+void GrSurfaceProxyPriv::exactify() {
   SkASSERT(GrSurfaceProxy::LazyState::kFully != fProxy->lazyInstantiationState());
   if (this->isExact()) {
     return;

@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/gl/GrGLVertexArray.h"
 #include "src/gpu/GrCpuBuffer.h"
 #include "src/gpu/gl/GrGLBuffer.h"
 #include "src/gpu/gl/GrGLGpu.h"
+#include "src/gpu/gl/GrGLVertexArray.h"
 
 struct AttribLayout {
   bool fNormalized;  // Only used by floating point types.
@@ -18,7 +18,7 @@ struct AttribLayout {
 
 GR_STATIC_ASSERT(4 == sizeof(AttribLayout));
 
-static AttribLayout attrib_layout(GrVertexAttribType type) noexcept {
+static AttribLayout attrib_layout(GrVertexAttribType type) {
   switch (type) {
     case kFloat_GrVertexAttribType: return {false, 1, GR_GL_FLOAT};
     case kFloat2_GrVertexAttribType: return {false, 2, GR_GL_FLOAT};
@@ -170,7 +170,7 @@ GrGLAttribArrayState* GrGLVertexArray::bindWithIndexBuffer(GrGLGpu* gpu, const G
   return state;
 }
 
-void GrGLVertexArray::invalidateCachedState() noexcept {
+void GrGLVertexArray::invalidateCachedState() {
   fAttribArrays.invalidate();
   fIndexBufferUniqueID.makeInvalid();
 }

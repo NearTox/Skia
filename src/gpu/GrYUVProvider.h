@@ -50,7 +50,7 @@ class GrYUVProvider {
       const void* planes[SkYUVASizeInfo::kMaxCount]);
 
  private:
-  virtual uint32_t onGetID() const noexcept = 0;
+  virtual uint32_t onGetID() const = 0;
 
   // These are not meant to be called by a client, only by the implementation
 

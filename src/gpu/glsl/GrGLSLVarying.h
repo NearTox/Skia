@@ -34,14 +34,13 @@ class GrGLSLVarying {
  public:
   enum class Scope { kVertToFrag, kVertToGeo, kGeoToFrag };
 
-  constexpr GrGLSLVarying() noexcept = default;
-  GrGLSLVarying(GrSLType type, Scope scope = Scope::kVertToFrag) noexcept
-      : fType(type), fScope(scope) {
+  GrGLSLVarying() = default;
+  GrGLSLVarying(GrSLType type, Scope scope = Scope::kVertToFrag) : fType(type), fScope(scope) {
     // Metal doesn't support varying matrices, so we disallow them everywhere for consistency
     SkASSERT(!is_matrix(type));
   }
 
-  void reset(GrSLType type, Scope scope = Scope::kVertToFrag) noexcept {
+  void reset(GrSLType type, Scope scope = Scope::kVertToFrag) {
     // Metal doesn't support varying matrices, so we disallow them everywhere for consistency
     SkASSERT(!is_matrix(type));
     *this = GrGLSLVarying();
@@ -49,18 +48,18 @@ class GrGLSLVarying {
     fScope = scope;
   }
 
-  GrSLType type() const noexcept { return fType; }
-  Scope scope() const noexcept { return fScope; }
-  bool isInVertexShader() const noexcept { return Scope::kGeoToFrag != fScope; }
-  bool isInFragmentShader() const noexcept { return Scope::kVertToGeo != fScope; }
+  GrSLType type() const { return fType; }
+  Scope scope() const { return fScope; }
+  bool isInVertexShader() const { return Scope::kGeoToFrag != fScope; }
+  bool isInFragmentShader() const { return Scope::kVertToGeo != fScope; }
 
-  const char* vsOut() const noexcept {
+  const char* vsOut() const {
     SkASSERT(this->isInVertexShader());
     return fVsOut;
   }
-  const char* gsIn() const noexcept { return fGsIn; }
-  const char* gsOut() const noexcept { return fGsOut; }
-  const char* fsIn() const noexcept {
+  const char* gsIn() const { return fGsIn; }
+  const char* gsOut() const { return fGsOut; }
+  const char* fsIn() const {
     SkASSERT(this->isInFragmentShader());
     return fFsIn;
   }

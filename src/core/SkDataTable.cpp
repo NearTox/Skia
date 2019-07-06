@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "include/core/SkDataTable.h"
 #include "include/core/SkData.h"
+#include "include/core/SkDataTable.h"
 #include "include/private/SkOnce.h"
 
 static void malloc_freeproc(void* context) { sk_free(context); }

@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "include/core/SkTextBlob.h"
 #include "include/core/SkRSXform.h"
+#include "include/core/SkTextBlob.h"
 #include "include/core/SkTypeface.h"
 #include "src/core/SkFontPriv.h"
 #include "src/core/SkGlyphRun.h"

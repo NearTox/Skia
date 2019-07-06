@@ -33,11 +33,11 @@ class SK_API GrSurfaceContext : public SkRefCnt {
  public:
   ~GrSurfaceContext() override {}
 
-  const GrColorSpaceInfo& colorSpaceInfo() const noexcept { return fColorSpaceInfo; }
+  const GrColorSpaceInfo& colorSpaceInfo() const { return fColorSpaceInfo; }
 
   // TODO: these two calls would be way cooler if this object had a GrSurfaceProxy pointer
-  int width() const noexcept { return this->asSurfaceProxy()->width(); }
-  int height() const noexcept { return this->asSurfaceProxy()->height(); }
+  int width() const { return this->asSurfaceProxy()->width(); }
+  int height() const { return this->asSurfaceProxy()->height(); }
 
   /*
    * Copy 'src' into the proxy backing this context
@@ -89,18 +89,18 @@ class SK_API GrSurfaceContext : public SkRefCnt {
       uint32_t flags = 0);
 
   // TODO: this is virtual b.c. this object doesn't have a pointer to the wrapped GrSurfaceProxy?
-  virtual GrSurfaceProxy* asSurfaceProxy() noexcept = 0;
-  virtual const GrSurfaceProxy* asSurfaceProxy() const noexcept = 0;
-  virtual sk_sp<GrSurfaceProxy> asSurfaceProxyRef() noexcept = 0;
+  virtual GrSurfaceProxy* asSurfaceProxy() = 0;
+  virtual const GrSurfaceProxy* asSurfaceProxy() const = 0;
+  virtual sk_sp<GrSurfaceProxy> asSurfaceProxyRef() = 0;
 
-  virtual GrTextureProxy* asTextureProxy() noexcept = 0;
-  virtual const GrTextureProxy* asTextureProxy() const noexcept = 0;
-  virtual sk_sp<GrTextureProxy> asTextureProxyRef() noexcept = 0;
+  virtual GrTextureProxy* asTextureProxy() = 0;
+  virtual const GrTextureProxy* asTextureProxy() const = 0;
+  virtual sk_sp<GrTextureProxy> asTextureProxyRef() = 0;
 
-  virtual GrRenderTargetProxy* asRenderTargetProxy() noexcept = 0;
-  virtual sk_sp<GrRenderTargetProxy> asRenderTargetProxyRef() noexcept = 0;
+  virtual GrRenderTargetProxy* asRenderTargetProxy() = 0;
+  virtual sk_sp<GrRenderTargetProxy> asRenderTargetProxyRef() = 0;
 
-  virtual GrRenderTargetContext* asRenderTargetContext() noexcept { return nullptr; }
+  virtual GrRenderTargetContext* asRenderTargetContext() { return nullptr; }
 
   GrAuditTrail* auditTrail();
 
@@ -111,7 +111,7 @@ class SK_API GrSurfaceContext : public SkRefCnt {
  protected:
   friend class GrSurfaceContextPriv;
 
-  GrSurfaceContext(GrRecordingContext*, GrPixelConfig, sk_sp<SkColorSpace>) noexcept;
+  GrSurfaceContext(GrRecordingContext*, GrPixelConfig, sk_sp<SkColorSpace>);
 
   GrDrawingManager* drawingManager();
   const GrDrawingManager* drawingManager() const;

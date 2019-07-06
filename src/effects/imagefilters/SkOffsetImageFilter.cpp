@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "include/effects/SkOffsetImageFilter.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkPaint.h"
+#include "include/effects/SkOffsetImageFilter.h"
 #include "src/core/SkImageFilterPriv.h"
 #include "src/core/SkPointPriv.h"
 #include "src/core/SkReadBuffer.h"

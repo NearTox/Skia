@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "include/effects/Sk2DPathEffect.h"
 #include "include/core/SkPath.h"
 #include "include/core/SkRegion.h"
 #include "include/core/SkStrokeRec.h"
+#include "include/effects/Sk2DPathEffect.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
 

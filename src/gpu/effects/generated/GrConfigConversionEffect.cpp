@@ -38,23 +38,23 @@ class GrGLSLConfigConversionEffect : public GrGLSLFragmentProcessor {
   }
 
  private:
-  void onSetData(
-      const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) noexcept override {}
+  void onSetData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) override {
+  }
 };
 GrGLSLFragmentProcessor* GrConfigConversionEffect::onCreateGLSLInstance() const {
   return new GrGLSLConfigConversionEffect();
 }
 void GrConfigConversionEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   b->add32((int32_t)pmConversion);
 }
-bool GrConfigConversionEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrConfigConversionEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrConfigConversionEffect& that = other.cast<GrConfigConversionEffect>();
   (void)that;
   if (pmConversion != that.pmConversion) return false;
   return true;
 }
-GrConfigConversionEffect::GrConfigConversionEffect(const GrConfigConversionEffect& src) noexcept
+GrConfigConversionEffect::GrConfigConversionEffect(const GrConfigConversionEffect& src)
     : INHERITED(kGrConfigConversionEffect_ClassID, src.optimizationFlags()),
       pmConversion(src.pmConversion) {}
 std::unique_ptr<GrFragmentProcessor> GrConfigConversionEffect::clone() const {

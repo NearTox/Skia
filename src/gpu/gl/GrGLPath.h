@@ -29,10 +29,10 @@ class GrGLPath : public GrPath {
   static void InitPathObjectEmptyPath(GrGLGpu*, GrGLuint pathID);
 
   GrGLPath(GrGLGpu*, const SkPath&, const GrStyle&);
-  GrGLuint pathID() const noexcept { return fPathID; }
+  GrGLuint pathID() const { return fPathID; }
 
-  bool shouldStroke() const noexcept { return fShouldStroke; }
-  bool shouldFill() const noexcept { return fShouldFill; }
+  bool shouldStroke() const { return fShouldStroke; }
+  bool shouldFill() const { return fShouldFill; }
 
  protected:
   void onRelease() override;
@@ -40,7 +40,7 @@ class GrGLPath : public GrPath {
 
  private:
   // TODO: Figure out how to get an approximate size of the path in Gpu memory.
-  size_t onGpuMemorySize() const noexcept override { return 100; }
+  size_t onGpuMemorySize() const override { return 100; }
 
   GrGLuint fPathID;
   bool fShouldStroke;

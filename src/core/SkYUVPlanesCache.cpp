@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkYUVPlanesCache.h"
 #include "src/core/SkBitmapCache.h"
 #include "src/core/SkResourceCache.h"
+#include "src/core/SkYUVPlanesCache.h"
 
 #define CHECK_LOCAL(localCache, localName, globalName, ...) \
   ((localCache) ? localCache->localName(__VA_ARGS__) : SkResourceCache::globalName(__VA_ARGS__))
@@ -40,14 +40,14 @@ struct YUVPlanesRec : public SkResourceCache::Rec {
   YUVPlanesKey fKey;
   YUVValue fValue;
 
-  const Key& getKey() const noexcept override { return fKey; }
-  size_t bytesUsed() const noexcept override { return sizeof(*this) + fValue.fData->size(); }
-  const char* getCategory() const noexcept override { return "yuv-planes"; }
-  SkDiscardableMemory* diagnostic_only_getDiscardable() const noexcept override {
+  const Key& getKey() const override { return fKey; }
+  size_t bytesUsed() const override { return sizeof(*this) + fValue.fData->size(); }
+  const char* getCategory() const override { return "yuv-planes"; }
+  SkDiscardableMemory* diagnostic_only_getDiscardable() const override {
     return fValue.fData->diagnostic_only_getDiscardable();
   }
 
-  static bool Visitor(const SkResourceCache::Rec& baseRec, void* contextData) noexcept {
+  static bool Visitor(const SkResourceCache::Rec& baseRec, void* contextData) {
     const YUVPlanesRec& rec = static_cast<const YUVPlanesRec&>(baseRec);
     YUVValue* result = static_cast<YUVValue*>(contextData);
 

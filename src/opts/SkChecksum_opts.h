@@ -12,9 +12,9 @@
 #include "include/private/SkChecksum.h"
 
 #if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE42
-#include <immintrin.h>
+#  include <immintrin.h>
 #elif defined(SK_ARM_HAS_CRC32)
-#include <arm_acle.h>
+#  include <arm_acle.h>
 #endif
 
 namespace SK_OPTS_NS {

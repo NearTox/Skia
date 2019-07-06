@@ -57,7 +57,7 @@ class SkGpuDevice : public SkClipStackDevice {
 
   ~SkGpuDevice() override {}
 
-  GrContext* context() const noexcept override { return fContext.get(); }
+  GrContext* context() const override { return fContext.get(); }
 
   // set all pixels to 0
   void clearAll();

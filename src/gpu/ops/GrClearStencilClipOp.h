@@ -23,7 +23,7 @@ class GrClearStencilClipOp final : public GrOp {
       GrRecordingContext* context, const GrFixedClip& clip, bool insideStencilMask,
       GrRenderTargetProxy* proxy);
 
-  const char* name() const noexcept override { return "ClearStencilClip"; }
+  const char* name() const override { return "ClearStencilClip"; }
 
 #ifdef SK_DEBUG
   SkString dumpInfo() const override {

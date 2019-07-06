@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
+#include "include/core/SkCanvas.h"
 #include "include/core/SkDrawable.h"
 #include <atomic>
-#include "include/core/SkCanvas.h"
 
 static int32_t next_generation_id() {
   static std::atomic<int32_t> nextID{1};

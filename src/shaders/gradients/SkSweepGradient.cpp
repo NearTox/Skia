@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "src/shaders/gradients/SkSweepGradient.h"
 #include "include/private/SkFloatingPoint.h"
 #include "src/core/SkRasterPipeline.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
+#include "src/shaders/gradients/SkSweepGradient.h"
 
 SkSweepGradient::SkSweepGradient(
     const SkPoint& center, SkScalar t0, SkScalar t1, const Descriptor& desc)

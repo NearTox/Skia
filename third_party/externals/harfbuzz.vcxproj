@@ -18,6 +18,7 @@
     <ClCompile Include="harfbuzz\src\hb-buffer.cc" />
     <ClCompile Include="harfbuzz\src\hb-common.cc" />
     <ClCompile Include="harfbuzz\src\hb-face.cc" />
+    <ClCompile Include="harfbuzz\src\hb-fallback-shape.cc" />
     <ClCompile Include="harfbuzz\src\hb-font.cc" />
     <ClCompile Include="harfbuzz\src\hb-icu.cc" />
     <ClCompile Include="harfbuzz\src\hb-map.cc" />
@@ -107,7 +108,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)harfbuzz\src;$(MyIncludeDir);$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)\modules\skshaper\include;$(SolutionDir)\third_party\externals\harfbuzz\src;$(SolutionDir)\third_party\externals\icu\source\common;$(SolutionDir)\third_party\externals\icu\source\i18n</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <PreprocessorDefinitions>HAVE_ICU;HAVE_ICU_BUILTIN;HAVE_OT;HAVE_ROUND;$(SkiaDef);$(SkiaDef2);WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HAVE_ICU;HAVE_ICU_BUILTIN;HAVE_OT;HAVE_ROUND;HAVE_INTEL_ATOMIC_PRIMITIVES;$(SkiaDef);$(SkiaDef2);WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions> /bigobj /utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ConformanceMode>true</ConformanceMode>
@@ -127,7 +128,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)harfbuzz\src;$(MyIncludeDir);$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)\modules\skshaper\include;$(SolutionDir)\third_party\externals\harfbuzz\src;$(SolutionDir)\third_party\externals\icu\source\common;$(SolutionDir)\third_party\externals\icu\source\i18n</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <PreprocessorDefinitions>HAVE_ICU;HAVE_ICU_BUILTIN;HAVE_OT;HAVE_ROUND;$(SkiaDef);$(SkiaDef2);WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HAVE_ICU;HAVE_ICU_BUILTIN;HAVE_OT;HAVE_ROUND;HAVE_INTEL_ATOMIC_PRIMITIVES;$(SkiaDef);$(SkiaDef2);WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions> /bigobj /utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ConformanceMode>true</ConformanceMode>

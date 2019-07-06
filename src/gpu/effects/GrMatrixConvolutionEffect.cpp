@@ -17,8 +17,7 @@ class GrGLMatrixConvolutionEffect : public GrGLSLFragmentProcessor {
  public:
   void emitCode(EmitArgs&) override;
 
-  static inline void GenKey(
-      const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) noexcept;
+  static inline void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*);
 
  protected:
   void onSetData(const GrGLSLProgramDataManager&, const GrFragmentProcessor&) override;
@@ -104,7 +103,7 @@ void GrGLMatrixConvolutionEffect::emitCode(EmitArgs& args) {
 }
 
 void GrGLMatrixConvolutionEffect::GenKey(
-    const GrProcessor& processor, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
+    const GrProcessor& processor, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
   const GrMatrixConvolutionEffect& m = processor.cast<GrMatrixConvolutionEffect>();
   SkASSERT(m.kernelSize().width() <= 0x7FFF && m.kernelSize().height() <= 0xFFFF);
   uint32_t key = m.kernelSize().width() << 16 | m.kernelSize().height();
@@ -159,7 +158,7 @@ GrMatrixConvolutionEffect::GrMatrixConvolutionEffect(
   fKernelOffset[1] = static_cast<float>(kernelOffset.y());
 }
 
-GrMatrixConvolutionEffect::GrMatrixConvolutionEffect(const GrMatrixConvolutionEffect& that) noexcept
+GrMatrixConvolutionEffect::GrMatrixConvolutionEffect(const GrMatrixConvolutionEffect& that)
     : INHERITED(kGrMatrixConvolutionEffect_ClassID, kNone_OptimizationFlags),
       fCoordTransform(that.fCoordTransform),
       fDomain(that.fDomain),
@@ -179,7 +178,7 @@ std::unique_ptr<GrFragmentProcessor> GrMatrixConvolutionEffect::clone() const {
 }
 
 void GrMatrixConvolutionEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   GrGLMatrixConvolutionEffect::GenKey(*this, caps, b);
 }
 
@@ -187,7 +186,7 @@ GrGLSLFragmentProcessor* GrMatrixConvolutionEffect::onCreateGLSLInstance() const
   return new GrGLMatrixConvolutionEffect;
 }
 
-bool GrMatrixConvolutionEffect::onIsEqual(const GrFragmentProcessor& sBase) const noexcept {
+bool GrMatrixConvolutionEffect::onIsEqual(const GrFragmentProcessor& sBase) const {
   const GrMatrixConvolutionEffect& s = sBase.cast<GrMatrixConvolutionEffect>();
   return fKernelSize == s.kernelSize() &&
          !memcmp(fKernel, s.kernel(), fKernelSize.width() * fKernelSize.height() * sizeof(float)) &&
@@ -197,7 +196,7 @@ bool GrMatrixConvolutionEffect::onIsEqual(const GrFragmentProcessor& sBase) cons
 }
 
 static void fill_in_1D_gaussian_kernel_with_stride(
-    float* kernel, int size, int stride, float twoSigmaSqrd) noexcept {
+    float* kernel, int size, int stride, float twoSigmaSqrd) {
   SkASSERT(!SkScalarNearlyZero(twoSigmaSqrd, SK_ScalarNearlyZero));
 
   const float sigmaDenom = 1.0f / twoSigmaSqrd;
@@ -219,7 +218,7 @@ static void fill_in_1D_gaussian_kernel_with_stride(
 }
 
 static void fill_in_2D_gaussian_kernel(
-    float* kernel, int width, int height, SkScalar sigmaX, SkScalar sigmaY) noexcept {
+    float* kernel, int width, int height, SkScalar sigmaX, SkScalar sigmaY) {
   SkASSERT(width * height <= MAX_KERNEL_SIZE);
   const float twoSigmaSqrdX = 2.0f * SkScalarToFloat(SkScalarSquare(sigmaX));
   const float twoSigmaSqrdY = 2.0f * SkScalarToFloat(SkScalarSquare(sigmaY));

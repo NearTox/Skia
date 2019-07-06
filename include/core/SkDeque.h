@@ -29,30 +29,30 @@ class SK_API SkDeque : SkNoncopyable {
    * elemSize specifies the size of each individual element in the deque
    * allocCount specifies how many elements are to be allocated as a block
    */
-  explicit SkDeque(size_t elemSize, int allocCount = 1) noexcept;
-  SkDeque(size_t elemSize, void* storage, size_t storageSize, int allocCount = 1) noexcept;
+  explicit SkDeque(size_t elemSize, int allocCount = 1);
+  SkDeque(size_t elemSize, void* storage, size_t storageSize, int allocCount = 1);
   ~SkDeque();
 
-  bool empty() const noexcept { return 0 == fCount; }
-  int count() const noexcept { return fCount; }
-  size_t elemSize() const noexcept { return fElemSize; }
+  bool empty() const { return 0 == fCount; }
+  int count() const { return fCount; }
+  size_t elemSize() const { return fElemSize; }
 
-  const void* front() const noexcept { return fFront; }
-  const void* back() const noexcept { return fBack; }
+  const void* front() const { return fFront; }
+  const void* back() const { return fBack; }
 
-  void* front() noexcept { return (void*)((const SkDeque*)this)->front(); }
+  void* front() { return (void*)((const SkDeque*)this)->front(); }
 
-  void* back() noexcept { return (void*)((const SkDeque*)this)->back(); }
+  void* back() { return (void*)((const SkDeque*)this)->back(); }
 
   /**
    * push_front and push_back return a pointer to the memory space
    * for the new element
    */
-  void* push_front() noexcept;
-  void* push_back() noexcept;
+  void* push_front();
+  void* push_back();
 
-  void pop_front() noexcept;
-  void pop_back() noexcept;
+  void pop_front();
+  void pop_back();
 
  private:
   struct Block;
@@ -68,13 +68,13 @@ class SK_API SkDeque : SkNoncopyable {
     /**
      * Creates an uninitialized iterator. Must be reset()
      */
-    Iter() noexcept;
+    Iter();
 
-    Iter(const SkDeque& d, IterStart startLoc) noexcept;
-    void* next() noexcept;
-    void* prev() noexcept;
+    Iter(const SkDeque& d, IterStart startLoc);
+    void* next();
+    void* prev();
 
-    void reset(const SkDeque& d, IterStart startLoc) noexcept;
+    void reset(const SkDeque& d, IterStart startLoc);
 
    private:
     SkDeque::Block* fCurBlock;
@@ -85,13 +85,13 @@ class SK_API SkDeque : SkNoncopyable {
   // Inherit privately from Iter to prevent access to reverse iteration
   class F2BIter : private Iter {
    public:
-    F2BIter() noexcept {}
+    F2BIter() {}
 
     /**
      * Wrap Iter's 2 parameter ctor to force initialization to the
      * beginning of the deque
      */
-    F2BIter(const SkDeque& d) noexcept : INHERITED(d, kFront_IterStart) {}
+    F2BIter(const SkDeque& d) : INHERITED(d, kFront_IterStart) {}
 
     using Iter::next;
 
@@ -99,7 +99,7 @@ class SK_API SkDeque : SkNoncopyable {
      * Wrap Iter::reset to force initialization to the beginning of the
      * deque
      */
-    void reset(const SkDeque& d) noexcept { this->INHERITED::reset(d, kFront_IterStart); }
+    void reset(const SkDeque& d) { this->INHERITED::reset(d, kFront_IterStart); }
 
    private:
     typedef Iter INHERITED;
@@ -119,14 +119,14 @@ class SK_API SkDeque : SkNoncopyable {
   int fCount;       // number of elements in the deque
   int fAllocCount;  // number of elements to allocate per block
 
-  Block* allocateBlock(int allocCount) noexcept;
-  void freeBlock(Block* block) noexcept;
+  Block* allocateBlock(int allocCount);
+  void freeBlock(Block* block);
 
   /**
    * This returns the number of chunk blocks allocated by the deque. It
    * can be used to gauge the effectiveness of the selected allocCount.
    */
-  int numBlocksAllocated() const noexcept;
+  int numBlocksAllocated() const;
 };
 
 #endif

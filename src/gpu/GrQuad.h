@@ -199,7 +199,7 @@ struct QuadData<void> {
 template <typename T>
 class GrQuadListBase {
  public:
-  int count() const noexcept { return fXYs.count(); }
+  int count() const { return fXYs.count(); }
 
   GrQuadType quadType() const { return fType; }
 

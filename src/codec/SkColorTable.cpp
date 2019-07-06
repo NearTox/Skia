@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "src/codec/SkColorTable.h"
 #include "include/private/SkMalloc.h"
+#include "src/codec/SkColorTable.h"
 
-SkColorTable::SkColorTable(const SkPMColor colors[], int count) noexcept {
+SkColorTable::SkColorTable(const SkPMColor colors[], int count) {
   SkASSERT(0 == count || colors);
   SkASSERT(count >= 0 && count <= 256);
 

@@ -27,9 +27,9 @@ class NormalMapFP : public GrFragmentProcessor {
     return std::unique_ptr<GrFragmentProcessor>(new NormalMapFP(std::move(mapFP), invCTM));
   }
 
-  const char* name() const noexcept override { return "NormalMapFP"; }
+  const char* name() const override { return "NormalMapFP"; }
 
-  const SkMatrix& invCTM() const noexcept { return fInvCTM; }
+  const SkMatrix& invCTM() const { return fInvCTM; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override {
     return Make(this->childProcessor(0).clone(), fInvCTM);
@@ -78,7 +78,7 @@ class NormalMapFP : public GrFragmentProcessor {
       fragBuilder->codeAppend("}");
     }
 
-    static void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
+    static void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
       b->add32(0x0);
     }
 
@@ -101,8 +101,7 @@ class NormalMapFP : public GrFragmentProcessor {
     GrGLSLProgramDataManager::UniformHandle fXformUni;
   };
 
-  void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const
-      noexcept override {
+  void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
     GLSLNormalMapFP::GenKey(*this, caps, b);
   }
   NormalMapFP(std::unique_ptr<GrFragmentProcessor> mapFP, const SkMatrix& invCTM)
@@ -112,7 +111,7 @@ class NormalMapFP : public GrFragmentProcessor {
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override { return new GLSLNormalMapFP; }
 
-  bool onIsEqual(const GrFragmentProcessor& proc) const noexcept override {
+  bool onIsEqual(const GrFragmentProcessor& proc) const override {
     const NormalMapFP& normalMapFP = proc.cast<NormalMapFP>();
     return fInvCTM == normalMapFP.fInvCTM;
   }
@@ -137,7 +136,7 @@ std::unique_ptr<GrFragmentProcessor> SkNormalMapSourceImpl::asFragmentProcessor(
 ////////////////////////////////////////////////////////////////////////////
 
 SkNormalMapSourceImpl::Provider::Provider(
-    const SkNormalMapSourceImpl& source, SkShaderBase::Context* mapContext) noexcept
+    const SkNormalMapSourceImpl& source, SkShaderBase::Context* mapContext)
     : fSource(source), fMapContext(mapContext) {}
 
 SkNormalSource::Provider* SkNormalMapSourceImpl::asProvider(
@@ -166,7 +165,7 @@ SkNormalSource::Provider* SkNormalMapSourceImpl::asProvider(
 }
 
 bool SkNormalMapSourceImpl::computeNormTotalInverse(
-    const SkShaderBase::ContextRec& rec, SkMatrix* normTotalInverse) const noexcept {
+    const SkShaderBase::ContextRec& rec, SkMatrix* normTotalInverse) const {
   SkMatrix total = SkMatrix::Concat(*rec.fMatrix, as_SB(fMapShader)->getLocalMatrix());
   if (rec.fLocalMatrix) {
     total.preConcat(*rec.fLocalMatrix);

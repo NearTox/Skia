@@ -20,17 +20,17 @@ class GrTexture;
  */
 class GrCoordTransform {
  public:
-  GrCoordTransform() noexcept : fProxy(nullptr), fNormalize(false), fReverseY(false) {
+  GrCoordTransform() : fProxy(nullptr), fNormalize(false), fReverseY(false) {
     SkDEBUGCODE(fInProcessor = false);
   }
 
-  GrCoordTransform(const GrCoordTransform&) noexcept = default;
+  GrCoordTransform(const GrCoordTransform&) = default;
 
   /**
    * Create a transformation that maps [0, 1] to a proxy's boundaries. The proxy origin also
    * implies whether a y-reversal should be performed.
    */
-  GrCoordTransform(GrTextureProxy* proxy) noexcept {
+  GrCoordTransform(GrTextureProxy* proxy) {
     SkASSERT(proxy);
     SkDEBUGCODE(fInProcessor = false);
     this->reset(SkMatrix::I(), proxy);
@@ -40,7 +40,7 @@ class GrCoordTransform {
    * Create a transformation from a matrix. The proxy origin also implies whether a y-reversal
    * should be performed.
    */
-  GrCoordTransform(const SkMatrix& m, GrTextureProxy* proxy) noexcept {
+  GrCoordTransform(const SkMatrix& m, GrTextureProxy* proxy) {
     SkASSERT(proxy);
     SkDEBUGCODE(fInProcessor = false);
     this->reset(m, proxy);
@@ -49,12 +49,12 @@ class GrCoordTransform {
   /**
    * Create a transformation that applies the matrix to a coord set.
    */
-  GrCoordTransform(const SkMatrix& m) noexcept {
+  GrCoordTransform(const SkMatrix& m) {
     SkDEBUGCODE(fInProcessor = false);
     this->reset(m);
   }
 
-  GrCoordTransform& operator=(const GrCoordTransform& that) noexcept {
+  GrCoordTransform& operator=(const GrCoordTransform& that) {
     SkASSERT(!fInProcessor);
     fMatrix = that.fMatrix;
     fProxy = that.fProxy;
@@ -67,12 +67,12 @@ class GrCoordTransform {
    * Access the matrix for editing. Note, this must be done before adding the transform to an
    * effect, since effects are immutable.
    */
-  SkMatrix* accessMatrix() noexcept {
+  SkMatrix* accessMatrix() {
     SkASSERT(!fInProcessor);
     return &fMatrix;
   }
 
-  bool hasSameEffectAs(const GrCoordTransform& that) const noexcept {
+  bool hasSameEffectAs(const GrCoordTransform& that) const {
     if (fNormalize != that.fNormalize || fReverseY != that.fReverseY ||
         !fMatrix.cheapEqualTo(that.fMatrix)) {
       return false;
@@ -87,17 +87,17 @@ class GrCoordTransform {
     return true;
   }
 
-  const SkMatrix& getMatrix() const noexcept { return fMatrix; }
-  const GrTextureProxy* proxy() const noexcept { return fProxy; }
-  bool normalize() const noexcept { return fNormalize; }
-  bool reverseY() const noexcept { return fReverseY; }
+  const SkMatrix& getMatrix() const { return fMatrix; }
+  const GrTextureProxy* proxy() const { return fProxy; }
+  bool normalize() const { return fNormalize; }
+  bool reverseY() const { return fReverseY; }
 
   // This should only ever be called at flush time after the backing texture has been
   // successfully instantiated
-  GrTexture* peekTexture() const noexcept { return fProxy->peekTexture(); }
+  GrTexture* peekTexture() const { return fProxy->peekTexture(); }
 
  private:
-  void reset(const SkMatrix& m, GrTextureProxy* proxy = nullptr) noexcept {
+  void reset(const SkMatrix& m, GrTextureProxy* proxy = nullptr) {
     SkASSERT(!fInProcessor);
 
     fMatrix = m;

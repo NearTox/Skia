@@ -5,11 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "include/gpu/GrContext.h"
-#include <atomic>
-#include <unordered_map>
 #include "include/core/SkTraceMemoryDump.h"
 #include "include/gpu/GrBackendSemaphore.h"
+#include "include/gpu/GrContext.h"
 #include "include/private/GrRenderTargetProxy.h"
 #include "include/private/SkDeferredDisplayList.h"
 #include "include/private/SkImageInfoPriv.h"
@@ -33,13 +31,15 @@
 #include "src/gpu/text/GrTextBlobCache.h"
 #include "src/gpu/text/GrTextContext.h"
 #include "src/image/SkSurface_Gpu.h"
+#include <atomic>
+#include <unordered_map>
 
 #define ASSERT_OWNED_PROXY(P) \
   SkASSERT(!(P) || !((P)->peekTexture()) || (P)->peekTexture()->getContext() == this)
 
 #define ASSERT_OWNED_RESOURCE(R) SkASSERT(!(R) || (R)->getContext() == this)
 #define ASSERT_SINGLE_OWNER \
-  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner()));
+  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner());)
 #define RETURN_IF_ABANDONED \
   if (this->abandoned()) {  \
     return;                 \

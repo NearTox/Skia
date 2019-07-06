@@ -7,7 +7,6 @@
 
 #include "src/shaders/SkPictureShader.h"
 
-#include <atomic>
 #include "include/core/SkBitmap.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkImage.h"
@@ -18,6 +17,7 @@
 #include "src/core/SkResourceCache.h"
 #include "src/shaders/SkBitmapProcShader.h"
 #include "src/shaders/SkImageShader.h"
+#include <atomic>
 
 #if SK_SUPPORT_GPU
 #include "include/private/GrRecordingContext.h"
@@ -81,11 +81,11 @@ struct BitmapShaderRec : public SkResourceCache::Rec {
   sk_sp<SkShader> fShader;
 
   const Key& getKey() const override { return fKey; }
-  size_t bytesUsed() const noexcept override {
+  size_t bytesUsed() const override {
     // Just the record overhead -- the actual pixels are accounted by SkImage_Lazy.
     return sizeof(fKey) + sizeof(SkImageShader);
   }
-  const char* getCategory() const noexcept override { return "bitmap-shader"; }
+  const char* getCategory() const override { return "bitmap-shader"; }
   SkDiscardableMemory* diagnostic_only_getDiscardable() const override { return nullptr; }
 
   static bool Visitor(const SkResourceCache::Rec& baseRec, void* contextShader) {
@@ -196,8 +196,8 @@ sk_sp<SkShader> SkPictureShader::refBitmapShader(
     scaledSize.set(scaledSize.width() * clampScale, scaledSize.height() * clampScale);
   }
 #if SK_SUPPORT_GPU
-  // Scale down the tile size if larger than maxTextureSize for GPU Path or it should fail on
-  // create texture
+  // Scale down the tile size if larger than maxTextureSize for GPU Path or it should fail on create
+  // texture
   if (maxTextureSize) {
     if (scaledSize.width() > maxTextureSize || scaledSize.height() > maxTextureSize) {
       SkScalar downScale = maxTextureSize / SkMaxScalar(scaledSize.width(), scaledSize.height());

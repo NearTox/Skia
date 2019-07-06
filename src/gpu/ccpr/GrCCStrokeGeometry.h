@@ -63,7 +63,7 @@ class GrCCStrokeGeometry {
 
     kEndContour  // Instructs the iterator to advance its internal point and normal ptrs.
   };
-  static bool IsInternalJoinVerb(Verb verb) noexcept;
+  static bool IsInternalJoinVerb(Verb verb);
 
   // Some verbs require additional parameters(s).
   union Parameter {
@@ -75,19 +75,19 @@ class GrCCStrokeGeometry {
     float fConicWeight;  // Round joins only.
   };
 
-  const SkTArray<Verb, true>& verbs() const noexcept {
+  const SkTArray<Verb, true>& verbs() const {
     SkASSERT(!fInsideContour);
     return fVerbs;
   }
-  const SkTArray<Parameter, true>& params() const noexcept {
+  const SkTArray<Parameter, true>& params() const {
     SkASSERT(!fInsideContour);
     return fParams;
   }
-  const SkTArray<SkPoint, true>& points() const noexcept {
+  const SkTArray<SkPoint, true>& points() const {
     SkASSERT(!fInsideContour);
     return fPoints;
   }
-  const SkTArray<SkVector, true>& normals() const noexcept {
+  const SkTArray<SkVector, true>& normals() const {
     SkASSERT(!fInsideContour);
     return fNormals;
   }
@@ -98,7 +98,7 @@ class GrCCStrokeGeometry {
     int fTriangles;
     int fConics;
 
-    InstanceTallies operator+(const InstanceTallies&) const noexcept;
+    InstanceTallies operator+(const InstanceTallies&) const;
   };
 
   void beginPath(const SkStrokeRec&, float strokeDevWidth, InstanceTallies*);
@@ -163,7 +163,7 @@ class GrCCStrokeGeometry {
 };
 
 inline GrCCStrokeGeometry::InstanceTallies GrCCStrokeGeometry::InstanceTallies::operator+(
-    const InstanceTallies& t) const noexcept {
+    const InstanceTallies& t) const {
   InstanceTallies ret;
   for (int i = 0; i <= kMaxNumLinearSegmentsLog2; ++i) {
     ret.fStrokes[i] = fStrokes[i] + t.fStrokes[i];
@@ -173,7 +173,7 @@ inline GrCCStrokeGeometry::InstanceTallies GrCCStrokeGeometry::InstanceTallies::
   return ret;
 }
 
-inline bool GrCCStrokeGeometry::IsInternalJoinVerb(Verb verb) noexcept {
+inline bool GrCCStrokeGeometry::IsInternalJoinVerb(Verb verb) {
   switch (verb) {
     case Verb::kInternalBevelJoin:
     case Verb::kInternalRoundJoin: return true;

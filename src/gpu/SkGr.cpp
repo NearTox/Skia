@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/SkGr.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColorFilter.h"
 #include "include/core/SkData.h"
@@ -34,6 +33,7 @@
 #include "src/gpu/GrProxyProvider.h"
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrXferProcessor.h"
+#include "src/gpu/SkGr.h"
 #include "src/gpu/effects/GrBicubicEffect.h"
 #include "src/gpu/effects/GrPorterDuffXferProcessor.h"
 #include "src/gpu/effects/GrSkSLFP.h"
@@ -94,7 +94,7 @@ GrSurfaceDesc GrImageInfoToSurfaceDesc(const SkImageInfo& info) {
   return desc;
 }
 
-void GrMakeKeyFromImageID(GrUniqueKey* key, uint32_t imageID, const SkIRect& imageBounds) noexcept {
+void GrMakeKeyFromImageID(GrUniqueKey* key, uint32_t imageID, const SkIRect& imageBounds) {
   SkASSERT(key);
   SkASSERT(imageID);
   SkASSERT(!imageBounds.isEmpty());
@@ -113,7 +113,7 @@ void GrInstallBitmapUniqueKeyInvalidator(
     const GrUniqueKey& key, uint32_t contextUniqueID, SkPixelRef* pixelRef) {
   class Invalidator : public SkPixelRef::GenIDChangeListener {
    public:
-    explicit Invalidator(const GrUniqueKey& key, uint32_t contextUniqueID) noexcept
+    explicit Invalidator(const GrUniqueKey& key, uint32_t contextUniqueID)
         : fMsg(key, contextUniqueID) {}
 
    private:
@@ -186,7 +186,7 @@ sk_sp<GrTextureProxy> GrMakeCachedBitmapProxy(
   return GrMakeCachedImageProxy(proxyProvider, std::move(image), fit);
 }
 
-static void create_unique_key_for_image(const SkImage* image, GrUniqueKey* result) noexcept {
+static void create_unique_key_for_image(const SkImage* image, GrUniqueKey* result) {
   if (!image) {
     result->reset();  // will be invalid
     return;
@@ -251,7 +251,7 @@ SkColor4f SkColor4fPrepForDst(SkColor4f color, const GrColorSpaceInfo& colorSpac
 
 ///////////////////////////////////////////////////////////////////////////////
 
-GrPixelConfig SkColorType2GrPixelConfig(const SkColorType type) noexcept {
+GrPixelConfig SkColorType2GrPixelConfig(const SkColorType type) {
   switch (type) {
     case kUnknown_SkColorType: return kUnknown_GrPixelConfig;
     case kAlpha_8_SkColorType: return kAlpha_8_GrPixelConfig;
@@ -271,11 +271,11 @@ GrPixelConfig SkColorType2GrPixelConfig(const SkColorType type) noexcept {
   return kUnknown_GrPixelConfig;
 }
 
-GrPixelConfig SkImageInfo2GrPixelConfig(const SkImageInfo& info) noexcept {
+GrPixelConfig SkImageInfo2GrPixelConfig(const SkImageInfo& info) {
   return SkColorType2GrPixelConfig(info.colorType());
 }
 
-bool GrPixelConfigToColorType(GrPixelConfig config, SkColorType* ctOut) noexcept {
+bool GrPixelConfigToColorType(GrPixelConfig config, SkColorType* ctOut) {
   SkColorType ct = GrColorTypeToSkColorType(GrPixelConfigToColorType(config));
   if (kUnknown_SkColorType != ct) {
     if (ctOut) {
@@ -288,12 +288,12 @@ bool GrPixelConfigToColorType(GrPixelConfig config, SkColorType* ctOut) noexcept
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-static constexpr inline bool blend_requires_shader(const SkBlendMode mode) noexcept {
+static inline bool blend_requires_shader(const SkBlendMode mode) {
   return SkBlendMode::kDst != mode;
 }
 
 #ifndef SK_IGNORE_GPU_DITHER
-static inline int32_t dither_range_type_for_config(GrPixelConfig dstConfig) noexcept {
+static inline int32_t dither_range_type_for_config(GrPixelConfig dstConfig) {
   switch (dstConfig) {
     case kGray_8_GrPixelConfig:
     case kGray_8_as_Lum_GrPixelConfig:
@@ -538,7 +538,7 @@ bool SkPaintToGrPaintWithTexture(
 
 GrSamplerState::Filter GrSkFilterQualityToGrFilterMode(
     SkFilterQuality paintFilterQuality, const SkMatrix& viewM, const SkMatrix& localM,
-    bool sharpenMipmappedTextures, bool* doBicubic) noexcept {
+    bool sharpenMipmappedTextures, bool* doBicubic) {
   *doBicubic = false;
   GrSamplerState::Filter textureFilterMode;
   switch (paintFilterQuality) {

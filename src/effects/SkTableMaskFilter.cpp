@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "include/effects/SkTableMaskFilter.h"
 #include "include/core/SkString.h"
+#include "include/effects/SkTableMaskFilter.h"
 #include "include/private/SkFixed.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"

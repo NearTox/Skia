@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkPicturePlayback.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkRSXform.h"
 #include "include/core/SkTextBlob.h"
@@ -16,6 +15,7 @@
 #include "src/core/SkFontPriv.h"
 #include "src/core/SkPaintPriv.h"
 #include "src/core/SkPictureData.h"
+#include "src/core/SkPicturePlayback.h"
 #include "src/core/SkPictureRecord.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkSafeMath.h"

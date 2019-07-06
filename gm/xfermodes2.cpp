@@ -5,8 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include <stdint.h>
-#include <string.h>
 #include "gm/gm.h"
 #include "include/core/SkBitmap.h"
 #include "include/core/SkBlendMode.h"
@@ -26,6 +24,8 @@
 #include "include/core/SkTypeface.h"
 #include "include/utils/SkTextUtils.h"
 #include "tools/ToolUtils.h"
+#include <stdint.h>
+#include <string.h>
 
 namespace skiagm {
 

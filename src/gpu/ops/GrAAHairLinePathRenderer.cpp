@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/ops/GrAAHairLinePathRenderer.h"
 #include "include/core/SkPoint3.h"
 #include "include/private/SkTemplates.h"
 #include "src/core/SkGeometry.h"
@@ -25,6 +24,7 @@
 #include "src/gpu/GrShape.h"
 #include "src/gpu/GrStyle.h"
 #include "src/gpu/effects/GrBezierEffect.h"
+#include "src/gpu/ops/GrAAHairLinePathRenderer.h"
 #include "src/gpu/ops/GrMeshDrawOp.h"
 #include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 
@@ -98,7 +98,7 @@ static sk_sp<const GrBuffer> get_lines_index_buffer(GrResourceProvider* resource
 }
 
 // Takes 178th time of logf on Z600 / VC2010
-static constexpr int get_float_exp(float x) noexcept {
+static int get_float_exp(float x) {
   GR_STATIC_ASSERT(sizeof(int) == sizeof(float));
 #ifdef SK_DEBUG
   static bool tested;
@@ -126,7 +126,7 @@ static constexpr int get_float_exp(float x) noexcept {
 // found along the curve segment it will return 1 and
 // dst[0] is the original conic. If it returns 2 the dst[0]
 // and dst[1] are the two new conics.
-static int split_conic(const SkPoint src[3], SkConic dst[2], const SkScalar weight) noexcept {
+static int split_conic(const SkPoint src[3], SkConic dst[2], const SkScalar weight) {
   SkScalar t = SkFindQuadMaxCurvature(src);
   if (t == 0 || t == 1) {
     if (dst) {
@@ -164,7 +164,7 @@ static int chop_conic(const SkPoint src[3], SkConic dst[4], const SkScalar weigh
 // returns 0 if quad/conic is degen or close to it
 // in this case approx the path with lines
 // otherwise returns 1
-static int is_degen_quad_or_conic(const SkPoint p[3], SkScalar* dsqd) noexcept {
+static int is_degen_quad_or_conic(const SkPoint p[3], SkScalar* dsqd) {
   static const SkScalar gDegenerateToLineTol = GrPathUtils::kDefaultTolerance;
   static const SkScalar gDegenerateToLineTolSqd = gDegenerateToLineTol * gDegenerateToLineTol;
 
@@ -184,14 +184,14 @@ static int is_degen_quad_or_conic(const SkPoint p[3], SkScalar* dsqd) noexcept {
   return 0;
 }
 
-static int is_degen_quad_or_conic(const SkPoint p[3]) noexcept {
+static int is_degen_quad_or_conic(const SkPoint p[3]) {
   SkScalar dsqd;
   return is_degen_quad_or_conic(p, &dsqd);
 }
 
 // we subdivide the quads to avoid huge overfill
 // if it returns -1 then should be drawn as lines
-static int num_quad_subdivs(const SkPoint p[3]) noexcept {
+static int num_quad_subdivs(const SkPoint p[3]) {
   SkScalar dsqd;
   if (is_degen_quad_or_conic(p, &dsqd)) {
     return -1;
@@ -251,8 +251,7 @@ static int gather_lines_and_quads(
   // Adds a quad that has already been chopped to the list and checks for quads that are close to
   // lines. Also does a bounding box check. It takes points that are in src space and device
   // space. The src points are only required if the view matrix has perspective.
-  auto addChoppedQuad = [&](
-      const SkPoint srcPts[3], const SkPoint devPts[4], bool isContourStart) noexcept {
+  auto addChoppedQuad = [&](const SkPoint srcPts[3], const SkPoint devPts[4], bool isContourStart) {
     SkRect bounds;
     SkIRect ibounds;
     bounds.setBounds(devPts, 3);
@@ -472,7 +471,7 @@ GR_STATIC_ASSERT(sizeof(BezierVertex) == 3 * sizeof(SkPoint));
 
 static void intersect_lines(
     const SkPoint& ptA, const SkVector& normA, const SkPoint& ptB, const SkVector& normB,
-    SkPoint* result) noexcept {
+    SkPoint* result) {
   SkScalar lineAW = -normA.dot(ptA);
   SkScalar lineBW = -normB.dot(ptB);
 
@@ -786,7 +785,7 @@ class AAHairlineOp final : public GrMeshDrawOp {
     this->setTransformedBounds(path.getBounds(), viewMatrix, HasAABloat::kYes, IsZeroArea::kYes);
   }
 
-  const char* name() const noexcept override { return "AAHairlineOp"; }
+  const char* name() const override { return "AAHairlineOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override { fHelper.visitProxies(func); }
 
@@ -802,9 +801,7 @@ class AAHairlineOp final : public GrMeshDrawOp {
   }
 #endif
 
-  FixedFunctionFlags fixedFunctionFlags() const noexcept override {
-    return fHelper.fixedFunctionFlags();
-  }
+  FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
   GrProcessorSet::Analysis finalize(
       const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType,
@@ -859,9 +856,9 @@ class AAHairlineOp final : public GrMeshDrawOp {
     return CombineResult::kMerged;
   }
 
-  const SkPMColor4f& color() const noexcept { return fColor; }
-  uint8_t coverage() const noexcept { return fCoverage; }
-  const SkMatrix& viewMatrix() const noexcept { return fPaths[0].fViewMatrix; }
+  const SkPMColor4f& color() const { return fColor; }
+  uint8_t coverage() const { return fCoverage; }
+  const SkMatrix& viewMatrix() const { return fPaths[0].fViewMatrix; }
 
   struct PathData {
     SkMatrix fViewMatrix;

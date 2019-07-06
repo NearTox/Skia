@@ -75,7 +75,7 @@ GrGLProgramBuilder::GrGLProgramBuilder(
       fVertexStride(0),
       fInstanceStride(0) {}
 
-const GrCaps* GrGLProgramBuilder::caps() const noexcept { return fGpu->caps(); }
+const GrCaps* GrGLProgramBuilder::caps() const { return fGpu->caps(); }
 
 bool GrGLProgramBuilder::compileAndAttachShaders(
     const SkSL::String& glsl, GrGLuint programId, GrGLenum type, SkTDArray<GrGLuint>* shaderIds,

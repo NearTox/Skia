@@ -13,8 +13,8 @@
 
 #ifdef SK_BUILD_FOR_WIN
 
-#include <ole2.h>
 #include "src/core/SkLeanWindows.h"
+#  include <ole2.h>
 
 class SkStream;
 class SkWStream;

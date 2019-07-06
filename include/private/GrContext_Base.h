@@ -26,17 +26,16 @@ class SK_API GrContext_Base : public SkRefCnt {
   /*
    * The 3D API backing this context
    */
-  GrBackendApi backend() const noexcept { return fBackend; }
+  GrBackendApi backend() const { return fBackend; }
 
   // Provides access to functions that aren't part of the public API.
-  GrBaseContextPriv priv() noexcept;
-  const GrBaseContextPriv priv() const noexcept;
+  GrBaseContextPriv priv();
+  const GrBaseContextPriv priv() const;
 
  protected:
   friend class GrBaseContextPriv;  // for hidden functions
 
-  GrContext_Base(
-      GrBackendApi backend, const GrContextOptions& options, uint32_t contextID) noexcept;
+  GrContext_Base(GrBackendApi backend, const GrContextOptions& options, uint32_t contextID);
 
   virtual bool init(sk_sp<const GrCaps>, sk_sp<GrSkSLFPFactoryCache>);
 
@@ -47,21 +46,21 @@ class SK_API GrContext_Base : public SkRefCnt {
    * a third thread with a direct context, then all three contexts will report the same id.
    * It is an error for an image to be used with contexts that report different ids.
    */
-  uint32_t contextID() const noexcept { return fContextID; }
+  uint32_t contextID() const { return fContextID; }
 
-  bool matches(GrContext_Base* candidate) const noexcept {
+  bool matches(GrContext_Base* candidate) const {
     return candidate->contextID() == this->contextID();
   }
 
   /*
    * The options in effect for this context
    */
-  const GrContextOptions& options() const noexcept { return fOptions; }
+  const GrContextOptions& options() const { return fOptions; }
 
-  const GrCaps* caps() const noexcept;
-  sk_sp<const GrCaps> refCaps() const noexcept;
+  const GrCaps* caps() const;
+  sk_sp<const GrCaps> refCaps() const;
 
-  sk_sp<GrSkSLFPFactoryCache> fpFactoryCache() noexcept;
+  sk_sp<GrSkSLFPFactoryCache> fpFactoryCache();
 
   virtual GrImageContext* asImageContext() { return nullptr; }
   virtual GrRecordingContext* asRecordingContext() { return nullptr; }

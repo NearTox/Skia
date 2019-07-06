@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #include "include/gpu/GrRenderTarget.h"
 #include "src/gpu/GrRenderTargetPriv.h"
 #include "src/gpu/GrShaderCaps.h"
 #include "src/gpu/gl/GrGLGpu.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #include "src/gpu/glsl/GrGLSLProgramBuilder.h"
 #include "src/gpu/glsl/GrGLSLUniformHandler.h"
 #include "src/gpu/glsl/GrGLSLVarying.h"

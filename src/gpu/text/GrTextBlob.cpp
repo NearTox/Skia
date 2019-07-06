@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/text/GrTextBlob.h"
 #include "include/core/SkColorFilter.h"
 #include "include/gpu/GrContext.h"
 #include "src/core/SkMaskFilterBase.h"
@@ -15,12 +14,13 @@
 #include "src/gpu/GrShape.h"
 #include "src/gpu/GrStyle.h"
 #include "src/gpu/ops/GrAtlasTextOp.h"
+#include "src/gpu/text/GrTextBlob.h"
 #include "src/gpu/text/GrTextTarget.h"
 
 #include <new>
 
 template <size_t N>
-static constexpr size_t sk_align(size_t s) noexcept {
+static size_t sk_align(size_t s) {
   return ((s + (N - 1)) / N) * N;
 }
 
@@ -191,7 +191,7 @@ inline std::unique_ptr<GrAtlasTextOp> GrTextBlob::makeOp(
 static void calculate_translation(
     bool applyVM, const SkMatrix& newViewMatrix, SkScalar newX, SkScalar newY,
     const SkMatrix& currentViewMatrix, SkScalar currentX, SkScalar currentY, SkScalar* transX,
-    SkScalar* transY) noexcept {
+    SkScalar* transY) {
   if (applyVM) {
     *transX = newViewMatrix.getTranslateX() + newViewMatrix.getScaleX() * (newX - currentX) +
               newViewMatrix.getSkewX() * (newY - currentY) - currentViewMatrix.getTranslateX();
@@ -355,7 +355,7 @@ std::unique_ptr<GrDrawOp> GrTextBlob::test_makeOp(
       distanceAdjustTable, target);
 }
 
-void GrTextBlob::AssertEqual(const GrTextBlob& l, const GrTextBlob& r) noexcept {
+void GrTextBlob::AssertEqual(const GrTextBlob& l, const GrTextBlob& r) {
   SkASSERT_RELEASE(l.fSize == r.fSize);
 
   SkASSERT_RELEASE(l.fBlurRec.fSigma == r.fBlurRec.fSigma);

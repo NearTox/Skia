@@ -72,7 +72,7 @@ class SK_API SkCanvasStateUtils {
    *
    * @param state The captured state you wish to dispose of.
    */
-  static void ReleaseCanvasState(SkCanvasState* state) noexcept;
+  static void ReleaseCanvasState(SkCanvasState* state);
 };
 
 #endif

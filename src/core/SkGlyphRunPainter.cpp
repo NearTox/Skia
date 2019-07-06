@@ -818,10 +818,10 @@ void GrTextBlob::processDeviceFallback(
   }
 }
 
-#if GR_TEST_UTILS
+#  if GR_TEST_UTILS
 
-#include "src/gpu/GrRecordingContextPriv.h"
-#include "src/gpu/GrRenderTargetContext.h"
+#    include "src/gpu/GrRecordingContextPriv.h"
+#    include "src/gpu/GrRenderTargetContext.h"
 
 std::unique_ptr<GrDrawOp> GrTextContext::createOp_TestingOnly(
     GrRecordingContext* context, GrTextContext* textContext, GrRenderTargetContext* rtc,
@@ -861,7 +861,7 @@ std::unique_ptr<GrDrawOp> GrTextContext::createOp_TestingOnly(
       textContext->dfAdjustTable(), rtc->textTarget());
 }
 
-#endif  // GR_TEST_UTILS
+#  endif  // GR_TEST_UTILS
 #endif  // SK_SUPPORT_GPU
 
 SkGlyphRunListPainter::ScopedBuffers::ScopedBuffers(SkGlyphRunListPainter* painter, int size)

@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/gl/GrGLRenderTarget.h"
 #include "include/core/SkTraceMemoryDump.h"
 #include "include/gpu/GrContext.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrGpuResourcePriv.h"
 #include "src/gpu/GrRenderTargetPriv.h"
 #include "src/gpu/gl/GrGLGpu.h"
+#include "src/gpu/gl/GrGLRenderTarget.h"
 #include "src/gpu/gl/GrGLUtil.h"
 
 #define GPUGL static_cast<GrGLGpu*>(this->getGpu())
@@ -35,7 +35,7 @@ GrGLRenderTarget::GrGLRenderTarget(
   this->init(desc, format, idDesc);
 }
 
-inline void GrGLRenderTarget::setFlags(const GrGLCaps& glCaps, const IDDesc& idDesc) noexcept {
+inline void GrGLRenderTarget::setFlags(const GrGLCaps& glCaps, const IDDesc& idDesc) {
   if (idDesc.fIsMixedSampled) {
     SkASSERT(glCaps.usesMixedSamples() && idDesc.fRTFBOID);  // FBO 0 can't be mixed sampled.
     this->setHasMixedSamples();
@@ -176,7 +176,7 @@ void GrGLRenderTarget::onAbandon() {
   INHERITED::onAbandon();
 }
 
-GrGLGpu* GrGLRenderTarget::getGLGpu() const noexcept {
+GrGLGpu* GrGLRenderTarget::getGLGpu() const {
   SkASSERT(!this->wasDestroyed());
   return static_cast<GrGLGpu*>(this->getGpu());
 }
@@ -226,7 +226,7 @@ void GrGLRenderTarget::dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) 
   }
 }
 
-int GrGLRenderTarget::msaaSamples() const noexcept {
+int GrGLRenderTarget::msaaSamples() const {
   if (fTexFBOID == kUnresolvableFBOID || fTexFBOID != fRTFBOID) {
     // If the render target's FBO is external (fTexFBOID == kUnresolvableFBOID), or if we own
     // the render target's FBO (fTexFBOID == fRTFBOID) then we use the provided sample count.
@@ -238,7 +238,7 @@ int GrGLRenderTarget::msaaSamples() const noexcept {
   return 0;
 }
 
-int GrGLRenderTarget::totalSamples() const noexcept {
+int GrGLRenderTarget::totalSamples() const {
   int total_samples = this->msaaSamples();
 
   if (fTexFBOID != kUnresolvableFBOID) {

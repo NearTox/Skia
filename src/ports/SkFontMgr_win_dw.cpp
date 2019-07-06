@@ -917,7 +917,7 @@ sk_sp<SkTypeface> SkFontMgr_DirectWrite::onMakeFromStreamArgs(
         continue;
       }
 
-#if defined(NTDDI_WIN10_RS3) && NTDDI_VERSION >= NTDDI_WIN10_RS3
+#  if defined(NTDDI_WIN10_RS3) && NTDDI_VERSION >= NTDDI_WIN10_RS3
 
       SkTScopedComPtr<IDWriteFontFace5> fontFace5;
       if (SUCCEEDED(fontFace->QueryInterface(&fontFace5)) && fontFace5->HasVariations()) {
@@ -946,7 +946,7 @@ sk_sp<SkTypeface> SkFontMgr_DirectWrite::onMakeFromStreamArgs(
         HRN(fontFace5_Out->QueryInterface(&fontFace));
       }
 
-#endif
+#  endif
 
       return DWriteFontTypeface::Make(
           fFactory.get(), fontFace.get(), font.get(), fontFamily.get(),
@@ -1138,7 +1138,7 @@ SK_API sk_sp<SkFontMgr> SkFontMgr_New_DirectWrite(
       defaultFamilyNameLen);
 }
 
-#include "include/ports/SkFontMgr_indirect.h"
+#  include "include/ports/SkFontMgr_indirect.h"
 SK_API sk_sp<SkFontMgr> SkFontMgr_New_DirectWriteRenderer(sk_sp<SkRemotableFontMgr> proxy) {
   sk_sp<SkFontMgr> impl(SkFontMgr_New_DirectWrite());
   if (!impl) {

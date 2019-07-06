@@ -9,18 +9,18 @@
 
 #if !defined(SK_BUILD_FOR_GOOGLE3)
 
-#include "gm/gm.h"
-#include "include/core/SkBitmap.h"
-#include "include/core/SkCanvas.h"
-#include "include/core/SkColor.h"
-#include "include/core/SkData.h"
-#include "include/core/SkImage.h"
-#include "include/core/SkImageInfo.h"
-#include "include/core/SkRect.h"
-#include "include/core/SkRefCnt.h"
-#include "include/core/SkSize.h"
-#include "include/core/SkString.h"
-#include "third_party/etc1/etc1.h"
+#  include "gm/gm.h"
+#  include "include/core/SkBitmap.h"
+#  include "include/core/SkCanvas.h"
+#  include "include/core/SkColor.h"
+#  include "include/core/SkData.h"
+#  include "include/core/SkImage.h"
+#  include "include/core/SkImageInfo.h"
+#  include "include/core/SkRect.h"
+#  include "include/core/SkRefCnt.h"
+#  include "include/core/SkSize.h"
+#  include "include/core/SkString.h"
+#  include "third_party/etc1/etc1.h"
 
 class GrContext;
 class GrRenderTargetContext;

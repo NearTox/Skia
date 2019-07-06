@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "include/gpu/GrSurface.h"
 #include "include/gpu/GrContext.h"
 #include "include/gpu/GrRenderTarget.h"
+#include "include/gpu/GrSurface.h"
 #include "include/gpu/GrTexture.h"
 #include "include/private/GrOpList.h"
 #include "src/gpu/GrResourceProvider.h"

@@ -15,8 +15,8 @@
 template <typename T>
 class SkBlockComRef : public T {
  private:
-  virtual ULONG STDMETHODCALLTYPE AddRef(void) noexcept = 0;
-  virtual ULONG STDMETHODCALLTYPE Release(void) noexcept = 0;
+  virtual ULONG STDMETHODCALLTYPE AddRef(void) = 0;
+  virtual ULONG STDMETHODCALLTYPE Release(void) = 0;
   virtual ~SkBlockComRef() {}
 };
 
@@ -40,20 +40,20 @@ class SkTScopedComPtr {
   T* fPtr;
 
  public:
-  constexpr SkTScopedComPtr() noexcept : fPtr(nullptr) {}
-  constexpr SkTScopedComPtr(std::nullptr_t) noexcept : fPtr(nullptr) {}
-  constexpr explicit SkTScopedComPtr(T* ptr) noexcept : fPtr(ptr) {}
-  constexpr SkTScopedComPtr(SkTScopedComPtr&& that) noexcept : fPtr(that.release()) {}
+  constexpr SkTScopedComPtr() : fPtr(nullptr) {}
+  constexpr SkTScopedComPtr(std::nullptr_t) : fPtr(nullptr) {}
+  explicit SkTScopedComPtr(T* ptr) : fPtr(ptr) {}
+  SkTScopedComPtr(SkTScopedComPtr&& that) : fPtr(that.release()) {}
   SkTScopedComPtr(const SkTScopedComPtr&) = delete;
 
   ~SkTScopedComPtr() { this->reset(); }
 
-  SkTScopedComPtr& operator=(SkTScopedComPtr&& that) noexcept(noexcept(this->reset())) {
+  SkTScopedComPtr& operator=(SkTScopedComPtr&& that) {
     this->reset(that.release());
     return *this;
   }
   SkTScopedComPtr& operator=(const SkTScopedComPtr&) = delete;
-  SkTScopedComPtr& operator=(std::nullptr_t) noexcept(noexcept(this->reset())) {
+  SkTScopedComPtr& operator=(std::nullptr_t) {
     this->reset();
     return *this;
   }
@@ -63,9 +63,9 @@ class SkTScopedComPtr {
     return *fPtr;
   }
 
-  explicit operator bool() const noexcept { return fPtr != nullptr; }
+  explicit operator bool() const { return fPtr != nullptr; }
 
-  SkBlockComRef<T>* operator->() const noexcept { return static_cast<SkBlockComRef<T>*>(fPtr); }
+  SkBlockComRef<T>* operator->() const { return static_cast<SkBlockComRef<T>*>(fPtr); }
 
   /**
    * Returns the address of the underlying pointer.
@@ -73,27 +73,27 @@ class SkTScopedComPtr {
    * Must only be used on instances currently pointing to NULL,
    * and only to initialize the instance.
    */
-  T** operator&() noexcept {
+  T** operator&() {
     SkASSERT(fPtr == nullptr);
     return &fPtr;
   }
 
-  T* get() const noexcept { return fPtr; }
+  T* get() const { return fPtr; }
 
-  void reset(T* ptr = nullptr) noexcept(noexcept(fPtr->Release())) {
+  void reset(T* ptr = nullptr) {
     if (fPtr) {
       fPtr->Release();
     }
     fPtr = ptr;
   }
 
-  void swap(SkTScopedComPtr<T>& that) noexcept {
+  void swap(SkTScopedComPtr<T>& that) {
     T* temp = this->fPtr;
     this->fPtr = that.fPtr;
     that.fPtr = temp;
   }
 
-  constexpr T* release() noexcept {
+  T* release() {
     T* temp = this->fPtr;
     this->fPtr = nullptr;
     return temp;

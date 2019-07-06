@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "src/shaders/SkColorFilterShader.h"
 #include "include/core/SkShader.h"
 #include "include/core/SkString.h"
 #include "src/core/SkArenaAlloc.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
+#include "src/shaders/SkColorFilterShader.h"
 
 #if SK_SUPPORT_GPU
 #include "src/gpu/GrFragmentProcessor.h"

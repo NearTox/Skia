@@ -16,7 +16,7 @@
 
 class SkDescriptor : SkNoncopyable {
  public:
-  static constexpr size_t ComputeOverhead(int entryCount) noexcept {
+  static size_t ComputeOverhead(int entryCount) {
     SkASSERT(entryCount >= 0);
     return sizeof(SkDescriptor) + entryCount * sizeof(Entry);
   }
@@ -25,31 +25,31 @@ class SkDescriptor : SkNoncopyable {
 
   // Ensure the unsized delete is called.
   void operator delete(void* p);
-  void init() noexcept {
+  void init() {
     fLength = sizeof(SkDescriptor);
     fCount = 0;
   }
-  uint32_t getLength() const noexcept { return fLength; }
-  void* addEntry(uint32_t tag, size_t length, const void* data = nullptr) noexcept;
+  uint32_t getLength() const { return fLength; }
+  void* addEntry(uint32_t tag, size_t length, const void* data = nullptr);
   void computeChecksum();
 
   // Assumes that getLength <= capacity of this SkDescriptor.
-  bool isValid() const noexcept;
+  bool isValid() const;
 
 #ifdef SK_DEBUG
   void assertChecksum() const { SkASSERT(SkDescriptor::ComputeChecksum(this) == fChecksum); }
 #endif
 
-  const void* findEntry(uint32_t tag, uint32_t* length) const noexcept;
+  const void* findEntry(uint32_t tag, uint32_t* length) const;
 
   std::unique_ptr<SkDescriptor> copy() const;
 
   // This assumes that all memory added has a length that is a multiple of 4. This is checked
   // by the assert in addEntry.
-  bool operator==(const SkDescriptor& other) const noexcept;
-  bool operator!=(const SkDescriptor& other) const noexcept { return !(*this == other); }
+  bool operator==(const SkDescriptor& other) const;
+  bool operator!=(const SkDescriptor& other) const { return !(*this == other); }
 
-  uint32_t getChecksum() const noexcept { return fChecksum; }
+  uint32_t getChecksum() const { return fChecksum; }
 
   struct Entry {
     uint32_t fTag;
@@ -86,13 +86,13 @@ class SkAutoDescriptor {
 
   void reset(size_t size);
   void reset(const SkDescriptor& desc);
-  SkDescriptor* getDesc() const noexcept {
+  SkDescriptor* getDesc() const {
     SkASSERT(fDesc);
     return fDesc;
   }
 
  private:
-  void free() noexcept;
+  void free();
   static constexpr size_t kStorageSize =
       sizeof(SkDescriptor) + sizeof(SkDescriptor::Entry) + sizeof(SkScalerContextRec)  // for rec
       + sizeof(SkDescriptor::Entry) + sizeof(void*)  // for typeface

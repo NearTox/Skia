@@ -9,17 +9,17 @@
 
 #include <stdlib.h>
 
-static constexpr inline bool is_between(int c, int min, int max) noexcept {
+static inline bool is_between(int c, int min, int max) {
   return (unsigned)(c - min) <= (unsigned)(max - min);
 }
 
-static constexpr inline bool is_ws(int c) noexcept { return is_between(c, 1, 32); }
+static inline bool is_ws(int c) { return is_between(c, 1, 32); }
 
-static constexpr inline bool is_digit(int c) noexcept { return is_between(c, '0', '9'); }
+static inline bool is_digit(int c) { return is_between(c, '0', '9'); }
 
-static constexpr inline bool is_sep(int c) noexcept { return is_ws(c) || c == ',' || c == ';'; }
+static inline bool is_sep(int c) { return is_ws(c) || c == ',' || c == ';'; }
 
-static int to_hex(int c) noexcept {
+static int to_hex(int c) {
   if (is_digit(c)) return c - '0';
 
   c |= 0x20;  // make us lower-case
@@ -29,21 +29,21 @@ static int to_hex(int c) noexcept {
     return -1;
 }
 
-static inline bool is_hex(int c) noexcept { return to_hex(c) >= 0; }
+static inline bool is_hex(int c) { return to_hex(c) >= 0; }
 
-static const char* skip_ws(const char str[]) noexcept {
+static const char* skip_ws(const char str[]) {
   SkASSERT(str);
   while (is_ws(*str)) str++;
   return str;
 }
 
-static const char* skip_sep(const char str[]) noexcept {
+static const char* skip_sep(const char str[]) {
   SkASSERT(str);
   while (is_sep(*str)) str++;
   return str;
 }
 
-int SkParse::Count(const char str[]) noexcept {
+int SkParse::Count(const char str[]) {
   char c;
   int count = 0;
   goto skipLeading;
@@ -61,7 +61,7 @@ goHome:
   return count;
 }
 
-int SkParse::Count(const char str[], char separator) noexcept {
+int SkParse::Count(const char str[], char separator) {
   char c;
   int count = 0;
   goto skipLeading;
@@ -79,7 +79,7 @@ goHome:
   return count;
 }
 
-const char* SkParse::FindHex(const char str[], uint32_t* value) noexcept {
+const char* SkParse::FindHex(const char str[], uint32_t* value) {
   SkASSERT(str);
   str = skip_ws(str);
 
@@ -102,7 +102,7 @@ const char* SkParse::FindHex(const char str[], uint32_t* value) noexcept {
   return nullptr;
 }
 
-const char* SkParse::FindS32(const char str[], int32_t* value) noexcept {
+const char* SkParse::FindS32(const char str[], int32_t* value) {
   SkASSERT(str);
   str = skip_ws(str);
 
@@ -123,7 +123,7 @@ const char* SkParse::FindS32(const char str[], int32_t* value) noexcept {
   return str;
 }
 
-const char* SkParse::FindMSec(const char str[], SkMSec* value) noexcept {
+const char* SkParse::FindMSec(const char str[], SkMSec* value) {
   SkASSERT(str);
   str = skip_ws(str);
 
@@ -154,7 +154,7 @@ const char* SkParse::FindMSec(const char str[], SkMSec* value) noexcept {
   return str;
 }
 
-const char* SkParse::FindScalar(const char str[], SkScalar* value) noexcept {
+const char* SkParse::FindScalar(const char str[], SkScalar* value) {
   SkASSERT(str);
   str = skip_ws(str);
 
@@ -169,7 +169,7 @@ const char* SkParse::FindScalar(const char str[], SkScalar* value) noexcept {
   return stop;
 }
 
-const char* SkParse::FindScalars(const char str[], SkScalar value[], int count) noexcept {
+const char* SkParse::FindScalars(const char str[], SkScalar value[], int count) {
   SkASSERT(count >= 0);
 
   if (count > 0) {
@@ -185,13 +185,13 @@ const char* SkParse::FindScalars(const char str[], SkScalar value[], int count) 
   return str;
 }
 
-static bool lookup_str(const char str[], const char** table, int count) noexcept {
+static bool lookup_str(const char str[], const char** table, int count) {
   while (--count >= 0)
     if (!strcmp(str, table[count])) return true;
   return false;
 }
 
-bool SkParse::FindBool(const char str[], bool* value) noexcept {
+bool SkParse::FindBool(const char str[], bool* value) {
   static const char* gYes[] = {"yes", "1", "true"};
   static const char* gNo[] = {"no", "0", "false"};
 
@@ -205,7 +205,7 @@ bool SkParse::FindBool(const char str[], bool* value) noexcept {
   return false;
 }
 
-int SkParse::FindList(const char target[], const char list[]) noexcept {
+int SkParse::FindList(const char target[], const char list[]) {
   size_t len = strlen(target);
   int index = 0;
 

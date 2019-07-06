@@ -22,21 +22,19 @@ class SkSampler : public SkNoncopyable {
   /**
    *  Update the sampler to sample every sampleY'th row.
    */
-  void setSampleY(int sampleY) noexcept { fSampleY = sampleY; }
+  void setSampleY(int sampleY) { fSampleY = sampleY; }
 
   /**
    *  Retrieve the value set for sampleY.
    */
-  int sampleY() const noexcept { return fSampleY; }
+  int sampleY() const { return fSampleY; }
 
   /**
    *  Based on fSampleY, return whether this row belongs in the output.
    *
    *  @param row Row of the image, starting with the first row in the subset.
    */
-  bool rowNeeded(int row) const noexcept {
-    return (row - get_start_coord(fSampleY)) % fSampleY == 0;
-  }
+  bool rowNeeded(int row) const { return (row - get_start_coord(fSampleY)) % fSampleY == 0; }
 
   /**
    * Fill the remainder of the destination with 0.

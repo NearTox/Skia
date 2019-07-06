@@ -21,9 +21,9 @@ class GrSurfaceProxyPriv {
   // The refs on proxies and their backing GrSurfaces shift around based on whether the proxy
   // is instantiated or not. Additionally, the lifetime of a proxy (and a GrSurface) also
   // depends on the read and write refs (So this method can validly return 0).
-  int32_t getProxyRefCnt() const noexcept { return fProxy->getProxyRefCnt(); }
+  int32_t getProxyRefCnt() const { return fProxy->getProxyRefCnt(); }
 
-  int32_t getTotalRefs() const noexcept { return fProxy->getTotalRefs(); }
+  int32_t getTotalRefs() const { return fProxy->getTotalRefs(); }
 
   void computeScratchKey(GrScratchKey* key) const { return fProxy->computeScratchKey(key); }
 
@@ -34,23 +34,23 @@ class GrSurfaceProxyPriv {
   }
 
   // Assign this proxy the provided GrSurface as its backing surface
-  void assign(sk_sp<GrSurface> surface) noexcept { fProxy->assign(std::move(surface)); }
+  void assign(sk_sp<GrSurface> surface) { fProxy->assign(std::move(surface)); }
 
   // Don't abuse this call!!!!!!!
-  bool isExact() const noexcept { return SkBackingFit::kExact == fProxy->fFit; }
+  bool isExact() const { return SkBackingFit::kExact == fProxy->fFit; }
 
   // Don't. Just don't.
-  void exactify() noexcept;
+  void exactify();
 
-  void setLazySize(int width, int height) noexcept { fProxy->setLazySize(width, height); }
+  void setLazySize(int width, int height) { fProxy->setLazySize(width, height); }
 
   bool doLazyInstantiation(GrResourceProvider*);
 
-  GrSurfaceProxy::LazyInstantiationType lazyInstantiationType() const noexcept {
+  GrSurfaceProxy::LazyInstantiationType lazyInstantiationType() const {
     return fProxy->fLazyInstantiationType;
   }
 
-  bool isSafeToDeinstantiate() const noexcept {
+  bool isSafeToDeinstantiate() const {
     return SkToBool(fProxy->fTarget) && SkToBool(fProxy->fLazyInstantiateCallback) &&
            GrSurfaceProxy::LazyInstantiationType::kDeinstantiate == lazyInstantiationType();
   }
@@ -58,12 +58,12 @@ class GrSurfaceProxyPriv {
   static bool SK_WARN_UNUSED_RESULT
   AttachStencilIfNeeded(GrResourceProvider*, GrSurface*, bool needsStencil);
 
-  bool ignoredByResourceAllocator() const noexcept { return fProxy->ignoredByResourceAllocator(); }
-  void setIgnoredByResourceAllocator() noexcept { fProxy->setIgnoredByResourceAllocator(); }
+  bool ignoredByResourceAllocator() const { return fProxy->ignoredByResourceAllocator(); }
+  void setIgnoredByResourceAllocator() { fProxy->setIgnoredByResourceAllocator(); }
 
  private:
-  constexpr explicit GrSurfaceProxyPriv(GrSurfaceProxy* proxy) noexcept : fProxy(proxy) {}
-  GrSurfaceProxyPriv(const GrSurfaceProxyPriv&) noexcept {}  // unimpl
+  explicit GrSurfaceProxyPriv(GrSurfaceProxy* proxy) : fProxy(proxy) {}
+  GrSurfaceProxyPriv(const GrSurfaceProxyPriv&) {}           // unimpl
   GrSurfaceProxyPriv& operator=(const GrSurfaceProxyPriv&);  // unimpl
 
   // No taking addresses of this type.
@@ -75,9 +75,9 @@ class GrSurfaceProxyPriv {
   friend class GrSurfaceProxy;  // to construct/copy this type.
 };
 
-inline GrSurfaceProxyPriv GrSurfaceProxy::priv() noexcept { return GrSurfaceProxyPriv(this); }
+inline GrSurfaceProxyPriv GrSurfaceProxy::priv() { return GrSurfaceProxyPriv(this); }
 
-inline const GrSurfaceProxyPriv GrSurfaceProxy::priv() const noexcept {
+inline const GrSurfaceProxyPriv GrSurfaceProxy::priv() const {
   return GrSurfaceProxyPriv(const_cast<GrSurfaceProxy*>(this));
 }
 

@@ -26,26 +26,26 @@ struct SkIPoint16 {
    @param y  integer y-axis value of constructed SkIPoint
    @return   SkIPoint16 (x, y)
    */
-  static constexpr SkIPoint16 Make(int x, int y) noexcept { return {SkToS16(x), SkToS16(y)}; }
+  static constexpr SkIPoint16 Make(int x, int y) { return {SkToS16(x), SkToS16(y)}; }
 
   /** Returns x-axis value of SkIPoint16.
 
    @return  fX
    */
-  int16_t x() const noexcept { return fX; }
+  int16_t x() const { return fX; }
 
   /** Returns y-axis value of SkIPoint.
 
    @return  fY
    */
-  int16_t y() const noexcept { return fY; }
+  int16_t y() const { return fY; }
 
   /** Sets fX to x and fY to y.
 
    @param x  new value for fX
    @param y  new value for fY
    */
-  void set(int x, int y) noexcept {
+  void set(int x, int y) {
     fX = SkToS16(x);
     fY = SkToS16(y);
   }

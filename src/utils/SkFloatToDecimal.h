@@ -29,6 +29,6 @@ constexpr unsigned kMaximumSkFloatToDecimalLength = 49;
 
     @return strlen(output)
 */
-unsigned SkFloatToDecimal(float value, char output[kMaximumSkFloatToDecimalLength]) noexcept;
+unsigned SkFloatToDecimal(float value, char output[kMaximumSkFloatToDecimalLength]);
 
 #endif  // SkFloatToDecimal_DEFINED

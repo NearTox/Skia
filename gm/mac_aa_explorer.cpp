@@ -21,9 +21,9 @@
 
 #ifdef SK_BUILD_FOR_MAC
 
-#include "include/core/SkSurface.h"
+#  include "include/core/SkSurface.h"
 
-#import <ApplicationServices/ApplicationServices.h>
+#  import <ApplicationServices/ApplicationServices.h>
 
 static void std_cg_setup(CGContextRef ctx) {
   CGContextSetAllowsFontSubpixelQuantization(ctx, false);

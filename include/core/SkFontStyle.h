@@ -44,19 +44,19 @@ class SK_API SkFontStyle {
     kOblique_Slant,
   };
 
-  constexpr SkFontStyle(int weight, int width, Slant slant) noexcept
+  constexpr SkFontStyle(int weight, int width, Slant slant)
       : fValue(
             (SkTPin<int>(weight, kInvisible_Weight, kExtraBlack_Weight)) +
             (SkTPin<int>(width, kUltraCondensed_Width, kUltraExpanded_Width) << 16) +
             (SkTPin<int>(slant, kUpright_Slant, kOblique_Slant) << 24)) {}
 
-  constexpr SkFontStyle() noexcept : SkFontStyle{kNormal_Weight, kNormal_Width, kUpright_Slant} {}
+  constexpr SkFontStyle() : SkFontStyle{kNormal_Weight, kNormal_Width, kUpright_Slant} {}
 
-  bool operator==(const SkFontStyle& rhs) const noexcept { return fValue == rhs.fValue; }
+  bool operator==(const SkFontStyle& rhs) const { return fValue == rhs.fValue; }
 
-  int weight() const noexcept { return fValue & 0xFFFF; }
-  int width() const noexcept { return (fValue >> 16) & 0xFF; }
-  Slant slant() const noexcept { return (Slant)((fValue >> 24) & 0xFF); }
+  int weight() const { return fValue & 0xFFFF; }
+  int width() const { return (fValue >> 16) & 0xFF; }
+  Slant slant() const { return (Slant)((fValue >> 24) & 0xFF); }
 
   static constexpr SkFontStyle Normal() {
     return SkFontStyle(kNormal_Weight, kNormal_Width, kUpright_Slant);

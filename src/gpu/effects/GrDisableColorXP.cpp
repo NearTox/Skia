@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/effects/GrDisableColorXP.h"
 #include "src/gpu/GrPipeline.h"
 #include "src/gpu/GrProcessor.h"
 #include "src/gpu/GrShaderCaps.h"
+#include "src/gpu/effects/GrDisableColorXP.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #include "src/gpu/glsl/GrGLSLProgramDataManager.h"
 #include "src/gpu/glsl/GrGLSLXferProcessor.h"
@@ -22,7 +22,7 @@ class DisableColorXP : public GrXferProcessor {
   DisableColorXP() : INHERITED(kDisableColorXP_ClassID) {}
 
  private:
-  const char* name() const noexcept override { return "Disable Color"; }
+  const char* name() const override { return "Disable Color"; }
   bool onIsEqual(const GrXferProcessor& xpBase) const override { return true; }
   void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
     return;  // No key.

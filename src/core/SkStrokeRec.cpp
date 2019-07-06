@@ -11,7 +11,7 @@
 // must be < 0, since ==0 means hairline, and >0 means normal stroke
 #define kStrokeRec_FillStyleWidth (-SK_Scalar1)
 
-SkStrokeRec::SkStrokeRec(InitStyle s) noexcept {
+SkStrokeRec::SkStrokeRec(InitStyle s) {
   fResScale = 1;
   fWidth = (kFill_InitStyle == s) ? kStrokeRec_FillStyleWidth : 0;
   fMiterLimit = SkPaintDefaults_MiterLimit;
@@ -20,16 +20,15 @@ SkStrokeRec::SkStrokeRec(InitStyle s) noexcept {
   fStrokeAndFill = false;
 }
 
-SkStrokeRec::SkStrokeRec(const SkPaint& paint, SkScalar resScale) noexcept {
+SkStrokeRec::SkStrokeRec(const SkPaint& paint, SkScalar resScale) {
   this->init(paint, paint.getStyle(), resScale);
 }
 
-SkStrokeRec::SkStrokeRec(
-    const SkPaint& paint, SkPaint::Style styleOverride, SkScalar resScale) noexcept {
+SkStrokeRec::SkStrokeRec(const SkPaint& paint, SkPaint::Style styleOverride, SkScalar resScale) {
   this->init(paint, styleOverride, resScale);
 }
 
-void SkStrokeRec::init(const SkPaint& paint, SkPaint::Style style, SkScalar resScale) noexcept {
+void SkStrokeRec::init(const SkPaint& paint, SkPaint::Style style, SkScalar resScale) {
   fResScale = resScale;
 
   switch (style) {
@@ -65,7 +64,7 @@ void SkStrokeRec::init(const SkPaint& paint, SkPaint::Style style, SkScalar resS
   fJoin = paint.getStrokeJoin();
 }
 
-SkStrokeRec::Style SkStrokeRec::getStyle() const noexcept {
+SkStrokeRec::Style SkStrokeRec::getStyle() const {
   if (fWidth < 0) {
     return kFill_Style;
   } else if (0 == fWidth) {
@@ -75,17 +74,17 @@ SkStrokeRec::Style SkStrokeRec::getStyle() const noexcept {
   }
 }
 
-void SkStrokeRec::setFillStyle() noexcept {
+void SkStrokeRec::setFillStyle() {
   fWidth = kStrokeRec_FillStyleWidth;
   fStrokeAndFill = false;
 }
 
-void SkStrokeRec::setHairlineStyle() noexcept {
+void SkStrokeRec::setHairlineStyle() {
   fWidth = 0;
   fStrokeAndFill = false;
 }
 
-void SkStrokeRec::setStrokeStyle(SkScalar width, bool strokeAndFill) noexcept {
+void SkStrokeRec::setStrokeStyle(SkScalar width, bool strokeAndFill) {
   if (strokeAndFill && (0 == width)) {
     // hairline+fill == fill
     this->setFillStyle();
@@ -123,7 +122,7 @@ bool SkStrokeRec::applyToPath(SkPath* dst, const SkPath& src) const {
   return true;
 }
 
-void SkStrokeRec::applyToPaint(SkPaint* paint) const noexcept {
+void SkStrokeRec::applyToPaint(SkPaint* paint) const {
   if (fWidth < 0) {  // fill
     paint->setStyle(SkPaint::kFill_Style);
     return;
@@ -136,18 +135,18 @@ void SkStrokeRec::applyToPaint(SkPaint* paint) const noexcept {
   paint->setStrokeJoin((SkPaint::Join)fJoin);
 }
 
-SkScalar SkStrokeRec::getInflationRadius() const noexcept {
+SkScalar SkStrokeRec::getInflationRadius() const {
   return GetInflationRadius((SkPaint::Join)fJoin, fMiterLimit, (SkPaint::Cap)fCap, fWidth);
 }
 
-SkScalar SkStrokeRec::GetInflationRadius(const SkPaint& paint, SkPaint::Style style) noexcept {
+SkScalar SkStrokeRec::GetInflationRadius(const SkPaint& paint, SkPaint::Style style) {
   SkScalar width = SkPaint::kFill_Style == style ? -SK_Scalar1 : paint.getStrokeWidth();
   return GetInflationRadius(
       paint.getStrokeJoin(), paint.getStrokeMiter(), paint.getStrokeCap(), width);
 }
 
 SkScalar SkStrokeRec::GetInflationRadius(
-    SkPaint::Join join, SkScalar miterLimit, SkPaint::Cap cap, SkScalar strokeWidth) noexcept {
+    SkPaint::Join join, SkScalar miterLimit, SkPaint::Cap cap, SkScalar strokeWidth) {
   if (strokeWidth < 0) {  // fill
     return 0;
   } else if (0 == strokeWidth) {
