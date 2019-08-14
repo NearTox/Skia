@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "experimental/svg/model/SkSVGStop.h"
 #include "experimental/svg/model/SkSVGRenderContext.h"
+#include "experimental/svg/model/SkSVGStop.h"
 #include "experimental/svg/model/SkSVGValue.h"
 
 SkSVGStop::SkSVGStop() : INHERITED(SkSVGTag::kStop) {}

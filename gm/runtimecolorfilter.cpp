@@ -119,11 +119,13 @@ class RuntimeCF : public skiagm::GM {
   void onDraw(SkCanvas* canvas) override {
     canvas->drawImage(fImg, 0, 0, nullptr);
 
-    float b = 0.75;
-    sk_sp<SkData> data = SkData::MakeWithCopy(&b, sizeof(b));
-    auto cf1 = fFact.make(data);
+    if (!fCF) {
+      float b = 0.75;
+      sk_sp<SkData> data = SkData::MakeWithCopy(&b, sizeof(b));
+      fCF = fFact.make(data);
+    }
     SkPaint p;
-    p.setColorFilter(cf1);
+    p.setColorFilter(fCF);
     canvas->drawImage(fImg, 256, 0, &p);
   }
 
@@ -131,6 +133,7 @@ class RuntimeCF : public skiagm::GM {
   sk_sp<SkImage> fImg;
   SkRuntimeColorFilterFactory fFact;
   SkString fName;
+  sk_sp<SkColorFilter> fCF;
 
   typedef skiagm::GM INHERITED;
 };

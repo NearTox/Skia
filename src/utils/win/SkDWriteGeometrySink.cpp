@@ -8,11 +8,11 @@
 #include "include/core/SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN)
 
-#include "include/core/SkPath.h"
-#include "src/utils/SkFloatUtils.h"
-#include "src/utils/win/SkDWriteGeometrySink.h"
+#  include "include/core/SkPath.h"
+#  include "src/utils/SkFloatUtils.h"
+#  include "src/utils/win/SkDWriteGeometrySink.h"
 
-#include <dwrite.h>
+#  include <dwrite.h>
 #  include <d2d1.h>
 
 SkDWriteGeometrySink::SkDWriteGeometrySink(SkPath* path) : fRefCount(1), fPath(path) {}

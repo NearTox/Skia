@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "experimental/svg/model/SkSVGDOM.h"
 #include "experimental/svg/model/SkSVGAttributeParser.h"
 #include "experimental/svg/model/SkSVGCircle.h"
 #include "experimental/svg/model/SkSVGClipPath.h"
+#include "experimental/svg/model/SkSVGDOM.h"
 #include "experimental/svg/model/SkSVGDefs.h"
 #include "experimental/svg/model/SkSVGEllipse.h"
 #include "experimental/svg/model/SkSVGG.h"

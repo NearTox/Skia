@@ -20,6 +20,8 @@
 #include "include/private/SkTArray.h"
 #include "include/utils/SkRandom.h"
 
+namespace {
+
 class SkDoOnce : SkNoncopyable {
  public:
   SkDoOnce() { fDidOnce = false; }
@@ -35,18 +37,14 @@ class SkDoOnce : SkNoncopyable {
   bool fDidOnce;
 };
 
-namespace skiagm {
-
-class ConvexPathsGM : public GM {
+class ConvexPathsGM : public skiagm::GM {
   SkDoOnce fOnce;
 
- public:
-  ConvexPathsGM() { this->setBGColor(0xFF000000); }
+  void onOnceBeforeDraw() override { this->setBGColor(0xFF000000); }
 
- protected:
-  virtual SkString onShortName() { return SkString("convexpaths"); }
+  SkString onShortName() override { return SkString("convexpaths"); }
 
-  virtual SkISize onISize() { return SkISize::Make(1200, 1100); }
+  SkISize onISize() override { return {1200, 1100}; }
 
   void makePaths() {
     if (fOnce.alreadyDone()) {
@@ -232,7 +230,7 @@ class ConvexPathsGM : public GM {
     fPaths.push_back().addCircle(0, 0, 1.2f);
   }
 
-  virtual void onDraw(SkCanvas* canvas) {
+  void onDraw(SkCanvas* canvas) override {
     this->makePaths();
 
     SkPaint paint;
@@ -261,13 +259,8 @@ class ConvexPathsGM : public GM {
     }
   }
 
- private:
-  typedef GM INHERITED;
   SkTArray<SkPath> fPaths;
 };
-
-//////////////////////////////////////////////////////////////////////////////
+}  // namespace
 
 DEF_GM(return new ConvexPathsGM;)
-
-}  // namespace skiagm

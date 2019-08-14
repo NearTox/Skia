@@ -12,9 +12,9 @@
 #include "src/gpu/GrPath.h"
 #include "src/gpu/GrRenderTargetContextPriv.h"
 #include "src/gpu/GrResourceProvider.h"
-#include "src/gpu/GrShape.h"
 #include "src/gpu/GrStencilClip.h"
 #include "src/gpu/GrStyle.h"
+#include "src/gpu/geometry/GrShape.h"
 #include "src/gpu/ops/GrDrawPathOp.h"
 #include "src/gpu/ops/GrStencilAndCoverPathRenderer.h"
 #include "src/gpu/ops/GrStencilPathOp.h"
@@ -37,14 +37,11 @@ GrPathRenderer::CanDrawPath GrStencilAndCoverPathRenderer::onCanDrawPath(
   // GrPath doesn't support hairline paths. An arbitrary path effect could produce a hairline
   // path.
   if (args.fShape->style().strokeRec().isHairlineStyle() ||
-      args.fShape->style().hasNonDashPathEffect()) {
+      args.fShape->style().hasNonDashPathEffect() || args.fHasUserStencilSettings) {
     return CanDrawPath::kNo;
   }
-  if (args.fHasUserStencilSettings) {
-    return CanDrawPath::kNo;
-  }
-  // doesn't do per-path AA, relies on the target having MSAA.
-  if (AATypeFlags::kCoverage == args.fAATypeFlags) {
+  if (GrAAType::kCoverage == args.fAAType && !args.fProxy->canUseMixedSamples(*args.fCaps)) {
+    // We rely on a mixed sampled stencil buffer to implement coverage AA.
     return CanDrawPath::kNo;
   }
   return CanDrawPath::kYes;
@@ -57,22 +54,22 @@ static sk_sp<GrPath> get_gr_path(GrResourceProvider* resourceProvider, const GrS
   sk_sp<GrPath> path;
   if (!isVolatile) {
     path = resourceProvider->findByUniqueKey<GrPath>(key);
+  }
+  if (!path) {
+    SkPath skPath;
+    shape.asPath(&skPath);
+    path = resourceProvider->createPath(skPath, shape.style());
+    if (!isVolatile) {
+      resourceProvider->assignUniqueKeyToResource(key, path.get());
     }
-    if (!path) {
-      SkPath skPath;
-      shape.asPath(&skPath);
-      path = resourceProvider->createPath(skPath, shape.style());
-      if (!isVolatile) {
-        resourceProvider->assignUniqueKeyToResource(key, path.get());
-      }
-    } else {
+  } else {
 #ifdef SK_DEBUG
-      SkPath skPath;
-      shape.asPath(&skPath);
-      SkASSERT(path->isEqualTo(skPath, shape.style()));
+    SkPath skPath;
+    shape.asPath(&skPath);
+    SkASSERT(path->isEqualTo(skPath, shape.style()));
 #endif
-    }
-    return path;
+  }
+  return path;
 }
 
 void GrStencilAndCoverPathRenderer::onStencilPath(const StencilPathArgs& args) {
@@ -90,10 +87,7 @@ bool GrStencilAndCoverPathRenderer::onDrawPath(const DrawPathArgs& args) {
 
   const SkMatrix& viewMatrix = *args.fViewMatrix;
 
-  bool doStencilMSAA = AATypeFlags::kNone != args.fAATypeFlags;
-  SkASSERT(
-      !doStencilMSAA ||
-      (AATypeFlags::kMSAA | AATypeFlags::kMixedSampledStencilThenCover) & args.fAATypeFlags);
+  bool doStencilMSAA = GrAAType::kNone != args.fAAType;
 
   sk_sp<GrPath> path(get_gr_path(fResourceProvider, *args.fShape));
 
@@ -154,8 +148,7 @@ bool GrStencilAndCoverPathRenderer::onDrawPath(const DrawPathArgs& args) {
       // We have to suppress enabling MSAA for mixed samples or we will get seams due to
       // coverage modulation along the edge where two triangles making up the rect meet.
       GrAA doStencilMSAA = GrAA::kNo;
-      if (AATypeFlags::kMSAA & args.fAATypeFlags) {
-        SkASSERT(!(AATypeFlags::kMixedSampledStencilThenCover & args.fAATypeFlags));
+      if (GrAAType::kMSAA == args.fAAType) {
         doStencilMSAA = GrAA::kYes;
       }
       args.fRenderTargetContext->priv().stencilRect(

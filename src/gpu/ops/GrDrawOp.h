@@ -44,7 +44,7 @@ class GrDrawOp : public GrOp {
    * itself) needs to be provided to the GrXferProcessor when this op executes.
    */
   virtual GrProcessorSet::Analysis finalize(
-      const GrCaps&, const GrAppliedClip*, GrFSAAType, GrClampType) = 0;
+      const GrCaps&, const GrAppliedClip*, bool hasMixedSampledCoverage, GrClampType) = 0;
 
 #ifdef SK_DEBUG
   bool fAddDrawOpCalled = false;

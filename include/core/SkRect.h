@@ -670,7 +670,7 @@ struct SK_API SkRect {
 
       @return  bounds (0, 0, 0, 0)
   */
-  static constexpr SkRect SK_WARN_UNUSED_RESULT MakeEmpty() { return SkRect{0, 0, 0, 0}; }
+  static constexpr SkRect SK_WARN_UNUSED_RESULT MakeEmpty() noexcept { return SkRect{0, 0, 0, 0}; }
 
   /** Returns constructed SkRect set to SkScalar values (0, 0, w, h). Does not
       validate input; w or h may be negative.
@@ -682,7 +682,7 @@ struct SK_API SkRect {
       @param h  SkScalar height of constructed SkRect
       @return   bounds (0, 0, w, h)
   */
-  static constexpr SkRect SK_WARN_UNUSED_RESULT MakeWH(SkScalar w, SkScalar h) {
+  static constexpr SkRect SK_WARN_UNUSED_RESULT MakeWH(SkScalar w, SkScalar h) noexcept {
     return SkRect{0, 0, w, h};
   }
 
@@ -708,7 +708,7 @@ struct SK_API SkRect {
       @param size  SkScalar values for SkRect width and height
       @return      bounds (0, 0, size.width(), size.height())
   */
-  static constexpr SkRect SK_WARN_UNUSED_RESULT MakeSize(const SkSize& size) {
+  static constexpr SkRect SK_WARN_UNUSED_RESULT MakeSize(const SkSize& size) noexcept {
     return SkRect{0, 0, size.fWidth, size.fHeight};
   }
 
@@ -722,7 +722,7 @@ struct SK_API SkRect {
       @return   bounds (l, t, r, b)
   */
   static constexpr SkRect SK_WARN_UNUSED_RESULT
-  MakeLTRB(SkScalar l, SkScalar t, SkScalar r, SkScalar b) {
+  MakeLTRB(SkScalar l, SkScalar t, SkScalar r, SkScalar b) noexcept {
     return SkRect{l, t, r, b};
   }
 
@@ -736,7 +736,7 @@ struct SK_API SkRect {
       @return   bounds at (x, y) with width w and height h
   */
   static constexpr SkRect SK_WARN_UNUSED_RESULT
-  MakeXYWH(SkScalar x, SkScalar y, SkScalar w, SkScalar h) {
+  MakeXYWH(SkScalar x, SkScalar y, SkScalar w, SkScalar h) noexcept {
     return SkRect{x, y, x + w, y + h};
   }
 

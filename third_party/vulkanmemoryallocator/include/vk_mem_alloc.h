@@ -7954,7 +7954,7 @@ void vmaDestroyBuffer(VmaAllocator allocator, VkBuffer buffer, VmaAllocation all
     VMA_DEBUG_GLOBAL_MUTEX_LOCK
 
         (*allocator->GetVulkanFunctions().vkDestroyBuffer)
-    (allocator->m_hDevice, buffer, allocator->GetAllocationCallbacks());
+        (allocator->m_hDevice, buffer, allocator->GetAllocationCallbacks());
 
     allocator->FreeMemory(allocation);
   }
@@ -8018,7 +8018,7 @@ void vmaDestroyImage(VmaAllocator allocator, VkImage image, VmaAllocation alloca
     VMA_DEBUG_GLOBAL_MUTEX_LOCK
 
         (*allocator->GetVulkanFunctions().vkDestroyImage)
-    (allocator->m_hDevice, image, allocator->GetAllocationCallbacks());
+        (allocator->m_hDevice, image, allocator->GetAllocationCallbacks());
 
     allocator->FreeMemory(allocation);
   }

@@ -12,7 +12,7 @@
 #include "src/image/SkImage_Base.h"
 
 #if SK_SUPPORT_GPU
-#include "src/gpu/GrTextureMaker.h"
+#  include "src/gpu/GrTextureMaker.h"
 #endif
 
 class SharedGenerator;

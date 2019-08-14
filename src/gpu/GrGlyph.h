@@ -10,7 +10,7 @@
 
 #include "include/gpu/GrTypes.h"
 #include "src/gpu/GrDrawOpAtlas.h"
-#include "src/gpu/GrRect.h"
+#include "src/gpu/geometry/GrRect.h"
 
 #include "include/core/SkPath.h"
 #include "include/private/SkChecksum.h"
@@ -19,8 +19,7 @@
 struct GrGlyph {
   enum MaskStyle { kCoverage_MaskStyle, kDistance_MaskStyle };
 
-  static GrMaskFormat FormatFromSkGlyph(const SkGlyph& glyph) {
-    SkMask::Format format = static_cast<SkMask::Format>(glyph.fMaskFormat);
+  static GrMaskFormat FormatFromSkGlyph(SkMask::Format format) {
     switch (format) {
       case SkMask::kBW_Format:
       case SkMask::kSDF_Format:
@@ -34,21 +33,16 @@ struct GrGlyph {
     }
   }
 
-  static GrIRect16 BoundsFromSkGlyph(const SkGlyph& glyph) {
-    return GrIRect16::MakeXYWH(glyph.fLeft, glyph.fTop, glyph.fWidth, glyph.fHeight);
-  }
-
   static MaskStyle MaskStyleFromSkGlyph(const SkGlyph& skGlyph) {
-    return (SkMask::Format)skGlyph.fMaskFormat == SkMask::kSDF_Format
-               ? GrGlyph::MaskStyle::kDistance_MaskStyle
-               : GrGlyph::MaskStyle::kCoverage_MaskStyle;
+    return skGlyph.maskFormat() == SkMask::kSDF_Format ? GrGlyph::MaskStyle::kDistance_MaskStyle
+                                                       : GrGlyph::MaskStyle::kCoverage_MaskStyle;
   }
 
   GrGlyph(const SkGlyph& skGlyph)
       : fPackedID{skGlyph.getPackedID()},
-        fMaskFormat{FormatFromSkGlyph(skGlyph)},
+        fMaskFormat{FormatFromSkGlyph(skGlyph.maskFormat())},
         fMaskStyle{MaskStyleFromSkGlyph(skGlyph)},
-        fBounds{BoundsFromSkGlyph(skGlyph)} {}
+        fBounds{GrIRect16::Make(skGlyph.iRect())} {}
 
   SkRect destRect(SkPoint origin) {
     return SkRect::MakeXYWH(

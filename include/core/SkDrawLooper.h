@@ -13,7 +13,6 @@
 #include "include/core/SkColor.h"
 #include "include/core/SkFlattenable.h"
 #include "include/core/SkPoint.h"
-#include "include/private/SkNoncopyable.h"
 
 class SkArenaAlloc;
 class SkCanvas;
@@ -37,10 +36,10 @@ class SK_API SkDrawLooper : public SkFlattenable {
    *  Subclasses of SkDrawLooper should create a subclass of this object to
    *  hold state specific to their subclass.
    */
-  class SK_API Context : ::SkNoncopyable {
+  class SK_API Context {
    public:
-    Context() {}
-    virtual ~Context() {}
+    constexpr Context() = default;
+    virtual ~Context() = default;
 
     /**
      *  Called in a loop on objects returned by SkDrawLooper::createContext().
@@ -57,6 +56,10 @@ class SK_API SkDrawLooper : public SkFlattenable {
      *  initially, before createContext() was first called.
      */
     virtual bool next(SkCanvas* canvas, SkPaint* paint) = 0;
+
+   private:
+    Context(const Context&) = delete;
+    Context& operator=(const Context&) = delete;
   };
 
   /**
@@ -104,6 +107,9 @@ class SK_API SkDrawLooper : public SkFlattenable {
     return sk_sp<SkDrawLooper>(static_cast<SkDrawLooper*>(
         SkFlattenable::Deserialize(kSkDrawLooper_Type, data, size, procs).release()));
   }
+
+  void apply(
+      SkCanvas* canvas, const SkPaint& paint, std::function<void(SkCanvas*, const SkPaint&)>);
 
  protected:
   SkDrawLooper() {}

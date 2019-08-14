@@ -446,6 +446,12 @@ class SK_API SkPath {
   */
   int getVerbs(uint8_t verbs[], int max) const;
 
+  /** Returns the approximate byte size of the SkPath in memory.
+
+      @return  approximate size
+  */
+  size_t approximateBytesUsed() const;
+
   /** Exchanges the verb array, SkPoint array, weights, and SkPath::FillType with other.
       Cached state is also exchanged. swap() internally exchanges pointers, so
       it is lightweight and does not allocate memory.
@@ -949,7 +955,7 @@ class SK_API SkPath {
                    kInverseWinding_FillType, kInverseEvenOdd_FillType
       @return      true if SkPath fills outside its bounds
   */
-  static bool IsInverseFillType(FillType fill) {
+  static constexpr bool IsInverseFillType(FillType fill) {
     static_assert(0 == kWinding_FillType, "fill_type_mismatch");
     static_assert(1 == kEvenOdd_FillType, "fill_type_mismatch");
     static_assert(2 == kInverseWinding_FillType, "fill_type_mismatch");
@@ -964,7 +970,7 @@ class SK_API SkPath {
                    kInverseWinding_FillType, kInverseEvenOdd_FillType
       @return      fill, or kWinding_FillType or kEvenOdd_FillType if fill is inverted
   */
-  static FillType ConvertToNonInverseFillType(FillType fill) {
+  static constexpr FillType ConvertToNonInverseFillType(FillType fill) {
     static_assert(0 == kWinding_FillType, "fill_type_mismatch");
     static_assert(1 == kEvenOdd_FillType, "fill_type_mismatch");
     static_assert(2 == kInverseWinding_FillType, "fill_type_mismatch");
@@ -1706,7 +1712,7 @@ class SK_API SkPath {
   // Notice the setters are const... these are mutable atomic fields.
   void setConvexity(Convexity) const;
   void setFirstDirection(uint8_t) const;
-  uint8_t getFirstDirection() const;
+  uint8_t getFirstDirection() const noexcept;
 
   friend class SkAutoPathBoundsUpdate;
   friend class SkAutoDisableOvalCheck;

@@ -222,15 +222,15 @@ void SkTable_ColorFilter::getTableAsBitmap(SkBitmap* table) const {
 
 #if SK_SUPPORT_GPU
 
-#include "include/private/GrRecordingContext.h"
-#include "src/gpu/GrColorSpaceInfo.h"
-#include "src/gpu/GrFragmentProcessor.h"
-#include "src/gpu/GrRecordingContextPriv.h"
-#include "src/gpu/SkGr.h"
-#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
-#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
-#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
-#include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#  include "include/private/GrRecordingContext.h"
+#  include "src/gpu/GrColorSpaceInfo.h"
+#  include "src/gpu/GrFragmentProcessor.h"
+#  include "src/gpu/GrRecordingContextPriv.h"
+#  include "src/gpu/SkGr.h"
+#  include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#  include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#  include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#  include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
 class ColorTableEffect : public GrFragmentProcessor {
  public:
@@ -362,9 +362,9 @@ GrGLSLFragmentProcessor* ColorTableEffect::onCreateGLSLInstance() const {
 
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(ColorTableEffect);
 
-#if GR_TEST_UTILS
+#  if GR_TEST_UTILS
 
-#include "include/gpu/GrContext.h"
+#    include "include/gpu/GrContext.h"
 
 std::unique_ptr<GrFragmentProcessor> ColorTableEffect::TestCreate(GrProcessorTestData* d) {
   int flags = 0;
@@ -386,11 +386,12 @@ std::unique_ptr<GrFragmentProcessor> ColorTableEffect::TestCreate(GrProcessorTes
       (flags & (1 << 2)) ? luts[2] : nullptr, (flags & (1 << 3)) ? luts[3] : nullptr));
   sk_sp<SkColorSpace> colorSpace = GrTest::TestColorSpace(d->fRandom);
   auto fp = filter->asFragmentProcessor(
-      d->context(), GrColorSpaceInfo(std::move(colorSpace), kRGBA_8888_GrPixelConfig));
+      d->context(),
+      GrColorSpaceInfo(GrColorType::kRGBA_8888, kUnknown_SkAlphaType, std::move(colorSpace)));
   SkASSERT(fp);
   return fp;
 }
-#endif
+#  endif
 
 std::unique_ptr<GrFragmentProcessor> SkTable_ColorFilter::asFragmentProcessor(
     GrRecordingContext* context, const GrColorSpaceInfo&) const {

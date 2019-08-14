@@ -67,7 +67,7 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
   FixedFunctionFlags fixedFunctionFlags() const override;
 
   GrProcessorSet::Analysis finalize(
-      const GrCaps&, const GrAppliedClip*, GrFSAAType, GrClampType) override;
+      const GrCaps&, const GrAppliedClip*, bool hasMixedSampledCoverage, GrClampType) override;
 
   enum MaskType {
     kGrayscaleCoverageMask_MaskType,

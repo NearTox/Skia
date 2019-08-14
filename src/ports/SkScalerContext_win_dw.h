@@ -33,6 +33,20 @@ class SkScalerContext_DW : public SkScalerContext {
   void generateFontMetrics(SkFontMetrics*) override;
 
  private:
+  static void BilevelToBW(const uint8_t* SK_RESTRICT src, const SkGlyph& glyph);
+
+  template <bool APPLY_PREBLEND>
+  static void GrayscaleToA8(
+      const uint8_t* SK_RESTRICT src, const SkGlyph& glyph, const uint8_t* table8);
+
+  template <bool APPLY_PREBLEND>
+  static void RGBToA8(const uint8_t* SK_RESTRICT src, const SkGlyph& glyph, const uint8_t* table8);
+
+  template <bool APPLY_PREBLEND, bool RGB>
+  static void RGBToLcd16(
+      const uint8_t* SK_RESTRICT src, const SkGlyph& glyph, const uint8_t* tableR,
+      const uint8_t* tableG, const uint8_t* tableB);
+
   const void* drawDWMask(
       const SkGlyph& glyph, DWRITE_RENDERING_MODE renderingMode, DWRITE_TEXTURE_TYPE textureType);
 

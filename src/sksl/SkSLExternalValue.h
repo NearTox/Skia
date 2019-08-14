@@ -8,7 +8,6 @@
 #ifndef SKSL_EXTERNALVALUE
 #define SKSL_EXTERNALVALUE
 
-#include "src/sksl/SkSLInterpreter.h"
 #include "src/sksl/ir/SkSLSymbol.h"
 
 namespace SkSL {
@@ -49,24 +48,25 @@ class ExternalValue : public Symbol {
    * Reads the external value and stores the resulting data in target. The caller must ensure
    * that target is a valid pointer to a region of sufficient size to hold the data contained
    * in this external value.
+   * 'index' is the element index ([0 .. N-1]) within a call to ByteCode::run()
    */
-  virtual void read(void* target) { SkASSERT(false); }
+  virtual void read(int index, float* target) { SkASSERT(false); }
 
   /**
    * Copies the value in src into this external value. The caller must ensure that src is a
    * pointer to the type of data expected by this external value.
+   * 'index' is the element index ([0 .. N-1]) within a call to ByteCode::run()
    */
-  virtual void write(void* src) { SkASSERT(false); }
+  virtual void write(int index, float* src) { SkASSERT(false); }
 
   /**
    * Calls the value as a function with the specified parameters. arguments must be a pointer to
    * a structure containing the arguments expected by the external value in source order, and
    * outResult must be a pointer to a region of sufficient size to hold the function's return
    * value.
+   * 'index' is the element index ([0 .. N-1]) within a call to ByteCode::run()
    */
-  virtual void call(Interpreter::Value* arguments, Interpreter::Value* outResult) {
-    SkASSERT(false);
-  }
+  virtual void call(int index, float* arguments, float* outResult) { SkASSERT(false); }
 
   /**
    * Resolves 'name' within this context and returns an ExternalValue which represents it, or

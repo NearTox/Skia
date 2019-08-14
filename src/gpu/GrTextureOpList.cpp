@@ -8,15 +8,15 @@
 #include "src/gpu/GrTextureOpList.h"
 
 #include "include/gpu/GrContext.h"
-#include "include/private/GrAuditTrail.h"
 #include "include/private/GrRecordingContext.h"
-#include "include/private/GrTextureProxy.h"
 #include "src/core/SkStringUtils.h"
+#include "src/gpu/GrAuditTrail.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrGpu.h"
 #include "src/gpu/GrMemoryPool.h"
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrResourceAllocator.h"
+#include "src/gpu/GrTextureProxy.h"
 #include "src/gpu/ops/GrCopySurfaceOp.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,14 +71,14 @@ void GrTextureOpList::dump(bool printDependencies) const {
 #endif
 
 void GrTextureOpList::onPrepare(GrOpFlushState* flushState) {
-  SkASSERT(fTarget.get()->peekTexture());
+  SkASSERT(fTarget->peekTexture());
   SkASSERT(this->isClosed());
 
   // Loop over the ops that haven't yet generated their geometry
   for (int i = 0; i < fRecordedOps.count(); ++i) {
     if (fRecordedOps[i]) {
       SkASSERT(fRecordedOps[i]->isChainHead());
-      GrOpFlushState::OpArgs opArgs = {fRecordedOps[i].get(), nullptr, nullptr,
+      GrOpFlushState::OpArgs opArgs = {fRecordedOps[i].get(), nullptr, nullptr, GrSwizzle(),
                                        GrXferProcessor::DstProxy()};
       flushState->setOpArgs(&opArgs);
       fRecordedOps[i]->prepare(flushState);
@@ -92,10 +92,10 @@ bool GrTextureOpList::onExecute(GrOpFlushState* flushState) {
     return false;
   }
 
-  SkASSERT(fTarget.get()->peekTexture());
+  SkASSERT(fTarget->peekTexture());
 
   GrGpuTextureCommandBuffer* commandBuffer(
-      flushState->gpu()->getCommandBuffer(fTarget.get()->peekTexture(), fTarget.get()->origin()));
+      flushState->gpu()->getCommandBuffer(fTarget->peekTexture(), fTarget->origin()));
   flushState->setCommandBuffer(commandBuffer);
 
   for (int i = 0; i < fRecordedOps.count(); ++i) {
@@ -103,7 +103,7 @@ bool GrTextureOpList::onExecute(GrOpFlushState* flushState) {
       continue;
     }
     SkASSERT(fRecordedOps[i]->isChainHead());
-    GrOpFlushState::OpArgs opArgs = {fRecordedOps[i].get(), nullptr, nullptr,
+    GrOpFlushState::OpArgs opArgs = {fRecordedOps[i].get(), nullptr, nullptr, GrSwizzle(),
                                      GrXferProcessor::DstProxy()};
     flushState->setOpArgs(&opArgs);
     fRecordedOps[i]->execute(flushState, fRecordedOps[i].get()->bounds());
@@ -217,11 +217,11 @@ void GrTextureOpList::gatherProxyIntervals(GrResourceAllocator* alloc) const {
 }
 
 void GrTextureOpList::recordOp(std::unique_ptr<GrOp> op) {
-  SkASSERT(fTarget.get());
+  SkASSERT(fTarget);
   // A closed GrOpList should never receive new/more ops
   SkASSERT(!this->isClosed());
 
-  GR_AUDIT_TRAIL_ADD_OP(fAuditTrail, op.get(), fTarget.get()->uniqueID());
+  GR_AUDIT_TRAIL_ADD_OP(fAuditTrail, op.get(), fTarget->uniqueID());
   GrOP_INFO(
       "Re-Recording (%s, opID: %u)\n"
       "\tBounds LRTB (%f, %f, %f, %f)\n",

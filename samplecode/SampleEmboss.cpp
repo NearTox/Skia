@@ -34,13 +34,7 @@ class EmbossView : public Sample {
   }
 
  protected:
-  virtual bool onQuery(Sample::Event* evt) {
-    if (Sample::TitleQ(*evt)) {
-      Sample::TitleR(evt, "Emboss");
-      return true;
-    }
-    return this->INHERITED::onQuery(evt);
-  }
+  virtual SkString name() { return SkString("Emboss"); }
 
   virtual void onDrawContent(SkCanvas* canvas) {
     SkPaint paint;

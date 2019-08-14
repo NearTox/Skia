@@ -29,7 +29,7 @@
 #include "src/sksl/ir/SkSLVarDeclarations.h"
 
 #ifdef SK_ENABLE_SPIRV_VALIDATION
-#include "spirv-tools/libspirv.hpp"
+#  include "spirv-tools/libspirv.hpp"
 #endif
 
 // include the built-in shader symbols as static strings
@@ -516,9 +516,14 @@ bool is_constant(const Expression& expr, double value) {
     case Expression::kFloatLiteral_Kind: return ((FloatLiteral&)expr).fValue == value;
     case Expression::kConstructor_Kind: {
       Constructor& c = (Constructor&)expr;
+      bool isFloat = c.fType.columns() > 1 ? c.fType.componentType().isFloat() : c.fType.isFloat();
       if (c.fType.kind() == Type::kVector_Kind && c.isConstant()) {
         for (int i = 0; i < c.fType.columns(); ++i) {
-          if (!is_constant(*c.getVecComponent(i), value)) {
+          if (isFloat) {
+            if (c.getFVecComponent(i) != value) {
+              return false;
+            }
+          } else if (c.getIVecComponent(i) != value) {
             return false;
           }
         }
@@ -1302,11 +1307,13 @@ std::unique_ptr<Program> Compiler::specialize(
   return result;
 }
 
+#if defined(SKSL_STANDALONE) || SK_SUPPORT_GPU
+
 bool Compiler::toSPIRV(Program& program, OutputStream& out) {
   if (!this->optimize(program)) {
     return false;
   }
-#ifdef SK_ENABLE_SPIRV_VALIDATION
+#  ifdef SK_ENABLE_SPIRV_VALIDATION
   StringStream buffer;
   fSource = program.fSource.get();
   SPIRVCodeGenerator cg(fContext.get(), &program, this, &buffer);
@@ -1325,12 +1332,12 @@ bool Compiler::toSPIRV(Program& program, OutputStream& out) {
     SkAssertResult(tools.Validate((const uint32_t*)data.c_str(), data.size() / 4));
     out.write(data.c_str(), data.size());
   }
-#else
+#  else
   fSource = program.fSource.get();
   SPIRVCodeGenerator cg(fContext.get(), &program, this, &out);
   bool result = cg.generateCode();
   fSource = nullptr;
-#endif
+#  endif
   return result;
 }
 
@@ -1420,7 +1427,10 @@ bool Compiler::toPipelineStage(
   return result;
 }
 
+#endif
+
 std::unique_ptr<ByteCode> Compiler::toByteCode(Program& program) {
+#if defined(SK_ENABLE_SKSL_INTERPRETER)
   if (!this->optimize(program)) {
     return nullptr;
   }
@@ -1429,6 +1439,9 @@ std::unique_ptr<ByteCode> Compiler::toByteCode(Program& program) {
   if (cg.generateCode()) {
     return result;
   }
+#else
+  ABORT("ByteCode interpreter not enabled");
+#endif
   return nullptr;
 }
 

@@ -209,7 +209,7 @@ struct PDFShaderBench : public Benchmark {
       SkNullWStream nullStream;
       SkPDFDocument doc(&nullStream, SkPDF::Metadata());
       doc.beginPage(256, 256);
-      (void)SkPDFMakeShader(&doc, fShader.get(), SkMatrix::I(), {0, 0, 400, 400}, SK_ColorBLACK);
+      (void)SkPDFMakeShader(&doc, fShader.get(), SkMatrix::I(), {0, 0, 400, 400}, SkColors::kBlack);
     }
   }
 };

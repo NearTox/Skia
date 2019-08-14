@@ -14,10 +14,9 @@
 #include "include/core/SkImage.h"
 
 static inline bool decode_file(
-    const char* filename, SkBitmap* bitmap, SkColorType colorType = kN32_SkColorType,
+    sk_sp<SkData> data, SkBitmap* bitmap, SkColorType colorType = kN32_SkColorType,
     bool requireUnpremul = false) {
-  sk_sp<SkData> data(SkData::MakeFromFileName(filename));
-  std::unique_ptr<SkCodec> codec = SkCodec::MakeFromData(data);
+  std::unique_ptr<SkCodec> codec = SkCodec::MakeFromData(std::move(data));
   if (!codec) {
     return false;
   }
@@ -32,6 +31,12 @@ static inline bool decode_file(
   }
 
   return SkCodec::kSuccess == codec->getPixels(info, bitmap->getPixels(), bitmap->rowBytes());
+}
+
+static inline bool decode_file(
+    const char* filename, SkBitmap* bitmap, SkColorType colorType = kN32_SkColorType,
+    bool requireUnpremul = false) {
+  return decode_file(SkData::MakeFromFileName(filename), bitmap, colorType, requireUnpremul);
 }
 
 static inline sk_sp<SkImage> decode_file(const char filename[]) {

@@ -11,9 +11,9 @@
 #include "include/private/SkTHash.h"
 #include "src/core/SkExchange.h"
 #include "src/core/SkTInternalLList.h"
-#include "src/gpu/GrShape.h"
 #include "src/gpu/ccpr/GrCCAtlas.h"
 #include "src/gpu/ccpr/GrCCPathProcessor.h"
+#include "src/gpu/geometry/GrShape.h"
 
 class GrCCPathCacheEntry;
 class GrShape;
@@ -265,8 +265,7 @@ class GrCCPathCacheEntry : public GrNonAtomicRef<GrCCPathCacheEntry> {
 
   friend class GrCCPathCache;
   friend void GrCCPathProcessor::Instance::set(
-      const GrCCPathCacheEntry&, const SkIVector&, uint64_t color,
-      DoEvenOddFill);  // To access data.
+      const GrCCPathCacheEntry&, const SkIVector&, uint64_t color, GrFillRule);  // To access data.
 
  public:
   int testingOnly_peekOnFlushRefCnt() const;
@@ -355,10 +354,9 @@ inline void GrCCPathCache::HashNode::operator=(HashNode&& node) {
 }
 
 inline void GrCCPathProcessor::Instance::set(
-    const GrCCPathCacheEntry& entry, const SkIVector& shift, uint64_t color,
-    DoEvenOddFill doEvenOddFill) {
+    const GrCCPathCacheEntry& entry, const SkIVector& shift, uint64_t color, GrFillRule fillRule) {
   float dx = (float)shift.fX, dy = (float)shift.fY;
-  this->set(entry.fOctoBounds.makeOffset(dx, dy), entry.fAtlasOffset - shift, color, doEvenOddFill);
+  this->set(entry.fOctoBounds.makeOffset(dx, dy), entry.fAtlasOffset - shift, color, fillRule);
 }
 
 #endif

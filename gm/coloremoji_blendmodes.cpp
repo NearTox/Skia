@@ -32,11 +32,11 @@
 
 #include <string.h>
 
-namespace skiagm {
+namespace {
 
 static uint16_t gData[] = {0xFFFF, 0xCCCF, 0xCCCF, 0xFFFF};
 
-class ColorEmojiBlendModesGM : public GM {
+class ColorEmojiBlendModesGM : public skiagm::GM {
  public:
   const static int W = 64;
   const static int H = 64;
@@ -63,11 +63,11 @@ class ColorEmojiBlendModesGM : public GM {
         SkImageInfo::Make(2, 2, kARGB_4444_SkColorType, kOpaque_SkAlphaType), gData, 4);
   }
 
-  virtual SkString onShortName() override { return SkString("coloremoji_blendmodes"); }
+  SkString onShortName() override { return SkString("coloremoji_blendmodes"); }
 
-  virtual SkISize onISize() override { return SkISize::Make(400, 640); }
+  SkISize onISize() override { return {400, 640}; }
 
-  virtual void onDraw(SkCanvas* canvas) override {
+  void onDraw(SkCanvas* canvas) override {
     canvas->translate(SkIntToScalar(10), SkIntToScalar(20));
 
     const SkBlendMode gModes[] = {
@@ -145,9 +145,6 @@ class ColorEmojiBlendModesGM : public GM {
 
   typedef GM INHERITED;
 };
-
-//////////////////////////////////////////////////////////////////////////////
+}  // namespace
 
 DEF_GM(return new ColorEmojiBlendModesGM;)
-
-}  // namespace skiagm

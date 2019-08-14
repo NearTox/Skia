@@ -91,7 +91,8 @@ void GrGLProgram::updateUniformsAndTextureBindings(
   fXferProcessor->setData(fProgramDataManager, xp, dstTexture, offset);
   if (dstTexture) {
     fGpu->bindTexture(
-        nextTexSamplerIdx++, GrSamplerState::ClampNearest(), static_cast<GrGLTexture*>(dstTexture));
+        nextTexSamplerIdx++, GrSamplerState::ClampNearest(),
+        pipeline.dstTextureProxy()->textureSwizzle(), static_cast<GrGLTexture*>(dstTexture));
   }
   SkASSERT(nextTexSamplerIdx == fNumTextureSamplers);
 }
@@ -100,7 +101,8 @@ void GrGLProgram::updatePrimitiveProcessorTextureBindings(
     const GrPrimitiveProcessor& primProc, const GrTextureProxy* const proxies[]) {
   for (int i = 0; i < primProc.numTextureSamplers(); ++i) {
     auto* tex = static_cast<GrGLTexture*>(proxies[i]->peekTexture());
-    fGpu->bindTexture(i, primProc.textureSampler(i).samplerState(), tex);
+    fGpu->bindTexture(
+        i, primProc.textureSampler(i).samplerState(), primProc.textureSampler(i).swizzle(), tex);
   }
 }
 
@@ -114,7 +116,7 @@ void GrGLProgram::setFragmentData(const GrPipeline& pipeline, int* nextTexSample
     for (int i = 0; i < fp->numTextureSamplers(); ++i) {
       const GrFragmentProcessor::TextureSampler& sampler = fp->textureSampler(i);
       fGpu->bindTexture(
-          (*nextTexSamplerIdx)++, sampler.samplerState(),
+          (*nextTexSamplerIdx)++, sampler.samplerState(), sampler.swizzle(),
           static_cast<GrGLTexture*>(sampler.peekTexture()));
     }
     fp = iter.next();

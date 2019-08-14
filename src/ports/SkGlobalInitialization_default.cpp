@@ -44,6 +44,7 @@ void SkFlattenable::PrivateInitializer::InitImageFilters() {}
 #  include "src/shaders/SkLightingShader.h"
 #  include "src/shaders/SkLocalMatrixShader.h"
 #  include "src/shaders/SkPictureShader.h"
+#  include "src/shaders/SkRTShader.h"
 #  include "src/shaders/SkShaderBase.h"
 
 #  include "include/effects/SkAlphaThresholdFilter.h"
@@ -84,6 +85,7 @@ void SkFlattenable::PrivateInitializer::InitEffects() {
   SK_REGISTER_FLATTENABLE(SkEmptyShader);
   SK_REGISTER_FLATTENABLE(SkLocalMatrixShader);
   SK_REGISTER_FLATTENABLE(SkPictureShader);
+  SK_REGISTER_FLATTENABLE(SkRTShader);
   SkGradientShader::RegisterFlattenables();
   SkLightingShader::RegisterFlattenables();
   SkPerlinNoiseShader::RegisterFlattenables();

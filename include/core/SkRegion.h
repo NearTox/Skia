@@ -111,7 +111,7 @@ class SK_API SkRegion {
 
       @param other  operator=(const SkRegion& region) set
   */
-  void swap(SkRegion& other);
+  void swap(SkRegion& other) noexcept;
 
   /** Returns true if SkRegion is empty.
       Empty SkRegion has bounds width or height less than or equal to zero.

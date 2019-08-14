@@ -8,42 +8,42 @@
 #include "include/core/SkTypes.h"
 
 #if defined(SK_BUILD_FOR_ANDROID) && __ANDROID_API__ >= 26
-#define GL_GLEXT_PROTOTYPES
-#define EGL_EGLEXT_PROTOTYPES
+#  define GL_GLEXT_PROTOTYPES
+#  define EGL_EGLEXT_PROTOTYPES
 
-#include "src/gpu/GrAHardwareBufferImageGenerator.h"
+#  include "src/gpu/GrAHardwareBufferImageGenerator.h"
 
-#include <android/hardware_buffer.h>
+#  include <android/hardware_buffer.h>
 
-#include "include/gpu/GrBackendSurface.h"
-#include "include/gpu/GrContext.h"
-#include "include/gpu/GrTexture.h"
-#include "include/gpu/gl/GrGLTypes.h"
-#include "include/private/GrRecordingContext.h"
-#include "include/private/GrTextureProxy.h"
-#include "src/core/SkExchange.h"
-#include "src/core/SkMessageBus.h"
-#include "src/gpu/GrAHardwareBufferUtils.h"
-#include "src/gpu/GrContextPriv.h"
-#include "src/gpu/GrProxyProvider.h"
-#include "src/gpu/GrRecordingContextPriv.h"
-#include "src/gpu/GrResourceCache.h"
-#include "src/gpu/GrResourceProvider.h"
-#include "src/gpu/GrResourceProviderPriv.h"
-#include "src/gpu/gl/GrGLDefines.h"
+#  include "include/gpu/GrBackendSurface.h"
+#  include "include/gpu/GrContext.h"
+#  include "include/gpu/GrTexture.h"
+#  include "include/gpu/gl/GrGLTypes.h"
+#  include "include/private/GrRecordingContext.h"
+#  include "src/core/SkExchange.h"
+#  include "src/core/SkMessageBus.h"
+#  include "src/gpu/GrAHardwareBufferUtils.h"
+#  include "src/gpu/GrContextPriv.h"
+#  include "src/gpu/GrProxyProvider.h"
+#  include "src/gpu/GrRecordingContextPriv.h"
+#  include "src/gpu/GrResourceCache.h"
+#  include "src/gpu/GrResourceProvider.h"
+#  include "src/gpu/GrResourceProviderPriv.h"
+#  include "src/gpu/GrTextureProxy.h"
+#  include "src/gpu/gl/GrGLDefines.h"
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <GLES/gl.h>
-#include <GLES/glext.h>
+#  include <EGL/egl.h>
+#  include <EGL/eglext.h>
+#  include <GLES/gl.h>
+#  include <GLES/glext.h>
 
-#ifdef SK_VULKAN
-#include "include/gpu/vk/GrVkExtensions.h"
-#include "src/gpu/vk/GrVkGpu.h"
-#endif
+#  ifdef SK_VULKAN
+#    include "include/gpu/vk/GrVkExtensions.h"
+#    include "src/gpu/vk/GrVkGpu.h"
+#  endif
 
-#define PROT_CONTENT_EXT_STR "EGL_EXT_protected_content"
-#define EGL_PROTECTED_CONTENT_EXT 0x32C0
+#  define PROT_CONTENT_EXT_STR "EGL_EXT_protected_content"
+#  define EGL_PROTECTED_CONTENT_EXT 0x32C0
 
 std::unique_ptr<SkImageGenerator> GrAHardwareBufferImageGenerator::Make(
     AHardwareBuffer* graphicBuffer, SkAlphaType alphaType, sk_sp<SkColorSpace> colorSpace,
@@ -90,8 +90,9 @@ sk_sp<GrTextureProxy> GrAHardwareBufferImageGenerator::makeProxy(GrRecordingCont
   GrBackendFormat backendFormat =
       GrAHardwareBufferUtils::GetBackendFormat(direct, fHardwareBuffer, fBufferFormat, false);
 
-  GrPixelConfig pixelConfig = context->priv().caps()->getConfigFromBackendFormat(
-      backendFormat, this->getInfo().colorType());
+  GrColorType grColorType = SkColorTypeToGrColorType(this->getInfo().colorType());
+  GrPixelConfig pixelConfig =
+      context->priv().caps()->getConfigFromBackendFormat(backendFormat, grColorType);
 
   if (pixelConfig == kUnknown_GrPixelConfig) {
     return nullptr;
@@ -145,7 +146,7 @@ sk_sp<GrTextureProxy> GrAHardwareBufferImageGenerator::makeProxy(GrRecordingCont
 
   sk_sp<GrTextureProxy> texProxy = proxyProvider->createLazyProxy(
       [direct, buffer = AutoAHBRelease(hardwareBuffer), width, height, pixelConfig,
-       isProtectedContent, backendFormat](
+       isProtectedContent, backendFormat, grColorType](
           GrResourceProvider* resourceProvider) -> GrSurfaceProxy::LazyInstantiationResult {
         GrAHardwareBufferUtils::DeleteImageProc deleteImageProc = nullptr;
         GrAHardwareBufferUtils::DeleteImageCtx deleteImageCtx = nullptr;
@@ -163,7 +164,8 @@ sk_sp<GrTextureProxy> GrAHardwareBufferImageGenerator::makeProxy(GrRecordingCont
         // is invoked. We know the owning SkIamge will send an invalidation message when the
         // image is destroyed, so the texture will be removed at that time.
         sk_sp<GrTexture> tex = resourceProvider->wrapBackendTexture(
-            backendTex, kBorrow_GrWrapOwnership, GrWrapCacheable::kYes, kRead_GrIOType);
+            backendTex, grColorType, kBorrow_GrWrapOwnership, GrWrapCacheable::kYes,
+            kRead_GrIOType);
         if (!tex) {
           deleteImageProc(deleteImageCtx);
           return {};
@@ -175,8 +177,8 @@ sk_sp<GrTextureProxy> GrAHardwareBufferImageGenerator::makeProxy(GrRecordingCont
 
         return std::move(tex);
       },
-      backendFormat, desc, fSurfaceOrigin, GrMipMapped::kNo, GrInternalSurfaceFlags::kReadOnly,
-      SkBackingFit::kExact, SkBudgeted::kNo);
+      backendFormat, desc, GrRenderable::kNo, 1, fSurfaceOrigin, GrMipMapped::kNo,
+      GrInternalSurfaceFlags::kReadOnly, SkBackingFit::kExact, SkBudgeted::kNo, GrProtected::kNo);
 
   return texProxy;
 }

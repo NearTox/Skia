@@ -8,7 +8,7 @@
 #include "include/core/SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN)
 
-#include "src/utils/win/SkHRESULT.h"
+#  include "src/utils/win/SkHRESULT.h"
 
 void SkTraceHR(const char* file, unsigned long line, HRESULT hr, const char* msg) {
   if (msg) {

@@ -136,7 +136,7 @@ class GrProcessorSet {
    */
   Analysis finalize(
       const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage, const GrAppliedClip*,
-      const GrUserStencilSettings*, GrFSAAType, const GrCaps&, GrClampType,
+      const GrUserStencilSettings*, bool hasMixedSampledCoverage, const GrCaps&, GrClampType,
       SkPMColor4f* inputColorOverride);
 
   bool isFinalized() const { return SkToBool(kFinalized_Flag & fFlags); }

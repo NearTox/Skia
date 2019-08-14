@@ -89,7 +89,7 @@ class DWriteFontTypeface : public SkTypeface {
   }
 
  protected:
-  void weak_dispose() const override {
+  void weak_dispose() const noexcept override {
     if (fDWriteFontCollectionLoader.get()) {
       HRV(fFactory->UnregisterFontCollectionLoader(fDWriteFontCollectionLoader.get()));
     }
@@ -122,6 +122,7 @@ class DWriteFontTypeface : public SkTypeface {
       SkFontParameters::Variation::Axis parameters[], int parameterCount) const override;
   int onGetTableTags(SkFontTableTag tags[]) const override;
   size_t onGetTableData(SkFontTableTag, size_t offset, size_t length, void* data) const override;
+  sk_sp<SkData> onCopyTableData(SkFontTableTag) const override;
 
  private:
   typedef SkTypeface INHERITED;

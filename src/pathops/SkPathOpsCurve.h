@@ -10,7 +10,7 @@
 #include "src/pathops/SkIntersections.h"
 
 #ifndef SK_RELEASE
-#include "include/core/SkPath.h"
+#  include "include/core/SkPath.h"
 #endif
 
 struct SkPathOpsBounds;

@@ -17,7 +17,8 @@
 #include "src/gpu/ops/GrOp.h"
 
 GrPipeline::GrPipeline(
-    const InitArgs& args, GrProcessorSet&& processors, GrAppliedClip&& appliedClip) {
+    const InitArgs& args, GrProcessorSet&& processors, GrAppliedClip&& appliedClip)
+    : fOutputSwizzle(args.fOutputSwizzle) {
   SkASSERT(processors.isFinalized());
 
   fFlags = (Flags)args.fInputFlags;
@@ -49,25 +50,26 @@ GrPipeline::GrPipeline(
   int numTotalProcessors = fNumColorProcessors + processors.numCoverageFragmentProcessors() +
                            appliedClip.numClipCoverageFragmentProcessors();
   fFragmentProcessors.reset(numTotalProcessors);
+
   int currFPIdx = 0;
   for (int i = 0; i < processors.numColorFragmentProcessors(); ++i, ++currFPIdx) {
     fFragmentProcessors[currFPIdx] = processors.detachColorFragmentProcessor(i);
-    if (!fFragmentProcessors[currFPIdx]->instantiate(args.fResourceProvider)) {
-      this->markAsBad();
-    }
   }
   for (int i = 0; i < processors.numCoverageFragmentProcessors(); ++i, ++currFPIdx) {
     fFragmentProcessors[currFPIdx] = processors.detachCoverageFragmentProcessor(i);
-    if (!fFragmentProcessors[currFPIdx]->instantiate(args.fResourceProvider)) {
-      this->markAsBad();
-    }
   }
   for (int i = 0; i < appliedClip.numClipCoverageFragmentProcessors(); ++i, ++currFPIdx) {
     fFragmentProcessors[currFPIdx] = appliedClip.detachClipCoverageFragmentProcessor(i);
-    if (!fFragmentProcessors[currFPIdx]->instantiate(args.fResourceProvider)) {
+  }
+
+#ifdef SK_DEBUG
+  for (int i = 0; i < numTotalProcessors; ++i) {
+    if (!fFragmentProcessors[i]->isInstantiated()) {
       this->markAsBad();
+      break;
     }
   }
+#endif
 }
 
 void GrPipeline::addDependenciesTo(GrOpList* opList, const GrCaps& caps) const {
@@ -91,14 +93,15 @@ GrXferBarrierType GrPipeline::xferBarrierType(GrTexture* texture, const GrCaps& 
 }
 
 GrPipeline::GrPipeline(
-    GrScissorTest scissorTest, SkBlendMode blendmode, InputFlags inputFlags,
-    const GrUserStencilSettings* userStencil)
+    GrScissorTest scissorTest, sk_sp<const GrXferProcessor> xp, const GrSwizzle& outputSwizzle,
+    InputFlags inputFlags, const GrUserStencilSettings* userStencil)
     : fWindowRectsState(),
       fUserStencilSettings(userStencil),
       fFlags((Flags)inputFlags),
-      fXferProcessor(GrPorterDuffXPFactory::MakeNoCoverageXP(blendmode)),
+      fXferProcessor(std::move(xp)),
       fFragmentProcessors(),
-      fNumColorProcessors(0) {
+      fNumColorProcessors(0),
+      fOutputSwizzle(outputSwizzle) {
   if (GrScissorTest::kEnabled == scissorTest) {
     fFlags |= Flags::kScissorEnabled;
   }
@@ -108,8 +111,7 @@ GrPipeline::GrPipeline(
 }
 
 uint32_t GrPipeline::getBlendInfoKey() const {
-  GrXferProcessor::BlendInfo blendInfo;
-  this->getXferProcessor().getBlendInfo(&blendInfo);
+  const GrXferProcessor::BlendInfo& blendInfo = this->getXferProcessor().getBlendInfo();
 
   static const uint32_t kBlendWriteShift = 1;
   static const uint32_t kBlendCoeffShift = 5;

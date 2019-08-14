@@ -7,6 +7,7 @@
 
 #include "include/core/SkBitmap.h"
 #include "include/core/SkCanvas.h"
+#include "include/core/SkData.h"
 #include "include/core/SkFontMetrics.h"
 #include "include/core/SkPath.h"
 #include "include/core/SkStream.h"
@@ -248,16 +249,20 @@ class FreeTypeLibrary : SkNoncopyable {
 
 struct SkFaceRec;
 
-SK_DECLARE_STATIC_MUTEX(gFTMutex);
+static SkMutex& f_t_mutex() {
+  static SkMutex& mutex = *(new SkMutex);
+  return mutex;
+}
+
 static FreeTypeLibrary* gFTLibrary;
 static SkFaceRec* gFaceRecHead;
 
 // Private to ref_ft_library and unref_ft_library
 static int gFTCount;
 
-// Caller must lock gFTMutex before calling this function.
+// Caller must lock f_t_mutex() before calling this function.
 static bool ref_ft_library() {
-  gFTMutex.assertHeld();
+  f_t_mutex().assertHeld();
   SkASSERT(gFTCount >= 0);
 
   if (0 == gFTCount) {
@@ -268,9 +273,9 @@ static bool ref_ft_library() {
   return gFTLibrary->library();
 }
 
-// Caller must lock gFTMutex before calling this function.
+// Caller must lock f_t_mutex() before calling this function.
 static void unref_ft_library() {
-  gFTMutex.assertHeld();
+  f_t_mutex().assertHeld();
   SkASSERT(gFTCount > 0);
 
   --gFTCount;
@@ -278,7 +283,7 @@ static void unref_ft_library() {
     SkASSERT(nullptr == gFaceRecHead);
     SkASSERT(nullptr != gFTLibrary);
     delete gFTLibrary;
-    SkDEBUGCODE(gFTLibrary = nullptr);
+    SkDEBUGCODE(gFTLibrary = nullptr;)
   }
 }
 
@@ -380,9 +385,9 @@ static void ft_face_setup_axes(SkFaceRec* rec, const SkFontData& data) {
 }
 
 // Will return nullptr on failure
-// Caller must lock gFTMutex before calling this function.
+// Caller must lock f_t_mutex() before calling this function.
 static SkFaceRec* ref_ft_face(const SkTypeface* typeface) {
-  gFTMutex.assertHeld();
+  f_t_mutex().assertHeld();
 
   const SkFontID fontID = typeface->uniqueID();
   SkFaceRec* cachedRec = gFaceRecHead;
@@ -442,10 +447,10 @@ static SkFaceRec* ref_ft_face(const SkTypeface* typeface) {
   return rec.release();
 }
 
-// Caller must lock gFTMutex before calling this function.
+// Caller must lock f_t_mutex() before calling this function.
 // Marked extern because vc++ does not support internal linkage template parameters.
 extern /*static*/ void unref_ft_face(SkFaceRec* faceRec) {
-  gFTMutex.assertHeld();
+  f_t_mutex().assertHeld();
 
   SkFaceRec* rec = gFaceRecHead;
   SkFaceRec* prev = nullptr;
@@ -471,7 +476,7 @@ extern /*static*/ void unref_ft_face(SkFaceRec* faceRec) {
 class AutoFTAccess {
  public:
   AutoFTAccess(const SkTypeface* tf) : fFaceRec(nullptr) {
-    gFTMutex.acquire();
+    f_t_mutex().acquire();
     SkASSERT_RELEASE(ref_ft_library());
     fFaceRec = ref_ft_face(tf);
   }
@@ -481,7 +486,7 @@ class AutoFTAccess {
       unref_ft_face(fFaceRec);
     }
     unref_ft_library();
-    gFTMutex.release();
+    f_t_mutex().release();
   }
 
   FT_Face face() { return fFaceRec ? fFaceRec->fFace.get() : nullptr; }
@@ -537,9 +542,9 @@ class SkScalerContext_FreeType : public SkScalerContext_FreeType_Base {
   void getBBoxForCurrentGlyph(
       const SkGlyph* glyph, FT_BBox* bbox, bool snapToPixelBoundary = false);
   bool getCBoxForLetter(char letter, FT_BBox* bbox);
-  // Caller must lock gFTMutex before calling this function.
+  // Caller must lock f_t_mutex() before calling this function.
   void updateGlyphIfLCD(SkGlyph* glyph);
-  // Caller must lock gFTMutex before calling this function.
+  // Caller must lock f_t_mutex() before calling this function.
   // update FreeType2 glyph slot with glyph emboldened
   void emboldenIfNeeded(FT_Face face, FT_GlyphSlot glyph, SkGlyphID gid);
   bool shouldSubpixelBitmap(const SkGlyph&, const SkMatrix&);
@@ -721,7 +726,7 @@ void SkTypeface_FreeType::onFilterRec(SkScalerContextRec* rec) const {
 
   if (isLCD(*rec)) {
     // TODO: re-work so that FreeType is set-up and selected by the SkFontMgr.
-    SkAutoMutexAcquire ama(gFTMutex);
+    SkAutoMutexExclusive ama(f_t_mutex());
     ref_ft_library();
     if (!gFTLibrary->isLCDSupported()) {
       // If the runtime Freetype library doesn't support LCD, disable it here.
@@ -829,7 +834,7 @@ SkScalerContext_FreeType::SkScalerContext_FreeType(
       fFace(nullptr),
       fFTSize(nullptr),
       fStrikeIndex(-1) {
-  SkAutoMutexAcquire ac(gFTMutex);
+  SkAutoMutexExclusive ac(f_t_mutex());
   SkASSERT_RELEASE(ref_ft_library());
 
   fFaceRec.reset(ref_ft_face(this->getTypeface()));
@@ -1004,7 +1009,7 @@ SkScalerContext_FreeType::SkScalerContext_FreeType(
 }
 
 SkScalerContext_FreeType::~SkScalerContext_FreeType() {
-  SkAutoMutexAcquire ac(gFTMutex);
+  SkAutoMutexExclusive ac(f_t_mutex());
 
   if (fFTSize != nullptr) {
     FT_Done_Size(fFTSize);
@@ -1019,7 +1024,7 @@ SkScalerContext_FreeType::~SkScalerContext_FreeType() {
     this face with other context (at different sizes).
 */
 FT_Error SkScalerContext_FreeType::setupSize() {
-  gFTMutex.assertHeld();
+  f_t_mutex().assertHeld();
   FT_Error err = FT_Activate_Size(fFTSize);
   if (err != 0) {
     return err;
@@ -1038,7 +1043,7 @@ bool SkScalerContext_FreeType::generateAdvance(SkGlyph* glyph) {
     return false;
   }
 
-  SkAutoMutexAcquire ac(gFTMutex);
+  SkAutoMutexExclusive ac(f_t_mutex());
 
   if (this->setupSize()) {
     glyph->zeroMetrics();
@@ -1139,7 +1144,7 @@ bool SkScalerContext_FreeType::shouldSubpixelBitmap(const SkGlyph& glyph, const 
 }
 
 void SkScalerContext_FreeType::generateMetrics(SkGlyph* glyph) {
-  SkAutoMutexAcquire ac(gFTMutex);
+  SkAutoMutexExclusive ac(f_t_mutex());
 
   glyph->fMaskFormat = fRec.fMaskFormat;
 
@@ -1284,15 +1289,11 @@ void SkScalerContext_FreeType::generateMetrics(SkGlyph* glyph) {
 #endif
 }
 
-static void clear_glyph_image(const SkGlyph& glyph) {
-  sk_bzero(glyph.fImage, glyph.rowBytes() * glyph.fHeight);
-}
-
 void SkScalerContext_FreeType::generateImage(const SkGlyph& glyph) {
-  SkAutoMutexAcquire ac(gFTMutex);
+  SkAutoMutexExclusive ac(f_t_mutex());
 
   if (this->setupSize()) {
-    clear_glyph_image(glyph);
+    sk_bzero(glyph.fImage, glyph.imageSize());
     return;
   }
 
@@ -1302,8 +1303,8 @@ void SkScalerContext_FreeType::generateImage(const SkGlyph& glyph) {
         err,
         "SkScalerContext_FreeType::generateImage: FT_Load_Glyph(glyph:%d "
         "width:%d height:%d rb:%d flags:%d) failed.",
-        glyph.getGlyphID(), glyph.fWidth, glyph.fHeight, glyph.rowBytes(), fLoadGlyphFlags);
-    clear_glyph_image(glyph);
+        glyph.getGlyphID(), glyph.width(), glyph.height(), glyph.rowBytes(), fLoadGlyphFlags);
+    sk_bzero(glyph.fImage, glyph.imageSize());
     return;
   }
 
@@ -1322,7 +1323,7 @@ void SkScalerContext_FreeType::generateImage(const SkGlyph& glyph) {
 bool SkScalerContext_FreeType::generatePath(SkGlyphID glyphID, SkPath* path) {
   SkASSERT(path);
 
-  SkAutoMutexAcquire ac(gFTMutex);
+  SkAutoMutexExclusive ac(f_t_mutex());
 
   // FT_IS_SCALABLE is documented to mean the face contains outline glyphs.
   if (!FT_IS_SCALABLE(fFace) || this->setupSize()) {
@@ -1363,7 +1364,7 @@ void SkScalerContext_FreeType::generateFontMetrics(SkFontMetrics* metrics) {
     return;
   }
 
-  SkAutoMutexAcquire ac(gFTMutex);
+  SkAutoMutexExclusive ac(f_t_mutex());
 
   if (this->setupSize()) {
     sk_bzero(metrics, sizeof(*metrics));
@@ -1737,6 +1738,30 @@ size_t SkTypeface_FreeType::onGetTableData(
   }
 
   return size;
+}
+
+sk_sp<SkData> SkTypeface_FreeType::onCopyTableData(SkFontTableTag tag) const {
+  AutoFTAccess fta(this);
+  FT_Face face = fta.face();
+
+  FT_ULong tableLength = 0;
+  FT_Error error;
+
+  // When 'length' is 0 it is overwritten with the full table length; 'offset' is ignored.
+  error = FT_Load_Sfnt_Table(face, tag, 0, nullptr, &tableLength);
+  if (error) {
+    return nullptr;
+  }
+
+  sk_sp<SkData> data = SkData::MakeUninitialized(tableLength);
+  if (data) {
+    error = FT_Load_Sfnt_Table(
+        face, tag, 0, reinterpret_cast<FT_Byte*>(data->writable_data()), &tableLength);
+    if (error) {
+      data.reset();
+    }
+  }
+  return data;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

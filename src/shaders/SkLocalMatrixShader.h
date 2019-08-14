@@ -35,6 +35,8 @@ class SkLocalMatrixShader final : public SkShaderBase {
     return fProxyShader;
   }
 
+  SkPicture* isAPicture(SkMatrix*, SkTileMode[2], SkRect* tile) const override;
+
  protected:
   void flatten(SkWriteBuffer&) const override;
 

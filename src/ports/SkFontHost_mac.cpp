@@ -648,6 +648,7 @@ class SkTypeface_Mac : public SkTypeface {
   SkTypeface::LocalizedStrings* onCreateFamilyNameIterator() const override;
   int onGetTableTags(SkFontTableTag tags[]) const override;
   size_t onGetTableData(SkFontTableTag, size_t offset, size_t length, void* data) const override;
+  sk_sp<SkData> onCopyTableData(SkFontTableTag) const override;
   SkScalerContext* onCreateScalerContext(
       const SkScalerContextEffects&, const SkDescriptor*) const override;
   void onFilterRec(SkScalerContextRec*) const override;
@@ -769,13 +770,44 @@ static SkUniqueCFRef<CTFontDescriptorRef> create_descriptor(
       CTFontDescriptorCreateWithAttributes(cfAttributes.get()));
 }
 
+// Same as the above function except style is included so we can
+// compare whether the created font conforms to the style. If not, we need
+// to recreate the font with symbolic traits. This is needed due to MacOS 10.11
+// font creation problem https://bugs.chromium.org/p/skia/issues/detail?id=8447.
+static sk_sp<SkTypeface> create_from_desc_and_style(
+    CTFontDescriptorRef desc, const SkFontStyle& style) {
+  SkUniqueCFRef<CTFontRef> ctFont(CTFontCreateWithFontDescriptor(desc, 0, nullptr));
+  if (!ctFont) {
+    return nullptr;
+  }
+
+  const CTFontSymbolicTraits traits = CTFontGetSymbolicTraits(ctFont.get());
+  CTFontSymbolicTraits expected_traits = traits;
+  if (style.slant() != SkFontStyle::kUpright_Slant) {
+    expected_traits |= kCTFontItalicTrait;
+  }
+  if (style.weight() >= SkFontStyle::kBold_Weight) {
+    expected_traits |= kCTFontBoldTrait;
+  }
+
+  if (expected_traits != traits) {
+    SkUniqueCFRef<CTFontRef> ctNewFont(CTFontCreateCopyWithSymbolicTraits(
+        ctFont.get(), 0, nullptr, expected_traits, expected_traits));
+    if (ctNewFont) {
+      ctFont = std::move(ctNewFont);
+    }
+  }
+
+  return create_from_CTFontRef(std::move(ctFont), nullptr, nullptr);
+}
+
 /** Creates a typeface from a name, searching the cache. */
 static sk_sp<SkTypeface> create_from_name(const char familyName[], const SkFontStyle& style) {
   SkUniqueCFRef<CTFontDescriptorRef> desc = create_descriptor(familyName, style);
   if (!desc) {
     return nullptr;
   }
-  return create_from_desc(desc.get());
+  return create_from_desc_and_style(desc.get(), style);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -823,6 +855,17 @@ class SkScalerContext_Mac : public SkScalerContext {
 
  private:
   static void CTPathElement(void* info, const CGPathElement* element);
+  template <bool APPLY_PREBLEND>
+  static void RGBToA8(
+      const CGRGBPixel* SK_RESTRICT cgPixels, size_t cgRowBytes, const SkGlyph& glyph,
+      const uint8_t* table8);
+  template <bool APPLY_PREBLEND>
+  static uint16_t RGBToLcd16(
+      CGRGBPixel rgb, const uint8_t* tableR, const uint8_t* tableG, const uint8_t* tableB);
+  template <bool APPLY_PREBLEND>
+  static void RGBToLcd16(
+      const CGRGBPixel* SK_RESTRICT cgPixels, size_t cgRowBytes, const SkGlyph& glyph,
+      const uint8_t* tableR, const uint8_t* tableG, const uint8_t* tableB);
 
   Offscreen fOffscreen;
 
@@ -928,13 +971,13 @@ CGRGBPixel* Offscreen::getCG(
   bool doAA = false;
   bool doLCD = false;
 
-  if (SkMask::kBW_Format != glyph.fMaskFormat) {
+  if (SkMask::kBW_Format != glyph.maskFormat()) {
     doLCD = true;
     doAA = true;
   }
 
   // FIXME: lcd smoothed un-hinted rasterization unsupported.
-  if (!generateA8FromLCD && SkMask::kA8_Format == glyph.fMaskFormat) {
+  if (!generateA8FromLCD && SkMask::kA8_Format == glyph.maskFormat()) {
     doLCD = false;
     doAA = true;
   }
@@ -942,24 +985,23 @@ CGRGBPixel* Offscreen::getCG(
   // If this font might have color glyphs, disable LCD as there's no way to support it.
   // CoreText doesn't tell us which format it ended up using, so we can't detect it.
   // A8 will end up black on transparent, but TODO: we can detect gray and set to A8.
-  if (SkMask::kARGB32_Format == glyph.fMaskFormat) {
+  if (SkMask::kARGB32_Format == glyph.maskFormat()) {
     doLCD = false;
   }
 
   size_t rowBytes = fSize.fWidth * sizeof(CGRGBPixel);
-  if (!fCG || fSize.fWidth < glyph.fWidth || fSize.fHeight < glyph.fHeight) {
-    if (fSize.fWidth < glyph.fWidth) {
-      fSize.fWidth = RoundSize(glyph.fWidth);
+  if (!fCG || fSize.fWidth < glyph.width() || fSize.fHeight < glyph.height()) {
+    if (fSize.fWidth < glyph.width()) {
+      fSize.fWidth = RoundSize(glyph.width());
     }
-    if (fSize.fHeight < glyph.fHeight) {
-      fSize.fHeight = RoundSize(glyph.fHeight);
+    if (fSize.fHeight < glyph.height()) {
+      fSize.fHeight = RoundSize(glyph.height());
     }
 
     rowBytes = fSize.fWidth * sizeof(CGRGBPixel);
     void* image = fImageStorage.reset(rowBytes * fSize.fHeight);
-    const CGImageAlphaInfo alpha = (SkMask::kARGB32_Format == glyph.fMaskFormat)
-                                       ? kCGImageAlphaPremultipliedFirst
-                                       : kCGImageAlphaNoneSkipFirst;
+    const CGImageAlphaInfo alpha =
+        (glyph.isColor()) ? kCGImageAlphaPremultipliedFirst : kCGImageAlphaNoneSkipFirst;
     const CGBitmapInfo bitmapInfo = kCGBitmapByteOrder32Host | alpha;
     fCG.reset(CGBitmapContextCreate(
         image, fSize.fWidth, fSize.fHeight, 8, rowBytes, fRGBSpace.get(), bitmapInfo));
@@ -998,11 +1040,11 @@ CGRGBPixel* Offscreen::getCG(
 
   CGRGBPixel* image = (CGRGBPixel*)fImageStorage.get();
   // skip rows based on the glyph's height
-  image += (fSize.fHeight - glyph.fHeight) * fSize.fWidth;
+  image += (fSize.fHeight - glyph.height()) * fSize.fWidth;
 
   // Erase to white (or transparent black if it's a color glyph, to not composite against white).
-  uint32_t bgColor = (SkMask::kARGB32_Format != glyph.fMaskFormat) ? 0xFFFFFFFF : 0x00000000;
-  sk_memset_rect32(image, bgColor, glyph.fWidth, glyph.fHeight, rowBytes);
+  uint32_t bgColor = (!glyph.isColor()) ? 0xFFFFFFFF : 0x00000000;
+  sk_memset_rect32(image, bgColor, glyph.width(), glyph.height(), rowBytes);
 
   float subX = 0;
   float subY = 0;
@@ -1011,7 +1053,7 @@ CGRGBPixel* Offscreen::getCG(
     subY = SkFixedToFloat(glyph.getSubYFixed());
   }
 
-  CGPoint point = CGPointMake(-glyph.fLeft + subX, glyph.fTop + glyph.fHeight - subY);
+  CGPoint point = CGPointMake(-glyph.left() + subX, glyph.top() + glyph.height() - subY);
   // Prior to 10.10, CTFontDrawGlyphs acted like CGContextShowGlyphsAtPositions and took
   // 'positions' which are in text space. The glyph location (in device space) must be
   // mapped into text space, so that CG can convert it back into device space.
@@ -1146,8 +1188,9 @@ static inline uint8_t rgb_to_a8(CGRGBPixel rgb, const uint8_t* table8) {
 #  endif
   return lum;
 }
+
 template <bool APPLY_PREBLEND>
-static void rgb_to_a8(
+void SkScalerContext_Mac::RGBToA8(
     const CGRGBPixel* SK_RESTRICT cgPixels, size_t cgRowBytes, const SkGlyph& glyph,
     const uint8_t* table8) {
   const int width = glyph.fWidth;
@@ -1164,7 +1207,7 @@ static void rgb_to_a8(
 }
 
 template <bool APPLY_PREBLEND>
-static inline uint16_t rgb_to_lcd16(
+uint16_t SkScalerContext_Mac::RGBToLcd16(
     CGRGBPixel rgb, const uint8_t* tableR, const uint8_t* tableG, const uint8_t* tableB) {
   U8CPU r = sk_apply_lut_if<APPLY_PREBLEND>(0xFF - ((rgb >> 16) & 0xFF), tableR);
   U8CPU g = sk_apply_lut_if<APPLY_PREBLEND>(0xFF - ((rgb >> 8) & 0xFF), tableG);
@@ -1176,8 +1219,9 @@ static inline uint16_t rgb_to_lcd16(
 #  endif
   return SkPack888ToRGB16(r, g, b);
 }
+
 template <bool APPLY_PREBLEND>
-static void rgb_to_lcd16(
+void SkScalerContext_Mac::RGBToLcd16(
     const CGRGBPixel* SK_RESTRICT cgPixels, size_t cgRowBytes, const SkGlyph& glyph,
     const uint8_t* tableR, const uint8_t* tableG, const uint8_t* tableB) {
   const int width = glyph.fWidth;
@@ -1186,7 +1230,7 @@ static void rgb_to_lcd16(
 
   for (int y = 0; y < glyph.fHeight; y++) {
     for (int i = 0; i < width; i++) {
-      dst[i] = rgb_to_lcd16<APPLY_PREBLEND>(cgPixels[i], tableR, tableG, tableB);
+      dst[i] = RGBToLcd16<APPLY_PREBLEND>(cgPixels[i], tableR, tableG, tableB);
     }
     cgPixels = SkTAddOffset<const CGRGBPixel>(cgPixels, cgRowBytes);
     dst = SkTAddOffset<uint16_t>(dst, dstRB);
@@ -1244,16 +1288,16 @@ void SkScalerContext_Mac::generateImage(const SkGlyph& glyph) {
   switch (glyph.fMaskFormat) {
     case SkMask::kLCD16_Format: {
       if (fPreBlend.isApplicable()) {
-        rgb_to_lcd16<true>(cgPixels, cgRowBytes, glyph, fPreBlend.fR, fPreBlend.fG, fPreBlend.fB);
+        RGBToLcd16<true>(cgPixels, cgRowBytes, glyph, fPreBlend.fR, fPreBlend.fG, fPreBlend.fB);
       } else {
-        rgb_to_lcd16<false>(cgPixels, cgRowBytes, glyph, fPreBlend.fR, fPreBlend.fG, fPreBlend.fB);
+        RGBToLcd16<false>(cgPixels, cgRowBytes, glyph, fPreBlend.fR, fPreBlend.fG, fPreBlend.fB);
       }
     } break;
     case SkMask::kA8_Format: {
       if (fPreBlend.isApplicable()) {
-        rgb_to_a8<true>(cgPixels, cgRowBytes, glyph, fPreBlend.fG);
+        RGBToA8<true>(cgPixels, cgRowBytes, glyph, fPreBlend.fG);
       } else {
-        rgb_to_a8<false>(cgPixels, cgRowBytes, glyph, fPreBlend.fG);
+        RGBToA8<false>(cgPixels, cgRowBytes, glyph, fPreBlend.fG);
       }
     } break;
     case SkMask::kBW_Format: {
@@ -2096,6 +2140,16 @@ size_t SkTypeface_Mac::onGetTableData(
   return length;
 }
 
+sk_sp<SkData> SkTypeface_Mac::onCopyTableData(SkFontTableTag tag) const {
+  SkUniqueCFRef<CFDataRef> srcData = copy_table_from_font(fFontRef.get(), tag);
+  if (!srcData) {
+    return nullptr;
+  }
+  return SkData::MakeWithProc(
+      CFDataGetBytePtr(srcData.get()), CFDataGetLength(srcData.get()),
+      [](const void*, void* ctx) { CFRelease((CFDataRef)ctx); }, (void*)srcData.release());
+}
+
 SkScalerContext* SkTypeface_Mac::onCreateScalerContext(
     const SkScalerContextEffects& effects, const SkDescriptor* desc) const {
   return new SkScalerContext_Mac(sk_ref_sp(const_cast<SkTypeface_Mac*>(this)), effects, desc);
@@ -2177,7 +2231,6 @@ void SkTypeface_Mac::onFilterRec(SkScalerContextRec* rec) const {
     rec->ignorePreBlend();
 #  endif
   } else {
-#  ifndef SK_IGNORE_MAC_BLENDING_MATCH_FIX
     SkColor color = rec->getLuminanceColor();
     if (smoothBehavior == SmoothBehavior::some) {
       // CoreGraphics smoothed text without subpixel coverage blitting goes from a gamma of
@@ -2193,7 +2246,7 @@ void SkTypeface_Mac::onFilterRec(SkScalerContextRec* rec) const {
           SkColorGetR(color) * 3 / 4, SkColorGetG(color) * 3 / 4, SkColorGetB(color) * 3 / 4);
     }
     rec->setLuminanceColor(color);
-#  endif
+
     // CoreGraphics dialates smoothed text to provide contrast.
     rec->setContrast(0);
   }

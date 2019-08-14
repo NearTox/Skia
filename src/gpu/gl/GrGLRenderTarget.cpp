@@ -20,26 +20,23 @@
 // Because this class is virtually derived from GrSurface we must explicitly call its constructor.
 // Constructor for wrapped render targets.
 GrGLRenderTarget::GrGLRenderTarget(
-    GrGLGpu* gpu, const GrSurfaceDesc& desc, GrGLenum format, const IDDesc& idDesc,
+    GrGLGpu* gpu, const GrSurfaceDesc& desc, int sampleCount, GrGLenum format, const IDDesc& idDesc,
     GrGLStencilAttachment* stencil)
-    : GrSurface(gpu, desc), INHERITED(gpu, desc, stencil) {
+    : GrSurface(gpu, desc, GrProtected::kNo),
+      INHERITED(gpu, desc, sampleCount, GrProtected::kNo, stencil) {
   this->setFlags(gpu->glCaps(), idDesc);
   this->init(desc, format, idDesc);
   this->registerWithCacheWrapped(GrWrapCacheable::kNo);
 }
 
 GrGLRenderTarget::GrGLRenderTarget(
-    GrGLGpu* gpu, const GrSurfaceDesc& desc, GrGLenum format, const IDDesc& idDesc)
-    : GrSurface(gpu, desc), INHERITED(gpu, desc) {
+    GrGLGpu* gpu, const GrSurfaceDesc& desc, int sampleCount, GrGLenum format, const IDDesc& idDesc)
+    : GrSurface(gpu, desc, GrProtected::kNo), INHERITED(gpu, desc, sampleCount, GrProtected::kNo) {
   this->setFlags(gpu->glCaps(), idDesc);
   this->init(desc, format, idDesc);
 }
 
 inline void GrGLRenderTarget::setFlags(const GrGLCaps& glCaps, const IDDesc& idDesc) {
-  if (idDesc.fIsMixedSampled) {
-    SkASSERT(glCaps.usesMixedSamples() && idDesc.fRTFBOID);  // FBO 0 can't be mixed sampled.
-    this->setHasMixedSamples();
-  }
   if (!idDesc.fRTFBOID) {
     this->setGLRTFBOIDIs0();
   }
@@ -57,7 +54,7 @@ void GrGLRenderTarget::init(const GrSurfaceDesc& desc, GrGLenum format, const ID
 }
 
 sk_sp<GrGLRenderTarget> GrGLRenderTarget::MakeWrapped(
-    GrGLGpu* gpu, const GrSurfaceDesc& desc, GrGLenum format, const IDDesc& idDesc,
+    GrGLGpu* gpu, const GrSurfaceDesc& desc, int sampleCount, GrGLenum format, const IDDesc& idDesc,
     int stencilBits) {
   GrGLStencilAttachment* sb = nullptr;
   if (stencilBits) {
@@ -68,9 +65,9 @@ sk_sp<GrGLRenderTarget> GrGLRenderTarget::MakeWrapped(
     format.fStencilBits = stencilBits;
     format.fTotalBits = stencilBits;
     // Ownership of sb is passed to the GrRenderTarget so doesn't need to be deleted
-    sb = new GrGLStencilAttachment(gpu, sbDesc, desc.fWidth, desc.fHeight, desc.fSampleCnt, format);
+    sb = new GrGLStencilAttachment(gpu, sbDesc, desc.fWidth, desc.fHeight, sampleCount, format);
   }
-  return sk_sp<GrGLRenderTarget>(new GrGLRenderTarget(gpu, desc, format, idDesc, sb));
+  return sk_sp<GrGLRenderTarget>(new GrGLRenderTarget(gpu, desc, sampleCount, format, idDesc, sb));
 }
 
 GrBackendRenderTarget GrGLRenderTarget::getBackendRenderTarget() const {
@@ -83,7 +80,7 @@ GrBackendRenderTarget GrGLRenderTarget::getBackendRenderTarget() const {
   }
 
   return GrBackendRenderTarget(
-      this->width(), this->height(), this->numColorSamples(), numStencilBits, fbi);
+      this->width(), this->height(), this->numSamples(), numStencilBits, fbi);
 }
 
 GrBackendFormat GrGLRenderTarget::backendFormat() const {
@@ -230,7 +227,7 @@ int GrGLRenderTarget::msaaSamples() const {
   if (fTexFBOID == kUnresolvableFBOID || fTexFBOID != fRTFBOID) {
     // If the render target's FBO is external (fTexFBOID == kUnresolvableFBOID), or if we own
     // the render target's FBO (fTexFBOID == fRTFBOID) then we use the provided sample count.
-    return this->numStencilSamples();
+    return this->numSamples();
   }
 
   // When fTexFBOID == fRTFBOID, we either are not using MSAA, or MSAA is auto resolving, so use

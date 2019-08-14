@@ -8,14 +8,14 @@
 #include "include/core/SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN)
 
-#include "include/docs/SkXPSDocument.h"
+#  include "include/docs/SkXPSDocument.h"
 
-#include "include/core/SkStream.h"
-#include "src/utils/win/SkHRESULT.h"
-#include "src/utils/win/SkTScopedComPtr.h"
-#include "src/xps/SkXPSDevice.h"
+#  include "include/core/SkStream.h"
+#  include "src/utils/win/SkHRESULT.h"
+#  include "src/utils/win/SkTScopedComPtr.h"
+#  include "src/xps/SkXPSDevice.h"
 
-#include <XpsObjectModel.h>
+#  include <XpsObjectModel.h>
 
 namespace {
 struct SkXPSDocument final : public SkDocument {

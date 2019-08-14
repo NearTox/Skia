@@ -14,8 +14,8 @@
 #include "src/core/SkWriteBuffer.h"
 
 #if SK_SUPPORT_GPU
-#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
-#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#  include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#  include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 
 class NormalFlatFP : public GrFragmentProcessor {
  public:

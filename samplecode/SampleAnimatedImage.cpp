@@ -14,7 +14,7 @@
 #include "include/core/SkRect.h"
 #include "include/core/SkScalar.h"
 #include "include/core/SkString.h"
-#include "tools/timer/AnimTimer.h"
+#include "tools/timer/TimeUtils.h"
 
 #include "samplecode/Sample.h"
 #include "tools/Resources.h"
@@ -23,10 +23,14 @@ static constexpr char kPauseKey = 'p';
 static constexpr char kResetKey = 'r';
 
 class SampleAnimatedImage : public Sample {
- public:
-  SampleAnimatedImage() : INHERITED(), fYOffset(0) {}
+  sk_sp<SkAnimatedImage> fImage;
+  sk_sp<SkDrawable> fDrawable;
+  SkScalar fYOffset = 0;
+  bool fRunning = false;
+  double fCurrentTime = 0.0;
+  double fLastWallTime = 0.0;
+  double fTimeToShowNextFrame = 0.0;
 
- protected:
   void onDrawBackground(SkCanvas* canvas) override {
     SkFont font;
     font.setSize(20);
@@ -53,13 +57,13 @@ class SampleAnimatedImage : public Sample {
     canvas->drawDrawable(fDrawable.get(), fImage->getBounds().width(), 0);
   }
 
-  bool onAnimate(const AnimTimer& animTimer) override {
+  bool onAnimate(double nanos) override {
     if (!fImage) {
       return false;
     }
 
     const double lastWallTime = fLastWallTime;
-    fLastWallTime = animTimer.msec();
+    fLastWallTime = TimeUtils::NanosToMSec(nanos);
 
     if (fRunning) {
       fCurrentTime += fLastWallTime - lastWallTime;
@@ -93,14 +97,10 @@ class SampleAnimatedImage : public Sample {
     fDrawable = recorder.finishRecordingAsDrawable();
   }
 
-  bool onQuery(Sample::Event* evt) override {
-    if (Sample::TitleQ(*evt)) {
-      Sample::TitleR(evt, "AnimatedImage");
-      return true;
-    }
+  SkString name() override { return SkString("AnimatedImage"); }
 
-    SkUnichar uni;
-    if (fImage && Sample::CharQ(*evt, &uni)) {
+  bool onChar(SkUnichar uni) override {
+    if (fImage) {
       switch (uni) {
         case kPauseKey:
           fRunning = !fRunning;
@@ -117,20 +117,8 @@ class SampleAnimatedImage : public Sample {
         default: break;
       }
     }
-    return this->INHERITED::onQuery(evt);
+    return false;
   }
-
- private:
-  sk_sp<SkAnimatedImage> fImage;
-  sk_sp<SkDrawable> fDrawable;
-  SkScalar fYOffset;
-  bool fRunning = false;
-  double fCurrentTime = 0.0;
-  double fLastWallTime = 0.0;
-  double fTimeToShowNextFrame = 0.0;
-  typedef Sample INHERITED;
 };
-
-///////////////////////////////////////////////////////////////////////////////
 
 DEF_SAMPLE(return new SampleAnimatedImage();)

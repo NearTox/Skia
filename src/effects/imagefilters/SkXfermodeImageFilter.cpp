@@ -15,18 +15,18 @@
 #include "src/core/SkSpecialSurface.h"
 #include "src/core/SkWriteBuffer.h"
 #if SK_SUPPORT_GPU
-#include "include/private/GrRecordingContext.h"
-#include "include/private/GrTextureProxy.h"
-#include "src/gpu/GrCaps.h"
-#include "src/gpu/GrClip.h"
-#include "src/gpu/GrColorSpaceXform.h"
-#include "src/gpu/GrRecordingContextPriv.h"
-#include "src/gpu/GrRenderTargetContext.h"
+#  include "include/private/GrRecordingContext.h"
+#  include "src/gpu/GrCaps.h"
+#  include "src/gpu/GrClip.h"
+#  include "src/gpu/GrColorSpaceXform.h"
+#  include "src/gpu/GrRecordingContextPriv.h"
+#  include "src/gpu/GrRenderTargetContext.h"
+#  include "src/gpu/GrTextureProxy.h"
 
-#include "src/gpu/SkGr.h"
-#include "src/gpu/effects/GrTextureDomain.h"
-#include "src/gpu/effects/generated/GrConstColorProcessor.h"
-#include "src/gpu/effects/generated/GrSimpleTextureEffect.h"
+#  include "src/gpu/SkGr.h"
+#  include "src/gpu/effects/GrTextureDomain.h"
+#  include "src/gpu/effects/generated/GrConstColorProcessor.h"
+#  include "src/gpu/effects/generated/GrSimpleTextureEffect.h"
 #endif
 #include "src/core/SkClipOpPriv.h"
 
@@ -220,7 +220,7 @@ void SkXfermodeImageFilter_Base::drawForeground(
 
 #if SK_SUPPORT_GPU
 
-#include "src/gpu/effects/GrXfermodeFragmentProcessor.h"
+#  include "src/gpu/effects/GrXfermodeFragmentProcessor.h"
 
 sk_sp<SkSpecialImage> SkXfermodeImageFilter_Base::filterImageGPU(
     SkSpecialImage* source, sk_sp<SkSpecialImage> background, const SkIPoint& backgroundOffset,
@@ -286,12 +286,11 @@ sk_sp<SkSpecialImage> SkXfermodeImageFilter_Base::filterImageGPU(
 
   paint.setPorterDuffXPFactory(SkBlendMode::kSrc);
 
-  SkColorType colorType = outputProperties.colorType();
-  GrBackendFormat format = context->priv().caps()->getBackendFormatFromColorType(colorType);
+  GrColorType colorType = SkColorTypeToGrColorType(outputProperties.colorType());
 
   sk_sp<GrRenderTargetContext> renderTargetContext(context->priv().makeDeferredRenderTargetContext(
-      format, SkBackingFit::kApprox, bounds.width(), bounds.height(),
-      SkColorType2GrPixelConfig(colorType), sk_ref_sp(outputProperties.colorSpace())));
+      SkBackingFit::kApprox, bounds.width(), bounds.height(), colorType,
+      sk_ref_sp(outputProperties.colorSpace())));
   if (!renderTargetContext) {
     return nullptr;
   }

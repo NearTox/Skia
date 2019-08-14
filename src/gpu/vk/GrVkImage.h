@@ -37,6 +37,7 @@ class GrVkImage : SkNoncopyable {
     } else if (fIsBorrowed) {
       fResource = new BorrowedResource(info.fImage, info.fAlloc, info.fImageTiling);
     } else {
+      SkASSERT(VK_NULL_HANDLE != info.fAlloc.fMemory);
       fResource = new Resource(info.fImage, info.fAlloc, info.fImageTiling);
     }
   }
@@ -117,6 +118,7 @@ class GrVkImage : SkNoncopyable {
     VkImageTiling fImageTiling;
     VkImageUsageFlags fUsageFlags;
     VkFlags fMemProps;
+    GrProtected fIsProtected;
 
     ImageDesc()
         : fImageType(VK_IMAGE_TYPE_2D),
@@ -127,7 +129,8 @@ class GrVkImage : SkNoncopyable {
           fSamples(1),
           fImageTiling(VK_IMAGE_TILING_OPTIMAL),
           fUsageFlags(0),
-          fMemProps(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) {}
+          fMemProps(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT),
+          fIsProtected(GrProtected::kNo) {}
   };
 
   static bool InitImageInfo(const GrVkGpu* gpu, const ImageDesc& imageDesc, GrVkImageInfo*);

@@ -74,7 +74,7 @@ class SK_API GrTexture : virtual public GrSurface {
   inline const GrTexturePriv texturePriv() const;
 
  protected:
-  GrTexture(GrGpu*, const GrSurfaceDesc&, GrTextureType, GrMipMapsStatus);
+  GrTexture(GrGpu*, const GrSurfaceDesc&, GrProtected, GrTextureType, GrMipMapsStatus);
 
   virtual bool onStealBackendTexture(GrBackendTexture*, SkImage::BackendTextureReleaseProc*) = 0;
 

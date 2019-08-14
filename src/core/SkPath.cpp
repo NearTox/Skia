@@ -21,6 +21,8 @@
 #include "src/core/SkPointPriv.h"
 #include "src/core/SkSafeMath.h"
 #include "src/core/SkTLazy.h"
+// need SkDVector
+#include "src/pathops/SkPathOpsPoint.h"
 
 #include <cmath>
 #include <utility>
@@ -166,7 +168,7 @@ SkPath::SkPath(const SkPath& that) : fPathRef(SkRef(that.fPathRef.get())) {
   SkDEBUGCODE(that.validate());
 }
 
-SkPath::~SkPath() { SkDEBUGCODE(this->validate();) }
+SkPath::~SkPath() { SkDEBUGCODE(this->validate()); }
 
 SkPath& SkPath::operator=(const SkPath& that) {
   SkDEBUGCODE(that.validate());
@@ -671,6 +673,16 @@ int SkPath::getVerbs(uint8_t dst[], int max) const {
   return fPathRef->countVerbs();
 }
 
+size_t SkPath::approximateBytesUsed() const {
+  size_t size = sizeof(SkPath);
+  if (fPathRef != nullptr) {
+    size += fPathRef->countPoints() * sizeof(SkPoint) + fPathRef->countVerbs() +
+            fPathRef->countWeights() * sizeof(SkScalar);
+  }
+
+  return size;
+}
+
 bool SkPath::getLastPt(SkPoint* lastPt) const {
   SkDEBUGCODE(this->validate());
 
@@ -719,7 +731,7 @@ void SkPath::setConvexity(Convexity c) const { fConvexity.store(c, std::memory_o
 void SkPath::setFirstDirection(uint8_t d) const {
   fFirstDirection.store(d, std::memory_order_relaxed);
 }
-uint8_t SkPath::getFirstDirection() const {
+uint8_t SkPath::getFirstDirection() const noexcept {
   return fFirstDirection.load(std::memory_order_relaxed);
 }
 
@@ -909,7 +921,7 @@ namespace {
 template <unsigned N>
 class PointIterator {
  public:
-  PointIterator(SkPath::Direction dir, unsigned startIndex)
+  PointIterator(SkPath::Direction dir, unsigned startIndex) noexcept
       : fCurrent(startIndex % N), fAdvance(dir == SkPath::kCW_Direction ? 1 : N - 1) {}
 
   const SkPoint& current() const {
@@ -1517,32 +1529,30 @@ SkPath& SkPath::arcTo(SkScalar x1, SkScalar y1, SkScalar x2, SkScalar y2, SkScal
     return this->lineTo(x1, y1);
   }
 
-  SkVector before, after;
-
   // need to know our prev pt so we can construct tangent vectors
-  {
-    SkPoint start;
-    this->getLastPt(&start);
-    // Handle degenerate cases by adding a line to the first point and
-    // bailing out.
-    before.setNormalize(x1 - start.fX, y1 - start.fY);
-    after.setNormalize(x2 - x1, y2 - y1);
-  }
+  SkPoint start;
+  this->getLastPt(&start);
 
-  SkScalar cosh = SkPoint::DotProduct(before, after);
-  SkScalar sinh = SkPoint::CrossProduct(before, after);
+  // need double precision for these calcs.
+  SkDVector befored, afterd;
+  befored.set({x1 - start.fX, y1 - start.fY}).normalize();
+  afterd.set({x2 - x1, y2 - y1}).normalize();
+  double cosh = befored.dot(afterd);
+  double sinh = befored.cross(afterd);
 
-  if (SkScalarNearlyZero(sinh)) {  // angle is too tight
+  if (!befored.isFinite() || !afterd.isFinite() || SkScalarNearlyZero(SkDoubleToScalar(sinh))) {
     return this->lineTo(x1, y1);
   }
 
-  SkScalar dist = SkScalarAbs(radius * (1 - cosh) / sinh);
-
+  // safe to convert back to floats now
+  SkVector before = befored.asSkVector();
+  SkVector after = afterd.asSkVector();
+  SkScalar dist = SkScalarAbs(SkDoubleToScalar(radius * (1 - cosh) / sinh));
   SkScalar xx = x1 - dist * before.fX;
   SkScalar yy = y1 - dist * before.fY;
   after.setLength(dist);
   this->lineTo(xx, yy);
-  SkScalar weight = SkScalarSqrt(SK_ScalarHalf + cosh * SK_ScalarHalf);
+  SkScalar weight = SkScalarSqrt(SkDoubleToScalar(SK_ScalarHalf + cosh * 0.5));
   return this->conicTo(x1, y1, x1 + after.fX, y1 + after.fY, weight);
 }
 
@@ -2221,10 +2231,6 @@ static bool almost_equal(SkScalar compA, SkScalar compB) {
   int aBits = SkFloatAs2sCompliment(compA);
   int bBits = SkFloatAs2sCompliment(compB);
   return aBits < bBits + epsilon && bBits < aBits + epsilon;
-}
-
-static bool approximately_zero_when_compared_to(double x, double y) {
-  return x == 0 || fabs(x) < fabs(y * FLT_EPSILON);
 }
 
 // only valid for a single contour

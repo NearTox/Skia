@@ -7,21 +7,19 @@
 
 #include "src/gpu/ccpr/GrCCClipPath.h"
 
+#include "include/gpu/GrRenderTarget.h"
 #include "include/gpu/GrTexture.h"
 #include "src/gpu/GrOnFlushResourceProvider.h"
 #include "src/gpu/GrProxyProvider.h"
 #include "src/gpu/ccpr/GrCCPerFlushResources.h"
 
 void GrCCClipPath::init(
-    const SkPath& deviceSpacePath, const SkIRect& accessRect, int rtWidth, int rtHeight,
-    const GrCaps& caps) {
+    const SkPath& deviceSpacePath, const SkIRect& accessRect,
+    GrCCAtlas::CoverageType atlasCoverageType, const GrCaps& caps) {
   SkASSERT(!this->isInitialized());
 
-  const GrBackendFormat format =
-      caps.getBackendFormatFromGrColorType(GrColorType::kAlpha_F16, GrSRGBEncoded::kNo);
-
-  fAtlasLazyProxy = GrProxyProvider::MakeFullyLazyProxy(
-      [this](GrResourceProvider* resourceProvider) -> GrSurfaceProxy::LazyInstantiationResult {
+  fAtlasLazyProxy = GrCCAtlas::MakeLazyAtlasProxy(
+      [this](GrResourceProvider* resourceProvider, GrPixelConfig pixelConfig, int sampleCount) {
         SkASSERT(fHasAtlas);
         SkASSERT(!fHasAtlasTransform);
 
@@ -30,22 +28,22 @@ void GrCCClipPath::init(
         if (!textureProxy || !textureProxy->instantiate(resourceProvider)) {
           fAtlasScale = fAtlasTranslate = {0, 0};
           SkDEBUGCODE(fHasAtlasTransform = true);
-          return {};
+          return sk_sp<GrTexture>();
         }
 
         sk_sp<GrTexture> texture = sk_ref_sp(textureProxy->peekTexture());
         SkASSERT(texture);
-        SkASSERT(kTopLeft_GrSurfaceOrigin == textureProxy->origin());
+        SkASSERT(texture->asRenderTarget()->numSamples() == sampleCount);
+        SkASSERT(textureProxy->origin() == kTopLeft_GrSurfaceOrigin);
 
         fAtlasScale = {1.f / texture->width(), 1.f / texture->height()};
         fAtlasTranslate.set(
             fDevToAtlasOffset.fX * fAtlasScale.x(), fDevToAtlasOffset.fY * fAtlasScale.y());
         SkDEBUGCODE(fHasAtlasTransform = true);
 
-        return std::move(texture);
+        return texture;
       },
-      format, GrProxyProvider::Renderable::kYes, kTopLeft_GrSurfaceOrigin,
-      kAlpha_half_GrPixelConfig, caps);
+      atlasCoverageType, caps);
 
   fDeviceSpacePath = deviceSpacePath;
   fDeviceSpacePath.getBounds().roundOut(&fPathDevIBounds);
@@ -69,6 +67,7 @@ void GrCCClipPath::renderPathInAtlas(
   SkASSERT(this->isInitialized());
   SkASSERT(!fHasAtlas);
   fAtlas = resources->renderDeviceSpacePathInAtlas(
-      fAccessRect, fDeviceSpacePath, fPathDevIBounds, &fDevToAtlasOffset);
+      fAccessRect, fDeviceSpacePath, fPathDevIBounds, GrFillRuleForSkPath(fDeviceSpacePath),
+      &fDevToAtlasOffset);
   SkDEBUGCODE(fHasAtlas = true);
 }

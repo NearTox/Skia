@@ -146,7 +146,7 @@ struct SkPoint;
 /** SkVector provides an alternative name for SkPoint. SkVector and SkPoint can
     be used interchangeably for all purposes.
 */
-typedef SkPoint SkVector;
+using SkVector = SkPoint;
 
 /** \struct SkPoint
     SkPoint holds two 32-bit floating point coordinates.

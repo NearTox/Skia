@@ -16,22 +16,22 @@
 #include "src/core/SkWriteBuffer.h"
 
 #if SK_SUPPORT_GPU
-#include "include/gpu/GrTexture.h"
-#include "include/private/GrRecordingContext.h"
-#include "include/private/GrTextureProxy.h"
-#include "src/gpu/GrCaps.h"
-#include "src/gpu/GrFixedClip.h"
-#include "src/gpu/GrFragmentProcessor.h"
-#include "src/gpu/GrPaint.h"
-#include "src/gpu/GrRecordingContextPriv.h"
-#include "src/gpu/GrRenderTargetContext.h"
+#  include "include/gpu/GrTexture.h"
+#  include "include/private/GrRecordingContext.h"
+#  include "src/gpu/GrCaps.h"
+#  include "src/gpu/GrFixedClip.h"
+#  include "src/gpu/GrFragmentProcessor.h"
+#  include "src/gpu/GrPaint.h"
+#  include "src/gpu/GrRecordingContextPriv.h"
+#  include "src/gpu/GrRenderTargetContext.h"
+#  include "src/gpu/GrTextureProxy.h"
 
-#include "src/gpu/SkGr.h"
-#include "src/gpu/effects/GrTextureDomain.h"
-#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
-#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
-#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
-#include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#  include "src/gpu/SkGr.h"
+#  include "src/gpu/effects/GrTextureDomain.h"
+#  include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#  include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#  include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#  include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
 class GrGLDiffuseLightingEffect;
 class GrGLSpecularLightingEffect;
@@ -431,12 +431,12 @@ sk_sp<SkSpecialImage> SkLightingImageFilterInternal::filterImageGPU(
   sk_sp<GrTextureProxy> inputProxy(input->asTextureProxyRef(context));
   SkASSERT(inputProxy);
 
-  SkColorType colorType = outputProperties.colorType();
-  GrBackendFormat format = context->priv().caps()->getBackendFormatFromColorType(colorType);
+  GrColorType colorType = SkColorTypeToGrColorType(outputProperties.colorType());
 
   sk_sp<GrRenderTargetContext> renderTargetContext(context->priv().makeDeferredRenderTargetContext(
-      format, SkBackingFit::kApprox, offsetBounds.width(), offsetBounds.height(),
-      SkColorType2GrPixelConfig(colorType), sk_ref_sp(outputProperties.colorSpace())));
+      SkBackingFit::kApprox, offsetBounds.width(), offsetBounds.height(), colorType,
+      sk_ref_sp(outputProperties.colorSpace()), 1, GrMipMapped::kNo, kBottomLeft_GrSurfaceOrigin,
+      nullptr, SkBudgeted::kYes, inputProxy->isProtected() ? GrProtected::kYes : GrProtected::kNo));
   if (!renderTargetContext) {
     return nullptr;
   }
@@ -1545,7 +1545,7 @@ GrGLSLFragmentProcessor* GrDiffuseLightingEffect::onCreateGLSLInstance() const {
 
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(GrDiffuseLightingEffect);
 
-#if GR_TEST_UTILS
+#  if GR_TEST_UTILS
 
 static SkPoint3 random_point3(SkRandom* random) {
   return SkPoint3::Make(
@@ -1589,7 +1589,7 @@ std::unique_ptr<GrFragmentProcessor> GrDiffuseLightingEffect::TestCreate(GrProce
   return GrDiffuseLightingEffect::Make(
       std::move(proxy), std::move(light), surfaceScale, matrix, kd, mode, &srcBounds);
 }
-#endif
+#  endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1759,7 +1759,7 @@ GrGLSLFragmentProcessor* GrSpecularLightingEffect::onCreateGLSLInstance() const 
 
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(GrSpecularLightingEffect);
 
-#if GR_TEST_UTILS
+#  if GR_TEST_UTILS
 std::unique_ptr<GrFragmentProcessor> GrSpecularLightingEffect::TestCreate(GrProcessorTestData* d) {
   int texIdx = d->fRandom->nextBool() ? GrProcessorUnitTest::kSkiaPMTextureIdx
                                       : GrProcessorUnitTest::kAlphaTextureIdx;
@@ -1779,7 +1779,7 @@ std::unique_ptr<GrFragmentProcessor> GrSpecularLightingEffect::TestCreate(GrProc
   return GrSpecularLightingEffect::Make(
       std::move(proxy), std::move(light), surfaceScale, matrix, ks, shininess, mode, &srcBounds);
 }
-#endif
+#  endif
 
 ///////////////////////////////////////////////////////////////////////////////
 

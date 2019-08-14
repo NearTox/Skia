@@ -127,9 +127,9 @@ bool GrDrawOpAtlas::Plot::addSubImage(int width, int height, const void* image, 
 
   loc->fX += fOffset.fX;
   loc->fY += fOffset.fY;
-  SkDEBUGCODE(fDirty = true);
+  SkDEBUGCODE(fDirty = true;)
 
-  return true;
+      return true;
 }
 
 void GrDrawOpAtlas::Plot::uploadToTexture(
@@ -153,7 +153,7 @@ void GrDrawOpAtlas::Plot::uploadToTexture(
       proxy, fOffset.fX + fDirtyRect.fLeft, fOffset.fY + fDirtyRect.fTop, fDirtyRect.width(),
       fDirtyRect.height(), fColorType, dataPtr, rowBytes);
   fDirtyRect.setEmpty();
-  SkDEBUGCODE(fDirty = false);
+  SkDEBUGCODE(fDirty = false;)
 }
 
 void GrDrawOpAtlas::Plot::resetRects() {
@@ -172,7 +172,7 @@ void GrDrawOpAtlas::Plot::resetRects() {
   }
 
   fDirtyRect.setEmpty();
-  SkDEBUGCODE(fDirty = false);
+  SkDEBUGCODE(fDirty = false;)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -513,23 +513,17 @@ bool GrDrawOpAtlas::createPages(GrProxyProvider* proxyProvider) {
   SkASSERT(SkIsPow2(fTextureWidth) && SkIsPow2(fTextureHeight));
 
   GrSurfaceDesc desc;
-  if (proxyProvider->caps()->shouldInitializeTextures()) {
-    // The atlas isn't guaranteed to touch all its pixels so, for platforms that benefit
-    // from complete initialization, clear everything.
-    desc.fFlags = kPerformInitialClear_GrSurfaceFlag;
-  } else {
-    desc.fFlags = kNone_GrSurfaceFlags;
-  }
   desc.fWidth = fTextureWidth;
   desc.fHeight = fTextureHeight;
-  desc.fConfig = GrColorTypeToPixelConfig(fColorType, GrSRGBEncoded::kNo);
+  desc.fConfig = GrColorTypeToPixelConfig(fColorType);
 
   int numPlotsX = fTextureWidth / fPlotWidth;
   int numPlotsY = fTextureHeight / fPlotHeight;
 
   for (uint32_t i = 0; i < this->maxPages(); ++i) {
     fProxies[i] = proxyProvider->createProxy(
-        fFormat, desc, kTopLeft_GrSurfaceOrigin, SkBackingFit::kExact, SkBudgeted::kYes);
+        fFormat, desc, GrRenderable::kNo, 1, kTopLeft_GrSurfaceOrigin, SkBackingFit::kExact,
+        SkBudgeted::kYes, GrProtected::kNo);
     if (!fProxies[i]) {
       return false;
     }

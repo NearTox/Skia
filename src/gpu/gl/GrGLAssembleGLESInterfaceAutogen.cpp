@@ -440,6 +440,12 @@ sk_sp<const GrGLInterface> GrGLMakeAssembledGLESInterface(void* ctx, GrGLGetProc
   if (glVer >= GR_GL_VER(3, 0)) {
     GET_PROC(GetProgramBinary);
     GET_PROC(ProgramBinary);
+  } else if (extensions.has("GL_OES_get_program_binary")) {
+    GET_PROC_SUFFIX(GetProgramBinary, OES);
+    GET_PROC_SUFFIX(ProgramBinary, OES);
+  }
+
+  if (glVer >= GR_GL_VER(3, 0)) {
     GET_PROC(ProgramParameteri);
   }
 
@@ -452,23 +458,23 @@ sk_sp<const GrGLInterface> GrGLMakeAssembledGLESInterface(void* ctx, GrGLGetProc
   }
 
   if (glVer >= GR_GL_VER(3, 0)) {
-#if GR_TEST_UTILS
+#  if GR_TEST_UTILS
     GET_PROC(BeginQuery);
     GET_PROC(DeleteQueries);
     GET_PROC(EndQuery);
     GET_PROC(GenQueries);
     GET_PROC(GetQueryObjectuiv);
     GET_PROC(GetQueryiv);
-#endif
+#  endif
   } else if (extensions.has("GL_EXT_occlusion_query_boolean")) {
-#if GR_TEST_UTILS
+#  if GR_TEST_UTILS
     GET_PROC_SUFFIX(BeginQuery, EXT);
     GET_PROC_SUFFIX(DeleteQueries, EXT);
     GET_PROC_SUFFIX(EndQuery, EXT);
     GET_PROC_SUFFIX(GenQueries, EXT);
     GET_PROC_SUFFIX(GetQueryObjectuiv, EXT);
     GET_PROC_SUFFIX(GetQueryiv, EXT);
-#endif
+#  endif
   }
 
   if (glVer >= GR_GL_VER(3, 0)) {

@@ -84,7 +84,7 @@ class SkPictureData {
       SkStream*, const SkPictInfo&, const SkDeserialProcs&, SkTypefacePlayback*);
   static SkPictureData* CreateFromBuffer(SkReadBuffer&, const SkPictInfo&);
 
-  void serialize(SkWStream*, const SkSerialProcs&, SkRefCntSet*) const;
+  void serialize(SkWStream*, const SkSerialProcs&, SkRefCntSet*, bool textBlobsOnly = false) const;
   void flatten(SkWriteBuffer&) const;
 
   const sk_sp<SkData>& opData() const { return fOpData; }
@@ -138,7 +138,7 @@ class SkPictureData {
   bool parseStreamTag(
       SkStream*, uint32_t tag, uint32_t size, const SkDeserialProcs&, SkTypefacePlayback*);
   void parseBufferTag(SkReadBuffer&, uint32_t tag, uint32_t size);
-  void flattenToBuffer(SkWriteBuffer&) const;
+  void flattenToBuffer(SkWriteBuffer&, bool textBlobsOnly) const;
 
   SkTArray<SkPaint> fPaints;
   SkTArray<SkPath> fPaths;

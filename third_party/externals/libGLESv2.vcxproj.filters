@@ -159,7 +159,6 @@
     <ClCompile Include="angle2\src\libGLESv2\entry_points_gles_3_1_autogen.cpp" />
     <ClCompile Include="angle2\src\libGLESv2\entry_points_gles_ext_autogen.cpp" />
     <ClCompile Include="angle2\src\libGLESv2\global_state.cpp" />
-    <ClCompile Include="angle2\src\libGLESv2\proc_table_autogen.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\BufferD3D.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\CompilerD3D.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\Blit11.cpp" />
@@ -337,7 +336,6 @@
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\Program11.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\ImageGL.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteAtomicFunctionExpressions.cpp" />
-    <ClCompile Include="angle2\src\compiler\translator\tree_ops\EmulateGLDrawID.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\AtomicCounterFunctionHLSL.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\ResourcesHLSL.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\ShaderStorageBlockFunctionHLSL.cpp" />
@@ -356,5 +354,33 @@
     <ClCompile Include="angle2\src\libANGLE\MemoryObject.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_util\ReplaceShadowingVariables.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Semaphore.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\tree_ops\EmulateMultiDrawShaderBuiltins.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteAtomicCounters.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteDfdy.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\tree_util\FindFunction.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\Context_gl.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationGL1.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationGL2.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationGL3.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationGL4.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationGL11.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationGL12.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationGL13.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationGL14.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationGL15.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationGL21.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationGL31.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationGL32.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationGL33.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationGL41.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationGL42.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationGL43.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationGL44.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationGL45.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationGL46.cpp" />
+    <ClCompile Include="angle2\src\common\android_util.cpp" />
+    <ClCompile Include="angle2\src\libGLESv2\proc_table_egl_autogen.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\ExternalImageSiblingImpl11.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\MappedSubresourceVerifier11.cpp" />
   </ItemGroup>
 </Project>

@@ -448,7 +448,8 @@ class GrCCStroker::InstanceBufferBuilder {
     if (!GrCCStrokeGeometry::IsInternalJoinVerb(joinVerb)) {
       // Normal joins are a triangle that connects the outer corners of two adjoining strokes.
       this->appendTriangleInstance().set(
-          n1 * fCurrStrokeRadius, Sk2f(0, 0), n0 * fCurrStrokeRadius, offset);
+          n1 * fCurrStrokeRadius, Sk2f(0, 0), n0 * fCurrStrokeRadius, offset,
+          TriangleInstance::Ordering::kXYTransposed);
       if (Verb::kBevelJoin == joinVerb) {
         return;
       }
@@ -457,9 +458,17 @@ class GrCCStroker::InstanceBufferBuilder {
       // four corners of two adjoining strokes together a like a shoelace. Coverage is
       // negative on the inside half. We implement this geometry with a pair of triangles.
       this->appendTriangleInstance().set(
-          -n0 * fCurrStrokeRadius, n0 * fCurrStrokeRadius, n1 * fCurrStrokeRadius, offset);
+          -n0 * fCurrStrokeRadius, n0 * fCurrStrokeRadius, n1 * fCurrStrokeRadius, offset,
+          TriangleInstance::Ordering::kXYTransposed);
+      if (Verb::kBevelJoin == joinVerb) {
+        return;
+      }
       this->appendTriangleInstance().set(
-          -n0 * fCurrStrokeRadius, n1 * fCurrStrokeRadius, -n1 * fCurrStrokeRadius, offset);
+          -n0 * fCurrStrokeRadius, n1 * fCurrStrokeRadius, -n1 * fCurrStrokeRadius, offset,
+          TriangleInstance::Ordering::kXYTransposed);
+      if (Verb::kBevelJoin == joinVerb) {
+        return;
+      }
       if (Verb::kInternalBevelJoin == joinVerb) {
         return;
       }
@@ -474,7 +483,8 @@ class GrCCStroker::InstanceBufferBuilder {
 
     if (Verb::kMiterJoin == joinVerb) {
       this->appendTriangleInstance().set(
-          n0 * fCurrStrokeRadius, c * fCurrStrokeRadius, n1 * fCurrStrokeRadius, offset);
+          n0 * fCurrStrokeRadius, c * fCurrStrokeRadius, n1 * fCurrStrokeRadius, offset,
+          TriangleInstance::Ordering::kXYTransposed);
     } else {
       SkASSERT(Verb::kRoundJoin == joinVerb || Verb::kInternalRoundJoin == joinVerb);
       this->appendConicInstance().setW(
@@ -500,7 +510,8 @@ class GrCCStroker::InstanceBufferBuilder {
       this->appendLinearStrokeInstance().set(endPts, offset[0], offset[1], fCurrStrokeRadius);
     } else {
       SkASSERT(Verb::kRoundCap == capType);
-      this->appendTriangleInstance().set(n, v, -n, offset);
+      this->appendTriangleInstance().set(
+          n, v, -n, offset, TriangleInstance::Ordering::kXYTransposed);
       this->appendConicInstance().setW(n, n + v, v, offset, SK_ScalarRoot2Over2);
       this->appendConicInstance().setW(v, v - n, -n, offset, SK_ScalarRoot2Over2);
     }
@@ -696,7 +707,8 @@ void GrCCStroker::drawStrokes(
       (!startScissorSubBatch) ? &fZeroTallies
                               : fScissorSubBatches[startScissorSubBatch - 1].fEndInstances;
 
-  GrPipeline pipeline(GrScissorTest::kEnabled, SkBlendMode::kPlus);
+  GrPipeline pipeline(
+      GrScissorTest::kEnabled, SkBlendMode::kPlus, flushState->drawOpArgs().fOutputSwizzle);
 
   // Draw linear strokes.
   this->appendStrokeMeshesToBuffers(0, batch, startIndices, startScissorSubBatch, drawBounds);

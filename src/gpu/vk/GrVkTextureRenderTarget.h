@@ -16,7 +16,7 @@ class GrVkGpu;
 
 #ifdef SK_BUILD_FOR_WIN
 // Windows gives bogus warnings about inheriting asTexture/asRenderTarget via dominance.
-#pragma warning(push)
+#  pragma warning(push)
 #  pragma warning(disable : 4250)
 #endif
 
@@ -26,11 +26,12 @@ struct GrVkImageInfo;
 class GrVkTextureRenderTarget : public GrVkTexture, public GrVkRenderTarget {
  public:
   static sk_sp<GrVkTextureRenderTarget> MakeNewTextureRenderTarget(
-      GrVkGpu*, SkBudgeted, const GrSurfaceDesc&, const GrVkImage::ImageDesc&, GrMipMapsStatus);
+      GrVkGpu*, SkBudgeted, const GrSurfaceDesc&, int sampleCnt, const GrVkImage::ImageDesc&,
+      GrMipMapsStatus);
 
   static sk_sp<GrVkTextureRenderTarget> MakeWrappedTextureRenderTarget(
-      GrVkGpu*, const GrSurfaceDesc&, GrWrapOwnership, GrWrapCacheable, const GrVkImageInfo&,
-      sk_sp<GrVkImageLayout>);
+      GrVkGpu*, const GrSurfaceDesc&, int sampleCnt, GrWrapOwnership, GrWrapCacheable,
+      const GrVkImageInfo&, sk_sp<GrVkImageLayout>);
 
   GrBackendFormat backendFormat() const override { return this->getBackendFormat(); }
 
@@ -50,10 +51,11 @@ class GrVkTextureRenderTarget : public GrVkTexture, public GrVkRenderTarget {
  private:
   // MSAA, not-wrapped
   GrVkTextureRenderTarget(
-      GrVkGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc, const GrVkImageInfo& info,
-      sk_sp<GrVkImageLayout> layout, const GrVkImageView* texView, const GrVkImageInfo& msaaInfo,
-      sk_sp<GrVkImageLayout> msaaLayout, const GrVkImageView* colorAttachmentView,
-      const GrVkImageView* resolveAttachmentView, GrMipMapsStatus);
+      GrVkGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc, int sampleCnt,
+      const GrVkImageInfo& info, sk_sp<GrVkImageLayout> layout, const GrVkImageView* texView,
+      const GrVkImageInfo& msaaInfo, sk_sp<GrVkImageLayout> msaaLayout,
+      const GrVkImageView* colorAttachmentView, const GrVkImageView* resolveAttachmentView,
+      GrMipMapsStatus);
 
   // non-MSAA, not-wrapped
   GrVkTextureRenderTarget(
@@ -63,7 +65,7 @@ class GrVkTextureRenderTarget : public GrVkTexture, public GrVkRenderTarget {
 
   // MSAA, wrapped
   GrVkTextureRenderTarget(
-      GrVkGpu* gpu, const GrSurfaceDesc& desc, const GrVkImageInfo& info,
+      GrVkGpu* gpu, const GrSurfaceDesc& desc, int sampleCnt, const GrVkImageInfo& info,
       sk_sp<GrVkImageLayout> layout, const GrVkImageView* texView, const GrVkImageInfo& msaaInfo,
       sk_sp<GrVkImageLayout> msaaLayout, const GrVkImageView* colorAttachmentView,
       const GrVkImageView* resolveAttachmentView, GrMipMapsStatus, GrBackendObjectOwnership,

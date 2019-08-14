@@ -228,7 +228,7 @@ static sk_sp<GrTextureProxy> create_profile_texture(
     sk_sp<SkImage> image = SkImage::MakeFromBitmap(bm);
 
     blurProfile = proxyProvider->createTextureProxy(
-        std::move(image), kNone_GrSurfaceFlags, 1, SkBudgeted::kYes, SkBackingFit::kExact);
+        std::move(image), GrRenderable::kNo, 1, SkBudgeted::kYes, SkBackingFit::kExact);
     if (!blurProfile) {
       return nullptr;
     }
@@ -283,7 +283,7 @@ class GrGLSLCircleBlurFragmentProcessor : public GrGLSLFragmentProcessor {
         args.fUniformHandler->getUniformCStr(circleDataVar),
         args.fUniformHandler->getUniformCStr(circleDataVar),
         args.fUniformHandler->getUniformCStr(circleDataVar), args.fOutputColor, args.fInputColor,
-        fragBuilder->getProgramBuilder()->samplerVariable(args.fTexSamplers[0]).c_str(),
+        fragBuilder->getProgramBuilder()->samplerVariable(args.fTexSamplers[0]),
         fragBuilder->getProgramBuilder()->samplerSwizzle(args.fTexSamplers[0]).c_str());
   }
 

@@ -15,13 +15,13 @@
 
 #if defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)
 
-#ifdef SK_BUILD_FOR_MAC
-#include <ApplicationServices/ApplicationServices.h>
-#endif
+#  ifdef SK_BUILD_FOR_MAC
+#    include <ApplicationServices/ApplicationServices.h>
+#  endif
 
-#ifdef SK_BUILD_FOR_IOS
-#include <CoreGraphics/CoreGraphics.h>
-#endif
+#  ifdef SK_BUILD_FOR_IOS
+#    include <CoreGraphics/CoreGraphics.h>
+#  endif
 
 class SkBitmap;
 class SkData;

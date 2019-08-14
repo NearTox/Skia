@@ -11,7 +11,7 @@
 #include "include/core/SkString.h"
 
 #ifdef SK_BUILD_FOR_IOS
-#import <CoreFoundation/CoreFoundation.h>
+#  import <CoreFoundation/CoreFoundation.h>
 
 static bool ios_get_path_in_bundle(const char path[], SkString* result) {
   // Get a reference to the main bundle

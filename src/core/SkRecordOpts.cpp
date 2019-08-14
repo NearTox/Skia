@@ -92,7 +92,11 @@ static bool fold_opacity_layer_color_to_paint(
   // looper drawing unmodulated filter layer twice and then modulating the result produces
   // different image to drawing modulated filter layer twice.
   // TODO: most likely the looper and only some xfer modes are the hard constraints
-  if (!paint->isSrcOver() || paint->getLooper()) {
+  if (!paint->isSrcOver()
+#ifdef SK_SUPPORT_LEGACY_DRAWLOOPER
+      || paint->getLooper()
+#endif
+  ) {
     return false;
   }
 
@@ -124,7 +128,10 @@ static bool fold_opacity_layer_color_to_paint(
 
     // The layer paint can not have any effects.
     if (layerPaint->getPathEffect() || layerPaint->getShader() || !layerPaint->isSrcOver() ||
-        layerPaint->getMaskFilter() || layerPaint->getColorFilter() || layerPaint->getLooper() ||
+        layerPaint->getMaskFilter() || layerPaint->getColorFilter() ||
+#ifdef SK_SUPPORT_LEGACY_DRAWLOOPER
+        layerPaint->getLooper() ||
+#endif
         layerPaint->getImageFilter()) {
       return false;
     }

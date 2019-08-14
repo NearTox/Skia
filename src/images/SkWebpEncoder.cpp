@@ -18,14 +18,14 @@
 
 #ifdef SK_HAS_WEBP_LIBRARY
 
-#include "include/core/SkBitmap.h"
-#include "include/core/SkStream.h"
-#include "include/core/SkUnPreMultiply.h"
-#include "include/encode/SkWebpEncoder.h"
-#include "include/private/SkColorData.h"
-#include "include/private/SkTemplates.h"
-#include "src/images/SkImageEncoderFns.h"
-#include "src/utils/SkUTF.h"
+#  include "include/core/SkBitmap.h"
+#  include "include/core/SkStream.h"
+#  include "include/core/SkUnPreMultiply.h"
+#  include "include/encode/SkWebpEncoder.h"
+#  include "include/private/SkColorData.h"
+#  include "include/private/SkTemplates.h"
+#  include "src/images/SkImageEncoderFns.h"
+#  include "src/utils/SkUTF.h"
 
 // A WebP encoder only, on top of (subset of) libwebp
 // For more information on WebP image format, and libwebp library, see:
@@ -33,12 +33,12 @@
 //   http://www.webmproject.org/code/#libwebp_webp_image_decoder_library
 //   http://review.webmproject.org/gitweb?p=libwebp.git
 
-#include <stdio.h>
+#  include <stdio.h>
 extern "C" {
 // If moving libwebp out of skia source tree, path for webp headers must be
 // updated accordingly. Here, we enforce using local copy in webp sub-directory.
-#include "webp/encode.h"
-#include "webp/mux.h"
+#  include "webp/encode.h"
+#  include "webp/mux.h"
 }
 
 static transform_scanline_proc choose_proc(const SkImageInfo& info) {

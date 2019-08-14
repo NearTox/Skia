@@ -77,7 +77,7 @@ class SK_API SkPaint {
       @param paint  original to move
       @return       content of paint
   */
-  SkPaint(SkPaint&& paint);
+  SkPaint(SkPaint&& paint) noexcept;
 
   /** Decreases SkPaint SkRefCnt of owned objects: SkPathEffect, SkShader,
       SkMaskFilter, SkColorFilter, SkDrawLooper, and SkImageFilter. If the
@@ -107,7 +107,7 @@ class SK_API SkPaint {
       @param paint  original to move
       @return       content of paint
   */
-  SkPaint& operator=(SkPaint&& paint);
+  SkPaint& operator=(SkPaint&& paint) noexcept;
 
   /** Compares a and b, and returns true if a and b are equivalent. May return false
       if SkPathEffect, SkShader, SkMaskFilter, SkColorFilter,
@@ -545,6 +545,7 @@ class SK_API SkPaint {
   */
   void setImageFilter(sk_sp<SkImageFilter> imageFilter);
 
+#ifdef SK_SUPPORT_LEGACY_DRAWLOOPER
   /** Returns SkDrawLooper if set, or nullptr.
       Does not alter SkDrawLooper SkRefCnt.
 
@@ -578,6 +579,7 @@ class SK_API SkPaint {
       (see skbug.com/6259)
   */
   void setLooper(sk_sp<SkDrawLooper> drawLooper);
+#endif
 
   /** Returns true if SkPaint prevents all drawing;
       otherwise, the SkPaint may or may not allow drawing.
@@ -628,7 +630,10 @@ class SK_API SkPaint {
     SkPaint::Style style = this->getStyle();
     // ultra fast-case: filling with no effects that affect geometry
     if (kFill_Style == style) {
-      uintptr_t effects = reinterpret_cast<uintptr_t>(this->getLooper());
+      uintptr_t effects = 0;
+#ifdef SK_SUPPORT_LEGACY_DRAWLOOPER
+      effects |= reinterpret_cast<uintptr_t>(this->getLooper());
+#endif
       effects |= reinterpret_cast<uintptr_t>(this->getMaskFilter());
       effects |= reinterpret_cast<uintptr_t>(this->getPathEffect());
       effects |= reinterpret_cast<uintptr_t>(this->getImageFilter());

@@ -29,11 +29,12 @@ GrVkPipelineStateDataManager::GrVkPipelineStateDataManager(
         GrShaderVar::kNonArray == uniformInfo.fVariable.getArrayCount() ||
         uniformInfo.fVariable.getArrayCount() > 0);
     SkDEBUGCODE(uniform.fArrayCount = uniformInfo.fVariable.getArrayCount();
-                uniform.fType = uniformInfo.fVariable.getType());
+                uniform.fType = uniformInfo.fVariable.getType();)
 
-    if (!(kFragment_GrShaderFlag & uniformInfo.fVisibility)) {
+        if (!(kFragment_GrShaderFlag & uniformInfo.fVisibility)) {
       uniform.fBinding = GrVkUniformHandler::kGeometryBinding;
-    } else {
+    }
+    else {
       SkASSERT(kFragment_GrShaderFlag == uniformInfo.fVisibility);
       uniform.fBinding = GrVkUniformHandler::kFragBinding;
     }

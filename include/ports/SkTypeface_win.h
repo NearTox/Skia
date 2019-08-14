@@ -13,13 +13,13 @@
 
 #ifdef SK_BUILD_FOR_WIN
 
-#ifdef UNICODE
+#  ifdef UNICODE
 typedef struct tagLOGFONTW LOGFONTW;
 typedef LOGFONTW LOGFONT;
-#else
+#  else
 typedef struct tagLOGFONTA LOGFONTA;
 typedef LOGFONTA LOGFONT;
-#endif  // UNICODE
+#  endif  // UNICODE
 
 /**
  *  Like the other Typeface create methods, this returns a new reference to the

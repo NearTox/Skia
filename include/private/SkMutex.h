@@ -14,30 +14,6 @@
 #include "include/private/SkThreadAnnotations.h"
 #include "include/private/SkThreadID.h"
 
-#define SK_DECLARE_STATIC_MUTEX(name) static SkBaseMutex name;
-
-class SkBaseMutex {
- public:
-  constexpr SkBaseMutex() = default;
-
-  void acquire() {
-    fSemaphore.wait();
-    SkDEBUGCODE(fOwner = SkGetThreadID());
-  }
-
-  void release() {
-    this->assertHeld();
-    SkDEBUGCODE(fOwner = kIllegalThreadID);
-    fSemaphore.signal();
-  }
-
-  void assertHeld() { SkASSERT(fOwner == SkGetThreadID()); }
-
- protected:
-  SkBaseSemaphore fSemaphore{1};
-  SkDEBUGCODE(SkThreadID fOwner{kIllegalThreadID});
-};
-
 class SK_CAPABILITY("mutex") SkMutex {
  public:
   constexpr SkMutex() = default;
@@ -59,34 +35,6 @@ class SK_CAPABILITY("mutex") SkMutex {
   SkSemaphore fSemaphore{1};
   SkDEBUGCODE(SkThreadID fOwner{kIllegalThreadID});
 };
-
-class SkAutoMutexAcquire {
- public:
-  template <typename T>
-  SkAutoMutexAcquire(T* mutex) : fMutex(mutex) {
-    if (mutex) {
-      mutex->acquire();
-    }
-    fRelease = [](void* mutex) { ((T*)mutex)->release(); };
-  }
-
-  template <typename T>
-  SkAutoMutexAcquire(T& mutex) : SkAutoMutexAcquire(&mutex) {}
-
-  ~SkAutoMutexAcquire() { this->release(); }
-
-  void release() {
-    if (fMutex) {
-      fRelease(fMutex);
-    }
-    fMutex = nullptr;
-  }
-
- private:
-  void* fMutex;
-  void (*fRelease)(void*);
-};
-#define SkAutoMutexAcquire(...) SK_REQUIRE_LOCAL_VAR(SkAutoMutexAcquire)
 
 class SK_SCOPED_CAPABILITY SkAutoMutexExclusive {
  public:

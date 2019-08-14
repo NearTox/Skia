@@ -51,12 +51,15 @@ class GrGLSLProgramBuilder {
 
   void appendUniformDecls(GrShaderFlags visibility, SkString*) const;
 
-  const GrShaderVar& samplerVariable(SamplerHandle handle) const {
+  const char* samplerVariable(SamplerHandle handle) const {
     return this->uniformHandler()->samplerVariable(handle);
   }
 
   GrSwizzle samplerSwizzle(SamplerHandle handle) const {
-    return this->uniformHandler()->samplerSwizzle(handle);
+    if (this->caps()->shaderCaps()->textureSwizzleAppliedInShader()) {
+      return this->uniformHandler()->samplerSwizzle(handle);
+    }
+    return GrSwizzle::RGBA();
   }
 
   // Used to add a uniform for the RenderTarget width (used for sk_Width) without mangling
@@ -124,7 +127,7 @@ class GrGLSLProgramBuilder {
   // fragment shader are cleared.
   void reset() {
     this->addStage();
-    SkDEBUGCODE(fFS.debugOnly_resetPerStageVerification());
+    SkDEBUGCODE(fFS.debugOnly_resetPerStageVerification();)
   }
   void addStage() { fStageIndex++; }
 
@@ -150,7 +153,8 @@ class GrGLSLProgramBuilder {
       const GrFragmentProcessor&, int index, int transformedCoordVarsIdx, const SkString& input,
       SkString output, SkTArray<std::unique_ptr<GrGLSLFragmentProcessor>>*);
   void emitAndInstallXferProc(const SkString& colorIn, const SkString& coverageIn);
-  SamplerHandle emitSampler(const GrTexture*, const GrSamplerState&, const char* name);
+  SamplerHandle emitSampler(
+      const GrTexture*, const GrSamplerState&, const GrSwizzle&, const char* name);
   bool checkSamplerCounts();
 
 #ifdef SK_DEBUG

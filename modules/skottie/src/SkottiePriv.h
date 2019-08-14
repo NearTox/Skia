@@ -53,7 +53,14 @@ class AnimationBuilder final : public SkNoncopyable {
 
   std::unique_ptr<sksg::Scene> parse(const skjson::ObjectValue&);
 
-  sk_sp<SkTypeface> findFont(const SkString& name) const;
+  struct FontInfo {
+    SkString fFamily, fStyle;
+    SkScalar fAscentPct;
+    sk_sp<SkTypeface> fTypeface;
+
+    bool matches(const char family[], const char style[]) const;
+  };
+  const FontInfo* findFont(const SkString& name) const;
 
   // This is the workhorse for property binding: depending on whether the property is animated,
   // it will either apply immediately or instantiate and attach a keyframe animator.
@@ -96,9 +103,8 @@ class AnimationBuilder final : public SkNoncopyable {
   void dispatchMarkers(const skjson::ArrayValue*) const;
 
   sk_sp<sksg::RenderNode> attachComposition(const skjson::ObjectValue&, AnimatorScope*) const;
-  sk_sp<sksg::RenderNode> attachLayer(const skjson::ObjectValue*, AttachLayerContext*) const;
-  sk_sp<sksg::RenderNode> attachLayerEffects(
-      const skjson::ArrayValue& jeffects, AnimatorScope*, sk_sp<sksg::RenderNode>) const;
+  sk_sp<sksg::RenderNode> attachLayer(
+      const skjson::ObjectValue*, AnimatorScope*, AttachLayerContext*) const;
 
   sk_sp<sksg::RenderNode> attachBlendMode(
       const skjson::ObjectValue&, sk_sp<sksg::RenderNode>) const;
@@ -110,22 +116,22 @@ class AnimationBuilder final : public SkNoncopyable {
       const;
   const ImageAssetInfo* loadImageAsset(const skjson::ObjectValue&) const;
   sk_sp<sksg::RenderNode> attachImageAsset(
-      const skjson::ObjectValue&, const LayerInfo&, AnimatorScope*) const;
+      const skjson::ObjectValue&, LayerInfo*, AnimatorScope*) const;
 
   sk_sp<sksg::RenderNode> attachNestedAnimation(const char* name, AnimatorScope* ascope) const;
 
   sk_sp<sksg::RenderNode> attachImageLayer(
-      const skjson::ObjectValue&, const LayerInfo&, AnimatorScope*) const;
+      const skjson::ObjectValue&, LayerInfo*, AnimatorScope*) const;
   sk_sp<sksg::RenderNode> attachNullLayer(
-      const skjson::ObjectValue&, const LayerInfo&, AnimatorScope*) const;
+      const skjson::ObjectValue&, LayerInfo*, AnimatorScope*) const;
   sk_sp<sksg::RenderNode> attachPrecompLayer(
-      const skjson::ObjectValue&, const LayerInfo&, AnimatorScope*) const;
+      const skjson::ObjectValue&, LayerInfo*, AnimatorScope*) const;
   sk_sp<sksg::RenderNode> attachShapeLayer(
-      const skjson::ObjectValue&, const LayerInfo&, AnimatorScope*) const;
+      const skjson::ObjectValue&, LayerInfo*, AnimatorScope*) const;
   sk_sp<sksg::RenderNode> attachSolidLayer(
-      const skjson::ObjectValue&, const LayerInfo&, AnimatorScope*) const;
+      const skjson::ObjectValue&, LayerInfo*, AnimatorScope*) const;
   sk_sp<sksg::RenderNode> attachTextLayer(
-      const skjson::ObjectValue&, const LayerInfo&, AnimatorScope*) const;
+      const skjson::ObjectValue&, LayerInfo*, AnimatorScope*) const;
 
   bool dispatchColorProperty(const sk_sp<sksg::Color>&) const;
   bool dispatchOpacityProperty(const sk_sp<sksg::OpacityEffect>&) const;
@@ -183,20 +189,13 @@ class AnimationBuilder final : public SkNoncopyable {
   mutable bool fHasNontrivialBlending : 1;
 
   struct LayerInfo {
-    float fInPoint, fOutPoint;
+    SkSize fSize;
+    const float fInPoint, fOutPoint;
   };
 
   struct AssetInfo {
     const skjson::ObjectValue* fAsset;
     mutable bool fIsAttaching;  // Used for cycle detection
-  };
-
-  struct FontInfo {
-    SkString fFamily, fStyle;
-    SkScalar fAscent;
-    sk_sp<SkTypeface> fTypeface;
-
-    bool matches(const char family[], const char style[]) const;
   };
 
   struct ImageAssetInfo {
@@ -209,6 +208,44 @@ class AnimationBuilder final : public SkNoncopyable {
   mutable SkTHashMap<SkString, ImageAssetInfo> fImageAssetCache;
 
   using INHERITED = SkNoncopyable;
+};
+
+struct AnimationBuilder::AttachLayerContext {
+  explicit AttachLayerContext(const skjson::ArrayValue&);
+  ~AttachLayerContext();
+
+  struct TransformRec {
+    sk_sp<sksg::Transform> fTransformNode;
+    AnimatorScope fTransformScope;
+  };
+
+  const skjson::ArrayValue& fLayerList;
+  SkTHashMap<int, TransformRec> fLayerTransformMap;
+  sk_sp<sksg::RenderNode> fCurrentMatte;
+  sk_sp<sksg::Transform> fCameraTransform;
+
+  size_t fMotionBlurSamples = 1;
+  float fMotionBlurAngle = 0, fMotionBlurPhase = 0;
+
+  enum class TransformType { kLayer, kCamera };
+
+  TransformRec attachLayerTransform(
+      const skjson::ObjectValue& jlayer, const AnimationBuilder* abuilder,
+      TransformType type = TransformType::kLayer);
+
+  bool hasMotionBlur(const skjson::ObjectValue& jlayer) const;
+
+ private:
+  sk_sp<sksg::Transform> attachParentLayerTransform(
+      const skjson::ObjectValue& jlayer, const AnimationBuilder* abuilder, int layer_index);
+
+  sk_sp<sksg::Transform> attachTransformNode(
+      const skjson::ObjectValue& jlayer, const AnimationBuilder* abuilder, AnimatorScope*,
+      sk_sp<sksg::Transform> parent_transform, TransformType type) const;
+
+  TransformRec* attachLayerTransformImpl(
+      const skjson::ObjectValue& jlayer, const AnimationBuilder* abuilder, TransformType type,
+      int layer_index);
 };
 
 }  // namespace internal

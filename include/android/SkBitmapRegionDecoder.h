@@ -72,7 +72,7 @@ class SK_API SkBitmapRegionDecoder {
   int width() const { return fWidth; }
   int height() const { return fHeight; }
 
-  virtual ~SkBitmapRegionDecoder() {}
+  virtual ~SkBitmapRegionDecoder() = default;
 
  protected:
   SkBitmapRegionDecoder(int width, int height) : fWidth(width), fHeight(height) {}

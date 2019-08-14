@@ -115,7 +115,7 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
 
   class SK_API Iter {
    public:
-    Iter();
+    Iter() noexcept;
     Iter(const SkPathRef&);
 
     void setPathRef(const SkPathRef&);
@@ -303,7 +303,7 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
 
   class GenIDChangeListener : public SkRefCnt {
    public:
-    GenIDChangeListener() : fShouldUnregisterFromPath(false) {}
+    constexpr GenIDChangeListener() noexcept : fShouldUnregisterFromPath(false) {}
     virtual ~GenIDChangeListener() {}
 
     virtual void onChange() = 0;
@@ -324,17 +324,16 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
   void addGenIDChangeListener(sk_sp<GenIDChangeListener>);  // Threadsafe.
 
   bool isValid() const;
-  SkDEBUGCODE(void validate() const { SkASSERT(this->isValid()); });
+  SkDEBUGCODE(void validate() const { SkASSERT(this->isValid()); })
 
- private:
-  enum SerializationOffsets {
-    kLegacyRRectOrOvalStartIdx_SerializationShift = 28,  // requires 3 bits, ignored.
-    kLegacyRRectOrOvalIsCCW_SerializationShift = 27,     // requires 1 bit, ignored.
-    kLegacyIsRRect_SerializationShift = 26,              // requires 1 bit, ignored.
-    kIsFinite_SerializationShift = 25,                   // requires 1 bit
-    kLegacyIsOval_SerializationShift = 24,               // requires 1 bit, ignored.
-    kSegmentMask_SerializationShift = 0                  // requires 4 bits (deprecated)
-  };
+      private : enum SerializationOffsets {
+        kLegacyRRectOrOvalStartIdx_SerializationShift = 28,  // requires 3 bits, ignored.
+        kLegacyRRectOrOvalIsCCW_SerializationShift = 27,     // requires 1 bit, ignored.
+        kLegacyIsRRect_SerializationShift = 26,              // requires 1 bit, ignored.
+        kIsFinite_SerializationShift = 25,                   // requires 1 bit
+        kLegacyIsOval_SerializationShift = 24,               // requires 1 bit, ignored.
+        kSegmentMask_SerializationShift = 0                  // requires 4 bits (deprecated)
+      };
 
   SkPathRef() {
     fBoundsIsDirty = true;  // this also invalidates fIsFinite

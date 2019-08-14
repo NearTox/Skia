@@ -36,7 +36,7 @@ class SK_API SkPixmap {
 
       @return  empty SkPixmap
   */
-  SkPixmap() : fPixels(nullptr), fRowBytes(0), fInfo(SkImageInfo::MakeUnknown(0, 0)) {}
+  SkPixmap() noexcept : fPixels(nullptr), fRowBytes(0), fInfo(SkImageInfo::MakeUnknown(0, 0)) {}
 
   /** Creates SkPixmap from info width, height, SkAlphaType, and SkColorType.
       addr points to pixels, or nullptr. rowBytes should be info.width() times
@@ -56,7 +56,7 @@ class SK_API SkPixmap {
       @param rowBytes  size of one row of addr; width times pixel size, or larger
       @return          initialized SkPixmap
   */
-  SkPixmap(const SkImageInfo& info, const void* addr, size_t rowBytes)
+  SkPixmap(const SkImageInfo& info, const void* addr, size_t rowBytes) noexcept
       : fPixels(addr), fRowBytes(rowBytes), fInfo(info) {}
 
   /** Sets width, height, row bytes to zero; pixel address to nullptr; SkColorType to
@@ -65,7 +65,7 @@ class SK_API SkPixmap {
       The prior pixels are unaffected; it is up to the caller to release pixels
       memory if desired.
   */
-  void reset();
+  void reset() noexcept;
 
   /** Sets width, height, SkAlphaType, and SkColorType from info.
       Sets pixel address from addr, which may be nullptr.
@@ -145,6 +145,11 @@ class SK_API SkPixmap {
   */
   int height() const { return fInfo.height(); }
 
+  /**
+   *  Return the dimensions of the pixmap (from its ImageInfo)
+   */
+  SkISize dimensions() const { return fInfo.dimensions(); }
+
   /** Returns SkColorType, one of:
       kUnknown_SkColorType, kAlpha_8_SkColorType, kRGB_565_SkColorType,
       kARGB_4444_SkColorType, kRGBA_8888_SkColorType, kRGB_888x_SkColorType,
@@ -211,7 +216,7 @@ class SK_API SkPixmap {
 
   /** Returns minimum memory required for pixel storage.
       Does not include unused memory on last row when rowBytesAsPixels() exceeds width().
-      Returns zero if result does not fit in size_t.
+      Returns SIZE_MAX if result does not fit in size_t.
       Returns zero if height() or width() is 0.
       Returns height() times rowBytes() if colorType() is kUnknown_SkColorType.
 

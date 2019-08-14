@@ -8,8 +8,8 @@
 #include "include/core/SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN)
 
-#include "include/core/SkStream.h"
-#include "src/utils/win/SkIStream.h"
+#  include "include/core/SkStream.h"
+#  include "src/utils/win/SkIStream.h"
 
 /**
  * SkBaseIStream

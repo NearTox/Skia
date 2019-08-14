@@ -149,7 +149,7 @@ struct SK_API SkPoint3 {
   SkPoint3 cross(const SkPoint3& vec) const { return CrossProduct(*this, vec); }
 };
 
-typedef SkPoint3 SkVector3;
-typedef SkPoint3 SkColor3f;
+using SkVector3 = SkPoint3;
+using SkColor3f = SkPoint3;
 
 #endif

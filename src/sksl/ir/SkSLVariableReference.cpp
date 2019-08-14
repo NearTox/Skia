@@ -93,7 +93,7 @@ std::unique_ptr<Expression> VariableReference::constantPropagate(
     return irGenerator.getArg(fOffset, fVariable.fName);
   }
   if ((fVariable.fModifiers.fFlags & Modifiers::kConst_Flag) && fVariable.fInitialValue &&
-      fVariable.fInitialValue->isConstant()) {
+      fVariable.fInitialValue->isConstant() && fType.kind() != Type::kArray_Kind) {
     return copy_constant(irGenerator, fVariable.fInitialValue);
   }
   auto exprIter = definitions.find(&fVariable);

@@ -13,11 +13,12 @@
 
 class GrMtlTextureRenderTarget : public GrMtlTexture, public GrMtlRenderTarget {
  public:
-  static sk_sp<GrMtlTextureRenderTarget> CreateNewTextureRenderTarget(
-      GrMtlGpu*, SkBudgeted, const GrSurfaceDesc&, MTLTextureDescriptor*, GrMipMapsStatus);
+  static sk_sp<GrMtlTextureRenderTarget> MakeNewTextureRenderTarget(
+      GrMtlGpu*, SkBudgeted, const GrSurfaceDesc&, int sampleCnt, MTLTextureDescriptor*,
+      GrMipMapsStatus);
 
   static sk_sp<GrMtlTextureRenderTarget> MakeWrappedTextureRenderTarget(
-      GrMtlGpu*, const GrSurfaceDesc&, id<MTLTexture>, GrWrapCacheable);
+      GrMtlGpu*, const GrSurfaceDesc&, int sampleCnt, id<MTLTexture>, GrWrapCacheable);
   GrBackendFormat backendFormat() const override { return GrMtlTexture::backendFormat(); }
 
  protected:
@@ -33,31 +34,31 @@ class GrMtlTextureRenderTarget : public GrMtlTexture, public GrMtlRenderTarget {
 
  private:
   GrMtlTextureRenderTarget(
-      GrMtlGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc, id<MTLTexture> renderTexture,
-      id<MTLTexture> resolveTexture, GrMipMapsStatus);
+      GrMtlGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc, int sampleCnt,
+      id<MTLTexture> colorTexture, id<MTLTexture> resolveTexture, GrMipMapsStatus);
 
   GrMtlTextureRenderTarget(
-      GrMtlGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc, id<MTLTexture> renderTexture,
+      GrMtlGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc, id<MTLTexture> colorTexture,
       GrMipMapsStatus);
 
   GrMtlTextureRenderTarget(
-      GrMtlGpu* gpu, const GrSurfaceDesc& desc, id<MTLTexture> renderTexture,
-      id<MTLTexture> resolveTexture, GrMipMapsStatus);
+      GrMtlGpu* gpu, const GrSurfaceDesc& desc, int sampleCnt, id<MTLTexture> colorTexture,
+      id<MTLTexture> resolveTexture, GrMipMapsStatus, GrWrapCacheable cacheable);
 
   GrMtlTextureRenderTarget(
-      GrMtlGpu* gpu, const GrSurfaceDesc& desc, id<MTLTexture> renderTexture, GrMipMapsStatus,
+      GrMtlGpu* gpu, const GrSurfaceDesc& desc, id<MTLTexture> colorTexture, GrMipMapsStatus,
       GrWrapCacheable cacheable);
 
   size_t onGpuMemorySize() const override {
     // TODO: When used as render targets certain formats may actually have a larger size than
     // the base format size. Check to make sure we are reporting the correct value here.
     // The plus 1 is to account for the resolve texture or if not using msaa the RT itself
-    int numColorSamples = this->numColorSamples();
+    int numColorSamples = this->numSamples();
     if (numColorSamples > 1) {
       ++numColorSamples;
     }
     return GrSurface::ComputeSize(
-        this->config(), this->width(), this->height(), numColorSamples, GrMipMapped::kNo, false);
+        this->config(), this->width(), this->height(), numColorSamples, GrMipMapped::kNo);
   }
 };
 

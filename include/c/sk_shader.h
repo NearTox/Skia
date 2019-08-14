@@ -15,8 +15,8 @@
 
 SK_C_PLUS_PLUS_BEGIN_GUARD
 
-void sk_shader_ref(sk_shader_t*);
-void sk_shader_unref(sk_shader_t*);
+SK_API void sk_shader_ref(sk_shader_t*);
+SK_API void sk_shader_unref(sk_shader_t*);
 
 typedef enum {
   CLAMP_SK_SHADER_TILEMODE,
@@ -42,7 +42,7 @@ typedef enum {
                       NULL) entries.
     @param mode The tiling mode
 */
-sk_shader_t* sk_shader_new_linear_gradient(
+SK_API sk_shader_t* sk_shader_new_linear_gradient(
     const sk_point_t points[2], const sk_color_t colors[], const float colorPos[], int colorCount,
     sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix);
 
@@ -67,7 +67,7 @@ sk_shader_t* sk_shader_new_linear_gradient(
     @param tileMode The tiling mode
     @param localMatrix May be NULL
 */
-sk_shader_t* sk_shader_new_radial_gradient(
+SK_API sk_shader_t* sk_shader_new_radial_gradient(
     const sk_point_t* center, float radius, const sk_color_t colors[], const float colorPos[],
     int colorCount, sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix);
 
@@ -88,7 +88,7 @@ sk_shader_t* sk_shader_new_radial_gradient(
                       not NULL) entries
     @param localMatrix May be NULL
 */
-sk_shader_t* sk_shader_new_sweep_gradient(
+SK_API sk_shader_t* sk_shader_new_sweep_gradient(
     const sk_point_t* center, const sk_color_t colors[], const float colorPos[], int colorCount,
     const sk_matrix_t* localMatrix);
 
@@ -117,7 +117,7 @@ sk_shader_t* sk_shader_new_sweep_gradient(
     @param localMatrix May be NULL
 
 */
-sk_shader_t* sk_shader_new_two_point_conical_gradient(
+SK_API sk_shader_t* sk_shader_new_two_point_conical_gradient(
     const sk_point_t* start, float startRadius, const sk_point_t* end, float endRadius,
     const sk_color_t colors[], const float colorPos[], int colorCount,
     sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix);

@@ -88,7 +88,7 @@ sk_sp<SkData> FileResourceProvider::load(
 }
 
 sk_sp<skottie::ImageAsset> FileResourceProvider::loadImageAsset(
-    const char resource_path[], const char resource_name[]) const {
+    const char resource_path[], const char resource_name[], const char[]) const {
   return MultiFrameImageAsset::Make(this->load(resource_path, resource_name));
 }
 

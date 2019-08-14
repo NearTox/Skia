@@ -30,10 +30,9 @@ class GrGpuCommandBuffer {
   virtual ~GrGpuCommandBuffer() {}
 
   // Copy src into current surface owned by either a GrGpuTextureCommandBuffer or
-  // GrGpuRenderTargetCommandBuffer.
-  virtual void copy(
-      GrSurface* src, GrSurfaceOrigin srcOrigin, const SkIRect& srcRect,
-      const SkIPoint& dstPoint) = 0;
+  // GrGpuRenderTargetCommandBuffer. The srcRect and dstPoint must be in dst coords and have
+  // already been adjusted for any origin flips.
+  virtual void copy(GrSurface* src, const SkIRect& srcRect, const SkIPoint& dstPoint) = 0;
   // Initiates a transfer from the surface owned by the command buffer to the GrGpuBuffer.
   virtual void transferFrom(
       const SkIRect& srcRect, GrColorType bufferColorType, GrGpuBuffer* transferBuffer,
@@ -49,17 +48,14 @@ class GrGpuTextureCommandBuffer : public GrGpuCommandBuffer {
   void set(GrTexture* texture, GrSurfaceOrigin origin) {
     SkASSERT(!fTexture);
 
-    fOrigin = origin;
     fTexture = texture;
   }
 
  protected:
-  GrGpuTextureCommandBuffer() : fOrigin(kTopLeft_GrSurfaceOrigin), fTexture(nullptr) {}
+  GrGpuTextureCommandBuffer() : fTexture(nullptr) {}
 
-  GrGpuTextureCommandBuffer(GrTexture* texture, GrSurfaceOrigin origin)
-      : fOrigin(origin), fTexture(texture) {}
+  GrGpuTextureCommandBuffer(GrTexture* texture, GrSurfaceOrigin origin) : fTexture(texture) {}
 
-  GrSurfaceOrigin fOrigin;
   GrTexture* fTexture;
 
  private:
@@ -110,12 +106,6 @@ class GrGpuRTCommandBuffer : public GrGpuCommandBuffer {
   void clear(const GrFixedClip&, const SkPMColor4f&);
 
   void clearStencilClip(const GrFixedClip&, bool insideStencilMask);
-
-  /**
-   * Discards the contents render target.
-   */
-  // TODO: This should be removed in the future to favor using the load and store ops for discard
-  virtual void discard() = 0;
 
   /**
    * Executes the SkDrawable object for the underlying backend.

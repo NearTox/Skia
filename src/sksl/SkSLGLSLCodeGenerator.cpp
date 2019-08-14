@@ -16,7 +16,7 @@
 #include "src/sksl/ir/SkSLVariableReference.h"
 
 #ifndef SKSL_STANDALONE
-#include "include/private/SkOnce.h"
+#  include "include/private/SkOnce.h"
 #endif
 
 namespace SkSL {
@@ -1073,8 +1073,9 @@ void GLSLCodeGenerator::writeModifiers(const Modifiers& modifiers, bool globalCo
     case Layout::Format::kUnspecified: break;
     case Layout::Format::kRGBA32F:  // fall through
     case Layout::Format::kR32F: this->write("highp "); break;
-    case Layout::Format::kRGBA16F:  // fall through
-    case Layout::Format::kR16F:     // fall through
+    case Layout::Format::kRGBA16F:       // fall through
+    case Layout::Format::kR16F:          // fall through
+    case Layout::Format::kLUMINANCE16F:  // fall through
     case Layout::Format::kRG16F: this->write("mediump "); break;
     case Layout::Format::kRGBA8:   // fall through
     case Layout::Format::kR8:      // fall through
@@ -1179,12 +1180,6 @@ void GLSLCodeGenerator::writeVarDeclarations(const VarDeclarations& decl, bool g
     if (var.fValue) {
       this->write(" = ");
       this->writeVarInitializer(*var.fVar, *var.fValue);
-    }
-    if (!fFoundImageDecl && var.fVar->fType == *fContext.fImage2D_Type) {
-      if (fProgram.fSettings.fCaps->imageLoadStoreExtensionString()) {
-        this->writeExtension(fProgram.fSettings.fCaps->imageLoadStoreExtensionString());
-      }
-      fFoundImageDecl = true;
     }
     if (!fFoundExternalSamplerDecl && var.fVar->fType == *fContext.fSamplerExternalOES_Type) {
       if (fProgram.fSettings.fCaps->externalTextureExtensionString()) {

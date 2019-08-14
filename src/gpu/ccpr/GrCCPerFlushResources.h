@@ -13,6 +13,7 @@
 #include "src/gpu/ccpr/GrCCFiller.h"
 #include "src/gpu/ccpr/GrCCPathProcessor.h"
 #include "src/gpu/ccpr/GrCCStroker.h"
+#include "src/gpu/ccpr/GrStencilAtlasOp.h"
 
 class GrCCPathCache;
 class GrCCPathCacheEntry;
@@ -66,15 +67,19 @@ struct GrCCPerFlushResourceSpecs {
  */
 class GrCCPerFlushResources : public GrNonAtomicRef<GrCCPerFlushResources> {
  public:
-  GrCCPerFlushResources(GrOnFlushResourceProvider*, const GrCCPerFlushResourceSpecs&);
+  GrCCPerFlushResources(
+      GrOnFlushResourceProvider*, GrCCAtlas::CoverageType, const GrCCPerFlushResourceSpecs&);
 
   bool isMapped() const { return SkToBool(fPathInstanceData); }
+
+  GrCCAtlas::CoverageType renderedPathCoverageType() const {
+    return fRenderedAtlasStack.coverageType();
+  }
 
   // Copies a coverage-counted path out of the given texture proxy, and into a cached, 8-bit,
   // literal coverage atlas. Updates the cache entry to reference the new atlas.
   void upgradeEntryToLiteralCoverageAtlas(
-      GrCCPathCache*, GrOnFlushResourceProvider*, GrCCPathCacheEntry*,
-      GrCCPathProcessor::DoEvenOddFill);
+      GrCCPathCache*, GrOnFlushResourceProvider*, GrCCPathCacheEntry*, GrFillRule);
 
   // These two methods render a path into a temporary coverage count atlas. See
   // GrCCPathProcessor::Instance for a description of the outputs.
@@ -86,7 +91,7 @@ class GrCCPerFlushResources : public GrNonAtomicRef<GrCCPerFlushResources> {
       GrOctoBounds*, SkIRect* devIBounds, SkIVector* devToAtlasOffset);
   const GrCCAtlas* renderDeviceSpacePathInAtlas(
       const SkIRect& clipIBounds, const SkPath& devPath, const SkIRect& devPathIBounds,
-      SkIVector* devToAtlasOffset);
+      GrFillRule fillRule, SkIVector* devToAtlasOffset);
 
   // Returns the index in instanceBuffer() of the next instance that will be added by
   // appendDrawPathInstance().
@@ -125,13 +130,22 @@ class GrCCPerFlushResources : public GrNonAtomicRef<GrCCPerFlushResources> {
     SkASSERT(!this->isMapped());
     return fInstanceBuffer;
   }
+  sk_sp<const GrGpuBuffer> refStencilResolveBuffer() const {
+    SkASSERT(!this->isMapped());
+    return fStencilResolveBuffer;
+  }
 
  private:
   void recordCopyPathInstance(
-      const GrCCPathCacheEntry&, const SkIVector& newAtlasOffset, GrCCPathProcessor::DoEvenOddFill,
+      const GrCCPathCacheEntry&, const SkIVector& newAtlasOffset, GrFillRule,
       sk_sp<GrTextureProxy> srcProxy);
   void placeRenderedPathInAtlas(
       const SkIRect& clippedPathIBounds, GrScissorTest, SkIVector* devToAtlasOffset);
+
+  // In MSAA mode we record an additional instance per path that draws a rectangle on top of its
+  // corresponding path in the atlas and resolves stencil winding values to coverage.
+  void recordStencilResolveInstance(
+      const SkIRect& clippedPathIBounds, const SkIVector& devToAtlasOffset, GrFillRule);
 
   const SkAutoSTArray<32, SkPoint> fLocalDevPtsBuffer;
   GrCCFiller fFiller;
@@ -147,6 +161,7 @@ class GrCCPerFlushResources : public GrNonAtomicRef<GrCCPerFlushResources> {
   int fNextCopyInstanceIdx;
   SkDEBUGCODE(int fEndCopyInstance);
   int fNextPathInstanceIdx;
+  int fBasePathInstanceIdx;
   SkDEBUGCODE(int fEndPathInstance);
 
   // Represents a range of copy-path instances that all share the same source proxy. (i.e. Draw
@@ -169,7 +184,20 @@ class GrCCPerFlushResources : public GrNonAtomicRef<GrCCPerFlushResources> {
   // than allocating new texture objects upon instantiation.
   SkSTArray<2, sk_sp<GrTexture>> fRecyclableAtlasTextures;
 
+  // Used in MSAA mode make an intermediate draw that resolves stencil winding values to coverage.
+  sk_sp<GrGpuBuffer> fStencilResolveBuffer;
+  GrStencilAtlasOp::ResolveRectInstance* fStencilResolveInstanceData = nullptr;
+  int fNextStencilResolveInstanceIdx = 0;
+  SkDEBUGCODE(int fEndStencilResolveInstance);
+
  public:
+#ifdef SK_DEBUG
+  void debugOnly_didReuseRenderedPath() {
+    if (GrCCAtlas::CoverageType::kA8_Multisample == this->renderedPathCoverageType()) {
+      --fEndStencilResolveInstance;
+    }
+  }
+#endif
   const GrTexture* testingOnly_frontCopyAtlasTexture() const;
   const GrTexture* testingOnly_frontRenderedAtlasTexture() const;
 };

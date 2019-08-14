@@ -102,9 +102,11 @@ sk_imageinfo_t* sk_imageinfo_new(
 
 void sk_imageinfo_delete(sk_imageinfo_t* cinfo) { delete ToImageInfo(cinfo); }
 
-int sk_imageinfo_get_width(const sk_imageinfo_t* cinfo) { return ToImageInfo(cinfo)->width(); }
+int32_t sk_imageinfo_get_width(const sk_imageinfo_t* cinfo) { return ToImageInfo(cinfo)->width(); }
 
-int sk_imageinfo_get_height(const sk_imageinfo_t* cinfo) { return ToImageInfo(cinfo)->height(); }
+int32_t sk_imageinfo_get_height(const sk_imageinfo_t* cinfo) {
+  return ToImageInfo(cinfo)->height();
+}
 
 sk_colortype_t sk_imageinfo_get_colortype(const sk_imageinfo_t* cinfo) {
   sk_colortype_t ct;

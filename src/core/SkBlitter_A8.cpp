@@ -20,9 +20,9 @@ SkA8_Coverage_Blitter::SkA8_Coverage_Blitter(const SkPixmap& device, const SkPai
 void SkA8_Coverage_Blitter::blitAntiH(
     int x, int y, const SkAlpha antialias[], const int16_t runs[]) {
   uint8_t* device = fDevice.writable_addr8(x, y);
-  SkDEBUGCODE(int totalCount = 0);
+  SkDEBUGCODE(int totalCount = 0;)
 
-  for (;;) {
+      for (;;) {
     int count = runs[0];
     SkASSERT(count >= 0);
     if (count == 0) {
@@ -35,7 +35,7 @@ void SkA8_Coverage_Blitter::blitAntiH(
     antialias += count;
     device += count;
 
-    SkDEBUGCODE(totalCount += count);
+    SkDEBUGCODE(totalCount += count;)
   }
   SkASSERT(fDevice.width() == totalCount);
 }

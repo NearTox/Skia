@@ -25,7 +25,7 @@
 #include "include/core/SkTypeface.h"
 #include "include/core/SkTypes.h"
 #include "src/core/SkFontPriv.h"
-#include "src/utils/SkMetaData.h"
+#include "tools/SkMetaData.h"
 #include "tools/ToolUtils.h"
 
 #include <utility>
@@ -69,18 +69,16 @@ static const char* zh = "zh";
 static const char* ja = "ja";
 
 class FontMgrGM : public skiagm::GM {
- public:
-  FontMgrGM() {
-    SkGraphics::SetFontCacheLimit(16 * 1024 * 1024);
+  sk_sp<SkFontMgr> fFM;
 
-    fName.set("fontmgr_iter");
+  void onOnceBeforeDraw() override {
+    SkGraphics::SetFontCacheLimit(16 * 1024 * 1024);
     fFM = SkFontMgr::RefDefault();
   }
 
- protected:
-  SkString onShortName() override { return fName; }
+  SkString onShortName() override { return SkString("fontmgr_iter"); }
 
-  SkISize onISize() override { return SkISize::Make(1536, 768); }
+  SkISize onISize() override { return {1536, 768}; }
 
   void onDraw(SkCanvas* canvas) override {
     SkScalar y = 20;
@@ -119,25 +117,19 @@ class FontMgrGM : public skiagm::GM {
       y += 24;
     }
   }
-
- private:
-  sk_sp<SkFontMgr> fFM;
-  SkString fName;
-  typedef GM INHERITED;
 };
 
 class FontMgrMatchGM : public skiagm::GM {
   sk_sp<SkFontMgr> fFM;
 
- public:
-  FontMgrMatchGM() : fFM(SkFontMgr::RefDefault()) {
+  void onOnceBeforeDraw() override {
+    fFM = SkFontMgr::RefDefault();
     SkGraphics::SetFontCacheLimit(16 * 1024 * 1024);
   }
 
- protected:
   SkString onShortName() override { return SkString("fontmgr_match"); }
 
-  SkISize onISize() override { return SkISize::Make(640, 1024); }
+  SkISize onISize() override { return {640, 1024}; }
 
   void iterateFamily(SkCanvas* canvas, const SkFont& font, SkFontStyleSet* fset) {
     SkFont f(font);
@@ -201,23 +193,21 @@ class FontMgrMatchGM : public skiagm::GM {
     this->iterateFamily(canvas, font, fset.get());
     return DrawResult::kOk;
   }
-
- private:
-  typedef GM INHERITED;
 };
 
 class FontMgrBoundsGM : public skiagm::GM {
  public:
-  FontMgrBoundsGM(double scale, double skew)
-      : fFM(SkFontMgr::RefDefault()),
-        fName("fontmgr_bounds"),
-        fScaleX(SkDoubleToScalar(scale)),
-        fSkewX(SkDoubleToScalar(skew)),
-        fLabelBounds(false) {
-    if (scale != 1 || skew != 0) {
-      fName.appendf("_%g_%g", scale, skew);
+  FontMgrBoundsGM(float scale, float skew) : fScaleX(scale), fSkewX(skew) {}
+
+ private:
+  SkString onShortName() override {
+    if (fScaleX != 1 || fSkewX != 0) {
+      return SkStringPrintf("fontmgr_bounds_%g_%g", fScaleX, fSkewX);
     }
+    return SkString("fontmgr_bounds");
   }
+
+  void onOnceBeforeDraw() override { fFM = SkFontMgr::RefDefault(); }
 
   bool onGetControls(SkMetaData* controls) override {
     controls->setBool("Label Bounds", fLabelBounds);
@@ -317,10 +307,7 @@ class FontMgrBoundsGM : public skiagm::GM {
     }
   }
 
- protected:
-  SkString onShortName() override { return fName; }
-
-  SkISize onISize() override { return SkISize::Make(1024, 850); }
+  SkISize onISize() override { return {1024, 850}; }
 
   void onDraw(SkCanvas* canvas) override {
     SkFont font;
@@ -364,19 +351,16 @@ class FontMgrBoundsGM : public skiagm::GM {
     }
   }
 
- private:
-  const sk_sp<SkFontMgr> fFM;
-  SkString fName;
+  sk_sp<SkFontMgr> fFM;
   const SkScalar fScaleX;
   const SkScalar fSkewX;
-  bool fLabelBounds;
-  typedef GM INHERITED;
+  bool fLabelBounds = false;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
 DEF_GM(return new FontMgrGM;)
 DEF_GM(return new FontMgrMatchGM;)
-DEF_GM(return new FontMgrBoundsGM(1.0, 0);)
-DEF_GM(return new FontMgrBoundsGM(0.75, 0);)
-DEF_GM(return new FontMgrBoundsGM(1.0, -0.25);)
+DEF_GM(return new FontMgrBoundsGM(1, 0);)
+DEF_GM(return new FontMgrBoundsGM(0.75f, 0);)
+DEF_GM(return new FontMgrBoundsGM(1, -0.25f);)

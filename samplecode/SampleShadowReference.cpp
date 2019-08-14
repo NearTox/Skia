@@ -34,39 +34,33 @@ class ShadowRefView : public Sample {
     fReferenceImage = GetResourceAsImage("images/shadowreference.png");
   }
 
-  bool onQuery(Sample::Event* evt) override {
-    if (Sample::TitleQ(*evt)) {
-      Sample::TitleR(evt, "ShadowReference");
+  SkString name() override { return SkString("ShadowReference"); }
+
+  bool onChar(SkUnichar uni) override {
+    bool handled = false;
+    switch (uni) {
+      case 'W':
+        fShowAmbient = !fShowAmbient;
+        handled = true;
+        break;
+      case 'S':
+        fShowSpot = !fShowSpot;
+        handled = true;
+        break;
+      case 'T':
+        fUseAlt = !fUseAlt;
+        handled = true;
+        break;
+      case 'O':
+        fShowObject = !fShowObject;
+        handled = true;
+        break;
+      default: break;
+    }
+    if (handled) {
       return true;
     }
-
-    SkUnichar uni;
-    if (Sample::CharQ(*evt, &uni)) {
-      bool handled = false;
-      switch (uni) {
-        case 'W':
-          fShowAmbient = !fShowAmbient;
-          handled = true;
-          break;
-        case 'S':
-          fShowSpot = !fShowSpot;
-          handled = true;
-          break;
-        case 'T':
-          fUseAlt = !fUseAlt;
-          handled = true;
-          break;
-        case 'O':
-          fShowObject = !fShowObject;
-          handled = true;
-          break;
-        default: break;
-      }
-      if (handled) {
-        return true;
-      }
-    }
-    return this->INHERITED::onQuery(evt);
+    return false;
   }
 
   void drawBG(SkCanvas* canvas) {

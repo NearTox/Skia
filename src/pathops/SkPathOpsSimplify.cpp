@@ -156,7 +156,7 @@ bool SimplifyDebug(
       contourList, &allocator SkDEBUGPARAMS(skipAssert) SkDEBUGPARAMS(testName));
   SkOpCoincidence coincidence(&globalState);
 #if DEBUG_DUMP_VERIFY
-#ifndef SK_DEBUG
+#  ifndef SK_DEBUG
   const char* testName = "release";
 #  endif
   if (SkPathOpsDebug::gDumpOp) {

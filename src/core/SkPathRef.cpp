@@ -379,7 +379,8 @@ SkPathRef* SkPathRef::CreateFromBuffer(SkRBuffer* buffer) {
 
 void SkPathRef::Rewind(sk_sp<SkPathRef>* pathRef) {
   if ((*pathRef)->unique()) {
-    SkDEBUGCODE((*pathRef)->validate();)(*pathRef)->callGenIDChangeListeners();
+    SkDEBUGCODE((*pathRef)->validate());
+    (*pathRef)->callGenIDChangeListeners();
     (*pathRef)->fBoundsIsDirty = true;  // this also invalidates fIsFinite
     (*pathRef)->fVerbCnt = 0;
     (*pathRef)->fPointCnt = 0;
@@ -741,7 +742,7 @@ SkRRect SkPathRef::getRRect() const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkPathRef::Iter::Iter() {
+SkPathRef::Iter::Iter() noexcept {
 #ifdef SK_DEBUG
   fPts = nullptr;
   fConicWeights = nullptr;

@@ -87,10 +87,10 @@ bool SkColor4Shader::onAppendStages(const SkStageRec& rec) const {
 
 #if SK_SUPPORT_GPU
 
-#include "src/gpu/GrColorSpaceInfo.h"
-#include "src/gpu/GrColorSpaceXform.h"
-#include "src/gpu/SkGr.h"
-#include "src/gpu/effects/generated/GrConstColorProcessor.h"
+#  include "src/gpu/GrColorSpaceInfo.h"
+#  include "src/gpu/GrColorSpaceXform.h"
+#  include "src/gpu/SkGr.h"
+#  include "src/gpu/effects/generated/GrConstColorProcessor.h"
 
 std::unique_ptr<GrFragmentProcessor> SkColorShader::asFragmentProcessor(
     const GrFPArgs& args) const {

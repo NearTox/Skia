@@ -24,19 +24,15 @@
 namespace skiagm {
 
 class DegenerateSegmentsGM : public GM {
- public:
-  DegenerateSegmentsGM() {}
-
- protected:
   struct PathAndName {
     SkPath fPath;
     const char* fName1;
     const char* fName2;
   };
 
-  SkString onShortName() { return SkString("degeneratesegments"); }
+  SkString onShortName() override { return SkString("degeneratesegments"); }
 
-  SkISize onISize() { return SkISize::Make(896, 930); }
+  SkISize onISize() override { return {896, 930}; }
 
   typedef SkPoint (*AddSegmentFunc)(SkPath&, SkPoint&);
 
@@ -215,7 +211,7 @@ class DegenerateSegmentsGM : public GM {
     canvas->restore();
   }
 
-  virtual void onDraw(SkCanvas* canvas) {
+  void onDraw(SkCanvas* canvas) override {
     constexpr AddSegmentFunc gSegmentFunctions[] = {AddMove,
                                                     AddMoveClose,
                                                     AddDegenLine,
@@ -358,9 +354,6 @@ class DegenerateSegmentsGM : public GM {
     canvas->restore();
     canvas->restore();
   }
-
- private:
-  typedef GM INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////

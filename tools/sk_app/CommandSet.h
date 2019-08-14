@@ -41,8 +41,8 @@ class CommandSet {
   CommandSet();
 
   void attach(Window* window);
-  bool onKey(sk_app::Window::Key key, sk_app::Window::InputState state, uint32_t modifiers);
-  bool onChar(SkUnichar, uint32_t modifiers);
+  bool onKey(sk_app::Window::Key key, InputState state, ModifierKey modifiers);
+  bool onChar(SkUnichar, ModifierKey modifiers);
   bool onSoftkey(const SkString& softkey);
 
   void addCommand(

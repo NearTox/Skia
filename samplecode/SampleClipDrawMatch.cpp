@@ -105,8 +105,17 @@ static void draw_normal_geom(SkCanvas* canvas, const SkPoint& offset, int geom, 
 }
 
 class ClipDrawMatchView : public Sample {
+  SkInterpolator fTrans;
+  Geometry fGeom;
+  bool fClipFirst = true;
+  int fSign = 1;
+  const double fStart = SkTime::GetMSecs();
+
  public:
-  ClipDrawMatchView() : fTrans(2, 5), fGeom(kRect_Geometry), fClipFirst(true), fSign(1) {
+  ClipDrawMatchView() : fTrans(2, 5), fGeom(kRect_Geometry) {}
+
+ private:
+  void onOnceBeforeDraw() override {
     SkScalar values[2];
 
     fTrans.setRepeatCount(999);
@@ -122,30 +131,24 @@ class ClipDrawMatchView : public Sample {
     fTrans.setKeyFrame(4, GetMSecs() + 5000, values);
   }
 
- protected:
-  bool onQuery(Sample::Event* evt) override {
-    if (Sample::TitleQ(*evt)) {
-      Sample::TitleR(evt, "ClipDrawMatch");
-      return true;
+  SkString name() override { return SkString("ClipDrawMatch"); }
+
+  bool onChar(SkUnichar uni) override {
+    switch (uni) {
+      case '1': fGeom = kRect_Geometry; return true;
+      case '2': fGeom = kRRect_Geometry; return true;
+      case '3': fGeom = kCircle_Geometry; return true;
+      case '4': fGeom = kConvexPath_Geometry; return true;
+      case '5': fGeom = kConcavePath_Geometry; return true;
+      case '6': fGeom = kRectAndRect_Geometry; return true;
+      case '7': fGeom = kRectAndRRect_Geometry; return true;
+      case '8': fGeom = kRectAndConvex_Geometry; return true;
+      case '9': fGeom = kRectAndConcave_Geometry; return true;
+      case 'f': fSign = -fSign; return true;
+      case 't': fClipFirst = !fClipFirst; return true;
+      default: break;
     }
-    SkUnichar uni;
-    if (Sample::CharQ(*evt, &uni)) {
-      switch (uni) {
-        case '1': fGeom = kRect_Geometry; return true;
-        case '2': fGeom = kRRect_Geometry; return true;
-        case '3': fGeom = kCircle_Geometry; return true;
-        case '4': fGeom = kConvexPath_Geometry; return true;
-        case '5': fGeom = kConcavePath_Geometry; return true;
-        case '6': fGeom = kRectAndRect_Geometry; return true;
-        case '7': fGeom = kRectAndRRect_Geometry; return true;
-        case '8': fGeom = kRectAndConvex_Geometry; return true;
-        case '9': fGeom = kRectAndConcave_Geometry; return true;
-        case 'f': fSign = -fSign; return true;
-        case 't': fClipFirst = !fClipFirst; return true;
-        default: break;
-      }
-    }
-    return this->INHERITED::onQuery(evt);
+    return false;
   }
 
   void drawClippedGeom(SkCanvas* canvas, const SkPoint& offset, bool useAA) {
@@ -221,17 +224,6 @@ class ClipDrawMatchView : public Sample {
   }
 
   SkMSec GetMSecs() const { return static_cast<SkMSec>(SkTime::GetMSecs() - fStart); }
-
- private:
-  SkInterpolator fTrans;
-  Geometry fGeom;
-  bool fClipFirst;
-  int fSign;
-  const double fStart = SkTime::GetMSecs();
-
-  typedef Sample INHERITED;
 };
-
-//////////////////////////////////////////////////////////////////////////////
 
 DEF_SAMPLE(return new ClipDrawMatchView();)

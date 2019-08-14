@@ -12,9 +12,9 @@
 #include "tools/Resources.h"
 
 extern "C" {
-#include "lauxlib.h"
 #include "lua.h"
 #include "lualib.h"
+#include "lauxlib.h"
 }
 
 //#define LUA_FILENAME    "lua/test.lua"
@@ -68,29 +68,24 @@ class LuaView : public Sample {
   }
 
  protected:
-  bool onQuery(Sample::Event* evt) override {
-    if (Sample::TitleQ(*evt)) {
-      Sample::TitleR(evt, "Lua");
-      return true;
-    }
-    SkUnichar uni;
-    if (Sample::CharQ(*evt, &uni)) {
-      lua_State* L = this->ensureLua();
-      lua_getglobal(L, gUnicharName);
-      if (lua_isfunction(L, -1)) {
-        SkString str;
-        str.appendUnichar(uni);
-        fLua->pushString(str.c_str());
-        if (lua_pcall(L, 1, 1, 0) != LUA_OK) {
-          SkDebugf("lua err: %s\n", lua_tostring(L, -1));
-        } else {
-          if (lua_isboolean(L, -1) && lua_toboolean(L, -1)) {
-            return true;
-          }
+  SkString name() override { return SkString("Lua"); }
+
+  bool onChar(SkUnichar uni) override {
+    lua_State* L = this->ensureLua();
+    lua_getglobal(L, gUnicharName);
+    if (lua_isfunction(L, -1)) {
+      SkString str;
+      str.appendUnichar(uni);
+      fLua->pushString(str.c_str());
+      if (lua_pcall(L, 1, 1, 0) != LUA_OK) {
+        SkDebugf("lua err: %s\n", lua_tostring(L, -1));
+      } else {
+        if (lua_isboolean(L, -1) && lua_toboolean(L, -1)) {
+          return true;
         }
       }
     }
-    return this->INHERITED::onQuery(evt);
+    return false;
   }
 
   void onDrawContent(SkCanvas* canvas) override {
@@ -113,7 +108,7 @@ class LuaView : public Sample {
     }
   }
 
-  virtual Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, unsigned modi) override {
+  virtual Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, ModifierKey modi) override {
     lua_State* L = this->ensureLua();
     lua_getglobal(L, gClickName);
     if (lua_isfunction(L, -1)) {
@@ -124,7 +119,7 @@ class LuaView : public Sample {
         SkDebugf("lua err: %s\n", lua_tostring(L, -1));
       } else {
         if (lua_isboolean(L, -1) && lua_toboolean(L, -1)) {
-          return new Click(this);
+          return new Click();
         }
       }
     }
@@ -134,8 +129,8 @@ class LuaView : public Sample {
   bool onClick(Click* click) override {
     const char* state = nullptr;
     switch (click->fState) {
-      case Click::kMoved_State: state = "moved"; break;
-      case Click::kUp_State: state = "up"; break;
+      case InputState::kMove: state = "moved"; break;
+      case InputState::kUp: state = "up"; break;
       default: break;
     }
     if (state) {

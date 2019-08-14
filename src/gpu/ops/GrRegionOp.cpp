@@ -84,11 +84,11 @@ class RegionOp final : public GrMeshDrawOp {
   FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
   GrProcessorSet::Analysis finalize(
-      const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType,
+      const GrCaps& caps, const GrAppliedClip* clip, bool hasMixedSampledCoverage,
       GrClampType clampType) override {
     return fHelper.finalizeProcessors(
-        caps, clip, fsaaType, clampType, GrProcessorAnalysisCoverage::kNone, &fRegions[0].fColor,
-        &fWideColor);
+        caps, clip, hasMixedSampledCoverage, clampType, GrProcessorAnalysisCoverage::kNone,
+        &fRegions[0].fColor, &fWideColor);
   }
 
  private:
@@ -204,7 +204,7 @@ GR_DRAW_OP_TEST_DEFINE(RegionOp) {
   }
   SkMatrix viewMatrix = GrTest::TestMatrix(random);
   GrAAType aaType = GrAAType::kNone;
-  if (GrFSAAType::kUnifiedMSAA == fsaaType && random->nextBool()) {
+  if (numSamples > 1 && random->nextBool()) {
     aaType = GrAAType::kMSAA;
   }
   return RegionOp::Make(

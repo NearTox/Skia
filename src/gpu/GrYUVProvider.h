@@ -8,6 +8,7 @@
 #ifndef GrYUVProvider_DEFINED
 #define GrYUVProvider_DEFINED
 
+#include <include/private/GrTypesPriv.h>
 #include "include/core/SkImageInfo.h"
 #include "include/core/SkYUVAIndex.h"
 #include "include/core/SkYUVASizeInfo.h"
@@ -42,8 +43,8 @@ class GrYUVProvider {
    *  On failure (e.g. the provider had no data), this returns NULL.
    */
   sk_sp<GrTextureProxy> refAsTextureProxy(
-      GrRecordingContext*, const GrBackendFormat&, const GrSurfaceDesc&,
-      SkColorSpace* srcColorSpace, SkColorSpace* dstColorSpace);
+      GrRecordingContext*, const GrSurfaceDesc&, GrColorType colorType, SkColorSpace* srcColorSpace,
+      SkColorSpace* dstColorSpace);
 
   sk_sp<SkCachedData> getPlanes(
       SkYUVASizeInfo*, SkYUVAIndex[SkYUVAIndex::kIndexCount], SkYUVColorSpace*,

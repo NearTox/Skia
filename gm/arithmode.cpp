@@ -79,15 +79,11 @@ static void show_k_text(SkCanvas* canvas, SkScalar x, SkScalar y, const SkScalar
 }
 
 class ArithmodeGM : public skiagm::GM {
- public:
-  ArithmodeGM() {}
+  SkString onShortName() override { return SkString("arithmode"); }
 
- protected:
-  virtual SkString onShortName() { return SkString("arithmode"); }
+  SkISize onISize() override { return {640, 572}; }
 
-  virtual SkISize onISize() { return SkISize::Make(640, 572); }
-
-  virtual void onDraw(SkCanvas* canvas) {
+  void onDraw(SkCanvas* canvas) override {
     sk_sp<SkImage> src = make_src();
     sk_sp<SkImage> dst = make_dst();
     sk_sp<SkImageFilter> srcFilter = SkImageSource::Make(src);

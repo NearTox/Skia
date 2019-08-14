@@ -34,21 +34,21 @@ class SK_API SkRRect {
 
       @return  empty SkRRect
   */
-  SkRRect() = default;
+  constexpr SkRRect() noexcept = default;
 
   /** Initializes to copy of rrect bounds and corner radii.
 
       @param rrect  bounds and corner to copy
       @return       copy of rrect
   */
-  SkRRect(const SkRRect& rrect) = default;
+  SkRRect(const SkRRect& rrect) noexcept = default;
 
   /** Copies rrect bounds and corner radii.
 
       @param rrect  bounds and corner to copy
       @return       copy of rrect
   */
-  SkRRect& operator=(const SkRRect& rrect) = default;
+  SkRRect& operator=(const SkRRect& rrect) noexcept = default;
 
   /** \enum SkRRect::Type
       Type describes possible specializations of SkRRect. Each Type is
@@ -119,7 +119,7 @@ class SK_API SkRRect {
   /** Sets bounds to zero width and height at (0, 0), the origin. Sets
       corner radii to zero and sets type to kEmpty_Type.
   */
-  void setEmpty() { *this = SkRRect(); }
+  void setEmpty() noexcept { *this = SkRRect(); }
 
   /** Sets bounds to sorted rect, and sets corner radii to zero.
       If set bounds has width and height, and sets type to kRect_Type;
@@ -143,7 +143,7 @@ class SK_API SkRRect {
 
       @return  empty SkRRect
   */
-  static SkRRect MakeEmpty() { return SkRRect(); }
+  static constexpr SkRRect MakeEmpty() noexcept { return SkRRect(); }
 
   /** Initializes to copy of r bounds and zeroes corner radii.
 
@@ -478,7 +478,7 @@ class SK_API SkRRect {
  private:
   static bool AreRectAndRadiiValid(const SkRect&, const SkVector[4]);
 
-  SkRRect(const SkRect& rect, const SkVector radii[4], int32_t type)
+  constexpr SkRRect(const SkRect& rect, const SkVector radii[4], int32_t type) noexcept
       : fRect(rect), fRadii{radii[0], radii[1], radii[2], radii[3]}, fType(type) {}
 
   /**

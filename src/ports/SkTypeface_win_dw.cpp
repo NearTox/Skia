@@ -13,23 +13,24 @@
 // GDI #defines GetGlyphIndices to GetGlyphIndicesA or GetGlyphIndicesW, but
 // IDWriteFontFace has a method called GetGlyphIndices. Since this file does
 // not use GDI, undefing GetGlyphIndices makes things less confusing.
-#undef GetGlyphIndices
+#  undef GetGlyphIndices
 
-#include "include/private/SkTo.h"
-#include "src/core/SkFontDescriptor.h"
-#include "src/core/SkFontStream.h"
-#include "src/core/SkScalerContext.h"
-#include "src/core/SkUtils.h"
-#include "src/ports/SkScalerContext_win_dw.h"
-#include "src/ports/SkTypeface_win_dw.h"
-#include "src/sfnt/SkOTTable_OS_2.h"
-#include "src/sfnt/SkOTTable_fvar.h"
-#include "src/sfnt/SkOTTable_head.h"
-#include "src/sfnt/SkOTTable_hhea.h"
-#include "src/sfnt/SkOTTable_post.h"
-#include "src/sfnt/SkOTUtils.h"
-#include "src/utils/win/SkDWrite.h"
-#include "src/utils/win/SkDWriteFontFileStream.h"
+#  include "include/private/SkTo.h"
+#  include "include/core/SkData.h"
+#  include "src/core/SkFontDescriptor.h"
+#  include "src/core/SkFontStream.h"
+#  include "src/core/SkScalerContext.h"
+#  include "src/core/SkUtils.h"
+#  include "src/ports/SkScalerContext_win_dw.h"
+#  include "src/ports/SkTypeface_win_dw.h"
+#  include "src/sfnt/SkOTTable_OS_2.h"
+#  include "src/sfnt/SkOTTable_fvar.h"
+#  include "src/sfnt/SkOTTable_head.h"
+#  include "src/sfnt/SkOTTable_hhea.h"
+#  include "src/sfnt/SkOTTable_post.h"
+#  include "src/sfnt/SkOTUtils.h"
+#  include "src/utils/win/SkDWrite.h"
+#  include "src/utils/win/SkDWriteFontFileStream.h"
 
 void DWriteFontTypeface::onGetFamilyName(SkString* familyName) const {
   SkTScopedComPtr<IDWriteLocalizedStrings> familyNames;
@@ -245,13 +246,21 @@ size_t DWriteFontTypeface::onGetTableData(
   return size;
 }
 
+sk_sp<SkData> DWriteFontTypeface::onCopyTableData(SkFontTableTag tag) const {
+  AutoDWriteTable table(fDWriteFontFace.get(), SkEndian_SwapBE32(tag));
+  if (!table.fExists) {
+    return nullptr;
+  }
+  return SkData::MakeWithCopy(table.fData, table.fSize);
+}
+
 sk_sp<SkTypeface> DWriteFontTypeface::onMakeClone(const SkFontArguments& args) const {
   // Skip if the current face index does not match the ttcIndex
   if (fDWriteFontFace->GetIndex() != SkTo<UINT32>(args.getCollectionIndex())) {
     return sk_ref_sp(this);
   }
 
-#if defined(NTDDI_WIN10_RS3) && NTDDI_VERSION >= NTDDI_WIN10_RS3
+#  if defined(NTDDI_WIN10_RS3) && NTDDI_VERSION >= NTDDI_WIN10_RS3
 
   SkTScopedComPtr<IDWriteFontFace5> fontFace5;
 
@@ -283,7 +292,7 @@ sk_sp<SkTypeface> DWriteFontTypeface::onMakeClone(const SkFontArguments& args) c
         fDWriteFontFileLoader.get(), fDWriteFontCollectionLoader.get());
   }
 
-#endif
+#  endif
 
   return sk_ref_sp(this);
 }
@@ -352,7 +361,7 @@ void DWriteFontTypeface::onFilterRec(SkScalerContextRec* rec) const {
       rec->setContrast(defaultRenderingParams->GetEnhancedContrast());
     }
   }
-#endif
+#  endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////

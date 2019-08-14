@@ -42,55 +42,49 @@ class ShadowColorView : public Sample {
  protected:
   void onOnceBeforeDraw() override { fRectPath.addRect(SkRect::MakeXYWH(-50, -50, 100, 100)); }
 
-  bool onQuery(Sample::Event* evt) override {
-    if (Sample::TitleQ(*evt)) {
-      Sample::TitleR(evt, "ShadowColor");
+  SkString name() override { return SkString("ShadowColor"); }
+
+  bool onChar(SkUnichar uni) override {
+    bool handled = false;
+    switch (uni) {
+      case 'W':
+        fShowAmbient = !fShowAmbient;
+        handled = true;
+        break;
+      case 'S':
+        fShowSpot = !fShowSpot;
+        handled = true;
+        break;
+      case 'T':
+        fUseAlt = !fUseAlt;
+        handled = true;
+        break;
+      case 'O':
+        fShowObject = !fShowObject;
+        handled = true;
+        break;
+      case 'X':
+        fTwoPassColor = !fTwoPassColor;
+        handled = true;
+        break;
+      case 'Z':
+        fDarkBackground = !fDarkBackground;
+        handled = true;
+        break;
+      case '>':
+        fZIndex = SkTMin(9, fZIndex + 1);
+        handled = true;
+        break;
+      case '<':
+        fZIndex = SkTMax(0, fZIndex - 1);
+        handled = true;
+        break;
+      default: break;
+    }
+    if (handled) {
       return true;
     }
-
-    SkUnichar uni;
-    if (Sample::CharQ(*evt, &uni)) {
-      bool handled = false;
-      switch (uni) {
-        case 'W':
-          fShowAmbient = !fShowAmbient;
-          handled = true;
-          break;
-        case 'S':
-          fShowSpot = !fShowSpot;
-          handled = true;
-          break;
-        case 'T':
-          fUseAlt = !fUseAlt;
-          handled = true;
-          break;
-        case 'O':
-          fShowObject = !fShowObject;
-          handled = true;
-          break;
-        case 'X':
-          fTwoPassColor = !fTwoPassColor;
-          handled = true;
-          break;
-        case 'Z':
-          fDarkBackground = !fDarkBackground;
-          handled = true;
-          break;
-        case '>':
-          fZIndex = SkTMin(9, fZIndex + 1);
-          handled = true;
-          break;
-        case '<':
-          fZIndex = SkTMax(0, fZIndex - 1);
-          handled = true;
-          break;
-        default: break;
-      }
-      if (handled) {
-        return true;
-      }
-    }
-    return this->INHERITED::onQuery(evt);
+    return false;
   }
 
   void drawShadowedPath(

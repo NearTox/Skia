@@ -42,7 +42,7 @@ class SK_API SkFlattenable : public SkRefCnt {
 
   typedef sk_sp<SkFlattenable> (*Factory)(SkReadBuffer&);
 
-  SkFlattenable() {}
+  constexpr SkFlattenable() noexcept = default;
 
   /** Implement this to return a factory function pointer that can be called
    to recreate your class given a buffer (previously written to by your

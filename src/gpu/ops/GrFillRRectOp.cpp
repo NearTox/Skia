@@ -128,14 +128,15 @@ GrFillRRectOp::GrFillRRectOp(
 }
 
 GrProcessorSet::Analysis GrFillRRectOp::finalize(
-    const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType, GrClampType clampType) {
+    const GrCaps& caps, const GrAppliedClip* clip, bool hasMixedSampledCoverage,
+    GrClampType clampType) {
   SkASSERT(1 == fInstanceCount);
 
   SkPMColor4f overrideColor;
   const GrProcessorSet::Analysis& analysis = fProcessors.finalize(
 
       fOriginalColor, GrProcessorAnalysisCoverage::kSingleChannel, clip,
-      &GrUserStencilSettings::kUnused, fsaaType, caps, clampType, &overrideColor);
+      &GrUserStencilSettings::kUnused, hasMixedSampledCoverage, caps, clampType, &overrideColor);
 
   // Finish writing the instance attribs.
   SkPMColor4f finalColor = analysis.inputColorIsOverridden() ? overrideColor : fOriginalColor;
@@ -714,8 +715,8 @@ void GrFillRRectOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBou
     initArgs.fInputFlags = GrPipeline::InputFlags::kHWAntialias;
   }
   initArgs.fCaps = &flushState->caps();
-  initArgs.fResourceProvider = flushState->resourceProvider();
   initArgs.fDstProxy = flushState->drawOpArgs().fDstProxy;
+  initArgs.fOutputSwizzle = flushState->drawOpArgs().fOutputSwizzle;
   auto clip = flushState->detachAppliedClip();
   GrPipeline::FixedDynamicState fixedDynamicState(clip.scissorState().rect());
   GrPipeline pipeline(initArgs, std::move(fProcessors), std::move(clip));

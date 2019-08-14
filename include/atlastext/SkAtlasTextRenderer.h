@@ -9,7 +9,7 @@
 #include "include/core/SkRefCnt.h"
 
 #ifndef SkAtlasTextRenderer_DEFINED
-#define SkAtlasTextRenderer_DEFINED
+#  define SkAtlasTextRenderer_DEFINED
 
 /**
  * This is the base class for a renderer implemented by the SkAtlasText client. The

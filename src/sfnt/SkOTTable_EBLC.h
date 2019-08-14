@@ -81,8 +81,8 @@ struct SkOTTableEmbeddedBitmapLocation {
     SK_OT_USHORT firstGlyphIndex;  // first glyph code of this range
     SK_OT_USHORT lastGlyphIndex;   // last glyph code of this range (inclusive)
     SK_OT_ULONG
-    additionalOffsetToIndexSubtable;  // add to BitmapSizeTable::indexSubTableArrayOffset to get
-                                      // offset from beginning of 'EBLC'
+        additionalOffsetToIndexSubtable;  // add to BitmapSizeTable::indexSubTableArrayOffset to get
+                                          // offset from beginning of 'EBLC'
   };  // indexSubTableArray[BitmapSizeTable::numberOfIndexSubTables];
 
   struct IndexSubHeader {

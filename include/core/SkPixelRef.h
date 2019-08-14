@@ -73,7 +73,7 @@ class SK_API SkPixelRef : public SkRefCnt {
   //
   // This can be used to invalidate caches keyed by SkPixelRef generation ID.
   struct GenIDChangeListener {
-    virtual ~GenIDChangeListener() {}
+    virtual ~GenIDChangeListener() = default;
     virtual void onChange() = 0;
   };
 

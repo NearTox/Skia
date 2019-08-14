@@ -12,14 +12,14 @@
 #include "src/core/SkRasterPipeline.h"
 
 #if SK_SUPPORT_GPU
-#include "include/gpu/GrContext.h"
-#include "src/gpu/effects/generated/GrLumaColorFilterEffect.h"
-#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
-#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#  include "include/gpu/GrContext.h"
+#  include "src/gpu/effects/generated/GrLumaColorFilterEffect.h"
+#  include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#  include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #endif
 
 bool SkLumaColorFilter::onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const {
-  rec.fPipeline->append(SkRasterPipeline::luminance_to_alpha);
+  rec.fPipeline->append(SkRasterPipeline::bt709_luminance_or_luma_to_alpha);
   rec.fPipeline->append(SkRasterPipeline::clamp_0);
   rec.fPipeline->append(SkRasterPipeline::clamp_1);
   return true;

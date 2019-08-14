@@ -29,9 +29,9 @@ class GrDrawPathOpBase : public GrDrawOp {
                    : FixedFunctionFlags::kUsesStencil;
   }
   GrProcessorSet::Analysis finalize(
-      const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType,
+      const GrCaps& caps, const GrAppliedClip* clip, bool hasMixedSampledCoverage,
       GrClampType clampType) override {
-    return this->doProcessorAnalysis(caps, clip, fsaaType, clampType);
+    return this->doProcessorAnalysis(caps, clip, hasMixedSampledCoverage, clampType);
   }
 
   void visitProxies(const VisitProxyFunc& func) const override { fProcessorSet.visitProxies(func); }
@@ -44,7 +44,7 @@ class GrDrawPathOpBase : public GrDrawOp {
   GrProcessorSet detachProcessors() { return std::move(fProcessorSet); }
   inline GrPipeline::InitArgs pipelineInitArgs(const GrOpFlushState&);
   const GrProcessorSet::Analysis& doProcessorAnalysis(
-      const GrCaps&, const GrAppliedClip*, GrFSAAType, GrClampType);
+      const GrCaps&, const GrAppliedClip*, bool hasMixedSampledCoverage, GrClampType);
   const GrProcessorSet::Analysis& processorAnalysis() const {
     SkASSERT(fAnalysis.isInitialized());
     return fAnalysis;

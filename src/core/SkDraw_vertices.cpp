@@ -264,7 +264,8 @@ void SkDraw::drawVertices(
           outerAlloc.make<SkTriColorShader>(compute_is_opaque(colors, vertexCount));
       matrix43 = triShader->getMatrix43();
       if (shader) {
-        shader = outerAlloc.make<SkShader_Blend>(bmode, sk_ref_sp(triShader), sk_ref_sp(shader));
+        shader = outerAlloc.make<SkShader_Blend>(
+            bmode, sk_ref_sp(triShader), sk_ref_sp(shader), nullptr);
       } else {
         shader = triShader;
       }

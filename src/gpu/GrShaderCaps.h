@@ -48,7 +48,6 @@ class GrShaderCaps : public SkRefCnt {
   bool dstReadInShaderSupport() const { return fDstReadInShaderSupport; }
   bool dualSourceBlendingSupport() const { return fDualSourceBlendingSupport; }
   bool integerSupport() const { return fIntegerSupport; }
-  int imageLoadStoreSupport() const { return fImageLoadStoreSupport; }
 
   /**
    * Some helper functions for encapsulating various extensions to read FB Buffer on openglES
@@ -64,8 +63,6 @@ class GrShaderCaps : public SkRefCnt {
   const char* fbFetchColorName() const { return fFBFetchColorName; }
 
   const char* fbFetchExtensionString() const { return fFBFetchExtensionString; }
-
-  bool dropsTileOnZeroDivide() const { return fDropsTileOnZeroDivide; }
 
   bool flatInterpolationSupport() const { return fFlatInterpolationSupport; }
 
@@ -92,8 +89,6 @@ class GrShaderCaps : public SkRefCnt {
   bool halfIs32Bits() const { return fHalfIs32Bits; }
 
   bool hasLowFragmentPrecision() const { return fHasLowFragmentPrecision; }
-
-  bool unsignedSupport() const { return fUnsignedSupport; }
 
   // SkSL only.
   bool builtinFMASupport() const { return fBuiltinFMASupport; }
@@ -221,30 +216,13 @@ class GrShaderCaps : public SkRefCnt {
   }
 
   const char* sampleVariablesExtensionString() const {
-    SkASSERT(this->sampleVariablesSupport());
+    SkASSERT(this->sampleVariablesSupport() || this->sampleVariablesStencilSupport());
     return fSampleVariablesExtensionString;
-  }
-
-  const char* imageLoadStoreExtensionString() const {
-    SkASSERT(this->imageLoadStoreSupport());
-    return fImageLoadStoreExtensionString;
   }
 
   int maxFragmentSamplers() const { return fMaxFragmentSamplers; }
 
-  /**
-   * Given a texture's config, this determines what swizzle must be appended to accesses to the
-   * texture in generated shader code. Swizzling may be implemented in texture parameters or a
-   * sampler rather than in the shader. In this case the returned swizzle will always be "rgba".
-   */
-  const GrSwizzle& configTextureSwizzle(GrPixelConfig config) const {
-    return fConfigTextureSwizzle[config];
-  }
-
-  /** Swizzle that should occur on the fragment shader outputs for a given config. */
-  const GrSwizzle& configOutputSwizzle(GrPixelConfig config) const {
-    return fConfigOutputSwizzle[config];
-  }
+  bool textureSwizzleAppliedInShader() const { return fTextureSwizzleAppliedInShader; }
 
   GrGLSLGeneration generation() const { return fGLSLGeneration; }
 
@@ -260,8 +238,6 @@ class GrShaderCaps : public SkRefCnt {
   bool fDstReadInShaderSupport : 1;
   bool fDualSourceBlendingSupport : 1;
   bool fIntegerSupport : 1;
-  bool fImageLoadStoreSupport : 1;
-  bool fDropsTileOnZeroDivide : 1;
   bool fFBFetchSupport : 1;
   bool fFBFetchNeedsCustomOutput : 1;
   bool fUsesPrecisionModifiers : 1;
@@ -276,7 +252,7 @@ class GrShaderCaps : public SkRefCnt {
   bool fFloatIs32Bits : 1;
   bool fHalfIs32Bits : 1;
   bool fHasLowFragmentPrecision : 1;
-  bool fUnsignedSupport : 1;
+  bool fTextureSwizzleAppliedInShader : 1;
 
   // Used by SkSL to know when to generate polyfills.
   bool fBuiltinFMASupport : 1;
@@ -311,7 +287,6 @@ class GrShaderCaps : public SkRefCnt {
   const char* fSecondExternalTextureExtensionString;
   const char* fNoPerspectiveInterpolationExtensionString;
   const char* fSampleVariablesExtensionString;
-  const char* fImageLoadStoreExtensionString;
 
   const char* fFBFetchColorName;
   const char* fFBFetchExtensionString;
@@ -319,9 +294,6 @@ class GrShaderCaps : public SkRefCnt {
   int fMaxFragmentSamplers;
 
   AdvBlendEqInteraction fAdvBlendEqInteraction;
-
-  GrSwizzle fConfigTextureSwizzle[kGrPixelConfigCnt];
-  GrSwizzle fConfigOutputSwizzle[kGrPixelConfigCnt];
 
   friend class GrCaps;  // For initialization.
   friend class GrGLCaps;

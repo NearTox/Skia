@@ -51,7 +51,7 @@ class GrGLProgramBuilder : public GrGLSLProgramBuilder {
   void addInputVars(const SkSL::Program::Inputs& inputs);
   bool compileAndAttachShaders(
       const SkSL::String& glsl, GrGLuint programId, GrGLenum type, SkTDArray<GrGLuint>* shaderIds,
-      const SkSL::Program::Inputs& inputs, GrContextOptions::ShaderErrorHandler* errorHandler);
+      GrContextOptions::ShaderErrorHandler* errorHandler);
 
   void computeCountsAndStrides(
       GrGLuint programID, const GrPrimitiveProcessor& primProc, bool bindAttribLocations);
@@ -63,7 +63,7 @@ class GrGLProgramBuilder : public GrGLSLProgramBuilder {
   bool checkLinkStatus(
       GrGLuint programID, GrContextOptions::ShaderErrorHandler* errorHandler, SkSL::String* sksl[],
       const SkSL::String glsl[]);
-  void resolveProgramResourceLocations(GrGLuint programID);
+  void resolveProgramResourceLocations(GrGLuint programID, bool force);
   void cleanupProgram(GrGLuint programID, const SkTDArray<GrGLuint>& shaderIDs);
   void cleanupShaders(const SkTDArray<GrGLuint>& shaderIDs);
 

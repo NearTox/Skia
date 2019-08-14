@@ -60,11 +60,14 @@ class GrRecordingContextPriv {
   void addOnFlushCallbackObject(GrOnFlushCallbackObject*);
 
   sk_sp<GrSurfaceContext> makeWrappedSurfaceContext(
-      sk_sp<GrSurfaceProxy>, sk_sp<SkColorSpace> = nullptr, const SkSurfaceProps* = nullptr);
+      sk_sp<GrSurfaceProxy>, GrColorType, SkAlphaType, sk_sp<SkColorSpace> = nullptr,
+      const SkSurfaceProps* = nullptr);
 
-  sk_sp<GrSurfaceContext> makeDeferredSurfaceContext(
-      const GrBackendFormat&, const GrSurfaceDesc&, GrSurfaceOrigin, GrMipMapped, SkBackingFit,
-      SkBudgeted, sk_sp<SkColorSpace> colorSpace = nullptr, const SkSurfaceProps* = nullptr);
+  /** Create a new texture context backed by a deferred-style GrTextureProxy. */
+  sk_sp<GrTextureContext> makeDeferredTextureContext(
+      SkBackingFit, int width, int height, GrColorType, SkAlphaType, sk_sp<SkColorSpace>,
+      GrMipMapped = GrMipMapped::kNo, GrSurfaceOrigin = kTopLeft_GrSurfaceOrigin,
+      SkBudgeted = SkBudgeted::kYes, GrProtected = GrProtected::kNo);
 
   /*
    * Create a new render target context backed by a deferred-style
@@ -72,10 +75,11 @@ class GrRecordingContextPriv {
    * renderTargetContexts created via this entry point.
    */
   sk_sp<GrRenderTargetContext> makeDeferredRenderTargetContext(
-      const GrBackendFormat& format, SkBackingFit fit, int width, int height, GrPixelConfig config,
-      sk_sp<SkColorSpace> colorSpace, int sampleCnt = 1, GrMipMapped = GrMipMapped::kNo,
+      SkBackingFit fit, int width, int height, GrColorType, sk_sp<SkColorSpace> colorSpace,
+      int sampleCnt = 1, GrMipMapped = GrMipMapped::kNo,
       GrSurfaceOrigin origin = kBottomLeft_GrSurfaceOrigin,
-      const SkSurfaceProps* surfaceProps = nullptr, SkBudgeted = SkBudgeted::kYes);
+      const SkSurfaceProps* surfaceProps = nullptr, SkBudgeted = SkBudgeted::kYes,
+      GrProtected isProtected = GrProtected::kNo);
 
   /*
    * This method will attempt to create a renderTargetContext that has, at least, the number of
@@ -84,10 +88,11 @@ class GrRecordingContextPriv {
    * SRGB-ness will be preserved.
    */
   sk_sp<GrRenderTargetContext> makeDeferredRenderTargetContextWithFallback(
-      const GrBackendFormat& format, SkBackingFit fit, int width, int height, GrPixelConfig config,
-      sk_sp<SkColorSpace> colorSpace, int sampleCnt = 1, GrMipMapped = GrMipMapped::kNo,
+      SkBackingFit fit, int width, int height, GrColorType, sk_sp<SkColorSpace> colorSpace,
+      int sampleCnt = 1, GrMipMapped = GrMipMapped::kNo,
       GrSurfaceOrigin origin = kBottomLeft_GrSurfaceOrigin,
-      const SkSurfaceProps* surfaceProps = nullptr, SkBudgeted budgeted = SkBudgeted::kYes);
+      const SkSurfaceProps* surfaceProps = nullptr, SkBudgeted budgeted = SkBudgeted::kYes,
+      GrProtected isProtected = GrProtected::kNo);
 
   GrAuditTrail* auditTrail() { return fContext->auditTrail(); }
 

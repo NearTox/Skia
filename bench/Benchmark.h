@@ -74,7 +74,15 @@ class Benchmark : public SkRefCnt {
 
   virtual void getGpuStats(SkCanvas*, SkTArray<SkString>* keys, SkTArray<double>* values) {}
 
+  // Count of units (pixels, whatever) being exercised, to scale timing by.
+  int getUnits() const { return fUnits; }
+
  protected:
+  void setUnits(int units) {
+    SkASSERT(units > 0);
+    fUnits = units;
+  }
+
   virtual void setupPaint(SkPaint* paint);
 
   virtual const char* onGetName() = 0;
@@ -91,6 +99,8 @@ class Benchmark : public SkRefCnt {
   virtual SkIPoint onGetSize();
 
  private:
+  int fUnits = 1;
+
   typedef SkRefCnt INHERITED;
 };
 

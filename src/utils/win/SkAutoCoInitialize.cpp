@@ -8,10 +8,10 @@
 #include "include/core/SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN)
 
-#include "src/utils/win/SkAutoCoInitialize.h"
+#  include "src/utils/win/SkAutoCoInitialize.h"
 
-#include <objbase.h>
-#include <winerror.h>
+#  include <objbase.h>
+#  include <winerror.h>
 
 SkAutoCoInitialize::SkAutoCoInitialize()
     : fHR(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE)) {}

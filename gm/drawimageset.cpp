@@ -103,8 +103,8 @@ namespace skiagm {
 
 class DrawImageSetGM : public GM {
  private:
-  SkString onShortName() final { return SkString("draw_image_set"); }
-  SkISize onISize() override { return SkISize::Make(1000, 725); }
+  SkString onShortName() override { return SkString("draw_image_set"); }
+  SkISize onISize() override { return {1000, 725}; }
   void onOnceBeforeDraw() override {
     static constexpr SkColor kColors[] = {SK_ColorCYAN, SK_ColorBLACK, SK_ColorMAGENTA,
                                           SK_ColorBLACK};
@@ -200,8 +200,8 @@ class DrawImageSetGM : public GM {
 // incorrectly disabled.
 class DrawImageSetRectToRectGM : public GM {
  private:
-  SkString onShortName() final { return SkString("draw_image_set_rect_to_rect"); }
-  SkISize onISize() override { return SkISize::Make(1250, 850); }
+  SkString onShortName() override { return SkString("draw_image_set_rect_to_rect"); }
+  SkISize onISize() override { return {1250, 850}; }
   void onOnceBeforeDraw() override {
     static constexpr SkColor kColors[] = {SK_ColorBLUE, SK_ColorWHITE, SK_ColorRED, SK_ColorWHITE};
     make_image_tiles(kTileW, kTileH, kM, kN, kColors, fSet);

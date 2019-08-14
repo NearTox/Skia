@@ -25,15 +25,11 @@
 // https://bug.skia.org/1316 shows that this cubic, when slightly clipped, creates big
 // (incorrect) changes to its control points.
 class ClippedCubicGM : public skiagm::GM {
- public:
-  ClippedCubicGM() {}
+  SkString onShortName() override { return SkString("clippedcubic"); }
 
- protected:
-  SkString onShortName() { return SkString("clippedcubic"); }
+  SkISize onISize() override { return {1240, 390}; }
 
-  SkISize onISize() { return SkISize::Make(1240, 390); }
-
-  virtual void onDraw(SkCanvas* canvas) {
+  virtual void onDraw(SkCanvas* canvas) override {
     SkPath path;
     path.moveTo(0, 0);
     path.cubicTo(140, 150, 40, 10, 170, 150);
@@ -56,19 +52,12 @@ class ClippedCubicGM : public skiagm::GM {
       canvas->translate(0, bounds.height());
     }
   }
-
- private:
-  typedef skiagm::GM INHERITED;
 };
 
 class ClippedCubic2GM : public skiagm::GM {
- public:
-  ClippedCubic2GM() {}
-
- protected:
   SkString onShortName() override { return SkString("clippedcubic2"); }
 
-  SkISize onISize() override { return SkISize::Make(1240, 390); }
+  SkISize onISize() override { return {1240, 390}; }
 
   void onDraw(SkCanvas* canvas) override {
     canvas->save();
@@ -131,13 +120,9 @@ class ClippedCubic2GM : public skiagm::GM {
 };
 
 class CubicPathGM : public skiagm::GM {
- public:
-  CubicPathGM() {}
+  SkString onShortName() override { return SkString("cubicpath"); }
 
- protected:
-  SkString onShortName() { return SkString("cubicpath"); }
-
-  SkISize onISize() { return SkISize::Make(1240, 390); }
+  SkISize onISize() override { return {1240, 390}; }
 
   void drawPath(
       SkPath& path, SkCanvas* canvas, SkColor color, const SkRect& clip, SkPaint::Cap cap,
@@ -155,7 +140,7 @@ class CubicPathGM : public skiagm::GM {
     canvas->restore();
   }
 
-  virtual void onDraw(SkCanvas* canvas) {
+  void onDraw(SkCanvas* canvas) override {
     struct FillAndName {
       SkPath::FillType fFill;
       const char* fName;
@@ -249,19 +234,12 @@ class CubicPathGM : public skiagm::GM {
     canvas->restore();
     canvas->restore();
   }
-
- private:
-  typedef skiagm::GM INHERITED;
 };
 
 class CubicClosePathGM : public skiagm::GM {
- public:
-  CubicClosePathGM() {}
+  SkString onShortName() override { return SkString("cubicclosepath"); }
 
- protected:
-  SkString onShortName() { return SkString("cubicclosepath"); }
-
-  SkISize onISize() { return SkISize::Make(1240, 390); }
+  SkISize onISize() override { return {1240, 390}; }
 
   void drawPath(
       SkPath& path, SkCanvas* canvas, SkColor color, const SkRect& clip, SkPaint::Cap cap,
@@ -279,7 +257,7 @@ class CubicClosePathGM : public skiagm::GM {
     canvas->restore();
   }
 
-  virtual void onDraw(SkCanvas* canvas) {
+  virtual void onDraw(SkCanvas* canvas) override {
     struct FillAndName {
       SkPath::FillType fFill;
       const char* fName;
@@ -375,9 +353,6 @@ class CubicClosePathGM : public skiagm::GM {
     canvas->restore();
     canvas->restore();
   }
-
- private:
-  typedef skiagm::GM INHERITED;
 };
 
 DEF_SIMPLE_GM(bug5099, canvas, 50, 50) {

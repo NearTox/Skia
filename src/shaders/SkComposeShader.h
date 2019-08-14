@@ -13,8 +13,8 @@
 
 class SkShader_Blend final : public SkShaderBase {
  public:
-  SkShader_Blend(SkBlendMode mode, sk_sp<SkShader> dst, sk_sp<SkShader> src)
-      : fDst(std::move(dst)), fSrc(std::move(src)), fMode(mode) {}
+  SkShader_Blend(SkBlendMode mode, sk_sp<SkShader> dst, sk_sp<SkShader> src, const SkMatrix* lm)
+      : INHERITED(lm), fDst(std::move(dst)), fSrc(std::move(src)), fMode(mode) {}
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
@@ -37,8 +37,8 @@ class SkShader_Blend final : public SkShaderBase {
 
 class SkShader_Lerp final : public SkShaderBase {
  public:
-  SkShader_Lerp(float weight, sk_sp<SkShader> dst, sk_sp<SkShader> src)
-      : fDst(std::move(dst)), fSrc(std::move(src)), fWeight(weight) {
+  SkShader_Lerp(float weight, sk_sp<SkShader> dst, sk_sp<SkShader> src, const SkMatrix* lm)
+      : INHERITED(lm), fDst(std::move(dst)), fSrc(std::move(src)), fWeight(weight) {
     SkASSERT(weight >= 0 && weight <= 1);
   }
 
@@ -63,8 +63,9 @@ class SkShader_Lerp final : public SkShaderBase {
 
 class SkShader_LerpRed final : public SkShaderBase {
  public:
-  SkShader_LerpRed(sk_sp<SkShader> red, sk_sp<SkShader> dst, sk_sp<SkShader> src)
-      : fDst(std::move(dst)), fSrc(std::move(src)), fRed(std::move(red)) {}
+  SkShader_LerpRed(
+      sk_sp<SkShader> red, sk_sp<SkShader> dst, sk_sp<SkShader> src, const SkMatrix* lm)
+      : INHERITED(lm), fDst(std::move(dst)), fSrc(std::move(src)), fRed(std::move(red)) {}
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;

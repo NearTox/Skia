@@ -66,10 +66,11 @@ static GrProcessorSet::Analysis do_analysis(
   GrPaint paint;
   paint.setXPFactory(xpf);
   GrProcessorSet procs(std::move(paint));
+  bool hasMixedSampledCoverage = false;
   SkPMColor4f overrideColor;
   GrProcessorSet::Analysis analysis = procs.finalize(
-      colorInput, coverageInput, nullptr, &GrUserStencilSettings::kUnused, GrFSAAType::kNone, caps,
-      GrClampType::kAuto, &overrideColor);
+      colorInput, coverageInput, nullptr, &GrUserStencilSettings::kUnused, hasMixedSampledCoverage,
+      caps, GrClampType::kAuto, &overrideColor);
   return analysis;
 }
 
@@ -98,7 +99,7 @@ class GrPorterDuffTest {
       // should always go hand in hand for Porter Duff modes.
       TEST_ASSERT(analysis.requiresDstTexture() == analysis.requiresNonOverlappingDraws());
       GetXPOutputTypes(xp.get(), &fPrimaryOutputType, &fSecondaryOutputType);
-      xp->getBlendInfo(&fBlendInfo);
+      fBlendInfo = xp->getBlendInfo();
       TEST_ASSERT(
           !xp->willReadDstColor() ||
           (isLCD && (SkBlendMode::kSrcOver != xfermode || !inputColor.isOpaque())));
@@ -948,8 +949,7 @@ static void test_lcd_coverage_fallback_case(skiatest::Reporter* reporter, const 
     return;
   }
 
-  GrXferProcessor::BlendInfo blendInfo;
-  xp_opaque->getBlendInfo(&blendInfo);
+  GrXferProcessor::BlendInfo blendInfo = xp_opaque->getBlendInfo();
   TEST_ASSERT(blendInfo.fWriteColor);
 
   // Test with non-opaque alpha
@@ -965,7 +965,7 @@ static void test_lcd_coverage_fallback_case(skiatest::Reporter* reporter, const 
     return;
   }
 
-  xp->getBlendInfo(&blendInfo);
+  blendInfo = xp->getBlendInfo();
   TEST_ASSERT(blendInfo.fWriteColor);
 }
 
@@ -987,13 +987,14 @@ DEF_GPUTEST(PorterDuffNoDualSourceBlending, reporter, options) {
   }
 
   GrBackendTexture backendTex = ctx->createBackendTexture(
-      100, 100, kRGBA_8888_SkColorType, GrMipMapped::kNo, GrRenderable::kNo);
+      100, 100, kRGBA_8888_SkColorType, SkColors::kTransparent, GrMipMapped::kNo, GrRenderable::kNo,
+      GrProtected::kNo);
 
   GrXferProcessor::DstProxy fakeDstProxy;
   {
     sk_sp<GrTextureProxy> proxy = proxyProvider->wrapBackendTexture(
-        backendTex, kTopLeft_GrSurfaceOrigin, kBorrow_GrWrapOwnership, GrWrapCacheable::kNo,
-        kRead_GrIOType);
+        backendTex, GrColorType::kRGBA_8888, kTopLeft_GrSurfaceOrigin, kBorrow_GrWrapOwnership,
+        GrWrapCacheable::kNo, kRead_GrIOType);
     fakeDstProxy.setProxy(std::move(proxy));
   }
 

@@ -71,7 +71,8 @@ sk_sp<GrTextureProxy> GrTextureMaker::onRefTextureProxyForParams(
     return nullptr;
   }
 
-  sk_sp<GrTextureProxy> result = CopyOnGpu(this->context(), source, copyParams, willBeMipped);
+  sk_sp<GrTextureProxy> result =
+      CopyOnGpu(this->context(), source, this->colorType(), copyParams, willBeMipped);
 
   if (!result) {
     // If we were unable to make a copy and we only needed a copy for mips, then we will return

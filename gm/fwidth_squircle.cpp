@@ -151,7 +151,7 @@ class FwidthSquircleTestOp : public GrDrawOp {
   const char* name() const override { return "ClockwiseTestOp"; }
   FixedFunctionFlags fixedFunctionFlags() const override { return FixedFunctionFlags::kNone; }
   GrProcessorSet::Analysis finalize(
-      const GrCaps&, const GrAppliedClip*, GrFSAAType, GrClampType) override {
+      const GrCaps&, const GrAppliedClip*, bool hasMixedSampledCoverage, GrClampType) override {
     return GrProcessorSet::EmptySetAnalysis();
   }
   void onPrepare(GrOpFlushState*) override {}
@@ -167,7 +167,8 @@ class FwidthSquircleTestOp : public GrDrawOp {
     if (!vertexBuffer) {
       return;
     }
-    GrPipeline pipeline(GrScissorTest::kDisabled, SkBlendMode::kSrcOver);
+    GrPipeline pipeline(
+        GrScissorTest::kDisabled, SkBlendMode::kSrcOver, flushState->drawOpArgs().fOutputSwizzle);
     GrMesh mesh(GrPrimitiveType::kTriangleStrip);
     mesh.setNonIndexedNonInstanced(4);
     mesh.setVertexData(std::move(vertexBuffer));

@@ -140,7 +140,7 @@ class Op : public GrMeshDrawOp {
   FixedFunctionFlags fixedFunctionFlags() const override { return FixedFunctionFlags::kNone; }
 
   GrProcessorSet::Analysis finalize(
-      const GrCaps&, const GrAppliedClip*, GrFSAAType, GrClampType) override {
+      const GrCaps&, const GrAppliedClip*, bool hasMixedSampledCoverage, GrClampType) override {
     return GrProcessorSet::EmptySetAnalysis();
   }
 
@@ -252,11 +252,9 @@ class VertexColorSpaceBench : public Benchmark {
     SkRandom r;
     const int kDrawsPerLoop = 32;
 
-    const GrBackendFormat format =
-        context->priv().caps()->getBackendFormatFromColorType(kRGBA_8888_SkColorType);
     for (int i = 0; i < loops; ++i) {
       sk_sp<GrRenderTargetContext> rtc(context->priv().makeDeferredRenderTargetContext(
-          format, SkBackingFit::kApprox, 100, 100, kRGBA_8888_GrPixelConfig, p3));
+          SkBackingFit::kApprox, 100, 100, GrColorType::kRGBA_8888, p3));
       SkASSERT(rtc);
 
       for (int j = 0; j < kDrawsPerLoop; ++j) {

@@ -17,13 +17,17 @@
 
 class SkSafeMath {
  public:
-  SkSafeMath() = default;
+  constexpr SkSafeMath() noexcept = default;
 
-  bool ok() const { return fOK; }
-  explicit operator bool() const { return fOK; }
+  constexpr bool ok() const noexcept { return fOK; }
+  constexpr explicit operator bool() const noexcept { return fOK; }
 
   size_t mul(size_t x, size_t y) {
-    return sizeof(size_t) == sizeof(uint64_t) ? mul64(x, y) : mul32(x, y);
+    if constexpr (sizeof(size_t) == sizeof(uint64_t)) {
+      return mul64(x, y);
+    } else {
+      return mul64(x, y);
+    }
   }
 
   size_t add(size_t x, size_t y) {

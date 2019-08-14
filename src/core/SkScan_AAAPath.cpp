@@ -346,7 +346,7 @@ class RunBasedAdditiveBlitter : public AdditiveBlitter {
         fRuns.fAlpha[x] = snapAlpha(fRuns.fAlpha[x]);
       }
       if (!fRuns.empty()) {
-        // SkDEBUGCODE(fRuns.dump());
+        // SkDEBUGCODE(fRuns.dump();)
         fRealBlitter->blitAntiH(fLeft, fCurrY, fRuns.fAlpha, fRuns.fRuns);
         this->advanceRuns();
         fOffsetX = 0;
@@ -534,21 +534,21 @@ static SkAlpha trapezoid_to_alpha(SkFixed l1, SkFixed l2) {
 // The alpha of right-triangle (a, a*b)
 static SkAlpha partial_triangle_to_alpha(SkFixed a, SkFixed b) {
   SkASSERT(a <= SK_Fixed1);
-#if 0
+#  if 0
     // TODO(mtklein): skia:8877
     SkASSERT(b <= SK_Fixed1);
-#endif
+#  endif
 
   // Approximating...
   // SkFixed area = SkFixedMul(a, SkFixedMul(a,b)) / 2;
   SkFixed area = (a >> 11) * (a >> 11) * (b >> 11);
 
-#if 0
+#  if 0
     // TODO(mtklein): skia:8877
     return SkTo<SkAlpha>(area >> 8);
-#else
+#  else
   return SkTo<SkAlpha>((area >> 8) & 0xFF);
-#endif
+#  endif
 }
 
 static SkAlpha get_partial_alpha(SkAlpha alpha, SkFixed partialHeight) {
@@ -907,7 +907,7 @@ static SkAnalyticEdge* sort_edges(SkAnalyticEdge* list[], int count, SkAnalyticE
 }
 
 static void validate_sort(const SkAnalyticEdge* edge) {
-#ifdef SK_DEBUG
+#  ifdef SK_DEBUG
   SkFixed y = SkIntToFixed(-32768);
 
   while (edge->fUpperY != SK_MaxS32) {
@@ -917,7 +917,7 @@ static void validate_sort(const SkAnalyticEdge* edge) {
     y = edge->fUpperY;
     edge = (SkAnalyticEdge*)edge->fNext;
   }
-#endif
+#  endif
 }
 
 // For an edge, we consider it smooth if the Dx doesn't change much, and Dy is large enough
@@ -1246,7 +1246,7 @@ static void insert_new_edges(SkAnalyticEdge* newEdge, SkFixed y, SkFixed* nextNe
 }
 
 static void validate_edges_for_y(const SkAnalyticEdge* edge, SkFixed y) {
-#ifdef SK_DEBUG
+#  ifdef SK_DEBUG
   while (edge->fUpperY <= y) {
     SkASSERT(edge->fPrev && edge->fNext);
     SkASSERT(edge->fPrev->fNext == edge);
@@ -1255,7 +1255,7 @@ static void validate_edges_for_y(const SkAnalyticEdge* edge, SkFixed y) {
     SkASSERT(edge->fPrev->fPrev == nullptr || edge->fPrev->fX <= edge->fX);
     edge = edge->fNext;
   }
-#endif
+#  endif
 }
 
 // Return true if prev->fX, next->fX are too close in the current pixel row.

@@ -12,25 +12,25 @@
 #include "include/private/SkNoncopyable.h"
 
 #if defined(SK_BUILD_FOR_WIN)
-#include "include/core/SkString.h"
+#  include "include/core/SkString.h"
 #endif
 
 #if !defined(SK_BUILD_FOR_ANDROID)
-#include <locale.h>
+#  include <locale.h>
 #endif
 
 #if defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)
-#include <xlocale.h>
-#include <cstring>
-#define HAVE_XLOCALE 1
+#  include <xlocale.h>
+#  include <cstring>
+#  define HAVE_XLOCALE 1
 #else
-#define HAVE_XLOCALE 0
+#  define HAVE_XLOCALE 0
 #endif
 
 #if defined(SK_BUILD_FOR_ANDROID) || defined(__UCLIBC__) || defined(_NEWLIB_VERSION)
-#define HAVE_LOCALE_T 0
+#  define HAVE_LOCALE_T 0
 #else
-#define HAVE_LOCALE_T 1
+#  define HAVE_LOCALE_T 1
 #endif
 
 /**
@@ -50,12 +50,12 @@ class GrAutoLocaleSetter : public SkNoncopyable {
       fShouldRestoreLocale = false;
     }
 #elif HAVE_LOCALE_T
-#if HAVE_XLOCALE
+#  if HAVE_XLOCALE
     // In xlocale nullptr means the C locale.
     if (0 == strcmp(name, "C")) {
       name = nullptr;
     }
-#endif
+#  endif
     fLocale = newlocale(LC_ALL_MASK, name, nullptr);
     if (fLocale) {
       fOldLocale = uselocale(fLocale);

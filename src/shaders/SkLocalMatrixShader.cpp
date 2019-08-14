@@ -9,7 +9,7 @@
 #include "src/shaders/SkLocalMatrixShader.h"
 
 #if SK_SUPPORT_GPU
-#include "src/gpu/GrFragmentProcessor.h"
+#  include "src/gpu/GrFragmentProcessor.h"
 #endif
 
 #if SK_SUPPORT_GPU
@@ -59,6 +59,16 @@ SkImage* SkLocalMatrixShader::onIsAImage(SkMatrix* outMatrix, SkTileMode* mode) 
   }
 
   return image;
+}
+
+SkPicture* SkLocalMatrixShader::isAPicture(
+    SkMatrix* matrix, SkTileMode tileModes[2], SkRect* tile) const {
+  SkMatrix proxyMatrix;
+  SkPicture* picture = as_SB(fProxyShader)->isAPicture(&proxyMatrix, tileModes, tile);
+  if (picture && matrix) {
+    *matrix = SkMatrix::Concat(proxyMatrix, this->getLocalMatrix());
+  }
+  return picture;
 }
 
 bool SkLocalMatrixShader::onAppendStages(const SkStageRec& rec) const {

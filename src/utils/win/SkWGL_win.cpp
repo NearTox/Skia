@@ -8,12 +8,12 @@
 #include "include/core/SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN) && !defined(_M_ARM64)
 
-#include "src/utils/win/SkWGL.h"
+#  include "src/utils/win/SkWGL.h"
 
-#include "include/private/SkOnce.h"
-#include "include/private/SkTDArray.h"
-#include "src/core/SkTSearch.h"
-#include "src/core/SkTSort.h"
+#  include "include/private/SkOnce.h"
+#  include "include/private/SkTDArray.h"
+#  include "src/core/SkTSearch.h"
+#  include "src/core/SkTSort.h"
 
 bool SkWGLExtensions::hasExtension(HDC dc, const char* ext) const {
   if (nullptr == this->fGetExtensionsString) {
@@ -140,13 +140,13 @@ int SkWGLExtensions::selectFormat(
 
 namespace {
 
-#if defined(UNICODE)
+#  if defined(UNICODE)
 #    define STR_LIT(X) L## #    X
-#else
+#  else
 #    define STR_LIT(X) #    X
-#endif
+#  endif
 
-#define DUMMY_CLASS STR_LIT("DummyClass")
+#  define DUMMY_CLASS STR_LIT("DummyClass")
 
 HWND create_dummy_window() {
   HMODULE module = GetModuleHandle(nullptr);

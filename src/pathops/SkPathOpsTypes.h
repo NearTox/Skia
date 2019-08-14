@@ -170,21 +170,21 @@ class SkOpGlobalState {
 };
 
 #ifdef SK_DEBUG
-#if DEBUG_COINCIDENCE
+#  if DEBUG_COINCIDENCE
 #    define SkOPASSERT(cond)                                                                       \
       SkASSERT(                                                                                    \
           (this->globalState() &&                                                                  \
            (this->globalState()->debugCheckHealth() || this->globalState()->debugSkipAssert())) || \
           (cond))
-#else
+#  else
 #    define SkOPASSERT(cond) \
       SkASSERT((this->globalState() && this->globalState()->debugSkipAssert()) || (cond))
-#endif
+#  endif
 #  define SkOPOBJASSERT(obj, cond) \
     SkASSERT((obj->globalState() && obj->globalState()->debugSkipAssert()) || (cond))
 #else
-#define SkOPASSERT(cond)
-#define SkOPOBJASSERT(obj, cond)
+#  define SkOPASSERT(cond)
+#  define SkOPOBJASSERT(obj, cond)
 #endif
 
 // Use Almost Equal when comparing coordinates. Use epsilon to compare T values.

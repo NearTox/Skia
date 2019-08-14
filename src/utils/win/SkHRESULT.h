@@ -11,7 +11,7 @@
 #include "include/core/SkTypes.h"
 #ifdef SK_BUILD_FOR_WIN
 
-#include "src/core/SkLeanWindows.h"
+#  include "src/core/SkLeanWindows.h"
 
 void SkTraceHR(const char* file, unsigned long line, HRESULT hr, const char* msg);
 
@@ -43,20 +43,20 @@ The HRN variants will return nullptr when FAILED.
 The HRV variants will simply return when FAILED.
 The HRZ variants will return 0 when FAILED.
 */
-#define HR(ex) HR_GENERAL(ex, nullptr, _hr)
-#define HRM(ex, msg) HR_GENERAL(ex, msg, _hr)
+#  define HR(ex) HR_GENERAL(ex, nullptr, _hr)
+#  define HRM(ex, msg) HR_GENERAL(ex, msg, _hr)
 
-#define HRB(ex) HR_GENERAL(ex, nullptr, false)
-#define HRBM(ex, msg) HR_GENERAL(ex, msg, false)
+#  define HRB(ex) HR_GENERAL(ex, nullptr, false)
+#  define HRBM(ex, msg) HR_GENERAL(ex, msg, false)
 
-#define HRN(ex) HR_GENERAL(ex, nullptr, nullptr)
-#define HRNM(ex, msg) HR_GENERAL(ex, msg, nullptr)
+#  define HRN(ex) HR_GENERAL(ex, nullptr, nullptr)
+#  define HRNM(ex, msg) HR_GENERAL(ex, msg, nullptr)
 
-#define HRV(ex) HR_GENERAL(ex, nullptr, )
-#define HRVM(ex, msg) HR_GENERAL(ex, msg, )
+#  define HRV(ex) HR_GENERAL(ex, nullptr, )
+#  define HRVM(ex, msg) HR_GENERAL(ex, msg, )
 
-#define HRZ(ex) HR_GENERAL(ex, nullptr, 0)
-#define HRZM(ex, msg) HR_GENERAL(ex, msg, 0)
+#  define HRZ(ex) HR_GENERAL(ex, nullptr, 0)
+#  define HRZM(ex, msg) HR_GENERAL(ex, msg, 0)
 //@}
 #endif  // SK_BUILD_FOR_WIN
 #endif  // SkHRESULT_DEFINED

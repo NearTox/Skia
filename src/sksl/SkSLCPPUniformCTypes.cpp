@@ -166,6 +166,12 @@ static const std::vector<UniformCTypeMapper>& get_mappers() {
           "{SK_FloatNaN, SK_FloatNaN, SK_FloatNaN, SK_FloatNaN}"),  // default value
 
       REGISTER(
+          Layout::CType::kSkVector4, {"half4", "float4", "double4"},
+          "${pdman}.set4fv(${uniform}, 1, ${var}.fData)",                           // to gpu
+          "SkVector4(SK_MScalarNaN, SK_MScalarNaN, SK_MScalarNaN, SK_MScalarNaN)",  // default value
+          "${oldVar} != (${newVar})"),                                              // dirty check
+
+      REGISTER(
           Layout::CType::kSkPoint, {"half2", "float2", "double2"},
           "${pdman}.set2f(${uniform}, ${var}.fX, ${var}.fY)",  // to gpu
           "SkPoint::Make(SK_FloatNaN, SK_FloatNaN)"),          // default value
@@ -184,8 +190,8 @@ static const std::vector<UniformCTypeMapper>& get_mappers() {
       REGISTER(
           Layout::CType::kSkMatrix44, {"half4x4", "float4x4", "double4x4"},
           "${pdman}.setSkMatrix44(${uniform}, ${var})",  // to gpu
-          "SkMatrix::MakeScale(SK_FloatNaN)",            // default value
-          "!${oldVar}.cheapEqualTo(${newVar})"),         // dirty check
+          "SkMatrix44(SkMatrix44::kNaN_Constructor)",    // default value
+          "${oldVar} != (${newVar})"),                   // dirty check
 
       REGISTER(
           Layout::CType::kFloat, {"half", "float", "double"},

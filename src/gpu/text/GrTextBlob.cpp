@@ -11,8 +11,8 @@
 #include "src/core/SkPaintPriv.h"
 #include "src/gpu/GrBlurUtils.h"
 #include "src/gpu/GrClip.h"
-#include "src/gpu/GrShape.h"
 #include "src/gpu/GrStyle.h"
+#include "src/gpu/geometry/GrShape.h"
 #include "src/gpu/ops/GrAtlasTextOp.h"
 #include "src/gpu/text/GrTextBlob.h"
 #include "src/gpu/text/GrTextTarget.h"
@@ -58,7 +58,7 @@ sk_sp<GrTextBlob> GrTextBlob::Make(
   return blob;
 }
 
-void GrTextBlob::Run::setupFont(const SkStrikeSpecStorage& strikeSpec) {
+void GrTextBlob::Run::setupFont(const SkStrikeSpec& strikeSpec) {
   if (fFallbackStrikeSpec != nullptr) {
     *fFallbackStrikeSpec = strikeSpec;
   } else {

@@ -9,20 +9,20 @@
 
 #if !defined(SK_BUILD_FOR_GOOGLE3)
 
-#include "include/core/SkRect.h"
-#include "include/private/SkTo.h"
-#include "modules/sksg/include/SkSGDraw.h"
-#include "modules/sksg/include/SkSGGroup.h"
-#include "modules/sksg/include/SkSGInvalidationController.h"
-#include "modules/sksg/include/SkSGPaint.h"
-#include "modules/sksg/include/SkSGRect.h"
-#include "modules/sksg/include/SkSGRenderEffect.h"
-#include "modules/sksg/include/SkSGTransform.h"
-#include "src/core/SkRectPriv.h"
+#  include "include/core/SkRect.h"
+#  include "include/private/SkTo.h"
+#  include "modules/sksg/include/SkSGDraw.h"
+#  include "modules/sksg/include/SkSGGroup.h"
+#  include "modules/sksg/include/SkSGInvalidationController.h"
+#  include "modules/sksg/include/SkSGPaint.h"
+#  include "modules/sksg/include/SkSGRect.h"
+#  include "modules/sksg/include/SkSGRenderEffect.h"
+#  include "modules/sksg/include/SkSGTransform.h"
+#  include "src/core/SkRectPriv.h"
 
-#include "tests/Test.h"
+#  include "tests/Test.h"
 
-#include <vector>
+#  include <vector>
 
 static void check_inval(
     skiatest::Reporter* reporter, const sk_sp<sksg::Node>& root, const SkRect& expected_bounds,
@@ -298,6 +298,15 @@ static void inval_test3(skiatest::Reporter* reporter) {
   {
     // Content change -> single/full filter bounds inval.
     color1->setColor(0xffff0000);
+    std::vector<SkRect> damage = {{50, 75, 350, 175}};
+    check_inval(
+        reporter, root, SkRect::MakeLTRB(50, 75, 350, 175), SkRect::MakeLTRB(50, 75, 350, 175),
+        &damage);
+  }
+
+  {
+    // Visibility change -> full inval.
+    group->setVisible(false);
     std::vector<SkRect> damage = {{50, 75, 350, 175}};
     check_inval(
         reporter, root, SkRect::MakeLTRB(50, 75, 350, 175), SkRect::MakeLTRB(50, 75, 350, 175),

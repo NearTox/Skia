@@ -18,7 +18,7 @@
 #include "include/gpu/GrTypes.h"
 
 #if defined(SK_BUILD_FOR_ANDROID) && __ANDROID_API__ >= 26
-#include <android/hardware_buffer.h>
+#  include <android/hardware_buffer.h>
 #endif
 
 class SkData;

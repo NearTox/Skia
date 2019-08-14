@@ -9,10 +9,10 @@
 #define GrCCClipPath_DEFINED
 
 #include "include/core/SkPath.h"
-#include "include/private/GrTextureProxy.h"
+#include "src/gpu/GrTextureProxy.h"
+#include "src/gpu/ccpr/GrCCAtlas.h"
 
 struct GrCCPerFlushResourceSpecs;
-class GrCCAtlas;
 class GrCCPerFlushResources;
 class GrOnFlushResourceProvider;
 class GrProxyProvider;
@@ -33,13 +33,13 @@ class GrCCClipPath {
     //
     // This assert also guarantees there won't be a lazy proxy callback with a dangling pointer
     // back into this class, since no proxy will exist after we destruct, if the assert passes.
-    SkASSERT(!fAtlasLazyProxy || fAtlasLazyProxy->isUnique_debugOnly());
+    SkASSERT(!fAtlasLazyProxy || fAtlasLazyProxy->unique());
   }
 
   bool isInitialized() const { return fAtlasLazyProxy != nullptr; }
   void init(
-      const SkPath& deviceSpacePath, const SkIRect& accessRect, int rtWidth, int rtHeight,
-      const GrCaps&);
+      const SkPath& deviceSpacePath, const SkIRect& accessRect,
+      GrCCAtlas::CoverageType atlasCoverageType, const GrCaps&);
 
   void addAccess(const SkIRect& accessRect) {
     SkASSERT(this->isInitialized());
@@ -78,11 +78,11 @@ class GrCCClipPath {
 
   const GrCCAtlas* fAtlas = nullptr;
   SkIVector fDevToAtlasOffset;  // Translation from device space to location in atlas.
-  SkDEBUGCODE(bool fHasAtlas = false);
+  SkDEBUGCODE(bool fHasAtlas = false;)
 
-  SkVector fAtlasScale;
+      SkVector fAtlasScale;
   SkVector fAtlasTranslate;
-  SkDEBUGCODE(bool fHasAtlasTransform = false);
+  SkDEBUGCODE(bool fHasAtlasTransform = false;)
 };
 
 #endif

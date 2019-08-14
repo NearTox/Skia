@@ -17,7 +17,7 @@
 #include "src/core/SkTLazy.h"
 
 #if SK_SUPPORT_GPU
-#include "src/gpu/GrFPArgs.h"
+#  include "src/gpu/GrFPArgs.h"
 #endif
 
 class GrContext;
@@ -63,7 +63,7 @@ class SkShaderBase : public SkShader {
   struct ContextRec {
     ContextRec(
         const SkPaint& paint, const SkMatrix& matrix, const SkMatrix* localM,
-        SkColorType dstColorType, SkColorSpace* dstColorSpace)
+        SkColorType dstColorType, SkColorSpace* dstColorSpace) noexcept
         : fPaint(&paint),
           fMatrix(&matrix),
           fLocalMatrix(localM),
@@ -165,6 +165,7 @@ class SkShaderBase : public SkShader {
       const SkMatrix* preLocalMatrix, const SkMatrix* postLocalMatrix = nullptr) const;
 
   virtual SkImage* onIsAImage(SkMatrix*, SkTileMode[2]) const { return nullptr; }
+  virtual SkPicture* isAPicture(SkMatrix*, SkTileMode[2], SkRect* tile) const { return nullptr; }
 
   static Type GetFlattenableType() { return kSkShaderBase_Type; }
   Type getFlattenableType() const override { return GetFlattenableType(); }
@@ -193,13 +194,6 @@ class SkShaderBase : public SkShader {
    * @return pointer to context owned by the arena allocator.
    */
   virtual Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const { return nullptr; }
-
-  /**
-   * Overriden by shaders which prefer burst mode.
-   */
-  virtual Context* onMakeBurstPipelineContext(const ContextRec&, SkArenaAlloc*) const {
-    return nullptr;
-  }
 #endif
 
   virtual bool onAsLuminanceColor(SkColor*) const { return false; }

@@ -12,6 +12,7 @@
 #include "include/gpu/GrSamplerState.h"
 #include "include/private/GrResourceKey.h"
 #include "include/private/SkNoncopyable.h"
+#include "src/gpu/GrColorSpaceInfo.h"
 
 class GrFragmentProcessor;
 class GrRecordingContext;
@@ -100,10 +101,11 @@ class GrTextureProducer : public SkNoncopyable {
 
   int width() const { return fWidth; }
   int height() const { return fHeight; }
-  bool isAlphaOnly() const { return fIsAlphaOnly; }
+  GrColorType colorType() const { return fColorSpaceInfo.colorType(); }
+  SkAlphaType alphaType() const { return fColorSpaceInfo.alphaType(); }
+  SkColorSpace* colorSpace() const { return fColorSpaceInfo.colorSpace(); }
+  bool isAlphaOnly() const { return GrColorTypeIsAlphaOnly(fColorSpaceInfo.colorType()); }
   bool domainNeedsDecal() const { return fDomainNeedsDecal; }
-  virtual SkAlphaType alphaType() const = 0;
-  virtual SkColorSpace* colorSpace() const = 0;
   // If the "texture" samples multiple images that have different resolutions (e.g. YUV420)
   virtual bool hasMixedResolutions() const { return false; }
 
@@ -111,11 +113,12 @@ class GrTextureProducer : public SkNoncopyable {
   friend class GrTextureProducer_TestAccess;
 
   GrTextureProducer(
-      GrRecordingContext* context, int width, int height, bool isAlphaOnly, bool domainNeedsDecal)
+      GrRecordingContext* context, int width, int height, const GrColorSpaceInfo& csInfo,
+      bool domainNeedsDecal)
       : fContext(context),
         fWidth(width),
         fHeight(height),
-        fIsAlphaOnly(isAlphaOnly),
+        fColorSpaceInfo(csInfo),
         fDomainNeedsDecal(domainNeedsDecal) {}
 
   /** Helper for creating a key for a copy from an original key. */
@@ -152,8 +155,8 @@ class GrTextureProducer : public SkNoncopyable {
 
   // This can draw to accomplish the copy, thus the recording context is needed
   static sk_sp<GrTextureProxy> CopyOnGpu(
-      GrRecordingContext*, sk_sp<GrTextureProxy> inputProxy, const CopyParams& copyParams,
-      bool dstWillRequireMipMaps);
+      GrRecordingContext*, sk_sp<GrTextureProxy> inputProxy, GrColorType,
+      const CopyParams& copyParams, bool dstWillRequireMipMaps);
 
   static DomainMode DetermineDomainMode(
       const SkRect& constraintRect, FilterConstraint filterConstraint,
@@ -173,7 +176,7 @@ class GrTextureProducer : public SkNoncopyable {
   GrRecordingContext* fContext;
   const int fWidth;
   const int fHeight;
-  const bool fIsAlphaOnly;
+  const GrColorSpaceInfo fColorSpaceInfo;
   // If true, any domain effect uses kDecal instead of kClamp, and sampler filter uses
   // kClampToBorder instead of kClamp.
   const bool fDomainNeedsDecal;

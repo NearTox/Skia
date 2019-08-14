@@ -47,4 +47,9 @@ sk_sp<SkImageFilter> SkApplyCTMToBackdropFilter(
 
 bool SkIsSameFilter(const SkImageFilter* a, const SkImageFilter* b);
 
+// Exposes just the behavior of the protected SkImageFilter::onFilterNodeBounds()
+SkIRect SkFilterNodeBounds(
+    const SkImageFilter* filter, const SkIRect& srcRect, const SkMatrix& ctm,
+    SkImageFilter::MapDirection dir, const SkIRect* inputRect);
+
 #endif

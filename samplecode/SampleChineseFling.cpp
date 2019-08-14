@@ -38,24 +38,18 @@ static sk_sp<SkTypeface> chinese_typeface() {
 }
 
 class ChineseFlingView : public Sample {
- public:
-  ChineseFlingView() : fBlobs(kNumBlobs) {}
+  static constexpr int kNumBlobs = 200;
+  static constexpr int kWordLength = 16;
 
- protected:
-  bool onQuery(Sample::Event* evt) override {
-    if (Sample::TitleQ(*evt)) {
-      Sample::TitleR(evt, "chinese-fling");
-      return true;
-    }
-    return this->INHERITED::onQuery(evt);
-  }
+  sk_sp<SkTypeface> fTypeface;
+  SkFontMetrics fMetrics;
+  sk_sp<SkTextBlob> fBlobs[kNumBlobs];
+  SkRandom fRand;
+  int fIndex = 0;
+
+  SkString name() override { return SkString("chinese-fling"); }
 
   void onDrawContent(SkCanvas* canvas) override {
-    if (!fInitialized) {
-      this->init();
-      fInitialized = true;
-    }
-
     canvas->clear(0xFFDDDDDD);
 
     SkPaint paint;
@@ -69,18 +63,14 @@ class ChineseFlingView : public Sample {
 
       y += fMetrics.fDescent + fMetrics.fLeading;
       ++index;
-      index %= fBlobs.count();
+      index %= kNumBlobs;
     }
     // now "fling" a random amount
     fIndex += fRand.nextRangeU(5, 20);
-    fIndex %= fBlobs.count();
+    fIndex %= kNumBlobs;
   }
 
- private:
-  static constexpr auto kNumBlobs = 200;
-  static constexpr auto kWordLength = 16;
-
-  void init() {
+  void onOnceBeforeDraw() override {
     fTypeface = chinese_typeface();
 
     SkFont font(fTypeface, 56);
@@ -94,10 +84,8 @@ class ChineseFlingView : public Sample {
       ToolUtils::add_to_text_blob_w_len(
           &builder, (const char*)glyphs, kWordLength * 4, SkTextEncoding::kUTF32, font, 0, 0);
 
-      fBlobs.emplace_back(builder.make());
+      fBlobs[i] = builder.make();
     }
-
-    fIndex = 0;
   }
 
   // Construct a random kWordLength character 'word' drawing from the full Chinese set
@@ -106,55 +94,42 @@ class ChineseFlingView : public Sample {
       glyphs[i] = fRand.nextRangeU(0x4F00, 0x9FA0);
     }
   }
-
-  bool fInitialized = false;
-  sk_sp<SkTypeface> fTypeface;
-  SkFontMetrics fMetrics;
-  SkTArray<sk_sp<SkTextBlob>> fBlobs;
-  SkRandom fRand;
-  int fIndex;
-
-  typedef Sample INHERITED;
 };
 
 class ChineseZoomView : public Sample {
- public:
-  ChineseZoomView() : fBlobs(kNumBlobs), fScale(15.0f), fTranslate(0.0f) {}
+  static constexpr int kNumBlobs = 8;
+  static constexpr int kParagraphLength = 175;
 
- protected:
-  bool onQuery(Sample::Event* evt) override {
-    if (Sample::TitleQ(*evt)) {
-      Sample::TitleR(evt, "chinese-zoom");
+  bool fAfterFirstFrame = false;
+  sk_sp<SkTypeface> fTypeface;
+  SkFontMetrics fMetrics;
+  sk_sp<SkTextBlob> fBlobs[kNumBlobs];
+  SkRandom fRand;
+  SkScalar fScale = 15;
+  SkScalar fTranslate = 0;
+
+  SkString name() override { return SkString("chinese-zoom"); }
+
+  bool onChar(SkUnichar uni) override {
+    if ('>' == uni) {
+      fScale += 0.125f;
       return true;
     }
-    SkUnichar uni;
-    if (Sample::CharQ(*evt, &uni)) {
-      if ('>' == uni) {
-        fScale += 0.125f;
-        return true;
-      }
-      if ('<' == uni) {
-        fScale -= 0.125f;
-        return true;
-      }
+    if ('<' == uni) {
+      fScale -= 0.125f;
+      return true;
     }
-    return this->INHERITED::onQuery(evt);
+    return false;
   }
 
   void onDrawContent(SkCanvas* canvas) override {
-    bool afterFirstFrame = fInitialized;
-    if (!fInitialized) {
-      this->init();
-      fInitialized = true;
-    }
-
     canvas->clear(0xFFDDDDDD);
 
     SkPaint paint;
     paint.setAntiAlias(true);
     paint.setColor(0xDE000000);
 
-    if (afterFirstFrame) {
+    if (fAfterFirstFrame) {
 #if SK_SUPPORT_GPU
       GrContext* grContext = canvas->getGrContext();
       if (grContext) {
@@ -183,13 +158,12 @@ class ChineseZoomView : public Sample {
 
       y += 3 * (fMetrics.fDescent - fMetrics.fAscent + fMetrics.fLeading);
     }
+    if (!fAfterFirstFrame) {
+      fAfterFirstFrame = true;
+    }
   }
 
- private:
-  static constexpr auto kNumBlobs = 8;
-  static constexpr auto kParagraphLength = 175;
-
-  void init() {
+  void onOnceBeforeDraw() override {
     fTypeface = chinese_typeface();
 
     SkFont font(fTypeface, 11);
@@ -213,10 +187,8 @@ class ChineseZoomView : public Sample {
         y += fMetrics.fDescent - fMetrics.fAscent + fMetrics.fLeading;
         paragraphLength -= 45;
       }
-      fBlobs.emplace_back(builder.make());
+      fBlobs[i] = builder.make();
     }
-
-    fIndex = 0;
   }
 
   // Construct a random kWordLength character 'word' drawing from the full Chinese set
@@ -225,17 +197,6 @@ class ChineseZoomView : public Sample {
       glyphs[i] = fRand.nextRangeU(0x4F00, 0x9FA0);
     }
   }
-
-  bool fInitialized = false;
-  sk_sp<SkTypeface> fTypeface;
-  SkFontMetrics fMetrics;
-  SkTArray<sk_sp<SkTextBlob>> fBlobs;
-  SkRandom fRand;
-  SkScalar fScale;
-  SkScalar fTranslate;
-  int fIndex;
-
-  typedef Sample INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////

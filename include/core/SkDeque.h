@@ -10,7 +10,6 @@
 #define SkDeque_DEFINED
 
 #include "include/core/SkTypes.h"
-#include "include/private/SkNoncopyable.h"
 
 /*
  * The deque class works by blindly creating memory space of a specified element
@@ -23,7 +22,7 @@
  * on the block boundaries don't cause thrashing). This can result in the first/
  * last element not residing in the first/last block.
  */
-class SK_API SkDeque : SkNoncopyable {
+class SK_API SkDeque {
  public:
   /**
    * elemSize specifies the size of each individual element in the deque
@@ -85,7 +84,7 @@ class SK_API SkDeque : SkNoncopyable {
   // Inherit privately from Iter to prevent access to reverse iteration
   class F2BIter : private Iter {
    public:
-    F2BIter() {}
+    F2BIter() = default;
 
     /**
      * Wrap Iter's 2 parameter ctor to force initialization to the
@@ -127,6 +126,9 @@ class SK_API SkDeque : SkNoncopyable {
    * can be used to gauge the effectiveness of the selected allocCount.
    */
   int numBlocksAllocated() const;
+
+  SkDeque(const SkDeque&) = delete;
+  SkDeque& operator=(const SkDeque&) = delete;
 };
 
 #endif

@@ -20,7 +20,7 @@ class SkString;
 
 class SkReader32 : SkNoncopyable {
  public:
-  SkReader32() : fCurr(nullptr), fStop(nullptr), fBase(nullptr) {}
+  constexpr SkReader32() noexcept : fCurr(nullptr), fStop(nullptr), fBase(nullptr) {}
   SkReader32(const void* data, size_t size) { this->setMemory(data, size); }
 
   void setMemory(const void* data, size_t size) {
@@ -61,7 +61,7 @@ class SkReader32 : SkNoncopyable {
   void* readPtr() {
     void* ptr;
     // we presume this "if" is resolved at compile-time
-    if (4 == sizeof(void*)) {
+    if constexpr (4 == sizeof(void*)) {
       ptr = *(void**)fCurr;
     } else {
       memcpy(&ptr, fCurr, sizeof(void*));

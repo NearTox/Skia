@@ -12,9 +12,9 @@ DEF_TEST(F16Stages, r) {
   // Make sure SkRasterPipeline::load_f16 and store_f16 can handle a range of
   // ordinary (0<=x<=1) and interesting (x<0, x>1) values.
   float floats[16] = {
-      0.0f, 0.25f, 0.5f, 1.0f, -1.25f, -0.5f, 1.25f, 2.0f,
-      0,    0,     0,    0,    0,      0,     0,     0,  // pad a bit to make sure we qualify for
-                                                         // platform-specific code
+      0.0f, 0.25f, 0.5f, 1.0f, -1.25f, -0.5f, 1.25f, 2.0f, 0,
+      0,    0,     0,    0,    0,      0,     0,  // pad a bit to make sure we qualify for
+                                                  // platform-specific code
   };
   uint64_t halfs[4] = {0, 0, 0, 0};
 

@@ -34,11 +34,6 @@ static const int gHeight = 480;
 ////////////////////////////////////////////////////////////////////////////////
 DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ResourceCacheCache, reporter, ctxInfo) {
   GrContext* context = ctxInfo.grContext();
-  GrSurfaceDesc desc;
-  desc.fConfig = kRGBA_8888_GrPixelConfig;
-  desc.fFlags = kRenderTarget_GrSurfaceFlag;
-  desc.fWidth = gWidth;
-  desc.fHeight = gHeight;
   SkImageInfo info = SkImageInfo::MakeN32Premul(gWidth, gHeight);
   auto surface(SkSurface::MakeRenderTarget(context, SkBudgeted::kNo, info));
   SkCanvas* canvas = surface->getCanvas();
@@ -97,19 +92,18 @@ static GrStencilAttachment* get_SB(GrRenderTarget* rt) {
 static sk_sp<GrRenderTarget> create_RT_with_SB(
     GrResourceProvider* provider, int size, int sampleCount, SkBudgeted budgeted) {
   GrSurfaceDesc desc;
-  desc.fFlags = kRenderTarget_GrSurfaceFlag;
   desc.fWidth = size;
   desc.fHeight = size;
   desc.fConfig = kRGBA_8888_GrPixelConfig;
-  desc.fSampleCnt = sampleCount;
 
-  sk_sp<GrTexture> tex(
-      provider->createTexture(desc, budgeted, GrResourceProvider::Flags::kNoPendingIO));
+  sk_sp<GrTexture> tex(provider->createTexture(
+      desc, GrRenderable::kYes, sampleCount, budgeted, GrProtected::kNo,
+      GrResourceProvider::Flags::kNoPendingIO));
   if (!tex || !tex->asRenderTarget()) {
     return nullptr;
   }
 
-  if (!provider->attachStencilAttachment(tex->asRenderTarget())) {
+  if (!provider->attachStencilAttachment(tex->asRenderTarget(), sampleCount)) {
     return nullptr;
   }
   SkASSERT(get_SB(tex->asRenderTarget()));
@@ -121,11 +115,16 @@ static sk_sp<GrRenderTarget> create_RT_with_SB(
 DEF_GPUTEST_FOR_CONTEXTS(
     ResourceCacheStencilBuffers, &is_rendering_and_not_angle_es3, reporter, ctxInfo, nullptr) {
   GrContext* context = ctxInfo.grContext();
-  if (context->priv().caps()->avoidStencilBuffers()) {
+  const GrCaps* caps = context->priv().caps();
+
+  if (caps->avoidStencilBuffers()) {
     return;
   }
 
   GrResourceProvider* resourceProvider = context->priv().resourceProvider();
+
+  GrColorType grColorType = GrColorType::kRGBA_8888;
+  GrBackendFormat format = caps->getBackendFormatFromColorType(grColorType);
 
   sk_sp<GrRenderTarget> smallRT0 = create_RT_with_SB(resourceProvider, 4, 1, SkBudgeted::kYes);
   REPORTER_ASSERT(reporter, smallRT0);
@@ -154,20 +153,12 @@ DEF_GPUTEST_FOR_CONTEXTS(
     REPORTER_ASSERT(reporter, get_SB(smallRT0.get()) != get_SB(bigRT.get()));
   }
 
-  int smallSampleCount =
-      context->priv().caps()->getRenderTargetSampleCount(2, kRGBA_8888_GrPixelConfig);
+  int smallSampleCount = context->priv().caps()->getRenderTargetSampleCount(2, grColorType, format);
   if (smallSampleCount > 1) {
     // An RT with a different sample count should not share.
     sk_sp<GrRenderTarget> smallMSAART0 =
         create_RT_with_SB(resourceProvider, 4, smallSampleCount, SkBudgeted::kNo);
-#ifdef SK_BUILD_FOR_ANDROID
-    if (!smallMSAART0) {
-      // The nexus player seems to fail to create MSAA textures.
-      return;
-    }
-#else
     REPORTER_ASSERT(reporter, smallMSAART0);
-#endif
 
     REPORTER_ASSERT(reporter, get_SB(smallRT0.get()) != get_SB(smallMSAART0.get()));
 
@@ -182,8 +173,7 @@ DEF_GPUTEST_FOR_CONTEXTS(
 
     // But one with a larger sample count should not. (Also check that the two requests didn't
     // rounded up to the same actual sample count or else they could share.).
-    int bigSampleCount =
-        context->priv().caps()->getRenderTargetSampleCount(5, kRGBA_8888_GrPixelConfig);
+    int bigSampleCount = context->priv().caps()->getRenderTargetSampleCount(5, grColorType, format);
     if (bigSampleCount > 0 && bigSampleCount != smallSampleCount) {
       sk_sp<GrRenderTarget> smallMSAART2 =
           create_RT_with_SB(resourceProvider, 4, bigSampleCount, SkBudgeted::kNo);
@@ -208,9 +198,11 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ResourceCacheWrappedResources, reporter, ctxI
   static const int kH = 100;
 
   backendTextures[0] = context->createBackendTexture(
-      kW, kH, kRGBA_8888_SkColorType, GrMipMapped::kNo, GrRenderable::kNo);
+      kW, kH, kRGBA_8888_SkColorType, SkColors::kTransparent, GrMipMapped::kNo, GrRenderable::kNo,
+      GrProtected::kNo);
   backendTextures[1] = context->createBackendTexture(
-      kW, kH, kRGBA_8888_SkColorType, GrMipMapped::kNo, GrRenderable::kNo);
+      kW, kH, kRGBA_8888_SkColorType, SkColors::kTransparent, GrMipMapped::kNo, GrRenderable::kNo,
+      GrProtected::kNo);
   REPORTER_ASSERT(reporter, backendTextures[0].isValid());
   REPORTER_ASSERT(reporter, backendTextures[1].isValid());
   if (!backendTextures[0].isValid() || !backendTextures[1].isValid()) {
@@ -220,10 +212,12 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ResourceCacheWrappedResources, reporter, ctxI
   context->resetContext();
 
   sk_sp<GrTexture> borrowed(resourceProvider->wrapBackendTexture(
-      backendTextures[0], kBorrow_GrWrapOwnership, GrWrapCacheable::kNo, kRead_GrIOType));
+      backendTextures[0], GrColorType::kRGBA_8888, kBorrow_GrWrapOwnership, GrWrapCacheable::kNo,
+      kRead_GrIOType));
 
   sk_sp<GrTexture> adopted(resourceProvider->wrapBackendTexture(
-      backendTextures[1], kAdopt_GrWrapOwnership, GrWrapCacheable::kNo, kRead_GrIOType));
+      backendTextures[1], GrColorType::kRGBA_8888, kAdopt_GrWrapOwnership, GrWrapCacheable::kNo,
+      kRead_GrIOType));
 
   REPORTER_ASSERT(reporter, borrowed != nullptr && adopted != nullptr);
   if (!borrowed || !adopted) {
@@ -1618,33 +1612,31 @@ DEF_GPUTEST(ResourceCacheMisc, reporter, /* options */) {
 
 ////////////////////////////////////////////////////////////////////////////////
 static sk_sp<GrTexture> make_normal_texture(
-    GrResourceProvider* provider, GrSurfaceDescFlags descFlags, int width, int height,
-    int sampleCnt) {
+    GrResourceProvider* provider, GrRenderable renderable, int width, int height, int sampleCnt) {
   GrSurfaceDesc desc;
-  desc.fFlags = descFlags;
   desc.fWidth = width;
   desc.fHeight = height;
   desc.fConfig = kRGBA_8888_GrPixelConfig;
-  desc.fSampleCnt = sampleCnt;
 
-  return provider->createTexture(desc, SkBudgeted::kYes, GrResourceProvider::Flags::kNoPendingIO);
+  return provider->createTexture(
+      desc, renderable, sampleCnt, SkBudgeted::kYes, GrProtected::kNo,
+      GrResourceProvider::Flags::kNoPendingIO);
 }
 
 static sk_sp<GrTextureProxy> make_mipmap_proxy(
-    GrProxyProvider* proxyProvider, const GrCaps* caps, GrSurfaceDescFlags descFlags, int width,
+    GrProxyProvider* proxyProvider, const GrCaps* caps, GrRenderable renderable, int width,
     int height, int sampleCnt) {
   GrSurfaceDesc desc;
-  desc.fFlags = descFlags;
   desc.fWidth = width;
   desc.fHeight = height;
   desc.fConfig = kRGBA_8888_GrPixelConfig;
-  desc.fSampleCnt = sampleCnt;
 
-  const GrBackendFormat format = caps->getBackendFormatFromColorType(kRGBA_8888_SkColorType);
-  auto origin = (descFlags & kRenderTarget_GrSurfaceFlag) ? kBottomLeft_GrSurfaceOrigin
-                                                          : kTopLeft_GrSurfaceOrigin;
+  const GrBackendFormat format = caps->getBackendFormatFromColorType(GrColorType::kRGBA_8888);
+  auto origin =
+      renderable == GrRenderable::kYes ? kBottomLeft_GrSurfaceOrigin : kTopLeft_GrSurfaceOrigin;
 
-  return proxyProvider->createMipMapProxy(format, desc, origin, SkBudgeted::kYes);
+  return proxyProvider->createMipMapProxy(
+      format, desc, renderable, sampleCnt, origin, SkBudgeted::kYes, GrProtected::kNo);
 }
 
 // Exercise GrSurface::gpuMemorySize for different combos of MSAA, RT-only,
@@ -1660,15 +1652,14 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(GPUMemorySize, reporter, ctxInfo) {
   {
     sk_sp<GrTexture> tex;
 
-    tex = make_normal_texture(resourceProvider, kRenderTarget_GrSurfaceFlag, kSize, kSize, 1);
+    tex = make_normal_texture(resourceProvider, GrRenderable::kYes, kSize, kSize, 1);
     size_t size = tex->gpuMemorySize();
     REPORTER_ASSERT(reporter, kSize * kSize * 4 == size);
 
     size_t sampleCount =
         (size_t)context->priv().caps()->getRenderTargetSampleCount(4, kRGBA_8888_GrPixelConfig);
     if (sampleCount >= 4) {
-      tex = make_normal_texture(
-          resourceProvider, kRenderTarget_GrSurfaceFlag, kSize, kSize, sampleCount);
+      tex = make_normal_texture(resourceProvider, GrRenderable::kYes, kSize, kSize, sampleCount);
       size = tex->gpuMemorySize();
       REPORTER_ASSERT(
           reporter,
@@ -1677,7 +1668,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(GPUMemorySize, reporter, ctxInfo) {
               kSize * kSize * 4 * (sampleCount + 1) == size);  // explicit resolve buffer
     }
 
-    tex = make_normal_texture(resourceProvider, kNone_GrSurfaceFlags, kSize, kSize, 1);
+    tex = make_normal_texture(resourceProvider, GrRenderable::kNo, kSize, kSize, 1);
     size = tex->gpuMemorySize();
     REPORTER_ASSERT(reporter, kSize * kSize * 4 == size);
   }
@@ -1687,15 +1678,14 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(GPUMemorySize, reporter, ctxInfo) {
   if (caps->mipMapSupport()) {
     sk_sp<GrTextureProxy> proxy;
 
-    proxy = make_mipmap_proxy(proxyProvider, caps, kRenderTarget_GrSurfaceFlag, kSize, kSize, 1);
+    proxy = make_mipmap_proxy(proxyProvider, caps, GrRenderable::kYes, kSize, kSize, 1);
     size_t size = proxy->gpuMemorySize();
     REPORTER_ASSERT(reporter, kSize * kSize * 4 + (kSize * kSize * 4) / 3 == size);
 
     size_t sampleCount =
         (size_t)context->priv().caps()->getRenderTargetSampleCount(4, kRGBA_8888_GrPixelConfig);
     if (sampleCount >= 4) {
-      proxy = make_mipmap_proxy(
-          proxyProvider, caps, kRenderTarget_GrSurfaceFlag, kSize, kSize, sampleCount);
+      proxy = make_mipmap_proxy(proxyProvider, caps, GrRenderable::kYes, kSize, kSize, sampleCount);
       size = proxy->gpuMemorySize();
       REPORTER_ASSERT(
           reporter,
@@ -1706,7 +1696,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(GPUMemorySize, reporter, ctxInfo) {
                   size);  // explicit resolve buffer
     }
 
-    proxy = make_mipmap_proxy(proxyProvider, caps, kNone_GrSurfaceFlags, kSize, kSize, 1);
+    proxy = make_mipmap_proxy(proxyProvider, caps, GrRenderable::kNo, kSize, kSize, 1);
     size = proxy->gpuMemorySize();
     REPORTER_ASSERT(reporter, kSize * kSize * 4 + (kSize * kSize * 4) / 3 == size);
   }

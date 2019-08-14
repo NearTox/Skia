@@ -84,11 +84,11 @@ class PolyBoundsOp : public GrMeshDrawOp {
   FixedFunctionFlags fixedFunctionFlags() const override { return FixedFunctionFlags::kNone; }
 
   GrProcessorSet::Analysis finalize(
-      const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType,
+      const GrCaps& caps, const GrAppliedClip* clip, bool hasMixedSampledCoverage,
       GrClampType clampType) override {
     return fProcessors.finalize(
-        fColor, GrProcessorAnalysisCoverage::kNone, clip, &GrUserStencilSettings::kUnused, fsaaType,
-        caps, clampType, &fColor);
+        fColor, GrProcessorAnalysisCoverage::kNone, clip, &GrUserStencilSettings::kUnused,
+        hasMixedSampledCoverage, caps, clampType, &fColor);
   }
 
  private:

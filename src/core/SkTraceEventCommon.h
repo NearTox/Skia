@@ -54,7 +54,7 @@
 // The tracing UI will show these counters in a single graph, as a summed area chart.
 
 #if defined(TRACE_EVENT0)
-#error "Another copy of this file has already been included."
+#  error "Another copy of this file has already been included."
 #endif
 
 #define TRACE_EMPTY \
@@ -63,8 +63,8 @@
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
 
-#include <cutils/trace.h>
-#include <stdarg.h>
+#  include <cutils/trace.h>
+#  include <stdarg.h>
 
 class SkAndroidFrameworkTraceUtil {
  public:
@@ -150,9 +150,9 @@ class SkAndroidFrameworkTraceUtil {
     } while (0)
 
 // ATrace has no object tracking
-#define TRACE_EVENT_OBJECT_CREATED_WITH_ID(category_group, name, id) TRACE_EMPTY
-#define TRACE_EVENT_OBJECT_SNAPSHOT_WITH_ID(category_group, name, id, snapshot) TRACE_EMPTY
-#define TRACE_EVENT_OBJECT_DELETED_WITH_ID(category_group, name, id) TRACE_EMPTY
+#  define TRACE_EVENT_OBJECT_CREATED_WITH_ID(category_group, name, id) TRACE_EMPTY
+#  define TRACE_EVENT_OBJECT_SNAPSHOT_WITH_ID(category_group, name, id, snapshot) TRACE_EMPTY
+#  define TRACE_EVENT_OBJECT_DELETED_WITH_ID(category_group, name, id) TRACE_EMPTY
 
 // Macro to efficiently determine if a given category group is enabled.
 // This is only used for some shader text logging that isn't supported in ATrace anyway.

@@ -38,7 +38,7 @@ class DrawVerticesOp final : public GrMeshDrawOp {
   FixedFunctionFlags fixedFunctionFlags() const override;
 
   GrProcessorSet::Analysis finalize(
-      const GrCaps&, const GrAppliedClip*, GrFSAAType, GrClampType) override;
+      const GrCaps&, const GrAppliedClip*, bool hasMixedSampledCoverage, GrClampType) override;
 
  private:
   enum class ColorArrayType {
@@ -188,7 +188,8 @@ GrDrawOp::FixedFunctionFlags DrawVerticesOp::fixedFunctionFlags() const {
 }
 
 GrProcessorSet::Analysis DrawVerticesOp::finalize(
-    const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType, GrClampType clampType) {
+    const GrCaps& caps, const GrAppliedClip* clip, bool hasMixedSampledCoverage,
+    GrClampType clampType) {
   GrProcessorAnalysisColor gpColor;
   if (this->requiresPerVertexColors()) {
     gpColor.setToUnknown();
@@ -196,7 +197,7 @@ GrProcessorSet::Analysis DrawVerticesOp::finalize(
     gpColor.setToConstant(fMeshes.front().fColor);
   }
   auto result = fHelper.finalizeProcessors(
-      caps, clip, fsaaType, clampType, GrProcessorAnalysisCoverage::kNone, &gpColor);
+      caps, clip, hasMixedSampledCoverage, clampType, GrProcessorAnalysisCoverage::kNone, &gpColor);
   if (gpColor.isConstant(&fMeshes.front().fColor)) {
     fMeshes.front().fIgnoreColors = true;
     fFlags &= ~kRequiresPerVertexColors_Flag;
@@ -546,7 +547,7 @@ std::unique_ptr<GrDrawOp> GrDrawVerticesOp::Make(
 
 #if GR_TEST_UTILS
 
-#include "src/gpu/GrDrawOpTest.h"
+#  include "src/gpu/GrDrawOpTest.h"
 
 static uint32_t seed_vertices(GrPrimitiveType type) {
   switch (type) {
@@ -642,7 +643,7 @@ GR_DRAW_OP_TEST_DEFINE(DrawVerticesOp) {
       kIgnoredMode, vertexCount, positions.begin(), texCoords.begin(), colors.begin(),
       hasIndices ? indices.count() : 0, indices.begin());
   GrAAType aaType = GrAAType::kNone;
-  if (GrFSAAType::kUnifiedMSAA == fsaaType && random->nextBool()) {
+  if (numSamples > 1 && random->nextBool()) {
     aaType = GrAAType::kMSAA;
   }
   return GrDrawVerticesOp::Make(

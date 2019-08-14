@@ -13,7 +13,7 @@
 #include "include/core/SkRefCnt.h"
 
 #ifdef SK_DEBUG
-#include "include/private/SkTHash.h"
+#  include "include/private/SkTHash.h"
 #endif
 
 /**

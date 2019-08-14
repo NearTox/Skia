@@ -8,11 +8,11 @@
 #include "include/core/SkTypes.h"
 #if defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)
 
-#include "include/core/SkBitmap.h"
-#include "include/private/SkColorData.h"
-#include "include/private/SkMacros.h"
-#include "include/private/SkTo.h"
-#include "include/utils/mac/SkCGUtils.h"
+#  include "include/core/SkBitmap.h"
+#  include "include/private/SkColorData.h"
+#  include "include/private/SkMacros.h"
+#  include "include/private/SkTo.h"
+#  include "include/utils/mac/SkCGUtils.h"
 
 static CGBitmapInfo ComputeCGAlphaInfo_RGBA(SkAlphaType at) {
   CGBitmapInfo info = kCGBitmapByteOrder32Big;

@@ -12,19 +12,11 @@
 #include "src/core/SkClipOpPriv.h"
 
 class ComplexClipView : public Sample {
- public:
-  ComplexClipView() { this->setBGColor(0xFFA0DDA0); }
+  void onOnceBeforeDraw() override { this->setBGColor(0xFFA0DDA0); }
 
- protected:
-  virtual bool onQuery(Sample::Event* evt) {
-    if (Sample::TitleQ(*evt)) {
-      Sample::TitleR(evt, "ComplexClip");
-      return true;
-    }
-    return this->INHERITED::onQuery(evt);
-  }
+  SkString name() override { return SkString("ComplexClip"); }
 
-  virtual void onDrawContent(SkCanvas* canvas) {
+  void onDrawContent(SkCanvas* canvas) override {
     SkPath path;
     path.moveTo(SkIntToScalar(0), SkIntToScalar(50));
     path.quadTo(SkIntToScalar(0), SkIntToScalar(0), SkIntToScalar(50), SkIntToScalar(0));
@@ -140,11 +132,6 @@ class ComplexClipView : public Sample {
     }
     canvas->restore();
   }
-
- private:
-  typedef Sample INHERITED;
 };
-
-//////////////////////////////////////////////////////////////////////////////
 
 DEF_SAMPLE(return new ComplexClipView();)

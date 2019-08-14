@@ -13,7 +13,6 @@
 #include "modules/skottie/utils/SkottieUtils.h"
 #include "src/core/SkMakeUnique.h"
 #include "tools/Resources.h"
-#include "tools/timer/AnimTimer.h"
 
 #include <cmath>
 #include <vector>
@@ -66,13 +65,13 @@ class SkottieWebFontGM : public skiagm::GM {
     return DrawResult::kOk;
   }
 
-  bool onAnimate(const AnimTimer& timer) override {
+  bool onAnimate(double nanos) override {
     if (!fAnimation) {
       return false;
     }
 
     const auto duration = fAnimation->duration();
-    fAnimation->seek(std::fmod(timer.secs(), duration) / duration);
+    fAnimation->seek(std::fmod(1e-9 * nanos, duration) / duration);
     return true;
   }
 
@@ -115,17 +114,17 @@ class SkottieColorizeGM : public skiagm::GM {
     return DrawResult::kOk;
   }
 
-  bool onAnimate(const AnimTimer& timer) override {
+  bool onAnimate(double nanos) override {
     if (!fAnimation) {
       return false;
     }
 
     const auto duration = fAnimation->duration();
-    fAnimation->seek(std::fmod(timer.secs(), duration) / duration);
+    fAnimation->seek(std::fmod(1e-9 * nanos, duration) / duration);
     return true;
   }
 
-  bool onHandleKey(SkUnichar uni) override {
+  bool onChar(SkUnichar uni) override {
     static constexpr SkColor kColors[] = {
         SK_ColorBLACK, SK_ColorRED, SK_ColorGREEN, SK_ColorYELLOW, SK_ColorCYAN,
     };
@@ -180,20 +179,20 @@ class SkottieMultiFrameGM : public skiagm::GM {
     return DrawResult::kOk;
   }
 
-  bool onAnimate(const AnimTimer& timer) override {
+  bool onAnimate(double nanos) override {
     if (!fAnimation) {
       return false;
     }
 
     const auto duration = fAnimation->duration();
-    fAnimation->seek(std::fmod(timer.secs(), duration) / duration);
+    fAnimation->seek(std::fmod(1e-9 * nanos, duration) / duration);
     return true;
   }
 
  private:
   class MultiFrameResourceProvider final : public skottie::ResourceProvider {
    public:
-    sk_sp<ImageAsset> loadImageAsset(const char[], const char[]) const override {
+    sk_sp<ImageAsset> loadImageAsset(const char[], const char[], const char[]) const override {
       return skottie_utils::MultiFrameImageAsset::Make(GetResourceAsData("images/flightAnim.gif"));
     }
   };

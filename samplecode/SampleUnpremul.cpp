@@ -20,6 +20,8 @@
 #include "tools/Resources.h"
 #include "tools/ToolUtils.h"
 
+#ifdef SK_SUPPORT_LEGACY_DRAWLOOPER
+
 /**
  *  Interprets c as an unpremultiplied color, and returns the
  *  premultiplied equivalent.
@@ -39,25 +41,20 @@ class UnpremulView : public Sample {
   }
 
  protected:
-  bool onQuery(Sample::Event* evt) override {
-    if (Sample::TitleQ(*evt)) {
-      Sample::TitleR(evt, "unpremul");
-      return true;
-    }
-    SkUnichar uni;
-    if (Sample::CharQ(*evt, &uni)) {
-      char utf8[SkUTF::kMaxBytesInUTF8Sequence];
-      size_t size = SkUTF::ToUTF8(uni, utf8);
-      // Only consider events for single char keys
-      if (1 == size) {
-        switch (utf8[0]) {
-          case fNextImageChar: this->nextImage(); return true;
-          case fTogglePremulChar: this->togglePremul(); return true;
-          default: break;
-        }
+  SkString name() override { return SkString("unpremul"); }
+
+  bool onChar(SkUnichar uni) override {
+    char utf8[SkUTF::kMaxBytesInUTF8Sequence];
+    size_t size = SkUTF::ToUTF8(uni, utf8);
+    // Only consider events for single char keys
+    if (1 == size) {
+      switch (utf8[0]) {
+        case fNextImageChar: this->nextImage(); return true;
+        case fTogglePremulChar: this->togglePremul(); return true;
+        default: break;
       }
     }
-    return this->INHERITED::onQuery(evt);
+    return false;
   }
 
   void onDrawBackground(SkCanvas* canvas) override {
@@ -166,3 +163,5 @@ class UnpremulView : public Sample {
 //////////////////////////////////////////////////////////////////////////////
 
 DEF_SAMPLE(return new UnpremulView(GetResourcePath("images"));)
+
+#endif

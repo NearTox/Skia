@@ -91,7 +91,7 @@ class GrGLSLRRectBlurEffect : public GrGLSLFragmentProcessor {
         "threshold + 1.0);\nhalf2 texCoord = translatedFragPos / proxyDims;\n%s = %s * "
         "texture(%s, float2(texCoord)).%s;\n",
         args.fOutputColor, args.fInputColor,
-        fragBuilder->getProgramBuilder()->samplerVariable(args.fTexSamplers[0]).c_str(),
+        fragBuilder->getProgramBuilder()->samplerVariable(args.fTexSamplers[0]),
         fragBuilder->getProgramBuilder()->samplerSwizzle(args.fTexSamplers[0]).c_str());
   }
 

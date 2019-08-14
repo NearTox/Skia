@@ -35,7 +35,7 @@ class SK_API SkEventTracer {
    */
   static SkEventTracer* GetInstance();
 
-  virtual ~SkEventTracer() {}
+  virtual ~SkEventTracer() = default;
 
   // The pointer returned from GetCategoryGroupEnabled() points to a
   // value with zero or more of the following bits. Used in this class only.

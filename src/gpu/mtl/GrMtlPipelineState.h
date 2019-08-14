@@ -14,7 +14,7 @@
 #include "src/gpu/mtl/GrMtlBuffer.h"
 #include "src/gpu/mtl/GrMtlPipelineStateDataManager.h"
 
-#import <metal/metal.h>
+#import <Metal/Metal.h>
 
 class GrMtlGpu;
 class GrMtlPipelineStateDataManager;
@@ -46,7 +46,8 @@ class GrMtlPipelineState {
       const GrRenderTarget*, GrSurfaceOrigin, const GrPrimitiveProcessor& primPRoc,
       const GrPipeline& pipeline, const GrTextureProxy* const primProcTextures[]);
 
-  void setDrawState(id<MTLRenderCommandEncoder>, GrPixelConfig, const GrXferProcessor&);
+  void setDrawState(
+      id<MTLRenderCommandEncoder>, const GrSwizzle& outputSwizzle, const GrXferProcessor&);
 
   static void SetDynamicScissorRectState(
       id<MTLRenderCommandEncoder> renderCmdEncoder, const GrRenderTarget* renderTarget,
@@ -95,7 +96,7 @@ class GrMtlPipelineState {
 
   void bind(id<MTLRenderCommandEncoder>);
 
-  void setBlendConstants(id<MTLRenderCommandEncoder>, GrPixelConfig, const GrXferProcessor&);
+  void setBlendConstants(id<MTLRenderCommandEncoder>, const GrSwizzle&, const GrXferProcessor&);
 
   void setDepthStencilState(id<MTLRenderCommandEncoder> renderCmdEncoder);
 

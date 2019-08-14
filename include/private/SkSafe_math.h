@@ -6,7 +6,7 @@
  */
 
 #ifndef SkSafe_math_DEFINED
-#define SkSafe_math_DEFINED
+#  define SkSafe_math_DEFINED
 
 // This file protects against known bugs in ucrt\math.h.
 // Namely, that header defines inline methods without marking them static,
@@ -26,7 +26,7 @@
 // I took a quick look through other headers outside math.h.
 // Nothing looks anywhere near as likely to be used by Skia as math.h.
 
-#if defined(_MSC_VER) && !defined(_INC_MATH)
+#  if defined(_MSC_VER) && !defined(_INC_MATH)
 // Our strategy here is to simply inject "static" into the headers
 // where it should have been written, just before __inline.
 //

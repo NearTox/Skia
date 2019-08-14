@@ -17,15 +17,15 @@
 #include "src/core/SkWriteBuffer.h"
 
 #if SK_SUPPORT_GPU
-#include "include/private/GrRecordingContext.h"
-#include "src/gpu/GrCoordTransform.h"
-#include "src/gpu/GrRecordingContextPriv.h"
-#include "src/gpu/SkGr.h"
-#include "src/gpu/effects/generated/GrConstColorProcessor.h"
-#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
-#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
-#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
-#include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#  include "include/private/GrRecordingContext.h"
+#  include "src/gpu/GrCoordTransform.h"
+#  include "src/gpu/GrRecordingContextPriv.h"
+#  include "src/gpu/SkGr.h"
+#  include "src/gpu/effects/generated/GrConstColorProcessor.h"
+#  include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#  include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#  include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#  include "src/gpu/glsl/GrGLSLUniformHandler.h"
 #endif
 
 static const int kBlockSize = 256;
@@ -774,7 +774,7 @@ class GrPerlinNoise2Effect : public GrFragmentProcessor {
 /////////////////////////////////////////////////////////////////////
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(GrPerlinNoise2Effect);
 
-#if GR_TEST_UTILS
+#  if GR_TEST_UTILS
 std::unique_ptr<GrFragmentProcessor> GrPerlinNoise2Effect::TestCreate(GrProcessorTestData* d) {
   int numOctaves = d->fRandom->nextRangeU(2, 10);
   bool stitchTiles = d->fRandom->nextBool();
@@ -795,7 +795,7 @@ std::unique_ptr<GrFragmentProcessor> GrPerlinNoise2Effect::TestCreate(GrProcesso
   GrTest::TestAsFPArgs asFPArgs(d);
   return as_SB(shader)->asFragmentProcessor(asFPArgs.args());
 }
-#endif
+#  endif
 
 void GrGLPerlinNoise::emitCode(EmitArgs& args) {
   const GrPerlinNoise2Effect& pne = args.fFp.cast<GrPerlinNoise2Effect>();
@@ -894,7 +894,7 @@ void GrGLPerlinNoise::emitCode(EmitArgs& args) {
     noiseCode.append(".r;");
   }
 
-#if defined(SK_BUILD_FOR_ANDROID)
+#  if defined(SK_BUILD_FOR_ANDROID)
   // Android rounding for Tegra devices, like, for example: Xoom (Tegra 2), Nexus 7 (Tegra 3).
   // The issue is that colors aren't accurate enough on Tegra devices. For example, if an 8 bit
   // value of 124 (or 0.486275 here) is entered, we can get a texture value of 123.513725
@@ -1182,7 +1182,7 @@ class GrImprovedPerlinNoiseEffect : public GrFragmentProcessor {
 /////////////////////////////////////////////////////////////////////
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(GrImprovedPerlinNoiseEffect);
 
-#if GR_TEST_UTILS
+#  if GR_TEST_UTILS
 std::unique_ptr<GrFragmentProcessor> GrImprovedPerlinNoiseEffect::TestCreate(
     GrProcessorTestData* d) {
   SkScalar baseFrequencyX = d->fRandom->nextRangeScalar(0.01f, 0.99f);

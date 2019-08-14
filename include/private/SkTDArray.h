@@ -18,7 +18,7 @@
 template <typename T>
 class SkTDArray {
  public:
-  SkTDArray() : fArray(nullptr), fReserve(0), fCount(0) {}
+  constexpr SkTDArray() noexcept : fArray(nullptr), fReserve(0), fCount(0) {}
   SkTDArray(const T src[], int count) {
     SkASSERT(src || count == 0);
 
@@ -64,28 +64,28 @@ class SkTDArray {
   }
   friend bool operator!=(const SkTDArray<T>& a, const SkTDArray<T>& b) { return !(a == b); }
 
-  void swap(SkTDArray<T>& that) {
+  void swap(SkTDArray<T>& that) noexcept {
     using std::swap;
     swap(fArray, that.fArray);
     swap(fReserve, that.fReserve);
     swap(fCount, that.fCount);
   }
 
-  bool isEmpty() const { return fCount == 0; }
-  bool empty() const { return this->isEmpty(); }
+  bool isEmpty() const noexcept { return fCount == 0; }
+  bool empty() const noexcept { return this->isEmpty(); }
 
   /**
    *  Return the number of elements in the array
    */
-  int count() const { return fCount; }
-  size_t size() const { return fCount; }
+  int count() const noexcept { return fCount; }
+  size_t size() const noexcept { return fCount; }
 
   /**
    *  Return the total number of elements allocated.
    *  reserved() - count() gives you the number of elements you can add
    *  without causing an allocation.
    */
-  int reserved() const { return fReserve; }
+  int reserved() const noexcept { return fReserve; }
 
   /**
    *  return the number of bytes in the array: count * sizeof(T)
@@ -354,7 +354,7 @@ class SkTDArray {
 };
 
 template <typename T>
-static inline void swap(SkTDArray<T>& a, SkTDArray<T>& b) {
+static inline void swap(SkTDArray<T>& a, SkTDArray<T>& b) noexcept {
   a.swap(b);
 }
 

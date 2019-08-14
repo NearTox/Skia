@@ -18,13 +18,13 @@
 */
 
 /** Free memory returned by sk_malloc(). It is safe to pass null. */
-SK_API extern void sk_free(void*);
+SK_API extern void sk_free(void*) noexcept;
 
 /**
  *  Called internally if we run out of memory. The platform implementation must
  *  not return, but should either throw an exception or otherwise exit.
  */
-SK_API extern void sk_out_of_memory(void);
+SK_API extern void sk_out_of_memory(void) noexcept;
 
 enum {
   /**
@@ -47,20 +47,22 @@ enum {
  *
  *  To free the memory, call sk_free()
  */
-SK_API extern void* sk_malloc_flags(size_t size, unsigned flags);
+SK_API extern void* sk_malloc_flags(size_t size, unsigned flags) noexcept;
 
 /** Same as standard realloc(), but this one never returns null on failure. It will throw
  *  an exception if it fails.
  */
-SK_API extern void* sk_realloc_throw(void* buffer, size_t size);
+SK_API extern void* sk_realloc_throw(void* buffer, size_t size) noexcept;
 
-static inline void* sk_malloc_throw(size_t size) { return sk_malloc_flags(size, SK_MALLOC_THROW); }
+static inline void* sk_malloc_throw(size_t size) noexcept {
+  return sk_malloc_flags(size, SK_MALLOC_THROW);
+}
 
-static inline void* sk_calloc_throw(size_t size) {
+static inline void* sk_calloc_throw(size_t size) noexcept {
   return sk_malloc_flags(size, SK_MALLOC_THROW | SK_MALLOC_ZERO_INITIALIZE);
 }
 
-static inline void* sk_calloc_canfail(size_t size) {
+static inline void* sk_calloc_canfail(size_t size) noexcept {
 #if defined(IS_FUZZING_WITH_LIBFUZZER)
   // The Libfuzzer environment is very susceptible to OOM, so to avoid those
   // just pretend we can't allocate more than 200kb.
@@ -79,7 +81,7 @@ SK_API extern void* sk_realloc_throw(void* buffer, size_t count, size_t elemSize
 /**
  *  These variants return nullptr on failure
  */
-static inline void* sk_malloc_canfail(size_t size) {
+static inline void* sk_malloc_canfail(size_t size) noexcept {
 #if defined(IS_FUZZING_WITH_LIBFUZZER)
   // The Libfuzzer environment is very susceptible to OOM, so to avoid those
   // just pretend we can't allocate more than 200kb.
@@ -92,7 +94,7 @@ static inline void* sk_malloc_canfail(size_t size) {
 SK_API extern void* sk_malloc_canfail(size_t count, size_t elemSize);
 
 // bzero is safer than memset, but we can't rely on it, so... sk_bzero()
-static inline void sk_bzero(void* buffer, size_t size) {
+static inline void sk_bzero(void* buffer, size_t size) noexcept {
   // Please c.f. sk_careful_memcpy.  It's undefined behavior to call memset(null, 0, 0).
   if (size) {
     memset(buffer, 0, size);
@@ -112,7 +114,7 @@ static inline void sk_bzero(void* buffer, size_t size) {
  * unconditionally running the printf, crashing the program if src really is null.
  * Of the compilers we pay attention to only GCC performs this optimization in practice.
  */
-static inline void* sk_careful_memcpy(void* dst, const void* src, size_t len) {
+static inline void* sk_careful_memcpy(void* dst, const void* src, size_t len) noexcept {
   // When we pass >0 len we had better already be passing valid pointers.
   // So we just need to skip calling memcpy when len == 0.
   if (len) {
@@ -121,7 +123,7 @@ static inline void* sk_careful_memcpy(void* dst, const void* src, size_t len) {
   return dst;
 }
 
-static inline void* sk_careful_memmove(void* dst, const void* src, size_t len) {
+static inline void* sk_careful_memmove(void* dst, const void* src, size_t len) noexcept {
   // When we pass >0 len we had better already be passing valid pointers.
   // So we just need to skip calling memcpy when len == 0.
   if (len) {

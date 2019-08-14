@@ -401,7 +401,7 @@ struct Edge {
     fY0 = (SkRegionPriv::RunType)(y0);
     fY1 = (SkRegionPriv::RunType)(y1);
     fFlags = 0;
-    SkDEBUGCODE(fNext = nullptr);
+    SkDEBUGCODE(fNext = nullptr;)
   }
 
   int top() const { return SkMin32(fY0, fY1); }

@@ -13,6 +13,7 @@
 #include "include/private/SkSafe_math.h"
 #include <float.h>
 #include <math.h>
+#include <cmath>
 #include <cstring>
 #include <limits>
 
@@ -24,7 +25,7 @@
 
 // For _POSIX_VERSION
 #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 constexpr float SK_FloatSqrt2 = 1.41421356f;
@@ -156,6 +157,8 @@ sk_double_to_float(double x) {
 #define SK_FloatInfinity (+std::numeric_limits<float>::infinity())
 #define SK_FloatNegativeInfinity (-std::numeric_limits<float>::infinity())
 
+#define SK_DoubleNaN std::numeric_limits<double>::quiet_NaN()
+
 // Returns false if any of the floats are outside of [0...1]
 // Returns true if count is 0
 bool sk_floats_are_unit(const float array[], size_t count);
@@ -204,9 +207,9 @@ static inline float sk_float_rsqrt(float x) {
 // string back we get the floating point number we expect.  The minimum value C requires is 6, but
 // most compilers support 9
 #ifdef FLT_DECIMAL_DIG
-#define SK_FLT_DECIMAL_DIG FLT_DECIMAL_DIG
+#  define SK_FLT_DECIMAL_DIG FLT_DECIMAL_DIG
 #else
-#define SK_FLT_DECIMAL_DIG 9
+#  define SK_FLT_DECIMAL_DIG 9
 #endif
 
 // IEEE defines how float divide behaves for non-finite values and zero-denoms, but C does not
@@ -234,6 +237,14 @@ static inline float sk_ieee_float_divide_TODO_IS_DIVIDE_BY_ZERO_SAFE_HERE(float 
 }
 static inline float sk_ieee_double_divide_TODO_IS_DIVIDE_BY_ZERO_SAFE_HERE(double n, double d) {
   return sk_ieee_double_divide(n, d);
+}
+
+static inline float sk_fmaf(float f, float m, float a) {
+#if defined(FP_FAST_FMA)
+  return std::fmaf(f, m, a);
+#else
+  return f * m + a;
+#endif
 }
 
 #endif

@@ -24,7 +24,7 @@ class GrMesh {
  public:
   GrMesh(GrPrimitiveType primitiveType = GrPrimitiveType::kTriangles)
       : fPrimitiveType(primitiveType), fBaseVertex(0) {
-    SkDEBUGCODE(fNonIndexNonInstanceData.fVertexCount = -1);
+    SkDEBUGCODE(fNonIndexNonInstanceData.fVertexCount = -1;)
   }
 
   void setPrimitiveType(GrPrimitiveType type) { fPrimitiveType = type; }

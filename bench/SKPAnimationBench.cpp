@@ -11,9 +11,9 @@
 #include "tools/flags/CommandLineFlags.h"
 
 SKPAnimationBench::SKPAnimationBench(
-    const char* name, const SkPicture* pic, const SkIRect& clip, Animation* animation,
+    const char* name, const SkPicture* pic, const SkIRect& clip, sk_sp<Animation> animation,
     bool doLooping)
-    : INHERITED(name, pic, clip, 1.0, false, doLooping), fAnimation(SkRef(animation)) {
+    : INHERITED(name, pic, clip, 1.0, false, doLooping), fAnimation(std::move(animation)) {
   fUniqueName.printf("%s_%s", name, fAnimation->getTag());
 }
 
@@ -23,16 +23,13 @@ void SKPAnimationBench::onPerCanvasPreDraw(SkCanvas* canvas) {
   INHERITED::onPerCanvasPreDraw(canvas);
   fDevBounds = canvas->getDeviceClipBounds();
   SkAssertResult(!fDevBounds.isEmpty());
-  fAnimationTimer.start();
 }
 
 void SKPAnimationBench::drawPicture() {
-  fAnimationTimer.end();
-
   for (int j = 0; j < this->tileRects().count(); ++j) {
     SkMatrix trans =
         SkMatrix::MakeTrans(-1.f * this->tileRects()[j].fLeft, -1.f * this->tileRects()[j].fTop);
-    fAnimation->preConcatFrameMatrix(fAnimationTimer.fWall, fDevBounds, &trans);
+    fAnimation->preConcatFrameMatrix(fAnimationTime.nextRangeF(0, 1000), fDevBounds, &trans);
     this->surfaces()[j]->getCanvas()->drawPicture(this->picture(), &trans, nullptr);
   }
 
@@ -66,7 +63,7 @@ class ZoomAnimation : public SKPAnimationBench::Animation {
   double fZoomPeriodMs;
 };
 
-SKPAnimationBench::Animation* SKPAnimationBench::CreateZoomAnimation(
+sk_sp<SKPAnimationBench::Animation> SKPAnimationBench::MakeZoomAnimation(
     SkScalar zoomMax, double zoomPeriodMs) {
-  return new ZoomAnimation(zoomMax, zoomPeriodMs);
+  return sk_make_sp<ZoomAnimation>(zoomMax, zoomPeriodMs);
 }

@@ -57,11 +57,12 @@ class GrMtlUniformHandler : public GrGLSLUniformHandler {
       const char** outName) override;
 
   SamplerHandle addSampler(
-      const GrTexture*, const GrSamplerState&, const char* name, const GrShaderCaps*) override;
+      const GrTexture*, const GrSamplerState&, const GrSwizzle&, const char* name,
+      const GrShaderCaps*) override;
 
   int numSamplers() const { return fSamplers.count(); }
-  const GrShaderVar& samplerVariable(SamplerHandle handle) const override {
-    return fSamplers[handle.toIndex()].fVariable;
+  const char* samplerVariable(SamplerHandle handle) const override {
+    return fSamplers[handle.toIndex()].fVariable.c_str();
   }
   GrSwizzle samplerSwizzle(SamplerHandle handle) const override {
     return fSamplerSwizzles[handle.toIndex()];

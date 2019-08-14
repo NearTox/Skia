@@ -17,10 +17,13 @@
 #include "src/gpu/mock/GrMockGpu.h"
 #include "src/gpu/text/GrStrikeCache.h"
 #ifdef SK_METAL
-#include "src/gpu/mtl/GrMtlTrampoline.h"
+#  include "src/gpu/mtl/GrMtlTrampoline.h"
 #endif
 #ifdef SK_VULKAN
-#include "src/gpu/vk/GrVkGpu.h"
+#  include "src/gpu/vk/GrVkGpu.h"
+#endif
+#ifdef SK_DAWN
+#  include "dawn/GrDawnGpu.h"
 #endif
 
 #ifdef SK_DISABLE_REDUCE_OPLIST_SPLITTING
@@ -202,6 +205,27 @@ sk_sp<GrContext> GrContext::MakeMetal(void* device, void* queue, const GrContext
   sk_sp<GrContext> context(new GrLegacyDirectContext(GrBackendApi::kMetal, options));
 
   context->fGpu = GrMtlTrampoline::MakeGpu(context.get(), options, device, queue);
+  if (!context->fGpu) {
+    return nullptr;
+  }
+
+  if (!context->init(context->fGpu->refCaps(), nullptr)) {
+    return nullptr;
+  }
+  return context;
+}
+#endif
+
+#ifdef SK_DAWN
+sk_sp<GrContext> GrContext::MakeDawn(const dawn::Device& device) {
+  GrContextOptions defaultOptions;
+  return MakeDawn(device, defaultOptions);
+}
+
+sk_sp<GrContext> GrContext::MakeDawn(const dawn::Device& device, const GrContextOptions& options) {
+  sk_sp<GrContext> context(new GrLegacyDirectContext(GrBackendApi::kDawn, options));
+
+  context->fGpu = GrDawnGpu::Make(device, options, context.get());
   if (!context->fGpu) {
     return nullptr;
   }

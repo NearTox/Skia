@@ -21,7 +21,7 @@
 #if SK_SUPPORT_GPU
 class GrProxyProvider;
 
-#include "include/private/GrResourceKey.h"
+#  include "include/private/GrResourceKey.h"
 #endif
 
 // Because a single save/restore state can have multiple clips, this class

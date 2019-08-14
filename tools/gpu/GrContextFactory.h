@@ -41,6 +41,7 @@ class GrContextFactory : SkNoncopyable {
     kCommandBuffer_ContextType,    //! Chromium command buffer OpenGL ES context.
     kVulkan_ContextType,           //! Vulkan
     kMetal_ContextType,            //! Metal
+    kDawn_ContextType,             //! Dawn
     kMock_ContextType,             //! Mock context that does not draw.
     kLastContextType = kMock_ContextType
   };
@@ -53,10 +54,7 @@ class GrContextFactory : SkNoncopyable {
    */
   enum class ContextOverrides {
     kNone = 0x0,
-    kDisableNVPR = 0x1,
-    kAvoidStencilBuffers = 0x2,
-
-    kRequireNVPRSupport = 0x4,
+    kAvoidStencilBuffers = 0x1,
   };
 
   static bool IsRenderingContext(ContextType type) {
@@ -70,6 +68,7 @@ class GrContextFactory : SkNoncopyable {
     switch (type) {
       case kVulkan_ContextType: return GrBackendApi::kVulkan;
       case kMetal_ContextType: return GrBackendApi::kMetal;
+      case kDawn_ContextType: return GrBackendApi::kDawn;
       case kMock_ContextType: return GrBackendApi::kMock;
       default: return GrBackendApi::kOpenGL;
     }
@@ -87,6 +86,7 @@ class GrContextFactory : SkNoncopyable {
       case kCommandBuffer_ContextType: return "Command Buffer";
       case kVulkan_ContextType: return "Vulkan";
       case kMetal_ContextType: return "Metal";
+      case kDawn_ContextType: return "Dawn";
       case kMock_ContextType: return "Mock";
     }
     SK_ABORT("Unreachable");
@@ -105,8 +105,7 @@ class GrContextFactory : SkNoncopyable {
   /**
    * Get a context initialized with a type of GL context. It also makes the GL context current.
    */
-  ContextInfo getContextInfo(
-      ContextType type, ContextOverrides overrides = ContextOverrides::kNone);
+  ContextInfo getContextInfo(ContextType type, ContextOverrides = ContextOverrides::kNone);
 
   /**
    * Get a context in the same share group as the passed in GrContext, with the same type and

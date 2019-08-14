@@ -107,7 +107,6 @@ class ColorFilterView : public Sample {
   sk_sp<SkShader> fShader;
   enum { N = 64 };
 
- protected:
   void onOnceBeforeDraw() override {
     fBitmap = createBitmap(N);
     fShader = ToolUtils::create_checkerboard_shader(0xFFCCCCCC, 0xFFFFFFFF, 12);
@@ -117,13 +116,7 @@ class ColorFilterView : public Sample {
     }
   }
 
-  bool onQuery(Sample::Event* evt) override {
-    if (Sample::TitleQ(*evt)) {
-      Sample::TitleR(evt, "ColorFilter");
-      return true;
-    }
-    return this->INHERITED::onQuery(evt);
-  }
+  SkString name() override { return SkString("ColorFilter"); }
 
   void onDrawBackground(SkCanvas* canvas) override {
     SkPaint paint;
@@ -164,11 +157,6 @@ class ColorFilterView : public Sample {
       }
     }
   }
-
- private:
-  typedef Sample INHERITED;
 };
-
-//////////////////////////////////////////////////////////////////////////////
 
 DEF_SAMPLE(return new ColorFilterView();)

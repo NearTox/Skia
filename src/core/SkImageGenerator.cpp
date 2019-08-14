@@ -56,7 +56,7 @@ bool SkImageGenerator::getYUVA8Planes(
 }
 
 #if SK_SUPPORT_GPU
-#include "include/private/GrTextureProxy.h"
+#  include "src/gpu/GrTextureProxy.h"
 
 sk_sp<GrTextureProxy> SkImageGenerator::generateTexture(
     GrRecordingContext* ctx, const SkImageInfo& info, const SkIPoint& origin,

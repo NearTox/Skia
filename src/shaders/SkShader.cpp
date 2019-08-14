@@ -23,7 +23,7 @@
 #include "src/shaders/SkShaderBase.h"
 
 #if SK_SUPPORT_GPU
-#include "src/gpu/GrFragmentProcessor.h"
+#  include "src/gpu/GrFragmentProcessor.h"
 #endif
 
 SkShaderBase::SkShaderBase(const SkMatrix* localMatrix)

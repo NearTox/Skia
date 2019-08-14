@@ -13,18 +13,18 @@
 #include <sys/stat.h>
 
 #ifdef SK_BUILD_FOR_UNIX
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #ifdef _WIN32
-#include <direct.h>
-#include <io.h>
-#include <vector>
-#include "src/utils/SkUTF.h"
+#  include <direct.h>
+#  include <io.h>
+#  include <vector>
+#  include "src/utils/SkUTF.h"
 #endif
 
 #ifdef SK_BUILD_FOR_IOS
-#include "src/ports/SkOSFile_ios.h"
+#  include "src/ports/SkOSFile_ios.h"
 #endif
 
 #ifdef _WIN32

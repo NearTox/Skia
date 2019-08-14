@@ -27,7 +27,6 @@
 #include <thread>
 
 class GrVkCommandPool;
-class GrVkCopyPipeline;
 class GrVkGpu;
 class GrVkPipeline;
 class GrVkPipelineState;
@@ -49,9 +48,6 @@ class GrVkResourceProvider {
       const GrStencilSettings& stencil, GrSurfaceOrigin,
       VkPipelineShaderStageCreateInfo* shaderStageInfo, int shaderStageCount,
       GrPrimitiveType primitiveType, VkRenderPass compatibleRenderPass, VkPipelineLayout layout);
-
-  GrVkCopyPipeline* findOrCreateCopyPipeline(
-      const GrVkRenderTarget* dst, VkPipelineShaderStageCreateInfo*, VkPipelineLayout);
 
   GR_DEFINE_RESOURCE_HANDLE_CLASS(CompatibleRPHandle);
 
@@ -180,7 +176,7 @@ class GrVkResourceProvider {
 
  private:
 #ifdef SK_DEBUG
-#define GR_PIPELINE_STATE_CACHE_STATS
+#  define GR_PIPELINE_STATE_CACHE_STATS
 #endif
 
   class PipelineStateCache : public ::SkNoncopyable {
@@ -254,9 +250,6 @@ class GrVkResourceProvider {
 
   // Central cache for creating pipelines
   VkPipelineCache fPipelineCache;
-
-  // Cache of previously created copy pipelines
-  SkTArray<GrVkCopyPipeline*> fCopyPipelines;
 
   SkSTArray<4, CompatibleRenderPassSet> fRenderPassArray;
 

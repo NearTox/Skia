@@ -2,18 +2,38 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="skottie\src\Skottie.cpp" />
+    <ClCompile Include="skottie\utils\SkottieUtils.cpp" />
     <ClCompile Include="skottie\src\SkottieAdapter.cpp" />
     <ClCompile Include="skottie\src\SkottieAnimator.cpp" />
     <ClCompile Include="skottie\src\SkottieJson.cpp" />
-    <ClCompile Include="skottie\src\SkottieLayer.cpp" />
-    <ClCompile Include="skottie\src\SkottieLayerEffect.cpp" />
     <ClCompile Include="skottie\src\SkottieProperty.cpp" />
-    <ClCompile Include="skottie\src\SkottieShapeLayer.cpp" />
+    <ClCompile Include="skottie\src\SkottieValue.cpp" />
+    <ClCompile Include="skottie\src\text\RangeSelector.cpp" />
     <ClCompile Include="skottie\src\text\SkottieShaper.cpp" />
     <ClCompile Include="skottie\src\text\TextAdapter.cpp" />
-    <ClCompile Include="skottie\src\text\TextLayer.cpp" />
+    <ClCompile Include="skottie\src\text\TextAnimator.cpp" />
     <ClCompile Include="skottie\src\text\TextValue.cpp" />
-    <ClCompile Include="skottie\src\SkottiePrecompLayer.cpp" />
-    <ClCompile Include="skottie\src\SkottieValue.cpp" />
+    <ClCompile Include="skottie\src\layers\ImageLayer.cpp" />
+    <ClCompile Include="skottie\src\layers\NullLayer.cpp" />
+    <ClCompile Include="skottie\src\layers\PrecompLayer.cpp" />
+    <ClCompile Include="skottie\src\layers\ShapeLayer.cpp" />
+    <ClCompile Include="skottie\src\layers\SolidLayer.cpp" />
+    <ClCompile Include="skottie\src\layers\TextLayer.cpp" />
+    <ClCompile Include="skottie\src\effects\DropShadowEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\Effects.cpp" />
+    <ClCompile Include="skottie\src\effects\FillEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\GaussianBlurEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\GradientEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\LevelsEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\LinearWipeEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\MotionBlurEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\MotionTileEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\RadialWipeEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\TintEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\TransformEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\TritoneEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\VenetianBlindsEffect.cpp" />
+    <ClCompile Include="skottie\src\Layer.cpp" />
+    <ClCompile Include="skottie\src\Composition.cpp" />
   </ItemGroup>
 </Project>

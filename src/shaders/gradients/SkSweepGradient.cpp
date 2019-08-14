@@ -68,7 +68,7 @@ void SkSweepGradient::appendGradientStages(
 
 #if SK_SUPPORT_GPU
 
-#include "src/gpu/gradients/GrGradientShader.h"
+#  include "src/gpu/gradients/GrGradientShader.h"
 
 std::unique_ptr<GrFragmentProcessor> SkSweepGradient::asFragmentProcessor(
     const GrFPArgs& args) const {

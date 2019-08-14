@@ -40,8 +40,8 @@ class SkStreamMemory;
  */
 class SK_API SkStream {
  public:
-  virtual ~SkStream() {}
-  SkStream() {}
+  virtual ~SkStream() = default;
+  constexpr SkStream() = default;
 
   /**
    *  Attempts to open the specified file as a stream, returns nullptr on failure.

@@ -30,7 +30,7 @@ class SK_API SkImageGenerator {
    *  The PixelRef which takes ownership of this SkImageGenerator
    *  will call the image generator's destructor.
    */
-  virtual ~SkImageGenerator() {}
+  virtual ~SkImageGenerator() = default;
 
   uint32_t uniqueID() const { return fUniqueID; }
 

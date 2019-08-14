@@ -126,8 +126,8 @@ class SK_API SkPathEffect : public SkFlattenable {
   };
 
   struct DashInfo {
-    DashInfo() : fIntervals(nullptr), fCount(0), fPhase(0) {}
-    DashInfo(SkScalar* intervals, int32_t count, SkScalar phase)
+    constexpr DashInfo() noexcept : fIntervals(nullptr), fCount(0), fPhase(0) {}
+    constexpr DashInfo(SkScalar* intervals, int32_t count, SkScalar phase) noexcept
         : fIntervals(intervals), fCount(count), fPhase(phase) {}
 
     SkScalar* fIntervals;  //!< Length of on/off intervals for dashed lines

@@ -355,7 +355,7 @@ class IndexClick : public Sample::Click {
   int fIndex;
 
  public:
-  IndexClick(Sample* v, int index) : Sample::Click(v), fIndex(index) {}
+  IndexClick(int index) : fIndex(index) {}
 
   static int GetIndex(Sample::Click* click) { return ((IndexClick*)click)->fIndex; }
 };
@@ -379,43 +379,38 @@ class DrawLineView : public Sample {
   void setStyle(FatBits::Style s) { fFB.setStyle(s); }
 
  protected:
-  bool onQuery(Sample::Event* evt) override {
-    if (Sample::TitleQ(*evt)) {
-      Sample::TitleR(evt, "FatBits");
-      return true;
+  SkString name() override { return SkString("FatBits"); }
+
+  bool onChar(SkUnichar uni) override {
+    switch (uni) {
+      case 'c': fFB.setUseClip(!fFB.getUseClip()); return true;
+      case 'r': fIsRect = !fIsRect; return true;
+      case 'o': fFB.toggleRectAsOval(); return true;
+      case 'x': fFB.setGrid(!fFB.getGrid()); return true;
+      case 's':
+        if (FatBits::kStroke_Style == fFB.getStyle()) {
+          this->setStyle(FatBits::kHair_Style);
+        } else {
+          this->setStyle(FatBits::kStroke_Style);
+        }
+        return true;
+      case 'k': {
+        const SkPaint::Cap caps[] = {
+            SkPaint::kButt_Cap,
+            SkPaint::kRound_Cap,
+            SkPaint::kSquare_Cap,
+        };
+        fFB.fStrokeCap = caps[(fFB.fStrokeCap + 1) % 3];
+        return true;
+      } break;
+      case 'a': fFB.setAA(!fFB.getAA()); return true;
+      case 'w': fFB.setShowSkeleton(!fFB.getShowSkeleton()); return true;
+      case 'g': fFB.togglePixelColors(); return true;
+      case 't': fFB.setTriangle(!fFB.getTriangle()); return true;
+      case '-': fFB.fStrokeWidth -= 0.125f; return true;
+      case '=': fFB.fStrokeWidth += 0.125f; return true;
     }
-    SkUnichar uni;
-    if (Sample::CharQ(*evt, &uni)) {
-      switch (uni) {
-        case 'c': fFB.setUseClip(!fFB.getUseClip()); return true;
-        case 'r': fIsRect = !fIsRect; return true;
-        case 'o': fFB.toggleRectAsOval(); return true;
-        case 'x': fFB.setGrid(!fFB.getGrid()); return true;
-        case 's':
-          if (FatBits::kStroke_Style == fFB.getStyle()) {
-            this->setStyle(FatBits::kHair_Style);
-          } else {
-            this->setStyle(FatBits::kStroke_Style);
-          }
-          return true;
-        case 'k': {
-          const SkPaint::Cap caps[] = {
-              SkPaint::kButt_Cap,
-              SkPaint::kRound_Cap,
-              SkPaint::kSquare_Cap,
-          };
-          fFB.fStrokeCap = caps[(fFB.fStrokeCap + 1) % 3];
-          return true;
-        } break;
-        case 'a': fFB.setAA(!fFB.getAA()); return true;
-        case 'w': fFB.setShowSkeleton(!fFB.getShowSkeleton()); return true;
-        case 'g': fFB.togglePixelColors(); return true;
-        case 't': fFB.setTriangle(!fFB.getTriangle()); return true;
-        case '-': fFB.fStrokeWidth -= 0.125f; return true;
-        case '=': fFB.fStrokeWidth += 0.125f; return true;
-      }
-    }
-    return this->INHERITED::onQuery(evt);
+    return false;
   }
 
   void onDrawContent(SkCanvas* canvas) override {
@@ -442,7 +437,7 @@ class DrawLineView : public Sample {
     }
   }
 
-  Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, unsigned modi) override {
+  Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, ModifierKey modi) override {
     SkPoint pt = {x, y};
     int index = -1;
     int count = fFB.getTriangle() ? 3 : 2;
@@ -454,7 +449,7 @@ class DrawLineView : public Sample {
         break;
       }
     }
-    return new IndexClick(this, index);
+    return new IndexClick(index);
   }
 
   bool onClick(Click* click) override {

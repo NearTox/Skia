@@ -111,10 +111,10 @@ sk_sp<SkSpecialSurface> SkSpecialSurface::MakeRaster(
 
 #if SK_SUPPORT_GPU
 ///////////////////////////////////////////////////////////////////////////////
-#include "include/gpu/GrBackendSurface.h"
-#include "include/private/GrRecordingContext.h"
-#include "src/gpu/GrRecordingContextPriv.h"
-#include "src/gpu/SkGpuDevice.h"
+#  include "include/gpu/GrBackendSurface.h"
+#  include "include/private/GrRecordingContext.h"
+#  include "src/gpu/GrRecordingContextPriv.h"
+#  include "src/gpu/SkGpuDevice.h"
 
 class SkSpecialSurface_Gpu : public SkSpecialSurface_Base {
  public:
@@ -159,15 +159,14 @@ class SkSpecialSurface_Gpu : public SkSpecialSurface_Base {
 };
 
 sk_sp<SkSpecialSurface> SkSpecialSurface::MakeRenderTarget(
-    GrRecordingContext* context, const GrBackendFormat& format, int width, int height,
-    GrPixelConfig config, sk_sp<SkColorSpace> colorSpace, const SkSurfaceProps* props) {
+    GrRecordingContext* context, int width, int height, GrColorType colorType,
+    sk_sp<SkColorSpace> colorSpace, const SkSurfaceProps* props) {
   if (!context) {
     return nullptr;
   }
-
   sk_sp<GrRenderTargetContext> renderTargetContext(context->priv().makeDeferredRenderTargetContext(
-      format, SkBackingFit::kApprox, width, height, config, std::move(colorSpace), 1,
-      GrMipMapped::kNo, kBottomLeft_GrSurfaceOrigin, props));
+      SkBackingFit::kApprox, width, height, colorType, std::move(colorSpace), 1, GrMipMapped::kNo,
+      kBottomLeft_GrSurfaceOrigin, props));
   if (!renderTargetContext) {
     return nullptr;
   }

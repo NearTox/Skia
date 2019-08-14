@@ -13,21 +13,21 @@
 #include "src/codec/SkCodecPriv.h"
 #include "src/codec/SkFrameHolder.h"
 #ifdef SK_HAS_HEIF_LIBRARY
-#include "src/codec/SkHeifCodec.h"
+#  include "src/codec/SkHeifCodec.h"
 #endif
 #include "src/codec/SkIcoCodec.h"
 #include "src/codec/SkJpegCodec.h"
 #ifdef SK_HAS_PNG_LIBRARY
-#include "src/codec/SkPngCodec.h"
+#  include "src/codec/SkPngCodec.h"
 #endif
 #include "include/core/SkStream.h"
 #include "src/codec/SkRawCodec.h"
 #include "src/codec/SkWbmpCodec.h"
 #include "src/codec/SkWebpCodec.h"
 #ifdef SK_HAS_WUFFS_LIBRARY
-#include "src/codec/SkWuffsCodec.h"
+#  include "src/codec/SkWuffsCodec.h"
 #else
-#include "src/codec/SkGifCodec.h"
+#  include "src/codec/SkGifCodec.h"
 #endif
 
 struct DecoderProc {

@@ -167,13 +167,7 @@ class RegionView : public Sample {
   }
 
  protected:
-  bool onQuery(Sample::Event* evt) override {
-    if (Sample::TitleQ(*evt)) {
-      Sample::TitleR(evt, "Regions");
-      return true;
-    }
-    return this->INHERITED::onQuery(evt);
-  }
+  SkString name() override { return SkString("Regions"); }
 
   static void drawstr(SkCanvas* canvas, const char text[], const SkPoint& loc, bool hilite) {
     SkPaint paint;
@@ -319,12 +313,12 @@ class RegionView : public Sample {
     }
   }
 
-  virtual Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, unsigned modi) override {
-    return fRect.contains(SkScalarRoundToInt(x), SkScalarRoundToInt(y)) ? new Click(this) : nullptr;
+  virtual Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, ModifierKey modi) override {
+    return fRect.contains(SkScalarRoundToInt(x), SkScalarRoundToInt(y)) ? new Click() : nullptr;
   }
 
   bool onClick(Click* click) override {
-    fRect.offset(click->fICurr.fX - click->fIPrev.fX, click->fICurr.fY - click->fIPrev.fY);
+    fRect.offset(click->fCurr.fX - click->fPrev.fX, click->fCurr.fY - click->fPrev.fY);
     return true;
   }
 

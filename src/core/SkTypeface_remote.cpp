@@ -44,9 +44,9 @@ void SkScalerContextProxy::generateMetrics(SkGlyph* glyph) {
   // fallback before failing.
   if (fCache && fCache->belongsToCache(glyph)) {
     // First check the original cache, in case there is a sub-pixel pos mismatch.
-    if (const auto* fallback =
+    if (const SkGlyph* from =
             fCache->getCachedGlyphAnySubPix(glyph->getGlyphID(), glyph->getPackedID())) {
-      fCache->initializeGlyphFromFallback(glyph, *fallback);
+      fCache->mergeGlyphAndImage(glyph->getPackedID(), *from);
       fDiscardableManager->notifyCacheMiss(SkStrikeClient::CacheMissType::kGlyphMetricsFallback);
       return;
     }

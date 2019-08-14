@@ -5,12 +5,13 @@
  * found in the LICENSE file.
  */
 
+#include "src/gpu/glsl/GrGLSLShaderBuilder.h"
+
 #include "src/gpu/GrShaderCaps.h"
 #include "src/gpu/GrShaderVar.h"
 #include "src/gpu/GrSwizzle.h"
 #include "src/gpu/glsl/GrGLSLColorSpaceXformHelper.h"
 #include "src/gpu/glsl/GrGLSLProgramBuilder.h"
-#include "src/gpu/glsl/GrGLSLShaderBuilder.h"
 
 GrGLSLShaderBuilder::GrGLSLShaderBuilder(GrGLSLProgramBuilder* program)
     : fProgramBuilder(program),
@@ -64,8 +65,8 @@ static inline void append_texture_swizzle(SkString* out, GrSwizzle swizzle) {
 
 void GrGLSLShaderBuilder::appendTextureLookup(
     SkString* out, SamplerHandle samplerHandle, const char* coordName, GrSLType varyingType) const {
-  const GrShaderVar& sampler = fProgramBuilder->samplerVariable(samplerHandle);
-  out->appendf("texture(%s, %s)", sampler.c_str(), coordName);
+  const char* sampler = fProgramBuilder->samplerVariable(samplerHandle);
+  out->appendf("texture(%s, %s)", sampler, coordName);
   append_texture_swizzle(out, fProgramBuilder->samplerSwizzle(samplerHandle));
 }
 
@@ -149,7 +150,7 @@ void GrGLSLShaderBuilder::appendColorGamutXform(
     const GrShaderVar gColorXformArgs[] = {GrShaderVar("color", kHalf4_GrSLType)};
     SkString body;
     if (colorXformHelper->applyUnpremul()) {
-      body.append("half nonZeroAlpha = max(color.a, 0.00001);");
+      body.append("half nonZeroAlpha = max(color.a, 0.0001);");
       body.append("color = half4(color.rgb / nonZeroAlpha, nonZeroAlpha);");
     }
     if (colorXformHelper->applySrcTF()) {
@@ -229,7 +230,6 @@ void GrGLSLShaderBuilder::compileAndAppendLayoutQualifiers() {
 
 void GrGLSLShaderBuilder::finalize(uint32_t visibility) {
   SkASSERT(!fFinalized);
-  this->versionDecl() = fProgramBuilder->shaderCaps()->versionDeclString();
   this->compileAndAppendLayoutQualifiers();
   SkASSERT(visibility);
   fProgramBuilder->appendUniformDecls((GrShaderFlags)visibility, &this->uniforms());

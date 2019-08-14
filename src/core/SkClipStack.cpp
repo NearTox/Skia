@@ -14,7 +14,7 @@
 #include <new>
 
 #if SK_SUPPORT_GPU
-#include "src/gpu/GrProxyProvider.h"
+#  include "src/gpu/GrProxyProvider.h"
 #endif
 
 SkClipStack::Element::Element(const Element& that) {
@@ -219,7 +219,7 @@ void SkClipStack::Element::setEmpty() {
   fDeviceSpaceRRect.setEmpty();
   fDeviceSpacePath.reset();
   fGenID = kEmptyGenID;
-  SkDEBUGCODE(this->checkEmpty());
+  SkDEBUGCODE(this->checkEmpty();)
 }
 
 void SkClipStack::Element::checkEmpty() const {
@@ -719,7 +719,7 @@ void SkClipStack::pushElement(const Element& element) {
   if (prior) {
     if (prior->canBeIntersectedInPlace(fSaveCount, element.getOp())) {
       switch (prior->fDeviceSpaceType) {
-        case Element::DeviceSpaceType::kEmpty: SkDEBUGCODE(prior->checkEmpty()); return;
+        case Element::DeviceSpaceType::kEmpty: SkDEBUGCODE(prior->checkEmpty();) return;
         case Element::DeviceSpaceType::kRect:
           if (Element::DeviceSpaceType::kRect == element.getDeviceSpaceType()) {
             if (prior->rectRectIntersectAllowed(element.getDeviceSpaceRect(), element.isAA())) {

@@ -12,7 +12,7 @@
 #include "src/pathops/SkOpSegment.h"
 
 #ifdef SK_DEBUG
-#include "src/pathops/SkPathOpsPoint.h"
+#  include "src/pathops/SkPathOpsPoint.h"
 #endif
 
 class SkIntersectionHelper {

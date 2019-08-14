@@ -64,16 +64,6 @@ SkShaderBase::Context* SkLinearGradient::onMakeContext(
              ? CheckedMakeContext<LinearGradient4fContext>(alloc, *this, rec)
              : nullptr;
 }
-
-SkShaderBase::Context* SkLinearGradient::onMakeBurstPipelineContext(
-    const ContextRec& rec, SkArenaAlloc* alloc) const {
-  if (fTileMode == SkTileMode::kDecal) {
-    // we only support decal w/ stages
-    return nullptr;
-  }
-  // Raster pipeline has a 2-stop specialization faster than our burst.
-  return fColorCount > 2 ? CheckedMakeContext<LinearGradient4fContext>(alloc, *this, rec) : nullptr;
-}
 #endif
 
 void SkLinearGradient::appendGradientStages(
@@ -94,7 +84,7 @@ SkShader::GradientType SkLinearGradient::asAGradient(GradientInfo* info) const {
 
 #if SK_SUPPORT_GPU
 
-#include "src/gpu/gradients/GrGradientShader.h"
+#  include "src/gpu/gradients/GrGradientShader.h"
 
 std::unique_ptr<GrFragmentProcessor> SkLinearGradient::asFragmentProcessor(
     const GrFPArgs& args) const {

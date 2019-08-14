@@ -76,12 +76,11 @@ void GrTextureDomain::GLDomain::sampleTexture(
     const SkString& inCoords, GrGLSLFragmentProcessor::SamplerHandle sampler,
     const char* inModulateColor) {
   SkASSERT(!fHasMode || (textureDomain.modeX() == fModeX && textureDomain.modeY() == fModeY));
-  SkDEBUGCODE(fModeX = textureDomain.modeX());
-  SkDEBUGCODE(fModeY = textureDomain.modeY());
-  SkDEBUGCODE(fHasMode = true);
+  SkDEBUGCODE(fModeX = textureDomain.modeX();) SkDEBUGCODE(fModeY = textureDomain.modeY();)
+      SkDEBUGCODE(fHasMode = true;)
 
-  if ((textureDomain.modeX() != kIgnore_Mode || textureDomain.modeY() != kIgnore_Mode) &&
-      !fDomainUni.isValid()) {
+          if ((textureDomain.modeX() != kIgnore_Mode || textureDomain.modeY() != kIgnore_Mode) &&
+              !fDomainUni.isValid()) {
     // Must include the domain uniform since at least one axis uses it
     const char* name;
     SkString uniName("TexDom");

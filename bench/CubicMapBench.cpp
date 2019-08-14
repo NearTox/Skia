@@ -19,9 +19,11 @@ class CubicMapBench : public Benchmark {
   const char* onGetName() override { return fName.c_str(); }
 
   void onDraw(int loops, SkCanvas*) override {
-    for (int i = 0; i < loops * 100; ++i) {
-      for (SkScalar x = 0; x <= 1; x += 1.0f / 512) {
-        fCMap.computeYFromX(x);
+    for (int outer = 0; outer < 100; ++outer) {
+      for (int i = 0; i < loops; ++i) {
+        for (SkScalar x = 0; x <= 1; x += 1.0f / 512) {
+          fCMap.computeYFromX(x);
+        }
       }
     }
   }

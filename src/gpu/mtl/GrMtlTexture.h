@@ -16,7 +16,7 @@ class GrMtlGpu;
 
 class GrMtlTexture : public GrTexture {
  public:
-  static sk_sp<GrMtlTexture> CreateNewTexture(
+  static sk_sp<GrMtlTexture> MakeNewTexture(
       GrMtlGpu*, SkBudgeted budgeted, const GrSurfaceDesc&, MTLTextureDescriptor*, GrMipMapsStatus);
 
   static sk_sp<GrMtlTexture> MakeWrappedTexture(

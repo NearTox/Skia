@@ -11,12 +11,12 @@
 // External embedders of Skia can override this to use their own list
 // of workaround names.
 #ifdef SK_GPU_WORKAROUNDS_HEADER
-#include SK_GPU_WORKAROUNDS_HEADER
+#  include SK_GPU_WORKAROUNDS_HEADER
 #else
 // To regenerate this file, set gn arg "skia_generate_workarounds = true".
 // This is not rebuilt by default to avoid embedders having to have extra
 // build steps.
-#include "include/gpu/GrDriverBugWorkaroundsAutogen.h"
+#  include "include/gpu/GrDriverBugWorkaroundsAutogen.h"
 #endif
 
 #include "include/core/SkTypes.h"

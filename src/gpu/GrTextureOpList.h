@@ -9,8 +9,8 @@
 #define GrTexureOpList_DEFINED
 
 #include "include/gpu/GrGpuResource.h"
-#include "include/private/GrOpList.h"
-#include "include/private/GrSurfaceProxy.h"
+#include "src/gpu/GrOpList.h"
+#include "src/gpu/GrSurfaceProxy.h"
 
 #include "include/private/SkTArray.h"
 
@@ -54,10 +54,9 @@ class GrTextureOpList final : public GrOpList {
 
   GrTextureOpList* asTextureOpList() override { return this; }
 
-  SkDEBUGCODE(void dump(bool printDependencies) const override);
+  SkDEBUGCODE(void dump(bool printDependencies) const override;)
 
- private:
-  bool onIsUsed(GrSurfaceProxy*) const override;
+      private : bool onIsUsed(GrSurfaceProxy*) const override;
 
   void deleteOp(int index);
   void deleteOps();

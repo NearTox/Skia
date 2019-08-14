@@ -13,8 +13,9 @@
 #include "src/core/SkPaintPriv.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkSafeMath.h"
+#include "src/core/SkStrikeCache.h"
+#include "src/core/SkStrikeSpec.h"
 #include "src/core/SkTextBlobPriv.h"
-#include "src/core/SkTextToPathIter.h"
 #include "src/core/SkWriteBuffer.h"
 
 #include <atomic>
@@ -22,7 +23,7 @@
 #include <new>
 
 #if SK_SUPPORT_GPU
-#include "src/gpu/text/GrTextBlobCache.h"
+#  include "src/gpu/text/GrTextBlobCache.h"
 #endif
 
 namespace {
@@ -73,7 +74,7 @@ struct RunRecordStorageEquivalent {
   SkPoint fOffset;
   uint32_t fCount;
   uint32_t fFlags;
-  SkDEBUGCODE(unsigned fMagic);
+  SkDEBUGCODE(unsigned fMagic;)
 };
 }  // namespace
 
@@ -130,7 +131,7 @@ void SkTextBlob::RunRecord::grow(uint32_t count) {
   memmove(posBuffer(), initialPosBuffer, copySize);
 }
 
-static int32_t next_id() {
+static int32_t next_id() noexcept {
   static std::atomic<int32_t> nextID{1};
   int32_t id;
   do {
@@ -152,8 +153,7 @@ SkTextBlob::~SkTextBlob() {
   const auto* run = RunRecord::First(this);
   do {
     const auto* nextRun = RunRecord::Next(run);
-    SkDEBUGCODE(run->validate((uint8_t*)this + fStorageSize));
-    run->~RunRecord();
+    SkDEBUGCODE(run->validate((uint8_t*)this + fStorageSize);) run->~RunRecord();
     run = nextRun;
   } while (run);
 }
@@ -202,15 +202,15 @@ void* SkTextBlob::operator new(size_t, void* p) { return p; }
 
 SkTextBlobRunIterator::SkTextBlobRunIterator(const SkTextBlob* blob)
     : fCurrentRun(SkTextBlob::RunRecord::First(blob)) {
-  SkDEBUGCODE(fStorageTop = (uint8_t*)blob + blob->fStorageSize);
+  SkDEBUGCODE(fStorageTop = (uint8_t*)blob + blob->fStorageSize;)
 }
 
 void SkTextBlobRunIterator::next() {
   SkASSERT(!this->done());
 
   if (!this->done()) {
-    SkDEBUGCODE(fCurrentRun->validate(fStorageTop));
-    fCurrentRun = SkTextBlob::RunRecord::Next(fCurrentRun);
+    SkDEBUGCODE(fCurrentRun->validate(fStorageTop);) fCurrentRun =
+        SkTextBlob::RunRecord::Next(fCurrentRun);
   }
 }
 
@@ -569,88 +569,25 @@ sk_sp<SkTextBlob> SkTextBlobBuilder::make() {
   lastRun->fFlags |= SkTextBlob::RunRecord::kLast_Flag;
 
   SkTextBlob* blob = new (fStorage.release()) SkTextBlob(fBounds);
-  SkDEBUGCODE(const_cast<SkTextBlob*>(blob)->fStorageSize = fStorageSize);
+  SkDEBUGCODE(const_cast<SkTextBlob*>(blob)->fStorageSize = fStorageSize;)
 
-  SkDEBUGCODE(SkSafeMath safe; size_t validateSize = SkAlignPtr(sizeof(SkTextBlob));
-              for (const auto* run = SkTextBlob::RunRecord::First(blob); run;
-                   run = SkTextBlob::RunRecord::Next(run)) {
-                validateSize += SkTextBlob::RunRecord::StorageSize(
-                    run->fCount, run->textSize(), run->positioning(), &safe);
-                run->validate(reinterpret_cast<const uint8_t*>(blob) + fStorageUsed);
-                fRunCount--;
-              } SkASSERT(validateSize == fStorageUsed);
-              SkASSERT(fRunCount == 0); SkASSERT(safe));
+      SkDEBUGCODE(SkSafeMath safe; size_t validateSize = SkAlignPtr(sizeof(SkTextBlob));
+                  for (const auto* run = SkTextBlob::RunRecord::First(blob); run;
+                       run = SkTextBlob::RunRecord::Next(run)) {
+                    validateSize += SkTextBlob::RunRecord::StorageSize(
+                        run->fCount, run->textSize(), run->positioning(), &safe);
+                    run->validate(reinterpret_cast<const uint8_t*>(blob) + fStorageUsed);
+                    fRunCount--;
+                  } SkASSERT(validateSize == fStorageUsed);
+                  SkASSERT(fRunCount == 0); SkASSERT(safe);)
 
-  fStorageUsed = 0;
+          fStorageUsed = 0;
   fStorageSize = 0;
   fRunCount = 0;
   fLastRun = 0;
   fBounds.setEmpty();
 
   return sk_sp<SkTextBlob>(blob);
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-template <SkTextInterceptsIter::TextType TextType, typename Func>
-int GetTextIntercepts(
-    const SkFont& font, const SkPaint* paint, const SkGlyphID glyphs[], int glyphCount,
-    const SkScalar bounds[2], SkScalar* array, Func posMaker) {
-  SkASSERT(glyphCount == 0 || glyphs != nullptr);
-
-  const SkPoint pos0 = posMaker(0);
-  SkTextInterceptsIter iter(glyphs, glyphCount, font, paint, bounds, pos0.x(), pos0.y(), TextType);
-
-  int i = 0;
-  int count = 0;
-  while (iter.next(array, &count)) {
-    if (TextType == SkTextInterceptsIter::TextType::kPosText) {
-      const SkPoint pos = posMaker(++i);
-      iter.setPosition(pos.x(), pos.y());
-    }
-  }
-
-  return count;
-}
-
-int SkTextBlob::getIntercepts(
-    const SkScalar bounds[2], SkScalar intervals[], const SkPaint* paint) const {
-  int count = 0;
-  SkTextBlobRunIterator it(this);
-
-  while (!it.done()) {
-    SkScalar* runIntervals = intervals ? intervals + count : nullptr;
-    const SkFont& font = it.font();
-    const SkGlyphID* glyphs = it.glyphs();
-    const int glyphCount = it.glyphCount();
-
-    switch (it.positioning()) {
-      case SkTextBlobRunIterator::kDefault_Positioning: {
-        SkPoint loc = it.offset();
-        count += GetTextIntercepts<SkTextInterceptsIter::TextType::kText>(
-            font, paint, glyphs, glyphCount, bounds, runIntervals, [loc](int) { return loc; });
-      } break;
-      case SkTextBlobRunIterator::kHorizontal_Positioning: {
-        const SkScalar* xpos = it.pos();
-        const SkScalar constY = it.offset().fY;
-        count += GetTextIntercepts<SkTextInterceptsIter::TextType::kPosText>(
-            font, paint, glyphs, glyphCount, bounds, runIntervals,
-            [xpos, constY](int i) { return SkPoint::Make(xpos[i], constY); });
-      } break;
-      case SkTextBlobRunIterator::kFull_Positioning: {
-        const SkPoint* pos = reinterpret_cast<const SkPoint*>(it.pos());
-        count += GetTextIntercepts<SkTextInterceptsIter::TextType::kPosText>(
-            font, paint, glyphs, glyphCount, bounds, runIntervals, [pos](int i) { return pos[i]; });
-      } break;
-      case SkTextBlobRunIterator::kRSXform_Positioning:
-        // Unimplemented for now -- can/should we try to make this work?
-        break;
-    }
-
-    it.next();
-  }
-
-  return count;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -853,73 +790,78 @@ size_t SkTextBlob::serialize(const SkSerialProcs& procs, void* memory, size_t me
   return buffer.usingInitialStorage() ? buffer.bytesWritten() : 0u;
 }
 
-///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
-// xyIndex is 0 for fAdvanceX or 1 for fAdvanceY
-static SkScalar advance(const SkGlyph& glyph) { return SkFloatToScalar(glyph.fAdvanceX); }
+namespace {
+int get_glyph_run_intercepts(
+    const SkGlyphRun& glyphRun, const SkPaint& paint, const SkScalar bounds[2],
+    SkScalar intervals[], int* intervalCount) {
+  SkScalar scale = SK_Scalar1;
+  SkPaint interceptPaint{paint};
+  SkFont interceptFont{glyphRun.font()};
 
-static bool has_thick_frame(const SkPaint& paint) {
-  return paint.getStrokeWidth() > 0 && paint.getStyle() != SkPaint::kFill_Style;
-}
+  interceptPaint.setMaskFilter(nullptr);  // don't want this affecting our path-cache lookup
 
-SkTextBaseIter::SkTextBaseIter(
-    const SkGlyphID glyphs[], int count, const SkFont& font, const SkPaint* paint)
-    : fFont(font) {
-  SkAssertResult(count >= 0);
-
-  if (paint) {
-    fPaint = *paint;
-  }
-  fPaint.setMaskFilter(nullptr);  // don't want this affecting our path-cache lookup
-
-  // can't use our canonical size if we need to apply patheffects
-  if (fPaint.getPathEffect() == nullptr) {
+  // can't use our canonical size if we need to apply path effects
+  if (interceptPaint.getPathEffect() == nullptr) {
     // If the wrong size is going to be used, don't hint anything.
-    fFont.setHinting(SkFontHinting::kNone);
-    fFont.setSubpixel(true);
-    fScale = fFont.getSize() / SkFontPriv::kCanonicalTextSizeForPaths;
-    fFont.setSize(SkIntToScalar(SkFontPriv::kCanonicalTextSizeForPaths));
+    interceptFont.setHinting(SkFontHinting::kNone);
+    interceptFont.setSubpixel(true);
+    scale = interceptFont.getSize() / SkFontPriv::kCanonicalTextSizeForPaths;
+    interceptFont.setSize(SkIntToScalar(SkFontPriv::kCanonicalTextSizeForPaths));
     // Note: fScale can be zero here (even if it wasn't before the divide). It can also
     // be very very small. We call sk_ieee_float_divide below to ensure IEEE divide behavior,
     // since downstream we will check for the resulting coordinates being non-finite anyway.
     // Thus we don't need to check for zero here.
-    if (has_thick_frame(fPaint)) {
-      fPaint.setStrokeWidth(sk_ieee_float_divide(fPaint.getStrokeWidth(), fScale));
+    if (interceptPaint.getStrokeWidth() > 0 && interceptPaint.getStyle() != SkPaint::kFill_Style) {
+      interceptPaint.setStrokeWidth(sk_ieee_float_divide(interceptPaint.getStrokeWidth(), scale));
     }
-  } else {
-    fScale = SK_Scalar1;
   }
 
-  SkPaint::Style prevStyle = fPaint.getStyle();
-  auto prevPE = fPaint.refPathEffect();
-  auto prevMF = fPaint.refMaskFilter();
-  fPaint.setStyle(SkPaint::kFill_Style);
-  fPaint.setPathEffect(nullptr);
+  interceptPaint.setStyle(SkPaint::kFill_Style);
+  interceptPaint.setPathEffect(nullptr);
 
-  fCache = SkStrikeCache::FindOrCreateStrikeWithNoDeviceExclusive(fFont, fPaint);
-
-  fPaint.setStyle(prevStyle);
-  fPaint.setPathEffect(std::move(prevPE));
-  fPaint.setMaskFilter(std::move(prevMF));
-
-  // now compute fXOffset if needed
+  SkStrikeSpec strikeSpec = SkStrikeSpec::MakeWithNoDevice(interceptFont, &interceptPaint);
+  auto cache = strikeSpec.findOrCreateExclusiveStrike();
 
   SkScalar xOffset = 0;
-  fXPos = xOffset;
-  fPrevAdvance = 0;
+  SkScalar xPos = xOffset;
+  SkScalar prevAdvance = 0;
 
-  fGlyphs = glyphs;
-  fStop = glyphs + count;
-}
+  // The typeface is scaled, so un-scale the bounds to be in the space of the typeface.
+  SkScalar scaledBounds[2] = {bounds[0] / scale, bounds[1] / scale};
 
-bool SkTextInterceptsIter::next(SkScalar* array, int* count) {
-  SkASSERT(fGlyphs < fStop);
-  const SkGlyph& glyph = fCache->getGlyphIDMetrics(*fGlyphs++);
-  fXPos += fPrevAdvance * fScale;
-  fPrevAdvance = advance(glyph);  // + fPaint.getTextTracking();
-  if (fCache->findPath(glyph)) {
-    fCache->findIntercepts(
-        fBounds, fScale, fXPos, false, const_cast<SkGlyph*>(&glyph), array, count);
+  const SkPoint* posCursor = glyphRun.positions().begin();
+  for (auto glyphID : glyphRun.glyphsIDs()) {
+    SkPoint pos = *posCursor++;
+
+    SkGlyph* glyph = cache->glyph(glyphID);
+    xPos += prevAdvance * scale;
+    prevAdvance = glyph->advanceX();
+    if (cache->preparePath(glyph) != nullptr) {
+      cache->findIntercepts(scaledBounds, scale, pos.x(), glyph, intervals, intervalCount);
+    }
   }
-  return fGlyphs < fStop;
+  return *intervalCount;
+}
+}  // namespace
+
+int SkTextBlob::getIntercepts(
+    const SkScalar bounds[2], SkScalar intervals[], const SkPaint* paint) const {
+  SkTLazy<SkPaint> defaultPaint;
+  if (paint == nullptr) {
+    defaultPaint.init();
+    paint = defaultPaint.get();
+  }
+
+  SkGlyphRunBuilder builder;
+  builder.textBlobToGlyphRunListIgnoringRSXForm(*paint, *this, SkPoint{0, 0});
+  auto glyphRunList = builder.useGlyphRunList();
+
+  int intervalCount = 0;
+  for (const SkGlyphRun& glyphRun : glyphRunList) {
+    intervalCount = get_glyph_run_intercepts(glyphRun, *paint, bounds, intervals, &intervalCount);
+  }
+
+  return intervalCount;
 }

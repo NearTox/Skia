@@ -431,9 +431,16 @@ bool GrGLInterface::validate() const {
   }
 
   if ((GR_IS_GR_GL(fStandard) && ((glVer >= GR_GL_VER(4, 1)))) ||
+      (GR_IS_GR_GL_ES(fStandard) &&
+       ((glVer >= GR_GL_VER(3, 0)) || fExtensions.has("GL_OES_get_program_binary")))) {
+    if (!fFunctions.fGetProgramBinary || !fFunctions.fProgramBinary) {
+      RETURN_FALSE_INTERFACE;
+    }
+  }
+
+  if ((GR_IS_GR_GL(fStandard) && ((glVer >= GR_GL_VER(4, 1)))) ||
       (GR_IS_GR_GL_ES(fStandard) && ((glVer >= GR_GL_VER(3, 0))))) {
-    if (!fFunctions.fGetProgramBinary || !fFunctions.fProgramBinary ||
-        !fFunctions.fProgramParameteri) {
+    if (!fFunctions.fProgramParameteri) {
       RETURN_FALSE_INTERFACE;
     }
   }

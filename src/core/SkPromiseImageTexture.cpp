@@ -35,7 +35,7 @@ void SkPromiseImageTexture::addKeyToInvalidate(uint32_t contextID, const GrUniqu
   fMessages.emplace_back(key, contextID);
 }
 
-#if GR_TEST_UTILS
+#  if GR_TEST_UTILS
 SkTArray<GrUniqueKey> SkPromiseImageTexture::testingOnly_uniqueKeysToInvalidate() const {
   SkTArray<GrUniqueKey> results;
   for (const auto& msg : fMessages) {
@@ -43,6 +43,6 @@ SkTArray<GrUniqueKey> SkPromiseImageTexture::testingOnly_uniqueKeysToInvalidate(
   }
   return results;
 }
-#endif
+#  endif
 
 #endif

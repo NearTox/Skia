@@ -216,6 +216,7 @@ class GrGLSLSkSLFP : public GrGLSLFragmentProcessor {
           }
           break;
         }
+        case SkSL::Layout::CType::kSkPMColor4f:
         case SkSL::Layout::CType::kSkRect: {
           offset = SkAlign4(offset);
           float f1 = *(float*)(inputs + offset);
@@ -319,14 +320,14 @@ GrSkSLFP::GrSkSLFP(const GrSkSLFP& other)
 const char* GrSkSLFP::name() const { return fName; }
 
 void GrSkSLFP::createFactory() const {
+  if (!fFactory) {
+    fFactory = fFactoryCache->get(fIndex);
     if (!fFactory) {
-      fFactory = fFactoryCache->get(fIndex);
-      if (!fFactory) {
-        fFactory =
-            sk_sp<GrSkSLFPFactory>(new GrSkSLFPFactory(fName, fShaderCaps.get(), fSkSL, fKind));
-        fFactoryCache->set(fIndex, fFactory);
-      }
+      fFactory =
+          sk_sp<GrSkSLFPFactory>(new GrSkSLFPFactory(fName, fShaderCaps.get(), fSkSL, fKind));
+      fFactoryCache->set(fIndex, fFactory);
     }
+  }
 }
 
 void GrSkSLFP::addChild(std::unique_ptr<GrFragmentProcessor> child) {
@@ -387,7 +388,8 @@ void GrSkSLFP::onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBui
         offset += sizeof(float);
         break;
       }
-      case SkSL::Layout::CType::kSkPMColor:  // fall through
+      case SkSL::Layout::CType::kSkPMColor:
+      case SkSL::Layout::CType::kSkPMColor4f:
       case SkSL::Layout::CType::kSkRect:
         if (v->fModifiers.fLayout.fKey) {
           for (size_t i = 0; i < sizeof(float) * 4; ++i) {
@@ -462,9 +464,9 @@ GR_DEFINE_FRAGMENT_PROCESSOR_TEST(GrSkSLFP);
 
 #if GR_TEST_UTILS
 
-#include "include/effects/SkArithmeticImageFilter.h"
-#include "include/gpu/GrContext.h"
-#include "src/gpu/effects/generated/GrConstColorProcessor.h"
+#  include "include/effects/SkArithmeticImageFilter.h"
+#  include "include/gpu/GrContext.h"
+#  include "src/gpu/effects/generated/GrConstColorProcessor.h"
 
 extern const char* SKSL_ARITHMETIC_SRC;
 extern const char* SKSL_DITHER_SRC;

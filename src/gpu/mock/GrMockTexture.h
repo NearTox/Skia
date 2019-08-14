@@ -11,22 +11,24 @@
 #include "include/gpu/GrTexture.h"
 #include "include/gpu/mock/GrMockTypes.h"
 #include "src/gpu/GrRenderTargetPriv.h"
+#include "src/gpu/GrStencilAttachment.h"
 #include "src/gpu/GrTexturePriv.h"
 #include "src/gpu/mock/GrMockGpu.h"
 
 class GrMockTexture : public GrTexture {
  public:
   GrMockTexture(
-      GrMockGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc, GrMipMapsStatus mipMapsStatus,
-      const GrMockTextureInfo& info)
-      : GrMockTexture(gpu, desc, mipMapsStatus, info) {
+      GrMockGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc, GrProtected isProtected,
+      GrMipMapsStatus mipMapsStatus, const GrMockTextureInfo& info)
+      : GrMockTexture(gpu, desc, isProtected, mipMapsStatus, info) {
     this->registerWithCache(budgeted);
   }
 
   GrMockTexture(
-      GrMockGpu* gpu, const GrSurfaceDesc& desc, GrMipMapsStatus mipMapsStatus,
-      const GrMockTextureInfo& info, GrWrapCacheable cacheable, GrIOType ioType)
-      : GrMockTexture(gpu, desc, mipMapsStatus, info) {
+      GrMockGpu* gpu, const GrSurfaceDesc& desc, GrProtected isProtected,
+      GrMipMapsStatus mipMapsStatus, const GrMockTextureInfo& info, GrWrapCacheable cacheable,
+      GrIOType ioType)
+      : GrMockTexture(gpu, desc, isProtected, mipMapsStatus, info) {
     if (ioType == kRead_GrIOType) {
       this->setReadOnly();
     }
@@ -39,19 +41,17 @@ class GrMockTexture : public GrTexture {
     return GrBackendTexture(this->width(), this->height(), this->texturePriv().mipMapped(), fInfo);
   }
 
-  GrBackendFormat backendFormat() const override {
-    return GrBackendFormat::MakeMock(fInfo.fConfig);
-  }
+  GrBackendFormat backendFormat() const override { return fInfo.getBackendFormat(); }
 
   void textureParamsModified() override {}
 
  protected:
   // constructor for subclasses
   GrMockTexture(
-      GrMockGpu* gpu, const GrSurfaceDesc& desc, GrMipMapsStatus mipMapsStatus,
-      const GrMockTextureInfo& info)
-      : GrSurface(gpu, desc),
-        INHERITED(gpu, desc, GrTextureType::k2D, mipMapsStatus),
+      GrMockGpu* gpu, const GrSurfaceDesc& desc, GrProtected isProtected,
+      GrMipMapsStatus mipMapsStatus, const GrMockTextureInfo& info)
+      : GrSurface(gpu, desc, isProtected),
+        INHERITED(gpu, desc, isProtected, GrTextureType::k2D, mipMapsStatus),
         fInfo(info) {}
 
   void onRelease() override { INHERITED::onRelease(); }
@@ -71,16 +71,21 @@ class GrMockTexture : public GrTexture {
 class GrMockRenderTarget : public GrRenderTarget {
  public:
   GrMockRenderTarget(
-      GrMockGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc,
-      const GrMockRenderTargetInfo& info)
-      : GrSurface(gpu, desc), INHERITED(gpu, desc), fInfo(info) {
+      GrMockGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc, int sampleCnt,
+      GrProtected isProtected, const GrMockRenderTargetInfo& info)
+      : GrSurface(gpu, desc, isProtected),
+        INHERITED(gpu, desc, sampleCnt, isProtected),
+        fInfo(info) {
     this->registerWithCache(budgeted);
   }
 
   enum Wrapped { kWrapped };
   GrMockRenderTarget(
-      GrMockGpu* gpu, Wrapped, const GrSurfaceDesc& desc, const GrMockRenderTargetInfo& info)
-      : GrSurface(gpu, desc), INHERITED(gpu, desc), fInfo(info) {
+      GrMockGpu* gpu, Wrapped, const GrSurfaceDesc& desc, int sampleCnt, GrProtected isProtected,
+      const GrMockRenderTargetInfo& info)
+      : GrSurface(gpu, desc, isProtected),
+        INHERITED(gpu, desc, sampleCnt, isProtected),
+        fInfo(info) {
     this->registerWithCacheWrapped(GrWrapCacheable::kNo);
   }
 
@@ -89,7 +94,7 @@ class GrMockRenderTarget : public GrRenderTarget {
   bool completeStencilAttachment() override { return true; }
 
   size_t onGpuMemorySize() const override {
-    int numColorSamples = this->numColorSamples();
+    int numColorSamples = this->numSamples();
     if (numColorSamples > 1) {
       // Add one to account for the resolve buffer.
       ++numColorSamples;
@@ -103,17 +108,19 @@ class GrMockRenderTarget : public GrRenderTarget {
     if (GrStencilAttachment* stencil = this->renderTargetPriv().getStencilAttachment()) {
       numStencilBits = stencil->bits();
     }
-    return {this->width(), this->height(), this->numColorSamples(), numStencilBits, fInfo};
+    return {this->width(), this->height(), this->numSamples(), numStencilBits, fInfo};
   }
 
-  GrBackendFormat backendFormat() const override {
-    return GrBackendFormat::MakeMock(fInfo.fConfig);
-  }
+  GrBackendFormat backendFormat() const override { return fInfo.getBackendFormat(); }
 
  protected:
   // constructor for subclasses
-  GrMockRenderTarget(GrMockGpu* gpu, const GrSurfaceDesc& desc, const GrMockRenderTargetInfo& info)
-      : GrSurface(gpu, desc), INHERITED(gpu, desc), fInfo(info) {}
+  GrMockRenderTarget(
+      GrMockGpu* gpu, const GrSurfaceDesc& desc, int sampleCnt, GrProtected isProtected,
+      const GrMockRenderTargetInfo& info)
+      : GrSurface(gpu, desc, isProtected),
+        INHERITED(gpu, desc, sampleCnt, isProtected),
+        fInfo(info) {}
 
  private:
   GrMockRenderTargetInfo fInfo;
@@ -125,22 +132,23 @@ class GrMockTextureRenderTarget : public GrMockTexture, public GrMockRenderTarge
  public:
   // Internally created.
   GrMockTextureRenderTarget(
-      GrMockGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc, GrMipMapsStatus mipMapsStatus,
-      const GrMockTextureInfo& texInfo, const GrMockRenderTargetInfo& rtInfo)
-      : GrSurface(gpu, desc),
-        GrMockTexture(gpu, desc, mipMapsStatus, texInfo),
-        GrMockRenderTarget(gpu, desc, rtInfo) {
+      GrMockGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc, int sampleCnt,
+      GrProtected isProtected, GrMipMapsStatus mipMapsStatus, const GrMockTextureInfo& texInfo,
+      const GrMockRenderTargetInfo& rtInfo)
+      : GrSurface(gpu, desc, isProtected),
+        GrMockTexture(gpu, desc, isProtected, mipMapsStatus, texInfo),
+        GrMockRenderTarget(gpu, desc, sampleCnt, isProtected, rtInfo) {
     this->registerWithCache(budgeted);
   }
 
   // Renderable wrapped backend texture.
   GrMockTextureRenderTarget(
-      GrMockGpu* gpu, const GrSurfaceDesc& desc, GrMipMapsStatus mipMapsStatus,
-      const GrMockTextureInfo& texInfo, const GrMockRenderTargetInfo& rtInfo,
-      GrWrapCacheable cacheble)
-      : GrSurface(gpu, desc),
-        GrMockTexture(gpu, desc, mipMapsStatus, texInfo),
-        GrMockRenderTarget(gpu, desc, rtInfo) {
+      GrMockGpu* gpu, const GrSurfaceDesc& desc, int sampleCnt, GrProtected isProtected,
+      GrMipMapsStatus mipMapsStatus, const GrMockTextureInfo& texInfo,
+      const GrMockRenderTargetInfo& rtInfo, GrWrapCacheable cacheble)
+      : GrSurface(gpu, desc, isProtected),
+        GrMockTexture(gpu, desc, isProtected, mipMapsStatus, texInfo),
+        GrMockRenderTarget(gpu, desc, sampleCnt, isProtected, rtInfo) {
     this->registerWithCacheWrapped(cacheble);
   }
 
@@ -167,7 +175,7 @@ class GrMockTextureRenderTarget : public GrMockTexture, public GrMockRenderTarge
   }
 
   size_t onGpuMemorySize() const override {
-    int numColorSamples = this->numColorSamples();
+    int numColorSamples = this->numSamples();
     if (numColorSamples > 1) {
       // Add one to account for the resolve buffer.
       ++numColorSamples;
@@ -179,7 +187,7 @@ class GrMockTextureRenderTarget : public GrMockTexture, public GrMockRenderTarge
 
   void computeScratchKey(GrScratchKey* key) const override {
     GrTexturePriv::ComputeScratchKey(
-        this->config(), this->width(), this->height(), true, this->numStencilSamples(),
+        this->config(), this->width(), this->height(), GrRenderable::kYes, this->numSamples(),
         this->texturePriv().mipMapped(), key);
   }
 };

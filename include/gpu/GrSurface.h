@@ -75,10 +75,12 @@ class SK_API GrSurface : public GrGpuResource {
   inline GrSurfacePriv surfacePriv();
   inline const GrSurfacePriv surfacePriv() const;
 
-  static size_t WorstCaseSize(const GrSurfaceDesc& desc, bool useNextPow2 = false);
+  static size_t WorstCaseSize(
+      const GrSurfaceDesc& desc, GrRenderable renderable, int renderTargetSampleCnt,
+      bool binSize = false);
   static size_t ComputeSize(
       GrPixelConfig config, int width, int height, int colorSamplesPerPixel, GrMipMapped,
-      bool useNextPow2 = false);
+      bool binSize = false);
 
   /**
    * The pixel values of this surface cannot be modified (e.g. doesn't support write pixels or
@@ -86,13 +88,10 @@ class SK_API GrSurface : public GrGpuResource {
    */
   bool readOnly() const { return fSurfaceFlags & GrInternalSurfaceFlags::kReadOnly; }
 
- protected:
-  void setHasMixedSamples() {
-    SkASSERT(this->asRenderTarget());
-    fSurfaceFlags |= GrInternalSurfaceFlags::kMixedSampled;
-  }
-  bool hasMixedSamples() const { return fSurfaceFlags & GrInternalSurfaceFlags::kMixedSampled; }
+  // Returns true if we are working with protected content.
+  bool isProtected() const { return fIsProtected == GrProtected::kYes; }
 
+ protected:
   void setGLRTFBOIDIs0() {
     SkASSERT(this->asRenderTarget());
     fSurfaceFlags |= GrInternalSurfaceFlags::kGLRTFBOIDIs0;
@@ -112,12 +111,13 @@ class SK_API GrSurface : public GrGpuResource {
   // Provides access to methods that should be public within Skia code.
   friend class GrSurfacePriv;
 
-  GrSurface(GrGpu* gpu, const GrSurfaceDesc& desc)
+  GrSurface(GrGpu* gpu, const GrSurfaceDesc& desc, GrProtected isProtected)
       : INHERITED(gpu),
         fConfig(desc.fConfig),
         fWidth(desc.fWidth),
         fHeight(desc.fHeight),
-        fSurfaceFlags(GrInternalSurfaceFlags::kNone) {}
+        fSurfaceFlags(GrInternalSurfaceFlags::kNone),
+        fIsProtected(isProtected) {}
 
   ~GrSurface() override {
     // check that invokeReleaseProc has been called (if needed)
@@ -144,6 +144,7 @@ class SK_API GrSurface : public GrGpuResource {
   int fWidth;
   int fHeight;
   GrInternalSurfaceFlags fSurfaceFlags;
+  GrProtected fIsProtected;
   sk_sp<GrRefCntedCallback> fReleaseHelper;
 
   typedef GrGpuResource INHERITED;

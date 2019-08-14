@@ -15,10 +15,10 @@
 #include "src/core/SkWriteBuffer.h"
 
 #if SK_SUPPORT_GPU
-#include "include/gpu/GrContext.h"
-#include "src/gpu/GrColorSpaceInfo.h"
-#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
-#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#  include "include/gpu/GrContext.h"
+#  include "src/gpu/GrColorSpaceInfo.h"
+#  include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#  include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #endif
 
 using InvertStyle = SkHighContrastConfig::InvertStyle;
@@ -241,7 +241,7 @@ void GLHighContrastFilterEffect::emitCode(EmitArgs& args) {
   fragBuilder->codeAppendf("half4 color = %s;", args.fInputColor);
 
   // Unpremultiply. The max() is to guard against 0 / 0.
-  fragBuilder->codeAppendf("half nonZeroAlpha = max(color.a, 0.00001);");
+  fragBuilder->codeAppendf("half nonZeroAlpha = max(color.a, 0.0001);");
   fragBuilder->codeAppendf("color = half4(color.rgb / nonZeroAlpha, nonZeroAlpha);");
 
   if (hcfe.linearize()) {

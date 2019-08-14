@@ -360,8 +360,7 @@ class GrResourceCache {
 #endif
 
   // our current stats for all resources
-  SkDEBUGCODE(int fCount = 0);
-  size_t fBytes = 0;
+  SkDEBUGCODE(int fCount = 0;) size_t fBytes = 0;
 
   // our current stats for resources that count against the budget
   int fBudgetedCount = 0;
@@ -378,9 +377,9 @@ class GrResourceCache {
 
   // This resource is allowed to be in the nonpurgeable array for the sake of validate() because
   // we're in the midst of converting it to purgeable status.
-  SkDEBUGCODE(GrGpuResource* fNewlyPurgeableResourceForValidation = nullptr);
+  SkDEBUGCODE(GrGpuResource* fNewlyPurgeableResourceForValidation = nullptr;)
 
-  bool fPreferVRAMUseOverFlushes = false;
+      bool fPreferVRAMUseOverFlushes = false;
 };
 
 GR_MAKE_BITFIELD_CLASS_OPS(GrResourceCache::ScratchFlags);

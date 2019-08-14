@@ -9,17 +9,18 @@
 #include "src/core/SkGeometry.h"
 #include "src/core/SkPathPriv.h"
 #include "src/core/SkTraceEvent.h"
+#include "src/gpu/GrAuditTrail.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrDefaultGeoProcFactory.h"
 #include "src/gpu/GrDrawOpTest.h"
 #include "src/gpu/GrGeometryProcessor.h"
 #include "src/gpu/GrOpFlushState.h"
-#include "src/gpu/GrPathUtils.h"
 #include "src/gpu/GrProcessor.h"
 #include "src/gpu/GrRenderTargetContext.h"
-#include "src/gpu/GrShape.h"
 #include "src/gpu/GrStyle.h"
 #include "src/gpu/GrVertexWriter.h"
+#include "src/gpu/geometry/GrPathUtils.h"
+#include "src/gpu/geometry/GrShape.h"
 #include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
 #include "src/gpu/ops/GrAAConvexTessellator.h"
 #include "src/gpu/ops/GrAALinearizingConvexPathRenderer.h"
@@ -38,7 +39,7 @@ GrAALinearizingConvexPathRenderer::GrAALinearizingConvexPathRenderer() {}
 
 GrPathRenderer::CanDrawPath GrAALinearizingConvexPathRenderer::onCanDrawPath(
     const CanDrawPathArgs& args) const {
-  if (!(AATypeFlags::kCoverage & args.fAATypeFlags)) {
+  if (GrAAType::kCoverage != args.fAAType) {
     return CanDrawPath::kNo;
   }
   if (!args.fShape->knownToBeConvex()) {
@@ -166,10 +167,10 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
   FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
   GrProcessorSet::Analysis finalize(
-      const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType,
+      const GrCaps& caps, const GrAppliedClip* clip, bool hasMixedSampledCoverage,
       GrClampType clampType) override {
     return fHelper.finalizeProcessors(
-        caps, clip, fsaaType, clampType, GrProcessorAnalysisCoverage::kSingleChannel,
+        caps, clip, hasMixedSampledCoverage, clampType, GrProcessorAnalysisCoverage::kSingleChannel,
         &fPaths.back().fColor, &fWideColor);
   }
 
@@ -313,7 +314,7 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
 bool GrAALinearizingConvexPathRenderer::onDrawPath(const DrawPathArgs& args) {
   GR_AUDIT_TRAIL_AUTO_FRAME(
       args.fRenderTargetContext->auditTrail(), "GrAALinearizingConvexPathRenderer::onDrawPath");
-  SkASSERT(GrFSAAType::kUnifiedMSAA != args.fRenderTargetContext->fsaaType());
+  SkASSERT(args.fRenderTargetContext->numSamples() <= 1);
   SkASSERT(!args.fShape->isEmpty());
   SkASSERT(!args.fShape->style().pathEffect());
 

@@ -24,7 +24,7 @@ class SkPathPriv {
     kUnknown_FirstDirection,
   };
 
-  static FirstDirection AsFirstDirection(SkPath::Direction dir) {
+  static constexpr FirstDirection AsFirstDirection(SkPath::Direction dir) {
     // since we agree numerically for the values in Direction, we can just cast.
     return (FirstDirection)dir;
   }
@@ -123,7 +123,7 @@ class SkPathPriv {
    */
   struct Verbs {
    public:
-    Verbs(const SkPath& path) : fPathRef(path.fPathRef.get()) {}
+    Verbs(const SkPath& path) noexcept : fPathRef(path.fPathRef.get()) {}
     struct Iter {
       void operator++() { --fVerb; }  // verbs are laid out backwards in memory.
       bool operator!=(const Iter& b) { return fVerb != b.fVerb; }

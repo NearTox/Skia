@@ -34,7 +34,7 @@ class SK_API SkFont {
 
       @return  default initialized SkFont
   */
-  SkFont();
+  SkFont() noexcept;
 
   /** Constructs SkFont with default values with SkTypeface and size in points.
 
@@ -42,14 +42,14 @@ class SK_API SkFont {
       @param size      typographic height of text
       @return          initialized SkFont
   */
-  SkFont(sk_sp<SkTypeface> typeface, SkScalar size);
+  SkFont(sk_sp<SkTypeface> typeface, SkScalar size) noexcept;
 
   /** Constructs SkFont with default values with SkTypeface.
 
       @param typeface  font and style used to draw and measure text
       @return          initialized SkFont
   */
-  explicit SkFont(sk_sp<SkTypeface> typeface);
+  explicit SkFont(sk_sp<SkTypeface> typeface) noexcept;
 
   /** Constructs SkFont with default values with SkTypeface and size in points,
       horizontal scale, and horizontal skew. Horizontal scale emulates condensed
@@ -61,7 +61,7 @@ class SK_API SkFont {
       @param skewX     additional shear on x-axis relative to y-axis
       @return          initialized SkFont
   */
-  SkFont(sk_sp<SkTypeface> typeface, SkScalar size, SkScalar scaleX, SkScalar skewX);
+  SkFont(sk_sp<SkTypeface> typeface, SkScalar size, SkScalar scaleX, SkScalar skewX) noexcept;
 
   /** Compares SkFont and font, and returns true if they are equivalent.
       May return false if SkTypeface has identical contents but different pointers.
@@ -510,11 +510,10 @@ class SK_API SkFont {
   bool hasSomeAntiAliasing() const;
 
   friend class GrTextBlob;
-  friend class SkCanonicalizeFont;
   friend class SkFontPriv;
   friend class SkGlyphRunListPainter;
   friend class SkTextBlobCacheDiffCanvas;
-  friend class SkStrikeSpecStorage;
+  friend class SkStrikeSpec;
 };
 
 #endif

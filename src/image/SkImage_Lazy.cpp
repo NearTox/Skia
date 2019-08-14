@@ -16,16 +16,16 @@
 #include "src/core/SkNextID.h"
 
 #if SK_SUPPORT_GPU
-#include "include/gpu/GrSamplerState.h"
-#include "include/private/GrRecordingContext.h"
-#include "include/private/GrResourceKey.h"
-#include "src/gpu/GrCaps.h"
-#include "src/gpu/GrGpuResourcePriv.h"
-#include "src/gpu/GrImageTextureMaker.h"
-#include "src/gpu/GrProxyProvider.h"
-#include "src/gpu/GrRecordingContextPriv.h"
-#include "src/gpu/GrYUVProvider.h"
-#include "src/gpu/SkGr.h"
+#  include "include/gpu/GrSamplerState.h"
+#  include "include/private/GrRecordingContext.h"
+#  include "include/private/GrResourceKey.h"
+#  include "src/gpu/GrCaps.h"
+#  include "src/gpu/GrGpuResourcePriv.h"
+#  include "src/gpu/GrImageTextureMaker.h"
+#  include "src/gpu/GrProxyProvider.h"
+#  include "src/gpu/GrRecordingContextPriv.h"
+#  include "src/gpu/GrYUVProvider.h"
+#  include "src/gpu/SkGr.h"
 #endif
 
 // Ref-counted tuple(SkImageGenerator, SkMutex) which allows sharing one generator among N images
@@ -422,7 +422,6 @@ sk_sp<GrTextureProxy> SkImage_Lazy::lockTextureProxy(
     const GrSurfaceDesc desc = GrImageInfoToSurfaceDesc(this->imageInfo());
 
     SkColorType colorType = this->colorType();
-    GrBackendFormat format = ctx->priv().caps()->getBackendFormatFromColorType(colorType);
 
     ScopedGenerator generator(fSharedGenerator);
     Generator_GrYUVProvider provider(generator);
@@ -436,7 +435,8 @@ sk_sp<GrTextureProxy> SkImage_Lazy::lockTextureProxy(
 
     // TODO: Update to create the mipped surface in the YUV generator and draw the base
     // layer directly into the mipped surface.
-    proxy = provider.refAsTextureProxy(ctx, format, desc, generatorColorSpace, thisColorSpace);
+    proxy = provider.refAsTextureProxy(
+        ctx, desc, SkColorTypeToGrColorType(colorType), generatorColorSpace, thisColorSpace);
     if (proxy) {
       SK_HISTOGRAM_ENUMERATION("LockTexturePath", kYUV_LockTexturePath, kLockTexturePathCount);
       set_key_on_proxy(proxyProvider, proxy.get(), nullptr, key);

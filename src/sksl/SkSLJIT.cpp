@@ -7,19 +7,19 @@
 
 #ifndef SKSL_STANDALONE
 
-#ifdef SK_LLVM_AVAILABLE
+#  ifdef SK_LLVM_AVAILABLE
 
-#include "src/sksl/SkSLJIT.h"
+#    include "src/sksl/SkSLJIT.h"
 
-#include "src/core/SkCpu.h"
-#include "src/core/SkRasterPipeline.h"
-#include "src/sksl/ir/SkSLAppendStage.h"
-#include "src/sksl/ir/SkSLExpressionStatement.h"
-#include "src/sksl/ir/SkSLFunctionCall.h"
-#include "src/sksl/ir/SkSLFunctionReference.h"
-#include "src/sksl/ir/SkSLIndexExpression.h"
-#include "src/sksl/ir/SkSLProgram.h"
-#include "src/sksl/ir/SkSLUnresolvedFunction.h"
+#    include "src/core/SkCpu.h"
+#    include "src/core/SkRasterPipeline.h"
+#    include "src/sksl/ir/SkSLAppendStage.h"
+#    include "src/sksl/ir/SkSLExpressionStatement.h"
+#    include "src/sksl/ir/SkSLFunctionCall.h"
+#    include "src/sksl/ir/SkSLFunctionReference.h"
+#    include "src/sksl/ir/SkSLIndexExpression.h"
+#    include "src/sksl/ir/SkSLProgram.h"
+#    include "src/sksl/ir/SkSLUnresolvedFunction.h"
 #    include "llvm/ExecutionEngine/RTDyldMemoryManager.h"
 
 static constexpr int MAX_VECTOR_COUNT = 16;
@@ -28,7 +28,7 @@ extern "C" void sksl_pipeline_append(SkRasterPipeline* p, int stage, void* ctx) 
   p->append((SkRasterPipeline::StockStage)stage, ctx);
 }
 
-#define PTR_SIZE sizeof(void*)
+#    define PTR_SIZE sizeof(void*)
 
 extern "C" void sksl_pipeline_append_callback(SkRasterPipeline* p, void* fn) {
   p->append(fn, nullptr);

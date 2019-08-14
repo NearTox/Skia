@@ -250,7 +250,7 @@ class SK_API SkCodec : SkNoncopyable {
    *  Additional options to pass to getPixels.
    */
   struct Options {
-    Options()
+    constexpr Options()
         : fZeroInitialized(kNo_ZeroInitialized),
           fSubset(nullptr),
           fFrameIndex(0),

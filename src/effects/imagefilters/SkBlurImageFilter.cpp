@@ -23,9 +23,9 @@
 #include "src/core/SkWriteBuffer.h"
 
 #if SK_SUPPORT_GPU
-#include "include/gpu/GrContext.h"
-#include "include/private/GrTextureProxy.h"
-#include "src/gpu/SkGr.h"
+#  include "include/gpu/GrContext.h"
+#  include "src/gpu/GrTextureProxy.h"
+#  include "src/gpu/SkGr.h"
 #endif
 
 static constexpr double kPi = 3.14159265358979323846264338327950288;
@@ -570,7 +570,6 @@ sk_sp<SkSpecialImage> SkBlurImageFilterImpl::onFilterImage(
     // Ensure the input is in the destination's gamut. This saves us from having to do the
     // xform during the filter itself.
     input = ImageToColorSpace(input.get(), ctx.outputProperties());
-
     result = this->gpuFilter(
         source, sigma, input, inputBounds, dstBounds, inputOffset, ctx.outputProperties(),
         &resultOffset);
@@ -606,7 +605,7 @@ sk_sp<SkSpecialImage> SkBlurImageFilterImpl::gpuFilter(
   }
 
   sk_sp<GrRenderTargetContext> renderTargetContext(SkGpuBlurUtils::GaussianBlur(
-      context, std::move(inputTexture),
+      context, std::move(inputTexture), input->subset().topLeft(),
       outProps.colorSpace() ? sk_ref_sp(input->getColorSpace()) : nullptr, dstBounds, inputBounds,
       sigma.x(), sigma.y(), to_texture_domain_mode(fTileMode), input->alphaType()));
   if (!renderTargetContext) {

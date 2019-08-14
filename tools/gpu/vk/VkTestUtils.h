@@ -28,7 +28,7 @@ using CanPresentFn = std::function<bool(VkInstance, VkPhysicalDevice, uint32_t q
 bool CreateVkBackendContext(
     GrVkGetProc getProc, GrVkBackendContext* ctx, GrVkExtensions*, VkPhysicalDeviceFeatures2*,
     VkDebugReportCallbackEXT* debugCallback, uint32_t* presentQueueIndexPtr = nullptr,
-    CanPresentFn canPresent = CanPresentFn());
+    CanPresentFn canPresent = CanPresentFn(), bool isProtected = false);
 
 void FreeVulkanFeaturesStructs(const VkPhysicalDeviceFeatures2*);
 }  // namespace sk_gpu_test

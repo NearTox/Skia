@@ -25,8 +25,10 @@
 #include "src/core/SkBlurMask.h"
 #include "tools/ToolUtils.h"
 
-#define WIDTH 200
-#define HEIGHT 200
+#ifdef SK_SUPPORT_LEGACY_DRAWLOOPER
+
+#  define WIDTH 200
+#  define HEIGHT 200
 
 class DrawLooperGM : public skiagm::GM {
  public:
@@ -94,3 +96,5 @@ class DrawLooperGM : public skiagm::GM {
 //////////////////////////////////////////////////////////////////////////////
 
 DEF_GM(return new DrawLooperGM;)
+
+#endif

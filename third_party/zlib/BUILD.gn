@@ -10,8 +10,16 @@ declare_args() {
 import("../third_party.gni")
 
 if (skia_use_system_zlib) {
-  system("zlib") {
-    libs = [ "z" ]
+  if (is_win) {
+    system("zlib") {
+      include_dirs = [ "../../../vs16.0/" + target_cpu + "/include" ]
+      lib_dirs = [ "../../../vs16.0/" + target_cpu + "/lib" ]
+      libs = [ "zlib.lib" ]
+    }
+  } else {
+    system("zlib") {
+      libs = [ "z" ]
+    }
   }
 } else {
   third_party("zlib") {

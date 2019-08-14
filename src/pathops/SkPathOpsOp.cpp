@@ -226,9 +226,7 @@ static const bool gOutInverse[kReverseDifference_SkPathOp + 1][2][2] = {
 
 #if DEBUG_T_SECT_LOOP_COUNT
 
-#include "include/private/SkMutex.h"
-
-SK_DECLARE_STATIC_MUTEX(debugWorstLoop);
+#  include "include/private/SkMutex.h"
 
 SkOpGlobalState debugWorstState(nullptr, nullptr SkDEBUGPARAMS(false) SkDEBUGPARAMS(nullptr));
 
@@ -242,7 +240,7 @@ bool OpDebug(
     const SkPath& one, const SkPath& two, SkPathOp op,
     SkPath* result SkDEBUGPARAMS(bool skipAssert) SkDEBUGPARAMS(const char* testName)) {
 #if DEBUG_DUMP_VERIFY
-#ifndef SK_DEBUG
+#  ifndef SK_DEBUG
   const char* testName = "release";
 #  endif
   if (SkPathOpsDebug::gDumpOp) {
@@ -353,8 +351,9 @@ bool OpDebug(
   }
   wrapper.assemble();  // if some edges could not be resolved, assemble remaining
 #if DEBUG_T_SECT_LOOP_COUNT
+  static SkMutex& debugWorstLoop = *(new SkMutex);
   {
-    SkAutoMutexAcquire autoM(debugWorstLoop);
+    SkAutoMutexExclusive autoM(debugWorstLoop);
     if (!gVerboseFinalize) {
       gVerboseFinalize = &ReportPathOpsDebugging;
     }

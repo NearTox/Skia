@@ -13,7 +13,7 @@
 #include "src/shaders/SkColorFilterShader.h"
 
 #if SK_SUPPORT_GPU
-#include "src/gpu/GrFragmentProcessor.h"
+#  include "src/gpu/GrFragmentProcessor.h"
 #endif
 
 SkColorFilterShader::SkColorFilterShader(sk_sp<SkShader> shader, sk_sp<SkColorFilter> filter)
@@ -47,7 +47,7 @@ bool SkColorFilterShader::onAppendStages(const SkStageRec& rec) const {
 #if SK_SUPPORT_GPU
 /////////////////////////////////////////////////////////////////////
 
-#include "include/gpu/GrContext.h"
+#  include "include/gpu/GrContext.h"
 
 std::unique_ptr<GrFragmentProcessor> SkColorFilterShader::asFragmentProcessor(
     const GrFPArgs& args) const {

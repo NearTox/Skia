@@ -27,8 +27,11 @@ class ObjectValue;
 }
 
 namespace sksg {
+
+class InvalidationController;
 class Scene;
-}
+
+}  // namespace sksg
 
 namespace skottie {
 
@@ -75,7 +78,7 @@ class SK_API ResourceProvider : public SkRefCnt {
    * ImageAsset proxy.
    */
   virtual sk_sp<ImageAsset> loadImageAsset(
-      const char resource_path[], const char resource_name[]) const;
+      const char resource_path[], const char resource_name[], const char resource_id[]) const;
 
   /**
    * Load an external font and return as SkData.
@@ -214,9 +217,15 @@ class SK_API Animation : public SkNVRefCnt<Animation> {
    * Updates the animation state for |t|.
    *
    * @param t   normalized [0..1] frame selector (0 -> first frame, 1 -> final frame)
+   * @param ic  optional invalidation controller (dirty region tracking)
    *
    */
-  void seek(SkScalar t);
+  void seek(SkScalar t, sksg::InvalidationController* ic = nullptr);
+
+  /** Update the animation state to match t, specifed in frame time
+   *  i.e. relative to duration().
+   */
+  void seekFrameTime(double t, sksg::InvalidationController* = nullptr);
 
   /**
    * Returns the animation duration in seconds.
@@ -225,8 +234,6 @@ class SK_API Animation : public SkNVRefCnt<Animation> {
 
   const SkString& version() const { return fVersion; }
   const SkSize& size() const { return fSize; }
-
-  void setShowInval(bool show);
 
  private:
   enum Flags : uint32_t {

@@ -109,7 +109,7 @@ static inline SkScalar SkScalarPin(SkScalar x, SkScalar min, SkScalar max) {
   return SkTPin(x, min, max);
 }
 
-static inline SkScalar SkScalarSquare(SkScalar x) { return x * x; }
+static constexpr inline SkScalar SkScalarSquare(SkScalar x) { return x * x; }
 
 #define SkScalarInvert(x) sk_ieee_float_divide_TODO_IS_DIVIDE_BY_ZERO_SAFE_HERE(SK_Scalar1, (x))
 #define SkScalarAve(a, b) (((a) + (b)) * SK_ScalarHalf)
@@ -118,8 +118,8 @@ static inline SkScalar SkScalarSquare(SkScalar x) { return x * x; }
 #define SkDegreesToRadians(degrees) ((degrees) * (SK_ScalarPI / 180))
 #define SkRadiansToDegrees(radians) ((radians) * (180 / SK_ScalarPI))
 
-static inline SkScalar SkMaxScalar(SkScalar a, SkScalar b) { return a > b ? a : b; }
-static inline SkScalar SkMinScalar(SkScalar a, SkScalar b) { return a < b ? a : b; }
+static constexpr inline SkScalar SkMaxScalar(SkScalar a, SkScalar b) { return a > b ? a : b; }
+static constexpr inline SkScalar SkMinScalar(SkScalar a, SkScalar b) { return a < b ? a : b; }
 
 static inline bool SkScalarIsInt(SkScalar x) { return x == SkScalarFloorToScalar(x); }
 
@@ -129,7 +129,7 @@ static inline bool SkScalarIsInt(SkScalar x) { return x == SkScalarFloorToScalar
  *   0 if x == 0
  *   1 if x > 0
  */
-static inline int SkScalarSignAsInt(SkScalar x) { return x < 0 ? -1 : (x > 0); }
+static constexpr inline int SkScalarSignAsInt(SkScalar x) { return x < 0 ? -1 : (x > 0); }
 
 // Scalar result version of above
 static inline SkScalar SkScalarSignAsScalar(SkScalar x) {

@@ -8,7 +8,7 @@
 #include "src/gpu/effects/GrGaussianConvolutionFragmentProcessor.h"
 
 #include "include/gpu/GrTexture.h"
-#include "include/private/GrTextureProxy.h"
+#include "src/gpu/GrTextureProxy.h"
 #include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #include "src/gpu/glsl/GrGLSLProgramDataManager.h"
@@ -172,7 +172,9 @@ void GrGLConvolutionEffect::GenKey(
       processor.cast<GrGaussianConvolutionFragmentProcessor>();
   uint32_t key = conv.radius();
   key <<= 3;
-  key |= Direction::kY == conv.direction() ? 0x4 : 0x0;
+  if (conv.useBounds()) {
+    key |= Direction::kY == conv.direction() ? 0x4 : 0x0;
+  }
   key |= static_cast<uint32_t>(conv.mode());
   b->add32(key);
 }

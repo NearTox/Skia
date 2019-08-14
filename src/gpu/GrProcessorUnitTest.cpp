@@ -11,7 +11,7 @@
 #if GR_TEST_UTILS
 
 std::unique_ptr<GrFragmentProcessor> GrProcessorUnitTest::MakeChildFP(GrProcessorTestData* data) {
-#if SK_ALLOW_STATIC_GLOBAL_INITIALIZERS
+#  if SK_ALLOW_STATIC_GLOBAL_INITIALIZERS
   std::unique_ptr<GrFragmentProcessor> fp;
   do {
     fp = GrFragmentProcessorTestFactory::Make(data);

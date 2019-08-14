@@ -10,9 +10,9 @@
 
 #ifndef SKSL_STANDALONE
 
-#include "src/core/SkRasterPipeline.h"
-#include "src/sksl/SkSLContext.h"
-#include "src/sksl/ir/SkSLExpression.h"
+#  include "src/core/SkRasterPipeline.h"
+#  include "src/sksl/SkSLContext.h"
+#  include "src/sksl/ir/SkSLExpression.h"
 
 namespace SkSL {
 

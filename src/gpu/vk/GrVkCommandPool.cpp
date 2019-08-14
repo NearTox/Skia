@@ -12,12 +12,17 @@
 #include "src/gpu/vk/GrVkGpu.h"
 
 GrVkCommandPool* GrVkCommandPool::Create(const GrVkGpu* gpu) {
+  VkCommandPoolCreateFlags cmdPoolCreateFlags =
+      VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+  if (gpu->protectedContext()) {
+    cmdPoolCreateFlags |= VK_COMMAND_POOL_CREATE_PROTECTED_BIT;
+  }
+
   const VkCommandPoolCreateInfo cmdPoolInfo = {
       VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,  // sType
       nullptr,                                     // pNext
-      VK_COMMAND_POOL_CREATE_TRANSIENT_BIT |
-          VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,  // CmdPoolCreateFlags
-      gpu->queueIndex(),                                    // queueFamilyIndex
+      cmdPoolCreateFlags,                          // CmdPoolCreateFlags
+      gpu->queueIndex(),                           // queueFamilyIndex
   };
   VkCommandPool pool;
   GR_VK_CALL_ERRCHECK(
@@ -54,6 +59,7 @@ void GrVkCommandPool::reset(GrVkGpu* gpu) {
 }
 
 void GrVkCommandPool::releaseResources(GrVkGpu* gpu) {
+  TRACE_EVENT0("skia.gpu", TRACE_FUNC);
   SkASSERT(!fOpen);
   fPrimaryCommandBuffer->releaseResources(gpu);
   for (GrVkSecondaryCommandBuffer* buffer : fAvailableSecondaryBuffers) {

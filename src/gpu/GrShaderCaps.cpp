@@ -21,8 +21,6 @@ GrShaderCaps::GrShaderCaps(const GrContextOptions& options) {
   fDstReadInShaderSupport = false;
   fDualSourceBlendingSupport = false;
   fIntegerSupport = false;
-  fImageLoadStoreSupport = false;
-  fDropsTileOnZeroDivide = false;
   fFBFetchSupport = false;
   fFBFetchNeedsCustomOutput = false;
   fUsesPrecisionModifiers = false;
@@ -54,7 +52,9 @@ GrShaderCaps::GrShaderCaps(const GrContextOptions& options) {
   fFloatIs32Bits = true;
   fHalfIs32Bits = false;
   fHasLowFragmentPrecision = false;
-  fUnsignedSupport = false;
+  // Backed API support is required to be able to make swizzle-neutral shaders (e.g.
+  // GL_ARB_texture_swizzle).
+  fTextureSwizzleAppliedInShader = true;
   fBuiltinFMASupport = false;
 
   fVersionDeclString = nullptr;
@@ -69,7 +69,6 @@ GrShaderCaps::GrShaderCaps(const GrContextOptions& options) {
   fSampleVariablesExtensionString = nullptr;
   fFBFetchColorName = nullptr;
   fFBFetchExtensionString = nullptr;
-  fImageLoadStoreExtensionString = nullptr;
   fMaxFragmentSamplers = 0;
   fAdvBlendEqInteraction = kNotSupported_AdvBlendEqInteraction;
 }
@@ -85,7 +84,6 @@ void GrShaderCaps::dumpJSON(SkJSONWriter* writer) const {
   writer->appendBool("Dst Read In Shader Support", fDstReadInShaderSupport);
   writer->appendBool("Dual Source Blending Support", fDualSourceBlendingSupport);
   writer->appendBool("Integer Support", fIntegerSupport);
-  writer->appendBool("Image Load Store Support", fImageLoadStoreSupport);
 
   static const char* kAdvBlendEqInteractionStr[] = {
       "Not Supported",
@@ -100,7 +98,6 @@ void GrShaderCaps::dumpJSON(SkJSONWriter* writer) const {
   GR_STATIC_ASSERT(SK_ARRAY_COUNT(kAdvBlendEqInteractionStr) == kLast_AdvBlendEqInteraction + 1);
 
   writer->appendBool("FB Fetch Support", fFBFetchSupport);
-  writer->appendBool("Drops tile on zero divide", fDropsTileOnZeroDivide);
   writer->appendBool("Uses precision modifiers", fUsesPrecisionModifiers);
   writer->appendBool("Can use any() function", fCanUseAnyFunctionInShader);
   writer->appendBool("Can use min() and abs() together", fCanUseMinAndAbsTogether);
@@ -132,6 +129,7 @@ void GrShaderCaps::dumpJSON(SkJSONWriter* writer) const {
   writer->appendBool("float == fp32", fFloatIs32Bits);
   writer->appendBool("half == fp32", fHalfIs32Bits);
   writer->appendBool("Has poor fragment precision", fHasLowFragmentPrecision);
+  writer->appendBool("Texture swizzle applied in shader", fTextureSwizzleAppliedInShader);
   writer->appendBool("Builtin fma() support", fBuiltinFMASupport);
 
   writer->appendS32("Max FS Samplers", fMaxFragmentSamplers);

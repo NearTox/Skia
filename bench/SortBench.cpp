@@ -10,8 +10,8 @@
 #include "include/utils/SkRandom.h"
 #include "src/core/SkTSort.h"
 
-#include <stdlib.h>
 #include <algorithm>
+#include <stdlib.h>
 
 static const int N = 1000;
 

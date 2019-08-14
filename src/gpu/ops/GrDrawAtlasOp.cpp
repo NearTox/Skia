@@ -43,7 +43,7 @@ class DrawAtlasOp final : public GrMeshDrawOp {
   FixedFunctionFlags fixedFunctionFlags() const override;
 
   GrProcessorSet::Analysis finalize(
-      const GrCaps&, const GrAppliedClip*, GrFSAAType, GrClampType) override;
+      const GrCaps&, const GrAppliedClip*, bool hasMixedSampledCoverage, GrClampType) override;
 
  private:
   void onPrepareDraws(Target*) override;
@@ -239,7 +239,8 @@ GrDrawOp::FixedFunctionFlags DrawAtlasOp::fixedFunctionFlags() const {
 }
 
 GrProcessorSet::Analysis DrawAtlasOp::finalize(
-    const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType, GrClampType clampType) {
+    const GrCaps& caps, const GrAppliedClip* clip, bool hasMixedSampledCoverage,
+    GrClampType clampType) {
   GrProcessorAnalysisColor gpColor;
   if (this->hasColors()) {
     gpColor.setToUnknown();
@@ -247,7 +248,7 @@ GrProcessorSet::Analysis DrawAtlasOp::finalize(
     gpColor.setToConstant(fColor);
   }
   auto result = fHelper.finalizeProcessors(
-      caps, clip, fsaaType, clampType, GrProcessorAnalysisCoverage::kNone, &gpColor);
+      caps, clip, hasMixedSampledCoverage, clampType, GrProcessorAnalysisCoverage::kNone, &gpColor);
   if (gpColor.isConstant(&fColor)) {
     fHasColors = false;
   }
@@ -319,7 +320,7 @@ GR_DRAW_OP_TEST_DEFINE(DrawAtlasOp) {
 
   SkMatrix viewMatrix = GrTest::TestMatrix(random);
   GrAAType aaType = GrAAType::kNone;
-  if (GrFSAAType::kUnifiedMSAA == fsaaType && random->nextBool()) {
+  if (numSamples > 1 && random->nextBool()) {
     aaType = GrAAType::kMSAA;
   }
 

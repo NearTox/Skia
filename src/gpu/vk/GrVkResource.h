@@ -16,7 +16,7 @@ class GrVkGpu;
 
 // uncomment to enable tracing of resource refs
 #ifdef SK_DEBUG
-#define SK_TRACE_VK_RESOURCES
+#  define SK_TRACE_VK_RESOURCES
 #endif
 
 /** \class GrVkResource

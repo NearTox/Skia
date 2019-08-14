@@ -393,61 +393,62 @@ class SK_API SkMatrix {
                     kMPersp0, kMPersp1, kMPersp2
       @param value  scalar to store in SkMatrix
   */
-  void set(int index, SkScalar value) {
+  SkMatrix& set(int index, SkScalar value) {
     SkASSERT((unsigned)index < 9);
     fMat[index] = value;
     this->setTypeMask(kUnknown_Mask);
+    return *this;
   }
 
   /** Sets horizontal scale factor.
 
       @param v  horizontal scale factor to store
   */
-  void setScaleX(SkScalar v) { this->set(kMScaleX, v); }
+  SkMatrix& setScaleX(SkScalar v) { return this->set(kMScaleX, v); }
 
   /** Sets vertical scale factor.
 
       @param v  vertical scale factor to store
   */
-  void setScaleY(SkScalar v) { this->set(kMScaleY, v); }
+  SkMatrix& setScaleY(SkScalar v) { return this->set(kMScaleY, v); }
 
   /** Sets vertical skew factor.
 
       @param v  vertical skew factor to store
   */
-  void setSkewY(SkScalar v) { this->set(kMSkewY, v); }
+  SkMatrix& setSkewY(SkScalar v) { return this->set(kMSkewY, v); }
 
   /** Sets horizontal skew factor.
 
       @param v  horizontal skew factor to store
   */
-  void setSkewX(SkScalar v) { this->set(kMSkewX, v); }
+  SkMatrix& setSkewX(SkScalar v) { return this->set(kMSkewX, v); }
 
   /** Sets horizontal translation.
 
       @param v  horizontal translation to store
   */
-  void setTranslateX(SkScalar v) { this->set(kMTransX, v); }
+  SkMatrix& setTranslateX(SkScalar v) { return this->set(kMTransX, v); }
 
   /** Sets vertical translation.
 
       @param v  vertical translation to store
   */
-  void setTranslateY(SkScalar v) { this->set(kMTransY, v); }
+  SkMatrix& setTranslateY(SkScalar v) { return this->set(kMTransY, v); }
 
   /** Sets input x-axis perspective factor, which causes mapXY() to vary input x-axis values
       inversely proportional to input y-axis values.
 
       @param v  perspective factor
   */
-  void setPerspX(SkScalar v) { this->set(kMPersp0, v); }
+  SkMatrix& setPerspX(SkScalar v) { return this->set(kMPersp0, v); }
 
   /** Sets input y-axis perspective factor, which causes mapXY() to vary input y-axis values
       inversely proportional to input x-axis values.
 
       @param v  perspective factor
   */
-  void setPerspY(SkScalar v) { this->set(kMPersp1, v); }
+  SkMatrix& setPerspY(SkScalar v) { return this->set(kMPersp1, v); }
 
   /** Sets all values from parameters. Sets matrix to:
 
@@ -465,7 +466,7 @@ class SK_API SkMatrix {
       @param persp1  input y-axis values perspective factor to store
       @param persp2  perspective scale factor to store
   */
-  void setAll(
+  SkMatrix& setAll(
       SkScalar scaleX, SkScalar skewX, SkScalar transX, SkScalar skewY, SkScalar scaleY,
       SkScalar transY, SkScalar persp0, SkScalar persp1, SkScalar persp2) {
     fMat[kMScaleX] = scaleX;
@@ -478,6 +479,7 @@ class SK_API SkMatrix {
     fMat[kMPersp1] = persp1;
     fMat[kMPersp2] = persp2;
     this->setTypeMask(kUnknown_Mask);
+    return *this;
   }
 
   /** Copies nine scalar values contained by SkMatrix into buffer, in member value
@@ -504,7 +506,7 @@ class SK_API SkMatrix {
 
       @param buffer  nine scalar values
   */
-  void set9(const SkScalar buffer[9]);
+  SkMatrix& set9(const SkScalar buffer[9]);
 
   /** Sets SkMatrix to identity; which has no effect on mapped SkPoint. Sets SkMatrix to:
 
@@ -515,7 +517,7 @@ class SK_API SkMatrix {
       Also called setIdentity(); use the one that provides better inline
       documentation.
   */
-  void reset();
+  SkMatrix& reset();
 
   /** Sets SkMatrix to identity; which has no effect on mapped SkPoint. Sets SkMatrix to:
 
@@ -526,20 +528,20 @@ class SK_API SkMatrix {
       Also called reset(); use the one that provides better inline
       documentation.
   */
-  void setIdentity() { this->reset(); }
+  SkMatrix& setIdentity() { return this->reset(); }
 
   /** Sets SkMatrix to translate by (dx, dy).
 
       @param dx  horizontal translation
       @param dy  vertical translation
   */
-  void setTranslate(SkScalar dx, SkScalar dy);
+  SkMatrix& setTranslate(SkScalar dx, SkScalar dy);
 
   /** Sets SkMatrix to translate by (v.fX, v.fY).
 
       @param v  vector containing horizontal and vertical translation
   */
-  void setTranslate(const SkVector& v) { this->setTranslate(v.fX, v.fY); }
+  SkMatrix& setTranslate(const SkVector& v) { return this->setTranslate(v.fX, v.fY); }
 
   /** Sets SkMatrix to scale by sx and sy, about a pivot point at (px, py).
       The pivot point is unchanged when mapped with SkMatrix.
@@ -549,14 +551,14 @@ class SK_API SkMatrix {
       @param px  pivot on x-axis
       @param py  pivot on y-axis
   */
-  void setScale(SkScalar sx, SkScalar sy, SkScalar px, SkScalar py);
+  SkMatrix& setScale(SkScalar sx, SkScalar sy, SkScalar px, SkScalar py);
 
   /** Sets SkMatrix to scale by sx and sy about at pivot point at (0, 0).
 
       @param sx  horizontal scale factor
       @param sy  vertical scale factor
   */
-  void setScale(SkScalar sx, SkScalar sy);
+  SkMatrix& setScale(SkScalar sx, SkScalar sy);
 
   /** Sets SkMatrix to rotate by degrees about a pivot point at (px, py).
       The pivot point is unchanged when mapped with SkMatrix.
@@ -567,14 +569,14 @@ class SK_API SkMatrix {
       @param px       pivot on x-axis
       @param py       pivot on y-axis
   */
-  void setRotate(SkScalar degrees, SkScalar px, SkScalar py);
+  SkMatrix& setRotate(SkScalar degrees, SkScalar px, SkScalar py);
 
   /** Sets SkMatrix to rotate by degrees about a pivot point at (0, 0).
       Positive degrees rotates clockwise.
 
       @param degrees  angle of axes relative to upright axes
   */
-  void setRotate(SkScalar degrees);
+  SkMatrix& setRotate(SkScalar degrees);
 
   /** Sets SkMatrix to rotate by sinValue and cosValue, about a pivot point at (px, py).
       The pivot point is unchanged when mapped with SkMatrix.
@@ -587,7 +589,7 @@ class SK_API SkMatrix {
       @param px        pivot on x-axis
       @param py        pivot on y-axis
   */
-  void setSinCos(SkScalar sinValue, SkScalar cosValue, SkScalar px, SkScalar py);
+  SkMatrix& setSinCos(SkScalar sinValue, SkScalar cosValue, SkScalar px, SkScalar py);
 
   /** Sets SkMatrix to rotate by sinValue and cosValue, about a pivot point at (0, 0).
 
@@ -597,7 +599,7 @@ class SK_API SkMatrix {
       @param sinValue  rotation vector x-axis component
       @param cosValue  rotation vector y-axis component
   */
-  void setSinCos(SkScalar sinValue, SkScalar cosValue);
+  SkMatrix& setSinCos(SkScalar sinValue, SkScalar cosValue);
 
   /** Sets SkMatrix to rotate, scale, and translate using a compressed matrix form.
 
@@ -618,14 +620,14 @@ class SK_API SkMatrix {
       @param px  pivot on x-axis
       @param py  pivot on y-axis
   */
-  void setSkew(SkScalar kx, SkScalar ky, SkScalar px, SkScalar py);
+  SkMatrix& setSkew(SkScalar kx, SkScalar ky, SkScalar px, SkScalar py);
 
   /** Sets SkMatrix to skew by kx and ky, about a pivot point at (0, 0).
 
       @param kx  horizontal skew factor
       @param ky  vertical skew factor
   */
-  void setSkew(SkScalar kx, SkScalar ky);
+  SkMatrix& setSkew(SkScalar kx, SkScalar ky);
 
   /** Sets SkMatrix to SkMatrix a multiplied by SkMatrix b. Either a or b may be this.
 
@@ -644,7 +646,7 @@ class SK_API SkMatrix {
       @param a  SkMatrix on left side of multiply expression
       @param b  SkMatrix on right side of multiply expression
   */
-  void setConcat(const SkMatrix& a, const SkMatrix& b);
+  SkMatrix& setConcat(const SkMatrix& a, const SkMatrix& b);
 
   /** Sets SkMatrix to SkMatrix multiplied by SkMatrix constructed from translation (dx, dy).
       This can be thought of as moving the point to be mapped before applying SkMatrix.
@@ -664,7 +666,7 @@ class SK_API SkMatrix {
       @param dx  x-axis translation before applying SkMatrix
       @param dy  y-axis translation before applying SkMatrix
   */
-  void preTranslate(SkScalar dx, SkScalar dy);
+  SkMatrix& preTranslate(SkScalar dx, SkScalar dy);
 
   /** Sets SkMatrix to SkMatrix multiplied by SkMatrix constructed from scaling by (sx, sy)
       about pivot point (px, py).
@@ -692,7 +694,7 @@ class SK_API SkMatrix {
       @param px  pivot on x-axis
       @param py  pivot on y-axis
   */
-  void preScale(SkScalar sx, SkScalar sy, SkScalar px, SkScalar py);
+  SkMatrix& preScale(SkScalar sx, SkScalar sy, SkScalar px, SkScalar py);
 
   /** Sets SkMatrix to SkMatrix multiplied by SkMatrix constructed from scaling by (sx, sy)
       about pivot point (0, 0).
@@ -713,7 +715,7 @@ class SK_API SkMatrix {
       @param sx  horizontal scale factor
       @param sy  vertical scale factor
   */
-  void preScale(SkScalar sx, SkScalar sy);
+  SkMatrix& preScale(SkScalar sx, SkScalar sy);
 
   /** Sets SkMatrix to SkMatrix multiplied by SkMatrix constructed from rotating by degrees
       about pivot point (px, py).
@@ -744,7 +746,7 @@ class SK_API SkMatrix {
       @param px       pivot on x-axis
       @param py       pivot on y-axis
   */
-  void preRotate(SkScalar degrees, SkScalar px, SkScalar py);
+  SkMatrix& preRotate(SkScalar degrees, SkScalar px, SkScalar py);
 
   /** Sets SkMatrix to SkMatrix multiplied by SkMatrix constructed from rotating by degrees
       about pivot point (0, 0).
@@ -771,7 +773,7 @@ class SK_API SkMatrix {
 
       @param degrees  angle of axes relative to upright axes
   */
-  void preRotate(SkScalar degrees);
+  SkMatrix& preRotate(SkScalar degrees);
 
   /** Sets SkMatrix to SkMatrix multiplied by SkMatrix constructed from skewing by (kx, ky)
       about pivot point (px, py).
@@ -799,7 +801,7 @@ class SK_API SkMatrix {
       @param px  pivot on x-axis
       @param py  pivot on y-axis
   */
-  void preSkew(SkScalar kx, SkScalar ky, SkScalar px, SkScalar py);
+  SkMatrix& preSkew(SkScalar kx, SkScalar ky, SkScalar px, SkScalar py);
 
   /** Sets SkMatrix to SkMatrix multiplied by SkMatrix constructed from skewing by (kx, ky)
       about pivot point (0, 0).
@@ -820,7 +822,7 @@ class SK_API SkMatrix {
       @param kx  horizontal skew factor
       @param ky  vertical skew factor
   */
-  void preSkew(SkScalar kx, SkScalar ky);
+  SkMatrix& preSkew(SkScalar kx, SkScalar ky);
 
   /** Sets SkMatrix to SkMatrix multiplied by SkMatrix other.
       This can be thought of mapping by other before applying SkMatrix.
@@ -839,7 +841,7 @@ class SK_API SkMatrix {
 
       @param other  SkMatrix on right side of multiply expression
   */
-  void preConcat(const SkMatrix& other);
+  SkMatrix& preConcat(const SkMatrix& other);
 
   /** Sets SkMatrix to SkMatrix constructed from translation (dx, dy) multiplied by SkMatrix.
       This can be thought of as moving the point to be mapped after applying SkMatrix.
@@ -859,7 +861,7 @@ class SK_API SkMatrix {
       @param dx  x-axis translation after applying SkMatrix
       @param dy  y-axis translation after applying SkMatrix
   */
-  void postTranslate(SkScalar dx, SkScalar dy);
+  SkMatrix& postTranslate(SkScalar dx, SkScalar dy);
 
   /** Sets SkMatrix to SkMatrix constructed from scaling by (sx, sy) about pivot point
       (px, py), multiplied by SkMatrix.
@@ -887,7 +889,7 @@ class SK_API SkMatrix {
       @param px  pivot on x-axis
       @param py  pivot on y-axis
   */
-  void postScale(SkScalar sx, SkScalar sy, SkScalar px, SkScalar py);
+  SkMatrix& postScale(SkScalar sx, SkScalar sy, SkScalar px, SkScalar py);
 
   /** Sets SkMatrix to SkMatrix constructed from scaling by (sx, sy) about pivot point
       (0, 0), multiplied by SkMatrix.
@@ -908,7 +910,7 @@ class SK_API SkMatrix {
       @param sx  horizontal scale factor
       @param sy  vertical scale factor
   */
-  void postScale(SkScalar sx, SkScalar sy);
+  SkMatrix& postScale(SkScalar sx, SkScalar sy);
 
   /** Sets SkMatrix to SkMatrix constructed from scaling by (1/divx, 1/divy),
       about pivot point (px, py), multiplied by SkMatrix.
@@ -967,7 +969,7 @@ class SK_API SkMatrix {
       @param px       pivot on x-axis
       @param py       pivot on y-axis
   */
-  void postRotate(SkScalar degrees, SkScalar px, SkScalar py);
+  SkMatrix& postRotate(SkScalar degrees, SkScalar px, SkScalar py);
 
   /** Sets SkMatrix to SkMatrix constructed from rotating by degrees about pivot point
       (0, 0), multiplied by SkMatrix.
@@ -994,7 +996,7 @@ class SK_API SkMatrix {
 
       @param degrees  angle of axes relative to upright axes
   */
-  void postRotate(SkScalar degrees);
+  SkMatrix& postRotate(SkScalar degrees);
 
   /** Sets SkMatrix to SkMatrix constructed from skewing by (kx, ky) about pivot point
       (px, py), multiplied by SkMatrix.
@@ -1022,7 +1024,7 @@ class SK_API SkMatrix {
       @param px  pivot on x-axis
       @param py  pivot on y-axis
   */
-  void postSkew(SkScalar kx, SkScalar ky, SkScalar px, SkScalar py);
+  SkMatrix& postSkew(SkScalar kx, SkScalar ky, SkScalar px, SkScalar py);
 
   /** Sets SkMatrix to SkMatrix constructed from skewing by (kx, ky) about pivot point
       (0, 0), multiplied by SkMatrix.
@@ -1043,7 +1045,7 @@ class SK_API SkMatrix {
       @param kx  horizontal skew factor
       @param ky  vertical skew factor
   */
-  void postSkew(SkScalar kx, SkScalar ky);
+  SkMatrix& postSkew(SkScalar kx, SkScalar ky);
 
   /** Sets SkMatrix to SkMatrix other multiplied by SkMatrix.
       This can be thought of mapping by other after applying SkMatrix.
@@ -1062,7 +1064,7 @@ class SK_API SkMatrix {
 
       @param other  SkMatrix on left side of multiply expression
   */
-  void postConcat(const SkMatrix& other);
+  SkMatrix& postConcat(const SkMatrix& other);
 
   /** \enum SkMatrix::ScaleToFit
       ScaleToFit describes how SkMatrix is constructed to map one SkRect to another.
@@ -1187,7 +1189,7 @@ class SK_API SkMatrix {
 
       @param affine  3 by 2 affine matrix
   */
-  void setAffine(const SkScalar affine[6]);
+  SkMatrix& setAffine(const SkScalar affine[6]);
 
   /** Maps src SkPoint array of length count to dst SkPoint array of equal or greater
       length. SkPoint are mapped by multiplying each SkPoint by SkMatrix. Given:
@@ -1581,7 +1583,7 @@ class SK_API SkMatrix {
       unchanged if SkMatrix contains perspective; scale factors are not finite, or
       are nearly zero.
 
-      On success: Matrix = scale * Remaining.
+      On success: Matrix = Remaining * scale.
 
       @param scale      axes scaling factors; may be nullptr
       @param remaining  SkMatrix without scaling; may be nullptr

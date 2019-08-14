@@ -13,11 +13,12 @@
 #include "include/core/SkSurfaceProps.h"
 
 #if SK_SUPPORT_GPU
-#include "include/private/GrTypesPriv.h"
+#  include "include/private/GrTypesPriv.h"
 #endif
 
 class GrBackendFormat;
 class GrContext;
+class GrRecordingContext;
 class SkBitmap;
 class SkCanvas;
 class SkSpecialImage;
@@ -61,8 +62,8 @@ class SkSpecialSurface : public SkRefCnt {
    *  be created, nullptr will be returned.
    */
   static sk_sp<SkSpecialSurface> MakeRenderTarget(
-      GrRecordingContext*, const GrBackendFormat& format, int width, int height,
-      GrPixelConfig config, sk_sp<SkColorSpace> colorSpace, const SkSurfaceProps* = nullptr);
+      GrRecordingContext*, int width, int height, GrColorType, sk_sp<SkColorSpace> colorSpace,
+      const SkSurfaceProps* = nullptr);
 #endif
 
   /**

@@ -10,7 +10,6 @@
 
 #include "include/core/SkPath.h"
 #include "include/core/SkRefCnt.h"
-#include "include/private/SkNoncopyable.h"
 #include "include/private/SkTDArray.h"
 
 struct SkConic;
@@ -88,7 +87,7 @@ class SK_API SkContourMeasure : public SkRefCnt {
   friend class SkContourMeasureIter;
 };
 
-class SK_API SkContourMeasureIter : SkNoncopyable {
+class SK_API SkContourMeasureIter {
  public:
   SkContourMeasureIter();
   /**
@@ -139,6 +138,9 @@ class SK_API SkContourMeasureIter : SkNoncopyable {
       const SkPoint& maxPt, unsigned ptIndex);
   SkScalar compute_cubic_segs(
       const SkPoint pts[4], SkScalar distance, int mint, int maxt, unsigned ptIndex);
+
+  SkContourMeasureIter(const SkContourMeasureIter&) = delete;
+  SkContourMeasureIter& operator=(const SkContourMeasureIter&) = delete;
 };
 
 #endif

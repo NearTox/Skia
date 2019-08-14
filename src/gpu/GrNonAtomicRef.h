@@ -19,7 +19,7 @@
 template <typename TSubclass>
 class GrNonAtomicRef : public SkNoncopyable {
  public:
-  GrNonAtomicRef() : fRefCnt(1) {}
+  constexpr GrNonAtomicRef() noexcept : fRefCnt(1) {}
 
 #ifdef SK_DEBUG
   ~GrNonAtomicRef() {
@@ -30,15 +30,15 @@ class GrNonAtomicRef : public SkNoncopyable {
   }
 #endif
 
-  bool unique() const { return 1 == fRefCnt; }
+  bool unique() const noexcept { return 1 == fRefCnt; }
 
-  void ref() const {
+  void ref() const noexcept {
     // Once the ref cnt reaches zero it should never be ref'ed again.
     SkASSERT(fRefCnt > 0);
     ++fRefCnt;
   }
 
-  void unref() const {
+  void unref() const noexcept {
     SkASSERT(fRefCnt > 0);
     --fRefCnt;
     if (0 == fRefCnt) {
@@ -54,7 +54,7 @@ class GrNonAtomicRef : public SkNoncopyable {
 };
 
 template <typename T>
-inline void GrTDeleteNonAtomicRef(const T* ref) {
+inline void GrTDeleteNonAtomicRef(const T* ref) noexcept {
   delete ref;
 }
 

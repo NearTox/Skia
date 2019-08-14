@@ -92,7 +92,9 @@ class LatticeGP : public GrGeometryProcessor {
     uint32_t extraSamplerKey =
         gpu->getExtraSamplerKeyForProgram(samplerState, proxy->backendFormat());
 
-    fSampler.reset(proxy->textureType(), proxy->config(), samplerState, extraSamplerKey);
+    fSampler.reset(
+        proxy->textureType(), proxy->config(), samplerState, proxy->textureSwizzle(),
+        extraSamplerKey);
     this->setTextureSamplerCnt(1);
     fInPosition = {"position", kFloat2_GrVertexAttribType, kFloat2_GrSLType};
     fInTextureCoords = {"textureCoords", kFloat2_GrVertexAttribType, kFloat2_GrSLType};
@@ -181,14 +183,15 @@ class NonAALatticeOp final : public GrMeshDrawOp {
   FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
   GrProcessorSet::Analysis finalize(
-      const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType,
+      const GrCaps& caps, const GrAppliedClip* clip, bool hasMixedSampledCoverage,
       GrClampType clampType) override {
     auto opaque = fPatches[0].fColor.isOpaque() && GrPixelConfigIsOpaque(fProxy->config())
                       ? GrProcessorAnalysisColor::Opaque::kYes
                       : GrProcessorAnalysisColor::Opaque::kNo;
     auto analysisColor = GrProcessorAnalysisColor(opaque);
     auto result = fHelper.finalizeProcessors(
-        caps, clip, fsaaType, clampType, GrProcessorAnalysisCoverage::kNone, &analysisColor);
+        caps, clip, hasMixedSampledCoverage, clampType, GrProcessorAnalysisCoverage::kNone,
+        &analysisColor);
     analysisColor.isConstant(&fPatches[0].fColor);
     fWideColor = SkPMColor4fNeedsWideColor(fPatches[0].fColor, clampType, caps);
     return result;
@@ -337,8 +340,8 @@ std::unique_ptr<GrDrawOp> MakeNonAA(
 };  // namespace GrLatticeOp
 
 #if GR_TEST_UTILS
-#include "src/gpu/GrProxyProvider.h"
-#include "src/gpu/GrRecordingContextPriv.h"
+#  include "src/gpu/GrProxyProvider.h"
+#  include "src/gpu/GrRecordingContextPriv.h"
 
 /** Randomly divides subset into count divs. */
 static void init_random_divs(
@@ -392,9 +395,10 @@ GR_DRAW_OP_TEST_DEFINE(NonAALatticeOp) {
   GrSurfaceOrigin origin =
       random->nextBool() ? kTopLeft_GrSurfaceOrigin : kBottomLeft_GrSurfaceOrigin;
   const GrBackendFormat format =
-      context->priv().caps()->getBackendFormatFromColorType(kRGBA_8888_SkColorType);
+      context->priv().caps()->getBackendFormatFromColorType(GrColorType::kRGBA_8888);
   auto proxy = context->priv().proxyProvider()->createProxy(
-      format, desc, origin, SkBackingFit::kExact, SkBudgeted::kYes);
+      format, desc, GrRenderable::kNo, 1, origin, SkBackingFit::kExact, SkBudgeted::kYes,
+      GrProtected::kNo);
 
   do {
     if (random->nextBool()) {

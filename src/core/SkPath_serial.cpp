@@ -81,9 +81,9 @@ size_t SkPath::writeToMemoryAsRRect(void* storage) const {
 }
 
 size_t SkPath::writeToMemory(void* storage) const {
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
 
-  if (size_t bytes = this->writeToMemoryAsRRect(storage)) {
+      if (size_t bytes = this->writeToMemoryAsRRect(storage)) {
     return bytes;
   }
 
@@ -300,7 +300,6 @@ size_t SkPath::readFromMemory_LE3(const void* storage, size_t length) {
   }
 
   fPathRef.reset(pathRef);
-  SkDEBUGCODE(this->validate());
-  buffer.skipToAlign4();
+  SkDEBUGCODE(this->validate();) buffer.skipToAlign4();
   return buffer.pos();
 }

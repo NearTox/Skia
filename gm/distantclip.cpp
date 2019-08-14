@@ -21,15 +21,11 @@
 namespace skiagm {
 
 class DistantClipGM : public GM {
- public:
-  DistantClipGM() {}
+  SkString onShortName() override { return SkString("distantclip"); }
 
- protected:
-  SkString onShortName() { return SkString("distantclip"); }
+  SkISize onISize() override { return {100, 100}; }
 
-  SkISize onISize() { return SkISize::Make(100, 100); }
-
-  virtual void onDraw(SkCanvas* canvas) {
+  void onDraw(SkCanvas* canvas) override {
     constexpr SkScalar kOffset = 35000.0f;
     constexpr SkScalar kExtents = 1000.0f;
 
@@ -62,9 +58,6 @@ class DistantClipGM : public GM {
     // If the image is red, we erroneously decided the clipPath was empty and didn't record
     // the green drawColor, if it's green we're all good.
   }
-
- private:
-  typedef GM INHERITED;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

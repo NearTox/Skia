@@ -104,7 +104,7 @@ class SK_API GrReducedClip {
    * may cause flushes or otherwise change which opList the actual draw is going into.
    */
   std::unique_ptr<GrFragmentProcessor> finishAndDetachAnalyticFPs(
-      GrCoverageCountingPathRenderer*, uint32_t opListID, int rtWidth, int rtHeight);
+      GrCoverageCountingPathRenderer*, uint32_t opListID);
 
  private:
   void walkStack(const SkClipStack&, const SkRect& queryBounds);

@@ -39,13 +39,7 @@ class SubpixelTranslateView : public Sample {
 
   SkPoint fCurPos;
 
-  bool onQuery(Sample::Event* evt) override {
-    if (Sample::TitleQ(*evt)) {
-      Sample::TitleR(evt, "SubpixelTranslate");
-      return true;
-    }
-    return this->INHERITED::onQuery(evt);
-  }
+  SkString name() override { return SkString("SubpixelTranslate"); }
 
   void onDrawContent(SkCanvas* canvas) override {
     static const SkFilterQuality gQualitys[] = {kNone_SkFilterQuality, kLow_SkFilterQuality,

@@ -9,13 +9,13 @@
 
 #ifdef SK_HAS_PNG_LIBRARY
 
-#include "include/core/SkStream.h"
-#include "include/core/SkString.h"
-#include "include/encode/SkPngEncoder.h"
-#include "include/private/SkImageInfoPriv.h"
-#include "src/codec/SkColorTable.h"
-#include "src/codec/SkPngPriv.h"
-#include "src/images/SkImageEncoderFns.h"
+#  include "include/core/SkStream.h"
+#  include "include/core/SkString.h"
+#  include "include/encode/SkPngEncoder.h"
+#  include "include/private/SkImageInfoPriv.h"
+#  include "src/codec/SkColorTable.h"
+#  include "src/codec/SkPngPriv.h"
+#  include "src/images/SkImageEncoderFns.h"
 #  include <vector>
 
 #  include "png.h"
@@ -284,7 +284,7 @@ static void set_icc(png_structp png_ptr, png_infop info_ptr, const SkImageInfo& 
     return;
   }
 
-#if PNG_LIBPNG_VER_MAJOR > 1 || (PNG_LIBPNG_VER_MAJOR == 1 && PNG_LIBPNG_VER_MINOR >= 5)
+#  if PNG_LIBPNG_VER_MAJOR > 1 || (PNG_LIBPNG_VER_MAJOR == 1 && PNG_LIBPNG_VER_MINOR >= 5)
   const char* name = "Skia";
   png_const_bytep iccPtr = icc->bytes();
 #  else

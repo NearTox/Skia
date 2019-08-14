@@ -14,14 +14,12 @@
 #include "string.h"
 #include "src/sksl/SkSLDefines.h"
 #include "src/sksl/SkSLLexer.h"
-#include "src/sksl/SkSLString.h"
-#include "src/sksl/SkSLStringStream.h"
 
 #ifndef SKSL_STANDALONE
-#include "include/core/SkTypes.h"
-#if SK_SUPPORT_GPU
-#include "include/gpu/GrContextOptions.h"
-#include "src/gpu/GrShaderCaps.h"
+#  include "include/core/SkTypes.h"
+#  if SK_SUPPORT_GPU
+#    include "include/gpu/GrContextOptions.h"
+#    include "src/gpu/GrShaderCaps.h"
 #  endif  // SK_SUPPORT_GPU
 #endif    // SKSL_STANDALONE
 
@@ -31,10 +29,6 @@ namespace SkSL {
 
 class OutputStream;
 class StringStream;
-
-#ifdef SKSL_STANDALONE
-#define SK_API
-#endif
 
 #if defined(SKSL_STANDALONE) || !SK_SUPPORT_GPU
 
@@ -72,8 +66,6 @@ class StandaloneShaderCaps {
 
   bool fbFetchNeedsCustomOutput() const { return false; }
 
-  bool dropsTileOnZeroDivide() const { return false; }
-
   bool flatInterpolationSupport() const { return true; }
 
   bool noperspectiveInterpolationSupport() const { return true; }
@@ -83,8 +75,6 @@ class StandaloneShaderCaps {
   bool sampleVariablesSupport() const { return true; }
 
   bool externalTextureSupport() const { return true; }
-
-  bool imageLoadStoreSupport() const { return true; }
 
   bool mustDoOpBetweenFloorAndAbs() const { return false; }
 
@@ -103,8 +93,6 @@ class StandaloneShaderCaps {
   const char* shaderDerivativeExtensionString() const { return nullptr; }
 
   const char* fragCoordConventionsExtensionString() const { return nullptr; }
-
-  const char* imageLoadStoreExtensionString() const { return nullptr; }
 
   const char* geometryShaderExtensionString() const { return nullptr; }
 
@@ -141,7 +129,7 @@ extern StandaloneShaderCaps standaloneCaps;
 
 #else
 
-#define SKSL_CAPS_CLASS GrShaderCaps
+#  define SKSL_CAPS_CLASS GrShaderCaps
 // Various sets of caps for use in tests
 class ShaderCapsFactory {
  public:
@@ -256,7 +244,6 @@ class ShaderCapsFactory {
     result->fVersionDeclString = "#version 400";
     result->fExternalTextureSupport = true;
     result->fFBFetchSupport = false;
-    result->fDropsTileOnZeroDivide = true;
     result->fCanUseAnyFunctionInShader = false;
     return result;
   }

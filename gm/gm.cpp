@@ -136,16 +136,19 @@ const char* GM::getName() {
 
 void GM::setBGColor(SkColor color) { fBGColor = color; }
 
-bool GM::animate(const AnimTimer& timer) { return this->onAnimate(timer); }
+bool GM::animate(double nanos) { return this->onAnimate(nanos); }
 
 bool GM::runAsBench() const { return false; }
 void GM::modifyGrContextOptions(GrContextOptions* options) {}
 
 void GM::onOnceBeforeDraw() {}
 
-bool GM::onAnimate(const AnimTimer&) { return false; }
-bool GM::onHandleKey(SkUnichar uni) { return false; }
+bool GM::onAnimate(double /*nanos*/) { return false; }
+
+bool GM::onChar(SkUnichar uni) { return false; }
+
 bool GM::onGetControls(SkMetaData*) { return false; }
+
 void GM::onSetControls(const SkMetaData&) {}
 
 /////////////////////////////////////////////////////////////////////////////////////////////

@@ -59,14 +59,7 @@ class SVGFileView : public Sample {
     this->INHERITED::onSizeChange();
   }
 
-  bool onQuery(Sample::Event* evt) override {
-    if (Sample::TitleQ(*evt)) {
-      Sample::TitleR(evt, fLabel.c_str());
-      return true;
-    }
-
-    return this->INHERITED::onQuery(evt);
-  }
+  SkString name() override { return fLabel; }
 
  private:
   sk_sp<SkSVGDOM> fDom;

@@ -7,12 +7,12 @@
 
 #include "include/gpu/GrContext.h"
 #include "include/gpu/GrSamplerState.h"
-#include "include/private/GrTextureProxy.h"
 #include "include/private/SkSpinlock.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrGeometryProcessor.h"
 #include "src/gpu/GrMemoryPool.h"
 #include "src/gpu/GrProcessor.h"
+#include "src/gpu/GrTextureProxy.h"
 #include "src/gpu/GrXferProcessor.h"
 
 #if GR_TEST_UTILS
@@ -54,15 +54,15 @@ SkTArray<GrXPFactoryTestFactory*, true>* GrXPFactoryTestFactory::GetFactories() 
  * we verify the count is as expected.  If a new factory is added, then these numbers must be
  * manually adjusted.
  */
-#if SK_ALLOW_STATIC_GLOBAL_INITIALIZERS
+#  if SK_ALLOW_STATIC_GLOBAL_INITIALIZERS
 static const int kFPFactoryCount = 36;
 static const int kGPFactoryCount = 14;
 static const int kXPFactoryCount = 4;
-#else
+#  else
 static const int kFPFactoryCount = 0;
 static const int kGPFactoryCount = 0;
 static const int kXPFactoryCount = 0;
-#endif
+#  endif
 
 template <>
 void GrFragmentProcessorTestFactory::VerifyFactoryCount() {

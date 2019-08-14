@@ -302,7 +302,6 @@ class ConicalGradientsGM : public GM {
  public:
   ConicalGradientsGM(GradCaseType gradCaseType, bool dither, SkTileMode mode = SkTileMode::kClamp)
       : fGradCaseType(gradCaseType), fDither(dither), fMode(mode) {
-    this->setBGColor(0xFFDDDDDD);
     fName.printf(
         "gradients_2pt_conical_%s%s", gGradCases[gradCaseType].fName, fDither ? "" : "_nodither");
     switch (mode) {
@@ -312,12 +311,14 @@ class ConicalGradientsGM : public GM {
     }
   }
 
- protected:
-  SkString onShortName() { return fName; }
+ private:
+  void onOnceBeforeDraw() override { this->setBGColor(0xFFDDDDDD); }
 
-  virtual SkISize onISize() { return SkISize::Make(840, 815); }
+  SkString onShortName() override { return fName; }
 
-  virtual void onDraw(SkCanvas* canvas) {
+  SkISize onISize() override { return {840, 815}; }
+
+  void onDraw(SkCanvas* canvas) override {
     SkPoint pts[2] = {{0, 0}, {SkIntToScalar(100), SkIntToScalar(100)}};
     SkRect r = {0, 0, SkIntToScalar(100), SkIntToScalar(100)};
     SkPaint paint;
@@ -349,8 +350,6 @@ class ConicalGradientsGM : public GM {
   }
 
  private:
-  typedef GM INHERITED;
-
   GradCaseType fGradCaseType;
   SkString fName;
   bool fDither;

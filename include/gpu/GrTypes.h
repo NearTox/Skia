@@ -173,6 +173,7 @@ static inline constexpr size_t GrSizeAlignDown(size_t x, uint32_t alignment) {
  */
 enum class GrBackendApi : unsigned {
   kMetal,
+  kDawn,
   kOpenGL,
   kVulkan,
   /**
@@ -209,6 +210,11 @@ enum class GrMipMapped : bool { kNo = false, kYes = true };
  * Can a GrBackendObject be rendered to?
  */
 enum class GrRenderable : bool { kNo = false, kYes = true };
+
+/*
+ * Used to say whether texture is backed by protected memory.
+ */
+enum class GrProtected : bool { kNo = false, kYes = true };
 
 ///////////////////////////////////////////////////////////////////////////////
 

@@ -31,15 +31,6 @@ bool GrXferProcessor::hasSecondaryOutput() const {
   return this->dstReadUsesMixedSamples();
 }
 
-void GrXferProcessor::getBlendInfo(BlendInfo* blendInfo) const {
-  blendInfo->reset();
-  if (!this->willReadDstColor()) {
-    this->onGetBlendInfo(blendInfo);
-  } else if (this->dstReadUsesMixedSamples()) {
-    blendInfo->fDstBlend = kIS2A_GrBlendCoeff;
-  }
-}
-
 void GrXferProcessor::getGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b,
     const GrSurfaceOrigin* originIfDstTexture) const {

@@ -50,9 +50,9 @@ DummyClasses(Cubic, Cubic);
 #undef DummyClasses
 
 #ifdef SK_RELEASE
-#define FORCE_RELEASE 1
+#  define FORCE_RELEASE 1
 #else
-#define FORCE_RELEASE 1  // set force release to 1 for multiple thread -- no debugging
+#  define FORCE_RELEASE 1  // set force release to 1 for multiple thread -- no debugging
 #endif
 
 #define DEBUG_UNDER_DEVELOPMENT 0
@@ -80,13 +80,13 @@ DummyClasses(Cubic, Cubic);
 
 #if FORCE_RELEASE
 
-#define DEBUG_ACTIVE_OP 0
-#define DEBUG_ACTIVE_SPANS 0
-#define DEBUG_ADD_INTERSECTING_TS 0
-#define DEBUG_ADD_T 0
-#define DEBUG_ALIGNMENT 0
-#define DEBUG_ANGLE 0
-#define DEBUG_ASSEMBLE 0
+#  define DEBUG_ACTIVE_OP 0
+#  define DEBUG_ACTIVE_SPANS 0
+#  define DEBUG_ADD_INTERSECTING_TS 0
+#  define DEBUG_ADD_T 0
+#  define DEBUG_ALIGNMENT 0
+#  define DEBUG_ANGLE 0
+#  define DEBUG_ASSEMBLE 0
 #  define DEBUG_COINCIDENCE 0        // sanity checking
 #  define DEBUG_COINCIDENCE_DUMP 0   // accumulate and dump which algorithms fired
 #  define DEBUG_COINCIDENCE_ORDER 0  // for well behaved curves, check if pairs match up in t-order
@@ -111,28 +111,28 @@ DummyClasses(Cubic, Cubic);
 
 #else
 
-#define DEBUG_ACTIVE_OP 1
-#define DEBUG_ACTIVE_SPANS 1
-#define DEBUG_ADD_INTERSECTING_TS 1
-#define DEBUG_ADD_T 1
-#define DEBUG_ALIGNMENT 0
-#define DEBUG_ANGLE 1
-#define DEBUG_ASSEMBLE 1
-#define DEBUG_COINCIDENCE 1
-#define DEBUG_COINCIDENCE_DUMP 0
-#define DEBUG_COINCIDENCE_ORDER 0  // tight arc quads may generate out-of-order coincidence spans
-#define DEBUG_COINCIDENCE_VERBOSE 1
-#define DEBUG_CUBIC_BINARY_SEARCH 0
-#define DEBUG_CUBIC_SPLIT 1
-#define DEBUG_DUMP_VERIFY 0
-#define DEBUG_DUMP_SEGMENTS 1
-#define DEBUG_FLOW 1
-#define DEBUG_LIMIT_WIND_SUM 15
-#define DEBUG_MARK_DONE 1
-#define DEBUG_PATH_CONSTRUCTION 1
-#define DEBUG_PERP 1
-#define DEBUG_SHOW_TEST_NAME 1
-#define DEBUG_SORT 1
+#  define DEBUG_ACTIVE_OP 1
+#  define DEBUG_ACTIVE_SPANS 1
+#  define DEBUG_ADD_INTERSECTING_TS 1
+#  define DEBUG_ADD_T 1
+#  define DEBUG_ALIGNMENT 0
+#  define DEBUG_ANGLE 1
+#  define DEBUG_ASSEMBLE 1
+#  define DEBUG_COINCIDENCE 1
+#  define DEBUG_COINCIDENCE_DUMP 0
+#  define DEBUG_COINCIDENCE_ORDER 0  // tight arc quads may generate out-of-order coincidence spans
+#  define DEBUG_COINCIDENCE_VERBOSE 1
+#  define DEBUG_CUBIC_BINARY_SEARCH 0
+#  define DEBUG_CUBIC_SPLIT 1
+#  define DEBUG_DUMP_VERIFY 0
+#  define DEBUG_DUMP_SEGMENTS 1
+#  define DEBUG_FLOW 1
+#  define DEBUG_LIMIT_WIND_SUM 15
+#  define DEBUG_MARK_DONE 1
+#  define DEBUG_PATH_CONSTRUCTION 1
+#  define DEBUG_PERP 1
+#  define DEBUG_SHOW_TEST_NAME 1
+#  define DEBUG_SORT 1
 #  define DEBUG_T_SECT 0       // enabling may trigger validate asserts even though op does not fail
 #  define DEBUG_T_SECT_DUMP 0  // Use 1 normally. Use 2 to number segments, 3 for script output
 #  define DEBUG_T_SECT_LOOP_COUNT 0
@@ -227,11 +227,11 @@ extern int gDumpTSectNum;
 #define PT_DEBUG_DATA(i, n) i.pt(n).asSkPoint().fX, i.pt(n).asSkPoint().fY
 
 #ifndef DEBUG_TEST
-#define DEBUG_TEST 0
+#  define DEBUG_TEST 0
 #endif
 
 #if DEBUG_SHOW_TEST_NAME
-#include "src/core/SkTLS.h"
+#  include "src/core/SkTLS.h"
 #endif
 
 // Tests with extreme numbers may fail, but all other tests should never fail.

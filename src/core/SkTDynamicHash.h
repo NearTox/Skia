@@ -255,8 +255,7 @@ class SkTDynamicHash {
   }
 
   void resize(int newCapacity) {
-    SkDEBUGCODE(int oldCount = fCount);
-    int oldCapacity = fCapacity;
+    SkDEBUGCODE(int oldCount = fCount;) int oldCapacity = fCapacity;
     SkAutoTMalloc<T*> oldArray(fArray);
 
     fCount = fDeleted = 0;

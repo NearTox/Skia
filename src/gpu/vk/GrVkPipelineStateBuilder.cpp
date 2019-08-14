@@ -66,9 +66,6 @@ bool GrVkPipelineStateBuilder::createVkShaderModule(
   if (outInputs->fRTHeight) {
     this->addRTHeightUniform(SKSL_RTHEIGHT_NAME);
   }
-  if (outInputs->fFlipY) {
-    desc->setSurfaceOriginKey(GrGLSLFragmentShaderBuilder::KeyForSurfaceOrigin(this->origin()));
-  }
   return true;
 }
 
@@ -257,7 +254,7 @@ GrVkPipelineState* GrVkPipelineStateBuilder::finalize(
     }
   }
   GrVkPipeline* pipeline = resourceProvider.createPipeline(
-      this->renderTarget()->numColorSamples(), fPrimProc, fPipeline, stencil, this->origin(),
+      this->renderTarget()->numSamples(), fPrimProc, fPipeline, stencil, this->origin(),
       shaderStageInfo, numShaderStages, primitiveType, compatibleRenderPass, pipelineLayout);
   for (int i = 0; i < kGrShaderTypeCount; ++i) {
     // This if check should not be needed since calling destroy on a VK_NULL_HANDLE is allowed.

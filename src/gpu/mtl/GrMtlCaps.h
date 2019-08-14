@@ -25,16 +25,29 @@ class GrMtlCaps : public GrCaps {
 
   GrMtlCaps(const GrContextOptions& contextOptions, id<MTLDevice> device, MTLFeatureSet featureSet);
 
-  bool isConfigTexturable(GrPixelConfig config) const override {
-    return SkToBool(fConfigTable[config].fFlags & ConfigInfo::kTextureable_Flag);
-  }
+  bool isFormatSRGB(const GrBackendFormat& format) const override;
 
+  bool isFormatTexturable(GrColorType, const GrBackendFormat&) const override;
+  bool isConfigTexturable(GrPixelConfig config) const override;
+  bool isFormatTexturable(MTLPixelFormat) const;
+
+  bool isFormatCopyable(GrColorType, const GrBackendFormat&) const override { return true; }
+  bool isConfigCopyable(GrPixelConfig) const override { return true; }
+
+  int getRenderTargetSampleCount(
+      int requestedCount, GrColorType, const GrBackendFormat&) const override;
   int getRenderTargetSampleCount(int requestedCount, GrPixelConfig) const override;
+  int getRenderTargetSampleCount(int requestedCount, MTLPixelFormat) const;
+
+  int maxRenderTargetSampleCount(GrColorType, const GrBackendFormat&) const override;
   int maxRenderTargetSampleCount(GrPixelConfig) const override;
+  int maxRenderTargetSampleCount(MTLPixelFormat) const;
 
-  bool surfaceSupportsReadPixels(const GrSurface*) const override { return true; }
-
-  bool isConfigCopyable(GrPixelConfig config) const override { return true; }
+  SurfaceReadPixelsSupport surfaceSupportsReadPixels(const GrSurface*) const override {
+    return SurfaceReadPixelsSupport::kSupported;
+  }
+  SupportedRead supportedReadPixelsColorType(
+      GrColorType, const GrBackendFormat&, GrColorType) const override;
 
   /**
    * Returns both a supported and most prefered stencil format to use in draws.
@@ -42,32 +55,23 @@ class GrMtlCaps : public GrCaps {
   const StencilFormat& preferredStencilFormat() const { return fPreferredStencilFormat; }
 
   bool canCopyAsBlit(
-      GrPixelConfig dstConfig, int dstSampleCount, GrSurfaceOrigin dstOrigin,
-      GrPixelConfig srcConfig, int srcSampleCount, GrSurfaceOrigin srcOrigin,
+      GrPixelConfig dstConfig, int dstSampleCount, GrPixelConfig srcConfig, int srcSampleCount,
       const SkIRect& srcRect, const SkIPoint& dstPoint, bool areDstSrcSameObj) const;
 
-  bool canCopyAsDraw(
-      GrPixelConfig dstConfig, bool dstIsRenderable, GrPixelConfig srcConfig,
-      bool srcIsTextureable) const;
-
-  bool canCopyAsDrawThenBlit(
-      GrPixelConfig dstConfig, GrPixelConfig srcConfig, bool srcIsTextureable) const;
-
-  bool initDescForDstCopy(
-      const GrRenderTargetProxy* src, GrSurfaceDesc* desc, GrSurfaceOrigin*, bool* rectsMustMatch,
-      bool* disallowSubrect) const override {
-    return false;
-  }
+  bool canCopyAsResolve(
+      GrSurface* dst, int dstSampleCount, GrSurface* src, int srcSampleCount,
+      const SkIRect& srcRect, const SkIPoint& dstPoint) const;
 
   GrPixelConfig validateBackendRenderTarget(
-      const GrBackendRenderTarget&, SkColorType) const override;
-
-  GrPixelConfig getConfigFromBackendFormat(const GrBackendFormat&, SkColorType) const override;
+      const GrBackendRenderTarget&, GrColorType) const override;
 
   GrPixelConfig getYUVAConfigFromBackendFormat(const GrBackendFormat&) const override;
+  GrColorType getYUVAColorTypeFromBackendFormat(const GrBackendFormat&) const override;
 
-  GrBackendFormat getBackendFormatFromGrColorType(
-      GrColorType ct, GrSRGBEncoded srgbEncoded) const override;
+  GrBackendFormat getBackendFormatFromColorType(GrColorType ct) const override;
+  GrBackendFormat getBackendFormatFromCompressionType(SkImage::CompressionType) const override;
+
+  bool canClearTextureOnCreation() const override { return true; }
 
   GrSwizzle getTextureSwizzle(const GrBackendFormat&, GrColorType) const override;
   GrSwizzle getOutputSwizzle(const GrBackendFormat&, GrColorType) const override;
@@ -80,7 +84,7 @@ class GrMtlCaps : public GrCaps {
   void initGrCaps(const id<MTLDevice> device);
   void initShaderCaps();
 
-  void initConfigTable();
+  void initFormatTable();
 
   bool onSurfaceSupportsWritePixels(const GrSurface*) const override;
   bool onCanCopySurface(
@@ -90,9 +94,11 @@ class GrMtlCaps : public GrCaps {
     // Transfer buffers not yet supported.
     return 0;
   }
+  GrPixelConfig onGetConfigFromBackendFormat(const GrBackendFormat&, GrColorType) const override;
+  bool onAreColorTypeAndFormatCompatible(GrColorType, const GrBackendFormat&) const override;
 
-  struct ConfigInfo {
-    ConfigInfo() : fFlags(0) {}
+  struct FormatInfo {
+    FormatInfo() : fFlags(0) {}
 
     enum {
       kTextureable_Flag = 0x1,
@@ -100,13 +106,23 @@ class GrMtlCaps : public GrCaps {
       kMSAA_Flag = 0x4,
       kResolve_Flag = 0x8,
     };
-    // TODO: Put kMSAA_Flag back when MSAA is implemented
-    static const uint16_t kAllFlags = kTextureable_Flag | kRenderable_Flag |
-                                      /*kMSAA_Flag |*/ kResolve_Flag;
+    static const uint16_t kAllFlags =
+        kTextureable_Flag | kRenderable_Flag | kMSAA_Flag | kResolve_Flag;
 
     uint16_t fFlags;
   };
-  ConfigInfo fConfigTable[kGrPixelConfigCnt];
+#ifdef SK_BUILD_FOR_IOS
+  static constexpr size_t kNumMtlFormats = 17;
+#else
+  static constexpr size_t kNumMtlFormats = 14;
+#endif
+  static size_t GetFormatIndex(MTLPixelFormat);
+  FormatInfo fFormatTable[kNumMtlFormats];
+
+  const FormatInfo& getFormatInfo(const MTLPixelFormat pixelFormat) const {
+    size_t index = GetFormatIndex(pixelFormat);
+    return fFormatTable[index];
+  }
 
   enum class Platform { kMac, kIOS };
   bool isMac() { return Platform::kMac == fPlatform; }

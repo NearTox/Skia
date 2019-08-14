@@ -90,11 +90,11 @@ class SK_API SkPicture : public SkRefCnt {
 
         @return  abstract class cannot be instantiated
     */
-    AbortCallback() {}
+    constexpr AbortCallback() = default;
 
     /** Has no effect.
      */
-    virtual ~AbortCallback() {}
+    virtual ~AbortCallback() = default;
 
     /** Stops SkPicture playback when some condition is met. A subclass of
         AbortCallback provides an override for abort() that can stop SkPicture::playback.
@@ -218,7 +218,9 @@ class SK_API SkPicture : public SkRefCnt {
   template <typename>
   friend class SkMiniPicture;
 
-  void serialize(SkWStream*, const SkSerialProcs*, class SkRefCntSet* typefaces) const;
+  void serialize(
+      SkWStream*, const SkSerialProcs*, class SkRefCntSet* typefaces,
+      bool textBlobsOnly = false) const;
   static sk_sp<SkPicture> MakeFromStream(
       SkStream*, const SkDeserialProcs*, class SkTypefacePlayback*);
   friend class SkPictureData;

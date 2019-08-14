@@ -32,9 +32,6 @@ class GrImageTextureMaker : public GrTextureMaker {
   void makeCopyKey(const CopyParams& stretch, GrUniqueKey* paramsCopyKey) override;
   void didCacheCopy(const GrUniqueKey& copyKey, uint32_t contextUniqueID) override {}
 
-  SkAlphaType alphaType() const override;
-  SkColorSpace* colorSpace() const override;
-
  private:
   const SkImage_Lazy* fImage;
   GrUniqueKey fOriginalKey;
@@ -66,9 +63,6 @@ class GrYUVAImageTextureMaker : public GrTextureMaker {
       const SkMatrix& textureMatrix, const SkRect& constraintRect,
       FilterConstraint filterConstraint, bool coordsLimitedToConstraintRect,
       const GrSamplerState::Filter* filterOrNullForBicubic) override;
-
-  SkAlphaType alphaType() const override;
-  SkColorSpace* colorSpace() const override;
 
  private:
   const SkImage_GpuYUVA* fImage;

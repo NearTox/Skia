@@ -198,7 +198,7 @@ class GrStyle {
       fIntervals.reset(0);
     }
     SkPathEffect::DashType fType;
-    SkScalar fPhase;
+    SkScalar fPhase{0};
     SkAutoSTArray<4, SkScalar> fIntervals;
   };
 

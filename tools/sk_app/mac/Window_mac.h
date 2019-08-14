@@ -17,7 +17,7 @@ namespace sk_app {
 
 class Window_mac : public Window {
  public:
-  Window_mac() : INHERITED(), fWindow(nil), fMSAASampleCount(1) {}
+  Window_mac() : INHERITED(), fWindow(nil) {}
   ~Window_mac() override { this->closeWindow(); }
 
   bool initWindow();
@@ -41,7 +41,6 @@ class Window_mac : public Window {
  private:
   NSWindow* fWindow;
   NSInteger fWindowNumber;
-  int fMSAASampleCount;
 
   static SkTDynamicHash<Window_mac, NSInteger> gWindowMap;
 

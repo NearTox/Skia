@@ -7,6 +7,7 @@
 
 #include "src/gpu/vk/GrVkAMDMemoryAllocator.h"
 
+#include "src/core/SkTraceEvent.h"
 #include "src/gpu/vk/GrVkInterface.h"
 #include "src/gpu/vk/GrVkMemory.h"
 #include "src/gpu/vk/GrVkUtil.h"
@@ -61,6 +62,7 @@ GrVkAMDMemoryAllocator::~GrVkAMDMemoryAllocator() {
 
 bool GrVkAMDMemoryAllocator::allocateMemoryForImage(
     VkImage image, AllocationPropertyFlags flags, GrVkBackendMemory* backendMemory) {
+  TRACE_EVENT0("skia.gpu", TRACE_FUNC);
   VmaAllocationCreateInfo info;
   info.flags = 0;
   info.usage = VMA_MEMORY_USAGE_UNKNOWN;
@@ -78,6 +80,10 @@ bool GrVkAMDMemoryAllocator::allocateMemoryForImage(
     info.preferredFlags |= VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT;
   }
 
+  if (AllocationPropertyFlags::kProtected & flags) {
+    info.requiredFlags |= VK_MEMORY_PROPERTY_PROTECTED_BIT;
+  }
+
   VmaAllocation allocation;
   VkResult result = vmaAllocateMemoryForImage(fAllocator, image, &info, &allocation, nullptr);
   if (VK_SUCCESS != result) {
@@ -90,6 +96,7 @@ bool GrVkAMDMemoryAllocator::allocateMemoryForImage(
 bool GrVkAMDMemoryAllocator::allocateMemoryForBuffer(
     VkBuffer buffer, BufferUsage usage, AllocationPropertyFlags flags,
     GrVkBackendMemory* backendMemory) {
+  TRACE_EVENT0("skia.gpu", TRACE_FUNC);
   VmaAllocationCreateInfo info;
   info.flags = 0;
   info.usage = VMA_MEMORY_USAGE_UNKNOWN;
@@ -150,6 +157,7 @@ bool GrVkAMDMemoryAllocator::allocateMemoryForBuffer(
 }
 
 void GrVkAMDMemoryAllocator::freeMemory(const GrVkBackendMemory& memoryHandle) {
+  TRACE_EVENT0("skia.gpu", TRACE_FUNC);
   const VmaAllocation allocation = (const VmaAllocation)memoryHandle;
   vmaFreeMemory(fAllocator, allocation);
 }
@@ -198,6 +206,7 @@ void GrVkAMDMemoryAllocator::getAllocInfo(
 }
 
 void* GrVkAMDMemoryAllocator::mapMemory(const GrVkBackendMemory& memoryHandle) {
+  TRACE_EVENT0("skia.gpu", TRACE_FUNC);
   const VmaAllocation allocation = (const VmaAllocation)memoryHandle;
   void* mapPtr;
   vmaMapMemory(fAllocator, allocation, &mapPtr);
@@ -205,12 +214,14 @@ void* GrVkAMDMemoryAllocator::mapMemory(const GrVkBackendMemory& memoryHandle) {
 }
 
 void GrVkAMDMemoryAllocator::unmapMemory(const GrVkBackendMemory& memoryHandle) {
+  TRACE_EVENT0("skia.gpu", TRACE_FUNC);
   const VmaAllocation allocation = (const VmaAllocation)memoryHandle;
   vmaUnmapMemory(fAllocator, allocation);
 }
 
 void GrVkAMDMemoryAllocator::flushMappedMemory(
     const GrVkBackendMemory& memoryHandle, VkDeviceSize offset, VkDeviceSize size) {
+  TRACE_EVENT0("skia.gpu", TRACE_FUNC);
   GrVkAlloc info;
   this->getAllocInfo(memoryHandle, &info);
 
@@ -228,6 +239,7 @@ void GrVkAMDMemoryAllocator::flushMappedMemory(
 
 void GrVkAMDMemoryAllocator::invalidateMappedMemory(
     const GrVkBackendMemory& memoryHandle, VkDeviceSize offset, VkDeviceSize size) {
+  TRACE_EVENT0("skia.gpu", TRACE_FUNC);
   GrVkAlloc info;
   this->getAllocInfo(memoryHandle, &info);
 

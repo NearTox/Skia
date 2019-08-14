@@ -33,7 +33,7 @@ std::unique_ptr<SkShaper> SkShaper::Make() {
 }
 
 SkShaper::SkShaper() {}
-SkShaper::~SkShaper() {}
+SkShaper::~SkShaper() = default;
 
 /** Replaces invalid utf-8 sequences with REPLACEMENT CHARACTER U+FFFD. */
 static inline SkUnichar utf8_next(const char** ptr, const char* end) {
@@ -117,33 +117,9 @@ std::unique_ptr<SkShaper::FontRunIterator> SkShaper::MakeFontMgrRunIterator(
   return skstd::make_unique<FontMgrRunIterator>(utf8, utf8Bytes, font, std::move(fallback));
 }
 
-class StdLanguageRunIterator final : public SkShaper::LanguageRunIterator {
- public:
-  StdLanguageRunIterator(const char* utf8, size_t utf8Bytes)
-      : fCurrent(utf8),
-        fBegin(utf8),
-        fEnd(fCurrent + utf8Bytes),
-        fLanguage(std::locale().name().c_str()) {}
-  void consume() override {
-    // Ideally something like cld2/3 could be used, or user signals.
-    SkASSERT(fCurrent < fEnd);
-    fCurrent = fEnd;
-  }
-  size_t endOfCurrentRun() const override { return fCurrent - fBegin; }
-  bool atEnd() const override { return fCurrent == fEnd; }
-
-  const char* currentLanguage() const override { return fLanguage.c_str(); }
-
- private:
-  char const* fCurrent;
-  char const* const fBegin;
-  char const* const fEnd;
-  const SkString fLanguage;
-};
-
 std::unique_ptr<SkShaper::LanguageRunIterator> SkShaper::MakeStdLanguageRunIterator(
     const char* utf8, size_t utf8Bytes) {
-  return skstd::make_unique<StdLanguageRunIterator>(utf8, utf8Bytes);
+  return skstd::make_unique<TrivialLanguageRunIterator>(std::locale().name().c_str(), utf8Bytes);
 }
 
 void SkTextBlobBuilderRunHandler::beginLine() {

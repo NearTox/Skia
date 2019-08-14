@@ -52,9 +52,8 @@ bool GrGpuRTCommandBuffer::draw(
       !pipeline.isScissorEnabled() || fixedDynamicState ||
       (dynamicStateArrays && dynamicStateArrays->fScissorRects));
 
-  if (pipeline.isBad()) {
-    return false;
-  }
+  SkASSERT(!pipeline.isBad());
+
 #ifdef SK_DEBUG
   if (fixedDynamicState && fixedDynamicState->fPrimitiveProcessorTextures) {
     GrTextureProxy** processorProxies = fixedDynamicState->fPrimitiveProcessorTextures;

@@ -9,9 +9,9 @@
 
 #if defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)
 
-#include "include/core/SkStream.h"
-#include "include/private/SkMalloc.h"
-#include "include/utils/mac/SkCGUtils.h"
+#  include "include/core/SkStream.h"
+#  include "include/private/SkMalloc.h"
+#  include "include/utils/mac/SkCGUtils.h"
 
 // These are used by CGDataProviderCreateWithData
 
@@ -72,7 +72,7 @@ CGDataProviderRef SkCreateDataProviderFromStream(std::unique_ptr<SkStreamRewinda
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "include/core/SkData.h"
+#  include "include/core/SkData.h"
 
 CGDataProviderRef SkCreateDataProviderFromData(sk_sp<SkData> data) {
   const void* addr = data->data();

@@ -12,23 +12,23 @@
 
 #ifdef SK_BUILD_FOR_WIN
 
-#include <ObjBase.h>
-#include <XpsObjectModel.h>
+#  include <ObjBase.h>
+#  include <XpsObjectModel.h>
 
-#include "include/core/SkCanvas.h"
-#include "include/core/SkColor.h"
-#include "include/core/SkPaint.h"
-#include "include/core/SkPath.h"
-#include "include/core/SkPoint.h"
-#include "include/core/SkShader.h"
-#include "include/core/SkSize.h"
-#include "include/core/SkTypeface.h"
-#include "include/private/SkTArray.h"
-#include "src/core/SkBitmapDevice.h"
-#include "src/core/SkClipStackDevice.h"
-#include "src/utils/SkBitSet.h"
-#include "src/utils/win/SkAutoCoInitialize.h"
-#include "src/utils/win/SkTScopedComPtr.h"
+#  include "include/core/SkCanvas.h"
+#  include "include/core/SkColor.h"
+#  include "include/core/SkPaint.h"
+#  include "include/core/SkPath.h"
+#  include "include/core/SkPoint.h"
+#  include "include/core/SkShader.h"
+#  include "include/core/SkSize.h"
+#  include "include/core/SkTypeface.h"
+#  include "include/private/SkTArray.h"
+#  include "src/core/SkBitmapDevice.h"
+#  include "src/core/SkClipStackDevice.h"
+#  include "src/utils/SkBitSet.h"
+#  include "src/utils/win/SkAutoCoInitialize.h"
+#  include "src/utils/win/SkTScopedComPtr.h"
 
 class SkGlyphRunList;
 

@@ -699,9 +699,9 @@ const GrXPFactory* GrPorterDuffXPFactory::Get(SkBlendMode blendMode) {
   // If these objects are constructed as static constexpr by cl.exe (2015 SP2) the vtables are
   // null.
 #ifdef SK_BUILD_FOR_WIN
-#define _CONSTEXPR_
+#  define _CONSTEXPR_
 #else
-#define _CONSTEXPR_ constexpr
+#  define _CONSTEXPR_ constexpr
 #endif
   static _CONSTEXPR_ const GrPorterDuffXPFactory gClearPDXPF(SkBlendMode::kClear);
   static _CONSTEXPR_ const GrPorterDuffXPFactory gSrcPDXPF(SkBlendMode::kSrc);
@@ -814,7 +814,7 @@ static inline GrXPFactory::AnalysisProperties analysis_properties(
       // Mixed samples implicity computes a fractional coverage from sample coverage. This
       // could affect the formula used. However, we don't expect to have mixed samples without
       // dual source blending.
-      SkASSERT(!caps.usesMixedSamples());
+      SkASSERT(!caps.mixedSamplesSupport());
       if (formula.hasSecondaryOutput()) {
         props |= AnalysisProperties::kReadsDstInShader;
       }

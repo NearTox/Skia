@@ -8,10 +8,10 @@
 #include "src/gpu/ops/GrStrokeRectOp.h"
 
 #include "include/core/SkStrokeRec.h"
-#include "include/private/GrColor.h"
 #include "include/private/GrResourceKey.h"
 #include "include/utils/SkRandom.h"
 #include "src/gpu/GrCaps.h"
+#include "src/gpu/GrColor.h"
 #include "src/gpu/GrDefaultGeoProcFactory.h"
 #include "src/gpu/GrDrawOpTest.h"
 #include "src/gpu/GrOpFlushState.h"
@@ -156,11 +156,12 @@ class NonAAStrokeRectOp final : public GrMeshDrawOp {
   FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
   GrProcessorSet::Analysis finalize(
-      const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType,
+      const GrCaps& caps, const GrAppliedClip* clip, bool hasMixedSampledCoverage,
       GrClampType clampType) override {
     // This Op uses uniform (not vertex) color, so doesn't need to track wide color.
     return fHelper.finalizeProcessors(
-        caps, clip, fsaaType, clampType, GrProcessorAnalysisCoverage::kNone, &fColor, nullptr);
+        caps, clip, hasMixedSampledCoverage, clampType, GrProcessorAnalysisCoverage::kNone, &fColor,
+        nullptr);
   }
 
  private:
@@ -390,10 +391,10 @@ class AAStrokeRectOp final : public GrMeshDrawOp {
   FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
   GrProcessorSet::Analysis finalize(
-      const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType,
+      const GrCaps& caps, const GrAppliedClip* clip, bool hasMixedSampledCoverage,
       GrClampType clampType) override {
     return fHelper.finalizeProcessors(
-        caps, clip, fsaaType, clampType, GrProcessorAnalysisCoverage::kSingleChannel,
+        caps, clip, hasMixedSampledCoverage, clampType, GrProcessorAnalysisCoverage::kSingleChannel,
         &fRects.back().fColor, &fWideColor);
   }
 
@@ -726,9 +727,9 @@ std::unique_ptr<GrDrawOp> MakeNested(
     if (devOutside.isEmpty()) {
       return nullptr;
     }
-    return GrFillRectOp::MakeGeneric(
+    return GrFillRectOp::Make(
         context, std::move(paint), GrAAType::kCoverage, GrQuadAAFlags::kAll,
-        GrPerspQuad::MakeFromRect(rects[0], viewMatrix), GrPerspQuad(rects[0]));
+        GrQuad::MakeFromRect(rects[0], viewMatrix), GrQuad(rects[0]));
   }
 
   return AAStrokeRectOp::Make(context, std::move(paint), viewMatrix, devOutside, devInside);
@@ -738,7 +739,7 @@ std::unique_ptr<GrDrawOp> MakeNested(
 
 #if GR_TEST_UTILS
 
-#include "src/gpu/GrDrawOpTest.h"
+#  include "src/gpu/GrDrawOpTest.h"
 
 GR_DRAW_OP_TEST_DEFINE(NonAAStrokeRectOp) {
   SkMatrix viewMatrix = GrTest::TestMatrix(random);
@@ -750,7 +751,7 @@ GR_DRAW_OP_TEST_DEFINE(NonAAStrokeRectOp) {
   strokePaint.setStrokeJoin(SkPaint::kMiter_Join);
   SkStrokeRec strokeRec(strokePaint);
   GrAAType aaType = GrAAType::kNone;
-  if (fsaaType == GrFSAAType::kUnifiedMSAA) {
+  if (numSamples > 1) {
     aaType = random->nextBool() ? GrAAType::kMSAA : GrAAType::kNone;
   }
   return NonAAStrokeRectOp::Make(context, std::move(paint), viewMatrix, rect, strokeRec, aaType);

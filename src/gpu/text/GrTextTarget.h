@@ -43,7 +43,9 @@ class GrTextTarget {
 
  protected:
   GrTextTarget(int width, int height, const GrColorSpaceInfo& colorSpaceInfo)
-      : fWidth(width), fHeight(height), fColorSpaceInfo(colorSpaceInfo) {}
+      : fWidth(width), fHeight(height), fColorSpaceInfo(colorSpaceInfo) {
+    SkASSERT(kPremul_SkAlphaType == colorSpaceInfo.alphaType());
+  }
 
  private:
   int fWidth;

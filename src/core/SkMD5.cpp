@@ -247,11 +247,11 @@ static const uint32_t* decode(uint32_t storage[16], const uint8_t input[64]) {
 #if defined(SK_CPU_LENDIAN) && defined(SK_CPU_FAST_UNALIGNED_ACCESS)
   return reinterpret_cast<const uint32_t*>(input);
 #else
-#if defined(SK_CPU_LENDIAN)
+#  if defined(SK_CPU_LENDIAN)
   if (is_aligned(input, 4)) {
     return reinterpret_cast<const uint32_t*>(input);
   }
-#endif
+#  endif
   for (size_t i = 0, j = 0; j < 64; i++, j += 4) {
     storage[i] = ((uint32_t)input[j]) | (((uint32_t)input[j + 1]) << 8) |
                  (((uint32_t)input[j + 2]) << 16) | (((uint32_t)input[j + 3]) << 24);

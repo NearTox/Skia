@@ -28,16 +28,16 @@ bool SkPackedArrayEqual(T* u, T* v, size_t n) {
 }
 
 #if 0
-#define PRINT_NOT_IMPL(str) fprintf(stderr, str)
+#  define PRINT_NOT_IMPL(str) fprintf(stderr, str)
 #else
-#define PRINT_NOT_IMPL(str)
+#  define PRINT_NOT_IMPL(str)
 #endif
 
 #define NOT_IMPLEMENTED(condition, assert)                 \
   do {                                                     \
     if ((bool)(condition)) {                               \
       PRINT_NOT_IMPL("NOT_IMPLEMENTED: " #condition "\n"); \
-      SkDEBUGCODE(SkASSERT(!assert));                      \
+      SkDEBUGCODE(SkASSERT(!assert);)                      \
     }                                                      \
   } while (0)
 

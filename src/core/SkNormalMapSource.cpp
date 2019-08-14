@@ -15,10 +15,10 @@
 #include "src/shaders/SkLightingShader.h"
 
 #if SK_SUPPORT_GPU
-#include "src/gpu/GrCoordTransform.h"
-#include "src/gpu/SkGr.h"
-#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
-#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#  include "src/gpu/GrCoordTransform.h"
+#  include "src/gpu/SkGr.h"
+#  include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#  include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 
 class NormalMapFP : public GrFragmentProcessor {
  public:

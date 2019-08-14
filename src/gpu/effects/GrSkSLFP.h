@@ -9,19 +9,19 @@
 #define GrSkSLFP_DEFINED
 
 #include "include/core/SkRefCnt.h"
-#include "include/private/GrSkSLFPFactoryCache.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrCoordTransform.h"
 #include "src/gpu/GrFragmentProcessor.h"
 #include "src/gpu/GrShaderCaps.h"
+#include "src/gpu/GrSkSLFPFactoryCache.h"
 #include "src/sksl/SkSLCompiler.h"
 #include "src/sksl/SkSLPipelineStageCodeGenerator.h"
 #include <atomic>
 
 #if GR_TEST_UTILS
-#define GR_FP_SRC_STRING const char*
+#  define GR_FP_SRC_STRING const char*
 #else
-#define GR_FP_SRC_STRING static const char*
+#  define GR_FP_SRC_STRING static const char*
 #endif
 
 class GrContext_Base;

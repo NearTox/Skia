@@ -14,7 +14,6 @@
 #include "src/shaders/SkBitmapProcShader.h"
 #include "src/shaders/SkLightingShader.h"
 #include "src/shaders/SkLights.h"
-#include "tools/timer/AnimTimer.h"
 
 #include "tools/ToolUtils.h"
 
@@ -433,28 +432,23 @@ class DrawLitAtlasView : public Sample {
   DrawLitAtlasView() : fDrawable(new DrawLitAtlasDrawable(SkRect::MakeWH(640, 480))) {}
 
  protected:
-  bool onQuery(Sample::Event* evt) override {
-    if (Sample::TitleQ(*evt)) {
-      Sample::TitleR(evt, "DrawLitAtlas");
-      return true;
+  SkString name() override { return SkString("DrawLitAtlas"); }
+
+  bool onChar(SkUnichar uni) override {
+    switch (uni) {
+      case 'C': fDrawable->toggleUseColors(); return true;
+      case 'j': fDrawable->left(); return true;
+      case 'k': fDrawable->thrust(); return true;
+      case 'l': fDrawable->right(); return true;
+      case 'o': fDrawable->rotateLight(); return true;
+      default: break;
     }
-    SkUnichar uni;
-    if (Sample::CharQ(*evt, &uni)) {
-      switch (uni) {
-        case 'C': fDrawable->toggleUseColors(); return true;
-        case 'j': fDrawable->left(); return true;
-        case 'k': fDrawable->thrust(); return true;
-        case 'l': fDrawable->right(); return true;
-        case 'o': fDrawable->rotateLight(); return true;
-        default: break;
-      }
-    }
-    return this->INHERITED::onQuery(evt);
+    return false;
   }
 
   void onDrawContent(SkCanvas* canvas) override { canvas->drawDrawable(fDrawable.get()); }
 
-  bool onAnimate(const AnimTimer& timer) override { return true; }
+  bool onAnimate(double nanos) override { return true; }
 
  private:
   sk_sp<DrawLitAtlasDrawable> fDrawable;

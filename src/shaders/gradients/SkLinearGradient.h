@@ -24,7 +24,6 @@ class SkLinearGradient : public SkGradientShaderBase {
   void flatten(SkWriteBuffer& buffer) const override;
 #ifdef SK_ENABLE_LEGACY_SHADERCONTEXT
   Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const override;
-  Context* onMakeBurstPipelineContext(const ContextRec&, SkArenaAlloc*) const override;
 #endif
 
   void appendGradientStages(

@@ -123,11 +123,11 @@ class TableColorFilterGM : public skiagm::GM {
   TableColorFilterGM() {}
 
  protected:
-  virtual SkString onShortName() { return SkString("tablecolorfilter"); }
+  SkString onShortName() override { return SkString("tablecolorfilter"); }
 
-  virtual SkISize onISize() { return SkISize::Make(700, 1650); }
+  SkISize onISize() override { return {700, 1650}; }
 
-  virtual void onDraw(SkCanvas* canvas) {
+  void onDraw(SkCanvas* canvas) override {
     canvas->drawColor(0xFFDDDDDD);
     canvas->translate(20, 20);
 
@@ -216,20 +216,18 @@ class ComposeColorFilterGM : public skiagm::GM {
   };
   const SkColor* fColors;
   const SkBlendMode* fModes;
-  SkString fName;
+  const char* fName;
 
  public:
-  ComposeColorFilterGM(const SkColor colors[], const SkBlendMode modes[], const char suffix[])
-      : fColors(colors), fModes(modes) {
-    fName.printf("colorcomposefilter_%s", suffix);
-  }
+  ComposeColorFilterGM(const SkColor colors[], const SkBlendMode modes[], const char* name)
+      : fColors(colors), fModes(modes), fName(name) {}
 
- protected:
-  virtual SkString onShortName() { return fName; }
+ private:
+  SkString onShortName() override { return SkString(fName); }
 
-  virtual SkISize onISize() { return SkISize::Make(790, 790); }
+  SkISize onISize() override { return {790, 790}; }
 
-  virtual void onDraw(SkCanvas* canvas) {
+  void onDraw(SkCanvas* canvas) override {
     SkBitmap bm;
     make_bm1(&bm);
 
@@ -280,9 +278,6 @@ class ComposeColorFilterGM : public skiagm::GM {
       canvas->translate(0, r.height() + spacer);
     }
   }
-
- private:
-  typedef GM INHERITED;
 };
 
 const SkColor gColors0[] = {SK_ColorCYAN, SK_ColorMAGENTA, SK_ColorYELLOW};
@@ -292,7 +287,7 @@ const SkBlendMode gModes0[] = {
     SkBlendMode::kColorBurn,
     SkBlendMode::kExclusion,
 };
-DEF_GM(return new ComposeColorFilterGM(gColors0, gModes0, "wacky");)
+DEF_GM(return new ComposeColorFilterGM(gColors0, gModes0, "colorcomposefilter_wacky");)
 
 const SkColor gColors1[] = {0x80FF0000, 0x8000FF00, 0x800000FF};
 const SkBlendMode gModes1[] = {
@@ -301,4 +296,4 @@ const SkBlendMode gModes1[] = {
     SkBlendMode::kDstOut,
     SkBlendMode::kSrcATop,
 };
-DEF_GM(return new ComposeColorFilterGM(gColors1, gModes1, "alpha");)
+DEF_GM(return new ComposeColorFilterGM(gColors1, gModes1, "colorcomposefilter_alpha");)

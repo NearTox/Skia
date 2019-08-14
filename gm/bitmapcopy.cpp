@@ -23,7 +23,7 @@
 
 #include <string.h>
 
-namespace skiagm {
+namespace {
 
 static const char* color_type_name(SkColorType colorType) {
   switch (colorType) {
@@ -69,18 +69,16 @@ static void draw_checks(SkCanvas* canvas, int width, int height) {
       paint);
 }
 
-class BitmapCopyGM : public GM {
- public:
+class BitmapCopyGM : public skiagm::GM {
   SkBitmap fDst[NUM_CONFIGS];
 
-  BitmapCopyGM() { this->setBGColor(0xFFDDDDDD); }
+  void onOnceBeforeDraw() override { this->setBGColor(0xFFDDDDDD); }
 
- protected:
-  virtual SkString onShortName() { return SkString("bitmapcopy"); }
+  SkString onShortName() override { return SkString("bitmapcopy"); }
 
-  virtual SkISize onISize() { return SkISize::Make(540, 330); }
+  SkISize onISize() override { return {540, 330}; }
 
-  virtual void onDraw(SkCanvas* canvas) {
+  void onDraw(SkCanvas* canvas) override {
     SkPaint paint;
     SkScalar horizMargin = 10;
     SkScalar vertMargin = 10;
@@ -134,12 +132,9 @@ class BitmapCopyGM : public GM {
       canvas->translate(horizOffset, 0);
     }
   }
-
- private:
-  typedef GM INHERITED;
 };
+}  // namespace
 
 //////////////////////////////////////////////////////////////////////////////
 
 DEF_GM(return new BitmapCopyGM;)
-}  // namespace skiagm

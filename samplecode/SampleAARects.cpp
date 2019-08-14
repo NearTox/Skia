@@ -32,24 +32,14 @@ static SkBitmap createBitmap(int n) {
   return bitmap;
 }
 
+static constexpr int N = 64;
+
 class AARectView : public Sample {
   SkBitmap fBitmap;
-  enum { N = 64 };
 
- protected:
-  void onOnceBeforeDraw() override {
-    fBitmap = createBitmap(N);
+  void onOnceBeforeDraw() override { fBitmap = createBitmap(N); }
 
-    fWidth = N;
-  }
-
-  bool onQuery(Sample::Event* evt) override {
-    if (Sample::TitleQ(*evt)) {
-      Sample::TitleR(evt, "AA Rects");
-      return true;
-    }
-    return this->INHERITED::onQuery(evt);
-  }
+  SkString name() override { return SkString("AA Rects"); }
 
   void onDrawContent(SkCanvas* canvas) override {
     canvas->translate(SkIntToScalar(10), SkIntToScalar(10));
@@ -146,8 +136,6 @@ class AARectView : public Sample {
   }
 
  private:
-  int fWidth;
-
   typedef Sample INHERITED;
 };
 

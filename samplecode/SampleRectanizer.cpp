@@ -51,25 +51,20 @@ class RectanizerView : public Sample {
   }
 
  protected:
-  bool onQuery(Sample::Event* evt) override {
-    if (Sample::TitleQ(*evt)) {
-      Sample::TitleR(evt, "Rectanizer");
-      return true;
-    }
-    SkUnichar uni;
-    if (Sample::CharQ(*evt, &uni)) {
-      char utf8[SkUTF::kMaxBytesInUTF8Sequence];
-      size_t size = SkUTF::ToUTF8(uni, utf8);
-      // Only consider events for single char keys
-      if (1 == size) {
-        switch (utf8[0]) {
-          case kCycleRectanizerKey: this->cycleRectanizer(); return true;
-          case kCycleRectsKey: this->cycleRects(); return true;
-          default: break;
-        }
+  SkString name() override { return SkString("Rectanizer"); }
+
+  bool onChar(SkUnichar uni) override {
+    char utf8[SkUTF::kMaxBytesInUTF8Sequence];
+    size_t size = SkUTF::ToUTF8(uni, utf8);
+    // Only consider events for single char keys
+    if (1 == size) {
+      switch (utf8[0]) {
+        case kCycleRectanizerKey: this->cycleRectanizer(); return true;
+        case kCycleRectsKey: this->cycleRects(); return true;
+        default: break;
       }
     }
-    return this->INHERITED::onQuery(evt);
+    return false;
   }
 
   void onDrawContent(SkCanvas* canvas) override {

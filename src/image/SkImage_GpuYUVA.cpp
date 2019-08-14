@@ -43,8 +43,7 @@ SkImage_GpuYUVA::SkImage_GpuYUVA(
       fYUVColorSpace(colorSpace),
       fOrigin(origin) {
   // The caller should have done this work, just verifying
-  SkDEBUGCODE(int textureCount);
-  SkASSERT(SkYUVAIndex::AreValidIndices(yuvaIndices, &textureCount));
+  SkDEBUGCODE(int textureCount;) SkASSERT(SkYUVAIndex::AreValidIndices(yuvaIndices, &textureCount));
   SkASSERT(textureCount == fNumProxies);
 
   for (int i = 0; i < numProxies; ++i) {
@@ -70,8 +69,8 @@ SkImage_GpuYUVA::SkImage_GpuYUVA(const SkImage_GpuYUVA* image, sk_sp<SkColorSpac
       ,
       fFromColorSpace(image->colorSpace() ? image->refColorSpace() : SkColorSpace::MakeSRGB()) {
   // The caller should have done this work, just verifying
-  SkDEBUGCODE(int textureCount);
-  SkASSERT(SkYUVAIndex::AreValidIndices(image->fYUVAIndices, &textureCount));
+  SkDEBUGCODE(int textureCount;)
+      SkASSERT(SkYUVAIndex::AreValidIndices(image->fYUVAIndices, &textureCount));
   SkASSERT(textureCount == fNumProxies);
 
   if (image->fRGBProxy) {
@@ -140,12 +139,9 @@ sk_sp<GrTextureProxy> SkImage_GpuYUVA::asTextureProxyRef(GrRecordingContext* con
     return nullptr;
   }
 
-  const GrBackendFormat format =
-      fContext->priv().caps()->getBackendFormatFromColorType(kAssumedColorType);
-
   // Needs to create a render target in order to draw to it for the yuv->rgb conversion.
   sk_sp<GrRenderTargetContext> renderTargetContext(context->priv().makeDeferredRenderTargetContext(
-      format, SkBackingFit::kExact, this->width(), this->height(), kRGBA_8888_GrPixelConfig,
+      SkBackingFit::kExact, this->width(), this->height(), GrColorType::kRGBA_8888,
       this->refColorSpace(), 1, GrMipMapped::kNo, fOrigin));
   if (!renderTargetContext) {
     return nullptr;
@@ -341,13 +337,14 @@ sk_sp<SkImage> SkImage_GpuYUVA::MakePromiseYUVATexture(
   // Get lazy proxies
   sk_sp<GrTextureProxy> proxies[4];
   for (int texIdx = 0; texIdx < numTextures; ++texIdx) {
-    GrPixelConfig config =
-        context->priv().caps()->getYUVAConfigFromBackendFormat(yuvaFormats[texIdx]);
-    if (config == kUnknown_GrPixelConfig) {
+    GrColorType colorType =
+        context->priv().caps()->getYUVAColorTypeFromBackendFormat(yuvaFormats[texIdx]);
+    if (GrColorType::kUnknown == colorType) {
       return nullptr;
     }
+
     proxies[texIdx] = MakePromiseImageLazyProxy(
-        context, yuvaSizes[texIdx].width(), yuvaSizes[texIdx].height(), imageOrigin, config,
+        context, yuvaSizes[texIdx].width(), yuvaSizes[texIdx].height(), imageOrigin, colorType,
         yuvaFormats[texIdx], GrMipMapped::kNo, textureFulfillProc, textureReleaseProc,
         promiseDoneProc, textureContexts[texIdx], version);
     ++proxiesCreated;

@@ -10,6 +10,7 @@
 
 #include "bench/SKPBench.h"
 #include "tools/timer/Timer.h"
+#include "include/utils/SkRandom.h"
 
 /**
  * Runs an SkPicture as a benchmark by repeatedly drawing it, first centering the picture and
@@ -26,9 +27,9 @@ class SKPAnimationBench : public SKPBench {
   };
 
   SKPAnimationBench(
-      const char* name, const SkPicture*, const SkIRect& devClip, Animation*, bool doLooping);
+      const char* name, const SkPicture*, const SkIRect& devClip, sk_sp<Animation>, bool doLooping);
 
-  static Animation* CreateZoomAnimation(SkScalar zoomMax, double zoomPeriodMs);
+  static sk_sp<Animation> MakeZoomAnimation(SkScalar zoomMax, double zoomPeriodMs);
 
  protected:
   const char* onGetUniqueName() override;
@@ -39,7 +40,7 @@ class SKPAnimationBench : public SKPBench {
 
  private:
   sk_sp<Animation> fAnimation;
-  WallTimer fAnimationTimer;
+  SkRandom fAnimationTime;
   SkString fUniqueName;
   SkIRect fDevBounds;
 

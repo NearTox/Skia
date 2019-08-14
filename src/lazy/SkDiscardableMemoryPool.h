@@ -61,7 +61,7 @@ class SkDiscardableMemoryPool : public SkDiscardableMemory::Factory {
 SkDiscardableMemoryPool* SkGetGlobalDiscardableMemoryPool();
 
 #if !defined(SK_DEFAULT_GLOBAL_DISCARDABLE_MEMORY_POOL_SIZE)
-#define SK_DEFAULT_GLOBAL_DISCARDABLE_MEMORY_POOL_SIZE (128 * 1024 * 1024)
+#  define SK_DEFAULT_GLOBAL_DISCARDABLE_MEMORY_POOL_SIZE (128 * 1024 * 1024)
 #endif
 
 #endif  // SkDiscardableMemoryPool_DEFINED

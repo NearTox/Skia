@@ -19,7 +19,7 @@ class GMSlide : public Slide {
   SkISize getDimensions() const override { return fGM->getISize(); }
 
   void draw(SkCanvas* canvas) override;
-  bool animate(const AnimTimer&) override;
+  bool animate(double nanos) override;
 
   bool onChar(SkUnichar c) override;
 
@@ -27,7 +27,7 @@ class GMSlide : public Slide {
   void onSetControls(const SkMetaData&) override;
 
  private:
-  skiagm::GM* fGM;
+  std::unique_ptr<skiagm::GM> fGM;
 };
 
 #endif

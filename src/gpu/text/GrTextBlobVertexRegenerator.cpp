@@ -153,7 +153,7 @@ bool GrTextBlob::VertexRegenerator::doRegen(
   if (regenTexCoords) {
     fSubRun->resetBulkUseToken();
 
-    const SkStrikeSpecStorage& strikeSpec = fSubRun->strikeSpec();
+    const SkStrikeSpec& strikeSpec = fSubRun->strikeSpec();
 
     if (!*fLazyStrike || (*fLazyStrike)->getDescriptor() != strikeSpec.descriptor()) {
       *fLazyStrike = strikeSpec.findOrCreateExclusiveStrike(SkStrikeCache::GlobalStrikeCache());

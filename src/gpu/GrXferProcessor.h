@@ -119,24 +119,24 @@ class GrXferProcessor : public GrProcessor, public GrNonAtomicRef<GrXferProcesso
   }
 
   struct BlendInfo {
-    void reset() {
-      fEquation = kAdd_GrBlendEquation;
-      fSrcBlend = kOne_GrBlendCoeff;
-      fDstBlend = kZero_GrBlendCoeff;
-      fBlendConstant = SK_PMColor4fTRANSPARENT;
-      fWriteColor = true;
-    }
+    SkDEBUGCODE(SkString dump() const;)
 
-    SkDEBUGCODE(SkString dump() const);
-
-    GrBlendEquation fEquation;
-    GrBlendCoeff fSrcBlend;
-    GrBlendCoeff fDstBlend;
-    SkPMColor4f fBlendConstant;
-    bool fWriteColor;
+        GrBlendEquation fEquation = kAdd_GrBlendEquation;
+    GrBlendCoeff fSrcBlend = kOne_GrBlendCoeff;
+    GrBlendCoeff fDstBlend = kZero_GrBlendCoeff;
+    SkPMColor4f fBlendConstant = SK_PMColor4fTRANSPARENT;
+    bool fWriteColor = true;
   };
 
-  void getBlendInfo(BlendInfo* blendInfo) const;
+  inline BlendInfo getBlendInfo() const {
+    BlendInfo blendInfo;
+    if (!this->willReadDstColor()) {
+      this->onGetBlendInfo(&blendInfo);
+    } else if (this->dstReadUsesMixedSamples()) {
+      blendInfo.fDstBlend = kIS2A_GrBlendCoeff;
+    }
+    return blendInfo;
+  }
 
   bool willReadDstColor() const { return fWillReadDstColor; }
 
@@ -236,12 +236,12 @@ class GrXferProcessor : public GrProcessor, public GrNonAtomicRef<GrXferProcesso
 // class has virtual functions and a non-virtual destructor. We suppress that warning here and
 // for the subclasses.
 #if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
 #endif
 #if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wnon-virtual-dtor"
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wnon-virtual-dtor"
 #endif
 class GrXPFactory {
  public:
@@ -299,10 +299,10 @@ class GrXPFactory {
       GrClampType) const = 0;
 };
 #if defined(__GNUC__)
-#pragma GCC diagnostic pop
+#  pragma GCC diagnostic pop
 #endif
 #if defined(__clang__)
-#pragma clang diagnostic pop
+#  pragma clang diagnostic pop
 #endif
 
 GR_MAKE_BITFIELD_CLASS_OPS(GrXPFactory::AnalysisProperties);

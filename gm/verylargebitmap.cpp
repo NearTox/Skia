@@ -45,7 +45,7 @@ static sk_sp<SkImage> make_picture_image(int width, int height, SkColor colors[2
   SkPictureRecorder recorder;
   draw(recorder.beginRecording(SkRect::MakeIWH(width, height)), width, height, colors);
   return SkImage::MakeFromPicture(
-      recorder.finishRecordingAsPicture(), SkISize::Make(width, height), nullptr, nullptr,
+      recorder.finishRecordingAsPicture(), {width, height}, nullptr, nullptr,
       SkImage::BitDepth::kU8, SkColorSpace::MakeSRGB());
 }
 
@@ -81,17 +81,15 @@ static void show_image(
 
 class VeryLargeBitmapGM : public skiagm::GM {
   ImageMakerProc fProc;
-  SkString fName;
+  const char* fName;
 
  public:
-  VeryLargeBitmapGM(ImageMakerProc proc, const char suffix[]) : fProc(proc) {
-    fName.printf("verylarge%s", suffix);
-  }
+  VeryLargeBitmapGM(ImageMakerProc proc, const char name[]) : fProc(proc), fName(name) {}
 
- protected:
-  SkString onShortName() override { return fName; }
+ private:
+  SkString onShortName() override { return SkString(fName); }
 
-  SkISize onISize() override { return SkISize::Make(500, 600); }
+  SkISize onISize() override { return {500, 600}; }
 
   void onDraw(SkCanvas* canvas) override {
     int veryBig = 65 * 1024;  // 64K < size
@@ -123,9 +121,7 @@ class VeryLargeBitmapGM : public skiagm::GM {
     // This used to be big enough that we didn't draw on CPU, but now we do.
     show_image(canvas, veryBig, small, colors, fProc);
   }
-
- private:
-  typedef skiagm::GM INHERITED;
 };
-DEF_GM(return new VeryLargeBitmapGM(make_raster_image, "bitmap");)
-DEF_GM(return new VeryLargeBitmapGM(make_picture_image, "_picture_image");)
+
+DEF_GM(return new VeryLargeBitmapGM(make_raster_image, "verylargebitmap");)
+DEF_GM(return new VeryLargeBitmapGM(make_picture_image, "verylarge_picture_image");)

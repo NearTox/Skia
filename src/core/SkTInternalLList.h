@@ -14,11 +14,10 @@
  * This macro creates the member variables required by the SkTInternalLList class. It should be
  * placed in the private section of any class that will be stored in a double linked list.
  */
-#define SK_DECLARE_INTERNAL_LLIST_INTERFACE(ClassName)       \
-  friend class SkTInternalLList<ClassName>;                  \
-  /* back pointer to the owning list - for debugging */      \
-  SkDEBUGCODE(SkTInternalLList<ClassName>* fList = nullptr); \
-  ClassName* fPrev = nullptr;                                \
+#define SK_DECLARE_INTERNAL_LLIST_INTERFACE(ClassName)                                   \
+  friend class SkTInternalLList<ClassName>;                                              \
+  /* back pointer to the owning list - for debugging */                                  \
+  SkDEBUGCODE(SkTInternalLList<ClassName>* fList = nullptr;) ClassName* fPrev = nullptr; \
   ClassName* fNext = nullptr
 
 /**

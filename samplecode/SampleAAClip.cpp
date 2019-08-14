@@ -52,19 +52,11 @@ static void drawClip(SkCanvas* canvas, const SkAAClip& clip) {
 }
 
 class AAClipView : public Sample {
- public:
-  AAClipView() { testop(); }
+  SkString name() override { return SkString("AAClip"); }
 
- protected:
-  virtual bool onQuery(Sample::Event* evt) {
-    if (Sample::TitleQ(*evt)) {
-      Sample::TitleR(evt, "AAClip");
-      return true;
-    }
-    return this->INHERITED::onQuery(evt);
-  }
+  void onOnceBeforeDraw() override { testop(); }
 
-  virtual void onDrawContent(SkCanvas* canvas) {
+  void onDrawContent(SkCanvas* canvas) override {
 #if 1
     SkAAClip aaclip;
     SkPath path;
@@ -107,11 +99,5 @@ class AAClipView : public Sample {
         canvas->drawPath(path, paint);
 #endif
   }
-
- private:
-  typedef Sample INHERITED;
 };
-
-//////////////////////////////////////////////////////////////////////////////
-
 DEF_SAMPLE(return new AAClipView();)

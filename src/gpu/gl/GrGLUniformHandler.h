@@ -35,10 +35,11 @@ class GrGLUniformHandler : public GrGLSLUniformHandler {
       const char** outName) override;
 
   SamplerHandle addSampler(
-      const GrTexture*, const GrSamplerState&, const char* name, const GrShaderCaps*) override;
+      const GrTexture*, const GrSamplerState&, const GrSwizzle&, const char* name,
+      const GrShaderCaps*) override;
 
-  const GrShaderVar& samplerVariable(SamplerHandle handle) const override {
-    return fSamplers[handle.toIndex()].fVariable;
+  const char* samplerVariable(SamplerHandle handle) const override {
+    return fSamplers[handle.toIndex()].fVariable.c_str();
   }
 
   GrSwizzle samplerSwizzle(SamplerHandle handle) const override {
@@ -51,7 +52,7 @@ class GrGLUniformHandler : public GrGLSLUniformHandler {
   void bindUniformLocations(GrGLuint programID, const GrGLCaps& caps);
 
   // Updates the loction of the Uniforms if we cannot bind uniform locations manually
-  void getUniformLocations(GrGLuint programID, const GrGLCaps& caps);
+  void getUniformLocations(GrGLuint programID, const GrGLCaps& caps, bool force);
 
   const GrGLGpu* glGpu() const;
 

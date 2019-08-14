@@ -9,10 +9,10 @@
 
 #if defined(SK_BUILD_FOR_WIN)
 
-#include "include/core/SkData.h"
-#include "include/core/SkImageGenerator.h"
+#  include "include/core/SkData.h"
+#  include "include/core/SkImageGenerator.h"
 
-#include <memory>
+#  include <memory>
 
 /*
  * Any Windows program that uses COM must initialize the COM library by calling

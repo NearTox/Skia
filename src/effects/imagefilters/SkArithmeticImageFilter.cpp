@@ -15,20 +15,20 @@
 #include "src/core/SkSpecialSurface.h"
 #include "src/core/SkWriteBuffer.h"
 #if SK_SUPPORT_GPU
-#include "include/private/GrRecordingContext.h"
-#include "include/private/GrTextureProxy.h"
-#include "src/gpu/GrClip.h"
-#include "src/gpu/GrColorSpaceXform.h"
-#include "src/gpu/GrRecordingContextPriv.h"
-#include "src/gpu/GrRenderTargetContext.h"
-#include "src/gpu/SkGr.h"
-#include "src/gpu/effects/GrSkSLFP.h"
-#include "src/gpu/effects/GrTextureDomain.h"
-#include "src/gpu/effects/generated/GrConstColorProcessor.h"
-#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
-#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
-#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
-#include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#  include "include/private/GrRecordingContext.h"
+#  include "src/gpu/GrClip.h"
+#  include "src/gpu/GrColorSpaceXform.h"
+#  include "src/gpu/GrRecordingContextPriv.h"
+#  include "src/gpu/GrRenderTargetContext.h"
+#  include "src/gpu/GrTextureProxy.h"
+#  include "src/gpu/SkGr.h"
+#  include "src/gpu/effects/GrSkSLFP.h"
+#  include "src/gpu/effects/GrTextureDomain.h"
+#  include "src/gpu/effects/generated/GrConstColorProcessor.h"
+#  include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#  include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#  include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#  include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
 GR_FP_SRC_STRING SKSL_ARITHMETIC_SRC = R"(
 in uniform float4 k;
@@ -282,12 +282,15 @@ sk_sp<SkSpecialImage> ArithmeticImageFilterImpl::filterImageGPU(
 
   sk_sp<GrTextureProxy> backgroundProxy, foregroundProxy;
 
+  GrProtected isProtected = GrProtected::kNo;
   if (background) {
     backgroundProxy = background->asTextureProxyRef(context);
+    isProtected = backgroundProxy->isProtected() ? GrProtected::kYes : GrProtected::kNo;
   }
 
   if (foreground) {
     foregroundProxy = foreground->asTextureProxyRef(context);
+    isProtected = foregroundProxy->isProtected() ? GrProtected::kYes : GrProtected::kNo;
   }
 
   GrPaint paint;
@@ -341,12 +344,12 @@ sk_sp<SkSpecialImage> ArithmeticImageFilterImpl::filterImageGPU(
 
   paint.setPorterDuffXPFactory(SkBlendMode::kSrc);
 
-  SkColorType colorType = outputProperties.colorType();
-  GrBackendFormat format = context->priv().caps()->getBackendFormatFromColorType(colorType);
+  GrColorType colorType = SkColorTypeToGrColorType(outputProperties.colorType());
 
   sk_sp<GrRenderTargetContext> renderTargetContext(context->priv().makeDeferredRenderTargetContext(
-      format, SkBackingFit::kApprox, bounds.width(), bounds.height(),
-      SkColorType2GrPixelConfig(colorType), sk_ref_sp(outputProperties.colorSpace())));
+      SkBackingFit::kApprox, bounds.width(), bounds.height(), colorType,
+      sk_ref_sp(outputProperties.colorSpace()), 1, GrMipMapped::kNo, kBottomLeft_GrSurfaceOrigin,
+      nullptr, SkBudgeted::kYes, isProtected));
   if (!renderTargetContext) {
     return nullptr;
   }

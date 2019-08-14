@@ -28,6 +28,7 @@
 #include "include/core/SkPictureRecorder.h"
 #include "include/core/SkString.h"
 #include "include/core/SkSurface.h"
+#include "include/core/SkTime.h"
 #include "src/core/SkAutoMalloc.h"
 #include "src/core/SkBBoxHierarchy.h"
 #include "src/core/SkColorSpacePriv.h"
@@ -37,6 +38,7 @@
 #include "src/core/SkTraceEvent.h"
 #include "src/utils/SkJSONWriter.h"
 #include "src/utils/SkOSPath.h"
+#include "tools/AutoreleasePool.h"
 #include "tools/CrashHandler.h"
 #include "tools/ProcStats.h"
 #include "tools/Stats.h"
@@ -76,17 +78,6 @@ GrContextOptions grContextOpts;
 
 static const int kAutoTuneLoops = 0;
 
-#if !defined(__has_feature)
-#  define __has_feature(x) 0
-#endif
-
-static const int kDefaultLoops =
-#if defined(SK_DEBUG) || __has_feature(address_sanitizer)
-    1;
-#else
-    kAutoTuneLoops;
-#endif
-
 static SkString loops_help_txt() {
   SkString help;
   help.printf(
@@ -102,7 +93,7 @@ static SkString to_string(int n) {
   return str;
 }
 
-static DEFINE_int(loops, kDefaultLoops, loops_help_txt().c_str());
+static DEFINE_int(loops, kAutoTuneLoops, loops_help_txt().c_str());
 
 static DEFINE_int(samples, 10, "Number of samples to measure for each bench.");
 static DEFINE_int(ms, 0, "If >0, run each bench for this many ms instead of obeying --samples.");
@@ -852,10 +843,10 @@ class BenchmarkStream {
 
         fCurrentAnimSKP++;
         SkString name = SkOSPath::Basename(path.c_str());
-        sk_sp<SKPAnimationBench::Animation> animation(
-            SKPAnimationBench::CreateZoomAnimation(fZoomMax, fZoomPeriodMs));
+        sk_sp<SKPAnimationBench::Animation> animation =
+            SKPAnimationBench::MakeZoomAnimation(fZoomMax, fZoomPeriodMs);
         return new SKPAnimationBench(
-            name.c_str(), pic.get(), fClip, animation.get(), FLAGS_loopSKP);
+            name.c_str(), pic.get(), fClip, std::move(animation), FLAGS_loopSKP);
       }
     }
 
@@ -1225,6 +1216,7 @@ int main(int argc, char** argv) {
   int runs = 0;
   BenchmarkStream benchStream;
   log.beginObject("results");
+  AutoreleasePool pool;
   while (Benchmark* b = benchStream.next()) {
     std::unique_ptr<Benchmark> bench(b);
     if (CommandLineFlags::ShouldSkip(FLAGS_match, bench->getUniqueName())) {
@@ -1294,6 +1286,11 @@ int main(int argc, char** argv) {
         for (int s = 0; s < FLAGS_samples; s++) {
           samples[s] = time(loops, bench.get(), target) / loops;
         }
+      }
+
+      // Scale each result to the benchmark's own units, time/unit.
+      for (double& sample : samples) {
+        sample *= (1.0 / bench->getUnits());
       }
 
       SkTArray<SkString> keys;
@@ -1391,6 +1388,7 @@ int main(int argc, char** argv) {
         SkDebugf("%s\n", bench->getUniqueName());
       }
       cleanup_run(target);
+      pool.drain();
     }
     if (!configs.empty()) {
       log.endBench();

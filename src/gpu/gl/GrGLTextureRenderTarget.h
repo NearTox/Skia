@@ -15,7 +15,7 @@ class GrGLGpu;
 
 #ifdef SK_BUILD_FOR_WIN
 // Windows gives bogus warnings about inheriting asTexture/asRenderTarget via dominance.
-#pragma warning(push)
+#  pragma warning(push)
 #  pragma warning(disable : 4250)
 #endif
 
@@ -24,7 +24,7 @@ class GrGLTextureRenderTarget : public GrGLTexture, public GrGLRenderTarget {
   // We're virtually derived from GrSurface (via both GrGLTexture and GrGLRenderTarget) so its
   // constructor must be explicitly called.
   GrGLTextureRenderTarget(
-      GrGLGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc,
+      GrGLGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc, int sampleCount,
       const GrGLTexture::IDDesc& texIDDesc, const GrGLRenderTarget::IDDesc& rtIDDesc,
       GrMipMapsStatus);
 
@@ -33,7 +33,8 @@ class GrGLTextureRenderTarget : public GrGLTexture, public GrGLRenderTarget {
   void dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const override;
 
   static sk_sp<GrGLTextureRenderTarget> MakeWrapped(
-      GrGLGpu* gpu, const GrSurfaceDesc& desc, const GrGLTexture::IDDesc& texIDDesc,
+      GrGLGpu* gpu, const GrSurfaceDesc& desc, int sampleCount,
+      const GrGLTexture::IDDesc& texIDDesc, sk_sp<GrGLTextureParameters> parameters,
       const GrGLRenderTarget::IDDesc& rtIDDesc, GrWrapCacheable cacheble, GrMipMapsStatus);
 
   GrBackendFormat backendFormat() const override {
@@ -55,14 +56,15 @@ class GrGLTextureRenderTarget : public GrGLTexture, public GrGLRenderTarget {
  private:
   // Constructor for instances wrapping backend objects.
   GrGLTextureRenderTarget(
-      GrGLGpu* gpu, const GrSurfaceDesc& desc, const GrGLTexture::IDDesc& texIDDesc,
+      GrGLGpu* gpu, const GrSurfaceDesc& desc, int sampleCount,
+      const GrGLTexture::IDDesc& texIDDesc, sk_sp<GrGLTextureParameters> parameters,
       const GrGLRenderTarget::IDDesc& rtIDDesc, GrWrapCacheable, GrMipMapsStatus);
 
   size_t onGpuMemorySize() const override;
 };
 
 #ifdef SK_BUILD_FOR_WIN
-#pragma warning(pop)
+#  pragma warning(pop)
 #endif
 
 #endif

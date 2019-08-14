@@ -9,18 +9,18 @@
 
 #include "include/gpu/GrBackendSemaphore.h"
 #include "include/gpu/GrTexture.h"
-#include "include/private/GrOpList.h"
 #include "include/private/GrRecordingContext.h"
-#include "include/private/GrRenderTargetProxy.h"
-#include "include/private/GrTextureProxy.h"
 #include "include/private/SkDeferredDisplayList.h"
 #include "src/core/SkTTopoSort.h"
+#include "src/gpu/GrAuditTrail.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrGpu.h"
 #include "src/gpu/GrMemoryPool.h"
 #include "src/gpu/GrOnFlushResourceProvider.h"
+#include "src/gpu/GrOpList.h"
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/GrRenderTargetProxy.h"
 #include "src/gpu/GrResourceAllocator.h"
 #include "src/gpu/GrResourceProvider.h"
 #include "src/gpu/GrSoftwarePathRenderer.h"
@@ -28,6 +28,7 @@
 #include "src/gpu/GrTextureContext.h"
 #include "src/gpu/GrTextureOpList.h"
 #include "src/gpu/GrTexturePriv.h"
+#include "src/gpu/GrTextureProxy.h"
 #include "src/gpu/GrTextureProxyPriv.h"
 #include "src/gpu/GrTracing.h"
 #include "src/gpu/ccpr/GrCoverageCountingPathRenderer.h"
@@ -250,7 +251,7 @@ GrSemaphoresSubmitted GrDrawingManager::flush(
     fCpuBufferCache = GrBufferAllocPool::CpuBufferCache::Make(maxCachedBuffers);
   }
 
-  GrOpFlushState flushState(gpu, resourceProvider, resourceCache, &fTokenTracker, fCpuBufferCache);
+  GrOpFlushState flushState(gpu, resourceProvider, &fTokenTracker, fCpuBufferCache);
 
   GrOnFlushResourceProvider onFlushProvider(this);
   // TODO: AFAICT the only reason fFlushState is on GrDrawingManager rather than on the
@@ -289,7 +290,7 @@ GrSemaphoresSubmitted GrDrawingManager::flush(
 #if 0
     // Enable this to print out verbose GrOp information
     for (int i = 0; i < fOpLists.count(); ++i) {
-        SkDEBUGCODE(fOpLists[i]->dump());
+        SkDEBUGCODE(fOpLists[i]->dump();)
     }
 #endif
 
@@ -312,8 +313,8 @@ GrSemaphoresSubmitted GrDrawingManager::flush(
     while (alloc.assign(&startIndex, &stopIndex, &error)) {
       if (GrResourceAllocator::AssignError::kFailedProxyInstantiation == error) {
         for (int i = startIndex; i < stopIndex; ++i) {
-          if (fDAG.opList(i) && !fDAG.opList(i)->isFullyInstantiated()) {
-            // If the backing surface wasn't allocated drop the entire opList.
+          if (fDAG.opList(i) && !fDAG.opList(i)->isInstantiated()) {
+            // If the backing surface wasn't allocated, drop the entire opList.
             fDAG.removeOpList(i);
           }
           if (fDAG.opList(i)) {
@@ -386,12 +387,6 @@ bool GrDrawingManager::executeOpLists(
   }
 #endif
 
-  auto direct = fContext->priv().asDirectContext();
-  if (!direct) {
-    return false;
-  }
-
-  auto resourceProvider = direct->priv().resourceProvider();
   bool anyOpListsExecuted = false;
 
   for (int i = startIndex; i < stopIndex; ++i) {
@@ -400,16 +395,9 @@ bool GrDrawingManager::executeOpLists(
     }
 
     GrOpList* opList = fDAG.opList(i);
+    SkASSERT(opList->isInstantiated());
+    SkASSERT(opList->deferredProxiesAreInstantiated());
 
-    if (!opList->isFullyInstantiated()) {
-      // If the backing surface wasn't allocated drop the draw of the entire opList.
-      fDAG.removeOpList(i);
-      continue;
-    }
-
-    // TODO: handle this instantiation via lazy surface proxies?
-    // Instantiate all deferred proxies (being built on worker threads) so we can upload them
-    opList->instantiateDeferredProxies(resourceProvider);
     opList->prepare(flushState);
   }
 
@@ -742,7 +730,7 @@ void GrDrawingManager::flushIfNecessary() {
 }
 
 sk_sp<GrRenderTargetContext> GrDrawingManager::makeRenderTargetContext(
-    sk_sp<GrSurfaceProxy> sProxy, sk_sp<SkColorSpace> colorSpace,
+    sk_sp<GrSurfaceProxy> sProxy, GrColorType colorType, sk_sp<SkColorSpace> colorSpace,
     const SkSurfaceProps* surfaceProps, bool managedOpList) {
   if (this->wasAbandoned() || !sProxy->asRenderTargetProxy()) {
     return nullptr;
@@ -750,7 +738,7 @@ sk_sp<GrRenderTargetContext> GrDrawingManager::makeRenderTargetContext(
 
   // SkSurface catches bad color space usage at creation. This check handles anything that slips
   // by, including internal usage.
-  if (!SkSurface_Gpu::Valid(fContext->priv().caps(), sProxy->config(), colorSpace.get())) {
+  if (!SkSurface_Gpu::Valid(fContext->priv().caps(), sProxy->backendFormat())) {
     SkDEBUGFAIL("Invalid config and colorspace combination");
     return nullptr;
   }
@@ -758,18 +746,20 @@ sk_sp<GrRenderTargetContext> GrDrawingManager::makeRenderTargetContext(
   sk_sp<GrRenderTargetProxy> renderTargetProxy(sk_ref_sp(sProxy->asRenderTargetProxy()));
 
   return sk_sp<GrRenderTargetContext>(new GrRenderTargetContext(
-      fContext, std::move(renderTargetProxy), std::move(colorSpace), surfaceProps, managedOpList));
+      fContext, std::move(renderTargetProxy), colorType, std::move(colorSpace), surfaceProps,
+      managedOpList));
 }
 
 sk_sp<GrTextureContext> GrDrawingManager::makeTextureContext(
-    sk_sp<GrSurfaceProxy> sProxy, sk_sp<SkColorSpace> colorSpace) {
+    sk_sp<GrSurfaceProxy> sProxy, GrColorType colorType, SkAlphaType alphaType,
+    sk_sp<SkColorSpace> colorSpace) {
   if (this->wasAbandoned() || !sProxy->asTextureProxy()) {
     return nullptr;
   }
 
   // SkSurface catches bad color space usage at creation. This check handles anything that slips
   // by, including internal usage.
-  if (!SkSurface_Gpu::Valid(fContext->priv().caps(), sProxy->config(), colorSpace.get())) {
+  if (!SkSurface_Gpu::Valid(fContext->priv().caps(), sProxy->backendFormat())) {
     SkDEBUGFAIL("Invalid config and colorspace combination");
     return nullptr;
   }
@@ -779,6 +769,6 @@ sk_sp<GrTextureContext> GrDrawingManager::makeTextureContext(
 
   sk_sp<GrTextureProxy> textureProxy(sk_ref_sp(sProxy->asTextureProxy()));
 
-  return sk_sp<GrTextureContext>(
-      new GrTextureContext(fContext, std::move(textureProxy), std::move(colorSpace)));
+  return sk_sp<GrTextureContext>(new GrTextureContext(
+      fContext, std::move(textureProxy), colorType, alphaType, std::move(colorSpace)));
 }

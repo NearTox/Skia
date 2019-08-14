@@ -73,10 +73,10 @@ bool SkModeColorFilter::onAppendStages(const SkStageRec& rec, bool shaderIsOpaqu
 
 ///////////////////////////////////////////////////////////////////////////////
 #if SK_SUPPORT_GPU
-#include "include/gpu/GrBlend.h"
-#include "src/gpu/SkGr.h"
-#include "src/gpu/effects/GrXfermodeFragmentProcessor.h"
-#include "src/gpu/effects/generated/GrConstColorProcessor.h"
+#  include "include/gpu/GrBlend.h"
+#  include "src/gpu/SkGr.h"
+#  include "src/gpu/effects/GrXfermodeFragmentProcessor.h"
+#  include "src/gpu/effects/generated/GrConstColorProcessor.h"
 
 std::unique_ptr<GrFragmentProcessor> SkModeColorFilter::asFragmentProcessor(
     GrRecordingContext*, const GrColorSpaceInfo& dstColorSpaceInfo) const {

@@ -14,7 +14,6 @@
 #include "src/gpu/GrSemaphore.h"
 
 #include "src/gpu/mtl/GrMtlCaps.h"
-#include "src/gpu/mtl/GrMtlCopyManager.h"
 #include "src/gpu/mtl/GrMtlResourceProvider.h"
 #include "src/gpu/mtl/GrMtlStencilAttachment.h"
 
@@ -29,10 +28,6 @@ class GrMtlCommandBuffer;
 namespace SkSL {
 class Compiler;
 }
-
-// Helper macros for autorelease pools
-#define SK_BEGIN_AUTORELEASE_BLOCK @autoreleasepool {
-#define SK_END_AUTORELEASE_BLOCK }
 
 class GrMtlGpu : public GrGpu {
  public:
@@ -60,7 +55,7 @@ class GrMtlGpu : public GrGpu {
 
   GrBackendTexture createBackendTexture(
       int w, int h, const GrBackendFormat&, GrMipMapped, GrRenderable, const void* pixels,
-      size_t rowBytes, const SkColor4f& color = SkColors::kTransparent) override;
+      size_t rowBytes, const SkColor4f* color, GrProtected isProtected) override;
 
   void deleteBackendTexture(const GrBackendTexture&) override;
 
@@ -73,20 +68,14 @@ class GrMtlGpu : public GrGpu {
   void testingOnly_flushGpuAndSync() override;
 #endif
 
-  bool copySurfaceAsBlit(
-      GrSurface* dst, GrSurfaceOrigin dstOrigin, GrSurface* src, GrSurfaceOrigin srcOrigin,
-      const SkIRect& srcRect, const SkIPoint& dstPoint);
+  void copySurfaceAsResolve(GrSurface* dst, GrSurface* src);
 
-  // This function is needed when we want to copy between two surfaces with different origins and
-  // the destination surface is not a render target. We will first draw to a temporary render
-  // target to adjust for the different origins and then blit from there to the destination.
-  bool copySurfaceAsDrawThenBlit(
-      GrSurface* dst, GrSurfaceOrigin dstOrigin, GrSurface* src, GrSurfaceOrigin srcOrigin,
-      const SkIRect& srcRect, const SkIPoint& dstPoint);
+  void copySurfaceAsBlit(
+      GrSurface* dst, GrSurface* src, const SkIRect& srcRect, const SkIPoint& dstPoint);
 
   bool onCopySurface(
-      GrSurface* dst, GrSurfaceOrigin dstOrigin, GrSurface* src, GrSurfaceOrigin srcOrigin,
-      const SkIRect& srcRect, const SkIPoint& dstPoint, bool canDiscardOutsideDstRect) override;
+      GrSurface* dst, GrSurface* src, const SkIRect& srcRect, const SkIPoint& dstPoint,
+      bool canDiscardOutsideDstRect) override;
 
   GrGpuRTCommandBuffer* getCommandBuffer(
       GrRenderTarget*, GrSurfaceOrigin, const SkRect& bounds,
@@ -124,6 +113,10 @@ class GrMtlGpu : public GrGpu {
     this->didWriteToSurface(surface, origin, bounds);
   }
 
+  void resolveRenderTargetNoFlush(GrRenderTarget* target) {
+    this->internalResolveRenderTarget(target, false);
+  }
+
  private:
   GrMtlGpu(
       GrContext* context, const GrContextOptions& options, id<MTLDevice> device,
@@ -141,19 +134,25 @@ class GrMtlGpu : public GrGpu {
   void xferBarrier(GrRenderTarget*, GrXferBarrierType) override {}
 
   sk_sp<GrTexture> onCreateTexture(
-      const GrSurfaceDesc& desc, SkBudgeted budgeted, const GrMipLevel texels[],
-      int mipLevelCount) override;
+      const GrSurfaceDesc& desc, GrRenderable, int renderTargetSampleCnt, SkBudgeted budgeted,
+      GrProtected, const GrMipLevel texels[], int mipLevelCount) override;
+  sk_sp<GrTexture> onCreateCompressedTexture(
+      int width, int height, SkImage::CompressionType, SkBudgeted, const void* data) override {
+    return nullptr;
+  }
 
   sk_sp<GrTexture> onWrapBackendTexture(
-      const GrBackendTexture&, GrWrapOwnership, GrWrapCacheable, GrIOType) override;
+      const GrBackendTexture&, GrColorType, GrWrapOwnership, GrWrapCacheable, GrIOType) override;
 
   sk_sp<GrTexture> onWrapRenderableBackendTexture(
-      const GrBackendTexture&, int sampleCnt, GrWrapOwnership, GrWrapCacheable) override;
+      const GrBackendTexture&, int sampleCnt, GrColorType, GrWrapOwnership,
+      GrWrapCacheable) override;
 
-  sk_sp<GrRenderTarget> onWrapBackendRenderTarget(const GrBackendRenderTarget&) override;
+  sk_sp<GrRenderTarget> onWrapBackendRenderTarget(
+      const GrBackendRenderTarget&, GrColorType) override;
 
   sk_sp<GrRenderTarget> onWrapBackendTextureAsRenderTarget(
-      const GrBackendTexture&, int sampleCnt) override;
+      const GrBackendTexture&, int sampleCnt, GrColorType) override;
 
   sk_sp<GrGpuBuffer> onCreateBuffer(size_t, GrGpuBufferType, GrAccessPattern, const void*) override;
 
@@ -180,7 +179,15 @@ class GrMtlGpu : public GrGpu {
 
   bool onRegenerateMipMapLevels(GrTexture*) override;
 
-  void onResolveRenderTarget(GrRenderTarget* target) override { return; }
+  void onResolveRenderTarget(GrRenderTarget* target) override {
+    // This resolve is called when we are preparing an msaa surface for external I/O. It is
+    // called after flushing, so we need to make sure we submit the command buffer after doing
+    // the resolve so that the resolve actually happens.
+    this->internalResolveRenderTarget(target, true);
+  }
+
+  void internalResolveRenderTarget(GrRenderTarget* target, bool requiresSubmit);
+  void resolveTexture(id<MTLTexture> colorTexture, id<MTLTexture> resolveTexture);
 
   void onFinishFlush(
       GrSurfaceProxy*[], int n, SkSurface::BackendSurfaceAccess access, const GrFlushInfo& info,
@@ -204,11 +211,11 @@ class GrMtlGpu : public GrGpu {
   bool uploadToTexture(
       GrMtlTexture* tex, int left, int top, int width, int height, GrColorType dataColorType,
       const GrMipLevel texels[], int mipLevels);
-  // Function that fills texture with transparent black
-  bool clearTexture(GrMtlTexture*, GrColorType);
+  // Function that fills texture levels with transparent black based on levelMask.
+  bool clearTexture(GrMtlTexture*, GrColorType, uint32_t levelMask);
 
   GrStencilAttachment* createStencilAttachmentForRenderTarget(
-      const GrRenderTarget*, int width, int height) override;
+      const GrRenderTarget*, int width, int height, int numStencilSamples) override;
 
   bool createTestingOnlyMtlTextureInfo(
       GrPixelConfig, MTLPixelFormat, int w, int h, bool texturable, bool renderable,
@@ -223,7 +230,6 @@ class GrMtlGpu : public GrGpu {
 
   std::unique_ptr<SkSL::Compiler> fCompiler;
 
-  GrMtlCopyManager fCopyManager;
   GrMtlResourceProvider fResourceProvider;
 
   bool fDisconnected;

@@ -98,13 +98,13 @@ class SkLightingShaderImpl : public SkShaderBase {
 
 #if SK_SUPPORT_GPU
 
-#include "src/gpu/GrCoordTransform.h"
-#include "src/gpu/GrFragmentProcessor.h"
-#include "src/gpu/SkGr.h"
-#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
-#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
-#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
-#include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#  include "src/gpu/GrCoordTransform.h"
+#  include "src/gpu/GrFragmentProcessor.h"
+#  include "src/gpu/SkGr.h"
+#  include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#  include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#  include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#  include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
 // This FP expects a premul'd color input for its diffuse color. Premul'ing of the paint's color is
 // handled by the asFragmentProcessor() factory, but shaders providing diffuse color must output it

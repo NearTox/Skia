@@ -225,14 +225,14 @@ template <typename T>
 class SkAutoTMalloc {
  public:
   /** Takes ownership of the ptr. The ptr must be a value which can be passed to sk_free. */
-  explicit SkAutoTMalloc(T* ptr = nullptr) : fPtr(ptr) {}
+  constexpr explicit SkAutoTMalloc(T* ptr = nullptr) noexcept : fPtr(ptr) {}
 
   /** Allocates space for 'count' Ts. */
   explicit SkAutoTMalloc(size_t count)
       : fPtr(count ? (T*)sk_malloc_throw(count, sizeof(T)) : nullptr) {}
 
-  SkAutoTMalloc(SkAutoTMalloc&&) = default;
-  SkAutoTMalloc& operator=(SkAutoTMalloc&&) = default;
+  SkAutoTMalloc(SkAutoTMalloc&&) noexcept = default;
+  SkAutoTMalloc& operator=(SkAutoTMalloc&&) noexcept = default;
 
   /** Resize the memory area pointed to by the current ptr preserving contents. */
   void realloc(size_t count) {
@@ -396,7 +396,7 @@ class SkAlignedSStorage {
   SkAlignedSStorage& operator=(SkAlignedSStorage&&) = delete;
   SkAlignedSStorage& operator=(const SkAlignedSStorage&) = delete;
 
-  size_t size() const { return N; }
+  constexpr size_t size() const { return N; }
   void* get() { return fData; }
   const void* get() const { return fData; }
 

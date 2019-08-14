@@ -9,7 +9,7 @@
 #include "include/core/SkFlattenable.h"
 
 #ifndef SkOverdrawColorFilter_DEFINED
-#define SkOverdrawColorFilter_DEFINED
+#  define SkOverdrawColorFilter_DEFINED
 
 /**
  *  Uses the value in the src alpha channel to set the dst pixel.
@@ -27,7 +27,7 @@ class SK_API SkOverdrawColorFilter : public SkColorFilter {
     return sk_sp<SkOverdrawColorFilter>(new SkOverdrawColorFilter(colors));
   }
 
-#if SK_SUPPORT_GPU
+#  if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(
       GrRecordingContext*, const GrColorSpaceInfo&) const override;
 #  endif

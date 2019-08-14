@@ -101,6 +101,14 @@ static inline void SkNO_RETURN_HINT() {}
 #  endif
 #endif
 
+#if !defined(SkUNREACHABLE)
+#  if defined(_MSC_VER) && !defined(__clang__)
+#    define SkUNREACHABLE __assume(false)
+#  else
+#    define SkUNREACHABLE __builtin_unreachable()
+#  endif
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////
 
 #if defined(SK_BUILD_FOR_GOOGLE3)
@@ -113,11 +121,13 @@ void DumpStackTrace(int skip_count, void w(const char*, void*), void* arg);
 
 #ifdef SK_BUILD_FOR_WIN
 // permits visual studio to follow error back to source
-#define SK_DUMP_LINE_FORMAT(message) \
-  SkDebugf(/*"%s(%d): fatal error: \"%s\"\n", __FILE__, __LINE__*/ "fatal error: \"%s\"\n", message)
+#  define SK_DUMP_LINE_FORMAT(message) \
+    SkDebugf(                          \
+        /*"%s(%d): fatal error: \"%s\"\n", __FILE__, __LINE__*/ "fatal error: \"%s\"\n", message)
 #else
-#define SK_DUMP_LINE_FORMAT(message) \
-  SkDebugf(/*"%s:%d: fatal error: \"%s\"\n", __FILE__, __LINE__*/ "fatal error: \"%s\"\n", message)
+#  define SK_DUMP_LINE_FORMAT(message) \
+    SkDebugf(                          \
+        /*"%s:%d: fatal error: \"%s\"\n", __FILE__, __LINE__*/ "fatal error: \"%s\"\n", message)
 #endif
 
 #ifndef SK_ABORT
@@ -289,7 +299,7 @@ static_assert(SK_B32_SHIFT == (16 - SK_R32_SHIFT), "");
 #endif
 
 #ifndef SK_DISABLE_LEGACY_SHADERCONTEXT
-#define SK_ENABLE_LEGACY_SHADERCONTEXT
+#  define SK_ENABLE_LEGACY_SHADERCONTEXT
 #endif
 
 #endif  // SkPostConfig_DEFINED

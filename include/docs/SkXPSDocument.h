@@ -12,7 +12,7 @@
 
 #ifdef SK_BUILD_FOR_WIN
 
-#include "include/core/SkDocument.h"
+#  include "include/core/SkDocument.h"
 
 struct IXpsOMObjectFactory;
 

@@ -12,18 +12,18 @@
 #include "src/image/SkSurface_Base.h"
 
 #if SK_SUPPORT_GPU
-#include "src/gpu/GrClip.h"
-#include "src/gpu/GrRenderTargetContext.h"
-#include "src/gpu/GrStyle.h"
-#include "src/gpu/GrUserStencilSettings.h"
-#include "src/gpu/effects/GrDisableColorXP.h"
+#  include "src/gpu/GrClip.h"
+#  include "src/gpu/GrRenderTargetContext.h"
+#  include "src/gpu/GrStyle.h"
+#  include "src/gpu/GrUserStencilSettings.h"
+#  include "src/gpu/effects/GrDisableColorXP.h"
 #endif  // SK_SUPPORT_GPU
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
 
-#include <log/log.h>
+#  include <log/log.h>
 
-#if SK_SUPPORT_GPU
+#  if SK_SUPPORT_GPU
 bool SkAndroidFrameworkUtils::clipWithStencil(SkCanvas* canvas) {
   SkRegion clipRegion;
   canvas->temporary_internal_getRgnClip(&clipRegion);

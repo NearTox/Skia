@@ -22,13 +22,13 @@
 SkTypeface::SkTypeface(const SkFontStyle& style, bool isFixedPitch)
     : fUniqueID(SkTypefaceCache::NewFontID()), fStyle(style), fIsFixedPitch(isFixedPitch) {}
 
-SkTypeface::~SkTypeface() {}
+SkTypeface::~SkTypeface() = default;
 
 #ifdef SK_WHITELIST_SERIALIZED_TYPEFACES
 extern void WhitelistSerializeTypeface(const SkTypeface*, SkWStream*);
 #  define SK_TYPEFACE_DELEGATE WhitelistSerializeTypeface
 #else
-#define SK_TYPEFACE_DELEGATE nullptr
+#  define SK_TYPEFACE_DELEGATE nullptr
 #endif
 
 void (*gSerializeTypefaceDelegate)(const SkTypeface*, SkWStream*) = SK_TYPEFACE_DELEGATE;
@@ -171,20 +171,22 @@ void SkTypeface::serialize(SkWStream* wstream, SerializeBehavior behavior) const
     (*gSerializeTypefaceDelegate)(this, wstream);
     return;
   }
+
   bool isLocalData = false;
   SkFontDescriptor desc;
   this->onGetFontDescriptor(&desc, &isLocalData);
 
+  bool shouldSerializeData = false;
   switch (behavior) {
-    case SerializeBehavior::kDoIncludeData: isLocalData = true; break;
-    case SerializeBehavior::kDontIncludeData: isLocalData = false; break;
-    case SerializeBehavior::kIncludeDataIfLocal: break;
+    case SerializeBehavior::kDoIncludeData: shouldSerializeData = true; break;
+    case SerializeBehavior::kDontIncludeData: shouldSerializeData = false; break;
+    case SerializeBehavior::kIncludeDataIfLocal: shouldSerializeData = isLocalData; break;
   }
 
   // TODO: why do we check hasFontData() and allow the data to pass through even if the caller
   //       has said they don't want the fontdata? Does this actually happen (getDescriptor returns
   //       fontdata as well?)
-  if (isLocalData && !desc.hasFontData()) {
+  if (shouldSerializeData && !desc.hasFontData()) {
     desc.setFontData(this->onMakeFontData());
   }
   desc.serialize(wstream);
@@ -240,6 +242,20 @@ size_t SkTypeface::getTableSize(SkFontTableTag tag) const {
 size_t SkTypeface::getTableData(
     SkFontTableTag tag, size_t offset, size_t length, void* data) const {
   return this->onGetTableData(tag, offset, length, data);
+}
+
+sk_sp<SkData> SkTypeface::copyTableData(SkFontTableTag tag) const {
+  return this->onCopyTableData(tag);
+}
+
+sk_sp<SkData> SkTypeface::onCopyTableData(SkFontTableTag tag) const {
+  size_t size = this->getTableSize(tag);
+  if (size) {
+    sk_sp<SkData> data = SkData::MakeUninitialized(size);
+    (void)this->getTableData(tag, 0, size, data->writable_data());
+    return data;
+  }
+  return nullptr;
 }
 
 std::unique_ptr<SkStreamAsset> SkTypeface::openStream(int* ttcIndex) const {

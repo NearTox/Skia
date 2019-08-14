@@ -53,11 +53,13 @@ class SK_API GrContextThreadSafeProxy : public GrContext_Base {
    *  @param willUseGLFBO0         Will the surface the DDL will be replayed into be backed by GL
    *                               FBO 0. This flag is only valid if using an GL backend.
    *  @param isTextureable         Will the surface be able to act as a texture?
+   *  @param isProtected           Will the (Vulkan) surface be DRM protected?
    */
   SkSurfaceCharacterization createCharacterization(
       size_t cacheMaxResourceBytes, const SkImageInfo& ii, const GrBackendFormat& backendFormat,
       int sampleCount, GrSurfaceOrigin origin, const SkSurfaceProps& surfaceProps, bool isMipMapped,
-      bool willUseGLFBO0 = false, bool isTextureable = true);
+      bool willUseGLFBO0 = false, bool isTextureable = true,
+      GrProtected isProtected = GrProtected::kNo);
 
   bool operator==(const GrContextThreadSafeProxy& that) const {
     // Each GrContext should only ever have a single thread-safe proxy.

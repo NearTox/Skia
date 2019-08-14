@@ -9,7 +9,7 @@
 #include "src/gpu/GrContextPriv.h"
 #include "tests/Test.h"
 
-#import <metal/metal.h>
+#import <Metal/Metal.h>
 #include "src/gpu/mtl/GrMtlCaps.h"
 
 // In BackendAllocationTest.cpp
@@ -43,8 +43,6 @@ DEF_GPUTEST_FOR_METAL_CONTEXT(MtlBackendAllocationTest, reporter, ctxInfo) {
       {kRGB_888x_SkColorType, MTLPixelFormatRGBA8Unorm, kRGBA_8888_GrPixelConfig, {1, 1, 0, 0.5f}},
 
       {kBGRA_8888_SkColorType, MTLPixelFormatBGRA8Unorm, kBGRA_8888_GrPixelConfig, SkColors::kBlue},
-      {kBGRA_8888_SkColorType, MTLPixelFormatBGRA8Unorm_sRGB, kSBGRA_8888_GrPixelConfig,
-       SkColors::kCyan},
 
       {kRGBA_1010102_SkColorType,
        MTLPixelFormatRGB10A2Unorm,
@@ -69,7 +67,6 @@ DEF_GPUTEST_FOR_METAL_CONTEXT(MtlBackendAllocationTest, reporter, ctxInfo) {
        SkColors::kYellow},
 
       // These backend formats don't have SkColorType equivalents
-      {kUnknown_SkColorType, MTLPixelFormatRG32Float, kRG_float_GrPixelConfig, {0.7f, 0.7f, 0, 0}},
       {kUnknown_SkColorType, MTLPixelFormatRG8Unorm, kRG_88_GrPixelConfig, {0.5f, 0.5f, 0, 0}},
       {kUnknown_SkColorType,
        MTLPixelFormatR16Float,
@@ -111,7 +108,8 @@ DEF_GPUTEST_FOR_METAL_CONTEXT(MtlBackendAllocationTest, reporter, ctxInfo) {
         {
           auto uninitCreateMtd =
               [format](GrContext* context, GrMipMapped mipMapped, GrRenderable renderable) {
-                return context->createBackendTexture(32, 32, format, mipMapped, renderable);
+                return context->createBackendTexture(
+                    32, 32, format, mipMapped, renderable, GrProtected::kNo);
               };
 
           test_wrapping(

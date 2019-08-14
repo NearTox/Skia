@@ -283,7 +283,7 @@ static void move_nearby(SkPathOpsDebug::GlitchLog* glitches, const SkOpContourHe
 
 #if DEBUG_COIN
 void SkOpGlobalState::debugAddToCoinChangedDict() {
-#if DEBUG_COINCIDENCE
+#  if DEBUG_COINCIDENCE
   SkPathOpsDebug::CheckHealth(fContourHead);
 #  endif
   // see if next coincident operation makes a change; if so, record it
@@ -345,7 +345,7 @@ void SkPathOpsDebug::ShowActiveSpans(SkOpContourHead* contourList) {
 
 #if DEBUG_COINCIDENCE || DEBUG_COIN
 void SkPathOpsDebug::CheckHealth(SkOpContourHead* contourList) {
-#if DEBUG_COINCIDENCE
+#  if DEBUG_COINCIDENCE
   contourList->globalState()->debugSetCheckHealth(true);
 #  endif
 #  if DEBUG_COIN
@@ -551,11 +551,11 @@ static void show_op(SkPathOp op, const char* pathOne, const char* pathTwo) {
   SkDebugf("}\n");
 }
 
-SK_DECLARE_STATIC_MUTEX(gTestMutex);
-
 void SkPathOpsDebug::ShowPath(
     const SkPath& a, const SkPath& b, SkPathOp shapeOp, const char* testName) {
-  SkAutoMutexAcquire ac(gTestMutex);
+  static SkMutex& mutex = *(new SkMutex);
+
+  SkAutoMutexExclusive ac(mutex);
   show_function_header(testName);
   ShowOnePath(a, "path", true);
   ShowOnePath(b, "pathB", true);
@@ -568,10 +568,9 @@ void SkPathOpsDebug::ShowPath(
 
 #if DEBUG_COIN
 
-SK_DECLARE_STATIC_MUTEX(gCoinDictMutex);
-
 void SkOpGlobalState::debugAddToGlobalCoinDicts() {
-  SkAutoMutexAcquire ac(&gCoinDictMutex);
+  static SkMutex& mutex = *(new SkMutex);
+  SkAutoMutexExclusive ac(mutex);
   SkPathOpsDebug::gCoinSumChangedDict.add(fCoinChangedDict);
   SkPathOpsDebug::gCoinSumVisitedDict.add(fCoinVisitedDict);
 }
@@ -936,11 +935,11 @@ void SkOpSegment::debugMissingCoincidence(SkPathOpsDebug::GlitchLog* log) const 
 //                 SkDebugf("%s coinSpan=%d endSpan=%d oppSpan=%d oppEndSpan=%d\n", __FUNCTION__,
 //                         rootPriorPtT->debugID(), rootPtT->debugID(), rootOppStart->debugID(),
 //                         rootOppEnd->debugID());
-#endif
+#  endif
         log->record(SkPathOpsDebug::kMissingCoin_Glitch, priorPtT, ptT, oppStart, oppEnd);
         //   coincidences->add(rootPriorPtT, rootPtT, rootOppStart, rootOppEnd);
         // }
-#if DEBUG_COINCIDENCE
+#  if DEBUG_COINCIDENCE
 //                SkASSERT(coincidences->contains(rootPriorPtT, rootPtT, rootOppStart, rootOppEnd);
 #  endif
         // result = true;
@@ -2307,7 +2306,7 @@ void SkOpContour::debugCheckHealth(SkPathOpsDebug::GlitchLog* log) const {
 }
 
 void SkOpCoincidence::debugCheckValid(SkPathOpsDebug::GlitchLog* log) const {
-#if DEBUG_VALIDATE
+#  if DEBUG_VALIDATE
   DebugValidate(fHead, fTop, log);
   DebugValidate(fTop, nullptr, log);
 #  endif
@@ -2700,8 +2699,7 @@ int SkIntersections::debugCoincidentUsed() const {
     return 0;
   }
   int count = 0;
-  SkDEBUGCODE(int count2 = 0);
-  for (int index = 0; index < fUsed; ++index) {
+  SkDEBUGCODE(int count2 = 0;) for (int index = 0; index < fUsed; ++index) {
     if (fIsCoincident[0] & (1 << index)) {
       ++count;
     }
@@ -2929,8 +2927,8 @@ void SkPathOpsDebug::ShowOnePath(const SkPath& path, const char* name, bool incl
 }
 
 #if DEBUG_DUMP_VERIFY
-#include "include/core/SkData.h"
-#include "include/core/SkStream.h"
+#  include "include/core/SkData.h"
+#  include "include/core/SkStream.h"
 
 static void dump_path(FILE* file, const SkPath& path, bool force, bool dumpAsHex) {
   SkDynamicMemoryWStream wStream;
@@ -2984,9 +2982,9 @@ void SkPathOpsDebug::DumpSimplify(FILE* file, const SkPath& path, const char* te
   fclose(file);
 }
 
-#include "include/core/SkBitmap.h"
-#include "include/core/SkCanvas.h"
-#include "include/core/SkPaint.h"
+#  include "include/core/SkBitmap.h"
+#  include "include/core/SkCanvas.h"
+#  include "include/core/SkPaint.h"
 
 const int bitWidth = 64;
 const int bitHeight = 64;

@@ -19,7 +19,7 @@
  *  [     0          0      1 ]
  */
 struct SkRSXform {
-  static SkRSXform Make(SkScalar scos, SkScalar ssin, SkScalar tx, SkScalar ty) {
+  static constexpr SkRSXform Make(SkScalar scos, SkScalar ssin, SkScalar tx, SkScalar ty) {
     SkRSXform xform = {scos, ssin, tx, ty};
     return xform;
   }

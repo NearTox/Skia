@@ -12,8 +12,8 @@
 #include "include/core/SkBlendMode.h"
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkRegion.h"
-#include "include/private/GrColor.h"
 #include "src/core/SkTLazy.h"
+#include "src/gpu/GrColor.h"
 #include "src/gpu/GrFragmentProcessor.h"
 
 class GrTextureProxy;
@@ -130,7 +130,7 @@ class GrPaint {
   SkSTArray<2, std::unique_ptr<GrFragmentProcessor>> fCoverageFragmentProcessors;
   bool fTrivial = true;
   SkPMColor4f fColor = SK_PMColor4fWHITE;
-  SkDEBUGCODE(bool fAlive = true);  // Set false after moved from.
+  SkDEBUGCODE(bool fAlive = true;)  // Set false after moved from.
 };
 
 #endif

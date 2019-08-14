@@ -8,16 +8,16 @@
 #include "include/core/SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN)
 
-#include "src/core/SkLeanWindows.h"
+#  include "src/core/SkLeanWindows.h"
 
-#ifndef UNICODE
-#define UNICODE
-#endif
-#ifndef _UNICODE
-#define _UNICODE
-#endif
-#include <ObjBase.h>
-#include <XpsObjectModel.h>
+#  ifndef UNICODE
+#    define UNICODE
+#  endif
+#  ifndef _UNICODE
+#    define _UNICODE
+#  endif
+#  include <ObjBase.h>
+#  include <XpsObjectModel.h>
 #  include <T2EmbApi.h>
 #  include <FontSub.h>
 #  include <limits>
@@ -1529,7 +1529,7 @@ void SkXPSDevice::drawSprite(const SkBitmap& bitmap, int x, int y, const SkPaint
   SkDEBUGF("XPS drawSprite not yet implemented.");
 }
 
-#if 0
+#  if 0
 
 HRESULT SkXPSDevice::CreateTypefaceUse(const SkPaint& paint,
                                        TypefaceUse** typefaceUse) {
@@ -1813,7 +1813,7 @@ void SkXPSDevice::drawPosText(const void* text, size_t byteLen,
                   this->ctm(),
                   paint));
 }
-#endif
+#  endif
 void SkXPSDevice::drawDevice(SkBaseDevice* dev, int x, int y, const SkPaint&) {
   SkXPSDevice* that = static_cast<SkXPSDevice*>(dev);
 

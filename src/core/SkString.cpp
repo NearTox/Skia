@@ -99,9 +99,9 @@ int SkStrStartsWithOneOf(const char string[], const char prefixes[]) {
 }
 
 char* SkStrAppendU32(char string[], uint32_t dec) {
-  SkDEBUGCODE(char* start = string);
+  SkDEBUGCODE(char* start = string;)
 
-  char buffer[SkStrAppendU32_MaxSize];
+      char buffer[SkStrAppendU32_MaxSize];
   char* p = buffer + sizeof(buffer);
 
   do {
@@ -128,9 +128,9 @@ char* SkStrAppendS32(char string[], int32_t dec) {
 }
 
 char* SkStrAppendU64(char string[], uint64_t dec, int minDigits) {
-  SkDEBUGCODE(char* start = string);
+  SkDEBUGCODE(char* start = string;)
 
-  char buffer[SkStrAppendU64_MaxSize];
+      char buffer[SkStrAppendU64_MaxSize];
   char* p = buffer + sizeof(buffer);
 
   do {

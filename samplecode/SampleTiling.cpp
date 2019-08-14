@@ -20,10 +20,12 @@
 #include "samplecode/Sample.h"
 #include "src/utils/SkUTF.h"
 
+#ifdef SK_SUPPORT_LEGACY_DRAWLOOPER
+
 // effects
-#include "include/effects/SkBlurDrawLooper.h"
-#include "include/effects/SkGradientShader.h"
-#include "src/core/SkBlurMask.h"
+#  include "include/effects/SkBlurDrawLooper.h"
+#  include "include/effects/SkGradientShader.h"
+#  include "src/core/SkBlurMask.h"
 
 static void makebm(SkBitmap* bm, SkColorType ct, int w, int h) {
   bm->allocPixels(SkImageInfo::Make(w, h, ct, kPremul_SkAlphaType));
@@ -72,13 +74,7 @@ class TilingView : public Sample {
   SkBitmap fTexture[SK_ARRAY_COUNT(gColorTypes)];
 
  protected:
-  virtual bool onQuery(Sample::Event* evt) {
-    if (Sample::TitleQ(*evt)) {
-      Sample::TitleR(evt, "Tiling");
-      return true;
-    }
-    return this->INHERITED::onQuery(evt);
-  }
+  virtual SkString name() { return SkString("Tiling"); }
 
   virtual void onDrawContent(SkCanvas* canvas) {
     SkRect r = {0, 0, SkIntToScalar(gWidth * 2), SkIntToScalar(gHeight * 2)};
@@ -166,3 +162,5 @@ class TilingView : public Sample {
 //////////////////////////////////////////////////////////////////////////////
 
 DEF_SAMPLE(return new TilingView();)
+
+#endif

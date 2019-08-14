@@ -7,17 +7,17 @@
 #include "include/core/SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN)
 
-#include "src/core/SkLeanWindows.h"
+#  include "src/core/SkLeanWindows.h"
 
-#include "include/gpu/gl/GrGLAssembleInterface.h"
-#include "include/gpu/gl/GrGLInterface.h"
-#include "src/gpu/gl/GrGLUtil.h"
+#  include "include/gpu/gl/GrGLAssembleInterface.h"
+#  include "include/gpu/gl/GrGLInterface.h"
+#  include "src/gpu/gl/GrGLUtil.h"
 
-#if defined(_M_ARM64)
+#  if defined(_M_ARM64)
 
 sk_sp<const GrGLInterface> GrGLMakeNativeInterface() { return nullptr; }
 
-#else
+#  else
 
 class AutoLibraryUnload {
  public:

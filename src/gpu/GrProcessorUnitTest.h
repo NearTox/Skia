@@ -12,9 +12,9 @@
 
 #if GR_TEST_UTILS
 
-#include "include/private/GrTextureProxy.h"
-#include "include/private/SkTArray.h"
-#include "src/gpu/GrTestUtils.h"
+#  include "include/private/SkTArray.h"
+#  include "src/gpu/GrTestUtils.h"
+#  include "src/gpu/GrTextureProxy.h"
 
 class SkMatrix;
 class GrCaps;
@@ -144,7 +144,7 @@ class GrXPFactoryTestFactory : private SkNoncopyable {
   static SkTArray<GrXPFactoryTestFactory*, true>* GetFactories();
 };
 
-#if SK_ALLOW_STATIC_GLOBAL_INITIALIZERS
+#  if SK_ALLOW_STATIC_GLOBAL_INITIALIZERS
 
 /** GrProcessor subclasses should insert this macro in their declaration to be included in the
  *  program generation unit test.
@@ -194,7 +194,7 @@ class GrXPFactoryTestFactory : private SkNoncopyable {
 #    define GR_DEFINE_XP_FACTORY_TEST(X)
 
 #  endif  // !SK_ALLOW_STATIC_GLOBAL_INITIALIZERS
-#else   // GR_TEST_UTILS
+#else     // GR_TEST_UTILS
 #  define GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 #  define GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 #  define GR_DECLARE_XP_FACTORY_TEST

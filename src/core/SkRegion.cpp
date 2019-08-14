@@ -154,7 +154,7 @@ SkRegion& SkRegion::operator=(const SkRegion& src) {
   return *this;
 }
 
-void SkRegion::swap(SkRegion& other) {
+void SkRegion::swap(SkRegion& other) noexcept {
   using std::swap;
   swap(fBounds, other.fBounds);
   swap(fRunHead, other.fRunHead);
@@ -215,7 +215,7 @@ bool SkRegion::op(const SkRegion& rgn, const SkIRect& rect, Op op) {
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
-#include <stdio.h>
+#  include <stdio.h>
 char* SkRegion::toString() {
   Iterator iter(*this);
   int count = 0;

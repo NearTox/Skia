@@ -73,14 +73,14 @@ size_t SkWBuffer::padToAlign4() {
 }
 
 #if 0
-#ifdef SK_DEBUG
+#  ifdef SK_DEBUG
     static void AssertBuffer32(const void* buffer)
     {
         SkASSERT(buffer);
         SkASSERT(((size_t)buffer & 3) == 0);
     }
-#else
+#  else
 #    define AssertBuffer32(buffer)
-#endif
+#  endif
 
 #endif

@@ -8,17 +8,17 @@
 #include "src/gpu/GrBlurUtils.h"
 
 #include "include/private/GrRecordingContext.h"
-#include "include/private/GrTextureProxy.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrFixedClip.h"
 #include "src/gpu/GrProxyProvider.h"
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/GrRenderTargetContextPriv.h"
-#include "src/gpu/GrShape.h"
 #include "src/gpu/GrSoftwarePathRenderer.h"
 #include "src/gpu/GrStyle.h"
+#include "src/gpu/GrTextureProxy.h"
 #include "src/gpu/effects/generated/GrSimpleTextureEffect.h"
+#include "src/gpu/geometry/GrShape.h"
 
 #include "include/core/SkPaint.h"
 #include "src/core/SkDraw.h"
@@ -140,7 +140,7 @@ static bool sw_draw_with_mask_filter(
     }
 
     filteredMask = proxyProvider->createTextureProxy(
-        std::move(image), kNone_GrSurfaceFlags, 1, SkBudgeted::kYes, SkBackingFit::kApprox);
+        std::move(image), GrRenderable::kNo, 1, SkBudgeted::kYes, SkBackingFit::kApprox);
     if (!filteredMask) {
       return false;
     }
@@ -163,12 +163,10 @@ static bool sw_draw_with_mask_filter(
 static sk_sp<GrTextureProxy> create_mask_GPU(
     GrRecordingContext* context, const SkIRect& maskRect, const SkMatrix& origViewMatrix,
     const GrShape& shape, int sampleCnt) {
-  GrBackendFormat format =
-      context->priv().caps()->getBackendFormatFromColorType(kAlpha_8_SkColorType);
   sk_sp<GrRenderTargetContext> rtContext(
       context->priv().makeDeferredRenderTargetContextWithFallback(
-          format, SkBackingFit::kApprox, maskRect.width(), maskRect.height(),
-          kAlpha_8_GrPixelConfig, nullptr, sampleCnt, GrMipMapped::kNo, kTopLeft_GrSurfaceOrigin));
+          SkBackingFit::kApprox, maskRect.width(), maskRect.height(), GrColorType::kAlpha_8,
+          nullptr, sampleCnt, GrMipMapped::kNo, kTopLeft_GrSurfaceOrigin));
   if (!rtContext) {
     return nullptr;
   }
@@ -368,7 +366,7 @@ static void draw_shape_with_mask_filter(
 
     if (!filteredMask) {
       sk_sp<GrTextureProxy> maskProxy(create_mask_GPU(
-          context, maskRect, viewMatrix, *shape, renderTargetContext->numColorSamples()));
+          context, maskRect, viewMatrix, *shape, renderTargetContext->numSamples()));
       if (maskProxy) {
         filteredMask =
             maskFilter->filterMaskGPU(context, std::move(maskProxy), viewMatrix, maskRect);

@@ -73,7 +73,7 @@ class SK_API SkBitmap {
       @param src  SkBitmap to copy SkImageInfo, and reassign SkPixelRef
       @return     copy of src
   */
-  SkBitmap(SkBitmap&& src);
+  SkBitmap(SkBitmap&& src) noexcept;
 
   /** Decrements SkPixelRef reference count, if SkPixelRef is not nullptr.
    */
@@ -93,13 +93,13 @@ class SK_API SkBitmap {
       @param src  SkBitmap to copy SkImageInfo, and reassign SkPixelRef
       @return     copy of src
   */
-  SkBitmap& operator=(SkBitmap&& src);
+  SkBitmap& operator=(SkBitmap&& src) noexcept;
 
   /** Swaps the fields of the two bitmaps.
 
       @param other  SkBitmap exchanged with original
   */
-  void swap(SkBitmap& other);
+  void swap(SkBitmap& other) noexcept;
 
   /** Returns a constant reference to the SkPixmap holding the SkBitmap pixel
       address, row bytes, and SkImageInfo.
@@ -263,7 +263,7 @@ class SK_API SkBitmap {
 
   /** Returns minimum memory required for pixel storage.
       Does not include unused memory on last row when rowBytesAsPixels() exceeds width().
-      Returns zero if result does not fit in size_t.
+      Returns SIZE_MAX if result does not fit in size_t.
       Returns zero if height() or width() is 0.
       Returns height() times rowBytes() if colorType() is kUnknown_SkColorType.
 

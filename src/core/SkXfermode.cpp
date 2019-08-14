@@ -17,10 +17,10 @@
 #include "src/core/SkXfermodePriv.h"
 
 #if SK_SUPPORT_GPU
-#include "src/gpu/GrFragmentProcessor.h"
-#include "src/gpu/effects/GrCustomXfermode.h"
-#include "src/gpu/effects/GrPorterDuffXferProcessor.h"
-#include "src/gpu/effects/GrXfermodeFragmentProcessor.h"
+#  include "src/gpu/GrFragmentProcessor.h"
+#  include "src/gpu/effects/GrCustomXfermode.h"
+#  include "src/gpu/effects/GrPorterDuffXferProcessor.h"
+#  include "src/gpu/effects/GrXfermodeFragmentProcessor.h"
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

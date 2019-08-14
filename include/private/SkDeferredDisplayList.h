@@ -15,7 +15,7 @@
 class SkDeferredDisplayListPriv;
 
 #if SK_SUPPORT_GPU
-#include "include/private/SkTArray.h"
+#  include "include/private/SkTArray.h"
 #  include <map>
 class GrOpList;
 class GrRenderTargetProxy;

@@ -50,7 +50,7 @@ class VideoDecoderGM : public skiagm::GM {
     }
   }
 
-  bool onAnimate(const AnimTimer& timer) override { return true; }
+  bool onAnimate(double nanos) override { return true; }
 
  private:
   typedef GM INHERITED;

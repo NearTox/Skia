@@ -17,15 +17,15 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 #if SK_SUPPORT_GPU
-#include "include/gpu/GrContext.h"
-#include "include/gpu/GrTexture.h"
-#include "src/gpu/GrColorSpaceXform.h"
-#include "src/gpu/GrCoordTransform.h"
-#include "src/gpu/effects/generated/GrMagnifierEffect.h"
-#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
-#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
-#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
-#include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#  include "include/gpu/GrContext.h"
+#  include "include/gpu/GrTexture.h"
+#  include "src/gpu/GrColorSpaceXform.h"
+#  include "src/gpu/GrCoordTransform.h"
+#  include "src/gpu/effects/generated/GrMagnifierEffect.h"
+#  include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#  include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#  include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#  include "src/gpu/glsl/GrGLSLUniformHandler.h"
 #endif
 
 sk_sp<SkImageFilter> SkMagnifierImageFilter::Make(
@@ -93,6 +93,8 @@ sk_sp<SkSpecialImage> SkMagnifierImageFilter::onFilterImage(
     sk_sp<GrTextureProxy> inputProxy(input->asTextureProxyRef(context));
     SkASSERT(inputProxy);
 
+    const auto isProtected = inputProxy->isProtected();
+
     offset->fX = bounds.left();
     offset->fY = bounds.top();
     bounds.offset(-inputOffset);
@@ -107,7 +109,9 @@ sk_sp<SkSpecialImage> SkMagnifierImageFilter::onFilterImage(
       return nullptr;
     }
 
-    return DrawWithFP(context, std::move(fp), bounds, ctx.outputProperties());
+    return DrawWithFP(
+        context, std::move(fp), bounds, ctx.outputProperties(),
+        isProtected ? GrProtected::kYes : GrProtected::kNo);
   }
 #endif
 

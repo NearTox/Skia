@@ -17,7 +17,6 @@
 #include "src/core/SkBlurMask.h"
 #include "src/utils/SkUTF.h"
 #include "tools/ToolUtils.h"
-#include "tools/timer/AnimTimer.h"
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -73,51 +72,45 @@ class ShadowUtilsView : public Sample {
     fConcavePaths.back().cubicTo(0, -25, 40, -50, 50, 0);
   }
 
-  bool onQuery(Sample::Event* evt) override {
-    if (Sample::TitleQ(*evt)) {
-      Sample::TitleR(evt, "ShadowUtils");
+  SkString name() override { return SkString("ShadowUtils"); }
+
+  bool onChar(SkUnichar uni) override {
+    bool handled = false;
+    switch (uni) {
+      case 'W':
+        fShowAmbient = !fShowAmbient;
+        handled = true;
+        break;
+      case 'S':
+        fShowSpot = !fShowSpot;
+        handled = true;
+        break;
+      case 'T':
+        fUseAlt = !fUseAlt;
+        handled = true;
+        break;
+      case 'O':
+        fShowObject = !fShowObject;
+        handled = true;
+        break;
+      case '>':
+        fZDelta += 0.5f;
+        handled = true;
+        break;
+      case '<':
+        fZDelta -= 0.5f;
+        handled = true;
+        break;
+      case '?':
+        fIgnoreShadowAlpha = !fIgnoreShadowAlpha;
+        handled = true;
+        break;
+      default: break;
+    }
+    if (handled) {
       return true;
     }
-
-    SkUnichar uni;
-    if (Sample::CharQ(*evt, &uni)) {
-      bool handled = false;
-      switch (uni) {
-        case 'W':
-          fShowAmbient = !fShowAmbient;
-          handled = true;
-          break;
-        case 'S':
-          fShowSpot = !fShowSpot;
-          handled = true;
-          break;
-        case 'T':
-          fUseAlt = !fUseAlt;
-          handled = true;
-          break;
-        case 'O':
-          fShowObject = !fShowObject;
-          handled = true;
-          break;
-        case '>':
-          fZDelta += 0.5f;
-          handled = true;
-          break;
-        case '<':
-          fZDelta -= 0.5f;
-          handled = true;
-          break;
-        case '?':
-          fIgnoreShadowAlpha = !fIgnoreShadowAlpha;
-          handled = true;
-          break;
-        default: break;
-      }
-      if (handled) {
-        return true;
-      }
-    }
-    return this->INHERITED::onQuery(evt);
+    return false;
   }
 
   void drawBG(SkCanvas* canvas) { canvas->drawColor(0xFFFFFFFF); }

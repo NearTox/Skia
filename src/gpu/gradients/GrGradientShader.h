@@ -17,7 +17,7 @@
 #include "src/shaders/gradients/SkTwoPointConicalGradient.h"
 
 #if GR_TEST_UTILS
-#include "include/utils/SkRandom.h"
+#  include "include/utils/SkRandom.h"
 #endif
 
 namespace GrGradientShader {

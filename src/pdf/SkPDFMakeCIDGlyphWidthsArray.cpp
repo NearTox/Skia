@@ -10,6 +10,7 @@
 #include "include/core/SkPaint.h"
 #include "include/private/SkTo.h"
 #include "src/core/SkStrike.h"
+#include "src/core/SkStrikeSpec.h"
 #include "src/pdf/SkPDFGlyphUse.h"
 
 #include <vector>
@@ -106,11 +107,11 @@ static void finish_range(AdvanceMetric* range, int endId, AdvanceMetric::MetricT
 }
 
 static void compose_advance_data(
-    const AdvanceMetric& range, uint16_t emSize, int16_t* defaultAdvance, SkPDFArray* result) {
+    const AdvanceMetric& range, uint16_t emSize, SkScalar* defaultAdvance, SkPDFArray* result) {
   switch (range.fType) {
     case AdvanceMetric::kDefault: {
       SkASSERT(range.fAdvance.size() == 1);
-      *defaultAdvance = range.fAdvance[0];
+      *defaultAdvance = scale_from_font_units(range.fAdvance[0], emSize);
       break;
     }
     case AdvanceMetric::kRange: {
@@ -135,7 +136,7 @@ static void compose_advance_data(
 // TODO(halcanary): this function is complex enough to need its logic
 // tested with unit tests.
 std::unique_ptr<SkPDFArray> SkPDFMakeCIDGlyphWidthsArray(
-    SkStrike* cache, const SkPDFGlyphUse* subset, uint16_t emSize, int16_t* defaultAdvance) {
+    const SkTypeface& typeface, const SkPDFGlyphUse* subset, SkScalar* defaultAdvance) {
   // Assuming that on average, the ASCII representation of an advance plus
   // a space is 8 characters and the ASCII representation of a glyph id is 3
   // characters, then the following cut offs for using different range types
@@ -147,12 +148,16 @@ std::unique_ptr<SkPDFArray> SkPDFMakeCIDGlyphWidthsArray(
   //  b. Removing 3 repeating advances is a win
   //  c. Removing 2 repeating advances and 3 don't cares is a win
   // When not currently in a range the cost of a run over a range is 16
-  // characaters, so:
+  // characters, so:
   //  d. Removing a leading 0/don't cares is a win because it is omitted
   //  e. Removing 2 repeating advances is a win
 
+  int emSize;
+  SkStrikeSpec strikeSpec = SkStrikeSpec::MakePDFVector(typeface, &emSize);
+  SkBulkGlyphMetricsAndPaths paths{strikeSpec};
+
   auto result = SkPDFMakeArray();
-  int num_glyphs = SkToInt(cache->getGlyphCount());
+  int num_glyphs = SkToInt(typeface.countGlyphs());
 
   bool prevRange = false;
 
@@ -175,16 +180,13 @@ std::unique_ptr<SkPDFArray> SkPDFMakeCIDGlyphWidthsArray(
     glyphIDs[gId] = gId;
   }
 
-  SkAutoTArray<SkPoint> advances{lastIndex + 1};
-
-  cache->getAdvances(
-      SkSpan<const SkGlyphID>{glyphIDs.get(), SkTo<size_t>(lastIndex + 1)}, advances.get());
+  auto glyphs = paths.glyphs(SkMakeSpan(glyphIDs.get(), lastIndex + 1));
 
   for (int gId = 0; gId <= lastIndex; gId++) {
     int16_t advance = kInvalidAdvance;
     if (gId < lastIndex) {
       if (!subset || 0 == gId || subset->has(gId)) {
-        advance = (int16_t)advances[gId].x();
+        advance = (int16_t)glyphs[gId]->advanceX();
       } else {
         advance = kDontCareAdvance;
       }

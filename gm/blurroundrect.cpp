@@ -29,16 +29,18 @@
 #include "include/effects/SkLayerDrawLooper.h"
 #include "src/core/SkBlurMask.h"
 
+#ifdef SK_SUPPORT_LEGACY_DRAWLOOPER
 // This GM mimics a blurred RR seen in the wild.
 class BlurRoundRectGM : public skiagm::GM {
  public:
-  BlurRoundRectGM(int width, int height) : fName("blurroundrect"), fWidth(width), fHeight(height) {
-    fName.appendf("-WH-%ix%i-unevenCorners", width, height);
+  BlurRoundRectGM(int w, int h) : fWidth(w), fHeight(h) {}
+
+ private:
+  SkString onShortName() override {
+    return SkStringPrintf("blurroundrect-WH-%ix%i-unevenCorners", fWidth, fHeight);
   }
 
-  SkString onShortName() override { return fName; }
-
-  SkISize onISize() override { return SkISize::Make(fWidth, fHeight); }
+  SkISize onISize() override { return {fWidth, fHeight}; }
 
   void onOnceBeforeDraw() override {
     SkVector radii[4];
@@ -78,13 +80,13 @@ class BlurRoundRectGM : public skiagm::GM {
     canvas->drawRRect(fRRect, paint);
   }
 
- private:
-  SkString fName;
   SkRRect fRRect;
   int fWidth, fHeight;
-
-  typedef skiagm::GM INHERITED;
 };
+// Rounded rect with two opposite corners with large radii, the other two
+// small.
+DEF_GM(return new BlurRoundRectGM(100, 100);)
+#endif
 
 /*
  * Spits out a dummy gradient to test blur with shader on paint
@@ -112,13 +114,9 @@ static sk_sp<SkShader> MakeRadial() {
 
 // Simpler blurred RR test cases where all the radii are the same.
 class SimpleBlurRoundRectGM : public skiagm::GM {
- public:
-  SimpleBlurRoundRectGM() : fName("simpleblurroundrect") {}
+  SkString onShortName() override { return SkString("simpleblurroundrect"); }
 
- protected:
-  SkString onShortName() override { return fName; }
-
-  SkISize onISize() override { return SkISize::Make(1000, 500); }
+  SkISize onISize() override { return {1000, 500}; }
 
   void onDraw(SkCanvas* canvas) override {
     canvas->scale(1.5f, 1.5f);
@@ -150,11 +148,6 @@ class SimpleBlurRoundRectGM : public skiagm::GM {
       }
     }
   }
-
- private:
-  const SkString fName;
-
-  typedef skiagm::GM INHERITED;
 };
 
 // Create one with dimensions/rounded corners based on the skp
@@ -163,9 +156,5 @@ class SimpleBlurRoundRectGM : public skiagm::GM {
 // https://code.google.com/p/skia/issues/detail?id=1801 ('Win7 Test bots all failing GenerateGMs:
 // ran wrong number of tests')
 // DEF_GM(return new BlurRoundRectGM(600, 5514, 6);)
-
-// Rounded rect with two opposite corners with large radii, the other two
-// small.
-DEF_GM(return new BlurRoundRectGM(100, 100);)
 
 DEF_GM(return new SimpleBlurRoundRectGM();)

@@ -11,13 +11,13 @@
 #include "include/core/SkMatrix.h"
 #include "include/core/SkStrokeRec.h"
 #include "include/core/SkTypes.h"
-#include "include/private/GrOpList.h"
 #include "include/private/SkTArray.h"
 #include "src/core/SkArenaAlloc.h"
 #include "src/core/SkClipStack.h"
 #include "src/core/SkStringUtils.h"
 #include "src/core/SkTLazy.h"
 #include "src/gpu/GrAppliedClip.h"
+#include "src/gpu/GrOpList.h"
 #include "src/gpu/GrPathRendering.h"
 #include "src/gpu/GrPrimitiveProcessor.h"
 #include "src/gpu/ops/GrDrawOp.h"
@@ -111,12 +111,12 @@ class GrRenderTargetOpList final : public GrOpList {
 
   GrRenderTargetOpList* asRenderTargetOpList() override { return this; }
 
-  SkDEBUGCODE(void dump(bool printDependencies) const override);
-  SkDEBUGCODE(int numClips() const override { return fNumClips; })
-      SkDEBUGCODE(void visitProxies_debugOnly(const GrOp::VisitProxyFunc&) const);
+  SkDEBUGCODE(void dump(bool printDependencies) const override;)
+      SkDEBUGCODE(int numClips() const override { return fNumClips; })
+          SkDEBUGCODE(void visitProxies_debugOnly(const GrOp::VisitProxyFunc&) const;)
 
- private:
-  friend class GrRenderTargetContextPriv;  // for stencil clip state. TODO: this is invasive
+              private
+      : friend class GrRenderTargetContextPriv;  // for stencil clip state. TODO: this is invasive
 
   // The RTC and RTOpList have to work together to handle buffer clears. In most cases, buffer
   // clearing can be done natively, in which case the op list's load ops are sufficient. In other
@@ -127,7 +127,7 @@ class GrRenderTargetOpList final : public GrOpList {
   bool onIsUsed(GrSurfaceProxy*) const override;
 
   // Must only be called if native stencil buffer clearing is enabled
-  void setStencilLoadOp(GrLoadOp op);
+  void setStencilLoadOp(GrLoadOp op) { fStencilLoadOp = op; }
   // Must only be called if native color buffer clearing is enabled.
   void setColorLoadOp(GrLoadOp op, const SkPMColor4f& color);
   // Sets the clear color to transparent black
@@ -136,10 +136,12 @@ class GrRenderTargetOpList final : public GrOpList {
     this->setColorLoadOp(op, kDefaultClearColor);
   }
 
+  enum class CanDiscardPreviousOps : bool { kYes = true, kNo = false };
+
   // Perform book-keeping for a fullscreen clear, regardless of how the clear is implemented later
   // (i.e. setColorLoadOp(), adding a ClearOp, or adding a GrFillRectOp that covers the device).
   // Returns true if the clear can be converted into a load op (barring device caps).
-  bool resetForFullscreenClear();
+  bool resetForFullscreenClear(CanDiscardPreviousOps);
 
   void deleteOps();
 
@@ -239,9 +241,9 @@ class GrRenderTargetOpList final : public GrOpList {
   // MDB TODO: 4096 for the first allocation of the clip space will be huge overkill.
   // Gather statistics to determine the correct size.
   SkArenaAlloc fClipAllocator{4096};
-  SkDEBUGCODE(int fNumClips);
+  SkDEBUGCODE(int fNumClips;)
 
-  typedef GrOpList INHERITED;
+      typedef GrOpList INHERITED;
 };
 
 #endif

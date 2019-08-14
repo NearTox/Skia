@@ -14,12 +14,12 @@
 
 // See the comment above GrXPFactory's definition about this warning suppression.
 #if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
 #endif
 #if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wnon-virtual-dtor"
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wnon-virtual-dtor"
 #endif
 class GrDisableColorXPFactory : public GrXPFactory {
  public:
@@ -48,10 +48,10 @@ class GrDisableColorXPFactory : public GrXPFactory {
   typedef GrXPFactory INHERITED;
 };
 #if defined(__GNUC__)
-#pragma GCC diagnostic pop
+#  pragma GCC diagnostic pop
 #endif
 #if defined(__clang__)
-#pragma clang diagnostic pop
+#  pragma clang diagnostic pop
 #endif
 
 inline const GrDisableColorXPFactory* GrDisableColorXPFactory::Get() {

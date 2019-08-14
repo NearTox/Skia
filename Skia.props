@@ -2,10 +2,10 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <SkiaDef2>SK_GAMMA_APPLY_TO_A8;SK_ANGLE;SK_ENABLE_DISCRETE_GPU;GR_TEST_UTILS=0;SK_HAS_HEIF_LIBRARY;SK_HAS_JPEG_LIBRARY;SK_HAS_PNG_LIBRARY;SK_HAS_WEBP_LIBRARY;SK_XML;SK_SUPPORT_ATLAS_TEXT=1;SK_ENABLE_SKOTTIE;SK_ALLOW_STATIC_GLOBAL_INITIALIZERS=0;SK_SHAPER_HARFBUZZ_AVAILABLE;U_USING_ICU_NAMESPACE=0;U_ENABLE_DYLOAD=0;USE_CHROMIUM_ICU=1;U_STATIC_IMPLEMENTATION;ICU_UTIL_DATA_IMPL=ICU_UTIL_DATA_FILE;UCHAR_TYPE=wchar_t</SkiaDef2>
+    <SkiaDef2>SK_GAMMA_APPLY_TO_A8;SK_ANGLE;SK_ENABLE_DISCRETE_GPU;GR_TEST_UTILS=0;SK_HAS_HEIF_LIBRARY;SK_HAS_JPEG_LIBRARY;SK_HAS_PNG_LIBRARY;SK_HAS_WEBP_LIBRARY;SK_XML;SK_SUPPORT_ATLAS_TEXT=1;SK_ENABLE_SKOTTIE;SK_ENABLE_SKSL_INTERPRETER;SK_ALLOW_STATIC_GLOBAL_INITIALIZERS=0;SK_SHAPER_HARFBUZZ_AVAILABLE;U_USING_ICU_NAMESPACE=0;U_ENABLE_DYLOAD=0;USE_CHROMIUM_ICU=1;U_STATIC_IMPLEMENTATION;ICU_UTIL_DATA_IMPL=ICU_UTIL_DATA_FILE;UCHAR_TYPE=wchar_t</SkiaDef2>
     <SkiaDef>WIN32_LEAN_AND_MEAN;NOMINMAX;SKIA_IMPLEMENTATION=1;SK_GL</SkiaDef>
-    <SkiaThirdParty>$(SolutionDir)third_party/externals/expat/lib/;$(SolutionDir)third_party\libpng;$(SolutionDir)third_party\externals\libpng;$(SolutionDir)third_party\gif;$(SolutionDir)third_party\libjpeg-turbo;$(SolutionDir)third_party\externals\libjpeg-turbo;$(SolutionDir)third_party\skcms</SkiaThirdParty>
-    <MyIncludeDir>$(SolutionDir)..\vs$(VisualStudioVersion)\$(PlatformTarget)\include;$(SkiaInclude);$(SolutionDir)..\Skia\third_party/externals/angle2/include</MyIncludeDir>
+    <SkiaThirdParty>$(SolutionDir)third_party\externals\expat\lib;$(SolutionDir)third_party\libpng;$(SolutionDir)third_party\externals\libpng;$(SolutionDir)third_party\gif;$(SolutionDir)third_party\libjpeg-turbo;$(SolutionDir)third_party\externals\libjpeg-turbo;$(SolutionDir)third_party\skcms</SkiaThirdParty>
+    <MyIncludeDir>$(SolutionDir)..\vs$(VisualStudioVersion)\$(PlatformTarget)\include;$(SkiaInclude);$(SolutionDir)..\Skia\third_party\externals\angle2\include</MyIncludeDir>
     <MyOutDir>$(SolutionDir)bin\$(Configuration)-$(PlatformTarget)-vs$(VisualStudioVersion)\</MyOutDir>
     <MyTempDir>$(SolutionDir)obj\$(ProjectName)\$(Configuration)-$(PlatformTarget)-vs$(VisualStudioVersion)\</MyTempDir>
   </PropertyGroup>

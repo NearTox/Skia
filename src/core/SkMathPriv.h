@@ -81,12 +81,12 @@ static inline unsigned SkClampUMax(unsigned value, unsigned max) {
 // to avoid the complaint.
 static inline size_t sk_negate_to_size_t(int32_t value) {
 #if defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable : 4146)  // Thanks MSVC, we know what we're negating an unsigned
+#  pragma warning(push)
+#  pragma warning(disable : 4146)  // Thanks MSVC, we know what we're negating an unsigned
 #endif
   return -static_cast<size_t>(value);
 #if defined(_MSC_VER)
-#pragma warning(pop)
+#  pragma warning(pop)
 #endif
 }
 
@@ -211,7 +211,7 @@ static inline int SkPrevLog2(uint32_t value) {
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- *  Return the next power of 2 >= n.
+ *  Return the smallest power-of-2 >= n.
  */
 static inline uint32_t GrNextPow2(uint32_t n) { return n ? (1 << (32 - SkCLZ(n - 1))) : 1; }
 

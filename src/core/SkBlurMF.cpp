@@ -19,25 +19,25 @@
 #include "src/core/SkWriteBuffer.h"
 
 #if SK_SUPPORT_GPU
-#include "include/private/GrRecordingContext.h"
-#include "include/private/GrTextureProxy.h"
-#include "src/gpu/GrClip.h"
-#include "src/gpu/GrFragmentProcessor.h"
-#include "src/gpu/GrRecordingContextPriv.h"
-#include "src/gpu/GrRenderTargetContext.h"
-#include "src/gpu/GrResourceProvider.h"
-#include "src/gpu/GrShaderCaps.h"
-#include "src/gpu/GrShape.h"
-#include "src/gpu/GrStyle.h"
-#include "src/gpu/effects/GrTextureDomain.h"
-#include "src/gpu/effects/generated/GrCircleBlurFragmentProcessor.h"
-#include "src/gpu/effects/generated/GrRRectBlurEffect.h"
-#include "src/gpu/effects/generated/GrRectBlurEffect.h"
-#include "src/gpu/effects/generated/GrSimpleTextureEffect.h"
-#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
-#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
-#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
-#include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#  include "include/private/GrRecordingContext.h"
+#  include "src/gpu/GrClip.h"
+#  include "src/gpu/GrFragmentProcessor.h"
+#  include "src/gpu/GrRecordingContextPriv.h"
+#  include "src/gpu/GrRenderTargetContext.h"
+#  include "src/gpu/GrResourceProvider.h"
+#  include "src/gpu/GrShaderCaps.h"
+#  include "src/gpu/GrStyle.h"
+#  include "src/gpu/GrTextureProxy.h"
+#  include "src/gpu/effects/GrTextureDomain.h"
+#  include "src/gpu/effects/generated/GrCircleBlurFragmentProcessor.h"
+#  include "src/gpu/effects/generated/GrRRectBlurEffect.h"
+#  include "src/gpu/effects/generated/GrRectBlurEffect.h"
+#  include "src/gpu/effects/generated/GrSimpleTextureEffect.h"
+#  include "src/gpu/geometry/GrShape.h"
+#  include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#  include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#  include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#  include "src/gpu/glsl/GrGLSLUniformHandler.h"
 #endif
 
 class SkBlurMaskFilterImpl : public SkMaskFilterBase {
@@ -848,8 +848,8 @@ sk_sp<GrTextureProxy> SkBlurMaskFilterImpl::filterMaskGPU(
   // gaussianBlur.  Otherwise, we need to save it for later compositing.
   bool isNormalBlur = (kNormal_SkBlurStyle == fBlurStyle);
   sk_sp<GrRenderTargetContext> renderTargetContext(SkGpuBlurUtils::GaussianBlur(
-      context, srcProxy, nullptr, clipRect, SkIRect::EmptyIRect(), xformedSigma, xformedSigma,
-      GrTextureDomain::kIgnore_Mode, kPremul_SkAlphaType));
+      context, srcProxy, SkIPoint::Make(0, 0), nullptr, clipRect, SkIRect::EmptyIRect(),
+      xformedSigma, xformedSigma, GrTextureDomain::kIgnore_Mode, kPremul_SkAlphaType));
   if (!renderTargetContext) {
     return nullptr;
   }

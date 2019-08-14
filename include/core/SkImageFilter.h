@@ -17,6 +17,9 @@
 #include "include/private/SkMutex.h"
 #include "include/private/SkTArray.h"
 #include "include/private/SkTemplates.h"
+#if SK_SUPPORT_GPU
+#  include "include/gpu/GrTypes.h"
+#endif
 
 class GrFragmentProcessor;
 class SkColorFilter;
@@ -166,7 +169,7 @@ class SK_API SkImageFilter : public SkFlattenable {
 #if SK_SUPPORT_GPU
   static sk_sp<SkSpecialImage> DrawWithFP(
       GrRecordingContext* context, std::unique_ptr<GrFragmentProcessor> fp, const SkIRect& bounds,
-      const OutputProperties& outputProperties);
+      const OutputProperties& outputProperties, GrProtected isProtected = GrProtected::kNo);
 #endif
 
   /**
@@ -428,6 +431,10 @@ class SK_API SkImageFilter : public SkFlattenable {
  private:
   friend class SkGraphics;
   friend bool SkIsSameFilter(const SkImageFilter* a, const SkImageFilter* b);
+  // Helper method to inspect onFilterNodeBounds() without going through filterBounds()
+  friend SkIRect SkFilterNodeBounds(
+      const SkImageFilter*, const SkIRect& srcRect, const SkMatrix&, MapDirection,
+      const SkIRect* inputRect);
 
   static void PurgeCache();
 

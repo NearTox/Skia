@@ -12,7 +12,7 @@
 #include "src/core/SkTraceEventCommon.h"
 
 #ifdef SK_BUILD_FOR_ANDROID
-#include <dlfcn.h>
+#  include <dlfcn.h>
 #endif
 
 SkATrace::SkATrace() : fBeginSection(nullptr), fEndSection(nullptr), fIsEnabled(nullptr) {

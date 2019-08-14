@@ -6,7 +6,6 @@
  */
 
 #include "include/private/GrRecordingContext.h"
-#include "include/private/GrTextureProxy.h"
 #include "src/core/SkMipMap.h"
 #include "src/core/SkRectPriv.h"
 #include "src/gpu/GrClip.h"
@@ -15,17 +14,16 @@
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/GrTextureProducer.h"
+#include "src/gpu/GrTextureProxy.h"
 #include "src/gpu/SkGr.h"
 #include "src/gpu/effects/GrBicubicEffect.h"
 #include "src/gpu/effects/GrTextureDomain.h"
 #include "src/gpu/effects/generated/GrSimpleTextureEffect.h"
 
 sk_sp<GrTextureProxy> GrTextureProducer::CopyOnGpu(
-    GrRecordingContext* context, sk_sp<GrTextureProxy> inputProxy, const CopyParams& copyParams,
-    bool dstWillRequireMipMaps) {
+    GrRecordingContext* context, sk_sp<GrTextureProxy> inputProxy, GrColorType colorType,
+    const CopyParams& copyParams, bool dstWillRequireMipMaps) {
   SkASSERT(context);
-
-  GrPixelConfig config = GrMakePixelConfigUncompressed(inputProxy->config());
 
   const SkRect dstRect = SkRect::MakeIWH(copyParams.fWidth, copyParams.fHeight);
   GrMipMapped mipMapped = dstWillRequireMipMaps ? GrMipMapped::kYes : GrMipMapped::kNo;
@@ -47,15 +45,10 @@ sk_sp<GrTextureProxy> GrTextureProducer::CopyOnGpu(
     }
   }
 
-  GrBackendFormat format = inputProxy->backendFormat().makeTexture2D();
-  if (!format.isValid()) {
-    return nullptr;
-  }
-
   sk_sp<GrRenderTargetContext> copyRTC =
       context->priv().makeDeferredRenderTargetContextWithFallback(
-          format, SkBackingFit::kExact, dstRect.width(), dstRect.height(), config, nullptr, 1,
-          mipMapped, inputProxy->origin());
+          SkBackingFit::kExact, dstRect.width(), dstRect.height(), colorType, nullptr, 1, mipMapped,
+          inputProxy->origin());
   if (!copyRTC) {
     return nullptr;
   }

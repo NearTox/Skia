@@ -9,13 +9,13 @@
 #define GrOpFlushState_DEFINED
 
 #include <utility>
-#include "include/private/GrRenderTargetProxy.h"
 #include "src/core/SkArenaAlloc.h"
 #include "src/core/SkArenaAllocList.h"
 #include "src/gpu/GrAppliedClip.h"
 #include "src/gpu/GrBufferAllocPool.h"
 #include "src/gpu/GrDeferredUpload.h"
 #include "src/gpu/GrDeinstantiateProxyTracker.h"
+#include "src/gpu/GrRenderTargetProxy.h"
 #include "src/gpu/ops/GrMeshDrawOp.h"
 
 class GrGpu;
@@ -30,7 +30,7 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
   // GrBufferAllocPool::kDefaultBufferSize. If the latter, then CPU memory is only allocated for
   // vertices/indices when a buffer larger than kDefaultBufferSize is required.
   GrOpFlushState(
-      GrGpu*, GrResourceProvider*, GrResourceCache*, GrTokenTracker*,
+      GrGpu*, GrResourceProvider*, GrTokenTracker*,
       sk_sp<GrBufferAllocPool::CpuBufferCache> = nullptr);
 
   ~GrOpFlushState() final { this->reset(); }
@@ -65,6 +65,7 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
     // TODO: do we still need the dst proxy here?
     GrRenderTargetProxy* fProxy;
     GrAppliedClip* fAppliedClip;
+    GrSwizzle fOutputSwizzle;
     GrXferProcessor::DstProxy fDstProxy;
   };
 

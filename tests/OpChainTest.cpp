@@ -172,14 +172,13 @@ DEF_GPUTEST(OpChainTest, reporter, /*ctxInfo*/) {
   desc.fConfig = kRGBA_8888_GrPixelConfig;
   desc.fWidth = kNumOps + 1;
   desc.fHeight = 1;
-  desc.fFlags = kRenderTarget_GrSurfaceFlag;
 
   const GrBackendFormat format =
-      context->priv().caps()->getBackendFormatFromColorType(kRGBA_8888_SkColorType);
+      context->priv().caps()->getBackendFormatFromColorType(GrColorType::kRGBA_8888);
 
   auto proxy = context->priv().proxyProvider()->createProxy(
-      format, desc, kTopLeft_GrSurfaceOrigin, GrMipMapped::kNo, SkBackingFit::kExact,
-      SkBudgeted::kNo, GrInternalSurfaceFlags::kNone);
+      format, desc, GrRenderable::kYes, 1, kTopLeft_GrSurfaceOrigin, GrMipMapped::kNo,
+      SkBackingFit::kExact, SkBudgeted::kNo, GrProtected::kNo, GrInternalSurfaceFlags::kNone);
   SkASSERT(proxy);
   proxy->instantiate(context->priv().resourceProvider());
   int result[result_width()];
@@ -209,8 +208,7 @@ DEF_GPUTEST(OpChainTest, reporter, /*ctxInfo*/) {
         init_combinable(g, &combinable, &random);
         GrTokenTracker tracker;
         GrOpFlushState flushState(
-            context->priv().getGpu(), context->priv().resourceProvider(),
-            context->priv().getResourceCache(), &tracker);
+            context->priv().getGpu(), context->priv().resourceProvider(), &tracker);
         GrRenderTargetOpList opList(
             sk_ref_sp(context->priv().opMemoryPool()), sk_ref_sp(proxy->asRenderTargetProxy()),
             context->priv().auditTrail());

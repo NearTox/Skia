@@ -8,32 +8,32 @@
 #include "include/core/SkTypes.h"
 
 #if defined(SK_BUILD_FOR_ANDROID) && __ANDROID_API__ >= 26
-#define GL_GLEXT_PROTOTYPES
-#define EGL_EGLEXT_PROTOTYPES
+#  define GL_GLEXT_PROTOTYPES
+#  define EGL_EGLEXT_PROTOTYPES
 
-#include "src/gpu/GrAHardwareBufferUtils.h"
+#  include "src/gpu/GrAHardwareBufferUtils.h"
 
-#include <android/hardware_buffer.h>
+#  include <android/hardware_buffer.h>
 
-#include "include/gpu/GrContext.h"
-#include "include/gpu/gl/GrGLTypes.h"
-#include "src/gpu/GrContextPriv.h"
-#include "src/gpu/gl/GrGLDefines.h"
+#  include "include/gpu/GrContext.h"
+#  include "include/gpu/gl/GrGLTypes.h"
+#  include "src/gpu/GrContextPriv.h"
+#  include "src/gpu/gl/GrGLDefines.h"
 
-#ifdef SK_VULKAN
-#include "src/gpu/vk/GrVkCaps.h"
-#include "src/gpu/vk/GrVkGpu.h"
-#endif
+#  ifdef SK_VULKAN
+#    include "src/gpu/vk/GrVkCaps.h"
+#    include "src/gpu/vk/GrVkGpu.h"
+#  endif
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <GLES/gl.h>
-#include <GLES/glext.h>
+#  include <EGL/egl.h>
+#  include <EGL/eglext.h>
+#  include <GLES/gl.h>
+#  include <GLES/glext.h>
 
-#define PROT_CONTENT_EXT_STR "EGL_EXT_protected_content"
-#define EGL_PROTECTED_CONTENT_EXT 0x32C0
+#  define PROT_CONTENT_EXT_STR "EGL_EXT_protected_content"
+#  define EGL_PROTECTED_CONTENT_EXT 0x32C0
 
-#define VK_CALL(X) gpu->vkInterface()->fFunctions.f##X;
+#  define VK_CALL(X) gpu->vkInterface()->fFunctions.f##X;
 
 namespace GrAHardwareBufferUtils {
 

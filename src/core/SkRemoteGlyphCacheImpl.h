@@ -27,7 +27,6 @@ class SkStrikeServer::SkGlyphCacheState : public SkStrikeInterface {
   SkDiscardableHandleId discardableHandleId() const { return fDiscardableHandleId; }
 
   bool isSubpixel() const { return fIsSubpixel; }
-  SkAxisAlignment axisAlignmentForHText() const { return fAxisAlignmentForHText; }
 
   const SkDescriptor& getDescriptor() const override { return *fDescriptor.getDesc(); }
 
@@ -35,13 +34,15 @@ class SkStrikeServer::SkGlyphCacheState : public SkStrikeInterface {
 
   SkVector rounding() const override;
 
-  const SkGlyph& getGlyphMetrics(SkGlyphID glyphID, SkPoint position) override;
+  SkIPoint subpixelMask() const override {
+    return SkIPoint::Make(
+        (!fIsSubpixel || fAxisAlignment == kY_SkAxisAlignment) ? 0 : ~0u,
+        (!fIsSubpixel || fAxisAlignment == kX_SkAxisAlignment) ? 0 : ~0u);
+  }
 
   SkSpan<const SkGlyphPos> prepareForDrawing(
-      const SkGlyphID glyphIDs[], const SkPoint positions[], size_t n, int maxDimension,
+      const SkPackedGlyphID packedGlyphIDs[], const SkPoint positions[], size_t n, int maxDimension,
       PreparationDetail detail, SkGlyphPos results[]) override;
-
-  void generatePath(const SkGlyph& glyph) override;
 
   void onAboutToExitScope() override {}
 
@@ -69,12 +70,12 @@ class SkStrikeServer::SkGlyphCacheState : public SkStrikeInterface {
 
   // Values saved from the initial context.
   const bool fIsSubpixel;
-  const SkAxisAlignment fAxisAlignmentForHText;
+  const SkAxisAlignment fAxisAlignment;
 
   // The context built using fDescriptor
   std::unique_ptr<SkScalerContext> fContext;
 
-  // These fields are set everytime getOrCreateCache. This allows the code to maintain the
+  // These fields are set every time getOrCreateCache. This allows the code to maintain the
   // fContext as lazy as possible.
   const SkTypeface* fTypeface{nullptr};
   SkScalerContextEffects fEffects;

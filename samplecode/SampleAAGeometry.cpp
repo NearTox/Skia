@@ -7,16 +7,14 @@
 
 #include "include/core/SkBitmap.h"
 #include "include/core/SkCanvas.h"
+#include "include/core/SkString.h"
 #include "include/private/SkMacros.h"
+#include "include/utils/SkTextUtils.h"
 #include "samplecode/Sample.h"
 #include "src/core/SkGeometry.h"
+#include "src/core/SkPointPriv.h"
 #include "src/pathops/SkIntersections.h"
 #include "src/pathops/SkOpEdgeBuilder.h"
-// #include "SkPathOpsSimplifyAA.h"
-// #include "SkPathStroker.h"
-#include "include/core/SkString.h"
-#include "include/utils/SkTextUtils.h"
-#include "src/core/SkPointPriv.h"
 
 #if 0
 void SkStrokeSegment::dump() const {
@@ -588,18 +586,14 @@ class MyClick : public Sample::Click {
   SkPath::Verb fVerb;
   SkScalar fWeight;
 
-  MyClick(Sample* target, ClickType type, ControlType control)
-      : Click(target), fType(type), fControl(control), fVerb((SkPath::Verb)-1), fWeight(1) {}
+  MyClick(ClickType type, ControlType control)
+      : fType(type), fControl(control), fVerb((SkPath::Verb)-1), fWeight(1) {}
 
-  MyClick(Sample* target, ClickType type, int index)
-      : Click(target),
-        fType(type),
-        fControl((ControlType)index),
-        fVerb((SkPath::Verb)-1),
-        fWeight(1) {}
+  MyClick(ClickType type, int index)
+      : fType(type), fControl((ControlType)index), fVerb((SkPath::Verb)-1), fWeight(1) {}
 
-  MyClick(Sample* target, ClickType type, int index, SkPath::Verb verb, SkScalar weight)
-      : Click(target), fType(type), fControl((ControlType)index), fVerb(verb), fWeight(weight) {}
+  MyClick(ClickType type, int index, SkPath::Verb verb, SkScalar weight)
+      : fType(type), fControl((ControlType)index), fVerb(verb), fWeight(weight) {}
 
   bool isButton() { return kFirstButton <= fControl && fControl <= kLastButton; }
 
@@ -671,7 +665,7 @@ struct Stroke {
 
 struct PathUndo {
   SkPath fPath;
-  PathUndo* fNext;
+  std::unique_ptr<PathUndo> fNext;
 };
 
 class AAGeometryView : public Sample {
@@ -703,7 +697,7 @@ class AAGeometryView : public Sample {
   Button fJoinButton;
   Button fInOutButton;
   SkTArray<Stroke> fStrokes;
-  PathUndo* fUndo;
+  std::unique_ptr<PathUndo> fUndo;
   int fActivePt;
   int fActiveVerb;
   bool fHandlePathMove;
@@ -729,7 +723,6 @@ class AAGeometryView : public Sample {
         fBisectButton('b'),
         fJoinButton('j'),
         fInOutButton('|'),
-        fUndo(nullptr),
         fActivePt(-1),
         fActiveVerb(-1),
         fHandlePathMove(true),
@@ -770,44 +763,43 @@ class AAGeometryView : public Sample {
     init_buttonList();
   }
 
+  ~AAGeometryView() override {
+    // Free linked list without deep recursion.
+    std::unique_ptr<PathUndo> undo = std::move(fUndo);
+    while (undo) {
+      undo = std::move(undo->fNext);
+    }
+  }
+
   bool constructPath() {
     construct_path(fPath);
     return true;
   }
 
-  void savePath(Click::State state) {
-    if (state != Click::kDown_State) {
+  void savePath(InputState state) {
+    if (state != InputState::kDown) {
       return;
     }
     if (fUndo && fUndo->fPath == fPath) {
       return;
     }
-    PathUndo* undo = new PathUndo;
+    std::unique_ptr<PathUndo> undo(new PathUndo);
     undo->fPath = fPath;
-    undo->fNext = fUndo;
-    fUndo = undo;
+    undo->fNext = std::move(fUndo);
+    fUndo = std::move(undo);
   }
 
   bool undo() {
     if (!fUndo) {
       return false;
     }
-    fPath = fUndo->fPath;
+    fPath = std::move(fUndo->fPath);
+    fUndo = std::move(fUndo->fNext);
     validatePath();
-    PathUndo* next = fUndo->fNext;
-    delete fUndo;
-    fUndo = next;
     return true;
   }
 
-  void validatePath() {
-    PathUndo* undo = fUndo;
-    int match = 0;
-    while (undo) {
-      match += fPath == undo->fPath;
-      undo = undo->fNext;
-    }
-  }
+  void validatePath() {}
 
   void set_controlList(int index, UniControl* control, MyClick::ControlType type) {
     kControlList[index].fControl = control;
@@ -856,7 +848,9 @@ class AAGeometryView : public Sample {
 
 #undef SET_BUTTON
 
-  bool onQuery(Sample::Event* evt) override;
+  SkString name() override { return SkString("AAGeometry"); }
+
+  bool onChar(SkUnichar) override;
 
   void onSizeChange() override {
     setControlButtonsPos();
@@ -1476,28 +1470,28 @@ class AAGeometryView : public Sample {
     return -1;
   }
 
-  virtual Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, unsigned modi) override {
+  virtual Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, ModifierKey modi) override {
     SkPoint pt = {x, y};
     int ptHit = hittest_pt(pt);
     if (ptHit >= 0) {
-      return new MyClick(this, MyClick::kPtType, ptHit);
+      return new MyClick(MyClick::kPtType, ptHit);
     }
     SkPath::Verb verb;
     SkScalar weight;
     int verbHit = hittest_verb(pt, &verb, &weight);
     if (verbHit >= 0) {
-      return new MyClick(this, MyClick::kVerbType, verbHit, verb, weight);
+      return new MyClick(MyClick::kVerbType, verbHit, verb, weight);
     }
     if (!fHideAll) {
       const SkRect& rectPt = SkRect::MakeXYWH(x, y, 1, 1);
       for (int index = 0; index < kControlCount; ++index) {
         if (kControlList[index].fControl->contains(rectPt)) {
-          return new MyClick(this, MyClick::kControlType, kControlList[index].fControlType);
+          return new MyClick(MyClick::kControlType, kControlList[index].fControlType);
         }
       }
       for (int index = 0; index < kButtonCount; ++index) {
         if (kButtonList[index].fButton->contains(rectPt)) {
-          return new MyClick(this, MyClick::kControlType, kButtonList[index].fButtonType);
+          return new MyClick(MyClick::kControlType, kButtonList[index].fButtonType);
         }
       }
     }
@@ -1506,9 +1500,9 @@ class AAGeometryView : public Sample {
     fActiveVerb = -1;
     fActivePt = -1;
     if (fHandlePathMove) {
-      return new MyClick(this, MyClick::kPathType, MyClick::kPathMove);
+      return new MyClick(MyClick::kPathType, MyClick::kPathMove);
     }
-    return this->INHERITED::onFindClickHandler(x, y, modi);
+    return nullptr;
   }
 
   static SkScalar MapScreenYtoValue(int y, const UniControl& control) {
@@ -1527,8 +1521,8 @@ class AAGeometryView : public Sample {
         fActivePt = myClick->ptHit();
         SkPoint pt = fPath.getPoint((int)myClick->fControl);
         pt.offset(
-            SkIntToScalar(click->fICurr.fX - click->fIPrev.fX),
-            SkIntToScalar(click->fICurr.fY - click->fIPrev.fY));
+            SkIntToScalar(click->fCurr.fX - click->fPrev.fX),
+            SkIntToScalar(click->fCurr.fY - click->fPrev.fY));
         set_path_pt(fActivePt, pt, &fPath);
         validatePath();
         return true;
@@ -1536,8 +1530,8 @@ class AAGeometryView : public Sample {
       case MyClick::kPathType:
         savePath(click->fState);
         fPath.offset(
-            SkIntToScalar(click->fICurr.fX - click->fIPrev.fX),
-            SkIntToScalar(click->fICurr.fY - click->fIPrev.fY));
+            SkIntToScalar(click->fCurr.fX - click->fPrev.fX),
+            SkIntToScalar(click->fCurr.fY - click->fPrev.fY));
         validatePath();
         return true;
       case MyClick::kVerbType: {
@@ -1552,12 +1546,12 @@ class AAGeometryView : public Sample {
         fWeightControl.fVisible = myClick->fVerb == SkPath::kConic_Verb;
       } break;
       case MyClick::kControlType: {
-        if (click->fState != Click::kDown_State && myClick->isButton()) {
+        if (click->fState != InputState::kDown && myClick->isButton()) {
           return true;
         }
         switch (myClick->fControl) {
           case MyClick::kFilterControl: {
-            SkScalar val = MapScreenYtoValue(click->fICurr.fY, fFilterControl);
+            SkScalar val = MapScreenYtoValue(click->fCurr.fY, fFilterControl);
             if (val - fFilterControl.fValLo < fFilterControl.fValHi - val) {
               fFilterControl.fValLo = SkTMax(0.f, val);
             } else {
@@ -1565,17 +1559,17 @@ class AAGeometryView : public Sample {
             }
           } break;
           case MyClick::kResControl:
-            fResControl.fValLo = MapScreenYtoValue(click->fICurr.fY, fResControl);
+            fResControl.fValLo = MapScreenYtoValue(click->fCurr.fY, fResControl);
             break;
           case MyClick::kWeightControl: {
             savePath(click->fState);
-            SkScalar w = MapScreenYtoValue(click->fICurr.fY, fWeightControl);
+            SkScalar w = MapScreenYtoValue(click->fCurr.fY, fWeightControl);
             set_path_weight(fActiveVerb, w, &fPath);
             validatePath();
             fWeightControl.fValLo = w;
           } break;
           case MyClick::kWidthControl:
-            fWidthControl.fValLo = MapScreenYtoValue(click->fICurr.fY, fWidthControl);
+            fWidthControl.fValLo = MapScreenYtoValue(click->fCurr.fY, fWidthControl);
             break;
           case MyClick::kLineButton:
             savePath(click->fState);
@@ -1674,44 +1668,34 @@ void AAGeometryView::draw_legend(SkCanvas* canvas) {
   }
 }
 
-bool AAGeometryView::onQuery(Sample::Event* evt) {
-  if (Sample::TitleQ(*evt)) {
-    Sample::TitleR(evt, "AAGeometry");
-    return true;
+bool AAGeometryView::onChar(SkUnichar uni) {
+  for (int index = 0; index < kButtonCount; ++index) {
+    Button* button = kButtonList[index].fButton;
+    if (button->fVisible && uni == button->fLabel) {
+      MyClick click(MyClick::kControlType, kButtonList[index].fButtonType);
+      click.fState = InputState::kDown;
+      (void)this->onClick(&click);
+      return true;
+    }
   }
-  SkUnichar uni;
-  if (false) {
-    return this->INHERITED::onQuery(evt);
+  for (int index = 0; index < kKeyCommandCount; ++index) {
+    KeyCommand& keyCommand = kKeyCommandList[index];
+    if (uni == keyCommand.fKey || uni == keyCommand.fAlternate) {
+      return (this->*keyCommand.fFunction)();
+    }
   }
-  if (Sample::CharQ(*evt, &uni)) {
+  if (('A' <= uni && uni <= 'Z') || ('a' <= uni && uni <= 'z')) {
     for (int index = 0; index < kButtonCount; ++index) {
       Button* button = kButtonList[index].fButton;
-      if (button->fVisible && uni == button->fLabel) {
-        MyClick click(this, MyClick::kControlType, kButtonList[index].fButtonType);
-        click.fState = Click::kDown_State;
+      if (button->fVisible && (uni & ~0x20) == (button->fLabel & ~0x20)) {
+        MyClick click(MyClick::kControlType, kButtonList[index].fButtonType);
+        click.fState = InputState::kDown;
         (void)this->onClick(&click);
         return true;
       }
     }
-    for (int index = 0; index < kKeyCommandCount; ++index) {
-      KeyCommand& keyCommand = kKeyCommandList[index];
-      if (uni == keyCommand.fKey || uni == keyCommand.fAlternate) {
-        return (this->*keyCommand.fFunction)();
-      }
-    }
-    if (('A' <= uni && uni <= 'Z') || ('a' <= uni && uni <= 'z')) {
-      for (int index = 0; index < kButtonCount; ++index) {
-        Button* button = kButtonList[index].fButton;
-        if (button->fVisible && (uni & ~0x20) == (button->fLabel & ~0x20)) {
-          MyClick click(this, MyClick::kControlType, kButtonList[index].fButtonType);
-          click.fState = Click::kDown_State;
-          (void)this->onClick(&click);
-          return true;
-        }
-      }
-    }
   }
-  return this->INHERITED::onQuery(evt);
+  return false;
 }
 
 DEF_SAMPLE(return new AAGeometryView;)

@@ -24,7 +24,7 @@
 #endif
 
 #ifdef SK_DEBUG
-#define VALIDATE() this->validate()
+#  define VALIDATE() this->validate()
 #else
 #  define VALIDATE() \
     do {             \
@@ -126,6 +126,8 @@ inline GrGLGpu* GrGLBuffer::glGpu() const {
 inline const GrGLCaps& GrGLBuffer::glCaps() const { return this->glGpu()->glCaps(); }
 
 void GrGLBuffer::onRelease() {
+  TRACE_EVENT0("skia.gpu", TRACE_FUNC);
+
   if (!this->wasDestroyed()) {
     VALIDATE();
     // make sure we've not been abandoned or already released

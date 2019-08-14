@@ -26,6 +26,7 @@
 #include "include/core/SkTypes.h"
 #include "include/effects/SkGradientShader.h"
 #include "include/private/SkTDArray.h"
+#include "src/core/SkTLazy.h"
 
 #include <utility>
 
@@ -155,7 +156,7 @@ static sk_sp<SkShader> make_linear_gradient_shader(int length) {
 
 class ComposeShaderBitmapGM : public skiagm::GM {
  public:
-  ComposeShaderBitmapGM() {}
+  ComposeShaderBitmapGM(bool use_lm) : fUseLocalMatrix(use_lm) {}
 
  protected:
   void onOnceBeforeDraw() override {
@@ -168,7 +169,9 @@ class ComposeShaderBitmapGM : public skiagm::GM {
     fLinearGradientShader = make_linear_gradient_shader(squareLength);
   }
 
-  SkString onShortName() override { return SkString("composeshader_bitmap"); }
+  SkString onShortName() override {
+    return SkStringPrintf("composeshader_bitmap%s", fUseLocalMatrix ? "_lm" : "");
+  }
 
   SkISize onISize() override {
     return SkISize::Make(7 * (squareLength + 5), 2 * (squareLength + 5));
@@ -177,11 +180,16 @@ class ComposeShaderBitmapGM : public skiagm::GM {
   void onDraw(SkCanvas* canvas) override {
     SkBlendMode mode = SkBlendMode::kDstOver;
 
+    SkTLazy<SkMatrix> lm;
+    if (fUseLocalMatrix) {
+      lm.set(SkMatrix::MakeTrans(0, squareLength * 0.5f));
+    }
+
     sk_sp<SkShader> shaders[] = {
         // gradient should appear over color bitmap
-        SkShaders::Blend(mode, fLinearGradientShader, fColorBitmapShader),
+        SkShaders::Blend(mode, fLinearGradientShader, fColorBitmapShader, lm.getMaybeNull()),
         // gradient should appear over alpha8 bitmap colorized by the paint color
-        SkShaders::Blend(mode, fLinearGradientShader, fAlpha8BitmapShader),
+        SkShaders::Blend(mode, fLinearGradientShader, fAlpha8BitmapShader, lm.getMaybeNull()),
     };
 
     SkPaint paint;
@@ -212,6 +220,8 @@ class ComposeShaderBitmapGM : public skiagm::GM {
    */
   static constexpr int squareLength = 20;
 
+  const bool fUseLocalMatrix;
+
   SkBitmap fColorBitmap;
   SkBitmap fAlpha8Bitmap;
   sk_sp<SkShader> fColorBitmapShader;
@@ -220,7 +230,8 @@ class ComposeShaderBitmapGM : public skiagm::GM {
 
   typedef GM INHERITED;
 };
-DEF_GM(return new ComposeShaderBitmapGM;)
+DEF_GM(return new ComposeShaderBitmapGM(false);)
+DEF_GM(return new ComposeShaderBitmapGM(true);)
 
 DEF_SIMPLE_GM(composeshader_bitmap2, canvas, 200, 200) {
   int width = 255;

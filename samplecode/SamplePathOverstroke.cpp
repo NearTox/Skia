@@ -8,8 +8,8 @@
 #include "include/core/SkPath.h"
 #include "samplecode/Sample.h"
 
-#include <cmath>
 #include <iostream>
+#include <cmath>
 
 #define PI SK_ScalarPI
 
@@ -32,24 +32,19 @@ class OverstrokeView : public Sample {
   }
 
  protected:
-  bool onQuery(Sample::Event* evt) override {
-    if (Sample::TitleQ(*evt)) {
-      Sample::TitleR(evt, "PathOverstroke");
-      return true;
+  SkString name() override { return SkString("PathOverstroke"); }
+
+  bool onChar(SkUnichar uni) override {
+    switch (uni) {
+      case ',': fStroke += 1.0; return true;
+      case '.': fStroke -= 1.0; return true;
+      case 'x': fPathType = (fPathType + 1) % 4; return true;
+      case 'c': fClosePath = !fClosePath; return true;
+      case 'f': fDrawFillPath = !fDrawFillPath; return true;
+      case 'D': fDumpHex = !fDumpHex; return true;
+      default: break;
     }
-    SkUnichar uni;
-    if (Sample::CharQ(*evt, &uni)) {
-      switch (uni) {
-        case ',': fStroke += 1.0; return true;
-        case '.': fStroke -= 1.0; return true;
-        case 'x': fPathType = (fPathType + 1) % 4; return true;
-        case 'c': fClosePath = !fClosePath; return true;
-        case 'f': fDrawFillPath = !fDrawFillPath; return true;
-        case 'D': fDumpHex = !fDumpHex; return true;
-        default: break;
-      }
-    }
-    return this->INHERITED::onQuery(evt);
+    return false;
   }
 
   SkPath quadPath(SkPoint p1, SkPoint p2) {

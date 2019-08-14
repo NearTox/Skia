@@ -195,12 +195,12 @@ void CustomXP::onGetBlendInfo(BlendInfo* blendInfo) const {
 
 // See the comment above GrXPFactory's definition about this warning suppression.
 #if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
 #endif
 #if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wnon-virtual-dtor"
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wnon-virtual-dtor"
 #endif
 class CustomXPFactory : public GrXPFactory {
  public:
@@ -224,10 +224,10 @@ class CustomXPFactory : public GrXPFactory {
   typedef GrXPFactory INHERITED;
 };
 #if defined(__GNUC__)
-#pragma GCC diagnostic pop
+#  pragma GCC diagnostic pop
 #endif
 #if defined(__clang__)
-#pragma clang diagnostic pop
+#  pragma clang diagnostic pop
 #endif
 
 sk_sp<const GrXferProcessor> CustomXPFactory::makeXferProcessor(
@@ -365,9 +365,9 @@ const GrXPFactory* GrCustomXfermode::Get(SkBlendMode mode) {
   // If these objects are constructed as static constexpr by cl.exe (2015 SP2) the vtables are
   // null.
 #ifdef SK_BUILD_FOR_WIN
-#define _CONSTEXPR_
+#  define _CONSTEXPR_
 #else
-#define _CONSTEXPR_ constexpr
+#  define _CONSTEXPR_ constexpr
 #endif
   static _CONSTEXPR_ const CustomXPFactory gOverlay(SkBlendMode::kOverlay);
   static _CONSTEXPR_ const CustomXPFactory gDarken(SkBlendMode::kDarken);

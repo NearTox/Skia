@@ -328,12 +328,11 @@ static void showPathOpPath(
   drawAsciiPaths(scaledOne, scaledTwo, true);
 }
 
-SK_DECLARE_STATIC_MUTEX(compareDebugOut3);
-
 static int comparePaths(
     skiatest::Reporter* reporter, const char* testName, const SkPath& one, const SkPath& scaledOne,
     const SkPath& two, const SkPath& scaledTwo, SkBitmap& bitmap, const SkPath& a, const SkPath& b,
     const SkPathOp shapeOp, const SkMatrix& scale, ExpectMatch expectMatch) {
+  static SkMutex& compareDebugOut3 = *(new SkMutex);
   int errors2x2;
   const int MAX_ERRORS = 8;
   (void)pathsDrawTheSame(bitmap, scaledOne, scaledTwo, errors2x2);
@@ -347,7 +346,7 @@ static int comparePaths(
     return 0;
   }
   if (ExpectMatch::kYes == expectMatch && errors2x2 >= MAX_ERRORS) {
-    SkAutoMutexAcquire autoM(compareDebugOut3);
+    SkAutoMutexExclusive autoM(compareDebugOut3);
     showPathOpPath(testName, one, two, a, b, scaledOne, scaledTwo, shapeOp, scale);
     SkDebugf("\n/*");
     REPORTER_ASSERT(reporter, 0);
@@ -422,10 +421,9 @@ void markTestFlakyForPathKit() {
   }
 }
 
-SK_DECLARE_STATIC_MUTEX(simplifyDebugOut);
-
 bool testSimplify(
     SkPath& path, bool useXor, SkPath& out, PathOpsThreadState& state, const char* pathStr) {
+  static SkMutex& simplifyDebugOut = *(new SkMutex);
   SkPath::FillType fillType = useXor ? SkPath::kEvenOdd_FillType : SkPath::kWinding_FillType;
   path.setFillType(fillType);
   state.fReporter->bumpTestCount();
@@ -439,7 +437,7 @@ bool testSimplify(
   }
   int result = comparePaths(state.fReporter, nullptr, path, out, *state.fBitmap);
   if (result) {
-    SkAutoMutexAcquire autoM(simplifyDebugOut);
+    SkAutoMutexExclusive autoM(simplifyDebugOut);
     std::string str;
     const char* pathPrefix = nullptr;
     const char* nameSuffix = nullptr;
@@ -737,11 +735,10 @@ bool testPathOpFail(
   return true;
 }
 
-SK_DECLARE_STATIC_MUTEX(gMutex);
-
 void initializeTests(skiatest::Reporter* reporter, const char* test) {
+  static SkMutex& mu = *(new SkMutex);
   if (reporter->verbose()) {
-    SkAutoMutexAcquire lock(gMutex);
+    SkAutoMutexExclusive lock(mu);
     testName = test;
     size_t testNameSize = strlen(test);
     SkFILEStream inFile("../../experimental/Intersection/op.htm");

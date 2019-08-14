@@ -25,6 +25,7 @@ class GrCopySurfaceOp final : public GrOp {
 
   void visitProxies(const VisitProxyFunc& func) const override {
     func(fSrc.get(), GrMipMapped::kNo);
+    func(fDst.get(), GrMipMapped::kNo);
   }
 
 #ifdef SK_DEBUG
@@ -43,19 +44,29 @@ class GrCopySurfaceOp final : public GrOp {
  private:
   friend class GrOpMemoryPool;  // for ctor
 
-  GrCopySurfaceOp(GrSurfaceProxy* src, const SkIRect& srcRect, const SkIPoint& dstPoint)
-      : INHERITED(ClassID()), fSrc(src), fSrcRect(srcRect), fDstPoint(dstPoint) {
+  GrCopySurfaceOp(
+      GrSurfaceProxy* src, GrSurfaceProxy* dst, const SkIRect& srcRect, const SkIPoint& dstPoint)
+      : INHERITED(ClassID()), fSrc(src), fDst(dst), fSrcRect(srcRect), fDstPoint(dstPoint) {
     SkRect bounds = SkRect::MakeXYWH(
         SkIntToScalar(dstPoint.fX), SkIntToScalar(dstPoint.fY), SkIntToScalar(srcRect.width()),
         SkIntToScalar(srcRect.height()));
     this->setBounds(bounds, HasAABloat::kNo, IsZeroArea::kNo);
+
+    SkASSERT(dst->origin() == src->origin());
+    if (kBottomLeft_GrSurfaceOrigin == src->origin()) {
+      int rectHeight = fSrcRect.height();
+      fSrcRect.fTop = src->height() - fSrcRect.fBottom;
+      fSrcRect.fBottom = fSrcRect.fTop + rectHeight;
+      fDstPoint.fY = dst->height() - fDstPoint.fY - rectHeight;
+    }
   }
 
   void onPrepare(GrOpFlushState*) override {}
 
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
 
-  GrPendingIOResource<GrSurfaceProxy, kRead_GrIOType> fSrc;
+  GrProxyPendingIO fSrc;
+  GrProxyPendingIO fDst;
   SkIRect fSrcRect;
   SkIPoint fDstPoint;
 

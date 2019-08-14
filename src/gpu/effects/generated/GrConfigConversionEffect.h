@@ -24,10 +24,7 @@ class GrConfigConversionEffect : public GrFragmentProcessor {
  public:
   static bool TestForPreservingPMConversions(GrContext* context) {
     static constexpr int kSize = 256;
-    static constexpr GrPixelConfig kConfig = kRGBA_8888_GrPixelConfig;
-    static constexpr SkColorType kColorType = kRGBA_8888_SkColorType;
-    const GrBackendFormat format =
-        context->priv().caps()->getBackendFormatFromColorType(kColorType);
+    static constexpr GrColorType kColorType = GrColorType::kRGBA_8888;
     SkAutoTMalloc<uint32_t> data(kSize * kSize * 3);
     uint32_t* srcData = data.get();
     uint32_t* firstRead = data.get() + kSize * kSize;
@@ -52,9 +49,9 @@ class GrConfigConversionEffect : public GrFragmentProcessor {
         SkImageInfo::Make(kSize, kSize, kRGBA_8888_SkColorType, kPremul_SkAlphaType);
 
     sk_sp<GrRenderTargetContext> readRTC(context->priv().makeDeferredRenderTargetContext(
-        format, SkBackingFit::kExact, kSize, kSize, kConfig, nullptr));
+        SkBackingFit::kExact, kSize, kSize, kColorType, nullptr));
     sk_sp<GrRenderTargetContext> tempRTC(context->priv().makeDeferredRenderTargetContext(
-        format, SkBackingFit::kExact, kSize, kSize, kConfig, nullptr));
+        SkBackingFit::kExact, kSize, kSize, kColorType, nullptr));
     if (!readRTC || !readRTC->asTextureProxy() || !tempRTC) {
       return false;
     }
@@ -72,7 +69,7 @@ class GrConfigConversionEffect : public GrFragmentProcessor {
     sk_sp<SkImage> image = SkImage::MakeFromRaster(pixmap, nullptr, nullptr);
 
     sk_sp<GrTextureProxy> dataProxy = proxyProvider->createTextureProxy(
-        std::move(image), kNone_GrSurfaceFlags, 1, SkBudgeted::kYes, SkBackingFit::kExact);
+        std::move(image), GrRenderable::kNo, 1, SkBudgeted::kYes, SkBackingFit::kExact);
     if (!dataProxy) {
       return false;
     }
@@ -96,7 +93,7 @@ class GrConfigConversionEffect : public GrFragmentProcessor {
     paint1.setPorterDuffXPFactory(SkBlendMode::kSrc);
 
     readRTC->fillRectToRect(GrNoClip(), std::move(paint1), GrAA::kNo, SkMatrix::I(), kRect, kRect);
-    if (!readRTC->readPixels(ii, firstRead, 0, 0, 0)) {
+    if (!readRTC->readPixels(ii, firstRead, 0, {0, 0})) {
       return false;
     }
 
@@ -116,7 +113,7 @@ class GrConfigConversionEffect : public GrFragmentProcessor {
 
     readRTC->fillRectToRect(GrNoClip(), std::move(paint3), GrAA::kNo, SkMatrix::I(), kRect, kRect);
 
-    if (!readRTC->readPixels(ii, secondRead, 0, 0, 0)) {
+    if (!readRTC->readPixels(ii, secondRead, 0, {0, 0})) {
       return false;
     }
 

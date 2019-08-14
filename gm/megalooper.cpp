@@ -24,6 +24,10 @@
 #include "src/core/SkBlurMask.h"
 #include "src/core/SkClipOpPriv.h"
 
+#ifdef SK_SUPPORT_LEGACY_DRAWLOOPER
+
+namespace {
+
 // This GM tests 3 different ways of drawing four shadows around a square:
 //      just using 4 blurred rects
 //      using 4 1-level draw loopers
@@ -40,8 +44,8 @@ class MegaLooperGM : public skiagm::GM {
 
   MegaLooperGM(Type type) : fType(type) {}
 
- protected:
-  virtual SkString onShortName() {
+ private:
+  SkString onShortName() override {
     switch (fType) {
       case k0x0_Type: return SkString("megalooper_0x0"); break;
       case k4x1_Type: return SkString("megalooper_4x1"); break;
@@ -50,9 +54,9 @@ class MegaLooperGM : public skiagm::GM {
     }
   }
 
-  virtual SkISize onISize() { return SkISize::Make(kWidth, kHeight); }
+  SkISize onISize() override { return {kWidth, kHeight}; }
 
-  virtual void onDraw(SkCanvas* canvas) {
+  void onDraw(SkCanvas* canvas) override {
     for (int y = 100; y < kHeight; y += 200) {
       for (int x = 100; x < kWidth; x += 200) {
         switch (fType) {
@@ -65,7 +69,6 @@ class MegaLooperGM : public skiagm::GM {
     }
   }
 
- private:
   static constexpr int kWidth = 800;
   static constexpr int kHeight = 800;
   static constexpr int kHalfOuterClipSize = 100;
@@ -216,8 +219,6 @@ class MegaLooperGM : public skiagm::GM {
 
     return looperBuilder.detach();
   }
-
-  typedef GM INHERITED;
 };
 
 const SkPoint MegaLooperGM::gBlurOffsets[4] = {{kHalfSquareSize, kHalfSquareSize},
@@ -226,7 +227,10 @@ const SkPoint MegaLooperGM::gBlurOffsets[4] = {{kHalfSquareSize, kHalfSquareSize
                                                {-kHalfSquareSize, -kHalfSquareSize}};
 
 const SkColor MegaLooperGM::gColors[4] = {SK_ColorGREEN, SK_ColorYELLOW, SK_ColorBLUE, SK_ColorRED};
+}  // namespace
 
 DEF_GM(return new MegaLooperGM(MegaLooperGM::k0x0_Type);)
 DEF_GM(return new MegaLooperGM(MegaLooperGM::k4x1_Type);)
 DEF_GM(return new MegaLooperGM(MegaLooperGM::k1x4_Type);)
+
+#endif

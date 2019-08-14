@@ -15,8 +15,6 @@
 #include "include/utils/SkRandom.h"
 #include "tools/ToolUtils.h"
 
-class AnimTimer;
-
 class SimpleRectGM : public skiagm::GM {
  public:
   SimpleRectGM() {}
@@ -49,7 +47,7 @@ class SimpleRectGM : public skiagm::GM {
     }
   }
 
-  bool onAnimate(const AnimTimer& timer) override { return true; }
+  bool onAnimate(double nanos) override { return true; }
 
  private:
   typedef GM INHERITED;

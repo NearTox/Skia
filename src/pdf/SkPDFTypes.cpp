@@ -112,8 +112,7 @@ static void write_name_escaped(SkWStream* o, const char* name) {
 }
 
 static void write_string(SkWStream* wStream, const char* cin, size_t len) {
-  SkDEBUGCODE(static const size_t kMaxLen = 65535);
-  SkASSERT(len <= kMaxLen);
+  SkDEBUGCODE(static const size_t kMaxLen = 65535;) SkASSERT(len <= kMaxLen);
 
   size_t extraCharacterCount = 0;
   for (size_t i = 0; i < len; i++) {
