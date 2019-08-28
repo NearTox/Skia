@@ -90,7 +90,7 @@ class SK_API SkPixmap {
 
       @param colorSpace  SkColorSpace moved to SkImageInfo
   */
-  void setColorSpace(sk_sp<SkColorSpace> colorSpace);
+  void setColorSpace(sk_sp<SkColorSpace> colorSpace) noexcept;
 
   /** Deprecated.
    */
@@ -112,7 +112,7 @@ class SK_API SkPixmap {
 
       @return  reference to SkImageInfo
   */
-  const SkImageInfo& info() const { return fInfo; }
+  const SkImageInfo& info() const noexcept { return fInfo; }
 
   /** Returns row bytes, the interval from one pixel row to the next. Row bytes
       is at least as large as: width() * info().bytesPerPixel().
@@ -122,7 +122,7 @@ class SK_API SkPixmap {
 
       @return  byte length of pixel row
   */
-  size_t rowBytes() const { return fRowBytes; }
+  size_t rowBytes() const noexcept { return fRowBytes; }
 
   /** Returns pixel address, the base address corresponding to the pixel origin.
 
@@ -130,25 +130,25 @@ class SK_API SkPixmap {
 
       @return  pixel address
   */
-  const void* addr() const { return fPixels; }
+  const void* addr() const noexcept { return fPixels; }
 
   /** Returns pixel count in each pixel row. Should be equal or less than:
       rowBytes() / info().bytesPerPixel().
 
       @return  pixel width in SkImageInfo
   */
-  int width() const { return fInfo.width(); }
+  int width() const noexcept { return fInfo.width(); }
 
   /** Returns pixel row count.
 
       @return  pixel height in SkImageInfo
   */
-  int height() const { return fInfo.height(); }
+  int height() const noexcept { return fInfo.height(); }
 
   /**
    *  Return the dimensions of the pixmap (from its ImageInfo)
    */
-  SkISize dimensions() const { return fInfo.dimensions(); }
+  SkISize dimensions() const noexcept { return fInfo.dimensions(); }
 
   /** Returns SkColorType, one of:
       kUnknown_SkColorType, kAlpha_8_SkColorType, kRGB_565_SkColorType,
@@ -158,7 +158,7 @@ class SK_API SkPixmap {
 
       @return  SkColorType in SkImageInfo
   */
-  SkColorType colorType() const { return fInfo.colorType(); }
+  SkColorType colorType() const noexcept { return fInfo.colorType(); }
 
   /** Returns SkAlphaType, one of:
       kUnknown_SkAlphaType, kOpaque_SkAlphaType, kPremul_SkAlphaType,
@@ -166,7 +166,7 @@ class SK_API SkPixmap {
 
       @return  SkAlphaType in SkImageInfo
   */
-  SkAlphaType alphaType() const { return fInfo.alphaType(); }
+  SkAlphaType alphaType() const noexcept { return fInfo.alphaType(); }
 
   /** Returns SkColorSpace, the range of colors, associated with SkImageInfo. The
       reference count of SkColorSpace is unchanged. The returned SkColorSpace is
@@ -174,7 +174,7 @@ class SK_API SkPixmap {
 
       @return  SkColorSpace in SkImageInfo, or nullptr
   */
-  SkColorSpace* colorSpace() const { return fInfo.colorSpace(); }
+  SkColorSpace* colorSpace() const noexcept { return fInfo.colorSpace(); }
 
   /** Returns smart pointer to SkColorSpace, the range of colors, associated with
       SkImageInfo. The smart pointer tracks the number of objects sharing this
@@ -192,27 +192,27 @@ class SK_API SkPixmap {
 
       @return  true if SkImageInfo has opaque SkAlphaType
   */
-  bool isOpaque() const { return fInfo.isOpaque(); }
+  bool isOpaque() const noexcept { return fInfo.isOpaque(); }
 
   /** Returns SkIRect { 0, 0, width(), height() }.
 
       @return  integral rectangle from origin to width() and height()
   */
-  SkIRect bounds() const { return SkIRect::MakeWH(this->width(), this->height()); }
+  SkIRect bounds() const noexcept { return SkIRect::MakeWH(this->width(), this->height()); }
 
   /** Returns number of pixels that fit on row. Should be greater than or equal to
       width().
 
       @return  maximum pixels per row
   */
-  int rowBytesAsPixels() const { return int(fRowBytes >> this->shiftPerPixel()); }
+  int rowBytesAsPixels() const noexcept { return int(fRowBytes >> this->shiftPerPixel()); }
 
   /** Returns bit shift converting row bytes to row pixels.
       Returns zero for kUnknown_SkColorType.
 
       @return  one of: 0, 1, 2, 3; left shift to convert pixels to bytes
   */
-  int shiftPerPixel() const { return fInfo.shiftPerPixel(); }
+  int shiftPerPixel() const noexcept { return fInfo.shiftPerPixel(); }
 
   /** Returns minimum memory required for pixel storage.
       Does not include unused memory on last row when rowBytesAsPixels() exceeds width().
@@ -222,7 +222,7 @@ class SK_API SkPixmap {
 
       @return  size in bytes of image buffer
   */
-  size_t computeByteSize() const { return fInfo.computeByteSize(fRowBytes); }
+  size_t computeByteSize() const noexcept { return fInfo.computeByteSize(fRowBytes); }
 
   /** Returns true if all pixels are opaque. SkColorType determines how pixels
       are encoded, and whether pixel describes alpha. Returns true for SkColorType
@@ -294,7 +294,7 @@ class SK_API SkPixmap {
 
       @return  readable unsigned 8-bit pointer to pixels
   */
-  const uint8_t* addr8() const {
+  const uint8_t* addr8() const noexcept {
     SkASSERT(1 == fInfo.bytesPerPixel());
     return reinterpret_cast<const uint8_t*>(fPixels);
   }
@@ -307,7 +307,7 @@ class SK_API SkPixmap {
 
       @return  readable unsigned 16-bit pointer to pixels
   */
-  const uint16_t* addr16() const {
+  const uint16_t* addr16() const noexcept {
     SkASSERT(2 == fInfo.bytesPerPixel());
     return reinterpret_cast<const uint16_t*>(fPixels);
   }
@@ -320,7 +320,7 @@ class SK_API SkPixmap {
 
       @return  readable unsigned 32-bit pointer to pixels
   */
-  const uint32_t* addr32() const {
+  const uint32_t* addr32() const noexcept {
     SkASSERT(4 == fInfo.bytesPerPixel());
     return reinterpret_cast<const uint32_t*>(fPixels);
   }
@@ -333,7 +333,7 @@ class SK_API SkPixmap {
 
       @return  readable unsigned 64-bit pointer to pixels
   */
-  const uint64_t* addr64() const {
+  const uint64_t* addr64() const noexcept {
     SkASSERT(8 == fInfo.bytesPerPixel());
     return reinterpret_cast<const uint64_t*>(fPixels);
   }
@@ -347,7 +347,7 @@ class SK_API SkPixmap {
 
       @return  readable unsigned 16-bit pointer to first component of pixels
   */
-  const uint16_t* addrF16() const {
+  const uint16_t* addrF16() const noexcept {
     SkASSERT(8 == fInfo.bytesPerPixel());
     SkASSERT(
         kRGBA_F16_SkColorType == fInfo.colorType() ||
@@ -453,7 +453,7 @@ class SK_API SkPixmap {
 
       @return  writable generic base pointer to pixels
   */
-  void* writable_addr() const { return const_cast<void*>(fPixels); }
+  void* writable_addr() const noexcept { return const_cast<void*>(fPixels); }
 
   /** Returns writable pixel address at (x, y).
 

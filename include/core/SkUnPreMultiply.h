@@ -16,9 +16,9 @@ class SK_API SkUnPreMultiply {
   typedef uint32_t Scale;
 
   // index this table with alpha [0..255]
-  static const Scale* GetScaleTable() { return gTable; }
+  static const Scale* GetScaleTable() noexcept { return gTable; }
 
-  static Scale GetScale(U8CPU alpha) {
+  static Scale GetScale(U8CPU alpha) noexcept {
     SkASSERT(alpha <= 255);
     return gTable[alpha];
   }
@@ -36,12 +36,12 @@ class SK_API SkUnPreMultiply {
           // now red is unpremultiplied
       }
   */
-  static U8CPU ApplyScale(Scale scale, U8CPU component) {
+  static constexpr U8CPU ApplyScale(Scale scale, U8CPU component) {
     SkASSERT(component <= 255);
     return (scale * component + (1 << 23)) >> 24;
   }
 
-  static SkColor PMColorToColor(SkPMColor c);
+  static SkColor PMColorToColor(SkPMColor c) noexcept;
 
  private:
   static const uint32_t gTable[256];

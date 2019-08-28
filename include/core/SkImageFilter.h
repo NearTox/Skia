@@ -44,11 +44,11 @@ class SK_API SkImageFilter : public SkFlattenable {
   // consumer of the DAG's output.
   class OutputProperties {
    public:
-    explicit OutputProperties(SkColorType colorType, SkColorSpace* colorSpace)
+    constexpr explicit OutputProperties(SkColorType colorType, SkColorSpace* colorSpace) noexcept
         : fColorType(colorType), fColorSpace(colorSpace) {}
 
-    SkColorType colorType() const { return fColorType; }
-    SkColorSpace* colorSpace() const { return fColorSpace; }
+    SkColorType colorType() const noexcept { return fColorType; }
+    SkColorSpace* colorSpace() const noexcept { return fColorSpace; }
 
    private:
     SkColorType fColorType;
@@ -61,13 +61,13 @@ class SK_API SkImageFilter : public SkFlattenable {
    public:
     Context(
         const SkMatrix& ctm, const SkIRect& clipBounds, SkImageFilterCache* cache,
-        const OutputProperties& outputProperties)
+        const OutputProperties& outputProperties) noexcept
         : fCTM(ctm), fClipBounds(clipBounds), fCache(cache), fOutputProperties(outputProperties) {}
 
-    const SkMatrix& ctm() const { return fCTM; }
-    const SkIRect& clipBounds() const { return fClipBounds; }
-    SkImageFilterCache* cache() const { return fCache; }
-    const OutputProperties& outputProperties() const { return fOutputProperties; }
+    const SkMatrix& ctm() const noexcept { return fCTM; }
+    const SkIRect& clipBounds() const noexcept { return fClipBounds; }
+    SkImageFilterCache* cache() const noexcept { return fCache; }
+    const OutputProperties& outputProperties() const noexcept { return fOutputProperties; }
 
     /**
      *  Since a context can be build directly, its constructor has no chance to
@@ -77,7 +77,7 @@ class SK_API SkImageFilter : public SkFlattenable {
      *  The SkImageFilterCache Key, for example, requires a finite ctm (no infinities
      *  or NaN), so that test is part of isValid.
      */
-    bool isValid() const { return fCTM.isFinite(); }
+    bool isValid() const noexcept { return fCTM.isFinite(); }
 
    private:
     SkMatrix fCTM;
@@ -95,11 +95,11 @@ class SK_API SkImageFilter : public SkFlattenable {
       kHasHeight_CropEdge = 0x08,
       kHasAll_CropEdge = 0x0F,
     };
-    CropRect() {}
-    explicit CropRect(const SkRect& rect, uint32_t flags = kHasAll_CropEdge)
+    CropRect() noexcept {}
+    explicit CropRect(const SkRect& rect, uint32_t flags = kHasAll_CropEdge) noexcept
         : fRect(rect), fFlags(flags) {}
-    uint32_t flags() const { return fFlags; }
-    const SkRect& rect() const { return fRect; }
+    uint32_t flags() const noexcept { return fFlags; }
+    const SkRect& rect() const noexcept { return fRect; }
 
     /**
      *  Apply this cropRect to the imageBounds. If a given edge of the cropRect is not
@@ -199,7 +199,7 @@ class SK_API SkImageFilter : public SkFlattenable {
    *  Returns the number of inputs this filter will accept (some inputs can
    *  be NULL).
    */
-  int countInputs() const { return fInputs.count(); }
+  int countInputs() const noexcept { return fInputs.count(); }
 
   /**
    *  Returns the input filter at a given index, or NULL if no input is
@@ -219,9 +219,9 @@ class SK_API SkImageFilter : public SkFlattenable {
    *  should be used to offset access to the input images, and should also
    *  be added to the "offset" parameter in onFilterImage.
    */
-  bool cropRectIsSet() const { return fCropRect.flags() != 0x0; }
+  bool cropRectIsSet() const noexcept { return fCropRect.flags() != 0x0; }
 
-  CropRect getCropRect() const { return fCropRect; }
+  CropRect getCropRect() const noexcept { return fCropRect; }
 
   // Default impl returns union of all input bounds.
   virtual SkRect computeFastBounds(const SkRect& bounds) const;
@@ -250,7 +250,7 @@ class SK_API SkImageFilter : public SkFlattenable {
 
   static void RegisterFlattenables();
 
-  static SkFlattenable::Type GetFlattenableType() { return kSkImageFilter_Type; }
+  static SkFlattenable::Type GetFlattenableType() noexcept { return kSkImageFilter_Type; }
 
   SkFlattenable::Type getFlattenableType() const override { return kSkImageFilter_Type; }
 
@@ -273,9 +273,9 @@ class SK_API SkImageFilter : public SkFlattenable {
      */
     bool unflatten(SkReadBuffer&, int expectedInputs);
 
-    const CropRect& cropRect() const { return fCropRect; }
-    int inputCount() const { return fInputs.count(); }
-    sk_sp<SkImageFilter>* inputs() { return fInputs.begin(); }
+    const CropRect& cropRect() const noexcept { return fCropRect; }
+    int inputCount() const noexcept { return fInputs.count(); }
+    sk_sp<SkImageFilter>* inputs() noexcept { return fInputs.begin(); }
 
     sk_sp<SkImageFilter> getInput(int index) { return fInputs[index]; }
 
@@ -440,7 +440,7 @@ class SK_API SkImageFilter : public SkFlattenable {
 
   void init(sk_sp<SkImageFilter> const* inputs, int inputCount, const CropRect* cropRect);
 
-  bool usesSrcInput() const { return fUsesSrcInput; }
+  bool usesSrcInput() const noexcept { return fUsesSrcInput; }
   virtual bool affectsTransparentBlack() const { return false; }
 
   SkAutoSTArray<2, sk_sp<SkImageFilter>> fInputs;

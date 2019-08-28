@@ -172,7 +172,7 @@ void GrGpuResource::notifyAllCntsAreZero(CntType lastCntTypeToReachZero) const {
   // We should have already handled this fully in notifyRefCntIsZero().
   SkASSERT(kRef_CntType != lastCntTypeToReachZero);
 
-  static const uint32_t kFlag =
+  static constexpr uint32_t kFlag =
       GrResourceCache::ResourceAccess::kAllCntsReachedZero_RefNotificationFlag;
   GrGpuResource* mutableThis = const_cast<GrGpuResource*>(this);
   get_resource_cache(fGpu)->resourceAccess().notifyCntReachedZero(mutableThis, kFlag);
@@ -223,7 +223,7 @@ void GrGpuResource::makeUnbudgeted() {
   }
 }
 
-uint32_t GrGpuResource::CreateUniqueID() {
+uint32_t GrGpuResource::CreateUniqueID() noexcept {
   static std::atomic<uint32_t> nextID{1};
   uint32_t id;
   do {

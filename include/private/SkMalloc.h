@@ -74,9 +74,9 @@ static inline void* sk_calloc_canfail(size_t size) noexcept {
 }
 
 // Performs a safe multiply count * elemSize, checking for overflow
-SK_API extern void* sk_calloc_throw(size_t count, size_t elemSize);
-SK_API extern void* sk_malloc_throw(size_t count, size_t elemSize);
-SK_API extern void* sk_realloc_throw(void* buffer, size_t count, size_t elemSize);
+SK_API extern void* sk_calloc_throw(size_t count, size_t elemSize) noexcept;
+SK_API extern void* sk_malloc_throw(size_t count, size_t elemSize) noexcept;
+SK_API extern void* sk_realloc_throw(void* buffer, size_t count, size_t elemSize) noexcept;
 
 /**
  *  These variants return nullptr on failure
@@ -91,7 +91,7 @@ static inline void* sk_malloc_canfail(size_t size) noexcept {
 #endif
   return sk_malloc_flags(size, 0);
 }
-SK_API extern void* sk_malloc_canfail(size_t count, size_t elemSize);
+SK_API extern void* sk_malloc_canfail(size_t count, size_t elemSize) noexcept;
 
 // bzero is safer than memset, but we can't rely on it, so... sk_bzero()
 static inline void sk_bzero(void* buffer, size_t size) noexcept {

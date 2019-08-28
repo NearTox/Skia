@@ -40,12 +40,12 @@ class SK_API GrRecordingContext : public GrImageContext {
 
   void abandonContext() override;
 
-  GrDrawingManager* drawingManager();
+  GrDrawingManager* drawingManager() noexcept;
 
   sk_sp<GrOpMemoryPool> refOpMemoryPool();
   GrOpMemoryPool* opMemoryPool();
 
-  GrStrikeCache* getGrStrikeCache() { return fStrikeCache.get(); }
+  GrStrikeCache* getGrStrikeCache() noexcept { return fStrikeCache.get(); }
   GrTextBlobCache* getTextBlobCache();
   const GrTextBlobCache* getTextBlobCache() const;
 

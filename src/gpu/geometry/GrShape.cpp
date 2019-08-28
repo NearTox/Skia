@@ -356,7 +356,7 @@ GrShape GrShape::MakeArc(
   return result;
 }
 
-GrShape::GrShape(const GrShape& that) : fStyle(that.fStyle) {
+GrShape::GrShape(const GrShape& that) noexcept : fStyle(that.fStyle) {
   const SkPath* thatPath = Type::kPath == that.fType ? &that.fPathData.fPath : nullptr;
   this->initType(that.fType, thatPath);
   switch (fType) {

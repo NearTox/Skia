@@ -52,25 +52,25 @@ class SkReadBuffer {
   /**
    *  Returns true IFF the version is older than the specified version.
    */
-  bool isVersionLT(Version targetVersion) const {
+  bool isVersionLT(Version targetVersion) const noexcept {
     SkASSERT(targetVersion > 0);
     return fVersion > 0 && fVersion < targetVersion;
   }
 
-  uint32_t getVersion() const { return fVersion; }
+  uint32_t getVersion() const noexcept { return fVersion; }
 
   /** This may be called at most once; most clients of SkReadBuffer should not mess with it. */
-  void setVersion(int version) {
+  void setVersion(int version) noexcept {
     SkASSERT(0 == fVersion || version == fVersion);
     fVersion = version;
   }
 
-  size_t size() const { return fReader.size(); }
-  size_t offset() const { return fReader.offset(); }
-  bool eof() { return fReader.eof(); }
+  size_t size() const noexcept { return fReader.size(); }
+  size_t offset() const noexcept { return fReader.offset(); }
+  bool eof() noexcept { return fReader.eof(); }
   const void* skip(size_t size);
   const void* skip(size_t count, size_t size);  // does safe multiply
-  size_t available() const { return fReader.available(); }
+  size_t available() const noexcept { return fReader.available(); }
 
   template <typename T>
   const T* skipT() {
@@ -99,7 +99,7 @@ class SkReadBuffer {
   }
 
   // peek
-  uint8_t peekByte();
+  uint8_t peekByte() noexcept;
 
   void readString(SkString* string);
 
@@ -158,7 +158,7 @@ class SkReadBuffer {
   sk_sp<SkImage> readImage();
   sk_sp<SkTypeface> readTypeface();
 
-  void setTypefaceArray(sk_sp<SkTypeface> array[], int count) {
+  void setTypefaceArray(sk_sp<SkTypeface> array[], int count) noexcept {
     fTFArray = array;
     fTFCount = count;
   }
@@ -167,19 +167,19 @@ class SkReadBuffer {
    *  Call this with a pre-loaded array of Factories, in the same order as
    *  were created/written by the writer. SkPicture uses this.
    */
-  void setFactoryPlayback(SkFlattenable::Factory array[], int count) {
+  void setFactoryPlayback(SkFlattenable::Factory array[], int count) noexcept {
     fFactoryArray = array;
     fFactoryCount = count;
   }
 
-  void setDeserialProcs(const SkDeserialProcs& procs);
-  const SkDeserialProcs& getDeserialProcs() const { return fProcs; }
+  void setDeserialProcs(const SkDeserialProcs& procs) noexcept;
+  const SkDeserialProcs& getDeserialProcs() const noexcept { return fProcs; }
 
   /**
    *  If isValid is false, sets the buffer to be "invalid". Returns true if the buffer
    *  is still valid.
    */
-  bool validate(bool isValid) {
+  bool validate(bool isValid) noexcept {
     if (!isValid) {
       this->setInvalid();
     }
@@ -196,7 +196,7 @@ class SkReadBuffer {
     return this->validate(n <= (fReader.available() / sizeof(T)));
   }
 
-  bool isValid() const { return !fError; }
+  bool isValid() const noexcept { return !fError; }
   bool validateIndex(int index, int count) { return this->validate(index >= 0 && index < count); }
 
   // Utilities that mark the buffer invalid if the requested value is out-of-range
@@ -215,7 +215,7 @@ class SkReadBuffer {
  private:
   const char* readString(size_t* length);
 
-  void setInvalid();
+  void setInvalid() noexcept;
   bool readArray(void* value, size_t size, size_t elementSize);
   void setMemory(const void*, size_t);
 
@@ -234,7 +234,7 @@ class SkReadBuffer {
 
   SkDeserialProcs fProcs;
 
-  static bool IsPtrAlign4(const void* ptr) { return SkIsAlign4((uintptr_t)ptr); }
+  static bool IsPtrAlign4(const void* ptr) noexcept { return SkIsAlign4((uintptr_t)ptr); }
 
   bool fError = false;
 };

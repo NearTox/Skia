@@ -93,7 +93,7 @@ class GrTextBlobCache {
   }
 
   struct PurgeBlobMessage {
-    PurgeBlobMessage(uint32_t blobID, uint32_t contextUniqueID)
+    PurgeBlobMessage(uint32_t blobID, uint32_t contextUniqueID) noexcept
         : fBlobID(blobID), fContextID(contextUniqueID) {}
 
     uint32_t fBlobID;
@@ -104,16 +104,16 @@ class GrTextBlobCache {
 
   void purgeStaleBlobs();
 
-  size_t usedBytes() const { return fCurrentSize; }
+  size_t usedBytes() const noexcept { return fCurrentSize; }
 
  private:
   using BitmapBlobList = SkTInternalLList<GrTextBlob>;
 
   struct BlobIDCacheEntry {
-    BlobIDCacheEntry() : fID(SK_InvalidGenID) {}
-    explicit BlobIDCacheEntry(uint32_t id) : fID(id) {}
+    BlobIDCacheEntry() noexcept : fID(SK_InvalidGenID) {}
+    explicit BlobIDCacheEntry(uint32_t id) noexcept : fID(id) {}
 
-    static uint32_t GetKey(const BlobIDCacheEntry& entry) { return entry.fID; }
+    static uint32_t GetKey(const BlobIDCacheEntry& entry) noexcept { return entry.fID; }
 
     void addBlob(sk_sp<GrTextBlob> blob) {
       SkASSERT(blob);

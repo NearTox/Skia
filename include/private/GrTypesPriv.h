@@ -70,7 +70,7 @@ enum GrPixelConfig {
 
   kLast_GrPixelConfig = kRG_half_GrPixelConfig
 };
-static const int kGrPixelConfigCnt = kLast_GrPixelConfig + 1;
+static constexpr int kGrPixelConfigCnt = kLast_GrPixelConfig + 1;
 
 // Aliases for pixel configs that match skia's byte order.
 #ifndef SK_CPU_LENDIAN
@@ -122,7 +122,7 @@ enum GrMaskFormat {
 
   kLast_GrMaskFormat = kARGB_GrMaskFormat
 };
-static const int kMaskFormatCount = kLast_GrMaskFormat + 1;
+static constexpr int kMaskFormatCount = kLast_GrMaskFormat + 1;
 
 /**
  *  Return the number of bytes-per-pixel for the specified mask format.
@@ -301,7 +301,7 @@ enum class GrQuadAAFlags {
 
 GR_MAKE_BITFIELD_CLASS_OPS(GrQuadAAFlags)
 
-static inline GrQuadAAFlags SkToGrQuadAAFlags(unsigned flags) {
+static constexpr inline GrQuadAAFlags SkToGrQuadAAFlags(unsigned flags) {
   return static_cast<GrQuadAAFlags>(flags);
 }
 
@@ -353,7 +353,7 @@ enum GrSLType {
 
   kLast_GrSLType = kTexture2DRectSampler_GrSLType
 };
-static const int kGrSLTypeCount = kLast_GrSLType + 1;
+static constexpr int kGrSLTypeCount = kLast_GrSLType + 1;
 
 /**
  * The type of texture. Backends other than GL currently only use the 2D value but the type must
@@ -375,7 +375,7 @@ enum GrShaderType {
 
   kLastkFragment_GrShaderType = kFragment_GrShaderType
 };
-static const int kGrShaderTypeCount = kLastkFragment_GrShaderType + 1;
+static constexpr int kGrShaderTypeCount = kLastkFragment_GrShaderType + 1;
 
 enum GrShaderFlags {
   kNone_GrShaderFlags = 0,
@@ -405,7 +405,7 @@ enum GrSLPrecision : int {
   kLast_GrSLPrecision = kHigh_GrSLPrecision,
 };
 
-static const int kGrSLPrecisionCount = kLast_GrSLPrecision + 1;
+static constexpr int kGrSLPrecisionCount = kLast_GrSLPrecision + 1;
 
 /** Is the shading language type float (including vectors/matrices)? */
 static constexpr bool GrSLTypeIsFloatType(GrSLType type) {
@@ -625,11 +625,11 @@ enum GrVertexAttribType {
 
   kLast_GrVertexAttribType = kUShort4_norm_GrVertexAttribType
 };
-static const int kGrVertexAttribTypeCount = kLast_GrVertexAttribType + 1;
+static constexpr int kGrVertexAttribTypeCount = kLast_GrVertexAttribType + 1;
 
 //////////////////////////////////////////////////////////////////////////////
 
-static const int kGrClipEdgeTypeCnt = (int)GrClipEdgeType::kLast + 1;
+static constexpr int kGrClipEdgeTypeCnt = (int)GrClipEdgeType::kLast + 1;
 
 static constexpr bool GrProcessorEdgeTypeIsFill(const GrClipEdgeType edgeType) {
   return (GrClipEdgeType::kFillAA == edgeType || GrClipEdgeType::kFillBW == edgeType);
@@ -668,7 +668,7 @@ enum class GrGpuBufferType {
   kXferCpuToGpu,
   kXferGpuToCpu,
 };
-static const int kGrGpuBufferTypeCount = static_cast<int>(GrGpuBufferType::kXferGpuToCpu) + 1;
+static constexpr int kGrGpuBufferTypeCount = static_cast<int>(GrGpuBufferType::kXferGpuToCpu) + 1;
 
 /**
  * Provides a performance hint regarding the frequency at which a data store will be accessed.
@@ -1080,7 +1080,7 @@ enum class GrColorType {
   kLast = kRG_F16
 };
 
-static const int kGrColorTypeCnt = static_cast<int>(GrColorType::kLast) + 1;
+static constexpr int kGrColorTypeCnt = static_cast<int>(GrColorType::kLast) + 1;
 
 static constexpr SkColorType GrColorTypeToSkColorType(GrColorType ct) {
   switch (ct) {

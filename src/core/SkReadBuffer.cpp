@@ -65,7 +65,7 @@ void SkReadBuffer::setMemory(const void* data, size_t size) {
     fReader.setMemory(data, size);
   }
 }
-void SkReadBuffer::setInvalid() {
+void SkReadBuffer::setInvalid() noexcept {
   if (!fError) {
     // When an error is found, send the read cursor to the end of the stream
     fReader.skip(fReader.available());
@@ -90,7 +90,7 @@ const void* SkReadBuffer::skip(size_t count, size_t size) {
   return this->skip(SkSafeMath::Mul(count, size));
 }
 
-void SkReadBuffer::setDeserialProcs(const SkDeserialProcs& procs) { fProcs = procs; }
+void SkReadBuffer::setDeserialProcs(const SkDeserialProcs& procs) noexcept { fProcs = procs; }
 
 bool SkReadBuffer::readBool() {
   uint32_t value = this->readUInt();
@@ -117,7 +117,7 @@ uint32_t SkReadBuffer::readUInt() { return this->readInt(); }
 
 int32_t SkReadBuffer::read32() { return this->readInt(); }
 
-uint8_t SkReadBuffer::peekByte() {
+uint8_t SkReadBuffer::peekByte() noexcept {
   if (fReader.available() <= 0) {
     fError = true;
     return 0;

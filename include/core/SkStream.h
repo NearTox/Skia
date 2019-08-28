@@ -41,7 +41,7 @@ class SkStreamMemory;
 class SK_API SkStream {
  public:
   virtual ~SkStream() = default;
-  constexpr SkStream() = default;
+  constexpr SkStream() noexcept = default;
 
   /**
    *  Attempts to open the specified file as a stream, returns nullptr on failure.
@@ -230,7 +230,7 @@ class SK_API SkStreamMemory : public SkStreamAsset {
 class SK_API SkWStream {
  public:
   virtual ~SkWStream();
-  SkWStream() {}
+  constexpr SkWStream() noexcept = default;
 
   /** Called to write bytes to a SkWStream. Returns true on success
       @param buffer the address of at least size bytes to be written to the stream
@@ -285,7 +285,7 @@ class SK_API SkWStream {
 
 class SK_API SkNullWStream : public SkWStream {
  public:
-  SkNullWStream() : fBytesWritten(0) {}
+  constexpr SkNullWStream() noexcept : fBytesWritten(0) {}
 
   bool write(const void*, size_t n) override {
     fBytesWritten += n;
@@ -325,7 +325,7 @@ class SK_API SkFILEStream : public SkStreamAsset {
   }
 
   /** Returns true if the current path could be opened. */
-  bool isValid() const { return fFILE != nullptr; }
+  bool isValid() const noexcept { return fFILE != nullptr; }
 
   /** Close this SkFILEStream. */
   void close();
@@ -445,7 +445,7 @@ class SK_API SkFILEWStream : public SkWStream {
 
   /** Returns true if the current path could be opened.
    */
-  bool isValid() const { return fFILE != nullptr; }
+  bool isValid() const noexcept { return fFILE != nullptr; }
 
   bool write(const void* buffer, size_t size) override;
   void flush() override;
@@ -460,7 +460,7 @@ class SK_API SkFILEWStream : public SkWStream {
 
 class SK_API SkDynamicMemoryWStream : public SkWStream {
  public:
-  SkDynamicMemoryWStream() = default;
+  constexpr SkDynamicMemoryWStream() noexcept = default;
   SkDynamicMemoryWStream(SkDynamicMemoryWStream&&);
   SkDynamicMemoryWStream& operator=(SkDynamicMemoryWStream&&);
   ~SkDynamicMemoryWStream() override;

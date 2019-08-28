@@ -124,8 +124,12 @@ class GrAtlasManager : public GrOnFlushCallbackObject {
   bool initAtlas(GrMaskFormat);
 
   // There is a 1:1 mapping between GrMaskFormats and atlas indices
-  static int MaskFormatToAtlasIndex(GrMaskFormat format) { return static_cast<int>(format); }
-  static GrMaskFormat AtlasIndexToMaskFormat(int idx) { return static_cast<GrMaskFormat>(idx); }
+  static constexpr int MaskFormatToAtlasIndex(GrMaskFormat format) {
+    return static_cast<int>(format);
+  }
+  static constexpr GrMaskFormat AtlasIndexToMaskFormat(int idx) {
+    return static_cast<GrMaskFormat>(idx);
+  }
 
   GrDrawOpAtlas* getAtlas(GrMaskFormat format) const {
     format = this->resolveMaskFormat(format);

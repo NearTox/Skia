@@ -155,7 +155,7 @@ class SkTConic : public SkTCurve {
   }
 
   int intersectRay(SkIntersections* i, const SkDLine& line) const override;
-  bool IsConic() const override { return true; }
+  bool IsConic() const noexcept override { return true; }
   SkTCurve* make(SkArenaAlloc& heap) const override { return heap.make<SkTConic>(); }
 
   int maxIntersections() const override { return SkDConic::kMaxIntersections; }

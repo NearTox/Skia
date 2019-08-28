@@ -204,7 +204,7 @@ class SkTHashTable {
     SkASSERT(fCount == oldCount);
   }
 
-  int next(int index) const {
+  int next(int index) const noexcept {
     index--;
     if (index < 0) {
       index += fCapacity;

@@ -98,10 +98,10 @@ class GrRecordingContextPriv {
 
   // CONTEXT TODO: remove this backdoor
   // In order to make progress we temporarily need a way to break CL impasses.
-  GrContext* backdoor();
+  GrContext* backdoor() noexcept;
 
  private:
-  explicit GrRecordingContextPriv(GrRecordingContext* context) : fContext(context) {}
+  explicit GrRecordingContextPriv(GrRecordingContext* context) noexcept : fContext(context) {}
   GrRecordingContextPriv(const GrRecordingContextPriv&);             // unimpl
   GrRecordingContextPriv& operator=(const GrRecordingContextPriv&);  // unimpl
 

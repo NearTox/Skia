@@ -149,7 +149,7 @@ class GrDrawOpAtlas {
     data->fData = userData;
   }
 
-  uint32_t numActivePages() { return fNumActivePages; }
+  uint32_t numActivePages() noexcept { return fNumActivePages; }
 
   /**
    * A class which can be handed back to GrDrawOpAtlas for updating last use tokens in bulk.  The
@@ -158,8 +158,9 @@ class GrDrawOpAtlas {
    */
   class BulkUseTokenUpdater {
    public:
-    BulkUseTokenUpdater() { memset(fPlotAlreadyUpdated, 0, sizeof(fPlotAlreadyUpdated)); }
-    BulkUseTokenUpdater(const BulkUseTokenUpdater& that) : fPlotsToUpdate(that.fPlotsToUpdate) {
+    BulkUseTokenUpdater() noexcept { memset(fPlotAlreadyUpdated, 0, sizeof(fPlotAlreadyUpdated)); }
+    BulkUseTokenUpdater(const BulkUseTokenUpdater& that) noexcept
+        : fPlotsToUpdate(that.fPlotsToUpdate) {
       memcpy(fPlotAlreadyUpdated, that.fPlotAlreadyUpdated, sizeof(fPlotAlreadyUpdated));
     }
 
@@ -179,7 +180,7 @@ class GrDrawOpAtlas {
     }
 
     struct PlotData {
-      PlotData(int pageIdx, int plotIdx) : fPageIndex(pageIdx), fPlotIndex(plotIdx) {}
+      PlotData(int pageIdx, int plotIdx) noexcept : fPageIndex(pageIdx), fPlotIndex(plotIdx) {}
       uint32_t fPageIndex;
       uint32_t fPlotIndex;
     };
@@ -220,11 +221,11 @@ class GrDrawOpAtlas {
 
   void compact(GrDeferredUploadToken startTokenForNextFlush);
 
-  static uint32_t GetPageIndexFromID(AtlasID id) { return id & 0xff; }
+  static constexpr uint32_t GetPageIndexFromID(AtlasID id) { return id & 0xff; }
 
   void instantiate(GrOnFlushResourceProvider*);
 
-  uint32_t maxPages() const { return fMaxPages; }
+  uint32_t maxPages() const noexcept { return fMaxPages; }
 
   int numAllocated_TestingOnly() const;
   void setMaxPages_TestingOnly(uint32_t maxPages);
@@ -246,19 +247,19 @@ class GrDrawOpAtlas {
 
    public:
     /** index() is a unique id for the plot relative to the owning GrAtlas and page. */
-    uint32_t index() const { return fPlotIndex; }
+    uint32_t index() const noexcept { return fPlotIndex; }
     /**
      * genID() is incremented when the plot is evicted due to a atlas spill. It is used to know
      * if a particular subimage is still present in the atlas.
      */
-    uint64_t genID() const { return fGenID; }
-    GrDrawOpAtlas::AtlasID id() const {
+    uint64_t genID() const noexcept { return fGenID; }
+    GrDrawOpAtlas::AtlasID id() const noexcept {
       SkASSERT(GrDrawOpAtlas::kInvalidAtlasID != fID);
       return fID;
     }
-    SkDEBUGCODE(size_t bpp() const { return fBytesPerPixel; })
+    SkDEBUGCODE(size_t bpp() const { return fBytesPerPixel; });
 
-        bool addSubImage(int width, int height, const void* image, SkIPoint16* loc);
+    bool addSubImage(int width, int height, const void* image, SkIPoint16* loc);
 
     /**
      * To manage the lifetime of a plot, we use two tokens. We use the last upload token to
@@ -267,17 +268,17 @@ class GrDrawOpAtlas {
      * use lastUse to determine when we can evict a plot from the cache, i.e. if the last use
      * has already flushed through the gpu then we can reuse the plot.
      */
-    GrDeferredUploadToken lastUploadToken() const { return fLastUpload; }
-    GrDeferredUploadToken lastUseToken() const { return fLastUse; }
-    void setLastUploadToken(GrDeferredUploadToken token) { fLastUpload = token; }
-    void setLastUseToken(GrDeferredUploadToken token) { fLastUse = token; }
+    GrDeferredUploadToken lastUploadToken() const noexcept { return fLastUpload; }
+    GrDeferredUploadToken lastUseToken() const noexcept { return fLastUse; }
+    void setLastUploadToken(GrDeferredUploadToken token) noexcept { fLastUpload = token; }
+    void setLastUseToken(GrDeferredUploadToken token) noexcept { fLastUse = token; }
 
     void uploadToTexture(GrDeferredTextureUploadWritePixelsFn&, GrTextureProxy*);
     void resetRects();
 
-    int flushesSinceLastUsed() { return fFlushesSinceLastUse; }
-    void resetFlushesSinceLastUsed() { fFlushesSinceLastUse = 0; }
-    void incFlushesSinceLastUsed() { fFlushesSinceLastUse++; }
+    int flushesSinceLastUsed() noexcept { return fFlushesSinceLastUse; }
+    void resetFlushesSinceLastUsed() noexcept { fFlushesSinceLastUse = 0; }
+    void incFlushesSinceLastUsed() noexcept { fFlushesSinceLastUse++; }
 
    private:
     Plot(
@@ -294,7 +295,7 @@ class GrDrawOpAtlas {
       return new Plot(fPageIndex, fPlotIndex, fGenID + 1, fX, fY, fWidth, fHeight, fColorType);
     }
 
-    static GrDrawOpAtlas::AtlasID CreateId(
+    static constexpr GrDrawOpAtlas::AtlasID CreateId(
         uint32_t pageIdx, uint32_t plotIdx, uint64_t generation) {
       SkASSERT(pageIdx < (1 << 8));
       SkASSERT(pageIdx < kMaxMultitexturePages);
@@ -333,10 +334,10 @@ class GrDrawOpAtlas {
 
   typedef SkTInternalLList<Plot> PlotList;
 
-  static uint32_t GetPlotIndexFromID(AtlasID id) { return (id >> 8) & 0xff; }
+  static constexpr uint32_t GetPlotIndexFromID(AtlasID id) { return (id >> 8) & 0xff; }
 
   // top 48 bits are reserved for the generation ID
-  static uint64_t GetGenerationFromID(AtlasID id) { return (id >> 16) & 0xffffffffffff; }
+  static constexpr uint64_t GetGenerationFromID(AtlasID id) { return (id >> 16) & 0xffffffffffff; }
 
   inline bool updatePlot(GrDeferredUploadTarget*, AtlasID*, Plot*);
 

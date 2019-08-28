@@ -27,7 +27,7 @@ class SkChecksum : SkNoncopyable {
    *
    * This is the Murmur3 finalizer.
    */
-  static uint32_t Mix(uint32_t hash) {
+  static constexpr uint32_t Mix(uint32_t hash) {
     hash ^= hash >> 16;
     hash *= 0x85ebca6b;
     hash ^= hash >> 13;
@@ -42,7 +42,7 @@ class SkChecksum : SkNoncopyable {
    *
    *  This version is 2-lines cheaper than Mix, but seems to be sufficient for the font cache.
    */
-  static uint32_t CheapMix(uint32_t hash) {
+  static constexpr uint32_t CheapMix(uint32_t hash) {
     hash ^= hash >> 16;
     hash *= 0x85ebca6b;
     hash ^= hash >> 16;

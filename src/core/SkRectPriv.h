@@ -15,28 +15,32 @@ class SkRectPriv {
  public:
   // Returns an irect that is very large, and can be safely round-trip with SkRect and still
   // be considered non-empty (i.e. width/height > 0) even if we round-out the SkRect.
-  static SkIRect MakeILarge() {
+  static constexpr SkIRect MakeILarge() {
     // SK_MaxS32 >> 1 seemed better, but it did not survive round-trip with SkRect and rounding.
     // Also, 1 << 29 can be perfectly represented in float, while SK_MaxS32 >> 1 cannot.
-    const int32_t large = 1 << 29;
+    constexpr int32_t large = 1 << 29;
     return {-large, -large, large, large};
   }
 
-  static SkIRect MakeILargestInverted() { return {SK_MaxS32, SK_MaxS32, SK_MinS32, SK_MinS32}; }
+  static constexpr SkIRect MakeILargestInverted() {
+    return {SK_MaxS32, SK_MaxS32, SK_MinS32, SK_MinS32};
+  }
 
-  static SkRect MakeLargeS32() {
+  static SkRect MakeLargeS32() noexcept {
     SkRect r;
     r.set(MakeILarge());
     return r;
   }
 
-  static SkRect MakeLargest() { return {SK_ScalarMin, SK_ScalarMin, SK_ScalarMax, SK_ScalarMax}; }
+  static constexpr SkRect MakeLargest() {
+    return {SK_ScalarMin, SK_ScalarMin, SK_ScalarMax, SK_ScalarMax};
+  }
 
   static constexpr SkRect MakeLargestInverted() {
     return {SK_ScalarMax, SK_ScalarMax, SK_ScalarMin, SK_ScalarMin};
   }
 
-  static void GrowToInclude(SkRect* r, const SkPoint& pt) {
+  static void GrowToInclude(SkRect* r, const SkPoint& pt) noexcept {
     r->fLeft = SkMinScalar(pt.fX, r->fLeft);
     r->fRight = SkMaxScalar(pt.fX, r->fRight);
     r->fTop = SkMinScalar(pt.fY, r->fTop);
@@ -50,7 +54,7 @@ class SkRectPriv {
            SkFitsInFixed(r.fBottom);
   }
 
-  static bool Is16Bit(const SkIRect& r) {
+  static bool Is16Bit(const SkIRect& r) noexcept {
     return SkTFitsIn<int16_t>(r.fLeft) && SkTFitsIn<int16_t>(r.fTop) &&
            SkTFitsIn<int16_t>(r.fRight) && SkTFitsIn<int16_t>(r.fBottom);
   }

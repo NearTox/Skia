@@ -37,7 +37,9 @@ struct SK_API SkIRect {
 
       @return  bounds (0, 0, 0, 0)
   */
-  static constexpr SkIRect SK_WARN_UNUSED_RESULT MakeEmpty() { return SkIRect{0, 0, 0, 0}; }
+  static constexpr SkIRect SK_WARN_UNUSED_RESULT MakeEmpty() noexcept {
+    return SkIRect{0, 0, 0, 0};
+  }
 
   /** Returns constructed SkIRect set to (0, 0, w, h). Does not validate input; w or h
       may be negative.
@@ -46,7 +48,7 @@ struct SK_API SkIRect {
       @param h  height of constructed SkIRect
       @return   bounds (0, 0, w, h)
   */
-  static constexpr SkIRect SK_WARN_UNUSED_RESULT MakeWH(int32_t w, int32_t h) {
+  static constexpr SkIRect SK_WARN_UNUSED_RESULT MakeWH(int32_t w, int32_t h) noexcept {
     return SkIRect{0, 0, w, h};
   }
 
@@ -56,7 +58,7 @@ struct SK_API SkIRect {
       @param size  values for SkIRect width and height
       @return      bounds (0, 0, size.width(), size.height())
   */
-  static constexpr SkIRect SK_WARN_UNUSED_RESULT MakeSize(const SkISize& size) {
+  static constexpr SkIRect SK_WARN_UNUSED_RESULT MakeSize(const SkISize& size) noexcept {
     return SkIRect{0, 0, size.fWidth, size.fHeight};
   }
 
@@ -70,7 +72,7 @@ struct SK_API SkIRect {
       @return   bounds (l, t, r, b)
   */
   static constexpr SkIRect SK_WARN_UNUSED_RESULT
-  MakeLTRB(int32_t l, int32_t t, int32_t r, int32_t b) {
+  MakeLTRB(int32_t l, int32_t t, int32_t r, int32_t b) noexcept {
     return SkIRect{l, t, r, b};
   }
 
@@ -93,66 +95,66 @@ struct SK_API SkIRect {
 
       @return  fLeft
   */
-  int32_t left() const { return fLeft; }
+  int32_t left() const noexcept { return fLeft; }
 
   /** Returns top edge of SkIRect, if sorted. Call isEmpty() to see if SkIRect may be invalid,
       and sort() to reverse fTop and fBottom if needed.
 
       @return  fTop
   */
-  int32_t top() const { return fTop; }
+  int32_t top() const noexcept { return fTop; }
 
   /** Returns right edge of SkIRect, if sorted.
       Call sort() to reverse fLeft and fRight if needed.
 
       @return  fRight
   */
-  int32_t right() const { return fRight; }
+  int32_t right() const noexcept { return fRight; }
 
   /** Returns bottom edge of SkIRect, if sorted. Call isEmpty() to see if SkIRect may be invalid,
       and sort() to reverse fTop and fBottom if needed.
 
       @return  fBottom
   */
-  int32_t bottom() const { return fBottom; }
+  int32_t bottom() const noexcept { return fBottom; }
 
   /** Returns left edge of SkIRect, if sorted. Call isEmpty() to see if SkIRect may be invalid,
       and sort() to reverse fLeft and fRight if needed.
 
       @return  fLeft
   */
-  int32_t x() const { return fLeft; }
+  int32_t x() const noexcept { return fLeft; }
 
   /** Returns top edge of SkIRect, if sorted. Call isEmpty() to see if SkIRect may be invalid,
       and sort() to reverse fTop and fBottom if needed.
 
       @return  fTop
   */
-  int32_t y() const { return fTop; }
+  int32_t y() const noexcept { return fTop; }
 
   // Experimental
-  SkIPoint topLeft() const { return {fLeft, fTop}; }
+  SkIPoint topLeft() const noexcept { return {fLeft, fTop}; }
 
   /** Returns span on the x-axis. This does not check if SkIRect is sorted, or if
       result fits in 32-bit signed integer; result may be negative.
 
       @return  fRight minus fLeft
   */
-  int32_t width() const { return Sk32_can_overflow_sub(fRight, fLeft); }
+  int32_t width() const noexcept { return Sk32_can_overflow_sub(fRight, fLeft); }
 
   /** Returns span on the y-axis. This does not check if SkIRect is sorted, or if
       result fits in 32-bit signed integer; result may be negative.
 
       @return  fBottom minus fTop
   */
-  int32_t height() const { return Sk32_can_overflow_sub(fBottom, fTop); }
+  int32_t height() const noexcept { return Sk32_can_overflow_sub(fBottom, fTop); }
 
   /** Returns spans on the x-axis and y-axis. This does not check if SkIRect is sorted,
       or if result fits in 32-bit signed integer; result may be negative.
 
       @return  SkISize (width, height)
   */
-  SkISize size() const { return SkISize::Make(this->width(), this->height()); }
+  SkISize size() const noexcept { return SkISize::Make(this->width(), this->height()); }
 
   /** Returns span on the x-axis. This does not check if SkIRect is sorted, so the
       result may be negative. This is safer than calling width() since width() might
@@ -160,7 +162,7 @@ struct SK_API SkIRect {
 
       @return  fRight minus fLeft cast to int64_t
   */
-  int64_t width64() const { return (int64_t)fRight - (int64_t)fLeft; }
+  int64_t width64() const noexcept { return (int64_t)fRight - (int64_t)fLeft; }
 
   /** Returns span on the y-axis. This does not check if SkIRect is sorted, so the
       result may be negative. This is safer than calling height() since height() might
@@ -168,7 +170,7 @@ struct SK_API SkIRect {
 
       @return  fBottom minus fTop cast to int64_t
   */
-  int64_t height64() const { return (int64_t)fBottom - (int64_t)fTop; }
+  int64_t height64() const noexcept { return (int64_t)fBottom - (int64_t)fTop; }
 
   /** Returns true if fLeft is equal to or greater than fRight, or if fTop is equal
       to or greater than fBottom. Call sort() to reverse rectangles with negative
@@ -176,13 +178,13 @@ struct SK_API SkIRect {
 
       @return  true if width64() or height64() are zero or negative
   */
-  bool isEmpty64() const { return fRight <= fLeft || fBottom <= fTop; }
+  bool isEmpty64() const noexcept { return fRight <= fLeft || fBottom <= fTop; }
 
   /** Returns true if width() or height() are zero or negative.
 
       @return  true if width() or height() are zero or negative
   */
-  bool isEmpty() const {
+  bool isEmpty() const noexcept {
     int64_t w = this->width64();
     int64_t h = this->height64();
     if (w <= 0 || h <= 0) {
@@ -199,7 +201,9 @@ struct SK_API SkIRect {
       @param b  SkIRect to compare
       @return   true if members are equal
   */
-  friend bool operator==(const SkIRect& a, const SkIRect& b) { return !memcmp(&a, &b, sizeof(a)); }
+  friend bool operator==(const SkIRect& a, const SkIRect& b) noexcept {
+    return !memcmp(&a, &b, sizeof(a));
+  }
 
   /** Returns true if any member in a: fLeft, fTop, fRight, and fBottom; is not
       identical to the corresponding member in b.
@@ -208,7 +212,7 @@ struct SK_API SkIRect {
       @param b  SkIRect to compare
       @return   true if members are not equal
   */
-  friend bool operator!=(const SkIRect& a, const SkIRect& b) { return !(a == b); }
+  friend bool operator!=(const SkIRect& a, const SkIRect& b) noexcept { return !(a == b); }
 
   /** Sets SkIRect to (0, 0, 0, 0).
 
@@ -216,7 +220,7 @@ struct SK_API SkIRect {
       or if top is equal to or greater than bottom. Setting all members to zero
       is a convenience, but does not designate a special empty rectangle.
   */
-  void setEmpty() { memset(this, 0, sizeof(*this)); }
+  void setEmpty() noexcept { memset(this, 0, sizeof(*this)); }
 
   /** Sets SkIRect to (left, top, right, bottom).
       left and right are not sorted; left is not necessarily less than right.
@@ -227,7 +231,7 @@ struct SK_API SkIRect {
       @param right   assigned to fRight
       @param bottom  assigned to fBottom
   */
-  void set(int32_t left, int32_t top, int32_t right, int32_t bottom) {
+  void set(int32_t left, int32_t top, int32_t right, int32_t bottom) noexcept {
     fLeft = left;
     fTop = top;
     fRight = right;
@@ -243,7 +247,7 @@ struct SK_API SkIRect {
       @param right   stored in fRight
       @param bottom  stored in fBottom
   */
-  void setLTRB(int32_t left, int32_t top, int32_t right, int32_t bottom) {
+  void setLTRB(int32_t left, int32_t top, int32_t right, int32_t bottom) noexcept {
     this->set(left, top, right, bottom);
   }
 
@@ -255,7 +259,7 @@ struct SK_API SkIRect {
       @param width   added to x and stored in fRight
       @param height  added to y and stored in fBottom
   */
-  void setXYWH(int32_t x, int32_t y, int32_t width, int32_t height) {
+  void setXYWH(int32_t x, int32_t y, int32_t width, int32_t height) noexcept {
     fLeft = x;
     fTop = y;
     fRight = Sk32_sat_add(x, width);
@@ -273,7 +277,7 @@ struct SK_API SkIRect {
       @param dy  offset added to fTop and fBottom
       @return    SkIRect offset by dx and dy, with original width and height
   */
-  SkIRect makeOffset(int32_t dx, int32_t dy) const {
+  SkIRect makeOffset(int32_t dx, int32_t dy) const noexcept {
     return {
         Sk32_sat_add(fLeft, dx),
         Sk32_sat_add(fTop, dy),
@@ -293,7 +297,7 @@ struct SK_API SkIRect {
       @param dy  offset added to fTop and subtracted from fBottom
       @return    SkIRect inset symmetrically left and right, top and bottom
   */
-  SkIRect makeInset(int32_t dx, int32_t dy) const {
+  SkIRect makeInset(int32_t dx, int32_t dy) const noexcept {
     return {
         Sk32_sat_add(fLeft, dx),
         Sk32_sat_add(fTop, dy),
@@ -313,7 +317,7 @@ struct SK_API SkIRect {
       @param dy  offset subtracted to fTop and added from fBottom
       @return    SkIRect outset symmetrically left and right, top and bottom
   */
-  SkIRect makeOutset(int32_t dx, int32_t dy) const {
+  SkIRect makeOutset(int32_t dx, int32_t dy) const noexcept {
     return {
         Sk32_sat_sub(fLeft, dx),
         Sk32_sat_sub(fTop, dy),
@@ -332,7 +336,7 @@ struct SK_API SkIRect {
       @param dx  offset added to fLeft and fRight
       @param dy  offset added to fTop and fBottom
   */
-  void offset(int32_t dx, int32_t dy) {
+  void offset(int32_t dx, int32_t dy) noexcept {
     fLeft = Sk32_sat_add(fLeft, dx);
     fTop = Sk32_sat_add(fTop, dy);
     fRight = Sk32_sat_add(fRight, dx);
@@ -349,7 +353,7 @@ struct SK_API SkIRect {
 
       @param delta  offset added to SkIRect
   */
-  void offset(const SkIPoint& delta) { this->offset(delta.fX, delta.fY); }
+  void offset(const SkIPoint& delta) noexcept { this->offset(delta.fX, delta.fY); }
 
   /** Offsets SkIRect so that fLeft equals newX, and fTop equals newY. width and height
       are unchanged.
@@ -357,7 +361,7 @@ struct SK_API SkIRect {
       @param newX  stored in fLeft, preserving width()
       @param newY  stored in fTop, preserving height()
   */
-  void offsetTo(int32_t newX, int32_t newY) {
+  void offsetTo(int32_t newX, int32_t newY) noexcept {
     fRight = Sk64_pin_to_s32((int64_t)fRight + newX - fLeft);
     fBottom = Sk64_pin_to_s32((int64_t)fBottom + newY - fTop);
     fLeft = newX;
@@ -374,7 +378,7 @@ struct SK_API SkIRect {
       @param dx  offset added to fLeft and subtracted from fRight
       @param dy  offset added to fTop and subtracted from fBottom
   */
-  void inset(int32_t dx, int32_t dy) {
+  void inset(int32_t dx, int32_t dy) noexcept {
     fLeft = Sk32_sat_add(fLeft, dx);
     fTop = Sk32_sat_add(fTop, dy);
     fRight = Sk32_sat_sub(fRight, dx);
@@ -391,7 +395,7 @@ struct SK_API SkIRect {
       @param dx  subtracted to fLeft and added from fRight
       @param dy  subtracted to fTop and added from fBottom
   */
-  void outset(int32_t dx, int32_t dy) { this->inset(-dx, -dy); }
+  void outset(int32_t dx, int32_t dy) noexcept { this->inset(-dx, -dy); }
 
   /** Adjusts SkIRect by adding dL to fLeft, dT to fTop, dR to fRight, and dB to fBottom.
 
@@ -409,7 +413,7 @@ struct SK_API SkIRect {
       @param dR  offset added to fRight
       @param dB  offset added to fBottom
   */
-  void adjust(int32_t dL, int32_t dT, int32_t dR, int32_t dB) {
+  void adjust(int32_t dL, int32_t dT, int32_t dR, int32_t dB) noexcept {
     fLeft = Sk32_sat_add(fLeft, dL);
     fTop = Sk32_sat_add(fTop, dT);
     fRight = Sk32_sat_add(fRight, dR);
@@ -426,7 +430,7 @@ struct SK_API SkIRect {
       @param y  test SkIPoint y-coordinate
       @return   true if (x, y) is inside SkIRect
   */
-  bool contains(int32_t x, int32_t y) const {
+  bool contains(int32_t x, int32_t y) const noexcept {
     return x >= fLeft && x < fRight && y >= fTop && y < fBottom;
   }
 
@@ -442,7 +446,7 @@ struct SK_API SkIRect {
       @param bottom  y-axis maximum of constructed SkIRect
       @return        true if all sides of SkIRect are outside construction
   */
-  bool contains(int32_t left, int32_t top, int32_t right, int32_t bottom) const {
+  bool contains(int32_t left, int32_t top, int32_t right, int32_t bottom) const noexcept {
     return left < right && top < bottom && !this->isEmpty() &&  // check for empties
            fLeft <= left && fTop <= top && fRight >= right && fBottom >= bottom;
   }
@@ -455,7 +459,7 @@ struct SK_API SkIRect {
       @param r  SkIRect contained
       @return   true if all sides of SkIRect are outside r
   */
-  bool contains(const SkIRect& r) const {
+  bool contains(const SkIRect& r) const noexcept {
     return !r.isEmpty() && !this->isEmpty() &&  // check for empties
            fLeft <= r.fLeft && fTop <= r.fTop && fRight >= r.fRight && fBottom >= r.fBottom;
   }
@@ -468,7 +472,7 @@ struct SK_API SkIRect {
       @param r  SkRect contained
       @return   true if all sides of SkIRect are outside r
   */
-  bool contains(const SkRect& r) const;
+  bool contains(const SkRect& r) const noexcept;
 
   /** Constructs SkIRect from (left, top, right, bottom). Does not sort
       construction.
@@ -484,7 +488,8 @@ struct SK_API SkIRect {
       @param bottom  y-axis maximum of constructed SkIRect
       @return        true if all sides of SkIRect are outside construction
   */
-  bool containsNoEmptyCheck(int32_t left, int32_t top, int32_t right, int32_t bottom) const {
+  bool containsNoEmptyCheck(int32_t left, int32_t top, int32_t right, int32_t bottom) const
+      noexcept {
     SkASSERT(fLeft < fRight && fTop < fBottom);
     SkASSERT(left < right && top < bottom);
 
@@ -499,7 +504,7 @@ struct SK_API SkIRect {
       @param r  SkIRect contained
       @return   true if all sides of SkIRect are outside r
   */
-  bool containsNoEmptyCheck(const SkIRect& r) const {
+  bool containsNoEmptyCheck(const SkIRect& r) const noexcept {
     return containsNoEmptyCheck(r.fLeft, r.fTop, r.fRight, r.fBottom);
   }
 
@@ -511,7 +516,7 @@ struct SK_API SkIRect {
       @param r  limit of result
       @return   true if r and SkIRect have area in common
   */
-  bool intersect(const SkIRect& r) { return this->intersect(*this, r); }
+  bool intersect(const SkIRect& r) noexcept { return this->intersect(*this, r); }
 
   /** Returns true if a intersects b, and sets SkIRect to intersection.
       Returns false if a does not intersect b, and leaves SkIRect unchanged.
@@ -522,7 +527,7 @@ struct SK_API SkIRect {
       @param b  SkIRect to intersect
       @return   true if a and b have area in common
   */
-  bool SK_WARN_UNUSED_RESULT intersectNoEmptyCheck(const SkIRect& a, const SkIRect& b) {
+  bool SK_WARN_UNUSED_RESULT intersectNoEmptyCheck(const SkIRect& a, const SkIRect& b) noexcept {
     SkASSERT(!a.isEmpty64() && !b.isEmpty64());
     SkIRect r = {SkMax32(a.fLeft, b.fLeft), SkMax32(a.fTop, b.fTop), SkMin32(a.fRight, b.fRight),
                  SkMin32(a.fBottom, b.fBottom)};
@@ -542,7 +547,7 @@ struct SK_API SkIRect {
       @param b  SkIRect to intersect
       @return   true if a and b have area in common
   */
-  bool SK_WARN_UNUSED_RESULT intersect(const SkIRect& a, const SkIRect& b) {
+  bool SK_WARN_UNUSED_RESULT intersect(const SkIRect& a, const SkIRect& b) noexcept {
     if (a.isEmpty64() || b.isEmpty64()) {
       return false;
     }
@@ -563,7 +568,7 @@ struct SK_API SkIRect {
       @param bottom  y-axis maximum of constructed SkIRect
       @return        true if construction and SkIRect have area in common
   */
-  bool intersect(int32_t left, int32_t top, int32_t right, int32_t bottom) {
+  bool intersect(int32_t left, int32_t top, int32_t right, int32_t bottom) noexcept {
     return this->intersect(*this, {left, top, right, bottom});
   }
 
@@ -574,7 +579,7 @@ struct SK_API SkIRect {
       @param b  SkIRect to intersect
       @return   true if a and b have area in common
   */
-  static bool Intersects(const SkIRect& a, const SkIRect& b) {
+  static bool Intersects(const SkIRect& a, const SkIRect& b) noexcept {
     SkIRect dummy;
     return dummy.intersect(a, b);
   }
@@ -586,7 +591,7 @@ struct SK_API SkIRect {
       @param b  SkIRect to intersect
       @return   true if a and b have area in common
   */
-  static bool IntersectsNoEmptyCheck(const SkIRect& a, const SkIRect& b) {
+  static bool IntersectsNoEmptyCheck(const SkIRect& a, const SkIRect& b) noexcept {
     SkIRect dummy;
     return dummy.intersectNoEmptyCheck(a, b);
   }
@@ -604,7 +609,7 @@ struct SK_API SkIRect {
       @param right   x-axis maximum of constructed SkIRect
       @param bottom  y-axis maximum of constructed SkIRect
   */
-  void join(int32_t left, int32_t top, int32_t right, int32_t bottom);
+  void join(int32_t left, int32_t top, int32_t right, int32_t bottom) noexcept;
 
   /** Sets SkIRect to the union of itself and r.
 
@@ -612,13 +617,13 @@ struct SK_API SkIRect {
 
       @param r  expansion SkIRect
   */
-  void join(const SkIRect& r) { this->join(r.fLeft, r.fTop, r.fRight, r.fBottom); }
+  void join(const SkIRect& r) noexcept { this->join(r.fLeft, r.fTop, r.fRight, r.fBottom); }
 
   /** Swaps fLeft and fRight if fLeft is greater than fRight; and swaps
       fTop and fBottom if fTop is greater than fBottom. Result may be empty,
       and width() and height() will be zero or positive.
   */
-  void sort() {
+  void sort() noexcept {
     using std::swap;
     if (fLeft > fRight) {
       swap(fLeft, fRight);
@@ -634,7 +639,7 @@ struct SK_API SkIRect {
 
       @return  sorted SkIRect
   */
-  SkIRect makeSorted() const {
+  SkIRect makeSorted() const noexcept {
     return MakeLTRB(
         SkMin32(fLeft, fRight), SkMin32(fTop, fBottom), SkMax32(fLeft, fRight),
         SkMax32(fTop, fBottom));
@@ -644,7 +649,7 @@ struct SK_API SkIRect {
 
       @return  global SkIRect set to all zeroes
   */
-  static const SkIRect& SK_WARN_UNUSED_RESULT EmptyIRect() {
+  static const SkIRect& SK_WARN_UNUSED_RESULT EmptyIRect() noexcept {
     static const SkIRect gEmpty = {0, 0, 0, 0};
     return gEmpty;
   }
@@ -696,7 +701,7 @@ struct SK_API SkRect {
       @param h  integer height of constructed SkRect
       @return   bounds (0, 0, w, h)
   */
-  static SkRect SK_WARN_UNUSED_RESULT MakeIWH(int w, int h) {
+  static SkRect SK_WARN_UNUSED_RESULT MakeIWH(int w, int h) noexcept {
     SkRect r;
     r.set(0, 0, SkIntToScalar(w), SkIntToScalar(h));
     return r;
@@ -746,7 +751,7 @@ struct SK_API SkRect {
       @param size  integer values for SkRect width and height
       @return      bounds (0, 0, size.width(), size.height())
   */
-  static SkRect Make(const SkISize& size) { return MakeIWH(size.width(), size.height()); }
+  static SkRect Make(const SkISize& size) noexcept { return MakeIWH(size.width(), size.height()); }
 
   /** Returns constructed SkIRect set to irect, promoting integers to scalar.
       Does not validate input; fLeft may be greater than fRight, fTop may be greater
@@ -755,7 +760,7 @@ struct SK_API SkRect {
       @param irect  integer unsorted bounds
       @return       irect members converted to SkScalar
   */
-  static SkRect SK_WARN_UNUSED_RESULT Make(const SkIRect& irect) {
+  static SkRect SK_WARN_UNUSED_RESULT Make(const SkIRect& irect) noexcept {
     SkRect r;
     r.set(
         SkIntToScalar(irect.fLeft), SkIntToScalar(irect.fTop), SkIntToScalar(irect.fRight),
@@ -769,7 +774,7 @@ struct SK_API SkRect {
 
       @return  true if width() or height() are zero or negative
   */
-  bool isEmpty() const {
+  bool isEmpty() const noexcept {
     // We write it as the NOT of a non-empty rect, so we will return true if any values
     // are NaN.
     return !(fLeft < fRight && fTop < fBottom);
@@ -781,14 +786,14 @@ struct SK_API SkRect {
 
       @return  true if width() or height() are zero or positive
   */
-  bool isSorted() const { return fLeft <= fRight && fTop <= fBottom; }
+  bool isSorted() const noexcept { return fLeft <= fRight && fTop <= fBottom; }
 
   /** Returns true if all values in the rectangle are finite: SK_ScalarMin or larger,
       and SK_ScalarMax or smaller.
 
       @return  true if no member is infinite or NaN
   */
-  bool isFinite() const {
+  bool isFinite() const noexcept {
     float accum = 0;
     accum *= fLeft;
     accum *= fTop;
@@ -808,63 +813,63 @@ struct SK_API SkRect {
 
       @return  fLeft
   */
-  SkScalar x() const { return fLeft; }
+  SkScalar x() const noexcept { return fLeft; }
 
   /** Returns top edge of SkRect, if sorted. Call isEmpty() to see if SkRect may be invalid,
       and sort() to reverse fTop and fBottom if needed.
 
       @return  fTop
   */
-  SkScalar y() const { return fTop; }
+  SkScalar y() const noexcept { return fTop; }
 
   /** Returns left edge of SkRect, if sorted. Call isSorted() to see if SkRect is valid.
       Call sort() to reverse fLeft and fRight if needed.
 
       @return  fLeft
   */
-  SkScalar left() const { return fLeft; }
+  SkScalar left() const noexcept { return fLeft; }
 
   /** Returns top edge of SkRect, if sorted. Call isEmpty() to see if SkRect may be invalid,
       and sort() to reverse fTop and fBottom if needed.
 
       @return  fTop
   */
-  SkScalar top() const { return fTop; }
+  SkScalar top() const noexcept { return fTop; }
 
   /** Returns right edge of SkRect, if sorted. Call isSorted() to see if SkRect is valid.
       Call sort() to reverse fLeft and fRight if needed.
 
       @return  fRight
   */
-  SkScalar right() const { return fRight; }
+  SkScalar right() const noexcept { return fRight; }
 
   /** Returns bottom edge of SkRect, if sorted. Call isEmpty() to see if SkRect may be invalid,
       and sort() to reverse fTop and fBottom if needed.
 
       @return  fBottom
   */
-  SkScalar bottom() const { return fBottom; }
+  SkScalar bottom() const noexcept { return fBottom; }
 
   /** Returns span on the x-axis. This does not check if SkRect is sorted, or if
       result fits in 32-bit float; result may be negative or infinity.
 
       @return  fRight minus fLeft
   */
-  SkScalar width() const { return fRight - fLeft; }
+  SkScalar width() const noexcept { return fRight - fLeft; }
 
   /** Returns span on the y-axis. This does not check if SkRect is sorted, or if
       result fits in 32-bit float; result may be negative or infinity.
 
       @return  fBottom minus fTop
   */
-  SkScalar height() const { return fBottom - fTop; }
+  SkScalar height() const noexcept { return fBottom - fTop; }
 
   /** Returns average of left edge and right edge. Result does not change if SkRect
       is sorted. Result may overflow to infinity if SkRect is far from the origin.
 
       @return  midpoint on x-axis
   */
-  SkScalar centerX() const {
+  SkScalar centerX() const noexcept {
     // don't use SkScalarHalf(fLeft + fBottom) as that might overflow before the 0.5
     return SkScalarHalf(fLeft) + SkScalarHalf(fRight);
   }
@@ -874,7 +879,7 @@ struct SK_API SkRect {
 
       @return  midpoint on y-axis
   */
-  SkScalar centerY() const {
+  SkScalar centerY() const noexcept {
     // don't use SkScalarHalf(fTop + fBottom) as that might overflow before the 0.5
     return SkScalarHalf(fTop) + SkScalarHalf(fBottom);
   }
@@ -889,7 +894,7 @@ struct SK_API SkRect {
       @param b  SkRect to compare
       @return   true if members are equal
   */
-  friend bool operator==(const SkRect& a, const SkRect& b) {
+  friend bool operator==(const SkRect& a, const SkRect& b) noexcept {
     return SkScalarsEqual((const SkScalar*)&a, (const SkScalar*)&b, 4);
   }
 
@@ -903,7 +908,7 @@ struct SK_API SkRect {
       @param b  SkRect to compare
       @return   true if members are not equal
   */
-  friend bool operator!=(const SkRect& a, const SkRect& b) {
+  friend bool operator!=(const SkRect& a, const SkRect& b) noexcept {
     return !SkScalarsEqual((const SkScalar*)&a, (const SkScalar*)&b, 4);
   }
 
@@ -914,7 +919,7 @@ struct SK_API SkRect {
 
       @param quad  storage for corners of SkRect
   */
-  void toQuad(SkPoint quad[4]) const;
+  void toQuad(SkPoint quad[4]) const noexcept;
 
   /** Sets SkRect to (0, 0, 0, 0).
 
@@ -922,14 +927,14 @@ struct SK_API SkRect {
       or if top is equal to or greater than bottom. Setting all members to zero
       is a convenience, but does not designate a special empty rectangle.
   */
-  void setEmpty() { *this = MakeEmpty(); }
+  void setEmpty() noexcept { *this = MakeEmpty(); }
 
   /** Sets SkRect to src, promoting src members from integer to scalar.
       Very large values in src may lose precision.
 
       @param src  integer SkRect
   */
-  void set(const SkIRect& src) {
+  void set(const SkIRect& src) noexcept {
     fLeft = SkIntToScalar(src.fLeft);
     fTop = SkIntToScalar(src.fTop);
     fRight = SkIntToScalar(src.fRight);
@@ -945,7 +950,7 @@ struct SK_API SkRect {
       @param right   stored in fRight
       @param bottom  stored in fBottom
   */
-  void set(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) {
+  void set(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) noexcept {
     fLeft = left;
     fTop = top;
     fRight = right;
@@ -961,7 +966,7 @@ struct SK_API SkRect {
       @param right   stored in fRight
       @param bottom  stored in fBottom
   */
-  void setLTRB(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) {
+  void setLTRB(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) noexcept {
     this->set(left, top, right, bottom);
   }
 
@@ -975,7 +980,7 @@ struct SK_API SkRect {
       @param right   promoted to SkScalar and stored in fRight
       @param bottom  promoted to SkScalar and stored in fBottom
   */
-  void iset(int left, int top, int right, int bottom) {
+  void iset(int left, int top, int right, int bottom) noexcept {
     fLeft = SkIntToScalar(left);
     fTop = SkIntToScalar(top);
     fRight = SkIntToScalar(right);
@@ -989,7 +994,7 @@ struct SK_API SkRect {
       @param width   promoted to SkScalar and stored in fRight
       @param height  promoted to SkScalar and stored in fBottom
   */
-  void isetWH(int width, int height) {
+  void isetWH(int width, int height) noexcept {
     fLeft = fTop = 0;
     fRight = SkIntToScalar(width);
     fBottom = SkIntToScalar(height);
@@ -1004,7 +1009,7 @@ struct SK_API SkRect {
       @param pts    SkPoint array
       @param count  entries in array
   */
-  void set(const SkPoint pts[], int count) {
+  void set(const SkPoint pts[], int count) noexcept {
     // set() had been checking for non-finite values, so keep that behavior
     // for now. Now that we have setBoundsCheck(), we may decide to make
     // set() be simpler/faster, and not check for those.
@@ -1020,7 +1025,9 @@ struct SK_API SkRect {
       @param pts    SkPoint array
       @param count  entries in array
   */
-  void setBounds(const SkPoint pts[], int count) { (void)this->setBoundsCheck(pts, count); }
+  void setBounds(const SkPoint pts[], int count) noexcept {
+    (void)this->setBoundsCheck(pts, count);
+  }
 
   /** Sets to bounds of SkPoint array with count entries. Returns false if count is
       zero or smaller, or if SkPoint array contains an infinity or NaN; in these cases
@@ -1033,7 +1040,7 @@ struct SK_API SkRect {
       @param count  entries in array
       @return       true if all SkPoint values are finite
   */
-  bool setBoundsCheck(const SkPoint pts[], int count);
+  bool setBoundsCheck(const SkPoint pts[], int count) noexcept;
 
   /** Sets to bounds of SkPoint pts array with count entries. If any SkPoint in pts
       contains infinity or NaN, all SkRect dimensions are set to NaN.
@@ -1041,7 +1048,7 @@ struct SK_API SkRect {
       @param pts    SkPoint array
       @param count  entries in array
   */
-  void setBoundsNoCheck(const SkPoint pts[], int count);
+  void setBoundsNoCheck(const SkPoint pts[], int count) noexcept;
 
   /** Sets bounds to the smallest SkRect enclosing SkPoint p0 and p1. The result is
       sorted and may be empty. Does not check to see if values are finite.
@@ -1049,7 +1056,7 @@ struct SK_API SkRect {
       @param p0  corner to include
       @param p1  corner to include
   */
-  void set(const SkPoint& p0, const SkPoint& p1) {
+  void set(const SkPoint& p0, const SkPoint& p1) noexcept {
     fLeft = SkMinScalar(p0.fX, p1.fX);
     fRight = SkMaxScalar(p0.fX, p1.fX);
     fTop = SkMinScalar(p0.fY, p1.fY);
@@ -1064,7 +1071,7 @@ struct SK_API SkRect {
       @param width   added to x and stored in fRight
       @param height  added to y and stored in fBottom
   */
-  void setXYWH(SkScalar x, SkScalar y, SkScalar width, SkScalar height) {
+  void setXYWH(SkScalar x, SkScalar y, SkScalar width, SkScalar height) noexcept {
     fLeft = x;
     fTop = y;
     fRight = x + width;
@@ -1077,7 +1084,7 @@ struct SK_API SkRect {
       @param width   stored in fRight
       @param height  stored in fBottom
   */
-  void setWH(SkScalar width, SkScalar height) {
+  void setWH(SkScalar width, SkScalar height) noexcept {
     fLeft = 0;
     fTop = 0;
     fRight = width;
@@ -1095,7 +1102,7 @@ struct SK_API SkRect {
       @param dy  added to fTop and fBottom
       @return    SkRect offset on axes, with original width and height
   */
-  SkRect makeOffset(SkScalar dx, SkScalar dy) const {
+  SkRect makeOffset(SkScalar dx, SkScalar dy) const noexcept {
     return MakeLTRB(fLeft + dx, fTop + dy, fRight + dx, fBottom + dy);
   }
 
@@ -1110,7 +1117,7 @@ struct SK_API SkRect {
       @param dy  added to fTop and subtracted from fBottom
       @return    SkRect inset symmetrically left and right, top and bottom
   */
-  SkRect makeInset(SkScalar dx, SkScalar dy) const {
+  SkRect makeInset(SkScalar dx, SkScalar dy) const noexcept {
     return MakeLTRB(fLeft + dx, fTop + dy, fRight - dx, fBottom - dy);
   }
 
@@ -1125,7 +1132,7 @@ struct SK_API SkRect {
       @param dy  subtracted to fTop and added from fBottom
       @return    SkRect outset symmetrically left and right, top and bottom
   */
-  SkRect makeOutset(SkScalar dx, SkScalar dy) const {
+  SkRect makeOutset(SkScalar dx, SkScalar dy) const noexcept {
     return MakeLTRB(fLeft - dx, fTop - dy, fRight + dx, fBottom + dy);
   }
 
@@ -1139,7 +1146,7 @@ struct SK_API SkRect {
       @param dx  offset added to fLeft and fRight
       @param dy  offset added to fTop and fBottom
   */
-  void offset(SkScalar dx, SkScalar dy) {
+  void offset(SkScalar dx, SkScalar dy) noexcept {
     fLeft += dx;
     fTop += dy;
     fRight += dx;
@@ -1156,7 +1163,7 @@ struct SK_API SkRect {
 
       @param delta  added to SkRect
   */
-  void offset(const SkPoint& delta) { this->offset(delta.fX, delta.fY); }
+  void offset(const SkPoint& delta) noexcept { this->offset(delta.fX, delta.fY); }
 
   /** Offsets SkRect so that fLeft equals newX, and fTop equals newY. width and height
       are unchanged.
@@ -1164,7 +1171,7 @@ struct SK_API SkRect {
       @param newX  stored in fLeft, preserving width()
       @param newY  stored in fTop, preserving height()
   */
-  void offsetTo(SkScalar newX, SkScalar newY) {
+  void offsetTo(SkScalar newX, SkScalar newY) noexcept {
     fRight += newX - fLeft;
     fBottom += newY - fTop;
     fLeft = newX;
@@ -1181,7 +1188,7 @@ struct SK_API SkRect {
       @param dx  added to fLeft and subtracted from fRight
       @param dy  added to fTop and subtracted from fBottom
   */
-  void inset(SkScalar dx, SkScalar dy) {
+  void inset(SkScalar dx, SkScalar dy) noexcept {
     fLeft += dx;
     fTop += dy;
     fRight -= dx;
@@ -1198,7 +1205,7 @@ struct SK_API SkRect {
       @param dx  subtracted to fLeft and added from fRight
       @param dy  subtracted to fTop and added from fBottom
   */
-  void outset(SkScalar dx, SkScalar dy) { this->inset(-dx, -dy); }
+  void outset(SkScalar dx, SkScalar dy) noexcept { this->inset(-dx, -dy); }
 
   /** Returns true if SkRect intersects r, and sets SkRect to intersection.
       Returns false if SkRect does not intersect r, and leaves SkRect unchanged.
@@ -1208,7 +1215,7 @@ struct SK_API SkRect {
       @param r  limit of result
       @return   true if r and SkRect have area in common
   */
-  bool intersect(const SkRect& r);
+  bool intersect(const SkRect& r) noexcept;
 
   /** Constructs SkRect to intersect from (left, top, right, bottom). Does not sort
       construction.
@@ -1224,7 +1231,7 @@ struct SK_API SkRect {
       @param bottom  y-axis maximum of constructed SkRect
       @return        true if construction and SkRect have area in common
   */
-  bool intersect(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom);
+  bool intersect(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) noexcept;
 
   /** Returns true if a intersects b, and sets SkRect to intersection.
       Returns false if a does not intersect b, and leaves SkRect unchanged.
@@ -1235,12 +1242,12 @@ struct SK_API SkRect {
       @param b  SkRect to intersect
       @return   true if a and b have area in common
   */
-  bool SK_WARN_UNUSED_RESULT intersect(const SkRect& a, const SkRect& b);
+  bool SK_WARN_UNUSED_RESULT intersect(const SkRect& a, const SkRect& b) noexcept;
 
  private:
-  static bool Intersects(
+  static constexpr bool Intersects(
       SkScalar al, SkScalar at, SkScalar ar, SkScalar ab, SkScalar bl, SkScalar bt, SkScalar br,
-      SkScalar bb) {
+      SkScalar bb) noexcept {
     SkScalar L = SkMaxScalar(al, bl);
     SkScalar R = SkMinScalar(ar, br);
     SkScalar T = SkMaxScalar(at, bt);
@@ -1261,7 +1268,7 @@ struct SK_API SkRect {
       @param bottom  y-axis maximum of constructed SkRect
       @return        true if construction and SkRect have area in common
   */
-  bool intersects(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) const {
+  bool intersects(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) const noexcept {
     return Intersects(fLeft, fTop, fRight, fBottom, left, top, right, bottom);
   }
 
@@ -1271,7 +1278,7 @@ struct SK_API SkRect {
       @param r  SkRect to intersect
       @return   true if r and SkRect have area in common
   */
-  bool intersects(const SkRect& r) const {
+  bool intersects(const SkRect& r) const noexcept {
     return Intersects(fLeft, fTop, fRight, fBottom, r.fLeft, r.fTop, r.fRight, r.fBottom);
   }
 
@@ -1282,7 +1289,7 @@ struct SK_API SkRect {
       @param b  SkRect to intersect
       @return   true if a and b have area in common
   */
-  static bool Intersects(const SkRect& a, const SkRect& b) {
+  static bool Intersects(const SkRect& a, const SkRect& b) noexcept {
     return Intersects(a.fLeft, a.fTop, a.fRight, a.fBottom, b.fLeft, b.fTop, b.fRight, b.fBottom);
   }
 
@@ -1299,7 +1306,7 @@ struct SK_API SkRect {
       @param right   x-axis maximum of constructed SkRect
       @param bottom  y-axis maximum of constructed SkRect
   */
-  void join(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom);
+  void join(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) noexcept;
 
   /** Sets SkRect to the union of itself and r.
 
@@ -1308,7 +1315,7 @@ struct SK_API SkRect {
 
       @param r  expansion SkRect
   */
-  void join(const SkRect& r) { this->join(r.fLeft, r.fTop, r.fRight, r.fBottom); }
+  void join(const SkRect& r) noexcept { this->join(r.fLeft, r.fTop, r.fRight, r.fBottom); }
 
   /** Sets SkRect to the union of itself and r.
 
@@ -1319,7 +1326,7 @@ struct SK_API SkRect {
 
       @param r  expansion SkRect
   */
-  void joinNonEmptyArg(const SkRect& r) {
+  void joinNonEmptyArg(const SkRect& r) noexcept {
     SkASSERT(!r.isEmpty());
     // if we are empty, just assign
     if (fLeft >= fRight || fTop >= fBottom) {
@@ -1335,7 +1342,7 @@ struct SK_API SkRect {
 
       @param r  expansion SkRect
   */
-  void joinPossiblyEmptyRect(const SkRect& r) {
+  void joinPossiblyEmptyRect(const SkRect& r) noexcept {
     fLeft = SkMinScalar(fLeft, r.left());
     fTop = SkMinScalar(fTop, r.top());
     fRight = SkMaxScalar(fRight, r.right());
@@ -1349,7 +1356,7 @@ struct SK_API SkRect {
       @param y  test SkPoint y-coordinate
       @return   true if (x, y) is inside SkRect
   */
-  bool contains(SkScalar x, SkScalar y) const {
+  bool contains(SkScalar x, SkScalar y) const noexcept {
     return x >= fLeft && x < fRight && y >= fTop && y < fBottom;
   }
 
@@ -1361,7 +1368,7 @@ struct SK_API SkRect {
       @param r  SkRect contained
       @return   true if all sides of SkRect are outside r
   */
-  bool contains(const SkRect& r) const {
+  bool contains(const SkRect& r) const noexcept {
     // todo: can we eliminate the this->isEmpty check?
     return !r.isEmpty() && !this->isEmpty() && fLeft <= r.fLeft && fTop <= r.fTop &&
            fRight >= r.fRight && fBottom >= r.fBottom;
@@ -1375,7 +1382,7 @@ struct SK_API SkRect {
       @param r  SkIRect contained
       @return   true if all sides of SkRect are outside r
   */
-  bool contains(const SkIRect& r) const {
+  bool contains(const SkIRect& r) const noexcept {
     // todo: can we eliminate the this->isEmpty check?
     return !r.isEmpty() && !this->isEmpty() && fLeft <= SkIntToScalar(r.fLeft) &&
            fTop <= SkIntToScalar(r.fTop) && fRight >= SkIntToScalar(r.fRight) &&
@@ -1388,7 +1395,7 @@ struct SK_API SkRect {
 
       @param dst  storage for SkIRect
   */
-  void round(SkIRect* dst) const {
+  void round(SkIRect* dst) const noexcept {
     SkASSERT(dst);
     dst->set(
         SkScalarRoundToInt(fLeft), SkScalarRoundToInt(fTop), SkScalarRoundToInt(fRight),
@@ -1402,7 +1409,7 @@ struct SK_API SkRect {
 
       @param dst  storage for SkIRect
   */
-  void roundOut(SkIRect* dst) const {
+  void roundOut(SkIRect* dst) const noexcept {
     SkASSERT(dst);
     dst->set(
         SkScalarFloorToInt(fLeft), SkScalarFloorToInt(fTop), SkScalarCeilToInt(fRight),
@@ -1416,7 +1423,7 @@ struct SK_API SkRect {
 
       @param dst  storage for SkRect
   */
-  void roundOut(SkRect* dst) const {
+  void roundOut(SkRect* dst) const noexcept {
     dst->set(
         SkScalarFloorToScalar(fLeft), SkScalarFloorToScalar(fTop), SkScalarCeilToScalar(fRight),
         SkScalarCeilToScalar(fBottom));
@@ -1429,7 +1436,7 @@ struct SK_API SkRect {
 
       @param dst  storage for SkIRect
   */
-  void roundIn(SkIRect* dst) const {
+  void roundIn(SkIRect* dst) const noexcept {
     SkASSERT(dst);
     dst->set(
         SkScalarCeilToInt(fLeft), SkScalarCeilToInt(fTop), SkScalarFloorToInt(fRight),
@@ -1442,7 +1449,7 @@ struct SK_API SkRect {
 
       @return  rounded SkIRect
   */
-  SkIRect round() const {
+  SkIRect round() const noexcept {
     SkIRect ir;
     this->round(&ir);
     return ir;
@@ -1455,7 +1462,7 @@ struct SK_API SkRect {
 
       @return  rounded SkIRect
   */
-  SkIRect roundOut() const {
+  SkIRect roundOut() const noexcept {
     SkIRect ir;
     this->roundOut(&ir);
     return ir;
@@ -1465,7 +1472,7 @@ struct SK_API SkRect {
       fTop and fBottom if fTop is greater than fBottom. Result may be empty;
       and width() and height() will be zero or positive.
   */
-  void sort() {
+  void sort() noexcept {
     using std::swap;
     if (fLeft > fRight) {
       swap(fLeft, fRight);
@@ -1482,7 +1489,7 @@ struct SK_API SkRect {
 
       @return  sorted SkRect
   */
-  SkRect makeSorted() const {
+  SkRect makeSorted() const noexcept {
     return MakeLTRB(
         SkMinScalar(fLeft, fRight), SkMinScalar(fTop, fBottom), SkMaxScalar(fLeft, fRight),
         SkMaxScalar(fTop, fBottom));
@@ -1493,7 +1500,7 @@ struct SK_API SkRect {
 
       @return  pointer to fLeft
   */
-  const SkScalar* asScalars() const { return &fLeft; }
+  const SkScalar* asScalars() const noexcept { return &fLeft; }
 
   /** Writes text representation of SkRect to standard output. Set asHex to true to
       generate exact binary representations of floating point numbers.
@@ -1519,7 +1526,7 @@ struct SK_API SkRect {
   void dumpHex() const { this->dump(true); }
 };
 
-inline bool SkIRect::contains(const SkRect& r) const {
+inline bool SkIRect::contains(const SkRect& r) const noexcept {
   return !r.isEmpty() && !this->isEmpty() &&  // check for empties
          (SkScalar)fLeft <= r.fLeft && (SkScalar)fTop <= r.fTop && (SkScalar)fRight >= r.fRight &&
          (SkScalar)fBottom >= r.fBottom;

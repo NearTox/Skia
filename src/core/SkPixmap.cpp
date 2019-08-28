@@ -55,7 +55,7 @@ bool SkPixmap::reset(const SkMask& src) {
   return false;
 }
 
-void SkPixmap::setColorSpace(sk_sp<SkColorSpace> cs) {
+void SkPixmap::setColorSpace(sk_sp<SkColorSpace> cs) noexcept {
   fInfo = fInfo.makeColorSpace(std::move(cs));
 }
 
@@ -83,7 +83,7 @@ bool SkPixmap::extractSubset(SkPixmap* result, const SkIRect& subset) const {
 // This is the same as SkPixmap::addr(x,y), but this version gets inlined, while the public
 // method does not. Perhaps we could bloat it so it can be inlined, but that would grow code-size
 // everywhere, instead of just here (on behalf of getAlphaf()).
-static const void* fast_getaddr(const SkPixmap& pm, int x, int y) {
+static const void* fast_getaddr(const SkPixmap& pm, int x, int y) noexcept {
   x <<= SkColorTypeShiftPerPixel(pm.colorType());
   return static_cast<const char*>(pm.addr()) + y * pm.rowBytes() + x;
 }
@@ -455,7 +455,7 @@ bool SkPixmapPriv::Orient(const SkPixmap& dst, const SkPixmap& src, SkEncodedOri
   return draw_orientation(dst, src, origin);
 }
 
-bool SkPixmapPriv::ShouldSwapWidthHeight(SkEncodedOrigin origin) {
+bool SkPixmapPriv::ShouldSwapWidthHeight(SkEncodedOrigin origin) noexcept {
   // The last four SkEncodedOrigin values involve 90 degree rotations
   return origin >= kLeftTop_SkEncodedOrigin;
 }

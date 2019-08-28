@@ -594,7 +594,7 @@ class SK_API SkCanvas {
 
         @return  empty SaveLayerRec
     */
-    SaveLayerRec() {}
+    constexpr SaveLayerRec() noexcept = default;
 
     /** Sets fBounds, fPaint, and fSaveLayerFlags; sets fBackdrop to nullptr.
 
@@ -603,7 +603,8 @@ class SK_API SkCanvas {
         @param saveLayerFlags  SaveLayerRec options to modify layer
         @return                SaveLayerRec with empty fBackdrop
     */
-    SaveLayerRec(const SkRect* bounds, const SkPaint* paint, SaveLayerFlags saveLayerFlags = 0)
+    SaveLayerRec(
+        const SkRect* bounds, const SkPaint* paint, SaveLayerFlags saveLayerFlags = 0) noexcept
         : fBounds(bounds), fPaint(paint), fSaveLayerFlags(saveLayerFlags) {}
 
     /** Sets fBounds, fPaint, fBackdrop, and fSaveLayerFlags.
@@ -620,7 +621,7 @@ class SK_API SkCanvas {
     */
     SaveLayerRec(
         const SkRect* bounds, const SkPaint* paint, const SkImageFilter* backdrop,
-        SaveLayerFlags saveLayerFlags)
+        SaveLayerFlags saveLayerFlags) noexcept
         : fBounds(bounds), fPaint(paint), fBackdrop(backdrop), fSaveLayerFlags(saveLayerFlags) {}
 
     /** Experimental. Not ready for general use.
@@ -643,7 +644,7 @@ class SK_API SkCanvas {
     */
     SaveLayerRec(
         const SkRect* bounds, const SkPaint* paint, const SkImageFilter* backdrop,
-        const SkImage* clipMask, const SkMatrix* clipMatrix, SaveLayerFlags saveLayerFlags)
+        const SkImage* clipMask, const SkMatrix* clipMatrix, SaveLayerFlags saveLayerFlags) noexcept
         : fBounds(bounds),
           fPaint(paint),
           fBackdrop(backdrop),
@@ -923,7 +924,7 @@ class SK_API SkCanvas {
   /** Experimental. For testing only.
       Set to simplify clip stack using PathOps.
   */
-  void setAllowSimplifyClip(bool allow) { fAllowSimplifyClip = allow; }
+  void setAllowSimplifyClip(bool allow) noexcept { fAllowSimplifyClip = allow; }
 
   /** Replaces clip with the intersection or difference of clip and SkRegion deviceRgn.
       Resulting clip is aliased; pixels are fully contained by the clip.
@@ -2505,7 +2506,7 @@ class SK_API SkCanvas {
     ~LayerIter();
 
     /** Return true if the iterator is done */
-    bool done() const { return fDone; }
+    bool done() const noexcept { return fDone; }
     /** Cycle to the next device */
     void next();
 
@@ -2575,8 +2576,8 @@ class SK_API SkCanvas {
   std::unique_ptr<SkRasterHandleAllocator> fAllocator;
 
   SkSurface_Base* fSurfaceBase;
-  SkSurface_Base* getSurfaceBase() const { return fSurfaceBase; }
-  void setSurfaceBase(SkSurface_Base* sb) { fSurfaceBase = sb; }
+  SkSurface_Base* getSurfaceBase() const noexcept { return fSurfaceBase; }
+  void setSurfaceBase(SkSurface_Base* sb) noexcept { fSurfaceBase = sb; }
   friend class SkSurface_Base;
   friend class SkSurface_Gpu;
 

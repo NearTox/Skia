@@ -27,7 +27,7 @@ struct SkBitmapCacheDesc {
   uint32_t fImageID;  // != 0
   SkIRect fSubset;    // always set to a valid rect (entire or subset)
 
-  void validate() const {
+  void validate() const noexcept {
     SkASSERT(fImageID);
     SkASSERT(fSubset.fLeft >= 0 && fSubset.fTop >= 0);
     SkASSERT(fSubset.width() > 0 && fSubset.height() > 0);

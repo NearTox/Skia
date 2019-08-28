@@ -180,7 +180,7 @@ class SK_API SkCodec : SkNoncopyable {
    *  Returns the image orientation stored in the EXIF data.
    *  If there is no EXIF data, or if we cannot read the EXIF data, returns kTopLeft.
    */
-  SkEncodedOrigin getOrigin() const { return fOrigin; }
+  SkEncodedOrigin getOrigin() const noexcept { return fOrigin; }
 
   /**
    *  Return a size that approximately supports the desired scale factor.
@@ -691,7 +691,7 @@ class SK_API SkCodec : SkNoncopyable {
       std::unique_ptr<SkCodec> (*make)(std::unique_ptr<SkStream>, SkCodec::Result*));
 
  protected:
-  const SkEncodedInfo& getEncodedInfo() const { return fEncodedInfo; }
+  const SkEncodedInfo& getEncodedInfo() const noexcept { return fEncodedInfo; }
 
   using XformFormat = skcms_PixelFormat;
 
@@ -756,7 +756,7 @@ class SK_API SkCodec : SkNoncopyable {
   /**
    * Get method for the input stream
    */
-  SkStream* stream() { return fStream.get(); }
+  SkStream* stream() noexcept { return fStream.get(); }
 
   /**
    *  The remaining functions revolve around decoding scanlines.
@@ -767,9 +767,9 @@ class SK_API SkCodec : SkNoncopyable {
    */
   virtual SkScanlineOrder onGetScanlineOrder() const { return kTopDown_SkScanlineOrder; }
 
-  const SkImageInfo& dstInfo() const { return fDstInfo; }
+  const SkImageInfo& dstInfo() const noexcept { return fDstInfo; }
 
-  const Options& options() const { return fOptions; }
+  const Options& options() const noexcept { return fOptions; }
 
   /**
    *  Returns the number of scanlines that have been decoded so far.
@@ -777,7 +777,7 @@ class SK_API SkCodec : SkNoncopyable {
    *
    *  Returns -1 if we have not started a scanline decode.
    */
-  int currScanline() const { return fCurrScanline; }
+  int currScanline() const noexcept { return fCurrScanline; }
 
   virtual int onOutputScanline(int inputScanline) const;
 
@@ -794,8 +794,8 @@ class SK_API SkCodec : SkNoncopyable {
   virtual bool usesColorXform() const { return true; }
   void applyColorXform(void* dst, const void* src, int count) const;
 
-  bool colorXform() const { return fXformTime != kNo_XformTime; }
-  bool xformOnDecode() const { return fXformTime == kDecodeRow_XformTime; }
+  bool colorXform() const noexcept { return fXformTime != kNo_XformTime; }
+  bool xformOnDecode() const noexcept { return fXformTime == kDecodeRow_XformTime; }
 
   virtual int onGetFrameCount() { return 1; }
 

@@ -20,7 +20,7 @@
 #include <new>
 
 template <size_t N>
-static size_t sk_align(size_t s) {
+static constexpr size_t sk_align(size_t s) {
   return ((s + (N - 1)) / N) * N;
 }
 
@@ -191,7 +191,7 @@ inline std::unique_ptr<GrAtlasTextOp> GrTextBlob::makeOp(
 static void calculate_translation(
     bool applyVM, const SkMatrix& newViewMatrix, SkScalar newX, SkScalar newY,
     const SkMatrix& currentViewMatrix, SkScalar currentX, SkScalar currentY, SkScalar* transX,
-    SkScalar* transY) {
+    SkScalar* transY) noexcept {
   if (applyVM) {
     *transX = newViewMatrix.getTranslateX() + newViewMatrix.getScaleX() * (newX - currentX) +
               newViewMatrix.getSkewX() * (newY - currentY) - currentViewMatrix.getTranslateX();
@@ -420,7 +420,7 @@ void GrTextBlob::AssertEqual(const GrTextBlob& l, const GrTextBlob& r) {
 }
 
 void GrTextBlob::SubRun::computeTranslation(
-    const SkMatrix& viewMatrix, SkScalar x, SkScalar y, SkScalar* transX, SkScalar* transY) {
+    const SkMatrix& viewMatrix, SkScalar x, SkScalar y, SkScalar* transX, SkScalar* transY) noexcept{
   // Don't use the matrix to translate on distance field for fallback subruns.
   calculate_translation(
       !this->drawAsDistanceFields() && !this->isFallback(), viewMatrix, x, y, fCurrentViewMatrix,

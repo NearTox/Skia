@@ -102,12 +102,12 @@ class GrAllocator : SkNoncopyable {
   /**
    * Returns the item count.
    */
-  int count() const { return fCount; }
+  int count() const noexcept { return fCount; }
 
   /**
    * Is the count 0?
    */
-  bool empty() const { return 0 == fCount; }
+  bool empty() const noexcept { return 0 == fCount; }
 
   /**
    * Access first item, only call if count() != 0
@@ -154,7 +154,7 @@ class GrAllocator : SkNoncopyable {
     /**
      * Initializes the iterator. next() must be called before get().
      */
-    Iter(const GrAllocator* allocator)
+    Iter(const GrAllocator* allocator) noexcept
         : fAllocator(allocator),
           fBlockIndex(-1),
           fIndexInBlock(allocator->fItemsPerBlock - 1),
@@ -163,7 +163,7 @@ class GrAllocator : SkNoncopyable {
     /**
      * Advances the iterator. Iteration is finished when next() returns false.
      */
-    bool next() {
+    bool next() noexcept {
       ++fIndexInBlock;
       ++fItemIndex;
       if (fIndexInBlock == fAllocator->fItemsPerBlock) {

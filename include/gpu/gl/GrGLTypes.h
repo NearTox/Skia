@@ -21,7 +21,7 @@ enum GrGLStandard {
   kGLES_GrGLStandard,
   kWebGL_GrGLStandard,
 };
-static const int kGrGLStandardCnt = 4;
+static constexpr int kGrGLStandardCnt = 4;
 
 // The following allow certain interfaces to be turned off at compile time
 // (for example, to lower code size).

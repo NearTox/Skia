@@ -34,7 +34,7 @@ class GrAuditTrail {
 
   class AutoEnable {
    public:
-    AutoEnable(GrAuditTrail* auditTrail) : fAuditTrail(auditTrail) {
+    AutoEnable(GrAuditTrail* auditTrail) noexcept : fAuditTrail(auditTrail) {
       SkASSERT(!fAuditTrail->isEnabled());
       fAuditTrail->setEnabled(true);
     }
@@ -50,7 +50,8 @@ class GrAuditTrail {
 
   class AutoManageOpList {
    public:
-    AutoManageOpList(GrAuditTrail* auditTrail) : fAutoEnable(auditTrail), fAuditTrail(auditTrail) {}
+    AutoManageOpList(GrAuditTrail* auditTrail) noexcept
+        : fAutoEnable(auditTrail), fAuditTrail(auditTrail) {}
 
     ~AutoManageOpList() { fAuditTrail->fullReset(); }
 
@@ -61,7 +62,7 @@ class GrAuditTrail {
 
   class AutoCollectOps {
    public:
-    AutoCollectOps(GrAuditTrail* auditTrail, int clientID)
+    AutoCollectOps(GrAuditTrail* auditTrail, int clientID) noexcept
         : fAutoEnable(auditTrail), fAuditTrail(auditTrail) {
       fAuditTrail->setClientID(clientID);
     }
@@ -93,10 +94,10 @@ class GrAuditTrail {
   // returns a json string of all of the ops associated with a given client id
   void toJson(SkJSONWriter& writer, int clientID) const;
 
-  bool isEnabled() { return fEnabled; }
-  void setEnabled(bool enabled) { fEnabled = enabled; }
+  bool isEnabled() noexcept { return fEnabled; }
+  void setEnabled(bool enabled) noexcept { fEnabled = enabled; }
 
-  void setClientID(int clientID) { fClientID = clientID; }
+  void setClientID(int clientID) noexcept { fClientID = clientID; }
 
   // We could just return our internal bookkeeping struct if copying the data out becomes
   // a performance issue, but until then its nice to decouple
@@ -165,7 +166,7 @@ class GrAuditTrail {
 #define GR_AUDIT_TRAIL_AUTO_FRAME(audit_trail, framename) \
   GR_AUDIT_TRAIL_INVOKE_GUARD((audit_trail), pushFrame, framename)
 
-#define GR_AUDIT_TRAIL_RESET(audit_trail) // GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, fullReset);
+#define GR_AUDIT_TRAIL_RESET(audit_trail)  // GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, fullReset);
 
 #define GR_AUDIT_TRAIL_ADD_OP(audit_trail, op, proxy_id) \
   GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, addOp, op, proxy_id)

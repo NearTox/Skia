@@ -76,7 +76,7 @@ class SK_API SkVertices : public SkNVRefCnt<SkVertices> {
       return values[i];
     }
 
-    SkPoint mapPoint(const SkPoint& point) const {
+    SkPoint mapPoint(const SkPoint& point) const noexcept {
       float x = values[0] * point.x() + values[2] * point.y() + values[4];
       float y = values[1] * point.x() + values[3] * point.y() + values[5];
       return SkPoint::Make(x, y);
@@ -149,7 +149,7 @@ class SK_API SkVertices : public SkNVRefCnt<SkVertices> {
    public:
     Builder(VertexMode mode, int vertexCount, int indexCount, uint32_t flags);
 
-    bool isValid() const { return fVertices != nullptr; }
+    bool isValid() const noexcept { return fVertices != nullptr; }
 
     // if the builder is invalid, these will return 0
     int vertexCount() const;
@@ -179,27 +179,27 @@ class SK_API SkVertices : public SkNVRefCnt<SkVertices> {
     friend class SkVertices;
   };
 
-  uint32_t uniqueID() const { return fUniqueID; }
-  VertexMode mode() const { return fMode; }
-  const SkRect& bounds() const { return fBounds; }
+  uint32_t uniqueID() const noexcept { return fUniqueID; }
+  VertexMode mode() const noexcept { return fMode; }
+  const SkRect& bounds() const noexcept { return fBounds; }
 
   bool hasColors() const { return SkToBool(this->colors()); }
   bool hasTexCoords() const { return SkToBool(this->texCoords()); }
   bool hasBones() const { return SkToBool(this->boneIndices()); }
   bool hasIndices() const { return SkToBool(this->indices()); }
 
-  int vertexCount() const { return fVertexCnt; }
-  const SkPoint* positions() const { return fPositions; }
-  const SkPoint* texCoords() const { return fTexs; }
-  const SkColor* colors() const { return fColors; }
+  int vertexCount() const noexcept { return fVertexCnt; }
+  const SkPoint* positions() const noexcept { return fPositions; }
+  const SkPoint* texCoords() const noexcept { return fTexs; }
+  const SkColor* colors() const noexcept { return fColors; }
 
-  const BoneIndices* boneIndices() const { return fBoneIndices; }
-  const BoneWeights* boneWeights() const { return fBoneWeights; }
+  const BoneIndices* boneIndices() const noexcept { return fBoneIndices; }
+  const BoneWeights* boneWeights() const noexcept { return fBoneWeights; }
 
-  int indexCount() const { return fIndexCnt; }
-  const uint16_t* indices() const { return fIndices; }
+  int indexCount() const noexcept { return fIndexCnt; }
+  const uint16_t* indices() const noexcept { return fIndices; }
 
-  bool isVolatile() const { return fIsVolatile; }
+  bool isVolatile() const noexcept { return fIsVolatile; }
 
   sk_sp<SkVertices> applyBones(const Bone bones[], int boneCount) const;
 

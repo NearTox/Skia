@@ -31,6 +31,6 @@ bool SkTreatAsSprite(const SkMatrix&, const SkISize& size, const SkPaint& paint)
     Returns true if successful. Returns false if the matrix is degenerate.
     */
 bool SkDecomposeUpper2x2(
-    const SkMatrix& matrix, SkPoint* rotation1, SkPoint* scale, SkPoint* rotation2);
+    const SkMatrix& matrix, SkPoint* rotation1, SkPoint* scale, SkPoint* rotation2) noexcept;
 
 #endif

@@ -33,7 +33,7 @@ class SkTInternalLList {
     fTail = nullptr;
   }
 
-  void remove(T* entry) {
+  void remove(T* entry) noexcept {
     SkASSERT(fHead && fTail);
     SkASSERT(this->isInList(entry));
 
@@ -59,7 +59,7 @@ class SkTInternalLList {
 #endif
   }
 
-  void addToHead(T* entry) {
+  void addToHead(T* entry) noexcept {
     SkASSERT(nullptr == entry->fPrev && nullptr == entry->fNext);
     SkASSERT(nullptr == entry->fList);
 

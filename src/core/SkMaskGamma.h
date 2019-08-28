@@ -60,10 +60,10 @@ static inline U8CPU sk_t_scale255(U8CPU base) {
   }
   return lum;
 }
-template <> /*static*/ inline U8CPU sk_t_scale255<1>(U8CPU base) { return base * 0xFF; }
-template <> /*static*/ inline U8CPU sk_t_scale255<2>(U8CPU base) { return base * 0x55; }
-template <> /*static*/ inline U8CPU sk_t_scale255<4>(U8CPU base) { return base * 0x11; }
-template <> /*static*/ inline U8CPU sk_t_scale255<8>(U8CPU base) { return base; }
+template <> /*static*/ constexpr inline U8CPU sk_t_scale255<1>(U8CPU base) { return base * 0xFF; }
+template <> /*static*/ constexpr inline U8CPU sk_t_scale255<2>(U8CPU base) { return base * 0x55; }
+template <> /*static*/ constexpr inline U8CPU sk_t_scale255<4>(U8CPU base) { return base * 0x11; }
+template <> /*static*/ constexpr inline U8CPU sk_t_scale255<8>(U8CPU base) { return base; }
 ///@}
 
 template <int R_LUM_BITS, int G_LUM_BITS, int B_LUM_BITS>

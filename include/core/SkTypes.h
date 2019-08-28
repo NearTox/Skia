@@ -195,7 +195,7 @@ static constexpr uint32_t SK_InvalidGenID = 0;
  */
 static constexpr uint32_t SK_InvalidUniqueID = 0;
 
-static inline int32_t SkAbs32(int32_t value) {
+static constexpr inline int32_t SkAbs32(int32_t value) {
   SkASSERT(value != SK_NaN32);  // The most negative int32_t can't be negated.
   if (value < 0) {
     value = -value;
@@ -204,7 +204,7 @@ static inline int32_t SkAbs32(int32_t value) {
 }
 
 template <typename T>
-static inline T SkTAbs(T value) {
+static inline T SkTAbs(T value) noexcept {
   if (value < 0) {
     value = -value;
   }

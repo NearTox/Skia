@@ -610,9 +610,9 @@ class GrGLCaps : public GrCaps {
 
   // ColorTypeInfo for a specific format
   struct ColorTypeInfo {
-    ColorTypeInfo(GrColorType colorType, uint32_t flags) : fColorType(colorType), fFlags(flags) {}
+    ColorTypeInfo(GrColorType colorType, uint32_t flags) noexcept: fColorType(colorType), fFlags(flags) {}
 
-    ColorTypeInfo(GrColorType colorType, uint32_t flags, GrSwizzle rgbaReadSwizzle)
+    ColorTypeInfo(GrColorType colorType, uint32_t flags, GrSwizzle rgbaReadSwizzle)noexcept
         : fColorType(colorType), fFlags(flags), fRGBAReadSwizzle(rgbaReadSwizzle) {}
 
     GrColorType fColorType;

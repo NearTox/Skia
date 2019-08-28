@@ -28,6 +28,9 @@
     <Rule Id="C26495" Action="None" />
     <Rule Id="C26497" Action="Warning" />
     <Rule Id="C26498" Action="Warning" />
+    <Rule Id="C26800" Action="Warning" />
+    <Rule Id="C26812" Action="None" />
+    <Rule Id="C26814" Action="Warning" />
     <Rule Id="C28020" Action="None" />
     <Rule Id="C28021" Action="None" />
     <Rule Id="C28022" Action="None" />

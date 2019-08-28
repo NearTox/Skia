@@ -152,7 +152,7 @@ class SK_API SkPathEffect : public SkFlattenable {
   }
 
  protected:
-  SkPathEffect() {}
+  constexpr SkPathEffect() noexcept = default;
 
   virtual bool onFilterPath(SkPath*, const SkPath&, SkStrokeRec*, const SkRect*) const = 0;
   virtual SkRect onComputeFastBounds(const SkRect& src) const { return src; }

@@ -152,7 +152,7 @@ constexpr SkColor SK_ColorMAGENTA = SkColorSetARGB(0xFF, 0xFF, 0x00, 0xFF);
     @param blue   blue component value from zero to 255
     @param hsv    three element array which holds the resulting HSV components
 */
-SK_API void SkRGBToHSV(U8CPU red, U8CPU green, U8CPU blue, SkScalar hsv[3]);
+SK_API void SkRGBToHSV(U8CPU red, U8CPU green, U8CPU blue, SkScalar hsv[3]) noexcept;
 
 /** Converts ARGB to its HSV components. Alpha in ARGB is ignored.
     hsv[0] contains hsv hue, and is assigned a value from zero to less than 360.
@@ -162,7 +162,7 @@ SK_API void SkRGBToHSV(U8CPU red, U8CPU green, U8CPU blue, SkScalar hsv[3]);
     @param color  ARGB color to convert
     @param hsv    three element array which holds the resulting HSV components
 */
-static inline void SkColorToHSV(SkColor color, SkScalar hsv[3]) {
+static inline void SkColorToHSV(SkColor color, SkScalar hsv[3]) noexcept {
   SkRGBToHSV(SkColorGetR(color), SkColorGetG(color), SkColorGetB(color), hsv);
 }
 
@@ -177,7 +177,7 @@ static inline void SkColorToHSV(SkColor color, SkScalar hsv[3]) {
     @param hsv    three element array which holds the input HSV components
     @return       ARGB equivalent to HSV
 */
-SK_API SkColor SkHSVToColor(U8CPU alpha, const SkScalar hsv[3]);
+SK_API SkColor SkHSVToColor(U8CPU alpha, const SkScalar hsv[3]) noexcept;
 
 /** Converts HSV components to an ARGB color. Alpha is set to 255.
     hsv[0] represents hsv hue, an angle from zero to less than 360.
@@ -189,7 +189,9 @@ SK_API SkColor SkHSVToColor(U8CPU alpha, const SkScalar hsv[3]);
     @param hsv  three element array which holds the input HSV components
     @return     RGB equivalent to HSV
 */
-static inline SkColor SkHSVToColor(const SkScalar hsv[3]) { return SkHSVToColor(0xFF, hsv); }
+static inline SkColor SkHSVToColor(const SkScalar hsv[3]) noexcept {
+  return SkHSVToColor(0xFF, hsv);
+}
 
 /** 32-bit ARGB color value, premultiplied. The byte order for this value is
     configuration dependent, matching the format of kBGRA_8888_SkColorType bitmaps.
@@ -206,7 +208,7 @@ typedef uint32_t SkPMColor;
     @param b  amount of blue, from no blue (0) to full blue (255)
     @return   premultiplied color
 */
-SK_API SkPMColor SkPreMultiplyARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b);
+SK_API SkPMColor SkPreMultiplyARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b) noexcept;
 
 /** Returns pmcolor closest to color c. Multiplies c RGB components by the c alpha,
     and arranges the bytes to match the format of kN32_SkColorType.
@@ -214,7 +216,7 @@ SK_API SkPMColor SkPreMultiplyARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b);
     @param c  unpremultiplied ARGB color
     @return   premultiplied color
 */
-SK_API SkPMColor SkPreMultiplyColor(SkColor c);
+SK_API SkPMColor SkPreMultiplyColor(SkColor c) noexcept;
 
 /** \struct SkRGBA4f
     RGBA color value, holding four floating point components. Color components are always in
@@ -237,7 +239,7 @@ struct SkRGBA4f {
       @param other  SkRGBA4f to compare
       @return       true if SkRGBA4f equals other
   */
-  bool operator==(const SkRGBA4f& other) const {
+  bool operator==(const SkRGBA4f& other) const noexcept {
     return fA == other.fA && fR == other.fR && fG == other.fG && fB == other.fB;
   }
 
@@ -246,7 +248,7 @@ struct SkRGBA4f {
       @param other  SkRGBA4f to compare
       @return       true if SkRGBA4f is not equal to other
   */
-  bool operator!=(const SkRGBA4f& other) const { return !(*this == other); }
+  bool operator!=(const SkRGBA4f& other) const noexcept { return !(*this == other); }
 
   /** Returns SkRGBA4f multiplied by scale.
 
@@ -268,7 +270,7 @@ struct SkRGBA4f {
 
       @return       pointer to array [fR, fG, fB, fA]
   */
-  const float* vec() const { return &fR; }
+  const float* vec() const noexcept { return &fR; }
 
   /** Returns a pointer to components of SkRGBA4f, for array access.
 
@@ -301,13 +303,13 @@ struct SkRGBA4f {
 
       @return       true if SkRGBA4f is opaque
   */
-  bool isOpaque() const {
+  bool isOpaque() const noexcept {
     SkASSERT(fA <= 1.0f && fA >= 0.0f);
     return fA == 1.0f;
   }
 
   /** Returns true if all channels are in [0, 1]. */
-  bool fitsInBytes() const {
+  bool fitsInBytes() const noexcept {
     SkASSERT(fA >= 0.0f && fA <= 1.0f);
     return fR >= 0.0f && fR <= 1.0f && fG >= 0.0f && fG <= 1.0f && fB >= 0.0f && fB <= 1.0f;
   }

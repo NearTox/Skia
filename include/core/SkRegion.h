@@ -29,7 +29,7 @@ class SK_API SkRegion {
 
       @return  empty SkRegion
   */
-  SkRegion();
+  SkRegion() noexcept;
 
   /** Constructs a copy of an existing region.
       Copy constructor makes two regions identical by value. Internally, region and
@@ -43,14 +43,14 @@ class SK_API SkRegion {
       @param region  SkRegion to copy by value
       @return        copy of SkRegion
   */
-  SkRegion(const SkRegion& region);
+  SkRegion(const SkRegion& region) noexcept;
 
   /** Constructs a rectangular SkRegion matching the bounds of rect.
 
       @param rect  bounds of constructed SkRegion
       @return      rectangular SkRegion
   */
-  explicit SkRegion(const SkIRect& rect);
+  explicit SkRegion(const SkIRect& rect) noexcept;
 
   /** Releases ownership of any shared data and deletes data if SkRegion is sole owner.
    */
@@ -68,7 +68,7 @@ class SK_API SkRegion {
       @param region  SkRegion to copy by value
       @return        SkRegion to copy by value
   */
-  SkRegion& operator=(const SkRegion& region);
+  SkRegion& operator=(const SkRegion& region) noexcept;
 
   /** Compares SkRegion and other; returns true if they enclose exactly
       the same area.
@@ -76,14 +76,14 @@ class SK_API SkRegion {
       @param other  SkRegion to compare
       @return       true if SkRegion pair are equivalent
   */
-  bool operator==(const SkRegion& other) const;
+  bool operator==(const SkRegion& other) const noexcept;
 
   /** Compares SkRegion and other; returns true if they do not enclose the same area.
 
       @param other  SkRegion to compare
       @return       true if SkRegion pair are not equivalent
   */
-  bool operator!=(const SkRegion& other) const { return !(*this == other); }
+  bool operator!=(const SkRegion& other) const noexcept { return !(*this == other); }
 
   /** Sets SkRegion to src, and returns true if src bounds is not empty.
       This makes SkRegion and src identical by value. Internally,
@@ -97,7 +97,7 @@ class SK_API SkRegion {
       @param src  SkRegion to copy
       @return     copy of src
   */
-  bool set(const SkRegion& src) {
+  bool set(const SkRegion& src) noexcept {
     *this = src;
     return !this->isEmpty();
   }
@@ -120,26 +120,26 @@ class SK_API SkRegion {
 
       @return  true if bounds has no width or height
   */
-  bool isEmpty() const { return fRunHead == emptyRunHeadPtr(); }
+  bool isEmpty() const noexcept { return fRunHead == emptyRunHeadPtr(); }
 
   /** Returns true if SkRegion is one SkIRect with positive dimensions.
 
       @return  true if SkRegion contains one SkIRect
   */
-  bool isRect() const { return fRunHead == kRectRunHeadPtr; }
+  bool isRect() const noexcept { return fRunHead == kRectRunHeadPtr; }
 
   /** Returns true if SkRegion is described by more than one rectangle.
 
       @return  true if SkRegion contains more than one SkIRect
   */
-  bool isComplex() const { return !this->isEmpty() && !this->isRect(); }
+  bool isComplex() const noexcept { return !this->isEmpty() && !this->isRect(); }
 
   /** Returns minimum and maximum axes values of SkIRect array.
       Returns (0, 0, 0, 0) if SkRegion is empty.
 
       @return  combined bounds of all SkIRect elements
   */
-  const SkIRect& getBounds() const { return fBounds; }
+  const SkIRect& getBounds() const noexcept { return fBounds; }
 
   /** Returns a value that increases with the number of
       elements in SkRegion. Returns zero if SkRegion is empty.
@@ -150,7 +150,7 @@ class SK_API SkRegion {
 
       @return  relative complexity
   */
-  int computeRegionComplexity() const;
+  int computeRegionComplexity() const noexcept;
 
   /** Appends outline of SkRegion to path.
       Returns true if SkRegion is not empty; otherwise, returns false, and leaves path
@@ -166,7 +166,7 @@ class SK_API SkRegion {
 
       @return  false
   */
-  bool setEmpty();
+  bool setEmpty() noexcept;
 
   /** Constructs a rectangular SkRegion matching the bounds of rect.
       If rect is empty, constructs empty and returns false.
@@ -174,7 +174,7 @@ class SK_API SkRegion {
       @param rect  bounds of constructed SkRegion
       @return      true if rect is not empty
   */
-  bool setRect(const SkIRect& rect);
+  bool setRect(const SkIRect& rect) noexcept;
 
   /** Constructs SkRegion with bounds (left, top, right, bottom).
       Returns true if left is less than right and top is less than bottom; otherwise,
@@ -186,7 +186,7 @@ class SK_API SkRegion {
       @param bottom  edge of bounds on y-axis
       @return        rectangular SkRegion
   */
-  bool setRect(int32_t left, int32_t top, int32_t right, int32_t bottom) {
+  bool setRect(int32_t left, int32_t top, int32_t right, int32_t bottom) noexcept {
     return this->setRect({left, top, right, bottom});
   }
 
@@ -213,7 +213,7 @@ class SK_API SkRegion {
       @param region  SkRegion to copy by value
       @return        SkRegion to copy by value
   */
-  bool setRegion(const SkRegion& region);
+  bool setRegion(const SkRegion& region) noexcept;
 
   /** Constructs SkRegion to match outline of path within clip.
       Returns false if constructed SkRegion is empty.
@@ -274,7 +274,7 @@ class SK_API SkRegion {
       @param r  SkIRect to contain
       @return   true quickly if r points are equal or inside
   */
-  bool quickContains(const SkIRect& r) const {
+  bool quickContains(const SkIRect& r) const noexcept {
     return this->quickContains(r.fLeft, r.fTop, r.fRight, r.fBottom);
   }
 
@@ -289,7 +289,7 @@ class SK_API SkRegion {
       @param bottom  edge of bounds on y-axis
       @return        true quickly if SkIRect are equal or inside
   */
-  bool quickContains(int32_t left, int32_t top, int32_t right, int32_t bottom) const {
+  bool quickContains(int32_t left, int32_t top, int32_t right, int32_t bottom) const noexcept {
     SkASSERT(this->isEmpty() == fBounds.isEmpty());  // valid region
 
     return left < right && top < bottom && fRunHead == kRectRunHeadPtr &&  // this->isRect()
@@ -305,7 +305,7 @@ class SK_API SkRegion {
       @param rect  SkIRect to intersect
       @return      true if rect does not intersect
   */
-  bool quickReject(const SkIRect& rect) const {
+  bool quickReject(const SkIRect& rect) const noexcept {
     return this->isEmpty() || rect.isEmpty() || !SkIRect::Intersects(fBounds, rect);
   }
 
@@ -316,7 +316,7 @@ class SK_API SkRegion {
       @param rgn  SkRegion to intersect
       @return     true if rgn does not intersect
   */
-  bool quickReject(const SkRegion& rgn) const {
+  bool quickReject(const SkRegion& rgn) const noexcept {
     return this->isEmpty() || rgn.isEmpty() || !SkIRect::Intersects(fBounds, rgn.fBounds);
   }
 
@@ -350,7 +350,7 @@ class SK_API SkRegion {
     kLastOp = kReplace_Op,  //!< last operator
   };
 
-  static const int kOpCnt = kLastOp + 1;
+  static constexpr int kOpCnt = kLastOp + 1;
 
   /** Replaces SkRegion with the result of SkRegion op rect.
       Returns true if replaced SkRegion is not empty.
@@ -456,50 +456,50 @@ class SK_API SkRegion {
 
         @return  empty SkRegion iterator
     */
-    Iterator() : fRgn(nullptr), fDone(true) {}
+    Iterator() noexcept : fRgn(nullptr), fDone(true) {}
 
     /** Sets SkRegion::Iterator to return elements of SkIRect array in region.
 
         @param region  SkRegion to iterate
         @return        SkRegion iterator
     */
-    Iterator(const SkRegion& region);
+    Iterator(const SkRegion& region) noexcept;
 
     /** SkPoint SkRegion::Iterator to start of SkRegion.
         Returns true if SkRegion was set; otherwise, returns false.
 
         @return  true if SkRegion was set
     */
-    bool rewind();
+    bool rewind() noexcept;
 
     /** Resets iterator, using the new SkRegion.
 
         @param region  SkRegion to iterate
     */
-    void reset(const SkRegion& region);
+    void reset(const SkRegion& region) noexcept;
 
     /** Returns true if SkRegion::Iterator is pointing to final SkIRect in SkRegion.
 
         @return  true if data parsing is complete
     */
-    bool done() const { return fDone; }
+    bool done() const noexcept { return fDone; }
 
     /** Advances SkRegion::Iterator to next SkIRect in SkRegion if it is not done.
      */
-    void next();
+    void next() noexcept;
 
     /** Returns SkIRect element in SkRegion. Does not return predictable results if SkRegion
         is empty.
 
         @return  part of SkRegion as SkIRect
     */
-    const SkIRect& rect() const { return fRect; }
+    const SkIRect& rect() const noexcept { return fRect; }
 
     /** Returns SkRegion if set; otherwise, returns nullptr.
 
         @return  iterated SkRegion
     */
-    const SkRegion* rgn() const { return fRgn; }
+    const SkRegion* rgn() const noexcept { return fRgn; }
 
    private:
     const SkRegion* fRgn;
@@ -520,17 +520,17 @@ class SK_API SkRegion {
         @param clip    bounds of iteration
         @return        SkRegion iterator
     */
-    Cliperator(const SkRegion& region, const SkIRect& clip);
+    Cliperator(const SkRegion& region, const SkIRect& clip) noexcept;
 
     /** Returns true if SkRegion::Cliperator is pointing to final SkIRect in SkRegion.
 
         @return  true if data parsing is complete
     */
-    bool done() { return fDone; }
+    bool done() noexcept { return fDone; }
 
     /** Advances iterator to next SkIRect in SkRegion contained by clip.
      */
-    void next();
+    void next() noexcept;
 
     /** Returns SkIRect element in SkRegion, intersected with clip passed to
         SkRegion::Cliperator constructor. Does not return predictable results if SkRegion
@@ -538,7 +538,7 @@ class SK_API SkRegion {
 
         @return  part of SkRegion inside clip as SkIRect
     */
-    const SkIRect& rect() const { return fRect; }
+    const SkIRect& rect() const noexcept { return fRect; }
 
    private:
     Iterator fIter;
@@ -569,7 +569,7 @@ class SK_API SkRegion {
         @param right  pointer to span end; may be nullptr
         @return       true if interval was found
     */
-    bool next(int* left, int* right);
+    bool next(int* left, int* right) noexcept;
 
    private:
     const SkRegion::RunType* fRuns;
@@ -604,11 +604,11 @@ class SK_API SkRegion {
 
   struct RunHead;
 
-  static RunHead* emptyRunHeadPtr() { return (SkRegion::RunHead*)-1; }
+  static RunHead* emptyRunHeadPtr() noexcept { return (SkRegion::RunHead*)-1; }
   static constexpr RunHead* kRectRunHeadPtr = nullptr;
 
   // allocate space for count runs
-  void allocateRuns(int count);
+  void allocateRuns(int count) noexcept;
   void allocateRuns(int count, int ySpanCount, int intervalCount);
   void allocateRuns(const RunHead& src);
 
@@ -617,29 +617,29 @@ class SK_API SkRegion {
   SkIRect fBounds;
   RunHead* fRunHead;
 
-  void freeRuns();
+  void freeRuns() noexcept;
 
   /**
    *  Return the runs from this region, consing up fake runs if the region
    *  is empty or a rect. In those 2 cases, we use tmpStorage to hold the
    *  run data.
    */
-  const RunType* getRuns(RunType tmpStorage[], int* intervals) const;
+  const RunType* getRuns(RunType tmpStorage[], int* intervals) const noexcept;
 
   // This is called with runs[] that do not yet have their interval-count
   // field set on each scanline. That is computed as part of this call
   // (inside ComputeRunBounds).
   bool setRuns(RunType runs[], int count);
 
-  int count_runtype_values(int* itop, int* ibot) const;
+  int count_runtype_values(int* itop, int* ibot) const noexcept;
 
   bool isValid() const;
 
-  static void BuildRectRuns(const SkIRect& bounds, RunType runs[kRectRegionRuns]);
+  static void BuildRectRuns(const SkIRect& bounds, RunType runs[kRectRegionRuns]) noexcept;
 
   // If the runs define a simple rect, return true and set bounds to that
   // rect. If not, return false and ignore bounds.
-  static bool RunsAreARect(const SkRegion::RunType runs[], int count, SkIRect* bounds);
+  static bool RunsAreARect(const SkRegion::RunType runs[], int count, SkIRect* bounds) noexcept;
 
   /**
    *  If the last arg is null, just return if the result is non-empty,

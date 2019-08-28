@@ -15,11 +15,11 @@
 
 class GrProxyPendingIO : SkNoncopyable {
  public:
-  GrProxyPendingIO() = default;
-  GrProxyPendingIO(GrSurfaceProxy* resource) { this->reset(resource); }
+  constexpr GrProxyPendingIO() noexcept = default;
+  GrProxyPendingIO(GrSurfaceProxy* resource) noexcept { this->reset(resource); }
   ~GrProxyPendingIO() { this->reset(nullptr); }
 
-  void reset(GrSurfaceProxy* resource = nullptr) {
+  void reset(GrSurfaceProxy* resource = nullptr) noexcept {
     if (resource == fResource) {
       return;
     }
@@ -34,10 +34,10 @@ class GrProxyPendingIO : SkNoncopyable {
     }
   }
 
-  explicit operator bool() const { return SkToBool(fResource); }
+  explicit operator bool() const noexcept { return SkToBool(fResource); }
 
-  GrSurfaceProxy* get() const { return fResource; }
-  GrSurfaceProxy* operator->() const { return fResource; }
+  GrSurfaceProxy* get() const noexcept { return fResource; }
+  GrSurfaceProxy* operator->() const noexcept { return fResource; }
 
  private:
   bool operator==(const GrProxyPendingIO& other) const = delete;

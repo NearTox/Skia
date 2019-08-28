@@ -94,7 +94,7 @@ class GrIORef : public SkNoncopyable {
 #endif
 
  protected:
-  GrIORef() : fRefCnt(1), fPendingReads(0), fPendingWrites(0) {}
+  constexpr GrIORef() noexcept : fRefCnt(1), fPendingReads(0), fPendingWrites(0) {}
 
   enum CntType {
     kRef_CntType,
@@ -175,7 +175,7 @@ class SK_API GrGpuResource : public GrIORef<GrGpuResource> {
    * @return true if the object has been released or abandoned,
    *         false otherwise.
    */
-  bool wasDestroyed() const { return nullptr == fGpu; }
+  bool wasDestroyed() const noexcept { return nullptr == fGpu; }
 
   /**
    * Retrieves the context that owns the object. Note that it is possible for
@@ -203,17 +203,17 @@ class SK_API GrGpuResource : public GrIORef<GrGpuResource> {
 
   class UniqueID {
    public:
-    UniqueID() = default;
+    constexpr UniqueID() noexcept = default;
 
-    explicit UniqueID(uint32_t id) : fID(id) {}
+    constexpr explicit UniqueID(uint32_t id) noexcept : fID(id) {}
 
-    uint32_t asUInt() const { return fID; }
+    uint32_t asUInt() const noexcept { return fID; }
 
-    bool operator==(const UniqueID& other) const { return fID == other.fID; }
-    bool operator!=(const UniqueID& other) const { return !(*this == other); }
+    bool operator==(const UniqueID& other) const noexcept { return fID == other.fID; }
+    bool operator!=(const UniqueID& other) const noexcept { return !(*this == other); }
 
-    void makeInvalid() { fID = SK_InvalidUniqueID; }
-    bool isInvalid() const { return fID == SK_InvalidUniqueID; }
+    void makeInvalid() noexcept { fID = SK_InvalidUniqueID; }
+    bool isInvalid() const noexcept { return fID == SK_InvalidUniqueID; }
 
    protected:
     uint32_t fID = SK_InvalidUniqueID;
@@ -224,11 +224,11 @@ class SK_API GrGpuResource : public GrIORef<GrGpuResource> {
    * not change when the content of the GrGpuResource object changes. This will never return
    * 0.
    */
-  UniqueID uniqueID() const { return fUniqueID; }
+  UniqueID uniqueID() const noexcept { return fUniqueID; }
 
   /** Returns the current unique key for the resource. It will be invalid if the resource has no
       associated unique key. */
-  const GrUniqueKey& getUniqueKey() const { return fUniqueKey; }
+  const GrUniqueKey& getUniqueKey() const noexcept { return fUniqueKey; }
 
   /**
    * Internal-only helper class used for manipulations of the resource by the cache.
@@ -241,7 +241,7 @@ class SK_API GrGpuResource : public GrIORef<GrGpuResource> {
    * Internal-only helper class used for manipulations of the resource by GrSurfaceProxy.
    */
   class ProxyAccess;
-  inline ProxyAccess proxyAccess();
+  inline ProxyAccess proxyAccess() noexcept;
 
   /**
    * Internal-only helper class used for manipulations of the resource by internal code.
@@ -266,7 +266,7 @@ class SK_API GrGpuResource : public GrIORef<GrGpuResource> {
    */
   virtual const char* getResourceType() const = 0;
 
-  static uint32_t CreateUniqueID();
+  static uint32_t CreateUniqueID() noexcept;
 
  protected:
   // This must be called by every non-wrapped GrGpuObject. It should be called once the object is
@@ -281,7 +281,7 @@ class SK_API GrGpuResource : public GrIORef<GrGpuResource> {
   GrGpuResource(GrGpu*);
   virtual ~GrGpuResource();
 
-  GrGpu* getGpu() const { return fGpu; }
+  GrGpu* getGpu() const noexcept { return fGpu; }
 
   /** Overridden to free GPU resources in the backend API. */
   virtual void onRelease() {}
@@ -381,7 +381,7 @@ class SK_API GrGpuResource : public GrIORef<GrGpuResource> {
 
 class GrGpuResource::ProxyAccess {
  private:
-  ProxyAccess(GrGpuResource* resource) : fResource(resource) {}
+  constexpr ProxyAccess(GrGpuResource* resource) noexcept : fResource(resource) {}
 
   /** Proxies are allowed to take a resource from no refs to one ref. */
   void ref(GrResourceCache* cache);
@@ -397,6 +397,6 @@ class GrGpuResource::ProxyAccess {
   friend class GrIORefProxy;
 };
 
-inline GrGpuResource::ProxyAccess GrGpuResource::proxyAccess() { return ProxyAccess(this); }
+inline GrGpuResource::ProxyAccess GrGpuResource::proxyAccess() noexcept { return ProxyAccess(this); }
 
 #endif

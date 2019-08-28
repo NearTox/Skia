@@ -24,7 +24,7 @@ class SkWriteBuffer;
 class SkGradientShaderBase : public SkShaderBase {
  public:
   struct Descriptor {
-    Descriptor() {
+    Descriptor() noexcept {
       sk_bzero(this, sizeof(*this));
       fTileMode = SkTileMode::kClamp;
     }
@@ -42,14 +42,14 @@ class SkGradientShaderBase : public SkShaderBase {
 
   class DescriptorScope : public Descriptor {
    public:
-    DescriptorScope() {}
+    DescriptorScope() noexcept {}
 
     bool unflatten(SkReadBuffer&);
 
     // fColors and fPos always point into local memory, so they can be safely mutated
     //
-    SkColor4f* mutableColors() { return const_cast<SkColor4f*>(fColors); }
-    SkScalar* mutablePos() { return const_cast<SkScalar*>(fPos); }
+    SkColor4f* mutableColors() noexcept { return const_cast<SkColor4f*>(fColors); }
+    SkScalar* mutablePos() noexcept { return const_cast<SkScalar*>(fPos); }
 
    private:
     SkSTArray<16, SkColor4f, true> fColorStorage;
@@ -62,9 +62,9 @@ class SkGradientShaderBase : public SkShaderBase {
 
   bool isOpaque() const override;
 
-  uint32_t getGradFlags() const { return fGradFlags; }
+  uint32_t getGradFlags() const noexcept { return fGradFlags; }
 
-  const SkMatrix& getGradientMatrix() const { return fPtsToUnit; }
+  const SkMatrix& getGradientMatrix() const noexcept { return fPtsToUnit; }
 
  protected:
   class GradientShaderBase4fContext;
@@ -95,7 +95,7 @@ class SkGradientShaderBase : public SkShaderBase {
   uint8_t fGradFlags;
 
  public:
-  SkScalar getPos(int i) const {
+  SkScalar getPos(int i) const noexcept {
     SkASSERT(i < fColorCount);
     return fOrigPos ? fOrigPos[i] : SkIntToScalar(i) / (fColorCount - 1);
   }
@@ -118,9 +118,9 @@ class SkGradientShaderBase : public SkShaderBase {
   int fColorCount;
   sk_sp<SkColorSpace> fColorSpace;  // color space of gradient stops
 
-  bool colorsAreOpaque() const { return fColorsAreOpaque; }
+  bool colorsAreOpaque() const noexcept { return fColorsAreOpaque; }
 
-  SkTileMode getTileMode() const { return fTileMode; }
+  SkTileMode getTileMode() const noexcept { return fTileMode; }
 
  private:
   // Reserve inline space for up to 4 stops.

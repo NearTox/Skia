@@ -106,13 +106,13 @@ class SK_API SkBitmap {
 
       @return  reference to SkPixmap describing this SkBitmap
   */
-  const SkPixmap& pixmap() const { return fPixmap; }
+  const SkPixmap& pixmap() const noexcept { return fPixmap; }
 
   /** Returns width, height, SkAlphaType, SkColorType, and SkColorSpace.
 
       @return  reference to SkImageInfo
   */
-  const SkImageInfo& info() const { return fPixmap.info(); }
+  const SkImageInfo& info() const noexcept { return fPixmap.info(); }
 
   /** Returns pixel count in each row. Should be equal or less than
       rowBytes() / info().bytesPerPixel().
@@ -122,7 +122,7 @@ class SK_API SkBitmap {
 
       @return  pixel width in SkImageInfo
   */
-  int width() const { return fPixmap.width(); }
+  int width() const noexcept { return fPixmap.width(); }
 
   /** Returns pixel row count.
 
@@ -131,7 +131,7 @@ class SK_API SkBitmap {
 
       @return  pixel height in SkImageInfo
   */
-  int height() const { return fPixmap.height(); }
+  int height() const noexcept { return fPixmap.height(); }
 
   /** Returns SkColorType, one of:
       kUnknown_SkColorType, kAlpha_8_SkColorType, kRGB_565_SkColorType,
@@ -141,7 +141,7 @@ class SK_API SkBitmap {
 
       @return  SkColorType in SkImageInfo
   */
-  SkColorType colorType() const { return fPixmap.colorType(); }
+  SkColorType colorType() const noexcept { return fPixmap.colorType(); }
 
   /** Returns SkAlphaType, one of:
       kUnknown_SkAlphaType, kOpaque_SkAlphaType, kPremul_SkAlphaType,
@@ -149,7 +149,7 @@ class SK_API SkBitmap {
 
       @return  SkAlphaType in SkImageInfo
   */
-  SkAlphaType alphaType() const { return fPixmap.alphaType(); }
+  SkAlphaType alphaType() const noexcept { return fPixmap.alphaType(); }
 
   /** Returns SkColorSpace, the range of colors, associated with SkImageInfo. The
       reference count of SkColorSpace is unchanged. The returned SkColorSpace is
@@ -157,7 +157,7 @@ class SK_API SkBitmap {
 
       @return  SkColorSpace in SkImageInfo, or nullptr
   */
-  SkColorSpace* colorSpace() const { return fPixmap.colorSpace(); }
+  SkColorSpace* colorSpace() const noexcept { return fPixmap.colorSpace(); }
 
   /** Returns smart pointer to SkColorSpace, the range of colors, associated with
       SkImageInfo. The smart pointer tracks the number of objects sharing this
@@ -174,21 +174,21 @@ class SK_API SkBitmap {
 
       @return  bytes in pixel
   */
-  int bytesPerPixel() const { return fPixmap.info().bytesPerPixel(); }
+  int bytesPerPixel() const noexcept { return fPixmap.info().bytesPerPixel(); }
 
   /** Returns number of pixels that fit on row. Should be greater than or equal to
       width().
 
       @return  maximum pixels per row
   */
-  int rowBytesAsPixels() const { return fPixmap.rowBytesAsPixels(); }
+  int rowBytesAsPixels() const noexcept { return fPixmap.rowBytesAsPixels(); }
 
   /** Returns bit shift converting row bytes to row pixels.
       Returns zero for kUnknown_SkColorType.
 
       @return  one of: 0, 1, 2, 3; left shift to convert pixels to bytes
   */
-  int shiftPerPixel() const { return fPixmap.shiftPerPixel(); }
+  int shiftPerPixel() const noexcept { return fPixmap.shiftPerPixel(); }
 
   /** Returns true if either width() or height() are zero.
 
@@ -197,7 +197,7 @@ class SK_API SkBitmap {
 
       @return  true if dimensions do not enclose area
   */
-  bool empty() const { return fPixmap.info().isEmpty(); }
+  bool empty() const noexcept { return fPixmap.info().isEmpty(); }
 
   /** Returns true if SkPixelRef is nullptr.
 
@@ -206,14 +206,14 @@ class SK_API SkBitmap {
 
       @return  true if no SkPixelRef is associated
   */
-  bool isNull() const { return nullptr == fPixelRef; }
+  bool isNull() const noexcept { return nullptr == fPixelRef; }
 
   /** Returns true if width() or height() are zero, or if SkPixelRef is nullptr.
       If true, SkBitmap has no effect when drawn or drawn into.
 
       @return  true if drawing has no effect
   */
-  bool drawsNothing() const { return this->empty() || this->isNull(); }
+  bool drawsNothing() const noexcept { return this->empty() || this->isNull(); }
 
   /** Returns row bytes, the interval from one pixel row to the next. Row bytes
       is at least as large as: width() * info().bytesPerPixel().
@@ -223,7 +223,7 @@ class SK_API SkBitmap {
 
       @return  byte length of pixel row
   */
-  size_t rowBytes() const { return fPixmap.rowBytes(); }
+  size_t rowBytes() const noexcept { return fPixmap.rowBytes(); }
 
   /** Sets SkAlphaType, if alphaType is compatible with SkColorType.
       Returns true unless alphaType is kUnknown_SkAlphaType and current SkAlphaType
@@ -259,7 +259,7 @@ class SK_API SkBitmap {
 
       @return  pixel address
   */
-  void* getPixels() const { return fPixmap.writable_addr(); }
+  void* getPixels() const noexcept { return fPixmap.writable_addr(); }
 
   /** Returns minimum memory required for pixel storage.
       Does not include unused memory on last row when rowBytesAsPixels() exceeds width().
@@ -269,7 +269,7 @@ class SK_API SkBitmap {
 
       @return  size in bytes of image buffer
   */
-  size_t computeByteSize() const { return fPixmap.computeByteSize(); }
+  size_t computeByteSize() const noexcept { return fPixmap.computeByteSize(); }
 
   /** Returns true if pixels can not change.
 
@@ -296,7 +296,7 @@ class SK_API SkBitmap {
 
       @return  true if SkImageInfo SkAlphaType is kOpaque_SkAlphaType
   */
-  bool isOpaque() const { return SkAlphaTypeIsOpaque(this->alphaType()); }
+  bool isOpaque() const noexcept { return SkAlphaTypeIsOpaque(this->alphaType()); }
 
   /** Provides a hint to caller that pixels should not be cached. Only true if
       setIsVolatile() has been called to mark as volatile.
@@ -327,7 +327,7 @@ class SK_API SkBitmap {
       If SkPixelRef is allocated, its reference count is decreased by one, releasing
       its memory if SkBitmap is the sole owner.
   */
-  void reset();
+  void reset() noexcept;
 
   /** Returns true if all pixels are opaque. SkColorType determines how pixels
       are encoded, and whether pixel describes alpha. Returns true for SkColorType
@@ -352,25 +352,25 @@ class SK_API SkBitmap {
 
       @param bounds  container for floating point rectangle
   */
-  void getBounds(SkRect* bounds) const;
+  void getBounds(SkRect* bounds) const noexcept;
 
   /** Returns SkIRect { 0, 0, width(), height() }.
 
       @param bounds  container for integral rectangle
   */
-  void getBounds(SkIRect* bounds) const;
+  void getBounds(SkIRect* bounds) const noexcept;
 
   /** Returns SkIRect { 0, 0, width(), height() }.
 
       @return  integral rectangle from origin to width() and height()
   */
-  SkIRect bounds() const { return fPixmap.info().bounds(); }
+  SkIRect bounds() const noexcept { return fPixmap.info().bounds(); }
 
   /** Returns SkISize { width(), height() }.
 
       @return  integral size of width() and height()
   */
-  SkISize dimensions() const { return fPixmap.info().dimensions(); }
+  SkISize dimensions() const noexcept { return fPixmap.info().dimensions(); }
 
   /** Returns the bounds of this bitmap, offset by its SkPixelRef origin.
 
@@ -683,7 +683,7 @@ class SK_API SkBitmap {
 
       @return  SkPixelRef, or nullptr
   */
-  SkPixelRef* pixelRef() const { return fPixelRef.get(); }
+  SkPixelRef* pixelRef() const noexcept { return fPixelRef.get(); }
 
   /** Returns origin of pixels within SkPixelRef. SkBitmap bounds is always contained
       by SkPixelRef bounds, which may be the same size or larger. Multiple SkBitmap
@@ -696,7 +696,7 @@ class SK_API SkBitmap {
 
       @return  pixel origin within SkPixelRef
   */
-  SkIPoint pixelRefOrigin() const;
+  SkIPoint pixelRefOrigin() const noexcept;
 
   /** Replaces pixelRef and origin in SkBitmap.  dx and dy specify the offset
       within the SkPixelRef pixels for the top-left corner of the bitmap.
@@ -711,13 +711,13 @@ class SK_API SkBitmap {
       @param dx        column offset in SkPixelRef for bitmap origin
       @param dy        row offset in SkPixelRef for bitmap origin
   */
-  void setPixelRef(sk_sp<SkPixelRef> pixelRef, int dx, int dy);
+  void setPixelRef(sk_sp<SkPixelRef> pixelRef, int dx, int dy) noexcept;
 
   /** Returns true if SkBitmap is can be drawn.
 
       @return  true if getPixels() is not nullptr
   */
-  bool readyToDraw() const { return this->getPixels() != nullptr; }
+  bool readyToDraw() const noexcept { return this->getPixels() != nullptr; }
 
   /** Returns a unique value corresponding to the pixels in SkPixelRef.
       Returns a different value after notifyPixelsChanged() has been called.
@@ -727,7 +727,7 @@ class SK_API SkBitmap {
 
       @return  unique value for pixels in SkPixelRef
   */
-  uint32_t getGenerationID() const;
+  uint32_t getGenerationID() const noexcept;
 
   /** Marks that pixels in SkPixelRef have changed. Subsequent calls to
       getGenerationID() return a different value.

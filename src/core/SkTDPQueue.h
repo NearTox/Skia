@@ -39,7 +39,7 @@ class SkTDPQueue {
   SkTDPQueue& operator=(const SkTDPQueue&) = delete;
 
   /** Number of items in the queue. */
-  int count() const { return fArray.count(); }
+  int count() const noexcept { return fArray.count(); }
 
   /** Gets the next item in the queue without popping it. */
   const T& peek() const { return fArray[0]; }

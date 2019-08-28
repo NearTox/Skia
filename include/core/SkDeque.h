@@ -32,12 +32,12 @@ class SK_API SkDeque {
   SkDeque(size_t elemSize, void* storage, size_t storageSize, int allocCount = 1);
   ~SkDeque();
 
-  bool empty() const { return 0 == fCount; }
-  int count() const { return fCount; }
-  size_t elemSize() const { return fElemSize; }
+  bool empty() const noexcept { return 0 == fCount; }
+  int count() const noexcept { return fCount; }
+  size_t elemSize() const noexcept { return fElemSize; }
 
-  const void* front() const { return fFront; }
-  const void* back() const { return fBack; }
+  const void* front() const noexcept { return fFront; }
+  const void* back() const noexcept { return fBack; }
 
   void* front() { return (void*)((const SkDeque*)this)->front(); }
 

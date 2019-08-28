@@ -14,14 +14,14 @@
 #include "src/core/SkImagePriv.h"
 #include "src/image/SkSurface_Base.h"
 
-static SkPixelGeometry compute_default_geometry() {
+static SkPixelGeometry compute_default_geometry() noexcept {
   SkFontLCDConfig::LCDOrder order = SkFontLCDConfig::GetSubpixelOrder();
   if (SkFontLCDConfig::kNONE_LCDOrder == order) {
     return kUnknown_SkPixelGeometry;
   } else {
     // Bit0 is RGB(0), BGR(1)
     // Bit1 is H(0), V(1)
-    const SkPixelGeometry gGeo[] = {
+    constexpr SkPixelGeometry gGeo[] = {
         kRGB_H_SkPixelGeometry,
         kBGR_H_SkPixelGeometry,
         kRGB_V_SkPixelGeometry,
@@ -38,17 +38,18 @@ static SkPixelGeometry compute_default_geometry() {
   }
 }
 
-SkSurfaceProps::SkSurfaceProps() : fFlags(0), fPixelGeometry(kUnknown_SkPixelGeometry) {}
+SkSurfaceProps::SkSurfaceProps() noexcept : fFlags(0), fPixelGeometry(kUnknown_SkPixelGeometry) {}
 
-SkSurfaceProps::SkSurfaceProps(InitType) : fFlags(0), fPixelGeometry(compute_default_geometry()) {}
+SkSurfaceProps::SkSurfaceProps(InitType) noexcept
+    : fFlags(0), fPixelGeometry(compute_default_geometry()) {}
 
-SkSurfaceProps::SkSurfaceProps(uint32_t flags, InitType)
+SkSurfaceProps::SkSurfaceProps(uint32_t flags, InitType) noexcept
     : fFlags(flags), fPixelGeometry(compute_default_geometry()) {}
 
-SkSurfaceProps::SkSurfaceProps(uint32_t flags, SkPixelGeometry pg)
+SkSurfaceProps::SkSurfaceProps(uint32_t flags, SkPixelGeometry pg) noexcept
     : fFlags(flags), fPixelGeometry(pg) {}
 
-SkSurfaceProps::SkSurfaceProps(const SkSurfaceProps& other)
+SkSurfaceProps::SkSurfaceProps(const SkSurfaceProps& other) noexcept
     : fFlags(other.fFlags), fPixelGeometry(other.fPixelGeometry) {}
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -202,7 +203,7 @@ void SkSurface_Base::onAsyncRescaleAndReadPixelsYUV420(
   callback(context, nullptr, nullptr);
 }
 
-bool SkSurface_Base::outstandingImageSnapshot() const {
+bool SkSurface_Base::outstandingImageSnapshot() const noexcept {
   return fCachedImage && !fCachedImage->unique();
 }
 
@@ -235,7 +236,7 @@ void SkSurface_Base::aboutToDraw(ContentChangeMode mode) {
   }
 }
 
-uint32_t SkSurface_Base::newGenerationID() {
+uint32_t SkSurface_Base::newGenerationID() noexcept {
   SkASSERT(!fCachedCanvas || fCachedCanvas->getSurfaceBase() == this);
   static std::atomic<uint32_t> nextID{1};
   return nextID++;

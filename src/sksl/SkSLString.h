@@ -17,13 +17,14 @@ namespace SkSL {
 
 // Represents a (not necessarily null-terminated) slice of a string.
 struct StringFragment {
-  StringFragment() : fChars(""), fLength(0) {}
+  constexpr StringFragment() noexcept : fChars(""), fLength(0) {}
 
-  StringFragment(const char* chars) : fChars(chars), fLength(strlen(chars)) {}
+  StringFragment(const char* chars) noexcept : fChars(chars), fLength(strlen(chars)) {}
 
-  StringFragment(const char* chars, size_t length) : fChars(chars), fLength(length) {}
+  constexpr StringFragment(const char* chars, size_t length) noexcept
+      : fChars(chars), fLength(length) {}
 
-  char operator[](size_t idx) const { return fChars[idx]; }
+  char operator[](size_t idx) const noexcept { return fChars[idx]; }
 
   bool operator==(const char* s) const;
   bool operator!=(const char* s) const;
@@ -43,9 +44,9 @@ class SK_API String : public std::string {
  public:
   String() = default;
   String(const String&) = default;
-  String(String&&) = default;
+  String(String&&) noexcept = default;
   String& operator=(const String&) = default;
-  String& operator=(String&&) = default;
+  String& operator=(String&&) noexcept = default;
 
   String(const char* s) : INHERITED(s) {}
 

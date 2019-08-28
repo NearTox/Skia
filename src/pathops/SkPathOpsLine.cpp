@@ -6,7 +6,7 @@
  */
 #include "src/pathops/SkPathOpsLine.h"
 
-SkDPoint SkDLine::ptAtT(double t) const {
+SkDPoint SkDLine::ptAtT(double t) const noexcept {
   if (0 == t) {
     return fPts[0];
   }
@@ -18,7 +18,7 @@ SkDPoint SkDLine::ptAtT(double t) const {
   return result;
 }
 
-double SkDLine::exactPoint(const SkDPoint& xy) const {
+double SkDLine::exactPoint(const SkDPoint& xy) const noexcept {
   if (xy == fPts[0]) {  // do cheapest test first
     return 0;
   }
@@ -78,7 +78,7 @@ bool SkDLine::nearRay(const SkDPoint& xy) const {
   return RoughlyEqualUlps(largest, largest + dist);  // is the dist within ULPS tolerance?
 }
 
-double SkDLine::ExactPointH(const SkDPoint& xy, double left, double right, double y) {
+double SkDLine::ExactPointH(const SkDPoint& xy, double left, double right, double y) noexcept {
   if (xy.fY == y) {
     if (xy.fX == left) {
       return 0;
@@ -113,7 +113,7 @@ double SkDLine::NearPointH(const SkDPoint& xy, double left, double right, double
   return t;
 }
 
-double SkDLine::ExactPointV(const SkDPoint& xy, double top, double bottom, double x) {
+double SkDLine::ExactPointV(const SkDPoint& xy, double top, double bottom, double x) noexcept {
   if (xy.fX == x) {
     if (xy.fY == top) {
       return 0;

@@ -618,53 +618,53 @@ class SkNx<4, uint32_t> {
 };
 
 template <>
-AI /*static*/ Sk4i SkNx_cast<int32_t, float>(const Sk4f& src) {
+AI /*static*/ Sk4i SkNx_cast<int32_t, float>(const Sk4f& src) noexcept{
   return vcvtq_s32_f32(src.fVec);
 }
 template <>
-AI /*static*/ Sk4f SkNx_cast<float, int32_t>(const Sk4i& src) {
+AI /*static*/ Sk4f SkNx_cast<float, int32_t>(const Sk4i& src)noexcept {
   return vcvtq_f32_s32(src.fVec);
 }
 template <>
-AI /*static*/ Sk4f SkNx_cast<float, uint32_t>(const Sk4u& src) {
+AI /*static*/ Sk4f SkNx_cast<float, uint32_t>(const Sk4u& src) noexcept{
   return SkNx_cast<float>(Sk4i::Load(&src));
 }
 
 template <>
-AI /*static*/ Sk4h SkNx_cast<uint16_t, float>(const Sk4f& src) {
+AI /*static*/ Sk4h SkNx_cast<uint16_t, float>(const Sk4f& src) noexcept{
   return vqmovn_u32(vcvtq_u32_f32(src.fVec));
 }
 
 template <>
-AI /*static*/ Sk4f SkNx_cast<float, uint16_t>(const Sk4h& src) {
+AI /*static*/ Sk4f SkNx_cast<float, uint16_t>(const Sk4h& src) noexcept{
   return vcvtq_f32_u32(vmovl_u16(src.fVec));
 }
 
 template <>
-AI /*static*/ Sk4b SkNx_cast<uint8_t, float>(const Sk4f& src) {
+AI /*static*/ Sk4b SkNx_cast<uint8_t, float>(const Sk4f& src) noexcept{
   uint32x4_t _32 = vcvtq_u32_f32(src.fVec);
   uint16x4_t _16 = vqmovn_u32(_32);
   return vqmovn_u16(vcombine_u16(_16, _16));
 }
 
 template <>
-AI /*static*/ Sk4u SkNx_cast<uint32_t, uint8_t>(const Sk4b& src) {
+AI /*static*/ Sk4u SkNx_cast<uint32_t, uint8_t>(const Sk4b& src)noexcept {
   uint16x8_t _16 = vmovl_u8(src.fVec);
   return vmovl_u16(vget_low_u16(_16));
 }
 
 template <>
-AI /*static*/ Sk4i SkNx_cast<int32_t, uint8_t>(const Sk4b& src) {
+AI /*static*/ Sk4i SkNx_cast<int32_t, uint8_t>(const Sk4b& src)noexcept {
   return vreinterpretq_s32_u32(SkNx_cast<uint32_t>(src).fVec);
 }
 
 template <>
-AI /*static*/ Sk4f SkNx_cast<float, uint8_t>(const Sk4b& src) {
+AI /*static*/ Sk4f SkNx_cast<float, uint8_t>(const Sk4b& src) noexcept{
   return vcvtq_f32_s32(SkNx_cast<int32_t>(src).fVec);
 }
 
 template <>
-AI /*static*/ Sk16b SkNx_cast<uint8_t, float>(const Sk16f& src) {
+AI /*static*/ Sk16b SkNx_cast<uint8_t, float>(const Sk16f& src)noexcept {
   Sk8f ab, cd;
   SkNx_split(src, &ab, &cd);
 
@@ -678,7 +678,7 @@ AI /*static*/ Sk16b SkNx_cast<uint8_t, float>(const Sk16f& src) {
 }
 
 template <>
-AI /*static*/ Sk8b SkNx_cast<uint8_t, int32_t>(const Sk8i& src) {
+AI /*static*/ Sk8b SkNx_cast<uint8_t, int32_t>(const Sk8i& src) noexcept{
   Sk4i a, b;
   SkNx_split(src, &a, &b);
   uint16x4_t a16 = vqmovun_s32(a.fVec);
@@ -688,49 +688,49 @@ AI /*static*/ Sk8b SkNx_cast<uint8_t, int32_t>(const Sk8i& src) {
 }
 
 template <>
-AI /*static*/ Sk4h SkNx_cast<uint16_t, uint8_t>(const Sk4b& src) {
+AI /*static*/ Sk4h SkNx_cast<uint16_t, uint8_t>(const Sk4b& src)noexcept {
   return vget_low_u16(vmovl_u8(src.fVec));
 }
 
 template <>
-AI /*static*/ Sk8h SkNx_cast<uint16_t, uint8_t>(const Sk8b& src) {
+AI /*static*/ Sk8h SkNx_cast<uint16_t, uint8_t>(const Sk8b& src)noexcept {
   return vmovl_u8(src.fVec);
 }
 
 template <>
-AI /*static*/ Sk4b SkNx_cast<uint8_t, uint16_t>(const Sk4h& src) {
+AI /*static*/ Sk4b SkNx_cast<uint8_t, uint16_t>(const Sk4h& src)noexcept {
   return vmovn_u16(vcombine_u16(src.fVec, src.fVec));
 }
 
 template <>
-AI /*static*/ Sk8b SkNx_cast<uint8_t, uint16_t>(const Sk8h& src) {
+AI /*static*/ Sk8b SkNx_cast<uint8_t, uint16_t>(const Sk8h& src)noexcept{
   return vqmovn_u16(src.fVec);
 }
 
 template <>
-AI /*static*/ Sk4b SkNx_cast<uint8_t, int32_t>(const Sk4i& src) {
+AI /*static*/ Sk4b SkNx_cast<uint8_t, int32_t>(const Sk4i& src)noexcept {
   uint16x4_t _16 = vqmovun_s32(src.fVec);
   return vqmovn_u16(vcombine_u16(_16, _16));
 }
 
 template <>
-AI /*static*/ Sk4b SkNx_cast<uint8_t, uint32_t>(const Sk4u& src) {
+AI /*static*/ Sk4b SkNx_cast<uint8_t, uint32_t>(const Sk4u& src)noexcept {
   uint16x4_t _16 = vqmovn_u32(src.fVec);
   return vqmovn_u16(vcombine_u16(_16, _16));
 }
 
 template <>
-AI /*static*/ Sk4i SkNx_cast<int32_t, uint16_t>(const Sk4h& src) {
+AI /*static*/ Sk4i SkNx_cast<int32_t, uint16_t>(const Sk4h& src) noexcept{
   return vreinterpretq_s32_u32(vmovl_u16(src.fVec));
 }
 
 template <>
-AI /*static*/ Sk4h SkNx_cast<uint16_t, int32_t>(const Sk4i& src) {
+AI /*static*/ Sk4h SkNx_cast<uint16_t, int32_t>(const Sk4i& src)noexcept {
   return vmovn_u32(vreinterpretq_u32_s32(src.fVec));
 }
 
 template <>
-AI /*static*/ Sk4i SkNx_cast<int32_t, uint32_t>(const Sk4u& src) {
+AI /*static*/ Sk4i SkNx_cast<int32_t, uint32_t>(const Sk4u& src) noexcept{
   return vreinterpretq_s32_u32(src.fVec);
 }
 

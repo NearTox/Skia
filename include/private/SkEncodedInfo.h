@@ -19,7 +19,7 @@ struct SkEncodedInfo {
     static std::unique_ptr<ICCProfile> Make(sk_sp<SkData>);
     static std::unique_ptr<ICCProfile> Make(const skcms_ICCProfile&);
 
-    const skcms_ICCProfile* profile() const { return &fProfile; }
+    const skcms_ICCProfile* profile() const noexcept { return &fProfile; }
 
    private:
     ICCProfile(const skcms_ICCProfile&, sk_sp<SkData> = nullptr);
@@ -157,19 +157,19 @@ struct SkEncodedInfo {
     return SkImageInfo::Make(fWidth, fHeight, ct, alpha, std::move(cs));
   }
 
-  int width() const { return fWidth; }
-  int height() const { return fHeight; }
-  Color color() const { return fColor; }
-  Alpha alpha() const { return fAlpha; }
-  bool opaque() const { return fAlpha == kOpaque_Alpha; }
+  int width() const noexcept { return fWidth; }
+  int height() const noexcept { return fHeight; }
+  Color color() const noexcept { return fColor; }
+  Alpha alpha() const noexcept { return fAlpha; }
+  bool opaque() const noexcept { return fAlpha == kOpaque_Alpha; }
   const skcms_ICCProfile* profile() const {
     if (!fProfile) return nullptr;
     return fProfile->profile();
   }
 
-  uint8_t bitsPerComponent() const { return fBitsPerComponent; }
+  uint8_t bitsPerComponent() const noexcept { return fBitsPerComponent; }
 
-  uint8_t bitsPerPixel() const {
+  uint8_t bitsPerPixel() const noexcept {
     switch (fColor) {
       case kGray_Color: return fBitsPerComponent;
       case kXAlpha_Color:
@@ -207,7 +207,7 @@ struct SkEncodedInfo {
  private:
   SkEncodedInfo(
       int width, int height, Color color, Alpha alpha, uint8_t bitsPerComponent,
-      std::unique_ptr<ICCProfile> profile)
+      std::unique_ptr<ICCProfile> profile) noexcept
       : fWidth(width),
         fHeight(height),
         fColor(color),

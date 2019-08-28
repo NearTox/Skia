@@ -16,7 +16,7 @@
 #include "src/core/SkSafeMath.h"
 
 // Conic weights must be 0 < weight <= finite
-static bool validate_conic_weights(const SkScalar weights[], int count) {
+static bool validate_conic_weights(const SkScalar weights[], int count) noexcept {
   for (int i = 0; i < count; ++i) {
     if (weights[i] <= 0 || !SkScalarIsFinite(weights[i])) {
       return false;
@@ -48,7 +48,7 @@ SkPathRef::Editor::Editor(sk_sp<SkPathRef>* pathRef, int incReserveVerbs, int in
 // allocations to just fit the current needs. makeSpace() will only grow, but never shrinks.
 //
 void SkPath::shrinkToFit() {
-  const size_t kMinFreeSpaceForShrink = 8;  // just made up a small number
+  constexpr size_t kMinFreeSpaceForShrink = 8;  // just made up a small number
 
   if (fPathRef->fFreeSpace <= kMinFreeSpaceForShrink) {
     return;
@@ -114,7 +114,7 @@ SkPathRef* SkPathRef::CreateEmpty() {
 }
 
 static void transform_dir_and_start(
-    const SkMatrix& matrix, bool isRRect, bool* isCCW, unsigned* start) {
+    const SkMatrix& matrix, bool isRRect, bool* isCCW, unsigned* start) noexcept {
   int inStart = *start;
   int rm = 0;
   if (isRRect) {
@@ -247,7 +247,7 @@ void SkPathRef::CreateTransformedCopy(
   SkDEBUGCODE((*dst)->validate());
 }
 
-static bool validate_verb_sequence(const uint8_t verbs[], int vCount) {
+static bool validate_verb_sequence(const uint8_t verbs[], int vCount) noexcept {
   // verbs are stored backwards, but we need to visit them in logical order to determine if
   // they form a valid sequence.
 
@@ -271,7 +271,7 @@ static bool validate_verb_sequence(const uint8_t verbs[], int vCount) {
 // Given the verb array, deduce the required number of pts and conics,
 // or if an invalid verb is encountered, return false.
 static bool deduce_pts_conics(
-    const uint8_t verbs[], int vCount, int* ptCountPtr, int* conicCountPtr) {
+    const uint8_t verbs[], int vCount, int* ptCountPtr, int* conicCountPtr) noexcept {
   // When there is at least one verb, the first is required to be kMove_Verb.
   if (0 < vCount && verbs[vCount - 1] != SkPath::kMove_Verb) {
     return false;
@@ -399,7 +399,7 @@ void SkPathRef::Rewind(sk_sp<SkPathRef>* pathRef) {
   }
 }
 
-bool SkPathRef::operator==(const SkPathRef& ref) const {
+bool SkPathRef::operator==(const SkPathRef& ref) const noexcept {
   SkDEBUGCODE(this->validate());
   SkDEBUGCODE(ref.validate());
 
@@ -469,7 +469,7 @@ void SkPathRef::writeToBuffer(SkWBuffer* buffer) const {
   SkASSERT(buffer->pos() - beforePos == (size_t)this->writeSize());
 }
 
-uint32_t SkPathRef::writeSize() const {
+uint32_t SkPathRef::writeSize() const noexcept {
   return uint32_t(
       5 * sizeof(uint32_t) + fVerbCnt * sizeof(uint8_t) + fPointCnt * sizeof(SkPoint) +
       fConicWeights.bytes() + sizeof(SkRect));
@@ -497,7 +497,7 @@ void SkPathRef::copy(
   SkDEBUGCODE(this->validate());
 }
 
-unsigned SkPathRef::computeSegmentMask() const {
+unsigned SkPathRef::computeSegmentMask() const noexcept {
   const uint8_t* verbs = this->verbsMemBegin();
   unsigned mask = 0;
   for (int i = this->countVerbs() - 1; i >= 0; --i) {
@@ -512,7 +512,8 @@ unsigned SkPathRef::computeSegmentMask() const {
   return mask;
 }
 
-void SkPathRef::interpolate(const SkPathRef& ending, SkScalar weight, SkPathRef* out) const {
+void SkPathRef::interpolate(const SkPathRef& ending, SkScalar weight, SkPathRef* out) const
+    noexcept {
   const SkScalar* inValues = &ending.getPoints()->fX;
   SkScalar* outValues = &out->getPoints()->fX;
   int count = out->countPoints() * 2;
@@ -528,7 +529,7 @@ SkPoint* SkPathRef::growForRepeatedVerb(int /*SkPath::Verb*/ verb, int numVbs, S
   // This value is just made-up for now. When count is 4, calling memset was much
   // slower than just writing the loop. This seems odd, and hopefully in the
   // future this will appear to have been a fluke...
-  static const unsigned int kMIN_COUNT_FOR_MEMSET_TO_BE_FAST = 16;
+  static constexpr unsigned int kMIN_COUNT_FOR_MEMSET_TO_BE_FAST = 16;
 
   SkDEBUGCODE(this->validate());
   int pCnt;
@@ -650,9 +651,10 @@ SkPoint* SkPathRef::growForVerb(int /* SkPath::Verb*/ verb, SkScalar weight) {
   return ret;
 }
 
-uint32_t SkPathRef::genID() const {
+uint32_t SkPathRef::genID() const noexcept {
   SkASSERT(fEditorsAttached.load() == 0);
-  static const uint32_t kMask = (static_cast<int64_t>(1) << SkPathPriv::kPathRefGenIDBitCnt) - 1;
+  static constexpr uint32_t kMask =
+      (static_cast<int64_t>(1) << SkPathPriv::kPathRefGenIDBitCnt) - 1;
 
   if (fGenerationID == 0) {
     if (fPointCnt == 0 && fVerbCnt == 0) {
@@ -754,7 +756,7 @@ SkPathRef::Iter::Iter() noexcept {
 
 SkPathRef::Iter::Iter(const SkPathRef& path) { this->setPathRef(path); }
 
-void SkPathRef::Iter::setPathRef(const SkPathRef& path) {
+void SkPathRef::Iter::setPathRef(const SkPathRef& path) noexcept {
   fPts = path.points();
   fVerbs = path.verbs();
   fVerbStop = path.verbsMemBegin();
@@ -769,7 +771,7 @@ void SkPathRef::Iter::setPathRef(const SkPathRef& path) {
   }
 }
 
-uint8_t SkPathRef::Iter::next(SkPoint pts[4]) {
+uint8_t SkPathRef::Iter::next(SkPoint pts[4]) noexcept {
   SkASSERT(pts);
 
   SkDEBUGCODE(unsigned peekResult = this->peek());
@@ -817,12 +819,12 @@ uint8_t SkPathRef::Iter::next(SkPoint pts[4]) {
   return (uint8_t)verb;
 }
 
-uint8_t SkPathRef::Iter::peek() const {
+uint8_t SkPathRef::Iter::peek() const noexcept {
   const uint8_t* next = fVerbs;
   return next <= fVerbStop ? (uint8_t)SkPath::kDone_Verb : next[-1];
 }
 
-bool SkPathRef::isValid() const {
+bool SkPathRef::isValid() const noexcept {
   if (static_cast<ptrdiff_t>(fFreeSpace) < 0) {
     return false;
   }

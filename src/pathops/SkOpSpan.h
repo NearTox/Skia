@@ -37,7 +37,7 @@ class SkOpPtT {
   }
 
   bool alias() const;
-  bool coincident() const { return fCoincident; }
+  bool coincident() const noexcept { return fCoincident; }
   bool contains(const SkOpPtT*) const;
   bool contains(const SkOpSegment*, const SkPoint&) const;
   bool contains(const SkOpSegment*, double t) const;
@@ -63,9 +63,9 @@ class SkOpPtT {
   const SkOpSpanBase* debugSpan(int id) const;
   void debugValidate() const;
 
-  bool deleted() const { return fDeleted; }
+  bool deleted() const noexcept { return fDeleted; }
 
-  bool duplicate() const { return fDuplicatePt; }
+  bool duplicate() const noexcept { return fDuplicatePt; }
 
   void dump() const;  // available to testing only
   void dumpAll() const;
@@ -81,9 +81,9 @@ class SkOpPtT {
     fNext = span;
   }
 
-  const SkOpPtT* next() const { return fNext; }
+  const SkOpPtT* next() const noexcept { return fNext; }
 
-  SkOpPtT* next() { return fNext; }
+  SkOpPtT* next() noexcept { return fNext; }
 
   bool onEnd() const;
 
@@ -136,13 +136,13 @@ class SkOpPtT {
 
   void setDeleted();
 
-  void setSpan(const SkOpSpanBase* span) { fSpan = const_cast<SkOpSpanBase*>(span); }
+  void setSpan(const SkOpSpanBase* span) noexcept { fSpan = const_cast<SkOpSpanBase*>(span); }
 
-  const SkOpSpanBase* span() const { return fSpan; }
+  const SkOpSpanBase* span() const noexcept { return fSpan; }
 
-  SkOpSpanBase* span() { return fSpan; }
+  SkOpSpanBase* span() noexcept { return fSpan; }
 
-  const SkOpPtT* starter(const SkOpPtT* end) const { return fT < end->fT ? this : end; }
+  const SkOpPtT* starter(const SkOpPtT* end) const noexcept { return fT < end->fT ? this : end; }
 
   double fT;
   SkPoint fPt;  // cache of point value at this t
@@ -166,13 +166,13 @@ class SkOpSpanBase {
 
   bool addOpp(SkOpSpanBase* opp);
 
-  void bumpSpanAdds() { ++fSpanAdds; }
+  void bumpSpanAdds() noexcept { ++fSpanAdds; }
 
-  bool chased() const { return fChased; }
+  bool chased() const noexcept { return fChased; }
 
   void checkForCollapsedCoincidence();
 
-  const SkOpSpanBase* coinEnd() const { return fCoinEnd; }
+  const SkOpSpanBase* coinEnd() const noexcept { return fCoinEnd; }
 
   Collapsed collapsed(double s, double e) const;
   bool contains(const SkOpSpanBase*) const;
@@ -309,11 +309,11 @@ class SkOpSpanBase {
     return result->upCast();
   }
 
-  int step(const SkOpSpanBase* end) const { return t() < end->t() ? 1 : -1; }
+  int step(const SkOpSpanBase* end) const noexcept { return t() < end->t() ? 1 : -1; }
 
-  double t() const { return fPtT.fT; }
+  double t() const noexcept { return fPtT.fT; }
 
-  void unaligned() { fAligned = false; }
+  void unaligned() noexcept { fAligned = false; }
 
   SkOpSpan* upCast() {
     SkASSERT(!final());
@@ -348,7 +348,7 @@ class SkOpSpanBase {
 
 class SkOpSpan : public SkOpSpanBase {
  public:
-  bool alreadyAdded() const {
+  bool alreadyAdded() const noexcept {
     if (fAlreadyAdded) {
       return true;
     }
@@ -419,7 +419,7 @@ class SkOpSpan : public SkOpSpanBase {
     return fCoincident != this;
   }
 
-  void markAdded() { fAlreadyAdded = true; }
+  void markAdded() noexcept { fAlreadyAdded = true; }
 
   SkOpSpanBase* next() const {
     SkASSERT(!final());

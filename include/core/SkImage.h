@@ -548,31 +548,31 @@ class SK_API SkImage : public SkRefCnt {
 
       @return  image info of SkImage.
   */
-  const SkImageInfo& imageInfo() const { return fInfo; }
+  const SkImageInfo& imageInfo() const noexcept { return fInfo; }
 
   /** Returns pixel count in each row.
 
       @return  pixel width in SkImage
   */
-  int width() const { return fInfo.width(); }
+  int width() const noexcept { return fInfo.width(); }
 
   /** Returns pixel row count.
 
       @return  pixel height in SkImage
   */
-  int height() const { return fInfo.height(); }
+  int height() const noexcept { return fInfo.height(); }
 
   /** Returns SkISize { width(), height() }.
 
       @return  integral size of width() and height()
   */
-  SkISize dimensions() const { return SkISize::Make(fInfo.width(), fInfo.height()); }
+  SkISize dimensions() const noexcept { return SkISize::Make(fInfo.width(), fInfo.height()); }
 
   /** Returns SkIRect { 0, 0, width(), height() }.
 
       @return  integral rectangle from origin to width() and height()
   */
-  SkIRect bounds() const { return SkIRect::MakeWH(fInfo.width(), fInfo.height()); }
+  SkIRect bounds() const noexcept { return SkIRect::MakeWH(fInfo.width(), fInfo.height()); }
 
   /** Returns value unique to image. SkImage contents cannot change after SkImage is
       created. Any operation to create a new SkImage will receive generate a new
@@ -580,7 +580,7 @@ class SK_API SkImage : public SkRefCnt {
 
       @return  unique identifier
   */
-  uint32_t uniqueID() const { return fUniqueID; }
+  uint32_t uniqueID() const noexcept { return fUniqueID; }
 
   /** Returns SkAlphaType, one of:
       kUnknown_SkAlphaType, kOpaque_SkAlphaType, kPremul_SkAlphaType,

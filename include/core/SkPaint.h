@@ -151,23 +151,23 @@ class SK_API SkPaint {
   /** Returns true if pixels on the active edges of SkPath may be drawn with partial transparency.
       @return  antialiasing state
   */
-  bool isAntiAlias() const { return SkToBool(fBitfields.fAntiAlias); }
+  bool isAntiAlias() const noexcept { return SkToBool(fBitfields.fAntiAlias); }
 
   /** Requests, but does not require, that edge pixels draw opaque or with
       partial transparency.
       @param aa  setting for antialiasing
   */
-  void setAntiAlias(bool aa) { fBitfields.fAntiAlias = static_cast<unsigned>(aa); }
+  void setAntiAlias(bool aa) noexcept { fBitfields.fAntiAlias = static_cast<unsigned>(aa); }
 
   /** Returns true if color error may be distributed to smooth color transition.
       @return  dithering state
   */
-  bool isDither() const { return SkToBool(fBitfields.fDither); }
+  bool isDither() const noexcept { return SkToBool(fBitfields.fDither); }
 
   /** Requests, but does not require, to distribute color error.
       @param dither  setting for ditering
   */
-  void setDither(bool dither) { fBitfields.fDither = static_cast<unsigned>(dither); }
+  void setDither(bool dither) noexcept { fBitfields.fDither = static_cast<unsigned>(dither); }
 
   /** Returns SkFilterQuality, the image filtering level. A lower setting
       draws faster; a higher setting looks better when the image is scaled.
@@ -175,7 +175,9 @@ class SK_API SkPaint {
       @return  one of: kNone_SkFilterQuality, kLow_SkFilterQuality,
                kMedium_SkFilterQuality, kHigh_SkFilterQuality
   */
-  SkFilterQuality getFilterQuality() const { return (SkFilterQuality)fBitfields.fFilterQuality; }
+  SkFilterQuality getFilterQuality() const noexcept {
+    return (SkFilterQuality)fBitfields.fFilterQuality;
+  }
 
   /** Sets SkFilterQuality, the image filtering level. A lower setting
       draws faster; a higher setting looks better when the image is scaled.
@@ -208,7 +210,7 @@ class SK_API SkPaint {
 
       @return  one of:kFill_Style, kStroke_Style, kStrokeAndFill_Style
   */
-  Style getStyle() const { return (Style)fBitfields.fStyle; }
+  Style getStyle() const noexcept { return (Style)fBitfields.fStyle; }
 
   /** Sets whether the geometry is filled, stroked, or filled and stroked.
       Has no effect if style is not a legal SkPaint::Style value.
@@ -230,7 +232,7 @@ class SK_API SkPaint {
 
       @return  unpremultiplied RGBA
   */
-  SkColor4f getColor4f() const { return fColor4f; }
+  SkColor4f getColor4f() const noexcept { return fColor4f; }
 
   /** Sets alpha and RGB used when stroking and filling. The color is a 32-bit value,
       unpremultiplied, packing 8-bit components for alpha, red, blue, and green.
@@ -257,10 +259,10 @@ class SK_API SkPaint {
 
       @return  alpha ranging from zero, fully transparent, to 255, fully opaque
   */
-  float getAlphaf() const { return fColor4f.fA; }
+  float getAlphaf() const noexcept { return fColor4f.fA; }
 
   // Helper that scales the alpha by 255.
-  uint8_t getAlpha() const { return sk_float_round2int(this->getAlphaf() * 255); }
+  uint8_t getAlpha() const noexcept { return sk_float_round2int(this->getAlphaf() * 255); }
 
   /** Replaces alpha, leaving RGB
       unchanged. An out of range value triggers an assert in the debug
@@ -290,7 +292,7 @@ class SK_API SkPaint {
 
       @return  zero for hairline, greater than zero for pen thickness
   */
-  SkScalar getStrokeWidth() const { return fWidth; }
+  SkScalar getStrokeWidth() const noexcept { return fWidth; }
 
   /** Sets the thickness of the pen used by the paint to
       outline the shape.
@@ -304,7 +306,7 @@ class SK_API SkPaint {
 
       @return  zero and greater miter limit
   */
-  SkScalar getStrokeMiter() const { return fMiterLimit; }
+  SkScalar getStrokeMiter() const noexcept { return fMiterLimit; }
 
   /** Sets the limit at which a sharp corner is drawn beveled.
       Valid values are zero and greater.
@@ -358,7 +360,7 @@ class SK_API SkPaint {
 
       @return  one of: kButt_Cap, kRound_Cap, kSquare_Cap
   */
-  Cap getStrokeCap() const { return (Cap)fBitfields.fCapType; }
+  Cap getStrokeCap() const noexcept { return (Cap)fBitfields.fCapType; }
 
   /** Sets the geometry drawn at the beginning and end of strokes.
 
@@ -371,7 +373,7 @@ class SK_API SkPaint {
 
       @return  one of: kMiter_Join, kRound_Join, kBevel_Join
   */
-  Join getStrokeJoin() const { return (Join)fBitfields.fJoinType; }
+  Join getStrokeJoin() const noexcept { return (Join)fBitfields.fJoinType; }
 
   /** Sets the geometry drawn at the corners of strokes.
 
@@ -411,7 +413,7 @@ class SK_API SkPaint {
 
       @return  SkShader if previously set, nullptr otherwise
   */
-  SkShader* getShader() const { return fShader.get(); }
+  SkShader* getShader() const noexcept { return fShader.get(); }
 
   /** Returns optional colors used when filling a path, such as a gradient.
 
@@ -435,7 +437,7 @@ class SK_API SkPaint {
 
       @return  SkColorFilter if previously set, nullptr otherwise
   */
-  SkColorFilter* getColorFilter() const { return fColorFilter.get(); }
+  SkColorFilter* getColorFilter() const noexcept { return fColorFilter.get(); }
 
   /** Returns SkColorFilter if set, or nullptr.
       Increases SkColorFilter SkRefCnt by one.
@@ -458,27 +460,29 @@ class SK_API SkPaint {
 
       @return  mode used to combine source color with destination color
   */
-  SkBlendMode getBlendMode() const { return (SkBlendMode)fBitfields.fBlendMode; }
+  SkBlendMode getBlendMode() const noexcept { return (SkBlendMode)fBitfields.fBlendMode; }
 
   /** Returns true if SkBlendMode is SkBlendMode::kSrcOver, the default.
 
       @return  true if SkBlendMode is SkBlendMode::kSrcOver
   */
-  bool isSrcOver() const { return (SkBlendMode)fBitfields.fBlendMode == SkBlendMode::kSrcOver; }
+  bool isSrcOver() const noexcept {
+    return (SkBlendMode)fBitfields.fBlendMode == SkBlendMode::kSrcOver;
+  }
 
   /** Sets SkBlendMode to mode.
       Does not check for valid input.
 
       @param mode  SkBlendMode used to combine source color and destination
   */
-  void setBlendMode(SkBlendMode mode) { fBitfields.fBlendMode = (unsigned)mode; }
+  void setBlendMode(SkBlendMode mode) noexcept { fBitfields.fBlendMode = (unsigned)mode; }
 
   /** Returns SkPathEffect if set, or nullptr.
       Does not alter SkPathEffect SkRefCnt.
 
       @return  SkPathEffect if previously set, nullptr otherwise
   */
-  SkPathEffect* getPathEffect() const { return fPathEffect.get(); }
+  SkPathEffect* getPathEffect() const noexcept { return fPathEffect.get(); }
 
   /** Returns SkPathEffect if set, or nullptr.
       Increases SkPathEffect SkRefCnt by one.
@@ -501,7 +505,7 @@ class SK_API SkPaint {
 
       @return  SkMaskFilter if previously set, nullptr otherwise
   */
-  SkMaskFilter* getMaskFilter() const { return fMaskFilter.get(); }
+  SkMaskFilter* getMaskFilter() const noexcept { return fMaskFilter.get(); }
 
   /** Returns SkMaskFilter if set, or nullptr.
 
@@ -526,7 +530,7 @@ class SK_API SkPaint {
 
       @return  SkImageFilter if previously set, nullptr otherwise
   */
-  SkImageFilter* getImageFilter() const { return fImageFilter.get(); }
+  SkImageFilter* getImageFilter() const noexcept { return fImageFilter.get(); }
 
   /** Returns SkImageFilter if set, or nullptr.
       Increases SkImageFilter SkRefCnt by one.

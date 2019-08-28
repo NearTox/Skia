@@ -160,9 +160,9 @@ class GrRenderTargetOpList final : public GrOpList {
 
     GrOp* head() const { return fList.head(); }
 
-    GrAppliedClip* appliedClip() const { return fAppliedClip; }
-    const DstProxy& dstProxy() const { return fDstProxy; }
-    const SkRect& bounds() const { return fBounds; }
+    GrAppliedClip* appliedClip() const noexcept { return fAppliedClip; }
+    const DstProxy& dstProxy() const noexcept { return fDstProxy; }
+    const SkRect& bounds() const noexcept { return fBounds; }
 
     // Deletes all the ops in the chain via the pool.
     void deleteOps(GrOpMemoryPool* pool);

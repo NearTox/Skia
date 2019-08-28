@@ -73,7 +73,8 @@ class SkTLazy {
     return fPtr;
   }
 
-  T* set(T&& src) {
+  T* set(T&& src) noexcept {
+    static_assert(std::is_nothrow_move_constructible_v<T>);
     if (this->isValid()) {
       *fPtr = std::move(src);
     } else {
@@ -85,7 +86,7 @@ class SkTLazy {
   /**
    * Destroy the lazy object (if it was created via init() or set())
    */
-  void reset() {
+  void reset() noexcept {
     if (this->isValid()) {
       fPtr->~T();
       fPtr = nullptr;
@@ -96,7 +97,7 @@ class SkTLazy {
    *  Returns true if a valid object has been initialized in the SkTLazy,
    *  false otherwise.
    */
-  bool isValid() const { return SkToBool(fPtr); }
+  bool isValid() const noexcept { return SkToBool(fPtr); }
 
   /**
    * Returns the object. This version should only be called when the caller

@@ -103,7 +103,7 @@ void GrRecordingContext::abandonContext() {
   fTextBlobCache->freeAll();
 }
 
-GrDrawingManager* GrRecordingContext::drawingManager() { return fDrawingManager.get(); }
+GrDrawingManager* GrRecordingContext::drawingManager() noexcept { return fDrawingManager.get(); }
 
 sk_sp<GrOpMemoryPool> GrRecordingContext::refOpMemoryPool() {
   if (!fOpMemoryPool) {
@@ -311,4 +311,4 @@ sk_sp<GrRenderTargetContext> GrRecordingContextPriv::makeDeferredRenderTargetCon
       surfaceProps, budgeted, isProtected);
 }
 
-GrContext* GrRecordingContextPriv::backdoor() { return (GrContext*)fContext; }
+GrContext* GrRecordingContextPriv::backdoor() noexcept { return (GrContext*)fContext; }

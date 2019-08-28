@@ -7,7 +7,7 @@
 #include "include/core/SkUnPreMultiply.h"
 #include "include/private/SkColorData.h"
 
-SkColor SkUnPreMultiply::PMColorToColor(SkPMColor c) {
+SkColor SkUnPreMultiply::PMColorToColor(SkPMColor c) noexcept {
   const unsigned a = SkGetPackedA32(c);
   const Scale scale = GetScale(a);
   return SkColorSetARGB(

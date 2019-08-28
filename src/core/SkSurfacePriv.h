@@ -12,7 +12,7 @@
 
 struct SkImageInfo;
 
-static inline SkSurfaceProps SkSurfacePropsCopyOrDefault(const SkSurfaceProps* props) {
+static inline SkSurfaceProps SkSurfacePropsCopyOrDefault(const SkSurfaceProps* props) noexcept {
   if (props) {
     return *props;
   } else {
@@ -20,7 +20,7 @@ static inline SkSurfaceProps SkSurfacePropsCopyOrDefault(const SkSurfaceProps* p
   }
 }
 
-constexpr size_t kIgnoreRowBytesValue = static_cast<size_t>(~0);
+static constexpr size_t kIgnoreRowBytesValue = static_cast<size_t>(~0);
 
 bool SkSurfaceValidateRasterInfo(const SkImageInfo&, size_t rb = kIgnoreRowBytesValue);
 

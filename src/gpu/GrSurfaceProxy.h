@@ -31,21 +31,21 @@ class GrTextureProxy;
 // This is basically SkRefCntBase except Ganesh uses internalGetProxyRefCnt for more than asserts.
 class GrIORefProxy : public SkNoncopyable {
  public:
-  GrIORefProxy() : fRefCnt(1) {}
+  constexpr GrIORefProxy() noexcept : fRefCnt(1) {}
 
-  virtual ~GrIORefProxy() {}
+  virtual ~GrIORefProxy() = default;
 
-  bool unique() const {
+  bool unique() const noexcept {
     SkASSERT(fRefCnt > 0);
     return 1 == fRefCnt;
   }
 
-  void ref() const {
+  void ref() const noexcept {
     SkASSERT(fRefCnt > 0);
     ++fRefCnt;
   }
 
-  void unref() const {
+  void unref() const noexcept {
     SkASSERT(fRefCnt > 0);
     --fRefCnt;
     if (0 == fRefCnt) {
@@ -54,7 +54,7 @@ class GrIORefProxy : public SkNoncopyable {
   }
 
  protected:
-  int32_t internalGetProxyRefCnt() const { return fRefCnt; }
+  int32_t internalGetProxyRefCnt() const noexcept { return fRefCnt; }
 
  private:
   mutable int32_t fRefCnt;
@@ -83,17 +83,18 @@ class GrSurfaceProxy : public GrIORefProxy {
   };
 
   struct LazyInstantiationResult {
-    LazyInstantiationResult() = default;
+    constexpr LazyInstantiationResult() noexcept = default;
     LazyInstantiationResult(const LazyInstantiationResult&) = default;
-    LazyInstantiationResult(LazyInstantiationResult&& that) = default;
+    LazyInstantiationResult(LazyInstantiationResult&& that) noexcept = default;
     LazyInstantiationResult(
-        sk_sp<GrSurface> surf, LazyInstantiationKeyMode mode = LazyInstantiationKeyMode::kSynced)
+        sk_sp<GrSurface> surf,
+        LazyInstantiationKeyMode mode = LazyInstantiationKeyMode::kSynced) noexcept
         : fSurface(std::move(surf)), fKeyMode(mode) {}
-    LazyInstantiationResult(sk_sp<GrTexture> tex)
+    LazyInstantiationResult(sk_sp<GrTexture> tex) noexcept
         : LazyInstantiationResult(sk_sp<GrSurface>(std::move(tex))) {}
 
     LazyInstantiationResult& operator=(const LazyInstantiationResult&) = default;
-    LazyInstantiationResult& operator=(LazyInstantiationResult&&) = default;
+    LazyInstantiationResult& operator=(LazyInstantiationResult&&) noexcept = default;
 
     sk_sp<GrSurface> fSurface;
     LazyInstantiationKeyMode fKeyMode = LazyInstantiationKeyMode::kSynced;
@@ -128,7 +129,7 @@ class GrSurfaceProxy : public GrIORefProxy {
     }
   }
 
-  GrPixelConfig config() const { return fConfig; }
+  GrPixelConfig config() const noexcept { return fConfig; }
   int width() const {
     SkASSERT(LazyState::kFully != this->lazyInstantiationState());
     return fWidth;
@@ -162,29 +163,31 @@ class GrSurfaceProxy : public GrIORefProxy {
     return fOrigin;
   }
 
-  const GrSwizzle& textureSwizzle() const { return fTextureSwizzle; }
+  const GrSwizzle& textureSwizzle() const noexcept { return fTextureSwizzle; }
 
-  const GrBackendFormat& backendFormat() const { return fFormat; }
+  const GrBackendFormat& backendFormat() const noexcept { return fFormat; }
 
   class UniqueID {
    public:
-    static UniqueID InvalidID() { return UniqueID(uint32_t(SK_InvalidUniqueID)); }
+    static constexpr UniqueID InvalidID() noexcept {
+      return UniqueID(uint32_t(SK_InvalidUniqueID));
+    }
 
     // wrapped
-    explicit UniqueID(const GrGpuResource::UniqueID& id) : fID(id.asUInt()) {}
+    explicit UniqueID(const GrGpuResource::UniqueID& id) noexcept : fID(id.asUInt()) {}
     // deferred and lazy-callback
-    UniqueID() : fID(GrGpuResource::CreateUniqueID()) {}
+    UniqueID() noexcept : fID(GrGpuResource::CreateUniqueID()) {}
 
-    uint32_t asUInt() const { return fID; }
+    uint32_t asUInt() const noexcept { return fID; }
 
-    bool operator==(const UniqueID& other) const { return fID == other.fID; }
-    bool operator!=(const UniqueID& other) const { return !(*this == other); }
+    bool operator==(const UniqueID& other) const noexcept { return fID == other.fID; }
+    bool operator!=(const UniqueID& other) const noexcept { return !(*this == other); }
 
-    void makeInvalid() { fID = SK_InvalidUniqueID; }
-    bool isInvalid() const { return SK_InvalidUniqueID == fID; }
+    void makeInvalid() noexcept { fID = SK_InvalidUniqueID; }
+    bool isInvalid() const noexcept { return SK_InvalidUniqueID == fID; }
 
    private:
-    explicit UniqueID(uint32_t id) : fID(id) {}
+    constexpr explicit UniqueID(uint32_t id) noexcept : fID(id) {}
 
     uint32_t fID;
   };

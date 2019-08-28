@@ -437,8 +437,8 @@ class GrFragmentProcessor::TextureSampler {
     return fProxy->peekTexture();
   }
 
-  GrTextureProxy* proxy() const { return fProxy.get(); }
-  const GrSamplerState& samplerState() const { return fSamplerState; }
+  GrTextureProxy* proxy() const noexcept { return fProxy.get(); }
+  const GrSamplerState& samplerState() const noexcept { return fSamplerState; }
   const GrSwizzle& swizzle() const { return this->proxy()->textureSwizzle(); }
 
   bool isInitialized() const { return SkToBool(fProxy.get()); }

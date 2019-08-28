@@ -15,7 +15,7 @@ class SkIntersections;
 
 class SkTCurve {
  public:
-  virtual ~SkTCurve() {}
+  virtual ~SkTCurve() = default;
   virtual const SkDPoint& operator[](int n) const = 0;
   virtual SkDPoint& operator[](int n) = 0;
 
@@ -31,7 +31,7 @@ class SkTCurve {
   virtual bool hullIntersects(const SkDCubic&, bool* isLinear) const = 0;
   virtual bool hullIntersects(const SkTCurve&, bool* isLinear) const = 0;
   virtual int intersectRay(SkIntersections* i, const SkDLine& line) const = 0;
-  virtual bool IsConic() const = 0;
+  virtual bool IsConic() const noexcept = 0;
   virtual SkTCurve* make(SkArenaAlloc&) const = 0;
   virtual int maxIntersections() const = 0;
   virtual void otherPts(int oddMan, const SkDPoint* endPt[2]) const = 0;

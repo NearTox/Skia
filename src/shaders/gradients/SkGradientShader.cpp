@@ -418,7 +418,7 @@ bool SkGradientShaderBase::isOpaque() const {
   return fColorsAreOpaque && (this->getTileMode() != SkTileMode::kDecal);
 }
 
-static unsigned rounded_divide(unsigned numer, unsigned denom) {
+static constexpr unsigned rounded_divide(unsigned numer, unsigned denom) {
   return (numer + (denom >> 1)) / denom;
 }
 
@@ -618,7 +618,7 @@ struct ColorStopOptimizer {
 
 struct ColorConverter {
   ColorConverter(const SkColor* colors, int count) {
-    const float ONE_OVER_255 = 1.f / 255;
+    constexpr float ONE_OVER_255 = 1.f / 255;
     for (int i = 0; i < count; ++i) {
       fColors4f.push_back(
           {SkColorGetR(colors[i]) * ONE_OVER_255, SkColorGetG(colors[i]) * ONE_OVER_255,

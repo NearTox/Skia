@@ -127,7 +127,7 @@ class SK_API SkRefCnt : public SkRefCntBase {
 /** Call obj->ref() and return obj. The obj must not be nullptr.
  */
 template <typename T>
-static inline T* SkRef(T* obj) {
+static inline T* SkRef(T* obj) noexcept {
   SkASSERT(obj);
   obj->ref();
   return obj;
@@ -136,7 +136,7 @@ static inline T* SkRef(T* obj) {
 /** Check if the argument is non-null, and if so, call obj->ref() and return obj.
  */
 template <typename T>
-static inline T* SkSafeRef(T* obj) {
+static inline T* SkSafeRef(T* obj) noexcept {
   if (obj) {
     obj->ref();
   }
@@ -282,7 +282,7 @@ class sk_sp {
     return *this;
   }
 
-  T& operator*() const {
+  T& operator*() const noexcept {
     SkASSERT(this->get() != nullptr);
     return *this->get();
   }
@@ -331,7 +331,7 @@ inline void swap(sk_sp<T>& a, sk_sp<T>& b) noexcept {
 }
 
 template <typename T, typename U>
-inline bool operator==(const sk_sp<T>& a, const sk_sp<U>& b) {
+inline bool operator==(const sk_sp<T>& a, const sk_sp<U>& b) noexcept {
   return a.get() == b.get();
 }
 template <typename T>
@@ -339,20 +339,20 @@ inline bool operator==(const sk_sp<T>& a, std::nullptr_t) /*noexcept*/ {
   return !a;
 }
 template <typename T>
-inline bool operator==(std::nullptr_t, const sk_sp<T>& b) /*noexcept*/ {
+inline bool operator==(std::nullptr_t, const sk_sp<T>& b) noexcept {
   return !b;
 }
 
 template <typename T, typename U>
-inline bool operator!=(const sk_sp<T>& a, const sk_sp<U>& b) {
+inline bool operator!=(const sk_sp<T>& a, const sk_sp<U>& b) noexcept {
   return a.get() != b.get();
 }
 template <typename T>
-inline bool operator!=(const sk_sp<T>& a, std::nullptr_t) /*noexcept*/ {
+inline bool operator!=(const sk_sp<T>& a, std::nullptr_t) noexcept {
   return static_cast<bool>(a);
 }
 template <typename T>
-inline bool operator!=(std::nullptr_t, const sk_sp<T>& b) /*noexcept*/ {
+inline bool operator!=(std::nullptr_t, const sk_sp<T>& b) noexcept {
   return static_cast<bool>(b);
 }
 
@@ -428,12 +428,12 @@ sk_sp<T> sk_make_sp(Args&&... args) {
  *  effectively "adopting" it.
  */
 template <typename T>
-sk_sp<T> sk_ref_sp(T* obj) {
+sk_sp<T> sk_ref_sp(T* obj) noexcept {
   return sk_sp<T>(SkSafeRef(obj));
 }
 
 template <typename T>
-sk_sp<T> sk_ref_sp(const T* obj) {
+sk_sp<T> sk_ref_sp(const T* obj) noexcept {
   return sk_sp<T>(const_cast<T*>(SkSafeRef(obj)));
 }
 
