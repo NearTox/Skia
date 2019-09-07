@@ -520,7 +520,6 @@ GrReducedClip::ClipResult GrReducedClip::clipInsideElement(const Element* elemen
   }
 
   SK_ABORT("Unexpected DeviceSpaceType");
-  return ClipResult::kNotClipped;
 }
 
 GrReducedClip::ClipResult GrReducedClip::clipOutsideElement(const Element* element) {
@@ -587,7 +586,6 @@ GrReducedClip::ClipResult GrReducedClip::clipOutsideElement(const Element* eleme
   }
 
   SK_ABORT("Unexpected DeviceSpaceType");
-  return ClipResult::kNotClipped;
 }
 
 inline void GrReducedClip::addWindowRectangle(const SkRect& elementInteriorRect, bool elementIsAA) {
@@ -653,7 +651,7 @@ GrReducedClip::ClipResult GrReducedClip::addAnalyticFP(
 
   if (fCCPRClipPaths.count() < fMaxCCPRClipPaths && GrAA::kYes == aa) {
     // Set aside CCPR paths for later. We will create their clip FPs once we know the ID of the
-    // opList they will operate in.
+    // opsTask they will operate in.
     SkPath& ccprClipPath = fCCPRClipPaths.push_back(deviceSpacePath);
     if (Invert::kYes == invert) {
       ccprClipPath.toggleInverseFillType();
@@ -944,7 +942,7 @@ bool GrReducedClip::drawStencilClipMask(
 }
 
 std::unique_ptr<GrFragmentProcessor> GrReducedClip::finishAndDetachAnalyticFPs(
-    GrCoverageCountingPathRenderer* ccpr, uint32_t opListID) {
+    GrCoverageCountingPathRenderer* ccpr, uint32_t opsTaskID) {
   // Make sure finishAndDetachAnalyticFPs hasn't been called already.
   SkDEBUGCODE(for (const auto& fp
                    : fAnalyticFPs) { SkASSERT(fp); })
@@ -954,7 +952,7 @@ std::unique_ptr<GrFragmentProcessor> GrReducedClip::finishAndDetachAnalyticFPs(
     for (const SkPath& ccprClipPath : fCCPRClipPaths) {
       SkASSERT(ccpr);
       SkASSERT(fHasScissor);
-      auto fp = ccpr->makeClipProcessor(opListID, ccprClipPath, fScissor, *fCaps);
+      auto fp = ccpr->makeClipProcessor(opsTaskID, ccprClipPath, fScissor, *fCaps);
       fAnalyticFPs.push_back(std::move(fp));
     }
     fCCPRClipPaths.reset();

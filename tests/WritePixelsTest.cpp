@@ -477,6 +477,7 @@ static sk_sp<SkImage> upload(const sk_sp<SkSurface>& surf, SkColor color) {
 DEF_GPUTEST_FOR_RENDERING_CONTEXTS(WritePixelsPendingIO, reporter, ctxInfo) {
   GrContext* context = ctxInfo.grContext();
   GrProxyProvider* proxyProvider = context->priv().proxyProvider();
+  const GrCaps* caps = context->priv().caps();
 
   static const int kFullSize = 62;
   static const int kHalfSize = 31;
@@ -499,11 +500,11 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(WritePixelsPendingIO, reporter, ctxInfo) {
     desc.fConfig = kRGBA_8888_GrPixelConfig;
 
     const GrBackendFormat format =
-        context->priv().caps()->getBackendFormatFromColorType(GrColorType::kRGBA_8888);
+        caps->getDefaultBackendFormat(GrColorType::kRGBA_8888, GrRenderable::kNo);
 
     sk_sp<GrTextureProxy> temp = proxyProvider->createProxy(
-        format, desc, GrRenderable::kNo, 1, kTopLeft_GrSurfaceOrigin, SkBackingFit::kApprox,
-        SkBudgeted::kYes, GrProtected::kNo);
+        format, desc, GrRenderable::kNo, 1, kTopLeft_GrSurfaceOrigin, GrMipMapped::kNo,
+        SkBackingFit::kApprox, SkBudgeted::kYes, GrProtected::kNo);
     temp->instantiate(context->priv().resourceProvider());
   }
 

@@ -190,6 +190,11 @@ class GrGLSLShaderBuilder {
     fCodeIndex++;
   }
 
+  void deleteStage() {
+    fShaderStrings.pop_back();
+    fCodeIndex--;
+  }
+
   SkString& extensions() { return fShaderStrings[kExtensions]; }
   SkString& definitions() { return fShaderStrings[kDefinitions]; }
   SkString& precisionQualifier() { return fShaderStrings[kPrecisionQualifier]; }
@@ -235,6 +240,7 @@ class GrGLSLShaderBuilder {
   friend class GrCCCoverageProcessor;  // to access code().
   friend class GrGLSLProgramBuilder;
   friend class GrGLProgramBuilder;
+  friend class GrDawnProgramBuilder;
   friend class GrGLSLVaryingHandler;    // to access noperspective interpolation feature.
   friend class GrGLPathProgramBuilder;  // to access fInputs.
   friend class GrVkPipelineStateBuilder;

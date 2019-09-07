@@ -23,12 +23,11 @@ class GrPipeline;
 
 class GrVkBufferImpl;
 class GrVkCommandPool;
-class GrVkGpuRTCommandBuffer;
-class GrVkGpuTextureCommandBuffer;
 class GrVkMemoryAllocator;
 class GrVkPipeline;
 class GrVkPipelineState;
 class GrVkPrimaryCommandBuffer;
+class GrVkOpsRenderPass;
 class GrVkRenderPass;
 class GrVkSecondaryCommandBuffer;
 class GrVkTexture;
@@ -95,12 +94,10 @@ class GrVkGpu : public GrGpu {
   GrStencilAttachment* createStencilAttachmentForRenderTarget(
       const GrRenderTarget*, int width, int height, int numStencilSamples) override;
 
-  GrGpuRTCommandBuffer* getCommandBuffer(
-      GrRenderTarget*, GrSurfaceOrigin, const SkRect&,
-      const GrGpuRTCommandBuffer::LoadAndStoreInfo&,
-      const GrGpuRTCommandBuffer::StencilLoadAndStoreInfo&) override;
-
-  GrGpuTextureCommandBuffer* getCommandBuffer(GrTexture*, GrSurfaceOrigin) override;
+  GrOpsRenderPass* getOpsRenderPass(
+      GrRenderTarget*, GrSurfaceOrigin, const SkRect&, const GrOpsRenderPass::LoadAndStoreInfo&,
+      const GrOpsRenderPass::StencilLoadAndStoreInfo&,
+      const SkTArray<GrTextureProxy*, true>& sampledProxies) override;
 
   void addBufferMemoryBarrier(
       const GrVkResource*, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask,
@@ -125,10 +122,10 @@ class GrVkGpu : public GrGpu {
   }
 
   void submitSecondaryCommandBuffer(
-      const SkTArray<GrVkSecondaryCommandBuffer*>&, const GrVkRenderPass*,
+      std::unique_ptr<GrVkSecondaryCommandBuffer>, const GrVkRenderPass*,
       const VkClearValue* colorClear, GrVkRenderTarget*, GrSurfaceOrigin, const SkIRect& bounds);
 
-  void submit(GrGpuCommandBuffer*) override;
+  void submit(GrOpsRenderPass*) override;
 
   GrFence SK_WARN_UNUSED_RESULT insertFence() override;
   bool waitFence(GrFence, uint64_t timeout) override;
@@ -178,10 +175,11 @@ class GrVkGpu : public GrGpu {
   void destroyResources();
 
   sk_sp<GrTexture> onCreateTexture(
-      const GrSurfaceDesc&, GrRenderable, int renderTargetSampleCnt, SkBudgeted, GrProtected,
-      const GrMipLevel[], int mipLevelCount) override;
+      const GrSurfaceDesc&, const GrBackendFormat& format, GrRenderable, int renderTargetSampleCnt,
+      SkBudgeted, GrProtected, const GrMipLevel[], int mipLevelCount) override;
   sk_sp<GrTexture> onCreateCompressedTexture(
-      int width, int height, SkImage::CompressionType, SkBudgeted, const void* data) override;
+      int width, int height, const GrBackendFormat&, SkImage::CompressionType, SkBudgeted,
+      const void* data) override;
 
   sk_sp<GrTexture> onWrapBackendTexture(
       const GrBackendTexture&, GrColorType, GrWrapOwnership, GrWrapCacheable, GrIOType) override;
@@ -201,23 +199,24 @@ class GrVkGpu : public GrGpu {
       size_t size, GrGpuBufferType type, GrAccessPattern, const void* data) override;
 
   bool onReadPixels(
-      GrSurface* surface, int left, int top, int width, int height, GrColorType, void* buffer,
-      size_t rowBytes) override;
+      GrSurface* surface, int left, int top, int width, int height, GrColorType surfaceColorType,
+      GrColorType dstColorType, void* buffer, size_t rowBytes) override;
 
   bool onWritePixels(
-      GrSurface* surface, int left, int top, int width, int height, GrColorType,
-      const GrMipLevel texels[], int mipLevelCount) override;
+      GrSurface* surface, int left, int top, int width, int height, GrColorType surfaceColorType,
+      GrColorType srcColorType, const GrMipLevel texels[], int mipLevelCount,
+      bool prepForTexSampling) override;
 
   bool onTransferPixelsTo(
-      GrTexture*, int left, int top, int width, int height, GrColorType,
-      GrGpuBuffer* transferBuffer, size_t offset, size_t rowBytes) override;
+      GrTexture*, int left, int top, int width, int height, GrColorType textureColorType,
+      GrColorType bufferColorType, GrGpuBuffer* transferBuffer, size_t offset,
+      size_t rowBytes) override;
   bool onTransferPixelsFrom(
-      GrSurface* surface, int left, int top, int width, int height, GrColorType,
-      GrGpuBuffer* transferBuffer, size_t offset) override;
+      GrSurface* surface, int left, int top, int width, int height, GrColorType surfaceColorType,
+      GrColorType bufferColorType, GrGpuBuffer* transferBuffer, size_t offset) override;
 
   bool onCopySurface(
-      GrSurface* dst, GrSurface* src, const SkIRect& srcRect, const SkIPoint& dstPoint,
-      bool canDiscardOutsideDstRect) override;
+      GrSurface* dst, GrSurface* src, const SkIRect& srcRect, const SkIPoint& dstPoint) override;
 
   void onFinishFlush(
       GrSurfaceProxy*[], int, SkSurface::BackendSurfaceAccess access, const GrFlushInfo&,
@@ -300,8 +299,7 @@ class GrVkGpu : public GrGpu {
 
   GrProtected fProtectedContext;
 
-  std::unique_ptr<GrVkGpuRTCommandBuffer> fCachedRTCommandBuffer;
-  std::unique_ptr<GrVkGpuTextureCommandBuffer> fCachedTexCommandBuffer;
+  std::unique_ptr<GrVkOpsRenderPass> fCachedOpsRenderPass;
 
   typedef GrGpu INHERITED;
 };

@@ -81,7 +81,7 @@ class SkTDynamicHash {
     int fCurrentIndex;
   };
 
-  int count() const noexcept { return fCount; }
+  int count() const { return fCount; }
 
   // Return the entry with this key if we have it, otherwise nullptr.
   T* find(const Key& key) const {
@@ -272,7 +272,7 @@ class SkTDynamicHash {
   }
 
   // fCapacity is always a power of 2, so this masks the correct low bits to index into our hash.
-  uint32_t hashMask() const noexcept { return fCapacity - 1; }
+  uint32_t hashMask() const { return fCapacity - 1; }
 
   int firstIndex(const Key& key) const { return Hash(key) & this->hashMask(); }
 

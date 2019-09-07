@@ -41,8 +41,6 @@
 
 #include <string.h>
 
-#ifdef SK_SUPPORT_LEGACY_DRAWLOOPER
-
 namespace skiagm {
 
 constexpr int kWidth = 1250;
@@ -262,5 +260,3 @@ class TextBlobLooperGM : public GM {
 
 DEF_GM(return new TextBlobLooperGM;)
 }  // namespace skiagm
-
-#endif

@@ -14,13 +14,13 @@
 #include "include/core/SkImageInfo.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkVertices.h"
-#include "include/gpu/GrBlend.h"
-#include "include/gpu/GrSamplerState.h"
 #include "include/gpu/GrTypes.h"
 #include "include/private/SkColorData.h"
 #include "src/core/SkBlendModePriv.h"
+#include "src/gpu/GrBlend.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrColor.h"
+#include "src/gpu/GrSamplerState.h"
 
 class GrCaps;
 class GrColorSpaceInfo;
@@ -128,8 +128,8 @@ GrPixelConfig SkImageInfo2GrPixelConfig(const SkImageInfo& info);
 bool GrPixelConfigToColorType(GrPixelConfig, SkColorType*);
 
 GrSamplerState::Filter GrSkFilterQualityToGrFilterMode(
-    SkFilterQuality paintFilterQuality, const SkMatrix& viewM, const SkMatrix& localM,
-    bool sharpenMipmappedTextures, bool* doBicubic);
+    int imageWidth, int imageHeight, SkFilterQuality paintFilterQuality, const SkMatrix& viewM,
+    const SkMatrix& localM, bool sharpenMipmappedTextures, bool* doBicubic);
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -140,7 +140,6 @@ static inline GrPrimitiveType SkVertexModeToGrPrimitiveType(SkVertices::VertexMo
     case SkVertices::kTriangleFan_VertexMode: break;
   }
   SK_ABORT("Invalid mode");
-  return GrPrimitiveType::kPoints;
 }
 
 //////////////////////////////////////////////////////////////////////////////

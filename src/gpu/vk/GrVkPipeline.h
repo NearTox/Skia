@@ -31,6 +31,7 @@ class GrVkPipeline : public GrVkResource {
       VkPipelineLayout layout, VkPipelineCache cache);
 
   VkPipeline pipeline() const { return fPipeline; }
+  VkPipelineLayout layout() const { return fPipelineLayout; }
 
   static void SetDynamicScissorRectState(
       GrVkGpu*, GrVkCommandBuffer*, const GrRenderTarget*, GrSurfaceOrigin, SkIRect);
@@ -45,9 +46,11 @@ class GrVkPipeline : public GrVkResource {
 #endif
 
  protected:
-  GrVkPipeline(VkPipeline pipeline) : INHERITED(), fPipeline(pipeline) {}
+  GrVkPipeline(VkPipeline pipeline, VkPipelineLayout layout)
+      : INHERITED(), fPipeline(pipeline), fPipelineLayout(layout) {}
 
   VkPipeline fPipeline;
+  VkPipelineLayout fPipelineLayout;
 
  private:
   void freeGPUData(GrVkGpu* gpu) const override;

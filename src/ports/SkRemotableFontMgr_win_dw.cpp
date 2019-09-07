@@ -20,6 +20,7 @@
 #  include "src/utils/win/SkDWrite.h"
 #  include "src/utils/win/SkDWriteFontFileStream.h"
 #  include "src/utils/win/SkHRESULT.h"
+#  include "src/utils/win/SkObjBase.h"
 #  include "src/utils/win/SkTScopedComPtr.h"
 
 #  include <dwrite.h>
@@ -224,7 +225,7 @@ class SK_API SkRemotableFontMgr_DirectWrite : public SkRemotableFontMgr {
     virtual ~FontFallbackRenderer() {}
 
     // IDWriteTextRenderer methods
-    virtual HRESULT STDMETHODCALLTYPE DrawGlyphRun(
+    SK_STDMETHODIMP DrawGlyphRun(
         void* clientDrawingContext, FLOAT baselineOriginX, FLOAT baselineOriginY,
         DWRITE_MEASURING_MODE measuringMode, DWRITE_GLYPH_RUN const* glyphRun,
         DWRITE_GLYPH_RUN_DESCRIPTION const* glyphRunDescription,
@@ -246,48 +247,46 @@ class SK_API SkRemotableFontMgr_DirectWrite : public SkRemotableFontMgr {
       return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE DrawUnderline(
+    SK_STDMETHODIMP DrawUnderline(
         void* clientDrawingContext, FLOAT baselineOriginX, FLOAT baselineOriginY,
         DWRITE_UNDERLINE const* underline, IUnknown* clientDrawingEffect) override {
       return E_NOTIMPL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE DrawStrikethrough(
+    SK_STDMETHODIMP DrawStrikethrough(
         void* clientDrawingContext, FLOAT baselineOriginX, FLOAT baselineOriginY,
         DWRITE_STRIKETHROUGH const* strikethrough, IUnknown* clientDrawingEffect) override {
       return E_NOTIMPL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE DrawInlineObject(
+    SK_STDMETHODIMP DrawInlineObject(
         void* clientDrawingContext, FLOAT originX, FLOAT originY, IDWriteInlineObject* inlineObject,
         BOOL isSideways, BOOL isRightToLeft, IUnknown* clientDrawingEffect) override {
       return E_NOTIMPL;
     }
 
     // IDWritePixelSnapping methods
-    virtual HRESULT STDMETHODCALLTYPE
-    IsPixelSnappingDisabled(void* clientDrawingContext, BOOL* isDisabled) override {
+    SK_STDMETHODIMP IsPixelSnappingDisabled(void* clientDrawingContext, BOOL* isDisabled) override {
       *isDisabled = FALSE;
       return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE
-    GetCurrentTransform(void* clientDrawingContext, DWRITE_MATRIX* transform) override {
+    SK_STDMETHODIMP GetCurrentTransform(
+        void* clientDrawingContext, DWRITE_MATRIX* transform) override {
       const DWRITE_MATRIX ident = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
       *transform = ident;
       return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE
-    GetPixelsPerDip(void* clientDrawingContext, FLOAT* pixelsPerDip) override {
+    SK_STDMETHODIMP GetPixelsPerDip(void* clientDrawingContext, FLOAT* pixelsPerDip) override {
       *pixelsPerDip = 1.0f;
       return S_OK;
     }
 
     // IUnknown methods
-    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&fRefCount); }
+    SK_STDMETHODIMP_(ULONG) AddRef() override { return InterlockedIncrement(&fRefCount); }
 
-    ULONG STDMETHODCALLTYPE Release() override {
+    SK_STDMETHODIMP_(ULONG) Release() override {
       ULONG newCount = InterlockedDecrement(&fRefCount);
       if (0 == newCount) {
         delete this;
@@ -295,7 +294,7 @@ class SK_API SkRemotableFontMgr_DirectWrite : public SkRemotableFontMgr {
       return newCount;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE QueryInterface(IID const& riid, void** ppvObject) override {
+    SK_STDMETHODIMP QueryInterface(IID const& riid, void** ppvObject) override {
       if (__uuidof(IUnknown) == riid || __uuidof(IDWritePixelSnapping) == riid ||
           __uuidof(IDWriteTextRenderer) == riid) {
         *ppvObject = this;

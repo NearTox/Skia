@@ -80,9 +80,9 @@ void test_copy_from_surface(
       context, proxy, GrMipMapped::kNo, SkBackingFit::kExact, SkBudgeted::kYes);
   SkASSERT(dstProxy);
 
-  sk_sp<GrSurfaceContext> dstContext = context->priv().makeWrappedSurfaceContext(
+  auto dstContext = context->priv().makeWrappedSurfaceContext(
       std::move(dstProxy), colorType, kPremul_SkAlphaType);
-  SkASSERT(dstContext.get());
+  SkASSERT(dstContext);
 
   test_read_pixels(reporter, dstContext.get(), expectedPixelValues, testName);
 }

@@ -8,6 +8,7 @@
 #ifndef SkSVGDevice_DEFINED
 #define SkSVGDevice_DEFINED
 
+#include "include/private/SkTArray.h"
 #include "include/private/SkTemplates.h"
 #include "src/core/SkClipStackDevice.h"
 
@@ -49,6 +50,8 @@ class SkSVGDevice final : public SkClipStackDevice {
   struct MxCp;
   void drawBitmapCommon(const MxCp&, const SkBitmap& bm, const SkPaint& paint);
 
+  void syncClipStack(const SkClipStack&);
+
   class AutoElement;
   class ResourceBucket;
 
@@ -56,7 +59,13 @@ class SkSVGDevice final : public SkClipStackDevice {
   const std::unique_ptr<ResourceBucket> fResourceBucket;
   const uint32_t fFlags;
 
+  struct ClipRec {
+    std::unique_ptr<AutoElement> fClipPathElem;
+    uint32_t fGenID;
+  };
+
   std::unique_ptr<AutoElement> fRootElement;
+  SkTArray<ClipRec> fClipStack;
 
   typedef SkClipStackDevice INHERITED;
 };

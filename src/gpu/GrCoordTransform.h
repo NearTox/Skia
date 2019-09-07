@@ -20,7 +20,8 @@ class GrTexture;
  */
 class GrCoordTransform {
  public:
-  GrCoordTransform() : fProxy(nullptr), fNormalize(false), fReverseY(false) {
+  GrCoordTransform()
+      : fProxy(nullptr), fNormalize(false), fReverseY(false), fComputeInVertexShader(true) {
     SkDEBUGCODE(fInProcessor = false);
   }
 
@@ -96,6 +97,12 @@ class GrCoordTransform {
   // successfully instantiated
   GrTexture* peekTexture() const { return fProxy->peekTexture(); }
 
+  bool computeInVertexShader() const { return fComputeInVertexShader; }
+
+  void setComputeInVertexShader(bool computeInVertexShader) {
+    fComputeInVertexShader = computeInVertexShader;
+  }
+
  private:
   void reset(const SkMatrix& m, GrTextureProxy* proxy = nullptr) {
     SkASSERT(!fInProcessor);
@@ -104,6 +111,7 @@ class GrCoordTransform {
     fProxy = proxy;
     fNormalize = proxy && proxy->textureType() != GrTextureType::kRectangle;
     fReverseY = proxy && kBottomLeft_GrSurfaceOrigin == proxy->origin();
+    fComputeInVertexShader = true;
   }
 
   // The textures' effect is to optionally normalize the final matrix, so a blind
@@ -115,6 +123,7 @@ class GrCoordTransform {
   const GrTextureProxy* fProxy;
   bool fNormalize;
   bool fReverseY;
+  bool fComputeInVertexShader;
 
 #ifdef SK_DEBUG
  public:

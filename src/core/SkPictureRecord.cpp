@@ -29,10 +29,11 @@ enum {
 // A lot of basic types get stored as a uint32_t: bools, ints, paint indices, etc.
 static int const kUInt32Size = 4;
 
+SkPictureRecord::SkPictureRecord(const SkIRect& dimensions, uint32_t flags)
+    : INHERITED(dimensions), fRecordFlags(flags), fInitialSaveCount(kNoInitialSave) {}
+
 SkPictureRecord::SkPictureRecord(const SkISize& dimensions, uint32_t flags)
-    : INHERITED(dimensions.width(), dimensions.height()),
-      fRecordFlags(flags),
-      fInitialSaveCount(kNoInitialSave) {}
+    : SkPictureRecord(SkIRect::MakeSize(dimensions), flags) {}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -731,14 +732,15 @@ void SkPictureRecord::onDrawAnnotation(const SkRect& rect, const char key[], SkD
 }
 
 void SkPictureRecord::onDrawEdgeAAQuad(
-    const SkRect& rect, const SkPoint clip[4], SkCanvas::QuadAAFlags aa, SkColor color,
+    const SkRect& rect, const SkPoint clip[4], SkCanvas::QuadAAFlags aa, const SkColor4f& color,
     SkBlendMode mode) {
   // op + rect + aa flags + color + mode + hasClip(as int) + clipCount*points
-  size_t size = 5 * kUInt32Size + sizeof(rect) + (clip ? 4 : 0) * sizeof(SkPoint);
+  size_t size =
+      4 * kUInt32Size + sizeof(SkColor4f) + sizeof(rect) + (clip ? 4 : 0) * sizeof(SkPoint);
   size_t initialOffset = this->addDraw(DRAW_EDGEAA_QUAD, &size);
   this->addRect(rect);
   this->addInt((int)aa);
-  this->addInt((int)color);
+  fWriter.write(&color, sizeof(SkColor4f));
   this->addInt((int)mode);
   this->addInt(clip != nullptr);
   if (clip) {

@@ -10,7 +10,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkPoint::scale(SkScalar scale, SkPoint* dst) const noexcept {
+void SkPoint::scale(SkScalar scale, SkPoint* dst) const {
   SkASSERT(dst);
   dst->set(fX * scale, fY * scale);
 }
@@ -66,7 +66,7 @@ SkScalar SkPoint::Normalize(SkPoint* pt) {
   return 0;
 }
 
-SkScalar SkPoint::Length(SkScalar dx, SkScalar dy) noexcept {
+SkScalar SkPoint::Length(SkScalar dx, SkScalar dy) {
   float mag2 = dx * dx + dy * dy;
   if (SkScalarIsFinite(mag2)) {
     return sk_float_sqrt(mag2);
@@ -88,7 +88,7 @@ bool SkPointPriv::SetLengthFast(SkPoint* pt, float length) {
 ///////////////////////////////////////////////////////////////////////////////
 
 SkScalar SkPointPriv::DistanceToLineBetweenSqd(
-    const SkPoint& pt, const SkPoint& a, const SkPoint& b, Side* side) noexcept {
+    const SkPoint& pt, const SkPoint& a, const SkPoint& b, Side* side) {
   SkVector u = b - a;
   SkVector v = pt - a;
 
@@ -109,7 +109,7 @@ SkScalar SkPointPriv::DistanceToLineBetweenSqd(
 }
 
 SkScalar SkPointPriv::DistanceToLineSegmentBetweenSqd(
-    const SkPoint& pt, const SkPoint& a, const SkPoint& b) noexcept {
+    const SkPoint& pt, const SkPoint& a, const SkPoint& b) {
   // See comments to distanceToLineBetweenSqd. If the projection of c onto
   // u is between a and b then this returns the same result as that
   // function. Otherwise, it returns the distance to the closer of a and

@@ -25,7 +25,6 @@
     <ClCompile Include="angle2\src\compiler\translator\FlagStd140Structs.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\FunctionLookup.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\HashNames.cpp" />
-    <ClCompile Include="angle2\src\compiler\translator\ImmutableString.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\ImmutableStringBuilder.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\InfoSink.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\Initialize.cpp" />
@@ -382,5 +381,20 @@
     <ClCompile Include="angle2\src\libGLESv2\proc_table_egl_autogen.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\ExternalImageSiblingImpl11.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\MappedSubresourceVerifier11.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\tree_ops\NameNamelessUniformBuffers.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteCubeMapSamplersAs2DArray.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteStructSamplersOld.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteRowMajorMatrices.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\ImmutableString_autogen.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\BuiltinsWorkaroundGLSL.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\entry_points_enum_autogen.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\format_map_desktop.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\Overlay.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\Overlay_autogen.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\Overlay_font_autogen.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\OverlayWidgets.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\renderer\gl\MemoryObjectGL.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\renderer\gl\SemaphoreGL.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\FrameCapture.cpp" />
   </ItemGroup>
 </Project>

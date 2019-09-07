@@ -14,16 +14,14 @@
 #include "src/gpu/GrAppliedClip.h"
 #include "src/gpu/GrBufferAllocPool.h"
 #include "src/gpu/GrDeferredUpload.h"
-#include "src/gpu/GrDeinstantiateProxyTracker.h"
 #include "src/gpu/GrRenderTargetProxy.h"
 #include "src/gpu/ops/GrMeshDrawOp.h"
 
 class GrGpu;
-class GrGpuCommandBuffer;
-class GrGpuRTCommandBuffer;
+class GrOpsRenderPass;
 class GrResourceProvider;
 
-/** Tracks the state across all the GrOps (really just the GrDrawOps) in a GrOpList flush. */
+/** Tracks the state across all the GrOps (really just the GrDrawOps) in a GrOpsTask flush. */
 class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp::Target {
  public:
   // vertexSpace and indexSpace may either be null or an alloation of size
@@ -39,7 +37,11 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
       executed. */
   void preExecuteDraws();
 
-  void doUpload(GrDeferredTextureUploadFn&);
+  /** Called to upload data to a texture using the GrDeferredTextureUploadFn. If the uploaded
+      surface needs to be prepared for being sampled in a draw after the upload, the caller
+      should pass in true for shouldPrepareSurfaceForSampling. This feature is needed for Vulkan
+      when doing inline uploads to reset the image layout back to sampled. */
+  void doUpload(GrDeferredTextureUploadFn&, bool shouldPrepareSurfaceForSampling = false);
 
   /** Called as ops are executed. Must be called in the same order as the ops were prepared. */
   void executeDrawsAndUploadsForMeshDrawOp(
@@ -47,10 +49,8 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
       GrPipeline::InputFlags = GrPipeline::InputFlags::kNone,
       const GrUserStencilSettings* = &GrUserStencilSettings::kUnused);
 
-  GrGpuCommandBuffer* commandBuffer() { return fCommandBuffer; }
-  // Helper function used by Ops that are only called via RenderTargetOpLists
-  GrGpuRTCommandBuffer* rtCommandBuffer();
-  void setCommandBuffer(GrGpuCommandBuffer* buffer) { fCommandBuffer = buffer; }
+  GrOpsRenderPass* opsRenderPass() { return fOpsRenderPass; }
+  void setOpsRenderPass(GrOpsRenderPass* renderPass) { fOpsRenderPass = renderPass; }
 
   GrGpu* gpu() { return fGpu; }
 
@@ -76,6 +76,12 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
     SkASSERT(fOpArgs->fOp);
     return *fOpArgs;
   }
+
+  void setSampledProxyArray(SkTArray<GrTextureProxy*, true>* sampledProxies) {
+    fSampledProxies = sampledProxies;
+  }
+
+  SkTArray<GrTextureProxy*, true>* sampledProxyArray() override { return fSampledProxies; }
 
   /** Overrides of GrDeferredUploadTarget. */
 
@@ -112,12 +118,10 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
   // permissible).
   GrAtlasManager* atlasManager() const final;
 
-  GrDeinstantiateProxyTracker* deinstantiateProxyTracker() { return &fDeinstantiateProxyTracker; }
-
- private:
   /** GrMeshDrawOp::Target override. */
   SkArenaAlloc* allocator() override { return &fArena; }
 
+ private:
   struct InlineUpload {
     InlineUpload(GrDeferredTextureUploadFn&& upload, GrDeferredUploadToken token)
         : fUpload(std::move(upload)), fUploadBeforeToken(token) {}
@@ -159,17 +163,18 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
   // an op is not currently preparing of executing.
   OpArgs* fOpArgs = nullptr;
 
+  // This field is only transiently set during flush. Each GrOpsTask will set it to point to an
+  // array of proxies it uses before call onPrepare and onExecute.
+  SkTArray<GrTextureProxy*, true>* fSampledProxies;
+
   GrGpu* fGpu;
   GrResourceProvider* fResourceProvider;
   GrTokenTracker* fTokenTracker;
-  GrGpuCommandBuffer* fCommandBuffer = nullptr;
+  GrOpsRenderPass* fOpsRenderPass = nullptr;
 
   // Variables that are used to track where we are in lists as ops are executed
   SkArenaAllocList<Draw>::Iter fCurrDraw;
   SkArenaAllocList<InlineUpload>::Iter fCurrUpload;
-
-  // Used to track the proxies that need to be deinstantiated after we finish a flush
-  GrDeinstantiateProxyTracker fDeinstantiateProxyTracker;
 };
 
 #endif

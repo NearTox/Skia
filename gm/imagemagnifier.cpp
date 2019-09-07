@@ -19,8 +19,7 @@
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkScalar.h"
 #include "include/core/SkTypeface.h"
-#include "include/effects/SkImageSource.h"
-#include "include/effects/SkMagnifierImageFilter.h"
+#include "include/effects/SkImageFilters.h"
 #include "include/utils/SkRandom.h"
 #include "tools/ToolUtils.h"
 
@@ -31,7 +30,7 @@
 
 DEF_SIMPLE_GM_BG(imagemagnifier, canvas, WIDTH, HEIGHT, SK_ColorBLACK) {
   SkPaint filterPaint;
-  filterPaint.setImageFilter(SkMagnifierImageFilter::Make(
+  filterPaint.setImageFilter(SkImageFilters::Magnifier(
       SkRect::MakeXYWH(
           SkIntToScalar(100), SkIntToScalar(100), SkIntToScalar(WIDTH / 2),
           SkIntToScalar(HEIGHT / 2)),
@@ -79,7 +78,7 @@ static sk_sp<SkImage> make_img() {
 DEF_SIMPLE_GM_BG(imagemagnifier_cropped, canvas, WIDTH_HEIGHT, WIDTH_HEIGHT, SK_ColorBLACK) {
   sk_sp<SkImage> image(make_img());
 
-  sk_sp<SkImageFilter> imageSource(SkImageSource::Make(std::move(image)));
+  sk_sp<SkImageFilter> imageSource(SkImageFilters::Image(std::move(image)));
 
   SkRect srcRect =
       SkRect::MakeWH(SkIntToScalar(WIDTH_HEIGHT - 32), SkIntToScalar(WIDTH_HEIGHT - 32));
@@ -88,12 +87,11 @@ DEF_SIMPLE_GM_BG(imagemagnifier_cropped, canvas, WIDTH_HEIGHT, WIDTH_HEIGHT, SK_
   constexpr SkScalar kInset = 64.0f;
 
   // Crop out a 16 pixel ring around the result
-  const SkRect rect = SkRect::MakeXYWH(16, 16, WIDTH_HEIGHT - 32, WIDTH_HEIGHT - 32);
-  SkImageFilter::CropRect cropRect(rect);
+  const SkIRect cropRect = SkIRect::MakeXYWH(16, 16, WIDTH_HEIGHT - 32, WIDTH_HEIGHT - 32);
 
   SkPaint filterPaint;
   filterPaint.setImageFilter(
-      SkMagnifierImageFilter::Make(srcRect, kInset, std::move(imageSource), &cropRect));
+      SkImageFilters::Magnifier(srcRect, kInset, std::move(imageSource), &cropRect));
 
   canvas->saveLayer(nullptr, &filterPaint);
   canvas->restore();

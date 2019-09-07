@@ -29,7 +29,9 @@ enum class RectHeightStyle {
   // The line spacing will be added to the top of the rect.
   kIncludeLineSpacingTop,
   // The line spacing will be added to the bottom of the rect.
-  kIncludeLineSpacingBottom
+  kIncludeLineSpacingBottom,
+  //
+  kStrut
 };
 
 enum class RectWidthStyle {
@@ -90,6 +92,10 @@ struct SkRange {
   }
 
   bool contains(SkRange<size_t> other) const { return start <= other.start && end >= other.end; }
+
+  bool intersects(SkRange<size_t> other) const {
+    return SkTMax(start, other.start) <= SkTMin(end, other.end);
+  }
 
   bool empty() const { return start == EMPTY_INDEX && end == EMPTY_INDEX; }
 };

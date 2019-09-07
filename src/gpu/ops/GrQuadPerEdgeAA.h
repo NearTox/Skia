@@ -10,10 +10,10 @@
 
 #include "include/core/SkPoint.h"
 #include "include/core/SkPoint3.h"
-#include "include/gpu/GrSamplerState.h"
 #include "include/private/GrTypesPriv.h"
 #include "src/gpu/GrColor.h"
 #include "src/gpu/GrGeometryProcessor.h"
+#include "src/gpu/GrSamplerState.h"
 #include "src/gpu/geometry/GrQuad.h"
 #include "src/gpu/ops/GrMeshDrawOp.h"
 
@@ -85,8 +85,8 @@ sk_sp<GrGeometryProcessor> MakeProcessor(const VertexSpec& spec);
 
 sk_sp<GrGeometryProcessor> MakeTexturedProcessor(
     const VertexSpec& spec, const GrShaderCaps& caps, GrTextureType textureType,
-    GrPixelConfig textureConfig, const GrSamplerState& samplerState, const GrSwizzle& swizzle,
-    uint32_t extraSamplerKey, sk_sp<GrColorSpaceXform> textureColorSpaceXform);
+    const GrSamplerState& samplerState, const GrSwizzle& swizzle, uint32_t extraSamplerKey,
+    sk_sp<GrColorSpaceXform> textureColorSpaceXform);
 
 // Fill vertices with the vertex data needed to represent the given quad. The device position,
 // local coords, vertex color, domain, and edge coefficients will be written and/or computed

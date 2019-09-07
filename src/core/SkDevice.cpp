@@ -52,7 +52,7 @@ void SkBaseDevice::setGlobalCTM(const SkMatrix& ctm) {
 }
 
 bool SkBaseDevice::clipIsWideOpen() const {
-  if (kRect_ClipType == this->onGetClipType()) {
+  if (ClipType::kRect == this->onGetClipType()) {
     SkRegion rgn;
     this->onAsRgnClip(&rgn);
     SkASSERT(rgn.isRect());
@@ -62,19 +62,14 @@ bool SkBaseDevice::clipIsWideOpen() const {
   }
 }
 
-SkPixelGeometry SkBaseDevice::CreateInfo::AdjustGeometry(
-    const SkImageInfo& info, TileUsage tileUsage, SkPixelGeometry geo, bool preserveLCDText) {
+SkPixelGeometry SkBaseDevice::CreateInfo::AdjustGeometry(TileUsage tileUsage, SkPixelGeometry geo) {
   switch (tileUsage) {
     case kPossible_TileUsage:
       // (we think) for compatibility with old clients, we assume this layer can support LCD
       // even though they may not have marked it as opaque... seems like we should update
       // our callers (reed/robertphilips).
       break;
-    case kNever_TileUsage:
-      if (!preserveLCDText) {
-        geo = kUnknown_SkPixelGeometry;
-      }
-      break;
+    case kNever_TileUsage: geo = kUnknown_SkPixelGeometry; break;
   }
   return geo;
 }
@@ -244,10 +239,10 @@ void SkBaseDevice::drawAtlas(
 }
 
 void SkBaseDevice::drawEdgeAAQuad(
-    const SkRect& r, const SkPoint clip[4], SkCanvas::QuadAAFlags aa, SkColor color,
+    const SkRect& r, const SkPoint clip[4], SkCanvas::QuadAAFlags aa, const SkColor4f& color,
     SkBlendMode mode) {
   SkPaint paint;
-  paint.setColor(color);
+  paint.setColor4f(color);
   paint.setBlendMode(mode);
   paint.setAntiAlias(aa == SkCanvas::kAll_QuadAAFlags);
 
@@ -318,7 +313,10 @@ void SkBaseDevice::drawSpecial(
     SkSpecialImage*, int x, int y, const SkPaint&, SkImage*, const SkMatrix&) {}
 sk_sp<SkSpecialImage> SkBaseDevice::makeSpecial(const SkBitmap&) { return nullptr; }
 sk_sp<SkSpecialImage> SkBaseDevice::makeSpecial(const SkImage*) { return nullptr; }
-sk_sp<SkSpecialImage> SkBaseDevice::snapSpecial() { return nullptr; }
+sk_sp<SkSpecialImage> SkBaseDevice::snapSpecial(const SkIRect&, bool) { return nullptr; }
+sk_sp<SkSpecialImage> SkBaseDevice::snapSpecial() {
+  return this->snapSpecial(SkIRect::MakeWH(this->width(), this->height()));
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -403,8 +401,6 @@ void SkBaseDevice::drawGlyphRunRSXform(
 sk_sp<SkSurface> SkBaseDevice::makeSurface(SkImageInfo const&, SkSurfaceProps const&) {
   return nullptr;
 }
-
-sk_sp<SkSpecialImage> SkBaseDevice::snapBackImage(const SkIRect&) { return nullptr; }
 
 //////////////////////////////////////////////////////////////////////////////////////////
 

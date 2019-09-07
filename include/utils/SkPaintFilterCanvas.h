@@ -92,7 +92,7 @@ class SK_API SkPaintFilterCanvas : public SkCanvasVirtualEnforcer<SkNWayCanvas> 
   void onDrawShadowRec(const SkPath& path, const SkDrawShadowRec& rec) override;
 
   void onDrawEdgeAAQuad(
-      const SkRect&, const SkPoint[4], QuadAAFlags, SkColor, SkBlendMode) override;
+      const SkRect&, const SkPoint[4], QuadAAFlags, const SkColor4f&, SkBlendMode) override;
   void onDrawEdgeAAImageSet(
       const ImageSetEntry[], int count, const SkPoint[], const SkMatrix[], const SkPaint*,
       SrcRectConstraint) override;

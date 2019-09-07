@@ -28,9 +28,9 @@ class AAClipBench : public Benchmark {
   AAClipBench(bool doPath, bool doAA) : fDoPath(doPath), fDoAA(doAA) {
     fName.printf("aaclip_%s_%s", doPath ? "path" : "rect", doAA ? "AA" : "BW");
 
-    fClipRect.set(10.5f, 10.5f, 50.5f, 50.5f);
+    fClipRect.setLTRB(10.5f, 10.5f, 50.5f, 50.5f);
     fClipPath.addRoundRect(fClipRect, SkIntToScalar(10), SkIntToScalar(10));
-    fDrawRect.set(SkIntToScalar(0), SkIntToScalar(0), SkIntToScalar(100), SkIntToScalar(100));
+    fDrawRect.setWH(100, 100);
 
     SkASSERT(fClipPath.isConvex());
   }
@@ -168,7 +168,7 @@ class AAClipBuilderBench : public Benchmark {
 
     fName.printf("aaclip_build_%s_%s", doPath ? "path" : "rect", doAA ? "AA" : "BW");
 
-    fRegion.setRect(0, 0, 640, 480);
+    fRegion.setRect({0, 0, 640, 480});
     fRect.set(fRegion.getBounds());
     fRect.inset(SK_Scalar1 / 4, SK_Scalar1 / 4);
     fPath.addRoundRect(fRect, SkIntToScalar(20), SkIntToScalar(20));

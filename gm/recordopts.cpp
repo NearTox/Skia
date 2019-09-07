@@ -18,8 +18,7 @@
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkScalar.h"
 #include "include/core/SkTypes.h"
-#include "include/effects/SkColorFilterImageFilter.h"
-#include "include/effects/SkPictureImageFilter.h"
+#include "include/effects/SkImageFilters.h"
 #include "include/effects/SkTableColorFilter.h"
 #include "include/gpu/GrContext.h"
 
@@ -58,7 +57,7 @@ static void install_detector_color_filter(SkPaint* drawPaint) {
 // This detector detects that image filter phase of the pixel pipeline receives the correct value.
 static void install_detector_image_filter(SkPaint* drawPaint) {
   drawPaint->setImageFilter(
-      SkColorFilterImageFilter::Make(make_detector_color_filter(), drawPaint->refImageFilter()));
+      SkImageFilters::ColorFilter(make_detector_color_filter(), drawPaint->refImageFilter()));
 }
 
 static void no_detector_install(SkPaint*) {}
@@ -129,7 +128,7 @@ static void draw_svg_opacity_and_filter_layer_sequence(
   canvas->save();
   canvas->clipRect(targetRect);
   SkPaint drawPaint;
-  drawPaint.setImageFilter(SkPictureImageFilter::Make(shape));
+  drawPaint.setImageFilter(SkImageFilters::Picture(shape));
   installDetector(&drawPaint);
   canvas->saveLayer(&targetRect, &drawPaint);
   canvas->restore();

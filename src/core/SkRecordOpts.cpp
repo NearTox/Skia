@@ -88,15 +88,9 @@ static bool fold_opacity_layer_color_to_paint(
   // true, we assume paint is too.
 
   // The alpha folding can proceed if the filter layer paint does not have properties which cause
-  // the resulting filter layer to be "blended" in complex ways to the parent layer. For example,
-  // looper drawing unmodulated filter layer twice and then modulating the result produces
-  // different image to drawing modulated filter layer twice.
-  // TODO: most likely the looper and only some xfer modes are the hard constraints
-  if (!paint->isSrcOver()
-#ifdef SK_SUPPORT_LEGACY_DRAWLOOPER
-      || paint->getLooper()
-#endif
-  ) {
+  // the resulting filter layer to be "blended" in complex ways to the parent layer.
+  // TODO: most likely only some xfer modes are the hard constraints
+  if (!paint->isSrcOver()) {
     return false;
   }
 
@@ -129,9 +123,6 @@ static bool fold_opacity_layer_color_to_paint(
     // The layer paint can not have any effects.
     if (layerPaint->getPathEffect() || layerPaint->getShader() || !layerPaint->isSrcOver() ||
         layerPaint->getMaskFilter() || layerPaint->getColorFilter() ||
-#ifdef SK_SUPPORT_LEGACY_DRAWLOOPER
-        layerPaint->getLooper() ||
-#endif
         layerPaint->getImageFilter()) {
       return false;
     }

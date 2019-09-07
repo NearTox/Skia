@@ -36,7 +36,7 @@ void Value::init_tagged(Tag t) {
 void Value::init_tagged_pointer(Tag t, void* p) {
   *this->cast<uintptr_t>() = reinterpret_cast<uintptr_t>(p);
 
-  if constexpr (sizeof(Value) == sizeof(uintptr_t)) {
+  if (sizeof(Value) == sizeof(uintptr_t)) {
     // For 64-bit, we rely on the pointer upper bits being unused/zero.
     SkASSERT(!(fData8[kTagOffset] & kTagMask));
     fData8[kTagOffset] |= SkTo<uint8_t>(t);

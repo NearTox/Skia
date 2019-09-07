@@ -231,8 +231,7 @@ GrDistanceFieldA8TextGeoProc::GrDistanceFieldA8TextGeoProc(
   for (int i = 0; i < numProxies; ++i) {
     SkASSERT(proxies[i]);
     SkASSERT(proxies[i]->isize() == fAtlasSize);
-    fTextureSamplers[i].reset(
-        proxies[i]->textureType(), proxies[i]->config(), params, proxies[i]->textureSwizzle());
+    fTextureSamplers[i].reset(proxies[i]->textureType(), params, proxies[i]->textureSwizzle());
   }
   this->setTextureSamplerCnt(numProxies);
 }
@@ -249,8 +248,7 @@ void GrDistanceFieldA8TextGeoProc::addNewProxies(
     SkASSERT(proxies[i]);
     SkASSERT(proxies[i]->isize() == fAtlasSize);
     if (!fTextureSamplers[i].isInitialized()) {
-      fTextureSamplers[i].reset(
-          proxies[i]->textureType(), proxies[i]->config(), params, proxies[i]->textureSwizzle());
+      fTextureSamplers[i].reset(proxies[i]->textureType(), params, proxies[i]->textureSwizzle());
     }
   }
   this->setTextureSamplerCnt(numProxies);
@@ -501,8 +499,7 @@ GrDistanceFieldPathGeoProc::GrDistanceFieldPathGeoProc(
   for (int i = 0; i < numProxies; ++i) {
     SkASSERT(proxies[i]);
     SkASSERT(proxies[i]->isize() == fAtlasSize);
-    fTextureSamplers[i].reset(
-        proxies[i]->textureType(), proxies[i]->config(), params, proxies[i]->textureSwizzle());
+    fTextureSamplers[i].reset(proxies[i]->textureType(), params, proxies[i]->textureSwizzle());
   }
   this->setTextureSamplerCnt(numProxies);
 }
@@ -520,8 +517,7 @@ void GrDistanceFieldPathGeoProc::addNewProxies(
     SkASSERT(proxies[i]->isize() == fAtlasSize);
 
     if (!fTextureSamplers[i].isInitialized()) {
-      fTextureSamplers[i].reset(
-          proxies[i]->textureType(), proxies[i]->config(), params, proxies[i]->textureSwizzle());
+      fTextureSamplers[i].reset(proxies[i]->textureType(), params, proxies[i]->textureSwizzle());
     }
   }
   this->setTextureSamplerCnt(numProxies);
@@ -806,8 +802,7 @@ GrDistanceFieldLCDTextGeoProc::GrDistanceFieldLCDTextGeoProc(
   for (int i = 0; i < numProxies; ++i) {
     SkASSERT(proxies[i]);
     SkASSERT(proxies[i]->isize() == fAtlasSize);
-    fTextureSamplers[i].reset(
-        proxies[i]->textureType(), proxies[i]->config(), params, proxies[i]->textureSwizzle());
+    fTextureSamplers[i].reset(proxies[i]->textureType(), params, proxies[i]->textureSwizzle());
   }
   this->setTextureSamplerCnt(numProxies);
 }
@@ -825,8 +820,7 @@ void GrDistanceFieldLCDTextGeoProc::addNewProxies(
     SkASSERT(proxies[i]->isize() == fAtlasSize);
 
     if (!fTextureSamplers[i].isInitialized()) {
-      fTextureSamplers[i].reset(
-          proxies[i]->textureType(), proxies[i]->config(), params, proxies[i]->textureSwizzle());
+      fTextureSamplers[i].reset(proxies[i]->textureType(), params, proxies[i]->textureSwizzle());
     }
   }
   this->setTextureSamplerCnt(numProxies);

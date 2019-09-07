@@ -111,9 +111,9 @@ class SkStrike final : public SkStrikeInterface {
   SkSpan<const SkGlyph*> prepareImages(
       SkSpan<const SkPackedGlyphID> glyphIDs, const SkGlyph* results[]);
 
-  SkSpan<const SkGlyphPos> prepareForDrawing(
+  SkSpan<const SkGlyphPos> prepareForDrawingRemoveEmpty(
       const SkPackedGlyphID packedGlyphIDs[], const SkPoint positions[], size_t n, int maxDimension,
-      PreparationDetail detail, SkGlyphPos results[]) override;
+      SkGlyphPos results[]) override;
 
   void onAboutToExitScope() override;
 
@@ -128,12 +128,12 @@ class SkStrike final : public SkStrikeInterface {
   void forceValidate() const;
   void validate() const;
 #else
-  void validate() const noexcept {}
+  void validate() const {}
 #endif
 
   class AutoValidate : SkNoncopyable {
    public:
-    AutoValidate(const SkStrike* cache) noexcept : fCache(cache) {
+    AutoValidate(const SkStrike* cache) : fCache(cache) {
       if (fCache) {
         fCache->validate();
       }
@@ -143,7 +143,7 @@ class SkStrike final : public SkStrikeInterface {
         fCache->validate();
       }
     }
-    void forget() noexcept { fCache = nullptr; }
+    void forget() { fCache = nullptr; }
 
    private:
     const SkStrike* fCache;

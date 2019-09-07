@@ -21,9 +21,8 @@ class GrStencilPathOp final : public GrOp {
   DEFINE_OP_CLASS_ID
 
   static std::unique_ptr<GrOp> Make(
-      GrRecordingContext* context, const SkMatrix& viewMatrix, bool useHWAA,
-      GrPathRendering::FillType fillType, bool hasStencilClip, const GrScissorState& scissor,
-      const GrPath* path);
+      GrRecordingContext* context, const SkMatrix& viewMatrix, bool useHWAA, bool hasStencilClip,
+      const GrScissorState& scissor, sk_sp<const GrPath> path);
 
   const char* name() const override { return "StencilPathOp"; }
 
@@ -40,16 +39,15 @@ class GrStencilPathOp final : public GrOp {
   friend class GrOpMemoryPool;  // for ctor
 
   GrStencilPathOp(
-      const SkMatrix& viewMatrix, bool useHWAA, GrPathRendering::FillType fillType,
-      bool hasStencilClip, const GrScissorState& scissor, const GrPath* path)
+      const SkMatrix& viewMatrix, bool useHWAA, bool hasStencilClip, const GrScissorState& scissor,
+      sk_sp<const GrPath> path)
       : INHERITED(ClassID()),
         fViewMatrix(viewMatrix),
         fUseHWAA(useHWAA),
-        fFillType(fillType),
         fHasStencilClip(hasStencilClip),
         fScissor(scissor),
-        fPath(path) {
-    this->setBounds(path->getBounds(), HasAABloat::kNo, IsZeroArea::kNo);
+        fPath(std::move(path)) {
+    this->setBounds(fPath->getBounds(), HasAABloat::kNo, IsZeroArea::kNo);
   }
 
   void onPrepare(GrOpFlushState*) override {}
@@ -58,10 +56,9 @@ class GrStencilPathOp final : public GrOp {
 
   SkMatrix fViewMatrix;
   bool fUseHWAA;
-  GrPathRendering::FillType fFillType;
   bool fHasStencilClip;
   GrScissorState fScissor;
-  GrPendingIOResource<const GrPath, kRead_GrIOType> fPath;
+  sk_sp<const GrPath> fPath;
 
   typedef GrOp INHERITED;
 };

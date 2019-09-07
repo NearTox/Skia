@@ -7,9 +7,9 @@
 
 #include "bench/GMBench.h"
 
-GMBench::GMBench(skiagm::GM* gm) : fGM(gm) { fName.printf("GM_%s", gm->getName()); }
-
-GMBench::~GMBench() { delete fGM; }
+GMBench::GMBench(std::unique_ptr<skiagm::GM> gm) : fGM(std::move(gm)) {
+  fName.printf("GM_%s", fGM->getName());
+}
 
 const char* GMBench::onGetName() { return fName.c_str(); }
 

@@ -60,7 +60,11 @@ class SkXMLWriter {
 
 class SkXMLStreamWriter : public SkXMLWriter {
  public:
-  SkXMLStreamWriter(SkWStream*);
+  enum : uint32_t {
+    kNoPretty_Flag = 0x01,
+  };
+
+  SkXMLStreamWriter(SkWStream*, uint32_t flags = 0);
   ~SkXMLStreamWriter() override;
   void writeHeader() override;
 
@@ -71,7 +75,11 @@ class SkXMLStreamWriter : public SkXMLWriter {
   void onAddText(const char text[], size_t length) override;
 
  private:
+  void newline();
+  void tab(int lvl);
+
   SkWStream& fStream;
+  const uint32_t fFlags;
 };
 
 class SkXMLParserWriter : public SkXMLWriter {

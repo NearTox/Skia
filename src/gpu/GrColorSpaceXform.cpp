@@ -67,7 +67,7 @@ class GrGLColorSpaceXformEffect : public GrGLSLFragmentProcessor {
 
     if (this->numChildProcessors()) {
       SkString childColor("src_color");
-      this->emitChild(0, &childColor, args);
+      this->invokeChild(0, &childColor, args);
 
       SkString xformedColor;
       fragBuilder->appendColorGamutXform(&xformedColor, childColor.c_str(), &fColorSpaceHelper);

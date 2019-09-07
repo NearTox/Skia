@@ -862,65 +862,65 @@ bool SkTSect::extractCoincident(SkTSect* sect2, SkTSpan* first, SkTSpan* last, S
     oppEndT = oppMatched ? oppLast->fEndT : oppLast->fStartT;
   }
 #endif
-  if (!oppMatched) {
-    using std::swap;
-    swap(oppFirst, oppLast);
-    swap(oppStartT, oppEndT);
-  }
-  SkOPASSERT(oppStartT < oppEndT);
-  SkASSERT(coinStart == first->fStartT);
-  SkASSERT(coinEnd == last->fEndT);
-  if (!oppFirst) {
-    *result = nullptr;
-    return true;
-  }
-  SkOPASSERT(oppStartT == oppFirst->fStartT);
-  if (!oppLast) {
-    *result = nullptr;
-    return true;
-  }
-  SkOPASSERT(oppEndT == oppLast->fEndT);
-  // reduce coincident runs to single entries
-  this->validate();
-  sect2->validate();
-  bool deleteEmptySpans = this->updateBounded(first, last, oppFirst);
-  deleteEmptySpans |= sect2->updateBounded(oppFirst, oppLast, first);
-  this->removeSpanRange(first, last);
-  sect2->removeSpanRange(oppFirst, oppLast);
-  first->fEndT = last->fEndT;
-  first->resetBounds(this->fCurve);
-  first->fCoinStart.setPerp(fCurve, first->fStartT, first->pointFirst(), sect2->fCurve);
-  first->fCoinEnd.setPerp(fCurve, first->fEndT, first->pointLast(), sect2->fCurve);
-  oppStartT = first->fCoinStart.perpT();
-  oppEndT = first->fCoinEnd.perpT();
-  if (between(0, oppStartT, 1) && between(0, oppEndT, 1)) {
     if (!oppMatched) {
       using std::swap;
+      swap(oppFirst, oppLast);
       swap(oppStartT, oppEndT);
     }
-    oppFirst->fStartT = oppStartT;
-    oppFirst->fEndT = oppEndT;
-    oppFirst->resetBounds(sect2->fCurve);
-  }
-  this->validateBounded();
-  sect2->validateBounded();
-  last = first->fNext;
-  if (!this->removeCoincident(first, false)) {
-    return false;
-  }
-  if (!sect2->removeCoincident(oppFirst, true)) {
-    return false;
-  }
-  if (deleteEmptySpans) {
-    if (!this->deleteEmptySpans() || !sect2->deleteEmptySpans()) {
+    SkOPASSERT(oppStartT < oppEndT);
+    SkASSERT(coinStart == first->fStartT);
+    SkASSERT(coinEnd == last->fEndT);
+    if (!oppFirst) {
       *result = nullptr;
+      return true;
+    }
+    SkOPASSERT(oppStartT == oppFirst->fStartT);
+    if (!oppLast) {
+      *result = nullptr;
+      return true;
+    }
+    SkOPASSERT(oppEndT == oppLast->fEndT);
+    // reduce coincident runs to single entries
+    this->validate();
+    sect2->validate();
+    bool deleteEmptySpans = this->updateBounded(first, last, oppFirst);
+    deleteEmptySpans |= sect2->updateBounded(oppFirst, oppLast, first);
+    this->removeSpanRange(first, last);
+    sect2->removeSpanRange(oppFirst, oppLast);
+    first->fEndT = last->fEndT;
+    first->resetBounds(this->fCurve);
+    first->fCoinStart.setPerp(fCurve, first->fStartT, first->pointFirst(), sect2->fCurve);
+    first->fCoinEnd.setPerp(fCurve, first->fEndT, first->pointLast(), sect2->fCurve);
+    oppStartT = first->fCoinStart.perpT();
+    oppEndT = first->fCoinEnd.perpT();
+    if (between(0, oppStartT, 1) && between(0, oppEndT, 1)) {
+      if (!oppMatched) {
+        using std::swap;
+        swap(oppStartT, oppEndT);
+      }
+      oppFirst->fStartT = oppStartT;
+      oppFirst->fEndT = oppEndT;
+      oppFirst->resetBounds(sect2->fCurve);
+    }
+    this->validateBounded();
+    sect2->validateBounded();
+    last = first->fNext;
+    if (!this->removeCoincident(first, false)) {
       return false;
     }
-  }
-  this->validate();
-  sect2->validate();
-  *result = last && !last->fDeleted && fHead && sect2->fHead ? last : nullptr;
-  return true;
+    if (!sect2->removeCoincident(oppFirst, true)) {
+      return false;
+    }
+    if (deleteEmptySpans) {
+      if (!this->deleteEmptySpans() || !sect2->deleteEmptySpans()) {
+        *result = nullptr;
+        return false;
+      }
+    }
+    this->validate();
+    sect2->validate();
+    *result = last && !last->fDeleted && fHead && sect2->fHead ? last : nullptr;
+    return true;
 }
 
 SkTSpan* SkTSect::findCoincidentRun(SkTSpan* first, SkTSpan** lastPtr) {

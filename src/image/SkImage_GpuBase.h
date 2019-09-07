@@ -60,8 +60,8 @@ class SkImage_GpuBase : public SkImage_Base {
 #endif
 
   static bool ValidateBackendTexture(
-      GrContext* ctx, const GrBackendTexture& tex, GrPixelConfig* config, GrColorType grCT,
-      SkColorType ct, SkAlphaType at, sk_sp<SkColorSpace> cs);
+      const GrCaps*, const GrBackendTexture& tex, GrColorType grCT, SkColorType ct, SkAlphaType at,
+      sk_sp<SkColorSpace> cs);
   static bool MakeTempTextureProxies(
       GrContext* ctx, const GrBackendTexture yuvaTextures[], int numTextures, const SkYUVAIndex[4],
       GrSurfaceOrigin imageOrigin, sk_sp<GrTextureProxy> tempTextureProxies[4]);

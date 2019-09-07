@@ -198,28 +198,41 @@ static unsigned calculateUPEM(HDC hdc, const LOGFONT& lf) {
   return (0 == otmRet) ? 0 : otm.otmEMSquare;
 }
 
+class SkAutoHDC {
+ public:
+  explicit SkAutoHDC(const LOGFONT& lf)
+      : fHdc(::CreateCompatibleDC(nullptr)),
+        fFont(::CreateFontIndirect(&lf)),
+        fSavefont((HFONT)::SelectObject(fHdc, fFont)) {}
+  ~SkAutoHDC() {
+    if (fHdc) {
+      ::SelectObject(fHdc, fSavefont);
+      ::DeleteDC(fHdc);
+    }
+    if (fFont) {
+      ::DeleteObject(fFont);
+    }
+  }
+  operator HDC() { return fHdc; }
+
+ private:
+  HDC fHdc;
+  HFONT fFont;
+  HFONT fSavefont;
+};
+#  define SkAutoHDC(...) SK_REQUIRE_LOCAL_VAR(SkAutoHDC)
+
 class LogFontTypeface : public SkTypeface {
  public:
   LogFontTypeface(const SkFontStyle& style, const LOGFONT& lf, bool serializeAsStream)
       : SkTypeface(style, false), fLogFont(lf), fSerializeAsStream(serializeAsStream) {
-    HFONT font = CreateFontIndirect(&lf);
-
-    HDC deviceContext = ::CreateCompatibleDC(nullptr);
-    HFONT savefont = (HFONT)SelectObject(deviceContext, font);
-
+    SkAutoHDC hdc(fLogFont);
     TEXTMETRIC textMetric;
-    if (0 == GetTextMetrics(deviceContext, &textMetric)) {
+    if (0 == GetTextMetrics(hdc, &textMetric)) {
       call_ensure_accessible(lf);
-      if (0 == GetTextMetrics(deviceContext, &textMetric)) {
+      if (0 == GetTextMetrics(hdc, &textMetric)) {
         textMetric.tmPitchAndFamily = TMPF_TRUETYPE;
       }
-    }
-    if (deviceContext) {
-      ::SelectObject(deviceContext, savefont);
-      ::DeleteDC(deviceContext);
-    }
-    if (font) {
-      ::DeleteObject(font);
     }
 
     // The fixed pitch bit is set if the font is *not* fixed pitch.
@@ -285,9 +298,8 @@ class FontMemResourceTypeface : public LogFontTypeface {
   }
 
  protected:
-  void weak_dispose() const noexcept override {
+  void weak_dispose() const override {
     RemoveFontMemResourceEx(fFontMemResource);
-    // SkTypefaceCache::Remove(this);
     INHERITED::weak_dispose();
   }
 
@@ -410,18 +422,12 @@ struct MyBitmapInfo : public BITMAPINFO {
 
 class HDCOffscreen {
  public:
-  HDCOffscreen() {
-    fFont = 0;
-    fDC = 0;
-    fBM = 0;
-    fBits = nullptr;
-    fWidth = fHeight = 0;
-    fIsBW = false;
-  }
+  HDCOffscreen() = default;
 
   ~HDCOffscreen() {
     if (fDC) {
-      DeleteDC(fDC);
+      ::SelectObject(fDC, fSavefont);
+      ::DeleteDC(fDC);
     }
     if (fBM) {
       DeleteObject(fBM);
@@ -436,14 +442,15 @@ class HDCOffscreen {
   const void* draw(const SkGlyph&, bool isBW, size_t* srcRBPtr);
 
  private:
-  HDC fDC;
-  HBITMAP fBM;
-  HFONT fFont;
-  XFORM fXform;
-  void* fBits;  // points into fBM
-  int fWidth;
-  int fHeight;
-  bool fIsBW;
+  HDC fDC{0};
+  HFONT fSavefont{0};
+  HBITMAP fBM{0};
+  HFONT fFont{0};
+  XFORM fXform{1, 0, 0, 1, 0, 0};
+  void* fBits{nullptr};  // points into fBM
+  int fWidth{0};
+  int fHeight{0};
+  bool fIsBW{false};
 };
 
 const void* HDCOffscreen::draw(const SkGlyph& glyph, bool isBW, size_t* srcRBPtr) {
@@ -457,7 +464,7 @@ const void* HDCOffscreen::draw(const SkGlyph& glyph, bool isBW, size_t* srcRBPtr
     SetGraphicsMode(fDC, GM_ADVANCED);
     SetBkMode(fDC, TRANSPARENT);
     SetTextAlign(fDC, TA_LEFT | TA_BASELINE);
-    SelectObject(fDC, fFont);
+    fSavefont = (HFONT)SelectObject(fDC, fFont);
 
     COLORREF color = 0x00FFFFFF;
     SkDEBUGCODE(COLORREF prev =) SetTextColor(fDC, color);
@@ -782,10 +789,11 @@ void SkScalerContext_GDI::generateMetrics(SkGlyph* glyph) {
     WORD glyphs = glyph->getGlyphID();
     if (0 == GetTextExtentPointI(fDDC, &glyphs, 1, &size)) {
       glyph->fWidth = SkToS16(fTM.tmMaxCharWidth);
+      glyph->fHeight = SkToS16(fTM.tmHeight);
     } else {
       glyph->fWidth = SkToS16(size.cx);
+      glyph->fHeight = SkToS16(size.cy);
     }
-    glyph->fHeight = SkToS16(size.cy);
 
     glyph->fTop = SkToS16(-fTM.tmAscent);
     // Bitmap FON cannot underhang, but vector FON may.
@@ -1511,20 +1519,8 @@ static void logfont_for_name(const char* familyName, LOGFONT* lf) {
 
 void LogFontTypeface::onGetFamilyName(SkString* familyName) const {
   // Get the actual name of the typeface. The logfont may not know this.
-  HFONT font = CreateFontIndirect(&fLogFont);
-
-  HDC deviceContext = ::CreateCompatibleDC(nullptr);
-  HFONT savefont = (HFONT)SelectObject(deviceContext, font);
-
-  dcfontname_to_skstring(deviceContext, fLogFont, familyName);
-
-  if (deviceContext) {
-    ::SelectObject(deviceContext, savefont);
-    ::DeleteDC(deviceContext);
-  }
-  if (font) {
-    ::DeleteObject(font);
-  }
+  SkAutoHDC hdc(fLogFont);
+  dcfontname_to_skstring(hdc, fLogFont, familyName);
 }
 
 void LogFontTypeface::onGetFontDescriptor(SkFontDescriptor* desc, bool* isLocalStream) const {
@@ -1536,30 +1532,19 @@ void LogFontTypeface::onGetFontDescriptor(SkFontDescriptor* desc, bool* isLocalS
 }
 
 void LogFontTypeface::getGlyphToUnicodeMap(SkUnichar* dstArray) const {
-  HDC hdc = ::CreateCompatibleDC(nullptr);
-  HFONT font = CreateFontIndirect(&fLogFont);
-  HFONT savefont = (HFONT)SelectObject(hdc, font);
-  LOGFONT lf = fLogFont;
-  HFONT designFont = CreateFontIndirect(&lf);
-  SelectObject(hdc, designFont);
-
+  SkAutoHDC hdc(fLogFont);
   unsigned int glyphCount = calculateGlyphCount(hdc, fLogFont);
   populate_glyph_to_unicode(hdc, glyphCount, dstArray);
-
-  SelectObject(hdc, savefont);
-  DeleteObject(designFont);
-  DeleteObject(font);
-  DeleteDC(hdc);
 }
 
 std::unique_ptr<SkAdvancedTypefaceMetrics> LogFontTypeface::onGetAdvancedMetrics() const {
   LOGFONT lf = fLogFont;
   std::unique_ptr<SkAdvancedTypefaceMetrics> info(nullptr);
 
-  HDC hdc = CreateCompatibleDC(nullptr);
-  HFONT font = CreateFontIndirect(&lf);
-  HFONT savefont = (HFONT)SelectObject(hdc, font);
-  HFONT designFont = nullptr;
+  // The design HFONT must be destroyed after the HDC
+  using HFONT_T = typename std::remove_pointer<HFONT>::type;
+  std::unique_ptr<HFONT_T, SkFunctionWrapper<decltype(DeleteObject), DeleteObject>> designFont;
+  SkAutoHDC hdc(lf);
 
   const char stem_chars[] = {'i', 'I', '!', '1'};
   int16_t min_width;
@@ -1574,13 +1559,13 @@ std::unique_ptr<SkAdvancedTypefaceMetrics> LogFontTypeface::onGetAdvancedMetrics
     otmRet = GetOutlineTextMetrics(hdc, sizeof(otm), &otm);
   }
   if (!otmRet || !GetTextFace(hdc, LF_FACESIZE, lf.lfFaceName)) {
-    goto Error;
+    return info;
   }
   lf.lfHeight = -SkToS32(otm.otmEMSquare);
-  designFont = CreateFontIndirect(&lf);
-  SelectObject(hdc, designFont);
+  designFont.reset(CreateFontIndirect(&lf));
+  SelectObject(hdc, designFont.get());
   if (!GetOutlineTextMetrics(hdc, sizeof(otm), &otm)) {
-    goto Error;
+    return info;
   }
   glyphCount = calculateGlyphCount(hdc, fLogFont);
 
@@ -1601,60 +1586,53 @@ std::unique_ptr<SkAdvancedTypefaceMetrics> LogFontTypeface::onGetAdvancedMetrics
     }
   }
 
-  if (glyphCount > 0 && (otm.otmTextMetrics.tmPitchAndFamily & TMPF_TRUETYPE)) {
+  if (glyphCount == 0 || (otm.otmTextMetrics.tmPitchAndFamily & TMPF_TRUETYPE) == 0) {
+    return info;
+  }
     info->fType = SkAdvancedTypefaceMetrics::kTrueType_Font;
-  } else {
-    goto ReturnInfo;
-  }
 
-  // If this bit is clear the font is a fixed pitch font.
-  if (!(otm.otmTextMetrics.tmPitchAndFamily & TMPF_FIXED_PITCH)) {
-    info->fStyle |= SkAdvancedTypefaceMetrics::kFixedPitch_Style;
-  }
-  if (otm.otmTextMetrics.tmItalic) {
-    info->fStyle |= SkAdvancedTypefaceMetrics::kItalic_Style;
-  }
-  if (otm.otmTextMetrics.tmPitchAndFamily & FF_ROMAN) {
-    info->fStyle |= SkAdvancedTypefaceMetrics::kSerif_Style;
-  } else if (otm.otmTextMetrics.tmPitchAndFamily & FF_SCRIPT) {
-    info->fStyle |= SkAdvancedTypefaceMetrics::kScript_Style;
-  }
+    // If this bit is clear the font is a fixed pitch font.
+    if (!(otm.otmTextMetrics.tmPitchAndFamily & TMPF_FIXED_PITCH)) {
+      info->fStyle |= SkAdvancedTypefaceMetrics::kFixedPitch_Style;
+    }
+    if (otm.otmTextMetrics.tmItalic) {
+      info->fStyle |= SkAdvancedTypefaceMetrics::kItalic_Style;
+    }
+    if (otm.otmTextMetrics.tmPitchAndFamily & FF_ROMAN) {
+      info->fStyle |= SkAdvancedTypefaceMetrics::kSerif_Style;
+    } else if (otm.otmTextMetrics.tmPitchAndFamily & FF_SCRIPT) {
+      info->fStyle |= SkAdvancedTypefaceMetrics::kScript_Style;
+    }
 
-  // The main italic angle of the font, in tenths of a degree counterclockwise
-  // from vertical.
-  info->fItalicAngle = otm.otmItalicAngle / 10;
-  info->fAscent = SkToS16(otm.otmTextMetrics.tmAscent);
-  info->fDescent = SkToS16(-otm.otmTextMetrics.tmDescent);
-  // TODO(ctguil): Use alternate cap height calculation.
-  // MSDN says otmsCapEmHeight is not support but it is returning a value on
-  // my Win7 box.
-  info->fCapHeight = otm.otmsCapEmHeight;
-  info->fBBox = SkIRect::MakeLTRB(
-      otm.otmrcFontBox.left, otm.otmrcFontBox.top, otm.otmrcFontBox.right, otm.otmrcFontBox.bottom);
+    // The main italic angle of the font, in tenths of a degree counterclockwise
+    // from vertical.
+    info->fItalicAngle = otm.otmItalicAngle / 10;
+    info->fAscent = SkToS16(otm.otmTextMetrics.tmAscent);
+    info->fDescent = SkToS16(-otm.otmTextMetrics.tmDescent);
+    // TODO(ctguil): Use alternate cap height calculation.
+    // MSDN says otmsCapEmHeight is not support but it is returning a value on
+    // my Win7 box.
+    info->fCapHeight = otm.otmsCapEmHeight;
+    info->fBBox = SkIRect::MakeLTRB(
+        otm.otmrcFontBox.left, otm.otmrcFontBox.top, otm.otmrcFontBox.right,
+        otm.otmrcFontBox.bottom);
 
-  // Figure out a good guess for StemV - Min width of i, I, !, 1.
-  // This probably isn't very good with an italic font.
-  min_width = SHRT_MAX;
-  info->fStemV = 0;
-  for (size_t i = 0; i < SK_ARRAY_COUNT(stem_chars); i++) {
-    ABC abcWidths;
-    if (GetCharABCWidths(hdc, stem_chars[i], stem_chars[i], &abcWidths)) {
-      int16_t width = abcWidths.abcB;
-      if (width > 0 && width < min_width) {
-        min_width = width;
-        info->fStemV = min_width;
+    // Figure out a good guess for StemV - Min width of i, I, !, 1.
+    // This probably isn't very good with an italic font.
+    min_width = SHRT_MAX;
+    info->fStemV = 0;
+    for (size_t i = 0; i < SK_ARRAY_COUNT(stem_chars); i++) {
+      ABC abcWidths;
+      if (GetCharABCWidths(hdc, stem_chars[i], stem_chars[i], &abcWidths)) {
+        int16_t width = abcWidths.abcB;
+        if (width > 0 && width < min_width) {
+          min_width = width;
+          info->fStemV = min_width;
+        }
       }
     }
-  }
 
-Error:
-ReturnInfo:
-  SelectObject(hdc, savefont);
-  DeleteObject(designFont);
-  DeleteObject(font);
-  DeleteDC(hdc);
-
-  return info;
+    return info;
 }
 
 // Dummy representation of a Base64 encoded GUID from create_unique_font_name.
@@ -1759,9 +1737,7 @@ std::unique_ptr<SkStreamAsset> LogFontTypeface::onOpenStream(int* ttcIndex) cons
   const DWORD kTTCTag = SkEndian_SwapBE32(SkSetFourByteTag('t', 't', 'c', 'f'));
   LOGFONT lf = fLogFont;
 
-  HDC hdc = ::CreateCompatibleDC(nullptr);
-  HFONT font = CreateFontIndirect(&lf);
-  HFONT savefont = (HFONT)SelectObject(hdc, font);
+  SkAutoHDC hdc(lf);
 
   std::unique_ptr<SkStreamAsset> stream;
   DWORD tables[2] = {kTTCTag, 0};
@@ -1780,11 +1756,6 @@ std::unique_ptr<SkStreamAsset> LogFontTypeface::onOpenStream(int* ttcIndex) cons
       }
     }
   }
-
-  SelectObject(hdc, savefont);
-  DeleteObject(font);
-  DeleteDC(hdc);
-
   return stream;
 }
 
@@ -1885,28 +1856,8 @@ static uint16_t nonBmpCharToGlyph(HDC hdc, SCRIPT_CACHE* scriptCache, const WCHA
   return index;
 }
 
-class SkAutoHDC {
- public:
-  SkAutoHDC(const LOGFONT& lf)
-      : fHdc(::CreateCompatibleDC(nullptr)),
-        fFont(::CreateFontIndirect(&lf)),
-        fSavefont((HFONT)SelectObject(fHdc, fFont)) {}
-  ~SkAutoHDC() {
-    SelectObject(fHdc, fSavefont);
-    DeleteObject(fFont);
-    DeleteDC(fHdc);
-  }
-  operator HDC() { return fHdc; }
-
- private:
-  HDC fHdc;
-  HFONT fFont;
-  HFONT fSavefont;
-};
-#  define SkAutoHDC(...) SK_REQUIRE_LOCAL_VAR(SkAutoHDC)
-
 void LogFontTypeface::onCharsToGlyphs(
-    const SkUnichar uni[], int glyphCount, SkGlyphID glyphs[]) const {
+    const SkUnichar* uni, int glyphCount, SkGlyphID glyphs[]) const {
   SkAutoHDC hdc(fLogFont);
 
   TEXTMETRIC tm;
@@ -1950,33 +1901,15 @@ void LogFontTypeface::onCharsToGlyphs(
 }
 
 int LogFontTypeface::onCountGlyphs() const {
-  HDC hdc = ::CreateCompatibleDC(nullptr);
-  HFONT font = CreateFontIndirect(&fLogFont);
-  HFONT savefont = (HFONT)SelectObject(hdc, font);
-
-  unsigned int glyphCount = calculateGlyphCount(hdc, fLogFont);
-
-  SelectObject(hdc, savefont);
-  DeleteObject(font);
-  DeleteDC(hdc);
-
-  return glyphCount;
+  SkAutoHDC hdc(fLogFont);
+  return calculateGlyphCount(hdc, fLogFont);
 }
 
 void LogFontTypeface::getPostScriptGlyphNames(SkString*) const {}
 
 int LogFontTypeface::onGetUPEM() const {
-  HDC hdc = ::CreateCompatibleDC(nullptr);
-  HFONT font = CreateFontIndirect(&fLogFont);
-  HFONT savefont = (HFONT)SelectObject(hdc, font);
-
-  unsigned int upem = calculateUPEM(hdc, fLogFont);
-
-  SelectObject(hdc, savefont);
-  DeleteObject(font);
-  DeleteDC(hdc);
-
-  return upem;
+  SkAutoHDC hdc(fLogFont);
+  return calculateUPEM(hdc, fLogFont);
 }
 
 SkTypeface::LocalizedStrings* LogFontTypeface::onCreateFamilyNameIterator() const {
@@ -2016,10 +1949,7 @@ int LogFontTypeface::onGetTableTags(SkFontTableTag tags[]) const {
 size_t LogFontTypeface::onGetTableData(
     SkFontTableTag tag, size_t offset, size_t length, void* data) const {
   LOGFONT lf = fLogFont;
-
-  HDC hdc = ::CreateCompatibleDC(nullptr);
-  HFONT font = CreateFontIndirect(&lf);
-  HFONT savefont = (HFONT)SelectObject(hdc, font);
+  SkAutoHDC hdc(lf);
 
   tag = SkEndian_SwapBE32(tag);
   if (nullptr == data) {
@@ -2030,20 +1960,12 @@ size_t LogFontTypeface::onGetTableData(
     call_ensure_accessible(lf);
     bufferSize = GetFontData(hdc, tag, (DWORD)offset, data, (DWORD)length);
   }
-
-  SelectObject(hdc, savefont);
-  DeleteObject(font);
-  DeleteDC(hdc);
-
   return bufferSize == GDI_ERROR ? 0 : bufferSize;
 }
 
 sk_sp<SkData> LogFontTypeface::onCopyTableData(SkFontTableTag tag) const {
   LOGFONT lf = fLogFont;
-
-  HDC hdc = ::CreateCompatibleDC(nullptr);
-  HFONT font = CreateFontIndirect(&lf);
-  HFONT savefont = (HFONT)SelectObject(hdc, font);
+  SkAutoHDC hdc(lf);
 
   tag = SkEndian_SwapBE32(tag);
   DWORD size = GetFontData(hdc, tag, 0, nullptr, 0);
@@ -2059,11 +1981,6 @@ sk_sp<SkData> LogFontTypeface::onCopyTableData(SkFontTableTag tag) const {
       data.reset();
     }
   }
-
-  SelectObject(hdc, savefont);
-  DeleteObject(font);
-  DeleteDC(hdc);
-
   return data;
 }
 

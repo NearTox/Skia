@@ -17,8 +17,7 @@
 namespace skottie {
 namespace internal {
 
-sk_sp<sksg::RenderNode> AnimationBuilder::attachNestedAnimation(
-    const char* name, AnimatorScope* ascope) const {
+sk_sp<sksg::RenderNode> AnimationBuilder::attachNestedAnimation(const char* name) const {
   class SkottieSGAdapter final : public sksg::RenderNode {
    public:
     explicit SkottieSGAdapter(sk_sp<Animation> animation) : fAnimation(std::move(animation)) {
@@ -75,16 +74,15 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachNestedAnimation(
     return nullptr;
   }
 
-  ascope->push_back(
+  fCurrentAnimatorScope->push_back(
       sk_make_sp<SkottieAnimatorAdapter>(animation, animation->duration() / fDuration));
 
   return sk_make_sp<SkottieSGAdapter>(std::move(animation));
 }
 
 sk_sp<sksg::RenderNode> AnimationBuilder::attachAssetRef(
-    const skjson::ObjectValue& jlayer, AnimatorScope* ascope,
-    const std::function<sk_sp<sksg::RenderNode>(const skjson::ObjectValue&, AnimatorScope*)>& func)
-    const {
+    const skjson::ObjectValue& jlayer,
+    const std::function<sk_sp<sksg::RenderNode>(const skjson::ObjectValue&)>& func) const {
   const auto refId = ParseDefault<SkString>(jlayer["refId"], SkString());
   if (refId.isEmpty()) {
     this->log(Logger::Level::kError, nullptr, "Layer missing refId.");
@@ -92,7 +90,7 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachAssetRef(
   }
 
   if (refId.startsWith("$")) {
-    return this->attachNestedAnimation(refId.c_str() + 1, ascope);
+    return this->attachNestedAnimation(refId.c_str() + 1);
   }
 
   const auto* asset_info = fAssets.find(refId);
@@ -107,14 +105,14 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachAssetRef(
   }
 
   asset_info->fIsAttaching = true;
-  auto asset = func(*asset_info->fAsset, ascope);
+  auto asset = func(*asset_info->fAsset);
   asset_info->fIsAttaching = false;
 
   return asset;
 }
 
 sk_sp<sksg::RenderNode> AnimationBuilder::attachComposition(
-    const skjson::ObjectValue& jcomp, AnimatorScope* scope) const {
+    const skjson::ObjectValue& jcomp) const {
   const skjson::ArrayValue* jlayers = jcomp["layers"];
   if (!jlayers) return nullptr;
 
@@ -132,7 +130,7 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachComposition(
 
   layers.reserve(jlayers->size());
   for (const auto& l : *jlayers) {
-    if (auto layer = this->attachLayer(l, scope, &layerCtx)) {
+    if (auto layer = this->attachLayer(l, &layerCtx)) {
       layers.push_back(std::move(layer));
     }
   }

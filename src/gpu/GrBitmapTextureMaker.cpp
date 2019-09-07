@@ -43,7 +43,9 @@ sk_sp<GrTextureProxy> GrBitmapTextureMaker::refOriginalTextureProxy(
   sk_sp<GrTextureProxy> proxy;
 
   if (fOriginalKey.isValid()) {
-    proxy = proxyProvider->findOrCreateProxyByUniqueKey(fOriginalKey, kTopLeft_GrSurfaceOrigin);
+    auto colorType = SkColorTypeToGrColorType(fBitmap.colorType());
+    proxy = proxyProvider->findOrCreateProxyByUniqueKey(
+        fOriginalKey, colorType, kTopLeft_GrSurfaceOrigin);
     if (proxy && (!willBeMipped || GrMipMapped::kYes == proxy->mipMapped())) {
       return proxy;
     }

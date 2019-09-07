@@ -9,14 +9,14 @@
 #define GrDawnRenderTarget_DEFINED
 
 #include "include/gpu/dawn/GrDawnTypes.h"
-#include "include/gpu/GrRenderTarget.h"
+#include "src/gpu/GrRenderTarget.h"
 
 class GrDawnGpu;
 
 class GrDawnRenderTarget : public GrRenderTarget {
  public:
   static sk_sp<GrDawnRenderTarget> MakeWrapped(
-      GrDawnGpu*, const GrSurfaceDesc&, int sampleCnt, const GrDawnImageInfo&);
+      GrDawnGpu*, const SkISize& size, GrPixelConfig config, int sampleCnt, const GrDawnImageInfo&);
 
   ~GrDawnRenderTarget() override;
 
@@ -32,11 +32,12 @@ class GrDawnRenderTarget : public GrRenderTarget {
 
   GrBackendRenderTarget getBackendRenderTarget() const override;
   GrBackendFormat backendFormat() const override;
+  dawn::Texture texture() const { return fInfo.fTexture; }
 
  protected:
   GrDawnRenderTarget(
-      GrDawnGpu* gpu, const GrSurfaceDesc& desc, int sampleCnt, const GrDawnImageInfo& info,
-      GrBackendObjectOwnership);
+      GrDawnGpu* gpu, const SkISize& size, GrPixelConfig config, int sampleCnt,
+      const GrDawnImageInfo& info);
 
   GrDawnGpu* getDawnGpu() const;
 
@@ -53,8 +54,7 @@ class GrDawnRenderTarget : public GrRenderTarget {
   }
 
   static GrDawnRenderTarget* Create(
-      GrDawnGpu*, const GrSurfaceDesc&, int sampleCnt, const GrDawnImageInfo&,
-      GrBackendObjectOwnership);
+      GrDawnGpu*, const GrSurfaceDesc&, int sampleCnt, const GrDawnImageInfo&);
 
   bool completeStencilAttachment() override;
   GrDawnImageInfo fInfo;

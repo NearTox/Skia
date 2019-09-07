@@ -16,6 +16,7 @@
 #include "include/core/SkShader.h"
 #include "include/core/SkTileMode.h"
 #include "include/gpu/GrTypes.h"
+#include <functional>  // std::function
 
 #if defined(SK_BUILD_FOR_ANDROID) && __ANDROID_API__ >= 26
 #  include <android/hardware_buffer.h>
@@ -152,18 +153,75 @@ class SK_API SkImage : public SkRefCnt {
   static sk_sp<SkImage> MakeFromGenerator(
       std::unique_ptr<SkImageGenerator> imageGenerator, const SkIRect* subset = nullptr);
 
-  /** Creates SkImage from encoded data.
-      subset allows selecting a portion of the full image. Pass nullptr to select the entire
-      image; otherwise, subset must be contained by image bounds.
-
-      SkImage is returned if format of the encoded data is recognized and supported.
-      Recognized formats vary by platform.
-
-      @param encoded  data of SkImage to decode
-      @param subset   bounds of returned SkImage; may be nullptr
-      @return         created SkImage, or nullptr
-  */
+  /**
+   *  Return an image backed by the encoded data, but attempt to defer decoding until the image
+   *  is actually used/drawn. This deferral allows the system to cache the result, either on the
+   *  CPU or on the GPU, depending on where the image is drawn. If memory is low, the cache may
+   *  be purged, causing the next draw of the image to have to re-decode.
+   *
+   *  The subset parameter specifies a area within the decoded image to create the image from.
+   *  If subset is null, then the entire image is returned.
+   *
+   *  This is similar to DecodeTo[Raster,Texture], but this method will attempt to defer the
+   *  actual decode, while the DecodeTo... method explicitly decode and allocate the backend
+   *  when the call is made.
+   *
+   *  If the encoded format is not supported, or subset is outside of the bounds of the decoded
+   *  image, nullptr is returned.
+   *
+   *  @param encoded  the encoded data
+   *  @param length   the number of bytes of encoded data
+   *  @param subset   the bounds of the pixels within the decoded image to return. may be null.
+   *  @return         created SkImage, or nullptr
+   */
   static sk_sp<SkImage> MakeFromEncoded(sk_sp<SkData> encoded, const SkIRect* subset = nullptr);
+
+  /**
+   *  Decode the data in encoded/length into a raster image.
+   *
+   *  The subset parameter specifies a area within the decoded image to create the image from.
+   *  If subset is null, then the entire image is returned.
+   *
+   *  This is similar to MakeFromEncoded, but this method will always decode immediately, and
+   *  allocate the memory for the pixels for the lifetime of the returned image.
+   *
+   *  If the encoded format is not supported, or subset is outside of the bounds of the decoded
+   *  image, nullptr is returned.
+   *
+   *  @param encoded  the encoded data
+   *  @param length   the number of bytes of encoded data
+   *  @param subset   the bounds of the pixels within the decoded image to return. may be null.
+   *  @return         created SkImage, or nullptr
+   */
+  static sk_sp<SkImage> DecodeToRaster(
+      const void* encoded, size_t length, const SkIRect* subset = nullptr);
+  static sk_sp<SkImage> DecodeToRaster(const sk_sp<SkData>& data, const SkIRect* subset = nullptr) {
+    return DecodeToRaster(data->data(), data->size(), subset);
+  }
+
+  /**
+   *  Decode the data in encoded/length into a texture-backed image.
+   *
+   *  The subset parameter specifies a area within the decoded image to create the image from.
+   *  If subset is null, then the entire image is returned.
+   *
+   *  This is similar to MakeFromEncoded, but this method will always decode immediately, and
+   *  allocate the texture for the pixels for the lifetime of the returned image.
+   *
+   *  If the encoded format is not supported, or subset is outside of the bounds of the decoded
+   *  image, nullptr is returned.
+   *
+   *  @param encoded  the encoded data
+   *  @param length   the number of bytes of encoded data
+   *  @param subset   the bounds of the pixels within the decoded image to return. may be null.
+   *  @return         created SkImage, or nullptr
+   */
+  static sk_sp<SkImage> DecodeToTexture(
+      GrContext* ctx, const void* encoded, size_t length, const SkIRect* subset = nullptr);
+  static sk_sp<SkImage> DecodeToTexture(
+      GrContext* ctx, const sk_sp<SkData>& data, const SkIRect* subset = nullptr) {
+    return DecodeToTexture(ctx, data->data(), data->size(), subset);
+  }
 
   // Experimental
   enum CompressionType {
@@ -248,35 +306,6 @@ class SK_API SkImage : public SkRefCnt {
       SkColorType colorType, SkAlphaType alphaType, sk_sp<SkColorSpace> colorSpace,
       TextureReleaseProc textureReleaseProc, ReleaseContext releaseContext);
 
-  /** Creates SkImage from encoded data. SkImage is uploaded to GPU back-end using context.
-
-      Created SkImage is available to other GPU contexts, and is available across thread
-      boundaries. All contexts must be in the same GPU share group, or otherwise
-      share resources.
-
-      When SkImage is no longer referenced, context releases texture memory
-      asynchronously.
-
-      GrBackendTexture decoded from data is uploaded to match SkSurface created with
-      dstColorSpace. SkColorSpace of SkImage is determined by encoded data.
-
-      SkImage is returned if format of data is recognized and supported, and if context
-      supports moving resources. Recognized formats vary by platform and GPU back-end.
-
-      SkImage is returned using MakeFromEncoded() if context is nullptr or does not support
-      moving resources between contexts.
-
-      @param context                GPU context
-      @param data                   SkImage to decode
-      @param buildMips              create SkImage as mip map if true
-      @param dstColorSpace          range of colors of matching SkSurface on GPU
-      @param limitToMaxTextureSize  downscale image to GPU maximum texture size, if necessary
-      @return                       created SkImage, or nullptr
-  */
-  static sk_sp<SkImage> MakeCrossContextFromEncoded(
-      GrContext* context, sk_sp<SkData> data, bool buildMips, SkColorSpace* dstColorSpace,
-      bool limitToMaxTextureSize = false);
-
   /** Creates SkImage from pixmap. SkImage is uploaded to GPU back-end using context.
 
       Created SkImage is available to other GPU contexts, and is available across thread
@@ -303,7 +332,7 @@ class SK_API SkImage : public SkRefCnt {
       @return                       created SkImage, or nullptr
   */
   static sk_sp<SkImage> MakeCrossContextFromPixmap(
-      GrContext* context, const SkPixmap& pixmap, bool buildMips, SkColorSpace* dstColorSpace,
+      GrContext* context, const SkPixmap& pixmap, bool buildMips,
       bool limitToMaxTextureSize = false);
 
   /** Creates SkImage from backendTexture associated with context. backendTexture and
@@ -358,25 +387,29 @@ class SK_API SkImage : public SkRefCnt {
   /** Creates an SkImage by flattening the specified YUVA planes into a single, interleaved RGBA
       image. 'backendTexture' is used to store the result of the flattening.
 
-      @param context         GPU context
-      @param yuvColorSpace   How the YUV values are converted to RGB. One of:
+      @param context            GPU context
+      @param yuvColorSpace      How the YUV values are converted to RGB. One of:
                                          kJPEG_SkYUVColorSpace, kRec601_SkYUVColorSpace,
                                          kRec709_SkYUVColorSpace, kIdentity_SkYUVColorSpace
-      @param yuvaTextures    array of (up to four) YUVA textures on GPU which contain the,
-                             possibly interleaved, YUVA planes
-      @param yuvaIndices     array indicating which texture in yuvaTextures, and channel
-                             in that texture, maps to each component of YUVA.
-      @param imageSize       size of the resulting image
-      @param imageOrigin     origin of the resulting image. One of: kBottomLeft_GrSurfaceOrigin,
-                             kTopLeft_GrSurfaceOrigin
-      @param backendTexture  the resource that stores the final pixels
-      @param imageColorSpace range of colors of the resulting image; may be nullptr
-      @return                created SkImage, or nullptr
+      @param yuvaTextures       array of (up to four) YUVA textures on GPU which contain the,
+                                possibly interleaved, YUVA planes
+      @param yuvaIndices        array indicating which texture in yuvaTextures, and channel
+                                in that texture, maps to each component of YUVA.
+      @param imageSize          size of the resulting image
+      @param imageOrigin        origin of the resulting image. One of:
+                                          kBottomLeft_GrSurfaceOrigin,
+                                          kTopLeft_GrSurfaceOrigin
+      @param backendTexture     the resource that stores the final pixels
+      @param imageColorSpace    range of colors of the resulting image; may be nullptr
+      @param textureReleaseProc function called when backendTexture can be released
+      @param releaseContext     state passed to textureReleaseProc
+      @return                   created SkImage, or nullptr
   */
   static sk_sp<SkImage> MakeFromYUVATexturesCopyWithExternalBackend(
       GrContext* context, SkYUVColorSpace yuvColorSpace, const GrBackendTexture yuvaTextures[],
       const SkYUVAIndex yuvaIndices[4], SkISize imageSize, GrSurfaceOrigin imageOrigin,
-      const GrBackendTexture& backendTexture, sk_sp<SkColorSpace> imageColorSpace = nullptr);
+      const GrBackendTexture& backendTexture, sk_sp<SkColorSpace> imageColorSpace = nullptr,
+      TextureReleaseProc textureReleaseProc = nullptr, ReleaseContext releaseContext = nullptr);
 
   /** Creates an SkImage by storing the specified YUVA planes into an image, to be rendered
       via multitexturing.
@@ -471,19 +504,22 @@ class SK_API SkImage : public SkRefCnt {
       Returned SkImage has the dimensions nv12Textures[2] and stores pixels in backendTexture.
       yuvColorSpace describes how YUV colors convert to RGB colors.
 
-      @param context         GPU context
-      @param yuvColorSpace   one of: kJPEG_SkYUVColorSpace, kRec601_SkYUVColorSpace,
-                             kRec709_SkYUVColorSpace, kIdentity_SkYUVColorSpace
-      @param nv12Textures    array of YUV textures on GPU
-      @param imageOrigin     one of: kBottomLeft_GrSurfaceOrigin, kTopLeft_GrSurfaceOrigin
-      @param backendTexture  the resource that stores the final pixels
-      @param imageColorSpace range of colors; may be nullptr
-      @return                created SkImage, or nullptr
+      @param context            GPU context
+      @param yuvColorSpace      one of: kJPEG_SkYUVColorSpace, kRec601_SkYUVColorSpace,
+                                kRec709_SkYUVColorSpace, kIdentity_SkYUVColorSpace
+      @param nv12Textures       array of YUV textures on GPU
+      @param imageOrigin        one of: kBottomLeft_GrSurfaceOrigin, kTopLeft_GrSurfaceOrigin
+      @param backendTexture     the resource that stores the final pixels
+      @param imageColorSpace    range of colors; may be nullptr
+      @param textureReleaseProc function called when backendTexture can be released
+      @param releaseContext     state passed to textureReleaseProc
+      @return                   created SkImage, or nullptr
   */
   static sk_sp<SkImage> MakeFromNV12TexturesCopyWithExternalBackend(
       GrContext* context, SkYUVColorSpace yuvColorSpace, const GrBackendTexture nv12Textures[2],
       GrSurfaceOrigin imageOrigin, const GrBackendTexture& backendTexture,
-      sk_sp<SkColorSpace> imageColorSpace = nullptr);
+      sk_sp<SkColorSpace> imageColorSpace = nullptr,
+      TextureReleaseProc textureReleaseProc = nullptr, ReleaseContext releaseContext = nullptr);
 
   enum class BitDepth {
     kU8,   //!< uses 8-bit unsigned int per color component
@@ -548,31 +584,31 @@ class SK_API SkImage : public SkRefCnt {
 
       @return  image info of SkImage.
   */
-  const SkImageInfo& imageInfo() const noexcept { return fInfo; }
+  const SkImageInfo& imageInfo() const { return fInfo; }
 
   /** Returns pixel count in each row.
 
       @return  pixel width in SkImage
   */
-  int width() const noexcept { return fInfo.width(); }
+  int width() const { return fInfo.width(); }
 
   /** Returns pixel row count.
 
       @return  pixel height in SkImage
   */
-  int height() const noexcept { return fInfo.height(); }
+  int height() const { return fInfo.height(); }
 
   /** Returns SkISize { width(), height() }.
 
       @return  integral size of width() and height()
   */
-  SkISize dimensions() const noexcept { return SkISize::Make(fInfo.width(), fInfo.height()); }
+  SkISize dimensions() const { return SkISize::Make(fInfo.width(), fInfo.height()); }
 
   /** Returns SkIRect { 0, 0, width(), height() }.
 
       @return  integral rectangle from origin to width() and height()
   */
-  SkIRect bounds() const noexcept { return SkIRect::MakeWH(fInfo.width(), fInfo.height()); }
+  SkIRect bounds() const { return SkIRect::MakeWH(fInfo.width(), fInfo.height()); }
 
   /** Returns value unique to image. SkImage contents cannot change after SkImage is
       created. Any operation to create a new SkImage will receive generate a new
@@ -580,7 +616,7 @@ class SK_API SkImage : public SkRefCnt {
 
       @return  unique identifier
   */
-  uint32_t uniqueID() const noexcept { return fUniqueID; }
+  uint32_t uniqueID() const { return fUniqueID; }
 
   /** Returns SkAlphaType, one of:
       kUnknown_SkAlphaType, kOpaque_SkAlphaType, kPremul_SkAlphaType,
@@ -914,9 +950,7 @@ class SK_API SkImage : public SkRefCnt {
       @param mipMapped      whether created SkImage texture must allocate mip map levels
       @return               created SkImage, or nullptr
   */
-  sk_sp<SkImage> makeTextureImage(
-      GrContext* context, SkColorSpace* dstColorSpace,
-      GrMipMapped mipMapped = GrMipMapped::kNo) const;
+  sk_sp<SkImage> makeTextureImage(GrContext* context, GrMipMapped = GrMipMapped::kNo) const;
 
   /** Returns raster image or lazy image. Copies SkImage backed by GPU texture into
       CPU memory if needed. Returns original SkImage if decoded in raster bitmap,
@@ -1051,6 +1085,12 @@ class SK_API SkImage : public SkRefCnt {
   */
   sk_sp<SkImage> makeColorTypeAndColorSpace(
       SkColorType targetColorType, sk_sp<SkColorSpace> targetColorSpace) const;
+
+  /** Creates a new SkImage identical to this one, but with a different SkColorSpace.
+      This does not convert the underlying pixel data, so the resulting image will draw
+      differently.
+  */
+  sk_sp<SkImage> reinterpretColorSpace(sk_sp<SkColorSpace> newColorSpace) const;
 
  private:
   SkImage(const SkImageInfo& info, uint32_t uniqueID);

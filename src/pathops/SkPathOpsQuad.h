@@ -163,7 +163,7 @@ class SkTQuad : public SkTCurve {
   }
 
   int intersectRay(SkIntersections* i, const SkDLine& line) const override;
-  bool IsConic() const noexcept override { return false; }
+  bool IsConic() const override { return false; }
   SkTCurve* make(SkArenaAlloc& heap) const override { return heap.make<SkTQuad>(); }
 
   int maxIntersections() const override { return SkDQuad::kMaxIntersections; }

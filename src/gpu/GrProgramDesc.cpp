@@ -36,8 +36,7 @@ static inline uint16_t texture_type_key(GrTextureType type) {
 }
 
 static uint32_t sampler_key(
-    GrTextureType textureType, const GrSwizzle& swizzle, GrPixelConfig config,
-    const GrShaderCaps& caps) {
+    GrTextureType textureType, const GrSwizzle& swizzle, const GrShaderCaps& caps) {
   int samplerTypeKey = texture_type_key(textureType);
 
   GR_STATIC_ASSERT(2 == sizeof(swizzle.asKey()));
@@ -45,9 +44,7 @@ static uint32_t sampler_key(
   if (caps.textureSwizzleAppliedInShader()) {
     swizzleKey = swizzle.asKey();
   }
-  return SkToU32(
-      samplerTypeKey | swizzleKey << kSamplerOrImageTypeKeyBits |
-      (GrSLSamplerPrecision(config) << (16 + kSamplerOrImageTypeKeyBits)));
+  return SkToU32(samplerTypeKey | swizzleKey << kSamplerOrImageTypeKeyBits);
 }
 
 static void add_sampler_keys(
@@ -59,12 +56,10 @@ static void add_sampler_keys(
   for (int i = 0; i < numTextureSamplers; ++i) {
     const GrFragmentProcessor::TextureSampler& sampler = fp.textureSampler(i);
     const GrTexture* tex = sampler.peekTexture();
-    uint32_t samplerKey =
-        sampler_key(tex->texturePriv().textureType(), sampler.swizzle(), tex->config(), caps);
+    uint32_t samplerKey = sampler_key(tex->texturePriv().textureType(), sampler.swizzle(), caps);
     uint32_t extraSamplerKey =
         gpu->getExtraSamplerKeyForProgram(sampler.samplerState(), sampler.proxy()->backendFormat());
     if (extraSamplerKey) {
-      SkASSERT(sampler.proxy()->textureType() == GrTextureType::kExternal);
       // We first mark the normal sampler key with last bit to flag that it has an extra
       // sampler key. We then add both keys.
       SkASSERT((samplerKey & (1 << 31)) == 0);
@@ -84,11 +79,9 @@ static void add_sampler_keys(
   }
   for (int i = 0; i < numTextureSamplers; ++i) {
     const GrPrimitiveProcessor::TextureSampler& sampler = pp.textureSampler(i);
-    uint32_t samplerKey =
-        sampler_key(sampler.textureType(), sampler.swizzle(), sampler.config(), caps);
+    uint32_t samplerKey = sampler_key(sampler.textureType(), sampler.swizzle(), caps);
     uint32_t extraSamplerKey = sampler.extraSamplerKey();
     if (extraSamplerKey) {
-      SkASSERT(sampler.textureType() == GrTextureType::kExternal);
       // We first mark the normal sampler key with last bit to flag that it has an extra
       // sampler key. We then add both keys.
       SkASSERT((samplerKey & (1 << 31)) == 0);

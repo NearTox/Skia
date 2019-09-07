@@ -14,10 +14,10 @@
 #include "src/core/SkLRUCache.h"
 #include "src/gpu/GrGpu.h"
 #include "src/gpu/GrMesh.h"
+#include "src/gpu/GrNativeRect.h"
 #include "src/gpu/GrWindowRectsState.h"
 #include "src/gpu/GrXferProcessor.h"
 #include "src/gpu/gl/GrGLContext.h"
-#include "src/gpu/gl/GrGLIRect.h"
 #include "src/gpu/gl/GrGLPathRendering.h"
 #include "src/gpu/gl/GrGLProgram.h"
 #include "src/gpu/gl/GrGLRenderTarget.h"
@@ -26,14 +26,9 @@
 #include "src/gpu/gl/GrGLVertexArray.h"
 
 class GrGLBuffer;
-class GrGLGpuRTCommandBuffer;
-class GrGLGpuTextureCommandBuffer;
+class GrGLOpsRenderPass;
 class GrPipeline;
 class GrSwizzle;
-
-#ifdef SK_DEBUG
-#  define PROGRAM_CACHE_STATS
-#endif
 
 class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
  public:
@@ -73,9 +68,9 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
   // If the caller wishes to bind an index buffer to a specific VAO, it can call glBind directly.
   GrGLenum bindBuffer(GrGpuBufferType type, const GrBuffer*);
 
-  // The GrGLGpuRTCommandBuffer does not buffer up draws before submitting them to the gpu.
+  // The GrGLOpsRenderPass does not buffer up draws before submitting them to the gpu.
   // Thus this is the implementation of the draw call for the corresponding passthrough function
-  // on GrGLRTGpuCommandBuffer.
+  // on GrGLOpsRenderPass.
   void draw(
       GrRenderTarget*, GrSurfaceOrigin, const GrPrimitiveProcessor&, const GrPipeline&,
       const GrPipeline::FixedDynamicState*, const GrPipeline::DynamicStateArrays*, const GrMesh[],
@@ -100,14 +95,14 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
       const GrBuffer* vertexBuffer, int baseVertex, const GrBuffer* instanceBuffer,
       int instanceCount, int baseInstance, GrPrimitiveRestart) final;
 
-  // The GrGLGpuRTCommandBuffer does not buffer up draws before submitting them to the gpu.
+  // The GrGLOpsRenderPass does not buffer up draws before submitting them to the gpu.
   // Thus this is the implementation of the clear call for the corresponding passthrough function
-  // on GrGLGpuRTCommandBuffer.
+  // on GrGLOpsRenderPass.
   void clear(const GrFixedClip&, const SkPMColor4f&, GrRenderTarget*, GrSurfaceOrigin);
 
-  // The GrGLGpuRTCommandBuffer does not buffer up draws before submitting them to the gpu.
+  // The GrGLOpsRenderPass does not buffer up draws before submitting them to the gpu.
   // Thus this is the implementation of the clearStencil call for the corresponding passthrough
-  // function on GrGLGpuRTCommandBuffer.
+  // function on GrGLOpsrenderPass.
   void clearStencilClip(
       const GrFixedClip&, bool insideStencilMask, GrRenderTarget*, GrSurfaceOrigin);
 
@@ -115,12 +110,10 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
   // stencil buffer as not dirty?
   void clearStencil(GrRenderTarget*, int clearValue);
 
-  GrGpuRTCommandBuffer* getCommandBuffer(
-      GrRenderTarget*, GrSurfaceOrigin, const SkRect&,
-      const GrGpuRTCommandBuffer::LoadAndStoreInfo&,
-      const GrGpuRTCommandBuffer::StencilLoadAndStoreInfo&) override;
-
-  GrGpuTextureCommandBuffer* getCommandBuffer(GrTexture*, GrSurfaceOrigin) override;
+  GrOpsRenderPass* getOpsRenderPass(
+      GrRenderTarget*, GrSurfaceOrigin, const SkRect&, const GrOpsRenderPass::LoadAndStoreInfo&,
+      const GrOpsRenderPass::StencilLoadAndStoreInfo&,
+      const SkTArray<GrTextureProxy*, true>& sampledProxies) override;
 
   void invalidateBoundRenderTarget() { fHWBoundRenderTargetUniqueID.makeInvalid(); }
 
@@ -144,7 +137,7 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
   void testingOnly_flushGpuAndSync() override;
 #endif
 
-  void submit(GrGpuCommandBuffer* buffer) override;
+  void submit(GrOpsRenderPass* renderPass) override;
 
   GrFence SK_WARN_UNUSED_RESULT insertFence() override;
   bool waitFence(GrFence, uint64_t timeout) override;
@@ -181,11 +174,11 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
   void xferBarrier(GrRenderTarget*, GrXferBarrierType) override;
 
   sk_sp<GrTexture> onCreateTexture(
-      const GrSurfaceDesc&, GrRenderable, int renderTargetSampleCnt, SkBudgeted, GrProtected,
-      const GrMipLevel[], int mipLevelCount) override;
+      const GrSurfaceDesc&, const GrBackendFormat&, GrRenderable, int renderTargetSampleCnt,
+      SkBudgeted, GrProtected, const GrMipLevel[], int mipLevelCount) override;
   sk_sp<GrTexture> onCreateCompressedTexture(
-      int width, int height, SkImage::CompressionType compression, SkBudgeted,
-      const void* data) override;
+      int width, int height, const GrBackendFormat&, SkImage::CompressionType compression,
+      SkBudgeted, const void* data) override;
 
   sk_sp<GrGpuBuffer> onCreateBuffer(
       size_t size, GrGpuBufferType intendedType, GrAccessPattern, const void* data) override;
@@ -206,36 +199,39 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
 
   void onFBOChanged();
 
-  // Returns whether the texture is successfully created. On success, the
-  // result is stored in |info|.
-  // The texture is populated with |texels|, if it exists.
+  // Returns whether the texture is successfully created. On success, a non-zero texture ID is
+  // returned. On failure, zero is returned.
+  // The texture is populated with |texels|, if it is non-null.
   // The texture parameters are cached in |initialTexParams|.
-  bool createTextureImpl(
-      const GrSurfaceDesc& desc, GrGLTextureInfo* info, GrRenderable,
-      GrGLTextureParameters::SamplerOverriddenState* initialState, const GrMipLevel texels[],
-      int mipLevelCount, GrMipMapsStatus* mipMapsStatus);
+  GrGLuint createTexture2D(
+      const SkISize& size, GrGLFormat format, GrRenderable,
+      GrGLTextureParameters::SamplerOverriddenState* initialState, GrColorType textureColorType,
+      GrColorType srcColorType, const GrMipLevel texels[], int mipLevelCount,
+      GrMipMapsStatus* mipMapsStatus);
 
-  bool createCompressedTextureImpl(
-      GrGLTextureInfo* info, int width, int height, SkImage::CompressionType compression,
+  GrGLuint createCompressedTexture2D(
+      const SkISize& size, GrGLFormat format, SkImage::CompressionType compression,
       GrGLTextureParameters::SamplerOverriddenState* initialState, const void* data);
 
   bool onReadPixels(
-      GrSurface*, int left, int top, int width, int height, GrColorType, void* buffer,
-      size_t rowBytes) override;
+      GrSurface*, int left, int top, int width, int height, GrColorType surfaceColorType,
+      GrColorType dstColorType, void* buffer, size_t rowBytes) override;
 
   bool onWritePixels(
-      GrSurface*, int left, int top, int width, int height, GrColorType, const GrMipLevel texels[],
-      int mipLevelCount) override;
+      GrSurface*, int left, int top, int width, int height, GrColorType surfaceColorType,
+      GrColorType srcColorType, const GrMipLevel texels[], int mipLevelCount,
+      bool prepForTexSampling) override;
 
   bool onTransferPixelsTo(
-      GrTexture*, int left, int top, int width, int height, GrColorType,
-      GrGpuBuffer* transferBuffer, size_t offset, size_t rowBytes) override;
+      GrTexture*, int left, int top, int width, int height, GrColorType textureColorType,
+      GrColorType bufferColorType, GrGpuBuffer* transferBuffer, size_t offset,
+      size_t rowBytes) override;
   bool onTransferPixelsFrom(
-      GrSurface*, int left, int top, int width, int height, GrColorType,
-      GrGpuBuffer* transferBuffer, size_t offset) override;
+      GrSurface*, int left, int top, int width, int height, GrColorType surfaceColorType,
+      GrColorType bufferColorType, GrGpuBuffer* transferBuffer, size_t offset) override;
   bool readOrTransferPixelsFrom(
-      GrSurface*, int left, int top, int width, int height, GrColorType, void* offsetOrPtr,
-      int rowWidthInPixels);
+      GrSurface*, int left, int top, int width, int height, GrColorType surfaceColorType,
+      GrColorType dstColorType, void* offsetOrPtr, int rowWidthInPixels);
 
   // Before calling any variation of TexImage, TexSubImage, etc..., call this to ensure that the
   // PIXEL_UNPACK_BUFFER is unbound.
@@ -246,20 +242,10 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
   bool onRegenerateMipMapLevels(GrTexture*) override;
 
   bool onCopySurface(
-      GrSurface* dst, GrSurface* src, const SkIRect& srcRect, const SkIPoint& dstPoint,
-      bool canDiscardOutsideDstRect) override;
+      GrSurface* dst, GrSurface* src, const SkIRect& srcRect, const SkIPoint& dstPoint) override;
 
   // binds texture unit in GL
   void setTextureUnit(int unitIdx);
-
-  /**
-   * primitiveProcessorTextures must contain GrPrimitiveProcessor::numTextureSamplers() *
-   * numPrimitiveProcessorTextureSets entries.
-   */
-  void resolveAndGenerateMipMapsForProcessorTextures(
-      const GrPrimitiveProcessor&, const GrPipeline&,
-      const GrTextureProxy* const primitiveProcessorTextures[],
-      int numPrimitiveProcessorTextureSets);
 
   // Flushes state from GrPipeline to GL. Returns false if the state couldn't be set.
   // willDrawPoints must be true if point primitives will be rendered after setting the GL state.
@@ -315,10 +301,6 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
 
     struct Entry;
 
-    // binary search for entry matching desc. returns index into fEntries that matches desc or ~
-    // of the index of where it should be inserted.
-    int search(const GrProgramDesc& desc) const;
-
     struct DescHash {
       uint32_t operator()(const GrProgramDesc& desc) const {
         return SkOpts::hash_fn(desc.asKey(), desc.keyLength(), 0);
@@ -328,11 +310,6 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
     SkLRUCache<GrProgramDesc, std::unique_ptr<Entry>, DescHash> fMap;
 
     GrGLGpu* fGpu;
-#ifdef PROGRAM_CACHE_STATS
-    int fTotalRequests;
-    int fCacheMisses;
-    int fHashMisses;  // cache hit but hash table missed
-#endif
   };
 
   void flushColorWrite(bool writeColor);
@@ -381,19 +358,17 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
     kWrite_UploadType,       // we are using TexSubImage2D to copy data to an existing texture
   };
   bool uploadTexData(
-      GrPixelConfig texConfig, int texWidth, int texHeight, GrGLenum target, UploadType uploadType,
-      int left, int top, int width, int height, GrPixelConfig dataConfig, const GrMipLevel texels[],
-      int mipLevelCount, GrMipMapsStatus* mipMapsStatus = nullptr);
+      GrGLFormat textureFormat, GrColorType textureColorType, int texWidth, int texHeight,
+      GrGLenum target, UploadType uploadType, int left, int top, int width, int height,
+      GrColorType srcColorType, const GrMipLevel texels[], int mipLevelCount,
+      GrMipMapsStatus* mipMapsStatus = nullptr);
 
-  // Helper for onCreateCompressedTexture. Compressed textures are read-only so we
-  // only use this to populate a new texture. Returns the internal format of the texture
-  // or 0 on failure.
-  GrGLenum uploadCompressedTexData(
-      SkImage::CompressionType, int width, int height, GrGLenum target, const void* data);
+  // Helper for onCreateCompressedTexture. Compressed textures are read-only so we only use this
+  // to populate a new texture. Returns false if we failed to create and upload the texture.
+  bool uploadCompressedTexData(
+      GrGLFormat, SkImage::CompressionType, const SkISize& size, GrGLenum target, const void* data);
 
-  bool createRenderTargetObjects(
-      const GrSurfaceDesc&, int sampleCount, const GrGLTextureInfo& texInfo,
-      GrGLRenderTarget::IDDesc*);
+  bool createRenderTargetObjects(const GrGLTexture::Desc&, int sampleCount, GrGLRenderTarget::IDs*);
 
   enum TempFBOTarget { kSrc_TempFBOTarget, kDst_TempFBOTarget };
 
@@ -436,7 +411,7 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
   // last scissor / viewport scissor state seen by the GL.
   struct {
     TriState fEnabled;
-    GrGLIRect fRect;
+    GrNativeRect fRect;
     void invalidate() {
       fEnabled = kUnknown_TriState;
       fRect.invalidate();
@@ -483,7 +458,7 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
     GrWindowRectsState fWindowState;
   } fHWWindowRectsState;
 
-  GrGLIRect fHWViewport;
+  GrNativeRect fHWViewport;
 
   /**
    * Tracks vertex attrib array state.
@@ -647,8 +622,7 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
   class SamplerObjectCache;
   std::unique_ptr<SamplerObjectCache> fSamplerObjectCache;
 
-  std::unique_ptr<GrGLGpuRTCommandBuffer> fCachedRTCommandBuffer;
-  std::unique_ptr<GrGLGpuTextureCommandBuffer> fCachedTexCommandBuffer;
+  std::unique_ptr<GrGLOpsRenderPass> fCachedOpsRenderPass;
 
   struct FinishCallback {
     GrGpuFinishedProc fCallback;

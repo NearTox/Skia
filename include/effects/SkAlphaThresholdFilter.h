@@ -12,6 +12,7 @@
 
 class SkRegion;
 
+// DEPRECATED: Use include/effects/SkImageFilters::AlphaThreshold
 class SK_API SkAlphaThresholdFilter {
  public:
   /**
@@ -26,6 +27,9 @@ class SK_API SkAlphaThresholdFilter {
       const SkImageFilter::CropRect* cropRect = nullptr);
 
   static void RegisterFlattenables();
+
+ private:
+  SkAlphaThresholdFilter() = delete;
 };
 
 #endif

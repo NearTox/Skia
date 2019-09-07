@@ -17,7 +17,7 @@
 #include "include/core/SkSize.h"
 #include "include/core/SkString.h"
 #include "include/core/SkSurface.h"
-#include "include/effects/SkBlurImageFilter.h"
+#include "include/effects/SkImageFilters.h"
 #include "src/core/SkClipOpPriv.h"
 #include "tools/ToolUtils.h"
 
@@ -37,7 +37,7 @@ class ComplexClipBlurTiledGM : public GM {
 
   void onDraw(SkCanvas* canvas) override {
     SkPaint blurPaint;
-    blurPaint.setImageFilter(SkBlurImageFilter::Make(5.0f, 5.0f, nullptr));
+    blurPaint.setImageFilter(SkImageFilters::Blur(5.0f, 5.0f, nullptr));
     const SkScalar tileSize = SkIntToScalar(128);
     SkRect bounds = canvas->getLocalClipBounds();
     int ts = SkScalarCeilToInt(tileSize);

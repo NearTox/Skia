@@ -26,13 +26,13 @@ class SK_API SkLights : public SkRefCnt {
    public:
     enum LightType { kDirectional_LightType, kPoint_LightType };
 
-    Light(const Light& other) noexcept
+    Light(const Light& other)
         : fType(other.fType),
           fColor(other.fColor),
           fDirOrPos(other.fDirOrPos),
           fIntensity(other.fIntensity) {}
 
-    Light(Light&& other) noexcept
+    Light(Light&& other)
         : fType(other.fType),
           fColor(other.fColor),
           fDirOrPos(other.fDirOrPos),
@@ -50,22 +50,22 @@ class SK_API SkLights : public SkRefCnt {
       return Light(kPoint_LightType, color, pos, intensity);
     }
 
-    LightType type() const noexcept { return fType; }
-    const SkColor3f& color() const noexcept { return fColor; }
-    const SkVector3& dir() const noexcept {
+    LightType type() const { return fType; }
+    const SkColor3f& color() const { return fColor; }
+    const SkVector3& dir() const {
       SkASSERT(kDirectional_LightType == fType);
       return fDirOrPos;
     }
-    const SkPoint3& pos() const noexcept {
+    const SkPoint3& pos() const {
       SkASSERT(kPoint_LightType == fType);
       return fDirOrPos;
     }
-    SkScalar intensity() const noexcept {
+    SkScalar intensity() const {
       SkASSERT(kPoint_LightType == fType);
       return fIntensity;
     }
 
-    Light& operator=(const Light& other) noexcept {
+    Light& operator=(const Light& other) {
       if (this == &other) {
         return *this;
       }
@@ -77,7 +77,7 @@ class SK_API SkLights : public SkRefCnt {
       return *this;
     }
 
-    bool operator==(const Light& other) noexcept {
+    bool operator==(const Light& other) {
       return (fType == other.fType) && (fColor == other.fColor) && (fDirOrPos == other.fDirOrPos) &&
              (fIntensity == other.fIntensity);
     }
@@ -87,9 +87,7 @@ class SK_API SkLights : public SkRefCnt {
    private:
     friend class SkLights;
 
-    Light(
-        LightType type, const SkColor3f& color, const SkVector3& dirOrPos,
-        SkScalar intensity) noexcept
+    Light(LightType type, const SkColor3f& color, const SkVector3& dirOrPos, SkScalar intensity)
         : fType(type), fColor(color), fDirOrPos(dirOrPos), fIntensity(intensity) {}
 
     LightType fType;
@@ -120,13 +118,13 @@ class SK_API SkLights : public SkRefCnt {
       }
     }
 
-    void setAmbientLightColor(const SkColor3f& color) noexcept {
+    void setAmbientLightColor(const SkColor3f& color) {
       if (fLights) {
         fLights->fAmbientLightColor = color;
       }
     }
 
-    sk_sp<SkLights> finish() noexcept { return std::move(fLights); }
+    sk_sp<SkLights> finish() { return std::move(fLights); }
 
    private:
     sk_sp<SkLights> fLights;
@@ -136,7 +134,7 @@ class SK_API SkLights : public SkRefCnt {
 
       @return number of lights not including the ambient light
   */
-  int numLights() const noexcept { return fLights.count(); }
+  int numLights() const { return fLights.count(); }
 
   /** Returns the index-th light.
 
@@ -149,7 +147,7 @@ class SK_API SkLights : public SkRefCnt {
 
       @return the ambient light
   */
-  const SkColor3f& ambientLightColor() const noexcept { return fAmbientLightColor; }
+  const SkColor3f& ambientLightColor() const { return fAmbientLightColor; }
 
   /**
    *  Recreate an SkLights object that was serialized into a buffer.
@@ -170,7 +168,7 @@ class SK_API SkLights : public SkRefCnt {
  private:
   friend class SkLightingShaderImpl;
 
-  SkLights() noexcept : fAmbientLightColor(SkColor3f::Make(0.0f, 0.0f, 0.0f)) {}
+  SkLights() : fAmbientLightColor(SkColor3f::Make(0.0f, 0.0f, 0.0f)) {}
 
   SkTArray<Light> fLights;
   SkColor3f fAmbientLightColor;

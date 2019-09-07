@@ -15,7 +15,7 @@ class SkNextID {
   /**
    *  Shared between SkPixelRef's generationID and SkImage's uniqueID
    */
-  static uint32_t ImageID() noexcept;
+  static uint32_t ImageID();
 };
 
 #endif

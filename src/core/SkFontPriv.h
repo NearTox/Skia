@@ -48,7 +48,7 @@ class SkFontPriv {
     return MakeTextMatrix(font.getSize(), font.getScaleX(), font.getSkewX());
   }
 
-  static void ScaleFontMetrics(SkFontMetrics*, SkScalar) noexcept;
+  static void ScaleFontMetrics(SkFontMetrics*, SkScalar);
 
   /**
       Returns the union of bounds of all glyphs.
@@ -91,8 +91,8 @@ class SkAutoToGlyphs {
     }
   }
 
-  int count() const noexcept { return fCount; }
-  const uint16_t* glyphs() const noexcept { return fGlyphs; }
+  int count() const { return fCount; }
+  const uint16_t* glyphs() const { return fGlyphs; }
 
  private:
   SkAutoSTArray<32, uint16_t> fStorage;

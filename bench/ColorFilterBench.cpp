@@ -7,7 +7,8 @@
 
 #include "bench/Benchmark.h"
 #include "include/core/SkCanvas.h"
-#include "include/effects/SkColorFilterImageFilter.h"
+#include "include/core/SkColorFilter.h"
+#include "include/effects/SkImageFilters.h"
 
 // Just need an interesting filter, nothing to special about colormatrix
 static sk_sp<SkColorFilter> make_grayscale() {
@@ -47,7 +48,7 @@ class FilteredRectBench : public Benchmark {
       case kNoFilter_Type: break;
       case kColorFilter_Type: fPaint.setColorFilter(make_grayscale()); break;
       case kImageFilter_Type:
-        fPaint.setImageFilter(SkColorFilterImageFilter::Make(make_grayscale(), nullptr));
+        fPaint.setImageFilter(SkImageFilters::ColorFilter(make_grayscale(), nullptr));
         break;
     }
   }

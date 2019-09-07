@@ -14,9 +14,6 @@
     <ClInclude Include="..\test\coreTest.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\third_party\etc1\etc1.cpp" />
-    <ClCompile Include="..\third_party\gif\SkGifImageReader.cpp" />
-    <ClCompile Include="..\third_party\skcms\skcms.cc" />
     <ClCompile Include="android\SkAndroidFrameworkUtils.cpp" />
     <ClCompile Include="android\SkAnimatedImage.cpp" />
     <ClCompile Include="android\SkBitmapRegionCodec.cpp" />
@@ -65,7 +62,6 @@
     <ClCompile Include="core\SkBitmapDevice.cpp" />
     <ClCompile Include="core\SkBitmapProcState.cpp" />
     <ClCompile Include="core\SkBitmapProcState_matrixProcs.cpp" />
-    <ClCompile Include="core\SkBitmapProvider.cpp" />
     <ClCompile Include="core\SkBlendMode.cpp" />
     <ClCompile Include="core\SkBlitRow_D32.cpp" />
     <ClCompile Include="core\SkBlitter.cpp" />
@@ -105,6 +101,7 @@
     <ClCompile Include="core\SkDrawable.cpp" />
     <ClCompile Include="core\SkDrawLooper.cpp" />
     <ClCompile Include="core\SkDrawShadowInfo.cpp" />
+    <ClCompile Include="core\SkDraw_atlas.cpp" />
     <ClCompile Include="core\SkDraw_text.cpp" />
     <ClCompile Include="core\SkDraw_vertices.cpp" />
     <ClCompile Include="core\SkEdge.cpp" />
@@ -233,6 +230,7 @@
     <ClCompile Include="core\SkVertices.cpp" />
     <ClCompile Include="core\SkVertState.cpp" />
     <ClCompile Include="core\SkVM.cpp" />
+    <ClCompile Include="core\SkVMBlitter.cpp" />
     <ClCompile Include="core\SkWriteBuffer.cpp" />
     <ClCompile Include="core\SkWriter32.cpp" />
     <ClCompile Include="core\SkXfermode.cpp" />
@@ -251,6 +249,7 @@
     <ClCompile Include="effects\imagefilters\SkComposeImageFilter.cpp" />
     <ClCompile Include="effects\imagefilters\SkDisplacementMapEffect.cpp" />
     <ClCompile Include="effects\imagefilters\SkDropShadowImageFilter.cpp" />
+    <ClCompile Include="effects\imagefilters\SkImageFilters.cpp" />
     <ClCompile Include="effects\imagefilters\SkImageSource.cpp" />
     <ClCompile Include="effects\imagefilters\SkLightingImageFilter.cpp" />
     <ClCompile Include="effects\imagefilters\SkMagnifierImageFilter.cpp" />
@@ -371,9 +370,9 @@
     <ClCompile Include="gpu\gl\GrGLExtensions.cpp" />
     <ClCompile Include="gpu\gl\GrGLGLSL.cpp" />
     <ClCompile Include="gpu\gl\GrGLGpu.cpp" />
-    <ClCompile Include="gpu\gl\GrGLGpuCommandBuffer.cpp" />
     <ClCompile Include="gpu\gl\GrGLGpuProgramCache.cpp" />
     <ClCompile Include="gpu\gl\GrGLInterfaceAutogen.cpp" />
+    <ClCompile Include="gpu\gl\GrGLOpsRenderPass.cpp" />
     <ClCompile Include="gpu\gl\GrGLPath.cpp" />
     <ClCompile Include="gpu\gl\GrGLPathRendering.cpp" />
     <ClCompile Include="gpu\gl\GrGLProgram.cpp" />
@@ -417,10 +416,10 @@
     <ClCompile Include="gpu\GrContextPriv.cpp" />
     <ClCompile Include="gpu\GrContextThreadSafeProxy.cpp" />
     <ClCompile Include="gpu\GrContext_Base.cpp" />
+    <ClCompile Include="gpu\GrCopyRenderTask.cpp" />
     <ClCompile Include="gpu\GrDataUtils.cpp" />
     <ClCompile Include="gpu\GrDDLContext.cpp" />
     <ClCompile Include="gpu\GrDefaultGeoProcFactory.cpp" />
-    <ClCompile Include="gpu\GrDeinstantiateProxyTracker.cpp" />
     <ClCompile Include="gpu\GrDistanceFieldGenFromVector.cpp" />
     <ClCompile Include="gpu\GrDrawingManager.cpp" />
     <ClCompile Include="gpu\GrDrawOpAtlas.cpp" />
@@ -430,7 +429,6 @@
     <ClCompile Include="gpu\GrFragmentProcessor.cpp" />
     <ClCompile Include="gpu\GrGpu.cpp" />
     <ClCompile Include="gpu\GrGpuBuffer.cpp" />
-    <ClCompile Include="gpu\GrGpuCommandBuffer.cpp" />
     <ClCompile Include="gpu\GrGpuResource.cpp" />
     <ClCompile Include="gpu\GrImageContext.cpp" />
     <ClCompile Include="gpu\GrImageTextureMaker.cpp" />
@@ -438,7 +436,8 @@
     <ClCompile Include="gpu\GrMemoryPool.cpp" />
     <ClCompile Include="gpu\GrOnFlushResourceProvider.cpp" />
     <ClCompile Include="gpu\GrOpFlushState.cpp" />
-    <ClCompile Include="gpu\GrOpList.cpp" />
+    <ClCompile Include="gpu\GrOpsRenderPass.cpp" />
+    <ClCompile Include="gpu\GrOpsTask.cpp" />
     <ClCompile Include="gpu\GrPaint.cpp" />
     <ClCompile Include="gpu\GrPath.cpp" />
     <ClCompile Include="gpu\GrPathProcessor.cpp" />
@@ -459,8 +458,8 @@
     <ClCompile Include="gpu\GrReducedClip.cpp" />
     <ClCompile Include="gpu\GrRenderTarget.cpp" />
     <ClCompile Include="gpu\GrRenderTargetContext.cpp" />
-    <ClCompile Include="gpu\GrRenderTargetOpList.cpp" />
     <ClCompile Include="gpu\GrRenderTargetProxy.cpp" />
+    <ClCompile Include="gpu\GrRenderTask.cpp" />
     <ClCompile Include="gpu\GrResourceAllocator.cpp" />
     <ClCompile Include="gpu\GrResourceCache.cpp" />
     <ClCompile Include="gpu\GrResourceProvider.cpp" />
@@ -483,12 +482,14 @@
     <ClCompile Include="gpu\GrTextureAdjuster.cpp" />
     <ClCompile Include="gpu\GrTextureContext.cpp" />
     <ClCompile Include="gpu\GrTextureMaker.cpp" />
-    <ClCompile Include="gpu\GrTextureOpList.cpp" />
     <ClCompile Include="gpu\GrTextureProducer.cpp" />
     <ClCompile Include="gpu\GrTextureProxy.cpp" />
     <ClCompile Include="gpu\GrTextureRenderTargetProxy.cpp" />
+    <ClCompile Include="gpu\GrTextureResolveRenderTask.cpp" />
+    <ClCompile Include="gpu\GrTransferFromRenderTask.cpp" />
     <ClCompile Include="gpu\GrXferProcessor.cpp" />
     <ClCompile Include="gpu\GrYUVProvider.cpp" />
+    <ClCompile Include="gpu\mock\GrMockCaps.cpp" />
     <ClCompile Include="gpu\mock\GrMockGpu.cpp" />
     <ClCompile Include="gpu\mock\GrMockTypes.cpp" />
     <ClCompile Include="gpu\ops\GrAAConvexPathRenderer.cpp" />
@@ -498,7 +499,6 @@
     <ClCompile Include="gpu\ops\GrAtlasTextOp.cpp" />
     <ClCompile Include="gpu\ops\GrClearOp.cpp" />
     <ClCompile Include="gpu\ops\GrClearStencilClipOp.cpp" />
-    <ClCompile Include="gpu\ops\GrCopySurfaceOp.cpp" />
     <ClCompile Include="gpu\ops\GrDashLinePathRenderer.cpp" />
     <ClCompile Include="gpu\ops\GrDashOp.cpp" />
     <ClCompile Include="gpu\ops\GrDebugMarkerOp.cpp" />
@@ -524,7 +524,6 @@
     <ClCompile Include="gpu\ops\GrStrokeRectOp.cpp" />
     <ClCompile Include="gpu\ops\GrTessellatingPathRenderer.cpp" />
     <ClCompile Include="gpu\ops\GrTextureOp.cpp" />
-    <ClCompile Include="gpu\ops\GrTransferFromOp.cpp" />
     <ClCompile Include="gpu\SkGpuDevice.cpp" />
     <ClCompile Include="gpu\SkGpuDevice_drawTexture.cpp" />
     <ClCompile Include="gpu\SkGr.cpp" />
@@ -659,6 +658,7 @@
     <ClCompile Include="sksl\SkSLOutputStream.cpp" />
     <ClCompile Include="sksl\SkSLParser.cpp" />
     <ClCompile Include="sksl\SkSLPipelineStageCodeGenerator.cpp" />
+    <ClCompile Include="sksl\SkSLSectionAndParameterHelper.cpp" />
     <ClCompile Include="sksl\SkSLSPIRVCodeGenerator.cpp" />
     <ClCompile Include="sksl\SkSLString.cpp" />
     <ClCompile Include="sksl\SkSLUtil.cpp" />

@@ -170,7 +170,7 @@ void SkAnalyticEdgeBuilder::addCubic(const SkPoint pts[]) {
 // TODO: merge addLine() and addPolyLine()?
 
 SkEdgeBuilder::Combine SkBasicEdgeBuilder::addPolyLine(
-    SkPoint pts[], char* arg_edge, char** arg_edgePtr) {
+    const SkPoint pts[], char* arg_edge, char** arg_edgePtr) {
   auto edge = (SkEdge*)arg_edge;
   auto edgePtr = (SkEdge**)arg_edgePtr;
 
@@ -182,7 +182,7 @@ SkEdgeBuilder::Combine SkBasicEdgeBuilder::addPolyLine(
   return SkEdgeBuilder::kPartial_Combine;  // A convenient lie.  Same do-nothing behavior.
 }
 SkEdgeBuilder::Combine SkAnalyticEdgeBuilder::addPolyLine(
-    SkPoint pts[], char* arg_edge, char** arg_edgePtr) {
+    const SkPoint pts[], char* arg_edge, char** arg_edgePtr) {
   auto edge = (SkAnalyticEdge*)arg_edge;
   auto edgePtr = (SkAnalyticEdge**)arg_edgePtr;
 
@@ -215,10 +215,6 @@ char* SkAnalyticEdgeBuilder::allocEdges(size_t n, size_t* size) {
 
 // TODO: maybe get rid of buildPoly() entirely?
 int SkEdgeBuilder::buildPoly(const SkPath& path, const SkIRect* iclip, bool canCullToTheRight) {
-  SkPath::Iter iter(path, true);
-  SkPoint pts[4];
-  SkPath::Verb verb;
-
   size_t maxEdgeCount = path.countPoints();
   if (iclip) {
     // clipping can turn 1 line into (up to) kMaxClippedLineSegments, since
@@ -238,19 +234,15 @@ int SkEdgeBuilder::buildPoly(const SkPath& path, const SkIRect* iclip, bool canC
   char** edgePtr = fAlloc.makeArrayDefault<char*>(maxEdgeCount);
   fEdgeList = (void**)edgePtr;
 
+  SkPathEdgeIter iter(path);
   if (iclip) {
     SkRect clip = this->recoverClip(*iclip);
 
-    while ((verb = iter.next(pts, false)) != SkPath::kDone_Verb) {
-      switch (verb) {
-        case SkPath::kMove_Verb:
-        case SkPath::kClose_Verb:
-          // we ignore these, and just get the whole segment from
-          // the corresponding line/quad/cubic verbs
-          break;
-        case SkPath::kLine_Verb: {
+    while (auto e = iter.next()) {
+      switch (e.fEdge) {
+        case SkPathEdgeIter::Edge::kLine: {
           SkPoint lines[SkLineClipper::kMaxPoints];
-          int lineCount = SkLineClipper::ClipLine(pts, clip, lines, canCullToTheRight);
+          int lineCount = SkLineClipper::ClipLine(e.fPts, clip, lines, canCullToTheRight);
           SkASSERT(lineCount <= SkLineClipper::kMaxClippedLineSegments);
           for (int i = 0; i < lineCount; i++) {
             switch (this->addPolyLine(lines + i, edge, edgePtr)) {
@@ -265,15 +257,10 @@ int SkEdgeBuilder::buildPoly(const SkPath& path, const SkIRect* iclip, bool canC
       }
     }
   } else {
-    while ((verb = iter.next(pts, false)) != SkPath::kDone_Verb) {
-      switch (verb) {
-        case SkPath::kMove_Verb:
-        case SkPath::kClose_Verb:
-          // we ignore these, and just get the whole segment from
-          // the corresponding line/quad/cubic verbs
-          break;
-        case SkPath::kLine_Verb: {
-          switch (this->addPolyLine(pts, edge, edgePtr)) {
+    while (auto e = iter.next()) {
+      switch (e.fEdge) {
+        case SkPathEdgeIter::Edge::kLine: {
+          switch (this->addPolyLine(e.fPts, edge, edgePtr)) {
             case kTotal_Combine: edgePtr--; break;
             case kPartial_Combine: break;
             case kNo_Combine: *edgePtr++ = edge; edge += edgeSize;
@@ -292,13 +279,9 @@ int SkEdgeBuilder::buildPoly(const SkPath& path, const SkIRect* iclip, bool canC
 int SkEdgeBuilder::build(const SkPath& path, const SkIRect* iclip, bool canCullToTheRight) {
   SkAutoConicToQuads quadder;
   const SkScalar conicTol = SK_Scalar1 / 4;
-
-  SkPath::Iter iter(path, true);
-  SkPoint pts[4];
-  SkPath::Verb verb;
-
   bool is_finite = true;
 
+  SkPathEdgeIter iter(path);
   if (iclip) {
     SkRect clip = this->recoverClip(*iclip);
     SkEdgeClipper clipper(canCullToTheRight);
@@ -322,25 +305,20 @@ int SkEdgeBuilder::build(const SkPath& path, const SkIRect* iclip, bool canCullT
       }
     };
 
-    while ((verb = iter.next(pts, false)) != SkPath::kDone_Verb) {
-      switch (verb) {
-        case SkPath::kMove_Verb:
-        case SkPath::kClose_Verb:
-          // we ignore these, and just get the whole segment from
-          // the corresponding line/quad/cubic verbs
-          break;
-        case SkPath::kLine_Verb:
-          if (clipper.clipLine(pts[0], pts[1], clip)) {
+    while (auto e = iter.next()) {
+      switch (e.fEdge) {
+        case SkPathEdgeIter::Edge::kLine:
+          if (clipper.clipLine(e.fPts[0], e.fPts[1], clip)) {
             apply_clipper();
           }
           break;
-        case SkPath::kQuad_Verb:
-          if (clipper.clipQuad(pts, clip)) {
+        case SkPathEdgeIter::Edge::kQuad:
+          if (clipper.clipQuad(e.fPts, clip)) {
             apply_clipper();
           }
           break;
-        case SkPath::kConic_Verb: {
-          const SkPoint* quadPts = quadder.computeQuads(pts, iter.conicWeight(), conicTol);
+        case SkPathEdgeIter::Edge::kConic: {
+          const SkPoint* quadPts = quadder.computeQuads(e.fPts, iter.conicWeight(), conicTol);
           for (int i = 0; i < quadder.countQuads(); ++i) {
             if (clipper.clipQuad(quadPts, clip)) {
               apply_clipper();
@@ -348,51 +326,43 @@ int SkEdgeBuilder::build(const SkPath& path, const SkIRect* iclip, bool canCullT
             quadPts += 2;
           }
         } break;
-        case SkPath::kCubic_Verb:
-          if (clipper.clipCubic(pts, clip)) {
+        case SkPathEdgeIter::Edge::kCubic:
+          if (clipper.clipCubic(e.fPts, clip)) {
             apply_clipper();
           }
           break;
-        default: SkDEBUGFAIL("unexpected verb"); break;
       }
     }
   } else {
-    while ((verb = iter.next(pts, false)) != SkPath::kDone_Verb) {
-      auto handle_quad = [this](const SkPoint pts[3]) {
-        SkPoint monoX[5];
-        int n = SkChopQuadAtYExtrema(pts, monoX);
-        for (int i = 0; i <= n; i++) {
-          this->addQuad(&monoX[i * 2]);
-        }
-      };
-
-      switch (verb) {
-        case SkPath::kMove_Verb:
-        case SkPath::kClose_Verb:
-          // we ignore these, and just get the whole segment from
-          // the corresponding line/quad/cubic verbs
-          break;
-        case SkPath::kLine_Verb: this->addLine(pts); break;
-        case SkPath::kQuad_Verb: {
-          handle_quad(pts);
+    auto handle_quad = [this](const SkPoint pts[3]) {
+      SkPoint monoX[5];
+      int n = SkChopQuadAtYExtrema(pts, monoX);
+      for (int i = 0; i <= n; i++) {
+        this->addQuad(&monoX[i * 2]);
+      }
+    };
+    while (auto e = iter.next()) {
+      switch (e.fEdge) {
+        case SkPathEdgeIter::Edge::kLine: this->addLine(e.fPts); break;
+        case SkPathEdgeIter::Edge::kQuad: {
+          handle_quad(e.fPts);
           break;
         }
-        case SkPath::kConic_Verb: {
-          const SkPoint* quadPts = quadder.computeQuads(pts, iter.conicWeight(), conicTol);
+        case SkPathEdgeIter::Edge::kConic: {
+          const SkPoint* quadPts = quadder.computeQuads(e.fPts, iter.conicWeight(), conicTol);
           for (int i = 0; i < quadder.countQuads(); ++i) {
             handle_quad(quadPts);
             quadPts += 2;
           }
         } break;
-        case SkPath::kCubic_Verb: {
+        case SkPathEdgeIter::Edge::kCubic: {
           SkPoint monoY[10];
-          int n = SkChopCubicAtYExtrema(pts, monoY);
+          int n = SkChopCubicAtYExtrema(e.fPts, monoY);
           for (int i = 0; i <= n; i++) {
             this->addCubic(&monoY[i * 3]);
           }
           break;
         }
-        default: SkDEBUGFAIL("unexpected verb"); break;
       }
     }
   }

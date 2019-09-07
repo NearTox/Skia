@@ -83,6 +83,7 @@ class RenderNode : public Node {
     }
 
     operator const RenderContext*() const { return &fCtx; }
+    const RenderContext* operator->() const { return &fCtx; }
 
     // Add (cumulative) paint overrides to a render node sub-DAG.
     ScopedRenderContext&& modulateOpacity(float opacity);

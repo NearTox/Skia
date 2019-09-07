@@ -34,7 +34,6 @@ class GrVkTransferBuffer : public GrGpuBuffer, public GrVkBuffer {
 
   bool onUpdateData(const void* src, size_t srcSizeInBytes) override {
     SK_ABORT("Not implemented for transfer buffers.");
-    return false;
   }
 
   GrVkGpu* getVkGpu() const {

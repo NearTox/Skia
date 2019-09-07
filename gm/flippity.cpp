@@ -89,7 +89,7 @@ static sk_sp<SkImage> make_text_image(GrContext* context, const char* text, SkCo
 
   sk_sp<SkImage> image = surf->makeImageSnapshot();
 
-  return image->makeTextureImage(context, nullptr);
+  return image->makeTextureImage(context);
 }
 
 // Create an image with each corner marked w/ "LL", "LR", etc., with the origin either bottom-left
@@ -147,7 +147,7 @@ class FlippityGM : public skiagm::GpuGM {
  public:
   FlippityGM() { this->setBGColor(0xFFCCCCCC); }
 
- protected:
+ private:
   SkString onShortName() override { return SkString("flippity"); }
 
   SkISize onISize() override { return SkISize::Make(kGMWidth, kGMHeight); }
@@ -205,12 +205,15 @@ class FlippityGM : public skiagm::GpuGM {
   }
 
   void makeLabels(GrContext* context) {
+    if (fLabels.count()) {
+      return;
+    }
+
     static const char* kLabelText[kNumLabels] = {"LL", "LR", "UL", "UR"};
 
     static const SkColor kLabelColors[kNumLabels] = {SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE,
                                                      SK_ColorCYAN};
 
-    SkASSERT(!fLabels.count());
     for (int i = 0; i < kNumLabels; ++i) {
       fLabels.push_back(make_text_image(context, kLabelText[i], kLabelColors[i]));
     }

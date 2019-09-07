@@ -225,7 +225,10 @@ SkPDFFont::SkPDFFont(
     : fTypeface(std::move(typeface)),
       fGlyphUsage(firstGlyphID, lastGlyphID),
       fIndirectReference(indirectReference),
-      fFontType(fontType) {}
+      fFontType(fontType) {
+  // Always include glyph 0
+  this->noteGlyphUsage(0);
+}
 
 void SkPDFFont::PopulateCommonFontDescriptor(
     SkPDFDict* descriptor, const SkAdvancedTypefaceMetrics& metrics, uint16_t emSize,
@@ -345,41 +348,41 @@ static void emit_subset_type0(const SkPDFFont& font, SkPDFDocument* doc) {
       newCIDFont->insertName("CIDToGIDMap", "Identity");
       break;
     default: SkASSERT(false);
-  }
-  auto sysInfo = SkPDFMakeDict();
-  sysInfo->insertString("Registry", "Adobe");
-  sysInfo->insertString("Ordering", "Identity");
-  sysInfo->insertInt("Supplement", 0);
-  newCIDFont->insertObject("CIDSystemInfo", std::move(sysInfo));
-
-  SkScalar defaultWidth = 0;
-  {
-    std::unique_ptr<SkPDFArray> widths =
-        SkPDFMakeCIDGlyphWidthsArray(*face, &font.glyphUsage(), &defaultWidth);
-    if (widths && widths->size() > 0) {
-      newCIDFont->insertObject("W", std::move(widths));
     }
-    newCIDFont->insertScalar("DW", defaultWidth);
-  }
+    auto sysInfo = SkPDFMakeDict();
+    sysInfo->insertString("Registry", "Adobe");
+    sysInfo->insertString("Ordering", "Identity");
+    sysInfo->insertInt("Supplement", 0);
+    newCIDFont->insertObject("CIDSystemInfo", std::move(sysInfo));
 
-  ////////////////////////////////////////////////////////////////////////////
+    SkScalar defaultWidth = 0;
+    {
+      std::unique_ptr<SkPDFArray> widths =
+          SkPDFMakeCIDGlyphWidthsArray(*face, font.glyphUsage(), &defaultWidth);
+      if (widths && widths->size() > 0) {
+        newCIDFont->insertObject("W", std::move(widths));
+      }
+      newCIDFont->insertScalar("DW", defaultWidth);
+    }
 
-  SkPDFDict fontDict("Font");
-  fontDict.insertName("Subtype", "Type0");
-  fontDict.insertName("BaseFont", metrics.fPostScriptName);
-  fontDict.insertName("Encoding", "Identity-H");
-  auto descendantFonts = SkPDFMakeArray();
-  descendantFonts->appendRef(doc->emit(*newCIDFont));
-  fontDict.insertObject("DescendantFonts", std::move(descendantFonts));
+    ////////////////////////////////////////////////////////////////////////////
 
-  const std::vector<SkUnichar>& glyphToUnicode = SkPDFFont::GetUnicodeMap(font.typeface(), doc);
-  SkASSERT(SkToSizeT(font.typeface()->countGlyphs()) == glyphToUnicode.size());
-  std::unique_ptr<SkStreamAsset> toUnicode = SkPDFMakeToUnicodeCmap(
-      glyphToUnicode.data(), &font.glyphUsage(), font.multiByteGlyphs(), font.firstGlyphID(),
-      font.lastGlyphID());
-  fontDict.insertRef("ToUnicode", SkPDFStreamOut(nullptr, std::move(toUnicode), doc));
+    SkPDFDict fontDict("Font");
+    fontDict.insertName("Subtype", "Type0");
+    fontDict.insertName("BaseFont", metrics.fPostScriptName);
+    fontDict.insertName("Encoding", "Identity-H");
+    auto descendantFonts = SkPDFMakeArray();
+    descendantFonts->appendRef(doc->emit(*newCIDFont));
+    fontDict.insertObject("DescendantFonts", std::move(descendantFonts));
 
-  doc->emit(fontDict, font.indirectReference());
+    const std::vector<SkUnichar>& glyphToUnicode = SkPDFFont::GetUnicodeMap(font.typeface(), doc);
+    SkASSERT(SkToSizeT(font.typeface()->countGlyphs()) == glyphToUnicode.size());
+    std::unique_ptr<SkStreamAsset> toUnicode = SkPDFMakeToUnicodeCmap(
+        glyphToUnicode.data(), &font.glyphUsage(), font.multiByteGlyphs(), font.firstGlyphID(),
+        font.lastGlyphID());
+    fontDict.insertRef("ToUnicode", SkPDFStreamOut(nullptr, std::move(toUnicode), doc));
+
+    doc->emit(fontDict, font.indirectReference());
 }
 
 ///////////////////////////////////////////////////////////////////////////////

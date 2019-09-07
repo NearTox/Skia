@@ -23,12 +23,28 @@ class GrShaderCaps;
 
 class GrGLSLPrimitiveProcessor {
  public:
-  using FPCoordTransformIter = GrFragmentProcessor::CoordTransformIter;
-
-  virtual ~GrGLSLPrimitiveProcessor() {}
-
   using UniformHandle = GrGLSLProgramDataManager::UniformHandle;
   using SamplerHandle = GrGLSLUniformHandler::SamplerHandle;
+  using FPCoordTransformIter = GrFragmentProcessor::CoordTransformIter;
+
+  struct TransformVar {
+    TransformVar() = default;
+
+    TransformVar(SkString matrixCode, UniformHandle uniformMatrix, GrShaderVar varyingPoint)
+        : fMatrixCode(std::move(matrixCode)),
+          fUniformMatrix(uniformMatrix),
+          fVaryingPoint(varyingPoint) {}
+
+    // a string of SkSL code which resolves to the transformation matrix
+    SkString fMatrixCode;
+    // the variable containing the matrix, if any, otherwise an invalid handle
+    UniformHandle fUniformMatrix;
+    // the transformed coordinate output by the vertex shader and consumed by the fragment
+    // shader
+    GrShaderVar fVaryingPoint;
+  };
+
+  virtual ~GrGLSLPrimitiveProcessor() {}
 
   /**
    * This class provides access to the GrCoordTransforms across all GrFragmentProcessors in a
@@ -39,7 +55,8 @@ class GrGLSLPrimitiveProcessor {
    */
   class FPCoordTransformHandler : public SkNoncopyable {
    public:
-    FPCoordTransformHandler(const GrPipeline& pipeline, SkTArray<GrShaderVar>* transformedCoordVars)
+    FPCoordTransformHandler(
+        const GrPipeline& pipeline, SkTArray<TransformVar>* transformedCoordVars)
         : fIter(pipeline), fTransformedCoordVars(transformedCoordVars) {}
 
     ~FPCoordTransformHandler() { SkASSERT(!this->nextCoordTransform()); }
@@ -57,7 +74,7 @@ class GrGLSLPrimitiveProcessor {
    private:
     GrFragmentProcessor::CoordTransformIter fIter;
     SkDEBUGCODE(bool fAddedCoord = false;) SkDEBUGCODE(
-        const GrCoordTransform* fCurr = nullptr;) SkTArray<GrShaderVar>* fTransformedCoordVars;
+        const GrCoordTransform* fCurr = nullptr;) SkTArray<TransformVar>* fTransformedCoordVars;
   };
 
   struct EmitArgs {

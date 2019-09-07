@@ -18,43 +18,43 @@ struct SkDVector {
   double fX;
   double fY;
 
-  SkDVector& set(const SkVector& pt) noexcept {
+  SkDVector& set(const SkVector& pt) {
     fX = pt.fX;
     fY = pt.fY;
     return *this;
   }
 
   // only used by testing
-  void operator+=(const SkDVector& v) noexcept {
+  void operator+=(const SkDVector& v) {
     fX += v.fX;
     fY += v.fY;
   }
 
   // only called by nearestT, which is currently only used by testing
-  void operator-=(const SkDVector& v) noexcept {
+  void operator-=(const SkDVector& v) {
     fX -= v.fX;
     fY -= v.fY;
   }
 
   // only used by testing
-  void operator/=(const double s) noexcept {
+  void operator/=(const double s) {
     fX /= s;
     fY /= s;
   }
 
   // only used by testing
-  void operator*=(const double s) noexcept {
+  void operator*=(const double s) {
     fX *= s;
     fY *= s;
   }
 
-  SkVector asSkVector() const noexcept {
+  SkVector asSkVector() const {
     SkVector v = {SkDoubleToScalar(fX), SkDoubleToScalar(fY)};
     return v;
   }
 
   // only used by testing
-  double cross(const SkDVector& a) const noexcept { return fX * a.fY - fY * a.fX; }
+  double cross(const SkDVector& a) const { return fX * a.fY - fY * a.fX; }
 
   // similar to cross, this bastardization considers nearly coincident to be zero
   // uses ulps epsilon == 16
@@ -65,75 +65,75 @@ struct SkDVector {
   }
 
   // allow tinier numbers
-  double crossNoNormalCheck(const SkDVector& a) const noexcept {
+  double crossNoNormalCheck(const SkDVector& a) const {
     double xy = fX * a.fY;
     double yx = fY * a.fX;
     return AlmostEqualUlpsNoNormalCheck(xy, yx) ? 0 : xy - yx;
   }
 
-  double dot(const SkDVector& a) const noexcept { return fX * a.fX + fY * a.fY; }
+  double dot(const SkDVector& a) const { return fX * a.fX + fY * a.fY; }
 
-  double length() const noexcept { return sqrt(lengthSquared()); }
+  double length() const { return sqrt(lengthSquared()); }
 
-  double lengthSquared() const noexcept { return fX * fX + fY * fY; }
+  double lengthSquared() const { return fX * fX + fY * fY; }
 
-  SkDVector& normalize() noexcept {
+  SkDVector& normalize() {
     double inverseLength = sk_ieee_double_divide(1, this->length());
     fX *= inverseLength;
     fY *= inverseLength;
     return *this;
   }
 
-  bool isFinite() const noexcept { return std::isfinite(fX) && std::isfinite(fY); }
+  bool isFinite() const { return std::isfinite(fX) && std::isfinite(fY); }
 };
 
 struct SkDPoint {
   double fX;
   double fY;
 
-  void set(const SkPoint& pt) noexcept {
+  void set(const SkPoint& pt) {
     fX = pt.fX;
     fY = pt.fY;
   }
 
-  friend SkDVector operator-(const SkDPoint& a, const SkDPoint& b) noexcept {
+  friend SkDVector operator-(const SkDPoint& a, const SkDPoint& b) {
     return {a.fX - b.fX, a.fY - b.fY};
   }
 
-  friend bool operator==(const SkDPoint& a, const SkDPoint& b) noexcept {
+  friend bool operator==(const SkDPoint& a, const SkDPoint& b) {
     return a.fX == b.fX && a.fY == b.fY;
   }
 
-  friend bool operator!=(const SkDPoint& a, const SkDPoint& b) noexcept {
+  friend bool operator!=(const SkDPoint& a, const SkDPoint& b) {
     return a.fX != b.fX || a.fY != b.fY;
   }
 
-  void operator=(const SkPoint& pt) noexcept {
+  void operator=(const SkPoint& pt) {
     fX = pt.fX;
     fY = pt.fY;
   }
 
   // only used by testing
-  void operator+=(const SkDVector& v) noexcept {
+  void operator+=(const SkDVector& v) {
     fX += v.fX;
     fY += v.fY;
   }
 
   // only used by testing
-  void operator-=(const SkDVector& v) noexcept {
+  void operator-=(const SkDVector& v) {
     fX -= v.fX;
     fY -= v.fY;
   }
 
   // only used by testing
-  SkDPoint operator+(const SkDVector& v) noexcept {
+  SkDPoint operator+(const SkDVector& v) {
     SkDPoint result = *this;
     result += v;
     return result;
   }
 
   // only used by testing
-  SkDPoint operator-(const SkDVector& v) noexcept {
+  SkDPoint operator-(const SkDVector& v) {
     SkDPoint result = *this;
     result -= v;
     return result;
@@ -200,26 +200,24 @@ struct SkDPoint {
   }
 
   // only used by testing
-  bool approximatelyZero() const noexcept {
-    return approximately_zero(fX) && approximately_zero(fY);
-  }
+  bool approximatelyZero() const { return approximately_zero(fX) && approximately_zero(fY); }
 
-  SkPoint asSkPoint() const noexcept {
+  SkPoint asSkPoint() const {
     SkPoint pt = {SkDoubleToScalar(fX), SkDoubleToScalar(fY)};
     return pt;
   }
 
-  double distance(const SkDPoint& a) const noexcept {
+  double distance(const SkDPoint& a) const {
     SkDVector temp = *this - a;
     return temp.length();
   }
 
-  double distanceSquared(const SkDPoint& a) const noexcept {
+  double distanceSquared(const SkDPoint& a) const {
     SkDVector temp = *this - a;
     return temp.lengthSquared();
   }
 
-  static SkDPoint Mid(const SkDPoint& a, const SkDPoint& b) noexcept {
+  static SkDPoint Mid(const SkDPoint& a, const SkDPoint& b) {
     SkDPoint result;
     result.fX = (a.fX + b.fX) / 2;
     result.fY = (a.fY + b.fY) / 2;
@@ -252,7 +250,7 @@ struct SkDPoint {
   }
 
   // very light weight check, should only be used for inequality check
-  static bool WayRoughlyEqual(const SkPoint& a, const SkPoint& b) noexcept {
+  static bool WayRoughlyEqual(const SkPoint& a, const SkPoint& b) {
     float largestNumber =
         SkTMax(SkTAbs(a.fX), SkTMax(SkTAbs(a.fY), SkTMax(SkTAbs(b.fX), SkTAbs(b.fY))));
     SkVector diffs = a - b;

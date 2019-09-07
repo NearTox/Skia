@@ -570,7 +570,7 @@ void SkScan::AntiHairLineRgn(
       SkFDot6 bottom = SkMax32(y0, y1);
       SkIRect ir;
 
-      ir.set(
+      ir.setLTRB(
           SkFDot6Floor(left) - 1, SkFDot6Floor(top) - 1, SkFDot6Ceil(right) + 1,
           SkFDot6Ceil(bottom) + 1);
 
@@ -906,7 +906,7 @@ void SkScan::AntiFrameRect(
 
   SkIRect outer;
   // set outer to the outer rect of the outer section
-  outer.set(FDot8Floor(outerL), FDot8Floor(outerT), FDot8Ceil(outerR), FDot8Ceil(outerB));
+  outer.setLTRB(FDot8Floor(outerL), FDot8Floor(outerT), FDot8Ceil(outerR), FDot8Ceil(outerB));
 
   SkBlitterClipper clipper;
   if (clip) {
@@ -944,14 +944,14 @@ void SkScan::AntiFrameRect(
   antifilldot8(outerL, outerT, outerR, outerB, blitter, false);
 
   // set outer to the outer rect of the middle section
-  outer.set(FDot8Ceil(outerL), FDot8Ceil(outerT), FDot8Floor(outerR), FDot8Floor(outerB));
+  outer.setLTRB(FDot8Ceil(outerL), FDot8Ceil(outerT), FDot8Floor(outerR), FDot8Floor(outerB));
 
   if (innerL >= innerR || innerT >= innerB) {
     fillcheckrect(outer.fLeft, outer.fTop, outer.fRight, outer.fBottom, blitter);
   } else {
     SkIRect inner;
     // set inner to the inner rect of the middle section
-    inner.set(FDot8Floor(innerL), FDot8Floor(innerT), FDot8Ceil(innerR), FDot8Ceil(innerB));
+    inner.setLTRB(FDot8Floor(innerL), FDot8Floor(innerT), FDot8Ceil(innerR), FDot8Ceil(innerB));
 
     // draw the frame in 4 pieces
     fillcheckrect(outer.fLeft, outer.fTop, outer.fRight, inner.fTop, blitter);

@@ -22,10 +22,10 @@
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrGeometryProcessor.h"
 #include "src/gpu/GrGpuBuffer.h"
-#include "src/gpu/GrGpuCommandBuffer.h"
 #include "src/gpu/GrMemoryPool.h"
 #include "src/gpu/GrMesh.h"
 #include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/GrOpsRenderPass.h"
 #include "src/gpu/GrPipeline.h"
 #include "src/gpu/GrPrimitiveProcessor.h"
 #include "src/gpu/GrProcessor.h"
@@ -172,7 +172,7 @@ class FwidthSquircleTestOp : public GrDrawOp {
     GrMesh mesh(GrPrimitiveType::kTriangleStrip);
     mesh.setNonIndexedNonInstanced(4);
     mesh.setVertexData(std::move(vertexBuffer));
-    flushState->rtCommandBuffer()->draw(
+    flushState->opsRenderPass()->draw(
         FwidthSquircleTestProcessor(fViewMatrix), pipeline, nullptr, nullptr, &mesh, 1,
         SkRect::MakeIWH(100, 100));
   }

@@ -72,10 +72,10 @@ class SkArenaAlloc {
 
   template <typename T, typename... Args>
   T* make(Args&&... args) {
-    constexpr uint32_t size = ToU32(sizeof(T));
-    constexpr uint32_t alignment = ToU32(alignof(T));
+    uint32_t size = ToU32(sizeof(T));
+    uint32_t alignment = ToU32(alignof(T));
     char* objStart;
-    if constexpr (std::is_trivially_destructible<T>::value) {
+    if (std::is_trivially_destructible<T>::value) {
       objStart = this->allocObject(size, alignment);
       fCursor = objStart + size;
     } else {
@@ -136,12 +136,12 @@ class SkArenaAlloc {
   void reset();
 
  private:
-  static void AssertRelease(bool cond) noexcept {
+  static void AssertRelease(bool cond) {
     if (!cond) {
       ::abort();
     }
   }
-  static constexpr uint32_t ToU32(size_t v) {
+  static uint32_t ToU32(size_t v) {
     assert(SkTFitsIn<uint32_t>(v));
     return (uint32_t)v;
   }
@@ -178,7 +178,7 @@ class SkArenaAlloc {
     char* objStart;
     AssertRelease(count <= std::numeric_limits<uint32_t>::max() / sizeof(T));
     uint32_t arraySize = ToU32(count * sizeof(T));
-    constexpr uint32_t alignment = ToU32(alignof(T));
+    uint32_t alignment = ToU32(alignof(T));
 
     if (std::is_trivially_destructible<T>::value) {
       objStart = this->allocObject(arraySize, alignment);

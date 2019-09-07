@@ -33,7 +33,7 @@ void basic_texture_test(
       srcBuffer, 0);
   REPORTER_ASSERT(reporter, proxy);
   if (proxy) {
-    sk_sp<GrSurfaceContext> sContext = context->priv().makeWrappedSurfaceContext(
+    auto sContext = context->priv().makeWrappedSurfaceContext(
         proxy, SkColorTypeToGrColorType(ct), kPremul_SkAlphaType);
 
     SkImageInfo dstInfo = SkImageInfo::Make(kWidth, kHeight, ct, kPremul_SkAlphaType);
@@ -60,7 +60,7 @@ void basic_texture_test(
       srcBuffer, 0);
   REPORTER_ASSERT(reporter, proxy);
   if (proxy) {
-    sk_sp<GrSurfaceContext> sContext = context->priv().makeWrappedSurfaceContext(
+    auto sContext = context->priv().makeWrappedSurfaceContext(
         proxy, SkColorTypeToGrColorType(ct), kPremul_SkAlphaType);
 
     SkImageInfo dstInfo = SkImageInfo::Make(kWidth, kHeight, ct, kPremul_SkAlphaType);

@@ -53,7 +53,7 @@ class GrPathRendering {
       case kTranslate_PathTransformType: return 2;
       case kAffine_PathTransformType: return 6;
 
-      default: SK_ABORT("Unknown path transform type"); return 0;
+      default: SK_ABORT("Unknown path transform type");
     }
   }
 

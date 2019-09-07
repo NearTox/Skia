@@ -85,7 +85,7 @@ class ImageCacheBudgetBench : public Benchmark {
   void onPerCanvasPreDraw(SkCanvas* canvas) override {
     GrContext* context = canvas->getGrContext();
     SkASSERT(context);
-    context->getResourceCacheLimits(&fOldCount, &fOldBytes);
+    fOldBytes = context->getResourceCacheLimit();
     set_cache_budget(canvas, fBudgetSize);
     make_images(fImages, kImagesToDraw);
     if (fShuffle) {
@@ -108,7 +108,7 @@ class ImageCacheBudgetBench : public Benchmark {
   void onPerCanvasPostDraw(SkCanvas* canvas) override {
     GrContext* context = canvas->getGrContext();
     SkASSERT(context);
-    context->setResourceCacheLimits(fOldCount, fOldBytes);
+    context->setResourceCacheLimit(fOldBytes);
     for (int i = 0; i < kImagesToDraw; ++i) {
       fImages[i].reset();
     }
@@ -143,7 +143,6 @@ class ImageCacheBudgetBench : public Benchmark {
   sk_sp<SkImage> fImages[kImagesToDraw];
   std::unique_ptr<int[]> fIndices;
   size_t fOldBytes;
-  int fOldCount;
 
   typedef Benchmark INHERITED;
 };

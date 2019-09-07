@@ -119,8 +119,7 @@ GrResourceCache::GrResourceCache(
 
 GrResourceCache::~GrResourceCache() { this->releaseAll(); }
 
-void GrResourceCache::setLimits(int count, size_t bytes) {
-  fMaxCount = count;
+void GrResourceCache::setLimit(size_t bytes) {
   fMaxBytes = bytes;
   this->purgeAsNeeded();
 }
@@ -482,7 +481,7 @@ void GrResourceCache::notifyCntReachedZero(GrGpuResource* resource, uint32_t fla
     if (!resource->resourcePriv().refsWrappedObjects() &&
         resource->resourcePriv().getScratchKey().isValid()) {
       // We won't purge an existing resource to make room for this one.
-      if (fBudgetedCount < fMaxCount && fBudgetedBytes + resource->gpuMemorySize() <= fMaxBytes) {
+      if (this->wouldFit(resource->gpuMemorySize())) {
         resource->resourcePriv().makeBudgeted();
         return;
       }
@@ -794,15 +793,14 @@ void GrResourceCache::dumpStats(SkString* out) const {
 
   this->getStats(&stats);
 
-  float countUtilization = (100.f * fBudgetedCount) / fMaxCount;
   float byteUtilization = (100.f * fBudgetedBytes) / fMaxBytes;
 
-  out->appendf("Budget: %d items %d bytes\n", fMaxCount, (int)fMaxBytes);
+  out->appendf("Budget: %d bytes\n", (int)fMaxBytes);
   out->appendf(
       "\t\tEntry Count: current %d"
-      " (%d budgeted, %d wrapped, %d locked, %d scratch %.2g%% full), high %d\n",
+      " (%d budgeted, %d wrapped, %d locked, %d scratch), high %d\n",
       stats.fTotal, fBudgetedCount, stats.fWrapped, stats.fNumNonPurgeable, stats.fScratch,
-      countUtilization, fHighWaterCount);
+      fHighWaterCount);
   out->appendf(
       "\t\tEntry Bytes: current %d (budgeted %d, %.2g%% full, %d unbudgeted) high %d\n",
       SkToInt(fBytes), SkToInt(fBudgetedBytes), byteUtilization, SkToInt(stats.fUnbudgetedSize),
@@ -851,6 +849,9 @@ void GrResourceCache::validate() const {
 
     void update(GrGpuResource* resource) {
       fBytes += resource->gpuMemorySize();
+
+      // No resource should ever have pendingIO any more
+      SkASSERT(!resource->internalHasPendingIO());
 
       if (!resource->resourcePriv().isPurgeable()) {
         ++fLocked;

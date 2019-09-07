@@ -13,6 +13,8 @@
 #include "include/core/SkString.h"
 #include "include/effects/SkGradientShader.h"
 
+#include "tools/ToolUtils.h"
+
 struct GradData {
   int fCount;
   const SkColor* fColors;
@@ -142,16 +144,6 @@ enum GradType {  // these must match the order in gGrads
 
 enum GeomType { kRect_GeomType, kOval_GeomType };
 
-static const char* tilemodename(SkTileMode tm) {
-  switch (tm) {
-    case SkTileMode::kClamp: return "clamp";
-    case SkTileMode::kRepeat: return "repeat";
-    case SkTileMode::kMirror: return "mirror";
-    case SkTileMode::kDecal: return "decal";
-  }
-  return "";
-}
-
 static const char* geomtypename(GeomType gt) {
   switch (gt) {
     case kRect_GeomType: return "rectangle";
@@ -168,7 +160,7 @@ class GradientBench : public Benchmark {
       GradType gradType, GradData data = gGradData[0], SkTileMode tm = SkTileMode::kClamp,
       GeomType geomType = kRect_GeomType, float scale = 1.0f)
       : fGeomType(geomType) {
-    fName.printf("gradient_%s_%s", gGrads[gradType].fName, tilemodename(tm));
+    fName.printf("gradient_%s_%s", gGrads[gradType].fName, ToolUtils::tilemode_name(tm));
     if (geomType != kRect_GeomType) {
       fName.appendf("_%s", geomtypename(geomType));
     }
@@ -184,7 +176,7 @@ class GradientBench : public Benchmark {
   }
 
   GradientBench(GradType gradType, GradData data, bool dither) : fGeomType(kRect_GeomType) {
-    const char* tmname = tilemodename(SkTileMode::kClamp);
+    const char* tmname = ToolUtils::tilemode_name(SkTileMode::kClamp);
     fName.printf("gradient_%s_%s", gGrads[gradType].fName, tmname);
     fName.append(data.fName);
 

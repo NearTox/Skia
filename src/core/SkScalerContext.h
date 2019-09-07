@@ -231,6 +231,7 @@ class SkScalerContext {
     // only meaningful if fMaskFormat is kA8
     kGenA8FromLCD_Flag = 0x0800,  // could be 0x200 (bit meaning dependent on fMaskFormat)
     kLinearMetrics_Flag = 0x1000,
+    kBaselineSnap_Flag = 0x2000,
   };
 
   // computed values

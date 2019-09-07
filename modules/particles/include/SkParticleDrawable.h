@@ -11,7 +11,7 @@
 #include "modules/particles/include/SkReflected.h"
 
 class SkCanvas;
-struct SkParticleState;
+struct SkParticles;
 class SkPaint;
 class SkString;
 
@@ -20,7 +20,7 @@ class SkParticleDrawable : public SkReflected {
   REFLECTED_ABSTRACT(SkParticleDrawable, SkReflected)
 
   virtual void draw(
-      SkCanvas* canvas, const SkParticleState particles[], int count, const SkPaint* paint) = 0;
+      SkCanvas* canvas, const SkParticles& particles, int count, const SkPaint& paint) = 0;
 
   static void RegisterDrawableTypes();
 

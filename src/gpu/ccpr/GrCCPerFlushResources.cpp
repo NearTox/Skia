@@ -496,8 +496,7 @@ void GrCCPerFlushResources::recordStencilResolveInstance(
       (int16_t)atlasIBounds.bottom()};
 }
 
-bool GrCCPerFlushResources::finalize(
-    GrOnFlushResourceProvider* onFlushRP, SkTArray<sk_sp<GrRenderTargetContext>>* out) {
+bool GrCCPerFlushResources::finalize(GrOnFlushResourceProvider* onFlushRP) {
   SkASSERT(this->isMapped());
   SkASSERT(fNextPathInstanceIdx == fEndPathInstance);
   SkASSERT(fNextCopyInstanceIdx == fEndCopyInstance);
@@ -539,7 +538,7 @@ bool GrCCPerFlushResources::finalize(
     int endCopyRange = atlas->getFillBatchID();
     SkASSERT(endCopyRange > copyRangeIdx);
 
-    sk_sp<GrRenderTargetContext> rtc = atlas->makeRenderTargetContext(onFlushRP);
+    auto rtc = atlas->makeRenderTargetContext(onFlushRP);
     for (; copyRangeIdx < endCopyRange; ++copyRangeIdx) {
       const CopyPathRange& copyRange = fCopyPathRanges[copyRangeIdx];
       int endCopyInstance = baseCopyInstance + copyRange.fCount;
@@ -551,7 +550,6 @@ bool GrCCPerFlushResources::finalize(
       }
       baseCopyInstance = endCopyInstance;
     }
-    out->push_back(std::move(rtc));
   }
   SkASSERT(fCopyPathRanges.count() == copyRangeIdx);
   SkASSERT(fNextCopyInstanceIdx == baseCopyInstance);
@@ -588,7 +586,10 @@ bool GrCCPerFlushResources::finalize(
             atlas->getStrokeBatchID(), atlas->drawBounds());
       }
       rtc->addDrawOp(GrNoClip(), std::move(op));
-      out->push_back(std::move(rtc));
+      if (rtc->proxy()->requiresManualMSAAResolve()) {
+        onFlushRP->addTextureResolveTask(
+            sk_ref_sp(rtc->proxy()->asTextureProxy()), GrSurfaceProxy::ResolveFlags::kMSAA);
+      }
     }
 
     SkASSERT(atlas->getEndStencilResolveInstance() >= baseStencilResolveInstance);

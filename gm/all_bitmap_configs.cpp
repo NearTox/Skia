@@ -199,7 +199,7 @@ static uint32_t make_pixel(int x, int y, SkAlphaType alphaType) {
   switch (alphaType) {
     case kPremul_SkAlphaType: component = alpha; break;
     case kUnpremul_SkAlphaType: component = 0xFF; break;
-    default: SK_ABORT("Should not get here - invalid alpha type"); return 0xFF000000;
+    default: SK_ABORT("Should not get here - invalid alpha type");
   }
   return alpha << 24 | component;
 }

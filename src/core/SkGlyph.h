@@ -36,17 +36,16 @@ struct SkPackedGlyphID {
     kSubShiftY = 0
   };
 
-  constexpr explicit SkPackedGlyphID(SkGlyphID glyphID) noexcept : fID{glyphID} {}
+  constexpr explicit SkPackedGlyphID(SkGlyphID glyphID) : fID{glyphID} {}
 
   constexpr SkPackedGlyphID(SkGlyphID glyphID, SkFixed x, SkFixed y)
       : fID{PackIDXY(glyphID, x, y)} {
     SkASSERT(fID != kImpossibleID);
   }
 
-  constexpr SkPackedGlyphID(SkGlyphID code, SkIPoint pt) noexcept
-      : SkPackedGlyphID(code, pt.fX, pt.fY) {}
+  constexpr SkPackedGlyphID(SkGlyphID code, SkIPoint pt) : SkPackedGlyphID(code, pt.fX, pt.fY) {}
 
-  constexpr SkPackedGlyphID() noexcept : fID{kImpossibleID} {}
+  constexpr SkPackedGlyphID() : fID{kImpossibleID} {}
 
   bool operator==(const SkPackedGlyphID& that) const { return fID == that.fID; }
   bool operator!=(const SkPackedGlyphID& that) const { return !(*this == that); }
@@ -96,7 +95,7 @@ class SkGlyph {
  public:
   static constexpr SkFixed kSubpixelRound = SK_FixedHalf >> SkPackedGlyphID::kSubBits;
 
-  constexpr explicit SkGlyph(SkPackedGlyphID id) noexcept : fID{id} {}
+  constexpr explicit SkGlyph(SkPackedGlyphID id) : fID{id} {}
   explicit SkGlyph(const SkGlyphPrototype& p);
 
   SkVector advanceVector() const { return SkVector{fAdvanceX, fAdvanceY}; }

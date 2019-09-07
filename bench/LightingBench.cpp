@@ -7,7 +7,7 @@
 #include "bench/Benchmark.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkPoint3.h"
-#include "include/effects/SkLightingImageFilter.h"
+#include "include/effects/SkImageFilters.h"
 
 #define FILTER_WIDTH_SMALL SkIntToScalar(32)
 #define FILTER_HEIGHT_SMALL SkIntToScalar(32)
@@ -105,7 +105,7 @@ class LightingPointLitDiffuseBench : public LightingBaseBench {
   void onDraw(int loops, SkCanvas* canvas) override {
     draw(
         loops, canvas,
-        SkLightingImageFilter::MakePointLitDiffuse(
+        SkImageFilters::PointLitDiffuse(
             GetPointLocation(), GetWhite(), GetSurfaceScale(), GetKd(), nullptr));
   }
 
@@ -125,7 +125,7 @@ class LightingDistantLitDiffuseBench : public LightingBaseBench {
   void onDraw(int loops, SkCanvas* canvas) override {
     draw(
         loops, canvas,
-        SkLightingImageFilter::MakeDistantLitDiffuse(
+        SkImageFilters::DistantLitDiffuse(
             GetDistantDirection(), GetWhite(), GetSurfaceScale(), GetKd(), nullptr));
   }
 
@@ -145,7 +145,7 @@ class LightingSpotLitDiffuseBench : public LightingBaseBench {
   void onDraw(int loops, SkCanvas* canvas) override {
     draw(
         loops, canvas,
-        SkLightingImageFilter::MakeSpotLitDiffuse(
+        SkImageFilters::SpotLitDiffuse(
             GetSpotLocation(), GetSpotTarget(), GetSpotExponent(), GetCutoffAngle(), GetWhite(),
             GetSurfaceScale(), GetKd(), nullptr));
   }
@@ -166,7 +166,7 @@ class LightingPointLitSpecularBench : public LightingBaseBench {
   void onDraw(int loops, SkCanvas* canvas) override {
     draw(
         loops, canvas,
-        SkLightingImageFilter::MakePointLitSpecular(
+        SkImageFilters::PointLitSpecular(
             GetPointLocation(), GetWhite(), GetSurfaceScale(), GetKs(), GetShininess(), nullptr));
   }
 
@@ -186,7 +186,7 @@ class LightingDistantLitSpecularBench : public LightingBaseBench {
   void onDraw(int loops, SkCanvas* canvas) override {
     draw(
         loops, canvas,
-        SkLightingImageFilter::MakeDistantLitSpecular(
+        SkImageFilters::DistantLitSpecular(
             GetDistantDirection(), GetWhite(), GetSurfaceScale(), GetKs(), GetShininess(),
             nullptr));
   }
@@ -207,7 +207,7 @@ class LightingSpotLitSpecularBench : public LightingBaseBench {
   void onDraw(int loops, SkCanvas* canvas) override {
     draw(
         loops, canvas,
-        SkLightingImageFilter::MakeSpotLitSpecular(
+        SkImageFilters::SpotLitSpecular(
             GetSpotLocation(), GetSpotTarget(), GetSpotExponent(), GetCutoffAngle(), GetWhite(),
             GetSurfaceScale(), GetKs(), GetShininess(), nullptr));
   }

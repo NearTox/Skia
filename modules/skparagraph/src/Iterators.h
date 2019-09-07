@@ -23,17 +23,13 @@ class FontIterator final : public SkShaper::FontRunIterator {
 
   void consume() override {
     SkASSERT(fCurrentChar < fText.end());
-    SkString locale;
-    auto found = fFontResolver->findNext(fCurrentChar, &fFont, &fLineHeight);
-    SkASSERT(found);
+    fFontResolver->findNext(fCurrentChar, &fFont, &fLineHeight);
 
     // Move until we find the first character that cannot be resolved with the current font
     while (++fCurrentChar != fText.end()) {
       SkFont font;
       SkScalar height;
-      SkString locale;
-      found = fFontResolver->findNext(fCurrentChar, &font, &height);
-      if (found) {
+      if (fFontResolver->findNext(fCurrentChar, &font, &height)) {
         if (fFont == font && fLineHeight == height) {
           continue;
         }
@@ -74,7 +70,7 @@ class LangIterator final : public SkShaper::LanguageRunIterator {
 
     fCurrentChar = fText.begin() + fCurrentStyle->fRange.end;
     fCurrentLocale = fCurrentStyle->fStyle.getLocale();
-    while (++fCurrentStyle != fTextStyles.end()) {
+    while (++fCurrentStyle != fTextStyles.end() && !fCurrentStyle->fStyle.isPlaceholder()) {
       if (fCurrentStyle->fStyle.getLocale() != fCurrentLocale) {
         break;
       }
@@ -83,7 +79,7 @@ class LangIterator final : public SkShaper::LanguageRunIterator {
   }
 
   size_t endOfCurrentRun() const override { return fCurrentChar - fText.begin(); }
-  bool atEnd() const override { return fCurrentChar == fText.end(); }
+  bool atEnd() const override { return fCurrentChar >= fText.end(); }
   const char* currentLanguage() const override { return fCurrentLocale.c_str(); }
 
  private:

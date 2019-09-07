@@ -42,7 +42,9 @@ static inline int grsltype_to_location_size(GrSLType type) {
     case kHalf3x3_GrSLType: return 3;
     case kFloat4x4_GrSLType:
     case kHalf4x4_GrSLType: return 4;
-    case kTexture2DSampler_GrSLType: return 0;
+    case kTexture2DSampler_GrSLType:
+    case kSampler_GrSLType:
+    case kTexture2D_GrSLType: return 0;
     case kTextureExternalSampler_GrSLType: return 0;
     case kTexture2DRectSampler_GrSLType: return 0;
     case kBool_GrSLType: return 1;
@@ -54,7 +56,6 @@ static inline int grsltype_to_location_size(GrSLType type) {
     case kUByte_GrSLType: return 1;
   }
   SK_ABORT("Unexpected type");
-  return -1;
 }
 
 static void finalize_helper(GrVkVaryingHandler::VarArray& vars) {

@@ -101,6 +101,9 @@ class SkBitmapDevice : public SkBaseDevice {
   void drawVertices(
       const SkVertices*, const SkVertices::Bone bones[], int boneCount, SkBlendMode,
       const SkPaint& paint) override;
+  void drawAtlas(
+      const SkImage*, const SkRSXform[], const SkRect[], const SkColor[], int count, SkBlendMode,
+      const SkPaint&) override;
   void drawDevice(SkBaseDevice*, int x, int y, const SkPaint&) override;
 
   ///////////////////////////////////////////////////////////////////////////
@@ -109,10 +112,8 @@ class SkBitmapDevice : public SkBaseDevice {
       SkSpecialImage*, int x, int y, const SkPaint&, SkImage*, const SkMatrix&) override;
   sk_sp<SkSpecialImage> makeSpecial(const SkBitmap&) override;
   sk_sp<SkSpecialImage> makeSpecial(const SkImage*) override;
-  sk_sp<SkSpecialImage> snapSpecial() override;
+  sk_sp<SkSpecialImage> snapSpecial(const SkIRect&, bool = false) override;
   void setImmutable() override { fBitmap.setImmutable(); }
-
-  sk_sp<SkSpecialImage> snapBackImage(const SkIRect&) override;
 
   ///////////////////////////////////////////////////////////////////////////
 

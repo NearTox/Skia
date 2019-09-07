@@ -29,31 +29,31 @@ bool SubsetPath::subset(bool testFailed, SkPath* sub) {
       fSelected[start] = true;
     }
   }
-  do {
     do {
-      ++fSubset;
-      start = range(&end);
-      //           SkDebugf("%d s=%d e=%d t=%d\n", fSubset, start, end, fTries);
-      if (end - start > 1) {
-        fTries = fSelected.count();
-      } else if (end - start == 1) {
-        if (--fTries <= 0) {
-          return false;
+      do {
+        ++fSubset;
+        start = range(&end);
+        //           SkDebugf("%d s=%d e=%d t=%d\n", fSubset, start, end, fTries);
+        if (end - start > 1) {
+          fTries = fSelected.count();
+        } else if (end - start == 1) {
+          if (--fTries <= 0) {
+            return false;
+          }
         }
-      }
-    } while (start == end);
-  } while (!fSelected[start]);
-  for (; start < end; ++start) {
-    fSelected[start] = false;
-  }
+      } while (start == end);
+    } while (!fSelected[start]);
+    for (; start < end; ++start) {
+      fSelected[start] = false;
+    }
 #if 1
-  SkDebugf("selected: ");
-  for (int index = 0; index < fSelected.count(); ++index) {
-    SkDebugf("%c", fSelected[index] ? 'x' : '-');
-  }
+    SkDebugf("selected: ");
+    for (int index = 0; index < fSelected.count(); ++index) {
+      SkDebugf("%c", fSelected[index] ? 'x' : '-');
+    }
 #endif
-  *sub = getSubsetPath();
-  return true;
+    *sub = getSubsetPath();
+    return true;
 }
 
 SubsetContours::SubsetContours(const SkPath& path) : SubsetPath(path) {

@@ -83,7 +83,7 @@ class GrShaderVar {
     SkASSERT(kVoid_GrSLType != type);
   }
 
-  GrShaderVar(const GrShaderVar& that) noexcept
+  GrShaderVar(const GrShaderVar& that)
       : fType(that.fType),
         fTypeModifier(that.fTypeModifier),
         fCount(that.fCount),

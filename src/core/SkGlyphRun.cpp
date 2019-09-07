@@ -173,7 +173,7 @@ void SkGlyphRunBuilder::drawTextBlob(
 
   for (SkTextBlobRunIterator it(&blob); !it.done(); it.next()) {
     if (it.positioning() != SkTextBlobRunIterator::kRSXform_Positioning) {
-      simplifyTextBlobIgnoringRSXForm(paint, it, positions);
+      simplifyTextBlobIgnoringRSXForm(it, positions);
     } else {
       // Handle kRSXform_Positioning
       if (!this->empty()) {
@@ -210,7 +210,7 @@ void SkGlyphRunBuilder::textBlobToGlyphRunListIgnoringRSXForm(
   SkPoint* positions = fPositions;
 
   for (SkTextBlobRunIterator it(&blob); !it.done(); it.next()) {
-    simplifyTextBlobIgnoringRSXForm(paint, it, positions);
+    simplifyTextBlobIgnoringRSXForm(it, positions);
     positions += it.glyphCount();
   }
 
@@ -220,7 +220,7 @@ void SkGlyphRunBuilder::textBlobToGlyphRunListIgnoringRSXForm(
 }
 
 void SkGlyphRunBuilder::simplifyTextBlobIgnoringRSXForm(
-    const SkPaint& paint, const SkTextBlobRunIterator& it, SkPoint* positions) {
+    const SkTextBlobRunIterator& it, SkPoint* positions) {
   size_t runSize = it.glyphCount();
 
   auto text = SkSpan<const char>(it.text(), it.textSize());

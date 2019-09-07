@@ -16,15 +16,17 @@
 #include "include/private/SkMacros.h"
 #include "tools/Registry.h"
 
+#include <memory>
+
 class GrContext;
 class GrRenderTargetContext;
 class SkCanvas;
 class SkMetaData;
 struct GrContextOptions;
 
-#define DEF_GM(code)                                           \
-  static skiagm::GM* SK_MACRO_APPEND_LINE(F_)(void*) { code; } \
-  static skiagm::GMRegistry SK_MACRO_APPEND_LINE(R_)(SK_MACRO_APPEND_LINE(F_));
+#define DEF_GM(CODE)                                    \
+  static skiagm::GMRegistry SK_MACRO_APPEND_LINE(REG_)( \
+      []() { return std::unique_ptr<skiagm::GM>([]() { CODE; }()); });
 
 // A Simple GM is a rendering test that does not store state between rendering calls or make use of
 // the onOnceBeforeDraw() virtual; it consists of:
@@ -164,8 +166,8 @@ class GM {
   bool fHaveCalledOnceBeforeDraw;
 };
 
-typedef GM* (*GMFactory)(void*);
-typedef sk_tools::Registry<GMFactory> GMRegistry;
+using GMFactory = std::unique_ptr<skiagm::GM> (*)();
+using GMRegistry = sk_tools::Registry<GMFactory>;
 
 // A GpuGM replaces the onDraw method with one that also accepts GPU objects alongside the
 // SkCanvas. Its onDraw is only invoked on GPU configs; on non-GPU configs it will automatically
@@ -217,7 +219,6 @@ class SimpleGpuGM : public GpuGM {
   const SkISize fSize;
   const DrawProc fDrawProc;
 };
-
 }  // namespace skiagm
 
 void MarkGMGood(SkCanvas*, SkScalar x, SkScalar y);

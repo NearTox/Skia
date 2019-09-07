@@ -24,18 +24,16 @@ class GrGLTextureRenderTarget : public GrGLTexture, public GrGLRenderTarget {
   // We're virtually derived from GrSurface (via both GrGLTexture and GrGLRenderTarget) so its
   // constructor must be explicitly called.
   GrGLTextureRenderTarget(
-      GrGLGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc, int sampleCount,
-      const GrGLTexture::IDDesc& texIDDesc, const GrGLRenderTarget::IDDesc& rtIDDesc,
-      GrMipMapsStatus);
+      GrGLGpu* gpu, SkBudgeted budgeted, int sampleCount, const GrGLTexture::Desc& texDesc,
+      const GrGLRenderTarget::IDs&, GrMipMapsStatus);
 
   bool canAttemptStencilAttachment() const override;
 
   void dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const override;
 
   static sk_sp<GrGLTextureRenderTarget> MakeWrapped(
-      GrGLGpu* gpu, const GrSurfaceDesc& desc, int sampleCount,
-      const GrGLTexture::IDDesc& texIDDesc, sk_sp<GrGLTextureParameters> parameters,
-      const GrGLRenderTarget::IDDesc& rtIDDesc, GrWrapCacheable cacheble, GrMipMapsStatus);
+      GrGLGpu* gpu, int sampleCount, const GrGLTexture::Desc&, sk_sp<GrGLTextureParameters>,
+      const GrGLRenderTarget::IDs&, GrWrapCacheable, GrMipMapsStatus);
 
   GrBackendFormat backendFormat() const override {
     // It doesn't matter if we take the texture or render target path, so just pick texture.
@@ -56,9 +54,9 @@ class GrGLTextureRenderTarget : public GrGLTexture, public GrGLRenderTarget {
  private:
   // Constructor for instances wrapping backend objects.
   GrGLTextureRenderTarget(
-      GrGLGpu* gpu, const GrSurfaceDesc& desc, int sampleCount,
-      const GrGLTexture::IDDesc& texIDDesc, sk_sp<GrGLTextureParameters> parameters,
-      const GrGLRenderTarget::IDDesc& rtIDDesc, GrWrapCacheable, GrMipMapsStatus);
+      GrGLGpu* gpu, int sampleCount, const GrGLTexture::Desc& texDesc,
+      sk_sp<GrGLTextureParameters> parameters, const GrGLRenderTarget::IDs& ids, GrWrapCacheable,
+      GrMipMapsStatus);
 
   size_t onGpuMemorySize() const override;
 };

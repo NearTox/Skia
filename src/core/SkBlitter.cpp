@@ -417,7 +417,7 @@ void SkRectClipBlitter::blitV(int x, int y, int height, SkAlpha alpha) {
 void SkRectClipBlitter::blitRect(int left, int y, int width, int height) {
   SkIRect r;
 
-  r.set(left, y, left + width, y + height);
+  r.setLTRB(left, y, left + width, y + height);
   if (r.intersect(fClipRect)) {
     fBlitter->blitRect(r.fLeft, r.fTop, r.width(), r.height());
   }
@@ -428,7 +428,7 @@ void SkRectClipBlitter::blitAntiRect(
   SkIRect r;
 
   // The *true* width of the rectangle blitted is width+2:
-  r.set(left, y, left + width + 2, y + height);
+  r.setLTRB(left, y, left + width + 2, y + height);
   if (r.intersect(fClipRect)) {
     if (r.fLeft != left) {
       SkASSERT(r.fLeft > left);
@@ -519,7 +519,7 @@ void SkRgnClipBlitter::blitAntiH(int x, int y, const SkAlpha aa[], const int16_t
 
 void SkRgnClipBlitter::blitV(int x, int y, int height, SkAlpha alpha) {
   SkIRect bounds;
-  bounds.set(x, y, x + 1, y + height);
+  bounds.setXYWH(x, y, 1, height);
 
   SkRegion::Cliperator iter(*fRgn, bounds);
 
@@ -534,7 +534,7 @@ void SkRgnClipBlitter::blitV(int x, int y, int height, SkAlpha alpha) {
 
 void SkRgnClipBlitter::blitRect(int x, int y, int width, int height) {
   SkIRect bounds;
-  bounds.set(x, y, x + width, y + height);
+  bounds.setXYWH(x, y, width, height);
 
   SkRegion::Cliperator iter(*fRgn, bounds);
 
@@ -551,7 +551,7 @@ void SkRgnClipBlitter::blitAntiRect(
     int x, int y, int width, int height, SkAlpha leftAlpha, SkAlpha rightAlpha) {
   // The *true* width of the rectangle to blit is width + 2
   SkIRect bounds;
-  bounds.set(x, y, x + width + 2, y + height);
+  bounds.setXYWH(x, y, width + 2, height);
 
   SkRegion::Cliperator iter(*fRgn, bounds);
 
@@ -709,6 +709,12 @@ SkBlitter* SkBlitter::Choose(
   if (paint->isDither() && !SkPaintPriv::ShouldDither(*paint, device.colorType())) {
     paint.writable()->setDither(false);
   }
+
+#if defined(SK_USE_SKVM_BLITTER)
+  if (auto blitter = SkCreateSkVMBlitter(device, *paint, matrix, alloc)) {
+    return blitter;
+  }
+#endif
 
   // We'll end here for many interesting cases: color spaces, color filters, most color types.
   if (UseRasterPipelineBlitter(device, *paint, matrix)) {

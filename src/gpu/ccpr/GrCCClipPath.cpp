@@ -7,10 +7,10 @@
 
 #include "src/gpu/ccpr/GrCCClipPath.h"
 
-#include "include/gpu/GrRenderTarget.h"
 #include "include/gpu/GrTexture.h"
 #include "src/gpu/GrOnFlushResourceProvider.h"
 #include "src/gpu/GrProxyProvider.h"
+#include "src/gpu/GrRenderTarget.h"
 #include "src/gpu/ccpr/GrCCPerFlushResources.h"
 
 void GrCCClipPath::init(
@@ -19,7 +19,9 @@ void GrCCClipPath::init(
   SkASSERT(!this->isInitialized());
 
   fAtlasLazyProxy = GrCCAtlas::MakeLazyAtlasProxy(
-      [this](GrResourceProvider* resourceProvider, GrPixelConfig pixelConfig, int sampleCount) {
+      [this](
+          GrResourceProvider* resourceProvider, GrPixelConfig, const GrBackendFormat& format,
+          int sampleCount) {
         SkASSERT(fHasAtlas);
         SkASSERT(!fHasAtlasTransform);
 
@@ -33,6 +35,7 @@ void GrCCClipPath::init(
 
         sk_sp<GrTexture> texture = sk_ref_sp(textureProxy->peekTexture());
         SkASSERT(texture);
+        SkASSERT(texture->backendFormat() == format);
         SkASSERT(texture->asRenderTarget()->numSamples() == sampleCount);
         SkASSERT(textureProxy->origin() == kTopLeft_GrSurfaceOrigin);
 
@@ -43,7 +46,7 @@ void GrCCClipPath::init(
 
         return texture;
       },
-      atlasCoverageType, caps);
+      atlasCoverageType, caps, GrSurfaceProxy::UseAllocator::kYes);
 
   fDeviceSpacePath = deviceSpacePath;
   fDeviceSpacePath.getBounds().roundOut(&fPathDevIBounds);

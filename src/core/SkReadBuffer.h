@@ -19,6 +19,7 @@
 #include "include/core/SkSerialProcs.h"
 #include "src/core/SkMaskFilterBase.h"
 #include "src/core/SkPaintPriv.h"
+#include "src/core/SkPicturePriv.h"
 #include "src/core/SkReader32.h"
 #include "src/core/SkWriteBuffer.h"
 #include "src/shaders/SkShaderBase.h"
@@ -33,44 +34,28 @@ class SkReadBuffer {
   SkReadBuffer();
   SkReadBuffer(const void* data, size_t size);
 
-  enum Version {
-    kTileModeInBlurImageFilter_Version = 56,
-    kTileInfoInSweepGradient_Version = 57,
-    k2PtConicalNoFlip_Version = 58,
-    kRemovePictureImageFilterLocalSpace = 59,
-    kRemoveHeaderFlags_Version = 60,
-    kTwoColorDrawShadow_Version = 61,
-    kDontNegateImageSize_Version = 62,
-    kStoreImageBounds_Version = 63,
-    kRemoveOccluderFromBlurMaskFilter = 64,
-    kFloat4PaintColor_Version = 65,
-    kSaveBehind_Version = 66,
-    kSerializeFonts_Version = 67,
-    kPaintDoesntSerializeFonts_Version = 68,
-  };
-
   /**
    *  Returns true IFF the version is older than the specified version.
    */
-  bool isVersionLT(Version targetVersion) const noexcept {
+  bool isVersionLT(SkPicturePriv::Version targetVersion) const {
     SkASSERT(targetVersion > 0);
     return fVersion > 0 && fVersion < targetVersion;
   }
 
-  uint32_t getVersion() const noexcept { return fVersion; }
+  uint32_t getVersion() const { return fVersion; }
 
   /** This may be called at most once; most clients of SkReadBuffer should not mess with it. */
-  void setVersion(int version) noexcept {
+  void setVersion(int version) {
     SkASSERT(0 == fVersion || version == fVersion);
     fVersion = version;
   }
 
-  size_t size() const noexcept { return fReader.size(); }
-  size_t offset() const noexcept { return fReader.offset(); }
-  bool eof() noexcept { return fReader.eof(); }
+  size_t size() const { return fReader.size(); }
+  size_t offset() const { return fReader.offset(); }
+  bool eof() { return fReader.eof(); }
   const void* skip(size_t size);
   const void* skip(size_t count, size_t size);  // does safe multiply
-  size_t available() const noexcept { return fReader.available(); }
+  size_t available() const { return fReader.available(); }
 
   template <typename T>
   const T* skipT() {
@@ -99,7 +84,7 @@ class SkReadBuffer {
   }
 
   // peek
-  uint8_t peekByte() noexcept;
+  uint8_t peekByte();
 
   void readString(SkString* string);
 
@@ -158,7 +143,7 @@ class SkReadBuffer {
   sk_sp<SkImage> readImage();
   sk_sp<SkTypeface> readTypeface();
 
-  void setTypefaceArray(sk_sp<SkTypeface> array[], int count) noexcept {
+  void setTypefaceArray(sk_sp<SkTypeface> array[], int count) {
     fTFArray = array;
     fTFCount = count;
   }
@@ -167,19 +152,19 @@ class SkReadBuffer {
    *  Call this with a pre-loaded array of Factories, in the same order as
    *  were created/written by the writer. SkPicture uses this.
    */
-  void setFactoryPlayback(SkFlattenable::Factory array[], int count) noexcept {
+  void setFactoryPlayback(SkFlattenable::Factory array[], int count) {
     fFactoryArray = array;
     fFactoryCount = count;
   }
 
-  void setDeserialProcs(const SkDeserialProcs& procs) noexcept;
-  const SkDeserialProcs& getDeserialProcs() const noexcept { return fProcs; }
+  void setDeserialProcs(const SkDeserialProcs& procs);
+  const SkDeserialProcs& getDeserialProcs() const { return fProcs; }
 
   /**
    *  If isValid is false, sets the buffer to be "invalid". Returns true if the buffer
    *  is still valid.
    */
-  bool validate(bool isValid) noexcept {
+  bool validate(bool isValid) {
     if (!isValid) {
       this->setInvalid();
     }
@@ -196,7 +181,7 @@ class SkReadBuffer {
     return this->validate(n <= (fReader.available() / sizeof(T)));
   }
 
-  bool isValid() const noexcept { return !fError; }
+  bool isValid() const { return !fError; }
   bool validateIndex(int index, int count) { return this->validate(index >= 0 && index < count); }
 
   // Utilities that mark the buffer invalid if the requested value is out-of-range
@@ -215,7 +200,7 @@ class SkReadBuffer {
  private:
   const char* readString(size_t* length);
 
-  void setInvalid() noexcept;
+  void setInvalid();
   bool readArray(void* value, size_t size, size_t elementSize);
   void setMemory(const void*, size_t);
 
@@ -234,7 +219,7 @@ class SkReadBuffer {
 
   SkDeserialProcs fProcs;
 
-  static bool IsPtrAlign4(const void* ptr) noexcept { return SkIsAlign4((uintptr_t)ptr); }
+  static bool IsPtrAlign4(const void* ptr) { return SkIsAlign4((uintptr_t)ptr); }
 
   bool fError = false;
 };
@@ -246,23 +231,7 @@ class SkReadBuffer {
   SkReadBuffer() {}
   SkReadBuffer(const void*, size_t) {}
 
-  enum Version {
-    kTileModeInBlurImageFilter_Version = 56,
-    kTileInfoInSweepGradient_Version = 57,
-    k2PtConicalNoFlip_Version = 58,
-    kRemovePictureImageFilterLocalSpace = 59,
-    kRemoveHeaderFlags_Version = 60,
-    kTwoColorDrawShadow_Version = 61,
-    kDontNegateImageSize_Version = 62,
-    kStoreImageBounds_Version = 63,
-    kRemoveOccluderFromBlurMaskFilter = 64,
-    kFloat4PaintColor_Version = 65,
-    kSaveBehind_Version = 66,
-    kSerializeFonts_Version = 67,
-    kPaintDoesntSerializeFonts_Version = 68,
-  };
-
-  bool isVersionLT(Version) const { return false; }
+  bool isVersionLT(SkPicturePriv::Version) const { return false; }
   uint32_t getVersion() const { return 0xffffffff; }
   void setVersion(int) {}
 

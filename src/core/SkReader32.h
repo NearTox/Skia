@@ -20,10 +20,10 @@ class SkString;
 
 class SkReader32 : SkNoncopyable {
  public:
-  constexpr SkReader32() noexcept : fCurr(nullptr), fStop(nullptr), fBase(nullptr) {}
-  SkReader32(const void* data, size_t size) noexcept { this->setMemory(data, size); }
+  SkReader32() : fCurr(nullptr), fStop(nullptr), fBase(nullptr) {}
+  SkReader32(const void* data, size_t size) { this->setMemory(data, size); }
 
-  void setMemory(const void* data, size_t size) noexcept {
+  void setMemory(const void* data, size_t size) {
     SkASSERT(ptr_align_4(data));
     SkASSERT(SkAlign4(size) == size);
 
@@ -31,26 +31,26 @@ class SkReader32 : SkNoncopyable {
     fStop = (const char*)data + size;
   }
 
-  size_t size() const noexcept { return fStop - fBase; }
-  size_t offset() const noexcept { return fCurr - fBase; }
-  bool eof() const noexcept { return fCurr >= fStop; }
-  const void* base() const noexcept { return fBase; }
-  const void* peek() const noexcept { return fCurr; }
+  size_t size() const { return fStop - fBase; }
+  size_t offset() const { return fCurr - fBase; }
+  bool eof() const { return fCurr >= fStop; }
+  const void* base() const { return fBase; }
+  const void* peek() const { return fCurr; }
 
-  size_t available() const noexcept { return fStop - fCurr; }
-  bool isAvailable(size_t size) const noexcept { return size <= this->available(); }
+  size_t available() const { return fStop - fCurr; }
+  bool isAvailable(size_t size) const { return size <= this->available(); }
 
-  void rewind() noexcept { fCurr = fBase; }
+  void rewind() { fCurr = fBase; }
 
-  void setOffset(size_t offset) noexcept {
+  void setOffset(size_t offset) {
     SkASSERT(SkAlign4(offset) == offset);
     SkASSERT(offset <= this->size());
     fCurr = fBase + offset;
   }
 
-  bool readBool() noexcept { return this->readInt() != 0; }
+  bool readBool() { return this->readInt() != 0; }
 
-  int32_t readInt() noexcept {
+  int32_t readInt() {
     SkASSERT(ptr_align_4(fCurr));
     int32_t value = *(const int32_t*)fCurr;
     fCurr += sizeof(value);
@@ -58,10 +58,10 @@ class SkReader32 : SkNoncopyable {
     return value;
   }
 
-  void* readPtr() noexcept {
+  void* readPtr() {
     void* ptr;
     // we presume this "if" is resolved at compile-time
-    if constexpr (4 == sizeof(void*)) {
+    if (4 == sizeof(void*)) {
       ptr = *(void**)fCurr;
     } else {
       memcpy(&ptr, fCurr, sizeof(void*));
@@ -70,7 +70,7 @@ class SkReader32 : SkNoncopyable {
     return ptr;
   }
 
-  SkScalar readScalar() noexcept {
+  SkScalar readScalar() {
     SkASSERT(ptr_align_4(fCurr));
     SkScalar value = *(const SkScalar*)fCurr;
     fCurr += sizeof(value);
@@ -78,7 +78,7 @@ class SkReader32 : SkNoncopyable {
     return value;
   }
 
-  const void* skip(size_t size) noexcept {
+  const void* skip(size_t size) {
     SkASSERT(ptr_align_4(fCurr));
     const void* addr = fCurr;
     fCurr += SkAlign4(size);
@@ -92,7 +92,7 @@ class SkReader32 : SkNoncopyable {
     return *(const T*)this->skip(sizeof(T));
   }
 
-  void read(void* dst, size_t size) noexcept {
+  void read(void* dst, size_t size) {
     SkASSERT(0 == size || dst != nullptr);
     SkASSERT(ptr_align_4(fCurr));
     sk_careful_memcpy(dst, fCurr, size);
@@ -100,10 +100,10 @@ class SkReader32 : SkNoncopyable {
     SkASSERT(fCurr <= fStop);
   }
 
-  uint8_t readU8() noexcept { return (uint8_t)this->readInt(); }
-  uint16_t readU16() noexcept { return (uint16_t)this->readInt(); }
-  int32_t readS32() noexcept { return this->readInt(); }
-  uint32_t readU32() noexcept { return this->readInt(); }
+  uint8_t readU8() { return (uint8_t)this->readInt(); }
+  uint16_t readU16() { return (uint16_t)this->readInt(); }
+  int32_t readS32() { return this->readInt(); }
+  uint32_t readU32() { return this->readInt(); }
 
   bool readPath(SkPath* path) { return this->readObjectFromMemory(path); }
 
@@ -118,7 +118,7 @@ class SkReader32 : SkNoncopyable {
    *  len (if len is not nullptr) and return the null-ternimated address of the
    *  string within the reader's buffer.
    */
-  const char* readString(size_t* len = nullptr) noexcept;
+  const char* readString(size_t* len = nullptr);
 
   /**
    *  Read the string (written by SkWriter32::writeString) and return it in

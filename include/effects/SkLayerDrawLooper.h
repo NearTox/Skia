@@ -72,7 +72,7 @@ class SK_API SkLayerDrawLooper : public SkDrawLooper {
     LayerInfo();
   };
 
-  SkDrawLooper::Context* makeContext(SkCanvas*, SkArenaAlloc*) const override;
+  SkDrawLooper::Context* makeContext(SkArenaAlloc*) const override;
 
   bool asABlurShadow(BlurShadowRec* rec) const override;
 
@@ -98,7 +98,7 @@ class SK_API SkLayerDrawLooper : public SkDrawLooper {
     explicit LayerDrawLooperContext(const SkLayerDrawLooper* looper);
 
    protected:
-    bool next(SkCanvas*, SkPaint* paint) override;
+    bool next(Info*, SkPaint* paint) override;
 
    private:
     Rec* fCurrRec;

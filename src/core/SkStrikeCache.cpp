@@ -30,10 +30,11 @@ class SkStrikeCache::Node final : public SkStrikeInterface {
 
   SkIPoint subpixelMask() const override { return fStrike.subpixelMask(); }
 
-  SkSpan<const SkGlyphPos> prepareForDrawing(
+  SkSpan<const SkGlyphPos> prepareForDrawingRemoveEmpty(
       const SkPackedGlyphID packedGlyphIDs[], const SkPoint positions[], size_t n, int maxDimension,
-      PreparationDetail detail, SkGlyphPos results[]) override {
-    return fStrike.prepareForDrawing(packedGlyphIDs, positions, n, maxDimension, detail, results);
+      SkGlyphPos results[]) override {
+    return fStrike.prepareForDrawingRemoveEmpty(
+        packedGlyphIDs, positions, n, maxDimension, results);
   }
 
   const SkDescriptor& getDescriptor() const override { return fStrike.getDescriptor(); }

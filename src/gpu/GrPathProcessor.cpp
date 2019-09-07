@@ -46,6 +46,12 @@ class GrGLPathProcessor : public GrGLSLPrimitiveProcessor {
     fragBuilder->codeAppendf("%s = half4(1);", args.fOutputCoverage);
   }
 
+  SkString matrix_to_sksl(const SkMatrix& m) {
+    return SkStringPrintf(
+        "float3x3(%f, %f, %f, %f, %f, %f, %f, %f, %f)", m[0], m[1], m[2], m[3], m[4], m[5], m[6],
+        m[7], m[8]);
+  }
+
   void emitTransforms(
       GrGLSLVaryingHandler* varyingHandler, FPCoordTransformHandler* transformHandler) {
     int i = 0;
@@ -61,7 +67,9 @@ class GrGLPathProcessor : public GrGLSLPrimitiveProcessor {
           glVaryingHandler->addPathProcessingVarying(strVaryingName.c_str(), &v).toIndex();
       fInstalledTransforms.back().fType = varyingType;
 
-      transformHandler->specifyCoordsForCurrCoordTransform(SkString(v.fsIn()), varyingType);
+      transformHandler->specifyCoordsForCurrCoordTransform(
+          matrix_to_sksl(coordTransform->getMatrix()), UniformHandle(),
+          GrShaderVar(SkString(v.fsIn()), varyingType));
       ++i;
     }
   }

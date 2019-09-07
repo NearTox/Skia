@@ -188,5 +188,4 @@ void GetLocalBounds(
     }
   }
 }
-
 }  // namespace SkDrawShadowMetrics

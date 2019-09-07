@@ -61,10 +61,10 @@ struct SKVX_ALIGNMENT Vec {
   //   - they'll definitely never want a specialized implementation.
   // Other operations on Vec should be defined outside the type.
 
-  Vec() noexcept = default;
+  Vec() = default;
 
   template <typename U, typename = typename std::enable_if<std::is_convertible<U, T>::value>::type>
-  Vec(U x) noexcept : lo(x), hi(x) {}
+  Vec(U x) : lo(x), hi(x) {}
 
   Vec(std::initializer_list<T> xs) {
     T vals[N] = {0};
@@ -74,37 +74,37 @@ struct SKVX_ALIGNMENT Vec {
     hi = Vec<N / 2, T>::Load(vals + N / 2);
   }
 
-  T operator[](int i) const noexcept { return i < N / 2 ? lo[i] : hi[i - N / 2]; }
-  T& operator[](int i) noexcept { return i < N / 2 ? lo[i] : hi[i - N / 2]; }
+  T operator[](int i) const { return i < N / 2 ? lo[i] : hi[i - N / 2]; }
+  T& operator[](int i) { return i < N / 2 ? lo[i] : hi[i - N / 2]; }
 
-  static Vec Load(const void* ptr) noexcept {
+  static Vec Load(const void* ptr) {
     Vec v;
     memcpy(&v, ptr, sizeof(Vec));
     return v;
   }
-  void store(void* ptr) const noexcept { memcpy(ptr, this, sizeof(Vec)); }
+  void store(void* ptr) const { memcpy(ptr, this, sizeof(Vec)); }
 };
 
 template <typename T>
 struct Vec<1, T> {
   T val;
 
-  Vec() noexcept = default;
+  Vec() = default;
 
   template <typename U, typename = typename std::enable_if<std::is_convertible<U, T>::value>::type>
-  Vec(U x) noexcept : val(x) {}
+  Vec(U x) : val(x) {}
 
   Vec(std::initializer_list<T> xs) : val(xs.size() ? *xs.begin() : 0) {}
 
-  T operator[](int) const noexcept { return val; }
-  T& operator[](int) noexcept { return val; }
+  T operator[](int) const { return val; }
+  T& operator[](int) { return val; }
 
-  static Vec Load(const void* ptr) noexcept {
+  static Vec Load(const void* ptr) {
     Vec v;
     memcpy(&v, ptr, sizeof(Vec));
     return v;
   }
-  void store(void* ptr) const noexcept { memcpy(ptr, this, sizeof(Vec)); }
+  void store(void* ptr) const { memcpy(ptr, this, sizeof(Vec)); }
 };
 
 #if defined(__GNUC__) && !defined(__clang__) && defined(__SSE__)
@@ -245,8 +245,8 @@ SINT Vec<N, M<T>> operator>(const Vec<N, T>& x, const Vec<N, T>& y) {
 // N == 1 scalar implementations.
 SIT Vec<1, T> operator+(const Vec<1, T>& x, const Vec<1, T>& y) { return x.val + y.val; }
 SIT Vec<1, T> operator-(const Vec<1, T>& x, const Vec<1, T>& y) { return x.val - y.val; }
-SIT Vec<1, T> operator*(const Vec<1, T>& x, const Vec<1, T>& y) noexcept { return x.val * y.val; }
-SIT Vec<1, T> operator/(const Vec<1, T>& x, const Vec<1, T>& y) noexcept { return x.val / y.val; }
+SIT Vec<1, T> operator*(const Vec<1, T>& x, const Vec<1, T>& y) { return x.val * y.val; }
+SIT Vec<1, T> operator/(const Vec<1, T>& x, const Vec<1, T>& y) { return x.val / y.val; }
 
 SIT Vec<1, T> operator^(const Vec<1, T>& x, const Vec<1, T>& y) { return x.val ^ y.val; }
 SIT Vec<1, T> operator&(const Vec<1, T>& x, const Vec<1, T>& y) { return x.val & y.val; }
@@ -341,8 +341,8 @@ SIT Vec<1, T> if_then_else(const Vec<1, M<T>>& cond, const Vec<1, T>& t, const V
 SIT bool any(const Vec<1, T>& x) { return x.val != 0; }
 SIT bool all(const Vec<1, T>& x) { return x.val != 0; }
 
-SIT T min(const Vec<1, T>& x) noexcept { return x.val; }
-SIT T max(const Vec<1, T>& x) noexcept { return x.val; }
+SIT T min(const Vec<1, T>& x) { return x.val; }
+SIT T max(const Vec<1, T>& x) { return x.val; }
 
 SIT Vec<1, T> min(const Vec<1, T>& x, const Vec<1, T>& y) { return std::min(x.val, y.val); }
 SIT Vec<1, T> max(const Vec<1, T>& x, const Vec<1, T>& y) { return std::max(x.val, y.val); }

@@ -32,6 +32,8 @@ class SkPictureRecord : public SkCanvasVirtualEnforcer<SkCanvas> {
  public:
   SkPictureRecord(const SkISize& dimensions, uint32_t recordFlags);
 
+  SkPictureRecord(const SkIRect& dimensions, uint32_t recordFlags);
+
   const SkTArray<sk_sp<const SkPicture>>& getPictures() const { return fPictures; }
 
   const SkTArray<sk_sp<SkDrawable>>& getDrawables() const { return fDrawables; }
@@ -190,7 +192,7 @@ class SkPictureRecord : public SkCanvasVirtualEnforcer<SkCanvas> {
   void onDrawAnnotation(const SkRect&, const char[], SkData*) override;
 
   void onDrawEdgeAAQuad(
-      const SkRect&, const SkPoint[4], QuadAAFlags, SkColor, SkBlendMode) override;
+      const SkRect&, const SkPoint[4], QuadAAFlags, const SkColor4f&, SkBlendMode) override;
   void onDrawEdgeAAImageSet(
       const ImageSetEntry[], int count, const SkPoint[], const SkMatrix[], const SkPaint*,
       SrcRectConstraint) override;

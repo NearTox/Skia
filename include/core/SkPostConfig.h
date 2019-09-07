@@ -122,12 +122,10 @@ void DumpStackTrace(int skip_count, void w(const char*, void*), void* arg);
 #ifdef SK_BUILD_FOR_WIN
 // permits visual studio to follow error back to source
 #  define SK_DUMP_LINE_FORMAT(message) \
-    SkDebugf(                          \
-        /*"%s(%d): fatal error: \"%s\"\n", __FILE__, __LINE__*/ "fatal error: \"%s\"\n", message)
+    SkDebugf("%s(%d): fatal error: \"%s\"\n", __FILE__, __LINE__, message)
 #else
 #  define SK_DUMP_LINE_FORMAT(message) \
-    SkDebugf(                          \
-        /*"%s:%d: fatal error: \"%s\"\n", __FILE__, __LINE__*/ "fatal error: \"%s\"\n", message)
+    SkDebugf("%s:%d: fatal error: \"%s\"\n", __FILE__, __LINE__, message)
 #endif
 
 #ifndef SK_ABORT
@@ -137,6 +135,7 @@ void DumpStackTrace(int skip_count, void w(const char*, void*), void* arg);
       SK_DUMP_LINE_FORMAT(message); \
       SK_DUMP_GOOGLE3_STACK();      \
       sk_abort_no_print();          \
+      SkUNREACHABLE;                \
     } while (false)
 #endif
 

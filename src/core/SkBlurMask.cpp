@@ -374,7 +374,7 @@ bool SkBlurMask::BlurRect(
     margin->set(pad, pad);
   }
 
-  dst->fBounds.set(
+  dst->fBounds.setLTRB(
       SkScalarRoundToInt(src.fLeft - pad), SkScalarRoundToInt(src.fTop - pad),
       SkScalarRoundToInt(src.fRight + pad), SkScalarRoundToInt(src.fBottom + pad));
 
@@ -387,10 +387,7 @@ bool SkBlurMask::BlurRect(
 
   if (createMode == SkMask::kJustComputeBounds_CreateMode) {
     if (style == kInner_SkBlurStyle) {
-      dst->fBounds.set(
-          SkScalarRoundToInt(src.fLeft), SkScalarRoundToInt(src.fTop),
-          SkScalarRoundToInt(src.fRight),
-          SkScalarRoundToInt(src.fBottom));  // restore trimmed bounds
+      dst->fBounds = src.round();  // restore trimmed bounds
       dst->fRowBytes = sw;
     }
     return true;
@@ -441,9 +438,7 @@ bool SkBlurMask::BlurRect(
     }
     SkMask::FreeImage(dp);
 
-    dst->fBounds.set(
-        SkScalarRoundToInt(src.fLeft), SkScalarRoundToInt(src.fTop), SkScalarRoundToInt(src.fRight),
-        SkScalarRoundToInt(src.fBottom));  // restore trimmed bounds
+    dst->fBounds = src.round();  // restore trimmed bounds
     dst->fRowBytes = sw;
 
   } else if (style == kOuter_SkBlurStyle) {

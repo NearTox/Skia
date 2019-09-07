@@ -13,7 +13,7 @@
 #include "src/core/SkWriteBuffer.h"
 #include "src/gpu/text/GrSDFMaskFilter.h"
 
-class SK_API GrSDFMaskFilterImpl : public SkMaskFilterBase {
+class GrSDFMaskFilterImpl : public SkMaskFilterBase {
  public:
   GrSDFMaskFilterImpl();
 
@@ -74,7 +74,7 @@ bool GrSDFMaskFilterImpl::filterMask(
 }
 
 void GrSDFMaskFilterImpl::computeFastBounds(const SkRect& src, SkRect* dst) const {
-  dst->set(
+  dst->setLTRB(
       src.fLeft - SK_DistanceFieldPad, src.fTop - SK_DistanceFieldPad,
       src.fRight + SK_DistanceFieldPad, src.fBottom + SK_DistanceFieldPad);
 }

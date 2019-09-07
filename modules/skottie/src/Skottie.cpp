@@ -21,6 +21,7 @@
 #include "modules/skottie/src/SkottieJson.h"
 #include "modules/skottie/src/SkottiePriv.h"
 #include "modules/skottie/src/SkottieValue.h"
+#include "modules/skottie/src/text/TextAdapter.h"
 #include "modules/sksg/include/SkSGInvalidationController.h"
 #include "modules/sksg/include/SkSGOpacityEffect.h"
 #include "modules/sksg/include/SkSGPaint.h"
@@ -67,26 +68,26 @@ void AnimationBuilder::log(
 }
 
 sk_sp<sksg::Transform> AnimationBuilder::attachMatrix2D(
-    const skjson::ObjectValue& t, AnimatorScope* ascope, sk_sp<sksg::Transform> parent) const {
+    const skjson::ObjectValue& t, sk_sp<sksg::Transform> parent) const {
   static const VectorValue g_default_vec_0 = {0, 0}, g_default_vec_100 = {100, 100};
 
   auto matrix = sksg::Matrix<SkMatrix>::Make(SkMatrix::I());
   auto adapter = sk_make_sp<TransformAdapter2D>(matrix);
 
   auto bound = this->bindProperty<VectorValue>(
-      t["a"], ascope,
+      t["a"],
       [adapter](const VectorValue& a) {
         adapter->setAnchorPoint(ValueTraits<VectorValue>::As<SkPoint>(a));
       },
       g_default_vec_0);
   bound |= this->bindProperty<VectorValue>(
-      t["p"], ascope,
+      t["p"],
       [adapter](const VectorValue& p) {
         adapter->setPosition(ValueTraits<VectorValue>::As<SkPoint>(p));
       },
       g_default_vec_0);
   bound |= this->bindProperty<VectorValue>(
-      t["s"], ascope,
+      t["s"],
       [adapter](const VectorValue& s) {
         adapter->setScale(ValueTraits<VectorValue>::As<SkVector>(s));
       },
@@ -99,11 +100,11 @@ sk_sp<sksg::Transform> AnimationBuilder::attachMatrix2D(
     jrotation = &t["rz"];
   }
   bound |= this->bindProperty<ScalarValue>(
-      *jrotation, ascope, [adapter](const ScalarValue& r) { adapter->setRotation(r); }, 0.0f);
+      *jrotation, [adapter](const ScalarValue& r) { adapter->setRotation(r); }, 0.0f);
   bound |= this->bindProperty<ScalarValue>(
-      t["sk"], ascope, [adapter](const ScalarValue& sk) { adapter->setSkew(sk); }, 0.0f);
+      t["sk"], [adapter](const ScalarValue& sk) { adapter->setSkew(sk); }, 0.0f);
   bound |= this->bindProperty<ScalarValue>(
-      t["sa"], ascope, [adapter](const ScalarValue& sa) { adapter->setSkewAxis(sa); }, 0.0f);
+      t["sa"], [adapter](const ScalarValue& sa) { adapter->setSkewAxis(sa); }, 0.0f);
 
   const auto dispatched = this->dispatchTransformProperty(adapter);
 
@@ -112,8 +113,8 @@ sk_sp<sksg::Transform> AnimationBuilder::attachMatrix2D(
 }
 
 sk_sp<sksg::Transform> AnimationBuilder::attachMatrix3D(
-    const skjson::ObjectValue& t, AnimatorScope* ascope, sk_sp<sksg::Transform> parent,
-    sk_sp<TransformAdapter3D> adapter, bool precompose_parent) const {
+    const skjson::ObjectValue& t, sk_sp<sksg::Transform> parent, sk_sp<TransformAdapter3D> adapter,
+    bool precompose_parent) const {
   static const VectorValue g_default_vec_0 = {0, 0, 0}, g_default_vec_100 = {100, 100, 100};
 
   if (!adapter) {
@@ -122,27 +123,26 @@ sk_sp<sksg::Transform> AnimationBuilder::attachMatrix3D(
   }
 
   auto bound = this->bindProperty<VectorValue>(
-      t["a"], ascope,
+      t["a"],
       [adapter](const VectorValue& a) { adapter->setAnchorPoint(TransformAdapter3D::Vec3(a)); },
       g_default_vec_0);
   bound |= this->bindProperty<VectorValue>(
-      t["p"], ascope,
+      t["p"],
       [adapter](const VectorValue& p) { adapter->setPosition(TransformAdapter3D::Vec3(p)); },
       g_default_vec_0);
   bound |= this->bindProperty<VectorValue>(
-      t["s"], ascope,
-      [adapter](const VectorValue& s) { adapter->setScale(TransformAdapter3D::Vec3(s)); },
+      t["s"], [adapter](const VectorValue& s) { adapter->setScale(TransformAdapter3D::Vec3(s)); },
       g_default_vec_100);
 
   // Orientation and rx/ry/rz are mapped to the same rotation property -- the difference is
   // in how they get interpolated (vector vs. scalar/decomposed interpolation).
   bound |= this->bindProperty<VectorValue>(
-      t["or"], ascope,
+      t["or"],
       [adapter](const VectorValue& o) { adapter->setRotation(TransformAdapter3D::Vec3(o)); },
       g_default_vec_0);
 
   bound |= this->bindProperty<ScalarValue>(
-      t["rx"], ascope,
+      t["rx"],
       [adapter](const ScalarValue& rx) {
         const auto& r = adapter->getRotation();
         adapter->setRotation(TransformAdapter3D::Vec3({rx, r.fY, r.fZ}));
@@ -150,7 +150,7 @@ sk_sp<sksg::Transform> AnimationBuilder::attachMatrix3D(
       0.0f);
 
   bound |= this->bindProperty<ScalarValue>(
-      t["ry"], ascope,
+      t["ry"],
       [adapter](const ScalarValue& ry) {
         const auto& r = adapter->getRotation();
         adapter->setRotation(TransformAdapter3D::Vec3({r.fX, ry, r.fZ}));
@@ -158,7 +158,7 @@ sk_sp<sksg::Transform> AnimationBuilder::attachMatrix3D(
       0.0f);
 
   bound |= this->bindProperty<ScalarValue>(
-      t["rz"], ascope,
+      t["rz"],
       [adapter](const ScalarValue& rz) {
         const auto& r = adapter->getRotation();
         adapter->setRotation(TransformAdapter3D::Vec3({r.fX, r.fY, rz}));
@@ -177,14 +177,13 @@ sk_sp<sksg::Transform> AnimationBuilder::attachMatrix3D(
 }
 
 sk_sp<sksg::RenderNode> AnimationBuilder::attachOpacity(
-    const skjson::ObjectValue& jtransform, AnimatorScope* ascope,
-    sk_sp<sksg::RenderNode> childNode) const {
+    const skjson::ObjectValue& jtransform, sk_sp<sksg::RenderNode> childNode) const {
   if (!childNode) return nullptr;
 
   auto opacityNode = sksg::OpacityEffect::Make(childNode);
 
   const auto bound = this->bindProperty<ScalarValue>(
-      jtransform["o"], ascope,
+      jtransform["o"],
       [opacityNode](const ScalarValue& o) {
         // BM opacity is [0..100]
         opacityNode->setOpacity(o * 0.01f);
@@ -242,11 +241,10 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachBlendMode(
   return child;
 }
 
-sk_sp<sksg::Path> AnimationBuilder::attachPath(
-    const skjson::Value& jpath, AnimatorScope* ascope) const {
+sk_sp<sksg::Path> AnimationBuilder::attachPath(const skjson::Value& jpath) const {
   auto path_node = sksg::Path::Make();
   return this->bindProperty<ShapeValue>(
-             jpath, ascope,
+             jpath,
              [path_node](const ShapeValue& p) {
                // FillType is tracked in the SG node, not in keyframes -- make sure we preserve it.
                auto path = ValueTraits<ShapeValue>::As<SkPath>(p);
@@ -258,10 +256,10 @@ sk_sp<sksg::Path> AnimationBuilder::attachPath(
 }
 
 sk_sp<sksg::Color> AnimationBuilder::attachColor(
-    const skjson::ObjectValue& jcolor, AnimatorScope* ascope, const char prop_name[]) const {
+    const skjson::ObjectValue& jcolor, const char prop_name[]) const {
   auto color_node = sksg::Color::Make(SK_ColorBLACK);
 
-  this->bindProperty<VectorValue>(jcolor[prop_name], ascope, [color_node](const VectorValue& c) {
+  this->bindProperty<VectorValue>(jcolor[prop_name], [color_node](const VectorValue& c) {
     color_node->setColor(ValueTraits<VectorValue>::As<SkColor>(c));
   });
   this->dispatchColorProperty(color_node);
@@ -290,9 +288,10 @@ std::unique_ptr<sksg::Scene> AnimationBuilder::parse(const skjson::ObjectValue& 
   this->parseAssets(jroot["assets"]);
   this->parseFonts(jroot["fonts"], jroot["chars"]);
 
-  AnimatorScope animators;
-  auto root = this->attachComposition(jroot, &animators);
+  AutoScope ascope(this);
+  auto root = this->attachComposition(jroot);
 
+  auto animators = ascope.release();
   fStats->fAnimatorCount = animators.size();
 
   return sksg::Scene::Make(std::move(root), std::move(animators));
@@ -357,6 +356,19 @@ bool AnimationBuilder::dispatchOpacityProperty(const sk_sp<sksg::OpacityEffect>&
     fPropertyObserver->onOpacityProperty(fPropertyObserverContext, [&]() {
       dispatched = true;
       return std::unique_ptr<OpacityPropertyHandle>(new OpacityPropertyHandle(o));
+    });
+  }
+
+  return dispatched;
+}
+
+bool AnimationBuilder::dispatchTextProperty(const sk_sp<TextAdapter>& t) const {
+  bool dispatched = false;
+
+  if (fPropertyObserver) {
+    fPropertyObserver->onTextProperty(fPropertyObserverContext, [&]() {
+      dispatched = true;
+      return std::unique_ptr<TextPropertyHandle>(new TextPropertyHandle(t));
     });
   }
 

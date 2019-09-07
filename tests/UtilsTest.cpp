@@ -7,9 +7,13 @@
 
 #include "include/core/SkRefCnt.h"
 #include "include/utils/SkRandom.h"
+#include "src/core/SkSpan.h"
 #include "src/core/SkTSearch.h"
 #include "src/core/SkTSort.h"
 #include "tests/Test.h"
+
+#include <array>
+#include <vector>
 
 class RefClass : public SkRefCnt {
  public:
@@ -162,4 +166,45 @@ DEF_TEST(Utils, reporter) {
   test_search(reporter);
   test_autounref(reporter);
   test_autostarray(reporter);
+}
+
+DEF_TEST(SkMakeSpan, reporter) {
+  // Test constness preservation for SkMakeSpan.
+  {
+    std::vector<int> v = {{1, 2, 3, 4, 5}};
+    auto s = SkMakeSpan(v);
+    REPORTER_ASSERT(reporter, s[3] == 4);
+    s[3] = 100;
+    REPORTER_ASSERT(reporter, s[3] == 100);
+  }
+
+  {
+    std::vector<int> t = {{1, 2, 3, 4, 5}};
+    const std::vector<int>& v = t;
+    auto s = SkMakeSpan(v);
+    // s[3] = 100; // Should fail to compile
+    REPORTER_ASSERT(reporter, s[3] == 4);
+    REPORTER_ASSERT(reporter, t[3] == 4);
+    t[3] = 100;
+    REPORTER_ASSERT(reporter, s[3] == 100);
+  }
+
+  {
+    std::array<int, 5> v = {{1, 2, 3, 4, 5}};
+    auto s = SkMakeSpan(v);
+    REPORTER_ASSERT(reporter, s[3] == 4);
+    s[3] = 100;
+    REPORTER_ASSERT(reporter, s[3] == 100);
+  }
+
+  {
+    std::array<int, 5> t = {{1, 2, 3, 4, 5}};
+    const std::array<int, 5>& v = t;
+    auto s = SkMakeSpan(v);
+    // s[3] = 100; // Should fail to compile
+    REPORTER_ASSERT(reporter, s[3] == 4);
+    REPORTER_ASSERT(reporter, t[3] == 4);
+    t[3] = 100;
+    REPORTER_ASSERT(reporter, s[3] == 100);
+  }
 }

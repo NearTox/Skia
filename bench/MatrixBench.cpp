@@ -319,7 +319,7 @@ class MapRectMatrixBench : public MatrixBench {
     fM.setScale(2, 3);
     fM.postTranslate(1, 2);
 
-    fR.set(10, 10, 100, 200);
+    fR.setLTRB(10, 10, 100, 200);
   }
 
   void performTest() override {

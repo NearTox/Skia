@@ -55,7 +55,7 @@ SkTypefaceCache& SkTypefaceCache::Get() {
   return gCache;
 }
 
-SkFontID SkTypefaceCache::NewFontID() noexcept {
+SkFontID SkTypefaceCache::NewFontID() {
   static std::atomic<int32_t> nextID{1};
   return nextID++;
 }

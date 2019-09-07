@@ -103,7 +103,7 @@ class SamplerStressGM : public GM {
     SkFont font(ToolUtils::create_portable_typeface(), 72);
 
     SkRect temp;
-    temp.set(SkIntToScalar(115), SkIntToScalar(75), SkIntToScalar(144), SkIntToScalar(110));
+    temp.setLTRB(115, 75, 144, 110);
 
     SkPath path;
     path.addRoundRect(temp, SkIntToScalar(5), SkIntToScalar(5));

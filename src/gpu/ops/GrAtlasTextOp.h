@@ -79,7 +79,7 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
     kLCDBGRDistanceField_MaskType,
   };
 
-  MaskType maskType() const noexcept { return fMaskType; }
+  MaskType maskType() const { return fMaskType; }
 
   void finalizeForTextTarget(uint32_t color, const GrCaps&);
   void executeForTextTarget(SkAtlasTextTarget*);
@@ -107,7 +107,7 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
   void onPrepareDraws(Target*) override;
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
 
-  GrMaskFormat maskFormat() const noexcept {
+  GrMaskFormat maskFormat() const {
     switch (fMaskType) {
       case kLCDCoverageMask_MaskType: return kA565_GrMaskFormat;
       case kColorBitmapMask_MaskType: return kARGB_GrMaskFormat;
@@ -120,13 +120,13 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
     return kA8_GrMaskFormat;  // suppress warning
   }
 
-  bool usesDistanceFields() const noexcept {
+  bool usesDistanceFields() const {
     return kAliasedDistanceField_MaskType == fMaskType ||
            kGrayscaleDistanceField_MaskType == fMaskType ||
            kLCDDistanceField_MaskType == fMaskType || kLCDBGRDistanceField_MaskType == fMaskType;
   }
 
-  bool isLCD() const noexcept {
+  bool isLCD() const {
     return kLCDCoverageMask_MaskType == fMaskType || kLCDDistanceField_MaskType == fMaskType ||
            kLCDBGRDistanceField_MaskType == fMaskType;
   }
@@ -137,8 +137,8 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
     SkASSERT(fGeoCount > 0);
     return fGeoData[0].fColor;
   }
-  bool usesLocalCoords() const noexcept { return fUsesLocalCoords; }
-  int numGlyphs() const noexcept { return fNumGlyphs; }
+  bool usesLocalCoords() const { return fUsesLocalCoords; }
+  int numGlyphs() const { return fNumGlyphs; }
 
   CombineResult onCombineIfPossible(GrOp* t, const GrCaps& caps) override;
 

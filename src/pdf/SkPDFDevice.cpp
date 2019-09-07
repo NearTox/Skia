@@ -28,6 +28,7 @@
 #include "src/core/SkDraw.h"
 #include "src/core/SkGlyphRun.h"
 #include "src/core/SkImageFilterCache.h"
+#include "src/core/SkImageFilter_Base.h"
 #include "src/core/SkMakeUnique.h"
 #include "src/core/SkMaskFilterBase.h"
 #include "src/core/SkRasterClip.h"
@@ -1648,10 +1649,10 @@ void SkPDFDevice::drawSpecial(
     sk_sp<SkImageFilterCache> cache(this->getImageFilterCache());
     // TODO: Should PDF be operating in a specified color type/space? For now, run the filter
     // in the same color space as the source (this is different from all other backends).
-    SkImageFilter::OutputProperties outputProperties(kN32_SkColorType, srcImg->getColorSpace());
-    SkImageFilter::Context ctx(matrix, clipBounds, cache.get(), outputProperties);
+    SkImageFilter_Base::Context ctx(
+        matrix, clipBounds, cache.get(), kN32_SkColorType, srcImg->getColorSpace(), srcImg);
 
-    sk_sp<SkSpecialImage> resultImg(filter->filterImage(srcImg, ctx, &offset));
+    sk_sp<SkSpecialImage> resultImg(as_IFB(filter)->filterImage(ctx).imageAndOffset(&offset));
     if (resultImg) {
       SkPaint tmpUnfiltered(paint);
       tmpUnfiltered.setImageFilter(nullptr);
@@ -1673,8 +1674,6 @@ sk_sp<SkSpecialImage> SkPDFDevice::makeSpecial(const SkBitmap& bitmap) {
 sk_sp<SkSpecialImage> SkPDFDevice::makeSpecial(const SkImage* image) {
   return SkSpecialImage::MakeFromImage(nullptr, image->bounds(), image->makeNonTextureImage());
 }
-
-sk_sp<SkSpecialImage> SkPDFDevice::snapSpecial() { return nullptr; }
 
 SkImageFilterCache* SkPDFDevice::getImageFilterCache() {
   // We always return a transient cache, so it is freed after each

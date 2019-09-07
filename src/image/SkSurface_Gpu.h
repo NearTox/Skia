@@ -22,7 +22,8 @@ class SkSurface_Gpu : public SkSurface_Base {
   ~SkSurface_Gpu() override;
 
   // This is an internal-only factory
-  static sk_sp<SkSurface> MakeWrappedRenderTarget(GrContext*, sk_sp<GrRenderTargetContext>);
+  static sk_sp<SkSurface> MakeWrappedRenderTarget(
+      GrContext*, std::unique_ptr<GrRenderTargetContext>);
 
   GrBackendTexture onGetBackendTexture(BackendHandleAccess) override;
   GrBackendRenderTarget onGetBackendRenderTarget(BackendHandleAccess) override;

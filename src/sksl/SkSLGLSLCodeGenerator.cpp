@@ -427,7 +427,7 @@ void GLSLCodeGenerator::writeFunctionCall(const FunctionCall& c) {
     (*fFunctionClasses)["min"] = FunctionClass::kMin;
     (*fFunctionClasses)["pow"] = FunctionClass::kPow;
     (*fFunctionClasses)["saturate"] = FunctionClass::kSaturate;
-    (*fFunctionClasses)["texture"] = FunctionClass::kTexture;
+    (*fFunctionClasses)["sample"] = FunctionClass::kTexture;
     (*fFunctionClasses)["transpose"] = FunctionClass::kTranspose;
   }
 #ifndef SKSL_STANDALONE
@@ -623,12 +623,16 @@ void GLSLCodeGenerator::writeFunctionCall(const FunctionCall& c) {
               proj = false;
               break;
           }
-          this->write("texture");
-          if (fProgram.fSettings.fCaps->generation() < k130_GrGLSLGeneration) {
-            this->write(dim);
-          }
-          if (proj) {
-            this->write("Proj");
+          if (fTextureFunctionOverride != "") {
+            this->write(fTextureFunctionOverride.c_str());
+          } else {
+            this->write("texture");
+            if (fProgram.fSettings.fCaps->generation() < k130_GrGLSLGeneration) {
+              this->write(dim);
+            }
+            if (proj) {
+              this->write("Proj");
+            }
           }
           nameWritten = true;
           break;
@@ -967,6 +971,8 @@ void GLSLCodeGenerator::writeSetting(const Setting& s) {
 }
 
 void GLSLCodeGenerator::writeFunction(const FunctionDefinition& f) {
+  fSetupFragPositionLocal = false;
+  fSetupFragCoordWorkaround = false;
   if (fProgramKind != Program::kPipelineStage_Kind) {
     this->writeTypePrecision(f.fDeclaration.fReturnType);
     this->writeType(f.fDeclaration.fReturnType);
@@ -1189,6 +1195,9 @@ void GLSLCodeGenerator::writeVarDeclarations(const VarDeclarations& decl, bool g
         this->writeExtension(fProgram.fSettings.fCaps->secondExternalTextureExtensionString());
       }
       fFoundExternalSamplerDecl = true;
+    }
+    if (!fFoundRectSamplerDecl && var.fVar->fType == *fContext.fSampler2DRect_Type) {
+      fFoundRectSamplerDecl = true;
     }
   }
   if (wroteType) {
@@ -1480,6 +1489,14 @@ bool GLSLCodeGenerator::generateCode() {
 
   if (this->usesPrecisionModifiers()) {
     this->writeLine("precision mediump float;");
+    this->writeLine("precision mediump sampler2D;");
+    if (fFoundExternalSamplerDecl &&
+        !fProgram.fSettings.fCaps->noDefaultPrecisionForExternalSamplers()) {
+      this->writeLine("precision mediump samplerExternalOES;");
+    }
+    if (fFoundRectSamplerDecl) {
+      this->writeLine("precision mediump sampler2DRect;");
+    }
   }
   write_stringstream(fExtraFunctions, *rawOut);
   write_stringstream(body, *rawOut);

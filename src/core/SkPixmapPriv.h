@@ -20,7 +20,7 @@ class SkPixmapPriv {
    */
   static bool Orient(const SkPixmap& dst, const SkPixmap& src, SkEncodedOrigin);
 
-  static bool ShouldSwapWidthHeight(SkEncodedOrigin o) noexcept;
+  static bool ShouldSwapWidthHeight(SkEncodedOrigin o);
   static SkImageInfo SwapWidthHeight(const SkImageInfo& info);
 
   /**
@@ -32,8 +32,9 @@ class SkPixmapPriv {
    *  @param decode Function for decoding into a pixmap without
    *      applying the origin.
    */
-  static bool Orient(
-      const SkPixmap& dst, SkEncodedOrigin origin, std::function<bool(const SkPixmap&)> decode) {
+
+  template <typename Fn>
+  static bool Orient(const SkPixmap& dst, SkEncodedOrigin origin, Fn&& decode) {
     SkAutoPixmapStorage storage;
     const SkPixmap* tmp = &dst;
     if (origin != kTopLeft_SkEncodedOrigin) {
@@ -55,7 +56,7 @@ class SkPixmapPriv {
     return true;
   }
 
-  static void ResetPixmapKeepInfo(SkPixmap* pm, const void* address, size_t rowBytes) noexcept {
+  static void ResetPixmapKeepInfo(SkPixmap* pm, const void* address, size_t rowBytes) {
     pm->fRowBytes = rowBytes;
     pm->fPixels = address;
   }

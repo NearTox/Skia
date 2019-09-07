@@ -252,7 +252,7 @@ enum GrGLBackendState {
 /**
  * This value translates to reseting all the context state for any backend.
  */
-static constexpr uint32_t kAll_GrBackendState = 0xffffffff;
+static const uint32_t kAll_GrBackendState = 0xffffffff;
 
 enum GrFlushFlags {
   kNone_GrFlushFlags = 0,

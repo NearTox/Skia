@@ -22,7 +22,6 @@ GrTextureType GrGLTexture::TextureTypeFromTarget(GrGLenum target) {
     case GR_GL_TEXTURE_EXTERNAL: return GrTextureType::kExternal;
   }
   SK_ABORT("Unexpected texture target");
-  return GrTextureType::k2D;
 }
 
 static inline GrGLenum target_from_texture_type(GrTextureType type) {
@@ -30,21 +29,20 @@ static inline GrGLenum target_from_texture_type(GrTextureType type) {
     case GrTextureType::k2D: return GR_GL_TEXTURE_2D;
     case GrTextureType::kRectangle: return GR_GL_TEXTURE_RECTANGLE;
     case GrTextureType::kExternal: return GR_GL_TEXTURE_EXTERNAL;
-    default: SK_ABORT("Unexpected texture target"); return GR_GL_TEXTURE_2D;
+    default: SK_ABORT("Unexpected texture target");
   }
   SK_ABORT("Unexpected texture type");
-  return GR_GL_TEXTURE_2D;
 }
 
 // Because this class is virtually derived from GrSurface we must explicitly call its constructor.
 GrGLTexture::GrGLTexture(
-    GrGLGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc, const IDDesc& idDesc,
-    GrMipMapsStatus mipMapsStatus)
-    : GrSurface(gpu, desc, GrProtected::kNo),
+    GrGLGpu* gpu, SkBudgeted budgeted, const Desc& desc, GrMipMapsStatus mipMapsStatus)
+    : GrSurface(gpu, desc.fSize, desc.fConfig, GrProtected::kNo),
       INHERITED(
-          gpu, desc, GrProtected::kNo, TextureTypeFromTarget(idDesc.fInfo.fTarget), mipMapsStatus),
+          gpu, desc.fSize, desc.fConfig, GrProtected::kNo, TextureTypeFromTarget(desc.fTarget),
+          mipMapsStatus),
       fParameters(sk_make_sp<GrGLTextureParameters>()) {
-  this->init(desc, idDesc);
+  this->init(desc);
   this->registerWithCache(budgeted);
   if (GrPixelConfigIsCompressed(desc.fConfig)) {
     this->setReadOnly();
@@ -52,14 +50,15 @@ GrGLTexture::GrGLTexture(
 }
 
 GrGLTexture::GrGLTexture(
-    GrGLGpu* gpu, const GrSurfaceDesc& desc, GrMipMapsStatus mipMapsStatus, const IDDesc& idDesc,
+    GrGLGpu* gpu, const Desc& desc, GrMipMapsStatus mipMapsStatus,
     sk_sp<GrGLTextureParameters> parameters, GrWrapCacheable cacheable, GrIOType ioType)
-    : GrSurface(gpu, desc, GrProtected::kNo),
+    : GrSurface(gpu, desc.fSize, desc.fConfig, GrProtected::kNo),
       INHERITED(
-          gpu, desc, GrProtected::kNo, TextureTypeFromTarget(idDesc.fInfo.fTarget), mipMapsStatus),
+          gpu, desc.fSize, desc.fConfig, GrProtected::kNo, TextureTypeFromTarget(desc.fTarget),
+          mipMapsStatus),
       fParameters(std::move(parameters)) {
   SkASSERT(fParameters);
-  this->init(desc, idDesc);
+  this->init(desc);
   this->registerWithCacheWrapped(cacheable);
   if (ioType == kRead_GrIOType) {
     this->setReadOnly();
@@ -67,22 +66,23 @@ GrGLTexture::GrGLTexture(
 }
 
 GrGLTexture::GrGLTexture(
-    GrGLGpu* gpu, const GrSurfaceDesc& desc, const IDDesc& idDesc,
-    sk_sp<GrGLTextureParameters> parameters, GrMipMapsStatus mipMapsStatus)
-    : GrSurface(gpu, desc, GrProtected::kNo),
+    GrGLGpu* gpu, const Desc& desc, sk_sp<GrGLTextureParameters> parameters,
+    GrMipMapsStatus mipMapsStatus)
+    : GrSurface(gpu, desc.fSize, desc.fConfig, GrProtected::kNo),
       INHERITED(
-          gpu, desc, GrProtected::kNo, TextureTypeFromTarget(idDesc.fInfo.fTarget), mipMapsStatus) {
-  SkASSERT(parameters || idDesc.fOwnership == GrBackendObjectOwnership::kOwned);
+          gpu, desc.fSize, desc.fConfig, GrProtected::kNo, TextureTypeFromTarget(desc.fTarget),
+          mipMapsStatus) {
+  SkASSERT(parameters || desc.fOwnership == GrBackendObjectOwnership::kOwned);
   fParameters = parameters ? std::move(parameters) : sk_make_sp<GrGLTextureParameters>();
-  this->init(desc, idDesc);
+  this->init(desc);
 }
 
-void GrGLTexture::init(const GrSurfaceDesc& desc, const IDDesc& idDesc) {
-  SkASSERT(0 != idDesc.fInfo.fID);
-  SkASSERT(0 != idDesc.fInfo.fFormat);
-  fID = idDesc.fInfo.fID;
-  fFormat = idDesc.fInfo.fFormat;
-  fTextureIDOwnership = idDesc.fOwnership;
+void GrGLTexture::init(const Desc& desc) {
+  SkASSERT(0 != desc.fID);
+  SkASSERT(GrGLFormat::kUnknown != desc.fFormat);
+  fID = desc.fID;
+  fFormat = desc.fFormat;
+  fTextureIDOwnership = desc.fOwnership;
 }
 
 GrGLenum GrGLTexture::target() const {
@@ -110,21 +110,21 @@ GrBackendTexture GrGLTexture::getBackendTexture() const {
   GrGLTextureInfo info;
   info.fTarget = target_from_texture_type(this->texturePriv().textureType());
   info.fID = fID;
-  info.fFormat = fFormat;
+  info.fFormat = GrGLFormatToEnum(fFormat);
   return GrBackendTexture(
       this->width(), this->height(), this->texturePriv().mipMapped(), info, fParameters);
 }
 
 GrBackendFormat GrGLTexture::backendFormat() const {
   return GrBackendFormat::MakeGL(
-      fFormat, target_from_texture_type(this->texturePriv().textureType()));
+      GrGLFormatToEnum(fFormat), target_from_texture_type(this->texturePriv().textureType()));
 }
 
 sk_sp<GrGLTexture> GrGLTexture::MakeWrapped(
-    GrGLGpu* gpu, const GrSurfaceDesc& desc, GrMipMapsStatus mipMapsStatus, const IDDesc& idDesc,
+    GrGLGpu* gpu, GrMipMapsStatus mipMapsStatus, const Desc& desc,
     sk_sp<GrGLTextureParameters> parameters, GrWrapCacheable cacheable, GrIOType ioType) {
   return sk_sp<GrGLTexture>(
-      new GrGLTexture(gpu, desc, mipMapsStatus, idDesc, std::move(parameters), cacheable, ioType));
+      new GrGLTexture(gpu, desc, mipMapsStatus, std::move(parameters), cacheable, ioType));
 }
 
 bool GrGLTexture::onStealBackendTexture(

@@ -205,8 +205,8 @@ static sk_sp<GrTextureProxy> create_profile_texture(
   builder[0] = sigmaToCircleRRatioFixed;
   builder.finish();
 
-  sk_sp<GrTextureProxy> blurProfile =
-      proxyProvider->findOrCreateProxyByUniqueKey(key, kTopLeft_GrSurfaceOrigin);
+  sk_sp<GrTextureProxy> blurProfile = proxyProvider->findOrCreateProxyByUniqueKey(
+      key, GrColorType::kAlpha_8, kTopLeft_GrSurfaceOrigin);
   if (!blurProfile) {
     static constexpr int kProfileTextureWidth = 512;
 
@@ -228,7 +228,7 @@ static sk_sp<GrTextureProxy> create_profile_texture(
     sk_sp<SkImage> image = SkImage::MakeFromBitmap(bm);
 
     blurProfile = proxyProvider->createTextureProxy(
-        std::move(image), GrRenderable::kNo, 1, SkBudgeted::kYes, SkBackingFit::kExact);
+        std::move(image), 1, SkBudgeted::kYes, SkBackingFit::kExact);
     if (!blurProfile) {
       return nullptr;
     }
@@ -276,7 +276,7 @@ class GrGLSLCircleBlurFragmentProcessor : public GrGLSLFragmentProcessor {
     fragBuilder->codeAppendf(
         "half2 vec = half2(half((sk_FragCoord.x - float(%s.x)) * float(%s.w)), "
         "half((sk_FragCoord.y - float(%s.y)) * float(%s.w)));\nhalf dist = length(vec) + "
-        "(0.5 - %s.z) * %s.w;\n%s = %s * texture(%s, float2(half2(dist, 0.5))).%s.w;\n",
+        "(0.5 - %s.z) * %s.w;\n%s = %s * sample(%s, float2(half2(dist, 0.5))).%s.w;\n",
         args.fUniformHandler->getUniformCStr(circleDataVar),
         args.fUniformHandler->getUniformCStr(circleDataVar),
         args.fUniformHandler->getUniformCStr(circleDataVar),

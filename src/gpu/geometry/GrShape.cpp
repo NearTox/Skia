@@ -142,7 +142,6 @@ SkRect GrShape::bounds() const {
     case Type::kPath: return this->path().getBounds();
   }
   SK_ABORT("Unknown shape type");
-  return kInverted;
 }
 
 SkRect GrShape::styledBounds() const {
@@ -231,7 +230,6 @@ int GrShape::unstyledKeySize() const {
     }
   }
   SK_ABORT("Should never get here.");
-  return 0;
 }
 
 void GrShape::writeUnstyledKey(uint32_t* key) const {
@@ -356,7 +354,7 @@ GrShape GrShape::MakeArc(
   return result;
 }
 
-GrShape::GrShape(const GrShape& that) noexcept : fStyle(that.fStyle) {
+GrShape::GrShape(const GrShape& that) : fStyle(that.fStyle) {
   const SkPath* thatPath = Type::kPath == that.fType ? &that.fPathData.fPath : nullptr;
   this->initType(that.fType, thatPath);
   switch (fType) {

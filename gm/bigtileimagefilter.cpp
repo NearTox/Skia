@@ -18,8 +18,7 @@
 #include "include/core/SkSize.h"
 #include "include/core/SkString.h"
 #include "include/core/SkSurface.h"
-#include "include/effects/SkImageSource.h"
-#include "include/effects/SkTileImageFilter.h"
+#include "include/effects/SkImageFilters.h"
 
 #include <utility>
 
@@ -61,9 +60,9 @@ class BigTileImageFilterGM : public GM {
       SkPaint p;
 
       const SkRect bound = SkRect::MakeIWH(kWidth, kHeight);
-      sk_sp<SkImageFilter> imageSource(SkImageSource::Make(fRedImage));
+      sk_sp<SkImageFilter> imageSource(SkImageFilters::Image(fRedImage));
 
-      sk_sp<SkImageFilter> tif(SkTileImageFilter::Make(
+      sk_sp<SkImageFilter> tif(SkImageFilters::Tile(
           SkRect::MakeIWH(kBitmapSize, kBitmapSize), SkRect::MakeIWH(kWidth, kHeight),
           std::move(imageSource)));
 
@@ -78,7 +77,7 @@ class BigTileImageFilterGM : public GM {
 
       const SkRect bound2 = SkRect::MakeIWH(kBitmapSize, kBitmapSize);
 
-      sk_sp<SkImageFilter> tif(SkTileImageFilter::Make(
+      sk_sp<SkImageFilter> tif(SkImageFilters::Tile(
           SkRect::MakeIWH(kBitmapSize, kBitmapSize), SkRect::MakeIWH(kBitmapSize, kBitmapSize),
           nullptr));
 

@@ -20,14 +20,14 @@ void* SkTLS::PlatformGetSpecific(bool forceCreateTheSlot) {
     return nullptr;
   }
 
-  if (!gOnce) {
-    SkAutoMutexExclusive tmp(mutex);
     if (!gOnce) {
-      gTlsIndex = TlsAlloc();
-      gOnce = true;
+      SkAutoMutexExclusive tmp(mutex);
+      if (!gOnce) {
+        gTlsIndex = TlsAlloc();
+        gOnce = true;
+      }
     }
-  }
-  return TlsGetValue(gTlsIndex);
+    return TlsGetValue(gTlsIndex);
 }
 
 void SkTLS::PlatformSetSpecific(void* ptr) {

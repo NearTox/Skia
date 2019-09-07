@@ -204,7 +204,7 @@ class SkTHashTable {
     SkASSERT(fCount == oldCount);
   }
 
-  int next(int index) const noexcept {
+  int next(int index) const {
     index--;
     if (index < 0) {
       index += fCapacity;
@@ -321,6 +321,9 @@ class SkTHashSet {
 
   // How many items are in the set?
   int count() const { return fTable.count(); }
+
+  // Is empty?
+  bool empty() const { return fTable.count() == 0; }
 
   // Approximately how many bytes of memory do we use beyond sizeof(*this)?
   size_t approxBytesUsed() const { return fTable.approxBytesUsed(); }

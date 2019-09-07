@@ -12,8 +12,8 @@
 #include <memory>
 
 class SkBitmap;
-class SkBitmapProvider;
 class SkImage;
+class SkImage_Base;
 struct SkImageInfo;
 class SkMipMap;
 class SkPixmap;
@@ -27,7 +27,7 @@ struct SkBitmapCacheDesc {
   uint32_t fImageID;  // != 0
   SkIRect fSubset;    // always set to a valid rect (entire or subset)
 
-  void validate() const noexcept {
+  void validate() const {
     SkASSERT(fImageID);
     SkASSERT(fSubset.fLeft >= 0 && fSubset.fTop >= 0);
     SkASSERT(fSubset.width() > 0 && fSubset.height() > 0);
@@ -62,7 +62,7 @@ class SkMipMapCache {
  public:
   static const SkMipMap* FindAndRef(
       const SkBitmapCacheDesc&, SkResourceCache* localCache = nullptr);
-  static const SkMipMap* AddAndRef(const SkBitmapProvider&, SkResourceCache* localCache = nullptr);
+  static const SkMipMap* AddAndRef(const SkImage_Base*, SkResourceCache* localCache = nullptr);
 };
 
 #endif

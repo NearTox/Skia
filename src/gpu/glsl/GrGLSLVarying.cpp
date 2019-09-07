@@ -30,7 +30,6 @@ static bool use_flat_interpolation(
     case Interpolation::kMustBeFlat: SkASSERT(shaderCaps.flatInterpolationSupport()); return true;
   }
   SK_ABORT("Invalid interpolation");
-  return false;
 }
 
 void GrGLSLVaryingHandler::addVarying(

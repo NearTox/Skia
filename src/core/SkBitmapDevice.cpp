@@ -18,6 +18,7 @@
 #include "src/core/SkDraw.h"
 #include "src/core/SkGlyphRun.h"
 #include "src/core/SkImageFilterCache.h"
+#include "src/core/SkImageFilter_Base.h"
 #include "src/core/SkMakeUnique.h"
 #include "src/core/SkRasterClip.h"
 #include "src/core/SkSpecialImage.h"
@@ -416,7 +417,7 @@ void SkBitmapDevice::drawBitmapRect(
   SkRect bitmapBounds, tmpSrc, tmpDst;
   SkBitmap tmpBitmap;
 
-  bitmapBounds.isetWH(bitmap.width(), bitmap.height());
+  bitmapBounds.setIWH(bitmap.width(), bitmap.height());
 
   // Compute matrix from the two rectangles
   if (src) {
@@ -481,7 +482,7 @@ void SkBitmapDevice::drawBitmapRect(
         dx, dy, SkIntToScalar(bitmapPtr->width()), SkIntToScalar(bitmapPtr->height()));
 #else
     SkRect extractedBitmapBounds;
-    extractedBitmapBounds.isetWH(bitmapPtr->width(), bitmapPtr->height());
+    extractedBitmapBounds.setIWH(bitmapPtr->width(), bitmapPtr->height());
 #endif
     if (extractedBitmapBounds == tmpSrc) {
       // no fractional part in src, we can just call drawBitmap
@@ -564,6 +565,17 @@ void SkBitmapDevice::drawDevice(SkBaseDevice* device, int x, int y, const SkPain
   }
 }
 
+void SkBitmapDevice::drawAtlas(
+    const SkImage* atlas, const SkRSXform xform[], const SkRect tex[], const SkColor colors[],
+    int count, SkBlendMode mode, const SkPaint& paint) {
+  // set this to true for performance comparisons with the old drawVertices way
+  if (false) {
+    this->INHERITED::drawAtlas(atlas, xform, tex, colors, count, mode, paint);
+    return;
+  }
+  BDDraw(this).drawAtlas(atlas, xform, tex, colors, count, mode, paint);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace {
@@ -601,10 +613,10 @@ void SkBitmapDevice::drawSpecial(
         SkMatrix::Concat(SkMatrix::MakeTrans(SkIntToScalar(-x), SkIntToScalar(-y)), this->ctm());
     const SkIRect clipBounds = fRCStack.rc().getBounds().makeOffset(-x, -y);
     sk_sp<SkImageFilterCache> cache(this->getImageFilterCache());
-    SkImageFilter::OutputProperties outputProperties(fBitmap.colorType(), fBitmap.colorSpace());
-    SkImageFilter::Context ctx(matrix, clipBounds, cache.get(), outputProperties);
+    SkImageFilter_Base::Context ctx(
+        matrix, clipBounds, cache.get(), fBitmap.colorType(), fBitmap.colorSpace(), src);
 
-    filteredImage = filter->filterImage(src, ctx, &offset);
+    filteredImage = as_IFB(filter)->filterImage(ctx).imageAndOffset(&offset);
     if (!filteredImage) {
       return;
     }
@@ -692,10 +704,12 @@ sk_sp<SkSpecialImage> SkBitmapDevice::makeSpecial(const SkImage* image) {
       nullptr, SkIRect::MakeWH(image->width(), image->height()), image->makeNonTextureImage());
 }
 
-sk_sp<SkSpecialImage> SkBitmapDevice::snapSpecial() { return this->makeSpecial(fBitmap); }
-
-sk_sp<SkSpecialImage> SkBitmapDevice::snapBackImage(const SkIRect& bounds) {
-  return SkSpecialImage::CopyFromRaster(bounds, fBitmap, &this->surfaceProps());
+sk_sp<SkSpecialImage> SkBitmapDevice::snapSpecial(const SkIRect& bounds, bool forceCopy) {
+  if (forceCopy) {
+    return SkSpecialImage::CopyFromRaster(bounds, fBitmap, &this->surfaceProps());
+  } else {
+    return SkSpecialImage::MakeFromRaster(bounds, fBitmap);
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -772,10 +786,10 @@ void SkBitmapDevice::validateDevBounds(const SkIRect& drawClipBounds) {
 SkBaseDevice::ClipType SkBitmapDevice::onGetClipType() const {
   const SkRasterClip& rc = fRCStack.rc();
   if (rc.isEmpty()) {
-    return kEmpty_ClipType;
+    return ClipType::kEmpty;
   } else if (rc.isRect()) {
-    return kRect_ClipType;
+    return ClipType::kRect;
   } else {
-    return kComplex_ClipType;
+    return ClipType::kComplex;
   }
 }

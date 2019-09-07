@@ -73,7 +73,7 @@ class GrTRecorder {
    * Multiple inheritance may make this not true. It is runtime asserted.
    */
   template <typename TItem, typename... Args>
-  TItem& emplace(Args... args) {
+  TItem& emplace(Args&&... args) {
     return this->emplaceWithData<TItem, Args...>(0, std::forward<Args>(args)...);
   }
 

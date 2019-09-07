@@ -10,7 +10,7 @@
 #include "src/core/SkSafeMath.h"
 #include "src/core/SkWriteBuffer.h"
 
-int SkColorTypeBytesPerPixel(SkColorType ct) noexcept {
+int SkColorTypeBytesPerPixel(SkColorType ct) {
   switch (ct) {
     case kUnknown_SkColorType: return 0;
     case kAlpha_8_SkColorType: return 1;
@@ -29,23 +29,23 @@ int SkColorTypeBytesPerPixel(SkColorType ct) noexcept {
   return 0;
 }
 
-bool SkColorTypeIsAlwaysOpaque(SkColorType ct) noexcept {
+bool SkColorTypeIsAlwaysOpaque(SkColorType ct) {
   return !(kAlpha_SkColorTypeComponentFlag & SkColorTypeComponentFlags(ct));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-int SkImageInfo::bytesPerPixel() const noexcept { return SkColorTypeBytesPerPixel(fColorType); }
+int SkImageInfo::bytesPerPixel() const { return SkColorTypeBytesPerPixel(fColorType); }
 
-int SkImageInfo::shiftPerPixel() const noexcept { return SkColorTypeShiftPerPixel(fColorType); }
+int SkImageInfo::shiftPerPixel() const { return SkColorTypeShiftPerPixel(fColorType); }
 
-size_t SkImageInfo::computeOffset(int x, int y, size_t rowBytes) const noexcept {
+size_t SkImageInfo::computeOffset(int x, int y, size_t rowBytes) const {
   SkASSERT((unsigned)x < (unsigned)this->width());
   SkASSERT((unsigned)y < (unsigned)this->height());
   return SkColorTypeComputeOffset(this->colorType(), x, y, rowBytes);
 }
 
-size_t SkImageInfo::computeByteSize(size_t rowBytes) const noexcept {
+size_t SkImageInfo::computeByteSize(size_t rowBytes) const {
   if (0 == this->height()) {
     return 0;
   }
@@ -61,7 +61,7 @@ SkImageInfo SkImageInfo::MakeS32(int width, int height, SkAlphaType at) {
 }
 
 bool SkColorTypeValidateAlphaType(
-    SkColorType colorType, SkAlphaType alphaType, SkAlphaType* canonical) noexcept {
+    SkColorType colorType, SkAlphaType alphaType, SkAlphaType* canonical) {
   switch (colorType) {
     case kUnknown_SkColorType: alphaType = kUnknown_SkAlphaType; break;
     case kAlpha_8_SkColorType:
@@ -107,7 +107,7 @@ bool SkReadPixelsRec::trim(int srcWidth, int srcHeight) {
   int x = fX;
   int y = fY;
   SkIRect srcR = SkIRect::MakeXYWH(x, y, fInfo.width(), fInfo.height());
-  if (!srcR.intersect(0, 0, srcWidth, srcHeight)) {
+  if (!srcR.intersect({0, 0, srcWidth, srcHeight})) {
     return false;
   }
 
@@ -144,7 +144,7 @@ bool SkWritePixelsRec::trim(int dstWidth, int dstHeight) {
   int x = fX;
   int y = fY;
   SkIRect dstR = SkIRect::MakeXYWH(x, y, fInfo.width(), fInfo.height());
-  if (!dstR.intersect(0, 0, dstWidth, dstHeight)) {
+  if (!dstR.intersect({0, 0, dstWidth, dstHeight})) {
     return false;
   }
 

@@ -27,7 +27,7 @@
 /** Swap the two bytes in the low 16bits of the parameters.
     e.g. 0x1234 -> 0x3412
 */
-static constexpr inline uint16_t SkEndianSwap16(uint16_t value) {
+static inline uint16_t SkEndianSwap16(uint16_t value) {
   return static_cast<uint16_t>((value >> 8) | ((value & 0xFF) << 8));
 }
 
@@ -77,7 +77,7 @@ static inline void SkEndianSwap32s(uint32_t array[], int count) {
 /** Reverse all 8 bytes in a 64bit value.
     e.g. 0x1122334455667788 -> 0x8877665544332211
 */
-static constexpr inline uint64_t SkEndianSwap64(uint64_t value) {
+static inline uint64_t SkEndianSwap64(uint64_t value) {
   return (
       ((value & 0x00000000000000FFULL) << (8 * 7)) | ((value & 0x000000000000FF00ULL) << (8 * 5)) |
       ((value & 0x0000000000FF0000ULL) << (8 * 3)) | ((value & 0x00000000FF000000ULL) << (8 * 1)) |

@@ -66,7 +66,7 @@ static inline void append_texture_swizzle(SkString* out, GrSwizzle swizzle) {
 void GrGLSLShaderBuilder::appendTextureLookup(
     SkString* out, SamplerHandle samplerHandle, const char* coordName, GrSLType varyingType) const {
   const char* sampler = fProgramBuilder->samplerVariable(samplerHandle);
-  out->appendf("texture(%s, %s)", sampler, coordName);
+  out->appendf("sample(%s, %s)", sampler, coordName);
   append_texture_swizzle(out, fProgramBuilder->samplerSwizzle(samplerHandle));
 }
 

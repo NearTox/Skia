@@ -22,9 +22,9 @@
 #include <string>
 #include <utility>
 
-std::unique_ptr<SkShaper> SkShaper::Make() {
+std::unique_ptr<SkShaper> SkShaper::Make(sk_sp<SkFontMgr> fontmgr) {
 #ifdef SK_SHAPER_HARFBUZZ_AVAILABLE
-  std::unique_ptr<SkShaper> shaper = SkShaper::MakeShaperDrivenWrapper();
+  std::unique_ptr<SkShaper> shaper = SkShaper::MakeShaperDrivenWrapper(std::move(fontmgr));
   if (shaper) {
     return shaper;
   }
@@ -33,7 +33,7 @@ std::unique_ptr<SkShaper> SkShaper::Make() {
 }
 
 SkShaper::SkShaper() {}
-SkShaper::~SkShaper() = default;
+SkShaper::~SkShaper() {}
 
 /** Replaces invalid utf-8 sequences with REPLACEMENT CHARACTER U+FFFD. */
 static inline SkUnichar utf8_next(const char** ptr, const char* end) {

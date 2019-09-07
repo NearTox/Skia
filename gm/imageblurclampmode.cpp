@@ -18,7 +18,7 @@
 #include "include/core/SkSize.h"
 #include "include/core/SkString.h"
 #include "include/core/SkSurface.h"
-#include "include/effects/SkBlurImageFilter.h"
+#include "include/effects/SkImageFilters.h"
 #include "tools/ToolUtils.h"
 
 #include <initializer_list>
@@ -77,20 +77,17 @@ class ImageBlurClampModeGM : public GM {
       canvas->save();
 
       // x-only blur
-      filter = SkBlurImageFilter::Make(
-          sigma, 0.0f, nullptr, nullptr, SkBlurImageFilter::kClamp_TileMode);
+      filter = SkImageFilters::Blur(sigma, 0.0f, SkTileMode::kClamp, nullptr);
       draw_image(canvas, image, std::move(filter));
       canvas->translate(image->width() + 20, 0);
 
       // y-only blur
-      filter = SkBlurImageFilter::Make(
-          0.0f, sigma, nullptr, nullptr, SkBlurImageFilter::kClamp_TileMode);
+      filter = SkImageFilters::Blur(0.0f, sigma, SkTileMode::kClamp, nullptr);
       draw_image(canvas, image, std::move(filter));
       canvas->translate(image->width() + 20, 0);
 
       // both directions
-      filter = SkBlurImageFilter::Make(
-          sigma, sigma, nullptr, nullptr, SkBlurImageFilter::kClamp_TileMode);
+      filter = SkImageFilters::Blur(sigma, sigma, SkTileMode::kClamp, nullptr);
       draw_image(canvas, image, std::move(filter));
       canvas->translate(image->width() + 20, 0);
 

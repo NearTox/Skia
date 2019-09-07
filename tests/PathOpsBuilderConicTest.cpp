@@ -39,7 +39,7 @@ static void testOvalSet(
           Op(*result, rotated, kUnion_SkPathOp, result);
         } else {
           SkRegion rgnB, openClip;
-          openClip.setRect(-16000, -16000, 16000, 16000);
+          openClip.setRect({-16000, -16000, 16000, 16000});
           rgnB.setPath(rotated, openClip);
           region->op(rgnB, SkRegion::kUnion_Op);
         }

@@ -258,8 +258,8 @@ static void draw_texture_producer(
   }
   bool doBicubic;
   GrSamplerState::Filter fm = GrSkFilterQualityToGrFilterMode(
-      paint.getFilterQuality(), ctm, srcToDst, context->priv().options().fSharpenMipmappedTextures,
-      &doBicubic);
+      producer->width(), producer->height(), paint.getFilterQuality(), ctm, srcToDst,
+      context->priv().options().fSharpenMipmappedTextures, &doBicubic);
   const GrSamplerState::Filter* filterMode = doBicubic ? nullptr : &fm;
 
   GrTextureProducer::FilterConstraint constraintMode;

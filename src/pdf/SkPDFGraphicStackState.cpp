@@ -139,21 +139,21 @@ void SkPDFGraphicStackState::updateClip(const SkClipStack* clipStack, const SkIR
   uint32_t clipStackGenID = clipStack ? clipStack->getTopmostGenID() : SkClipStack::kWideOpenGenID;
   if (clipStackGenID == currentEntry()->fClipStackGenID) {
     return;
-  }
-  while (fStackDepth > 0) {
-    this->pop();
-    if (clipStackGenID == currentEntry()->fClipStackGenID) {
-      return;
     }
-  }
-  SkASSERT(currentEntry()->fClipStackGenID == SkClipStack::kWideOpenGenID);
-  if (clipStackGenID != SkClipStack::kWideOpenGenID) {
-    SkASSERT(clipStack);
-    this->push();
+    while (fStackDepth > 0) {
+      this->pop();
+      if (clipStackGenID == currentEntry()->fClipStackGenID) {
+        return;
+      }
+    }
+    SkASSERT(currentEntry()->fClipStackGenID == SkClipStack::kWideOpenGenID);
+    if (clipStackGenID != SkClipStack::kWideOpenGenID) {
+      SkASSERT(clipStack);
+      this->push();
 
-    currentEntry()->fClipStackGenID = clipStackGenID;
-    append_clip(*clipStack, bounds, fContentStream);
-  }
+      currentEntry()->fClipStackGenID = clipStackGenID;
+      append_clip(*clipStack, bounds, fContentStream);
+    }
 }
 
 void SkPDFGraphicStackState::updateMatrix(const SkMatrix& matrix) {

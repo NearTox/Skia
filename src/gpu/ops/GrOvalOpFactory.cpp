@@ -2207,7 +2207,6 @@ static int rrect_type_to_vert_count(RRectType type) {
     case kOverstroke_RRectType: return kVertsPerOverstrokeRRect;
   }
   SK_ABORT("Invalid type");
-  return 0;
 }
 
 static int rrect_type_to_index_count(RRectType type) {
@@ -2217,7 +2216,6 @@ static int rrect_type_to_index_count(RRectType type) {
     case kOverstroke_RRectType: return kIndicesPerOverstrokeRRect;
   }
   SK_ABORT("Invalid type");
-  return 0;
 }
 
 static const uint16_t* rrect_type_to_indices(RRectType type) {
@@ -2227,7 +2225,6 @@ static const uint16_t* rrect_type_to_indices(RRectType type) {
     case kOverstroke_RRectType: return gOverstrokeRRectIndices;
   }
   SK_ABORT("Invalid type");
-  return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3086,31 +3083,31 @@ GR_DRAW_OP_TEST_DEFINE(DIEllipseOp) {
 }
 
 GR_DRAW_OP_TEST_DEFINE(CircularRRectOp) {
-  do {
-    SkScalar rotate = random->nextSScalar1() * 360.f;
-    SkScalar translateX = random->nextSScalar1() * 1000.f;
-    SkScalar translateY = random->nextSScalar1() * 1000.f;
-    SkScalar scale;
     do {
-      scale = random->nextSScalar1() * 100.f;
-    } while (scale == 0);
-    SkMatrix viewMatrix;
-    viewMatrix.setRotate(rotate);
-    viewMatrix.postTranslate(translateX, translateY);
-    viewMatrix.postScale(scale, scale);
-    SkRect rect = GrTest::TestRect(random);
-    SkScalar radius = random->nextRangeF(0.1f, 10.f);
-    SkRRect rrect = SkRRect::MakeRectXY(rect, radius, radius);
-    if (rrect.isOval()) {
-      continue;
-    }
-    std::unique_ptr<GrDrawOp> op = GrOvalOpFactory::MakeCircularRRectOp(
-        context, std::move(paint), viewMatrix, rrect, GrTest::TestStrokeRec(random), nullptr);
-    if (op) {
-      return op;
-    }
-    assert_alive(paint);
-  } while (true);
+      SkScalar rotate = random->nextSScalar1() * 360.f;
+      SkScalar translateX = random->nextSScalar1() * 1000.f;
+      SkScalar translateY = random->nextSScalar1() * 1000.f;
+      SkScalar scale;
+      do {
+        scale = random->nextSScalar1() * 100.f;
+      } while (scale == 0);
+      SkMatrix viewMatrix;
+      viewMatrix.setRotate(rotate);
+      viewMatrix.postTranslate(translateX, translateY);
+      viewMatrix.postScale(scale, scale);
+      SkRect rect = GrTest::TestRect(random);
+      SkScalar radius = random->nextRangeF(0.1f, 10.f);
+      SkRRect rrect = SkRRect::MakeRectXY(rect, radius, radius);
+      if (rrect.isOval()) {
+        continue;
+      }
+      std::unique_ptr<GrDrawOp> op = GrOvalOpFactory::MakeCircularRRectOp(
+          context, std::move(paint), viewMatrix, rrect, GrTest::TestStrokeRec(random), nullptr);
+      if (op) {
+        return op;
+      }
+      assert_alive(paint);
+    } while (true);
 }
 
 GR_DRAW_OP_TEST_DEFINE(RRectOp) {

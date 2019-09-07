@@ -304,7 +304,7 @@ class PolygonOffsetGM : public GM {
       } else {
         GetSimplePolygon(index, SkPath::kCW_Direction, &data, &numPts);
       }
-      bounds.set(data.get(), numPts);
+      bounds.setBounds(data.get(), numPts);
       if (!fConvexOnly) {
         bounds.outset(kMaxOutset, kMaxOutset);
       }

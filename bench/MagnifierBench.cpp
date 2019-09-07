@@ -8,7 +8,7 @@
 #include "bench/Benchmark.h"
 #include "include/core/SkBitmap.h"
 #include "include/core/SkCanvas.h"
-#include "include/effects/SkMagnifierImageFilter.h"
+#include "include/effects/SkImageFilters.h"
 #include "include/utils/SkRandom.h"
 
 #define FILTER_WIDTH_SMALL 32
@@ -34,7 +34,7 @@ class MagnifierBench : public Benchmark {
     const int w = fIsSmall ? FILTER_WIDTH_SMALL : FILTER_WIDTH_LARGE;
     const int h = fIsSmall ? FILTER_HEIGHT_SMALL : FILTER_HEIGHT_LARGE;
     SkPaint paint;
-    paint.setImageFilter(SkMagnifierImageFilter::Make(
+    paint.setImageFilter(SkImageFilters::Magnifier(
         SkRect::MakeXYWH(
             SkIntToScalar(w / 4), SkIntToScalar(h / 4), SkIntToScalar(w / 2), SkIntToScalar(h / 2)),
         100, nullptr));

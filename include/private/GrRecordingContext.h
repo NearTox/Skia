@@ -23,9 +23,13 @@ class GrSurfaceProxy;
 class GrTextBlobCache;
 class GrTextureContext;
 
-class SK_API GrRecordingContext : public GrImageContext {
+class GrRecordingContext : public GrImageContext {
  public:
   ~GrRecordingContext() override;
+
+  SK_API GrBackendFormat defaultBackendFormat(SkColorType ct, GrRenderable renderable) const {
+    return INHERITED::defaultBackendFormat(ct, renderable);
+  }
 
   // Provides access to functions that aren't part of the public API.
   GrRecordingContextPriv priv();
@@ -36,16 +40,16 @@ class SK_API GrRecordingContext : public GrImageContext {
 
   GrRecordingContext(GrBackendApi, const GrContextOptions&, uint32_t contextID);
   bool init(sk_sp<const GrCaps>, sk_sp<GrSkSLFPFactoryCache>) override;
-  void setupDrawingManager(bool sortOpLists, bool reduceOpListSplitting);
+  void setupDrawingManager(bool sortOpsTasks, bool reduceOpsTaskSplitting);
 
   void abandonContext() override;
 
-  GrDrawingManager* drawingManager() noexcept;
+  GrDrawingManager* drawingManager();
 
   sk_sp<GrOpMemoryPool> refOpMemoryPool();
   GrOpMemoryPool* opMemoryPool();
 
-  GrStrikeCache* getGrStrikeCache() noexcept { return fStrikeCache.get(); }
+  GrStrikeCache* getGrStrikeCache() { return fStrikeCache.get(); }
   GrTextBlobCache* getTextBlobCache();
   const GrTextBlobCache* getTextBlobCache() const;
 
@@ -57,12 +61,12 @@ class SK_API GrRecordingContext : public GrImageContext {
    */
   void addOnFlushCallbackObject(GrOnFlushCallbackObject*);
 
-  sk_sp<GrSurfaceContext> makeWrappedSurfaceContext(
+  std::unique_ptr<GrSurfaceContext> makeWrappedSurfaceContext(
       sk_sp<GrSurfaceProxy>, GrColorType, SkAlphaType, sk_sp<SkColorSpace> = nullptr,
       const SkSurfaceProps* = nullptr);
 
   /** Create a new texture context backed by a deferred-style GrTextureProxy. */
-  sk_sp<GrTextureContext> makeDeferredTextureContext(
+  std::unique_ptr<GrTextureContext> makeDeferredTextureContext(
       SkBackingFit, int width, int height, GrColorType, SkAlphaType, sk_sp<SkColorSpace>,
       GrMipMapped = GrMipMapped::kNo, GrSurfaceOrigin = kTopLeft_GrSurfaceOrigin,
       SkBudgeted = SkBudgeted::kYes, GrProtected = GrProtected::kNo);
@@ -72,7 +76,7 @@ class SK_API GrRecordingContext : public GrImageContext {
    * GrRenderTargetProxy. We guarantee that "asTextureProxy" will succeed for
    * renderTargetContexts created via this entry point.
    */
-  sk_sp<GrRenderTargetContext> makeDeferredRenderTargetContext(
+  std::unique_ptr<GrRenderTargetContext> makeDeferredRenderTargetContext(
       SkBackingFit fit, int width, int height, GrColorType colorType,
       sk_sp<SkColorSpace> colorSpace, int sampleCnt = 1, GrMipMapped = GrMipMapped::kNo,
       GrSurfaceOrigin origin = kBottomLeft_GrSurfaceOrigin,
@@ -85,7 +89,7 @@ class SK_API GrRecordingContext : public GrImageContext {
    * converted to 8888). It may also swizzle the channels (e.g., BGRA -> RGBA).
    * SRGB-ness will be preserved.
    */
-  sk_sp<GrRenderTargetContext> makeDeferredRenderTargetContextWithFallback(
+  std::unique_ptr<GrRenderTargetContext> makeDeferredRenderTargetContextWithFallback(
       SkBackingFit fit, int width, int height, GrColorType colorType,
       sk_sp<SkColorSpace> colorSpace, int sampleCnt = 1, GrMipMapped = GrMipMapped::kNo,
       GrSurfaceOrigin origin = kBottomLeft_GrSurfaceOrigin,

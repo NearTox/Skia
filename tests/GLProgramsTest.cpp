@@ -112,7 +112,7 @@ class BlockInputFragmentProcessor : public GrFragmentProcessor {
  private:
   class GLFP : public GrGLSLFragmentProcessor {
    public:
-    void emitCode(EmitArgs& args) override { this->emitChild(0, args); }
+    void emitCode(EmitArgs& args) override { this->invokeChild(0, args); }
 
    private:
     typedef GrGLSLFragmentProcessor INHERITED;
@@ -138,22 +138,21 @@ class BlockInputFragmentProcessor : public GrFragmentProcessor {
 static const int kRenderTargetHeight = 1;
 static const int kRenderTargetWidth = 1;
 
-static sk_sp<GrRenderTargetContext> random_render_target_context(
+static std::unique_ptr<GrRenderTargetContext> random_render_target_context(
     GrContext* context, SkRandom* random, const GrCaps* caps) {
   GrSurfaceOrigin origin =
       random->nextBool() ? kTopLeft_GrSurfaceOrigin : kBottomLeft_GrSurfaceOrigin;
 
   GrColorType ct = GrColorType::kRGBA_8888;
-  const GrBackendFormat format = caps->getBackendFormatFromColorType(ct);
+  const GrBackendFormat format = caps->getDefaultBackendFormat(ct, GrRenderable::kYes);
 
-  int sampleCnt = random->nextBool() ? caps->getRenderTargetSampleCount(2, ct, format) : 1;
+  int sampleCnt = random->nextBool() ? caps->getRenderTargetSampleCount(2, format) : 1;
   // Above could be 0 if msaa isn't supported.
   sampleCnt = SkTMax(1, sampleCnt);
 
-  sk_sp<GrRenderTargetContext> renderTargetContext(context->priv().makeDeferredRenderTargetContext(
+  return context->priv().makeDeferredRenderTargetContext(
       SkBackingFit::kExact, kRenderTargetWidth, kRenderTargetHeight, GrColorType::kRGBA_8888,
-      nullptr, sampleCnt, GrMipMapped::kNo, origin));
-  return renderTargetContext;
+      nullptr, sampleCnt, GrMipMapped::kNo, origin);
 }
 
 #if GR_TEST_UTILS
@@ -258,8 +257,8 @@ bool GrDrawingManager::ProgramUnitTest(GrContext* context, int maxStages, int ma
     dummyDesc.fWidth = 34;
     dummyDesc.fHeight = 18;
     dummyDesc.fConfig = kRGBA_8888_GrPixelConfig;
-    const GrBackendFormat format =
-        context->priv().caps()->getBackendFormatFromColorType(GrColorType::kRGBA_8888);
+    const GrBackendFormat format = context->priv().caps()->getDefaultBackendFormat(
+        GrColorType::kRGBA_8888, GrRenderable::kYes);
     proxies[0] = proxyProvider->createProxy(
         format, dummyDesc, GrRenderable::kYes, 1, kBottomLeft_GrSurfaceOrigin, mipMapped,
         SkBackingFit::kExact, SkBudgeted::kNo, GrProtected::kNo, GrInternalSurfaceFlags::kNone);
@@ -270,7 +269,7 @@ bool GrDrawingManager::ProgramUnitTest(GrContext* context, int maxStages, int ma
     dummyDesc.fHeight = 22;
     dummyDesc.fConfig = kAlpha_8_GrPixelConfig;
     const GrBackendFormat format =
-        context->priv().caps()->getBackendFormatFromColorType(GrColorType::kAlpha_8);
+        context->priv().caps()->getDefaultBackendFormat(GrColorType::kAlpha_8, GrRenderable::kNo);
     proxies[1] = proxyProvider->createProxy(
         format, dummyDesc, GrRenderable::kNo, 1, kTopLeft_GrSurfaceOrigin, mipMapped,
         SkBackingFit::kExact, SkBudgeted::kNo, GrProtected::kNo, GrInternalSurfaceFlags::kNone);
@@ -288,8 +287,8 @@ bool GrDrawingManager::ProgramUnitTest(GrContext* context, int maxStages, int ma
   static const int NUM_TESTS = 1024;
   for (int t = 0; t < NUM_TESTS; t++) {
     // setup random render target(can fail)
-    sk_sp<GrRenderTargetContext> renderTargetContext(
-        random_render_target_context(context, &random, context->priv().caps()));
+    auto renderTargetContext =
+        random_render_target_context(context, &random, context->priv().caps());
     if (!renderTargetContext) {
       SkDebugf("Could not allocate renderTargetContext");
       return false;
@@ -307,9 +306,9 @@ bool GrDrawingManager::ProgramUnitTest(GrContext* context, int maxStages, int ma
       GrPrepareForExternalIORequests());
 
   // Validate that GrFPs work correctly without an input.
-  sk_sp<GrRenderTargetContext> renderTargetContext(context->priv().makeDeferredRenderTargetContext(
+  auto renderTargetContext = context->priv().makeDeferredRenderTargetContext(
       SkBackingFit::kExact, kRenderTargetWidth, kRenderTargetHeight, GrColorType::kRGBA_8888,
-      nullptr));
+      nullptr);
   if (!renderTargetContext) {
     SkDebugf("Could not allocate a renderTargetContext");
     return false;
@@ -369,14 +368,14 @@ static int get_glprograms_max_levels(const sk_gpu_test::ContextInfo& ctxInfo) {
   int maxTreeLevels = 4;
   // On iOS we can exceed the maximum number of varyings. http://skbug.com/6627.
 #ifdef SK_BUILD_FOR_IOS
-  maxTreeLevels = 2;
-#endif
-  if (ctxInfo.type() == sk_gpu_test::GrContextFactory::kANGLE_D3D9_ES2_ContextType ||
-      ctxInfo.type() == sk_gpu_test::GrContextFactory::kANGLE_D3D11_ES2_ContextType) {
-    // On Angle D3D we will hit a limit of out variables if we use too many stages.
     maxTreeLevels = 2;
-  }
-  return maxTreeLevels;
+#endif
+    if (ctxInfo.type() == sk_gpu_test::GrContextFactory::kANGLE_D3D9_ES2_ContextType ||
+        ctxInfo.type() == sk_gpu_test::GrContextFactory::kANGLE_D3D11_ES2_ContextType) {
+      // On Angle D3D we will hit a limit of out variables if we use too many stages.
+      maxTreeLevels = 2;
+    }
+    return maxTreeLevels;
 }
 
 static void test_glprograms(skiatest::Reporter* reporter, const sk_gpu_test::ContextInfo& ctxInfo) {

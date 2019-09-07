@@ -161,7 +161,7 @@ int GrPathUtils::worstCasePointCount(const SkPath& path, int* subpaths, SkScalar
   SkPath::Verb verb;
 
   SkPoint pts[4];
-  while ((verb = iter.next(pts, false)) != SkPath::kDone_Verb) {
+  while ((verb = iter.next(pts)) != SkPath::kDone_Verb) {
     switch (verb) {
       case SkPath::kLine_Verb: pointCount += 1; break;
       case SkPath::kConic_Verb: {

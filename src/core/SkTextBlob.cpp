@@ -131,7 +131,7 @@ void SkTextBlob::RunRecord::grow(uint32_t count) {
   memmove(posBuffer(), initialPosBuffer, copySize);
 }
 
-static int32_t next_id() noexcept {
+static int32_t next_id() {
   static std::atomic<int32_t> nextID{1};
   int32_t id;
   do {
@@ -193,10 +193,7 @@ unsigned SkTextBlob::ScalarsPerGlyph(GlyphPositioning pos) {
 
 void SkTextBlob::operator delete(void* p) { sk_free(p); }
 
-void* SkTextBlob::operator new(size_t) {
-  SK_ABORT("All blobs are created by placement new.");
-  return sk_malloc_throw(0);
-}
+void* SkTextBlob::operator new(size_t) { SK_ABORT("All blobs are created by placement new."); }
 
 void* SkTextBlob::operator new(size_t, void* p) { return p; }
 
@@ -661,7 +658,7 @@ sk_sp<SkTextBlob> SkTextBlobPriv::MakeFromBuffer(SkReadBuffer& reader) {
     SkPoint offset;
     reader.readPoint(&offset);
     SkFont font;
-    if (reader.isVersionLT(SkReadBuffer::kSerializeFonts_Version)) {
+    if (reader.isVersionLT(SkPicturePriv::kSerializeFonts_Version)) {
       SkPaint paint;
       reader.readPaint(&paint, &font);
     } else {

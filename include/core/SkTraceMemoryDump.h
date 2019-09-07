@@ -79,7 +79,7 @@ class SK_API SkTraceMemoryDump {
   virtual bool shouldDumpWrappedObjects() const { return true; }
 
  protected:
-  virtual ~SkTraceMemoryDump() = default;
+  virtual ~SkTraceMemoryDump() {}
 };
 
 #endif

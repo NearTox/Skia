@@ -12,10 +12,10 @@
 
 class GrScissorState {
  public:
-  GrScissorState() noexcept : fEnabled(false) {}
-  GrScissorState(const SkIRect& rect) noexcept : fEnabled(true), fRect(rect) {}
-  void setDisabled() noexcept { fEnabled = false; }
-  void set(const SkIRect& rect) noexcept {
+  GrScissorState() : fEnabled(false) {}
+  GrScissorState(const SkIRect& rect) : fEnabled(true), fRect(rect) {}
+  void setDisabled() { fEnabled = false; }
+  void set(const SkIRect& rect) {
     fRect = rect;
     fEnabled = true;
   }
@@ -26,13 +26,13 @@ class GrScissorState {
     }
     return fRect.intersect(rect);
   }
-  bool operator==(const GrScissorState& other) const noexcept {
+  bool operator==(const GrScissorState& other) const {
     return fEnabled == other.fEnabled && (false == fEnabled || fRect == other.fRect);
   }
-  bool operator!=(const GrScissorState& other) const noexcept { return !(*this == other); }
+  bool operator!=(const GrScissorState& other) const { return !(*this == other); }
 
-  bool enabled() const noexcept { return fEnabled; }
-  const SkIRect& rect() const noexcept { return fRect; }
+  bool enabled() const { return fEnabled; }
+  const SkIRect& rect() const { return fRect; }
 
  private:
   bool fEnabled;

@@ -18,8 +18,8 @@
 GrMtlRenderTarget::GrMtlRenderTarget(
     GrMtlGpu* gpu, const GrSurfaceDesc& desc, int sampleCnt, id<MTLTexture> colorTexture,
     id<MTLTexture> resolveTexture, Wrapped)
-    : GrSurface(gpu, desc, GrProtected::kNo),
-      GrRenderTarget(gpu, desc, sampleCnt, GrProtected::kNo),
+    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, GrProtected::kNo),
+      GrRenderTarget(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, sampleCnt, GrProtected::kNo),
       fColorTexture(colorTexture),
       fResolveTexture(resolveTexture) {
   SkASSERT(sampleCnt > 1);
@@ -28,8 +28,8 @@ GrMtlRenderTarget::GrMtlRenderTarget(
 
 GrMtlRenderTarget::GrMtlRenderTarget(
     GrMtlGpu* gpu, const GrSurfaceDesc& desc, id<MTLTexture> colorTexture, Wrapped)
-    : GrSurface(gpu, desc, GrProtected::kNo),
-      GrRenderTarget(gpu, desc, 1, GrProtected::kNo),
+    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, GrProtected::kNo),
+      GrRenderTarget(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, 1, GrProtected::kNo),
       fColorTexture(colorTexture),
       fResolveTexture(nil) {
   this->registerWithCacheWrapped(GrWrapCacheable::kNo);
@@ -39,8 +39,8 @@ GrMtlRenderTarget::GrMtlRenderTarget(
 GrMtlRenderTarget::GrMtlRenderTarget(
     GrMtlGpu* gpu, const GrSurfaceDesc& desc, int sampleCnt, id<MTLTexture> colorTexture,
     id<MTLTexture> resolveTexture)
-    : GrSurface(gpu, desc, GrProtected::kNo),
-      GrRenderTarget(gpu, desc, sampleCnt, GrProtected::kNo),
+    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, GrProtected::kNo),
+      GrRenderTarget(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, sampleCnt, GrProtected::kNo),
       fColorTexture(colorTexture),
       fResolveTexture(resolveTexture) {
   SkASSERT(sampleCnt > 1);
@@ -48,8 +48,8 @@ GrMtlRenderTarget::GrMtlRenderTarget(
 
 GrMtlRenderTarget::GrMtlRenderTarget(
     GrMtlGpu* gpu, const GrSurfaceDesc& desc, id<MTLTexture> colorTexture)
-    : GrSurface(gpu, desc, GrProtected::kNo),
-      GrRenderTarget(gpu, desc, 1, GrProtected::kNo),
+    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, GrProtected::kNo),
+      GrRenderTarget(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, 1, GrProtected::kNo),
       fColorTexture(colorTexture),
       fResolveTexture(nil) {}
 

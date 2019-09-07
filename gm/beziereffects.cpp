@@ -234,7 +234,7 @@ class BezierConicEffects : public GpuGM {
           SkRect bounds;
           // SkPoint bPts[] = {{0.f, 0.f}, {800.f, 800.f}};
           // bounds.set(bPts, 2);
-          bounds.set(pts, 3);
+          bounds.setBounds(pts, 3);
 
           SkPaint boundsPaint;
           boundsPaint.setColor(0xff808080);
@@ -421,7 +421,7 @@ class BezierQuadEffects : public GpuGM {
           }
 
           SkRect bounds;
-          bounds.set(pts, 3);
+          bounds.setBounds(pts, 3);
 
           SkPaint boundsPaint;
           boundsPaint.setColor(0xff808080);

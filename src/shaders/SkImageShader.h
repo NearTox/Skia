@@ -12,6 +12,9 @@
 #include "src/shaders/SkBitmapProcShader.h"
 #include "src/shaders/SkShaderBase.h"
 
+// private subclass of SkStageUpdater
+class SkImageStageUpdater;
+
 class SkImageShader : public SkShaderBase {
  public:
   static sk_sp<SkShader> Make(
@@ -38,6 +41,9 @@ class SkImageShader : public SkShaderBase {
   SkImage* onIsAImage(SkMatrix*, SkTileMode*) const override;
 
   bool onAppendStages(const SkStageRec&) const override;
+  SkStageUpdater* onAppendUpdatableStages(const SkStageRec&) const override;
+
+  bool doStages(const SkStageRec&, SkImageStageUpdater* = nullptr) const;
 
   sk_sp<SkImage> fImage;
   const SkTileMode fTileModeX;

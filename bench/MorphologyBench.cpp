@@ -10,7 +10,7 @@
 #include "include/core/SkPaint.h"
 #include "include/core/SkShader.h"
 #include "include/core/SkString.h"
-#include "include/effects/SkMorphologyImageFilter.h"
+#include "include/effects/SkImageFilters.h"
 #include "include/utils/SkRandom.h"
 
 #define SMALL SkIntToScalar(2)
@@ -56,11 +56,11 @@ class MorphologyBench : public Benchmark {
         sk_sp<SkImageFilter> mf;
         switch (fStyle) {
           case kDilate_MT:
-            mf = SkDilateImageFilter::Make(
+            mf = SkImageFilters::Dilate(
                 SkScalarFloorToInt(fRadius), SkScalarFloorToInt(fRadius), nullptr);
             break;
           case kErode_MT:
-            mf = SkErodeImageFilter::Make(
+            mf = SkImageFilters::Erode(
                 SkScalarFloorToInt(fRadius), SkScalarFloorToInt(fRadius), nullptr);
             break;
         }

@@ -395,25 +395,25 @@ bool SkOpAngle::computeSector() {
     fUnorderable = true;
     return false;
   }
-  do {
-    // advance end
-    const SkOpSegment* other = checkEnd->segment();
-    const SkOpSpanBase* oSpan = other->head();
     do {
-      if (oSpan->segment() != segment()) {
-        continue;
-      }
-      if (oSpan == checkEnd) {
-        continue;
-      }
-      if (!approximately_equal(oSpan->t(), checkEnd->t())) {
-        continue;
-      }
-      goto recomputeSector;
-    } while (!oSpan->final() && (oSpan = oSpan->upCast()->next()));
-    checkEnd =
-        stepUp ? !checkEnd->final() ? checkEnd->upCast()->next() : nullptr : checkEnd->prev();
-  } while (checkEnd);
+      // advance end
+      const SkOpSegment* other = checkEnd->segment();
+      const SkOpSpanBase* oSpan = other->head();
+      do {
+        if (oSpan->segment() != segment()) {
+          continue;
+        }
+        if (oSpan == checkEnd) {
+          continue;
+        }
+        if (!approximately_equal(oSpan->t(), checkEnd->t())) {
+          continue;
+        }
+        goto recomputeSector;
+      } while (!oSpan->final() && (oSpan = oSpan->upCast()->next()));
+      checkEnd =
+          stepUp ? !checkEnd->final() ? checkEnd->upCast()->next() : nullptr : checkEnd->prev();
+    } while (checkEnd);
 recomputeSector:
   SkOpSpanBase* computedEnd = stepUp
                                   ? checkEnd ? checkEnd->prev() : fEnd->segment()->head()

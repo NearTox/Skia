@@ -59,12 +59,12 @@ class GrRecordingContextPriv {
    */
   void addOnFlushCallbackObject(GrOnFlushCallbackObject*);
 
-  sk_sp<GrSurfaceContext> makeWrappedSurfaceContext(
+  std::unique_ptr<GrSurfaceContext> makeWrappedSurfaceContext(
       sk_sp<GrSurfaceProxy>, GrColorType, SkAlphaType, sk_sp<SkColorSpace> = nullptr,
       const SkSurfaceProps* = nullptr);
 
   /** Create a new texture context backed by a deferred-style GrTextureProxy. */
-  sk_sp<GrTextureContext> makeDeferredTextureContext(
+  std::unique_ptr<GrTextureContext> makeDeferredTextureContext(
       SkBackingFit, int width, int height, GrColorType, SkAlphaType, sk_sp<SkColorSpace>,
       GrMipMapped = GrMipMapped::kNo, GrSurfaceOrigin = kTopLeft_GrSurfaceOrigin,
       SkBudgeted = SkBudgeted::kYes, GrProtected = GrProtected::kNo);
@@ -74,7 +74,7 @@ class GrRecordingContextPriv {
    * GrRenderTargetProxy. We guarantee that "asTextureProxy" will succeed for
    * renderTargetContexts created via this entry point.
    */
-  sk_sp<GrRenderTargetContext> makeDeferredRenderTargetContext(
+  std::unique_ptr<GrRenderTargetContext> makeDeferredRenderTargetContext(
       SkBackingFit fit, int width, int height, GrColorType, sk_sp<SkColorSpace> colorSpace,
       int sampleCnt = 1, GrMipMapped = GrMipMapped::kNo,
       GrSurfaceOrigin origin = kBottomLeft_GrSurfaceOrigin,
@@ -87,7 +87,7 @@ class GrRecordingContextPriv {
    * converted to 8888). It may also swizzle the channels (e.g., BGRA -> RGBA).
    * SRGB-ness will be preserved.
    */
-  sk_sp<GrRenderTargetContext> makeDeferredRenderTargetContextWithFallback(
+  std::unique_ptr<GrRenderTargetContext> makeDeferredRenderTargetContextWithFallback(
       SkBackingFit fit, int width, int height, GrColorType, sk_sp<SkColorSpace> colorSpace,
       int sampleCnt = 1, GrMipMapped = GrMipMapped::kNo,
       GrSurfaceOrigin origin = kBottomLeft_GrSurfaceOrigin,
@@ -98,10 +98,10 @@ class GrRecordingContextPriv {
 
   // CONTEXT TODO: remove this backdoor
   // In order to make progress we temporarily need a way to break CL impasses.
-  GrContext* backdoor() noexcept;
+  GrContext* backdoor();
 
  private:
-  explicit GrRecordingContextPriv(GrRecordingContext* context) noexcept : fContext(context) {}
+  explicit GrRecordingContextPriv(GrRecordingContext* context) : fContext(context) {}
   GrRecordingContextPriv(const GrRecordingContextPriv&);             // unimpl
   GrRecordingContextPriv& operator=(const GrRecordingContextPriv&);  // unimpl
 

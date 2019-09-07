@@ -21,9 +21,8 @@ class GrMtlUniformHandler : public GrGLSLUniformHandler {
   static const int kUniformsPerBlock = 8;
 
   enum {
-    kGeometryBinding = 0,
-    kFragBinding = 1,
-    kLastUniformBinding = kFragBinding,
+    kUniformBinding = 0,
+    kLastUniformBinding = kUniformBinding,
   };
 
   // fUBOffset is only valid if the GrSLType of the fVariable is not a sampler
@@ -47,14 +46,16 @@ class GrMtlUniformHandler : public GrGLSLUniformHandler {
       : INHERITED(program),
         fUniforms(kUniformsPerBlock),
         fSamplers(kUniformsPerBlock),
-        fCurrentGeometryUBOOffset(0),
-        fCurrentGeometryUBOMaxAlignment(0x0),
-        fCurrentFragmentUBOOffset(0),
-        fCurrentFragmentUBOMaxAlignment(0x0) {}
+        fCurrentUBOOffset(0),
+        fCurrentUBOMaxAlignment(0x0) {}
 
   UniformHandle internalAddUniformArray(
       uint32_t visibility, GrSLType type, const char* name, bool mangleName, int arrayCount,
       const char** outName) override;
+
+  void updateUniformVisibility(UniformHandle u, uint32_t visibility) override {
+    fUniforms[u.toIndex()].fVisibility |= visibility;
+  }
 
   SamplerHandle addSampler(
       const GrTexture*, const GrSamplerState&, const GrSwizzle&, const char* name,
@@ -73,19 +74,14 @@ class GrMtlUniformHandler : public GrGLSLUniformHandler {
 
   void appendUniformDecls(GrShaderFlags, SkString*) const override;
 
-  bool hasGeometryUniforms() const { return fCurrentGeometryUBOOffset > 0; }
-  bool hasFragmentUniforms() const { return fCurrentFragmentUBOOffset > 0; }
-
   const UniformInfo& getUniformInfo(UniformHandle u) const { return fUniforms[u.toIndex()]; }
 
   UniformInfoArray fUniforms;
   UniformInfoArray fSamplers;
   SkTArray<GrSwizzle> fSamplerSwizzles;
 
-  uint32_t fCurrentGeometryUBOOffset;
-  uint32_t fCurrentGeometryUBOMaxAlignment;
-  uint32_t fCurrentFragmentUBOOffset;
-  uint32_t fCurrentFragmentUBOMaxAlignment;
+  uint32_t fCurrentUBOOffset;
+  uint32_t fCurrentUBOMaxAlignment;
 
   friend class GrMtlPipelineStateBuilder;
 

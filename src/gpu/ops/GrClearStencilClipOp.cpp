@@ -8,9 +8,9 @@
 #include "src/gpu/ops/GrClearStencilClipOp.h"
 
 #include "include/private/GrRecordingContext.h"
-#include "src/gpu/GrGpuCommandBuffer.h"
 #include "src/gpu/GrMemoryPool.h"
 #include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/GrOpsRenderPass.h"
 #include "src/gpu/GrRecordingContextPriv.h"
 
 std::unique_ptr<GrOp> GrClearStencilClipOp::Make(
@@ -22,6 +22,6 @@ std::unique_ptr<GrOp> GrClearStencilClipOp::Make(
 }
 
 void GrClearStencilClipOp::onExecute(GrOpFlushState* state, const SkRect& chainBounds) {
-  SkASSERT(state->rtCommandBuffer());
-  state->rtCommandBuffer()->clearStencilClip(fClip, fInsideStencilMask);
+  SkASSERT(state->opsRenderPass());
+  state->opsRenderPass()->clearStencilClip(fClip, fInsideStencilMask);
 }

@@ -239,10 +239,10 @@ bool GrClipStackClip::apply(
     }
   }
 
-  // The opList ID must not be looked up until AFTER producing the clip mask (if any). That step
-  // can cause a flush or otherwise change which opList our draw is going into.
-  uint32_t opListID = renderTargetContext->getOpList()->uniqueID();
-  if (auto clipFPs = reducedClip.finishAndDetachAnalyticFPs(ccpr, opListID)) {
+  // The opsTask ID must not be looked up until AFTER producing the clip mask (if any). That step
+  // can cause a flush or otherwise change which opstask our draw is going into.
+  uint32_t opsTaskID = renderTargetContext->getOpsTask()->uniqueID();
+  if (auto clipFPs = reducedClip.finishAndDetachAnalyticFPs(ccpr, opsTaskID)) {
     out->addCoverageFP(std::move(clipFPs));
   }
 
@@ -341,17 +341,17 @@ sk_sp<GrTextureProxy> GrClipStackClip::createAlphaClipMask(
   create_clip_mask_key(
       reducedClip.maskGenID(), reducedClip.scissor(), reducedClip.numAnalyticFPs(), &key);
 
-  sk_sp<GrTextureProxy> proxy(
-      proxyProvider->findOrCreateProxyByUniqueKey(key, kTopLeft_GrSurfaceOrigin));
+  sk_sp<GrTextureProxy> proxy(proxyProvider->findOrCreateProxyByUniqueKey(
+      key, GrColorType::kAlpha_8, kTopLeft_GrSurfaceOrigin));
   if (proxy) {
     return proxy;
   }
 
   auto isProtected = proxy->isProtected() ? GrProtected::kYes : GrProtected::kNo;
-  sk_sp<GrRenderTargetContext> rtc(context->priv().makeDeferredRenderTargetContextWithFallback(
+  auto rtc = context->priv().makeDeferredRenderTargetContextWithFallback(
       SkBackingFit::kApprox, reducedClip.width(), reducedClip.height(), GrColorType::kAlpha_8,
       nullptr, 1, GrMipMapped::kNo, kTopLeft_GrSurfaceOrigin, nullptr, SkBudgeted::kYes,
-      isProtected));
+      isProtected);
   if (!rtc) {
     return nullptr;
   }
@@ -454,9 +454,10 @@ sk_sp<GrTextureProxy> GrClipStackClip::createSoftwareClipMask(
       reducedClip.maskGenID(), reducedClip.scissor(), reducedClip.numAnalyticFPs(), &key);
 
   GrProxyProvider* proxyProvider = context->priv().proxyProvider();
+  const GrCaps* caps = context->priv().caps();
 
-  sk_sp<GrTextureProxy> proxy(
-      proxyProvider->findOrCreateProxyByUniqueKey(key, kTopLeft_GrSurfaceOrigin));
+  sk_sp<GrTextureProxy> proxy(proxyProvider->findOrCreateProxyByUniqueKey(
+      key, GrColorType::kAlpha_8, kTopLeft_GrSurfaceOrigin));
   if (proxy) {
     return proxy;
   }
@@ -478,13 +479,13 @@ sk_sp<GrTextureProxy> GrClipStackClip::createSoftwareClipMask(
     desc.fConfig = kAlpha_8_GrPixelConfig;
 
     GrBackendFormat format =
-        context->priv().caps()->getBackendFormatFromColorType(GrColorType::kAlpha_8);
+        caps->getDefaultBackendFormat(GrColorType::kAlpha_8, GrRenderable::kNo);
 
     // MDB TODO: We're going to fill this proxy with an ASAP upload (which is out of order wrt
     // to ops), so it can't have any pending IO.
     proxy = proxyProvider->createProxy(
-        format, desc, GrRenderable::kNo, 1, kTopLeft_GrSurfaceOrigin, SkBackingFit::kApprox,
-        SkBudgeted::kYes, GrProtected::kNo);
+        format, desc, GrRenderable::kNo, 1, kTopLeft_GrSurfaceOrigin, GrMipMapped::kNo,
+        SkBackingFit::kApprox, SkBudgeted::kYes, GrProtected::kNo);
 
     auto uploader = skstd::make_unique<GrTDeferredProxyUploader<ClipMaskData>>(reducedClip);
     GrTDeferredProxyUploader<ClipMaskData>* uploaderRaw = uploader.get();

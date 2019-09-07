@@ -9,27 +9,27 @@
 #include "include/private/SkColorData.h"
 #include "include/private/SkFixed.h"
 
-SkPMColor SkPreMultiplyARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b) noexcept {
+SkPMColor SkPreMultiplyARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b) {
   return SkPremultiplyARGBInline(a, r, g, b);
 }
 
-SkPMColor SkPreMultiplyColor(SkColor c) noexcept {
+SkPMColor SkPreMultiplyColor(SkColor c) {
   return SkPremultiplyARGBInline(SkColorGetA(c), SkColorGetR(c), SkColorGetG(c), SkColorGetB(c));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static constexpr inline SkScalar ByteToScalar(U8CPU x) {
+static inline SkScalar ByteToScalar(U8CPU x) {
   SkASSERT(x <= 255);
   return SkIntToScalar(x) / 255;
 }
 
-static constexpr inline SkScalar ByteDivToScalar(int numer, U8CPU denom) {
+static inline SkScalar ByteDivToScalar(int numer, U8CPU denom) {
   // cast to keep the answer signed
   return SkIntToScalar(numer) / (int)denom;
 }
 
-void SkRGBToHSV(U8CPU r, U8CPU g, U8CPU b, SkScalar hsv[3]) noexcept {
+void SkRGBToHSV(U8CPU r, U8CPU g, U8CPU b, SkScalar hsv[3]) {
   SkASSERT(hsv);
 
   unsigned min = SkMin32(r, SkMin32(g, b));
@@ -69,7 +69,7 @@ void SkRGBToHSV(U8CPU r, U8CPU g, U8CPU b, SkScalar hsv[3]) noexcept {
   hsv[2] = v;
 }
 
-SkColor SkHSVToColor(U8CPU a, const SkScalar hsv[3]) noexcept {
+SkColor SkHSVToColor(U8CPU a, const SkScalar hsv[3]) {
   SkASSERT(hsv);
 
   SkScalar s = SkScalarPin(hsv[1], 0, 1);

@@ -11,7 +11,7 @@
 
 #define SK_DEBUGFAILF(fmt, ...) SkASSERT((SkDebugf(fmt "\n", __VA_ARGS__), false))
 
-static inline void sk_out_of_memory(size_t size) noexcept {
+static inline void sk_out_of_memory(size_t size) {
   SK_DEBUGFAILF("sk_out_of_memory (asked for " SK_SIZE_T_SPECIFIER " bytes)", size);
 #if defined(IS_FUZZING_WITH_AFL)
   exit(1);
@@ -20,7 +20,7 @@ static inline void sk_out_of_memory(size_t size) noexcept {
 #endif
 }
 
-static inline void* throw_on_failure(size_t size, void* p) noexcept {
+static inline void* throw_on_failure(size_t size, void* p) {
   if (size > 0 && p == nullptr) {
     // If we've got a nullptr here, the only reason we should have failed is running out of RAM.
     sk_out_of_memory(size);
@@ -28,7 +28,7 @@ static inline void* throw_on_failure(size_t size, void* p) noexcept {
   return p;
 }
 
-void sk_abort_no_print() noexcept {
+void sk_abort_no_print() {
 #if defined(SK_BUILD_FOR_WIN) && defined(SK_IS_BOT)
   // do not display a system dialog before aborting the process
   _set_abort_behavior(0, _WRITE_ABORT_MSG);
@@ -42,7 +42,7 @@ void sk_abort_no_print() noexcept {
 #endif
 }
 
-void sk_out_of_memory(void) noexcept {
+void sk_out_of_memory(void) {
   SkDEBUGFAIL("sk_out_of_memory");
 #if defined(IS_FUZZING_WITH_AFL)
   exit(1);
@@ -51,17 +51,17 @@ void sk_out_of_memory(void) noexcept {
 #endif
 }
 
-void* sk_realloc_throw(void* addr, size_t size) noexcept {
+void* sk_realloc_throw(void* addr, size_t size) {
   return throw_on_failure(size, realloc(addr, size));
 }
 
-void sk_free(void* p) noexcept {
+void sk_free(void* p) {
   if (p) {
     free(p);
   }
 }
 
-void* sk_malloc_flags(size_t size, unsigned flags) noexcept {
+void* sk_malloc_flags(size_t size, unsigned flags) {
   void* p;
   if (flags & SK_MALLOC_ZERO_INITIALIZE) {
     p = calloc(size, 1);

@@ -66,7 +66,7 @@ void SkDCurve::setConicBounds(
   dCurve.set(curve, curveWeight);
   SkDRect dRect;
   dRect.setBounds(dCurve, fConic, tStart, tEnd);
-  bounds->set(
+  bounds->setLTRB(
       SkDoubleToScalar(dRect.fLeft), SkDoubleToScalar(dRect.fTop), SkDoubleToScalar(dRect.fRight),
       SkDoubleToScalar(dRect.fBottom));
 }
@@ -77,7 +77,7 @@ void SkDCurve::setCubicBounds(
   dCurve.set(curve);
   SkDRect dRect;
   dRect.setBounds(dCurve, fCubic, tStart, tEnd);
-  bounds->set(
+  bounds->setLTRB(
       SkDoubleToScalar(dRect.fLeft), SkDoubleToScalar(dRect.fTop), SkDoubleToScalar(dRect.fRight),
       SkDoubleToScalar(dRect.fBottom));
 }
@@ -88,7 +88,7 @@ void SkDCurve::setQuadBounds(
   dCurve.set(curve);
   SkDRect dRect;
   dRect.setBounds(dCurve, fQuad, tStart, tEnd);
-  bounds->set(
+  bounds->setLTRB(
       SkDoubleToScalar(dRect.fLeft), SkDoubleToScalar(dRect.fTop), SkDoubleToScalar(dRect.fRight),
       SkDoubleToScalar(dRect.fBottom));
 }

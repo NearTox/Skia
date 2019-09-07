@@ -18,9 +18,9 @@
 
 class SkSafeRange {
  public:
-  operator bool() const noexcept { return fOK; }
+  operator bool() const { return fOK; }
 
-  bool ok() const noexcept { return fOK; }
+  bool ok() const { return fOK; }
 
   // checks 0 <= value <= max.
   // On success, returns value
@@ -35,7 +35,7 @@ class SkSafeRange {
     return static_cast<T>(value);
   }
 
-  int checkGE(int value, int min) noexcept {
+  int checkGE(int value, int min) {
     if (value < min) {
       fOK = false;
       value = min;

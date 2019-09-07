@@ -60,6 +60,11 @@ class GrGLSLUniformHandler {
   virtual const GrShaderVar& getUniformVariable(UniformHandle u) const = 0;
 
   /**
+   * 'Or's the visibility parameter with the current uniform visibililty.
+   */
+  virtual void updateUniformVisibility(UniformHandle u, uint32_t visibility) = 0;
+
+  /**
    * Shortcut for getUniformVariable(u).c_str()
    */
   virtual const char* getUniformCStr(UniformHandle u) const = 0;

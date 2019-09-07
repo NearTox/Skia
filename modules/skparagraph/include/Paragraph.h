@@ -42,6 +42,8 @@ class Paragraph {
       unsigned start, unsigned end, RectHeightStyle rectHeightStyle,
       RectWidthStyle rectWidthStyle) = 0;
 
+  virtual std::vector<TextBox> GetRectsForPlaceholders() = 0;
+
   // Returns the index of the glyph that corresponds to the provided coordinate,
   // with the top left corner as the origin, and +y direction as down
   virtual PositionWithAffinity getGlyphPositionAtCoordinate(SkScalar dx, SkScalar dy) = 0;

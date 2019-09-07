@@ -538,52 +538,52 @@ static bool inner_simplify(
 #if 0 && DEBUG_SHOW_TEST_NAME
     showPathData(path);
 #endif
-  if (PathOpsDebug::gJson) {
-    if (check_for_duplicate_names(filename)) {
-      return true;
-    }
-    if (!PathOpsDebug::gOutFirst) {
-      fprintf(PathOpsDebug::gOut, ",\n");
-    }
-    PathOpsDebug::gOutFirst = false;
-    fprintf(PathOpsDebug::gOut, "\"%s\": {\n", filename);
-    json_path_out(path, "path", "", false);
-  }
-  SkPath out;
-  if (!SimplifyDebug(
-          path, &out SkDEBUGPARAMS(SkipAssert::kYes == skipAssert) SkDEBUGPARAMS(testName))) {
-    if (ExpectSuccess::kYes == expectSuccess) {
-      SkDebugf("%s did not expect %s failure\n", __FUNCTION__, filename);
-      REPORTER_ASSERT(reporter, 0);
-    }
     if (PathOpsDebug::gJson) {
-      json_status(expectSuccess, expectMatch, false);
-      fprintf(PathOpsDebug::gOut, "  \"out\": \"\"\n}");
+      if (check_for_duplicate_names(filename)) {
+        return true;
+      }
+      if (!PathOpsDebug::gOutFirst) {
+        fprintf(PathOpsDebug::gOut, ",\n");
+      }
+      PathOpsDebug::gOutFirst = false;
+      fprintf(PathOpsDebug::gOut, "\"%s\": {\n", filename);
+      json_path_out(path, "path", "", false);
     }
-    return false;
-  } else {
-    if (ExpectSuccess::kNo == expectSuccess) {
-      SkDebugf("%s %s unexpected success\n", __FUNCTION__, filename);
-      REPORTER_ASSERT(reporter, 0);
-    }
-    if (PathOpsDebug::gJson) {
-      json_status(expectSuccess, expectMatch, true);
-      json_path_out(out, "out", "Out", true);
-    }
-  }
-  SkBitmap bitmap;
-  int errors = comparePaths(reporter, filename, path, out, bitmap);
-  if (ExpectMatch::kNo == expectMatch) {
-    if (!errors) {
-      SkDebugf("%s failing test %s now succeeds\n", __FUNCTION__, filename);
-      REPORTER_ASSERT(reporter, 0);
+    SkPath out;
+    if (!SimplifyDebug(
+            path, &out SkDEBUGPARAMS(SkipAssert::kYes == skipAssert) SkDEBUGPARAMS(testName))) {
+      if (ExpectSuccess::kYes == expectSuccess) {
+        SkDebugf("%s did not expect %s failure\n", __FUNCTION__, filename);
+        REPORTER_ASSERT(reporter, 0);
+      }
+      if (PathOpsDebug::gJson) {
+        json_status(expectSuccess, expectMatch, false);
+        fprintf(PathOpsDebug::gOut, "  \"out\": \"\"\n}");
+      }
       return false;
+    } else {
+      if (ExpectSuccess::kNo == expectSuccess) {
+        SkDebugf("%s %s unexpected success\n", __FUNCTION__, filename);
+        REPORTER_ASSERT(reporter, 0);
+      }
+      if (PathOpsDebug::gJson) {
+        json_status(expectSuccess, expectMatch, true);
+        json_path_out(out, "out", "Out", true);
+      }
     }
-  } else if (ExpectMatch::kYes == expectMatch && errors) {
-    REPORTER_ASSERT(reporter, 0);
-  }
-  reporter->bumpTestCount();
-  return errors == 0;
+    SkBitmap bitmap;
+    int errors = comparePaths(reporter, filename, path, out, bitmap);
+    if (ExpectMatch::kNo == expectMatch) {
+      if (!errors) {
+        SkDebugf("%s failing test %s now succeeds\n", __FUNCTION__, filename);
+        REPORTER_ASSERT(reporter, 0);
+        return false;
+      }
+    } else if (ExpectMatch::kYes == expectMatch && errors) {
+      REPORTER_ASSERT(reporter, 0);
+    }
+    reporter->bumpTestCount();
+    return errors == 0;
 }
 
 bool testSimplify(skiatest::Reporter* reporter, const SkPath& path, const char* filename) {
@@ -624,74 +624,74 @@ static bool innerPathOp(
 #if 0 && DEBUG_SHOW_TEST_NAME
     showName(a, b, shapeOp);
 #endif
-  if (PathOpsDebug::gJson) {
-    if (check_for_duplicate_names(testName)) {
+    if (PathOpsDebug::gJson) {
+      if (check_for_duplicate_names(testName)) {
+        return true;
+      }
+      if (!PathOpsDebug::gOutFirst) {
+        fprintf(PathOpsDebug::gOut, ",\n");
+      }
+      PathOpsDebug::gOutFirst = false;
+      fprintf(PathOpsDebug::gOut, "\"%s\": {\n", testName);
+      json_path_out(a, "p1", "1", false);
+      json_path_out(b, "p2", "2", false);
+      fprintf(PathOpsDebug::gOut, "  \"op\": \"%s\",\n", opStrs[shapeOp]);
+    }
+    SkPath out;
+    if (!OpDebug(
+            a, b, shapeOp,
+            &out SkDEBUGPARAMS(SkipAssert::kYes == skipAssert) SkDEBUGPARAMS(testName))) {
+      if (ExpectSuccess::kYes == expectSuccess) {
+        SkDebugf("%s %s did not expect failure\n", __FUNCTION__, testName);
+        REPORTER_ASSERT(reporter, 0);
+      }
+      if (PathOpsDebug::gJson) {
+        json_status(expectSuccess, expectMatch, false);
+        fprintf(PathOpsDebug::gOut, "  \"out\": \"\"\n}");
+      }
+      return false;
+    } else {
+      if (ExpectSuccess::kNo == expectSuccess) {
+        SkDebugf("%s %s unexpected success\n", __FUNCTION__, testName);
+        REPORTER_ASSERT(reporter, 0);
+      }
+      if (PathOpsDebug::gJson) {
+        json_status(expectSuccess, expectMatch, true);
+        json_path_out(out, "out", "Out", true);
+      }
+    }
+    if (!reporter->verbose()) {
       return true;
     }
-    if (!PathOpsDebug::gOutFirst) {
-      fprintf(PathOpsDebug::gOut, ",\n");
-    }
-    PathOpsDebug::gOutFirst = false;
-    fprintf(PathOpsDebug::gOut, "\"%s\": {\n", testName);
-    json_path_out(a, "p1", "1", false);
-    json_path_out(b, "p2", "2", false);
-    fprintf(PathOpsDebug::gOut, "  \"op\": \"%s\",\n", opStrs[shapeOp]);
-  }
-  SkPath out;
-  if (!OpDebug(
-          a, b, shapeOp,
-          &out SkDEBUGPARAMS(SkipAssert::kYes == skipAssert) SkDEBUGPARAMS(testName))) {
-    if (ExpectSuccess::kYes == expectSuccess) {
-      SkDebugf("%s %s did not expect failure\n", __FUNCTION__, testName);
-      REPORTER_ASSERT(reporter, 0);
-    }
-    if (PathOpsDebug::gJson) {
-      json_status(expectSuccess, expectMatch, false);
-      fprintf(PathOpsDebug::gOut, "  \"out\": \"\"\n}");
-    }
-    return false;
-  } else {
-    if (ExpectSuccess::kNo == expectSuccess) {
-      SkDebugf("%s %s unexpected success\n", __FUNCTION__, testName);
-      REPORTER_ASSERT(reporter, 0);
-    }
-    if (PathOpsDebug::gJson) {
-      json_status(expectSuccess, expectMatch, true);
-      json_path_out(out, "out", "Out", true);
-    }
-  }
-  if (!reporter->verbose()) {
-    return true;
-  }
-  SkPath pathOut, scaledPathOut;
-  SkRegion rgnA, rgnB, openClip, rgnOut;
-  openClip.setRect(-16000, -16000, 16000, 16000);
-  rgnA.setPath(a, openClip);
-  rgnB.setPath(b, openClip);
-  rgnOut.op(rgnA, rgnB, (SkRegion::Op)shapeOp);
-  rgnOut.getBoundaryPath(&pathOut);
+    SkPath pathOut, scaledPathOut;
+    SkRegion rgnA, rgnB, openClip, rgnOut;
+    openClip.setRect({-16000, -16000, 16000, 16000});
+    rgnA.setPath(a, openClip);
+    rgnB.setPath(b, openClip);
+    rgnOut.op(rgnA, rgnB, (SkRegion::Op)shapeOp);
+    rgnOut.getBoundaryPath(&pathOut);
 
-  SkMatrix scale;
-  scaleMatrix(a, b, scale);
-  SkRegion scaledRgnA, scaledRgnB, scaledRgnOut;
-  SkPath scaledA, scaledB;
-  scaledA.addPath(a, scale);
-  scaledA.setFillType(a.getFillType());
-  scaledB.addPath(b, scale);
-  scaledB.setFillType(b.getFillType());
-  scaledRgnA.setPath(scaledA, openClip);
-  scaledRgnB.setPath(scaledB, openClip);
-  scaledRgnOut.op(scaledRgnA, scaledRgnB, (SkRegion::Op)shapeOp);
-  scaledRgnOut.getBoundaryPath(&scaledPathOut);
-  SkBitmap bitmap;
-  SkPath scaledOut;
-  scaledOut.addPath(out, scale);
-  scaledOut.setFillType(out.getFillType());
-  int result = comparePaths(
-      reporter, testName, pathOut, scaledPathOut, out, scaledOut, bitmap, a, b, shapeOp, scale,
-      expectMatch);
-  reporter->bumpTestCount();
-  return result == 0;
+    SkMatrix scale;
+    scaleMatrix(a, b, scale);
+    SkRegion scaledRgnA, scaledRgnB, scaledRgnOut;
+    SkPath scaledA, scaledB;
+    scaledA.addPath(a, scale);
+    scaledA.setFillType(a.getFillType());
+    scaledB.addPath(b, scale);
+    scaledB.setFillType(b.getFillType());
+    scaledRgnA.setPath(scaledA, openClip);
+    scaledRgnB.setPath(scaledB, openClip);
+    scaledRgnOut.op(scaledRgnA, scaledRgnB, (SkRegion::Op)shapeOp);
+    scaledRgnOut.getBoundaryPath(&scaledPathOut);
+    SkBitmap bitmap;
+    SkPath scaledOut;
+    scaledOut.addPath(out, scale);
+    scaledOut.setFillType(out.getFillType());
+    int result = comparePaths(
+        reporter, testName, pathOut, scaledPathOut, out, scaledOut, bitmap, a, b, shapeOp, scale,
+        expectMatch);
+    reporter->bumpTestCount();
+    return result == 0;
 }
 
 bool testPathOp(

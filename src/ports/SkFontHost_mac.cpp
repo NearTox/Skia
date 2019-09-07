@@ -1670,7 +1670,7 @@ std::unique_ptr<SkAdvancedTypefaceMetrics> SkTypeface_Mac::onGetAdvancedMetrics(
   CGRect bbox = CTFontGetBoundingBox(ctFont.get());
 
   SkRect r;
-  r.set(
+  r.setLTRB(
       CGToScalar(CGRectGetMinX_inline(bbox)),   // Left
       CGToScalar(CGRectGetMaxY_inline(bbox)),   // Top
       CGToScalar(CGRectGetMaxX_inline(bbox)),   // Right
@@ -1976,7 +1976,7 @@ static SkUniqueCFRef<CFDictionaryRef> ct_variation_from_cg_variation(
 
     CFDictionaryAddValue(ctVariations.get(), axisTag, axisValue);
   }
-  return std::move(ctVariations);
+  return ctVariations;
 }
 
 int SkTypeface_Mac::onGetVariationDesignPosition(
@@ -2599,7 +2599,7 @@ class SkFontMgr_Mac : public SkFontMgr {
           CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &value));
       CFDictionaryAddValue(dict.get(), axisName, valueNumber.get());
     }
-    return std::move(dict);
+    return dict;
   }
   sk_sp<SkTypeface> onMakeFromStreamArgs(
       std::unique_ptr<SkStreamAsset> s, const SkFontArguments& args) const override {
@@ -2682,7 +2682,7 @@ class SkFontMgr_Mac : public SkFontMgr {
           CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &value));
       CFDictionaryAddValue(dict.get(), axisName, valueNumber.get());
     }
-    return std::move(dict);
+    return dict;
   }
   sk_sp<SkTypeface> onMakeFromFontData(std::unique_ptr<SkFontData> fontData) const override {
     if (fontData->getIndex() != 0) {

@@ -40,7 +40,7 @@ sk_sp<SkFlattenable> SkSweepGradient::CreateProc(SkReadBuffer& buffer) {
   const SkPoint center = buffer.readPoint();
 
   SkScalar startAngle = 0, endAngle = 360;
-  if (!buffer.isVersionLT(SkReadBuffer::kTileInfoInSweepGradient_Version)) {
+  if (!buffer.isVersionLT(SkPicturePriv::kTileInfoInSweepGradient_Version)) {
     const auto tBias = buffer.readScalar(), tScale = buffer.readScalar();
     std::tie(startAngle, endAngle) = angles_from_t_coeff(tBias, tScale);
   }

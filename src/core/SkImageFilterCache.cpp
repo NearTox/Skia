@@ -42,12 +42,11 @@ class CacheImpl : public SkImageFilterCache {
   }
   struct Value {
     Value(
-        const Key& key, SkSpecialImage* image, const SkIPoint& offset, const SkImageFilter* filter)
-        : fKey(key), fImage(SkRef(image)), fOffset(offset), fFilter(filter) {}
+        const Key& key, const skif::FilterResult<For::kOutput>& image, const SkImageFilter* filter)
+        : fKey(key), fImage(image), fFilter(filter) {}
 
     Key fKey;
-    sk_sp<SkSpecialImage> fImage;
-    SkIPoint fOffset;
+    skif::FilterResult<For::kOutput> fImage;
     const SkImageFilter* fFilter;
     static const Key& GetKey(const Value& v) { return v.fKey; }
     static uint32_t Hash(const Key& key) {
@@ -56,30 +55,33 @@ class CacheImpl : public SkImageFilterCache {
     SK_DECLARE_INTERNAL_LLIST_INTERFACE(Value);
   };
 
-  sk_sp<SkSpecialImage> get(const Key& key, SkIPoint* offset) const override {
+  bool get(const Key& key, skif::FilterResult<For::kOutput>* result) const override {
+    SkASSERT(result);
+
     SkAutoMutexExclusive mutex(fMutex);
     if (Value* v = fLookup.find(key)) {
-      *offset = v->fOffset;
       if (v != fLRU.head()) {
         fLRU.remove(v);
         fLRU.addToHead(v);
       }
-      return v->fImage;
+
+      *result = v->fImage;
+      return true;
     }
-    return nullptr;
+    return false;
   }
 
   void set(
-      const Key& key, SkSpecialImage* image, const SkIPoint& offset,
-      const SkImageFilter* filter) override {
+      const Key& key, const SkImageFilter* filter,
+      const skif::FilterResult<For::kOutput>& result) override {
     SkAutoMutexExclusive mutex(fMutex);
     if (Value* v = fLookup.find(key)) {
       this->removeInternal(v);
     }
-    Value* v = new Value(key, image, offset, filter);
+    Value* v = new Value(key, result, filter);
     fLookup.add(v);
     fLRU.addToHead(v);
-    fCurrentBytes += image->getSize();
+    fCurrentBytes += result.image() ? result.image()->getSize() : 0;
     if (auto* values = fImageFilterValues.find(filter)) {
       values->push_back(v);
     } else {
@@ -122,7 +124,6 @@ class CacheImpl : public SkImageFilterCache {
 
   SkDEBUGCODE(int count() const override { return fLookup.count(); }) private
       : void removeInternal(Value* v) {
-    SkASSERT(v->fImage);
     if (v->fFilter) {
       if (auto* values = fImageFilterValues.find(v->fFilter)) {
         if (values->size() == 1 && (*values)[0] == v) {
@@ -137,7 +138,7 @@ class CacheImpl : public SkImageFilterCache {
         }
       }
     }
-    fCurrentBytes -= v->fImage->getSize();
+    fCurrentBytes -= v->fImage.image() ? v->fImage.image()->getSize() : 0;
     fLRU.remove(v);
     fLookup.remove(v->fKey);
     delete v;

@@ -112,6 +112,24 @@ class SK_API SkCodec : SkNoncopyable {
   static const char* ResultToString(Result);
 
   /**
+   * For container formats that contain both still images and image sequences,
+   * instruct the decoder how the output should be selected. (Refer to comments
+   * for each value for more details.)
+   */
+  enum class SelectionPolicy {
+    /**
+     *  If the container format contains both still images and image sequences,
+     *  SkCodec should choose one of the still images. This is the default.
+     */
+    kPreferStillImage,
+    /**
+     *  If the container format contains both still images and image sequences,
+     *  SkCodec should choose one of the image sequences for animation.
+     */
+    kPreferAnimation,
+  };
+
+  /**
    *  If this stream represents an encoded image that we know how to decode,
    *  return an SkCodec that can decode it. Otherwise return NULL.
    *
@@ -146,7 +164,8 @@ class SK_API SkCodec : SkNoncopyable {
    *  SkCodec takes ownership of it, and will delete it when done with it.
    */
   static std::unique_ptr<SkCodec> MakeFromStream(
-      std::unique_ptr<SkStream>, Result* = nullptr, SkPngChunkReader* = nullptr);
+      std::unique_ptr<SkStream>, Result* = nullptr, SkPngChunkReader* = nullptr,
+      SelectionPolicy selectionPolicy = SelectionPolicy::kPreferStillImage);
 
   /**
    *  If this data represents an encoded image that we know how to decode,
@@ -180,7 +199,7 @@ class SK_API SkCodec : SkNoncopyable {
    *  Returns the image orientation stored in the EXIF data.
    *  If there is no EXIF data, or if we cannot read the EXIF data, returns kTopLeft.
    */
-  SkEncodedOrigin getOrigin() const noexcept { return fOrigin; }
+  SkEncodedOrigin getOrigin() const { return fOrigin; }
 
   /**
    *  Return a size that approximately supports the desired scale factor.
@@ -250,7 +269,7 @@ class SK_API SkCodec : SkNoncopyable {
    *  Additional options to pass to getPixels.
    */
   struct Options {
-    constexpr Options()
+    Options()
         : fZeroInitialized(kNo_ZeroInitialized),
           fSubset(nullptr),
           fFrameIndex(0),
@@ -691,7 +710,7 @@ class SK_API SkCodec : SkNoncopyable {
       std::unique_ptr<SkCodec> (*make)(std::unique_ptr<SkStream>, SkCodec::Result*));
 
  protected:
-  const SkEncodedInfo& getEncodedInfo() const noexcept { return fEncodedInfo; }
+  const SkEncodedInfo& getEncodedInfo() const { return fEncodedInfo; }
 
   using XformFormat = skcms_PixelFormat;
 
@@ -756,7 +775,7 @@ class SK_API SkCodec : SkNoncopyable {
   /**
    * Get method for the input stream
    */
-  SkStream* stream() noexcept { return fStream.get(); }
+  SkStream* stream() { return fStream.get(); }
 
   /**
    *  The remaining functions revolve around decoding scanlines.
@@ -767,9 +786,9 @@ class SK_API SkCodec : SkNoncopyable {
    */
   virtual SkScanlineOrder onGetScanlineOrder() const { return kTopDown_SkScanlineOrder; }
 
-  const SkImageInfo& dstInfo() const noexcept { return fDstInfo; }
+  const SkImageInfo& dstInfo() const { return fDstInfo; }
 
-  const Options& options() const noexcept { return fOptions; }
+  const Options& options() const { return fOptions; }
 
   /**
    *  Returns the number of scanlines that have been decoded so far.
@@ -777,7 +796,7 @@ class SK_API SkCodec : SkNoncopyable {
    *
    *  Returns -1 if we have not started a scanline decode.
    */
-  int currScanline() const noexcept { return fCurrScanline; }
+  int currScanline() const { return fCurrScanline; }
 
   virtual int onOutputScanline(int inputScanline) const;
 
@@ -794,8 +813,8 @@ class SK_API SkCodec : SkNoncopyable {
   virtual bool usesColorXform() const { return true; }
   void applyColorXform(void* dst, const void* src, int count) const;
 
-  bool colorXform() const noexcept { return fXformTime != kNo_XformTime; }
-  bool xformOnDecode() const noexcept { return fXformTime == kDecodeRow_XformTime; }
+  bool colorXform() const { return fXformTime != kNo_XformTime; }
+  bool xformOnDecode() const { return fXformTime == kDecodeRow_XformTime; }
 
   virtual int onGetFrameCount() { return 1; }
 

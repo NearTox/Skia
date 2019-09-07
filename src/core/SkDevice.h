@@ -128,7 +128,7 @@ class SkBaseDevice : public SkRefCnt {
   virtual void onSetDeviceClipRestriction(SkIRect* mutableClipRestriction) {}
   virtual bool onClipIsAA() const = 0;
   virtual void onAsRgnClip(SkRegion*) const = 0;
-  enum ClipType { kEmpty_ClipType, kRect_ClipType, kComplex_ClipType };
+  enum class ClipType { kEmpty, kRect, kComplex };
   virtual ClipType onGetClipType() const = 0;
 
   /** These are called inside the per-device-layer loop for each draw call.
@@ -201,8 +201,8 @@ class SkBaseDevice : public SkRefCnt {
   // only when all edge flags are set. If there's a clip region, it draws that using drawPath,
   // or uses clipPath().
   virtual void drawEdgeAAQuad(
-      const SkRect& rect, const SkPoint clip[4], SkCanvas::QuadAAFlags aaFlags, SkColor color,
-      SkBlendMode mode);
+      const SkRect& rect, const SkPoint clip[4], SkCanvas::QuadAAFlags aaFlags,
+      const SkColor4f& color, SkBlendMode mode);
   // Default impl uses drawImageRect per entry, being anti-aliased only when an entry's edge flags
   // are all set. If there's a clip region, it will be applied using clipPath().
   virtual void drawEdgeAAImageSet(
@@ -225,12 +225,17 @@ class SkBaseDevice : public SkRefCnt {
       const SkMatrix& clipMatrix);
   virtual sk_sp<SkSpecialImage> makeSpecial(const SkBitmap&);
   virtual sk_sp<SkSpecialImage> makeSpecial(const SkImage*);
-  virtual sk_sp<SkSpecialImage> snapSpecial();
+  // Get a view of the entire device's current contents as an image.
+  sk_sp<SkSpecialImage> snapSpecial();
+  // Snap the 'subset' contents from this device, possibly as a read-only view. If 'forceCopy'
+  // is true then the returned image's pixels must not be affected by subsequent draws into the
+  // device. When 'forceCopy' is false, the image can be a view into the device's pixels
+  // (avoiding a copy for performance, at the expense of safety). Default returns null.
+  virtual sk_sp<SkSpecialImage> snapSpecial(const SkIRect& subset, bool forceCopy = false);
+
   virtual void setImmutable() {}
 
   bool readPixels(const SkPixmap&, int x, int y);
-
-  virtual sk_sp<SkSpecialImage> snapBackImage(const SkIRect&);  // default returns null
 
   ///////////////////////////////////////////////////////////////////////////
 
@@ -258,21 +263,15 @@ class SkBaseDevice : public SkRefCnt {
   virtual bool onAccessPixels(SkPixmap*) { return false; }
 
   struct CreateInfo {
-    static SkPixelGeometry AdjustGeometry(
-        const SkImageInfo&, TileUsage, SkPixelGeometry, bool preserveLCDText);
+    static SkPixelGeometry AdjustGeometry(TileUsage, SkPixelGeometry);
 
     // The constructor may change the pixel geometry based on other parameters.
-    CreateInfo(const SkImageInfo& info, TileUsage tileUsage, SkPixelGeometry geo)
-        : fInfo(info),
-          fTileUsage(tileUsage),
-          fPixelGeometry(AdjustGeometry(info, tileUsage, geo, false)) {}
-
     CreateInfo(
-        const SkImageInfo& info, TileUsage tileUsage, SkPixelGeometry geo, bool preserveLCDText,
-        bool trackCoverage, SkRasterHandleAllocator* allocator)
+        const SkImageInfo& info, TileUsage tileUsage, SkPixelGeometry geo, bool trackCoverage,
+        SkRasterHandleAllocator* allocator)
         : fInfo(info),
           fTileUsage(tileUsage),
-          fPixelGeometry(AdjustGeometry(info, tileUsage, geo, preserveLCDText)),
+          fPixelGeometry(AdjustGeometry(tileUsage, geo)),
           fTrackCoverage(trackCoverage),
           fAllocator(allocator) {}
 
@@ -359,11 +358,14 @@ class SkNoPixelsDevice : public SkBaseDevice {
     // this fails if we enable this assert:
     // DiscardableImageMapTest.GetDiscardableImagesInRectMaxImage
     // SkASSERT(bounds.width() >= 0 && bounds.height() >= 0);
+
+    this->setOrigin(SkMatrix::I(), bounds.left(), bounds.top());
   }
 
   void resetForNextPicture(const SkIRect& bounds) {
     // SkASSERT(bounds.width() >= 0 && bounds.height() >= 0);
     this->privateResize(bounds.width(), bounds.height());
+    this->setOrigin(SkMatrix::I(), bounds.left(), bounds.top());
   }
 
  protected:
@@ -380,7 +382,7 @@ class SkNoPixelsDevice : public SkBaseDevice {
   void onAsRgnClip(SkRegion* rgn) const override {
     rgn->setRect(SkIRect::MakeWH(this->width(), this->height()));
   }
-  ClipType onGetClipType() const override { return kRect_ClipType; }
+  ClipType onGetClipType() const override { return ClipType::kRect; }
 
   void drawPaint(const SkPaint& paint) override {}
   void drawPoints(SkCanvas::PointMode, size_t, const SkPoint[], const SkPaint&) override {}

@@ -45,10 +45,9 @@ sk_sp<GrTextureProxy> GrTextureProducer::CopyOnGpu(
     }
   }
 
-  sk_sp<GrRenderTargetContext> copyRTC =
-      context->priv().makeDeferredRenderTargetContextWithFallback(
-          SkBackingFit::kExact, dstRect.width(), dstRect.height(), colorType, nullptr, 1, mipMapped,
-          inputProxy->origin());
+  auto copyRTC = context->priv().makeDeferredRenderTargetContextWithFallback(
+      SkBackingFit::kExact, dstRect.width(), dstRect.height(), colorType, nullptr, 1, mipMapped,
+      inputProxy->origin());
   if (!copyRTC) {
     return nullptr;
   }
@@ -260,7 +259,7 @@ sk_sp<GrTextureProxy> GrTextureProducer::refTextureProxyForParams(
   // maps, unless the config is not copyable.
   SkASSERT(
       !result || !willBeMipped || result->mipMapped() == GrMipMapped::kYes ||
-      !this->context()->priv().caps()->isConfigCopyable(result->config()));
+      !this->context()->priv().caps()->isFormatCopyable(result->backendFormat()));
 
   // Check that the "no scaling expected" case always returns a proxy of the same size as the
   // producer.
@@ -286,7 +285,7 @@ sk_sp<GrTextureProxy> GrTextureProducer::refTextureProxy(GrMipMapped willNeedMip
   // maps, unless the config is not copyable.
   SkASSERT(
       !result || !willBeMipped || result->mipMapped() == GrMipMapped::kYes ||
-      !this->context()->priv().caps()->isConfigCopyable(result->config()));
+      !this->context()->priv().caps()->isFormatCopyable(result->backendFormat()));
 
   // Check that no scaling occured and we returned a proxy of the same size as the producer.
   SkASSERT(!result || (result->width() == this->width() && result->height() == this->height()));

@@ -11,12 +11,12 @@
 #include "include/core/SkTypes.h"
 #include "include/gpu/GrBackendSurface.h"
 #include "include/gpu/GrContext.h"
-#include "include/gpu/GrSamplerState.h"
 #include "include/gpu/GrTypes.h"
 #include "include/private/GrTypesPriv.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrProxyProvider.h"
+#include "src/gpu/GrSamplerState.h"
 #include "src/gpu/GrTextureProducer.h"
 #include "src/gpu/GrTextureProxy.h"
 #include "tests/Test.h"
@@ -117,6 +117,8 @@ class RectInfo {
 static sk_sp<GrTextureProxy> create_proxy(
     GrContext* ctx, bool isPowerOfTwo, bool isExact, RectInfo* rect) {
   GrProxyProvider* proxyProvider = ctx->priv().proxyProvider();
+  const GrCaps* caps = ctx->priv().caps();
+
   int size = isPowerOfTwo ? 128 : 100;
   SkBackingFit fit = isExact ? SkBackingFit::kExact : SkBackingFit::kApprox;
 
@@ -126,7 +128,7 @@ static sk_sp<GrTextureProxy> create_proxy(
   desc.fConfig = kRGBA_8888_GrPixelConfig;
 
   GrBackendFormat format =
-      ctx->priv().caps()->getBackendFormatFromColorType(GrColorType::kRGBA_8888);
+      caps->getDefaultBackendFormat(GrColorType::kRGBA_8888, GrRenderable::kNo);
 
   static const char* name = "proxy";
 
@@ -137,8 +139,8 @@ static sk_sp<GrTextureProxy> create_proxy(
       (isPowerOfTwo || isExact) ? RectInfo::kHard : RectInfo::kBad, name);
 
   return proxyProvider->createProxy(
-      format, desc, GrRenderable::kNo, 1, kTopLeft_GrSurfaceOrigin, fit, SkBudgeted::kYes,
-      GrProtected::kNo);
+      format, desc, GrRenderable::kNo, 1, kTopLeft_GrSurfaceOrigin, GrMipMapped::kNo, fit,
+      SkBudgeted::kYes, GrProtected::kNo);
 }
 
 static RectInfo::EdgeType compute_inset_edgetype(

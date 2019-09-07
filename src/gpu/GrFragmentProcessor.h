@@ -8,10 +8,10 @@
 #ifndef GrFragmentProcessor_DEFINED
 #define GrFragmentProcessor_DEFINED
 
+#include "src/gpu/GrCoordTransform.h"
 #include "src/gpu/GrProcessor.h"
 #include "src/gpu/ops/GrOp.h"
 
-class GrCoordTransform;
 class GrGLSLFragmentProcessor;
 class GrPaint;
 class GrPipeline;
@@ -113,9 +113,7 @@ class GrFragmentProcessor : public GrProcessor {
       numTransforms(). */
   const GrCoordTransform& coordTransform(int index) const { return *fCoordTransforms[index]; }
 
-  const SkTArray<const GrCoordTransform*, true>& coordTransforms() const {
-    return fCoordTransforms;
-  }
+  const SkTArray<GrCoordTransform*, true>& coordTransforms() const { return fCoordTransforms; }
 
   int numChildProcessors() const { return fChildProcessors.count(); }
 
@@ -126,6 +124,24 @@ class GrFragmentProcessor : public GrProcessor {
       /** Do any of the coordtransforms for this processor require local coords? */
       bool usesLocalCoords() const {
     return SkToBool(fFlags & kUsesLocalCoords_Flag);
+  }
+
+  bool computeLocalCoordsInVertexShader() const {
+    return SkToBool(fFlags & kComputeLocalCoordsInVertexShader_Flag);
+  }
+
+  void setComputeLocalCoordsInVertexShader(bool value) const {
+    if (value) {
+      fFlags |= kComputeLocalCoordsInVertexShader_Flag;
+    } else {
+      fFlags &= ~kComputeLocalCoordsInVertexShader_Flag;
+    }
+    for (GrCoordTransform* transform : fCoordTransforms) {
+      transform->setComputeInVertexShader(value);
+    }
+    for (const auto& child : fChildProcessors) {
+      child->setComputeLocalCoordsInVertexShader(value);
+    }
   }
 
   /**
@@ -280,8 +296,8 @@ class GrFragmentProcessor : public GrProcessor {
   }
 
   GrFragmentProcessor(ClassID classID, OptimizationFlags optimizationFlags)
-      : INHERITED(classID), fFlags(optimizationFlags) {
-    SkASSERT((fFlags & ~kAll_OptimizationFlags) == 0);
+      : INHERITED(classID), fFlags(optimizationFlags | kComputeLocalCoordsInVertexShader_Flag) {
+    SkASSERT((optimizationFlags & ~kAll_OptimizationFlags) == 0);
   }
 
   OptimizationFlags optimizationFlags() const {
@@ -321,7 +337,7 @@ class GrFragmentProcessor : public GrProcessor {
    * transforms in a consistent order. The non-virtual implementation of isEqual() automatically
    * compares transforms and will assume they line up across the two processor instances.
    */
-  void addCoordTransform(const GrCoordTransform*);
+  void addCoordTransform(GrCoordTransform*);
 
   /**
    * FragmentProcessor subclasses call this from their constructor to register any child
@@ -353,7 +369,6 @@ class GrFragmentProcessor : public GrProcessor {
  private:
   virtual SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& /* inputColor */) const {
     SK_ABORT("Subclass must override this if advertising this optimization.");
-    return SK_PMColor4fTRANSPARENT;
   }
 
   /** Returns a new instance of the appropriate *GL* implementation class
@@ -379,13 +394,14 @@ class GrFragmentProcessor : public GrProcessor {
   enum PrivateFlags {
     kFirstPrivateFlag = kAll_OptimizationFlags + 1,
     kUsesLocalCoords_Flag = kFirstPrivateFlag,
+    kComputeLocalCoordsInVertexShader_Flag = kFirstPrivateFlag << 1,
   };
 
-  mutable uint32_t fFlags = 0;
+  mutable uint32_t fFlags = kComputeLocalCoordsInVertexShader_Flag;
 
   int fTextureSamplerCnt = 0;
 
-  SkSTArray<4, const GrCoordTransform*, true> fCoordTransforms;
+  SkSTArray<4, GrCoordTransform*, true> fCoordTransforms;
 
   SkSTArray<1, std::unique_ptr<GrFragmentProcessor>, true> fChildProcessors;
 
@@ -437,8 +453,8 @@ class GrFragmentProcessor::TextureSampler {
     return fProxy->peekTexture();
   }
 
-  GrTextureProxy* proxy() const noexcept { return fProxy.get(); }
-  const GrSamplerState& samplerState() const noexcept { return fSamplerState; }
+  GrTextureProxy* proxy() const { return fProxy.get(); }
+  const GrSamplerState& samplerState() const { return fSamplerState; }
   const GrSwizzle& swizzle() const { return this->proxy()->textureSwizzle(); }
 
   bool isInitialized() const { return SkToBool(fProxy.get()); }

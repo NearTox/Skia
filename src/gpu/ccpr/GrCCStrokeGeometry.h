@@ -189,6 +189,5 @@ inline bool GrCCStrokeGeometry::IsInternalJoinVerb(Verb verb) {
     case Verb::kEndContour: return false;
   }
   SK_ABORT("Invalid GrCCStrokeGeometry::Verb.");
-  return false;
 }
 #endif

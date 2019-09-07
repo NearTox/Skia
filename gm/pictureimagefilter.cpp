@@ -22,8 +22,7 @@
 #include "include/core/SkSize.h"
 #include "include/core/SkString.h"
 #include "include/core/SkTypeface.h"
-#include "include/effects/SkImageSource.h"
-#include "include/effects/SkPictureImageFilter.h"
+#include "include/effects/SkImageFilters.h"
 #include "tools/ToolUtils.h"
 
 // This GM exercises the SkPictureImageFilter ImageFilter class.
@@ -80,7 +79,7 @@ class PictureImageFilterGM : public skiagm::GM {
     SkISize dim = {SkScalarRoundToInt(r.width()), SkScalarRoundToInt(r.height())};
     auto img = SkImage::MakeFromPicture(
         pic, dim, nullptr, nullptr, SkImage::BitDepth::kU8, SkColorSpace::MakeSRGB());
-    return SkImageSource::Make(img, r, r, fq);
+    return SkImageFilters::Image(img, r, r, fq);
   }
   sk_sp<SkImageFilter> make(SkFilterQuality fq) { return make(fPicture, fPicture->cullRect(), fq); }
 
@@ -90,9 +89,9 @@ class PictureImageFilterGM : public skiagm::GM {
       SkRect srcRect = SkRect::MakeXYWH(20, 20, 30, 30);
       SkRect emptyRect = SkRect::MakeXYWH(20, 20, 0, 0);
       SkRect bounds = SkRect::MakeXYWH(0, 0, 100, 100);
-      sk_sp<SkImageFilter> pictureSource(SkPictureImageFilter::Make(fPicture));
-      sk_sp<SkImageFilter> pictureSourceSrcRect(SkPictureImageFilter::Make(fPicture, srcRect));
-      sk_sp<SkImageFilter> pictureSourceEmptyRect(SkPictureImageFilter::Make(fPicture, emptyRect));
+      sk_sp<SkImageFilter> pictureSource(SkImageFilters::Picture(fPicture));
+      sk_sp<SkImageFilter> pictureSourceSrcRect(SkImageFilters::Picture(fPicture, srcRect));
+      sk_sp<SkImageFilter> pictureSourceEmptyRect(SkImageFilters::Picture(fPicture, emptyRect));
       sk_sp<SkImageFilter> pictureSourceResampled = make(kLow_SkFilterQuality);
       sk_sp<SkImageFilter> pictureSourcePixelated = make(kNone_SkFilterQuality);
 

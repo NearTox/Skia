@@ -32,12 +32,12 @@ class SK_API SkDeque {
   SkDeque(size_t elemSize, void* storage, size_t storageSize, int allocCount = 1);
   ~SkDeque();
 
-  bool empty() const noexcept { return 0 == fCount; }
-  int count() const noexcept { return fCount; }
-  size_t elemSize() const noexcept { return fElemSize; }
+  bool empty() const { return 0 == fCount; }
+  int count() const { return fCount; }
+  size_t elemSize() const { return fElemSize; }
 
-  const void* front() const noexcept { return fFront; }
-  const void* back() const noexcept { return fBack; }
+  const void* front() const { return fFront; }
+  const void* back() const { return fBack; }
 
   void* front() { return (void*)((const SkDeque*)this)->front(); }
 
@@ -84,7 +84,7 @@ class SK_API SkDeque {
   // Inherit privately from Iter to prevent access to reverse iteration
   class F2BIter : private Iter {
    public:
-    F2BIter() = default;
+    F2BIter() {}
 
     /**
      * Wrap Iter's 2 parameter ctor to force initialization to the

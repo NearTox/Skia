@@ -8,9 +8,9 @@
 #include "src/gpu/mtl/GrMtlPipelineState.h"
 
 #include "include/gpu/GrContext.h"
-#include "include/gpu/GrRenderTarget.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrPipeline.h"
+#include "src/gpu/GrRenderTarget.h"
 #include "src/gpu/GrRenderTargetPriv.h"
 #include "src/gpu/GrTexturePriv.h"
 #include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
@@ -34,7 +34,7 @@ GrMtlPipelineState::SamplerBindings::SamplerBindings(
 GrMtlPipelineState::GrMtlPipelineState(
     GrMtlGpu* gpu, id<MTLRenderPipelineState> pipelineState, MTLPixelFormat pixelFormat,
     const GrGLSLBuiltinUniformHandles& builtinUniformHandles, const UniformInfoArray& uniforms,
-    uint32_t geometryUniformBufferSize, uint32_t fragmentUniformBufferSize, uint32_t numSamplers,
+    uint32_t uniformBufferSize, uint32_t numSamplers,
     std::unique_ptr<GrGLSLPrimitiveProcessor> geometryProcessor,
     std::unique_ptr<GrGLSLXferProcessor> xferProcessor,
     std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fragmentProcessors,
@@ -48,7 +48,7 @@ GrMtlPipelineState::GrMtlPipelineState(
       fXferProcessor(std::move(xferProcessor)),
       fFragmentProcessors(std::move(fragmentProcessors)),
       fFragmentProcessorCnt(fragmentProcessorCnt),
-      fDataManager(uniforms, geometryUniformBufferSize, fragmentUniformBufferSize) {
+      fDataManager(uniforms, uniformBufferSize) {
   (void)fPixelFormat;  // Suppress unused-var warning.
 }
 

@@ -9,7 +9,6 @@
 
 #include "include/core/SkCanvas.h"
 #include "include/core/SkRect.h"
-#include "src/core/SkImageFilterPriv.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkSpecialImage.h"
 #include "src/core/SkSpecialSurface.h"
@@ -39,9 +38,9 @@ void SkMatrixImageFilter::flatten(SkWriteBuffer& buffer) const {
 }
 
 sk_sp<SkSpecialImage> SkMatrixImageFilter::onFilterImage(
-    SkSpecialImage* source, const Context& ctx, SkIPoint* offset) const {
+    const Context& ctx, SkIPoint* offset) const {
   SkIPoint inputOffset = SkIPoint::Make(0, 0);
-  sk_sp<SkSpecialImage> input(this->filterInput(0, source, ctx, &inputOffset));
+  sk_sp<SkSpecialImage> input(this->filterInput(0, ctx, &inputOffset));
   if (!input) {
     return nullptr;
   }
@@ -62,7 +61,7 @@ sk_sp<SkSpecialImage> SkMatrixImageFilter::onFilterImage(
   SkIRect dstBounds;
   dstRect.roundOut(&dstBounds);
 
-  sk_sp<SkSpecialSurface> surf(input->makeSurface(ctx.outputProperties(), dstBounds.size()));
+  sk_sp<SkSpecialSurface> surf(ctx.makeSurface(dstBounds.size()));
   if (!surf) {
     return nullptr;
   }

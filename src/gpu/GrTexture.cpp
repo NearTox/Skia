@@ -8,7 +8,6 @@
 #include "include/core/SkMath.h"
 #include "include/core/SkTypes.h"
 #include "include/gpu/GrContext.h"
-#include "include/gpu/GrRenderTarget.h"
 #include "include/gpu/GrTexture.h"
 #include "include/gpu/GrTypes.h"
 #include "include/private/GrResourceKey.h"
@@ -16,6 +15,7 @@
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrGpu.h"
+#include "src/gpu/GrRenderTarget.h"
 #include "src/gpu/GrSurfacePriv.h"
 #include "src/gpu/GrTexturePriv.h"
 
@@ -37,9 +37,11 @@ size_t GrTexture::onGpuMemorySize() const {
 
 /////////////////////////////////////////////////////////////////////////////
 GrTexture::GrTexture(
-    GrGpu* gpu, const GrSurfaceDesc& desc, GrProtected isProtected, GrTextureType textureType,
-    GrMipMapsStatus mipMapsStatus)
-    : INHERITED(gpu, desc, isProtected), fTextureType(textureType), fMipMapsStatus(mipMapsStatus) {
+    GrGpu* gpu, const SkISize& size, GrPixelConfig config, GrProtected isProtected,
+    GrTextureType textureType, GrMipMapsStatus mipMapsStatus)
+    : INHERITED(gpu, size, config, isProtected),
+      fTextureType(textureType),
+      fMipMapsStatus(mipMapsStatus) {
   if (GrMipMapsStatus::kNotAllocated == fMipMapsStatus) {
     fMaxMipMapLevel = 0;
   } else {
@@ -78,7 +80,7 @@ bool GrTexture::StealBackendTexture(
 }
 
 void GrTexture::computeScratchKey(GrScratchKey* key) const {
-  if (!GrPixelConfigIsCompressed(this->config())) {
+  if (!this->getGpu()->caps()->isFormatCompressed(this->backendFormat())) {
     int sampleCount = 1;
     GrRenderable renderable = GrRenderable::kNo;
     if (const auto* rt = this->asRenderTarget()) {

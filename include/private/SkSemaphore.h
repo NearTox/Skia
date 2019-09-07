@@ -14,7 +14,7 @@
 
 class SkSemaphore {
  public:
-  constexpr SkSemaphore(int count = 0) noexcept : fCount(count), fOSSemaphore(nullptr) {}
+  constexpr SkSemaphore(int count = 0) : fCount(count), fOSSemaphore(nullptr) {}
 
   // Cleanup the underlying OS semaphore.
   ~SkSemaphore();

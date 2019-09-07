@@ -76,7 +76,7 @@ void SkDraw::drawPaint(const SkPaint& paint) const {
   }
 
   SkIRect devRect;
-  devRect.set(0, 0, fDst.width(), fDst.height());
+  devRect.setWH(fDst.width(), fDst.height());
 
   SkAutoBlitterChoose blitter(*this, nullptr, paint);
   SkScan::FillIRect(devRect, *fRC, blitter.get());
@@ -479,7 +479,7 @@ void SkDraw::drawPoints(
               SkRect r;
 
               for (int i = 0; i < pointData.fNumPoints; ++i) {
-                r.set(
+                r.setLTRB(
                     pointData.fPoints[i].fX - pointData.fSize.fX,
                     pointData.fPoints[i].fY - pointData.fSize.fY,
                     pointData.fPoints[i].fX + pointData.fSize.fX,
@@ -939,7 +939,7 @@ void SkDraw::drawBitmapAsMask(const SkBitmap& bitmap, const SkPaint& paint) cons
       return;
     }
     SkMask mask;
-    mask.fBounds.set(ix, iy, ix + pmap.width(), iy + pmap.height());
+    mask.fBounds.setXYWH(ix, iy, pmap.width(), pmap.height());
     mask.fFormat = SkMask::kA8_Format;
     mask.fRowBytes = SkToU32(pmap.rowBytes());
     // fImage is typed as writable, but in this case it is used read-only
@@ -950,7 +950,7 @@ void SkDraw::drawBitmapAsMask(const SkBitmap& bitmap, const SkPaint& paint) cons
     SkRect r;
     SkMask mask;
 
-    r.set(0, 0, SkIntToScalar(bitmap.width()), SkIntToScalar(bitmap.height()));
+    r.setIWH(bitmap.width(), bitmap.height());
     fMatrix->mapRect(&r);
     r.round(&mask.fBounds);
 
@@ -999,7 +999,7 @@ void SkDraw::drawBitmapAsMask(const SkBitmap& bitmap, const SkPaint& paint) cons
       tmpPaint.setFilterQuality(paint.getFilterQuality());
       SkPaint paintWithShader = make_paint_with_image(tmpPaint, bitmap);
       SkRect rr;
-      rr.set(0, 0, SkIntToScalar(bitmap.width()), SkIntToScalar(bitmap.height()));
+      rr.setIWH(bitmap.width(), bitmap.height());
       c.drawRect(rr, paintWithShader);
     }
     this->drawDevMask(mask, paint);
@@ -1014,7 +1014,7 @@ static bool clipped_out(const SkMatrix& m, const SkRasterClip& c, const SkRect& 
 
 static bool clipped_out(const SkMatrix& matrix, const SkRasterClip& clip, int width, int height) {
   SkRect r;
-  r.set(0, 0, SkIntToScalar(width), SkIntToScalar(height));
+  r.setIWH(width, height);
   return clipped_out(matrix, clip, r);
 }
 
@@ -1147,7 +1147,7 @@ void SkDraw::validate() const {
   const SkIRect& cr = fRC->getBounds();
   SkIRect br;
 
-  br.set(0, 0, fDst.width(), fDst.height());
+  br.setWH(fDst.width(), fDst.height());
   SkASSERT(cr.isEmpty() || br.contains(cr));
 }
 

@@ -471,54 +471,54 @@ std::unique_ptr<Statement> IRGenerator::convertSwitch(const ASTNode& s) {
   std::unique_ptr<Expression> value = this->convertExpression(*(iter++));
   if (!value) {
     return nullptr;
-  }
-  if (value->fType != *fContext.fUInt_Type && value->fType.kind() != Type::kEnum_Kind) {
-    value = this->coerce(std::move(value), *fContext.fInt_Type);
-    if (!value) {
-      return nullptr;
     }
-  }
-  AutoSymbolTable table(this);
-  std::unordered_set<int> caseValues;
-  std::vector<std::unique_ptr<SwitchCase>> cases;
-  for (; iter != s.end(); ++iter) {
-    const ASTNode& c = *iter;
-    SkASSERT(c.fKind == ASTNode::Kind::kSwitchCase);
-    std::unique_ptr<Expression> caseValue;
-    auto childIter = c.begin();
-    if (*childIter) {
-      caseValue = this->convertExpression(*childIter);
-      if (!caseValue) {
+    if (value->fType != *fContext.fUInt_Type && value->fType.kind() != Type::kEnum_Kind) {
+      value = this->coerce(std::move(value), *fContext.fInt_Type);
+      if (!value) {
         return nullptr;
       }
-      caseValue = this->coerce(std::move(caseValue), value->fType);
-      if (!caseValue) {
-        return nullptr;
-      }
-      if (!caseValue->isConstant()) {
-        fErrors.error(caseValue->fOffset, "case value must be a constant");
-        return nullptr;
-      }
-      int64_t v;
-      this->getConstantInt(*caseValue, &v);
-      if (caseValues.find(v) != caseValues.end()) {
-        fErrors.error(caseValue->fOffset, "duplicate case value");
-      }
-      caseValues.insert(v);
     }
-    ++childIter;
-    std::vector<std::unique_ptr<Statement>> statements;
-    for (; childIter != c.end(); ++childIter) {
-      std::unique_ptr<Statement> converted = this->convertStatement(*childIter);
-      if (!converted) {
-        return nullptr;
+    AutoSymbolTable table(this);
+    std::unordered_set<int> caseValues;
+    std::vector<std::unique_ptr<SwitchCase>> cases;
+    for (; iter != s.end(); ++iter) {
+      const ASTNode& c = *iter;
+      SkASSERT(c.fKind == ASTNode::Kind::kSwitchCase);
+      std::unique_ptr<Expression> caseValue;
+      auto childIter = c.begin();
+      if (*childIter) {
+        caseValue = this->convertExpression(*childIter);
+        if (!caseValue) {
+          return nullptr;
+        }
+        caseValue = this->coerce(std::move(caseValue), value->fType);
+        if (!caseValue) {
+          return nullptr;
+        }
+        if (!caseValue->isConstant()) {
+          fErrors.error(caseValue->fOffset, "case value must be a constant");
+          return nullptr;
+        }
+        int64_t v;
+        this->getConstantInt(*caseValue, &v);
+        if (caseValues.find(v) != caseValues.end()) {
+          fErrors.error(caseValue->fOffset, "duplicate case value");
+        }
+        caseValues.insert(v);
       }
-      statements.push_back(std::move(converted));
+      ++childIter;
+      std::vector<std::unique_ptr<Statement>> statements;
+      for (; childIter != c.end(); ++childIter) {
+        std::unique_ptr<Statement> converted = this->convertStatement(*childIter);
+        if (!converted) {
+          return nullptr;
+        }
+        statements.push_back(std::move(converted));
+      }
+      cases.emplace_back(new SwitchCase(c.fOffset, std::move(caseValue), std::move(statements)));
     }
-    cases.emplace_back(new SwitchCase(c.fOffset, std::move(caseValue), std::move(statements)));
-  }
-  return std::unique_ptr<Statement>(new SwitchStatement(
-      s.fOffset, s.getBool(), std::move(value), std::move(cases), fSymbolTable));
+    return std::unique_ptr<Statement>(new SwitchStatement(
+        s.fOffset, s.getBool(), std::move(value), std::move(cases), fSymbolTable));
 }
 
 std::unique_ptr<Statement> IRGenerator::convertExpressionStatement(const ASTNode& s) {
@@ -1060,6 +1060,30 @@ std::unique_ptr<Expression> IRGenerator::convertIdentifier(const ASTNode& identi
             }
           }
 #endif
+      }
+      if (fKind == Program::kFragmentProcessor_Kind &&
+          (var->fModifiers.fFlags & Modifiers::kIn_Flag) &&
+          !(var->fModifiers.fFlags & Modifiers::kUniform_Flag) && !var->fModifiers.fLayout.fKey &&
+          var->fModifiers.fLayout.fBuiltin == -1 &&
+          var->fType.nonnullable() != *fContext.fFragmentProcessor_Type &&
+          var->fType.kind() != Type::kSampler_Kind) {
+        bool valid = false;
+        for (const auto& decl : fFile->root()) {
+          if (decl.fKind == ASTNode::Kind::kSection) {
+            ASTNode::SectionData section = decl.getSectionData();
+            if (section.fName == "setData") {
+              valid = true;
+              break;
+            }
+          }
+        }
+        if (!valid) {
+          fErrors.error(
+              identifier.fOffset,
+              "'in' variable must be either 'uniform' or "
+              "'layout(key)', or there must be a custom "
+              "@setData function");
+        }
       }
       // default to kRead_RefKind; this will be corrected later if the variable is written to
       return std::unique_ptr<VariableReference>(

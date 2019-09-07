@@ -92,9 +92,7 @@ class LatticeGP : public GrGeometryProcessor {
     uint32_t extraSamplerKey =
         gpu->getExtraSamplerKeyForProgram(samplerState, proxy->backendFormat());
 
-    fSampler.reset(
-        proxy->textureType(), proxy->config(), samplerState, proxy->textureSwizzle(),
-        extraSamplerKey);
+    fSampler.reset(proxy->textureType(), samplerState, proxy->textureSwizzle(), extraSamplerKey);
     this->setTextureSamplerCnt(1);
     fInPosition = {"position", kFloat2_GrVertexAttribType, kFloat2_GrSLType};
     fInTextureCoords = {"textureCoords", kFloat2_GrVertexAttribType, kFloat2_GrSLType};
@@ -395,10 +393,10 @@ GR_DRAW_OP_TEST_DEFINE(NonAALatticeOp) {
   GrSurfaceOrigin origin =
       random->nextBool() ? kTopLeft_GrSurfaceOrigin : kBottomLeft_GrSurfaceOrigin;
   const GrBackendFormat format =
-      context->priv().caps()->getBackendFormatFromColorType(GrColorType::kRGBA_8888);
+      context->priv().caps()->getDefaultBackendFormat(GrColorType::kRGBA_8888, GrRenderable::kNo);
   auto proxy = context->priv().proxyProvider()->createProxy(
-      format, desc, GrRenderable::kNo, 1, origin, SkBackingFit::kExact, SkBudgeted::kYes,
-      GrProtected::kNo);
+      format, desc, GrRenderable::kNo, 1, origin, GrMipMapped::kNo, SkBackingFit::kExact,
+      SkBudgeted::kYes, GrProtected::kNo);
 
   do {
     if (random->nextBool()) {

@@ -83,9 +83,9 @@ static void test_image(
 
   //--------------
   // Test that draw restricts itself to the subset
-  SkImageFilter::OutputProperties outProps(kN32_SkColorType, img->getColorSpace());
-  sk_sp<SkSpecialSurface> surf(
-      img->makeSurface(outProps, SkISize::Make(kFullSize, kFullSize), kPremul_SkAlphaType));
+  sk_sp<SkSpecialSurface> surf(img->makeSurface(
+      kN32_SkColorType, img->getColorSpace(), SkISize::Make(kFullSize, kFullSize),
+      kPremul_SkAlphaType));
 
   SkCanvas* canvas = surf->getCanvas();
 
@@ -119,8 +119,8 @@ static void test_image(
     REPORTER_ASSERT(reporter, isGPUBacked != !!tightImg->peekPixels(&tmpPixmap));
   }
   {
-    SkImageFilter::OutputProperties outProps(kN32_SkColorType, img->getColorSpace());
-    sk_sp<SkSurface> tightSurf(img->makeTightSurface(outProps, subset.size()));
+    sk_sp<SkSurface> tightSurf(
+        img->makeTightSurface(kN32_SkColorType, img->getColorSpace(), subset.size()));
 
     REPORTER_ASSERT(reporter, tightSurf->width() == subset.width());
     REPORTER_ASSERT(reporter, tightSurf->height() == subset.height());
@@ -210,33 +210,33 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(SpecialImage_MakeTexture, reporter, ctxInfo) 
       sk_sp<SkSpecialImage> fromSubRaster(subRasterImage->makeTextureImage(context));
       test_texture_backed(reporter, subRasterImage, fromSubRaster);
     }
-  }
-
-  {
-    // gpu
-    sk_sp<SkImage> rasterImage = SkImage::MakeFromBitmap(bm);
-    sk_sp<GrTextureProxy> proxy = proxyProvider->createTextureProxy(
-        rasterImage, GrRenderable::kNo, 1, SkBudgeted::kNo, SkBackingFit::kExact);
-    if (!proxy) {
-      return;
-    }
-
-    sk_sp<SkSpecialImage> gpuImage(SkSpecialImage::MakeDeferredFromGpu(
-        context, SkIRect::MakeWH(kFullSize, kFullSize), kNeedNewImageUniqueID_SpecialImage,
-        std::move(proxy), nullptr));
-
-    {
-      sk_sp<SkSpecialImage> fromGPU(gpuImage->makeTextureImage(context));
-      test_texture_backed(reporter, gpuImage, fromGPU);
     }
 
     {
-      sk_sp<SkSpecialImage> subGPUImage(gpuImage->makeSubset(subset));
+      // gpu
+      sk_sp<SkImage> rasterImage = SkImage::MakeFromBitmap(bm);
+      sk_sp<GrTextureProxy> proxy =
+          proxyProvider->createTextureProxy(rasterImage, 1, SkBudgeted::kNo, SkBackingFit::kExact);
+      if (!proxy) {
+        return;
+      }
 
-      sk_sp<SkSpecialImage> fromSubGPU(subGPUImage->makeTextureImage(context));
-      test_texture_backed(reporter, subGPUImage, fromSubGPU);
+      sk_sp<SkSpecialImage> gpuImage(SkSpecialImage::MakeDeferredFromGpu(
+          context, SkIRect::MakeWH(kFullSize, kFullSize), kNeedNewImageUniqueID_SpecialImage,
+          std::move(proxy), nullptr));
+
+      {
+        sk_sp<SkSpecialImage> fromGPU(gpuImage->makeTextureImage(context));
+        test_texture_backed(reporter, gpuImage, fromGPU);
+      }
+
+      {
+        sk_sp<SkSpecialImage> subGPUImage(gpuImage->makeSubset(subset));
+
+        sk_sp<SkSpecialImage> fromSubGPU(subGPUImage->makeTextureImage(context));
+        test_texture_backed(reporter, subGPUImage, fromSubGPU);
+      }
     }
-  }
 }
 
 DEF_GPUTEST_FOR_RENDERING_CONTEXTS(SpecialImage_Gpu, reporter, ctxInfo) {
@@ -245,8 +245,8 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(SpecialImage_Gpu, reporter, ctxInfo) {
   SkBitmap bm = create_bm();
   sk_sp<SkImage> rasterImage = SkImage::MakeFromBitmap(bm);
 
-  sk_sp<GrTextureProxy> proxy = proxyProvider->createTextureProxy(
-      rasterImage, GrRenderable::kNo, 1, SkBudgeted::kNo, SkBackingFit::kExact);
+  sk_sp<GrTextureProxy> proxy =
+      proxyProvider->createTextureProxy(rasterImage, 1, SkBudgeted::kNo, SkBackingFit::kExact);
   if (!proxy) {
     return;
   }

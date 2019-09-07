@@ -17,7 +17,7 @@
 SkBaseIStream::SkBaseIStream() : _refcount(1) {}
 SkBaseIStream::~SkBaseIStream() {}
 
-HRESULT STDMETHODCALLTYPE SkBaseIStream::QueryInterface(REFIID iid, void** ppvObject) {
+SK_STDMETHODIMP SkBaseIStream::QueryInterface(REFIID iid, void** ppvObject) {
   if (nullptr == ppvObject) {
     return E_INVALIDARG;
   }
@@ -31,11 +31,9 @@ HRESULT STDMETHODCALLTYPE SkBaseIStream::QueryInterface(REFIID iid, void** ppvOb
   }
 }
 
-ULONG STDMETHODCALLTYPE SkBaseIStream::AddRef(void) {
-  return (ULONG)InterlockedIncrement(&_refcount);
-}
+SK_STDMETHODIMP_(ULONG) SkBaseIStream::AddRef() { return (ULONG)InterlockedIncrement(&_refcount); }
 
-ULONG STDMETHODCALLTYPE SkBaseIStream::Release(void) {
+SK_STDMETHODIMP_(ULONG) SkBaseIStream::Release() {
   ULONG res = (ULONG)InterlockedDecrement(&_refcount);
   if (0 == res) {
     delete this;
@@ -44,81 +42,72 @@ ULONG STDMETHODCALLTYPE SkBaseIStream::Release(void) {
 }
 
 // ISequentialStream Interface
-HRESULT STDMETHODCALLTYPE SkBaseIStream::Read(void* pv, ULONG cb, ULONG* pcbRead) {
-  return E_NOTIMPL;
-}
+SK_STDMETHODIMP SkBaseIStream::Read(void* pv, ULONG cb, ULONG* pcbRead) { return E_NOTIMPL; }
 
-HRESULT STDMETHODCALLTYPE SkBaseIStream::Write(void const* pv, ULONG cb, ULONG* pcbWritten) {
+SK_STDMETHODIMP SkBaseIStream::Write(void const* pv, ULONG cb, ULONG* pcbWritten) {
   return E_NOTIMPL;
 }
 
 // IStream Interface
-HRESULT STDMETHODCALLTYPE SkBaseIStream::SetSize(ULARGE_INTEGER) { return E_NOTIMPL; }
+SK_STDMETHODIMP SkBaseIStream::SetSize(ULARGE_INTEGER) { return E_NOTIMPL; }
 
-HRESULT STDMETHODCALLTYPE
-SkBaseIStream::CopyTo(IStream*, ULARGE_INTEGER, ULARGE_INTEGER*, ULARGE_INTEGER*) {
+SK_STDMETHODIMP SkBaseIStream::CopyTo(IStream*, ULARGE_INTEGER, ULARGE_INTEGER*, ULARGE_INTEGER*) {
   return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE SkBaseIStream::Commit(DWORD) { return E_NOTIMPL; }
+SK_STDMETHODIMP SkBaseIStream::Commit(DWORD) { return E_NOTIMPL; }
 
-HRESULT STDMETHODCALLTYPE SkBaseIStream::Revert(void) { return E_NOTIMPL; }
+SK_STDMETHODIMP SkBaseIStream::Revert() { return E_NOTIMPL; }
 
-HRESULT STDMETHODCALLTYPE SkBaseIStream::LockRegion(ULARGE_INTEGER, ULARGE_INTEGER, DWORD) {
+SK_STDMETHODIMP SkBaseIStream::LockRegion(ULARGE_INTEGER, ULARGE_INTEGER, DWORD) {
   return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE SkBaseIStream::UnlockRegion(ULARGE_INTEGER, ULARGE_INTEGER, DWORD) {
+SK_STDMETHODIMP SkBaseIStream::UnlockRegion(ULARGE_INTEGER, ULARGE_INTEGER, DWORD) {
   return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE SkBaseIStream::Clone(IStream**) { return E_NOTIMPL; }
+SK_STDMETHODIMP SkBaseIStream::Clone(IStream**) { return E_NOTIMPL; }
 
-HRESULT STDMETHODCALLTYPE SkBaseIStream::Seek(
+SK_STDMETHODIMP SkBaseIStream::Seek(
     LARGE_INTEGER liDistanceToMove, DWORD dwOrigin, ULARGE_INTEGER* lpNewFilePointer) {
   return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE SkBaseIStream::Stat(STATSTG* pStatstg, DWORD grfStatFlag) {
-  return E_NOTIMPL;
-}
+SK_STDMETHODIMP SkBaseIStream::Stat(STATSTG* pStatstg, DWORD grfStatFlag) { return E_NOTIMPL; }
 
 /**
  * SkIStream
  */
-SkIStream::SkIStream(SkStream* stream, bool deleteOnRelease)
-    : SkBaseIStream(), fSkStream(stream), fDeleteOnRelease(deleteOnRelease), fLocation() {
+SkIStream::SkIStream(std::unique_ptr<SkStreamAsset> stream)
+    : SkBaseIStream(), fSkStream(std::move(stream)), fLocation() {
   this->fSkStream->rewind();
 }
 
-SkIStream::~SkIStream() {
-  if (fDeleteOnRelease) {
-    delete this->fSkStream;
-  }
-}
+SkIStream::~SkIStream() {}
 
-HRESULT SkIStream::CreateFromSkStream(SkStream* stream, bool deleteOnRelease, IStream** ppStream) {
+HRESULT SkIStream::CreateFromSkStream(std::unique_ptr<SkStreamAsset> stream, IStream** ppStream) {
   if (nullptr == stream) {
     return E_INVALIDARG;
   }
-  *ppStream = new SkIStream(stream, deleteOnRelease);
+  *ppStream = new SkIStream(std::move(stream));
   return S_OK;
 }
 
 // ISequentialStream Interface
-HRESULT STDMETHODCALLTYPE SkIStream::Read(void* pv, ULONG cb, ULONG* pcbRead) {
+SK_STDMETHODIMP SkIStream::Read(void* pv, ULONG cb, ULONG* pcbRead) {
   *pcbRead = static_cast<ULONG>(this->fSkStream->read(pv, cb));
   this->fLocation.QuadPart += *pcbRead;
   return (*pcbRead == cb) ? S_OK : S_FALSE;
 }
 
-HRESULT STDMETHODCALLTYPE SkIStream::Write(void const* pv, ULONG cb, ULONG* pcbWritten) {
+SK_STDMETHODIMP SkIStream::Write(void const* pv, ULONG cb, ULONG* pcbWritten) {
   return STG_E_CANTSAVE;
 }
 
 // IStream Interface
-HRESULT STDMETHODCALLTYPE
-SkIStream::Seek(LARGE_INTEGER liDistanceToMove, DWORD dwOrigin, ULARGE_INTEGER* lpNewFilePointer) {
+SK_STDMETHODIMP SkIStream::Seek(
+    LARGE_INTEGER liDistanceToMove, DWORD dwOrigin, ULARGE_INTEGER* lpNewFilePointer) {
   HRESULT hr = S_OK;
 
   switch (dwOrigin) {
@@ -148,8 +137,6 @@ SkIStream::Seek(LARGE_INTEGER liDistanceToMove, DWORD dwOrigin, ULARGE_INTEGER* 
       if (!this->fSkStream->rewind()) {
         hr = E_FAIL;
       } else {
-        // FIXME: Should not depend on getLength.
-        // See https://code.google.com/p/skia/issues/detail?id=1570
         size_t skip = static_cast<size_t>(this->fSkStream->getLength() + liDistanceToMove.QuadPart);
         size_t skipped = this->fSkStream->skip(skip);
         this->fLocation.QuadPart = skipped;
@@ -168,13 +155,11 @@ SkIStream::Seek(LARGE_INTEGER liDistanceToMove, DWORD dwOrigin, ULARGE_INTEGER* 
   return hr;
 }
 
-HRESULT STDMETHODCALLTYPE SkIStream::Stat(STATSTG* pStatstg, DWORD grfStatFlag) {
+SK_STDMETHODIMP SkIStream::Stat(STATSTG* pStatstg, DWORD grfStatFlag) {
   if (0 == (grfStatFlag & STATFLAG_NONAME)) {
     return STG_E_INVALIDFLAG;
   }
   pStatstg->pwcsName = nullptr;
-  // FIXME: Should not depend on getLength
-  // See https://code.google.com/p/skia/issues/detail?id=1570
   pStatstg->cbSize.QuadPart = this->fSkStream->getLength();
   pStatstg->clsid = CLSID_NULL;
   pStatstg->type = STGTY_STREAM;
@@ -199,7 +184,7 @@ HRESULT SkWIStream::CreateFromSkWStream(SkWStream* stream, IStream** ppStream) {
 }
 
 // ISequentialStream Interface
-HRESULT STDMETHODCALLTYPE SkWIStream::Write(void const* pv, ULONG cb, ULONG* pcbWritten) {
+SK_STDMETHODIMP SkWIStream::Write(void const* pv, ULONG cb, ULONG* pcbWritten) {
   HRESULT hr = S_OK;
   bool wrote = this->fSkWStream->write(pv, cb);
   if (wrote) {
@@ -212,12 +197,12 @@ HRESULT STDMETHODCALLTYPE SkWIStream::Write(void const* pv, ULONG cb, ULONG* pcb
 }
 
 // IStream Interface
-HRESULT STDMETHODCALLTYPE SkWIStream::Commit(DWORD) {
+SK_STDMETHODIMP SkWIStream::Commit(DWORD) {
   this->fSkWStream->flush();
   return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SkWIStream::Stat(STATSTG* pStatstg, DWORD grfStatFlag) {
+SK_STDMETHODIMP SkWIStream::Stat(STATSTG* pStatstg, DWORD grfStatFlag) {
   if (0 == (grfStatFlag & STATFLAG_NONAME)) {
     return STG_E_INVALIDFLAG;
   }

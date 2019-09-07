@@ -145,7 +145,6 @@ class GrGLSLSkSLFP : public GrGLSLFragmentProcessor {
     }
     printf("%s\n", SkSL::String(type.fName).c_str());
     SK_ABORT("unsupported uniform type");
-    return kFloat_GrSLType;
   }
 
   void emitCode(EmitArgs& args) override {
@@ -159,11 +158,14 @@ class GrGLSLSkSLFP : public GrGLSLFragmentProcessor {
     std::vector<SkString> childNames;
     for (int i = 0; i < this->numChildProcessors(); ++i) {
       childNames.push_back(SkStringPrintf("_child%d", i));
-      this->emitChild(i, &childNames[i], args);
+      this->invokeChild(i, &childNames[i], args);
     }
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     int substringStartIndex = 0;
     int formatArgIndex = 0;
+    SkString coords = args.fTransformedCoords.count()
+                          ? fragBuilder->ensureCoords2D(args.fTransformedCoords[0].fVaryingPoint)
+                          : SkString("sk_FragCoord");
     for (size_t i = 0; i < fGLSL.length(); ++i) {
       char c = fGLSL[i];
       if (c == '%') {
@@ -179,6 +181,12 @@ class GrGLSLSkSLFP : public GrGLSLFragmentProcessor {
                 break;
               case SkSL::Compiler::FormatArg::Kind::kOutput:
                 fragBuilder->codeAppend(args.fOutputColor);
+                break;
+              case SkSL::Compiler::FormatArg::Kind::kCoordX:
+                fragBuilder->codeAppendf("%s.x", coords.c_str());
+                break;
+              case SkSL::Compiler::FormatArg::Kind::kCoordY:
+                fragBuilder->codeAppendf("%s.y", coords.c_str());
                 break;
               case SkSL::Compiler::FormatArg::Kind::kUniform:
                 fragBuilder->codeAppend(
@@ -267,24 +275,24 @@ class GrGLSLSkSLFP : public GrGLSLFragmentProcessor {
 
 std::unique_ptr<GrSkSLFP> GrSkSLFP::Make(
     GrContext_Base* context, int index, const char* name, const char* sksl, const void* inputs,
-    size_t inputSize, SkSL::Program::Kind kind) {
+    size_t inputSize, SkSL::Program::Kind kind, const SkMatrix* matrix) {
   return std::unique_ptr<GrSkSLFP>(new GrSkSLFP(
       context->priv().fpFactoryCache(), context->priv().caps()->shaderCaps(), kind, index, name,
-      sksl, SkString(), inputs, inputSize));
+      sksl, SkString(), inputs, inputSize, matrix));
 }
 
 std::unique_ptr<GrSkSLFP> GrSkSLFP::Make(
     GrContext_Base* context, int index, const char* name, SkString sksl, const void* inputs,
-    size_t inputSize, SkSL::Program::Kind kind) {
+    size_t inputSize, SkSL::Program::Kind kind, const SkMatrix* matrix) {
   return std::unique_ptr<GrSkSLFP>(new GrSkSLFP(
       context->priv().fpFactoryCache(), context->priv().caps()->shaderCaps(), kind, index, name,
-      nullptr, std::move(sksl), inputs, inputSize));
+      nullptr, std::move(sksl), inputs, inputSize, matrix));
 }
 
 GrSkSLFP::GrSkSLFP(
     sk_sp<GrSkSLFPFactoryCache> factoryCache, const GrShaderCaps* shaderCaps,
     SkSL::Program::Kind kind, int index, const char* name, const char* sksl, SkString skslString,
-    const void* inputs, size_t inputSize)
+    const void* inputs, size_t inputSize, const SkMatrix* matrix)
     : INHERITED(kGrSkSLFP_ClassID, kNone_OptimizationFlags),
       fFactoryCache(factoryCache),
       fShaderCaps(sk_ref_sp(shaderCaps)),
@@ -297,6 +305,10 @@ GrSkSLFP::GrSkSLFP(
       fInputSize(inputSize) {
   if (fInputSize) {
     memcpy(fInputs.get(), inputs, inputSize);
+  }
+  if (matrix) {
+    fCoordTransform = GrCoordTransform(*matrix);
+    this->addCoordTransform(&fCoordTransform);
   }
 }
 
@@ -315,19 +327,23 @@ GrSkSLFP::GrSkSLFP(const GrSkSLFP& other)
   if (fInputSize) {
     memcpy(fInputs.get(), other.fInputs.get(), fInputSize);
   }
+  if (other.numCoordTransforms()) {
+    fCoordTransform = other.fCoordTransform;
+    this->addCoordTransform(&fCoordTransform);
+  }
 }
 
 const char* GrSkSLFP::name() const { return fName; }
 
 void GrSkSLFP::createFactory() const {
-  if (!fFactory) {
-    fFactory = fFactoryCache->get(fIndex);
     if (!fFactory) {
-      fFactory =
-          sk_sp<GrSkSLFPFactory>(new GrSkSLFPFactory(fName, fShaderCaps.get(), fSkSL, fKind));
-      fFactoryCache->set(fIndex, fFactory);
+      fFactory = fFactoryCache->get(fIndex);
+      if (!fFactory) {
+        fFactory =
+            sk_sp<GrSkSLFPFactory>(new GrSkSLFPFactory(fName, fShaderCaps.get(), fSkSL, fKind));
+        fFactoryCache->set(fIndex, fFactory);
+      }
     }
-  }
 }
 
 void GrSkSLFP::addChild(std::unique_ptr<GrFragmentProcessor> child) {
@@ -511,7 +527,6 @@ std::unique_ptr<GrFragmentProcessor> GrSkSLFP::TestCreate(GrProcessorTestData* d
     }
   }
   SK_ABORT("unreachable");
-  return nullptr;
 }
 
 #endif

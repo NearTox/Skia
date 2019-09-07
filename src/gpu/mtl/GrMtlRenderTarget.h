@@ -8,7 +8,7 @@
 #ifndef GrMtlRenderTarget_DEFINED
 #define GrMtlRenderTarget_DEFINED
 
-#include "include/gpu/GrRenderTarget.h"
+#include "src/gpu/GrRenderTarget.h"
 
 #include "include/gpu/GrBackendSurface.h"
 
@@ -26,8 +26,10 @@ class GrMtlRenderTarget : public GrRenderTarget {
   // override of GrRenderTarget
   ResolveType getResolveType() const override {
     if (this->numSamples() > 1) {
+      SkASSERT(this->requiresManualMSAAResolve());
       return kCanResolve_ResolveType;
     }
+    SkASSERT(!this->requiresManualMSAAResolve());
     return kAutoResolves_ResolveType;
   }
 

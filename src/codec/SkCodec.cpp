@@ -53,9 +53,6 @@ static std::vector<DecoderProc>* decoders() {
 #endif
       {SkBmpCodec::IsBmp, SkBmpCodec::MakeFromStream},
       {SkWbmpCodec::IsWbmp, SkWbmpCodec::MakeFromStream},
-#ifdef SK_HAS_HEIF_LIBRARY
-      {SkHeifCodec::IsHeif, SkHeifCodec::MakeFromStream},
-#endif
   };
   return decoders;
 }
@@ -67,7 +64,8 @@ void SkCodec::Register(
 }
 
 std::unique_ptr<SkCodec> SkCodec::MakeFromStream(
-    std::unique_ptr<SkStream> stream, Result* outResult, SkPngChunkReader* chunkReader) {
+    std::unique_ptr<SkStream> stream, Result* outResult, SkPngChunkReader* chunkReader,
+    SelectionPolicy selectionPolicy) {
   Result resultStorage;
   if (!outResult) {
     outResult = &resultStorage;
@@ -75,6 +73,12 @@ std::unique_ptr<SkCodec> SkCodec::MakeFromStream(
 
   if (!stream) {
     *outResult = kInvalidInput;
+    return nullptr;
+  }
+
+  if (selectionPolicy != SelectionPolicy::kPreferStillImage &&
+      selectionPolicy != SelectionPolicy::kPreferAnimation) {
+    *outResult = kInvalidParameters;
     return nullptr;
   }
 
@@ -119,6 +123,12 @@ std::unique_ptr<SkCodec> SkCodec::MakeFromStream(
         return proc.MakeFromStream(std::move(stream), outResult);
       }
     }
+
+#ifdef SK_HAS_HEIF_LIBRARY
+    if (SkHeifCodec::IsHeif(buffer, bytesRead)) {
+      return SkHeifCodec::MakeFromStream(std::move(stream), selectionPolicy, outResult);
+    }
+#endif
 
 #ifdef SK_CODEC_DECODES_RAW
     // Try to treat the input as RAW if all the other checks failed.
@@ -200,9 +210,21 @@ bool SkCodec::rewindIfNeeded() {
   return this->onRewind();
 }
 
+static SkIRect frame_rect_on_screen(SkIRect frameRect, const SkIRect& screenRect) {
+  if (!frameRect.intersect(screenRect)) {
+    return SkIRect::MakeEmpty();
+  }
+
+  return frameRect;
+}
+
 bool zero_rect(
     const SkImageInfo& dstInfo, void* pixels, size_t rowBytes, SkISize srcDimensions,
     SkIRect prevRect) {
+  prevRect = frame_rect_on_screen(prevRect, SkIRect::MakeSize(srcDimensions));
+  if (prevRect.isEmpty()) {
+    return true;
+  }
   const auto dimensions = dstInfo.dimensions();
   if (dimensions != srcDimensions) {
     SkRect src = SkRect::Make(srcDimensions);
@@ -218,12 +240,6 @@ bool zero_rect(
       // so nothing to zero.
       return true;
     }
-  }
-
-  if (!prevRect.intersect(dstInfo.bounds())) {
-    SkCodecPrintf("rectangles do not intersect!");
-    SkASSERT(false);
-    return true;
   }
 
   const SkImageInfo info = dstInfo.makeWH(prevRect.width(), prevRect.height());
@@ -695,14 +711,6 @@ const char* SkCodec::ResultToString(Result result) {
     case kUnimplemented: return "unimplemented";
     default: SkASSERT(false); return "bogus result value";
   }
-}
-
-static SkIRect frame_rect_on_screen(SkIRect frameRect, const SkIRect& screenRect) {
-  if (!frameRect.intersect(screenRect)) {
-    return SkIRect::MakeEmpty();
-  }
-
-  return frameRect;
 }
 
 static bool independent(const SkFrame& frame) {

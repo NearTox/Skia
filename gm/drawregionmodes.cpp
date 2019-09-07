@@ -19,9 +19,9 @@
 #include "include/core/SkSize.h"
 #include "include/core/SkString.h"
 #include "include/core/SkTileMode.h"
-#include "include/effects/SkBlurImageFilter.h"
 #include "include/effects/SkDashPathEffect.h"
 #include "include/effects/SkGradientShader.h"
+#include "include/effects/SkImageFilters.h"
 
 class DrawRegionModesGM : public skiagm::GM {
  public:
@@ -33,8 +33,8 @@ class DrawRegionModesGM : public skiagm::GM {
   SkISize onISize() override { return SkISize::Make(375, 500); }
 
   void onOnceBeforeDraw() override {
-    fRegion.op(50, 50, 100, 100, SkRegion::kUnion_Op);
-    fRegion.op(50, 100, 150, 150, SkRegion::kUnion_Op);
+    fRegion.op({50, 50, 100, 100}, SkRegion::kUnion_Op);
+    fRegion.op({50, 100, 150, 150}, SkRegion::kUnion_Op);
   }
 
   void onDraw(SkCanvas* canvas) override {
@@ -51,7 +51,7 @@ class DrawRegionModesGM : public skiagm::GM {
     canvas->drawRegion(fRegion, paint);
 
     canvas->translate(125.0f, 125.0f);
-    paint.setImageFilter(SkBlurImageFilter::Make(5.0f, 5.0f, nullptr, nullptr));
+    paint.setImageFilter(SkImageFilters::Blur(5.0f, 5.0f, nullptr, nullptr));
     canvas->drawRegion(fRegion, paint);
 
     canvas->translate(-125.0f, 125.0f);

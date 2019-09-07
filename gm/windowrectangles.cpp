@@ -163,7 +163,7 @@ class MaskOnlyClipBase : public GrClip {
   bool quickContains(const SkRect&) const final { return false; }
   bool isRRect(const SkRect& rtBounds, SkRRect* rr, GrAA*) const final { return false; }
   void getConservativeBounds(int width, int height, SkIRect* rect, bool* iior) const final {
-    rect->set(0, 0, width, height);
+    rect->setWH(width, height);
     if (iior) {
       *iior = false;
     }
@@ -229,7 +229,7 @@ void WindowRectanglesMaskGM::visualizeAlphaMask(
     GrContext* ctx, GrRenderTargetContext* rtc, const GrReducedClip& reducedClip, GrPaint&& paint) {
   const int padRight = (kDeviceRect.right() - kCoverRect.right()) / 2;
   const int padBottom = (kDeviceRect.bottom() - kCoverRect.bottom()) / 2;
-  sk_sp<GrRenderTargetContext> maskRTC(ctx->priv().makeDeferredRenderTargetContextWithFallback(
+  auto maskRTC(ctx->priv().makeDeferredRenderTargetContextWithFallback(
       SkBackingFit::kExact, kCoverRect.width() + padRight, kCoverRect.height() + padBottom,
       GrColorType::kAlpha_8, nullptr));
   if (!maskRTC) {

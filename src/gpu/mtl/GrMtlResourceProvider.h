@@ -60,7 +60,7 @@ class GrMtlResourceProvider {
     enum {
       // We may actually have kMaxEntries+1 PipelineStates in context because we create a new
       // PipelineState before evicting from the cache.
-      kMaxEntries = 128,
+      kMaxEntries = 1024,
     };
 
     struct Entry;
@@ -102,7 +102,6 @@ class GrMtlResourceProvider {
     SkSpinlock fMutex;
   };
   static constexpr size_t kBufferSuballocatorStartSize = 1024 * 1024;
-  static constexpr size_t kBufferSuballocatorMaxSize = 8 * 1024 * 1024;
 
   GrMtlGpu* fGpu;
 
@@ -116,6 +115,7 @@ class GrMtlResourceProvider {
   // finishes. The completion handler will retain a reference to this so it won't get
   // deleted along with the GrContext.
   sk_sp<BufferSuballocator> fBufferSuballocator;
+  size_t fBufferSuballocatorMaxSize;
 };
 
 #endif

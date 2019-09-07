@@ -16,6 +16,7 @@
 #include "include/core/SkScalar.h"
 #include "include/core/SkTypeface.h"
 #include "include/core/SkTypes.h"
+#include "include/effects/SkImageFilters.h"
 #include "tools/ToolUtils.h"
 
 #define WIDTH 640
@@ -27,7 +28,7 @@ DEF_SIMPLE_GM(imageresizetiled, canvas, WIDTH, HEIGHT) {
   SkPaint paint;
   SkMatrix matrix;
   matrix.setScale(RESIZE_FACTOR, RESIZE_FACTOR);
-  paint.setImageFilter(SkImageFilter::MakeMatrixFilter(matrix, kNone_SkFilterQuality, nullptr));
+  paint.setImageFilter(SkImageFilters::MatrixTransform(matrix, kNone_SkFilterQuality, nullptr));
 
   SkFont font(ToolUtils::create_portable_typeface(), 100);
   const SkScalar tile_size = SkIntToScalar(100);

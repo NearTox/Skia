@@ -317,7 +317,10 @@ class GrSmallPathRenderer::SmallPathOp final : public GrMeshDrawOp {
     int numActiveProxies = fAtlas->numActivePages();
     const auto proxies = fAtlas->getProxies();
     for (int i = 0; i < numActiveProxies; ++i) {
+      // This op does not know its atlas proxies when it is added to a GrOpsTasks, so the
+      // proxies don't get added during the visitProxies call. Thus we add them here.
       flushInfo.fFixedDynamicState->fPrimitiveProcessorTextures[i] = proxies[i].get();
+      target->sampledProxyArray()->push_back(proxies[i].get());
     }
 
     // Setup GrGeometryProcessor
@@ -746,6 +749,9 @@ class GrSmallPathRenderer::SmallPathOp final : public GrMeshDrawOp {
     if (gp->numTextureSamplers() != numAtlasTextures) {
       for (int i = gp->numTextureSamplers(); i < numAtlasTextures; ++i) {
         flushInfo->fFixedDynamicState->fPrimitiveProcessorTextures[i] = proxies[i].get();
+        // This op does not know its atlas proxies when it is added to a GrOpsTasks, so the
+        // proxies don't get added during the visitProxies call. Thus we add them here.
+        target->sampledProxyArray()->push_back(proxies[i].get());
       }
       // During preparation the number of atlas pages has increased.
       // Update the proxies used in the GP to match.
@@ -843,8 +849,8 @@ bool GrSmallPathRenderer::onDrawPath(const DrawPathArgs& args) {
   SkASSERT(!args.fShape->isEmpty());
   SkASSERT(args.fShape->hasUnstyledKey());
   if (!fAtlas) {
-    const GrBackendFormat format =
-        args.fContext->priv().caps()->getBackendFormatFromColorType(GrColorType::kAlpha_8);
+    const GrBackendFormat format = args.fContext->priv().caps()->getDefaultBackendFormat(
+        GrColorType::kAlpha_8, GrRenderable::kNo);
     fAtlas = GrDrawOpAtlas::Make(
         args.fContext->priv().proxyProvider(), format, GrColorType::kAlpha_8, ATLAS_TEXTURE_WIDTH,
         ATLAS_TEXTURE_HEIGHT, PLOT_WIDTH, PLOT_HEIGHT, GrDrawOpAtlas::AllowMultitexturing::kYes,
@@ -922,7 +928,7 @@ GR_DRAW_OP_TEST_DEFINE(SmallPathOp) {
     gTestStruct.fContextID = context->priv().contextID();
     gTestStruct.reset();
     const GrBackendFormat format =
-        context->priv().caps()->getBackendFormatFromColorType(GrColorType::kAlpha_8);
+        context->priv().caps()->getDefaultBackendFormat(GrColorType::kAlpha_8, GrRenderable::kNo);
     gTestStruct.fAtlas = GrDrawOpAtlas::Make(
         context->priv().proxyProvider(), format, GrColorType::kAlpha_8, ATLAS_TEXTURE_WIDTH,
         ATLAS_TEXTURE_HEIGHT, PLOT_WIDTH, PLOT_HEIGHT, GrDrawOpAtlas::AllowMultitexturing::kYes,

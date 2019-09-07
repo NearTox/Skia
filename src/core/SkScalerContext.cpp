@@ -303,138 +303,139 @@ static void pack4xHToLCD16(
   if (doVert) {
     SkASSERT(src.width() == (dst.fBounds.height() - 2) * 4);
     SkASSERT(src.height() == dst.fBounds.width());
-  } else {
-    SkASSERT(src.width() == (dst.fBounds.width() - 2) * 4);
-    SkASSERT(src.height() == dst.fBounds.height());
-  }
-
-  const int sample_width = src.width();
-  const int height = src.height();
-
-  uint16_t* dstImage = (uint16_t*)dst.fImage;
-  size_t dstRB = dst.fRowBytes;
-  // An N tap FIR is defined by
-  // out[n] = coeff[0]*x[n] + coeff[1]*x[n-1] + ... + coeff[N]*x[n-N]
-  // or
-  // out[n] = sum(i, 0, N, coeff[i]*x[n-i])
-
-  // The strategy is to use one FIR (different coefficients) for each of r, g, and b.
-  // This means using every 4th FIR output value of each FIR and discarding the rest.
-  // The FIRs are aligned, and the coefficients reach 5 samples to each side of their 'center'.
-  // (For r and b this is technically incorrect, but the coeffs outside round to zero anyway.)
-
-  // These are in some fixed point repesentation.
-  // Adding up to more than one simulates ink spread.
-  // For implementation reasons, these should never add up to more than two.
-
-  // Coefficients determined by a gausian where 5 samples = 3 std deviations (0x110 'contrast').
-  // Calculated using tools/generate_fir_coeff.py
-  // With this one almost no fringing is ever seen, but it is imperceptibly blurry.
-  // The lcd smoothed text is almost imperceptibly different from gray,
-  // but is still sharper on small stems and small rounded corners than gray.
-  // This also seems to be about as wide as one can get and only have a three pixel kernel.
-  // TODO: calculate these at runtime so parameters can be adjusted (esp contrast).
-  static const unsigned int coefficients[LCD_PER_PIXEL][SAMPLES_PER_PIXEL * 3] = {
-      // The red subpixel is centered inside the first sample (at 1/6 pixel), and is shifted.
-      {
-          0x03,
-          0x0b,
-          0x1c,
-          0x33,
-          0x40,
-          0x39,
-          0x24,
-          0x10,
-          0x05,
-          0x01,
-          0x00,
-          0x00,
-      },
-      // The green subpixel is centered between two samples (at 1/2 pixel), so is symetric
-      {
-          0x00,
-          0x02,
-          0x08,
-          0x16,
-          0x2b,
-          0x3d,
-          0x3d,
-          0x2b,
-          0x16,
-          0x08,
-          0x02,
-          0x00,
-      },
-      // The blue subpixel is centered inside the last sample (at 5/6 pixel), and is shifted.
-      {
-          0x00,
-          0x00,
-          0x01,
-          0x05,
-          0x10,
-          0x24,
-          0x39,
-          0x40,
-          0x33,
-          0x1c,
-          0x0b,
-          0x03,
-      },
-  };
-
-  for (int y = 0; y < height; ++y) {
-    uint16_t* dstP;
-    size_t dstPDelta;
-    if (doVert) {
-      dstP = dstImage + y;
-      dstPDelta = dstRB;
     } else {
-      dstP = SkTAddOffset<uint16_t>(dstImage, dstRB * y);
-      dstPDelta = sizeof(uint16_t);
+      SkASSERT(src.width() == (dst.fBounds.width() - 2) * 4);
+      SkASSERT(src.height() == dst.fBounds.height());
     }
 
-    const uint8_t* srcP = src.addr8(0, y);
+    const int sample_width = src.width();
+    const int height = src.height();
 
-    // TODO: this fir filter implementation is straight forward, but slow.
-    // It should be possible to make it much faster.
-    for (int sample_x = -4; sample_x < sample_width + 4; sample_x += 4) {
-      int fir[LCD_PER_PIXEL] = {0};
-      for (int sample_index = SkMax32(0, sample_x - 4), coeff_index = sample_index - (sample_x - 4);
-           sample_index < SkMin32(sample_x + 8, sample_width); ++sample_index, ++coeff_index) {
-        int sample_value = srcP[sample_index];
-        for (int subpxl_index = 0; subpxl_index < LCD_PER_PIXEL; ++subpxl_index) {
-          fir[subpxl_index] += coefficients[subpxl_index][coeff_index] * sample_value;
-        }
-      }
-      for (int subpxl_index = 0; subpxl_index < LCD_PER_PIXEL; ++subpxl_index) {
-        fir[subpxl_index] /= 0x100;
-        fir[subpxl_index] = SkMin32(fir[subpxl_index], 255);
-      }
+    uint16_t* dstImage = (uint16_t*)dst.fImage;
+    size_t dstRB = dst.fRowBytes;
+    // An N tap FIR is defined by
+    // out[n] = coeff[0]*x[n] + coeff[1]*x[n-1] + ... + coeff[N]*x[n-N]
+    // or
+    // out[n] = sum(i, 0, N, coeff[i]*x[n-i])
 
-      U8CPU r, g, b;
-      if (doBGR) {
-        r = fir[2];
-        g = fir[1];
-        b = fir[0];
+    // The strategy is to use one FIR (different coefficients) for each of r, g, and b.
+    // This means using every 4th FIR output value of each FIR and discarding the rest.
+    // The FIRs are aligned, and the coefficients reach 5 samples to each side of their 'center'.
+    // (For r and b this is technically incorrect, but the coeffs outside round to zero anyway.)
+
+    // These are in some fixed point repesentation.
+    // Adding up to more than one simulates ink spread.
+    // For implementation reasons, these should never add up to more than two.
+
+    // Coefficients determined by a gausian where 5 samples = 3 std deviations (0x110 'contrast').
+    // Calculated using tools/generate_fir_coeff.py
+    // With this one almost no fringing is ever seen, but it is imperceptibly blurry.
+    // The lcd smoothed text is almost imperceptibly different from gray,
+    // but is still sharper on small stems and small rounded corners than gray.
+    // This also seems to be about as wide as one can get and only have a three pixel kernel.
+    // TODO: calculate these at runtime so parameters can be adjusted (esp contrast).
+    static const unsigned int coefficients[LCD_PER_PIXEL][SAMPLES_PER_PIXEL * 3] = {
+        // The red subpixel is centered inside the first sample (at 1/6 pixel), and is shifted.
+        {
+            0x03,
+            0x0b,
+            0x1c,
+            0x33,
+            0x40,
+            0x39,
+            0x24,
+            0x10,
+            0x05,
+            0x01,
+            0x00,
+            0x00,
+        },
+        // The green subpixel is centered between two samples (at 1/2 pixel), so is symetric
+        {
+            0x00,
+            0x02,
+            0x08,
+            0x16,
+            0x2b,
+            0x3d,
+            0x3d,
+            0x2b,
+            0x16,
+            0x08,
+            0x02,
+            0x00,
+        },
+        // The blue subpixel is centered inside the last sample (at 5/6 pixel), and is shifted.
+        {
+            0x00,
+            0x00,
+            0x01,
+            0x05,
+            0x10,
+            0x24,
+            0x39,
+            0x40,
+            0x33,
+            0x1c,
+            0x0b,
+            0x03,
+        },
+    };
+
+    for (int y = 0; y < height; ++y) {
+      uint16_t* dstP;
+      size_t dstPDelta;
+      if (doVert) {
+        dstP = dstImage + y;
+        dstPDelta = dstRB;
       } else {
-        r = fir[0];
-        g = fir[1];
-        b = fir[2];
+        dstP = SkTAddOffset<uint16_t>(dstImage, dstRB * y);
+        dstPDelta = sizeof(uint16_t);
       }
-      if (maskPreBlend.isApplicable()) {
-        r = maskPreBlend.fR[r];
-        g = maskPreBlend.fG[g];
-        b = maskPreBlend.fB[b];
-      }
+
+      const uint8_t* srcP = src.addr8(0, y);
+
+      // TODO: this fir filter implementation is straight forward, but slow.
+      // It should be possible to make it much faster.
+      for (int sample_x = -4; sample_x < sample_width + 4; sample_x += 4) {
+        int fir[LCD_PER_PIXEL] = {0};
+        for (int sample_index = SkMax32(0, sample_x - 4),
+                 coeff_index = sample_index - (sample_x - 4);
+             sample_index < SkMin32(sample_x + 8, sample_width); ++sample_index, ++coeff_index) {
+          int sample_value = srcP[sample_index];
+          for (int subpxl_index = 0; subpxl_index < LCD_PER_PIXEL; ++subpxl_index) {
+            fir[subpxl_index] += coefficients[subpxl_index][coeff_index] * sample_value;
+          }
+        }
+        for (int subpxl_index = 0; subpxl_index < LCD_PER_PIXEL; ++subpxl_index) {
+          fir[subpxl_index] /= 0x100;
+          fir[subpxl_index] = SkMin32(fir[subpxl_index], 255);
+        }
+
+        U8CPU r, g, b;
+        if (doBGR) {
+          r = fir[2];
+          g = fir[1];
+          b = fir[0];
+        } else {
+          r = fir[0];
+          g = fir[1];
+          b = fir[2];
+        }
+        if (maskPreBlend.isApplicable()) {
+          r = maskPreBlend.fR[r];
+          g = maskPreBlend.fG[g];
+          b = maskPreBlend.fB[b];
+        }
 #if SK_SHOW_TEXT_BLIT_COVERAGE
-      r = SkMax32(r, 10);
-      g = SkMax32(g, 10);
-      b = SkMax32(b, 10);
+        r = SkMax32(r, 10);
+        g = SkMax32(g, 10);
+        b = SkMax32(b, 10);
 #endif
-      *dstP = SkPack888ToRGB16(r, g, b);
-      dstP = SkTAddOffset<uint16_t>(dstP, dstPDelta);
+        *dstP = SkPack888ToRGB16(r, g, b);
+        dstP = SkTAddOffset<uint16_t>(dstP, dstPDelta);
+      }
     }
-  }
 }
 
 static inline int convert_8_to_1(unsigned byte) {
@@ -859,6 +860,9 @@ SkAxisAlignment SkScalerContextRec::computeAxisAlignmentForHText() const {
   // * fPreSkewX (has no effect, but would on vertical text alignment).
   // In other words, making the text bigger, stretching it along the
   // horizontal axis, or fake italicizing it does not move the baseline.
+  if (!SkToBool(fFlags & SkScalerContext::kBaselineSnap_Flag)) {
+    return kNone_SkAxisAlignment;
+  }
 
   if (0 == fPost2x2[1][0]) {
     // The x axis is mapped onto the x axis.
@@ -1073,6 +1077,9 @@ void SkScalerContext::MakeRecAndEffects(
   }
   if (font.isLinearMetrics()) {
     flags |= SkScalerContext::kLinearMetrics_Flag;
+  }
+  if (font.isBaselineSnap()) {
+    flags |= SkScalerContext::kBaselineSnap_Flag;
   }
   rec->fFlags = SkToU16(flags);
 

@@ -17,6 +17,7 @@
     <ClCompile Include="skottie\src\effects\FillEffect.cpp" />
     <ClCompile Include="skottie\src\effects\GaussianBlurEffect.cpp" />
     <ClCompile Include="skottie\src\effects\GradientEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\HueSaturationEffect.cpp" />
     <ClCompile Include="skottie\src\effects\LevelsEffect.cpp" />
     <ClCompile Include="skottie\src\effects\LinearWipeEffect.cpp" />
     <ClCompile Include="skottie\src\effects\MotionBlurEffect.cpp" />
@@ -44,7 +45,6 @@
     <ClCompile Include="skottie\src\text\TextAdapter.cpp" />
     <ClCompile Include="skottie\src\text\TextAnimator.cpp" />
     <ClCompile Include="skottie\src\text\TextValue.cpp" />
-    <ClCompile Include="skottie\utils\SkottieUtils.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

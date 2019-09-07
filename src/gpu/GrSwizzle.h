@@ -16,11 +16,11 @@ class SkRasterPipeline;
 /** Represents a rgba swizzle. It can be converted either into a string or a eight bit int. */
 class GrSwizzle {
  public:
-  constexpr GrSwizzle() noexcept : GrSwizzle("rgba") {}
-  explicit constexpr GrSwizzle(const char c[4]) noexcept;
+  constexpr GrSwizzle() : GrSwizzle("rgba") {}
+  explicit constexpr GrSwizzle(const char c[4]);
 
-  constexpr GrSwizzle(const GrSwizzle&) noexcept;
-  constexpr GrSwizzle& operator=(const GrSwizzle& that) noexcept;
+  constexpr GrSwizzle(const GrSwizzle&);
+  constexpr GrSwizzle& operator=(const GrSwizzle& that);
 
   static constexpr GrSwizzle Concat(const GrSwizzle& a, const GrSwizzle& b);
 
@@ -64,14 +64,14 @@ class GrSwizzle {
   uint16_t fKey;
 };
 
-constexpr GrSwizzle::GrSwizzle(const char c[4]) noexcept
+constexpr GrSwizzle::GrSwizzle(const char c[4])
     : fSwiz{c[0], c[1], c[2], c[3], '\0'},
       fKey((CToI(c[0]) << 0) | (CToI(c[1]) << 4) | (CToI(c[2]) << 8) | (CToI(c[3]) << 12)) {}
 
-constexpr GrSwizzle::GrSwizzle(const GrSwizzle& that) noexcept
+constexpr GrSwizzle::GrSwizzle(const GrSwizzle& that)
     : fSwiz{that.fSwiz[0], that.fSwiz[1], that.fSwiz[2], that.fSwiz[3], '\0'}, fKey(that.fKey) {}
 
-constexpr GrSwizzle& GrSwizzle::operator=(const GrSwizzle& that) noexcept {
+constexpr GrSwizzle& GrSwizzle::operator=(const GrSwizzle& that) {
   fSwiz[0] = that.fSwiz[0];
   fSwiz[1] = that.fSwiz[1];
   fSwiz[2] = that.fSwiz[2];

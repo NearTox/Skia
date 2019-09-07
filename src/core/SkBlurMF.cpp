@@ -621,12 +621,13 @@ SkMaskFilterBase::FilterReturn SkBlurMaskFilterImpl::filterRectsToNine(
     return kUnimplemented_FilterReturn;
   }
 
-  smallR[0].set(rects[0].left(), rects[0].top(), rects[0].right() - dx, rects[0].bottom() - dy);
+  smallR[0].setLTRB(rects[0].left(), rects[0].top(), rects[0].right() - dx, rects[0].bottom() - dy);
   if (smallR[0].width() < 2 || smallR[0].height() < 2) {
     return kUnimplemented_FilterReturn;
   }
   if (2 == count) {
-    smallR[1].set(rects[1].left(), rects[1].top(), rects[1].right() - dx, rects[1].bottom() - dy);
+    smallR[1].setLTRB(
+        rects[1].left(), rects[1].top(), rects[1].right() - dx, rects[1].bottom() - dy);
     SkASSERT(!smallR[1].isEmpty());
   }
 
@@ -663,7 +664,7 @@ SkMaskFilterBase::FilterReturn SkBlurMaskFilterImpl::filterRectsToNine(
 void SkBlurMaskFilterImpl::computeFastBounds(const SkRect& src, SkRect* dst) const {
   SkScalar pad = 3.0f * fSigma;
 
-  dst->set(src.fLeft - pad, src.fTop - pad, src.fRight + pad, src.fBottom + pad);
+  dst->setLTRB(src.fLeft - pad, src.fTop - pad, src.fRight + pad, src.fBottom + pad);
 }
 
 sk_sp<SkFlattenable> SkBlurMaskFilterImpl::CreateProc(SkReadBuffer& buffer) {
@@ -673,7 +674,7 @@ sk_sp<SkFlattenable> SkBlurMaskFilterImpl::CreateProc(SkReadBuffer& buffer) {
   uint32_t flags = buffer.read32LE(0x3);  // historically we only recorded 2 bits
   bool respectCTM = !(flags & 1);         // historically we stored ignoreCTM in low bit
 
-  if (buffer.isVersionLT(SkReadBuffer::kRemoveOccluderFromBlurMaskFilter)) {
+  if (buffer.isVersionLT(SkPicturePriv::kRemoveOccluderFromBlurMaskFilter)) {
     SkRect unused;
     buffer.readRect(&unused);
   }
@@ -732,11 +733,8 @@ bool SkBlurMaskFilterImpl::directFilterMaskGPU(
 
   if (devRRect.isRect() || SkRRectPriv::IsCircle(devRRect)) {
     if (devRRect.isRect()) {
-      SkScalar pad = 3.0f * xformedSigma;
-      const SkRect dstCoverageRect = devRRect.rect().makeOutset(pad, pad);
-
       fp = GrRectBlurEffect::Make(
-          proxyProvider, *context->priv().caps()->shaderCaps(), dstCoverageRect, xformedSigma);
+          proxyProvider, *context->priv().caps()->shaderCaps(), devRRect.rect(), xformedSigma);
     } else {
       fp = GrCircleBlurFragmentProcessor::Make(proxyProvider, devRRect.rect(), xformedSigma);
     }
@@ -847,9 +845,9 @@ sk_sp<GrTextureProxy> SkBlurMaskFilterImpl::filterMaskGPU(
   // If we're doing a normal blur, we can clobber the pathTexture in the
   // gaussianBlur.  Otherwise, we need to save it for later compositing.
   bool isNormalBlur = (kNormal_SkBlurStyle == fBlurStyle);
-  sk_sp<GrRenderTargetContext> renderTargetContext(SkGpuBlurUtils::GaussianBlur(
+  auto renderTargetContext = SkGpuBlurUtils::GaussianBlur(
       context, srcProxy, SkIPoint::Make(0, 0), nullptr, clipRect, SkIRect::EmptyIRect(),
-      xformedSigma, xformedSigma, GrTextureDomain::kIgnore_Mode, kPremul_SkAlphaType));
+      xformedSigma, xformedSigma, GrTextureDomain::kIgnore_Mode, kPremul_SkAlphaType);
   if (!renderTargetContext) {
     return nullptr;
   }

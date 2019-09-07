@@ -38,17 +38,16 @@ sk_sp<sksg::RenderNode> EffectBuilder::attachFillEffect(
   if (!color_prop || !opacity_prop) {
     return nullptr;
   }
-  sk_sp<sksg::Color> color_node = fBuilder->attachColor(*color_prop, fScope, "v");
+  sk_sp<sksg::Color> color_node = fBuilder->attachColor(*color_prop, "v");
   if (!color_node) {
     return nullptr;
   }
 
-  fBuilder->bindProperty<ScalarValue>(
-      (*opacity_prop)["v"], fScope, [color_node](const ScalarValue& o) {
-        const auto c = color_node->getColor();
-        const auto a = sk_float_round2int_no_saturate(SkTPin(o, 0.0f, 1.0f) * 255);
-        color_node->setColor(SkColorSetA(c, a));
-      });
+  fBuilder->bindProperty<ScalarValue>((*opacity_prop)["v"], [color_node](const ScalarValue& o) {
+    const auto c = color_node->getColor();
+    const auto a = sk_float_round2int_no_saturate(SkTPin(o, 0.0f, 1.0f) * 255);
+    color_node->setColor(SkColorSetA(c, a));
+  });
 
   return sksg::ModeColorFilter::Make(std::move(layer), std::move(color_node), SkBlendMode::kSrcIn);
 }

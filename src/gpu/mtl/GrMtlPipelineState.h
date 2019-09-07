@@ -34,7 +34,7 @@ class GrMtlPipelineState {
   GrMtlPipelineState(
       GrMtlGpu* gpu, id<MTLRenderPipelineState> pipelineState, MTLPixelFormat pixelFormat,
       const GrGLSLBuiltinUniformHandles& builtinUniformHandles, const UniformInfoArray& uniforms,
-      uint32_t geometryUniformBufferSize, uint32_t fragmentUniformBufferSize, uint32_t numSamplers,
+      uint32_t uniformBufferSize, uint32_t numSamplers,
       std::unique_ptr<GrGLSLPrimitiveProcessor> geometryProcessor,
       std::unique_ptr<GrGLSLXferProcessor> xferPRocessor,
       std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fragmentProcessors,

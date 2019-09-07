@@ -23,7 +23,19 @@ class SkToJsonVisitor : public SkFieldVisitor {
   void visit(const char* name, float& f) override { fWriter.appendFloat(name, f); }
   void visit(const char* name, int& i) override { fWriter.appendS32(name, i); }
   void visit(const char* name, bool& b) override { fWriter.appendBool(name, b); }
-  void visit(const char* name, SkString& s) override { fWriter.appendString(name, s.c_str()); }
+  void visit(const char* name, SkString& s) override {
+    if (s.contains('\n')) {
+      SkTArray<SkString> lines;
+      SkStrSplit(s.c_str(), "\n", kStrict_SkStrSplitMode, &lines);
+      fWriter.beginArray(name);
+      for (const auto& line : lines) {
+        fWriter.appendString(line.c_str());
+      }
+      fWriter.endArray();
+    } else {
+      fWriter.appendString(name, s.c_str());
+    }
+  }
   void visit(const char* name, int& i, const EnumStringMapping* map, int count) override {
     fWriter.appendString(name, EnumToString(i, map, count));
   }
@@ -72,7 +84,23 @@ class SkFromJsonVisitor : public SkFieldVisitor {
   void visit(const char* name, float& f) override { TryParse(get(name), f); }
   void visit(const char* name, int& i) override { TryParse(get(name), i); }
   void visit(const char* name, bool& b) override { TryParse(get(name), b); }
-  void visit(const char* name, SkString& s) override { TryParse(get(name), s); }
+  void visit(const char* name, SkString& s) override {
+    if (const skjson::ArrayValue* lines = get(name)) {
+      s.reset();
+      bool first = true;
+      for (const skjson::StringValue* line : *lines) {
+        if (line) {
+          if (!first) {
+            s.append("\n");
+          }
+          s.append(line->begin(), line->size());
+          first = false;
+        }
+      }
+    } else {
+      TryParse(get(name), s);
+    }
+  }
   void visit(const char* name, int& i, const EnumStringMapping* map, int count) override {
     SkString str;
     if (TryParse(get(name), str)) {

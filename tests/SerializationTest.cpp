@@ -12,9 +12,8 @@
 #include "include/core/SkTextBlob.h"
 #include "include/core/SkTypeface.h"
 #include "include/effects/SkDashPathEffect.h"
-#include "include/effects/SkImageSource.h"
+#include "include/effects/SkImageFilters.h"
 #include "include/effects/SkTableColorFilter.h"
-#include "include/effects/SkXfermodeImageFilter.h"
 #include "include/private/SkFixed.h"
 #include "include/private/SkTemplates.h"
 #include "src/core/SkAnnotationKeys.h"
@@ -268,10 +267,10 @@ static void TestBitmapSerialization(
     const SkBitmap& validBitmap, const SkBitmap& invalidBitmap, bool shouldSucceed,
     skiatest::Reporter* reporter) {
   sk_sp<SkImage> validImage(SkImage::MakeFromBitmap(validBitmap));
-  sk_sp<SkImageFilter> validBitmapSource(SkImageSource::Make(std::move(validImage)));
+  sk_sp<SkImageFilter> validBitmapSource(SkImageFilters::Image(std::move(validImage)));
   sk_sp<SkImage> invalidImage(SkImage::MakeFromBitmap(invalidBitmap));
-  sk_sp<SkImageFilter> invalidBitmapSource(SkImageSource::Make(std::move(invalidImage)));
-  sk_sp<SkImageFilter> xfermodeImageFilter(SkXfermodeImageFilter::Make(
+  sk_sp<SkImageFilter> invalidBitmapSource(SkImageFilters::Image(std::move(invalidImage)));
+  sk_sp<SkImageFilter> xfermodeImageFilter(SkImageFilters::Xfermode(
       SkBlendMode::kSrcOver, std::move(invalidBitmapSource), std::move(validBitmapSource),
       nullptr));
 

@@ -11,7 +11,7 @@
 
 static char* end_chain(char*) { return nullptr; }
 
-static constexpr uint32_t first_allocated_block(uint32_t blockSize, uint32_t firstHeapAllocation) {
+static uint32_t first_allocated_block(uint32_t blockSize, uint32_t firstHeapAllocation) {
   return firstHeapAllocation > 0 ? firstHeapAllocation : blockSize > 0 ? blockSize : 1024;
 }
 

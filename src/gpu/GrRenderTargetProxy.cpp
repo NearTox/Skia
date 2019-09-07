@@ -7,10 +7,12 @@
 
 #include "src/gpu/GrRenderTargetProxy.h"
 
+#include "include/gpu/GrContext.h"
 #include "src/core/SkMathPriv.h"
 #include "src/gpu/GrCaps.h"
+#include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrGpuResourcePriv.h"
-#include "src/gpu/GrRenderTargetOpList.h"
+#include "src/gpu/GrOpsTask.h"
 #include "src/gpu/GrRenderTargetPriv.h"
 #include "src/gpu/GrResourceProvider.h"
 #include "src/gpu/GrSurfacePriv.h"
@@ -23,24 +25,24 @@ GrRenderTargetProxy::GrRenderTargetProxy(
     const GrCaps& caps, const GrBackendFormat& format, const GrSurfaceDesc& desc, int sampleCount,
     GrSurfaceOrigin origin, const GrSwizzle& textureSwizzle, const GrSwizzle& outputSwizzle,
     SkBackingFit fit, SkBudgeted budgeted, GrProtected isProtected,
-    GrInternalSurfaceFlags surfaceFlags)
+    GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator)
     : INHERITED(
           format, desc, GrRenderable::kYes, origin, textureSwizzle, fit, budgeted, isProtected,
-          surfaceFlags),
+          surfaceFlags, useAllocator),
       fSampleCnt(sampleCount),
       fWrapsVkSecondaryCB(WrapsVkSecondaryCB::kNo),
       fOutputSwizzle(outputSwizzle) {}
 
 // Lazy-callback version
 GrRenderTargetProxy::GrRenderTargetProxy(
-    LazyInstantiateCallback&& callback, LazyInstantiationType lazyType,
-    const GrBackendFormat& format, const GrSurfaceDesc& desc, int sampleCount,
-    GrSurfaceOrigin origin, const GrSwizzle& textureSwizzle, const GrSwizzle& outputSwizzle,
-    SkBackingFit fit, SkBudgeted budgeted, GrProtected isProtected,
-    GrInternalSurfaceFlags surfaceFlags, WrapsVkSecondaryCB wrapsVkSecondaryCB)
+    LazyInstantiateCallback&& callback, const GrBackendFormat& format, const GrSurfaceDesc& desc,
+    int sampleCount, GrSurfaceOrigin origin, const GrSwizzle& textureSwizzle,
+    const GrSwizzle& outputSwizzle, SkBackingFit fit, SkBudgeted budgeted, GrProtected isProtected,
+    GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator,
+    WrapsVkSecondaryCB wrapsVkSecondaryCB)
     : INHERITED(
-          std::move(callback), lazyType, format, desc, GrRenderable::kYes, origin, textureSwizzle,
-          fit, budgeted, isProtected, surfaceFlags),
+          std::move(callback), format, desc, GrRenderable::kYes, origin, textureSwizzle, fit,
+          budgeted, isProtected, surfaceFlags, useAllocator),
       fSampleCnt(sampleCount),
       fWrapsVkSecondaryCB(wrapsVkSecondaryCB),
       fOutputSwizzle(outputSwizzle) {}
@@ -48,18 +50,30 @@ GrRenderTargetProxy::GrRenderTargetProxy(
 // Wrapped version
 GrRenderTargetProxy::GrRenderTargetProxy(
     sk_sp<GrSurface> surf, GrSurfaceOrigin origin, const GrSwizzle& textureSwizzle,
-    const GrSwizzle& outputSwizzle, WrapsVkSecondaryCB wrapsVkSecondaryCB)
-    : INHERITED(std::move(surf), origin, textureSwizzle, SkBackingFit::kExact),
+    const GrSwizzle& outputSwizzle, UseAllocator useAllocator,
+    WrapsVkSecondaryCB wrapsVkSecondaryCB)
+    : INHERITED(std::move(surf), origin, textureSwizzle, SkBackingFit::kExact, useAllocator),
       fSampleCnt(fTarget->asRenderTarget()->numSamples()),
       fWrapsVkSecondaryCB(wrapsVkSecondaryCB),
-      fOutputSwizzle(outputSwizzle) {}
+      fOutputSwizzle(outputSwizzle) {
+  // The kRequiresManualMSAAResolve flag better not be set if we are not multisampled or if
+  // MSAA resolve should happen automatically.
+  //
+  // From the other side, we don't know enough about the wrapped surface to assert when
+  // kRequiresManualMSAAResolve *should* be set. e.g., The caller might be wrapping a backend
+  // texture as a render target at this point but we wouldn't know it.
+  SkASSERT(
+      !(this->numSamples() <= 1 ||
+        fTarget->getContext()->priv().caps()->msaaResolvesAutomatically()) ||
+      !this->requiresManualMSAAResolve());
+}
 
 int GrRenderTargetProxy::maxWindowRectangles(const GrCaps& caps) const {
   return this->glRTFBOIDIs0() ? 0 : caps.maxWindowRectangles();
 }
 
 bool GrRenderTargetProxy::instantiate(GrResourceProvider* resourceProvider) {
-  if (LazyState::kNot != this->lazyInstantiationState()) {
+  if (this->isLazy()) {
     return false;
   }
   if (!this->instantiateImpl(
@@ -127,7 +141,7 @@ void GrRenderTargetProxy::onValidateSurface(const GrSurface* surface) {
   GrInternalSurfaceFlags proxyFlags = fSurfaceFlags;
   GrInternalSurfaceFlags surfaceFlags = surface->surfacePriv().flags();
   SkASSERT(
-      (proxyFlags & GrInternalSurfaceFlags::kRenderTargetMask) ==
-      (surfaceFlags & GrInternalSurfaceFlags::kRenderTargetMask));
+      ((int)proxyFlags & kGrInternalRenderTargetFlagsMask) ==
+      ((int)surfaceFlags & kGrInternalRenderTargetFlagsMask));
 }
 #endif

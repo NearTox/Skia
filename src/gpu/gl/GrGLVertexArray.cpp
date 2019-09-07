@@ -51,7 +51,6 @@ static AttribLayout attrib_layout(GrVertexAttribType type) {
     case kUShort4_norm_GrVertexAttribType: return {true, 4, GR_GL_UNSIGNED_SHORT};
   }
   SK_ABORT("Unknown vertex attrib type");
-  return {false, 0, 0};
 };
 
 void GrGLAttribArrayState::set(

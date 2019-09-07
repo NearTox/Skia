@@ -224,7 +224,8 @@ void SkOverdrawCanvas::onDrawShadowRec(const SkPath& path, const SkDrawShadowRec
 }
 
 void SkOverdrawCanvas::onDrawEdgeAAQuad(
-    const SkRect& rect, const SkPoint clip[4], QuadAAFlags aa, SkColor color, SkBlendMode mode) {
+    const SkRect& rect, const SkPoint clip[4], QuadAAFlags aa, const SkColor4f& color,
+    SkBlendMode mode) {
   if (clip) {
     SkPath path;
     path.addPoly(clip, 4, true);

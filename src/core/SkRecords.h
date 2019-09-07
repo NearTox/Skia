@@ -246,7 +246,7 @@ RECORD(DrawAnnotation, 0,  // TODO: kDraw_Tag, skia:5548
        SkRect rect;
        SkString key; sk_sp<SkData> value);
 RECORD(DrawEdgeAAQuad, kDraw_Tag, SkRect rect; PODArray<SkPoint> clip; SkCanvas::QuadAAFlags aa;
-       SkColor color; SkBlendMode mode);
+       SkColor4f color; SkBlendMode mode);
 RECORD(DrawEdgeAAImageSet, kDraw_Tag | kHasImage_Tag | kHasPaint_Tag, Optional<SkPaint> paint;
        SkAutoTArray<SkCanvas::ImageSetEntry> set; int count; PODArray<SkPoint> dstClips;
        PODArray<SkMatrix> preViewMatrices; SkCanvas::SrcRectConstraint constraint);

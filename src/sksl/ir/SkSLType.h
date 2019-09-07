@@ -45,8 +45,10 @@ class Type : public Symbol {
     kMatrix_Kind,
     kOther_Kind,
     kSampler_Kind,
+    kSeparateSampler_Kind,
     kScalar_Kind,
     kStruct_Kind,
+    kTexture_Kind,
     kVector_Kind
   };
 
@@ -187,19 +189,35 @@ class Type : public Symbol {
     fName.fLength = fNameString.size();
   }
 
-  // Create a sampler type.
+  // Create a texture type.
   Type(
       const char* name, SpvDim_ dimensions, bool isDepth, bool isArrayed, bool isMultisampled,
       bool isSampled)
       : INHERITED(-1, kType_Kind, StringFragment()),
         fNameString(name),
-        fTypeKind(kSampler_Kind),
+        fTypeKind(kTexture_Kind),
         fNumberKind(kNonnumeric_NumberKind),
         fDimensions(dimensions),
         fIsDepth(isDepth),
         fIsArrayed(isArrayed),
         fIsMultisampled(isMultisampled),
         fIsSampled(isSampled) {
+    fName.fChars = fNameString.c_str();
+    fName.fLength = fNameString.size();
+  }
+
+  // Create a sampler type.
+  Type(const char* name, const Type& textureType)
+      : INHERITED(-1, kType_Kind, StringFragment()),
+        fNameString(name),
+        fTypeKind(kSampler_Kind),
+        fNumberKind(kNonnumeric_NumberKind),
+        fDimensions(textureType.dimensions()),
+        fIsDepth(textureType.isDepth()),
+        fIsArrayed(textureType.isArrayed()),
+        fIsMultisampled(textureType.isMultisampled()),
+        fIsSampled(textureType.isSampled()),
+        fTextureType(&textureType) {
     fName.fChars = fNameString.c_str();
     fName.fLength = fNameString.size();
   }
@@ -279,6 +297,15 @@ class Type : public Symbol {
   }
 
   /**
+   * For texturesamplers, returns the type of texture it samples (e.g., sampler2D has
+   * a texture type of texture2D).
+   */
+  const Type& textureType() const {
+    SkASSERT(fTextureType);
+    return *fTextureType;
+  }
+
+  /**
    * For nullable types, returns the base type, otherwise returns the type itself.
    */
   const Type& nonnullable() const {
@@ -324,27 +351,27 @@ class Type : public Symbol {
   }
 
   SpvDim_ dimensions() const {
-    SkASSERT(kSampler_Kind == fTypeKind);
+    SkASSERT(kSampler_Kind == fTypeKind || kTexture_Kind == fTypeKind);
     return fDimensions;
   }
 
   bool isDepth() const {
-    SkASSERT(kSampler_Kind == fTypeKind);
+    SkASSERT(kSampler_Kind == fTypeKind || kTexture_Kind == fTypeKind);
     return fIsDepth;
   }
 
   bool isArrayed() const {
-    SkASSERT(kSampler_Kind == fTypeKind);
+    SkASSERT(kSampler_Kind == fTypeKind || kTexture_Kind == fTypeKind);
     return fIsArrayed;
   }
 
   bool isMultisampled() const {
-    SkASSERT(kSampler_Kind == fTypeKind);
+    SkASSERT(kSampler_Kind == fTypeKind || kTexture_Kind == fTypeKind);
     return fIsMultisampled;
   }
 
   bool isSampled() const {
-    SkASSERT(kSampler_Kind == fTypeKind);
+    SkASSERT(kSampler_Kind == fTypeKind || kTexture_Kind == fTypeKind);
     return fIsSampled;
   }
 
@@ -380,6 +407,7 @@ class Type : public Symbol {
   bool fIsMultisampled = false;
   bool fIsSampled = false;
   bool fHighPrecision = false;
+  const Type* fTextureType = nullptr;
 };
 
 }  // namespace SkSL

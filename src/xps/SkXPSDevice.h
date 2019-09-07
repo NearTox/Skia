@@ -83,27 +83,30 @@ class SkXPSDevice : public SkClipStackDevice {
   void drawBitmapRect(
       const SkBitmap&, const SkRect* srcOrNull, const SkRect& dst, const SkPaint& paint,
       SkCanvas::SrcRectConstraint) override;
-  void drawGlyphRunList(const SkGlyphRunList& glyphRunList) override {
-    SK_ABORT("Needs an implementation");
-  }
+  void drawGlyphRunList(const SkGlyphRunList& glyphRunList) override;
   void drawVertices(
       const SkVertices*, const SkVertices::Bone bones[], int boneCount, SkBlendMode,
       const SkPaint&) override;
   void drawDevice(SkBaseDevice*, int x, int y, const SkPaint&) override;
 
  private:
-  class TypefaceUse : ::SkNoncopyable {
+  class TypefaceUse {
    public:
-    SkFontID typefaceId;
-    int ttcIndex;
-    SkStream* fontData;
-    IXpsOMFontResource* xpsFont;
-    SkBitSet* glyphsUsed;
-
-    explicit TypefaceUse();
-    ~TypefaceUse();
+    TypefaceUse(
+        SkFontID id, int index, std::unique_ptr<SkStream> data,
+        SkTScopedComPtr<IXpsOMFontResource> xps, size_t numGlyphs)
+        : typefaceId(id),
+          ttcIndex(index),
+          fontData(std::move(data)),
+          xpsFont(std::move(xps)),
+          glyphsUsed(numGlyphs) {}
+    const SkFontID typefaceId;
+    const int ttcIndex;
+    const std::unique_ptr<SkStream> fontData;
+    const SkTScopedComPtr<IXpsOMFontResource> xpsFont;
+    SkBitSet glyphsUsed;
   };
-  friend HRESULT subset_typeface(TypefaceUse* current);
+  friend HRESULT subset_typeface(const TypefaceUse& current);
 
   bool createCanvasForLayer();
 
@@ -168,10 +171,10 @@ class SkXPSDevice : public SkClipStackDevice {
   HRESULT createXpsQuad(
       const SkPoint (&points)[4], BOOL stroke, BOOL fill, IXpsOMGeometryFigure** xpsQuad);
 
-  HRESULT CreateTypefaceUse(const SkPaint& paint, TypefaceUse** fontResource);
+  HRESULT CreateTypefaceUse(const SkFont& font, TypefaceUse** fontResource);
 
   HRESULT AddGlyphs(
-      IXpsOMObjectFactory* xpsFactory, IXpsOMCanvas* canvas, TypefaceUse* font, LPCWSTR text,
+      IXpsOMObjectFactory* xpsFactory, IXpsOMCanvas* canvas, const TypefaceUse* font, LPCWSTR text,
       XPS_GLYPH_INDEX* xpsGlyphs, UINT32 xpsGlyphsLen, XPS_POINT* origin, FLOAT fontSize,
       XPS_STYLE_SIMULATION sims, const SkMatrix& transform, const SkPaint& paint);
 

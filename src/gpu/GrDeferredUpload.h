@@ -116,7 +116,7 @@ class GrTokenTracker {
  * actually write its pixel data into a texture.
  */
 using GrDeferredTextureUploadWritePixelsFn = std::function<bool(
-    GrTextureProxy*, int left, int top, int width, int height, GrColorType colorType,
+    GrTextureProxy*, int left, int top, int width, int height, GrColorType srcColorType,
     const void* buffer, size_t rowBytes)>;
 
 /**

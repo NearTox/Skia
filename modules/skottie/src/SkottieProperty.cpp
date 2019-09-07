@@ -8,10 +8,23 @@
 #include "modules/skottie/include/SkottieProperty.h"
 
 #include "modules/skottie/src/SkottieAdapter.h"
+#include "modules/skottie/src/text/TextAdapter.h"
 #include "modules/sksg/include/SkSGOpacityEffect.h"
 #include "modules/sksg/include/SkSGPaint.h"
 
 namespace skottie {
+
+bool TextPropertyValue::operator==(const TextPropertyValue& other) const {
+  return fTypeface == other.fTypeface && fText == other.fText && fTextSize == other.fTextSize &&
+         fStrokeWidth == other.fStrokeWidth && fLineHeight == other.fLineHeight &&
+         fHAlign == other.fHAlign && fVAlign == other.fVAlign && fBox == other.fBox &&
+         fFillColor == other.fFillColor && fStrokeColor == other.fStrokeColor &&
+         fHasFill == other.fHasFill && fHasStroke == other.fHasStroke;
+}
+
+bool TextPropertyValue::operator!=(const TextPropertyValue& other) const {
+  return !(*this == other);
+}
 
 bool TransformPropertyValue::operator==(const TransformPropertyValue& other) const {
   return this->fAnchorPoint == other.fAnchorPoint && this->fPosition == other.fPosition &&
@@ -50,6 +63,19 @@ void PropertyHandle<OpacityPropertyValue, sksg::OpacityEffect>::set(const Opacit
 }
 
 template <>
+PropertyHandle<TextPropertyValue, internal::TextAdapter>::~PropertyHandle() {}
+
+template <>
+TextPropertyValue PropertyHandle<TextPropertyValue, internal::TextAdapter>::get() const {
+  return fNode->getText();
+}
+
+template <>
+void PropertyHandle<TextPropertyValue, internal::TextAdapter>::set(const TextPropertyValue& t) {
+  fNode->setText(t);
+}
+
+template <>
 PropertyHandle<TransformPropertyValue, TransformAdapter2D>::~PropertyHandle() {}
 
 template <>
@@ -72,6 +98,8 @@ void PropertyHandle<TransformPropertyValue, TransformAdapter2D>::set(
 void PropertyObserver::onColorProperty(const char[], const LazyHandle<ColorPropertyHandle>&) {}
 
 void PropertyObserver::onOpacityProperty(const char[], const LazyHandle<OpacityPropertyHandle>&) {}
+
+void PropertyObserver::onTextProperty(const char[], const LazyHandle<TextPropertyHandle>&) {}
 
 void PropertyObserver::onTransformProperty(
     const char[], const LazyHandle<TransformPropertyHandle>&) {}

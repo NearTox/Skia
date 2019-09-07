@@ -21,8 +21,7 @@
 #include "include/core/SkString.h"
 #include "include/core/SkSurface.h"
 #include "include/core/SkTypes.h"
-#include "include/effects/SkImageSource.h"
-#include "include/effects/SkMagnifierImageFilter.h"
+#include "include/effects/SkImageFilters.h"
 #include "include/gpu/GrTypes.h"
 
 #include <utility>
@@ -94,10 +93,10 @@ class SimpleMagnificationGM : public skiagm::GM {
   }
 
   void draw(SkCanvas* canvas, sk_sp<SkImage> image, const SkIPoint& offset, int inset) {
-    sk_sp<SkImageFilter> imgSrc(SkImageSource::Make(std::move(image)));
+    sk_sp<SkImageFilter> imgSrc(SkImageFilters::Image(std::move(image)));
 
     SkRect srcRect = SkRect::MakeXYWH(1.0f, 1.0f, 2.0f, 2.0f);
-    sk_sp<SkImageFilter> magFilter(SkMagnifierImageFilter::Make(srcRect, inset, imgSrc));
+    sk_sp<SkImageFilter> magFilter(SkImageFilters::Magnifier(srcRect, inset, imgSrc));
 
     SkPaint paint;
     paint.setImageFilter(std::move(magFilter));

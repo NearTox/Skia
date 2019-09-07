@@ -65,7 +65,7 @@ class SK_API Compiler : public ErrorReporter {
   };
 
   struct FormatArg {
-    enum class Kind { kInput, kOutput, kUniform, kChildProcessor };
+    enum class Kind { kInput, kOutput, kCoordX, kCoordY, kUniform, kChildProcessor };
 
     FormatArg(Kind kind) : fKind(kind) {}
 

@@ -5,10 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "modules/particles/include/SkCurve.h"
-
 #include "include/utils/SkRandom.h"
-#include "modules/particles/include/SkParticleData.h"
+#include "modules/particles/include/SkCurve.h"
 #include "modules/particles/include/SkReflected.h"
 
 constexpr SkFieldVisitor::EnumStringMapping gCurveSegmentTypeMapping[] = {
@@ -61,26 +59,24 @@ void SkCurveSegment::visitFields(SkFieldVisitor* v) {
   if (fType == kCubic_SegmentType) {
     v->visit("B0", fMin[1]);
     v->visit("C0", fMin[2]);
-  }
-  if (fType != kConstant_SegmentType) {
-    v->visit("D0", fMin[3]);
-  }
-  if (fRanged) {
-    v->visit("A1", fMax[0]);
-    if (fType == kCubic_SegmentType) {
-      v->visit("B1", fMax[1]);
-      v->visit("C1", fMax[2]);
     }
     if (fType != kConstant_SegmentType) {
-      v->visit("D1", fMax[3]);
+      v->visit("D0", fMin[3]);
     }
-  }
+    if (fRanged) {
+      v->visit("A1", fMax[0]);
+      if (fType == kCubic_SegmentType) {
+        v->visit("B1", fMax[1]);
+        v->visit("C1", fMax[2]);
+      }
+      if (fType != kConstant_SegmentType) {
+        v->visit("D1", fMax[3]);
+      }
+    }
 }
 
-float SkCurve::eval(const SkParticleUpdateParams& params, SkParticleState& ps) const {
+float SkCurve::eval(float x, SkRandom& random) const {
   SkASSERT(fSegments.count() == fXValues.count() + 1);
-
-  float x = fInput.eval(params, ps);
 
   int i = 0;
   for (; i < fXValues.count(); ++i) {
@@ -99,13 +95,12 @@ float SkCurve::eval(const SkParticleUpdateParams& params, SkParticleState& ps) c
 
   // Always pull t and negate here, so that the stable generator behaves consistently, even if
   // our segments use an inconsistent feature-set.
-  float t = ps.fRandom.nextF();
-  bool negate = ps.fRandom.nextBool();
+  float t = random.nextF();
+  bool negate = random.nextBool();
   return fSegments[i].eval(segmentX, t, negate);
 }
 
 void SkCurve::visitFields(SkFieldVisitor* v) {
-  v->visit("Input", fInput);
   v->visit("XValues", fXValues);
   v->visit("Segments", fSegments);
 
@@ -134,26 +129,24 @@ void SkColorCurveSegment::visitFields(SkFieldVisitor* v) {
   if (fType == kCubic_SegmentType) {
     v->visit("B0", fMin[1]);
     v->visit("C0", fMin[2]);
-  }
-  if (fType != kConstant_SegmentType) {
-    v->visit("D0", fMin[3]);
-  }
-  if (fRanged) {
-    v->visit("A1", fMax[0]);
-    if (fType == kCubic_SegmentType) {
-      v->visit("B1", fMax[1]);
-      v->visit("C1", fMax[2]);
     }
     if (fType != kConstant_SegmentType) {
-      v->visit("D1", fMax[3]);
+      v->visit("D0", fMin[3]);
     }
-  }
+    if (fRanged) {
+      v->visit("A1", fMax[0]);
+      if (fType == kCubic_SegmentType) {
+        v->visit("B1", fMax[1]);
+        v->visit("C1", fMax[2]);
+      }
+      if (fType != kConstant_SegmentType) {
+        v->visit("D1", fMax[3]);
+      }
+    }
 }
 
-SkColor4f SkColorCurve::eval(const SkParticleUpdateParams& params, SkParticleState& ps) const {
+SkColor4f SkColorCurve::eval(float x, SkRandom& random) const {
   SkASSERT(fSegments.count() == fXValues.count() + 1);
-
-  float x = fInput.eval(params, ps);
 
   int i = 0;
   for (; i < fXValues.count(); ++i) {
@@ -169,11 +162,10 @@ SkColor4f SkColorCurve::eval(const SkParticleUpdateParams& params, SkParticleSta
     segmentX = rangeMin;
   }
   SkASSERT(0.0f <= segmentX && segmentX <= 1.0f);
-  return fSegments[i].eval(segmentX, ps.fRandom.nextF());
+  return fSegments[i].eval(segmentX, random.nextF());
 }
 
 void SkColorCurve::visitFields(SkFieldVisitor* v) {
-  v->visit("Input", fInput);
   v->visit("XValues", fXValues);
   v->visit("Segments", fSegments);
 

@@ -17,6 +17,7 @@ struct ArithmeticFPInputs {
   bool enforcePMColor;
 };
 
+// DEPRECATED: Use include/effects/SkImageFilters::Arithmetic
 class SK_API SkArithmeticImageFilter {
  public:
   static sk_sp<SkImageFilter> Make(

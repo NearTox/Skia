@@ -43,7 +43,7 @@ const AnimationBuilder::ImageAssetInfo* AnimationBuilder::loadImageAsset(
 }
 
 sk_sp<sksg::RenderNode> AnimationBuilder::attachImageAsset(
-    const skjson::ObjectValue& jimage, LayerInfo* layer_info, AnimatorScope* ascope) const {
+    const skjson::ObjectValue& jimage, LayerInfo* layer_info) const {
   const auto* asset_info = this->loadImageAsset(jimage);
   if (!asset_info) {
     return nullptr;
@@ -79,7 +79,7 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachImageAsset(
       float fTimeBias, fTimeScale;
     };
 
-    ascope->push_back(sk_make_sp<MultiFrameAnimator>(
+    fCurrentAnimatorScope->push_back(sk_make_sp<MultiFrameAnimator>(
         asset_info->fAsset, image_node, -layer_info->fInPoint, 1 / fFrameRate));
   }
 
@@ -92,7 +92,7 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachImageAsset(
 
   if (asset_size == image->bounds().size()) {
     // No resize needed.
-    return std::move(image_node);
+    return image_node;
   }
 
   return sksg::TransformEffect::Make(
@@ -102,12 +102,10 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachImageAsset(
 }
 
 sk_sp<sksg::RenderNode> AnimationBuilder::attachImageLayer(
-    const skjson::ObjectValue& jlayer, LayerInfo* layer_info, AnimatorScope* ascope) const {
-  return this->attachAssetRef(
-      jlayer, ascope,
-      [this, &layer_info](const skjson::ObjectValue& jimage, AnimatorScope* ascope) {
-        return this->attachImageAsset(jimage, layer_info, ascope);
-      });
+    const skjson::ObjectValue& jlayer, LayerInfo* layer_info) const {
+  return this->attachAssetRef(jlayer, [this, &layer_info](const skjson::ObjectValue& jimage) {
+    return this->attachImageAsset(jimage, layer_info);
+  });
 }
 
 }  // namespace internal

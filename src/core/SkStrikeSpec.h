@@ -109,7 +109,7 @@ class SkBulkGlyphMetricsAndImages {
   SkSpan<const SkGlyph*> glyphs(SkSpan<const SkPackedGlyphID> glyphIDs);
 
  private:
-  static constexpr int kTypicalGlyphCount = 20;
+  static constexpr int kTypicalGlyphCount = 64;
   SkAutoSTArray<kTypicalGlyphCount, const SkGlyph*> fGlyphs;
   SkExclusiveStrikePtr fStrike;
 };

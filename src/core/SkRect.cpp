@@ -9,26 +9,36 @@
 
 #include "include/private/SkMalloc.h"
 
-void SkIRect::join(int32_t left, int32_t top, int32_t right, int32_t bottom) noexcept {
+bool SkIRect::intersect(const SkIRect& a, const SkIRect& b) {
+  SkIRect tmp = {SkMax32(a.fLeft, b.fLeft), SkMax32(a.fTop, b.fTop), SkMin32(a.fRight, b.fRight),
+                 SkMin32(a.fBottom, b.fBottom)};
+  if (tmp.isEmpty()) {
+    return false;
+  }
+  *this = tmp;
+  return true;
+}
+
+void SkIRect::join(const SkIRect& r) {
   // do nothing if the params are empty
-  if (left >= right || top >= bottom) {
+  if (r.fLeft >= r.fRight || r.fTop >= r.fBottom) {
     return;
   }
 
   // if we are empty, just assign
   if (fLeft >= fRight || fTop >= fBottom) {
-    this->set(left, top, right, bottom);
+    *this = r;
   } else {
-    if (left < fLeft) fLeft = left;
-    if (top < fTop) fTop = top;
-    if (right > fRight) fRight = right;
-    if (bottom > fBottom) fBottom = bottom;
+    if (r.fLeft < fLeft) fLeft = r.fLeft;
+    if (r.fTop < fTop) fTop = r.fTop;
+    if (r.fRight > fRight) fRight = r.fRight;
+    if (r.fBottom > fBottom) fBottom = r.fBottom;
   }
 }
 
 /////////////////////////////////////////////////////////////////////////////
 
-void SkRect::toQuad(SkPoint quad[4]) const noexcept {
+void SkRect::toQuad(SkPoint quad[4]) const {
   SkASSERT(quad);
 
   quad[0].set(fLeft, fTop);
@@ -39,7 +49,7 @@ void SkRect::toQuad(SkPoint quad[4]) const noexcept {
 
 #include "include/private/SkNx.h"
 
-bool SkRect::setBoundsCheck(const SkPoint pts[], int count) noexcept {
+bool SkRect::setBoundsCheck(const SkPoint pts[], int count) {
   SkASSERT((pts && count > 0) || count == 0);
 
   if (count <= 0) {
@@ -70,7 +80,7 @@ bool SkRect::setBoundsCheck(const SkPoint pts[], int count) noexcept {
 
   bool all_finite = (accum * 0 == 0).allTrue();
   if (all_finite) {
-    this->set(
+    this->setLTRB(
         SkTMin(min[0], min[2]), SkTMin(min[1], min[3]), SkTMax(max[0], max[2]),
         SkTMax(max[1], max[3]));
   } else {
@@ -79,9 +89,9 @@ bool SkRect::setBoundsCheck(const SkPoint pts[], int count) noexcept {
   return all_finite;
 }
 
-void SkRect::setBoundsNoCheck(const SkPoint pts[], int count) noexcept {
+void SkRect::setBoundsNoCheck(const SkPoint pts[], int count) {
   if (!this->setBoundsCheck(pts, count)) {
-    this->set(SK_ScalarNaN, SK_ScalarNaN, SK_ScalarNaN, SK_ScalarNaN);
+    this->setLTRB(SK_ScalarNaN, SK_ScalarNaN, SK_ScalarNaN, SK_ScalarNaN);
   }
 }
 
@@ -95,36 +105,30 @@ void SkRect::setBoundsNoCheck(const SkPoint pts[], int count) noexcept {
   } while (0)
 // do the !(opposite) check so we return false if either arg is NaN
 
-bool SkRect::intersect(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) noexcept {
-  CHECK_INTERSECT(left, top, right, bottom, fLeft, fTop, fRight, fBottom);
+bool SkRect::intersect(const SkRect& r) {
+  CHECK_INTERSECT(r.fLeft, r.fTop, r.fRight, r.fBottom, fLeft, fTop, fRight, fBottom);
   this->setLTRB(L, T, R, B);
   return true;
 }
 
-bool SkRect::intersect(const SkRect& r) noexcept {
-  return this->intersect(r.fLeft, r.fTop, r.fRight, r.fBottom);
-}
-
-bool SkRect::intersect(const SkRect& a, const SkRect& b) noexcept {
+bool SkRect::intersect(const SkRect& a, const SkRect& b) {
   CHECK_INTERSECT(a.fLeft, a.fTop, a.fRight, a.fBottom, b.fLeft, b.fTop, b.fRight, b.fBottom);
   this->setLTRB(L, T, R, B);
   return true;
 }
 
-void SkRect::join(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) noexcept {
-  // do nothing if the params are empty
-  if (left >= right || top >= bottom) {
+void SkRect::join(const SkRect& r) {
+  if (r.isEmpty()) {
     return;
   }
 
-  // if we are empty, just assign
-  if (fLeft >= fRight || fTop >= fBottom) {
-    this->set(left, top, right, bottom);
+  if (this->isEmpty()) {
+    *this = r;
   } else {
-    fLeft = SkMinScalar(fLeft, left);
-    fTop = SkMinScalar(fTop, top);
-    fRight = SkMaxScalar(fRight, right);
-    fBottom = SkMaxScalar(fBottom, bottom);
+    fLeft = SkMinScalar(fLeft, r.fLeft);
+    fTop = SkMinScalar(fTop, r.fTop);
+    fRight = SkMaxScalar(fRight, r.fRight);
+    fBottom = SkMaxScalar(fBottom, r.fBottom);
   }
 }
 

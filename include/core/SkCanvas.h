@@ -594,7 +594,7 @@ class SK_API SkCanvas {
 
         @return  empty SaveLayerRec
     */
-    constexpr SaveLayerRec() noexcept = default;
+    SaveLayerRec() {}
 
     /** Sets fBounds, fPaint, and fSaveLayerFlags; sets fBackdrop to nullptr.
 
@@ -603,8 +603,7 @@ class SK_API SkCanvas {
         @param saveLayerFlags  SaveLayerRec options to modify layer
         @return                SaveLayerRec with empty fBackdrop
     */
-    SaveLayerRec(
-        const SkRect* bounds, const SkPaint* paint, SaveLayerFlags saveLayerFlags = 0) noexcept
+    SaveLayerRec(const SkRect* bounds, const SkPaint* paint, SaveLayerFlags saveLayerFlags = 0)
         : fBounds(bounds), fPaint(paint), fSaveLayerFlags(saveLayerFlags) {}
 
     /** Sets fBounds, fPaint, fBackdrop, and fSaveLayerFlags.
@@ -621,7 +620,7 @@ class SK_API SkCanvas {
     */
     SaveLayerRec(
         const SkRect* bounds, const SkPaint* paint, const SkImageFilter* backdrop,
-        SaveLayerFlags saveLayerFlags) noexcept
+        SaveLayerFlags saveLayerFlags)
         : fBounds(bounds), fPaint(paint), fBackdrop(backdrop), fSaveLayerFlags(saveLayerFlags) {}
 
     /** Experimental. Not ready for general use.
@@ -644,7 +643,7 @@ class SK_API SkCanvas {
     */
     SaveLayerRec(
         const SkRect* bounds, const SkPaint* paint, const SkImageFilter* backdrop,
-        const SkImage* clipMask, const SkMatrix* clipMatrix, SaveLayerFlags saveLayerFlags) noexcept
+        const SkImage* clipMask, const SkMatrix* clipMatrix, SaveLayerFlags saveLayerFlags)
         : fBounds(bounds),
           fPaint(paint),
           fBackdrop(backdrop),
@@ -924,7 +923,7 @@ class SK_API SkCanvas {
   /** Experimental. For testing only.
       Set to simplify clip stack using PathOps.
   */
-  void setAllowSimplifyClip(bool allow) noexcept { fAllowSimplifyClip = allow; }
+  void setAllowSimplifyClip(bool allow) { fAllowSimplifyClip = allow; }
 
   /** Replaces clip with the intersection or difference of clip and SkRegion deviceRgn.
       Resulting clip is aliased; pixels are fully contained by the clip.
@@ -1845,8 +1844,14 @@ class SK_API SkCanvas {
    * This API only draws solid color, filled rectangles so it does not accept a full SkPaint.
    */
   void experimental_DrawEdgeAAQuad(
-      const SkRect& rect, const SkPoint clip[4], QuadAAFlags aaFlags, SkColor color,
+      const SkRect& rect, const SkPoint clip[4], QuadAAFlags aaFlags, const SkColor4f& color,
       SkBlendMode mode);
+  void experimental_DrawEdgeAAQuad(
+      const SkRect& rect, const SkPoint clip[4], QuadAAFlags aaFlags, SkColor color,
+      SkBlendMode mode) {
+    this->experimental_DrawEdgeAAQuad(rect, clip, aaFlags, SkColor4f::FromColor(color), mode);
+  }
+
   /**
    * This is an bulk variant of experimental_DrawEdgeAAQuad() that renders 'cnt' textured quads.
    * For each entry, 'fDstRect' is rendered with its clip (determined by entry's 'fHasClip' and
@@ -2190,6 +2195,8 @@ class SK_API SkCanvas {
       Optional cullRect is a conservative bounds of all transformed sprites.
       If cullRect is outside of clip, canvas can skip drawing.
 
+      If atlas is nullptr, this draws nothing.
+
       @param atlas     SkImage containing sprites
       @param xform     SkRSXform mappings for sprites in atlas
       @param tex       SkRect locations of sprites in atlas
@@ -2467,7 +2474,7 @@ class SK_API SkCanvas {
       const SkPicture* picture, const SkMatrix* matrix, const SkPaint* paint);
 
   virtual void onDrawEdgeAAQuad(
-      const SkRect& rect, const SkPoint clip[4], QuadAAFlags aaFlags, SkColor color,
+      const SkRect& rect, const SkPoint clip[4], QuadAAFlags aaFlags, const SkColor4f& color,
       SkBlendMode mode);
   virtual void onDrawEdgeAAImageSet(
       const ImageSetEntry imageSet[], int count, const SkPoint dstClips[],
@@ -2506,7 +2513,7 @@ class SK_API SkCanvas {
     ~LayerIter();
 
     /** Return true if the iterator is done */
-    bool done() const noexcept { return fDone; }
+    bool done() const { return fDone; }
     /** Cycle to the next device */
     void next();
 
@@ -2576,8 +2583,8 @@ class SK_API SkCanvas {
   std::unique_ptr<SkRasterHandleAllocator> fAllocator;
 
   SkSurface_Base* fSurfaceBase;
-  SkSurface_Base* getSurfaceBase() const noexcept { return fSurfaceBase; }
-  void setSurfaceBase(SkSurface_Base* sb) noexcept { fSurfaceBase = sb; }
+  SkSurface_Base* getSurfaceBase() const { return fSurfaceBase; }
+  void setSurfaceBase(SkSurface_Base* sb) { fSurfaceBase = sb; }
   friend class SkSurface_Base;
   friend class SkSurface_Gpu;
 
@@ -2590,7 +2597,7 @@ class SK_API SkCanvas {
   friend class SkAndroidFrameworkUtils;
   friend class SkCanvasPriv;  // needs kDontClipToLayer_PrivateSaveLayerFlag
   friend class SkDrawIter;    // needs setupDrawForLayerDevice()
-  friend class AutoDrawLooper;
+  friend class AutoLayerForImageFilter;
   friend class DebugCanvas;       // needs experimental fAllowSimplifyClip
   friend class SkSurface_Raster;  // needs getDevice()
   friend class SkNoDrawCanvas;    // needs resetForNextPicture()

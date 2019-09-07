@@ -31,7 +31,7 @@ class SkTArray {
   /**
    * Creates an empty array with no initial storage
    */
-  SkTArray() noexcept { this->init(); }
+  SkTArray() { this->init(); }
 
   /**
    * Creates an empty array that will preallocate space for reserveCount
@@ -47,7 +47,7 @@ class SkTArray {
     this->copy(that.fItemArray);
   }
 
-  SkTArray(SkTArray&& that) noexcept {
+  SkTArray(SkTArray&& that) {
     // TODO: If 'that' owns its memory why don't we just steal the pointer?
     this->init(that.fCount);
     that.move(fMemArray);
@@ -77,7 +77,7 @@ class SkTArray {
     this->copy(that.fItemArray);
     return *this;
   }
-  SkTArray& operator=(SkTArray&& that) noexcept {
+  SkTArray& operator=(SkTArray&& that) {
     if (this == &that) {
       return *this;
     }
@@ -169,12 +169,12 @@ class SkTArray {
   /**
    * Number of elements in the array.
    */
-  int count() const noexcept { return fCount; }
+  int count() const { return fCount; }
 
   /**
    * Is the array empty.
    */
-  bool empty() const noexcept { return !fCount; }
+  bool empty() const { return !fCount; }
 
   /**
    * Adds 1 new default-initialized T value and returns it by reference. Note
@@ -321,13 +321,13 @@ class SkTArray {
     }
   }
 
-  T* begin() noexcept { return fItemArray; }
+  T* begin() { return fItemArray; }
   const T* begin() const { return fItemArray; }
   T* end() { return fItemArray ? fItemArray + fCount : nullptr; }
   const T* end() const { return fItemArray ? fItemArray + fCount : nullptr; }
   T* data() { return fItemArray; }
-  const T* data() const noexcept { return fItemArray; }
-  size_t size() const noexcept { return (size_t)fCount; }
+  const T* data() const { return fItemArray; }
+  size_t size() const { return (size_t)fCount; }
   void resize(size_t count) { this->resize_back((int)count); }
 
   /**
@@ -374,7 +374,7 @@ class SkTArray {
   /**
    * equivalent to operator[](count()-1-i)
    */
-  T& fromBack(int i) noexcept {
+  T& fromBack(int i) {
     SkASSERT(i >= 0);
     SkASSERT(i < fCount);
     return fItemArray[fCount - i - 1];
@@ -448,7 +448,7 @@ class SkTArray {
   }
 
  private:
-  void init(int count = 0, int reserveCount = 0) noexcept {
+  void init(int count = 0, int reserveCount = 0) {
     SkASSERT(count >= 0);
     SkASSERT(reserveCount >= 0);
     fCount = count;
@@ -465,7 +465,7 @@ class SkTArray {
     }
   }
 
-  void initWithPreallocatedStorage(int count, void* preallocStorage, int preallocCount) noexcept {
+  void initWithPreallocatedStorage(int count, void* preallocStorage, int preallocCount) {
     SkASSERT(count >= 0);
     SkASSERT(preallocCount > 0);
     SkASSERT(preallocStorage);
@@ -498,26 +498,24 @@ class SkTArray {
 
   template <bool E = MEM_MOVE>
   SK_WHEN(E, void)
-  move(int dst, int src) noexcept {
+  move(int dst, int src) {
     memcpy(&fItemArray[dst], &fItemArray[src], sizeof(T));
   }
   template <bool E = MEM_MOVE>
   SK_WHEN(E, void)
-  move(void* dst) noexcept {
+  move(void* dst) {
     sk_careful_memcpy(dst, fMemArray, fCount * sizeof(T));
   }
 
   template <bool E = MEM_MOVE>
   SK_WHEN(!E, void)
-  move(int dst, int src) noexcept {
-    static_assert(std::is_nothrow_move_constructible_v<T>);
+  move(int dst, int src) {
     new (&fItemArray[dst]) T(std::move(fItemArray[src]));
     fItemArray[src].~T();
   }
   template <bool E = MEM_MOVE>
   SK_WHEN(!E, void)
-  move(void* dst) noexcept {
-    static_assert(std::is_nothrow_move_constructible_v<T>);
+  move(void* dst) {
     for (int i = 0; i < fCount; ++i) {
       new (static_cast<char*>(dst) + sizeof(T) * i) T(std::move(fItemArray[i]));
       fItemArray[i].~T();
@@ -601,15 +599,15 @@ class SkSTArray : public SkTArray<T, MEM_MOVE> {
   typedef SkTArray<T, MEM_MOVE> INHERITED;
 
  public:
-  SkSTArray() noexcept : INHERITED(&fStorage) {}
+  SkSTArray() : INHERITED(&fStorage) {}
 
   SkSTArray(const SkSTArray& array) : INHERITED(array, &fStorage) {}
 
-  SkSTArray(SkSTArray&& array) noexcept : INHERITED(std::move(array), &fStorage) {}
+  SkSTArray(SkSTArray&& array) : INHERITED(std::move(array), &fStorage) {}
 
   explicit SkSTArray(const INHERITED& array) : INHERITED(array, &fStorage) {}
 
-  explicit SkSTArray(INHERITED&& array) noexcept : INHERITED(std::move(array), &fStorage) {}
+  explicit SkSTArray(INHERITED&& array) : INHERITED(std::move(array), &fStorage) {}
 
   explicit SkSTArray(int reserveCount) : INHERITED(reserveCount) {}
 
@@ -620,7 +618,7 @@ class SkSTArray : public SkTArray<T, MEM_MOVE> {
     return *this;
   }
 
-  SkSTArray& operator=(SkSTArray&& array) noexcept {
+  SkSTArray& operator=(SkSTArray&& array) {
     INHERITED::operator=(std::move(array));
     return *this;
   }
@@ -630,7 +628,7 @@ class SkSTArray : public SkTArray<T, MEM_MOVE> {
     return *this;
   }
 
-  SkSTArray& operator=(INHERITED&& array) noexcept {
+  SkSTArray& operator=(INHERITED&& array) {
     INHERITED::operator=(std::move(array));
     return *this;
   }

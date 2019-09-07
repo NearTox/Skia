@@ -72,7 +72,7 @@ class GrVkDescriptorSetManager {
 
    private:
     enum {
-      kUniformDescPerSet = 2,
+      kUniformDescPerSet = 1,
       kMaxDescriptors = 1024,
       kStartNumDescriptors = 16,  // must be less than kMaxUniformDescriptors
     };

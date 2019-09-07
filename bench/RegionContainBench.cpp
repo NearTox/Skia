@@ -42,7 +42,7 @@ class RegionContainBench : public Benchmark {
       fA.op(randrect(rand, i), SkRegion::kXOR_Op);
     }
 
-    fB.setRect(0, 0, H, W);
+    fB.setRect({0, 0, H, W});
   }
 
   bool isSuitableFor(Backend backend) override { return backend == kNonRendering_Backend; }

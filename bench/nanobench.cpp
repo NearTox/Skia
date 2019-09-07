@@ -466,9 +466,9 @@ static void create_config(const SkCommandLineConfig* config, SkTArray<Config>* c
 
     GrContextFactory factory(grContextOpts);
     if (const GrContext* ctx = factory.get(ctxType, ctxOverrides)) {
-      GrPixelConfig grPixConfig = SkColorType2GrPixelConfig(colorType);
+      GrBackendFormat format = ctx->defaultBackendFormat(colorType, GrRenderable::kYes);
       int supportedSampleCount =
-          ctx->priv().caps()->getRenderTargetSampleCount(sampleCount, grPixConfig);
+          ctx->priv().caps()->getRenderTargetSampleCount(sampleCount, format);
       if (sampleCount != supportedSampleCount) {
         SkDebugf(
             "Configuration '%s' sample count %d is not a supported sample count.\n",
@@ -746,12 +746,12 @@ class BenchmarkStream {
     }
 
     while (fGMs) {
-      std::unique_ptr<skiagm::GM> gm(fGMs->get()(nullptr));
+      std::unique_ptr<skiagm::GM> gm = fGMs->get()();
       fGMs = fGMs->next();
       if (gm->runAsBench()) {
         fSourceType = "gm";
         fBenchType = "micro";
-        return new GMBench(gm.release());
+        return new GMBench(std::move(gm));
       }
     }
 

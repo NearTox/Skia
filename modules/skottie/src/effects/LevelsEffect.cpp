@@ -71,7 +71,7 @@ class LevelsEffectAdapter final : public SkNVRefCnt<LevelsEffectAdapter> {
 
     auto in_0 = SkTPin(fInBlack, 0.0f, 1.0f), in_1 = SkTPin(fInWhite, 0.0f, 1.0f),
          out_0 = SkTPin(fOutBlack, 0.0f, 1.0f), out_1 = SkTPin(fOutWhite, 0.0f, 1.0f),
-         g = 1 / SkTMax(fGamma, 0.0f);
+         g = sk_ieee_float_divide(1, std::max(fGamma, 0.0f));
 
     float clip[] = {0, 1};
     const auto kLottieDoClip = 1;
@@ -146,29 +146,29 @@ sk_sp<sksg::RenderNode> EffectBuilder::attachLevelsEffect(
   auto adapter = sk_make_sp<LevelsEffectAdapter>(std::move(layer));
 
   fBuilder->bindProperty<ScalarValue>(
-      GetPropValue(jprops, kChannel_Index), fScope,
+      GetPropValue(jprops, kChannel_Index),
       [adapter](const ScalarValue& channel) { adapter->setChannel(channel); });
   fBuilder->bindProperty<ScalarValue>(
-      GetPropValue(jprops, kInputBlack_Index), fScope,
+      GetPropValue(jprops, kInputBlack_Index),
       [adapter](const ScalarValue& ib) { adapter->setInBlack(ib); });
   fBuilder->bindProperty<ScalarValue>(
-      GetPropValue(jprops, kInputWhite_Index), fScope,
+      GetPropValue(jprops, kInputWhite_Index),
       [adapter](const ScalarValue& iw) { adapter->setInWhite(iw); });
   fBuilder->bindProperty<ScalarValue>(
-      GetPropValue(jprops, kOutputBlack_Index), fScope,
+      GetPropValue(jprops, kOutputBlack_Index),
       [adapter](const ScalarValue& ob) { adapter->setOutBlack(ob); });
   fBuilder->bindProperty<ScalarValue>(
-      GetPropValue(jprops, kOutputWhite_Index), fScope,
+      GetPropValue(jprops, kOutputWhite_Index),
       [adapter](const ScalarValue& ow) { adapter->setOutWhite(ow); });
   fBuilder->bindProperty<ScalarValue>(
-      GetPropValue(jprops, kGamma_Index), fScope,
+      GetPropValue(jprops, kGamma_Index),
       [adapter](const ScalarValue& g) { adapter->setGamma(g); });
 
   fBuilder->bindProperty<ScalarValue>(
-      GetPropValue(jprops, kClipToOutBlack_Index), fScope,
+      GetPropValue(jprops, kClipToOutBlack_Index),
       [adapter](const ScalarValue& cb) { adapter->setClipBlack(cb); });
   fBuilder->bindProperty<ScalarValue>(
-      GetPropValue(jprops, kClipToOutWhite_Index), fScope,
+      GetPropValue(jprops, kClipToOutWhite_Index),
       [adapter](const ScalarValue& cw) { adapter->setClipWhite(cw); });
 
   return adapter->root();

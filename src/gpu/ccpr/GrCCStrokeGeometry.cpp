@@ -57,7 +57,6 @@ static GrCCStrokeGeometry::Verb join_verb_from_join(SkPaint::Join join) {
     case SkPaint::kRound_Join: return Verb::kRoundJoin;
   }
   SK_ABORT("Invalid SkPaint::Join.");
-  return Verb::kBevelJoin;
 }
 
 void GrCCStrokeGeometry::beginPath(

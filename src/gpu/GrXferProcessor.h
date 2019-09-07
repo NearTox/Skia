@@ -8,8 +8,8 @@
 #ifndef GrXferProcessor_DEFINED
 #define GrXferProcessor_DEFINED
 
-#include "include/gpu/GrBlend.h"
 #include "include/gpu/GrTypes.h"
+#include "src/gpu/GrBlend.h"
 #include "src/gpu/GrNonAtomicRef.h"
 #include "src/gpu/GrProcessor.h"
 #include "src/gpu/GrProcessorAnalysis.h"
@@ -59,7 +59,7 @@ class GrXferProcessor : public GrProcessor, public GrNonAtomicRef<GrXferProcesso
 
     DstProxy(const DstProxy& other) { *this = other; }
 
-    DstProxy(sk_sp<GrTextureProxy> proxy, const SkIPoint& offset)noexcept : fProxy(std::move(proxy)) {
+    DstProxy(sk_sp<GrTextureProxy> proxy, const SkIPoint& offset) : fProxy(std::move(proxy)) {
       if (fProxy) {
         fOffset = offset;
       } else {
@@ -73,19 +73,20 @@ class GrXferProcessor : public GrProcessor, public GrNonAtomicRef<GrXferProcesso
       return *this;
     }
 
-    bool operator==(const DstProxy& that) const noexcept {
+    bool operator==(const DstProxy& that) const {
       return fProxy == that.fProxy && fOffset == that.fOffset;
     }
-    bool operator!=(const DstProxy& that) const noexcept { return !(*this == that); }
+    bool operator!=(const DstProxy& that) const { return !(*this == that); }
 
-    const SkIPoint& offset() const noexcept { return fOffset; }
+    const SkIPoint& offset() const { return fOffset; }
 
     void setOffset(const SkIPoint& offset) { fOffset = offset; }
-    void setOffset(int ox, int oy) noexcept { fOffset.set(ox, oy); }
+    void setOffset(int ox, int oy) { fOffset.set(ox, oy); }
 
-    GrTextureProxy* proxy() const noexcept { return fProxy.get(); }
+    GrTextureProxy* proxy() const { return fProxy.get(); }
+    sk_sp<GrTextureProxy> refProxy() const { return fProxy; }
 
-    void setProxy(sk_sp<GrTextureProxy> proxy) noexcept {
+    void setProxy(sk_sp<GrTextureProxy> proxy) {
       fProxy = std::move(proxy);
       if (!fProxy) {
         fOffset = {0, 0};

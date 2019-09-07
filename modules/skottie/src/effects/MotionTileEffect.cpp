@@ -175,32 +175,31 @@ sk_sp<sksg::RenderNode> EffectBuilder::attachMotionTileEffect(
   auto tiler = sk_make_sp<TileRenderNode>(fLayerSize, std::move(layer));
 
   fBuilder->bindProperty<VectorValue>(
-      GetPropValue(jprops, kTileCenter_Index), fScope, [tiler](const VectorValue& tc) {
+      GetPropValue(jprops, kTileCenter_Index), [tiler](const VectorValue& tc) {
         tiler->setTileCenter(ValueTraits<VectorValue>::As<SkPoint>(tc));
       });
   fBuilder->bindProperty<ScalarValue>(
-      GetPropValue(jprops, kTileWidth_Index), fScope,
+      GetPropValue(jprops, kTileWidth_Index),
       [tiler](const ScalarValue& tw) { tiler->setTileWidth(tw); });
   fBuilder->bindProperty<ScalarValue>(
-      GetPropValue(jprops, kTileHeight_Index), fScope,
+      GetPropValue(jprops, kTileHeight_Index),
       [tiler](const ScalarValue& th) { tiler->setTileHeight(th); });
   fBuilder->bindProperty<ScalarValue>(
-      GetPropValue(jprops, kOutputWidth_Index), fScope,
+      GetPropValue(jprops, kOutputWidth_Index),
       [tiler](const ScalarValue& ow) { tiler->setOutputWidth(ow); });
   fBuilder->bindProperty<ScalarValue>(
-      GetPropValue(jprops, kOutputHeight_Index), fScope,
+      GetPropValue(jprops, kOutputHeight_Index),
       [tiler](const ScalarValue& oh) { tiler->setOutputHeight(oh); });
   fBuilder->bindProperty<ScalarValue>(
-      GetPropValue(jprops, kMirrorEdges_Index), fScope,
+      GetPropValue(jprops, kMirrorEdges_Index),
       [tiler](const ScalarValue& me) { tiler->setMirrorEdges(SkScalarRoundToInt(me)); });
   fBuilder->bindProperty<ScalarValue>(
-      GetPropValue(jprops, kPhase_Index), fScope,
-      [tiler](const ScalarValue& ph) { tiler->setPhase(ph); });
+      GetPropValue(jprops, kPhase_Index), [tiler](const ScalarValue& ph) { tiler->setPhase(ph); });
   fBuilder->bindProperty<ScalarValue>(
-      GetPropValue(jprops, kHorizontalPhaseShift_Index), fScope,
+      GetPropValue(jprops, kHorizontalPhaseShift_Index),
       [tiler](const ScalarValue& hp) { tiler->setHorizontalPhase(SkScalarRoundToInt(hp)); });
 
-  return std::move(tiler);
+  return tiler;
 }
 
 }  // namespace internal

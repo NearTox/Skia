@@ -59,8 +59,6 @@ class GrResourceCache {
   GrResourceCache(const GrCaps*, GrSingleOwner* owner, uint32_t contextUniqueID);
   ~GrResourceCache();
 
-  // Default maximum number of budgeted resources in the cache.
-  static const int kDefaultMaxCount = 2 * (1 << 12);
   // Default maximum number of bytes of gpu memory of budgeted resources in the cache.
   static const size_t kDefaultMaxSize = 96 * (1 << 20);
 
@@ -71,8 +69,8 @@ class GrResourceCache {
   /** Unique ID of the owning GrContext. */
   uint32_t contextUniqueID() const { return fContextUniqueID; }
 
-  /** Sets the cache limits in terms of number of resources and max gpu memory byte size. */
-  void setLimits(int count, size_t bytes);
+  /** Sets the max gpu memory byte size of the cache. */
+  void setLimit(size_t bytes);
 
   /**
    * Returns the number of resources.
@@ -98,11 +96,6 @@ class GrResourceCache {
    * Returns the number of bytes consumed by budgeted resources.
    */
   size_t getBudgetedResourceBytes() const { return fBudgetedBytes; }
-
-  /**
-   * Returns the cached resources count budget.
-   */
-  int getMaxResourceCount() const { return fMaxCount; }
 
   /**
    * Returns the number of bytes consumed by cached resources.
@@ -173,7 +166,7 @@ class GrResourceCache {
   /** Purge all resources not used since the passed in time. */
   void purgeResourcesNotUsedSince(GrStdSteadyClock::time_point);
 
-  bool overBudget() const { return fBudgetedBytes > fMaxBytes || fBudgetedCount > fMaxCount; }
+  bool overBudget() const { return fBudgetedBytes > fMaxBytes; }
 
   /**
    * Purge unlocked resources from the cache until the the provided byte count has been reached
@@ -269,9 +262,7 @@ class GrResourceCache {
   void addToNonpurgeableArray(GrGpuResource*);
   void removeFromNonpurgeableArray(GrGpuResource*);
 
-  bool wouldFit(size_t bytes) {
-    return fBudgetedBytes + bytes <= fMaxBytes && fBudgetedCount + 1 <= fMaxCount;
-  }
+  bool wouldFit(size_t bytes) const { return fBudgetedBytes + bytes <= fMaxBytes; }
 
   uint32_t getNextTimestamp();
 
@@ -349,7 +340,6 @@ class GrResourceCache {
   UniqueHash fUniqueHash;
 
   // our budget, used in purgeAsNeeded()
-  int fMaxCount = kDefaultMaxCount;
   size_t fMaxBytes = kDefaultMaxSize;
 
 #if GR_CACHE_STATS

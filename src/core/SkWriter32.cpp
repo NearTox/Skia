@@ -22,7 +22,7 @@ void SkWriter32::writeMatrix(const SkMatrix& matrix) {
  *  Strings are stored as: length[4-bytes] + string_data + '\0' + pad_to_mul_4
  */
 
-const char* SkReader32::readString(size_t* outLen) noexcept {
+const char* SkReader32::readString(size_t* outLen) {
   size_t len = this->readU32();
   const void* ptr = this->peek();
 
@@ -62,12 +62,12 @@ void SkWriter32::writeString(const char str[], size_t len) {
   chars[len] = '\0';
 }
 
-size_t SkWriter32::WriteStringSize(const char* str, size_t len) noexcept {
+size_t SkWriter32::WriteStringSize(const char* str, size_t len) {
   if ((long)len < 0) {
     SkASSERT(str);
     len = strlen(str);
   }
-  constexpr size_t lenBytes = 4;  // we use 4 bytes to record the length
+  const size_t lenBytes = 4;  // we use 4 bytes to record the length
   // add 1 since we also write a terminating 0
   return SkAlign4(lenBytes + len + 1);
 }

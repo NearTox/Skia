@@ -126,7 +126,7 @@ class SK_API SkShader : public SkFlattenable {
   sk_sp<SkShader> makeWithColorFilter(sk_sp<SkColorFilter>) const;
 
  private:
-  constexpr SkShader() noexcept = default;
+  SkShader() = default;
   friend class SkShaderBase;
 
   typedef SkFlattenable INHERITED;

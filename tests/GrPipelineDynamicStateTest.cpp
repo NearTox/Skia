@@ -14,9 +14,9 @@
 #include "src/gpu/GrColor.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrGeometryProcessor.h"
-#include "src/gpu/GrGpuCommandBuffer.h"
 #include "src/gpu/GrMemoryPool.h"
 #include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/GrOpsRenderPass.h"
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/GrRenderTargetContextPriv.h"
@@ -142,7 +142,7 @@ class GrPipelineDynamicStateTestOp : public GrDrawOp {
     }
     GrPipeline::DynamicStateArrays dynamicState;
     dynamicState.fScissorRects = kDynamicScissors;
-    state->rtCommandBuffer()->draw(
+    state->opsRenderPass()->draw(
         GrPipelineDynamicStateTestProcessor(), pipeline, nullptr, &dynamicState, meshes.begin(), 4,
         SkRect::MakeIWH(kScreenSize, kScreenSize));
   }
@@ -157,8 +157,8 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(GrPipelineDynamicStateTest, reporter, ctxInfo
   GrContext* context = ctxInfo.grContext();
   GrResourceProvider* rp = context->priv().resourceProvider();
 
-  sk_sp<GrRenderTargetContext> rtc(context->priv().makeDeferredRenderTargetContext(
-      SkBackingFit::kExact, kScreenSize, kScreenSize, GrColorType::kRGBA_8888, nullptr));
+  auto rtc = context->priv().makeDeferredRenderTargetContext(
+      SkBackingFit::kExact, kScreenSize, kScreenSize, GrColorType::kRGBA_8888, nullptr);
   if (!rtc) {
     ERRORF(reporter, "could not create render target context.");
     return;

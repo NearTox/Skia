@@ -54,7 +54,7 @@ void runFPTest(
       continue;
     }
 
-    sk_sp<GrSurfaceContext> sContext = context->priv().makeWrappedSurfaceContext(
+    auto sContext = context->priv().makeWrappedSurfaceContext(
         std::move(fpProxy), colorType, kPremul_SkAlphaType);
     REPORTER_ASSERT(reporter, sContext);
 

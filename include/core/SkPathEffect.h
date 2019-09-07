@@ -126,8 +126,8 @@ class SK_API SkPathEffect : public SkFlattenable {
   };
 
   struct DashInfo {
-    constexpr DashInfo() noexcept : fIntervals(nullptr), fCount(0), fPhase(0) {}
-    constexpr DashInfo(SkScalar* intervals, int32_t count, SkScalar phase) noexcept
+    DashInfo() : fIntervals(nullptr), fCount(0), fPhase(0) {}
+    DashInfo(SkScalar* intervals, int32_t count, SkScalar phase)
         : fIntervals(intervals), fCount(count), fPhase(phase) {}
 
     SkScalar* fIntervals;  //!< Length of on/off intervals for dashed lines
@@ -152,7 +152,7 @@ class SK_API SkPathEffect : public SkFlattenable {
   }
 
  protected:
-  constexpr SkPathEffect() noexcept = default;
+  SkPathEffect() {}
 
   virtual bool onFilterPath(SkPath*, const SkPath&, SkStrokeRec*, const SkRect*) const = 0;
   virtual SkRect onComputeFastBounds(const SkRect& src) const { return src; }

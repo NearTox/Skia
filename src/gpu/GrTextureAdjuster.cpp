@@ -41,7 +41,8 @@ sk_sp<GrTextureProxy> GrTextureAdjuster::refTextureProxyCopy(
   this->makeCopyKey(copyParams, &key);
   sk_sp<GrTextureProxy> cachedCopy;
   if (key.isValid()) {
-    cachedCopy = proxyProvider->findOrCreateProxyByUniqueKey(key, this->originalProxy()->origin());
+    cachedCopy = proxyProvider->findOrCreateProxyByUniqueKey(
+        key, this->colorType(), this->originalProxy()->origin());
     if (cachedCopy && (!willBeMipped || GrMipMapped::kYes == cachedCopy->mipMapped())) {
       return cachedCopy;
     }

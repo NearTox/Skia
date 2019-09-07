@@ -8,9 +8,7 @@
 #include "include/core/SkPoint3.h"
 
 // Returns the square of the Euclidian distance to (x,y,z).
-static constexpr inline float get_length_squared(float x, float y, float z) {
-  return x * x + y * y + z * z;
-}
+static inline float get_length_squared(float x, float y, float z) { return x * x + y * y + z * z; }
 
 // Calculates the square of the Euclidian distance to (x,y,z) and stores it in
 // *lengthSquared.  Returns true if the distance is judged to be "nearly zero".
@@ -18,12 +16,12 @@ static constexpr inline float get_length_squared(float x, float y, float z) {
 // This logic is encapsulated in a helper method to make it explicit that we
 // always perform this check in the same manner, to avoid inconsistencies
 // (see http://code.google.com/p/skia/issues/detail?id=560 ).
-static inline bool is_length_nearly_zero(float x, float y, float z, float* lengthSquared) noexcept {
+static inline bool is_length_nearly_zero(float x, float y, float z, float* lengthSquared) {
   *lengthSquared = get_length_squared(x, y, z);
   return *lengthSquared <= (SK_ScalarNearlyZero * SK_ScalarNearlyZero);
 }
 
-SkScalar SkPoint3::Length(SkScalar x, SkScalar y, SkScalar z) noexcept {
+SkScalar SkPoint3::Length(SkScalar x, SkScalar y, SkScalar z) {
   float magSq = get_length_squared(x, y, z);
   if (SkScalarIsFinite(magSq)) {
     return sk_float_sqrt(magSq);
@@ -43,7 +41,7 @@ SkScalar SkPoint3::Length(SkScalar x, SkScalar y, SkScalar z) noexcept {
  *  If we underflow, we return false. If we overflow, we compute again using
  *  doubles, which is much slower (3x in a desktop test) but will not overflow.
  */
-bool SkPoint3::normalize() noexcept {
+bool SkPoint3::normalize() {
   float magSq;
   if (is_length_nearly_zero(fX, fY, fZ, &magSq)) {
     this->set(0, 0, 0);

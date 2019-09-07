@@ -10,7 +10,6 @@
 #include "src/gpu/GrAuditTrail.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrDrawingManager.h"
-#include "src/gpu/GrTextureOpList.h"
 
 #define ASSERT_SINGLE_OWNER \
   SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner());)
@@ -23,8 +22,7 @@ GrTextureContext::GrTextureContext(
     GrRecordingContext* context, sk_sp<GrTextureProxy> textureProxy, GrColorType colorType,
     SkAlphaType alphaType, sk_sp<SkColorSpace> colorSpace)
     : GrSurfaceContext(context, colorType, alphaType, std::move(colorSpace)),
-      fTextureProxy(std::move(textureProxy)),
-      fOpList(sk_ref_sp(fTextureProxy->getLastTextureOpList())) {
+      fTextureProxy(std::move(textureProxy)) {
   SkDEBUGCODE(this->validate();)
 }
 
@@ -32,10 +30,6 @@ GrTextureContext::GrTextureContext(
 void GrTextureContext::validate() const {
   SkASSERT(fTextureProxy);
   fTextureProxy->validate(fContext);
-
-  if (fOpList && !fOpList->isClosed()) {
-    SkASSERT(fTextureProxy->getLastOpList() == fOpList.get());
-  }
 }
 #endif
 
@@ -51,15 +45,4 @@ sk_sp<GrRenderTargetProxy> GrTextureContext::asRenderTargetProxyRef() {
   // If the proxy can return an RTProxy it should've been wrapped in a RTContext
   SkASSERT(!fTextureProxy->asRenderTargetProxy());
   return nullptr;
-}
-
-GrOpList* GrTextureContext::getOpList() {
-  ASSERT_SINGLE_OWNER
-  SkDEBUGCODE(this->validate();)
-
-      if (!fOpList || fOpList->isClosed()) {
-    fOpList = this->drawingManager()->newTextureOpList(fTextureProxy);
-  }
-
-  return fOpList.get();
 }

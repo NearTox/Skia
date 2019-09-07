@@ -42,6 +42,8 @@ class SkImage_GpuYUVA : public SkImage_GpuBase {
   sk_sp<SkImage> onMakeColorTypeAndColorSpace(
       GrRecordingContext*, SkColorType, sk_sp<SkColorSpace>) const final;
 
+  sk_sp<SkImage> onReinterpretColorSpace(sk_sp<SkColorSpace>) const final;
+
   virtual bool isYUVA() const override { return true; }
 
   bool setupMipmapsForPlanes(GrRecordingContext*) const;

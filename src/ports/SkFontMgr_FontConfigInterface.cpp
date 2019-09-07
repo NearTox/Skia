@@ -171,23 +171,16 @@ class SkFontMgr_FCI : public SkFontMgr {
   SkFontMgr_FCI(sk_sp<SkFontConfigInterface> fci) : fFCI(std::move(fci)), fCache(kMaxSize) {}
 
  protected:
-  int onCountFamilies() const override {
-    SK_ABORT("Not implemented.");
-    return 0;
-  }
+  int onCountFamilies() const override { SK_ABORT("Not implemented."); }
 
   void onGetFamilyName(int index, SkString* familyName) const override {
     SK_ABORT("Not implemented.");
   }
 
-  SkFontStyleSet* onCreateStyleSet(int index) const override {
-    SK_ABORT("Not implemented.");
-    return nullptr;
-  }
+  SkFontStyleSet* onCreateStyleSet(int index) const override { SK_ABORT("Not implemented."); }
 
   SkFontStyleSet* onMatchFamily(const char familyName[]) const override {
     SK_ABORT("Not implemented.");
-    return new SkFontStyleSet_FCI();
   }
 
   SkTypeface* onMatchFamilyStyle(
@@ -216,12 +209,10 @@ class SkFontMgr_FCI : public SkFontMgr {
       const char familyName[], const SkFontStyle&, const char* bcp47[], int bcp47Count,
       SkUnichar character) const override {
     SK_ABORT("Not implemented.");
-    return nullptr;
   }
 
   SkTypeface* onMatchFaceStyle(const SkTypeface*, const SkFontStyle&) const override {
     SK_ABORT("Not implemented.");
-    return nullptr;
   }
 
   sk_sp<SkTypeface> onMakeFromData(sk_sp<SkData> data, int ttcIndex) const override {

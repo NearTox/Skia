@@ -19,10 +19,10 @@
 #include "src/core/SkTypefaceCache.h"
 #include "src/sfnt/SkOTTable_OS_2.h"
 
-SkTypeface::SkTypeface(const SkFontStyle& style, bool isFixedPitch) noexcept
+SkTypeface::SkTypeface(const SkFontStyle& style, bool isFixedPitch)
     : fUniqueID(SkTypefaceCache::NewFontID()), fStyle(style), fIsFixedPitch(isFixedPitch) {}
 
-SkTypeface::~SkTypeface() = default;
+SkTypeface::~SkTypeface() {}
 
 #ifdef SK_WHITELIST_SERIALIZED_TYPEFACES
 extern void WhitelistSerializeTypeface(const SkTypeface*, SkWStream*);
@@ -88,7 +88,7 @@ class SkEmptyTypeface : public SkTypeface {
 
 }  // namespace
 
-SkFontStyle SkTypeface::FromOldStyle(Style oldStyle) noexcept {
+SkFontStyle SkTypeface::FromOldStyle(Style oldStyle) {
   return SkFontStyle(
       (oldStyle & SkTypeface::kBold) ? SkFontStyle::kBold_Weight : SkFontStyle::kNormal_Weight,
       SkFontStyle::kNormal_Width,
@@ -368,8 +368,8 @@ SkRect SkTypeface::getBounds() const {
 bool SkTypeface::onComputeBounds(SkRect* bounds) const {
   // we use a big size to ensure lots of significant bits from the scalercontext.
   // then we scale back down to return our final answer (at 1-pt)
-  constexpr SkScalar textSize = 2048;
-  constexpr SkScalar invTextSize = 1 / textSize;
+  const SkScalar textSize = 2048;
+  const SkScalar invTextSize = 1 / textSize;
 
   SkFont font;
   font.setTypeface(sk_ref_sp(const_cast<SkTypeface*>(this)));
@@ -392,7 +392,7 @@ bool SkTypeface::onComputeBounds(SkRect* bounds) const {
 
   SkFontMetrics fm;
   ctx->getFontMetrics(&fm);
-  bounds->set(
+  bounds->setLTRB(
       fm.fXMin * invTextSize, fm.fTop * invTextSize, fm.fXMax * invTextSize,
       fm.fBottom * invTextSize);
   return true;

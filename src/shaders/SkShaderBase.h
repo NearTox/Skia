@@ -29,6 +29,23 @@ struct SkImageInfo;
 class SkPaint;
 class SkRasterPipeline;
 
+/**
+ *  Shaders can optionally return a subclass of this when appending their stages.
+ *  Doing so tells the caller that the stages can be reused with different CTMs (but nothing
+ *  else can change), by calling the updater's udpate() method before each use.
+ *
+ *  This can be a perf-win bulk draws like drawAtlas and drawVertices, where most of the setup
+ *  (i.e. uniforms) are constant, and only something small is changing (i.e. matrices). This
+ *  reuse skips the cost of computing the stages (and/or avoids having to allocate a separate
+ *  shader for each small draw.
+ */
+class SkStageUpdater {
+ public:
+  virtual ~SkStageUpdater() {}
+
+  virtual bool update(const SkMatrix& ctm, const SkMatrix* localM) = 0;
+};
+
 class SkShaderBase : public SkShader {
  public:
   ~SkShaderBase() override;
@@ -37,9 +54,9 @@ class SkShaderBase : public SkShader {
    *  Returns true if the shader is guaranteed to produce only a single color.
    *  Subclasses can override this to allow loop-hoisting optimization.
    */
-  virtual bool isConstant() const noexcept { return false; }
+  virtual bool isConstant() const { return false; }
 
-  const SkMatrix& getLocalMatrix() const noexcept { return fLocalMatrix; }
+  const SkMatrix& getLocalMatrix() const { return fLocalMatrix; }
 
   enum Flags {
     //!< set if all of the colors will be opaque
@@ -61,9 +78,9 @@ class SkShaderBase : public SkShader {
    *  ContextRec acts as a parameter bundle for creating Contexts.
    */
   struct ContextRec {
-    constexpr ContextRec(
+    ContextRec(
         const SkPaint& paint, const SkMatrix& matrix, const SkMatrix* localM,
-        SkColorType dstColorType, SkColorSpace* dstColorSpace) noexcept
+        SkColorType dstColorType, SkColorSpace* dstColorSpace)
         : fPaint(&paint),
           fMatrix(&matrix),
           fLocalMatrix(localM),
@@ -105,9 +122,9 @@ class SkShaderBase : public SkShader {
     // Reference to shader, so we don't have to dupe information.
     const SkShaderBase& fShader;
 
-    uint8_t getPaintAlpha() const noexcept { return fPaintAlpha; }
-    const SkMatrix& getTotalInverse() const noexcept { return fTotalInverse; }
-    const SkMatrix& getCTM() const noexcept { return fCTM; }
+    uint8_t getPaintAlpha() const { return fPaintAlpha; }
+    const SkMatrix& getTotalInverse() const { return fTotalInverse; }
+    const SkMatrix& getCTM() const { return fCTM; }
 
    private:
     SkMatrix fCTM;
@@ -167,7 +184,7 @@ class SkShaderBase : public SkShader {
   virtual SkImage* onIsAImage(SkMatrix*, SkTileMode[2]) const { return nullptr; }
   virtual SkPicture* isAPicture(SkMatrix*, SkTileMode[2], SkRect* tile) const { return nullptr; }
 
-  static Type GetFlattenableType() noexcept { return kSkShaderBase_Type; }
+  static Type GetFlattenableType() { return kSkShaderBase_Type; }
   Type getFlattenableType() const override { return GetFlattenableType(); }
 
   static sk_sp<SkShaderBase> Deserialize(
@@ -182,6 +199,10 @@ class SkShaderBase : public SkShader {
    *  the localMatrix. If not, return nullptr and ignore the localMatrix parameter.
    */
   virtual sk_sp<SkShader> makeAsALocalMatrixShader(SkMatrix* localMatrix) const;
+
+  SkStageUpdater* appendUpdatableStages(const SkStageRec& rec) const {
+    return this->onAppendUpdatableStages(rec);
+  }
 
  protected:
   SkShaderBase(const SkMatrix* localMatrix = nullptr);
@@ -200,6 +221,8 @@ class SkShaderBase : public SkShader {
 
   // Default impl creates shadercontext and calls that (not very efficient)
   virtual bool onAppendStages(const SkStageRec&) const;
+
+  virtual SkStageUpdater* onAppendUpdatableStages(const SkStageRec&) const { return nullptr; }
 
  private:
   // This is essentially const, but not officially so it can be modified in constructors.

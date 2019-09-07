@@ -40,19 +40,18 @@ sk_sp<sksg::RenderNode> EffectBuilder::attachTritoneEffect(
   }
 
   auto tritone_node = sksg::GradientColorFilter::Make(
-      std::move(layer), {fBuilder->attachColor(*locolor_prop, fScope, "v"),
-                         fBuilder->attachColor(*micolor_prop, fScope, "v"),
-                         fBuilder->attachColor(*hicolor_prop, fScope, "v")});
+      std::move(layer),
+      {fBuilder->attachColor(*locolor_prop, "v"), fBuilder->attachColor(*micolor_prop, "v"),
+       fBuilder->attachColor(*hicolor_prop, "v")});
   if (!tritone_node) {
     return nullptr;
   }
 
-  fBuilder->bindProperty<ScalarValue>(
-      (*blend_prop)["v"], fScope, [tritone_node](const ScalarValue& w) {
-        tritone_node->setWeight((100 - w) / 100);  // 100-based, inverted (!?).
-      });
+  fBuilder->bindProperty<ScalarValue>((*blend_prop)["v"], [tritone_node](const ScalarValue& w) {
+    tritone_node->setWeight((100 - w) / 100);  // 100-based, inverted (!?).
+  });
 
-  return std::move(tritone_node);
+  return tritone_node;
 }
 
 }  // namespace internal
