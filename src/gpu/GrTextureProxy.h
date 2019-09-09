@@ -173,9 +173,9 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
   void setUniqueKey(GrProxyProvider*, const GrUniqueKey&);
   void clearUniqueKey();
 
-  SkDEBUGCODE(void onValidateSurface(const GrSurface*) override;)
+  SkDEBUGCODE(void onValidateSurface(const GrSurface*) override);
 
-      typedef GrSurfaceProxy INHERITED;
+  typedef GrSurfaceProxy INHERITED;
 };
 
 #endif

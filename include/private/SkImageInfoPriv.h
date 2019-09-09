@@ -94,7 +94,7 @@ static inline bool SkImageInfoIsValid(const SkImageInfo& info) {
     return false;
   }
 
-  const int kMaxDimension = SK_MaxS32 >> 2;
+  constexpr int kMaxDimension = SK_MaxS32 >> 2;
   if (info.width() > kMaxDimension || info.height() > kMaxDimension) {
     return false;
   }

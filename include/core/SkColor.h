@@ -152,7 +152,7 @@ constexpr SkColor SK_ColorMAGENTA = SkColorSetARGB(0xFF, 0xFF, 0x00, 0xFF);
     @param blue   blue component value from zero to 255
     @param hsv    three element array which holds the resulting HSV components
 */
-SK_API void SkRGBToHSV(U8CPU red, U8CPU green, U8CPU blue, SkScalar hsv[3]);
+SK_API void SkRGBToHSV(U8CPU red, U8CPU green, U8CPU blue, SkScalar hsv[3]) noexcept;
 
 /** Converts ARGB to its HSV components. Alpha in ARGB is ignored.
     hsv[0] contains hsv hue, and is assigned a value from zero to less than 360.
@@ -177,7 +177,7 @@ static inline void SkColorToHSV(SkColor color, SkScalar hsv[3]) {
     @param hsv    three element array which holds the input HSV components
     @return       ARGB equivalent to HSV
 */
-SK_API SkColor SkHSVToColor(U8CPU alpha, const SkScalar hsv[3]);
+SK_API SkColor SkHSVToColor(U8CPU alpha, const SkScalar hsv[3]) noexcept;
 
 /** Converts HSV components to an ARGB color. Alpha is set to 255.
     hsv[0] represents hsv hue, an angle from zero to less than 360.
@@ -249,7 +249,7 @@ struct SkRGBA4f {
       @param other  SkRGBA4f to compare
       @return       true if SkRGBA4f equals other
   */
-  bool operator==(const SkRGBA4f& other) const {
+  bool operator==(const SkRGBA4f& other) const noexcept {
     return fA == other.fA && fR == other.fR && fG == other.fG && fB == other.fB;
   }
 
@@ -258,7 +258,7 @@ struct SkRGBA4f {
       @param other  SkRGBA4f to compare
       @return       true if SkRGBA4f is not equal to other
   */
-  bool operator!=(const SkRGBA4f& other) const { return !(*this == other); }
+  bool operator!=(const SkRGBA4f& other) const noexcept { return !(*this == other); }
 
   /** Returns SkRGBA4f multiplied by scale.
 
@@ -280,13 +280,13 @@ struct SkRGBA4f {
 
       @return       pointer to array [fR, fG, fB, fA]
   */
-  const float* vec() const { return &fR; }
+  const float* vec() const noexcept { return &fR; }
 
   /** Returns a pointer to components of SkRGBA4f, for array access.
 
       @return       pointer to array [fR, fG, fB, fA]
   */
-  float* vec() { return &fR; }
+  float* vec() noexcept { return &fR; }
 
   /** Returns one component. Asserts if index is out of range and SK_DEBUG is defined.
 

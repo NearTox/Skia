@@ -29,7 +29,7 @@ struct SkNx {
   Half fLo, fHi;
 
   AI SkNx() = default;
-  AI SkNx(const Half& lo, const Half& hi) : fLo(lo), fHi(hi) {}
+  AI SkNx(const Half& lo, const Half& hi) noexcept : fLo(lo), fHi(hi) {}
 
   AI SkNx(T v) : fLo(v), fHi(v) {}
 
@@ -157,7 +157,7 @@ struct SkNx<1, T> {
   T fVal;
 
   AI SkNx() = default;
-  AI SkNx(T v) : fVal(v) {}
+  AI SkNx(T v) noexcept : fVal(v) {}
 
   // Android complains against unused parameters, so we guard it
   AI T operator[](int SkDEBUGCODE(k)) const {

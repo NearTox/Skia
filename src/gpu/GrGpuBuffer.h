@@ -21,13 +21,13 @@ class GrGpuBuffer : public GrGpuResource, public GrBuffer {
    */
   static void ComputeScratchKeyForDynamicVBO(size_t size, GrGpuBufferType, GrScratchKey*);
 
-  GrAccessPattern accessPattern() const { return fAccessPattern; }
+  GrAccessPattern accessPattern() const noexcept { return fAccessPattern; }
 
-  size_t size() const final { return fSizeInBytes; }
+  size_t size() const noexcept final { return fSizeInBytes; }
 
-  void ref() const final { GrGpuResource::ref(); }
+  void ref() const noexcept final { GrGpuResource::ref(); }
 
-  void unref() const final { GrGpuResource::unref(); }
+  void unref() const noexcept final { GrGpuResource::unref(); }
 
   /**
    * Maps the buffer to be read or written by the CPU.
@@ -60,7 +60,7 @@ class GrGpuBuffer : public GrGpuResource, public GrBuffer {
    */
   bool isMapped() const;
 
-  bool isCpuBuffer() const final { return false; }
+  bool isCpuBuffer() const noexcept final { return false; }
 
   /**
    * Updates the buffer data.
@@ -82,7 +82,7 @@ class GrGpuBuffer : public GrGpuResource, public GrBuffer {
 
  protected:
   GrGpuBuffer(GrGpu*, size_t sizeInBytes, GrGpuBufferType, GrAccessPattern);
-  GrGpuBufferType intendedType() const { return fIntendedType; }
+  GrGpuBufferType intendedType() const noexcept { return fIntendedType; }
 
   void* fMapPtr;
 

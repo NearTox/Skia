@@ -116,7 +116,7 @@ class GrShape {
       const SkRect& oval, SkScalar startAngleDegrees, SkScalar sweepAngleDegrees, bool useCenter,
       const GrStyle& style);
 
-  GrShape(const GrShape&);
+  GrShape(const GrShape&) noexcept;
   GrShape& operator=(const GrShape& that);
 
   ~GrShape() { this->changeType(Type::kEmpty); }

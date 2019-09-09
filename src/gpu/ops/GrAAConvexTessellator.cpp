@@ -275,7 +275,8 @@ bool GrAAConvexTessellator::tessellate(const SkMatrix& m, const SkPath& path) {
     this->createInsetRings(
         outerStrokeAndAARing, 0.0f, 0.0f, 2 * kAntialiasingRadius, 1.0f, &insetAARing);
 
-    SkDEBUGCODE(this->validate();) return true;
+    SkDEBUGCODE(this->validate());
+    return true;
   }
 
   if (SkStrokeRec::kStroke_Style == fStyle) {
@@ -313,7 +314,8 @@ bool GrAAConvexTessellator::tessellate(const SkMatrix& m, const SkPath& path) {
     this->createInsetRings(fInitialRing, 0.0f, 0.5f, kAntialiasingRadius, 1.0f, &insetAARing);
   }
 
-  SkDEBUGCODE(this->validate();) return true;
+  SkDEBUGCODE(this->validate());
+  return true;
 }
 
 SkScalar GrAAConvexTessellator::computeDepthFromEdge(int edgeIdx, const SkPoint& p) const {

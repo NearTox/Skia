@@ -138,7 +138,8 @@ void GrResourceCache::insertResource(GrGpuResource* resource) {
   this->addToNonpurgeableArray(resource);
 
   size_t size = resource->gpuMemorySize();
-  SkDEBUGCODE(++fCount;) fBytes += size;
+  SkDEBUGCODE(++fCount);
+  fBytes += size;
 #if GR_CACHE_STATS
   fHighWaterCount = SkTMax(this->getResourceCount(), fHighWaterCount);
   fHighWaterBytes = SkTMax(fBytes, fHighWaterBytes);
@@ -175,7 +176,8 @@ void GrResourceCache::removeResource(GrGpuResource* resource) {
     this->removeFromNonpurgeableArray(resource);
   }
 
-  SkDEBUGCODE(--fCount;) fBytes -= size;
+  SkDEBUGCODE(--fCount);
+  fBytes -= size;
   if (GrBudgetedType::kBudgeted == resource->resourcePriv().budgetedType()) {
     --fBudgetedCount;
     fBudgetedBytes -= size;
@@ -488,7 +490,8 @@ void GrResourceCache::notifyCntReachedZero(GrGpuResource* resource, uint32_t fla
     }
   }
 
-  SkDEBUGCODE(int beforeCount = this->getResourceCount();) resource->cacheAccess().release();
+  SkDEBUGCODE(int beforeCount = this->getResourceCount());
+  resource->cacheAccess().release();
   // We should at least free this resource, perhaps dependent resources as well.
   SkASSERT(this->getResourceCount() < beforeCount);
   this->validate();

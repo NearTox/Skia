@@ -74,7 +74,7 @@ class SkMipMap : public SkCachedData {
   SkMipMap(void* malloc, size_t size) : INHERITED(malloc, size) {}
   SkMipMap(size_t size, SkDiscardableMemory* dm) : INHERITED(size, dm) {}
 
-  static size_t AllocLevelsSize(int levelCount, size_t pixelSize);
+  static size_t AllocLevelsSize(int levelCount, size_t pixelSize) noexcept;
 
   typedef SkCachedData INHERITED;
 };

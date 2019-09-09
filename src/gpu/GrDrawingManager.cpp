@@ -310,11 +310,11 @@ GrSemaphoresSubmitted GrDrawingManager::flush(
     // Enable this to print out verbose GrOp information
     SkDEBUGCODE(SkDebugf("onFlush renderTasks:"));
     for (const auto& onFlushRenderTask : fOnFlushRenderTasks) {
-        SkDEBUGCODE(onFlushRenderTask->dump();)
+        SkDEBUGCODE(onFlushRenderTask->dump());
     }
     SkDEBUGCODE(SkDebugf("Normal renderTasks:"));
     for (int i = 0; i < fRenderTasks.count(); ++i) {
-        SkDEBUGCODE(fRenderTasks[i]->dump();)
+        SkDEBUGCODE(fRenderTasks[i]->dump());
     }
 #endif
 
@@ -675,19 +675,19 @@ sk_sp<GrOpsTask> GrDrawingManager::newOpsTask(sk_sp<GrRenderTargetProxy> rtp, bo
 
 GrRenderTask* GrDrawingManager::newTextureResolveRenderTask(
     sk_sp<GrSurfaceProxy> proxy, GrSurfaceProxy::ResolveFlags flags, const GrCaps& caps) {
-  SkDEBUGCODE(auto* previousTaskBeforeMipsResolve = proxy->getLastRenderTask();)
+  SkDEBUGCODE(auto* previousTaskBeforeMipsResolve = proxy->getLastRenderTask());
 
-      // Unlike in the "new opsTask" case, we do not want to close the active opsTask, nor (if we
-      // are in sorting and opsTask reduction mode) the render tasks that depend on the proxy's
-      // current state. This is because those opsTasks can still receive new ops and because if they
-      // refer to the mipmapped version of 'proxy', they will then come to depend on the render task
-      // being created here.
-      //
-      // Add the new textureResolveTask before the fActiveOpsTask (if not in
-      // sorting/opsTask-splitting-reduction mode) because it will depend upon this resolve task.
-      // NOTE: Putting it here will also reduce the amount of work required by the topological sort.
-      auto* resolveTask = static_cast<GrTextureResolveRenderTask*>(
-          fDAG.addBeforeLast(sk_make_sp<GrTextureResolveRenderTask>(std::move(proxy), flags)));
+  // Unlike in the "new opsTask" case, we do not want to close the active opsTask, nor (if we
+  // are in sorting and opsTask reduction mode) the render tasks that depend on the proxy's
+  // current state. This is because those opsTasks can still receive new ops and because if they
+  // refer to the mipmapped version of 'proxy', they will then come to depend on the render task
+  // being created here.
+  //
+  // Add the new textureResolveTask before the fActiveOpsTask (if not in
+  // sorting/opsTask-splitting-reduction mode) because it will depend upon this resolve task.
+  // NOTE: Putting it here will also reduce the amount of work required by the topological sort.
+  auto* resolveTask = static_cast<GrTextureResolveRenderTask*>(
+      fDAG.addBeforeLast(sk_make_sp<GrTextureResolveRenderTask>(std::move(proxy), flags)));
   resolveTask->init(caps);
 
   // GrTextureResolveRenderTask::init should have closed the texture proxy's previous task.

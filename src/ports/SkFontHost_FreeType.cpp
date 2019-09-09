@@ -283,7 +283,7 @@ static void unref_ft_library() {
     SkASSERT(nullptr == gFaceRecHead);
     SkASSERT(nullptr != gFTLibrary);
     delete gFTLibrary;
-    SkDEBUGCODE(gFTLibrary = nullptr;)
+    SkDEBUGCODE(gFTLibrary = nullptr);
   }
 }
 
@@ -363,10 +363,9 @@ static void ft_face_setup_axes(SkFaceRec* rec, const SkFontData& data) {
             "INFO: font %s has %d variations, but %d were specified.\n", rec->fFace->family_name,
             variations->num_axis, data.getAxisCount());
         return;
-      })
+      });
 
-      SkAutoSTMalloc<4, FT_Fixed>
-          coords(data.getAxisCount());
+  SkAutoSTMalloc<4, FT_Fixed> coords(data.getAxisCount());
   for (int i = 0; i < data.getAxisCount(); ++i) {
     coords[i] = data.getAxis()[i];
   }
@@ -1983,5 +1982,5 @@ bool SkTypeface_FreeType::Scanner::GetAxes(FT_Face face, AxisDefinitions* axes) 
               "Requested font axis not found: %s '%c%c%c%c'\n", name.c_str(), (skTag >> 24) & 0xFF,
               (skTag >> 16) & 0xFF, (skTag >> 8) & 0xFF, (skTag)&0xFF);
         }
-      })
+      });
 }

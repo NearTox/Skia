@@ -708,7 +708,7 @@ void SkCanvas::checkForDeferredSave() {
   }
 }
 
-int SkCanvas::getSaveCount() const {
+int SkCanvas::getSaveCount() const noexcept {
 #ifdef SK_DEBUG
   int count = 0;
   SkDeque::Iter iter(fMCStack, SkDeque::Iter::kFront_IterStart);
@@ -2468,9 +2468,9 @@ void SkCanvas::onDrawImageRect(
 }
 
 void SkCanvas::onDrawBitmap(const SkBitmap& bitmap, SkScalar x, SkScalar y, const SkPaint* paint) {
-  SkDEBUGCODE(bitmap.validate();)
+  SkDEBUGCODE(bitmap.validate());
 
-      if (bitmap.drawsNothing()) {
+  if (bitmap.drawsNothing()) {
     return;
   }
 
@@ -2551,7 +2551,8 @@ void SkCanvas::internalDrawBitmapRect(
 void SkCanvas::onDrawBitmapRect(
     const SkBitmap& bitmap, const SkRect* src, const SkRect& dst, const SkPaint* paint,
     SrcRectConstraint constraint) {
-  SkDEBUGCODE(bitmap.validate();) this->internalDrawBitmapRect(bitmap, src, dst, paint, constraint);
+  SkDEBUGCODE(bitmap.validate());
+  this->internalDrawBitmapRect(bitmap, src, dst, paint, constraint);
 }
 
 void SkCanvas::onDrawImageNine(
@@ -2578,7 +2579,8 @@ void SkCanvas::onDrawImageNine(
 
 void SkCanvas::onDrawBitmapNine(
     const SkBitmap& bitmap, const SkIRect& center, const SkRect& dst, const SkPaint* paint) {
-  SkDEBUGCODE(bitmap.validate();) SkPaint realPaint;
+  SkDEBUGCODE(bitmap.validate());
+  SkPaint realPaint;
   paint = init_image_paint(&realPaint, paint);
 
   if (nullptr == paint || paint->canComputeFastBounds()) {

@@ -19,7 +19,8 @@ void SkAlphaRuns::reset(int width) {
   fRuns[width] = 0;
   fAlpha[0] = 0;
 
-  SkDEBUGCODE(fWidth = width;) SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(fWidth = width);
+  SkDEBUGCODE(this->validate());
 }
 
 #ifdef SK_DEBUG

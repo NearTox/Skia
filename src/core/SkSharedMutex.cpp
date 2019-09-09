@@ -239,7 +239,7 @@ void SkSharedMutex::assertHeldShared() const {
 // * WaitingExclusive - the number of threads waiting for an exclusive lock.
 // * WaitingShared - the number of threads waiting to run while waiting for an exclusive thread
 //   to finish.
-static const int kLogThreadCount = 10;
+static constexpr int kLogThreadCount = 10;
 
 enum {
   kSharedOffset = (0 * kLogThreadCount),
@@ -250,7 +250,7 @@ enum {
   kWaitingSharedMask = ((1 << kLogThreadCount) - 1) << kWaitingSharedOffset,
 };
 
-SkSharedMutex::SkSharedMutex() : fQueueCounts(0) { ANNOTATE_RWLOCK_CREATE(this); }
+SkSharedMutex::SkSharedMutex() noexcept : fQueueCounts(0) { ANNOTATE_RWLOCK_CREATE(this); }
 SkSharedMutex::~SkSharedMutex() { ANNOTATE_RWLOCK_DESTROY(this); }
 void SkSharedMutex::acquire() {
   // Increment the count of exclusive queue waiters.

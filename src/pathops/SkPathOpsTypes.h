@@ -260,25 +260,25 @@ inline int UlpsDistance(double a, double b) {
 
 // FLT_EPSILON == 1.19209290E-07 == 1 / (2 ^ 23)
 // DBL_EPSILON == 2.22045e-16
-const double FLT_EPSILON_CUBED = FLT_EPSILON * FLT_EPSILON * FLT_EPSILON;
-const double FLT_EPSILON_HALF = FLT_EPSILON / 2;
-const double FLT_EPSILON_DOUBLE = FLT_EPSILON * 2;
-const double FLT_EPSILON_ORDERABLE_ERR = FLT_EPSILON * 16;
-const double FLT_EPSILON_SQUARED = FLT_EPSILON * FLT_EPSILON;
+constexpr double FLT_EPSILON_CUBED = FLT_EPSILON * FLT_EPSILON * FLT_EPSILON;
+constexpr double FLT_EPSILON_HALF = FLT_EPSILON / 2;
+constexpr double FLT_EPSILON_DOUBLE = FLT_EPSILON * 2;
+constexpr double FLT_EPSILON_ORDERABLE_ERR = FLT_EPSILON * 16;
+constexpr double FLT_EPSILON_SQUARED = FLT_EPSILON * FLT_EPSILON;
 // Use a compile-time constant for FLT_EPSILON_SQRT to avoid initializers.
 // A 17 digit constant guarantees exact results.
-const double FLT_EPSILON_SQRT = 0.00034526697709225118;  // sqrt(FLT_EPSILON);
-const double FLT_EPSILON_INVERSE = 1 / FLT_EPSILON;
-const double DBL_EPSILON_ERR = DBL_EPSILON * 4;  // FIXME: tune -- allow a few bits of error
-const double DBL_EPSILON_SUBDIVIDE_ERR = DBL_EPSILON * 16;
-const double ROUGH_EPSILON = FLT_EPSILON * 64;
-const double MORE_ROUGH_EPSILON = FLT_EPSILON * 256;
-const double WAY_ROUGH_EPSILON = FLT_EPSILON * 2048;
-const double BUMP_EPSILON = FLT_EPSILON * 4096;
+constexpr double FLT_EPSILON_SQRT = 0.00034526697709225118;  // sqrt(FLT_EPSILON);
+constexpr double FLT_EPSILON_INVERSE = 1 / FLT_EPSILON;
+constexpr double DBL_EPSILON_ERR = DBL_EPSILON * 4;  // FIXME: tune -- allow a few bits of error
+constexpr double DBL_EPSILON_SUBDIVIDE_ERR = DBL_EPSILON * 16;
+constexpr double ROUGH_EPSILON = FLT_EPSILON * 64;
+constexpr double MORE_ROUGH_EPSILON = FLT_EPSILON * 256;
+constexpr double WAY_ROUGH_EPSILON = FLT_EPSILON * 2048;
+constexpr double BUMP_EPSILON = FLT_EPSILON * 4096;
 
-const SkScalar INVERSE_NUMBER_RANGE = FLT_EPSILON_ORDERABLE_ERR;
+constexpr SkScalar INVERSE_NUMBER_RANGE = FLT_EPSILON_ORDERABLE_ERR;
 
-inline bool zero_or_one(double x) { return x == 0 || x == 1; }
+inline constexpr bool zero_or_one(double x) { return x == 0 || x == 1; }
 
 inline bool approximately_zero(double x) { return fabs(x) < FLT_EPSILON; }
 

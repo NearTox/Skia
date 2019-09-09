@@ -16,23 +16,23 @@ class SkDiscardableMemory;
 
 class SkCachedData : ::SkNoncopyable {
  public:
-  SkCachedData(void* mallocData, size_t size);
+  SkCachedData(void* mallocData, size_t size) noexcept;
   SkCachedData(size_t size, SkDiscardableMemory*);
   virtual ~SkCachedData();
 
-  size_t size() const { return fSize; }
-  const void* data() const { return fData; }
+  size_t size() const noexcept { return fSize; }
+  const void* data() const noexcept { return fData; }
 
-  void* writable_data() { return fData; }
+  void* writable_data() noexcept { return fData; }
 
   void ref() const { this->internalRef(false); }
   void unref() const { this->internalUnref(false); }
 
-  int testing_only_getRefCnt() const { return fRefCnt; }
-  bool testing_only_isLocked() const { return fIsLocked; }
-  bool testing_only_isInCache() const { return fInCache; }
+  int testing_only_getRefCnt() const noexcept { return fRefCnt; }
+  bool testing_only_isLocked() const noexcept { return fIsLocked; }
+  bool testing_only_isInCache() const noexcept { return fInCache; }
 
-  SkDiscardableMemory* diagnostic_only_getDiscardable() const {
+  SkDiscardableMemory* diagnostic_only_getDiscardable() const noexcept {
     return kDiscardableMemory_StorageType == fStorageType ? fStorage.fDM : nullptr;
   }
 
@@ -56,8 +56,8 @@ class SkCachedData : ::SkNoncopyable {
   bool fInCache;
   bool fIsLocked;
 
-  void internalRef(bool fromCache) const;
-  void internalUnref(bool fromCache) const;
+  void internalRef(bool fromCache) const noexcept;
+  void internalUnref(bool fromCache) const noexcept;
 
   void inMutexRef(bool fromCache);
   bool inMutexUnref(bool fromCache);  // returns true if we should delete "this"
@@ -79,7 +79,7 @@ class SkCachedData : ::SkNoncopyable {
 #ifdef SK_DEBUG
   void validate() const;
 #else
-  void validate() const {}
+  void validate() const noexcept {}
 #endif
 
   /*

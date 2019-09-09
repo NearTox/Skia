@@ -74,9 +74,11 @@ static inline float sk_float_log2(float x) {
 #  define sk_float_log2(x) log2f(x)
 #endif
 
-static inline bool sk_float_isfinite(float x) { return SkFloatBits_IsFinite(SkFloat2Bits(x)); }
+static constexpr inline bool sk_float_isfinite(float x) {
+  return SkFloatBits_IsFinite(SkFloat2Bits(x));
+}
 
-static inline bool sk_floats_are_finite(float a, float b) {
+static constexpr inline bool sk_floats_are_finite(float a, float b) {
   return sk_float_isfinite(a) && sk_float_isfinite(b);
 }
 
@@ -89,9 +91,9 @@ static inline bool sk_floats_are_finite(const float array[], int count) {
   return prod == 0;  // if prod is NaN, this check will return false
 }
 
-static inline bool sk_float_isinf(float x) { return SkFloatBits_IsInf(SkFloat2Bits(x)); }
+static constexpr inline bool sk_float_isinf(float x) { return SkFloatBits_IsInf(SkFloat2Bits(x)); }
 
-static inline bool sk_float_isnan(float x) { return !(x == x); }
+static constexpr inline bool sk_float_isnan(float x) { return !(x == x); }
 
 #define sk_double_isnan(a) sk_float_isnan(a)
 
@@ -104,7 +106,7 @@ static inline bool sk_float_isnan(float x) { return !(x == x); }
 /**
  *  Return the closest int for the given float. Returns SK_MaxS32FitsInFloat for NaN.
  */
-static inline int sk_float_saturate2int(float x) {
+static constexpr inline int sk_float_saturate2int(float x) {
   x = SkTMin<float>(x, SK_MaxS32FitsInFloat);
   x = SkTMax<float>(x, SK_MinS32FitsInFloat);
   return (int)x;
@@ -113,7 +115,7 @@ static inline int sk_float_saturate2int(float x) {
 /**
  *  Return the closest int for the given double. Returns SK_MaxS32 for NaN.
  */
-static inline int sk_double_saturate2int(double x) {
+static constexpr inline int sk_double_saturate2int(double x) {
   x = SkTMin<double>(x, SK_MaxS32);
   x = SkTMax<double>(x, SK_MinS32);
   return (int)x;
@@ -149,7 +151,7 @@ static inline int64_t sk_float_saturate2int64(float x) {
 #if defined(__clang__) && (__clang_major__ * 1000 + __clang_minor__) >= 3007
 __attribute__((no_sanitize("float-cast-overflow")))
 #endif
-static inline float
+static constexpr inline float
 sk_double_to_float(double x) {
   return static_cast<float>(x);
 }
@@ -162,9 +164,9 @@ sk_double_to_float(double x) {
 
 // Returns false if any of the floats are outside of [0...1]
 // Returns true if count is 0
-bool sk_floats_are_unit(const float array[], size_t count);
+bool sk_floats_are_unit(const float array[], size_t count) noexcept;
 
-static inline float sk_float_rsqrt_portable(float x) {
+static inline float sk_float_rsqrt_portable(float x) noexcept {
   // Get initial estimate.
   int i;
   memcpy(&i, &x, 4);

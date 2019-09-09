@@ -162,8 +162,10 @@ class GrTextureDomain {
 
    private:
     static const int kPrevDomainCount = 4;
-    SkDEBUGCODE(Mode fModeX;) SkDEBUGCODE(Mode fModeY;)
-        SkDEBUGCODE(bool fHasMode = false;) GrGLSLProgramDataManager::UniformHandle fDomainUni;
+    SkDEBUGCODE(Mode fModeX);
+    SkDEBUGCODE(Mode fModeY);
+    SkDEBUGCODE(bool fHasMode = false);
+    GrGLSLProgramDataManager::UniformHandle fDomainUni;
     SkString fDomainName;
 
     // Only initialized if the domain has at least one decal axis

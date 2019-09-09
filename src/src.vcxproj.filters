@@ -688,5 +688,8 @@
     <ClCompile Include="c\sk_surface.cpp" />
     <ClCompile Include="c\sk_paint.cpp" />
     <ClCompile Include="c\sk_imageinfo.cpp" />
+    <ClCompile Include="..\third_party\etc1\etc1.cpp" />
+    <ClCompile Include="..\third_party\gif\SkGifImageReader.cpp" />
+    <ClCompile Include="..\third_party\skcms\skcms.cc" />
   </ItemGroup>
 </Project>

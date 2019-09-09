@@ -85,7 +85,7 @@ class SkTLazy {
   /**
    * Destroy the lazy object (if it was created via init() or set())
    */
-  void reset() {
+  void reset() noexcept {
     if (this->isValid()) {
       fPtr->~T();
       fPtr = nullptr;
@@ -96,7 +96,7 @@ class SkTLazy {
    *  Returns true if a valid object has been initialized in the SkTLazy,
    *  false otherwise.
    */
-  bool isValid() const { return SkToBool(fPtr); }
+  bool isValid() const noexcept { return SkToBool(fPtr); }
 
   /**
    * Returns the object. This version should only be called when the caller

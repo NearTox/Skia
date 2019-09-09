@@ -119,12 +119,10 @@ class GrFragmentProcessor : public GrProcessor {
 
   const GrFragmentProcessor& childProcessor(int index) const { return *fChildProcessors[index]; }
 
-  SkDEBUGCODE(bool isInstantiated() const;)
+  SkDEBUGCODE(bool isInstantiated() const);
 
-      /** Do any of the coordtransforms for this processor require local coords? */
-      bool usesLocalCoords() const {
-    return SkToBool(fFlags & kUsesLocalCoords_Flag);
-  }
+  /** Do any of the coordtransforms for this processor require local coords? */
+  bool usesLocalCoords() const { return SkToBool(fFlags & kUsesLocalCoords_Flag); }
 
   bool computeLocalCoordsInVertexShader() const {
     return SkToBool(fFlags & kComputeLocalCoordsInVertexShader_Flag);
@@ -445,10 +443,10 @@ class GrFragmentProcessor::TextureSampler {
 
   bool operator!=(const TextureSampler& other) const { return !(*this == other); }
 
-  SkDEBUGCODE(bool isInstantiated() const { return fProxy->isInstantiated(); })
+  SkDEBUGCODE(bool isInstantiated() const { return fProxy->isInstantiated(); });
 
-      // 'peekTexture' should only ever be called after a successful 'instantiate' call
-      GrTexture* peekTexture() const {
+  // 'peekTexture' should only ever be called after a successful 'instantiate' call
+  GrTexture* peekTexture() const {
     SkASSERT(fProxy->isInstantiated());
     return fProxy->peekTexture();
   }

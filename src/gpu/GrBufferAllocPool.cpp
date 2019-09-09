@@ -71,7 +71,7 @@ void GrBufferAllocPool::CpuBufferCache::releaseAll() {
 #ifdef SK_DEBUG
 #  define VALIDATE validate
 #else
-static void VALIDATE(bool = false) {}
+static constexpr void VALIDATE(bool = false) {}
 #endif
 
 #define UNMAP_BUFFER(block)                                                          \

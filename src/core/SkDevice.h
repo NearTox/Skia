@@ -33,12 +33,12 @@ class SkBaseDevice : public SkRefCnt {
    *  Return ImageInfo for this device. If the canvas is not backed by pixels
    *  (cpu or gpu), then the info's ColorType will be kUnknown_SkColorType.
    */
-  const SkImageInfo& imageInfo() const { return fInfo; }
+  const SkImageInfo& imageInfo() const noexcept { return fInfo; }
 
   /**
    *  Return SurfaceProps for this device.
    */
-  const SkSurfaceProps& surfaceProps() const { return fSurfaceProps; }
+  const SkSurfaceProps& surfaceProps() const noexcept { return fSurfaceProps; }
 
   /**
    *  Return the bounds of the device in the coordinate space of the root
@@ -86,7 +86,7 @@ class SkBaseDevice : public SkRefCnt {
    *  Return the device's origin: its offset in device coordinates from
    *  the default origin in its canvas' matrix/clip
    */
-  const SkIPoint& getOrigin() const { return fOrigin; }
+  const SkIPoint& getOrigin() const noexcept { return fOrigin; }
 
   virtual void* getRasterHandle() const { return nullptr; }
 
@@ -104,8 +104,8 @@ class SkBaseDevice : public SkRefCnt {
   }
   bool clipIsWideOpen() const;
 
-  const SkMatrix& ctm() const { return fCTM; }
-  void setCTM(const SkMatrix& ctm) { fCTM = ctm; }
+  const SkMatrix& ctm() const noexcept { return fCTM; }
+  void setCTM(const SkMatrix& ctm) noexcept { fCTM = ctm; }
   void setGlobalCTM(const SkMatrix& ctm);
   virtual void validateDevBounds(const SkIRect&) {}
 

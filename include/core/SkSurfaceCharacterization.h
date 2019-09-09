@@ -92,14 +92,14 @@ class SK_API SkSurfaceCharacterization {
   friend class SkDeferredDisplayListRecorder;  // for 'config'
   friend class SkSurface;                      // for 'config'
 
-  SkDEBUGCODE(void validate() const;)
+  SkDEBUGCODE(void validate() const);
 
-      SkSurfaceCharacterization(
-          sk_sp<GrContextThreadSafeProxy> contextInfo, size_t cacheMaxResourceBytes,
-          const SkImageInfo& ii, const GrBackendFormat& backendFormat, GrSurfaceOrigin origin,
-          int sampleCnt, Textureable isTextureable, MipMapped isMipMapped, UsesGLFBO0 usesGLFBO0,
-          VulkanSecondaryCBCompatible vulkanSecondaryCBCompatible, GrProtected isProtected,
-          const SkSurfaceProps& surfaceProps)
+  SkSurfaceCharacterization(
+      sk_sp<GrContextThreadSafeProxy> contextInfo, size_t cacheMaxResourceBytes,
+      const SkImageInfo& ii, const GrBackendFormat& backendFormat, GrSurfaceOrigin origin,
+      int sampleCnt, Textureable isTextureable, MipMapped isMipMapped, UsesGLFBO0 usesGLFBO0,
+      VulkanSecondaryCBCompatible vulkanSecondaryCBCompatible, GrProtected isProtected,
+      const SkSurfaceProps& surfaceProps)
       : fContextInfo(std::move(contextInfo)),
         fCacheMaxResourceBytes(cacheMaxResourceBytes),
         fImageInfo(ii),

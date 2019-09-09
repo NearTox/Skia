@@ -103,7 +103,7 @@ void GrRecordingContext::abandonContext() {
   fTextBlobCache->freeAll();
 }
 
-GrDrawingManager* GrRecordingContext::drawingManager() { return fDrawingManager.get(); }
+GrDrawingManager* GrRecordingContext::drawingManager() noexcept { return fDrawingManager.get(); }
 
 sk_sp<GrOpMemoryPool> GrRecordingContext::refOpMemoryPool() {
   if (!fOpMemoryPool) {
@@ -119,9 +119,11 @@ sk_sp<GrOpMemoryPool> GrRecordingContext::refOpMemoryPool() {
 
 GrOpMemoryPool* GrRecordingContext::opMemoryPool() { return this->refOpMemoryPool().get(); }
 
-GrTextBlobCache* GrRecordingContext::getTextBlobCache() { return fTextBlobCache.get(); }
+GrTextBlobCache* GrRecordingContext::getTextBlobCache() noexcept { return fTextBlobCache.get(); }
 
-const GrTextBlobCache* GrRecordingContext::getTextBlobCache() const { return fTextBlobCache.get(); }
+const GrTextBlobCache* GrRecordingContext::getTextBlobCache() const noexcept {
+  return fTextBlobCache.get();
+}
 
 void GrRecordingContext::addOnFlushCallbackObject(GrOnFlushCallbackObject* onFlushCBObject) {
   this->drawingManager()->addOnFlushCallbackObject(onFlushCBObject);
@@ -218,7 +220,7 @@ std::unique_ptr<GrRenderTargetContext> GrRecordingContext::makeDeferredRenderTar
   return renderTargetContext;
 }
 
-static inline GrColorType color_type_fallback(GrColorType ct) {
+static inline GrColorType color_type_fallback(GrColorType ct) noexcept {
   switch (ct) {
     // kRGBA_8888 is our default fallback for many color types that may not have renderable
     // backend formats.
@@ -301,4 +303,4 @@ GrRecordingContextPriv::makeDeferredRenderTargetContextWithFallback(
       surfaceProps, budgeted, isProtected);
 }
 
-GrContext* GrRecordingContextPriv::backdoor() { return (GrContext*)fContext; }
+GrContext* GrRecordingContextPriv::backdoor() noexcept { return (GrContext*)fContext; }

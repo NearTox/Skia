@@ -393,10 +393,10 @@ bool SkAAClip::trimLeftRight() {
   yoff = head->yoffsets();
   while (yoff < stop) {
     uint8_t* row = base + yoff->fOffset;
-    SkDEBUGCODE((void)compute_row_length(row, width);) yoff->fOffset +=
-        trim_row_left_right(row, width, leftZeros, riteZeros);
-    SkDEBUGCODE((void)compute_row_length(base + yoff->fOffset, width - leftZeros - riteZeros);)
-        yoff += 1;
+    SkDEBUGCODE((void)compute_row_length(row, width));
+    yoff->fOffset += trim_row_left_right(row, width, leftZeros, riteZeros);
+    SkDEBUGCODE((void)compute_row_length(base + yoff->fOffset, width - leftZeros - riteZeros));
+    yoff += 1;
   }
   return true;
 }
@@ -534,8 +534,8 @@ SkAAClip::SkAAClip() {
 }
 
 SkAAClip::SkAAClip(const SkAAClip& src) {
-  SkDEBUGCODE(fBounds.setEmpty();)  // need this for validate
-      fRunHead = nullptr;
+  SkDEBUGCODE(fBounds.setEmpty());  // need this for validate
+  fRunHead = nullptr;
   *this = src;
 }
 
@@ -1004,7 +1004,8 @@ class SkAAClip::Builder {
     uint8_t* baseData = data;
 
     row = fRows.begin();
-    SkDEBUGCODE(int prevY = row->fY - 1;) while (row < stop) {
+    SkDEBUGCODE(int prevY = row->fY - 1);
+    while (row < stop) {
       SkASSERT(prevY < row->fY);  // must be monotonic
       SkDEBUGCODE(prevY = row->fY);
 
@@ -1836,7 +1837,8 @@ static void merge(
     const uint8_t* SK_RESTRICT row, int rowN, const SkAlpha* SK_RESTRICT srcAA,
     const int16_t* SK_RESTRICT srcRuns, SkAlpha* SK_RESTRICT dstAA, int16_t* SK_RESTRICT dstRuns,
     int width) {
-  SkDEBUGCODE(int accumulated = 0;) int srcN = srcRuns[0];
+  SkDEBUGCODE(int accumulated = 0);
+  int srcN = srcRuns[0];
   // do we need this check?
   if (0 == srcN) {
     return;
@@ -1867,7 +1869,8 @@ static void merge(
       rowN = row[0];  // reload
     }
 
-    SkDEBUGCODE(accumulated += minN;) SkASSERT(accumulated <= width);
+    SkDEBUGCODE(accumulated += minN);
+    SkASSERT(accumulated <= width);
   }
   dstRuns[0] = 0;
 }

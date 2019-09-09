@@ -14,6 +14,9 @@
     <ClInclude Include="..\test\coreTest.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\third_party\etc1\etc1.cpp" />
+    <ClCompile Include="..\third_party\gif\SkGifImageReader.cpp" />
+    <ClCompile Include="..\third_party\skcms\skcms.cc" />
     <ClCompile Include="android\SkAndroidFrameworkUtils.cpp" />
     <ClCompile Include="android\SkAnimatedImage.cpp" />
     <ClCompile Include="android\SkBitmapRegionCodec.cpp" />

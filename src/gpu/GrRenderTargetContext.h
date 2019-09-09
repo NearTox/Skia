@@ -456,9 +456,10 @@ class GrRenderTargetContext : public GrSurfaceContext {
       GrRecordingContext*, sk_sp<GrRenderTargetProxy>, GrColorType, sk_sp<SkColorSpace>,
       const SkSurfaceProps*, bool managedOpsTask = true);
 
-  SkDEBUGCODE(void validate() const override;)
+  SkDEBUGCODE(void validate() const override);
 
-      private : class TextTarget;
+ private:
+  class TextTarget;
   enum class QuadOptimization;
 
   GrAAType chooseAAType(GrAA);

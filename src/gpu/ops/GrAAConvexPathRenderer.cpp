@@ -29,7 +29,7 @@
 #include "src/gpu/ops/GrMeshDrawOp.h"
 #include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 
-GrAAConvexPathRenderer::GrAAConvexPathRenderer() {}
+GrAAConvexPathRenderer::GrAAConvexPathRenderer() = default;
 
 struct Segment {
   enum {
@@ -182,8 +182,8 @@ struct DegenerateTestData {
   SkScalar fLineC;
 };
 
-static const SkScalar kClose = (SK_Scalar1 / 16);
-static const SkScalar kCloseSqd = kClose * kClose;
+static constexpr SkScalar kClose = (SK_Scalar1 / 16);
+static constexpr SkScalar kCloseSqd = kClose * kClose;
 
 static void update_degenerate_test(DegenerateTestData* data, const SkPoint& pt) {
   switch (data->fStage) {

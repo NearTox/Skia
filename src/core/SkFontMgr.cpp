@@ -16,7 +16,7 @@ class SkTypeface;
 
 class SkEmptyFontStyleSet : public SkFontStyleSet {
  public:
-  int count() override { return 0; }
+  int count() noexcept override { return 0; }
   void getStyle(int, SkFontStyle*, SkString*) override {
     SkDEBUGFAIL("SkFontStyleSet::getStyle called on empty set");
   }

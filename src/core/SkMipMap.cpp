@@ -36,24 +36,24 @@ struct ColorTypeFilter_8888 {
 
 struct ColorTypeFilter_565 {
   typedef uint16_t Type;
-  static uint32_t Expand(uint16_t x) {
+  static constexpr uint32_t Expand(uint16_t x) {
     return (x & ~SK_G16_MASK_IN_PLACE) | ((x & SK_G16_MASK_IN_PLACE) << 16);
   }
-  static uint16_t Compact(uint32_t x) {
+  static constexpr uint16_t Compact(uint32_t x) {
     return ((x & ~SK_G16_MASK_IN_PLACE) & 0xFFFF) | ((x >> 16) & SK_G16_MASK_IN_PLACE);
   }
 };
 
 struct ColorTypeFilter_4444 {
   typedef uint16_t Type;
-  static uint32_t Expand(uint16_t x) { return (x & 0xF0F) | ((x & ~0xF0F) << 12); }
-  static uint16_t Compact(uint32_t x) { return (x & 0xF0F) | ((x >> 12) & ~0xF0F); }
+  static constexpr uint32_t Expand(uint16_t x) { return (x & 0xF0F) | ((x & ~0xF0F) << 12); }
+  static constexpr uint16_t Compact(uint32_t x) { return (x & 0xF0F) | ((x >> 12) & ~0xF0F); }
 };
 
 struct ColorTypeFilter_8 {
   typedef uint8_t Type;
-  static unsigned Expand(unsigned x) { return x; }
-  static uint8_t Compact(unsigned x) { return (uint8_t)x; }
+  static constexpr unsigned Expand(unsigned x) { return x; }
+  static constexpr uint8_t Compact(unsigned x) { return (uint8_t)x; }
 };
 
 struct ColorTypeFilter_F16 {
@@ -67,19 +67,19 @@ struct ColorTypeFilter_F16 {
 };
 
 template <typename T>
-T add_121(const T& a, const T& b, const T& c) {
+T add_121(const T& a, const T& b, const T& c) noexcept {
   return a + b + b + c;
 }
 
 template <typename T>
-T shift_right(const T& x, int bits) {
+T shift_right(const T& x, int bits) noexcept {
   return x >> bits;
 }
 
 Sk4f shift_right(const Sk4f& x, int bits) { return x * (1.0f / (1 << bits)); }
 
 template <typename T>
-T shift_left(const T& x, int bits) {
+T shift_left(const T& x, int bits) noexcept {
   return x << bits;
 }
 
@@ -295,7 +295,7 @@ void downsample_3_3(void* dst, const void* src, size_t srcRB, int count) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-size_t SkMipMap::AllocLevelsSize(int levelCount, size_t pixelSize) {
+size_t SkMipMap::AllocLevelsSize(int levelCount, size_t pixelSize) noexcept {
   if (levelCount < 0) {
     return 0;
   }

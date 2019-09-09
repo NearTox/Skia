@@ -19,17 +19,17 @@ SkPMColor SkPreMultiplyColor(SkColor c) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static inline SkScalar ByteToScalar(U8CPU x) {
+static constexpr inline SkScalar ByteToScalar(U8CPU x) {
   SkASSERT(x <= 255);
   return SkIntToScalar(x) / 255;
 }
 
-static inline SkScalar ByteDivToScalar(int numer, U8CPU denom) {
+static constexpr inline SkScalar ByteDivToScalar(int numer, U8CPU denom) {
   // cast to keep the answer signed
   return SkIntToScalar(numer) / (int)denom;
 }
 
-void SkRGBToHSV(U8CPU r, U8CPU g, U8CPU b, SkScalar hsv[3]) {
+void SkRGBToHSV(U8CPU r, U8CPU g, U8CPU b, SkScalar hsv[3]) noexcept {
   SkASSERT(hsv);
 
   unsigned min = SkMin32(r, SkMin32(g, b));
@@ -69,7 +69,7 @@ void SkRGBToHSV(U8CPU r, U8CPU g, U8CPU b, SkScalar hsv[3]) {
   hsv[2] = v;
 }
 
-SkColor SkHSVToColor(U8CPU a, const SkScalar hsv[3]) {
+SkColor SkHSVToColor(U8CPU a, const SkScalar hsv[3]) noexcept {
   SkASSERT(hsv);
 
   SkScalar s = SkScalarPin(hsv[1], 0, 1);

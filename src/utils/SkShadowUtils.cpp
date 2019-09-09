@@ -207,7 +207,7 @@ class CachedTessellations : public SkRefCnt {
   template <typename FACTORY, int MAX_ENTRIES>
   class Set {
    public:
-    size_t size() const { return fSize; }
+    size_t size() const noexcept { return fSize; }
 
     sk_sp<SkVertices> find(
         const FACTORY& factory, const SkMatrix& matrix, SkVector* translate) const {
@@ -306,7 +306,7 @@ class CachedTessellationsRec : public SkResourceCache::Rec {
  */
 template <typename FACTORY>
 struct FindContext {
-  FindContext(const SkMatrix* viewMatrix, const FACTORY* factory)
+  constexpr FindContext(const SkMatrix* viewMatrix, const FACTORY* factory) noexcept
       : fViewMatrix(viewMatrix), fFactory(factory) {}
   const SkMatrix* const fViewMatrix;
   // If this is valid after Find is called then we found the vertices and they should be drawn

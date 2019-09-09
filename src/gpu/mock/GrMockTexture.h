@@ -166,7 +166,9 @@ class GrMockTextureRenderTarget : public GrMockTexture, public GrMockRenderTarge
 
  protected:
   // This avoids an inherits via dominance warning on MSVC.
-  void willRemoveLastRefOrPendingIO() override { GrTexture::willRemoveLastRefOrPendingIO(); }
+  void willRemoveLastRefOrPendingIO() noexcept override {
+    GrTexture::willRemoveLastRefOrPendingIO();
+  }
 
  private:
   void onAbandon() override {

@@ -310,7 +310,8 @@ GrVkCommandPool* GrVkResourceProvider::findOrCreateCommandPool() {
            : fActiveCommandPools) { SkASSERT(pool != result); } for (const GrVkCommandPool* pool
                                                                      : fAvailableCommandPools) {
         SkASSERT(pool != result);
-      }) fActiveCommandPools.push_back(result);
+      });
+  fActiveCommandPools.push_back(result);
   result->ref();
   return result;
 }

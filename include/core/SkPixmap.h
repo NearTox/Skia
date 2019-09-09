@@ -65,7 +65,7 @@ class SK_API SkPixmap {
       The prior pixels are unaffected; it is up to the caller to release pixels
       memory if desired.
   */
-  void reset();
+  void reset() noexcept;
 
   /** Sets width, height, SkAlphaType, and SkColorType from info.
       Sets pixel address from addr, which may be nullptr.

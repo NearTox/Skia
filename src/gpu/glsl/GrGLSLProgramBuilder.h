@@ -127,7 +127,7 @@ class GrGLSLProgramBuilder {
   // fragment shader are cleared.
   void reset() {
     this->addStage();
-    SkDEBUGCODE(fFS.debugOnly_resetPerStageVerification();)
+    SkDEBUGCODE(fFS.debugOnly_resetPerStageVerification());
   }
   void addStage() { fStageIndex++; }
 

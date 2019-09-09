@@ -45,6 +45,7 @@
     <ClCompile Include="skottie\src\text\TextAdapter.cpp" />
     <ClCompile Include="skottie\src\text\TextAnimator.cpp" />
     <ClCompile Include="skottie\src\text\TextValue.cpp" />
+    <ClCompile Include="skottie\utils\SkottieUtils.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

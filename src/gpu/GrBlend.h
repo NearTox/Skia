@@ -43,7 +43,7 @@ enum GrBlendEquation {
   kLast_GrBlendEquation = kIllegal_GrBlendEquation,
 };
 
-static const int kGrBlendEquationCnt = kLast_GrBlendEquation + 1;
+static constexpr int kGrBlendEquationCnt = kLast_GrBlendEquation + 1;
 
 /**
  * Coefficients for alpha-blending.
@@ -73,7 +73,7 @@ enum GrBlendCoeff {
   kLast_GrBlendCoeff = kIllegal_GrBlendCoeff,
 };
 
-static const int kGrBlendCoeffCnt = kLast_GrBlendCoeff + 1;
+static constexpr int kGrBlendCoeffCnt = kLast_GrBlendCoeff + 1;
 
 static constexpr bool GrBlendCoeffRefsSrc(const GrBlendCoeff coeff) {
   return kSC_GrBlendCoeff == coeff || kISC_GrBlendCoeff == coeff || kSA_GrBlendCoeff == coeff ||

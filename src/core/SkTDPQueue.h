@@ -32,14 +32,14 @@ class SkTDPQueue {
   SkTDPQueue() {}
   SkTDPQueue(int reserve) { fArray.setReserve(reserve); }
 
-  SkTDPQueue(SkTDPQueue&&) = default;
-  SkTDPQueue& operator=(SkTDPQueue&&) = default;
+  SkTDPQueue(SkTDPQueue&&) noexcept = default;
+  SkTDPQueue& operator=(SkTDPQueue&&) noexcept = default;
 
   SkTDPQueue(const SkTDPQueue&) = delete;
   SkTDPQueue& operator=(const SkTDPQueue&) = delete;
 
   /** Number of items in the queue. */
-  int count() const { return fArray.count(); }
+  int count() const noexcept { return fArray.count(); }
 
   /** Gets the next item in the queue without popping it. */
   const T& peek() const { return fArray[0]; }
@@ -48,7 +48,8 @@ class SkTDPQueue {
   /** Removes the next item. */
   void pop() {
     this->validate();
-    SkDEBUGCODE(if (SkToBool(INDEX)) { *INDEX(fArray[0]) = -1; }) if (1 == fArray.count()) {
+    SkDEBUGCODE(if (SkToBool(INDEX)) { *INDEX(fArray[0]) = -1; });
+    if (1 == fArray.count()) {
       fArray.pop();
       return;
     }
@@ -77,7 +78,8 @@ class SkTDPQueue {
     int index = *INDEX(entry);
     SkASSERT(index >= 0 && index < fArray.count());
     this->validate();
-    SkDEBUGCODE(*INDEX(fArray[index]) = -1;) if (index == fArray.count() - 1) {
+    SkDEBUGCODE(*INDEX(fArray[index]) = -1);
+    if (index == fArray.count() - 1) {
       fArray.pop();
       return;
     }

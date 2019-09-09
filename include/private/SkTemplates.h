@@ -30,7 +30,7 @@
  *  Note that this does *not* prevent the local variable from being optimized away.
  */
 template <typename T>
-inline void sk_ignore_unused_variable(const T&) {}
+inline constexpr void sk_ignore_unused_variable(const T&) noexcept {}
 
 /**
  *  Returns a pointer to a D which comes immediately after S[count].
@@ -90,16 +90,16 @@ class SkAutoTArray {
     if (count) {
       fArray.reset(new T[count]);
     }
-    SkDEBUGCODE(fCount = count;)
+    SkDEBUGCODE(fCount = count);
   }
 
   SkAutoTArray(SkAutoTArray&& other) : fArray(std::move(other.fArray)) {
-    SkDEBUGCODE(fCount = other.fCount; other.fCount = 0;)
+    SkDEBUGCODE(fCount = other.fCount; other.fCount = 0);
   }
   SkAutoTArray& operator=(SkAutoTArray&& other) {
     if (this != &other) {
       fArray = std::move(other.fArray);
-      SkDEBUGCODE(fCount = other.fCount; other.fCount = 0;)
+      SkDEBUGCODE(fCount = other.fCount; other.fCount = 0);
     }
     return *this;
   }
@@ -121,7 +121,7 @@ class SkAutoTArray {
 
  private:
   std::unique_ptr<T[]> fArray;
-  SkDEBUGCODE(int fCount = 0;)
+  SkDEBUGCODE(int fCount = 0);
 };
 
 /** Wraps SkAutoTArray, with room for kCountRequested elements preallocated.
@@ -135,7 +135,7 @@ class SkAutoSTArray {
   SkAutoSTArray& operator=(const SkAutoSTArray&) = delete;
 
   /** Initialize with no objects */
-  SkAutoSTArray() {
+  SkAutoSTArray() noexcept {
     fArray = nullptr;
     fCount = 0;
   }
@@ -299,7 +299,7 @@ class SkAutoSTMalloc {
   }
 
   // doesn't preserve contents
-  T* reset(size_t count) {
+  T* reset(size_t count) noexcept {
     if (fPtr != fTStorage) {
       sk_free(fPtr);
     }
@@ -313,15 +313,15 @@ class SkAutoSTMalloc {
     return fPtr;
   }
 
-  T* get() const { return fPtr; }
+  T* get() const noexcept { return fPtr; }
 
-  operator T*() { return fPtr; }
+  operator T*() noexcept { return fPtr; }
 
-  operator const T*() const { return fPtr; }
+  operator const T*() const noexcept { return fPtr; }
 
-  T& operator[](int index) { return fPtr[index]; }
+  T& operator[](int index) noexcept { return fPtr[index]; }
 
-  const T& operator[](int index) const { return fPtr[index]; }
+  const T& operator[](int index) const noexcept { return fPtr[index]; }
 
   // Reallocs the array, can be used to shrink the allocation.  Makes no attempt to be intelligent
   void realloc(size_t count) {
@@ -343,15 +343,15 @@ class SkAutoSTMalloc {
 
  private:
   // Since we use uint32_t storage, we might be able to get more elements for free.
-  static const size_t kCountWithPadding = SkAlign4(kCountRequested * sizeof(T)) / sizeof(T);
+  static constexpr size_t kCountWithPadding = SkAlign4(kCountRequested * sizeof(T)) / sizeof(T);
 #if defined(SK_BUILD_FOR_GOOGLE3)
   // Stack frame size is limited for SK_BUILD_FOR_GOOGLE3. 4k is less than the actual max, but some
   // functions have multiple large stack allocations.
-  static const size_t kMaxBytes = 4 * 1024;
-  static const size_t kCount = kCountRequested * sizeof(T) > kMaxBytes ? kMaxBytes / sizeof(T)
-                                                                       : kCountWithPadding;
+  static constexpr size_t kMaxBytes = 4 * 1024;
+  static constexpr size_t kCount = kCountRequested * sizeof(T) > kMaxBytes ? kMaxBytes / sizeof(T)
+                                                                           : kCountWithPadding;
 #else
-  static const size_t kCount = kCountWithPadding;
+  static constexpr size_t kCount = kCountWithPadding;
 #endif
 
   T* fPtr;
@@ -402,8 +402,8 @@ class SkAlignedSStorage {
   SkAlignedSStorage& operator=(SkAlignedSStorage&&) = delete;
   SkAlignedSStorage& operator=(const SkAlignedSStorage&) = delete;
 
-  size_t size() const { return N; }
-  void* get() { return fData; }
+  constexpr size_t size() const noexcept { return N; }
+  void* get() noexcept { return fData; }
   const void* get() const { return fData; }
 
  private:

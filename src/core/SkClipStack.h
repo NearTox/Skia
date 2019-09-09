@@ -287,7 +287,7 @@ class SkClipStack {
 
   void reset();
 
-  int getSaveCount() const { return fSaveCount; }
+  int getSaveCount() const noexcept { return fSaveCount; }
   void save();
   void restore();
 

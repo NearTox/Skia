@@ -48,16 +48,16 @@ class GrGpu : public SkRefCnt {
   GrGpu(GrContext* context);
   ~GrGpu() override;
 
-  GrContext* getContext() { return fContext; }
-  const GrContext* getContext() const { return fContext; }
+  GrContext* getContext() noexcept { return fContext; }
+  const GrContext* getContext() const noexcept { return fContext; }
 
   /**
    * Gets the capabilities of the draw target.
    */
-  const GrCaps* caps() const { return fCaps.get(); }
+  const GrCaps* caps() const noexcept { return fCaps.get(); }
   sk_sp<const GrCaps> refCaps() const { return fCaps; }
 
-  GrPathRendering* pathRendering() { return fPathRendering.get(); }
+  GrPathRendering* pathRendering() noexcept { return fPathRendering.get(); }
 
   enum class DisconnectType {
     // No cleanup should be attempted, immediately cease making backend API calls
@@ -77,7 +77,7 @@ class GrGpu : public SkRefCnt {
    * the GrGpu that the state was modified and it shouldn't make assumptions
    * about the state.
    */
-  void markContextDirty(uint32_t state = kAll_GrBackendState) { fResetBits |= state; }
+  void markContextDirty(uint32_t state = kAll_GrBackendState) noexcept { fResetBits |= state; }
 
   /**
    * Creates a texture object. If renderable is kYes then the returned texture can
@@ -363,42 +363,42 @@ class GrGpu : public SkRefCnt {
   class Stats {
    public:
 #if GR_GPU_STATS
-    Stats() = default;
+    constexpr Stats() noexcept = default;
 
-    void reset() { *this = {}; }
+    void reset() noexcept { *this = {}; }
 
-    int renderTargetBinds() const { return fRenderTargetBinds; }
-    void incRenderTargetBinds() { fRenderTargetBinds++; }
+    int renderTargetBinds() const noexcept { return fRenderTargetBinds; }
+    void incRenderTargetBinds() noexcept { fRenderTargetBinds++; }
 
-    int shaderCompilations() const { return fShaderCompilations; }
-    void incShaderCompilations() { fShaderCompilations++; }
+    int shaderCompilations() const noexcept { return fShaderCompilations; }
+    void incShaderCompilations() noexcept { fShaderCompilations++; }
 
-    int textureCreates() const { return fTextureCreates; }
-    void incTextureCreates() { fTextureCreates++; }
+    int textureCreates() const noexcept { return fTextureCreates; }
+    void incTextureCreates() noexcept { fTextureCreates++; }
 
-    int textureUploads() const { return fTextureUploads; }
-    void incTextureUploads() { fTextureUploads++; }
+    int textureUploads() const noexcept { return fTextureUploads; }
+    void incTextureUploads() noexcept { fTextureUploads++; }
 
-    int transfersToTexture() const { return fTransfersToTexture; }
-    void incTransfersToTexture() { fTransfersToTexture++; }
+    int transfersToTexture() const noexcept { return fTransfersToTexture; }
+    void incTransfersToTexture() noexcept { fTransfersToTexture++; }
 
-    int transfersFromSurface() const { return fTransfersFromSurface; }
-    void incTransfersFromSurface() { fTransfersFromSurface++; }
+    int transfersFromSurface() const noexcept { return fTransfersFromSurface; }
+    void incTransfersFromSurface() noexcept { fTransfersFromSurface++; }
 
-    int stencilAttachmentCreates() const { return fStencilAttachmentCreates; }
-    void incStencilAttachmentCreates() { fStencilAttachmentCreates++; }
+    int stencilAttachmentCreates() const noexcept { return fStencilAttachmentCreates; }
+    void incStencilAttachmentCreates() noexcept { fStencilAttachmentCreates++; }
 
-    int numDraws() const { return fNumDraws; }
-    void incNumDraws() { fNumDraws++; }
+    int numDraws() const noexcept { return fNumDraws; }
+    void incNumDraws() noexcept { fNumDraws++; }
 
-    int numFailedDraws() const { return fNumFailedDraws; }
-    void incNumFailedDraws() { ++fNumFailedDraws; }
+    int numFailedDraws() const noexcept { return fNumFailedDraws; }
+    void incNumFailedDraws() noexcept { ++fNumFailedDraws; }
 
-    int numFinishFlushes() const { return fNumFinishFlushes; }
-    void incNumFinishFlushes() { ++fNumFinishFlushes; }
+    int numFinishFlushes() const noexcept { return fNumFinishFlushes; }
+    void incNumFinishFlushes() noexcept { ++fNumFinishFlushes; }
 
-    int numScratchTexturesReused() const { return fNumScratchTexturesReused; }
-    void incNumScratchTexturesReused() { ++fNumScratchTexturesReused; }
+    int numScratchTexturesReused() const noexcept { return fNumScratchTexturesReused; }
+    void incNumScratchTexturesReused() noexcept { ++fNumScratchTexturesReused; }
 
 #  if GR_TEST_UTILS
     void dump(SkString*);
@@ -434,7 +434,7 @@ class GrGpu : public SkRefCnt {
 #endif
   };
 
-  Stats* stats() { return &fStats; }
+  Stats* stats() noexcept { return &fStats; }
   void dumpJSON(SkJSONWriter*) const;
 
   /**

@@ -13,16 +13,16 @@
 /**
  *  Return the integer square root of value, with a bias of bitBias
  */
-int32_t SkSqrtBits(int32_t value, int bitBias);
+int32_t SkSqrtBits(int32_t value, int bitBias) noexcept;
 
 /** Return the integer square root of n, treated as a SkFixed (16.16)
  */
-static inline int32_t SkSqrt32(int32_t n) { return SkSqrtBits(n, 15); }
+static inline int32_t SkSqrt32(int32_t n) noexcept { return SkSqrtBits(n, 15); }
 
 /**
  *  Returns (value < 0 ? 0 : value) efficiently (i.e. no compares or branches)
  */
-static inline int SkClampPos(int value) { return value & ~(value >> 31); }
+static constexpr inline int SkClampPos(int value) { return value & ~(value >> 31); }
 
 /**
  * Stores numer/denom and numer%denom into div and mod respectively.
@@ -68,7 +68,7 @@ static inline int32_t SkCopySign32(int32_t x, int32_t y) {
  Note: only works as long as max - value doesn't wrap around
  @return max if value >= max, else value
  */
-static inline unsigned SkClampUMax(unsigned value, unsigned max) {
+static constexpr inline unsigned SkClampUMax(unsigned value, unsigned max) {
   if (value > max) {
     value = max;
   }
@@ -126,19 +126,19 @@ static inline float SkPinToUnitFloat(float x) { return SkTMin(SkTMax(x, 0.0f), 1
  */
 #if defined(_MSC_VER)
 #  include <stdlib.h>
-static inline uint32_t SkBSwap32(uint32_t v) { return _byteswap_ulong(v); }
+static inline uint32_t SkBSwap32(uint32_t v) noexcept { return _byteswap_ulong(v); }
 #else
 static inline uint32_t SkBSwap32(uint32_t v) { return __builtin_bswap32(v); }
 #endif
 
 //! Returns the number of leading zero bits (0...32)
-int SkCLZ_portable(uint32_t);
+int SkCLZ_portable(uint32_t) noexcept;
 
 #ifndef SkCLZ
 #  if defined(SK_BUILD_FOR_WIN)
 #    include <intrin.h>
 
-static inline int SkCLZ(uint32_t mask) {
+static inline int SkCLZ(uint32_t mask) noexcept {
   if (mask) {
     unsigned long index;
     _BitScanReverse(&index, mask);

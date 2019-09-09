@@ -76,7 +76,7 @@ class SK_API SkPaint {
       @param paint  original to move
       @return       content of paint
   */
-  SkPaint(SkPaint&& paint);
+  SkPaint(SkPaint&& paint) noexcept;
 
   /** Decreases SkPaint SkRefCnt of owned objects: SkPathEffect, SkShader,
       SkMaskFilter, SkColorFilter, and SkImageFilter. If the
@@ -106,7 +106,7 @@ class SK_API SkPaint {
       @param paint  original to move
       @return       content of paint
   */
-  SkPaint& operator=(SkPaint&& paint);
+  SkPaint& operator=(SkPaint&& paint) noexcept;
 
   /** Compares a and b, and returns true if a and b are equivalent. May return false
       if SkPathEffect, SkShader, SkMaskFilter, SkColorFilter,

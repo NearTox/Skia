@@ -113,12 +113,12 @@ bool SkRegion::RunsAreARect(const SkRegion::RunType runs[], int count, SkIRect* 
 
 //////////////////////////////////////////////////////////////////////////
 
-SkRegion::SkRegion() {
+SkRegion::SkRegion() noexcept {
   fBounds.setEmpty();
   fRunHead = SkRegion_gEmptyRunHeadPtr;
 }
 
-SkRegion::SkRegion(const SkRegion& src) {
+SkRegion::SkRegion(const SkRegion& src) noexcept {
   fRunHead = SkRegion_gEmptyRunHeadPtr;  // just need a value that won't trigger sk_free(fRunHead)
   this->setRegion(src);
 }
@@ -130,7 +130,7 @@ SkRegion::SkRegion(const SkIRect& rect) {
 
 SkRegion::~SkRegion() { this->freeRuns(); }
 
-void SkRegion::freeRuns() {
+void SkRegion::freeRuns() noexcept {
   if (this->isComplex()) {
     SkASSERT(fRunHead->fRefCnt >= 1);
     if (--fRunHead->fRefCnt == 0) {
@@ -187,7 +187,7 @@ bool SkRegion::setRect(const SkIRect& r) {
   return true;
 }
 
-bool SkRegion::setRegion(const SkRegion& src) {
+bool SkRegion::setRegion(const SkRegion& src) noexcept {
   if (this != &src) {
     this->freeRuns();
 

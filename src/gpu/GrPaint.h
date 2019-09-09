@@ -46,10 +46,10 @@ class GrPaint {
   /**
    * The initial color of the drawn primitive. Defaults to solid white.
    */
-  void setColor4f(const SkPMColor4f& color) { fColor = color; }
-  const SkPMColor4f& getColor4f() const { return fColor; }
+  void setColor4f(const SkPMColor4f& color) noexcept { fColor = color; }
+  const SkPMColor4f& getColor4f() const noexcept { return fColor; }
 
-  void setXPFactory(const GrXPFactory* xpFactory) {
+  void setXPFactory(const GrXPFactory* xpFactory) noexcept {
     fXPFactory = xpFactory;
     fTrivial &= !SkToBool(xpFactory);
   }
@@ -92,7 +92,7 @@ class GrPaint {
     return this->numColorFragmentProcessors() + this->numCoverageFragmentProcessors();
   }
 
-  const GrXPFactory* getXPFactory() const { return fXPFactory; }
+  const GrXPFactory* getXPFactory() const noexcept { return fXPFactory; }
 
   GrFragmentProcessor* getColorFragmentProcessor(int i) const {
     return fColorFragmentProcessors[i].get();
@@ -113,7 +113,7 @@ class GrPaint {
    * A trivial paint is one that uses src-over and has no fragment processors.
    * It may have variable sRGB settings.
    **/
-  bool isTrivial() const { return fTrivial; }
+  bool isTrivial() const noexcept { return fTrivial; }
 
   friend void assert_alive(GrPaint& p) { SkASSERT(p.fAlive); }
 
@@ -130,7 +130,7 @@ class GrPaint {
   SkSTArray<2, std::unique_ptr<GrFragmentProcessor>> fCoverageFragmentProcessors;
   bool fTrivial = true;
   SkPMColor4f fColor = SK_PMColor4fWHITE;
-  SkDEBUGCODE(bool fAlive = true;)  // Set false after moved from.
+  SkDEBUGCODE(bool fAlive = true);  // Set false after moved from.
 };
 
 #endif

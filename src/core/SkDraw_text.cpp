@@ -93,9 +93,9 @@ void SkDraw::paintPaths(
 
 void SkDraw::drawGlyphRunList(
     const SkGlyphRunList& glyphRunList, SkGlyphRunListPainter* glyphPainter) const {
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 
-      if (fRC->isEmpty()) {
+  if (fRC->isEmpty()) {
     return;
   }
 

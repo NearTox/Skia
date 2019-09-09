@@ -307,7 +307,7 @@ class GrResourceProvider {
   sk_sp<const GrGpuBuffer> fQuadIndexBuffer;
 
   // In debug builds we guard against improper thread handling
-  SkDEBUGCODE(mutable GrSingleOwner* fSingleOwner;)
+  SkDEBUGCODE(mutable GrSingleOwner* fSingleOwner);
 };
 
 GR_MAKE_BITFIELD_CLASS_OPS(GrResourceProvider::Flags);

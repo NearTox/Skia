@@ -100,11 +100,12 @@ class GrOpsTask : public GrRenderTask {
 
   void discard();
 
-  SkDEBUGCODE(void dump(bool printDependencies) const override;)
-      SkDEBUGCODE(int numClips() const override { return fNumClips; })
-          SkDEBUGCODE(void visitProxies_debugOnly(const VisitSurfaceProxyFunc&) const override;)
+  SkDEBUGCODE(void dump(bool printDependencies) const override);
+  SkDEBUGCODE(int numClips() const override { return fNumClips; });
+  SkDEBUGCODE(void visitProxies_debugOnly(const VisitSurfaceProxyFunc&) const override);
 
-              private : bool isNoOp() const {
+ private:
+  bool isNoOp() const {
     // TODO: GrLoadOp::kDiscard (i.e., storing a discard) should also be grounds for skipping
     // execution. We currently don't because of Vulkan. See http://skbug.com/9373.
     //
@@ -260,11 +261,11 @@ class GrOpsTask : public GrRenderTask {
   // MDB TODO: 4096 for the first allocation of the clip space will be huge overkill.
   // Gather statistics to determine the correct size.
   SkArenaAlloc fClipAllocator{4096};
-  SkDEBUGCODE(int fNumClips;)
+  SkDEBUGCODE(int fNumClips);
 
-      // TODO: We could look into this being a set if we find we're adding a lot of duplicates that
-      // is causing slow downs.
-      SkTArray<GrTextureProxy*, true> fSampledProxies;
+  // TODO: We could look into this being a set if we find we're adding a lot of duplicates that
+  // is causing slow downs.
+  SkTArray<GrTextureProxy*, true> fSampledProxies;
 };
 
 #endif

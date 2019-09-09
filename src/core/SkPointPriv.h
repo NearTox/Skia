@@ -59,7 +59,7 @@ class SkPointPriv {
     return SkScalarNearlyZero(pt.fX - p.fX, tol) && SkScalarNearlyZero(pt.fY - p.fY, tol);
   }
 
-  static SkScalar LengthSqd(const SkPoint& pt) { return SkPoint::DotProduct(pt, pt); }
+  static SkScalar LengthSqd(const SkPoint& pt) noexcept { return SkPoint::DotProduct(pt, pt); }
 
   static void Negate(SkIPoint& pt) {
     pt.fX = -pt.fX;

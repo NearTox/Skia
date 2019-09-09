@@ -128,7 +128,7 @@ class SkStrike final : public SkStrikeInterface {
   void forceValidate() const;
   void validate() const;
 #else
-  void validate() const {}
+  void validate() const noexcept {}
 #endif
 
   class AutoValidate : SkNoncopyable {
@@ -143,7 +143,7 @@ class SkStrike final : public SkStrikeInterface {
         fCache->validate();
       }
     }
-    void forget() { fCache = nullptr; }
+    void forget() noexcept { fCache = nullptr; }
 
    private:
     const SkStrike* fCache;

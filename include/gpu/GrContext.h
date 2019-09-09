@@ -338,8 +338,8 @@ class SK_API GrContext : public GrRecordingContext {
   void checkAsyncWorkCompletion();
 
   // Provides access to functions that aren't part of the public API.
-  GrContextPriv priv();
-  const GrContextPriv priv() const;
+  GrContextPriv priv() noexcept;
+  const GrContextPriv priv() const noexcept;
 
   /** Enumerates all cached GPU resources and dumps their memory to traceMemoryDump. */
   // Chrome is using this!

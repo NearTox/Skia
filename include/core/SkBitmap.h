@@ -73,7 +73,7 @@ class SK_API SkBitmap {
       @param src  SkBitmap to copy SkImageInfo, and reassign SkPixelRef
       @return     copy of src
   */
-  SkBitmap(SkBitmap&& src);
+  SkBitmap(SkBitmap&& src) noexcept;
 
   /** Decrements SkPixelRef reference count, if SkPixelRef is not nullptr.
    */
@@ -93,20 +93,20 @@ class SK_API SkBitmap {
       @param src  SkBitmap to copy SkImageInfo, and reassign SkPixelRef
       @return     copy of src
   */
-  SkBitmap& operator=(SkBitmap&& src);
+  SkBitmap& operator=(SkBitmap&& src) noexcept;
 
   /** Swaps the fields of the two bitmaps.
 
       @param other  SkBitmap exchanged with original
   */
-  void swap(SkBitmap& other);
+  void swap(SkBitmap& other) noexcept;
 
   /** Returns a constant reference to the SkPixmap holding the SkBitmap pixel
       address, row bytes, and SkImageInfo.
 
       @return  reference to SkPixmap describing this SkBitmap
   */
-  const SkPixmap& pixmap() const { return fPixmap; }
+  const SkPixmap& pixmap() const noexcept { return fPixmap; }
 
   /** Returns width, height, SkAlphaType, SkColorType, and SkColorSpace.
 
@@ -206,7 +206,7 @@ class SK_API SkBitmap {
 
       @return  true if no SkPixelRef is associated
   */
-  bool isNull() const { return nullptr == fPixelRef; }
+  bool isNull() const noexcept { return nullptr == fPixelRef; }
 
   /** Returns true if width() or height() are zero, or if SkPixelRef is nullptr.
       If true, SkBitmap has no effect when drawn or drawn into.
@@ -305,7 +305,7 @@ class SK_API SkBitmap {
 
       @return  true if marked volatile
   */
-  bool isVolatile() const;
+  bool isVolatile() const noexcept;
 
   /** Sets if pixels should be read from SkPixelRef on every access. SkBitmap are not
       volatile by default; a GPU back end may upload pixel values expecting them to be
@@ -316,7 +316,7 @@ class SK_API SkBitmap {
 
       @param isVolatile  true if backing pixels are temporary
   */
-  void setIsVolatile(bool isVolatile);
+  void setIsVolatile(bool isVolatile) noexcept;
 
   /** Resets to its initial state; all fields are set to zero, as if SkBitmap had
       been initialized by SkBitmap().
@@ -683,7 +683,7 @@ class SK_API SkBitmap {
 
       @return  SkPixelRef, or nullptr
   */
-  SkPixelRef* pixelRef() const { return fPixelRef.get(); }
+  SkPixelRef* pixelRef() const noexcept { return fPixelRef.get(); }
 
   /** Returns origin of pixels within SkPixelRef. SkBitmap bounds is always contained
       by SkPixelRef bounds, which may be the same size or larger. Multiple SkBitmap
@@ -1076,12 +1076,12 @@ class SK_API SkBitmap {
   /** Asserts if internal values are illegal or inconsistent. Only available if
       SK_DEBUG is defined at compile time.
   */
-  SkDEBUGCODE(void validate() const;)
+  SkDEBUGCODE(void validate() const);
 
-      /** \class SkBitmap::Allocator
-          Abstract subclass of HeapAllocator.
-      */
-      class Allocator : public SkRefCnt {
+  /** \class SkBitmap::Allocator
+      Abstract subclass of HeapAllocator.
+  */
+  class Allocator : public SkRefCnt {
    public:
     /** Allocates the pixel memory for the bitmap, given its dimensions and
         SkColorType. Returns true on success, where success means either setPixels()

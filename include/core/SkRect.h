@@ -216,7 +216,7 @@ struct SK_API SkIRect {
       or if top is equal to or greater than bottom. Setting all members to zero
       is a convenience, but does not designate a special empty rectangle.
   */
-  void setEmpty() { memset(this, 0, sizeof(*this)); }
+  void setEmpty() noexcept { memset(this, 0, sizeof(*this)); }
 
   /** Sets SkIRect to (left, top, right, bottom).
       left and right are not sorted; left is not necessarily less than right.
@@ -652,7 +652,7 @@ struct SK_API SkRect {
 
       @return  true if width() or height() are zero or negative
   */
-  bool isEmpty() const {
+  bool isEmpty() const noexcept {
     // We write it as the NOT of a non-empty rect, so we will return true if any values
     // are NaN.
     return !(fLeft < fRight && fTop < fBottom);
@@ -664,14 +664,14 @@ struct SK_API SkRect {
 
       @return  true if width() or height() are zero or positive
   */
-  bool isSorted() const { return fLeft <= fRight && fTop <= fBottom; }
+  bool isSorted() const noexcept { return fLeft <= fRight && fTop <= fBottom; }
 
   /** Returns true if all values in the rectangle are finite: SK_ScalarMin or larger,
       and SK_ScalarMax or smaller.
 
       @return  true if no member is infinite or NaN
   */
-  bool isFinite() const {
+  bool isFinite() const noexcept {
     float accum = 0;
     accum *= fLeft;
     accum *= fTop;
@@ -805,7 +805,7 @@ struct SK_API SkRect {
       or if top is equal to or greater than bottom. Setting all members to zero
       is a convenience, but does not designate a special empty rectangle.
   */
-  void setEmpty() { *this = MakeEmpty(); }
+  void setEmpty() noexcept { *this = MakeEmpty(); }
 
   /** Sets SkRect to src, promoting src members from integer to scalar.
       Very large values in src may lose precision.
@@ -828,7 +828,7 @@ struct SK_API SkRect {
       @param right   stored in fRight
       @param bottom  stored in fBottom
   */
-  void setLTRB(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) {
+  void setLTRB(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) noexcept {
     fLeft = left;
     fTop = top;
     fRight = right;
@@ -857,7 +857,7 @@ struct SK_API SkRect {
       @param count  entries in array
       @return       true if all SkPoint values are finite
   */
-  bool setBoundsCheck(const SkPoint pts[], int count);
+  bool setBoundsCheck(const SkPoint pts[], int count) noexcept;
 
   /** Sets to bounds of SkPoint pts array with count entries. If any SkPoint in pts
       contains infinity or NaN, all SkRect dimensions are set to NaN.

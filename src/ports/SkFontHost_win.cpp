@@ -298,7 +298,7 @@ class FontMemResourceTypeface : public LogFontTypeface {
   }
 
  protected:
-  void weak_dispose() const override {
+  void weak_dispose() const noexcept override {
     RemoveFontMemResourceEx(fFontMemResource);
     INHERITED::weak_dispose();
   }
@@ -1589,50 +1589,49 @@ std::unique_ptr<SkAdvancedTypefaceMetrics> LogFontTypeface::onGetAdvancedMetrics
   if (glyphCount == 0 || (otm.otmTextMetrics.tmPitchAndFamily & TMPF_TRUETYPE) == 0) {
     return info;
   }
-    info->fType = SkAdvancedTypefaceMetrics::kTrueType_Font;
+  info->fType = SkAdvancedTypefaceMetrics::kTrueType_Font;
 
-    // If this bit is clear the font is a fixed pitch font.
-    if (!(otm.otmTextMetrics.tmPitchAndFamily & TMPF_FIXED_PITCH)) {
-      info->fStyle |= SkAdvancedTypefaceMetrics::kFixedPitch_Style;
-    }
-    if (otm.otmTextMetrics.tmItalic) {
-      info->fStyle |= SkAdvancedTypefaceMetrics::kItalic_Style;
-    }
-    if (otm.otmTextMetrics.tmPitchAndFamily & FF_ROMAN) {
-      info->fStyle |= SkAdvancedTypefaceMetrics::kSerif_Style;
-    } else if (otm.otmTextMetrics.tmPitchAndFamily & FF_SCRIPT) {
-      info->fStyle |= SkAdvancedTypefaceMetrics::kScript_Style;
-    }
+  // If this bit is clear the font is a fixed pitch font.
+  if (!(otm.otmTextMetrics.tmPitchAndFamily & TMPF_FIXED_PITCH)) {
+    info->fStyle |= SkAdvancedTypefaceMetrics::kFixedPitch_Style;
+  }
+  if (otm.otmTextMetrics.tmItalic) {
+    info->fStyle |= SkAdvancedTypefaceMetrics::kItalic_Style;
+  }
+  if (otm.otmTextMetrics.tmPitchAndFamily & FF_ROMAN) {
+    info->fStyle |= SkAdvancedTypefaceMetrics::kSerif_Style;
+  } else if (otm.otmTextMetrics.tmPitchAndFamily & FF_SCRIPT) {
+    info->fStyle |= SkAdvancedTypefaceMetrics::kScript_Style;
+  }
 
-    // The main italic angle of the font, in tenths of a degree counterclockwise
-    // from vertical.
-    info->fItalicAngle = otm.otmItalicAngle / 10;
-    info->fAscent = SkToS16(otm.otmTextMetrics.tmAscent);
-    info->fDescent = SkToS16(-otm.otmTextMetrics.tmDescent);
-    // TODO(ctguil): Use alternate cap height calculation.
-    // MSDN says otmsCapEmHeight is not support but it is returning a value on
-    // my Win7 box.
-    info->fCapHeight = otm.otmsCapEmHeight;
-    info->fBBox = SkIRect::MakeLTRB(
-        otm.otmrcFontBox.left, otm.otmrcFontBox.top, otm.otmrcFontBox.right,
-        otm.otmrcFontBox.bottom);
+  // The main italic angle of the font, in tenths of a degree counterclockwise
+  // from vertical.
+  info->fItalicAngle = otm.otmItalicAngle / 10;
+  info->fAscent = SkToS16(otm.otmTextMetrics.tmAscent);
+  info->fDescent = SkToS16(-otm.otmTextMetrics.tmDescent);
+  // TODO(ctguil): Use alternate cap height calculation.
+  // MSDN says otmsCapEmHeight is not support but it is returning a value on
+  // my Win7 box.
+  info->fCapHeight = otm.otmsCapEmHeight;
+  info->fBBox = SkIRect::MakeLTRB(
+      otm.otmrcFontBox.left, otm.otmrcFontBox.top, otm.otmrcFontBox.right, otm.otmrcFontBox.bottom);
 
-    // Figure out a good guess for StemV - Min width of i, I, !, 1.
-    // This probably isn't very good with an italic font.
-    min_width = SHRT_MAX;
-    info->fStemV = 0;
-    for (size_t i = 0; i < SK_ARRAY_COUNT(stem_chars); i++) {
-      ABC abcWidths;
-      if (GetCharABCWidths(hdc, stem_chars[i], stem_chars[i], &abcWidths)) {
-        int16_t width = abcWidths.abcB;
-        if (width > 0 && width < min_width) {
-          min_width = width;
-          info->fStemV = min_width;
-        }
+  // Figure out a good guess for StemV - Min width of i, I, !, 1.
+  // This probably isn't very good with an italic font.
+  min_width = SHRT_MAX;
+  info->fStemV = 0;
+  for (size_t i = 0; i < SK_ARRAY_COUNT(stem_chars); i++) {
+    ABC abcWidths;
+    if (GetCharABCWidths(hdc, stem_chars[i], stem_chars[i], &abcWidths)) {
+      int16_t width = abcWidths.abcB;
+      if (width > 0 && width < min_width) {
+        min_width = width;
+        info->fStemV = min_width;
       }
     }
+  }
 
-    return info;
+  return info;
 }
 
 // Dummy representation of a Base64 encoded GUID from create_unique_font_name.
@@ -2086,7 +2085,7 @@ class SkFontStyleSetGDI : public SkFontStyleSet {
     ::DeleteDC(hdc);
   }
 
-  int count() override { return fArray.count(); }
+  int count() noexcept override { return fArray.count(); }
 
   void getStyle(int index, SkFontStyle* fs, SkString* styleName) override {
     if (fs) {

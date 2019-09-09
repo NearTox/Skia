@@ -23,7 +23,7 @@ GrTextureContext::GrTextureContext(
     SkAlphaType alphaType, sk_sp<SkColorSpace> colorSpace)
     : GrSurfaceContext(context, colorType, alphaType, std::move(colorSpace)),
       fTextureProxy(std::move(textureProxy)) {
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 }
 
 #ifdef SK_DEBUG

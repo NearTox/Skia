@@ -149,7 +149,7 @@ class GrDrawOpAtlas {
     data->fData = userData;
   }
 
-  uint32_t numActivePages() { return fNumActivePages; }
+  uint32_t numActivePages() noexcept { return fNumActivePages; }
 
   /**
    * A class which can be handed back to GrDrawOpAtlas for updating last use tokens in bulk.  The
@@ -159,7 +159,8 @@ class GrDrawOpAtlas {
   class BulkUseTokenUpdater {
    public:
     BulkUseTokenUpdater() { memset(fPlotAlreadyUpdated, 0, sizeof(fPlotAlreadyUpdated)); }
-    BulkUseTokenUpdater(const BulkUseTokenUpdater& that) : fPlotsToUpdate(that.fPlotsToUpdate) {
+    BulkUseTokenUpdater(const BulkUseTokenUpdater& that) noexcept
+        : fPlotsToUpdate(that.fPlotsToUpdate) {
       memcpy(fPlotAlreadyUpdated, that.fPlotAlreadyUpdated, sizeof(fPlotAlreadyUpdated));
     }
 
@@ -173,13 +174,13 @@ class GrDrawOpAtlas {
       return true;
     }
 
-    void reset() {
+    void reset() noexcept {
       fPlotsToUpdate.reset();
       memset(fPlotAlreadyUpdated, 0, sizeof(fPlotAlreadyUpdated));
     }
 
     struct PlotData {
-      PlotData(int pageIdx, int plotIdx) : fPageIndex(pageIdx), fPlotIndex(plotIdx) {}
+      PlotData(int pageIdx, int plotIdx) noexcept : fPageIndex(pageIdx), fPlotIndex(plotIdx) {}
       uint32_t fPageIndex;
       uint32_t fPlotIndex;
     };
@@ -256,9 +257,9 @@ class GrDrawOpAtlas {
       SkASSERT(GrDrawOpAtlas::kInvalidAtlasID != fID);
       return fID;
     }
-    SkDEBUGCODE(size_t bpp() const { return fBytesPerPixel; })
+    SkDEBUGCODE(size_t bpp() const { return fBytesPerPixel; });
 
-        bool addSubImage(int width, int height, const void* image, SkIPoint16* loc);
+    bool addSubImage(int width, int height, const void* image, SkIPoint16* loc);
 
     /**
      * To manage the lifetime of a plot, we use two tokens. We use the last upload token to

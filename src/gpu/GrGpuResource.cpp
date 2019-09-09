@@ -14,7 +14,7 @@
 #include "src/gpu/GrResourceCache.h"
 #include <atomic>
 
-static inline GrResourceCache* get_resource_cache(GrGpu* gpu) {
+static inline GrResourceCache* get_resource_cache(GrGpu* gpu) noexcept {
   SkASSERT(gpu);
   SkASSERT(gpu->getContext());
   SkASSERT(gpu->getContext()->priv().getResourceCache());
@@ -113,7 +113,7 @@ SkString GrGpuResource::getResourceName() const {
   return resourceName;
 }
 
-const GrContext* GrGpuResource::getContext() const {
+const GrContext* GrGpuResource::getContext() const noexcept {
   if (fGpu) {
     return fGpu->getContext();
   } else {
@@ -121,7 +121,7 @@ const GrContext* GrGpuResource::getContext() const {
   }
 }
 
-GrContext* GrGpuResource::getContext() {
+GrContext* GrGpuResource::getContext() noexcept {
   if (fGpu) {
     return fGpu->getContext();
   } else {
@@ -157,12 +157,12 @@ void GrGpuResource::setUniqueKey(const GrUniqueKey& key) {
   get_resource_cache(fGpu)->resourceAccess().changeUniqueKey(this, key);
 }
 
-void GrGpuResource::notifyAllCntsWillBeZero() const {
+void GrGpuResource::notifyAllCntsWillBeZero() const noexcept {
   GrGpuResource* mutableThis = const_cast<GrGpuResource*>(this);
   mutableThis->willRemoveLastRefOrPendingIO();
 }
 
-void GrGpuResource::notifyAllCntsAreZero(CntType lastCntTypeToReachZero) const {
+void GrGpuResource::notifyAllCntsAreZero(CntType lastCntTypeToReachZero) const noexcept {
   if (this->wasDestroyed()) {
     // We've already been removed from the cache. Goodbye cruel world!
     delete this;
@@ -172,13 +172,13 @@ void GrGpuResource::notifyAllCntsAreZero(CntType lastCntTypeToReachZero) const {
   // We should have already handled this fully in notifyRefCntIsZero().
   SkASSERT(kRef_CntType != lastCntTypeToReachZero);
 
-  static const uint32_t kFlag =
+  static constexpr uint32_t kFlag =
       GrResourceCache::ResourceAccess::kAllCntsReachedZero_RefNotificationFlag;
   GrGpuResource* mutableThis = const_cast<GrGpuResource*>(this);
   get_resource_cache(fGpu)->resourceAccess().notifyCntReachedZero(mutableThis, kFlag);
 }
 
-bool GrGpuResource::notifyRefCountIsZero() const {
+bool GrGpuResource::notifyRefCountIsZero() const noexcept {
   if (this->wasDestroyed()) {
     // handle this in notifyAllCntsAreZero().
     return true;

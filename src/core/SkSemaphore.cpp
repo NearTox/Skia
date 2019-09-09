@@ -99,7 +99,7 @@ void SkSemaphore::osWait() {
   fOSSemaphore->wait();
 }
 
-bool SkSemaphore::try_wait() {
+bool SkSemaphore::try_wait() noexcept {
   int count = fCount.load(std::memory_order_relaxed);
   if (count > 0) {
     return fCount.compare_exchange_weak(count, count - 1, std::memory_order_acquire);

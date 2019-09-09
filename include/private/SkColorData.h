@@ -56,7 +56,7 @@ static inline unsigned SkB16ToB32(unsigned b) {
 // pair of them are in the same 2 slots in both RGBA and BGRA, thus there is
 // no need to pass in the colortype to this function.
 static inline uint32_t SkSwizzle_RB(uint32_t c) {
-  static const uint32_t kRBMask = (0xFF << SK_R32_SHIFT) | (0xFF << SK_B32_SHIFT);
+  static constexpr uint32_t kRBMask = (0xFF << SK_R32_SHIFT) | (0xFF << SK_B32_SHIFT);
 
   unsigned c0 = (c >> SK_R32_SHIFT) & 0xFF;
   unsigned c1 = (c >> SK_B32_SHIFT) & 0xFF;
@@ -184,7 +184,7 @@ static inline SkPMColor SkFourByteInterp(SkPMColor src, SkPMColor dst, U8CPU src
  * 0xAARRGGBB -> 0x00AA00GG, 0x00RR00BB
  */
 static inline void SkSplay(uint32_t color, uint32_t* ag, uint32_t* rb) {
-  const uint32_t mask = 0x00FF00FF;
+  constexpr uint32_t mask = 0x00FF00FF;
   *ag = (color >> 8) & mask;
   *rb = color & mask;
 }
@@ -194,7 +194,7 @@ static inline void SkSplay(uint32_t color, uint32_t* ag, uint32_t* rb) {
  * (note, ARGB -> AGRB)
  */
 static inline uint64_t SkSplay(uint32_t color) {
-  const uint32_t mask = 0x00FF00FF;
+  constexpr uint32_t mask = 0x00FF00FF;
   uint64_t agrb = (color >> 8) & mask;  // 0x0000000000AA00GG
   agrb <<= 32;                          // 0x00AA00GG00000000
   agrb |= color & mask;                 // 0x00AA00GG00RR00BB
@@ -205,7 +205,7 @@ static inline uint64_t SkSplay(uint32_t color) {
  * 0xAAxxGGxx, 0xRRxxBBxx-> 0xAARRGGBB
  */
 static inline uint32_t SkUnsplay(uint32_t ag, uint32_t rb) {
-  const uint32_t mask = 0xFF00FF00;
+  constexpr uint32_t mask = 0xFF00FF00;
   return (ag & mask) | ((rb & mask) >> 8);
 }
 
@@ -214,7 +214,7 @@ static inline uint32_t SkUnsplay(uint32_t ag, uint32_t rb) {
  * (note, AGRB -> ARGB)
  */
 static inline uint32_t SkUnsplay(uint64_t agrb) {
-  const uint32_t mask = 0xFF00FF00;
+  constexpr uint32_t mask = 0xFF00FF00;
   return SkPMColor(
       ((agrb & mask) >> 8) |   // 0x00RR00BB
       ((agrb >> 32) & mask));  // 0xAARRGGBB
@@ -278,7 +278,7 @@ static inline SkPMColor SkBlendARGB32(SkPMColor src, SkPMColor dst, U8CPU aa) {
   unsigned src_scale = SkAlpha255To256(aa);
   unsigned dst_scale = SkAlphaMulInv256(SkGetPackedA32(src), src_scale);
 
-  const uint32_t mask = 0xFF00FF;
+  constexpr uint32_t mask = 0xFF00FF;
 
   uint32_t src_rb = (src & mask) * src_scale;
   uint32_t src_ag = ((src >> 8) & mask) * src_scale;

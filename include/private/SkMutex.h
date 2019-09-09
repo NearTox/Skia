@@ -20,19 +20,20 @@ class SK_CAPABILITY("mutex") SkMutex {
 
   void acquire() SK_ACQUIRE() {
     fSemaphore.wait();
-    SkDEBUGCODE(fOwner = SkGetThreadID();)
+    SkDEBUGCODE(fOwner = SkGetThreadID());
   }
 
   void release() SK_RELEASE_CAPABILITY() {
     this->assertHeld();
-    SkDEBUGCODE(fOwner = kIllegalThreadID;) fSemaphore.signal();
+    SkDEBUGCODE(fOwner = kIllegalThreadID);
+    fSemaphore.signal();
   }
 
   void assertHeld() SK_ASSERT_CAPABILITY(this) { SkASSERT(fOwner == SkGetThreadID()); }
 
  private:
   SkSemaphore fSemaphore{1};
-  SkDEBUGCODE(SkThreadID fOwner{kIllegalThreadID};)
+  SkDEBUGCODE(SkThreadID fOwner{kIllegalThreadID});
 };
 
 class SK_SCOPED_CAPABILITY SkAutoMutexExclusive {

@@ -79,7 +79,7 @@ class GrTexture : virtual public GrSurface {
 
   SkTArray<sk_sp<GrRefCntedCallback>> fIdleProcs;
 
-  void willRemoveLastRefOrPendingIO() override {
+  void willRemoveLastRefOrPendingIO() noexcept override {
     // We're about to be idle in the resource cache. Do our part to trigger the idle callbacks.
     fIdleProcs.reset();
   }

@@ -26,13 +26,13 @@ class SK_API SkLights : public SkRefCnt {
    public:
     enum LightType { kDirectional_LightType, kPoint_LightType };
 
-    Light(const Light& other)
+    Light(const Light& other) noexcept
         : fType(other.fType),
           fColor(other.fColor),
           fDirOrPos(other.fDirOrPos),
           fIntensity(other.fIntensity) {}
 
-    Light(Light&& other)
+    Light(Light&& other) noexcept
         : fType(other.fType),
           fColor(other.fColor),
           fDirOrPos(other.fDirOrPos),
@@ -50,22 +50,22 @@ class SK_API SkLights : public SkRefCnt {
       return Light(kPoint_LightType, color, pos, intensity);
     }
 
-    LightType type() const { return fType; }
-    const SkColor3f& color() const { return fColor; }
-    const SkVector3& dir() const {
+    LightType type() const noexcept { return fType; }
+    const SkColor3f& color() const noexcept { return fColor; }
+    const SkVector3& dir() const noexcept {
       SkASSERT(kDirectional_LightType == fType);
       return fDirOrPos;
     }
-    const SkPoint3& pos() const {
+    const SkPoint3& pos() const noexcept {
       SkASSERT(kPoint_LightType == fType);
       return fDirOrPos;
     }
-    SkScalar intensity() const {
+    SkScalar intensity() const noexcept {
       SkASSERT(kPoint_LightType == fType);
       return fIntensity;
     }
 
-    Light& operator=(const Light& other) {
+    Light& operator=(const Light& other) noexcept {
       if (this == &other) {
         return *this;
       }
@@ -77,7 +77,7 @@ class SK_API SkLights : public SkRefCnt {
       return *this;
     }
 
-    bool operator==(const Light& other) {
+    bool operator==(const Light& other) noexcept {
       return (fType == other.fType) && (fColor == other.fColor) && (fDirOrPos == other.fDirOrPos) &&
              (fIntensity == other.fIntensity);
     }
@@ -124,7 +124,7 @@ class SK_API SkLights : public SkRefCnt {
       }
     }
 
-    sk_sp<SkLights> finish() { return std::move(fLights); }
+    sk_sp<SkLights> finish() noexcept { return std::move(fLights); }
 
    private:
     sk_sp<SkLights> fLights;

@@ -43,7 +43,8 @@ SkImage_GpuYUVA::SkImage_GpuYUVA(
       fYUVColorSpace(colorSpace),
       fOrigin(origin) {
   // The caller should have done this work, just verifying
-  SkDEBUGCODE(int textureCount;) SkASSERT(SkYUVAIndex::AreValidIndices(yuvaIndices, &textureCount));
+  SkDEBUGCODE(int textureCount);
+  SkASSERT(SkYUVAIndex::AreValidIndices(yuvaIndices, &textureCount));
   SkASSERT(textureCount == fNumProxies);
 
   for (int i = 0; i < numProxies; ++i) {
@@ -69,8 +70,8 @@ SkImage_GpuYUVA::SkImage_GpuYUVA(const SkImage_GpuYUVA* image, sk_sp<SkColorSpac
       ,
       fFromColorSpace(image->colorSpace() ? image->refColorSpace() : SkColorSpace::MakeSRGB()) {
   // The caller should have done this work, just verifying
-  SkDEBUGCODE(int textureCount;)
-      SkASSERT(SkYUVAIndex::AreValidIndices(image->fYUVAIndices, &textureCount));
+  SkDEBUGCODE(int textureCount);
+  SkASSERT(SkYUVAIndex::AreValidIndices(image->fYUVAIndices, &textureCount));
   SkASSERT(textureCount == fNumProxies);
 
   if (image->fRGBProxy) {

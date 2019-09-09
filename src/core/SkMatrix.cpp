@@ -1561,15 +1561,13 @@ bool SkTreatAsSprite(const SkMatrix& mat, const SkISize& size, const SkPaint& pa
   // more slightly fractional cases to fall into the fast (sprite) case.
   static const unsigned kAntiAliasSubpixelBits = 4;
 
-  const unsigned subpixelBits = paint.isAntiAlias() ? kAntiAliasSubpixelBits : 0;
-
   // quick reject on affine or perspective
   if (mat.getType() & ~(SkMatrix::kScale_Mask | SkMatrix::kTranslate_Mask)) {
     return false;
   }
 
   // quick success check
-  if (!subpixelBits && !(mat.getType() & ~SkMatrix::kTranslate_Mask)) {
+  if (!paint.isAntiAlias() && !(mat.getType() & ~SkMatrix::kTranslate_Mask)) {
     return true;
   }
 
@@ -1590,13 +1588,13 @@ bool SkTreatAsSprite(const SkMatrix& mat, const SkISize& size, const SkPaint& pa
   // just apply the translate to isrc
   isrc.offset(SkScalarRoundToInt(mat.getTranslateX()), SkScalarRoundToInt(mat.getTranslateY()));
 
-  if (subpixelBits) {
-    isrc.fLeft = SkLeftShift(isrc.fLeft, subpixelBits);
-    isrc.fTop = SkLeftShift(isrc.fTop, subpixelBits);
-    isrc.fRight = SkLeftShift(isrc.fRight, subpixelBits);
-    isrc.fBottom = SkLeftShift(isrc.fBottom, subpixelBits);
+  if (paint.isAntiAlias()) {
+    isrc.fLeft = SkLeftShift(isrc.fLeft, kAntiAliasSubpixelBits);
+    isrc.fTop = SkLeftShift(isrc.fTop, kAntiAliasSubpixelBits);
+    isrc.fRight = SkLeftShift(isrc.fRight, kAntiAliasSubpixelBits);
+    isrc.fBottom = SkLeftShift(isrc.fBottom, kAntiAliasSubpixelBits);
 
-    const float scale = 1 << subpixelBits;
+    constexpr float scale = 1 << kAntiAliasSubpixelBits;
     dst.fLeft *= scale;
     dst.fTop *= scale;
     dst.fRight *= scale;

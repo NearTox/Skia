@@ -50,5 +50,6 @@
     <ClCompile Include="harfbuzz\src\hb-ot-shape-complex-vowel-constraints.cc" />
     <ClCompile Include="harfbuzz\src\hb-ucd.cc" />
     <ClCompile Include="harfbuzz\src\hb-fallback-shape.cc" />
+    <ClCompile Include="harfbuzz\src\hb-ot-metrics.cc" />
   </ItemGroup>
 </Project>

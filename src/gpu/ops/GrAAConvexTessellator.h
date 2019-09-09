@@ -162,9 +162,9 @@ class GrAAConvexTessellator {
     void computeNormals(const GrAAConvexTessellator& result);
     void computeBisectors(const GrAAConvexTessellator& tess);
 
-    SkDEBUGCODE(bool isConvex(const GrAAConvexTessellator& tess) const;)
+    SkDEBUGCODE(bool isConvex(const GrAAConvexTessellator& tess) const);
 
-        struct PointData {
+    struct PointData {
       SkPoint fNorm;
       SkPoint fBisector;
       int fIndex;

@@ -265,25 +265,27 @@ class GrTextBlob : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainterInterf
 
     // TODO when this object is more internal, drop the privacy
     void resetBulkUseToken() { fBulkUseToken.reset(); }
-    GrDrawOpAtlas::BulkUseTokenUpdater* bulkUseToken() { return &fBulkUseToken; }
-    void setStrike(sk_sp<GrTextStrike> strike) { fStrike = std::move(strike); }
-    GrTextStrike* strike() const { return fStrike.get(); }
+    GrDrawOpAtlas::BulkUseTokenUpdater* bulkUseToken() noexcept { return &fBulkUseToken; }
+    void setStrike(sk_sp<GrTextStrike> strike) noexcept { fStrike = std::move(strike); }
+    GrTextStrike* strike() const noexcept { return fStrike.get(); }
     sk_sp<GrTextStrike> refStrike() const { return fStrike; }
 
-    void setAtlasGeneration(uint64_t atlasGeneration) { fAtlasGeneration = atlasGeneration; }
-    uint64_t atlasGeneration() const { return fAtlasGeneration; }
+    void setAtlasGeneration(uint64_t atlasGeneration) noexcept {
+      fAtlasGeneration = atlasGeneration;
+    }
+    uint64_t atlasGeneration() const noexcept { return fAtlasGeneration; }
 
-    size_t byteCount() const { return fVertexEndIndex - fVertexStartIndex; }
-    size_t vertexStartIndex() const { return fVertexStartIndex; }
-    size_t vertexEndIndex() const { return fVertexEndIndex; }
+    size_t byteCount() const noexcept { return fVertexEndIndex - fVertexStartIndex; }
+    size_t vertexStartIndex() const noexcept { return fVertexStartIndex; }
+    size_t vertexEndIndex() const noexcept { return fVertexEndIndex; }
 
-    uint32_t glyphCount() const { return fGlyphEndIndex - fGlyphStartIndex; }
-    uint32_t glyphStartIndex() const { return fGlyphStartIndex; }
-    uint32_t glyphEndIndex() const { return fGlyphEndIndex; }
-    void setColor(GrColor color) { fColor = color; }
-    GrColor color() const { return fColor; }
-    void setMaskFormat(GrMaskFormat format) { fMaskFormat = format; }
-    GrMaskFormat maskFormat() const { return fMaskFormat; }
+    uint32_t glyphCount() const noexcept { return fGlyphEndIndex - fGlyphStartIndex; }
+    uint32_t glyphStartIndex() const noexcept { return fGlyphStartIndex; }
+    uint32_t glyphEndIndex() const noexcept { return fGlyphEndIndex; }
+    void setColor(GrColor color) noexcept { fColor = color; }
+    GrColor color() const noexcept { return fColor; }
+    void setMaskFormat(GrMaskFormat format) noexcept { fMaskFormat = format; }
+    GrMaskFormat maskFormat() const noexcept { return fMaskFormat; }
 
     void setAsSuccessor(const SubRun& prev) {
       fGlyphStartIndex = prev.glyphEndIndex();

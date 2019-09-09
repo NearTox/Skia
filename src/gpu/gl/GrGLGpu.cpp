@@ -863,9 +863,9 @@ bool GrGLGpu::onTransferPixelsTo(
 
   SkDEBUGCODE(SkIRect subRect = SkIRect::MakeXYWH(left, top, width, height);
               SkIRect bounds = SkIRect::MakeWH(texture->width(), texture->height());
-              SkASSERT(bounds.contains(subRect));)
+              SkASSERT(bounds.contains(subRect)));
 
-      size_t bpp = GrColorTypeBytesPerPixel(bufferColorType);
+  size_t bpp = GrColorTypeBytesPerPixel(bufferColorType);
   const size_t trimRowBytes = width * bpp;
   const void* pixels = (void*)offset;
   if (width < 0 || height < 0) {
@@ -1081,10 +1081,9 @@ bool GrGLGpu::uploadTexData(
   SkASSERT(this->glCaps().isFormatTexturable(textureFormat));
   SkDEBUGCODE(SkIRect subRect = SkIRect::MakeXYWH(left, top, width, height);
               SkIRect bounds = SkIRect::MakeWH(texWidth, texHeight);
-              SkASSERT(bounds.contains(subRect));)
-      SkASSERT(
-          1 == mipLevelCount ||
-          (0 == left && 0 == top && width == texWidth && height == texHeight));
+              SkASSERT(bounds.contains(subRect)));
+  SkASSERT(
+      1 == mipLevelCount || (0 == left && 0 == top && width == texWidth && height == texHeight));
 
   this->unbindCpuToGpuXferBuffer();
 

@@ -217,12 +217,12 @@ class SK_API SkTextBlob final : public SkNVRefCnt<SkTextBlob> {
   const uint32_t fUniqueID;
   mutable std::atomic<uint32_t> fCacheID;
 
-  SkDEBUGCODE(size_t fStorageSize;)
+  SkDEBUGCODE(size_t fStorageSize);
 
-      // The actual payload resides in externally-managed storage, following the object.
-      // (see the .cpp for more details)
+  // The actual payload resides in externally-managed storage, following the object.
+  // (see the .cpp for more details)
 
-      typedef SkRefCnt INHERITED;
+  typedef SkRefCnt INHERITED;
 };
 
 /** \class SkTextBlobBuilder

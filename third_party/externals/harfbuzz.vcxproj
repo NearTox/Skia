@@ -29,6 +29,7 @@
     <ClCompile Include="harfbuzz\src\hb-ot-layout.cc" />
     <ClCompile Include="harfbuzz\src\hb-ot-map.cc" />
     <ClCompile Include="harfbuzz\src\hb-ot-math.cc" />
+    <ClCompile Include="harfbuzz\src\hb-ot-metrics.cc" />
     <ClCompile Include="harfbuzz\src\hb-ot-name.cc" />
     <ClCompile Include="harfbuzz\src\hb-ot-shape-complex-arabic.cc" />
     <ClCompile Include="harfbuzz\src\hb-ot-shape-complex-default.cc" />

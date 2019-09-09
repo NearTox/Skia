@@ -64,7 +64,7 @@ static inline GrColor GrColorPackRGBA(unsigned r, unsigned g, unsigned b, unsign
 
 /** Normalizes and coverts an uint8_t to a float. [0, 255] -> [0.0, 1.0] */
 static inline float GrNormalizeByteToFloat(uint8_t value) {
-  static const float ONE_OVER_255 = 1.f / 255.f;
+  static constexpr float ONE_OVER_255 = 1.f / 255.f;
   return value * ONE_OVER_255;
 }
 

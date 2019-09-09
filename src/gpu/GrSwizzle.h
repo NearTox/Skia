@@ -16,19 +16,19 @@ class SkRasterPipeline;
 /** Represents a rgba swizzle. It can be converted either into a string or a eight bit int. */
 class GrSwizzle {
  public:
-  constexpr GrSwizzle() : GrSwizzle("rgba") {}
-  explicit constexpr GrSwizzle(const char c[4]);
+  constexpr GrSwizzle() noexcept : GrSwizzle("rgba") {}
+  explicit constexpr GrSwizzle(const char c[4]) noexcept;
 
-  constexpr GrSwizzle(const GrSwizzle&);
-  constexpr GrSwizzle& operator=(const GrSwizzle& that);
+  constexpr GrSwizzle(const GrSwizzle&) noexcept;
+  constexpr GrSwizzle& operator=(const GrSwizzle& that) noexcept;
 
-  static constexpr GrSwizzle Concat(const GrSwizzle& a, const GrSwizzle& b);
+  static constexpr GrSwizzle Concat(const GrSwizzle& a, const GrSwizzle& b) noexcept;
 
   /** Recreates a GrSwizzle from the output of asKey() */
-  constexpr void setFromKey(uint16_t key);
+  constexpr void setFromKey(uint16_t key) noexcept;
 
-  constexpr bool operator==(const GrSwizzle& that) const { return fKey == that.fKey; }
-  constexpr bool operator!=(const GrSwizzle& that) const { return !(*this == that); }
+  constexpr bool operator==(const GrSwizzle& that) const noexcept { return fKey == that.fKey; }
+  constexpr bool operator!=(const GrSwizzle& that) const noexcept { return !(*this == that); }
 
   /** Compact representation of the swizzle suitable for a key. */
   constexpr uint16_t asKey() const { return fKey; }
@@ -47,31 +47,31 @@ class GrSwizzle {
 
   void apply(SkRasterPipeline*) const;
 
-  static constexpr GrSwizzle RGBA() { return GrSwizzle("rgba"); }
-  static constexpr GrSwizzle AAAA() { return GrSwizzle("aaaa"); }
-  static constexpr GrSwizzle RRRR() { return GrSwizzle("rrrr"); }
-  static constexpr GrSwizzle RRRA() { return GrSwizzle("rrra"); }
-  static constexpr GrSwizzle BGRA() { return GrSwizzle("bgra"); }
-  static constexpr GrSwizzle RGB1() { return GrSwizzle("rgb1"); }
+  static constexpr GrSwizzle RGBA() noexcept { return GrSwizzle("rgba"); }
+  static constexpr GrSwizzle AAAA() noexcept { return GrSwizzle("aaaa"); }
+  static constexpr GrSwizzle RRRR() noexcept { return GrSwizzle("rrrr"); }
+  static constexpr GrSwizzle RRRA() noexcept { return GrSwizzle("rrra"); }
+  static constexpr GrSwizzle BGRA() noexcept { return GrSwizzle("bgra"); }
+  static constexpr GrSwizzle RGB1() noexcept { return GrSwizzle("rgb1"); }
 
  private:
   template <SkAlphaType AlphaType>
-  static constexpr float ComponentIndexToFloat(const SkRGBA4f<AlphaType>& color, int idx);
-  static constexpr int CToI(char c);
-  static constexpr char IToC(int idx);
+  static constexpr float ComponentIndexToFloat(const SkRGBA4f<AlphaType>& color, int idx) noexcept;
+  static constexpr int CToI(char c) noexcept;
+  static constexpr char IToC(int idx) noexcept;
 
   char fSwiz[5];
   uint16_t fKey;
 };
 
-constexpr GrSwizzle::GrSwizzle(const char c[4])
+constexpr GrSwizzle::GrSwizzle(const char c[4]) noexcept
     : fSwiz{c[0], c[1], c[2], c[3], '\0'},
       fKey((CToI(c[0]) << 0) | (CToI(c[1]) << 4) | (CToI(c[2]) << 8) | (CToI(c[3]) << 12)) {}
 
-constexpr GrSwizzle::GrSwizzle(const GrSwizzle& that)
+constexpr GrSwizzle::GrSwizzle(const GrSwizzle& that) noexcept
     : fSwiz{that.fSwiz[0], that.fSwiz[1], that.fSwiz[2], that.fSwiz[3], '\0'}, fKey(that.fKey) {}
 
-constexpr GrSwizzle& GrSwizzle::operator=(const GrSwizzle& that) {
+constexpr GrSwizzle& GrSwizzle::operator=(const GrSwizzle& that) noexcept {
   fSwiz[0] = that.fSwiz[0];
   fSwiz[1] = that.fSwiz[1];
   fSwiz[2] = that.fSwiz[2];
@@ -100,7 +100,7 @@ constexpr SkRGBA4f<AlphaType> GrSwizzle::applyTo(const SkRGBA4f<AlphaType>& colo
 }
 
 /** Recreates a GrSwizzle from the output of asKey() */
-constexpr void GrSwizzle::setFromKey(uint16_t key) {
+constexpr void GrSwizzle::setFromKey(uint16_t key) noexcept {
   fKey = key;
   for (int i = 0; i < 4; ++i) {
     fSwiz[i] = IToC(key & 15);
@@ -110,7 +110,8 @@ constexpr void GrSwizzle::setFromKey(uint16_t key) {
 }
 
 template <SkAlphaType AlphaType>
-constexpr float GrSwizzle::ComponentIndexToFloat(const SkRGBA4f<AlphaType>& color, int idx) {
+constexpr float GrSwizzle::ComponentIndexToFloat(
+    const SkRGBA4f<AlphaType>& color, int idx) noexcept {
   if (idx <= 3) {
     return color[idx];
   }
@@ -123,7 +124,7 @@ constexpr float GrSwizzle::ComponentIndexToFloat(const SkRGBA4f<AlphaType>& colo
   SkUNREACHABLE;
 }
 
-constexpr int GrSwizzle::CToI(char c) {
+constexpr int GrSwizzle::CToI(char c) noexcept {
   switch (c) {
     // r...a must map to 0...3 because other methods use them as indices into fSwiz.
     case 'r': return 0;
@@ -136,7 +137,7 @@ constexpr int GrSwizzle::CToI(char c) {
   }
 }
 
-constexpr char GrSwizzle::IToC(int idx) {
+constexpr char GrSwizzle::IToC(int idx) noexcept {
   switch (idx) {
     case CToI('r'): return 'r';
     case CToI('g'): return 'g';
@@ -148,7 +149,7 @@ constexpr char GrSwizzle::IToC(int idx) {
   }
 }
 
-constexpr GrSwizzle GrSwizzle::Concat(const GrSwizzle& a, const GrSwizzle& b) {
+constexpr GrSwizzle GrSwizzle::Concat(const GrSwizzle& a, const GrSwizzle& b) noexcept {
   char swiz[4]{};
   for (int i = 0; i < 4; ++i) {
     int idx = (b.fKey >> (4U * i)) & 0xfU;

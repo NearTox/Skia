@@ -37,10 +37,10 @@ AI static __m128 emulate_mm_floor_ps(__m128 v) {
 template <>
 class SkNx<2, float> {
  public:
-  AI SkNx(const __m128& vec) : fVec(vec) {}
+  constexpr AI SkNx(const __m128& vec) noexcept : fVec(vec) {}
 
   AI SkNx() {}
-  AI SkNx(float val) : fVec(_mm_set1_ps(val)) {}
+  AI SkNx(float val) noexcept : fVec(_mm_set1_ps(val)) {}
   AI static SkNx Load(const void* ptr) {
     return _mm_castsi128_ps(_mm_loadl_epi64((const __m128i*)ptr));
   }
@@ -127,13 +127,13 @@ class SkNx<2, float> {
 template <>
 class SkNx<4, float> {
  public:
-  AI SkNx(const __m128& vec) : fVec(vec) {}
+  constexpr AI SkNx(const __m128& vec) noexcept : fVec(vec) {}
 
   AI SkNx() {}
   AI SkNx(float val) : fVec(_mm_set1_ps(val)) {}
-  AI SkNx(float a, float b, float c, float d) : fVec(_mm_setr_ps(a, b, c, d)) {}
+  AI SkNx(float a, float b, float c, float d) noexcept : fVec(_mm_setr_ps(a, b, c, d)) {}
 
-  AI static SkNx Load(const void* ptr) { return _mm_loadu_ps((const float*)ptr); }
+  AI static SkNx Load(const void* ptr) noexcept { return _mm_loadu_ps((const float*)ptr); }
   AI void store(void* ptr) const { _mm_storeu_ps((float*)ptr, fVec); }
 
   AI static void Load2(const void* ptr, SkNx* x, SkNx* y) {
@@ -160,22 +160,22 @@ class SkNx<4, float> {
     _mm_storeu_ps(((float*)dst) + 12, v3);
   }
 
-  AI SkNx operator-() const { return _mm_xor_ps(_mm_set1_ps(-0.0f), fVec); }
+  AI SkNx operator-() const noexcept { return _mm_xor_ps(_mm_set1_ps(-0.0f), fVec); }
 
-  AI SkNx operator+(const SkNx& o) const { return _mm_add_ps(fVec, o.fVec); }
-  AI SkNx operator-(const SkNx& o) const { return _mm_sub_ps(fVec, o.fVec); }
-  AI SkNx operator*(const SkNx& o) const { return _mm_mul_ps(fVec, o.fVec); }
-  AI SkNx operator/(const SkNx& o) const { return _mm_div_ps(fVec, o.fVec); }
+  AI SkNx operator+(const SkNx& o) const noexcept { return _mm_add_ps(fVec, o.fVec); }
+  AI SkNx operator-(const SkNx& o) const noexcept { return _mm_sub_ps(fVec, o.fVec); }
+  AI SkNx operator*(const SkNx& o) const noexcept { return _mm_mul_ps(fVec, o.fVec); }
+  AI SkNx operator/(const SkNx& o) const noexcept { return _mm_div_ps(fVec, o.fVec); }
 
-  AI SkNx operator==(const SkNx& o) const { return _mm_cmpeq_ps(fVec, o.fVec); }
-  AI SkNx operator!=(const SkNx& o) const { return _mm_cmpneq_ps(fVec, o.fVec); }
-  AI SkNx operator<(const SkNx& o) const { return _mm_cmplt_ps(fVec, o.fVec); }
-  AI SkNx operator>(const SkNx& o) const { return _mm_cmpgt_ps(fVec, o.fVec); }
-  AI SkNx operator<=(const SkNx& o) const { return _mm_cmple_ps(fVec, o.fVec); }
-  AI SkNx operator>=(const SkNx& o) const { return _mm_cmpge_ps(fVec, o.fVec); }
+  AI SkNx operator==(const SkNx& o) const noexcept { return _mm_cmpeq_ps(fVec, o.fVec); }
+  AI SkNx operator!=(const SkNx& o) const noexcept { return _mm_cmpneq_ps(fVec, o.fVec); }
+  AI SkNx operator<(const SkNx& o) const noexcept { return _mm_cmplt_ps(fVec, o.fVec); }
+  AI SkNx operator>(const SkNx& o) const noexcept { return _mm_cmpgt_ps(fVec, o.fVec); }
+  AI SkNx operator<=(const SkNx& o) const noexcept { return _mm_cmple_ps(fVec, o.fVec); }
+  AI SkNx operator>=(const SkNx& o) const noexcept { return _mm_cmpge_ps(fVec, o.fVec); }
 
-  AI static SkNx Min(const SkNx& l, const SkNx& r) { return _mm_min_ps(l.fVec, r.fVec); }
-  AI static SkNx Max(const SkNx& l, const SkNx& r) { return _mm_max_ps(l.fVec, r.fVec); }
+  AI static SkNx Min(const SkNx& l, const SkNx& r) noexcept { return _mm_min_ps(l.fVec, r.fVec); }
+  AI static SkNx Max(const SkNx& l, const SkNx& r) noexcept { return _mm_max_ps(l.fVec, r.fVec); }
 
   AI SkNx abs() const { return _mm_andnot_ps(_mm_set1_ps(-0.0f), fVec); }
   AI SkNx floor() const {
@@ -186,11 +186,11 @@ class SkNx<4, float> {
 #endif
   }
 
-  AI SkNx sqrt() const { return _mm_sqrt_ps(fVec); }
-  AI SkNx rsqrt() const { return _mm_rsqrt_ps(fVec); }
-  AI SkNx invert() const { return _mm_rcp_ps(fVec); }
+  AI SkNx sqrt() const noexcept { return _mm_sqrt_ps(fVec); }
+  AI SkNx rsqrt() const noexcept { return _mm_rsqrt_ps(fVec); }
+  AI SkNx invert() const noexcept { return _mm_rcp_ps(fVec); }
 
-  AI float operator[](int k) const {
+  AI float operator[](int k) const noexcept {
     SkASSERT(0 <= k && k < 4);
     union {
       __m128 v;
@@ -211,8 +211,8 @@ class SkNx<4, float> {
     return max[0];
   }
 
-  AI bool allTrue() const { return 0xffff == _mm_movemask_epi8(_mm_castps_si128(fVec)); }
-  AI bool anyTrue() const { return 0x0000 != _mm_movemask_epi8(_mm_castps_si128(fVec)); }
+  AI bool allTrue() const noexcept { return 0xffff == _mm_movemask_epi8(_mm_castps_si128(fVec)); }
+  AI bool anyTrue() const noexcept { return 0x0000 != _mm_movemask_epi8(_mm_castps_si128(fVec)); }
 
   AI SkNx thenElse(const SkNx& t, const SkNx& e) const {
 #if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE41
@@ -563,7 +563,7 @@ class SkNx<8, uint16_t> {
   AI static SkNx Min(const SkNx& a, const SkNx& b) {
     // No unsigned _mm_min_epu16, so we'll shift into a space where we can use the
     // signed version, _mm_min_epi16, then shift back.
-    const uint16_t top = 0x8000;  // Keep this separate from _mm_set1_epi16 or MSVC will whine.
+    constexpr uint16_t top = 0x8000;  // Keep this separate from _mm_set1_epi16 or MSVC will whine.
     const __m128i top_8x = _mm_set1_epi16(top);
     return _mm_add_epi8(
         top_8x, _mm_min_epi16(_mm_sub_epi8(a.fVec, top_8x), _mm_sub_epi8(b.fVec, top_8x)));

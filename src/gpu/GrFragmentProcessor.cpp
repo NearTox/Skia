@@ -73,7 +73,7 @@ void GrFragmentProcessor::addCoordTransform(GrCoordTransform* transform) {
   transform->setComputeInVertexShader(this->computeLocalCoordsInVertexShader());
   fCoordTransforms.push_back(transform);
   fFlags |= kUsesLocalCoords_Flag;
-  SkDEBUGCODE(transform->setInProcessor();)
+  SkDEBUGCODE(transform->setInProcessor());
 }
 
 #ifdef SK_DEBUG
