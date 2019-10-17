@@ -73,7 +73,12 @@ class GrMeshDrawOp : public GrDrawOp {
   };
 
  private:
+  void onPrePrepare(GrRecordingContext* context) final { this->onPrePrepareDraws(context); }
   void onPrepare(GrOpFlushState* state) final;
+
+  // Only the GrTextureOp currently overrides this virtual
+  virtual void onPrePrepareDraws(GrRecordingContext*) {}
+
   virtual void onPrepareDraws(Target*) = 0;
   typedef GrDrawOp INHERITED;
 };

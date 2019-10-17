@@ -53,14 +53,12 @@
     <OutDir>$(MyOutDir)</OutDir>
     <IntDir>$(MyTempDir)</IntDir>
     <CodeAnalysisRuleSet>..\rules skia.ruleset</CodeAnalysisRuleSet>
-    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(MyOutDir)</OutDir>
     <IntDir>$(MyTempDir)</IntDir>
     <CodeAnalysisRuleSet>..\rules skia.ruleset</CodeAnalysisRuleSet>
-    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -74,10 +72,10 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)\modules\skshaper\include;$(SolutionDir)\third_party\externals\harfbuzz\src;$(SolutionDir)\third_party\externals\icu\source\common;$(SolutionDir)\third_party\externals\icu\source\i18n</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AssemblerOutput>AssemblyCode</AssemblerOutput>
       <EnablePREfast>false</EnablePREfast>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <AssemblerOutput>AssemblyCode</AssemblerOutput>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -98,10 +96,10 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)\modules\skshaper\include;$(SolutionDir)\third_party\externals\harfbuzz\src;$(SolutionDir)\third_party\externals\icu\source\common;$(SolutionDir)\third_party\externals\icu\source\i18n</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AssemblerOutput>AssemblyCode</AssemblerOutput>
       <EnablePREfast>false</EnablePREfast>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <AssemblerOutput>AssemblyCode</AssemblerOutput>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

@@ -77,47 +77,48 @@ void FontResolver::findAllFontsForStyledBlock(const TextStyle& style, TextRange 
     }
   }
 
-  if (fUnresolved != wasUnresolved || allWhitespaces()) {
-    addResolvedWhitespacesToMapping();
-    wasUnresolved = fUnresolved;
-  }
-
-  if (fUnresolved > 0) {
-    // Check the default font
-    auto typeface = fFontCollection->matchDefaultTypeface(style.getFontStyle(), style.getLocale());
-    if (typeface != nullptr) {
-      auto font = makeFont(typeface, style.getFontSize(), style.getHeight());
-      resolveAllCharactersByFont(font);
-    }
     if (fUnresolved != wasUnresolved || allWhitespaces()) {
       addResolvedWhitespacesToMapping();
       wasUnresolved = fUnresolved;
     }
-  }
 
-  if (fUnresolved > 0 && fFontCollection->fontFallbackEnabled()) {
-    while (fUnresolved > 0 && !allWhitespaces()) {
-      auto unicode = firstUnresolved();
+    if (fUnresolved > 0) {
+      // Check the default font
       auto typeface =
-          fFontCollection->defaultFallback(unicode, style.getFontStyle(), style.getLocale());
-      if (typeface == nullptr) {
-        break;
+          fFontCollection->matchDefaultTypeface(style.getFontStyle(), style.getLocale());
+      if (typeface != nullptr) {
+        auto font = makeFont(typeface, style.getFontSize(), style.getHeight());
+        resolveAllCharactersByFont(font);
       }
+      if (fUnresolved != wasUnresolved || allWhitespaces()) {
+        addResolvedWhitespacesToMapping();
+        wasUnresolved = fUnresolved;
+      }
+    }
 
-      SkString name;
-      typeface->getFamilyName(&name);
-      auto font = makeFont(typeface, style.getFontSize(), style.getHeight());
-      auto newResolved = resolveAllCharactersByFont(font);
-      if (newResolved == 0) {
-        // Not a single unicode character was resolved
-        break;
+    if (fUnresolved > 0 && fFontCollection->fontFallbackEnabled()) {
+      while (fUnresolved > 0 && !allWhitespaces()) {
+        auto unicode = firstUnresolved();
+        auto typeface =
+            fFontCollection->defaultFallback(unicode, style.getFontStyle(), style.getLocale());
+        if (typeface == nullptr) {
+          break;
+        }
+
+        SkString name;
+        typeface->getFamilyName(&name);
+        auto font = makeFont(typeface, style.getFontSize(), style.getHeight());
+        auto newResolved = resolveAllCharactersByFont(font);
+        if (newResolved == 0) {
+          // Not a single unicode character was resolved
+          break;
+        }
+      }
+      if (fUnresolved != wasUnresolved || allWhitespaces()) {
+        addResolvedWhitespacesToMapping();
+        wasUnresolved = fUnresolved;
       }
     }
-    if (fUnresolved != wasUnresolved || allWhitespaces()) {
-      addResolvedWhitespacesToMapping();
-      wasUnresolved = fUnresolved;
-    }
-  }
 }
 
 size_t FontResolver::resolveAllCharactersByFont(const FontDescr& font) {

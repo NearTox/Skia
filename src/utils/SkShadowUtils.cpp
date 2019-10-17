@@ -41,7 +41,7 @@ class SkGaussianColorFilter : public SkColorFilter {
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(
-      GrRecordingContext*, const GrColorSpaceInfo&) const override;
+      GrRecordingContext*, const GrColorInfo&) const override;
 #endif
 
  protected:
@@ -64,7 +64,7 @@ sk_sp<SkFlattenable> SkGaussianColorFilter::CreateProc(SkReadBuffer&) { return M
 #if SK_SUPPORT_GPU
 
 std::unique_ptr<GrFragmentProcessor> SkGaussianColorFilter::asFragmentProcessor(
-    GrRecordingContext*, const GrColorSpaceInfo&) const {
+    GrRecordingContext*, const GrColorInfo&) const {
   return GrBlurredEdgeFragmentProcessor::Make(GrBlurredEdgeFragmentProcessor::Mode::kGaussian);
 }
 #endif
@@ -207,7 +207,7 @@ class CachedTessellations : public SkRefCnt {
   template <typename FACTORY, int MAX_ENTRIES>
   class Set {
    public:
-    size_t size() const noexcept { return fSize; }
+    size_t size() const { return fSize; }
 
     sk_sp<SkVertices> find(
         const FACTORY& factory, const SkMatrix& matrix, SkVector* translate) const {
@@ -306,7 +306,7 @@ class CachedTessellationsRec : public SkResourceCache::Rec {
  */
 template <typename FACTORY>
 struct FindContext {
-  constexpr FindContext(const SkMatrix* viewMatrix, const FACTORY* factory) noexcept
+  FindContext(const SkMatrix* viewMatrix, const FACTORY* factory)
       : fViewMatrix(viewMatrix), fFactory(factory) {}
   const SkMatrix* const fViewMatrix;
   // If this is valid after Find is called then we found the vertices and they should be drawn

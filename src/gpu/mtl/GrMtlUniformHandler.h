@@ -58,7 +58,7 @@ class GrMtlUniformHandler : public GrGLSLUniformHandler {
   }
 
   SamplerHandle addSampler(
-      const GrTexture*, const GrSamplerState&, const GrSwizzle&, const char* name,
+      const GrTextureProxy*, const GrSamplerState&, const GrSwizzle&, const char* name,
       const GrShaderCaps*) override;
 
   int numSamplers() const { return fSamplers.count(); }

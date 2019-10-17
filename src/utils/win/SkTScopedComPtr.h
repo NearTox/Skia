@@ -33,10 +33,10 @@ class SkTScopedComPtr {
   T* fPtr;
 
  public:
-  constexpr SkTScopedComPtr() noexcept : fPtr(nullptr) {}
-  constexpr SkTScopedComPtr(std::nullptr_t) noexcept : fPtr(nullptr) {}
-  explicit SkTScopedComPtr(T* ptr) noexcept : fPtr(ptr) {}
-  SkTScopedComPtr(SkTScopedComPtr&& that) noexcept : fPtr(that.release()) {}
+  constexpr SkTScopedComPtr() : fPtr(nullptr) {}
+  constexpr SkTScopedComPtr(std::nullptr_t) : fPtr(nullptr) {}
+  explicit SkTScopedComPtr(T* ptr) : fPtr(ptr) {}
+  SkTScopedComPtr(SkTScopedComPtr&& that) : fPtr(that.release()) {}
   SkTScopedComPtr(const SkTScopedComPtr&) = delete;
 
   ~SkTScopedComPtr() { this->reset(); }
@@ -56,9 +56,9 @@ class SkTScopedComPtr {
     return *fPtr;
   }
 
-  explicit operator bool() const noexcept { return fPtr != nullptr; }
+  explicit operator bool() const { return fPtr != nullptr; }
 
-  T* operator->() const noexcept { return fPtr; }
+  T* operator->() const { return fPtr; }
 
   /**
    * Returns the address of the underlying pointer.
@@ -71,7 +71,7 @@ class SkTScopedComPtr {
     return &fPtr;
   }
 
-  T* get() const noexcept { return fPtr; }
+  T* get() const { return fPtr; }
 
   void reset(T* ptr = nullptr) {
     if (fPtr) {
@@ -86,7 +86,7 @@ class SkTScopedComPtr {
     that.fPtr = temp;
   }
 
-  T* release() noexcept {
+  T* release() {
     T* temp = this->fPtr;
     this->fPtr = nullptr;
     return temp;

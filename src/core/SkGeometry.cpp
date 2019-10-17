@@ -756,10 +756,10 @@ static int solve_cubic_poly(const SkScalar coeff[4], SkScalar tValues[3]) {
     tValues[0] = SkScalarPin(neg2RootQ * SkScalarCos(theta / 3) - adiv3, 0, 1);
     tValues[1] = SkScalarPin(neg2RootQ * SkScalarCos((theta + 2 * SK_ScalarPI) / 3) - adiv3, 0, 1);
     tValues[2] = SkScalarPin(neg2RootQ * SkScalarCos((theta - 2 * SK_ScalarPI) / 3) - adiv3, 0, 1);
-    SkDEBUGCODE(test_collaps_duplicates());
+    SkDEBUGCODE(test_collaps_duplicates();)
 
-    // now sort the roots
-    bubble_sort(tValues, 3);
+        // now sort the roots
+        bubble_sort(tValues, 3);
     return collaps_duplicates(tValues, 3);
   } else {  // we have 1 real root
     SkScalar A = SkScalarAbs(R) + SkScalarSqrt(R2MinusQ3);

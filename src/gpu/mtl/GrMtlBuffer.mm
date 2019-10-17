@@ -38,13 +38,13 @@ GrMtlBuffer::GrMtlBuffer(
     : INHERITED(gpu, size, intendedType, accessPattern),
       fIsDynamic(accessPattern != kStatic_GrAccessPattern),
       fOffset(0) {
-  // We'll allocate dynamic buffers when we map them, below.
+  // In most cases, we'll allocate dynamic buffers when we map them, below.
   if (!fIsDynamic) {
-    // TODO: newBufferWithBytes: used to work with StorageModePrivate buffers -- seems like
-    // a bug that it no longer does. If that changes we could use that to pre-load the buffer.
-    fMtlBuffer = size == 0 ? nil
-                           : [gpu->device() newBufferWithLength:size
-                                                        options:MTLResourceStorageModePrivate];
+    NSUInteger options = 0;
+    if (@available(macOS 10.11, iOS 9.0, *)) {
+      options |= MTLResourceStorageModePrivate;
+    }
+    fMtlBuffer = size == 0 ? nil : [gpu->device() newBufferWithLength:size options:options];
   }
   this->registerWithCache(SkBudgeted::kYes);
   VALIDATE();
@@ -54,6 +54,11 @@ GrMtlBuffer::~GrMtlBuffer() {
   SkASSERT(fMtlBuffer == nil);
   SkASSERT(fMappedBuffer == nil);
   SkASSERT(fMapPtr == nullptr);
+}
+
+void GrMtlBuffer::bind() {
+  SkASSERT(fIsDynamic && GrGpuBufferType::kXferGpuToCpu == this->intendedType());
+  fMtlBuffer = this->mtlGpu()->resourceProvider().getDynamicBuffer(this->size(), &fOffset);
 }
 
 bool GrMtlBuffer::onUpdateData(const void* src, size_t srcInBytes) {
@@ -113,14 +118,19 @@ void GrMtlBuffer::internalMap(size_t sizeInBytes) {
   VALIDATE();
   SkASSERT(!this->isMapped());
   if (fIsDynamic) {
-    fMtlBuffer = this->mtlGpu()->resourceProvider().getDynamicBuffer(sizeInBytes, &fOffset);
+    if (GrGpuBufferType::kXferGpuToCpu != this->intendedType()) {
+      fMtlBuffer = this->mtlGpu()->resourceProvider().getDynamicBuffer(sizeInBytes, &fOffset);
+    }
     fMappedBuffer = fMtlBuffer;
     fMapPtr = static_cast<char*>(fMtlBuffer.contents) + fOffset;
   } else {
     SkASSERT(fMtlBuffer);
     SkASSERT(fMappedBuffer == nil);
-    fMappedBuffer = [this->mtlGpu()->device() newBufferWithLength:sizeInBytes
-                                                          options:MTLResourceStorageModeShared];
+    NSUInteger options = 0;
+    if (@available(macOS 10.11, iOS 9.0, *)) {
+      options |= MTLResourceStorageModeShared;
+    }
+    fMappedBuffer = [this->mtlGpu()->device() newBufferWithLength:sizeInBytes options:options];
     fMapPtr = fMappedBuffer.contents;
   }
   VALIDATE();

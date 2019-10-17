@@ -82,7 +82,7 @@ class GrDrawPathOp final : public GrDrawPathOpBase {
   GrDrawPathOp(const SkMatrix& viewMatrix, GrPaint&& paint, GrAA aa, sk_sp<const GrPath> path)
       : GrDrawPathOpBase(ClassID(), viewMatrix, std::move(paint), path->getFillType(), aa),
         fPath(std::move(path)) {
-    this->setTransformedBounds(fPath->getBounds(), viewMatrix, HasAABloat::kNo, IsZeroArea::kNo);
+    this->setTransformedBounds(fPath->getBounds(), viewMatrix, HasAABloat::kNo, IsHairline::kNo);
   }
 
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;

@@ -135,9 +135,6 @@ class GM {
   // helper: fill a rect in the specified color based on the GM's getISize bounds.
   void drawSizeBounds(SkCanvas*, SkColor);
 
-  bool isCanvasDeferred() const { return fCanvasIsDeferred; }
-  void setCanvasIsDeferred(bool isDeferred) { fCanvasIsDeferred = isDeferred; }
-
   bool animate(double /*nanos*/);
   virtual bool onChar(SkUnichar);
 
@@ -162,7 +159,6 @@ class GM {
   Mode fMode;
   SkString fShortName;
   SkColor fBGColor;
-  bool fCanvasIsDeferred;  // work-around problem in srcmode.cpp
   bool fHaveCalledOnceBeforeDraw;
 };
 

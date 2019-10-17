@@ -139,7 +139,7 @@ void SkPDFGraphicStackState::updateClip(const SkClipStack* clipStack, const SkIR
   uint32_t clipStackGenID = clipStack ? clipStack->getTopmostGenID() : SkClipStack::kWideOpenGenID;
   if (clipStackGenID == currentEntry()->fClipStackGenID) {
     return;
-    }
+  }
     while (fStackDepth > 0) {
       this->pop();
       if (clipStackGenID == currentEntry()->fClipStackGenID) {

@@ -20,6 +20,9 @@
 #ifdef SK_METAL
 #  include "tools/gpu/mtl/MtlTestContext.h"
 #endif
+#ifdef SK_DAWN
+#  include "tools/gpu/dawn/DawnTestContext.h"
+#endif
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/gl/GrGLGpu.h"
 #include "tools/gpu/mock/MockTestContext.h"
@@ -198,9 +201,6 @@ ContextInfo GrContextFactory::getContextInfoInternal(
       VkTestContext* vkSharedContext =
           masterContext ? static_cast<VkTestContext*>(masterContext->fTestContext) : nullptr;
       SkASSERT(kVulkan_ContextType == type);
-      if (ContextOverrides::kRequireNVPRSupport & overrides) {
-        return ContextInfo();
-      }
       testCtx.reset(CreatePlatformVkTestContext(vkSharedContext));
       if (!testCtx) {
         return ContextInfo();
@@ -230,12 +230,20 @@ ContextInfo GrContextFactory::getContextInfoInternal(
       break;
     }
 #endif
+#ifdef SK_DAWN
+    case GrBackendApi::kDawn: {
+      DawnTestContext* dawnSharedContext =
+          masterContext ? static_cast<DawnTestContext*>(masterContext->fTestContext) : nullptr;
+      testCtx.reset(CreatePlatformDawnTestContext(dawnSharedContext));
+      if (!testCtx) {
+        return ContextInfo();
+      }
+      break;
+    }
+#endif
     case GrBackendApi::kMock: {
       TestContext* sharedContext = masterContext ? masterContext->fTestContext : nullptr;
       SkASSERT(kMock_ContextType == type);
-      if (ContextOverrides::kRequireNVPRSupport & overrides) {
-        return ContextInfo();
-      }
       testCtx.reset(CreateMockTestContext(sharedContext));
       if (!testCtx) {
         return ContextInfo();
@@ -247,9 +255,6 @@ ContextInfo GrContextFactory::getContextInfoInternal(
 
   SkASSERT(testCtx && testCtx->backend() == backend);
   GrContextOptions grOptions = fGlobalOptions;
-  if (ContextOverrides::kDisableNVPR & overrides) {
-    grOptions.fSuppressPathRendering = true;
-  }
   if (ContextOverrides::kAvoidStencilBuffers & overrides) {
     grOptions.fAvoidStencilBuffers = true;
   }
@@ -260,11 +265,6 @@ ContextInfo GrContextFactory::getContextInfoInternal(
   }
   if (!grCtx.get()) {
     return ContextInfo();
-  }
-  if (ContextOverrides::kRequireNVPRSupport & overrides) {
-    if (!grCtx->priv().caps()->shaderCaps()->pathRenderingSupport()) {
-      return ContextInfo();
-    }
   }
 
   // We must always add new contexts by pushing to the back so that when we delete them we delete

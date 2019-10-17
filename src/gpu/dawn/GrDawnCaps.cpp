@@ -30,7 +30,10 @@ GrDawnCaps::GrDawnCaps(const GrContextOptions& contextOptions) : INHERITED(conte
 
 bool GrDawnCaps::isFormatSRGB(const GrBackendFormat& format) const { return false; }
 
-bool GrDawnCaps::isFormatCompressed(const GrBackendFormat& format) const { return false; }
+bool GrDawnCaps::isFormatCompressed(
+    const GrBackendFormat& format, SkImage::CompressionType* compressionType) const {
+  return false;
+}
 
 bool GrDawnCaps::isFormatTexturable(const GrBackendFormat& format) const {
   // Currently, all the formats in GrDawnFormatToPixelConfig are texturable.
@@ -127,6 +130,14 @@ bool GrDawnCaps::isFormatAsColorTypeRenderable(
   return isFormatRenderable(format, sampleCount);
 }
 
+size_t GrDawnCaps::bytesPerPixel(const GrBackendFormat& backendFormat) const {
+  dawn::TextureFormat dawnFormat;
+  if (!backendFormat.asDawnFormat(&dawnFormat)) {
+    return 0;
+  }
+  return GrDawnBytesPerPixel(dawnFormat);
+}
+
 int GrDawnCaps::getRenderTargetSampleCount(
     int requestedCount, const GrBackendFormat& backendFormat) const {
   dawn::TextureFormat dawnFormat;
@@ -163,8 +174,6 @@ GrSwizzle GrDawnCaps::getTextureSwizzle(
   return get_swizzle(format, colorType, false);
 }
 
-bool GrDawnCaps::canClearTextureOnCreation() const { return true; }
-
 GrSwizzle GrDawnCaps::getOutputSwizzle(const GrBackendFormat& format, GrColorType colorType) const {
   return get_swizzle(format, colorType, true);
 }
@@ -175,8 +184,18 @@ bool GrDawnCaps::onAreColorTypeAndFormatCompatible(
 }
 
 GrColorType GrDawnCaps::getYUVAColorTypeFromBackendFormat(
-    const GrBackendFormat&, bool isAlphaChannel) const {
-  return GrColorType::kUnknown;
+    const GrBackendFormat& backendFormat, bool isAlphaChannel) const {
+  dawn::TextureFormat textureFormat;
+  if (!backendFormat.asDawnFormat(&textureFormat)) {
+    return GrColorType::kUnknown;
+  }
+  switch (textureFormat) {
+    case dawn::TextureFormat::R8Unorm:
+      return isAlphaChannel ? GrColorType::kAlpha_8 : GrColorType::kGray_8;
+    case dawn::TextureFormat::RGBA8Unorm: return GrColorType::kRGBA_8888;
+    case dawn::TextureFormat::BGRA8Unorm: return GrColorType::kBGRA_8888;
+    default: return GrColorType::kUnknown;
+  }
 }
 
 #if GR_TEST_UTILS

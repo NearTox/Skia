@@ -15,6 +15,7 @@
 #include "src/gpu/GrDataUtils.h"
 #include "src/gpu/GrDrawingManager.h"
 #include "src/gpu/GrGpu.h"
+#include "src/gpu/GrImageInfo.h"
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/GrSurfaceContextPriv.h"
@@ -37,7 +38,7 @@
 GrSurfaceContext::GrSurfaceContext(
     GrRecordingContext* context, GrColorType colorType, SkAlphaType alphaType,
     sk_sp<SkColorSpace> colorSpace)
-    : fContext(context), fColorSpaceInfo(colorType, alphaType, std::move(colorSpace)) {}
+    : fContext(context), fColorInfo(colorType, alphaType, std::move(colorSpace)) {}
 
 const GrCaps* GrSurfaceContext::caps() const { return fContext->priv().caps(); }
 
@@ -54,11 +55,11 @@ GrSingleOwner* GrSurfaceContext::singleOwner() { return fContext->priv().singleO
 #endif
 
 bool GrSurfaceContext::readPixels(
-    const GrPixelInfo& origDstInfo, void* dst, size_t rowBytes, SkIPoint pt, GrContext* direct) {
+    const GrImageInfo& origDstInfo, void* dst, size_t rowBytes, SkIPoint pt, GrContext* direct) {
   ASSERT_SINGLE_OWNER
   RETURN_FALSE_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
-  GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrSurfaceContext::readPixels");
+  SkDEBUGCODE(this->validate();)
+      GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrSurfaceContext::readPixels");
 
   if (!direct && !(direct = fContext->priv().asDirectContext())) {
     return false;
@@ -95,13 +96,13 @@ bool GrSurfaceContext::readPixels(
   // Our tight row bytes may have been changed by clipping.
   tightRowBytes = dstInfo.minRowBytes();
 
-  bool premul = this->colorSpaceInfo().alphaType() == kUnpremul_SkAlphaType &&
+  bool premul = this->colorInfo().alphaType() == kUnpremul_SkAlphaType &&
                 dstInfo.alphaType() == kPremul_SkAlphaType;
-  bool unpremul = this->colorSpaceInfo().alphaType() == kPremul_SkAlphaType &&
+  bool unpremul = this->colorInfo().alphaType() == kPremul_SkAlphaType &&
                   dstInfo.alphaType() == kUnpremul_SkAlphaType;
 
   bool needColorConversion =
-      SkColorSpaceXformSteps::Required(this->colorSpaceInfo().colorSpace(), dstInfo.colorSpace());
+      SkColorSpaceXformSteps::Required(this->colorInfo().colorSpace(), dstInfo.colorSpace());
 
   const GrCaps* caps = direct->priv().caps();
   // This is the getImageData equivalent to the canvas2D putImageData fast path. We probably don't
@@ -127,8 +128,8 @@ bool GrSurfaceContext::readPixels(
 
   if (readFlag == GrCaps::SurfaceReadPixelsSupport::kCopyToTexture2D || canvas2DFastPath) {
     GrColorType colorType =
-        canvas2DFastPath ? GrColorType::kRGBA_8888 : this->colorSpaceInfo().colorType();
-    sk_sp<SkColorSpace> cs = canvas2DFastPath ? nullptr : this->colorSpaceInfo().refColorSpace();
+        canvas2DFastPath ? GrColorType::kRGBA_8888 : this->colorInfo().colorType();
+    sk_sp<SkColorSpace> cs = canvas2DFastPath ? nullptr : this->colorInfo().refColorSpace();
 
     auto tempCtx = direct->priv().makeDeferredRenderTargetContext(
         SkBackingFit::kApprox, dstInfo.width(), dstInfo.height(), colorType, std::move(cs), 1,
@@ -139,8 +140,8 @@ bool GrSurfaceContext::readPixels(
 
     std::unique_ptr<GrFragmentProcessor> fp;
     if (canvas2DFastPath) {
-      fp = direct->priv().createPMToUPMEffect(
-          GrSimpleTextureEffect::Make(sk_ref_sp(srcProxy->asTextureProxy()), SkMatrix::I()));
+      fp = direct->priv().createPMToUPMEffect(GrSimpleTextureEffect::Make(
+          sk_ref_sp(srcProxy->asTextureProxy()), this->colorInfo().colorType(), SkMatrix::I()));
       if (dstInfo.colorType() == GrColorType::kBGRA_8888) {
         fp = GrFragmentProcessor::SwizzleOutput(std::move(fp), GrSwizzle::BGRA());
         dstInfo = dstInfo.makeColorType(GrColorType::kRGBA_8888);
@@ -150,7 +151,8 @@ bool GrSurfaceContext::readPixels(
       // double unpremul.
       dstInfo = dstInfo.makeAlphaType(kPremul_SkAlphaType);
     } else {
-      fp = GrSimpleTextureEffect::Make(sk_ref_sp(srcProxy->asTextureProxy()), SkMatrix::I());
+      fp = GrSimpleTextureEffect::Make(
+          sk_ref_sp(srcProxy->asTextureProxy()), this->colorInfo().colorType(), SkMatrix::I());
     }
     if (!fp) {
       return false;
@@ -170,7 +172,7 @@ bool GrSurfaceContext::readPixels(
   bool flip = srcProxy->origin() == kBottomLeft_GrSurfaceOrigin;
 
   auto supportedRead = caps->supportedReadPixelsColorType(
-      this->colorSpaceInfo().colorType(), srcProxy->backendFormat(), dstInfo.colorType());
+      this->colorInfo().colorType(), srcProxy->backendFormat(), dstInfo.colorType());
 
   bool makeTight = !caps->readPixelsRowBytesSupport() && tightRowBytes != rowBytes;
 
@@ -178,12 +180,12 @@ bool GrSurfaceContext::readPixels(
                  (dstInfo.colorType() != supportedRead.fColorType);
 
   std::unique_ptr<char[]> tmpPixels;
-  GrPixelInfo tmpInfo;
+  GrImageInfo tmpInfo;
   void* readDst = dst;
   size_t readRB = rowBytes;
   if (convert) {
-    tmpInfo = {supportedRead.fColorType, this->colorSpaceInfo().alphaType(),
-               this->colorSpaceInfo().refColorSpace(), dstInfo.width(), dstInfo.height()};
+    tmpInfo = {supportedRead.fColorType, this->colorInfo().alphaType(),
+               this->colorInfo().refColorSpace(), dstInfo.width(), dstInfo.height()};
     size_t tmpRB = tmpInfo.minRowBytes();
     size_t size = tmpRB * tmpInfo.height();
     // Chrome MSAN bots require the data to be initialized (hence the ()).
@@ -198,7 +200,7 @@ bool GrSurfaceContext::readPixels(
 
   if (!direct->priv().getGpu()->readPixels(
           srcSurface, pt.fX, pt.fY, dstInfo.width(), dstInfo.height(),
-          this->colorSpaceInfo().colorType(), supportedRead.fColorType, readDst, readRB)) {
+          this->colorInfo().colorType(), supportedRead.fColorType, readDst, readRB)) {
     return false;
   }
 
@@ -209,12 +211,12 @@ bool GrSurfaceContext::readPixels(
 }
 
 bool GrSurfaceContext::writePixels(
-    const GrPixelInfo& origSrcInfo, const void* src, size_t rowBytes, SkIPoint pt,
+    const GrImageInfo& origSrcInfo, const void* src, size_t rowBytes, SkIPoint pt,
     GrContext* direct) {
   ASSERT_SINGLE_OWNER
   RETURN_FALSE_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
-  GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrSurfaceContext::writePixels");
+  SkDEBUGCODE(this->validate();)
+      GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrSurfaceContext::writePixels");
 
   if (!direct && !(direct = fContext->priv().asDirectContext())) {
     return false;
@@ -253,13 +255,13 @@ bool GrSurfaceContext::writePixels(
   // Our tight row bytes may have been changed by clipping.
   tightRowBytes = srcInfo.minRowBytes();
 
-  bool premul = this->colorSpaceInfo().alphaType() == kPremul_SkAlphaType &&
+  bool premul = this->colorInfo().alphaType() == kPremul_SkAlphaType &&
                 srcInfo.alphaType() == kUnpremul_SkAlphaType;
-  bool unpremul = this->colorSpaceInfo().alphaType() == kUnpremul_SkAlphaType &&
+  bool unpremul = this->colorInfo().alphaType() == kUnpremul_SkAlphaType &&
                   srcInfo.alphaType() == kPremul_SkAlphaType;
 
   bool needColorConversion =
-      SkColorSpaceXformSteps::Required(srcInfo.colorSpace(), this->colorSpaceInfo().colorSpace());
+      SkColorSpaceXformSteps::Required(srcInfo.colorSpace(), this->colorInfo().colorSpace());
 
   const GrCaps* caps = direct->priv().caps();
 
@@ -292,12 +294,12 @@ bool GrSurfaceContext::writePixels(
       alphaType = kUnpremul_SkAlphaType;
     } else {
       desc.fConfig = dstProxy->config();
-      colorType = this->colorSpaceInfo().colorType();
+      colorType = this->colorInfo().colorType();
       format = dstProxy->backendFormat().makeTexture2D();
       if (!format.isValid()) {
         return false;
       }
-      alphaType = this->colorSpaceInfo().alphaType();
+      alphaType = this->colorInfo().alphaType();
     }
 
     // It is more efficient for us to write pixels into a top left origin so we prefer that.
@@ -315,7 +317,7 @@ bool GrSurfaceContext::writePixels(
       return false;
     }
     auto tempCtx = direct->priv().drawingManager()->makeTextureContext(
-        tempProxy, colorType, alphaType, this->colorSpaceInfo().refColorSpace());
+        tempProxy, colorType, alphaType, this->colorInfo().refColorSpace());
     if (!tempCtx) {
       return false;
     }
@@ -335,13 +337,13 @@ bool GrSurfaceContext::writePixels(
       std::unique_ptr<GrFragmentProcessor> fp;
       if (canvas2DFastPath) {
         fp = direct->priv().createUPMToPMEffect(
-            GrSimpleTextureEffect::Make(std::move(tempProxy), SkMatrix::I()));
+            GrSimpleTextureEffect::Make(std::move(tempProxy), colorType, SkMatrix::I()));
         // Important: check the original src color type here!
         if (origSrcInfo.colorType() == GrColorType::kBGRA_8888) {
           fp = GrFragmentProcessor::SwizzleOutput(std::move(fp), GrSwizzle::BGRA());
         }
       } else {
-        fp = GrSimpleTextureEffect::Make(std::move(tempProxy), SkMatrix::I());
+        fp = GrSimpleTextureEffect::Make(std::move(tempProxy), colorType, SkMatrix::I());
       }
       if (!fp) {
         return false;
@@ -365,7 +367,7 @@ bool GrSurfaceContext::writePixels(
 
   GrColorType allowedColorType =
       caps->supportedWritePixelsColorType(
-              this->colorSpaceInfo().colorType(), dstProxy->backendFormat(), srcInfo.colorType())
+              this->colorInfo().colorType(), dstProxy->backendFormat(), srcInfo.colorType())
           .fColorType;
   bool flip = dstProxy->origin() == kBottomLeft_GrSurfaceOrigin;
   bool makeTight = !caps->writePixelsRowBytesSupport() && rowBytes != tightRowBytes;
@@ -375,9 +377,9 @@ bool GrSurfaceContext::writePixels(
   std::unique_ptr<char[]> tmpPixels;
   GrColorType srcColorType = srcInfo.colorType();
   if (convert) {
-    GrPixelInfo tmpInfo(
-        allowedColorType, this->colorSpaceInfo().alphaType(),
-        this->colorSpaceInfo().refColorSpace(), srcInfo.width(), srcInfo.height());
+    GrImageInfo tmpInfo(
+        allowedColorType, this->colorInfo().alphaType(), this->colorInfo().refColorSpace(),
+        srcInfo.width(), srcInfo.height());
     auto tmpRB = tmpInfo.minRowBytes();
     tmpPixels.reset(new char[tmpRB * tmpInfo.height()]);
 
@@ -397,15 +399,15 @@ bool GrSurfaceContext::writePixels(
   direct->priv().flushSurface(caps->preferVRAMUseOverFlushes() ? dstProxy : nullptr);
 
   return direct->priv().getGpu()->writePixels(
-      dstSurface, pt.fX, pt.fY, srcInfo.width(), srcInfo.height(),
-      this->colorSpaceInfo().colorType(), srcColorType, src, rowBytes);
+      dstSurface, pt.fX, pt.fY, srcInfo.width(), srcInfo.height(), this->colorInfo().colorType(),
+      srcColorType, src, rowBytes);
 }
 
 bool GrSurfaceContext::copy(GrSurfaceProxy* src, const SkIRect& srcRect, const SkIPoint& dstPoint) {
   ASSERT_SINGLE_OWNER
   RETURN_FALSE_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
-  GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrSurfaceContextPriv::copy");
+  SkDEBUGCODE(this->validate();)
+      GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrSurfaceContextPriv::copy");
 
   const GrCaps* caps = fContext->priv().caps();
 
@@ -447,10 +449,11 @@ std::unique_ptr<GrRenderTargetContext> GrSurfaceContext::rescale(
   int srcY = srcRect.fTop;
   sk_sp<GrTextureProxy> texProxy = sk_ref_sp(this->asTextureProxy());
   SkCanvas::SrcRectConstraint constraint = SkCanvas::kStrict_SrcRectConstraint;
+  GrColorType srcColorType = this->colorInfo().colorType();
   if (!texProxy) {
     texProxy = GrSurfaceProxy::Copy(
-        fContext, this->asSurfaceProxy(), GrMipMapped::kNo, srcRect, SkBackingFit::kApprox,
-        SkBudgeted::kNo);
+        fContext, this->asSurfaceProxy(), srcColorType, GrMipMapped::kNo, srcRect,
+        SkBackingFit::kApprox, SkBudgeted::kNo);
     if (!texProxy) {
       return nullptr;
     }
@@ -473,6 +476,7 @@ std::unique_ptr<GrRenderTargetContext> GrSurfaceContext::rescale(
     stepsY = sy != 1.f;
   }
   SkASSERT(stepsX || stepsY);
+
   // Within a rescaling pass A is the input (if not null) and B is the output. At the end of the
   // pass B is moved to A. If 'this' is the input on the first pass then tempA is null.
   std::unique_ptr<GrRenderTargetContext> tempA;
@@ -480,11 +484,11 @@ std::unique_ptr<GrRenderTargetContext> GrSurfaceContext::rescale(
 
   // Assume we should ignore the rescale linear request if the surface has no color space since
   // it's unclear how we'd linearize from an unknown color space.
-  if (rescaleGamma == SkSurface::kLinear && this->colorSpaceInfo().colorSpace() &&
-      !this->colorSpaceInfo().colorSpace()->gammaIsLinear()) {
-    auto cs = this->colorSpaceInfo().colorSpace()->makeLinearGamma();
+  if (rescaleGamma == SkSurface::kLinear && this->colorInfo().colorSpace() &&
+      !this->colorInfo().colorSpace()->gammaIsLinear()) {
+    auto cs = this->colorInfo().colorSpace()->makeLinearGamma();
     auto xform = GrColorSpaceXform::Make(
-        this->colorSpaceInfo().colorSpace(), this->colorSpaceInfo().alphaType(), cs.get(),
+        this->colorInfo().colorSpace(), this->colorInfo().alphaType(), cs.get(),
         kPremul_SkAlphaType);
     // We'll fall back to kRGBA_8888 if half float not supported.
     auto linearRTC = fContext->priv().makeDeferredRenderTargetContextWithFallback(
@@ -494,7 +498,7 @@ std::unique_ptr<GrRenderTargetContext> GrSurfaceContext::rescale(
       return nullptr;
     }
     linearRTC->drawTexture(
-        GrNoClip(), texProxy, GrSamplerState::Filter::kNearest, SkBlendMode::kSrc,
+        GrNoClip(), texProxy, srcColorType, GrSamplerState::Filter::kNearest, SkBlendMode::kSrc,
         SK_PMColor4fWHITE, SkRect::Make(srcRect), SkRect::MakeWH(srcW, srcH), GrAA::kNo,
         GrQuadAAFlags::kNone, constraint, SkMatrix::I(), std::move(xform));
     texProxy = linearRTC->asTextureProxyRef();
@@ -525,16 +529,16 @@ std::unique_ptr<GrRenderTargetContext> GrSurfaceContext::rescale(
       --stepsY;
     }
     auto input = tempA ? tempA.get() : this;
-    GrColorType colorType = input->colorSpaceInfo().colorType();
-    auto cs = input->colorSpaceInfo().refColorSpace();
+    GrColorType colorType = input->colorInfo().colorType();
+    auto cs = input->colorInfo().refColorSpace();
     sk_sp<GrColorSpaceXform> xform;
-    auto prevAlphaType = input->colorSpaceInfo().alphaType();
+    auto prevAlphaType = input->colorInfo().alphaType();
     if (!stepsX && !stepsY) {
       // Might as well fold conversion to final info in the last step.
       cs = info.refColorSpace();
       colorType = SkColorTypeToGrColorType(info.colorType());
       xform = GrColorSpaceXform::Make(
-          input->colorSpaceInfo().colorSpace(), input->colorSpaceInfo().alphaType(), cs.get(),
+          input->colorInfo().colorSpace(), input->colorInfo().alphaType(), cs.get(),
           info.alphaType());
     }
     tempB = fContext->priv().makeDeferredRenderTargetContextWithFallback(
@@ -557,9 +561,9 @@ std::unique_ptr<GrRenderTargetContext> GrSurfaceContext::rescale(
       if (srcW != texProxy->width() || srcH != texProxy->height()) {
         auto domain = GrTextureDomain::MakeTexelDomain(
             SkIRect::MakeXYWH(srcX, srcY, srcW, srcH), GrTextureDomain::kClamp_Mode);
-        fp = GrBicubicEffect::Make(texProxy, matrix, domain, dir, prevAlphaType);
+        fp = GrBicubicEffect::Make(texProxy, srcColorType, matrix, domain, dir, prevAlphaType);
       } else {
-        fp = GrBicubicEffect::Make(texProxy, matrix, dir, prevAlphaType);
+        fp = GrBicubicEffect::Make(texProxy, srcColorType, matrix, dir, prevAlphaType);
       }
       if (xform) {
         fp = GrColorSpaceXformEffect::Make(std::move(fp), std::move(xform));
@@ -574,8 +578,9 @@ std::unique_ptr<GrRenderTargetContext> GrSurfaceContext::rescale(
                                                             : GrSamplerState::Filter::kBilerp;
       auto srcSubset = SkRect::MakeXYWH(srcX, srcY, srcW, srcH);
       tempB->drawTexture(
-          GrNoClip(), texProxy, filter, SkBlendMode::kSrc, SK_PMColor4fWHITE, srcSubset, dstRect,
-          GrAA::kNo, GrQuadAAFlags::kNone, constraint, SkMatrix::I(), std::move(xform));
+          GrNoClip(), texProxy, srcColorType, filter, SkBlendMode::kSrc, SK_PMColor4fWHITE,
+          srcSubset, dstRect, GrAA::kNo, GrQuadAAFlags::kNone, constraint, SkMatrix::I(),
+          std::move(xform));
     }
     texProxy = tempB->asTextureProxyRef();
     tempA = std::move(tempB);
@@ -603,12 +608,12 @@ GrSurfaceContext::PixelTransferResult GrSurfaceContext::transferPixels(
 
   auto proxy = this->asSurfaceProxy();
   auto supportedRead = this->caps()->supportedReadPixelsColorType(
-      this->colorSpaceInfo().colorType(), proxy->backendFormat(), dstCT);
+      this->colorInfo().colorType(), proxy->backendFormat(), dstCT);
   // Fail if read color type does not have all of dstCT's color channels and those missing color
   // channels are in the src.
   uint32_t dstComponents = GrColorTypeComponentFlags(dstCT);
   uint32_t legalReadComponents = GrColorTypeComponentFlags(supportedRead.fColorType);
-  uint32_t srcComponents = GrColorTypeComponentFlags(this->colorSpaceInfo().colorType());
+  uint32_t srcComponents = GrColorTypeComponentFlags(this->colorInfo().colorType());
   if ((~legalReadComponents & dstComponents) & srcComponents) {
     return {};
   }
@@ -631,16 +636,16 @@ GrSurfaceContext::PixelTransferResult GrSurfaceContext::transferPixels(
         rect.fLeft, this->height() - rect.fBottom, rect.fRight, this->height() - rect.fTop);
   }
   this->drawingManager()->newTransferFromRenderTask(
-      this->asSurfaceProxyRef(), srcRect, this->colorSpaceInfo().colorType(),
-      supportedRead.fColorType, buffer, 0);
+      this->asSurfaceProxyRef(), srcRect, this->colorInfo().colorType(), supportedRead.fColorType,
+      buffer, 0);
   PixelTransferResult result;
   result.fTransferBuffer = std::move(buffer);
-  auto at = this->colorSpaceInfo().alphaType();
+  auto at = this->colorInfo().alphaType();
   if (supportedRead.fColorType != dstCT || flip) {
     result.fPixelConverter = [w = rect.width(), h = rect.height(), dstCT, supportedRead, at](
                                  void* dst, const void* src) {
-      GrPixelInfo srcInfo(supportedRead.fColorType, at, nullptr, w, h);
-      GrPixelInfo dstInfo(dstCT, at, nullptr, w, h);
+      GrImageInfo srcInfo(supportedRead.fColorType, at, nullptr, w, h);
+      GrImageInfo dstInfo(dstCT, at, nullptr, w, h);
       GrConvertPixels(
           dstInfo, dst, dstInfo.minRowBytes(), srcInfo, src, srcInfo.minRowBytes(),
           /* flipY = */ false);

@@ -41,8 +41,7 @@ void GrGLPathRendering::setProjectionMatrix(const SkMatrix&, const SkISize&, GrS
 sk_sp<GrPath> GrGLPathRendering::createPath(const SkPath&, const GrStyle&) { return nullptr; }
 
 void GrGLPathRendering::onDrawPath(
-    GrRenderTarget*, GrSurfaceOrigin, const GrPrimitiveProcessor&, const GrPipeline&,
-    const GrPipeline::FixedDynamicState&, const GrStencilSettings&, const GrPath*) {}
+    GrRenderTarget*, const GrProgramInfo&, const GrStencilSettings&, const GrPath*) {}
 
 void GrGLPathRendering::onStencilPath(const StencilPathArgs&, const GrPath*) {}
 

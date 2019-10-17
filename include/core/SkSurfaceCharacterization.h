@@ -56,7 +56,16 @@ class SK_API SkSurfaceCharacterization {
   bool operator==(const SkSurfaceCharacterization& other) const;
   bool operator!=(const SkSurfaceCharacterization& other) const { return !(*this == other); }
 
+  /*
+   * Return a new surface characterization with the only difference being a different width
+   * and height
+   */
   SkSurfaceCharacterization createResized(int width, int height) const;
+
+  /*
+   * Return a new surface characterization with only a replaced color space
+   */
+  SkSurfaceCharacterization createColorSpace(sk_sp<SkColorSpace>) const;
 
   GrContextThreadSafeProxy* contextInfo() const { return fContextInfo.get(); }
   sk_sp<GrContextThreadSafeProxy> refContextInfo() const { return fContextInfo; }
@@ -170,6 +179,8 @@ class SK_API SkSurfaceCharacterization {
   SkSurfaceCharacterization() : fSurfaceProps(0, kUnknown_SkPixelGeometry) {}
 
   SkSurfaceCharacterization createResized(int width, int height) const { return *this; }
+
+  SkSurfaceCharacterization createColorSpace(sk_sp<SkColorSpace>) const { return *this; }
 
   bool operator==(const SkSurfaceCharacterization& other) const { return false; }
   bool operator!=(const SkSurfaceCharacterization& other) const { return !(*this == other); }

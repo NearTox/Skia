@@ -6,6 +6,7 @@
 #define TimeUtils_DEFINED
 
 #include "include/core/SkTypes.h"
+#include "include/private/SkFloatingPoint.h"
 
 #include <cmath>
 
@@ -36,6 +37,17 @@ static inline float PingPong(double time, float period, float phase, float ends,
   double half = period / 2.0;
   double diff = ::fabs(value - half);
   return (float)(ends + (1.0 - diff / half) * (mid - ends));
+}
+
+static inline float SineWave(
+    double time, float periodInSecs, float phaseInSecs, float min, float max) {
+  if (periodInSecs < 0.f) {
+    return (min + max) / 2.f;
+  }
+  double t = NanosToSeconds(time) + phaseInSecs;
+  t *= 2 * SK_FloatPI / periodInSecs;
+  float halfAmplitude = (max - min) / 2.f;
+  return halfAmplitude * std::sin(t) + halfAmplitude + min;
 }
 }  // namespace TimeUtils
 #endif

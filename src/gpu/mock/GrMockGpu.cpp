@@ -53,7 +53,7 @@ sk_sp<GrGpu> GrMockGpu::Make(
 }
 
 GrOpsRenderPass* GrMockGpu::getOpsRenderPass(
-    GrRenderTarget* rt, GrSurfaceOrigin origin, const SkRect& bounds,
+    GrRenderTarget* rt, GrSurfaceOrigin origin, const SkIRect& bounds,
     const GrOpsRenderPass::LoadAndStoreInfo& colorInfo,
     const GrOpsRenderPass::StencilLoadAndStoreInfo&,
     const SkTArray<GrTextureProxy*, true>& sampledProxies) {
@@ -130,8 +130,8 @@ void GrMockGpu::querySampleLocations(GrRenderTarget* rt, SkTArray<SkPoint>* samp
 
 sk_sp<GrTexture> GrMockGpu::onCreateTexture(
     const GrSurfaceDesc& desc, const GrBackendFormat& format, GrRenderable renderable,
-    int renderTargetSampleCnt, SkBudgeted budgeted, GrProtected isProtected,
-    const GrMipLevel texels[], int mipLevelCount) {
+    int renderTargetSampleCnt, SkBudgeted budgeted, GrProtected isProtected, int mipLevelCount,
+    uint32_t levelClearMask) {
   if (fMockOptions.fFailTextureAllocations) {
     return nullptr;
   }
@@ -140,13 +140,7 @@ sk_sp<GrTexture> GrMockGpu::onCreateTexture(
   SkASSERT(ct != GrColorType::kUnknown);
 
   GrMipMapsStatus mipMapsStatus =
-      mipLevelCount > 1 ? GrMipMapsStatus::kValid : GrMipMapsStatus::kNotAllocated;
-  for (int i = 0; i < mipLevelCount; ++i) {
-    if (!texels[i].fPixels) {
-      mipMapsStatus = GrMipMapsStatus::kDirty;
-      break;
-    }
-  }
+      mipLevelCount > 1 ? GrMipMapsStatus::kDirty : GrMipMapsStatus::kNotAllocated;
   GrMockTextureInfo texInfo(ct, NextInternalTextureID());
   if (renderable == GrRenderable::kYes) {
     GrMockRenderTargetInfo rtInfo(ct, NextInternalRenderTargetID());
@@ -253,9 +247,9 @@ GrStencilAttachment* GrMockGpu::createStencilAttachmentForRenderTarget(
   return new GrMockStencilAttachment(this, width, height, kBits, rt->numSamples());
 }
 
-GrBackendTexture GrMockGpu::createBackendTexture(
+GrBackendTexture GrMockGpu::onCreateBackendTexture(
     int w, int h, const GrBackendFormat& format, GrMipMapped mipMapped,
-    GrRenderable /* renderable */, const void* /* pixels */, size_t /* rowBytes */,
+    GrRenderable /* renderable */, const SkPixmap /*srcData*/[], int /*numMipLevels*/,
     const SkColor4f* /* color */, GrProtected /* isProtected */) {
   auto colorType = format.asMockColorType();
   if (!this->caps()->isFormatTexturable(format)) {

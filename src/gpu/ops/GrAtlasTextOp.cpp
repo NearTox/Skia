@@ -94,7 +94,7 @@ void GrAtlasTextOp::init() {
       &bounds, geo.fRun, geo.fSubRun, geo.fViewMatrix, geo.fX, geo.fY, fNeedsGlyphTransform);
   // We don't have tight bounds on the glyph paths in device space. For the purposes of bounds
   // we treat this as a set of non-AA rects rendered with a texture.
-  this->setBounds(bounds, HasAABloat::kNo, IsZeroArea::kNo);
+  this->setBounds(bounds, HasAABloat::kNo, IsHairline::kNo);
 }
 
 void GrAtlasTextOp::visitProxies(const VisitProxyFunc& func) const {

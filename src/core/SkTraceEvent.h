@@ -150,8 +150,8 @@ namespace tracing_internals {
 
 // Specify these values when the corresponding argument of AddTraceEvent is not
 // used.
-constexpr int kZeroNumArgs = 0;
-constexpr uint64_t kNoEventId = 0;
+const int kZeroNumArgs = 0;
+const uint64_t kNoEventId = 0;
 
 // TraceID encapsulates an ID that can either be an integer or pointer. Pointers
 // are by default mangled with the Process ID so that they are unlikely to

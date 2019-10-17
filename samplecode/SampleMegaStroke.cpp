@@ -13,7 +13,7 @@
 class MegaStrokeView : public Sample {
  public:
   MegaStrokeView() {
-    fClip.set(0, 0, 950, 600);
+    fClip.setLTRB(0, 0, 950, 600);
     fAngle = 0;
     fPlusMinus = 0;
     SkRandom rand;
@@ -29,7 +29,7 @@ class MegaStrokeView : public Sample {
   SkString name() override { return SkString("MegaStroke"); }
 
   bool onChar(SkUnichar uni) override {
-    fClip.set(0, 0, 950, 600);
+    fClip.setLTRB(0, 0, 950, 600);
     return true;
   }
 
@@ -64,7 +64,7 @@ class MegaStrokeView : public Sample {
     fClip = divSim;
   }
 
-  void onSizeChange() override { fClip.set(0, 0, 950, 600); }
+  void onSizeChange() override { fClip.setWH(950, 600); }
 
   bool onAnimate(double /*nanos*/) override { return true; }
 

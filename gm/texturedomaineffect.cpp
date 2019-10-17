@@ -141,8 +141,8 @@ class TextureDomainEffect : public GpuGM {
           GrPaint grPaint;
           grPaint.setXPFactory(GrPorterDuffXPFactory::Get(SkBlendMode::kSrc));
           auto fp = GrTextureDomainEffect::Make(
-              proxy, textureMatrices[tm], GrTextureDomain::MakeTexelDomain(texelDomains[d], mode),
-              mode, fFilter);
+              proxy, SkColorTypeToGrColorType(fBitmap.colorType()), textureMatrices[tm],
+              GrTextureDomain::MakeTexelDomain(texelDomains[d], mode), mode, fFilter);
 
           if (!fp) {
             continue;

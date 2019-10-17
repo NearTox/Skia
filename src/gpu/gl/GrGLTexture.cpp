@@ -44,7 +44,7 @@ GrGLTexture::GrGLTexture(
       fParameters(sk_make_sp<GrGLTextureParameters>()) {
   this->init(desc);
   this->registerWithCache(budgeted);
-  if (GrPixelConfigIsCompressed(desc.fConfig)) {
+  if (GrGLFormatIsCompressed(desc.fFormat)) {
     this->setReadOnly();
   }
 }

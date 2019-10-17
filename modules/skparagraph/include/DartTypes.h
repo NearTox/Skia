@@ -62,6 +62,7 @@ struct PositionWithAffinity {
   int32_t position;
   Affinity affinity;
 
+  PositionWithAffinity() : position(0), affinity(kDownstream) {}
   PositionWithAffinity(int32_t p, Affinity a) : position(p), affinity(a) {}
 };
 
@@ -106,6 +107,7 @@ enum class TextBaseline {
   kAlphabetic,
   kIdeographic,
 };
+
 }  // namespace textlayout
 }  // namespace skia
 

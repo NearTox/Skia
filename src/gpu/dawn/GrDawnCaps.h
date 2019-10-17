@@ -18,7 +18,8 @@ class GrDawnCaps : public GrCaps {
   GrDawnCaps(const GrContextOptions& contextOptions);
 
   bool isFormatSRGB(const GrBackendFormat&) const override;
-  bool isFormatCompressed(const GrBackendFormat&) const override;
+  bool isFormatCompressed(
+      const GrBackendFormat&, SkImage::CompressionType* compressionType = nullptr) const override;
 
   bool isFormatTexturableAndUploadable(GrColorType, const GrBackendFormat& format) const override;
   bool isFormatRenderable(const GrBackendFormat& format, int sampleCount = 1) const override;
@@ -39,13 +40,13 @@ class GrDawnCaps : public GrCaps {
     return SurfaceReadPixelsSupport::kSupported;
   }
 
+  size_t bytesPerPixel(const GrBackendFormat&) const override;
+
   int getRenderTargetSampleCount(int requestedCount, const GrBackendFormat&) const override;
 
   int maxRenderTargetSampleCount(const GrBackendFormat& format) const override;
 
   GrBackendFormat getBackendFormatFromCompressionType(SkImage::CompressionType) const override;
-
-  bool canClearTextureOnCreation() const override;
 
   GrSwizzle getTextureSwizzle(const GrBackendFormat&, GrColorType) const override;
 

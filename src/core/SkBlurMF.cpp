@@ -56,8 +56,8 @@ class SkBlurMaskFilterImpl : public SkMaskFilterBase {
       GrRecordingContext*, GrRenderTargetContext* renderTargetContext, GrPaint&&, const GrClip&,
       const SkMatrix& viewMatrix, const GrShape& shape) const override;
   sk_sp<GrTextureProxy> filterMaskGPU(
-      GrRecordingContext*, sk_sp<GrTextureProxy> srcProxy, const SkMatrix& ctm,
-      const SkIRect& maskRect) const override;
+      GrRecordingContext*, sk_sp<GrTextureProxy> srcProxy, GrColorType srcColorType,
+      SkAlphaType srcAlphaType, const SkMatrix& ctm, const SkIRect& maskRect) const override;
 #endif
 
   void computeFastBounds(const SkRect&, SkRect*) const override;
@@ -834,8 +834,8 @@ bool SkBlurMaskFilterImpl::canFilterMaskGPU(
 }
 
 sk_sp<GrTextureProxy> SkBlurMaskFilterImpl::filterMaskGPU(
-    GrRecordingContext* context, sk_sp<GrTextureProxy> srcProxy, const SkMatrix& ctm,
-    const SkIRect& maskRect) const {
+    GrRecordingContext* context, sk_sp<GrTextureProxy> srcProxy, GrColorType srcColorType,
+    SkAlphaType srcAlphaType, const SkMatrix& ctm, const SkIRect& maskRect) const {
   // 'maskRect' isn't snapped to the UL corner but the mask in 'src' is.
   const SkIRect clipRect = SkIRect::MakeWH(maskRect.width(), maskRect.height());
 
@@ -846,8 +846,8 @@ sk_sp<GrTextureProxy> SkBlurMaskFilterImpl::filterMaskGPU(
   // gaussianBlur.  Otherwise, we need to save it for later compositing.
   bool isNormalBlur = (kNormal_SkBlurStyle == fBlurStyle);
   auto renderTargetContext = SkGpuBlurUtils::GaussianBlur(
-      context, srcProxy, SkIPoint::Make(0, 0), nullptr, clipRect, SkIRect::EmptyIRect(),
-      xformedSigma, xformedSigma, GrTextureDomain::kIgnore_Mode, kPremul_SkAlphaType);
+      context, srcProxy, srcColorType, srcAlphaType, SkIPoint::Make(0, 0), nullptr, clipRect,
+      SkIRect::EmptyIRect(), xformedSigma, xformedSigma, GrTextureDomain::kIgnore_Mode);
   if (!renderTargetContext) {
     return nullptr;
   }
@@ -856,7 +856,7 @@ sk_sp<GrTextureProxy> SkBlurMaskFilterImpl::filterMaskGPU(
     GrPaint paint;
     // Blend pathTexture over blurTexture.
     paint.addCoverageFragmentProcessor(
-        GrSimpleTextureEffect::Make(std::move(srcProxy), SkMatrix::I()));
+        GrSimpleTextureEffect::Make(std::move(srcProxy), srcColorType, SkMatrix::I()));
     if (kInner_SkBlurStyle == fBlurStyle) {
       // inner:  dst = dst * src
       paint.setCoverageSetOpXPFactory(SkRegion::kIntersect_Op);

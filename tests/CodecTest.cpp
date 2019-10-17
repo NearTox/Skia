@@ -406,7 +406,7 @@ static void check(
     const bool supported = codec->getValidSubset(&subset);
     REPORTER_ASSERT(r, supported == supportsSubsetDecoding);
 
-    SkImageInfo subsetInfo = info.makeWH(subset.width(), subset.height());
+    SkImageInfo subsetInfo = info.makeDimensions(subset.size());
     SkBitmap bm;
     bm.allocPixels(subsetInfo);
     const auto result = codec->getPixels(bm.info(), bm.getPixels(), bm.rowBytes(), &opts);
@@ -592,9 +592,8 @@ static void test_dimensions(skiatest::Reporter* r, const char path[]) {
   for (int sampleSize = 1; sampleSize < 32; sampleSize++) {
     // Scale the output dimensions
     SkISize scaledDims = codec->getSampledDimensions(sampleSize);
-    SkImageInfo scaledInfo = codec->getInfo()
-                                 .makeWH(scaledDims.width(), scaledDims.height())
-                                 .makeColorType(kN32_SkColorType);
+    SkImageInfo scaledInfo =
+        codec->getInfo().makeDimensions(scaledDims).makeColorType(kN32_SkColorType);
 
     // Set up for the decode
     size_t rowBytes = scaledDims.width() * sizeof(SkPMColor);
@@ -1303,7 +1302,7 @@ DEF_TEST(Codec_reusePng, r) {
   SkAndroidCodec::AndroidOptions opts;
   opts.fSampleSize = 5;
   auto size = codec->getSampledDimensions(opts.fSampleSize);
-  auto info = codec->getInfo().makeWH(size.fWidth, size.fHeight).makeColorType(kN32_SkColorType);
+  auto info = codec->getInfo().makeDimensions(size).makeColorType(kN32_SkColorType);
   SkBitmap bm;
   bm.allocPixels(info);
   auto result = codec->getAndroidPixels(info, bm.getPixels(), bm.rowBytes(), &opts);
@@ -1675,7 +1674,7 @@ DEF_TEST(Codec_78329453, r) {
   // but the ones tested by DM happen to not.
   constexpr int kSampleSize = 19;
   const auto size = codec->getSampledDimensions(kSampleSize);
-  auto info = codec->getInfo().makeWH(size.width(), size.height());
+  auto info = codec->getInfo().makeDimensions(size);
   SkBitmap bm;
   bm.allocPixels(info);
   bm.eraseColor(SK_ColorTRANSPARENT);

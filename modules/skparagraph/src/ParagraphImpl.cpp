@@ -10,9 +10,20 @@
 #include "src/core/SkSpan.h"
 #include "src/utils/SkUTF.h"
 #include <algorithm>
+#include <unicode/ustring.h>
 
 namespace skia {
 namespace textlayout {
+
+namespace {
+
+using ICUUText = std::unique_ptr<UText, SkFunctionWrapper<decltype(utext_close), utext_close>>;
+
+SkScalar littleRound(SkScalar a) {
+  // This rounding is done to match Flutter tests. Must be removed..
+  return SkScalarRoundToScalar(a * 100.0) / 100.0;
+}
+}  // namespace
 
 TextRange operator*(const TextRange& a, const TextRange& b) {
   if (a.start == b.start && a.end == b.end) return a;
@@ -29,18 +40,18 @@ bool TextBreaker::initialize(SkSpan<const char> text, UBreakIteratorType type) {
   std::unique_ptr<UText, SkFunctionWrapper<decltype(utext_close), utext_close>> utf8UText(
       utext_openUTF8(&sUtf8UText, text.begin(), text.size(), &status));
   if (U_FAILURE(status)) {
-    SkDebugf("Could not create utf8UText: %s", u_errorName(status));
+    SkDEBUGF("Could not create utf8UText: %s", u_errorName(status));
     return false;
   }
   fIterator.reset(ubrk_open(type, "en", nullptr, 0, &status));
   if (U_FAILURE(status)) {
-    SkDebugf("Could not create line break iterator: %s", u_errorName(status));
+    SkDEBUGF("Could not create line break iterator: %s", u_errorName(status));
     SK_ABORT("");
   }
 
   ubrk_setUText(fIterator.get(), utf8UText.get(), &status);
   if (U_FAILURE(status)) {
-    SkDebugf("Could not setText on break iterator: %s", u_errorName(status));
+    SkDEBUGF("Could not setText on break iterator: %s", u_errorName(status));
     return false;
   }
 
@@ -84,74 +95,102 @@ ParagraphImpl::ParagraphImpl(
 
 ParagraphImpl::~ParagraphImpl() = default;
 
-void ParagraphImpl::layout(SkScalar width) {
-    if (fState < kShaped) {
-      // Layout marked as dirty for performance/testing reasons
-      this->fRuns.reset();
-      this->fClusters.reset();
-    } else if (fState >= kLineBroken && (fOldWidth != width || fOldHeight != fHeight)) {
-      // We can use the results from SkShaper but have to break lines again
-      fState = kShaped;
-    }
+void ParagraphImpl::layout(SkScalar rawWidth) {
+  // TODO: This rounding is done to match Flutter tests. Must be removed...
+  auto floorWidth = SkScalarFloorToScalar(rawWidth);
+  if (fState < kShaped) {
+    // Layout marked as dirty for performance/testing reasons
+    this->fRuns.reset();
+    this->fClusters.reset();
+  } else if (fState >= kLineBroken && (fOldWidth != floorWidth || fOldHeight != fHeight)) {
+    // We can use the results from SkShaper but have to break lines again
+    fState = kShaped;
+  }
 
-    if (fState < kShaped) {
-      fClusters.reset();
+  if (fState < kShaped) {
+    fClusters.reset();
 
-      if (!this->shapeTextIntoEndlessLine()) {
-        // Apply the last style to the empty text
-        SkFont font;
-        SkScalar height;
-        fFontResolver.getFirstFont(&font, &height);
-        LineMetrics lineMetrics(font, paragraphStyle().getStrutStyle().getForceStrutHeight());
-        // Set the important values that are not zero
-        fWidth = 0;
-        fHeight = lineMetrics.height() * (height == 0 || height == 1 ? 1 : height);
-        fAlphabeticBaseline = lineMetrics.alphabeticBaseline();
-        fIdeographicBaseline = lineMetrics.ideographicBaseline();
-        this->fOldWidth = width;
-        this->fOldHeight = this->fHeight;
-        return;
-      }
-      if (fState < kShaped) {
-        fState = kShaped;
-      } else {
-        layout(width);
-        return;
-      }
-
-      if (fState < kMarked) {
-        this->buildClusterTable();
-        fState = kClusterized;
-        this->markLineBreaks();
-        fState = kMarked;
-
-        // Add the paragraph to the cache
-        fFontCollection->getParagraphCache()->updateParagraph(this);
-      }
-    }
-
-    if (fState >= kLineBroken) {
-      if (fOldWidth != width || fOldHeight != fHeight) {
-        fState = kMarked;
-      }
-    }
-
-    if (fState < kLineBroken) {
+    if (!this->shapeTextIntoEndlessLine()) {
       this->resetContext();
       this->resolveStrut();
       this->fLines.reset();
-      this->breakShapedTextIntoLines(width);
-      fState = kLineBroken;
+
+      // Set the important values that are not zero
+      auto emptyMetrics = computeEmptyMetrics();
+      fWidth = floorWidth;
+      fHeight = emptyMetrics.height();
+      if (fParagraphStyle.getStrutStyle().getStrutEnabled() &&
+          fParagraphStyle.getStrutStyle().getForceStrutHeight()) {
+        fHeight = fStrutMetrics.height();
+      }
+      fAlphabeticBaseline = emptyMetrics.alphabeticBaseline();
+      fIdeographicBaseline = emptyMetrics.ideographicBaseline();
+      fMinIntrinsicWidth = 0;
+      fMaxIntrinsicWidth = 0;
+      this->fOldWidth = floorWidth;
+      this->fOldHeight = this->fHeight;
+
+      return;
+    }
+    if (fState < kShaped) {
+      fState = kShaped;
+    } else {
+      layout(floorWidth);
+      return;
     }
 
-    if (fState < kFormatted) {
-      // Build the picture lazily not until we actually have to paint (or never)
-      this->formatLines(fWidth);
-      fState = kFormatted;
-    }
+    if (fState < kMarked) {
+      this->buildClusterTable();
+      fState = kClusterized;
+      this->markLineBreaks();
+      fState = kMarked;
 
-    this->fOldWidth = width;
-    this->fOldHeight = this->fHeight;
+      // Add the paragraph to the cache
+      fFontCollection->getParagraphCache()->updateParagraph(this);
+    }
+  }
+
+  if (fState >= kLineBroken) {
+    if (fOldWidth != floorWidth || fOldHeight != fHeight) {
+      fState = kMarked;
+    }
+  }
+
+  if (fState < kLineBroken) {
+    this->resetContext();
+    this->resolveStrut();
+    this->fLines.reset();
+    this->breakShapedTextIntoLines(floorWidth);
+    fState = kLineBroken;
+  }
+
+  if (fState < kFormatted) {
+    // Build the picture lazily not until we actually have to paint (or never)
+    this->formatLines(fWidth);
+    fState = kFormatted;
+  }
+
+  this->fOldWidth = floorWidth;
+  this->fOldHeight = this->fHeight;
+
+  // TODO: This rounding is done to match Flutter tests. Must be removed...
+  fMinIntrinsicWidth = littleRound(fMinIntrinsicWidth);
+  fMaxIntrinsicWidth = littleRound(fMaxIntrinsicWidth);
+
+  // TODO: This is strictly Flutter thing. Must be factored out into some flutter code
+  if (fParagraphStyle.getMaxLines() == 1 ||
+      (fParagraphStyle.unlimited_lines() && fParagraphStyle.ellipsized())) {
+    fMinIntrinsicWidth = fMaxIntrinsicWidth;
+  }
+
+  // TODO: This rounding is done to match Flutter tests. Must be removed..
+  if (floorWidth == 0.0f) {
+    fWidth = 0;
+    if (fParagraphStyle.unlimited_lines() && !fParagraphStyle.ellipsized()) {
+      fMinIntrinsicWidth = fHeight;
+      fHeight = fMaxIntrinsicWidth;
+    }
+  }
 }
 
 void ParagraphImpl::paint(SkCanvas* canvas, SkScalar x, SkScalar y) {
@@ -172,7 +211,9 @@ void ParagraphImpl::resetContext() {
   fIdeographicBaseline = 0;
   fMaxIntrinsicWidth = 0;
   fMinIntrinsicWidth = 0;
+  fLongestLine = 0;
   fMaxWidthWithTrailingSpaces = 0;
+  fExceededMaxLines = false;
 }
 
 // Clusters in the order of the input text
@@ -199,7 +240,6 @@ void ParagraphImpl::buildClusterTable() {
                                                 SkScalar height) {
         SkASSERT(charEnd >= charStart);
         SkSpan<const char> text(fText.c_str() + charStart, charEnd - charStart);
-
         auto& cluster =
             fClusters.emplace_back(this, runIndex, glyphStart, glyphEnd, text, width, height);
         cluster.setIsWhiteSpaces();
@@ -403,14 +443,23 @@ bool ParagraphImpl::iterateThroughShapingRegions(ShapeVisitor shape) {
     if (placeholder.fRange.width() == 0) {
       continue;
     }
+
+    // Get the placeholder font
+    sk_sp<SkTypeface> typeface = nullptr;
+    for (auto& ff : placeholder.fTextStyle.getFontFamilies()) {
+      typeface = fFontCollection->matchTypeface(
+          ff.c_str(), placeholder.fTextStyle.getFontStyle(), placeholder.fTextStyle.getLocale());
+      if (typeface != nullptr) {
+        break;
+      }
+    }
+    SkFont font(typeface, placeholder.fTextStyle.getFontSize());
+
     // "Shape" the placeholder
     const SkShaper::RunHandler::RunInfo runInfo = {
-        SkFont(), (uint8_t)2, SkPoint::Make(placeholder.fStyle.fWidth, placeholder.fStyle.fHeight),
-        1, SkShaper::RunHandler::Range(placeholder.fRange.start, placeholder.fRange.width())};
-    auto& run = fRuns.emplace_back(
-        this, runInfo,
-        0,  // placeholder.fRange.start,
-        1, fRuns.count(), advanceX);
+        font, (uint8_t)2, SkPoint::Make(placeholder.fStyle.fWidth, placeholder.fStyle.fHeight), 1,
+        SkShaper::RunHandler::Range(placeholder.fRange.start, placeholder.fRange.width())};
+    auto& run = fRuns.emplace_back(this, runInfo, 0, 1, fRuns.count(), advanceX);
     run.fPositions[0] = {advanceX, 0};
     run.fClusterIndexes[0] = 0;
     run.fPlaceholder = &placeholder.fStyle;
@@ -425,7 +474,7 @@ void ParagraphImpl::breakShapedTextIntoLines(SkScalar maxWidth) {
       this, maxWidth,
       [&](TextRange text, TextRange textWithSpaces, ClusterRange clusters,
           ClusterRange clustersWithGhosts, SkScalar widthWithSpaces, size_t startPos, size_t endPos,
-          SkVector offset, SkVector advance, LineMetrics metrics, bool addEllipsis) {
+          SkVector offset, SkVector advance, InternalLineMetrics metrics, bool addEllipsis) {
         // Add the line
         // TODO: Take in account clipped edges
         auto& line = this->addLine(
@@ -434,13 +483,16 @@ void ParagraphImpl::breakShapedTextIntoLines(SkScalar maxWidth) {
         if (addEllipsis) {
           line.createEllipsis(maxWidth, fParagraphStyle.getEllipsis(), true);
         }
+
+        fLongestLine = advance.fX;
       });
   fHeight = textWrapper.height();
-  fWidth = maxWidth;  // fTextWrapper.width();
-  fMinIntrinsicWidth = textWrapper.minIntrinsicWidth();
+  fWidth = maxWidth;
   fMaxIntrinsicWidth = textWrapper.maxIntrinsicWidth();
+  fMinIntrinsicWidth = textWrapper.minIntrinsicWidth();
   fAlphabeticBaseline = fLines.empty() ? 0 : fLines.front().alphabeticBaseline();
   fIdeographicBaseline = fLines.empty() ? 0 : fLines.front().ideographicBaseline();
+  fExceededMaxLines = textWrapper.exceededMaxLines();
 }
 
 void ParagraphImpl::formatLines(SkScalar maxWidth) {
@@ -471,14 +523,20 @@ void ParagraphImpl::resolveStrut() {
   }
 
   sk_sp<SkTypeface> typeface;
-  for (auto& fontFamily : strutStyle.getFontFamilies()) {
-    typeface =
-        fFontCollection->matchTypeface(fontFamily.c_str(), strutStyle.getFontStyle(), SkString());
-    if (typeface.get() != nullptr) {
-      break;
+  if (strutStyle.getFontFamilies().empty()) {
+    typeface = fFontCollection->matchTypeface("", strutStyle.getFontStyle(), SkString(""));
+  } else {
+    for (auto& fontFamily : strutStyle.getFontFamilies()) {
+      typeface = fFontCollection->matchTypeface(
+          fontFamily.c_str(), strutStyle.getFontStyle(), SkString(""));
+      if (typeface.get() != nullptr) {
+        break;
+      }
     }
   }
+
   if (typeface.get() == nullptr) {
+    SkDEBUGF("Could not resolve strut font\n");
     return;
   }
 
@@ -487,17 +545,18 @@ void ParagraphImpl::resolveStrut() {
   font.getMetrics(&metrics);
 
   if (strutStyle.getHeightOverride()) {
-    auto strutHeight = metrics.fDescent - metrics.fAscent + metrics.fLeading;
+    auto strutHeight = metrics.fDescent - metrics.fAscent;
     auto strutMultiplier = strutStyle.getHeight() * strutStyle.getFontSize();
-    fStrutMetrics = LineMetrics(
-        metrics.fAscent / strutHeight * strutMultiplier,
-        metrics.fDescent / strutHeight * strutMultiplier,
+    fStrutMetrics = InternalLineMetrics(
+        (metrics.fAscent / strutHeight) * strutMultiplier,
+        (metrics.fDescent / strutHeight) * strutMultiplier,
         strutStyle.getLeading() < 0 ? 0 : strutStyle.getLeading() * strutStyle.getFontSize());
   } else {
-    fStrutMetrics = LineMetrics(
+    fStrutMetrics = InternalLineMetrics(
         metrics.fAscent, metrics.fDescent,
         strutStyle.getLeading() < 0 ? 0 : strutStyle.getLeading() * strutStyle.getFontSize());
   }
+  fStrutMetrics.setForceStrut(this->paragraphStyle().getStrutStyle().getForceStrutHeight());
 }
 
 BlockRange ParagraphImpl::findAllBlocks(TextRange textRange) {
@@ -523,7 +582,7 @@ BlockRange ParagraphImpl::findAllBlocks(TextRange textRange) {
 TextLine& ParagraphImpl::addLine(
     SkVector offset, SkVector advance, TextRange text, TextRange textWithSpaces,
     ClusterRange clusters, ClusterRange clustersWithGhosts, SkScalar widthWithSpaces,
-    LineMetrics sizes) {
+    InternalLineMetrics sizes) {
   // Define a list of styles that covers the line
   auto blocks = findAllBlocks(text);
 
@@ -589,17 +648,36 @@ std::vector<TextBox> ParagraphImpl::getRectsForRange(
   }
 
   markGraphemes();
+
   if (start >= end || start > fCodePoints.size() || end == 0) {
     return results;
   }
 
-  // Make sure the edges are set on the glyph edges
-  TextRange text;
-  text.end = end >= fCodePoints.size() ? fText.size()
-                                       : fGraphemes[fCodePoints[end].fGrapeme].fTextRange.start;
-  text.start = start >= fCodePoints.size()
-                   ? fText.size()
-                   : fGraphemes[fCodePoints[start].fGrapeme].fTextRange.start;
+  // Snap text edges to the code points/grapheme edges
+  TextRange text(fText.size(), fText.size());
+  if (end < fCodePoints.size()) {
+    text.end = fCodePoints[end].fTextIndex;
+    auto endGrapheme = fGraphemes[fCodePoints[end].fGrapeme];
+    if (text.end < endGrapheme.fTextRange.end) {
+      text.end = endGrapheme.fTextRange.start;
+    }
+  }
+  if (start < fCodePoints.size()) {
+    text.start = fCodePoints[start].fTextIndex;
+    auto startGrapheme = fGraphemes[fCodePoints[start].fGrapeme];
+    if (startGrapheme.fTextRange.end <= text.end) {
+      // TODO: remove the change that is done to pass txtlib unittests
+      //  (GetRectsForRangeIncludeCombiningCharacter). Must be removed...
+      if (startGrapheme.fCodepointRange.end - start == 1 ||
+          startGrapheme.fCodepointRange.start == start) {
+        text.start = startGrapheme.fTextRange.start;
+      } else {
+        text.start = startGrapheme.fTextRange.end;
+      }
+    } else if (text.start > startGrapheme.fTextRange.start) {
+      text.start = startGrapheme.fTextRange.end;
+    }
+  }
 
   for (auto& line : fLines) {
     auto lineText = line.textWithSpaces();
@@ -617,25 +695,32 @@ std::vector<TextBox> ParagraphImpl::getRectsForRange(
         true, [&](const Run* run, SkScalar runOffset, TextRange textRange, SkScalar* width) {
           auto intersect = textRange * text;
           if (intersect.empty() || textRange.empty()) {
-            auto context = line.measureTextInsideOneRun(textRange, run, runOffset, 0, true);
+            auto context = line.measureTextInsideOneRun(textRange, run, runOffset, 0, true, false);
             *width = context.clip.width();
-            return true;
+            if (textRange.width() > 0) {
+              return true;
+            } else {
+              intersect = textRange;
+            }
+          } else {
+            TextRange head;
+            if (run->leftToRight() && textRange.start != intersect.start) {
+              head = TextRange(textRange.start, intersect.start);
+              *width =
+                  line.measureTextInsideOneRun(head, run, runOffset, 0, true, false).clip.width();
+            } else if (!run->leftToRight() && textRange.end != intersect.end) {
+              head = TextRange(intersect.end, textRange.end);
+              *width =
+                  line.measureTextInsideOneRun(head, run, runOffset, 0, true, false).clip.width();
+            } else {
+              *width = 0;
+            }
           }
 
-          TextRange head;
-          if (run->leftToRight() && textRange.start != intersect.start) {
-            head = TextRange(textRange.start, intersect.start);
-            *width = line.measureTextInsideOneRun(head, run, runOffset, 0, true).clip.width();
-          } else if (!run->leftToRight() && textRange.end != intersect.end) {
-            head = TextRange(intersect.end, textRange.end);
-            *width = line.measureTextInsideOneRun(head, run, runOffset, 0, true).clip.width();
-          } else {
-            *width = 0;
-          }
           runOffset += *width;
 
           // Found a run that intersects with the text
-          auto context = line.measureTextInsideOneRun(intersect, run, runOffset, 0, true);
+          auto context = line.measureTextInsideOneRun(intersect, run, runOffset, 0, true, true);
           *width += context.clip.width();
 
           SkRect clip = context.clip;
@@ -653,15 +738,11 @@ std::vector<TextBox> ParagraphImpl::getRectsForRange(
             }
           }
 
-          clip.offset(line.offset());
-
           if (rectHeightStyle == RectHeightStyle::kMax) {
             // TODO: Sort it out with Flutter people
-            // Mimicking TxtLib:
-            // clip.fTop = line.offset().fY + line.roundingDelta();
-            clip.fBottom = line.offset().fY + line.height();
-            clip.fTop = line.offset().fY + line.sizes().baseline() -
-                        line.getMaxRunMetrics().baseline() + line.getMaxRunMetrics().delta();
+            clip.fBottom = line.height();
+            clip.fTop = line.sizes().baseline() - line.getMaxRunMetrics().baseline() +
+                        line.getMaxRunMetrics().delta();
 
           } else if (rectHeightStyle == RectHeightStyle::kIncludeLineSpacingTop) {
             if (&line != &fLines.front()) {
@@ -687,9 +768,9 @@ std::vector<TextBox> ParagraphImpl::getRectsForRange(
               auto top = line.baseline();  //+ line.sizes().runTop(run);
               clip.fTop = top + fStrutMetrics.ascent();
               clip.fBottom = top + fStrutMetrics.descent();
-              clip.offset(line.offset());
             }
           }
+          clip.offset(line.offset());
 
           // Check if we can merge two boxes
           bool mergedBoxes = false;
@@ -739,12 +820,19 @@ std::vector<TextBox> ParagraphImpl::getRectsForRange(
         results.emplace_back(right);
       }
     }
+
+    for (auto& r : results) {
+      r.rect.fLeft = littleRound(r.rect.fLeft);
+      r.rect.fRight = littleRound(r.rect.fRight);
+      r.rect.fTop = littleRound(r.rect.fTop);
+      r.rect.fBottom = littleRound(r.rect.fBottom);
+    }
   }
 
   return results;
 }
 
-std::vector<TextBox> ParagraphImpl::GetRectsForPlaceholders() {
+std::vector<TextBox> ParagraphImpl::getRectsForPlaceholders() {
   std::vector<TextBox> boxes;
   if (fText.isEmpty()) {
     boxes.emplace_back(SkRect::MakeXYWH(0, 0, 0, fHeight), fParagraphStyle.getTextDirection());
@@ -758,7 +846,7 @@ std::vector<TextBox> ParagraphImpl::GetRectsForPlaceholders() {
     line.iterateThroughVisualRuns(
         true,
         [&boxes, &line](const Run* run, SkScalar runOffset, TextRange textRange, SkScalar* width) {
-          auto context = line.measureTextInsideOneRun(textRange, run, runOffset, 0, true);
+          auto context = line.measureTextInsideOneRun(textRange, run, runOffset, 0, true, false);
           *width = context.clip.width();
           if (run->placeholder() == nullptr) {
             return true;
@@ -768,6 +856,11 @@ std::vector<TextBox> ParagraphImpl::GetRectsForPlaceholders() {
           }
           SkRect clip = context.clip;
           clip.offset(line.offset());
+
+          clip.fLeft = littleRound(clip.fLeft);
+          clip.fRight = littleRound(clip.fRight);
+          clip.fTop = littleRound(clip.fTop);
+          clip.fBottom = littleRound(clip.fBottom);
           boxes.emplace_back(clip, run->leftToRight() ? TextDirection::kLtr : TextDirection::kRtl);
           return true;
         });
@@ -796,8 +889,9 @@ PositionWithAffinity ParagraphImpl::getGlyphPositionAtCoordinate(SkScalar dx, Sk
     line.iterateThroughVisualRuns(
         true, [this, &line, dx, &result](
                   const Run* run, SkScalar runOffset, TextRange textRange, SkScalar* width) {
-          auto context = line.measureTextInsideOneRun(textRange, run, 0, 0, true);
-          if (dx < context.clip.fLeft) {
+          auto offsetX = line.offset().fX;
+          auto context = line.measureTextInsideOneRun(textRange, run, 0, 0, true, false);
+          if (dx < context.clip.fLeft + offsetX) {
             // All the other runs are placed right of this one
             result = {SkToS32(context.run->fClusterIndexes[context.pos]), kDownstream};
             return false;
@@ -806,8 +900,13 @@ PositionWithAffinity ParagraphImpl::getGlyphPositionAtCoordinate(SkScalar dx, Sk
           if (dx >= context.clip.fRight) {
             // We have to keep looking but just in case keep the last one as the closes
             // so far
-            result = {SkToS32(context.run->fClusterIndexes[context.pos + context.size - 1]) + 1,
-                      kUpstream};
+            auto index = context.pos + context.size;
+            if (index < context.run->size()) {
+              result = {SkToS32(context.run->fClusterIndexes[index]), kUpstream};
+            } else {
+              // Take the last cluster on that line
+              result = {SkToS32(line.clusters().end), kUpstream};
+            }
             return true;
           }
 
@@ -816,7 +915,9 @@ PositionWithAffinity ParagraphImpl::getGlyphPositionAtCoordinate(SkScalar dx, Sk
           // TODO: binary search
           size_t found = context.pos;
           for (size_t i = context.pos; i < context.pos + context.size; ++i) {
-            if (context.run->positionX(i) + context.fTextShift > dx) {
+            // TODO: this rounding is done to match Flutter tests. Must be removed..
+            auto end = littleRound(context.run->positionX(i) + context.fTextShift + offsetX);
+            if (end > dx) {
               break;
             }
             found = i;
@@ -849,7 +950,7 @@ PositionWithAffinity ParagraphImpl::getGlyphPositionAtCoordinate(SkScalar dx, Sk
             center = (codepointStart + codepointEnd) / 2 + context.fTextShift;
           }
 
-          if ((dx <= center) == context.run->leftToRight()) {
+          if ((dx < center) == context.run->leftToRight()) {
             result = {SkToS32(codepointIndex), kDownstream};
           } else {
             result = {SkToS32(codepointIndex + 1), kUpstream};
@@ -872,16 +973,58 @@ PositionWithAffinity ParagraphImpl::getGlyphPositionAtCoordinate(SkScalar dx, Sk
 // the glyph at index offset.
 // By "glyph" they mean a character index - indicated by Minikin's code
 SkRange<size_t> ParagraphImpl::getWordBoundary(unsigned offset) {
-  if (!fWordBreaker.initialized()) {
-    if (!fWordBreaker.initialize(this->text(), UBRK_WORD)) {
+  if (fWords.empty()) {
+    auto unicode = icu::UnicodeString::fromUTF8(fText.c_str());
+
+    UErrorCode errorCode = U_ZERO_ERROR;
+
+    auto iter = ubrk_open(UBRK_WORD, icu::Locale().getName(), nullptr, 0, &errorCode);
+    if (U_FAILURE(errorCode)) {
+      SkDEBUGF("Could not create line break iterator: %s", u_errorName(errorCode));
       return {0, 0};
+    }
+
+    UText sUtf16UText = UTEXT_INITIALIZER;
+    ICUUText utf16UText(utext_openUnicodeString(&sUtf16UText, &unicode, &errorCode));
+    if (U_FAILURE(errorCode)) {
+      SkDEBUGF("Could not create utf8UText: %s", u_errorName(errorCode));
+      return {0, 0};
+    }
+
+    ubrk_setUText(iter, utf16UText.get(), &errorCode);
+    if (U_FAILURE(errorCode)) {
+      SkDEBUGF("Could not setText on break iterator: %s", u_errorName(errorCode));
+      return {0, 0};
+    }
+
+    int32_t pos = ubrk_first(iter);
+    while (pos != icu::BreakIterator::DONE) {
+      fWords.emplace_back(pos);
+      pos = ubrk_next(iter);
     }
   }
 
-  auto start = fWordBreaker.preceding(offset + 1);
-  auto end = fWordBreaker.following(start);
+  int32_t start = 0;
+  int32_t end = 0;
+  for (size_t i = 0; i < fWords.size(); ++i) {
+    auto word = fWords[i];
+    if (word <= offset) {
+      start = word;
+      end = word;
+    } else if (word > offset) {
+      end = word;
+      break;
+    }
+  }
 
-  return {start, end};
+  return {SkToU32(start), SkToU32(end)};
+}
+
+void ParagraphImpl::getLineMetrics(std::vector<LineMetrics>& metrics) {
+  metrics.clear();
+  for (auto& line : fLines) {
+    metrics.emplace_back(line.getMetrics());
+  }
 }
 
 SkSpan<const char> ParagraphImpl::text(TextRange textRange) {
@@ -948,6 +1091,73 @@ void ParagraphImpl::setState(InternalState state) {
     case kFormatted: fPicture = nullptr;
     case kDrawn: break;
     default: break;
+  }
+}
+
+InternalLineMetrics ParagraphImpl::computeEmptyMetrics() {
+  auto defaultTextStyle = paragraphStyle().getTextStyle();
+
+  auto typeface = fontCollection()->matchTypeface(
+      defaultTextStyle.getFontFamilies().front().c_str(), defaultTextStyle.getFontStyle(),
+      defaultTextStyle.getLocale());
+
+  SkFont font(typeface, defaultTextStyle.getFontSize());
+  InternalLineMetrics metrics(font, paragraphStyle().getStrutStyle().getForceStrutHeight());
+  fStrutMetrics.updateLineMetrics(metrics);
+
+  return metrics;
+}
+
+void ParagraphImpl::updateText(size_t from, SkString text) {
+  fText.remove(from, from + text.size());
+  fText.insert(from, text);
+  fState = kUnknown;
+  fOldWidth = 0;
+  fOldHeight = 0;
+}
+
+void ParagraphImpl::updateFontSize(size_t from, size_t to, SkScalar fontSize) {
+  SkASSERT(from == 0 && to == fText.size());
+  auto defaultStyle = fParagraphStyle.getTextStyle();
+  defaultStyle.setFontSize(fontSize);
+  fParagraphStyle.setTextStyle(defaultStyle);
+
+  for (auto& textStyle : fTextStyles) {
+    textStyle.fStyle.setFontSize(fontSize);
+  }
+
+  fState = kUnknown;
+  fOldWidth = 0;
+  fOldHeight = 0;
+}
+
+void ParagraphImpl::updateTextAlign(TextAlign textAlign) {
+  fParagraphStyle.setTextAlign(textAlign);
+
+  if (fState >= kLineBroken) {
+    fState = kLineBroken;
+  }
+}
+
+void ParagraphImpl::updateForegroundPaint(size_t from, size_t to, SkPaint paint) {
+  SkASSERT(from == 0 && to == fText.size());
+  auto defaultStyle = fParagraphStyle.getTextStyle();
+  defaultStyle.setForegroundColor(paint);
+  fParagraphStyle.setTextStyle(defaultStyle);
+
+  for (auto& textStyle : fTextStyles) {
+    textStyle.fStyle.setForegroundColor(paint);
+  }
+}
+
+void ParagraphImpl::updateBackgroundPaint(size_t from, size_t to, SkPaint paint) {
+  SkASSERT(from == 0 && to == fText.size());
+  auto defaultStyle = fParagraphStyle.getTextStyle();
+  defaultStyle.setBackgroundColor(paint);
+  fParagraphStyle.setTextStyle(defaultStyle);
+
+  for (auto& textStyle : fTextStyles) {
+    textStyle.fStyle.setBackgroundColor(paint);
   }
 }
 

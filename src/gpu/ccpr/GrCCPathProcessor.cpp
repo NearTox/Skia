@@ -89,8 +89,7 @@ GrCCPathProcessor::GrCCPathProcessor(
     : INHERITED(kGrCCPathProcessor_ClassID),
       fCoverageMode(coverageMode),
       fAtlasAccess(
-          atlasTexture->texturePriv().textureType(), GrSamplerState::Filter::kNearest,
-          GrSamplerState::WrapMode::kClamp, swizzle),
+          atlasTexture->texturePriv().textureType(), GrSamplerState::ClampNearest(), swizzle),
       fAtlasSize(SkISize::Make(atlasTexture->width(), atlasTexture->height())),
       fAtlasOrigin(atlasOrigin) {
   // TODO: Can we just assert that atlas has GrCCAtlas::kTextureOrigin and remove fAtlasOrigin?
@@ -144,7 +143,11 @@ void GrCCPathProcessor::drawPaths(
       endInstance - baseInstance, baseInstance, enablePrimitiveRestart);
   mesh.setVertexData(resources.refVertexBuffer());
 
-  flushState->opsRenderPass()->draw(*this, pipeline, fixedDynamicState, nullptr, &mesh, 1, bounds);
+  GrProgramInfo programInfo(
+      flushState->drawOpArgs().numSamples(), flushState->drawOpArgs().origin(), pipeline, *this,
+      fixedDynamicState, nullptr, 0);
+
+  flushState->opsRenderPass()->draw(programInfo, &mesh, 1, bounds);
 }
 
 void GrCCPathProcessor::Impl::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {

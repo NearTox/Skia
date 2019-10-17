@@ -17,10 +17,10 @@
 namespace SkSL {
 
 // represents a swizzle component of constant 0, as in x.rgb0
-constexpr int SKSL_SWIZZLE_0 = -2;
+const int SKSL_SWIZZLE_0 = -2;
 
 // represents a swizzle component of constant 1, as in x.rgb1
-constexpr int SKSL_SWIZZLE_1 = -1;
+const int SKSL_SWIZZLE_1 = -1;
 
 /**
  * Given a type and a swizzle component count, returns the type that will result from swizzling. For
@@ -140,7 +140,7 @@ struct Swizzle : public Expression {
   }
 
   std::unique_ptr<Expression> fBase;
-  const std::vector<int> fComponents;
+  std::vector<int> fComponents;
 
   typedef Expression INHERITED;
 

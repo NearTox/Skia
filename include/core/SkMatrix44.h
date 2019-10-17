@@ -25,8 +25,8 @@ static inline float SkMScalarToFloat(double x) { return static_cast<float>(x); }
 static inline double SkDoubleToMScalar(double x) { return x; }
 static inline double SkMScalarToDouble(double x) { return x; }
 static inline double SkMScalarAbs(double x) { return fabs(x); }
-static constexpr SkMScalar SK_MScalarPI = 3.141592653589793;
-static constexpr SkMScalar SK_MScalarNaN = SK_DoubleNaN;
+static const SkMScalar SK_MScalarPI = 3.141592653589793;
+static const SkMScalar SK_MScalarNaN = SK_DoubleNaN;
 
 #  define SkMScalarFloor(x) sk_double_floor(x)
 #  define SkMScalarCeil(x) sk_double_ceil(x)
@@ -47,8 +47,8 @@ static inline float SkMScalarToFloat(float x) { return x; }
 static inline float SkDoubleToMScalar(double x) { return sk_double_to_float(x); }
 static inline double SkMScalarToDouble(float x) { return static_cast<double>(x); }
 static inline float SkMScalarAbs(float x) { return sk_float_abs(x); }
-static constexpr SkMScalar SK_MScalarPI = 3.14159265f;
-static constexpr SkMScalar SK_MScalarNaN = SK_FloatNaN;
+static const SkMScalar SK_MScalarPI = 3.14159265f;
+static const SkMScalar SK_MScalarNaN = SK_FloatNaN;
 
 #  define SkMScalarFloor(x) sk_float_floor(x)
 #  define SkMScalarCeil(x) sk_float_ceil(x)
@@ -65,7 +65,7 @@ static constexpr SkMScalar SK_MScalarNaN = SK_FloatNaN;
 #define SkMScalarToScalar(x) SkMScalarToFloat(x)
 #define SkScalarToMScalar(x) SkFloatToMScalar(x)
 
-static constexpr SkMScalar SK_MScalar1 = 1;
+static const SkMScalar SK_MScalar1 = 1;
 
 ///////////////////////////////////////////////////////////////////////////////
 

@@ -324,6 +324,10 @@ struct SK_API GrGLInterface : public SkRefCnt {
 
     /* EXT_window_rectangles */
     GrGLFunction<GrGLWindowRectanglesFn> fWindowRectangles;
+
+    /* GL_QCOM_tiled_rendering */
+    GrGLFunction<GrGLStartTilingFn> fStartTiling;
+    GrGLFunction<GrGLEndTilingFn> fEndTiling;
   } fFunctions;
 
 #if GR_TEST_UTILS

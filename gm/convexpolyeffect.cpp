@@ -99,7 +99,7 @@ class PolyBoundsOp : public GrMeshDrawOp {
         fColor(paint.getColor4f()),
         fProcessors(std::move(paint)),
         fRect(outset(rect)) {
-    this->setBounds(sorted_rect(fRect), HasAABloat::kNo, IsZeroArea::kNo);
+    this->setBounds(sorted_rect(fRect), HasAABloat::kNo, IsHairline::kNo);
   }
 
   void onPrepareDraws(Target* target) override {

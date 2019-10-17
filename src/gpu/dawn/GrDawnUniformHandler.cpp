@@ -181,8 +181,12 @@ GrGLSLUniformHandler::UniformHandle GrDawnUniformHandler::internalAddUniformArra
   return GrGLSLUniformHandler::UniformHandle(fUniforms.count() - 1);
 }
 
+void GrDawnUniformHandler::updateUniformVisibility(UniformHandle u, uint32_t visibility) {
+  fUniforms[u.toIndex()].fVisibility |= visibility;
+}
+
 GrGLSLUniformHandler::SamplerHandle GrDawnUniformHandler::addSampler(
-    const GrTexture* texture, const GrSamplerState&, const GrSwizzle& swizzle, const char* name,
+    const GrTextureProxy*, const GrSamplerState&, const GrSwizzle& swizzle, const char* name,
     const GrShaderCaps* caps) {
   SkString mangleName;
   char prefix = 's';

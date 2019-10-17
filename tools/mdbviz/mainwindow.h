@@ -31,7 +31,7 @@ class MainWindow : public QMainWindow {
 
  private:
   void loadFile(const QString& fileName);
-  void setupOpListWidget();
+  void setupOpsTaskWidget();
   void presentCurrentRenderState();
 
   void createActions();
@@ -44,7 +44,7 @@ class MainWindow : public QMainWindow {
   QImage fImage;
   QLabel* fImageLabel;
 
-  QTreeWidget* fOpListWidget;
+  QTreeWidget* fOpsTaskWidget;
 
   QMenu* fViewMenu;
 

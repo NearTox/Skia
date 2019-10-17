@@ -46,10 +46,10 @@ class GrPaint {
   /**
    * The initial color of the drawn primitive. Defaults to solid white.
    */
-  void setColor4f(const SkPMColor4f& color) noexcept { fColor = color; }
-  const SkPMColor4f& getColor4f() const noexcept { return fColor; }
+  void setColor4f(const SkPMColor4f& color) { fColor = color; }
+  const SkPMColor4f& getColor4f() const { return fColor; }
 
-  void setXPFactory(const GrXPFactory* xpFactory) noexcept {
+  void setXPFactory(const GrXPFactory* xpFactory) {
     fXPFactory = xpFactory;
     fTrivial &= !SkToBool(xpFactory);
   }
@@ -80,11 +80,9 @@ class GrPaint {
    * Helpers for adding color or coverage effects that sample a texture. The matrix is applied
    * to the src space position to compute texture coordinates.
    */
-  void addColorTextureProcessor(sk_sp<GrTextureProxy>, const SkMatrix&);
-  void addColorTextureProcessor(sk_sp<GrTextureProxy>, const SkMatrix&, const GrSamplerState&);
-
-  void addCoverageTextureProcessor(sk_sp<GrTextureProxy>, const SkMatrix&);
-  void addCoverageTextureProcessor(sk_sp<GrTextureProxy>, const SkMatrix&, const GrSamplerState&);
+  void addColorTextureProcessor(sk_sp<GrTextureProxy>, GrColorType srcColorType, const SkMatrix&);
+  void addColorTextureProcessor(
+      sk_sp<GrTextureProxy>, GrColorType srcColorType, const SkMatrix&, const GrSamplerState&);
 
   int numColorFragmentProcessors() const { return fColorFragmentProcessors.count(); }
   int numCoverageFragmentProcessors() const { return fCoverageFragmentProcessors.count(); }
@@ -92,7 +90,7 @@ class GrPaint {
     return this->numColorFragmentProcessors() + this->numCoverageFragmentProcessors();
   }
 
-  const GrXPFactory* getXPFactory() const noexcept { return fXPFactory; }
+  const GrXPFactory* getXPFactory() const { return fXPFactory; }
 
   GrFragmentProcessor* getColorFragmentProcessor(int i) const {
     return fColorFragmentProcessors[i].get();
@@ -113,7 +111,7 @@ class GrPaint {
    * A trivial paint is one that uses src-over and has no fragment processors.
    * It may have variable sRGB settings.
    **/
-  bool isTrivial() const noexcept { return fTrivial; }
+  bool isTrivial() const { return fTrivial; }
 
   friend void assert_alive(GrPaint& p) { SkASSERT(p.fAlive); }
 
@@ -130,7 +128,7 @@ class GrPaint {
   SkSTArray<2, std::unique_ptr<GrFragmentProcessor>> fCoverageFragmentProcessors;
   bool fTrivial = true;
   SkPMColor4f fColor = SK_PMColor4fWHITE;
-  SkDEBUGCODE(bool fAlive = true);  // Set false after moved from.
+  SkDEBUGCODE(bool fAlive = true;)  // Set false after moved from.
 };
 
 #endif

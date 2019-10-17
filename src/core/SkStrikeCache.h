@@ -38,7 +38,7 @@ class SkStrikePinner {
   virtual bool canDelete() = 0;
 };
 
-class SkStrikeCache final : public SkStrikeCacheInterface {
+class SkStrikeCache final : public SkStrikeForGPUCacheInterface {
   class Node;
 
  public:
@@ -83,7 +83,7 @@ class SkStrikeCache final : public SkStrikeCacheInterface {
   bool desperationSearchForImage(const SkDescriptor& desc, SkGlyph* glyph, SkStrike* targetCache);
   bool desperationSearchForPath(const SkDescriptor& desc, SkGlyphID glyphID, SkPath* path);
 
-  SkScopedStrike findOrCreateScopedStrike(
+  SkScopedStrikeForGPU findOrCreateScopedStrike(
       const SkDescriptor& desc, const SkScalerContextEffects& effects,
       const SkTypeface& typeface) override;
 

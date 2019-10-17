@@ -185,7 +185,7 @@ struct StrikeSpec {
 };
 
 // -- RemoteStrike ----------------------------------------------------------------------------
-class SkStrikeServer::RemoteStrike : public SkStrikeInterface {
+class SkStrikeServer::RemoteStrike : public SkStrikeForGPU {
  public:
   // N.B. RemoteStrike is not valid until ensureScalerContext is called.
   RemoteStrike(
@@ -197,19 +197,11 @@ class SkStrikeServer::RemoteStrike : public SkStrikeInterface {
   void writePendingGlyphs(Serializer* serializer);
   SkDiscardableHandleId discardableHandleId() const { return fDiscardableHandleId; }
 
-  bool isSubpixel() const { return fIsSubpixel; }
-
   const SkDescriptor& getDescriptor() const override { return *fDescriptor.getDesc(); }
 
   void setTypefaceAndEffects(const SkTypeface* typeface, SkScalerContextEffects effects);
 
-  SkVector rounding() const override;
-
-  SkIPoint subpixelMask() const override {
-    return SkIPoint::Make(
-        (!fIsSubpixel || fAxisAlignment == kY_SkAxisAlignment) ? 0 : ~0u,
-        (!fIsSubpixel || fAxisAlignment == kX_SkAxisAlignment) ? 0 : ~0u);
-  }
+  const SkGlyphPositionRoundingSpec& roundingSpec() const override { return fRoundingSpec; }
 
   SkSpan<const SkGlyphPos> prepareForDrawingRemoveEmpty(
       const SkPackedGlyphID packedGlyphIDs[], const SkPoint positions[], size_t n, int maxDimension,
@@ -217,14 +209,16 @@ class SkStrikeServer::RemoteStrike : public SkStrikeInterface {
 
   void onAboutToExitScope() override {}
 
- private:
   bool hasPendingGlyphs() const {
     return !fPendingGlyphImages.empty() || !fPendingGlyphPaths.empty();
   }
+
+  void resetScalerContext();
+
+ private:
   void writeGlyphPath(const SkPackedGlyphID& glyphID, Serializer* serializer) const;
 
   void ensureScalerContext();
-  void resetScalerContext();
 
   // The set of glyphs cached on the remote client.
   SkTHashSet<SkPackedGlyphID> fCachedGlyphImages;
@@ -239,9 +233,7 @@ class SkStrikeServer::RemoteStrike : public SkStrikeInterface {
 
   const SkDiscardableHandleId fDiscardableHandleId;
 
-  // Values saved from the initial context.
-  const bool fIsSubpixel;
-  const SkAxisAlignment fAxisAlignment;
+  const SkGlyphPositionRoundingSpec fRoundingSpec;
 
   // The context built using fDescriptor
   std::unique_ptr<SkScalerContext> fContext;
@@ -271,8 +263,7 @@ SkStrikeServer::RemoteStrike::RemoteStrike(
     uint32_t discardableHandleId)
     : fDescriptor{descriptor},
       fDiscardableHandleId(discardableHandleId),
-      fIsSubpixel{context->isSubpixel()},
-      fAxisAlignment{context->computeAxisAlignmentForHText()}
+      fRoundingSpec{context->isSubpixel(), context->computeAxisAlignmentForHText()}
       // N.B. context must come last because it is used above.
       ,
       fContext{std::move(context)} {
@@ -406,7 +397,17 @@ sk_sp<SkData> SkStrikeServer::serializeTypeface(SkTypeface* tf) {
 }
 
 void SkStrikeServer::writeStrikeData(std::vector<uint8_t>* memory) {
-  if (fRemoteStrikesToSend.empty() && fTypefacesToSend.empty()) {
+  size_t strikesToSend = 0;
+  fRemoteStrikesToSend.foreach ([&strikesToSend](RemoteStrike* strike) {
+    if (strike->hasPendingGlyphs()) {
+      strikesToSend++;
+    } else {
+      strike->resetScalerContext();
+    }
+  });
+
+  if (strikesToSend == 0 && fTypefacesToSend.empty()) {
+    fRemoteStrikesToSend.reset();
     return;
   }
 
@@ -417,18 +418,26 @@ void SkStrikeServer::writeStrikeData(std::vector<uint8_t>* memory) {
   }
   fTypefacesToSend.clear();
 
-  serializer.emplace<uint64_t>(SkTo<uint64_t>(fRemoteStrikesToSend.count()));
+  serializer.emplace<uint64_t>(SkTo<uint64_t>(strikesToSend));
   fRemoteStrikesToSend.foreach (
 #ifdef SK_DEBUG
       [&serializer, this](RemoteStrike* strike) {
-        strike->writePendingGlyphs(&serializer);
+        if (strike->hasPendingGlyphs()) {
+          strike->writePendingGlyphs(&serializer);
+          strike->resetScalerContext();
+        }
         auto it = fDescToRemoteStrike.find(&strike->getDescriptor());
         SkASSERT(it != fDescToRemoteStrike.end());
         SkASSERT(it->second.get() == strike);
       }
 
 #else
-      [&serializer](RemoteStrike* strike) { strike->writePendingGlyphs(&serializer); }
+      [&serializer](RemoteStrike* strike) {
+        if (strike->hasPendingGlyphs()) {
+          strike->writePendingGlyphs(&serializer);
+          strike->resetScalerContext();
+        }
+      }
 #endif
   );
   fRemoteStrikesToSend.reset();
@@ -443,9 +452,9 @@ SkStrikeServer::RemoteStrike* SkStrikeServer::getOrCreateCache(
   return this->getOrCreateCache(*desc, *font.getTypefaceOrDefault(), *effects);
 }
 
-SkScopedStrike SkStrikeServer::findOrCreateScopedStrike(
+SkScopedStrikeForGPU SkStrikeServer::findOrCreateScopedStrike(
     const SkDescriptor& desc, const SkScalerContextEffects& effects, const SkTypeface& typeface) {
-  return SkScopedStrike{this->getOrCreateCache(desc, typeface, effects)};
+  return SkScopedStrikeForGPU{this->getOrCreateCache(desc, typeface, effects)};
 }
 
 void SkStrikeServer::AddGlyphForTesting(RemoteStrike* cache, SkPackedGlyphID glyphID, bool asPath) {
@@ -539,12 +548,7 @@ static void writeGlyph(SkGlyph* glyph, Serializer* serializer) {
 }
 
 void SkStrikeServer::RemoteStrike::writePendingGlyphs(Serializer* serializer) {
-  // TODO(khushalsagar): Write a strike only if it has any pending glyphs.
-  serializer->emplace<bool>(this->hasPendingGlyphs());
-  if (!this->hasPendingGlyphs()) {
-    this->resetScalerContext();
-    return;
-  }
+  SkASSERT(this->hasPendingGlyphs());
 
   // Write the desc.
   serializer->emplace<StrikeSpec>(fContext->getTypeface()->uniqueID(), fDiscardableHandleId);
@@ -588,7 +592,6 @@ void SkStrikeServer::RemoteStrike::writePendingGlyphs(Serializer* serializer) {
     writeGlyphPath(glyphID, serializer);
   }
   fPendingGlyphPaths.clear();
-  this->resetScalerContext();
 }
 
 void SkStrikeServer::RemoteStrike::ensureScalerContext() {
@@ -608,10 +611,6 @@ void SkStrikeServer::RemoteStrike::setTypefaceAndEffects(
   fEffects = effects;
 }
 
-SkVector SkStrikeServer::RemoteStrike::rounding() const {
-  return SkStrikeCommon::PixelRounding(fIsSubpixel, fAxisAlignment);
-}
-
 void SkStrikeServer::RemoteStrike::writeGlyphPath(
     const SkPackedGlyphID& glyphID, Serializer* serializer) const {
   SkPath path;
@@ -626,7 +625,7 @@ void SkStrikeServer::RemoteStrike::writeGlyphPath(
 }
 
 // Be sure to read and understand the comment for prepareForDrawingRemoveEmpty in
-// SkStrikeInterface.h before working on this code.
+// SkStrikeForGPU.h before working on this code.
 SkSpan<const SkGlyphPos> SkStrikeServer::RemoteStrike::prepareForDrawingRemoveEmpty(
     const SkPackedGlyphID packedGlyphIDs[], const SkPoint positions[], size_t n, int maxDimension,
     SkGlyphPos results[]) {
@@ -751,11 +750,6 @@ bool SkStrikeClient::readStrikeData(const volatile void* memory, size_t memorySi
   if (!deserializer.read<uint64_t>(&strikeCount)) READ_FAILURE
 
   for (size_t i = 0; i < strikeCount; ++i) {
-    bool has_glyphs = false;
-    if (!deserializer.read<bool>(&has_glyphs)) READ_FAILURE
-
-    if (!has_glyphs) continue;
-
     StrikeSpec spec;
     if (!deserializer.read<StrikeSpec>(&spec)) READ_FAILURE
 

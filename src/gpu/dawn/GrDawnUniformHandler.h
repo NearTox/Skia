@@ -36,7 +36,7 @@ class GrDawnUniformHandler : public GrGLSLUniformHandler {
   explicit GrDawnUniformHandler(GrGLSLProgramBuilder* program);
 
   SamplerHandle addSampler(
-      const GrTexture*, const GrSamplerState&, const GrSwizzle&, const char* name,
+      const GrTextureProxy*, const GrSamplerState&, const GrSwizzle&, const char* name,
       const GrShaderCaps*) override;
   const char* samplerVariable(SamplerHandle handle) const override;
   GrSwizzle samplerSwizzle(SamplerHandle handle) const override;
@@ -44,6 +44,8 @@ class GrDawnUniformHandler : public GrGLSLUniformHandler {
   UniformHandle internalAddUniformArray(
       uint32_t visibility, GrSLType type, const char* name, bool mangleName, int arrayCount,
       const char** outName) override;
+
+  void updateUniformVisibility(UniformHandle u, uint32_t visibility) override;
 
   UniformInfoArray fUniforms;
   UniformInfoArray fSamplers;

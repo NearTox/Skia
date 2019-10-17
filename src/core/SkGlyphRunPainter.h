@@ -10,23 +10,39 @@
 
 #include "include/core/SkSurfaceProps.h"
 #include "src/core/SkDistanceFieldGen.h"
+#include "src/core/SkGlyphBuffer.h"
 #include "src/core/SkGlyphRun.h"
 #include "src/core/SkScalerContext.h"
 #include "src/core/SkTextBlobPriv.h"
 
 #if SK_SUPPORT_GPU
 #  include "src/gpu/text/GrTextContext.h"
-class GrColorSpaceInfo;
+class GrColorInfo;
 class GrRenderTargetContext;
 #endif
 
 class SkGlyphRunPainterInterface;
 class SkStrikeSpec;
 
+// round and ignorePositionMask are used to calculate the subpixel position of a glyph.
+// The per component (x or y) calculation is:
+//
+//   subpixelOffset = (floor((viewportPosition + rounding) & mask) >> 14) & 3
+//
+// where mask is either 0 or ~0, and rounding is either
+// 1/2 for non-subpixel or 1/8 for subpixel.
+struct SkGlyphPositionRoundingSpec {
+  SkGlyphPositionRoundingSpec(bool isSubpixel, SkAxisAlignment axisAlignment);
+  const SkVector halfAxisSampleFreq;
+  const SkIPoint ignorePositionMask;
+
+ private:
+  static SkVector HalfAxisSampleFreq(bool isSubpixel, SkAxisAlignment axisAlignment);
+  static SkIPoint IgnorePositionMask(bool isSubpixel, SkAxisAlignment axisAlignment);
+};
+
 class SkStrikeCommon {
  public:
-  static SkVector PixelRounding(bool isSubpixel, SkAxisAlignment axisAlignment);
-
   // An atlas consists of plots, and plots hold glyphs. The minimum a plot can be is 256x256.
   // This means that the maximum size a glyph can be is 256x256.
   static constexpr uint16_t kSkSideTooBigForAtlas = 256;
@@ -37,12 +53,12 @@ class SkGlyphRunListPainter {
   // Constructor for SkBitmpapDevice.
   SkGlyphRunListPainter(
       const SkSurfaceProps& props, SkColorType colorType, SkColorSpace* cs,
-      SkStrikeCacheInterface* strikeCache);
+      SkStrikeForGPUCacheInterface* strikeCache);
 
 #if SK_SUPPORT_GPU
   // The following two ctors are used exclusively by the GPU, and will always use the global
   // strike cache.
-  SkGlyphRunListPainter(const SkSurfaceProps&, const GrColorSpaceInfo&);
+  SkGlyphRunListPainter(const SkSurfaceProps&, const GrColorInfo&);
   explicit SkGlyphRunListPainter(const GrRenderTargetContext& renderTargetContext);
 #endif  // SK_SUPPORT_GPU
 
@@ -51,9 +67,9 @@ class SkGlyphRunListPainter {
     virtual ~BitmapDevicePainter() = default;
 
     virtual void paintPaths(
-        SkSpan<const SkPathPos> pathsAndPositions, SkScalar scale, const SkPaint& paint) const = 0;
+        SkDrawableGlyphBuffer* drawables, SkScalar scale, const SkPaint& paint) const = 0;
 
-    virtual void paintMasks(SkSpan<const SkMask> masks, const SkPaint& paint) const = 0;
+    virtual void paintMasks(SkDrawableGlyphBuffer* drawables, const SkPaint& paint) const = 0;
   };
 
   void drawForBitmapDevice(
@@ -72,10 +88,10 @@ class SkGlyphRunListPainter {
  private:
   SkGlyphRunListPainter(
       const SkSurfaceProps& props, SkColorType colorType, SkScalerContextFlags flags,
-      SkStrikeCacheInterface* strikeCache);
+      SkStrikeForGPUCacheInterface* strikeCache);
 
   struct ScopedBuffers {
-    ScopedBuffers(SkGlyphRunListPainter* painter, int size);
+    ScopedBuffers(SkGlyphRunListPainter* painter, size_t size);
     ~ScopedBuffers();
     SkGlyphRunListPainter* fPainter;
   };
@@ -97,9 +113,9 @@ class SkGlyphRunListPainter {
       const SkMatrix& viewMatrix, SkGlyphRunPainterInterface* process);
 
   static SkSpan<const SkPackedGlyphID> DeviceSpacePackedGlyphIDs(
-      SkStrikeInterface* strike, const SkMatrix& viewMatrix, const SkPoint& origin, int n,
-      const SkGlyphID* glyphIDs, const SkPoint* positions, SkPoint* mappedPositions,
-      SkPackedGlyphID* results);
+      const SkGlyphPositionRoundingSpec& roundingSpec, const SkMatrix& viewMatrix,
+      const SkPoint& origin, int n, const SkGlyphID* glyphIDs, const SkPoint* positions,
+      SkPoint* mappedPositions, SkPackedGlyphID* results);
 
   static SkSpan<const SkPackedGlyphID> SourceSpacePackedGlyphIDs(
       const SkPoint& origin, int n, const SkGlyphID* glyphIDs, const SkPoint* positions,
@@ -112,9 +128,11 @@ class SkGlyphRunListPainter {
   const SkColorType fColorType;
   const SkScalerContextFlags fScalerContextFlags;
 
-  SkStrikeCacheInterface* const fStrikeCache;
+  SkStrikeForGPUCacheInterface* const fStrikeCache;
 
-  int fMaxRunSize{0};
+  SkDrawableGlyphBuffer fDrawable;
+
+  size_t fMaxRunSize{0};
   SkAutoTMalloc<SkPoint> fPositions;
   SkAutoTMalloc<SkPackedGlyphID> fPackedGlyphIDs;
   SkAutoTMalloc<SkGlyphPos> fGlyphPos;

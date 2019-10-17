@@ -77,7 +77,7 @@ VkImageAspectFlags vk_format_to_aspect_flags(VkFormat format) {
     case VK_FORMAT_D24_UNORM_S8_UINT:  // fallthrough
     case VK_FORMAT_D32_SFLOAT_S8_UINT:
       return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-    default: SkASSERT(GrVkFormatIsSupported(format)); return VK_IMAGE_ASPECT_COLOR_BIT;
+    default: return VK_IMAGE_ASPECT_COLOR_BIT;
   }
 }
 
@@ -300,7 +300,7 @@ void GrVkImage::Resource::notifyRemovedFromCommandBuffer() const {
     return;
   }
   if (fOwningTexture) {
-    if (fOwningTexture->resourcePriv().hasRefOrPendingIO()) {
+    if (fOwningTexture->resourcePriv().hasRef()) {
       // Wait for the texture to become idle in the cache to call the procs.
       return;
     }

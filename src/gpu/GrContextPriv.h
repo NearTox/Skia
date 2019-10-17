@@ -43,7 +43,7 @@ class GrContextPriv {
   sk_sp<GrSkSLFPFactoryCache> fpFactoryCache();
 
   GrImageContext* asImageContext() { return fContext->asImageContext(); }
-  GrRecordingContext* asRecordingContext() noexcept { return fContext->asRecordingContext(); }
+  GrRecordingContext* asRecordingContext() { return fContext->asRecordingContext(); }
   GrContext* asDirectContext() { return fContext->asDirectContext(); }
 
   // from GrImageContext
@@ -53,16 +53,18 @@ class GrContextPriv {
   bool abandoned() const { return fContext->abandoned(); }
 
   /** This is only useful for debug purposes */
-  SkDEBUGCODE(GrSingleOwner* singleOwner() const { return fContext->singleOwner(); });
+  SkDEBUGCODE(GrSingleOwner* singleOwner() const { return fContext->singleOwner(); })
 
-  // from GrRecordingContext
-  GrDrawingManager* drawingManager() noexcept { return fContext->drawingManager(); }
+      // from GrRecordingContext
+      GrDrawingManager* drawingManager() {
+    return fContext->drawingManager();
+  }
 
   sk_sp<GrOpMemoryPool> refOpMemoryPool();
   GrOpMemoryPool* opMemoryPool() { return fContext->opMemoryPool(); }
 
-  GrStrikeCache* getGrStrikeCache() noexcept { return fContext->getGrStrikeCache(); }
-  GrTextBlobCache* getTextBlobCache() noexcept { return fContext->getTextBlobCache(); }
+  GrStrikeCache* getGrStrikeCache() { return fContext->getGrStrikeCache(); }
+  GrTextBlobCache* getTextBlobCache() { return fContext->getTextBlobCache(); }
 
   /**
    * Registers an object for flush-related callbacks. (See GrOnFlushCallbackObject.)
@@ -104,9 +106,10 @@ class GrContextPriv {
       SkBackingFit fit, int width, int height, GrColorType, sk_sp<SkColorSpace> colorSpace,
       int sampleCnt = 1, GrMipMapped = GrMipMapped::kNo,
       GrSurfaceOrigin origin = kBottomLeft_GrSurfaceOrigin,
-      const SkSurfaceProps* surfaceProps = nullptr, SkBudgeted budgeted = SkBudgeted::kYes);
+      const SkSurfaceProps* surfaceProps = nullptr, SkBudgeted budgeted = SkBudgeted::kYes,
+      GrProtected isProtected = GrProtected::kNo);
 
-  GrAuditTrail* auditTrail() noexcept { return fContext->auditTrail(); }
+  GrAuditTrail* auditTrail() { return fContext->auditTrail(); }
 
   /**
    * Create a GrContext without a resource cache
@@ -166,17 +169,15 @@ class GrContextPriv {
   std::unique_ptr<GrFragmentProcessor> createPMToUPMEffect(std::unique_ptr<GrFragmentProcessor>);
   std::unique_ptr<GrFragmentProcessor> createUPMToPMEffect(std::unique_ptr<GrFragmentProcessor>);
 
-  SkTaskGroup* getTaskGroup() noexcept { return fContext->fTaskGroup.get(); }
+  SkTaskGroup* getTaskGroup() { return fContext->fTaskGroup.get(); }
 
-  GrResourceProvider* resourceProvider() noexcept { return fContext->fResourceProvider; }
-  const GrResourceProvider* resourceProvider() const noexcept {
-    return fContext->fResourceProvider;
-  }
+  GrResourceProvider* resourceProvider() { return fContext->fResourceProvider; }
+  const GrResourceProvider* resourceProvider() const { return fContext->fResourceProvider; }
 
-  GrResourceCache* getResourceCache() noexcept { return fContext->fResourceCache; }
+  GrResourceCache* getResourceCache() { return fContext->fResourceCache; }
 
-  GrGpu* getGpu() noexcept { return fContext->fGpu.get(); }
-  const GrGpu* getGpu() const noexcept { return fContext->fGpu.get(); }
+  GrGpu* getGpu() { return fContext->fGpu.get(); }
+  const GrGpu* getGpu() const { return fContext->fGpu.get(); }
 
   // This accessor should only ever be called by the GrOpFlushState.
   GrAtlasManager* getAtlasManager() { return fContext->onGetAtlasManager(); }
@@ -187,6 +188,10 @@ class GrContextPriv {
   GrContextOptions::PersistentCache* getPersistentCache() { return fContext->fPersistentCache; }
   GrContextOptions::ShaderErrorHandler* getShaderErrorHandler() const {
     return fContext->fShaderErrorHandler;
+  }
+
+  GrClientMappedBufferManager* clientMappedBufferManager() {
+    return fContext->fMappedBufferManager.get();
   }
 
 #if GR_TEST_UTILS
@@ -222,17 +227,8 @@ class GrContextPriv {
   void testingOnly_flushAndRemoveOnFlushCallbackObject(GrOnFlushCallbackObject*);
 #endif
 
-  // If possible, create a backend texture initialized with the provided pixmap data. The client
-  // should ensure that the returned backend texture is valid.
-  // If successful, the created backend texture will be compatible with the provided
-  // pixmap(s).
-  // If numLevels is 1 a non-mipMapped texture will result. If a mipMapped texture is desired
-  // the data for all the mipmap levels must be provided.
-  GrBackendTexture createBackendTexture(
-      const SkPixmap srcData[], int numLevels, GrRenderable, GrProtected);
-
  private:
-  explicit GrContextPriv(GrContext* context) noexcept : fContext(context) {}
+  explicit GrContextPriv(GrContext* context) : fContext(context) {}
   GrContextPriv(const GrContextPriv&);             // unimpl
   GrContextPriv& operator=(const GrContextPriv&);  // unimpl
 
@@ -245,9 +241,9 @@ class GrContextPriv {
   friend class GrContext;  // to construct/copy this type.
 };
 
-inline GrContextPriv GrContext::priv() noexcept { return GrContextPriv(this); }
+inline GrContextPriv GrContext::priv() { return GrContextPriv(this); }
 
-inline const GrContextPriv GrContext::priv() const noexcept {
+inline const GrContextPriv GrContext::priv() const {
   return GrContextPriv(const_cast<GrContext*>(this));
 }
 

@@ -162,10 +162,8 @@ class GrTextureDomain {
 
    private:
     static const int kPrevDomainCount = 4;
-    SkDEBUGCODE(Mode fModeX);
-    SkDEBUGCODE(Mode fModeY);
-    SkDEBUGCODE(bool fHasMode = false);
-    GrGLSLProgramDataManager::UniformHandle fDomainUni;
+    SkDEBUGCODE(Mode fModeX;) SkDEBUGCODE(Mode fModeY;)
+        SkDEBUGCODE(bool fHasMode = false;) GrGLSLProgramDataManager::UniformHandle fDomainUni;
     SkString fDomainName;
 
     // Only initialized if the domain has at least one decal axis
@@ -188,12 +186,12 @@ class GrTextureDomain {
 class GrTextureDomainEffect : public GrFragmentProcessor {
  public:
   static std::unique_ptr<GrFragmentProcessor> Make(
-      sk_sp<GrTextureProxy>, const SkMatrix&, const SkRect& domain, GrTextureDomain::Mode mode,
-      GrSamplerState::Filter filterMode);
+      sk_sp<GrTextureProxy>, GrColorType srcColorType, const SkMatrix&, const SkRect& domain,
+      GrTextureDomain::Mode mode, GrSamplerState::Filter filterMode);
 
   static std::unique_ptr<GrFragmentProcessor> Make(
-      sk_sp<GrTextureProxy>, const SkMatrix&, const SkRect& domain, GrTextureDomain::Mode modeX,
-      GrTextureDomain::Mode modeY, const GrSamplerState& sampler);
+      sk_sp<GrTextureProxy>, GrColorType srcColorType, const SkMatrix&, const SkRect& domain,
+      GrTextureDomain::Mode modeX, GrTextureDomain::Mode modeY, const GrSamplerState& sampler);
 
   const char* name() const override { return "TextureDomain"; }
 
@@ -219,8 +217,8 @@ class GrTextureDomainEffect : public GrFragmentProcessor {
   TextureSampler fTextureSampler;
 
   GrTextureDomainEffect(
-      sk_sp<GrTextureProxy>, const SkMatrix&, const SkRect& domain, GrTextureDomain::Mode modeX,
-      GrTextureDomain::Mode modeY, const GrSamplerState&);
+      sk_sp<GrTextureProxy>, GrColorType srcColorType, const SkMatrix&, const SkRect& domain,
+      GrTextureDomain::Mode modeX, GrTextureDomain::Mode modeY, const GrSamplerState&);
 
   explicit GrTextureDomainEffect(const GrTextureDomainEffect&);
 

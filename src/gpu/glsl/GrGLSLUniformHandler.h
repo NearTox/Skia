@@ -17,7 +17,7 @@
 
 class GrGLSLProgramBuilder;
 class GrSamplerState;
-class GrTexture;
+class GrTextureProxy;
 
 // Handles for program uniforms (other than per-effect uniforms)
 struct GrGLSLBuiltinUniformHandles {
@@ -81,7 +81,7 @@ class GrGLSLUniformHandler {
   virtual GrSwizzle samplerSwizzle(SamplerHandle) const = 0;
 
   virtual SamplerHandle addSampler(
-      const GrTexture*, const GrSamplerState&, const GrSwizzle&, const char* name,
+      const GrTextureProxy*, const GrSamplerState&, const GrSwizzle&, const char* name,
       const GrShaderCaps*) = 0;
 
   virtual UniformHandle internalAddUniformArray(

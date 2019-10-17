@@ -239,26 +239,22 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
 //////////////////////////////////////////////////////////////////////////////
 
 /**
- * Used to represent a texture that is required by a GrPrimitiveProcessor. It holds a GrTextureProxy
- * along with an associated GrSamplerState. TextureSamplers don't perform any coord manipulation to
- * account for texture origin.
+ * Used to capture the properties of the GrTextureProxies required/expected by a primitiveProcessor
+ * along with an associated GrSamplerState. The actual proxies used are stored in either the
+ * fixed or dynamic state arrays. TextureSamplers don't perform any coord manipulation to account
+ * for texture origin.
  */
 class GrPrimitiveProcessor::TextureSampler {
  public:
   TextureSampler() = default;
 
-  TextureSampler(GrTextureType, const GrSamplerState&, const GrSwizzle&, uint32_t extraSamplerKey);
-
-  explicit TextureSampler(
-      GrTextureType, GrSamplerState::Filter, GrSamplerState::WrapMode wrapXAndY, const GrSwizzle&);
+  TextureSampler(
+      GrTextureType, const GrSamplerState&, const GrSwizzle&, uint32_t extraSamplerKey = 0);
 
   TextureSampler(const TextureSampler&) = delete;
   TextureSampler& operator=(const TextureSampler&) = delete;
 
   void reset(GrTextureType, const GrSamplerState&, const GrSwizzle&, uint32_t extraSamplerKey = 0);
-  void reset(
-      GrTextureType, GrSamplerState::Filter, GrSamplerState::WrapMode wrapXAndY,
-      const GrSwizzle& swizzle);
 
   GrTextureType textureType() const { return fTextureType; }
 
@@ -320,7 +316,6 @@ static constexpr inline size_t GrVertexAttribTypeSize(GrVertexAttribType type) {
     case kInt_GrVertexAttribType: return sizeof(int32_t);
     case kUint_GrVertexAttribType: return sizeof(uint32_t);
     case kUShort_norm_GrVertexAttribType: return sizeof(uint16_t);
-    // Experimental (for Y416)
     case kUShort4_norm_GrVertexAttribType: return 4 * sizeof(uint16_t);
   }
     // GCC fails because SK_ABORT evaluates to non constexpr. clang and cl.exe think this is

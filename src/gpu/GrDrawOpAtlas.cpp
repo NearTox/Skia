@@ -10,11 +10,13 @@
 #include "include/gpu/GrContext.h"
 #include "include/gpu/GrTexture.h"
 #include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrGpu.h"
 #include "src/gpu/GrOnFlushResourceProvider.h"
 #include "src/gpu/GrOpFlushState.h"
 #include "src/gpu/GrProxyProvider.h"
 #include "src/gpu/GrRectanizer.h"
 #include "src/gpu/GrResourceProvider.h"
+#include "src/gpu/GrResourceProviderPriv.h"
 #include "src/gpu/GrSurfaceProxyPriv.h"
 #include "src/gpu/GrTracing.h"
 
@@ -131,9 +133,9 @@ bool GrDrawOpAtlas::Plot::addSubImage(int width, int height, const void* image, 
 
   loc->fX += fOffset.fX;
   loc->fY += fOffset.fY;
-  SkDEBUGCODE(fDirty = true);
+  SkDEBUGCODE(fDirty = true;)
 
-  return true;
+      return true;
 }
 
 void GrDrawOpAtlas::Plot::uploadToTexture(
@@ -157,7 +159,7 @@ void GrDrawOpAtlas::Plot::uploadToTexture(
       proxy, fOffset.fX + fDirtyRect.fLeft, fOffset.fY + fDirtyRect.fTop, fDirtyRect.width(),
       fDirtyRect.height(), fColorType, dataPtr, rowBytes);
   fDirtyRect.setEmpty();
-  SkDEBUGCODE(fDirty = false);
+  SkDEBUGCODE(fDirty = false;)
 }
 
 void GrDrawOpAtlas::Plot::resetRects() {
@@ -176,7 +178,7 @@ void GrDrawOpAtlas::Plot::resetRects() {
   }
 
   fDirtyRect.setEmpty();
-  SkDEBUGCODE(fDirty = false);
+  SkDEBUGCODE(fDirty = false;)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -237,8 +239,8 @@ inline bool GrDrawOpAtlas::updatePlot(GrDeferredUploadTarget* target, AtlasID* i
 }
 
 bool GrDrawOpAtlas::uploadToPage(
-    unsigned int pageIdx, AtlasID* id, GrDeferredUploadTarget* target, int width, int height,
-    const void* image, SkIPoint16* loc) {
+    const GrCaps& caps, unsigned int pageIdx, AtlasID* id, GrDeferredUploadTarget* target,
+    int width, int height, const void* image, SkIPoint16* loc) {
   SkASSERT(fProxies[pageIdx] && fProxies[pageIdx]->isInstantiated());
 
   // look through all allocated plots for one we can share, in Most Recently Refed order
@@ -246,7 +248,7 @@ bool GrDrawOpAtlas::uploadToPage(
   plotIter.init(fPages[pageIdx].fPlotList, PlotList::Iter::kHead_IterStart);
 
   for (Plot* plot = plotIter.get(); plot; plot = plotIter.next()) {
-    SkASSERT(GrBytesPerPixel(fProxies[pageIdx]->config()) == plot->bpp());
+    SkASSERT(caps.bytesPerPixel(fProxies[pageIdx]->backendFormat()) == plot->bpp());
 
     if (plot->addSubImage(width, height, image, loc)) {
       return this->updatePlot(target, id, plot);
@@ -271,11 +273,13 @@ GrDrawOpAtlas::ErrorCode GrDrawOpAtlas::addToAtlas(
     return ErrorCode::kError;
   }
 
+  const GrCaps& caps = *resourceProvider->caps();
+
   // Look through each page to see if we can upload without having to flush
   // We prioritize this upload to the first pages, not the most recently used, to make it easier
   // to remove unused pages in reverse page order.
   for (unsigned int pageIdx = 0; pageIdx < fNumActivePages; ++pageIdx) {
-    if (this->uploadToPage(pageIdx, id, target, width, height, image, loc)) {
+    if (this->uploadToPage(caps, pageIdx, id, target, width, height, image, loc)) {
       return ErrorCode::kSucceeded;
     }
   }
@@ -291,7 +295,7 @@ GrDrawOpAtlas::ErrorCode GrDrawOpAtlas::addToAtlas(
       SkASSERT(plot);
       if (plot->lastUseToken() < target->tokenTracker()->nextTokenToFlush()) {
         this->processEvictionAndResetRects(plot);
-        SkASSERT(GrBytesPerPixel(fProxies[pageIdx]->config()) == plot->bpp());
+        SkASSERT(caps.bytesPerPixel(fProxies[pageIdx]->backendFormat()) == plot->bpp());
         SkDEBUGCODE(bool verify =) plot->addSubImage(width, height, image, loc);
         SkASSERT(verify);
         if (!this->updatePlot(target, id, plot)) {
@@ -306,7 +310,7 @@ GrDrawOpAtlas::ErrorCode GrDrawOpAtlas::addToAtlas(
       return ErrorCode::kError;
     }
 
-    if (this->uploadToPage(fNumActivePages - 1, id, target, width, height, image, loc)) {
+    if (this->uploadToPage(caps, fNumActivePages - 1, id, target, width, height, image, loc)) {
       return ErrorCode::kSucceeded;
     } else {
       // If we fail to upload to a newly activated page then something has gone terribly
@@ -346,7 +350,7 @@ GrDrawOpAtlas::ErrorCode GrDrawOpAtlas::addToAtlas(
   newPlot.reset(plot->clone());
 
   fPages[pageIdx].fPlotList.addToHead(newPlot.get());
-  SkASSERT(GrBytesPerPixel(fProxies[pageIdx]->config()) == newPlot->bpp());
+  SkASSERT(caps.bytesPerPixel(fProxies[pageIdx]->backendFormat()) == newPlot->bpp());
   SkDEBUGCODE(bool verify =) newPlot->addSubImage(width, height, image, loc);
   SkASSERT(verify);
 

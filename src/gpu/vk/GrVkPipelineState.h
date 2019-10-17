@@ -49,8 +49,7 @@ class GrVkPipelineState : public SkRefCnt {
   ~GrVkPipelineState();
 
   void setAndBindUniforms(
-      GrVkGpu*, const GrRenderTarget*, GrSurfaceOrigin, const GrPrimitiveProcessor&,
-      const GrPipeline&, GrVkCommandBuffer*);
+      GrVkGpu*, const GrRenderTarget*, const GrProgramInfo&, GrVkCommandBuffer*);
   /**
    * This must be called after setAndBindUniforms() since that function invalidates texture
    * bindings.

@@ -49,7 +49,11 @@ class GrGLSLGeometryBuilder : public GrGLSLVertexGeoBuilder {
  public:
   GrGLSLGeometryBuilder(GrGLSLProgramBuilder* program) : INHERITED(program) {}
 
-  enum class InputType { kPoints, kLines, kLinesAdjacency, kTriangles, kTrianglesAdjacency };
+  enum class InputType {
+    kPoints,
+    kLines,
+    kTriangles,
+  };
 
   enum class OutputType { kPoints, kLineStrip, kTriangleStrip };
 

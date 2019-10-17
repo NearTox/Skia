@@ -69,12 +69,11 @@ SkColor GrTextContext::ComputeCanonicalColor(const SkPaint& paint, bool lcd) {
   return canonicalColor;
 }
 
-SkScalerContextFlags GrTextContext::ComputeScalerContextFlags(
-    const GrColorSpaceInfo& colorSpaceInfo) {
+SkScalerContextFlags GrTextContext::ComputeScalerContextFlags(const GrColorInfo& colorInfo) {
   // If we're doing linear blending, then we can disable the gamma hacks.
   // Otherwise, leave them on. In either case, we still want the contrast boost:
   // TODO: Can we be even smarter about mask gamma based on the dest transfer function?
-  if (colorSpaceInfo.isLinearlyBlended()) {
+  if (colorInfo.isLinearlyBlended()) {
     return SkScalerContextFlags::kBoostContrast;
   } else {
     return SkScalerContextFlags::kFakeGammaAndBoostContrast;
@@ -93,7 +92,21 @@ void GrTextContext::SanitizeOptions(Options* options) {
 bool GrTextContext::CanDrawAsDistanceFields(
     const SkPaint& paint, const SkFont& font, const SkMatrix& viewMatrix,
     const SkSurfaceProps& props, bool contextSupportsDistanceFieldText, const Options& options) {
-  if (!viewMatrix.hasPerspective()) {
+  // mask filters modify alpha, which doesn't translate well to distance
+  if (paint.getMaskFilter() || !contextSupportsDistanceFieldText) {
+    return false;
+  }
+
+  // TODO: add some stroking support
+  if (paint.getStyle() != SkPaint::kFill_Style) {
+    return false;
+  }
+
+  if (viewMatrix.hasPerspective()) {
+    if (!options.fDistanceFieldVerticesAlwaysHaveW) {
+      return false;
+    }
+  } else {
     SkScalar maxScale = viewMatrix.getMaxScale();
     SkScalar scaledTextSize = maxScale * font.getSize();
     // Hinted text looks far better at small resolutions
@@ -111,16 +124,6 @@ bool GrTextContext::CanDrawAsDistanceFields(
     if (!useDFT && scaledTextSize < kLargeDFFontSize) {
       return false;
     }
-  }
-
-  // mask filters modify alpha, which doesn't translate well to distance
-  if (paint.getMaskFilter() || !contextSupportsDistanceFieldText) {
-    return false;
-  }
-
-  // TODO: add some stroking support
-  if (paint.getStyle() != SkPaint::kFill_Style) {
-    return false;
   }
 
   return true;

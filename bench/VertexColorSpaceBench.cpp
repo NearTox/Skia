@@ -121,12 +121,12 @@ class Op : public GrMeshDrawOp {
   const char* name() const override { return "VertColorXformOp"; }
 
   Op(GrColor color) : INHERITED(ClassID()), fMode(kBaseline_Mode), fColor(color) {
-    this->setBounds(SkRect::MakeWH(100.f, 100.f), HasAABloat::kNo, IsZeroArea::kNo);
+    this->setBounds(SkRect::MakeWH(100.f, 100.f), HasAABloat::kNo, IsHairline::kNo);
   }
 
   Op(const SkColor4f& color4f, Mode mode) : INHERITED(ClassID()), fMode(mode), fColor4f(color4f) {
     SkASSERT(kFloat_Mode == fMode || kHalf_Mode == mode);
-    this->setBounds(SkRect::MakeWH(100.f, 100.f), HasAABloat::kNo, IsZeroArea::kNo);
+    this->setBounds(SkRect::MakeWH(100.f, 100.f), HasAABloat::kNo, IsHairline::kNo);
   }
 
   Op(GrColor color, sk_sp<GrColorSpaceXform> colorSpaceXform)
@@ -134,7 +134,7 @@ class Op : public GrMeshDrawOp {
         fMode(kShader_Mode),
         fColor(color),
         fColorSpaceXform(std::move(colorSpaceXform)) {
-    this->setBounds(SkRect::MakeWH(100.f, 100.f), HasAABloat::kNo, IsZeroArea::kNo);
+    this->setBounds(SkRect::MakeWH(100.f, 100.f), HasAABloat::kNo, IsHairline::kNo);
   }
 
   FixedFunctionFlags fixedFunctionFlags() const override { return FixedFunctionFlags::kNone; }

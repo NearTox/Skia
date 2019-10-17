@@ -14,6 +14,7 @@
 #include "include/private/SkTo.h"
 #include "src/core/SkAntiRun.h"
 #include "src/core/SkArenaAlloc.h"
+#include "src/core/SkColorSpacePriv.h"
 #include "src/core/SkMask.h"
 #include "src/core/SkMaskFilterBase.h"
 #include "src/core/SkPaintPriv.h"
@@ -483,9 +484,9 @@ void SkRgnClipBlitter::blitAntiH(int x, int y, const SkAlpha aa[], const int16_t
   int width = compute_anti_width(runs);
   SkRegion::Spanerator span(*fRgn, y, x, x + width);
   int left, right;
-  SkDEBUGCODE(const SkIRect& bounds = fRgn->getBounds());
+  SkDEBUGCODE(const SkIRect& bounds = fRgn->getBounds();)
 
-  int prevRite = x;
+      int prevRite = x;
   while (span.next(&left, &right)) {
     SkASSERT(x <= left);
     SkASSERT(left < right);
@@ -696,6 +697,17 @@ SkBlitter* SkBlitter::Choose(
     p->setBlendMode(SkBlendMode::kSrc);
     p->setColor(0x00000000);
   }
+
+#ifndef SK_SUPPORT_LEGACY_COLORFILTER_NO_SHADER
+  if (paint->getColorFilter() && !paint->getShader()) {
+    // apply the filter to the paint's color, and then remove the filter
+    auto dstCS = device.colorSpace();
+    SkPaint* p = paint.writable();
+    p->setColor(
+        p->getColorFilter()->filterColor4f(p->getColor4f(), sk_srgb_singleton(), dstCS), dstCS);
+    p->setColorFilter(nullptr);
+  }
+#endif
 
   if (drawCoverage) {
     if (device.colorType() == kAlpha_8_SkColorType) {

@@ -16,7 +16,7 @@
 #include "tools/debugger/DrawCommand.h"
 
 #include "include/gpu/GrContext.h"
-#include "include/private/GrAuditTrail.h"
+#include "src/gpu/GrAuditTrail.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrRenderTargetContext.h"
 
@@ -172,7 +172,7 @@ void DebugCanvas::drawTo(SkCanvas* originalCanvas, int index, int m) {
       at->getBoundsByClientID(&childrenBounds, index);
     } else {
       // the client wants us to draw the mth op
-      at->getBoundsByOpListID(&childrenBounds.push_back(), m);
+      at->getBoundsByOpsTaskID(&childrenBounds.push_back(), m);
     }
     SkPaint paint;
     paint.setStyle(SkPaint::kStroke_Style);
@@ -268,12 +268,12 @@ void DebugCanvas::toJSON(
   this->cleanupAuditTrail(canvas);
 }
 
-void DebugCanvas::toJSONOpList(SkJSONWriter& writer, int n, SkCanvas* canvas) {
+void DebugCanvas::toJSONOpsTask(SkJSONWriter& writer, int n, SkCanvas* canvas) {
   this->drawAndCollectOps(n, canvas);
 
   GrAuditTrail* at = this->getAuditTrail(canvas);
   if (at) {
-    GrAuditTrail::AutoManageOpList enable(at);
+    GrAuditTrail::AutoManageOpsTask enable(at);
     at->toJson(writer);
   } else {
     writer.beginObject();
@@ -439,7 +439,8 @@ void DebugCanvas::onDrawDrawable(SkDrawable* drawable, const SkMatrix* matrix) {
 }
 
 void DebugCanvas::onDrawEdgeAAQuad(
-    const SkRect& rect, const SkPoint clip[4], QuadAAFlags aa, SkColor color, SkBlendMode mode) {
+    const SkRect& rect, const SkPoint clip[4], QuadAAFlags aa, const SkColor4f& color,
+    SkBlendMode mode) {
   this->addDrawCommand(new DrawEdgeAAQuadCommand(rect, clip, aa, color, mode));
 }
 

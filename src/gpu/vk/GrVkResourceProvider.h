@@ -44,8 +44,7 @@ class GrVkResourceProvider {
   void init();
 
   GrVkPipeline* createPipeline(
-      int numColorSamples, const GrPrimitiveProcessor& primProc, const GrPipeline& pipeline,
-      const GrStencilSettings& stencil, GrSurfaceOrigin,
+      const GrProgramInfo&, const GrStencilSettings& stencil,
       VkPipelineShaderStageCreateInfo* shaderStageInfo, int shaderStageCount,
       GrPrimitiveType primitiveType, VkRenderPass compatibleRenderPass, VkPipelineLayout layout);
 
@@ -109,9 +108,7 @@ class GrVkResourceProvider {
       const GrVkYcbcrConversionInfo& ycbcrInfo);
 
   GrVkPipelineState* findOrCreateCompatiblePipelineState(
-      GrRenderTarget*, GrSurfaceOrigin, const GrPipeline&, const GrPrimitiveProcessor&,
-      const GrTextureProxy* const primProcProxies[], GrPrimitiveType,
-      VkRenderPass compatibleRenderPass);
+      GrRenderTarget*, const GrProgramInfo&, GrPrimitiveType, VkRenderPass compatibleRenderPass);
 
   void getSamplerDescriptorSetHandle(
       VkDescriptorType type, const GrVkUniformHandler&, GrVkDescriptorSetManager::Handle* handle);
@@ -187,17 +184,9 @@ class GrVkResourceProvider {
     void abandon();
     void release();
     GrVkPipelineState* refPipelineState(
-        GrRenderTarget*, GrSurfaceOrigin, const GrPrimitiveProcessor&,
-        const GrTextureProxy* const primProcProxies[], const GrPipeline&, GrPrimitiveType,
-        VkRenderPass compatibleRenderPass);
+        GrRenderTarget*, const GrProgramInfo&, GrPrimitiveType, VkRenderPass compatibleRenderPass);
 
    private:
-    enum {
-      // We may actually have kMaxEntries+1 PipelineStates in context because we create a new
-      // PipelineState before evicting from the cache.
-      kMaxEntries = 128,
-    };
-
     struct Entry;
 
     struct DescHash {

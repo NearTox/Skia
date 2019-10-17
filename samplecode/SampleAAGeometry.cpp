@@ -776,8 +776,8 @@ class AAGeometryView : public Sample {
     return true;
   }
 
-  void savePath(InputState state) {
-    if (state != InputState::kDown) {
+  void savePath(skui::InputState state) {
+    if (state != skui::InputState::kDown) {
       return;
     }
     if (fUndo && fUndo->fPath == fPath) {
@@ -1470,7 +1470,8 @@ class AAGeometryView : public Sample {
     return -1;
   }
 
-  virtual Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, ModifierKey modi) override {
+  virtual Sample::Click* onFindClickHandler(
+      SkScalar x, SkScalar y, skui::ModifierKey modi) override {
     SkPoint pt = {x, y};
     int ptHit = hittest_pt(pt);
     if (ptHit >= 0) {
@@ -1546,7 +1547,7 @@ class AAGeometryView : public Sample {
         fWeightControl.fVisible = myClick->fVerb == SkPath::kConic_Verb;
       } break;
       case MyClick::kControlType: {
-        if (click->fState != InputState::kDown && myClick->isButton()) {
+        if (click->fState != skui::InputState::kDown && myClick->isButton()) {
           return true;
         }
         switch (myClick->fControl) {
@@ -1673,7 +1674,7 @@ bool AAGeometryView::onChar(SkUnichar uni) {
     Button* button = kButtonList[index].fButton;
     if (button->fVisible && uni == button->fLabel) {
       MyClick click(MyClick::kControlType, kButtonList[index].fButtonType);
-      click.fState = InputState::kDown;
+      click.fState = skui::InputState::kDown;
       (void)this->onClick(&click);
       return true;
     }
@@ -1689,7 +1690,7 @@ bool AAGeometryView::onChar(SkUnichar uni) {
       Button* button = kButtonList[index].fButton;
       if (button->fVisible && (uni & ~0x20) == (button->fLabel & ~0x20)) {
         MyClick click(MyClick::kControlType, kButtonList[index].fButtonType);
-        click.fState = InputState::kDown;
+        click.fState = skui::InputState::kDown;
         (void)this->onClick(&click);
         return true;
       }

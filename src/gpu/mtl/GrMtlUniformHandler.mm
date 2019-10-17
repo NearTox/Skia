@@ -188,14 +188,14 @@ GrGLSLUniformHandler::UniformHandle GrMtlUniformHandler::internalAddUniformArray
 }
 
 GrGLSLUniformHandler::SamplerHandle GrMtlUniformHandler::addSampler(
-    const GrTexture* texture, const GrSamplerState&, const GrSwizzle& swizzle, const char* name,
-    const GrShaderCaps* caps) {
+    const GrTextureProxy* texture, const GrSamplerState&, const GrSwizzle& swizzle,
+    const char* name, const GrShaderCaps* caps) {
   SkASSERT(name && strlen(name));
   SkString mangleName;
   char prefix = 'u';
   fProgramBuilder->nameVariable(&mangleName, prefix, name, true);
 
-  GrTextureType type = texture->texturePriv().textureType();
+  GrTextureType type = texture->textureType();
 
   UniformInfo& info = fSamplers.push_back();
   info.fVariable.setType(GrSLCombinedSamplerTypeForTextureType(type));

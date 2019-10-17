@@ -29,7 +29,7 @@ class WritePixelsBench : public Benchmark {
   void onDraw(int loops, SkCanvas* canvas) override {
     SkISize size = canvas->getBaseLayerSize();
 
-    SkImageInfo info = SkImageInfo::Make(size.width(), size.height(), fColorType, fAlphaType, fCS);
+    SkImageInfo info = SkImageInfo::Make(size, fColorType, fAlphaType, fCS);
     SkBitmap bmp;
     bmp.allocPixels(info);
     bmp.eraseColor(SK_ColorBLACK);

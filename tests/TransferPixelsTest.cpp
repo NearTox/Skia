@@ -13,6 +13,7 @@
 #include "include/gpu/GrTexture.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrGpu.h"
+#include "src/gpu/GrImageInfo.h"
 #include "src/gpu/GrResourceProvider.h"
 #include "src/gpu/GrSurfaceProxy.h"
 #include "src/gpu/SkGr.h"
@@ -38,8 +39,8 @@ void fill_transfer_data(
       // set b and a channels to be inverse of r and g just to have interesting values to
       // test.
       uint32_t srcPixel = GrColorPackRGBA(r, g, 0xff - r, 0xff - g);
-      GrPixelInfo srcInfo(GrColorType::kRGBA_8888, kUnpremul_SkAlphaType, nullptr, 1, 1);
-      GrPixelInfo dstInfo(dstType, kUnpremul_SkAlphaType, nullptr, 1, 1);
+      GrImageInfo srcInfo(GrColorType::kRGBA_8888, kUnpremul_SkAlphaType, nullptr, 1, 1);
+      GrImageInfo dstInfo(dstType, kUnpremul_SkAlphaType, nullptr, 1, 1);
       GrConvertPixels(dstInfo, dstLocation(i, j), dstBpp, srcInfo, &srcPixel, 4);
     }
   }
@@ -86,8 +87,8 @@ bool read_pixels_from_texture(
             tmpRowBytes)) {
       return false;
     }
-    GrPixelInfo tmpInfo(supportedRead.fColorType, kUnpremul_SkAlphaType, nullptr, w, h);
-    GrPixelInfo dstInfo(colorType, kUnpremul_SkAlphaType, nullptr, w, h);
+    GrImageInfo tmpInfo(supportedRead.fColorType, kUnpremul_SkAlphaType, nullptr, w, h);
+    GrImageInfo dstInfo(colorType, kUnpremul_SkAlphaType, nullptr, w, h);
     determine_tolerances(tmpInfo.colorType(), dstInfo.colorType(), tolerances);
     return GrConvertPixels(dstInfo, dst, rowBytes, tmpInfo, tmpPixels.get(), tmpRowBytes, false);
   }
@@ -122,8 +123,7 @@ void basic_transfer_to_test(
   desc.fConfig = GrColorTypeToPixelConfig(colorType);
 
   sk_sp<GrTexture> tex = resourceProvider->createTexture(
-      desc, backendFormat, renderable, 1, SkBudgeted::kNo, GrProtected::kNo,
-      GrResourceProvider::Flags::kNoPendingIO);
+      desc, backendFormat, renderable, 1, GrMipMapped::kNo, SkBudgeted::kNo, GrProtected::kNo);
   if (!tex) {
     ERRORF(reporter, "Could not create texture");
     return;
@@ -194,9 +194,9 @@ void basic_transfer_to_test(
             reporter, "Error at (%d %d) in transfer, color type: %d, diffs: (%f, %f, %f, %f)", x, y,
             colorType, diffs[0], diffs[1], diffs[2], diffs[3]);
       });
-  GrPixelInfo srcInfo(
+  GrImageInfo srcInfo(
       allowedSrc.fColorType, kUnpremul_SkAlphaType, nullptr, tex->width(), tex->height());
-  GrPixelInfo dstInfo(colorType, kUnpremul_SkAlphaType, nullptr, tex->width(), tex->height());
+  GrImageInfo dstInfo(colorType, kUnpremul_SkAlphaType, nullptr, tex->width(), tex->height());
   compare_pixels(
       srcInfo, srcData.get(), srcRowBytes, dstInfo, dstBuffer.get(), dstRowBytes, compareTolerances,
       error);
@@ -299,7 +299,7 @@ void basic_transfer_from_test(
   data.fPixels = textureData.get();
   data.fRowBytes = textureDataRowBytes;
   sk_sp<GrTexture> tex = resourceProvider->createTexture(
-      desc, format, renderable, 1, SkBudgeted::kNo, GrProtected::kNo, &data, 1);
+      desc, format, colorType, renderable, 1, SkBudgeted::kNo, GrProtected::kNo, &data, 1);
   if (!tex) {
     return;
   }
@@ -316,7 +316,7 @@ void basic_transfer_from_test(
 
   // Create the transfer buffer.
   auto allowedRead = caps->supportedReadPixelsColorType(colorType, tex->backendFormat(), colorType);
-  GrPixelInfo readInfo(
+  GrImageInfo readInfo(
       allowedRead.fColorType, kUnpremul_SkAlphaType, nullptr, kTextureWidth, kTextureHeight);
 
   size_t bpp = GrColorTypeBytesPerPixel(allowedRead.fColorType);
@@ -370,7 +370,7 @@ void basic_transfer_from_test(
   memcpy(transferData.get(), map, fullBufferRowBytes * kTextureHeight);
   buffer->unmap();
 
-  GrPixelInfo transferInfo(
+  GrImageInfo transferInfo(
       allowedRead.fColorType, kUnpremul_SkAlphaType, nullptr, kTextureWidth, kTextureHeight);
 
   float tol[4];
@@ -381,7 +381,7 @@ void basic_transfer_from_test(
             reporter, "Error at (%d %d) in transfer, color type: %d, diffs: (%f, %f, %f, %f)", x, y,
             colorType, diffs[0], diffs[1], diffs[2], diffs[3]);
       });
-  GrPixelInfo textureDataInfo(
+  GrImageInfo textureDataInfo(
       colorType, kUnpremul_SkAlphaType, nullptr, kTextureWidth, kTextureHeight);
   compare_pixels(
       textureDataInfo, textureData.get(), textureDataRowBytes, transferInfo, transferData.get(),
@@ -448,7 +448,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(TransferPixelsToTest, reporter, ctxInfo) {
              GrColorType::kRGBA_F16,
              GrColorType::kRGBA_F16_Clamped,
              GrColorType::kRGBA_F32,
-             GrColorType::kR_16,
+             GrColorType::kAlpha_16,
              GrColorType::kRG_1616,
              GrColorType::kRGBA_16161616,
              GrColorType::kRG_F16,
@@ -466,6 +466,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(TransferPixelsFromTest, reporter, ctxInfo) {
   for (auto renderable : {GrRenderable::kNo, GrRenderable::kYes}) {
     for (auto colorType : {
              GrColorType::kAlpha_8,
+             GrColorType::kAlpha_16,
              GrColorType::kBGR_565,
              GrColorType::kABGR_4444,
              GrColorType::kRGBA_8888,
@@ -479,7 +480,6 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(TransferPixelsFromTest, reporter, ctxInfo) {
              GrColorType::kRGBA_F16,
              GrColorType::kRGBA_F16_Clamped,
              GrColorType::kRGBA_F32,
-             GrColorType::kR_16,
              GrColorType::kRG_1616,
              GrColorType::kRGBA_16161616,
              GrColorType::kRG_F16,

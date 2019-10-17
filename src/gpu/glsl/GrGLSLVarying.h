@@ -75,7 +75,7 @@ class GrGLSLVarying {
   friend class GrGLSLVaryingHandler;
 };
 
-static constexpr int kVaryingsPerBlock = 8;
+static const int kVaryingsPerBlock = 8;
 
 class GrGLSLVaryingHandler {
  public:

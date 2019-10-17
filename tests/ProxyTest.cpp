@@ -75,6 +75,17 @@ static void check_texture(
   GrSurfaceProxy::UniqueID idBefore = texProxy->uniqueID();
 
   bool preinstantiated = texProxy->isInstantiated();
+  // The instantiated texture should have these dimensions. If the fit is kExact, then
+  // 'worst-case' reports the original WxH. If it is kApprox, make sure that the texture
+  // is that size and didn't reuse one of the kExact surfaces in the provider. This is important
+  // because upstream usage (e.g. SkImage) reports size based on the worst case dimensions and
+  // client code may rely on that if they are creating backend resources.
+  // NOTE: we store these before instantiating, since after instantiation worstCaseWH() just
+  // return the target's dimensions. In this instance, we want to ensure the target's dimensions
+  // are no different from the original approximate (or exact) dimensions.
+  int expectedWidth = texProxy->worstCaseWidth();
+  int expectedHeight = texProxy->worstCaseHeight();
+
   REPORTER_ASSERT(reporter, texProxy->instantiate(provider));
   GrTexture* tex = texProxy->peekTexture();
 
@@ -86,13 +97,9 @@ static void check_texture(
     REPORTER_ASSERT(reporter, texProxy->uniqueID().asUInt() != tex->uniqueID().asUInt());
   }
 
-  if (SkBackingFit::kExact == fit) {
-    REPORTER_ASSERT(reporter, tex->width() == texProxy->width());
-    REPORTER_ASSERT(reporter, tex->height() == texProxy->height());
-  } else {
-    REPORTER_ASSERT(reporter, tex->width() >= texProxy->width());
-    REPORTER_ASSERT(reporter, tex->height() >= texProxy->height());
-  }
+  REPORTER_ASSERT(reporter, tex->width() == expectedWidth);
+  REPORTER_ASSERT(reporter, tex->height() == expectedHeight);
+
   REPORTER_ASSERT(reporter, tex->config() == texProxy->config());
 }
 
@@ -128,12 +135,11 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(DeferredProxyTest, reporter, ctxInfo) {
                 sk_sp<GrTexture> tex;
                 if (SkBackingFit::kApprox == fit) {
                   tex = resourceProvider->createApproxTexture(
-                      desc, format, GrRenderable::kYes, numSamples, GrProtected::kNo,
-                      GrResourceProvider::Flags::kNoPendingIO);
+                      desc, format, GrRenderable::kYes, numSamples, GrProtected::kNo);
                 } else {
                   tex = resourceProvider->createTexture(
-                      desc, format, GrRenderable::kYes, numSamples, budgeted, GrProtected::kNo,
-                      GrResourceProvider::Flags::kNoPendingIO);
+                      desc, format, GrRenderable::kYes, numSamples, GrMipMapped::kNo, budgeted,
+                      GrProtected::kNo);
                 }
 
                 sk_sp<GrTextureProxy> proxy = proxyProvider->createProxy(
@@ -147,7 +153,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(DeferredProxyTest, reporter, ctxInfo) {
                   // instantiated, it checks that the instantiated size is <= to
                   // the pre-computation. If the proxy never computed its
                   // pre-instantiation size then the check is skipped.
-                  proxy->gpuMemorySize();
+                  proxy->gpuMemorySize(caps);
 
                   check_surface(
                       reporter, proxy.get(), origin, widthHeight, widthHeight, config, budgeted);
@@ -163,12 +169,11 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(DeferredProxyTest, reporter, ctxInfo) {
                 sk_sp<GrTexture> tex;
                 if (SkBackingFit::kApprox == fit) {
                   tex = resourceProvider->createApproxTexture(
-                      desc, format, GrRenderable::kNo, numSamples, GrProtected::kNo,
-                      GrResourceProvider::Flags::kNoPendingIO);
+                      desc, format, GrRenderable::kNo, numSamples, GrProtected::kNo);
                 } else {
                   tex = resourceProvider->createTexture(
-                      desc, format, GrRenderable::kNo, numSamples, budgeted, GrProtected::kNo,
-                      GrResourceProvider::Flags::kNoPendingIO);
+                      desc, format, GrRenderable::kNo, numSamples, GrMipMapped::kNo, budgeted,
+                      GrProtected::kNo);
                 }
 
                 sk_sp<GrTextureProxy> proxy(proxyProvider->createProxy(
@@ -181,7 +186,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(DeferredProxyTest, reporter, ctxInfo) {
                   // instantiated, it checks that the instantiated size is <= to
                   // the pre-computation. If the proxy never computed its
                   // pre-instantiation size then the check is skipped.
-                  proxy->gpuMemorySize();
+                  proxy->gpuMemorySize(caps);
 
                   check_surface(
                       reporter, proxy.get(), origin, widthHeight, widthHeight, config, budgeted);

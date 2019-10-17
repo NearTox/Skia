@@ -46,7 +46,10 @@ class GrMockCaps : public GrCaps {
   }
 
   // Mock caps doesn't support any compressed formats right now
-  bool isFormatCompressed(const GrBackendFormat&) const override { return false; }
+  bool isFormatCompressed(
+      const GrBackendFormat&, SkImage::CompressionType* compressionType = nullptr) const override {
+    return false;
+  }
 
   bool isFormatTexturableAndUploadable(GrColorType, const GrBackendFormat& format) const override {
     return this->isFormatTexturable(format);
@@ -102,6 +105,10 @@ class GrMockCaps : public GrCaps {
     return this->maxRenderTargetSampleCount(format.asMockColorType());
   }
 
+  size_t bytesPerPixel(const GrBackendFormat& format) const override {
+    return GrColorTypeBytesPerPixel(format.asMockColorType());
+  }
+
   SupportedWrite supportedWritePixelsColorType(
       GrColorType surfaceColorType, const GrBackendFormat& surfaceFormat,
       GrColorType srcColorType) const override {
@@ -120,8 +127,6 @@ class GrMockCaps : public GrCaps {
   GrBackendFormat getBackendFormatFromCompressionType(SkImage::CompressionType) const override {
     return {};
   }
-
-  bool canClearTextureOnCreation() const override { return true; }
 
   GrSwizzle getTextureSwizzle(const GrBackendFormat&, GrColorType) const override {
     return GrSwizzle();

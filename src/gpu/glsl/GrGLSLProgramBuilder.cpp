@@ -21,17 +21,13 @@
 const int GrGLSLProgramBuilder::kVarsPerBlock = 8;
 
 GrGLSLProgramBuilder::GrGLSLProgramBuilder(
-    GrRenderTarget* renderTarget, GrSurfaceOrigin origin, const GrPrimitiveProcessor& primProc,
-    const GrTextureProxy* const primProcProxies[], const GrPipeline& pipeline, GrProgramDesc* desc)
+    GrRenderTarget* renderTarget, const GrProgramInfo& programInfo, const GrProgramDesc* desc)
     : fVS(this),
       fGS(this),
       fFS(this),
       fStageIndex(-1),
       fRenderTarget(renderTarget),
-      fOrigin(origin),
-      fPipeline(pipeline),
-      fPrimProc(primProc),
-      fPrimProcProxies(primProcProxies),
+      fProgramInfo(programInfo),
       fDesc(desc),
       fGeometryProcessor(nullptr),
       fXferProcessor(nullptr),
@@ -65,7 +61,16 @@ bool GrGLSLProgramBuilder::emitAndInstallProcs() {
 
 void GrGLSLProgramBuilder::emitAndInstallPrimProc(SkString* outputColor, SkString* outputCoverage) {
   const GrPrimitiveProcessor& proc = this->primitiveProcessor();
-  const GrTextureProxy* const* primProcProxies = this->primProcProxies();
+
+  // Because all the texture properties must be consistent between all the dynamic and fixed
+  // primProc proxies, we just deal w/ the first set of dynamic proxies or the set of fixed
+  // proxies here.
+  const GrTextureProxy* const* primProcProxies = nullptr;
+  if (fProgramInfo.hasDynamicPrimProcTextures()) {
+    primProcProxies = fProgramInfo.dynamicPrimProcTextures(0);
+  } else if (fProgramInfo.hasFixedPrimProcTextures()) {
+    primProcProxies = fProgramInfo.fixedPrimProcTextures();
+  }
 
   // Program builders have a bit of state we need to clear with each effect
   AutoStageAdvance adv(this);
@@ -98,14 +103,13 @@ void GrGLSLProgramBuilder::emitAndInstallPrimProc(SkString* outputColor, SkStrin
     SkString name;
     name.printf("TextureSampler_%d", i);
     const auto& sampler = proc.textureSampler(i);
-    const GrTexture* texture = primProcProxies[i]->peekTexture();
-    SkASSERT(sampler.textureType() == texture->texturePriv().textureType());
-    texSamplers[i] =
-        this->emitSampler(texture, sampler.samplerState(), sampler.swizzle(), name.c_str());
+    SkASSERT(sampler.textureType() == primProcProxies[i]->textureType());
+    texSamplers[i] = this->emitSampler(
+        primProcProxies[i], sampler.samplerState(), sampler.swizzle(), name.c_str());
   }
 
   GrGLSLPrimitiveProcessor::FPCoordTransformHandler transformHandler(
-      fPipeline, &fTransformedCoordVars);
+      this->pipeline(), &fTransformedCoordVars);
   GrGLSLGeometryProcessor::EmitArgs args(
       &fVS, proc.willUseGeoShader() ? &fGS : nullptr, &fFS, this->varyingHandler(),
       this->uniformHandler(), this->shaderCaps(), proc, outputColor->c_str(),
@@ -114,9 +118,9 @@ void GrGLSLProgramBuilder::emitAndInstallPrimProc(SkString* outputColor, SkStrin
 
   // We have to check that effects and the code they emit are consistent, ie if an effect
   // asks for dst color, then the emit code needs to follow suit
-  SkDEBUGCODE(verify(proc));
+  SkDEBUGCODE(verify(proc);)
 
-  fFS.codeAppend("}");
+      fFS.codeAppend("}");
 }
 
 void GrGLSLProgramBuilder::emitAndInstallFragProcs(SkString* color, SkString* coverage) {
@@ -170,7 +174,7 @@ SkString GrGLSLProgramBuilder::emitAndInstallFragProc(
       name.printf("TextureSampler_%d", samplerIdx++);
       const auto& sampler = subFP->textureSampler(i);
       texSamplers.emplace_back(this->emitSampler(
-          sampler.peekTexture(), sampler.samplerState(), sampler.swizzle(), name.c_str()));
+          sampler.proxy(), sampler.samplerState(), sampler.swizzle(), name.c_str()));
     }
   }
 
@@ -186,8 +190,7 @@ SkString GrGLSLProgramBuilder::emitAndInstallFragProc(
 
   // We have to check that effects and the code they emit are consistent, ie if an effect
   // asks for dst color, then the emit code needs to follow suit
-  SkDEBUGCODE(verify(fp));
-  glslFragmentProcessors->emplace_back(fragProc);
+  SkDEBUGCODE(verify(fp);) glslFragmentProcessors->emplace_back(fragProc);
 
   fFS.codeAppend("}");
   return output;
@@ -199,7 +202,7 @@ void GrGLSLProgramBuilder::emitAndInstallXferProc(
   AutoStageAdvance adv(this);
 
   SkASSERT(!fXferProcessor);
-  const GrXferProcessor& xp = fPipeline.getXferProcessor();
+  const GrXferProcessor& xp = this->pipeline().getXferProcessor();
   fXferProcessor.reset(xp.createGLSLInstance());
 
   // Enable dual source secondary output if we have one
@@ -218,42 +221,31 @@ void GrGLSLProgramBuilder::emitAndInstallXferProc(
   SamplerHandle dstTextureSamplerHandle;
   GrSurfaceOrigin dstTextureOrigin = kTopLeft_GrSurfaceOrigin;
 
-  if (GrTexture* dstTexture = fPipeline.peekDstTexture()) {
+  if (GrTextureProxy* dstTextureProxy = this->pipeline().dstTextureProxy()) {
     // GrProcessor::TextureSampler sampler(dstTexture);
-    SkASSERT(fPipeline.dstTextureProxy());
-    const GrSwizzle& swizzle = fPipeline.dstTextureProxy()->textureSwizzle();
+    const GrSwizzle& swizzle = dstTextureProxy->textureSwizzle();
     dstTextureSamplerHandle =
-        this->emitSampler(dstTexture, GrSamplerState(), swizzle, "DstTextureSampler");
-    dstTextureOrigin = fPipeline.dstTextureProxy()->origin();
-    SkASSERT(dstTexture->texturePriv().textureType() != GrTextureType::kExternal);
+        this->emitSampler(dstTextureProxy, GrSamplerState(), swizzle, "DstTextureSampler");
+    dstTextureOrigin = dstTextureProxy->origin();
+    SkASSERT(dstTextureProxy->textureType() != GrTextureType::kExternal);
   }
 
-  SkString finalInColor;
-  if (colorIn.size()) {
-    if (this->desc()->header().fClampBlendInput) {
-      finalInColor.printf("saturate(%s)", colorIn.c_str());
-    } else {
-      finalInColor = colorIn;
-    }
-  } else {
-    finalInColor = "float4(1)";
-  }
+  SkString finalInColor = colorIn.size() ? colorIn : SkString("float4(1)");
 
   GrGLSLXferProcessor::EmitArgs args(
       &fFS, this->uniformHandler(), this->shaderCaps(), xp, finalInColor.c_str(),
       coverageIn.size() ? coverageIn.c_str() : "float4(1)", fFS.getPrimaryColorOutputName(),
       fFS.getSecondaryColorOutputName(), dstTextureSamplerHandle, dstTextureOrigin,
-      this->desc()->header().fOutputSwizzle);
+      this->pipeline().outputSwizzle());
   fXferProcessor->emitCode(args);
 
   // We have to check that effects and the code they emit are consistent, ie if an effect
   // asks for dst color, then the emit code needs to follow suit
-  SkDEBUGCODE(verify(xp));
-  fFS.codeAppend("}");
+  SkDEBUGCODE(verify(xp);) fFS.codeAppend("}");
 }
 
 GrGLSLProgramBuilder::SamplerHandle GrGLSLProgramBuilder::emitSampler(
-    const GrTexture* texture, const GrSamplerState& state, const GrSwizzle& swizzle,
+    const GrTextureProxy* texture, const GrSamplerState& state, const GrSwizzle& swizzle,
     const char* name) {
   ++fNumFragmentSamplers;
   return this->uniformHandler()->addSampler(texture, state, swizzle, name, this->shaderCaps());

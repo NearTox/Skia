@@ -25,7 +25,7 @@ class GrTextureMaker : public GrTextureProducer {
 
  protected:
   GrTextureMaker(
-      GrRecordingContext* context, int width, int height, const GrColorSpaceInfo& info,
+      GrRecordingContext* context, int width, int height, const GrColorInfo& info,
       bool domainNeedsLocal)
       : INHERITED(context, width, height, info, domainNeedsLocal) {}
 

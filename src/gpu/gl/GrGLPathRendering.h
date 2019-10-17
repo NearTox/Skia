@@ -62,8 +62,7 @@ class GrGLPathRendering : public GrPathRendering {
  protected:
   void onStencilPath(const StencilPathArgs&, const GrPath*) override;
   void onDrawPath(
-      GrRenderTarget*, GrSurfaceOrigin, const GrPrimitiveProcessor&, const GrPipeline&,
-      const GrPipeline::FixedDynamicState&, const GrStencilSettings&, const GrPath*) override;
+      GrRenderTarget*, const GrProgramInfo&, const GrStencilSettings&, const GrPath*) override;
 
  private:
   /**

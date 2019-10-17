@@ -26,6 +26,7 @@ class GrMtlBuffer : public GrGpuBuffer {
 
   id<MTLBuffer> mtlBuffer() const { return fMtlBuffer; }
   size_t offset() const { return fOffset; }
+  void bind();  // for initial binding of XferGpuToCpu buffers
 
  protected:
   GrMtlBuffer(GrMtlGpu*, size_t size, GrGpuBufferType intendedType, GrAccessPattern);

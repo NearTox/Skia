@@ -58,7 +58,8 @@ class GrDawnProgramDataManager : public GrGLSLProgramDataManager {
   }
 
   void uploadUniformBuffers(
-      GrDawnRingBuffer::Slice geometryBuffer, GrDawnRingBuffer::Slice fragmentBuffer) const;
+      GrDawnGpu* gpu, GrDawnRingBuffer::Slice geometryBuffer,
+      GrDawnRingBuffer::Slice fragmentBuffer) const;
 
   uint32_t geometryUniformSize() const { return fGeometryUniformSize; }
   uint32_t fragmentUniformSize() const { return fFragmentUniformSize; }

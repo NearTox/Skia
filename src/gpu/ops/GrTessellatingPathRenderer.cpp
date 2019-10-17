@@ -214,7 +214,7 @@ class TessellatingPathOp final : public GrMeshDrawOp {
       // include the path bounds.
       devBounds.join(SkRect::Make(fDevClipBounds));
     }
-    this->setBounds(devBounds, HasAABloat::kNo, IsZeroArea::kNo);
+    this->setBounds(devBounds, HasAABloat::kNo, IsHairline::kNo);
   }
 
   FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }

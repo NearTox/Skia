@@ -79,13 +79,13 @@ bool GrVkSecondaryCBDrawContext::characterize(SkSurfaceCharacterization* charact
   // We current don't support textured GrVkSecondaryCBDrawContexts.
   SkASSERT(!rtc->asTextureProxy());
 
-  SkColorType ct = GrColorTypeToSkColorType(rtc->colorSpaceInfo().colorType());
+  SkColorType ct = GrColorTypeToSkColorType(rtc->colorInfo().colorType());
   if (ct == kUnknown_SkColorType) {
     return false;
   }
 
   SkImageInfo ii = SkImageInfo::Make(
-      rtc->width(), rtc->height(), ct, kPremul_SkAlphaType, rtc->colorSpaceInfo().refColorSpace());
+      rtc->width(), rtc->height(), ct, kPremul_SkAlphaType, rtc->colorInfo().refColorSpace());
 
   GrBackendFormat format = rtc->asRenderTargetProxy()->backendFormat();
 
@@ -126,7 +126,7 @@ bool GrVkSecondaryCBDrawContext::isCompatible(
     return false;
   }
 
-  SkColorType rtColorType = GrColorTypeToSkColorType(rtc->colorSpaceInfo().colorType());
+  SkColorType rtColorType = GrColorTypeToSkColorType(rtc->colorInfo().colorType());
   if (rtColorType == kUnknown_SkColorType) {
     return false;
   }
@@ -141,7 +141,7 @@ bool GrVkSecondaryCBDrawContext::isCompatible(
          characterization.width() == rtc->width() && characterization.height() == rtc->height() &&
          characterization.colorType() == rtColorType &&
          characterization.sampleCount() == rtc->numSamples() &&
-         SkColorSpace::Equals(characterization.colorSpace(), rtc->colorSpaceInfo().colorSpace()) &&
+         SkColorSpace::Equals(characterization.colorSpace(), rtc->colorInfo().colorSpace()) &&
          characterization.isProtected() == isProtected &&
          characterization.surfaceProps() == rtc->surfaceProps();
 }

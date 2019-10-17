@@ -18,7 +18,7 @@ class SkRectPriv {
   static SkIRect MakeILarge() {
     // SK_MaxS32 >> 1 seemed better, but it did not survive round-trip with SkRect and rounding.
     // Also, 1 << 29 can be perfectly represented in float, while SK_MaxS32 >> 1 cannot.
-    constexpr int32_t large = 1 << 29;
+    const int32_t large = 1 << 29;
     return {-large, -large, large, large};
   }
 

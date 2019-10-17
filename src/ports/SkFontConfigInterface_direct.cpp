@@ -69,7 +69,7 @@ struct FCLocker {
     SkDEBUGCODE(
         if (FcGetVersion() < 21091) { f_c_mutex().assertHeld(); } else {
           SkASSERT(true == *THREAD_FC_LOCKED);
-        });
+        })
   }
 };
 
@@ -502,7 +502,7 @@ SkFontConfigInterfaceDirect::SkFontConfigInterfaceDirect() {
 
   FcInit();
 
-  SkDEBUGCODE(fontconfiginterface_unittest());
+  SkDEBUGCODE(fontconfiginterface_unittest();)
 }
 
 SkFontConfigInterfaceDirect::~SkFontConfigInterfaceDirect() {}

@@ -31,8 +31,8 @@ static constexpr auto kAssumedColorType = kRGBA_8888_SkColorType;
 
 SkImage_GpuYUVA::SkImage_GpuYUVA(
     sk_sp<GrContext> context, int width, int height, uint32_t uniqueID, SkYUVColorSpace colorSpace,
-    sk_sp<GrTextureProxy> proxies[], int numProxies, const SkYUVAIndex yuvaIndices[4],
-    GrSurfaceOrigin origin, sk_sp<SkColorSpace> imageColorSpace)
+    sk_sp<GrTextureProxy> proxies[], GrColorType proxyColorTypes[], int numProxies,
+    const SkYUVAIndex yuvaIndices[4], GrSurfaceOrigin origin, sk_sp<SkColorSpace> imageColorSpace)
     : INHERITED(
           std::move(context), width, height, uniqueID, kAssumedColorType,
           // If an alpha channel is present we always switch to kPremul. This is because,
@@ -43,12 +43,12 @@ SkImage_GpuYUVA::SkImage_GpuYUVA(
       fYUVColorSpace(colorSpace),
       fOrigin(origin) {
   // The caller should have done this work, just verifying
-  SkDEBUGCODE(int textureCount);
-  SkASSERT(SkYUVAIndex::AreValidIndices(yuvaIndices, &textureCount));
+  SkDEBUGCODE(int textureCount;) SkASSERT(SkYUVAIndex::AreValidIndices(yuvaIndices, &textureCount));
   SkASSERT(textureCount == fNumProxies);
 
   for (int i = 0; i < numProxies; ++i) {
     fProxies[i] = std::move(proxies[i]);
+    fProxyColorTypes[i] = proxyColorTypes[i];
   }
   memcpy(fYUVAIndices, yuvaIndices, 4 * sizeof(SkYUVAIndex));
 }
@@ -70,8 +70,8 @@ SkImage_GpuYUVA::SkImage_GpuYUVA(const SkImage_GpuYUVA* image, sk_sp<SkColorSpac
       ,
       fFromColorSpace(image->colorSpace() ? image->refColorSpace() : SkColorSpace::MakeSRGB()) {
   // The caller should have done this work, just verifying
-  SkDEBUGCODE(int textureCount);
-  SkASSERT(SkYUVAIndex::AreValidIndices(image->fYUVAIndices, &textureCount));
+  SkDEBUGCODE(int textureCount;)
+      SkASSERT(SkYUVAIndex::AreValidIndices(image->fYUVAIndices, &textureCount));
   SkASSERT(textureCount == fNumProxies);
 
   if (image->fRGBProxy) {
@@ -79,6 +79,7 @@ SkImage_GpuYUVA::SkImage_GpuYUVA(const SkImage_GpuYUVA* image, sk_sp<SkColorSpac
   } else {
     for (int i = 0; i < fNumProxies; ++i) {
       fProxies[i] = image->fProxies[i];  // we ref in this case, not move
+      fProxyColorTypes[i] = image->fProxyColorTypes[i];
     }
   }
   memcpy(fYUVAIndices, image->fYUVAIndices, 4 * sizeof(SkYUVAIndex));
@@ -99,7 +100,8 @@ bool SkImage_GpuYUVA::setupMipmapsForPlanes(GrRecordingContext* context) const {
     if (mipCount && GrGpu::IsACopyNeededForMips(
                         fContext->priv().caps(), fProxies[i].get(), GrSamplerState::Filter::kMipMap,
                         &copyParams)) {
-      auto mippedProxy = GrCopyBaseMipMapToTextureProxy(context, fProxies[i].get());
+      auto mippedProxy =
+          GrCopyBaseMipMapToTextureProxy(context, fProxies[i].get(), fProxyColorTypes[i]);
       if (!mippedProxy) {
         return false;
       }
@@ -179,7 +181,8 @@ sk_sp<GrTextureProxy> SkImage_GpuYUVA::asMippedTextureProxyRef(GrRecordingContex
   }
 
   // need to generate mips for the proxy
-  if (auto mippedProxy = GrCopyBaseMipMapToTextureProxy(context, proxy.get())) {
+  GrColorType srcColorType = SkColorTypeToGrColorType(this->colorType());
+  if (auto mippedProxy = GrCopyBaseMipMapToTextureProxy(context, proxy.get(), srcColorType)) {
     fRGBProxy = mippedProxy;
     return mippedProxy;
   }
@@ -210,7 +213,7 @@ sk_sp<SkImage> SkImage_GpuYUVA::onMakeColorTypeAndColorSpace(
 sk_sp<SkImage> SkImage_GpuYUVA::onReinterpretColorSpace(sk_sp<SkColorSpace> newCS) const {
   return sk_make_sp<SkImage_GpuYUVA>(
       fContext, this->width(), this->height(), kNeedNewImageUniqueID, fYUVColorSpace, fProxies,
-      fNumProxies, fYUVAIndices, fOrigin, std::move(newCS));
+      fProxyColorTypes, fNumProxies, fYUVAIndices, fOrigin, std::move(newCS));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -229,10 +232,15 @@ sk_sp<SkImage> SkImage::MakeFromYUVATextures(
           ctx, yuvaTextures, numTextures, yuvaIndices, imageOrigin, tempTextureProxies)) {
     return nullptr;
   }
+  GrColorType proxyColorTypes[4];
+  for (int i = 0; i < numTextures; ++i) {
+    proxyColorTypes[i] = ctx->priv().caps()->getYUVAColorTypeFromBackendFormat(
+        yuvaTextures[i].getBackendFormat(), yuvaIndices[3].fIndex == i);
+  }
 
   return sk_make_sp<SkImage_GpuYUVA>(
       sk_ref_sp(ctx), imageSize.width(), imageSize.height(), kNeedNewImageUniqueID, colorSpace,
-      tempTextureProxies, numTextures, yuvaIndices, imageOrigin, imageColorSpace);
+      tempTextureProxies, proxyColorTypes, numTextures, yuvaIndices, imageOrigin, imageColorSpace);
 }
 
 sk_sp<SkImage> SkImage::MakeFromYUVAPixmaps(
@@ -255,6 +263,7 @@ sk_sp<SkImage> SkImage::MakeFromYUVAPixmaps(
   // Make proxies
   GrProxyProvider* proxyProvider = context->priv().proxyProvider();
   sk_sp<GrTextureProxy> tempTextureProxies[4];
+  GrColorType proxyColorTypes[4];
   for (int i = 0; i < numPixmaps; ++i) {
     const SkPixmap* pixmap = &yuvaPixmaps[i];
     SkAutoPixmapStorage resized;
@@ -278,11 +287,13 @@ sk_sp<SkImage> SkImage::MakeFromYUVAPixmaps(
     if (!tempTextureProxies[i]) {
       return nullptr;
     }
+    proxyColorTypes[i] = SkColorTypeToGrColorType(bmp.colorType());
   }
 
   return sk_make_sp<SkImage_GpuYUVA>(
       sk_ref_sp(context), imageSize.width(), imageSize.height(), kNeedNewImageUniqueID,
-      yuvColorSpace, tempTextureProxies, numPixmaps, yuvaIndices, imageOrigin, imageColorSpace);
+      yuvColorSpace, tempTextureProxies, proxyColorTypes, numPixmaps, yuvaIndices, imageOrigin,
+      imageColorSpace);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -343,6 +354,7 @@ sk_sp<SkImage> SkImage_GpuYUVA::MakePromiseYUVATexture(
 
   // Get lazy proxies
   sk_sp<GrTextureProxy> proxies[4];
+  GrColorType proxyColorTypes[4];
   for (int texIdx = 0; texIdx < numTextures; ++texIdx) {
     GrColorType colorType = context->priv().caps()->getYUVAColorTypeFromBackendFormat(
         yuvaFormats[texIdx], yuvaIndices[3].fIndex == texIdx);
@@ -358,9 +370,10 @@ sk_sp<SkImage> SkImage_GpuYUVA::MakePromiseYUVATexture(
     if (!proxies[texIdx]) {
       return nullptr;
     }
+    proxyColorTypes[texIdx] = colorType;
   }
 
   return sk_make_sp<SkImage_GpuYUVA>(
       sk_ref_sp(context), imageWidth, imageHeight, kNeedNewImageUniqueID, yuvColorSpace, proxies,
-      numTextures, yuvaIndices, imageOrigin, std::move(imageColorSpace));
+      proxyColorTypes, numTextures, yuvaIndices, imageOrigin, std::move(imageColorSpace));
 }

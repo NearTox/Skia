@@ -706,7 +706,7 @@ class SK_API SkCanvas {
 
       @return  depth of save state stack
   */
-  int getSaveCount() const noexcept;
+  int getSaveCount() const;
 
   /** Restores state to SkMatrix and clip values when save(), saveLayer(),
       saveLayerPreserveLCDTextRequests(), or saveLayerAlpha() returned saveCount.
@@ -2712,7 +2712,7 @@ class SK_API SkCanvas {
 #ifdef SK_DEBUG
   void validateClip() const;
 #else
-  void validateClip() const noexcept {}
+  void validateClip() const {}
 #endif
 
   std::unique_ptr<SkGlyphRunBuilder> fScratchGlyphRunBuilder;

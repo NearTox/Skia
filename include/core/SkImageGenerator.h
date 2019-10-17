@@ -169,7 +169,7 @@ class SK_API SkImageGenerator {
     return false;
   }
   virtual bool onGetYUVA8Planes(
-      const SkYUVASizeInfo&, const SkYUVAIndex[SkYUVAIndex::kIndexCount], void * [4] /*planes*/) {
+      const SkYUVASizeInfo&, const SkYUVAIndex[SkYUVAIndex::kIndexCount], void* [4] /*planes*/) {
     return false;
   }
 #if SK_SUPPORT_GPU

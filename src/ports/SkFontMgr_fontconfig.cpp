@@ -114,7 +114,7 @@ class FCLocker {
     SkDEBUGCODE(
         if (FcGetVersion() < 21091) { f_c_mutex().assertHeld(); } else {
           SkASSERT(true == *THREAD_FC_LOCKED);
-        });
+        })
   }
 };
 

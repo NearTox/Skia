@@ -94,7 +94,7 @@ void GrTextureRenderTargetProxy::initSurfaceFlags(const GrCaps& caps) {
   }
 }
 
-size_t GrTextureRenderTargetProxy::onUninstantiatedGpuMemorySize() const {
+size_t GrTextureRenderTargetProxy::onUninstantiatedGpuMemorySize(const GrCaps& caps) const {
   int colorSamplesPerPixel = this->numSamples();
   if (colorSamplesPerPixel > 1) {
     // Add one to account for the resolve buffer.
@@ -103,8 +103,8 @@ size_t GrTextureRenderTargetProxy::onUninstantiatedGpuMemorySize() const {
 
   // TODO: do we have enough information to improve this worst case estimate?
   return GrSurface::ComputeSize(
-      this->config(), this->width(), this->height(), colorSamplesPerPixel, this->proxyMipMapped(),
-      !this->priv().isExact());
+      caps, this->backendFormat(), this->width(), this->height(), colorSamplesPerPixel,
+      this->proxyMipMapped(), !this->priv().isExact());
 }
 
 bool GrTextureRenderTargetProxy::instantiate(GrResourceProvider* resourceProvider) {

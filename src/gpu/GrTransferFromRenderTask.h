@@ -24,7 +24,6 @@ class GrTransferFromRenderTask final : public GrRenderTask {
         fDstOffset(dstOffset) {}
 
  private:
-  void onPrepare(GrOpFlushState*) override {}
   bool onIsUsed(GrSurfaceProxy* proxy) const override {
     SkASSERT(!fTarget);
     return proxy == fSrcProxy.get();
@@ -33,7 +32,9 @@ class GrTransferFromRenderTask final : public GrRenderTask {
   void handleInternalAllocationFailure() override {}
   void gatherProxyIntervals(GrResourceAllocator*) const override;
 
-  ExpectedOutcome onMakeClosed(const GrCaps&) override { return ExpectedOutcome::kTargetUnchanged; }
+  ExpectedOutcome onMakeClosed(const GrCaps&, SkIRect*) override {
+    return ExpectedOutcome::kTargetUnchanged;
+  }
 
   bool onExecute(GrOpFlushState*) override;
 

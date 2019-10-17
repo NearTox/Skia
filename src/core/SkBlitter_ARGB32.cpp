@@ -714,17 +714,17 @@ void SkARGB32_Blitter::blitAntiH(int x, int y, const SkAlpha antialias[], const 
 
 void SkARGB32_Blitter::blitAntiH2(int x, int y, U8CPU a0, U8CPU a1) {
   uint32_t* device = fDevice.writable_addr32(x, y);
-  SkDEBUGCODE((void)fDevice.writable_addr32(x + 1, y));
+  SkDEBUGCODE((void)fDevice.writable_addr32(x + 1, y);)
 
-  device[0] = SkBlendARGB32(fPMColor, device[0], a0);
+      device[0] = SkBlendARGB32(fPMColor, device[0], a0);
   device[1] = SkBlendARGB32(fPMColor, device[1], a1);
 }
 
 void SkARGB32_Blitter::blitAntiV2(int x, int y, U8CPU a0, U8CPU a1) {
   uint32_t* device = fDevice.writable_addr32(x, y);
-  SkDEBUGCODE((void)fDevice.writable_addr32(x, y + 1));
+  SkDEBUGCODE((void)fDevice.writable_addr32(x, y + 1);)
 
-  device[0] = SkBlendARGB32(fPMColor, device[0], a0);
+      device[0] = SkBlendARGB32(fPMColor, device[0], a0);
   device = (uint32_t*)((char*)device + fDevice.rowBytes());
   device[0] = SkBlendARGB32(fPMColor, device[0], a1);
 }
@@ -822,17 +822,17 @@ void SkARGB32_Opaque_Blitter::blitMask(const SkMask& mask, const SkIRect& clip) 
 
 void SkARGB32_Opaque_Blitter::blitAntiH2(int x, int y, U8CPU a0, U8CPU a1) {
   uint32_t* device = fDevice.writable_addr32(x, y);
-  SkDEBUGCODE((void)fDevice.writable_addr32(x + 1, y));
+  SkDEBUGCODE((void)fDevice.writable_addr32(x + 1, y);)
 
-  device[0] = SkFastFourByteInterp(fPMColor, device[0], a0);
+      device[0] = SkFastFourByteInterp(fPMColor, device[0], a0);
   device[1] = SkFastFourByteInterp(fPMColor, device[1], a1);
 }
 
 void SkARGB32_Opaque_Blitter::blitAntiV2(int x, int y, U8CPU a0, U8CPU a1) {
   uint32_t* device = fDevice.writable_addr32(x, y);
-  SkDEBUGCODE((void)fDevice.writable_addr32(x, y + 1));
+  SkDEBUGCODE((void)fDevice.writable_addr32(x, y + 1);)
 
-  device[0] = SkFastFourByteInterp(fPMColor, device[0], a0);
+      device[0] = SkFastFourByteInterp(fPMColor, device[0], a0);
   device = (uint32_t*)((char*)device + fDevice.rowBytes());
   device[0] = SkFastFourByteInterp(fPMColor, device[0], a1);
 }
@@ -919,17 +919,17 @@ void SkARGB32_Black_Blitter::blitAntiH(
 
 void SkARGB32_Black_Blitter::blitAntiH2(int x, int y, U8CPU a0, U8CPU a1) {
   uint32_t* device = fDevice.writable_addr32(x, y);
-  SkDEBUGCODE((void)fDevice.writable_addr32(x + 1, y));
+  SkDEBUGCODE((void)fDevice.writable_addr32(x + 1, y);)
 
-  device[0] = (a0 << SK_A32_SHIFT) + SkAlphaMulQ(device[0], 256 - a0);
+      device[0] = (a0 << SK_A32_SHIFT) + SkAlphaMulQ(device[0], 256 - a0);
   device[1] = (a1 << SK_A32_SHIFT) + SkAlphaMulQ(device[1], 256 - a1);
 }
 
 void SkARGB32_Black_Blitter::blitAntiV2(int x, int y, U8CPU a0, U8CPU a1) {
   uint32_t* device = fDevice.writable_addr32(x, y);
-  SkDEBUGCODE((void)fDevice.writable_addr32(x, y + 1));
+  SkDEBUGCODE((void)fDevice.writable_addr32(x, y + 1);)
 
-  device[0] = (a0 << SK_A32_SHIFT) + SkAlphaMulQ(device[0], 256 - a0);
+      device[0] = (a0 << SK_A32_SHIFT) + SkAlphaMulQ(device[0], 256 - a0);
   device = (uint32_t*)((char*)device + fDevice.rowBytes());
   device[0] = (a1 << SK_A32_SHIFT) + SkAlphaMulQ(device[0], 256 - a1);
 }

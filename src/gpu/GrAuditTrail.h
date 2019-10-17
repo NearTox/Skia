@@ -94,10 +94,10 @@ class GrAuditTrail {
   // returns a json string of all of the ops associated with a given client id
   void toJson(SkJSONWriter& writer, int clientID) const;
 
-  bool isEnabled() noexcept { return fEnabled; }
-  void setEnabled(bool enabled) noexcept { fEnabled = enabled; }
+  bool isEnabled() { return fEnabled; }
+  void setEnabled(bool enabled) { fEnabled = enabled; }
 
-  void setClientID(int clientID) noexcept { fClientID = clientID; }
+  void setClientID(int clientID) { fClientID = clientID; }
 
   // We could just return our internal bookkeeping struct if copying the data out becomes
   // a performance issue, but until then its nice to decouple

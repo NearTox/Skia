@@ -20,7 +20,7 @@
 #include "modules/sksg/include/SkSGText.h"
 #include "modules/sksg/include/SkSGTransform.h"
 #include "src/core/SkMakeUnique.h"
-#include "tools/timer/AnimTimer.h"
+#include "tools/timer/TimeUtils.h"
 
 #include <cmath>
 #include <utility>
@@ -44,7 +44,7 @@ class SlideAdapter final : public sksg::RenderNode {
  public:
   explicit SlideAdapter(sk_sp<Slide> slide) : fSlide(std::move(slide)) { SkASSERT(fSlide); }
 
-  std::unique_ptr<sksg::Animator> makeForwardingAnimator() {
+  sk_sp<sksg::Animator> makeForwardingAnimator() {
     // Trivial sksg::Animator -> skottie::Animation tick adapter
     class ForwardingAnimator final : public sksg::Animator {
      public:
@@ -57,7 +57,7 @@ class SlideAdapter final : public sksg::RenderNode {
       sk_sp<SlideAdapter> fAdapter;
     };
 
-    return skstd::make_unique<ForwardingAnimator>(sk_ref_sp(this));
+    return sk_make_sp<ForwardingAnimator>(sk_ref_sp(this));
   }
 
  protected:
@@ -78,7 +78,7 @@ class SlideAdapter final : public sksg::RenderNode {
 
  private:
   void tick(SkMSec t) {
-    fSlide->animate(AnimTimer(t * 1e6));
+    fSlide->animate(t * 1e6);
     this->invalidate();
   }
 
@@ -150,7 +150,7 @@ class SlideDir::FocusController final : public sksg::Animator {
     fState = State::kUnfocusing;
   }
 
-  bool onMouse(SkScalar x, SkScalar y, sk_app::Window::InputState state, uint32_t modifiers) {
+  bool onMouse(SkScalar x, SkScalar y, skui::InputState state, skui::ModifierKey modifiers) {
     SkASSERT(fTarget);
 
     if (!fRect.contains(x, y)) {
@@ -330,13 +330,14 @@ SkISize SlideDir::getDimensions() const {
 
 void SlideDir::draw(SkCanvas* canvas) { fScene->render(canvas); }
 
-bool SlideDir::animate(const AnimTimer& timer) {
+bool SlideDir::animate(double nanos) {
+  SkMSec msec = TimeUtils::NanosToMSec(nanos);
   if (fTimeBase == 0) {
     // Reset the animation time.
-    fTimeBase = timer.msec();
+    fTimeBase = msec;
   }
 
-  const auto t = timer.msec() - fTimeBase;
+  const auto t = msec - fTimeBase;
   fScene->animate(t);
   fFocusController->tick(t);
 
@@ -356,8 +357,9 @@ bool SlideDir::onChar(SkUnichar c) {
 }
 
 bool SlideDir::onMouse(
-    SkScalar x, SkScalar y, sk_app::Window::InputState state, uint32_t modifiers) {
-  if (state == sk_app::Window::kMove_InputState || modifiers) return false;
+    SkScalar x, SkScalar y, skui::InputState state, skui::ModifierKey modifiers) {
+  modifiers &= ~skui::ModifierKey::kFirstPress;
+  if (state == skui::InputState::kMove || skstd::Any(modifiers)) return false;
 
   if (fFocusController->hasFocus()) {
     return fFocusController->onMouse(x, y, state, modifiers);
@@ -369,11 +371,11 @@ bool SlideDir::onMouse(
   static constexpr SkScalar kClickMoveTolerance = 4;
 
   switch (state) {
-    case sk_app::Window::kDown_InputState:
+    case skui::InputState::kDown:
       fTrackingCell = cell;
       fTrackingPos = SkPoint::Make(x, y);
       break;
-    case sk_app::Window::kUp_InputState:
+    case skui::InputState::kUp:
       if (cell == fTrackingCell &&
           SkPoint::Distance(fTrackingPos, SkPoint::Make(x, y)) < kClickMoveTolerance) {
         fFocusController->startFocus(cell);

@@ -21,7 +21,7 @@ class SkTypeface;
 
 class SK_API SkFontStyleSet : public SkRefCnt {
  public:
-  virtual int count() noexcept = 0;
+  virtual int count() = 0;
   virtual void getStyle(int index, SkFontStyle*, SkString* style) = 0;
   virtual SkTypeface* createTypeface(int index) = 0;
   virtual SkTypeface* matchStyle(const SkFontStyle& pattern) = 0;

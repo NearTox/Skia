@@ -47,8 +47,7 @@ bool SkBitmapRegionCodec::decodeRegion(
 
   // Create the image info for the decode
   SkAlphaType dstAlphaType = fCodec->computeOutputAlphaType(requireUnpremul);
-  SkImageInfo decodeInfo = SkImageInfo::Make(
-      scaledSize.width(), scaledSize.height(), dstColorType, dstAlphaType, dstColorSpace);
+  SkImageInfo decodeInfo = SkImageInfo::Make(scaledSize, dstColorType, dstAlphaType, dstColorSpace);
 
   // Initialize the destination bitmap
   int scaledOutX = 0;

@@ -10,7 +10,6 @@
 
 #include <atomic>
 #include <utility>
-#include "include/core/SkTypes.h"
 
 // SkOnce provides call-once guarantees for Skia, much like std::once_flag/std::call_once().
 //
@@ -19,10 +18,10 @@
 
 class SkOnce {
  public:
-  constexpr SkOnce() noexcept = default;
+  constexpr SkOnce() = default;
 
   template <typename Fn, typename... Args>
-  void operator()(Fn&& fn, Args&&... args) noexcept(std::is_nothrow_invocable_v<Fn, Args...>) {
+  void operator()(Fn&& fn, Args&&... args) {
     auto state = fState.load(std::memory_order_acquire);
 
     if (state == Done) {

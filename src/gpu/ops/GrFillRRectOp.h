@@ -77,7 +77,10 @@ class GrFillRRectOp : public GrDrawOp {
   int fInstanceStride = 0;
 
   sk_sp<const GrBuffer> fInstanceBuffer;
+  sk_sp<const GrBuffer> fVertexBuffer;
+  sk_sp<const GrBuffer> fIndexBuffer;
   int fBaseInstance;
+  int fIndexCount = 0;
 
   friend class GrOpMemoryPool;
 };

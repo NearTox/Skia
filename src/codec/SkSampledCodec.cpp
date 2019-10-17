@@ -100,7 +100,7 @@ SkCodec::Result SkSampledCodec::onGetAndroidPixels(
   int scaledSubsetWidth = info.width();
   int scaledSubsetHeight = info.height();
 
-  const SkImageInfo scaledInfo = info.makeWH(scaledSize.width(), scaledSize.height());
+  const SkImageInfo scaledInfo = info.makeDimensions(scaledSize);
 
   {
     // Although startScanlineDecode expects the bottom and top to match the
@@ -208,7 +208,7 @@ SkCodec::Result SkSampledCodec::sampledDecode(
   const int startY = samplingOffsetY + subsetY;
   const int dstHeight = info.height();
 
-  const SkImageInfo nativeInfo = info.makeWH(nativeSize.width(), nativeSize.height());
+  const SkImageInfo nativeInfo = info.makeDimensions(nativeSize);
 
   {
     // Although startScanlineDecode expects the bottom and top to match the

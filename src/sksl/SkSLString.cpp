@@ -224,8 +224,7 @@ String to_string(double value) {
 
 SKSL_INT stoi(const String& s) {
   char* p;
-  SkDEBUGCODE(errno = 0);
-  long result = strtoul(s.c_str(), &p, 0);
+  SkDEBUGCODE(errno = 0;) long result = strtoul(s.c_str(), &p, 0);
   SkASSERT(*p == 0);
   SkASSERT(!errno);
   return result;
@@ -243,8 +242,7 @@ SKSL_FLOAT stod(const String& s) {
 
 long stol(const String& s) {
   char* p;
-  SkDEBUGCODE(errno = 0);
-  long result = strtoul(s.c_str(), &p, 0);
+  SkDEBUGCODE(errno = 0;) long result = strtoul(s.c_str(), &p, 0);
   SkASSERT(*p == 0);
   SkASSERT(!errno);
   return result;

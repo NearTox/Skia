@@ -49,7 +49,7 @@ class StringArtView : public Sample {
     canvas->drawPath(path, paint);
   }
 
-  Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, ModifierKey) override {
+  Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, skui::ModifierKey) override {
     fAngle = x / width();
     return nullptr;
   }

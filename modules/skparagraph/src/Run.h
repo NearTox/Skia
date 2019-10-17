@@ -39,7 +39,7 @@ struct RunShifts {
   SkSTArray<128, SkScalar, true> fShifts;
 };
 
-class LineMetrics;
+class InternalLineMetrics;
 class Run {
  public:
   Run() = default;
@@ -100,7 +100,7 @@ class Run {
 
   bool isEllipsis() const { return fEllipsis; }
 
-  void updateMetrics(LineMetrics* endlineMetrics);
+  void updateMetrics(InternalLineMetrics* endlineMetrics);
 
   void setClusterRange(size_t from, size_t to) { fClusterRange = ClusterRange(from, to); }
   SkRect clip() const { return SkRect::MakeXYWH(fOffset.fX, fOffset.fY, fAdvance.fX, fAdvance.fY); }
@@ -124,7 +124,8 @@ class Run {
       SkScalar height)>;
   void iterateThroughClustersInTextOrder(const ClusterVisitor& visitor);
 
-  std::tuple<bool, ClusterIndex, ClusterIndex> findLimitingClusters(TextRange) const;
+  std::tuple<bool, ClusterIndex, ClusterIndex> findLimitingClusters(
+      TextRange text, bool onlyInnerClusters) const;
   SkSpan<const SkGlyphID> glyphs() const {
     return SkSpan<const SkGlyphID>(fGlyphs.begin(), fGlyphs.size());
   }
@@ -141,7 +142,7 @@ class Run {
  private:
   friend class ParagraphImpl;
   friend class TextLine;
-  friend class LineMetrics;
+  friend class InternalLineMetrics;
   friend class ParagraphCache;
 
   ParagraphImpl* fMaster;
@@ -203,6 +204,7 @@ class Cluster {
         fWidth(),
         fSpacing(0),
         fHeight(),
+        fHalfLetterSpacing(0.0),
         fWhiteSpaces(false),
         fBreakType(None) {}
 
@@ -237,6 +239,9 @@ class Cluster {
   SkScalar width() const { return fWidth; }
   SkScalar height() const { return fHeight; }
   size_t size() const { return fEnd - fStart; }
+
+  void setHalfLetterSpacing(SkScalar halfLetterSpacing) { fHalfLetterSpacing = halfLetterSpacing; }
+  SkScalar getHalfLetterSpacing() const { return fHalfLetterSpacing; }
 
   TextRange textRange() const { return fTextRange; }
 
@@ -273,32 +278,40 @@ class Cluster {
   SkScalar fWidth;
   SkScalar fSpacing;
   SkScalar fHeight;
+  SkScalar fHalfLetterSpacing;
   bool fWhiteSpaces;
   BreakType fBreakType;
 };
 
-class LineMetrics {
+class InternalLineMetrics {
  public:
-  LineMetrics() { clean(); }
-  LineMetrics(bool forceStrut) {
+  InternalLineMetrics() {
+    clean();
+    fForceStrut = false;
+  }
+
+  InternalLineMetrics(bool forceStrut) {
     clean();
     fForceStrut = forceStrut;
   }
 
-  LineMetrics(SkScalar a, SkScalar d, SkScalar l) {
+  InternalLineMetrics(SkScalar a, SkScalar d, SkScalar l) {
     fAscent = a;
     fDescent = d;
     fLeading = l;
     fForceStrut = false;
   }
 
-  LineMetrics(const SkFont& font, bool forceStrut) {
+  InternalLineMetrics(const SkFont& font, bool forceStrut) {
     SkFontMetrics metrics;
     font.getMetrics(&metrics);
     fAscent = metrics.fAscent;
     fDescent = metrics.fDescent;
     fLeading = metrics.fLeading;
     fForceStrut = forceStrut;
+    if (fForceStrut) {
+      fHeight = fDescent - fAscent + fLeading;
+    }
   }
 
   void add(Run* run) {
@@ -311,7 +324,7 @@ class LineMetrics {
     fLeading = SkTMax(fLeading, run->correctLeading());
   }
 
-  void add(LineMetrics other) {
+  void add(InternalLineMetrics other) {
     fAscent = SkTMin(fAscent, other.fAscent);
     fDescent = SkTMax(fDescent, other.fDescent);
     fLeading = SkTMax(fLeading, other.fLeading);
@@ -320,19 +333,35 @@ class LineMetrics {
     fAscent = 0;
     fDescent = 0;
     fLeading = 0;
-    fForceStrut = false;
+    // fForceStrut = false;
   }
 
   SkScalar delta() const { return height() - ideographicBaseline(); }
 
-  void updateLineMetrics(LineMetrics& metrics) {
-    metrics.fAscent = SkTMin(metrics.fAscent, fAscent);
-    metrics.fDescent = SkTMax(metrics.fDescent, fDescent);
-    metrics.fLeading = SkTMax(metrics.fLeading, fLeading);
+  void updateLineMetrics(InternalLineMetrics& metrics) {
+    if (metrics.fForceStrut) {
+      metrics.fAscent = fAscent;
+      metrics.fDescent = fDescent;
+      metrics.fLeading = fLeading;
+      metrics.fHeight = fDescent - fAscent + fLeading;
+    } else {
+      // This is another of those flutter changes. To be removed...
+      metrics.fAscent = SkTMin(metrics.fAscent, fAscent - fLeading / 2.0f);
+      metrics.fDescent = SkTMax(metrics.fDescent, fDescent + fLeading / 2.0f);
+      // metrics.fLeading = SkTMax(metrics.fLeading, fLeading);
+    }
   }
 
   SkScalar runTop(const Run* run) const { return fLeading / 2 - fAscent + run->ascent() + delta(); }
-  SkScalar height() const { return SkScalarRoundToInt(fDescent - fAscent + fLeading); }
+
+  SkScalar height() const {
+    if (fForceStrut) {
+      return SkScalarRoundToInt(fHeight);
+    } else {
+      return SkScalarRoundToInt(fDescent - fAscent + fLeading);
+    }
+  }
+
   SkScalar alphabeticBaseline() const { return fLeading / 2 - fAscent; }
   SkScalar ideographicBaseline() const { return fDescent - fAscent + fLeading; }
   SkScalar deltaBaselines() const { return fLeading / 2 + fDescent; }
@@ -340,6 +369,7 @@ class LineMetrics {
   SkScalar ascent() const { return fAscent; }
   SkScalar descent() const { return fDescent; }
   SkScalar leading() const { return fLeading; }
+  void setForceStrut(bool value) { fForceStrut = value; }
 
  private:
   friend class TextWrapper;
@@ -348,6 +378,7 @@ class LineMetrics {
   SkScalar fDescent;
   SkScalar fLeading;
   bool fForceStrut;
+  SkScalar fHeight;
 };
 }  // namespace textlayout
 }  // namespace skia

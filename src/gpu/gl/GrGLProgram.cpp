@@ -10,6 +10,7 @@
 #include "src/gpu/GrPathProcessor.h"
 #include "src/gpu/GrPipeline.h"
 #include "src/gpu/GrProcessor.h"
+#include "src/gpu/GrProgramInfo.h"
 #include "src/gpu/GrTexturePriv.h"
 #include "src/gpu/GrXferProcessor.h"
 #include "src/gpu/gl/GrGLBuffer.h"
@@ -64,10 +65,8 @@ void GrGLProgram::abandon() { fProgramID = 0; }
 ///////////////////////////////////////////////////////////////////////////////
 
 void GrGLProgram::updateUniformsAndTextureBindings(
-    const GrRenderTarget* renderTarget, GrSurfaceOrigin origin,
-    const GrPrimitiveProcessor& primProc, const GrPipeline& pipeline,
-    const GrTextureProxy* const primProcTextures[]) {
-  this->setRenderTargetState(renderTarget, origin, primProc);
+    const GrRenderTarget* renderTarget, const GrProgramInfo& programInfo) {
+  this->setRenderTargetState(renderTarget, programInfo.origin(), programInfo.primProc());
 
   // we set the textures, and uniforms for installed processors in a generic way, but subclasses
   // of GLProgram determine how to set coord transforms
@@ -76,23 +75,26 @@ void GrGLProgram::updateUniformsAndTextureBindings(
   // GrGLProgramDataManager. That is, we bind textures for processors in this order:
   // primProc, fragProcs, XP.
   fPrimitiveProcessor->setData(
-      fProgramDataManager, primProc, GrFragmentProcessor::CoordTransformIter(pipeline));
-  if (primProcTextures) {
-    this->updatePrimitiveProcessorTextureBindings(primProc, primProcTextures);
+      fProgramDataManager, programInfo.primProc(),
+      GrFragmentProcessor::CoordTransformIter(programInfo.pipeline()));
+  if (programInfo.hasFixedPrimProcTextures()) {
+    this->updatePrimitiveProcessorTextureBindings(
+        programInfo.primProc(), programInfo.fixedPrimProcTextures());
   }
-  int nextTexSamplerIdx = primProc.numTextureSamplers();
+  int nextTexSamplerIdx = programInfo.primProc().numTextureSamplers();
 
-  this->setFragmentData(pipeline, &nextTexSamplerIdx);
+  this->setFragmentData(programInfo.pipeline(), &nextTexSamplerIdx);
 
-  const GrXferProcessor& xp = pipeline.getXferProcessor();
+  const GrXferProcessor& xp = programInfo.pipeline().getXferProcessor();
   SkIPoint offset;
-  GrTexture* dstTexture = pipeline.peekDstTexture(&offset);
+  GrTexture* dstTexture = programInfo.pipeline().peekDstTexture(&offset);
 
   fXferProcessor->setData(fProgramDataManager, xp, dstTexture, offset);
   if (dstTexture) {
     fGpu->bindTexture(
         nextTexSamplerIdx++, GrSamplerState::ClampNearest(),
-        pipeline.dstTextureProxy()->textureSwizzle(), static_cast<GrGLTexture*>(dstTexture));
+        programInfo.pipeline().dstTextureProxy()->textureSwizzle(),
+        static_cast<GrGLTexture*>(dstTexture));
   }
   SkASSERT(nextTexSamplerIdx == fNumTextureSamplers);
 }

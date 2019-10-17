@@ -5,13 +5,16 @@
  * found in the LICENSE file.
  */
 
+#include "include/gpu/GrContext.h"
+
 #include "include/core/SkTraceMemoryDump.h"
 #include "include/gpu/GrBackendSemaphore.h"
-#include "include/gpu/GrContext.h"
 #include "include/private/SkDeferredDisplayList.h"
 #include "include/private/SkImageInfoPriv.h"
 #include "src/core/SkMakeUnique.h"
 #include "src/core/SkTaskGroup.h"
+#include "src/gpu/GrClientMappedBufferManager.h"
+#include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrDrawingManager.h"
 #include "src/gpu/GrGpu.h"
 #include "src/gpu/GrMemoryPool.h"
@@ -29,9 +32,9 @@
 #include "src/gpu/effects/GrSkSLFP.h"
 #include "src/gpu/text/GrTextBlobCache.h"
 #include "src/gpu/text/GrTextContext.h"
+#include "src/image/SkImage_GpuBase.h"
 #include "src/image/SkSurface_Gpu.h"
 #include <atomic>
-#include <unordered_map>
 
 #define ASSERT_OWNED_PROXY(P) \
   SkASSERT(!(P) || !((P)->peekTexture()) || (P)->peekTexture()->getContext() == this)
@@ -86,6 +89,7 @@ bool GrContext::init(sk_sp<const GrCaps> caps, sk_sp<GrSkSLFPFactoryCache> FPFac
   if (fGpu) {
     fResourceCache = new GrResourceCache(this->caps(), this->singleOwner(), this->contextID());
     fResourceProvider = new GrResourceProvider(fGpu.get(), fResourceCache, this->singleOwner());
+    fMappedBufferManager = skstd::make_unique<GrClientMappedBufferManager>(this->contextID());
   }
 
   if (fResourceCache) {
@@ -120,6 +124,8 @@ void GrContext::abandonContext() {
 
   INHERITED::abandonContext();
 
+  fMappedBufferManager->abandon();
+
   fResourceProvider->abandon();
 
   // Need to cleanup the drawing manager first so all the render targets
@@ -131,6 +137,8 @@ void GrContext::abandonContext() {
   fResourceCache->abandonAll();
 
   fGpu->disconnect(GrGpu::DisconnectType::kAbandon);
+
+  fMappedBufferManager.reset();
 }
 
 void GrContext::releaseResourcesAndAbandonContext() {
@@ -139,6 +147,8 @@ void GrContext::releaseResourcesAndAbandonContext() {
   }
 
   INHERITED::abandonContext();
+
+  fMappedBufferManager.reset();
 
   fResourceProvider->abandon();
 
@@ -178,6 +188,11 @@ void GrContext::freeGpuResources() {
 
 void GrContext::purgeUnlockedResources(bool scratchResourcesOnly) {
   ASSERT_SINGLE_OWNER
+
+  if (this->abandoned()) {
+    return;
+  }
+
   fResourceCache->purgeUnlockedResources(scratchResourcesOnly);
   fResourceCache->purgeAsNeeded();
 
@@ -191,6 +206,11 @@ void GrContext::performDeferredCleanup(std::chrono::milliseconds msNotUsed) {
 
   ASSERT_SINGLE_OWNER
 
+  if (this->abandoned()) {
+    return;
+  }
+
+  fMappedBufferManager->process();
   auto purgeTime = GrStdSteadyClock::now() - msNotUsed;
 
   fResourceCache->purgeAsNeeded();
@@ -207,6 +227,11 @@ void GrContext::performDeferredCleanup(std::chrono::milliseconds msNotUsed) {
 
 void GrContext::purgeUnlockedResources(size_t bytesToPurge, bool preferScratchResources) {
   ASSERT_SINGLE_OWNER
+
+  if (this->abandoned()) {
+    return;
+  }
+
   fResourceCache->purgeUnlockedResources(bytesToPurge, preferScratchResources);
 }
 
@@ -226,11 +251,21 @@ size_t GrContext::getResourceCachePurgeableBytes() const {
   return fResourceCache->getPurgeableBytes();
 }
 
-size_t GrContext::ComputeTextureSize(
-    SkColorType type, int width, int height, GrMipMapped mipMapped, bool useNextPow2) {
+size_t GrContext::ComputeImageSize(sk_sp<SkImage> image, GrMipMapped mipMapped, bool useNextPow2) {
+  if (!image->isTextureBacked()) {
+    return 0;
+  }
+  SkImage_GpuBase* gpuImage = static_cast<SkImage_GpuBase*>(as_IB(image.get()));
+  GrTextureProxy* proxy = gpuImage->peekProxy();
+  if (!proxy) {
+    return 0;
+  }
+
+  const GrCaps& caps = *gpuImage->context()->priv().caps();
   int colorSamplesPerPixel = 1;
   return GrSurface::ComputeSize(
-      SkColorType2GrPixelConfig(type), width, height, colorSamplesPerPixel, mipMapped, useNextPow2);
+      caps, proxy->backendFormat(), image->width(), image->height(), colorSamplesPerPixel,
+      mipMapped, useNextPow2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -349,10 +384,6 @@ GrBackendTexture GrContext::createBackendTexture(
     return GrBackendTexture();
   }
 
-  if (!backendFormat.isValid()) {
-    return GrBackendTexture();
-  }
-
   return fGpu->createBackendTexture(
       width, height, backendFormat, mipMapped, renderable, nullptr, 0, nullptr, isProtected);
 }
@@ -369,16 +400,11 @@ GrBackendTexture GrContext::createBackendTexture(
   }
 
   const GrBackendFormat format = this->defaultBackendFormat(skColorType, renderable);
-  if (!format.isValid()) {
-    return GrBackendTexture();
-  }
 
   return this->createBackendTexture(width, height, format, mipMapped, renderable, isProtected);
 }
 
 GrBackendTexture GrContext::createBackendTexture(const SkSurfaceCharacterization& c) {
-  const GrCaps* caps = this->caps();
-
   if (!this->asDirectContext() || !c.isValid()) {
     return GrBackendTexture();
   }
@@ -398,10 +424,6 @@ GrBackendTexture GrContext::createBackendTexture(const SkSurfaceCharacterization
 
   const GrBackendFormat format = this->defaultBackendFormat(c.colorType(), GrRenderable::kYes);
   if (!format.isValid()) {
-    return GrBackendTexture();
-  }
-
-  if (!SkSurface_Gpu::Valid(caps, format)) {
     return GrBackendTexture();
   }
 
@@ -436,10 +458,6 @@ GrBackendTexture GrContext::createBackendTexture(
     return GrBackendTexture();
   }
 
-  if (!SkSurface_Gpu::Valid(this->caps(), format)) {
-    return GrBackendTexture();
-  }
-
   GrBackendTexture result = this->createBackendTexture(
       c.width(), c.height(), format, color, GrMipMapped(c.isMipMapped()), GrRenderable::kYes,
       c.isProtected());
@@ -456,10 +474,6 @@ GrBackendTexture GrContext::createBackendTexture(
   }
 
   if (this->abandoned()) {
-    return GrBackendTexture();
-  }
-
-  if (!backendFormat.isValid()) {
     return GrBackendTexture();
   }
 
@@ -490,6 +504,33 @@ GrBackendTexture GrContext::createBackendTexture(
       width, height, format, swizzledColor, mipMapped, renderable, isProtected);
 }
 
+GrBackendTexture GrContext::createBackendTexture(
+    const SkPixmap srcData[], int numLevels, GrRenderable renderable, GrProtected isProtected) {
+  TRACE_EVENT0("skia.gpu", TRACE_FUNC);
+
+  if (!this->asDirectContext()) {
+    return {};
+  }
+
+  if (this->abandoned()) {
+    return {};
+  }
+
+  if (!srcData || !numLevels) {
+    return {};
+  }
+
+  int baseWidth = srcData[0].width();
+  int baseHeight = srcData[0].height();
+  SkColorType colorType = srcData[0].colorType();
+
+  GrBackendFormat backendFormat = this->defaultBackendFormat(colorType, renderable);
+
+  return fGpu->createBackendTexture(
+      baseWidth, baseHeight, backendFormat, numLevels > 1 ? GrMipMapped::kYes : GrMipMapped::kNo,
+      renderable, srcData, numLevels, nullptr, isProtected);
+}
+
 void GrContext::deleteBackendTexture(GrBackendTexture backendTex) {
   TRACE_EVENT0("skia.gpu", TRACE_FUNC);
   if (this->abandoned() || !backendTex.isValid()) {
@@ -497,6 +538,10 @@ void GrContext::deleteBackendTexture(GrBackendTexture backendTex) {
   }
 
   fGpu->deleteBackendTexture(backendTex);
+}
+
+bool GrContext::precompileShader(const SkData& key, const SkData& data) {
+  return fGpu->precompileShader(key, data);
 }
 
 #ifdef SK_ENABLE_DUMP_GPU

@@ -45,10 +45,9 @@ class GrTexturePriv {
                                          : GrSamplerState::Filter::kMipMap;
   }
 
-  static void ComputeScratchKey(const GrSurfaceDesc&, GrRenderable, int sampleCnt, GrScratchKey*);
   static void ComputeScratchKey(
       GrPixelConfig config, int width, int height, GrRenderable, int sampleCnt, GrMipMapped,
-      GrScratchKey* key);
+      GrProtected, GrScratchKey* key);
 
  private:
   GrTexturePriv(GrTexture* texture) : fTexture(texture) {}

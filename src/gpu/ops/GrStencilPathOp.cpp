@@ -33,6 +33,6 @@ void GrStencilPathOp::onExecute(GrOpFlushState* state, const SkRect& chainBounds
       numStencilBits);
 
   GrPathRendering::StencilPathArgs args(
-      fUseHWAA, state->drawOpArgs().fProxy, &fViewMatrix, &fScissor, &stencil);
+      fUseHWAA, state->drawOpArgs().proxy(), &fViewMatrix, &fScissor, &stencil);
   state->gpu()->pathRendering()->stencilPath(args, fPath.get());
 }

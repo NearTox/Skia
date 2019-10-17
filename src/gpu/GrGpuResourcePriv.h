@@ -16,13 +16,11 @@
  */
 class GrGpuResource::ResourcePriv {
  public:
-  SkDEBUGCODE(bool hasPendingIO_debugOnly() const { return fResource->internalHasPendingIO(); });
-
   /**
-   * Sets a unique key for the resource. If the resource was previously cached as scratch it
-   * will be converted to a uniquely-keyed resource. If the key is invalid then this is
-   * equivalent to removeUniqueKey(). If another resource is using the key then its unique key
-   * is removed and this resource takes over the key.
+   * Sets a unique key for the resource. If the resource was previously cached as scratch it will
+   * be converted to a uniquely-keyed resource. If the key is invalid then this is equivalent to
+   * removeUniqueKey(). If another resource is using the key then its unique key is removed and
+   * this resource takes over the key.
    */
   void setUniqueKey(const GrUniqueKey& key) { fResource->setUniqueKey(key); }
 
@@ -73,7 +71,7 @@ class GrGpuResource::ResourcePriv {
 
   bool isPurgeable() const { return fResource->isPurgeable(); }
 
-  bool hasRefOrPendingIO() const { return fResource->hasRefOrPendingIO(); }
+  bool hasRef() const { return fResource->hasRef(); }
 
  protected:
   ResourcePriv(GrGpuResource* resource) : fResource(resource) {}

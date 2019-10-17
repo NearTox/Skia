@@ -298,7 +298,7 @@ class FontMemResourceTypeface : public LogFontTypeface {
   }
 
  protected:
-  void weak_dispose() const noexcept override {
+  void weak_dispose() const override {
     RemoveFontMemResourceEx(fFontMemResource);
     INHERITED::weak_dispose();
   }
@@ -2085,7 +2085,7 @@ class SkFontStyleSetGDI : public SkFontStyleSet {
     ::DeleteDC(hdc);
   }
 
-  int count() noexcept override { return fArray.count(); }
+  int count() override { return fArray.count(); }
 
   void getStyle(int index, SkFontStyle* fs, SkString* styleName) override {
     if (fs) {

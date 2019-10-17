@@ -63,8 +63,7 @@ void GrVkCommandBuffer::freeGPUData(GrVkGpu* gpu) const {
 }
 
 void GrVkCommandBuffer::abandonGPUData() const {
-  SkDEBUGCODE(fResourcesReleased = true);
-  for (int i = 0; i < fTrackedResources.count(); ++i) {
+  SkDEBUGCODE(fResourcesReleased = true;) for (int i = 0; i < fTrackedResources.count(); ++i) {
     fTrackedResources[i]->notifyRemovedFromCommandBuffer();
     fTrackedResources[i]->unrefAndAbandon();
   }
@@ -80,8 +79,7 @@ void GrVkCommandBuffer::abandonGPUData() const {
 
 void GrVkCommandBuffer::releaseResources(GrVkGpu* gpu) {
   TRACE_EVENT0("skia.gpu", TRACE_FUNC);
-  SkDEBUGCODE(fResourcesReleased = true);
-  SkASSERT(!fIsActive);
+  SkDEBUGCODE(fResourcesReleased = true;) SkASSERT(!fIsActive);
   for (int i = 0; i < fTrackedResources.count(); ++i) {
     fTrackedResources[i]->notifyRemovedFromCommandBuffer();
     fTrackedResources[i]->unref(gpu);
@@ -249,6 +247,9 @@ void GrVkCommandBuffer::clearAttachments(
   GR_VK_CALL(
       gpu->vkInterface(),
       CmdClearAttachments(fCmdBuffer, numAttachments, attachments, numRects, clearRects));
+  if (gpu->vkCaps().mustInvalidatePrimaryCmdBufferStateAfterClearAttachments()) {
+    this->invalidateState();
+  }
 }
 
 void GrVkCommandBuffer::bindDescriptorSets(

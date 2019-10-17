@@ -102,8 +102,8 @@ class GrSurfaceProxy : public GrNonAtomicRef<GrSurfaceProxy> {
   bool isLazy() const { return !this->isInstantiated() && SkToBool(fLazyInstantiateCallback); }
 
   bool isFullyLazy() const {
-    bool result = fHeight <= 0;
-    SkASSERT(result == (fWidth <= 0));
+    bool result = fHeight < 0;
+    SkASSERT(result == (fWidth < 0));
     SkASSERT(!result || this->isLazy());
     return result;
   }
@@ -265,13 +265,13 @@ class GrSurfaceProxy : public GrNonAtomicRef<GrSurfaceProxy> {
    *
    * @return the amount of GPU memory used in bytes
    */
-  size_t gpuMemorySize() const {
+  size_t gpuMemorySize(const GrCaps& caps) const {
     SkASSERT(!this->isFullyLazy());
     if (fTarget) {
       return fTarget->gpuMemorySize();
     }
     if (kInvalidGpuMemorySize == fGpuMemorySize) {
-      fGpuMemorySize = this->onUninstantiatedGpuMemorySize();
+      fGpuMemorySize = this->onUninstantiatedGpuMemorySize(caps);
       SkASSERT(kInvalidGpuMemorySize != fGpuMemorySize);
     }
     return fGpuMemorySize;
@@ -282,22 +282,23 @@ class GrSurfaceProxy : public GrNonAtomicRef<GrSurfaceProxy> {
   // Helper function that creates a temporary SurfaceContext to perform the copy
   // The copy is is not a render target and not multisampled.
   static sk_sp<GrTextureProxy> Copy(
-      GrRecordingContext*, GrSurfaceProxy* src, GrMipMapped, SkIRect srcRect, SkBackingFit,
-      SkBudgeted, RectsMustMatch = RectsMustMatch::kNo);
+      GrRecordingContext*, GrSurfaceProxy* src, GrColorType srcColorType, GrMipMapped,
+      SkIRect srcRect, SkBackingFit, SkBudgeted, RectsMustMatch = RectsMustMatch::kNo);
 
   // Copy the entire 'src'
   static sk_sp<GrTextureProxy> Copy(
-      GrRecordingContext*, GrSurfaceProxy* src, GrMipMapped, SkBackingFit, SkBudgeted);
+      GrRecordingContext*, GrSurfaceProxy* src, GrColorType srcColortype, GrMipMapped, SkBackingFit,
+      SkBudgeted);
 
 #if GR_TEST_UTILS
   int32_t testingOnly_getBackingRefCnt() const;
   GrInternalSurfaceFlags testingOnly_getFlags() const;
 #endif
 
-  SkDEBUGCODE(void validate(GrContext_Base*) const);
+  SkDEBUGCODE(void validate(GrContext_Base*) const;)
 
-  // Provides access to functions that aren't part of the public API.
-  inline GrSurfaceProxyPriv priv();
+      // Provides access to functions that aren't part of the public API.
+      inline GrSurfaceProxyPriv priv();
   inline const GrSurfaceProxyPriv priv() const;
 
   // Returns true if we are working with protected content.
@@ -368,12 +369,12 @@ class GrSurfaceProxy : public GrNonAtomicRef<GrSurfaceProxy> {
  private:
   // For wrapped resources, 'fFormat', 'fConfig', 'fWidth', 'fHeight', and 'fOrigin; will always
   // be filled in from the wrapped resource.
-  GrBackendFormat fFormat;
-  GrPixelConfig fConfig;
+  const GrBackendFormat fFormat;
+  const GrPixelConfig fConfig;
   int fWidth;
   int fHeight;
-  GrSurfaceOrigin fOrigin;
-  GrSwizzle fTextureSwizzle;
+  const GrSurfaceOrigin fOrigin;
+  const GrSwizzle fTextureSwizzle;
 
   SkBackingFit fFit;             // always kApprox for lazy-callback resources
                                  // always kExact for wrapped resources
@@ -387,13 +388,13 @@ class GrSurfaceProxy : public GrNonAtomicRef<GrSurfaceProxy> {
 
   LazyInstantiateCallback fLazyInstantiateCallback;
 
-  SkDEBUGCODE(void validateSurface(const GrSurface*));
-  SkDEBUGCODE(virtual void onValidateSurface(const GrSurface*) = 0);
+  SkDEBUGCODE(void validateSurface(const GrSurface*);)
+      SkDEBUGCODE(virtual void onValidateSurface(const GrSurface*) = 0;)
 
-  static const size_t kInvalidGpuMemorySize = ~static_cast<size_t>(0);
-  SkDEBUGCODE(size_t getRawGpuMemorySize_debugOnly() const { return fGpuMemorySize; });
+          static const size_t kInvalidGpuMemorySize = ~static_cast<size_t>(0);
+  SkDEBUGCODE(size_t getRawGpuMemorySize_debugOnly() const { return fGpuMemorySize; })
 
-  virtual size_t onUninstantiatedGpuMemorySize() const = 0;
+      virtual size_t onUninstantiatedGpuMemorySize(const GrCaps&) const = 0;
 
   bool fIgnoredByResourceAllocator = false;
   GrProtected fIsProtected;

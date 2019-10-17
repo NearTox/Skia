@@ -511,7 +511,7 @@ class DOMParser {
     SkDEBUGCODE(const auto& obj = fValueStack.back().as<ObjectValue>();
                 SkASSERT(obj.is<ObjectValue>());
                 for (const auto& member
-                     : obj) { SkASSERT(member.fKey.is<StringValue>()); });
+                     : obj) { SkASSERT(member.fKey.is<StringValue>()); })
   }
 
   void pushArrayScope() {
@@ -527,7 +527,7 @@ class DOMParser {
     this->popScopeAsVec<ArrayValue>(SkTo<size_t>(-fScopeIndex));
 
     SkDEBUGCODE(const auto& arr = fValueStack.back().as<ArrayValue>();
-                SkASSERT(arr.is<ArrayValue>()));
+                SkASSERT(arr.is<ArrayValue>());)
   }
 
   void pushObjectKey(const char* key, size_t size, const char* eos) {

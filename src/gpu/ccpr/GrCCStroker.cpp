@@ -11,6 +11,7 @@
 #include "src/core/SkPathPriv.h"
 #include "src/gpu/GrOnFlushResourceProvider.h"
 #include "src/gpu/GrOpsRenderPass.h"
+#include "src/gpu/GrProgramInfo.h"
 #include "src/gpu/ccpr/GrCCCoverageProcessor.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #include "src/gpu/glsl/GrGLSLVertexGeoBuilder.h"
@@ -306,7 +307,7 @@ void GrCCStroker::parseDeviceSpaceStroke(
     SkASSERT(fBatches.back().fEndScissorSubBatch == fScissorSubBatches.count());
     fScissorSubBatches.emplace_back(
         &fTalliesAllocator, *fInstanceCounts[(int)GrScissorTest::kEnabled],
-        clippedDevIBounds.makeOffset(devToAtlasOffset.x(), devToAtlasOffset.y()));
+        clippedDevIBounds.makeOffset(devToAtlasOffset));
     fBatches.back().fEndScissorSubBatch = fScissorSubBatches.count();
     fInstanceCounts[(int)GrScissorTest::kEnabled] = currStrokeEndIndices =
         fScissorSubBatches.back().fEndInstances;
@@ -708,7 +709,7 @@ void GrCCStroker::drawStrokes(
                               : fScissorSubBatches[startScissorSubBatch - 1].fEndInstances;
 
   GrPipeline pipeline(
-      GrScissorTest::kEnabled, SkBlendMode::kPlus, flushState->drawOpArgs().fOutputSwizzle);
+      GrScissorTest::kEnabled, SkBlendMode::kPlus, flushState->drawOpArgs().outputSwizzle());
 
   // Draw linear strokes.
   this->appendStrokeMeshesToBuffers(0, batch, startIndices, startScissorSubBatch, drawBounds);
@@ -778,9 +779,13 @@ void GrCCStroker::flushBufferedMeshesAsStrokes(
   SkASSERT(fMeshesBuffer.count() == fScissorsBuffer.count());
   GrPipeline::DynamicStateArrays dynamicStateArrays;
   dynamicStateArrays.fScissorRects = fScissorsBuffer.begin();
+
+  GrProgramInfo programInfo(
+      flushState->drawOpArgs().numSamples(), flushState->drawOpArgs().origin(), pipeline, processor,
+      nullptr, &dynamicStateArrays, 0);
+
   flushState->opsRenderPass()->draw(
-      processor, pipeline, nullptr, &dynamicStateArrays, fMeshesBuffer.begin(),
-      fMeshesBuffer.count(), SkRect::Make(drawBounds));
+      programInfo, fMeshesBuffer.begin(), fMeshesBuffer.count(), SkRect::Make(drawBounds));
   // Don't call reset(), as that also resets the reserve count.
   fMeshesBuffer.pop_back_n(fMeshesBuffer.count());
   fScissorsBuffer.pop_back_n(fScissorsBuffer.count());

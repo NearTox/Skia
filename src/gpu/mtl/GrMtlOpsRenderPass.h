@@ -45,14 +45,10 @@ class GrMtlOpsRenderPass : public GrOpsRenderPass, private GrMesh::SendToGpuImpl
  private:
   GrGpu* gpu() override { return fGpu; }
 
-  GrMtlPipelineState* prepareDrawState(
-      const GrPrimitiveProcessor& primProc, const GrPipeline& pipeline,
-      const GrPipeline::FixedDynamicState* fixedDynamicState, GrPrimitiveType primType);
+  GrMtlPipelineState* prepareDrawState(const GrProgramInfo&, GrPrimitiveType);
 
   void onDraw(
-      const GrPrimitiveProcessor& primProc, const GrPipeline& pipeline,
-      const GrPipeline::FixedDynamicState* fixedDynamicState,
-      const GrPipeline::DynamicStateArrays* dynamicStateArrays, const GrMesh mesh[], int meshCount,
+      const GrProgramInfo& programInfo, const GrMesh mesh[], int meshCount,
       const SkRect& bounds) override;
 
   void onClear(const GrFixedClip& clip, const SkPMColor4f& color) override;

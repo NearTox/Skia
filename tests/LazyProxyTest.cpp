@@ -91,8 +91,8 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
               desc.fHeight = 567;
               desc.fConfig = kRGB_565_GrPixelConfig;
               sk_sp<GrTexture> texture = rp->createTexture(
-                  desc, format, GrRenderable::kNo, 1, SkBudgeted::kYes, GrProtected::kNo,
-                  GrResourceProvider::Flags::kNoPendingIO);
+                  desc, format, GrRenderable::kNo, 1, GrMipMapped::kNo, SkBudgeted::kYes,
+                  GrProtected::kNo);
               REPORTER_ASSERT(fTest->fReporter, texture);
               return texture;
             }
@@ -100,7 +100,7 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
           format, GrRenderable::kNo, 1, GrProtected::kNo, kTopLeft_GrSurfaceOrigin,
           kRGB_565_GrPixelConfig, *proxyProvider->caps(), GrSurfaceProxy::UseAllocator::kYes);
 
-      this->setBounds(SkRectPriv::MakeLargest(), GrOp::HasAABloat::kNo, GrOp::IsZeroArea::kNo);
+      this->setBounds(SkRectPriv::MakeLargest(), GrOp::HasAABloat::kNo, GrOp::IsHairline::kNo);
     }
 
     const char* name() const override { return "LazyProxyTest::Op"; }
@@ -137,7 +137,7 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
           },
           format, GrRenderable::kYes, 1, GrProtected::kNo, kBottomLeft_GrSurfaceOrigin,
           kAlpha_half_GrPixelConfig, *proxyProvider->caps(), GrSurfaceProxy::UseAllocator::kYes);
-      fAccess.reset(fLazyProxy, GrSamplerState::Filter::kNearest, GrSamplerState::WrapMode::kClamp);
+      fAccess.reset(fLazyProxy, GrSamplerState::ClampNearest());
       this->setTextureSamplerCnt(1);
     }
 
@@ -230,7 +230,7 @@ DEF_GPUTEST(LazyProxyReleaseTest, reporter, /* options */) {
       caps->getDefaultBackendFormat(GrColorType::kRGBA_8888, GrRenderable::kNo);
 
   auto tex = ctx->priv().resourceProvider()->createTexture(
-      desc, format, GrRenderable::kNo, 1, SkBudgeted::kNo, GrProtected::kNo);
+      desc, format, GrRenderable::kNo, 1, GrMipMapped::kNo, SkBudgeted::kNo, GrProtected::kNo);
   using LazyInstantiationResult = GrSurfaceProxy::LazyCallbackResult;
   for (bool doInstantiate : {true, false}) {
     for (bool releaseCallback : {false, true}) {
@@ -333,8 +333,8 @@ class LazyFailedInstantiationTestOp : public GrDrawOp {
             return {};
           }
           return {rp->createTexture(
-                      desc, format, GrRenderable::kNo, 1, SkBudgeted::kNo, GrProtected::kNo,
-                      GrResourceProvider::Flags::kNoPendingIO),
+                      desc, format, GrRenderable::kNo, 1, GrMipMapped::kNo, SkBudgeted::kNo,
+                      GrProtected::kNo),
                   true, GrSurfaceProxy::LazyInstantiationKeyMode::kUnsynced};
         },
         format, desc, GrRenderable::kNo, 1, kTopLeft_GrSurfaceOrigin, GrMipMapped::kNo,
@@ -343,7 +343,7 @@ class LazyFailedInstantiationTestOp : public GrDrawOp {
 
     SkASSERT(fLazyProxy.get());
 
-    this->setBounds(SkRect::MakeIWH(kSize, kSize), HasAABloat::kNo, IsZeroArea::kNo);
+    this->setBounds(SkRect::MakeIWH(kSize, kSize), HasAABloat::kNo, IsHairline::kNo);
   }
 
   const char* name() const override { return "LazyFailedInstantiationTestOp"; }

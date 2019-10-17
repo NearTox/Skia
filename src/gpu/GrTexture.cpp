@@ -31,8 +31,10 @@ void GrTexture::markMipMapsClean() {
 }
 
 size_t GrTexture::onGpuMemorySize() const {
+  const GrCaps& caps = *this->getGpu()->caps();
   return GrSurface::ComputeSize(
-      this->config(), this->width(), this->height(), 1, this->texturePriv().mipMapped());
+      caps, this->backendFormat(), this->width(), this->height(), 1,
+      this->texturePriv().mipMapped());
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -52,7 +54,7 @@ GrTexture::GrTexture(
 bool GrTexture::StealBackendTexture(
     sk_sp<GrTexture> texture, GrBackendTexture* backendTexture,
     SkImage::BackendTextureReleaseProc* releaseProc) {
-  if (!texture->surfacePriv().hasUniqueRef() || texture->surfacePriv().hasPendingIO()) {
+  if (!texture->unique()) {
     return false;
   }
 
@@ -87,15 +89,16 @@ void GrTexture::computeScratchKey(GrScratchKey* key) const {
       sampleCount = rt->numSamples();
       renderable = GrRenderable::kYes;
     }
+    auto isProtected = this->isProtected() ? GrProtected::kYes : GrProtected::kNo;
     GrTexturePriv::ComputeScratchKey(
         this->config(), this->width(), this->height(), renderable, sampleCount,
-        this->texturePriv().mipMapped(), key);
+        this->texturePriv().mipMapped(), isProtected, key);
   }
 }
 
 void GrTexturePriv::ComputeScratchKey(
     GrPixelConfig config, int width, int height, GrRenderable renderable, int sampleCnt,
-    GrMipMapped mipMapped, GrScratchKey* key) {
+    GrMipMapped mipMapped, GrProtected isProtected, GrScratchKey* key) {
   static const GrScratchKey::ResourceType kType = GrScratchKey::GenerateResourceType();
   SkASSERT(width > 0);
   SkASSERT(height > 0);
@@ -104,20 +107,16 @@ void GrTexturePriv::ComputeScratchKey(
 
   // make sure desc.fConfig fits in 5 bits
   SkASSERT(sk_float_log2(kLast_GrPixelConfig) <= 5);
-  SkASSERT(static_cast<int>(config) < (1 << 5));
-  SkASSERT(sampleCnt < (1 << 8));
-  SkASSERT(static_cast<int>(mipMapped) <= 1);
+  SkASSERT(static_cast<uint32_t>(config) < (1 << 5));
+  SkASSERT(static_cast<uint32_t>(mipMapped) <= 1);
+  SkASSERT(static_cast<uint32_t>(isProtected) <= 1);
+  SkASSERT(static_cast<uint32_t>(renderable) <= 1);
+  SkASSERT(static_cast<uint32_t>(sampleCnt) < (1 << (32 - 8)));
 
   GrScratchKey::Builder builder(key, kType, 3);
   builder[0] = width;
   builder[1] = height;
-  builder[2] = config | (static_cast<uint32_t>(mipMapped) << 5) | (sampleCnt << 6) |
-               (static_cast<uint32_t>(renderable) << 14);
-}
-
-void GrTexturePriv::ComputeScratchKey(
-    const GrSurfaceDesc& desc, GrRenderable renderable, int sampleCnt, GrScratchKey* key) {
-  // Note: the fOrigin field is not used in the scratch key
-  return ComputeScratchKey(
-      desc.fConfig, desc.fWidth, desc.fHeight, renderable, sampleCnt, GrMipMapped::kNo, key);
+  builder[2] = (static_cast<uint32_t>(config) << 0) | (static_cast<uint32_t>(mipMapped) << 5) |
+               (static_cast<uint32_t>(isProtected) << 6) |
+               (static_cast<uint32_t>(renderable) << 7) | (static_cast<uint32_t>(sampleCnt) << 8);
 }

@@ -15,6 +15,7 @@
 #include "src/core/SkCachedData.h"
 #include "src/core/SkCoverageModePriv.h"
 #include "src/core/SkDraw.h"
+#include "src/core/SkPathPriv.h"
 #include "src/core/SkRasterClip.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
@@ -206,7 +207,7 @@ static void draw_nine(
 }
 
 static int countNestedRects(const SkPath& path, SkRect rects[2]) {
-  if (path.isNestedFillRects(rects)) {
+  if (SkPathPriv::IsNestedFillRects(path, rects)) {
     return 2;
   }
   return path.isRect(&rects[0]);
@@ -326,8 +327,8 @@ bool SkMaskFilterBase::directFilterMaskGPU(
 }
 
 sk_sp<GrTextureProxy> SkMaskFilterBase::filterMaskGPU(
-    GrRecordingContext*, sk_sp<GrTextureProxy> srcProxy, const SkMatrix& ctm,
-    const SkIRect& maskRect) const {
+    GrRecordingContext*, sk_sp<GrTextureProxy> srcProxy, GrColorType srcColorType,
+    SkAlphaType srcAlphaType, const SkMatrix& ctm, const SkIRect& maskRect) const {
   return nullptr;
 }
 #endif

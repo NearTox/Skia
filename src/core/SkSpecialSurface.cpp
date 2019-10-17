@@ -142,9 +142,11 @@ class SkSpecialSurface_Gpu : public SkSpecialSurface_Base {
     if (!fProxy) {
       return nullptr;
     }
+    GrColorType ct = SkColorTypeToGrColorType(fCanvas->imageInfo().colorType());
+
     return SkSpecialImage::MakeDeferredFromGpu(
         fCanvas->getGrContext(), this->subset(), kNeedNewImageUniqueID_SpecialImage,
-        std::move(fProxy), fCanvas->imageInfo().refColorSpace(), &this->props());
+        std::move(fProxy), ct, fCanvas->imageInfo().refColorSpace(), &this->props());
   }
 
  private:

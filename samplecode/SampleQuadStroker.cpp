@@ -254,7 +254,7 @@ class QuadStrokerView : public Sample {
 
   void setWHZ(int width, int height, int zoom) {
     fZoom = zoom;
-    fBounds.set(0, 0, SkIntToScalar(width * zoom), SkIntToScalar(height * zoom));
+    fBounds.setIWH(width * zoom, height * zoom);
     fMatrix.setScale(SkIntToScalar(zoom), SkIntToScalar(zoom));
     fInverse.setScale(SK_Scalar1 / zoom, SK_Scalar1 / zoom);
     fShader = ToolUtils::create_checkerboard_shader(0xFFCCCCCC, 0xFFFFFFFF, zoom);
@@ -610,7 +610,7 @@ class QuadStrokerView : public Sample {
     if (fRRectButton.fEnabled) {
       SkScalar rad = 32;
       SkRect r;
-      r.set(&fPts[13], 2);
+      r.setBounds(&fPts[13], 2);
       path.reset();
       SkRRect rr;
       rr.setRectXY(r, rad, rad);
@@ -633,14 +633,14 @@ class QuadStrokerView : public Sample {
     if (fCircleButton.fEnabled) {
       path.reset();
       SkRect r;
-      r.set(&fPts[15], 2);
+      r.setBounds(&fPts[15], 2);
       path.addOval(r);
       setForGeometry();
       if (fCircleButton.fFill) {
         if (fArcButton.fEnabled) {
           SkPoint center;
           if (arcCenter(&center)) {
-            r.set(
+            r.setLTRB(
                 center.fX - fRadius, center.fY - fRadius, center.fX + fRadius, center.fY + fRadius);
           }
         }
@@ -697,7 +697,8 @@ class QuadStrokerView : public Sample {
     MyClick(int index) : fIndex(index) {}
   };
 
-  virtual Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, ModifierKey modi) override {
+  virtual Sample::Click* onFindClickHandler(
+      SkScalar x, SkScalar y, skui::ModifierKey modi) override {
     for (size_t i = 0; i < SK_ARRAY_COUNT(fPts); ++i) {
       if (hittest(fPts[i], x, y)) {
         return new MyClick((int)i);

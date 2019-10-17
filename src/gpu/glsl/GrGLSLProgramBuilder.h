@@ -11,6 +11,7 @@
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrGeometryProcessor.h"
 #include "src/gpu/GrProgramDesc.h"
+#include "src/gpu/GrProgramInfo.h"
 #include "src/gpu/GrRenderTarget.h"
 #include "src/gpu/GrRenderTargetPriv.h"
 #include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
@@ -36,18 +37,27 @@ class GrGLSLProgramBuilder {
   virtual const GrCaps* caps() const = 0;
   const GrShaderCaps* shaderCaps() const { return this->caps()->shaderCaps(); }
 
-  const GrPrimitiveProcessor& primitiveProcessor() const { return fPrimProc; }
-  const GrTextureProxy* const* primProcProxies() const { return fPrimProcProxies; }
-  const GrRenderTarget* renderTarget() const { return fRenderTarget; }
-  GrPixelConfig config() const { return fRenderTarget->config(); }
+  int numSamples() const { return fProgramInfo.numSamples(); }
+  GrSurfaceOrigin origin() const { return fProgramInfo.origin(); }
+  const GrPipeline& pipeline() const { return fProgramInfo.pipeline(); }
+  const GrPrimitiveProcessor& primitiveProcessor() const { return fProgramInfo.primProc(); }
+  GrProcessor::CustomFeatures processorFeatures() const { return fProgramInfo.requestedFeatures(); }
+  bool snapVerticesToPixelCenters() const {
+    return fProgramInfo.pipeline().snapVerticesToPixelCenters();
+  }
+  // TODO: remove this usage of the descriptor's header
+  bool hasPointSize() const { return fDesc->hasPointSize(); }
+
+  // TODO: stop passing in the renderTarget for just the sampleLocations
   int effectiveSampleCnt() const {
-    SkASSERT(GrProcessor::CustomFeatures::kSampleLocations & header().processorFeatures());
+    SkASSERT(GrProcessor::CustomFeatures::kSampleLocations & fProgramInfo.requestedFeatures());
     return fRenderTarget->renderTargetPriv().getSampleLocations().count();
   }
-  GrSurfaceOrigin origin() const { return fOrigin; }
-  const GrPipeline& pipeline() const { return fPipeline; }
-  GrProgramDesc* desc() { return fDesc; }
-  const GrProgramDesc::KeyHeader& header() const { return fDesc->header(); }
+  const SkTArray<SkPoint>& getSampleLocations() const {
+    return fRenderTarget->renderTargetPriv().getSampleLocations();
+  }
+
+  const GrProgramDesc* desc() const { return fDesc; }
 
   void appendUniformDecls(GrShaderFlags visibility, SkString*) const;
 
@@ -93,13 +103,10 @@ class GrGLSLProgramBuilder {
 
   int fStageIndex;
 
-  const GrRenderTarget* fRenderTarget;
-  const GrSurfaceOrigin fOrigin;
-  const GrPipeline& fPipeline;
-  const GrPrimitiveProcessor& fPrimProc;
-  const GrTextureProxy* const* fPrimProcProxies;
+  const GrRenderTarget* fRenderTarget;  // TODO: remove this
+  const GrProgramInfo& fProgramInfo;
 
-  GrProgramDesc* fDesc;
+  const GrProgramDesc* fDesc;
 
   GrGLSLBuiltinUniformHandles fUniformHandles;
 
@@ -109,9 +116,7 @@ class GrGLSLProgramBuilder {
   int fFragmentProcessorCnt;
 
  protected:
-  explicit GrGLSLProgramBuilder(
-      GrRenderTarget* renderTarget, GrSurfaceOrigin origin, const GrPrimitiveProcessor&,
-      const GrTextureProxy* const primProcProxies[], const GrPipeline&, GrProgramDesc*);
+  explicit GrGLSLProgramBuilder(GrRenderTarget*, const GrProgramInfo&, const GrProgramDesc*);
 
   void addFeature(GrShaderFlags shaders, uint32_t featureBit, const char* extensionName);
 
@@ -127,7 +132,7 @@ class GrGLSLProgramBuilder {
   // fragment shader are cleared.
   void reset() {
     this->addStage();
-    SkDEBUGCODE(fFS.debugOnly_resetPerStageVerification());
+    SkDEBUGCODE(fFS.debugOnly_resetPerStageVerification();)
   }
   void addStage() { fStageIndex++; }
 
@@ -154,7 +159,7 @@ class GrGLSLProgramBuilder {
       SkString output, SkTArray<std::unique_ptr<GrGLSLFragmentProcessor>>*);
   void emitAndInstallXferProc(const SkString& colorIn, const SkString& coverageIn);
   SamplerHandle emitSampler(
-      const GrTexture*, const GrSamplerState&, const GrSwizzle&, const char* name);
+      const GrTextureProxy*, const GrSamplerState&, const GrSwizzle&, const char* name);
   bool checkSamplerCounts();
 
 #ifdef SK_DEBUG

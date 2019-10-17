@@ -24,7 +24,7 @@
 #include "include/private/GrRecordingContext.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrColor.h"
-#include "src/gpu/GrColorSpaceInfo.h"
+#include "src/gpu/GrColorInfo.h"
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/SkGr.h"
 
@@ -46,7 +46,7 @@ static std::unique_ptr<GrFragmentProcessor> make_textured_colorizer(
   // Use 8888 or F16, depending on the destination config.
   // TODO: Use 1010102 for opaque gradients, at least if destination is 1010102?
   SkColorType colorType = kRGBA_8888_SkColorType;
-  if (GrColorTypeIsWiderThan(args.fDstColorSpaceInfo->colorType(), 8)) {
+  if (GrColorTypeIsWiderThan(args.fDstColorInfo->colorType(), 8)) {
     auto f16Format = args.fContext->priv().caps()->getDefaultBackendFormat(
         GrColorType::kRGBA_F16, GrRenderable::kNo);
     if (f16Format.isValid()) {
@@ -170,7 +170,7 @@ static std::unique_ptr<GrFragmentProcessor> make_gradient(
   SkAutoSTMalloc<4, SkPMColor4f> colors(shader.fColorCount);
   SkColor4fXformer xformedColors(
       shader.fOrigColors4f, shader.fColorCount, shader.fColorSpace.get(),
-      args.fDstColorSpaceInfo->colorSpace());
+      args.fDstColorInfo->colorSpace());
   for (int i = 0; i < shader.fColorCount; i++) {
     const SkColor4f& upmColor = xformedColors.fColors[i];
     colors[i] = inputPremul ? upmColor.premul()

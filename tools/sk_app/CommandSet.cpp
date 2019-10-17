@@ -26,8 +26,8 @@ CommandSet::CommandSet() : fHelpMode(kNone_HelpMode) {
 
 void CommandSet::attach(Window* window) { fWindow = window; }
 
-bool CommandSet::onKey(Window::Key key, Window::InputState state, uint32_t modifiers) {
-  if (Window::kDown_InputState == state) {
+bool CommandSet::onKey(skui::Key key, skui::InputState state, skui::ModifierKey modifiers) {
+  if (skui::InputState::kDown == state) {
     for (Command& cmd : fCommands) {
       if (Command::kKey_CommandType == cmd.fType && key == cmd.fKey) {
         cmd.fFunction();
@@ -39,7 +39,7 @@ bool CommandSet::onKey(Window::Key key, Window::InputState state, uint32_t modif
   return false;
 }
 
-bool CommandSet::onChar(SkUnichar c, uint32_t modifiers) {
+bool CommandSet::onChar(SkUnichar c, skui::ModifierKey modifiers) {
   for (Command& cmd : fCommands) {
     if (Command::kChar_CommandType == cmd.fType && c == cmd.fChar) {
       cmd.fFunction();
@@ -66,7 +66,7 @@ void CommandSet::addCommand(
 }
 
 void CommandSet::addCommand(
-    Window::Key k, const char* keyName, const char* group, const char* description,
+    skui::Key k, const char* keyName, const char* group, const char* description,
     std::function<void(void)> function) {
   fCommands.push_back(Command(k, keyName, group, description, function));
 }

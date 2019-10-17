@@ -244,7 +244,7 @@ hb_blob_t* skhb_get_table(hb_face_t* face, hb_tag_t tag, void* user_data) {
   SkData* rawData = data.release();
   return hb_blob_create(
       reinterpret_cast<char*>(rawData->writable_data()), rawData->size(), HB_MEMORY_MODE_WRITABLE,
-      rawData, [](void* ctx) { ((SkData*)ctx)->unref(); });
+      rawData, [](void* ctx) { SkSafeUnref(((SkData*)ctx)); });
 }
 
 HBFont create_hb_font(const SkFont& font) {
@@ -396,10 +396,12 @@ class HbIcuScriptRunIterator final : public SkShaper::ScriptRunIterator {
 
 class RunIteratorQueue {
  public:
-  void insert(SkShaper::RunIterator* runIterator) { fRunIterators.insert(runIterator); }
+  void insert(SkShaper::RunIterator* runIterator, int priority) {
+    fEntries.insert({runIterator, priority});
+  }
 
   bool advanceRuns() {
-    const SkShaper::RunIterator* leastRun = fRunIterators.peek();
+    const SkShaper::RunIterator* leastRun = fEntries.peek().runIterator;
     if (leastRun->atEnd()) {
       SkASSERT(this->allRunsAreAtEnd());
       return false;
@@ -407,32 +409,39 @@ class RunIteratorQueue {
     const size_t leastEnd = leastRun->endOfCurrentRun();
     SkShaper::RunIterator* currentRun = nullptr;
     SkDEBUGCODE(size_t previousEndOfCurrentRun);
-    while ((currentRun = fRunIterators.peek())->endOfCurrentRun() <= leastEnd) {
-      fRunIterators.pop();
+    while ((currentRun = fEntries.peek().runIterator)->endOfCurrentRun() <= leastEnd) {
+      int priority = fEntries.peek().priority;
+      fEntries.pop();
       SkDEBUGCODE(previousEndOfCurrentRun = currentRun->endOfCurrentRun());
       currentRun->consume();
       SkASSERT(previousEndOfCurrentRun < currentRun->endOfCurrentRun());
-      fRunIterators.insert(currentRun);
+      fEntries.insert({currentRun, priority});
     }
     return true;
   }
 
-  size_t endOfCurrentRun() const { return fRunIterators.peek()->endOfCurrentRun(); }
+  size_t endOfCurrentRun() const { return fEntries.peek().runIterator->endOfCurrentRun(); }
 
  private:
   bool allRunsAreAtEnd() const {
-    for (int i = 0; i < fRunIterators.count(); ++i) {
-      if (!fRunIterators.at(i)->atEnd()) {
+    for (int i = 0; i < fEntries.count(); ++i) {
+      if (!fEntries.at(i).runIterator->atEnd()) {
         return false;
       }
     }
     return true;
   }
 
-  static bool CompareRunIterator(SkShaper::RunIterator* const& a, SkShaper::RunIterator* const& b) {
-    return a->endOfCurrentRun() < b->endOfCurrentRun();
+  struct Entry {
+    SkShaper::RunIterator* runIterator;
+    int priority;
+  };
+  static bool CompareEntry(Entry const& a, Entry const& b) {
+    size_t aEnd = a.runIterator->endOfCurrentRun();
+    size_t bEnd = b.runIterator->endOfCurrentRun();
+    return aEnd < bEnd || (aEnd == bEnd && a.priority < b.priority);
   }
-  SkTDPQueue<SkShaper::RunIterator*, CompareRunIterator> fRunIterators;
+  SkTDPQueue<Entry, CompareEntry> fEntries;
 };
 
 struct ShapedGlyph {
@@ -688,7 +697,6 @@ ShaperHarfBuzz::ShaperHarfBuzz(
 void ShaperHarfBuzz::shape(
     const char* utf8, size_t utf8Bytes, const SkFont& srcFont, bool leftToRight, SkScalar width,
     RunHandler* handler) const {
-  SkASSERT(handler);
   UBiDiLevel defaultLevel = leftToRight ? UBIDI_DEFAULT_LTR : UBIDI_DEFAULT_RTL;
 
   std::unique_ptr<BiDiRunIterator> bidi(MakeIcuBiDiRunIterator(utf8, utf8Bytes, defaultLevel));
@@ -719,11 +727,12 @@ void ShaperHarfBuzz::shape(
     const char* utf8, size_t utf8Bytes, FontRunIterator& font, BiDiRunIterator& bidi,
     ScriptRunIterator& script, LanguageRunIterator& language, SkScalar width,
     RunHandler* handler) const {
+  SkASSERT(handler);
   RunIteratorQueue runSegmenter;
-  runSegmenter.insert(&font);
-  runSegmenter.insert(&bidi);
-  runSegmenter.insert(&script);
-  runSegmenter.insert(&language);
+  runSegmenter.insert(&font, 3);  // The font iterator is always run last in case of tie.
+  runSegmenter.insert(&bidi, 2);
+  runSegmenter.insert(&script, 1);
+  runSegmenter.insert(&language, 0);
 
   this->wrap(utf8, utf8Bytes, bidi, language, script, font, runSegmenter, width, handler);
 }
@@ -1013,14 +1022,13 @@ void ShapeThenWrap::wrap(
     ShapedRunGlyphIterator glyphIterator(runs);
     int previousRunIndex = -1;
     while (glyphIterator.current()) {
-      int runIndex = glyphIterator.fRunIndex;
-      size_t glyphIndex = glyphIterator.fGlyphIndex;
+      const ShapedRunGlyphIterator current = glyphIterator;
       ShapedGlyph* nextGlyph = glyphIterator.next();
 
-      if (previousRunIndex != runIndex) {
+      if (previousRunIndex != current.fRunIndex) {
         SkFontMetrics metrics;
-        runs[runIndex].fFont.getMetrics(&metrics);
-        previousRunIndex = runIndex;
+        runs[current.fRunIndex].fFont.getMetrics(&metrics);
+        previousRunIndex = current.fRunIndex;
       }
 
       // Nothing can be written until the baseline is known.
@@ -1028,7 +1036,7 @@ void ShapeThenWrap::wrap(
         continue;
       }
 
-      int numRuns = runIndex - previousBreak.fRunIndex + 1;
+      int numRuns = current.fRunIndex - previousBreak.fRunIndex + 1;
       SkAutoSTMalloc<4, UBiDiLevel> runLevels(numRuns);
       for (int i = 0; i < numRuns; ++i) {
         runLevels[i] = runs[previousBreak.fRunIndex + i].fLevel;
@@ -1040,25 +1048,44 @@ void ShapeThenWrap::wrap(
       // until a visible glyph is found and force them to the end of the visual line.
 
       handler->beginLine();
-      for (int i = 0; i < numRuns; ++i) {
-        int logicalIndex = previousBreak.fRunIndex + logicalFromVisual[i];
+
+      struct SubRun {
+        const ShapedRun& run;
+        size_t startGlyphIndex;
+        size_t endGlyphIndex;
+      };
+      auto makeSubRun = [&runs, &previousBreak, &current, &logicalFromVisual](size_t visualIndex) {
+        int logicalIndex = previousBreak.fRunIndex + logicalFromVisual[visualIndex];
         const auto& run = runs[logicalIndex];
-        const RunHandler::RunInfo info = {run.fFont, run.fLevel, run.fAdvance, run.fNumGlyphs,
-                                          run.fUtf8Range};
-        handler->runInfo(info);
+        size_t startGlyphIndex =
+            (logicalIndex == previousBreak.fRunIndex) ? previousBreak.fGlyphIndex : 0;
+        size_t endGlyphIndex =
+            (logicalIndex == current.fRunIndex) ? current.fGlyphIndex + 1 : run.fNumGlyphs;
+        return SubRun{run, startGlyphIndex, endGlyphIndex};
+      };
+      auto makeRunInfo = [](const SubRun& sub) {
+        uint32_t startUtf8 = sub.run.fGlyphs[sub.startGlyphIndex].fCluster;
+        uint32_t endUtf8 = (sub.endGlyphIndex < sub.run.fNumGlyphs)
+                               ? sub.run.fGlyphs[sub.endGlyphIndex].fCluster
+                               : sub.run.fUtf8Range.end();
+
+        SkVector advance = SkVector::Make(0, 0);
+        for (size_t i = sub.startGlyphIndex; i < sub.endGlyphIndex; ++i) {
+          advance += sub.run.fGlyphs[i].fAdvance;
+        }
+
+        return RunHandler::RunInfo{sub.run.fFont, sub.run.fLevel, advance,
+                                   sub.endGlyphIndex - sub.startGlyphIndex,
+                                   RunHandler::Range(startUtf8, endUtf8 - startUtf8)};
+      };
+
+      for (int i = 0; i < numRuns; ++i) {
+        handler->runInfo(makeRunInfo(makeSubRun(i)));
       }
       handler->commitRunInfo();
       for (int i = 0; i < numRuns; ++i) {
-        int logicalIndex = previousBreak.fRunIndex + logicalFromVisual[i];
-        const auto& run = runs[logicalIndex];
-        const RunHandler::RunInfo info = {run.fFont, run.fLevel, run.fAdvance, run.fNumGlyphs,
-                                          run.fUtf8Range};
-
-        size_t startGlyphIndex =
-            (logicalIndex == previousBreak.fRunIndex) ? previousBreak.fGlyphIndex : 0;
-        size_t endGlyphIndex = (logicalIndex == runIndex) ? glyphIndex + 1 : run.fNumGlyphs;
-
-        append(handler, info, run, startGlyphIndex, endGlyphIndex);
+        SubRun sub = makeSubRun(i);
+        append(handler, makeRunInfo(sub), sub.run, sub.startGlyphIndex, sub.endGlyphIndex);
       }
 
       handler->commitLine();

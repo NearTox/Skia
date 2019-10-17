@@ -74,7 +74,7 @@ struct RunRecordStorageEquivalent {
   SkPoint fOffset;
   uint32_t fCount;
   uint32_t fFlags;
-  SkDEBUGCODE(unsigned fMagic);
+  SkDEBUGCODE(unsigned fMagic;)
 };
 }  // namespace
 
@@ -153,8 +153,7 @@ SkTextBlob::~SkTextBlob() {
   const auto* run = RunRecord::First(this);
   do {
     const auto* nextRun = RunRecord::Next(run);
-    SkDEBUGCODE(run->validate((uint8_t*)this + fStorageSize));
-    run->~RunRecord();
+    SkDEBUGCODE(run->validate((uint8_t*)this + fStorageSize);) run->~RunRecord();
     run = nextRun;
   } while (run);
 }
@@ -200,15 +199,15 @@ void* SkTextBlob::operator new(size_t, void* p) { return p; }
 
 SkTextBlobRunIterator::SkTextBlobRunIterator(const SkTextBlob* blob)
     : fCurrentRun(SkTextBlob::RunRecord::First(blob)) {
-  SkDEBUGCODE(fStorageTop = (uint8_t*)blob + blob->fStorageSize);
+  SkDEBUGCODE(fStorageTop = (uint8_t*)blob + blob->fStorageSize;)
 }
 
 void SkTextBlobRunIterator::next() {
   SkASSERT(!this->done());
 
   if (!this->done()) {
-    SkDEBUGCODE(fCurrentRun->validate(fStorageTop));
-    fCurrentRun = SkTextBlob::RunRecord::Next(fCurrentRun);
+    SkDEBUGCODE(fCurrentRun->validate(fStorageTop);) fCurrentRun =
+        SkTextBlob::RunRecord::Next(fCurrentRun);
   }
 }
 
@@ -567,19 +566,19 @@ sk_sp<SkTextBlob> SkTextBlobBuilder::make() {
   lastRun->fFlags |= SkTextBlob::RunRecord::kLast_Flag;
 
   SkTextBlob* blob = new (fStorage.release()) SkTextBlob(fBounds);
-  SkDEBUGCODE(const_cast<SkTextBlob*>(blob)->fStorageSize = fStorageSize);
+  SkDEBUGCODE(const_cast<SkTextBlob*>(blob)->fStorageSize = fStorageSize;)
 
-  SkDEBUGCODE(SkSafeMath safe; size_t validateSize = SkAlignPtr(sizeof(SkTextBlob));
-              for (const auto* run = SkTextBlob::RunRecord::First(blob); run;
-                   run = SkTextBlob::RunRecord::Next(run)) {
-                validateSize += SkTextBlob::RunRecord::StorageSize(
-                    run->fCount, run->textSize(), run->positioning(), &safe);
-                run->validate(reinterpret_cast<const uint8_t*>(blob) + fStorageUsed);
-                fRunCount--;
-              } SkASSERT(validateSize == fStorageUsed);
-              SkASSERT(fRunCount == 0); SkASSERT(safe));
+      SkDEBUGCODE(SkSafeMath safe; size_t validateSize = SkAlignPtr(sizeof(SkTextBlob));
+                  for (const auto* run = SkTextBlob::RunRecord::First(blob); run;
+                       run = SkTextBlob::RunRecord::Next(run)) {
+                    validateSize += SkTextBlob::RunRecord::StorageSize(
+                        run->fCount, run->textSize(), run->positioning(), &safe);
+                    run->validate(reinterpret_cast<const uint8_t*>(blob) + fStorageUsed);
+                    fRunCount--;
+                  } SkASSERT(validateSize == fStorageUsed);
+                  SkASSERT(fRunCount == 0); SkASSERT(safe);)
 
-  fStorageUsed = 0;
+          fStorageUsed = 0;
   fStorageSize = 0;
   fRunCount = 0;
   fLastRun = 0;
@@ -826,9 +825,6 @@ int get_glyph_run_intercepts(
   SkScalar xPos = xOffset;
   SkScalar prevAdvance = 0;
 
-  // The typeface is scaled, so un-scale the bounds to be in the space of the typeface.
-  SkScalar scaledBounds[2] = {bounds[0] / scale, bounds[1] / scale};
-
   const SkPoint* posCursor = glyphRun.positions().begin();
   for (auto glyphID : glyphRun.glyphsIDs()) {
     SkPoint pos = *posCursor++;
@@ -837,6 +833,9 @@ int get_glyph_run_intercepts(
     xPos += prevAdvance * scale;
     prevAdvance = glyph->advanceX();
     if (cache->preparePath(glyph) != nullptr) {
+      // The typeface is scaled, so un-scale the bounds to be in the space of the typeface.
+      // Also ensure the bounds are properly offset by the vertical positioning of the glyph.
+      SkScalar scaledBounds[2] = {(bounds[0] - pos.y()) / scale, (bounds[1] - pos.y()) / scale};
       cache->findIntercepts(scaledBounds, scale, pos.x(), glyph, intervals, intervalCount);
     }
   }
@@ -862,4 +861,25 @@ int SkTextBlob::getIntercepts(
   }
 
   return intervalCount;
+}
+
+////////
+
+SkTextBlob::Iter::Iter(const SkTextBlob& blob) { fRunRecord = RunRecord::First(&blob); }
+
+bool SkTextBlob::Iter::next(Run* rec) {
+  if (fRunRecord) {
+    if (rec) {
+      rec->fTypeface = fRunRecord->font().getTypeface();
+      rec->fGlyphCount = fRunRecord->glyphCount();
+      rec->fGlyphIndices = fRunRecord->glyphBuffer();
+    }
+    if (fRunRecord->isLastRun()) {
+      fRunRecord = nullptr;
+    } else {
+      fRunRecord = RunRecord::Next(fRunRecord);
+    }
+    return true;
+  }
+  return false;
 }

@@ -44,14 +44,14 @@ class GrRecordingContext : public GrImageContext {
 
   void abandonContext() override;
 
-  GrDrawingManager* drawingManager() noexcept;
+  GrDrawingManager* drawingManager();
 
   sk_sp<GrOpMemoryPool> refOpMemoryPool();
   GrOpMemoryPool* opMemoryPool();
 
-  GrStrikeCache* getGrStrikeCache() noexcept { return fStrikeCache.get(); }
-  GrTextBlobCache* getTextBlobCache() noexcept;
-  const GrTextBlobCache* getTextBlobCache() const noexcept;
+  GrStrikeCache* getGrStrikeCache() { return fStrikeCache.get(); }
+  GrTextBlobCache* getTextBlobCache();
+  const GrTextBlobCache* getTextBlobCache() const;
 
   /**
    * Registers an object for flush-related callbacks. (See GrOnFlushCallbackObject.)
@@ -96,9 +96,9 @@ class GrRecordingContext : public GrImageContext {
       const SkSurfaceProps* surfaceProps = nullptr, SkBudgeted budgeted = SkBudgeted::kYes,
       GrProtected isProtected = GrProtected::kNo);
 
-  GrAuditTrail* auditTrail() noexcept { return fAuditTrail.get(); }
+  GrAuditTrail* auditTrail() { return fAuditTrail.get(); }
 
-  GrRecordingContext* asRecordingContext() noexcept override { return this; }
+  GrRecordingContext* asRecordingContext() override { return this; }
 
  private:
   std::unique_ptr<GrDrawingManager> fDrawingManager;

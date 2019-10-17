@@ -45,7 +45,7 @@ typedef uint32_t SkFontTableTag;
 class SK_API SkTypeface : public SkWeakRefCnt {
  public:
   /** Returns the typeface's intrinsic style attributes. */
-  SkFontStyle fontStyle() const noexcept { return fStyle; }
+  SkFontStyle fontStyle() const { return fStyle; }
 
   /** Returns true if style() has the kBold bit set. */
   bool isBold() const { return fStyle.weight() >= SkFontStyle::kSemiBold_Weight; }
@@ -56,7 +56,7 @@ class SK_API SkTypeface : public SkWeakRefCnt {
   /** Returns true if the typeface claims to be fixed-pitch.
    *  This is a style bit, advance widths may vary even if this returns true.
    */
-  bool isFixedPitch() const noexcept { return fIsFixedPitch; }
+  bool isFixedPitch() const { return fIsFixedPitch; }
 
   /** Copy into 'coordinates' (allocated by the caller) the design variation coordinates.
    *
@@ -89,7 +89,7 @@ class SK_API SkTypeface : public SkWeakRefCnt {
   /** Return a 32bit value for this typeface, unique for the underlying font
       data. Will never return 0.
    */
-  SkFontID uniqueID() const noexcept { return fUniqueID; }
+  SkFontID uniqueID() const { return fUniqueID; }
 
   /** Return the uniqueID for the specified typeface. If the face is null,
       resolve it to the default font and return its uniqueID. Will never
@@ -278,10 +278,10 @@ class SK_API SkTypeface : public SkWeakRefCnt {
   };
   class LocalizedStrings {
    public:
-    constexpr LocalizedStrings() noexcept = default;
-    virtual ~LocalizedStrings() = default;
+    LocalizedStrings() = default;
+    virtual ~LocalizedStrings() {}
     virtual bool next(LocalizedString* localizedString) = 0;
-    void unref() noexcept { delete this; }
+    void unref() { delete this; }
 
    private:
     LocalizedStrings(const LocalizedStrings&) = delete;
@@ -348,9 +348,9 @@ class SK_API SkTypeface : public SkWeakRefCnt {
   virtual sk_sp<SkTypeface> onMakeClone(const SkFontArguments&) const = 0;
 
   /** Sets the fixedPitch bit. If used, must be called in the constructor. */
-  void setIsFixedPitch(bool isFixedPitch) noexcept { fIsFixedPitch = isFixedPitch; }
+  void setIsFixedPitch(bool isFixedPitch) { fIsFixedPitch = isFixedPitch; }
   /** Sets the font style. If used, must be called in the constructor. */
-  void setFontStyle(SkFontStyle style) noexcept { fStyle = style; }
+  void setFontStyle(SkFontStyle style) { fStyle = style; }
 
   virtual SkScalerContext* onCreateScalerContext(
       const SkScalerContextEffects&, const SkDescriptor*) const = 0;

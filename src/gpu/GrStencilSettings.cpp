@@ -162,18 +162,20 @@ void GrStencilSettings::Face::reset(
   int userMask = clipBit - 1;
 
   GrUserStencilOp maxOp = SkTMax(user.fPassOp, user.fFailOp);
-  SkDEBUGCODE(GrUserStencilOp otherOp = SkTMin(user.fPassOp, user.fFailOp));
-  if (maxOp <= kLastUserOnlyStencilOp) {
+  SkDEBUGCODE(GrUserStencilOp otherOp =
+                  SkTMin(user.fPassOp, user.fFailOp);) if (maxOp <= kLastUserOnlyStencilOp) {
     // Ops that only modify user bits.
     fWriteMask = user.fWriteMask & userMask;
     SkASSERT(otherOp <= kLastUserOnlyStencilOp);
-  } else if (maxOp <= kLastClipOnlyStencilOp) {
+  }
+  else if (maxOp <= kLastClipOnlyStencilOp) {
     // Ops that only modify the clip bit.
     fWriteMask = clipBit;
     SkASSERT(
         GrUserStencilOp::kKeep == otherOp ||
         (otherOp > kLastUserOnlyStencilOp && otherOp <= kLastClipOnlyStencilOp));
-  } else {
+  }
+  else {
     // Ops that modify both clip and user bits.
     fWriteMask = clipBit | (user.fWriteMask & userMask);
     SkASSERT(GrUserStencilOp::kKeep == otherOp || otherOp > kLastClipOnlyStencilOp);

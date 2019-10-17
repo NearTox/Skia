@@ -63,17 +63,22 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
 
   bool wrapsVkSecondaryCB() const { return fWrapsVkSecondaryCB == WrapsVkSecondaryCB::kYes; }
 
-  void markMSAADirty() {
+  void markMSAADirty(const SkIRect& dirtyRect) {
+    SkASSERT(SkIRect::MakeWH(this->width(), this->height()).contains(dirtyRect));
     SkASSERT(this->requiresManualMSAAResolve());
-    fIsMSAADirty = true;
+    fMSAADirtyRect.join(dirtyRect);
   }
   void markMSAAResolved() {
     SkASSERT(this->requiresManualMSAAResolve());
-    fIsMSAADirty = false;
+    fMSAADirtyRect.setEmpty();
   }
   bool isMSAADirty() const {
-    SkASSERT(!fIsMSAADirty || this->requiresManualMSAAResolve());
-    return fIsMSAADirty;
+    SkASSERT(fMSAADirtyRect.isEmpty() || this->requiresManualMSAAResolve());
+    return this->requiresManualMSAAResolve() && !fMSAADirtyRect.isEmpty();
+  }
+  const SkIRect& msaaDirtyRect() const {
+    SkASSERT(this->requiresManualMSAAResolve());
+    return fMSAADirtyRect;
   }
 
   // TODO: move this to a priv class!
@@ -123,24 +128,21 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
   bool glRTFBOIDIs0() const { return fSurfaceFlags & GrInternalSurfaceFlags::kGLRTFBOIDIs0; }
   bool canChangeStencilAttachment() const;
 
-  size_t onUninstantiatedGpuMemorySize() const override;
-  SkDEBUGCODE(void onValidateSurface(const GrSurface*) override);
+  size_t onUninstantiatedGpuMemorySize(const GrCaps&) const override;
+  SkDEBUGCODE(void onValidateSurface(const GrSurface*) override;)
 
-  // WARNING: Be careful when adding or removing fields here. ASAN is likely to trigger warnings
-  // when instantiating GrTextureRenderTargetProxy. The std::function in GrSurfaceProxy makes
-  // each class in the diamond require 16 byte alignment. Clang appears to layout the fields for
-  // each class to achieve the necessary alignment. However, ASAN checks the alignment of 'this'
-  // in the constructors, and always looks for the full 16 byte alignment, even if the fields in
-  // that particular class don't require it. Changing the size of this object can move the start
-  // address of other types, leading to this problem.
-  int8_t fSampleCnt;
+      // WARNING: Be careful when adding or removing fields here. ASAN is likely to trigger warnings
+      // when instantiating GrTextureRenderTargetProxy. The std::function in GrSurfaceProxy makes
+      // each class in the diamond require 16 byte alignment. Clang appears to layout the fields for
+      // each class to achieve the necessary alignment. However, ASAN checks the alignment of 'this'
+      // in the constructors, and always looks for the full 16 byte alignment, even if the fields in
+      // that particular class don't require it. Changing the size of this object can move the start
+      // address of other types, leading to this problem.
+      int8_t fSampleCnt;
   int8_t fNumStencilSamples = 0;
   WrapsVkSecondaryCB fWrapsVkSecondaryCB;
   GrSwizzle fOutputSwizzle;
-  // Indicates whether some sub-rectangle of the render target requires MSAA resolve. We currently
-  // rely on the GrRenderTarget itself to track the actual dirty rect.
-  // TODO: In the future, convert the flag to a dirty rect and quit tracking it in GrRenderTarget.
-  bool fIsMSAADirty = false;
+  SkIRect fMSAADirtyRect = SkIRect::MakeEmpty();
   // This is to fix issue in large comment above. Without the padding we end 6 bytes into a 16
   // byte range, so the GrTextureProxy ends up starting 8 byte aligned by not 16. We add the
   // padding here to get us right up to the 16 byte alignment (technically any padding of 3-10

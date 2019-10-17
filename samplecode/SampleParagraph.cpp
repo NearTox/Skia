@@ -29,9 +29,13 @@ namespace {
 
 class ParagraphView_Base : public Sample {
  protected:
-  sk_sp<TestFontCollection> fFC;
-  void onOnceBeforeDraw() override {
-    fFC = sk_make_sp<TestFontCollection>(GetResourcePath("fonts").c_str());
+  sk_sp<TestFontCollection> getFontCollection() {
+    // If we reset font collection we need to reset paragraph cache
+    static sk_sp<TestFontCollection> fFC = nullptr;
+    if (fFC == nullptr) {
+      fFC = sk_make_sp<TestFontCollection>(GetResourcePath("fonts").c_str());
+    }
+    return fFC;
   }
 };
 
@@ -40,25 +44,6 @@ sk_sp<SkShader> setgrad(const SkRect& r, SkColor c0, SkColor c1) {
   SkPoint pts[] = {{r.fLeft, r.fTop}, {r.fRight, r.fTop}};
   return SkGradientShader::MakeLinear(pts, colors, nullptr, 2, SkTileMode::kClamp);
 }
-
-const char* gText =
-    "This is a very long sentence to test if the text will properly wrap "
-    "around and go to the next line. Sometimes, short sentence. Longer "
-    "sentences are okay too because they are nessecary. Very short. "
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
-    "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim "
-    "veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea "
-    "commodo consequat. Duis aute irure dolor in reprehenderit in voluptate "
-    "velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint "
-    "occaecat cupidatat non proident, sunt in culpa qui officia deserunt "
-    "mollit anim id est laborum. "
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
-    "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim "
-    "veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea "
-    "commodo consequat. Duis aute irure dolor in reprehenderit in voluptate "
-    "velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint "
-    "occaecat cupidatat non proident, sunt in culpa qui officia deserunt "
-    "mollit anim id est laborum.";
 
 }  // namespace
 
@@ -98,14 +83,14 @@ class ParagraphView1 : public ParagraphView_Base {
     defaultStyle.setForegroundColor(paint);
     ParagraphStyle paraStyle;
 
+    auto fontCollection = sk_make_sp<FontCollection>();
+    fontCollection->setDefaultFontManager(SkFontMgr::RefDefault());
     for (auto i = 1; i < 5; ++i) {
       defaultStyle.setFontSize(24 * i);
       paraStyle.setTextStyle(defaultStyle);
-      auto fontCollection = sk_make_sp<FontCollection>();
-      fontCollection->setDefaultFontManager(SkFontMgr::RefDefault());
       ParagraphBuilderImpl builder(paraStyle, fontCollection);
       std::string name = "Paragraph: " + std::to_string(24 * i);
-      builder.addText(name.c_str());
+      builder.addText(name.c_str(), name.length());
       for (auto para : gParagraph) {
         TextStyle style;
         style.setFontFamilies({SkString(std::get<0>(para).c_str())});
@@ -147,7 +132,7 @@ class ParagraphView1 : public ParagraphView_Base {
             (std::get<4>(para) != bg ? ", background" : "") +
             (std::get<5>(para) != fg ? ", foreground" : "") +
             (std::get<6>(para) ? ", shadow" : "") + (test ? ", decorations " + deco : "") + ";";
-        builder.addText(name.c_str());
+        builder.addText(name.c_str(), name.length());
         builder.pop();
       }
 
@@ -202,23 +187,31 @@ class ParagraphView2 : public ParagraphView_Base {
     fontCollection->setDefaultFontManager(SkFontMgr::RefDefault());
     ParagraphBuilderImpl builder(paraStyle, fontCollection);
 
+    const char* text1 = "RaisedButton";
+    const char* text2 = "(\n";
+    const char* text3 = "  child: ";
+    const char* text4 = "const";
+    const char* text5 = "Text";
+    const char* text6 = "'BUTTON TITLE'";
+    const char* text7 = "),\n";
+
     builder.pushStyle(style(name));
-    builder.addText("RaisedButton");
+    builder.addText(text1, strlen(text1));
     builder.pop();
-    builder.addText("(\n");
-    builder.addText("  child: ");
+    builder.addText(text2, strlen(text2));
+    builder.addText(text3, strlen(text3));
     builder.pushStyle(style(constant));
-    builder.addText("const");
+    builder.addText(text4, strlen(text4));
     builder.pop();
-    builder.addText(" ");
+    builder.addText(" ", 1);
     builder.pushStyle(style(name));
-    builder.addText("Text");
+    builder.addText(text5, strlen(text5));
     builder.pop();
-    builder.addText("(");
+    builder.addText("(", 1);
     builder.pushStyle(style(literal));
-    builder.addText("'BUTTON TITLE'");
+    builder.addText(text6, strlen(text6));
     builder.pop();
-    builder.addText("),\n");
+    builder.addText(text7, strlen(text7));
 
     auto paragraph = builder.Build();
     paragraph->layout(w - 20);
@@ -272,7 +265,7 @@ class ParagraphView2 : public ParagraphView_Base {
     TextStyle defaultStyle;
     defaultStyle.setFontSize(20);
     paraStyle.setTextStyle(defaultStyle);
-    ParagraphBuilderImpl builder(paraStyle, fFC);
+    ParagraphBuilderImpl builder(paraStyle, getFontCollection());
 
     SkPaint foreground;
     foreground.setColor(fg);
@@ -281,7 +274,7 @@ class ParagraphView2 : public ParagraphView_Base {
 
     for (auto& part : text) {
       builder.pushStyle(style);
-      builder.addText(part);
+      builder.addText(part, strlen(part));
       builder.pop();
     }
 
@@ -320,7 +313,7 @@ class ParagraphView2 : public ParagraphView_Base {
     auto fontCollection = sk_make_sp<FontCollection>();
     fontCollection->setDefaultFontManager(SkFontMgr::RefDefault());
     ParagraphBuilderImpl builder(paraStyle, fontCollection);
-    builder.addText(text.c_str());
+    builder.addText(text.c_str(), text.length());
 
     auto paragraph = builder.Build();
     paragraph->layout(w - margin * 2);
@@ -390,7 +383,6 @@ class ParagraphView2 : public ParagraphView_Base {
     canvas->translate(width, 0);
     drawText(canvas, width, height, very_word, SK_ColorBLACK, SK_ColorWHITE, "Google Sans", 30);
     canvas->translate(width, 0);
-
     drawText(
         canvas, width, height / 2, text, SK_ColorBLACK, SK_ColorWHITE, "Roboto", 20, 100,
         u"\u2026");
@@ -618,31 +610,31 @@ class ParagraphView4 : public ParagraphView_Base {
     const char* logo5 = "google_lo";
     const char* logo6 = "go";
     {
-      ParagraphBuilderImpl builder(paraStyle, fFC);
+      ParagraphBuilderImpl builder(paraStyle, getFontCollection());
 
       builder.pushStyle(style0);
-      builder.addText(logo1);
+      builder.addText(logo1, strlen(logo1));
       builder.pop();
       builder.pushStyle(style1);
-      builder.addText(logo2);
+      builder.addText(logo2, strlen(logo2));
       builder.pop();
 
-      builder.addText(" ");
+      builder.addText(" ", 1);
 
       builder.pushStyle(style0);
-      builder.addText(logo3);
+      builder.addText(logo3, strlen(logo3));
       builder.pop();
       builder.pushStyle(style1);
-      builder.addText(logo4);
+      builder.addText(logo4, strlen(logo4));
       builder.pop();
 
-      builder.addText(" ");
+      builder.addText(" ", 1);
 
       builder.pushStyle(style0);
-      builder.addText(logo5);
+      builder.addText(logo5, strlen(logo5));
       builder.pop();
       builder.pushStyle(style1);
-      builder.addText(logo6);
+      builder.addText(logo6, strlen(logo6));
       builder.pop();
 
       auto paragraph = builder.Build();
@@ -708,7 +700,7 @@ class ParagraphView5 : public ParagraphView_Base {
 
     paraStyle.setEllipsis(ellipsis);
 
-    ParagraphBuilderImpl builder(paraStyle, fFC);
+    ParagraphBuilderImpl builder(paraStyle, getFontCollection());
 
     if (text.empty()) {
       const std::u16string text0 = u"\u202Dabc";
@@ -869,31 +861,31 @@ class ParagraphView6 : public ParagraphView_Base {
     const char* logo5 = "Ski";
     const char* logo6 = "a";
     {
-      ParagraphBuilderImpl builder(paraStyle, fFC);
+      ParagraphBuilderImpl builder(paraStyle, getFontCollection());
 
       builder.pushStyle(style0);
-      builder.addText(logo1);
+      builder.addText(logo1, strlen(logo1));
       builder.pop();
       builder.pushStyle(style1);
-      builder.addText(logo2);
+      builder.addText(logo2, strlen(logo2));
       builder.pop();
 
-      builder.addText("   ");
+      builder.addText("   ", 3);
 
       builder.pushStyle(style0);
-      builder.addText(logo3);
+      builder.addText(logo3, strlen(logo3));
       builder.pop();
       builder.pushStyle(style1);
-      builder.addText(logo4);
+      builder.addText(logo4, strlen(logo4));
       builder.pop();
 
-      builder.addText("   ");
+      builder.addText("   ", 3);
 
       builder.pushStyle(style0);
-      builder.addText(logo5);
+      builder.addText(logo5, strlen(logo5));
       builder.pop();
       builder.pushStyle(style1);
-      builder.addText(logo6);
+      builder.addText(logo6, strlen(logo6));
       builder.pop();
 
       auto paragraph = builder.Build();
@@ -909,31 +901,31 @@ class ParagraphView6 : public ParagraphView_Base {
     const char* logo15 = "S";
     const char* logo16 = "S";
     {
-      ParagraphBuilderImpl builder(paraStyle, fFC);
+      ParagraphBuilderImpl builder(paraStyle, getFontCollection());
 
       builder.pushStyle(style0);
-      builder.addText(logo11);
+      builder.addText(logo11, strlen(logo1));
       builder.pop();
       builder.pushStyle(style1);
-      builder.addText(logo12);
+      builder.addText(logo12, strlen(logo2));
       builder.pop();
 
-      builder.addText("   ");
+      builder.addText("   ", 3);
 
       builder.pushStyle(style0);
-      builder.addText(logo13);
+      builder.addText(logo13, strlen(logo3));
       builder.pop();
       builder.pushStyle(style1);
-      builder.addText(logo14);
+      builder.addText(logo14, strlen(logo4));
       builder.pop();
 
-      builder.addText("   ");
+      builder.addText("   ", 3);
 
       builder.pushStyle(style0);
-      builder.addText(logo15);
+      builder.addText(logo15, strlen(logo5));
       builder.pop();
       builder.pushStyle(style1);
-      builder.addText(logo16);
+      builder.addText(logo16, strlen(logo6));
       builder.pop();
 
       auto paragraph = builder.Build();
@@ -966,7 +958,7 @@ class ParagraphView7 : public ParagraphView_Base {
     canvas->drawColor(background);
 
     const char* line =
-        "World domination is such an ugly phrase - I prefer to call it world optimisation";
+        "World domination is such an ugly phrase - I prefer to call it world optimisation.";
 
     ParagraphStyle paragraphStyle;
     paragraphStyle.setTextAlign(TextAlign::kLeft);
@@ -980,9 +972,9 @@ class ParagraphView7 : public ParagraphView_Base {
     textStyle.setFontStyle(SkFontStyle(
         SkFontStyle::kMedium_Weight, SkFontStyle::kNormal_Width, SkFontStyle::kUpright_Slant));
 
-    ParagraphBuilderImpl builder(paragraphStyle, fFC);
+    ParagraphBuilderImpl builder(paragraphStyle, getFontCollection());
     builder.pushStyle(textStyle);
-    builder.addText(line);
+    builder.addText(line, strlen(line));
     builder.pop();
 
     auto paragraph = builder.Build();
@@ -1027,7 +1019,7 @@ class ParagraphView7 : public ParagraphView_Base {
 
 class ParagraphView8 : public ParagraphView_Base {
  protected:
-  SkString name() override { return SkString("Paragraph7"); }
+  SkString name() override { return SkString("Paragraph8"); }
 
   void drawText(SkCanvas* canvas, SkColor background, SkScalar wordSpace, SkScalar w, SkScalar h) {
     SkAutoCanvasRestore acr(canvas, true);
@@ -1035,7 +1027,7 @@ class ParagraphView8 : public ParagraphView_Base {
     canvas->drawColor(background);
 
     const char* line =
-        "World domination is such an ugly phrase - I prefer to call it world optimisation";
+        "World domination is such an ugly phrase - I prefer to call it world optimisation.";
 
     ParagraphStyle paragraphStyle;
     paragraphStyle.setTextAlign(TextAlign::kLeft);
@@ -1049,9 +1041,9 @@ class ParagraphView8 : public ParagraphView_Base {
     textStyle.setFontStyle(SkFontStyle(
         SkFontStyle::kMedium_Weight, SkFontStyle::kNormal_Width, SkFontStyle::kUpright_Slant));
 
-    ParagraphBuilderImpl builder(paragraphStyle, fFC);
+    ParagraphBuilderImpl builder(paragraphStyle, getFontCollection());
     builder.pushStyle(textStyle);
-    builder.addText(line);
+    builder.addText(line, strlen(line));
     builder.pop();
 
     auto paragraph = builder.Build();
@@ -1135,9 +1127,9 @@ class ParagraphView9 : public ParagraphView_Base {
     textStyle.setFontStyle(SkFontStyle(
         SkFontStyle::kMedium_Weight, SkFontStyle::kNormal_Width, SkFontStyle::kUpright_Slant));
 
-    ParagraphBuilderImpl builder(paragraphStyle, fFC);
+    ParagraphBuilderImpl builder(paragraphStyle, getFontCollection());
     builder.pushStyle(textStyle);
-    builder.addText(text);
+    builder.addText(text, strlen(text));
     builder.pop();
 
     auto paragraph = builder.Build();
@@ -1194,7 +1186,7 @@ class ParagraphView10 : public ParagraphView_Base {
     const char* text = "English English 字典 字典 😀😃😄 😀😃😄";
     ParagraphStyle paragraph_style;
     paragraph_style.turnHintingOff();
-    ParagraphBuilderImpl builder(paragraph_style, fFC);
+    ParagraphBuilderImpl builder(paragraph_style, getFontCollection());
 
     TextStyle text_style;
     text_style.setFontFamilies(
@@ -1206,7 +1198,7 @@ class ParagraphView10 : public ParagraphView_Base {
     text_style.setColor(SK_ColorBLACK);
     text_style.setHeight(1);
     builder.pushStyle(text_style);
-    builder.addText(text);
+    builder.addText(text, strlen(text));
     builder.pop();
 
     auto paragraph = builder.Build();
@@ -1229,21 +1221,39 @@ class ParagraphView11 : public ParagraphView_Base {
 
   void onDrawContent(SkCanvas* canvas) override {
     canvas->drawColor(SK_ColorWHITE);
-    const char* text = "The same text many times";
 
-    for (size_t i = 0; i < 10; i++) {
-      ParagraphStyle paragraph_style;
-      ParagraphBuilderImpl builder(paragraph_style, fFC);
-      TextStyle text_style;
-      text_style.setFontFamilies({SkString("Roboto")});
-      text_style.setColor(SK_ColorBLACK);
-      text_style.setFontSize(10 + 2 * (i % 10));
-      builder.pushStyle(text_style);
-      builder.addText(text);
-      builder.pop();
-      auto paragraph = builder.Build();
-      paragraph->layout(500);
-      paragraph->paint(canvas, 0, 40 * (i % 10));
+    auto text =
+        "\U0001f469\U0000200D\U0001f469\U0000200D\U0001f466\U0001f469\U0000200D\U0001f469\U0000200D"
+        "\U0001f467\U0000200D\U0001f467\U0001f1fa\U0001f1f8";
+    TextStyle text_style;
+    text_style.setFontFamilies({SkString("Ahem")});
+    text_style.setColor(SK_ColorBLACK);
+    text_style.setFontSize(60);
+    text_style.setLetterSpacing(0);
+    text_style.setWordSpacing(0);
+    ParagraphStyle paragraph_style;
+    paragraph_style.setTextStyle(text_style);
+    ParagraphBuilderImpl builder(paragraph_style, getFontCollection());
+    builder.addText(text, strlen(text));
+    auto paragraph = builder.Build();
+    paragraph->layout(1000);
+    paragraph->paint(canvas, 0, 0);
+
+    SkColor colors[] = {SK_ColorRED, SK_ColorBLACK, SK_ColorBLUE, SK_ColorTRANSPARENT,
+                        SK_ColorTRANSPARENT};
+    SkPoint queries[] = {{1, 3}, {1, 5}, {1, 9}, {1, 17}, {1, 33}};
+    SkPaint paint;
+    paint.setColor(SK_ColorRED);
+    paint.setStyle(SkPaint::kStroke_Style);
+    paint.setAntiAlias(true);
+    paint.setStrokeWidth(5);
+    for (auto& query : queries) {
+      auto rects = paragraph->getRectsForRange(
+          query.fX, query.fY, RectHeightStyle::kTight, RectWidthStyle::kTight);
+      paint.setColor(colors[&query - &queries[0]]);
+      for (auto& rect : rects) {
+        canvas->drawRect(rect.rect, paint);
+      }
     }
   }
 
@@ -1251,74 +1261,191 @@ class ParagraphView11 : public ParagraphView_Base {
   typedef Sample INHERITED;
 };
 
-// Measure different stages of layout/paint
 class ParagraphView12 : public ParagraphView_Base {
  protected:
   SkString name() override { return SkString("Paragraph12"); }
 
   void onDrawContent(SkCanvas* canvas) override {
-    ParagraphStyle paragraph_style;
-    paragraph_style.setMaxLines(14);
-    paragraph_style.setTextAlign(TextAlign::kLeft);
-    paragraph_style.turnHintingOff();
-    ParagraphBuilderImpl builder(paragraph_style, fFC);
+    canvas->drawColor(SK_ColorWHITE);
 
+    const char* text = "Atwater Peel Sherbrooke Bonaventure Angrignon Peel Côte-des-Neiges";
     TextStyle text_style;
-    text_style.setFontFamilies({SkString("Roboto")});
-    text_style.setFontSize(26);
+    text_style.setFontFamilies({SkString("Ahem")});
     text_style.setColor(SK_ColorBLACK);
-    text_style.setHeight(1);
-    text_style.setDecoration(TextDecoration::kUnderline);
-    text_style.setDecorationColor(SK_ColorBLACK);
-    builder.pushStyle(text_style);
-    builder.addText(gText);
-    builder.pop();
-
+    text_style.setFontSize(16);
+    // text_style.setLetterSpacing(-0.41);
+    StrutStyle strut_style;
+    strut_style.setStrutEnabled(false);
+    ParagraphStyle paragraph_style;
+    paragraph_style.setStrutStyle(strut_style);
+    paragraph_style.setTextStyle(text_style);
+    ParagraphBuilderImpl builder(paragraph_style, getFontCollection());
+    builder.addText(text);
     auto paragraph = builder.Build();
-    auto impl = reinterpret_cast<ParagraphImpl*>(paragraph.get());
-    impl->turnOnCache(false);
+    paragraph->layout(1095.000000);
+    auto result =
+        paragraph->getRectsForRange(65, 66, RectHeightStyle::kTight, RectWidthStyle::kTight);
+    paragraph->paint(canvas, 0, 0);
 
-    for (auto i = 0; i < 1000; ++i) {
-      impl->setState(kUnknown);
-      impl->shapeTextIntoEndlessLine();
-      impl->setState(kShaped);
-    }
+    SkPaint paint;
+    paint.setColor(SK_ColorRED);
+    paint.setStyle(SkPaint::kStroke_Style);
+    paint.setAntiAlias(true);
+    paint.setStrokeWidth(1);
+    canvas->drawRect(result.front().rect, paint);
+  }
 
-    for (auto i = 0; i < 1000; ++i) {
-      impl->setState(kShaped);
-      impl->buildClusterTable();
-      impl->markLineBreaks();
-      impl->setState(kMarked);
-    }
+ private:
+  typedef Sample INHERITED;
+};
 
-    for (auto i = 0; i < 1000; ++i) {
-      impl->setState(kMarked);
-      impl->breakShapedTextIntoLines(1000);
-      impl->setState(kLineBroken);
-    }
+class ParagraphView13 : public ParagraphView_Base {
+ protected:
+  SkString name() override { return SkString("Paragraph13"); }
 
-    for (auto i = 0; i < 1000; ++i) {
-      impl->setState(kLineBroken);
-      impl->formatLines(1000);
-      impl->setState(kFormatted);
-    }
+  void onDrawContent(SkCanvas* canvas) override {
+    canvas->drawColor(SK_ColorWHITE);
 
-    for (auto i = 0; i < 1000; ++i) {
-      impl->setState(kFormatted);
-      impl->paintLinesIntoPicture();
-      impl->setState(kDrawn);
-    }
+    const char* text =
+        "This\n"
+        "is a wrapping test. It should wrap at manual newlines, and if softWrap is true, also at "
+        "spaces.";
+    TextStyle text_style;
+    text_style.setFontFamilies({SkString("Ahem")});
+    text_style.setColor(SK_ColorBLACK);
+    text_style.setFontSize(10);
 
-    auto picture = impl->getPicture();
-    SkMatrix matrix = SkMatrix::MakeTrans(0, 0);
-    for (auto i = 0; i < 1000; ++i) {
-      canvas->drawPicture(picture, &matrix, nullptr);
+    auto relayout = [&](size_t lines, bool ellipsis, SkScalar width, SkScalar height,
+                        SkScalar minWidth, SkScalar maxWidth, SkColor bg) {
+      ParagraphStyle paragraph_style;
+      SkPaint paint;
+      paint.setColor(bg);
+      text_style.setForegroundColor(paint);
+      paragraph_style.setTextStyle(text_style);
+      paragraph_style.setMaxLines(lines);
+      if (ellipsis) {
+        paragraph_style.setEllipsis(u"\u2026");
+      }
+      ParagraphBuilderImpl builder(paragraph_style, getFontCollection());
+      builder.addText(text);
+      auto paragraph = builder.Build();
+      paragraph->layout(50);
+      paragraph->paint(canvas, 0, 0);
+      canvas->translate(0, paragraph->getHeight() + 10);
+
+      SkASSERT(width == paragraph->getMaxWidth());
+      SkASSERT(height == paragraph->getHeight());
+      SkASSERT(minWidth == paragraph->getMinIntrinsicWidth());
+      SkASSERT(maxWidth == paragraph->getMaxIntrinsicWidth());
+    };
+
+    SkPaint paint;
+    paint.setColor(SK_ColorLTGRAY);
+    canvas->drawRect(SkRect::MakeXYWH(0, 0, 50, 500), paint);
+
+    relayout(1, false, 50, 10, 950, 950, SK_ColorRED);
+    relayout(3, false, 50, 30, 50, 950, SK_ColorBLUE);
+    relayout(std::numeric_limits<size_t>::max(), false, 50, 200, 50, 950, SK_ColorGREEN);
+
+    relayout(1, true, 50, 10, 950, 950, SK_ColorYELLOW);
+    relayout(3, true, 50, 30, 50, 950, SK_ColorMAGENTA);
+    relayout(std::numeric_limits<size_t>::max(), true, 50, 20, 950, 950, SK_ColorCYAN);
+
+    relayout(1, false, 50, 10, 950, 950, SK_ColorRED);
+    relayout(3, false, 50, 30, 50, 950, SK_ColorBLUE);
+    relayout(std::numeric_limits<size_t>::max(), false, 50, 200, 50, 950, SK_ColorGREEN);
+  }
+
+ private:
+  typedef Sample INHERITED;
+};
+
+class ParagraphView14 : public ParagraphView_Base {
+ protected:
+  SkString name() override { return SkString("Paragraph14"); }
+
+  void onDrawContent(SkCanvas* canvas) override {
+    canvas->drawColor(SK_ColorWHITE);
+    TextStyle text_style;
+    text_style.setFontFamilies({SkString("Ahem")});
+    text_style.setColor(SK_ColorBLACK);
+    text_style.setFontSize(25);
+    text_style.setDecoration((TextDecoration)(
+        TextDecoration::kUnderline | TextDecoration::kOverline | TextDecoration::kLineThrough));
+    text_style.setDecorationColor(SK_ColorBLUE);
+    text_style.setDecorationStyle(TextDecorationStyle::kWavy);
+    text_style.setDecorationThicknessMultiplier(4.0f);
+    ParagraphStyle paragraph_style;
+    paragraph_style.setTextStyle(text_style);
+    paragraph_style.setTextDirection(TextDirection::kRtl);
+    ParagraphBuilderImpl builder(paragraph_style, getFontCollection());
+    builder.pushStyle(text_style);
+    builder.addText("Hello, wor!\nabcd.");
+    auto paragraph = builder.Build();
+    paragraph->layout(300);
+    paragraph->paint(canvas, 0, 0);
+    SkPaint paint;
+    paint.setColor(SK_ColorRED);
+    paint.setStyle(SkPaint::kStroke_Style);
+    paint.setAntiAlias(true);
+    paint.setStrokeWidth(1);
+    canvas->drawRect(SkRect::MakeXYWH(0, 0, 300, 100), paint);
+  }
+
+ private:
+  typedef Sample INHERITED;
+};
+
+class ParagraphView15 : public ParagraphView_Base {
+ protected:
+  SkString name() override { return SkString("Paragraph15"); }
+
+  void onDrawContent(SkCanvas* canvas) override {
+    canvas->drawColor(SK_ColorWHITE);
+    TextStyle text_style;
+    text_style.setFontFamilies({SkString("Ahem")});
+    text_style.setColor(SK_ColorBLACK);
+    ParagraphStyle paragraph_style;
+    paragraph_style.setTextStyle(text_style);
+    ParagraphBuilderImpl builder(paragraph_style, getFontCollection());
+    text_style.setFontSize(16);
+    builder.pushStyle(text_style);
+    builder.addText("C ");
+    text_style.setFontSize(20);
+    builder.pushStyle(text_style);
+    builder.addText("He");
+    builder.pop();
+    PlaceholderStyle placeholderStyle;
+    placeholderStyle.fHeight = 55.0f;
+    placeholderStyle.fWidth = 50.0f;
+    placeholderStyle.fBaseline = TextBaseline::kAlphabetic;
+    placeholderStyle.fAlignment = PlaceholderAlignment::kBottom;
+    builder.addPlaceholder(placeholderStyle);
+    text_style.setFontSize(16);
+    builder.pushStyle(text_style);
+    builder.addText("hello world! sieze the day!");
+    auto paragraph = builder.Build();
+    paragraph->layout(400);
+    paragraph->paint(canvas, 0, 0);
+    SkPaint paint;
+    paint.setColor(SK_ColorRED);
+    paint.setStyle(SkPaint::kStroke_Style);
+    paint.setAntiAlias(true);
+    paint.setStrokeWidth(1);
+    canvas->drawRect(SkRect::MakeXYWH(0, 0, 400, 200), paint);
+
+    auto phs = paragraph->getRectsForPlaceholders();
+    for (auto& ph : phs) {
+      paint.setStyle(SkPaint::kFill_Style);
+      paint.setColor(SK_ColorYELLOW);
+      canvas->drawRect(ph.rect, paint);
     }
   }
 
  private:
   typedef Sample INHERITED;
 };
+
 //////////////////////////////////////////////////////////////////////////////
 
 DEF_SAMPLE(return new ParagraphView1();)
@@ -1333,3 +1460,6 @@ DEF_SAMPLE(return new ParagraphView9();)
 DEF_SAMPLE(return new ParagraphView10();)
 DEF_SAMPLE(return new ParagraphView11();)
 DEF_SAMPLE(return new ParagraphView12();)
+DEF_SAMPLE(return new ParagraphView13();)
+DEF_SAMPLE(return new ParagraphView14();)
+DEF_SAMPLE(return new ParagraphView15();)

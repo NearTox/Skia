@@ -288,7 +288,7 @@ class DashOp final : public GrMeshDrawOp {
     SkMatrix& combinedMatrix = fLines[0].fSrcRotInv;
     combinedMatrix.postConcat(geometry.fViewMatrix);
 
-    IsZeroArea zeroArea = geometry.fSrcStrokeWidth ? IsZeroArea::kNo : IsZeroArea::kYes;
+    IsHairline zeroArea = geometry.fSrcStrokeWidth ? IsHairline::kNo : IsHairline::kYes;
     HasAABloat aaBloat = (aaMode == AAMode::kNone) ? HasAABloat ::kNo : HasAABloat::kYes;
     this->setTransformedBounds(bounds, combinedMatrix, aaBloat, zeroArea);
   }

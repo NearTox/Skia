@@ -134,6 +134,7 @@
     <ClCompile Include="angle2\src\libANGLE\validationES2.cpp" />
     <ClCompile Include="angle2\src\libANGLE\validationES3.cpp" />
     <ClCompile Include="angle2\src\libANGLE\validationES31.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationES32.cpp" />
     <ClCompile Include="angle2\src\common\Float16ToFloat32.cpp" />
     <ClCompile Include="angle2\src\common\MemoryBuffer.cpp" />
     <ClCompile Include="angle2\src\common\aligned_memory.cpp" />
@@ -156,6 +157,7 @@
     <ClCompile Include="angle2\src\libGLESv2\entry_points_gles_2_0_autogen.cpp" />
     <ClCompile Include="angle2\src\libGLESv2\entry_points_gles_3_0_autogen.cpp" />
     <ClCompile Include="angle2\src\libGLESv2\entry_points_gles_3_1_autogen.cpp" />
+    <ClCompile Include="angle2\src\libGLESv2\entry_points_gles_3_2_autogen.cpp" />
     <ClCompile Include="angle2\src\libGLESv2\entry_points_gles_ext_autogen.cpp" />
     <ClCompile Include="angle2\src\libGLESv2\global_state.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\BufferD3D.cpp" />
@@ -395,6 +397,6 @@
     <ClCompile Include="angle2\src\libANGLE\OverlayWidgets.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\MemoryObjectGL.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\SemaphoreGL.cpp" />
-    <ClCompile Include="angle2\src\libANGLE\FrameCapture.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\FrameCapture_mock.cpp" />
   </ItemGroup>
 </Project>

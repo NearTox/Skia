@@ -89,7 +89,7 @@ class DWriteFontTypeface : public SkTypeface {
   }
 
  protected:
-  void weak_dispose() const noexcept override {
+  void weak_dispose() const override {
     if (fDWriteFontCollectionLoader.get()) {
       HRV(fFactory->UnregisterFontCollectionLoader(fDWriteFontCollectionLoader.get()));
     }

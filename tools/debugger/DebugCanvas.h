@@ -100,7 +100,7 @@ class DebugCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
    */
   void toJSON(SkJSONWriter& writer, UrlDataManager& urlDataManager, int n, SkCanvas*);
 
-  void toJSONOpList(SkJSONWriter& writer, int n, SkCanvas*);
+  void toJSONOpsTask(SkJSONWriter& writer, int n, SkCanvas*);
 
   void detachCommands(SkTDArray<DrawCommand*>* dst) { fCommandVector.swap(*dst); }
 
@@ -164,7 +164,7 @@ class DebugCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
   void onDrawPicture(const SkPicture*, const SkMatrix*, const SkPaint*) override;
 
   void onDrawEdgeAAQuad(
-      const SkRect&, const SkPoint[4], QuadAAFlags, SkColor, SkBlendMode) override;
+      const SkRect&, const SkPoint[4], QuadAAFlags, const SkColor4f&, SkBlendMode) override;
   void onDrawEdgeAAImageSet(
       const ImageSetEntry[], int count, const SkPoint[], const SkMatrix[], const SkPaint*,
       SrcRectConstraint) override;

@@ -11,6 +11,7 @@
 #include "src/gpu/GrRenderTarget.h"
 
 #include "include/gpu/GrBackendSurface.h"
+#include "src/gpu/GrGpu.h"
 
 #import <Metal/Metal.h>
 
@@ -22,16 +23,6 @@ class GrMtlRenderTarget : public GrRenderTarget {
       GrMtlGpu*, const GrSurfaceDesc&, int sampleCnt, id<MTLTexture>);
 
   ~GrMtlRenderTarget() override;
-
-  // override of GrRenderTarget
-  ResolveType getResolveType() const override {
-    if (this->numSamples() > 1) {
-      SkASSERT(this->requiresManualMSAAResolve());
-      return kCanResolve_ResolveType;
-    }
-    SkASSERT(!this->requiresManualMSAAResolve());
-    return kAutoResolves_ResolveType;
-  }
 
   bool canAttemptStencilAttachment() const override { return true; }
 
@@ -63,8 +54,10 @@ class GrMtlRenderTarget : public GrRenderTarget {
     if (numColorSamples > 1) {
       ++numColorSamples;
     }
+    const GrCaps& caps = *this->getGpu()->caps();
     return GrSurface::ComputeSize(
-        this->config(), this->width(), this->height(), numColorSamples, GrMipMapped::kNo);
+        caps, this->backendFormat(), this->width(), this->height(), numColorSamples,
+        GrMipMapped::kNo);
   }
 
   id<MTLTexture> fColorTexture;

@@ -26,7 +26,8 @@ class GrMtlCaps : public GrCaps {
   GrMtlCaps(const GrContextOptions& contextOptions, id<MTLDevice> device, MTLFeatureSet featureSet);
 
   bool isFormatSRGB(const GrBackendFormat&) const override;
-  bool isFormatCompressed(const GrBackendFormat&) const override;
+  bool isFormatCompressed(
+      const GrBackendFormat&, SkImage::CompressionType* compressionType = nullptr) const override;
 
   bool isFormatTexturableAndUploadable(GrColorType, const GrBackendFormat&) const override;
   bool isFormatTexturable(const GrBackendFormat&) const override;
@@ -44,6 +45,9 @@ class GrMtlCaps : public GrCaps {
 
   int maxRenderTargetSampleCount(const GrBackendFormat&) const override;
   int maxRenderTargetSampleCount(MTLPixelFormat) const;
+
+  size_t bytesPerPixel(const GrBackendFormat&) const override;
+  size_t bytesPerPixel(MTLPixelFormat) const;
 
   SupportedWrite supportedWritePixelsColorType(
       GrColorType surfaceColorType, const GrBackendFormat& surfaceFormat,
@@ -75,8 +79,6 @@ class GrMtlCaps : public GrCaps {
     int idx = static_cast<int>(colorType);
     return fColorTypeToFormatTable[idx];
   }
-
-  bool canClearTextureOnCreation() const override { return true; }
 
   GrSwizzle getTextureSwizzle(const GrBackendFormat&, GrColorType) const override;
   GrSwizzle getOutputSwizzle(const GrBackendFormat&, GrColorType) const override;
@@ -142,13 +144,16 @@ class GrMtlCaps : public GrCaps {
 
     uint16_t fFlags = 0;
 
+    // This value is only valid for regular formats. Compressed formats will be 0.
+    size_t fBytesPerPixel = 0;
+
     std::unique_ptr<ColorTypeInfo[]> fColorTypeInfos;
     int fColorTypeInfoCount = 0;
   };
 #ifdef SK_BUILD_FOR_IOS
-  static constexpr size_t kNumMtlFormats = 18;
+  static constexpr size_t kNumMtlFormats = 17;
 #else
-  static constexpr size_t kNumMtlFormats = 15;
+  static constexpr size_t kNumMtlFormats = 14;
 #endif
   static size_t GetFormatIndex(MTLPixelFormat);
   FormatInfo fFormatTable[kNumMtlFormats];

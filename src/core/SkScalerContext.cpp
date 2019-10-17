@@ -303,10 +303,10 @@ static void pack4xHToLCD16(
   if (doVert) {
     SkASSERT(src.width() == (dst.fBounds.height() - 2) * 4);
     SkASSERT(src.height() == dst.fBounds.width());
-    } else {
-      SkASSERT(src.width() == (dst.fBounds.width() - 2) * 4);
-      SkASSERT(src.height() == dst.fBounds.height());
-    }
+  } else {
+    SkASSERT(src.width() == (dst.fBounds.width() - 2) * 4);
+    SkASSERT(src.height() == dst.fBounds.height());
+  }
 
     const int sample_width = src.width();
     const int height = src.height();

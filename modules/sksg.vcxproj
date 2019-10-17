@@ -75,14 +75,12 @@
     <OutDir>$(MyOutDir)</OutDir>
     <IntDir>$(MyTempDir)</IntDir>
     <CodeAnalysisRuleSet>..\rules skia.ruleset</CodeAnalysisRuleSet>
-    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(MyOutDir)</OutDir>
     <IntDir>$(MyTempDir)</IntDir>
     <CodeAnalysisRuleSet>..\rules skia.ruleset</CodeAnalysisRuleSet>
-    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -96,10 +94,10 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AssemblerOutput>AssemblyCode</AssemblerOutput>
       <EnablePREfast>false</EnablePREfast>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <AssemblerOutput>AssemblyCode</AssemblerOutput>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -120,10 +118,10 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AssemblerOutput>AssemblyCode</AssemblerOutput>
       <EnablePREfast>false</EnablePREfast>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <AssemblerOutput>AssemblyCode</AssemblerOutput>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

@@ -91,13 +91,12 @@ void GrVkResourceProvider::init() {
 }
 
 GrVkPipeline* GrVkResourceProvider::createPipeline(
-    int numColorSamples, const GrPrimitiveProcessor& primProc, const GrPipeline& pipeline,
-    const GrStencilSettings& stencil, GrSurfaceOrigin origin,
+    const GrProgramInfo& programInfo, const GrStencilSettings& stencil,
     VkPipelineShaderStageCreateInfo* shaderStageInfo, int shaderStageCount,
     GrPrimitiveType primitiveType, VkRenderPass compatibleRenderPass, VkPipelineLayout layout) {
   return GrVkPipeline::Create(
-      fGpu, numColorSamples, primProc, pipeline, stencil, origin, shaderStageInfo, shaderStageCount,
-      primitiveType, compatibleRenderPass, layout, this->pipelineCache());
+      fGpu, programInfo, stencil, shaderStageInfo, shaderStageCount, primitiveType,
+      compatibleRenderPass, layout, this->pipelineCache());
 }
 
 // To create framebuffers, we first need to create a simple RenderPass that is
@@ -216,11 +215,10 @@ GrVkSamplerYcbcrConversion* GrVkResourceProvider::findOrCreateCompatibleSamplerY
 }
 
 GrVkPipelineState* GrVkResourceProvider::findOrCreateCompatiblePipelineState(
-    GrRenderTarget* renderTarget, GrSurfaceOrigin origin, const GrPipeline& pipeline,
-    const GrPrimitiveProcessor& proc, const GrTextureProxy* const primProcProxies[],
-    GrPrimitiveType primitiveType, VkRenderPass compatibleRenderPass) {
+    GrRenderTarget* renderTarget, const GrProgramInfo& programInfo, GrPrimitiveType primitiveType,
+    VkRenderPass compatibleRenderPass) {
   return fPipelineStateCache->refPipelineState(
-      renderTarget, origin, proc, primProcProxies, pipeline, primitiveType, compatibleRenderPass);
+      renderTarget, programInfo, primitiveType, compatibleRenderPass);
 }
 
 void GrVkResourceProvider::getSamplerDescriptorSetHandle(
@@ -310,8 +308,7 @@ GrVkCommandPool* GrVkResourceProvider::findOrCreateCommandPool() {
            : fActiveCommandPools) { SkASSERT(pool != result); } for (const GrVkCommandPool* pool
                                                                      : fAvailableCommandPools) {
         SkASSERT(pool != result);
-      });
-  fActiveCommandPools.push_back(result);
+      }) fActiveCommandPools.push_back(result);
   result->ref();
   return result;
 }

@@ -25,7 +25,7 @@ class GrMockGpu : public GrGpu {
   ~GrMockGpu() override {}
 
   GrOpsRenderPass* getOpsRenderPass(
-      GrRenderTarget*, GrSurfaceOrigin, const SkRect&, const GrOpsRenderPass::LoadAndStoreInfo&,
+      GrRenderTarget*, GrSurfaceOrigin, const SkIRect&, const GrOpsRenderPass::LoadAndStoreInfo&,
       const GrOpsRenderPass::StencilLoadAndStoreInfo&,
       const SkTArray<GrTextureProxy*, true>& sampledProxies) override;
 
@@ -58,7 +58,7 @@ class GrMockGpu : public GrGpu {
 
   sk_sp<GrTexture> onCreateTexture(
       const GrSurfaceDesc&, const GrBackendFormat&, GrRenderable, int renderTargetSampleCnt,
-      SkBudgeted, GrProtected, const GrMipLevel[], int mipLevelCount) override;
+      SkBudgeted, GrProtected, int mipLevelCount, uint32_t levelClearMask) override;
 
   sk_sp<GrTexture> onCreateCompressedTexture(
       int width, int height, const GrBackendFormat&, SkImage::CompressionType, SkBudgeted,
@@ -111,7 +111,8 @@ class GrMockGpu : public GrGpu {
 
   bool onRegenerateMipMapLevels(GrTexture*) override { return true; }
 
-  void onResolveRenderTarget(GrRenderTarget* target) override { target->flagAsResolved(); }
+  void onResolveRenderTarget(
+      GrRenderTarget* target, const SkIRect&, GrSurfaceOrigin, ForExternalIO) override {}
 
   void onFinishFlush(
       GrSurfaceProxy*[], int n, SkSurface::BackendSurfaceAccess access, const GrFlushInfo& info,
@@ -123,9 +124,9 @@ class GrMockGpu : public GrGpu {
 
   GrStencilAttachment* createStencilAttachmentForRenderTarget(
       const GrRenderTarget*, int width, int height, int numStencilSamples) override;
-  GrBackendTexture createBackendTexture(
-      int w, int h, const GrBackendFormat&, GrMipMapped, GrRenderable, const void* pixels,
-      size_t rowBytes, const SkColor4f* color, GrProtected isProtected) override;
+  GrBackendTexture onCreateBackendTexture(
+      int w, int h, const GrBackendFormat&, GrMipMapped, GrRenderable, const SkPixmap srcData[],
+      int numMipLevels, const SkColor4f* color, GrProtected) override;
   void deleteBackendTexture(const GrBackendTexture&) override;
 
 #if GR_TEST_UTILS

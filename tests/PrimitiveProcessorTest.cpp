@@ -49,7 +49,7 @@ class Op : public GrMeshDrawOp {
   friend class ::GrOpMemoryPool;
 
   Op(int numAttribs) : INHERITED(ClassID()), fNumAttribs(numAttribs) {
-    this->setBounds(SkRect::MakeWH(1.f, 1.f), HasAABloat::kNo, IsZeroArea::kNo);
+    this->setBounds(SkRect::MakeWH(1.f, 1.f), HasAABloat::kNo, IsHairline::kNo);
   }
 
   void onPrepareDraws(Target* target) override {

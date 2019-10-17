@@ -50,6 +50,7 @@ class GrOpsTask : public GrRenderTask {
    */
   void endFlush() override;
 
+  void onPrePrepare(GrRecordingContext*) override;
   /**
    * Together these two functions flush all queued up draws to GrCommandBuffer. The return value
    * of executeOps() indicates whether any commands were actually issued to the GPU.
@@ -100,12 +101,11 @@ class GrOpsTask : public GrRenderTask {
 
   void discard();
 
-  SkDEBUGCODE(void dump(bool printDependencies) const override);
-  SkDEBUGCODE(int numClips() const override { return fNumClips; });
-  SkDEBUGCODE(void visitProxies_debugOnly(const VisitSurfaceProxyFunc&) const override);
+  SkDEBUGCODE(void dump(bool printDependencies) const override;)
+      SkDEBUGCODE(int numClips() const override { return fNumClips; })
+          SkDEBUGCODE(void visitProxies_debugOnly(const VisitSurfaceProxyFunc&) const override;)
 
- private:
-  bool isNoOp() const {
+              private : bool isNoOp() const {
     // TODO: GrLoadOp::kDiscard (i.e., storing a discard) should also be grounds for skipping
     // execution. We currently don't because of Vulkan. See http://skbug.com/9373.
     //
@@ -116,8 +116,30 @@ class GrOpsTask : public GrRenderTask {
 
   void deleteOps();
 
-  // Must only be called if native stencil buffer clearing is enabled
-  void setStencilLoadOp(GrLoadOp op) { fStencilLoadOp = op; }
+  enum class StencilContent {
+    kDontCare,
+    kUserBitsCleared,  // User bits: cleared
+                       // Clip bit: don't care (Ganesh always pre-clears the clip bit.)
+    kPreserved
+  };
+
+  // Lets the caller specify what the content of the stencil buffer should be at the beginning
+  // of the render pass.
+  //
+  // When requesting kClear: Tilers will load the stencil buffer with a "clear" op; non-tilers
+  // will clear the stencil on first load, and then preserve it on subsequent loads. (Preserving
+  // works because renderTargetContexts are required to leave the user bits in a cleared state
+  // once finished.)
+  //
+  // NOTE: initialContent must not be kClear if caps.performStencilClearsAsDraws() is true.
+  void setInitialStencilContent(StencilContent initialContent) {
+    fInitialStencilContent = initialContent;
+  }
+
+  // If a renderTargetContext splits its opsTask, it uses this method to guarantee stencil values
+  // get preserved across its split tasks.
+  void setMustPreserveStencil() { fMustPreserveStencil = true; }
+
   // Must only be called if native color buffer clearing is enabled.
   void setColorLoadOp(GrLoadOp op, const SkPMColor4f& color);
   // Sets the clear color to transparent black
@@ -224,10 +246,7 @@ class GrOpsTask : public GrRenderTask {
 
   void forwardCombine(const GrCaps&);
 
-  ExpectedOutcome onMakeClosed(const GrCaps& caps) override {
-    this->forwardCombine(caps);
-    return (this->isNoOp()) ? ExpectedOutcome::kTargetUnchanged : ExpectedOutcome::kTargetDirty;
-  }
+  ExpectedOutcome onMakeClosed(const GrCaps& caps, SkIRect* targetUpdateBounds) override;
 
   friend class GrRenderTargetContextPriv;  // for stencil clip state. TODO: this is invasive
 
@@ -245,7 +264,8 @@ class GrOpsTask : public GrRenderTask {
 
   GrLoadOp fColorLoadOp = GrLoadOp::kLoad;
   SkPMColor4f fLoadClearColor = SK_PMColor4fTRANSPARENT;
-  GrLoadOp fStencilLoadOp = GrLoadOp::kLoad;
+  StencilContent fInitialStencilContent = StencilContent::kDontCare;
+  bool fMustPreserveStencil = false;
 
   uint32_t fLastClipStackGenID;
   SkIRect fLastDevClipBounds;
@@ -261,11 +281,14 @@ class GrOpsTask : public GrRenderTask {
   // MDB TODO: 4096 for the first allocation of the clip space will be huge overkill.
   // Gather statistics to determine the correct size.
   SkArenaAlloc fClipAllocator{4096};
-  SkDEBUGCODE(int fNumClips);
+  SkDEBUGCODE(int fNumClips;)
 
-  // TODO: We could look into this being a set if we find we're adding a lot of duplicates that
-  // is causing slow downs.
-  SkTArray<GrTextureProxy*, true> fSampledProxies;
+      // TODO: We could look into this being a set if we find we're adding a lot of duplicates that
+      // is causing slow downs.
+      SkTArray<GrTextureProxy*, true> fSampledProxies;
+
+  SkRect fTotalBounds = SkRect::MakeEmpty();
+  SkIRect fClippedContentBounds = SkIRect::MakeEmpty();
 };
 
 #endif

@@ -26,9 +26,9 @@
 #define kDefault_Edging SkFont::Edging::kAntiAlias
 #define kDefault_Hinting SkPaintDefaults_Hinting
 
-static constexpr inline SkScalar valid_size(SkScalar size) { return SkTMax<SkScalar>(0, size); }
+static inline SkScalar valid_size(SkScalar size) { return SkTMax<SkScalar>(0, size); }
 
-SkFont::SkFont(sk_sp<SkTypeface> face, SkScalar size, SkScalar scaleX, SkScalar skewX) noexcept
+SkFont::SkFont(sk_sp<SkTypeface> face, SkScalar size, SkScalar scaleX, SkScalar skewX)
     : fTypeface(std::move(face)),
       fSize(valid_size(size)),
       fScaleX(scaleX),
@@ -37,19 +37,18 @@ SkFont::SkFont(sk_sp<SkTypeface> face, SkScalar size, SkScalar scaleX, SkScalar 
       fEdging(static_cast<unsigned>(kDefault_Edging)),
       fHinting(static_cast<unsigned>(kDefault_Hinting)) {}
 
-SkFont::SkFont(sk_sp<SkTypeface> face, SkScalar size) noexcept
-    : SkFont(std::move(face), size, 1, 0) {}
+SkFont::SkFont(sk_sp<SkTypeface> face, SkScalar size) : SkFont(std::move(face), size, 1, 0) {}
 
-SkFont::SkFont(sk_sp<SkTypeface> face) noexcept : SkFont(std::move(face), kDefault_Size, 1, 0) {}
+SkFont::SkFont(sk_sp<SkTypeface> face) : SkFont(std::move(face), kDefault_Size, 1, 0) {}
 
-SkFont::SkFont() noexcept : SkFont(nullptr, kDefault_Size) {}
+SkFont::SkFont() : SkFont(nullptr, kDefault_Size) {}
 
-bool SkFont::operator==(const SkFont& b) const noexcept {
+bool SkFont::operator==(const SkFont& b) const {
   return fTypeface.get() == b.fTypeface.get() && fSize == b.fSize && fScaleX == b.fScaleX &&
          fSkewX == b.fSkewX && fFlags == b.fFlags && fEdging == b.fEdging && fHinting == b.fHinting;
 }
 
-void SkFont::dump() const noexcept {
+void SkFont::dump() const {
   SkDebugf("typeface %p\n", fTypeface.get());
   SkDebugf("size %g\n", fSize);
   SkDebugf("skewx %g\n", fSkewX);
@@ -61,37 +60,37 @@ void SkFont::dump() const noexcept {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-static constexpr inline uint32_t set_clear_mask(uint32_t bits, bool cond, uint32_t mask) {
+static inline uint32_t set_clear_mask(uint32_t bits, bool cond, uint32_t mask) {
   return cond ? bits | mask : bits & ~mask;
 }
 
-void SkFont::setForceAutoHinting(bool predicate) noexcept {
+void SkFont::setForceAutoHinting(bool predicate) {
   fFlags = set_clear_mask(fFlags, predicate, kForceAutoHinting_PrivFlag);
 }
-void SkFont::setEmbeddedBitmaps(bool predicate) noexcept {
+void SkFont::setEmbeddedBitmaps(bool predicate) {
   fFlags = set_clear_mask(fFlags, predicate, kEmbeddedBitmaps_PrivFlag);
 }
-void SkFont::setSubpixel(bool predicate) noexcept {
+void SkFont::setSubpixel(bool predicate) {
   fFlags = set_clear_mask(fFlags, predicate, kSubpixel_PrivFlag);
 }
-void SkFont::setLinearMetrics(bool predicate) noexcept {
+void SkFont::setLinearMetrics(bool predicate) {
   fFlags = set_clear_mask(fFlags, predicate, kLinearMetrics_PrivFlag);
 }
-void SkFont::setEmbolden(bool predicate) noexcept {
+void SkFont::setEmbolden(bool predicate) {
   fFlags = set_clear_mask(fFlags, predicate, kEmbolden_PrivFlag);
 }
-void SkFont::setBaselineSnap(bool predicate) noexcept {
+void SkFont::setBaselineSnap(bool predicate) {
   fFlags = set_clear_mask(fFlags, predicate, kBaselineSnap_PrivFlag);
 }
-void SkFont::setEdging(Edging e) noexcept { fEdging = SkToU8(e); }
+void SkFont::setEdging(Edging e) { fEdging = SkToU8(e); }
 
-void SkFont::setHinting(SkFontHinting h) noexcept { fHinting = SkToU8(h); }
+void SkFont::setHinting(SkFontHinting h) { fHinting = SkToU8(h); }
 
-void SkFont::setSize(SkScalar size) noexcept { fSize = valid_size(size); }
-void SkFont::setScaleX(SkScalar scale) noexcept { fScaleX = scale; }
-void SkFont::setSkewX(SkScalar skew) noexcept { fSkewX = skew; }
+void SkFont::setSize(SkScalar size) { fSize = valid_size(size); }
+void SkFont::setScaleX(SkScalar scale) { fScaleX = scale; }
+void SkFont::setSkewX(SkScalar skew) { fSkewX = skew; }
 
-SkFont SkFont::makeWithSize(SkScalar newSize) const noexcept {
+SkFont SkFont::makeWithSize(SkScalar newSize) const {
   SkFont font = *this;
   font.setSize(newSize);
   return font;
@@ -118,7 +117,7 @@ SkScalar SkFont::setupForAsPaths(SkPaint* paint) {
   return textSize / SkFontPriv::kCanonicalTextSizeForPaths;
 }
 
-bool SkFont::hasSomeAntiAliasing() const noexcept {
+bool SkFont::hasSomeAntiAliasing() const {
   Edging edging = this->getEdging();
   return edging == SkFont::Edging::kAntiAlias || edging == SkFont::Edging::kSubpixelAntiAlias;
 }
@@ -350,7 +349,7 @@ sk_sp<SkTypeface> SkFont::refTypefaceOrDefault() const {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-void SkFontPriv::ScaleFontMetrics(SkFontMetrics* metrics, SkScalar scale) noexcept {
+void SkFontPriv::ScaleFontMetrics(SkFontMetrics* metrics, SkScalar scale) {
   metrics->fTop *= scale;
   metrics->fAscent *= scale;
   metrics->fDescent *= scale;
@@ -437,7 +436,7 @@ enum {
   kMask_For_Hinting = 0x3
 };
 
-static constexpr bool scalar_is_byte(SkScalar x) {
+static bool scalar_is_byte(SkScalar x) {
   int ix = (int)x;
   return ix == x && ix >= 0 && ix <= kMask_For_Size;
 }

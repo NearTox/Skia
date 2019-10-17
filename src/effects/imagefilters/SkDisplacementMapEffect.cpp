@@ -280,7 +280,7 @@ sk_sp<SkSpecialImage> SkDisplacementMapEffectImpl::onFilterImage(
   // color space makes sense, so we ignore color spaces (and gamma) entirely. This may not be
   // ideal, but it's at least consistent and predictable.
   Context displContext(
-      ctx.ctm(), ctx.clipBounds(), ctx.cache(), kN32_SkColorType, nullptr, ctx.source());
+      ctx.mapping(), ctx.desiredOutput(), ctx.cache(), kN32_SkColorType, nullptr, ctx.source());
   sk_sp<SkSpecialImage> displ(this->filterInput(0, displContext, &displOffset));
   if (!displ) {
     return nullptr;
@@ -306,7 +306,7 @@ sk_sp<SkSpecialImage> SkDisplacementMapEffectImpl::onFilterImage(
     return nullptr;
   }
 
-  const SkIRect colorBounds = bounds.makeOffset(-colorOffset.x(), -colorOffset.y());
+  const SkIRect colorBounds = bounds.makeOffset(-colorOffset);
   // If the offset overflowed (saturated) then we have to abort, as we need their
   // dimensions to be equal. See https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=7209
   if (colorBounds.size() != bounds.size()) {
@@ -359,7 +359,8 @@ sk_sp<SkSpecialImage> SkDisplacementMapEffectImpl::onFilterImage(
     return SkSpecialImage::MakeDeferredFromGpu(
         context, SkIRect::MakeWH(bounds.width(), bounds.height()),
         kNeedNewImageUniqueID_SpecialImage, renderTargetContext->asTextureProxyRef(),
-        renderTargetContext->colorSpaceInfo().refColorSpace());
+        renderTargetContext->colorInfo().colorType(),
+        renderTargetContext->colorInfo().refColorSpace());
   }
 #endif
 

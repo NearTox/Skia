@@ -152,7 +152,7 @@ bool SkCoincidentSpans::ordered(bool* result) const {
   if (next == end) {
     *result = true;
     return true;
-    }
+  }
     bool flipped = this->flipped();
     const SkOpSegment* oppSeg = this->oppPtTStart()->segment();
     double oppLastT = fOppPtTStart->fT;

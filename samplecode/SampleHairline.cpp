@@ -211,7 +211,7 @@ class HairlineView : public Sample {
     return true;
   }
 
-  Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, ModifierKey modi) override {
+  Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, skui::ModifierKey modi) override {
     fDoAA = !fDoAA;
     return this->INHERITED::onFindClickHandler(x, y, modi);
   }

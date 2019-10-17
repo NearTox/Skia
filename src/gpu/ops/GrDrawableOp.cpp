@@ -24,7 +24,7 @@ std::unique_ptr<GrDrawableOp> GrDrawableOp::Make(
 GrDrawableOp::GrDrawableOp(
     std::unique_ptr<SkDrawable::GpuDrawHandler> drawable, const SkRect& bounds)
     : INHERITED(ClassID()), fDrawable(std::move(drawable)) {
-  this->setBounds(bounds, HasAABloat::kNo, IsZeroArea::kNo);
+  this->setBounds(bounds, HasAABloat::kNo, IsHairline::kNo);
 }
 
 void GrDrawableOp::onExecute(GrOpFlushState* state, const SkRect& chainBounds) {

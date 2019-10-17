@@ -43,6 +43,7 @@
     <ClCompile Include="codec\SkJpegUtility.cpp" />
     <ClCompile Include="codec\SkMasks.cpp" />
     <ClCompile Include="codec\SkMaskSwizzler.cpp" />
+    <ClCompile Include="codec\SkParseEncodedOrigin.cpp" />
     <ClCompile Include="codec\SkPngCodec.cpp" />
     <ClCompile Include="codec\SkSampledCodec.cpp" />
     <ClCompile Include="codec\SkSampler.cpp" />
@@ -121,6 +122,7 @@
     <ClCompile Include="core\SkGeometry.cpp" />
     <ClCompile Include="core\SkGlobalInitialization_core.cpp" />
     <ClCompile Include="core\SkGlyph.cpp" />
+    <ClCompile Include="core\SkGlyphBuffer.cpp" />
     <ClCompile Include="core\SkGlyphRun.cpp" />
     <ClCompile Include="core\SkGlyphRunPainter.cpp" />
     <ClCompile Include="core\SkGpuBlurUtils.cpp" />
@@ -129,6 +131,7 @@
     <ClCompile Include="core\SkICC.cpp" />
     <ClCompile Include="core\SkImageFilter.cpp" />
     <ClCompile Include="core\SkImageFilterCache.cpp" />
+    <ClCompile Include="core\SkImageFilterTypes.cpp" />
     <ClCompile Include="core\SkImageGenerator.cpp" />
     <ClCompile Include="core\SkImageInfo.cpp" />
     <ClCompile Include="core\SkLatticeIter.cpp" />
@@ -211,6 +214,7 @@
     <ClCompile Include="core\SkStream.cpp" />
     <ClCompile Include="core\SkStrike.cpp" />
     <ClCompile Include="core\SkStrikeCache.cpp" />
+    <ClCompile Include="core\SkStrikeForGPU.cpp" />
     <ClCompile Include="core\SkStrikeSpec.cpp" />
     <ClCompile Include="core\SkString.cpp" />
     <ClCompile Include="core\SkStringUtils.cpp" />
@@ -323,6 +327,7 @@
     <ClCompile Include="gpu\effects\generated\GrPremulInputFragmentProcessor.cpp" />
     <ClCompile Include="gpu\effects\generated\GrRectBlurEffect.cpp" />
     <ClCompile Include="gpu\effects\generated\GrRRectBlurEffect.cpp" />
+    <ClCompile Include="gpu\effects\generated\GrSaturateProcessor.cpp" />
     <ClCompile Include="gpu\effects\generated\GrSimpleTextureEffect.cpp" />
     <ClCompile Include="gpu\effects\GrBezierEffect.cpp" />
     <ClCompile Include="gpu\effects\GrBicubicEffect.cpp" />
@@ -412,8 +417,9 @@
     <ClCompile Include="gpu\GrBlurUtils.cpp" />
     <ClCompile Include="gpu\GrBufferAllocPool.cpp" />
     <ClCompile Include="gpu\GrCaps.cpp" />
+    <ClCompile Include="gpu\GrClientMappedBufferManager.cpp" />
     <ClCompile Include="gpu\GrClipStackClip.cpp" />
-    <ClCompile Include="gpu\GrColorSpaceInfo.cpp" />
+    <ClCompile Include="gpu\GrColorInfo.cpp" />
     <ClCompile Include="gpu\GrColorSpaceXform.cpp" />
     <ClCompile Include="gpu\GrContext.cpp" />
     <ClCompile Include="gpu\GrContextPriv.cpp" />
@@ -454,6 +460,7 @@
     <ClCompile Include="gpu\GrProcessorSet.cpp" />
     <ClCompile Include="gpu\GrProcessorUnitTest.cpp" />
     <ClCompile Include="gpu\GrProgramDesc.cpp" />
+    <ClCompile Include="gpu\GrProgramInfo.cpp" />
     <ClCompile Include="gpu\GrProxyProvider.cpp" />
     <ClCompile Include="gpu\GrRecordingContext.cpp" />
     <ClCompile Include="gpu\GrRectanizer_pow2.cpp" />
@@ -490,6 +497,7 @@
     <ClCompile Include="gpu\GrTextureRenderTargetProxy.cpp" />
     <ClCompile Include="gpu\GrTextureResolveRenderTask.cpp" />
     <ClCompile Include="gpu\GrTransferFromRenderTask.cpp" />
+    <ClCompile Include="gpu\GrWaitRenderTask.cpp" />
     <ClCompile Include="gpu\GrXferProcessor.cpp" />
     <ClCompile Include="gpu\GrYUVProvider.cpp" />
     <ClCompile Include="gpu\mock\GrMockCaps.cpp" />
@@ -518,7 +526,6 @@
     <ClCompile Include="gpu\ops\GrOvalOpFactory.cpp" />
     <ClCompile Include="gpu\ops\GrQuadPerEdgeAA.cpp" />
     <ClCompile Include="gpu\ops\GrRegionOp.cpp" />
-    <ClCompile Include="gpu\ops\GrSemaphoreOp.cpp" />
     <ClCompile Include="gpu\ops\GrShadowRRectOp.cpp" />
     <ClCompile Include="gpu\ops\GrSimpleMeshDrawOpHelper.cpp" />
     <ClCompile Include="gpu\ops\GrSmallPathRenderer.cpp" />
@@ -655,7 +662,6 @@
     <ClCompile Include="sksl\SkSLGLSLCodeGenerator.cpp" />
     <ClCompile Include="sksl\SkSLHCodeGenerator.cpp" />
     <ClCompile Include="sksl\SkSLIRGenerator.cpp" />
-    <ClCompile Include="sksl\SkSLJIT.cpp" />
     <ClCompile Include="sksl\SkSLLexer.cpp" />
     <ClCompile Include="sksl\SkSLMetalCodeGenerator.cpp" />
     <ClCompile Include="sksl\SkSLOutputStream.cpp" />
@@ -752,13 +758,11 @@
     <OutDir>$(MyOutDir)</OutDir>
     <IntDir>$(MyTempDir)</IntDir>
     <CodeAnalysisRuleSet>..\rules skia.ruleset</CodeAnalysisRuleSet>
-    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(MyOutDir)</OutDir>
     <IntDir>$(MyTempDir)</IntDir>
     <CodeAnalysisRuleSet>..\rules skia.ruleset</CodeAnalysisRuleSet>
-    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -774,8 +778,8 @@
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <EnablePREfast>false</EnablePREfast>
-      <AssemblerOutput>AssemblyCode</AssemblerOutput>
       <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AssemblerOutput>AssemblyCode</AssemblerOutput>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -803,8 +807,8 @@
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <EnablePREfast>false</EnablePREfast>
-      <AssemblerOutput>AssemblyCode</AssemblerOutput>
       <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AssemblerOutput>AssemblyCode</AssemblerOutput>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

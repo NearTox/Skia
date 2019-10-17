@@ -357,7 +357,8 @@ class DefaultPathOp final : public GrMeshDrawOp {
         fIsHairline(isHairline) {
     fPaths.emplace_back(PathData{path, tolerance});
 
-    this->setBounds(devBounds, HasAABloat::kNo, isHairline ? IsZeroArea::kYes : IsZeroArea::kNo);
+    HasAABloat aaBloat = (aaType == GrAAType::kNone) ? HasAABloat ::kNo : HasAABloat::kYes;
+    this->setBounds(devBounds, aaBloat, isHairline ? IsHairline::kYes : IsHairline::kNo);
   }
 
   FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }

@@ -18,7 +18,7 @@
 template <typename T>
 class SkTDArray {
  public:
-  constexpr SkTDArray() noexcept : fArray(nullptr), fReserve(0), fCount(0) {}
+  SkTDArray() : fArray(nullptr), fReserve(0), fCount(0) {}
   SkTDArray(const T src[], int count) {
     SkASSERT(src || count == 0);
 
@@ -35,9 +35,7 @@ class SkTDArray {
     SkTDArray<T> tmp(src.fArray, src.fCount);
     this->swap(tmp);
   }
-  SkTDArray(SkTDArray<T>&& src) noexcept : fArray(nullptr), fReserve(0), fCount(0) {
-    this->swap(src);
-  }
+  SkTDArray(SkTDArray<T>&& src) : fArray(nullptr), fReserve(0), fCount(0) { this->swap(src); }
   ~SkTDArray() { sk_free(fArray); }
 
   SkTDArray<T>& operator=(const SkTDArray<T>& src) {
@@ -66,21 +64,21 @@ class SkTDArray {
   }
   friend bool operator!=(const SkTDArray<T>& a, const SkTDArray<T>& b) { return !(a == b); }
 
-  void swap(SkTDArray<T>& that) noexcept {
+  void swap(SkTDArray<T>& that) {
     using std::swap;
     swap(fArray, that.fArray);
     swap(fReserve, that.fReserve);
     swap(fCount, that.fCount);
   }
 
-  bool isEmpty() const noexcept { return fCount == 0; }
-  bool empty() const noexcept { return this->isEmpty(); }
+  bool isEmpty() const { return fCount == 0; }
+  bool empty() const { return this->isEmpty(); }
 
   /**
    *  Return the number of elements in the array
    */
-  int count() const noexcept { return fCount; }
-  size_t size() const noexcept { return fCount; }
+  int count() const { return fCount; }
+  size_t size() const { return fCount; }
 
   /**
    *  Return the total number of elements allocated.
@@ -95,9 +93,9 @@ class SkTDArray {
   size_t bytes() const { return fCount * sizeof(T); }
 
   T* begin() { return fArray; }
-  const T* begin() const noexcept { return fArray; }
+  const T* begin() const { return fArray; }
   T* end() { return fArray ? fArray + fCount : nullptr; }
-  const T* end() const noexcept { return fArray ? fArray + fCount : nullptr; }
+  const T* end() const { return fArray ? fArray + fCount : nullptr; }
 
   T& operator[](int index) {
     SkASSERT(index < fCount);
@@ -315,8 +313,8 @@ class SkTDArray {
 
  private:
   T* fArray;
-  int fReserve;
-  int fCount;
+  int fReserve;  // size of the allocation in fArray (#elements)
+  int fCount;    // logical number of elements (fCount <= fReserve)
 
   /**
    *  Adjusts the number of elements in the array.

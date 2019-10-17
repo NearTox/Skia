@@ -54,7 +54,7 @@ dawn::RenderPassEncoder GrDawnOpsRenderPass::beginRenderPass(
   dawn::Texture texture = static_cast<GrDawnRenderTarget*>(fRenderTarget)->texture();
   auto stencilAttachment = static_cast<GrDawnStencilAttachment*>(
       fRenderTarget->renderTargetPriv().getStencilAttachment());
-  dawn::TextureView colorView = texture.CreateDefaultView();
+  dawn::TextureView colorView = texture.CreateView();
   const float* c = fColorInfo.fClearColor.vec();
 
   dawn::RenderPassColorAttachmentDescriptor colorAttachment;
@@ -66,7 +66,7 @@ dawn::RenderPassEncoder GrDawnOpsRenderPass::beginRenderPass(
   dawn::RenderPassColorAttachmentDescriptor* colorAttachments = {&colorAttachment};
   dawn::RenderPassDescriptor renderPassDescriptor;
   renderPassDescriptor.colorAttachmentCount = 1;
-  renderPassDescriptor.colorAttachments = &colorAttachments;
+  renderPassDescriptor.colorAttachments = colorAttachments;
   if (stencilAttachment) {
     dawn::RenderPassDepthStencilAttachmentDescriptor depthStencilAttachment;
     depthStencilAttachment.attachment = stencilAttachment->view();
@@ -111,13 +111,11 @@ void GrDawnOpsRenderPass::inlineUpload(GrOpFlushState* state, GrDeferredTextureU
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GrDawnOpsRenderPass::setScissorState(
-    const GrPipeline& pipeline, const GrPipeline::FixedDynamicState* fixedDynamicState,
-    const GrPipeline::DynamicStateArrays* dynamicStateArrays) {
+void GrDawnOpsRenderPass::setScissorState(const GrProgramInfo& programInfo) {
   SkIRect rect;
-  if (pipeline.isScissorEnabled()) {
+  if (programInfo.pipeline().isScissorEnabled()) {
     constexpr SkIRect kBogusScissor{0, 0, 1, 1};
-    rect = fixedDynamicState ? fixedDynamicState->fScissorRect : kBogusScissor;
+    rect = programInfo.hasFixedScissor() ? programInfo.fixedScissor() : kBogusScissor;
     if (kBottomLeft_GrSurfaceOrigin == fOrigin) {
       rect.setXYWH(rect.x(), fRenderTarget->height() - rect.bottom(), rect.width(), rect.height());
     }
@@ -128,17 +126,13 @@ void GrDawnOpsRenderPass::setScissorState(
 }
 
 void GrDawnOpsRenderPass::applyState(
-    const GrPipeline& pipeline, const GrPrimitiveProcessor& primProc,
-    const GrTextureProxy* const primProcProxies[],
-    const GrPipeline::FixedDynamicState* fixedDynamicState,
-    const GrPipeline::DynamicStateArrays* dynamicStateArrays, const GrPrimitiveType primitiveType,
-    bool hasPoints) {
-  sk_sp<GrDawnProgram> program = fGpu->getOrCreateRenderPipeline(
-      fRenderTarget, fOrigin, pipeline, primProc, primProcProxies, hasPoints, primitiveType);
-  auto bindGroup =
-      program->setData(fGpu, fRenderTarget, fOrigin, primProc, pipeline, primProcProxies);
+    const GrProgramInfo& programInfo, const GrPrimitiveType primitiveType) {
+  sk_sp<GrDawnProgram> program =
+      fGpu->getOrCreateRenderPipeline(fRenderTarget, programInfo, primitiveType);
+  auto bindGroup = program->setData(fGpu, fRenderTarget, programInfo);
   fPassEncoder.SetPipeline(program->fRenderPipeline);
   fPassEncoder.SetBindGroup(0, bindGroup, 0, nullptr);
+  const GrPipeline& pipeline = programInfo.pipeline();
   if (pipeline.isStencilEnabled()) {
     fPassEncoder.SetStencilReference(pipeline.getUserStencil()->fFront.fRef);
   }
@@ -146,33 +140,16 @@ void GrDawnOpsRenderPass::applyState(
   const float* c = blendInfo.fBlendConstant.vec();
   dawn::Color color{c[0], c[1], c[2], c[3]};
   fPassEncoder.SetBlendColor(&color);
-  this->setScissorState(pipeline, fixedDynamicState, dynamicStateArrays);
+  this->setScissorState(programInfo);
 }
 
 void GrDawnOpsRenderPass::onDraw(
-    const GrPrimitiveProcessor& primProc, const GrPipeline& pipeline,
-    const GrPipeline::FixedDynamicState* fixedDynamicState,
-    const GrPipeline::DynamicStateArrays* dynamicStateArrays, const GrMesh meshes[], int meshCount,
-    const SkRect& bounds) {
+    const GrProgramInfo& programInfo, const GrMesh meshes[], int meshCount, const SkRect& bounds) {
   if (!meshCount) {
     return;
   }
-  bool hasPoints = false;
   for (int i = 0; i < meshCount; ++i) {
-    if (meshes[i].primitiveType() == GrPrimitiveType::kPoints) {
-      hasPoints = true;
-    }
-  }
-  const GrTextureProxy* const* primProcProxies = nullptr;
-  if (dynamicStateArrays && dynamicStateArrays->fPrimitiveProcessorTextures) {
-    primProcProxies = dynamicStateArrays->fPrimitiveProcessorTextures;
-  } else if (fixedDynamicState) {
-    primProcProxies = fixedDynamicState->fPrimitiveProcessorTextures;
-  }
-  for (int i = 0; i < meshCount; ++i) {
-    applyState(
-        pipeline, primProc, primProcProxies, fixedDynamicState, dynamicStateArrays,
-        meshes[0].primitiveType(), hasPoints);
+    applyState(programInfo, meshes[0].primitiveType());
     meshes[i].sendToGpu(this);
   }
 }
@@ -180,9 +157,8 @@ void GrDawnOpsRenderPass::onDraw(
 void GrDawnOpsRenderPass::sendInstancedMeshToGpu(
     GrPrimitiveType, const GrBuffer* vertexBuffer, int vertexCount, int baseVertex,
     const GrBuffer* instanceBuffer, int instanceCount, int baseInstance) {
-  static const uint64_t vertexBufferOffsets[1] = {0};
   dawn::Buffer vb = static_cast<const GrDawnBuffer*>(vertexBuffer)->get();
-  fPassEncoder.SetVertexBuffers(0, 1, &vb, vertexBufferOffsets);
+  fPassEncoder.SetVertexBuffer(0, vb);
   fPassEncoder.Draw(vertexCount, 1, baseVertex, baseInstance);
   fGpu->stats()->incNumDraws();
 }
@@ -191,12 +167,10 @@ void GrDawnOpsRenderPass::sendIndexedInstancedMeshToGpu(
     GrPrimitiveType, const GrBuffer* indexBuffer, int indexCount, int baseIndex,
     const GrBuffer* vertexBuffer, int baseVertex, const GrBuffer* instanceBuffer, int instanceCount,
     int baseInstance, GrPrimitiveRestart restart) {
-  uint64_t vertexBufferOffsets[1];
-  vertexBufferOffsets[0] = 0;
   dawn::Buffer vb = static_cast<const GrDawnBuffer*>(vertexBuffer)->get();
   dawn::Buffer ib = static_cast<const GrDawnBuffer*>(indexBuffer)->get();
-  fPassEncoder.SetIndexBuffer(ib, 0);
-  fPassEncoder.SetVertexBuffers(0, 1, &vb, vertexBufferOffsets);
+  fPassEncoder.SetIndexBuffer(ib);
+  fPassEncoder.SetVertexBuffer(0, vb);
   fPassEncoder.DrawIndexed(indexCount, 1, baseIndex, baseVertex, baseInstance);
   fGpu->stats()->incNumDraws();
 }

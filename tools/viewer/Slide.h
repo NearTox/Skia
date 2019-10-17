@@ -29,7 +29,8 @@ class Slide : public SkRefCnt {
   virtual void unload() {}
 
   virtual bool onChar(SkUnichar c) { return false; }
-  virtual bool onMouse(SkScalar x, SkScalar y, InputState state, ModifierKey modifiers) {
+  virtual bool onMouse(
+      SkScalar x, SkScalar y, skui::InputState state, skui::ModifierKey modifiers) {
     return false;
   }
 

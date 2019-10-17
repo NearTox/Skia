@@ -69,16 +69,6 @@ class GrVkRenderTarget : public GrRenderTarget, public virtual GrVkImage {
   bool wrapsSecondaryCommandBuffer() const { return fSecondaryCommandBuffer != VK_NULL_HANDLE; }
   VkCommandBuffer getExternalSecondaryCommandBuffer() const { return fSecondaryCommandBuffer; }
 
-  // override of GrRenderTarget
-  ResolveType getResolveType() const override {
-    if (this->numSamples() > 1) {
-      SkASSERT(this->requiresManualMSAAResolve());
-      return kCanResolve_ResolveType;
-    }
-    SkASSERT(!this->requiresManualMSAAResolve());
-    return kAutoResolves_ResolveType;
-  }
-
   bool canAttemptStencilAttachment() const override {
     // We don't know the status of the stencil attachment for wrapped external secondary command
     // buffers so we just assume we don't have one.
@@ -116,8 +106,10 @@ class GrVkRenderTarget : public GrRenderTarget, public virtual GrVkImage {
       // Add one to account for the resolved VkImage.
       numColorSamples += 1;
     }
+    const GrCaps& caps = *this->getGpu()->caps();
     return GrSurface::ComputeSize(
-        this->config(), this->width(), this->height(), numColorSamples, GrMipMapped::kNo);
+        caps, this->backendFormat(), this->width(), this->height(), numColorSamples,
+        GrMipMapped::kNo);
   }
 
   void createFramebuffer(GrVkGpu* gpu);

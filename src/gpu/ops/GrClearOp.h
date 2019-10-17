@@ -56,7 +56,7 @@ class GrClearOp final : public GrOp {
     if (fullScreen) {
       fClip.disableScissor();
     }
-    this->setBounds(SkRect::Make(rect), HasAABloat::kNo, IsZeroArea::kNo);
+    this->setBounds(SkRect::Make(rect), HasAABloat::kNo, IsHairline::kNo);
   }
 
   CombineResult onCombineIfPossible(GrOp* t, const GrCaps& caps) override {

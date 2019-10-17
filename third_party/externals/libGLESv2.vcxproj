@@ -132,7 +132,7 @@
     <ClCompile Include="angle2\src\libANGLE\EGLSync.cpp" />
     <ClCompile Include="angle2\src\libANGLE\entry_points_enum_autogen.cpp" />
     <ClCompile Include="angle2\src\libANGLE\format_map_desktop.cpp" />
-    <ClCompile Include="angle2\src\libANGLE\FrameCapture.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\FrameCapture_mock.cpp" />
     <ClCompile Include="angle2\src\libANGLE\MemoryObject.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Overlay.cpp" />
     <ClCompile Include="angle2\src\libANGLE\OverlayWidgets.cpp" />
@@ -265,6 +265,7 @@
     <ClCompile Include="angle2\src\libANGLE\validationES2.cpp" />
     <ClCompile Include="angle2\src\libANGLE\validationES3.cpp" />
     <ClCompile Include="angle2\src\libANGLE\validationES31.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationES32.cpp" />
     <ClCompile Include="angle2\src\common\Float16ToFloat32.cpp" />
     <ClCompile Include="angle2\src\common\MemoryBuffer.cpp" />
     <ClCompile Include="angle2\src\common\PackedEGLEnums_autogen.cpp" />
@@ -291,6 +292,7 @@
     <ClCompile Include="angle2\src\libGLESv2\entry_points_gles_2_0_autogen.cpp" />
     <ClCompile Include="angle2\src\libGLESv2\entry_points_gles_3_0_autogen.cpp" />
     <ClCompile Include="angle2\src\libGLESv2\entry_points_gles_3_1_autogen.cpp" />
+    <ClCompile Include="angle2\src\libGLESv2\entry_points_gles_3_2_autogen.cpp" />
     <ClCompile Include="angle2\src\libGLESv2\entry_points_gles_ext_autogen.cpp" />
     <ClCompile Include="angle2\src\libGLESv2\global_state.cpp" />
     <ClCompile Include="angle2\src\libGLESv2\libGLESv2_autogen.cpp" />
@@ -463,7 +465,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;DXGI.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SetChecksum>true</SetChecksum>
     </Link>
   </ItemDefinitionGroup>
@@ -483,7 +485,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;DXGI.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SetChecksum>true</SetChecksum>
     </Link>
   </ItemDefinitionGroup>

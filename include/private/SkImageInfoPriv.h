@@ -16,6 +16,7 @@ enum SkColorTypeComponentFlag {
   kBlue_SkColorTypeComponentFlag = 0x4,
   kAlpha_SkColorTypeComponentFlag = 0x8,
   kGray_SkColorTypeComponentFlag = 0x10,
+  kRG_SkColorTypeComponentFlags = kRed_SkColorTypeComponentFlag | kGreen_SkColorTypeComponentFlag,
   kRGB_SkColorTypeComponentFlags = kRed_SkColorTypeComponentFlag | kGreen_SkColorTypeComponentFlag |
                                    kBlue_SkColorTypeComponentFlag,
   kRGBA_SkColorTypeComponentFlags =
@@ -37,8 +38,14 @@ static inline uint32_t SkColorTypeComponentFlags(SkColorType ct) {
     case kRGBA_F16Norm_SkColorType: return kRGBA_SkColorTypeComponentFlags;
     case kRGBA_F16_SkColorType: return kRGBA_SkColorTypeComponentFlags;
     case kRGBA_F32_SkColorType: return kRGBA_SkColorTypeComponentFlags;
+    case kR8G8_unorm_SkColorType: return kRG_SkColorTypeComponentFlags;
+    case kA16_unorm_SkColorType: return kAlpha_SkColorTypeComponentFlag;
+    case kR16G16_unorm_SkColorType: return kRG_SkColorTypeComponentFlags;
+    case kA16_float_SkColorType: return kAlpha_SkColorTypeComponentFlag;
+    case kR16G16_float_SkColorType: return kRG_SkColorTypeComponentFlags;
+    case kR16G16B16A16_unorm_SkColorType: return kRGBA_SkColorTypeComponentFlags;
   }
-  return 0;
+  SkUNREACHABLE;
 }
 
 static inline bool SkColorTypeIsAlphaOnly(SkColorType ct) {
@@ -69,8 +76,14 @@ static int SkColorTypeShiftPerPixel(SkColorType ct) {
     case kRGBA_F16Norm_SkColorType: return 3;
     case kRGBA_F16_SkColorType: return 3;
     case kRGBA_F32_SkColorType: return 4;
+    case kR8G8_unorm_SkColorType: return 1;
+    case kA16_unorm_SkColorType: return 1;
+    case kR16G16_unorm_SkColorType: return 2;
+    case kA16_float_SkColorType: return 1;
+    case kR16G16_float_SkColorType: return 2;
+    case kR16G16B16A16_unorm_SkColorType: return 3;
   }
-  return 0;
+  SkUNREACHABLE;
 }
 
 static inline size_t SkColorTypeMinRowBytes(SkColorType ct, int width) {
@@ -94,7 +107,7 @@ static inline bool SkImageInfoIsValid(const SkImageInfo& info) {
     return false;
   }
 
-  constexpr int kMaxDimension = SK_MaxS32 >> 2;
+  const int kMaxDimension = SK_MaxS32 >> 2;
   if (info.width() > kMaxDimension || info.height() > kMaxDimension) {
     return false;
   }

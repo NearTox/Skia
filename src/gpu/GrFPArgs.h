@@ -11,17 +11,17 @@
 #include "include/core/SkFilterQuality.h"
 #include "include/core/SkMatrix.h"
 
-class GrColorSpaceInfo;
+class GrColorInfo;
 class GrRecordingContext;
 
 struct GrFPArgs {
   GrFPArgs(
       GrRecordingContext* context, const SkMatrix* viewMatrix, SkFilterQuality filterQuality,
-      const GrColorSpaceInfo* dstColorSpaceInfo)
+      const GrColorInfo* dstColorInfo)
       : fContext(context),
         fViewMatrix(viewMatrix),
         fFilterQuality(filterQuality),
-        fDstColorSpaceInfo(dstColorSpaceInfo) {
+        fDstColorInfo(dstColorInfo) {
     SkASSERT(fContext);
     SkASSERT(fViewMatrix);
   }
@@ -45,7 +45,7 @@ struct GrFPArgs {
   bool fInputColorIsOpaque = false;
 
   SkFilterQuality fFilterQuality;
-  const GrColorSpaceInfo* fDstColorSpaceInfo;
+  const GrColorInfo* fDstColorInfo;
 };
 
 class GrFPArgs::WithPreLocalMatrix final : public GrFPArgs {

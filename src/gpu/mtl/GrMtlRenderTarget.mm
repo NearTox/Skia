@@ -57,7 +57,9 @@ sk_sp<GrMtlRenderTarget> GrMtlRenderTarget::MakeWrappedRenderTarget(
     GrMtlGpu* gpu, const GrSurfaceDesc& desc, int sampleCnt, id<MTLTexture> texture) {
   SkASSERT(nil != texture);
   SkASSERT(1 == texture.mipmapLevelCount);
-  SkASSERT(MTLTextureUsageRenderTarget & texture.usage);
+  if (@available(macOS 10.11, iOS 9.0, *)) {
+    SkASSERT(MTLTextureUsageRenderTarget & texture.usage);
+  }
 
   GrMtlRenderTarget* mtlRT;
   if (sampleCnt > 1) {
@@ -74,14 +76,18 @@ sk_sp<GrMtlRenderTarget> GrMtlRenderTarget::MakeWrappedRenderTarget(
     texDesc.mipmapLevelCount = 1;
     texDesc.sampleCount = sampleCnt;
     texDesc.arrayLength = 1;
-    texDesc.storageMode = MTLStorageModePrivate;
-    texDesc.usage = MTLTextureUsageShaderRead | MTLTextureUsageRenderTarget;
+    if (@available(macOS 10.11, iOS 9.0, *)) {
+      texDesc.storageMode = MTLStorageModePrivate;
+      texDesc.usage = MTLTextureUsageShaderRead | MTLTextureUsageRenderTarget;
+    }
 
     id<MTLTexture> colorTexture = [gpu->device() newTextureWithDescriptor:texDesc];
     if (!colorTexture) {
       return nullptr;
     }
-    SkASSERT((MTLTextureUsageShaderRead | MTLTextureUsageRenderTarget) & colorTexture.usage);
+    if (@available(macOS 10.11, iOS 9.0, *)) {
+      SkASSERT((MTLTextureUsageShaderRead | MTLTextureUsageRenderTarget) & colorTexture.usage);
+    }
     mtlRT = new GrMtlRenderTarget(gpu, desc, sampleCnt, colorTexture, texture, kWrapped);
   } else {
     mtlRT = new GrMtlRenderTarget(gpu, desc, texture, kWrapped);

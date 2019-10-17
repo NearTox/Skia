@@ -59,7 +59,7 @@ static void drawFadingText(
   SkFontMetrics fm;
 
   font.getMetrics(&fm);
-  bounds.set(
+  bounds.setLTRB(
       x, y + fm.fTop, x + font.measureText(text, len, SkTextEncoding::kUTF8), y + fm.fBottom);
 
   // may need to outset bounds a little, to account for hinting and/or
@@ -147,7 +147,7 @@ static void paint_rgn(SkCanvas* canvas, const SkRegion& rgn, const SkPaint& pain
 class RegionView : public Sample {
  public:
   RegionView() {
-    fBase.set(100, 100, 150, 150);
+    fBase.setLTRB(100, 100, 150, 150);
     fRect = fBase;
     fRect.inset(5, 5);
     fRect.offset(25, 25);
@@ -313,7 +313,8 @@ class RegionView : public Sample {
     }
   }
 
-  virtual Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, ModifierKey modi) override {
+  virtual Sample::Click* onFindClickHandler(
+      SkScalar x, SkScalar y, skui::ModifierKey modi) override {
     return fRect.contains(SkScalarRoundToInt(x), SkScalarRoundToInt(y)) ? new Click() : nullptr;
   }
 

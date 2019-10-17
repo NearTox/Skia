@@ -50,39 +50,27 @@ void GrMtlOpsRenderPass::submit() {
 }
 
 GrMtlPipelineState* GrMtlOpsRenderPass::prepareDrawState(
-    const GrPrimitiveProcessor& primProc, const GrPipeline& pipeline,
-    const GrPipeline::FixedDynamicState* fixedDynamicState, GrPrimitiveType primType) {
+    const GrProgramInfo& programInfo, GrPrimitiveType primitiveType) {
   // TODO: resolve textures and regenerate mipmaps as needed
 
-  const GrTextureProxy* const* primProcProxies = nullptr;
-  if (fixedDynamicState) {
-    primProcProxies = fixedDynamicState->fPrimitiveProcessorTextures;
-  }
-  SkASSERT(SkToBool(primProcProxies) == SkToBool(primProc.numTextureSamplers()));
-
   GrMtlPipelineState* pipelineState = fGpu->resourceProvider().findOrCreateCompatiblePipelineState(
-      fRenderTarget, fOrigin, pipeline, primProc, primProcProxies, primType);
+      fRenderTarget, programInfo, primitiveType);
   if (!pipelineState) {
     return nullptr;
   }
-  pipelineState->setData(fRenderTarget, fOrigin, primProc, pipeline, primProcProxies);
-  fCurrentVertexStride = primProc.vertexStride();
+
+  pipelineState->setData(fRenderTarget, programInfo);
+  fCurrentVertexStride = programInfo.primProc().vertexStride();
 
   return pipelineState;
 }
 
 void GrMtlOpsRenderPass::onDraw(
-    const GrPrimitiveProcessor& primProc, const GrPipeline& pipeline,
-    const GrPipeline::FixedDynamicState* fixedDynamicState,
-    const GrPipeline::DynamicStateArrays* dynamicStateArrays, const GrMesh meshes[], int meshCount,
-    const SkRect& bounds) {
-  if (!meshCount) {
-    return;
-  }
+    const GrProgramInfo& programInfo, const GrMesh meshes[], int meshCount, const SkRect& bounds) {
+  SkASSERT(meshCount);  // guaranteed by GrOpsRenderPass::draw
 
   GrPrimitiveType primitiveType = meshes[0].primitiveType();
-  GrMtlPipelineState* pipelineState =
-      this->prepareDrawState(primProc, pipeline, fixedDynamicState, primitiveType);
+  GrMtlPipelineState* pipelineState = this->prepareDrawState(programInfo, primitiveType);
   if (!pipelineState) {
     return;
   }
@@ -94,18 +82,20 @@ void GrMtlOpsRenderPass::onDraw(
 
   [fActiveRenderCmdEncoder setRenderPipelineState:pipelineState->mtlPipelineState()];
   pipelineState->setDrawState(
-      fActiveRenderCmdEncoder, pipeline.outputSwizzle(), pipeline.getXferProcessor());
+      fActiveRenderCmdEncoder, programInfo.pipeline().outputSwizzle(),
+      programInfo.pipeline().getXferProcessor());
 
-  bool dynamicScissor =
-      pipeline.isScissorEnabled() && dynamicStateArrays && dynamicStateArrays->fScissorRects;
-  if (!pipeline.isScissorEnabled()) {
+  bool hasDynamicScissors = programInfo.hasDynamicScissors();
+
+  if (!programInfo.pipeline().isScissorEnabled()) {
     GrMtlPipelineState::SetDynamicScissorRectState(
         fActiveRenderCmdEncoder, fRenderTarget, fOrigin,
         SkIRect::MakeWH(fRenderTarget->width(), fRenderTarget->height()));
-  } else if (!dynamicScissor) {
-    SkASSERT(fixedDynamicState);
+  } else if (!hasDynamicScissors) {
+    SkASSERT(programInfo.hasFixedScissor());
+
     GrMtlPipelineState::SetDynamicScissorRectState(
-        fActiveRenderCmdEncoder, fRenderTarget, fOrigin, fixedDynamicState->fScissorRect);
+        fActiveRenderCmdEncoder, fRenderTarget, fOrigin, programInfo.fixedScissor());
   }
 
   for (int i = 0; i < meshCount; ++i) {
@@ -114,19 +104,20 @@ void GrMtlOpsRenderPass::onDraw(
     if (mesh.primitiveType() != primitiveType) {
       SkDEBUGCODE(pipelineState = nullptr);
       primitiveType = mesh.primitiveType();
-      pipelineState = this->prepareDrawState(primProc, pipeline, fixedDynamicState, primitiveType);
+      pipelineState = this->prepareDrawState(programInfo, primitiveType);
       if (!pipelineState) {
         return;
       }
 
       [fActiveRenderCmdEncoder setRenderPipelineState:pipelineState->mtlPipelineState()];
       pipelineState->setDrawState(
-          fActiveRenderCmdEncoder, pipeline.outputSwizzle(), pipeline.getXferProcessor());
+          fActiveRenderCmdEncoder, programInfo.pipeline().outputSwizzle(),
+          programInfo.pipeline().getXferProcessor());
     }
 
-    if (dynamicScissor) {
+    if (hasDynamicScissors) {
       GrMtlPipelineState::SetDynamicScissorRectState(
-          fActiveRenderCmdEncoder, fRenderTarget, fOrigin, dynamicStateArrays->fScissorRects[i]);
+          fActiveRenderCmdEncoder, fRenderTarget, fOrigin, programInfo.dynamicScissor(i));
     }
 
     mesh.sendToGpu(this);
@@ -272,7 +263,6 @@ void GrMtlOpsRenderPass::sendMeshToGpu(
     GrPrimitiveType primitiveType, const GrBuffer* vertexBuffer, int vertexCount, int baseVertex) {
   this->bindGeometry(vertexBuffer, 0, nullptr);
 
-  SkASSERT(primitiveType != GrPrimitiveType::kLinesAdjacency);  // Geometry shaders not supported.
   [fActiveRenderCmdEncoder drawPrimitives:gr_to_mtl_primitive(primitiveType)
                               vertexStart:baseVertex
                               vertexCount:vertexCount];
@@ -284,7 +274,6 @@ void GrMtlOpsRenderPass::sendIndexedMeshToGpu(
     int baseVertex, GrPrimitiveRestart restart) {
   this->bindGeometry(vertexBuffer, fCurrentVertexStride * baseVertex, nullptr);
 
-  SkASSERT(primitiveType != GrPrimitiveType::kLinesAdjacency);  // Geometry shaders not supported.
   id<MTLBuffer> mtlIndexBuffer = nil;
   if (indexBuffer) {
     SkASSERT(!indexBuffer->isCpuBuffer());
@@ -310,12 +299,15 @@ void GrMtlOpsRenderPass::sendInstancedMeshToGpu(
     const GrBuffer* instanceBuffer, int instanceCount, int baseInstance) {
   this->bindGeometry(vertexBuffer, 0, instanceBuffer);
 
-  SkASSERT(primitiveType != GrPrimitiveType::kLinesAdjacency);  // Geometry shaders not supported.
-  [fActiveRenderCmdEncoder drawPrimitives:gr_to_mtl_primitive(primitiveType)
-                              vertexStart:baseVertex
-                              vertexCount:vertexCount
-                            instanceCount:instanceCount
-                             baseInstance:baseInstance];
+  if (@available(macOS 10.11, iOS 9.0, *)) {
+    [fActiveRenderCmdEncoder drawPrimitives:gr_to_mtl_primitive(primitiveType)
+                                vertexStart:baseVertex
+                                vertexCount:vertexCount
+                              instanceCount:instanceCount
+                               baseInstance:baseInstance];
+  } else {
+    SkASSERT(false);
+  }
 }
 
 void GrMtlOpsRenderPass::sendIndexedInstancedMeshToGpu(
@@ -324,7 +316,6 @@ void GrMtlOpsRenderPass::sendIndexedInstancedMeshToGpu(
     int baseInstance, GrPrimitiveRestart restart) {
   this->bindGeometry(vertexBuffer, 0, instanceBuffer);
 
-  SkASSERT(primitiveType != GrPrimitiveType::kLinesAdjacency);  // Geometry shaders not supported.
   id<MTLBuffer> mtlIndexBuffer = nil;
   if (indexBuffer) {
     SkASSERT(!indexBuffer->isCpuBuffer());
@@ -337,14 +328,19 @@ void GrMtlOpsRenderPass::sendIndexedInstancedMeshToGpu(
   SkASSERT(restart == GrPrimitiveRestart::kNo);
   size_t indexOffset =
       static_cast<const GrMtlBuffer*>(indexBuffer)->offset() + sizeof(uint16_t) * baseIndex;
-  [fActiveRenderCmdEncoder drawIndexedPrimitives:gr_to_mtl_primitive(primitiveType)
-                                      indexCount:indexCount
-                                       indexType:MTLIndexTypeUInt16
-                                     indexBuffer:mtlIndexBuffer
-                               indexBufferOffset:indexOffset
-                                   instanceCount:instanceCount
-                                      baseVertex:baseVertex
-                                    baseInstance:baseInstance];
+
+  if (@available(macOS 10.11, iOS 9.0, *)) {
+    [fActiveRenderCmdEncoder drawIndexedPrimitives:gr_to_mtl_primitive(primitiveType)
+                                        indexCount:indexCount
+                                         indexType:MTLIndexTypeUInt16
+                                       indexBuffer:mtlIndexBuffer
+                                 indexBufferOffset:indexOffset
+                                     instanceCount:instanceCount
+                                        baseVertex:baseVertex
+                                      baseInstance:baseInstance];
+  } else {
+    SkASSERT(false);
+  }
   fGpu->stats()->incNumDraws();
 }
 
@@ -362,7 +358,11 @@ void GrMtlOpsRenderPass::setVertexBuffer(
     fBufferBindings[index].fBuffer = mtlVertexBuffer;
     fBufferBindings[index].fOffset = offset;
   } else if (fBufferBindings[index].fOffset != offset) {
-    [encoder setVertexBufferOffset:offset atIndex:index];
+    if (@available(macOS 10.11, iOS 8.3, *)) {
+      [encoder setVertexBufferOffset:offset atIndex:index];
+    } else {
+      [encoder setVertexBuffer:mtlVertexBuffer offset:offset atIndex:index];
+    }
     fBufferBindings[index].fOffset = offset;
   }
 }

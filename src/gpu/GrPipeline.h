@@ -182,9 +182,9 @@ class GrPipeline {
   }
   bool hasStencilClip() const { return SkToBool(fFlags & Flags::kHasStencilClip); }
   bool isStencilEnabled() const { return SkToBool(fFlags & Flags::kStencilEnabled); }
-  SkDEBUGCODE(bool isBad() const { return SkToBool(fFlags & Flags::kIsBad); });
+  SkDEBUGCODE(bool isBad() const { return SkToBool(fFlags & Flags::kIsBad); })
 
-  GrXferBarrierType xferBarrierType(GrTexture*, const GrCaps&) const;
+      GrXferBarrierType xferBarrierType(GrTexture*, const GrCaps&) const;
 
   // Used by Vulkan and Metal to cache their respective pipeline objects
   uint32_t getBlendInfoKey() const;
@@ -192,9 +192,9 @@ class GrPipeline {
   const GrSwizzle& outputSwizzle() const { return fOutputSwizzle; }
 
  private:
-  SkDEBUGCODE(void markAsBad() { fFlags |= Flags::kIsBad; });
+  SkDEBUGCODE(void markAsBad() { fFlags |= Flags::kIsBad; })
 
-  static constexpr uint8_t kLastInputFlag = (uint8_t)InputFlags::kSnapVerticesToPixelCenters;
+      static constexpr uint8_t kLastInputFlag = (uint8_t)InputFlags::kSnapVerticesToPixelCenters;
 
   /** This is a continuation of the public "InputFlags" enum. */
   enum class Flags : uint8_t {

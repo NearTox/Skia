@@ -125,7 +125,7 @@ class TestOp : public GrOp {
     fValueRanges.push_back({value, range});
     this->setBounds(
         SkRect::MakeXYWH(range.fOffset, 0, range.fOffset + range.fLength, 1), HasAABloat::kNo,
-        IsZeroArea::kNo);
+        IsHairline::kNo);
   }
 
   void onPrepare(GrOpFlushState*) override {}

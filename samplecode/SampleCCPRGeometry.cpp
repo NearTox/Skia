@@ -47,7 +47,7 @@ class CCPRGeometryView : public Sample {
   void onOnceBeforeDraw() override { this->updateGpuData(); }
   void onDrawContent(SkCanvas*) override;
 
-  Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, ModifierKey) override;
+  Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, skui::ModifierKey) override;
   bool onClick(Sample::Click*) override;
   bool onChar(SkUnichar) override;
   SkString name() override { return SkString("CCPRGeometry"); }
@@ -83,7 +83,7 @@ class CCPRGeometryView::DrawCoverageCountOp : public GrDrawOp {
   DrawCoverageCountOp(CCPRGeometryView* view) : INHERITED(ClassID()), fView(view) {
     this->setBounds(
         SkRect::MakeIWH(fView->width(), fView->height()), GrOp::HasAABloat::kNo,
-        GrOp::IsZeroArea::kNo);
+        GrOp::IsHairline::kNo);
   }
 
   const char* name() const override {
@@ -186,7 +186,7 @@ void CCPRGeometryView::onDrawContent(SkCanvas* canvas) {
 
     GrOpMemoryPool* pool = ctx->priv().opMemoryPool();
 
-    sk_sp<GrRenderTargetContext> ccbuff = ctx->priv().makeDeferredRenderTargetContext(
+    auto ccbuff = ctx->priv().makeDeferredRenderTargetContext(
         SkBackingFit::kApprox, this->width(), this->height(), GrColorType::kAlpha_F16, nullptr);
     SkASSERT(ccbuff);
     ccbuff->clear(
@@ -195,8 +195,8 @@ void CCPRGeometryView::onDrawContent(SkCanvas* canvas) {
 
     // Visualize coverage count in main canvas.
     GrPaint paint;
-    paint.addColorFragmentProcessor(
-        GrSimpleTextureEffect::Make(sk_ref_sp(ccbuff->asTextureProxy()), SkMatrix::I()));
+    paint.addColorFragmentProcessor(GrSimpleTextureEffect::Make(
+        sk_ref_sp(ccbuff->asTextureProxy()), ccbuff->colorInfo().colorType(), SkMatrix::I()));
     paint.addColorFragmentProcessor(skstd::make_unique<VisualizeCoverageCountFP>());
     paint.setPorterDuffXPFactory(SkBlendMode::kSrcOver);
     rtc->drawRect(
@@ -324,7 +324,7 @@ void CCPRGeometryView::DrawCoverageCountOp::onExecute(
   }
 
   GrPipeline pipeline(
-      GrScissorTest::kDisabled, SkBlendMode::kPlus, state->drawOpArgs().fOutputSwizzle);
+      GrScissorTest::kDisabled, SkBlendMode::kPlus, state->drawOpArgs().outputSwizzle());
 
   std::unique_ptr<GrCCCoverageProcessor> proc;
   if (state->caps().shaderCaps()->geometryShaderSupport()) {
@@ -404,7 +404,7 @@ class CCPRGeometryView::Click : public Sample::Click {
   int fPtIdx;
 };
 
-Sample::Click* CCPRGeometryView::onFindClickHandler(SkScalar x, SkScalar y, ModifierKey) {
+Sample::Click* CCPRGeometryView::onFindClickHandler(SkScalar x, SkScalar y, skui::ModifierKey) {
   for (int i = 0; i < 4; ++i) {
     if (PrimitiveType::kCubics != fPrimitiveType && 2 == i) {
       continue;

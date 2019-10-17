@@ -52,7 +52,9 @@ class GrRRectBlurEffect : public GrFragmentProcessor {
     sk_sp<GrTextureProxy> mask(proxyProvider->findOrCreateProxyByUniqueKey(
         key, GrColorType::kAlpha_8, kBottomLeft_GrSurfaceOrigin));
     if (!mask) {
-      // TODO: this could be approx but the texture coords will need to be updated
+      // TODO: this could be SkBackingFit::kApprox, but:
+      //   1) The texture coords would need to be updated.
+      //   2) We would have to use GrTextureDomain::kClamp_Mode for the GaussianBlur.
       auto rtc = context->priv().makeDeferredRenderTargetContextWithFallback(
           SkBackingFit::kExact, size.fWidth, size.fHeight, GrColorType::kAlpha_8, nullptr);
       if (!rtc) {
@@ -71,9 +73,10 @@ class GrRRectBlurEffect : public GrFragmentProcessor {
         return nullptr;
       }
       auto rtc2 = SkGpuBlurUtils::GaussianBlur(
-          context, std::move(srcProxy), SkIPoint::Make(0, 0), nullptr,
-          SkIRect::MakeWH(size.fWidth, size.fHeight), SkIRect::EmptyIRect(), xformedSigma,
-          xformedSigma, GrTextureDomain::kIgnore_Mode, kPremul_SkAlphaType, SkBackingFit::kExact);
+          context, std::move(srcProxy), rtc->colorInfo().colorType(), rtc->colorInfo().alphaType(),
+          SkIPoint::Make(0, 0), nullptr, SkIRect::MakeWH(size.fWidth, size.fHeight),
+          SkIRect::EmptyIRect(), xformedSigma, xformedSigma, GrTextureDomain::kIgnore_Mode,
+          SkBackingFit::kExact);
       if (!rtc2) {
         return nullptr;
       }

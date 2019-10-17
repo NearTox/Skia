@@ -9,6 +9,7 @@
 #define SkPath_DEFINED
 
 #include "include/core/SkMatrix.h"
+#include "include/core/SkPathTypes.h"
 #include "include/private/SkPathRef.h"
 #include "include/private/SkTo.h"
 
@@ -53,8 +54,8 @@ class SK_API SkPath {
       travel counterclockwise.
   */
   enum Direction : int {
-    kCW_Direction,   //!< contour travels clockwise
-    kCCW_Direction,  //!< contour travels counterclockwise
+    kCW_Direction = static_cast<int>(SkPathDirection::kCW),
+    kCCW_Direction = static_cast<int>(SkPathDirection::kCCW)
   };
 
   /** Constructs an empty SkPath. By default, SkPath has no verbs, no SkPoint, and no weights.
@@ -77,7 +78,6 @@ class SK_API SkPath {
       @return      copy of SkPath
   */
   SkPath(const SkPath& path);
-  SkPath(SkPath&& path) noexcept;
 
   /** Releases ownership of any shared data and deletes data if SkPath is sole owner.
    */
@@ -96,7 +96,6 @@ class SK_API SkPath {
       @return      SkPath copied by value
   */
   SkPath& operator=(const SkPath& path);
-  SkPath& operator=(SkPath&& path) noexcept;
 
   /** Compares a and b; returns true if SkPath::FillType, verb array, SkPoint array, and weights
       are equivalent.
@@ -159,10 +158,10 @@ class SK_API SkPath {
       kInverseEvenOdd_FillType fills where the number of contour edges is even.
   */
   enum FillType {
-    kWinding_FillType,         //!< is enclosed by a non-zero sum of contour directions
-    kEvenOdd_FillType,         //!< is enclosed by an odd number of contours
-    kInverseWinding_FillType,  //!< is enclosed by a zero sum of contour directions
-    kInverseEvenOdd_FillType,  //!< is enclosed by an even number of contours
+    kWinding_FillType = static_cast<int>(SkPathFillType::kWinding),
+    kEvenOdd_FillType = static_cast<int>(SkPathFillType::kEvenOdd),
+    kInverseWinding_FillType = static_cast<int>(SkPathFillType::kInverseWinding),
+    kInverseEvenOdd_FillType = static_cast<int>(SkPathFillType::kInverseEvenOdd)
   };
 
   /** Returns FillType, the rule used to fill SkPath. FillType of a new SkPath is
@@ -171,7 +170,7 @@ class SK_API SkPath {
       @return  one of: kWinding_FillType, kEvenOdd_FillType,  kInverseWinding_FillType,
                kInverseEvenOdd_FillType
   */
-  FillType getFillType() const noexcept { return (FillType)fFillType; }
+  FillType getFillType() const { return (FillType)fFillType; }
 
   /** Sets FillType, the rule used to fill SkPath. While there is no check
       that ft is legal, values outside of FillType are not supported.
@@ -179,7 +178,7 @@ class SK_API SkPath {
       @param ft  one of: kWinding_FillType, kEvenOdd_FillType,  kInverseWinding_FillType,
                  kInverseEvenOdd_FillType
   */
-  void setFillType(FillType ft) noexcept { fFillType = SkToU8(ft); }
+  void setFillType(FillType ft) { fFillType = SkToU8(ft); }
 
   /** Returns if FillType describes area outside SkPath geometry. The inverse fill area
       extends indefinitely.
@@ -191,7 +190,7 @@ class SK_API SkPath {
   /** Replaces FillType with its inverse. The inverse of FillType describes the area
       unmodified by the original FillType.
   */
-  void toggleInverseFillType() noexcept { fFillType ^= 2; }
+  void toggleInverseFillType() { fFillType ^= 2; }
 
   /** \enum SkPath::Convexity
       SkPath is convex if it contains one contour and contour loops no more than
@@ -206,9 +205,9 @@ class SK_API SkPath {
       if needed by destination SkSurface.
   */
   enum Convexity : uint8_t {
-    kUnknown_Convexity,  //!< indicates Convexity has not been determined
-    kConvex_Convexity,   //!< one contour made of a simple geometry without indentations
-    kConcave_Convexity,  //!< more than one contour, or a geometry with indentations
+    kUnknown_Convexity = static_cast<int>(SkPathConvexityType::kUnknown),
+    kConvex_Convexity = static_cast<int>(SkPathConvexityType::kConvex),
+    kConcave_Convexity = static_cast<int>(SkPathConvexityType::kConcave),
   };
 
   /** Computes SkPath::Convexity if required, and returns stored value.
@@ -217,7 +216,7 @@ class SK_API SkPath {
 
       @return  computed or stored SkPath::Convexity
   */
-  Convexity getConvexity() const noexcept {
+  Convexity getConvexity() const {
     Convexity convexity = this->getConvexityOrUnknown();
     if (convexity != kUnknown_Convexity) {
       return convexity;
@@ -230,9 +229,7 @@ class SK_API SkPath {
 
       @return  stored SkPath::Convexity
   */
-  Convexity getConvexityOrUnknown() const noexcept {
-    return fConvexity.load(std::memory_order_relaxed);
-  }
+  Convexity getConvexityOrUnknown() const { return fConvexity.load(std::memory_order_relaxed); }
 
   /** Stores convexity so that it is later returned by getConvexity() or getConvexityOrUnknown().
       convexity may differ from getConvexity(), although setting an incorrect value may
@@ -247,7 +244,7 @@ class SK_API SkPath {
 
       @param convexity  one of: kUnknown_Convexity, kConvex_Convexity, or kConcave_Convexity
   */
-  void setConvexity(Convexity convexity) noexcept;
+  void setConvexity(Convexity convexity);
 
   /** Computes SkPath::Convexity if required, and returns true if value is kConvex_Convexity.
       If setConvexity() was called with kConvex_Convexity or kConcave_Convexity, and
@@ -324,7 +321,7 @@ class SK_API SkPath {
 
       @return  true if all SkPoint values are finite
   */
-  bool isFinite() const noexcept {
+  bool isFinite() const {
     SkDEBUGCODE(this->validate());
     return fPathRef->isFinite();
   }
@@ -413,7 +410,7 @@ class SK_API SkPath {
 
       @return  SkPath SkPoint array length
   */
-  int countPoints() const noexcept;
+  int countPoints() const;
 
   /** Returns SkPoint at index in SkPoint array. Valid range for index is
       0 to countPoints() - 1.
@@ -466,7 +463,7 @@ class SK_API SkPath {
 
       @param other  SkPath exchanged by value
   */
-  void swap(SkPath& other) noexcept;
+  void swap(SkPath& other);
 
   /** Returns minimum and maximum axes values of SkPoint array.
       Returns (0, 0, 0, 0) if SkPath contains no points. Returned bounds width and height may
@@ -477,7 +474,7 @@ class SK_API SkPath {
 
       @return  bounds of all SkPoint in SkPoint array
   */
-  const SkRect& getBounds() const noexcept { return fPathRef->getBounds(); }
+  const SkRect& getBounds() const { return fPathRef->getBounds(); }
 
   /** Updates internal bounds so that subsequent calls to getBounds() are instantaneous.
       Unaltered copies of SkPath may also access cached bounds through getBounds().
@@ -1025,19 +1022,6 @@ class SK_API SkPath {
   */
   bool isRect(SkRect* rect, bool* isClosed = nullptr, Direction* direction = nullptr) const;
 
-  /** Returns true if SkPath is equivalent to nested SkRect pair when filled.
-      If false, rect and dirs are unchanged.
-      If true, rect and dirs are written to if not nullptr:
-      setting rect[0] to outer SkRect, and rect[1] to inner SkRect;
-      setting dirs[0] to SkPath::Direction of outer SkRect, and dirs[1] to SkPath::Direction of
-      inner SkRect.
-
-      @param rect  storage for SkRect pair; may be nullptr
-      @param dirs  storage for SkPath::Direction pair; may be nullptr
-      @return      true if SkPath contains nested SkRect pair
-  */
-  bool isNestedFillRects(SkRect rect[2], Direction dirs[2] = nullptr) const;
-
   /** Adds SkRect to SkPath, appending kMove_Verb, three kLine_Verb, and kClose_Verb,
       starting with top-left corner of SkRect; followed by top-right, bottom-right,
       and bottom-left if dir is kCW_Direction; or followed by bottom-left,
@@ -1339,10 +1323,10 @@ class SK_API SkPath {
       instance, if SkPath only contains lines, only the kLine_SegmentMask bit is set.
   */
   enum SegmentMask {
-    kLine_SegmentMask = 1 << 0,   //!< contains one or more lines
-    kQuad_SegmentMask = 1 << 1,   //!< contains one or more quads
-    kConic_SegmentMask = 1 << 2,  //!< contains one or more conics
-    kCubic_SegmentMask = 1 << 3,  //!< contains one or more cubics
+    kLine_SegmentMask = kLine_SkPathSegmentMask,
+    kQuad_SegmentMask = kQuad_SkPathSegmentMask,
+    kConic_SegmentMask = kConic_SkPathSegmentMask,
+    kCubic_SegmentMask = kCubic_SkPathSegmentMask,
   };
 
   /** Returns a mask, where each set bit corresponds to a SegmentMask constant
@@ -1360,13 +1344,13 @@ class SK_API SkPath {
       manage contour, and terminate SkPath.
   */
   enum Verb {
-    kMove_Verb,   //!< starts new contour at next SkPoint
-    kLine_Verb,   //!< adds line from last point to next SkPoint
-    kQuad_Verb,   //!< adds quad from last point
-    kConic_Verb,  //!< adds conic from last point
-    kCubic_Verb,  //!< adds cubic from last point
-    kClose_Verb,  //!< closes contour
-    kDone_Verb,   //!< terminates SkPath
+    kMove_Verb = static_cast<int>(SkPathVerb::kMove),
+    kLine_Verb = static_cast<int>(SkPathVerb::kLine),
+    kQuad_Verb = static_cast<int>(SkPathVerb::kQuad),
+    kConic_Verb = static_cast<int>(SkPathVerb::kConic),
+    kCubic_Verb = static_cast<int>(SkPathVerb::kCubic),
+    kClose_Verb = static_cast<int>(SkPathVerb::kClose),
+    kDone_Verb = static_cast<int>(SkPathVerb::kDone),
   };
 
   /** \class SkPath::Iter
@@ -1392,7 +1376,7 @@ class SK_API SkPath {
         @param forceClose  true if open contours generate kClose_Verb
         @return            SkPath::Iter of path
     */
-    Iter(const SkPath& path, bool forceClose) noexcept;
+    Iter(const SkPath& path, bool forceClose);
 
     /** Sets SkPath::Iter to return elements of verb array, SkPoint array, and conic weight in
         path. If forceClose is true, SkPath::Iter will add kLine_Verb and kClose_Verb after each
@@ -1401,7 +1385,7 @@ class SK_API SkPath {
         @param path        SkPath to iterate
         @param forceClose  true if open contours generate kClose_Verb
     */
-    void setPath(const SkPath& path, bool forceClose) noexcept;
+    void setPath(const SkPath& path, bool forceClose);
 
     /** Returns next SkPath::Verb in verb array, and advances SkPath::Iter.
         When verb array is exhausted, returns kDone_Verb.
@@ -1411,7 +1395,7 @@ class SK_API SkPath {
         @param pts  storage for SkPoint data describing returned SkPath::Verb
         @return     next SkPath::Verb from verb array
     */
-    Verb next(SkPoint pts[4]) noexcept;
+    Verb next(SkPoint pts[4]);
 
     // DEPRECATED
     Verb next(SkPoint pts[4], bool /*doConsumeDegenerates*/, bool /*exact*/ = false) {
@@ -1436,7 +1420,7 @@ class SK_API SkPath {
 
         @return  true if last kLine_Verb was generated by kClose_Verb
     */
-    bool isCloseLine() const noexcept { return SkToBool(fCloseLine); }
+    bool isCloseLine() const { return SkToBool(fCloseLine); }
 
     /** Returns true if subsequent calls to next() return kClose_Verb before returning
         kMove_Verb. if true, contour SkPath::Iter is processing may end with kClose_Verb, or
@@ -1444,7 +1428,7 @@ class SK_API SkPath {
 
         @return  true if contour is closed
     */
-    bool isClosedContour() const noexcept;
+    bool isClosedContour() const;
 
    private:
     const SkPoint* fPts;
@@ -1466,8 +1450,8 @@ class SK_API SkPath {
     };
     SegmentState fSegmentState;
 
-    inline const SkPoint& cons_moveTo() noexcept;
-    Verb autoClose(SkPoint pts[2]) noexcept;
+    inline const SkPoint& cons_moveTo();
+    Verb autoClose(SkPoint pts[2]);
   };
 
   /** \class SkPath::RawIter
@@ -1636,18 +1620,17 @@ class SK_API SkPath {
    *  Assumes the caller has already emptied fPathRef.
    *  On Android increments fGenerationID without reseting it.
    */
-  void resetFields() noexcept;
+  void resetFields();
 
   /** Sets all fields other than fPathRef to the values in 'that'.
    *  Assumes the caller has already set fPathRef.
    *  Doesn't change fGenerationID or fSourcePath on Android.
    */
-  void copyFields(const SkPath& that) noexcept;
+  void copyFields(const SkPath& that);
 
   size_t writeToMemoryAsRRect(void* buffer) const;
   size_t readAsRRect(const void*, size_t);
-  size_t readFromMemory_LE3(const void*, size_t);
-  size_t readFromMemory_EQ4(const void*, size_t);
+  size_t readFromMemory_EQ4Or5(const void*, size_t);
 
   friend class Iter;
   friend class SkPathPriv;
@@ -1669,17 +1652,14 @@ class SK_API SkPath {
 
   inline bool hasOnlyMoveTos() const;
 
-  Convexity internalGetConvexity() const noexcept;
+  Convexity internalGetConvexity() const;
 
   /** Asserts if SkPath data is inconsistent.
       Debugging check intended for internal use only.
    */
-  SkDEBUGCODE(void validate() const { SkASSERT(this->isValidImpl()); }) bool isValidImpl() const;
+  SkDEBUGCODE(void validate() const { SkASSERT(this->isValidImpl()); });
+  bool isValidImpl() const;
   SkDEBUGCODE(void validateRef() const { fPathRef->validate(); });
-
-  bool isRectContour(
-      bool allowPartial, int* currVerb, const SkPoint** pts, bool* isClosed, Direction* direction,
-      SkRect* rect) const;
 
   // called by stroker to see if all points (in the last contour) are equal and worthy of a cap
   bool isZeroLengthSincePoint(int startPtIndex) const;
@@ -1687,7 +1667,7 @@ class SK_API SkPath {
   /** Returns if the path can return a bound at no cost (true) or will have to
       perform some computation (false).
    */
-  bool hasComputedBounds() const noexcept {
+  bool hasComputedBounds() const {
     SkDEBUGCODE(this->validate());
     return fPathRef->hasComputedBounds();
   }
@@ -1703,9 +1683,9 @@ class SK_API SkPath {
 
   // Bottlenecks for working with fConvexity and fFirstDirection.
   // Notice the setters are const... these are mutable atomic fields.
-  void setConvexity(Convexity) const noexcept;
-  void setFirstDirection(uint8_t) const noexcept;
-  uint8_t getFirstDirection() const noexcept;
+  void setConvexity(Convexity) const;
+  void setFirstDirection(uint8_t) const;
+  uint8_t getFirstDirection() const;
 
   friend class SkAutoPathBoundsUpdate;
   friend class SkAutoDisableOvalCheck;

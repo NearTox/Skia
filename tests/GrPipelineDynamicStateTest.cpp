@@ -14,9 +14,11 @@
 #include "src/gpu/GrColor.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrGeometryProcessor.h"
+#include "src/gpu/GrImageInfo.h"
 #include "src/gpu/GrMemoryPool.h"
 #include "src/gpu/GrOpFlushState.h"
 #include "src/gpu/GrOpsRenderPass.h"
+#include "src/gpu/GrProgramInfo.h"
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/GrRenderTargetContextPriv.h"
@@ -122,7 +124,7 @@ class GrPipelineDynamicStateTestOp : public GrDrawOp {
 
   GrPipelineDynamicStateTestOp(GrScissorTest scissorTest, sk_sp<const GrBuffer> vbuff)
       : INHERITED(ClassID()), fScissorTest(scissorTest), fVertexBuffer(std::move(vbuff)) {
-    this->setBounds(SkRect::MakeIWH(kScreenSize, kScreenSize), HasAABloat::kNo, IsZeroArea::kNo);
+    this->setBounds(SkRect::MakeIWH(kScreenSize, kScreenSize), HasAABloat::kNo, IsHairline::kNo);
   }
 
   const char* name() const override { return "GrPipelineDynamicStateTestOp"; }
@@ -132,8 +134,8 @@ class GrPipelineDynamicStateTestOp : public GrDrawOp {
     return GrProcessorSet::EmptySetAnalysis();
   }
   void onPrepare(GrOpFlushState*) override {}
-  void onExecute(GrOpFlushState* state, const SkRect& chainBounds) override {
-    GrPipeline pipeline(fScissorTest, SkBlendMode::kSrc, state->drawOpArgs().fOutputSwizzle);
+  void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
+    GrPipeline pipeline(fScissorTest, SkBlendMode::kSrc, flushState->drawOpArgs().outputSwizzle());
     SkSTArray<kNumMeshes, GrMesh> meshes;
     for (int i = 0; i < kNumMeshes; ++i) {
       GrMesh& mesh = meshes.emplace_back(GrPrimitiveType::kTriangleStrip);
@@ -142,9 +144,15 @@ class GrPipelineDynamicStateTestOp : public GrDrawOp {
     }
     GrPipeline::DynamicStateArrays dynamicState;
     dynamicState.fScissorRects = kDynamicScissors;
-    state->opsRenderPass()->draw(
-        GrPipelineDynamicStateTestProcessor(), pipeline, nullptr, &dynamicState, meshes.begin(), 4,
-        SkRect::MakeIWH(kScreenSize, kScreenSize));
+
+    GrPipelineDynamicStateTestProcessor primProc;
+
+    GrProgramInfo programInfo(
+        flushState->drawOpArgs().numSamples(), flushState->drawOpArgs().origin(), pipeline,
+        primProc, nullptr, &dynamicState, 0);
+
+    flushState->opsRenderPass()->draw(
+        programInfo, meshes.begin(), 4, SkRect::MakeIWH(kScreenSize, kScreenSize));
   }
 
   GrScissorTest fScissorTest;

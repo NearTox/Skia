@@ -173,10 +173,11 @@ static void draw_texture(
     GrRenderTargetContext* rtc, const GrClip& clip, const SkMatrix& ctm, const SkPaint& paint,
     const SkRect& srcRect, const SkRect& dstRect, const SkPoint dstClip[4], GrAA aa,
     GrQuadAAFlags aaFlags, SkCanvas::SrcRectConstraint constraint, sk_sp<GrTextureProxy> proxy,
-    SkAlphaType alphaType, SkColorSpace* colorSpace) {
-  const GrColorSpaceInfo& dstInfo(rtc->colorSpaceInfo());
-  auto textureXform =
-      GrColorSpaceXform::Make(colorSpace, alphaType, dstInfo.colorSpace(), kPremul_SkAlphaType);
+    const GrColorInfo& srcColorInfo) {
+  const GrColorInfo& dstInfo(rtc->colorInfo());
+  auto textureXform = GrColorSpaceXform::Make(
+      srcColorInfo.colorSpace(), srcColorInfo.alphaType(), dstInfo.colorSpace(),
+      kPremul_SkAlphaType);
   GrSamplerState::Filter filter;
   switch (paint.getFilterQuality()) {
     case kNone_SkFilterQuality: filter = GrSamplerState::Filter::kNearest; break;
@@ -199,7 +200,7 @@ static void draw_texture(
     }
   }
   SkPMColor4f color;
-  if (GrPixelConfigIsAlphaOnly(proxy->config())) {
+  if (GrColorTypeIsAlphaOnly(srcColorInfo.colorType())) {
     color = SkColor4fPrepForDst(paint.getColor4f(), dstInfo).premul();
   } else {
     float paintAlpha = paint.getColor4f().fA;
@@ -212,13 +213,14 @@ static void draw_texture(
     GrMapRectPoints(dstRect, srcRect, dstClip, srcQuad, 4);
 
     rtc->drawTextureQuad(
-        clip, std::move(proxy), filter, paint.getBlendMode(), color, srcQuad, dstClip, aa, aaFlags,
+        clip, std::move(proxy), srcColorInfo.colorType(), filter, paint.getBlendMode(), color,
+        srcQuad, dstClip, aa, aaFlags,
         constraint == SkCanvas::kStrict_SrcRectConstraint ? &srcRect : nullptr, ctm,
         std::move(textureXform));
   } else {
     rtc->drawTexture(
-        clip, std::move(proxy), filter, paint.getBlendMode(), color, srcRect, dstRect, aa, aaFlags,
-        constraint, ctm, std::move(textureXform));
+        clip, std::move(proxy), srcColorInfo.colorType(), filter, paint.getBlendMode(), color,
+        srcRect, dstRect, aa, aaFlags, constraint, ctm, std::move(textureXform));
   }
 }
 
@@ -238,7 +240,7 @@ static void draw_texture_producer(
 
     draw_texture(
         rtc, clip, ctm, paint, src, dst, dstClip, aa, aaFlags, constraint, std::move(proxy),
-        producer->alphaType(), producer->colorSpace());
+        producer->colorInfo());
     return;
   }
 
@@ -296,15 +298,14 @@ static void draw_texture_producer(
   auto fp = producer->createFragmentProcessor(
       textureMatrix, src, constraintMode, coordsAllInsideSrcRect, filterMode);
   fp = GrColorSpaceXformEffect::Make(
-      std::move(fp), producer->colorSpace(), producer->alphaType(),
-      rtc->colorSpaceInfo().colorSpace());
+      std::move(fp), producer->colorSpace(), producer->alphaType(), rtc->colorInfo().colorSpace());
   if (!fp) {
     return;
   }
 
   GrPaint grPaint;
   if (!SkPaintToGrPaintWithTexture(
-          context, rtc->colorSpaceInfo(), paint, ctm, std::move(fp), producer->isAlphaOnly(),
+          context, rtc->colorInfo(), paint, ctm, std::move(fp), producer->isAlphaOnly(),
           &grPaint)) {
     return;
   }
@@ -398,19 +399,16 @@ void SkGpuDevice::drawImageQuad(
     SK_HISTOGRAM_BOOLEAN("DrawTiled", false);
     LogDrawScaleFactor(ctm, srcToDst, paint.getFilterQuality());
 
-    SkAlphaType alphaType = image->alphaType();
-    SkColorSpace* colorSpace = as_IB(image)->colorSpace();
+    GrColorInfo colorInfo(image->imageInfo().colorInfo());
 
     if (attemptDrawTexture && can_use_draw_texture(paint)) {
       draw_texture(
           fRenderTargetContext.get(), this->clip(), ctm, paint, src, dst, dstClip, aa, aaFlags,
-          constraint, std::move(proxy), alphaType, colorSpace);
+          constraint, std::move(proxy), colorInfo);
       return;
     }
-    auto colorType = SkColorTypeToGrColorType(image->colorType());
     GrTextureAdjuster adjuster(
-        fContext.get(), std::move(proxy), colorType, alphaType, pinnedUniqueID, colorSpace,
-        useDecal);
+        fContext.get(), std::move(proxy), colorInfo, pinnedUniqueID, useDecal);
     draw_texture_producer(
         fContext.get(), fRenderTargetContext.get(), this->clip(), ctm, paint, &adjuster, src, dst,
         dstClip, srcToDst, aa, aaFlags, constraint, /* attempt draw_texture */ false);
@@ -466,12 +464,17 @@ void SkGpuDevice::drawEdgeAAImageSet(
       SkASSERT(!set[i].fHasClip || dstClips);
       SkASSERT(set[i].fMatrixIndex < 0 || preViewMatrices);
 
+      SkTCopyOnFirstWrite<SkPaint> entryPaint(paint);
+      if (set[i].fAlpha != 1.f) {
+        auto paintAlpha = paint.getAlphaf();
+        entryPaint.writable()->setAlphaf(paintAlpha * set[i].fAlpha);
+      }
       // Always send GrAA::kYes to preserve seaming across tiling in MSAA
       this->drawImageQuad(
           set[i].fImage.get(), &set[i].fSrcRect, &set[i].fDstRect,
           set[i].fHasClip ? dstClips + dstClipIndex : nullptr, GrAA::kYes,
           SkToGrQuadAAFlags(set[i].fAAFlags),
-          set[i].fMatrixIndex < 0 ? nullptr : preViewMatrices + set[i].fMatrixIndex, paint,
+          set[i].fMatrixIndex < 0 ? nullptr : preViewMatrices + set[i].fMatrixIndex, *entryPaint,
           constraint);
       dstClipIndex += 4 * set[i].fHasClip;
     }
@@ -491,7 +494,7 @@ void SkGpuDevice::drawEdgeAAImageSet(
     if (n > 0) {
       auto textureXform = GrColorSpaceXform::Make(
           set[base].fImage->colorSpace(), set[base].fImage->alphaType(),
-          fRenderTargetContext->colorSpaceInfo().colorSpace(), kPremul_SkAlphaType);
+          fRenderTargetContext->colorInfo().colorSpace(), kPremul_SkAlphaType);
       fRenderTargetContext->drawTextureSet(
           this->clip(), textures.get() + base, n, filter, mode, GrAA::kYes, constraint, this->ctm(),
           std::move(textureXform));
@@ -534,15 +537,21 @@ void SkGpuDevice::drawEdgeAAImageSet(
       draw();
       base = i + 1;
       n = 0;
+      SkTCopyOnFirstWrite<SkPaint> entryPaint(paint);
+      if (set[i].fAlpha != 1.f) {
+        auto paintAlpha = paint.getAlphaf();
+        entryPaint.writable()->setAlphaf(paintAlpha * set[i].fAlpha);
+      }
       this->drawImageQuad(
           image, &set[i].fSrcRect, &set[i].fDstRect, clip, GrAA::kYes,
           SkToGrQuadAAFlags(set[i].fAAFlags),
-          set[i].fMatrixIndex < 0 ? nullptr : preViewMatrices + set[i].fMatrixIndex, paint,
+          set[i].fMatrixIndex < 0 ? nullptr : preViewMatrices + set[i].fMatrixIndex, *entryPaint,
           constraint);
       continue;
     }
 
     textures[i].fProxy = std::move(proxy);
+    textures[i].fSrcColorType = SkColorTypeToGrColorType(image->colorType());
     textures[i].fSrcRect = set[i].fSrcRect;
     textures[i].fDstRect = set[i].fDstRect;
     textures[i].fDstClipQuad = clip;

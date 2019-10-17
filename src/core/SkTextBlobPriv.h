@@ -78,9 +78,9 @@ class SkTextBlobBuilderPriv {
 //
 // Extended Textblob runs may be mixed with non-extended runs.
 
-SkDEBUGCODE(static const unsigned kRunRecordMagic = 0xb10bcafe);
+SkDEBUGCODE(static const unsigned kRunRecordMagic = 0xb10bcafe;)
 
-class SkTextBlob::RunRecord {
+    class SkTextBlob::RunRecord {
  public:
   RunRecord(
       uint32_t count, uint32_t textSize, const SkPoint& offset, const SkFont& font,
@@ -141,6 +141,8 @@ class SkTextBlob::RunRecord {
     return isExtended() ? reinterpret_cast<char*>(this->clusterBuffer() + fCount) : nullptr;
   }
 
+  bool isLastRun() const { return SkToBool(fFlags & kLast_Flag); }
+
   static size_t StorageSize(
       uint32_t glyphCount, uint32_t textSize, SkTextBlob::GlyphPositioning positioning,
       SkSafeMath* safe);
@@ -176,7 +178,7 @@ class SkTextBlob::RunRecord {
   SkPoint fOffset;
   uint32_t fFlags;
 
-  SkDEBUGCODE(unsigned fMagic);
+  SkDEBUGCODE(unsigned fMagic;)
 };
 
 /**
@@ -242,7 +244,7 @@ class SkTextBlobRunIterator {
  private:
   const SkTextBlob::RunRecord* fCurrentRun;
 
-  SkDEBUGCODE(uint8_t* fStorageTop);
+  SkDEBUGCODE(uint8_t* fStorageTop;)
 };
 
 #endif  // SkTextBlobPriv_DEFINED

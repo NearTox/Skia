@@ -139,5 +139,5 @@ SkIRect SkOffsetImageFilterImpl::onFilterNodeBounds(
     SkPointPriv::Negate(vec);
   }
 
-  return src.makeOffset(vec.fX, vec.fY);
+  return src.makeOffset(vec);
 }

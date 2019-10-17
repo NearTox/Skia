@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "src/gpu/ops/GrTextureOp.h"
 #include <new>
+
 #include "include/core/SkPoint.h"
 #include "include/core/SkPoint3.h"
 #include "include/gpu/GrTexture.h"
@@ -31,6 +31,7 @@
 #include "src/gpu/GrTextureProxy.h"
 #include "src/gpu/SkGr.h"
 #include "src/gpu/effects/GrTextureDomain.h"
+#include "src/gpu/effects/generated/GrSaturateProcessor.h"
 #include "src/gpu/geometry/GrQuad.h"
 #include "src/gpu/geometry/GrQuadBuffer.h"
 #include "src/gpu/geometry/GrQuadUtils.h"
@@ -38,6 +39,7 @@
 #include "src/gpu/ops/GrFillRectOp.h"
 #include "src/gpu/ops/GrMeshDrawOp.h"
 #include "src/gpu/ops/GrQuadPerEdgeAA.h"
+#include "src/gpu/ops/GrTextureOp.h"
 
 namespace {
 
@@ -145,22 +147,25 @@ class TextureOp final : public GrMeshDrawOp {
   static std::unique_ptr<GrDrawOp> Make(
       GrRecordingContext* context, sk_sp<GrTextureProxy> proxy,
       sk_sp<GrColorSpaceXform> textureXform, GrSamplerState::Filter filter,
-      const SkPMColor4f& color, GrAAType aaType, GrQuadAAFlags aaFlags, const GrQuad& deviceQuad,
-      const GrQuad& localQuad, const SkRect* domain) {
+      const SkPMColor4f& color, GrTextureOp::Saturate saturate, GrAAType aaType,
+      GrQuadAAFlags aaFlags, const GrQuad& deviceQuad, const GrQuad& localQuad,
+      const SkRect* domain) {
     GrOpMemoryPool* pool = context->priv().opMemoryPool();
     return pool->allocate<TextureOp>(
-        std::move(proxy), std::move(textureXform), filter, color, aaType, aaFlags, deviceQuad,
-        localQuad, domain);
+        std::move(proxy), std::move(textureXform), filter, color, saturate, aaType, aaFlags,
+        deviceQuad, localQuad, domain);
   }
   static std::unique_ptr<GrDrawOp> Make(
       GrRecordingContext* context, const GrRenderTargetContext::TextureSetEntry set[], int cnt,
-      GrSamplerState::Filter filter, GrAAType aaType, SkCanvas::SrcRectConstraint constraint,
-      const SkMatrix& viewMatrix, sk_sp<GrColorSpaceXform> textureColorSpaceXform) {
+      GrSamplerState::Filter filter, GrTextureOp::Saturate saturate, GrAAType aaType,
+      SkCanvas::SrcRectConstraint constraint, const SkMatrix& viewMatrix,
+      sk_sp<GrColorSpaceXform> textureColorSpaceXform) {
     size_t size = sizeof(TextureOp) + sizeof(Proxy) * (cnt - 1);
     GrOpMemoryPool* pool = context->priv().opMemoryPool();
     void* mem = pool->allocate(size);
     return std::unique_ptr<GrDrawOp>(new (mem) TextureOp(
-        set, cnt, filter, aaType, constraint, viewMatrix, std::move(textureColorSpaceXform)));
+        set, cnt, filter, saturate, aaType, constraint, viewMatrix,
+        std::move(textureColorSpaceXform)));
   }
 
   ~TextureOp() override {
@@ -259,12 +264,15 @@ class TextureOp final : public GrMeshDrawOp {
   // is not null it will be used to apply the strict src rect constraint.
   TextureOp(
       sk_sp<GrTextureProxy> proxy, sk_sp<GrColorSpaceXform> textureColorSpaceXform,
-      GrSamplerState::Filter filter, const SkPMColor4f& color, GrAAType aaType,
-      GrQuadAAFlags aaFlags, const GrQuad& dstQuad, const GrQuad& srcQuad, const SkRect* domainRect)
+      GrSamplerState::Filter filter, const SkPMColor4f& color, GrTextureOp::Saturate saturate,
+      GrAAType aaType, GrQuadAAFlags aaFlags, const GrQuad& dstQuad, const GrQuad& srcQuad,
+      const SkRect* domainRect)
       : INHERITED(ClassID()),
         fQuads(1, true /* includes locals */),
         fTextureColorSpaceXform(std::move(textureColorSpaceXform)),
-        fFilter(static_cast<unsigned>(filter)) {
+        fSaturate(static_cast<unsigned>(saturate)),
+        fFilter(static_cast<unsigned>(filter)),
+        fPrePrepared(false) {
     // Clean up disparities between the overall aa type and edge configuration and apply
     // optimizations based on the rect and matrix when appropriate
     GrQuadUtils::ResolveAAType(aaType, aaFlags, dstQuad, &aaType, &aaFlags);
@@ -285,17 +293,19 @@ class TextureOp final : public GrMeshDrawOp {
 
     fProxyCnt = 1;
     fProxies[0] = {proxy.release(), 1};
-    this->setBounds(dstQuad.bounds(), HasAABloat(aaType == GrAAType::kCoverage), IsZeroArea::kNo);
+    this->setBounds(dstQuad.bounds(), HasAABloat(aaType == GrAAType::kCoverage), IsHairline::kNo);
     fDomain = static_cast<unsigned>(domainRect != nullptr);
   }
   TextureOp(
       const GrRenderTargetContext::TextureSetEntry set[], int cnt, GrSamplerState::Filter filter,
-      GrAAType aaType, SkCanvas::SrcRectConstraint constraint, const SkMatrix& viewMatrix,
-      sk_sp<GrColorSpaceXform> textureColorSpaceXform)
+      GrTextureOp::Saturate saturate, GrAAType aaType, SkCanvas::SrcRectConstraint constraint,
+      const SkMatrix& viewMatrix, sk_sp<GrColorSpaceXform> textureColorSpaceXform)
       : INHERITED(ClassID()),
         fQuads(cnt, true /* includes locals */),
         fTextureColorSpaceXform(std::move(textureColorSpaceXform)),
-        fFilter(static_cast<unsigned>(filter)) {
+        fSaturate(static_cast<unsigned>(saturate)),
+        fFilter(static_cast<unsigned>(filter)),
+        fPrePrepared(false) {
     fProxyCnt = SkToUInt(cnt);
     SkRect bounds = SkRectPriv::MakeLargestInverted();
     GrAAType overallAAType = GrAAType::kNone;  // aa type maximally compatible with all dst rects
@@ -363,7 +373,7 @@ class TextureOp final : public GrMeshDrawOp {
     if (!mustFilter) {
       fFilter = static_cast<unsigned>(GrSamplerState::Filter::kNearest);
     }
-    this->setBounds(bounds, HasAABloat(this->aaType() == GrAAType::kCoverage), IsZeroArea::kNo);
+    this->setBounds(bounds, HasAABloat(this->aaType() == GrAAType::kCoverage), IsHairline::kNo);
     fDomain = static_cast<unsigned>(netDomain);
   }
 
@@ -400,17 +410,50 @@ class TextureOp final : public GrMeshDrawOp {
     }
   }
 
-  void onPrepareDraws(Target* target) override {
-    TRACE_EVENT0("skia.gpu", TRACE_FUNC);
-    GrQuad::Type quadType = GrQuad::Type::kAxisAligned;
-    GrQuad::Type srcQuadType = GrQuad::Type::kAxisAligned;
-    Domain domain = Domain::kNo;
-    ColorType colorType = ColorType::kNone;
-    int numProxies = 0;
-    int numTotalQuads = 0;
+  void onPrePrepareDraws(GrRecordingContext* context) override {
+    SkASSERT(!fPrePrepared);
+    // Pull forward the tessellation of the quads to here
+
+    // GrOpMemoryPool* pool = context->priv().opMemoryPool();
+
+    fPrePrepared = true;
+  }
+
+#ifdef SK_DEBUG
+  void validate() const override {
     auto textureType = fProxies[0].fProxy->textureType();
     const GrSwizzle& swizzle = fProxies[0].fProxy->textureSwizzle();
     GrAAType aaType = this->aaType();
+
+    for (const auto& op : ChainRange<TextureOp>(this)) {
+      for (unsigned p = 0; p < op.fProxyCnt; ++p) {
+        auto* proxy = op.fProxies[p].fProxy;
+        SkASSERT(proxy);
+        SkASSERT(proxy->textureType() == textureType);
+        SkASSERT(proxy->textureSwizzle() == swizzle);
+      }
+
+      // Each individual op must be a single aaType. kCoverage and kNone ops can chain
+      // together but kMSAA ones do not.
+      if (aaType == GrAAType::kCoverage || aaType == GrAAType::kNone) {
+        SkASSERT(op.aaType() == GrAAType::kCoverage || op.aaType() == GrAAType::kNone);
+      } else {
+        SkASSERT(aaType == GrAAType::kMSAA && op.aaType() == GrAAType::kMSAA);
+      }
+    }
+  }
+#endif
+
+  VertexSpec characterize(int* numProxies, int* numTotalQuads) const {
+    GrQuad::Type quadType = GrQuad::Type::kAxisAligned;
+    ColorType colorType = ColorType::kNone;
+    GrQuad::Type srcQuadType = GrQuad::Type::kAxisAligned;
+    Domain domain = Domain::kNo;
+    GrAAType overallAAType = this->aaType();
+
+    *numProxies = 0;
+    *numTotalQuads = 0;
+
     for (const auto& op : ChainRange<TextureOp>(this)) {
       if (op.fQuads.deviceQuadType() > quadType) {
         quadType = op.fQuads.deviceQuadType();
@@ -422,34 +465,30 @@ class TextureOp final : public GrMeshDrawOp {
         domain = Domain::kYes;
       }
       colorType = SkTMax(colorType, static_cast<ColorType>(op.fColorType));
-      numProxies += op.fProxyCnt;
+      *numProxies += op.fProxyCnt;
       for (unsigned p = 0; p < op.fProxyCnt; ++p) {
-        numTotalQuads += op.fProxies[p].fQuadCnt;
-        auto* proxy = op.fProxies[p].fProxy;
-        if (!proxy->isInstantiated()) {
-          return;
-        }
-        SkASSERT(proxy->textureType() == textureType);
-        SkASSERT(proxy->textureSwizzle() == swizzle);
+        *numTotalQuads += op.fProxies[p].fQuadCnt;
       }
       if (op.aaType() == GrAAType::kCoverage) {
-        SkASSERT(aaType == GrAAType::kCoverage || aaType == GrAAType::kNone);
-        aaType = GrAAType::kCoverage;
+        overallAAType = GrAAType::kCoverage;
       }
     }
 
-    VertexSpec vertexSpec(
-        quadType, colorType, srcQuadType, /* hasLocal */ true, domain, aaType,
+    return VertexSpec(
+        quadType, colorType, srcQuadType, /* hasLocal */ true, domain, overallAAType,
         /* alpha as coverage */ true);
+  }
 
-    GrSamplerState samplerState = GrSamplerState(GrSamplerState::WrapMode::kClamp, this->filter());
-    GrGpu* gpu = target->resourceProvider()->priv().gpu();
-    uint32_t extraSamplerKey =
-        gpu->getExtraSamplerKeyForProgram(samplerState, fProxies[0].fProxy->backendFormat());
+  // onPrePrepareDraws may or may not have been called at this point
+  void onPrepareDraws(Target* target) override {
+    TRACE_EVENT0("skia.gpu", TRACE_FUNC);
 
-    sk_sp<GrGeometryProcessor> gp = GrQuadPerEdgeAA::MakeTexturedProcessor(
-        vertexSpec, *target->caps().shaderCaps(), textureType, samplerState, swizzle,
-        extraSamplerKey, std::move(fTextureColorSpaceXform));
+    SkDEBUGCODE(this->validate();)
+
+        int numProxies,
+        numTotalQuads;
+
+    const VertexSpec vertexSpec = this->characterize(&numProxies, &numTotalQuads);
 
     // We'll use a dynamic state array for the GP textures when there are multiple ops.
     // Otherwise, we use fixed dynamic state to specify the single op's proxy.
@@ -463,7 +502,7 @@ class TextureOp final : public GrMeshDrawOp {
       fixedDynamicState->fPrimitiveProcessorTextures[0] = fProxies[0].fProxy;
     }
 
-    size_t vertexSize = gp->vertexStride();
+    size_t vertexSize = vertexSpec.vertexSize();
 
     GrMesh* meshes = target->allocMeshes(numProxies);
     sk_sp<const GrBuffer> vbuffer;
@@ -513,6 +552,29 @@ class TextureOp final : public GrMeshDrawOp {
     }
     SkASSERT(!numQuadVerticesLeft);
     SkASSERT(!numAllocatedVertices);
+
+    sk_sp<GrGeometryProcessor> gp;
+
+    {
+      auto textureType = fProxies[0].fProxy->textureType();
+      const GrSwizzle& swizzle = fProxies[0].fProxy->textureSwizzle();
+
+      GrSamplerState samplerState =
+          GrSamplerState(GrSamplerState::WrapMode::kClamp, this->filter());
+
+      auto saturate = static_cast<GrTextureOp::Saturate>(fSaturate);
+
+      GrGpu* gpu = target->resourceProvider()->priv().gpu();
+      uint32_t extraSamplerKey =
+          gpu->getExtraSamplerKeyForProgram(samplerState, fProxies[0].fProxy->backendFormat());
+
+      gp = GrQuadPerEdgeAA::MakeTexturedProcessor(
+          vertexSpec, *target->caps().shaderCaps(), textureType, samplerState, swizzle,
+          extraSamplerKey, std::move(fTextureColorSpaceXform), saturate);
+
+      SkASSERT(vertexSize == gp->vertexStride());
+    }
+
     target->recordDraw(std::move(gp), meshes, numProxies, fixedDynamicState, dynamicStateArrays);
   }
 
@@ -526,6 +588,13 @@ class TextureOp final : public GrMeshDrawOp {
   CombineResult onCombineIfPossible(GrOp* t, const GrCaps& caps) override {
     TRACE_EVENT0("skia.gpu", TRACE_FUNC);
     const auto* that = t->cast<TextureOp>();
+
+    if (fPrePrepared || that->fPrePrepared) {
+      // This should never happen (since only DDL recorded ops should be prePrepared)
+      // but, in any case, we should never combine ops that that been prePrepared
+      return CombineResult::kCannotCombine;
+    }
+
     if (fDomain != that->fDomain) {
       // It is technically possible to combine operations across domain modes, but performance
       // testing suggests it's better to make more draw calls where some take advantage of
@@ -543,6 +612,9 @@ class TextureOp final : public GrMeshDrawOp {
         return CombineResult::kCannotCombine;
       }
       upgradeToCoverageAAOnMerge = true;
+    }
+    if (fSaturate != that->fSaturate) {
+      return CombineResult::kCannotCombine;
     }
     if (fFilter != that->fFilter) {
       return CombineResult::kCannotCombine;
@@ -576,11 +648,13 @@ class TextureOp final : public GrMeshDrawOp {
 
   GrQuadBuffer<ColorDomainAndAA> fQuads;
   sk_sp<GrColorSpaceXform> fTextureColorSpaceXform;
+  unsigned fSaturate : 1;
   unsigned fFilter : 2;
   unsigned fAAType : 2;
   unsigned fDomain : 1;
   unsigned fColorType : 2;
   GR_STATIC_ASSERT(GrQuadPerEdgeAA::kColorTypeCount <= 4);
+  unsigned fPrePrepared : 1;
   unsigned fProxyCnt : 32 - 7;
   Proxy fProxies[1];
 
@@ -594,10 +668,10 @@ class TextureOp final : public GrMeshDrawOp {
 namespace GrTextureOp {
 
 std::unique_ptr<GrDrawOp> Make(
-    GrRecordingContext* context, sk_sp<GrTextureProxy> proxy, sk_sp<GrColorSpaceXform> textureXform,
-    GrSamplerState::Filter filter, const SkPMColor4f& color, SkBlendMode blendMode, GrAAType aaType,
-    GrQuadAAFlags aaFlags, const GrQuad& deviceQuad, const GrQuad& localQuad,
-    const SkRect* domain) {
+    GrRecordingContext* context, sk_sp<GrTextureProxy> proxy, GrColorType srcColorType,
+    sk_sp<GrColorSpaceXform> textureXform, GrSamplerState::Filter filter, const SkPMColor4f& color,
+    Saturate saturate, SkBlendMode blendMode, GrAAType aaType, GrQuadAAFlags aaFlags,
+    const GrQuad& deviceQuad, const GrQuad& localQuad, const SkRect* domain) {
   // Apply optimizations that are valid whether or not using GrTextureOp or GrFillRectOp
   if (domain && domain->contains(proxy->getWorstCaseBoundsRect())) {
     // No need for a shader-based domain if hardware clamping achieves the same effect
@@ -610,8 +684,8 @@ std::unique_ptr<GrDrawOp> Make(
 
   if (blendMode == SkBlendMode::kSrcOver) {
     return TextureOp::Make(
-        context, std::move(proxy), std::move(textureXform), filter, color, aaType, aaFlags,
-        deviceQuad, localQuad, domain);
+        context, std::move(proxy), std::move(textureXform), filter, color, saturate, aaType,
+        aaFlags, deviceQuad, localQuad, domain);
   } else {
     // Emulate complex blending using GrFillRectOp
     GrPaint paint;
@@ -628,12 +702,16 @@ std::unique_ptr<GrDrawOp> Make(
           Domain::kYes, filter, kTopLeft_GrSurfaceOrigin, *domain, 1.f, 1.f, proxy->height(),
           &correctedDomain);
       fp = GrTextureDomainEffect::Make(
-          std::move(proxy), SkMatrix::I(), correctedDomain, GrTextureDomain::kClamp_Mode, filter);
+          std::move(proxy), srcColorType, SkMatrix::I(), correctedDomain,
+          GrTextureDomain::kClamp_Mode, filter);
     } else {
-      fp = GrSimpleTextureEffect::Make(std::move(proxy), SkMatrix::I(), filter);
+      fp = GrSimpleTextureEffect::Make(std::move(proxy), srcColorType, SkMatrix::I(), filter);
     }
     fp = GrColorSpaceXformEffect::Make(std::move(fp), std::move(textureXform));
     paint.addColorFragmentProcessor(std::move(fp));
+    if (saturate == GrTextureOp::Saturate::kYes) {
+      paint.addColorFragmentProcessor(GrSaturateProcessor::Make());
+    }
 
     return GrFillRectOp::Make(context, std::move(paint), aaType, aaFlags, deviceQuad, localQuad);
   }
@@ -641,10 +719,12 @@ std::unique_ptr<GrDrawOp> Make(
 
 std::unique_ptr<GrDrawOp> MakeSet(
     GrRecordingContext* context, const GrRenderTargetContext::TextureSetEntry set[], int cnt,
-    GrSamplerState::Filter filter, GrAAType aaType, SkCanvas::SrcRectConstraint constraint,
-    const SkMatrix& viewMatrix, sk_sp<GrColorSpaceXform> textureColorSpaceXform) {
+    GrSamplerState::Filter filter, Saturate saturate, GrAAType aaType,
+    SkCanvas::SrcRectConstraint constraint, const SkMatrix& viewMatrix,
+    sk_sp<GrColorSpaceXform> textureColorSpaceXform) {
   return TextureOp::Make(
-      context, set, cnt, filter, aaType, constraint, viewMatrix, std::move(textureColorSpaceXform));
+      context, set, cnt, filter, saturate, aaType, constraint, viewMatrix,
+      std::move(textureColorSpaceXform));
 }
 
 }  // namespace GrTextureOp
@@ -698,10 +778,11 @@ GR_DRAW_OP_TEST_DEFINE(TextureOp) {
   aaFlags |= random->nextBool() ? GrQuadAAFlags::kRight : GrQuadAAFlags::kNone;
   aaFlags |= random->nextBool() ? GrQuadAAFlags::kBottom : GrQuadAAFlags::kNone;
   bool useDomain = random->nextBool();
+  auto saturate = random->nextBool() ? GrTextureOp::Saturate::kYes : GrTextureOp::Saturate::kNo;
   return GrTextureOp::Make(
-      context, std::move(proxy), std::move(texXform), filter, color, SkBlendMode::kSrcOver, aaType,
-      aaFlags, GrQuad::MakeFromRect(rect, viewMatrix), GrQuad(srcRect),
-      useDomain ? &srcRect : nullptr);
+      context, std::move(proxy), GrColorType::kRGBA_8888, std::move(texXform), filter, color,
+      saturate, SkBlendMode::kSrcOver, aaType, aaFlags, GrQuad::MakeFromRect(rect, viewMatrix),
+      GrQuad(srcRect), useDomain ? &srcRect : nullptr);
 }
 
 #endif

@@ -30,7 +30,7 @@ class ReadPixBench : public Benchmark {
 
     SkISize size = canvas->getBaseLayerSize();
 
-    auto info = SkImageInfo::Make(size.width(), size.height(), fCT, fAT, fCS);
+    auto info = SkImageInfo::Make(size, fCT, fAT, fCS);
     SkBitmap bitmap;
     bitmap.allocPixels(info);
 
@@ -73,7 +73,7 @@ class PixmapOrientBench : public Benchmark {
     const SkImageInfo info = SkImageInfo::MakeN32Premul(2048, 1024);
     fSrc.allocPixels(info);
     fSrc.eraseColor(SK_ColorBLACK);
-    fDst.allocPixels(info.makeWH(info.height(), info.width()));
+    fDst.allocPixels(info.makeDimensions(info.dimensions()));
   }
 
   const char* onGetName() override { return "orient_pixmap"; }

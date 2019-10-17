@@ -15,7 +15,7 @@
 // Handy util that can be passed two ints, and will automatically promote to
 // 64bits before the multiply, so the caller doesn't have to remember to cast
 // e.g. (int64_t)a * b;
-static constexpr inline int64_t sk_64_mul(int64_t a, int64_t b) { return a * b; }
+static inline int64_t sk_64_mul(int64_t a, int64_t b) { return a * b; }
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -25,7 +25,7 @@ static constexpr inline int64_t sk_64_mul(int64_t a, int64_t b) { return a * b; 
  *  @param max      The positive max value
  *  @return 0 if value < 0, max if value > max, else value
  */
-static constexpr inline int SkClampMax(int value, int max) {
+static inline int SkClampMax(int value, int max) {
   // ensure that max is positive
   SkASSERT(max >= 0);
   if (value < 0) {

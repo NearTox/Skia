@@ -154,12 +154,12 @@ void GrGLBicubicEffect::onSetData(
 }
 
 GrBicubicEffect::GrBicubicEffect(
-    sk_sp<GrTextureProxy> proxy, const SkMatrix& matrix, const SkRect& domain,
-    const GrSamplerState::WrapMode wrapModes[2], GrTextureDomain::Mode modeX,
+    sk_sp<GrTextureProxy> proxy, GrColorType srcColorType, const SkMatrix& matrix,
+    const SkRect& domain, const GrSamplerState::WrapMode wrapModes[2], GrTextureDomain::Mode modeX,
     GrTextureDomain::Mode modeY, Direction direction, SkAlphaType alphaType)
     : INHERITED{kGrBicubicEffect_ClassID,
                 ModulateForSamplerOptFlags(
-                    proxy->config(), GrTextureDomain::IsDecalSampled(wrapModes, modeX, modeY))},
+                    srcColorType, GrTextureDomain::IsDecalSampled(wrapModes, modeX, modeY))},
       fCoordTransform(matrix, proxy.get()),
       fDomain(proxy.get(), domain, modeX, modeY),
       fTextureSampler(
@@ -211,7 +211,8 @@ std::unique_ptr<GrFragmentProcessor> GrBicubicEffect::TestCreate(GrProcessorTest
     case 2: direction = Direction::kXY; break;
   }
   return GrBicubicEffect::Make(
-      d->textureProxy(texIdx), SkMatrix::I(), kClampClamp, direction, alphaType);
+      d->textureProxy(texIdx), d->textureProxyColorType(texIdx), SkMatrix::I(), kClampClamp,
+      direction, alphaType);
 }
 #endif
 

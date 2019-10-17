@@ -122,10 +122,8 @@ class CacheImpl : public SkImageFilterCache {
     fImageFilterValues.remove(filter);
   }
 
-  SkDEBUGCODE(int count() const override { return fLookup.count(); });
-
- private:
-  void removeInternal(Value* v) {
+  SkDEBUGCODE(int count() const override { return fLookup.count(); }) private
+      : void removeInternal(Value* v) {
     if (v->fFilter) {
       if (auto* values = fImageFilterValues.find(v->fFilter)) {
         if (values->size() == 1 && (*values)[0] == v) {

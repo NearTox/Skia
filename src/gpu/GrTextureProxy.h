@@ -167,15 +167,15 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
   // point, the proxy is instantiated, and this data is used to perform an ASAP upload.
   std::unique_ptr<GrDeferredProxyUploader> fDeferredUploader;
 
-  size_t onUninstantiatedGpuMemorySize() const override;
+  size_t onUninstantiatedGpuMemorySize(const GrCaps&) const override;
 
   // Methods made available via GrTextureProxy::CacheAccess
   void setUniqueKey(GrProxyProvider*, const GrUniqueKey&);
   void clearUniqueKey();
 
-  SkDEBUGCODE(void onValidateSurface(const GrSurface*) override);
+  SkDEBUGCODE(void onValidateSurface(const GrSurface*) override;)
 
-  typedef GrSurfaceProxy INHERITED;
+      typedef GrSurfaceProxy INHERITED;
 };
 
 #endif

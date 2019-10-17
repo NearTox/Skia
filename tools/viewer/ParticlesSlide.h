@@ -28,7 +28,8 @@ class ParticlesSlide : public Slide {
   void draw(SkCanvas* canvas) override;
   bool animate(double) override;
 
-  bool onMouse(SkScalar x, SkScalar y, InputState state, ModifierKey modifiers) override;
+  bool onMouse(
+      SkScalar x, SkScalar y, skui::InputState state, skui::ModifierKey modifiers) override;
 
  private:
   void loadEffects(const char* dirname);
@@ -48,6 +49,7 @@ class ParticlesSlide : public Slide {
     SkPoint fPosition;
     SkString fName;
     sk_sp<SkParticleEffect> fEffect;
+    bool fTrackMouse;
   };
   SkTArray<RunningEffect> fRunning;
 };

@@ -39,7 +39,7 @@ struct GrDawnProgram : public SkRefCnt {
     void getRTAdjustmentVec(float* destVec) {
       destVec[0] = 2.f / fRenderTargetSize.fWidth;
       destVec[1] = -1.f;
-      if (kBottomLeft_GrSurfaceOrigin == fRenderTargetOrigin) {
+      if (kTopLeft_GrSurfaceOrigin == fRenderTargetOrigin) {
         destVec[2] = -2.f / fRenderTargetSize.fHeight;
         destVec[3] = 1.f;
       } else {
@@ -64,16 +64,13 @@ struct GrDawnProgram : public SkRefCnt {
   BuiltinUniformHandles fBuiltinUniformHandles;
 
   void setRenderTargetState(const GrRenderTarget*, GrSurfaceOrigin);
-  dawn::BindGroup setData(
-      GrDawnGpu* gpu, const GrRenderTarget*, GrSurfaceOrigin origin, const GrPrimitiveProcessor&,
-      const GrPipeline&, const GrTextureProxy* const primProcTextures[]);
+  dawn::BindGroup setData(GrDawnGpu* gpu, const GrRenderTarget*, const GrProgramInfo&);
 };
 
 class GrDawnProgramBuilder : public GrGLSLProgramBuilder {
  public:
   static sk_sp<GrDawnProgram> Build(
-      GrDawnGpu*, GrRenderTarget* renderTarget, GrSurfaceOrigin origin, const GrPipeline&,
-      const GrPrimitiveProcessor&, const GrTextureProxy* const primProcProxies[],
+      GrDawnGpu*, GrRenderTarget* rt, const GrProgramInfo& programInfo,
       GrPrimitiveType primitiveType, dawn::TextureFormat colorFormat, bool hasDepthStencil,
       dawn::TextureFormat depthStencilFormat, GrProgramDesc* desc);
   const GrCaps* caps() const override;
@@ -84,11 +81,9 @@ class GrDawnProgramBuilder : public GrGLSLProgramBuilder {
   GrDawnGpu* gpu() const { return fGpu; }
 
  private:
-  GrDawnProgramBuilder(
-      GrDawnGpu*, GrRenderTarget*, GrSurfaceOrigin, const GrPrimitiveProcessor&,
-      const GrTextureProxy* const primProcProxies[], const GrPipeline&, GrProgramDesc*);
+  GrDawnProgramBuilder(GrDawnGpu*, GrRenderTarget*, const GrProgramInfo&, GrProgramDesc*);
   dawn::ShaderModule createShaderModule(
-      const GrGLSLShaderBuilder&, SkSL::Program::Kind, SkSL::Program::Inputs* inputs);
+      const GrGLSLShaderBuilder&, SkSL::Program::Kind, bool flipY, SkSL::Program::Inputs* inputs);
   GrDawnGpu* fGpu;
   GrDawnVaryingHandler fVaryingHandler;
   GrDawnUniformHandler fUniformHandler;

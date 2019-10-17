@@ -130,14 +130,20 @@ SI U16 to_fixed(F f) { return cast<U16>(f + 0.5f); }
 SI U32 to_fixed(F f) { return (U32)cast<I32>(f + 0.5f); }
 #endif
 
+// Sometimes we do something crazy on one branch of a conditonal,
+// like divide by zero or convert a huge float to an integer,
+// but then harmlessly select the other side.  That trips up N==1
+// sanitizer builds, so we make if_then_else() a macro to avoid
+// evaluating the unused side.
+
+#if N == 1
+#  define if_then_else(cond, t, e) ((cond) ? (t) : (e))
+#else
 template <typename C, typename T>
 SI T if_then_else(C cond, T t, T e) {
-#if N == 1
-  return cond ? t : e;
-#else
   return bit_pun<T>((cond & bit_pun<C>(t)) | (~cond & bit_pun<C>(e)));
-#endif
 }
+#endif
 
 SI F F_from_Half(U16 half) {
 #if defined(USING_NEON_FP16)
@@ -254,6 +260,11 @@ SI F approx_log2(F x) {
 #endif
 }
 
+SI F approx_log(F x) {
+  const float ln2 = 0.69314718f;
+  return ln2 * approx_log2(x);
+}
+
 SI F approx_exp2(F x) {
 #if defined(USING_NEON_FP16)
   // TODO(mtklein)
@@ -272,6 +283,11 @@ SI F approx_pow(F x, float y) {
   return if_then_else((x == F0) | (x == F1), x, approx_exp2(approx_log2(x) * y));
 }
 
+SI F approx_exp(F x) {
+  const float log2_e = 1.4426950408889634074f;
+  return approx_exp2(log2_e * x);
+}
+
 // Return tf(x).
 SI F apply_tf(const skcms_TransferFunction* tf, F x) {
 #if defined(USING_NEON_FP16)
@@ -287,6 +303,55 @@ SI F apply_tf(const skcms_TransferFunction* tf, F x) {
   F v = if_then_else(x < tf->d, tf->c * x + tf->f, approx_pow(tf->a * x + tf->b, tf->g) + tf->e);
 
   // Tack the sign bit back on.
+  return bit_pun<F>(sign | bit_pun<U32>(v));
+#endif
+}
+
+SI F apply_pq(const skcms_TransferFunction* tf, F x) {
+#if defined(USING_NEON_FP16)
+  // TODO(mtklein)
+  (void)tf;
+  return x;
+#else
+  U32 bits = bit_pun<U32>(x), sign = bits & 0x80000000;
+  x = bit_pun<F>(bits ^ sign);
+
+  F v = approx_pow(
+      max_(tf->a + tf->b * approx_pow(x, tf->c), F0) / (tf->d + tf->e * approx_pow(x, tf->c)),
+      tf->f);
+
+  return bit_pun<F>(sign | bit_pun<U32>(v));
+#endif
+}
+
+SI F apply_hlg(const skcms_TransferFunction* tf, F x) {
+#if defined(USING_NEON_FP16)
+  // TODO(mtklein)
+  (void)tf;
+  return x;
+#else
+  const float R = tf->a, G = tf->b, a = tf->c, b = tf->d, c = tf->e;
+  U32 bits = bit_pun<U32>(x), sign = bits & 0x80000000;
+  x = bit_pun<F>(bits ^ sign);
+
+  F v = if_then_else(x * R <= 1, approx_pow(x * R, G), approx_exp((x - c) * a) + b);
+
+  return bit_pun<F>(sign | bit_pun<U32>(v));
+#endif
+}
+
+SI F apply_hlginv(const skcms_TransferFunction* tf, F x) {
+#if defined(USING_NEON_FP16)
+  // TODO(mtklein)
+  (void)tf;
+  return x;
+#else
+  const float R = tf->a, G = tf->b, a = tf->c, b = tf->d, c = tf->e;
+  U32 bits = bit_pun<U32>(x), sign = bits & 0x80000000;
+  x = bit_pun<F>(bits ^ sign);
+
+  F v = if_then_else(x <= 1, R * approx_pow(x, G), a * approx_log(x - b) + c);
+
   return bit_pun<F>(sign | bit_pun<U32>(v));
 #endif
 }
@@ -1067,6 +1132,45 @@ static void exec_ops(const Op* ops, const void** args, const char* src, char* ds
       } break;
       case Op_tf_a: {
         a = apply_tf((const skcms_TransferFunction*)*args++, a);
+      } break;
+
+      case Op_pq_r: {
+        r = apply_pq((const skcms_TransferFunction*)*args++, r);
+      } break;
+      case Op_pq_g: {
+        g = apply_pq((const skcms_TransferFunction*)*args++, g);
+      } break;
+      case Op_pq_b: {
+        b = apply_pq((const skcms_TransferFunction*)*args++, b);
+      } break;
+      case Op_pq_a: {
+        a = apply_pq((const skcms_TransferFunction*)*args++, a);
+      } break;
+
+      case Op_hlg_r: {
+        r = apply_hlg((const skcms_TransferFunction*)*args++, r);
+      } break;
+      case Op_hlg_g: {
+        g = apply_hlg((const skcms_TransferFunction*)*args++, g);
+      } break;
+      case Op_hlg_b: {
+        b = apply_hlg((const skcms_TransferFunction*)*args++, b);
+      } break;
+      case Op_hlg_a: {
+        a = apply_hlg((const skcms_TransferFunction*)*args++, a);
+      } break;
+
+      case Op_hlginv_r: {
+        r = apply_hlginv((const skcms_TransferFunction*)*args++, r);
+      } break;
+      case Op_hlginv_g: {
+        g = apply_hlginv((const skcms_TransferFunction*)*args++, g);
+      } break;
+      case Op_hlginv_b: {
+        b = apply_hlginv((const skcms_TransferFunction*)*args++, b);
+      } break;
+      case Op_hlginv_a: {
+        a = apply_hlginv((const skcms_TransferFunction*)*args++, a);
       } break;
 
       case Op_table_r: {

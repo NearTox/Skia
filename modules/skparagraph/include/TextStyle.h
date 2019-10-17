@@ -258,19 +258,25 @@ struct Placeholder {
   Placeholder() : fRange(EMPTY_RANGE), fStyle() {}
 
   Placeholder(
-      size_t start, size_t end, const PlaceholderStyle& style, BlockRange blocksBefore,
-      TextRange textBefore)
-      : fRange(start, end), fStyle(style), fBlocksBefore(blocksBefore), fTextBefore(textBefore) {}
+      size_t start, size_t end, const PlaceholderStyle& style, const TextStyle& textStyle,
+      BlockRange blocksBefore, TextRange textBefore)
+      : fRange(start, end),
+        fStyle(style),
+        fTextStyle(textStyle),
+        fBlocksBefore(blocksBefore),
+        fTextBefore(textBefore) {}
 
   Placeholder(const Placeholder& other) {
     fRange = other.fRange;
     fStyle = other.fStyle;
+    fTextStyle = other.fTextStyle;
     fBlocksBefore = other.fBlocksBefore;
     fTextBefore = other.fTextBefore;
   }
 
   TextRange fRange;
   PlaceholderStyle fStyle;
+  TextStyle fTextStyle;
   BlockRange fBlocksBefore;
   TextRange fTextBefore;
 };

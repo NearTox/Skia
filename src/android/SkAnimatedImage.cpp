@@ -24,7 +24,7 @@ sk_sp<SkAnimatedImage> SkAnimatedImage::Make(
   if (!codec) {
     return nullptr;
   }
-  auto info = codec->getInfo().makeWH(scaledSize.width(), scaledSize.height());
+  auto info = codec->getInfo().makeDimensions(scaledSize);
   return Make(std::move(codec), info, cropRect, std::move(postProcess));
 }
 
@@ -41,7 +41,7 @@ sk_sp<SkAnimatedImage> SkAnimatedImage::Make(
       scaledSize.width() >= decodeInfo.width() || scaledSize.height() >= decodeInfo.height()) {
     // Only libwebp can decode to arbitrary smaller sizes.
     auto dims = codec->getInfo().dimensions();
-    decodeInfo = decodeInfo.makeWH(dims.width(), dims.height());
+    decodeInfo = decodeInfo.makeDimensions(dims);
   }
 
   auto image = sk_sp<SkAnimatedImage>(new SkAnimatedImage(

@@ -62,13 +62,13 @@ SkPaint::SkPaint(const SkColor4f& color, SkColorSpace* colorSpace) : SkPaint() {
 
 SkPaint::SkPaint(const SkPaint& src) = default;
 
-SkPaint::SkPaint(SkPaint&& src) noexcept = default;
+SkPaint::SkPaint(SkPaint&& src) = default;
 
 SkPaint::~SkPaint() = default;
 
 SkPaint& SkPaint::operator=(const SkPaint& src) = default;
 
-SkPaint& SkPaint::operator=(SkPaint&& src) noexcept = default;
+SkPaint& SkPaint::operator=(SkPaint&& src) = default;
 
 bool operator==(const SkPaint& a, const SkPaint& b) {
 #define EQUAL(field) (a.field == b.field)

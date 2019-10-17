@@ -129,7 +129,6 @@ bool SectionAndParameterHelper::hasCoordOverrides(const Expression& e, const Var
              this->hasCoordOverrides(*t.fIfFalse, fp);
     }
     case Expression::kVariableReference_Kind: return false;
-    case Expression::kAppendStage_Kind:
     case Expression::kBoolLiteral_Kind:
     case Expression::kDefined_Kind:
     case Expression::kExternalFunctionCall_Kind:

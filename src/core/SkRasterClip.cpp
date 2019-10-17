@@ -133,31 +133,31 @@ SkRasterClip::SkRasterClip(const SkRasterClip& src) {
   fIsEmpty = src.isEmpty();
   fIsRect = src.isRect();
   fClipRestrictionRect = src.fClipRestrictionRect;
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
 }
 
 SkRasterClip::SkRasterClip(const SkRegion& rgn) : fBW(rgn) {
   fIsBW = true;
   fIsEmpty = this->computeIsEmpty();  // bounds might be empty, so compute
   fIsRect = !fIsEmpty;
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
 }
 
 SkRasterClip::SkRasterClip(const SkIRect& bounds) : fBW(bounds) {
   fIsBW = true;
   fIsEmpty = this->computeIsEmpty();  // bounds might be empty, so compute
   fIsRect = !fIsEmpty;
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
 }
 
 SkRasterClip::SkRasterClip() {
   fIsBW = true;
   fIsEmpty = true;
   fIsRect = false;
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
 }
 
-SkRasterClip::~SkRasterClip() { SkDEBUGCODE(this->validate()); }
+SkRasterClip::~SkRasterClip() { SkDEBUGCODE(this->validate();) }
 
 bool SkRasterClip::operator==(const SkRasterClip& other) const {
   if (fIsBW != other.fIsBW) {
@@ -463,8 +463,7 @@ void SkRasterClip::validate() const {
 ///////////////////////////////////////////////////////////////////////////////
 
 SkAAClipBlitterWrapper::SkAAClipBlitterWrapper() {
-  SkDEBUGCODE(fClipRgn = nullptr);
-  SkDEBUGCODE(fBlitter = nullptr);
+  SkDEBUGCODE(fClipRgn = nullptr;) SkDEBUGCODE(fBlitter = nullptr;)
 }
 
 SkAAClipBlitterWrapper::SkAAClipBlitterWrapper(const SkRasterClip& clip, SkBlitter* blitter) {

@@ -27,10 +27,10 @@
     The platform implementation must not return, but should either throw
     an exception or otherwise exit.
 */
-[[noreturn]] SK_API extern void sk_abort_no_print(void) noexcept;
+SK_API extern void sk_abort_no_print(void);
 
 #ifndef SkDebugf
-SK_API void SkDebugf(const char format[], ...) noexcept;
+SK_API void SkDebugf(const char format[], ...);
 #endif
 
 // SkASSERT, SkASSERTF and SkASSERT_RELEASE can be used as stand alone assertion expressions, e.g.
@@ -44,7 +44,7 @@ SK_API void SkDebugf(const char format[], ...) noexcept;
 //               x - 4;
 //    }
 #define SkASSERT_RELEASE(cond) \
-  static_cast<void>((cond) ? (void)0 : []() noexcept { SK_ABORT("assert(" #cond ")"); }())
+  static_cast<void>((cond) ? (void)0 : [] { SK_ABORT("assert(" #cond ")"); }())
 
 #ifdef SK_DEBUG
 #  define SkASSERT(cond) SkASSERT_RELEASE(cond)
@@ -90,14 +90,14 @@ typedef unsigned U16CPU;
 /** @return false or true based on the condition
  */
 template <typename T>
-static constexpr bool SkToBool(const T& x) noexcept {
+static constexpr bool SkToBool(const T& x) {
   return 0 != x;
 }
 
-template <>
+/*template <>
 constexpr bool SkToBool<bool>(const bool& x) noexcept {
   return x;
-}
+}*/
 
 static constexpr int16_t SK_MaxS16 = INT16_MAX;
 static constexpr int16_t SK_MinS16 = -SK_MaxS16;
@@ -194,7 +194,7 @@ static constexpr uint32_t SK_InvalidGenID = 0;
  */
 static constexpr uint32_t SK_InvalidUniqueID = 0;
 
-static constexpr inline int32_t SkAbs32(int32_t value) {
+static inline int32_t SkAbs32(int32_t value) {
   SkASSERT(value != SK_NaN32);  // The most negative int32_t can't be negated.
   if (value < 0) {
     value = -value;
@@ -210,12 +210,12 @@ static inline T SkTAbs(T value) {
   return value;
 }
 
-static constexpr inline int32_t SkMax32(int32_t a, int32_t b) {
+static inline int32_t SkMax32(int32_t a, int32_t b) {
   if (a < b) a = b;
   return a;
 }
 
-static constexpr inline int32_t SkMin32(int32_t a, int32_t b) {
+static inline int32_t SkMin32(int32_t a, int32_t b) {
   if (a > b) a = b;
   return a;
 }

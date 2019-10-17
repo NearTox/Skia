@@ -83,6 +83,7 @@ class TypefaceFontProvider : public SkFontMgr {
   SkTHashMap<SkString, sk_sp<TypefaceFontStyleSet>> fRegisteredFamilies;
   SkTArray<SkString> fFamilyNames;
 };
+
 }  // namespace textlayout
 }  // namespace skia
 

@@ -26,11 +26,11 @@ sk_sp<GrDawnTexture> GrDawnTexture::Make(
   bool renderTarget = renderable == GrRenderable::kYes;
   dawn::TextureDescriptor textureDesc;
 
-  textureDesc.usage = dawn::TextureUsageBit::Sampled | dawn::TextureUsageBit::CopySrc |
-                      dawn::TextureUsageBit::CopyDst;
+  textureDesc.usage =
+      dawn::TextureUsage::Sampled | dawn::TextureUsage::CopySrc | dawn::TextureUsage::CopyDst;
 
   if (renderTarget) {
-    textureDesc.usage |= dawn::TextureUsageBit::OutputAttachment;
+    textureDesc.usage |= dawn::TextureUsage::OutputAttachment;
   }
 
   textureDesc.size.width = size.fWidth;
@@ -46,7 +46,7 @@ sk_sp<GrDawnTexture> GrDawnTexture::Make(
     return nullptr;
   }
 
-  dawn::TextureView textureView = tex.CreateDefaultView();
+  dawn::TextureView textureView = tex.CreateView();
 
   if (!textureView) {
     return nullptr;
@@ -74,7 +74,7 @@ GrBackendFormat GrDawnTexture::backendFormat() const {
 sk_sp<GrDawnTexture> GrDawnTexture::MakeWrapped(
     GrDawnGpu* gpu, const SkISize& size, GrPixelConfig config, GrRenderable renderable,
     int sampleCnt, GrMipMapsStatus status, GrWrapCacheable cacheable, const GrDawnImageInfo& info) {
-  dawn::TextureView textureView = info.fTexture.CreateDefaultView();
+  dawn::TextureView textureView = info.fTexture.CreateView();
   if (!textureView) {
     return nullptr;
   }
@@ -133,8 +133,7 @@ void GrDawnTexture::upload(
       SkColorType colorType = GrColorTypeToSkColorType(GrPixelConfigToColorType(this->config()));
       srcInfo = SkImageInfo::Make(width, height, colorType, kOpaque_SkAlphaType);
       SkPixmap srcPixmap(srcInfo, texels[i].fPixels, origRowBytes);
-      origRowBytes = width * GrBytesPerPixel(kRGBA_8888_GrPixelConfig);
-      origRowBytes = GrDawnRoundRowBytes(origRowBytes);
+      origRowBytes = GrDawnRoundRowBytes(info.minRowBytes());
       bitmap.allocPixels(info, origRowBytes);
       bitmap.writePixels(srcPixmap);
       if (!bitmap.peekPixels(&pixmap)) {
@@ -146,29 +145,23 @@ void GrDawnTexture::upload(
     }
     size_t rowBytes = GrDawnRoundRowBytes(origRowBytes);
     size_t size = rowBytes * height;
-
-    dawn::BufferDescriptor desc;
-    desc.usage = dawn::BufferUsageBit::CopyDst | dawn::BufferUsageBit::CopySrc;
-    desc.size = size;
-
-    dawn::Buffer stagingBuffer = device.CreateBuffer(&desc);
-
+    GrDawnStagingBuffer* stagingBuffer = getDawnGpu()->getStagingBuffer(size);
     if (rowBytes == origRowBytes) {
-      stagingBuffer.SetSubData(0, size, static_cast<const uint8_t*>(static_cast<const void*>(src)));
+      memcpy(stagingBuffer->fData, src, size);
     } else {
-      char* buf = new char[size];
-      char* dst = buf;
+      char* dst = static_cast<char*>(stagingBuffer->fData);
       for (uint32_t row = 0; row < height; row++) {
         memcpy(dst, src, origRowBytes);
         dst += rowBytes;
         src += texels[i].fRowBytes;
       }
-      stagingBuffer.SetSubData(0, size, static_cast<const uint8_t*>(static_cast<const void*>(buf)));
-      delete[] buf;
     }
+    dawn::Buffer buffer = stagingBuffer->fBuffer;
+    buffer.Unmap();
+    stagingBuffer->fData = nullptr;
 
     dawn::BufferCopyView srcBuffer;
-    srcBuffer.buffer = stagingBuffer;
+    srcBuffer.buffer = buffer;
     srcBuffer.offset = 0;
     srcBuffer.rowPitch = rowBytes;
     srcBuffer.imageHeight = height;

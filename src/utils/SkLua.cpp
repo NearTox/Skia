@@ -1251,7 +1251,7 @@ static SkString segment_masks_to_str(uint32_t segmentMasks) {
   if (SkPath::kLine_SegmentMask & segmentMasks) {
     result.append("line");
     first = false;
-    SkDEBUGCODE(segmentMasks &= ~SkPath::kLine_SegmentMask);
+    SkDEBUGCODE(segmentMasks &= ~SkPath::kLine_SegmentMask;)
   }
   if (SkPath::kQuad_SegmentMask & segmentMasks) {
     if (!first) {
@@ -1259,7 +1259,7 @@ static SkString segment_masks_to_str(uint32_t segmentMasks) {
     }
     result.append("quad");
     first = false;
-    SkDEBUGCODE(segmentMasks &= ~SkPath::kQuad_SegmentMask);
+    SkDEBUGCODE(segmentMasks &= ~SkPath::kQuad_SegmentMask;)
   }
   if (SkPath::kConic_SegmentMask & segmentMasks) {
     if (!first) {
@@ -1267,14 +1267,14 @@ static SkString segment_masks_to_str(uint32_t segmentMasks) {
     }
     result.append("conic");
     first = false;
-    SkDEBUGCODE(segmentMasks &= ~SkPath::kConic_SegmentMask);
+    SkDEBUGCODE(segmentMasks &= ~SkPath::kConic_SegmentMask;)
   }
   if (SkPath::kCubic_SegmentMask & segmentMasks) {
     if (!first) {
       result.append(" ");
     }
     result.append("cubic");
-    SkDEBUGCODE(segmentMasks &= ~SkPath::kCubic_SegmentMask);
+    SkDEBUGCODE(segmentMasks &= ~SkPath::kCubic_SegmentMask;)
   }
   SkASSERT(0 == segmentMasks);
   return result;
@@ -1305,29 +1305,6 @@ static int lpath_isRect(lua_State* L) {
   if (pred) {
     SkLua(L).pushRect(r);
     ret_count += 1;
-  }
-  return ret_count;
-}
-
-static const char* dir2string(SkPath::Direction dir) {
-  static const char* gStr[] = {"unknown", "cw", "ccw"};
-  SkASSERT((unsigned)dir < SK_ARRAY_COUNT(gStr));
-  return gStr[dir];
-}
-
-static int lpath_isNestedFillRects(lua_State* L) {
-  SkRect rects[2];
-  SkPath::Direction dirs[2];
-  bool pred = get_obj<SkPath>(L, 1)->isNestedFillRects(rects, dirs);
-  int ret_count = 1;
-  lua_pushboolean(L, pred);
-  if (pred) {
-    SkLua lua(L);
-    lua.pushRect(rects[0]);
-    lua.pushRect(rects[1]);
-    lua_pushstring(L, dir2string(dirs[0]));
-    lua_pushstring(L, dir2string(dirs[0]));
-    ret_count += 4;
   }
   return ret_count;
 }
@@ -1409,7 +1386,6 @@ static const struct luaL_Reg gSkPath_Methods[] = {{"getBounds", lpath_getBounds}
                                                   {"isConvex", lpath_isConvex},
                                                   {"isEmpty", lpath_isEmpty},
                                                   {"isRect", lpath_isRect},
-                                                  {"isNestedFillRects", lpath_isNestedFillRects},
                                                   {"countPoints", lpath_countPoints},
                                                   {"reset", lpath_reset},
                                                   {"moveTo", lpath_moveTo},

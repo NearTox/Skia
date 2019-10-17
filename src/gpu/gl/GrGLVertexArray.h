@@ -51,7 +51,7 @@ class GrGLAttribArrayState {
       fAttribArrayStates[i].invalidate();
     }
     fEnableStateIsValid = false;
-    }
+  }
 
     /**
      * The number of attrib arrays that this object is configured to track.

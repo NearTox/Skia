@@ -14,6 +14,6 @@ typedef int64_t SkThreadID;
 
 SkThreadID SkGetThreadID();
 
-constexpr SkThreadID kIllegalThreadID = 0;
+const SkThreadID kIllegalThreadID = 0;
 
 #endif  // SkThreadID_DEFINED

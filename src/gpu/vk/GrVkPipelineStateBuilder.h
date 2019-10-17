@@ -39,8 +39,8 @@ class GrVkPipelineStateBuilder : public GrGLSLProgramBuilder {
   class Desc : public GrProgramDesc {
    public:
     static bool Build(
-        Desc*, GrRenderTarget*, const GrPrimitiveProcessor&, const GrPipeline&,
-        const GrStencilSettings&, GrPrimitiveType primitiveType, GrVkGpu* gpu);
+        Desc*, GrRenderTarget*, const GrProgramInfo&, const GrStencilSettings&,
+        GrPrimitiveType primitiveType, GrVkGpu* gpu);
 
     size_t shaderKeyLength() const { return fShaderKeyLength; }
 
@@ -59,9 +59,8 @@ class GrVkPipelineStateBuilder : public GrGLSLProgramBuilder {
    * @return true if generation was successful.
    */
   static GrVkPipelineState* CreatePipelineState(
-      GrVkGpu*, GrRenderTarget*, GrSurfaceOrigin, const GrPrimitiveProcessor&,
-      const GrTextureProxy* const primProcProxies[], const GrPipeline&, const GrStencilSettings&,
-      GrPrimitiveType, Desc*, VkRenderPass compatibleRenderPass);
+      GrVkGpu*, GrRenderTarget*, const GrProgramInfo&, const GrStencilSettings&, GrPrimitiveType,
+      Desc*, VkRenderPass compatibleRenderPass);
 
   const GrCaps* caps() const override;
 
@@ -71,9 +70,7 @@ class GrVkPipelineStateBuilder : public GrGLSLProgramBuilder {
   void finalizeFragmentSecondaryColor(GrShaderVar& outputColor) override;
 
  private:
-  GrVkPipelineStateBuilder(
-      GrVkGpu*, GrRenderTarget*, GrSurfaceOrigin, const GrPipeline&, const GrPrimitiveProcessor&,
-      const GrTextureProxy* const primProcProxies[], GrProgramDesc*);
+  GrVkPipelineStateBuilder(GrVkGpu*, GrRenderTarget*, const GrProgramInfo&, GrProgramDesc*);
 
   GrVkPipelineState* finalize(
       const GrStencilSettings&, GrPrimitiveType primitiveType, VkRenderPass compatibleRenderPass,

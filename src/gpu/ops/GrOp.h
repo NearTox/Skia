@@ -155,6 +155,13 @@ class GrOp : private SkNoncopyable {
   }
 
   /**
+   * This can optionally be called before 'prepare' (but after sorting). Each op that overrides
+   * onPrePrepare must be prepared to handle both cases (when onPrePrepare has been called
+   * ahead of time and when it has not been called).
+   */
+  void prePrepare(GrRecordingContext* context) { this->onPrePrepare(context); }
+
+  /**
    * Called prior to executing. The op should perform any resource creation or data transfers
    * necessary before execute() is called.
    */
@@ -243,23 +250,23 @@ class GrOp : private SkNoncopyable {
    */
   enum class HasAABloat : bool { kNo = false, kYes = true };
   /**
-   * Indicates that the geometry represented by the op has zero area (e.g. it is hairline or
-   * points).
+   * Indicates that the geometry being drawn in a hairline stroke. A point that is drawn in device
+   * space is also considered a hairline.
    */
-  enum class IsZeroArea : bool { kNo = false, kYes = true };
+  enum class IsHairline : bool { kNo = false, kYes = true };
 
-  void setBounds(const SkRect& newBounds, HasAABloat aabloat, IsZeroArea zeroArea) {
+  void setBounds(const SkRect& newBounds, HasAABloat aabloat, IsHairline zeroArea) {
     fBounds = newBounds;
     this->setBoundsFlags(aabloat, zeroArea);
   }
   void setTransformedBounds(
-      const SkRect& srcBounds, const SkMatrix& m, HasAABloat aabloat, IsZeroArea zeroArea) {
+      const SkRect& srcBounds, const SkMatrix& m, HasAABloat aabloat, IsHairline zeroArea) {
     m.mapRect(&fBounds, srcBounds);
     this->setBoundsFlags(aabloat, zeroArea);
   }
   void makeFullScreen(GrSurfaceProxy* proxy) {
     this->setBounds(
-        SkRect::MakeIWH(proxy->width(), proxy->height()), HasAABloat::kNo, IsZeroArea::kNo);
+        SkRect::MakeIWH(proxy->width(), proxy->height()), HasAABloat::kNo, IsHairline::kNo);
   }
 
   static uint32_t GenOpClassID() { return GenID(&gCurrOpClassID); }
@@ -279,6 +286,8 @@ class GrOp : private SkNoncopyable {
     return CombineResult::kCannotCombine;
   }
 
+  // Only GrMeshDrawOp currently overrides this virtual
+  virtual void onPrePrepare(GrRecordingContext*) {}
   virtual void onPrepare(GrOpFlushState*) = 0;
   // If this op is chained then chainBounds is the union of the bounds of all ops in the chain.
   // Otherwise, this op's bounds.
@@ -294,10 +303,10 @@ class GrOp : private SkNoncopyable {
     return id;
   }
 
-  void setBoundsFlags(HasAABloat aabloat, IsZeroArea zeroArea) {
+  void setBoundsFlags(HasAABloat aabloat, IsHairline zeroArea) {
     fBoundsFlags = 0;
     fBoundsFlags |= (HasAABloat::kYes == aabloat) ? kAABloat_BoundsFlag : 0;
-    fBoundsFlags |= (IsZeroArea ::kYes == zeroArea) ? kZeroArea_BoundsFlag : 0;
+    fBoundsFlags |= (IsHairline ::kYes == zeroArea) ? kZeroArea_BoundsFlag : 0;
   }
 
   enum {

@@ -56,6 +56,18 @@ SkSurfaceCharacterization SkSurfaceCharacterization::createResized(int width, in
       fIsProtected, fSurfaceProps);
 }
 
+SkSurfaceCharacterization SkSurfaceCharacterization::createColorSpace(
+    sk_sp<SkColorSpace> cs) const {
+  if (!this->isValid()) {
+    return SkSurfaceCharacterization();
+  }
+
+  return SkSurfaceCharacterization(
+      fContextInfo, fCacheMaxResourceBytes, fImageInfo.makeColorSpace(std::move(cs)),
+      fBackendFormat, fOrigin, fSampleCnt, fIsTextureable, fIsMipMapped, fUsesGLFBO0,
+      fVulkanSecondaryCBCompatible, fIsProtected, fSurfaceProps);
+}
+
 bool SkSurfaceCharacterization::isCompatible(const GrBackendTexture& backendTex) const {
   if (!this->isValid() || !backendTex.isValid()) {
     return false;

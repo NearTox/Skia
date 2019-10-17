@@ -97,7 +97,7 @@ class VerticesView : public Sample {
     }
   }
 
-  Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, ModifierKey) override {
+  Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, skui::ModifierKey) override {
     return new Click();
   }
 

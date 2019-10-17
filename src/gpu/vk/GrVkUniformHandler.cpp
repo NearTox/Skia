@@ -200,14 +200,14 @@ GrGLSLUniformHandler::UniformHandle GrVkUniformHandler::internalAddUniformArray(
 }
 
 GrGLSLUniformHandler::SamplerHandle GrVkUniformHandler::addSampler(
-    const GrTexture* texture, const GrSamplerState& state, const GrSwizzle& swizzle,
+    const GrTextureProxy* texture, const GrSamplerState& state, const GrSwizzle& swizzle,
     const char* name, const GrShaderCaps* shaderCaps) {
   SkASSERT(name && strlen(name));
   SkString mangleName;
   char prefix = 'u';
   fProgramBuilder->nameVariable(&mangleName, prefix, name, true);
 
-  GrTextureType type = texture->texturePriv().textureType();
+  GrTextureType type = texture->textureType();
 
   UniformInfo& info = fSamplers.push_back();
   info.fVariable.setType(GrSLCombinedSamplerTypeForTextureType(type));
@@ -220,11 +220,11 @@ GrGLSLUniformHandler::SamplerHandle GrVkUniformHandler::addSampler(
   info.fUBOffset = 0;
 
   // Check if we are dealing with an external texture and store the needed information if so.
-  const GrVkTexture* vkTexture = static_cast<const GrVkTexture*>(texture);
-  if (vkTexture->ycbcrConversionInfo().isValid()) {
+  auto ycbcrInfo = texture->backendFormat().getVkYcbcrConversionInfo();
+  if (ycbcrInfo && ycbcrInfo->isValid()) {
     GrVkGpu* gpu = static_cast<GrVkPipelineStateBuilder*>(fProgramBuilder)->gpu();
-    info.fImmutableSampler = gpu->resourceProvider().findOrCreateCompatibleSampler(
-        state, vkTexture->ycbcrConversionInfo());
+    info.fImmutableSampler =
+        gpu->resourceProvider().findOrCreateCompatibleSampler(state, *ycbcrInfo);
     SkASSERT(info.fImmutableSampler);
   }
 
@@ -237,7 +237,9 @@ GrGLSLUniformHandler::SamplerHandle GrVkUniformHandler::addSampler(
 void GrVkUniformHandler::appendUniformDecls(GrShaderFlags visibility, SkString* out) const {
   for (int i = 0; i < fSamplers.count(); ++i) {
     const UniformInfo& sampler = fSamplers[i];
-    SkASSERT(sampler.fVariable.getType() == kTexture2DSampler_GrSLType);
+    SkASSERT(
+        sampler.fVariable.getType() == kTexture2DSampler_GrSLType ||
+        sampler.fVariable.getType() == kTextureExternalSampler_GrSLType);
     if (visibility == sampler.fVisibility) {
       sampler.fVariable.appendDecl(fProgramBuilder->shaderCaps(), out);
       out->append(";\n");

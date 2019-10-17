@@ -50,6 +50,8 @@ const char* colortype_name(SkColorType ct) {
   switch (ct) {
     case kUnknown_SkColorType: return "Unknown";
     case kAlpha_8_SkColorType: return "Alpha_8";
+    case kA16_unorm_SkColorType: return "Alpha_16";
+    case kA16_float_SkColorType: return "A16_float";
     case kRGB_565_SkColorType: return "RGB_565";
     case kARGB_4444_SkColorType: return "ARGB_4444";
     case kRGBA_8888_SkColorType: return "RGBA_8888";
@@ -61,6 +63,10 @@ const char* colortype_name(SkColorType ct) {
     case kRGBA_F16Norm_SkColorType: return "RGBA_F16Norm";
     case kRGBA_F16_SkColorType: return "RGBA_F16";
     case kRGBA_F32_SkColorType: return "RGBA_F32";
+    case kR8G8_unorm_SkColorType: return "R8G8_unorm";
+    case kR16G16_unorm_SkColorType: return "R16G16_unorm";
+    case kR16G16_float_SkColorType: return "R16G16_float";
+    case kR16G16B16A16_unorm_SkColorType: return "R16G16B16A16_unorm";
   }
   SkASSERT(false);
   return "unexpected colortype";
@@ -70,6 +76,8 @@ const char* colortype_depth(SkColorType ct) {
   switch (ct) {
     case kUnknown_SkColorType: return "Unknown";
     case kAlpha_8_SkColorType: return "A8";
+    case kA16_unorm_SkColorType: return "A16";
+    case kA16_float_SkColorType: return "AF16";
     case kRGB_565_SkColorType: return "565";
     case kARGB_4444_SkColorType: return "4444";
     case kRGBA_8888_SkColorType: return "8888";
@@ -81,9 +89,24 @@ const char* colortype_depth(SkColorType ct) {
     case kRGBA_F16Norm_SkColorType: return "F16Norm";  // TODO: "F16"?
     case kRGBA_F16_SkColorType: return "F16";
     case kRGBA_F32_SkColorType: return "F32";
+    case kR8G8_unorm_SkColorType: return "88";
+    case kR16G16_unorm_SkColorType: return "1616";
+    case kR16G16_float_SkColorType: return "F16F16";
+    case kR16G16B16A16_unorm_SkColorType: return "16161616";
   }
   SkASSERT(false);
   return "unexpected colortype";
+}
+
+const char* tilemode_name(SkTileMode mode) {
+  switch (mode) {
+    case SkTileMode::kClamp: return "clamp";
+    case SkTileMode::kRepeat: return "repeat";
+    case SkTileMode::kMirror: return "mirror";
+    case SkTileMode::kDecal: return "decal";
+  }
+  SkASSERT(false);
+  return "unexpected tilemode";
 }
 
 SkColor color_to_565(SkColor color) {

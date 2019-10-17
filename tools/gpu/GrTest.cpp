@@ -10,7 +10,6 @@
 #include "include/gpu/GrContextOptions.h"
 #include "include/gpu/GrTexture.h"
 #include "include/private/GrRecordingContext.h"
-#include "include/private/GrRenderTargetProxy.h"
 #include "include/private/SkTo.h"
 #include "src/core/SkMathPriv.h"
 #include "src/gpu/GrClip.h"
@@ -23,6 +22,7 @@
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/GrRenderTargetContextPriv.h"
+#include "src/gpu/GrRenderTargetProxy.h"
 #include "src/gpu/GrResourceCache.h"
 #include "src/gpu/GrSemaphore.h"
 #include "src/gpu/GrSurfaceContextPriv.h"
@@ -35,14 +35,6 @@
 #include "src/image/SkImage_Gpu.h"
 
 #include <algorithm>
-
-bool GrSurfaceProxy::isWrapped_ForTesting() const { return SkToBool(fTarget); }
-
-bool GrRenderTargetContext::isWrapped_ForTesting() const {
-  return fRenderTargetProxy->isWrapped_ForTesting();
-}
-
-///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -67,8 +59,8 @@ int GrResourceCache::countUniqueKeysWithTag(const char* tag) const {
 #define ASSERT_SINGLE_OWNER \
   SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(fRenderTargetContext->singleOwner());)
 
-uint32_t GrRenderTargetContextPriv::testingOnly_getOpListID() {
-  return fRenderTargetContext->getOpList()->uniqueID();
+uint32_t GrRenderTargetContextPriv::testingOnly_getOpsTaskID() {
+  return fRenderTargetContext->getOpsTask()->uniqueID();
 }
 
 void GrRenderTargetContextPriv::testingOnly_addDrawOp(std::unique_ptr<GrDrawOp> op) {
@@ -90,10 +82,6 @@ void GrRenderTargetContextPriv::testingOnly_addDrawOp(
 }
 
 #undef ASSERT_SINGLE_OWNER
-
-///////////////////////////////////////////////////////////////////////////////
-
-GrInternalSurfaceFlags GrSurfaceProxy::testingOnly_getFlags() const { return fSurfaceFlags; }
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -155,8 +143,9 @@ int GrCCCachedAtlas::testingOnly_peekOnFlushRefCnt() const { return fOnFlushRefC
 
 //////////////////////////////////////////////////////////////////////////////
 
-#define DRAW_OP_TEST_EXTERN(Op) \
-  extern std::unique_ptr<GrDrawOp> Op##__Test(GrPaint&&, SkRandom*, GrRecordingContext*, GrFSAAType)
+#define DRAW_OP_TEST_EXTERN(Op)                \
+  extern std::unique_ptr<GrDrawOp> Op##__Test( \
+      GrPaint&&, SkRandom*, GrRecordingContext*, int numSamples)
 #define DRAW_OP_TEST_ENTRY(Op) Op##__Test
 
 DRAW_OP_TEST_EXTERN(AAConvexPathOp);
@@ -184,7 +173,7 @@ DRAW_OP_TEST_EXTERN(TextureOp);
 void GrDrawRandomOp(SkRandom* random, GrRenderTargetContext* renderTargetContext, GrPaint&& paint) {
   auto context = renderTargetContext->surfPriv().getContext();
   using MakeDrawOpFn =
-      std::unique_ptr<GrDrawOp>(GrPaint&&, SkRandom*, GrRecordingContext*, GrFSAAType);
+      std::unique_ptr<GrDrawOp>(GrPaint&&, SkRandom*, GrRecordingContext*, int numSamples);
   static constexpr MakeDrawOpFn* gFactories[] = {
       DRAW_OP_TEST_ENTRY(AAConvexPathOp),    DRAW_OP_TEST_ENTRY(AAFlatteningConvexPathOp),
       DRAW_OP_TEST_ENTRY(AAHairlineOp),      DRAW_OP_TEST_ENTRY(AAStrokeRectOp),
@@ -201,7 +190,7 @@ void GrDrawRandomOp(SkRandom* random, GrRenderTargetContext* renderTargetContext
 
   static constexpr size_t kTotal = SK_ARRAY_COUNT(gFactories);
   uint32_t index = random->nextULessThan(static_cast<uint32_t>(kTotal));
-  auto op = gFactories[index](std::move(paint), random, context, renderTargetContext->fsaaType());
+  auto op = gFactories[index](std::move(paint), random, context, renderTargetContext->numSamples());
   SkASSERT(op);
   renderTargetContext->priv().testingOnly_addDrawOp(std::move(op));
 }

@@ -52,7 +52,7 @@ class PathClipView : public Sample {
     canvas->drawOval(oval, p);
   }
 
-  Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, ModifierKey) override {
+  Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, skui::ModifierKey) override {
     return new Click();
   }
 
@@ -274,7 +274,7 @@ class EdgeClipView : public Sample {
     return dx * dx + dy * dy <= rad * rad;
   }
 
-  Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, ModifierKey) override {
+  Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, skui::ModifierKey) override {
     for (int i = 0; i < N; ++i) {
       if (hit_test(fPoly[i], x, y)) {
         return new VertClick(&fPoly[i]);

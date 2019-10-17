@@ -30,7 +30,7 @@ class TextAdapter final : public DiscardableAdaptorBase {
   const sk_sp<sksg::Group>& renderNode() const { return fRoot; }
 
   const TextValue& getText() const { return fText; }
-  void setText(const TextValue& t) { fText = t; }
+  void setText(const TextValue&);
 
  protected:
   void onSync() override;
@@ -45,6 +45,7 @@ class TextAdapter final : public DiscardableAdaptorBase {
     sk_sp<sksg::Color> fFillColorNode, fStrokeColorNode;
   };
 
+  void reshape();
   void addFragment(const Shaper::Fragment&);
   void buildDomainMaps(const Shaper::Result&);
 
@@ -63,6 +64,7 @@ class TextAdapter final : public DiscardableAdaptorBase {
   TextAnimator::DomainMaps fMaps;
 
   TextValue fText;
+  bool fTextDirty = true;
 };
 
 }  // namespace internal

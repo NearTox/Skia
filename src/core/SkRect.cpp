@@ -49,7 +49,7 @@ void SkRect::toQuad(SkPoint quad[4]) const {
 
 #include "include/private/SkNx.h"
 
-bool SkRect::setBoundsCheck(const SkPoint pts[], int count) noexcept {
+bool SkRect::setBoundsCheck(const SkPoint pts[], int count) {
   SkASSERT((pts && count > 0) || count == 0);
 
   if (count <= 0) {

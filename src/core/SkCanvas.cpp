@@ -708,7 +708,7 @@ void SkCanvas::checkForDeferredSave() {
   }
 }
 
-int SkCanvas::getSaveCount() const noexcept {
+int SkCanvas::getSaveCount() const {
 #ifdef SK_DEBUG
   int count = 0;
   SkDeque::Iter iter(fMCStack, SkDeque::Iter::kFront_IterStart);
@@ -897,14 +897,14 @@ int SkCanvas::only_axis_aligned_saveBehind(const SkRect* bounds) {
 void SkCanvas::DrawDeviceWithFilter(
     SkBaseDevice* src, const SkImageFilter* filter, SkBaseDevice* dst, const SkIPoint& dstOrigin,
     const SkMatrix& ctm) {
-  // The local bounds of the src device; all snap bounds must be intersected with this rect
+  // The local bounds of the src device; all the bounds passed to snapSpecial must be intersected
+  // with this rect.
   const SkIRect srcDevRect = SkIRect::MakeWH(src->width(), src->height());
 
-  SkPaint p;
   if (!filter) {
-    // All devices are currently axis aligned, so they only differ by their origin. This means
-    // that we only have to copy a dst-sized block of pixels out of src and translate it to the
-    // matching position relative to dst's origin.
+    // All non-filtered devices are currently axis aligned, so they only differ by their origin.
+    // This means that we only have to copy a dst-sized block of pixels out of src and translate
+    // it to the matching position relative to dst's origin.
     SkIRect snapBounds = SkIRect::MakeXYWH(
         dstOrigin.x() - src->getOrigin().x(), dstOrigin.y() - src->getOrigin().y(), dst->width(),
         dst->height());
@@ -914,6 +914,8 @@ void SkCanvas::DrawDeviceWithFilter(
 
     auto special = src->snapSpecial(snapBounds);
     if (special) {
+      // The image is drawn at 1-1 scale with integer translation, so no filtering is needed.
+      SkPaint p;
       dst->drawSpecial(special.get(), 0, 0, p, nullptr, SkMatrix::I());
     }
     return;
@@ -956,8 +958,8 @@ void SkCanvas::DrawDeviceWithFilter(
       layerTargetBounds, layerMatrix, SkImageFilter::kReverse_MapDirection, &layerTargetBounds);
 
   // Map the required input into the root space, then make relative to the src device. This will
-  // be conservative contents required to fill a layerInputBounds-sized surface with the backdrop
-  // content (transformed back into the layer space using fromRoot).
+  // be the conservative contents required to fill a layerInputBounds-sized surface with the
+  // backdrop content (transformed back into the layer space using fromRoot).
   SkIRect backdropBounds = toRoot.mapRect(SkRect::Make(layerInputBounds)).roundOut();
   backdropBounds.offset(-src->getOrigin().x(), -src->getOrigin().y());
   if (!backdropBounds.intersect(srcDevRect)) {
@@ -974,14 +976,21 @@ void SkCanvas::DrawDeviceWithFilter(
     colorType = kRGBA_8888_SkColorType;
   }
   SkColorSpace* colorSpace = src->imageInfo().colorSpace();
+
+  SkPaint p;
   if (!toRoot.isIdentity()) {
+    // Drawing the temporary and final filtered image requires a higher filter quality if the
+    // 'toRoot' transformation is not identity, in order to minimize the impact on already
+    // rendered edges/content.
+    // TODO (michaelludwig) - Explore reducing this quality, identify visual tradeoffs
+    p.setFilterQuality(kHigh_SkFilterQuality);
+
     // The snapped backdrop content needs to be transformed by fromRoot into the layer space,
     // and stored in a temporary surface, which is then used as the input to the actual filter.
     auto tmpSurface = special->makeSurface(colorType, colorSpace, layerInputBounds.size());
     if (!tmpSurface) {
       return;
     }
-    p.setFilterQuality(kHigh_SkFilterQuality);
 
     auto tmpCanvas = tmpSurface->getCanvas();
     tmpCanvas->clear(SK_ColorTRANSPARENT);
@@ -992,6 +1001,7 @@ void SkCanvas::DrawDeviceWithFilter(
     tmpCanvas->translate(-layerInputBounds.fLeft, -layerInputBounds.fTop);
     tmpCanvas->concat(fromRoot);
     tmpCanvas->translate(src->getOrigin().x(), src->getOrigin().y());
+
     tmpCanvas->drawImageRect(
         special->asImage(), special->subset(), SkRect::Make(backdropBounds), &p,
         kStrict_SrcRectConstraint);
@@ -1004,6 +1014,10 @@ void SkCanvas::DrawDeviceWithFilter(
     // back into the shared layer space
     layerInputBounds = backdropBounds;
     layerInputBounds.offset(src->getOrigin().x(), src->getOrigin().y());
+
+    // Similar to the unfiltered case above, when toRoot is the identity, then the final
+    // draw will be 1-1 so there is no need to increase filter quality.
+    p.setFilterQuality(kNone_SkFilterQuality);
   }
 
   // Now evaluate the filter on 'special', which contains the backdrop content mapped back into
@@ -1019,9 +1033,10 @@ void SkCanvas::DrawDeviceWithFilter(
   SkIPoint offset;
   special = as_IFB(filter)->filterImage(ctx).imageAndOffset(&offset);
   if (special) {
-    // Draw the filtered backdrop content into the dst device. Must adjust the reported offset
-    // to include the layerInputBounds origin shift, since the returned offset is in the coord
-    // system defined by filterCTM, and we want it to be in that of layerMatrix.
+    // Draw the filtered backdrop content into the dst device. We add layerInputBounds origin
+    // to offset because the original value in 'offset' was relative to 'filterCTM'. 'filterCTM'
+    // had subtracted the layerInputBounds origin, so adding that back makes 'offset' relative
+    // to 'layerMatrix' (what we need it to be when drawing the image by 'toRoot').
     offset += layerInputBounds.topLeft();
 
     // Manually setting the device's CTM requires accounting for the device's origin.
@@ -1035,27 +1050,18 @@ void SkCanvas::DrawDeviceWithFilter(
     // And because devices don't have a special-image draw function that supports arbitrary
     // matrices, we are abusing the asImage() functionality here...
     SkRect specialSrc = SkRect::Make(special->subset());
-    auto hackImageMeh = special->asImage();
+    auto looseImage = special->asImage();
     dst->drawImageRect(
-        hackImageMeh.get(), &specialSrc,
+        looseImage.get(), &specialSrc,
         SkRect::MakeXYWH(offset.x(), offset.y(), special->width(), special->height()), p,
         kStrict_SrcRectConstraint);
   }
 }
 
-// This is shared by all backends, but contains raster-specific thoughts. Can we defer to the
-// device to perform this?
 static SkImageInfo make_layer_info(const SkImageInfo& prev, int w, int h, const SkPaint* paint) {
-  // Need to force L32 for now if we have an image filter.
-  // If filters ever support other colortypes, e.g. F16, we can modify this check.
-  if (paint && paint->getImageFilter()) {
-    // TODO: can we query the imagefilter, to see if it can handle floats (so we don't always
-    //       use N32 when the layer itself was float)?
-    return SkImageInfo::MakeN32Premul(w, h, prev.refColorSpace());
-  }
-
   SkColorType ct = prev.colorType();
-  if (prev.bytesPerPixel() <= 4) {
+  if (prev.bytesPerPixel() <= 4 && prev.colorType() != kRGBA_8888_SkColorType &&
+      prev.colorType() != kBGRA_8888_SkColorType) {
     // "Upgrade" A8, G8, 565, 4444, 1010102, 101010x, and 888x to 8888,
     // ensuring plenty of alpha bits for the layer, perhaps losing some color bits in return.
     ct = kN32_SkColorType;
@@ -2237,7 +2243,7 @@ void SkCanvas::onDrawBehind(const SkPaint& paint) {
     // We use clipRegion because it is already defined to operate in dev-space
     // (i.e. ignores the ctm). However, it is going to first translate by -origin,
     // but we don't want that, so we undo that before calling in.
-    SkRegion rgn(bounds.makeOffset(dev->fOrigin.fX, dev->fOrigin.fY));
+    SkRegion rgn(bounds.makeOffset(dev->fOrigin));
     dev->clipRegion(rgn, SkClipOp::kIntersect);
     dev->drawPaint(draw.paint());
     dev->restore(fMCRec->fMatrix);
@@ -2468,9 +2474,9 @@ void SkCanvas::onDrawImageRect(
 }
 
 void SkCanvas::onDrawBitmap(const SkBitmap& bitmap, SkScalar x, SkScalar y, const SkPaint* paint) {
-  SkDEBUGCODE(bitmap.validate());
+  SkDEBUGCODE(bitmap.validate();)
 
-  if (bitmap.drawsNothing()) {
+      if (bitmap.drawsNothing()) {
     return;
   }
 
@@ -2551,8 +2557,7 @@ void SkCanvas::internalDrawBitmapRect(
 void SkCanvas::onDrawBitmapRect(
     const SkBitmap& bitmap, const SkRect* src, const SkRect& dst, const SkPaint* paint,
     SrcRectConstraint constraint) {
-  SkDEBUGCODE(bitmap.validate());
-  this->internalDrawBitmapRect(bitmap, src, dst, paint, constraint);
+  SkDEBUGCODE(bitmap.validate();) this->internalDrawBitmapRect(bitmap, src, dst, paint, constraint);
 }
 
 void SkCanvas::onDrawImageNine(
@@ -2579,8 +2584,7 @@ void SkCanvas::onDrawImageNine(
 
 void SkCanvas::onDrawBitmapNine(
     const SkBitmap& bitmap, const SkIRect& center, const SkRect& dst, const SkPaint* paint) {
-  SkDEBUGCODE(bitmap.validate());
-  SkPaint realPaint;
+  SkDEBUGCODE(bitmap.validate();) SkPaint realPaint;
   paint = init_image_paint(&realPaint, paint);
 
   if (nullptr == paint || paint->canComputeFastBounds()) {

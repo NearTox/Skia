@@ -32,7 +32,7 @@ class SkPath;
  */
 class GrPathRenderer : public SkRefCnt {
  public:
-  constexpr GrPathRenderer() noexcept = default;
+  GrPathRenderer();
 
   /**
    * A caller may wish to use a path renderer to draw a path into the stencil buffer. However,
@@ -74,9 +74,9 @@ class GrPathRenderer : public SkRefCnt {
   };
 
   struct CanDrawPathArgs {
-    SkDEBUGCODE(CanDrawPathArgs() { memset(this, 0, sizeof(*this)); });  // For validation.
+    SkDEBUGCODE(CanDrawPathArgs() { memset(this, 0, sizeof(*this)); })  // For validation.
 
-    const GrCaps* fCaps;
+        const GrCaps* fCaps;
     const GrRenderTargetProxy* fProxy;
     const SkIRect* fClipConservativeBounds;
     const SkMatrix* fViewMatrix;
@@ -104,8 +104,7 @@ class GrPathRenderer : public SkRefCnt {
    * called when searching for the best path renderer to draw a path.
    */
   CanDrawPath canDrawPath(const CanDrawPathArgs& args) const {
-    SkDEBUGCODE(args.validate());
-    return this->onCanDrawPath(args);
+    SkDEBUGCODE(args.validate();) return this->onCanDrawPath(args);
   }
 
   struct DrawPathArgs {
@@ -141,9 +140,9 @@ class GrPathRenderer : public SkRefCnt {
    * Args to stencilPath(). fAAType cannot be kCoverage.
    */
   struct StencilPathArgs {
-    SkDEBUGCODE(StencilPathArgs() { memset(this, 0, sizeof(*this)); });  // For validation.
+    SkDEBUGCODE(StencilPathArgs() { memset(this, 0, sizeof(*this)); })  // For validation.
 
-    GrRecordingContext* fContext;
+        GrRecordingContext* fContext;
     GrRenderTargetContext* fRenderTargetContext;
     const GrHardClip* fClip;
     const SkIRect* fClipConservativeBounds;
@@ -159,8 +158,8 @@ class GrPathRenderer : public SkRefCnt {
    * initialized to zero. The pixels inside the path will have non-zero stencil values afterwards.
    */
   void stencilPath(const StencilPathArgs& args) {
-    SkDEBUGCODE(args.validate());
-    SkASSERT(kNoSupport_StencilSupport != this->getStencilSupport(*args.fShape));
+    SkDEBUGCODE(args.validate();)
+        SkASSERT(kNoSupport_StencilSupport != this->getStencilSupport(*args.fShape));
     this->onStencilPath(args);
   }
 

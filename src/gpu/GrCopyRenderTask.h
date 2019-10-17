@@ -14,14 +14,13 @@ class GrCopyRenderTask final : public GrRenderTask {
  public:
   static sk_sp<GrRenderTask> Make(
       sk_sp<GrSurfaceProxy> srcProxy, const SkIRect& srcRect, sk_sp<GrSurfaceProxy> dstProxy,
-      const SkIPoint& dstPoint);
+      const SkIPoint& dstPoint, const GrCaps*);
 
  private:
   GrCopyRenderTask(
       sk_sp<GrSurfaceProxy> srcProxy, const SkIRect& srcRect, sk_sp<GrSurfaceProxy> dstProxy,
       const SkIPoint& dstPoint);
 
-  void onPrepare(GrOpFlushState*) override {}
   bool onIsUsed(GrSurfaceProxy* proxy) const override {
     SkASSERT(proxy != fTarget.get());  // This case should be handled by GrRenderTask.
     return proxy == fSrcProxy.get();
@@ -29,7 +28,10 @@ class GrCopyRenderTask final : public GrRenderTask {
   // If instantiation failed, at flush time we simply will skip doing the copy.
   void handleInternalAllocationFailure() override {}
   void gatherProxyIntervals(GrResourceAllocator*) const override;
-  ExpectedOutcome onMakeClosed(const GrCaps&) override { return ExpectedOutcome::kTargetDirty; }
+  ExpectedOutcome onMakeClosed(const GrCaps&, SkIRect* targetUpdateBounds) override {
+    targetUpdateBounds->setXYWH(fDstPoint.x(), fDstPoint.y(), fSrcRect.width(), fSrcRect.height());
+    return ExpectedOutcome::kTargetDirty;
+  }
   bool onExecute(GrOpFlushState*) override;
 
 #ifdef SK_DEBUG

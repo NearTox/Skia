@@ -110,8 +110,7 @@ static sk_sp<GrTextureProxy> create_wrapped_backend(
       proxyProvider->caps()->getDefaultBackendFormat(kColorType, GrRenderable::kYes);
 
   *backingSurface = resourceProvider->createTexture(
-      desc, format, GrRenderable::kNo, 1, SkBudgeted::kNo, GrProtected::kNo,
-      GrResourceProvider::Flags::kNoPendingIO);
+      desc, format, GrRenderable::kNo, 1, GrMipMapped::kNo, SkBudgeted::kNo, GrProtected::kNo);
   if (!(*backingSurface)) {
     return nullptr;
   }

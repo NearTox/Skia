@@ -116,7 +116,7 @@ class GrShape {
       const SkRect& oval, SkScalar startAngleDegrees, SkScalar sweepAngleDegrees, bool useCenter,
       const GrStyle& style);
 
-  GrShape(const GrShape&) noexcept;
+  GrShape(const GrShape&);
   GrShape& operator=(const GrShape& that);
 
   ~GrShape() { this->changeType(Type::kEmpty); }
@@ -247,7 +247,7 @@ class GrShape {
     }
 
     SkPath::Direction dirs[2];
-    if (!this->path().isNestedFillRects(rects, dirs)) {
+    if (!SkPathPriv::IsNestedFillRects(this->path(), rects, dirs)) {
       return false;
     }
 
