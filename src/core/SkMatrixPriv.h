@@ -146,11 +146,11 @@ class SkMatrixPriv {
 
   static void MapHomogeneousPointsWithStride(
       const SkMatrix& mx, SkPoint3 dst[], size_t dstStride, const SkPoint3 src[], size_t srcStride,
-      int count);
+      int count) noexcept;
 
   // Returns the recommended filterquality, assuming the caller originally wanted kHigh (bicubic)
   static SkFilterQuality AdjustHighQualityFilterLevel(
-      const SkMatrix&, bool matrixIsInverse = false);
+      const SkMatrix&, bool matrixIsInverse = false) noexcept;
 };
 
 #endif

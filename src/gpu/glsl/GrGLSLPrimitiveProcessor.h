@@ -44,7 +44,7 @@ class GrGLSLPrimitiveProcessor {
     GrShaderVar fVaryingPoint;
   };
 
-  virtual ~GrGLSLPrimitiveProcessor() {}
+  virtual ~GrGLSLPrimitiveProcessor() = default;
 
   /**
    * This class provides access to the GrCoordTransforms across all GrFragmentProcessors in a
@@ -68,13 +68,14 @@ class GrGLSLPrimitiveProcessor {
     void specifyCoordsForCurrCoordTransform(Args&&... args) {
       SkASSERT(!fAddedCoord);
       fTransformedCoordVars->emplace_back(std::forward<Args>(args)...);
-      SkDEBUGCODE(fAddedCoord = true;)
+      SkDEBUGCODE(fAddedCoord = true);
     }
 
    private:
     GrFragmentProcessor::CoordTransformIter fIter;
-    SkDEBUGCODE(bool fAddedCoord = false;) SkDEBUGCODE(
-        const GrCoordTransform* fCurr = nullptr;) SkTArray<TransformVar>* fTransformedCoordVars;
+    SkDEBUGCODE(bool fAddedCoord = false);
+    SkDEBUGCODE(const GrCoordTransform* fCurr = nullptr);
+    SkTArray<TransformVar>* fTransformedCoordVars;
   };
 
   struct EmitArgs {

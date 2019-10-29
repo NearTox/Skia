@@ -484,7 +484,7 @@ sk_sp<Animation> Animation::Builder::make(const char* data, size_t data_len) {
   const auto t1 = std::chrono::steady_clock::now();
   fStats.fJsonParseTimeMS = std::chrono::duration<float, std::milli>{t1 - t0}.count();
 
-  const auto version = ParseDefault<SkString>(json["v"], SkString());
+  auto version = ParseDefault<SkString>(json["v"], SkString());
   const auto size =
       SkSize::Make(ParseDefault<float>(json["w"], 0.0f), ParseDefault<float>(json["h"], 0.0f));
   const auto fps = ParseDefault<float>(json["fr"], -1.0f),

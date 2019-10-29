@@ -63,18 +63,18 @@ class GrSurfaceProxy : public GrNonAtomicRef<GrSurfaceProxy> {
   };
 
   struct LazyCallbackResult {
-    LazyCallbackResult() = default;
+    constexpr LazyCallbackResult() noexcept = default;
     LazyCallbackResult(const LazyCallbackResult&) = default;
-    LazyCallbackResult(LazyCallbackResult&& that) = default;
+    LazyCallbackResult(LazyCallbackResult&& that) noexcept = default;
     LazyCallbackResult(
         sk_sp<GrSurface> surf, bool releaseCallback = true,
-        LazyInstantiationKeyMode mode = LazyInstantiationKeyMode::kSynced)
+        LazyInstantiationKeyMode mode = LazyInstantiationKeyMode::kSynced) noexcept
         : fSurface(std::move(surf)), fKeyMode(mode), fReleaseCallback(releaseCallback) {}
-    LazyCallbackResult(sk_sp<GrTexture> tex)
+    LazyCallbackResult(sk_sp<GrTexture> tex) noexcept
         : LazyCallbackResult(sk_sp<GrSurface>(std::move(tex))) {}
 
     LazyCallbackResult& operator=(const LazyCallbackResult&) = default;
-    LazyCallbackResult& operator=(LazyCallbackResult&&) = default;
+    LazyCallbackResult& operator=(LazyCallbackResult&&) noexcept = default;
 
     sk_sp<GrSurface> fSurface;
     LazyInstantiationKeyMode fKeyMode = LazyInstantiationKeyMode::kSynced;
@@ -101,26 +101,26 @@ class GrSurfaceProxy : public GrNonAtomicRef<GrSurfaceProxy> {
 
   bool isLazy() const { return !this->isInstantiated() && SkToBool(fLazyInstantiateCallback); }
 
-  bool isFullyLazy() const {
+  bool isFullyLazy() const noexcept {
     bool result = fHeight < 0;
     SkASSERT(result == (fWidth < 0));
     SkASSERT(!result || this->isLazy());
     return result;
   }
 
-  GrPixelConfig config() const { return fConfig; }
+  GrPixelConfig config() const noexcept { return fConfig; }
 
-  int width() const {
+  int width() const noexcept {
     SkASSERT(!this->isFullyLazy());
     return fWidth;
   }
 
-  int height() const {
+  int height() const noexcept {
     SkASSERT(!this->isFullyLazy());
     return fHeight;
   }
 
-  SkISize isize() const { return {fWidth, fHeight}; }
+  SkISize isize() const noexcept { return {fWidth, fHeight}; }
 
   int worstCaseWidth() const;
   int worstCaseHeight() const;
@@ -139,34 +139,34 @@ class GrSurfaceProxy : public GrNonAtomicRef<GrSurfaceProxy> {
     return SkRect::MakeIWH(this->worstCaseWidth(), this->worstCaseHeight());
   }
 
-  GrSurfaceOrigin origin() const {
+  GrSurfaceOrigin origin() const noexcept {
     SkASSERT(kTopLeft_GrSurfaceOrigin == fOrigin || kBottomLeft_GrSurfaceOrigin == fOrigin);
     return fOrigin;
   }
 
-  const GrSwizzle& textureSwizzle() const { return fTextureSwizzle; }
+  const GrSwizzle& textureSwizzle() const noexcept { return fTextureSwizzle; }
 
-  const GrBackendFormat& backendFormat() const { return fFormat; }
+  const GrBackendFormat& backendFormat() const noexcept { return fFormat; }
 
   class UniqueID {
    public:
-    static UniqueID InvalidID() { return UniqueID(uint32_t(SK_InvalidUniqueID)); }
+    static UniqueID InvalidID() noexcept { return UniqueID(uint32_t(SK_InvalidUniqueID)); }
 
     // wrapped
-    explicit UniqueID(const GrGpuResource::UniqueID& id) : fID(id.asUInt()) {}
+    explicit UniqueID(const GrGpuResource::UniqueID& id) noexcept : fID(id.asUInt()) {}
     // deferred and lazy-callback
-    UniqueID() : fID(GrGpuResource::CreateUniqueID()) {}
+    UniqueID() noexcept : fID(GrGpuResource::CreateUniqueID()) {}
 
-    uint32_t asUInt() const { return fID; }
+    uint32_t asUInt() const noexcept { return fID; }
 
-    bool operator==(const UniqueID& other) const { return fID == other.fID; }
-    bool operator!=(const UniqueID& other) const { return !(*this == other); }
+    bool operator==(const UniqueID& other) const noexcept { return fID == other.fID; }
+    bool operator!=(const UniqueID& other) const noexcept { return !(*this == other); }
 
-    void makeInvalid() { fID = SK_InvalidUniqueID; }
-    bool isInvalid() const { return SK_InvalidUniqueID == fID; }
+    void makeInvalid() noexcept { fID = SK_InvalidUniqueID; }
+    bool isInvalid() const noexcept { return SK_InvalidUniqueID == fID; }
 
    private:
-    explicit UniqueID(uint32_t id) : fID(id) {}
+    constexpr explicit UniqueID(uint32_t id) noexcept : fID(id) {}
 
     uint32_t fID;
   };
@@ -295,10 +295,10 @@ class GrSurfaceProxy : public GrNonAtomicRef<GrSurfaceProxy> {
   GrInternalSurfaceFlags testingOnly_getFlags() const;
 #endif
 
-  SkDEBUGCODE(void validate(GrContext_Base*) const;)
+  SkDEBUGCODE(void validate(GrContext_Base*) const);
 
-      // Provides access to functions that aren't part of the public API.
-      inline GrSurfaceProxyPriv priv();
+  // Provides access to functions that aren't part of the public API.
+  inline GrSurfaceProxyPriv priv();
   inline const GrSurfaceProxyPriv priv() const;
 
   // Returns true if we are working with protected content.
@@ -388,10 +388,10 @@ class GrSurfaceProxy : public GrNonAtomicRef<GrSurfaceProxy> {
 
   LazyInstantiateCallback fLazyInstantiateCallback;
 
-  SkDEBUGCODE(void validateSurface(const GrSurface*);)
-      SkDEBUGCODE(virtual void onValidateSurface(const GrSurface*) = 0;)
+  SkDEBUGCODE(void validateSurface(const GrSurface*));
+  SkDEBUGCODE(virtual void onValidateSurface(const GrSurface*) = 0);
 
-          static const size_t kInvalidGpuMemorySize = ~static_cast<size_t>(0);
+  static const size_t kInvalidGpuMemorySize = ~static_cast<size_t>(0);
   SkDEBUGCODE(size_t getRawGpuMemorySize_debugOnly() const { return fGpuMemorySize; })
 
       virtual size_t onUninstantiatedGpuMemorySize(const GrCaps&) const = 0;

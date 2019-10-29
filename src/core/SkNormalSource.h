@@ -33,7 +33,7 @@ class SK_API SkNormalSource : public SkFlattenable {
 
   class Provider {
    public:
-    virtual ~Provider() {}
+    virtual ~Provider() = default;
 
     /** Called for each span of the object being drawn on the CPU. Your subclass should set
         the appropriate normals that correspond to the specified device coordinates.

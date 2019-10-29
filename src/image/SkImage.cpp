@@ -33,7 +33,7 @@
 #endif
 #include "include/gpu/GrBackendSurface.h"
 
-SkImage::SkImage(const SkImageInfo& info, uint32_t uniqueID)
+SkImage::SkImage(const SkImageInfo& info, uint32_t uniqueID) noexcept
     : fInfo(info), fUniqueID(kNeedNewImageUniqueID == uniqueID ? SkNextID::ImageID() : uniqueID) {
   SkASSERT(info.width() > 0);
   SkASSERT(info.height() > 0);
@@ -75,11 +75,11 @@ bool SkImage::scalePixels(const SkPixmap& dst, SkFilterQuality quality, CachingH
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkColorType SkImage::colorType() const { return fInfo.colorType(); }
+SkColorType SkImage::colorType() const noexcept { return fInfo.colorType(); }
 
-SkAlphaType SkImage::alphaType() const { return fInfo.alphaType(); }
+SkAlphaType SkImage::alphaType() const noexcept { return fInfo.alphaType(); }
 
-SkColorSpace* SkImage::colorSpace() const { return fInfo.colorSpace(); }
+SkColorSpace* SkImage::colorSpace() const noexcept { return fInfo.colorSpace(); }
 
 sk_sp<SkColorSpace> SkImage::refColorSpace() const { return fInfo.refColorSpace(); }
 

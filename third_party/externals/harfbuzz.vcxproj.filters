@@ -51,5 +51,6 @@
     <ClCompile Include="harfbuzz\src\hb-ucd.cc" />
     <ClCompile Include="harfbuzz\src\hb-fallback-shape.cc" />
     <ClCompile Include="harfbuzz\src\hb-ot-metrics.cc" />
+    <ClCompile Include="harfbuzz\src\hb-number.cc" />
   </ItemGroup>
 </Project>

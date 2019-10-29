@@ -252,7 +252,7 @@ enum GrGLBackendState {
 /**
  * This value translates to reseting all the context state for any backend.
  */
-static const uint32_t kAll_GrBackendState = 0xffffffff;
+static constexpr uint32_t kAll_GrBackendState = 0xffffffff;
 
 enum GrFlushFlags {
   kNone_GrFlushFlags = 0,
@@ -322,7 +322,7 @@ struct GrPrepareForExternalIORequests {
   SkSurface** fSurfaces = nullptr;
   bool* fPrepareSurfaceForPresent = nullptr;
 
-  bool hasRequests() const { return fNumImages || fNumSurfaces; }
+  bool hasRequests() const noexcept { return fNumImages || fNumSurfaces; }
 };
 
 #endif

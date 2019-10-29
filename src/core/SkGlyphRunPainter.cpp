@@ -807,7 +807,7 @@ SkGlyphRunListPainter::ScopedBuffers::~ScopedBuffers() {
 }
 
 SkVector SkGlyphPositionRoundingSpec::HalfAxisSampleFreq(
-    bool isSubpixel, SkAxisAlignment axisAlignment) {
+    bool isSubpixel, SkAxisAlignment axisAlignment) noexcept {
   if (!isSubpixel) {
     return {SK_ScalarHalf, SK_ScalarHalf};
   } else {
@@ -824,13 +824,13 @@ SkVector SkGlyphPositionRoundingSpec::HalfAxisSampleFreq(
 }
 
 SkIPoint SkGlyphPositionRoundingSpec::IgnorePositionMask(
-    bool isSubpixel, SkAxisAlignment axisAlignment) {
+    bool isSubpixel, SkAxisAlignment axisAlignment) noexcept {
   return SkIPoint::Make(
       (!isSubpixel || axisAlignment == kY_SkAxisAlignment) ? 0 : ~0,
       (!isSubpixel || axisAlignment == kX_SkAxisAlignment) ? 0 : ~0);
 }
 
 SkGlyphPositionRoundingSpec::SkGlyphPositionRoundingSpec(
-    bool isSubpixel, SkAxisAlignment axisAlignment)
+    bool isSubpixel, SkAxisAlignment axisAlignment) noexcept
     : halfAxisSampleFreq{HalfAxisSampleFreq(isSubpixel, axisAlignment)},
       ignorePositionMask{IgnorePositionMask(isSubpixel, axisAlignment)} {}

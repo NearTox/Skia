@@ -19,7 +19,7 @@
 #include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
 // The effects defined here only handle rrect radii >= kRadiusMin.
-static const SkScalar kRadiusMin = SK_ScalarHalf;
+static constexpr SkScalar kRadiusMin = SK_ScalarHalf;
 
 //////////////////////////////////////////////////////////////////////////////
 

@@ -19,9 +19,8 @@
  *  [     0          0      1 ]
  */
 struct SkRSXform {
-  static SkRSXform Make(SkScalar scos, SkScalar ssin, SkScalar tx, SkScalar ty) {
-    SkRSXform xform = {scos, ssin, tx, ty};
-    return xform;
+  static constexpr SkRSXform Make(SkScalar scos, SkScalar ssin, SkScalar tx, SkScalar ty) {
+    return SkRSXform{scos, ssin, tx, ty};
   }
 
   /*
@@ -42,25 +41,25 @@ struct SkRSXform {
   SkScalar fTx;
   SkScalar fTy;
 
-  bool rectStaysRect() const { return 0 == fSCos || 0 == fSSin; }
+  bool rectStaysRect() const noexcept { return 0 == fSCos || 0 == fSSin; }
 
-  void setIdentity() {
+  void setIdentity() noexcept {
     fSCos = 1;
     fSSin = fTx = fTy = 0;
   }
 
-  void set(SkScalar scos, SkScalar ssin, SkScalar tx, SkScalar ty) {
+  void set(SkScalar scos, SkScalar ssin, SkScalar tx, SkScalar ty) noexcept {
     fSCos = scos;
     fSSin = ssin;
     fTx = tx;
     fTy = ty;
   }
 
-  void toQuad(SkScalar width, SkScalar height, SkPoint quad[4]) const;
-  void toQuad(const SkSize& size, SkPoint quad[4]) const {
+  void toQuad(SkScalar width, SkScalar height, SkPoint quad[4]) const noexcept;
+  void toQuad(const SkSize& size, SkPoint quad[4]) const noexcept {
     this->toQuad(size.width(), size.height(), quad);
   }
-  void toTriStrip(SkScalar width, SkScalar height, SkPoint strip[4]) const;
+  void toTriStrip(SkScalar width, SkScalar height, SkPoint strip[4]) const noexcept;
 };
 
 #endif

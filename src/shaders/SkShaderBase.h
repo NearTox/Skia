@@ -41,7 +41,7 @@ class SkRasterPipeline;
  */
 class SkStageUpdater {
  public:
-  virtual ~SkStageUpdater() {}
+  virtual ~SkStageUpdater() = default;
 
   virtual bool update(const SkMatrix& ctm, const SkMatrix* localM) = 0;
 };

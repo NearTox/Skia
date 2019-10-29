@@ -41,7 +41,7 @@ void Group::addChild(sk_sp<RenderNode> node) {
   }
 
   this->observeInval(node);
-  fChildren.push_back(std::move(node));
+  fChildren.emplace_back(std::move(node));
 
   this->invalidate();
 }

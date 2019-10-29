@@ -33,8 +33,8 @@ class GrProgramInfo {
     }
     fRequestedFeatures |= fPipeline.getXferProcessor().requestedFeatures();
 
-    SkDEBUGCODE(this->validate();)(void)
-        fNumDynamicStateArrays;  // touch this to quiet unused member warnings
+    SkDEBUGCODE(this->validate());
+    (void)fNumDynamicStateArrays;  // touch this to quiet unused member warnings
   }
 
   GrProcessor::CustomFeatures requestedFeatures() const { return fRequestedFeatures; }

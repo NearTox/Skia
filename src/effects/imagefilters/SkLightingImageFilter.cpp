@@ -136,8 +136,8 @@ class SkImageFilterLight : public SkRefCnt {
 
 class BaseLightingType {
  public:
-  BaseLightingType() {}
-  virtual ~BaseLightingType() {}
+  constexpr BaseLightingType() noexcept = default;
+  virtual ~BaseLightingType() = default;
 
   virtual SkPMColor light(
       const SkPoint3& normal, const SkPoint3& surfaceTolight, const SkPoint3& lightColor) const = 0;
@@ -688,7 +688,7 @@ class GrSpecularLightingEffect : public GrLightingEffect {
 
 class GrGLLight {
  public:
-  virtual ~GrGLLight() {}
+  virtual ~GrGLLight() = default;
 
   /**
    * This is called by GrGLLightingEffect::emitCode() before either of the two virtual functions

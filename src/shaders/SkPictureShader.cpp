@@ -70,7 +70,7 @@ struct BitmapShaderKey : public SkResourceCache::Key {
   SkImage::BitDepth fBitDepth;
   SkSize fScale;
 
-  SkDEBUGCODE(uint32_t fEndOfStruct;)
+  SkDEBUGCODE(uint32_t fEndOfStruct);
 };
 
 struct BitmapShaderRec : public SkResourceCache::Rec {

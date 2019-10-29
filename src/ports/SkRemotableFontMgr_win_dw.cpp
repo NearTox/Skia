@@ -37,7 +37,7 @@ class SK_API SkRemotableFontMgr_DirectWrite : public SkRemotableFontMgr {
     DataId(DataId&& that) : fLoader(that.fLoader), fKey(that.fKey), fKeySize(that.fKeySize) {
       that.fLoader = nullptr;
       that.fKey = nullptr;
-      SkDEBUGCODE(that.fKeySize = 0xFFFFFFFF;)
+      SkDEBUGCODE(that.fKeySize = 0xFFFFFFFF);
     }
 
     ~DataId() {
@@ -222,7 +222,7 @@ class SK_API SkRemotableFontMgr_DirectWrite : public SkRemotableFontMgr {
       fIdentity.fDataId = SkFontIdentity::kInvalidDataId;
     }
 
-    virtual ~FontFallbackRenderer() {}
+    virtual ~FontFallbackRenderer() = default;
 
     // IDWriteTextRenderer methods
     SK_STDMETHODIMP DrawGlyphRun(

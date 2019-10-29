@@ -100,7 +100,7 @@ bool GrGpuResource::isPurgeable() const {
          !(fBudgetedType == GrBudgetedType::kUnbudgetedCacheable && fUniqueKey.isValid());
 }
 
-bool GrGpuResource::hasRef() const { return this->internalHasRef(); }
+bool GrGpuResource::hasRef() const noexcept { return this->internalHasRef(); }
 
 SkString GrGpuResource::getResourceName() const {
   // Dump resource as "skia/gpu_resources/resource_#".
@@ -109,7 +109,7 @@ SkString GrGpuResource::getResourceName() const {
   return resourceName;
 }
 
-const GrContext* GrGpuResource::getContext() const {
+const GrContext* GrGpuResource::getContext() const noexcept {
   if (fGpu) {
     return fGpu->getContext();
   } else {
@@ -117,7 +117,7 @@ const GrContext* GrGpuResource::getContext() const {
   }
 }
 
-GrContext* GrGpuResource::getContext() {
+GrContext* GrGpuResource::getContext() noexcept {
   if (fGpu) {
     return fGpu->getContext();
   } else {
@@ -197,7 +197,7 @@ void GrGpuResource::makeUnbudgeted() {
   }
 }
 
-uint32_t GrGpuResource::CreateUniqueID() {
+uint32_t GrGpuResource::CreateUniqueID() noexcept {
   static std::atomic<uint32_t> nextID{1};
   uint32_t id;
   do {

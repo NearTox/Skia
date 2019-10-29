@@ -91,12 +91,12 @@ class GrRenderTask : public SkRefCnt {
   // it is required)?
   bool isInstantiated() const;
 
-  SkDEBUGCODE(bool deferredProxiesAreInstantiated() const;)
+  SkDEBUGCODE(bool deferredProxiesAreInstantiated() const);
 
-      enum class ExpectedOutcome : bool {
-        kTargetUnchanged,
-        kTargetDirty,
-      };
+  enum class ExpectedOutcome : bool {
+    kTargetUnchanged,
+    kTargetDirty,
+  };
 
   // Performs any work to finalize this renderTask prior to execution. If returning
   // ExpectedOutcome::kTargetDiry, the caller is also responsible to fill out the area it will
@@ -133,8 +133,9 @@ class GrRenderTask : public SkRefCnt {
 
   void addDependency(GrRenderTask* dependedOn);
   void addDependent(GrRenderTask* dependent);
-  SkDEBUGCODE(bool isDependedent(const GrRenderTask* dependent) const;)
-      SkDEBUGCODE(void validate() const;) void closeThoseWhoDependOnMe(const GrCaps&);
+  SkDEBUGCODE(bool isDependedent(const GrRenderTask* dependent) const);
+  SkDEBUGCODE(void validate() const);
+  void closeThoseWhoDependOnMe(const GrCaps&);
 
   // Feed proxy usage intervals to the GrResourceAllocator class
   virtual void gatherProxyIntervals(GrResourceAllocator*) const = 0;

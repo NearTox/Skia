@@ -37,7 +37,7 @@ class SK_API SkDiscardableMemory {
 
   /** Must not be called while locked.
    */
-  virtual ~SkDiscardableMemory() {}
+  virtual ~SkDiscardableMemory() = default;
 
   /**
    * Locks the memory, prevent it from being discarded. Once locked. you may

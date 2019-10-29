@@ -14,7 +14,7 @@
 #include "src/gpu/GrWindowRectangles.h"
 #include "src/utils/SkJSONWriter.h"
 
-GrCaps::GrCaps(const GrContextOptions& options) {
+GrCaps::GrCaps(const GrContextOptions& options) noexcept {
   fMipMapSupport = false;
   fNPOTTextureTileSupport = false;
   fReuseScratchTextures = true;

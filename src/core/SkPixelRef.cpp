@@ -14,7 +14,7 @@
 
 #include <atomic>
 
-uint32_t SkNextID::ImageID() {
+uint32_t SkNextID::ImageID() noexcept {
   // We never set the low bit.... see SkPixelRef::genIDIsUnique().
   static std::atomic<uint32_t> nextID{2};
 
@@ -27,7 +27,7 @@ uint32_t SkNextID::ImageID() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkPixelRef::SkPixelRef(int width, int height, void* pixels, size_t rowBytes)
+SkPixelRef::SkPixelRef(int width, int height, void* pixels, size_t rowBytes) noexcept
     : fWidth(width), fHeight(height), fPixels(pixels), fRowBytes(rowBytes), fAddedToCache(false) {
   this->needsNewGenID();
   fMutability = kMutable;
@@ -46,12 +46,12 @@ void SkPixelRef::android_only_reset(int width, int height, size_t rowBytes) {
   this->notifyPixelsChanged();
 }
 
-void SkPixelRef::needsNewGenID() {
+void SkPixelRef::needsNewGenID() noexcept {
   fTaggedGenID.store(0);
   SkASSERT(!this->genIDIsUnique());  // This method isn't threadsafe, so the assert should be fine.
 }
 
-uint32_t SkPixelRef::getGenerationID() const {
+uint32_t SkPixelRef::getGenerationID() const noexcept {
   uint32_t id = fTaggedGenID.load();
   if (0 == id) {
     uint32_t next = SkNextID::ImageID() | 1u;
@@ -103,9 +103,9 @@ void SkPixelRef::notifyPixelsChanged() {
   this->needsNewGenID();
 }
 
-void SkPixelRef::setImmutable() { fMutability = kImmutable; }
+void SkPixelRef::setImmutable() noexcept { fMutability = kImmutable; }
 
-void SkPixelRef::setImmutableWithID(uint32_t genID) {
+void SkPixelRef::setImmutableWithID(uint32_t genID) noexcept {
   /*
    *  We are forcing the genID to match an external value. The caller must ensure that this
    *  value does not conflict with other content.
@@ -116,12 +116,12 @@ void SkPixelRef::setImmutableWithID(uint32_t genID) {
   fTaggedGenID.store(genID);
 }
 
-void SkPixelRef::setTemporarilyImmutable() {
+void SkPixelRef::setTemporarilyImmutable() noexcept {
   SkASSERT(fMutability != kImmutable);
   fMutability = kTemporarilyImmutable;
 }
 
-void SkPixelRef::restoreMutability() {
+void SkPixelRef::restoreMutability() noexcept {
   SkASSERT(fMutability != kImmutable);
   fMutability = kMutable;
 }
@@ -136,7 +136,7 @@ sk_sp<SkPixelRef> SkMakePixelRefWithProc(
   struct PixelRef final : public SkPixelRef {
     void (*fReleaseProc)(void*, void*);
     void* fReleaseProcContext;
-    PixelRef(int w, int h, void* s, size_t r, void (*proc)(void*, void*), void* ctx)
+    PixelRef(int w, int h, void* s, size_t r, void (*proc)(void*, void*), void* ctx) noexcept
         : SkPixelRef(w, h, s, r), fReleaseProc(proc), fReleaseProcContext(ctx) {}
     ~PixelRef() override { fReleaseProc(this->pixels(), fReleaseProcContext); }
   };

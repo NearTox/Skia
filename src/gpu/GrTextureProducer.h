@@ -97,7 +97,7 @@ class GrTextureProducer : public SkNoncopyable {
   // that array.
   sk_sp<GrTextureProxy> refTextureProxy(GrMipMapped willNeedMips);
 
-  virtual ~GrTextureProducer() {}
+  virtual ~GrTextureProducer() = default;
 
   int width() const { return fWidth; }
   int height() const { return fHeight; }

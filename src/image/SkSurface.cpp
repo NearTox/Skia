@@ -15,7 +15,7 @@
 #include "src/core/SkMakeUnique.h"
 #include "src/image/SkSurface_Base.h"
 
-static SkPixelGeometry compute_default_geometry() {
+static SkPixelGeometry compute_default_geometry() noexcept {
   SkFontLCDConfig::LCDOrder order = SkFontLCDConfig::GetSubpixelOrder();
   if (SkFontLCDConfig::kNONE_LCDOrder == order) {
     return kUnknown_SkPixelGeometry;
@@ -39,17 +39,18 @@ static SkPixelGeometry compute_default_geometry() {
   }
 }
 
-SkSurfaceProps::SkSurfaceProps() : fFlags(0), fPixelGeometry(kUnknown_SkPixelGeometry) {}
+SkSurfaceProps::SkSurfaceProps() noexcept : fFlags(0), fPixelGeometry(kUnknown_SkPixelGeometry) {}
 
-SkSurfaceProps::SkSurfaceProps(InitType) : fFlags(0), fPixelGeometry(compute_default_geometry()) {}
+SkSurfaceProps::SkSurfaceProps(InitType) noexcept
+    : fFlags(0), fPixelGeometry(compute_default_geometry()) {}
 
-SkSurfaceProps::SkSurfaceProps(uint32_t flags, InitType)
+SkSurfaceProps::SkSurfaceProps(uint32_t flags, InitType) noexcept
     : fFlags(flags), fPixelGeometry(compute_default_geometry()) {}
 
-SkSurfaceProps::SkSurfaceProps(uint32_t flags, SkPixelGeometry pg)
+SkSurfaceProps::SkSurfaceProps(uint32_t flags, SkPixelGeometry pg) noexcept
     : fFlags(flags), fPixelGeometry(pg) {}
 
-SkSurfaceProps::SkSurfaceProps(const SkSurfaceProps& other)
+SkSurfaceProps::SkSurfaceProps(const SkSurfaceProps& other) noexcept
     : fFlags(other.fFlags), fPixelGeometry(other.fPixelGeometry) {}
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -191,11 +192,11 @@ void SkSurface_Base::onAsyncRescaleAndReadPixels(
   if (src->readPixels(pm, srcX, srcY)) {
     class Result : public AsyncReadResult {
      public:
-      Result(std::unique_ptr<const char[]> data, size_t rowBytes)
+      Result(std::unique_ptr<const char[]> data, size_t rowBytes) noexcept
           : fData(std::move(data)), fRowBytes(rowBytes) {}
-      int count() const override { return 1; }
-      const void* data(int i) const override { return fData.get(); }
-      size_t rowBytes(int i) const override { return fRowBytes; }
+      int count() const noexcept override { return 1; }
+      const void* data(int i) const noexcept override { return fData.get(); }
+      size_t rowBytes(int i) const noexcept override { return fRowBytes; }
 
      private:
       std::unique_ptr<const char[]> fData;
@@ -216,7 +217,7 @@ void SkSurface_Base::onAsyncRescaleAndReadPixelsYUV420(
   callback(context, nullptr);
 }
 
-bool SkSurface_Base::outstandingImageSnapshot() const {
+bool SkSurface_Base::outstandingImageSnapshot() const noexcept {
   return fCachedImage && !fCachedImage->unique();
 }
 
@@ -249,15 +250,17 @@ void SkSurface_Base::aboutToDraw(ContentChangeMode mode) {
   }
 }
 
-uint32_t SkSurface_Base::newGenerationID() {
+uint32_t SkSurface_Base::newGenerationID() noexcept {
   SkASSERT(!fCachedCanvas || fCachedCanvas->getSurfaceBase() == this);
   static std::atomic<uint32_t> nextID{1};
   return nextID++;
 }
 
-static SkSurface_Base* asSB(SkSurface* surface) { return static_cast<SkSurface_Base*>(surface); }
+static SkSurface_Base* asSB(SkSurface* surface) noexcept {
+  return static_cast<SkSurface_Base*>(surface);
+}
 
-static const SkSurface_Base* asConstSB(const SkSurface* surface) {
+static const SkSurface_Base* asConstSB(const SkSurface* surface) noexcept {
   return static_cast<const SkSurface_Base*>(surface);
 }
 
@@ -282,7 +285,7 @@ SkImageInfo SkSurface::imageInfo() {
   return this->getCanvas()->imageInfo();
 }
 
-uint32_t SkSurface::generationID() {
+uint32_t SkSurface::generationID() noexcept {
   if (0 == fGenerationID) {
     fGenerationID = asSB(this)->newGenerationID();
   }

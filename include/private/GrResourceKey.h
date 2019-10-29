@@ -149,7 +149,7 @@ class GrResourceKey {
 
   size_t internalSize() const { return fKey[kDomainAndSize_MetaDataIdx] >> 16; }
 
-  void validate() const {
+  void validate() const noexcept {
     SkASSERT(this->isValid());
     SkASSERT(
         fKey[kHash_MetaDataIdx] ==
@@ -193,7 +193,7 @@ class GrScratchKey : public GrResourceKey {
   typedef uint32_t ResourceType;
 
   /** Generate a unique ResourceType. */
-  static ResourceType GenerateResourceType();
+  static ResourceType GenerateResourceType() noexcept;
 
   /** Creates an invalid scratch key. It must be initialized using a Builder object before use. */
   GrScratchKey() {}
@@ -243,7 +243,7 @@ class GrUniqueKey : public GrResourceKey {
  public:
   typedef uint32_t Domain;
   /** Generate a Domain for unique keys. */
-  static Domain GenerateDomain();
+  static Domain GenerateDomain() noexcept;
 
   /** Creates an invalid unique key. It must be initialized using a Builder object before use. */
   GrUniqueKey() : fTag(nullptr) {}
@@ -266,9 +266,9 @@ class GrUniqueKey : public GrResourceKey {
   bool operator!=(const GrUniqueKey& that) const { return !(*this == that); }
 
   void setCustomData(sk_sp<SkData> data) { fData = std::move(data); }
-  SkData* getCustomData() const { return fData.get(); }
+  SkData* getCustomData() const noexcept { return fData.get(); }
 
-  const char* tag() const { return fTag; }
+  const char* tag() const noexcept { return fTag; }
 
 #ifdef SK_DEBUG
   void dump(const char* label) const {
@@ -343,8 +343,8 @@ class GrUniqueKeyInvalidatedMessage {
 
   GrUniqueKeyInvalidatedMessage& operator=(const GrUniqueKeyInvalidatedMessage&) = default;
 
-  const GrUniqueKey& key() const { return fKey; }
-  uint32_t contextID() const { return fContextID; }
+  const GrUniqueKey& key() const noexcept { return fKey; }
+  uint32_t contextID() const noexcept { return fContextID; }
 
  private:
   GrUniqueKey fKey;

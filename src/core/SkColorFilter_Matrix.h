@@ -17,7 +17,7 @@ class SkColorFilter_Matrix : public SkColorFilter {
 
   explicit SkColorFilter_Matrix(const float array[20], Domain);
 
-  uint32_t getFlags() const override;
+  uint32_t getFlags() const noexcept override;
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(

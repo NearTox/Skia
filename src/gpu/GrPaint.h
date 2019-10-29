@@ -128,7 +128,7 @@ class GrPaint {
   SkSTArray<2, std::unique_ptr<GrFragmentProcessor>> fCoverageFragmentProcessors;
   bool fTrivial = true;
   SkPMColor4f fColor = SK_PMColor4fWHITE;
-  SkDEBUGCODE(bool fAlive = true;)  // Set false after moved from.
+  SkDEBUGCODE(bool fAlive = true);  // Set false after moved from.
 };
 
 #endif

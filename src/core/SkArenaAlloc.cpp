@@ -9,13 +9,14 @@
 #include <algorithm>
 #include <new>
 
-static char* end_chain(char*) { return nullptr; }
+static char* end_chain(char*) noexcept { return nullptr; }
 
-static uint32_t first_allocated_block(uint32_t blockSize, uint32_t firstHeapAllocation) {
+static constexpr uint32_t first_allocated_block(
+    uint32_t blockSize, uint32_t firstHeapAllocation) noexcept {
   return firstHeapAllocation > 0 ? firstHeapAllocation : blockSize > 0 ? blockSize : 1024;
 }
 
-SkArenaAlloc::SkArenaAlloc(char* block, size_t size, size_t firstHeapAllocation)
+SkArenaAlloc::SkArenaAlloc(char* block, size_t size, size_t firstHeapAllocation) noexcept
     : fDtorCursor{block},
       fCursor{block},
       fEnd{block + ToU32(size)},
@@ -33,12 +34,12 @@ SkArenaAlloc::SkArenaAlloc(char* block, size_t size, size_t firstHeapAllocation)
 
 SkArenaAlloc::~SkArenaAlloc() { RunDtorsOnBlock(fDtorCursor); }
 
-void SkArenaAlloc::reset() {
+void SkArenaAlloc::reset() noexcept {
   this->~SkArenaAlloc();
   new (this) SkArenaAlloc{fFirstBlock, fFirstSize, fFirstHeapAllocationSize};
 }
 
-void SkArenaAlloc::installFooter(FooterAction* action, uint32_t padding) {
+void SkArenaAlloc::installFooter(FooterAction* action, uint32_t padding) noexcept {
   assert(padding < 64);
   int64_t actionInt = (int64_t)(intptr_t)action;
 
@@ -50,13 +51,13 @@ void SkArenaAlloc::installFooter(FooterAction* action, uint32_t padding) {
   fDtorCursor = fCursor;
 }
 
-void SkArenaAlloc::installPtrFooter(FooterAction* action, char* ptr, uint32_t padding) {
+void SkArenaAlloc::installPtrFooter(FooterAction* action, char* ptr, uint32_t padding) noexcept {
   memmove(fCursor, &ptr, sizeof(char*));
   fCursor += sizeof(char*);
   this->installFooter(action, padding);
 }
 
-char* SkArenaAlloc::SkipPod(char* footerEnd) {
+char* SkArenaAlloc::SkipPod(char* footerEnd) noexcept {
   char* objEnd = footerEnd - (sizeof(Footer) + sizeof(int32_t));
   int32_t skip;
   memmove(&skip, objEnd, sizeof(int32_t));
@@ -84,7 +85,8 @@ char* SkArenaAlloc::NextBlock(char* footerEnd) {
   return nullptr;
 }
 
-void SkArenaAlloc::installUint32Footer(FooterAction* action, uint32_t value, uint32_t padding) {
+void SkArenaAlloc::installUint32Footer(
+    FooterAction* action, uint32_t value, uint32_t padding) noexcept {
   memmove(fCursor, &value, sizeof(uint32_t));
   fCursor += sizeof(uint32_t);
   this->installFooter(action, padding);

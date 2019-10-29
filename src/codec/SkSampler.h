@@ -62,9 +62,9 @@ class SkSampler : public SkNoncopyable {
 
   virtual int fillWidth() const = 0;
 
-  SkSampler() : fSampleY(1) {}
+  constexpr SkSampler() noexcept : fSampleY(1) {}
 
-  virtual ~SkSampler() {}
+  virtual ~SkSampler() = default;
 
  private:
   int fSampleY;

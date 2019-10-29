@@ -48,8 +48,8 @@ class GrGpu : public SkRefCnt {
   GrGpu(GrContext* context);
   ~GrGpu() override;
 
-  GrContext* getContext() { return fContext; }
-  const GrContext* getContext() const { return fContext; }
+  GrContext* getContext() noexcept { return fContext; }
+  const GrContext* getContext() const noexcept { return fContext; }
 
   /**
    * Gets the capabilities of the draw target.

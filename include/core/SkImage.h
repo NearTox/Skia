@@ -584,31 +584,31 @@ class SK_API SkImage : public SkRefCnt {
 
       @return  image info of SkImage.
   */
-  const SkImageInfo& imageInfo() const { return fInfo; }
+  const SkImageInfo& imageInfo() const noexcept { return fInfo; }
 
   /** Returns pixel count in each row.
 
       @return  pixel width in SkImage
   */
-  int width() const { return fInfo.width(); }
+  int width() const noexcept { return fInfo.width(); }
 
   /** Returns pixel row count.
 
       @return  pixel height in SkImage
   */
-  int height() const { return fInfo.height(); }
+  int height() const noexcept { return fInfo.height(); }
 
   /** Returns SkISize { width(), height() }.
 
       @return  integral size of width() and height()
   */
-  SkISize dimensions() const { return SkISize::Make(fInfo.width(), fInfo.height()); }
+  SkISize dimensions() const noexcept { return SkISize::Make(fInfo.width(), fInfo.height()); }
 
   /** Returns SkIRect { 0, 0, width(), height() }.
 
       @return  integral rectangle from origin to width() and height()
   */
-  SkIRect bounds() const { return SkIRect::MakeWH(fInfo.width(), fInfo.height()); }
+  SkIRect bounds() const noexcept { return SkIRect::MakeWH(fInfo.width(), fInfo.height()); }
 
   /** Returns value unique to image. SkImage contents cannot change after SkImage is
       created. Any operation to create a new SkImage will receive generate a new
@@ -616,7 +616,7 @@ class SK_API SkImage : public SkRefCnt {
 
       @return  unique identifier
   */
-  uint32_t uniqueID() const { return fUniqueID; }
+  uint32_t uniqueID() const noexcept { return fUniqueID; }
 
   /** Returns SkAlphaType, one of:
       kUnknown_SkAlphaType, kOpaque_SkAlphaType, kPremul_SkAlphaType,
@@ -627,13 +627,13 @@ class SK_API SkImage : public SkRefCnt {
 
       @return  SkAlphaType in SkImage
   */
-  SkAlphaType alphaType() const;
+  SkAlphaType alphaType() const noexcept;
 
   /** Returns SkColorType if known; otherwise, returns kUnknown_SkColorType.
 
       @return  SkColorType of SkImage
   */
-  SkColorType colorType() const;
+  SkColorType colorType() const noexcept;
 
   /** Returns SkColorSpace, the range of colors, associated with SkImage.  The
       reference count of SkColorSpace is unchanged. The returned SkColorSpace is
@@ -645,7 +645,7 @@ class SK_API SkImage : public SkRefCnt {
 
       @return  SkColorSpace in SkImage, or nullptr
   */
-  SkColorSpace* colorSpace() const;
+  SkColorSpace* colorSpace() const noexcept;
 
   /** Returns a smart pointer to SkColorSpace, the range of colors, associated with
       SkImage.  The smart pointer tracks the number of objects sharing this
@@ -672,7 +672,7 @@ class SK_API SkImage : public SkRefCnt {
 
       @return  true if SkAlphaType is kOpaque_SkAlphaType
   */
-  bool isOpaque() const { return SkAlphaTypeIsOpaque(this->alphaType()); }
+  bool isOpaque() const noexcept { return SkAlphaTypeIsOpaque(this->alphaType()); }
 
   /** Creates SkShader from SkImage. SkShader dimensions are taken from SkImage. SkShader uses
       SkTileMode rules to fill drawn area outside SkImage. localMatrix permits
@@ -1093,7 +1093,7 @@ class SK_API SkImage : public SkRefCnt {
   sk_sp<SkImage> reinterpretColorSpace(sk_sp<SkColorSpace> newColorSpace) const;
 
  private:
-  SkImage(const SkImageInfo& info, uint32_t uniqueID);
+  SkImage(const SkImageInfo& info, uint32_t uniqueID) noexcept;
   friend class SkImage_Base;
 
   SkImageInfo fInfo;

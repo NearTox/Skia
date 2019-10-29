@@ -32,7 +32,7 @@ class GrGLSLProgramBuilder {
   using UniformHandle = GrGLSLUniformHandler::UniformHandle;
   using SamplerHandle = GrGLSLUniformHandler::SamplerHandle;
 
-  virtual ~GrGLSLProgramBuilder() {}
+  virtual ~GrGLSLProgramBuilder() = default;
 
   virtual const GrCaps* caps() const = 0;
   const GrShaderCaps* shaderCaps() const { return this->caps()->shaderCaps(); }
@@ -132,7 +132,7 @@ class GrGLSLProgramBuilder {
   // fragment shader are cleared.
   void reset() {
     this->addStage();
-    SkDEBUGCODE(fFS.debugOnly_resetPerStageVerification();)
+    SkDEBUGCODE(fFS.debugOnly_resetPerStageVerification());
   }
   void addStage() { fStageIndex++; }
 

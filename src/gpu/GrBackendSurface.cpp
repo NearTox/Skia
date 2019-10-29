@@ -24,7 +24,7 @@
 #  include "src/gpu/mtl/GrMtlCppUtil.h"
 #endif
 
-GrBackendFormat::GrBackendFormat(const GrBackendFormat& that)
+GrBackendFormat::GrBackendFormat(const GrBackendFormat& that) noexcept
     : fBackend(that.fBackend), fValid(that.fValid), fTextureType(that.fTextureType) {
   if (!fValid) {
     return;
@@ -48,7 +48,7 @@ GrBackendFormat::GrBackendFormat(const GrBackendFormat& that)
   }
 }
 
-GrBackendFormat::GrBackendFormat(GrGLenum format, GrGLenum target)
+GrBackendFormat::GrBackendFormat(GrGLenum format, GrGLenum target) noexcept
     : fBackend(GrBackendApi::kOpenGL), fValid(true), fGLFormat(format) {
   switch (target) {
     case GR_GL_TEXTURE_NONE: fTextureType = GrTextureType::kNone; break;
@@ -59,19 +59,20 @@ GrBackendFormat::GrBackendFormat(GrGLenum format, GrGLenum target)
   }
 }
 
-GrGLFormat GrBackendFormat::asGLFormat() const {
+GrGLFormat GrBackendFormat::asGLFormat() const noexcept {
   if (this->isValid() && GrBackendApi::kOpenGL == fBackend) {
     return GrGLFormatFromGLEnum(fGLFormat);
   }
   return GrGLFormat::kUnknown;
 }
 
-GrBackendFormat GrBackendFormat::MakeVk(const GrVkYcbcrConversionInfo& ycbcrInfo) {
+GrBackendFormat GrBackendFormat::MakeVk(const GrVkYcbcrConversionInfo& ycbcrInfo) noexcept {
   SkASSERT(ycbcrInfo.isValid());
   return GrBackendFormat(ycbcrInfo.fFormat, ycbcrInfo);
 }
 
-GrBackendFormat::GrBackendFormat(VkFormat vkFormat, const GrVkYcbcrConversionInfo& ycbcrInfo)
+GrBackendFormat::GrBackendFormat(
+    VkFormat vkFormat, const GrVkYcbcrConversionInfo& ycbcrInfo) noexcept
     : fBackend(GrBackendApi::kVulkan)
 #ifdef SK_VULKAN
       ,
@@ -89,7 +90,7 @@ GrBackendFormat::GrBackendFormat(VkFormat vkFormat, const GrVkYcbcrConversionInf
   }
 }
 
-bool GrBackendFormat::asVkFormat(VkFormat* format) const {
+bool GrBackendFormat::asVkFormat(VkFormat* format) const noexcept {
   SkASSERT(format);
   if (this->isValid() && GrBackendApi::kVulkan == fBackend) {
     *format = fVk.fFormat;
@@ -98,7 +99,7 @@ bool GrBackendFormat::asVkFormat(VkFormat* format) const {
   return false;
 }
 
-const GrVkYcbcrConversionInfo* GrBackendFormat::getVkYcbcrConversionInfo() const {
+const GrVkYcbcrConversionInfo* GrBackendFormat::getVkYcbcrConversionInfo() const noexcept {
   if (this->isValid() && GrBackendApi::kVulkan == fBackend) {
     return &fVk.fYcbcrConversionInfo;
   }
@@ -138,19 +139,19 @@ GrMTLPixelFormat GrBackendFormat::asMtlFormat() const {
 }
 #endif
 
-GrBackendFormat::GrBackendFormat(GrColorType colorType)
+GrBackendFormat::GrBackendFormat(GrColorType colorType) noexcept
     : fBackend(GrBackendApi::kMock), fValid(true), fTextureType(GrTextureType::k2D) {
   fMockColorType = colorType;
 }
 
-GrColorType GrBackendFormat::asMockColorType() const {
+GrColorType GrBackendFormat::asMockColorType() const noexcept {
   if (this->isValid() && GrBackendApi::kMock == fBackend) {
     return fMockColorType;
   }
   return GrColorType::kUnknown;
 }
 
-GrBackendFormat GrBackendFormat::makeTexture2D() const {
+GrBackendFormat GrBackendFormat::makeTexture2D() const noexcept {
   GrBackendFormat copy = *this;
   if (const GrVkYcbcrConversionInfo* ycbcrInfo = this->getVkYcbcrConversionInfo()) {
     if (ycbcrInfo->isValid()) {
@@ -165,7 +166,7 @@ GrBackendFormat GrBackendFormat::makeTexture2D() const {
   return copy;
 }
 
-bool GrBackendFormat::operator==(const GrBackendFormat& that) const {
+bool GrBackendFormat::operator==(const GrBackendFormat& that) const noexcept {
   // Invalid GrBackendFormats are never equal to anything.
   if (!fValid || !that.fValid) {
     return false;
@@ -258,7 +259,7 @@ GrBackendTexture::GrBackendTexture(int width, int height, const GrDawnImageInfo&
       fDawnInfo(dawnInfo) {}
 #endif
 
-GrBackendTexture::GrBackendTexture(int width, int height, const GrVkImageInfo& vkInfo)
+GrBackendTexture::GrBackendTexture(int width, int height, const GrVkImageInfo& vkInfo) noexcept
 #ifdef SK_VULKAN
     : GrBackendTexture(
           width, height, vkInfo, sk_sp<GrVkImageLayout>(new GrVkImageLayout(vkInfo.fImageLayout))) {
@@ -317,7 +318,7 @@ GrBackendTexture::GrBackendTexture(
 }
 
 GrBackendTexture::GrBackendTexture(
-    int width, int height, GrMipMapped mipMapped, const GrMockTextureInfo& mockInfo)
+    int width, int height, GrMipMapped mipMapped, const GrMockTextureInfo& mockInfo) noexcept
     : fIsValid(true),
       fWidth(width),
       fHeight(height),
@@ -386,7 +387,7 @@ bool GrBackendTexture::getDawnImageInfo(GrDawnImageInfo* outInfo) const {
 }
 #endif
 
-bool GrBackendTexture::getVkImageInfo(GrVkImageInfo* outInfo) const {
+bool GrBackendTexture::getVkImageInfo(GrVkImageInfo* outInfo) const noexcept {
 #ifdef SK_VULKAN
   if (this->isValid() && GrBackendApi::kVulkan == fBackend) {
     *outInfo = fVkInfo.snapImageInfo();
@@ -396,7 +397,7 @@ bool GrBackendTexture::getVkImageInfo(GrVkImageInfo* outInfo) const {
   return false;
 }
 
-void GrBackendTexture::setVkImageLayout(VkImageLayout layout) {
+void GrBackendTexture::setVkImageLayout(VkImageLayout layout) noexcept {
 #ifdef SK_VULKAN
   if (this->isValid() && GrBackendApi::kVulkan == fBackend) {
     fVkInfo.setImageLayout(layout);
@@ -447,7 +448,7 @@ void GrBackendTexture::glTextureParametersModified() {
 #endif
 }
 
-bool GrBackendTexture::getMockTextureInfo(GrMockTextureInfo* outInfo) const {
+bool GrBackendTexture::getMockTextureInfo(GrMockTextureInfo* outInfo) const noexcept {
   if (this->isValid() && GrBackendApi::kMock == fBackend) {
     *outInfo = fMockInfo;
     return true;
@@ -455,7 +456,7 @@ bool GrBackendTexture::getMockTextureInfo(GrMockTextureInfo* outInfo) const {
   return false;
 }
 
-bool GrBackendTexture::isProtected() const {
+bool GrBackendTexture::isProtected() const noexcept {
   if (!this->isValid() || this->backend() != GrBackendApi::kVulkan) {
     return false;
   }
@@ -566,14 +567,14 @@ GrBackendRenderTarget::GrBackendRenderTarget(
 #endif
 
 GrBackendRenderTarget::GrBackendRenderTarget(
-    int width, int height, int sampleCnt, int stencilBits, const GrVkImageInfo& vkInfo)
+    int width, int height, int sampleCnt, int stencilBits, const GrVkImageInfo& vkInfo) noexcept
     : GrBackendRenderTarget(width, height, sampleCnt, vkInfo) {
   // This is a deprecated constructor that takes a bogus stencil bits.
   SkASSERT(0 == stencilBits);
 }
 
 GrBackendRenderTarget::GrBackendRenderTarget(
-    int width, int height, int sampleCnt, const GrVkImageInfo& vkInfo)
+    int width, int height, int sampleCnt, const GrVkImageInfo& vkInfo) noexcept
 #ifdef SK_VULKAN
     : GrBackendRenderTarget(
           width, height, sampleCnt, vkInfo,
@@ -611,7 +612,8 @@ GrBackendRenderTarget::GrBackendRenderTarget(
 #endif
 
 GrBackendRenderTarget::GrBackendRenderTarget(
-    int width, int height, int sampleCnt, int stencilBits, const GrGLFramebufferInfo& glInfo)
+    int width, int height, int sampleCnt, int stencilBits,
+    const GrGLFramebufferInfo& glInfo) noexcept
     : fWidth(width),
       fHeight(height),
       fSampleCnt(SkTMax(1, sampleCnt)),
@@ -622,7 +624,8 @@ GrBackendRenderTarget::GrBackendRenderTarget(
 }
 
 GrBackendRenderTarget::GrBackendRenderTarget(
-    int width, int height, int sampleCnt, int stencilBits, const GrMockRenderTargetInfo& mockInfo)
+    int width, int height, int sampleCnt, int stencilBits,
+    const GrMockRenderTargetInfo& mockInfo) noexcept
     : fIsValid(true),
       fWidth(width),
       fHeight(height),
@@ -632,7 +635,7 @@ GrBackendRenderTarget::GrBackendRenderTarget(
 
 GrBackendRenderTarget::~GrBackendRenderTarget() { this->cleanup(); }
 
-void GrBackendRenderTarget::cleanup() {
+void GrBackendRenderTarget::cleanup() noexcept {
 #ifdef SK_VULKAN
   if (this->isValid() && GrBackendApi::kVulkan == fBackend) {
     fVkInfo.cleanup();
@@ -640,11 +643,13 @@ void GrBackendRenderTarget::cleanup() {
 #endif
 }
 
-GrBackendRenderTarget::GrBackendRenderTarget(const GrBackendRenderTarget& that) : fIsValid(false) {
+GrBackendRenderTarget::GrBackendRenderTarget(const GrBackendRenderTarget& that) noexcept
+    : fIsValid(false) {
   *this = that;
 }
 
-GrBackendRenderTarget& GrBackendRenderTarget::operator=(const GrBackendRenderTarget& that) {
+GrBackendRenderTarget& GrBackendRenderTarget::operator=(
+    const GrBackendRenderTarget& that) noexcept {
   if (!that.isValid()) {
     this->cleanup();
     fIsValid = false;
@@ -689,7 +694,7 @@ bool GrBackendRenderTarget::getDawnImageInfo(GrDawnImageInfo* outInfo) const {
 }
 #endif
 
-bool GrBackendRenderTarget::getVkImageInfo(GrVkImageInfo* outInfo) const {
+bool GrBackendRenderTarget::getVkImageInfo(GrVkImageInfo* outInfo) const noexcept {
 #ifdef SK_VULKAN
   if (this->isValid() && GrBackendApi::kVulkan == fBackend) {
     *outInfo = fVkInfo.snapImageInfo();
@@ -699,7 +704,7 @@ bool GrBackendRenderTarget::getVkImageInfo(GrVkImageInfo* outInfo) const {
   return false;
 }
 
-void GrBackendRenderTarget::setVkImageLayout(VkImageLayout layout) {
+void GrBackendRenderTarget::setVkImageLayout(VkImageLayout layout) noexcept {
 #ifdef SK_VULKAN
   if (this->isValid() && GrBackendApi::kVulkan == fBackend) {
     fVkInfo.setImageLayout(layout);
@@ -726,7 +731,7 @@ bool GrBackendRenderTarget::getMtlTextureInfo(GrMtlTextureInfo* outInfo) const {
 }
 #endif
 
-bool GrBackendRenderTarget::getGLFramebufferInfo(GrGLFramebufferInfo* outInfo) const {
+bool GrBackendRenderTarget::getGLFramebufferInfo(GrGLFramebufferInfo* outInfo) const noexcept {
   if (this->isValid() && GrBackendApi::kOpenGL == fBackend) {
     *outInfo = fGLInfo;
     return true;
@@ -764,7 +769,8 @@ GrBackendFormat GrBackendRenderTarget::getBackendFormat() const {
   }
 }
 
-bool GrBackendRenderTarget::getMockRenderTargetInfo(GrMockRenderTargetInfo* outInfo) const {
+bool GrBackendRenderTarget::getMockRenderTargetInfo(
+    GrMockRenderTargetInfo* outInfo) const noexcept {
   if (this->isValid() && GrBackendApi::kMock == fBackend) {
     *outInfo = fMockInfo;
     return true;
@@ -772,7 +778,7 @@ bool GrBackendRenderTarget::getMockRenderTargetInfo(GrMockRenderTargetInfo* outI
   return false;
 }
 
-bool GrBackendRenderTarget::isProtected() const {
+bool GrBackendRenderTarget::isProtected() const noexcept {
   if (!this->isValid() || this->backend() != GrBackendApi::kVulkan) {
     return false;
   }

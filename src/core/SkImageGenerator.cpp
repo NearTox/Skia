@@ -10,7 +10,7 @@
 #include "include/core/SkYUVAIndex.h"
 #include "src/core/SkNextID.h"
 
-SkImageGenerator::SkImageGenerator(const SkImageInfo& info, uint32_t uniqueID)
+SkImageGenerator::SkImageGenerator(const SkImageInfo& info, uint32_t uniqueID) noexcept
     : fInfo(info), fUniqueID(kNeedNewImageUniqueID == uniqueID ? SkNextID::ImageID() : uniqueID) {}
 
 bool SkImageGenerator::getPixels(const SkImageInfo& info, void* pixels, size_t rowBytes) {
@@ -84,7 +84,8 @@ sk_sp<GrTextureProxy> SkImageGenerator::onGenerateTexture(
 static SkGraphics::ImageGeneratorFromEncodedDataFactory gFactory;
 
 SkGraphics::ImageGeneratorFromEncodedDataFactory
-SkGraphics::SetImageGeneratorFromEncodedDataFactory(ImageGeneratorFromEncodedDataFactory factory) {
+SkGraphics::SetImageGeneratorFromEncodedDataFactory(
+    ImageGeneratorFromEncodedDataFactory factory) noexcept {
   ImageGeneratorFromEncodedDataFactory prev = gFactory;
   gFactory = factory;
   return prev;

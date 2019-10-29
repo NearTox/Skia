@@ -17,7 +17,7 @@ namespace SkSL {
  */
 class ErrorReporter {
  public:
-  virtual ~ErrorReporter() {}
+  virtual ~ErrorReporter() = default;
 
   void error(int offset, const char* msg) { this->error(offset, String(msg)); }
 

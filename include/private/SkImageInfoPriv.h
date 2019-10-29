@@ -23,7 +23,7 @@ enum SkColorTypeComponentFlag {
       kRGB_SkColorTypeComponentFlags | kAlpha_SkColorTypeComponentFlag,
 };
 
-static inline uint32_t SkColorTypeComponentFlags(SkColorType ct) {
+static inline uint32_t SkColorTypeComponentFlags(SkColorType ct) noexcept {
   switch (ct) {
     case kUnknown_SkColorType: return 0;
     case kAlpha_8_SkColorType: return kAlpha_SkColorTypeComponentFlag;
@@ -52,7 +52,9 @@ static inline bool SkColorTypeIsAlphaOnly(SkColorType ct) {
   return kAlpha_SkColorTypeComponentFlag == SkColorTypeComponentFlags(ct);
 }
 
-static inline bool SkAlphaTypeIsValid(unsigned value) { return value <= kLastEnum_SkAlphaType; }
+static constexpr inline bool SkAlphaTypeIsValid(unsigned value) {
+  return value <= kLastEnum_SkAlphaType;
+}
 
 static inline bool SkColorTypeIsGray(SkColorType ct) {
   auto flags = SkColorTypeComponentFlags(ct);
@@ -61,7 +63,7 @@ static inline bool SkColorTypeIsGray(SkColorType ct) {
   return kGray_SkColorTypeComponentFlag == flags;
 }
 
-static int SkColorTypeShiftPerPixel(SkColorType ct) {
+static int SkColorTypeShiftPerPixel(SkColorType ct) noexcept {
   switch (ct) {
     case kUnknown_SkColorType: return 0;
     case kAlpha_8_SkColorType: return 0;
@@ -86,13 +88,16 @@ static int SkColorTypeShiftPerPixel(SkColorType ct) {
   SkUNREACHABLE;
 }
 
-static inline size_t SkColorTypeMinRowBytes(SkColorType ct, int width) {
+static inline size_t SkColorTypeMinRowBytes(SkColorType ct, int width) noexcept {
   return width * SkColorTypeBytesPerPixel(ct);
 }
 
-static inline bool SkColorTypeIsValid(unsigned value) { return value <= kLastEnum_SkColorType; }
+static constexpr inline bool SkColorTypeIsValid(unsigned value) {
+  return value <= kLastEnum_SkColorType;
+}
 
-static inline size_t SkColorTypeComputeOffset(SkColorType ct, int x, int y, size_t rowBytes) {
+static inline size_t SkColorTypeComputeOffset(
+    SkColorType ct, int x, int y, size_t rowBytes) noexcept {
   if (kUnknown_SkColorType == ct) {
     return 0;
   }
@@ -102,12 +107,12 @@ static inline size_t SkColorTypeComputeOffset(SkColorType ct, int x, int y, size
 /**
  *  Returns true if |info| contains a valid combination of width, height, colorType, and alphaType.
  */
-static inline bool SkImageInfoIsValid(const SkImageInfo& info) {
+static inline bool SkImageInfoIsValid(const SkImageInfo& info) noexcept {
   if (info.width() <= 0 || info.height() <= 0) {
     return false;
   }
 
-  const int kMaxDimension = SK_MaxS32 >> 2;
+  constexpr int kMaxDimension = SK_MaxS32 >> 2;
   if (info.width() > kMaxDimension || info.height() > kMaxDimension) {
     return false;
   }
@@ -123,7 +128,8 @@ static inline bool SkImageInfoIsValid(const SkImageInfo& info) {
  *  Returns true if Skia has defined a pixel conversion from the |src| to the |dst|.
  *  Returns false otherwise.
  */
-static inline bool SkImageInfoValidConversion(const SkImageInfo& dst, const SkImageInfo& src) {
+static inline bool SkImageInfoValidConversion(
+    const SkImageInfo& dst, const SkImageInfo& src) noexcept {
   return SkImageInfoIsValid(dst) && SkImageInfoIsValid(src);
 }
 #endif  // SkImageInfoPriv_DEFINED

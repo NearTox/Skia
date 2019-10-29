@@ -15,19 +15,20 @@ class SkRectPriv {
  public:
   // Returns an irect that is very large, and can be safely round-trip with SkRect and still
   // be considered non-empty (i.e. width/height > 0) even if we round-out the SkRect.
-  static SkIRect MakeILarge() {
+  static constexpr SkIRect MakeILarge() {
     // SK_MaxS32 >> 1 seemed better, but it did not survive round-trip with SkRect and rounding.
     // Also, 1 << 29 can be perfectly represented in float, while SK_MaxS32 >> 1 cannot.
-    const int32_t large = 1 << 29;
+    constexpr int32_t large = 1 << 29;
     return {-large, -large, large, large};
   }
 
-  static SkIRect MakeILargestInverted() { return {SK_MaxS32, SK_MaxS32, SK_MinS32, SK_MinS32}; }
+  static constexpr SkIRect MakeILargestInverted() {
+    return {SK_MaxS32, SK_MaxS32, SK_MinS32, SK_MinS32};
+  }
 
-  static SkRect MakeLargeS32() {
-    SkRect r;
-    r.set(MakeILarge());
-    return r;
+  static constexpr SkRect MakeLargeS32() {
+    constexpr float large = int32_t(1 << 29);
+    return {-large, -large, large, large};
   }
 
   static SkRect MakeLargest() { return {SK_ScalarMin, SK_ScalarMin, SK_ScalarMax, SK_ScalarMax}; }

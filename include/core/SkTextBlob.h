@@ -42,7 +42,7 @@ class SK_API SkTextBlob final : public SkNVRefCnt<SkTextBlob> {
 
       @return  identifier for SkTextBlob
   */
-  uint32_t uniqueID() const { return fUniqueID; }
+  uint32_t uniqueID() const noexcept { return fUniqueID; }
 
   /** Returns the number of intervals that intersect bounds.
       bounds describes a pair of lines parallel to the text advance.
@@ -213,7 +213,7 @@ class SK_API SkTextBlob final : public SkNVRefCnt<SkTextBlob> {
 
   enum GlyphPositioning : uint8_t;
 
-  explicit SkTextBlob(const SkRect& bounds);
+  explicit SkTextBlob(const SkRect& bounds) noexcept;
 
   ~SkTextBlob();
 

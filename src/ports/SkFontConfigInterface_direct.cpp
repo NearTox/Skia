@@ -502,7 +502,7 @@ SkFontConfigInterfaceDirect::SkFontConfigInterfaceDirect() {
 
   FcInit();
 
-  SkDEBUGCODE(fontconfiginterface_unittest();)
+  SkDEBUGCODE(fontconfiginterface_unittest());
 }
 
 SkFontConfigInterfaceDirect::~SkFontConfigInterfaceDirect() {}

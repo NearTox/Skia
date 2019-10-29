@@ -83,9 +83,9 @@ size_t SkPath::writeToMemoryAsRRect(void* storage) const {
 }
 
 size_t SkPath::writeToMemory(void* storage) const {
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 
-      if (size_t bytes = this->writeToMemoryAsRRect(storage)) {
+  if (size_t bytes = this->writeToMemoryAsRRect(storage)) {
     return bytes;
   }
 

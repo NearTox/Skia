@@ -34,7 +34,7 @@ struct SK_API SkColorSpacePrimaries {
    *  Convert primaries and a white point to a toXYZD50 matrix, the preferred color gamut
    *  representation of SkColorSpace.
    */
-  bool toXYZD50(skcms_Matrix3x3* toXYZD50) const;
+  bool toXYZD50(skcms_Matrix3x3* toXYZD50) const noexcept;
 };
 
 namespace SkNamedTransferFn {
@@ -126,17 +126,17 @@ class SK_API SkColorSpace : public SkNVRefCnt<SkColorSpace> {
   /**
    *  Convert this color space to an skcms ICC profile struct.
    */
-  void toProfile(skcms_ICCProfile*) const;
+  void toProfile(skcms_ICCProfile*) const noexcept;
 
   /**
    *  Returns true if the color space gamma is near enough to be approximated as sRGB.
    */
-  bool gammaCloseToSRGB() const;
+  bool gammaCloseToSRGB() const noexcept;
 
   /**
    *  Returns true if the color space gamma is linear.
    */
-  bool gammaIsLinear() const;
+  bool gammaIsLinear() const noexcept;
 
   /**
    *  If the transfer function can be represented as coefficients to the standard
@@ -144,21 +144,21 @@ class SK_API SkColorSpace : public SkNVRefCnt<SkColorSpace> {
    *
    *  If not, returns false.
    */
-  bool isNumericalTransferFn(skcms_TransferFunction* fn) const;
+  bool isNumericalTransferFn(skcms_TransferFunction* fn) const noexcept;
 
   /**
    *  Returns true and sets |toXYZD50| if the color gamut can be described as a matrix.
    *  Returns false otherwise.
    */
-  bool toXYZD50(SkMatrix44* toXYZD50) const;
+  bool toXYZD50(SkMatrix44* toXYZD50) const noexcept;
 
-  bool toXYZD50(skcms_Matrix3x3* toXYZD50) const;
+  bool toXYZD50(skcms_Matrix3x3* toXYZD50) const noexcept;
 
   /**
    *  Returns a hash of the gamut transformation to XYZ D50. Allows for fast equality checking
    *  of gamuts, at the (very small) risk of collision.
    */
-  uint32_t toXYZD50Hash() const { return fToXYZD50Hash; }
+  uint32_t toXYZD50Hash() const noexcept { return fToXYZD50Hash; }
 
   /**
    *  Returns a color space with the same gamut as this one, but with a linear gamma.
@@ -216,21 +216,21 @@ class SK_API SkColorSpace : public SkNVRefCnt<SkColorSpace> {
    *  If both are null, we return true.  If one is null and the other is not, we return false.
    *  If both are non-null, we do a deeper compare.
    */
-  static bool Equals(const SkColorSpace*, const SkColorSpace*);
+  static bool Equals(const SkColorSpace*, const SkColorSpace*) noexcept;
 
-  void transferFn(float gabcdef[7]) const;
-  void invTransferFn(float gabcdef[7]) const;
-  void gamutTransformTo(const SkColorSpace* dst, float src_to_dst_row_major[9]) const;
+  void transferFn(float gabcdef[7]) const noexcept;
+  void invTransferFn(float gabcdef[7]) const noexcept;
+  void gamutTransformTo(const SkColorSpace* dst, float src_to_dst_row_major[9]) const noexcept;
 
-  uint32_t transferFnHash() const { return fTransferFnHash; }
-  uint64_t hash() const { return (uint64_t)fTransferFnHash << 32 | fToXYZD50Hash; }
+  uint32_t transferFnHash() const noexcept { return fTransferFnHash; }
+  uint64_t hash() const noexcept { return (uint64_t)fTransferFnHash << 32 | fToXYZD50Hash; }
 
  private:
   friend class SkColorSpaceSingletonFactory;
 
-  SkColorSpace(const float transferFn[7], const skcms_Matrix3x3& toXYZ);
+  SkColorSpace(const float transferFn[7], const skcms_Matrix3x3& toXYZ) noexcept;
 
-  void computeLazyDstFields() const;
+  void computeLazyDstFields() const noexcept;
 
   uint32_t fTransferFnHash;
   uint32_t fToXYZD50Hash;

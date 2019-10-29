@@ -31,7 +31,7 @@ struct GrGLSLBuiltinUniformHandles {
 
 class GrGLSLUniformHandler {
  public:
-  virtual ~GrGLSLUniformHandler() {}
+  virtual ~GrGLSLUniformHandler() = default;
 
   using UniformHandle = GrGLSLProgramDataManager::UniformHandle;
 

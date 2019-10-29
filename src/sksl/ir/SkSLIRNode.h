@@ -20,7 +20,7 @@ namespace SkSL {
 struct IRNode {
   IRNode(int offset) : fOffset(offset) {}
 
-  virtual ~IRNode() {}
+  virtual ~IRNode() = default;
 
   virtual String description() const = 0;
 

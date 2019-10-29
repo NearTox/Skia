@@ -40,7 +40,7 @@ class SK_API SkDrawLooper : public SkFlattenable {
   class SK_API Context {
    public:
     Context() {}
-    virtual ~Context() {}
+    virtual ~Context() = default;
 
     struct Info {
       SkVector fTranslate;

@@ -10,8 +10,9 @@
 #include "src/core/SkRasterPipeline.h"
 #include <algorithm>
 
-SkRasterPipeline::SkRasterPipeline(SkArenaAlloc* alloc) : fAlloc(alloc) { this->reset(); }
-void SkRasterPipeline::reset() {
+SkRasterPipeline::SkRasterPipeline(SkArenaAlloc* alloc) noexcept : fAlloc(alloc) { this->reset(); }
+
+void SkRasterPipeline::reset() noexcept {
   fStages = nullptr;
   fNumStages = 0;
   fSlotsNeeded = 1;  // We always need one extra slot for just_return().

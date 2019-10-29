@@ -13,13 +13,13 @@
 
 class SkAutoPixmapStorage : public SkPixmap {
  public:
-  SkAutoPixmapStorage();
+  SkAutoPixmapStorage() noexcept;
   ~SkAutoPixmapStorage();
 
   /**
    * Leave the moved-from object in a free-but-valid state.
    */
-  SkAutoPixmapStorage& operator=(SkAutoPixmapStorage&& other);
+  SkAutoPixmapStorage& operator=(SkAutoPixmapStorage&& other) noexcept;
 
   /**
    *  Try to allocate memory for the pixels needed to match the specified Info. On success
@@ -53,11 +53,11 @@ class SkAutoPixmapStorage : public SkPixmap {
 
   // We wrap these so we can clear our internal storage
 
-  void reset() {
+  void reset() noexcept {
     this->freeStorage();
     this->INHERITED::reset();
   }
-  void reset(const SkImageInfo& info, const void* addr, size_t rb) {
+  void reset(const SkImageInfo& info, const void* addr, size_t rb) noexcept {
     this->freeStorage();
     this->INHERITED::reset(info, addr, rb);
   }
@@ -70,7 +70,7 @@ class SkAutoPixmapStorage : public SkPixmap {
  private:
   void* fStorage;
 
-  void freeStorage() {
+  void freeStorage() noexcept {
     sk_free(fStorage);
     fStorage = nullptr;
   }

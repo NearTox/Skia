@@ -41,7 +41,8 @@
 class BaseSuperBlitter : public SkBlitter {
  public:
   BaseSuperBlitter(
-      SkBlitter* realBlitter, const SkIRect& ir, const SkIRect& clipBounds, bool isInverse);
+      SkBlitter* realBlitter, const SkIRect& ir, const SkIRect& clipBounds,
+      bool isInverse) noexcept;
 
   /// Must be explicitly defined on subclasses.
   virtual void blitAntiH(int x, int y, const SkAlpha antialias[], const int16_t runs[]) override {
@@ -63,9 +64,9 @@ class BaseSuperBlitter : public SkBlitter {
   /// Leftmost x coordinate in any row, in supersampled coordinates.
   int fSuperLeft;
 
-  SkDEBUGCODE(int fCurrX;)
-      /// Current y coordinate in supersampled coordinates.
-      int fCurrY;
+  SkDEBUGCODE(int fCurrX);
+  /// Current y coordinate in supersampled coordinates.
+  int fCurrY;
   /// Initial y coordinate (top of bounds).
   int fTop;
 
@@ -73,7 +74,7 @@ class BaseSuperBlitter : public SkBlitter {
 };
 
 BaseSuperBlitter::BaseSuperBlitter(
-    SkBlitter* realBlit, const SkIRect& ir, const SkIRect& clipBounds, bool isInverse) {
+    SkBlitter* realBlit, const SkIRect& ir, const SkIRect& clipBounds, bool isInverse) noexcept {
   fRealBlitter = realBlit;
 
   SkIRect sectBounds;
@@ -97,7 +98,7 @@ BaseSuperBlitter::BaseSuperBlitter(
   fCurrIY = fTop - 1;
   fCurrY = SkLeftShift(fTop, SHIFT) - 1;
 
-  SkDEBUGCODE(fCurrX = -1;)
+  SkDEBUGCODE(fCurrX = -1);
 }
 
 /// Run-length-encoded supersampling antialiased blitter.
@@ -130,7 +131,7 @@ class SuperBlitter : public BaseSuperBlitter {
   SkAlphaRuns fRuns;
 
   // extra one to store the zero at the end
-  int getRunsSz() const { return (fWidth + 1 + (fWidth + 2) / 2) * sizeof(int16_t); }
+  int getRunsSz() const noexcept { return (fWidth + 1 + (fWidth + 2) / 2) * sizeof(int16_t); }
 
   // This function updates the fRuns variable to point to the next buffer space
   // with adequate storage for a SkAlphaRuns. It mostly just advances fCurrentRun
@@ -163,14 +164,14 @@ void SuperBlitter::flush() {
   if (fCurrIY >= fTop) {
     SkASSERT(fCurrentRun < fRunsToBuffer);
     if (!fRuns.empty()) {
-      // SkDEBUGCODE(fRuns.dump();)
+      // SkDEBUGCODE(fRuns.dump());
       fRealBlitter->blitAntiH(fLeft, fCurrIY, fRuns.fAlpha, fRuns.fRuns);
       this->advanceRuns();
       fOffsetX = 0;
     }
 
     fCurrIY = fTop - 1;
-    SkDEBUGCODE(fCurrX = -1;)
+    SkDEBUGCODE(fCurrX = -1);
   }
 }
 
@@ -180,7 +181,7 @@ void SuperBlitter::flush() {
     itself, with the same (alpha - (alpha >> 8)) correction as
     coverage_to_exact_alpha().
 */
-static inline int coverage_to_partial_alpha(int aa) {
+static constexpr inline int coverage_to_partial_alpha(int aa) {
   aa <<= 8 - 2 * SHIFT;
   return aa;
 }
@@ -188,7 +189,7 @@ static inline int coverage_to_partial_alpha(int aa) {
 /** coverage_to_exact_alpha() is being used by our blitter, which wants
     a final value in [0, 255].
 */
-static inline int coverage_to_exact_alpha(int aa) {
+static constexpr inline int coverage_to_exact_alpha(int aa) {
   int alpha = (256 >> SHIFT) * aa;
   // clamp 256->255
   return alpha - (alpha >> 8);
@@ -388,12 +389,13 @@ void SuperBlitter::blitRect(int x, int y, int width, int height) {
 /// Masked supersampling antialiased blitter.
 class MaskSuperBlitter : public BaseSuperBlitter {
  public:
-  MaskSuperBlitter(SkBlitter* realBlitter, const SkIRect& ir, const SkIRect&, bool isInverse);
+  MaskSuperBlitter(
+      SkBlitter* realBlitter, const SkIRect& ir, const SkIRect&, bool isInverse) noexcept;
   ~MaskSuperBlitter() override { fRealBlitter->blitMask(fMask, fClipRect); }
 
-  void blitH(int x, int y, int width) override;
+  void blitH(int x, int y, int width) noexcept override;
 
-  static bool CanHandleRect(const SkIRect& bounds) {
+  static bool CanHandleRect(const SkIRect& bounds) noexcept {
 #ifdef FORCE_RLE
     return false;
 #endif
@@ -425,7 +427,7 @@ class MaskSuperBlitter : public BaseSuperBlitter {
 };
 
 MaskSuperBlitter::MaskSuperBlitter(
-    SkBlitter* realBlitter, const SkIRect& ir, const SkIRect& clipBounds, bool isInverse)
+    SkBlitter* realBlitter, const SkIRect& ir, const SkIRect& clipBounds, bool isInverse) noexcept
     : BaseSuperBlitter(realBlitter, ir, clipBounds, isInverse) {
   SkASSERT(CanHandleRect(ir));
   SkASSERT(!isInverse);
@@ -446,7 +448,7 @@ MaskSuperBlitter::MaskSuperBlitter(
   memset(fStorage, 0, fMask.fBounds.height() * fMask.fRowBytes + 1);
 }
 
-static void add_aa_span(uint8_t* alpha, U8CPU startAlpha) {
+static void add_aa_span(uint8_t* alpha, U8CPU startAlpha) noexcept {
   /*  I should be able to just add alpha[x] + startAlpha.
       However, if the trailing edge of the previous span and the leading
       edge of the current span round to the same super-sampled x value,
@@ -457,7 +459,7 @@ static void add_aa_span(uint8_t* alpha, U8CPU startAlpha) {
   *alpha = SkToU8(tmp - (tmp >> 8));
 }
 
-static inline uint32_t quadplicate_byte(U8CPU value) {
+static constexpr inline uint32_t quadplicate_byte(U8CPU value) {
   uint32_t pair = (value << 8) | value;
   return (pair << 16) | pair;
 }
@@ -467,7 +469,7 @@ static inline uint32_t quadplicate_byte(U8CPU value) {
 // enough to just subtract the high-bit. Actually clamping with a branch would
 // be slower (e.g. if (tmp > 255) tmp = 255;)
 //
-static inline void saturated_add(uint8_t* ptr, U8CPU add) {
+static inline void saturated_add(uint8_t* ptr, U8CPU add) noexcept {
   unsigned tmp = *ptr + add;
   SkASSERT(tmp <= 256);
   *ptr = SkToU8(tmp - (tmp >> 8));
@@ -477,7 +479,7 @@ static inline void saturated_add(uint8_t* ptr, U8CPU add) {
 #define MIN_COUNT_FOR_QUAD_LOOP 16
 
 static void add_aa_span(
-    uint8_t* alpha, U8CPU startAlpha, int middleCount, U8CPU stopAlpha, U8CPU maxValue) {
+    uint8_t* alpha, U8CPU startAlpha, int middleCount, U8CPU stopAlpha, U8CPU maxValue) noexcept {
   SkASSERT(middleCount >= 0);
 
   saturated_add(alpha, startAlpha);
@@ -515,7 +517,7 @@ static void add_aa_span(
   saturated_add(alpha, stopAlpha);
 }
 
-void MaskSuperBlitter::blitH(int x, int y, int width) {
+void MaskSuperBlitter::blitH(int x, int y, int width) noexcept {
   int iy = (y >> SHIFT);
 
   SkASSERT(iy >= fMask.fBounds.fTop && iy < fMask.fBounds.fBottom);
@@ -573,14 +575,14 @@ void MaskSuperBlitter::blitH(int x, int y, int width) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static SkIRect safeRoundOut(const SkRect& src) {
+static SkIRect safeRoundOut(const SkRect& src) noexcept {
   // roundOut will pin huge floats to max/min int
   SkIRect dst = src.roundOut();
 
   // intersect with a smaller huge rect, so the rect will not be considered empty for being
   // too large. e.g. { -SK_MaxS32 ... SK_MaxS32 } is considered empty because its width
   // exceeds signed 32bit.
-  const int32_t limit = SK_MaxS32 >> SK_SUPERSAMPLE_SHIFT;
+  constexpr int32_t limit = SK_MaxS32 >> SK_SUPERSAMPLE_SHIFT;
   (void)dst.intersect({-limit, -limit, limit, limit});
 
   return dst;
@@ -678,7 +680,7 @@ void SkScan::SAAFillPath(
   }
 }
 
-static int overflows_short_shift(int value, int shift) {
+static constexpr int overflows_short_shift(int value, int shift) {
   const int s = 16 + shift;
   return (SkLeftShift(value, s) >> s) - value;
 }
@@ -687,7 +689,7 @@ static int overflows_short_shift(int value, int shift) {
   Would any of the coordinates of this rectangle not fit in a short,
   when left-shifted by shift?
 */
-static int rect_overflows_short_shift(SkIRect rect, int shift) {
+static int rect_overflows_short_shift(SkIRect rect, int shift) noexcept {
   SkASSERT(!overflows_short_shift(8191, shift));
   SkASSERT(overflows_short_shift(8192, shift));
   SkASSERT(!overflows_short_shift(32767, 0));
@@ -741,7 +743,7 @@ void SkScan::AntiFillPath(
   SkRegion tmpClipStorage;
   const SkRegion* clipRgn = &origClip;
   {
-    static const int32_t kMaxClipCoord = 32767;
+    static constexpr int32_t kMaxClipCoord = 32767;
     const SkIRect& bounds = origClip.getBounds();
     if (bounds.fRight > kMaxClipCoord || bounds.fBottom > kMaxClipCoord) {
       SkIRect limit = {0, 0, kMaxClipCoord, kMaxClipCoord};

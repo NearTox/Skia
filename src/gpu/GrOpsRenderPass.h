@@ -31,7 +31,7 @@ struct SkRect;
  */
 class GrOpsRenderPass {
  public:
-  virtual ~GrOpsRenderPass() {}
+  virtual ~GrOpsRenderPass() = default;
 
   virtual void insertEventMarker(const char*) = 0;
 

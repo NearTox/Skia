@@ -31,7 +31,9 @@ SkColorFilter_Matrix::SkColorFilter_Matrix(const float array[20], Domain domain)
   memcpy(fMatrix, array, 20 * sizeof(float));
 }
 
-uint32_t SkColorFilter_Matrix::getFlags() const { return this->INHERITED::getFlags() | fFlags; }
+uint32_t SkColorFilter_Matrix::getFlags() const noexcept {
+  return this->INHERITED::getFlags() | fFlags;
+}
 
 void SkColorFilter_Matrix::flatten(SkWriteBuffer& buffer) const {
   SkASSERT(sizeof(fMatrix) / sizeof(float) == 20);

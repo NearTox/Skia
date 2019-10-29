@@ -18,7 +18,7 @@ class SkConservativeClip {
   SkIRect fBounds;
   const SkIRect* fClipRestrictionRect;
 
-  inline void applyClipRestriction(SkRegion::Op op, SkIRect* bounds) {
+  inline void applyClipRestriction(SkRegion::Op op, SkIRect* bounds) noexcept {
     if (op >= SkRegion::kUnion_Op && fClipRestrictionRect && !fClipRestrictionRect->isEmpty()) {
       if (!bounds->intersect(*fClipRestrictionRect)) {
         bounds->setEmpty();
@@ -27,15 +27,16 @@ class SkConservativeClip {
   }
 
  public:
-  SkConservativeClip() : fBounds(SkIRect::MakeEmpty()), fClipRestrictionRect(nullptr) {}
+  constexpr SkConservativeClip() noexcept
+      : fBounds(SkIRect::MakeEmpty()), fClipRestrictionRect(nullptr) {}
 
-  bool isEmpty() const { return fBounds.isEmpty(); }
-  bool isRect() const { return true; }
-  const SkIRect& getBounds() const { return fBounds; }
+  bool isEmpty() const noexcept { return fBounds.isEmpty(); }
+  bool isRect() const noexcept { return true; }
+  const SkIRect& getBounds() const noexcept { return fBounds; }
 
-  void setEmpty() { fBounds.setEmpty(); }
-  void setRect(const SkIRect& r) { fBounds = r; }
-  void setDeviceClipRestriction(const SkIRect* rect) { fClipRestrictionRect = rect; }
+  void setEmpty() noexcept { fBounds.setEmpty(); }
+  void setRect(const SkIRect& r) noexcept { fBounds = r; }
+  void setDeviceClipRestriction(const SkIRect* rect) noexcept { fClipRestrictionRect = rect; }
 
   void opRect(const SkRect&, const SkMatrix&, const SkIRect& limit, SkRegion::Op, bool isAA);
   void opRRect(const SkRRect&, const SkMatrix&, const SkIRect& limit, SkRegion::Op, bool isAA);
@@ -56,42 +57,42 @@ class SkConservativeClip {
 class SkRasterClip {
  public:
   SkRasterClip();
-  SkRasterClip(const SkIRect&);
-  SkRasterClip(const SkRegion&);
-  SkRasterClip(const SkRasterClip&);
+  SkRasterClip(const SkIRect&) noexcept;
+  SkRasterClip(const SkRegion&) noexcept;
+  SkRasterClip(const SkRasterClip&) noexcept;
   ~SkRasterClip();
 
   // Only compares the current state. Does not compare isForceConservativeRects(), so that field
   // could be different but this could still return true.
-  bool operator==(const SkRasterClip&) const;
-  bool operator!=(const SkRasterClip& other) const { return !(*this == other); }
+  bool operator==(const SkRasterClip&) const noexcept;
+  bool operator!=(const SkRasterClip& other) const noexcept { return !(*this == other); }
 
-  bool isBW() const { return fIsBW; }
-  bool isAA() const { return !fIsBW; }
-  const SkRegion& bwRgn() const {
+  bool isBW() const noexcept { return fIsBW; }
+  bool isAA() const noexcept { return !fIsBW; }
+  const SkRegion& bwRgn() const noexcept {
     SkASSERT(fIsBW);
     return fBW;
   }
-  const SkAAClip& aaRgn() const {
+  const SkAAClip& aaRgn() const noexcept {
     SkASSERT(!fIsBW);
     return fAA;
   }
 
-  bool isEmpty() const {
+  bool isEmpty() const noexcept {
     SkASSERT(this->computeIsEmpty() == fIsEmpty);
     return fIsEmpty;
   }
 
-  bool isRect() const {
+  bool isRect() const noexcept {
     SkASSERT(this->computeIsRect() == fIsRect);
     return fIsRect;
   }
 
-  bool isComplex() const;
-  const SkIRect& getBounds() const;
+  bool isComplex() const noexcept;
+  const SkIRect& getBounds() const noexcept;
 
-  bool setEmpty();
-  bool setRect(const SkIRect&);
+  bool setEmpty() noexcept;
+  bool setRect(const SkIRect&) noexcept;
 
   bool op(const SkIRect&, SkRegion::Op);
   bool op(const SkRegion&, SkRegion::Op);
@@ -102,8 +103,8 @@ class SkRasterClip {
   void translate(int dx, int dy, SkRasterClip* dst) const;
   void translate(int dx, int dy) { this->translate(dx, dy, this); }
 
-  bool quickContains(const SkIRect& rect) const;
-  bool quickContains(int left, int top, int right, int bottom) const {
+  bool quickContains(const SkIRect& rect) const noexcept;
+  bool quickContains(int left, int top, int right, int bottom) const noexcept {
     return quickContains(SkIRect::MakeLTRB(left, top, right, bottom));
   }
 
@@ -112,20 +113,20 @@ class SkRasterClip {
    *  not intersect the region. Returning false is not a guarantee that they
    *  intersect, but returning true is a guarantee that they do not.
    */
-  bool quickReject(const SkIRect& rect) const {
+  bool quickReject(const SkIRect& rect) const noexcept {
     return !SkIRect::Intersects(this->getBounds(), rect);
   }
 
   // hack for SkCanvas::getTotalClip
-  const SkRegion& forceGetBW();
+  const SkRegion& forceGetBW() noexcept;
 
 #ifdef SK_DEBUG
   void validate() const;
 #else
-  void validate() const {}
+  void validate() const noexcept {}
 #endif
 
-  void setDeviceClipRestriction(const SkIRect* rect) { fClipRestrictionRect = rect; }
+  void setDeviceClipRestriction(const SkIRect* rect) noexcept { fClipRestrictionRect = rect; }
 
  private:
   SkRegion fBW;
@@ -136,9 +137,9 @@ class SkRasterClip {
   bool fIsRect;
   const SkIRect* fClipRestrictionRect = nullptr;
 
-  bool computeIsEmpty() const { return fIsBW ? fBW.isEmpty() : fAA.isEmpty(); }
+  bool computeIsEmpty() const noexcept { return fIsBW ? fBW.isEmpty() : fAA.isEmpty(); }
 
-  bool computeIsRect() const { return fIsBW ? fBW.isRect() : fAA.isRect(); }
+  bool computeIsRect() const noexcept { return fIsBW ? fBW.isRect() : fAA.isRect(); }
 
   bool updateCacheAndReturnNonEmpty(bool detectAARect = true) {
     fIsEmpty = this->computeIsEmpty();
@@ -161,7 +162,7 @@ class SkRasterClip {
   bool op(const SkRasterClip&, SkRegion::Op);
   bool setConservativeRect(const SkRect& r, const SkIRect& clipR, bool isInverse);
 
-  inline void applyClipRestriction(SkRegion::Op op, SkIRect* bounds) {
+  inline void applyClipRestriction(SkRegion::Op op, SkIRect* bounds) noexcept {
     if (op >= SkRegion::kUnion_Op && fClipRestrictionRect && !fClipRestrictionRect->isEmpty()) {
       if (!bounds->intersect(*fClipRestrictionRect)) {
         bounds->setEmpty();
@@ -169,7 +170,7 @@ class SkRasterClip {
     }
   }
 
-  inline void applyClipRestriction(SkRegion::Op op, SkRect* bounds) {
+  inline void applyClipRestriction(SkRegion::Op op, SkRect* bounds) noexcept {
     if (op >= SkRegion::kUnion_Op && fClipRestrictionRect && !fClipRestrictionRect->isEmpty()) {
       if (!bounds->intersect(SkRect::Make(*fClipRestrictionRect))) {
         bounds->setEmpty();
@@ -180,7 +181,7 @@ class SkRasterClip {
 
 class SkAutoRasterClipValidate : SkNoncopyable {
  public:
-  SkAutoRasterClipValidate(const SkRasterClip& rc) : fRC(rc) { fRC.validate(); }
+  SkAutoRasterClipValidate(const SkRasterClip& rc) noexcept : fRC(rc) { fRC.validate(); }
   ~SkAutoRasterClipValidate() { fRC.validate(); }
 
  private:
@@ -211,17 +212,17 @@ class SkAAClipBlitterWrapper {
   SkAAClipBlitterWrapper(const SkRasterClip&, SkBlitter*);
   SkAAClipBlitterWrapper(const SkAAClip*, SkBlitter*);
 
-  void init(const SkRasterClip&, SkBlitter*);
+  void init(const SkRasterClip&, SkBlitter*) noexcept;
 
-  const SkIRect& getBounds() const {
+  const SkIRect& getBounds() const noexcept {
     SkASSERT(fClipRgn);
     return fClipRgn->getBounds();
   }
-  const SkRegion& getRgn() const {
+  const SkRegion& getRgn() const noexcept {
     SkASSERT(fClipRgn);
     return *fClipRgn;
   }
-  SkBlitter* getBlitter() {
+  SkBlitter* getBlitter() noexcept {
     SkASSERT(fBlitter);
     return fBlitter;
   }

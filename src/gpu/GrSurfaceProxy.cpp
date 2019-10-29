@@ -193,9 +193,9 @@ bool GrSurfaceProxy::canSkipResourceAllocator() const {
 void GrSurfaceProxy::assign(sk_sp<GrSurface> surface) {
   SkASSERT(!fTarget && surface);
 
-  SkDEBUGCODE(this->validateSurface(surface.get());)
+  SkDEBUGCODE(this->validateSurface(surface.get()));
 
-      fTarget = std::move(surface);
+  fTarget = std::move(surface);
 
 #ifdef SK_DEBUG
   if (this->asRenderTargetProxy()) {

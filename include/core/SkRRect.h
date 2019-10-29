@@ -34,21 +34,21 @@ class SK_API SkRRect {
 
       @return  empty SkRRect
   */
-  SkRRect() = default;
+  constexpr SkRRect() noexcept = default;
 
   /** Initializes to copy of rrect bounds and corner radii.
 
       @param rrect  bounds and corner to copy
       @return       copy of rrect
   */
-  SkRRect(const SkRRect& rrect) = default;
+  SkRRect(const SkRRect& rrect) noexcept = default;
 
   /** Copies rrect bounds and corner radii.
 
       @param rrect  bounds and corner to copy
       @return       copy of rrect
   */
-  SkRRect& operator=(const SkRRect& rrect) = default;
+  SkRRect& operator=(const SkRRect& rrect) noexcept = default;
 
   /** \enum SkRRect::Type
       Type describes possible specializations of SkRRect. Each Type is
@@ -73,7 +73,7 @@ class SK_API SkRRect {
 
       @return  SkRRect::Type
   */
-  Type getType() const {
+  Type getType() const noexcept {
     SkASSERT(this->isValid());
     return static_cast<Type>(fType);
   }
@@ -84,28 +84,28 @@ class SK_API SkRRect {
 
       @return  SkRRect::Type
   */
-  Type type() const { return this->getType(); }
+  Type type() const noexcept { return this->getType(); }
 
-  inline bool isEmpty() const { return kEmpty_Type == this->getType(); }
-  inline bool isRect() const { return kRect_Type == this->getType(); }
-  inline bool isOval() const { return kOval_Type == this->getType(); }
-  inline bool isSimple() const { return kSimple_Type == this->getType(); }
-  inline bool isNinePatch() const { return kNinePatch_Type == this->getType(); }
-  inline bool isComplex() const { return kComplex_Type == this->getType(); }
+  inline bool isEmpty() const noexcept { return kEmpty_Type == this->getType(); }
+  inline bool isRect() const noexcept { return kRect_Type == this->getType(); }
+  inline bool isOval() const noexcept { return kOval_Type == this->getType(); }
+  inline bool isSimple() const noexcept { return kSimple_Type == this->getType(); }
+  inline bool isNinePatch() const noexcept { return kNinePatch_Type == this->getType(); }
+  inline bool isComplex() const noexcept { return kComplex_Type == this->getType(); }
 
   /** Returns span on the x-axis. This does not check if result fits in 32-bit float;
       result may be infinity.
 
       @return  rect().fRight minus rect().fLeft
   */
-  SkScalar width() const { return fRect.width(); }
+  SkScalar width() const noexcept { return fRect.width(); }
 
   /** Returns span on the y-axis. This does not check if result fits in 32-bit float;
       result may be infinity.
 
       @return  rect().fBottom minus rect().fTop
   */
-  SkScalar height() const { return fRect.height(); }
+  SkScalar height() const noexcept { return fRect.height(); }
 
   /** Returns top-left corner radii. If type() returns kEmpty_Type, kRect_Type,
       kOval_Type, or kSimple_Type, returns a value representative of all corner radii.
@@ -114,12 +114,12 @@ class SK_API SkRRect {
 
       @return  corner radii for simple types
   */
-  SkVector getSimpleRadii() const { return fRadii[0]; }
+  SkVector getSimpleRadii() const noexcept { return fRadii[0]; }
 
   /** Sets bounds to zero width and height at (0, 0), the origin. Sets
       corner radii to zero and sets type to kEmpty_Type.
   */
-  void setEmpty() { *this = SkRRect(); }
+  void setEmpty() noexcept { *this = SkRRect(); }
 
   /** Sets bounds to sorted rect, and sets corner radii to zero.
       If set bounds has width and height, and sets type to kRect_Type;
@@ -143,7 +143,7 @@ class SK_API SkRRect {
 
       @return  empty SkRRect
   */
-  static SkRRect MakeEmpty() { return SkRRect(); }
+  static constexpr SkRRect MakeEmpty() { return SkRRect(); }
 
   /** Initializes to copy of r bounds and zeroes corner radii.
 
@@ -275,7 +275,7 @@ class SK_API SkRRect {
 
       @return  bounding box
   */
-  const SkRect& rect() const { return fRect; }
+  const SkRect& rect() const noexcept { return fRect; }
 
   /** Returns scalar pair for radius of curve on x-axis and y-axis for one corner.
       Both radii may be zero. If not zero, both are positive and finite.
@@ -284,7 +284,7 @@ class SK_API SkRRect {
                      kLowerRight_Corner, kLowerLeft_Corner
       @return        x-axis and y-axis radii for one corner
   */
-  SkVector radii(Corner corner) const { return fRadii[corner]; }
+  SkVector radii(Corner corner) const noexcept { return fRadii[corner]; }
 
   /** Returns bounds. Bounds may have zero width or zero height. Bounds right is
       greater than or equal to left; bounds bottom is greater than or equal to top.
@@ -292,7 +292,7 @@ class SK_API SkRRect {
 
       @return  bounding box
   */
-  const SkRect& getBounds() const { return fRect; }
+  const SkRect& getBounds() const noexcept { return fRect; }
 
   /** Returns true if bounds and radii in a are equal to bounds and radii in b.
 
@@ -303,7 +303,7 @@ class SK_API SkRRect {
       @param b  SkRect bounds and radii to compare
       @return   true if members are equal
   */
-  friend bool operator==(const SkRRect& a, const SkRRect& b) {
+  friend bool operator==(const SkRRect& a, const SkRRect& b) noexcept {
     return a.fRect == b.fRect && SkScalarsEqual(&a.fRadii[0].fX, &b.fRadii[0].fX, 8);
   }
 
@@ -316,7 +316,7 @@ class SK_API SkRRect {
       @param b  SkRect bounds and radii to compare
       @return   true if members are not equal
   */
-  friend bool operator!=(const SkRRect& a, const SkRRect& b) {
+  friend bool operator!=(const SkRRect& a, const SkRRect& b) noexcept {
     return a.fRect != b.fRect || !SkScalarsEqual(&a.fRadii[0].fX, &b.fRadii[0].fX, 8);
   }
 
@@ -392,7 +392,7 @@ class SK_API SkRRect {
       @param dx  offset added to rect().fLeft and rect().fRight
       @param dy  offset added to rect().fTop and rect().fBottom
   */
-  void offset(SkScalar dx, SkScalar dy) { fRect.offset(dx, dy); }
+  void offset(SkScalar dx, SkScalar dy) noexcept { fRect.offset(dx, dy); }
 
   /** Returns SkRRect translated by (dx, dy).
 
@@ -400,7 +400,7 @@ class SK_API SkRRect {
       @param dy  offset added to rect().fTop and rect().fBottom
       @return    SkRRect bounds offset by (dx, dy), with unchanged corner radii
   */
-  SkRRect SK_WARN_UNUSED_RESULT makeOffset(SkScalar dx, SkScalar dy) const {
+  SkRRect SK_WARN_UNUSED_RESULT makeOffset(SkScalar dx, SkScalar dy) const noexcept {
     return SkRRect(fRect.makeOffset(dx, dy), fRadii, fType);
   }
 
@@ -476,9 +476,9 @@ class SK_API SkRRect {
   void dumpHex() const { this->dump(true); }
 
  private:
-  static bool AreRectAndRadiiValid(const SkRect&, const SkVector[4]);
+  static bool AreRectAndRadiiValid(const SkRect&, const SkVector[4]) noexcept;
 
-  SkRRect(const SkRect& rect, const SkVector radii[4], int32_t type)
+  SkRRect(const SkRect& rect, const SkVector radii[4], int32_t type) noexcept
       : fRect(rect), fRadii{radii[0], radii[1], radii[2], radii[3]}, fType(type) {}
 
   /**
@@ -487,8 +487,8 @@ class SK_API SkRRect {
    */
   bool initializeRect(const SkRect&);
 
-  void computeType();
-  bool checkCornerContainment(SkScalar x, SkScalar y) const;
+  void computeType() noexcept;
+  bool checkCornerContainment(SkScalar x, SkScalar y) const noexcept;
   void scaleRadii(const SkRect& rect);
 
   SkRect fRect = SkRect::MakeEmpty();

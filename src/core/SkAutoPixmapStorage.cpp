@@ -8,11 +8,11 @@
 #include "include/core/SkData.h"
 #include "src/core/SkAutoPixmapStorage.h"
 
-SkAutoPixmapStorage::SkAutoPixmapStorage() : fStorage(nullptr) {}
+SkAutoPixmapStorage::SkAutoPixmapStorage() noexcept : fStorage(nullptr) {}
 
 SkAutoPixmapStorage::~SkAutoPixmapStorage() { this->freeStorage(); }
 
-SkAutoPixmapStorage& SkAutoPixmapStorage::operator=(SkAutoPixmapStorage&& other) {
+SkAutoPixmapStorage& SkAutoPixmapStorage::operator=(SkAutoPixmapStorage&& other) noexcept {
   this->fStorage = other.fStorage;
   this->INHERITED::reset(other.info(), this->fStorage, other.rowBytes());
 

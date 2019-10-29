@@ -70,13 +70,13 @@ int32_t SkSqrtBits(int32_t x, int count) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-size_t SkSafeMath::Add(size_t x, size_t y) {
+size_t SkSafeMath::Add(size_t x, size_t y) noexcept {
   SkSafeMath tmp;
   size_t sum = tmp.add(x, y);
   return tmp.ok() ? sum : SIZE_MAX;
 }
 
-size_t SkSafeMath::Mul(size_t x, size_t y) {
+size_t SkSafeMath::Mul(size_t x, size_t y) noexcept {
   SkSafeMath tmp;
   size_t prod = tmp.mul(x, y);
   return tmp.ok() ? prod : SIZE_MAX;
@@ -84,7 +84,7 @@ size_t SkSafeMath::Mul(size_t x, size_t y) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool sk_floats_are_unit(const float array[], size_t count) {
+bool sk_floats_are_unit(const float array[], size_t count) noexcept {
   bool is_unit = true;
   for (size_t i = 0; i < count; ++i) {
     is_unit &= (array[i] >= 0) & (array[i] <= 1);

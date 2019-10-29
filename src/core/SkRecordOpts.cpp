@@ -158,7 +158,7 @@ void SkRecordNoopSaveRestores(SkRecord* record) {
 }
 
 #ifndef SK_BUILD_FOR_ANDROID_FRAMEWORK
-static bool effectively_srcover(const SkPaint* paint) {
+static bool effectively_srcover(const SkPaint* paint) noexcept {
   if (!paint || paint->isSrcOver()) {
     return true;
   }

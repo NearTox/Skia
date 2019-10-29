@@ -14,29 +14,29 @@
 
 class SkAAClip {
  public:
-  SkAAClip();
-  SkAAClip(const SkAAClip&);
+  SkAAClip() noexcept;
+  SkAAClip(const SkAAClip&) noexcept;
   ~SkAAClip();
 
-  SkAAClip& operator=(const SkAAClip&);
-  friend bool operator==(const SkAAClip&, const SkAAClip&);
-  friend bool operator!=(const SkAAClip& a, const SkAAClip& b) { return !(a == b); }
+  SkAAClip& operator=(const SkAAClip&) noexcept;
+  friend bool operator==(const SkAAClip&, const SkAAClip&) noexcept;
+  friend bool operator!=(const SkAAClip& a, const SkAAClip& b) noexcept { return !(a == b); }
 
-  void swap(SkAAClip&);
+  void swap(SkAAClip&) noexcept;
 
-  bool isEmpty() const { return nullptr == fRunHead; }
-  const SkIRect& getBounds() const { return fBounds; }
+  bool isEmpty() const noexcept { return nullptr == fRunHead; }
+  const SkIRect& getBounds() const noexcept { return fBounds; }
 
   // Returns true iff the clip is not empty, and is just a hard-edged rect (no partial alpha).
   // If true, getBounds() can be used in place of this clip.
-  bool isRect() const;
+  bool isRect() const noexcept;
 
-  bool setEmpty();
-  bool setRect(const SkIRect&);
+  bool setEmpty() noexcept;
+  bool setRect(const SkIRect&) noexcept;
   bool setRect(const SkRect&, bool doAA = true);
   bool setPath(const SkPath&, const SkRegion* clip = nullptr, bool doAA = true);
   bool setRegion(const SkRegion&);
-  bool set(const SkAAClip&);
+  bool set(const SkAAClip&) noexcept;
 
   bool op(const SkAAClip&, const SkAAClip&, SkRegion::Op);
 
@@ -45,8 +45,8 @@ class SkAAClip {
   bool op(const SkRect&, SkRegion::Op, bool doAA);
   bool op(const SkAAClip&, SkRegion::Op);
 
-  bool translate(int dx, int dy, SkAAClip* dst) const;
-  bool translate(int dx, int dy) { return this->translate(dx, dy, this); }
+  bool translate(int dx, int dy, SkAAClip* dst) const noexcept;
+  bool translate(int dx, int dy) noexcept { return this->translate(dx, dy, this); }
 
   /**
    *  Allocates a mask the size of the aaclip, and expands its data into
@@ -56,13 +56,13 @@ class SkAAClip {
 
   // called internally
 
-  bool quickContains(int left, int top, int right, int bottom) const;
-  bool quickContains(const SkIRect& r) const {
+  bool quickContains(int left, int top, int right, int bottom) const noexcept;
+  bool quickContains(const SkIRect& r) const noexcept {
     return this->quickContains(r.fLeft, r.fTop, r.fRight, r.fBottom);
   }
 
-  const uint8_t* findRow(int y, int* lastYForRow = nullptr) const;
-  const uint8_t* findX(const uint8_t data[], int x, int* initialCount = nullptr) const;
+  const uint8_t* findRow(int y, int* lastYForRow = nullptr) const noexcept;
+  const uint8_t* findX(const uint8_t data[], int x, int* initialCount = nullptr) const noexcept;
 
   class Iter;
   struct RunHead;
@@ -73,7 +73,7 @@ class SkAAClip {
   void validate() const;
   void debug(bool compress_y = false) const;
 #else
-  void validate() const {}
+  void validate() const noexcept {}
   void debug(bool compress_y = false) const {}
 #endif
 
@@ -81,10 +81,10 @@ class SkAAClip {
   SkIRect fBounds;
   RunHead* fRunHead;
 
-  void freeRuns();
-  bool trimBounds();
-  bool trimTopBottom();
-  bool trimLeftRight();
+  void freeRuns() noexcept;
+  bool trimBounds() noexcept;
+  bool trimTopBottom() noexcept;
+  bool trimLeftRight() noexcept;
 
   friend class Builder;
   class BuilderBlitter;
@@ -98,7 +98,7 @@ class SkAAClipBlitter : public SkBlitter {
   SkAAClipBlitter() : fScanlineScratch(nullptr) {}
   ~SkAAClipBlitter() override;
 
-  void init(SkBlitter* blitter, const SkAAClip* aaclip) {
+  void init(SkBlitter* blitter, const SkAAClip* aaclip) noexcept {
     SkASSERT(aaclip && !aaclip->isEmpty());
     fBlitter = blitter;
     fAAClip = aaclip;
@@ -125,7 +125,7 @@ class SkAAClipBlitter : public SkBlitter {
   SkAutoSMalloc<kSize> fGrayMaskScratch;  // used for blitMask
   void* fScanlineScratch;                 // enough for a mask at 32bit, or runs+aa
 
-  void ensureRunsAndAA();
+  void ensureRunsAndAA() noexcept;
 };
 
 #endif

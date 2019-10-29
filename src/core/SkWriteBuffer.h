@@ -22,7 +22,7 @@ class SkRefCntSet;
 class SkWriteBuffer {
  public:
   SkWriteBuffer() {}
-  virtual ~SkWriteBuffer() {}
+  virtual ~SkWriteBuffer() = default;
 
   virtual void writePad32(const void* buffer, size_t bytes) = 0;
 

@@ -32,13 +32,13 @@ class SkStrikeSpec;
 // where mask is either 0 or ~0, and rounding is either
 // 1/2 for non-subpixel or 1/8 for subpixel.
 struct SkGlyphPositionRoundingSpec {
-  SkGlyphPositionRoundingSpec(bool isSubpixel, SkAxisAlignment axisAlignment);
+  SkGlyphPositionRoundingSpec(bool isSubpixel, SkAxisAlignment axisAlignment) noexcept;
   const SkVector halfAxisSampleFreq;
   const SkIPoint ignorePositionMask;
 
  private:
-  static SkVector HalfAxisSampleFreq(bool isSubpixel, SkAxisAlignment axisAlignment);
-  static SkIPoint IgnorePositionMask(bool isSubpixel, SkAxisAlignment axisAlignment);
+  static SkVector HalfAxisSampleFreq(bool isSubpixel, SkAxisAlignment axisAlignment) noexcept;
+  static SkIPoint IgnorePositionMask(bool isSubpixel, SkAxisAlignment axisAlignment) noexcept;
 };
 
 class SkStrikeCommon {

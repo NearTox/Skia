@@ -254,7 +254,8 @@ bool GrOpsTask::OpChain::tryConcat(
     return false;
   }
 
-  SkDEBUGCODE(bool first = true;) do {
+  SkDEBUGCODE(bool first = true);
+  do {
     switch (fList.tail()->combineIfPossible(list->head(), caps)) {
       case GrOp::CombineResult::kCannotCombine:
         // If an op supports chaining then it is required that chaining is transitive and
@@ -279,9 +280,7 @@ bool GrOpsTask::OpChain::tryConcat(
       }
     }
     SkDEBUGCODE(first = false);
-  }
-  while (!list->empty())
-    ;
+  } while (!list->empty());
 
   // The new ops were successfully merged and/or chained onto our own.
   fBounds.joinPossiblyEmptyRect(bounds);
@@ -722,8 +721,8 @@ void GrOpsTask::gatherProxyIntervals(GrResourceAllocator* alloc) const {
 void GrOpsTask::recordOp(
     std::unique_ptr<GrOp> op, GrProcessorSet::Analysis processorAnalysis, GrAppliedClip* clip,
     const DstProxy* dstProxy, const GrCaps& caps) {
-  SkDEBUGCODE(op->validate();)
-      SkASSERT(processorAnalysis.requiresDstTexture() == (dstProxy && dstProxy->proxy()));
+  SkDEBUGCODE(op->validate());
+  SkASSERT(processorAnalysis.requiresDstTexture() == (dstProxy && dstProxy->proxy()));
   SkASSERT(fTarget);
 
   // A closed GrOpsTask should never receive new/more ops
@@ -776,7 +775,7 @@ void GrOpsTask::recordOp(
   }
   if (clip) {
     clip = fClipAllocator.make<GrAppliedClip>(std::move(*clip));
-    SkDEBUGCODE(fNumClips++;)
+    SkDEBUGCODE(fNumClips++);
   }
   fOpChains.emplace_back(std::move(op), processorAnalysis, clip, dstProxy);
 }

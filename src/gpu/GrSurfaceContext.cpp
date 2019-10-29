@@ -25,7 +25,7 @@
 #include "src/gpu/effects/GrBicubicEffect.h"
 
 #define ASSERT_SINGLE_OWNER \
-  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner());)
+  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner()))
 #define RETURN_FALSE_IF_ABANDONED           \
   if (this->fContext->priv().abandoned()) { \
     return false;                           \
@@ -56,10 +56,10 @@ GrSingleOwner* GrSurfaceContext::singleOwner() { return fContext->priv().singleO
 
 bool GrSurfaceContext::readPixels(
     const GrImageInfo& origDstInfo, void* dst, size_t rowBytes, SkIPoint pt, GrContext* direct) {
-  ASSERT_SINGLE_OWNER
+  ASSERT_SINGLE_OWNER;
   RETURN_FALSE_IF_ABANDONED
-  SkDEBUGCODE(this->validate();)
-      GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrSurfaceContext::readPixels");
+  SkDEBUGCODE(this->validate());
+  GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrSurfaceContext::readPixels");
 
   if (!direct && !(direct = fContext->priv().asDirectContext())) {
     return false;
@@ -213,10 +213,10 @@ bool GrSurfaceContext::readPixels(
 bool GrSurfaceContext::writePixels(
     const GrImageInfo& origSrcInfo, const void* src, size_t rowBytes, SkIPoint pt,
     GrContext* direct) {
-  ASSERT_SINGLE_OWNER
+  ASSERT_SINGLE_OWNER;
   RETURN_FALSE_IF_ABANDONED
-  SkDEBUGCODE(this->validate();)
-      GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrSurfaceContext::writePixels");
+  SkDEBUGCODE(this->validate());
+  GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrSurfaceContext::writePixels");
 
   if (!direct && !(direct = fContext->priv().asDirectContext())) {
     return false;
@@ -404,10 +404,10 @@ bool GrSurfaceContext::writePixels(
 }
 
 bool GrSurfaceContext::copy(GrSurfaceProxy* src, const SkIRect& srcRect, const SkIPoint& dstPoint) {
-  ASSERT_SINGLE_OWNER
+  ASSERT_SINGLE_OWNER;
   RETURN_FALSE_IF_ABANDONED
-  SkDEBUGCODE(this->validate();)
-      GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrSurfaceContextPriv::copy");
+  SkDEBUGCODE(this->validate());
+  GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrSurfaceContextPriv::copy");
 
   const GrCaps* caps = fContext->priv().caps();
 

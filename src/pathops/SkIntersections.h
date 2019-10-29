@@ -178,7 +178,7 @@ class SkIntersections {
   }
 
   // leaves swap, max alone
-  void reset() {
+  void reset() noexcept {
     fAllowNear = true;
     fUsed = 0;
     sk_bzero(fIsCoincident, sizeof(fIsCoincident));
@@ -186,16 +186,16 @@ class SkIntersections {
 
   void set(bool swap, int tIndex, double t) { fT[(int)swap][tIndex] = t; }
 
-  void setMax(int max) {
+  void setMax(int max) noexcept {
     SkASSERT(max <= (int)SK_ARRAY_COUNT(fPt));
     fMax = max;
   }
 
   void swap() { fSwap ^= true; }
 
-  bool swapped() const { return fSwap; }
+  bool swapped() const noexcept { return fSwap; }
 
-  int used() const { return fUsed; }
+  int used() const noexcept { return fUsed; }
 
   void downDepth() { SkASSERT(--fDepth >= 0); }
 

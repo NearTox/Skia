@@ -172,7 +172,7 @@ class SkNullBlitter : public SkBlitter {
 */
 class SkRectClipBlitter : public SkBlitter {
  public:
-  void init(SkBlitter* blitter, const SkIRect& clipRect) {
+  void init(SkBlitter* blitter, const SkIRect& clipRect) noexcept {
     SkASSERT(!clipRect.isEmpty());
     fBlitter = blitter;
     fClipRect = clipRect;
@@ -202,7 +202,7 @@ class SkRectClipBlitter : public SkBlitter {
 */
 class SkRgnClipBlitter : public SkBlitter {
  public:
-  void init(SkBlitter* blitter, const SkRegion* clipRgn) {
+  void init(SkBlitter* blitter, const SkRegion* clipRgn) noexcept {
     SkASSERT(clipRgn && !clipRgn->isEmpty());
     fBlitter = blitter;
     fRgn = clipRgn;
@@ -280,7 +280,7 @@ class SkPairBlitter : public SkBlitter {
   SkBlitter* fB = nullptr;
 
  public:
-  SkPairBlitter(SkBlitter* a, SkBlitter* b) : fA(a), fB(b) {}
+  SkPairBlitter(SkBlitter* a, SkBlitter* b) noexcept : fA(a), fB(b) {}
 
   void blitH(int x, int y, int width) override { SHARD(blitH(x, y, width)) }
   void blitAntiH(int x, int y, const SkAlpha alphas[], const int16_t runs[]) override {

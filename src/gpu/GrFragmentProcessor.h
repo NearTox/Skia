@@ -119,12 +119,10 @@ class GrFragmentProcessor : public GrProcessor {
 
   const GrFragmentProcessor& childProcessor(int index) const { return *fChildProcessors[index]; }
 
-  SkDEBUGCODE(bool isInstantiated() const;)
+  SkDEBUGCODE(bool isInstantiated() const);
 
-      /** Do any of the coordtransforms for this processor require local coords? */
-      bool usesLocalCoords() const {
-    return SkToBool(fFlags & kUsesLocalCoords_Flag);
-  }
+  /** Do any of the coordtransforms for this processor require local coords? */
+  bool usesLocalCoords() const { return SkToBool(fFlags & kUsesLocalCoords_Flag); }
 
   bool computeLocalCoordsInVertexShader() const {
     return SkToBool(fFlags & kComputeLocalCoordsInVertexShader_Flag);
@@ -214,7 +212,7 @@ class GrFragmentProcessor : public GrProcessor {
    */
   template <
       typename T, int (GrFragmentProcessor::*COUNT)() const,
-      const T& (GrFragmentProcessor::*GET)(int)const>
+      const T& (GrFragmentProcessor::*GET)(int) const>
   class FPItemIter : public SkNoncopyable {
    public:
     explicit FPItemIter(const GrFragmentProcessor* fp) : fCurrFP(nullptr), fCTIdx(0), fFPIter(fp) {
@@ -415,7 +413,7 @@ class GrFragmentProcessor : public GrProcessor {
  */
 class GrFragmentProcessor::TextureSampler {
  public:
-  TextureSampler() = default;
+  constexpr TextureSampler() noexcept = default;
 
   /**
    * This copy constructor is used by GrFragmentProcessor::clone() implementations.
@@ -444,8 +442,8 @@ class GrFragmentProcessor::TextureSampler {
     return fProxy->peekTexture();
   }
 
-  GrTextureProxy* proxy() const { return fProxy.get(); }
-  const GrSamplerState& samplerState() const { return fSamplerState; }
+  GrTextureProxy* proxy() const noexcept { return fProxy.get(); }
+  const GrSamplerState& samplerState() const noexcept { return fSamplerState; }
   const GrSwizzle& swizzle() const { return this->proxy()->textureSwizzle(); }
 
   bool isInitialized() const { return SkToBool(fProxy.get()); }

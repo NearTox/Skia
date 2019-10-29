@@ -27,7 +27,7 @@ class GrVkVertexBuffer;
 
 class GrVkCommandBuffer {
  public:
-  virtual ~GrVkCommandBuffer() {}
+  virtual ~GrVkCommandBuffer() = default;
 
   void invalidateState();
 

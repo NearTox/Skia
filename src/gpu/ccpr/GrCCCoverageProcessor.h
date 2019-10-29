@@ -191,7 +191,7 @@ class GrCCCoverageProcessor : public GrGeometryProcessor {
         GrGLSLVertexGeoBuilder*, const char* leftDir, const char* rightDir,
         const char* outputAttenuation);
 
-    virtual ~Shader() {}
+    virtual ~Shader() = default;
 
    protected:
     // Here the subclass adds its internal varyings to the handler and produces code to

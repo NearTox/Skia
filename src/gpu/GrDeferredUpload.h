@@ -131,7 +131,7 @@ using GrDeferredTextureUploadFn = std::function<void(GrDeferredTextureUploadWrit
  */
 class GrDeferredUploadTarget {
  public:
-  virtual ~GrDeferredUploadTarget() {}
+  virtual ~GrDeferredUploadTarget() = default;
 
   virtual const GrTokenTracker* tokenTracker() = 0;
 

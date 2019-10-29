@@ -317,7 +317,7 @@ class GrResourceProvider {
   sk_sp<const GrGpuBuffer> fQuadIndexBuffer;
 
   // In debug builds we guard against improper thread handling
-  SkDEBUGCODE(mutable GrSingleOwner* fSingleOwner;)
+  SkDEBUGCODE(mutable GrSingleOwner* fSingleOwner);
 };
 
 #endif

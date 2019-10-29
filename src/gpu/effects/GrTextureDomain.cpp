@@ -22,7 +22,7 @@
 #include <utility>
 
 GrTextureDomain::GrTextureDomain(
-    GrTextureProxy* proxy, const SkRect& domain, Mode modeX, Mode modeY, int index)
+    GrTextureProxy* proxy, const SkRect& domain, Mode modeX, Mode modeY, int index) noexcept
     : fModeX(modeX), fModeY(modeY), fIndex(index) {
   if (!proxy) {
     SkASSERT(modeX == kIgnore_Mode && modeY == kIgnore_Mode);
@@ -76,11 +76,12 @@ void GrTextureDomain::GLDomain::sampleTexture(
     const SkString& inCoords, GrGLSLFragmentProcessor::SamplerHandle sampler,
     const char* inModulateColor) {
   SkASSERT(!fHasMode || (textureDomain.modeX() == fModeX && textureDomain.modeY() == fModeY));
-  SkDEBUGCODE(fModeX = textureDomain.modeX();) SkDEBUGCODE(fModeY = textureDomain.modeY();)
-      SkDEBUGCODE(fHasMode = true;)
+  SkDEBUGCODE(fModeX = textureDomain.modeX());
+  SkDEBUGCODE(fModeY = textureDomain.modeY());
+  SkDEBUGCODE(fHasMode = true);
 
-          if ((textureDomain.modeX() != kIgnore_Mode || textureDomain.modeY() != kIgnore_Mode) &&
-              !fDomainUni.isValid()) {
+  if ((textureDomain.modeX() != kIgnore_Mode || textureDomain.modeY() != kIgnore_Mode) &&
+      !fDomainUni.isValid()) {
     // Must include the domain uniform since at least one axis uses it
     const char* name;
     SkString uniName("TexDom");
@@ -203,10 +204,11 @@ void GrTextureDomain::GLDomain::setData(
       }
     }
 
-    float values[kPrevDomainCount] = {SkScalarToFloat(textureDomain.domain().fLeft * wInv),
-                                      SkScalarToFloat(textureDomain.domain().fTop * hInv),
-                                      SkScalarToFloat(textureDomain.domain().fRight * wInv),
-                                      SkScalarToFloat(textureDomain.domain().fBottom * hInv)};
+    float values[kPrevDomainCount] = {
+        SkScalarToFloat(textureDomain.domain().fLeft * wInv),
+        SkScalarToFloat(textureDomain.domain().fTop * hInv),
+        SkScalarToFloat(textureDomain.domain().fRight * wInv),
+        SkScalarToFloat(textureDomain.domain().fBottom * hInv)};
 
     if (proxy->textureType() == GrTextureType::kRectangle) {
       SkASSERT(values[0] >= 0.0f && values[0] <= proxy->width());
@@ -422,8 +424,8 @@ GrGLSLFragmentProcessor* GrDeviceSpaceTextureDecalFragmentProcessor::onCreateGLS
           pdman, dstdfp.fTextureDomain, proxy, dstdfp.textureSampler(0).samplerState());
       float iw = 1.f / texture->width();
       float ih = 1.f / texture->height();
-      float scaleAndTransData[4] = {iw, ih, -dstdfp.fDeviceSpaceOffset.fX * iw,
-                                    -dstdfp.fDeviceSpaceOffset.fY * ih};
+      float scaleAndTransData[4] = {
+          iw, ih, -dstdfp.fDeviceSpaceOffset.fX * iw, -dstdfp.fDeviceSpaceOffset.fY * ih};
       if (proxy->origin() == kBottomLeft_GrSurfaceOrigin) {
         scaleAndTransData[1] = -scaleAndTransData[1];
         scaleAndTransData[3] = 1 - scaleAndTransData[3];

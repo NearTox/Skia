@@ -12,8 +12,6 @@
 
 #include "include/core/SkFilterQuality.h"
 
-class SkImage;
-
 namespace sksg {
 
 /**

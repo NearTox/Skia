@@ -118,9 +118,9 @@ void GrGLSLProgramBuilder::emitAndInstallPrimProc(SkString* outputColor, SkStrin
 
   // We have to check that effects and the code they emit are consistent, ie if an effect
   // asks for dst color, then the emit code needs to follow suit
-  SkDEBUGCODE(verify(proc);)
+  SkDEBUGCODE(verify(proc));
 
-      fFS.codeAppend("}");
+  fFS.codeAppend("}");
 }
 
 void GrGLSLProgramBuilder::emitAndInstallFragProcs(SkString* color, SkString* coverage) {
@@ -190,7 +190,8 @@ SkString GrGLSLProgramBuilder::emitAndInstallFragProc(
 
   // We have to check that effects and the code they emit are consistent, ie if an effect
   // asks for dst color, then the emit code needs to follow suit
-  SkDEBUGCODE(verify(fp);) glslFragmentProcessors->emplace_back(fragProc);
+  SkDEBUGCODE(verify(fp));
+  glslFragmentProcessors->emplace_back(fragProc);
 
   fFS.codeAppend("}");
   return output;
@@ -241,7 +242,8 @@ void GrGLSLProgramBuilder::emitAndInstallXferProc(
 
   // We have to check that effects and the code they emit are consistent, ie if an effect
   // asks for dst color, then the emit code needs to follow suit
-  SkDEBUGCODE(verify(xp);) fFS.codeAppend("}");
+  SkDEBUGCODE(verify(xp));
+  fFS.codeAppend("}");
 }
 
 GrGLSLProgramBuilder::SamplerHandle GrGLSLProgramBuilder::emitSampler(

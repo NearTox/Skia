@@ -88,10 +88,10 @@ class GrCoordTransform {
     return true;
   }
 
-  const SkMatrix& getMatrix() const { return fMatrix; }
-  const GrTextureProxy* proxy() const { return fProxy; }
-  bool normalize() const { return fNormalize; }
-  bool reverseY() const { return fReverseY; }
+  const SkMatrix& getMatrix() const noexcept { return fMatrix; }
+  const GrTextureProxy* proxy() const noexcept { return fProxy; }
+  bool normalize() const noexcept { return fNormalize; }
+  bool reverseY() const noexcept { return fReverseY; }
 
   // This should only ever be called at flush time after the backing texture has been
   // successfully instantiated

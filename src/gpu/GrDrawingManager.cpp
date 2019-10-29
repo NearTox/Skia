@@ -313,11 +313,11 @@ GrSemaphoresSubmitted GrDrawingManager::flush(
     // Enable this to print out verbose GrOp information
     SkDEBUGCODE(SkDebugf("onFlush renderTasks:"));
     for (const auto& onFlushRenderTask : fOnFlushRenderTasks) {
-        SkDEBUGCODE(onFlushRenderTask->dump();)
+        SkDEBUGCODE(onFlushRenderTask->dump());
     }
     SkDEBUGCODE(SkDebugf("Normal renderTasks:"));
     for (int i = 0; i < fRenderTasks.count(); ++i) {
-        SkDEBUGCODE(fRenderTasks[i]->dump();)
+        SkDEBUGCODE(fRenderTasks[i]->dump());
     }
 #endif
 

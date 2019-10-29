@@ -133,9 +133,9 @@ bool GrDrawOpAtlas::Plot::addSubImage(int width, int height, const void* image, 
 
   loc->fX += fOffset.fX;
   loc->fY += fOffset.fY;
-  SkDEBUGCODE(fDirty = true;)
+  SkDEBUGCODE(fDirty = true);
 
-      return true;
+  return true;
 }
 
 void GrDrawOpAtlas::Plot::uploadToTexture(
@@ -159,7 +159,7 @@ void GrDrawOpAtlas::Plot::uploadToTexture(
       proxy, fOffset.fX + fDirtyRect.fLeft, fOffset.fY + fDirtyRect.fTop, fDirtyRect.width(),
       fDirtyRect.height(), fColorType, dataPtr, rowBytes);
   fDirtyRect.setEmpty();
-  SkDEBUGCODE(fDirty = false;)
+  SkDEBUGCODE(fDirty = false);
 }
 
 void GrDrawOpAtlas::Plot::resetRects() {
@@ -178,7 +178,7 @@ void GrDrawOpAtlas::Plot::resetRects() {
   }
 
   fDirtyRect.setEmpty();
-  SkDEBUGCODE(fDirty = false;)
+  SkDEBUGCODE(fDirty = false);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

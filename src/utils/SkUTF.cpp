@@ -31,7 +31,7 @@ static constexpr inline bool utf16_is_low_surrogate(uint16_t c) { return (c & 0x
                 4  iff leading byte of 4-byte sequence.
       I.e.: if return value > 0, then gives length of sequence.
 */
-static int utf8_byte_type(uint8_t c) {
+static int utf8_byte_type(uint8_t c) noexcept {
   if (c < 0x80) {
     return 1;
   } else if (c < 0xC0) {
@@ -44,13 +44,13 @@ static int utf8_byte_type(uint8_t c) {
     return value;
   }
 }
-static bool utf8_type_is_valid_leading_byte(int type) { return type > 0; }
+static constexpr bool utf8_type_is_valid_leading_byte(int type) { return type > 0; }
 
-static bool utf8_byte_is_continuation(uint8_t c) { return utf8_byte_type(c) == 0; }
+static bool utf8_byte_is_continuation(uint8_t c) noexcept { return utf8_byte_type(c) == 0; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int SkUTF::CountUTF8(const char* utf8, size_t byteLength) {
+int SkUTF::CountUTF8(const char* utf8, size_t byteLength) noexcept {
   if (!utf8) {
     return -1;
   }
@@ -73,7 +73,7 @@ int SkUTF::CountUTF8(const char* utf8, size_t byteLength) {
   return count;
 }
 
-int SkUTF::CountUTF16(const uint16_t* utf16, size_t byteLength) {
+int SkUTF::CountUTF16(const uint16_t* utf16, size_t byteLength) noexcept {
   if (!utf16 || !is_align2(intptr_t(utf16)) || !is_align2(byteLength)) {
     return -1;
   }
@@ -99,11 +99,11 @@ int SkUTF::CountUTF16(const uint16_t* utf16, size_t byteLength) {
   return count;
 }
 
-int SkUTF::CountUTF32(const int32_t* utf32, size_t byteLength) {
+int SkUTF::CountUTF32(const int32_t* utf32, size_t byteLength) noexcept {
   if (!is_align4(intptr_t(utf32)) || !is_align4(byteLength) || byteLength >> 2 > INT_MAX) {
     return -1;
   }
-  const uint32_t kInvalidUnicharMask = 0xFF000000;  // unichar fits in 24 bits
+  constexpr uint32_t kInvalidUnicharMask = 0xFF000000;  // unichar fits in 24 bits
   const uint32_t* ptr = (const uint32_t*)utf32;
   const uint32_t* stop = ptr + (byteLength >> 2);
   while (ptr < stop) {
@@ -116,12 +116,12 @@ int SkUTF::CountUTF32(const int32_t* utf32, size_t byteLength) {
 }
 
 template <typename T>
-static SkUnichar next_fail(const T** ptr, const T* end) {
+static SkUnichar next_fail(const T** ptr, const T* end) noexcept {
   *ptr = end;
   return -1;
 }
 
-SkUnichar SkUTF::NextUTF8(const char** ptr, const char* end) {
+SkUnichar SkUTF::NextUTF8(const char** ptr, const char* end) noexcept {
   if (!ptr || !end) {
     return -1;
   }
@@ -157,7 +157,7 @@ SkUnichar SkUTF::NextUTF8(const char** ptr, const char* end) {
   return c;
 }
 
-SkUnichar SkUTF::NextUTF16(const uint16_t** ptr, const uint16_t* end) {
+SkUnichar SkUTF::NextUTF16(const uint16_t** ptr, const uint16_t* end) noexcept {
   if (!ptr || !end) {
     return -1;
   }
@@ -195,7 +195,7 @@ SkUnichar SkUTF::NextUTF16(const uint16_t** ptr, const uint16_t* end) {
   return result;
 }
 
-SkUnichar SkUTF::NextUTF32(const int32_t** ptr, const int32_t* end) {
+SkUnichar SkUTF::NextUTF32(const int32_t** ptr, const int32_t* end) noexcept {
   if (!ptr || !end) {
     return -1;
   }
@@ -204,7 +204,7 @@ SkUnichar SkUTF::NextUTF32(const int32_t** ptr, const int32_t* end) {
     return next_fail(ptr, end);
   }
   int32_t value = *s;
-  const uint32_t kInvalidUnicharMask = 0xFF000000;  // unichar fits in 24 bits
+  constexpr uint32_t kInvalidUnicharMask = 0xFF000000;  // unichar fits in 24 bits
   if (value & kInvalidUnicharMask) {
     return next_fail(ptr, end);
   }
@@ -212,7 +212,7 @@ SkUnichar SkUTF::NextUTF32(const int32_t** ptr, const int32_t* end) {
   return value;
 }
 
-size_t SkUTF::ToUTF8(SkUnichar uni, char utf8[SkUTF::kMaxBytesInUTF8Sequence]) {
+size_t SkUTF::ToUTF8(SkUnichar uni, char utf8[SkUTF::kMaxBytesInUTF8Sequence]) noexcept {
   if ((uint32_t)uni > 0x10FFFF) {
     return 0;
   }
@@ -241,7 +241,7 @@ size_t SkUTF::ToUTF8(SkUnichar uni, char utf8[SkUTF::kMaxBytesInUTF8Sequence]) {
   return count;
 }
 
-size_t SkUTF::ToUTF16(SkUnichar uni, uint16_t utf16[2]) {
+size_t SkUTF::ToUTF16(SkUnichar uni, uint16_t utf16[2]) noexcept {
   if ((uint32_t)uni > 0x10FFFF) {
     return 0;
   }

@@ -86,7 +86,7 @@ SkColor4f SkColorFilter::filterColor4f(
 
 class SkComposeColorFilter : public SkColorFilter {
  public:
-  uint32_t getFlags() const override {
+  uint32_t getFlags() const noexcept override {
     // Can only claim alphaunchanged support if both our proxys do.
     return fOuter->getFlags() & fInner->getFlags();
   }
@@ -260,7 +260,7 @@ class SkMixerColorFilter : public SkColorFilter {
     SkASSERT(fWeight >= 0 && fWeight <= 1);
   }
 
-  uint32_t getFlags() const override {
+  uint32_t getFlags() const noexcept override {
     uint32_t f0 = fCF0->getFlags();
     uint32_t f1 = fCF1 ? fCF1->getFlags() : ~0U;
     return f0 & f1;

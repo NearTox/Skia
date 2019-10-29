@@ -286,8 +286,8 @@ class SkDOMParser : public SkXMLParser {
 const SkDOM::Node* SkDOM::build(SkStream& docStream) {
   SkDOMParser parser(&fAlloc);
   if (!parser.parse(docStream)) {
-    SkDEBUGCODE(SkDebugf("xml parse error, line %d\n", parser.fParserError.getLineNumber());)
-        fRoot = nullptr;
+    SkDEBUGCODE(SkDebugf("xml parse error, line %d\n", parser.fParserError.getLineNumber()));
+    fRoot = nullptr;
     fAlloc.reset();
     return nullptr;
   }

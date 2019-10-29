@@ -112,10 +112,10 @@ class SkSurface_Base : public SkSurface {
   inline SkCanvas* getCachedCanvas();
   inline sk_sp<SkImage> refCachedImage();
 
-  bool hasCachedImage() const { return fCachedImage != nullptr; }
+  bool hasCachedImage() const noexcept { return fCachedImage != nullptr; }
 
   // called by SkSurface to compute a new genID
-  uint32_t newGenerationID();
+  uint32_t newGenerationID() noexcept;
 
  private:
   std::unique_ptr<SkCanvas> fCachedCanvas;
@@ -125,7 +125,7 @@ class SkSurface_Base : public SkSurface {
 
   // Returns true if there is an outstanding image-snapshot, indicating that a call to aboutToDraw
   // would trigger a copy-on-write.
-  bool outstandingImageSnapshot() const;
+  bool outstandingImageSnapshot() const noexcept;
 
   friend class SkCanvas;
   friend class SkSurface;

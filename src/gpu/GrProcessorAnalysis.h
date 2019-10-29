@@ -96,21 +96,23 @@ class GrColorFragmentProcessorAnalysis {
   GrColorFragmentProcessorAnalysis(
       const GrProcessorAnalysisColor& input, const GrFragmentProcessor* const* processors, int cnt);
 
-  bool isOpaque() const { return fIsOpaque; }
+  bool isOpaque() const noexcept { return fIsOpaque; }
 
   /**
    * Are all the fragment processors compatible with conflating coverage with color prior to the
    * the first fragment processor. This result assumes that processors that should be eliminated
    * as indicated by initialProcessorsToEliminate() are in fact eliminated.
    */
-  bool allProcessorsCompatibleWithCoverageAsAlpha() const { return fCompatibleWithCoverageAsAlpha; }
+  bool allProcessorsCompatibleWithCoverageAsAlpha() const noexcept {
+    return fCompatibleWithCoverageAsAlpha;
+  }
 
   /**
    * Do any of the fragment processors require local coords. This result assumes that
    * processors that should be eliminated as indicated by initialProcessorsToEliminate() are in
    * fact eliminated.
    */
-  bool usesLocalCoords() const { return fUsesLocalCoords; }
+  bool usesLocalCoords() const noexcept { return fUsesLocalCoords; }
 
   /**
    * If we detected that the result after the first N processors is a known color then we
@@ -119,7 +121,7 @@ class GrColorFragmentProcessorAnalysis {
    * there are only N processors) sees its expected input. If this returns 0 then there are no
    * processors to eliminate.
    */
-  int initialProcessorsToEliminate(SkPMColor4f* newPipelineInputColor) const {
+  int initialProcessorsToEliminate(SkPMColor4f* newPipelineInputColor) const noexcept {
     if (fProcessorsToEliminate > 0) {
       *newPipelineInputColor = fLastKnownOutputColor;
     }

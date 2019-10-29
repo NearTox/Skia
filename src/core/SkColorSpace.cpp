@@ -11,11 +11,11 @@
 #include "src/core/SkColorSpacePriv.h"
 #include "src/core/SkOpts.h"
 
-bool SkColorSpacePrimaries::toXYZD50(skcms_Matrix3x3* toXYZ_D50) const {
+bool SkColorSpacePrimaries::toXYZD50(skcms_Matrix3x3* toXYZ_D50) const noexcept {
   return skcms_PrimariesToXYZD50(fRX, fRY, fGX, fGY, fBX, fBY, fWX, fWY, toXYZ_D50);
 }
 
-SkColorSpace::SkColorSpace(const float transferFn[7], const skcms_Matrix3x3& toXYZD50) {
+SkColorSpace::SkColorSpace(const float transferFn[7], const skcms_Matrix3x3& toXYZD50) noexcept {
   memcpy(fToXYZD50_3x3, &toXYZD50.vals[0][0], 9 * sizeof(float));
   fToXYZD50Hash = SkOpts::hash_fn(fToXYZD50_3x3, 9 * sizeof(float), 0);
 
@@ -23,7 +23,7 @@ SkColorSpace::SkColorSpace(const float transferFn[7], const skcms_Matrix3x3& toX
   fTransferFnHash = SkOpts::hash_fn(fTransferFn, 7 * sizeof(float), 0);
 }
 
-static bool xyz_almost_equal(const skcms_Matrix3x3& mA, const skcms_Matrix3x3& mB) {
+static bool xyz_almost_equal(const skcms_Matrix3x3& mA, const skcms_Matrix3x3& mB) noexcept {
   for (int r = 0; r < 3; ++r) {
     for (int c = 0; c < 3; ++c) {
       if (!color_space_almost_equal(mA.vals[r][c], mB.vals[r][c])) {
@@ -84,8 +84,8 @@ sk_sp<SkColorSpace> SkColorSpace::MakeSRGB() { return sk_ref_sp(sk_srgb_singleto
 
 sk_sp<SkColorSpace> SkColorSpace::MakeSRGBLinear() { return sk_ref_sp(sk_srgb_linear_singleton()); }
 
-void SkColorSpace::computeLazyDstFields() const {
-  fLazyDstFieldsOnce([this] {
+void SkColorSpace::computeLazyDstFields() const noexcept {
+  fLazyDstFieldsOnce([this]() noexcept {
     // Invert 3x3 gamut, defaulting to sRGB if we can't.
     {
       skcms_Matrix3x3 fwd, inv;
@@ -108,7 +108,7 @@ void SkColorSpace::computeLazyDstFields() const {
   });
 }
 
-bool SkColorSpace::isNumericalTransferFn(skcms_TransferFunction* coeffs) const {
+bool SkColorSpace::isNumericalTransferFn(skcms_TransferFunction* coeffs) const noexcept {
   // TODO: Change transferFn/invTransferFn to just operate on skcms_TransferFunction (all callers
   // already pass pointers to an skcms struct). Then remove this function, and update the two
   // remaining callers to do the right thing with transferFn and classify.
@@ -116,26 +116,26 @@ bool SkColorSpace::isNumericalTransferFn(skcms_TransferFunction* coeffs) const {
   return classify_transfer_fn(*coeffs) == sRGBish_TF;
 }
 
-void SkColorSpace::transferFn(float gabcdef[7]) const {
+void SkColorSpace::transferFn(float gabcdef[7]) const noexcept {
   memcpy(gabcdef, &fTransferFn, 7 * sizeof(float));
 }
 
-void SkColorSpace::invTransferFn(float gabcdef[7]) const {
+void SkColorSpace::invTransferFn(float gabcdef[7]) const noexcept {
   this->computeLazyDstFields();
   memcpy(gabcdef, &fInvTransferFn, 7 * sizeof(float));
 }
 
-bool SkColorSpace::toXYZD50(SkMatrix44* toXYZD50) const {
+bool SkColorSpace::toXYZD50(SkMatrix44* toXYZD50) const noexcept {
   toXYZD50->set3x3RowMajorf(fToXYZD50_3x3);
   return true;
 }
 
-bool SkColorSpace::toXYZD50(skcms_Matrix3x3* toXYZD50) const {
+bool SkColorSpace::toXYZD50(skcms_Matrix3x3* toXYZD50) const noexcept {
   memcpy(toXYZD50, fToXYZD50_3x3, 9 * sizeof(float));
   return true;
 }
 
-void SkColorSpace::gamutTransformTo(const SkColorSpace* dst, float src_to_dst[9]) const {
+void SkColorSpace::gamutTransformTo(const SkColorSpace* dst, float src_to_dst[9]) const noexcept {
   dst->computeLazyDstFields();
 
   skcms_Matrix3x3 toXYZD50, fromXYZD50;
@@ -149,12 +149,12 @@ void SkColorSpace::gamutTransformTo(const SkColorSpace* dst, float src_to_dst[9]
 
 bool SkColorSpace::isSRGB() const { return sk_srgb_singleton() == this; }
 
-bool SkColorSpace::gammaCloseToSRGB() const {
+bool SkColorSpace::gammaCloseToSRGB() const noexcept {
   // Nearly-equal transfer functions were snapped at construction time, so just do an exact test
   return memcmp(fTransferFn, &SkNamedTransferFn::kSRGB.g, 7 * sizeof(float)) == 0;
 }
 
-bool SkColorSpace::gammaIsLinear() const {
+bool SkColorSpace::gammaIsLinear() const noexcept {
   // Nearly-equal transfer functions were snapped at construction time, so just do an exact test
   return memcmp(fTransferFn, &SkNamedTransferFn::kLinear.g, 7 * sizeof(float)) == 0;
 }
@@ -192,7 +192,7 @@ sk_sp<SkColorSpace> SkColorSpace::makeColorSpin() const {
   return sk_sp<SkColorSpace>(new SkColorSpace(fTransferFn, spun));
 }
 
-void SkColorSpace::toProfile(skcms_ICCProfile* profile) const {
+void SkColorSpace::toProfile(skcms_ICCProfile* profile) const noexcept {
   skcms_TransferFunction tf;
   skcms_Matrix3x3 toXYZD50;
 
@@ -376,7 +376,7 @@ sk_sp<SkColorSpace> SkColorSpace::Deserialize(const void* data, size_t length) {
   }
 }
 
-bool SkColorSpace::Equals(const SkColorSpace* x, const SkColorSpace* y) {
+bool SkColorSpace::Equals(const SkColorSpace* x, const SkColorSpace* y) noexcept {
   if (x == y) {
     return true;
   }

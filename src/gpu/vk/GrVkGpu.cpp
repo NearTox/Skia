@@ -470,8 +470,8 @@ bool GrVkGpu::onTransferPixelsTo(
 
   SkDEBUGCODE(SkIRect subRect = SkIRect::MakeXYWH(left, top, width, height);
               SkIRect bounds = SkIRect::MakeWH(texture->width(), texture->height());
-              SkASSERT(bounds.contains(subRect));) size_t bpp =
-      GrColorTypeBytesPerPixel(bufferColorType);
+              SkASSERT(bounds.contains(subRect)));
+  size_t bpp = GrColorTypeBytesPerPixel(bufferColorType);
 
   // Set up copy region
   VkBufferImageCopy region;
@@ -605,8 +605,8 @@ bool GrVkGpu::uploadTexDataLinear(
 
   SkDEBUGCODE(SkIRect subRect = SkIRect::MakeXYWH(left, top, width, height);
               SkIRect bounds = SkIRect::MakeWH(tex->width(), tex->height());
-              SkASSERT(bounds.contains(subRect));) size_t bpp =
-      GrColorTypeBytesPerPixel(dataColorType);
+              SkASSERT(bounds.contains(subRect)));
+  size_t bpp = GrColorTypeBytesPerPixel(dataColorType);
   size_t trimRowBytes = width * bpp;
 
   SkASSERT(

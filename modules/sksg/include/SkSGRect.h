@@ -44,7 +44,7 @@ class Rect final : public GeometryNode {
   SkPath onAsPath() const override;
 
  private:
-  explicit Rect(const SkRect&);
+  explicit Rect(const SkRect&) noexcept;
 
   SkRect fRect;
 
@@ -85,7 +85,7 @@ class RRect final : public GeometryNode {
   SkPath onAsPath() const override;
 
  private:
-  explicit RRect(const SkRRect&);
+  explicit RRect(const SkRRect&) noexcept;
 
   SkRRect fRRect;
 

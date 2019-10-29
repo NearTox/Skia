@@ -16,7 +16,7 @@
 SkInterpolatorBase::SkInterpolatorBase() {
   fStorage = nullptr;
   fTimes = nullptr;
-  SkDEBUGCODE(fTimesArray = nullptr;)
+  SkDEBUGCODE(fTimesArray = nullptr);
 }
 
 SkInterpolatorBase::~SkInterpolatorBase() {
@@ -129,7 +129,7 @@ SkInterpolatorBase::Result SkInterpolatorBase::timeToT(
 SkInterpolator::SkInterpolator() {
   INHERITED::reset(0, 0);
   fValues = nullptr;
-  SkDEBUGCODE(fScalarsArray = nullptr;)
+  SkDEBUGCODE(fScalarsArray = nullptr);
 }
 
 SkInterpolator::SkInterpolator(int elemCount, int frameCount) {

@@ -24,9 +24,11 @@ struct SkFontParameters {
       // Maximum value supported by this axis. The maximum can equal the minimum.
       float max;
       // Return whether this axis is recommended to be remain hidden in user interfaces.
-      bool isHidden() const { return flags & HIDDEN; }
+      bool isHidden() const noexcept { return flags & HIDDEN; }
       // Set this axis to be remain hidden in user interfaces.
-      void setHidden(bool hidden) { flags = hidden ? (flags | HIDDEN) : (flags & ~HIDDEN); }
+      void setHidden(bool hidden) noexcept {
+        flags = hidden ? (flags | HIDDEN) : (flags & ~HIDDEN);
+      }
 
      private:
       static constexpr uint16_t HIDDEN = 0x0001;

@@ -179,34 +179,33 @@ struct Builder : public skvm::Builder {
     // and how coverage is applied, and to complicate things, LCD coverage
     // needs to know dst.a.  We're careful to assert it's loaded in time.
     Color dst;
-    SkDEBUGCODE(bool dst_loaded = false;)
+    SkDEBUGCODE(bool dst_loaded = false);
 
-        // load_coverage() returns false when there's no need to apply coverage.
-        auto load_coverage = [&](Color* cov) {
-          switch (key.coverage) {
-            case Coverage::Full: return false;
+    // load_coverage() returns false when there's no need to apply coverage.
+    auto load_coverage = [&](Color* cov) {
+      switch (key.coverage) {
+        case Coverage::Full: return false;
 
-            case Coverage::UniformA8:
-              cov->r = cov->g = cov->b = cov->a = uniform8(uniforms, offsetof(Uniforms, coverage));
-              return true;
+        case Coverage::UniformA8:
+          cov->r = cov->g = cov->b = cov->a = uniform8(uniforms, offsetof(Uniforms, coverage));
+          return true;
 
-            case Coverage::MaskA8:
-              cov->r = cov->g = cov->b = cov->a = load8(varying<uint8_t>());
-              return true;
+        case Coverage::MaskA8:
+          cov->r = cov->g = cov->b = cov->a = load8(varying<uint8_t>());
+          return true;
 
-            case Coverage::MaskLCD16:
-              SkASSERT(dst_loaded);
-              *cov = unpack_565(load16(varying<uint16_t>()));
-              cov->a = select(
-                  lt(src.a, dst.a), min(cov->r, min(cov->g, cov->b)),
-                  max(cov->r, max(cov->g, cov->b)));
-              return true;
+        case Coverage::MaskLCD16:
+          SkASSERT(dst_loaded);
+          *cov = unpack_565(load16(varying<uint16_t>()));
+          cov->a = select(
+              lt(src.a, dst.a), min(cov->r, min(cov->g, cov->b)), max(cov->r, max(cov->g, cov->b)));
+          return true;
 
-            case Coverage::Mask3D: TODO;
-          }
-          // GCC insists...
-          return false;
-        };
+        case Coverage::Mask3D: TODO;
+      }
+      // GCC insists...
+      return false;
+    };
 
     // The math for some blend modes lets us fold coverage into src before the blend,
     // obviating the need for the lerp afterwards. This early-coverage strategy tends
@@ -224,7 +223,8 @@ struct Builder : public skvm::Builder {
     }
 
     // Load up the destination color.
-    SkDEBUGCODE(dst_loaded = true;) switch (key.colorType) {
+    SkDEBUGCODE(dst_loaded = true);
+    switch (key.colorType) {
       default: TODO;
       case kRGB_565_SkColorType: dst = unpack_565(load16(dst_ptr)); break;
       case kRGBA_8888_SkColorType: dst = unpack_8888(load32(dst_ptr)); break;

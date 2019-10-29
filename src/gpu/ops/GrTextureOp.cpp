@@ -483,10 +483,9 @@ class TextureOp final : public GrMeshDrawOp {
   void onPrepareDraws(Target* target) override {
     TRACE_EVENT0("skia.gpu", TRACE_FUNC);
 
-    SkDEBUGCODE(this->validate();)
+    SkDEBUGCODE(this->validate());
 
-        int numProxies,
-        numTotalQuads;
+    int numProxies, numTotalQuads;
 
     const VertexSpec vertexSpec = this->characterize(&numProxies, &numTotalQuads);
 

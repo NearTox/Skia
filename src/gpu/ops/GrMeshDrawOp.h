@@ -85,7 +85,7 @@ class GrMeshDrawOp : public GrDrawOp {
 
 class GrMeshDrawOp::Target {
  public:
-  virtual ~Target() {}
+  virtual ~Target() = default;
 
   /** Adds a draw of a mesh. */
   virtual void recordDraw(

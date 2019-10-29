@@ -33,10 +33,10 @@ class SkTScopedComPtr {
   T* fPtr;
 
  public:
-  constexpr SkTScopedComPtr() : fPtr(nullptr) {}
-  constexpr SkTScopedComPtr(std::nullptr_t) : fPtr(nullptr) {}
-  explicit SkTScopedComPtr(T* ptr) : fPtr(ptr) {}
-  SkTScopedComPtr(SkTScopedComPtr&& that) : fPtr(that.release()) {}
+  constexpr SkTScopedComPtr() noexcept : fPtr(nullptr) {}
+  constexpr SkTScopedComPtr(std::nullptr_t) noexcept : fPtr(nullptr) {}
+  explicit SkTScopedComPtr(T* ptr) noexcept : fPtr(ptr) {}
+  SkTScopedComPtr(SkTScopedComPtr&& that) noexcept : fPtr(that.release()) {}
   SkTScopedComPtr(const SkTScopedComPtr&) = delete;
 
   ~SkTScopedComPtr() { this->reset(); }
@@ -71,7 +71,7 @@ class SkTScopedComPtr {
     return &fPtr;
   }
 
-  T* get() const { return fPtr; }
+  T* get() const noexcept { return fPtr; }
 
   void reset(T* ptr = nullptr) {
     if (fPtr) {
@@ -80,13 +80,13 @@ class SkTScopedComPtr {
     fPtr = ptr;
   }
 
-  void swap(SkTScopedComPtr<T>& that) {
+  void swap(SkTScopedComPtr<T>& that) noexcept {
     T* temp = this->fPtr;
     this->fPtr = that.fPtr;
     that.fPtr = temp;
   }
 
-  T* release() {
+  T* release() noexcept {
     T* temp = this->fPtr;
     this->fPtr = nullptr;
     return temp;

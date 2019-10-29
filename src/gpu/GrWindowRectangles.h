@@ -15,14 +15,26 @@ class GrWindowRectangles {
  public:
   constexpr static int kMaxWindows = 8;
 
+ private:
+  struct Rec : public GrNonAtomicRef<Rec> {
+    Rec(const SkIRect* windows, int numWindows) {
+      SkASSERT(numWindows < kMaxWindows);
+      memcpy(fData, windows, sizeof(SkIRect) * numWindows);
+    }
+    Rec() = default;
+
+    SkIRect fData[kMaxWindows];
+  };
+
+ public:
   GrWindowRectangles() : fCount(0) {}
   GrWindowRectangles(const GrWindowRectangles& that) : fCount(0) { *this = that; }
   ~GrWindowRectangles() { SkSafeUnref(this->rec()); }
 
   GrWindowRectangles makeOffset(int dx, int dy) const;
 
-  bool empty() const { return !fCount; }
-  int count() const { return fCount; }
+  bool empty() const noexcept { return !fCount; }
+  int count() const noexcept { return fCount; }
   const SkIRect* data() const;
 
   void reset();
@@ -36,25 +48,14 @@ class GrWindowRectangles {
 
  private:
   constexpr static int kNumLocalWindows = 1;
-  struct Rec;
 
-  const Rec* rec() const { return fCount <= kNumLocalWindows ? nullptr : fRec; }
+  const Rec* rec() const noexcept { return fCount <= kNumLocalWindows ? nullptr : fRec; }
 
   int fCount;
   union {
     SkIRect fLocalWindows[kNumLocalWindows];  // If fCount <= kNumLocalWindows.
     Rec* fRec;                                // If fCount > kNumLocalWindows.
   };
-};
-
-struct GrWindowRectangles::Rec : public GrNonAtomicRef<Rec> {
-  Rec(const SkIRect* windows, int numWindows) {
-    SkASSERT(numWindows < kMaxWindows);
-    memcpy(fData, windows, sizeof(SkIRect) * numWindows);
-  }
-  Rec() = default;
-
-  SkIRect fData[kMaxWindows];
 };
 
 inline const SkIRect* GrWindowRectangles::data() const {

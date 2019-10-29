@@ -18,10 +18,10 @@
  */
 class SkKeyedImage {
  public:
-  SkKeyedImage() {}
+  SkKeyedImage() noexcept = default;
   SkKeyedImage(sk_sp<SkImage>);
   SkKeyedImage(const SkBitmap&);
-  SkKeyedImage(SkKeyedImage&&) = default;
+  SkKeyedImage(SkKeyedImage&&) noexcept = default;
   SkKeyedImage(const SkKeyedImage&) = default;
 
   SkKeyedImage& operator=(SkKeyedImage&&) = default;

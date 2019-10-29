@@ -19,7 +19,7 @@ struct SkGlyphPositionRoundingSpec;
 // memory.
 class SkGlyphVariant {
  public:
-  SkGlyphVariant() : fV{nullptr} {}
+  constexpr SkGlyphVariant() noexcept : fV{nullptr} {}
   SkGlyphVariant& operator=(SkPackedGlyphID packedID) {
     fV.packedID = packedID;
     SkDEBUGCODE(fTag = kPackedID);
@@ -70,7 +70,7 @@ class SkGlyphVariant {
 // SkPackedGlyphIDs.
 class SkDrawableGlyphBuffer {
  public:
-  void ensureSize(size_t size);
+  void ensureSize(size_t size) noexcept;
 
   // Load the buffer with SkPackedGlyphIDs and positions in source space.
   void startSource(const SkZip<const SkGlyphID, const SkPoint>& source, SkPoint origin);
@@ -114,7 +114,7 @@ class SkDrawableGlyphBuffer {
     return SkZip<SkGlyphVariant, SkPoint>{fDrawableSize, fMultiBuffer, fPositions};
   }
 
-  void reset();
+  void reset() noexcept;
 
  private:
   size_t fMaxSize{0};

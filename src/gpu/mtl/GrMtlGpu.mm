@@ -901,10 +901,10 @@ bool GrMtlGpu::createMtlTextureForBackendSurface(
 GrBackendTexture GrMtlGpu::onCreateBackendTexture(
     int w, int h, const GrBackendFormat& format, GrMipMapped mipMapped, GrRenderable renderable,
     const SkPixmap srcData[], int numMipLevels, const SkColor4f* color, GrProtected isProtected) {
-  SkDEBUGCODE(const GrMtlCaps& caps = this->mtlCaps();)
+  SkDEBUGCODE(const GrMtlCaps& caps = this->mtlCaps());
 
-      // GrGpu::createBackendTexture should've ensured these conditions
-      SkASSERT(w >= 1 && w <= caps.maxTextureSize() && h >= 1 && h <= caps.maxTextureSize());
+  // GrGpu::createBackendTexture should've ensured these conditions
+  SkASSERT(w >= 1 && w <= caps.maxTextureSize() && h >= 1 && h <= caps.maxTextureSize());
   SkASSERT(GrGpu::MipMapsAreCorrect(w, h, mipMapped, srcData, numMipLevels));
   SkASSERT(mipMapped == GrMipMapped::kNo || caps.mipMapSupport());
 

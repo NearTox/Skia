@@ -39,11 +39,11 @@ class SK_API SkImageFilter : public SkFlattenable {
       kHasHeight_CropEdge = 0x08,
       kHasAll_CropEdge = 0x0F,
     };
-    CropRect() {}
-    explicit CropRect(const SkRect& rect, uint32_t flags = kHasAll_CropEdge)
+    CropRect() noexcept {}
+    explicit CropRect(const SkRect& rect, uint32_t flags = kHasAll_CropEdge) noexcept
         : fRect(rect), fFlags(flags) {}
-    uint32_t flags() const { return fFlags; }
-    const SkRect& rect() const { return fRect; }
+    uint32_t flags() const noexcept { return fFlags; }
+    const SkRect& rect() const noexcept { return fRect; }
 
     /**
      *  Apply this cropRect to the imageBounds. If a given edge of the cropRect is not set, then

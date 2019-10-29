@@ -33,8 +33,9 @@ void GrPathRenderer::StencilPathArgs::validate() const {
 GrPathRenderer::GrPathRenderer() {}
 
 GrPathRenderer::StencilSupport GrPathRenderer::getStencilSupport(const GrShape& shape) const {
-  SkDEBUGCODE(SkPath path;) SkDEBUGCODE(shape.asPath(&path);)
-      SkASSERT(shape.style().isSimpleFill());
+  SkDEBUGCODE(SkPath path);
+  SkDEBUGCODE(shape.asPath(&path));
+  SkASSERT(shape.style().isSimpleFill());
   SkASSERT(!path.isInverseFillType());
   return this->onGetStencilSupport(shape);
 }

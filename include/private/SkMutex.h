@@ -16,7 +16,7 @@
 
 class SK_CAPABILITY("mutex") SkMutex {
  public:
-  constexpr SkMutex() = default;
+  constexpr SkMutex() noexcept = default;
 
   void acquire() SK_ACQUIRE() {
     fSemaphore.wait();

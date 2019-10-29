@@ -40,7 +40,8 @@ typedef uint32_t GrColor;
 /**
  *  Pack 4 components (RGBA) into a GrColor int
  */
-static inline GrColor GrColorPackRGBA(unsigned r, unsigned g, unsigned b, unsigned a) {
+static constexpr inline GrColor GrColorPackRGBA(
+    unsigned r, unsigned g, unsigned b, unsigned a) noexcept {
   SkASSERT((uint8_t)r == r);
   SkASSERT((uint8_t)g == g);
   SkASSERT((uint8_t)b == b);
@@ -63,8 +64,8 @@ static inline GrColor GrColorPackRGBA(unsigned r, unsigned g, unsigned b, unsign
 #define GrColor_ILLEGAL (~(0xFF << GrColor_SHIFT_A))
 
 /** Normalizes and coverts an uint8_t to a float. [0, 255] -> [0.0, 1.0] */
-static inline float GrNormalizeByteToFloat(uint8_t value) {
-  static const float ONE_OVER_255 = 1.f / 255.f;
+static constexpr inline float GrNormalizeByteToFloat(uint8_t value) noexcept {
+  constexpr float ONE_OVER_255 = 1.f / 255.f;
   return value * ONE_OVER_255;
 }
 
@@ -96,7 +97,7 @@ class GrVertexColor {
     }
   }
 
-  size_t size() const { return fWideColor ? 8 : 4; }
+  size_t size() const noexcept { return fWideColor ? 8 : 4; }
 
  private:
   friend struct GrVertexWriter;

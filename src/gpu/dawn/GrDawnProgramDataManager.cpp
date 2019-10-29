@@ -27,7 +27,8 @@ GrDawnProgramDataManager::GrDawnProgramDataManager(
     Uniform& uniform = fUniforms[i];
     const GrDawnUniformHandler::UniformInfo uniformInfo = uniforms[i];
     SkDEBUGCODE(uniform.fArrayCount = uniformInfo.fVar.getArrayCount();
-                uniform.fType = uniformInfo.fVar.getType(););
+                uniform.fType = uniformInfo.fVar.getType());
+    ;
 
     if (!(kFragment_GrShaderFlag & uniformInfo.fVisibility)) {
       uniform.fBinding = GrDawnUniformHandler::kGeometryBinding;

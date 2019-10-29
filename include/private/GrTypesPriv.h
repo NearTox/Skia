@@ -67,7 +67,7 @@ enum GrPixelConfig {
 
   kLast_GrPixelConfig = kRG_half_GrPixelConfig
 };
-static const int kGrPixelConfigCnt = kLast_GrPixelConfig + 1;
+static constexpr int kGrPixelConfigCnt = kLast_GrPixelConfig + 1;
 
 // Aliases for pixel configs that match skia's byte order.
 #ifndef SK_CPU_LENDIAN
@@ -114,12 +114,12 @@ enum GrMaskFormat {
 
   kLast_GrMaskFormat = kARGB_GrMaskFormat
 };
-static const int kMaskFormatCount = kLast_GrMaskFormat + 1;
+static constexpr int kMaskFormatCount = kLast_GrMaskFormat + 1;
 
 /**
  *  Return the number of bytes-per-pixel for the specified mask format.
  */
-static inline int GrMaskFormatBytesPerPixel(GrMaskFormat format) {
+static inline int GrMaskFormatBytesPerPixel(GrMaskFormat format) noexcept {
   SkASSERT(format < kMaskFormatCount);
   // kA8   (0) -> 1
   // kA565 (1) -> 2
@@ -226,7 +226,7 @@ enum class GrAA : bool { kNo = false, kYes = true };
 
 enum class GrFillRule : bool { kNonzero, kEvenOdd };
 
-inline GrFillRule GrFillRuleForSkPath(const SkPath& path) {
+inline GrFillRule GrFillRuleForSkPath(const SkPath& path) noexcept {
   switch (path.getFillType()) {
     case SkPath::kWinding_FillType:
     case SkPath::kInverseWinding_FillType: return GrFillRule::kNonzero;
@@ -293,7 +293,7 @@ enum class GrQuadAAFlags {
 
 GR_MAKE_BITFIELD_CLASS_OPS(GrQuadAAFlags)
 
-static inline GrQuadAAFlags SkToGrQuadAAFlags(unsigned flags) {
+static constexpr inline GrQuadAAFlags SkToGrQuadAAFlags(unsigned flags) {
   return static_cast<GrQuadAAFlags>(flags);
 }
 
@@ -347,7 +347,7 @@ enum GrSLType {
 
   kLast_GrSLType = kSampler_GrSLType
 };
-static const int kGrSLTypeCount = kLast_GrSLType + 1;
+static constexpr int kGrSLTypeCount = kLast_GrSLType + 1;
 
 /**
  * The type of texture. Backends other than GL currently only use the 2D value but the type must
@@ -369,7 +369,7 @@ enum GrShaderType {
 
   kLastkFragment_GrShaderType = kFragment_GrShaderType
 };
-static const int kGrShaderTypeCount = kLastkFragment_GrShaderType + 1;
+static constexpr int kGrShaderTypeCount = kLastkFragment_GrShaderType + 1;
 
 enum GrShaderFlags {
   kNone_GrShaderFlags = 0,
@@ -484,7 +484,7 @@ static constexpr int GrSLTypeVecLength(GrSLType type) {
   SkUNREACHABLE;
 }
 
-static inline GrSLType GrSLCombinedSamplerTypeForTextureType(GrTextureType type) {
+static inline GrSLType GrSLCombinedSamplerTypeForTextureType(GrTextureType type) noexcept {
   switch (type) {
     case GrTextureType::k2D: return kTexture2DSampler_GrSLType;
     case GrTextureType::kRectangle: return kTexture2DRectSampler_GrSLType;
@@ -496,7 +496,7 @@ static inline GrSLType GrSLCombinedSamplerTypeForTextureType(GrTextureType type)
 /** Rectangle and external textures only support the clamp wrap mode and do not support
  *  MIP maps.
  */
-static inline bool GrTextureTypeHasRestrictedSampling(GrTextureType type) {
+static inline bool GrTextureTypeHasRestrictedSampling(GrTextureType type) noexcept {
   switch (type) {
     case GrTextureType::k2D: return false;
     case GrTextureType::kRectangle: return true;
@@ -602,11 +602,11 @@ enum GrVertexAttribType {
 
   kLast_GrVertexAttribType = kUShort4_norm_GrVertexAttribType
 };
-static const int kGrVertexAttribTypeCount = kLast_GrVertexAttribType + 1;
+static constexpr int kGrVertexAttribTypeCount = kLast_GrVertexAttribType + 1;
 
 //////////////////////////////////////////////////////////////////////////////
 
-static const int kGrClipEdgeTypeCnt = (int)GrClipEdgeType::kLast + 1;
+static constexpr int kGrClipEdgeTypeCnt = (int)GrClipEdgeType::kLast + 1;
 
 static constexpr bool GrProcessorEdgeTypeIsFill(const GrClipEdgeType edgeType) {
   return (GrClipEdgeType::kFillAA == edgeType || GrClipEdgeType::kFillBW == edgeType);
@@ -620,7 +620,7 @@ static constexpr bool GrProcessorEdgeTypeIsAA(const GrClipEdgeType edgeType) {
   return (GrClipEdgeType::kFillBW != edgeType && GrClipEdgeType::kInverseFillBW != edgeType);
 }
 
-static inline GrClipEdgeType GrInvertProcessorEdgeType(const GrClipEdgeType edgeType) {
+static inline GrClipEdgeType GrInvertProcessorEdgeType(const GrClipEdgeType edgeType) noexcept {
   switch (edgeType) {
     case GrClipEdgeType::kFillBW: return GrClipEdgeType::kInverseFillBW;
     case GrClipEdgeType::kFillAA: return GrClipEdgeType::kInverseFillAA;
@@ -645,7 +645,7 @@ enum class GrGpuBufferType {
   kXferCpuToGpu,
   kXferGpuToCpu,
 };
-static const int kGrGpuBufferTypeCount = static_cast<int>(GrGpuBufferType::kXferGpuToCpu) + 1;
+static constexpr int kGrGpuBufferTypeCount = static_cast<int>(GrGpuBufferType::kXferGpuToCpu) + 1;
 
 /**
  * Provides a performance hint regarding the frequency at which a data store will be accessed.
@@ -783,7 +783,7 @@ static constexpr bool GrPixelConfigIsCompressed(GrPixelConfig config) {
  * Returns the data size for the given SkImage::CompressionType
  */
 static inline size_t GrCompressedFormatDataSize(
-    SkImage::CompressionType compressionType, int width, int height) {
+    SkImage::CompressionType compressionType, int width, int height) noexcept {
   switch (compressionType) {
     case SkImage::kETC1_CompressionType:
       SkASSERT((width & 3) == 0);
@@ -836,7 +836,7 @@ enum class GrColorType {
   kLast = kGray_8xxx
 };
 
-static const int kGrColorTypeCnt = static_cast<int>(GrColorType::kLast) + 1;
+static constexpr int kGrColorTypeCnt = static_cast<int>(GrColorType::kLast) + 1;
 
 static constexpr SkColorType GrColorTypeToSkColorType(GrColorType ct) {
   switch (ct) {
@@ -1177,12 +1177,12 @@ class GrRefCntedCallback : public SkRefCnt {
   using Context = void*;
   using Callback = void (*)(Context);
 
-  GrRefCntedCallback(Callback proc, Context ctx) : fReleaseProc(proc), fReleaseCtx(ctx) {
+  GrRefCntedCallback(Callback proc, Context ctx) noexcept : fReleaseProc(proc), fReleaseCtx(ctx) {
     SkASSERT(proc);
   }
   ~GrRefCntedCallback() override { fReleaseProc ? fReleaseProc(fReleaseCtx) : void(); }
 
-  Context context() const { return fReleaseCtx; }
+  Context context() const noexcept { return fReleaseCtx; }
 
  private:
   Callback fReleaseProc;

@@ -28,8 +28,8 @@ class Group : public RenderNode {
   void addChild(sk_sp<RenderNode>);
   void removeChild(const sk_sp<RenderNode>&);
 
-  size_t size() const { return fChildren.size(); }
-  bool empty() const { return fChildren.empty(); }
+  size_t size() const noexcept { return fChildren.size(); }
+  bool empty() const noexcept { return fChildren.empty(); }
   void clear();
 
  protected:

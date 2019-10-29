@@ -165,7 +165,7 @@ class SK_API SkGraphics {
    *  Returns the previous factory (which could be NULL).
    */
   static ImageGeneratorFromEncodedDataFactory SetImageGeneratorFromEncodedDataFactory(
-      ImageGeneratorFromEncodedDataFactory);
+      ImageGeneratorFromEncodedDataFactory) noexcept;
 };
 
 class SkAutoGraphics {

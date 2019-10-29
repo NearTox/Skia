@@ -22,7 +22,7 @@ void SkWriter32::writeMatrix(const SkMatrix& matrix) {
  *  Strings are stored as: length[4-bytes] + string_data + '\0' + pad_to_mul_4
  */
 
-const char* SkReader32::readString(size_t* outLen) {
+const char* SkReader32::readString(size_t* outLen) noexcept {
   size_t len = this->readU32();
   const void* ptr = this->peek();
 
@@ -62,7 +62,7 @@ void SkWriter32::writeString(const char str[], size_t len) {
   chars[len] = '\0';
 }
 
-size_t SkWriter32::WriteStringSize(const char* str, size_t len) {
+size_t SkWriter32::WriteStringSize(const char* str, size_t len) noexcept {
   if ((long)len < 0) {
     SkASSERT(str);
     len = strlen(str);
@@ -72,7 +72,7 @@ size_t SkWriter32::WriteStringSize(const char* str, size_t len) {
   return SkAlign4(lenBytes + len + 1);
 }
 
-void SkWriter32::growToAtLeast(size_t size) {
+void SkWriter32::growToAtLeast(size_t size) noexcept {
   const bool wasExternal = (fExternal != nullptr) && (fData == fExternal);
 
   fCapacity = 4096 + SkTMax(size, fCapacity + (fCapacity / 2));

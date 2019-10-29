@@ -72,8 +72,8 @@ class SkResourceCache {
   struct Rec {
     typedef SkResourceCache::Key Key;
 
-    Rec() {}
-    virtual ~Rec() {}
+    Rec() noexcept = default;
+    virtual ~Rec() = default;
 
     uint32_t getHash() const { return this->getKey().hash(); }
 
@@ -109,7 +109,7 @@ class SkResourceCache {
 
   // Used with SkMessageBus
   struct PurgeSharedIDMessage {
-    PurgeSharedIDMessage(uint64_t sharedID) : fSharedID(sharedID) {}
+    constexpr PurgeSharedIDMessage(uint64_t sharedID) noexcept : fSharedID(sharedID) {}
     uint64_t fSharedID;
   };
 
@@ -218,19 +218,19 @@ class SkResourceCache {
   void add(Rec*, void* payload = nullptr);
   void visitAll(Visitor, void* context);
 
-  size_t getTotalBytesUsed() const { return fTotalBytesUsed; }
-  size_t getTotalByteLimit() const { return fTotalByteLimit; }
+  size_t getTotalBytesUsed() const noexcept { return fTotalBytesUsed; }
+  size_t getTotalByteLimit() const noexcept { return fTotalByteLimit; }
 
   /**
    *  This is respected by SkBitmapProcState::possiblyScaleImage.
    *  0 is no maximum at all; this is the default.
    *  setSingleAllocationByteLimit() returns the previous value.
    */
-  size_t setSingleAllocationByteLimit(size_t maximumAllocationSize);
-  size_t getSingleAllocationByteLimit() const;
+  size_t setSingleAllocationByteLimit(size_t maximumAllocationSize) noexcept;
+  size_t getSingleAllocationByteLimit() const noexcept;
   // returns the logical single allocation size (pinning against the budget when the cache
   // is not backed by discardable memory.
-  size_t getEffectiveSingleAllocationByteLimit() const;
+  size_t getEffectiveSingleAllocationByteLimit() const noexcept;
 
   /**
    *  Set the maximum number of bytes available to this cache. If the current
@@ -243,7 +243,7 @@ class SkResourceCache {
 
   void purgeAll() { this->purgeAsNeeded(true); }
 
-  DiscardableFactory discardableFactory() const { return fDiscardableFactory; }
+  DiscardableFactory discardableFactory() const noexcept { return fDiscardableFactory; }
 
   SkCachedData* newCachedData(size_t bytes);
 
@@ -272,9 +272,9 @@ class SkResourceCache {
   void purgeAsNeeded(bool forcePurge = false);
 
   // linklist management
-  void moveToHead(Rec*);
+  void moveToHead(Rec*) noexcept;
   void addToHead(Rec*);
-  void release(Rec*);
+  void release(Rec*) noexcept;
   void remove(Rec*);
 
   void init();  // called by constructors
@@ -282,7 +282,7 @@ class SkResourceCache {
 #ifdef SK_DEBUG
   void validate() const;
 #else
-  void validate() const {}
+  void validate() const noexcept {}
 #endif
 };
 #endif

@@ -90,7 +90,7 @@ class GrGLSLVaryingHandler {
         fProgramBuilder(program),
         fDefaultInterpolationModifier(nullptr) {}
 
-  virtual ~GrGLSLVaryingHandler() {}
+  virtual ~GrGLSLVaryingHandler() = default;
 
   /*
    * Notifies the varying handler that this shader will never emit geometry in perspective and

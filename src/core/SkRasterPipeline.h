@@ -41,15 +41,19 @@
   M(clamp_0)                                                                                                                                            \
   M(clamp_1)                                                                                                                                            \
   M(clamp_a)                                                                                                                                            \
-  M(clamp_gamut) M(unpremul) M(premul) M(premul_dst) M(force_opaque) M(force_opaque_dst) M(                                                             \
-      set_rgb) M(unbounded_set_rgb) M(swap_rb) M(swap_rb_dst) M(from_srgb) M(to_srgb)                                                                   \
-      M(black_color) M(white_color) M(uniform_color) M(unbounded_uniform_color) M(                                                                      \
-          uniform_color_dst) M(seed_shader) M(dither) M(load_a8) M(load_a8_dst) M(store_a8)                                                             \
-          M(gather_a8) M(load_565) M(load_565_dst) M(store_565) M(gather_565) M(load_4444) M(                                                           \
-              load_4444_dst) M(store_4444) M(gather_4444) M(load_f16) M(load_f16_dst) M(store_f16)                                                      \
-              M(gather_f16) M(load_af16) M(load_af16_dst) M(store_af16) M(gather_af16) M(load_rgf16) M(                                                 \
-                  load_rgf16_dst) M(store_rgf16) M(gather_rgf16) M(load_f32) M(load_f32_dst) M(store_f32) M(gather_f32)                                 \
-                  M(load_rgf32) M(store_rgf32) M(load_8888) M(load_8888_dst) M(store_8888) M(gather_8888) M(load_rg88) M(                               \
+  M(clamp_gamut)                                                                                                                                        \
+  M(unpremul)                                                                                                                                           \
+  M(premul)                                                                                                                                             \
+  M(premul_dst)                                                                                                                                         \
+  M(force_opaque) M(force_opaque_dst) M(set_rgb) M(unbounded_set_rgb) M(swap_rb) M(swap_rb_dst) M(                                                      \
+      from_srgb) M(to_srgb) M(black_color) M(white_color) M(uniform_color)                                                                              \
+      M(unbounded_uniform_color) M(uniform_color_dst) M(seed_shader) M(dither) M(load_a8) M(                                                            \
+          load_a8_dst) M(store_a8) M(gather_a8) M(load_565) M(load_565_dst) M(store_565)                                                                \
+          M(gather_565) M(load_4444) M(load_4444_dst) M(store_4444) M(gather_4444) M(load_f16) M(                                                       \
+              load_f16_dst) M(store_f16) M(gather_f16) M(load_af16) M(load_af16_dst) M(store_af16)                                                      \
+              M(gather_af16) M(load_rgf16) M(load_rgf16_dst) M(store_rgf16) M(gather_rgf16) M(load_f32) M(load_f32_dst) M(                              \
+                  store_f32) M(gather_f32) M(load_rgf32) M(store_rgf32) M(load_8888)                                                                    \
+                  M(load_8888_dst) M(store_8888) M(gather_8888) M(load_rg88) M(                                                                         \
                       load_rg88_dst) M(store_rg88) M(gather_rg88) M(load_a16) M(load_a16_dst)                                                           \
                       M(store_a16) M(gather_a16) M(load_rg1616) M(load_rg1616_dst) M(store_rg1616) M(                                                   \
                           gather_rg1616) M(load_16161616) M(load_16161616_dst) M(store_16161616)                                                        \
@@ -98,7 +102,7 @@
                                                                                                                   M(swizzle)
 
 // The largest number of pixels we handle at a time.
-static const int SkRasterPipeline_kMaxStride = 16;
+static constexpr int SkRasterPipeline_kMaxStride = 16;
 
 // Structs representing the arguments to some common stages.
 
@@ -196,15 +200,15 @@ struct SkRasterPipeline_EmbossCtx {
 
 class SkRasterPipeline {
  public:
-  explicit SkRasterPipeline(SkArenaAlloc*);
+  explicit SkRasterPipeline(SkArenaAlloc*) noexcept;
 
   SkRasterPipeline(const SkRasterPipeline&) = delete;
-  SkRasterPipeline(SkRasterPipeline&&) = default;
+  SkRasterPipeline(SkRasterPipeline&&) noexcept = default;
 
   SkRasterPipeline& operator=(const SkRasterPipeline&) = delete;
-  SkRasterPipeline& operator=(SkRasterPipeline&&) = default;
+  SkRasterPipeline& operator=(SkRasterPipeline&&) noexcept = default;
 
-  void reset();
+  void reset() noexcept;
 
   enum StockStage {
 #define M(stage) stage,
@@ -253,7 +257,7 @@ class SkRasterPipeline {
 
   void append_transfer_function(const skcms_TransferFunction&);
 
-  bool empty() const { return fStages == nullptr; }
+  bool empty() const noexcept { return fStages == nullptr; }
 
  private:
   struct StageList {

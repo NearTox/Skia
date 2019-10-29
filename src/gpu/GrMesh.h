@@ -23,7 +23,7 @@ class GrMesh {
  public:
   GrMesh(GrPrimitiveType primitiveType = GrPrimitiveType::kTriangles)
       : fPrimitiveType(primitiveType), fBaseVertex(0) {
-    SkDEBUGCODE(fNonIndexNonInstanceData.fVertexCount = -1;)
+    SkDEBUGCODE(fNonIndexNonInstanceData.fVertexCount = -1);
   }
 
   void setPrimitiveType(GrPrimitiveType type) { fPrimitiveType = type; }
@@ -73,7 +73,7 @@ class GrMesh {
         const GrBuffer* vertexBuffer, int baseVertex, const GrBuffer* instanceBuffer,
         int instanceCount, int baseInstance, GrPrimitiveRestart) = 0;
 
-    virtual ~SendToGpuImpl() {}
+    virtual ~SendToGpuImpl() = default;
   };
 
   void sendToGpu(SendToGpuImpl*) const;

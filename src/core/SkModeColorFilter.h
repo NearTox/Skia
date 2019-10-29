@@ -17,7 +17,7 @@ class SkModeColorFilter : public SkColorFilter {
     return sk_sp<SkColorFilter>(new SkModeColorFilter(color, mode));
   }
 
-  uint32_t getFlags() const override;
+  uint32_t getFlags() const noexcept override;
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(

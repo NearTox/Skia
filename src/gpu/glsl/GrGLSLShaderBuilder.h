@@ -24,7 +24,7 @@ class GrGLSLColorSpaceXformHelper;
 class GrGLSLShaderBuilder {
  public:
   GrGLSLShaderBuilder(GrGLSLProgramBuilder* program);
-  virtual ~GrGLSLShaderBuilder() {}
+  virtual ~GrGLSLShaderBuilder() = default;
 
   using SamplerHandle = GrGLSLUniformHandler::SamplerHandle;
 

@@ -11,14 +11,14 @@ static SkFontLCDConfig::LCDOrientation gLCDOrientation =
     SkFontLCDConfig::kHorizontal_LCDOrientation;
 static SkFontLCDConfig::LCDOrder gLCDOrder = SkFontLCDConfig::kRGB_LCDOrder;
 
-SkFontLCDConfig::LCDOrientation SkFontLCDConfig::GetSubpixelOrientation() {
+SkFontLCDConfig::LCDOrientation SkFontLCDConfig::GetSubpixelOrientation() noexcept {
   return gLCDOrientation;
 }
 
-void SkFontLCDConfig::SetSubpixelOrientation(LCDOrientation orientation) {
+void SkFontLCDConfig::SetSubpixelOrientation(LCDOrientation orientation) noexcept {
   gLCDOrientation = orientation;
 }
 
-SkFontLCDConfig::LCDOrder SkFontLCDConfig::GetSubpixelOrder() { return gLCDOrder; }
+SkFontLCDConfig::LCDOrder SkFontLCDConfig::GetSubpixelOrder() noexcept { return gLCDOrder; }
 
-void SkFontLCDConfig::SetSubpixelOrder(LCDOrder order) { gLCDOrder = order; }
+void SkFontLCDConfig::SetSubpixelOrder(LCDOrder order) noexcept { gLCDOrder = order; }

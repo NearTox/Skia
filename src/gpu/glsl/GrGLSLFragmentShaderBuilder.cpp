@@ -176,9 +176,9 @@ SkString GrGLSLFPFragmentBuilder::writeProcessorFunction(
 }
 
 const char* GrGLSLFragmentShaderBuilder::dstColor() {
-  SkDEBUGCODE(fHasReadDstColorThisStage_DebugOnly = true;)
+  SkDEBUGCODE(fHasReadDstColorThisStage_DebugOnly = true);
 
-      const GrShaderCaps* shaderCaps = fProgramBuilder->shaderCaps();
+  const GrShaderCaps* shaderCaps = fProgramBuilder->shaderCaps();
   if (shaderCaps->fbFetchSupport()) {
     this->addFeature(
         1 << kFramebufferFetch_GLSLPrivateFeature, shaderCaps->fbFetchExtensionString());

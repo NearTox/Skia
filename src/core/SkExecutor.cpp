@@ -26,7 +26,7 @@ static int num_cores() {
 static int num_cores() { return (int)sysconf(_SC_NPROCESSORS_ONLN); }
 #endif
 
-SkExecutor::~SkExecutor() {}
+SkExecutor::~SkExecutor() = default;
 
 // The default default SkExecutor is an SkTrivialExecutor, which just runs the work right away.
 class SkTrivialExecutor final : public SkExecutor {

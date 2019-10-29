@@ -189,7 +189,7 @@ int ByteCodeGenerator::StackUsage(ByteCodeInstruction inst, int count_) {
     }
     ~CountValue() { SkASSERT(used || val == ByteCodeGenerator::kUnusedStackCount); }
     int val;
-    SkDEBUGCODE(bool used = false;)
+    SkDEBUGCODE(bool used = false);
   } count = {count_};
 
   switch (inst) {

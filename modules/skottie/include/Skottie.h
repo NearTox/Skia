@@ -138,7 +138,7 @@ class SK_API Animation : public SkNVRefCnt<Animation> {
      *
      * @return Stats (see above).
      */
-    const Stats& getStats() const { return fStats; }
+    const Stats& getStats() const noexcept { return fStats; }
 
     /**
      * Specify a loader for external resources (images, etc.).
@@ -230,10 +230,10 @@ class SK_API Animation : public SkNVRefCnt<Animation> {
   /**
    * Returns the animation duration in seconds.
    */
-  SkScalar duration() const { return fDuration; }
+  SkScalar duration() const noexcept { return fDuration; }
 
-  const SkString& version() const { return fVersion; }
-  const SkSize& size() const { return fSize; }
+  const SkString& version() const noexcept { return fVersion; }
+  const SkSize& size() const noexcept { return fSize; }
 
  private:
   enum Flags : uint32_t {

@@ -108,11 +108,11 @@ class GrSurfaceContext {
   GrDrawingManager* drawingManager();
   const GrDrawingManager* drawingManager() const;
 
-  SkDEBUGCODE(virtual void validate() const = 0;)
+  SkDEBUGCODE(virtual void validate() const = 0);
 
-      SkDEBUGCODE(GrSingleOwner* singleOwner();)
+  SkDEBUGCODE(GrSingleOwner* singleOwner());
 
-          GrRecordingContext* fContext;
+  GrRecordingContext* fContext;
 
   // The rescaling step of asyncRescaleAndReadPixels[YUV420]().
   std::unique_ptr<GrRenderTargetContext> rescale(

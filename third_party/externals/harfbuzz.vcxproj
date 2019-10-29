@@ -22,6 +22,7 @@
     <ClCompile Include="harfbuzz\src\hb-font.cc" />
     <ClCompile Include="harfbuzz\src\hb-icu.cc" />
     <ClCompile Include="harfbuzz\src\hb-map.cc" />
+    <ClCompile Include="harfbuzz\src\hb-number.cc" />
     <ClCompile Include="harfbuzz\src\hb-ot-cff1-table.cc" />
     <ClCompile Include="harfbuzz\src\hb-ot-cff2-table.cc" />
     <ClCompile Include="harfbuzz\src\hb-ot-face.cc" />

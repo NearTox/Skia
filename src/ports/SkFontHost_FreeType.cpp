@@ -283,7 +283,7 @@ static void unref_ft_library() {
     SkASSERT(nullptr == gFaceRecHead);
     SkASSERT(nullptr != gFTLibrary);
     delete gFTLibrary;
-    SkDEBUGCODE(gFTLibrary = nullptr;)
+    SkDEBUGCODE(gFTLibrary = nullptr);
   }
 }
 

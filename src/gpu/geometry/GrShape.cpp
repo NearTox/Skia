@@ -234,11 +234,11 @@ int GrShape::unstyledKeySize() const {
 
 void GrShape::writeUnstyledKey(uint32_t* key) const {
   SkASSERT(this->unstyledKeySize());
-  SkDEBUGCODE(uint32_t* origKey = key;) if (fInheritedKey.count()) {
+  SkDEBUGCODE(uint32_t* origKey = key);
+  if (fInheritedKey.count()) {
     memcpy(key, fInheritedKey.get(), sizeof(uint32_t) * fInheritedKey.count());
-    SkDEBUGCODE(key += fInheritedKey.count();)
-  }
-  else {
+    SkDEBUGCODE(key += fInheritedKey.count());
+  } else {
     switch (fType) {
       case Type::kEmpty: *key++ = 1; break;
       case Type::kInvertedEmpty: *key++ = 2; break;

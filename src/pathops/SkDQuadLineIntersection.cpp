@@ -92,12 +92,12 @@ class LineQuadraticIntersections {
  public:
   enum PinTPoint { kPointUninitialized, kPointInitialized };
 
-  LineQuadraticIntersections(const SkDQuad& q, const SkDLine& l, SkIntersections* i)
+  LineQuadraticIntersections(const SkDQuad& q, const SkDLine& l, SkIntersections* i) noexcept
       : fQuad(q), fLine(&l), fIntersections(i), fAllowNear(true) {
     i->setMax(5);  // allow short partial coincidence plus discrete intersections
   }
 
-  LineQuadraticIntersections(const SkDQuad& q)
+  LineQuadraticIntersections(const SkDQuad& q) noexcept
       : fQuad(q) SkDEBUGPARAMS(fLine(nullptr)) SkDEBUGPARAMS(fIntersections(nullptr))
             SkDEBUGPARAMS(fAllowNear(false)) {}
 

@@ -28,7 +28,7 @@ struct Symbol : public IRNode {
   Symbol(int offset, Kind kind, StringFragment name)
       : INHERITED(offset), fKind(kind), fName(name) {}
 
-  virtual ~Symbol() {}
+  virtual ~Symbol() = default;
 
   Kind fKind;
   StringFragment fName;

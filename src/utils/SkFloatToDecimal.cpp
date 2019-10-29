@@ -14,7 +14,7 @@
 #include "include/core/SkTypes.h"
 
 // returns `value * pow(base, e)`, assuming `e` is positive.
-static double pow_by_squaring(double value, double base, int e) {
+static constexpr double pow_by_squaring(double value, double base, int e) {
   // https://en.wikipedia.org/wiki/Exponentiation_by_squaring
   SkASSERT(e > 0);
   while (true) {
@@ -30,7 +30,7 @@ static double pow_by_squaring(double value, double base, int e) {
 }
 
 // Return pow(10.0, e), optimized for common cases.
-static double pow10(int e) {
+static constexpr double pow10(int e) {
   switch (e) {
     case 0: return 1.0;  // common cases
     case 1: return 10.0;
@@ -67,7 +67,7 @@ static double pow10(int e) {
     Motivation: "PDF does not support [numbers] in exponential format
     (such as 6.02e23)."  Otherwise, this function would rely on a
     sprintf-type function from the standard library. */
-unsigned SkFloatToDecimal(float value, char output[kMaximumSkFloatToDecimalLength]) {
+unsigned SkFloatToDecimal(float value, char output[kMaximumSkFloatToDecimalLength]) noexcept {
   /* The longest result is -FLT_MIN.
      We serialize it as "-.0000000000000000000000000000000000000117549435"
      which has 48 characters plus a terminating '\0'. */
@@ -116,7 +116,7 @@ unsigned SkFloatToDecimal(float value, char output[kMaximumSkFloatToDecimalLengt
 
   int binaryExponent;
   (void)std::frexp(value, &binaryExponent);
-  static const double kLog2 = 0.3010299956639812;  // log10(2.0);
+  static constexpr double kLog2 = 0.3010299956639812;  // log10(2.0);
   int decimalExponent = static_cast<int>(std::floor(kLog2 * binaryExponent));
   int decimalShift = decimalExponent - 8;
   double power = pow10(-decimalShift);

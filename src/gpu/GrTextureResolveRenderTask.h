@@ -34,7 +34,7 @@ class GrTextureResolveRenderTask final : public GrRenderTask {
   bool onExecute(GrOpFlushState*) override;
 
 #ifdef SK_DEBUG
-  SkDEBUGCODE(void visitProxies_debugOnly(const VisitSurfaceProxyFunc&) const override;)
+  SkDEBUGCODE(void visitProxies_debugOnly(const VisitSurfaceProxyFunc&) const override);
 #endif
 
       struct Resolve {

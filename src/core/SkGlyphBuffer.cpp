@@ -9,7 +9,7 @@
 #include "src/core/SkGlyphRunPainter.h"
 #include "src/core/SkStrikeForGPU.h"
 
-void SkDrawableGlyphBuffer::ensureSize(size_t size) {
+void SkDrawableGlyphBuffer::ensureSize(size_t size) noexcept {
   if (size > fMaxSize) {
     fMultiBuffer.reset(size);
     fPositions.reset(size);
@@ -69,7 +69,7 @@ void SkDrawableGlyphBuffer::startDevice(
   SkDEBUGCODE(fPhase = kInput);
 }
 
-void SkDrawableGlyphBuffer::reset() {
+void SkDrawableGlyphBuffer::reset() noexcept {
   SkDEBUGCODE(fPhase = kReset);
   if (fMaxSize > 200) {
     fMultiBuffer.reset();
