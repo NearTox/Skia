@@ -82,7 +82,7 @@ class SK_API SkVertices : public SkNVRefCnt<SkVertices> {
       return SkPoint::Make(x, y);
     }
 
-    SkRect mapRect(const SkRect& rect) const {
+    SkRect mapRect(const SkRect& rect) const noexcept {
       SkRect dst = SkRect::MakeEmpty();
       SkPoint quad[4];
       rect.toQuad(quad);

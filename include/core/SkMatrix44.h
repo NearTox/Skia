@@ -323,7 +323,7 @@ class SK_API SkMatrix44 {
   inline void preScale(SkMScalar scale) noexcept { this->preScale(scale, scale, scale); }
   inline void postScale(SkMScalar scale) noexcept { this->postScale(scale, scale, scale); }
 
-  void setRotateDegreesAbout(SkMScalar x, SkMScalar y, SkMScalar z, SkMScalar degrees) {
+  void setRotateDegreesAbout(SkMScalar x, SkMScalar y, SkMScalar z, SkMScalar degrees) noexcept {
     this->setRotateAbout(x, y, z, degrees * SK_MScalarPI / 180);
   }
 

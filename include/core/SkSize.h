@@ -14,9 +14,9 @@ struct SkISize {
   int32_t fWidth;
   int32_t fHeight;
 
-  static constexpr SkISize Make(int32_t w, int32_t h) { return {w, h}; }
+  static constexpr SkISize Make(int32_t w, int32_t h) noexcept { return {w, h}; }
 
-  static constexpr SkISize MakeEmpty() { return {0, 0}; }
+  static constexpr SkISize MakeEmpty() noexcept { return {0, 0}; }
 
   void set(int32_t w, int32_t h) noexcept { *this = SkISize{w, h}; }
 
@@ -48,7 +48,7 @@ struct SkSize {
   SkScalar fWidth;
   SkScalar fHeight;
 
-  static constexpr SkSize Make(SkScalar w, SkScalar h) { return {w, h}; }
+  static constexpr SkSize Make(SkScalar w, SkScalar h) noexcept { return {w, h}; }
 
   static SkSize Make(const SkISize& src) noexcept {
     return {SkIntToScalar(src.width()), SkIntToScalar(src.height())};
@@ -58,7 +58,7 @@ struct SkSize {
     return *this = SkSize{SkIntToScalar(src.fWidth), SkIntToScalar(src.fHeight)};
   }
 
-  static constexpr SkSize MakeEmpty() { return {0, 0}; }
+  static constexpr SkSize MakeEmpty() noexcept { return {0, 0}; }
 
   void set(SkScalar w, SkScalar h) noexcept { *this = SkSize{w, h}; }
 

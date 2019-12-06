@@ -61,7 +61,6 @@
     <ClCompile Include="harfbuzz\src\hb-subset-plan.cc" />
     <ClCompile Include="harfbuzz\src\hb-ucd.cc" />
     <ClCompile Include="harfbuzz\src\hb-unicode.cc" />
-    <ClCompile Include="harfbuzz\src\hb-warning.cc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A9CB0101-1BE5-45D7-BFCA-939F30A2D141}</ProjectGuid>

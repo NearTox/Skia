@@ -2736,7 +2736,7 @@ class SkAutoCanvasRestore {
       @param doSave  call SkCanvas::save()
       @return        utility to restore SkCanvas state on destructor
   */
-  SkAutoCanvasRestore(SkCanvas* canvas, bool doSave) : fCanvas(canvas), fSaveCount(0) {
+  SkAutoCanvasRestore(SkCanvas* canvas, bool doSave) noexcept : fCanvas(canvas), fSaveCount(0) {
     if (fCanvas) {
       fSaveCount = canvas->getSaveCount();
       if (doSave) {
