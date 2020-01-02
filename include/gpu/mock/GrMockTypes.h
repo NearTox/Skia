@@ -14,17 +14,17 @@
 class GrBackendFormat;
 
 struct GrMockTextureInfo {
-  constexpr GrMockTextureInfo() noexcept : fColorType(GrColorType::kUnknown), fID(0) {}
+  GrMockTextureInfo() : fColorType(GrColorType::kUnknown), fID(0) {}
 
-  GrMockTextureInfo(GrColorType colorType, int id) noexcept : fColorType(colorType), fID(id) {
+  GrMockTextureInfo(GrColorType colorType, int id) : fColorType(colorType), fID(id) {
     SkASSERT(fID);
   }
 
-  bool operator==(const GrMockTextureInfo& that) const noexcept {
+  bool operator==(const GrMockTextureInfo& that) const {
     return fColorType == that.fColorType && fID == that.fID;
   }
 
-  GrPixelConfig pixelConfig() const noexcept { return GrColorTypeToPixelConfig(fColorType); }
+  GrPixelConfig pixelConfig() const { return GrColorTypeToPixelConfig(fColorType); }
 
   GrBackendFormat getBackendFormat() const;
 
@@ -33,21 +33,21 @@ struct GrMockTextureInfo {
 };
 
 struct GrMockRenderTargetInfo {
-  constexpr GrMockRenderTargetInfo() noexcept : fColorType(GrColorType::kUnknown), fID(0) {}
+  GrMockRenderTargetInfo() : fColorType(GrColorType::kUnknown), fID(0) {}
 
-  GrMockRenderTargetInfo(GrColorType colorType, int id) noexcept : fColorType(colorType), fID(id) {
+  GrMockRenderTargetInfo(GrColorType colorType, int id) : fColorType(colorType), fID(id) {
     SkASSERT(fID);
   }
 
-  bool operator==(const GrMockRenderTargetInfo& that) const noexcept {
+  bool operator==(const GrMockRenderTargetInfo& that) const {
     return fColorType == that.fColorType && fID == that.fID;
   }
 
-  GrPixelConfig pixelConfig() const noexcept { return GrColorTypeToPixelConfig(fColorType); }
+  GrPixelConfig pixelConfig() const { return GrColorTypeToPixelConfig(fColorType); }
 
   GrBackendFormat getBackendFormat() const;
 
-  GrColorType colorType() const noexcept { return fColorType; }
+  GrColorType colorType() const { return fColorType; }
 
  private:
   GrColorType fColorType;

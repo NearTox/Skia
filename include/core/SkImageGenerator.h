@@ -30,9 +30,9 @@ class SK_API SkImageGenerator {
    *  The PixelRef which takes ownership of this SkImageGenerator
    *  will call the image generator's destructor.
    */
-  virtual ~SkImageGenerator() = default;
+  virtual ~SkImageGenerator() {}
 
-  uint32_t uniqueID() const noexcept { return fUniqueID; }
+  uint32_t uniqueID() const { return fUniqueID; }
 
   /**
    *  Return a ref to the encoded (i.e. compressed) representation
@@ -46,7 +46,7 @@ class SK_API SkImageGenerator {
   /**
    *  Return the ImageInfo associated with this generator.
    */
-  const SkImageInfo& getInfo() const noexcept { return fInfo; }
+  const SkImageInfo& getInfo() const { return fInfo; }
 
   /**
    *  Can this generator be used to produce images that will be drawable to the specified context
@@ -158,7 +158,7 @@ class SK_API SkImageGenerator {
  protected:
   static constexpr int kNeedNewImageUniqueID = 0;
 
-  SkImageGenerator(const SkImageInfo& info, uint32_t uniqueId = kNeedNewImageUniqueID) noexcept;
+  SkImageGenerator(const SkImageInfo& info, uint32_t uniqueId = kNeedNewImageUniqueID);
 
   virtual sk_sp<SkData> onRefEncodedData() { return nullptr; }
   struct Options {};

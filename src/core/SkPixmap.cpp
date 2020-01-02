@@ -30,13 +30,13 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void SkPixmap::reset() noexcept {
+void SkPixmap::reset() {
   fPixels = nullptr;
   fRowBytes = 0;
   fInfo = SkImageInfo::MakeUnknown();
 }
 
-void SkPixmap::reset(const SkImageInfo& info, const void* addr, size_t rowBytes) noexcept {
+void SkPixmap::reset(const SkImageInfo& info, const void* addr, size_t rowBytes) {
   if (addr) {
     SkASSERT(info.validRowBytes(rowBytes));
   }

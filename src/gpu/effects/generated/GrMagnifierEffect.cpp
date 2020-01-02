@@ -56,8 +56,7 @@ class GrGLSLMagnifierEffect : public GrGLSLFragmentProcessor {
         "- delta;\n    float dist = length(delta);\n    dist = max(2.0 - dist, 0.0);\n    "
         "weight = min(dist * dist, 1.0);\n} else {\n    float2 delta_squared = delta * "
         "delta;\n    weight = min(min(delta_squared.x, delta_square",
-        _outer.computeLocalCoordsInVertexShader() ? sk_TransformedCoords2D_0.c_str() : "_coords",
-        args.fUniformHandler->getUniformCStr(offsetVar),
+        sk_TransformedCoords2D_0.c_str(), args.fUniformHandler->getUniformCStr(offsetVar),
         args.fUniformHandler->getUniformCStr(xInvZoomVar),
         args.fUniformHandler->getUniformCStr(yInvZoomVar),
         args.fUniformHandler->getUniformCStr(boundsUniformVar),
@@ -67,7 +66,7 @@ class GrGLSLMagnifierEffect : public GrGLSLFragmentProcessor {
     fragBuilder->codeAppendf(
         "d.y), 1.0);\n}\n%s = sample(%s, mix(coord, zoom_coord, weight)).%s;\n", args.fOutputColor,
         fragBuilder->getProgramBuilder()->samplerVariable(args.fTexSamplers[0]),
-        fragBuilder->getProgramBuilder()->samplerSwizzle(args.fTexSamplers[0]).c_str());
+        fragBuilder->getProgramBuilder()->samplerSwizzle(args.fTexSamplers[0]).asString().c_str());
   }
 
  private:

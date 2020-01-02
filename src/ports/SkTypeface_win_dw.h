@@ -65,6 +65,10 @@ class DWriteFontTypeface : public SkTypeface {
     if (!SUCCEEDED(fFactory->QueryInterface(&fFactory2))) {
       SkASSERT_RELEASE(nullptr == fFactory2.get());
     }
+
+    if (fDWriteFontFace1 && fDWriteFontFace1->IsMonospacedFont()) {
+      this->setIsFixedPitch(true);
+    }
   }
 
  public:
@@ -89,7 +93,7 @@ class DWriteFontTypeface : public SkTypeface {
   }
 
  protected:
-  void weak_dispose() const noexcept override {
+  void weak_dispose() const override {
     if (fDWriteFontCollectionLoader.get()) {
       HRV(fFactory->UnregisterFontCollectionLoader(fDWriteFontCollectionLoader.get()));
     }

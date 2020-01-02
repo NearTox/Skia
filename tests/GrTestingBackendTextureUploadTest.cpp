@@ -37,7 +37,7 @@ void testing_only_texture_test(
   if (doDataUpload) {
     SkASSERT(GrMipMapped::kNo == mipMapped);
 
-    fill_pixel_data(kWidth, kHeight, expectedPixels.writable_addr32(0, 0));
+    FillPixelData(kWidth, kHeight, expectedPixels.writable_addr32(0, 0));
 
     backendTex = context->createBackendTexture(&expectedPixels, 1, renderable, GrProtected::kNo);
   } else {
@@ -81,7 +81,7 @@ void testing_only_texture_test(
 
   REPORTER_ASSERT(reporter, result);
   REPORTER_ASSERT(
-      reporter, does_full_buffer_contain_correct_color(
+      reporter, DoesFullBufferContainCorrectColor(
                     expectedPixels.addr32(), actualPixels.addr32(), kWidth, kHeight));
 }
 

@@ -55,7 +55,7 @@ static void testOvalSet(
 
 static void testOne(skiatest::Reporter* reporter, const OvalSet& set) {
   SkPath oval, regionResult, builderResult, opResult;
-  oval.setFillType(SkPath::kWinding_FillType);
+  oval.setFillType(SkPathFillType::kWinding);
   oval.addOval(set.fBounds);
   SkOpBuilder builder;
   SkRegion region;
@@ -838,7 +838,7 @@ DEF_TEST(SixtyOvals_2_2_9_73_reduced, reporter) {
 
 DEF_TEST(SixtyOvalsA, reporter) {
   SkPath path;
-  path.setFillType(SkPath::kEvenOdd_FillType);
+  path.setFillType(SkPathFillType::kEvenOdd);
   path.moveTo(11.1722f, -8.10398f);
   path.conicTo(22.9143f, -10.3787f, 23.7764f, -7.72542f, 1.00863f);
   path.conicTo(24.6671f, -4.98406f, 13.8147f, 0.0166066f, 0.973016f);
@@ -865,7 +865,7 @@ DEF_TEST(SixtyOvalsA, reporter) {
   path.close();
   SkPath one(path);
   path.reset();
-  path.setFillType(SkPath::kWinding_FillType);
+  path.setFillType(SkPathFillType::kWinding);
   path.moveTo(-1.54509f, -4.75528f);
   path.conicTo(22.2313f, -12.4807f, 23.7764f, -7.72543f, 0.707107f);
   path.conicTo(25.3215f, -2.97014f, 1.54509f, 4.75528f, 0.707107f);
@@ -879,7 +879,7 @@ DEF_TEST(SixtyOvalsA, reporter) {
 
 DEF_TEST(SixtyOvalsAX, reporter) {
   SkPath path;
-  path.setFillType(SkPath::kEvenOdd_FillType);
+  path.setFillType(SkPathFillType::kEvenOdd);
   path.moveTo(SkBits2Float(0x4132c174), SkBits2Float(0xc101a9e5));  // 11.1722f, -8.10398f
   path.conicTo(
       SkBits2Float(0x41b7508a), SkBits2Float(0xc1260efe), SkBits2Float(0x41be3618),
@@ -971,7 +971,7 @@ DEF_TEST(SixtyOvalsAX, reporter) {
   path.close();
   SkPath one(path);
   path.reset();
-  path.setFillType(SkPath::kWinding_FillType);
+  path.setFillType(SkPathFillType::kWinding);
   path.moveTo(SkBits2Float(0xbfc5c55c), SkBits2Float(0xc0982b46));  // -1.54509f, -4.75528f
   path.conicTo(
       SkBits2Float(0x41b1d9c2), SkBits2Float(0xc147b0fc), SkBits2Float(0x41be3618),

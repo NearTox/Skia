@@ -331,8 +331,9 @@ SkISize SkAndroidCodec::getSampledSubsetDimensions(int sampleSize, const SkIRect
 
   // This should perhaps call a virtual function, but currently both of our subclasses
   // want the same implementation.
-  return {get_scaled_dimension(subset.width(), sampleSize),
-          get_scaled_dimension(subset.height(), sampleSize)};
+  return {
+      get_scaled_dimension(subset.width(), sampleSize),
+      get_scaled_dimension(subset.height(), sampleSize)};
 }
 
 static bool acceptable_result(SkCodec::Result result) {

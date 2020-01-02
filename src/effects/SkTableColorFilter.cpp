@@ -253,7 +253,7 @@ class ColorTableEffect : public GrFragmentProcessor {
 
   bool onIsEqual(const GrFragmentProcessor&) const override { return true; }
 
-  ColorTableEffect(sk_sp<GrTextureProxy> proxy)
+  ColorTableEffect(sk_sp<GrSurfaceProxy> proxy)
       : INHERITED(
             kColorTableEffect_ClassID,
             kNone_OptimizationFlags)  // Not bothering with table-specific optimizations.

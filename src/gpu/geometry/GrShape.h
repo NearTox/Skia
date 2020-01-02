@@ -62,7 +62,7 @@ class GrShape {
   }
 
   GrShape(
-      const SkRRect& rrect, SkPath::Direction dir, unsigned start, bool inverted,
+      const SkRRect& rrect, SkPathDirection dir, unsigned start, bool inverted,
       const GrStyle& style)
       : fStyle(style) {
     this->initType(Type::kRRect);
@@ -155,7 +155,7 @@ class GrShape {
   }
 
   /** Returns the unstyled geometry as a rrect if possible. */
-  bool asRRect(SkRRect* rrect, SkPath::Direction* dir, unsigned* start, bool* inverted) const {
+  bool asRRect(SkRRect* rrect, SkPathDirection* dir, unsigned* start, bool* inverted) const {
     if (Type::kRRect != fType) {
       return false;
     }
@@ -246,12 +246,12 @@ class GrShape {
       return false;
     }
 
-    SkPath::Direction dirs[2];
+    SkPathDirection dirs[2];
     if (!SkPathPriv::IsNestedFillRects(this->path(), rects, dirs)) {
       return false;
     }
 
-    if (SkPath::kWinding_FillType == this->path().getFillType() && dirs[0] == dirs[1]) {
+    if (SkPathFillType::kWinding == this->path().getNewFillType() && dirs[0] == dirs[1]) {
       // The two rects need to be wound opposite to each other
       return false;
     }
@@ -511,14 +511,14 @@ class GrShape {
   const SkPath* originalPathForListeners() const;
 
   // Defaults to use when there is no distinction between even/odd and winding fills.
-  static constexpr SkPath::FillType kDefaultPathFillType = SkPath::kEvenOdd_FillType;
-  static constexpr SkPath::FillType kDefaultPathInverseFillType = SkPath::kInverseEvenOdd_FillType;
+  static constexpr SkPathFillType kDefaultPathFillType = SkPathFillType::kEvenOdd;
+  static constexpr SkPathFillType kDefaultPathInverseFillType = SkPathFillType::kInverseEvenOdd;
 
-  static constexpr SkPath::Direction kDefaultRRectDir = SkPath::kCW_Direction;
+  static constexpr SkPathDirection kDefaultRRectDir = SkPathDirection::kCW;
   static constexpr unsigned kDefaultRRectStart = 0;
 
   static unsigned DefaultRectDirAndStartIndex(
-      const SkRect& rect, bool hasPathEffect, SkPath::Direction* dir) {
+      const SkRect& rect, bool hasPathEffect, SkPathDirection* dir) {
     *dir = kDefaultRRectDir;
     // This comes from SkPath's interface. The default for adding a SkRect is counter clockwise
     // beginning at index 0 (which happens to correspond to rrect index 0 or 7).
@@ -535,11 +535,11 @@ class GrShape {
       // 0 becomes start index 2 and times 2 to convert from rect the rrect indices.
       return 2 * 2;
     } else if (swapX) {
-      *dir = SkPath::kCCW_Direction;
+      *dir = SkPathDirection::kCCW;
       // 0 becomes start index 1 and times 2 to convert from rect the rrect indices.
       return 2 * 1;
     } else if (swapY) {
-      *dir = SkPath::kCCW_Direction;
+      *dir = SkPathDirection::kCCW;
       // 0 becomes start index 3 and times 2 to convert from rect the rrect indices.
       return 2 * 3;
     }
@@ -547,7 +547,7 @@ class GrShape {
   }
 
   static unsigned DefaultRRectDirAndStartIndex(
-      const SkRRect& rrect, bool hasPathEffect, SkPath::Direction* dir) {
+      const SkRRect& rrect, bool hasPathEffect, SkPathDirection* dir) {
     // This comes from SkPath's interface. The default for adding a SkRRect to a path is
     // clockwise beginning at starting index 6.
     static constexpr unsigned kPathRRectStartIdx = 6;
@@ -562,7 +562,7 @@ class GrShape {
   union {
     struct {
       SkRRect fRRect;
-      SkPath::Direction fDir;
+      SkPathDirection fDir;
       unsigned fStart;
       bool fInverted;
     } fRRectData;

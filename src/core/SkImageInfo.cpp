@@ -10,7 +10,7 @@
 #include "src/core/SkSafeMath.h"
 #include "src/core/SkWriteBuffer.h"
 
-int SkColorTypeBytesPerPixel(SkColorType ct) noexcept {
+int SkColorTypeBytesPerPixel(SkColorType ct) {
   switch (ct) {
     case kUnknown_SkColorType: return 0;
     case kAlpha_8_SkColorType: return 1;
@@ -41,7 +41,7 @@ bool SkColorTypeIsAlwaysOpaque(SkColorType ct) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-int SkColorInfo::bytesPerPixel() const noexcept { return SkColorTypeBytesPerPixel(fColorType); }
+int SkColorInfo::bytesPerPixel() const { return SkColorTypeBytesPerPixel(fColorType); }
 
 int SkColorInfo::shiftPerPixel() const { return SkColorTypeShiftPerPixel(fColorType); }
 
@@ -78,7 +78,7 @@ void SkImageInfo::validate() const {
 #endif
 
 bool SkColorTypeValidateAlphaType(
-    SkColorType colorType, SkAlphaType alphaType, SkAlphaType* canonical) noexcept {
+    SkColorType colorType, SkAlphaType alphaType, SkAlphaType* canonical) {
   switch (colorType) {
     case kUnknown_SkColorType: alphaType = kUnknown_SkAlphaType; break;
     case kAlpha_8_SkColorType:    // fall-through

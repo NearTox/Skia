@@ -14,7 +14,6 @@
 #include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
 #include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
 #include "src/gpu/glsl/GrGLSLXferProcessor.h"
-#include "src/gpu/vk/GrVkBufferView.h"
 #include "src/gpu/vk/GrVkCommandBuffer.h"
 #include "src/gpu/vk/GrVkDescriptorPool.h"
 #include "src/gpu/vk/GrVkDescriptorSet.h"
@@ -37,7 +36,6 @@ GrVkPipelineState::GrVkPipelineState(
     int fragmentProcessorCnt)
     : fPipeline(pipeline),
       fUniformDescriptorSet(nullptr),
-      fSamplerDescriptorSet(nullptr),
       fSamplerDSHandle(samplerDSHandle),
       fBuiltinUniformHandles(builtinUniformHandles),
       fGeometryProcessor(std::move(geometryProcessor)),
@@ -45,10 +43,6 @@ GrVkPipelineState::GrVkPipelineState(
       fFragmentProcessors(std::move(fragmentProcessors)),
       fFragmentProcessorCnt(fragmentProcessorCnt),
       fDataManager(uniforms, uniformSize) {
-  fDescriptorSets[0] = VK_NULL_HANDLE;
-  fDescriptorSets[1] = VK_NULL_HANDLE;
-  fDescriptorSets[2] = VK_NULL_HANDLE;
-
   fUniformBuffer.reset(GrVkUniformBuffer::Create(gpu, uniformSize));
 
   fNumSamplers = samplers.count();
@@ -80,11 +74,6 @@ void GrVkPipelineState::freeGPUResources(GrVkGpu* gpu) {
     fUniformDescriptorSet->recycle(const_cast<GrVkGpu*>(gpu));
     fUniformDescriptorSet = nullptr;
   }
-
-  if (fSamplerDescriptorSet) {
-    fSamplerDescriptorSet->recycle(const_cast<GrVkGpu*>(gpu));
-    fSamplerDescriptorSet = nullptr;
-  }
 }
 
 void GrVkPipelineState::abandonGPUResources() {
@@ -102,31 +91,21 @@ void GrVkPipelineState::abandonGPUResources() {
     fUniformDescriptorSet->unrefAndAbandon();
     fUniformDescriptorSet = nullptr;
   }
-
-  if (fSamplerDescriptorSet) {
-    fSamplerDescriptorSet->unrefAndAbandon();
-    fSamplerDescriptorSet = nullptr;
-  }
 }
 
-void GrVkPipelineState::setAndBindUniforms(
+bool GrVkPipelineState::setAndBindUniforms(
     GrVkGpu* gpu, const GrRenderTarget* renderTarget, const GrProgramInfo& programInfo,
     GrVkCommandBuffer* commandBuffer) {
   this->setRenderTargetState(renderTarget, programInfo.origin());
 
-  fGeometryProcessor->setData(
-      fDataManager, programInfo.primProc(),
-      GrFragmentProcessor::CoordTransformIter(programInfo.pipeline()));
-  GrFragmentProcessor::Iter iter(programInfo.pipeline());
+  GrFragmentProcessor::PipelineCoordTransformRange transformRange(programInfo.pipeline());
+  fGeometryProcessor->setData(fDataManager, programInfo.primProc(), transformRange);
+  GrFragmentProcessor::CIter fpIter(programInfo.pipeline());
   GrGLSLFragmentProcessor::Iter glslIter(fFragmentProcessors.get(), fFragmentProcessorCnt);
-  const GrFragmentProcessor* fp = iter.next();
-  GrGLSLFragmentProcessor* glslFP = glslIter.next();
-  while (fp && glslFP) {
-    glslFP->setData(fDataManager, *fp);
-    fp = iter.next();
-    glslFP = glslIter.next();
+  for (; fpIter && glslIter; ++fpIter, ++glslIter) {
+    glslIter->setData(fDataManager, *fpIter);
   }
-  SkASSERT(!fp && !glslFP);
+  SkASSERT(!fpIter && !glslIter);
 
   {
     SkIPoint offset;
@@ -138,30 +117,30 @@ void GrVkPipelineState::setAndBindUniforms(
 
   // Get new descriptor set
   if (fUniformBuffer) {
-    int uniformDSIdx = GrVkUniformHandler::kUniformBufferDescSet;
     if (fDataManager.uploadUniformBuffers(gpu, fUniformBuffer.get()) || !fUniformDescriptorSet) {
       if (fUniformDescriptorSet) {
         fUniformDescriptorSet->recycle(gpu);
       }
       fUniformDescriptorSet = gpu->resourceProvider().getUniformDescriptorSet();
-      fDescriptorSets[uniformDSIdx] = fUniformDescriptorSet->descriptorSet();
+      if (!fUniformDescriptorSet) {
+        return false;
+      }
       this->writeUniformBuffers(gpu);
     }
+    static const int kUniformDSIdx = GrVkUniformHandler::kUniformBufferDescSet;
     commandBuffer->bindDescriptorSets(
-        gpu, this, fPipeline->layout(), uniformDSIdx, 1, &fDescriptorSets[uniformDSIdx], 0,
+        gpu, this, fPipeline->layout(), kUniformDSIdx, 1, fUniformDescriptorSet->descriptorSet(), 0,
         nullptr);
-    if (fUniformDescriptorSet) {
-      commandBuffer->addRecycledResource(fUniformDescriptorSet);
-    }
-    if (fUniformBuffer) {
-      commandBuffer->addRecycledResource(fUniformBuffer->resource());
-    }
+    SkASSERT(fUniformDescriptorSet);
+    commandBuffer->addRecycledResource(fUniformDescriptorSet);
+    commandBuffer->addRecycledResource(fUniformBuffer->resource());
   }
+  return true;
 }
 
-void GrVkPipelineState::setAndBindTextures(
+bool GrVkPipelineState::setAndBindTextures(
     GrVkGpu* gpu, const GrPrimitiveProcessor& primProc, const GrPipeline& pipeline,
-    const GrTextureProxy* const primProcTextures[], GrVkCommandBuffer* commandBuffer) {
+    const GrSurfaceProxy* const primProcTextures[], GrVkCommandBuffer* commandBuffer) {
   SkASSERT(primProcTextures || !primProc.numTextureSamplers());
 
   struct SamplerBindings {
@@ -171,43 +150,55 @@ void GrVkPipelineState::setAndBindTextures(
   SkAutoSTMalloc<8, SamplerBindings> samplerBindings(fNumSamplers);
   int currTextureBinding = 0;
 
-  fGeometryProcessor->setData(
-      fDataManager, primProc, GrFragmentProcessor::CoordTransformIter(pipeline));
   for (int i = 0; i < primProc.numTextureSamplers(); ++i) {
+    SkASSERT(primProcTextures[i]->asTextureProxy());
     const auto& sampler = primProc.textureSampler(i);
     auto texture = static_cast<GrVkTexture*>(primProcTextures[i]->peekTexture());
     samplerBindings[currTextureBinding++] = {sampler.samplerState(), texture};
   }
 
-  GrFragmentProcessor::Iter iter(pipeline);
+  GrFragmentProcessor::CIter fpIter(pipeline);
   GrGLSLFragmentProcessor::Iter glslIter(fFragmentProcessors.get(), fFragmentProcessorCnt);
-  const GrFragmentProcessor* fp = iter.next();
-  GrGLSLFragmentProcessor* glslFP = glslIter.next();
-  while (fp && glslFP) {
-    for (int i = 0; i < fp->numTextureSamplers(); ++i) {
-      const auto& sampler = fp->textureSampler(i);
-      samplerBindings[currTextureBinding++] = {sampler.samplerState(),
-                                               static_cast<GrVkTexture*>(sampler.peekTexture())};
+  for (; fpIter && glslIter; ++fpIter, ++glslIter) {
+    for (int i = 0; i < fpIter->numTextureSamplers(); ++i) {
+      const auto& sampler = fpIter->textureSampler(i);
+      samplerBindings[currTextureBinding++] = {
+          sampler.samplerState(), static_cast<GrVkTexture*>(sampler.peekTexture())};
     }
-    fp = iter.next();
-    glslFP = glslIter.next();
   }
-  SkASSERT(!fp && !glslFP);
+  SkASSERT(!fpIter && !glslIter);
 
-  if (GrTextureProxy* dstTextureProxy = pipeline.dstTextureProxy()) {
+  if (GrTexture* dstTexture = pipeline.peekDstTexture()) {
     samplerBindings[currTextureBinding++] = {
-        GrSamplerState::ClampNearest(), static_cast<GrVkTexture*>(dstTextureProxy->peekTexture())};
+        GrSamplerState::ClampNearest(), static_cast<GrVkTexture*>(dstTexture)};
   }
 
   // Get new descriptor set
   SkASSERT(fNumSamplers == currTextureBinding);
   if (fNumSamplers) {
-    if (fSamplerDescriptorSet) {
-      fSamplerDescriptorSet->recycle(gpu);
+    static const int kSamplerDSIdx = GrVkUniformHandler::kSamplerDescSet;
+
+    if (fNumSamplers == 1) {
+      auto texture = samplerBindings[0].fTexture;
+      const auto& samplerState = samplerBindings[0].fState;
+      const GrVkDescriptorSet* descriptorSet = texture->cachedSingleDescSet(samplerState);
+      if (descriptorSet) {
+        commandBuffer->addResource(texture->textureView());
+        commandBuffer->addResource(texture->resource());
+        commandBuffer->addRecycledResource(descriptorSet);
+        commandBuffer->bindDescriptorSets(
+            gpu, this, fPipeline->layout(), kSamplerDSIdx, 1, descriptorSet->descriptorSet(), 0,
+            nullptr);
+        return true;
+      }
     }
-    fSamplerDescriptorSet = gpu->resourceProvider().getSamplerDescriptorSet(fSamplerDSHandle);
-    int samplerDSIdx = GrVkUniformHandler::kSamplerDescSet;
-    fDescriptorSets[samplerDSIdx] = fSamplerDescriptorSet->descriptorSet();
+
+    const GrVkDescriptorSet* descriptorSet =
+        gpu->resourceProvider().getSamplerDescriptorSet(fSamplerDSHandle);
+    if (!descriptorSet) {
+      return false;
+    }
+
     for (int i = 0; i < fNumSamplers; ++i) {
       const GrSamplerState& state = samplerBindings[i].fState;
       GrVkTexture* texture = samplerBindings[i].fTexture;
@@ -232,7 +223,7 @@ void GrVkPipelineState::setAndBindTextures(
       memset(&writeInfo, 0, sizeof(VkWriteDescriptorSet));
       writeInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
       writeInfo.pNext = nullptr;
-      writeInfo.dstSet = fDescriptorSets[GrVkUniformHandler::kSamplerDescSet];
+      writeInfo.dstSet = *descriptorSet->descriptorSet();
       writeInfo.dstBinding = i;
       writeInfo.dstArrayElement = 0;
       writeInfo.descriptorCount = 1;
@@ -250,12 +241,19 @@ void GrVkPipelineState::setAndBindTextures(
       commandBuffer->addResource(samplerBindings[i].fTexture->textureView());
       commandBuffer->addResource(samplerBindings[i].fTexture->resource());
     }
+    if (fNumSamplers == 1) {
+      const GrSamplerState& state = samplerBindings[0].fState;
+      GrVkTexture* texture = samplerBindings[0].fTexture;
+      texture->addDescriptorSetToCache(descriptorSet, state);
+    }
 
     commandBuffer->bindDescriptorSets(
-        gpu, this, fPipeline->layout(), samplerDSIdx, 1, &fDescriptorSets[samplerDSIdx], 0,
+        gpu, this, fPipeline->layout(), kSamplerDSIdx, 1, descriptorSet->descriptorSet(), 0,
         nullptr);
-    commandBuffer->addRecycledResource(fSamplerDescriptorSet);
+    commandBuffer->addRecycledResource(descriptorSet);
+    descriptorSet->recycle(gpu);
   }
+  return true;
 }
 
 void set_uniform_descriptor_writes(
@@ -286,9 +284,10 @@ void GrVkPipelineState::writeUniformBuffers(const GrVkGpu* gpu) {
   uint32_t writeCount = 0;
 
   if (fUniformBuffer.get()) {
+    SkASSERT(fUniformDescriptorSet);
     set_uniform_descriptor_writes(
         &descriptorWrites[writeCount], &bufferInfos[writeCount], fUniformBuffer.get(),
-        fDescriptorSets[GrVkUniformHandler::kUniformBufferDescSet]);
+        *fUniformDescriptorSet->descriptorSet());
     ++writeCount;
   }
 
@@ -307,12 +306,11 @@ void GrVkPipelineState::setRenderTargetState(const GrRenderTarget* rt, GrSurface
   }
 
   // set RT adjustment
-  SkISize size;
-  size.set(rt->width(), rt->height());
+  SkISize dimensions = rt->dimensions();
   SkASSERT(fBuiltinUniformHandles.fRTAdjustmentUni.isValid());
   if (fRenderTargetState.fRenderTargetOrigin != origin ||
-      fRenderTargetState.fRenderTargetSize != size) {
-    fRenderTargetState.fRenderTargetSize = size;
+      fRenderTargetState.fRenderTargetSize != dimensions) {
+    fRenderTargetState.fRenderTargetSize = dimensions;
     fRenderTargetState.fRenderTargetOrigin = origin;
 
     float rtAdjustmentVec[4];

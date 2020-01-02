@@ -14,15 +14,15 @@ namespace {
 const int kDefaultSize = 512 * 1024;
 }
 
-GrDawnRingBuffer::GrDawnRingBuffer(GrDawnGpu* gpu, dawn::BufferUsage usage)
+GrDawnRingBuffer::GrDawnRingBuffer(GrDawnGpu* gpu, wgpu::BufferUsage usage)
     : fGpu(gpu), fUsage(usage) {}
 
 GrDawnRingBuffer::~GrDawnRingBuffer() {}
 
 GrDawnRingBuffer::Slice GrDawnRingBuffer::allocate(int size) {
   if (!fBuffer || fOffset + size > kDefaultSize) {
-    dawn::BufferDescriptor desc;
-    desc.usage = fUsage | dawn::BufferUsage::CopyDst;
+    wgpu::BufferDescriptor desc;
+    desc.usage = fUsage | wgpu::BufferUsage::CopyDst;
     desc.size = kDefaultSize;
     fBuffer = fGpu->device().CreateBuffer(&desc);
     fOffset = 0;

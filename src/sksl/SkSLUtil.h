@@ -72,7 +72,7 @@ class StandaloneShaderCaps {
 
   bool multisampleInterpolationSupport() const { return true; }
 
-  bool sampleVariablesSupport() const { return true; }
+  bool sampleMaskSupport() const { return true; }
 
   bool externalTextureSupport() const { return true; }
 
@@ -297,6 +297,12 @@ class ShaderCapsFactory {
     sk_sp<GrShaderCaps> result = sk_make_sp<GrShaderCaps>(GrContextOptions());
     result->fVersionDeclString = "#version 400";
     result->fRemovePowWithConstantExponent = true;
+    return result;
+  }
+
+  static sk_sp<GrShaderCaps> SampleMaskSupport() {
+    sk_sp<GrShaderCaps> result = Default();
+    result->fSampleMaskSupport = true;
     return result;
   }
 };

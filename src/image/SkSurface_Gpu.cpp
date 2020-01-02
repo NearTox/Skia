@@ -103,8 +103,7 @@ sk_sp<SkImage> SkSurface_Gpu::onNewImageSnapshot(const SkIRect* subset) {
 
   if (subset) {
     srcProxy = GrSurfaceProxy::Copy(
-        ctx, rtc->asSurfaceProxy(), rtc->colorInfo().colorType(), rtc->mipMapped(), *subset,
-        SkBackingFit::kExact, budgeted);
+        ctx, rtc->asSurfaceProxy(), rtc->mipMapped(), *subset, SkBackingFit::kExact, budgeted);
   } else if (!srcProxy || rtc->priv().refsWrappedObjects()) {
     // If the original render target is a buffer originally created by the client, then we don't
     // want to ever retarget the SkSurface at another buffer we create. Force a copy now to avoid
@@ -112,8 +111,7 @@ sk_sp<SkImage> SkSurface_Gpu::onNewImageSnapshot(const SkIRect* subset) {
     SkASSERT(rtc->origin() == rtc->asSurfaceProxy()->origin());
 
     srcProxy = GrSurfaceProxy::Copy(
-        ctx, rtc->asSurfaceProxy(), rtc->colorInfo().colorType(), rtc->mipMapped(),
-        SkBackingFit::kExact, budgeted);
+        ctx, rtc->asSurfaceProxy(), rtc->mipMapped(), SkBackingFit::kExact, budgeted);
   }
 
   const SkImageInfo info = fDevice->imageInfo();

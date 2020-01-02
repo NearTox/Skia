@@ -45,7 +45,7 @@ extern Swizzle_8888_u8 RGB_to_RGB1,  // i.e. insert an opaque alpha
     grayA_to_rgbA;                   // i.e. expand to color channels and premultiply
 
 extern void (*memset16)(uint16_t[], uint16_t, int);
-extern void SK_API (*memset32)(uint32_t[], uint32_t, int);
+extern void SK_SPI (*memset32)(uint32_t[], uint32_t, int);
 extern void (*memset64)(uint64_t[], uint64_t, int);
 
 extern void (*rect_memset16)(uint16_t[], uint16_t, int, size_t, int);
@@ -61,8 +61,9 @@ static inline uint32_t hash(const void* data, size_t bytes, uint32_t seed = 0) {
 }
 
 // SkBitmapProcState optimized Shader, Sample, or Matrix procs.
-// This is the only one that can use anything past SSE2/NEON.
 extern void (*S32_alpha_D32_filter_DX)(
+    const SkBitmapProcState&, const uint32_t* xy, int count, SkPMColor*);
+extern void (*S32_alpha_D32_filter_DXDY)(
     const SkBitmapProcState&, const uint32_t* xy, int count, SkPMColor*);
 
 #define M(st) +1

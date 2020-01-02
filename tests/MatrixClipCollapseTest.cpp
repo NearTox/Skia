@@ -640,8 +640,8 @@ static void print(const SkTDArray<DrawType>& expected, const SkTDArray<DrawType>
 static void test_collapse(skiatest::Reporter* reporter) {
   PFEmitStruct gStructure[] = {emit_struct0, emit_struct1, emit_struct2, emit_struct3};
   PFEmitBody gBody[] = {emit_body0, emit_body1, emit_body2, emit_body3};
-  PFEmitMC gMCs[] = {emit_clip_and_mat, emit_mat_and_clip, emit_double_mat_and_clip,
-                     emit_mat_clip_clip};
+  PFEmitMC gMCs[] = {
+      emit_clip_and_mat, emit_mat_and_clip, emit_double_mat_and_clip, emit_mat_clip_clip};
 
   for (size_t i = 0; i < SK_ARRAY_COUNT(gStructure); ++i) {
     for (size_t j = 0; j < SK_ARRAY_COUNT(gBody); ++j) {

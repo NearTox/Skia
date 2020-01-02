@@ -52,19 +52,19 @@ class ContourStartGM : public GM {
   SkISize onISize() override { return SkISize::Make(kImageWidth, kImageHeight); }
 
   void onDraw(SkCanvas* canvas) override {
-    drawDirs(canvas, [](const SkRect& rect, SkPath::Direction dir, unsigned startIndex) {
+    drawDirs(canvas, [](const SkRect& rect, SkPathDirection dir, unsigned startIndex) {
       SkPath path;
       path.addRect(rect, dir, startIndex);
       return path;
     });
 
-    drawDirs(canvas, [](const SkRect& rect, SkPath::Direction dir, unsigned startIndex) {
+    drawDirs(canvas, [](const SkRect& rect, SkPathDirection dir, unsigned startIndex) {
       SkPath path;
       path.addOval(rect, dir, startIndex);
       return path;
     });
 
-    drawDirs(canvas, [](const SkRect& rect, SkPath::Direction dir, unsigned startIndex) {
+    drawDirs(canvas, [](const SkRect& rect, SkPathDirection dir, unsigned startIndex) {
       SkRRect rrect;
       const SkVector radii[4] = {{15, 15}, {15, 15}, {15, 15}, {15, 15}};
       rrect.setRectRadii(rect, radii);
@@ -74,7 +74,7 @@ class ContourStartGM : public GM {
       return path;
     });
 
-    drawDirs(canvas, [](const SkRect& rect, SkPath::Direction dir, unsigned startIndex) {
+    drawDirs(canvas, [](const SkRect& rect, SkPathDirection dir, unsigned startIndex) {
       SkRRect rrect;
       rrect.setRect(rect);
 
@@ -83,7 +83,7 @@ class ContourStartGM : public GM {
       return path;
     });
 
-    drawDirs(canvas, [](const SkRect& rect, SkPath::Direction dir, unsigned startIndex) {
+    drawDirs(canvas, [](const SkRect& rect, SkPathDirection dir, unsigned startIndex) {
       SkRRect rrect;
       rrect.setOval(rect);
 
@@ -101,16 +101,16 @@ class ContourStartGM : public GM {
   SkRect fRect;
 
   void drawDirs(
-      SkCanvas* canvas, SkPath (*makePath)(const SkRect&, SkPath::Direction, unsigned)) const {
-    drawOneColumn(canvas, SkPath::kCW_Direction, makePath);
+      SkCanvas* canvas, SkPath (*makePath)(const SkRect&, SkPathDirection, unsigned)) const {
+    drawOneColumn(canvas, SkPathDirection::kCW, makePath);
     canvas->translate(kImageWidth / 10, 0);
-    drawOneColumn(canvas, SkPath::kCCW_Direction, makePath);
+    drawOneColumn(canvas, SkPathDirection::kCCW, makePath);
     canvas->translate(kImageWidth / 10, 0);
   }
 
   void drawOneColumn(
-      SkCanvas* canvas, SkPath::Direction dir,
-      SkPath (*makePath)(const SkRect&, SkPath::Direction, unsigned)) const {
+      SkCanvas* canvas, SkPathDirection dir,
+      SkPath (*makePath)(const SkRect&, SkPathDirection, unsigned)) const {
     SkAutoCanvasRestore acr(canvas, true);
 
     for (unsigned i = 0; i < 8; ++i) {

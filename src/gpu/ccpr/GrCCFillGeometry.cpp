@@ -50,19 +50,19 @@ inline void GrCCFillGeometry::appendLine(const Sk2f& p0, const Sk2f& p1) {
   fVerbs.push_back(Verb::kLineTo);
 }
 
-static inline Sk2f normalize(const Sk2f& n) noexcept {
+static inline Sk2f normalize(const Sk2f& n) {
   Sk2f nn = n * n;
   return n * (nn + SkNx_shuffle<1, 0>(nn)).rsqrt();
 }
 
-static inline float dot(const Sk2f& a, const Sk2f& b) noexcept {
+static inline float dot(const Sk2f& a, const Sk2f& b) {
   float product[2];
   (a * b).store(product);
   return product[0] + product[1];
 }
 
 static inline bool are_collinear(
-    const Sk2f& p0, const Sk2f& p1, const Sk2f& p2, float tolerance = kFlatnessThreshold) noexcept {
+    const Sk2f& p0, const Sk2f& p1, const Sk2f& p2, float tolerance = kFlatnessThreshold) {
   Sk2f l = p2 - p0;  // Line from p0 -> p2.
 
   // lwidth = Manhattan width of l.
@@ -90,8 +90,7 @@ static inline bool are_collinear(
   return std::abs(d) <= lwidth * tolerance;
 }
 
-static inline bool are_collinear(
-    const SkPoint P[4], float tolerance = kFlatnessThreshold) noexcept {
+static inline bool are_collinear(const SkPoint P[4], float tolerance = kFlatnessThreshold) {
   Sk4f Px, Py;               // |Px  Py|   |p0 - p3|
   Sk4f::Load2(P, &Px, &Py);  // |.   . | = |p1 - p3|
   Px -= Px[3];               // |.   . |   |p2 - p3|
@@ -118,7 +117,7 @@ static inline bool are_collinear(
 
 // Returns whether the (convex) curve segment is monotonic with respect to [endPt - startPt].
 static inline bool is_convex_curve_monotonic(
-    const Sk2f& startPt, const Sk2f& tan0, const Sk2f& endPt, const Sk2f& tan1) noexcept {
+    const Sk2f& startPt, const Sk2f& tan0, const Sk2f& endPt, const Sk2f& tan1) {
   Sk2f v = endPt - startPt;
   float dot0 = dot(tan0, v);
   float dot1 = dot(tan1, v);
@@ -131,7 +130,7 @@ static inline bool is_convex_curve_monotonic(
 
 template <int N>
 static inline SkNx<N, float> lerp(
-    const SkNx<N, float>& a, const SkNx<N, float>& b, const SkNx<N, float>& t) noexcept {
+    const SkNx<N, float>& a, const SkNx<N, float>& b, const SkNx<N, float>& t) {
   return SkNx_fma(t, b - a, a);
 }
 
@@ -206,7 +205,7 @@ inline void GrCCFillGeometry::appendMonotonicQuadratic(
   ++fCurrContourTallies.fQuadratics;
 }
 
-static inline Sk2f first_unless_nearly_zero(const Sk2f& a, const Sk2f& b) noexcept {
+static inline Sk2f first_unless_nearly_zero(const Sk2f& a, const Sk2f& b) {
   Sk2f aa = a * a;
   aa += SkNx_shuffle<1, 0>(aa);
   SkASSERT(aa[0] == aa[1]);
@@ -219,15 +218,14 @@ static inline Sk2f first_unless_nearly_zero(const Sk2f& a, const Sk2f& b) noexce
 }
 
 static inline void get_cubic_tangents(
-    const Sk2f& p0, const Sk2f& p1, const Sk2f& p2, const Sk2f& p3, Sk2f* tan0,
-    Sk2f* tan1) noexcept {
+    const Sk2f& p0, const Sk2f& p1, const Sk2f& p2, const Sk2f& p3, Sk2f* tan0, Sk2f* tan1) {
   *tan0 = first_unless_nearly_zero(p1 - p0, p2 - p0);
   *tan1 = first_unless_nearly_zero(p3 - p2, p3 - p1);
 }
 
 static inline bool is_cubic_nearly_quadratic(
     const Sk2f& p0, const Sk2f& p1, const Sk2f& p2, const Sk2f& p3, const Sk2f& tan0,
-    const Sk2f& tan1, Sk2f* c) noexcept {
+    const Sk2f& tan1, Sk2f* c) {
   Sk2f c1 = SkNx_fma(Sk2f(1.5f), tan0, p0);
   Sk2f c2 = SkNx_fma(Sk2f(-1.5f), tan1, p3);
   *c = (c1 + c2) * .5f;  // Hopefully optimized out if not used?
@@ -314,7 +312,7 @@ static inline void find_chops_around_inflection_points(
   }
 }
 
-static inline void swap_if_greater(float& a, float& b) noexcept {
+static inline void swap_if_greater(float& a, float& b) {
   if (a > b) {
     std::swap(a, b);
   }
@@ -523,7 +521,7 @@ void GrCCFillGeometry::cubicTo(const SkPoint P[4], float inflectPad, float loopI
 
 static inline void chop_cubic(
     const Sk2f& p0, const Sk2f& p1, const Sk2f& p2, const Sk2f& p3, float T, Sk2f* ab, Sk2f* abc,
-    Sk2f* abcd, Sk2f* bcd, Sk2f* cd) noexcept {
+    Sk2f* abcd, Sk2f* bcd, Sk2f* cd) {
   Sk2f TT = T;
   *ab = lerp(p0, p1, TT);
   Sk2f bc = lerp(p1, p2, TT);

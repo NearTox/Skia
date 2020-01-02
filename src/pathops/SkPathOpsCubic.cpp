@@ -314,8 +314,8 @@ int SkDCubic::ComplexBreak(const SkPoint pointsPtr[4], SkScalar* t) {
             continue;
           }
           // don't call dxdyAtT since we want (0,0) results
-          SkDVector dPt = {derivative_at_t(&cubic.fPts[0].fX, testT),
-                           derivative_at_t(&cubic.fPts[0].fY, testT)};
+          SkDVector dPt = {
+              derivative_at_t(&cubic.fPts[0].fX, testT), derivative_at_t(&cubic.fPts[0].fY, testT)};
           double dPtLen = dPt.length();
           if (dPtLen < precision) {
             t[resultCount++] = testT;
@@ -599,8 +599,9 @@ SkDPoint SkDCubic::ptAtT(double t) const {
   double t2 = t * t;
   double c = 3 * one_t * t2;
   double d = t2 * t;
-  SkDPoint result = {a * fPts[0].fX + b * fPts[1].fX + c * fPts[2].fX + d * fPts[3].fX,
-                     a * fPts[0].fY + b * fPts[1].fY + c * fPts[2].fY + d * fPts[3].fY};
+  SkDPoint result = {
+      a * fPts[0].fX + b * fPts[1].fX + c * fPts[2].fX + d * fPts[3].fX,
+      a * fPts[0].fY + b * fPts[1].fY + c * fPts[2].fY + d * fPts[3].fY};
   return result;
 }
 

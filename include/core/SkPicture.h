@@ -94,7 +94,7 @@ class SK_API SkPicture : public SkRefCnt {
 
     /** Has no effect.
      */
-    virtual ~AbortCallback() = default;
+    virtual ~AbortCallback() {}
 
     /** Stops SkPicture playback when some condition is met. A subclass of
         AbortCallback provides an override for abort() that can stop SkPicture::playback.
@@ -107,6 +107,8 @@ class SK_API SkPicture : public SkRefCnt {
         SkPicture::playback was called.
 
         @return  true to stop playback
+
+    example: https://fiddle.skia.org/c/@Picture_AbortCallback_abort
     */
     virtual bool abort() = 0;
   };
@@ -119,6 +121,8 @@ class SK_API SkPicture : public SkRefCnt {
 
       @param canvas    receiver of drawing commands
       @param callback  allows interruption of playback
+
+      example: https://fiddle.skia.org/c/@Picture_playback
   */
   virtual void playback(SkCanvas* canvas, AbortCallback* callback = nullptr) const = 0;
 
@@ -130,6 +134,8 @@ class SK_API SkPicture : public SkRefCnt {
       cull.
 
       @return  bounds passed when SkPicture was created
+
+      example: https://fiddle.skia.org/c/@Picture_cullRect
   */
   virtual SkRect cullRect() const = 0;
 
@@ -137,7 +143,7 @@ class SK_API SkPicture : public SkRefCnt {
 
       @return  identifier for SkPicture
   */
-  uint32_t uniqueID() const noexcept { return fUniqueID; }
+  uint32_t uniqueID() const { return fUniqueID; }
 
   /** Returns storage containing SkData describing SkPicture, using optional custom
       encoders.
@@ -149,6 +155,8 @@ class SK_API SkPicture : public SkRefCnt {
 
       @param procs  custom serial data encoders; may be nullptr
       @return       storage containing serialized SkPicture
+
+      example: https://fiddle.skia.org/c/@Picture_serialize
   */
   sk_sp<SkData> serialize(const SkSerialProcs* procs = nullptr) const;
 
@@ -161,6 +169,8 @@ class SK_API SkPicture : public SkRefCnt {
 
       @param stream  writable serial data stream
       @param procs   custom serial data encoders; may be nullptr
+
+      example: https://fiddle.skia.org/c/@Picture_serialize_2
   */
   void serialize(SkWStream* stream, const SkSerialProcs* procs = nullptr) const;
 
@@ -173,6 +183,8 @@ class SK_API SkPicture : public SkRefCnt {
 
       @param cull  placeholder dimensions
       @return      placeholder with unique identifier
+
+      example: https://fiddle.skia.org/c/@Picture_MakePlaceholder
   */
   static sk_sp<SkPicture> MakePlaceholder(SkRect cull);
 
@@ -182,6 +194,8 @@ class SK_API SkPicture : public SkRefCnt {
       calls may be optimized away.
 
       @return  approximate operation count
+
+      example: https://fiddle.skia.org/c/@Picture_approximateOpCount
   */
   virtual int approximateOpCount() const = 0;
 
@@ -189,6 +203,8 @@ class SK_API SkPicture : public SkRefCnt {
       referenced by SkPicture.
 
       @return  approximate size
+
+      example: https://fiddle.skia.org/c/@Picture_approximateBytesUsed
   */
   virtual size_t approximateBytesUsed() const = 0;
 

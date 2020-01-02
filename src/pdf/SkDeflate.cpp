@@ -40,15 +40,16 @@ static void do_deflate(
   zStream->next_in = inBuffer;
   zStream->avail_in = SkToInt(inBufferSize);
   unsigned char outBuffer[SKDEFLATEWSTREAM_OUTPUT_BUFFER_SIZE];
-  SkDEBUGCODE(int returnValue);
-  do {
+  SkDEBUGCODE(int returnValue;) do {
     zStream->next_out = outBuffer;
     zStream->avail_out = sizeof(outBuffer);
     SkDEBUGCODE(returnValue =) deflate(zStream, flush);
     SkASSERT(!zStream->msg);
 
     out->write(outBuffer, sizeof(outBuffer) - zStream->avail_out);
-  } while (zStream->avail_in || !zStream->avail_out);
+  }
+  while (zStream->avail_in || !zStream->avail_out)
+    ;
   SkASSERT(flush == Z_FINISH ? returnValue == Z_STREAM_END : returnValue == Z_OK);
 }
 

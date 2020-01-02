@@ -487,6 +487,9 @@ static void test_negative_blur_sigma(skiatest::Reporter* reporter, GrContext* co
   SkBitmap gradient = make_gradient_circle(kWidth, kHeight);
   sk_sp<SkSpecialImage> imgSrc(
       SkSpecialImage::MakeFromRaster(SkIRect::MakeWH(kWidth, kHeight), gradient));
+  if (context) {
+    imgSrc = imgSrc->makeTextureImage(context);
+  }
 
   SkIPoint offset;
   SkImageFilter_Base::Context ctx(
@@ -571,6 +574,9 @@ static void test_morphology_radius_with_mirror_ctm(
 
   sk_sp<SkSpecialImage> imgSrc(
       SkSpecialImage::MakeFromRaster(SkIRect::MakeWH(kWidth, kHeight), bitmap));
+  if (context) {
+    imgSrc = imgSrc->makeTextureImage(context);
+  }
 
   SkIPoint offset;
   SkImageFilter_Base::Context ctx(

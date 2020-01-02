@@ -70,7 +70,7 @@ inline void CubicStrokeInstance::set(
 // for seamless integration with the connecting geometry.
 class LinearStrokeProcessor : public GrGeometryProcessor {
  public:
-  LinearStrokeProcessor() : GrGeometryProcessor(kLinearStrokeProcessor_ClassID) {
+  LinearStrokeProcessor() : INHERITED(kLinearStrokeProcessor_ClassID) {
     this->setInstanceAttributes(kInstanceAttribs, 2);
 #ifdef SK_DEBUG
     using Instance = LinearStrokeInstance;
@@ -89,13 +89,15 @@ class LinearStrokeProcessor : public GrGeometryProcessor {
   class Impl : public GrGLSLGeometryProcessor {
     void setData(
         const GrGLSLProgramDataManager&, const GrPrimitiveProcessor&,
-        FPCoordTransformIter&&) override {}
+        const CoordTransformRange&) override {}
     void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override;
   };
 
   GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override {
     return new Impl();
   }
+
+  typedef GrGeometryProcessor INHERITED;
 };
 
 void LinearStrokeProcessor::Impl::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
@@ -185,7 +187,7 @@ class CubicStrokeProcessor : public GrGeometryProcessor {
   class Impl : public GrGLSLGeometryProcessor {
     void setData(
         const GrGLSLProgramDataManager&, const GrPrimitiveProcessor&,
-        FPCoordTransformIter&&) override {}
+        const CoordTransformRange&) override {}
     void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override;
   };
 
@@ -781,8 +783,9 @@ void GrCCStroker::flushBufferedMeshesAsStrokes(
   dynamicStateArrays.fScissorRects = fScissorsBuffer.begin();
 
   GrProgramInfo programInfo(
-      flushState->drawOpArgs().numSamples(), flushState->drawOpArgs().origin(), pipeline, processor,
-      nullptr, &dynamicStateArrays, 0);
+      flushState->proxy()->numSamples(), flushState->proxy()->numStencilSamples(),
+      flushState->proxy()->backendFormat(), flushState->view()->origin(), &pipeline, &processor,
+      nullptr, &dynamicStateArrays, 0, GrPrimitiveType::kTriangleStrip);
 
   flushState->opsRenderPass()->draw(
       programInfo, fMeshesBuffer.begin(), fMeshesBuffer.count(), SkRect::Make(drawBounds));

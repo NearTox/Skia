@@ -29,7 +29,7 @@ class GrSemaphore;
 class GrBackendTextureImageGenerator : public SkImageGenerator {
  public:
   static std::unique_ptr<SkImageGenerator> Make(
-      sk_sp<GrTexture>, GrSurfaceOrigin, sk_sp<GrSemaphore>, SkColorType, SkAlphaType,
+      sk_sp<GrTexture>, GrSurfaceOrigin, std::unique_ptr<GrSemaphore>, SkColorType, SkAlphaType,
       sk_sp<SkColorSpace>);
 
   ~GrBackendTextureImageGenerator() override;
@@ -46,13 +46,13 @@ class GrBackendTextureImageGenerator : public SkImageGenerator {
  private:
   GrBackendTextureImageGenerator(
       const SkImageInfo& info, GrTexture*, GrSurfaceOrigin, uint32_t owningContextID,
-      sk_sp<GrSemaphore>, const GrBackendTexture&);
+      std::unique_ptr<GrSemaphore>, const GrBackendTexture&);
 
   static void ReleaseRefHelper_TextureReleaseProc(void* ctx);
 
   class RefHelper : public SkNVRefCnt<RefHelper> {
    public:
-    RefHelper(GrTexture*, uint32_t owningContextID);
+    RefHelper(GrTexture*, uint32_t owningContextID, std::unique_ptr<GrSemaphore>);
 
     ~RefHelper();
 
@@ -69,6 +69,8 @@ class GrBackendTextureImageGenerator : public SkImageGenerator {
     // proxies and gpu uses of the backend texture.
     GrRefCntedCallback* fBorrowingContextReleaseProc;
     uint32_t fBorrowingContextID;
+
+    std::unique_ptr<GrSemaphore> fSemaphore;
   };
 
   RefHelper* fRefHelper;
@@ -76,8 +78,6 @@ class GrBackendTextureImageGenerator : public SkImageGenerator {
   // as the creation of the fBorrowingContextReleaseProc. The latter happening if two threads with
   // the same consuming GrContext try to generate a texture at the same time.
   SkMutex fBorrowingMutex;
-
-  sk_sp<GrSemaphore> fSemaphore;
 
   GrBackendTexture fBackendTexture;
   GrSurfaceOrigin fSurfaceOrigin;

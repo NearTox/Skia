@@ -105,11 +105,13 @@ class GrProcessor {
     kGrDistanceFieldA8TextGeoProc_ClassID,
     kGrDistanceFieldLCDTextGeoProc_ClassID,
     kGrDistanceFieldPathGeoProc_ClassID,
+    kGrDomainEffect_ClassID,
     kGrDualIntervalGradientColorizer_ClassID,
     kGrEllipseEffect_ClassID,
     kGrFillRRectOp_Processor_ClassID,
     kGrGaussianConvolutionFragmentProcessor_ClassID,
     kGrGSCoverageProcessor_ClassID,
+    kGrHSLToRGBFilterEffect_ClassID,
     kGrImprovedPerlinNoiseEffect_ClassID,
     kGrLinearGradientLayout_ClassID,
     kGrLumaColorFilterEffect_ClassID,
@@ -126,6 +128,7 @@ class GrProcessor {
     kGrQuadEffect_ClassID,
     kGrRadialGradientLayout_ClassID,
     kGrRectBlurEffect_ClassID,
+    kGrRGBToHSLFilterEffect_ClassID,
     kGrRRectBlurEffect_ClassID,
     kGrRRectShadowGeoProc_ClassID,
     kGrSimpleTextureEffect_ClassID,
@@ -136,7 +139,6 @@ class GrProcessor {
     kGrSampleMaskProcessor_ClassID,
     kGrSaturateProcessor_ClassID,
     kGrSweepGradientLayout_ClassID,
-    kGrTextureDomainEffect_ClassID,
     kGrTextureGradientColorizer_ClassID,
     kGrTiledGradientEffect_ClassID,
     kGrTwoPointConicalGradientLayout_ClassID,
@@ -157,6 +159,7 @@ class GrProcessor {
     kFwidthSquircleTestProcessor_ClassID,
     kSwizzleFragmentProcessor_ClassID,
     kTestFP_ClassID,
+    kTestRectOp_ClassID,
     kFlatNormalsFP_ClassID,
     kMappedNormalsFP_ClassID,
     kLightingFP_ClassID,
@@ -220,6 +223,6 @@ class GrProcessor {
   CustomFeatures fRequestedFeatures = CustomFeatures::kNone;
 };
 
-GR_MAKE_BITFIELD_CLASS_OPS(GrProcessor::CustomFeatures);
+GR_MAKE_BITFIELD_CLASS_OPS(GrProcessor::CustomFeatures)
 
 #endif

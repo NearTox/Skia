@@ -25,8 +25,8 @@ enum {
 // quads with extreme widths (e.g. (0,1) (1,6) (0,3) width=5e7) recurse to point of failure
 // largest seen for normal cubics : 5, 26
 // largest seen for normal quads : 11
-static const int kRecursiveLimits[] = {5 * 3, 26 * 3, 11 * 3,
-                                       11 * 3};  // 3x limits seen in practice
+static const int kRecursiveLimits[] = {
+    5 * 3, 26 * 3, 11 * 3, 11 * 3};  // 3x limits seen in practice
 
 static_assert(0 == kTangent_RecursiveLimit, "cubic_stroke_relies_on_tangent_equalling_zero");
 static_assert(1 == kCubic_RecursiveLimit, "cubic_stroke_relies_on_cubic_equalling_one");
@@ -1381,8 +1381,8 @@ void SkStroke::strokePath(const SkPath& src, SkPath* dst) const {
   // If src is really a rect, call our specialty strokeRect() method
   {
     SkRect rect;
-    bool isClosed;
-    SkPath::Direction dir;
+    bool isClosed = false;
+    SkPathDirection dir;
     if (src.isRect(&rect, &isClosed, &dir) && isClosed) {
       this->strokeRect(rect, dst, dir);
       // our answer should preserve the inverseness of the src
@@ -1486,15 +1486,15 @@ DONE:
   }
 }
 
-static SkPath::Direction reverse_direction(SkPath::Direction dir) {
-  static const SkPath::Direction gOpposite[] = {SkPath::kCCW_Direction, SkPath::kCW_Direction};
-  return gOpposite[dir];
+static SkPathDirection reverse_direction(SkPathDirection dir) {
+  static const SkPathDirection gOpposite[] = {SkPathDirection::kCCW, SkPathDirection::kCW};
+  return gOpposite[(int)dir];
 }
 
-static void addBevel(SkPath* path, const SkRect& r, const SkRect& outer, SkPath::Direction dir) {
+static void addBevel(SkPath* path, const SkRect& r, const SkRect& outer, SkPathDirection dir) {
   SkPoint pts[8];
 
-  if (SkPath::kCW_Direction == dir) {
+  if (SkPathDirection::kCW == dir) {
     pts[0].set(r.fLeft, outer.fTop);
     pts[1].set(r.fRight, outer.fTop);
     pts[2].set(outer.fRight, r.fTop);
@@ -1516,7 +1516,7 @@ static void addBevel(SkPath* path, const SkRect& r, const SkRect& outer, SkPath:
   path->addPoly(pts, 8, true);
 }
 
-void SkStroke::strokeRect(const SkRect& origRect, SkPath* dst, SkPath::Direction dir) const {
+void SkStroke::strokeRect(const SkRect& origRect, SkPath* dst, SkPathDirection dir) const {
   SkASSERT(dst != nullptr);
   dst->reset();
 

@@ -19,14 +19,14 @@
     <ClCompile Include="angle2\src\compiler\preprocessor\DiagnosticsBase.cpp" />
     <ClCompile Include="angle2\src\compiler\preprocessor\DirectiveHandlerBase.cpp" />
     <ClCompile Include="angle2\src\compiler\preprocessor\DirectiveParser.cpp" />
-    <ClCompile Include="angle2\src\compiler\preprocessor\ExpressionParser.cpp" />
     <ClCompile Include="angle2\src\compiler\preprocessor\Input.cpp" />
     <ClCompile Include="angle2\src\compiler\preprocessor\Lexer.cpp" />
     <ClCompile Include="angle2\src\compiler\preprocessor\Macro.cpp" />
     <ClCompile Include="angle2\src\compiler\preprocessor\MacroExpander.cpp" />
     <ClCompile Include="angle2\src\compiler\preprocessor\Preprocessor.cpp" />
+    <ClCompile Include="angle2\src\compiler\preprocessor\preprocessor_lex_autogen.cpp" />
+    <ClCompile Include="angle2\src\compiler\preprocessor\preprocessor_tab_autogen.cpp" />
     <ClCompile Include="angle2\src\compiler\preprocessor\Token.cpp" />
-    <ClCompile Include="angle2\src\compiler\preprocessor\Tokenizer.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\AtomicCounterFunctionHLSL.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\BuiltInFunctionEmulator.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\BuiltinsWorkaroundGLSL.cpp" />
@@ -41,6 +41,8 @@
     <ClCompile Include="angle2\src\compiler\translator\ExtensionBehavior.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\FlagStd140Structs.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\FunctionLookup.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\glslang_lex_autogen.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\glslang_tab_autogen.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\HashNames.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\ImmutableStringBuilder.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\ImmutableString_autogen.cpp" />
@@ -84,8 +86,6 @@
     <ClCompile Include="angle2\src\compiler\translator\ValidateVaryingLocations.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\VariablePacker.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\blocklayout.cpp" />
-    <ClCompile Include="angle2\src\compiler\translator\glslang_lex.cpp" />
-    <ClCompile Include="angle2\src\compiler\translator\glslang_tab.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\util.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\AddAndTrueToLoopCondition.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\BreakVariableAliasingInInnerLoops.cpp" />
@@ -150,6 +150,7 @@
     <ClCompile Include="angle2\src\libANGLE\renderer\QueryImpl.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\ShaderImpl.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Semaphore.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationESEXT.cpp" />
     <ClCompile Include="angle2\src\libANGLE\validationGL1.cpp" />
     <ClCompile Include="angle2\src\libANGLE\validationGL11.cpp" />
     <ClCompile Include="angle2\src\libANGLE\validationGL12.cpp" />

@@ -206,7 +206,6 @@ if (skia_use_system_harfbuzz) {
       "$_src/hb-unicode.cc",
       "$_src/hb-unicode.hh",
       "$_src/hb-utf.hh",
-      "$_src/hb-warning.cc",
       "$_src/hb.hh",
     ]
   }

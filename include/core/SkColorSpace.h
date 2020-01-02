@@ -34,7 +34,7 @@ struct SK_API SkColorSpacePrimaries {
    *  Convert primaries and a white point to a toXYZD50 matrix, the preferred color gamut
    *  representation of SkColorSpace.
    */
-  bool toXYZD50(skcms_Matrix3x3* toXYZD50) const noexcept;
+  bool toXYZD50(skcms_Matrix3x3* toXYZD50) const;
 };
 
 namespace SkNamedTransferFn {
@@ -126,39 +126,36 @@ class SK_API SkColorSpace : public SkNVRefCnt<SkColorSpace> {
   /**
    *  Convert this color space to an skcms ICC profile struct.
    */
-  void toProfile(skcms_ICCProfile*) const noexcept;
+  void toProfile(skcms_ICCProfile*) const;
 
   /**
    *  Returns true if the color space gamma is near enough to be approximated as sRGB.
    */
-  bool gammaCloseToSRGB() const noexcept;
+  bool gammaCloseToSRGB() const;
 
   /**
    *  Returns true if the color space gamma is linear.
    */
-  bool gammaIsLinear() const noexcept;
+  bool gammaIsLinear() const;
 
   /**
-   *  If the transfer function can be represented as coefficients to the standard
-   *  equation, returns true and sets |fn| to the proper values.
-   *
-   *  If not, returns false.
+   *  Sets |fn| to the transfer function from this color space. Returns true if the transfer
+   *  function can be represented as coefficients to the standard ICC 7-parameter equation.
+   *  Returns false otherwise (eg, PQ, HLG).
    */
-  bool isNumericalTransferFn(skcms_TransferFunction* fn) const noexcept;
+  bool isNumericalTransferFn(skcms_TransferFunction* fn) const;
 
   /**
    *  Returns true and sets |toXYZD50| if the color gamut can be described as a matrix.
    *  Returns false otherwise.
    */
-  bool toXYZD50(SkMatrix44* toXYZD50) const noexcept;
-
-  bool toXYZD50(skcms_Matrix3x3* toXYZD50) const noexcept;
+  bool toXYZD50(skcms_Matrix3x3* toXYZD50) const;
 
   /**
    *  Returns a hash of the gamut transformation to XYZ D50. Allows for fast equality checking
    *  of gamuts, at the (very small) risk of collision.
    */
-  uint32_t toXYZD50Hash() const noexcept { return fToXYZD50Hash; }
+  uint32_t toXYZD50Hash() const { return fToXYZD50Hash; }
 
   /**
    *  Returns a color space with the same gamut as this one, but with a linear gamma.
@@ -216,30 +213,31 @@ class SK_API SkColorSpace : public SkNVRefCnt<SkColorSpace> {
    *  If both are null, we return true.  If one is null and the other is not, we return false.
    *  If both are non-null, we do a deeper compare.
    */
-  static bool Equals(const SkColorSpace*, const SkColorSpace*) noexcept;
+  static bool Equals(const SkColorSpace*, const SkColorSpace*);
 
-  void transferFn(float gabcdef[7]) const noexcept;
-  void invTransferFn(float gabcdef[7]) const noexcept;
-  void gamutTransformTo(const SkColorSpace* dst, float src_to_dst_row_major[9]) const noexcept;
+  void transferFn(float gabcdef[7]) const;  // DEPRECATED: Remove when webview usage is gone
+  void transferFn(skcms_TransferFunction* fn) const;
+  void invTransferFn(skcms_TransferFunction* fn) const;
+  void gamutTransformTo(const SkColorSpace* dst, skcms_Matrix3x3* src_to_dst) const;
 
-  uint32_t transferFnHash() const noexcept { return fTransferFnHash; }
-  uint64_t hash() const noexcept { return (uint64_t)fTransferFnHash << 32 | fToXYZD50Hash; }
+  uint32_t transferFnHash() const { return fTransferFnHash; }
+  uint64_t hash() const { return (uint64_t)fTransferFnHash << 32 | fToXYZD50Hash; }
 
  private:
   friend class SkColorSpaceSingletonFactory;
 
-  SkColorSpace(const float transferFn[7], const skcms_Matrix3x3& toXYZ) noexcept;
+  SkColorSpace(const skcms_TransferFunction& transferFn, const skcms_Matrix3x3& toXYZ);
 
-  void computeLazyDstFields() const noexcept;
+  void computeLazyDstFields() const;
 
   uint32_t fTransferFnHash;
   uint32_t fToXYZD50Hash;
 
-  float fTransferFn[7];
-  float fToXYZD50_3x3[9];  // row-major
+  skcms_TransferFunction fTransferFn;
+  skcms_Matrix3x3 fToXYZD50;
 
-  mutable float fInvTransferFn[7];
-  mutable float fFromXYZD50_3x3[9];  // row-major
+  mutable skcms_TransferFunction fInvTransferFn;
+  mutable skcms_Matrix3x3 fFromXYZD50;
   mutable SkOnce fLazyDstFieldsOnce;
 };
 

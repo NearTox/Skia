@@ -59,7 +59,7 @@ bool SkStream::readPackedUInt(size_t* i) {
 
 //////////////////////////////////////////////////////////////////////////////////////
 
-SkWStream::~SkWStream() = default;
+SkWStream::~SkWStream() {}
 
 void SkWStream::flush() {}
 
@@ -89,7 +89,7 @@ bool SkWStream::writeScalarAsText(SkScalar value) {
 
 bool SkWStream::writeScalar(SkScalar value) { return this->write(&value, sizeof(value)); }
 
-int SkWStream::SizeOfPackedUInt(size_t value) noexcept {
+int SkWStream::SizeOfPackedUInt(size_t value) {
   if (value <= SK_MAX_BYTE_FOR_U8) {
     return 1;
   } else if (value <= 0xFFFF) {
@@ -120,7 +120,7 @@ bool SkWStream::writePackedUInt(size_t value) {
 
 bool SkWStream::writeStream(SkStream* stream, size_t length) {
   char scratch[1024];
-  constexpr size_t MAX = sizeof(scratch);
+  const size_t MAX = sizeof(scratch);
 
   while (length != 0) {
     size_t n = length;
@@ -139,13 +139,13 @@ bool SkWStream::writeStream(SkStream* stream, size_t length) {
 ///////////////////////////////////////////////////////////////////////////////
 
 SkFILEStream::SkFILEStream(
-    std::shared_ptr<FILE> file, size_t size, size_t offset, size_t originalOffset) noexcept
+    std::shared_ptr<FILE> file, size_t size, size_t offset, size_t originalOffset)
     : fFILE(std::move(file)),
       fSize(size),
       fOffset(SkTMin(offset, fSize)),
       fOriginalOffset(SkTMin(originalOffset, fSize)) {}
 
-SkFILEStream::SkFILEStream(std::shared_ptr<FILE> file, size_t size, size_t offset) noexcept
+SkFILEStream::SkFILEStream(std::shared_ptr<FILE> file, size_t size, size_t offset)
     : SkFILEStream(std::move(file), size, offset, offset) {}
 
 SkFILEStream::SkFILEStream(FILE* file)
@@ -158,7 +158,7 @@ SkFILEStream::SkFILEStream(const char path[])
 
 SkFILEStream::~SkFILEStream() { this->close(); }
 
-void SkFILEStream::close() noexcept {
+void SkFILEStream::close() {
   fFILE.reset();
   fSize = 0;
   fOffset = 0;
@@ -292,7 +292,7 @@ void SkMemoryStream::setData(sk_sp<SkData> data) {
   fOffset = 0;
 }
 
-void SkMemoryStream::skipToAlign4() noexcept {
+void SkMemoryStream::skipToAlign4() {
   // cast to remove unary-minus warning
   fOffset += -(int)fOffset & 0x03;
 }
@@ -369,8 +369,7 @@ bool SkFILEWStream::write(const void* buffer, size_t size) {
   }
 
   if (sk_fwrite(buffer, size, fFILE) != size) {
-    SkDEBUGCODE(SkDebugf("SkFILEWStream failed writing %d bytes\n", size));
-    sk_fclose(fFILE);
+    SkDEBUGCODE(SkDebugf("SkFILEWStream failed writing %d bytes\n", size);) sk_fclose(fFILE);
     fFILE = nullptr;
     return false;
   }
@@ -407,9 +406,9 @@ struct SkDynamicMemoryWStream::Block {
   char* fCurr;
   char* fStop;
 
-  const char* start() const noexcept { return (const char*)(this + 1); }
-  char* start() noexcept { return (char*)(this + 1); }
-  size_t avail() const noexcept { return fStop - fCurr; }
+  const char* start() const { return (const char*)(this + 1); }
+  char* start() { return (char*)(this + 1); }
+  size_t avail() const { return fStop - fCurr; }
   size_t written() const { return fCurr - this->start(); }
 
   void init(size_t size) {
@@ -445,7 +444,7 @@ SkDynamicMemoryWStream& SkDynamicMemoryWStream::operator=(SkDynamicMemoryWStream
 
 SkDynamicMemoryWStream::~SkDynamicMemoryWStream() { this->reset(); }
 
-void SkDynamicMemoryWStream::reset() noexcept {
+void SkDynamicMemoryWStream::reset() {
   Block* block = fHead;
   while (block != nullptr) {
     Block* next = block->fNext;
@@ -855,7 +854,7 @@ sk_sp<SkData> SkCopyStreamToData(SkStream* stream) {
   }
 
   SkDynamicMemoryWStream tempStream;
-  constexpr size_t bufferSize = 4096;
+  const size_t bufferSize = 4096;
   char buffer[bufferSize];
   do {
     size_t bytesRead = stream->read(buffer, bufferSize);

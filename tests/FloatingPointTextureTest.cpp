@@ -48,8 +48,8 @@ void runFPTest(
 
   for (auto origin : {kTopLeft_GrSurfaceOrigin, kBottomLeft_GrSurfaceOrigin}) {
     auto fpProxy = sk_gpu_test::MakeTextureProxyFromData(
-        context, GrRenderable::kYes, DEV_W, DEV_H, colorType, kPremul_SkAlphaType, origin,
-        controlPixelData.begin(), 0);
+        context, GrRenderable::kYes, origin,
+        {colorType, kPremul_SkAlphaType, nullptr, DEV_W, DEV_H}, controlPixelData.begin(), 0);
     // Floating point textures are NOT supported everywhere
     if (!fpProxy) {
       continue;

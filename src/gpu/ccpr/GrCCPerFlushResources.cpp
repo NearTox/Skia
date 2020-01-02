@@ -80,7 +80,7 @@ class CopyAtlasOp : public AtlasOp {
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
     SkASSERT(fSrcProxy);
-    auto srcProxy = fSrcProxy.get();
+    GrSurfaceProxy* srcProxy = fSrcProxy.get();
     SkASSERT(srcProxy->isInstantiated());
 
     auto coverageMode = GrCCPathProcessor::GetCoverageMode(fResources->renderedPathCoverageType());

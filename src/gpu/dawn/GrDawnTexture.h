@@ -9,7 +9,7 @@
 #define GrDawnTexture_DEFINED
 
 #include "include/gpu/GrTexture.h"
-#include "dawn/dawncpp.h"
+#include "dawn/webgpu_cpp.h"
 
 class GrDawnGpu;
 struct GrDawnImageInfo;
@@ -17,11 +17,11 @@ struct GrDawnImageInfo;
 class GrDawnTexture : public GrTexture {
  public:
   static sk_sp<GrDawnTexture> Make(
-      GrDawnGpu*, const SkISize& size, GrPixelConfig config, dawn::TextureFormat format,
+      GrDawnGpu*, const SkISize& dimensions, GrPixelConfig config, wgpu::TextureFormat format,
       GrRenderable, int sampleCnt, SkBudgeted, int mipLevels, GrMipMapsStatus);
 
   static sk_sp<GrDawnTexture> MakeWrapped(
-      GrDawnGpu*, const SkISize& size, GrPixelConfig config, GrRenderable, int sampleCnt,
+      GrDawnGpu*, const SkISize& dimensions, GrPixelConfig config, GrRenderable, int sampleCnt,
       GrMipMapsStatus, GrWrapCacheable, const GrDawnImageInfo&);
 
   ~GrDawnTexture() override;
@@ -31,17 +31,17 @@ class GrDawnTexture : public GrTexture {
 
   void textureParamsModified() override {}
 
-  void upload(const GrMipLevel texels[], int mipLevels, dawn::CommandEncoder copyEncoder);
+  void upload(const GrMipLevel texels[], int mipLevels, wgpu::CommandEncoder copyEncoder);
   void upload(
       const GrMipLevel texels[], int mipLevels, const SkIRect& dstRect,
-      dawn::CommandEncoder copyEncoder);
+      wgpu::CommandEncoder copyEncoder);
 
-  dawn::Texture texture() const { return fInfo.fTexture; }
-  dawn::TextureView textureView() const { return fTextureView; }
+  wgpu::Texture texture() const { return fInfo.fTexture; }
+  wgpu::TextureView textureView() const { return fTextureView; }
 
  protected:
   GrDawnTexture(
-      GrDawnGpu*, const SkISize& size, GrPixelConfig config, dawn::TextureView,
+      GrDawnGpu*, const SkISize& dimensions, GrPixelConfig config, wgpu::TextureView,
       const GrDawnImageInfo&, GrMipMapsStatus);
 
   GrDawnGpu* getDawnGpu() const;
@@ -57,7 +57,7 @@ class GrDawnTexture : public GrTexture {
   GrDawnTexture(GrDawnGpu*, const GrSurfaceDesc&, const GrDawnImageInfo&, GrMipMapsStatus);
 
   GrDawnImageInfo fInfo;
-  dawn::TextureView fTextureView;
+  wgpu::TextureView fTextureView;
 
   typedef GrTexture INHERITED;
 };

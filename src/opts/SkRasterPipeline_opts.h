@@ -1796,6 +1796,10 @@ STAGE(unpremul, Ctx::None) {
 STAGE(force_opaque, Ctx::None) { a = 1; }
 STAGE(force_opaque_dst, Ctx::None) { da = 1; }
 
+// Clamp x to [0,1], both sides inclusive (think, gradients).
+// Even repeat and mirror funnel through a clamp to handle bad inputs like +Inf, NaN.
+SI F clamp_01(F v) { return min(max(0, v), 1); }
+
 STAGE(rgb_to_hsl, Ctx::None) {
   F mx = max(r, max(g, b)), mn = min(r, min(g, b)), d = mx - mn, d_rcp = 1.0f / d;
 
@@ -1814,23 +1818,18 @@ STAGE(rgb_to_hsl, Ctx::None) {
   b = l;
 }
 STAGE(hsl_to_rgb, Ctx::None) {
-  F h = r, s = g, l = b;
+  // See GrRGBToHSLFilterEffect.fp
 
-  F q = l + if_then_else(l >= 0.5f, s - l * s, l * s), p = 2.0f * l - q;
+  F h = r, s = g, l = b, c = (1.0f - abs_(2.0f * l - 1)) * s;
 
-  auto hue_to_rgb = [&](F t) {
-    t = fract(t);
-
-    F r = p;
-    r = if_then_else(t >= 4 / 6.0f, r, p + (q - p) * (4.0f - 6.0f * t));
-    r = if_then_else(t >= 3 / 6.0f, r, q);
-    r = if_then_else(t >= 1 / 6.0f, r, p + (q - p) * (6.0f * t));
-    return r;
+  auto hue_to_rgb = [&](F hue) {
+    F q = clamp_01(abs_(fract(hue) * 6.0f - 3.0f) - 1.0f);
+    return (q - 0.5f) * c + l;
   };
 
-  r = if_then_else(s == 0, l, hue_to_rgb(h + (1 / 3.0f)));
-  g = if_then_else(s == 0, l, hue_to_rgb(h));
-  b = if_then_else(s == 0, l, hue_to_rgb(h - (1 / 3.0f)));
+  r = hue_to_rgb(h + 0.0f / 3.0f);
+  g = hue_to_rgb(h + 2.0f / 3.0f);
+  b = hue_to_rgb(h + 1.0f / 3.0f);
 }
 
 // Derive alpha's coverage from rgb coverage and the values of src and dst alpha.
@@ -2416,10 +2415,6 @@ STAGE(repeat_x, const SkRasterPipeline_TileCtx* ctx) { r = exclusive_repeat(r, c
 STAGE(repeat_y, const SkRasterPipeline_TileCtx* ctx) { g = exclusive_repeat(g, ctx); }
 STAGE(mirror_x, const SkRasterPipeline_TileCtx* ctx) { r = exclusive_mirror(r, ctx); }
 STAGE(mirror_y, const SkRasterPipeline_TileCtx* ctx) { g = exclusive_mirror(g, ctx); }
-
-// Clamp x to [0,1], both sides inclusive (think, gradients).
-// Even repeat and mirror funnel through a clamp to handle bad inputs like +Inf, NaN.
-SI F clamp_01(F v) { return min(max(0, v), 1); }
 
 STAGE(clamp_x_1, Ctx::None) { r = clamp_01(r); }
 STAGE(repeat_x_1, Ctx::None) { r = clamp_01(r - floor_(r)); }

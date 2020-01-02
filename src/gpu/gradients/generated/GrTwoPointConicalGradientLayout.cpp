@@ -52,8 +52,8 @@ class GrGLSLTwoPointConicalGradientLayout : public GrGLSLFragmentProcessor {
         "0:\n        {\n            half r0 = %s.x;\n            @if (%s) {\n              "
         "  t = length(p) - float(r0);\n            } else {\n                t = "
         "-length(p) - float(r0);\n       ",
-        _outer.computeLocalCoordsInVertexShader() ? sk_TransformedCoords2D_0.c_str() : "_coords",
-        (int)_outer.type, args.fUniformHandler->getUniformCStr(focalParamsVar),
+        sk_TransformedCoords2D_0.c_str(), (int)_outer.type,
+        args.fUniformHandler->getUniformCStr(focalParamsVar),
         args.fUniformHandler->getUniformCStr(focalParamsVar),
         (_outer.isRadiusIncreasing ? "true" : "false"));
     fragBuilder->codeAppendf(
@@ -149,10 +149,10 @@ std::unique_ptr<GrFragmentProcessor> GrTwoPointConicalGradientLayout::TestCreate
   SkScalar scale = GrGradientShader::RandomParams::kGradientScale;
   SkScalar offset = scale / 32.0f;
 
-  SkPoint center1 = {d->fRandom->nextRangeScalar(0.0f, scale),
-                     d->fRandom->nextRangeScalar(0.0f, scale)};
-  SkPoint center2 = {d->fRandom->nextRangeScalar(0.0f, scale),
-                     d->fRandom->nextRangeScalar(0.0f, scale)};
+  SkPoint center1 = {
+      d->fRandom->nextRangeScalar(0.0f, scale), d->fRandom->nextRangeScalar(0.0f, scale)};
+  SkPoint center2 = {
+      d->fRandom->nextRangeScalar(0.0f, scale), d->fRandom->nextRangeScalar(0.0f, scale)};
   SkScalar radius1 = d->fRandom->nextRangeScalar(0.0f, scale);
   SkScalar radius2 = d->fRandom->nextRangeScalar(0.0f, scale);
 

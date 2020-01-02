@@ -120,8 +120,8 @@ static int blend31_old(int src, int dst, int a31) {
 }
 
 // suppress unused code warning
-static int (*blend_functions[])(int, int, int) = {blend31, blend31_slow, blend31_round,
-                                                  blend31_old};
+static int (*blend_functions[])(int, int, int) = {
+    blend31, blend31_slow, blend31_round, blend31_old};
 
 static void test_blend31() {
   int failed = 0;

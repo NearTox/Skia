@@ -35,8 +35,7 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
     Blob* fBlob;
     SkScalar fX;
     SkScalar fY;
-    uint16_t fRun;
-    uint16_t fSubRun;
+    GrTextBlob::SubRun* fSubRunPtr;
     SkPMColor4f fColor;
   };
 
@@ -98,7 +97,7 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
   struct FlushInfo {
     sk_sp<const GrBuffer> fVertexBuffer;
     sk_sp<const GrBuffer> fIndexBuffer;
-    sk_sp<GrGeometryProcessor> fGeometryProcessor;
+    GrGeometryProcessor* fGeometryProcessor;
     GrPipeline::FixedDynamicState* fFixedDynamicState;
     int fGlyphsToFlush;
     int fVertexOffset;
@@ -142,8 +141,8 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
 
   CombineResult onCombineIfPossible(GrOp* t, const GrCaps& caps) override;
 
-  sk_sp<GrGeometryProcessor> setupDfProcessor(
-      const GrShaderCaps& caps, const sk_sp<GrTextureProxy>* proxies,
+  GrGeometryProcessor* setupDfProcessor(
+      SkArenaAlloc* arena, const GrShaderCaps& caps, const sk_sp<GrTextureProxy>* proxies,
       unsigned int numActiveProxies) const;
 
   SkAutoSTMalloc<kMinGeometryAllocated, Geometry> fGeoData;

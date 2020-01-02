@@ -126,7 +126,7 @@ void GrDrawingManager::RenderTaskDAG::prepForFlush() {
       GrOpsTask* curOpsTask = fRenderTasks[i]->asOpsTask();
 
       if (prevOpsTask && curOpsTask) {
-        SkASSERT(prevOpsTask->fTarget.get() != curOpsTask->fTarget.get());
+        SkASSERT(prevOpsTask->fTargetView != curOpsTask->fTargetView);
       }
 
       prevOpsTask = curOpsTask;
@@ -313,11 +313,11 @@ GrSemaphoresSubmitted GrDrawingManager::flush(
     // Enable this to print out verbose GrOp information
     SkDEBUGCODE(SkDebugf("onFlush renderTasks:"));
     for (const auto& onFlushRenderTask : fOnFlushRenderTasks) {
-        SkDEBUGCODE(onFlushRenderTask->dump());
+        SkDEBUGCODE(onFlushRenderTask->dump();)
     }
     SkDEBUGCODE(SkDebugf("Normal renderTasks:"));
     for (int i = 0; i < fRenderTasks.count(); ++i) {
-        SkDEBUGCODE(fRenderTasks[i]->dump());
+        SkDEBUGCODE(fRenderTasks[i]->dump();)
     }
 #endif
 
@@ -577,6 +577,8 @@ void GrDrawingManager::moveRenderTasksToDDL(SkDeferredDisplayList* ddl) {
     renderTask->prePrepare(fContext);
   }
 
+  ddl->fRecordTimeData = fContext->priv().detachRecordTimeAllocator();
+
   if (fPathRendererChain) {
     if (auto ccpr = fPathRendererChain->getCoverageCountingPathRenderer()) {
       ddl->fPendingPaths = ccpr->detachPendingPaths();
@@ -664,15 +666,16 @@ void GrDrawingManager::closeRenderTasksForNewRenderTask(GrSurfaceProxy* target) 
   }
 }
 
-sk_sp<GrOpsTask> GrDrawingManager::newOpsTask(sk_sp<GrRenderTargetProxy> rtp, bool managedOpsTask) {
+sk_sp<GrOpsTask> GrDrawingManager::newOpsTask(GrSurfaceProxyView surfaceView, bool managedOpsTask) {
   SkDEBUGCODE(this->validate());
   SkASSERT(fContext);
 
-  this->closeRenderTasksForNewRenderTask(rtp.get());
+  GrSurfaceProxy* proxy = surfaceView.proxy();
+  this->closeRenderTasksForNewRenderTask(proxy);
 
-  sk_sp<GrOpsTask> opsTask(
-      new GrOpsTask(fContext->priv().refOpMemoryPool(), rtp, fContext->priv().auditTrail()));
-  SkASSERT(rtp->getLastRenderTask() == opsTask.get());
+  sk_sp<GrOpsTask> opsTask(new GrOpsTask(
+      fContext->priv().refOpMemoryPool(), std::move(surfaceView), fContext->priv().auditTrail()));
+  SkASSERT(proxy->getLastRenderTask() == opsTask.get());
 
   if (managedOpsTask) {
     fDAG.add(opsTask);
@@ -701,7 +704,7 @@ GrTextureResolveRenderTask* GrDrawingManager::newTextureResolveRenderTask(const 
 }
 
 void GrDrawingManager::newWaitRenderTask(
-    sk_sp<GrSurfaceProxy> proxy, std::unique_ptr<sk_sp<GrSemaphore>[]> semaphores,
+    sk_sp<GrSurfaceProxy> proxy, std::unique_ptr<std::unique_ptr<GrSemaphore>[]> semaphores,
     int numSemaphores) {
   SkDEBUGCODE(this->validate());
   SkASSERT(fContext);
@@ -709,7 +712,7 @@ void GrDrawingManager::newWaitRenderTask(
   const GrCaps& caps = *fContext->priv().caps();
 
   sk_sp<GrWaitRenderTask> waitTask =
-      sk_make_sp<GrWaitRenderTask>(proxy, std::move(semaphores), numSemaphores);
+      sk_make_sp<GrWaitRenderTask>(GrSurfaceProxyView(proxy), std::move(semaphores), numSemaphores);
   if (fReduceOpsTaskSplitting) {
     GrRenderTask* lastTask = proxy->getLastRenderTask();
     if (lastTask && !lastTask->isClosed()) {
@@ -739,7 +742,7 @@ void GrDrawingManager::newWaitRenderTask(
     }
     fDAG.add(waitTask);
   } else {
-    if (fActiveOpsTask && (fActiveOpsTask->fTarget == proxy)) {
+    if (fActiveOpsTask && (fActiveOpsTask->fTargetView.proxy() == proxy.get())) {
       SkASSERT(proxy->getLastRenderTask() == fActiveOpsTask);
       fDAG.addBeforeLast(waitTask);
       // In this case we keep the current renderTask open but just insert the new waitTask
@@ -800,23 +803,25 @@ void GrDrawingManager::newTransferFromRenderTask(
 }
 
 bool GrDrawingManager::newCopyRenderTask(
-    sk_sp<GrSurfaceProxy> srcProxy, const SkIRect& srcRect, sk_sp<GrSurfaceProxy> dstProxy,
+    GrSurfaceProxyView srcView, const SkIRect& srcRect, GrSurfaceProxyView dstView,
     const SkIPoint& dstPoint) {
   SkDEBUGCODE(this->validate());
   SkASSERT(fContext);
 
-  this->closeRenderTasksForNewRenderTask(dstProxy.get());
+  this->closeRenderTasksForNewRenderTask(dstView.proxy());
   const GrCaps& caps = *fContext->priv().caps();
 
-  GrRenderTask* task =
-      fDAG.add(GrCopyRenderTask::Make(srcProxy, srcRect, dstProxy, dstPoint, &caps));
+  GrSurfaceProxy* srcProxy = srcView.proxy();
+
+  GrRenderTask* task = fDAG.add(
+      GrCopyRenderTask::Make(std::move(srcView), srcRect, std::move(dstView), dstPoint, &caps));
   if (!task) {
     return false;
   }
 
   // We always say GrMipMapped::kNo here since we are always just copying from the base layer to
   // another base layer. We don't need to make sure the whole mip map chain is valid.
-  task->addDependency(srcProxy.get(), GrMipMapped::kNo, GrTextureResolveManager(this), caps);
+  task->addDependency(srcProxy, GrMipMapped::kNo, GrTextureResolveManager(this), caps);
   task->makeClosed(caps);
 
   // We have closed the previous active oplist but since a new oplist isn't being added there
@@ -897,9 +902,15 @@ std::unique_ptr<GrRenderTargetContext> GrDrawingManager::makeRenderTargetContext
 
   sk_sp<GrRenderTargetProxy> renderTargetProxy(sk_ref_sp(sProxy->asRenderTargetProxy()));
 
+  GrSurfaceOrigin origin = renderTargetProxy->origin();
+  GrSwizzle texSwizzle =
+      fContext->priv().caps()->getTextureSwizzle(sProxy->backendFormat(), colorType);
+  GrSwizzle outSwizzle =
+      fContext->priv().caps()->getOutputSwizzle(sProxy->backendFormat(), colorType);
+
   return std::unique_ptr<GrRenderTargetContext>(new GrRenderTargetContext(
-      fContext, std::move(renderTargetProxy), colorType, std::move(colorSpace), surfaceProps,
-      managedOpsTask));
+      fContext, std::move(renderTargetProxy), colorType, origin, texSwizzle, outSwizzle,
+      std::move(colorSpace), surfaceProps, managedOpsTask));
 }
 
 std::unique_ptr<GrTextureContext> GrDrawingManager::makeTextureContext(
@@ -914,6 +925,10 @@ std::unique_ptr<GrTextureContext> GrDrawingManager::makeTextureContext(
 
   sk_sp<GrTextureProxy> textureProxy(sk_ref_sp(sProxy->asTextureProxy()));
 
+  GrSurfaceOrigin origin = textureProxy->origin();
+  GrSwizzle texSwizzle = textureProxy->textureSwizzle();
+
   return std::unique_ptr<GrTextureContext>(new GrTextureContext(
-      fContext, std::move(textureProxy), colorType, alphaType, std::move(colorSpace)));
+      fContext, std::move(textureProxy), colorType, alphaType, std::move(colorSpace), origin,
+      texSwizzle));
 }

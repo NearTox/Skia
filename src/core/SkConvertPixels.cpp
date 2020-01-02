@@ -215,8 +215,8 @@ void SkConvertPixels(
   SkASSERT(dstInfo.dimensions() == srcInfo.dimensions());
   SkASSERT(SkImageInfoValidConversion(dstInfo, srcInfo));
 
-  SkColorSpaceXformSteps steps{srcInfo.colorSpace(), srcInfo.alphaType(), dstInfo.colorSpace(),
-                               dstInfo.alphaType()};
+  SkColorSpaceXformSteps steps{
+      srcInfo.colorSpace(), srcInfo.alphaType(), dstInfo.colorSpace(), dstInfo.alphaType()};
 
   for (auto fn : {rect_memcpy, swizzle_or_premul, convert_to_alpha8}) {
     if (fn(dstInfo, dstPixels, dstRB, srcInfo, srcPixels, srcRB, steps)) {

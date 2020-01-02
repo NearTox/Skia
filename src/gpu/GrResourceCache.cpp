@@ -29,11 +29,11 @@ DECLARE_SKMESSAGEBUS_MESSAGE(GrUniqueKeyInvalidatedMessage);
 
 DECLARE_SKMESSAGEBUS_MESSAGE(GrTextureFreedMessage);
 
-#define ASSERT_SINGLE_OWNER SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(fSingleOwner))
+#define ASSERT_SINGLE_OWNER SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(fSingleOwner);)
 
 //////////////////////////////////////////////////////////////////////////////
 
-GrScratchKey::ResourceType GrScratchKey::GenerateResourceType() noexcept {
+GrScratchKey::ResourceType GrScratchKey::GenerateResourceType() {
   static std::atomic<int32_t> nextType{INHERITED::kInvalidDomain + 1};
 
   int32_t type = nextType++;
@@ -44,7 +44,7 @@ GrScratchKey::ResourceType GrScratchKey::GenerateResourceType() noexcept {
   return static_cast<ResourceType>(type);
 }
 
-GrUniqueKey::Domain GrUniqueKey::GenerateDomain() noexcept {
+GrUniqueKey::Domain GrUniqueKey::GenerateDomain() {
   static std::atomic<int32_t> nextDomain{INHERITED::kInvalidDomain + 1};
 
   int32_t domain = nextDomain++;
@@ -70,24 +70,20 @@ class GrResourceCache::AutoValidate : ::SkNoncopyable {
 
 //////////////////////////////////////////////////////////////////////////////
 
-inline GrResourceCache::TextureAwaitingUnref::TextureAwaitingUnref() noexcept = default;
+inline GrResourceCache::TextureAwaitingUnref::TextureAwaitingUnref() = default;
 
-inline GrResourceCache::TextureAwaitingUnref::TextureAwaitingUnref(GrTexture* texture) noexcept
+inline GrResourceCache::TextureAwaitingUnref::TextureAwaitingUnref(GrTexture* texture)
     : fTexture(texture), fNumUnrefs(1) {}
 
-inline GrResourceCache::TextureAwaitingUnref::TextureAwaitingUnref(
-    TextureAwaitingUnref&& that) noexcept
-    : fTexture(that.fTexture), fNumUnrefs(that.fNumUnrefs) {
-  that.fTexture = nullptr;
-  fNumUnrefs = 0;
+inline GrResourceCache::TextureAwaitingUnref::TextureAwaitingUnref(TextureAwaitingUnref&& that) {
+  fTexture = skstd::exchange(that.fTexture, nullptr);
+  fNumUnrefs = skstd::exchange(that.fNumUnrefs, 0);
 }
 
 inline GrResourceCache::TextureAwaitingUnref& GrResourceCache::TextureAwaitingUnref::operator=(
-    TextureAwaitingUnref&& that) noexcept {
-  fTexture = that.fTexture;
-  that.fTexture = nullptr;
-  fNumUnrefs = that.fNumUnrefs;
-  that.fNumUnrefs = 0;
+    TextureAwaitingUnref&& that) {
+  fTexture = skstd::exchange(that.fTexture, nullptr);
+  fNumUnrefs = skstd::exchange(that.fNumUnrefs, 0);
   return *this;
 }
 
@@ -99,9 +95,7 @@ inline GrResourceCache::TextureAwaitingUnref::~TextureAwaitingUnref() {
   }
 }
 
-inline void GrResourceCache::TextureAwaitingUnref::TextureAwaitingUnref::addRef() noexcept {
-  ++fNumUnrefs;
-}
+inline void GrResourceCache::TextureAwaitingUnref::TextureAwaitingUnref::addRef() { ++fNumUnrefs; }
 
 inline void GrResourceCache::TextureAwaitingUnref::unref() {
   SkASSERT(fNumUnrefs > 0);
@@ -109,7 +103,7 @@ inline void GrResourceCache::TextureAwaitingUnref::unref() {
   --fNumUnrefs;
 }
 
-inline bool GrResourceCache::TextureAwaitingUnref::finished() noexcept { return !fNumUnrefs; }
+inline bool GrResourceCache::TextureAwaitingUnref::finished() { return !fNumUnrefs; }
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -131,7 +125,7 @@ void GrResourceCache::setLimit(size_t bytes) {
 }
 
 void GrResourceCache::insertResource(GrGpuResource* resource) {
-  ASSERT_SINGLE_OWNER;
+  ASSERT_SINGLE_OWNER
   SkASSERT(resource);
   SkASSERT(!this->isInCache(resource));
   SkASSERT(!resource->wasDestroyed());
@@ -144,8 +138,7 @@ void GrResourceCache::insertResource(GrGpuResource* resource) {
   this->addToNonpurgeableArray(resource);
 
   size_t size = resource->gpuMemorySize();
-  SkDEBUGCODE(++fCount);
-  fBytes += size;
+  SkDEBUGCODE(++fCount;) fBytes += size;
 #if GR_CACHE_STATS
   fHighWaterCount = SkTMax(this->getResourceCount(), fHighWaterCount);
   fHighWaterBytes = SkTMax(fBytes, fHighWaterBytes);
@@ -170,7 +163,7 @@ void GrResourceCache::insertResource(GrGpuResource* resource) {
 }
 
 void GrResourceCache::removeResource(GrGpuResource* resource) {
-  ASSERT_SINGLE_OWNER;
+  ASSERT_SINGLE_OWNER
   this->validate();
   SkASSERT(this->isInCache(resource));
 
@@ -182,8 +175,7 @@ void GrResourceCache::removeResource(GrGpuResource* resource) {
     this->removeFromNonpurgeableArray(resource);
   }
 
-  SkDEBUGCODE(--fCount);
-  fBytes -= size;
+  SkDEBUGCODE(--fCount;) fBytes -= size;
   if (GrBudgetedType::kBudgeted == resource->resourcePriv().budgetedType()) {
     --fBudgetedCount;
     fBudgetedBytes -= size;
@@ -307,7 +299,7 @@ GrGpuResource* GrResourceCache::findAndRefScratchResource(const GrScratchKey& sc
 }
 
 void GrResourceCache::willRemoveScratchKey(const GrGpuResource* resource) {
-  ASSERT_SINGLE_OWNER;
+  ASSERT_SINGLE_OWNER
   SkASSERT(resource->resourcePriv().getScratchKey().isValid());
   if (!resource->getUniqueKey().isValid()) {
     fScratchMap.remove(resource->resourcePriv().getScratchKey(), resource);
@@ -315,7 +307,7 @@ void GrResourceCache::willRemoveScratchKey(const GrGpuResource* resource) {
 }
 
 void GrResourceCache::removeUniqueKey(GrGpuResource* resource) {
-  ASSERT_SINGLE_OWNER;
+  ASSERT_SINGLE_OWNER
   // Someone has a ref to this resource in order to have removed the key. When the ref count
   // reaches zero we will get a ref cnt notification and figure out what to do with it.
   if (resource->getUniqueKey().isValid()) {
@@ -335,7 +327,7 @@ void GrResourceCache::removeUniqueKey(GrGpuResource* resource) {
 }
 
 void GrResourceCache::changeUniqueKey(GrGpuResource* resource, const GrUniqueKey& newKey) {
-  ASSERT_SINGLE_OWNER;
+  ASSERT_SINGLE_OWNER
   SkASSERT(resource);
   SkASSERT(this->isInCache(resource));
 
@@ -375,7 +367,7 @@ void GrResourceCache::changeUniqueKey(GrGpuResource* resource, const GrUniqueKey
 }
 
 void GrResourceCache::refAndMakeResourceMRU(GrGpuResource* resource) {
-  ASSERT_SINGLE_OWNER;
+  ASSERT_SINGLE_OWNER
   SkASSERT(resource);
   SkASSERT(this->isInCache(resource));
 
@@ -397,7 +389,7 @@ void GrResourceCache::refAndMakeResourceMRU(GrGpuResource* resource) {
 }
 
 void GrResourceCache::notifyRefCntReachedZero(GrGpuResource* resource) {
-  ASSERT_SINGLE_OWNER;
+  ASSERT_SINGLE_OWNER
   SkASSERT(resource);
   SkASSERT(!resource->wasDestroyed());
   SkASSERT(this->isInCache(resource));
@@ -459,15 +451,14 @@ void GrResourceCache::notifyRefCntReachedZero(GrGpuResource* resource) {
     }
   }
 
-  SkDEBUGCODE(int beforeCount = this->getResourceCount());
-  resource->cacheAccess().release();
+  SkDEBUGCODE(int beforeCount = this->getResourceCount();) resource->cacheAccess().release();
   // We should at least free this resource, perhaps dependent resources as well.
   SkASSERT(this->getResourceCount() < beforeCount);
   this->validate();
 }
 
 void GrResourceCache::didChangeBudgetStatus(GrGpuResource* resource) {
-  ASSERT_SINGLE_OWNER;
+  ASSERT_SINGLE_OWNER
   SkASSERT(resource);
   SkASSERT(this->isInCache(resource));
 
@@ -619,7 +610,7 @@ void GrResourceCache::purgeUnlockedResources(size_t bytesToPurge, bool preferScr
     fMaxBytes = cachedByteCount;
   }
 }
-bool GrResourceCache::requestsFlush() const noexcept {
+bool GrResourceCache::requestsFlush() const {
   return this->overBudget() && !fPurgeableQueue.count() &&
          fNumBudgetedResourcesFlushWillMakePurgeable > 0;
 }
@@ -645,15 +636,13 @@ void GrResourceCache::processFreedGpuResources() {
     SkASSERT(msgs[i].fOwningUniqueID == fContextUniqueID);
     uint32_t id = msgs[i].fTexture->uniqueID().asUInt();
     TextureAwaitingUnref* info = fTexturesAwaitingUnref.find(id);
-    // If we called release or abandon on the GrContext we will have already released our ref on
-    // the GrGpuResource. If then the message arrives before the actual GrContext gets destroyed
-    // we will try to process the message when we destroy the GrContext. This protects us from
-    // trying to unref the resource twice.
-    if (info) {
-      info->unref();
-      if (info->finished()) {
-        fTexturesAwaitingUnref.remove(id);
-      }
+    // If the GrContext was released or abandoned then fTexturesAwaitingUnref should have been
+    // empty and we would have returned early above. Thus, any texture from a message should be
+    // in the list of fTexturesAwaitingUnref.
+    SkASSERT(info);
+    info->unref();
+    if (info->finished()) {
+      fTexturesAwaitingUnref.remove(id);
     }
   }
 }

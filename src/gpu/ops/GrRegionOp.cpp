@@ -18,16 +18,15 @@
 #include "src/gpu/ops/GrMeshDrawOp.h"
 #include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 
-static const int kVertsPerInstance = 4;
-static const int kIndicesPerInstance = 6;
-
-static sk_sp<GrGeometryProcessor> make_gp(
-    const GrShaderCaps* shaderCaps, const SkMatrix& viewMatrix, bool wideColor) {
+static GrGeometryProcessor* make_gp(
+    SkArenaAlloc* arena, const GrShaderCaps* shaderCaps, const SkMatrix& viewMatrix,
+    bool wideColor) {
   using namespace GrDefaultGeoProcFactory;
   Color::Type colorType =
       wideColor ? Color::kPremulWideColorAttribute_Type : Color::kPremulGrColorAttribute_Type;
   return GrDefaultGeoProcFactory::Make(
-      shaderCaps, colorType, Coverage::kSolid_Type, LocalCoords::kUsePosition_Type, viewMatrix);
+      arena, shaderCaps, colorType, Coverage::kSolid_Type, LocalCoords::kUsePosition_Type,
+      viewMatrix);
 }
 
 namespace {
@@ -93,7 +92,8 @@ class RegionOp final : public GrMeshDrawOp {
 
  private:
   void onPrepareDraws(Target* target) override {
-    sk_sp<GrGeometryProcessor> gp = make_gp(target->caps().shaderCaps(), fViewMatrix, fWideColor);
+    GrGeometryProcessor* gp =
+        make_gp(target->allocator(), target->caps().shaderCaps(), fViewMatrix, fWideColor);
     if (!gp) {
       SkDebugf("Couldn't create GrGeometryProcessor\n");
       return;
@@ -108,14 +108,9 @@ class RegionOp final : public GrMeshDrawOp {
     if (!numRects) {
       return;
     }
-    sk_sp<const GrGpuBuffer> indexBuffer = target->resourceProvider()->refQuadIndexBuffer();
-    if (!indexBuffer) {
-      SkDebugf("Could not allocate indices\n");
-      return;
-    }
-    PatternHelper helper(
-        target, GrPrimitiveType::kTriangles, gp->vertexStride(), std::move(indexBuffer),
-        kVertsPerInstance, kIndicesPerInstance, numRects);
+
+    QuadHelper helper(target, gp->vertexStride(), numRects);
+
     GrVertexWriter vertices{helper.vertices()};
     if (!vertices.fPtr) {
       SkDebugf("Could not allocate vertices\n");
@@ -131,7 +126,7 @@ class RegionOp final : public GrMeshDrawOp {
         iter.next();
       }
     }
-    helper.recordDraw(target, std::move(gp));
+    helper.recordDraw(target, gp);
   }
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {

@@ -57,11 +57,12 @@ class DrawVerticesOp final : public GrMeshDrawOp {
       uint16_t* indices) const;
 
   void drawVertices(
-      Target*, sk_sp<const GrGeometryProcessor>, sk_sp<const GrBuffer> vertexBuffer,
-      int firstVertex, sk_sp<const GrBuffer> indexBuffer, int firstIndex);
+      Target*, const GrGeometryProcessor*, sk_sp<const GrBuffer> vertexBuffer, int firstVertex,
+      sk_sp<const GrBuffer> indexBuffer, int firstIndex);
 
-  sk_sp<GrGeometryProcessor> makeGP(
-      const GrShaderCaps* shaderCaps, bool* hasColorAttribute, bool* hasLocalCoordAttribute) const;
+  GrGeometryProcessor* makeGP(
+      SkArenaAlloc* arena, const GrShaderCaps* shaderCaps, bool* hasColorAttribute,
+      bool* hasLocalCoordAttribute) const;
 
   GrPrimitiveType primitiveType() const { return fPrimitiveType; }
   bool combinablePrimitive() const {
@@ -210,8 +211,9 @@ GrProcessorSet::Analysis DrawVerticesOp::finalize(
   return result;
 }
 
-sk_sp<GrGeometryProcessor> DrawVerticesOp::makeGP(
-    const GrShaderCaps* shaderCaps, bool* hasColorAttribute, bool* hasLocalCoordAttribute) const {
+GrGeometryProcessor* DrawVerticesOp::makeGP(
+    SkArenaAlloc* arena, const GrShaderCaps* shaderCaps, bool* hasColorAttribute,
+    bool* hasLocalCoordAttribute) const {
   using namespace GrDefaultGeoProcFactory;
   LocalCoords::Type localCoordsType;
   if (fHelper.usesLocalCoords()) {
@@ -245,7 +247,7 @@ sk_sp<GrGeometryProcessor> DrawVerticesOp::makeGP(
   const SkMatrix& vm = this->hasMultipleViewMatrices() ? SkMatrix::I() : fMeshes[0].fViewMatrix;
 
   return GrDefaultGeoProcFactory::Make(
-      shaderCaps, color, Coverage::kSolid_Type, localCoordsType, vm);
+      arena, shaderCaps, color, Coverage::kSolid_Type, localCoordsType, vm);
 }
 
 void DrawVerticesOp::onPrepareDraws(Target* target) {
@@ -260,8 +262,9 @@ void DrawVerticesOp::onPrepareDraws(Target* target) {
 void DrawVerticesOp::drawVolatile(Target* target) {
   bool hasColorAttribute;
   bool hasLocalCoordsAttribute;
-  sk_sp<GrGeometryProcessor> gp =
-      this->makeGP(target->caps().shaderCaps(), &hasColorAttribute, &hasLocalCoordsAttribute);
+  GrGeometryProcessor* gp = this->makeGP(
+      target->allocator(), target->caps().shaderCaps(), &hasColorAttribute,
+      &hasLocalCoordsAttribute);
 
   // Allocate buffers.
   size_t vertexStride = gp->vertexStride();
@@ -288,8 +291,7 @@ void DrawVerticesOp::drawVolatile(Target* target) {
   this->fillBuffers(hasColorAttribute, hasLocalCoordsAttribute, vertexStride, verts, indices);
 
   // Draw the vertices.
-  this->drawVertices(
-      target, std::move(gp), std::move(vertexBuffer), firstVertex, indexBuffer, firstIndex);
+  this->drawVertices(target, gp, std::move(vertexBuffer), firstVertex, indexBuffer, firstIndex);
 }
 
 void DrawVerticesOp::drawNonVolatile(Target* target) {
@@ -297,8 +299,9 @@ void DrawVerticesOp::drawNonVolatile(Target* target) {
 
   bool hasColorAttribute;
   bool hasLocalCoordsAttribute;
-  sk_sp<GrGeometryProcessor> gp =
-      this->makeGP(target->caps().shaderCaps(), &hasColorAttribute, &hasLocalCoordsAttribute);
+  GrGeometryProcessor* gp = this->makeGP(
+      target->allocator(), target->caps().shaderCaps(), &hasColorAttribute,
+      &hasLocalCoordsAttribute);
 
   SkASSERT(fMeshes.count() == 1);  // Non-volatile meshes should never combine.
 
@@ -322,8 +325,7 @@ void DrawVerticesOp::drawNonVolatile(Target* target) {
 
   // Draw using the cached buffers if possible.
   if (vertexBuffer && (!this->isIndexed() || indexBuffer)) {
-    this->drawVertices(
-        target, std::move(gp), std::move(vertexBuffer), 0, std::move(indexBuffer), 0);
+    this->drawVertices(target, gp, std::move(vertexBuffer), 0, std::move(indexBuffer), 0);
     return;
   }
 
@@ -363,7 +365,7 @@ void DrawVerticesOp::drawNonVolatile(Target* target) {
   rp->assignUniqueKeyToResource(indexKey, indexBuffer.get());
 
   // Draw the vertices.
-  this->drawVertices(target, std::move(gp), std::move(vertexBuffer), 0, std::move(indexBuffer), 0);
+  this->drawVertices(target, gp, std::move(vertexBuffer), 0, std::move(indexBuffer), 0);
 }
 
 void DrawVerticesOp::fillBuffers(
@@ -457,7 +459,7 @@ void DrawVerticesOp::fillBuffers(
 }
 
 void DrawVerticesOp::drawVertices(
-    Target* target, sk_sp<const GrGeometryProcessor> gp, sk_sp<const GrBuffer> vertexBuffer,
+    Target* target, const GrGeometryProcessor* gp, sk_sp<const GrBuffer> vertexBuffer,
     int firstVertex, sk_sp<const GrBuffer> indexBuffer, int firstIndex) {
   GrMesh* mesh = target->allocMesh(this->primitiveType());
   if (this->isIndexed()) {
@@ -468,7 +470,7 @@ void DrawVerticesOp::drawVertices(
     mesh->setNonIndexedNonInstanced(fVertexCount);
   }
   mesh->setVertexData(std::move(vertexBuffer), firstVertex);
-  target->recordDraw(std::move(gp), mesh);
+  target->recordDraw(gp, mesh, 1, this->primitiveType());
 }
 
 void DrawVerticesOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) {

@@ -252,19 +252,20 @@ ANGLEGLContext::ANGLEGLContext(
   }
 
   EGLint numConfigs;
-  static const EGLint configAttribs[] = {EGL_SURFACE_TYPE,
-                                         EGL_PBUFFER_BIT,
-                                         EGL_RENDERABLE_TYPE,
-                                         EGL_OPENGL_ES2_BIT,
-                                         EGL_RED_SIZE,
-                                         8,
-                                         EGL_GREEN_SIZE,
-                                         8,
-                                         EGL_BLUE_SIZE,
-                                         8,
-                                         EGL_ALPHA_SIZE,
-                                         8,
-                                         EGL_NONE};
+  static const EGLint configAttribs[] = {
+      EGL_SURFACE_TYPE,
+      EGL_PBUFFER_BIT,
+      EGL_RENDERABLE_TYPE,
+      EGL_OPENGL_ES2_BIT,
+      EGL_RED_SIZE,
+      8,
+      EGL_GREEN_SIZE,
+      8,
+      EGL_BLUE_SIZE,
+      8,
+      EGL_ALPHA_SIZE,
+      8,
+      EGL_NONE};
 
   EGLConfig surfaceConfig;
   if (!eglChooseConfig(fDisplay, configAttribs, &surfaceConfig, 1, &numConfigs)) {

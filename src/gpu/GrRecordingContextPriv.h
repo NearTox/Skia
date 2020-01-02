@@ -48,6 +48,9 @@ class GrRecordingContextPriv {
   sk_sp<GrOpMemoryPool> refOpMemoryPool();
   GrOpMemoryPool* opMemoryPool() { return fContext->opMemoryPool(); }
 
+  SkArenaAlloc* recordTimeAllocator() { return fContext->recordTimeAllocator(); }
+  std::unique_ptr<SkArenaAlloc> detachRecordTimeAllocator();
+
   GrStrikeCache* getGrStrikeCache() { return fContext->getGrStrikeCache(); }
   GrTextBlobCache* getTextBlobCache() { return fContext->getTextBlobCache(); }
 

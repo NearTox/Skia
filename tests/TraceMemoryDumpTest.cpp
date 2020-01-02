@@ -12,9 +12,11 @@
 #include "include/gpu/GrTexture.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrRenderTarget.h"
-#include "src/gpu/gl/GrGLBuffer.h"
-#include "src/gpu/gl/GrGLDefines.h"
-#include "src/gpu/gl/GrGLGpu.h"
+#ifdef SK_GL
+#  include "src/gpu/gl/GrGLBuffer.h"
+#  include "src/gpu/gl/GrGLDefines.h"
+#  include "src/gpu/gl/GrGLGpu.h"
+#endif
 
 /*
  * Build test for SkTraceMemoryDump.
@@ -70,6 +72,7 @@ void ValidateMemoryDumps(
   }
 }
 
+#ifdef SK_GL
 DEF_GPUTEST_FOR_GL_RENDERING_CONTEXTS(SkTraceMemoryDump_ownedGLBuffer, reporter, ctxInfo) {
   GrContext* context = ctxInfo.grContext();
   GrGLGpu* gpu = static_cast<GrGLGpu*>(context->priv().getGpu());
@@ -156,3 +159,4 @@ DEF_GPUTEST_FOR_GL_RENDERING_CONTEXTS(SkTraceMemoryDump_unownedGLRenderTarget, r
 
   ValidateMemoryDumps(reporter, context, rt->gpuMemorySize(), false /* isOwned */);
 }
+#endif  // SK_GL

@@ -13,10 +13,11 @@
 #include "include/gpu/GrTypes.h"
 #include "src/gpu/GrColor.h"
 #include "src/gpu/GrMesh.h"
-#include "dawn/dawncpp.h"
+#include "dawn/webgpu_cpp.h"
 
 class GrDawnGpu;
 class GrDawnRenderTarget;
+struct GrDawnProgram;
 
 class GrDawnOpsRenderPass : public GrOpsRenderPass, private GrMesh::SendToGpuImpl {
  public:
@@ -29,7 +30,7 @@ class GrDawnOpsRenderPass : public GrOpsRenderPass, private GrMesh::SendToGpuImp
   void begin() override {}
   void end() override;
 
-  dawn::RenderPassEncoder beginRenderPass(dawn::LoadOp colorOp, dawn::LoadOp stencilOp);
+  wgpu::RenderPassEncoder beginRenderPass(wgpu::LoadOp colorOp, wgpu::LoadOp stencilOp);
   void insertEventMarker(const char*) override;
 
   void inlineUpload(GrOpFlushState* state, GrDeferredTextureUploadFn& upload) override;
@@ -40,7 +41,7 @@ class GrDawnOpsRenderPass : public GrOpsRenderPass, private GrMesh::SendToGpuImp
   GrGpu* gpu() override;
 
   void setScissorState(const GrProgramInfo&);
-  void applyState(const GrProgramInfo& programInfo, const GrPrimitiveType primitiveType);
+  void applyState(GrDawnProgram*, const GrProgramInfo& programInfo);
 
   void onDraw(
       const GrProgramInfo& programInfo, const GrMesh mesh[], int meshCount,
@@ -83,8 +84,8 @@ class GrDawnOpsRenderPass : public GrOpsRenderPass, private GrMesh::SendToGpuImp
   };
 
   GrDawnGpu* fGpu;
-  dawn::CommandEncoder fEncoder;
-  dawn::RenderPassEncoder fPassEncoder;
+  wgpu::CommandEncoder fEncoder;
+  wgpu::RenderPassEncoder fPassEncoder;
   LoadAndStoreInfo fColorInfo;
 
   typedef GrOpsRenderPass INHERITED;

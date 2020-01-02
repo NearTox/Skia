@@ -28,7 +28,7 @@
 #endif
 
 #ifdef _WIN32
-static bool is_ascii(const char* s) noexcept {
+static bool is_ascii(const char* s) {
   while (char v = *s++) {
     if ((v & 0x80) != 0) {
       return false;
@@ -72,7 +72,10 @@ FILE* sk_fopen(const char path[], SkFILE_Flags flags) {
     *p++ = 'r';
   }
   if (flags & kWrite_SkFILE_Flag) {
+    SkASSERT(!(flags & kAppend_SkFILE_Flag));
     *p++ = 'w';
+  } else if (flags & kAppend_SkFILE_Flag) {
+    *p++ = 'a';
   }
   *p = 'b';
 
@@ -100,7 +103,7 @@ FILE* sk_fopen(const char path[], SkFILE_Flags flags) {
   return file;
 }
 
-size_t sk_fgetsize(FILE* f) noexcept {
+size_t sk_fgetsize(FILE* f) {
   SkASSERT(f);
 
   long curr = ftell(f);  // remember where we are
@@ -118,17 +121,17 @@ size_t sk_fgetsize(FILE* f) noexcept {
   return size;
 }
 
-size_t sk_fwrite(const void* buffer, size_t byteCount, FILE* f) noexcept {
+size_t sk_fwrite(const void* buffer, size_t byteCount, FILE* f) {
   SkASSERT(f);
   return fwrite(buffer, 1, byteCount, f);
 }
 
-void sk_fflush(FILE* f) noexcept {
+void sk_fflush(FILE* f) {
   SkASSERT(f);
   fflush(f);
 }
 
-void sk_fsync(FILE* f) noexcept {
+void sk_fsync(FILE* f) {
 #if !defined(_WIN32) && !defined(SK_BUILD_FOR_ANDROID) && !defined(__UCLIBC__) && \
     !defined(_NEWLIB_VERSION)
   int fd = fileno(f);
@@ -136,7 +139,7 @@ void sk_fsync(FILE* f) noexcept {
 #endif
 }
 
-size_t sk_ftell(FILE* f) noexcept {
+size_t sk_ftell(FILE* f) {
   long curr = ftell(f);
   if (curr < 0) {
     return 0;
@@ -144,13 +147,13 @@ size_t sk_ftell(FILE* f) noexcept {
   return curr;
 }
 
-void sk_fclose(FILE* f) noexcept {
+void sk_fclose(FILE* f) {
   if (f) {
     fclose(f);
   }
 }
 
-bool sk_isdir(const char* path) noexcept {
+bool sk_isdir(const char* path) {
   struct stat status;
   if (0 != stat(path, &status)) {
 #ifdef SK_BUILD_FOR_IOS
@@ -168,7 +171,7 @@ bool sk_isdir(const char* path) noexcept {
   return SkToBool(status.st_mode & S_IFDIR);
 }
 
-bool sk_mkdir(const char* path) noexcept {
+bool sk_mkdir(const char* path) {
   if (sk_isdir(path)) {
     return true;
   }

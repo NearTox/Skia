@@ -28,7 +28,7 @@ class GrSurfaceContext;
 class GrSurfaceProxyPriv;
 class GrTextureProxy;
 
-class GrSurfaceProxy : public GrNonAtomicRef<GrSurfaceProxy> {
+class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
  public:
   virtual ~GrSurfaceProxy();
 
@@ -63,18 +63,18 @@ class GrSurfaceProxy : public GrNonAtomicRef<GrSurfaceProxy> {
   };
 
   struct LazyCallbackResult {
-    constexpr LazyCallbackResult() noexcept = default;
+    LazyCallbackResult() = default;
     LazyCallbackResult(const LazyCallbackResult&) = default;
-    LazyCallbackResult(LazyCallbackResult&& that) noexcept = default;
+    LazyCallbackResult(LazyCallbackResult&& that) = default;
     LazyCallbackResult(
         sk_sp<GrSurface> surf, bool releaseCallback = true,
-        LazyInstantiationKeyMode mode = LazyInstantiationKeyMode::kSynced) noexcept
+        LazyInstantiationKeyMode mode = LazyInstantiationKeyMode::kSynced)
         : fSurface(std::move(surf)), fKeyMode(mode), fReleaseCallback(releaseCallback) {}
-    LazyCallbackResult(sk_sp<GrTexture> tex) noexcept
+    LazyCallbackResult(sk_sp<GrTexture> tex)
         : LazyCallbackResult(sk_sp<GrSurface>(std::move(tex))) {}
 
     LazyCallbackResult& operator=(const LazyCallbackResult&) = default;
-    LazyCallbackResult& operator=(LazyCallbackResult&&) noexcept = default;
+    LazyCallbackResult& operator=(LazyCallbackResult&&) = default;
 
     sk_sp<GrSurface> fSurface;
     LazyInstantiationKeyMode fKeyMode = LazyInstantiationKeyMode::kSynced;
@@ -101,72 +101,62 @@ class GrSurfaceProxy : public GrNonAtomicRef<GrSurfaceProxy> {
 
   bool isLazy() const { return !this->isInstantiated() && SkToBool(fLazyInstantiateCallback); }
 
-  bool isFullyLazy() const noexcept {
-    bool result = fHeight < 0;
-    SkASSERT(result == (fWidth < 0));
+  bool isFullyLazy() const {
+    bool result = fDimensions.width() < 0;
+    SkASSERT(result == (fDimensions.height() < 0));
     SkASSERT(!result || this->isLazy());
     return result;
   }
 
-  GrPixelConfig config() const noexcept { return fConfig; }
+  GrPixelConfig config() const { return fConfig; }
 
-  int width() const noexcept {
+  SkISize dimensions() const {
     SkASSERT(!this->isFullyLazy());
-    return fWidth;
+    return fDimensions;
   }
+  int width() const { return this->dimensions().width(); }
+  int height() const { return this->dimensions().height(); }
 
-  int height() const noexcept {
-    SkASSERT(!this->isFullyLazy());
-    return fHeight;
-  }
+  SkISize backingStoreDimensions() const;
 
-  SkISize isize() const noexcept { return {fWidth, fHeight}; }
-
-  int worstCaseWidth() const;
-  int worstCaseHeight() const;
   /**
-   * Helper that gets the width and height of the surface as a bounding rectangle.
+   * Helper that gets the width and height of the proxy as a bounding rectangle.
    */
-  SkRect getBoundsRect() const {
-    SkASSERT(!this->isFullyLazy());
-    return SkRect::MakeIWH(this->width(), this->height());
-  }
-  /**
-   * Helper that gets the worst case width and height of the surface as a bounding rectangle.
-   */
-  SkRect getWorstCaseBoundsRect() const {
-    SkASSERT(!this->isFullyLazy());
-    return SkRect::MakeIWH(this->worstCaseWidth(), this->worstCaseHeight());
-  }
+  SkRect getBoundsRect() const { return SkRect::Make(this->dimensions()); }
 
-  GrSurfaceOrigin origin() const noexcept {
+  /**
+   * Helper that gets the dimensions the backing GrSurface will have as a bounding rectangle.
+   */
+  SkRect backingStoreBoundsRect() const { return SkRect::Make(this->backingStoreDimensions()); }
+
+  GrSurfaceOrigin origin() const {
     SkASSERT(kTopLeft_GrSurfaceOrigin == fOrigin || kBottomLeft_GrSurfaceOrigin == fOrigin);
     return fOrigin;
   }
 
-  const GrSwizzle& textureSwizzle() const noexcept { return fTextureSwizzle; }
+  const GrSwizzle& textureSwizzle() const { return fTextureSwizzle; }
 
-  const GrBackendFormat& backendFormat() const noexcept { return fFormat; }
+  const GrBackendFormat& backendFormat() const { return fFormat; }
 
   class UniqueID {
    public:
-    static UniqueID InvalidID() noexcept { return UniqueID(uint32_t(SK_InvalidUniqueID)); }
+    static UniqueID InvalidID() { return UniqueID(uint32_t(SK_InvalidUniqueID)); }
 
     // wrapped
-    explicit UniqueID(const GrGpuResource::UniqueID& id) noexcept : fID(id.asUInt()) {}
+    explicit UniqueID(const GrGpuResource::UniqueID& id) : fID(id.asUInt()) {}
     // deferred and lazy-callback
-    UniqueID() noexcept : fID(GrGpuResource::CreateUniqueID()) {}
+    UniqueID() : fID(GrGpuResource::CreateUniqueID()) {}
 
-    uint32_t asUInt() const noexcept { return fID; }
+    uint32_t asUInt() const { return fID; }
 
-    bool operator==(const UniqueID& other) const noexcept { return fID == other.fID; }
-    bool operator!=(const UniqueID& other) const noexcept { return !(*this == other); }
+    bool operator==(const UniqueID& other) const { return fID == other.fID; }
+    bool operator!=(const UniqueID& other) const { return !(*this == other); }
 
-    void makeInvalid() noexcept { fID = SK_InvalidUniqueID; }
-    bool isInvalid() const noexcept { return SK_InvalidUniqueID == fID; }
+    void makeInvalid() { fID = SK_InvalidUniqueID; }
+    bool isInvalid() const { return SK_InvalidUniqueID == fID; }
 
    private:
-    constexpr explicit UniqueID(uint32_t id) noexcept : fID(id) {}
+    explicit UniqueID(uint32_t id) : fID(id) {}
 
     uint32_t fID;
   };
@@ -282,23 +272,22 @@ class GrSurfaceProxy : public GrNonAtomicRef<GrSurfaceProxy> {
   // Helper function that creates a temporary SurfaceContext to perform the copy
   // The copy is is not a render target and not multisampled.
   static sk_sp<GrTextureProxy> Copy(
-      GrRecordingContext*, GrSurfaceProxy* src, GrColorType srcColorType, GrMipMapped,
-      SkIRect srcRect, SkBackingFit, SkBudgeted, RectsMustMatch = RectsMustMatch::kNo);
+      GrRecordingContext*, GrSurfaceProxy* src, GrMipMapped, SkIRect srcRect, SkBackingFit,
+      SkBudgeted, RectsMustMatch = RectsMustMatch::kNo);
 
   // Copy the entire 'src'
   static sk_sp<GrTextureProxy> Copy(
-      GrRecordingContext*, GrSurfaceProxy* src, GrColorType srcColortype, GrMipMapped, SkBackingFit,
-      SkBudgeted);
+      GrRecordingContext*, GrSurfaceProxy* src, GrMipMapped, SkBackingFit, SkBudgeted);
 
 #if GR_TEST_UTILS
   int32_t testingOnly_getBackingRefCnt() const;
   GrInternalSurfaceFlags testingOnly_getFlags() const;
 #endif
 
-  SkDEBUGCODE(void validate(GrContext_Base*) const);
+  SkDEBUGCODE(void validate(GrContext_Base*) const;)
 
-  // Provides access to functions that aren't part of the public API.
-  inline GrSurfaceProxyPriv priv();
+      // Provides access to functions that aren't part of the public API.
+      inline GrSurfaceProxyPriv priv();
   inline const GrSurfaceProxyPriv priv() const;
 
   // Returns true if we are working with protected content.
@@ -336,23 +325,21 @@ class GrSurfaceProxy : public GrNonAtomicRef<GrSurfaceProxy> {
   void assign(sk_sp<GrSurface> surface);
 
   sk_sp<GrSurface> createSurfaceImpl(
-      GrResourceProvider*, int sampleCnt, int minStencilSampleCount, GrRenderable,
-      GrMipMapped) const;
+      GrResourceProvider*, int sampleCnt, GrRenderable, GrMipMapped) const;
 
-  // Once the size of a fully-lazy proxy is decided, and before it gets instantiated, the client
-  // can use this optional method to specify the proxy's size. (A proxy's size can be less than
-  // the GPU surface that backs it. e.g., SkBackingFit::kApprox.) Otherwise, the proxy's size will
-  // be set to match the underlying GPU surface upon instantiation.
-  void setLazySize(int width, int height) {
+  // Once the dimensions of a fully-lazy proxy are decided, and before it gets instantiated, the
+  // client can use this optional method to specify the proxy's dimensions. (A proxy's dimensions
+  // can be less than the GPU surface that backs it. e.g., SkBackingFit::kApprox.) Otherwise,
+  // the proxy's dimensions will be set to match the underlying GPU surface upon instantiation.
+  void setLazyDimensions(SkISize dimensions) {
     SkASSERT(this->isFullyLazy());
-    SkASSERT(width > 0 && height > 0);
-    fWidth = width;
-    fHeight = height;
+    SkASSERT(!dimensions.isEmpty());
+    fDimensions = dimensions;
   }
 
   bool instantiateImpl(
-      GrResourceProvider* resourceProvider, int sampleCnt, int minStencilSampleCount, GrRenderable,
-      GrMipMapped, const GrUniqueKey*);
+      GrResourceProvider* resourceProvider, int sampleCnt, GrRenderable, GrMipMapped,
+      const GrUniqueKey*);
 
   // For deferred proxies this will be null until the proxy is instantiated.
   // For wrapped proxies it will point to the wrapped resource.
@@ -371,8 +358,7 @@ class GrSurfaceProxy : public GrNonAtomicRef<GrSurfaceProxy> {
   // be filled in from the wrapped resource.
   const GrBackendFormat fFormat;
   const GrPixelConfig fConfig;
-  int fWidth;
-  int fHeight;
+  SkISize fDimensions;
   const GrSurfaceOrigin fOrigin;
   const GrSwizzle fTextureSwizzle;
 
@@ -388,10 +374,10 @@ class GrSurfaceProxy : public GrNonAtomicRef<GrSurfaceProxy> {
 
   LazyInstantiateCallback fLazyInstantiateCallback;
 
-  SkDEBUGCODE(void validateSurface(const GrSurface*));
-  SkDEBUGCODE(virtual void onValidateSurface(const GrSurface*) = 0);
+  SkDEBUGCODE(void validateSurface(const GrSurface*);)
+      SkDEBUGCODE(virtual void onValidateSurface(const GrSurface*) = 0;)
 
-  static const size_t kInvalidGpuMemorySize = ~static_cast<size_t>(0);
+          static const size_t kInvalidGpuMemorySize = ~static_cast<size_t>(0);
   SkDEBUGCODE(size_t getRawGpuMemorySize_debugOnly() const { return fGpuMemorySize; })
 
       virtual size_t onUninstantiatedGpuMemorySize(const GrCaps&) const = 0;

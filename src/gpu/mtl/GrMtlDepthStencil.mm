@@ -54,10 +54,10 @@ GrMtlDepthStencil* GrMtlDepthStencil::Create(
   MTLDepthStencilDescriptor* desc = [[MTLDepthStencilDescriptor alloc] init];
   if (!stencil.isDisabled()) {
     if (stencil.isTwoSided()) {
-      desc.frontFaceStencil = skia_stencil_to_mtl(stencil.front(origin));
-      desc.backFaceStencil = skia_stencil_to_mtl(stencil.back(origin));
+      desc.frontFaceStencil = skia_stencil_to_mtl(stencil.postOriginCCWFace(origin));
+      desc.backFaceStencil = skia_stencil_to_mtl(stencil.postOriginCWFace(origin));
     } else {
-      desc.frontFaceStencil = skia_stencil_to_mtl(stencil.frontAndBack());
+      desc.frontFaceStencil = skia_stencil_to_mtl(stencil.singleSidedFace());
       desc.backFaceStencil = desc.frontFaceStencil;
     }
   }
@@ -91,10 +91,10 @@ GrMtlDepthStencil::Key GrMtlDepthStencil::GenerateKey(
     memset(&depthStencilKey, 0, sizeof(Key));
   } else {
     if (stencil.isTwoSided()) {
-      skia_stencil_to_key(stencil.front(origin), &depthStencilKey.fFront);
-      skia_stencil_to_key(stencil.back(origin), &depthStencilKey.fBack);
+      skia_stencil_to_key(stencil.postOriginCCWFace(origin), &depthStencilKey.fFront);
+      skia_stencil_to_key(stencil.postOriginCWFace(origin), &depthStencilKey.fBack);
     } else {
-      skia_stencil_to_key(stencil.frontAndBack(), &depthStencilKey.fFront);
+      skia_stencil_to_key(stencil.singleSidedFace(), &depthStencilKey.fFront);
       memcpy(&depthStencilKey.fBack, &depthStencilKey.fFront, sizeof(Key::Face));
     }
   }

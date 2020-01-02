@@ -109,11 +109,20 @@ static size_t linebreak(
 void SkShaperPrimitive::shape(
     const char* utf8, size_t utf8Bytes, FontRunIterator& font, BiDiRunIterator& bidi,
     ScriptRunIterator&, LanguageRunIterator&, SkScalar width, RunHandler* handler) const {
-  font.consume();
-  SkASSERT(font.currentFont().getTypeface());
-  bidi.consume();
-  return this->shape(
-      utf8, utf8Bytes, font.currentFont(), (bidi.currentLevel() % 2) == 0, width, handler);
+  SkFont skfont;
+  if (!font.atEnd()) {
+    font.consume();
+    skfont = font.currentFont();
+  } else {
+    skfont.setTypeface(sk_ref_sp(skfont.getTypefaceOrDefault()));
+  }
+  SkASSERT(skfont.getTypeface());
+  bool skbidi = 0;
+  if (!bidi.atEnd()) {
+    bidi.consume();
+    skbidi = (bidi.currentLevel() % 2) == 0;
+  }
+  return this->shape(utf8, utf8Bytes, skfont, skbidi, width, handler);
 }
 
 void SkShaperPrimitive::shape(

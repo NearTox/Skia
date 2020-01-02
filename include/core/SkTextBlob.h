@@ -42,7 +42,7 @@ class SK_API SkTextBlob final : public SkNVRefCnt<SkTextBlob> {
 
       @return  identifier for SkTextBlob
   */
-  uint32_t uniqueID() const noexcept { return fUniqueID; }
+  uint32_t uniqueID() const { return fUniqueID; }
 
   /** Returns the number of intervals that intersect bounds.
       bounds describes a pair of lines parallel to the text advance.
@@ -156,6 +156,8 @@ class SK_API SkTextBlob final : public SkNVRefCnt<SkTextBlob> {
       @param memory      storage for data
       @param memory_size size of storage
       @return            bytes written, or zero if required storage is larger than memory_size
+
+      example: https://fiddle.skia.org/c/@TextBlob_serialize
   */
   size_t serialize(const SkSerialProcs& procs, void* memory, size_t memory_size) const;
 
@@ -169,6 +171,8 @@ class SK_API SkTextBlob final : public SkNVRefCnt<SkTextBlob> {
 
       @param procs  custom serial data encoders; may be nullptr
       @return       storage containing serialized SkTextBlob
+
+      example: https://fiddle.skia.org/c/@TextBlob_serialize_2
   */
   sk_sp<SkData> serialize(const SkSerialProcs& procs) const;
 
@@ -213,7 +217,7 @@ class SK_API SkTextBlob final : public SkNVRefCnt<SkTextBlob> {
 
   enum GlyphPositioning : uint8_t;
 
-  explicit SkTextBlob(const SkRect& bounds) noexcept;
+  explicit SkTextBlob(const SkRect& bounds);
 
   ~SkTextBlob();
 
@@ -239,12 +243,12 @@ class SK_API SkTextBlob final : public SkNVRefCnt<SkTextBlob> {
   const uint32_t fUniqueID;
   mutable std::atomic<uint32_t> fCacheID;
 
-  SkDEBUGCODE(size_t fStorageSize);
+  SkDEBUGCODE(size_t fStorageSize;)
 
-  // The actual payload resides in externally-managed storage, following the object.
-  // (see the .cpp for more details)
+      // The actual payload resides in externally-managed storage, following the object.
+      // (see the .cpp for more details)
 
-  typedef SkRefCnt INHERITED;
+      typedef SkRefCnt INHERITED;
 };
 
 /** \class SkTextBlobBuilder
@@ -255,6 +259,8 @@ class SK_API SkTextBlobBuilder {
   /** Constructs empty SkTextBlobBuilder. By default, SkTextBlobBuilder has no runs.
 
       @return  empty SkTextBlobBuilder
+
+      example: https://fiddle.skia.org/c/@TextBlobBuilder_empty_constructor
   */
   SkTextBlobBuilder();
 
@@ -270,6 +276,8 @@ class SK_API SkTextBlobBuilder {
       reused to build a new set of runs.
 
       @return  SkTextBlob or nullptr
+
+      example: https://fiddle.skia.org/c/@TextBlobBuilder_make
   */
   sk_sp<SkTextBlob> make();
 

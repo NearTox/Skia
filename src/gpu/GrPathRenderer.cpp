@@ -33,9 +33,8 @@ void GrPathRenderer::StencilPathArgs::validate() const {
 GrPathRenderer::GrPathRenderer() {}
 
 GrPathRenderer::StencilSupport GrPathRenderer::getStencilSupport(const GrShape& shape) const {
-  SkDEBUGCODE(SkPath path);
-  SkDEBUGCODE(shape.asPath(&path));
-  SkASSERT(shape.style().isSimpleFill());
+  SkDEBUGCODE(SkPath path;) SkDEBUGCODE(shape.asPath(&path);)
+      SkASSERT(shape.style().isSimpleFill());
   SkASSERT(!path.isInverseFillType());
   return this->onGetStencilSupport(shape);
 }
@@ -82,9 +81,9 @@ bool GrPathRenderer::IsStrokeHairlineOrEquivalent(
 }
 
 void GrPathRenderer::GetPathDevBounds(
-    const SkPath& path, int devW, int devH, const SkMatrix& matrix, SkRect* bounds) {
+    const SkPath& path, SkISize devSize, const SkMatrix& matrix, SkRect* bounds) {
   if (path.isInverseFillType()) {
-    *bounds = SkRect::MakeWH(SkIntToScalar(devW), SkIntToScalar(devH));
+    *bounds = SkRect::Make(devSize);
     return;
   }
   *bounds = path.getBounds();
@@ -98,15 +97,16 @@ void GrPathRenderer::onStencilPath(const StencilPathArgs& args) {
           GrUserStencilOp::kReplace, 0xffff>());
 
   GrPaint paint;
-  DrawPathArgs drawArgs{args.fContext,
-                        std::move(paint),
-                        &kIncrementStencil,
-                        args.fRenderTargetContext,
-                        nullptr,  // clip
-                        args.fClipConservativeBounds,
-                        args.fViewMatrix,
-                        args.fShape,
-                        (GrAA::kYes == args.fDoStencilMSAA) ? GrAAType::kMSAA : GrAAType::kNone,
-                        false};
+  DrawPathArgs drawArgs{
+      args.fContext,
+      std::move(paint),
+      &kIncrementStencil,
+      args.fRenderTargetContext,
+      nullptr,  // clip
+      args.fClipConservativeBounds,
+      args.fViewMatrix,
+      args.fShape,
+      (GrAA::kYes == args.fDoStencilMSAA) ? GrAAType::kMSAA : GrAAType::kNone,
+      false};
   this->drawPath(drawArgs);
 }

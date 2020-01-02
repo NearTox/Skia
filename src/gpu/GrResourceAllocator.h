@@ -116,7 +116,7 @@ class GrResourceAllocator {
 
   // These two methods wrap the interactions with the free pool
   void recycleSurface(sk_sp<GrSurface> surface);
-  sk_sp<GrSurface> findSurfaceFor(const GrSurfaceProxy* proxy, int minStencilSampleCount);
+  sk_sp<GrSurface> findSurfaceFor(const GrSurfaceProxy* proxy);
 
   struct FreePoolTraits {
     static const GrScratchKey& GetKey(const GrSurface& s) {
@@ -238,9 +238,9 @@ class GrResourceAllocator {
     Interval* detachAll();
 
    private:
-    SkDEBUGCODE(void validate() const);
+    SkDEBUGCODE(void validate() const;)
 
-    Interval* fHead = nullptr;
+        Interval* fHead = nullptr;
     Interval* fTail = nullptr;
   };
 
@@ -257,11 +257,11 @@ class GrResourceAllocator {
   unsigned int fNumOps = 0;
   SkTArray<unsigned int> fEndOfOpsTaskOpIndices;
   int fCurOpsTaskIndex = 0;
-  SkDEBUGCODE(const int fNumOpsTasks = -1);
+  SkDEBUGCODE(const int fNumOpsTasks = -1;)
 
-  SkDEBUGCODE(bool fAssigned = false);
+      SkDEBUGCODE(bool fAssigned = false;)
 
-  char fStorage[kInitialArenaSize];
+          char fStorage[kInitialArenaSize];
   SkArenaAlloc fIntervalAllocator{fStorage, kInitialArenaSize, kInitialArenaSize};
   Interval* fFreeIntervalList = nullptr;
   bool fLazyInstantiationError = false;

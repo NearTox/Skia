@@ -12,7 +12,7 @@
 
 static void fuzz763_3084(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0xc19e6455), SkBits2Float(0xc19e6455));
   path.quadTo(
       SkBits2Float(0xc1399153), SkBits2Float(0xc1e00000), SkBits2Float(0x00000000),
@@ -110,7 +110,7 @@ static void fuzz763_3084(skiatest::Reporter* reporter, const char* filename) {
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0x42240000), SkBits2Float(0x42040000));
   path.quadTo(
       SkBits2Float(0x42240000), SkBits2Float(0x4211413d), SkBits2Float(0x421aa09e),
@@ -144,7 +144,7 @@ static void fuzz763_3084(skiatest::Reporter* reporter, const char* filename) {
 
 static void fuzz763_1823(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0xc19e6455), SkBits2Float(0xc19e6455));
   path.quadTo(
       SkBits2Float(0xc1399153), SkBits2Float(0xc1e00000), SkBits2Float(0x00000000),
@@ -239,7 +239,7 @@ static void fuzz763_1823(skiatest::Reporter* reporter, const char* filename) {
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0x41000000), SkBits2Float(0x42040000));
   path.quadTo(
       SkBits2Float(0x41000000), SkBits2Float(0x4211413d), SkBits2Float(0x40b504f3),
@@ -273,7 +273,7 @@ static void fuzz763_1823(skiatest::Reporter* reporter, const char* filename) {
 
 static void fuzz763_378(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0x41013776), SkBits2Float(0xc25007a8));
   path.quadTo(
       SkBits2Float(0x412f219e), SkBits2Float(0xc256a86f), SkBits2Float(0x41625842),
@@ -467,7 +467,7 @@ static void fuzz763_378(skiatest::Reporter* reporter, const char* filename) {
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0xc2444fb0), SkBits2Float(0x419813d4));
   path.quadTo(
       SkBits2Float(0xc24fca68), SkBits2Float(0x418ad2e8), SkBits2Float(0xc25338d1),
@@ -500,7 +500,7 @@ static void fuzz763_378(skiatest::Reporter* reporter, const char* filename) {
 
 static void fuzz763_378b(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(-47.1494f, 4.35143f);
   path.quadTo(-39.8075f, 18.9486f, -43.0083f, 19.8062f);
   path.quadTo(-50.35f, 5.21042f, -52.0068f, 8.08022f);
@@ -510,7 +510,7 @@ static void fuzz763_378b(skiatest::Reporter* reporter, const char* filename) {
   path.close();
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0xc2444fb0), SkBits2Float(0x419813d4));
   path.quadTo(
       SkBits2Float(0xc24fca68), SkBits2Float(0x418ad2e8), SkBits2Float(0xc25338d1),
@@ -531,7 +531,7 @@ static void fuzz763_378b(skiatest::Reporter* reporter, const char* filename) {
 
 static void fuzz763_378c(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(-47.1494f, 4.35143f);
   path.quadTo(-46.208f, 20.6664f, -43.0072f, 19.8086f);
   path.quadTo(-39.8065f, 18.9507f, -38.1498f, 16.0809f);
@@ -540,7 +540,7 @@ static void fuzz763_378c(skiatest::Reporter* reporter, const char* filename) {
   path.close();
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(-49.0778f, 19.0097f);
   path.quadTo(-38.2087f, 6.80955f, -37.3509f, 10.0103f);
   path.quadTo(-36.4931f, 13.211f, -38.1498f, 16.0809f);
@@ -552,14 +552,14 @@ static void fuzz763_378c(skiatest::Reporter* reporter, const char* filename) {
 
 static void fuzz763_378d(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(-47.1494f, 4.35143f);
   path.quadTo(-38.2091f, 6.80749f, -37.3514f, 10.0083f);  // required
   path.quadTo(-36.4938f, 13.2091f, -38.1506f, 16.0788f);  // required
   path.close();
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(-49.0778f, 19.0097f);
   path.quadTo(-38.2087f, 6.80955f, -37.3509f, 10.0103f);
   path.quadTo(-36.4931f, 13.211f, -38.1498f, 16.0809f);
@@ -570,7 +570,7 @@ static void fuzz763_378d(skiatest::Reporter* reporter, const char* filename) {
 
 static void fuzz763_558(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0x41c95d06), SkBits2Float(0xc238e312));
   path.quadTo(
       SkBits2Float(0x41e37302), SkBits2Float(0xc23b3f66), SkBits2Float(0x41f93bb2),
@@ -764,7 +764,7 @@ static void fuzz763_558(skiatest::Reporter* reporter, const char* filename) {
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0xbfe9fe20), SkBits2Float(0x42526568));
   path.quadTo(
       SkBits2Float(0xc08f5cf4), SkBits2Float(0x425a57e7), SkBits2Float(0xc0f853f0),
@@ -798,7 +798,7 @@ static void fuzz763_558(skiatest::Reporter* reporter, const char* filename) {
 
 static void fuzz763_378a(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0x40f4c1fc), SkBits2Float(0xc25049c6));
   path.quadTo(
       SkBits2Float(0x41281306), SkBits2Float(0xc25702a0), SkBits2Float(0x415b6610),
@@ -978,7 +978,7 @@ static void fuzz763_378a(skiatest::Reporter* reporter, const char* filename) {
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0xc243ae22), SkBits2Float(0x419b4beb));
   path.quadTo(
       SkBits2Float(0xc24f36b0), SkBits2Float(0x418e3b60), SkBits2Float(0xc252bffc),
@@ -1012,7 +1012,7 @@ static void fuzz763_378a(skiatest::Reporter* reporter, const char* filename) {
 
 static void fuzz763_378a_1(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0xc23c98fa), SkBits2Float(0x408b3eec));
   path.quadTo(
       SkBits2Float(0xc22fcb5c), SkBits2Float(0x405f9a18), SkBits2Float(0xc22450bb),
@@ -1066,7 +1066,7 @@ static void fuzz763_378a_1(skiatest::Reporter* reporter, const char* filename) {
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0xc243ae22), SkBits2Float(0x419b4beb));
   path.quadTo(
       SkBits2Float(0xc24f36b0), SkBits2Float(0x418e3b60), SkBits2Float(0xc252bffc),
@@ -1100,7 +1100,7 @@ static void fuzz763_378a_1(skiatest::Reporter* reporter, const char* filename) {
 
 static void fuzz763_8712(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0x40dce520), SkBits2Float(0xc250b45c));
   path.quadTo(
       SkBits2Float(0x411bc0ec), SkBits2Float(0xc25796e0), SkBits2Float(0x414f4352),
@@ -1288,7 +1288,7 @@ static void fuzz763_8712(skiatest::Reporter* reporter, const char* filename) {
   path.close();
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0xc2428ca4), SkBits2Float(0x41a0e11e));
   path.quadTo(
       SkBits2Float(0xc24e2cd0), SkBits2Float(0x41942565), SkBits2Float(0xc251e4cc),
@@ -1322,7 +1322,7 @@ static void fuzz763_8712(skiatest::Reporter* reporter, const char* filename) {
 
 static void fuzz763_8712a(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0xc23c98fa), SkBits2Float(0x408b3eec));
   path.quadTo(
       SkBits2Float(0xc22fcb5c), SkBits2Float(0x405f9a18), SkBits2Float(0xc22450bb),
@@ -1363,7 +1363,7 @@ static void fuzz763_8712a(skiatest::Reporter* reporter, const char* filename) {
   path.close();
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0xc2428ca4), SkBits2Float(0x41a0e11e));
   path.quadTo(
       SkBits2Float(0xc24e2cd0), SkBits2Float(0x41942565), SkBits2Float(0xc251e4cc),
@@ -1397,7 +1397,7 @@ static void fuzz763_8712a(skiatest::Reporter* reporter, const char* filename) {
 
 static void fuzz763_4014(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0x4126977e), SkBits2Float(0xc24e5cc8));
   path.quadTo(
       SkBits2Float(0x4155a79e), SkBits2Float(0xc2547762), SkBits2Float(0x41841952),
@@ -1584,7 +1584,7 @@ static void fuzz763_4014(skiatest::Reporter* reporter, const char* filename) {
   path.close();
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0xc2478a00), SkBits2Float(0x418639e0));
   path.quadTo(
       SkBits2Float(0xc252b546), SkBits2Float(0x416fe6f8), SkBits2Float(0xc2558f0e),
@@ -1618,7 +1618,7 @@ static void fuzz763_4014(skiatest::Reporter* reporter, const char* filename) {
 
 static void fuzz763_4014a(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0xc23d30a0), SkBits2Float(0x400e5c28));  // -47.2975f, 2.22437f
   path.quadTo(
       SkBits2Float(0xc2303ecc), SkBits2Float(0x3fc17f10), SkBits2Float(0xc2251387),
@@ -1660,7 +1660,7 @@ static void fuzz763_4014a(skiatest::Reporter* reporter, const char* filename) {
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0xc2478a00), SkBits2Float(0x418639e0));  // -49.8848f, 16.7783f
   path.quadTo(
       SkBits2Float(0xc252b546), SkBits2Float(0x416fe6f8), SkBits2Float(0xc2558f0e),
@@ -1694,7 +1694,7 @@ static void fuzz763_4014a(skiatest::Reporter* reporter, const char* filename) {
 
 static void fuzz763_1404(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0x419b2e3e), SkBits2Float(0xc243b405));
   path.quadTo(
       SkBits2Float(0x41b4811d), SkBits2Float(0xc2479f9a), SkBits2Float(0x41cbf476),
@@ -1911,7 +1911,7 @@ static void fuzz763_1404(skiatest::Reporter* reporter, const char* filename) {
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0x401b14b8), SkBits2Float(0x42524cc7));
   path.quadTo(
       SkBits2Float(0xbd754800), SkBits2Float(0x425b13d0), SkBits2Float(0xc05781d0),
@@ -1945,7 +1945,7 @@ static void fuzz763_1404(skiatest::Reporter* reporter, const char* filename) {
 
 static void fuzz763_4713(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0x40f7bc68), SkBits2Float(0xc2503bb0));
   path.quadTo(
       SkBits2Float(0x41299c84), SkBits2Float(0xc256ef4e), SkBits2Float(0x415ce976),
@@ -2121,7 +2121,7 @@ static void fuzz763_4713(skiatest::Reporter* reporter, const char* filename) {
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0x42240000), SkBits2Float(0x42040000));
   path.quadTo(
       SkBits2Float(0x42240000), SkBits2Float(0x4211413d), SkBits2Float(0x421aa09e),
@@ -2155,7 +2155,7 @@ static void fuzz763_4713(skiatest::Reporter* reporter, const char* filename) {
 
 static void fuzz763_24588(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0x413a5194), SkBits2Float(0xc24d4e33));  // 11.6449f, -51.3264f
   path.quadTo(
       SkBits2Float(0x4169f3fc), SkBits2Float(0xc2532032), SkBits2Float(0x418e0c8b),
@@ -2350,7 +2350,7 @@ static void fuzz763_24588(skiatest::Reporter* reporter, const char* filename) {
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0x421a8288), SkBits2Float(0x420efdef));  // 38.6275f, 35.748f
   path.quadTo(
       SkBits2Float(0x4219989b), SkBits2Float(0x421c3719), SkBits2Float(0x420f9986),
@@ -2385,7 +2385,7 @@ static void fuzz763_24588(skiatest::Reporter* reporter, const char* filename) {
 // SkDQuadIntersection.cpp:594: failed assertion "way_roughly_zero(fT[0][index])
 static void fuzz763_20016(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0x41e88c66), SkBits2Float(0xc22f800b));  // 29.0686f, -43.875f
   path.quadTo(
       SkBits2Float(0x420178e8), SkBits2Float(0xc230b9b9), SkBits2Float(0x420babd1),
@@ -2605,7 +2605,7 @@ static void fuzz763_20016(skiatest::Reporter* reporter, const char* filename) {
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0x41bbb37b), SkBits2Float(0x423c724c));  // 23.4626f, 47.1116f
   path.quadTo(
       SkBits2Float(0x41b0a015), SkBits2Float(0x42487d2f), SkBits2Float(0x4197c34c),
@@ -2639,7 +2639,7 @@ static void fuzz763_20016(skiatest::Reporter* reporter, const char* filename) {
 
 static void fuzz763_17370(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0x41fb8980), SkBits2Float(0xc20d9cf4));  // 31.4421f, -35.4033f
   path.quadTo(
       SkBits2Float(0x42081e43), SkBits2Float(0xc215e4e6), SkBits2Float(0x42154ac6),
@@ -2873,7 +2873,7 @@ static void fuzz763_17370(skiatest::Reporter* reporter, const char* filename) {
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0x415798ee), SkBits2Float(0x424b81a4));  // 13.4748f, 50.8766f
   path.quadTo(
       SkBits2Float(0x41382eba), SkBits2Float(0x42562f18), SkBits2Float(0x4103c4ac),
@@ -2908,7 +2908,7 @@ static void fuzz763_17370(skiatest::Reporter* reporter, const char* filename) {
 // SkDQuadIntersection.cpp:598: failed assertion "way_roughly_equal(fT[0][index], 1)"
 static void fuzz763_35322(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0x41042400), SkBits2Float(0xc24fea42));  // 8.25879f, -51.9788f
   path.quadTo(
       SkBits2Float(0x413225f2), SkBits2Float(0xc25680b3), SkBits2Float(0x4165502a),
@@ -3136,7 +3136,7 @@ static void fuzz763_35322(skiatest::Reporter* reporter, const char* filename) {
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0x41213a06), SkBits2Float(0x424ea0eb));  // 10.0767f, 51.6571f
   path.quadTo(
       SkBits2Float(0x40fe1b10), SkBits2Float(0x4258c340), SkBits2Float(0x40947314),
@@ -3171,7 +3171,7 @@ static void fuzz763_35322(skiatest::Reporter* reporter, const char* filename) {
 // SkPathOpsOp.cpp:52: failed assertion "angle != firstAngle || !loop"
 static void fuzz763_849020(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0x411e4374), SkBits2Float(0xc24ec58f));  // 9.89147f, -51.6929f
   path.quadTo(
       SkBits2Float(0x414d13fa), SkBits2Float(0xc254fe70), SkBits2Float(0x417fc7a6),
@@ -3363,7 +3363,7 @@ static void fuzz763_849020(skiatest::Reporter* reporter, const char* filename) {
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0x421f4961), SkBits2Float(0x4209a6a0));  // 39.8217f, 34.4127f
   path.quadTo(
       SkBits2Float(0x421ed2ca), SkBits2Float(0x4216e5cb), SkBits2Float(0x42152104),
@@ -3397,7 +3397,7 @@ static void fuzz763_849020(skiatest::Reporter* reporter, const char* filename) {
 
 static void fuzz763_1597464(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0x4101092a), SkBits2Float(0xc2500973));  // 8.06474f, -52.0092f
   path.quadTo(
       SkBits2Float(0x412ef1d8), SkBits2Float(0xc256aade), SkBits2Float(0x41622940),
@@ -3581,7 +3581,7 @@ static void fuzz763_1597464(skiatest::Reporter* reporter, const char* filename) 
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0xc2444b74), SkBits2Float(0x419829ad));  // -49.0737f, 19.0203f
   path.quadTo(
       SkBits2Float(0xc24fc68b), SkBits2Float(0x418aea08), SkBits2Float(0xc25335aa),
@@ -3615,7 +3615,7 @@ static void fuzz763_1597464(skiatest::Reporter* reporter, const char* filename) 
 
 static void fuzz763_34974(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
 #if 00
   path.moveTo(SkBits2Float(0x41015326), SkBits2Float(0xc2500694));
   path.quadTo(
@@ -3797,7 +3797,7 @@ path.close();
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
 #if 01
   path.moveTo(SkBits2Float(0xc2445236), SkBits2Float(0x419806c2));
   path.quadTo(
@@ -3832,7 +3832,7 @@ path.close();
 
 static void fuzz763_2211264(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0x41017a68), SkBits2Float(0xc250050e));
   path.quadTo(
       SkBits2Float(0x412f66b2), SkBits2Float(0xc256a4e9), SkBits2Float(0x41629c3c),
@@ -3975,7 +3975,7 @@ static void fuzz763_2211264(skiatest::Reporter* reporter, const char* filename) 
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0xc24455cc), SkBits2Float(0x4197f43e));
   path.quadTo(
       SkBits2Float(0xc24fcffc), SkBits2Float(0x418ab179), SkBits2Float(0xc2533d5e),
@@ -4009,7 +4009,7 @@ static void fuzz763_2211264(skiatest::Reporter* reporter, const char* filename) 
 
 static void fuzz763_4628016(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0x41029678), SkBits2Float(0xc24ff9f4));  // 8.16174f, -51.9941f
   path.quadTo(
       SkBits2Float(0x41308bcc), SkBits2Float(0xc25695e3), SkBits2Float(0x4163bca4),
@@ -4202,7 +4202,7 @@ static void fuzz763_4628016(skiatest::Reporter* reporter, const char* filename) 
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0x4223940b), SkBits2Float(0x420485b1));  // 40.8946f, 33.1306f
   path.quadTo(
       SkBits2Float(0x4223893a), SkBits2Float(0x4211c6ea), SkBits2Float(0x421a2234),
@@ -4236,7 +4236,7 @@ static void fuzz763_4628016(skiatest::Reporter* reporter, const char* filename) 
 
 static void fuzz763_6411089(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0x410373c2), SkBits2Float(0xc24ff13e));
   path.quadTo(
       SkBits2Float(0x4131701e), SkBits2Float(0xc2568a1e), SkBits2Float(0x41649d46),
@@ -4423,7 +4423,7 @@ static void fuzz763_6411089(skiatest::Reporter* reporter, const char* filename) 
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0xc24450bb), SkBits2Float(0x41980e6c));
   path.quadTo(
       SkBits2Float(0xc24fcb5c), SkBits2Float(0x418acd2f), SkBits2Float(0xc2533998),
@@ -4457,7 +4457,7 @@ static void fuzz763_6411089(skiatest::Reporter* reporter, const char* filename) 
 
 static void fuzz763_3283699(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0x411032d0), SkBits2Float(0xc24f69e5));
   path.quadTo(
       SkBits2Float(0x413e956c), SkBits2Float(0xc255d56a), SkBits2Float(0x41718a9c),
@@ -4661,7 +4661,7 @@ static void fuzz763_3283699(skiatest::Reporter* reporter, const char* filename) 
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0xc24450bb), SkBits2Float(0x41980e6c));
   path.quadTo(
       SkBits2Float(0xc24fcb5c), SkBits2Float(0x418acd2f), SkBits2Float(0xc2533998),
@@ -4695,7 +4695,7 @@ static void fuzz763_3283699(skiatest::Reporter* reporter, const char* filename) 
 
 static void fuzz763_1026368(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0x4101c02c), SkBits2Float(0xc2500256));  // 8.10942f, -52.0023f
   path.quadTo(
       SkBits2Float(0x412faeae), SkBits2Float(0xc256a13a), SkBits2Float(0x4162e312),
@@ -4879,7 +4879,7 @@ static void fuzz763_1026368(skiatest::Reporter* reporter, const char* filename) 
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0x42240000), SkBits2Float(0x42040000));  // 41, 33
   path.quadTo(
       SkBits2Float(0x42240000), SkBits2Float(0x4211413d), SkBits2Float(0x421aa09e),
@@ -4914,7 +4914,7 @@ static void fuzz763_1026368(skiatest::Reporter* reporter, const char* filename) 
 
 static void fuzz763_5485218(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0xc1b1a434), SkBits2Float(0xc247d348));
   path.quadTo(
       SkBits2Float(0xc1996ac1), SkBits2Float(0xc24d3588), SkBits2Float(0xc180ac87),
@@ -5146,7 +5146,7 @@ static void fuzz763_5485218(skiatest::Reporter* reporter, const char* filename) 
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0x425285c7), SkBits2Float(0xbdfdd900));
   path.quadTo(
       SkBits2Float(0x425adb97), SkBits2Float(0x401cf6e8), SkBits2Float(0x425976d3),
@@ -5180,7 +5180,7 @@ static void fuzz763_5485218(skiatest::Reporter* reporter, const char* filename) 
 
 static void fuzz763_2674194(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0xbfb16e10), SkBits2Float(0xc252733b));
   path.quadTo(
       SkBits2Float(0x3f91df50), SkBits2Float(0xc25b07b4), SkBits2Float(0x408e27f4),
@@ -5407,7 +5407,7 @@ static void fuzz763_2674194(skiatest::Reporter* reporter, const char* filename) 
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0x41828cb4), SkBits2Float(0x424825e0));
   path.quadTo(
       SkBits2Float(0x416823bc), SkBits2Float(0x42534038), SkBits2Float(0x41344220),
@@ -5441,7 +5441,7 @@ static void fuzz763_2674194(skiatest::Reporter* reporter, const char* filename) 
 
 static void fuzz763_10022998(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)1);
+  path.setFillType((SkPathFillType)1);
   path.moveTo(SkBits2Float(0x40f23d54), SkBits2Float(0xc250558c));  // 7.56999f, -52.0835f
   path.quadTo(
       SkBits2Float(0x4126c646), SkBits2Float(0xc25712d1), SkBits2Float(0x415a1e76),
@@ -5617,7 +5617,7 @@ static void fuzz763_10022998(skiatest::Reporter* reporter, const char* filename)
 
   SkPath path1(path);
   path.reset();
-  path.setFillType((SkPath::FillType)0);
+  path.setFillType((SkPathFillType)0);
   path.moveTo(SkBits2Float(0x42240000), SkBits2Float(0x42040000));  // 41, 33
   path.quadTo(
       SkBits2Float(0x42240000), SkBits2Float(0x4211413d), SkBits2Float(0x421aa09e),

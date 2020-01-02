@@ -14,7 +14,7 @@
 /** returns the product if it is positive and fits in 31 bits. Otherwise this
     returns 0.
  */
-static int32_t safeMul32(int32_t a, int32_t b) noexcept {
+static int32_t safeMul32(int32_t a, int32_t b) {
   int64_t size = sk_64_mul(a, b);
   if (size > 0 && SkTFitsIn<int32_t>(size)) {
     return size;
@@ -22,9 +22,9 @@ static int32_t safeMul32(int32_t a, int32_t b) noexcept {
   return 0;
 }
 
-size_t SkMask::computeImageSize() const noexcept { return safeMul32(fBounds.height(), fRowBytes); }
+size_t SkMask::computeImageSize() const { return safeMul32(fBounds.height(), fRowBytes); }
 
-size_t SkMask::computeTotalImageSize() const noexcept {
+size_t SkMask::computeTotalImageSize() const {
   size_t size = this->computeImageSize();
   if (fFormat == SkMask::k3D_Format) {
     size = safeMul32(SkToS32(size), 3);
@@ -47,7 +47,7 @@ uint8_t* SkMask::AllocImage(size_t size, AllocType at) {
 /** We explicitly use this allocator for SkBimap pixels, so that we can
     freely assign memory allocated by one class to the other.
 */
-void SkMask::FreeImage(void* image) noexcept { sk_free(image); }
+void SkMask::FreeImage(void* image) { sk_free(image); }
 
 SkMask SkMask::PrepareDestination(int radiusX, int radiusY, const SkMask& src) {
   SkSafeMath safe;

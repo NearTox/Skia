@@ -31,13 +31,13 @@ class SkTArray {
   /**
    * Creates an empty array with no initial storage
    */
-  SkTArray() noexcept { this->init(); }
+  SkTArray() { this->init(); }
 
   /**
    * Creates an empty array that will preallocate space for reserveCount
    * elements.
    */
-  explicit SkTArray(int reserveCount) noexcept { this->init(0, reserveCount); }
+  explicit SkTArray(int reserveCount) { this->init(0, reserveCount); }
 
   /**
    * Copies one array to another. The new array will be heap allocated.
@@ -50,7 +50,7 @@ class SkTArray {
   SkTArray(SkTArray&& that) {
     // TODO: If 'that' owns its memory why don't we just steal the pointer?
     this->init(that.fCount);
-    that.move(fMemArray);
+    that.move(fItemArray);
     that.fCount = 0;
   }
 
@@ -87,7 +87,7 @@ class SkTArray {
     fCount = 0;
     this->checkRealloc(that.count());
     fCount = that.count();
-    that.move(fMemArray);
+    that.move(fItemArray);
     that.fCount = 0;
     return *this;
   }
@@ -97,7 +97,7 @@ class SkTArray {
       fItemArray[i].~T();
     }
     if (fOwnMemory) {
-      sk_free(fMemArray);
+      sk_free(fItemArray);
     }
   }
 
@@ -169,12 +169,12 @@ class SkTArray {
   /**
    * Number of elements in the array.
    */
-  int count() const noexcept { return fCount; }
+  int count() const { return fCount; }
 
   /**
    * Is the array empty.
    */
-  bool empty() const noexcept { return !fCount; }
+  bool empty() const { return !fCount; }
 
   /**
    * Adds 1 new default-initialized T value and returns it by reference. Note
@@ -321,25 +321,25 @@ class SkTArray {
     }
   }
 
-  T* begin() noexcept { return fItemArray; }
-  const T* begin() const noexcept { return fItemArray; }
-  T* end() noexcept { return fItemArray ? fItemArray + fCount : nullptr; }
-  const T* end() const noexcept { return fItemArray ? fItemArray + fCount : nullptr; }
-  T* data() noexcept { return fItemArray; }
-  const T* data() const noexcept { return fItemArray; }
-  size_t size() const noexcept { return (size_t)fCount; }
+  T* begin() { return fItemArray; }
+  const T* begin() const { return fItemArray; }
+  T* end() { return fItemArray ? fItemArray + fCount : nullptr; }
+  const T* end() const { return fItemArray ? fItemArray + fCount : nullptr; }
+  T* data() { return fItemArray; }
+  const T* data() const { return fItemArray; }
+  size_t size() const { return (size_t)fCount; }
   void resize(size_t count) { this->resize_back((int)count); }
 
   /**
    * Get the i^th element.
    */
-  T& operator[](int i) noexcept {
+  T& operator[](int i) {
     SkASSERT(i < fCount);
     SkASSERT(i >= 0);
     return fItemArray[i];
   }
 
-  const T& operator[](int i) const noexcept {
+  const T& operator[](int i) const {
     SkASSERT(i < fCount);
     SkASSERT(i >= 0);
     return fItemArray[i];
@@ -361,7 +361,7 @@ class SkTArray {
   /**
    * equivalent to operator[](count() - 1)
    */
-  T& back() noexcept {
+  T& back() {
     SkASSERT(fCount);
     return fItemArray[fCount - 1];
   }
@@ -432,7 +432,7 @@ class SkTArray {
   template <int N>
   SkTArray(SkTArray&& array, SkAlignedSTStorage<N, T>* storage) {
     this->initWithPreallocatedStorage(array.fCount, storage->get(), N);
-    array.move(fMemArray);
+    array.move(fItemArray);
     array.fCount = 0;
   }
 
@@ -448,37 +448,37 @@ class SkTArray {
   }
 
  private:
-  void init(int count = 0, int reserveCount = 0) noexcept {
+  void init(int count = 0, int reserveCount = 0) {
     SkASSERT(count >= 0);
     SkASSERT(reserveCount >= 0);
     fCount = count;
     if (!count && !reserveCount) {
       fAllocCount = 0;
-      fMemArray = nullptr;
+      fItemArray = nullptr;
       fOwnMemory = true;
       fReserved = false;
     } else {
       fAllocCount = SkTMax(count, SkTMax(kMinHeapAllocCount, reserveCount));
-      fMemArray = sk_malloc_throw(fAllocCount, sizeof(T));
+      fItemArray = (T*)sk_malloc_throw(fAllocCount, sizeof(T));
       fOwnMemory = true;
       fReserved = reserveCount > 0;
     }
   }
 
-  void initWithPreallocatedStorage(int count, void* preallocStorage, int preallocCount) noexcept {
+  void initWithPreallocatedStorage(int count, void* preallocStorage, int preallocCount) {
     SkASSERT(count >= 0);
     SkASSERT(preallocCount > 0);
     SkASSERT(preallocStorage);
     fCount = count;
-    fMemArray = nullptr;
+    fItemArray = nullptr;
     fReserved = false;
     if (count > preallocCount) {
       fAllocCount = SkTMax(count, kMinHeapAllocCount);
-      fMemArray = sk_malloc_throw(fAllocCount, sizeof(T));
+      fItemArray = (T*)sk_malloc_throw(fAllocCount, sizeof(T));
       fOwnMemory = true;
     } else {
       fAllocCount = preallocCount;
-      fMemArray = preallocStorage;
+      fItemArray = (T*)preallocStorage;
       fOwnMemory = false;
     }
   }
@@ -498,26 +498,24 @@ class SkTArray {
 
   template <bool E = MEM_MOVE>
   SK_WHEN(E, void)
-  move(int dst, int src) noexcept {
+  move(int dst, int src) {
     memcpy(&fItemArray[dst], &fItemArray[src], sizeof(T));
   }
   template <bool E = MEM_MOVE>
   SK_WHEN(E, void)
-  move(void* dst) noexcept {
-    sk_careful_memcpy(dst, fMemArray, fCount * sizeof(T));
+  move(void* dst) {
+    sk_careful_memcpy(dst, fItemArray, fCount * sizeof(T));
   }
 
   template <bool E = MEM_MOVE>
   SK_WHEN(!E, void)
   move(int dst, int src) {
-    // static_assert(std::is_nothrow_move_constructible_v<T>);
     new (&fItemArray[dst]) T(std::move(fItemArray[src]));
     fItemArray[src].~T();
   }
   template <bool E = MEM_MOVE>
   SK_WHEN(!E, void)
   move(void* dst) {
-    // static_assert(std::is_nothrow_move_constructible_v<T>);
     for (int i = 0; i < fCount; ++i) {
       new (static_cast<char*>(dst) + sizeof(T) * i) T(std::move(fItemArray[i]));
       fItemArray[i].~T();
@@ -564,20 +562,17 @@ class SkTArray {
 
     fAllocCount = Sk64_pin_to_s32(newAllocCount);
     SkASSERT(fAllocCount >= newCount);
-    void* newMemArray = sk_malloc_throw(fAllocCount, sizeof(T));
-    this->move(newMemArray);
+    T* newItemArray = (T*)sk_malloc_throw(fAllocCount, sizeof(T));
+    this->move(newItemArray);
     if (fOwnMemory) {
-      sk_free(fMemArray);
+      sk_free(fItemArray);
     }
-    fMemArray = newMemArray;
+    fItemArray = newItemArray;
     fOwnMemory = true;
     fReserved = false;
   }
 
-  union {
-    T* fItemArray;
-    void* fMemArray;
-  };
+  T* fItemArray;
   int fCount;
   int fAllocCount;
   bool fOwnMemory : 1;

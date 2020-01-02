@@ -104,8 +104,7 @@ class GrPathRenderer : public SkRefCnt {
    * called when searching for the best path renderer to draw a path.
    */
   CanDrawPath canDrawPath(const CanDrawPathArgs& args) const {
-    SkDEBUGCODE(args.validate());
-    return this->onCanDrawPath(args);
+    SkDEBUGCODE(args.validate();) return this->onCanDrawPath(args);
   }
 
   struct DrawPathArgs {
@@ -159,8 +158,8 @@ class GrPathRenderer : public SkRefCnt {
    * initialized to zero. The pixels inside the path will have non-zero stencil values afterwards.
    */
   void stencilPath(const StencilPathArgs& args) {
-    SkDEBUGCODE(args.validate());
-    SkASSERT(kNoSupport_StencilSupport != this->getStencilSupport(*args.fShape));
+    SkDEBUGCODE(args.validate();)
+        SkASSERT(kNoSupport_StencilSupport != this->getStencilSupport(*args.fShape));
     this->onStencilPath(args);
   }
 
@@ -172,7 +171,7 @@ class GrPathRenderer : public SkRefCnt {
   // Helper for getting the device bounds of a path. Inverse filled paths will have bounds set
   // by devSize. Non-inverse path bounds will not necessarily be clipped to devSize.
   static void GetPathDevBounds(
-      const SkPath& path, int devW, int devH, const SkMatrix& matrix, SkRect* bounds);
+      const SkPath& path, SkISize devSize, const SkMatrix& matrix, SkRect* bounds);
 
  private:
   /**

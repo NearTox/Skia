@@ -102,8 +102,8 @@ static void write_name_escaped(SkWStream* o, const char* name) {
   for (const uint8_t* n = reinterpret_cast<const uint8_t*>(name); *n; ++n) {
     uint8_t v = *n;
     if (v < '!' || v > '~' || strchr(kToEscape, v)) {
-      char buffer[3] = {'#', SkHexadecimalDigits::gUpper[v >> 4],
-                        SkHexadecimalDigits::gUpper[v & 0xF]};
+      char buffer[3] = {
+          '#', SkHexadecimalDigits::gUpper[v >> 4], SkHexadecimalDigits::gUpper[v & 0xF]};
       o->write(buffer, sizeof(buffer));
     } else {
       o->write(n, 1);
@@ -112,8 +112,7 @@ static void write_name_escaped(SkWStream* o, const char* name) {
 }
 
 static void write_string(SkWStream* wStream, const char* cin, size_t len) {
-  SkDEBUGCODE(static const size_t kMaxLen = 65535);
-  SkASSERT(len <= kMaxLen);
+  SkDEBUGCODE(static const size_t kMaxLen = 65535;) SkASSERT(len <= kMaxLen);
 
   size_t extraCharacterCount = 0;
   for (size_t i = 0; i < len; i++) {
@@ -128,8 +127,9 @@ static void write_string(SkWStream* wStream, const char* cin, size_t len) {
     for (size_t i = 0; i < len; i++) {
       if (cin[i] > '~' || cin[i] < ' ') {
         uint8_t c = static_cast<uint8_t>(cin[i]);
-        uint8_t octal[4] = {'\\', (uint8_t)('0' | (c >> 6)), (uint8_t)('0' | ((c >> 3) & 0x07)),
-                            (uint8_t)('0' | (c & 0x07))};
+        uint8_t octal[4] = {
+            '\\', (uint8_t)('0' | (c >> 6)), (uint8_t)('0' | ((c >> 3) & 0x07)),
+            (uint8_t)('0' | (c & 0x07))};
         wStream->write(octal, 4);
       } else {
         if (cin[i] == '\\' || cin[i] == '(' || cin[i] == ')') {
@@ -143,8 +143,8 @@ static void write_string(SkWStream* wStream, const char* cin, size_t len) {
     wStream->writeText("<");
     for (size_t i = 0; i < len; i++) {
       uint8_t c = static_cast<uint8_t>(cin[i]);
-      char hexValue[2] = {SkHexadecimalDigits::gUpper[c >> 4],
-                          SkHexadecimalDigits::gUpper[c & 0xF]};
+      char hexValue[2] = {
+          SkHexadecimalDigits::gUpper[c >> 4], SkHexadecimalDigits::gUpper[c & 0xF]};
       wStream->write(hexValue, 2);
     }
     wStream->writeText(">");

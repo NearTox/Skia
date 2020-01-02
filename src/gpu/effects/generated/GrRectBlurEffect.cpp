@@ -68,10 +68,10 @@ class GrGLSLRectBlurEffect : public GrGLSLFragmentProcessor {
         "sk_FragCoord.y);\n    } else {\n        l = half(sk_FragCoord.x - float(%s.x));\n "
         "       r = half(float(%s.z) - sk_FragCoord.x);\n        t = half(sk_FragCoord.y - "
         "float(%s.y));\n        b = half(float(",
-        fragBuilder->getProgramBuilder()->samplerSwizzle(args.fTexSamplers[0]).c_str(),
+        fragBuilder->getProgramBuilder()->samplerSwizzle(args.fTexSamplers[0]).asString().c_str(),
         fragBuilder->getProgramBuilder()->samplerVariable(args.fTexSamplers[0]),
         args.fUniformHandler->getUniformCStr(invSixSigmaVar),
-        fragBuilder->getProgramBuilder()->samplerSwizzle(args.fTexSamplers[0]).c_str(),
+        fragBuilder->getProgramBuilder()->samplerSwizzle(args.fTexSamplers[0]).asString().c_str(),
         args.fOutputColor, args.fInputColor,
         rectFVar.isValid() ? args.fUniformHandler->getUniformCStr(rectFVar) : "float4(0)",
         rectFVar.isValid() ? args.fUniformHandler->getUniformCStr(rectFVar) : "float4(0)",
@@ -92,13 +92,13 @@ class GrGLSLRectBlurEffect : public GrGLSLFragmentProcessor {
         args.fUniformHandler->getUniformCStr(invSixSigmaVar),
         args.fUniformHandler->getUniformCStr(invSixSigmaVar),
         fragBuilder->getProgramBuilder()->samplerVariable(args.fTexSamplers[0]),
-        fragBuilder->getProgramBuilder()->samplerSwizzle(args.fTexSamplers[0]).c_str(),
+        fragBuilder->getProgramBuilder()->samplerSwizzle(args.fTexSamplers[0]).asString().c_str(),
         fragBuilder->getProgramBuilder()->samplerVariable(args.fTexSamplers[0]),
-        fragBuilder->getProgramBuilder()->samplerSwizzle(args.fTexSamplers[0]).c_str(),
+        fragBuilder->getProgramBuilder()->samplerSwizzle(args.fTexSamplers[0]).asString().c_str(),
         fragBuilder->getProgramBuilder()->samplerVariable(args.fTexSamplers[0]),
-        fragBuilder->getProgramBuilder()->samplerSwizzle(args.fTexSamplers[0]).c_str(),
+        fragBuilder->getProgramBuilder()->samplerSwizzle(args.fTexSamplers[0]).asString().c_str(),
         fragBuilder->getProgramBuilder()->samplerVariable(args.fTexSamplers[0]),
-        fragBuilder->getProgramBuilder()->samplerSwizzle(args.fTexSamplers[0]).c_str(),
+        fragBuilder->getProgramBuilder()->samplerSwizzle(args.fTexSamplers[0]).asString().c_str(),
         args.fOutputColor, args.fInputColor);
   }
 

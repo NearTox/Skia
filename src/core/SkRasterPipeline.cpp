@@ -5,14 +5,14 @@
  * found in the LICENSE file.
  */
 
+#include "include/private/SkImageInfoPriv.h"
 #include "src/core/SkColorSpacePriv.h"
 #include "src/core/SkOpts.h"
 #include "src/core/SkRasterPipeline.h"
 #include <algorithm>
 
-SkRasterPipeline::SkRasterPipeline(SkArenaAlloc* alloc) noexcept : fAlloc(alloc) { this->reset(); }
-
-void SkRasterPipeline::reset() noexcept {
+SkRasterPipeline::SkRasterPipeline(SkArenaAlloc* alloc) : fAlloc(alloc) { this->reset(); }
+void SkRasterPipeline::reset() {
   fStages = nullptr;
   fNumStages = 0;
   fSlotsNeeded = 1;  // We always need one extra slot for just_return().
@@ -300,10 +300,11 @@ void SkRasterPipeline::append_transfer_function(const skcms_TransferFunction& tf
   }
 }
 
-void SkRasterPipeline::append_gamut_clamp_if_normalized(const SkImageInfo& dstInfo) {
-  // N.B. we _do_ clamp for kRGBA_F16Norm_SkColorType... because it's normalized.
-  if (dstInfo.colorType() != kRGBA_F16_SkColorType &&
-      dstInfo.colorType() != kRGBA_F32_SkColorType && dstInfo.alphaType() == kPremul_SkAlphaType) {
+// Clamp premul values to [0,alpha] (logical [0,1]) to avoid the confusing
+// scenario of being able to store a logical color channel > 1.0 when alpha < 1.0.
+// Most software that works with normalized premul values expect r,g,b channels all <= a.
+void SkRasterPipeline::append_gamut_clamp_if_normalized(const SkImageInfo& info) {
+  if (info.alphaType() == kPremul_SkAlphaType && SkColorTypeIsNormalized(info.colorType())) {
     this->unchecked_append(SkRasterPipeline::clamp_gamut, nullptr);
   }
 }

@@ -21,7 +21,6 @@ struct SkRect;
 class SkPaint;
 class SkPixelRef;
 class SkShader;
-class SkString;
 
 /** \class SkBitmap
     SkBitmap describes a two-dimensional raster pixel array. SkBitmap is built on
@@ -56,14 +55,18 @@ class SK_API SkBitmap {
       after SkBitmap has been created.
 
       @return  empty SkBitmap
+
+      example: https://fiddle.skia.org/c/@Bitmap_empty_constructor
   */
-  SkBitmap() noexcept;
+  SkBitmap();
 
   /** Copies settings from src to returned SkBitmap. Shares pixels if src has pixels
       allocated, so both bitmaps reference the same pixels.
 
       @param src  SkBitmap to copy SkImageInfo, and share SkPixelRef
       @return     copy of src
+
+      example: https://fiddle.skia.org/c/@Bitmap_copy_const_SkBitmap
   */
   SkBitmap(const SkBitmap& src);
 
@@ -72,8 +75,10 @@ class SK_API SkBitmap {
 
       @param src  SkBitmap to copy SkImageInfo, and reassign SkPixelRef
       @return     copy of src
+
+      example: https://fiddle.skia.org/c/@Bitmap_move_SkBitmap
   */
-  SkBitmap(SkBitmap&& src) noexcept;
+  SkBitmap(SkBitmap&& src);
 
   /** Decrements SkPixelRef reference count, if SkPixelRef is not nullptr.
    */
@@ -84,6 +89,8 @@ class SK_API SkBitmap {
 
       @param src  SkBitmap to copy SkImageInfo, and share SkPixelRef
       @return     copy of src
+
+      example: https://fiddle.skia.org/c/@Bitmap_copy_operator
   */
   SkBitmap& operator=(const SkBitmap& src);
 
@@ -92,27 +99,31 @@ class SK_API SkBitmap {
 
       @param src  SkBitmap to copy SkImageInfo, and reassign SkPixelRef
       @return     copy of src
+
+      example: https://fiddle.skia.org/c/@Bitmap_move_operator
   */
-  SkBitmap& operator=(SkBitmap&& src) noexcept;
+  SkBitmap& operator=(SkBitmap&& src);
 
   /** Swaps the fields of the two bitmaps.
 
       @param other  SkBitmap exchanged with original
+
+      example: https://fiddle.skia.org/c/@Bitmap_swap
   */
-  void swap(SkBitmap& other) noexcept;
+  void swap(SkBitmap& other);
 
   /** Returns a constant reference to the SkPixmap holding the SkBitmap pixel
       address, row bytes, and SkImageInfo.
 
       @return  reference to SkPixmap describing this SkBitmap
   */
-  const SkPixmap& pixmap() const noexcept { return fPixmap; }
+  const SkPixmap& pixmap() const { return fPixmap; }
 
   /** Returns width, height, SkAlphaType, SkColorType, and SkColorSpace.
 
       @return  reference to SkImageInfo
   */
-  const SkImageInfo& info() const noexcept { return fPixmap.info(); }
+  const SkImageInfo& info() const { return fPixmap.info(); }
 
   /** Returns pixel count in each row. Should be equal or less than
       rowBytes() / info().bytesPerPixel().
@@ -122,7 +133,7 @@ class SK_API SkBitmap {
 
       @return  pixel width in SkImageInfo
   */
-  int width() const noexcept { return fPixmap.width(); }
+  int width() const { return fPixmap.width(); }
 
   /** Returns pixel row count.
 
@@ -131,7 +142,7 @@ class SK_API SkBitmap {
 
       @return  pixel height in SkImageInfo
   */
-  int height() const noexcept { return fPixmap.height(); }
+  int height() const { return fPixmap.height(); }
 
   /** Returns SkColorType, one of:
       kUnknown_SkColorType, kAlpha_8_SkColorType, kRGB_565_SkColorType,
@@ -141,7 +152,7 @@ class SK_API SkBitmap {
 
       @return  SkColorType in SkImageInfo
   */
-  SkColorType colorType() const noexcept { return fPixmap.colorType(); }
+  SkColorType colorType() const { return fPixmap.colorType(); }
 
   /** Returns SkAlphaType, one of:
       kUnknown_SkAlphaType, kOpaque_SkAlphaType, kPremul_SkAlphaType,
@@ -149,7 +160,7 @@ class SK_API SkBitmap {
 
       @return  SkAlphaType in SkImageInfo
   */
-  SkAlphaType alphaType() const noexcept { return fPixmap.alphaType(); }
+  SkAlphaType alphaType() const { return fPixmap.alphaType(); }
 
   /** Returns SkColorSpace, the range of colors, associated with SkImageInfo. The
       reference count of SkColorSpace is unchanged. The returned SkColorSpace is
@@ -157,7 +168,7 @@ class SK_API SkBitmap {
 
       @return  SkColorSpace in SkImageInfo, or nullptr
   */
-  SkColorSpace* colorSpace() const noexcept { return fPixmap.colorSpace(); }
+  SkColorSpace* colorSpace() const { return fPixmap.colorSpace(); }
 
   /** Returns smart pointer to SkColorSpace, the range of colors, associated with
       SkImageInfo. The smart pointer tracks the number of objects sharing this
@@ -174,7 +185,7 @@ class SK_API SkBitmap {
 
       @return  bytes in pixel
   */
-  int bytesPerPixel() const noexcept { return fPixmap.info().bytesPerPixel(); }
+  int bytesPerPixel() const { return fPixmap.info().bytesPerPixel(); }
 
   /** Returns number of pixels that fit on row. Should be greater than or equal to
       width().
@@ -197,7 +208,7 @@ class SK_API SkBitmap {
 
       @return  true if dimensions do not enclose area
   */
-  bool empty() const noexcept { return fPixmap.info().isEmpty(); }
+  bool empty() const { return fPixmap.info().isEmpty(); }
 
   /** Returns true if SkPixelRef is nullptr.
 
@@ -206,14 +217,14 @@ class SK_API SkBitmap {
 
       @return  true if no SkPixelRef is associated
   */
-  bool isNull() const noexcept { return nullptr == fPixelRef; }
+  bool isNull() const { return nullptr == fPixelRef; }
 
   /** Returns true if width() or height() are zero, or if SkPixelRef is nullptr.
       If true, SkBitmap has no effect when drawn or drawn into.
 
       @return  true if drawing has no effect
   */
-  bool drawsNothing() const noexcept { return this->empty() || this->isNull(); }
+  bool drawsNothing() const { return this->empty() || this->isNull(); }
 
   /** Returns row bytes, the interval from one pixel row to the next. Row bytes
       is at least as large as: width() * info().bytesPerPixel().
@@ -223,7 +234,7 @@ class SK_API SkBitmap {
 
       @return  byte length of pixel row
   */
-  size_t rowBytes() const noexcept { return fPixmap.rowBytes(); }
+  size_t rowBytes() const { return fPixmap.rowBytes(); }
 
   /** Sets SkAlphaType, if alphaType is compatible with SkColorType.
       Returns true unless alphaType is kUnknown_SkAlphaType and current SkAlphaType
@@ -252,6 +263,8 @@ class SK_API SkBitmap {
                         kUnknown_SkAlphaType, kOpaque_SkAlphaType, kPremul_SkAlphaType,
                         kUnpremul_SkAlphaType
       @return           true if SkAlphaType is set
+
+      example: https://fiddle.skia.org/c/@Bitmap_setAlphaType
   */
   bool setAlphaType(SkAlphaType alphaType);
 
@@ -259,7 +272,7 @@ class SK_API SkBitmap {
 
       @return  pixel address
   */
-  void* getPixels() const noexcept { return fPixmap.writable_addr(); }
+  void* getPixels() const { return fPixmap.writable_addr(); }
 
   /** Returns minimum memory required for pixel storage.
       Does not include unused memory on last row when rowBytesAsPixels() exceeds width().
@@ -276,16 +289,20 @@ class SK_API SkBitmap {
       Most immutable SkBitmap checks trigger an assert only on debug builds.
 
       @return  true if pixels are immutable
+
+      example: https://fiddle.skia.org/c/@Bitmap_isImmutable
   */
-  bool isImmutable() const noexcept;
+  bool isImmutable() const;
 
   /** Sets internal flag to mark SkBitmap as immutable. Once set, pixels can not change.
       Any other bitmap sharing the same SkPixelRef are also marked as immutable.
       Once SkPixelRef is marked immutable, the setting cannot be cleared.
 
       Writing to immutable SkBitmap pixels triggers an assert on debug builds.
+
+      example: https://fiddle.skia.org/c/@Bitmap_setImmutable
   */
-  void setImmutable() noexcept;
+  void setImmutable();
 
   /** Returns true if SkAlphaType is set to hint that all pixels are opaque; their
       alpha value is implicitly or explicitly 1.0. If true, and all pixels are
@@ -296,7 +313,7 @@ class SK_API SkBitmap {
 
       @return  true if SkImageInfo SkAlphaType is kOpaque_SkAlphaType
   */
-  bool isOpaque() const noexcept { return SkAlphaTypeIsOpaque(this->alphaType()); }
+  bool isOpaque() const { return SkAlphaTypeIsOpaque(this->alphaType()); }
 
   /** Provides a hint to caller that pixels should not be cached. Only true if
       setIsVolatile() has been called to mark as volatile.
@@ -304,8 +321,10 @@ class SK_API SkBitmap {
       Volatile state is not shared by other bitmaps sharing the same SkPixelRef.
 
       @return  true if marked volatile
+
+      example: https://fiddle.skia.org/c/@Bitmap_isVolatile
   */
-  bool isVolatile() const noexcept;
+  bool isVolatile() const;
 
   /** Sets if pixels should be read from SkPixelRef on every access. SkBitmap are not
       volatile by default; a GPU back end may upload pixel values expecting them to be
@@ -315,8 +334,10 @@ class SK_API SkBitmap {
       consumption on SkBaseDevice.
 
       @param isVolatile  true if backing pixels are temporary
+
+      example: https://fiddle.skia.org/c/@Bitmap_setIsVolatile
   */
-  void setIsVolatile(bool isVolatile) noexcept;
+  void setIsVolatile(bool isVolatile);
 
   /** Resets to its initial state; all fields are set to zero, as if SkBitmap had
       been initialized by SkBitmap().
@@ -326,8 +347,10 @@ class SK_API SkBitmap {
 
       If SkPixelRef is allocated, its reference count is decreased by one, releasing
       its memory if SkBitmap is the sole owner.
+
+      example: https://fiddle.skia.org/c/@Bitmap_reset
   */
-  void reset() noexcept;
+  void reset();
 
   /** Returns true if all pixels are opaque. SkColorType determines how pixels
       are encoded, and whether pixel describes alpha. Returns true for SkColorType
@@ -351,26 +374,30 @@ class SK_API SkBitmap {
   /** Returns SkRect { 0, 0, width(), height() }.
 
       @param bounds  container for floating point rectangle
+
+      example: https://fiddle.skia.org/c/@Bitmap_getBounds
   */
-  void getBounds(SkRect* bounds) const noexcept;
+  void getBounds(SkRect* bounds) const;
 
   /** Returns SkIRect { 0, 0, width(), height() }.
 
       @param bounds  container for integral rectangle
+
+      example: https://fiddle.skia.org/c/@Bitmap_getBounds_2
   */
-  void getBounds(SkIRect* bounds) const noexcept;
+  void getBounds(SkIRect* bounds) const;
 
   /** Returns SkIRect { 0, 0, width(), height() }.
 
       @return  integral rectangle from origin to width() and height()
   */
-  SkIRect bounds() const noexcept { return fPixmap.info().bounds(); }
+  SkIRect bounds() const { return fPixmap.info().bounds(); }
 
   /** Returns SkISize { width(), height() }.
 
       @return  integral size of width() and height()
   */
-  SkISize dimensions() const noexcept { return fPixmap.info().dimensions(); }
+  SkISize dimensions() const { return fPixmap.info().dimensions(); }
 
   /** Returns the bounds of this bitmap, offset by its SkPixelRef origin.
 
@@ -408,6 +435,8 @@ class SK_API SkBitmap {
       @param imageInfo  contains width, height, SkAlphaType, SkColorType, SkColorSpace
       @param rowBytes   imageInfo.minRowBytes() or larger; or zero
       @return           true if SkImageInfo set successfully
+
+      example: https://fiddle.skia.org/c/@Bitmap_setInfo
   */
   bool setInfo(const SkImageInfo& imageInfo, size_t rowBytes = 0);
 
@@ -450,6 +479,8 @@ class SK_API SkBitmap {
 
       @param info   contains width, height, SkAlphaType, SkColorType, SkColorSpace
       @param flags  kZeroPixels_AllocFlag, or zero
+
+      example: https://fiddle.skia.org/c/@Bitmap_allocPixelsFlags
   */
   void allocPixelsFlags(const SkImageInfo& info, uint32_t flags);
 
@@ -486,6 +517,8 @@ class SK_API SkBitmap {
 
       @param info      contains width, height, SkAlphaType, SkColorType, SkColorSpace
       @param rowBytes  size of pixel row or larger; may be zero
+
+      example: https://fiddle.skia.org/c/@Bitmap_allocPixels
   */
   void allocPixels(const SkImageInfo& info, size_t rowBytes);
 
@@ -520,6 +553,8 @@ class SK_API SkBitmap {
       implementation of malloc().
 
       @param info  contains width, height, SkAlphaType, SkColorType, SkColorSpace
+
+      example: https://fiddle.skia.org/c/@Bitmap_allocPixels_2
   */
   void allocPixels(const SkImageInfo& info);
 
@@ -556,6 +591,8 @@ class SK_API SkBitmap {
       @param width     pixel column count; must be zero or greater
       @param height    pixel row count; must be zero or greater
       @param isOpaque  true if pixels do not have transparency
+
+      example: https://fiddle.skia.org/c/@Bitmap_allocN32Pixels
   */
   void allocN32Pixels(int width, int height, bool isOpaque = false);
 
@@ -616,6 +653,8 @@ class SK_API SkBitmap {
 
       @param pixmap  SkImageInfo, pixel address, and rowBytes()
       @return        true if SkImageInfo was set to pixmap.info()
+
+      example: https://fiddle.skia.org/c/@Bitmap_installPixels_3
   */
   bool installPixels(const SkPixmap& pixmap);
 
@@ -633,6 +672,8 @@ class SK_API SkBitmap {
       of SkBitmap and SkPixelRef.
 
       @param pixels  address of pixel storage, managed by caller
+
+      example: https://fiddle.skia.org/c/@Bitmap_setPixels
   */
   void setPixels(void* pixels);
 
@@ -651,6 +692,8 @@ class SK_API SkBitmap {
       Aborts if info().colorType() is kUnknown_SkColorType, or allocation fails.
       Abort steps may be provided by the user at compile
       time by defining SK_ABORT.
+
+      example: https://fiddle.skia.org/c/@Bitmap_allocPixels_3
   */
   void allocPixels();
 
@@ -673,6 +716,8 @@ class SK_API SkBitmap {
       the user at compile time by defining SK_ABORT.
 
       @param allocator  instance of SkBitmap::Allocator instantiation
+
+      example: https://fiddle.skia.org/c/@Bitmap_allocPixels_4
   */
   void allocPixels(Allocator* allocator);
 
@@ -683,7 +728,7 @@ class SK_API SkBitmap {
 
       @return  SkPixelRef, or nullptr
   */
-  SkPixelRef* pixelRef() const noexcept { return fPixelRef.get(); }
+  SkPixelRef* pixelRef() const { return fPixelRef.get(); }
 
   /** Returns origin of pixels within SkPixelRef. SkBitmap bounds is always contained
       by SkPixelRef bounds, which may be the same size or larger. Multiple SkBitmap
@@ -695,6 +740,8 @@ class SK_API SkBitmap {
       Returns (0, 0) if SkPixelRef is nullptr.
 
       @return  pixel origin within SkPixelRef
+
+      example: https://fiddle.skia.org/c/@Bitmap_pixelRefOrigin
   */
   SkIPoint pixelRefOrigin() const;
 
@@ -710,6 +757,8 @@ class SK_API SkBitmap {
       @param pixelRef  SkPixelRef describing pixel address and rowBytes()
       @param dx        column offset in SkPixelRef for bitmap origin
       @param dy        row offset in SkPixelRef for bitmap origin
+
+      example: https://fiddle.skia.org/c/@Bitmap_setPixelRef
   */
   void setPixelRef(sk_sp<SkPixelRef> pixelRef, int dx, int dy);
 
@@ -717,7 +766,7 @@ class SK_API SkBitmap {
 
       @return  true if getPixels() is not nullptr
   */
-  bool readyToDraw() const noexcept { return this->getPixels() != nullptr; }
+  bool readyToDraw() const { return this->getPixels() != nullptr; }
 
   /** Returns a unique value corresponding to the pixels in SkPixelRef.
       Returns a different value after notifyPixelsChanged() has been called.
@@ -726,11 +775,15 @@ class SK_API SkBitmap {
       Determines if pixels have changed since last examined.
 
       @return  unique value for pixels in SkPixelRef
+
+      example: https://fiddle.skia.org/c/@Bitmap_getGenerationID
   */
-  uint32_t getGenerationID() const noexcept;
+  uint32_t getGenerationID() const;
 
   /** Marks that pixels in SkPixelRef have changed. Subsequent calls to
       getGenerationID() return a different value.
+
+      example: https://fiddle.skia.org/c/@Bitmap_notifyPixelsChanged
   */
   void notifyPixelsChanged() const;
 
@@ -740,6 +793,8 @@ class SK_API SkBitmap {
       then RGB is ignored.
 
       @param c  unpremultiplied color
+
+      example: https://fiddle.skia.org/c/@Bitmap_eraseColor
   */
   void eraseColor(SkColor c) const;
 
@@ -767,6 +822,8 @@ class SK_API SkBitmap {
 
       @param c     unpremultiplied color
       @param area  rectangle to fill
+
+      example: https://fiddle.skia.org/c/@Bitmap_erase
   */
   void erase(SkColor c, const SkIRect& area) const;
 
@@ -814,6 +871,8 @@ class SK_API SkBitmap {
       @param x  column index, zero or greater, and less than width()
       @param y  row index, zero or greater, and less than height()
       @return   generic pointer to pixel
+
+      example: https://fiddle.skia.org/c/@Bitmap_getAddr
   */
   void* getAddr(int x, int y) const;
 
@@ -829,7 +888,7 @@ class SK_API SkBitmap {
       @param y  row index, zero or greater, and less than height()
       @return   unsigned 32-bit pointer to pixel at (x, y)
   */
-  inline uint32_t* getAddr32(int x, int y) const noexcept;
+  inline uint32_t* getAddr32(int x, int y) const;
 
   /** Returns address at (x, y).
 
@@ -843,7 +902,7 @@ class SK_API SkBitmap {
       @param y  row index, zero or greater, and less than height()
       @return   unsigned 16-bit pointer to pixel at (x, y)
   */
-  inline uint16_t* getAddr16(int x, int y) const noexcept;
+  inline uint16_t* getAddr16(int x, int y) const;
 
   /** Returns address at (x, y).
 
@@ -857,7 +916,7 @@ class SK_API SkBitmap {
       @param y  row index, zero or greater, and less than height()
       @return   unsigned 8-bit pointer to pixel at (x, y)
   */
-  inline uint8_t* getAddr8(int x, int y) const noexcept;
+  inline uint8_t* getAddr8(int x, int y) const;
 
   /** Shares SkPixelRef with dst. Pixels are not copied; SkBitmap and dst point
       to the same pixels; dst bounds() are set to the intersection of subset
@@ -876,6 +935,8 @@ class SK_API SkBitmap {
       @param dst     SkBitmap set to subset
       @param subset  rectangle of pixels to reference
       @return        true if dst is replaced by subset
+
+      example: https://fiddle.skia.org/c/@Bitmap_extractSubset
   */
   bool extractSubset(SkBitmap* dst, const SkIRect& subset) const;
 
@@ -935,6 +996,8 @@ class SK_API SkBitmap {
       @param srcX  column index whose absolute value is less than width()
       @param srcY  row index whose absolute value is less than height()
       @return      true if pixels are copied to dst
+
+      example: https://fiddle.skia.org/c/@Bitmap_readPixels_2
   */
   bool readPixels(const SkPixmap& dst, int srcX, int srcY) const;
 
@@ -985,6 +1048,8 @@ class SK_API SkBitmap {
       @param dstX  column index whose absolute value is less than width()
       @param dstY  row index whose absolute value is less than height()
       @return      true if src pixels are copied to SkBitmap
+
+      example: https://fiddle.skia.org/c/@Bitmap_writePixels
   */
   bool writePixels(const SkPixmap& src, int dstX, int dstY);
 
@@ -1065,6 +1130,8 @@ class SK_API SkBitmap {
 
       @param pixmap  storage for pixel state if pixels are readable; otherwise, ignored
       @return        true if SkBitmap has direct access to pixels
+
+      example: https://fiddle.skia.org/c/@Bitmap_peekPixels
   */
   bool peekPixels(SkPixmap* pixmap) const;
 
@@ -1076,12 +1143,12 @@ class SK_API SkBitmap {
   /** Asserts if internal values are illegal or inconsistent. Only available if
       SK_DEBUG is defined at compile time.
   */
-  SkDEBUGCODE(void validate() const);
+  SkDEBUGCODE(void validate() const;)
 
-  /** \class SkBitmap::Allocator
-      Abstract subclass of HeapAllocator.
-  */
-  class Allocator : public SkRefCnt {
+      /** \class SkBitmap::Allocator
+          Abstract subclass of HeapAllocator.
+      */
+      class Allocator : public SkRefCnt {
    public:
     /** Allocates the pixel memory for the bitmap, given its dimensions and
         SkColorType. Returns true on success, where success means either setPixels()
@@ -1109,6 +1176,8 @@ class SK_API SkBitmap {
 
         @param bitmap  SkBitmap containing SkImageInfo as input, and SkPixelRef as output
         @return        true if pixels are allocated
+
+    example: https://fiddle.skia.org/c/@Bitmap_HeapAllocator_allocPixelRef
     */
     bool allocPixelRef(SkBitmap* bitmap) override;
   };
@@ -1127,17 +1196,17 @@ class SK_API SkBitmap {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-inline uint32_t* SkBitmap::getAddr32(int x, int y) const noexcept {
+inline uint32_t* SkBitmap::getAddr32(int x, int y) const {
   SkASSERT(fPixmap.addr());
   return fPixmap.writable_addr32(x, y);
 }
 
-inline uint16_t* SkBitmap::getAddr16(int x, int y) const noexcept {
+inline uint16_t* SkBitmap::getAddr16(int x, int y) const {
   SkASSERT(fPixmap.addr());
   return fPixmap.writable_addr16(x, y);
 }
 
-inline uint8_t* SkBitmap::getAddr8(int x, int y) const noexcept {
+inline uint8_t* SkBitmap::getAddr8(int x, int y) const {
   SkASSERT(fPixmap.addr());
   return fPixmap.writable_addr8(x, y);
 }

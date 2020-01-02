@@ -20,7 +20,7 @@
 template <typename T>
 class SkTLazy {
  public:
-  constexpr SkTLazy() noexcept = default;
+  SkTLazy() = default;
   explicit SkTLazy(const T* src) : fPtr(src ? new (&fStorage) T(*src) : nullptr) {}
   SkTLazy(const SkTLazy& that) : fPtr(that.fPtr ? new (&fStorage) T(*that.fPtr) : nullptr) {}
   SkTLazy(SkTLazy&& that) : fPtr(that.fPtr ? new (&fStorage) T(std::move(*that.fPtr)) : nullptr) {}
@@ -85,7 +85,7 @@ class SkTLazy {
   /**
    * Destroy the lazy object (if it was created via init() or set())
    */
-  void reset() noexcept {
+  void reset() {
     if (this->isValid()) {
       fPtr->~T();
       fPtr = nullptr;
@@ -96,24 +96,24 @@ class SkTLazy {
    *  Returns true if a valid object has been initialized in the SkTLazy,
    *  false otherwise.
    */
-  bool isValid() const noexcept { return SkToBool(fPtr); }
+  bool isValid() const { return SkToBool(fPtr); }
 
   /**
    * Returns the object. This version should only be called when the caller
    * knows that the object has been initialized.
    */
-  T* get() const noexcept {
+  T* get() const {
     SkASSERT(this->isValid());
     return fPtr;
   }
-  T* operator->() const noexcept { return this->get(); }
-  T& operator*() const noexcept { return *this->get(); }
+  T* operator->() const { return this->get(); }
+  T& operator*() const { return *this->get(); }
 
   /**
    * Like above but doesn't assert if object isn't initialized (in which case
    * nullptr is returned).
    */
-  T* getMaybeNull() const noexcept { return fPtr; }
+  T* getMaybeNull() const { return fPtr; }
 
  private:
   typename std::aligned_storage<sizeof(T), alignof(T)>::type fStorage;
@@ -195,7 +195,7 @@ class SkTCopyOnFirstWrite {
 
   const T* operator->() const { return fObj; }
 
-  operator const T*() const { return fObj; }
+  operator const T *() const { return fObj; }
 
   const T& operator*() const { return *fObj; }
 

@@ -16,7 +16,8 @@
 
 static void append_index_uv_varyings(
     GrGLSLPrimitiveProcessor::EmitArgs& args, const char* inTexCoordsName,
-    const char* atlasSizeInvName, GrGLSLVarying* uv, GrGLSLVarying* texIdx, GrGLSLVarying* st) {
+    const char* atlasDimensionsInvName, GrGLSLVarying* uv, GrGLSLVarying* texIdx,
+    GrGLSLVarying* st) {
   using Interpolation = GrGLSLVaryingHandler::Interpolation;
 
   // This extracts the texture index and texel coordinates from the same variable
@@ -37,9 +38,9 @@ static void append_index_uv_varyings(
     args.fVertBuilder->codeAppend("float texIdx = 2.0*diff.x + diff.y;");
   }
 
-  // Multiply by 1/atlasSize to get normalized texture coordinates
+  // Multiply by 1/atlasDimensions to get normalized texture coordinates
   args.fVaryingHandler->addVarying("TextureCoords", uv);
-  args.fVertBuilder->codeAppendf("%s = unormTexCoords * %s;", uv->vsOut(), atlasSizeInvName);
+  args.fVertBuilder->codeAppendf("%s = unormTexCoords * %s;", uv->vsOut(), atlasDimensionsInvName);
 
   args.fVaryingHandler->addVarying(
       "TexIndex", texIdx,
@@ -55,6 +56,13 @@ static void append_index_uv_varyings(
 static void append_multitexture_lookup(
     GrGLSLPrimitiveProcessor::EmitArgs& args, int numTextureSamplers, const GrGLSLVarying& texIdx,
     const char* coordName, const char* colorName) {
+  SkASSERT(numTextureSamplers > 0);
+  // This shouldn't happen, but will avoid a crash if it does
+  if (numTextureSamplers <= 0) {
+    args.fFragBuilder->codeAppendf("%s = float4(1, 1, 1, 1);", colorName);
+    return;
+  }
+
   // conditionally load from the indexed texture sampler
   for (int i = 0; i < numTextureSamplers - 1; ++i) {
     args.fFragBuilder->codeAppendf("if (%s == %d) { %s = ", texIdx.fsIn(), i, colorName);

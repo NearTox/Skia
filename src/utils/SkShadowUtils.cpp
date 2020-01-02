@@ -567,9 +567,10 @@ void SkBaseDevice::drawShadow(const SkPath& path, const SkDrawShadowRec& rec) {
       // For perspective shadows we've already computed the shadow in world space,
       // and we can't translate it without changing it. Otherwise we concat the
       // change in translation from the cached version.
-      SkAutoDeviceCTMRestore adr(
-          this, hasPerspective ? SkMatrix::I()
-                               : SkMatrix::Concat(this->ctm(), SkMatrix::MakeTrans(tx, ty)));
+      SkAutoDeviceTransformRestore adr(
+          this, hasPerspective
+                    ? SkMatrix::I()
+                    : SkMatrix::Concat(this->localToDevice(), SkMatrix::MakeTrans(tx, ty)));
       this->drawVertices(vertices, nullptr, 0, mode, paint);
     }
   };
@@ -578,8 +579,8 @@ void SkBaseDevice::drawShadow(const SkPath& path, const SkDrawShadowRec& rec) {
     return;
   }
 
-  SkMatrix viewMatrix = this->ctm();
-  SkAutoDeviceCTMRestore adr(this, SkMatrix::I());
+  SkMatrix viewMatrix = this->localToDevice();
+  SkAutoDeviceTransformRestore adr(this, SkMatrix::I());
 
   ShadowedPath shadowedPath(&path, &viewMatrix);
 
@@ -738,7 +739,7 @@ void SkBaseDevice::drawShadow(const SkPath& path, const SkDrawShadowRec& rec) {
                 &radius)) {
           return;
         }
-        SkAutoDeviceCTMRestore adr(this, shadowMatrix);
+        SkAutoDeviceTransformRestore adr(this, shadowMatrix);
 
         SkPaint paint;
         paint.setColor(rec.fSpotColor);

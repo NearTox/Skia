@@ -169,14 +169,15 @@ class NonAAStrokeRectOp final : public GrMeshDrawOp {
 
  private:
   void onPrepareDraws(Target* target) override {
-    sk_sp<GrGeometryProcessor> gp;
+    GrGeometryProcessor* gp;
     {
       using namespace GrDefaultGeoProcFactory;
       Color color(fColor);
       LocalCoords::Type localCoordsType =
           fHelper.usesLocalCoords() ? LocalCoords::kUsePosition_Type : LocalCoords::kUnused_Type;
       gp = GrDefaultGeoProcFactory::Make(
-          target->caps().shaderCaps(), color, Coverage::kSolid_Type, localCoordsType, fViewMatrix);
+          target->allocator(), target->caps().shaderCaps(), color, Coverage::kSolid_Type,
+          localCoordsType, fViewMatrix);
     }
 
     size_t kVertexStride = gp->vertexStride();
@@ -214,7 +215,7 @@ class NonAAStrokeRectOp final : public GrMeshDrawOp {
     GrMesh* mesh = target->allocMesh(primType);
     mesh->setNonIndexedNonInstanced(vertexCount);
     mesh->setVertexData(std::move(vertexBuffer), firstVertex);
-    target->recordDraw(std::move(gp), mesh);
+    target->recordDraw(gp, mesh, 1, primType);
   }
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
@@ -294,9 +295,9 @@ static void compute_aa_rects(
   }
 }
 
-static sk_sp<GrGeometryProcessor> create_aa_stroke_rect_gp(
-    const GrShaderCaps* shaderCaps, bool tweakAlphaForCoverage, const SkMatrix& viewMatrix,
-    bool usesLocalCoords, bool wideColor) {
+static GrGeometryProcessor* create_aa_stroke_rect_gp(
+    SkArenaAlloc* arena, const GrShaderCaps* shaderCaps, bool tweakAlphaForCoverage,
+    const SkMatrix& viewMatrix, bool usesLocalCoords, bool wideColor) {
   using namespace GrDefaultGeoProcFactory;
 
   Coverage::Type coverageType =
@@ -306,7 +307,8 @@ static sk_sp<GrGeometryProcessor> create_aa_stroke_rect_gp(
   Color::Type colorType =
       wideColor ? Color::kPremulWideColorAttribute_Type : Color::kPremulGrColorAttribute_Type;
 
-  return MakeForDeviceSpace(shaderCaps, colorType, coverageType, localCoordsType, viewMatrix);
+  return MakeForDeviceSpace(
+      arena, shaderCaps, colorType, coverageType, localCoordsType, viewMatrix);
 }
 
 class AAStrokeRectOp final : public GrMeshDrawOp {
@@ -444,9 +446,9 @@ class AAStrokeRectOp final : public GrMeshDrawOp {
 };
 
 void AAStrokeRectOp::onPrepareDraws(Target* target) {
-  sk_sp<GrGeometryProcessor> gp(create_aa_stroke_rect_gp(
-      target->caps().shaderCaps(), fHelper.compatibleWithCoverageAsAlpha(), this->viewMatrix(),
-      fHelper.usesLocalCoords(), fWideColor));
+  GrGeometryProcessor* gp = create_aa_stroke_rect_gp(
+      target->allocator(), target->caps().shaderCaps(), fHelper.compatibleWithCoverageAsAlpha(),
+      this->viewMatrix(), fHelper.usesLocalCoords(), fWideColor);
   if (!gp) {
     SkDebugf("Couldn't create GrGeometryProcessor\n");
     return;
@@ -457,6 +459,7 @@ void AAStrokeRectOp::onPrepareDraws(Target* target) {
   int verticesPerInstance = (outerVertexNum + innerVertexNum) * 2;
   int indicesPerInstance = this->miterStroke() ? kMiterIndexCnt : kBevelIndexCnt;
   int instanceCount = fRects.count();
+  int maxQuads = this->miterStroke() ? kNumMiterRectsInIndexBuffer : kNumBevelRectsInIndexBuffer;
 
   sk_sp<const GrGpuBuffer> indexBuffer =
       GetIndexBuffer(target->resourceProvider(), this->miterStroke());
@@ -466,7 +469,7 @@ void AAStrokeRectOp::onPrepareDraws(Target* target) {
   }
   PatternHelper helper(
       target, GrPrimitiveType::kTriangles, gp->vertexStride(), std::move(indexBuffer),
-      verticesPerInstance, indicesPerInstance, instanceCount);
+      verticesPerInstance, indicesPerInstance, instanceCount, maxQuads);
   GrVertexWriter vertices{helper.vertices()};
   if (!vertices.fPtr) {
     SkDebugf("Could not allocate vertices\n");
@@ -479,7 +482,7 @@ void AAStrokeRectOp::onPrepareDraws(Target* target) {
         vertices, info.fColor, fWideColor, info.fDevOutside, info.fDevOutsideAssist,
         info.fDevInside, fMiterStroke, info.fDegenerate, fHelper.compatibleWithCoverageAsAlpha());
   }
-  helper.recordDraw(target, std::move(gp));
+  helper.recordDraw(target, gp);
 }
 
 void AAStrokeRectOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) {

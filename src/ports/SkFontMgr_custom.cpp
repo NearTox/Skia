@@ -135,8 +135,8 @@ SkFontMgr_Custom::SkFontMgr_Custom(const SystemFontLoader& loader) : fDefaultFam
   loader.loadSystemFonts(fScanner, &fFamilies);
 
   // Try to pick a default font.
-  static const char* defaultNames[] = {"Arial", "Verdana", "Times New Roman", "Droid Sans",
-                                       nullptr};
+  static const char* defaultNames[] = {
+      "Arial", "Verdana", "Times New Roman", "Droid Sans", nullptr};
   for (size_t i = 0; i < SK_ARRAY_COUNT(defaultNames); ++i) {
     sk_sp<SkFontStyleSet_Custom> set(this->onMatchFamily(defaultNames[i]));
     if (nullptr == set) {

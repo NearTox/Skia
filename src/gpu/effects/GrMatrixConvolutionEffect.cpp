@@ -115,13 +115,13 @@ void GrGLMatrixConvolutionEffect::GenKey(
 void GrGLMatrixConvolutionEffect::onSetData(
     const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& processor) {
   const GrMatrixConvolutionEffect& conv = processor.cast<GrMatrixConvolutionEffect>();
-  GrTextureProxy* proxy = conv.textureSampler(0).proxy();
-  GrTexture* texture = proxy->peekTexture();
+  GrSurfaceProxy* proxy = conv.textureSampler(0).proxy();
+  SkISize textureDims = proxy->backingStoreDimensions();
 
   float imageIncrement[2];
   float ySign = proxy->origin() == kTopLeft_GrSurfaceOrigin ? 1.0f : -1.0f;
-  imageIncrement[0] = 1.0f / texture->width();
-  imageIncrement[1] = ySign / texture->height();
+  imageIncrement[0] = 1.0f / textureDims.width();
+  imageIncrement[1] = ySign / textureDims.height();
   pdman.set2fv(fImageIncrementUni, 1, imageIncrement);
   pdman.set2fv(fKernelOffsetUni, 1, conv.kernelOffset());
   int kernelCount = conv.kernelSize().width() * conv.kernelSize().height();
@@ -134,7 +134,7 @@ void GrGLMatrixConvolutionEffect::onSetData(
 }
 
 GrMatrixConvolutionEffect::GrMatrixConvolutionEffect(
-    sk_sp<GrTextureProxy> srcProxy, const SkIRect& srcBounds, const SkISize& kernelSize,
+    sk_sp<GrSurfaceProxy> srcProxy, const SkIRect& srcBounds, const SkISize& kernelSize,
     const SkScalar* kernel, SkScalar gain, SkScalar bias, const SkIPoint& kernelOffset,
     GrTextureDomain::Mode tileMode, bool convolveAlpha)
     // To advertise either the modulation or opaqueness optimizations we'd have to examine the

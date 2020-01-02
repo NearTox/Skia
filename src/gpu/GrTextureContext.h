@@ -39,12 +39,12 @@ class GrTextureContext : public GrSurfaceContext {
 
  protected:
   GrTextureContext(
-      GrRecordingContext*, sk_sp<GrTextureProxy>, GrColorType, SkAlphaType, sk_sp<SkColorSpace>);
+      GrRecordingContext*, sk_sp<GrTextureProxy>, GrColorType, SkAlphaType, sk_sp<SkColorSpace>,
+      GrSurfaceOrigin origin, GrSwizzle texSwizzle);
 
-  SkDEBUGCODE(void validate() const override);
+  SkDEBUGCODE(void validate() const override;)
 
- private:
-  friend class GrDrawingManager;  // for ctor
+      private : friend class GrDrawingManager;  // for ctor
 
   sk_sp<GrTextureProxy> fTextureProxy;
 

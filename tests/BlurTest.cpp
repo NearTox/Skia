@@ -431,8 +431,8 @@ static void test_layerDrawLooper(
 }
 
 DEF_TEST(BlurAsABlur, reporter) {
-  const SkBlurStyle styles[] = {kNormal_SkBlurStyle, kSolid_SkBlurStyle, kOuter_SkBlurStyle,
-                                kInner_SkBlurStyle};
+  const SkBlurStyle styles[] = {
+      kNormal_SkBlurStyle, kSolid_SkBlurStyle, kOuter_SkBlurStyle, kInner_SkBlurStyle};
   const SkScalar sigmas[] = {// values <= 0 should not success for a blur
                              -1, 0, 0.5f, 2};
 

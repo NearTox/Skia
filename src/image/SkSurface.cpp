@@ -15,7 +15,7 @@
 #include "src/core/SkMakeUnique.h"
 #include "src/image/SkSurface_Base.h"
 
-static SkPixelGeometry compute_default_geometry() noexcept {
+static SkPixelGeometry compute_default_geometry() {
   SkFontLCDConfig::LCDOrder order = SkFontLCDConfig::GetSubpixelOrder();
   if (SkFontLCDConfig::kNONE_LCDOrder == order) {
     return kUnknown_SkPixelGeometry;
@@ -39,18 +39,17 @@ static SkPixelGeometry compute_default_geometry() noexcept {
   }
 }
 
-SkSurfaceProps::SkSurfaceProps() noexcept : fFlags(0), fPixelGeometry(kUnknown_SkPixelGeometry) {}
+SkSurfaceProps::SkSurfaceProps() : fFlags(0), fPixelGeometry(kUnknown_SkPixelGeometry) {}
 
-SkSurfaceProps::SkSurfaceProps(InitType) noexcept
-    : fFlags(0), fPixelGeometry(compute_default_geometry()) {}
+SkSurfaceProps::SkSurfaceProps(InitType) : fFlags(0), fPixelGeometry(compute_default_geometry()) {}
 
-SkSurfaceProps::SkSurfaceProps(uint32_t flags, InitType) noexcept
+SkSurfaceProps::SkSurfaceProps(uint32_t flags, InitType)
     : fFlags(flags), fPixelGeometry(compute_default_geometry()) {}
 
-SkSurfaceProps::SkSurfaceProps(uint32_t flags, SkPixelGeometry pg) noexcept
+SkSurfaceProps::SkSurfaceProps(uint32_t flags, SkPixelGeometry pg)
     : fFlags(flags), fPixelGeometry(pg) {}
 
-SkSurfaceProps::SkSurfaceProps(const SkSurfaceProps& other) noexcept
+SkSurfaceProps::SkSurfaceProps(const SkSurfaceProps& other)
     : fFlags(other.fFlags), fPixelGeometry(other.fPixelGeometry) {}
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -192,11 +191,11 @@ void SkSurface_Base::onAsyncRescaleAndReadPixels(
   if (src->readPixels(pm, srcX, srcY)) {
     class Result : public AsyncReadResult {
      public:
-      Result(std::unique_ptr<const char[]> data, size_t rowBytes) noexcept
+      Result(std::unique_ptr<const char[]> data, size_t rowBytes)
           : fData(std::move(data)), fRowBytes(rowBytes) {}
-      int count() const noexcept override { return 1; }
-      const void* data(int i) const noexcept override { return fData.get(); }
-      size_t rowBytes(int i) const noexcept override { return fRowBytes; }
+      int count() const override { return 1; }
+      const void* data(int i) const override { return fData.get(); }
+      size_t rowBytes(int i) const override { return fRowBytes; }
 
      private:
       std::unique_ptr<const char[]> fData;
@@ -217,7 +216,7 @@ void SkSurface_Base::onAsyncRescaleAndReadPixelsYUV420(
   callback(context, nullptr);
 }
 
-bool SkSurface_Base::outstandingImageSnapshot() const noexcept {
+bool SkSurface_Base::outstandingImageSnapshot() const {
   return fCachedImage && !fCachedImage->unique();
 }
 
@@ -250,17 +249,15 @@ void SkSurface_Base::aboutToDraw(ContentChangeMode mode) {
   }
 }
 
-uint32_t SkSurface_Base::newGenerationID() noexcept {
+uint32_t SkSurface_Base::newGenerationID() {
   SkASSERT(!fCachedCanvas || fCachedCanvas->getSurfaceBase() == this);
   static std::atomic<uint32_t> nextID{1};
   return nextID++;
 }
 
-static SkSurface_Base* asSB(SkSurface* surface) noexcept {
-  return static_cast<SkSurface_Base*>(surface);
-}
+static SkSurface_Base* asSB(SkSurface* surface) { return static_cast<SkSurface_Base*>(surface); }
 
-static const SkSurface_Base* asConstSB(const SkSurface* surface) noexcept {
+static const SkSurface_Base* asConstSB(const SkSurface* surface) {
   return static_cast<const SkSurface_Base*>(surface);
 }
 
@@ -285,7 +282,7 @@ SkImageInfo SkSurface::imageInfo() {
   return this->getCanvas()->imageInfo();
 }
 
-uint32_t SkSurface::generationID() noexcept {
+uint32_t SkSurface::generationID() {
   if (0 == fGenerationID) {
     fGenerationID = asSB(this)->newGenerationID();
   }
@@ -340,59 +337,6 @@ bool SkSurface::readPixels(const SkBitmap& bitmap, int srcX, int srcY) {
   return bitmap.peekPixels(&pm) && this->readPixels(pm, srcX, srcY);
 }
 
-// Stuff to keep the legacy async readback APIs working on top of the new implementation.
-namespace {
-struct BridgeContext {
-  SkSurface::ReadPixelsContext fClientContext;
-  SkSurface::LegacyReadPixelsCallback* fClientCallback;
-};
-struct BridgeContextYUV420 {
-  SkSurface::ReadPixelsContext fClientContext;
-  SkSurface::LegacyReadPixelsCallbackYUV420* fClientCallback;
-};
-}  // anonymous namespace
-
-static void bridge_callback(
-    SkSurface::ReadPixelsContext context,
-    std::unique_ptr<const SkSurface::AsyncReadResult> result) {
-  auto bridgeContext = static_cast<const BridgeContext*>(context);
-  if (!result || result->count() != 1) {
-    bridgeContext->fClientCallback(bridgeContext->fClientContext, nullptr, 0);
-  } else {
-    bridgeContext->fClientCallback(
-        bridgeContext->fClientContext, result->data(0), result->rowBytes(0));
-  }
-  delete bridgeContext;
-}
-
-static void bridge_callback_yuv420(
-    SkSurface::ReadPixelsContext context,
-    std::unique_ptr<const SkSurface::AsyncReadResult> result) {
-  auto bridgeContext = static_cast<const BridgeContextYUV420*>(context);
-  if (!result || result->count() != 3) {
-    bridgeContext->fClientCallback(bridgeContext->fClientContext, nullptr, 0);
-  } else {
-    const void* data[] = {result->data(0), result->data(1), result->data(2)};
-    size_t rowBytes[] = {result->rowBytes(0), result->rowBytes(1), result->rowBytes(2)};
-    bridgeContext->fClientCallback(bridgeContext->fClientContext, data, rowBytes);
-  }
-  delete bridgeContext;
-}
-
-void SkSurface::asyncRescaleAndReadPixels(
-    const SkImageInfo& info, const SkIRect& srcRect, RescaleGamma rescaleGamma,
-    SkFilterQuality rescaleQuality, LegacyReadPixelsCallback callback, ReadPixelsContext context) {
-  if (!SkIRect::MakeWH(this->width(), this->height()).contains(srcRect) ||
-      !SkImageInfoIsValid(info)) {
-    callback(context, nullptr, 0);
-    return;
-  }
-
-  auto bridgeContext = new BridgeContext{context, callback};
-  asSB(this)->onAsyncRescaleAndReadPixels(
-      info, srcRect, rescaleGamma, rescaleQuality, bridge_callback, bridgeContext);
-}
-
 void SkSurface::asyncRescaleAndReadPixels(
     const SkImageInfo& info, const SkIRect& srcRect, RescaleGamma rescaleGamma,
     SkFilterQuality rescaleQuality, ReadPixelsCallback callback, ReadPixelsContext context) {
@@ -403,21 +347,6 @@ void SkSurface::asyncRescaleAndReadPixels(
   }
   asSB(this)->onAsyncRescaleAndReadPixels(
       info, srcRect, rescaleGamma, rescaleQuality, callback, context);
-}
-
-void SkSurface::asyncRescaleAndReadPixelsYUV420(
-    SkYUVColorSpace yuvColorSpace, sk_sp<SkColorSpace> dstColorSpace, const SkIRect& srcRect,
-    int dstW, int dstH, RescaleGamma rescaleGamma, SkFilterQuality rescaleQuality,
-    LegacyReadPixelsCallbackYUV420 callback, ReadPixelsContext context) {
-  if (!SkIRect::MakeWH(this->width(), this->height()).contains(srcRect) || (dstW & 0b1) ||
-      (dstH & 0b1)) {
-    callback(context, nullptr, nullptr);
-    return;
-  }
-  auto bridgeContext = new BridgeContextYUV420{context, callback};
-  asSB(this)->onAsyncRescaleAndReadPixelsYUV420(
-      yuvColorSpace, std::move(dstColorSpace), srcRect, {dstW, dstH}, rescaleGamma, rescaleQuality,
-      bridge_callback_yuv420, bridgeContext);
 }
 
 void SkSurface::asyncRescaleAndReadPixelsYUV420(

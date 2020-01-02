@@ -69,8 +69,8 @@ struct LocalCoords {
   const SkMatrix* fMatrix;
 };
 
-sk_sp<GrGeometryProcessor> Make(
-    const GrShaderCaps*, const Color&, const Coverage&, const LocalCoords&,
+GrGeometryProcessor* Make(
+    SkArenaAlloc*, const GrShaderCaps*, const Color&, const Coverage&, const LocalCoords&,
     const SkMatrix& viewMatrix);
 
 /*
@@ -78,8 +78,8 @@ sk_sp<GrGeometryProcessor> Make(
  * attribute. The view matrix must still be provided to compute correctly transformed
  * coordinates for GrFragmentProcessors. It may fail if the view matrix is not invertible.
  */
-sk_sp<GrGeometryProcessor> MakeForDeviceSpace(
-    const GrShaderCaps*, const Color&, const Coverage&, const LocalCoords&,
+GrGeometryProcessor* MakeForDeviceSpace(
+    SkArenaAlloc*, const GrShaderCaps*, const Color&, const Coverage&, const LocalCoords&,
     const SkMatrix& viewMatrix);
 };  // namespace GrDefaultGeoProcFactory
 

@@ -15,9 +15,9 @@
 struct SkDCubicPair;
 
 struct SkDCubic {
-  static constexpr int kPointCount = 4;
-  static constexpr int kPointLast = kPointCount - 1;
-  static constexpr int kMaxIntersections = 9;
+  static const int kPointCount = 4;
+  static const int kPointLast = kPointCount - 1;
+  static const int kMaxIntersections = 9;
 
   enum SearchAxis { kXAxis, kYAxis };
 
@@ -35,7 +35,7 @@ struct SkDCubic {
     return v03.dot(v01) > 0 && v03.dot(v02) > 0 && v03.dot(v13) > 0 && v03.dot(v23) > 0;
   }
 
-  static bool IsConic() noexcept { return false; }
+  static bool IsConic() { return false; }
 
   const SkDPoint& operator[](int n) const {
     SkASSERT(n >= 0 && n < kPointCount);
@@ -82,12 +82,12 @@ struct SkDCubic {
   bool hullIntersects(const SkDQuad& c2, bool* isLinear) const;
   bool hullIntersects(const SkDPoint* pts, int ptCount, bool* isLinear) const;
   bool isLinear(int startIndex, int endIndex) const;
-  static int maxIntersections() noexcept { return kMaxIntersections; }
+  static int maxIntersections() { return kMaxIntersections; }
   bool monotonicInX() const;
   bool monotonicInY() const;
   void otherPts(int index, const SkDPoint* o1Pts[kPointCount - 1]) const;
-  static int pointCount() noexcept { return kPointCount; }
-  static int pointLast() noexcept { return kPointLast; }
+  static int pointCount() { return kPointCount; }
+  static int pointLast() { return kPointLast; }
   SkDPoint ptAtT(double t) const;
   static int RootsReal(double A, double B, double C, double D, double t[3]);
   static int RootsValidT(const double A, const double B, const double C, double D, double s[3]);
@@ -158,7 +158,7 @@ given that:
    (0, 3) ^ 2 -> (2, 1)  (1, 2) ^ 2 -> (3, 0)
    (0, 1) ^ 3 -> (3, 2)  (0, 2) ^ 3 -> (3, 1)  (1, 3) ^ 3 -> (2, 0)  (2, 3) ^ 3 -> (1, 0)
 */
-constexpr inline int other_two(int one, int two) { return 1 >> (3 - (one ^ two)) ^ 3; }
+inline int other_two(int one, int two) { return 1 >> (3 - (one ^ two)) ^ 3; }
 
 struct SkDCubicPair {
   const SkDCubic first() const {

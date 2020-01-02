@@ -707,7 +707,7 @@ class GrPerlinNoise2Effect : public GrFragmentProcessor {
   bool stitchTiles() const { return fStitchTiles; }
   const SkVector& baseFrequency() const { return fPaintingData->fBaseFrequency; }
   int numOctaves() const { return fNumOctaves; }
-  const SkMatrix& matrix() const { return fCoordTransform.getMatrix(); }
+  const SkMatrix& matrix() const { return fCoordTransform.matrix(); }
 
  private:
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override { return new GrGLPerlinNoise; }
@@ -838,12 +838,12 @@ void GrGLPerlinNoise::emitCode(EmitArgs& args) {
   const char* dotLattice = "dot(((%s.ga + %s.rb * half2(%s)) * half2(2.0) - half2(1.0)), %s);";
 
   // Add noise function
-  const GrShaderVar gPerlinNoiseArgs[] = {GrShaderVar(chanCoord, kHalf_GrSLType),
-                                          GrShaderVar(noiseVec, kHalf2_GrSLType)};
+  const GrShaderVar gPerlinNoiseArgs[] = {
+      GrShaderVar(chanCoord, kHalf_GrSLType), GrShaderVar(noiseVec, kHalf2_GrSLType)};
 
-  const GrShaderVar gPerlinNoiseStitchArgs[] = {GrShaderVar(chanCoord, kHalf_GrSLType),
-                                                GrShaderVar(noiseVec, kHalf2_GrSLType),
-                                                GrShaderVar(stitchData, kHalf2_GrSLType)};
+  const GrShaderVar gPerlinNoiseStitchArgs[] = {
+      GrShaderVar(chanCoord, kHalf_GrSLType), GrShaderVar(noiseVec, kHalf2_GrSLType),
+      GrShaderVar(stitchData, kHalf2_GrSLType)};
 
   SkString noiseCode;
 
@@ -1120,7 +1120,7 @@ class GrImprovedPerlinNoiseEffect : public GrFragmentProcessor {
   const SkVector& baseFrequency() const { return fPaintingData->fBaseFrequency; }
   SkScalar z() const { return fZ; }
   int octaves() const { return fOctaves; }
-  const SkMatrix& matrix() const { return fCoordTransform.getMatrix(); }
+  const SkMatrix& matrix() const { return fCoordTransform.matrix(); }
 
  private:
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override {
@@ -1231,8 +1231,8 @@ void GrGLImprovedPerlinNoise::emitCode(EmitArgs& args) {
       kHalf_GrSLType, "perm", SK_ARRAY_COUNT(permArgs), permArgs, permCode.c_str(), &permFuncName);
 
   // grad function
-  const GrShaderVar gradArgs[] = {GrShaderVar("x", kHalf_GrSLType),
-                                  GrShaderVar("p", kHalf3_GrSLType)};
+  const GrShaderVar gradArgs[] = {
+      GrShaderVar("x", kHalf_GrSLType), GrShaderVar("p", kHalf3_GrSLType)};
   SkString gradFuncName;
   SkString gradCode("return half(dot(");
   fragBuilder->appendTextureLookup(
@@ -1242,9 +1242,9 @@ void GrGLImprovedPerlinNoise::emitCode(EmitArgs& args) {
       kHalf_GrSLType, "grad", SK_ARRAY_COUNT(gradArgs), gradArgs, gradCode.c_str(), &gradFuncName);
 
   // lerp function
-  const GrShaderVar lerpArgs[] = {GrShaderVar("a", kHalf_GrSLType),
-                                  GrShaderVar("b", kHalf_GrSLType),
-                                  GrShaderVar("w", kHalf_GrSLType)};
+  const GrShaderVar lerpArgs[] = {
+      GrShaderVar("a", kHalf_GrSLType), GrShaderVar("b", kHalf_GrSLType),
+      GrShaderVar("w", kHalf_GrSLType)};
   SkString lerpFuncName;
   fragBuilder->emitFunction(
       kHalf_GrSLType, "lerp", SK_ARRAY_COUNT(lerpArgs), lerpArgs, "return a + w * (b - a);",

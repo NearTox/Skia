@@ -558,8 +558,8 @@ HRESULT SkXPSDevice::createXpsImageBrush(
           read.get(), XPS_IMAGE_TYPE_PNG, imagePartUri.get(), &imageResource),
       "Could not create image resource.");
 
-  XPS_RECT bitmapRect = {0.0, 0.0, static_cast<FLOAT>(bitmap.width()),
-                         static_cast<FLOAT>(bitmap.height())};
+  XPS_RECT bitmapRect = {
+      0.0, 0.0, static_cast<FLOAT>(bitmap.width()), static_cast<FLOAT>(bitmap.height())};
   SkTScopedComPtr<IXpsOMImageBrush> xpsImageBrush;
   HRM(this->fXpsFactory->CreateImageBrush(
           imageResource.get(), &bitmapRect, &bitmapRect, &xpsImageBrush),
@@ -1021,10 +1021,10 @@ void SkXPSDevice::internalDrawRect(const SkRect& r, bool transformRect, const Sk
   }
 
   // Path the rect if we can't optimize it.
-  if (rect_must_be_pathed(paint, this->ctm())) {
+  if (rect_must_be_pathed(paint, this->localToDevice())) {
     SkPath tmp;
     tmp.addRect(r);
-    tmp.setFillType(SkPath::kWinding_FillType);
+    tmp.setFillType(SkPathFillType::kWinding);
     this->drawPath(tmp, paint, true);
     return;
   }
@@ -1047,13 +1047,13 @@ void SkXPSDevice::internalDrawRect(const SkRect& r, bool transformRect, const Sk
   // Set the brushes.
   BOOL fill = FALSE;
   BOOL stroke = FALSE;
-  HRV(this->shadePath(shadedPath.get(), paint, this->ctm(), &fill, &stroke));
+  HRV(this->shadePath(shadedPath.get(), paint, this->localToDevice(), &fill, &stroke));
 
   bool xpsTransformsPath = true;
   // Transform the geometry.
   if (transformRect && xpsTransformsPath) {
     SkTScopedComPtr<IXpsOMMatrixTransform> xpsTransform;
-    HRV(this->createXpsTransform(this->ctm(), &xpsTransform));
+    HRV(this->createXpsTransform(this->localToDevice(), &xpsTransform));
     if (xpsTransform.get()) {
       HRVM(
           shadedGeometry->SetTransformLocal(xpsTransform.get()),
@@ -1073,7 +1073,7 @@ void SkXPSDevice::internalDrawRect(const SkRect& r, bool transformRect, const Sk
         {r.fRight, r.fTop},
     };
     if (!xpsTransformsPath && transformRect) {
-      this->ctm().mapPoints(points, SK_ARRAY_COUNT(points));
+      this->localToDevice().mapPoints(points, SK_ARRAY_COUNT(points));
     }
     HRV(this->createXpsQuad(points, stroke, fill, &rectFigure));
   }
@@ -1311,7 +1311,7 @@ void SkXPSDevice::drawPath(
       paint->getPathEffect() || paint->getStyle() != SkPaint::kFill_Style;
 
   // Apply pre-path matrix [Platonic-path -> Skeletal-path].
-  SkMatrix matrix = this->ctm();
+  SkMatrix matrix = this->localToDevice();
   SkPath* skeletalPath = const_cast<SkPath*>(&platonicPath);
 
   // Apply path effect [Skeletal-path -> Fillable-path].
@@ -1360,7 +1360,7 @@ void SkXPSDevice::drawPath(
   // Set the brushes.
   BOOL fill;
   BOOL stroke;
-  HRV(this->shadePath(shadedPath.get(), *paint, this->ctm(), &fill, &stroke));
+  HRV(this->shadePath(shadedPath.get(), *paint, this->localToDevice(), &fill, &stroke));
 
   // Mask filter
   if (filter) {
@@ -1412,10 +1412,10 @@ void SkXPSDevice::drawPath(
   // Set the fill rule.
   SkPath* xpsCompatiblePath = fillablePath;
   XPS_FILL_RULE xpsFillRule;
-  switch (fillablePath->getFillType()) {
-    case SkPath::kWinding_FillType: xpsFillRule = XPS_FILL_RULE_NONZERO; break;
-    case SkPath::kEvenOdd_FillType: xpsFillRule = XPS_FILL_RULE_EVENODD; break;
-    case SkPath::kInverseWinding_FillType: {
+  switch (fillablePath->getNewFillType()) {
+    case SkPathFillType::kWinding: xpsFillRule = XPS_FILL_RULE_NONZERO; break;
+    case SkPathFillType::kEvenOdd: xpsFillRule = XPS_FILL_RULE_EVENODD; break;
+    case SkPathFillType::kInverseWinding: {
       //[Fillable-path (inverse winding) -> XPS-path (inverse even odd)]
       if (!pathIsMutable) {
         xpsCompatiblePath = &modifiedPath;
@@ -1427,7 +1427,7 @@ void SkXPSDevice::drawPath(
       }
     }
     // The xpsCompatiblePath is now inverse even odd, so fall through.
-    case SkPath::kInverseEvenOdd_FillType: {
+    case SkPathFillType::kInverseEvenOdd: {
       const SkRect universe =
           SkRect::MakeLTRB(0, 0, this->fCurrentCanvasSize.fWidth, this->fCurrentCanvasSize.fHeight);
       SkTScopedComPtr<IXpsOMGeometryFigure> addOneFigure;
@@ -1660,7 +1660,8 @@ void SkXPSDevice::drawGlyphRunList(const SkGlyphRunList& glyphRunList) {
     }
 
     TypefaceUse* typeface;
-    if (FAILED(CreateTypefaceUse(font, &typeface)) || text_must_be_pathed(paint, this->ctm())) {
+    if (FAILED(CreateTypefaceUse(font, &typeface)) ||
+        text_must_be_pathed(paint, this->localToDevice())) {
       SkPath path;
       // TODO: make this work, Draw currently does not handle as well.
       // paint.getTextPath(text, byteLength, x, y, &path);
@@ -1694,7 +1695,7 @@ void SkXPSDevice::drawGlyphRunList(const SkGlyphRunList& glyphRunList) {
     HRV(AddGlyphs(
         this->fXpsFactory.get(), this->fCurrentXpsCanvas.get(), typeface, nullptr, xpsGlyphs.get(),
         glyphCount, &origin, SkScalarToFLOAT(font.getSize()), XPS_STYLE_SIMULATION_NONE,
-        this->ctm(), paint));
+        this->localToDevice(), paint));
   }
 }
 

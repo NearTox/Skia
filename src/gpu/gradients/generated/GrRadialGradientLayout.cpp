@@ -29,8 +29,7 @@ class GrGLSLRadialGradientLayout : public GrGLSLFragmentProcessor {
         fragBuilder->ensureCoords2D(args.fTransformedCoords[0].fVaryingPoint);
     fragBuilder->codeAppendf(
         "half t = half(length(%s));\n%s = half4(t, 1.0, 0.0, 0.0);\n",
-        _outer.computeLocalCoordsInVertexShader() ? sk_TransformedCoords2D_0.c_str() : "_coords",
-        args.fOutputColor);
+        sk_TransformedCoords2D_0.c_str(), args.fOutputColor);
   }
 
  private:
@@ -65,8 +64,8 @@ std::unique_ptr<GrFragmentProcessor> GrRadialGradientLayout::TestCreate(GrProces
   GrTest::TestAsFPArgs asFPArgs(d);
   do {
     GrGradientShader::RandomParams params(d->fRandom);
-    SkPoint center = {d->fRandom->nextRangeScalar(0.0f, scale),
-                      d->fRandom->nextRangeScalar(0.0f, scale)};
+    SkPoint center = {
+        d->fRandom->nextRangeScalar(0.0f, scale), d->fRandom->nextRangeScalar(0.0f, scale)};
     SkScalar radius = d->fRandom->nextRangeScalar(0.0f, scale);
     sk_sp<SkShader> shader = params.fUseColors4f
                                  ? SkGradientShader::MakeRadial(

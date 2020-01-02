@@ -284,7 +284,7 @@ class UtfToGlyph : public Benchmark {
   std::vector<std::unique_ptr<Line>> fLines;
   std::vector<SkGlyphID> fGlyphIds;
   sk_sp<SkTypeface> fTypeface;
-  const char*(*fText);
+  const char** fText;
   int fLineCount;
   const char* fName;
 };

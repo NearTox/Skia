@@ -44,7 +44,7 @@ struct SK_API GrContextOptions {
    */
   class SK_API PersistentCache {
    public:
-    virtual ~PersistentCache() = default;
+    virtual ~PersistentCache() {}
 
     /**
      * Returns the data for the key if it exists in the cache, otherwise returns null.
@@ -61,11 +61,11 @@ struct SK_API GrContextOptions {
    */
   class SK_API ShaderErrorHandler {
    public:
-    virtual ~ShaderErrorHandler() = default;
+    virtual ~ShaderErrorHandler() {}
     virtual void compileError(const char* shader, const char* errors) = 0;
   };
 
-  GrContextOptions() noexcept = default;
+  GrContextOptions() {}
 
   // Suppress prints for the GrContext.
   bool fSuppressPrints = false;

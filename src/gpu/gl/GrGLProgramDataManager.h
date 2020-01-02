@@ -97,8 +97,7 @@ class GrGLProgramDataManager : public GrGLSLProgramDataManager {
   };
   struct PathProcVarying {
     GrGLint fLocation;
-    SkDEBUGCODE(GrSLType fType; int fArrayCount);
-    ;
+    SkDEBUGCODE(GrSLType fType; int fArrayCount;);
   };
 
   template <int N>

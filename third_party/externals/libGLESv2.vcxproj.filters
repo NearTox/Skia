@@ -4,14 +4,12 @@
     <ClCompile Include="angle2\src\compiler\preprocessor\DiagnosticsBase.cpp" />
     <ClCompile Include="angle2\src\compiler\preprocessor\DirectiveHandlerBase.cpp" />
     <ClCompile Include="angle2\src\compiler\preprocessor\DirectiveParser.cpp" />
-    <ClCompile Include="angle2\src\compiler\preprocessor\ExpressionParser.cpp" />
     <ClCompile Include="angle2\src\compiler\preprocessor\Input.cpp" />
     <ClCompile Include="angle2\src\compiler\preprocessor\Lexer.cpp" />
     <ClCompile Include="angle2\src\compiler\preprocessor\Macro.cpp" />
     <ClCompile Include="angle2\src\compiler\preprocessor\MacroExpander.cpp" />
     <ClCompile Include="angle2\src\compiler\preprocessor\Preprocessor.cpp" />
     <ClCompile Include="angle2\src\compiler\preprocessor\Token.cpp" />
-    <ClCompile Include="angle2\src\compiler\preprocessor\Tokenizer.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\BuiltInFunctionEmulator.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\CallDAG.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\CodeGen.cpp" />
@@ -50,8 +48,6 @@
     <ClCompile Include="angle2\src\compiler\translator\ValidateVaryingLocations.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\VariablePacker.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\blocklayout.cpp" />
-    <ClCompile Include="angle2\src\compiler\translator\glslang_lex.cpp" />
-    <ClCompile Include="angle2\src\compiler\translator\glslang_tab.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\util.cpp" />
     <ClCompile Include="angle2\src\third_party\compiler\ArrayBoundsClamper.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\OutputESSL.cpp" />
@@ -398,5 +394,10 @@
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\MemoryObjectGL.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\SemaphoreGL.cpp" />
     <ClCompile Include="angle2\src\libANGLE\FrameCapture_mock.cpp" />
+    <ClCompile Include="angle2\src\compiler\preprocessor\preprocessor_lex_autogen.cpp" />
+    <ClCompile Include="angle2\src\compiler\preprocessor\preprocessor_tab_autogen.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\glslang_lex_autogen.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\glslang_tab_autogen.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\validationESEXT.cpp" />
   </ItemGroup>
 </Project>

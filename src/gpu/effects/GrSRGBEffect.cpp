@@ -95,12 +95,12 @@ SkPMColor4f GrSRGBEffect::constantOutputForConstantInput(const SkPMColor4f& inCo
   SkColor4f color = inColor.unpremul();
   switch (fMode) {
     case Mode::kLinearToSRGB:
-      color = {linear_to_srgb(color.fR), linear_to_srgb(color.fG), linear_to_srgb(color.fB),
-               color.fA};
+      color = {
+          linear_to_srgb(color.fR), linear_to_srgb(color.fG), linear_to_srgb(color.fB), color.fA};
       break;
     case Mode::kSRGBToLinear:
-      color = {srgb_to_linear(color.fR), srgb_to_linear(color.fG), srgb_to_linear(color.fB),
-               color.fA};
+      color = {
+          srgb_to_linear(color.fR), srgb_to_linear(color.fG), srgb_to_linear(color.fB), color.fA};
       break;
   }
   return color.premul();

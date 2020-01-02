@@ -8,6 +8,7 @@
 #include "src/gpu/ccpr/GrGSCoverageProcessor.h"
 
 #include "src/gpu/GrMesh.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #include "src/gpu/glsl/GrGLSLVertexGeoBuilder.h"
 
 using InputType = GrGLSLGeometryBuilder::InputType;
@@ -24,8 +25,8 @@ class GrGSCoverageProcessor::Impl : public GrGLSLGeometryProcessor {
 
   void setData(
       const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor&,
-      FPCoordTransformIter&& transformIter) final {
-    this->setTransformDataHelper(SkMatrix::I(), pdman, &transformIter);
+      const CoordTransformRange& transformRange) final {
+    this->setTransformDataHelper(SkMatrix::I(), pdman, transformRange);
   }
 
   void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) final {
@@ -40,7 +41,7 @@ class GrGSCoverageProcessor::Impl : public GrGLSLGeometryProcessor {
     this->emitGeometryShader(proc, varyingHandler, args.fGeomBuilder, args.fRTAdjustName);
     varyingHandler->emitAttributes(proc);
     varyingHandler->setNoPerspective();
-    SkASSERT(!args.fFPCoordTransformHandler->nextCoordTransform());
+    SkASSERT(!*args.fFPCoordTransformHandler);
 
     // Fragment shader.
     GrGLSLFPFragmentBuilder* f = args.fFragBuilder;
@@ -464,8 +465,7 @@ void GrGSCoverageProcessor::draw(
   // and does edge AA. The second pass does touch up on corner pixels.
   for (int i = 0; i < 2; ++i) {
     fSubpass = (Subpass)i;
-    this->GrCCCoverageProcessor::draw(
-        flushState, pipeline, scissorRects, meshes, meshCount, drawBounds);
+    INHERITED::draw(flushState, pipeline, scissorRects, meshes, meshCount, drawBounds);
   }
 }
 

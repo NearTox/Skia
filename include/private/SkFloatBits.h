@@ -17,7 +17,7 @@
     int. This also converts -0 (0x80000000) to 0. Doing this to a float allows
     it to be compared using normal C operators (<, <=, etc.)
 */
-static constexpr inline int32_t SkSignBitTo2sCompliment(int32_t x) {
+static inline int32_t SkSignBitTo2sCompliment(int32_t x) {
   if (x < 0) {
     x &= 0x7FFFFFFF;
     x = -x;
@@ -28,7 +28,7 @@ static constexpr inline int32_t SkSignBitTo2sCompliment(int32_t x) {
 /** Convert a 2s compliment int to a sign-bit (i.e. int interpreted as float).
     This undoes the result of SkSignBitTo2sCompliment().
  */
-static constexpr inline int32_t Sk2sComplimentToSignBit(int32_t x) {
+static inline int32_t Sk2sComplimentToSignBit(int32_t x) {
   int sign = x >> 31;
   // make x positive
   x = (x ^ sign) - sign;
@@ -43,15 +43,15 @@ union SkFloatIntUnion {
 };
 
 // Helper to see a float as its bit pattern (w/o aliasing warnings)
-static constexpr inline int32_t SkFloat2Bits(float x) {
-  SkFloatIntUnion data{};
+static inline int32_t SkFloat2Bits(float x) {
+  SkFloatIntUnion data;
   data.fFloat = x;
   return data.fSignBitInt;
 }
 
 // Helper to see a bit pattern as a float (w/o aliasing warnings)
-static constexpr inline float SkBits2Float(int32_t floatAsBits) {
-  SkFloatIntUnion data{};
+static inline float SkBits2Float(int32_t floatAsBits) {
+  SkFloatIntUnion data;
   data.fSignBitInt = floatAsBits;
   return data.fFloat;
 }
@@ -59,11 +59,11 @@ static constexpr inline float SkBits2Float(int32_t floatAsBits) {
 constexpr int32_t gFloatBits_exponent_mask = 0x7F800000;
 constexpr int32_t gFloatBits_matissa_mask = 0x007FFFFF;
 
-static constexpr inline bool SkFloatBits_IsFinite(int32_t bits) {
+static inline bool SkFloatBits_IsFinite(int32_t bits) {
   return (bits & gFloatBits_exponent_mask) != gFloatBits_exponent_mask;
 }
 
-static constexpr inline bool SkFloatBits_IsInf(int32_t bits) {
+static inline bool SkFloatBits_IsInf(int32_t bits) {
   return ((bits & gFloatBits_exponent_mask) == gFloatBits_exponent_mask) &&
          (bits & gFloatBits_matissa_mask) == 0;
 }
@@ -73,14 +73,14 @@ static constexpr inline bool SkFloatBits_IsInf(int32_t bits) {
     not return the int equivalent of the float, just something cheaper for
     compares-only.
  */
-static constexpr inline int32_t SkFloatAs2sCompliment(float x) {
+static inline int32_t SkFloatAs2sCompliment(float x) {
   return SkSignBitTo2sCompliment(SkFloat2Bits(x));
 }
 
 /** Return the 2s compliment int as a float. This undos the result of
     SkFloatAs2sCompliment
  */
-static constexpr inline float Sk2sComplimentAsFloat(int32_t x) {
+static inline float Sk2sComplimentAsFloat(int32_t x) {
   return SkBits2Float(Sk2sComplimentToSignBit(x));
 }
 

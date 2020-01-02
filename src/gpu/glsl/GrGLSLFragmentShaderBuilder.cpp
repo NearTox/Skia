@@ -62,6 +62,9 @@ GrGLSLFragmentShaderBuilder::GrGLSLFragmentShaderBuilder(GrGLSLProgramBuilder* p
 }
 
 SkString GrGLSLFragmentShaderBuilder::ensureCoords2D(const GrShaderVar& coords) {
+  if (!coords.getName().size()) {
+    return SkString("_coords");
+  }
   if (kFloat3_GrSLType != coords.getType() && kHalf3_GrSLType != coords.getType()) {
     SkASSERT(kFloat2_GrSLType == coords.getType() || kHalf2_GrSLType == coords.getType());
     return coords.getName();
@@ -84,7 +87,7 @@ const char* GrGLSLFragmentShaderBuilder::sampleOffsets() {
 void GrGLSLFragmentShaderBuilder::maskOffMultisampleCoverage(
     const char* mask, ScopeFlags scopeFlags) {
   const GrShaderCaps& shaderCaps = *fProgramBuilder->shaderCaps();
-  if (!shaderCaps.sampleVariablesSupport() && !shaderCaps.sampleVariablesStencilSupport()) {
+  if (!shaderCaps.sampleMaskSupport()) {
     SkDEBUGFAIL("Attempted to mask sample coverage without support.");
     return;
   }
@@ -95,15 +98,15 @@ void GrGLSLFragmentShaderBuilder::maskOffMultisampleCoverage(
   if (!fHasModifiedSampleMask) {
     fHasModifiedSampleMask = true;
     if (ScopeFlags::kTopLevel != scopeFlags) {
-      this->codePrependf("gl_SampleMask[0] = ~0;");
+      this->codePrependf("sk_SampleMask[0] = ~0;");
     }
     if (!(ScopeFlags::kInsideLoop & scopeFlags)) {
-      this->codeAppendf("gl_SampleMask[0] = (%s);", mask);
+      this->codeAppendf("sk_SampleMask[0] = (%s);", mask);
       return;
     }
   }
 
-  this->codeAppendf("gl_SampleMask[0] &= (%s);", mask);
+  this->codeAppendf("sk_SampleMask[0] &= (%s);", mask);
 }
 
 void GrGLSLFragmentShaderBuilder::applyFnToMultisampleMask(
@@ -150,25 +153,25 @@ SkString GrGLSLFPFragmentBuilder::writeProcessorFunction(
     GrGLSLFragmentProcessor* fp, GrGLSLFragmentProcessor::EmitArgs& args) {
   this->onBeforeChildProcEmitCode();
   this->nextStage();
-  if (!args.fFp.computeLocalCoordsInVertexShader() && args.fTransformedCoords.count() > 0) {
+  if (!args.fFp.coordTransformsApplyToLocalCoords() && args.fTransformedCoords.count() > 0) {
     // we currently only support overriding a single coordinate pair
     SkASSERT(args.fTransformedCoords.count() == 1);
     const GrGLSLProgramDataManager::UniformHandle& mat = args.fTransformedCoords[0].fUniformMatrix;
     if (mat.isValid()) {
       args.fUniformHandler->updateUniformVisibility(mat, kFragment_GrShaderFlag);
       this->codeAppendf(
-          "_coords = (float3(_coords, 1) * %s).xy;\n",
+          "_coords = (%s * float3(_coords, 1)).xy;\n",
           args.fTransformedCoords[0].fMatrixCode.c_str());
     }
   }
   this->codeAppendf("half4 %s;\n", args.fOutputColor);
   fp->emitCode(args);
   this->codeAppendf("return %s;\n", args.fOutputColor);
-  GrShaderVar params[] = {GrShaderVar(args.fInputColor, kHalf4_GrSLType),
-                          GrShaderVar("_coords", kFloat2_GrSLType)};
+  GrShaderVar params[] = {
+      GrShaderVar(args.fInputColor, kHalf4_GrSLType), GrShaderVar("_coords", kFloat2_GrSLType)};
   SkString result;
   this->emitFunction(
-      kHalf4_GrSLType, "stage", args.fFp.computeLocalCoordsInVertexShader() ? 1 : 2, params,
+      kHalf4_GrSLType, "stage", args.fFp.coordTransformsApplyToLocalCoords() ? 1 : 2, params,
       this->code().c_str(), &result);
   this->deleteStage();
   this->onAfterChildProcEmitCode();
@@ -176,9 +179,9 @@ SkString GrGLSLFPFragmentBuilder::writeProcessorFunction(
 }
 
 const char* GrGLSLFragmentShaderBuilder::dstColor() {
-  SkDEBUGCODE(fHasReadDstColorThisStage_DebugOnly = true);
+  SkDEBUGCODE(fHasReadDstColorThisStage_DebugOnly = true;)
 
-  const GrShaderCaps* shaderCaps = fProgramBuilder->shaderCaps();
+      const GrShaderCaps* shaderCaps = fProgramBuilder->shaderCaps();
   if (shaderCaps->fbFetchSupport()) {
     this->addFeature(
         1 << kFramebufferFetch_GLSLPrivateFeature, shaderCaps->fbFetchExtensionString());
@@ -278,7 +281,9 @@ void GrGLSLFragmentShaderBuilder::onFinalize() {
 
   if (CustomFeatures::kSampleLocations & fProgramBuilder->processorFeatures()) {
     const SkTArray<SkPoint>& sampleLocations = fProgramBuilder->getSampleLocations();
-    this->definitions().append("const float2 _sampleOffsets[] = float2[](");
+    this->definitions().appendf(
+        "const float2 _sampleOffsets[%i] = float2[%i](", sampleLocations.count(),
+        sampleLocations.count());
     for (int i = 0; i < sampleLocations.count(); ++i) {
       SkPoint offset = sampleLocations[i] - SkPoint::Make(.5f, .5f);
       if (kBottomLeft_GrSurfaceOrigin == this->getSurfaceOrigin()) {

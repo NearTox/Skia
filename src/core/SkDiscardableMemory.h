@@ -15,7 +15,7 @@
  *  Interface for discardable memory. Implementation is provided by the
  *  embedder.
  */
-class SK_API SkDiscardableMemory {
+class SK_SPI SkDiscardableMemory {
  public:
   /**
    *  Factory method that creates, initializes and locks an SkDiscardableMemory
@@ -37,7 +37,7 @@ class SK_API SkDiscardableMemory {
 
   /** Must not be called while locked.
    */
-  virtual ~SkDiscardableMemory() = default;
+  virtual ~SkDiscardableMemory() {}
 
   /**
    * Locks the memory, prevent it from being discarded. Once locked. you may

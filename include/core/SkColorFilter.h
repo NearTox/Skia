@@ -20,7 +20,12 @@ class SkBitmap;
 class SkColorMatrix;
 class SkColorSpace;
 struct SkStageRec;
-class SkString;
+
+namespace skvm {
+class Builder;
+struct F32;
+struct Uniforms;
+}  // namespace skvm
 
 /**
  *  ColorFilters are optional objects in the drawing pipeline. When present in
@@ -54,6 +59,10 @@ class SK_API SkColorFilter : public SkFlattenable {
 
   bool appendStages(const SkStageRec& rec, bool shaderIsOpaque) const;
 
+  virtual bool program(
+      skvm::Builder*, SkColorSpace* dstCS, skvm::Uniforms* uniforms, skvm::F32* r, skvm::F32* g,
+      skvm::F32* b, skvm::F32* a) const;
+
   enum Flags {
     /** If set the filter methods will not change the alpha channel of the colors.
      */
@@ -62,7 +71,7 @@ class SK_API SkColorFilter : public SkFlattenable {
 
   /** Returns the flags for this filter. Override in subclasses to return custom flags.
    */
-  virtual uint32_t getFlags() const noexcept { return 0; }
+  virtual uint32_t getFlags() const { return 0; }
 
   SkColor filterColor(SkColor) const;
 
@@ -103,7 +112,7 @@ class SK_API SkColorFilter : public SkFlattenable {
 
   static void RegisterFlattenables();
 
-  static SkFlattenable::Type GetFlattenableType() noexcept { return kSkColorFilter_Type; }
+  static SkFlattenable::Type GetFlattenableType() { return kSkColorFilter_Type; }
 
   SkFlattenable::Type getFlattenableType() const override { return kSkColorFilter_Type; }
 

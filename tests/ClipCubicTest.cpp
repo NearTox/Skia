@@ -71,10 +71,11 @@ static SkPoint* SetCurve(
 }
 
 DEF_TEST(ClipCubic, reporter) {
-  static SkPoint crv[4] = {{SkIntToScalar(0), SkIntToScalar(0)},
-                           {SkIntToScalar(2), SkIntToScalar(3)},
-                           {SkIntToScalar(1), SkIntToScalar(10)},
-                           {SkIntToScalar(4), SkIntToScalar(12)}};
+  static SkPoint crv[4] = {
+      {SkIntToScalar(0), SkIntToScalar(0)},
+      {SkIntToScalar(2), SkIntToScalar(3)},
+      {SkIntToScalar(1), SkIntToScalar(10)},
+      {SkIntToScalar(4), SkIntToScalar(12)}};
 
   SkCubicClipper clipper;
   SkPoint clipped[4], shouldbe[4];
@@ -173,7 +174,6 @@ DEF_TEST(test_fuzz_crbug_698714, reporter) {
   SkPaint paint;
   paint.setAntiAlias(true);
   SkPath path;
-  path.setFillType(SkPath::kWinding_FillType);
   path.moveTo(SkBits2Float(0x00000000), SkBits2Float(0x00000000));  // 0,0
   path.lineTo(SkBits2Float(0x43434343), SkBits2Float(0x43430143));  // 195.263f, 195.005f
   path.lineTo(SkBits2Float(0x43434343), SkBits2Float(0x43434343));  // 195.263f, 195.263f

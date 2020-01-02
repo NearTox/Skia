@@ -46,7 +46,7 @@ class GrTexturePriv {
   }
 
   static void ComputeScratchKey(
-      GrPixelConfig config, int width, int height, GrRenderable, int sampleCnt, GrMipMapped,
+      GrPixelConfig config, SkISize dimensions, GrRenderable, int sampleCnt, GrMipMapped,
       GrProtected, GrScratchKey* key);
 
  private:

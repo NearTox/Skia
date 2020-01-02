@@ -17,12 +17,12 @@ class DawnTestContext : public TestContext {
  public:
   virtual GrBackend backend() override { return GrBackendApi::kDawn; }
 
-  const dawn::Device& getDevice() { return fDevice; }
+  const wgpu::Device& getDevice() { return fDevice; }
 
  protected:
-  DawnTestContext(const dawn::Device& device) : fDevice(device) {}
+  DawnTestContext(const wgpu::Device& device) : fDevice(device) {}
 
-  dawn::Device fDevice;
+  wgpu::Device fDevice;
 
  private:
   typedef TestContext INHERITED;

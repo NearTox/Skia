@@ -13,7 +13,7 @@
 #include "src/gpu/GrRecordingContextPriv.h"
 
 #define ASSERT_SINGLE_OWNER \
-  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner()))
+  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner());)
 #define RETURN_FALSE_IF_ABANDONED               \
   if (this->drawingManager()->wasAbandoned()) { \
     return false;                               \
@@ -21,10 +21,11 @@
 
 GrTextureContext::GrTextureContext(
     GrRecordingContext* context, sk_sp<GrTextureProxy> textureProxy, GrColorType colorType,
-    SkAlphaType alphaType, sk_sp<SkColorSpace> colorSpace)
-    : GrSurfaceContext(context, colorType, alphaType, std::move(colorSpace)),
+    SkAlphaType alphaType, sk_sp<SkColorSpace> colorSpace, GrSurfaceOrigin origin,
+    GrSwizzle texSwizzle)
+    : GrSurfaceContext(context, colorType, alphaType, std::move(colorSpace), origin, texSwizzle),
       fTextureProxy(std::move(textureProxy)) {
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
 }
 
 #ifdef SK_DEBUG
@@ -36,7 +37,7 @@ void GrTextureContext::validate() const {
 }
 #endif
 
-GrTextureContext::~GrTextureContext() { ASSERT_SINGLE_OWNER; }
+GrTextureContext::~GrTextureContext(){ASSERT_SINGLE_OWNER}
 
 GrRenderTargetProxy* GrTextureContext::asRenderTargetProxy() {
   // If the proxy can return an RTProxy it should've been wrapped in a RTContext

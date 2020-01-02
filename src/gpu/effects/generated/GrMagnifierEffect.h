@@ -17,7 +17,7 @@
 class GrMagnifierEffect : public GrFragmentProcessor {
  public:
   static std::unique_ptr<GrFragmentProcessor> Make(
-      sk_sp<GrTextureProxy> src, SkIRect bounds, SkRect srcRect, float xInvZoom, float yInvZoom,
+      sk_sp<GrSurfaceProxy> src, SkIRect bounds, SkRect srcRect, float xInvZoom, float yInvZoom,
       float xInvInset, float yInvInset) {
     return std::unique_ptr<GrFragmentProcessor>(
         new GrMagnifierEffect(src, bounds, srcRect, xInvZoom, yInvZoom, xInvInset, yInvInset));
@@ -36,7 +36,7 @@ class GrMagnifierEffect : public GrFragmentProcessor {
 
  private:
   GrMagnifierEffect(
-      sk_sp<GrTextureProxy> src, SkIRect bounds, SkRect srcRect, float xInvZoom, float yInvZoom,
+      sk_sp<GrSurfaceProxy> src, SkIRect bounds, SkRect srcRect, float xInvZoom, float yInvZoom,
       float xInvInset, float yInvInset)
       : INHERITED(kGrMagnifierEffect_ClassID, kNone_OptimizationFlags),
         srcCoordTransform(SkMatrix::I(), src.get()),

@@ -59,8 +59,8 @@ static void test_strokerect(skiatest::Reporter* reporter) {
   SkRect outer(r);
   outer.outset(width / 2, width / 2);
 
-  static const SkPaint::Join joins[] = {SkPaint::kMiter_Join, SkPaint::kRound_Join,
-                                        SkPaint::kBevel_Join};
+  static const SkPaint::Join joins[] = {
+      SkPaint::kMiter_Join, SkPaint::kRound_Join, SkPaint::kBevel_Join};
 
   for (size_t i = 0; i < SK_ARRAY_COUNT(joins); ++i) {
     paint.setStrokeJoin(joins[i]);
@@ -165,7 +165,6 @@ static void test_big_stroke(skiatest::Reporter* reporter) {
   paint.setStrokeWidth(1.49679073e+10f);
 
   SkPath path;
-  path.setFillType(SkPath::kWinding_FillType);
   path.moveTo(SkBits2Float(0x46380000), SkBits2Float(0xc6380000));  // 11776, -11776
   path.lineTo(SkBits2Float(0x46a00000), SkBits2Float(0xc6a00000));  // 20480, -20480
   path.lineTo(SkBits2Float(0x468c0000), SkBits2Float(0xc68c0000));  // 17920, -17920

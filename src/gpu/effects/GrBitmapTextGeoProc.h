@@ -8,6 +8,7 @@
 #ifndef GrBitmapTextGeoProc_DEFINED
 #define GrBitmapTextGeoProc_DEFINED
 
+#include "src/core/SkArenaAlloc.h"
 #include "src/gpu/GrGeometryProcessor.h"
 #include "src/gpu/GrProcessor.h"
 
@@ -23,12 +24,12 @@ class GrBitmapTextGeoProc : public GrGeometryProcessor {
  public:
   static constexpr int kMaxTextures = 4;
 
-  static sk_sp<GrGeometryProcessor> Make(
-      const GrShaderCaps& caps, const SkPMColor4f& color, bool wideColor,
+  static GrGeometryProcessor* Make(
+      SkArenaAlloc* arena, const GrShaderCaps& caps, const SkPMColor4f& color, bool wideColor,
       const sk_sp<GrTextureProxy>* proxies, int numActiveProxies, const GrSamplerState& p,
       GrMaskFormat format, const SkMatrix& localMatrix, bool usesW) {
-    return sk_sp<GrGeometryProcessor>(new GrBitmapTextGeoProc(
-        caps, color, wideColor, proxies, numActiveProxies, p, format, localMatrix, usesW));
+    return arena->make<GrBitmapTextGeoProc>(
+        caps, color, wideColor, proxies, numActiveProxies, p, format, localMatrix, usesW);
   }
 
   ~GrBitmapTextGeoProc() override {}
@@ -43,7 +44,7 @@ class GrBitmapTextGeoProc : public GrGeometryProcessor {
   bool hasVertexColor() const { return fInColor.isInitialized(); }
   const SkMatrix& localMatrix() const { return fLocalMatrix; }
   bool usesW() const { return fUsesW; }
-  const SkISize& atlasSize() const { return fAtlasSize; }
+  const SkISize& atlasDimensions() const { return fAtlasDimensions; }
 
   void addNewProxies(const sk_sp<GrTextureProxy>*, int numActiveProxies, const GrSamplerState&);
 
@@ -52,6 +53,8 @@ class GrBitmapTextGeoProc : public GrGeometryProcessor {
   GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps& caps) const override;
 
  private:
+  friend class ::SkArenaAlloc;  // for access to ctor
+
   GrBitmapTextGeoProc(
       const GrShaderCaps&, const SkPMColor4f&, bool wideColor, const sk_sp<GrTextureProxy>* proxies,
       int numProxies, const GrSamplerState& params, GrMaskFormat format,
@@ -62,7 +65,7 @@ class GrBitmapTextGeoProc : public GrGeometryProcessor {
   SkPMColor4f fColor;
   SkMatrix fLocalMatrix;
   bool fUsesW;
-  SkISize fAtlasSize;  // size for all textures used with fTextureSamplers[].
+  SkISize fAtlasDimensions;  // dimensions for all textures used with fTextureSamplers[].
   TextureSampler fTextureSamplers[kMaxTextures];
   Attribute fInPosition;
   Attribute fInColor;

@@ -189,7 +189,7 @@ int ByteCodeGenerator::StackUsage(ByteCodeInstruction inst, int count_) {
     }
     ~CountValue() { SkASSERT(used || val == ByteCodeGenerator::kUnusedStackCount); }
     int val;
-    SkDEBUGCODE(bool used = false);
+    SkDEBUGCODE(bool used = false;)
   } count = {count_};
 
   switch (inst) {
@@ -982,8 +982,16 @@ void ByteCodeGenerator::writeIntrinsicCall(const FunctionCall& c) {
 }
 
 void ByteCodeGenerator::writeFunctionCall(const FunctionCall& f) {
-  // Builtins have simple signatures...
-  if (f.fFunction.fBuiltin) {
+  // Find the index of the function we're calling. We explicitly do not allow calls to functions
+  // before they're defined. This is an easy-to-understand rule that prevents recursion.
+  int idx = -1;
+  for (size_t i = 0; i < fFunctions.size(); ++i) {
+    if (f.fFunction.matches(fFunctions[i]->fDeclaration)) {
+      idx = i;
+      break;
+    }
+  }
+  if (idx == -1) {
     for (const auto& arg : f.fArguments) {
       this->writeExpression(*arg);
     }
@@ -991,18 +999,10 @@ void ByteCodeGenerator::writeFunctionCall(const FunctionCall& f) {
     return;
   }
 
-  // Find the index of the function we're calling. We explicitly do not allow calls to functions
-  // before they're defined. This is an easy-to-understand rule that prevents recursion.
-  size_t idx;
-  for (idx = 0; idx < fFunctions.size(); ++idx) {
-    if (f.fFunction.matches(fFunctions[idx]->fDeclaration)) {
-      break;
-    }
-  }
   if (idx > 255) {
     fErrors.error(f.fOffset, "Function count limit exceeded");
     return;
-  } else if (idx >= fFunctions.size()) {
+  } else if (idx >= (int)fFunctions.size()) {
     fErrors.error(f.fOffset, "Call to undefined function");
     return;
   }

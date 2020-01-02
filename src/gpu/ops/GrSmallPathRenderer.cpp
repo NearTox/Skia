@@ -300,7 +300,7 @@ class GrSmallPathRenderer::SmallPathOp final : public GrMeshDrawOp {
   struct FlushInfo {
     sk_sp<const GrBuffer> fVertexBuffer;
     sk_sp<const GrBuffer> fIndexBuffer;
-    sk_sp<GrGeometryProcessor> fGeometryProcessor;
+    GrGeometryProcessor* fGeometryProcessor;
     GrPipeline::FixedDynamicState* fFixedDynamicState;
     int fVertexOffset;
     int fInstancesToFlush;
@@ -345,8 +345,8 @@ class GrSmallPathRenderer::SmallPathOp final : public GrMeshDrawOp {
         matrix = &SkMatrix::I();
       }
       flushInfo.fGeometryProcessor = GrDistanceFieldPathGeoProc::Make(
-          *target->caps().shaderCaps(), *matrix, fWideColor, fAtlas->getProxies(),
-          fAtlas->numActivePages(), GrSamplerState::ClampBilerp(), flags);
+          target->allocator(), *target->caps().shaderCaps(), *matrix, fWideColor,
+          fAtlas->getProxies(), fAtlas->numActivePages(), GrSamplerState::ClampBilerp(), flags);
     } else {
       SkMatrix invert;
       if (fHelper.usesLocalCoords()) {
@@ -356,9 +356,9 @@ class GrSmallPathRenderer::SmallPathOp final : public GrMeshDrawOp {
       }
 
       flushInfo.fGeometryProcessor = GrBitmapTextGeoProc::Make(
-          *target->caps().shaderCaps(), this->color(), fWideColor, fAtlas->getProxies(),
-          fAtlas->numActivePages(), GrSamplerState::ClampNearest(), kA8_GrMaskFormat, invert,
-          false);
+          target->allocator(), *target->caps().shaderCaps(), this->color(), fWideColor,
+          fAtlas->getProxies(), fAtlas->numActivePages(), GrSamplerState::ClampNearest(),
+          kA8_GrMaskFormat, invert, false);
     }
 
     // allocate vertices
@@ -366,13 +366,14 @@ class GrSmallPathRenderer::SmallPathOp final : public GrMeshDrawOp {
 
     // We need to make sure we don't overflow a 32 bit int when we request space in the
     // makeVertexSpace call below.
-    if (instanceCount > SK_MaxS32 / kVerticesPerQuad) {
+    if (instanceCount > SK_MaxS32 / GrResourceProvider::NumVertsPerNonAAQuad()) {
       return;
     }
     GrVertexWriter vertices{target->makeVertexSpace(
-        kVertexStride, kVerticesPerQuad * instanceCount, &flushInfo.fVertexBuffer,
-        &flushInfo.fVertexOffset)};
-    flushInfo.fIndexBuffer = target->resourceProvider()->refQuadIndexBuffer();
+        kVertexStride, GrResourceProvider::NumVertsPerNonAAQuad() * instanceCount,
+        &flushInfo.fVertexBuffer, &flushInfo.fVertexOffset)};
+
+    flushInfo.fIndexBuffer = target->resourceProvider()->refNonAAQuadIndexBuffer();
     if (!vertices.fPtr || !flushInfo.fIndexBuffer) {
       SkDebugf("Could not allocate vertices\n");
       return;
@@ -743,7 +744,7 @@ class GrSmallPathRenderer::SmallPathOp final : public GrMeshDrawOp {
   }
 
   void flush(GrMeshDrawOp::Target* target, FlushInfo* flushInfo) const {
-    GrGeometryProcessor* gp = flushInfo->fGeometryProcessor.get();
+    GrGeometryProcessor* gp = flushInfo->fGeometryProcessor;
     int numAtlasTextures = SkToInt(fAtlas->numActivePages());
     auto proxies = fAtlas->getProxies();
     if (gp->numTextureSamplers() != numAtlasTextures) {
@@ -766,15 +767,16 @@ class GrSmallPathRenderer::SmallPathOp final : public GrMeshDrawOp {
 
     if (flushInfo->fInstancesToFlush) {
       GrMesh* mesh = target->allocMesh(GrPrimitiveType::kTriangles);
-      int maxInstancesPerDraw =
-          static_cast<int>(flushInfo->fIndexBuffer->size() / sizeof(uint16_t) / 6);
       mesh->setIndexedPatterned(
-          flushInfo->fIndexBuffer, kIndicesPerQuad, kVerticesPerQuad, flushInfo->fInstancesToFlush,
-          maxInstancesPerDraw);
+          flushInfo->fIndexBuffer, GrResourceProvider::NumIndicesPerNonAAQuad(),
+          GrResourceProvider::NumVertsPerNonAAQuad(), flushInfo->fInstancesToFlush,
+          GrResourceProvider::MaxNumNonAAQuads());
       mesh->setVertexData(flushInfo->fVertexBuffer, flushInfo->fVertexOffset);
       target->recordDraw(
-          flushInfo->fGeometryProcessor, mesh, 1, flushInfo->fFixedDynamicState, nullptr);
-      flushInfo->fVertexOffset += kVerticesPerQuad * flushInfo->fInstancesToFlush;
+          flushInfo->fGeometryProcessor, mesh, 1, flushInfo->fFixedDynamicState, nullptr,
+          GrPrimitiveType::kTriangles);
+      flushInfo->fVertexOffset +=
+          GrResourceProvider::NumVertsPerNonAAQuad() * flushInfo->fInstancesToFlush;
       flushInfo->fInstancesToFlush = 0;
     }
   }

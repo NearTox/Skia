@@ -8,6 +8,7 @@
 #ifndef GrFillRRectOp_DEFINED
 #define GrFillRRectOp_DEFINED
 
+#include "src/gpu/GrProgramInfo.h"
 #include "src/gpu/ops/GrDrawOp.h"
 
 class GrRecordingContext;
@@ -20,17 +21,29 @@ class GrFillRRectOp : public GrDrawOp {
       GrRecordingContext*, GrAAType, const SkMatrix& viewMatrix, const SkRRect&, const GrCaps&,
       GrPaint&&);
 
-  const char* name() const override { return "GrFillRRectOp"; }
-  FixedFunctionFlags fixedFunctionFlags() const override {
+  const char* name() const final { return "GrFillRRectOp"; }
+
+  FixedFunctionFlags fixedFunctionFlags() const final {
     return (GrAAType::kMSAA == fAAType) ? FixedFunctionFlags::kUsesHWAA : FixedFunctionFlags::kNone;
   }
   GrProcessorSet::Analysis finalize(
-      const GrCaps&, const GrAppliedClip*, bool hasMixedSampledCoverage, GrClampType) override;
-  CombineResult onCombineIfPossible(GrOp*, const GrCaps&) override;
-  void visitProxies(const VisitProxyFunc& fn) const override { fProcessors.visitProxies(fn); }
-  void onPrepare(GrOpFlushState*) override;
+      const GrCaps&, const GrAppliedClip*, bool hasMixedSampledCoverage, GrClampType) final;
+  CombineResult onCombineIfPossible(GrOp*, const GrCaps&) final;
+  void visitProxies(const VisitProxyFunc& fn) const override {
+    if (fProgramInfo) {
+      fProgramInfo->visitProxies(fn);
+    } else {
+      fProcessors.visitProxies(fn);
+    }
+  }
 
-  void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
+  void onPrePrepare(
+      GrRecordingContext*, const GrSurfaceProxyView*, GrAppliedClip*,
+      const GrXferProcessor::DstProxyView&) final;
+
+  void onPrepare(GrOpFlushState*) final;
+
+  void onExecute(GrOpFlushState*, const SkRect& chainBounds) final;
 
  private:
   enum class Flags {
@@ -66,6 +79,11 @@ class GrFillRRectOp : public GrDrawOp {
 
   void writeInstanceData() {}  // Halt condition.
 
+  // Create a GrProgramInfo object in the provided arena
+  GrProgramInfo* createProgramInfo(
+      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* dstView, GrAppliedClip&&,
+      const GrXferProcessor::DstProxyView&);
+
   const GrAAType fAAType;
   const SkPMColor4f fOriginalColor;
   const SkRect fLocalRect;
@@ -79,8 +97,12 @@ class GrFillRRectOp : public GrDrawOp {
   sk_sp<const GrBuffer> fInstanceBuffer;
   sk_sp<const GrBuffer> fVertexBuffer;
   sk_sp<const GrBuffer> fIndexBuffer;
-  int fBaseInstance;
+  int fBaseInstance = 0;
   int fIndexCount = 0;
+
+  // If this op is prePrepared the created programInfo will be stored here from use in
+  // onExecute. In the prePrepared case it will have been stored in the record-time arena.
+  GrProgramInfo* fProgramInfo = nullptr;
 
   friend class GrOpMemoryPool;
 };

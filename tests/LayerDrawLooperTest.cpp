@@ -32,7 +32,7 @@ class FakeDevice : public SkBitmapDevice {
             make_bm(100, 100), SkSurfaceProps(0, kUnknown_SkPixelGeometry), nullptr, nullptr) {}
 
   void drawRect(const SkRect& r, const SkPaint& paint) override {
-    fLastMatrix = this->ctm();
+    fLastMatrix = this->localToDevice();
     this->INHERITED::drawRect(r, paint);
   }
 

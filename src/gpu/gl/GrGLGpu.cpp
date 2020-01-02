@@ -862,9 +862,9 @@ bool GrGLGpu::onTransferPixelsTo(
 
   SkDEBUGCODE(SkIRect subRect = SkIRect::MakeXYWH(left, top, width, height);
               SkIRect bounds = SkIRect::MakeWH(texture->width(), texture->height());
-              SkASSERT(bounds.contains(subRect)));
+              SkASSERT(bounds.contains(subRect));)
 
-  size_t bpp = GrColorTypeBytesPerPixel(bufferColorType);
+      size_t bpp = GrColorTypeBytesPerPixel(bufferColorType);
   const size_t trimRowBytes = width * bpp;
   const void* pixels = (void*)offset;
   if (width < 0 || height < 0) {
@@ -928,9 +928,10 @@ bool GrGLGpu::uploadTexData(
   SkASSERT(this->glCaps().isFormatTexturable(textureFormat));
   SkDEBUGCODE(SkIRect subRect = SkIRect::MakeXYWH(left, top, width, height);
               SkIRect bounds = SkIRect::MakeWH(texWidth, texHeight);
-              SkASSERT(bounds.contains(subRect)));
-  SkASSERT(
-      1 == mipLevelCount || (0 == left && 0 == top && width == texWidth && height == texHeight));
+              SkASSERT(bounds.contains(subRect));)
+      SkASSERT(
+          1 == mipLevelCount ||
+          (0 == left && 0 == top && width == texWidth && height == texHeight));
 
   this->unbindCpuToGpuXferBuffer();
 
@@ -997,7 +998,7 @@ bool GrGLGpu::uploadTexData(
 }
 
 bool GrGLGpu::uploadCompressedTexData(
-    GrGLFormat format, SkImage::CompressionType compressionType, const SkISize& size,
+    GrGLFormat format, SkImage::CompressionType compressionType, const SkISize& dimensions,
     GrGLenum target, const void* data) {
   SkASSERT(format != GrGLFormat::kUnknown);
   const GrGLCaps& caps = this->glCaps();
@@ -1014,13 +1015,14 @@ bool GrGLGpu::uploadCompressedTexData(
 
   // Make sure that the width and height that we pass to OpenGL
   // is a multiple of the block size.
-  size_t dataSize = GrCompressedDataSize(compressionType, size.width(), size.height());
+  size_t dataSize = GrCompressedDataSize(compressionType, dimensions.width(), dimensions.height());
 
   if (useTexStorage) {
     // We never resize or change formats of textures.
     GL_ALLOC_CALL(
         this->glInterface(),
-        TexStorage2D(target, kMipLevelCount, internalFormat, size.width(), size.height()));
+        TexStorage2D(
+            target, kMipLevelCount, internalFormat, dimensions.width(), dimensions.height()));
     GrGLenum error = CHECK_ALLOC_ERROR(this->glInterface());
     if (error != GR_GL_NO_ERROR) {
       return false;
@@ -1030,13 +1032,13 @@ bool GrGLGpu::uploadCompressedTexData(
         0,  // level
         0,  // left
         0,  // top
-        size.width(), size.height(), internalFormat, SkToInt(dataSize), data));
+        dimensions.width(), dimensions.height(), internalFormat, SkToInt(dataSize), data));
   } else {
     GL_ALLOC_CALL(
         this->glInterface(), CompressedTexImage2D(
                                  target,
                                  0,  // level
-                                 internalFormat, size.width(), size.height(),
+                                 internalFormat, dimensions.width(), dimensions.height(),
                                  0,  // border
                                  SkToInt(dataSize), data));
 
@@ -1227,9 +1229,9 @@ sk_sp<GrTexture> GrGLGpu::onCreateTexture(
       &initialState, GrGLTextureParameters::NonsamplerState(), fResetTimestampForTextureParameters);
   if (levelClearMask) {
     GrGLenum externalFormat, externalType;
-    size_t bpp;
-    this->glCaps().getTexSubImageZeroFormatTypeAndBpp(
-        texDesc.fFormat, &externalFormat, &externalType, &bpp);
+    GrColorType colorType;
+    this->glCaps().getTexSubImageDefaultFormatTypeAndColorType(
+        texDesc.fFormat, &externalFormat, &externalType, &colorType);
     if (this->glCaps().clearTextureSupport()) {
       for (int i = 0; i < mipLevelCount; ++i) {
         if (levelClearMask & (1U << i)) {
@@ -1261,6 +1263,7 @@ sk_sp<GrTexture> GrGLGpu::onCreateTexture(
           // Levels only get smaller as we proceed. Once we create a zeros use it for all
           // smaller levels that need clearing.
           if (!zeros) {
+            size_t bpp = GrColorTypeBytesPerPixel(colorType);
             size_t size = levelWidth * levelHeight * bpp;
             zeros.reset(new char[size]());
           }
@@ -1389,7 +1392,7 @@ int GrGLGpu::getCompatibleStencilIndex(GrGLFormat format) {
 }
 
 GrGLuint GrGLGpu::createCompressedTexture2D(
-    const SkISize& size, GrGLFormat format, SkImage::CompressionType compression,
+    const SkISize& dimensions, GrGLFormat format, SkImage::CompressionType compression,
     GrGLTextureParameters::SamplerOverriddenState* initialState, const void* data) {
   if (format == GrGLFormat::kUnknown) {
     return 0;
@@ -1404,7 +1407,7 @@ GrGLuint GrGLGpu::createCompressedTexture2D(
 
   *initialState = set_initial_texture_params(this->glInterface(), GR_GL_TEXTURE_2D);
 
-  if (!this->uploadCompressedTexData(format, compression, size, GR_GL_TEXTURE_2D, data)) {
+  if (!this->uploadCompressedTexData(format, compression, dimensions, GR_GL_TEXTURE_2D, data)) {
     GL_CALL(DeleteTextures(1, &id));
     return 0;
   }
@@ -1412,7 +1415,7 @@ GrGLuint GrGLGpu::createCompressedTexture2D(
 }
 
 GrGLuint GrGLGpu::createTexture2D(
-    const SkISize& size, GrGLFormat format, GrRenderable renderable,
+    const SkISize& dimensions, GrGLFormat format, GrRenderable renderable,
     GrGLTextureParameters::SamplerOverriddenState* initialState, int mipLevelCount) {
   SkASSERT(format != GrGLFormat::kUnknown);
   SkASSERT(!GrGLFormatIsCompressed(format));
@@ -1446,7 +1449,7 @@ GrGLuint GrGLGpu::createTexture2D(
       GL_ALLOC_CALL(
           this->glInterface(), TexStorage2D(
                                    GR_GL_TEXTURE_2D, SkTMax(mipLevelCount, 1), internalFormat,
-                                   size.width(), size.height()));
+                                   dimensions.width(), dimensions.height()));
       success = (GR_GL_NO_ERROR == CHECK_ALLOC_ERROR(this->glInterface()));
     } else {
       GrGLenum externalFormat, externalType;
@@ -1455,8 +1458,8 @@ GrGLuint GrGLGpu::createTexture2D(
       if (externalFormat && externalType) {
         for (int level = 0; level < mipLevelCount && error == GR_GL_NO_ERROR; level++) {
           const int twoToTheMipLevel = 1 << level;
-          const int currentWidth = SkTMax(1, size.width() / twoToTheMipLevel);
-          const int currentHeight = SkTMax(1, size.height() / twoToTheMipLevel);
+          const int currentWidth = SkTMax(1, dimensions.width() / twoToTheMipLevel);
+          const int currentHeight = SkTMax(1, dimensions.height() / twoToTheMipLevel);
           GL_ALLOC_CALL(
               this->glInterface(), TexImage2D(
                                        GR_GL_TEXTURE_2D, level, internalFormat, currentWidth,
@@ -1586,10 +1589,8 @@ void GrGLGpu::disableWindowRectangles() {
 #endif
 }
 
-bool GrGLGpu::flushGLState(
-    GrRenderTarget* renderTarget, const GrProgramInfo& programInfo, GrPrimitiveType primitiveType) {
-  sk_sp<GrGLProgram> program(
-      fProgramCache->refProgram(this, renderTarget, programInfo, primitiveType));
+bool GrGLGpu::flushGLState(GrRenderTarget* renderTarget, const GrProgramInfo& programInfo) {
+  sk_sp<GrGLProgram> program(fProgramCache->refProgram(this, renderTarget, programInfo));
   if (!program) {
     GrCapsDebugf(this->caps(), "Failed to create program!\n");
     return false;
@@ -1607,7 +1608,6 @@ bool GrGLGpu::flushGLState(
   GrGLRenderTarget* glRT = static_cast<GrGLRenderTarget*>(renderTarget);
   GrStencilSettings stencil;
   if (programInfo.pipeline().isStencilEnabled()) {
-    // TODO: attach stencil and create settings during render target flush.
     SkASSERT(glRT->renderTargetPriv().getStencilAttachment());
     stencil.reset(
         *programInfo.pipeline().getUserStencil(), programInfo.pipeline().hasStencilClip(),
@@ -2030,7 +2030,7 @@ GrOpsRenderPass* GrGLGpu::getOpsRenderPass(
     GrRenderTarget* rt, GrSurfaceOrigin origin, const SkIRect& bounds,
     const GrOpsRenderPass::LoadAndStoreInfo& colorInfo,
     const GrOpsRenderPass::StencilLoadAndStoreInfo& stencilInfo,
-    const SkTArray<GrTextureProxy*, true>& sampledProxies) {
+    const SkTArray<GrSurfaceProxy*, true>& sampledProxies) {
   if (!fCachedOpsRenderPass) {
     fCachedOpsRenderPass.reset(new GrGLOpsRenderPass(this));
   }
@@ -2124,22 +2124,7 @@ void GrGLGpu::draw(
 
   SkASSERT(meshCount);  // guaranteed by GrOpsRenderPass::draw
 
-  GrPrimitiveType primitiveType = meshes[0].primitiveType();
-
-#ifdef SK_DEBUG
-  // kPoints should never be intermingled in with the other primitive types
-  for (int i = 1; i < meshCount; ++i) {
-    if (primitiveType == GrPrimitiveType::kPoints) {
-      SkASSERT(meshes[i].primitiveType() == GrPrimitiveType::kPoints);
-    } else {
-      SkASSERT(meshes[i].primitiveType() != GrPrimitiveType::kPoints);
-    }
-  }
-#endif
-
-  // Passing 'primitiveType' here is a bit misleading. In GL's case it works out, since
-  // GL only cares if it is kPoints or not.
-  if (!this->flushGLState(renderTarget, programInfo, primitiveType)) {
+  if (!this->flushGLState(renderTarget, programInfo)) {
     return;
   }
 
@@ -2147,6 +2132,8 @@ void GrGLGpu::draw(
   bool hasDynamicPrimProcTextures = programInfo.hasDynamicPrimProcTextures();
 
   for (int m = 0; m < meshCount; ++m) {
+    SkASSERT(meshes[m].primitiveType() == programInfo.primitiveType());
+
     if (auto barrierType =
             programInfo.pipeline().xferBarrierType(renderTarget->asTexture(), *this->caps())) {
       this->xferBarrier(renderTarget, barrierType);
@@ -2373,11 +2360,11 @@ void GrGLGpu::flushStencil(const GrStencilSettings& stencilSettings, GrSurfaceOr
 
       fHWStencilTestEnabled = kYes_TriState;
     }
-    if (stencilSettings.isTwoSided()) {
-      set_gl_stencil(this->glInterface(), stencilSettings.front(origin), GR_GL_FRONT);
-      set_gl_stencil(this->glInterface(), stencilSettings.back(origin), GR_GL_BACK);
+    if (!stencilSettings.isTwoSided()) {
+      set_gl_stencil(this->glInterface(), stencilSettings.singleSidedFace(), GR_GL_FRONT_AND_BACK);
     } else {
-      set_gl_stencil(this->glInterface(), stencilSettings.frontAndBack(), GR_GL_FRONT_AND_BACK);
+      set_gl_stencil(this->glInterface(), stencilSettings.postOriginCWFace(origin), GR_GL_FRONT);
+      set_gl_stencil(this->glInterface(), stencilSettings.postOriginCCWFace(origin), GR_GL_BACK);
     }
     fHWStencilSettings = stencilSettings;
     fHWStencilOrigin = origin;
@@ -2644,8 +2631,8 @@ void GrGLGpu::bindTexture(
 }
 
 void GrGLGpu::onResetTextureBindings() {
-  static constexpr GrGLenum kTargets[] = {GR_GL_TEXTURE_2D, GR_GL_TEXTURE_RECTANGLE,
-                                          GR_GL_TEXTURE_EXTERNAL};
+  static constexpr GrGLenum kTargets[] = {
+      GR_GL_TEXTURE_2D, GR_GL_TEXTURE_RECTANGLE, GR_GL_TEXTURE_EXTERNAL};
   for (int i = 0; i < this->numTextureUnits(); ++i) {
     this->setTextureUnit(i);
     for (auto target : kTargets) {
@@ -3474,16 +3461,9 @@ static GrPixelConfig gl_format_to_pixel_config(GrGLFormat format) {
 }
 
 GrBackendTexture GrGLGpu::onCreateBackendTexture(
-    int w, int h, const GrBackendFormat& format, GrMipMapped mipMapped, GrRenderable renderable,
-    const SkPixmap srcData[], int numMipLevels, const SkColor4f* color, GrProtected isProtected) {
+    SkISize dimensions, const GrBackendFormat& format, GrRenderable renderable,
+    const BackendTextureData* data, int numMipLevels, GrProtected isProtected) {
   this->handleDirtyContext();
-
-  SkDEBUGCODE(const GrCaps* caps = this->caps());
-
-  // GrGpu::createBackendTexture should've ensured these conditions
-  SkASSERT(w >= 1 && w <= caps->maxTextureSize() && h >= 1 && h <= caps->maxTextureSize());
-  SkASSERT(GrGpu::MipMapsAreCorrect(w, h, mipMapped, srcData, numMipLevels));
-  SkASSERT(mipMapped == GrMipMapped::kNo || caps->mipMapSupport());
 
   GrGLFormat glFormat = format.asGLFormat();
   if (glFormat == GrGLFormat::kUnknown) {
@@ -3493,87 +3473,80 @@ GrBackendTexture GrGLGpu::onCreateBackendTexture(
   // Compressed formats go through onCreateCompressedBackendTexture
   SkASSERT(!GrGLFormatIsCompressed(glFormat));
 
-  GrPixelConfig config = gl_format_to_pixel_config(glFormat);
-
-  if (config == kUnknown_GrPixelConfig) {
-    return GrBackendTexture();  // invalid
-  }
-
-  auto textureColorType = GrPixelConfigToColorType(config);
-
-  // TODO: move the texturability check up to GrGpu::createBackendTexture and just assert here
-  if (!this->caps()->isFormatTexturableAndUploadable(textureColorType, format)) {
-    return GrBackendTexture();  // invalid
-  }
-
   GrGLTextureInfo info;
   GrGLTextureParameters::SamplerOverriddenState initialState;
 
-  SkTDArray<GrMipLevel> texels;
-  SkAutoMalloc pixelStorage;
-
-  int mipLevelCount = 1;
-  if (srcData) {
-    mipLevelCount = numMipLevels;
-    texels.append(mipLevelCount);
-    for (int i = 0; i < mipLevelCount; ++i) {
-      texels[i] = {srcData[i].addr(), srcData[i].rowBytes()};
-    }
-  } else if (color) {
-    if (GrMipMapped::kYes == mipMapped) {
-      mipLevelCount = SkMipMap::ComputeLevelCount(w, h) + 1;
-    }
-
-    texels.append(mipLevelCount);
-    SkTArray<size_t> individualMipOffsets(mipLevelCount);
-
-    size_t bytesPerPixel = this->glCaps().bytesPerPixel(glFormat);
-
-    size_t totalSize =
-        GrComputeTightCombinedBufferSize(bytesPerPixel, w, h, &individualMipOffsets, mipLevelCount);
-
-    char* tmpPixels = (char*)pixelStorage.reset(totalSize);
-
-    GrFillInData(textureColorType, w, h, individualMipOffsets, tmpPixels, *color);
-    for (int i = 0; i < mipLevelCount; ++i) {
-      size_t offset = individualMipOffsets[i];
-
-      int twoToTheMipLevel = 1 << i;
-      int currentWidth = SkTMax(1, w / twoToTheMipLevel);
-
-      texels[i] = {&(tmpPixels[offset]), currentWidth * bytesPerPixel};
-    }
-  }
-
   GrSurfaceDesc desc;
-  desc.fWidth = w;
-  desc.fHeight = h;
-  desc.fConfig = config;
+  desc.fWidth = dimensions.width();
+  desc.fHeight = dimensions.height();
+  desc.fConfig = gl_format_to_pixel_config(glFormat);
+  if (desc.fConfig == kUnknown_GrPixelConfig) {
+    return GrBackendTexture();  // invalid
+  }
 
   info.fTarget = GR_GL_TEXTURE_2D;
   info.fFormat = GrGLFormatToEnum(glFormat);
-  info.fID = this->createTexture2D(
-      {desc.fWidth, desc.fHeight}, glFormat, renderable, &initialState, SkTMax(1, texels.count()));
+  info.fID = this->createTexture2D(dimensions, glFormat, renderable, &initialState, numMipLevels);
   if (!info.fID) {
-    return GrBackendTexture();  // invalid
-  }
-  auto srcColorType = GrPixelConfigToColorType(desc.fConfig);
-  if (!texels.empty() &&
-      !this->uploadTexData(
-          glFormat, textureColorType, desc.fWidth, desc.fHeight, GR_GL_TEXTURE_2D, 0, 0,
-          desc.fWidth, desc.fHeight, srcColorType, texels.begin(), texels.count())) {
-    GL_CALL(DeleteTextures(1, &info.fID));
-    return GrBackendTexture();
+    return {};
   }
 
-  // unbind the texture from the texture unit to avoid asserts
-  GL_CALL(BindTexture(info.fTarget, 0));
+  if (data && data->type() == BackendTextureData::Type::kPixmaps) {
+    SkTDArray<GrMipLevel> texels;
+    GrColorType colorType = SkColorTypeToGrColorType(data->pixmap(0).colorType());
+    // Incorporate the color type into the config to make it "specific" if applicable.
+    desc.fConfig = this->caps()->getConfigFromBackendFormat(format, colorType);
+    SkASSERT(desc.fConfig != kUnknown_GrPixelConfig);
+    texels.append(numMipLevels);
+    for (int i = 0; i < numMipLevels; ++i) {
+      texels[i] = {data->pixmap(i).addr(), data->pixmap(i).rowBytes()};
+    }
+    if (!this->uploadTexData(
+            glFormat, colorType, desc.fWidth, desc.fHeight, GR_GL_TEXTURE_2D, 0, 0, desc.fWidth,
+            desc.fHeight, colorType, texels.begin(), texels.count())) {
+      GL_CALL(DeleteTextures(1, &info.fID));
+      return {};
+    }
+  } else if (data && data->type() == BackendTextureData::Type::kColor) {
+    // TODO: Unify this with the clear texture code in onCreateTexture().
+    GrColorType colorType;
+    GrGLenum externalFormat, externalType;
+    this->glCaps().getTexSubImageDefaultFormatTypeAndColorType(
+        glFormat, &externalFormat, &externalType, &colorType);
+    if (colorType == GrColorType::kUnknown) {
+      GL_CALL(DeleteTextures(1, &info.fID));
+      return {};
+    }
+
+    // Make one tight image at the base size and reuse it for smaller levels.
+    GrImageInfo ii(colorType, kUnpremul_SkAlphaType, nullptr, dimensions);
+    auto rb = ii.minRowBytes();
+    std::unique_ptr<char[]> pixelStorage(new char[rb * dimensions.height()]);
+    if (!GrClearImage(ii, pixelStorage.get(), rb, data->color())) {
+      GL_CALL(DeleteTextures(1, &info.fID));
+      return {};
+    }
+
+    GL_CALL(PixelStorei(GR_GL_UNPACK_ALIGNMENT, 1));
+    SkISize levelDimensions = dimensions;
+    for (int i = 0; i < numMipLevels; ++i) {
+      GL_CALL(TexSubImage2D(
+          GR_GL_TEXTURE_2D, i, 0, 0, levelDimensions.width(), levelDimensions.height(),
+          externalFormat, externalType, pixelStorage.get()));
+      levelDimensions = {
+          SkTMax(1, levelDimensions.width() / 2), SkTMax(1, levelDimensions.height() / 2)};
+    }
+  }
+  // Unbind this texture from the scratch texture unit.
+  this->bindTextureToScratchUnit(GR_GL_TEXTURE_2D, 0);
 
   auto parameters = sk_make_sp<GrGLTextureParameters>();
   parameters->set(
       &initialState, GrGLTextureParameters::NonsamplerState(), fResetTimestampForTextureParameters);
 
-  return GrBackendTexture(w, h, mipMapped, info, std::move(parameters));
+  auto mipMapped = numMipLevels > 1 ? GrMipMapped::kYes : GrMipMapped::kNo;
+  return GrBackendTexture(
+      dimensions.width(), dimensions.height(), mipMapped, info, std::move(parameters));
 }
 
 void GrGLGpu::deleteBackendTexture(const GrBackendTexture& tex) {
@@ -3750,7 +3723,7 @@ GrGLAttribArrayState* GrGLGpu::HWVertexArrayState::bindInternalVertexArray(
   return attribState;
 }
 
-void GrGLGpu::onFinishFlush(
+bool GrGLGpu::onFinishFlush(
     GrSurfaceProxy*[], int, SkSurface::BackendSurfaceAccess access, const GrFlushInfo& info,
     const GrPrepareForExternalIORequests&) {
   // If we inserted semaphores during the flush, we need to call GLFlush.
@@ -3785,6 +3758,7 @@ void GrGLGpu::onFinishFlush(
     // See if any previously inserted finish procs are good to go.
     this->checkFinishProcs();
   }
+  return true;
 }
 
 void GrGLGpu::submit(GrOpsRenderPass* renderPass) {
@@ -3814,28 +3788,28 @@ bool GrGLGpu::waitFence(GrFence fence, uint64_t timeout) {
 
 void GrGLGpu::deleteFence(GrFence fence) const { this->deleteSync((GrGLsync)fence); }
 
-sk_sp<GrSemaphore> SK_WARN_UNUSED_RESULT GrGLGpu::makeSemaphore(bool isOwned) {
+std::unique_ptr<GrSemaphore> SK_WARN_UNUSED_RESULT GrGLGpu::makeSemaphore(bool isOwned) {
   SkASSERT(this->caps()->semaphoreSupport());
   return GrGLSemaphore::Make(this, isOwned);
 }
 
-sk_sp<GrSemaphore> GrGLGpu::wrapBackendSemaphore(
+std::unique_ptr<GrSemaphore> GrGLGpu::wrapBackendSemaphore(
     const GrBackendSemaphore& semaphore, GrResourceProvider::SemaphoreWrapType wrapType,
     GrWrapOwnership ownership) {
   SkASSERT(this->caps()->semaphoreSupport());
   return GrGLSemaphore::MakeWrapped(this, semaphore.glSync(), ownership);
 }
 
-void GrGLGpu::insertSemaphore(sk_sp<GrSemaphore> semaphore) {
-  GrGLSemaphore* glSem = static_cast<GrGLSemaphore*>(semaphore.get());
+void GrGLGpu::insertSemaphore(GrSemaphore* semaphore) {
+  GrGLSemaphore* glSem = static_cast<GrGLSemaphore*>(semaphore);
 
   GrGLsync sync;
   GL_CALL_RET(sync, FenceSync(GR_GL_SYNC_GPU_COMMANDS_COMPLETE, 0));
   glSem->setSync(sync);
 }
 
-void GrGLGpu::waitSemaphore(sk_sp<GrSemaphore> semaphore) {
-  GrGLSemaphore* glSem = static_cast<GrGLSemaphore*>(semaphore.get());
+void GrGLGpu::waitSemaphore(GrSemaphore* semaphore) {
+  GrGLSemaphore* glSem = static_cast<GrGLSemaphore*>(semaphore);
 
   GL_CALL(WaitSync(glSem->sync(), 0, GR_GL_TIMEOUT_IGNORED));
 }
@@ -3855,10 +3829,11 @@ void GrGLGpu::deleteSync(GrGLsync sync) const { GL_CALL(DeleteSync(sync)); }
 
 void GrGLGpu::insertEventMarker(const char* msg) { GL_CALL(InsertEventMarker(strlen(msg), msg)); }
 
-sk_sp<GrSemaphore> GrGLGpu::prepareTextureForCrossContextUsage(GrTexture* texture) {
+std::unique_ptr<GrSemaphore> GrGLGpu::prepareTextureForCrossContextUsage(GrTexture* texture) {
   // Set up a semaphore to be signaled once the data is ready, and flush GL
-  sk_sp<GrSemaphore> semaphore = this->makeSemaphore(true);
-  this->insertSemaphore(semaphore);
+  std::unique_ptr<GrSemaphore> semaphore = this->makeSemaphore(true);
+  SkASSERT(semaphore);
+  this->insertSemaphore(semaphore.get());
   // We must call flush here to make sure the GrGLSync object gets created and sent to the gpu.
   GL_CALL(Flush());
 

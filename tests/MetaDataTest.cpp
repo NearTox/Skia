@@ -40,11 +40,12 @@ DEF_TEST(MetaData, reporter) {
     const char* fName;
     SkMetaData::Type fType;
     int fCount;
-  } gElems[] = {{"int", SkMetaData::kS32_Type, 1},
-                {"scalar", SkMetaData::kScalar_Type, 1},
-                {"ptr", SkMetaData::kPtr_Type, 1},
-                {"true", SkMetaData::kBool_Type, 1},
-                {"false", SkMetaData::kBool_Type, 1}};
+  } gElems[] = {
+      {"int", SkMetaData::kS32_Type, 1},
+      {"scalar", SkMetaData::kScalar_Type, 1},
+      {"ptr", SkMetaData::kPtr_Type, 1},
+      {"true", SkMetaData::kBool_Type, 1},
+      {"false", SkMetaData::kBool_Type, 1}};
 
   int loop = 0;
   int count;

@@ -50,7 +50,11 @@ class ImageFromYUVTextures : public GpuGM {
  protected:
   SkString onShortName() override { return SkString("image_from_yuv_textures"); }
 
-  SkISize onISize() override { return SkISize::Make(kBmpSize + 2 * kPad, 390); }
+  SkISize onISize() override {
+    // Original image, plus each color space drawn twice
+    int numBitmaps = 2 * (kLastEnum_SkYUVColorSpace + 1) + 1;
+    return SkISize::Make(kBmpSize + 2 * kPad, numBitmaps * (kBmpSize + kPad) + kPad);
+  }
 
   void onOnceBeforeDraw() override {
     // We create an RGB bitmap and then extract YUV bmps where the U and V bitmaps are

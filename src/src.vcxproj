@@ -14,9 +14,10 @@
     <ClInclude Include="..\test\coreTest.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\third_party\etc1\etc1.cpp" />
-    <ClCompile Include="..\third_party\gif\SkGifImageReader.cpp" />
+    <ClCompile Include="..\third_party\externals\libgifcodec\SkGifImageReader.cpp" />
+    <ClCompile Include="..\third_party\externals\libgifcodec\SkLibGifCodec.cpp" />
     <ClCompile Include="..\third_party\skcms\skcms.cc" />
+    <ClCompile Include="..\third_party\vulkanmemoryallocator\GrVulkanMemoryAllocator.cpp" />
     <ClCompile Include="android\SkAndroidFrameworkUtils.cpp" />
     <ClCompile Include="android\SkAnimatedImage.cpp" />
     <ClCompile Include="android\SkBitmapRegionCodec.cpp" />
@@ -35,7 +36,6 @@
     <ClCompile Include="codec\SkCodecImageGenerator.cpp" />
     <ClCompile Include="codec\SkColorTable.cpp" />
     <ClCompile Include="codec\SkEncodedInfo.cpp" />
-    <ClCompile Include="codec\SkGifCodec.cpp" />
     <ClCompile Include="codec\SkHeifCodec.cpp" />
     <ClCompile Include="codec\SkIcoCodec.cpp" />
     <ClCompile Include="codec\SkJpegCodec.cpp" />
@@ -118,6 +118,7 @@
     <ClCompile Include="core\SkFontLCDConfig.cpp" />
     <ClCompile Include="core\SkFontMgr.cpp" />
     <ClCompile Include="core\SkFontStream.cpp" />
+    <ClCompile Include="core\SkFont_serial.cpp" />
     <ClCompile Include="core\SkGaussFilter.cpp" />
     <ClCompile Include="core\SkGeometry.cpp" />
     <ClCompile Include="core\SkGlobalInitialization_core.cpp" />
@@ -137,6 +138,7 @@
     <ClCompile Include="core\SkLatticeIter.cpp" />
     <ClCompile Include="core\SkLineClipper.cpp" />
     <ClCompile Include="core\SkLocalMatrixImageFilter.cpp" />
+    <ClCompile Include="core\SkMalloc.cpp" />
     <ClCompile Include="core\SkMallocPixelRef.cpp" />
     <ClCompile Include="core\SkMask.cpp" />
     <ClCompile Include="core\SkMaskBlurFilter.cpp" />
@@ -151,7 +153,6 @@
     <ClCompile Include="core\SkMiniRecorder.cpp" />
     <ClCompile Include="core\SkMipMap.cpp" />
     <ClCompile Include="core\SkModeColorFilter.cpp" />
-    <ClCompile Include="core\SkMultiPictureDraw.cpp" />
     <ClCompile Include="core\SkNormalFlatSource.cpp" />
     <ClCompile Include="core\SkNormalMapSource.cpp" />
     <ClCompile Include="core\SkNormalSource.cpp" />
@@ -225,6 +226,7 @@
     <ClCompile Include="core\SkSwizzle.cpp" />
     <ClCompile Include="core\SkTaskGroup.cpp" />
     <ClCompile Include="core\SkTextBlob.cpp" />
+    <ClCompile Include="core\SkTextBlobTrace.cpp" />
     <ClCompile Include="core\SkThreadID.cpp" />
     <ClCompile Include="core\SkTime.cpp" />
     <ClCompile Include="core\SkTLS.cpp" />
@@ -320,12 +322,14 @@
     <ClCompile Include="gpu\effects\generated\GrConfigConversionEffect.cpp" />
     <ClCompile Include="gpu\effects\generated\GrConstColorProcessor.cpp" />
     <ClCompile Include="gpu\effects\generated\GrEllipseEffect.cpp" />
+    <ClCompile Include="gpu\effects\generated\GrHSLToRGBFilterEffect.cpp" />
     <ClCompile Include="gpu\effects\generated\GrLumaColorFilterEffect.cpp" />
     <ClCompile Include="gpu\effects\generated\GrMagnifierEffect.cpp" />
     <ClCompile Include="gpu\effects\generated\GrMixerEffect.cpp" />
     <ClCompile Include="gpu\effects\generated\GrOverrideInputFragmentProcessor.cpp" />
     <ClCompile Include="gpu\effects\generated\GrPremulInputFragmentProcessor.cpp" />
     <ClCompile Include="gpu\effects\generated\GrRectBlurEffect.cpp" />
+    <ClCompile Include="gpu\effects\generated\GrRGBToHSLFilterEffect.cpp" />
     <ClCompile Include="gpu\effects\generated\GrRRectBlurEffect.cpp" />
     <ClCompile Include="gpu\effects\generated\GrSaturateProcessor.cpp" />
     <ClCompile Include="gpu\effects\generated\GrSimpleTextureEffect.cpp" />
@@ -545,6 +549,45 @@
     <ClCompile Include="gpu\text\GrTextBlobCache.cpp" />
     <ClCompile Include="gpu\text\GrTextBlobVertexRegenerator.cpp" />
     <ClCompile Include="gpu\text\GrTextContext.cpp" />
+    <ClCompile Include="gpu\vk\GrVkAMDMemoryAllocator.cpp" />
+    <ClCompile Include="gpu\vk\GrVkBuffer.cpp" />
+    <ClCompile Include="gpu\vk\GrVkCaps.cpp" />
+    <ClCompile Include="gpu\vk\GrVkCommandBuffer.cpp" />
+    <ClCompile Include="gpu\vk\GrVkCommandPool.cpp" />
+    <ClCompile Include="gpu\vk\GrVkDescriptorPool.cpp" />
+    <ClCompile Include="gpu\vk\GrVkDescriptorSet.cpp" />
+    <ClCompile Include="gpu\vk\GrVkDescriptorSetManager.cpp" />
+    <ClCompile Include="gpu\vk\GrVkExtensions.cpp" />
+    <ClCompile Include="gpu\vk\GrVkFramebuffer.cpp" />
+    <ClCompile Include="gpu\vk\GrVkGpu.cpp" />
+    <ClCompile Include="gpu\vk\GrVkImage.cpp" />
+    <ClCompile Include="gpu\vk\GrVkImageView.cpp" />
+    <ClCompile Include="gpu\vk\GrVkIndexBuffer.cpp" />
+    <ClCompile Include="gpu\vk\GrVkInterface.cpp" />
+    <ClCompile Include="gpu\vk\GrVkMemory.cpp" />
+    <ClCompile Include="gpu\vk\GrVkOpsRenderPass.cpp" />
+    <ClCompile Include="gpu\vk\GrVkPipeline.cpp" />
+    <ClCompile Include="gpu\vk\GrVkPipelineState.cpp" />
+    <ClCompile Include="gpu\vk\GrVkPipelineStateBuilder.cpp" />
+    <ClCompile Include="gpu\vk\GrVkPipelineStateCache.cpp" />
+    <ClCompile Include="gpu\vk\GrVkPipelineStateDataManager.cpp" />
+    <ClCompile Include="gpu\vk\GrVkRenderPass.cpp" />
+    <ClCompile Include="gpu\vk\GrVkRenderTarget.cpp" />
+    <ClCompile Include="gpu\vk\GrVkResourceProvider.cpp" />
+    <ClCompile Include="gpu\vk\GrVkSampler.cpp" />
+    <ClCompile Include="gpu\vk\GrVkSamplerYcbcrConversion.cpp" />
+    <ClCompile Include="gpu\vk\GrVkSecondaryCBDrawContext.cpp" />
+    <ClCompile Include="gpu\vk\GrVkSemaphore.cpp" />
+    <ClCompile Include="gpu\vk\GrVkStencilAttachment.cpp" />
+    <ClCompile Include="gpu\vk\GrVkTexture.cpp" />
+    <ClCompile Include="gpu\vk\GrVkTextureRenderTarget.cpp" />
+    <ClCompile Include="gpu\vk\GrVkTransferBuffer.cpp" />
+    <ClCompile Include="gpu\vk\GrVkTypesPriv.cpp" />
+    <ClCompile Include="gpu\vk\GrVkUniformBuffer.cpp" />
+    <ClCompile Include="gpu\vk\GrVkUniformHandler.cpp" />
+    <ClCompile Include="gpu\vk\GrVkUtil.cpp" />
+    <ClCompile Include="gpu\vk\GrVkVaryingHandler.cpp" />
+    <ClCompile Include="gpu\vk\GrVkVertexBuffer.cpp" />
     <ClCompile Include="images\SkImageEncoder.cpp" />
     <ClCompile Include="images\SkJpegEncoder.cpp" />
     <ClCompile Include="images\SkJPEGWriteUtility.cpp" />
@@ -674,7 +717,6 @@
     <ClCompile Include="svg\SkSVGCanvas.cpp" />
     <ClCompile Include="svg\SkSVGDevice.cpp" />
     <ClCompile Include="utils\mac\SkCreateCGImageRef.cpp" />
-    <ClCompile Include="utils\mac\SkStream_mac.cpp" />
     <ClCompile Include="utils\Sk3D.cpp" />
     <ClCompile Include="utils\SkAnimCodecPlayer.cpp" />
     <ClCompile Include="utils\SkBase64.cpp" />
@@ -768,7 +810,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)include/third_party/externals/libwebp;$(SolutionDir)..\vs16.0\x86\include;$(SolutionDir)include/third_party/skcms;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)..\vs16.0\x86\include;$(SolutionDir)include/third_party/skcms;$(SolutionDir)include/third_party/vulkan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -797,7 +839,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)include/third_party/externals/libwebp;$(SolutionDir)..\vs16.0\x86\include;$(SolutionDir)include/third_party/skcms;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)..\vs16.0\x86\include;$(SolutionDir)include/third_party/skcms;$(SolutionDir)include/third_party/vulkan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>

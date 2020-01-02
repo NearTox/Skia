@@ -148,8 +148,7 @@ sk_sp<GrTextureProxy> GrYUVProvider::refAsTextureProxy(
     auto proxyProvider = ctx->priv().proxyProvider();
     yuvTextureProxies[i] = proxyProvider->createTextureProxy(yuvImage, 1, SkBudgeted::kYes, fit);
 
-    SkASSERT(yuvTextureProxies[i]->width() == yuvSizeInfo.fSizes[i].fWidth);
-    SkASSERT(yuvTextureProxies[i]->height() == yuvSizeInfo.fSizes[i].fHeight);
+    SkASSERT(yuvTextureProxies[i]->dimensions() == yuvSizeInfo.fSizes[i]);
   }
 
   // TODO: investigate preallocating mip maps here

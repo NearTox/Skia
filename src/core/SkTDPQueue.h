@@ -29,21 +29,21 @@ template <
     int* (*INDEX)(const T&) = (int* (*)(const T&)) nullptr>
 class SkTDPQueue {
  public:
-  SkTDPQueue() noexcept = default;
-  SkTDPQueue(int reserve) noexcept { fArray.setReserve(reserve); }
+  SkTDPQueue() {}
+  SkTDPQueue(int reserve) { fArray.setReserve(reserve); }
 
-  SkTDPQueue(SkTDPQueue&&) noexcept = default;
-  SkTDPQueue& operator=(SkTDPQueue&&) noexcept = default;
+  SkTDPQueue(SkTDPQueue&&) = default;
+  SkTDPQueue& operator=(SkTDPQueue&&) = default;
 
   SkTDPQueue(const SkTDPQueue&) = delete;
   SkTDPQueue& operator=(const SkTDPQueue&) = delete;
 
   /** Number of items in the queue. */
-  int count() const noexcept { return fArray.count(); }
+  int count() const { return fArray.count(); }
 
   /** Gets the next item in the queue without popping it. */
   const T& peek() const { return fArray[0]; }
-  T& peek() noexcept { return fArray[0]; }
+  T& peek() { return fArray[0]; }
 
   /** Removes the next item. */
   void pop() {
@@ -77,8 +77,7 @@ class SkTDPQueue {
     int index = *INDEX(entry);
     SkASSERT(index >= 0 && index < fArray.count());
     this->validate();
-    SkDEBUGCODE(*INDEX(fArray[index]) = -1);
-    if (index == fArray.count() - 1) {
+    SkDEBUGCODE(*INDEX(fArray[index]) = -1;) if (index == fArray.count() - 1) {
       fArray.pop();
       return;
     }
@@ -119,11 +118,11 @@ class SkTDPQueue {
   }
 
  private:
-  static int LeftOf(int x) noexcept {
+  static int LeftOf(int x) {
     SkASSERT(x >= 0);
     return 2 * x + 1;
   }
-  static int ParentOf(int x) noexcept {
+  static int ParentOf(int x) {
     SkASSERT(x > 0);
     return (x - 1) >> 1;
   }

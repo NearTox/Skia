@@ -38,10 +38,10 @@ class GrVkOpsRenderPass : public GrOpsRenderPass, private GrMesh::SendToGpuImpl 
 
   void executeDrawable(std::unique_ptr<SkDrawable::GpuDrawHandler>) override;
 
-  void set(
+  bool set(
       GrRenderTarget*, GrSurfaceOrigin, const SkIRect& bounds,
       const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
-      const SkTArray<GrTextureProxy*, true>& sampledProxies);
+      const SkTArray<GrSurfaceProxy*, true>& sampledProxies);
   void reset();
 
   void submit();
@@ -51,13 +51,13 @@ class GrVkOpsRenderPass : public GrOpsRenderPass, private GrMesh::SendToGpuImpl 
 #endif
 
  private:
-  void init(
+  bool init(
       const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
       const SkPMColor4f& clearColor);
 
   // Called instead of init when we are drawing to a render target that already wraps a secondary
   // command buffer.
-  void initWrapped();
+  bool initWrapped();
 
   bool wrapsSecondaryCommandBuffer() const;
 
@@ -70,8 +70,7 @@ class GrVkOpsRenderPass : public GrOpsRenderPass, private GrMesh::SendToGpuImpl 
       const GrGpuBuffer* indexBuffer, const GrGpuBuffer* vertexBuffer,
       const GrGpuBuffer* instanceBuffer);
 
-  GrVkPipelineState* prepareDrawState(
-      const GrProgramInfo&, GrPrimitiveType, const SkIRect& renderPassScissorRect);
+  GrVkPipelineState* prepareDrawState(const GrProgramInfo&, const SkIRect& renderPassScissorRect);
 
   void onDraw(const GrProgramInfo&, const GrMesh[], int meshCount, const SkRect& bounds) override;
 

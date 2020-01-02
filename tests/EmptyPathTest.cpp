@@ -61,12 +61,12 @@ enum DrawCaps { kDontDrawCaps, kDrawCaps };
 
 static void iter_paint(
     skiatest::Reporter* reporter, const SkPath& path, bool shouldDraw, DrawCaps drawCaps) {
-  static const SkPaint::Cap gCaps[] = {SkPaint::kButt_Cap, SkPaint::kRound_Cap,
-                                       SkPaint::kSquare_Cap};
-  static const SkPaint::Join gJoins[] = {SkPaint::kMiter_Join, SkPaint::kRound_Join,
-                                         SkPaint::kBevel_Join};
-  static const SkPaint::Style gStyles[] = {SkPaint::kFill_Style, SkPaint::kStroke_Style,
-                                           SkPaint::kStrokeAndFill_Style};
+  static const SkPaint::Cap gCaps[] = {
+      SkPaint::kButt_Cap, SkPaint::kRound_Cap, SkPaint::kSquare_Cap};
+  static const SkPaint::Join gJoins[] = {
+      SkPaint::kMiter_Join, SkPaint::kRound_Join, SkPaint::kBevel_Join};
+  static const SkPaint::Style gStyles[] = {
+      SkPaint::kFill_Style, SkPaint::kStroke_Style, SkPaint::kStrokeAndFill_Style};
   for (size_t cap = 0; cap < SK_ARRAY_COUNT(gCaps); ++cap) {
     for (size_t join = 0; join < SK_ARRAY_COUNT(gJoins); ++join) {
       for (size_t style = 0; style < SK_ARRAY_COUNT(gStyles); ++style) {
@@ -115,9 +115,9 @@ static void make_C(SkPath* path) { path->moveTo(CX, CY).cubicTo(CX, CY, CX, CY, 
 static void test_emptydrawing(skiatest::Reporter* reporter) {
   static void (*gMakeProc[])(SkPath*) = {make_empty, make_M, make_MM, make_MZM,
                                          make_L,     make_Q, make_C};
-  static SkPath::FillType gFills[] = {SkPath::kWinding_FillType, SkPath::kEvenOdd_FillType,
-                                      SkPath::kInverseWinding_FillType,
-                                      SkPath::kInverseEvenOdd_FillType};
+  static SkPathFillType gFills[] = {
+      SkPathFillType::kWinding, SkPathFillType::kEvenOdd, SkPathFillType::kInverseWinding,
+      SkPathFillType::kInverseEvenOdd};
   for (int doClose = 0; doClose < 2; ++doClose) {
     for (size_t i = 0; i < SK_ARRAY_COUNT(gMakeProc); ++i) {
       SkPath path;

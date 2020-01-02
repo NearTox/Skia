@@ -753,7 +753,7 @@ static std::unique_ptr<SkStreamAsset> create_pattern_fill_content(
   }
   SkPDFUtils::ApplyPattern(patternIndex, &content);
   SkPDFUtils::AppendRectangle(bounds, &content);
-  SkPDFUtils::PaintPath(SkPaint::kFill_Style, SkPath::kEvenOdd_FillType, &content);
+  SkPDFUtils::PaintPath(SkPaint::kFill_Style, SkPathFillType::kEvenOdd, &content);
   return content.detachAsStream();
 }
 
@@ -769,14 +769,15 @@ static bool gradient_has_alpha(const SkPDFGradientShader::Key& key) {
 
 // warning: does not set fHash on new key.  (Both callers need to change fields.)
 static SkPDFGradientShader::Key clone_key(const SkPDFGradientShader::Key& k) {
-  SkPDFGradientShader::Key clone = {k.fType,
-                                    k.fInfo,  // change pointers later.
-                                    std::unique_ptr<SkColor[]>(new SkColor[k.fInfo.fColorCount]),
-                                    std::unique_ptr<SkScalar[]>(new SkScalar[k.fInfo.fColorCount]),
-                                    k.fCanvasTransform,
-                                    k.fShaderTransform,
-                                    k.fBBox,
-                                    0};
+  SkPDFGradientShader::Key clone = {
+      k.fType,
+      k.fInfo,  // change pointers later.
+      std::unique_ptr<SkColor[]>(new SkColor[k.fInfo.fColorCount]),
+      std::unique_ptr<SkScalar[]>(new SkScalar[k.fInfo.fColorCount]),
+      k.fCanvasTransform,
+      k.fShaderTransform,
+      k.fBBox,
+      0};
   clone.fInfo.fColors = clone.fColors.get();
   clone.fInfo.fColorOffsets = clone.fStops.get();
   for (int i = 0; i < clone.fInfo.fColorCount; i++) {

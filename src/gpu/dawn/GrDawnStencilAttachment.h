@@ -10,7 +10,7 @@
 
 #include "src/gpu/GrStencilAttachment.h"
 
-#include "dawn/dawncpp.h"
+#include "dawn/webgpu_cpp.h"
 
 class GrDawnGpu;
 
@@ -19,7 +19,7 @@ class GrDawnStencilAttachment : public GrStencilAttachment {
   static GrDawnStencilAttachment* Create(GrDawnGpu* gpu, int width, int height, int sampleCnt);
 
   ~GrDawnStencilAttachment() override;
-  dawn::TextureView view() const { return fView; }
+  wgpu::TextureView view() const { return fView; }
 
  protected:
   void onRelease() override;
@@ -29,13 +29,13 @@ class GrDawnStencilAttachment : public GrStencilAttachment {
   size_t onGpuMemorySize() const override;
 
   GrDawnStencilAttachment(
-      GrDawnGpu* gpu, int width, int height, int bits, int samples, dawn::Texture texture,
-      dawn::TextureView view);
+      GrDawnGpu* gpu, int width, int height, int bits, int samples, wgpu::Texture texture,
+      wgpu::TextureView view);
 
   GrDawnGpu* getDawnGpu() const;
 
-  dawn::Texture fTexture;
-  dawn::TextureView fView;
+  wgpu::Texture fTexture;
+  wgpu::TextureView fView;
 
   typedef GrStencilAttachment INHERITED;
 };

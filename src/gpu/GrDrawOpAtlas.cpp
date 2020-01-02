@@ -9,6 +9,7 @@
 
 #include "include/gpu/GrContext.h"
 #include "include/gpu/GrTexture.h"
+#include "src/core/SkOpts.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrGpu.h"
 #include "src/gpu/GrOnFlushResourceProvider.h"
@@ -133,9 +134,9 @@ bool GrDrawOpAtlas::Plot::addSubImage(int width, int height, const void* image, 
 
   loc->fX += fOffset.fX;
   loc->fY += fOffset.fY;
-  SkDEBUGCODE(fDirty = true);
+  SkDEBUGCODE(fDirty = true;)
 
-  return true;
+      return true;
 }
 
 void GrDrawOpAtlas::Plot::uploadToTexture(
@@ -159,7 +160,7 @@ void GrDrawOpAtlas::Plot::uploadToTexture(
       proxy, fOffset.fX + fDirtyRect.fLeft, fOffset.fY + fDirtyRect.fTop, fDirtyRect.width(),
       fDirtyRect.height(), fColorType, dataPtr, rowBytes);
   fDirtyRect.setEmpty();
-  SkDEBUGCODE(fDirty = false);
+  SkDEBUGCODE(fDirty = false;)
 }
 
 void GrDrawOpAtlas::Plot::resetRects() {
@@ -178,7 +179,7 @@ void GrDrawOpAtlas::Plot::resetRects() {
   }
 
   fDirtyRect.setEmpty();
-  SkDEBUGCODE(fDirty = false);
+  SkDEBUGCODE(fDirty = false;)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -629,8 +630,9 @@ GrDrawOpAtlasConfig::GrDrawOpAtlasConfig(int maxTextureSize, size_t maxBytes) {
 SkISize GrDrawOpAtlasConfig::atlasDimensions(GrMaskFormat type) const {
   if (kA8_GrMaskFormat == type) {
     // A8 is always 2x the ARGB dimensions, clamped to the max allowed texture size
-    return {SkTMin<int>(2 * fARGBDimensions.width(), fMaxTextureSize),
-            SkTMin<int>(2 * fARGBDimensions.height(), fMaxTextureSize)};
+    return {
+        SkTMin<int>(2 * fARGBDimensions.width(), fMaxTextureSize),
+        SkTMin<int>(2 * fARGBDimensions.height(), fMaxTextureSize)};
   } else {
     return fARGBDimensions;
   }

@@ -29,7 +29,7 @@ class OutputStream {
 
   void appendVAList(const char format[], va_list args);
 
-  virtual ~OutputStream() = default;
+  virtual ~OutputStream() {}
 
  private:
   static const int kBufferSize = 1024;

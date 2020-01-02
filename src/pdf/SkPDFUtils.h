@@ -37,7 +37,7 @@ bool SkPackedArrayEqual(T* u, T* v, size_t n) {
   do {                                                     \
     if ((bool)(condition)) {                               \
       PRINT_NOT_IMPL("NOT_IMPLEMENTED: " #condition "\n"); \
-      SkDEBUGCODE(SkASSERT(!assert));                      \
+      SkDEBUGCODE(SkASSERT(!assert);)                      \
     }                                                      \
   } while (0)
 
@@ -59,7 +59,7 @@ inline void EmitPath(
   SkPDFUtils::EmitPath(path, paintStyle, true, content, tolerance);
 }
 void ClosePath(SkWStream* content);
-void PaintPath(SkPaint::Style style, SkPath::FillType fill, SkWStream* content);
+void PaintPath(SkPaint::Style style, SkPathFillType fill, SkWStream* content);
 void StrokePath(SkWStream* content);
 void ApplyGraphicState(int objectIndex, SkWStream* content);
 void ApplyPattern(int objectIndex, SkWStream* content);
@@ -96,8 +96,8 @@ inline void WriteUInt16BE(SkDynamicMemoryWStream* wStream, uint16_t value) {
 }
 
 inline void WriteUInt8(SkDynamicMemoryWStream* wStream, uint8_t value) {
-  char result[2] = {SkHexadecimalDigits::gUpper[value >> 4],
-                    SkHexadecimalDigits::gUpper[value & 0xF]};
+  char result[2] = {
+      SkHexadecimalDigits::gUpper[value >> 4], SkHexadecimalDigits::gUpper[value & 0xF]};
   wStream->write(result, 2);
 }
 

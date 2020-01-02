@@ -86,7 +86,7 @@ class SPIRVCodeGenerator : public CodeGenerator {
  public:
   class LValue {
    public:
-    virtual ~LValue() = default;
+    virtual ~LValue() {}
 
     // returns a pointer to the lvalue, if possible. If the lvalue cannot be directly referenced
     // by a pointer (e.g. vector swizzles), returns 0.

@@ -77,7 +77,7 @@ class GrMtlGpu : public GrGpu {
   GrOpsRenderPass* getOpsRenderPass(
       GrRenderTarget*, GrSurfaceOrigin, const SkIRect& bounds,
       const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
-      const SkTArray<GrTextureProxy*, true>& sampledProxies) override;
+      const SkTArray<GrSurfaceProxy*, true>& sampledProxies) override;
 
   SkSL::Compiler* shaderCompiler() const { return fCompiler.get(); }
 
@@ -87,14 +87,16 @@ class GrMtlGpu : public GrGpu {
   bool waitFence(GrFence, uint64_t) override;
   void deleteFence(GrFence) const override;
 
-  sk_sp<GrSemaphore> SK_WARN_UNUSED_RESULT makeSemaphore(bool isOwned) override;
-  sk_sp<GrSemaphore> wrapBackendSemaphore(
+  std::unique_ptr<GrSemaphore> SK_WARN_UNUSED_RESULT makeSemaphore(bool isOwned) override;
+  std::unique_ptr<GrSemaphore> wrapBackendSemaphore(
       const GrBackendSemaphore& semaphore, GrResourceProvider::SemaphoreWrapType wrapType,
       GrWrapOwnership ownership) override;
-  void insertSemaphore(sk_sp<GrSemaphore> semaphore) override;
-  void waitSemaphore(sk_sp<GrSemaphore> semaphore) override;
+  void insertSemaphore(GrSemaphore* semaphore) override;
+  void waitSemaphore(GrSemaphore* semaphore) override;
   void checkFinishProcs() override;
-  sk_sp<GrSemaphore> prepareTextureForCrossContextUsage(GrTexture*) override { return nullptr; }
+  std::unique_ptr<GrSemaphore> prepareTextureForCrossContextUsage(GrTexture*) override {
+    return nullptr;
+  }
 
   // When the Metal backend actually uses indirect command buffers, this function will actually do
   // what it says. For now, every command is encoded directly into the primary command buffer, so
@@ -122,8 +124,8 @@ class GrMtlGpu : public GrGpu {
   void xferBarrier(GrRenderTarget*, GrXferBarrierType) override {}
 
   GrBackendTexture onCreateBackendTexture(
-      int w, int h, const GrBackendFormat&, GrMipMapped, GrRenderable, const SkPixmap srcData[],
-      int numMipLevels, const SkColor4f* color, GrProtected) override;
+      SkISize, const GrBackendFormat&, GrRenderable, const BackendTextureData*, int numMipLevels,
+      GrProtected) override;
 
   sk_sp<GrTexture> onCreateTexture(
       const GrSurfaceDesc& desc, const GrBackendFormat& format, GrRenderable,
@@ -172,7 +174,7 @@ class GrMtlGpu : public GrGpu {
 
   void resolveTexture(id<MTLTexture> colorTexture, id<MTLTexture> resolveTexture);
 
-  void onFinishFlush(
+  bool onFinishFlush(
       GrSurfaceProxy*[], int n, SkSurface::BackendSurfaceAccess access, const GrFlushInfo& info,
       const GrPrepareForExternalIORequests&) override;
 
@@ -190,8 +192,8 @@ class GrMtlGpu : public GrGpu {
       const GrRenderTarget*, int width, int height, int numStencilSamples) override;
 
   bool createMtlTextureForBackendSurface(
-      MTLPixelFormat, int w, int h, bool texturable, bool renderable, GrMipMapped,
-      const SkPixmap srcData[], int numMipLevels, const SkColor4f* color, GrMtlTextureInfo*);
+      MTLPixelFormat, SkISize, bool texturable, bool renderable, const BackendTextureData*,
+      int numMipLevels, GrMtlTextureInfo*);
 
 #if GR_TEST_UTILS
   void testingOnly_startCapture() override;
@@ -208,11 +210,6 @@ class GrMtlGpu : public GrGpu {
   std::unique_ptr<SkSL::Compiler> fCompiler;
 
   GrMtlResourceProvider fResourceProvider;
-
-  // For FenceSync
-  id<MTLSharedEvent> fSharedEvent API_AVAILABLE(macos(10.14), ios(12.0));
-  MTLSharedEventListener* fSharedEventListener API_AVAILABLE(macos(10.14), ios(12.0));
-  uint64_t fLatestEvent;
 
   bool fDisconnected;
 

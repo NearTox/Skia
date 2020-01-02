@@ -18,20 +18,20 @@ struct SkDVector {
   double fX;
   double fY;
 
-  SkDVector& set(const SkVector& pt) noexcept {
+  SkDVector& set(const SkVector& pt) {
     fX = pt.fX;
     fY = pt.fY;
     return *this;
   }
 
   // only used by testing
-  void operator+=(const SkDVector& v) noexcept {
+  void operator+=(const SkDVector& v) {
     fX += v.fX;
     fY += v.fY;
   }
 
   // only called by nearestT, which is currently only used by testing
-  void operator-=(const SkDVector& v) noexcept {
+  void operator-=(const SkDVector& v) {
     fX -= v.fX;
     fY -= v.fY;
   }
@@ -91,7 +91,7 @@ struct SkDPoint {
   double fX;
   double fY;
 
-  void set(const SkPoint& pt) noexcept {
+  void set(const SkPoint& pt) {
     fX = pt.fX;
     fY = pt.fY;
   }

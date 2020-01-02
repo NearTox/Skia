@@ -18,8 +18,8 @@
  */
 class SkBBoxHierarchy : public SkRefCnt {
  public:
-  constexpr SkBBoxHierarchy() noexcept = default;
-  virtual ~SkBBoxHierarchy() = default;
+  SkBBoxHierarchy() {}
+  virtual ~SkBBoxHierarchy() {}
 
   /**
    * Insert N bounding boxes into the hierarchy.

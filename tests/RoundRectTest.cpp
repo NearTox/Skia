@@ -214,10 +214,11 @@ static void test_round_rect_basic(skiatest::Reporter* reporter) {
         reporter, SkPointPriv::EqualsWithinTolerance(rr2.radii((SkRRect::Corner)i), halfPoint));
   }
   SkRRect rr2_2;  // construct the same RR using the most general set function
-  SkVector rr2_2_radii[4] = {{halfPoint.fX, halfPoint.fY},
-                             {halfPoint.fX, halfPoint.fY},
-                             {halfPoint.fX, halfPoint.fY},
-                             {halfPoint.fX, halfPoint.fY}};
+  SkVector rr2_2_radii[4] = {
+      {halfPoint.fX, halfPoint.fY},
+      {halfPoint.fX, halfPoint.fY},
+      {halfPoint.fX, halfPoint.fY},
+      {halfPoint.fX, halfPoint.fY}};
   rr2_2.setRectRadii(rect, rr2_2_radii);
   REPORTER_ASSERT(reporter, rr2_2 == rr2 && rr2_2.getType() == rr2.getType());
   SkRRect rr2_3;  // construct the same RR using the nine patch set function
@@ -901,10 +902,11 @@ static void test_round_rect_transform(skiatest::Reporter* reporter) {
   }
   {
     SkRect r = {SkIntToScalar(5), SkIntToScalar(15), SkIntToScalar(27), SkIntToScalar(34)};
-    SkVector radii[4] = {{0, SkIntToScalar(1)},
-                         {SkIntToScalar(2), SkIntToScalar(3)},
-                         {SkIntToScalar(4), SkIntToScalar(5)},
-                         {SkIntToScalar(6), SkIntToScalar(7)}};
+    SkVector radii[4] = {
+        {0, SkIntToScalar(1)},
+        {SkIntToScalar(2), SkIntToScalar(3)},
+        {SkIntToScalar(4), SkIntToScalar(5)},
+        {SkIntToScalar(6), SkIntToScalar(7)}};
     rrect.setRectRadii(r, radii);
     test_transform_helper(reporter, rrect);
   }

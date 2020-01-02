@@ -49,8 +49,8 @@ const GrVkImageView* GrVkImageView::Create(
     viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT;
   }
 
-  VkResult err = GR_VK_CALL(
-      gpu->vkInterface(), CreateImageView(gpu->device(), &viewInfo, nullptr, &imageView));
+  VkResult err;
+  GR_VK_CALL_RESULT(gpu, err, CreateImageView(gpu->device(), &viewInfo, nullptr, &imageView));
   if (err) {
     return nullptr;
   }

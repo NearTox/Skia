@@ -8,9 +8,11 @@
 #ifndef SKSL_COMPILER
 #define SKSL_COMPILER
 
+#include <map>
 #include <set>
 #include <unordered_set>
 #include <vector>
+#include "src/sksl/SkSLASTFile.h"
 #include "src/sksl/SkSLCFGGenerator.h"
 #include "src/sksl/SkSLContext.h"
 #include "src/sksl/SkSLErrorReporter.h"
@@ -36,6 +38,7 @@
 #define SK_HEIGHT_BUILTIN 10012
 #define SK_FRAGCOORD_BUILTIN 15
 #define SK_CLOCKWISE_BUILTIN 17
+#define SK_SAMPLEMASK_BUILTIN 20
 #define SK_VERTEXID_BUILTIN 42
 #define SK_INSTANCEID_BUILTIN 43
 #define SK_CLIPDISTANCE_BUILTIN 3
@@ -90,6 +93,7 @@ class SK_API Compiler : public ErrorReporter {
     SkString fName;
     std::vector<GrShaderVar> fParameters;
     SkString fBody;
+    std::vector<Compiler::FormatArg> fFormatArgs;
   };
 #endif
 
@@ -194,6 +198,9 @@ class SK_API Compiler : public ErrorReporter {
 
   Position position(int offset);
 
+  std::map<StringFragment, std::pair<std::unique_ptr<ProgramElement>, bool>> fGPUIntrinsics;
+  std::map<StringFragment, std::pair<std::unique_ptr<ProgramElement>, bool>> fInterpreterIntrinsics;
+  std::unique_ptr<ASTFile> fGpuIncludeSource;
   std::shared_ptr<SymbolTable> fGpuSymbolTable;
   std::vector<std::unique_ptr<ProgramElement>> fVertexInclude;
   std::shared_ptr<SymbolTable> fVertexSymbolTable;

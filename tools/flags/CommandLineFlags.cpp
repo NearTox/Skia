@@ -89,46 +89,46 @@ static bool parse_bool_arg(const char* string, bool* result) {
 
 bool SkFlagInfo::match(const char* string) {
     if (SkStrStartsWith(string, '-') && strlen(string) > 1) {
-      string++;
-      const SkString* compareName;
-      if (SkStrStartsWith(string, '-') && strlen(string) > 1) {
         string++;
-        // There were two dashes. Compare against full name.
-        compareName = &fName;
-      } else {
-        // One dash. Compare against the short name.
-        compareName = &fShortName;
-      }
-      if (kBool_FlagType == fFlagType) {
-        // In this case, go ahead and set the value.
-        if (compareName->equals(string)) {
-          *fBoolValue = true;
-          return true;
+        const SkString* compareName;
+        if (SkStrStartsWith(string, '-') && strlen(string) > 1) {
+          string++;
+          // There were two dashes. Compare against full name.
+          compareName = &fName;
+        } else {
+          // One dash. Compare against the short name.
+          compareName = &fShortName;
         }
-        if (SkStrStartsWith(string, "no") && strlen(string) > 2) {
-          string += 2;
-          // Only allow "no" to be prepended to the full name.
-          if (fName.equals(string)) {
-            *fBoolValue = false;
+        if (kBool_FlagType == fFlagType) {
+          // In this case, go ahead and set the value.
+          if (compareName->equals(string)) {
+            *fBoolValue = true;
             return true;
           }
-          return false;
-        }
-        int equalIndex = SkStrFind(string, "=");
-        if (equalIndex > 0) {
-          // The string has an equal sign. Check to see if the string matches.
-          SkString flag(string, equalIndex);
-          if (flag.equals(*compareName)) {
-            // Check to see if the remainder beyond the equal sign is true or false:
-            string += equalIndex + 1;
-            parse_bool_arg(string, fBoolValue);
-            return true;
-          } else {
+          if (SkStrStartsWith(string, "no") && strlen(string) > 2) {
+            string += 2;
+            // Only allow "no" to be prepended to the full name.
+            if (fName.equals(string)) {
+              *fBoolValue = false;
+              return true;
+            }
             return false;
           }
+          int equalIndex = SkStrFind(string, "=");
+          if (equalIndex > 0) {
+            // The string has an equal sign. Check to see if the string matches.
+            SkString flag(string, equalIndex);
+            if (flag.equals(*compareName)) {
+              // Check to see if the remainder beyond the equal sign is true or false:
+              string += equalIndex + 1;
+              parse_bool_arg(string, fBoolValue);
+              return true;
+            } else {
+              return false;
+            }
+          }
         }
-      }
-      return compareName->equals(string);
+        return compareName->equals(string);
     } else {
       // Has no dash
       return false;

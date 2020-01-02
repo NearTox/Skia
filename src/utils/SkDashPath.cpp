@@ -417,7 +417,7 @@ bool SkDashPath::InternalFilter(
   } while (meas.nextContour());
 
   if (segCount > 1) {
-    dst->setConvexity(SkPath::kConcave_Convexity);
+    dst->setConvexityType(SkPathConvexityType::kConcave);
   }
 
   return true;

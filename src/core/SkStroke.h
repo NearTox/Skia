@@ -61,8 +61,7 @@ class SkStroke {
   /**
    *  Stroke the specified rect, winding it in the specified direction..
    */
-  void strokeRect(
-      const SkRect& rect, SkPath* result, SkPath::Direction = SkPath::kCW_Direction) const;
+  void strokeRect(const SkRect& rect, SkPath* result, SkPathDirection = SkPathDirection::kCW) const;
   void strokePath(const SkPath& path, SkPath*) const;
 
   ////////////////////////////////////////////////////////////////

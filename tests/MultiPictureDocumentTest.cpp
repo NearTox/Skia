@@ -173,7 +173,7 @@ DEF_TEST(Serialize_and_deserialize_multi_skp, reporter) {
   REPORTER_ASSERT(
       reporter, writtenStream->getLength() > 24, "Written data length too short (%d)",
       writtenStream->getLength());
-  SkDebugf("Multi Frame file size = %d\n", writtenStream->getLength());
+  // SkDebugf("Multi Frame file size = %d\n", writtenStream->getLength());
 
   // Set up deserialization
   SkSharingDeserialContext deserialContext;

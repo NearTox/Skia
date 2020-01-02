@@ -38,8 +38,8 @@ GrVkFramebuffer* GrVkFramebuffer::Create(
   createInfo.layers = 1;
 
   VkFramebuffer framebuffer;
-  VkResult err = GR_VK_CALL(
-      gpu->vkInterface(), CreateFramebuffer(gpu->device(), &createInfo, nullptr, &framebuffer));
+  VkResult err;
+  GR_VK_CALL_RESULT(gpu, err, CreateFramebuffer(gpu->device(), &createInfo, nullptr, &framebuffer));
   if (err) {
     return nullptr;
   }

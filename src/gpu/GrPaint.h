@@ -80,9 +80,9 @@ class GrPaint {
    * Helpers for adding color or coverage effects that sample a texture. The matrix is applied
    * to the src space position to compute texture coordinates.
    */
-  void addColorTextureProcessor(sk_sp<GrTextureProxy>, GrColorType srcColorType, const SkMatrix&);
   void addColorTextureProcessor(
-      sk_sp<GrTextureProxy>, GrColorType srcColorType, const SkMatrix&, const GrSamplerState&);
+      sk_sp<GrTextureProxy>, SkAlphaType, const SkMatrix&,
+      const GrSamplerState& = GrSamplerState::ClampBilerp());
 
   int numColorFragmentProcessors() const { return fColorFragmentProcessors.count(); }
   int numCoverageFragmentProcessors() const { return fCoverageFragmentProcessors.count(); }
@@ -128,7 +128,7 @@ class GrPaint {
   SkSTArray<2, std::unique_ptr<GrFragmentProcessor>> fCoverageFragmentProcessors;
   bool fTrivial = true;
   SkPMColor4f fColor = SK_PMColor4fWHITE;
-  SkDEBUGCODE(bool fAlive = true);  // Set false after moved from.
+  SkDEBUGCODE(bool fAlive = true;)  // Set false after moved from.
 };
 
 #endif

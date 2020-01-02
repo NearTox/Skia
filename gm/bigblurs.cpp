@@ -46,7 +46,7 @@ class BigBlursGM : public GM {
     SkPath rectori;
 
     rectori.addRect(bigRect);
-    rectori.addRect(insetRect, SkPath::kCCW_Direction);
+    rectori.addRect(insetRect, SkPathDirection::kCCW);
 
     // The blur extends 3*kSigma out from the big rect.
     // Offset the close-up windows so we get the entire blur

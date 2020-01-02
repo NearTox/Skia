@@ -179,7 +179,7 @@ static void write_path_key_from_data(const SkPath& path, uint32_t* origKey) {
   const int conicWeightCnt = SkPathPriv::ConicWeightCnt(path);
   SkASSERT(verbCnt <= GrShape::kMaxKeyFromDataVerbCnt);
   SkASSERT(pointCnt && verbCnt);
-  *key++ = path.getFillType();
+  *key++ = (uint32_t)path.getFillType();
   *key++ = verbCnt;
   memcpy(key, SkPathPriv::VerbData(path), verbCnt * sizeof(uint8_t));
   int verbKeySize = SkAlign4(verbCnt);
@@ -234,18 +234,18 @@ int GrShape::unstyledKeySize() const {
 
 void GrShape::writeUnstyledKey(uint32_t* key) const {
   SkASSERT(this->unstyledKeySize());
-  SkDEBUGCODE(uint32_t* origKey = key);
-  if (fInheritedKey.count()) {
+  SkDEBUGCODE(uint32_t* origKey = key;) if (fInheritedKey.count()) {
     memcpy(key, fInheritedKey.get(), sizeof(uint32_t) * fInheritedKey.count());
-    SkDEBUGCODE(key += fInheritedKey.count());
-  } else {
+    SkDEBUGCODE(key += fInheritedKey.count();)
+  }
+  else {
     switch (fType) {
       case Type::kEmpty: *key++ = 1; break;
       case Type::kInvertedEmpty: *key++ = 2; break;
       case Type::kRRect:
         fRRectData.fRRect.writeToMemory(key);
         key += SkRRect::kSizeInMemory / sizeof(uint32_t);
-        *key = (fRRectData.fDir == SkPath::kCCW_Direction) ? (1 << 31) : 0;
+        *key = (fRRectData.fDir == SkPathDirection::kCCW) ? (1 << 31) : 0;
         *key |= fRRectData.fInverted ? (1 << 30) : 0;
         *key++ |= fRRectData.fStart;
         SkASSERT(fRRectData.fStart < 8);
@@ -269,7 +269,7 @@ void GrShape::writeUnstyledKey(uint32_t* key) const {
         *key++ = fPathData.fGenID;
         // We could canonicalize the fill rule for paths that don't differentiate between
         // even/odd or winding fill (e.g. convex).
-        *key++ = this->path().getFillType();
+        *key++ = (uint32_t)this->path().getFillType();
         break;
       }
     }
@@ -467,7 +467,7 @@ GrShape::GrShape(const GrShape& parent, GrStyle::Apply apply, SkScalar scale) {
 void GrShape::attemptToSimplifyPath() {
   SkRect rect;
   SkRRect rrect;
-  SkPath::Direction rrectDir;
+  SkPathDirection rrectDir;
   unsigned rrectStart;
   bool inverted = this->path().isInverseFillType();
   SkPoint pts[2];

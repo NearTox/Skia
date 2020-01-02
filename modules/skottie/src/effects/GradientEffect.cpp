@@ -25,8 +25,8 @@ class GradientRampEffectAdapter final : public SkNVRefCnt<GradientRampEffectAdap
 
   ADAPTER_PROPERTY(StartPoint, SkPoint, SkPoint::Make(0, 0))
   ADAPTER_PROPERTY(EndPoint, SkPoint, SkPoint::Make(0, 0))
-  ADAPTER_PROPERTY(StartColor, SkColor, SK_ColorBLACK)
-  ADAPTER_PROPERTY(EndColor, SkColor, SK_ColorBLACK)
+  ADAPTER_PROPERTY(StartColor, SkColor4f, SkColors::kBlack)
+  ADAPTER_PROPERTY(EndColor, SkColor4f, SkColors::kBlack)
   ADAPTER_PROPERTY(Blend, SkScalar, 0)
   ADAPTER_PROPERTY(Scatter, SkScalar, 0)
 
@@ -120,11 +120,11 @@ sk_sp<sksg::RenderNode> EffectBuilder::attachGradientEffect(
       });
   fBuilder->bindProperty<VectorValue>(
       GetPropValue(jprops, kStartColor_Index), [adapter](const VectorValue& c0) {
-        adapter->setStartColor(ValueTraits<VectorValue>::As<SkColor>(c0));
+        adapter->setStartColor(ValueTraits<VectorValue>::As<SkColor4f>(c0));
       });
   fBuilder->bindProperty<VectorValue>(
       GetPropValue(jprops, kEndColor_Index), [adapter](const VectorValue& c1) {
-        adapter->setEndColor(ValueTraits<VectorValue>::As<SkColor>(c1));
+        adapter->setEndColor(ValueTraits<VectorValue>::As<SkColor4f>(c1));
       });
   fBuilder->bindProperty<ScalarValue>(
       GetPropValue(jprops, kRampShape_Index),

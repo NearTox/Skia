@@ -8,7 +8,9 @@
 
 #include "src/gpu/GrContextPriv.h"
 #include "tools/gpu/GrContextFactory.h"
-#include "tools/gpu/gl/GLTestContext.h"
+#ifdef SK_GL
+#  include "tools/gpu/gl/GLTestContext.h"
+#endif
 
 #if SK_ANGLE
 #  include "tools/gpu/gl/angle/GLTestContext_angle.h"
@@ -145,6 +147,7 @@ ContextInfo GrContextFactory::getContextInfoInternal(
   std::unique_ptr<TestContext> testCtx;
   GrBackendApi backend = ContextTypeBackend(type);
   switch (backend) {
+#ifdef SK_GL
     case GrBackendApi::kOpenGL: {
       GLTestContext* glShareContext =
           masterContext ? static_cast<GLTestContext*>(masterContext->fTestContext) : nullptr;
@@ -156,7 +159,7 @@ ContextInfo GrContextFactory::getContextInfoInternal(
         case kGLES_ContextType:
           glCtx = CreatePlatformGLTestContext(kGLES_GrGLStandard, glShareContext);
           break;
-#if SK_ANGLE
+#  if SK_ANGLE
         case kANGLE_D3D9_ES2_ContextType:
           glCtx =
               MakeANGLETestContext(ANGLEBackend::kD3D9, ANGLEContextVersion::kES2, glShareContext)
@@ -182,12 +185,12 @@ ContextInfo GrContextFactory::getContextInfoInternal(
               MakeANGLETestContext(ANGLEBackend::kOpenGL, ANGLEContextVersion::kES3, glShareContext)
                   .release();
           break;
-#endif
-#ifndef SK_NO_COMMAND_BUFFER
+#  endif
+#  ifndef SK_NO_COMMAND_BUFFER
         case kCommandBuffer_ContextType:
           glCtx = CommandBufferGLTestContext::Create(glShareContext);
           break;
-#endif
+#  endif
         default: return ContextInfo();
       }
       if (!glCtx) {
@@ -196,6 +199,7 @@ ContextInfo GrContextFactory::getContextInfoInternal(
       testCtx.reset(glCtx);
       break;
     }
+#endif  // SK_GL
 #ifdef SK_VULKAN
     case GrBackendApi::kVulkan: {
       VkTestContext* vkSharedContext =
@@ -206,6 +210,7 @@ ContextInfo GrContextFactory::getContextInfoInternal(
         return ContextInfo();
       }
 
+#  ifdef SK_GL
       // There is some bug (either in Skia or the NV Vulkan driver) where VkDevice
       // destruction will hang occaisonally. For some reason having an existing GL
       // context fixes this.
@@ -215,6 +220,7 @@ ContextInfo GrContextFactory::getContextInfoInternal(
           fSentinelGLContext.reset(CreatePlatformGLTestContext(kGLES_GrGLStandard));
         }
       }
+#  endif
       break;
     }
 #endif

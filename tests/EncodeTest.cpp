@@ -139,8 +139,9 @@ DEF_TEST(Encode_JPG, r) {
     return;
   }
 
-  for (auto ct : {kRGBA_8888_SkColorType, kBGRA_8888_SkColorType, kRGB_565_SkColorType,
-                  kARGB_4444_SkColorType, kGray_8_SkColorType, kRGBA_F16_SkColorType}) {
+  for (auto ct :
+       {kRGBA_8888_SkColorType, kBGRA_8888_SkColorType, kRGB_565_SkColorType,
+        kARGB_4444_SkColorType, kGray_8_SkColorType, kRGBA_F16_SkColorType}) {
     for (auto at : {kPremul_SkAlphaType, kUnpremul_SkAlphaType, kOpaque_SkAlphaType}) {
       auto info = SkImageInfo::Make(image->width(), image->height(), ct, at);
       auto surface = SkSurface::MakeRaster(info);

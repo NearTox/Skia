@@ -117,7 +117,7 @@ static void check_equivalence(
   // The asRRect() output params are all initialized just to silence compiler warnings about
   // uninitialized variables.
   SkRRect rrectA = SkRRect::MakeEmpty(), rrectB = SkRRect::MakeEmpty();
-  SkPath::Direction dirA = SkPath::kCW_Direction, dirB = SkPath::kCW_Direction;
+  SkPathDirection dirA = SkPathDirection::kCW, dirB = SkPathDirection::kCW;
   unsigned startA = ~0U, startB = ~0U;
   bool invertedA = true, invertedB = true;
 
@@ -143,8 +143,8 @@ static void check_equivalence(
     ignoreInversenessDifference = (canDropInverse1 != canDropInverse2);
   }
   bool ignoreWindingVsEvenOdd = false;
-  if (SkPath::ConvertToNonInverseFillType(pathA.getFillType()) !=
-      SkPath::ConvertToNonInverseFillType(pathB.getFillType())) {
+  if (SkPathFillType_ConvertToNonInverse(pathA.getNewFillType()) !=
+      SkPathFillType_ConvertToNonInverse(pathB.getNewFillType())) {
     bool aCanChange = can_interchange_winding_and_even_odd_fill(a);
     bool bCanChange = can_interchange_winding_and_even_odd_fill(b);
     if (aCanChange != bCanChange) {
@@ -161,14 +161,14 @@ static void check_equivalence(
     REPORTER_ASSERT(r, a.inverseFilled() == pA.isInverseFillType());
     REPORTER_ASSERT(r, b.inverseFilled() == pB.isInverseFillType());
     if (ignoreInversenessDifference) {
-      pA.setFillType(SkPath::ConvertToNonInverseFillType(pathA.getFillType()));
-      pB.setFillType(SkPath::ConvertToNonInverseFillType(pathB.getFillType()));
+      pA.setFillType(SkPathFillType_ConvertToNonInverse(pathA.getNewFillType()));
+      pB.setFillType(SkPathFillType_ConvertToNonInverse(pathB.getNewFillType()));
     }
     if (ignoreWindingVsEvenOdd) {
       pA.setFillType(
-          pA.isInverseFillType() ? SkPath::kInverseEvenOdd_FillType : SkPath::kEvenOdd_FillType);
+          pA.isInverseFillType() ? SkPathFillType::kInverseEvenOdd : SkPathFillType::kEvenOdd);
       pB.setFillType(
-          pB.isInverseFillType() ? SkPath::kInverseEvenOdd_FillType : SkPath::kEvenOdd_FillType);
+          pB.isInverseFillType() ? SkPathFillType::kInverseEvenOdd : SkPathFillType::kEvenOdd);
     }
     if (!ignoreInversenessDifference && !ignoreWindingVsEvenOdd) {
       REPORTER_ASSERT(r, keyA == keyB);
@@ -203,13 +203,14 @@ static void check_equivalence(
   REPORTER_ASSERT(r, a.bounds() == b.bounds());
   REPORTER_ASSERT(r, a.segmentMask() == b.segmentMask());
   // Init these to suppress warnings.
-  SkPoint pts[4]{{
-                     0,
-                     0,
-                 },
-                 {0, 0},
-                 {0, 0},
-                 {0, 0}};
+  SkPoint pts[4]{
+      {
+          0,
+          0,
+      },
+      {0, 0},
+      {0, 0},
+      {0, 0}};
   bool invertedLine[2]{true, true};
   REPORTER_ASSERT(r, a.asLine(pts, &invertedLine[0]) == b.asLine(pts + 2, &invertedLine[1]));
   // mayBeInverseFilledAfterStyling() is allowed to differ if one has a arbitrary PE and the other
@@ -422,11 +423,11 @@ class PathGeo : public Geo {
   PathGeo(const SkPath& path, Invert invert) : fPath(path) {
     SkASSERT(!path.isInverseFillType());
     if (Invert::kYes == invert) {
-      if (fPath.getFillType() == SkPath::kEvenOdd_FillType) {
-        fPath.setFillType(SkPath::kInverseEvenOdd_FillType);
+      if (fPath.getNewFillType() == SkPathFillType::kEvenOdd) {
+        fPath.setFillType(SkPathFillType::kInverseEvenOdd);
       } else {
-        SkASSERT(fPath.getFillType() == SkPath::kWinding_FillType);
-        fPath.setFillType(SkPath::kInverseWinding_FillType);
+        SkASSERT(fPath.getNewFillType() == SkPathFillType::kWinding);
+        fPath.setFillType(SkPathFillType::kInverseWinding);
       }
     }
   }
@@ -450,7 +451,7 @@ class PathGeo : public Geo {
     }
     SkRect rect;
     unsigned start;
-    SkPath::Direction dir;
+    SkPathDirection dir;
     if (SkPathPriv::IsSimpleClosedRect(fPath, &rect, &dir, &start)) {
       return RectGeo(rect).strokeAndFillIsConvertedToFill(paint);
     }
@@ -564,7 +565,7 @@ class TestCase {
     }
     // The bounds API explicitly calls out that it does not consider inverseness.
     SkPath p = path;
-    p.setFillType(SkPath::ConvertToNonInverseFillType(path.getFillType()));
+    p.setFillType(SkPathFillType_ConvertToNonInverse(path.getNewFillType()));
     REPORTER_ASSERT(r, test_bounds_by_rasterizing(p, bounds));
   }
 
@@ -1544,7 +1545,7 @@ DEF_TEST(GrShape_empty_shape, reporter) {
   dashAndStrokeEmptyRRectCase.compare(
       reporter, fillEmptyCase, TestCase::kAllSame_ComparisonExpecation);
 
-  static constexpr SkPath::Direction kDir = SkPath::kCCW_Direction;
+  static constexpr SkPathDirection kDir = SkPathDirection::kCCW;
   static constexpr int kStart = 0;
 
   TestCase fillInvertedEmptyRRectCase(reporter, emptyRRect, kDir, kStart, true, GrStyle(fill));
@@ -1590,8 +1591,9 @@ void test_rrect(skiatest::Reporter* r, const SkRRect& rrect) {
   enum Style { kFill, kStroke, kHairline, kStrokeAndFill };
 
   // SkStrokeRec has no default cons., so init with kFill before calling the setters below.
-  SkStrokeRec strokeRecs[4]{SkStrokeRec::kFill_InitStyle, SkStrokeRec::kFill_InitStyle,
-                            SkStrokeRec::kFill_InitStyle, SkStrokeRec::kFill_InitStyle};
+  SkStrokeRec strokeRecs[4]{
+      SkStrokeRec::kFill_InitStyle, SkStrokeRec::kFill_InitStyle, SkStrokeRec::kFill_InitStyle,
+      SkStrokeRec::kFill_InitStyle};
   strokeRecs[kFill].setFillStyle();
   strokeRecs[kStroke].setStrokeStyle(2.f);
   strokeRecs[kHairline].setHairlineStyle();
@@ -1603,16 +1605,16 @@ void test_rrect(skiatest::Reporter* r, const SkRRect& rrect) {
 
   static constexpr Style kStyleCnt = static_cast<Style>(SK_ARRAY_COUNT(strokeRecs));
 
-  auto index = [](bool inverted, SkPath::Direction dir, unsigned start, Style style,
+  auto index = [](bool inverted, SkPathDirection dir, unsigned start, Style style,
                   bool dash) -> int {
-    return inverted * (2 * 8 * kStyleCnt * 2) + dir * (8 * kStyleCnt * 2) +
+    return inverted * (2 * 8 * kStyleCnt * 2) + (int)dir * (8 * kStyleCnt * 2) +
            start * (kStyleCnt * 2) + style * (2) + dash;
   };
-  static const SkPath::Direction kSecondDirection = static_cast<SkPath::Direction>(1);
+  static const SkPathDirection kSecondDirection = static_cast<SkPathDirection>(1);
   const int cnt = index(true, kSecondDirection, 7, static_cast<Style>(kStyleCnt - 1), true) + 1;
   SkAutoTArray<GrShape> shapes(cnt);
   for (bool inverted : {false, true}) {
-    for (SkPath::Direction dir : {SkPath::kCW_Direction, SkPath::kCCW_Direction}) {
+    for (SkPathDirection dir : {SkPathDirection::kCW, SkPathDirection::kCCW}) {
       for (unsigned start = 0; start < 8; ++start) {
         for (Style style : {kFill, kStroke, kHairline, kStrokeAndFill}) {
           for (bool dash : {false, true}) {
@@ -1627,7 +1629,7 @@ void test_rrect(skiatest::Reporter* r, const SkRRect& rrect) {
 
   // Get the keys for some example shape instances that we'll use for comparision against the
   // rest.
-  static constexpr SkPath::Direction kExamplesDir = SkPath::kCW_Direction;
+  static constexpr SkPathDirection kExamplesDir = SkPathDirection::kCW;
   static constexpr unsigned kExamplesStart = 0;
   const GrShape& exampleFillCase = shapes[index(false, kExamplesDir, kExamplesStart, kFill, false)];
   Key exampleFillCaseKey;
@@ -1670,59 +1672,59 @@ void test_rrect(skiatest::Reporter* r, const SkRRect& rrect) {
 
   // These are dummy initializations to suppress warnings.
   SkRRect queryRR = SkRRect::MakeEmpty();
-  SkPath::Direction queryDir = SkPath::kCW_Direction;
+  SkPathDirection queryDir = SkPathDirection::kCW;
   unsigned queryStart = ~0U;
   bool queryInverted = true;
 
   REPORTER_ASSERT(r, exampleFillCase.asRRect(&queryRR, &queryDir, &queryStart, &queryInverted));
   REPORTER_ASSERT(r, queryRR == rrect);
-  REPORTER_ASSERT(r, SkPath::kCW_Direction == queryDir);
+  REPORTER_ASSERT(r, SkPathDirection::kCW == queryDir);
   REPORTER_ASSERT(r, 0 == queryStart);
   REPORTER_ASSERT(r, !queryInverted);
 
   REPORTER_ASSERT(r, exampleInvFillCase.asRRect(&queryRR, &queryDir, &queryStart, &queryInverted));
   REPORTER_ASSERT(r, queryRR == rrect);
-  REPORTER_ASSERT(r, SkPath::kCW_Direction == queryDir);
+  REPORTER_ASSERT(r, SkPathDirection::kCW == queryDir);
   REPORTER_ASSERT(r, 0 == queryStart);
   REPORTER_ASSERT(r, queryInverted);
 
   REPORTER_ASSERT(
       r, exampleStrokeAndFillCase.asRRect(&queryRR, &queryDir, &queryStart, &queryInverted));
   REPORTER_ASSERT(r, queryRR == rrect);
-  REPORTER_ASSERT(r, SkPath::kCW_Direction == queryDir);
+  REPORTER_ASSERT(r, SkPathDirection::kCW == queryDir);
   REPORTER_ASSERT(r, 0 == queryStart);
   REPORTER_ASSERT(r, !queryInverted);
 
   REPORTER_ASSERT(
       r, exampleInvStrokeAndFillCase.asRRect(&queryRR, &queryDir, &queryStart, &queryInverted));
   REPORTER_ASSERT(r, queryRR == rrect);
-  REPORTER_ASSERT(r, SkPath::kCW_Direction == queryDir);
+  REPORTER_ASSERT(r, SkPathDirection::kCW == queryDir);
   REPORTER_ASSERT(r, 0 == queryStart);
   REPORTER_ASSERT(r, queryInverted);
 
   REPORTER_ASSERT(r, exampleHairlineCase.asRRect(&queryRR, &queryDir, &queryStart, &queryInverted));
   REPORTER_ASSERT(r, queryRR == rrect);
-  REPORTER_ASSERT(r, SkPath::kCW_Direction == queryDir);
+  REPORTER_ASSERT(r, SkPathDirection::kCW == queryDir);
   REPORTER_ASSERT(r, 0 == queryStart);
   REPORTER_ASSERT(r, !queryInverted);
 
   REPORTER_ASSERT(
       r, exampleInvHairlineCase.asRRect(&queryRR, &queryDir, &queryStart, &queryInverted));
   REPORTER_ASSERT(r, queryRR == rrect);
-  REPORTER_ASSERT(r, SkPath::kCW_Direction == queryDir);
+  REPORTER_ASSERT(r, SkPathDirection::kCW == queryDir);
   REPORTER_ASSERT(r, 0 == queryStart);
   REPORTER_ASSERT(r, queryInverted);
 
   REPORTER_ASSERT(r, exampleStrokeCase.asRRect(&queryRR, &queryDir, &queryStart, &queryInverted));
   REPORTER_ASSERT(r, queryRR == rrect);
-  REPORTER_ASSERT(r, SkPath::kCW_Direction == queryDir);
+  REPORTER_ASSERT(r, SkPathDirection::kCW == queryDir);
   REPORTER_ASSERT(r, 0 == queryStart);
   REPORTER_ASSERT(r, !queryInverted);
 
   REPORTER_ASSERT(
       r, exampleInvStrokeCase.asRRect(&queryRR, &queryDir, &queryStart, &queryInverted));
   REPORTER_ASSERT(r, queryRR == rrect);
-  REPORTER_ASSERT(r, SkPath::kCW_Direction == queryDir);
+  REPORTER_ASSERT(r, SkPathDirection::kCW == queryDir);
   REPORTER_ASSERT(r, 0 == queryStart);
   REPORTER_ASSERT(r, queryInverted);
 
@@ -1739,7 +1741,7 @@ void test_rrect(skiatest::Reporter* r, const SkRRect& rrect) {
   REPORTER_ASSERT(r, exampleInvStrokeAndFillCaseKey == exampleInvHairlineCaseKey);
 
   for (bool inverted : {false, true}) {
-    for (SkPath::Direction dir : {SkPath::kCW_Direction, SkPath::kCCW_Direction}) {
+    for (SkPathDirection dir : {SkPathDirection::kCW, SkPathDirection::kCCW}) {
       for (unsigned start = 0; start < 8; ++start) {
         for (bool dash : {false, true}) {
           const GrShape& fillCase = shapes[index(inverted, dir, start, kFill, dash)];
@@ -1792,7 +1794,7 @@ void test_rrect(skiatest::Reporter* r, const SkRRect& rrect) {
 
             // The pre-style case for the dash will match the non-dash example iff the
             // dir and start match (dir=cw, start=0).
-            if (0 == expectedStart && SkPath::kCW_Direction == dir) {
+            if (0 == expectedStart && SkPathDirection::kCW == dir) {
               e.compare(r, f, TestCase::kSameUpToPE_ComparisonExpecation);
               g.compare(r, h, TestCase::kSameUpToPE_ComparisonExpecation);
             } else {
@@ -1831,7 +1833,7 @@ DEF_TEST(GrShape_lines, r) {
   lineAC.lineTo(kC);
 
   SkPath invLineAB = lineAB;
-  invLineAB.setFillType(SkPath::kInverseEvenOdd_FillType);
+  invLineAB.setFillType(SkPathFillType::kInverseEvenOdd);
 
   SkPaint fill;
   SkPaint stroke;
@@ -2085,8 +2087,9 @@ DEF_TEST(GrShape, reporter) {
   SkTArray<std::unique_ptr<Geo>> geos;
   SkTArray<std::unique_ptr<RRectPathGeo>> rrectPathGeos;
 
-  for (auto r : {SkRect::MakeWH(10, 20), SkRect::MakeWH(-10, -20), SkRect::MakeWH(-10, 20),
-                 SkRect::MakeWH(10, -20)}) {
+  for (auto r :
+       {SkRect::MakeWH(10, 20), SkRect::MakeWH(-10, -20), SkRect::MakeWH(-10, 20),
+        SkRect::MakeWH(10, -20)}) {
     geos.emplace_back(new RectGeo(r));
     SkPath rectPath;
     rectPath.addRect(r);
@@ -2097,9 +2100,10 @@ DEF_TEST(GrShape, reporter) {
     rrectPathGeos.emplace_back(
         new RRectPathGeo(rectPath, r, RRectPathGeo::RRectForStroke::kYes, PathGeo::Invert::kNo));
   }
-  for (auto rr : {SkRRect::MakeRect(SkRect::MakeWH(10, 10)),
-                  SkRRect::MakeRectXY(SkRect::MakeWH(10, 10), 3, 4),
-                  SkRRect::MakeOval(SkRect::MakeWH(20, 20))}) {
+  for (auto rr :
+       {SkRRect::MakeRect(SkRect::MakeWH(10, 10)),
+        SkRRect::MakeRectXY(SkRect::MakeWH(10, 10), 3, 4),
+        SkRRect::MakeOval(SkRect::MakeWH(20, 20))}) {
     geos.emplace_back(new RRectGeo(rr));
     test_rrect(reporter, rr);
     SkPath rectPath;

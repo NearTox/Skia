@@ -136,8 +136,8 @@ class SkImageFilterLight : public SkRefCnt {
 
 class BaseLightingType {
  public:
-  constexpr BaseLightingType() noexcept = default;
-  virtual ~BaseLightingType() = default;
+  BaseLightingType() {}
+  virtual ~BaseLightingType() {}
 
   virtual SkPMColor light(
       const SkPoint3& normal, const SkPoint3& surfaceTolight, const SkPoint3& lightColor) const = 0;
@@ -688,7 +688,7 @@ class GrSpecularLightingEffect : public GrLightingEffect {
 
 class GrGLLight {
  public:
-  virtual ~GrGLLight() = default;
+  virtual ~GrGLLight() {}
 
   /**
    * This is called by GrGLLightingEffect::emitCode() before either of the two virtual functions
@@ -1691,11 +1691,11 @@ void GrGLLightingEffect::onSetData(
     fLight = lighting.light()->createGLLight();
   }
 
-  GrTextureProxy* proxy = lighting.textureSampler(0).proxy();
-  GrTexture* texture = proxy->peekTexture();
+  GrSurfaceProxy* proxy = lighting.textureSampler(0).proxy();
+  SkISize textureDims = proxy->backingStoreDimensions();
 
   float ySign = proxy->origin() == kTopLeft_GrSurfaceOrigin ? -1.0f : 1.0f;
-  pdman.set2f(fImageIncrementUni, 1.0f / texture->width(), ySign / texture->height());
+  pdman.set2f(fImageIncrementUni, 1.0f / textureDims.width(), ySign / textureDims.height());
   pdman.set1f(fSurfaceScaleUni, lighting.surfaceScale());
   sk_sp<SkImageFilterLight> transformedLight(lighting.light()->transform(lighting.filterMatrix()));
   fDomain.setData(pdman, lighting.domain(), proxy, lighting.textureSampler(0).samplerState());
@@ -1712,9 +1712,9 @@ void GrGLDiffuseLightingEffect::emitLightFunc(
   const char* kd;
   fKDUni = uniformHandler->addUniform(kFragment_GrShaderFlag, kHalf_GrSLType, "KD", &kd);
 
-  const GrShaderVar gLightArgs[] = {GrShaderVar("normal", kHalf3_GrSLType),
-                                    GrShaderVar("surfaceToLight", kHalf3_GrSLType),
-                                    GrShaderVar("lightColor", kHalf3_GrSLType)};
+  const GrShaderVar gLightArgs[] = {
+      GrShaderVar("normal", kHalf3_GrSLType), GrShaderVar("surfaceToLight", kHalf3_GrSLType),
+      GrShaderVar("lightColor", kHalf3_GrSLType)};
   SkString lightBody;
   lightBody.appendf("\thalf colorScale = %s * dot(normal, surfaceToLight);\n", kd);
   lightBody.appendf("\treturn half4(lightColor * saturate(colorScale), 1.0);\n");
@@ -1795,9 +1795,9 @@ void GrGLSpecularLightingEffect::emitLightFunc(
   fShininessUni =
       uniformHandler->addUniform(kFragment_GrShaderFlag, kHalf_GrSLType, "Shininess", &shininess);
 
-  const GrShaderVar gLightArgs[] = {GrShaderVar("normal", kHalf3_GrSLType),
-                                    GrShaderVar("surfaceToLight", kHalf3_GrSLType),
-                                    GrShaderVar("lightColor", kHalf3_GrSLType)};
+  const GrShaderVar gLightArgs[] = {
+      GrShaderVar("normal", kHalf3_GrSLType), GrShaderVar("surfaceToLight", kHalf3_GrSLType),
+      GrShaderVar("lightColor", kHalf3_GrSLType)};
   SkString lightBody;
   lightBody.appendf("\thalf3 halfDir = half3(normalize(surfaceToLight + half3(0, 0, 1)));\n");
   lightBody.appendf(

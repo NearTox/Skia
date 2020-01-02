@@ -20,18 +20,17 @@ namespace GrVkMemory {
  * Returns true if allocation succeeded.
  */
 bool AllocAndBindBufferMemory(
-    const GrVkGpu* gpu, VkBuffer buffer, GrVkBuffer::Type type, bool dynamic, GrVkAlloc* alloc);
+    GrVkGpu* gpu, VkBuffer buffer, GrVkBuffer::Type type, bool dynamic, GrVkAlloc* alloc);
 void FreeBufferMemory(const GrVkGpu* gpu, GrVkBuffer::Type type, const GrVkAlloc& alloc);
 
-bool AllocAndBindImageMemory(
-    const GrVkGpu* gpu, VkImage image, bool linearTiling, GrVkAlloc* alloc);
+bool AllocAndBindImageMemory(GrVkGpu* gpu, VkImage image, bool linearTiling, GrVkAlloc* alloc);
 void FreeImageMemory(const GrVkGpu* gpu, bool linearTiling, const GrVkAlloc& alloc);
 
 // Maps the entire GrVkAlloc and returns a pointer to the start of the allocation. Underneath
 // the hood, we may map more than the range of the GrVkAlloc (e.g. the entire VkDeviceMemory),
 // but the pointer returned will always be to the start of the GrVkAlloc. The caller should also
 // never assume more than the GrVkAlloc block has been mapped.
-void* MapAlloc(const GrVkGpu* gpu, const GrVkAlloc& alloc);
+void* MapAlloc(GrVkGpu* gpu, const GrVkAlloc& alloc);
 void UnmapAlloc(const GrVkGpu* gpu, const GrVkAlloc& alloc);
 
 // For the Flush and Invalidate calls, the offset should be relative to the GrVkAlloc. Thus this

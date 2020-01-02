@@ -885,16 +885,17 @@ bool GrReducedClip::drawStencilClipMask(
             GrPaint paint;
             paint.setXPFactory(GrDisableColorXPFactory::Get());
 
-            GrPathRenderer::DrawPathArgs args{context,
-                                              std::move(paint),
-                                              &kDrawToStencil,
-                                              renderTargetContext,
-                                              &stencilClip.fixedClip(),
-                                              &stencilClip.fixedClip().scissorRect(),
-                                              &SkMatrix::I(),
-                                              &shape,
-                                              pathAAType,
-                                              false};
+            GrPathRenderer::DrawPathArgs args{
+                context,
+                std::move(paint),
+                &kDrawToStencil,
+                renderTargetContext,
+                &stencilClip.fixedClip(),
+                &stencilClip.fixedClip().scissorRect(),
+                &SkMatrix::I(),
+                &shape,
+                pathAAType,
+                false};
             pr->drawPath(args);
           } else {
             GrPathRenderer::StencilPathArgs args;

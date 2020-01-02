@@ -476,6 +476,8 @@ class SK_API SkSurface : public SkRefCnt {
       @param width   one or greater
       @param height  one or greater
       @return        SkSurface if width and height are positive; otherwise, nullptr
+
+      example: https://fiddle.skia.org/c/@Surface_MakeNull
   */
   static sk_sp<SkSurface> MakeNull(int width, int height);
 
@@ -483,13 +485,13 @@ class SK_API SkSurface : public SkRefCnt {
 
       @return  number of pixel columns
   */
-  int width() const noexcept { return fWidth; }
+  int width() const { return fWidth; }
 
   /** Returns pixel row count; may be zero or greater.
 
       @return  number of pixel rows
   */
-  int height() const noexcept { return fHeight; }
+  int height() const { return fHeight; }
 
   /** Returns an ImageInfo describing the surface.
    */
@@ -500,8 +502,10 @@ class SK_API SkSurface : public SkRefCnt {
       notifyContentWillChange().
 
       @return  unique content identifier
+
+      example: https://fiddle.skia.org/c/@Surface_notifyContentWillChange
   */
-  uint32_t generationID() noexcept;
+  uint32_t generationID();
 
   /** \enum SkSurface::ContentChangeMode
       ContentChangeMode members are parameters to notifyContentWillChange().
@@ -517,6 +521,8 @@ class SK_API SkSurface : public SkRefCnt {
       TODO: Can kRetain_ContentChangeMode be deprecated?
 
       @param mode  one of: kDiscard_ContentChangeMode, kRetain_ContentChangeMode
+
+      example: https://fiddle.skia.org/c/@Surface_notifyContentWillChange
   */
   void notifyContentWillChange(ContentChangeMode mode);
 
@@ -587,6 +593,8 @@ class SK_API SkSurface : public SkRefCnt {
       is deleted.
 
       @return  drawing SkCanvas for SkSurface
+
+      example: https://fiddle.skia.org/c/@Surface_getCanvas
   */
   SkCanvas* getCanvas();
 
@@ -600,6 +608,8 @@ class SK_API SkSurface : public SkRefCnt {
       @param imageInfo  width, height, SkColorType, SkAlphaType, SkColorSpace,
                         of SkSurface; width and height must be greater than zero
       @return           compatible SkSurface or nullptr
+
+      example: https://fiddle.skia.org/c/@Surface_makeSurface
   */
   sk_sp<SkSurface> makeSurface(const SkImageInfo& imageInfo);
 
@@ -613,6 +623,8 @@ class SK_API SkSurface : public SkRefCnt {
       SkBudgeted::kYes.
 
       @return  SkImage initialized with SkSurface contents
+
+      example: https://fiddle.skia.org/c/@Surface_makeImageSnapshot
   */
   sk_sp<SkImage> makeImageSnapshot();
 
@@ -624,6 +636,8 @@ class SK_API SkSurface : public SkRefCnt {
    *    it and the surface.
    *  - If bounds does not intersect the surface, then this returns nullptr.
    *  - If bounds == the surface, then this is the same as calling the no-parameter variant.
+
+      example: https://fiddle.skia.org/c/@Surface_makeImageSnapshot_2
    */
   sk_sp<SkImage> makeImageSnapshot(const SkIRect& bounds);
 
@@ -637,6 +651,8 @@ class SK_API SkSurface : public SkRefCnt {
       @param y       vertical offset in SkCanvas
       @param paint   SkPaint containing SkBlendMode, SkColorFilter, SkImageFilter,
                      and so on; or nullptr
+
+      example: https://fiddle.skia.org/c/@Surface_draw
   */
   void draw(SkCanvas* canvas, SkScalar x, SkScalar y, const SkPaint* paint);
 
@@ -648,6 +664,8 @@ class SK_API SkSurface : public SkRefCnt {
 
       @param pixmap  storage for pixel state if pixels are readable; otherwise, ignored
       @return        true if SkSurface has direct access to pixels
+
+      example: https://fiddle.skia.org/c/@Surface_peekPixels
   */
   bool peekPixels(SkPixmap* pixmap);
 
@@ -677,6 +695,8 @@ class SK_API SkSurface : public SkRefCnt {
       @param srcX  offset into readable pixels on x-axis; may be negative
       @param srcY  offset into readable pixels on y-axis; may be negative
       @return      true if pixels were copied
+
+      example: https://fiddle.skia.org/c/@Surface_readPixels
   */
   bool readPixels(const SkPixmap& dst, int srcX, int srcY);
 
@@ -739,6 +759,8 @@ class SK_API SkSurface : public SkRefCnt {
       @param srcX  offset into readable pixels on x-axis; may be negative
       @param srcY  offset into readable pixels on y-axis; may be negative
       @return      true if pixels were copied
+
+      example: https://fiddle.skia.org/c/@Surface_readPixels_3
   */
   bool readPixels(const SkBitmap& dst, int srcX, int srcY);
 
@@ -805,17 +827,6 @@ class SK_API SkSurface : public SkRefCnt {
       const SkImageInfo& info, const SkIRect& srcRect, RescaleGamma rescaleGamma,
       SkFilterQuality rescaleQuality, ReadPixelsCallback callback, ReadPixelsContext context);
 
-  /** Legacy version of asyncRescaleAndReadPixels() that passes data directly to the callback
-      rather than using AsyncReadResult. The data is only valid during the lifetime of the
-      callback.
-
-      Deprecated.
-   */
-  using LegacyReadPixelsCallback = void(ReadPixelsContext, const void* data, size_t rowBytes);
-  void asyncRescaleAndReadPixels(
-      const SkImageInfo& info, const SkIRect& srcRect, RescaleGamma rescaleGamma,
-      SkFilterQuality rescaleQuality, LegacyReadPixelsCallback callback, ReadPixelsContext context);
-
   /**
       Similar to asyncRescaleAndReadPixels but performs an additional conversion to YUV. The
       RGB->YUV conversion is controlled by 'yuvColorSpace'. The YUV data is returned as three
@@ -848,19 +859,6 @@ class SK_API SkSurface : public SkRefCnt {
       const SkISize& dstSize, RescaleGamma rescaleGamma, SkFilterQuality rescaleQuality,
       ReadPixelsCallback callback, ReadPixelsContext);
 
-  /** Legacy version of asyncRescaleAndReadPixelsYUV420() that passes data directly to the
-      callback rather than using AsyncReadResult. The data is only valid during the lifetime of
-      the callback.
-
-      Deprecated.
-   */
-  using LegacyReadPixelsCallbackYUV420 =
-      void(ReadPixelsContext, const void* data[3], size_t rowBytes[3]);
-  void asyncRescaleAndReadPixelsYUV420(
-      SkYUVColorSpace yuvColorSpace, sk_sp<SkColorSpace> dstColorSpace, const SkIRect& srcRect,
-      int dstW, int dstH, RescaleGamma rescaleGamma, SkFilterQuality rescaleQuality,
-      LegacyReadPixelsCallbackYUV420 callback, ReadPixelsContext);
-
   /** Copies SkRect of pixels from the src SkPixmap to the SkSurface.
 
       Source SkRect corners are (0, 0) and (src.width(), src.height()).
@@ -873,6 +871,8 @@ class SK_API SkSurface : public SkRefCnt {
       @param src   storage for pixels to copy to SkSurface
       @param dstX  x-axis position relative to SkSurface to begin copy; may be negative
       @param dstY  y-axis position relative to SkSurface to begin copy; may be negative
+
+      example: https://fiddle.skia.org/c/@Surface_writePixels
   */
   void writePixels(const SkPixmap& src, int dstX, int dstY);
 
@@ -888,6 +888,8 @@ class SK_API SkSurface : public SkRefCnt {
       @param src   storage for pixels to copy to SkSurface
       @param dstX  x-axis position relative to SkSurface to begin copy; may be negative
       @param dstY  y-axis position relative to SkSurface to begin copy; may be negative
+
+      example: https://fiddle.skia.org/c/@Surface_writePixels_2
   */
   void writePixels(const SkBitmap& src, int dstX, int dstY);
 
@@ -895,7 +897,7 @@ class SK_API SkSurface : public SkRefCnt {
 
       @return  LCD striping orientation and setting for device independent fonts
   */
-  const SkSurfaceProps& props() const noexcept { return fProps; }
+  const SkSurfaceProps& props() const { return fProps; }
 
   /** Issues pending SkSurface commands to the GPU-backed API and resolves any SkSurface MSAA.
 
@@ -982,6 +984,8 @@ class SK_API SkSurface : public SkRefCnt {
 
       @param characterization  properties for parallel drawing
       @return                  true if supported
+
+      example: https://fiddle.skia.org/c/@Surface_characterize
   */
   bool characterize(SkSurfaceCharacterization* characterization) const;
 
@@ -993,6 +997,8 @@ class SK_API SkSurface : public SkRefCnt {
 
       @param deferredDisplayList  drawing commands
       @return                     false if deferredDisplayList is not compatible
+
+      example: https://fiddle.skia.org/c/@Surface_draw_2
   */
   bool draw(SkDeferredDisplayList* deferredDisplayList);
 
@@ -1001,7 +1007,7 @@ class SK_API SkSurface : public SkRefCnt {
   SkSurface(const SkImageInfo& imageInfo, const SkSurfaceProps* surfaceProps);
 
   // called by subclass if their contents have changed
-  void dirtyGenerationID() noexcept { fGenerationID = 0; }
+  void dirtyGenerationID() { fGenerationID = 0; }
 
  private:
   const SkSurfaceProps fProps;

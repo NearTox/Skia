@@ -37,7 +37,7 @@ class SkTypeface;
  */
 class GrPathRendering {
  public:
-  virtual ~GrPathRendering() = default;
+  virtual ~GrPathRendering() {}
 
   enum PathTransformType {
     kNone_PathTransformType,        //!< []

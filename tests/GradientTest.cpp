@@ -336,8 +336,8 @@ static void test_clamping_overflow(skiatest::Reporter*) {
 static void test_degenerate_linear(skiatest::Reporter*) {
   SkPaint p;
   const SkColor colors[] = {SK_ColorRED, SK_ColorGREEN};
-  const SkPoint pts[] = {SkPoint::Make(-46058024627067344430605278824628224.0f, 0),
-                         SkPoint::Make(SK_ScalarMax, 0)};
+  const SkPoint pts[] = {
+      SkPoint::Make(-46058024627067344430605278824628224.0f, 0), SkPoint::Make(SK_ScalarMax, 0)};
 
   p.setShader(SkGradientShader::MakeLinear(pts, colors, nullptr, 2, SkTileMode::kClamp));
   sk_sp<SkSurface> surface(SkSurface::MakeRasterN32Premul(50, 50));

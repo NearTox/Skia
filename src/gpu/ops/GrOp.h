@@ -18,6 +18,7 @@
 #include <atomic>
 #include <new>
 
+class GrAppliedClip;
 class GrCaps;
 class GrOpFlushState;
 class GrOpsRenderPass;
@@ -68,7 +69,7 @@ class GrOp : private SkNoncopyable {
 
   virtual const char* name() const = 0;
 
-  using VisitProxyFunc = std::function<void(GrTextureProxy*, GrMipMapped)>;
+  using VisitProxyFunc = std::function<void(GrSurfaceProxy*, GrMipMapped)>;
 
   virtual void visitProxies(const VisitProxyFunc&) const {
     // This default implementation assumes the op has no proxies
@@ -159,7 +160,11 @@ class GrOp : private SkNoncopyable {
    * onPrePrepare must be prepared to handle both cases (when onPrePrepare has been called
    * ahead of time and when it has not been called).
    */
-  void prePrepare(GrRecordingContext* context) { this->onPrePrepare(context); }
+  void prePrepare(
+      GrRecordingContext* context, GrSurfaceProxyView* dstView, GrAppliedClip* clip,
+      const GrXferProcessor::DstProxyView& dstProxyView) {
+    this->onPrePrepare(context, dstView, clip, dstProxyView);
+  }
 
   /**
    * Called prior to executing. The op should perform any resource creation or data transfers
@@ -265,8 +270,7 @@ class GrOp : private SkNoncopyable {
     this->setBoundsFlags(aabloat, zeroArea);
   }
   void makeFullScreen(GrSurfaceProxy* proxy) {
-    this->setBounds(
-        SkRect::MakeIWH(proxy->width(), proxy->height()), HasAABloat::kNo, IsHairline::kNo);
+    this->setBounds(proxy->getBoundsRect(), HasAABloat::kNo, IsHairline::kNo);
   }
 
   static uint32_t GenOpClassID() { return GenID(&gCurrOpClassID); }
@@ -286,8 +290,10 @@ class GrOp : private SkNoncopyable {
     return CombineResult::kCannotCombine;
   }
 
-  // Only GrMeshDrawOp currently overrides this virtual
-  virtual void onPrePrepare(GrRecordingContext*) {}
+  // TODO: the parameters to onPrePrepare mirror GrOpFlushState::OpArgs - fuse the two?
+  virtual void onPrePrepare(
+      GrRecordingContext*, const GrSurfaceProxyView*, GrAppliedClip*,
+      const GrXferProcessor::DstProxyView&) {}
   virtual void onPrepare(GrOpFlushState*) = 0;
   // If this op is chained then chainBounds is the union of the bounds of all ops in the chain.
   // Otherwise, this op's bounds.

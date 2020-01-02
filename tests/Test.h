@@ -113,6 +113,7 @@ extern bool IsGLContextType(GrContextFactoryContextType);
 extern bool IsVulkanContextType(GrContextFactoryContextType);
 extern bool IsMetalContextType(GrContextFactoryContextType);
 extern bool IsRenderingGLContextType(GrContextFactoryContextType);
+extern bool IsRenderingGLOrMetalContextType(GrContextFactoryContextType);
 extern bool IsMockContextType(GrContextFactoryContextType);
 void RunWithGPUTestContexts(
     GrContextTestFn*, GrContextTypeFilterFn*, Reporter*, const GrContextOptions&);

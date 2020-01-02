@@ -16,23 +16,23 @@ class SkDiscardableMemory;
 
 class SkCachedData : ::SkNoncopyable {
  public:
-  SkCachedData(void* mallocData, size_t size) noexcept;
+  SkCachedData(void* mallocData, size_t size);
   SkCachedData(size_t size, SkDiscardableMemory*);
   virtual ~SkCachedData();
 
-  size_t size() const noexcept { return fSize; }
-  const void* data() const noexcept { return fData; }
+  size_t size() const { return fSize; }
+  const void* data() const { return fData; }
 
-  void* writable_data() noexcept { return fData; }
+  void* writable_data() { return fData; }
 
   void ref() const { this->internalRef(false); }
   void unref() const { this->internalUnref(false); }
 
-  int testing_only_getRefCnt() const noexcept { return fRefCnt; }
-  bool testing_only_isLocked() const noexcept { return fIsLocked; }
-  bool testing_only_isInCache() const noexcept { return fInCache; }
+  int testing_only_getRefCnt() const { return fRefCnt; }
+  bool testing_only_isLocked() const { return fIsLocked; }
+  bool testing_only_isInCache() const { return fInCache; }
 
-  SkDiscardableMemory* diagnostic_only_getDiscardable() const noexcept {
+  SkDiscardableMemory* diagnostic_only_getDiscardable() const {
     return kDiscardableMemory_StorageType == fStorageType ? fStorage.fDM : nullptr;
   }
 
@@ -79,7 +79,7 @@ class SkCachedData : ::SkNoncopyable {
 #ifdef SK_DEBUG
   void validate() const;
 #else
-  void validate() const noexcept {}
+  void validate() const {}
 #endif
 
   /*

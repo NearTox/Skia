@@ -95,10 +95,10 @@ static void apply_clip(const SkClipStack& stack, const SkRect& outerBounds, F fn
 
 static void append_clip_path(const SkPath& clipPath, SkWStream* wStream) {
   SkPDFUtils::EmitPath(clipPath, SkPaint::kFill_Style, wStream);
-  SkPath::FillType clipFill = clipPath.getFillType();
-  NOT_IMPLEMENTED(clipFill == SkPath::kInverseEvenOdd_FillType, false);
-  NOT_IMPLEMENTED(clipFill == SkPath::kInverseWinding_FillType, false);
-  if (clipFill == SkPath::kEvenOdd_FillType) {
+  SkPathFillType clipFill = clipPath.getNewFillType();
+  NOT_IMPLEMENTED(clipFill == SkPathFillType::kInverseEvenOdd, false);
+  NOT_IMPLEMENTED(clipFill == SkPathFillType::kInverseWinding, false);
+  if (clipFill == SkPathFillType::kEvenOdd) {
     wStream->writeText("W* n\n");
   } else {
     wStream->writeText("W n\n");
@@ -140,12 +140,12 @@ void SkPDFGraphicStackState::updateClip(const SkClipStack* clipStack, const SkIR
   if (clipStackGenID == currentEntry()->fClipStackGenID) {
     return;
   }
-    while (fStackDepth > 0) {
-      this->pop();
-      if (clipStackGenID == currentEntry()->fClipStackGenID) {
-        return;
-      }
+  while (fStackDepth > 0) {
+    this->pop();
+    if (clipStackGenID == currentEntry()->fClipStackGenID) {
+      return;
     }
+  }
     SkASSERT(currentEntry()->fClipStackGenID == SkClipStack::kWideOpenGenID);
     if (clipStackGenID != SkClipStack::kWideOpenGenID) {
       SkASSERT(clipStack);

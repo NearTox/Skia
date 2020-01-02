@@ -23,7 +23,7 @@
 #include "include/private/SkTemplates.h"
 #include "include/private/SkTo.h"
 
-class SK_API SkWriter32 : SkNoncopyable {
+class SkWriter32 : SkNoncopyable {
  public:
   /**
    *  The caller can specify an initial block of storage, which the caller manages.
@@ -37,13 +37,13 @@ class SK_API SkWriter32 : SkNoncopyable {
   }
 
   // return the current offset (will always be a multiple of 4)
-  size_t bytesWritten() const noexcept { return fUsed; }
+  size_t bytesWritten() const { return fUsed; }
 
   // Returns true iff all of the bytes written so far are stored in the initial storage
   // buffer provided in the constructor or the most recent call to reset.
-  bool usingInitialStorage() const noexcept { return fData == fExternal; }
+  bool usingInitialStorage() const { return fData == fExternal; }
 
-  void reset(void* external = nullptr, size_t externalBytes = 0) noexcept {
+  void reset(void* external = nullptr, size_t externalBytes = 0) {
     // we cast this pointer to int* and float* at times, so assert that it is aligned.
     SkASSERT(SkIsAlign4((uintptr_t)external));
     // we always write multiples of 4-bytes, so truncate down the size to match that
@@ -184,7 +184,7 @@ class SK_API SkWriter32 : SkNoncopyable {
    *  in a call to writeString(). If the length is not specified, it will be
    *  computed by calling strlen().
    */
-  static size_t WriteStringSize(const char* str, size_t len = (size_t)-1) noexcept;
+  static size_t WriteStringSize(const char* str, size_t len = (size_t)-1);
 
   void writeData(const SkData* data) {
     uint32_t len = data ? SkToU32(data->size()) : 0;
@@ -194,22 +194,20 @@ class SK_API SkWriter32 : SkNoncopyable {
     }
   }
 
-  static size_t WriteDataSize(const SkData* data) noexcept {
-    return 4 + SkAlign4(data ? data->size() : 0);
-  }
+  static size_t WriteDataSize(const SkData* data) { return 4 + SkAlign4(data ? data->size() : 0); }
 
   /**
    *  Move the cursor back to offset bytes from the beginning.
    *  offset must be a multiple of 4 no greater than size().
    */
-  void rewindToOffset(size_t offset) noexcept {
+  void rewindToOffset(size_t offset) {
     SkASSERT(SkAlign4(offset) == offset);
     SkASSERT(offset <= bytesWritten());
     fUsed = offset;
   }
 
   // copy into a single buffer (allocated by caller). Must be at least size()
-  void flatten(void* dst) const noexcept { memcpy(dst, fData, fUsed); }
+  void flatten(void* dst) const { memcpy(dst, fData, fUsed); }
 
   bool writeToStream(SkWStream* stream) const { return stream->write(fData, fUsed); }
 
@@ -225,7 +223,7 @@ class SK_API SkWriter32 : SkNoncopyable {
   sk_sp<SkData> snapshotAsData() const;
 
  private:
-  void growToAtLeast(size_t size) noexcept;
+  void growToAtLeast(size_t size);
 
   uint8_t* fData;                    // Points to either fInternal or fExternal.
   size_t fCapacity;                  // Number of bytes we can write to fData.

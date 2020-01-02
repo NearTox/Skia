@@ -14,15 +14,16 @@
 class GrWaitRenderTask final : public GrRenderTask {
  public:
   GrWaitRenderTask(
-      sk_sp<GrSurfaceProxy> proxy, std::unique_ptr<sk_sp<GrSemaphore>[]> semaphores,
+      GrSurfaceProxyView surfaceView, std::unique_ptr<std::unique_ptr<GrSemaphore>[]> semaphores,
       int numSemaphores)
-      : GrRenderTask(std::move(proxy)),
+      : GrRenderTask(std::move(surfaceView)),
         fSemaphores(std::move(semaphores)),
         fNumSemaphores(numSemaphores) {}
 
  private:
   bool onIsUsed(GrSurfaceProxy* proxy) const override {
-    SkASSERT(proxy != fTarget.get());  // This case should be handled by GrRenderTask.
+    // This case should be handled by GrRenderTask.
+    SkASSERT(proxy != fTargetView.proxy());
     return false;
   }
   void handleInternalAllocationFailure() override {}
@@ -36,9 +37,9 @@ class GrWaitRenderTask final : public GrRenderTask {
 
 #ifdef SK_DEBUG
   // No non-dst proxies.
-  void visitProxies_debugOnly(const VisitSurfaceProxyFunc& fn) const override {}
+  void visitProxies_debugOnly(const GrOp::VisitProxyFunc& fn) const override {}
 #endif
-  std::unique_ptr<sk_sp<GrSemaphore>[]> fSemaphores;
+  std::unique_ptr<std::unique_ptr<GrSemaphore>[]> fSemaphores;
   int fNumSemaphores;
 };
 

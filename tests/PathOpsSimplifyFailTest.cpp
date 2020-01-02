@@ -59,11 +59,11 @@ static void failOne(skiatest::Reporter* reporter, int index) {
     case 12: path.moveTo(nonFinitePts[i]); break;
   }
   SkPath result;
-  result.setFillType(SkPath::kWinding_FillType);
+  result.setFillType(SkPathFillType::kWinding);
   bool success = Simplify(path, &result);
   REPORTER_ASSERT(reporter, !success);
   REPORTER_ASSERT(reporter, result.isEmpty());
-  REPORTER_ASSERT(reporter, result.getFillType() == SkPath::kWinding_FillType);
+  REPORTER_ASSERT(reporter, result.getNewFillType() == SkPathFillType::kWinding);
   reporter->bumpTestCount();
 }
 
@@ -85,10 +85,10 @@ static void dontFailOne(skiatest::Reporter* reporter, int index) {
     case 10: path.moveTo(finitePts[f]); break;
   }
   SkPath result;
-  result.setFillType(SkPath::kWinding_FillType);
+  result.setFillType(SkPathFillType::kWinding);
   bool success = Simplify(path, &result);
   REPORTER_ASSERT(reporter, success);
-  REPORTER_ASSERT(reporter, result.getFillType() != SkPath::kWinding_FillType);
+  REPORTER_ASSERT(reporter, result.getNewFillType() != SkPathFillType::kWinding);
   reporter->bumpTestCount();
 }
 
@@ -150,7 +150,6 @@ static void fuzz_x2(skiatest::Reporter* reporter, const char* filename) {
 
 static void fuzz763_1(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)0);
   path.moveTo(SkBits2Float(0x00000000), SkBits2Float(0x00000000));  // 0, 0
   path.cubicTo(
       SkBits2Float(0xbcb63000), SkBits2Float(0xb6b6b6b7), SkBits2Float(0x38b6b6b6),
@@ -219,7 +218,6 @@ static void fuzz763_1(skiatest::Reporter* reporter, const char* filename) {
 
 static void fuzz763_2s(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType((SkPath::FillType)0);
   path.moveTo(SkBits2Float(0x00000000), SkBits2Float(0x00000000));  // 0, 0
   path.cubicTo(
       SkBits2Float(0x76773011), SkBits2Float(0x5d66fe78), SkBits2Float(0xbbeeff66),
@@ -321,7 +319,6 @@ static void fuzz763_2s(skiatest::Reporter* reporter, const char* filename) {
 
 static void fuzz_x3(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType(SkPath::kWinding_FillType);
   path.moveTo(SkBits2Float(0x00000000), SkBits2Float(0x00000000));  // 0, 0
   path.cubicTo(
       SkBits2Float(0x92743420), SkBits2Float(0x74747474), SkBits2Float(0x0f747c74),
@@ -351,7 +348,6 @@ static void fuzz_x3(skiatest::Reporter* reporter, const char* filename) {
 
 static void fuzz_k1(skiatest::Reporter* reporter, const char* filename) {
   SkPath path;
-  path.setFillType(SkPath::kWinding_FillType);
   path.moveTo(SkBits2Float(0x00000000), SkBits2Float(0x00000000));  // 0, 0
   path.conicTo(
       SkBits2Float(0x2073732f), SkBits2Float(0x73f17f00), SkBits2Float(0x737b7b73),

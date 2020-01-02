@@ -114,14 +114,14 @@ void SkRRect::setNinePatch(
 // These parameters intentionally double. Apropos crbug.com/463920, if one of the
 // radii is huge while the other is small, single precision math can completely
 // miss the fact that a scale is required.
-static double compute_min_scale(double rad1, double rad2, double limit, double curMin) noexcept {
+static double compute_min_scale(double rad1, double rad2, double limit, double curMin) {
   if ((rad1 + rad2) > limit) {
     return SkTMin(curMin, limit / (rad1 + rad2));
   }
   return curMin;
 }
 
-static bool clamp_to_zero(SkVector radii[4]) noexcept {
+static bool clamp_to_zero(SkVector radii[4]) {
   bool allCornersSquare = true;
 
   // Clamp negative radii to zero
@@ -179,7 +179,7 @@ bool SkRRect::initializeRect(const SkRect& rect) {
 // If we can't distinguish one of the radii relative to the other, force it to zero so it
 // doesn't confuse us later. See crbug.com/850350
 //
-static void flush_to_zero(SkScalar& a, SkScalar& b) noexcept {
+static void flush_to_zero(SkScalar& a, SkScalar& b) {
   SkASSERT(a >= 0);
   SkASSERT(b >= 0);
   if (a + b == a) {
@@ -236,7 +236,7 @@ void SkRRect::scaleRadii(const SkRect& rect) {
 
 // This method determines if a point known to be inside the RRect's bounds is
 // inside all the corners.
-bool SkRRect::checkCornerContainment(SkScalar x, SkScalar y) const noexcept {
+bool SkRRect::checkCornerContainment(SkScalar x, SkScalar y) const {
   SkPoint canonicalPt;  // (x,y) translated to one of the quadrants
   int index;
 
@@ -296,7 +296,7 @@ bool SkRRect::checkCornerContainment(SkScalar x, SkScalar y) const noexcept {
   return dist <= SkScalarSquare(fRadii[index].fX * fRadii[index].fY);
 }
 
-bool SkRRectPriv::AllCornersCircular(const SkRRect& rr, SkScalar tolerance) noexcept {
+bool SkRRectPriv::AllCornersCircular(const SkRRect& rr, SkScalar tolerance) {
   return SkScalarNearlyEqual(rr.fRadii[0].fX, rr.fRadii[0].fY, tolerance) &&
          SkScalarNearlyEqual(rr.fRadii[1].fX, rr.fRadii[1].fY, tolerance) &&
          SkScalarNearlyEqual(rr.fRadii[2].fX, rr.fRadii[2].fY, tolerance) &&
@@ -324,7 +324,7 @@ bool SkRRect::contains(const SkRect& rect) const {
          this->checkCornerContainment(rect.fLeft, rect.fBottom);
 }
 
-static bool radii_are_nine_patch(const SkVector radii[4]) noexcept {
+static bool radii_are_nine_patch(const SkVector radii[4]) {
   return radii[SkRRect::kUpperLeft_Corner].fX == radii[SkRRect::kLowerLeft_Corner].fX &&
          radii[SkRRect::kUpperLeft_Corner].fY == radii[SkRRect::kUpperRight_Corner].fY &&
          radii[SkRRect::kUpperRight_Corner].fX == radii[SkRRect::kLowerRight_Corner].fX &&
@@ -332,7 +332,7 @@ static bool radii_are_nine_patch(const SkVector radii[4]) noexcept {
 }
 
 // There is a simplified version of this method in setRectXY
-void SkRRect::computeType() noexcept {
+void SkRRect::computeType() {
   if (fRect.isEmpty()) {
     SkASSERT(fRect.isSorted());
     for (size_t i = 0; i < SK_ARRAY_COUNT(fRadii); ++i) {
@@ -603,7 +603,7 @@ void SkRRect::dump(bool asHex) const {
 /**
  *  We need all combinations of predicates to be true to have a "safe" radius value.
  */
-static constexpr bool are_radius_check_predicates_valid(SkScalar rad, SkScalar min, SkScalar max) {
+static bool are_radius_check_predicates_valid(SkScalar rad, SkScalar min, SkScalar max) {
   return (min <= max) && (rad <= max - min) && (min + rad <= max) && (max - rad >= min) && rad >= 0;
 }
 
@@ -678,7 +678,7 @@ bool SkRRect::isValid() const {
   return true;
 }
 
-bool SkRRect::AreRectAndRadiiValid(const SkRect& rect, const SkVector radii[4]) noexcept {
+bool SkRRect::AreRectAndRadiiValid(const SkRect& rect, const SkVector radii[4]) {
   if (!rect.isFinite() || !rect.isSorted()) {
     return false;
   }

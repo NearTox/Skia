@@ -34,10 +34,9 @@ class GrMockCaps : public GrCaps {
     fShaderCaps->fMaxFragmentSamplers = options.fMaxFragmentSamplers;
     fShaderCaps->fShaderDerivativeSupport = options.fShaderDerivativeSupport;
     fShaderCaps->fDualSourceBlendingSupport = options.fDualSourceBlendingSupport;
-    fShaderCaps->fSampleVariablesSupport = true;
-    fShaderCaps->fSampleVariablesStencilSupport = true;
+    fShaderCaps->fSampleMaskSupport = true;
 
-    this->applyOptionsOverrides(contextOptions);
+    this->finishInitialization(contextOptions);
   }
 
   bool isFormatSRGB(const GrBackendFormat& format) const override {
@@ -134,6 +133,8 @@ class GrMockCaps : public GrCaps {
   GrSwizzle getOutputSwizzle(const GrBackendFormat&, GrColorType) const override {
     return GrSwizzle();
   }
+
+  GrProgramDesc makeDesc(const GrRenderTarget*, const GrProgramInfo&) const override;
 
 #if GR_TEST_UTILS
   std::vector<GrCaps::TestFormatColorTypeCombination> getTestingCombinations() const override;

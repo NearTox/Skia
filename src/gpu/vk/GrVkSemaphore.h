@@ -19,12 +19,14 @@ class GrVkGpu;
 
 class GrVkSemaphore : public GrSemaphore {
  public:
-  static sk_sp<GrVkSemaphore> Make(GrVkGpu* gpu, bool isOwned);
+  static std::unique_ptr<GrVkSemaphore> Make(GrVkGpu* gpu, bool isOwned);
 
   using WrapType = GrResourceProvider::SemaphoreWrapType;
 
-  static sk_sp<GrVkSemaphore> MakeWrapped(
+  static std::unique_ptr<GrVkSemaphore> MakeWrapped(
       GrVkGpu* gpu, VkSemaphore semaphore, WrapType wrapType, GrWrapOwnership);
+
+  ~GrVkSemaphore() override;
 
   GrBackendSemaphore backendSemaphore() const override;
 
@@ -46,6 +48,8 @@ class GrVkSemaphore : public GrSemaphore {
 
     void markAsSignaled() { fHasBeenSubmittedToQueueForSignal = true; }
     void markAsWaited() { fHasBeenSubmittedToQueueForWait = true; }
+
+    void setIsOwned() { fIsOwned = true; }
 
 #ifdef SK_TRACE_VK_RESOURCES
     void dumpInfo() const override {
@@ -69,10 +73,11 @@ class GrVkSemaphore : public GrSemaphore {
   GrVkSemaphore(
       GrVkGpu* gpu, VkSemaphore semaphore, bool prohibitSignal, bool prohibitWait, bool isOwned);
 
-  void onRelease() override;
-  void onAbandon() override;
+  void setIsOwned() override { fResource->setIsOwned(); }
 
   Resource* fResource;
+
+  GrVkGpu* fGpu;
 
   typedef GrSemaphore INHERITED;
 };

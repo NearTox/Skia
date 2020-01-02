@@ -26,6 +26,7 @@
 #include "src/gpu/GrRenderTargetContextPriv.h"
 #include "src/gpu/effects/GrRRectEffect.h"
 #include "src/gpu/effects/GrSkSLFP.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #include "src/gpu/ops/GrFillRectOp.h"
 #include "tools/Resources.h"
 #include "tools/ToolUtils.h"
@@ -36,7 +37,7 @@ class SampleCoordEffect : public GrFragmentProcessor {
 
   SampleCoordEffect(std::unique_ptr<GrFragmentProcessor> child)
       : INHERITED(CLASS_ID, kNone_OptimizationFlags) {
-    child->setComputeLocalCoordsInVertexShader(false);
+    child->setSampledWithExplicitCoords(true);
     this->registerChildProcessor(std::move(child));
   }
 
@@ -82,10 +83,9 @@ DEF_SIMPLE_GPU_GM_BG(
   SkBitmap bmp;
   GetResourceAsBitmap("images/mandrill_512_q075.jpg", &bmp);
   GrProxyProvider* proxyProvider = ctx->priv().proxyProvider();
-  GrColorType srcColorType = SkColorTypeToGrColorType(bmp.colorType());
   sk_sp<GrTextureProxy> texture = proxyProvider->createProxyFromBitmap(bmp, GrMipMapped::kNo);
   std::unique_ptr<GrFragmentProcessor> imgFP =
-      GrSimpleTextureEffect::Make(texture, srcColorType, SkMatrix());
+      GrSimpleTextureEffect::Make(texture, bmp.alphaType(), SkMatrix());
   auto fp = std::unique_ptr<GrFragmentProcessor>(new SampleCoordEffect(std::move(imgFP)));
 
   GrPaint grPaint;

@@ -60,7 +60,7 @@ class GrQuadBuffer {
           fBuffer(buffer),
           fCurrentEntry(nullptr),
           fNextEntry(buffer->fData.begin()) {
-      SkDEBUGCODE(fExpectedCount = buffer->count());
+      SkDEBUGCODE(fExpectedCount = buffer->count();)
     }
 
     bool next();
@@ -70,17 +70,19 @@ class GrQuadBuffer {
       return *(fBuffer->metadata(fCurrentEntry));
     }
 
-    const GrQuad& deviceQuad() const {
+    // The returned pointer is mutable so that the object can be used for scratch calculations
+    // during op preparation. However, any changes are not persisted in the GrQuadBuffer and
+    // subsequent calls to next() will overwrite the state of the GrQuad.
+    GrQuad* deviceQuad() {
       this->validate();
-      return fDeviceQuad;
+      return &fDeviceQuad;
     }
 
-    // If isLocalValid() returns false, this returns an empty quad (all 0s) so that localQuad()
-    // can be called without triggering any sanitizers, for convenience when some other state
-    // ensures that the quad will eventually not be used.
-    const GrQuad& localQuad() const {
+    // If isLocalValid() returns false, this returns nullptr. Otherwise, the returned pointer
+    // is mutable in the same manner as deviceQuad().
+    GrQuad* localQuad() {
       this->validate();
-      return fLocalQuad;
+      return this->isLocalValid() ? &fLocalQuad : nullptr;
     }
 
     bool isLocalValid() const {
@@ -100,9 +102,11 @@ class GrQuadBuffer {
     // automatically while unpacking the quad data.
     const char* fNextEntry;
 
-    SkDEBUGCODE(int fExpectedCount);
+    SkDEBUGCODE(int fExpectedCount;)
 
-    void validate() const { SkDEBUGCODE(fBuffer->validate(fCurrentEntry, fExpectedCount)); }
+        void validate() const {
+      SkDEBUGCODE(fBuffer->validate(fCurrentEntry, fExpectedCount);)
+    }
   };
 
   Iter iterator() const { return Iter(this); }
@@ -113,7 +117,7 @@ class GrQuadBuffer {
   class MetadataIter {
    public:
     MetadataIter(GrQuadBuffer<T>* list) : fBuffer(list), fCurrentEntry(nullptr) {
-      SkDEBUGCODE(fExpectedCount = list->count());
+      SkDEBUGCODE(fExpectedCount = list->count();)
     }
 
     bool next();
@@ -132,9 +136,11 @@ class GrQuadBuffer {
     GrQuadBuffer<T>* fBuffer;
     char* fCurrentEntry;
 
-    SkDEBUGCODE(int fExpectedCount);
+    SkDEBUGCODE(int fExpectedCount;)
 
-    void validate() const { SkDEBUGCODE(fBuffer->validate(fCurrentEntry, fExpectedCount)); }
+        void validate() const {
+      SkDEBUGCODE(fBuffer->validate(fCurrentEntry, fExpectedCount);)
+    }
   };
 
   MetadataIter metadata() { return MetadataIter(this); }
@@ -145,7 +151,7 @@ class GrQuadBuffer {
     unsigned fLocalType : 2;  // Ignore if fHasLocals is false
     unsigned fHasLocals : 1;
     // Known value to detect if iteration doesn't properly advance through the buffer
-    SkDEBUGCODE(unsigned fSentinel : 27);
+    SkDEBUGCODE(unsigned fSentinel : 27;)
   };
   static_assert(sizeof(Header) == sizeof(int32_t), "Header should be 4 bytes");
 
@@ -251,17 +257,9 @@ const float* GrQuadBuffer<T>::unpackQuad(
     memcpy(quad->xs(), coords, k3DQuadFloats * sizeof(float));
     coords = coords + k3DQuadFloats;
   } else {
-    // Fill in X and Y of the quad, and set W to 1s if needed
+    // Fill in X and Y of the quad, the setQuadType() below will set Ws to 1 if needed
     memcpy(quad->xs(), coords, k2DQuadFloats * sizeof(float));
     coords = coords + k2DQuadFloats;
-
-    if (quad->quadType() == GrQuad::Type::kPerspective) {
-      // The output quad was previously perspective, so its ws are not 1s
-      static constexpr float kNoPerspectiveWs[4] = {1.f, 1.f, 1.f, 1.f};
-      memcpy(quad->ws(), kNoPerspectiveWs, 4 * sizeof(float));
-    }
-    // Else the quad should already have 1s in w
-    SkASSERT(quad->w(0) == 1.f && quad->w(1) == 1.f && quad->w(2) == 1.f && quad->w(3) == 1.f);
   }
 
   quad->setQuadType(type);
@@ -281,10 +279,10 @@ void GrQuadBuffer<T>::append(const GrQuad& deviceQuad, T&& metadata, const GrQua
   h->fHasLocals = static_cast<unsigned>(localQuad != nullptr);
   h->fLocalType =
       static_cast<unsigned>(localQuad ? localQuad->quadType() : GrQuad::Type::kAxisAligned);
-  SkDEBUGCODE(h->fSentinel = static_cast<unsigned>(kSentinel));
+  SkDEBUGCODE(h->fSentinel = static_cast<unsigned>(kSentinel);)
 
-  // Second, the fixed-size metadata
-  static_assert(alignof(T) == 4, "Metadata must be 4 byte aligned");
+      // Second, the fixed-size metadata
+      static_assert(alignof(T) == 4, "Metadata must be 4 byte aligned");
   *(this->metadata(entry)) = std::move(metadata);
 
   // Then the variable blocks of x, y, and w float coordinates
@@ -350,10 +348,8 @@ bool GrQuadBuffer<T>::Iter::next() {
   coords = fBuffer->unpackQuad(static_cast<GrQuad::Type>(h->fDeviceType), coords, &fDeviceQuad);
   if (h->fHasLocals) {
     coords = fBuffer->unpackQuad(static_cast<GrQuad::Type>(h->fLocalType), coords, &fLocalQuad);
-  } else {
-    static const GrQuad kEmptyLocal(SkRect::MakeEmpty());
-    fLocalQuad = kEmptyLocal;
-  }
+  }  // else localQuad() will return a nullptr so no need to reset fLocalQuad
+
   // At this point, coords points to the start of the next entry
   fNextEntry = static_cast<const char*>(static_cast<const void*>(coords));
   SkASSERT((fNextEntry - fCurrentEntry) == fBuffer->entrySize(h));

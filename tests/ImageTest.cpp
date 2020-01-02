@@ -814,7 +814,7 @@ DEF_GPUTEST_FOR_GL_RENDERING_CONTEXTS(SkImage_NewFromTextureRelease, reporter, c
       SkImageInfo::Make(kWidth, kHeight, SkColorType::kRGBA_8888_SkColorType, kPremul_SkAlphaType);
   GrBackendTexture backendTex;
 
-  if (!create_backend_texture(
+  if (!CreateBackendTexture(
           ctx, &backendTex, ii, SkColors::kRed, GrMipMapped::kNo, GrRenderable::kNo)) {
     ERRORF(reporter, "couldn't create backend texture\n");
   }
@@ -841,7 +841,7 @@ DEF_GPUTEST_FOR_GL_RENDERING_CONTEXTS(SkImage_NewFromTextureRelease, reporter, c
   refImg.reset(nullptr);  // force a release of the image
   REPORTER_ASSERT(reporter, 1 == releaseChecker.fReleaseCount);
 
-  delete_backend_texture(ctx, backendTex);
+  DeleteBackendTexture(ctx, backendTex);
 }
 
 static void test_cross_context_image(
@@ -1060,22 +1060,22 @@ DEF_GPUTEST_FOR_GL_RENDERING_CONTEXTS(makeBackendTexture, reporter, ctxInfo) {
     std::function<sk_sp<SkImage>()> fImageFactory;
     bool fExpectation;
     bool fCanTakeDirectly;
-  } testCases[] = {{create_image, true, false},
-                   {create_codec_image, true, false},
-                   {create_data_image, true, false},
-                   {create_picture_image, true, false},
-                   {[context] { return create_gpu_image(context); }, true, true},
-                   // Create a texture image in a another GrContext.
-                   {[otherContextInfo] {
-                      auto restore = otherContextInfo.testContext()->makeCurrentAndAutoRestore();
-                      sk_sp<SkImage> otherContextImage =
-                          create_gpu_image(otherContextInfo.grContext());
-                      otherContextInfo.grContext()->flush();
-                      return otherContextImage;
-                    },
-                    false, false},
-                   // Create an image that is too large to be texture backed.
-                   {createLarge, false, false}};
+  } testCases[] = {
+      {create_image, true, false},
+      {create_codec_image, true, false},
+      {create_data_image, true, false},
+      {create_picture_image, true, false},
+      {[context] { return create_gpu_image(context); }, true, true},
+      // Create a texture image in a another GrContext.
+      {[otherContextInfo] {
+         auto restore = otherContextInfo.testContext()->makeCurrentAndAutoRestore();
+         sk_sp<SkImage> otherContextImage = create_gpu_image(otherContextInfo.grContext());
+         otherContextInfo.grContext()->flush();
+         return otherContextImage;
+       },
+       false, false},
+      // Create an image that is too large to be texture backed.
+      {createLarge, false, false}};
 
   for (auto testCase : testCases) {
     sk_sp<SkImage> image(testCase.fImageFactory());
@@ -1353,10 +1353,11 @@ static sk_sp<SkImage> make_yuva_image(GrContext* c) {
   SkAutoPixmapStorage pm;
   pm.alloc(SkImageInfo::Make(1, 1, kAlpha_8_SkColorType, kPremul_SkAlphaType));
   const SkPixmap pmaps[] = {pm, pm, pm, pm};
-  SkYUVAIndex indices[] = {{0, SkColorChannel::kA},
-                           {1, SkColorChannel::kA},
-                           {2, SkColorChannel::kA},
-                           {3, SkColorChannel::kA}};
+  SkYUVAIndex indices[] = {
+      {0, SkColorChannel::kA},
+      {1, SkColorChannel::kA},
+      {2, SkColorChannel::kA},
+      {3, SkColorChannel::kA}};
 
   return SkImage::MakeFromYUVAPixmaps(
       c, kJPEG_SkYUVColorSpace, pmaps, indices, SkISize::Make(1, 1), kTopLeft_GrSurfaceOrigin,

@@ -21,7 +21,7 @@ class Reporter;
 class GrGpuResource::CacheAccess {
  private:
   /** The cache is allowed to go from no refs to 1 ref. */
-  void ref() noexcept { fResource->addInitialRef(); }
+  void ref() { fResource->addInitialRef(); }
 
   /**
    * Is the resource currently cached as scratch? This means it is cached, has a valid scratch
@@ -61,8 +61,8 @@ class GrGpuResource::CacheAccess {
   /** Called by the cache to make the unique key invalid. */
   void removeUniqueKey() { fResource->fUniqueKey.reset(); }
 
-  uint32_t timestamp() const noexcept { return fResource->fTimestamp; }
-  void setTimestamp(uint32_t ts) noexcept { fResource->fTimestamp = ts; }
+  uint32_t timestamp() const { return fResource->fTimestamp; }
+  void setTimestamp(uint32_t ts) { fResource->fTimestamp = ts; }
 
   void setTimeWhenResourceBecomePurgeable() {
     SkASSERT(fResource->isPurgeable());
@@ -72,15 +72,15 @@ class GrGpuResource::CacheAccess {
    * Called by the cache to determine whether this resource should be purged based on the length
    * of time it has been available for purging.
    */
-  GrStdSteadyClock::time_point timeWhenResourceBecamePurgeable() noexcept {
+  GrStdSteadyClock::time_point timeWhenResourceBecamePurgeable() {
     SkASSERT(fResource->isPurgeable());
     return fResource->fTimeWhenBecamePurgeable;
   }
 
-  int* accessCacheIndex() const noexcept { return &fResource->fCacheArrayIndex; }
+  int* accessCacheIndex() const { return &fResource->fCacheArrayIndex; }
 
-  CacheAccess(GrGpuResource* resource) noexcept : fResource(resource) {}
-  CacheAccess(const CacheAccess& that) noexcept : fResource(that.fResource) {}
+  CacheAccess(GrGpuResource* resource) : fResource(resource) {}
+  CacheAccess(const CacheAccess& that) : fResource(that.fResource) {}
   CacheAccess& operator=(const CacheAccess&);  // unimpl
 
   // No taking addresses of this type.

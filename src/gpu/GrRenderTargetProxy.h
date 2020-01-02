@@ -45,10 +45,7 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
   }
 
   /**
-   * Returns the number of stencil samples required by this proxy.
-   * NOTE: Once instantiated, the actual render target may have more samples, but it is guaranteed
-   * to have at least this many. (After a multisample stencil buffer has been attached to a render
-   * target, we never "downgrade" it to one with fewer samples.)
+   * Returns the number of stencil samples this proxy will use, or 0 if it does not use stencil.
    */
   int numStencilSamples() const { return fNumStencilSamples; }
 
@@ -59,12 +56,10 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
 
   int maxWindowRectangles(const GrCaps& caps) const;
 
-  const GrSwizzle& outputSwizzle() const { return fOutputSwizzle; }
-
   bool wrapsVkSecondaryCB() const { return fWrapsVkSecondaryCB == WrapsVkSecondaryCB::kYes; }
 
   void markMSAADirty(const SkIRect& dirtyRect) {
-    SkASSERT(SkIRect::MakeWH(this->width(), this->height()).contains(dirtyRect));
+    SkASSERT(SkIRect::MakeSize(this->dimensions()).contains(dirtyRect));
     SkASSERT(this->requiresManualMSAAResolve());
     fMSAADirtyRect.join(dirtyRect);
   }
@@ -95,8 +90,8 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
   // Deferred version
   GrRenderTargetProxy(
       const GrCaps&, const GrBackendFormat&, const GrSurfaceDesc&, int sampleCount, GrSurfaceOrigin,
-      const GrSwizzle& textureSwizzle, const GrSwizzle& outputSwizzle, SkBackingFit, SkBudgeted,
-      GrProtected, GrInternalSurfaceFlags, UseAllocator);
+      const GrSwizzle& textureSwizzle, SkBackingFit, SkBudgeted, GrProtected,
+      GrInternalSurfaceFlags, UseAllocator);
 
   enum class WrapsVkSecondaryCB : bool { kNo = false, kYes = true };
 
@@ -112,14 +107,13 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
   // know the final size until flush time.
   GrRenderTargetProxy(
       LazyInstantiateCallback&&, const GrBackendFormat&, const GrSurfaceDesc&, int sampleCount,
-      GrSurfaceOrigin, const GrSwizzle& textureSwizzle, const GrSwizzle& outputSwizzle,
-      SkBackingFit, SkBudgeted, GrProtected, GrInternalSurfaceFlags, UseAllocator,
-      WrapsVkSecondaryCB);
+      GrSurfaceOrigin, const GrSwizzle& textureSwizzle, SkBackingFit, SkBudgeted, GrProtected,
+      GrInternalSurfaceFlags, UseAllocator, WrapsVkSecondaryCB);
 
   // Wrapped version
   GrRenderTargetProxy(
-      sk_sp<GrSurface>, GrSurfaceOrigin, const GrSwizzle& textureSwizzle,
-      const GrSwizzle& outputSwizzle, UseAllocator, WrapsVkSecondaryCB = WrapsVkSecondaryCB::kNo);
+      sk_sp<GrSurface>, GrSurfaceOrigin, const GrSwizzle& textureSwizzle, UseAllocator,
+      WrapsVkSecondaryCB = WrapsVkSecondaryCB::kNo);
 
   sk_sp<GrSurface> createSurface(GrResourceProvider*) const override;
 
@@ -129,26 +123,26 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
   bool canChangeStencilAttachment() const;
 
   size_t onUninstantiatedGpuMemorySize(const GrCaps&) const override;
-  SkDEBUGCODE(void onValidateSurface(const GrSurface*) override);
+  SkDEBUGCODE(void onValidateSurface(const GrSurface*) override;)
 
-  // WARNING: Be careful when adding or removing fields here. ASAN is likely to trigger warnings
-  // when instantiating GrTextureRenderTargetProxy. The std::function in GrSurfaceProxy makes
-  // each class in the diamond require 16 byte alignment. Clang appears to layout the fields for
-  // each class to achieve the necessary alignment. However, ASAN checks the alignment of 'this'
-  // in the constructors, and always looks for the full 16 byte alignment, even if the fields in
-  // that particular class don't require it. Changing the size of this object can move the start
-  // address of other types, leading to this problem.
-  int8_t fSampleCnt;
+      // WARNING: Be careful when adding or removing fields here. ASAN is likely to trigger warnings
+      // when instantiating GrTextureRenderTargetProxy. The std::function in GrSurfaceProxy makes
+      // each class in the diamond require 16 byte alignment. Clang appears to layout the fields for
+      // each class to achieve the necessary alignment. However, ASAN checks the alignment of 'this'
+      // in the constructors, and always looks for the full 16 byte alignment, even if the fields in
+      // that particular class don't require it. Changing the size of this object can move the start
+      // address of other types, leading to this problem.
+      int8_t fSampleCnt;
   int8_t fNumStencilSamples = 0;
   WrapsVkSecondaryCB fWrapsVkSecondaryCB;
-  GrSwizzle fOutputSwizzle;
   SkIRect fMSAADirtyRect = SkIRect::MakeEmpty();
-  // This is to fix issue in large comment above. Without the padding we end 6 bytes into a 16
-  // byte range, so the GrTextureProxy ends up starting 8 byte aligned by not 16. We add the
-  // padding here to get us right up to the 16 byte alignment (technically any padding of 3-10
-  // bytes would work since it always goes up to 8 byte alignment, but we use 10 to more explicit
-  // about what we're doing).
-  char fDummyPadding[10];
+  // This is to fix issue in large comment above. Without the padding we can end up with the
+  // GrTextureProxy starting 8 byte aligned by not 16. This happens when the RT ends at bytes 1-8.
+  // Note: with the virtual inheritance an 8 byte pointer is at the start of GrRenderTargetProxy.
+  //
+  // In the current world we end the RT proxy at 12 bytes. Technically any padding between 0-4
+  // will work, but we use 4 to be more explicit about getting it to 16 byte alignment.
+  char fDummyPadding[4];
 
   typedef GrSurfaceProxy INHERITED;
 };

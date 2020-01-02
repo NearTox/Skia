@@ -7,6 +7,7 @@
 
 #include "modules/skottie/src/SkottiePriv.h"
 
+#include "modules/skottie/src/Composition.h"
 #include "modules/skottie/src/SkottieJson.h"
 #include "modules/skottie/src/SkottieValue.h"
 #include "modules/sksg/include/SkSGRenderNode.h"
@@ -35,8 +36,9 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachPrecompLayer(
     local_scope.init(this);
   }
 
-  auto precomp_layer = this->attachAssetRef(
-      jlayer, [this](const skjson::ObjectValue& jcomp) { return this->attachComposition(jcomp); });
+  auto precomp_layer = this->attachAssetRef(jlayer, [this](const skjson::ObjectValue& jcomp) {
+    return CompositionBuilder(*this, jcomp).build(*this);
+  });
 
   // Applies a bias/scale/remap t-adjustment to child animators.
   class CompTimeMapper final : public sksg::GroupAnimator {

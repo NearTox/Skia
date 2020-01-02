@@ -208,8 +208,8 @@ void SkShaperJSONWriter::VisualizeClusters(
       checkRangesAndProcess();
 
       SkSpan<const char> utf8Span{&utf8[utf8StartIndex], utf8EndIndex - utf8StartIndex};
-      SkSpan<const SkGlyphID> glyphSpan{&glyphIDs[glyphStartIndex],
-                                        glyphEndIndex - glyphStartIndex};
+      SkSpan<const SkGlyphID> glyphSpan{
+          &glyphIDs[glyphStartIndex], glyphEndIndex - glyphStartIndex};
 
       processMToN(codePointCount, utf8Span, glyphSpan);
     }

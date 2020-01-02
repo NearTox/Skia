@@ -56,7 +56,7 @@ void GrGpuBuffer::ComputeScratchKeyForDynamicVBO(
   // differentiate between the "read" types (e.g. kGpuToCpu_BufferType) and "draw" types.
   builder[0] = SkToU32(intendedType);
   builder[1] = (uint32_t)size;
-  if constexpr (sizeof(size_t) > 4) {
+  if (sizeof(size_t) > 4) {
     builder[2] = (uint32_t)((uint64_t)size >> 32);
   }
 }

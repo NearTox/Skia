@@ -59,8 +59,7 @@ class GrMtlTextureRenderTarget : public GrMtlTexture, public GrMtlRenderTarget {
     }
     const GrCaps& caps = *this->getGpu()->caps();
     return GrSurface::ComputeSize(
-        caps, this->backendFormat(), this->width(), this->height(), numColorSamples,
-        GrMipMapped::kNo);
+        caps, this->backendFormat(), this->dimensions(), numColorSamples, GrMipMapped::kNo);
   }
 };
 

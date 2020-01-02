@@ -43,7 +43,7 @@ class FillTypePerspGM : public GM {
   SkISize onISize() override { return SkISize::Make(835, 840); }
 
   void showPath(
-      SkCanvas* canvas, int x, int y, SkPath::FillType ft, SkScalar scale, const SkPaint& paint) {
+      SkCanvas* canvas, int x, int y, SkPathFillType ft, SkScalar scale, const SkPaint& paint) {
     const SkRect r = {0, 0, SkIntToScalar(150), SkIntToScalar(150)};
 
     canvas->save();
@@ -67,10 +67,10 @@ class FillTypePerspGM : public GM {
         center, SkIntToScalar(100), colors, pos, SK_ARRAY_COUNT(colors), SkTileMode::kClamp));
     paint.setAntiAlias(aa);
 
-    showPath(canvas, 0, 0, SkPath::kWinding_FillType, scale, paint);
-    showPath(canvas, 200, 0, SkPath::kEvenOdd_FillType, scale, paint);
-    showPath(canvas, 00, 200, SkPath::kInverseWinding_FillType, scale, paint);
-    showPath(canvas, 200, 200, SkPath::kInverseEvenOdd_FillType, scale, paint);
+    showPath(canvas, 0, 0, SkPathFillType::kWinding, scale, paint);
+    showPath(canvas, 200, 0, SkPathFillType::kEvenOdd, scale, paint);
+    showPath(canvas, 00, 200, SkPathFillType::kInverseWinding, scale, paint);
+    showPath(canvas, 200, 200, SkPathFillType::kInverseEvenOdd, scale, paint);
   }
 
   void onDraw(SkCanvas* canvas) override {

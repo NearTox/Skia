@@ -8,6 +8,7 @@
 #include "include/private/GrRecordingContext.h"
 
 #include "include/gpu/GrContext.h"
+#include "src/core/SkArenaAlloc.h"
 #include "src/gpu/GrAuditTrail.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrDrawingManager.h"
@@ -105,6 +106,9 @@ void GrRecordingContext::abandonContext() {
 
 GrDrawingManager* GrRecordingContext::drawingManager() { return fDrawingManager.get(); }
 
+// This entry point exists bc the GrOpsTask (and SkAtlasTextTarget) take refs on the memory pool.
+// Ostensibly, this is to keep the op's data alive in DDL mode but the back pointer is also
+// used for deletion.
 sk_sp<GrOpMemoryPool> GrRecordingContext::refOpMemoryPool() {
   if (!fOpMemoryPool) {
     // DDL TODO: should the size of the memory pool be decreased in DDL mode? CPU-side memory
@@ -118,6 +122,24 @@ sk_sp<GrOpMemoryPool> GrRecordingContext::refOpMemoryPool() {
 }
 
 GrOpMemoryPool* GrRecordingContext::opMemoryPool() { return this->refOpMemoryPool().get(); }
+
+// Stored in this arena:
+//     GrTextureOp's DynamicStateArrays and FixedDynamicState
+//     some GrGeometryProcessors, GrPipelines and GrProgramInfos
+SkArenaAlloc* GrRecordingContext::recordTimeAllocator() {
+  if (!fRecordTimeAllocator) {
+    // TODO: empirically determine a better number for SkArenaAlloc's firstHeapAllocation param
+    fRecordTimeAllocator =
+        std::unique_ptr<SkArenaAlloc>(new SkArenaAlloc(sizeof(GrPipeline) * 100));
+  }
+
+  SkASSERT(fRecordTimeAllocator);
+  return fRecordTimeAllocator.get();
+}
+
+std::unique_ptr<SkArenaAlloc> GrRecordingContext::detachRecordTimeAllocator() {
+  return std::move(fRecordTimeAllocator);
+}
 
 GrTextBlobCache* GrRecordingContext::getTextBlobCache() { return fTextBlobCache.get(); }
 
@@ -253,6 +275,10 @@ GrRecordingContext::makeDeferredRenderTargetContextWithFallback(
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 sk_sp<const GrCaps> GrRecordingContextPriv::refCaps() const { return fContext->refCaps(); }
+
+std::unique_ptr<SkArenaAlloc> GrRecordingContextPriv::detachRecordTimeAllocator() {
+  return fContext->detachRecordTimeAllocator();
+}
 
 sk_sp<GrSkSLFPFactoryCache> GrRecordingContextPriv::fpFactoryCache() {
   return fContext->fpFactoryCache();

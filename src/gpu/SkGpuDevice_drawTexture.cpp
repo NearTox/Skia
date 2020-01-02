@@ -193,7 +193,7 @@ static void draw_texture(
     // Conservative estimate of how much a coord could be outset from src rect:
     // 1/2 pixel for AA and 1/2 pixel for bilerp
     float buffer = 0.5f * (aa == GrAA::kYes) + 0.5f * (filter == GrSamplerState::Filter::kBilerp);
-    SkRect safeBounds = SkRect::MakeWH(proxy->width(), proxy->height());
+    SkRect safeBounds = proxy->getBoundsRect();
     safeBounds.inset(buffer, buffer);
     if (!safeBounds.contains(srcRect)) {
       constraint = SkCanvas::kStrict_SrcRectConstraint;
@@ -213,14 +213,15 @@ static void draw_texture(
     GrMapRectPoints(dstRect, srcRect, dstClip, srcQuad, 4);
 
     rtc->drawTextureQuad(
-        clip, std::move(proxy), srcColorInfo.colorType(), filter, paint.getBlendMode(), color,
-        srcQuad, dstClip, aa, aaFlags,
+        clip, std::move(proxy), srcColorInfo.colorType(), srcColorInfo.alphaType(), filter,
+        paint.getBlendMode(), color, srcQuad, dstClip, aa, aaFlags,
         constraint == SkCanvas::kStrict_SrcRectConstraint ? &srcRect : nullptr, ctm,
         std::move(textureXform));
   } else {
     rtc->drawTexture(
-        clip, std::move(proxy), srcColorInfo.colorType(), filter, paint.getBlendMode(), color,
-        srcRect, dstRect, aa, aaFlags, constraint, ctm, std::move(textureXform));
+        clip, std::move(proxy), srcColorInfo.colorType(), srcColorInfo.alphaType(), filter,
+        paint.getBlendMode(), color, srcRect, dstRect, aa, aaFlags, constraint, ctm,
+        std::move(textureXform));
   }
 }
 
@@ -371,7 +372,7 @@ void SkGpuDevice::drawImageQuad(
   bool attemptDrawTexture = !useDecal;  // rtc->drawTexture() only clamps
 
   // Get final CTM matrix
-  SkMatrix ctm = this->ctm();
+  SkMatrix ctm = this->localToDevice();
   if (preViewMatrix) {
     ctm.preConcat(*preViewMatrix);
   }
@@ -421,11 +422,10 @@ void SkGpuDevice::drawImageQuad(
   SkBitmap bm;
   if (this->shouldTileImage(image, &src, constraint, paint.getFilterQuality(), ctm, srcToDst)) {
     // only support tiling as bitmap at the moment, so force raster-version
-    if (!as_IB(image)->getROPixels(&bm)) {
+    if (as_IB(image)->getROPixels(&bm)) {
+      this->drawBitmapRect(bm, &src, dst, paint, constraint);
       return;
     }
-    this->drawBitmapRect(bm, &src, dst, paint, constraint);
-    return;
   }
 
   // This is the funnel for all non-tiled bitmap/image draw calls. Log a histogram entry.
@@ -496,8 +496,8 @@ void SkGpuDevice::drawEdgeAAImageSet(
           set[base].fImage->colorSpace(), set[base].fImage->alphaType(),
           fRenderTargetContext->colorInfo().colorSpace(), kPremul_SkAlphaType);
       fRenderTargetContext->drawTextureSet(
-          this->clip(), textures.get() + base, n, filter, mode, GrAA::kYes, constraint, this->ctm(),
-          std::move(textureXform));
+          this->clip(), textures.get() + base, n, filter, mode, GrAA::kYes, constraint,
+          this->localToDevice(), std::move(textureXform));
     }
   };
   int dstClipIndex = 0;
@@ -550,8 +550,11 @@ void SkGpuDevice::drawEdgeAAImageSet(
       continue;
     }
 
-    textures[i].fProxy = std::move(proxy);
-    textures[i].fSrcColorType = SkColorTypeToGrColorType(image->colorType());
+    // TODO: have refPinnedTextureProxy and asTextureProxyRef return GrSurfaceProxyViews.
+    GrSurfaceOrigin origin = proxy->origin();
+    const GrSwizzle& swizzle = proxy->textureSwizzle();
+    textures[i].fProxyView = {std::move(proxy), origin, swizzle};
+    textures[i].fSrcAlphaType = image->alphaType();
     textures[i].fSrcRect = set[i].fSrcRect;
     textures[i].fDstRect = set[i].fDstRect;
     textures[i].fDstClipQuad = clip;
@@ -562,7 +565,7 @@ void SkGpuDevice::drawEdgeAAImageSet(
 
     if (n > 0 &&
         (!GrTextureProxy::ProxiesAreCompatibleAsDynamicState(
-             textures[i].fProxy.get(), textures[base].fProxy.get()) ||
+             textures[i].fProxyView.proxy(), textures[base].fProxyView.proxy()) ||
          set[i].fImage->alphaType() != set[base].fImage->alphaType() ||
          !SkColorSpace::Equals(set[i].fImage->colorSpace(), set[base].fImage->colorSpace()))) {
       draw();
@@ -587,8 +590,7 @@ void SkGpuDevice::drawTextureProducer(
   SkRect dst;
   SkMatrix srcToDst;
   ImageDrawMode mode = optimize_sample_area(
-      SkISize::Make(producer->width(), producer->height()), srcRect, dstRect, nullptr, &src, &dst,
-      &srcToDst);
+      producer->dimensions(), srcRect, dstRect, nullptr, &src, &dst, &srcToDst);
   if (mode == ImageDrawMode::kSkip) {
     return;
   }

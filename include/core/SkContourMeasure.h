@@ -80,7 +80,7 @@ class SK_API SkContourMeasure : public SkRefCnt {
 
   SkContourMeasure(
       SkTDArray<Segment>&& segs, SkTDArray<SkPoint>&& pts, SkScalar length, bool isClosed);
-  ~SkContourMeasure() override = default;
+  ~SkContourMeasure() override {}
 
   const Segment* distanceToSegment(SkScalar distance, SkScalar* t) const;
 

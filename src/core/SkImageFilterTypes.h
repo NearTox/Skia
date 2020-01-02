@@ -76,7 +76,7 @@ class ParameterSpace {
   explicit ParameterSpace(const T& data) : fData(data) {}
   explicit ParameterSpace(T&& data) : fData(std::move(data)) {}
 
-  explicit operator const T&() const { return fData; }
+  explicit operator const T &() const { return fData; }
 
  private:
   T fData;
@@ -94,7 +94,7 @@ class DeviceSpace {
   explicit DeviceSpace(const T& data) : fData(data) {}
   explicit DeviceSpace(T&& data) : fData(std::move(data)) {}
 
-  explicit operator const T&() const { return fData; }
+  explicit operator const T &() const { return fData; }
 
  private:
   T fData;
@@ -121,7 +121,7 @@ class LayerSpace<IVector> {
   LayerSpace() = default;
   explicit LayerSpace(const IVector& geometry) : fData(geometry) {}
   explicit LayerSpace(IVector&& geometry) : fData(std::move(geometry)) {}
-  explicit operator const IVector&() const { return fData; }
+  explicit operator const IVector &() const { return fData; }
 
   explicit operator SkIVector() const { return SkIVector::Make(fData.fX, fData.fY); }
 
@@ -161,7 +161,7 @@ class LayerSpace<Vector> {
   LayerSpace() = default;
   explicit LayerSpace(const Vector& geometry) : fData(geometry) {}
   explicit LayerSpace(Vector&& geometry) : fData(std::move(geometry)) {}
-  explicit operator const Vector&() const { return fData; }
+  explicit operator const Vector &() const { return fData; }
 
   explicit operator SkVector() const { return SkVector::Make(fData.fX, fData.fY); }
 
@@ -215,7 +215,7 @@ class LayerSpace<SkIPoint> {
   LayerSpace() = default;
   explicit LayerSpace(const SkIPoint& geometry) : fData(geometry) {}
   explicit LayerSpace(SkIPoint&& geometry) : fData(std::move(geometry)) {}
-  explicit operator const SkIPoint&() const { return fData; }
+  explicit operator const SkIPoint &() const { return fData; }
 
   // Parrot the SkIPoint API while preserving coordinate space.
   int32_t x() const { return fData.fX; }
@@ -248,7 +248,7 @@ class LayerSpace<SkPoint> {
   LayerSpace() = default;
   explicit LayerSpace(const SkPoint& geometry) : fData(geometry) {}
   explicit LayerSpace(SkPoint&& geometry) : fData(std::move(geometry)) {}
-  explicit operator const SkPoint&() const { return fData; }
+  explicit operator const SkPoint &() const { return fData; }
 
   // Parrot the SkPoint API while preserving coordinate space.
   SkScalar x() const { return fData.fX; }
@@ -283,7 +283,7 @@ class LayerSpace<SkISize> {
   LayerSpace() = default;
   explicit LayerSpace(const SkISize& geometry) : fData(geometry) {}
   explicit LayerSpace(SkISize&& geometry) : fData(std::move(geometry)) {}
-  explicit operator const SkISize&() const { return fData; }
+  explicit operator const SkISize &() const { return fData; }
 
   int32_t width() const { return fData.width(); }
   int32_t height() const { return fData.height(); }
@@ -301,7 +301,7 @@ class LayerSpace<SkSize> {
   LayerSpace() = default;
   explicit LayerSpace(const SkSize& geometry) : fData(geometry) {}
   explicit LayerSpace(SkSize&& geometry) : fData(std::move(geometry)) {}
-  explicit operator const SkSize&() const { return fData; }
+  explicit operator const SkSize &() const { return fData; }
 
   SkScalar width() const { return fData.width(); }
   SkScalar height() const { return fData.height(); }
@@ -324,7 +324,7 @@ class LayerSpace<SkIRect> {
   LayerSpace() = default;
   explicit LayerSpace(const SkIRect& geometry) : fData(geometry) {}
   explicit LayerSpace(SkIRect&& geometry) : fData(std::move(geometry)) {}
-  explicit operator const SkIRect&() const { return fData; }
+  explicit operator const SkIRect &() const { return fData; }
 
   // Parrot the SkIRect API while preserving coord space
   int32_t left() const { return fData.fLeft; }
@@ -354,7 +354,7 @@ class LayerSpace<SkRect> {
   LayerSpace() = default;
   explicit LayerSpace(const SkRect& geometry) : fData(geometry) {}
   explicit LayerSpace(SkRect&& geometry) : fData(std::move(geometry)) {}
-  explicit operator const SkRect&() const { return fData; }
+  explicit operator const SkRect &() const { return fData; }
 
   // Parrot the SkRect API while preserving coord space and usage
   SkScalar left() const { return fData.fLeft; }

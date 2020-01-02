@@ -35,7 +35,7 @@ class SkMatrix;
  */
 class SK_API SkRasterHandleAllocator {
  public:
-  virtual ~SkRasterHandleAllocator() = default;
+  virtual ~SkRasterHandleAllocator() {}
 
   // The value that is returned to clients of the canvas that has this allocator installed.
   typedef void* Handle;

@@ -28,8 +28,8 @@ sk_sp<GrTextureProxy> GrTextureMaker::onRefTextureProxyForParams(
   if (original) {
     if (!params.isRepeated() ||
         !GrGpu::IsACopyNeededForRepeatWrapMode(
-            this->context()->priv().caps(), original.get(), original->width(), original->height(),
-            params.filter(), &copyParams, scaleAdjust)) {
+            this->context()->priv().caps(), original.get(), original->dimensions(), params.filter(),
+            &copyParams, scaleAdjust)) {
       needsCopyForMipsOnly = GrGpu::IsACopyNeededForMips(
           this->context()->priv().caps(), original.get(), params.filter(), &copyParams);
       if (!needsCopyForMipsOnly) {
@@ -38,8 +38,8 @@ sk_sp<GrTextureProxy> GrTextureMaker::onRefTextureProxyForParams(
     }
   } else {
     if (!params.isRepeated() || !GrGpu::IsACopyNeededForRepeatWrapMode(
-                                    this->context()->priv().caps(), nullptr, this->width(),
-                                    this->height(), params.filter(), &copyParams, scaleAdjust)) {
+                                    this->context()->priv().caps(), nullptr, this->dimensions(),
+                                    params.filter(), &copyParams, scaleAdjust)) {
       return this->refOriginalTextureProxy(willBeMipped, AllowedTexGenType::kAny);
     }
   }

@@ -45,7 +45,7 @@ GrPipeline::InitArgs GrDrawPathOpBase::pipelineInitArgs(const GrOpFlushState& st
   }
   args.fUserStencil = &kCoverPass;
   args.fCaps = &state.caps();
-  args.fDstProxy = state.drawOpArgs().dstProxy();
+  args.fDstProxyView = state.drawOpArgs().dstProxyView();
   args.fOutputSwizzle = state.drawOpArgs().outputSwizzle();
   return args;
 }
@@ -66,9 +66,10 @@ void init_stencil_pass_settings(
     GrStencilSettings* stencil) {
   const GrAppliedClip* appliedClip = flushState.drawOpArgs().appliedClip();
   bool stencilClip = appliedClip && appliedClip->hasStencilClip();
+  GrRenderTarget* rt = flushState.drawOpArgs().proxy()->peekRenderTarget();
   stencil->reset(
       GrPathRendering::GetStencilPassSettings(fillType), stencilClip,
-      flushState.drawOpArgs().renderTarget()->renderTargetPriv().numStencilBits());
+      rt->renderTargetPriv().numStencilBits());
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -83,19 +84,27 @@ std::unique_ptr<GrDrawOp> GrDrawPathOp::Make(
 
 void GrDrawPathOp::onExecute(GrOpFlushState* state, const SkRect& chainBounds) {
   GrAppliedClip appliedClip = state->detachAppliedClip();
-  GrPipeline::FixedDynamicState fixedDynamicState(appliedClip.scissorState().rect());
+
+  GrPipeline::FixedDynamicState *fixedDynamicState = nullptr, storage;
+
+  if (appliedClip.scissorState().enabled()) {
+    storage.fScissorRect = appliedClip.scissorState().rect();
+    fixedDynamicState = &storage;
+  }
+
   GrPipeline pipeline(
       this->pipelineInitArgs(*state), this->detachProcessors(), std::move(appliedClip));
   sk_sp<GrPathProcessor> pathProc(GrPathProcessor::Create(this->color(), this->viewMatrix()));
 
   GrProgramInfo programInfo(
-      state->drawOpArgs().numSamples(), state->drawOpArgs().origin(), pipeline, *pathProc,
-      &fixedDynamicState, nullptr, 0);
+      state->proxy()->numSamples(), state->proxy()->numStencilSamples(),
+      state->proxy()->backendFormat(), state->view()->origin(), &pipeline, pathProc.get(),
+      fixedDynamicState, nullptr, 0, GrPrimitiveType::kPath);
 
   GrStencilSettings stencil;
   init_stencil_pass_settings(*state, this->fillType(), &stencil);
   state->gpu()->pathRendering()->drawPath(
-      state->drawOpArgs().renderTarget(), programInfo, stencil, fPath.get());
+      state->drawOpArgs().proxy()->peekRenderTarget(), programInfo, stencil, fPath.get());
 }
 
 //////////////////////////////////////////////////////////////////////////////

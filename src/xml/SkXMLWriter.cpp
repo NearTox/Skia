@@ -79,10 +79,11 @@ const char* SkXMLWriter::getHeader() {
 void SkXMLWriter::startElement(const char name[]) { this->startElementLen(name, strlen(name)); }
 
 static const char* escape_char(char c, char storage[2]) {
-  static const char* gEscapeChars[] = {"<&lt;", ">&gt;",
-                                       //"\"&quot;",
-                                       //"'&apos;",
-                                       "&&amp;"};
+  static const char* gEscapeChars[] = {
+      "<&lt;", ">&gt;",
+      //"\"&quot;",
+      //"'&apos;",
+      "&&amp;"};
 
   const char** array = gEscapeChars;
   for (unsigned i = 0; i < SK_ARRAY_COUNT(gEscapeChars); i++) {

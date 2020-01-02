@@ -31,8 +31,9 @@ class GrMixerEffect : public GrFragmentProcessor {
                c1 = (this->numChildProcessors() > 1)
                         ? ConstantOutputForConstantInput(this->childProcessor(1), input)
                         : input;
-    return {c0.fR + (c1.fR - c0.fR) * weight, c0.fG + (c1.fG - c0.fG) * weight,
-            c0.fB + (c1.fB - c0.fB) * weight, c0.fA + (c1.fA - c0.fA) * weight};
+    return {
+        c0.fR + (c1.fR - c0.fR) * weight, c0.fG + (c1.fG - c0.fG) * weight,
+        c0.fB + (c1.fB - c0.fB) * weight, c0.fA + (c1.fA - c0.fA) * weight};
   }
   static std::unique_ptr<GrFragmentProcessor> Make(
       std::unique_ptr<GrFragmentProcessor> fp0, std::unique_ptr<GrFragmentProcessor> fp1,

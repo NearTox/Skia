@@ -93,9 +93,9 @@ class ComplexClip3GM : public GM {
             canvas->save();
             // set clip
             firstClip->setFillType(
-                doInvA ? SkPath::kInverseEvenOdd_FillType : SkPath::kEvenOdd_FillType);
+                doInvA ? SkPathFillType::kInverseEvenOdd : SkPathFillType::kEvenOdd);
             secondClip->setFillType(
-                doInvB ? SkPath::kInverseEvenOdd_FillType : SkPath::kEvenOdd_FillType);
+                doInvB ? SkPathFillType::kInverseEvenOdd : SkPathFillType::kEvenOdd);
             canvas->clipPath(*firstClip, doAAA);
             canvas->clipPath(*secondClip, gOps[op].fOp, doAAB);
 

@@ -15,13 +15,13 @@
 template <typename kind>
 class GrResourceHandle {
  public:
-  constexpr GrResourceHandle(int value) noexcept : fValue(value) { SkASSERT(this->isValid()); }
+  GrResourceHandle(int value) : fValue(value) { SkASSERT(this->isValid()); }
 
-  constexpr GrResourceHandle() noexcept : fValue(kInvalid_ResourceHandle) {}
+  GrResourceHandle() : fValue(kInvalid_ResourceHandle) {}
 
-  bool operator==(const GrResourceHandle& other) const noexcept { return other.fValue == fValue; }
-  bool isValid() const noexcept { return kInvalid_ResourceHandle != fValue; }
-  int toIndex() const noexcept {
+  bool operator==(const GrResourceHandle& other) const { return other.fValue == fValue; }
+  bool isValid() const { return kInvalid_ResourceHandle != fValue; }
+  int toIndex() const {
     SkASSERT(this->isValid());
     return fValue;
   }

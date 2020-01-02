@@ -23,12 +23,12 @@
 #include <functional>
 #include <memory>
 
-static void create_ngon(int n, SkPoint* pts, SkScalar w, SkScalar h, SkPath::Direction dir) {
+static void create_ngon(int n, SkPoint* pts, SkScalar w, SkScalar h, SkPathDirection dir) {
   float angleStep = 360.0f / n, angle = 0.0f;
   if ((n % 2) == 1) {
     angle = angleStep / 2.0f;
   }
-  if (SkPath::kCCW_Direction == dir) {
+  if (SkPathDirection::kCCW == dir) {
     angle = -angle;
     angleStep = -angleStep;
   }
@@ -225,12 +225,12 @@ class PolygonOffsetGM : public GM {
   bool runAsBench() const override { return true; }
 
   static void GetConvexPolygon(
-      int index, SkPath::Direction dir, std::unique_ptr<SkPoint[]>* data, int* numPts) {
+      int index, SkPathDirection dir, std::unique_ptr<SkPoint[]>* data, int* numPts) {
     if (index < (int)SK_ARRAY_COUNT(PolygonOffsetData::gConvexPoints)) {
       // manually specified
       *numPts = (int)PolygonOffsetData::gConvexSizes[index];
       data->reset(new SkPoint[*numPts]);
-      if (SkPath::kCW_Direction == dir) {
+      if (SkPathDirection::kCW == dir) {
         for (int i = 0; i < *numPts; ++i) {
           (*data)[i] = PolygonOffsetData::gConvexPoints[index][i];
         }
@@ -260,12 +260,12 @@ class PolygonOffsetGM : public GM {
   }
 
   static void GetSimplePolygon(
-      int index, SkPath::Direction dir, std::unique_ptr<SkPoint[]>* data, int* numPts) {
+      int index, SkPathDirection dir, std::unique_ptr<SkPoint[]>* data, int* numPts) {
     if (index < (int)SK_ARRAY_COUNT(PolygonOffsetData::gSimplePoints)) {
       // manually specified
       *numPts = (int)PolygonOffsetData::gSimpleSizes[index];
       data->reset(new SkPoint[*numPts]);
-      if (SkPath::kCW_Direction == dir) {
+      if (SkPathDirection::kCW == dir) {
         for (int i = 0; i < *numPts; ++i) {
           (*data)[i] = PolygonOffsetData::gSimplePoints[index][i];
         }
@@ -300,9 +300,9 @@ class PolygonOffsetGM : public GM {
       std::unique_ptr<SkPoint[]> data(nullptr);
       int numPts;
       if (fConvexOnly) {
-        GetConvexPolygon(index, SkPath::kCW_Direction, &data, &numPts);
+        GetConvexPolygon(index, SkPathDirection::kCW, &data, &numPts);
       } else {
-        GetSimplePolygon(index, SkPath::kCW_Direction, &data, &numPts);
+        GetSimplePolygon(index, SkPathDirection::kCW, &data, &numPts);
       }
       bounds.setBounds(data.get(), numPts);
       if (!fConvexOnly) {
@@ -316,7 +316,7 @@ class PolygonOffsetGM : public GM {
       offset->fX += bounds.width();
     }
 
-    const SkPath::Direction dirs[2] = {SkPath::kCW_Direction, SkPath::kCCW_Direction};
+    const SkPathDirection dirs[2] = {SkPathDirection::kCW, SkPathDirection::kCCW};
     const float insets[] = {5, 10, 15, 20, 25, 30, 35, 40};
     const float offsets[] = {2, 5, 9, 14, 20, 27, 35, 44, -2, -5, -9};
     const SkColor colors[] = {0xFF901313, 0xFF8D6214, 0xFF698B14, 0xFF1C8914,

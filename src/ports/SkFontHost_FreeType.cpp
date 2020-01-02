@@ -283,7 +283,7 @@ static void unref_ft_library() {
     SkASSERT(nullptr == gFaceRecHead);
     SkASSERT(nullptr != gFTLibrary);
     delete gFTLibrary;
-    SkDEBUGCODE(gFTLibrary = nullptr);
+    SkDEBUGCODE(gFTLibrary = nullptr;)
   }
 }
 
@@ -1163,8 +1163,8 @@ void SkScalerContext_FreeType::generateMetrics(SkGlyph* glyph) {
 
   if (fFace->glyph->format == FT_GLYPH_FORMAT_OUTLINE) {
     using FT_PosLimits = std::numeric_limits<FT_Pos>;
-    FT_BBox bounds = {FT_PosLimits::max(), FT_PosLimits::max(), FT_PosLimits::min(),
-                      FT_PosLimits::min()};
+    FT_BBox bounds = {
+        FT_PosLimits::max(), FT_PosLimits::max(), FT_PosLimits::min(), FT_PosLimits::min()};
 #ifdef FT_COLOR_H
     FT_Bool haveLayers = false;
     FT_LayerIterator layerIterator = {0, 0, nullptr};

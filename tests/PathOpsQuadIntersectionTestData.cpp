@@ -68,11 +68,12 @@ const QuadPts quadraticModEpsilonLines[] = {
 
 const size_t quadraticModEpsilonLines_count = SK_ARRAY_COUNT(quadraticModEpsilonLines);
 
-const QuadPts quadraticTests[][2] = {{// one intersection
-                                      {{{0, 0}, {0, 1}, {1, 1}}},
-                                      {{{0, 1}, {0, 0}, {1, 0}}}},
-                                     {// four intersections
-                                      {{{1, 0}, {2, 6}, {3, 0}}},
-                                      {{{0, 1}, {6, 2}, {0, 3}}}}};
+const QuadPts quadraticTests[][2] = {
+    {// one intersection
+     {{{0, 0}, {0, 1}, {1, 1}}},
+     {{{0, 1}, {0, 0}, {1, 0}}}},
+    {// four intersections
+     {{{1, 0}, {2, 6}, {3, 0}}},
+     {{{0, 1}, {6, 2}, {0, 3}}}}};
 
 const size_t quadraticTests_count = SK_ARRAY_COUNT(quadraticTests);

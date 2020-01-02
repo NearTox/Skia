@@ -32,7 +32,7 @@ class GeometryNode : public Node {
   SkPath asPath() const;
 
  protected:
-  GeometryNode() noexcept;
+  GeometryNode();
 
   virtual void onClip(SkCanvas*, bool antiAlias) const = 0;
 

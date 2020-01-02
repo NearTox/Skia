@@ -37,7 +37,7 @@ class SkShaper {
 
   static std::unique_ptr<SkShaper> Make(sk_sp<SkFontMgr> = nullptr);
 
-  SkShaper() noexcept;
+  SkShaper();
   virtual ~SkShaper();
 
   class RunIterator {
@@ -75,8 +75,11 @@ class SkShaper {
   class TrivialRunIterator : public RunIteratorSubclass {
    public:
     static_assert(std::is_base_of<RunIterator, RunIteratorSubclass>::value, "");
-    constexpr TrivialRunIterator(size_t utf8Bytes) noexcept : fEnd(utf8Bytes), fAtEnd(false) {}
-    void consume() override { fAtEnd = true; }
+    TrivialRunIterator(size_t utf8Bytes) : fEnd(utf8Bytes), fAtEnd(fEnd == 0) {}
+    void consume() override {
+      SkASSERT(!fAtEnd);
+      fAtEnd = true;
+    }
     size_t endOfCurrentRun() const override { return fAtEnd ? fEnd : 0; }
     bool atEnd() const override { return fAtEnd; }
 
@@ -109,7 +112,7 @@ class SkShaper {
 #endif
   class TrivialBiDiRunIterator : public TrivialRunIterator<BiDiRunIterator> {
    public:
-    constexpr TrivialBiDiRunIterator(uint8_t bidiLevel, size_t utf8Bytes) noexcept
+    TrivialBiDiRunIterator(uint8_t bidiLevel, size_t utf8Bytes)
         : TrivialRunIterator(utf8Bytes), fBidiLevel(bidiLevel) {}
     uint8_t currentLevel() const override { return fBidiLevel; }
 
@@ -125,7 +128,7 @@ class SkShaper {
 #endif
   class TrivialScriptRunIterator : public TrivialRunIterator<ScriptRunIterator> {
    public:
-    constexpr TrivialScriptRunIterator(SkFourByteTag script, size_t utf8Bytes) noexcept
+    TrivialScriptRunIterator(SkFourByteTag script, size_t utf8Bytes)
         : TrivialRunIterator(utf8Bytes), fScript(script) {}
     SkFourByteTag currentScript() const override { return fScript; }
 
@@ -150,13 +153,13 @@ class SkShaper {
     virtual ~RunHandler() = default;
 
     struct Range {
-      constexpr Range() noexcept : fBegin(0), fSize(0) {}
-      constexpr Range(size_t begin, size_t size) noexcept : fBegin(begin), fSize(size) {}
+      constexpr Range() : fBegin(0), fSize(0) {}
+      constexpr Range(size_t begin, size_t size) : fBegin(begin), fSize(size) {}
       size_t fBegin;
       size_t fSize;
-      constexpr size_t begin() const noexcept { return fBegin; }
-      constexpr size_t end() const noexcept { return begin() + size(); }
-      constexpr size_t size() const noexcept { return fSize; }
+      constexpr size_t begin() const { return fBegin; }
+      constexpr size_t end() const { return begin() + size(); }
+      constexpr size_t size() const { return fSize; }
     };
 
     struct RunInfo {
@@ -216,7 +219,7 @@ class SkTextBlobBuilderRunHandler final : public SkShaper::RunHandler {
   SkTextBlobBuilderRunHandler(const char* utf8Text, SkPoint offset)
       : fUtf8Text(utf8Text), fOffset(offset) {}
   sk_sp<SkTextBlob> makeBlob();
-  SkPoint endPoint() noexcept { return fOffset; }
+  SkPoint endPoint() { return fOffset; }
 
   void beginLine() override;
   void runInfo(const RunInfo&) override;

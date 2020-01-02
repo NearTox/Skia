@@ -298,7 +298,7 @@ class FontMemResourceTypeface : public LogFontTypeface {
   }
 
  protected:
-  void weak_dispose() const noexcept override {
+  void weak_dispose() const override {
     RemoveFontMemResourceEx(fFontMemResource);
     INHERITED::weak_dispose();
   }

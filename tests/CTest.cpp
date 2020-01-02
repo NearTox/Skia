@@ -26,8 +26,9 @@ static void shader_test(skiatest::Reporter* reporter) {
   sk_shader_tilemode_t tilemode = CLAMP_SK_SHADER_TILEMODE;
   sk_point_t point = {0.0f, 0.0f};
   sk_point_t point2 = {30.0f, 40.0f};
-  sk_color_t colors[] = {(sk_color_t)sk_color_set_argb(0xFF, 0x00, 0x00, 0xFF),
-                         (sk_color_t)sk_color_set_argb(0xFF, 0x00, 0xFF, 0x00)};
+  sk_color_t colors[] = {
+      (sk_color_t)sk_color_set_argb(0xFF, 0x00, 0x00, 0xFF),
+      (sk_color_t)sk_color_set_argb(0xFF, 0x00, 0xFF, 0x00)};
   sk_shader_t* shader;
 
   shader = sk_shader_new_radial_gradient(&point, 1.0f, colors, nullptr, 2, tilemode, nullptr);

@@ -10,6 +10,11 @@
 
 #include "include/core/SkPath.h"
 
+static_assert(0 == static_cast<int>(SkPathFillType::kWinding), "fill_type_mismatch");
+static_assert(1 == static_cast<int>(SkPathFillType::kEvenOdd), "fill_type_mismatch");
+static_assert(2 == static_cast<int>(SkPathFillType::kInverseWinding), "fill_type_mismatch");
+static_assert(3 == static_cast<int>(SkPathFillType::kInverseEvenOdd), "fill_type_mismatch");
+
 class SkPathPriv {
  public:
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
@@ -19,12 +24,12 @@ class SkPathPriv {
 #endif
 
   enum FirstDirection : int {
-    kCW_FirstDirection,   // == SkPath::kCW_Direction
-    kCCW_FirstDirection,  // == SkPath::kCCW_Direction
+    kCW_FirstDirection,   // == SkPathDirection::kCW
+    kCCW_FirstDirection,  // == SkPathDirection::kCCW
     kUnknown_FirstDirection,
   };
 
-  static constexpr FirstDirection AsFirstDirection(SkPath::Direction dir) {
+  static FirstDirection AsFirstDirection(SkPathDirection dir) {
     // since we agree numerically for the values in Direction, we can just cast.
     return (FirstDirection)dir;
   }
@@ -33,7 +38,7 @@ class SkPathPriv {
    *  Return the opposite of the specified direction. kUnknown is its own
    *  opposite.
    */
-  static FirstDirection OppositeFirstDirection(FirstDirection dir) noexcept {
+  static FirstDirection OppositeFirstDirection(FirstDirection dir) {
     static const FirstDirection gOppositeDir[] = {
         kCCW_FirstDirection,
         kCW_FirstDirection,
@@ -49,7 +54,7 @@ class SkPathPriv {
    *  the dir parameter. If the direction was determined, it is cached to make
    *  subsequent calls return quickly.
    */
-  static bool CheapComputeFirstDirection(const SkPath&, FirstDirection* dir) noexcept;
+  static bool CheapComputeFirstDirection(const SkPath&, FirstDirection* dir);
 
   /**
    *  Returns true if the path's direction can be computed via
@@ -63,7 +68,7 @@ class SkPathPriv {
     return computedDir == dir;
   }
 
-  static bool IsClosedSingleContour(const SkPath& path) noexcept {
+  static bool IsClosedSingleContour(const SkPath& path) {
     int verbCount = path.countVerbs();
     if (verbCount == 0) return false;
     int moveCount = 0;
@@ -98,7 +103,7 @@ class SkPathPriv {
    * optional. This does not permit degenerate line or point rectangles.
    */
   static bool IsSimpleClosedRect(
-      const SkPath& path, SkRect* rect, SkPath::Direction* direction, unsigned* start) noexcept;
+      const SkPath& path, SkRect* rect, SkPathDirection* direction, unsigned* start);
 
   /**
    * Creates a path from arc params using the semantics of SkCanvas::drawArc. This function
@@ -112,8 +117,7 @@ class SkPathPriv {
    * Determines whether an arc produced by CreateDrawArcPath will be convex. Assumes a non-empty
    * oval.
    */
-  static bool DrawArcIsConvex(
-      SkScalar sweepAngle, bool useCenter, bool isFillNoPathEffect) noexcept;
+  static bool DrawArcIsConvex(SkScalar sweepAngle, bool useCenter, bool isFillNoPathEffect);
 
   /**
    * Returns a C++11-iterable object that traverses a path's verbs in order. e.g:
@@ -124,15 +128,15 @@ class SkPathPriv {
    */
   struct Verbs {
    public:
-    Verbs(const SkPath& path) noexcept : fPathRef(path.fPathRef.get()) {}
+    Verbs(const SkPath& path) : fPathRef(path.fPathRef.get()) {}
     struct Iter {
-      void operator++() noexcept { fVerb++; }
-      bool operator!=(const Iter& b) noexcept { return fVerb != b.fVerb; }
-      SkPath::Verb operator*() noexcept { return static_cast<SkPath::Verb>(*fVerb); }
+      void operator++() { fVerb++; }
+      bool operator!=(const Iter& b) { return fVerb != b.fVerb; }
+      SkPath::Verb operator*() { return static_cast<SkPath::Verb>(*fVerb); }
       const uint8_t* fVerb;
     };
-    Iter begin() noexcept { return Iter{fPathRef->verbsBegin()}; }
-    Iter end() noexcept { return Iter{fPathRef->verbsEnd()}; }
+    Iter begin() { return Iter{fPathRef->verbsBegin()}; }
+    Iter end() { return Iter{fPathRef->verbsEnd()}; }
 
    private:
     Verbs(const Verbs&) = delete;
@@ -143,22 +147,19 @@ class SkPathPriv {
   /**
    * Returns a pointer to the verb data.
    */
-  static const uint8_t* VerbData(const SkPath& path) noexcept {
-    return path.fPathRef->verbsBegin();
-  }
+  static const uint8_t* VerbData(const SkPath& path) { return path.fPathRef->verbsBegin(); }
 
   /** Returns a raw pointer to the path points */
-  static const SkPoint* PointData(const SkPath& path) noexcept { return path.fPathRef->points(); }
+  static const SkPoint* PointData(const SkPath& path) { return path.fPathRef->points(); }
 
   /** Returns the number of conic weights in the path */
-  static int ConicWeightCnt(const SkPath& path) noexcept { return path.fPathRef->countWeights(); }
+  static int ConicWeightCnt(const SkPath& path) { return path.fPathRef->countWeights(); }
 
   /** Returns a raw pointer to the path conic weights. */
-  static const SkScalar* ConicWeightData(const SkPath& path) noexcept {
+  static const SkScalar* ConicWeightData(const SkPath& path) {
     return path.fPathRef->conicWeights();
   }
 
-#ifndef SK_LEGACY_PATH_CONVEXITY
   /** Returns true if path formed by pts is convex.
 
       @param pts    SkPoint array of path
@@ -167,17 +168,16 @@ class SkPathPriv {
       @return       true if pts represent a convex geometry
   */
   static bool IsConvex(const SkPoint pts[], int count);
-#endif
 
   /** Returns true if the underlying SkPathRef has one single owner. */
-  static bool TestingOnly_unique(const SkPath& path) noexcept { return path.fPathRef->unique(); }
+  static bool TestingOnly_unique(const SkPath& path) { return path.fPathRef->unique(); }
 
   /** Returns true if constructed by addCircle(), addOval(); and in some cases,
    addRoundRect(), addRRect(). SkPath constructed with conicTo() or rConicTo() will not
    return true though SkPath draws oval.
 
    rect receives bounds of oval.
-   dir receives SkPath::Direction of oval: kCW_Direction if clockwise, kCCW_Direction if
+   dir receives SkPathDirection of oval: kCW_Direction if clockwise, kCCW_Direction if
    counterclockwise.
    start receives start of oval: 0 for top, 1 for right, 2 for bottom, 3 for left.
 
@@ -186,16 +186,15 @@ class SkPathPriv {
    Triggers performance optimizations on some GPU surface implementations.
 
    @param rect   storage for bounding SkRect of oval; may be nullptr
-   @param dir    storage for SkPath::Direction; may be nullptr
+   @param dir    storage for SkPathDirection; may be nullptr
    @param start  storage for start of oval; may be nullptr
    @return       true if SkPath was constructed by method that reduces to oval
    */
-  static bool IsOval(
-      const SkPath& path, SkRect* rect, SkPath::Direction* dir, unsigned* start) noexcept {
+  static bool IsOval(const SkPath& path, SkRect* rect, SkPathDirection* dir, unsigned* start) {
     bool isCCW = false;
     bool result = path.fPathRef->isOval(rect, &isCCW, start);
     if (dir && result) {
-      *dir = isCCW ? SkPath::kCCW_Direction : SkPath::kCW_Direction;
+      *dir = isCCW ? SkPathDirection::kCCW : SkPathDirection::kCW;
     }
     return result;
   }
@@ -205,7 +204,7 @@ class SkPathPriv {
    will not return true though SkPath draws SkRRect.
 
    rrect receives bounds of SkRRect.
-   dir receives SkPath::Direction of oval: kCW_Direction if clockwise, kCCW_Direction if
+   dir receives SkPathDirection of oval: kCW_Direction if clockwise, kCCW_Direction if
    counterclockwise.
    start receives start of SkRRect: 0 for top, 1 for right, 2 for bottom, 3 for left.
 
@@ -214,15 +213,15 @@ class SkPathPriv {
    Triggers performance optimizations on some GPU surface implementations.
 
    @param rrect  storage for bounding SkRect of SkRRect; may be nullptr
-   @param dir    storage for SkPath::Direction; may be nullptr
+   @param dir    storage for SkPathDirection; may be nullptr
    @param start  storage for start of SkRRect; may be nullptr
    @return       true if SkPath contains only SkRRect
    */
-  static bool IsRRect(const SkPath& path, SkRRect* rrect, SkPath::Direction* dir, unsigned* start) {
+  static bool IsRRect(const SkPath& path, SkRRect* rrect, SkPathDirection* dir, unsigned* start) {
     bool isCCW = false;
     bool result = path.fPathRef->isRRect(rrect, &isCCW, start);
     if (dir && result) {
-      *dir = isCCW ? SkPath::kCCW_Direction : SkPath::kCW_Direction;
+      *dir = isCCW ? SkPathDirection::kCCW : SkPathDirection::kCW;
     }
     return result;
   }
@@ -235,7 +234,7 @@ class SkPathPriv {
    *  finite path values into infinities (or NaNs), we allow the upper drawing code to reject
    *  the path if its bounds (in device coordinates) is too close to max float.
    */
-  static bool TooBigForMath(const SkRect& bounds) noexcept {
+  static bool TooBigForMath(const SkRect& bounds) {
     // This value is just a guess. smaller is safer, but we don't want to reject largish paths
     // that we don't have to.
     constexpr SkScalar scale_down_to_allow_for_small_multiplies = 0.25f;
@@ -246,10 +245,10 @@ class SkPathPriv {
         bounds.fLeft >= -max && bounds.fTop >= -max && bounds.fRight <= max &&
         bounds.fBottom <= max);
   }
-  static bool TooBigForMath(const SkPath& path) noexcept { return TooBigForMath(path.getBounds()); }
+  static bool TooBigForMath(const SkPath& path) { return TooBigForMath(path.getBounds()); }
 
   // Returns number of valid points for each SkPath::Iter verb
-  static int PtsInIter(unsigned verb) noexcept {
+  static int PtsInIter(unsigned verb) {
     static const uint8_t gPtsInVerb[] = {
         1,  // kMove    pts[0]
         2,  // kLine    pts[0..1]
@@ -269,7 +268,7 @@ class SkPathPriv {
     return (path.fPathRef->fIsRRect | path.fPathRef->fIsOval) || path.isRect(&tmp);
   }
 
-  static bool AllPointsEq(const SkPoint pts[], int count) noexcept {
+  static bool AllPointsEq(const SkPoint pts[], int count) {
     for (int i = 1; i < count; ++i) {
       if (pts[0] != pts[i]) {
         return false;
@@ -280,20 +279,33 @@ class SkPathPriv {
 
   static bool IsRectContour(
       const SkPath&, bool allowPartial, int* currVerb, const SkPoint** ptsPtr, bool* isClosed,
-      SkPath::Direction* direction, SkRect* rect);
+      SkPathDirection* direction, SkRect* rect);
 
   /** Returns true if SkPath is equivalent to nested SkRect pair when filled.
    If false, rect and dirs are unchanged.
    If true, rect and dirs are written to if not nullptr:
    setting rect[0] to outer SkRect, and rect[1] to inner SkRect;
-   setting dirs[0] to SkPath::Direction of outer SkRect, and dirs[1] to SkPath::Direction of
+   setting dirs[0] to SkPathDirection of outer SkRect, and dirs[1] to SkPathDirection of
    inner SkRect.
 
    @param rect  storage for SkRect pair; may be nullptr
-   @param dirs  storage for SkPath::Direction pair; may be nullptr
+   @param dirs  storage for SkPathDirection pair; may be nullptr
    @return      true if SkPath contains nested SkRect pair
    */
-  static bool IsNestedFillRects(const SkPath&, SkRect rect[2], SkPath::Direction dirs[2] = nullptr);
+  static bool IsNestedFillRects(const SkPath&, SkRect rect[2], SkPathDirection dirs[2] = nullptr);
+
+  static bool IsInverseFillType(SkPathFillType fill) { return (static_cast<int>(fill) & 2) != 0; }
+
+  /** Returns equivalent SkPath::FillType representing SkPath fill inside its bounds.
+   .
+
+   @param fill  one of: kWinding_FillType, kEvenOdd_FillType,
+   kInverseWinding_FillType, kInverseEvenOdd_FillType
+   @return      fill, or kWinding_FillType or kEvenOdd_FillType if fill is inverted
+   */
+  static SkPathFillType ConvertToNonInverseFillType(SkPathFillType fill) {
+    return (SkPathFillType)(static_cast<int>(fill) & 1);
+  }
 };
 
 // Lightweight variant of SkPath::Iter that only returns segments (e.g. lines/conics).
@@ -309,14 +321,15 @@ class SkPathEdgeIter {
   const SkScalar* fConicWeights;
   SkPoint fScratch[2];  // for auto-close lines
   bool fNeedsCloseLine;
+  bool fNextIsNewContour;
   SkDEBUGCODE(bool fIsConic);
 
   enum { kIllegalEdgeValue = 99 };
 
  public:
-  SkPathEdgeIter(const SkPath& path) noexcept;
+  SkPathEdgeIter(const SkPath& path);
 
-  SkScalar conicWeight() const noexcept {
+  SkScalar conicWeight() const {
     SkASSERT(fIsConic);
     return *fConicWeights;
   }
@@ -328,33 +341,35 @@ class SkPathEdgeIter {
     kCubic = SkPath::kCubic_Verb,
   };
 
-  static constexpr SkPath::Verb EdgeToVerb(Edge e) { return SkPath::Verb(e); }
+  static SkPath::Verb EdgeToVerb(Edge e) { return SkPath::Verb(e); }
 
   struct Result {
     const SkPoint* fPts;  // points for the segment, or null if done
     Edge fEdge;
+    bool fIsNewContour;
 
     // Returns true when it holds an Edge, false when the path is done.
-    operator bool() noexcept { return fPts != nullptr; }
+    operator bool() { return fPts != nullptr; }
   };
 
-  Result next() noexcept {
+  Result next() {
     auto closeline = [&]() {
       fScratch[0] = fPts[-1];
       fScratch[1] = *fMoveToPtr;
       fNeedsCloseLine = false;
-      return Result{fScratch, Edge::kLine};
+      fNextIsNewContour = true;
+      return Result{fScratch, Edge::kLine, false};
     };
 
     for (;;) {
       SkASSERT(fVerbs <= fVerbsStop);
       if (fVerbs == fVerbsStop) {
-        return fNeedsCloseLine ? closeline() : Result{nullptr, Edge(kIllegalEdgeValue)};
+        return fNeedsCloseLine ? closeline() : Result{nullptr, Edge(kIllegalEdgeValue), false};
       }
 
-      SkDEBUGCODE(fIsConic = false);
+      SkDEBUGCODE(fIsConic = false;)
 
-      const auto v = *fVerbs++;
+          const auto v = *fVerbs++;
       switch (v) {
         case SkPath::kMove_Verb: {
           if (fNeedsCloseLine) {
@@ -376,10 +391,11 @@ class SkPathEdgeIter {
           fPts += pts_count;
           fConicWeights += cws_count;
 
-          SkDEBUGCODE(fIsConic = (v == SkPath::kConic_Verb));
-          SkASSERT(fIsConic == (cws_count > 0));
+          SkDEBUGCODE(fIsConic = (v == SkPath::kConic_Verb);) SkASSERT(fIsConic == (cws_count > 0));
 
-          return {&fPts[-(pts_count + 1)], Edge(v)};
+          bool isNewContour = fNextIsNewContour;
+          fNextIsNewContour = false;
+          return {&fPts[-(pts_count + 1)], Edge(v), isNewContour};
         }
       }
     }

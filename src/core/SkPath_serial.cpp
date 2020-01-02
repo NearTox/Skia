@@ -39,8 +39,8 @@ enum SerializationType { kGeneral = 0, kRRect = 1 };
 
 static unsigned extract_version(uint32_t packed) { return packed & kVersion_SerializationMask; }
 
-static SkPath::FillType extract_filltype(uint32_t packed) {
-  return static_cast<SkPath::FillType>((packed >> kFillType_SerializationShift) & 0x3);
+static SkPathFillType extract_filltype(uint32_t packed) {
+  return static_cast<SkPathFillType>((packed >> kFillType_SerializationShift) & 0x3);
 }
 
 static SerializationType extract_serializationtype(uint32_t packed) {
@@ -83,9 +83,9 @@ size_t SkPath::writeToMemoryAsRRect(void* storage) const {
 }
 
 size_t SkPath::writeToMemory(void* storage) const {
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
 
-  if (size_t bytes = this->writeToMemoryAsRRect(storage)) {
+      if (size_t bytes = this->writeToMemoryAsRRect(storage)) {
     return bytes;
   }
 
@@ -160,14 +160,14 @@ size_t SkPath::readAsRRect(const void* storage, size_t length) {
   SkASSERT(extract_serializationtype(packed) == SerializationType::kRRect);
 
   uint8_t dir = (packed >> kDirection_SerializationShift) & 0x3;
-  FillType fillType = extract_filltype(packed);
+  SkPathFillType fillType = extract_filltype(packed);
 
-  Direction rrectDir;
+  SkPathDirection rrectDir;
   SkRRect rrect;
   int32_t start;
   switch (dir) {
-    case SkPathPriv::kCW_FirstDirection: rrectDir = kCW_Direction; break;
-    case SkPathPriv::kCCW_FirstDirection: rrectDir = kCCW_Direction; break;
+    case SkPathPriv::kCW_FirstDirection: rrectDir = SkPathDirection::kCW; break;
+    case SkPathPriv::kCCW_FirstDirection: rrectDir = SkPathDirection::kCCW; break;
     default: return 0;
   }
   if (!SkRRectPriv::ReadFromBuffer(&buffer, &rrect)) {

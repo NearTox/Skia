@@ -131,20 +131,23 @@ static DEFINE_int_2(
     "Run threadsafe tests on a threadpool with this many extra threads, "
     "defaulting to one extra thread per core.");
 
-const char* kBackendTypeStrings[sk_app::Window::kBackendTypeCount] = {"OpenGL",
+static DEFINE_bool(redraw, false, "Toggle continuous redraw.");
+
+const char* kBackendTypeStrings[sk_app::Window::kBackendTypeCount] = {
+    "OpenGL",
 #if SK_ANGLE && defined(SK_BUILD_FOR_WIN)
-                                                                      "ANGLE",
+    "ANGLE",
 #endif
 #ifdef SK_DAWN
-                                                                      "Dawn",
+    "Dawn",
 #endif
 #ifdef SK_VULKAN
-                                                                      "Vulkan",
+    "Vulkan",
 #endif
 #ifdef SK_METAL
-                                                                      "Metal",
+    "Metal",
 #endif
-                                                                      "Raster"};
+    "Raster"};
 
 static sk_app::Window::BackendType get_backend_type(const char* str) {
 #ifdef SK_DAWN
@@ -294,6 +297,7 @@ Viewer::Viewer(int argc, char** argv, void* platformData)
   displayParams.fGrContextOptions.fSuppressPrints = true;
   displayParams.fGrContextOptions.fInternalMultisampleCount = FLAGS_internalSamples;
   fWindow->setRequestedDisplayParams(displayParams);
+  fRefresh = FLAGS_redraw;
 
   // Configure timers
   fStatsLayer.setActive(false);
@@ -960,10 +964,11 @@ void Viewer::preTouchMatrixChanged() {
 SkMatrix Viewer::computePerspectiveMatrix() {
   SkScalar w = fWindow->width(), h = fWindow->height();
   SkPoint orthoPts[4] = {{0, 0}, {w, 0}, {0, h}, {w, h}};
-  SkPoint perspPts[4] = {{fPerspectivePoints[0].fX * w, fPerspectivePoints[0].fY * h},
-                         {fPerspectivePoints[1].fX * w, fPerspectivePoints[1].fY * h},
-                         {fPerspectivePoints[2].fX * w, fPerspectivePoints[2].fY * h},
-                         {fPerspectivePoints[3].fX * w, fPerspectivePoints[3].fY * h}};
+  SkPoint perspPts[4] = {
+      {fPerspectivePoints[0].fX * w, fPerspectivePoints[0].fY * h},
+      {fPerspectivePoints[1].fX * w, fPerspectivePoints[1].fY * h},
+      {fPerspectivePoints[2].fX * w, fPerspectivePoints[2].fY * h},
+      {fPerspectivePoints[3].fX * w, fPerspectivePoints[3].fY * h}};
   SkMatrix m;
   m.setPolyToPoly(orthoPts, perspPts, 4);
   return m;

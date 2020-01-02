@@ -265,14 +265,15 @@ static void test_codec(
 }
 
 static bool supports_partial_scanlines(const char path[]) {
-  static const char* const exts[] = {"jpg",
-                                     "jpeg",
-                                     "png",
-                                     "webp"
-                                     "JPG",
-                                     "JPEG",
-                                     "PNG",
-                                     "WEBP"};
+  static const char* const exts[] = {
+      "jpg",
+      "jpeg",
+      "png",
+      "webp"
+      "JPG",
+      "JPEG",
+      "PNG",
+      "WEBP"};
 
   for (uint32_t i = 0; i < SK_ARRAY_COUNT(exts); i++) {
     if (SkStrEndsWith(path, exts[i])) {
@@ -1066,8 +1067,8 @@ static void check_round_trip(skiatest::Reporter* r, SkCodec* origCodec, const Sk
 DEF_TEST(Codec_PngRoundTrip, r) {
   auto codec = SkCodec::MakeFromStream(GetResourceAsStream("images/mandrill_512_q075.jpg"));
 
-  SkColorType colorTypesOpaque[] = {kRGB_565_SkColorType, kRGBA_8888_SkColorType,
-                                    kBGRA_8888_SkColorType};
+  SkColorType colorTypesOpaque[] = {
+      kRGB_565_SkColorType, kRGBA_8888_SkColorType, kBGRA_8888_SkColorType};
   for (SkColorType colorType : colorTypesOpaque) {
     SkImageInfo newInfo = codec->getInfo().makeColorType(colorType);
     check_round_trip(r, codec.get(), newInfo);

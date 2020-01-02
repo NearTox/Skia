@@ -67,7 +67,7 @@ class SK_API SkDrawable : public SkFlattenable {
 
   class GpuDrawHandler {
    public:
-    virtual ~GpuDrawHandler() = default;
+    virtual ~GpuDrawHandler() {}
 
     virtual void draw(const GrBackendDrawableInfo&) {}
   };

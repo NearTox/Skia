@@ -95,8 +95,8 @@ static SkPDFIndirectReference make_image_shader(
     deviceBounds.join(bitmapBounds);
   }
 
-  SkISize patternDeviceSize = {SkScalarCeilToInt(deviceBounds.width()),
-                               SkScalarCeilToInt(deviceBounds.height())};
+  SkISize patternDeviceSize = {
+      SkScalarCeilToInt(deviceBounds.width()), SkScalarCeilToInt(deviceBounds.height())};
   auto patternDevice = sk_make_sp<SkPDFDevice>(patternDeviceSize, doc);
   SkCanvas canvas(patternDevice);
 
@@ -287,8 +287,9 @@ static SkPDFIndirectReference make_fallback_shader(
   SkISize size = {
       SkTClamp(SkScalarCeilToInt(rasterScale * surfaceBBox.width()), 1, kMaxBitmapArea),
       SkTClamp(SkScalarCeilToInt(rasterScale * surfaceBBox.height()), 1, kMaxBitmapArea)};
-  SkSize scale = {SkIntToScalar(size.width()) / shaderRect.width(),
-                  SkIntToScalar(size.height()) / shaderRect.height()};
+  SkSize scale = {
+      SkIntToScalar(size.width()) / shaderRect.width(),
+      SkIntToScalar(size.height()) / shaderRect.height()};
 
   auto surface = SkSurface::MakeRasterN32Premul(size.width(), size.height());
   SkASSERT(surface);
@@ -341,11 +342,12 @@ SkPDFIndirectReference SkPDFMakeShader(
   SkTileMode imageTileModes[2];
   if (SkImage* skimg = shader->isAImage(&shaderTransform, imageTileModes)) {
     SkMatrix finalMatrix = SkMatrix::Concat(canvasTransform, shaderTransform);
-    SkPDFImageShaderKey key = {finalMatrix,
-                               surfaceBBox,
-                               SkBitmapKeyFromImage(skimg),
-                               {imageTileModes[0], imageTileModes[1]},
-                               paintColor};
+    SkPDFImageShaderKey key = {
+        finalMatrix,
+        surfaceBBox,
+        SkBitmapKeyFromImage(skimg),
+        {imageTileModes[0], imageTileModes[1]},
+        paintColor};
     SkPDFIndirectReference* shaderPtr = doc->fImageShaderMap.find(key);
     if (shaderPtr) {
       return *shaderPtr;

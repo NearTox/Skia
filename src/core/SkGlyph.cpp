@@ -13,7 +13,9 @@
 #include "src/pathops/SkPathOpsCubic.h"
 #include "src/pathops/SkPathOpsQuad.h"
 
-SkMask SkGlyph::mask() const noexcept {
+constexpr SkIPoint SkPackedGlyphID::kXYFieldMask;
+
+SkMask SkGlyph::mask() const {
   // getMetrics had to be called.
   SkASSERT(fMaskFormat != MASK_FORMAT_UNKNOWN);
 
@@ -31,7 +33,7 @@ SkMask SkGlyph::mask(SkPoint position) const {
   return answer;
 }
 
-void SkGlyph::zeroMetrics() noexcept {
+void SkGlyph::zeroMetrics() {
   fAdvanceX = 0;
   fAdvanceY = 0;
   fWidth = 0;
@@ -40,9 +42,9 @@ void SkGlyph::zeroMetrics() noexcept {
   fLeft = 0;
 }
 
-static constexpr size_t bits_to_bytes(size_t bits) { return (bits + 7) >> 3; }
+static size_t bits_to_bytes(size_t bits) { return (bits + 7) >> 3; }
 
-static size_t format_alignment(SkMask::Format format) noexcept {
+static size_t format_alignment(SkMask::Format format) {
   switch (format) {
     case SkMask::kBW_Format:
     case SkMask::kA8_Format:
@@ -55,11 +57,11 @@ static size_t format_alignment(SkMask::Format format) noexcept {
   return 0;
 }
 
-static size_t format_rowbytes(int width, SkMask::Format format) noexcept {
+static size_t format_rowbytes(int width, SkMask::Format format) {
   return format == SkMask::kBW_Format ? bits_to_bytes(width) : width * format_alignment(format);
 }
 
-SkGlyph::SkGlyph(const SkGlyphPrototype& p) noexcept
+SkGlyph::SkGlyph(const SkGlyphPrototype& p)
     : fWidth{p.width},
       fHeight{p.height},
       fTop{p.top},
@@ -70,7 +72,7 @@ SkGlyph::SkGlyph(const SkGlyphPrototype& p) noexcept
       fForceBW{p.forceBW},
       fID{p.id} {}
 
-size_t SkGlyph::formatAlignment() const noexcept { return format_alignment(this->maskFormat()); }
+size_t SkGlyph::formatAlignment() const { return format_alignment(this->maskFormat()); }
 
 size_t SkGlyph::allocImage(SkArenaAlloc* alloc) {
   SkASSERT(!this->isEmpty());
@@ -112,20 +114,20 @@ bool SkGlyph::setMetricsAndImage(SkArenaAlloc* alloc, const SkGlyph& from) {
     fLeft = from.fLeft;
     fForceBW = from.fForceBW;
     fMaskFormat = from.fMaskFormat;
-    return this->setImage(alloc, from.image());
+
+    // From glyph may not have an image because the glyph is too large.
+    return from.fImage != nullptr && this->setImage(alloc, from.image());
   }
   return false;
 }
 
-size_t SkGlyph::rowBytes() const noexcept {
-  return format_rowbytes(fWidth, (SkMask::Format)fMaskFormat);
-}
+size_t SkGlyph::rowBytes() const { return format_rowbytes(fWidth, (SkMask::Format)fMaskFormat); }
 
-size_t SkGlyph::rowBytesUsingFormat(SkMask::Format format) const noexcept {
+size_t SkGlyph::rowBytesUsingFormat(SkMask::Format format) const {
   return format_rowbytes(fWidth, format);
 }
 
-size_t SkGlyph::imageSize() const noexcept {
+size_t SkGlyph::imageSize() const {
   if (this->isEmpty() || this->imageTooLarge()) {
     return 0;
   }
@@ -173,7 +175,7 @@ bool SkGlyph::setPath(SkArenaAlloc* alloc, const SkPath* path) {
   return false;
 }
 
-const SkPath* SkGlyph::path() const noexcept {
+const SkPath* SkGlyph::path() const {
   // setPath must have been called previously.
   SkASSERT(this->setPathHasBeenCalled());
   if (fPathData->fHasPath) {

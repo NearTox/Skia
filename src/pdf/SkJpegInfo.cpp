@@ -107,8 +107,9 @@ bool SkGetJpegInfo(
     return false;  // Invalid JFIF
   }
   if (size) {
-    *size = {JpegSegment::GetBigendianUint16(&segment.data()[3]),
-             JpegSegment::GetBigendianUint16(&segment.data()[1])};
+    *size = {
+        JpegSegment::GetBigendianUint16(&segment.data()[3]),
+        JpegSegment::GetBigendianUint16(&segment.data()[1])};
   }
   if (colorType) {
     *colorType = numberOfComponents == 3 ? SkEncodedInfo::kYUV_Color : SkEncodedInfo::kGray_Color;

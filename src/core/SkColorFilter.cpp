@@ -17,6 +17,7 @@
 #include "src/core/SkColorSpaceXformSteps.h"
 #include "src/core/SkRasterPipeline.h"
 #include "src/core/SkReadBuffer.h"
+#include "src/core/SkVM.h"
 #include "src/core/SkWriteBuffer.h"
 
 #if SK_SUPPORT_GPU
@@ -37,6 +38,12 @@ std::unique_ptr<GrFragmentProcessor> SkColorFilter::asFragmentProcessor(
 
 bool SkColorFilter::appendStages(const SkStageRec& rec, bool shaderIsOpaque) const {
   return this->onAppendStages(rec, shaderIsOpaque);
+}
+
+bool SkColorFilter::program(
+    skvm::Builder*, SkColorSpace* dstCS, skvm::Uniforms* uniforms, skvm::F32* r, skvm::F32* g,
+    skvm::F32* b, skvm::F32* a) const {
+  return false;
 }
 
 SkColor SkColorFilter::filterColor(SkColor c) const {
@@ -86,7 +93,7 @@ SkColor4f SkColorFilter::filterColor4f(
 
 class SkComposeColorFilter : public SkColorFilter {
  public:
-  uint32_t getFlags() const noexcept override {
+  uint32_t getFlags() const override {
     // Can only claim alphaunchanged support if both our proxys do.
     return fOuter->getFlags() & fInner->getFlags();
   }
@@ -175,11 +182,13 @@ class SkSRGBGammaColorFilter : public SkColorFilter {
       : fDir(dir), fSteps([&] {
           // We handle premul/unpremul separately, so here just always upm->upm.
           if (dir == Direction::kLinearToSRGB) {
-            return SkColorSpaceXformSteps{sk_srgb_linear_singleton(), kUnpremul_SkAlphaType,
-                                          sk_srgb_singleton(), kUnpremul_SkAlphaType};
+            return SkColorSpaceXformSteps{
+                sk_srgb_linear_singleton(), kUnpremul_SkAlphaType, sk_srgb_singleton(),
+                kUnpremul_SkAlphaType};
           } else {
-            return SkColorSpaceXformSteps{sk_srgb_singleton(), kUnpremul_SkAlphaType,
-                                          sk_srgb_linear_singleton(), kUnpremul_SkAlphaType};
+            return SkColorSpaceXformSteps{
+                sk_srgb_singleton(), kUnpremul_SkAlphaType, sk_srgb_linear_singleton(),
+                kUnpremul_SkAlphaType};
           }
         }()) {}
 
@@ -260,7 +269,7 @@ class SkMixerColorFilter : public SkColorFilter {
     SkASSERT(fWeight >= 0 && fWeight <= 1);
   }
 
-  uint32_t getFlags() const noexcept override {
+  uint32_t getFlags() const override {
     uint32_t f0 = fCF0->getFlags();
     uint32_t f1 = fCF1 ? fCF1->getFlags() : ~0U;
     return f0 & f1;

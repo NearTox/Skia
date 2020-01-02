@@ -266,8 +266,8 @@ void SkDraw::drawVertices(
     SkScan::HairRCProc hairProc = ChooseHairProc(paint.isAntiAlias());
     const SkRasterClip& clip = *fRC;
     while (vertProc(&state)) {
-      SkPoint array[] = {devVerts[state.f0], devVerts[state.f1], devVerts[state.f2],
-                         devVerts[state.f0]};
+      SkPoint array[] = {
+          devVerts[state.f0], devVerts[state.f1], devVerts[state.f2], devVerts[state.f0]};
       hairProc(array, 4, clip, blitter.get());
     }
     return;

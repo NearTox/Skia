@@ -58,7 +58,7 @@ SkImage_Gpu::SkImage_Gpu(
     sk_sp<GrContext> context, uint32_t uniqueID, SkAlphaType at, sk_sp<GrTextureProxy> proxy,
     sk_sp<SkColorSpace> colorSpace)
     : INHERITED(
-          std::move(context), proxy->worstCaseWidth(), proxy->worstCaseHeight(), uniqueID,
+          std::move(context), proxy->backingStoreDimensions(), uniqueID,
           proxy_color_type(proxy.get()), at, colorSpace),
       fProxy(std::move(proxy)) {}
 
@@ -94,8 +94,7 @@ sk_sp<SkImage> SkImage_Gpu::onMakeColorTypeAndColorSpace(
 
   GrPaint paint;
   paint.setPorterDuffXPFactory(SkBlendMode::kSrc);
-  paint.addColorTextureProcessor(
-      std::move(proxy), SkColorTypeToGrColorType(this->colorType()), SkMatrix::I());
+  paint.addColorTextureProcessor(std::move(proxy), this->alphaType(), SkMatrix::I());
   if (xform) {
     paint.addColorFragmentProcessor(std::move(xform));
   }
@@ -362,8 +361,7 @@ sk_sp<SkImage> SkImage::makeTextureImage(GrContext* context, GrMipMapped mipMapp
       return sk_ref_sp(const_cast<SkImage*>(this));
     }
     GrTextureAdjuster adjuster(
-        context, std::move(proxy), SkColorTypeToGrColorType(this->colorType()), this->alphaType(),
-        this->uniqueID(), this->colorSpace());
+        context, std::move(proxy), this->imageInfo().colorInfo(), this->uniqueID());
     return create_image_from_producer(
         context, &adjuster, this->alphaType(), this->uniqueID(), mipMapped);
   }
@@ -481,7 +479,7 @@ sk_sp<SkImage> SkImage::MakeCrossContextFromPixmap(
   context->priv().flushSurface(proxy.get());
   GrGpu* gpu = context->priv().getGpu();
 
-  sk_sp<GrSemaphore> sema = gpu->prepareTextureForCrossContextUsage(texture.get());
+  std::unique_ptr<GrSemaphore> sema = gpu->prepareTextureForCrossContextUsage(texture.get());
 
   auto gen = GrBackendTextureImageGenerator::Make(
       std::move(texture), proxy->origin(), std::move(sema), pixmap->colorType(),

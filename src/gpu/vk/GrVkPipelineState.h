@@ -15,7 +15,6 @@
 
 class GrPipeline;
 class GrStencilSettings;
-class GrVkBufferView;
 class GrVkCommandBuffer;
 class GrVkDescriptorPool;
 class GrVkDescriptorSet;
@@ -48,15 +47,15 @@ class GrVkPipelineState : public SkRefCnt {
 
   ~GrVkPipelineState();
 
-  void setAndBindUniforms(
+  bool setAndBindUniforms(
       GrVkGpu*, const GrRenderTarget*, const GrProgramInfo&, GrVkCommandBuffer*);
   /**
    * This must be called after setAndBindUniforms() since that function invalidates texture
    * bindings.
    */
-  void setAndBindTextures(
+  bool setAndBindTextures(
       GrVkGpu*, const GrPrimitiveProcessor&, const GrPipeline&,
-      const GrTextureProxy* const primitiveProcessorTextures[], GrVkCommandBuffer*);
+      const GrSurfaceProxy* const primitiveProcessorTextures[], GrVkCommandBuffer*);
 
   void bindPipeline(const GrVkGpu* gpu, GrVkCommandBuffer* commandBuffer);
 
@@ -111,15 +110,7 @@ class GrVkPipelineState : public SkRefCnt {
   // GrVkResources
   GrVkPipeline* fPipeline;
 
-  // The DescriptorSets need to survive until the gpu has finished all draws that use them.
-  // However, they will only be freed by the descriptor pool. Thus by simply keeping the
-  // descriptor pool alive through the draw, the descritor sets will also stay alive. Thus we do
-  // not need a GrVkResource versions of VkDescriptorSet. We hold on to these in the
-  // GrVkPipelineState since we update the descriptor sets and bind them at separate times;
-  VkDescriptorSet fDescriptorSets[3];
-
   const GrVkDescriptorSet* fUniformDescriptorSet;
-  const GrVkDescriptorSet* fSamplerDescriptorSet;
 
   const GrVkDescriptorSetManager::Handle fSamplerDSHandle;
 

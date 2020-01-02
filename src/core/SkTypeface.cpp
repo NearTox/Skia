@@ -19,10 +19,10 @@
 #include "src/core/SkTypefaceCache.h"
 #include "src/sfnt/SkOTTable_OS_2.h"
 
-SkTypeface::SkTypeface(const SkFontStyle& style, bool isFixedPitch) noexcept
+SkTypeface::SkTypeface(const SkFontStyle& style, bool isFixedPitch)
     : fUniqueID(SkTypefaceCache::NewFontID()), fStyle(style), fIsFixedPitch(isFixedPitch) {}
 
-SkTypeface::~SkTypeface() = default;
+SkTypeface::~SkTypeface() {}
 
 #ifdef SK_WHITELIST_SERIALIZED_TYPEFACES
 extern void WhitelistSerializeTypeface(const SkTypeface*, SkWStream*);

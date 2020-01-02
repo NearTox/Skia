@@ -508,10 +508,11 @@ DEF_TEST(Serialization, reporter) {
 
   // Test readColor4fArray
   {
-    SkColor4f data[kArraySize] = {SkColor4f::FromColor(SK_ColorBLACK),
-                                  SkColor4f::FromColor(SK_ColorWHITE),
-                                  SkColor4f::FromColor(SK_ColorRED),
-                                  {1.f, 2.f, 4.f, 8.f}};
+    SkColor4f data[kArraySize] = {
+        SkColor4f::FromColor(SK_ColorBLACK),
+        SkColor4f::FromColor(SK_ColorWHITE),
+        SkColor4f::FromColor(SK_ColorRED),
+        {1.f, 2.f, 4.f, 8.f}};
     TestArraySerialization(data, reporter);
   }
 

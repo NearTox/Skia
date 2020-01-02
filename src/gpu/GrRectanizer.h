@@ -19,7 +19,7 @@ class GrRectanizer {
     SkASSERT(height >= 0);
   }
 
-  virtual ~GrRectanizer() = default;
+  virtual ~GrRectanizer() {}
 
   virtual void reset() = 0;
 

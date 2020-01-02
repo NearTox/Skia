@@ -24,6 +24,8 @@ class GrSampleMaskProcessor : public GrCCCoverageProcessor {
       sk_sp<const GrGpuBuffer> instanceBuffer, int instanceCount, int baseInstance,
       SkTArray<GrMesh>* out) const override;
 
+  GrPrimitiveType primType() const final;
+
   GrGLSLPrimitiveProcessor* onCreateGLSLInstance(std::unique_ptr<Shader>) const override;
 
   SkSTArray<2, Attribute> fInputAttribs;

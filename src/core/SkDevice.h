@@ -33,12 +33,12 @@ class SkBaseDevice : public SkRefCnt {
    *  Return ImageInfo for this device. If the canvas is not backed by pixels
    *  (cpu or gpu), then the info's ColorType will be kUnknown_SkColorType.
    */
-  const SkImageInfo& imageInfo() const noexcept { return fInfo; }
+  const SkImageInfo& imageInfo() const { return fInfo; }
 
   /**
    *  Return SurfaceProps for this device.
    */
-  const SkSurfaceProps& surfaceProps() const noexcept { return fSurfaceProps; }
+  const SkSurfaceProps& surfaceProps() const { return fSurfaceProps; }
 
   /**
    *  Return the bounds of the device in the coordinate space of the root
@@ -86,7 +86,7 @@ class SkBaseDevice : public SkRefCnt {
    *  Return the device's origin: its offset in device coordinates from
    *  the default origin in its canvas' matrix/clip
    */
-  const SkIPoint& getOrigin() const noexcept { return fOrigin; }
+  const SkIPoint& getOrigin() const { return fOrigin; }
 
   virtual void* getRasterHandle() const { return nullptr; }
 
@@ -94,6 +94,10 @@ class SkBaseDevice : public SkRefCnt {
   void restore(const SkMatrix& ctm) {
     this->onRestore();
     this->setGlobalCTM(ctm);
+  }
+  void restoreLocal(const SkMatrix& localToDevice) {
+    this->onRestore();
+    this->setLocalToDevice(localToDevice);
   }
   void clipRect(const SkRect& rect, SkClipOp op, bool aa) { this->onClipRect(rect, op, aa); }
   void clipRRect(const SkRRect& rrect, SkClipOp op, bool aa) { this->onClipRRect(rrect, op, aa); }
@@ -104,8 +108,8 @@ class SkBaseDevice : public SkRefCnt {
   }
   bool clipIsWideOpen() const;
 
-  const SkMatrix& ctm() const noexcept { return fCTM; }
-  void setCTM(const SkMatrix& ctm) noexcept { fCTM = ctm; }
+  const SkMatrix& localToDevice() const { return fLocalToDevice; }
+  void setLocalToDevice(const SkMatrix& localToDevice) { fLocalToDevice = localToDevice; }
   void setGlobalCTM(const SkMatrix& ctm);
   virtual void validateDevBounds(const SkIRect&) {}
 
@@ -341,7 +345,7 @@ class SkBaseDevice : public SkRefCnt {
   SkIPoint fOrigin;
   const SkImageInfo fInfo;
   const SkSurfaceProps fSurfaceProps;
-  SkMatrix fCTM;
+  SkMatrix fLocalToDevice;
 
   typedef SkRefCnt INHERITED;
 };
@@ -402,17 +406,17 @@ class SkNoPixelsDevice : public SkBaseDevice {
   typedef SkBaseDevice INHERITED;
 };
 
-class SkAutoDeviceCTMRestore : SkNoncopyable {
+class SkAutoDeviceTransformRestore : SkNoncopyable {
  public:
-  SkAutoDeviceCTMRestore(SkBaseDevice* device, const SkMatrix& ctm) noexcept
-      : fDevice(device), fPrevCTM(device->ctm()) {
-    fDevice->setCTM(ctm);
+  SkAutoDeviceTransformRestore(SkBaseDevice* device, const SkMatrix& localToDevice)
+      : fDevice(device), fPrevLocalToDevice(device->localToDevice()) {
+    fDevice->setLocalToDevice(localToDevice);
   }
-  ~SkAutoDeviceCTMRestore() { fDevice->setCTM(fPrevCTM); }
+  ~SkAutoDeviceTransformRestore() { fDevice->setLocalToDevice(fPrevLocalToDevice); }
 
  private:
   SkBaseDevice* fDevice;
-  const SkMatrix fPrevCTM;
+  const SkMatrix fPrevLocalToDevice;
 };
 
 #endif

@@ -424,7 +424,7 @@ void markTestFlakyForPathKit() {
 bool testSimplify(
     SkPath& path, bool useXor, SkPath& out, PathOpsThreadState& state, const char* pathStr) {
   static SkMutex& simplifyDebugOut = *(new SkMutex);
-  SkPath::FillType fillType = useXor ? SkPath::kEvenOdd_FillType : SkPath::kWinding_FillType;
+  SkPathFillType fillType = useXor ? SkPathFillType::kEvenOdd : SkPathFillType::kWinding;
   path.setFillType(fillType);
   state.fReporter->bumpTestCount();
   if (!Simplify(path, &out)) {
@@ -441,8 +441,8 @@ bool testSimplify(
     std::string str;
     const char* pathPrefix = nullptr;
     const char* nameSuffix = nullptr;
-    if (fillType == SkPath::kEvenOdd_FillType) {
-      pathPrefix = "    path.setFillType(SkPath::kEvenOdd_FillType);\n";
+    if (fillType == SkPathFillType::kEvenOdd) {
+      pathPrefix = "    path.setFillType(SkPathFillType::kEvenOdd);\n";
       nameSuffix = "x";
     }
     const char testFunction[] = "testSimplify(reporter, path);";
@@ -758,12 +758,12 @@ void initializeTests(skiatest::Reporter* reporter, const char* test) {
   }
 }
 
-void PathOpsThreadState::outputProgress(const char* pathStr, SkPath::FillType pathFillType) {
+void PathOpsThreadState::outputProgress(const char* pathStr, SkPathFillType pathFillType) {
   const char testFunction[] = "testSimplify(path);";
   const char* pathPrefix = nullptr;
   const char* nameSuffix = nullptr;
-  if (pathFillType == SkPath::kEvenOdd_FillType) {
-    pathPrefix = "    path.setFillType(SkPath::kEvenOdd_FillType);\n";
+  if (pathFillType == SkPathFillType::kEvenOdd) {
+    pathPrefix = "    path.setFillType(SkPathFillType::kEvenOdd);\n";
     nameSuffix = "x";
   }
   appendTest(pathStr, pathPrefix, nameSuffix, testFunction, false, fPathStr);

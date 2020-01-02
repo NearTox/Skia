@@ -49,12 +49,11 @@ void GrMtlOpsRenderPass::submit() {
   fGpu->submitIndirectCommandBuffer(fRenderTarget, fOrigin, &iBounds);
 }
 
-GrMtlPipelineState* GrMtlOpsRenderPass::prepareDrawState(
-    const GrProgramInfo& programInfo, GrPrimitiveType primitiveType) {
+GrMtlPipelineState* GrMtlOpsRenderPass::prepareDrawState(const GrProgramInfo& programInfo) {
   // TODO: resolve textures and regenerate mipmaps as needed
 
-  GrMtlPipelineState* pipelineState = fGpu->resourceProvider().findOrCreateCompatiblePipelineState(
-      fRenderTarget, programInfo, primitiveType);
+  GrMtlPipelineState* pipelineState =
+      fGpu->resourceProvider().findOrCreateCompatiblePipelineState(fRenderTarget, programInfo);
   if (!pipelineState) {
     return nullptr;
   }
@@ -69,8 +68,7 @@ void GrMtlOpsRenderPass::onDraw(
     const GrProgramInfo& programInfo, const GrMesh meshes[], int meshCount, const SkRect& bounds) {
   SkASSERT(meshCount);  // guaranteed by GrOpsRenderPass::draw
 
-  GrPrimitiveType primitiveType = meshes[0].primitiveType();
-  GrMtlPipelineState* pipelineState = this->prepareDrawState(programInfo, primitiveType);
+  GrMtlPipelineState* pipelineState = this->prepareDrawState(programInfo);
   if (!pipelineState) {
     return;
   }
@@ -86,6 +84,7 @@ void GrMtlOpsRenderPass::onDraw(
       programInfo.pipeline().getXferProcessor());
 
   bool hasDynamicScissors = programInfo.hasDynamicScissors();
+  bool hasDynamicTextures = programInfo.hasDynamicPrimProcTextures();
 
   if (!programInfo.pipeline().isScissorEnabled()) {
     GrMtlPipelineState::SetDynamicScissorRectState(
@@ -98,26 +97,23 @@ void GrMtlOpsRenderPass::onDraw(
         fActiveRenderCmdEncoder, fRenderTarget, fOrigin, programInfo.fixedScissor());
   }
 
+  if (!hasDynamicTextures) {
+    pipelineState->bindTextures(fActiveRenderCmdEncoder);
+  }
+
   for (int i = 0; i < meshCount; ++i) {
     const GrMesh& mesh = meshes[i];
     SkASSERT(nil != fActiveRenderCmdEncoder);
-    if (mesh.primitiveType() != primitiveType) {
-      SkDEBUGCODE(pipelineState = nullptr);
-      primitiveType = mesh.primitiveType();
-      pipelineState = this->prepareDrawState(programInfo, primitiveType);
-      if (!pipelineState) {
-        return;
-      }
-
-      [fActiveRenderCmdEncoder setRenderPipelineState:pipelineState->mtlPipelineState()];
-      pipelineState->setDrawState(
-          fActiveRenderCmdEncoder, programInfo.pipeline().outputSwizzle(),
-          programInfo.pipeline().getXferProcessor());
-    }
+    SkASSERT(mesh.primitiveType() == programInfo.primitiveType());
 
     if (hasDynamicScissors) {
       GrMtlPipelineState::SetDynamicScissorRectState(
           fActiveRenderCmdEncoder, fRenderTarget, fOrigin, programInfo.dynamicScissor(i));
+    }
+    if (hasDynamicTextures) {
+      auto meshProxies = programInfo.dynamicPrimProcTextures(i);
+      pipelineState->setTextures(programInfo, meshProxies);
+      pipelineState->bindTextures(fActiveRenderCmdEncoder);
     }
 
     mesh.sendToGpu(this);
@@ -171,8 +167,8 @@ void GrMtlOpsRenderPass::initRenderState(id<MTLRenderCommandEncoder> encoder) {
 void GrMtlOpsRenderPass::setupRenderPass(
     const GrOpsRenderPass::LoadAndStoreInfo& colorInfo,
     const GrOpsRenderPass::StencilLoadAndStoreInfo& stencilInfo) {
-  const static MTLLoadAction mtlLoadAction[]{MTLLoadActionLoad, MTLLoadActionClear,
-                                             MTLLoadActionDontCare};
+  const static MTLLoadAction mtlLoadAction[]{
+      MTLLoadActionLoad, MTLLoadActionClear, MTLLoadActionDontCare};
   GR_STATIC_ASSERT((int)GrLoadOp::kLoad == 0);
   GR_STATIC_ASSERT((int)GrLoadOp::kClear == 1);
   GR_STATIC_ASSERT((int)GrLoadOp::kDiscard == 2);

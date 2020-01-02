@@ -35,6 +35,8 @@ class GrGSCoverageProcessor : public GrCCCoverageProcessor {
       GrOpFlushState*, const GrPipeline&, const SkIRect scissorRects[], const GrMesh[],
       int meshCount, const SkRect& drawBounds) const override;
 
+  GrPrimitiveType primType() const final { return GrPrimitiveType::kLines; }
+
   GrGLSLPrimitiveProcessor* onCreateGLSLInstance(std::unique_ptr<Shader>) const override;
 
   // The geometry shader impl draws primitives in two subpasses. The first pass fills the interior
@@ -48,6 +50,8 @@ class GrGSCoverageProcessor : public GrCCCoverageProcessor {
   class TriangleHullImpl;
   class CurveHullImpl;
   class CornerImpl;
+
+  typedef GrCCCoverageProcessor INHERITED;
 };
 
 #endif

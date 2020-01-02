@@ -32,7 +32,7 @@ class Rect final : public GeometryNode {
   SG_ATTRIBUTE(R, SkScalar, fRect.fRight)
   SG_ATTRIBUTE(B, SkScalar, fRect.fBottom)
 
-  SG_MAPPED_ATTRIBUTE(Direction, SkPath::Direction, fAttrContaier)
+  SG_MAPPED_ATTRIBUTE(Direction, SkPathDirection, fAttrContaier)
   SG_MAPPED_ATTRIBUTE(InitialPointIndex, uint8_t, fAttrContaier)
 
  protected:
@@ -44,7 +44,7 @@ class Rect final : public GeometryNode {
   SkPath onAsPath() const override;
 
  private:
-  explicit Rect(const SkRect&) noexcept;
+  explicit Rect(const SkRect&);
 
   SkRect fRect;
 
@@ -52,13 +52,13 @@ class Rect final : public GeometryNode {
     uint8_t fDirection : 1;
     uint8_t fInitialPointIndex : 2;
 
-    SkPath::Direction getDirection() const { return static_cast<SkPath::Direction>(fDirection); }
-    void setDirection(SkPath::Direction dir) { fDirection = SkTo<uint8_t>(dir); }
+    SkPathDirection getDirection() const { return static_cast<SkPathDirection>(fDirection); }
+    void setDirection(SkPathDirection dir) { fDirection = SkTo<uint8_t>(dir); }
 
     uint8_t getInitialPointIndex() const { return fInitialPointIndex; }
     void setInitialPointIndex(uint8_t idx) { fInitialPointIndex = idx; }
   };
-  AttrContainer fAttrContaier = {SkPath::kCW_Direction, 0};
+  AttrContainer fAttrContaier = {(int)SkPathDirection::kCW, 0};
 
   using INHERITED = GeometryNode;
 };
@@ -73,7 +73,7 @@ class RRect final : public GeometryNode {
 
   SG_ATTRIBUTE(RRect, SkRRect, fRRect)
 
-  SG_MAPPED_ATTRIBUTE(Direction, SkPath::Direction, fAttrContaier)
+  SG_MAPPED_ATTRIBUTE(Direction, SkPathDirection, fAttrContaier)
   SG_MAPPED_ATTRIBUTE(InitialPointIndex, uint8_t, fAttrContaier)
 
  protected:
@@ -85,7 +85,7 @@ class RRect final : public GeometryNode {
   SkPath onAsPath() const override;
 
  private:
-  explicit RRect(const SkRRect&) noexcept;
+  explicit RRect(const SkRRect&);
 
   SkRRect fRRect;
 
@@ -93,13 +93,13 @@ class RRect final : public GeometryNode {
     uint8_t fDirection : 1;
     uint8_t fInitialPointIndex : 2;
 
-    SkPath::Direction getDirection() const { return static_cast<SkPath::Direction>(fDirection); }
-    void setDirection(SkPath::Direction dir) { fDirection = SkTo<uint8_t>(dir); }
+    SkPathDirection getDirection() const { return static_cast<SkPathDirection>(fDirection); }
+    void setDirection(SkPathDirection dir) { fDirection = SkTo<uint8_t>(dir); }
 
     uint8_t getInitialPointIndex() const { return fInitialPointIndex; }
     void setInitialPointIndex(uint8_t idx) { fInitialPointIndex = idx; }
   };
-  AttrContainer fAttrContaier = {SkPath::kCW_Direction, 0};
+  AttrContainer fAttrContaier = {(int)SkPathDirection::kCW, 0};
 
   using INHERITED = GeometryNode;
 };

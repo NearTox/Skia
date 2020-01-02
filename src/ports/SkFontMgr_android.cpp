@@ -202,8 +202,8 @@ class SkFontStyleSet_Android : public SkFontStyleSet {
       }
 
       SkAutoSTMalloc<4, SkFixed> axisValues(axisDefinitions.count());
-      SkFontArguments::VariationPosition position = {fontFile.fVariationDesignPosition.begin(),
-                                                     fontFile.fVariationDesignPosition.count()};
+      SkFontArguments::VariationPosition position = {
+          fontFile.fVariationDesignPosition.begin(), fontFile.fVariationDesignPosition.count()};
       Scanner::computeAxisValues(axisDefinitions, position, axisValues, familyName);
 
       fStyles.push_back().reset(new SkTypeface_AndroidSystem(

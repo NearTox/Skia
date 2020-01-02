@@ -30,8 +30,8 @@ struct SkDConic {
   void debugSet(const SkDPoint* pts, SkScalar weight);
 
   SkDConic flip() const {
-    SkDConic result = {{{fPts[2], fPts[1], fPts[0]} SkDEBUGPARAMS(fPts.fDebugGlobalState)},
-                       fWeight};
+    SkDConic result = {
+        {{fPts[2], fPts[1], fPts[0]} SkDEBUGPARAMS(fPts.fDebugGlobalState)}, fWeight};
     return result;
   }
 

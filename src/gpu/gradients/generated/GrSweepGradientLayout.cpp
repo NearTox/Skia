@@ -38,12 +38,9 @@ class GrGLSLSweepGradientLayout : public GrGLSLFragmentProcessor {
         "atan(-%s.y, length(%s) - %s.x));\n} else {\n    angle = half(atan(-%s.y, "
         "-%s.x));\n}\nhalf t = ((angle * 0.15915493667125702 + 0.5) + %s) * %s;\n%s = "
         "half4(t, 1.0, 0.0, 0.0);\n",
-        _outer.computeLocalCoordsInVertexShader() ? sk_TransformedCoords2D_0.c_str() : "_coords",
-        _outer.computeLocalCoordsInVertexShader() ? sk_TransformedCoords2D_0.c_str() : "_coords",
-        _outer.computeLocalCoordsInVertexShader() ? sk_TransformedCoords2D_0.c_str() : "_coords",
-        _outer.computeLocalCoordsInVertexShader() ? sk_TransformedCoords2D_0.c_str() : "_coords",
-        _outer.computeLocalCoordsInVertexShader() ? sk_TransformedCoords2D_0.c_str() : "_coords",
-        args.fUniformHandler->getUniformCStr(biasVar),
+        sk_TransformedCoords2D_0.c_str(), sk_TransformedCoords2D_0.c_str(),
+        sk_TransformedCoords2D_0.c_str(), sk_TransformedCoords2D_0.c_str(),
+        sk_TransformedCoords2D_0.c_str(), args.fUniformHandler->getUniformCStr(biasVar),
         args.fUniformHandler->getUniformCStr(scaleVar), args.fOutputColor);
   }
 
@@ -96,8 +93,8 @@ GR_DEFINE_FRAGMENT_PROCESSOR_TEST(GrSweepGradientLayout);
 #if GR_TEST_UTILS
 std::unique_ptr<GrFragmentProcessor> GrSweepGradientLayout::TestCreate(GrProcessorTestData* d) {
   SkScalar scale = GrGradientShader::RandomParams::kGradientScale;
-  SkPoint center = {d->fRandom->nextRangeScalar(0.0f, scale),
-                    d->fRandom->nextRangeScalar(0.0f, scale)};
+  SkPoint center = {
+      d->fRandom->nextRangeScalar(0.0f, scale), d->fRandom->nextRangeScalar(0.0f, scale)};
 
   GrGradientShader::RandomParams params(d->fRandom);
   auto shader = params.fUseColors4f

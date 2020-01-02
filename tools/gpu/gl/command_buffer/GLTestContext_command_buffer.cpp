@@ -219,19 +219,20 @@ namespace sk_gpu_test {
 
 CommandBufferGLTestContext::CommandBufferGLTestContext(CommandBufferGLTestContext* shareContext)
     : fContext(EGL_NO_CONTEXT), fDisplay(EGL_NO_DISPLAY), fSurface(EGL_NO_SURFACE) {
-  static const EGLint configAttribs[] = {EGL_SURFACE_TYPE,
-                                         EGL_PBUFFER_BIT,
-                                         EGL_RENDERABLE_TYPE,
-                                         EGL_OPENGL_ES2_BIT,
-                                         EGL_RED_SIZE,
-                                         8,
-                                         EGL_GREEN_SIZE,
-                                         8,
-                                         EGL_BLUE_SIZE,
-                                         8,
-                                         EGL_ALPHA_SIZE,
-                                         8,
-                                         EGL_NONE};
+  static const EGLint configAttribs[] = {
+      EGL_SURFACE_TYPE,
+      EGL_PBUFFER_BIT,
+      EGL_RENDERABLE_TYPE,
+      EGL_OPENGL_ES2_BIT,
+      EGL_RED_SIZE,
+      8,
+      EGL_GREEN_SIZE,
+      8,
+      EGL_BLUE_SIZE,
+      8,
+      EGL_ALPHA_SIZE,
+      8,
+      EGL_NONE};
 
   static const EGLint surfaceAttribs[] = {EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE};
 

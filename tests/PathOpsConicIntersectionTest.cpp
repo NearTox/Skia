@@ -119,10 +119,11 @@ static void writePng(const SkConic& c, const SkConic ch[2], const char* name) {
 
 static void writeDPng(const SkDConic& dC, const char* name) {
   const int scale = 5;
-  SkDConic dConic = {{{{dC.fPts[0].fX * scale, dC.fPts[0].fY * scale},
-                       {dC.fPts[1].fX * scale, dC.fPts[1].fY * scale},
-                       {dC.fPts[2].fX * scale, dC.fPts[2].fY * scale}}},
-                     dC.fWeight};
+  SkDConic dConic = {
+      {{{dC.fPts[0].fX * scale, dC.fPts[0].fY * scale},
+        {dC.fPts[1].fX * scale, dC.fPts[1].fY * scale},
+        {dC.fPts[2].fX * scale, dC.fPts[2].fY * scale}}},
+      dC.fWeight};
   SkBitmap bitmap;
   SkDRect bounds;
   bounds.setBounds(dConic);
@@ -298,10 +299,11 @@ static void writeFrames() {
     int frameSize = frameSizes[index];
     for (int fIndex = 0; fIndex < frameSize; ++fIndex) {
       const SkDConic& dC = frames[index][fIndex];
-      SkDConic dConic = {{{{dC.fPts[0].fX * scale, dC.fPts[0].fY * scale},
-                           {dC.fPts[1].fX * scale, dC.fPts[1].fY * scale},
-                           {dC.fPts[2].fX * scale, dC.fPts[2].fY * scale}}},
-                         dC.fWeight};
+      SkDConic dConic = {
+          {{{dC.fPts[0].fX * scale, dC.fPts[0].fY * scale},
+            {dC.fPts[1].fX * scale, dC.fPts[1].fY * scale},
+            {dC.fPts[2].fX * scale, dC.fPts[2].fY * scale}}},
+          dC.fWeight};
       SkDRect dBounds;
       dBounds.setBounds(dConic);
       if (!boundsSet) {
@@ -328,10 +330,11 @@ static void writeFrames() {
     canvas.drawColor(SK_ColorWHITE);
     for (int fIndex = 0; fIndex < frameSize; ++fIndex) {
       const SkDConic& dC = frames[index][fIndex];
-      SkDConic dConic = {{{{dC.fPts[0].fX * scale, dC.fPts[0].fY * scale},
-                           {dC.fPts[1].fX * scale, dC.fPts[1].fY * scale},
-                           {dC.fPts[2].fX * scale, dC.fPts[2].fY * scale}}},
-                         dC.fWeight};
+      SkDConic dConic = {
+          {{{dC.fPts[0].fX * scale, dC.fPts[0].fY * scale},
+            {dC.fPts[1].fX * scale, dC.fPts[1].fY * scale},
+            {dC.fPts[2].fX * scale, dC.fPts[2].fY * scale}}},
+          dC.fWeight};
       SkPath path;
       path.moveTo(dConic.fPts[0].asSkPoint());
       path.conicTo(dConic.fPts[1].asSkPoint(), dConic.fPts[2].asSkPoint(), dConic.fWeight);

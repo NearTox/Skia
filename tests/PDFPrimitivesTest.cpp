@@ -360,22 +360,23 @@ DEF_TEST(SkPDF_Primitives_Scalar, reporter) {
     static_assert(sizeof(float) == sizeof(uint32_t), "");
     check_pdf_scalar_serialization(reporter, f);
   }
-  float alwaysCheck[] = {0.0f,
-                         -0.0f,
-                         1.0f,
-                         -1.0f,
-                         SK_ScalarPI,
-                         0.1f,
-                         FLT_MIN,
-                         FLT_MAX,
-                         -FLT_MIN,
-                         -FLT_MAX,
-                         FLT_MIN / 16.0f,
-                         -FLT_MIN / 16.0f,
-                         SK_FloatNaN,
-                         SK_FloatInfinity,
-                         SK_FloatNegativeInfinity,
-                         -FLT_MIN / 8388608.0};
+  float alwaysCheck[] = {
+      0.0f,
+      -0.0f,
+      1.0f,
+      -1.0f,
+      SK_ScalarPI,
+      0.1f,
+      FLT_MIN,
+      FLT_MAX,
+      -FLT_MIN,
+      -FLT_MAX,
+      FLT_MIN / 16.0f,
+      -FLT_MIN / 16.0f,
+      SK_FloatNaN,
+      SK_FloatInfinity,
+      SK_FloatNegativeInfinity,
+      -FLT_MIN / 8388608.0};
   for (float inputFloat : alwaysCheck) {
     check_pdf_scalar_serialization(reporter, inputFloat);
   }

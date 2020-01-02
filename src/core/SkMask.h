@@ -20,7 +20,7 @@
     the 3-channel 3D format. These are passed to SkMaskFilter objects.
 */
 struct SkMask {
-  SkMask() noexcept : fImage(nullptr) {}
+  SkMask() : fImage(nullptr) {}
 
   enum Format {
     kBW_Format,      //!< 1bit per pixel mask (e.g. monochrome)
@@ -38,23 +38,23 @@ struct SkMask {
   uint32_t fRowBytes;
   Format fFormat;
 
-  static constexpr bool IsValidFormat(uint8_t format) { return format < kCountMaskFormats; }
+  static bool IsValidFormat(uint8_t format) { return format < kCountMaskFormats; }
 
   /** Returns true if the mask is empty: i.e. it has an empty bounds.
    */
-  bool isEmpty() const noexcept { return fBounds.isEmpty(); }
+  bool isEmpty() const { return fBounds.isEmpty(); }
 
   /** Return the byte size of the mask, assuming only 1 plane.
       Does not account for k3D_Format. For that, use computeTotalImageSize().
       If there is an overflow of 32bits, then returns 0.
   */
-  size_t computeImageSize() const noexcept;
+  size_t computeImageSize() const;
 
   /** Return the byte size of the mask, taking into account
       any extra planes (e.g. k3D_Format).
       If there is an overflow of 32bits, then returns 0.
   */
-  size_t computeTotalImageSize() const noexcept;
+  size_t computeTotalImageSize() const;
 
   /** Returns the address of the byte that holds the specified bit.
       Asserts that the mask is kBW_Format, and that x,y are in range.
@@ -123,7 +123,7 @@ struct SkMask {
     kZeroInit_Alloc,
   };
   static uint8_t* AllocImage(size_t bytes, AllocType = kUninit_Alloc);
-  static void FreeImage(void* image) noexcept;
+  static void FreeImage(void* image);
 
   enum CreateMode {
     kJustComputeBounds_CreateMode,           //!< compute bounds and return
@@ -149,9 +149,9 @@ struct SkMask {
 
 template <>
 struct SkMask::AlphaIter<SkMask::kBW_Format> {
-  AlphaIter(const uint8_t* ptr, int offset) noexcept : fPtr(ptr), fOffset(7 - offset) {}
-  AlphaIter(const AlphaIter& that) noexcept : fPtr(that.fPtr), fOffset(that.fOffset) {}
-  AlphaIter& operator++() noexcept {
+  AlphaIter(const uint8_t* ptr, int offset) : fPtr(ptr), fOffset(7 - offset) {}
+  AlphaIter(const AlphaIter& that) : fPtr(that.fPtr), fOffset(that.fOffset) {}
+  AlphaIter& operator++() {
     if (0 < fOffset) {
       --fOffset;
     } else {
@@ -160,7 +160,7 @@ struct SkMask::AlphaIter<SkMask::kBW_Format> {
     }
     return *this;
   }
-  AlphaIter& operator--() noexcept {
+  AlphaIter& operator--() {
     if (fOffset < 7) {
       ++fOffset;
     } else {
@@ -173,8 +173,8 @@ struct SkMask::AlphaIter<SkMask::kBW_Format> {
     fPtr = SkTAddOffset<const uint8_t>(fPtr, rb);
     return *this;
   }
-  uint8_t operator*() const noexcept { return ((*fPtr) >> fOffset) & 1 ? 0xFF : 0; }
-  bool operator<(const AlphaIter& that) const noexcept {
+  uint8_t operator*() const { return ((*fPtr) >> fOffset) & 1 ? 0xFF : 0; }
+  bool operator<(const AlphaIter& that) const {
     return fPtr < that.fPtr || (fPtr == that.fPtr && fOffset > that.fOffset);
   }
   const uint8_t* fPtr;
@@ -183,13 +183,13 @@ struct SkMask::AlphaIter<SkMask::kBW_Format> {
 
 template <>
 struct SkMask::AlphaIter<SkMask::kA8_Format> {
-  AlphaIter(const uint8_t* ptr) noexcept : fPtr(ptr) {}
-  AlphaIter(const AlphaIter& that) noexcept : fPtr(that.fPtr) {}
-  AlphaIter& operator++() noexcept {
+  AlphaIter(const uint8_t* ptr) : fPtr(ptr) {}
+  AlphaIter(const AlphaIter& that) : fPtr(that.fPtr) {}
+  AlphaIter& operator++() {
     ++fPtr;
     return *this;
   }
-  AlphaIter& operator--() noexcept {
+  AlphaIter& operator--() {
     --fPtr;
     return *this;
   }
@@ -197,20 +197,20 @@ struct SkMask::AlphaIter<SkMask::kA8_Format> {
     fPtr = SkTAddOffset<const uint8_t>(fPtr, rb);
     return *this;
   }
-  uint8_t operator*() const noexcept { return *fPtr; }
-  bool operator<(const AlphaIter& that) const noexcept { return fPtr < that.fPtr; }
+  uint8_t operator*() const { return *fPtr; }
+  bool operator<(const AlphaIter& that) const { return fPtr < that.fPtr; }
   const uint8_t* fPtr;
 };
 
 template <>
 struct SkMask::AlphaIter<SkMask::kARGB32_Format> {
-  AlphaIter(const uint32_t* ptr) noexcept : fPtr(ptr) {}
-  AlphaIter(const AlphaIter& that) noexcept : fPtr(that.fPtr) {}
-  AlphaIter& operator++() noexcept {
+  AlphaIter(const uint32_t* ptr) : fPtr(ptr) {}
+  AlphaIter(const AlphaIter& that) : fPtr(that.fPtr) {}
+  AlphaIter& operator++() {
     ++fPtr;
     return *this;
   }
-  AlphaIter& operator--() noexcept {
+  AlphaIter& operator--() {
     --fPtr;
     return *this;
   }
@@ -218,20 +218,20 @@ struct SkMask::AlphaIter<SkMask::kARGB32_Format> {
     fPtr = SkTAddOffset<const uint32_t>(fPtr, rb);
     return *this;
   }
-  uint8_t operator*() const noexcept { return SkGetPackedA32(*fPtr); }
-  bool operator<(const AlphaIter& that) const noexcept { return fPtr < that.fPtr; }
+  uint8_t operator*() const { return SkGetPackedA32(*fPtr); }
+  bool operator<(const AlphaIter& that) const { return fPtr < that.fPtr; }
   const uint32_t* fPtr;
 };
 
 template <>
 struct SkMask::AlphaIter<SkMask::kLCD16_Format> {
-  AlphaIter(const uint16_t* ptr) noexcept : fPtr(ptr) {}
-  AlphaIter(const AlphaIter& that) noexcept : fPtr(that.fPtr) {}
-  AlphaIter& operator++() noexcept {
+  AlphaIter(const uint16_t* ptr) : fPtr(ptr) {}
+  AlphaIter(const AlphaIter& that) : fPtr(that.fPtr) {}
+  AlphaIter& operator++() {
     ++fPtr;
     return *this;
   }
-  AlphaIter& operator--() noexcept {
+  AlphaIter& operator--() {
     --fPtr;
     return *this;
   }
@@ -239,14 +239,14 @@ struct SkMask::AlphaIter<SkMask::kLCD16_Format> {
     fPtr = SkTAddOffset<const uint16_t>(fPtr, rb);
     return *this;
   }
-  uint8_t operator*() const noexcept {
+  uint8_t operator*() const {
     unsigned packed = *fPtr;
     unsigned r = SkPacked16ToR32(packed);
     unsigned g = SkPacked16ToG32(packed);
     unsigned b = SkPacked16ToB32(packed);
     return (r + g + b) / 3;
   }
-  bool operator<(const AlphaIter& that) const noexcept { return fPtr < that.fPtr; }
+  bool operator<(const AlphaIter& that) const { return fPtr < that.fPtr; }
   const uint16_t* fPtr;
 };
 

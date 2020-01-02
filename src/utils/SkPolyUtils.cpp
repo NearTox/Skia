@@ -29,7 +29,7 @@ constexpr SkScalar kCrossTolerance = SK_ScalarNearlyZero * SK_ScalarNearlyZero;
 // Computes perpDot for point p compared to segment defined by origin p0 and vector v.
 // A positive value means the point is to the left of the segment,
 // negative is to the right, 0 is collinear.
-static int compute_side(const SkPoint& p0, const SkVector& v, const SkPoint& p) noexcept {
+static int compute_side(const SkPoint& p0, const SkVector& v, const SkPoint& p) {
   SkVector w = p - p0;
   SkScalar perpDot = v.cross(w);
   if (!SkScalarNearlyZero(perpDot, kCrossTolerance)) {
@@ -40,7 +40,7 @@ static int compute_side(const SkPoint& p0, const SkVector& v, const SkPoint& p) 
 }
 
 // Returns 1 for cw, -1 for ccw and 0 if zero signed area (either degenerate or self-intersecting)
-int SkGetPolygonWinding(const SkPoint* polygonVerts, int polygonSize) noexcept {
+int SkGetPolygonWinding(const SkPoint* polygonVerts, int polygonSize) {
   if (polygonSize < 3) {
     return 0;
   }
@@ -62,7 +62,7 @@ int SkGetPolygonWinding(const SkPoint* polygonVerts, int polygonSize) noexcept {
 
 // Compute difference vector to offset p0-p1 'offset' units in direction specified by 'side'
 bool compute_offset_vector(
-    const SkPoint& p0, const SkPoint& p1, SkScalar offset, int side, SkPoint* vector) noexcept {
+    const SkPoint& p0, const SkPoint& p1, SkScalar offset, int side, SkPoint* vector) {
   SkASSERT(side == -1 || side == 1);
   // if distances are equal, can just outset by the perpendicular
   SkVector perp = SkVector::Make(p0.fY - p1.fY, p1.fX - p0.fX);
@@ -74,7 +74,7 @@ bool compute_offset_vector(
 }
 
 // check interval to see if intersection is in segment
-static constexpr inline bool outside_interval(SkScalar numer, SkScalar denom, bool denomPositive) {
+static inline bool outside_interval(SkScalar numer, SkScalar denom, bool denomPositive) {
   return (denomPositive && (numer < 0 || numer > denom)) ||
          (!denomPositive && (numer > 0 || numer < denom));
 }
@@ -83,8 +83,7 @@ static constexpr inline bool outside_interval(SkScalar numer, SkScalar denom, bo
 // 's' is the parametric value for the intersection along 's0' & 't' is the same for 's1'.
 // Returns false if there is no intersection.
 static bool compute_intersection(
-    const OffsetSegment& s0, const OffsetSegment& s1, SkPoint* p, SkScalar* s,
-    SkScalar* t) noexcept {
+    const OffsetSegment& s0, const OffsetSegment& s1, SkPoint* p, SkScalar* s, SkScalar* t) {
   const SkVector& v0 = s0.fV;
   const SkVector& v1 = s1.fV;
   SkVector w = s1.fP0 - s0.fP0;
@@ -169,7 +168,7 @@ static bool compute_intersection(
   return true;
 }
 
-bool SkIsConvexPolygon(const SkPoint* polygonVerts, int polygonSize) noexcept {
+bool SkIsConvexPolygon(const SkPoint* polygonVerts, int polygonSize) {
   if (polygonSize < 3) {
     return false;
   }
@@ -230,7 +229,7 @@ struct OffsetEdge {
   uint16_t fIndex;
   uint16_t fEnd;
 
-  void init(uint16_t start = 0, uint16_t end = 0) noexcept {
+  void init(uint16_t start = 0, uint16_t end = 0) {
     fIntersection = fOffset.fP0;
     fTValue = SK_ScalarMin;
     fIndex = start;
@@ -238,7 +237,7 @@ struct OffsetEdge {
   }
 
   // special intersection check that looks for endpoint intersection
-  bool checkIntersection(const OffsetEdge* that, SkPoint* p, SkScalar* s, SkScalar* t) noexcept {
+  bool checkIntersection(const OffsetEdge* that, SkPoint* p, SkScalar* s, SkScalar* t) {
     if (this->fEnd == that->fIndex) {
       SkPoint p1 = this->fOffset.fP0 + this->fOffset.fV;
       if (SkPointPriv::EqualsWithinTolerance(p1, that->fOffset.fP0)) {
@@ -255,7 +254,7 @@ struct OffsetEdge {
   // computes the line intersection and then the "distance" from that to this
   // this is really a signed squared distance, where negative means that
   // the intersection lies inside this->fOffset
-  SkScalar computeCrossingDistance(const OffsetEdge* that) noexcept {
+  SkScalar computeCrossingDistance(const OffsetEdge* that) {
     const OffsetSegment& s0 = this->fOffset;
     const OffsetSegment& s1 = that->fOffset;
     const SkVector& v0 = s0.fV;
@@ -282,7 +281,7 @@ struct OffsetEdge {
   }
 };
 
-static void remove_node(const OffsetEdge* node, OffsetEdge** head) noexcept {
+static void remove_node(const OffsetEdge* node, OffsetEdge** head) {
   // remove from linked list
   node->fPrev->fNext = node->fNext;
   node->fNext->fPrev = node->fPrev;
@@ -457,8 +456,8 @@ bool SkInsetConvexPolygon(
 // compute the number of points needed for a circular join when offsetting a reflex vertex
 bool SkComputeRadialSteps(
     const SkVector& v1, const SkVector& v2, SkScalar offset, SkScalar* rotSin, SkScalar* rotCos,
-    int* n) noexcept {
-  constexpr SkScalar kRecipPixelsPerArcSegment = 0.25f;
+    int* n) {
+  const SkScalar kRecipPixelsPerArcSegment = 0.25f;
 
   SkScalar rCos = v1.dot(v2);
   if (!SkScalarIsFinite(rCos)) {
@@ -488,17 +487,17 @@ bool SkComputeRadialSteps(
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 // a point is "left" to another if its x-coord is less, or if equal, its y-coord is greater
-static bool left(const SkPoint& p0, const SkPoint& p1) noexcept {
+static bool left(const SkPoint& p0, const SkPoint& p1) {
   return p0.fX < p1.fX || (!(p0.fX > p1.fX) && p0.fY > p1.fY);
 }
 
 // a point is "right" to another if its x-coord is greater, or if equal, its y-coord is less
-static bool right(const SkPoint& p0, const SkPoint& p1) noexcept {
+static bool right(const SkPoint& p0, const SkPoint& p1) {
   return p0.fX > p1.fX || (!(p0.fX < p1.fX) && p0.fY < p1.fY);
 }
 
 struct Vertex {
-  static bool Left(const Vertex& qv0, const Vertex& qv1) noexcept {
+  static bool Left(const Vertex& qv0, const Vertex& qv1) {
     return left(qv0.fPosition, qv1.fPosition);
   }
 
@@ -516,8 +515,8 @@ enum VertexFlags {
 };
 
 struct ActiveEdge {
-  ActiveEdge() noexcept : fChild{nullptr, nullptr}, fAbove(nullptr), fBelow(nullptr), fRed(false) {}
-  ActiveEdge(const SkPoint& p0, const SkVector& v, uint16_t index0, uint16_t index1) noexcept
+  ActiveEdge() : fChild{nullptr, nullptr}, fAbove(nullptr), fBelow(nullptr), fRed(false) {}
+  ActiveEdge(const SkPoint& p0, const SkVector& v, uint16_t index0, uint16_t index1)
       : fSegment({p0, v}),
         fIndex0(index0),
         fIndex1(index1),
@@ -531,7 +530,7 @@ struct ActiveEdge {
   // Returns true if "this" is above "that", assuming this->p0 is to the left of that->p0
   // This is only used to verify the edgelist -- the actual test for insertion/deletion is much
   // simpler because we can make certain assumptions then.
-  bool aboveIfLeft(const ActiveEdge* that) const noexcept {
+  bool aboveIfLeft(const ActiveEdge* that) const {
     const SkPoint& p0 = this->fSegment.fP0;
     const SkPoint& q0 = that->fSegment.fP0;
     SkASSERT(p0.fX <= q0.fX);
@@ -585,7 +584,7 @@ struct ActiveEdge {
   }
 
   // same as leftAndAbove(), but generalized
-  bool above(const ActiveEdge* that) const noexcept {
+  bool above(const ActiveEdge* that) const {
     const SkPoint& p0 = this->fSegment.fP0;
     const SkPoint& q0 = that->fSegment.fP0;
     if (right(p0, q0)) {
@@ -595,8 +594,7 @@ struct ActiveEdge {
     }
   }
 
-  bool intersect(
-      const SkPoint& q0, const SkVector& w, uint16_t index0, uint16_t index1) const noexcept {
+  bool intersect(const SkPoint& q0, const SkVector& w, uint16_t index0, uint16_t index1) const {
     // check first to see if these edges are neighbors in the polygon
     if (this->fIndex0 == index0 || this->fIndex1 == index0 || this->fIndex0 == index1 ||
         this->fIndex1 == index1) {
@@ -635,18 +633,18 @@ struct ActiveEdge {
     return result;
   }
 
-  bool intersect(const ActiveEdge* edge) noexcept {
+  bool intersect(const ActiveEdge* edge) {
     return this->intersect(edge->fSegment.fP0, edge->fSegment.fV, edge->fIndex0, edge->fIndex1);
   }
 
-  bool lessThan(const ActiveEdge* that) const noexcept {
+  bool lessThan(const ActiveEdge* that) const {
     SkASSERT(!this->above(this));
     SkASSERT(!that->above(that));
     SkASSERT(!(this->above(that) && that->above(this)));
     return this->above(that);
   }
 
-  bool equals(uint16_t index0, uint16_t index1) const noexcept {
+  bool equals(uint16_t index0, uint16_t index1) const {
     return (this->fIndex0 == index0 && this->fIndex1 == index1);
   }
 
@@ -661,7 +659,7 @@ struct ActiveEdge {
 
 class ActiveEdgeList {
  public:
-  ActiveEdgeList(int maxEdges) noexcept {
+  ActiveEdgeList(int maxEdges) {
     fAllocation = (char*)sk_malloc_throw(sizeof(ActiveEdge) * maxEdges);
     fCurrFree = 0;
     fMaxFree = maxEdges;
@@ -671,7 +669,7 @@ class ActiveEdgeList {
     sk_free(fAllocation);
   }
 
-  bool insert(const SkPoint& p0, const SkPoint& p1, uint16_t index0, uint16_t index1) noexcept {
+  bool insert(const SkPoint& p0, const SkPoint& p1, uint16_t index0, uint16_t index1) {
     SkVector v = p1 - p0;
     if (!v.isFinite()) {
       return false;
@@ -783,7 +781,7 @@ class ActiveEdgeList {
   // replaces edge p0p1 with p1p2
   bool replace(
       const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, uint16_t index0, uint16_t index1,
-      uint16_t index2) noexcept {
+      uint16_t index2) {
     if (!fTreeHead.fChild[1]) {
       return false;
     }
@@ -841,7 +839,7 @@ class ActiveEdgeList {
     return true;
   }
 
-  bool remove(const SkPoint& p0, const SkPoint& p1, uint16_t index0, uint16_t index1) noexcept {
+  bool remove(const SkPoint& p0, const SkPoint& p1, uint16_t index0, uint16_t index1) {
     if (!fTreeHead.fChild[1]) {
       return false;
     }
@@ -954,8 +952,7 @@ class ActiveEdgeList {
 
  private:
   // allocator
-  ActiveEdge* allocate(
-      const SkPoint& p0, const SkPoint& p1, uint16_t index0, uint16_t index1) noexcept {
+  ActiveEdge* allocate(const SkPoint& p0, const SkPoint& p1, uint16_t index0, uint16_t index1) {
     if (fCurrFree >= fMaxFree) {
       return nullptr;
     }
@@ -967,9 +964,9 @@ class ActiveEdgeList {
   ///////////////////////////////////////////////////////////////////////////////////
   // Red-black tree methods
   ///////////////////////////////////////////////////////////////////////////////////
-  static bool IsRed(const ActiveEdge* node) noexcept { return node && node->fRed; }
+  static bool IsRed(const ActiveEdge* node) { return node && node->fRed; }
 
-  static ActiveEdge* SingleRotation(ActiveEdge* node, int dir) noexcept {
+  static ActiveEdge* SingleRotation(ActiveEdge* node, int dir) {
     ActiveEdge* tmp = node->fChild[!dir];
 
     node->fChild[!dir] = tmp->fChild[dir];
@@ -981,7 +978,7 @@ class ActiveEdgeList {
     return tmp;
   }
 
-  static ActiveEdge* DoubleRotation(ActiveEdge* node, int dir) noexcept {
+  static ActiveEdge* DoubleRotation(ActiveEdge* node, int dir) {
     node->fChild[!dir] = SingleRotation(node->fChild[!dir], !dir);
 
     return SingleRotation(node, dir);
@@ -1132,7 +1129,7 @@ bool SkIsSimplePolygon(const SkPoint* polygon, int polygonSize) {
 // helper function for SkOffsetSimplePolygon
 static void setup_offset_edge(
     OffsetEdge* currEdge, const SkPoint& endpoint0, const SkPoint& endpoint1, uint16_t startIndex,
-    uint16_t endIndex) noexcept {
+    uint16_t endIndex) {
   currEdge->fOffset.fP0 = endpoint0;
   currEdge->fOffset.fV = endpoint1 - endpoint0;
   currEdge->init(startIndex, endIndex);
@@ -1140,7 +1137,7 @@ static void setup_offset_edge(
 
 static bool is_reflex_vertex(
     const SkPoint* inputPolygonVerts, int winding, SkScalar offset, uint16_t prevIndex,
-    uint16_t currIndex, uint16_t nextIndex) noexcept {
+    uint16_t currIndex, uint16_t nextIndex) {
   int side = compute_side(
       inputPolygonVerts[prevIndex], inputPolygonVerts[currIndex] - inputPolygonVerts[prevIndex],
       inputPolygonVerts[nextIndex]);
@@ -1429,7 +1426,7 @@ struct TriangulationVertex {
 };
 
 static void compute_triangle_bounds(
-    const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, SkRect* bounds) noexcept {
+    const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, SkRect* bounds) {
   Sk4s min, max;
   min = max = Sk4s(p0.fX, p0.fY, p0.fX, p0.fY);
   Sk4s xy(p1.fX, p1.fY, p2.fX, p2.fY);
@@ -1443,7 +1440,7 @@ static void compute_triangle_bounds(
 // test to see if point p is in triangle p0p1p2.
 // for now assuming strictly inside -- if on the edge it's outside
 static bool point_in_triangle(
-    const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, const SkPoint& p) noexcept {
+    const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, const SkPoint& p) {
   SkVector v0 = p1 - p0;
   SkVector v1 = p2 - p1;
   SkScalar n = v0.cross(v1);
@@ -1470,7 +1467,7 @@ static bool point_in_triangle(
 // Data structure to track reflex vertices and check whether any are inside a given triangle
 class ReflexHash {
  public:
-  bool init(const SkRect& bounds, int vertexCount) noexcept {
+  bool init(const SkRect& bounds, int vertexCount) {
     fBounds = bounds;
     fNumVerts = 0;
     SkScalar width = bounds.width();
@@ -1501,13 +1498,13 @@ class ReflexHash {
     return true;
   }
 
-  void add(TriangulationVertex* v) noexcept {
+  void add(TriangulationVertex* v) {
     int index = hash(v);
     fGrid[index].addToTail(v);
     ++fNumVerts;
   }
 
-  void remove(TriangulationVertex* v) noexcept {
+  void remove(TriangulationVertex* v) {
     int index = hash(v);
     fGrid[index].remove(v);
     --fNumVerts;
@@ -1515,7 +1512,7 @@ class ReflexHash {
 
   bool checkTriangle(
       const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, uint16_t ignoreIndex0,
-      uint16_t ignoreIndex1) const noexcept {
+      uint16_t ignoreIndex1) const {
     if (!fNumVerts) {
       return false;
     }
@@ -1545,7 +1542,7 @@ class ReflexHash {
   }
 
  private:
-  int hash(TriangulationVertex* vert) const noexcept {
+  int hash(TriangulationVertex* vert) const {
     int h = (vert->fPosition.fX - fBounds.fLeft) * fGridConversion.fX;
     int v = (vert->fPosition.fY - fBounds.fTop) * fGridConversion.fY;
     SkASSERT(v * fHCount + h >= 0);
@@ -1721,27 +1718,27 @@ bool SkTriangulateSimplePolygon(
 
 ///////////
 
-static constexpr double crs(SkVector a, SkVector b) { return a.fX * b.fY - a.fY * b.fX; }
+static double crs(SkVector a, SkVector b) { return a.fX * b.fY - a.fY * b.fX; }
 
-static constexpr int sign(SkScalar v) { return v < 0 ? -1 : (v > 0); }
+static int sign(SkScalar v) { return v < 0 ? -1 : (v > 0); }
 
 struct SignTracker {
   int fSign;
   int fSignChanges;
 
-  void reset() noexcept {
+  void reset() {
     fSign = 0;
     fSignChanges = 0;
   }
 
-  void init(int s) noexcept {
+  void init(int s) {
     SkASSERT(fSignChanges == 0);
     SkASSERT(s == 1 || s == -1 || s == 0);
     fSign = s;
     fSignChanges = 1;
   }
 
-  void update(int s) noexcept {
+  void update(int s) {
     if (s) {
       if (fSign != s) {
         fSignChanges += 1;
@@ -1759,7 +1756,7 @@ struct ConvexTracker {
 
   ConvexTracker() { this->reset(); }
 
-  void reset() noexcept {
+  void reset() {
     fPrev = {0, 0};
     fDSign.reset();
     fCSign.reset();
@@ -1767,8 +1764,8 @@ struct ConvexTracker {
     fIsConcave = false;
   }
 
-  void addVec(SkPoint p1, SkPoint p0) noexcept { this->addVec(p1 - p0); }
-  void addVec(SkVector v) noexcept {
+  void addVec(SkPoint p1, SkPoint p0) { this->addVec(p1 - p0); }
+  void addVec(SkVector v) {
     if (v.fX == 0 && v.fY == 0) {
       return;
     }
@@ -1802,7 +1799,7 @@ struct ConvexTracker {
     }
   }
 
-  void finalCross() noexcept { this->addVec(fFirst); }
+  void finalCross() { this->addVec(fFirst); }
 };
 
 bool SkIsPolyConvex_experimental(const SkPoint pts[], int count) {

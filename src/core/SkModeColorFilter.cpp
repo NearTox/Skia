@@ -19,7 +19,6 @@
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkValidationUtils.h"
 #include "src/core/SkWriteBuffer.h"
-#include "src/utils/SkUTF.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -38,7 +37,7 @@ bool SkModeColorFilter::onAsAColorMode(SkColor* color, SkBlendMode* mode) const 
   return true;
 }
 
-uint32_t SkModeColorFilter::getFlags() const noexcept {
+uint32_t SkModeColorFilter::getFlags() const {
   uint32_t flags = 0;
   switch (fMode) {
     case SkBlendMode::kDst:      //!< [Da, Dc]

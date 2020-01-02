@@ -202,9 +202,9 @@ static GrBackendTexture make_gl_backend_texture(
   }  // clear GL errors
 
   EGLClientBuffer clientBuffer = eglGetNativeClientBufferANDROID(hardwareBuffer);
-  EGLint attribs[] = {EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
-                      isProtectedContent ? EGL_PROTECTED_CONTENT_EXT : EGL_NONE,
-                      isProtectedContent ? EGL_TRUE : EGL_NONE, EGL_NONE};
+  EGLint attribs[] = {
+      EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, isProtectedContent ? EGL_PROTECTED_CONTENT_EXT : EGL_NONE,
+      isProtectedContent ? EGL_TRUE : EGL_NONE, EGL_NONE};
   EGLDisplay display = eglGetCurrentDisplay();
   // eglCreateImageKHR will add a ref to the AHardwareBuffer
   EGLImageKHR image =

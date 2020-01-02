@@ -32,7 +32,7 @@ class SkRegionPriv {
 
 static constexpr int SkRegion_kRunTypeSentinel = 0x7FFFFFFF;
 
-inline constexpr bool SkRegionValueIsSentinel(int32_t value) {
+inline bool SkRegionValueIsSentinel(int32_t value) {
   return value == (int32_t)SkRegion_kRunTypeSentinel;
 }
 
@@ -65,16 +65,16 @@ struct SkRegion::RunHead {
    *  case of a rectangle, this would return 1, and an empty region would
    *  return 0.
    */
-  int getYSpanCount() const noexcept { return fYSpanCount; }
+  int getYSpanCount() const { return fYSpanCount; }
 
   /**
    *  Number of intervals in the entire region. This equals the number of
    *  rects that would be returned by the Iterator. In the logical case of
    *  a rect, this would return 1, and an empty region would return 0.
    */
-  int getIntervalCount() const noexcept { return fIntervalCount; }
+  int getIntervalCount() const { return fIntervalCount; }
 
-  static RunHead* Alloc(int count) noexcept {
+  static RunHead* Alloc(int count) {
     if (count < SkRegion::kRectRegionRuns) {
       return nullptr;
     }
@@ -85,7 +85,7 @@ struct SkRegion::RunHead {
     }
 
     RunHead* head = (RunHead*)sk_malloc_throw(size);
-    head->fRefCnt.store(1, std::memory_order_release);
+    head->fRefCnt = 1;
     head->fRunCount = count;
     // these must be filled in later, otherwise we will be invalid
     head->fYSpanCount = 0;
@@ -93,7 +93,7 @@ struct SkRegion::RunHead {
     return head;
   }
 
-  static RunHead* Alloc(int count, int yspancount, int intervalCount) noexcept {
+  static RunHead* Alloc(int count, int yspancount, int intervalCount) {
     if (yspancount <= 0 || intervalCount <= 1) {
       return nullptr;
     }
@@ -107,16 +107,14 @@ struct SkRegion::RunHead {
     return head;
   }
 
-  SkRegion::RunType* writable_runs() noexcept {
+  SkRegion::RunType* writable_runs() {
     SkASSERT(fRefCnt == 1);
     return (SkRegion::RunType*)(this + 1);
   }
 
-  const SkRegion::RunType* readonly_runs() const noexcept {
-    return (const SkRegion::RunType*)(this + 1);
-  }
+  const SkRegion::RunType* readonly_runs() const { return (const SkRegion::RunType*)(this + 1); }
 
-  RunHead* ensureWritable() noexcept {
+  RunHead* ensureWritable() {
     RunHead* writable = this;
     if (fRefCnt > 1) {
       // We need to alloc & copy the current region before decrease
@@ -138,7 +136,7 @@ struct SkRegion::RunHead {
    *  Given a scanline (including its Bottom value at runs[0]), return the next
    *  scanline. Asserts that there is one (i.e. runs[0] < Sentinel)
    */
-  static SkRegion::RunType* SkipEntireScanline(const SkRegion::RunType runs[]) noexcept {
+  static SkRegion::RunType* SkipEntireScanline(const SkRegion::RunType runs[]) {
     // we are not the Y Sentinel
     SkASSERT(runs[0] < SkRegion_kRunTypeSentinel);
 
@@ -163,7 +161,7 @@ struct SkRegion::RunHead {
    *
    *  It returns the beginning of the scanline, starting with its Bottom value.
    */
-  SkRegion::RunType* findScanline(int y) const noexcept {
+  SkRegion::RunType* findScanline(int y) const {
     const RunType* runs = this->readonly_runs();
 
     // if the top-check fails, we didn't do a quick check on the bounds
@@ -184,7 +182,7 @@ struct SkRegion::RunHead {
   }
 
   // Copy src runs into us, computing interval counts and bounds along the way
-  void computeRunBounds(SkIRect* bounds) noexcept {
+  void computeRunBounds(SkIRect* bounds) {
     RunType* runs = this->writable_runs();
     bounds->fTop = *runs++;
 

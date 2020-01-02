@@ -15,6 +15,7 @@
 #include "src/core/SkEffectPriv.h"
 #include "src/core/SkMask.h"
 #include "src/core/SkTLazy.h"
+#include "src/core/SkVM.h"
 
 #if SK_SUPPORT_GPU
 #  include "src/gpu/GrFPArgs.h"
@@ -41,7 +42,7 @@ class SkRasterPipeline;
  */
 class SkStageUpdater {
  public:
-  virtual ~SkStageUpdater() = default;
+  virtual ~SkStageUpdater() {}
 
   virtual bool update(const SkMatrix& ctm, const SkMatrix* localM) = 0;
 };
@@ -202,6 +203,16 @@ class SkShaderBase : public SkShader {
 
   SkStageUpdater* appendUpdatableStages(const SkStageRec& rec) const {
     return this->onAppendUpdatableStages(rec);
+  }
+
+  bool program(
+      skvm::Builder*, SkColorSpace* dstCS, skvm::Uniforms* uniforms, skvm::F32 x, skvm::F32 y,
+      skvm::F32* r, skvm::F32* g, skvm::F32* b, skvm::F32* a) const;
+
+  virtual bool onProgram(
+      skvm::Builder*, SkColorSpace* dstCS, skvm::Uniforms* uniforms, skvm::F32 x, skvm::F32 y,
+      skvm::F32* r, skvm::F32* g, skvm::F32* b, skvm::F32* a) const {
+    return false;
   }
 
  protected:

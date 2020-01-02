@@ -426,7 +426,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ReadOnlyTexture, reporter, context_info) {
 
     // Mip regen should not work with a read only texture.
     if (context->priv().caps()->mipMapSupport()) {
-      delete_backend_texture(context, backendTex);
+      DeleteBackendTexture(context, backendTex);
       backendTex = context->createBackendTexture(
           kSize, kSize, kRGBA_8888_SkColorType, SkColors::kTransparent, GrMipMapped::kYes,
           GrRenderable::kYes, GrProtected::kNo);
@@ -438,7 +438,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ReadOnlyTexture, reporter, context_info) {
       auto regenResult = context->priv().getGpu()->regenerateMipMapLevels(proxy->peekTexture());
       REPORTER_ASSERT(reporter, regenResult == (ioType == kRW_GrIOType));
     }
-    delete_backend_texture(context, backendTex);
+    DeleteBackendTexture(context, backendTex);
   }
 }
 
@@ -497,8 +497,8 @@ DEF_GPUTEST(TextureIdleProcTest, reporter, options) {
     return make_normal_texture(context, GrRenderable::kYes);
   };
 
-  std::function<sk_sp<GrTexture>(GrContext*)> makers[] = {makeWrapped, makeWrappedRenderable,
-                                                          makeNormal, makeRenderable};
+  std::function<sk_sp<GrTexture>(GrContext*)> makers[] = {
+      makeWrapped, makeWrappedRenderable, makeNormal, makeRenderable};
 
   // Add a unique key, or not.
   auto addKey = [](GrTexture* texture) {
@@ -578,10 +578,10 @@ DEF_GPUTEST(TextureIdleProcTest, reporter, options) {
             GrMipMapsStatus::kNotAllocated, GrInternalSurfaceFlags ::kNone, SkBackingFit::kExact,
             budgeted, GrProtected::kNo, GrSurfaceProxy::UseAllocator::kYes);
         rtc->drawTexture(
-            GrNoClip(), proxy, GrColorType::kRGBA_8888, GrSamplerState::Filter::kNearest,
-            SkBlendMode::kSrcOver, SkPMColor4f(), SkRect::MakeWH(w, h), SkRect::MakeWH(w, h),
-            GrAA::kNo, GrQuadAAFlags::kNone, SkCanvas::kFast_SrcRectConstraint, SkMatrix::I(),
-            nullptr);
+            GrNoClip(), proxy, GrColorType::kRGBA_8888, kPremul_SkAlphaType,
+            GrSamplerState::Filter::kNearest, SkBlendMode::kSrcOver, SkPMColor4f(),
+            SkRect::MakeWH(w, h), SkRect::MakeWH(w, h), GrAA::kNo, GrQuadAAFlags::kNone,
+            SkCanvas::kFast_SrcRectConstraint, SkMatrix::I(), nullptr);
         // We still have the proxy, which should remain instantiated, thereby keeping the
         // texture not purgeable.
         REPORTER_ASSERT(reporter, idleIDs.find(2) == idleIDs.end());
@@ -592,10 +592,10 @@ DEF_GPUTEST(TextureIdleProcTest, reporter, options) {
 
         // This time we move the proxy into the draw.
         rtc->drawTexture(
-            GrNoClip(), std::move(proxy), GrColorType::kRGBA_8888, GrSamplerState::Filter::kNearest,
-            SkBlendMode::kSrcOver, SkPMColor4f(), SkRect::MakeWH(w, h), SkRect::MakeWH(w, h),
-            GrAA::kNo, GrQuadAAFlags::kNone, SkCanvas::kFast_SrcRectConstraint, SkMatrix::I(),
-            nullptr);
+            GrNoClip(), std::move(proxy), GrColorType::kRGBA_8888, kPremul_SkAlphaType,
+            GrSamplerState::Filter::kNearest, SkBlendMode::kSrcOver, SkPMColor4f(),
+            SkRect::MakeWH(w, h), SkRect::MakeWH(w, h), GrAA::kNo, GrQuadAAFlags::kNone,
+            SkCanvas::kFast_SrcRectConstraint, SkMatrix::I(), nullptr);
         REPORTER_ASSERT(reporter, idleIDs.find(2) == idleIDs.end());
         context->flush();
         context->priv().getGpu()->testingOnly_flushGpuAndSync();
@@ -634,10 +634,10 @@ DEF_GPUTEST(TextureIdleProcTest, reporter, options) {
               auto proxy = context->priv().proxyProvider()->testingOnly_createWrapped(
                   texture, GrColorType::kRGBA_8888, kTopLeft_GrSurfaceOrigin);
               rtc->drawTexture(
-                  GrNoClip(), proxy, GrColorType::kRGBA_8888, GrSamplerState::Filter::kNearest,
-                  SkBlendMode::kSrcOver, SkPMColor4f(), SkRect::MakeWH(w, h), SkRect::MakeWH(w, h),
-                  GrAA::kNo, GrQuadAAFlags::kNone, SkCanvas::kFast_SrcRectConstraint, SkMatrix::I(),
-                  nullptr);
+                  GrNoClip(), proxy, GrColorType::kRGBA_8888, kPremul_SkAlphaType,
+                  GrSamplerState::Filter::kNearest, SkBlendMode::kSrcOver, SkPMColor4f(),
+                  SkRect::MakeWH(w, h), SkRect::MakeWH(w, h), GrAA::kNo, GrQuadAAFlags::kNone,
+                  SkCanvas::kFast_SrcRectConstraint, SkMatrix::I(), nullptr);
               if (drawType == DrawType::kDrawAndFlush) {
                 context->flush();
               }
@@ -729,7 +729,7 @@ DEF_GPUTEST_FOR_ALL_CONTEXTS(TextureIdleProcFlushTest, reporter, contextInfo) {
 
       GrBackendTexture backendTexture;
 
-      if (!create_backend_texture(
+      if (!CreateBackendTexture(
               context, &backendTexture, info, SkColors::kBlack, GrMipMapped::kNo,
               GrRenderable::kNo)) {
         REPORTER_ASSERT(reporter, false);
@@ -743,7 +743,7 @@ DEF_GPUTEST_FOR_ALL_CONTEXTS(TextureIdleProcFlushTest, reporter, contextInfo) {
       surf->getCanvas()->drawImage(std::move(img2), 1, 1);
       idleTexture.reset();
 
-      delete_backend_texture(context, backendTexture);
+      DeleteBackendTexture(context, backendTexture);
     }
   }
 }

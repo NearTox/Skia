@@ -181,8 +181,9 @@ bool SkMultiPictureDocumentRead(
   }
   SkSize joined = {0.0f, 0.0f};
   for (int i = 0; i < dstArrayCount; ++i) {
-    joined = SkSize{SkTMax(joined.width(), dstArray[i].fSize.width()),
-                    SkTMax(joined.height(), dstArray[i].fSize.height())};
+    joined = SkSize{
+        SkTMax(joined.width(), dstArray[i].fSize.width()),
+        SkTMax(joined.height(), dstArray[i].fSize.height())};
   }
 
   auto picture = SkPicture::MakeFromStream(stream, procs);

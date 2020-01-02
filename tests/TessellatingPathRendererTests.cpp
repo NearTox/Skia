@@ -717,16 +717,17 @@ static void test_path(
       SkIRect::MakeWH(renderTargetContext->width(), renderTargetContext->height());
   GrStyle style(SkStrokeRec::kFill_InitStyle);
   GrShape shape(path, style);
-  GrPathRenderer::DrawPathArgs args{ctx,
-                                    std::move(paint),
-                                    &GrUserStencilSettings::kUnused,
-                                    renderTargetContext,
-                                    &noClip,
-                                    &clipConservativeBounds,
-                                    &matrix,
-                                    &shape,
-                                    aaType,
-                                    false};
+  GrPathRenderer::DrawPathArgs args{
+      ctx,
+      std::move(paint),
+      &GrUserStencilSettings::kUnused,
+      renderTargetContext,
+      &noClip,
+      &clipConservativeBounds,
+      &matrix,
+      &shape,
+      aaType,
+      false};
   tess.drawPath(args);
 }
 

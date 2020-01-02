@@ -26,7 +26,7 @@ class SkPicturePlayback final : SkNoncopyable {
   // Return the ID of the operation currently being executed when playing
   // back. 0 indicates no call is active.
   size_t curOpID() const { return fCurOffset; }
-  void resetOpID() noexcept { fCurOffset = 0; }
+  void resetOpID() { fCurOffset = 0; }
 
  protected:
   const SkPictureData* fPictureData;

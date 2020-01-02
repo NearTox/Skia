@@ -25,7 +25,7 @@ namespace {
 // simulating a bad or empty codec stream.
 class EmptyImageGenerator final : public SkImageGenerator {
  public:
-  EmptyImageGenerator(const SkImageInfo& info) noexcept : INHERITED(info) {}
+  EmptyImageGenerator(const SkImageInfo& info) : INHERITED(info) {}
 
  private:
   typedef SkImageGenerator INHERITED;
@@ -59,13 +59,13 @@ SkReadBuffer::SkReadBuffer(const void* data, size_t size) {
   fFactoryCount = 0;
 }
 
-void SkReadBuffer::setMemory(const void* data, size_t size) noexcept {
+void SkReadBuffer::setMemory(const void* data, size_t size) {
   this->validate(IsPtrAlign4(data) && (SkAlign4(size) == size));
   if (!fError) {
     fReader.setMemory(data, size);
   }
 }
-void SkReadBuffer::setInvalid() noexcept {
+void SkReadBuffer::setInvalid() {
   if (!fError) {
     // When an error is found, send the read cursor to the end of the stream
     fReader.skip(fReader.available());
@@ -73,7 +73,7 @@ void SkReadBuffer::setInvalid() noexcept {
   }
 }
 
-const void* SkReadBuffer::skip(size_t size) noexcept {
+const void* SkReadBuffer::skip(size_t size) {
   size_t inc = SkAlign4(size);
   this->validate(inc >= size);
   const void* addr = fReader.peek();
@@ -86,38 +86,38 @@ const void* SkReadBuffer::skip(size_t size) noexcept {
   return addr;
 }
 
-const void* SkReadBuffer::skip(size_t count, size_t size) noexcept {
+const void* SkReadBuffer::skip(size_t count, size_t size) {
   return this->skip(SkSafeMath::Mul(count, size));
 }
 
-void SkReadBuffer::setDeserialProcs(const SkDeserialProcs& procs) noexcept { fProcs = procs; }
+void SkReadBuffer::setDeserialProcs(const SkDeserialProcs& procs) { fProcs = procs; }
 
-bool SkReadBuffer::readBool() noexcept {
+bool SkReadBuffer::readBool() {
   uint32_t value = this->readUInt();
   // Boolean value should be either 0 or 1
   this->validate(!(value & ~1));
   return value != 0;
 }
 
-SkColor SkReadBuffer::readColor() noexcept { return this->readUInt(); }
+SkColor SkReadBuffer::readColor() { return this->readUInt(); }
 
-int32_t SkReadBuffer::readInt() noexcept {
-  constexpr size_t inc = sizeof(int32_t);
+int32_t SkReadBuffer::readInt() {
+  const size_t inc = sizeof(int32_t);
   this->validate(IsPtrAlign4(fReader.peek()) && fReader.isAvailable(inc));
   return fError ? 0 : fReader.readInt();
 }
 
-SkScalar SkReadBuffer::readScalar() noexcept {
-  constexpr size_t inc = sizeof(SkScalar);
+SkScalar SkReadBuffer::readScalar() {
+  const size_t inc = sizeof(SkScalar);
   this->validate(IsPtrAlign4(fReader.peek()) && fReader.isAvailable(inc));
   return fError ? 0 : fReader.readScalar();
 }
 
-uint32_t SkReadBuffer::readUInt() noexcept { return this->readInt(); }
+uint32_t SkReadBuffer::readUInt() { return this->readInt(); }
 
-int32_t SkReadBuffer::read32() noexcept { return this->readInt(); }
+int32_t SkReadBuffer::read32() { return this->readInt(); }
 
-uint8_t SkReadBuffer::peekByte() noexcept {
+uint8_t SkReadBuffer::peekByte() {
   if (fReader.available() <= 0) {
     fError = true;
     return 0;
@@ -125,7 +125,7 @@ uint8_t SkReadBuffer::peekByte() noexcept {
   return *((uint8_t*)fReader.peek());
 }
 
-bool SkReadBuffer::readPad32(void* buffer, size_t bytes) noexcept {
+bool SkReadBuffer::readPad32(void* buffer, size_t bytes) {
   if (const void* src = this->skip(bytes)) {
     memcpy(buffer, src, bytes);
     return true;
@@ -133,7 +133,7 @@ bool SkReadBuffer::readPad32(void* buffer, size_t bytes) noexcept {
   return false;
 }
 
-const char* SkReadBuffer::readString(size_t* len) noexcept {
+const char* SkReadBuffer::readString(size_t* len) {
   *len = this->readUInt();
 
   // The string is len characters and a terminating \0.
@@ -154,20 +154,18 @@ void SkReadBuffer::readString(SkString* string) {
   string->reset();
 }
 
-void SkReadBuffer::readColor4f(SkColor4f* color) noexcept {
+void SkReadBuffer::readColor4f(SkColor4f* color) {
   if (!this->readPad32(color, sizeof(SkColor4f))) {
     *color = {0, 0, 0, 0};
   }
 }
 
-void SkReadBuffer::readPoint(SkPoint* point) noexcept {
+void SkReadBuffer::readPoint(SkPoint* point) {
   point->fX = this->readScalar();
   point->fY = this->readScalar();
 }
 
-void SkReadBuffer::readPoint3(SkPoint3* point) noexcept {
-  this->readPad32(point, sizeof(SkPoint3));
-}
+void SkReadBuffer::readPoint3(SkPoint3* point) { this->readPad32(point, sizeof(SkPoint3)); }
 
 void SkReadBuffer::readMatrix(SkMatrix* matrix) {
   size_t size = 0;
@@ -181,13 +179,13 @@ void SkReadBuffer::readMatrix(SkMatrix* matrix) {
   (void)this->skip(size);
 }
 
-void SkReadBuffer::readIRect(SkIRect* rect) noexcept {
+void SkReadBuffer::readIRect(SkIRect* rect) {
   if (!this->readPad32(rect, sizeof(SkIRect))) {
     rect->setEmpty();
   }
 }
 
-void SkReadBuffer::readRect(SkRect* rect) noexcept {
+void SkReadBuffer::readRect(SkRect* rect) {
   if (!this->readPad32(rect, sizeof(SkRect))) {
     rect->setEmpty();
   }
@@ -221,33 +219,33 @@ void SkReadBuffer::readPath(SkPath* path) {
   (void)this->skip(size);
 }
 
-bool SkReadBuffer::readArray(void* value, size_t size, size_t elementSize) noexcept {
+bool SkReadBuffer::readArray(void* value, size_t size, size_t elementSize) {
   const uint32_t count = this->readUInt();
   return this->validate(size == count) &&
          this->readPad32(value, SkSafeMath::Mul(size, elementSize));
 }
 
-bool SkReadBuffer::readByteArray(void* value, size_t size) noexcept {
+bool SkReadBuffer::readByteArray(void* value, size_t size) {
   return this->readArray(value, size, sizeof(uint8_t));
 }
 
-bool SkReadBuffer::readColorArray(SkColor* colors, size_t size) noexcept {
+bool SkReadBuffer::readColorArray(SkColor* colors, size_t size) {
   return this->readArray(colors, size, sizeof(SkColor));
 }
 
-bool SkReadBuffer::readColor4fArray(SkColor4f* colors, size_t size) noexcept {
+bool SkReadBuffer::readColor4fArray(SkColor4f* colors, size_t size) {
   return this->readArray(colors, size, sizeof(SkColor4f));
 }
 
-bool SkReadBuffer::readIntArray(int32_t* values, size_t size) noexcept {
+bool SkReadBuffer::readIntArray(int32_t* values, size_t size) {
   return this->readArray(values, size, sizeof(int32_t));
 }
 
-bool SkReadBuffer::readPointArray(SkPoint* points, size_t size) noexcept {
+bool SkReadBuffer::readPointArray(SkPoint* points, size_t size) {
   return this->readArray(points, size, sizeof(SkPoint));
 }
 
-bool SkReadBuffer::readScalarArray(SkScalar* values, size_t size) noexcept {
+bool SkReadBuffer::readScalarArray(SkScalar* values, size_t size) {
   return this->readArray(values, size, sizeof(SkScalar));
 }
 
@@ -265,8 +263,8 @@ sk_sp<SkData> SkReadBuffer::readByteArrayAsData() {
   return SkData::MakeFromMalloc(buffer.release(), numBytes);
 }
 
-uint32_t SkReadBuffer::getArrayCount() noexcept {
-  constexpr size_t inc = sizeof(uint32_t);
+uint32_t SkReadBuffer::getArrayCount() {
+  const size_t inc = sizeof(uint32_t);
   fError = fError || !IsPtrAlign4(fReader.peek()) || !fReader.isAvailable(inc);
   return fError ? 0 : *(uint32_t*)fReader.peek();
 }
@@ -439,7 +437,7 @@ SkFlattenable* SkReadBuffer::readFlattenable(SkFlattenable::Type ft) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-int32_t SkReadBuffer::checkInt(int32_t min, int32_t max) noexcept {
+int32_t SkReadBuffer::checkInt(int32_t min, int32_t max) {
   SkASSERT(min <= max);
   int32_t value = this->read32();
   if (value < min || value > max) {

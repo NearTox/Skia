@@ -49,8 +49,8 @@ class GrGLSLAlphaThresholdFragmentProcessor : public GrGLSLFragmentProcessor {
         "scale = %s / max(0.0010000000474974513, color.w);\n    color.xyz *= scale;\n    "
         "color.w = %s;\n}\n%s = color;\n",
         args.fInputColor, fragBuilder->getProgramBuilder()->samplerVariable(args.fTexSamplers[0]),
-        _outer.computeLocalCoordsInVertexShader() ? sk_TransformedCoords2D_0.c_str() : "_coords",
-        fragBuilder->getProgramBuilder()->samplerSwizzle(args.fTexSamplers[0]).c_str(),
+        sk_TransformedCoords2D_0.c_str(),
+        fragBuilder->getProgramBuilder()->samplerSwizzle(args.fTexSamplers[0]).asString().c_str(),
         args.fUniformHandler->getUniformCStr(outerThresholdVar),
         args.fUniformHandler->getUniformCStr(outerThresholdVar),
         args.fUniformHandler->getUniformCStr(outerThresholdVar),

@@ -201,8 +201,9 @@ SkDVector SkDQuad::dxdyAtT(double t) const {
   double a = t - 1;
   double b = 1 - 2 * t;
   double c = t;
-  SkDVector result = {a * fPts[0].fX + b * fPts[1].fX + c * fPts[2].fX,
-                      a * fPts[0].fY + b * fPts[1].fY + c * fPts[2].fY};
+  SkDVector result = {
+      a * fPts[0].fX + b * fPts[1].fX + c * fPts[2].fX,
+      a * fPts[0].fY + b * fPts[1].fY + c * fPts[2].fY};
   if (result.fX == 0 && result.fY == 0) {
     if (zero_or_one(t)) {
       result = fPts[2] - fPts[0];
@@ -226,8 +227,9 @@ SkDPoint SkDQuad::ptAtT(double t) const {
   double a = one_t * one_t;
   double b = 2 * one_t * t;
   double c = t * t;
-  SkDPoint result = {a * fPts[0].fX + b * fPts[1].fX + c * fPts[2].fX,
-                     a * fPts[0].fY + b * fPts[1].fY + c * fPts[2].fY};
+  SkDPoint result = {
+      a * fPts[0].fX + b * fPts[1].fX + c * fPts[2].fX,
+      a * fPts[0].fY + b * fPts[1].fY + c * fPts[2].fY};
   return result;
 }
 

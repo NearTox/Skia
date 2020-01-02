@@ -197,7 +197,7 @@ void basic_transfer_to_test(
   GrImageInfo srcInfo(
       allowedSrc.fColorType, kUnpremul_SkAlphaType, nullptr, tex->width(), tex->height());
   GrImageInfo dstInfo(colorType, kUnpremul_SkAlphaType, nullptr, tex->width(), tex->height());
-  compare_pixels(
+  ComparePixels(
       srcInfo, srcData.get(), srcRowBytes, dstInfo, dstBuffer.get(), dstRowBytes, compareTolerances,
       error);
 
@@ -252,7 +252,7 @@ void basic_transfer_to_test(
         static_cast<int>(colorType));
     return;
   }
-  compare_pixels(
+  ComparePixels(
       srcInfo, srcData.get(), srcRowBytes, dstInfo, dstBuffer.get(), dstRowBytes, compareTolerances,
       error);
 }
@@ -383,7 +383,7 @@ void basic_transfer_from_test(
       });
   GrImageInfo textureDataInfo(
       colorType, kUnpremul_SkAlphaType, nullptr, kTextureWidth, kTextureHeight);
-  compare_pixels(
+  ComparePixels(
       textureDataInfo, textureData.get(), textureDataRowBytes, transferInfo, transferData.get(),
       fullBufferRowBytes, tol, error);
 
@@ -418,7 +418,7 @@ void basic_transfer_from_test(
   const char* textureDataStart =
       textureData.get() + textureDataRowBytes * kPartialTop + textureDataBpp * kPartialLeft;
   textureDataInfo = textureDataInfo.makeWH(kPartialWidth, kPartialHeight);
-  compare_pixels(
+  ComparePixels(
       textureDataInfo, textureDataStart, textureDataRowBytes, transferInfo, transferData.get(),
       partialBufferRowBytes, tol, error);
 #if GR_GPU_STATS
@@ -443,7 +443,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(TransferPixelsToTest, reporter, ctxInfo) {
              GrColorType::kRG_88,
              GrColorType::kBGRA_8888,
              GrColorType::kRGBA_1010102,
-             //  GrColorType::kGray_8, Reading back to kGray is busted.
+             GrColorType::kGray_8,
              GrColorType::kAlpha_F16,
              GrColorType::kRGBA_F16,
              GrColorType::kRGBA_F16_Clamped,
@@ -475,7 +475,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(TransferPixelsFromTest, reporter, ctxInfo) {
              GrColorType::kRG_88,
              GrColorType::kBGRA_8888,
              GrColorType::kRGBA_1010102,
-             //  GrColorType::kGray_8, Reading back to kGray is busted.
+             GrColorType::kGray_8,
              GrColorType::kAlpha_F16,
              GrColorType::kRGBA_F16,
              GrColorType::kRGBA_F16_Clamped,

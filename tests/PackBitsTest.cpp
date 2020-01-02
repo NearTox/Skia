@@ -24,11 +24,12 @@ static void test_pack8(skiatest::Reporter* reporter) {
   static const struct {
     const uint8_t* fSrc;
     int fCount;
-  } gTests[] = {{gTest80, SK_ARRAY_COUNT(gTest80)},
-                {gTest81, SK_ARRAY_COUNT(gTest81)},
-                {gTest82, SK_ARRAY_COUNT(gTest82)},
-                {gTest83, SK_ARRAY_COUNT(gTest83)},
-                {gTest84, SK_ARRAY_COUNT(gTest84)}};
+  } gTests[] = {
+      {gTest80, SK_ARRAY_COUNT(gTest80)},
+      {gTest81, SK_ARRAY_COUNT(gTest81)},
+      {gTest82, SK_ARRAY_COUNT(gTest82)},
+      {gTest83, SK_ARRAY_COUNT(gTest83)},
+      {gTest84, SK_ARRAY_COUNT(gTest84)}};
 
   for (size_t i = 4; i < SK_ARRAY_COUNT(gTests); i++) {
     uint8_t dst[100];

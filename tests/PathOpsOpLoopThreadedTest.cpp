@@ -44,10 +44,12 @@ static void testOpLoopsMain(PathOpsThreadState* data) {
         for (int d = c + 1; d < 7; ++d) {
           // define 4 points that form two lines that often cross; one line is (a, b) (c, d)
           SkVector v = {SkIntToScalar(a - c), SkIntToScalar(b - d)};
-          SkPoint midA = {SkIntToScalar(a * state.fA + c * (6 - state.fA)) / 6,
-                          SkIntToScalar(b * state.fA + d * (6 - state.fA)) / 6};
-          SkPoint midB = {SkIntToScalar(a * state.fB + c * (6 - state.fB)) / 6,
-                          SkIntToScalar(b * state.fB + d * (6 - state.fB)) / 6};
+          SkPoint midA = {
+              SkIntToScalar(a * state.fA + c * (6 - state.fA)) / 6,
+              SkIntToScalar(b * state.fA + d * (6 - state.fA)) / 6};
+          SkPoint midB = {
+              SkIntToScalar(a * state.fB + c * (6 - state.fB)) / 6,
+              SkIntToScalar(b * state.fB + d * (6 - state.fB)) / 6};
           SkPoint endC = {midA.fX + v.fY * state.fC / 3, midA.fY + v.fX * state.fC / 3};
           SkPoint endD = {midB.fX - v.fY * state.fD / 3, midB.fY + v.fX * state.fD / 3};
           SkPath pathA, pathB;

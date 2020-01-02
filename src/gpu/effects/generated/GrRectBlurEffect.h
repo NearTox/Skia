@@ -91,8 +91,9 @@ class GrRectBlurEffect : public GrFragmentProcessor {
     // inset the rect so that the edge of the inset rect corresponds to t = 0 in the texture.
     // It actually simplifies things a bit in the !isFast case, too.
     float threeSigma = sixSigma / 2;
-    SkRect insetRect = {rect.fLeft + threeSigma, rect.fTop + threeSigma, rect.fRight - threeSigma,
-                        rect.fBottom - threeSigma};
+    SkRect insetRect = {
+        rect.fLeft + threeSigma, rect.fTop + threeSigma, rect.fRight - threeSigma,
+        rect.fBottom - threeSigma};
 
     // In our fast variant we find the nearest horizontal and vertical edges and for each
     // do a lookup in the integral texture for each and multiply them. When the rect is
@@ -115,7 +116,7 @@ class GrRectBlurEffect : public GrFragmentProcessor {
 
  private:
   GrRectBlurEffect(
-      SkRect rect, sk_sp<GrTextureProxy> integral, float invSixSigma, bool isFast,
+      SkRect rect, sk_sp<GrSurfaceProxy> integral, float invSixSigma, bool isFast,
       GrSamplerState samplerParams)
       : INHERITED(
             kGrRectBlurEffect_ClassID,

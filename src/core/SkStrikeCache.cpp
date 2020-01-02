@@ -30,14 +30,22 @@ class SkStrikeCache::Node final : public SkStrikeForGPU {
     return fStrike.roundingSpec();
   }
 
-  SkSpan<const SkGlyphPos> prepareForDrawingRemoveEmpty(
-      const SkPackedGlyphID packedGlyphIDs[], const SkPoint positions[], size_t n, int maxDimension,
-      SkGlyphPos results[]) override {
-    return fStrike.prepareForDrawingRemoveEmpty(
-        packedGlyphIDs, positions, n, maxDimension, results);
+  const SkDescriptor& getDescriptor() const override { return fStrike.getDescriptor(); }
+
+  void prepareForMaskDrawing(
+      SkDrawableGlyphBuffer* drawbles, SkSourceGlyphBuffer* rejects) override {
+    fStrike.prepareForMaskDrawing(drawbles, rejects);
   }
 
-  const SkDescriptor& getDescriptor() const override { return fStrike.getDescriptor(); }
+  void prepareForSDFTDrawing(
+      SkDrawableGlyphBuffer* drawbles, SkSourceGlyphBuffer* rejects) override {
+    fStrike.prepareForSDFTDrawing(drawbles, rejects);
+  }
+
+  void prepareForPathDrawing(
+      SkDrawableGlyphBuffer* drawbles, SkSourceGlyphBuffer* rejects) override {
+    fStrike.prepareForPathDrawing(drawbles, rejects);
+  }
 
   void onAboutToExitScope() override { fStrikeCache->attachNode(this); }
 

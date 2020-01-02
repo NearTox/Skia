@@ -26,8 +26,8 @@ DEF_TEST(Paint_filterQuality, reporter) {
 
   REPORTER_ASSERT(reporter, kNone_SkFilterQuality == p0.getFilterQuality());
 
-  static const SkFilterQuality gQualitys[] = {kNone_SkFilterQuality, kLow_SkFilterQuality,
-                                              kMedium_SkFilterQuality, kHigh_SkFilterQuality};
+  static const SkFilterQuality gQualitys[] = {
+      kNone_SkFilterQuality, kLow_SkFilterQuality, kMedium_SkFilterQuality, kHigh_SkFilterQuality};
   for (size_t i = 0; i < SK_ARRAY_COUNT(gQualitys); ++i) {
     p0.setFilterQuality(gQualitys[i]);
     REPORTER_ASSERT(reporter, gQualitys[i] == p0.getFilterQuality());
@@ -248,8 +248,9 @@ DEF_TEST(Font_getpos, r) {
 
   for (bool subpix : {false, true}) {
     font.setSubpixel(subpix);
-    for (auto hint : {SkFontHinting::kNone, SkFontHinting::kSlight, SkFontHinting::kNormal,
-                      SkFontHinting::kFull}) {
+    for (auto hint :
+         {SkFontHinting::kNone, SkFontHinting::kSlight, SkFontHinting::kNormal,
+          SkFontHinting::kFull}) {
       font.setHinting(hint);
       for (auto size : {1.0f, 12.0f, 100.0f}) {
         font.setSize(size);

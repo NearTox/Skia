@@ -22,7 +22,7 @@ class GrVkDescriptorSet : public GrVkRecycledResource {
 
   ~GrVkDescriptorSet() override {}
 
-  VkDescriptorSet descriptorSet() const { return fDescSet; }
+  const VkDescriptorSet* descriptorSet() const { return &fDescSet; }
 
 #ifdef SK_TRACE_VK_RESOURCES
   void dumpInfo() const override {

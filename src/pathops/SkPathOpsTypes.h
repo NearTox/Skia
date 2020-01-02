@@ -40,17 +40,17 @@ class SkOpGlobalState {
 
   enum { kMaxWindingTries = 10 };
 
-  bool allocatedOpSpan() const noexcept { return fAllocatedOpSpan; }
+  bool allocatedOpSpan() const { return fAllocatedOpSpan; }
 
-  SkArenaAlloc* allocator() noexcept { return fAllocator; }
+  SkArenaAlloc* allocator() { return fAllocator; }
 
-  void bumpNested() noexcept { ++fNested; }
+  void bumpNested() { ++fNested; }
 
-  void clearNested() noexcept { fNested = 0; }
+  void clearNested() { fNested = 0; }
 
-  SkOpCoincidence* coincidence() noexcept { return fCoincidence; }
+  SkOpCoincidence* coincidence() { return fCoincidence; }
 
-  SkOpContourHead* contourHead() noexcept { return fContourHead; }
+  SkOpContourHead* contourHead() { return fContourHead; }
 
 #ifdef SK_DEBUG
   const class SkOpAngle* debugAngle(int id) const;
@@ -94,7 +94,7 @@ class SkOpGlobalState {
   static void DumpCoinDict();
 #endif
 
-  int nested() const noexcept { return fNested; }
+  int nested() const { return fNested; }
 
 #ifdef SK_DEBUG
   int nextAngleID() { return ++fAngleID; }
@@ -110,17 +110,17 @@ class SkOpGlobalState {
   int nextSpanID() { return ++fSpanID; }
 #endif
 
-  SkOpPhase phase() const noexcept { return fPhase; }
+  SkOpPhase phase() const { return fPhase; }
 
-  void resetAllocatedOpSpan() noexcept { fAllocatedOpSpan = false; }
+  void resetAllocatedOpSpan() { fAllocatedOpSpan = false; }
 
-  void setAllocatedOpSpan() noexcept { fAllocatedOpSpan = true; }
+  void setAllocatedOpSpan() { fAllocatedOpSpan = true; }
 
-  void setCoincidence(SkOpCoincidence* coincidence) noexcept { fCoincidence = coincidence; }
+  void setCoincidence(SkOpCoincidence* coincidence) { fCoincidence = coincidence; }
 
-  void setContourHead(SkOpContourHead* contourHead) noexcept { fContourHead = contourHead; }
+  void setContourHead(SkOpContourHead* contourHead) { fContourHead = contourHead; }
 
-  void setPhase(SkOpPhase phase) noexcept {
+  void setPhase(SkOpPhase phase) {
     if (SkOpPhase::kNoChange == phase) {
       return;
     }
@@ -129,9 +129,9 @@ class SkOpGlobalState {
   }
 
   // called in very rare cases where angles are sorted incorrectly -- signfies op will fail
-  void setWindingFailed() noexcept { fWindingFailed = true; }
+  void setWindingFailed() { fWindingFailed = true; }
 
-  bool windingFailed() const noexcept { return fWindingFailed; }
+  bool windingFailed() const { return fWindingFailed; }
 
  private:
   SkArenaAlloc* fAllocator;
@@ -260,206 +260,180 @@ inline int UlpsDistance(double a, double b) {
 
 // FLT_EPSILON == 1.19209290E-07 == 1 / (2 ^ 23)
 // DBL_EPSILON == 2.22045e-16
-constexpr double FLT_EPSILON_CUBED = FLT_EPSILON * FLT_EPSILON * FLT_EPSILON;
-constexpr double FLT_EPSILON_HALF = FLT_EPSILON / 2;
-constexpr double FLT_EPSILON_DOUBLE = FLT_EPSILON * 2;
-constexpr double FLT_EPSILON_ORDERABLE_ERR = FLT_EPSILON * 16;
-constexpr double FLT_EPSILON_SQUARED = FLT_EPSILON * FLT_EPSILON;
+const double FLT_EPSILON_CUBED = FLT_EPSILON * FLT_EPSILON * FLT_EPSILON;
+const double FLT_EPSILON_HALF = FLT_EPSILON / 2;
+const double FLT_EPSILON_DOUBLE = FLT_EPSILON * 2;
+const double FLT_EPSILON_ORDERABLE_ERR = FLT_EPSILON * 16;
+const double FLT_EPSILON_SQUARED = FLT_EPSILON * FLT_EPSILON;
 // Use a compile-time constant for FLT_EPSILON_SQRT to avoid initializers.
 // A 17 digit constant guarantees exact results.
-constexpr double FLT_EPSILON_SQRT = 0.00034526697709225118;  // sqrt(FLT_EPSILON);
-constexpr double FLT_EPSILON_INVERSE = 1 / FLT_EPSILON;
-constexpr double DBL_EPSILON_ERR = DBL_EPSILON * 4;  // FIXME: tune -- allow a few bits of error
-constexpr double DBL_EPSILON_SUBDIVIDE_ERR = DBL_EPSILON * 16;
-constexpr double ROUGH_EPSILON = FLT_EPSILON * 64;
-constexpr double MORE_ROUGH_EPSILON = FLT_EPSILON * 256;
-constexpr double WAY_ROUGH_EPSILON = FLT_EPSILON * 2048;
-constexpr double BUMP_EPSILON = FLT_EPSILON * 4096;
+const double FLT_EPSILON_SQRT = 0.00034526697709225118;  // sqrt(FLT_EPSILON);
+const double FLT_EPSILON_INVERSE = 1 / FLT_EPSILON;
+const double DBL_EPSILON_ERR = DBL_EPSILON * 4;  // FIXME: tune -- allow a few bits of error
+const double DBL_EPSILON_SUBDIVIDE_ERR = DBL_EPSILON * 16;
+const double ROUGH_EPSILON = FLT_EPSILON * 64;
+const double MORE_ROUGH_EPSILON = FLT_EPSILON * 256;
+const double WAY_ROUGH_EPSILON = FLT_EPSILON * 2048;
+const double BUMP_EPSILON = FLT_EPSILON * 4096;
 
-constexpr SkScalar INVERSE_NUMBER_RANGE = FLT_EPSILON_ORDERABLE_ERR;
+const SkScalar INVERSE_NUMBER_RANGE = FLT_EPSILON_ORDERABLE_ERR;
 
-constexpr inline bool zero_or_one(double x) { return x == 0 || x == 1; }
+inline bool zero_or_one(double x) { return x == 0 || x == 1; }
 
-inline bool approximately_zero(double x) noexcept { return fabs(x) < FLT_EPSILON; }
+inline bool approximately_zero(double x) { return fabs(x) < FLT_EPSILON; }
 
-inline bool precisely_zero(double x) noexcept { return fabs(x) < DBL_EPSILON_ERR; }
+inline bool precisely_zero(double x) { return fabs(x) < DBL_EPSILON_ERR; }
 
-inline bool precisely_subdivide_zero(double x) noexcept {
-  return fabs(x) < DBL_EPSILON_SUBDIVIDE_ERR;
-}
+inline bool precisely_subdivide_zero(double x) { return fabs(x) < DBL_EPSILON_SUBDIVIDE_ERR; }
 
-inline bool approximately_zero(float x) noexcept { return fabs(x) < FLT_EPSILON; }
+inline bool approximately_zero(float x) { return fabs(x) < FLT_EPSILON; }
 
-inline bool approximately_zero_cubed(double x) noexcept { return fabs(x) < FLT_EPSILON_CUBED; }
+inline bool approximately_zero_cubed(double x) { return fabs(x) < FLT_EPSILON_CUBED; }
 
-inline bool approximately_zero_half(double x) noexcept { return fabs(x) < FLT_EPSILON_HALF; }
+inline bool approximately_zero_half(double x) { return fabs(x) < FLT_EPSILON_HALF; }
 
-inline bool approximately_zero_double(double x) noexcept { return fabs(x) < FLT_EPSILON_DOUBLE; }
+inline bool approximately_zero_double(double x) { return fabs(x) < FLT_EPSILON_DOUBLE; }
 
-inline bool approximately_zero_orderable(double x) noexcept {
-  return fabs(x) < FLT_EPSILON_ORDERABLE_ERR;
-}
+inline bool approximately_zero_orderable(double x) { return fabs(x) < FLT_EPSILON_ORDERABLE_ERR; }
 
-inline bool approximately_zero_squared(double x) noexcept { return fabs(x) < FLT_EPSILON_SQUARED; }
+inline bool approximately_zero_squared(double x) { return fabs(x) < FLT_EPSILON_SQUARED; }
 
-inline bool approximately_zero_sqrt(double x) noexcept { return fabs(x) < FLT_EPSILON_SQRT; }
+inline bool approximately_zero_sqrt(double x) { return fabs(x) < FLT_EPSILON_SQRT; }
 
-inline bool roughly_zero(double x) noexcept { return fabs(x) < ROUGH_EPSILON; }
+inline bool roughly_zero(double x) { return fabs(x) < ROUGH_EPSILON; }
 
-inline bool approximately_zero_inverse(double x) noexcept { return fabs(x) > FLT_EPSILON_INVERSE; }
+inline bool approximately_zero_inverse(double x) { return fabs(x) > FLT_EPSILON_INVERSE; }
 
-inline bool approximately_zero_when_compared_to(double x, double y) noexcept {
+inline bool approximately_zero_when_compared_to(double x, double y) {
   return x == 0 || fabs(x) < fabs(y * FLT_EPSILON);
 }
 
-inline bool precisely_zero_when_compared_to(double x, double y) noexcept {
+inline bool precisely_zero_when_compared_to(double x, double y) {
   return x == 0 || fabs(x) < fabs(y * DBL_EPSILON);
 }
 
-inline bool roughly_zero_when_compared_to(double x, double y) noexcept {
+inline bool roughly_zero_when_compared_to(double x, double y) {
   return x == 0 || fabs(x) < fabs(y * ROUGH_EPSILON);
 }
 
 // Use this for comparing Ts in the range of 0 to 1. For general numbers (larger and smaller) use
 // AlmostEqualUlps instead.
-inline bool approximately_equal(double x, double y) noexcept { return approximately_zero(x - y); }
+inline bool approximately_equal(double x, double y) { return approximately_zero(x - y); }
 
-inline bool precisely_equal(double x, double y) noexcept { return precisely_zero(x - y); }
+inline bool precisely_equal(double x, double y) { return precisely_zero(x - y); }
 
-inline bool precisely_subdivide_equal(double x, double y) noexcept {
+inline bool precisely_subdivide_equal(double x, double y) {
   return precisely_subdivide_zero(x - y);
 }
 
-inline bool approximately_equal_half(double x, double y) noexcept {
-  return approximately_zero_half(x - y);
-}
+inline bool approximately_equal_half(double x, double y) { return approximately_zero_half(x - y); }
 
-inline bool approximately_equal_double(double x, double y) noexcept {
+inline bool approximately_equal_double(double x, double y) {
   return approximately_zero_double(x - y);
 }
 
-inline bool approximately_equal_orderable(double x, double y) noexcept {
+inline bool approximately_equal_orderable(double x, double y) {
   return approximately_zero_orderable(x - y);
 }
 
-inline bool approximately_equal_squared(double x, double y) noexcept {
-  return approximately_equal(x, y);
-}
+inline bool approximately_equal_squared(double x, double y) { return approximately_equal(x, y); }
 
-constexpr inline bool approximately_greater(double x, double y) { return x - FLT_EPSILON >= y; }
+inline bool approximately_greater(double x, double y) { return x - FLT_EPSILON >= y; }
 
-constexpr inline bool approximately_greater_double(double x, double y) {
-  return x - FLT_EPSILON_DOUBLE >= y;
-}
+inline bool approximately_greater_double(double x, double y) { return x - FLT_EPSILON_DOUBLE >= y; }
 
-constexpr inline bool approximately_greater_orderable(double x, double y) {
+inline bool approximately_greater_orderable(double x, double y) {
   return x - FLT_EPSILON_ORDERABLE_ERR >= y;
 }
 
-constexpr inline bool approximately_greater_or_equal(double x, double y) {
-  return x + FLT_EPSILON > y;
-}
+inline bool approximately_greater_or_equal(double x, double y) { return x + FLT_EPSILON > y; }
 
-constexpr inline bool approximately_greater_or_equal_double(double x, double y) {
+inline bool approximately_greater_or_equal_double(double x, double y) {
   return x + FLT_EPSILON_DOUBLE > y;
 }
 
-constexpr inline bool approximately_greater_or_equal_orderable(double x, double y) {
+inline bool approximately_greater_or_equal_orderable(double x, double y) {
   return x + FLT_EPSILON_ORDERABLE_ERR > y;
 }
 
-constexpr inline bool approximately_lesser(double x, double y) { return x + FLT_EPSILON <= y; }
+inline bool approximately_lesser(double x, double y) { return x + FLT_EPSILON <= y; }
 
-constexpr inline bool approximately_lesser_double(double x, double y) {
-  return x + FLT_EPSILON_DOUBLE <= y;
-}
+inline bool approximately_lesser_double(double x, double y) { return x + FLT_EPSILON_DOUBLE <= y; }
 
-constexpr inline bool approximately_lesser_orderable(double x, double y) {
+inline bool approximately_lesser_orderable(double x, double y) {
   return x + FLT_EPSILON_ORDERABLE_ERR <= y;
 }
 
-constexpr inline bool approximately_lesser_or_equal(double x, double y) {
-  return x - FLT_EPSILON < y;
-}
+inline bool approximately_lesser_or_equal(double x, double y) { return x - FLT_EPSILON < y; }
 
-constexpr inline bool approximately_lesser_or_equal_double(double x, double y) {
+inline bool approximately_lesser_or_equal_double(double x, double y) {
   return x - FLT_EPSILON_DOUBLE < y;
 }
 
-constexpr inline bool approximately_lesser_or_equal_orderable(double x, double y) {
+inline bool approximately_lesser_or_equal_orderable(double x, double y) {
   return x - FLT_EPSILON_ORDERABLE_ERR < y;
 }
 
-constexpr inline bool approximately_greater_than_one(double x) { return x > 1 - FLT_EPSILON; }
+inline bool approximately_greater_than_one(double x) { return x > 1 - FLT_EPSILON; }
 
-constexpr inline bool precisely_greater_than_one(double x) { return x > 1 - DBL_EPSILON_ERR; }
+inline bool precisely_greater_than_one(double x) { return x > 1 - DBL_EPSILON_ERR; }
 
-constexpr inline bool approximately_less_than_zero(double x) { return x < FLT_EPSILON; }
+inline bool approximately_less_than_zero(double x) { return x < FLT_EPSILON; }
 
-constexpr inline bool precisely_less_than_zero(double x) { return x < DBL_EPSILON_ERR; }
+inline bool precisely_less_than_zero(double x) { return x < DBL_EPSILON_ERR; }
 
-constexpr inline bool approximately_negative(double x) { return x < FLT_EPSILON; }
+inline bool approximately_negative(double x) { return x < FLT_EPSILON; }
 
-constexpr inline bool approximately_negative_orderable(double x) {
-  return x < FLT_EPSILON_ORDERABLE_ERR;
-}
+inline bool approximately_negative_orderable(double x) { return x < FLT_EPSILON_ORDERABLE_ERR; }
 
-constexpr inline bool precisely_negative(double x) { return x < DBL_EPSILON_ERR; }
+inline bool precisely_negative(double x) { return x < DBL_EPSILON_ERR; }
 
-constexpr inline bool approximately_one_or_less(double x) { return x < 1 + FLT_EPSILON; }
+inline bool approximately_one_or_less(double x) { return x < 1 + FLT_EPSILON; }
 
-constexpr inline bool approximately_one_or_less_double(double x) {
-  return x < 1 + FLT_EPSILON_DOUBLE;
-}
+inline bool approximately_one_or_less_double(double x) { return x < 1 + FLT_EPSILON_DOUBLE; }
 
-constexpr inline bool approximately_positive(double x) { return x > -FLT_EPSILON; }
+inline bool approximately_positive(double x) { return x > -FLT_EPSILON; }
 
-constexpr inline bool approximately_positive_squared(double x) {
-  return x > -(FLT_EPSILON_SQUARED);
-}
+inline bool approximately_positive_squared(double x) { return x > -(FLT_EPSILON_SQUARED); }
 
-constexpr inline bool approximately_zero_or_more(double x) { return x > -FLT_EPSILON; }
+inline bool approximately_zero_or_more(double x) { return x > -FLT_EPSILON; }
 
-constexpr inline bool approximately_zero_or_more_double(double x) {
-  return x > -FLT_EPSILON_DOUBLE;
-}
+inline bool approximately_zero_or_more_double(double x) { return x > -FLT_EPSILON_DOUBLE; }
 
-constexpr inline bool approximately_between_orderable(double a, double b, double c) {
+inline bool approximately_between_orderable(double a, double b, double c) {
   return a <= c
              ? approximately_negative_orderable(a - b) && approximately_negative_orderable(b - c)
              : approximately_negative_orderable(b - a) && approximately_negative_orderable(c - b);
 }
 
-constexpr inline bool approximately_between(double a, double b, double c) {
+inline bool approximately_between(double a, double b, double c) {
   return a <= c ? approximately_negative(a - b) && approximately_negative(b - c)
                 : approximately_negative(b - a) && approximately_negative(c - b);
 }
 
-constexpr inline bool precisely_between(double a, double b, double c) {
+inline bool precisely_between(double a, double b, double c) {
   return a <= c ? precisely_negative(a - b) && precisely_negative(b - c)
                 : precisely_negative(b - a) && precisely_negative(c - b);
 }
 
 // returns true if (a <= b <= c) || (a >= b >= c)
-inline bool between(double a, double b, double c) noexcept {
+inline bool between(double a, double b, double c) {
   SkASSERT(
       ((a <= b && b <= c) || (a >= b && b >= c)) == ((a - b) * (c - b) <= 0) ||
       (precisely_zero(a) && precisely_zero(b) && precisely_zero(c)));
   return (a - b) * (c - b) <= 0;
 }
 
-inline bool roughly_equal(double x, double y) noexcept { return fabs(x - y) < ROUGH_EPSILON; }
+inline bool roughly_equal(double x, double y) { return fabs(x - y) < ROUGH_EPSILON; }
 
-constexpr inline bool roughly_negative(double x) { return x < ROUGH_EPSILON; }
+inline bool roughly_negative(double x) { return x < ROUGH_EPSILON; }
 
-constexpr inline bool roughly_between(double a, double b, double c) {
+inline bool roughly_between(double a, double b, double c) {
   return a <= c ? roughly_negative(a - b) && roughly_negative(b - c)
                 : roughly_negative(b - a) && roughly_negative(c - b);
 }
 
-inline bool more_roughly_equal(double x, double y) noexcept {
-  return fabs(x - y) < MORE_ROUGH_EPSILON;
-}
+inline bool more_roughly_equal(double x, double y) { return fabs(x - y) < MORE_ROUGH_EPSILON; }
 
 struct SkDPoint;
 struct SkDVector;
@@ -469,7 +443,7 @@ struct SkDConic;
 struct SkDCubic;
 struct SkDRect;
 
-constexpr inline SkPath::Verb SkPathOpsPointsToVerb(int points) {
+inline SkPath::Verb SkPathOpsPointsToVerb(int points) {
   int verb = (1 << points) >> 1;
 #ifdef SK_DEBUG
   switch (points) {
@@ -483,7 +457,7 @@ constexpr inline SkPath::Verb SkPathOpsPointsToVerb(int points) {
   return (SkPath::Verb)verb;
 }
 
-constexpr inline int SkPathOpsVerbToPoints(SkPath::Verb verb) {
+inline int SkPathOpsVerbToPoints(SkPath::Verb verb) {
   int points = (int)verb - (((int)verb + 1) >> 2);
 #ifdef SK_DEBUG
   switch (verb) {
@@ -497,23 +471,23 @@ constexpr inline int SkPathOpsVerbToPoints(SkPath::Verb verb) {
   return points;
 }
 
-constexpr inline double SkDInterp(double A, double B, double t) { return A + (B - A) * t; }
+inline double SkDInterp(double A, double B, double t) { return A + (B - A) * t; }
 
 double SkDCubeRoot(double x);
 
 /* Returns -1 if negative, 0 if zero, 1 if positive
  */
-constexpr inline int SkDSign(double x) { return (x > 0) - (x < 0); }
+inline int SkDSign(double x) { return (x > 0) - (x < 0); }
 
 /* Returns 0 if negative, 1 if zero, 2 if positive
  */
-constexpr inline int SKDSide(double x) { return (x > 0) + (x >= 0); }
+inline int SKDSide(double x) { return (x > 0) + (x >= 0); }
 
 /* Returns 1 if negative, 2 if zero, 4 if positive
  */
-constexpr inline int SkDSideBit(double x) { return 1 << SKDSide(x); }
+inline int SkDSideBit(double x) { return 1 << SKDSide(x); }
 
-constexpr inline double SkPinT(double t) {
+inline double SkPinT(double t) {
   return precisely_less_than_zero(t) ? 0 : precisely_greater_than_one(t) ? 1 : t;
 }
 

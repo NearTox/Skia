@@ -21,7 +21,7 @@ class SK_API SkEncoder : SkNoncopyable {
    */
   bool encodeRows(int numRows);
 
-  virtual ~SkEncoder() = default;
+  virtual ~SkEncoder() {}
 
  protected:
   virtual bool onEncodeRows(int numRows) = 0;

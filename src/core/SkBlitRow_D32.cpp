@@ -281,9 +281,10 @@ static void blit_row_s32a_blend(SkPMColor* dst, const SkPMColor* src, int count,
 #endif
 
 SkBlitRow::Proc32 SkBlitRow::Factory32(unsigned flags) {
-  static const SkBlitRow::Proc32 kProcs[] = {blit_row_s32_opaque, blit_row_s32_blend,
-                                             nullptr,  // blit_row_s32a_opaque is in SkOpts
-                                             blit_row_s32a_blend};
+  static const SkBlitRow::Proc32 kProcs[] = {
+      blit_row_s32_opaque, blit_row_s32_blend,
+      nullptr,  // blit_row_s32a_opaque is in SkOpts
+      blit_row_s32a_blend};
 
   SkASSERT(flags < SK_ARRAY_COUNT(kProcs));
   flags &= SK_ARRAY_COUNT(kProcs) - 1;  // just to be safe

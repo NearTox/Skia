@@ -225,9 +225,10 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ResourceAllocatorTest, reporter, ctxInfo) {
 
   {
     // Wrapped backend textures should never be reused
-    TestCase t[1] = {{{64, kNotRT, kRGBA, kE, 1, kTL, kNotB},
-                      {64, kNotRT, kRGBA, kE, 1, kTL, kNotB},
-                      kDontShare}};
+    TestCase t[1] = {
+        {{64, kNotRT, kRGBA, kE, 1, kTL, kNotB},
+         {64, kNotRT, kRGBA, kE, 1, kTL, kNotB},
+         kDontShare}};
 
     GrBackendTexture backEndTex;
     sk_sp<GrSurfaceProxy> p1 = make_backend(ctxInfo.grContext(), t[0].fP1, &backEndTex);

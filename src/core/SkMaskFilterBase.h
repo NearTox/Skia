@@ -162,7 +162,7 @@ class SkMaskFilterBase : public SkMaskFilter {
 
   class NinePatch : ::SkNoncopyable {
    public:
-    NinePatch() noexcept : fCache(nullptr) {}
+    NinePatch() : fCache(nullptr) {}
     ~NinePatch();
 
     SkMask fMask;        // fBounds must have [0,0] in its top-left

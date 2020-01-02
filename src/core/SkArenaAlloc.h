@@ -63,9 +63,9 @@
 // there are 71 allocations.
 class SkArenaAlloc {
  public:
-  SkArenaAlloc(char* block, size_t blockSize, size_t firstHeapAllocation) noexcept;
+  SkArenaAlloc(char* block, size_t blockSize, size_t firstHeapAllocation);
 
-  explicit SkArenaAlloc(size_t firstHeapAllocation) noexcept
+  explicit SkArenaAlloc(size_t firstHeapAllocation)
       : SkArenaAlloc(nullptr, 0, firstHeapAllocation) {}
 
   ~SkArenaAlloc();
@@ -133,15 +133,15 @@ class SkArenaAlloc {
   }
 
   // Destroy all allocated objects, free any heap allocations.
-  void reset() noexcept;
+  void reset();
 
  private:
-  static void AssertRelease(bool cond) noexcept {
+  static void AssertRelease(bool cond) {
     if (!cond) {
       ::abort();
     }
   }
-  static uint32_t ToU32(size_t v) noexcept {
+  static uint32_t ToU32(size_t v) {
     assert(SkTFitsIn<uint32_t>(v));
     return (uint32_t)v;
   }
@@ -149,13 +149,13 @@ class SkArenaAlloc {
   using Footer = int64_t;
   using FooterAction = char*(char*);
 
-  static char* SkipPod(char* footerEnd) noexcept;
+  static char* SkipPod(char* footerEnd);
   static void RunDtorsOnBlock(char* footerEnd);
   static char* NextBlock(char* footerEnd);
 
-  void installFooter(FooterAction* releaser, uint32_t padding) noexcept;
-  void installUint32Footer(FooterAction* action, uint32_t value, uint32_t padding) noexcept;
-  void installPtrFooter(FooterAction* action, char* ptr, uint32_t padding) noexcept;
+  void installFooter(FooterAction* releaser, uint32_t padding);
+  void installUint32Footer(FooterAction* action, uint32_t value, uint32_t padding);
+  void installPtrFooter(FooterAction* action, char* ptr, uint32_t padding);
 
   void ensureSpace(uint32_t size, uint32_t alignment);
 

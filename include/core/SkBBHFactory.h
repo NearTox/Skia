@@ -18,7 +18,7 @@ class SK_API SkBBHFactory {
    *  Allocate a new SkBBoxHierarchy. Return NULL on failure.
    */
   virtual SkBBoxHierarchy* operator()() const = 0;
-  virtual ~SkBBHFactory() = default;
+  virtual ~SkBBHFactory() {}
 };
 
 class SK_API SkRTreeFactory : public SkBBHFactory {

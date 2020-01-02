@@ -19,7 +19,6 @@ class SkArenaAlloc;
 class SkCanvas;
 class SkPaint;
 struct SkRect;
-class SkString;
 
 /** \class SkDrawLooper
     Subclasses of SkDrawLooper can be attached to a SkPaint. Where they are,
@@ -40,7 +39,7 @@ class SK_API SkDrawLooper : public SkFlattenable {
   class SK_API Context {
    public:
     Context() {}
-    virtual ~Context() = default;
+    virtual ~Context() {}
 
     struct Info {
       SkVector fTranslate;

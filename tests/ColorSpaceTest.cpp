@@ -240,9 +240,10 @@ DEF_TEST(ColorSpace_Primaries, r) {
   ntsc.fBY = 0.08f;
   ntsc.fWX = 0.31006f;
   ntsc.fWY = 0.31616f;
-  skcms_Matrix3x3 ntscToXYZ = {{{0.6343706f, 0.1852204f, 0.1446290f},
-                                {0.3109496f, 0.5915984f, 0.0974520f},
-                                {-0.0011817f, 0.0555518f, 0.7708399f}}};
+  skcms_Matrix3x3 ntscToXYZ = {
+      {{0.6343706f, 0.1852204f, 0.1446290f},
+       {0.3109496f, 0.5915984f, 0.0974520f},
+       {-0.0011817f, 0.0555518f, 0.7708399f}}};
   check_primaries(r, ntsc, ntscToXYZ);
 
   // DCI P3 (D65)
@@ -319,4 +320,18 @@ DEF_TEST(ColorSpace_skcms_sRGB_exact, r) {
   sk_srgb_singleton()->toProfile(&profile);
 
   REPORTER_ASSERT(r, 0 == memcmp(&profile, skcms_sRGB_profile(), sizeof(skcms_ICCProfile)));
+}
+
+DEF_TEST(ColorSpace_classifyUnderflow, r) {
+  // crbug.com/1016183
+  skcms_TransferFunction fn;
+  fn.a = 1.0f;
+  fn.b = 0.0f;
+  fn.c = 0.0f;
+  fn.d = 0.0f;
+  fn.e = 0.0f;
+  fn.f = 0.0f;
+  fn.g = INT_MIN;
+  sk_sp<SkColorSpace> bad = SkColorSpace::MakeRGB(fn, SkNamedGamut::kSRGB);
+  REPORTER_ASSERT(r, bad == nullptr);
 }

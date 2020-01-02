@@ -56,7 +56,7 @@ GrOpsRenderPass* GrMockGpu::getOpsRenderPass(
     GrRenderTarget* rt, GrSurfaceOrigin origin, const SkIRect& bounds,
     const GrOpsRenderPass::LoadAndStoreInfo& colorInfo,
     const GrOpsRenderPass::StencilLoadAndStoreInfo&,
-    const SkTArray<GrTextureProxy*, true>& sampledProxies) {
+    const SkTArray<GrSurfaceProxy*, true>& sampledProxies) {
   return new GrMockOpsRenderPass(this, rt, origin, colorInfo);
 }
 
@@ -248,9 +248,8 @@ GrStencilAttachment* GrMockGpu::createStencilAttachmentForRenderTarget(
 }
 
 GrBackendTexture GrMockGpu::onCreateBackendTexture(
-    int w, int h, const GrBackendFormat& format, GrMipMapped mipMapped,
-    GrRenderable /* renderable */, const SkPixmap /*srcData*/[], int /*numMipLevels*/,
-    const SkColor4f* /* color */, GrProtected /* isProtected */) {
+    SkISize dimensions, const GrBackendFormat& format, GrRenderable, const BackendTextureData*,
+    int numMipLevels, GrProtected) {
   auto colorType = format.asMockColorType();
   if (!this->caps()->isFormatTexturable(format)) {
     return GrBackendTexture();  // invalid
@@ -259,7 +258,8 @@ GrBackendTexture GrMockGpu::onCreateBackendTexture(
   GrMockTextureInfo info(colorType, NextExternalTextureID());
 
   fOutstandingTestingOnlyTextureIDs.add(info.fID);
-  return GrBackendTexture(w, h, mipMapped, info);
+  auto mipMapped = numMipLevels > 1 ? GrMipMapped::kYes : GrMipMapped::kNo;
+  return GrBackendTexture(dimensions.width(), dimensions.height(), mipMapped, info);
 }
 
 void GrMockGpu::deleteBackendTexture(const GrBackendTexture& tex) {

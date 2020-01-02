@@ -39,7 +39,7 @@ class GrClip {
       GrRecordingContext*, GrRenderTargetContext*, bool useHWAA, bool hasUserStencilSettings,
       GrAppliedClip*, SkRect* bounds) const = 0;
 
-  virtual ~GrClip() = default;
+  virtual ~GrClip() {}
 
   /**
    * This method quickly and conservatively determines whether the entire clip is equivalent to

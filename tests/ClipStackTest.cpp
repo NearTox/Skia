@@ -248,8 +248,9 @@ static void test_bounds(
       {10, 10, 50, 50},
   };
 
-  static const SkClipOp gOps[] = {kIntersect_SkClipOp, kDifference_SkClipOp, kUnion_SkClipOp,
-                                  kXOR_SkClipOp, kReverseDifference_SkClipOp};
+  static const SkClipOp gOps[] = {
+      kIntersect_SkClipOp, kDifference_SkClipOp, kUnion_SkClipOp, kXOR_SkClipOp,
+      kReverseDifference_SkClipOp};
 
   SkRect rectA, rectB;
 
@@ -277,8 +278,8 @@ static void test_bounds(
       bool doInvA = SkToBool(invBits & 1);
       bool doInvB = SkToBool(invBits & 2);
 
-      pathA.setFillType(doInvA ? SkPath::kInverseEvenOdd_FillType : SkPath::kEvenOdd_FillType);
-      pathB.setFillType(doInvB ? SkPath::kInverseEvenOdd_FillType : SkPath::kEvenOdd_FillType);
+      pathA.setFillType(doInvA ? SkPathFillType::kInverseEvenOdd : SkPathFillType::kEvenOdd);
+      pathB.setFillType(doInvB ? SkPathFillType::kInverseEvenOdd : SkPathFillType::kEvenOdd);
 
       switch (primType) {
         case SkClipStack::Element::DeviceSpaceType::kEmpty:
@@ -347,10 +348,10 @@ static void test_isWideOpen(skiatest::Reporter* reporter) {
     SkPath clipA, clipB;
 
     clipA.addRoundRect(rectA, SkIntToScalar(5), SkIntToScalar(5));
-    clipA.setFillType(SkPath::kInverseEvenOdd_FillType);
+    clipA.setFillType(SkPathFillType::kInverseEvenOdd);
 
     clipB.addRoundRect(rectB, SkIntToScalar(5), SkIntToScalar(5));
-    clipB.setFillType(SkPath::kInverseEvenOdd_FillType);
+    clipB.setFillType(SkPathFillType::kInverseEvenOdd);
 
     stack.clipPath(clipA, SkMatrix::I(), kReplace_SkClipOp, false);
     stack.clipPath(clipB, SkMatrix::I(), kUnion_SkClipOp, false);
@@ -837,7 +838,7 @@ static void test_invfill_diff_bug(skiatest::Reporter* reporter) {
 
   SkPath path;
   path.addRect({30, 10, 40, 20});
-  path.setFillType(SkPath::kInverseWinding_FillType);
+  path.setFillType(SkPathFillType::kInverseWinding);
   stack.clipPath(path, SkMatrix::I(), kDifference_SkClipOp, false);
 
   REPORTER_ASSERT(reporter, SkClipStack::kEmptyGenID == stack.getTopmostGenID());
@@ -871,7 +872,7 @@ static void add_round_rect(
   if (invert) {
     SkPath path;
     path.addRoundRect(rect, rx, ry);
-    path.setFillType(SkPath::kInverseWinding_FillType);
+    path.setFillType(SkPathFillType::kInverseWinding);
     stack->clipPath(path, SkMatrix::I(), op, doAA);
   } else {
     SkRRect rrect;
@@ -884,7 +885,7 @@ static void add_rect(const SkRect& rect, bool invert, SkClipOp op, SkClipStack* 
   if (invert) {
     SkPath path;
     path.addRect(rect);
-    path.setFillType(SkPath::kInverseWinding_FillType);
+    path.setFillType(SkPathFillType::kInverseWinding);
     stack->clipPath(path, SkMatrix::I(), op, doAA);
   } else {
     stack->clipRect(rect, SkMatrix::I(), op, doAA);
@@ -895,7 +896,7 @@ static void add_oval(const SkRect& rect, bool invert, SkClipOp op, SkClipStack* 
   SkPath path;
   path.addOval(rect);
   if (invert) {
-    path.setFillType(SkPath::kInverseWinding_FillType);
+    path.setFillType(SkPathFillType::kInverseWinding);
   }
   stack->clipPath(path, SkMatrix::I(), op, doAA);
 };
@@ -984,8 +985,9 @@ static void test_reduced_clip_stack(skiatest::Reporter* reporter) {
           kBounds.width() * r.nextRangeScalar(kMinElemSizeFrac, kMaxElemSizeFrac),
           kBounds.height() * r.nextRangeScalar(kMinElemSizeFrac, kMaxElemSizeFrac));
 
-      SkPoint xy = {r.nextRangeScalar(kBounds.fLeft, kBounds.fRight - size.fWidth),
-                    r.nextRangeScalar(kBounds.fTop, kBounds.fBottom - size.fHeight)};
+      SkPoint xy = {
+          r.nextRangeScalar(kBounds.fLeft, kBounds.fRight - size.fWidth),
+          r.nextRangeScalar(kBounds.fTop, kBounds.fBottom - size.fHeight)};
 
       SkRect rect;
       if (doAA) {
@@ -1388,10 +1390,11 @@ static void test_tiny_query_bounds_assertion_bug(skiatest::Reporter* reporter) {
   const GrCaps* caps = context->priv().caps();
 
   for (const SkClipStack& stack : {rectStack, pathStack}) {
-    for (SkRect queryBounds : {SkRect::MakeXYWH(53, 60, GrClip::kBoundsTolerance, 1000),
-                               SkRect::MakeXYWH(53, 60, GrClip::kBoundsTolerance / 2, 1000),
-                               SkRect::MakeXYWH(53, 160, 1000, GrClip::kBoundsTolerance),
-                               SkRect::MakeXYWH(53, 160, 1000, GrClip::kBoundsTolerance / 2)}) {
+    for (SkRect queryBounds :
+         {SkRect::MakeXYWH(53, 60, GrClip::kBoundsTolerance, 1000),
+          SkRect::MakeXYWH(53, 60, GrClip::kBoundsTolerance / 2, 1000),
+          SkRect::MakeXYWH(53, 160, 1000, GrClip::kBoundsTolerance),
+          SkRect::MakeXYWH(53, 160, 1000, GrClip::kBoundsTolerance / 2)}) {
       const GrReducedClip reduced(stack, queryBounds, caps);
       REPORTER_ASSERT(reporter, !reduced.hasScissor());
       REPORTER_ASSERT(reporter, reduced.maskElements().isEmpty());
@@ -1505,7 +1508,7 @@ DEF_GPUTEST_FOR_ALL_CONTEXTS(ClipMaskCache, reporter, ctxInfo) {
   SkPath path;
   path.addCircle(10, 10, 8);
   path.addCircle(15, 15, 8);
-  path.setFillType(SkPath::kEvenOdd_FillType);
+  path.setFillType(SkPathFillType::kEvenOdd);
 
   static const char* kTag = GrClipStackClip::kMaskTestTag;
   GrResourceCache* cache = context->priv().getResourceCache();

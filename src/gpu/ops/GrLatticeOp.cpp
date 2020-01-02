@@ -18,6 +18,7 @@
 #include "src/gpu/GrVertexWriter.h"
 #include "src/gpu/SkGr.h"
 #include "src/gpu/glsl/GrGLSLColorSpaceXformHelper.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
 #include "src/gpu/glsl/GrGLSLVarying.h"
 #include "src/gpu/ops/GrLatticeOp.h"
@@ -28,11 +29,10 @@ namespace {
 
 class LatticeGP : public GrGeometryProcessor {
  public:
-  static sk_sp<GrGeometryProcessor> Make(
-      GrGpu* gpu, const GrTextureProxy* proxy, sk_sp<GrColorSpaceXform> csxf,
+  static GrGeometryProcessor* Make(
+      SkArenaAlloc* arena, const GrTextureProxy* proxy, sk_sp<GrColorSpaceXform> csxf,
       GrSamplerState::Filter filter, bool wideColor) {
-    return sk_sp<GrGeometryProcessor>(
-        new LatticeGP(gpu, proxy, std::move(csxf), filter, wideColor));
+    return arena->make<LatticeGP>(proxy, std::move(csxf), filter, wideColor);
   }
 
   const char* name() const override { return "LatticeGP"; }
@@ -46,9 +46,9 @@ class LatticeGP : public GrGeometryProcessor {
      public:
       void setData(
           const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& proc,
-          FPCoordTransformIter&& transformIter) override {
+          const CoordTransformRange& transformRange) override {
         const auto& latticeGP = proc.cast<LatticeGP>();
-        this->setTransformDataHelper(SkMatrix::I(), pdman, &transformIter);
+        this->setTransformDataHelper(SkMatrix::I(), pdman, transformRange);
         fColorSpaceXformHelper.setData(pdman, latticeGP.fColorSpaceXform.get());
       }
 
@@ -84,15 +84,15 @@ class LatticeGP : public GrGeometryProcessor {
   }
 
  private:
-  LatticeGP(
-      GrGpu* gpu, const GrTextureProxy* proxy, sk_sp<GrColorSpaceXform> csxf,
-      GrSamplerState::Filter filter, bool wideColor)
-      : INHERITED(kLatticeGP_ClassID), fColorSpaceXform(std::move(csxf)) {
-    GrSamplerState samplerState = GrSamplerState(GrSamplerState::WrapMode::kClamp, filter);
-    uint32_t extraSamplerKey =
-        gpu->getExtraSamplerKeyForProgram(samplerState, proxy->backendFormat());
+  friend class ::SkArenaAlloc;  // for access to ctor
 
-    fSampler.reset(proxy->textureType(), samplerState, proxy->textureSwizzle(), extraSamplerKey);
+  LatticeGP(
+      const GrTextureProxy* proxy, sk_sp<GrColorSpaceXform> csxf, GrSamplerState::Filter filter,
+      bool wideColor)
+      : INHERITED(kLatticeGP_ClassID), fColorSpaceXform(std::move(csxf)) {
+    fSampler.reset(
+        GrSamplerState(GrSamplerState::WrapMode::kClamp, filter), proxy->backendFormat(),
+        proxy->textureSwizzle());
     this->setTextureSamplerCnt(1);
     fInPosition = {"position", kFloat2_GrVertexAttribType, kFloat2_GrSLType};
     fInTextureCoords = {"textureCoords", kFloat2_GrVertexAttribType, kFloat2_GrSLType};
@@ -120,9 +120,6 @@ class NonAALatticeOp final : public GrMeshDrawOp {
 
  public:
   DEFINE_OP_CLASS_ID
-
-  static const int kVertsPerRect = 4;
-  static const int kIndicesPerRect = 6;
 
   static std::unique_ptr<GrDrawOp> Make(
       GrRecordingContext* context, GrPaint&& paint, const SkMatrix& viewMatrix,
@@ -194,14 +191,14 @@ class NonAALatticeOp final : public GrMeshDrawOp {
         caps, clip, hasMixedSampledCoverage, clampType, GrProcessorAnalysisCoverage::kNone,
         &analysisColor);
     analysisColor.isConstant(&fPatches[0].fColor);
-    fWideColor = SkPMColor4fNeedsWideColor(fPatches[0].fColor, clampType, caps);
+    fWideColor = !fPatches[0].fColor.fitsInBytes();
     return result;
   }
 
  private:
   void onPrepareDraws(Target* target) override {
-    GrGpu* gpu = target->resourceProvider()->priv().gpu();
-    auto gp = LatticeGP::Make(gpu, fProxy.get(), fColorSpaceXform, fFilter, fWideColor);
+    auto gp =
+        LatticeGP::Make(target->allocator(), fProxy.get(), fColorSpaceXform, fFilter, fWideColor);
     if (!gp) {
       SkDebugf("Couldn't create GrGeometryProcessor\n");
       return;
@@ -218,14 +215,9 @@ class NonAALatticeOp final : public GrMeshDrawOp {
     }
 
     const size_t kVertexStride = gp->vertexStride();
-    sk_sp<const GrBuffer> indexBuffer = target->resourceProvider()->refQuadIndexBuffer();
-    if (!indexBuffer) {
-      SkDebugf("Could not allocate indices\n");
-      return;
-    }
-    PatternHelper helper(
-        target, GrPrimitiveType::kTriangles, kVertexStride, std::move(indexBuffer), kVertsPerRect,
-        kIndicesPerRect, numRects);
+
+    QuadHelper helper(target, kVertexStride, numRects);
+
     GrVertexWriter vertices{helper.vertices()};
     if (!vertices.fPtr) {
       SkDebugf("Could not allocate vertices\n");
@@ -278,12 +270,12 @@ class NonAALatticeOp final : public GrMeshDrawOp {
       if (!isScaleTranslate) {
         SkMatrixPriv::MapPointsWithStride(
             patch.fViewMatrix, patchPositions, kVertexStride,
-            kVertsPerRect * patch.fIter->numRectsToDraw());
+            GrResourceProvider::NumVertsPerNonAAQuad() * patch.fIter->numRectsToDraw());
       }
     }
     auto fixedDynamicState = target->makeFixedDynamicState(1);
     fixedDynamicState->fPrimitiveProcessorTextures[0] = fProxy.get();
-    helper.recordDraw(target, std::move(gp), fixedDynamicState);
+    helper.recordDraw(target, gp, fixedDynamicState);
   }
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {

@@ -83,7 +83,7 @@ void TextWrapper::moveForward() {
     } else if (fClusters.width() > 0) {
       fEndLine.extend(fClusters);
       fTooLongWord = false;
-    } else if (fClip.width() > 0) {
+    } else if (fClip.width() > 0 || (fTooLongWord && fTooLongCluster)) {
       fEndLine.extend(fClip);
       fTooLongWord = false;
       fTooLongCluster = false;
@@ -110,9 +110,7 @@ void TextWrapper::trimEndSpaces(TextAlign align) {
       break;
     }
   }
-  if (!right || true) {
     fEndLine.trim();
-  }
 }
 
 SkScalar TextWrapper::getClustersTrimmedWidth() {
@@ -229,9 +227,7 @@ void TextWrapper::breakTextIntoLines(
         fEndLine.startCluster()->textRange().start, fEndLine.endCluster()->textRange().end);
     TextRange textWithSpaces(
         fEndLine.startCluster()->textRange().start, startLine->textRange().start);
-    if (fEndLine.breakCluster()->isHardBreak()) {
-      textWithSpaces.end = fEndLine.breakCluster()->textRange().start;
-    } else if (startLine == end) {
+    if (startLine == end) {
       textWithSpaces.end = parent->text().size();
     }
     ClusterRange clusters(fEndLine.startCluster() - start, fEndLine.endCluster() - start + 1);

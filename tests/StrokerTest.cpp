@@ -58,10 +58,11 @@ static void cubicSetTest(const CubicPts* dCubic, size_t count) {
     const CubicPts& dPts = dCubic[index];
     SkDCubic d;
     d.debugSet(dPts.fPts);
-    SkPoint c[4] = {{(float)d[0].fX, (float)d[0].fY},
-                    {(float)d[1].fX, (float)d[1].fY},
-                    {(float)d[2].fX, (float)d[2].fY},
-                    {(float)d[3].fX, (float)d[3].fY}};
+    SkPoint c[4] = {
+        {(float)d[0].fX, (float)d[0].fY},
+        {(float)d[1].fX, (float)d[1].fY},
+        {(float)d[2].fX, (float)d[2].fY},
+        {(float)d[3].fX, (float)d[3].fY}};
     cubicTest(c);
     if (FLAGS_timeout && timer.elapsedMs() > MS_TEST_DURATION) {
       return;
@@ -76,10 +77,11 @@ static void cubicPairSetTest(const CubicPts dCubic[][2], size_t count) {
       const CubicPts& dPts = dCubic[index][pair];
       SkDCubic d;
       d.debugSet(dPts.fPts);
-      SkPoint c[4] = {{(float)d[0].fX, (float)d[0].fY},
-                      {(float)d[1].fX, (float)d[1].fY},
-                      {(float)d[2].fX, (float)d[2].fY},
-                      {(float)d[3].fX, (float)d[3].fY}};
+      SkPoint c[4] = {
+          {(float)d[0].fX, (float)d[0].fY},
+          {(float)d[1].fX, (float)d[1].fY},
+          {(float)d[2].fX, (float)d[2].fY},
+          {(float)d[3].fX, (float)d[3].fY}};
       cubicTest(c);
       if (FLAGS_timeout && timer.elapsedMs() > MS_TEST_DURATION) {
         return;
@@ -94,9 +96,10 @@ static void quadSetTest(const QuadPts* dQuad, size_t count) {
     const QuadPts& dPts = dQuad[index];
     SkDQuad d;
     d.debugSet(dPts.fPts);
-    SkPoint c[3] = {{(float)d[0].fX, (float)d[0].fY},
-                    {(float)d[1].fX, (float)d[1].fY},
-                    {(float)d[2].fX, (float)d[2].fY}};
+    SkPoint c[3] = {
+        {(float)d[0].fX, (float)d[0].fY},
+        {(float)d[1].fX, (float)d[1].fY},
+        {(float)d[2].fX, (float)d[2].fY}};
     quadTest(c);
     if (FLAGS_timeout && timer.elapsedMs() > MS_TEST_DURATION) {
       return;
@@ -111,9 +114,10 @@ static void quadPairSetTest(const QuadPts dQuad[][2], size_t count) {
       const QuadPts& dPts = dQuad[index][pair];
       SkDQuad d;
       d.debugSet(dPts.fPts);
-      SkPoint c[3] = {{(float)d[0].fX, (float)d[0].fY},
-                      {(float)d[1].fX, (float)d[1].fY},
-                      {(float)d[2].fX, (float)d[2].fY}};
+      SkPoint c[3] = {
+          {(float)d[0].fX, (float)d[0].fY},
+          {(float)d[1].fX, (float)d[1].fY},
+          {(float)d[2].fX, (float)d[2].fY}};
       quadTest(c);
       if (FLAGS_timeout && timer.elapsedMs() > MS_TEST_DURATION) {
         return;

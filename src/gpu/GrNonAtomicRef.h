@@ -19,7 +19,7 @@
 template <typename TSubclass>
 class GrNonAtomicRef : public SkNoncopyable {
  public:
-  constexpr GrNonAtomicRef() noexcept : fRefCnt(1) {}
+  GrNonAtomicRef() : fRefCnt(1) {}
 
 #ifdef SK_DEBUG
   ~GrNonAtomicRef() {
@@ -30,19 +30,19 @@ class GrNonAtomicRef : public SkNoncopyable {
   }
 #endif
 
-  bool unique() const noexcept { return 1 == fRefCnt; }
+  bool unique() const { return 1 == fRefCnt; }
 
   // We allow this getter because this type is not thread-safe, meaning only one thread should
   // have ownership and be manipulating the ref count or querying this.
-  int refCnt() const noexcept { return fRefCnt; }
+  int refCnt() const { return fRefCnt; }
 
-  void ref() const noexcept {
+  void ref() const {
     // Once the ref cnt reaches zero it should never be ref'ed again.
     SkASSERT(fRefCnt > 0);
     ++fRefCnt;
   }
 
-  void unref() const noexcept {
+  void unref() const {
     SkASSERT(fRefCnt > 0);
     --fRefCnt;
     if (0 == fRefCnt) {
@@ -58,7 +58,7 @@ class GrNonAtomicRef : public SkNoncopyable {
 };
 
 template <typename T>
-inline void GrTDeleteNonAtomicRef(const T* ref) noexcept {
+inline void GrTDeleteNonAtomicRef(const T* ref) {
   delete ref;
 }
 

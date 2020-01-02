@@ -128,10 +128,8 @@ DEF_TEST(Jpeg_YUV_Codec, r) {
 // (i.e. rgb2yuv and yuv2rgb
 DEF_TEST(YUVMath, reporter) {
   const SkYUVColorSpace spaces[] = {
-      kJPEG_SkYUVColorSpace,
-      kRec601_SkYUVColorSpace,
-      kRec709_SkYUVColorSpace,
-      kIdentity_SkYUVColorSpace,
+      kJPEG_SkYUVColorSpace,   kRec601_SkYUVColorSpace,   kRec709_SkYUVColorSpace,
+      kBT2020_SkYUVColorSpace, kIdentity_SkYUVColorSpace,
   };
 
   // Not sure what the theoretical precision we can hope for is, so pick a big value that

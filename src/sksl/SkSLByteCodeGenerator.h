@@ -58,7 +58,7 @@ class ByteCodeGenerator : public CodeGenerator {
    public:
     LValue(ByteCodeGenerator& generator) : fGenerator(generator) {}
 
-    virtual ~LValue() = default;
+    virtual ~LValue() {}
 
     /**
      * Stack before call: ... lvalue

@@ -24,6 +24,8 @@ class GrVSCoverageProcessor : public GrCCCoverageProcessor {
       sk_sp<const GrGpuBuffer> instanceBuffer, int instanceCount, int baseInstance,
       SkTArray<GrMesh>* out) const override;
 
+  GrPrimitiveType primType() const final { return fTriangleType; }
+
   GrGLSLPrimitiveProcessor* onCreateGLSLInstance(std::unique_ptr<Shader>) const override;
 
   Attribute fPerVertexData;
@@ -31,7 +33,7 @@ class GrVSCoverageProcessor : public GrCCCoverageProcessor {
   sk_sp<const GrGpuBuffer> fVertexBuffer;
   sk_sp<const GrGpuBuffer> fIndexBuffer;
   int fNumIndicesPerInstance;
-  GrPrimitiveType fTriangleType;
+  GrPrimitiveType fTriangleType = GrPrimitiveType::kPoints;
 
   class Impl;
 };

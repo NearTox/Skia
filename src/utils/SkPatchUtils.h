@@ -14,7 +14,7 @@
 
 class SkColorSpace;
 
-class SK_API SkPatchUtils {
+class SkPatchUtils {
  public:
   // Enums for control points based on the order specified in the constructor (clockwise).
   enum { kNumCtrlPts = 12, kNumCorners = 4, kNumPtsCubic = 4 };

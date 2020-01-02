@@ -55,7 +55,7 @@ class SkImageFilterCache : public SkRefCnt {
 
   enum { kDefaultTransientSize = 32 * 1024 * 1024 };
 
-  virtual ~SkImageFilterCache() = default;
+  virtual ~SkImageFilterCache() {}
   static SkImageFilterCache* Create(size_t maxBytes);
   static SkImageFilterCache* Get();
 
@@ -70,7 +70,7 @@ class SkImageFilterCache : public SkRefCnt {
       const skif::FilterResult<For::kOutput>& result) = 0;
   virtual void purge() = 0;
   virtual void purgeByImageFilter(const SkImageFilter*) = 0;
-  SkDEBUGCODE(virtual int count() const = 0);
+  SkDEBUGCODE(virtual int count() const = 0;)
 };
 
 #endif

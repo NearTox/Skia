@@ -31,7 +31,7 @@
 class GrRRectBlurEffect : public GrFragmentProcessor {
  public:
   static sk_sp<GrTextureProxy> find_or_create_rrect_blur_mask(
-      GrRecordingContext* context, const SkRRect& rrectToDraw, const SkISize& size,
+      GrRecordingContext* context, const SkRRect& rrectToDraw, const SkISize& dimensions,
       float xformedSigma) {
     static const GrUniqueKey::Domain kDomain = GrUniqueKey::GenerateDomain();
     GrUniqueKey key;
@@ -39,8 +39,9 @@ class GrRRectBlurEffect : public GrFragmentProcessor {
     builder[0] = SkScalarCeilToInt(xformedSigma - 1 / 6.0f);
 
     int index = 1;
-    for (auto c : {SkRRect::kUpperLeft_Corner, SkRRect::kUpperRight_Corner,
-                   SkRRect::kLowerRight_Corner, SkRRect::kLowerLeft_Corner}) {
+    for (auto c :
+         {SkRRect::kUpperLeft_Corner, SkRRect::kUpperRight_Corner, SkRRect::kLowerRight_Corner,
+          SkRRect::kLowerLeft_Corner}) {
       SkASSERT(SkScalarIsInt(rrectToDraw.radii(c).fX) && SkScalarIsInt(rrectToDraw.radii(c).fY));
       builder[index++] = SkScalarCeilToInt(rrectToDraw.radii(c).fX);
       builder[index++] = SkScalarCeilToInt(rrectToDraw.radii(c).fY);
@@ -56,7 +57,8 @@ class GrRRectBlurEffect : public GrFragmentProcessor {
       //   1) The texture coords would need to be updated.
       //   2) We would have to use GrTextureDomain::kClamp_Mode for the GaussianBlur.
       auto rtc = context->priv().makeDeferredRenderTargetContextWithFallback(
-          SkBackingFit::kExact, size.fWidth, size.fHeight, GrColorType::kAlpha_8, nullptr);
+          SkBackingFit::kExact, dimensions.fWidth, dimensions.fHeight, GrColorType::kAlpha_8,
+          nullptr);
       if (!rtc) {
         return nullptr;
       }
@@ -74,9 +76,8 @@ class GrRRectBlurEffect : public GrFragmentProcessor {
       }
       auto rtc2 = SkGpuBlurUtils::GaussianBlur(
           context, std::move(srcProxy), rtc->colorInfo().colorType(), rtc->colorInfo().alphaType(),
-          SkIPoint::Make(0, 0), nullptr, SkIRect::MakeWH(size.fWidth, size.fHeight),
-          SkIRect::EmptyIRect(), xformedSigma, xformedSigma, GrTextureDomain::kIgnore_Mode,
-          SkBackingFit::kExact);
+          SkIPoint::Make(0, 0), nullptr, SkIRect::MakeSize(dimensions), SkIRect::EmptyIRect(),
+          xformedSigma, xformedSigma, GrTextureDomain::kIgnore_Mode, SkBackingFit::kExact);
       if (!rtc2) {
         return nullptr;
       }
@@ -105,7 +106,7 @@ class GrRRectBlurEffect : public GrFragmentProcessor {
 
  private:
   GrRRectBlurEffect(
-      float sigma, SkRect rect, float cornerRadius, sk_sp<GrTextureProxy> ninePatchSampler)
+      float sigma, SkRect rect, float cornerRadius, sk_sp<GrSurfaceProxy> ninePatchSampler)
       : INHERITED(
             kGrRRectBlurEffect_ClassID,
             (OptimizationFlags)kCompatibleWithCoverageAsAlpha_OptimizationFlag),

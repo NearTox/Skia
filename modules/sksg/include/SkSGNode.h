@@ -45,17 +45,17 @@ class Node : public SkRefCnt {
     kOverrideDamage_Trait = 1 << 1,
   };
 
-  explicit Node(uint32_t invalTraits) noexcept;
+  explicit Node(uint32_t invalTraits);
   ~Node() override;
 
-  const SkRect& bounds() const noexcept {
+  const SkRect& bounds() const {
     SkASSERT(!this->hasInval());
     return fBounds;
   }
 
   // Tag this node for invalidation and optional damage.
-  void invalidate(bool damage = true) noexcept;
-  bool hasInval() const noexcept { return fFlags & kInvalidated_Flag; }
+  void invalidate(bool damage = true);
+  bool hasInval() const { return fFlags & kInvalidated_Flag; }
 
   // Dispatched on revalidation.  Subclasses are expected to recompute/cache their properties
   // and return their bounding box in local coordinates.
@@ -74,7 +74,7 @@ class Node : public SkRefCnt {
   };
 
   template <typename Func>
-  inline void forEachInvalObserver(Func&&) const;
+  void forEachInvalObserver(Func&&) const;
 
   class ScopedFlag;
 

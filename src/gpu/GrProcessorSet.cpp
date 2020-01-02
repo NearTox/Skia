@@ -40,7 +40,7 @@ GrProcessorSet::GrProcessorSet(GrPaint&& paint) : fXP(paint.getXPFactory()) {
     SkDebugf("Insane number of color fragment processors in paint. Dropping all processors.");
     fColorFragmentProcessorCnt = 0;
   }
-  SkDEBUGCODE(paint.fAlive = false);
+  SkDEBUGCODE(paint.fAlive = false;)
 }
 
 GrProcessorSet::GrProcessorSet(SkBlendMode mode)
@@ -246,4 +246,11 @@ GrProcessorSet::Analysis GrProcessorSet::finalize(
   SkASSERT(analysis.fRequiresNonOverlappingDraws == needsNonOverlappingDraws);
 #endif
   return analysis;
+}
+
+void GrProcessorSet::visitProxies(const GrOp::VisitProxyFunc& func) const {
+  for (auto [sampler, fp] : GrFragmentProcessor::ProcessorSetTextureSamplerRange(*this)) {
+    bool mipped = (GrSamplerState::Filter::kMipMap == sampler.samplerState().filter());
+    func(sampler.proxy(), GrMipMapped(mipped));
+  }
 }

@@ -27,7 +27,7 @@ class SkSurfaceProps;
  */
 class GrOnFlushCallbackObject {
  public:
-  virtual ~GrOnFlushCallbackObject() = default;
+  virtual ~GrOnFlushCallbackObject() {}
 
   /*
    * The onFlush callback allows subsystems (e.g., text, path renderers) to create atlases

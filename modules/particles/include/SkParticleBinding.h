@@ -18,6 +18,10 @@ class SkParticleEffect;
 class SkParticleEffectParams;
 class SkRandom;
 
+namespace skresources {
+class ResourceProvider;
+}
+
 namespace SkSL {
 class Compiler;
 }
@@ -44,7 +48,9 @@ class SkParticleBinding : public SkReflected {
   REFLECTED_ABSTRACT(SkParticleBinding, SkReflected)
 
   void visitFields(SkFieldVisitor* v) override;
+
   virtual std::unique_ptr<SkParticleExternalValue> toValue(SkSL::Compiler&) = 0;
+  virtual void prepare(const skresources::ResourceProvider*) = 0;
 
   static void RegisterBindingTypes();
 
@@ -55,13 +61,19 @@ class SkParticleBinding : public SkReflected {
    * each kind of binding is described below.
    */
 
-  // Binds an SkPath to an effect's SkSL. The path is specified using SVG syntax. It is called
-  // in the SkSL as 'name(t)'. 't' is a normalized distance along the path. This returns a float4
-  // value, containing the position in .xy, and the normal in .zw.
-  static sk_sp<SkParticleBinding> MakePathBinding(const char* name, const char* path);
-
-  static sk_sp<SkParticleBinding> MakeEffectBinding(
+  // void name(loop) -- Creates an effect instance. Effect will loop if 'loop' is true, otherwise
+  // it's a one-shot. The new effect inherits all properties from the calling effect or particle.
+  static sk_sp<SkParticleBinding> MakeEffect(
       const char* name, sk_sp<SkParticleEffectParams> effect);
+
+  // float4 name(xy) -- Fetches RGBA data from an image. 'xy' are normalized image coordinates.
+  static sk_sp<SkParticleBinding> MakeImage(
+      const char* name, const char* imagePath, const char* imageName);
+
+  // float4 name(t) -- Fetches position and normal from an SkPath. 't' is the normalized distance
+  // along the path. The return value contains position in .xy and normal in .zw.
+  static sk_sp<SkParticleBinding> MakePath(
+      const char* name, const char* pathPath, const char* pathName);
 
  protected:
   SkString fName;

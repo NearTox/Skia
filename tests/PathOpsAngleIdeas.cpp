@@ -255,10 +255,11 @@ static bool equalPoints(const SkDPoint& pt1, const SkDPoint& pt2, double max) {
 static double maxDist(const SkDQuad& quad) {
   SkDRect bounds;
   bounds.setBounds(quad);
-  SkDVector corner[4] = {{bounds.fLeft - quad[0].fX, bounds.fTop - quad[0].fY},
-                         {bounds.fRight - quad[0].fX, bounds.fTop - quad[0].fY},
-                         {bounds.fLeft - quad[0].fX, bounds.fBottom - quad[0].fY},
-                         {bounds.fRight - quad[0].fX, bounds.fBottom - quad[0].fY}};
+  SkDVector corner[4] = {
+      {bounds.fLeft - quad[0].fX, bounds.fTop - quad[0].fY},
+      {bounds.fRight - quad[0].fX, bounds.fTop - quad[0].fY},
+      {bounds.fLeft - quad[0].fX, bounds.fBottom - quad[0].fY},
+      {bounds.fRight - quad[0].fX, bounds.fBottom - quad[0].fY}};
   double max = 0;
   for (unsigned index = 0; index < SK_ARRAY_COUNT(corner); ++index) {
     max = SkTMax(max, corner[index].length());
@@ -556,12 +557,13 @@ static void testQuadAngles(
 DEF_TEST(PathOpsAngleOverlapHullsOne, reporter) {
   SkSTArenaAlloc<4096> allocator;
   //    gPathOpsAngleIdeasVerbose = true;
-  const QuadPts quads[] = {{{{939.4808349609375, 914.355224609375},
-                             {-357.7921142578125, 590.842529296875},
-                             {736.8936767578125, -350.717529296875}}},
-                           {{{939.4808349609375, 914.355224609375},
-                             {-182.85418701171875, 634.4552001953125},
-                             {-509.62615966796875, 576.1182861328125}}}};
+  const QuadPts quads[] = {
+      {{{939.4808349609375, 914.355224609375},
+        {-357.7921142578125, 590.842529296875},
+        {736.8936767578125, -350.717529296875}}},
+      {{{939.4808349609375, 914.355224609375},
+        {-182.85418701171875, 634.4552001953125},
+        {-509.62615966796875, 576.1182861328125}}}};
   for (int index = 0; index < (int)SK_ARRAY_COUNT(quads); index += 2) {
     SkDQuad quad0, quad1;
     quad0.debugSet(quads[index].fPts);
@@ -579,15 +581,17 @@ DEF_TEST(PathOpsAngleOverlapHulls, reporter) {
   for (int index = 0; index < 100000; ++index) {
     if (index % 1000 == 999) SkDebugf(".");
     SkDPoint origin = {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)};
-    QuadPts quad1 = {{origin,
-                      {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)},
-                      {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)}}};
+    QuadPts quad1 = {
+        {origin,
+         {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)},
+         {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)}}};
     if (quad1.fPts[0] == quad1.fPts[2]) {
       continue;
     }
-    QuadPts quad2 = {{origin,
-                      {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)},
-                      {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)}}};
+    QuadPts quad2 = {
+        {origin,
+         {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)},
+         {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)}}};
     if (quad2.fPts[0] == quad2.fPts[2]) {
       continue;
     }
@@ -614,15 +618,17 @@ DEF_TEST(PathOpsAngleBruteT, reporter) {
   SkDEBUGCODE(int smallIndex = 0);
   for (int index = 0; index < 100000; ++index) {
     SkDPoint origin = {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)};
-    QuadPts quad1 = {{origin,
-                      {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)},
-                      {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)}}};
+    QuadPts quad1 = {
+        {origin,
+         {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)},
+         {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)}}};
     if (quad1.fPts[0] == quad1.fPts[2]) {
       continue;
     }
-    QuadPts quad2 = {{origin,
-                      {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)},
-                      {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)}}};
+    QuadPts quad2 = {
+        {origin,
+         {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)},
+         {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)}}};
     if (quad2.fPts[0] == quad2.fPts[2]) {
       continue;
     }

@@ -21,7 +21,11 @@ class GrBackendFormat;
 class GrBackendRenderTarget;
 class GrBackendTexture;
 struct GrContextOptions;
+class GrProcessorKeyBuilder;
+class GrProgramDesc;
+class GrProgramInfo;
 class GrRenderTargetProxy;
+class GrSamplerState;
 class GrSurface;
 class SkJSONWriter;
 
@@ -30,55 +34,55 @@ class SkJSONWriter;
  */
 class GrCaps : public SkRefCnt {
  public:
-  GrCaps(const GrContextOptions&) noexcept;
+  GrCaps(const GrContextOptions&);
 
   void dumpJSON(SkJSONWriter*) const;
 
-  const GrShaderCaps* shaderCaps() const noexcept { return fShaderCaps.get(); }
+  const GrShaderCaps* shaderCaps() const { return fShaderCaps.get(); }
 
-  bool npotTextureTileSupport() const noexcept { return fNPOTTextureTileSupport; }
+  bool npotTextureTileSupport() const { return fNPOTTextureTileSupport; }
   /** To avoid as-yet-unnecessary complexity we don't allow any partial support of MIP Maps (e.g.
       only for POT textures) */
-  bool mipMapSupport() const noexcept { return fMipMapSupport; }
+  bool mipMapSupport() const { return fMipMapSupport; }
 
-  bool gpuTracingSupport() const noexcept { return fGpuTracingSupport; }
-  bool oversizedStencilSupport() const noexcept { return fOversizedStencilSupport; }
-  bool textureBarrierSupport() const noexcept { return fTextureBarrierSupport; }
-  bool sampleLocationsSupport() const noexcept { return fSampleLocationsSupport; }
-  bool multisampleDisableSupport() const noexcept { return fMultisampleDisableSupport; }
-  bool instanceAttribSupport() const noexcept { return fInstanceAttribSupport; }
-  bool mixedSamplesSupport() const noexcept { return fMixedSamplesSupport; }
+  bool gpuTracingSupport() const { return fGpuTracingSupport; }
+  bool oversizedStencilSupport() const { return fOversizedStencilSupport; }
+  bool textureBarrierSupport() const { return fTextureBarrierSupport; }
+  bool sampleLocationsSupport() const { return fSampleLocationsSupport; }
+  bool multisampleDisableSupport() const { return fMultisampleDisableSupport; }
+  bool instanceAttribSupport() const { return fInstanceAttribSupport; }
+  bool mixedSamplesSupport() const { return fMixedSamplesSupport; }
   // This flag indicates that we never have to resolve MSAA. In practice, it means that we have
   // an MSAA-render-to-texture extension: Any render target we create internally will use the
   // extension, and any wrapped render target is the client's responsibility.
-  bool msaaResolvesAutomatically() const noexcept { return fMSAAResolvesAutomatically; }
-  bool halfFloatVertexAttributeSupport() const noexcept { return fHalfFloatVertexAttributeSupport; }
+  bool msaaResolvesAutomatically() const { return fMSAAResolvesAutomatically; }
+  bool halfFloatVertexAttributeSupport() const { return fHalfFloatVertexAttributeSupport; }
 
   // Primitive restart functionality is core in ES 3.0, but using it will cause slowdowns on some
   // systems. This cap is only set if primitive restart will improve performance.
-  bool usePrimitiveRestart() const noexcept { return fUsePrimitiveRestart; }
+  bool usePrimitiveRestart() const { return fUsePrimitiveRestart; }
 
-  bool preferClientSideDynamicBuffers() const noexcept { return fPreferClientSideDynamicBuffers; }
+  bool preferClientSideDynamicBuffers() const { return fPreferClientSideDynamicBuffers; }
 
   // On tilers, an initial fullscreen clear is an OPTIMIZATION. It allows the hardware to
   // initialize each tile with a constant value rather than loading each pixel from memory.
-  bool preferFullscreenClears() const noexcept { return fPreferFullscreenClears; }
+  bool preferFullscreenClears() const { return fPreferFullscreenClears; }
 
   // Should we discard stencil values after a render pass? (Tilers get better performance if we
   // always load stencil buffers with a "clear" op, and then discard the content when finished.)
-  bool discardStencilValuesAfterRenderPass() const noexcept {
+  bool discardStencilValuesAfterRenderPass() const {
     // This method is actually just a duplicate of preferFullscreenClears(), with a descriptive
     // name for the sake of readability.
     return this->preferFullscreenClears();
   }
 
-  bool preferVRAMUseOverFlushes() const noexcept { return fPreferVRAMUseOverFlushes; }
+  bool preferVRAMUseOverFlushes() const { return fPreferVRAMUseOverFlushes; }
 
-  bool preferTrianglesOverSampleMask() const noexcept { return fPreferTrianglesOverSampleMask; }
+  bool preferTrianglesOverSampleMask() const { return fPreferTrianglesOverSampleMask; }
 
-  bool avoidStencilBuffers() const noexcept { return fAvoidStencilBuffers; }
+  bool avoidStencilBuffers() const { return fAvoidStencilBuffers; }
 
-  bool avoidWritePixelsFastPath() const noexcept { return fAvoidWritePixelsFastPath; }
+  bool avoidWritePixelsFastPath() const { return fAvoidWritePixelsFastPath; }
 
   /**
    * Indicates the capabilities of the fixed function blend unit.
@@ -94,13 +98,13 @@ class GrCaps : public SkRefCnt {
     kLast_BlendEquationSupport = kAdvancedCoherent_BlendEquationSupport
   };
 
-  BlendEquationSupport blendEquationSupport() const noexcept { return fBlendEquationSupport; }
+  BlendEquationSupport blendEquationSupport() const { return fBlendEquationSupport; }
 
-  bool advancedBlendEquationSupport() const noexcept {
+  bool advancedBlendEquationSupport() const {
     return fBlendEquationSupport >= kAdvanced_BlendEquationSupport;
   }
 
-  bool advancedCoherentBlendEquationSupport() const noexcept {
+  bool advancedCoherentBlendEquationSupport() const {
     return kAdvancedCoherent_BlendEquationSupport == fBlendEquationSupport;
   }
 
@@ -124,25 +128,25 @@ class GrCaps : public SkRefCnt {
                                //   submitted to GrGpu.
   };
 
-  uint32_t mapBufferFlags() const noexcept { return fMapBufferFlags; }
+  uint32_t mapBufferFlags() const { return fMapBufferFlags; }
 
   // Scratch textures not being reused means that those scratch textures
   // that we upload to (i.e., don't have a render target) will not be
   // recycled in the texture cache. This is to prevent ghosting by drivers
   // (in particular for deferred architectures).
-  bool reuseScratchTextures() const noexcept { return fReuseScratchTextures; }
-  bool reuseScratchBuffers() const noexcept { return fReuseScratchBuffers; }
+  bool reuseScratchTextures() const { return fReuseScratchTextures; }
+  bool reuseScratchBuffers() const { return fReuseScratchBuffers; }
 
   /// maximum number of attribute values per vertex
-  int maxVertexAttributes() const noexcept { return fMaxVertexAttributes; }
+  int maxVertexAttributes() const { return fMaxVertexAttributes; }
 
-  int maxRenderTargetSize() const noexcept { return fMaxRenderTargetSize; }
+  int maxRenderTargetSize() const { return fMaxRenderTargetSize; }
 
   /** This is the largest render target size that can be used without incurring extra perfomance
       cost. It is usually the max RT size, unless larger render targets are known to be slower. */
-  int maxPreferredRenderTargetSize() const noexcept { return fMaxPreferredRenderTargetSize; }
+  int maxPreferredRenderTargetSize() const { return fMaxPreferredRenderTargetSize; }
 
-  int maxTextureSize() const noexcept { return fMaxTextureSize; }
+  int maxTextureSize() const { return fMaxTextureSize; }
 
   /** This is the maximum tile size to use by GPU devices for rendering sw-backed images/bitmaps.
       It is usually the max texture size, unless we're overriding it for testing. */
@@ -151,7 +155,7 @@ class GrCaps : public SkRefCnt {
     return fMaxTileSize;
   }
 
-  int maxWindowRectangles() const noexcept { return fMaxWindowRectangles; }
+  int maxWindowRectangles() const { return fMaxWindowRectangles; }
 
   // Returns whether mixed samples is supported for the given backend render target.
   bool isWindowRectanglesSupportedForRT(const GrBackendRenderTarget& rt) const {
@@ -269,47 +273,47 @@ class GrCaps : public SkRefCnt {
    * Do GrGpu::writePixels() and GrGpu::transferPixelsTo() support a src buffer where the row
    * bytes is not equal to bpp * w?
    */
-  bool writePixelsRowBytesSupport() const noexcept { return fWritePixelsRowBytesSupport; }
+  bool writePixelsRowBytesSupport() const { return fWritePixelsRowBytesSupport; }
   /**
    * Does GrGpu::readPixels() support a dst buffer where the row bytes is not equal to bpp * w?
    */
-  bool readPixelsRowBytesSupport() const noexcept { return fReadPixelsRowBytesSupport; }
+  bool readPixelsRowBytesSupport() const { return fReadPixelsRowBytesSupport; }
 
   /** Are transfer buffers (to textures and from surfaces) supported? */
-  bool transferBufferSupport() const noexcept { return fTransferBufferSupport; }
+  bool transferBufferSupport() const { return fTransferBufferSupport; }
 
-  bool suppressPrints() const noexcept { return fSuppressPrints; }
+  bool suppressPrints() const { return fSuppressPrints; }
 
-  size_t bufferMapThreshold() const noexcept {
+  size_t bufferMapThreshold() const {
     SkASSERT(fBufferMapThreshold >= 0);
     return fBufferMapThreshold;
   }
 
   /** True in environments that will issue errors if memory uploaded to buffers
       is not initialized (even if not read by draw calls). */
-  bool mustClearUploadedBufferData() const noexcept { return fMustClearUploadedBufferData; }
+  bool mustClearUploadedBufferData() const { return fMustClearUploadedBufferData; }
 
   /** For some environments, there is a performance or safety concern to not
       initializing textures. For example, with WebGL and Firefox, there is a large
       performance hit to not doing it.
    */
-  bool shouldInitializeTextures() const noexcept { return fShouldInitializeTextures; }
+  bool shouldInitializeTextures() const { return fShouldInitializeTextures; }
 
   /** Returns true if the given backend supports importing AHardwareBuffers via the
    * GrAHardwarebufferImageGenerator. This will only ever be supported on Android devices with API
    * level >= 26.
    * */
-  bool supportsAHardwareBufferImages() const noexcept { return fSupportsAHardwareBufferImages; }
+  bool supportsAHardwareBufferImages() const { return fSupportsAHardwareBufferImages; }
 
-  bool wireframeMode() const noexcept { return fWireframeMode; }
+  bool wireframeMode() const { return fWireframeMode; }
 
   /** Supports using GrFence. */
-  bool fenceSyncSupport() const noexcept { return fFenceSyncSupport; }
+  bool fenceSyncSupport() const { return fFenceSyncSupport; }
 
   /** Supports using GrSemaphore. */
-  bool semaphoreSupport() const noexcept { return fSemaphoreSupport; }
+  bool semaphoreSupport() const { return fSemaphoreSupport; }
 
-  bool crossContextTextureSupport() const noexcept { return fCrossContextTextureSupport; }
+  bool crossContextTextureSupport() const { return fCrossContextTextureSupport; }
   /**
    * Returns whether or not we will be able to do a copy given the passed in params
    */
@@ -317,31 +321,33 @@ class GrCaps : public SkRefCnt {
       const GrSurfaceProxy* dst, const GrSurfaceProxy* src, const SkIRect& srcRect,
       const SkIPoint& dstPoint) const;
 
-  bool dynamicStateArrayGeometryProcessorTextureSupport() const noexcept {
+  bool dynamicStateArrayGeometryProcessorTextureSupport() const {
     return fDynamicStateArrayGeometryProcessorTextureSupport;
   }
 
   // Not all backends support clearing with a scissor test (e.g. Metal), this will always
   // return true if performColorClearsAsDraws() returns true.
-  bool performPartialClearsAsDraws() const noexcept {
+  bool performPartialClearsAsDraws() const {
     return fPerformColorClearsAsDraws || fPerformPartialClearsAsDraws;
   }
 
   // Many drivers have issues with color clears.
-  bool performColorClearsAsDraws() const noexcept { return fPerformColorClearsAsDraws; }
+  bool performColorClearsAsDraws() const { return fPerformColorClearsAsDraws; }
+
+  bool avoidLargeIndexBufferDraws() const { return fAvoidLargeIndexBufferDraws; }
 
   /// Adreno 4xx devices experience an issue when there are a large number of stencil clip bit
   /// clears. The minimal repro steps are not precisely known but drawing a rect with a stencil
   /// op instead of using glClear seems to resolve the issue.
-  bool performStencilClearsAsDraws() const noexcept { return fPerformStencilClearsAsDraws; }
+  bool performStencilClearsAsDraws() const { return fPerformStencilClearsAsDraws; }
 
   // Can we use coverage counting shortcuts to render paths? Coverage counting can cause artifacts
   // along shared edges if care isn't taken to ensure both contours wind in the same direction.
-  bool allowCoverageCounting() const noexcept { return fAllowCoverageCounting; }
+  bool allowCoverageCounting() const { return fAllowCoverageCounting; }
 
   // Should we disable the CCPR code due to a faulty driver?
-  bool driverBlacklistCCPR() const noexcept { return fDriverBlacklistCCPR; }
-  bool driverBlacklistMSAACCPR() const noexcept { return fDriverBlacklistMSAACCPR; }
+  bool driverBlacklistCCPR() const { return fDriverBlacklistCCPR; }
+  bool driverBlacklistMSAACCPR() const { return fDriverBlacklistMSAACCPR; }
 
   /**
    * This is used to try to ensure a successful copy a dst in order to perform shader-based
@@ -401,7 +407,7 @@ class GrCaps : public SkRefCnt {
    * The CLAMP_TO_BORDER wrap mode for texture coordinates was added to desktop GL in 1.3, and
    * GLES 3.2, but is also available in extensions. Vulkan and Metal always have support.
    */
-  bool clampToBorderSupport() const noexcept { return fClampToBorderSupport; }
+  bool clampToBorderSupport() const { return fClampToBorderSupport; }
 
   /**
    * Returns the GrSwizzle to use when sampling from a texture with the passed in GrBackendFormat
@@ -415,7 +421,7 @@ class GrCaps : public SkRefCnt {
    */
   virtual GrSwizzle getOutputSwizzle(const GrBackendFormat&, GrColorType) const = 0;
 
-  const GrDriverBugWorkarounds& workarounds() const noexcept { return fDriverBugWorkarounds; }
+  const GrDriverBugWorkarounds& workarounds() const { return fDriverBugWorkarounds; }
 
   /**
    * Given a possibly generic GrPixelConfig and a backend format return a specific
@@ -427,6 +433,16 @@ class GrCaps : public SkRefCnt {
     SkASSERT(config == result || AreConfigsCompatible(config, result));
     return result;
   }
+
+  /**
+   * Adds fields to the key to represent the sampler that will be created for the passed
+   * in parameters. Currently this extra keying is only needed when building a vulkan pipeline
+   * with immutable samplers.
+   */
+  virtual void addExtraSamplerKey(
+      GrProcessorKeyBuilder*, const GrSamplerState&, const GrBackendFormat&) const {}
+
+  virtual GrProgramDesc makeDesc(const GrRenderTarget*, const GrProgramInfo&) const = 0;
 
 #ifdef SK_DEBUG
   // This is just a debugging entry point until we're weaned off of GrPixelConfig. It
@@ -445,10 +461,10 @@ class GrCaps : public SkRefCnt {
 #endif
 
  protected:
-  /** Subclasses must call this at the end of their constructors in order to apply caps
-      overrides requested by the client. Note that overrides will only reduce the caps never
-      expand them. */
-  void applyOptionsOverrides(const GrContextOptions& options);
+  // Subclasses must call this at the end of their init method in order to do final processing on
+  // the caps (including overrides requested by the client).
+  // NOTE: this method will only reduce the caps, never expand them.
+  void finishInitialization(const GrContextOptions& options);
 
   sk_sp<GrShaderCaps> fShaderCaps;
 
@@ -474,6 +490,7 @@ class GrCaps : public SkRefCnt {
   bool fClampToBorderSupport : 1;
   bool fPerformPartialClearsAsDraws : 1;
   bool fPerformColorClearsAsDraws : 1;
+  bool fAvoidLargeIndexBufferDraws : 1;
   bool fPerformStencilClearsAsDraws : 1;
   bool fAllowCoverageCounting : 1;
   bool fTransferBufferSupport : 1;
@@ -519,6 +536,8 @@ class GrCaps : public SkRefCnt {
   GrDriverBugWorkarounds fDriverBugWorkarounds;
 
  private:
+  void applyOptionsOverrides(const GrContextOptions& options);
+
   virtual void onApplyOptionsOverrides(const GrContextOptions&) {}
   virtual void onDumpJSON(SkJSONWriter*) const {}
   virtual bool onSurfaceSupportsWritePixels(const GrSurface*) const = 0;

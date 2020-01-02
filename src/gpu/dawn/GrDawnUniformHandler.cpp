@@ -158,11 +158,7 @@ GrGLSLUniformHandler::UniformHandle GrDawnUniformHandler::internalAddUniformArra
     const char** outName) {
   UniformInfo& info = fUniforms.push_back();
   info.fVisibility = visibility;
-  if (visibility == kFragment_GrShaderFlag) {
-    info.fUBOOffset = get_ubo_offset(&fCurrentFragmentUBOOffset, type, arrayCount);
-  } else {
-    info.fUBOOffset = get_ubo_offset(&fCurrentGeometryUBOOffset, type, arrayCount);
-  }
+  info.fUBOOffset = get_ubo_offset(&fCurrentUBOOffset, type, arrayCount);
   GrShaderVar& var = info.fVar;
   char prefix = 'u';
   if ('u' == name[0] || !strncmp(name, GR_NO_MANGLE_PREFIX, strlen(GR_NO_MANGLE_PREFIX))) {
@@ -186,20 +182,20 @@ void GrDawnUniformHandler::updateUniformVisibility(UniformHandle u, uint32_t vis
 }
 
 GrGLSLUniformHandler::SamplerHandle GrDawnUniformHandler::addSampler(
-    const GrTextureProxy*, const GrSamplerState&, const GrSwizzle& swizzle, const char* name,
+    const GrSurfaceProxy*, const GrSamplerState&, const GrSwizzle& swizzle, const char* name,
     const GrShaderCaps* caps) {
   SkString mangleName;
   char prefix = 's';
   fProgramBuilder->nameVariable(&mangleName, prefix, name, true);
 
   GrSLType samplerType = kSampler_GrSLType, textureType = kTexture2D_GrSLType;
-  int binding = kSamplerBindingBase + fSamplers.count() * 2;
+  int binding = fSamplers.count() * 2;
   UniformInfo& info = fSamplers.push_back();
   info.fVar.setType(samplerType);
   info.fVar.setTypeModifier(GrShaderVar::kUniform_TypeModifier);
   info.fVar.setName(mangleName);
   SkString layoutQualifier;
-  layoutQualifier.appendf("set = 0, binding = %d", binding);
+  layoutQualifier.appendf("set = 1, binding = %d", binding);
   info.fVar.addLayoutQualifier(layoutQualifier.c_str());
   info.fVisibility = kFragment_GrShaderFlag;
   info.fUBOOffset = 0;
@@ -214,7 +210,7 @@ GrGLSLUniformHandler::SamplerHandle GrDawnUniformHandler::addSampler(
   texInfo.fVar.setTypeModifier(GrShaderVar::kUniform_TypeModifier);
   texInfo.fVar.setName(mangleTexName);
   SkString texLayoutQualifier;
-  texLayoutQualifier.appendf("set = 0, binding = %d", binding + 1);
+  texLayoutQualifier.appendf("set = 1, binding = %d", binding + 1);
   texInfo.fVar.addLayoutQualifier(texLayoutQualifier.c_str());
   texInfo.fVisibility = kFragment_GrShaderFlag;
   texInfo.fUBOOffset = 0;
@@ -252,21 +248,12 @@ void GrDawnUniformHandler::appendUniformDecls(GrShaderFlags visibility, SkString
     }
   }
   if (!uniformsString.isEmpty()) {
-    uint32_t uniformBinding;
-    const char* stage;
-    if (kVertex_GrShaderFlag == visibility) {
-      uniformBinding = kGeometryBinding;
-      stage = "vertex";
-    } else if (kGeometry_GrShaderFlag == visibility) {
-      uniformBinding = kGeometryBinding;
-      stage = "geometry";
-    } else {
-      SkASSERT(kFragment_GrShaderFlag == visibility);
-      uniformBinding = kFragBinding;
-      stage = "fragment";
-    }
-    out->appendf(
-        "layout (set = 0, binding = %d) uniform %sUniformBuffer\n{\n", uniformBinding, stage);
+    out->appendf("layout (set = 0, binding = %d) uniform UniformBuffer\n{\n", kUniformBinding);
     out->appendf("%s\n};\n", uniformsString.c_str());
   }
+}
+
+uint32_t GrDawnUniformHandler::getRTHeightOffset() const {
+  uint32_t dummy = fCurrentUBOOffset;
+  return get_ubo_offset(&dummy, kFloat_GrSLType, 0);
 }

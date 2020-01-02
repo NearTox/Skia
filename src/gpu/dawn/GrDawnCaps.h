@@ -55,6 +55,8 @@ class GrDawnCaps : public GrCaps {
   GrColorType getYUVAColorTypeFromBackendFormat(
       const GrBackendFormat&, bool isAlphaChannel) const override;
 
+  GrProgramDesc makeDesc(const GrRenderTarget*, const GrProgramInfo&) const override;
+
 #if GR_TEST_UTILS
   std::vector<TestFormatColorTypeCombination> getTestingCombinations() const override;
 #endif

@@ -24,7 +24,7 @@ class CodeGenerator {
     SkASSERT(program->fIsOptimized);
   }
 
-  virtual ~CodeGenerator() = default;
+  virtual ~CodeGenerator() {}
 
   virtual bool generateCode() = 0;
 

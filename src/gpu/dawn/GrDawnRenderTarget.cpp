@@ -12,16 +12,16 @@
 #include "src/gpu/dawn/GrDawnUtil.h"
 
 GrDawnRenderTarget::GrDawnRenderTarget(
-    GrDawnGpu* gpu, const SkISize& size, GrPixelConfig config, int sampleCnt,
+    GrDawnGpu* gpu, const SkISize& dimensions, GrPixelConfig config, int sampleCnt,
     const GrDawnImageInfo& info)
-    : GrSurface(gpu, size, config, GrProtected::kNo),
-      GrRenderTarget(gpu, size, config, sampleCnt, GrProtected::kNo),
+    : GrSurface(gpu, dimensions, config, GrProtected::kNo),
+      GrRenderTarget(gpu, dimensions, config, sampleCnt, GrProtected::kNo),
       fInfo(info) {}
 
 sk_sp<GrDawnRenderTarget> GrDawnRenderTarget::MakeWrapped(
-    GrDawnGpu* gpu, const SkISize& size, GrPixelConfig config, int sampleCnt,
+    GrDawnGpu* gpu, const SkISize& dimensions, GrPixelConfig config, int sampleCnt,
     const GrDawnImageInfo& info) {
-  sk_sp<GrDawnRenderTarget> rt(new GrDawnRenderTarget(gpu, size, config, sampleCnt, info));
+  sk_sp<GrDawnRenderTarget> rt(new GrDawnRenderTarget(gpu, dimensions, config, sampleCnt, info));
   rt->registerWithCacheWrapped(GrWrapCacheable::kNo);
   return rt;
 }
@@ -31,7 +31,7 @@ size_t GrDawnRenderTarget::onGpuMemorySize() const {
   int numSamples = this->numSamples() + 1;
   const GrCaps& caps = *getGpu()->caps();
   return GrSurface::ComputeSize(
-      caps, this->backendFormat(), this->width(), this->height(), numSamples, GrMipMapped::kNo);
+      caps, this->backendFormat(), this->dimensions(), numSamples, GrMipMapped::kNo);
 }
 
 bool GrDawnRenderTarget::completeStencilAttachment() { return true; }

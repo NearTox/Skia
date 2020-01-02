@@ -60,12 +60,20 @@ static bool duplicate_pt(const SkPoint& p0, const SkPoint& p1) {
 
 static bool points_are_colinear_and_b_is_middle(
     const SkPoint& a, const SkPoint& b, const SkPoint& c) {
-  // 'area' is twice the area of the triangle with corners a, b, and c.
-  SkScalar area = a.fX * (b.fY - c.fY) + b.fX * (c.fY - a.fY) + c.fX * (a.fY - b.fY);
-  if (SkScalarAbs(area) >= 2 * kCloseSqd) {
+  // First check distance from b to the infinite line through a, c
+  SkVector aToC = c - a;
+  SkVector n = {aToC.fY, -aToC.fX};
+  n.normalize();
+
+  SkScalar distBToLineAC = n.dot(b) - n.dot(a);
+  if (SkScalarAbs(distBToLineAC) >= kClose) {
+    // Too far from the line, cannot be colinear
     return false;
   }
-  return (a - b).dot(b - c) >= 0;
+
+  // b is colinear, but it may not be in the line segment between a and c. It's in the middle if
+  // both the angle at a and the angle at c are acute.
+  return aToC.dot(b - a) > 0 && aToC.dot(c - b) > 0;
 }
 
 int GrAAConvexTessellator::addPt(
@@ -275,8 +283,7 @@ bool GrAAConvexTessellator::tessellate(const SkMatrix& m, const SkPath& path) {
     this->createInsetRings(
         outerStrokeAndAARing, 0.0f, 0.0f, 2 * kAntialiasingRadius, 1.0f, &insetAARing);
 
-    SkDEBUGCODE(this->validate());
-    return true;
+    SkDEBUGCODE(this->validate();) return true;
   }
 
   if (SkStrokeRec::kStroke_Style == fStyle) {
@@ -314,8 +321,7 @@ bool GrAAConvexTessellator::tessellate(const SkMatrix& m, const SkPath& path) {
     this->createInsetRings(fInitialRing, 0.0f, 0.5f, kAntialiasingRadius, 1.0f, &insetAARing);
   }
 
-  SkDEBUGCODE(this->validate());
-  return true;
+  SkDEBUGCODE(this->validate();) return true;
 }
 
 SkScalar GrAAConvexTessellator::computeDepthFromEdge(int edgeIdx, const SkPoint& p) const {
@@ -360,7 +366,7 @@ bool GrAAConvexTessellator::computePtAlongBisector(
 }
 
 bool GrAAConvexTessellator::extractFromPath(const SkMatrix& m, const SkPath& path) {
-  SkASSERT(SkPath::kConvex_Convexity == path.getConvexity());
+  SkASSERT(SkPathConvexityType::kConvex == path.getConvexityType());
 
   SkRect bounds = path.getBounds();
   m.mapRect(&bounds);

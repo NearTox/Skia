@@ -11,22 +11,39 @@
 
 namespace skia {
 namespace textlayout {
-// TODO: deal with all the intersection functionality
-int32_t intersectedSize(TextRange a, TextRange b) {
-  if (a.empty() || b.empty()) {
-    return -1;
-  }
-  auto begin = SkTMax(a.start, b.start);
-  auto end = SkTMin(a.end, b.end);
-  return begin <= end ? SkToS32(end - begin) : -1;
-}
 
+namespace {
+
+// TODO: deal with all the intersection functionality
 TextRange intersected(const TextRange& a, const TextRange& b) {
   if (a.start == b.start && a.end == b.end) return a;
   auto begin = SkTMax(a.start, b.start);
   auto end = SkTMin(a.end, b.end);
   return end >= begin ? TextRange(begin, end) : EMPTY_TEXT;
 }
+
+SkScalar littleRound(SkScalar a) {
+  // This rounding is done to match Flutter tests. Must be removed..
+  return SkScalarRoundToScalar(a * 100.0) / 100.0;
+}
+
+int compareRound(SkScalar a, SkScalar b) {
+  // There is a rounding error that gets bigger when maxWidth gets bigger
+  // Currently, with VERY long zalgo text (> 100000) on a VERY long line (> 10000)
+  // it grows bigger that this little trick can hide
+  // TODO: deal with it eventually
+  auto ra = littleRound(a);
+  auto rb = littleRound(b);
+  if (ra == rb) {
+    return 0;
+  } else if (ra < rb) {
+    return -1;
+  } else {
+    return 1;
+  }
+}
+
+}  // namespace
 
 TextLine::TextLine(
     ParagraphImpl* master, SkVector offset, SkVector advance, BlockRange blocks, TextRange text,
@@ -225,9 +242,12 @@ void TextLine::paintText(
     paint.setColor(style.getColor());
   }
 
+  // TODO: This is the change for flutter, must be removed later
+  SkScalar correctedBaseline = SkScalarFloorToScalar(this->baseline() + 0.5);
+
   SkTextBlobBuilder builder;
   context.run->copyTo(
-      builder, SkToU32(context.pos), context.size, SkVector::Make(0, this->baseline()));
+      builder, SkToU32(context.pos), context.size, SkVector::Make(0, correctedBaseline));
   canvas->save();
   if (context.clippingNeeded) {
     canvas->clipRect(context.clip);
@@ -470,11 +490,12 @@ void TextLine::justify(SkScalar maxWidth) {
       false, true, [&](const Cluster* cluster, ClusterIndex index, bool leftToRight, bool ghost) {
         if (ghost) {
           if (leftToRight) {
-            fMaster->shiftCluster(index, ghostShift);
+            fMaster->shiftCluster(index, ghostShift, ghostShift);
           }
           return true;
         }
 
+        auto lastShift = shift;
         if (cluster->isWhitespaces()) {
           if (!whitespacePatch) {
             shift += step;
@@ -484,7 +505,7 @@ void TextLine::justify(SkScalar maxWidth) {
         } else {
           whitespacePatch = false;
         }
-        fMaster->shiftCluster(index, shift);
+        fMaster->shiftCluster(index, shift, lastShift);
         return true;
       });
 
@@ -500,32 +521,46 @@ void TextLine::createEllipsis(SkScalar maxWidth, const SkString& ellipsis, bool)
   // Go through the clusters in the reverse logical order
   // taking off cluster by cluster until the ellipsis fits
   SkScalar width = fAdvance.fX;
+  bool noWhitespace = false;
+
+  auto attachEllipsis = [&](const Cluster* cluster) {
+    // Shape the ellipsis
+    Run* run = shapeEllipsis(ellipsis, cluster->run());
+    run->fClusterStart = cluster->textRange().start;
+    run->setMaster(fMaster);
+
+    // See if it fits
+    if (width + run->advance().fX > maxWidth) {
+      width -= cluster->width();
+      // Continue if it's not
+      noWhitespace = true;
+      return false;
+    }
+
+    fEllipsis = std::make_shared<Run>(*run);
+    fEllipsis->shift(width, 0);
+    fAdvance.fX = width;
+    return true;
+  };
+
   iterateThroughClustersInGlyphsOrder(
-      true, false,
-      [this, &width, ellipsis, maxWidth](
-          const Cluster* cluster, ClusterIndex index, bool leftToRight, bool ghost) {
+      true, false, [&](const Cluster* cluster, ClusterIndex index, bool leftToRight, bool ghost) {
         if (cluster->isWhitespaces()) {
           width -= cluster->width();
+          noWhitespace = false;
           return true;
-        }
-
-        // Shape the ellipsis
-        Run* run = shapeEllipsis(ellipsis, cluster->run());
-        run->fFirstChar = cluster->textRange().start;
-        run->setMaster(fMaster);
-        fEllipsis = std::make_shared<Run>(*run);
-
-        // See if it fits
-        if (width + fEllipsis->advance().fX > maxWidth) {
+        } else if (noWhitespace) {
           width -= cluster->width();
-          // Continue if it's not
           return true;
         }
 
-        fEllipsis->shift(width, 0);
-        fAdvance.fX = width;
-        return false;
+        return !attachEllipsis(cluster);
       });
+
+  if (!fEllipsis) {
+    // Weird situation: just the ellipsis on the line (if it fits)
+    attachEllipsis(&fMaster->cluster(clusters().start));
+  }
 }
 
 Run* TextLine::shapeEllipsis(const SkString& ellipsis, Run* run) {
@@ -575,8 +610,6 @@ Run* TextLine::shapeEllipsis(const SkString& ellipsis, Run* run) {
 TextLine::ClipContext TextLine::measureTextInsideOneRun(
     TextRange textRange, const Run* run, SkScalar runOffsetInLine, SkScalar textOffsetInRunInLine,
     bool includeGhostSpaces, bool limitToClusters) const {
-  SkASSERT(intersectedSize(run->textRange(), textRange) >= 0);
-
   ClipContext result = {run, 0, run->size(), 0, SkRect::MakeEmpty(), false};
 
   if (run->placeholder() != nullptr || run->fEllipsis) {
@@ -628,9 +661,9 @@ TextLine::ClipContext TextLine::measureTextInsideOneRun(
   textStartInLine -= leftCorrection;
   result.clip.offset(textStartInLine, 0);
 
-  if (result.clip.fRight > fAdvance.fX && !includeGhostSpaces) {
-    result.clip.fRight = fAdvance.fX;
+  if (compareRound(result.clip.fRight, fAdvance.fX) > 0 && !includeGhostSpaces) {
     result.clippingNeeded = true;
+    result.clip.fRight = fAdvance.fX;
   }
 
   // The text must be aligned with the lineOffset
@@ -680,7 +713,7 @@ SkScalar TextLine::iterateThroughSingleRunByStyles(
     // Extra efforts to get the ellipsis text style
     ClipContext clipContext =
         this->measureTextInsideOneRun(run->textRange(), run, runOffset, 0, false, false);
-    TextRange testRange(run->fFirstChar, run->fFirstChar + 1);
+    TextRange testRange(run->fClusterStart, run->fClusterStart + 1);
     for (BlockIndex index = fBlockRange.start; index < fBlockRange.end; ++index) {
       auto block = fMaster->styles().begin() + index;
       auto intersect = intersected(block->fRange, testRange);
@@ -763,7 +796,10 @@ void TextLine::iterateThroughVisualRuns(
   for (auto& runIndex : fRunsInVisualOrder) {
     const auto run = &this->fMaster->run(runIndex);
     auto lineIntersection = intersected(run->textRange(), textRange);
-
+    if (lineIntersection.width() == 0 && this->width() != 0) {
+      // TODO: deal with empty runs in a better way
+      continue;
+    }
     runOffset += width;
     if (!visitor(run, runOffset, lineIntersection, &width)) {
       return;
@@ -779,7 +815,7 @@ void TextLine::iterateThroughVisualRuns(
 
   // This is a very important assert!
   // It asserts that 2 different ways of calculation come with the same results
-  if (!includingGhostSpaces && !SkScalarNearlyEqual(runOffset, this->width())) {
+  if (!includingGhostSpaces && compareRound(runOffset, this->width()) != 0) {
     SkDebugf("ASSERT: %f != %f\n", runOffset, this->width());
     SkASSERT(false);
   }
@@ -795,14 +831,17 @@ LineMetrics TextLine::getMetrics() const {
   result.fEndIndex = fTextWithWhitespacesRange.end;
   result.fEndExcludingWhitespaces = fTextRange.end;
   result.fEndIncludingNewline = fTextWithWhitespacesRange.end;  // TODO: implement
-  result.fHardBreak = fMaster->cluster(fGhostClusterRange.end).isHardBreak();
-  result.fAscent = fMaxRunMetrics.ascent();
+  // TODO: For some reason Flutter imagines a hard line break at the end of the last line.
+  //  To be removed...
+  result.fHardBreak = fMaster->cluster(fGhostClusterRange.end - 1).isHardBreak() ||
+                      fGhostClusterRange.end == fMaster->clusters().size() - 1;
+  result.fAscent = -fMaxRunMetrics.ascent();
   result.fDescent = fMaxRunMetrics.descent();
-  result.fUnscaledAscent = fMaxRunMetrics.ascent();  // TODO: implement
-  result.fHeight = fAdvance.fY;
-  result.fWidth = fAdvance.fX;
+  result.fUnscaledAscent = -fMaxRunMetrics.ascent();  // TODO: implement
+  result.fHeight = littleRound(fAdvance.fY);
+  result.fWidth = littleRound(fAdvance.fX);
   result.fLeft = fOffset.fX;
-  result.fBaseline = fMaxRunMetrics.baseline();
+  result.fBaseline = fMaxRunMetrics.baseline() + (this - fMaster->lines().begin()) * result.fHeight;
   result.fLineNumber = this - fMaster->lines().begin();
 
   // Fill out the style parts

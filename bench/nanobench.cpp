@@ -19,6 +19,7 @@
 #include "bench/ResultsWriter.h"
 #include "bench/SKPAnimationBench.h"
 #include "bench/SKPBench.h"
+#include "bench/SkGlyphCacheBench.h"
 #include "include/android/SkBitmapRegionDecoder.h"
 #include "include/codec/SkAndroidCodec.h"
 #include "include/codec/SkCodec.h"
@@ -162,6 +163,7 @@ static DEFINE_bool2(verbose, v, false, "enable verbose output from the test driv
 
 static DEFINE_string(skps, "skps", "Directory to read skps from.");
 static DEFINE_string(svgs, "", "Directory to read SVGs from, or a single SVG file.");
+static DEFINE_string(texttraces, "", "Directory to read TextBlobTrace files from.");
 
 static DEFINE_int_2(
     threads, j, -1,
@@ -620,25 +622,10 @@ static void collect_files(
 
 class BenchmarkStream {
  public:
-  BenchmarkStream()
-      : fBenches(BenchRegistry::Head()),
-        fGMs(skiagm::GMRegistry::Head()),
-        fCurrentRecording(0),
-        fCurrentDeserialPicture(0),
-        fCurrentScale(0),
-        fCurrentSKP(0),
-        fCurrentSVG(0),
-        fCurrentUseMPD(0),
-        fCurrentCodec(0),
-        fCurrentAndroidCodec(0),
-        fCurrentBRDImage(0),
-        fCurrentColorType(0),
-        fCurrentAlphaType(0),
-        fCurrentSubsetType(0),
-        fCurrentSampleSize(0),
-        fCurrentAnimSKP(0) {
+  BenchmarkStream() : fBenches(BenchRegistry::Head()), fGMs(skiagm::GMRegistry::Head()) {
     collect_files(FLAGS_skps, ".skp", &fSKPs);
     collect_files(FLAGS_svgs, ".svg", &fSVGs);
+    collect_files(FLAGS_texttraces, ".trace", &fTextBlobTraces);
 
     if (4 != sscanf(
                  FLAGS_clip[0], "%d,%d,%d,%d", &fClip.fLeft, &fClip.fTop, &fClip.fRight,
@@ -753,6 +740,20 @@ class BenchmarkStream {
         fBenchType = "micro";
         return new GMBench(std::move(gm));
       }
+    }
+
+    while (fCurrentTextBlobTrace < fTextBlobTraces.count()) {
+      SkString path = fTextBlobTraces[fCurrentTextBlobTrace++];
+      SkString basename = SkOSPath::Basename(path.c_str());
+      static constexpr char kEnding[] = ".trace";
+      if (basename.endsWith(kEnding)) {
+        basename.remove(basename.size() - strlen(kEnding), strlen(kEnding));
+      }
+      fSourceType = "texttrace";
+      fBenchType = "micro";
+      return CreateDiffCanvasBench(SkStringPrintf("SkDiffBench-%s", basename.c_str()), [path]() {
+        return SkStream::MakeFromFile(path.c_str());
+      });
     }
 
     // First add all .skps as RecordingBenches.
@@ -1080,6 +1081,7 @@ class BenchmarkStream {
   SkTArray<SkScalar> fScales;
   SkTArray<SkString> fSKPs;
   SkTArray<SkString> fSVGs;
+  SkTArray<SkString> fTextBlobTraces;
   SkTArray<bool> fUseMPDs;
   SkTArray<SkString> fImages;
   SkTArray<SkColorType, true> fColorTypes;
@@ -1090,20 +1092,21 @@ class BenchmarkStream {
 
   const char* fSourceType;  // What we're benching: bench, GM, SKP, ...
   const char* fBenchType;   // How we bench it: micro, recording, playback, ...
-  int fCurrentRecording;
-  int fCurrentDeserialPicture;
-  int fCurrentScale;
-  int fCurrentSKP;
-  int fCurrentSVG;
-  int fCurrentUseMPD;
-  int fCurrentCodec;
-  int fCurrentAndroidCodec;
-  int fCurrentBRDImage;
-  int fCurrentColorType;
-  int fCurrentAlphaType;
-  int fCurrentSubsetType;
-  int fCurrentSampleSize;
-  int fCurrentAnimSKP;
+  int fCurrentRecording = 0;
+  int fCurrentDeserialPicture = 0;
+  int fCurrentScale = 0;
+  int fCurrentSKP = 0;
+  int fCurrentSVG = 0;
+  int fCurrentTextBlobTrace = 0;
+  int fCurrentUseMPD = 0;
+  int fCurrentCodec = 0;
+  int fCurrentAndroidCodec = 0;
+  int fCurrentBRDImage = 0;
+  int fCurrentColorType = 0;
+  int fCurrentAlphaType = 0;
+  int fCurrentSubsetType = 0;
+  int fCurrentSampleSize = 0;
+  int fCurrentAnimSKP = 0;
 };
 
 // Some runs (mostly, Valgrind) are so slow that the bot framework thinks we've hung.
@@ -1153,7 +1156,9 @@ int main(int argc, char** argv) {
   std::unique_ptr<SkWStream> logStream(new SkNullWStream);
   if (!FLAGS_outResultsFile.isEmpty()) {
 #if defined(SK_RELEASE)
-    logStream.reset(new SkFILEWStream(FLAGS_outResultsFile[0]));
+    // SkJSONWriter uses a 32k in-memory cache, so it only flushes occasionally and is well
+    // equipped for a stream that re-opens, appends, and closes the file on every write.
+    logStream.reset(new NanoFILEAppendAndCloseStream(FLAGS_outResultsFile[0]));
 #else
     SkDebugf("I'm ignoring --outResultsFile because this is a Debug build.");
     return 1;

@@ -42,16 +42,17 @@ static void draw_path(
     shape = shape.applyStyle(GrStyle::Apply::kPathEffectAndStrokeRec, 1.0f);
   }
   SkMatrix matrix = SkMatrix::I();
-  GrPathRenderer::DrawPathArgs args{ctx,
-                                    std::move(paint),
-                                    &GrUserStencilSettings::kUnused,
-                                    renderTargetContext,
-                                    &noClip,
-                                    &clipConservativeBounds,
-                                    &matrix,
-                                    &shape,
-                                    aaType,
-                                    false};
+  GrPathRenderer::DrawPathArgs args{
+      ctx,
+      std::move(paint),
+      &GrUserStencilSettings::kUnused,
+      renderTargetContext,
+      &noClip,
+      &clipConservativeBounds,
+      &matrix,
+      &shape,
+      aaType,
+      false};
   pr->drawPath(args);
 }
 

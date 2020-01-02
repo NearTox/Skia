@@ -44,6 +44,10 @@ class GrMtlPipelineState {
 
   void setData(const GrRenderTarget*, const GrProgramInfo&);
 
+  void setTextures(
+      const GrProgramInfo& programInfo, const GrSurfaceProxy* const primProcTextures[]);
+  void bindTextures(id<MTLRenderCommandEncoder> renderCmdEncoder);
+
   void setDrawState(
       id<MTLRenderCommandEncoder>, const GrSwizzle& outputSwizzle, const GrXferProcessor&);
 
@@ -92,7 +96,7 @@ class GrMtlPipelineState {
 
   void setRenderTargetState(const GrRenderTarget*, GrSurfaceOrigin);
 
-  void bind(id<MTLRenderCommandEncoder>);
+  void bindUniforms(id<MTLRenderCommandEncoder>);
 
   void setBlendConstants(id<MTLRenderCommandEncoder>, const GrSwizzle&, const GrXferProcessor&);
 

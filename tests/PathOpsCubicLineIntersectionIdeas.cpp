@@ -175,10 +175,11 @@ DEF_TEST(PathOpsCubicLineRoots, reporter) {
   double largestR2 = 0;
   for (int index = 0; index < 1000000000; ++index) {
     SkDPoint origin = {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)};
-    CubicPts cuPts = {{origin,
-                       {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)},
-                       {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)},
-                       {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)}}};
+    CubicPts cuPts = {
+        {origin,
+         {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)},
+         {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)},
+         {ran.nextRangeF(-1000, 1000), ran.nextRangeF(-1000, 1000)}}};
     // construct a line at a known intersection
     double t = ran.nextRangeF(0, 1);
     SkDCubic cubic;

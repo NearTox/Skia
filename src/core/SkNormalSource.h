@@ -20,7 +20,7 @@ class GrFragmentProcessor;
 
 /** Abstract class that generates or reads in normals for use by SkLightingShader.
  */
-class SK_API SkNormalSource : public SkFlattenable {
+class SkNormalSource : public SkFlattenable {
  public:
   virtual ~SkNormalSource() override;
 
@@ -33,7 +33,7 @@ class SK_API SkNormalSource : public SkFlattenable {
 
   class Provider {
    public:
-    virtual ~Provider() = default;
+    virtual ~Provider() {}
 
     /** Called for each span of the object being drawn on the CPU. Your subclass should set
         the appropriate normals that correspond to the specified device coordinates.

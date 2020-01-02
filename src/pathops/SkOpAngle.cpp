@@ -506,8 +506,9 @@ bool SkOpAngle::endsIntersect(SkOpAngle* rh) {
   SkPath::Verb rVerb = rh->segment()->verb();
   int lPts = SkPathOpsVerbToPoints(lVerb);
   int rPts = SkPathOpsVerbToPoints(rVerb);
-  SkDLine rays[] = {{{this->fPart.fCurve[0], rh->fPart.fCurve[rPts]}},
-                    {{this->fPart.fCurve[0], this->fPart.fCurve[lPts]}}};
+  SkDLine rays[] = {
+      {{this->fPart.fCurve[0], rh->fPart.fCurve[rPts]}},
+      {{this->fPart.fCurve[0], this->fPart.fCurve[lPts]}}};
   if (this->fEnd->contains(rh->fEnd)) {
     return checkParallel(rh);
   }

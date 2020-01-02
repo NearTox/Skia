@@ -15,8 +15,9 @@ class GrSampleMaskProcessor::Impl : public GrGLSLGeometryProcessor {
   Impl(std::unique_ptr<Shader> shader) : fShader(std::move(shader)) {}
 
  private:
-  void setData(const GrGLSLProgramDataManager&, const GrPrimitiveProcessor&, FPCoordTransformIter&&)
-      override {}
+  void setData(
+      const GrGLSLProgramDataManager&, const GrPrimitiveProcessor&,
+      const CoordTransformRange&) override {}
 
   void onEmitCode(EmitArgs&, GrGPArgs*) override;
 
@@ -31,7 +32,7 @@ void GrSampleMaskProcessor::Impl::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
   int inputWidth = (4 == numInputPoints || proc.hasInputWeight()) ? 4 : 3;
 
   varyingHandler->emitAttributes(proc);
-  SkASSERT(!args.fFPCoordTransformHandler->nextCoordTransform());
+  SkASSERT(!*args.fFPCoordTransformHandler);
 
   if (PrimitiveType::kTriangles == proc.fPrimitiveType) {
     SkASSERT(!proc.hasInstanceAttributes());  // Triangles are drawn with vertex arrays.
@@ -113,6 +114,19 @@ void GrSampleMaskProcessor::appendMesh(
       mesh.setInstanced(std::move(instanceBuffer), instanceCount, baseInstance, 4);
       break;
     }
+  }
+}
+
+GrPrimitiveType GrSampleMaskProcessor::primType() const {
+  SkASSERT(PrimitiveType::kWeightedTriangles != fPrimitiveType);
+
+  switch (fPrimitiveType) {
+    case PrimitiveType::kTriangles:
+    case PrimitiveType::kWeightedTriangles: return GrPrimitiveType::kTriangles;
+    case PrimitiveType::kQuadratics:
+    case PrimitiveType::kCubics:
+    case PrimitiveType::kConics: return GrPrimitiveType::kTriangleStrip;
+    default: return GrPrimitiveType::kTriangleStrip;
   }
 }
 

@@ -5,11 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "include/core/SkImage.h"
-
 #include "modules/sksg/include/SkSGImage.h"
 
 #include "include/core/SkCanvas.h"
+#include "include/core/SkImage.h"
 
 namespace sksg {
 

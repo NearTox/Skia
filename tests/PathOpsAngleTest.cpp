@@ -645,9 +645,10 @@ DEF_TEST(PathOpsAngleAllOnOneSide, reporter) {
   SkOpContourHead contour;
   SkOpGlobalState state(&contour, &allocator SkDEBUGPARAMS(false) SkDEBUGPARAMS(nullptr));
   contour.init(&state, false, false);
-  SkPoint conicPts[3] = {{494.37100219726562f, 224.66200256347656f},
-                         {494.37360910682298f, 224.6729026561527f},
-                         {494.37600708007813f, 224.68400573730469f}};
+  SkPoint conicPts[3] = {
+      {494.37100219726562f, 224.66200256347656f},
+      {494.37360910682298f, 224.6729026561527f},
+      {494.37600708007813f, 224.68400573730469f}};
   SkPoint linePts[2] = {{494.371002f, 224.662003f}, {494.375000f, 224.675995f}};
   for (int i = 10; i >= 0; --i) {
     SkPoint modLinePts[2] = {linePts[0], linePts[1]};

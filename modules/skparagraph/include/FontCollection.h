@@ -31,14 +31,15 @@ class FontCollection : public SkRefCnt {
 
   sk_sp<SkFontMgr> getFallbackManager() const { return fDefaultFontManager; }
 
-  sk_sp<SkTypeface> matchTypeface(
-      const char familyName[], SkFontStyle fontStyle, const SkString& locale);
-  sk_sp<SkTypeface> matchDefaultTypeface(SkFontStyle fontStyle, const SkString& locale);
+  std::vector<sk_sp<SkTypeface>> findTypefaces(
+      const std::vector<SkString>& familyNames, SkFontStyle fontStyle);
+
   sk_sp<SkTypeface> defaultFallback(
       SkUnichar unicode, SkFontStyle fontStyle, const SkString& locale);
   sk_sp<SkTypeface> defaultFallback();
 
   void disableFontFallback();
+  void enableFontFallback();
   bool fontFallbackEnabled() { return fEnableFontFallback; }
 
   ParagraphCache* getParagraphCache() { return &fParagraphCache; }
@@ -46,14 +47,15 @@ class FontCollection : public SkRefCnt {
  private:
   std::vector<sk_sp<SkFontMgr>> getFontManagerOrder() const;
 
+  sk_sp<SkTypeface> matchTypeface(const SkString& familyName, SkFontStyle fontStyle);
+
   struct FamilyKey {
-    FamilyKey(const char family[], const char loc[], SkFontStyle style)
-        : fFontFamily(family), fLocale(loc), fFontStyle(style) {}
+    FamilyKey(const std::vector<SkString>& familyNames, SkFontStyle style)
+        : fFamilyNames(familyNames), fFontStyle(style) {}
 
     FamilyKey() {}
 
-    SkString fFontFamily;
-    SkString fLocale;
+    std::vector<SkString> fFamilyNames;
     SkFontStyle fFontStyle;
 
     bool operator==(const FamilyKey& other) const;
@@ -64,7 +66,7 @@ class FontCollection : public SkRefCnt {
   };
 
   bool fEnableFontFallback;
-  SkTHashMap<FamilyKey, sk_sp<SkTypeface>, FamilyKey::Hasher> fTypefaces;
+  SkTHashMap<FamilyKey, std::vector<sk_sp<SkTypeface>>, FamilyKey::Hasher> fTypefaces;
   sk_sp<SkFontMgr> fDefaultFontManager;
   sk_sp<SkFontMgr> fAssetFontManager;
   sk_sp<SkFontMgr> fDynamicFontManager;

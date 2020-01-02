@@ -102,8 +102,7 @@ class GrMockRenderTarget : public GrRenderTarget {
     }
     const GrCaps& caps = *this->getGpu()->caps();
     return GrSurface::ComputeSize(
-        caps, this->backendFormat(), this->width(), this->height(), numColorSamples,
-        GrMipMapped::kNo);
+        caps, this->backendFormat(), this->dimensions(), numColorSamples, GrMipMapped::kNo);
   }
 
   GrBackendRenderTarget getBackendRenderTarget() const override {
@@ -185,7 +184,7 @@ class GrMockTextureRenderTarget : public GrMockTexture, public GrMockRenderTarge
     }
     const GrCaps& caps = *this->getGpu()->caps();
     return GrSurface::ComputeSize(
-        caps, this->backendFormat(), this->width(), this->height(), numColorSamples,
+        caps, this->backendFormat(), this->dimensions(), numColorSamples,
         this->texturePriv().mipMapped());
   }
 

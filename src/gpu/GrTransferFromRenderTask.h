@@ -15,7 +15,7 @@ class GrTransferFromRenderTask final : public GrRenderTask {
   GrTransferFromRenderTask(
       sk_sp<GrSurfaceProxy> srcProxy, const SkIRect& srcRect, GrColorType surfaceColorType,
       GrColorType dstColorType, sk_sp<GrGpuBuffer> dstBuffer, size_t dstOffset)
-      : GrRenderTask(nullptr),
+      : GrRenderTask(),
         fSrcProxy(std::move(srcProxy)),
         fSrcRect(srcRect),
         fSurfaceColorType(surfaceColorType),
@@ -25,7 +25,7 @@ class GrTransferFromRenderTask final : public GrRenderTask {
 
  private:
   bool onIsUsed(GrSurfaceProxy* proxy) const override {
-    SkASSERT(!fTarget);
+    SkASSERT(!fTargetView.proxy());
     return proxy == fSrcProxy.get();
   }
   // If fSrcProxy is uninstantiated at flush time we simply will skip doing the transfer.
@@ -39,7 +39,7 @@ class GrTransferFromRenderTask final : public GrRenderTask {
   bool onExecute(GrOpFlushState*) override;
 
 #ifdef SK_DEBUG
-  void visitProxies_debugOnly(const VisitSurfaceProxyFunc& fn) const override {
+  void visitProxies_debugOnly(const GrOp::VisitProxyFunc& fn) const override {
     fn(fSrcProxy.get(), GrMipMapped::kNo);
   }
 #endif

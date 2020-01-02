@@ -28,7 +28,7 @@ class GrGLContextInfo {
   GrGLContextInfo(const GrGLContextInfo&) = delete;
   GrGLContextInfo& operator=(const GrGLContextInfo&) = delete;
 
-  virtual ~GrGLContextInfo() = default;
+  virtual ~GrGLContextInfo() {}
 
   GrGLStandard standard() const { return fInterface->fStandard; }
   GrGLVersion version() const { return fGLVersion; }

@@ -23,6 +23,7 @@
     <ClCompile Include="skottie\src\effects\MotionBlurEffect.cpp" />
     <ClCompile Include="skottie\src\effects\MotionTileEffect.cpp" />
     <ClCompile Include="skottie\src\effects\RadialWipeEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\ShiftChannelsEffect.cpp" />
     <ClCompile Include="skottie\src\effects\TintEffect.cpp" />
     <ClCompile Include="skottie\src\effects\TransformEffect.cpp" />
     <ClCompile Include="skottie\src\effects\TritoneEffect.cpp" />

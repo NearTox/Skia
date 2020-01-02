@@ -284,7 +284,7 @@ class GrGLSLCircleBlurFragmentProcessor : public GrGLSLFragmentProcessor {
         args.fUniformHandler->getUniformCStr(circleDataVar),
         args.fUniformHandler->getUniformCStr(circleDataVar), args.fOutputColor, args.fInputColor,
         fragBuilder->getProgramBuilder()->samplerVariable(args.fTexSamplers[0]),
-        fragBuilder->getProgramBuilder()->samplerSwizzle(args.fTexSamplers[0]).c_str());
+        fragBuilder->getProgramBuilder()->samplerSwizzle(args.fTexSamplers[0]).asString().c_str());
   }
 
  private:

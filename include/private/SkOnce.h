@@ -8,6 +8,7 @@
 #ifndef SkOnce_DEFINED
 #define SkOnce_DEFINED
 
+#include "include/private/SkThreadAnnotations.h"
 #include <atomic>
 #include <utility>
 
@@ -18,10 +19,10 @@
 
 class SkOnce {
  public:
-  constexpr SkOnce() noexcept = default;
+  constexpr SkOnce() = default;
 
   template <typename Fn, typename... Args>
-  void operator()(Fn&& fn, Args&&... args) noexcept(std::is_nothrow_invocable_v<Fn, Args...>) {
+  void operator()(Fn&& fn, Args&&... args) {
     auto state = fState.load(std::memory_order_acquire);
 
     if (state == Done) {
@@ -39,8 +40,10 @@ class SkOnce {
 
     // Some other thread is calling fn().
     // We'll just spin here acquiring until it releases Done into fState.
+    SK_POTENTIALLY_BLOCKING_REGION_BEGIN;
     while (fState.load(std::memory_order_acquire) != Done) { /*spin*/
     }
+    SK_POTENTIALLY_BLOCKING_REGION_END;
   }
 
  private:

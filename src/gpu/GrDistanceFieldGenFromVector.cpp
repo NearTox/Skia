@@ -732,7 +732,7 @@ bool GrGenerateDistanceFieldFromPath(
     workingPath = path;
   }
 
-  if (!IsDistanceFieldSupportedFillType(workingPath.getFillType())) {
+  if (!IsDistanceFieldSupportedFillType(workingPath.getNewFillType())) {
     return false;
   }
 
@@ -792,15 +792,13 @@ bool GrGenerateDistanceFieldFromPath(
 
       enum DFSign { kInside = -1, kOutside = 1 } dfSign;
 
-      if (workingPath.getFillType() == SkPath::kWinding_FillType) {
-        dfSign = windingNumber ? kInside : kOutside;
-      } else if (workingPath.getFillType() == SkPath::kInverseWinding_FillType) {
-        dfSign = windingNumber ? kOutside : kInside;
-      } else if (workingPath.getFillType() == SkPath::kEvenOdd_FillType) {
-        dfSign = (windingNumber % 2) ? kInside : kOutside;
-      } else {
-        SkASSERT(workingPath.getFillType() == SkPath::kInverseEvenOdd_FillType);
-        dfSign = (windingNumber % 2) ? kOutside : kInside;
+      switch (workingPath.getNewFillType()) {
+        case SkPathFillType::kWinding: dfSign = windingNumber ? kInside : kOutside; break;
+        case SkPathFillType::kInverseWinding: dfSign = windingNumber ? kOutside : kInside; break;
+        case SkPathFillType::kEvenOdd: dfSign = (windingNumber % 2) ? kInside : kOutside; break;
+        case SkPathFillType::kInverseEvenOdd:
+          dfSign = (windingNumber % 2) ? kOutside : kInside;
+          break;
       }
 
       // The winding number at the end of a scanline should be zero.

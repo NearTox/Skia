@@ -80,11 +80,11 @@ sk_sp<const GrGLInterface> ANGLEGLWindowContext_win::onInitializeContext() {
   fSampleCount = this->getDisplayParams().fMSAASampleCount;
   const int sampleBuffers = fSampleCount > 1 ? 1 : 0;
   const int eglSampleCnt = fSampleCount > 1 ? fSampleCount : 0;
-  const EGLint configAttribs[] = {EGL_RENDERABLE_TYPE,
-                                  // We currently only support ES3.
-                                  EGL_OPENGL_ES3_BIT, EGL_RED_SIZE, 8, EGL_GREEN_SIZE, 8,
-                                  EGL_BLUE_SIZE, 8, EGL_ALPHA_SIZE, 8, EGL_SAMPLE_BUFFERS,
-                                  sampleBuffers, EGL_SAMPLES, eglSampleCnt, EGL_NONE};
+  const EGLint configAttribs[] = {
+      EGL_RENDERABLE_TYPE,
+      // We currently only support ES3.
+      EGL_OPENGL_ES3_BIT, EGL_RED_SIZE, 8, EGL_GREEN_SIZE, 8, EGL_BLUE_SIZE, 8, EGL_ALPHA_SIZE, 8,
+      EGL_SAMPLE_BUFFERS, sampleBuffers, EGL_SAMPLES, eglSampleCnt, EGL_NONE};
 
   EGLConfig surfaceConfig;
   if (!eglChooseConfig(fDisplay, configAttribs, &surfaceConfig, 1, &numConfigs)) {

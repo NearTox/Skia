@@ -10,7 +10,6 @@
 
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrGeometryProcessor.h"
-#include "src/gpu/GrProgramDesc.h"
 #include "src/gpu/GrProgramInfo.h"
 #include "src/gpu/GrRenderTarget.h"
 #include "src/gpu/GrRenderTargetPriv.h"
@@ -22,6 +21,7 @@
 #include "src/gpu/glsl/GrGLSLVertexGeoBuilder.h"
 #include "src/gpu/glsl/GrGLSLXferProcessor.h"
 
+class GrProgramDesc;
 class GrShaderVar;
 class GrGLSLVaryingHandler;
 class SkString;
@@ -32,12 +32,11 @@ class GrGLSLProgramBuilder {
   using UniformHandle = GrGLSLUniformHandler::UniformHandle;
   using SamplerHandle = GrGLSLUniformHandler::SamplerHandle;
 
-  virtual ~GrGLSLProgramBuilder() = default;
+  virtual ~GrGLSLProgramBuilder() {}
 
   virtual const GrCaps* caps() const = 0;
   const GrShaderCaps* shaderCaps() const { return this->caps()->shaderCaps(); }
 
-  int numSamples() const { return fProgramInfo.numSamples(); }
   GrSurfaceOrigin origin() const { return fProgramInfo.origin(); }
   const GrPipeline& pipeline() const { return fProgramInfo.pipeline(); }
   const GrPrimitiveProcessor& primitiveProcessor() const { return fProgramInfo.primProc(); }
@@ -45,8 +44,7 @@ class GrGLSLProgramBuilder {
   bool snapVerticesToPixelCenters() const {
     return fProgramInfo.pipeline().snapVerticesToPixelCenters();
   }
-  // TODO: remove this usage of the descriptor's header
-  bool hasPointSize() const { return fDesc->hasPointSize(); }
+  bool hasPointSize() const { return fProgramInfo.primitiveType() == GrPrimitiveType::kPoints; }
 
   // TODO: stop passing in the renderTarget for just the sampleLocations
   int effectiveSampleCnt() const {
@@ -132,7 +130,7 @@ class GrGLSLProgramBuilder {
   // fragment shader are cleared.
   void reset() {
     this->addStage();
-    SkDEBUGCODE(fFS.debugOnly_resetPerStageVerification());
+    SkDEBUGCODE(fFS.debugOnly_resetPerStageVerification();)
   }
   void addStage() { fStageIndex++; }
 
@@ -159,7 +157,7 @@ class GrGLSLProgramBuilder {
       SkString output, SkTArray<std::unique_ptr<GrGLSLFragmentProcessor>>*);
   void emitAndInstallXferProc(const SkString& colorIn, const SkString& coverageIn);
   SamplerHandle emitSampler(
-      const GrTextureProxy*, const GrSamplerState&, const GrSwizzle&, const char* name);
+      const GrSurfaceProxy*, const GrSamplerState&, const GrSwizzle&, const char* name);
   bool checkSamplerCounts();
 
 #ifdef SK_DEBUG

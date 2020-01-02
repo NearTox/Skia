@@ -130,7 +130,7 @@ class SkFontMgr_Custom : public SkFontMgr {
   typedef SkTArray<sk_sp<SkFontStyleSet_Custom>> Families;
   class SystemFontLoader {
    public:
-    virtual ~SystemFontLoader() = default;
+    virtual ~SystemFontLoader() {}
     virtual void loadSystemFonts(const SkTypeface_FreeType::Scanner&, Families*) const = 0;
   };
   explicit SkFontMgr_Custom(const SystemFontLoader& loader);

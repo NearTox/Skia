@@ -332,10 +332,11 @@ class LazyFailedInstantiationTestOp : public GrDrawOp {
             *testExecuteValue = 1;
             return {};
           }
-          return {rp->createTexture(
-                      desc, format, GrRenderable::kNo, 1, GrMipMapped::kNo, SkBudgeted::kNo,
-                      GrProtected::kNo),
-                  true, GrSurfaceProxy::LazyInstantiationKeyMode::kUnsynced};
+          return {
+              rp->createTexture(
+                  desc, format, GrRenderable::kNo, 1, GrMipMapped::kNo, SkBudgeted::kNo,
+                  GrProtected::kNo),
+              true, GrSurfaceProxy::LazyInstantiationKeyMode::kUnsynced};
         },
         format, desc, GrRenderable::kNo, 1, kTopLeft_GrSurfaceOrigin, GrMipMapped::kNo,
         GrMipMapsStatus::kNotAllocated, GrInternalSurfaceFlags::kNone, SkBackingFit::kExact,

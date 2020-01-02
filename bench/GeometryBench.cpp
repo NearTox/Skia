@@ -264,7 +264,7 @@ class ConvexityBench : public Benchmark {
 
   void onDraw(int loops, SkCanvas* canvas) override {
     for (int i = 0; i < loops; ++i) {
-      fPath.setConvexity(SkPath::kUnknown_Convexity);
+      fPath.setConvexityType(SkPathConvexityType::kUnknown);
       (void)fPath.isConvex();
     }
   }

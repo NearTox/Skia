@@ -46,8 +46,8 @@ int SkDConic::FindExtrema(const double src[], SkScalar w, double t[1]) {
 }
 
 SkDVector SkDConic::dxdyAtT(double t) const {
-  SkDVector result = {conic_eval_tan(&fPts[0].fX, fWeight, t),
-                      conic_eval_tan(&fPts[0].fY, fWeight, t)};
+  SkDVector result = {
+      conic_eval_tan(&fPts[0].fX, fWeight, t), conic_eval_tan(&fPts[0].fY, fWeight, t)};
   if (result.fX == 0 && result.fY == 0) {
     if (zero_or_one(t)) {
       result = fPts[2] - fPts[0];
@@ -154,9 +154,10 @@ SkDConic SkDConic::subDivide(double t1, double t2) const {
   if (!bz) {
     bz = 1;  // if bz is 0, weight is 0, control point has no effect: any value will do
   }
-  SkDConic dst = {{{{ax / az, ay / az}, {bx / bz, by / bz}, {cx / cz, cy / cz}} SkDEBUGPARAMS(
-                      fPts.fDebugGlobalState)},
-                  SkDoubleToScalar(bz / sqrt(az * cz))};
+  SkDConic dst = {
+      {{{ax / az, ay / az}, {bx / bz, by / bz}, {cx / cz, cy / cz}} SkDEBUGPARAMS(
+          fPts.fDebugGlobalState)},
+      SkDoubleToScalar(bz / sqrt(az * cz))};
   return dst;
 }
 

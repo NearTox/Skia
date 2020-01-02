@@ -43,8 +43,9 @@ class GrYUVtoRGBEffect : public GrFragmentProcessor {
       const GrSamplerState::Filter filterModes[], int numPlanes, const SkYUVAIndex yuvaIndices[4],
       SkYUVColorSpace yuvColorSpace, const SkMatrix& localMatrix, const SkRect* domain)
       : INHERITED(kGrYUVtoRGBEffect_ClassID, kNone_OptimizationFlags),
-        fDomains{GrTextureDomain::IgnoredDomain(), GrTextureDomain::IgnoredDomain(),
-                 GrTextureDomain::IgnoredDomain(), GrTextureDomain::IgnoredDomain()},
+        fDomains{
+            GrTextureDomain::IgnoredDomain(), GrTextureDomain::IgnoredDomain(),
+            GrTextureDomain::IgnoredDomain(), GrTextureDomain::IgnoredDomain()},
         fYUVColorSpace(yuvColorSpace) {
     for (int i = 0; i < numPlanes; ++i) {
       SkMatrix planeMatrix = SkMatrix::MakeScale(scales[i].width(), scales[i].height());

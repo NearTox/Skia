@@ -9,6 +9,7 @@
   GPU_OP(ADD_AND_TRUE_TO_LOOP_CONDITION, add_and_true_to_loop_condition)                           \
   GPU_OP(DISABLE_BLEND_EQUATION_ADVANCED, disable_blend_equation_advanced)                         \
   GPU_OP(DISABLE_DISCARD_FRAMEBUFFER, disable_discard_framebuffer)                                 \
+  GPU_OP(DISABLE_DUAL_SOURCE_BLENDING_SUPPORT, disable_dual_source_blending_support)               \
   GPU_OP(DISABLE_TEXTURE_STORAGE, disable_texture_storage)                                         \
   GPU_OP(DISALLOW_LARGE_INSTANCED_DRAW, disallow_large_instanced_draw)                             \
   GPU_OP(EMULATE_ABS_INT_FUNCTION, emulate_abs_int_function)                                       \

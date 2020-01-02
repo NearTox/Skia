@@ -25,6 +25,10 @@ class SkParticleBinding;
 class SkParticleDrawable;
 class SkParticleExternalValue;
 
+namespace skresources {
+class ResourceProvider;
+}
+
 namespace SkSL {
 class ByteCode;
 }
@@ -111,6 +115,9 @@ class SkParticleEffectParams : public SkRefCnt {
 
   void visitFields(SkFieldVisitor* v);
 
+  // Load/compute cached resources
+  void prepare(const skresources::ResourceProvider*);
+
  private:
   friend class SkParticleEffect;
 
@@ -122,8 +129,6 @@ class SkParticleEffectParams : public SkRefCnt {
 
   Program fEffectProgram;
   Program fParticleProgram;
-
-  void rebuild();
 };
 
 class SkParticleEffect : public SkRefCnt {

@@ -16,7 +16,7 @@ class SkSpecialSurface_Base : public SkSpecialSurface {
   SkSpecialSurface_Base(const SkIRect& subset, const SkSurfaceProps* props)
       : INHERITED(subset, props), fCanvas(nullptr) {}
 
-  virtual ~SkSpecialSurface_Base() = default;
+  virtual ~SkSpecialSurface_Base() {}
 
   // reset is called after an SkSpecialImage has been snapped
   void reset() { fCanvas.reset(); }

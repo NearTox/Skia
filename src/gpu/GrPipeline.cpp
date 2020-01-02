@@ -37,11 +37,9 @@ GrPipeline::GrPipeline(
 
   fXferProcessor = processors.refXferProcessor();
 
-  if (args.fDstProxy.proxy()) {
-    SkASSERT(args.fDstProxy.proxy()->isInstantiated());
-
-    fDstTextureProxy = args.fDstProxy.refProxy();
-    fDstTextureOffset = args.fDstProxy.offset();
+  if (args.fDstProxyView.proxy()) {
+    fDstProxyView = args.fDstProxyView.proxyView();
+    fDstTextureOffset = args.fDstProxyView.offset();
   }
 
   // Copy GrFragmentProcessors from GrProcessorSet to Pipeline
@@ -60,19 +58,11 @@ GrPipeline::GrPipeline(
   for (int i = 0; i < appliedClip.numClipCoverageFragmentProcessors(); ++i, ++currFPIdx) {
     fFragmentProcessors[currFPIdx] = appliedClip.detachClipCoverageFragmentProcessor(i);
   }
-
-#ifdef SK_DEBUG
-  for (int i = 0; i < numTotalProcessors; ++i) {
-    if (!fFragmentProcessors[i]->isInstantiated()) {
-      this->markAsBad();
-      break;
-    }
-  }
-#endif
 }
 
 GrXferBarrierType GrPipeline::xferBarrierType(GrTexture* texture, const GrCaps& caps) const {
-  if (fDstTextureProxy && fDstTextureProxy->peekTexture() == texture) {
+  auto proxy = fDstProxyView.proxy();
+  if (proxy && proxy->peekTexture() == texture) {
     return kTexture_GrXferBarrierType;
   }
   return this->getXferProcessor().xferBarrierType(caps);
@@ -96,7 +86,15 @@ GrPipeline::GrPipeline(
   }
 }
 
-uint32_t GrPipeline::getBlendInfoKey() const {
+void GrPipeline::genKey(GrProcessorKeyBuilder* b, const GrCaps& caps) const {
+  // kSnapVerticesToPixelCenters is implemented in a shader.
+  InputFlags ignoredFlags = InputFlags::kSnapVerticesToPixelCenters;
+  if (!caps.multisampleDisableSupport()) {
+    // Ganesh will omit kHWAntialias regardless multisampleDisableSupport.
+    ignoredFlags |= InputFlags::kHWAntialias;
+  }
+  b->add32((uint32_t)fFlags & ~(uint32_t)ignoredFlags);
+
   const GrXferProcessor::BlendInfo& blendInfo = this->getXferProcessor().getBlendInfo();
 
   static const uint32_t kBlendWriteShift = 1;
@@ -104,10 +102,21 @@ uint32_t GrPipeline::getBlendInfoKey() const {
   GR_STATIC_ASSERT(kLast_GrBlendCoeff < (1 << kBlendCoeffShift));
   GR_STATIC_ASSERT(kFirstAdvancedGrBlendEquation - 1 < 4);
 
-  uint32_t key = blendInfo.fWriteColor;
-  key |= (blendInfo.fSrcBlend << kBlendWriteShift);
-  key |= (blendInfo.fDstBlend << (kBlendWriteShift + kBlendCoeffShift));
-  key |= (blendInfo.fEquation << (kBlendWriteShift + 2 * kBlendCoeffShift));
+  uint32_t blendKey = blendInfo.fWriteColor;
+  blendKey |= (blendInfo.fSrcBlend << kBlendWriteShift);
+  blendKey |= (blendInfo.fDstBlend << (kBlendWriteShift + kBlendCoeffShift));
+  blendKey |= (blendInfo.fEquation << (kBlendWriteShift + 2 * kBlendCoeffShift));
 
-  return key;
+  b->add32(blendKey);
+}
+
+void GrPipeline::visitProxies(const GrOp::VisitProxyFunc& func) const {
+  // This iteration includes any clip coverage FPs
+  for (auto [sampler, fp] : GrFragmentProcessor::PipelineTextureSamplerRange(*this)) {
+    bool mipped = (GrSamplerState::Filter::kMipMap == sampler.samplerState().filter());
+    func(sampler.proxy(), GrMipMapped(mipped));
+  }
+  if (fDstProxyView.asTextureProxy()) {
+    func(fDstProxyView.asTextureProxy(), GrMipMapped::kNo);
+  }
 }
