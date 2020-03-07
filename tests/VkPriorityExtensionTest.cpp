@@ -210,67 +210,67 @@ DEF_GPUTEST(VulkanPriorityExtension, reporter, options) {
       hasPriorityExt = true;
     }
   }
-    delete[] extensions;
+  delete[] extensions;
 
-    if (!hasPriorityExt) {
-      destroy_instance(getProc, inst);
-      return;
-    }
+  if (!hasPriorityExt) {
+    destroy_instance(getProc, inst);
+    return;
+  }
 
-    const char* priorityExt = VK_EXT_GLOBAL_PRIORITY_EXTENSION_NAME;
+  const char* priorityExt = VK_EXT_GLOBAL_PRIORITY_EXTENSION_NAME;
 
-    VkPhysicalDeviceFeatures deviceFeatures;
-    grVkGetPhysicalDeviceFeatures(physDev, &deviceFeatures);
+  VkPhysicalDeviceFeatures deviceFeatures;
+  grVkGetPhysicalDeviceFeatures(physDev, &deviceFeatures);
 
-    // this looks like it would slow things down,
-    // and we can't depend on it on all platforms
-    deviceFeatures.robustBufferAccess = VK_FALSE;
+  // this looks like it would slow things down,
+  // and we can't depend on it on all platforms
+  deviceFeatures.robustBufferAccess = VK_FALSE;
 
-    float queuePriorities[1] = {0.0};
+  float queuePriorities[1] = {0.0};
 
-    VkDeviceQueueGlobalPriorityCreateInfoEXT queuePriorityCreateInfo;
-    queuePriorityCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_GLOBAL_PRIORITY_CREATE_INFO_EXT;
-    queuePriorityCreateInfo.pNext = nullptr;
+  VkDeviceQueueGlobalPriorityCreateInfoEXT queuePriorityCreateInfo;
+  queuePriorityCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_GLOBAL_PRIORITY_CREATE_INFO_EXT;
+  queuePriorityCreateInfo.pNext = nullptr;
 
-    VkDeviceQueueCreateInfo queueInfo = {
-        VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,  // sType
-        &queuePriorityCreateInfo,                    // pNext
-        0,                                           // VkDeviceQueueCreateFlags
-        graphicsQueueIndex,                          // queueFamilyIndex
-        1,                                           // queueCount
-        queuePriorities,                             // pQueuePriorities
+  VkDeviceQueueCreateInfo queueInfo = {
+      VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,  // sType
+      &queuePriorityCreateInfo,                    // pNext
+      0,                                           // VkDeviceQueueCreateFlags
+      graphicsQueueIndex,                          // queueFamilyIndex
+      1,                                           // queueCount
+      queuePriorities,                             // pQueuePriorities
+  };
+
+  for (VkQueueGlobalPriorityEXT globalPriority :
+       {VK_QUEUE_GLOBAL_PRIORITY_LOW_EXT, VK_QUEUE_GLOBAL_PRIORITY_MEDIUM_EXT,
+        VK_QUEUE_GLOBAL_PRIORITY_HIGH_EXT, VK_QUEUE_GLOBAL_PRIORITY_REALTIME_EXT}) {
+    queuePriorityCreateInfo.globalPriority = globalPriority;
+
+    const VkDeviceCreateInfo deviceInfo = {
+        VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,  // sType
+        nullptr,                               // pNext
+        0,                                     // VkDeviceCreateFlags
+        1,                                     // queueCreateInfoCount
+        &queueInfo,                            // pQueueCreateInfos
+        0,                                     // layerCount
+        nullptr,                               // ppEnabledLayerNames
+        1,                                     // extensionCount
+        &priorityExt,                          // ppEnabledExtensionNames
+        &deviceFeatures                        // ppEnabledFeatures
     };
 
-    for (VkQueueGlobalPriorityEXT globalPriority :
-         {VK_QUEUE_GLOBAL_PRIORITY_LOW_EXT, VK_QUEUE_GLOBAL_PRIORITY_MEDIUM_EXT,
-          VK_QUEUE_GLOBAL_PRIORITY_HIGH_EXT, VK_QUEUE_GLOBAL_PRIORITY_REALTIME_EXT}) {
-      queuePriorityCreateInfo.globalPriority = globalPriority;
+    err = grVkCreateDevice(physDev, &deviceInfo, nullptr, &device);
 
-      const VkDeviceCreateInfo deviceInfo = {
-          VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,  // sType
-          nullptr,                               // pNext
-          0,                                     // VkDeviceCreateFlags
-          1,                                     // queueCreateInfoCount
-          &queueInfo,                            // pQueueCreateInfos
-          0,                                     // layerCount
-          nullptr,                               // ppEnabledLayerNames
-          1,                                     // extensionCount
-          &priorityExt,                          // ppEnabledExtensionNames
-          &deviceFeatures                        // ppEnabledFeatures
-      };
-
-      err = grVkCreateDevice(physDev, &deviceInfo, nullptr, &device);
-
-      if (err != VK_SUCCESS && err != VK_ERROR_NOT_PERMITTED_EXT) {
-        ERRORF(reporter, "CreateDevice failed: %d, priority %d", err, globalPriority);
-        destroy_instance(getProc, inst);
-        continue;
-      }
-      if (err != VK_ERROR_NOT_PERMITTED_EXT) {
-        grVkDestroyDevice(device, nullptr);
-      }
+    if (err != VK_SUCCESS && err != VK_ERROR_NOT_PERMITTED_EXT) {
+      ERRORF(reporter, "CreateDevice failed: %d, priority %d", err, globalPriority);
+      destroy_instance(getProc, inst);
+      continue;
     }
-    destroy_instance(getProc, inst);
+    if (err != VK_ERROR_NOT_PERMITTED_EXT) {
+      grVkDestroyDevice(device, nullptr);
+    }
+  }
+  destroy_instance(getProc, inst);
 }
 
 #endif

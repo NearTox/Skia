@@ -1434,10 +1434,10 @@ static void test_is_rrect_deep_rect_stack(skiatest::Reporter* reporter) {
     stack.clipRect(
         SkRect::MakeLTRB(i, j + 0.5, kTargetBounds.width(), kTargetBounds.height()), SkMatrix::I(),
         SkClipOp::kIntersect, aa);
-    }
-    SkRRect rrect;
-    bool isAA;
-    REPORTER_ASSERT(reporter, !stack.isRRect(kTargetBounds, &rrect, &isAA));
+  }
+  SkRRect rrect;
+  bool isAA;
+  REPORTER_ASSERT(reporter, !stack.isRRect(kTargetBounds, &rrect, &isAA));
 }
 
 DEF_TEST(ClipStack, reporter) {

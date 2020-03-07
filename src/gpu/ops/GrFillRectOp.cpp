@@ -484,12 +484,12 @@ GR_DRAW_OP_TEST_DEFINE(FillRectOp) {
           context, std::move(paint), aaType, aaFlags, GrQuad::MakeFromRect(rect, viewMatrix),
           GrQuad(localRect), stencil);
     }
-    } else {
-      // The simplest constructor
-      return GrFillRectOp::Make(
-          context, std::move(paint), aaType, aaFlags, GrQuad::MakeFromRect(rect, viewMatrix),
-          GrQuad(rect), stencil);
-    }
+  } else {
+    // The simplest constructor
+    return GrFillRectOp::Make(
+        context, std::move(paint), aaType, aaFlags, GrQuad::MakeFromRect(rect, viewMatrix),
+        GrQuad(rect), stencil);
+  }
 }
 
 #endif

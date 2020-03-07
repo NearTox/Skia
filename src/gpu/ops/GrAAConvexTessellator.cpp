@@ -302,26 +302,26 @@ bool GrAAConvexTessellator::tessellate(const SkMatrix& m, const SkPath& path) {
     this->createOuterRing(fInitialRing, kAntialiasingRadius, 0.0f, &outerAARing);
   }
 
-    // the bisectors are only needed for the computation of the outer ring
-    fBisectors.rewind();
-    if (SkStrokeRec::kStroke_Style == fStyle && fInitialRing.numPts() > 2) {
-      SkASSERT(fStrokeWidth >= 0.0f);
-      SkScalar effectiveStrokeWidth = scaleFactor * fStrokeWidth;
-      Ring* insetStrokeRing;
-      SkScalar strokeDepth = effectiveStrokeWidth / 2 - kAntialiasingRadius;
-      if (this->createInsetRings(
-              fInitialRing, 0.0f, coverage, strokeDepth, coverage, &insetStrokeRing)) {
-        Ring* insetAARing;
-        this->createInsetRings(
-            *insetStrokeRing, strokeDepth, coverage, strokeDepth + kAntialiasingRadius * 2, 0.0f,
-            &insetAARing);
-      }
-    } else {
+  // the bisectors are only needed for the computation of the outer ring
+  fBisectors.rewind();
+  if (SkStrokeRec::kStroke_Style == fStyle && fInitialRing.numPts() > 2) {
+    SkASSERT(fStrokeWidth >= 0.0f);
+    SkScalar effectiveStrokeWidth = scaleFactor * fStrokeWidth;
+    Ring* insetStrokeRing;
+    SkScalar strokeDepth = effectiveStrokeWidth / 2 - kAntialiasingRadius;
+    if (this->createInsetRings(
+            fInitialRing, 0.0f, coverage, strokeDepth, coverage, &insetStrokeRing)) {
       Ring* insetAARing;
-      this->createInsetRings(fInitialRing, 0.0f, 0.5f, kAntialiasingRadius, 1.0f, &insetAARing);
+      this->createInsetRings(
+          *insetStrokeRing, strokeDepth, coverage, strokeDepth + kAntialiasingRadius * 2, 0.0f,
+          &insetAARing);
     }
+  } else {
+    Ring* insetAARing;
+    this->createInsetRings(fInitialRing, 0.0f, 0.5f, kAntialiasingRadius, 1.0f, &insetAARing);
+  }
 
-    SkDEBUGCODE(this->validate();) return true;
+  SkDEBUGCODE(this->validate();) return true;
 }
 
 SkScalar GrAAConvexTessellator::computeDepthFromEdge(int edgeIdx, const SkPoint& p) const {

@@ -199,8 +199,8 @@ static bool bridgeOp(
         break;
       }
     } while (true);
-    } while (true);
-    return true;
+  } while (true);
+  return true;
 }
 
 // diagram of why this simplifcation is possible is here:

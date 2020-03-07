@@ -35,7 +35,7 @@ float linear_to_srgb(float linear) {
     return 1.055f * powf(linear, 1.f / 2.4f) - 0.055f;
   }
 }
-}
+}  // namespace
 
 /** tests a conversion with an error tolerance */
 template <float (*CONVERT)(float)>

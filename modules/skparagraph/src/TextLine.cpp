@@ -42,7 +42,7 @@ int compareRound(SkScalar a, SkScalar b) {
   }
 }
 
-}
+}  // namespace
 
 TextLine::TextLine(
     ParagraphImpl* master, SkVector offset, SkVector advance, BlockRange blocks, TextRange text,

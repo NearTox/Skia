@@ -167,7 +167,7 @@ bool write_should_succeed(const SkImageInfo& dstInfo, const SkImageInfo& srcInfo
       SkColorTypeIsAlphaOnly(dstInfo.colorType())) {
     return false;
   }
-    return true;
+  return true;
 }
 
 static bool check_write(

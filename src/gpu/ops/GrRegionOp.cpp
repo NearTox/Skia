@@ -178,7 +178,7 @@ std::unique_ptr<GrDrawOp> Make(
   }
   return RegionOp::Make(context, std::move(paint), viewMatrix, region, aaType, stencilSettings);
 }
-}
+}  // namespace GrRegionOp
 
 #if GR_TEST_UTILS
 

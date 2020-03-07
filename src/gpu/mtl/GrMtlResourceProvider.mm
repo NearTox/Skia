@@ -155,7 +155,7 @@ GrMtlPipelineState* GrMtlResourceProvider::PipelineStateCache::refPipelineState(
     entry = fMap.insert(desc, std::unique_ptr<Entry>(new Entry(fGpu, pipelineState)));
     return (*entry)->fPipelineState.get();
   }
-    return (*entry)->fPipelineState.get();
+  return (*entry)->fPipelineState.get();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

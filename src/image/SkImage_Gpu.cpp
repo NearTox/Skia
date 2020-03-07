@@ -429,7 +429,7 @@ sk_sp<SkImage> SkImage::makeTextureImage(GrContext* context, GrMipMapped mipMapp
     GrBitmapTextureMaker maker(context, *bmp, GrBitmapTextureMaker::Cached::kYes);
     return create_image_from_producer(context, &maker, this->uniqueID(), mipMapped);
   }
-    return nullptr;
+  return nullptr;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

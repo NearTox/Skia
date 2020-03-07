@@ -563,7 +563,7 @@ void convert_noninflect_cubic_to_quads_with_constraint(
   convert_noninflect_cubic_to_quads_with_constraint(
       choppedPts + 3, toleranceSqd, dir, quads, sublevel + 1);
 }
-}
+}  // namespace
 
 void GrPathUtils::convertCubicToQuads(
     const SkPoint p[4], SkScalar tolScale, SkTArray<SkPoint, true>* quads) {

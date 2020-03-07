@@ -1083,9 +1083,9 @@ void MetalCodeGenerator::writeVarDeclarations(const VarDeclarations& decl, bool 
       this->writeVarInitializer(*var.fVar, *var.fValue);
     }
   }
-    if (wroteType) {
-      this->write(";");
-    }
+  if (wroteType) {
+    this->write(";");
+  }
 }
 
 void MetalCodeGenerator::writeStatement(const Statement& s) {
@@ -1155,12 +1155,12 @@ void MetalCodeGenerator::writeForStatement(const ForStatement& f) {
   if (f.fTest) {
     this->writeExpression(*f.fTest, kTopLevel_Precedence);
   }
-    this->write("; ");
-    if (f.fNext) {
-      this->writeExpression(*f.fNext, kTopLevel_Precedence);
-    }
-    this->write(") ");
-    this->writeStatement(*f.fStatement);
+  this->write("; ");
+  if (f.fNext) {
+    this->writeExpression(*f.fNext, kTopLevel_Precedence);
+  }
+  this->write(") ");
+  this->writeStatement(*f.fStatement);
 }
 
 void MetalCodeGenerator::writeWhileStatement(const WhileStatement& w) {
@@ -1198,8 +1198,8 @@ void MetalCodeGenerator::writeSwitchStatement(const SwitchStatement& s) {
     }
     fIndentation--;
   }
-    fIndentation--;
-    this->write("}");
+  fIndentation--;
+  this->write("}");
 }
 
 void MetalCodeGenerator::writeReturnStatement(const ReturnStatement& r) {

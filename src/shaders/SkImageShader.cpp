@@ -606,7 +606,7 @@ bool SkImageShader::doStages(const SkStageRec& rec, SkImageStageUpdater* updater
     p->append(SkRasterPipeline::move_dst_src);
   }
 
-    return append_misc();
+  return append_misc();
 }
 
 bool SkImageShader::onAppendStages(const SkStageRec& rec) const {

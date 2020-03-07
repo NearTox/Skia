@@ -186,7 +186,7 @@ void SkDQuad::dumpInner() const {
     fPts[index].dump();
     SkDebugf(", ");
   } while (++index < 2);
-    fPts[index].dump();
+  fPts[index].dump();
 }
 
 void SkIntersections::dump() const {
@@ -766,11 +766,11 @@ void SkOpSegment::dumpPtsInner(const char* prefix) const {
     SkDPoint::Dump(fPts[index]);
     SkDebugf(", ");
   } while (++index < last);
-    SkDPoint::Dump(fPts[index]);
-    SkDebugf("}}");
-    if (fVerb == SkPath::kConic_Verb) {
-      SkDebugf(", %1.9gf}", fWeight);
-    }
+  SkDPoint::Dump(fPts[index]);
+  SkDebugf("}}");
+  if (fVerb == SkPath::kConic_Verb) {
+    SkDebugf(", %1.9gf}", fWeight);
+  }
 }
 
 void SkOpSegment::dumpPts(const char* prefix) const {

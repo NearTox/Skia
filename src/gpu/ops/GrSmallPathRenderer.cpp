@@ -865,14 +865,14 @@ bool GrSmallPathRenderer::onDrawPath(const DrawPathArgs& args) {
     if (!fAtlas) {
       return false;
     }
-    }
+  }
 
-    std::unique_ptr<GrDrawOp> op = SmallPathOp::Make(
-        args.fContext, std::move(args.fPaint), *args.fShape, *args.fViewMatrix, fAtlas.get(),
-        &fShapeCache, &fShapeList, args.fGammaCorrect, args.fUserStencilSettings);
-    args.fRenderTargetContext->addDrawOp(*args.fClip, std::move(op));
+  std::unique_ptr<GrDrawOp> op = SmallPathOp::Make(
+      args.fContext, std::move(args.fPaint), *args.fShape, *args.fViewMatrix, fAtlas.get(),
+      &fShapeCache, &fShapeList, args.fGammaCorrect, args.fUserStencilSettings);
+  args.fRenderTargetContext->addDrawOp(*args.fClip, std::move(op));
 
-    return true;
+  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

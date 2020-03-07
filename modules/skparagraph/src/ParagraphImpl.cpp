@@ -31,7 +31,7 @@ static inline SkUnichar utf8_next(const char** ptr, const char* end) {
   SkUnichar val = SkUTF::NextUTF8(ptr, end);
   return val < 0 ? 0xFFFD : val;
 }
-}
+}  // namespace
 
 TextRange operator*(const TextRange& a, const TextRange& b) {
   if (a.start == b.start && a.end == b.end) return a;
@@ -1006,21 +1006,21 @@ void ParagraphImpl::setState(InternalState state) {
     return;
   }
 
-    fState = state;
-    switch (fState) {
-      case kUnknown: fRuns.reset();
-      case kShaped: fClusters.reset();
-      case kClusterized:
-      case kMarked:
-      case kLineBroken:
-        this->resetContext();
-        this->resolveStrut();
-        this->fRunShifts.reset();
-        fLines.reset();
-      case kFormatted: fPicture = nullptr;
-      case kDrawn: break;
-      default: break;
-    }
+  fState = state;
+  switch (fState) {
+    case kUnknown: fRuns.reset();
+    case kShaped: fClusters.reset();
+    case kClusterized:
+    case kMarked:
+    case kLineBroken:
+      this->resetContext();
+      this->resolveStrut();
+      this->fRunShifts.reset();
+      fLines.reset();
+    case kFormatted: fPicture = nullptr;
+    case kDrawn: break;
+    default: break;
+  }
 }
 
 void ParagraphImpl::computeEmptyMetrics() {

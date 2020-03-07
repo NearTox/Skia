@@ -170,60 +170,60 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ReadWriteAlpha, reporter, ctxInfo) {
       {GrColorType::kRGBA_1010102, kPremul_SkAlphaType},
   };
 
-    for (int y = 0; y < Y_SIZE; ++y) {
-      for (int x = 0; x < X_SIZE; ++x) {
-        alphaData[y * X_SIZE + x] = y * X_SIZE + x;
-      }
+  for (int y = 0; y < Y_SIZE; ++y) {
+    for (int x = 0; x < X_SIZE; ++x) {
+      alphaData[y * X_SIZE + x] = y * X_SIZE + x;
     }
+  }
 
-    const SkImageInfo dstInfo =
-        SkImageInfo::Make(X_SIZE, Y_SIZE, kAlpha_8_SkColorType, kPremul_SkAlphaType);
+  const SkImageInfo dstInfo =
+      SkImageInfo::Make(X_SIZE, Y_SIZE, kAlpha_8_SkColorType, kPremul_SkAlphaType);
 
-    // Attempt to read back just alpha from a RGBA/BGRA texture. Once with a texture-only src and
-    // once with a render target.
-    for (auto info : kInfos) {
-      for (auto renderable : {GrRenderable::kNo, GrRenderable::kYes}) {
-        uint32_t rgbaData[X_SIZE * Y_SIZE];
-        // Make the alpha channel of the rgba texture come from alphaData.
-        for (int y = 0; y < Y_SIZE; ++y) {
-          for (int x = 0; x < X_SIZE; ++x) {
-            rgbaData[y * X_SIZE + x] = GrColorPackRGBA(6, 7, 8, alphaData[y * X_SIZE + x]);
-          }
-        }
-
-        auto origin = GrRenderable::kYes == renderable ? kBottomLeft_GrSurfaceOrigin
-                                                       : kTopLeft_GrSurfaceOrigin;
-        auto proxy = sk_gpu_test::MakeTextureProxyFromData(
-            context, renderable, origin,
-            {info.fColorType, info.fAlphaType, nullptr, X_SIZE, Y_SIZE}, rgbaData, 0);
-        if (!proxy) {
-          continue;
-        }
-
-        GrSwizzle swizzle =
-            context->priv().caps()->getReadSwizzle(proxy->backendFormat(), info.fColorType);
-        GrSurfaceProxyView view(std::move(proxy), origin, swizzle);
-        auto sContext = GrSurfaceContext::Make(
-            context, std::move(view), info.fColorType, kPremul_SkAlphaType, nullptr);
-
-        for (auto rowBytes : kRowBytes) {
-          size_t nonZeroRowBytes = rowBytes ? rowBytes : X_SIZE;
-
-          std::unique_ptr<uint8_t[]> readback(new uint8_t[nonZeroRowBytes * Y_SIZE]);
-          // Clear so we don't accidentally see values from previous iteration.
-          memset(readback.get(), kClearValue, nonZeroRowBytes * Y_SIZE);
-
-          // read the texture back
-          bool result = sContext->readPixels(dstInfo, readback.get(), rowBytes, {0, 0});
-          REPORTER_ASSERT(reporter, result, "8888 readPixels failed");
-
-          // make sure the original & read back versions match
-          SkString msg;
-          msg.printf("rt:%d, rb:%d 8888", GrRenderable::kYes == renderable, SkToU32(rowBytes));
-          validate_alpha_data(
-              reporter, X_SIZE, Y_SIZE, readback.get(), nonZeroRowBytes, alphaData, msg,
-              info.fColorType);
+  // Attempt to read back just alpha from a RGBA/BGRA texture. Once with a texture-only src and
+  // once with a render target.
+  for (auto info : kInfos) {
+    for (auto renderable : {GrRenderable::kNo, GrRenderable::kYes}) {
+      uint32_t rgbaData[X_SIZE * Y_SIZE];
+      // Make the alpha channel of the rgba texture come from alphaData.
+      for (int y = 0; y < Y_SIZE; ++y) {
+        for (int x = 0; x < X_SIZE; ++x) {
+          rgbaData[y * X_SIZE + x] = GrColorPackRGBA(6, 7, 8, alphaData[y * X_SIZE + x]);
         }
       }
+
+      auto origin =
+          GrRenderable::kYes == renderable ? kBottomLeft_GrSurfaceOrigin : kTopLeft_GrSurfaceOrigin;
+      auto proxy = sk_gpu_test::MakeTextureProxyFromData(
+          context, renderable, origin, {info.fColorType, info.fAlphaType, nullptr, X_SIZE, Y_SIZE},
+          rgbaData, 0);
+      if (!proxy) {
+        continue;
+      }
+
+      GrSwizzle swizzle =
+          context->priv().caps()->getReadSwizzle(proxy->backendFormat(), info.fColorType);
+      GrSurfaceProxyView view(std::move(proxy), origin, swizzle);
+      auto sContext = GrSurfaceContext::Make(
+          context, std::move(view), info.fColorType, kPremul_SkAlphaType, nullptr);
+
+      for (auto rowBytes : kRowBytes) {
+        size_t nonZeroRowBytes = rowBytes ? rowBytes : X_SIZE;
+
+        std::unique_ptr<uint8_t[]> readback(new uint8_t[nonZeroRowBytes * Y_SIZE]);
+        // Clear so we don't accidentally see values from previous iteration.
+        memset(readback.get(), kClearValue, nonZeroRowBytes * Y_SIZE);
+
+        // read the texture back
+        bool result = sContext->readPixels(dstInfo, readback.get(), rowBytes, {0, 0});
+        REPORTER_ASSERT(reporter, result, "8888 readPixels failed");
+
+        // make sure the original & read back versions match
+        SkString msg;
+        msg.printf("rt:%d, rb:%d 8888", GrRenderable::kYes == renderable, SkToU32(rowBytes));
+        validate_alpha_data(
+            reporter, X_SIZE, Y_SIZE, readback.get(), nonZeroRowBytes, alphaData, msg,
+            info.fColorType);
+      }
     }
+  }
 }

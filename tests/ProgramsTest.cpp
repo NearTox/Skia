@@ -318,27 +318,27 @@ bool GrDrawingManager::ProgramUnitTest(GrContext* context, int maxStages, int ma
   if (!renderTargetContext) {
     SkDebugf("Could not allocate a renderTargetContext");
     return false;
+  }
+
+  int fpFactoryCnt = GrFragmentProcessorTestFactory::Count();
+  for (int i = 0; i < fpFactoryCnt; ++i) {
+    // Since FP factories internally randomize, call each 10 times.
+    for (int j = 0; j < 10; ++j) {
+      GrProcessorTestData ptd(&random, context, 2, proxies);
+
+      GrPaint paint;
+      paint.setXPFactory(GrPorterDuffXPFactory::Get(SkBlendMode::kSrc));
+      auto fp = GrFragmentProcessorTestFactory::MakeIdx(i, &ptd);
+      auto blockFP = BlockInputFragmentProcessor::Make(std::move(fp));
+      paint.addColorFragmentProcessor(std::move(blockFP));
+      GrDrawRandomOp(&random, renderTargetContext.get(), std::move(paint));
+      drawingManager->flush(
+          nullptr, 0, SkSurface::BackendSurfaceAccess::kNoAccess, GrFlushInfo(),
+          GrPrepareForExternalIORequests());
     }
+  }
 
-    int fpFactoryCnt = GrFragmentProcessorTestFactory::Count();
-    for (int i = 0; i < fpFactoryCnt; ++i) {
-      // Since FP factories internally randomize, call each 10 times.
-      for (int j = 0; j < 10; ++j) {
-        GrProcessorTestData ptd(&random, context, 2, proxies);
-
-        GrPaint paint;
-        paint.setXPFactory(GrPorterDuffXPFactory::Get(SkBlendMode::kSrc));
-        auto fp = GrFragmentProcessorTestFactory::MakeIdx(i, &ptd);
-        auto blockFP = BlockInputFragmentProcessor::Make(std::move(fp));
-        paint.addColorFragmentProcessor(std::move(blockFP));
-        GrDrawRandomOp(&random, renderTargetContext.get(), std::move(paint));
-        drawingManager->flush(
-            nullptr, 0, SkSurface::BackendSurfaceAccess::kNoAccess, GrFlushInfo(),
-            GrPrepareForExternalIORequests());
-      }
-    }
-
-    return true;
+  return true;
 }
 #endif
 

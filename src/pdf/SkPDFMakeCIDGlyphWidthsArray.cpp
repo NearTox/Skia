@@ -130,73 +130,73 @@ std::unique_ptr<SkPDFArray> SkPDFMakeCIDGlyphWidthsArray(
     // a. Skipping don't cares or defaults is a win (trivial)
     if (advance == modeAdvance) {
       continue;
-        }
+    }
 #endif
 
-        // b. 2+ repeats create run as long as possible, else start range
-        {
-          size_t j = i + 1;  // j is always one past the last known repeat
-          for (; j < glyphs.size(); ++j) {
-            int16_t next_advance = (int16_t)glyphs[j]->advanceX();
-            if (advance != next_advance) {
-              break;
-            }
-          }
-          if (j - i >= 2) {
-            result->appendInt(glyphs[i]->getGlyphID());
-            result->appendInt(glyphs[j - 1]->getGlyphID());
-            result->appendScalar(scale_from_font_units(advance, emSize));
-            i = j - 1;
-            continue;
-          }
+    // b. 2+ repeats create run as long as possible, else start range
+    {
+      size_t j = i + 1;  // j is always one past the last known repeat
+      for (; j < glyphs.size(); ++j) {
+        int16_t next_advance = (int16_t)glyphs[j]->advanceX();
+        if (advance != next_advance) {
+          break;
         }
+      }
+      if (j - i >= 2) {
+        result->appendInt(glyphs[i]->getGlyphID());
+        result->appendInt(glyphs[j - 1]->getGlyphID());
+        result->appendScalar(scale_from_font_units(advance, emSize));
+        i = j - 1;
+        continue;
+      }
+    }
 
-        {
-          result->appendInt(glyphs[i]->getGlyphID());
-          auto advanceArray = SkPDFMakeArray();
-          advanceArray->appendScalar(scale_from_font_units(advance, emSize));
-          size_t j = i + 1;  // j is always one past the last output
-          for (; j < glyphs.size(); ++j) {
-            advance = (int16_t)glyphs[j]->advanceX();
+    {
+      result->appendInt(glyphs[i]->getGlyphID());
+      auto advanceArray = SkPDFMakeArray();
+      advanceArray->appendScalar(scale_from_font_units(advance, emSize));
+      size_t j = i + 1;  // j is always one past the last output
+      for (; j < glyphs.size(); ++j) {
+        advance = (int16_t)glyphs[j]->advanceX();
 #if defined(SK_PDF_CAN_USE_DW)
-            // c. end range if default seen
-            if (advance == modeAdvance) {
-              break;
-            }
+        // c. end range if default seen
+        if (advance == modeAdvance) {
+          break;
+        }
 #endif
 
-            int dontCares = glyphs[j]->getGlyphID() - glyphs[j - 1]->getGlyphID() - 1;
-            // d. end range if 4+ don't cares
-            if (dontCares >= 4) {
-              break;
-            }
-
-            int16_t next_advance = 0;
-            // e. end range for 2+ repeats with 4+ don't cares
-            if (j + 1 < glyphs.size()) {
-              next_advance = (int16_t)glyphs[j + 1]->advanceX();
-              int next_dontCares = glyphs[j + 1]->getGlyphID() - glyphs[j]->getGlyphID() - 1;
-              if (advance == next_advance && dontCares + next_dontCares >= 4) {
-                break;
-              }
-            }
-
-            // f. end range for 3+ repeats
-            if (j + 2 < glyphs.size() && advance == next_advance) {
-              next_advance = (int16_t)glyphs[j + 2]->advanceX();
-              if (advance == next_advance) {
-                break;
-              }
-            }
-
-            while (dontCares-- > 0) {
-              advanceArray->appendScalar(0);
-            }
-            advanceArray->appendScalar(scale_from_font_units(advance, emSize));
-          }
-          result->appendObject(std::move(advanceArray));
-          i = j - 1;
+        int dontCares = glyphs[j]->getGlyphID() - glyphs[j - 1]->getGlyphID() - 1;
+        // d. end range if 4+ don't cares
+        if (dontCares >= 4) {
+          break;
         }
+
+        int16_t next_advance = 0;
+        // e. end range for 2+ repeats with 4+ don't cares
+        if (j + 1 < glyphs.size()) {
+          next_advance = (int16_t)glyphs[j + 1]->advanceX();
+          int next_dontCares = glyphs[j + 1]->getGlyphID() - glyphs[j]->getGlyphID() - 1;
+          if (advance == next_advance && dontCares + next_dontCares >= 4) {
+            break;
+          }
+        }
+
+        // f. end range for 3+ repeats
+        if (j + 2 < glyphs.size() && advance == next_advance) {
+          next_advance = (int16_t)glyphs[j + 2]->advanceX();
+          if (advance == next_advance) {
+            break;
+          }
+        }
+
+        while (dontCares-- > 0) {
+          advanceArray->appendScalar(0);
+        }
+        advanceArray->appendScalar(scale_from_font_units(advance, emSize));
+      }
+      result->appendObject(std::move(advanceArray));
+      i = j - 1;
+    }
   }
 
   return result;

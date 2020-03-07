@@ -1095,7 +1095,7 @@ DEF_TEST(Codec_PngRoundTrip, r) {
   for (SkAlphaType alphaType : alphaTypes) {
     SkImageInfo newInfo = codec->getInfo().makeAlphaType(alphaType).makeColorSpace(nullptr);
     check_round_trip(r, codec.get(), newInfo);
-    }
+  }
 }
 
 static void test_conversion_possible(

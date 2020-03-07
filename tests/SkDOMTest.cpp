@@ -71,7 +71,7 @@ DEF_TEST(SkDOM_test, r) {
       { check_node(r, dom, dom.getFirstChild(subelem3), "Some more text.", SkDOM::kText_Type); }
     }
     check_node(r, dom, dom.getNextSibling(elem3), "elem4", SkDOM::kElement_Type);
-    }
+  }
 }
 
 #endif  // SK_XML

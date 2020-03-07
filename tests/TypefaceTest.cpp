@@ -299,8 +299,8 @@ DEF_TEST(TypefaceCache, reporter) {
     REPORTER_ASSERT(reporter, count(reporter, cache) == 2);
     cache.purgeAll();
     REPORTER_ASSERT(reporter, count(reporter, cache) == 1);
-    }
-    REPORTER_ASSERT(reporter, t1->unique());
+  }
+  REPORTER_ASSERT(reporter, t1->unique());
 }
 
 static void check_serialize_behaviors(

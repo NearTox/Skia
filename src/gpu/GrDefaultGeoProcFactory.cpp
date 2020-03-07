@@ -269,15 +269,15 @@ GrGeometryProcessor* DefaultGeoProc::TestCreate(GrProcessorTestData* d) {
       flags |= kCoverageAttributeTweak_GPFlag;
     }
   }
-    if (d->fRandom->nextBool()) {
-      flags |= kLocalCoordAttribute_GPFlag;
-    }
+  if (d->fRandom->nextBool()) {
+    flags |= kLocalCoordAttribute_GPFlag;
+  }
 
-    return DefaultGeoProc::Make(
-        d->allocator(), d->caps()->shaderCaps(), flags,
-        SkPMColor4f::FromBytes_RGBA(GrRandomColor(d->fRandom)), GrTest::TestColorXform(d->fRandom),
-        GrTest::TestMatrix(d->fRandom), GrTest::TestMatrix(d->fRandom), d->fRandom->nextBool(),
-        GrRandomCoverage(d->fRandom));
+  return DefaultGeoProc::Make(
+      d->allocator(), d->caps()->shaderCaps(), flags,
+      SkPMColor4f::FromBytes_RGBA(GrRandomColor(d->fRandom)), GrTest::TestColorXform(d->fRandom),
+      GrTest::TestMatrix(d->fRandom), GrTest::TestMatrix(d->fRandom), d->fRandom->nextBool(),
+      GrRandomCoverage(d->fRandom));
 }
 #endif
 

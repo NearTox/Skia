@@ -40,6 +40,6 @@ int EmitInnerPolygonTriangles(const SkPath&, GrEagerVertexAllocator*);
 // Returns the number of *instances* written to the array.
 int EmitCubicInstances(const SkPath&, GrEagerVertexAllocator*);
 
-}  // namespace
+}  // namespace GrPathParser
 
 #endif

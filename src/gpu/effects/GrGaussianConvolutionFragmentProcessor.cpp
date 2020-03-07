@@ -207,7 +207,7 @@ static void fill_in_1D_gaussian_kernel(float* kernel, int width, float gaussianS
   float scale = 1.0f / sum;
   for (int i = 0; i < width; ++i) {
     kernel[i] *= scale;
-    }
+  }
 }
 
 GrGaussianConvolutionFragmentProcessor::GrGaussianConvolutionFragmentProcessor(

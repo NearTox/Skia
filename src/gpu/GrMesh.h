@@ -237,35 +237,35 @@ inline void GrMesh::sendToGpu(SendToGpuImpl* impl) const {
     return;
   }
 
-    if (!this->isIndexed()) {
-      SkASSERT(fNonIndexNonInstanceData.fVertexCount > 0);
-      impl->sendArrayMeshToGpu(*this, fNonIndexNonInstanceData.fVertexCount, fBaseVertex);
-      return;
-    }
+  if (!this->isIndexed()) {
+    SkASSERT(fNonIndexNonInstanceData.fVertexCount > 0);
+    impl->sendArrayMeshToGpu(*this, fNonIndexNonInstanceData.fVertexCount, fBaseVertex);
+    return;
+  }
 
-    if (0 == fIndexData.fPatternRepeatCount) {
-      impl->sendIndexedMeshToGpu(
-          *this, fIndexData.fIndexCount, fNonPatternIndexData.fBaseIndex,
-          fNonPatternIndexData.fMinIndexValue, fNonPatternIndexData.fMaxIndexValue, fBaseVertex);
-      return;
-    }
+  if (0 == fIndexData.fPatternRepeatCount) {
+    impl->sendIndexedMeshToGpu(
+        *this, fIndexData.fIndexCount, fNonPatternIndexData.fBaseIndex,
+        fNonPatternIndexData.fMinIndexValue, fNonPatternIndexData.fMaxIndexValue, fBaseVertex);
+    return;
+  }
 
-    SkASSERT(fIndexData.fPatternRepeatCount > 0);
-    int baseRepetition = 0;
-    do {
-      int repeatCount = SkTMin(
-          fPatternData.fMaxPatternRepetitionsInIndexBuffer,
-          fIndexData.fPatternRepeatCount - baseRepetition);
-      int indexCount = fIndexData.fIndexCount * repeatCount;
-      // A patterned index buffer must contain indices in the range [0..vertexCount].
-      int minIndexValue = 0;
-      int maxIndexValue = fPatternData.fVertexCount * repeatCount - 1;
-      SkASSERT(!(fFlags & Flags::kUsePrimitiveRestart));
-      impl->sendIndexedMeshToGpu(
-          *this, indexCount, 0, minIndexValue, maxIndexValue,
-          fBaseVertex + fPatternData.fVertexCount * baseRepetition);
-      baseRepetition += repeatCount;
-    } while (baseRepetition < fIndexData.fPatternRepeatCount);
+  SkASSERT(fIndexData.fPatternRepeatCount > 0);
+  int baseRepetition = 0;
+  do {
+    int repeatCount = SkTMin(
+        fPatternData.fMaxPatternRepetitionsInIndexBuffer,
+        fIndexData.fPatternRepeatCount - baseRepetition);
+    int indexCount = fIndexData.fIndexCount * repeatCount;
+    // A patterned index buffer must contain indices in the range [0..vertexCount].
+    int minIndexValue = 0;
+    int maxIndexValue = fPatternData.fVertexCount * repeatCount - 1;
+    SkASSERT(!(fFlags & Flags::kUsePrimitiveRestart));
+    impl->sendIndexedMeshToGpu(
+        *this, indexCount, 0, minIndexValue, maxIndexValue,
+        fBaseVertex + fPatternData.fVertexCount * baseRepetition);
+    baseRepetition += repeatCount;
+  } while (baseRepetition < fIndexData.fPatternRepeatCount);
 }
 
 #endif

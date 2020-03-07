@@ -648,7 +648,7 @@ GrFragmentProcessor::FPItemIter<Item, Count, Get>::operator++() {
   fIndex = 0;
   do {
   } while (++fFPIter && !((*fFPIter).*Count)());
-    return *this;
+  return *this;
 }
 
 //////////////////////////////////////////////////////////////////////////////

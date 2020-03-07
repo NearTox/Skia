@@ -114,8 +114,8 @@ static void test_autostarray(skiatest::Reporter* reporter) {
     REPORTER_ASSERT(reporter, !obj1.unique());
   }
 
-    REPORTER_ASSERT(reporter, obj0.unique());
-    REPORTER_ASSERT(reporter, obj1.unique());
+  REPORTER_ASSERT(reporter, obj0.unique());
+  REPORTER_ASSERT(reporter, obj1.unique());
 }
 
 /////////////////////////////////////////////////////////////////////////////

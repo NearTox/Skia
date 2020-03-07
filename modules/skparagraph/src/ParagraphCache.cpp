@@ -257,4 +257,4 @@ bool ParagraphCache::updateParagraph(ParagraphImpl* paragraph) {
   }
 }
 }  // namespace textlayout
-}
+}  // namespace skia

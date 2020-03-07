@@ -374,24 +374,24 @@ bool SkTSpan::removeBounded(const SkTSpan* opp) {
       fCoinEnd.init();
     }
   }
-    SkTSpanBounded* bounded = fBounded;
-    SkTSpanBounded* prev = nullptr;
-    while (bounded) {
-      SkTSpanBounded* boundedNext = bounded->fNext;
-      if (opp == bounded->fBounded) {
-        if (prev) {
-          prev->fNext = boundedNext;
-          return false;
-        } else {
-          fBounded = boundedNext;
-          return fBounded == nullptr;
-        }
+  SkTSpanBounded* bounded = fBounded;
+  SkTSpanBounded* prev = nullptr;
+  while (bounded) {
+    SkTSpanBounded* boundedNext = bounded->fNext;
+    if (opp == bounded->fBounded) {
+      if (prev) {
+        prev->fNext = boundedNext;
+        return false;
+      } else {
+        fBounded = boundedNext;
+        return fBounded == nullptr;
       }
-      prev = bounded;
-      bounded = boundedNext;
     }
-    SkOPASSERT(0);
-    return false;
+    prev = bounded;
+    bounded = boundedNext;
+  }
+  SkOPASSERT(0);
+  return false;
 }
 
 bool SkTSpan::splitAt(SkTSpan* work, double t, SkArenaAlloc* heap) {

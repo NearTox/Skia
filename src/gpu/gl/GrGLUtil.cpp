@@ -28,7 +28,7 @@ const char* get_error_string(uint32_t err) {
   }
   return "Unknown";
 }
-}
+}  // namespace
 
 void GrGLCheckErr(const GrGLInterface* gl, const char* location, const char* call) {
   uint32_t err = GR_GL_GET_ERROR(gl);
@@ -90,7 +90,7 @@ GrGLStandard GrGLGetStandardInUseFromString(const char* versionString) {
   if (2 == n) {
     return kGLES_GrGLStandard;
   }
-    return kNone_GrGLStandard;
+  return kNone_GrGLStandard;
 }
 
 void GrGLGetDriverInfo(

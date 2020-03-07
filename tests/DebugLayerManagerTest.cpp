@@ -24,7 +24,7 @@ static void test_basic(skiatest::Reporter* reporter) {
   canvas->clear(0x00000000);
   SkPaint paint;
   paint.setColor(SK_ColorBLUE);
-  canvas->drawOval(SkRect::MakeLTRB(1,1,99,99), paint);
+  canvas->drawOval(SkRect::MakeLTRB(1, 1, 99, 99), paint);
   canvas->flush();
   auto picture1 = rec.finishRecordingAsPicture();
   SkIRect dirtyRectFull = SkIRect::MakeLTRB(0, 0, layerWidth, layerHeight);
@@ -33,10 +33,10 @@ static void test_basic(skiatest::Reporter* reporter) {
   SkPictureRecorder rec2;
   canvas = rec2.beginRecording(layerWidth, layerHeight);
   paint.setColor(SK_ColorGREEN);
-  canvas->drawOval(SkRect::MakeLTRB(40,40,60,60), paint);
+  canvas->drawOval(SkRect::MakeLTRB(40, 40, 60, 60), paint);
   canvas->flush();
   auto picture2 = rec2.finishRecordingAsPicture();
-  SkIRect dirtyRectPartial = SkIRect::MakeLTRB(40,40,60,60);
+  SkIRect dirtyRectPartial = SkIRect::MakeLTRB(40, 40, 60, 60);
 
   int node = 2;
 
@@ -53,7 +53,7 @@ static void test_basic(skiatest::Reporter* reporter) {
 
   SkPixmap pixmap;
   // request an image of the layer between the two updates.
-  for (int i=0; i<10; i++) {
+  for (int i = 0; i < 10; i++) {
     auto image = dlm.getLayerAsImage(node, i);
     REPORTER_ASSERT(reporter, image->width() == layerWidth);
     REPORTER_ASSERT(reporter, image->height() == layerHeight);
@@ -65,7 +65,7 @@ static void test_basic(skiatest::Reporter* reporter) {
 
   // For any images after the second draw, confirm the center is green, but the area just outside
   // that smaller circle is still blue, proving dlm drew both pictures.
-  for (int i=10; i<12; i++) {
+  for (int i = 10; i < 12; i++) {
     auto image = dlm.getLayerAsImage(node, i);
     REPORTER_ASSERT(reporter, image->width() == layerWidth);
     REPORTER_ASSERT(reporter, image->height() == layerHeight);
@@ -75,10 +75,6 @@ static void test_basic(skiatest::Reporter* reporter) {
     auto outerColor = pixmap.getColor(10, 50);
     REPORTER_ASSERT(reporter, outerColor == SK_ColorBLUE);
   }
-
-
 }
 
-DEF_TEST(DebugLayerManagerTest, reporter) {
-  test_basic(reporter);
-}
+DEF_TEST(DebugLayerManagerTest, reporter) { test_basic(reporter); }

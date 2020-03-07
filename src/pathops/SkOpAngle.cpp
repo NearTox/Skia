@@ -779,7 +779,7 @@ bool SkOpAngle::insert(SkOpAngle* angle) {
     }
     next = next->fNext;
   } while (true);
-    return true;
+  return true;
 }
 
 SkOpSpanBase* SkOpAngle::lastMarked() const {
@@ -815,7 +815,7 @@ bool SkOpAngle::loopContains(const SkOpAngle* angle) const {
       return true;
     }
   } while ((loop = loop->fNext) != first);
-    return false;
+  return false;
 }
 
 int SkOpAngle::loopCount() const {

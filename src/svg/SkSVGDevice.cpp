@@ -842,12 +842,12 @@ void SkSVGDevice::drawBitmapCommon(const MxCp& mc, const SkBitmap& bm, const SkP
       image.addAttribute("height", bm.height());
       image.addAttribute("xlink:href", svgImageData);
     }
-    }
+  }
 
-    {
-      AutoElement imageUse("use", this, fResourceBucket.get(), mc, paint);
-      imageUse.addAttribute("xlink:href", SkStringPrintf("#%s", imageID.c_str()));
-    }
+  {
+    AutoElement imageUse("use", this, fResourceBucket.get(), mc, paint);
+    imageUse.addAttribute("xlink:href", SkStringPrintf("#%s", imageID.c_str()));
+  }
 }
 
 void SkSVGDevice::drawSprite(const SkBitmap& bitmap, int x, int y, const SkPaint& paint) {

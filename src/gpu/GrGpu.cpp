@@ -595,7 +595,7 @@ bool GrGpu::regenerateMipMapLevels(GrTexture* texture) {
     texture->texturePriv().markMipMapsClean();
     return true;
   }
-    return false;
+  return false;
 }
 
 void GrGpu::resetTextureBindings() {

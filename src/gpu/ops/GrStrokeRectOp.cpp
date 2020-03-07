@@ -523,11 +523,11 @@ sk_sp<const GrGpuBuffer> AAStrokeRectOp::GetIndexBuffer(
             3 + 8, 0 + 8, 4 + 8, 4 + 8, 7 + 8, 3 + 8,
         };
     // clang-format on
-    static_assert(SK_ARRAY_COUNT(gMiterIndices) == kMiterIndexCnt);
-    GR_DEFINE_STATIC_UNIQUE_KEY(gMiterIndexBufferKey);
-    return resourceProvider->findOrCreatePatternedIndexBuffer(
-        gMiterIndices, kMiterIndexCnt, kNumMiterRectsInIndexBuffer, kMiterVertexCnt,
-        gMiterIndexBufferKey);
+        static_assert(SK_ARRAY_COUNT(gMiterIndices) == kMiterIndexCnt);
+        GR_DEFINE_STATIC_UNIQUE_KEY(gMiterIndexBufferKey);
+        return resourceProvider->findOrCreatePatternedIndexBuffer(
+            gMiterIndices, kMiterIndexCnt, kNumMiterRectsInIndexBuffer, kMiterVertexCnt,
+            gMiterIndexBufferKey);
   } else {
     /**
      * As in miter-stroke, index = a + b, and a is the current index, b is the shift
@@ -587,12 +587,12 @@ sk_sp<const GrGpuBuffer> AAStrokeRectOp::GetIndexBuffer(
             3 + 16, 0 + 16, 4 + 16, 4 + 16, 7 + 16, 3 + 16,
         };
     // clang-format on
-    static_assert(SK_ARRAY_COUNT(gBevelIndices) == kBevelIndexCnt);
+        static_assert(SK_ARRAY_COUNT(gBevelIndices) == kBevelIndexCnt);
 
-    GR_DEFINE_STATIC_UNIQUE_KEY(gBevelIndexBufferKey);
-    return resourceProvider->findOrCreatePatternedIndexBuffer(
-        gBevelIndices, kBevelIndexCnt, kNumBevelRectsInIndexBuffer, kBevelVertexCnt,
-        gBevelIndexBufferKey);
+        GR_DEFINE_STATIC_UNIQUE_KEY(gBevelIndexBufferKey);
+        return resourceProvider->findOrCreatePatternedIndexBuffer(
+            gBevelIndices, kBevelIndexCnt, kNumBevelRectsInIndexBuffer, kBevelVertexCnt,
+            gBevelIndexBufferKey);
   }
 }
 

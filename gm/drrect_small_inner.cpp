@@ -42,5 +42,5 @@ DEF_SIMPLE_GM(drrect_small_inner, canvas, 170, 610) {
     canvas->restore();
     canvas->translate(2 * kOuterRadius + 2, 0);
   }
-    canvas->restore();
+  canvas->restore();
 }

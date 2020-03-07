@@ -11,6 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="skottie\src\Animator.cpp" />
+    <ClCompile Include="skottie\src\Camera.cpp" />
     <ClCompile Include="skottie\src\Composition.cpp" />
     <ClCompile Include="skottie\src\effects\DropShadowEffect.cpp" />
     <ClCompile Include="skottie\src\effects\Effects.cpp" />
@@ -18,6 +20,7 @@
     <ClCompile Include="skottie\src\effects\GaussianBlurEffect.cpp" />
     <ClCompile Include="skottie\src\effects\GradientEffect.cpp" />
     <ClCompile Include="skottie\src\effects\HueSaturationEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\InvertEffect.cpp" />
     <ClCompile Include="skottie\src\effects\LevelsEffect.cpp" />
     <ClCompile Include="skottie\src\effects\LinearWipeEffect.cpp" />
     <ClCompile Include="skottie\src\effects\MotionBlurEffect.cpp" />
@@ -32,11 +35,19 @@
     <ClCompile Include="skottie\src\layers\ImageLayer.cpp" />
     <ClCompile Include="skottie\src\layers\NullLayer.cpp" />
     <ClCompile Include="skottie\src\layers\PrecompLayer.cpp" />
-    <ClCompile Include="skottie\src\layers\ShapeLayer.cpp" />
+    <ClCompile Include="skottie\src\layers\shapelayer\Ellipse.cpp" />
+    <ClCompile Include="skottie\src\layers\shapelayer\FillStroke.cpp" />
+    <ClCompile Include="skottie\src\layers\shapelayer\Gradient.cpp" />
+    <ClCompile Include="skottie\src\layers\shapelayer\MergePaths.cpp" />
+    <ClCompile Include="skottie\src\layers\shapelayer\Polystar.cpp" />
+    <ClCompile Include="skottie\src\layers\shapelayer\Rectangle.cpp" />
+    <ClCompile Include="skottie\src\layers\shapelayer\Repeater.cpp" />
+    <ClCompile Include="skottie\src\layers\shapelayer\RoundCorners.cpp" />
+    <ClCompile Include="skottie\src\layers\shapelayer\ShapeLayer.cpp" />
+    <ClCompile Include="skottie\src\layers\shapelayer\TrimPaths.cpp" />
     <ClCompile Include="skottie\src\layers\SolidLayer.cpp" />
     <ClCompile Include="skottie\src\layers\TextLayer.cpp" />
     <ClCompile Include="skottie\src\Skottie.cpp" />
-    <ClCompile Include="skottie\src\SkottieAdapter.cpp" />
     <ClCompile Include="skottie\src\SkottieAnimator.cpp" />
     <ClCompile Include="skottie\src\SkottieJson.cpp" />
     <ClCompile Include="skottie\src\SkottieProperty.cpp" />
@@ -46,6 +57,7 @@
     <ClCompile Include="skottie\src\text\TextAdapter.cpp" />
     <ClCompile Include="skottie\src\text\TextAnimator.cpp" />
     <ClCompile Include="skottie\src\text\TextValue.cpp" />
+    <ClCompile Include="skottie\src\Transform.cpp" />
     <ClCompile Include="skottie\utils\SkottieUtils.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

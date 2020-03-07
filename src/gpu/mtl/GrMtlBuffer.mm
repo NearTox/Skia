@@ -98,11 +98,11 @@ inline GrMtlGpu* GrMtlBuffer::mtlGpu() const {
 }
 
 void GrMtlBuffer::onAbandon() {
-    fMtlBuffer = nil;
-    fMappedBuffer = nil;
-    fMapPtr = nullptr;
-    VALIDATE();
-    INHERITED::onAbandon();
+  fMtlBuffer = nil;
+  fMappedBuffer = nil;
+  fMapPtr = nullptr;
+  VALIDATE();
+  INHERITED::onAbandon();
 }
 
 void GrMtlBuffer::onRelease() {

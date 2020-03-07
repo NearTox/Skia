@@ -273,7 +273,7 @@ SkString GrBackendFormat::toStr() const {
       break;
   }
 
-    return str;
+  return str;
 }
 #endif
 

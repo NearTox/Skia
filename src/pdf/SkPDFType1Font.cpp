@@ -125,7 +125,7 @@ static int8_t hexToBin(uint8_t c) {
   } else if (c <= 'f') {
     return c - 'a' + 10;
   }
-    return -1;
+  return -1;
 }
 
 static sk_sp<SkData> convert_type1_font_stream(

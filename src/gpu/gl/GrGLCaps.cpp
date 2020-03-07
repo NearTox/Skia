@@ -777,7 +777,7 @@ bool is_float_fp32(const GrGLContextInfo& ctxInfo, const GrGLInterface* gli, GrG
       return false;
     }
   }
-    return true;
+  return true;
 }
 
 void GrGLCaps::initGLSL(const GrGLContextInfo& ctxInfo, const GrGLInterface* gli) {
@@ -1100,114 +1100,114 @@ void GrGLCaps::onDumpJSON(SkJSONWriter* writer) const {
     writer->endObject();
   }
 
-    writer->endArray();
+  writer->endArray();
 
-    static const char* kMSFBOExtStr[] = {
-        "None", "Standard", "Apple", "IMG MS To Texture", "EXT MS To Texture",
-    };
-    static_assert(0 == kNone_MSFBOType);
-    static_assert(1 == kStandard_MSFBOType);
-    static_assert(2 == kES_Apple_MSFBOType);
-    static_assert(3 == kES_IMG_MsToTexture_MSFBOType);
-    static_assert(4 == kES_EXT_MsToTexture_MSFBOType);
-    static_assert(SK_ARRAY_COUNT(kMSFBOExtStr) == kLast_MSFBOType + 1);
+  static const char* kMSFBOExtStr[] = {
+      "None", "Standard", "Apple", "IMG MS To Texture", "EXT MS To Texture",
+  };
+  static_assert(0 == kNone_MSFBOType);
+  static_assert(1 == kStandard_MSFBOType);
+  static_assert(2 == kES_Apple_MSFBOType);
+  static_assert(3 == kES_IMG_MsToTexture_MSFBOType);
+  static_assert(4 == kES_EXT_MsToTexture_MSFBOType);
+  static_assert(SK_ARRAY_COUNT(kMSFBOExtStr) == kLast_MSFBOType + 1);
 
-    static const char* kInvalidateFBTypeStr[] = {
-        "None",
-        "Discard",
-        "Invalidate",
-    };
-    static_assert(0 == kNone_InvalidateFBType);
-    static_assert(1 == kDiscard_InvalidateFBType);
-    static_assert(2 == kInvalidate_InvalidateFBType);
-    static_assert(SK_ARRAY_COUNT(kInvalidateFBTypeStr) == kLast_InvalidateFBType + 1);
+  static const char* kInvalidateFBTypeStr[] = {
+      "None",
+      "Discard",
+      "Invalidate",
+  };
+  static_assert(0 == kNone_InvalidateFBType);
+  static_assert(1 == kDiscard_InvalidateFBType);
+  static_assert(2 == kInvalidate_InvalidateFBType);
+  static_assert(SK_ARRAY_COUNT(kInvalidateFBTypeStr) == kLast_InvalidateFBType + 1);
 
-    static const char* kMapBufferTypeStr[] = {
-        "None",
-        "MapBuffer",
-        "MapBufferRange",
-        "Chromium",
-    };
-    static_assert(0 == kNone_MapBufferType);
-    static_assert(1 == kMapBuffer_MapBufferType);
-    static_assert(2 == kMapBufferRange_MapBufferType);
-    static_assert(3 == kChromium_MapBufferType);
-    static_assert(SK_ARRAY_COUNT(kMapBufferTypeStr) == kLast_MapBufferType + 1);
+  static const char* kMapBufferTypeStr[] = {
+      "None",
+      "MapBuffer",
+      "MapBufferRange",
+      "Chromium",
+  };
+  static_assert(0 == kNone_MapBufferType);
+  static_assert(1 == kMapBuffer_MapBufferType);
+  static_assert(2 == kMapBufferRange_MapBufferType);
+  static_assert(3 == kChromium_MapBufferType);
+  static_assert(SK_ARRAY_COUNT(kMapBufferTypeStr) == kLast_MapBufferType + 1);
 
-    writer->appendBool("Core Profile", fIsCoreProfile);
-    writer->appendString("MSAA Type", kMSFBOExtStr[fMSFBOType]);
-    writer->appendString("Invalidate FB Type", kInvalidateFBTypeStr[fInvalidateFBType]);
-    writer->appendString("Map Buffer Type", kMapBufferTypeStr[fMapBufferType]);
-    writer->appendS32("Max FS Uniform Vectors", fMaxFragmentUniformVectors);
-    writer->appendBool("Pack Flip Y support", fPackFlipYSupport);
+  writer->appendBool("Core Profile", fIsCoreProfile);
+  writer->appendString("MSAA Type", kMSFBOExtStr[fMSFBOType]);
+  writer->appendString("Invalidate FB Type", kInvalidateFBTypeStr[fInvalidateFBType]);
+  writer->appendString("Map Buffer Type", kMapBufferTypeStr[fMapBufferType]);
+  writer->appendS32("Max FS Uniform Vectors", fMaxFragmentUniformVectors);
+  writer->appendBool("Pack Flip Y support", fPackFlipYSupport);
 
-    writer->appendBool("Texture Usage support", fTextureUsageSupport);
-    writer->appendBool("GL_ARB_imaging support", fImagingSupport);
-    writer->appendBool("Vertex array object support", fVertexArrayObjectSupport);
-    writer->appendBool("Debug support", fDebugSupport);
-    writer->appendBool("Draw indirect support", fDrawIndirectSupport);
-    writer->appendBool("Multi draw indirect support", fMultiDrawIndirectSupport);
-    writer->appendBool("Base instance support", fBaseInstanceSupport);
-    writer->appendBool("RGBA 8888 pixel ops are slow", fRGBA8888PixelsOpsAreSlow);
-    writer->appendBool("Partial FBO read is slow", fPartialFBOReadIsSlow);
-    writer->appendBool("Bind uniform location support", fBindUniformLocationSupport);
-    writer->appendBool("Rectangle texture support", fRectangleTextureSupport);
-    writer->appendBool(
-        "BGRA to RGBA readback conversions are slow", fRGBAToBGRAReadbackConversionsAreSlow);
-    writer->appendBool("Use buffer data null hint", fUseBufferDataNullHint);
-    writer->appendBool("Clear texture support", fClearTextureSupport);
-    writer->appendBool("Program binary support", fProgramBinarySupport);
-    writer->appendBool("Program parameters support", fProgramParameterSupport);
-    writer->appendBool("Sampler object support", fSamplerObjectSupport);
-    writer->appendBool("Tiled rendering support", fTiledRenderingSupport);
-    writer->appendBool("FB fetch requires enable per sample", fFBFetchRequiresEnablePerSample);
-    writer->appendBool("sRGB Write Control", fSRGBWriteControl);
+  writer->appendBool("Texture Usage support", fTextureUsageSupport);
+  writer->appendBool("GL_ARB_imaging support", fImagingSupport);
+  writer->appendBool("Vertex array object support", fVertexArrayObjectSupport);
+  writer->appendBool("Debug support", fDebugSupport);
+  writer->appendBool("Draw indirect support", fDrawIndirectSupport);
+  writer->appendBool("Multi draw indirect support", fMultiDrawIndirectSupport);
+  writer->appendBool("Base instance support", fBaseInstanceSupport);
+  writer->appendBool("RGBA 8888 pixel ops are slow", fRGBA8888PixelsOpsAreSlow);
+  writer->appendBool("Partial FBO read is slow", fPartialFBOReadIsSlow);
+  writer->appendBool("Bind uniform location support", fBindUniformLocationSupport);
+  writer->appendBool("Rectangle texture support", fRectangleTextureSupport);
+  writer->appendBool(
+      "BGRA to RGBA readback conversions are slow", fRGBAToBGRAReadbackConversionsAreSlow);
+  writer->appendBool("Use buffer data null hint", fUseBufferDataNullHint);
+  writer->appendBool("Clear texture support", fClearTextureSupport);
+  writer->appendBool("Program binary support", fProgramBinarySupport);
+  writer->appendBool("Program parameters support", fProgramParameterSupport);
+  writer->appendBool("Sampler object support", fSamplerObjectSupport);
+  writer->appendBool("Tiled rendering support", fTiledRenderingSupport);
+  writer->appendBool("FB fetch requires enable per sample", fFBFetchRequiresEnablePerSample);
+  writer->appendBool("sRGB Write Control", fSRGBWriteControl);
 
-    writer->appendBool(
-        "Intermediate texture for partial updates of unorm textures ever bound to FBOs",
-        fDisallowTexSubImageForUnormConfigTexturesEverBoundToFBO);
-    writer->appendBool(
-        "Intermediate texture for all updates of textures bound to FBOs",
-        fUseDrawInsteadOfAllRenderTargetWrites);
-    writer->appendBool(
-        "Max instances per draw without crashing (or zero)", fMaxInstancesPerDrawWithoutCrashing);
+  writer->appendBool(
+      "Intermediate texture for partial updates of unorm textures ever bound to FBOs",
+      fDisallowTexSubImageForUnormConfigTexturesEverBoundToFBO);
+  writer->appendBool(
+      "Intermediate texture for all updates of textures bound to FBOs",
+      fUseDrawInsteadOfAllRenderTargetWrites);
+  writer->appendBool(
+      "Max instances per draw without crashing (or zero)", fMaxInstancesPerDrawWithoutCrashing);
 
-    writer->beginArray("formats");
+  writer->beginArray("formats");
 
-    for (int i = 0; i < kGrGLFormatCount; ++i) {
+  for (int i = 0; i < kGrGLFormatCount; ++i) {
+    writer->beginObject(nullptr, false);
+    writer->appendHexU32("flags", fFormatTable[i].fFlags);
+    writer->appendHexU32("f_type", (uint32_t)fFormatTable[i].fFormatType);
+    writer->appendHexU32("c_internal", fFormatTable[i].fCompressedInternalFormat);
+    writer->appendHexU32("i_for_teximage", fFormatTable[i].fInternalFormatForTexImageOrStorage);
+    writer->appendHexU32("i_for_renderbuffer", fFormatTable[i].fInternalFormatForRenderbuffer);
+    writer->appendHexU32("default_ex_format", fFormatTable[i].fDefaultExternalFormat);
+    writer->appendHexU32("default_ex_type", fFormatTable[i].fDefaultExternalType);
+    writer->appendHexU32("default_color_type", (uint32_t)fFormatTable[i].fDefaultColorType);
+
+    writer->beginArray("surface color types");
+    for (int j = 0; j < fFormatTable[i].fColorTypeInfoCount; ++j) {
+      const auto& ctInfo = fFormatTable[i].fColorTypeInfos[j];
       writer->beginObject(nullptr, false);
-      writer->appendHexU32("flags", fFormatTable[i].fFlags);
-      writer->appendHexU32("f_type", (uint32_t)fFormatTable[i].fFormatType);
-      writer->appendHexU32("c_internal", fFormatTable[i].fCompressedInternalFormat);
-      writer->appendHexU32("i_for_teximage", fFormatTable[i].fInternalFormatForTexImageOrStorage);
-      writer->appendHexU32("i_for_renderbuffer", fFormatTable[i].fInternalFormatForRenderbuffer);
-      writer->appendHexU32("default_ex_format", fFormatTable[i].fDefaultExternalFormat);
-      writer->appendHexU32("default_ex_type", fFormatTable[i].fDefaultExternalType);
-      writer->appendHexU32("default_color_type", (uint32_t)fFormatTable[i].fDefaultColorType);
+      writer->appendHexU32("colorType", (uint32_t)ctInfo.fColorType);
+      writer->appendHexU32("flags", ctInfo.fFlags);
 
-      writer->beginArray("surface color types");
-      for (int j = 0; j < fFormatTable[i].fColorTypeInfoCount; ++j) {
-        const auto& ctInfo = fFormatTable[i].fColorTypeInfos[j];
+      writer->beginArray("data color types");
+      for (int k = 0; k < ctInfo.fExternalIOFormatCount; ++k) {
+        const auto& ioInfo = ctInfo.fExternalIOFormats[k];
         writer->beginObject(nullptr, false);
-        writer->appendHexU32("colorType", (uint32_t)ctInfo.fColorType);
-        writer->appendHexU32("flags", ctInfo.fFlags);
-
-        writer->beginArray("data color types");
-        for (int k = 0; k < ctInfo.fExternalIOFormatCount; ++k) {
-          const auto& ioInfo = ctInfo.fExternalIOFormats[k];
-          writer->beginObject(nullptr, false);
-          writer->appendHexU32("colorType", (uint32_t)ioInfo.fColorType);
-          writer->appendHexU32("ex_type", ioInfo.fExternalType);
-          writer->appendHexU32("ex_teximage", ioInfo.fExternalTexImageFormat);
-          writer->appendHexU32("ex_read", ioInfo.fExternalReadFormat);
-          writer->endObject();
-        }
-        writer->endArray();
+        writer->appendHexU32("colorType", (uint32_t)ioInfo.fColorType);
+        writer->appendHexU32("ex_type", ioInfo.fExternalType);
+        writer->appendHexU32("ex_teximage", ioInfo.fExternalTexImageFormat);
+        writer->appendHexU32("ex_read", ioInfo.fExternalReadFormat);
         writer->endObject();
       }
       writer->endArray();
       writer->endObject();
     }
+    writer->endArray();
+    writer->endObject();
+  }
 
     writer->endArray();
     writer->endObject();

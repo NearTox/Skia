@@ -208,8 +208,8 @@ bool SkImage_Lazy::getROPixels(SkBitmap* bitmap, SkImage::CachingHint chint) con
     bitmap->setImmutable();
   }
 
-    check_output_bitmap();
-    return true;
+  check_output_bitmap();
+  return true;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////

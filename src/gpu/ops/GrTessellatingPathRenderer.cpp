@@ -63,7 +63,7 @@ bool cache_match(GrGpuBuffer* vertexBuffer, SkScalar tol, int* actualCount) {
     *actualCount = info->fCount;
     return true;
   }
-    return false;
+  return false;
 }
 
 class StaticVertexAllocator : public GrEagerVertexAllocator {

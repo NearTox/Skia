@@ -1756,7 +1756,7 @@ std::unique_ptr<SkAdvancedTypefaceMetrics> SkTypeface_Mac::onGetAdvancedMetrics(
       }
     }
   }
-    return info;
+  return info;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

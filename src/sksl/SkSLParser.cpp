@@ -622,7 +622,7 @@ int Parser::layoutInt() {
   if (this->expect(Token::INT_LITERAL, "a non-negative integer", &resultToken)) {
     return SkSL::stoi(this->text(resultToken));
   }
-    return -1;
+  return -1;
 }
 
 /** EQ IDENTIFIER */
@@ -979,10 +979,10 @@ ASTNode::ID Parser::type() {
       CREATE_EMPTY_CHILD(result);
     }
     this->expect(Token::RBRACKET, "']'");
-    }
-    td.fIsNullable = this->checkNext(Token::QUESTION);
-    getNode(result).setTypeData(td);
-    return result;
+  }
+  td.fIsNullable = this->checkNext(Token::QUESTION);
+  getNode(result).setTypeData(td);
+  return result;
 }
 
 /* IDENTIFIER LBRACE varDeclaration* RBRACE (IDENTIFIER (LBRACKET expression? RBRACKET)*)? */

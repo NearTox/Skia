@@ -2289,7 +2289,7 @@ bool GrVkGpu::onCopySurface(
     return true;
   }
 
-    return false;
+  return false;
 }
 
 bool GrVkGpu::onReadPixels(

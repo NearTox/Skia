@@ -518,7 +518,7 @@ void DrawCommand::MakeJsonMatrix(SkJSONWriter& writer, const SkMatrix& matrix) {
     }
     writer.endArray();
   }
-    writer.endArray();
+  writer.endArray();
 }
 
 void DrawCommand::MakeJsonPath(SkJSONWriter& writer, const SkPath& path) {

@@ -175,7 +175,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(BasicDrawOpAtlas, reporter, ctxInfo) {
     atlas->compact(uploadTarget.tokenTracker()->nextTokenToFlush());
   }
 
-    check(reporter, atlas.get(), 1, 4, 1);
+  check(reporter, atlas.get(), 1, 4, 1);
 }
 
 // This test verifies that the GrAtlasTextOp::onPrepare method correctly handles a failure

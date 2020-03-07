@@ -411,10 +411,10 @@ sk_sp<const GrGpuBuffer> GrResourceProvider::createAAQuadIndexBuffer() {
     };
   // clang-format on
 
-  static_assert(SK_ARRAY_COUNT(kAAQuadIndexPattern) == kIndicesPerAAQuad);
+    static_assert(SK_ARRAY_COUNT(kAAQuadIndexPattern) == kIndicesPerAAQuad);
 
-  return this->createPatternedIndexBuffer(
-      kAAQuadIndexPattern, kIndicesPerAAQuad, kMaxNumAAQuads, kVertsPerAAQuad, nullptr);
+    return this->createPatternedIndexBuffer(
+        kAAQuadIndexPattern, kIndicesPerAAQuad, kMaxNumAAQuads, kVertsPerAAQuad, nullptr);
 }
 
 int GrResourceProvider::MaxNumAAQuads() { return kMaxNumAAQuads; }

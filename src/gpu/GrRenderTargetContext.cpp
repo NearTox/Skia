@@ -1099,9 +1099,8 @@ void GrRenderTargetContext::drawRRect(
     return;
   }
 
-    assert_alive(paint);
-    this->drawShapeUsingPathRenderer(
-        *clip, std::move(paint), aa, viewMatrix, GrShape(rrect, style));
+  assert_alive(paint);
+  this->drawShapeUsingPathRenderer(*clip, std::move(paint), aa, viewMatrix, GrShape(rrect, style));
 }
 
 ///////////////////////////////////////////////////////////////////////////////

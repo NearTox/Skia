@@ -148,7 +148,7 @@ size_t sk_qread(FILE* file, void* buffer, size_t count, size_t offset) {
   if (GetLastError() == ERROR_HANDLE_EOF) {
     return 0;
   }
-    return SIZE_MAX;
+  return SIZE_MAX;
 }
 
 ////////////////////////////////////////////////////////////////////////////

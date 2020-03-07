@@ -350,7 +350,7 @@ void ParticlesSlide::draw(SkCanvas* canvas) {
   for (const auto& effect : fRunning) {
     effect.fEffect->draw(canvas);
   }
-    canvas->restore();
+  canvas->restore();
 }
 
 bool ParticlesSlide::animate(double nanos) {
@@ -359,7 +359,7 @@ bool ParticlesSlide::animate(double nanos) {
   for (const auto& effect : fRunning) {
     effect.fEffect->update(fAnimationTime);
   }
-    return true;
+  return true;
 }
 
 bool ParticlesSlide::onMouse(

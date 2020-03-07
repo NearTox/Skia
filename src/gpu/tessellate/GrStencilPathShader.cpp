@@ -35,51 +35,51 @@ constexpr char kEvalCubicFn[] = R"(
         })";
 
 class GrStencilPathShader::Impl : public GrGLSLGeometryProcessor {
-    void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override {
-        const auto& shader = args.fGP.cast<GrStencilPathShader>();
-        args.fVaryingHandler->emitAttributes(shader);
+  void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override {
+    const auto& shader = args.fGP.cast<GrStencilPathShader>();
+    args.fVaryingHandler->emitAttributes(shader);
 
-        GrShaderVar vertexPos = (*shader.vertexAttributes().begin()).asShaderVar();
-        if (!shader.viewMatrix().isIdentity()) {
-            const char* viewMatrix;
-            fViewMatrixUniform = args.fUniformHandler->addUniform(
-                    kVertex_GrShaderFlag, kFloat3x3_GrSLType, "view_matrix", &viewMatrix);
-            args.fVertBuilder->codeAppendf(
-                    "float2 vertexpos = (%s * float3(point, 1)).xy;", viewMatrix);
-            vertexPos.set(kFloat2_GrSLType, "vertexpos");
-        }
-
-        if (!shader.willUseTessellationShaders()) {
-            gpArgs->fPositionVar = vertexPos;
-        } else {
-            args.fVertBuilder->declareGlobal(GrShaderVar(
-                    "P", kFloat2_GrSLType, GrShaderVar::kOut_TypeModifier));
-            args.fVertBuilder->codeAppendf("P = %s;", vertexPos.c_str());
-        }
-
-        // No fragment shader.
+    GrShaderVar vertexPos = (*shader.vertexAttributes().begin()).asShaderVar();
+    if (!shader.viewMatrix().isIdentity()) {
+      const char* viewMatrix;
+      fViewMatrixUniform = args.fUniformHandler->addUniform(
+          kVertex_GrShaderFlag, kFloat3x3_GrSLType, "view_matrix", &viewMatrix);
+      args.fVertBuilder->codeAppendf("float2 vertexpos = (%s * float3(point, 1)).xy;", viewMatrix);
+      vertexPos.set(kFloat2_GrSLType, "vertexpos");
     }
 
-    void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& primProc,
-                 const CoordTransformRange& transformRange) override {
-        const auto& shader = primProc.cast<GrStencilPathShader>();
-        if (!shader.viewMatrix().isIdentity()) {
-            pdman.setSkMatrix(fViewMatrixUniform, shader.viewMatrix());
-        }
+    if (!shader.willUseTessellationShaders()) {
+      gpArgs->fPositionVar = vertexPos;
+    } else {
+      args.fVertBuilder->declareGlobal(
+          GrShaderVar("P", kFloat2_GrSLType, GrShaderVar::kOut_TypeModifier));
+      args.fVertBuilder->codeAppendf("P = %s;", vertexPos.c_str());
     }
 
-    GrGLSLUniformHandler::UniformHandle fViewMatrixUniform;
+    // No fragment shader.
+  }
+
+  void setData(
+      const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& primProc,
+      const CoordTransformRange& transformRange) override {
+    const auto& shader = primProc.cast<GrStencilPathShader>();
+    if (!shader.viewMatrix().isIdentity()) {
+      pdman.setSkMatrix(fViewMatrixUniform, shader.viewMatrix());
+    }
+  }
+
+  GrGLSLUniformHandler::UniformHandle fViewMatrixUniform;
 };
 
 GrGLSLPrimitiveProcessor* GrStencilPathShader::createGLSLInstance(const GrShaderCaps&) const {
-    return new Impl;
+  return new Impl;
 }
 
-SkString GrStencilCubicShader::getTessControlShaderGLSL(const char* versionAndExtensionDecls,
-                                                        const GrShaderCaps&) const {
-    SkString code(versionAndExtensionDecls);
-    code.append(kWangsFormulaCubicFn);
-    code.append(R"(
+SkString GrStencilCubicShader::getTessControlShaderGLSL(
+    const char* versionAndExtensionDecls, const GrShaderCaps&) const {
+  SkString code(versionAndExtensionDecls);
+  code.append(kWangsFormulaCubicFn);
+  code.append(R"(
             layout(vertices = 1) out;
 
             in vec2 P[];
@@ -112,14 +112,14 @@ SkString GrStencilCubicShader::getTessControlShaderGLSL(const char* versionAndEx
                 Y[gl_InvocationID /*== 0*/] = vec4(P[0].y, P[1].y, P[2].y, P[3].y);
             })");
 
-    return code;
+  return code;
 }
 
-SkString GrStencilCubicShader::getTessEvaluationShaderGLSL(const char* versionAndExtensionDecls,
-                                                           const GrShaderCaps&) const {
-    SkString code(versionAndExtensionDecls);
-    code.append(kEvalCubicFn);
-    code.append(R"(
+SkString GrStencilCubicShader::getTessEvaluationShaderGLSL(
+    const char* versionAndExtensionDecls, const GrShaderCaps&) const {
+  SkString code(versionAndExtensionDecls);
+  code.append(kEvalCubicFn);
+  code.append(R"(
             layout(triangles, equal_spacing, ccw) in;
 
             uniform vec4 sk_RTAdjust;
@@ -144,14 +144,14 @@ SkString GrStencilCubicShader::getTessEvaluationShaderGLSL(const char* versionAn
                 gl_Position = vec4(vertexpos * sk_RTAdjust.xz + sk_RTAdjust.yw, 0.0, 1.0);
             })");
 
-    return code;
+  return code;
 }
 
-SkString GrStencilWedgeShader::getTessControlShaderGLSL(const char* versionAndExtensionDecls,
-                                                        const GrShaderCaps&) const {
-    SkString code(versionAndExtensionDecls);
-    code.append(kWangsFormulaCubicFn);
-    code.append(R"(
+SkString GrStencilWedgeShader::getTessControlShaderGLSL(
+    const char* versionAndExtensionDecls, const GrShaderCaps&) const {
+  SkString code(versionAndExtensionDecls);
+  code.append(kWangsFormulaCubicFn);
+  code.append(R"(
             layout(vertices = 1) out;
 
             in vec2 P[];
@@ -180,14 +180,14 @@ SkString GrStencilWedgeShader::getTessControlShaderGLSL(const char* versionAndEx
                 fanpoint[gl_InvocationID /*== 0*/] = P[4];
             })");
 
-    return code;
+  return code;
 }
 
-SkString GrStencilWedgeShader::getTessEvaluationShaderGLSL(const char* versionAndExtensionDecls,
-                                                           const GrShaderCaps&) const {
-    SkString code(versionAndExtensionDecls);
-    code.append(kEvalCubicFn);
-    code.append(R"(
+SkString GrStencilWedgeShader::getTessEvaluationShaderGLSL(
+    const char* versionAndExtensionDecls, const GrShaderCaps&) const {
+  SkString code(versionAndExtensionDecls);
+  code.append(kEvalCubicFn);
+  code.append(R"(
             layout(triangles, equal_spacing, ccw) in;
 
             uniform vec4 sk_RTAdjust;
@@ -216,5 +216,5 @@ SkString GrStencilWedgeShader::getTessEvaluationShaderGLSL(const char* versionAn
                 gl_Position = vec4(vertexpos * sk_RTAdjust.xz + sk_RTAdjust.yw, 0.0, 1.0);
             })");
 
-    return code;
+  return code;
 }

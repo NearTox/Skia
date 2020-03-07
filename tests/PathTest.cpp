@@ -2153,60 +2153,60 @@ static void test_isRect(skiatest::Reporter* reporter) {
     }
   }
 
-    // fail, close then line
-    SkPath path1;
-    path1.moveTo(r1[0].fX, r1[0].fY);
-    for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
-      path1.lineTo(r1[index].fX, r1[index].fY);
-    }
-    path1.close();
-    path1.lineTo(1, 0);
-    REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
+  // fail, close then line
+  SkPath path1;
+  path1.moveTo(r1[0].fX, r1[0].fY);
+  for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
+    path1.lineTo(r1[index].fX, r1[index].fY);
+  }
+  path1.close();
+  path1.lineTo(1, 0);
+  REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
 
-    // fail, move in the middle
-    path1.reset();
-    path1.moveTo(r1[0].fX, r1[0].fY);
-    for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
-      if (index == 2) {
-        path1.moveTo(1, .5f);
-      }
-      path1.lineTo(r1[index].fX, r1[index].fY);
+  // fail, move in the middle
+  path1.reset();
+  path1.moveTo(r1[0].fX, r1[0].fY);
+  for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
+    if (index == 2) {
+      path1.moveTo(1, .5f);
     }
-    path1.close();
-    REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
+    path1.lineTo(r1[index].fX, r1[index].fY);
+  }
+  path1.close();
+  REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
 
-    // fail, move on the edge
-    path1.reset();
-    for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
-      path1.moveTo(r1[index - 1].fX, r1[index - 1].fY);
-      path1.lineTo(r1[index].fX, r1[index].fY);
-    }
-    path1.close();
-    REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
+  // fail, move on the edge
+  path1.reset();
+  for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
+    path1.moveTo(r1[index - 1].fX, r1[index - 1].fY);
+    path1.lineTo(r1[index].fX, r1[index].fY);
+  }
+  path1.close();
+  REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
 
-    // fail, quad
-    path1.reset();
-    path1.moveTo(r1[0].fX, r1[0].fY);
-    for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
-      if (index == 2) {
-        path1.quadTo(1, .5f, 1, .5f);
-      }
-      path1.lineTo(r1[index].fX, r1[index].fY);
+  // fail, quad
+  path1.reset();
+  path1.moveTo(r1[0].fX, r1[0].fY);
+  for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
+    if (index == 2) {
+      path1.quadTo(1, .5f, 1, .5f);
     }
-    path1.close();
-    REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
+    path1.lineTo(r1[index].fX, r1[index].fY);
+  }
+  path1.close();
+  REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
 
-    // fail, cubic
-    path1.reset();
-    path1.moveTo(r1[0].fX, r1[0].fY);
-    for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
-      if (index == 2) {
-        path1.cubicTo(1, .5f, 1, .5f, 1, .5f);
-      }
-      path1.lineTo(r1[index].fX, r1[index].fY);
+  // fail, cubic
+  path1.reset();
+  path1.moveTo(r1[0].fX, r1[0].fY);
+  for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
+    if (index == 2) {
+      path1.cubicTo(1, .5f, 1, .5f, 1, .5f);
     }
-    path1.close();
-    REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
+    path1.lineTo(r1[index].fX, r1[index].fY);
+  }
+  path1.close();
+  REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
 }
 
 static void check_simple_closed_rect(

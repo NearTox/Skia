@@ -105,14 +105,14 @@ static void dcfontname_to_skstring(HDC deviceContext, const LOGFONT& lf, SkStrin
     if (0 == (fontNameLen = GetTextFace(deviceContext, 0, nullptr))) {
       fontNameLen = 0;
     }
-    }
+  }
 
-    SkAutoSTArray<LF_FULLFACESIZE, TCHAR> fontName(fontNameLen + 1);
+  SkAutoSTArray<LF_FULLFACESIZE, TCHAR> fontName(fontNameLen + 1);
+  if (0 == GetTextFace(deviceContext, fontNameLen, fontName.get())) {
+    call_ensure_accessible(lf);
     if (0 == GetTextFace(deviceContext, fontNameLen, fontName.get())) {
-      call_ensure_accessible(lf);
-      if (0 == GetTextFace(deviceContext, fontNameLen, fontName.get())) {
-        fontName[0] = 0;
-      }
+      fontName[0] = 0;
+    }
     }
 
     tchar_to_skstring(fontName.get(), familyName);
@@ -1630,7 +1630,7 @@ std::unique_ptr<SkAdvancedTypefaceMetrics> LogFontTypeface::onGetAdvancedMetrics
     }
   }
 
-    return info;
+  return info;
 }
 
 // Dummy representation of a Base64 encoded GUID from create_unique_font_name.

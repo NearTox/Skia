@@ -120,34 +120,34 @@ static void write_string(SkWStream* wStream, const char* cin, size_t len) {
     } else if (cin[i] == '\\' || cin[i] == '(' || cin[i] == ')') {
       ++extraCharacterCount;
     }
-    }
-    if (extraCharacterCount <= len) {
-      wStream->writeText("(");
-      for (size_t i = 0; i < len; i++) {
-        if (cin[i] > '~' || cin[i] < ' ') {
-          uint8_t c = static_cast<uint8_t>(cin[i]);
-          uint8_t octal[4] = {
-              '\\', (uint8_t)('0' | (c >> 6)), (uint8_t)('0' | ((c >> 3) & 0x07)),
-              (uint8_t)('0' | (c & 0x07))};
-          wStream->write(octal, 4);
-        } else {
-          if (cin[i] == '\\' || cin[i] == '(' || cin[i] == ')') {
-            wStream->writeText("\\");
-          }
-          wStream->write(&cin[i], 1);
-        }
-      }
-      wStream->writeText(")");
-    } else {
-      wStream->writeText("<");
-      for (size_t i = 0; i < len; i++) {
+  }
+  if (extraCharacterCount <= len) {
+    wStream->writeText("(");
+    for (size_t i = 0; i < len; i++) {
+      if (cin[i] > '~' || cin[i] < ' ') {
         uint8_t c = static_cast<uint8_t>(cin[i]);
-        char hexValue[2] = {
-            SkHexadecimalDigits::gUpper[c >> 4], SkHexadecimalDigits::gUpper[c & 0xF]};
-        wStream->write(hexValue, 2);
+        uint8_t octal[4] = {
+            '\\', (uint8_t)('0' | (c >> 6)), (uint8_t)('0' | ((c >> 3) & 0x07)),
+            (uint8_t)('0' | (c & 0x07))};
+        wStream->write(octal, 4);
+      } else {
+        if (cin[i] == '\\' || cin[i] == '(' || cin[i] == ')') {
+          wStream->writeText("\\");
+        }
+        wStream->write(&cin[i], 1);
       }
-      wStream->writeText(">");
     }
+    wStream->writeText(")");
+  } else {
+    wStream->writeText("<");
+    for (size_t i = 0; i < len; i++) {
+      uint8_t c = static_cast<uint8_t>(cin[i]);
+      char hexValue[2] = {
+          SkHexadecimalDigits::gUpper[c >> 4], SkHexadecimalDigits::gUpper[c & 0xF]};
+      wStream->write(hexValue, 2);
+    }
+    wStream->writeText(">");
+  }
 }
 
 void SkPDFWriteString(SkWStream* wStream, const char* cin, size_t len) {

@@ -58,7 +58,7 @@ bool GrClipStackClip::isRRect(const SkRect& origRTBounds, SkRRect* rr, GrAA* aa)
     *aa = GrAA(isAA);
     return true;
   }
-    return false;
+  return false;
 }
 
 void GrClipStackClip::getConservativeBounds(

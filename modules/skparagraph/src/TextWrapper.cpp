@@ -10,7 +10,7 @@ SkScalar littleRound(SkScalar a) {
   // This rounding is done to match Flutter tests. Must be removed..
   return SkScalarRoundToScalar(a * 100.0) / 100.0;
 }
-}
+}  // namespace
 
 // Since we allow cluster clipping when they don't fit
 // we have to work with stretches - parts of clusters

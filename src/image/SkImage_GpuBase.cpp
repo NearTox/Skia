@@ -131,7 +131,7 @@ bool SkImage_GpuBase::getROPixels(SkBitmap* dst, CachingHint chint) const {
     SkBitmapCache::Add(std::move(rec), dst);
     this->notifyAddedToRasterCache();
   }
-    return true;
+  return true;
 }
 
 sk_sp<SkImage> SkImage_GpuBase::onMakeSubset(

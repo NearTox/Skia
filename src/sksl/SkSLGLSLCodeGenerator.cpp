@@ -1357,9 +1357,9 @@ void GLSLCodeGenerator::writeVarDeclarations(const VarDeclarations& decl, bool g
       fFoundRectSamplerDecl = true;
     }
   }
-    if (wroteType) {
-      this->write(";");
-    }
+  if (wroteType) {
+    this->write(";");
+  }
 }
 
 void GLSLCodeGenerator::writeStatement(const Statement& s) {
@@ -1523,8 +1523,8 @@ void GLSLCodeGenerator::writeSwitchStatement(const SwitchStatement& s) {
     }
     fIndentation--;
   }
-    fIndentation--;
-    this->write("}");
+  fIndentation--;
+  this->write("}");
 }
 
 void GLSLCodeGenerator::writeReturnStatement(const ReturnStatement& r) {

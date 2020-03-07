@@ -13,68 +13,73 @@
 #include "src/gpu/glsl/GrGLSLVertexGeoBuilder.h"
 
 class GrFillPathShader::Impl : public GrGLSLGeometryProcessor {
-public:
-    void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override {
-        auto& shader = args.fGP.cast<GrFillPathShader>();
+ public:
+  void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override {
+    auto& shader = args.fGP.cast<GrFillPathShader>();
 
-        const char* viewMatrix;
-        fViewMatrixUniform = args.fUniformHandler->addUniform(
-                kVertex_GrShaderFlag, kFloat3x3_GrSLType, "view_matrix", &viewMatrix);
+    const char* viewMatrix;
+    fViewMatrixUniform = args.fUniformHandler->addUniform(
+        kVertex_GrShaderFlag, kFloat3x3_GrSLType, "view_matrix", &viewMatrix);
 
-        args.fVaryingHandler->emitAttributes(shader);
+    args.fVaryingHandler->emitAttributes(shader);
 
-        args.fVertBuilder->codeAppend("float2 localcoord, vertexpos;");
-        shader.emitVertexCode(this, args.fVertBuilder, viewMatrix, args.fUniformHandler);
+    args.fVertBuilder->codeAppend("float2 localcoord, vertexpos;");
+    shader.emitVertexCode(this, args.fVertBuilder, viewMatrix, args.fUniformHandler);
 
-        this->emitTransforms(args.fVertBuilder, args.fVaryingHandler, args.fUniformHandler,
-                             GrShaderVar("localcoord", kFloat2_GrSLType),
-                             args.fFPCoordTransformHandler);
+    this->emitTransforms(
+        args.fVertBuilder, args.fVaryingHandler, args.fUniformHandler,
+        GrShaderVar("localcoord", kFloat2_GrSLType), args.fFPCoordTransformHandler);
 
-        gpArgs->fPositionVar.set(kFloat2_GrSLType, "vertexpos");
+    gpArgs->fPositionVar.set(kFloat2_GrSLType, "vertexpos");
 
-        const char* color;
-        fColorUniform = args.fUniformHandler->addUniform(
-                kFragment_GrShaderFlag, kHalf4_GrSLType, "color", &color);
+    const char* color;
+    fColorUniform =
+        args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kHalf4_GrSLType, "color", &color);
 
-        args.fFragBuilder->codeAppendf("%s = %s;", args.fOutputColor, color);
-        args.fFragBuilder->codeAppendf("%s = half4(1);", args.fOutputCoverage);
+    args.fFragBuilder->codeAppendf("%s = %s;", args.fOutputColor, color);
+    args.fFragBuilder->codeAppendf("%s = half4(1);", args.fOutputCoverage);
+  }
+
+  void setData(
+      const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& primProc,
+      const CoordTransformRange& transformRange) override {
+    const GrFillPathShader& shader = primProc.cast<GrFillPathShader>();
+    pdman.setSkMatrix(fViewMatrixUniform, shader.viewMatrix());
+
+    const SkPMColor4f& color = shader.fColor;
+    pdman.set4f(fColorUniform, color.fR, color.fG, color.fB, color.fA);
+
+    if (fPathBoundsUniform.isValid()) {
+      const SkRect& b = primProc.cast<GrFillBoundingBoxShader>().pathBounds();
+      pdman.set4f(fPathBoundsUniform, b.left(), b.top(), b.right(), b.bottom());
     }
 
-    void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& primProc,
-                 const CoordTransformRange& transformRange) override {
-        const GrFillPathShader& shader = primProc.cast<GrFillPathShader>();
-        pdman.setSkMatrix(fViewMatrixUniform, shader.viewMatrix());
+    this->setTransformDataHelper(SkMatrix::I(), pdman, transformRange);
+  }
 
-        const SkPMColor4f& color = shader.fColor;
-        pdman.set4f(fColorUniform, color.fR, color.fG, color.fB, color.fA);
-
-        if (fPathBoundsUniform.isValid()) {
-            const SkRect& b = primProc.cast<GrFillBoundingBoxShader>().pathBounds();
-            pdman.set4f(fPathBoundsUniform, b.left(), b.top(), b.right(), b.bottom());
-        }
-
-        this->setTransformDataHelper(SkMatrix::I(), pdman, transformRange);
-    }
-
-    GrGLSLUniformHandler::UniformHandle fViewMatrixUniform;
-    GrGLSLUniformHandler::UniformHandle fColorUniform;
-    GrGLSLUniformHandler::UniformHandle fPathBoundsUniform;
+  GrGLSLUniformHandler::UniformHandle fViewMatrixUniform;
+  GrGLSLUniformHandler::UniformHandle fColorUniform;
+  GrGLSLUniformHandler::UniformHandle fPathBoundsUniform;
 };
 
 GrGLSLPrimitiveProcessor* GrFillPathShader::createGLSLInstance(const GrShaderCaps&) const {
-    return new Impl;
+  return new Impl;
 }
 
-void GrFillTriangleShader::emitVertexCode(Impl*, GrGLSLVertexBuilder* v, const char* viewMatrix,
-                                          GrGLSLUniformHandler* uniformHandler) const {
-    v->codeAppendf(R"(
+void GrFillTriangleShader::emitVertexCode(
+    Impl*, GrGLSLVertexBuilder* v, const char* viewMatrix,
+    GrGLSLUniformHandler* uniformHandler) const {
+  v->codeAppendf(
+      R"(
             localcoord = input_point;
-            vertexpos = (%s * float3(localcoord, 1)).xy;)", viewMatrix);
+            vertexpos = (%s * float3(localcoord, 1)).xy;)",
+      viewMatrix);
 }
 
-void GrFillCubicHullShader::emitVertexCode(Impl*, GrGLSLVertexBuilder* v, const char* viewMatrix,
-                                           GrGLSLUniformHandler* uniformHandler) const {
-    v->codeAppend(R"(
+void GrFillCubicHullShader::emitVertexCode(
+    Impl*, GrGLSLVertexBuilder* v, const char* viewMatrix,
+    GrGLSLUniformHandler* uniformHandler) const {
+  v->codeAppend(R"(
             float4x2 P = float4x2(input_points_0_1, input_points_2_3);
 
             // Translate the points to v0..3 where v0=0.
@@ -112,17 +117,18 @@ void GrFillCubicHullShader::emitVertexCode(Impl*, GrGLSLVertexBuilder* v, const 
 
             localcoord = P[vertexidx];)");
 
-    v->codeAppendf("vertexpos = (%s * float3(localcoord, 1)).xy;", viewMatrix);
+  v->codeAppendf("vertexpos = (%s * float3(localcoord, 1)).xy;", viewMatrix);
 }
 
-void GrFillBoundingBoxShader::emitVertexCode(Impl* impl, GrGLSLVertexBuilder* v,
-                                             const char* viewMatrix,
-                                             GrGLSLUniformHandler* uniformHandler) const {
-    const char* pathBounds;
-    impl->fPathBoundsUniform = uniformHandler->addUniform(
-            kVertex_GrShaderFlag, kFloat4_GrSLType, "path_bounds", &pathBounds);
+void GrFillBoundingBoxShader::emitVertexCode(
+    Impl* impl, GrGLSLVertexBuilder* v, const char* viewMatrix,
+    GrGLSLUniformHandler* uniformHandler) const {
+  const char* pathBounds;
+  impl->fPathBoundsUniform = uniformHandler->addUniform(
+      kVertex_GrShaderFlag, kFloat4_GrSLType, "path_bounds", &pathBounds);
 
-    v->codeAppendf(R"(
+  v->codeAppendf(
+      R"(
             // Use sk_VertexID and uniforms (instead of vertex data) to find vertex positions.
             float2 T = float2(sk_VertexID & 1, sk_VertexID >> 1);
             localcoord = mix(%s.xy, %s.zw, T);
@@ -132,5 +138,6 @@ void GrFillBoundingBoxShader::emitVertexCode(Impl* impl, GrGLSLVertexBuilder* v,
             float2x2 M2 = float2x2(%s);
             float2 devoutset = .25 * sign(M2 * (T - .5));
             localcoord += inverse(M2) * devoutset;
-            vertexpos += devoutset;)", pathBounds, pathBounds, viewMatrix, viewMatrix);
+            vertexpos += devoutset;)",
+      pathBounds, pathBounds, viewMatrix, viewMatrix);
 }

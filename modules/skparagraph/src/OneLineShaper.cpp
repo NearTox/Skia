@@ -566,4 +566,4 @@ TextRange OneLineShaper::clusteredText(GlyphRange glyphs) {
   return {textRange.start, textRange.end};
 }
 }  // namespace textlayout
-}
+}  // namespace skia

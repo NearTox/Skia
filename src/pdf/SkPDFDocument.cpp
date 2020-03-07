@@ -537,11 +537,11 @@ void SkPDFDocument::onClose(SkWStream* stream) {
     f->emitSubset(this);
   }
 
-    this->waitForJobs();
-    {
-      SkAutoMutexExclusive autoMutexAcquire(fMutex);
-      serialize_footer(fOffsetMap, this->getStream(), fInfoDict, docCatalogRef, fUUID);
-    }
+  this->waitForJobs();
+  {
+    SkAutoMutexExclusive autoMutexAcquire(fMutex);
+    serialize_footer(fOffsetMap, this->getStream(), fInfoDict, docCatalogRef, fUUID);
+  }
 }
 
 void SkPDFDocument::incrementJobCount() { fJobCount++; }

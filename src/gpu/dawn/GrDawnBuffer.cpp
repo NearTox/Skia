@@ -19,7 +19,7 @@ wgpu::BufferUsage GrGpuBufferTypeToDawnUsageBit(GrGpuBufferType type) {
     default: SkASSERT(!"buffer type not supported by Dawn"); return wgpu::BufferUsage::Vertex;
   }
 }
-}
+}  // namespace
 
 GrDawnBuffer::GrDawnBuffer(
     GrDawnGpu* gpu, size_t sizeInBytes, GrGpuBufferType type, GrAccessPattern pattern)
