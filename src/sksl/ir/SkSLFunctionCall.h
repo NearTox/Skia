@@ -24,13 +24,17 @@ struct FunctionCall : public Expression {
         fFunction(std::move(function)),
         fArguments(std::move(arguments)) {}
 
-  bool hasSideEffects() const override {
+  bool hasProperty(Property property) const override {
+    if (property == Property::kSideEffects &&
+        (fFunction.fModifiers.fFlags & Modifiers::kHasSideEffects_Flag)) {
+      return true;
+    }
     for (const auto& arg : fArguments) {
-      if (arg->hasSideEffects()) {
+      if (arg->hasProperty(property)) {
         return true;
       }
     }
-    return fFunction.fModifiers.fFlags & Modifiers::kHasSideEffects_Flag;
+    return false;
   }
 
   std::unique_ptr<Expression> clone() const override {
@@ -42,6 +46,7 @@ struct FunctionCall : public Expression {
         new FunctionCall(fOffset, fType, fFunction, std::move(cloned)));
   }
 
+#ifdef SK_DEBUG
   String description() const override {
     String result = String(fFunction.fName) + "(";
     String separator;
@@ -53,6 +58,7 @@ struct FunctionCall : public Expression {
     result += ")";
     return result;
   }
+#endif
 
   const FunctionDeclaration& fFunction;
   std::vector<std::unique_ptr<Expression>> fArguments;

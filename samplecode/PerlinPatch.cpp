@@ -126,10 +126,11 @@ class PerlinPatchView : public Sample {
 
     SkScalar texWidth = fTexScale * TexWidth;
     SkScalar texHeight = fTexScale * TexHeight;
-    const SkPoint texCoords[SkPatchUtils::kNumCorners] = {{fTexX - texWidth, fTexY - texHeight},
-                                                          {fTexX + texWidth, fTexY - texHeight},
-                                                          {fTexX + texWidth, fTexY + texHeight},
-                                                          {fTexX - texWidth, fTexY + texHeight}};
+    const SkPoint texCoords[SkPatchUtils::kNumCorners] = {
+        {fTexX - texWidth, fTexY - texHeight},
+        {fTexX + texWidth, fTexY - texHeight},
+        {fTexX + texWidth, fTexY + texHeight},
+        {fTexX - texWidth, fTexY + texHeight}};
 
     SkScalar scaleFreq = 2.0;
     fShader1 =

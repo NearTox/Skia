@@ -84,8 +84,8 @@ static void draw_bitmap(SkCanvas* canvas, const SkRect& r, sk_sp<SkImageFilter> 
 ///////////////////////////////////////////////////////////////////////////////
 
 DEF_SIMPLE_GM(dropshadowimagefilter, canvas, 400, 656) {
-  void (*drawProc[])(SkCanvas*, const SkRect&, sk_sp<SkImageFilter>) = {draw_bitmap, draw_path,
-                                                                        draw_paint, draw_text};
+  void (*drawProc[])(SkCanvas*, const SkRect&, sk_sp<SkImageFilter>) = {
+      draw_bitmap, draw_path, draw_paint, draw_text};
 
   sk_sp<SkColorFilter> cf(SkColorFilters::Blend(SK_ColorMAGENTA, SkBlendMode::kSrcIn));
   sk_sp<SkImageFilter> cfif(SkImageFilters::ColorFilter(std::move(cf), nullptr));

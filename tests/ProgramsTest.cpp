@@ -112,7 +112,10 @@ class BlockInputFragmentProcessor : public GrFragmentProcessor {
  private:
   class GLFP : public GrGLSLFragmentProcessor {
    public:
-    void emitCode(EmitArgs& args) override { this->invokeChild(0, args); }
+    void emitCode(EmitArgs& args) override {
+      SkString temp = this->invokeChild(0, args);
+      args.fFragBuilder->codeAppendf("%s = %s;", args.fOutputColor, temp.c_str());
+    }
 
    private:
     typedef GrGLSLFragmentProcessor INHERITED;
@@ -150,9 +153,10 @@ static std::unique_ptr<GrRenderTargetContext> random_render_target_context(
   // Above could be 0 if msaa isn't supported.
   sampleCnt = SkTMax(1, sampleCnt);
 
-  return context->priv().makeDeferredRenderTargetContext(
-      SkBackingFit::kExact, kRenderTargetWidth, kRenderTargetHeight, GrColorType::kRGBA_8888,
-      nullptr, sampleCnt, GrMipMapped::kNo, origin);
+  return GrRenderTargetContext::Make(
+      context, GrColorType::kRGBA_8888, nullptr, SkBackingFit::kExact,
+      {kRenderTargetWidth, kRenderTargetHeight}, sampleCnt, GrMipMapped::kNo, GrProtected::kNo,
+      origin);
 }
 
 #if GR_TEST_UTILS
@@ -248,7 +252,7 @@ bool GrDrawingManager::ProgramUnitTest(GrContext* context, int maxStages, int ma
   GrDrawingManager* drawingManager = context->priv().drawingManager();
   GrProxyProvider* proxyProvider = context->priv().proxyProvider();
 
-  sk_sp<GrTextureProxy> proxies[2];
+  GrProcessorTestData::ProxyInfo proxies[2];
 
   // setup dummy textures
   GrMipMapped mipMapped = GrMipMapped(context->priv().caps()->mipMapSupport());
@@ -256,26 +260,31 @@ bool GrDrawingManager::ProgramUnitTest(GrContext* context, int maxStages, int ma
     GrSurfaceDesc dummyDesc;
     dummyDesc.fWidth = 34;
     dummyDesc.fHeight = 18;
-    dummyDesc.fConfig = kRGBA_8888_GrPixelConfig;
     const GrBackendFormat format = context->priv().caps()->getDefaultBackendFormat(
         GrColorType::kRGBA_8888, GrRenderable::kYes);
-    proxies[0] = proxyProvider->createProxy(
-        format, dummyDesc, GrRenderable::kYes, 1, kBottomLeft_GrSurfaceOrigin, mipMapped,
-        SkBackingFit::kExact, SkBudgeted::kNo, GrProtected::kNo, GrInternalSurfaceFlags::kNone);
+    GrSwizzle swizzle = context->priv().caps()->getReadSwizzle(format, GrColorType::kRGBA_8888);
+    proxies[0] = {
+        proxyProvider->createProxy(
+            format, dummyDesc, swizzle, GrRenderable::kYes, 1, kBottomLeft_GrSurfaceOrigin,
+            mipMapped, SkBackingFit::kExact, SkBudgeted::kNo, GrProtected::kNo,
+            GrInternalSurfaceFlags::kNone),
+        GrColorType::kRGBA_8888, kPremul_SkAlphaType};
   }
   {
     GrSurfaceDesc dummyDesc;
     dummyDesc.fWidth = 16;
     dummyDesc.fHeight = 22;
-    dummyDesc.fConfig = kAlpha_8_GrPixelConfig;
     const GrBackendFormat format =
         context->priv().caps()->getDefaultBackendFormat(GrColorType::kAlpha_8, GrRenderable::kNo);
-    proxies[1] = proxyProvider->createProxy(
-        format, dummyDesc, GrRenderable::kNo, 1, kTopLeft_GrSurfaceOrigin, mipMapped,
-        SkBackingFit::kExact, SkBudgeted::kNo, GrProtected::kNo, GrInternalSurfaceFlags::kNone);
+    GrSwizzle swizzle = context->priv().caps()->getReadSwizzle(format, GrColorType::kAlpha_8);
+    proxies[1] = {
+        proxyProvider->createProxy(
+            format, dummyDesc, swizzle, GrRenderable::kNo, 1, kTopLeft_GrSurfaceOrigin, mipMapped,
+            SkBackingFit::kExact, SkBudgeted::kNo, GrProtected::kNo, GrInternalSurfaceFlags::kNone),
+        GrColorType::kAlpha_8, kPremul_SkAlphaType};
   }
 
-  if (!proxies[0] || !proxies[1]) {
+  if (!std::get<0>(proxies[0]) || !std::get<0>(proxies[1])) {
     SkDebugf("Could not allocate dummy textures");
     return false;
   }
@@ -292,7 +301,7 @@ bool GrDrawingManager::ProgramUnitTest(GrContext* context, int maxStages, int ma
     }
 
     GrPaint paint;
-    GrProcessorTestData ptd(&random, context, renderTargetContext.get(), proxies);
+    GrProcessorTestData ptd(&random, context, 2, proxies);
     set_random_color_coverage_stages(&paint, &ptd, maxStages, maxLevels);
     set_random_xpf(&paint, &ptd);
     GrDrawRandomOp(&random, renderTargetContext.get(), std::move(paint));
@@ -303,33 +312,33 @@ bool GrDrawingManager::ProgramUnitTest(GrContext* context, int maxStages, int ma
       GrPrepareForExternalIORequests());
 
   // Validate that GrFPs work correctly without an input.
-  auto renderTargetContext = context->priv().makeDeferredRenderTargetContext(
-      SkBackingFit::kExact, kRenderTargetWidth, kRenderTargetHeight, GrColorType::kRGBA_8888,
-      nullptr);
+  auto renderTargetContext = GrRenderTargetContext::Make(
+      context, GrColorType::kRGBA_8888, nullptr, SkBackingFit::kExact,
+      {kRenderTargetWidth, kRenderTargetHeight});
   if (!renderTargetContext) {
     SkDebugf("Could not allocate a renderTargetContext");
     return false;
-  }
-
-  int fpFactoryCnt = GrFragmentProcessorTestFactory::Count();
-  for (int i = 0; i < fpFactoryCnt; ++i) {
-    // Since FP factories internally randomize, call each 10 times.
-    for (int j = 0; j < 10; ++j) {
-      GrProcessorTestData ptd(&random, context, renderTargetContext.get(), proxies);
-
-      GrPaint paint;
-      paint.setXPFactory(GrPorterDuffXPFactory::Get(SkBlendMode::kSrc));
-      auto fp = GrFragmentProcessorTestFactory::MakeIdx(i, &ptd);
-      auto blockFP = BlockInputFragmentProcessor::Make(std::move(fp));
-      paint.addColorFragmentProcessor(std::move(blockFP));
-      GrDrawRandomOp(&random, renderTargetContext.get(), std::move(paint));
-      drawingManager->flush(
-          nullptr, 0, SkSurface::BackendSurfaceAccess::kNoAccess, GrFlushInfo(),
-          GrPrepareForExternalIORequests());
     }
-  }
 
-  return true;
+    int fpFactoryCnt = GrFragmentProcessorTestFactory::Count();
+    for (int i = 0; i < fpFactoryCnt; ++i) {
+      // Since FP factories internally randomize, call each 10 times.
+      for (int j = 0; j < 10; ++j) {
+        GrProcessorTestData ptd(&random, context, 2, proxies);
+
+        GrPaint paint;
+        paint.setXPFactory(GrPorterDuffXPFactory::Get(SkBlendMode::kSrc));
+        auto fp = GrFragmentProcessorTestFactory::MakeIdx(i, &ptd);
+        auto blockFP = BlockInputFragmentProcessor::Make(std::move(fp));
+        paint.addColorFragmentProcessor(std::move(blockFP));
+        GrDrawRandomOp(&random, renderTargetContext.get(), std::move(paint));
+        drawingManager->flush(
+            nullptr, 0, SkSurface::BackendSurfaceAccess::kNoAccess, GrFlushInfo(),
+            GrPrepareForExternalIORequests());
+      }
+    }
+
+    return true;
 }
 #endif
 
@@ -369,6 +378,14 @@ static int get_programs_max_levels(const sk_gpu_test::ContextInfo& ctxInfo) {
     // On iOS we can exceed the maximum number of varyings. http://skbug.com/6627.
 #ifdef SK_BUILD_FOR_IOS
     maxTreeLevels = 2;
+#endif
+#ifdef SK_BUILD_FOR_ANDROID
+    GrGLGpu* gpu = static_cast<GrGLGpu*>(ctxInfo.grContext()->priv().getGpu());
+    // Tecno Spark 3 Pro with Power VR Rogue GE8300 will fail shader compiles with
+    // no message if the shader is particularly long.
+    if (gpu->ctxInfo().vendor() == kImagination_GrGLVendor) {
+      maxTreeLevels = 3;
+    }
 #endif
     if (ctxInfo.type() == sk_gpu_test::GrContextFactory::kANGLE_D3D9_ES2_ContextType ||
         ctxInfo.type() == sk_gpu_test::GrContextFactory::kANGLE_D3D11_ES2_ContextType) {

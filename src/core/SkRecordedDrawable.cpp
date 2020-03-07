@@ -24,21 +24,16 @@ void SkRecordedDrawable::onDraw(SkCanvas* canvas) {
 }
 
 SkPicture* SkRecordedDrawable::onNewPictureSnapshot() {
-  SkBigPicture::SnapshotArray* pictList = nullptr;
-  if (fDrawableList) {
     // TODO: should we plumb-down the BBHFactory and recordFlags from our host
     //       PictureRecorder?
-    pictList = fDrawableList->newDrawableSnapshot();
-  }
+    std::unique_ptr<SkBigPicture::SnapshotArray> pictList{
+        fDrawableList ? fDrawableList->newDrawableSnapshot() : nullptr};
 
-  size_t subPictureBytes = 0;
-  for (int i = 0; pictList && i < pictList->count(); i++) {
-    subPictureBytes += pictList->begin()[i]->approximateBytesUsed();
-  }
-  // SkBigPicture will take ownership of a ref on both fRecord and fBBH.
-  // We're not willing to give up our ownership, so we must ref them for SkPicture.
-  return new SkBigPicture(
-      fBounds, SkRef(fRecord.get()), pictList, SkSafeRef(fBBH.get()), subPictureBytes);
+    size_t subPictureBytes = 0;
+    for (int i = 0; pictList && i < pictList->count(); i++) {
+      subPictureBytes += pictList->begin()[i]->approximateBytesUsed();
+    }
+    return new SkBigPicture(fBounds, fRecord, std::move(pictList), fBBH, subPictureBytes);
 }
 
 void SkRecordedDrawable::flatten(SkWriteBuffer& buffer) const {

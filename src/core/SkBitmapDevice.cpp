@@ -19,7 +19,6 @@
 #include "src/core/SkGlyphRun.h"
 #include "src/core/SkImageFilterCache.h"
 #include "src/core/SkImageFilter_Base.h"
-#include "src/core/SkMakeUnique.h"
 #include "src/core/SkRasterClip.h"
 #include "src/core/SkSpecialImage.h"
 #include "src/core/SkStrikeCache.h"
@@ -37,7 +36,7 @@ struct Bounder {
 
   bool hasBounds() const { return fHasBounds; }
   const SkRect* bounds() const { return fHasBounds ? &fBounds : nullptr; }
-  operator const SkRect *() const { return this->bounds(); }
+  operator const SkRect*() const { return this->bounds(); }
 };
 
 class SkDrawTiler {
@@ -238,7 +237,7 @@ SkBitmapDevice::SkBitmapDevice(
   if (coverage) {
     SkASSERT(coverage->width() == bitmap.width());
     SkASSERT(coverage->height() == bitmap.height());
-    fCoverage = skstd::make_unique<SkBitmap>(*coverage);
+    fCoverage = std::make_unique<SkBitmap>(*coverage);
   }
 }
 
@@ -770,6 +769,13 @@ void SkBitmapDevice::onSetDeviceClipRestriction(SkIRect* mutableClipRestriction)
     SkRegion rgn(*mutableClipRestriction);
     fRCStack.clipRegion(rgn, SkClipOp::kIntersect);
   }
+}
+
+bool SkBitmapDevice::onClipIsWideOpen() const {
+  const SkRasterClip& rc = fRCStack.rc();
+  // If we're AA, we can't be wide-open (we would represent that as BW)
+  return rc.isBW() && rc.bwRgn().isRect() &&
+         rc.bwRgn().getBounds() == SkIRect{0, 0, this->width(), this->height()};
 }
 
 bool SkBitmapDevice::onClipIsAA() const {

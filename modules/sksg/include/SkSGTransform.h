@@ -11,7 +11,7 @@
 #include "modules/sksg/include/SkSGEffectNode.h"
 
 #include "include/core/SkMatrix.h"
-#include "include/core/SkMatrix44.h"
+#include "include/private/SkM44.h"
 
 namespace sksg {
 
@@ -32,7 +32,7 @@ class Transform : public Node {
   virtual bool is44() const = 0;
 
   virtual SkMatrix asMatrix() const = 0;
-  virtual SkMatrix44 asMatrix44() const = 0;
+  virtual SkM44 asM44() const = 0;
 
  private:
   friend class TransformPriv;
@@ -43,7 +43,7 @@ class Transform : public Node {
 /**
  * Concrete, matrix-backed Transform.
  *
- * Supported instantiations: SkMatrix, SkMatrix44.
+ * Supported instantiations: SkMatrix, SkM44.
  *
  * Sample use:
  *
@@ -56,8 +56,7 @@ template <typename T>
 class Matrix final : public Transform {
  public:
   template <
-      typename =
-          std::enable_if<std::is_same<T, SkMatrix>::value || std::is_same<T, SkMatrix44>::value>>
+      typename = std::enable_if<std::is_same<T, SkMatrix>::value || std::is_same<T, SkM44>::value>>
   static sk_sp<Matrix> Make(const T& m) {
     return sk_sp<Matrix>(new Matrix(m));
   }
@@ -71,10 +70,10 @@ class Matrix final : public Transform {
     return SkRect::MakeEmpty();
   }
 
-  bool is44() const override { return std::is_same<T, SkMatrix44>::value; }
+  bool is44() const override { return std::is_same<T, SkM44>::value; }
 
-  SkMatrix asMatrix() const override { return fMatrix; }
-  SkMatrix44 asMatrix44() const override { return fMatrix; }
+  SkMatrix asMatrix() const override;
+  SkM44 asM44() const override;
 
  private:
   T fMatrix;

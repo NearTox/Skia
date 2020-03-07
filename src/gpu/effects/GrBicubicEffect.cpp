@@ -137,8 +137,8 @@ void GrGLBicubicEffect::emitCode(EmitArgs& args) {
 void GrGLBicubicEffect::onSetData(
     const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& processor) {
   const GrBicubicEffect& bicubicEffect = processor.cast<GrBicubicEffect>();
-  GrSurfaceProxy* proxy = processor.textureSampler(0).proxy();
-  SkISize textureDims = proxy->backingStoreDimensions();
+  const auto& view = processor.textureSampler(0).view();
+  SkISize textureDims = view.proxy()->backingStoreDimensions();
 
   float dims[4] = {0, 0, 0, 0};
   if (bicubicEffect.direction() != GrBicubicEffect::Direction::kY) {
@@ -150,7 +150,7 @@ void GrGLBicubicEffect::onSetData(
     dims[3] = textureDims.height();
   }
   pdman.set4fv(fDimensions, 1, dims);
-  fDomain.setData(pdman, bicubicEffect.domain(), proxy, processor.textureSampler(0).samplerState());
+  fDomain.setData(pdman, bicubicEffect.domain(), view, processor.textureSampler(0).samplerState());
 }
 
 GrBicubicEffect::GrBicubicEffect(
@@ -197,19 +197,16 @@ GR_DEFINE_FRAGMENT_PROCESSOR_TEST(GrBicubicEffect);
 
 #if GR_TEST_UTILS
 std::unique_ptr<GrFragmentProcessor> GrBicubicEffect::TestCreate(GrProcessorTestData* d) {
-  int texIdx = d->fRandom->nextBool() ? GrProcessorUnitTest::kSkiaPMTextureIdx
-                                      : GrProcessorUnitTest::kAlphaTextureIdx;
   static const GrSamplerState::WrapMode kClampClamp[] = {
       GrSamplerState::WrapMode::kClamp, GrSamplerState::WrapMode::kClamp};
-  SkAlphaType alphaType = d->fRandom->nextBool() ? kPremul_SkAlphaType : kUnpremul_SkAlphaType;
   Direction direction = Direction::kX;
   switch (d->fRandom->nextULessThan(3)) {
     case 0: direction = Direction::kX; break;
     case 1: direction = Direction::kY; break;
     case 2: direction = Direction::kXY; break;
   }
-  return GrBicubicEffect::Make(
-      d->textureProxy(texIdx), SkMatrix::I(), kClampClamp, direction, alphaType);
+  auto [proxy, ct, at] = d->randomProxy();
+  return GrBicubicEffect::Make(proxy, SkMatrix::I(), kClampClamp, direction, at);
 }
 #endif
 

@@ -29,12 +29,9 @@ class GrContextThreadSafeProxyPriv {
   const GrCaps* caps() const { return fProxy->caps(); }
   sk_sp<const GrCaps> refCaps() const { return fProxy->refCaps(); }
 
-  sk_sp<GrSkSLFPFactoryCache> fpFactoryCache();
-
   // GrContextThreadSafeProxyPriv
   static sk_sp<GrContextThreadSafeProxy> Make(
-      GrBackendApi, const GrContextOptions&, uint32_t contextID, sk_sp<const GrCaps>,
-      sk_sp<GrSkSLFPFactoryCache>);
+      GrBackendApi, const GrContextOptions&, uint32_t contextID, sk_sp<const GrCaps>);
 
  private:
   explicit GrContextThreadSafeProxyPriv(GrContextThreadSafeProxy* proxy) : fProxy(proxy) {}

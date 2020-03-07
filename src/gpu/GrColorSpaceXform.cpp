@@ -45,7 +45,7 @@ bool GrColorSpaceXform::Equals(const GrColorSpaceXform* a, const GrColorSpaceXfo
     return false;
   }
 
-  return true;
+    return true;
 }
 
 SkColor4f GrColorSpaceXform::apply(const SkColor4f& srcColor) {
@@ -66,8 +66,7 @@ class GrGLColorSpaceXformEffect : public GrGLSLFragmentProcessor {
     fColorSpaceHelper.emitCode(uniformHandler, csxe.colorXform());
 
     if (this->numChildProcessors()) {
-      SkString childColor("src_color");
-      this->invokeChild(0, &childColor, args);
+      SkString childColor = this->invokeChild(0, args);
 
       SkString xformedColor;
       fragBuilder->appendColorGamutXform(&xformedColor, childColor.c_str(), &fColorSpaceHelper);

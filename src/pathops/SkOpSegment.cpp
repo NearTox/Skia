@@ -246,7 +246,7 @@ bool SkOpSegment::addExpanded(double newT, const SkOpSpanBase* test, bool* start
     writableTest->ptT()->addOpp(newPtT, oppPrev);
     writableTest->checkForCollapsedCoincidence();
   }
-  return true;
+    return true;
 }
 
 // Please keep this in sync with debugAddT()
@@ -1744,7 +1744,7 @@ int SkOpSegment::updateWinding(SkOpSpanBase* start, SkOpSpanBase* end) {
   if (winding && UseInnerWinding(winding - spanWinding, winding) && winding != SK_MaxS32) {
     winding -= spanWinding;
   }
-  return winding;
+    return winding;
 }
 
 int SkOpSegment::updateWinding(SkOpAngle* angle) {

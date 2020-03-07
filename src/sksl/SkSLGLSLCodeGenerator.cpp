@@ -196,7 +196,11 @@ void GLSLCodeGenerator::writeExpression(const Expression& expr, Precedence paren
       this->writeTernaryExpression((TernaryExpression&)expr, parentPrecedence);
       break;
     case Expression::kIndex_Kind: this->writeIndexExpression((IndexExpression&)expr); break;
-    default: ABORT("unsupported expression: %s", expr.description().c_str());
+    default:
+#ifdef SK_DEBUG
+      ABORT("unsupported expression: %s", expr.description().c_str());
+#endif
+      break;
   }
 }
 
@@ -1014,8 +1018,7 @@ void GLSLCodeGenerator::writeBinaryExpression(
   bool positionWorkaround =
       fProgramKind == Program::Kind::kVertex_Kind && Compiler::IsAssignment(b.fOperator) &&
       Expression::kFieldAccess_Kind == b.fLeft->fKind && is_sk_position((FieldAccess&)*b.fLeft) &&
-      !strstr(b.fRight->description().c_str(), "sk_RTAdjust") &&
-      !fProgram.fSettings.fCaps->canUseFragCoord();
+      !b.fRight->containsRTAdjust() && !fProgram.fSettings.fCaps->canUseFragCoord();
   if (positionWorkaround) {
     this->write("sk_FragCoord_Workaround = (");
   }
@@ -1354,9 +1357,9 @@ void GLSLCodeGenerator::writeVarDeclarations(const VarDeclarations& decl, bool g
       fFoundRectSamplerDecl = true;
     }
   }
-  if (wroteType) {
-    this->write(";");
-  }
+    if (wroteType) {
+      this->write(";");
+    }
 }
 
 void GLSLCodeGenerator::writeStatement(const Statement& s) {
@@ -1379,7 +1382,11 @@ void GLSLCodeGenerator::writeStatement(const Statement& s) {
     case Statement::kContinue_Kind: this->write("continue;"); break;
     case Statement::kDiscard_Kind: this->write("discard;"); break;
     case Statement::kNop_Kind: this->write(";"); break;
-    default: ABORT("unsupported statement: %s", s.description().c_str());
+    default:
+#ifdef SK_DEBUG
+      ABORT("unsupported statement: %s", s.description().c_str());
+#endif
+      break;
   }
 }
 
@@ -1516,8 +1523,8 @@ void GLSLCodeGenerator::writeSwitchStatement(const SwitchStatement& s) {
     }
     fIndentation--;
   }
-  fIndentation--;
-  this->write("}");
+    fIndentation--;
+    this->write("}");
 }
 
 void GLSLCodeGenerator::writeReturnStatement(const ReturnStatement& r) {
@@ -1577,7 +1584,11 @@ void GLSLCodeGenerator::writeProgramElement(const ProgramElement& e) {
       break;
     }
     case ProgramElement::kEnum_Kind: break;
-    default: printf("%s\n", e.description().c_str()); ABORT("unsupported program element");
+    default:
+#ifdef SK_DEBUG
+      printf("unsupported program element %s\n", e.description().c_str());
+#endif
+      SkASSERT(false);
   }
 }
 

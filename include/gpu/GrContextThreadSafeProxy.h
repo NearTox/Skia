@@ -90,7 +90,7 @@ class SK_API GrContextThreadSafeProxy : public GrContext_Base {
   // DDL TODO: need to add unit tests for backend & maybe options
   GrContextThreadSafeProxy(GrBackendApi, const GrContextOptions&, uint32_t contextID);
 
-  bool init(sk_sp<const GrCaps>, sk_sp<GrSkSLFPFactoryCache>) override;
+  bool init(sk_sp<const GrCaps>) override;
 
   typedef GrContext_Base INHERITED;
 };

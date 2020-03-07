@@ -23,8 +23,8 @@ struct SkRect;
 
 namespace GrLatticeOp {
 std::unique_ptr<GrDrawOp> MakeNonAA(
-    GrRecordingContext*, GrPaint&&, const SkMatrix& viewMatrix, sk_sp<GrTextureProxy>,
-    GrColorType srcColorType, sk_sp<GrColorSpaceXform>, GrSamplerState::Filter,
+    GrRecordingContext*, GrPaint&&, const SkMatrix& viewMatrix, GrSurfaceProxyView view,
+    SkAlphaType alphaType, sk_sp<GrColorSpaceXform>, GrSamplerState::Filter,
     std::unique_ptr<SkLatticeIter>, const SkRect& dst);
 };
 

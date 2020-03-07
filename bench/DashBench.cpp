@@ -366,10 +366,11 @@ class DashGridBench : public Benchmark {
     p.setPathEffect(fPathEffect);
     p.setAntiAlias(fDoAA);
 
-    SkPoint pts[4] = {{SkIntToScalar(0), 20.5f},
-                      {SkIntToScalar(20), 20.5f},
-                      {20.5f, SkIntToScalar(0)},
-                      {20.5f, SkIntToScalar(20)}};
+    SkPoint pts[4] = {
+        {SkIntToScalar(0), 20.5f},
+        {SkIntToScalar(20), 20.5f},
+        {20.5f, SkIntToScalar(0)},
+        {20.5f, SkIntToScalar(20)}};
 
     for (int i = 0; i < loops; ++i) {
       for (int j = 0; j < 10; ++j) {

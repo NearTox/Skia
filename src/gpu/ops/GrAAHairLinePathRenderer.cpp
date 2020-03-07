@@ -100,7 +100,7 @@ static sk_sp<const GrBuffer> get_lines_index_buffer(GrResourceProvider* resource
 
 // Takes 178th time of logf on Z600 / VC2010
 static int get_float_exp(float x) {
-  GR_STATIC_ASSERT(sizeof(int) == sizeof(float));
+  static_assert(sizeof(int) == sizeof(float));
 #ifdef SK_DEBUG
   static bool tested;
   if (!tested) {
@@ -468,7 +468,7 @@ struct BezierVertex {
   };
 };
 
-GR_STATIC_ASSERT(sizeof(BezierVertex) == 3 * sizeof(SkPoint));
+static_assert(sizeof(BezierVertex) == 3 * sizeof(SkPoint));
 
 static void intersect_lines(
     const SkPoint& ptA, const SkVector& normA, const SkPoint& ptB, const SkVector& normB,
@@ -831,7 +831,8 @@ class AAHairlineOp final : public GrMeshDrawOp {
   typedef SkTArray<int, true> IntArray;
   typedef SkTArray<float, true> FloatArray;
 
-  CombineResult onCombineIfPossible(GrOp* t, const GrCaps& caps) override {
+  CombineResult onCombineIfPossible(
+      GrOp* t, GrRecordingContext::Arenas*, const GrCaps& caps) override {
     AAHairlineOp* that = t->cast<AAHairlineOp>();
 
     if (!fHelper.isCompatible(that->fHelper, caps, this->bounds(), that->bounds())) {
@@ -844,7 +845,7 @@ class AAHairlineOp final : public GrMeshDrawOp {
 
     // We go to identity if we don't have perspective
     if (this->viewMatrix().hasPerspective() &&
-        !this->viewMatrix().cheapEqualTo(that->viewMatrix())) {
+        !SkMatrixPriv::CheapEqual(this->viewMatrix(), that->viewMatrix())) {
       return CombineResult::kCannotCombine;
     }
 
@@ -859,7 +860,8 @@ class AAHairlineOp final : public GrMeshDrawOp {
       return CombineResult::kCannotCombine;
     }
 
-    if (fHelper.usesLocalCoords() && !this->viewMatrix().cheapEqualTo(that->viewMatrix())) {
+    if (fHelper.usesLocalCoords() &&
+        !SkMatrixPriv::CheapEqual(this->viewMatrix(), that->viewMatrix())) {
       return CombineResult::kCannotCombine;
     }
 
@@ -1055,7 +1057,10 @@ void AAHairlineOp::onPrepareDraws(Target* target) {
 }
 
 void AAHairlineOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) {
-  fHelper.executeDrawsAndUploads(this, flushState, chainBounds);
+  auto pipeline = GrSimpleMeshDrawOpHelper::CreatePipeline(
+      flushState, fHelper.detachProcessorSet(), fHelper.pipelineFlags(), fHelper.stencilSettings());
+
+  flushState->executeDrawsAndUploadsForMeshDrawOp(this, chainBounds, pipeline);
 }
 
 bool GrAAHairLinePathRenderer::onDrawPath(const DrawPathArgs& args) {

@@ -327,6 +327,9 @@ int SkAnimatedImage::decodeNextFrame() {
 }
 
 void SkAnimatedImage::onDraw(SkCanvas* canvas) {
+  // This SkBitmap may be reused later to decode the following frame. But Frame::init
+  // lazily copies the pixel ref if it has any other references. So it is safe to not
+  // do a deep copy here.
   auto image = SkMakeImageFromRasterBitmap(fDisplayFrame.fBitmap, kNever_SkCopyPixelsMode);
 
   if (fSimple) {
@@ -352,3 +355,10 @@ void SkAnimatedImage::onDraw(SkCanvas* canvas) {
 }
 
 void SkAnimatedImage::setRepetitionCount(int newCount) { fRepetitionCount = newCount; }
+
+sk_sp<SkImage> SkAnimatedImage::getCurrentFrame() {
+  // This SkBitmap may be reused later to decode the following frame. But Frame::init
+  // lazily copies the pixel ref if it has any other references. So it is safe to not
+  // do a deep copy here.
+  return SkMakeImageFromRasterBitmap(fDisplayFrame.fBitmap, kNever_SkCopyPixelsMode);
+}

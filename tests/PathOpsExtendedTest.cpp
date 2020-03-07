@@ -290,7 +290,7 @@ bool drawAsciiPaths(const SkPath& one, const SkPath& two, bool drawPaths) {
     *outPtr++ = '\0';
     SkDebugf("%s\n", out);
   }
-  return true;
+    return true;
 }
 
 int comparePaths(

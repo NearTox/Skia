@@ -38,11 +38,12 @@ static sk_sp<SkShader> make_shader0(SkIPoint* size) {
 }
 
 static sk_sp<SkShader> make_shader1(const SkIPoint& size) {
-  SkPoint pts[] = {{
-                       0,
-                       0,
-                   },
-                   {SkIntToScalar(size.fX), SkIntToScalar(size.fY)}};
+  SkPoint pts[] = {
+      {
+          0,
+          0,
+      },
+      {SkIntToScalar(size.fX), SkIntToScalar(size.fY)}};
   SkColor colors[] = {SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorRED};
   return SkGradientShader::MakeLinear(
       pts, colors, nullptr, SK_ARRAY_COUNT(colors), SkTileMode::kMirror);

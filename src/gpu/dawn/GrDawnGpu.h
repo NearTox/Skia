@@ -40,8 +40,12 @@ class GrDawnGpu : public GrGpu {
   void xferBarrier(GrRenderTarget*, GrXferBarrierType) override {}
 
   GrBackendTexture onCreateBackendTexture(
-      SkISize, const GrBackendFormat&, GrRenderable, const BackendTextureData* data,
-      int numMipLevels, GrProtected isProtected) override;
+      SkISize dimensions, const GrBackendFormat&, GrRenderable, GrMipMapped, GrProtected,
+      const BackendTextureData*) override;
+  GrBackendTexture onCreateCompressedBackendTexture(
+      SkISize dimensions, const GrBackendFormat&, GrMipMapped, GrProtected,
+      const BackendTextureData*) override;
+
   void deleteBackendTexture(const GrBackendTexture&) override;
 #if GR_TEST_UTILS
   bool isTestingOnlyBackendTexture(const GrBackendTexture&) const override;
@@ -81,7 +85,7 @@ class GrDawnGpu : public GrGpu {
 
   sk_sp<GrDawnProgram> getOrCreateRenderPipeline(GrRenderTarget*, const GrProgramInfo&);
 
-  wgpu::Sampler getOrCreateSampler(const GrSamplerState& samplerState);
+  wgpu::Sampler getOrCreateSampler(GrSamplerState samplerState);
 
   GrDawnRingBuffer::Slice allocateUniformRingBufferSlice(int size);
   GrDawnStagingBuffer* getStagingBuffer(size_t size);
@@ -96,15 +100,17 @@ class GrDawnGpu : public GrGpu {
   virtual void querySampleLocations(GrRenderTarget*, SkTArray<SkPoint>*) override {}
 
   sk_sp<GrTexture> onCreateTexture(
-      const GrSurfaceDesc& desc, const GrBackendFormat&, GrRenderable, int renderTargetSampleCnt,
+      const GrSurfaceDesc&, const GrBackendFormat&, GrRenderable, int renderTargetSampleCnt,
       SkBudgeted, GrProtected, int mipLevelCount, uint32_t levelClearMask) override;
 
   sk_sp<GrTexture> onCreateCompressedTexture(
-      int width, int height, const GrBackendFormat&, SkImage::CompressionType, SkBudgeted,
-      const void* data) override;
+      SkISize dimensions, const GrBackendFormat&, SkBudgeted, GrMipMapped, GrProtected,
+      const void* data, size_t dataSize) override;
 
   sk_sp<GrTexture> onWrapBackendTexture(
       const GrBackendTexture&, GrColorType, GrWrapOwnership, GrWrapCacheable, GrIOType) override;
+  sk_sp<GrTexture> onWrapCompressedBackendTexture(
+      const GrBackendTexture&, GrWrapOwnership, GrWrapCacheable) override;
   sk_sp<GrTexture> onWrapRenderableBackendTexture(
       const GrBackendTexture&, int sampleCnt, GrColorType, GrWrapOwnership,
       GrWrapCacheable) override;
@@ -162,7 +168,7 @@ class GrDawnGpu : public GrGpu {
   };
 
   struct SamplerHash {
-    size_t operator()(const GrSamplerState& samplerState) const {
+    size_t operator()(GrSamplerState samplerState) const {
       return SkOpts::hash_fn(&samplerState, sizeof(samplerState), 0);
     }
   };

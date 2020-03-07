@@ -117,8 +117,8 @@ class XfermodeImageFilterGM : public GM {
     }
     // Test cropping
     constexpr size_t nbSamples = 3;
-    const SkBlendMode sampledModes[nbSamples] = {SkBlendMode::kOverlay, SkBlendMode::kSrcOver,
-                                                 SkBlendMode::kPlus};
+    const SkBlendMode sampledModes[nbSamples] = {
+        SkBlendMode::kOverlay, SkBlendMode::kSrcOver, SkBlendMode::kPlus};
     int offsets[nbSamples][4] = {{10, 10, -16, -16}, {10, 10, 10, 10}, {-10, -10, -6, -6}};
     for (size_t i = 0; i < nbSamples; ++i) {
       SkIRect cropRect = SkIRect::MakeXYWH(

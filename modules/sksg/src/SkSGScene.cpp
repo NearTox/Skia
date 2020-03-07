@@ -18,8 +18,6 @@ namespace sksg {
 Animator::Animator() = default;
 Animator::~Animator() = default;
 
-void Animator::tick(float t) { this->onTick(t); }
-
 GroupAnimator::GroupAnimator(AnimatorList&& animators) : fAnimators(std::move(animators)) {}
 
 void GroupAnimator::onTick(float t) {

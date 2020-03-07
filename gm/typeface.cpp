@@ -186,8 +186,8 @@ static void draw_typeface_rendering_gm(
   // Odd sizes have embedded bitmaps.
   constexpr SkScalar textSizes[] = {9, 10, 11, 12, 13, 14, 15, 16};
 
-  constexpr SkFontHinting hintingTypes[] = {SkFontHinting::kNone, SkFontHinting::kSlight,
-                                            SkFontHinting::kNormal, SkFontHinting::kFull};
+  constexpr SkFontHinting hintingTypes[] = {
+      SkFontHinting::kNone, SkFontHinting::kSlight, SkFontHinting::kNormal, SkFontHinting::kFull};
 
   struct SubpixelType {
     bool requested;

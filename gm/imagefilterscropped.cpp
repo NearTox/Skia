@@ -115,8 +115,8 @@ class ImageFiltersCroppedGM : public skiagm::GM {
   void onOnceBeforeDraw() override { make_checkerboard(); }
 
   void onDraw(SkCanvas* canvas) override {
-    void (*drawProc[])(SkCanvas*, const SkRect&, sk_sp<SkImageFilter>) = {draw_bitmap, draw_path,
-                                                                          draw_paint, draw_text};
+    void (*drawProc[])(SkCanvas*, const SkRect&, sk_sp<SkImageFilter>) = {
+        draw_bitmap, draw_path, draw_paint, draw_text};
 
     sk_sp<SkColorFilter> cf(SkColorFilters::Blend(SK_ColorBLUE, SkBlendMode::kSrcIn));
     SkIRect cropRect = SkIRect::MakeXYWH(10, 10, 44, 44);

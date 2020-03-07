@@ -11,7 +11,6 @@
 #include "include/core/SkColorPriv.h"
 #include "include/core/SkFont.h"
 #include "include/core/SkStream.h"
-#include "include/effects/SkBlurMaskFilter.h"
 #include "include/utils/SkRandom.h"
 #include "samplecode/DecodeFile.h"
 #include "tools/Resources.h"
@@ -42,8 +41,9 @@ class SubpixelTranslateView : public Sample {
   SkString name() override { return SkString("SubpixelTranslate"); }
 
   void onDrawContent(SkCanvas* canvas) override {
-    static const SkFilterQuality gQualitys[] = {kNone_SkFilterQuality, kLow_SkFilterQuality,
-                                                kMedium_SkFilterQuality, kHigh_SkFilterQuality};
+    static const SkFilterQuality gQualitys[] = {
+        kNone_SkFilterQuality, kLow_SkFilterQuality, kMedium_SkFilterQuality,
+        kHigh_SkFilterQuality};
 
     SkPaint paint;
     SkFont font(nullptr, 48);

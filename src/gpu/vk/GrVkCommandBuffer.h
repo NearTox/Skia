@@ -93,7 +93,6 @@ class GrVkCommandBuffer {
   void releaseResources(GrVkGpu* gpu);
 
   void freeGPUData(GrVkGpu* gpu, VkCommandPool pool) const;
-  void abandonGPUData() const;
 
   bool hasWork() const { return fHasWork; }
 
@@ -131,7 +130,6 @@ class GrVkCommandBuffer {
 
   virtual void onReleaseResources(GrVkGpu* gpu) {}
   virtual void onFreeGPUData(GrVkGpu* gpu) const = 0;
-  virtual void onAbandonGPUData() const = 0;
 
   static constexpr uint32_t kMaxInputBuffers = 2;
 
@@ -249,8 +247,6 @@ class GrVkPrimaryCommandBuffer : public GrVkCommandBuffer {
 
   void onFreeGPUData(GrVkGpu* gpu) const override;
 
-  void onAbandonGPUData() const override;
-
   void onReleaseResources(GrVkGpu* gpu) override;
 
   SkTArray<std::unique_ptr<GrVkSecondaryCommandBuffer>, true> fSecondaryCommandBuffers;
@@ -279,8 +275,6 @@ class GrVkSecondaryCommandBuffer : public GrVkCommandBuffer {
       : INHERITED(cmdBuffer, isWrapped) {}
 
   void onFreeGPUData(GrVkGpu* gpu) const override {}
-
-  void onAbandonGPUData() const override {}
 
   // Used for accessing fIsActive (on GrVkCommandBuffer)
   friend class GrVkPrimaryCommandBuffer;

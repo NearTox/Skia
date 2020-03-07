@@ -198,8 +198,8 @@ DEF_SIMPLE_GM(recordopts, canvas, (kTestRectSize + 1) * 2, (kTestRectSize + 1) *
       SkColorSetARGB(255, 0, (kDetectorGreenValue + 1), 0)  // This tests that detectors work.
   };
 
-  InstallDetectorFunc detectorInstallFuncs[] = {install_detector_image_filter,
-                                                install_detector_color_filter};
+  InstallDetectorFunc detectorInstallFuncs[] = {
+      install_detector_image_filter, install_detector_color_filter};
 
   for (size_t i = 0; i < SK_ARRAY_COUNT(shapeColors); ++i) {
     shapeColor = shapeColors[i];

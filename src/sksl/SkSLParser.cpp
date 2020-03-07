@@ -86,11 +86,11 @@ void Parser::InitLayoutMap() {
   TOKEN(TRACKED, "tracked");
   TOKEN(CTYPE, "ctype");
   TOKEN(SKPMCOLOR4F, "SkPMColor4f");
-  TOKEN(SKVECTOR4, "SkVector4");
+  TOKEN(SKV4, "SkV4");
   TOKEN(SKRECT, "SkRect");
   TOKEN(SKIRECT, "SkIRect");
   TOKEN(SKPMCOLOR, "SkPMColor");
-  TOKEN(SKMATRIX44, "SkMatrix44");
+  TOKEN(SKM44, "SkM44");
   TOKEN(BOOL, "bool");
   TOKEN(INT, "int");
   TOKEN(FLOAT, "float");
@@ -535,6 +535,38 @@ ASTNode::ID Parser::varDeclarationEnd(Modifiers mods, ASTNode::ID type, StringFr
       }
     }
     ++vd.fSizeCount;
+  }
+  getNode(currentVar).setVarData(vd);
+  if (this->checkNext(Token::EQ)) {
+    ASTNode::ID value = this->assignmentExpression();
+    if (!value) {
+      return ASTNode::ID::Invalid();
+    }
+    getNode(currentVar).addChild(value);
+  }
+  while (this->checkNext(Token::COMMA)) {
+    Token name;
+    if (!this->expect(Token::IDENTIFIER, "an identifier", &name)) {
+      return ASTNode::ID::Invalid();
+    }
+    currentVar = ASTNode::ID(fFile->fNodes.size());
+    vd = ASTNode::VarData(this->text(name), 0);
+    fFile->fNodes.emplace_back(&fFile->fNodes, -1, ASTNode::Kind::kVarDeclaration);
+    getNode(result).addChild(currentVar);
+    while (this->checkNext(Token::LBRACKET)) {
+      if (this->checkNext(Token::RBRACKET)) {
+        CREATE_EMPTY_CHILD(currentVar);
+      } else {
+        ASTNode::ID size = this->expression();
+        if (!size) {
+          return ASTNode::ID::Invalid();
+        }
+        getNode(currentVar).addChild(size);
+        if (!this->expect(Token::RBRACKET, "']'")) {
+          return ASTNode::ID::Invalid();
+        }
+      }
+      ++vd.fSizeCount;
     }
     getNode(currentVar).setVarData(vd);
     if (this->checkNext(Token::EQ)) {
@@ -544,39 +576,7 @@ ASTNode::ID Parser::varDeclarationEnd(Modifiers mods, ASTNode::ID type, StringFr
       }
       getNode(currentVar).addChild(value);
     }
-    while (this->checkNext(Token::COMMA)) {
-      Token name;
-      if (!this->expect(Token::IDENTIFIER, "an identifier", &name)) {
-        return ASTNode::ID::Invalid();
-      }
-      currentVar = ASTNode::ID(fFile->fNodes.size());
-      vd = ASTNode::VarData(this->text(name), 0);
-      fFile->fNodes.emplace_back(&fFile->fNodes, -1, ASTNode::Kind::kVarDeclaration);
-      getNode(result).addChild(currentVar);
-      while (this->checkNext(Token::LBRACKET)) {
-        if (this->checkNext(Token::RBRACKET)) {
-          CREATE_EMPTY_CHILD(currentVar);
-        } else {
-          ASTNode::ID size = this->expression();
-          if (!size) {
-            return ASTNode::ID::Invalid();
-          }
-          getNode(currentVar).addChild(size);
-          if (!this->expect(Token::RBRACKET, "']'")) {
-            return ASTNode::ID::Invalid();
-          }
-        }
-        ++vd.fSizeCount;
-      }
-      getNode(currentVar).setVarData(vd);
-      if (this->checkNext(Token::EQ)) {
-        ASTNode::ID value = this->assignmentExpression();
-        if (!value) {
-          return ASTNode::ID::Invalid();
-        }
-        getNode(currentVar).addChild(value);
-      }
-    }
+  }
     if (!this->expect(Token::SEMICOLON, "';'")) {
       return ASTNode::ID::Invalid();
     }
@@ -622,7 +622,7 @@ int Parser::layoutInt() {
   if (this->expect(Token::INT_LITERAL, "a non-negative integer", &resultToken)) {
     return SkSL::stoi(this->text(resultToken));
   }
-  return -1;
+    return -1;
 }
 
 /** EQ IDENTIFIER */
@@ -698,14 +698,14 @@ Layout::CType Parser::layoutCType() {
     if (found != layoutTokens->end()) {
       switch (found->second) {
         case LayoutToken::SKPMCOLOR4F: return Layout::CType::kSkPMColor4f;
-        case LayoutToken::SKVECTOR4: return Layout::CType::kSkVector4;
+        case LayoutToken::SKV4: return Layout::CType::kSkV4;
         case LayoutToken::SKRECT: return Layout::CType::kSkRect;
         case LayoutToken::SKIRECT: return Layout::CType::kSkIRect;
         case LayoutToken::SKPMCOLOR: return Layout::CType::kSkPMColor;
         case LayoutToken::BOOL: return Layout::CType::kBool;
         case LayoutToken::INT: return Layout::CType::kInt32;
         case LayoutToken::FLOAT: return Layout::CType::kFloat;
-        case LayoutToken::SKMATRIX44: return Layout::CType::kSkMatrix44;
+        case LayoutToken::SKM44: return Layout::CType::kSkM44;
         default: break;
       }
     }
@@ -979,10 +979,10 @@ ASTNode::ID Parser::type() {
       CREATE_EMPTY_CHILD(result);
     }
     this->expect(Token::RBRACKET, "']'");
-  }
-  td.fIsNullable = this->checkNext(Token::QUESTION);
-  getNode(result).setTypeData(td);
-  return result;
+    }
+    td.fIsNullable = this->checkNext(Token::QUESTION);
+    getNode(result).setTypeData(td);
+    return result;
 }
 
 /* IDENTIFIER LBRACE varDeclaration* RBRACE (IDENTIFIER (LBRACKET expression? RBRACKET)*)? */

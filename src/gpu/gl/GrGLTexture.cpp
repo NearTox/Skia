@@ -37,10 +37,9 @@ static inline GrGLenum target_from_texture_type(GrTextureType type) {
 // Because this class is virtually derived from GrSurface we must explicitly call its constructor.
 GrGLTexture::GrGLTexture(
     GrGLGpu* gpu, SkBudgeted budgeted, const Desc& desc, GrMipMapsStatus mipMapsStatus)
-    : GrSurface(gpu, desc.fSize, desc.fConfig, GrProtected::kNo),
+    : GrSurface(gpu, desc.fSize, GrProtected::kNo),
       INHERITED(
-          gpu, desc.fSize, desc.fConfig, GrProtected::kNo, TextureTypeFromTarget(desc.fTarget),
-          mipMapsStatus),
+          gpu, desc.fSize, GrProtected::kNo, TextureTypeFromTarget(desc.fTarget), mipMapsStatus),
       fParameters(sk_make_sp<GrGLTextureParameters>()) {
   this->init(desc);
   this->registerWithCache(budgeted);
@@ -52,10 +51,9 @@ GrGLTexture::GrGLTexture(
 GrGLTexture::GrGLTexture(
     GrGLGpu* gpu, const Desc& desc, GrMipMapsStatus mipMapsStatus,
     sk_sp<GrGLTextureParameters> parameters, GrWrapCacheable cacheable, GrIOType ioType)
-    : GrSurface(gpu, desc.fSize, desc.fConfig, GrProtected::kNo),
+    : GrSurface(gpu, desc.fSize, GrProtected::kNo),
       INHERITED(
-          gpu, desc.fSize, desc.fConfig, GrProtected::kNo, TextureTypeFromTarget(desc.fTarget),
-          mipMapsStatus),
+          gpu, desc.fSize, GrProtected::kNo, TextureTypeFromTarget(desc.fTarget), mipMapsStatus),
       fParameters(std::move(parameters)) {
   SkASSERT(fParameters);
   this->init(desc);
@@ -68,10 +66,9 @@ GrGLTexture::GrGLTexture(
 GrGLTexture::GrGLTexture(
     GrGLGpu* gpu, const Desc& desc, sk_sp<GrGLTextureParameters> parameters,
     GrMipMapsStatus mipMapsStatus)
-    : GrSurface(gpu, desc.fSize, desc.fConfig, GrProtected::kNo),
+    : GrSurface(gpu, desc.fSize, GrProtected::kNo),
       INHERITED(
-          gpu, desc.fSize, desc.fConfig, GrProtected::kNo, TextureTypeFromTarget(desc.fTarget),
-          mipMapsStatus) {
+          gpu, desc.fSize, GrProtected::kNo, TextureTypeFromTarget(desc.fTarget), mipMapsStatus) {
   SkASSERT(parameters || desc.fOwnership == GrBackendObjectOwnership::kOwned);
   fParameters = parameters ? std::move(parameters) : sk_make_sp<GrGLTextureParameters>();
   this->init(desc);

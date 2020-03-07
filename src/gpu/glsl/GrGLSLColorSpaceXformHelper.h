@@ -20,7 +20,7 @@
  */
 class GrGLSLColorSpaceXformHelper : public SkNoncopyable {
  public:
-  GrGLSLColorSpaceXformHelper() { memset(&fFlags, 0, sizeof(fFlags)); }
+  GrGLSLColorSpaceXformHelper() {}
 
   void emitCode(
       GrGLSLUniformHandler* uniformHandler, const GrColorSpaceXform* colorSpaceXform,

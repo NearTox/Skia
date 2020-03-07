@@ -520,10 +520,10 @@ DEF_SIMPLE_GM(bleed_downscale, canvas, 360, 240) {
 
   canvas->translate(10, 10);
 
-  const SkCanvas::SrcRectConstraint constraints[] = {SkCanvas::kStrict_SrcRectConstraint,
-                                                     SkCanvas::kFast_SrcRectConstraint};
-  const SkFilterQuality qualities[] = {kNone_SkFilterQuality, kLow_SkFilterQuality,
-                                       kMedium_SkFilterQuality};
+  const SkCanvas::SrcRectConstraint constraints[] = {
+      SkCanvas::kStrict_SrcRectConstraint, SkCanvas::kFast_SrcRectConstraint};
+  const SkFilterQuality qualities[] = {
+      kNone_SkFilterQuality, kLow_SkFilterQuality, kMedium_SkFilterQuality};
   for (auto constraint : constraints) {
     canvas->save();
     for (auto quality : qualities) {

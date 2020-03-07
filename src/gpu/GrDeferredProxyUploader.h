@@ -11,7 +11,6 @@
 #include "include/core/SkRefCnt.h"
 #include "include/private/SkSemaphore.h"
 #include "src/core/SkAutoPixmapStorage.h"
-#include "src/core/SkMakeUnique.h"
 
 #include "src/gpu/GrOpFlushState.h"
 #include "src/gpu/GrTextureProxyPriv.h"
@@ -99,7 +98,7 @@ class GrTDeferredProxyUploader : public GrDeferredProxyUploader {
  public:
   template <typename... Args>
   GrTDeferredProxyUploader(Args&&... args)
-      : fData(skstd::make_unique<T>(std::forward<Args>(args)...)) {}
+      : fData(std::make_unique<T>(std::forward<Args>(args)...)) {}
 
   ~GrTDeferredProxyUploader() override {
     // We need to wait here, so that we don't free fData before the worker thread is done

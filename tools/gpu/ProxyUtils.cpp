@@ -31,20 +31,22 @@ sk_sp<GrTextureProxy> MakeTextureProxyFromData(
   if (!format.isValid()) {
     return nullptr;
   }
+  GrSwizzle swizzle = caps->getReadSwizzle(format, imageInfo.colorType());
 
   sk_sp<GrTextureProxy> proxy;
   GrSurfaceDesc desc;
-  desc.fConfig = GrColorTypeToPixelConfig(imageInfo.colorType());
   desc.fWidth = imageInfo.width();
   desc.fHeight = imageInfo.height();
   proxy = context->priv().proxyProvider()->createProxy(
-      format, desc, renderable, 1, origin, GrMipMapped::kNo, SkBackingFit::kExact, SkBudgeted::kYes,
-      GrProtected::kNo);
+      format, desc, swizzle, renderable, 1, origin, GrMipMapped::kNo, SkBackingFit::kExact,
+      SkBudgeted::kYes, GrProtected::kNo);
   if (!proxy) {
     return nullptr;
   }
-  auto sContext = context->priv().makeWrappedSurfaceContext(
-      proxy, imageInfo.colorType(), imageInfo.alphaType(), imageInfo.refColorSpace(), nullptr);
+  GrSurfaceProxyView view(proxy, origin, swizzle);
+  auto sContext = GrSurfaceContext::Make(
+      context, std::move(view), imageInfo.colorType(), imageInfo.alphaType(),
+      imageInfo.refColorSpace());
   if (!sContext) {
     return nullptr;
   }
@@ -78,8 +80,8 @@ GrProgramInfo* CreateProgramInfo(
   SkPMColor4f analysisColor = {0, 0, 0, 1};  // opaque black
 
   SkDEBUGCODE(auto analysis =) processors.finalize(
-      analysisColor, GrProcessorAnalysisCoverage::kNone, &appliedClip, stencil, false, *caps,
-      GrClampType::kAuto, &analysisColor);
+      analysisColor, GrProcessorAnalysisCoverage::kSingleChannel, &appliedClip, stencil, false,
+      *caps, GrClampType::kAuto, &analysisColor);
   SkASSERT(!analysis.requiresDstTexture());
 
   GrPipeline* pipeline =

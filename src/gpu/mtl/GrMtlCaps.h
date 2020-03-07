@@ -26,8 +26,7 @@ class GrMtlCaps : public GrCaps {
   GrMtlCaps(const GrContextOptions& contextOptions, id<MTLDevice> device, MTLFeatureSet featureSet);
 
   bool isFormatSRGB(const GrBackendFormat&) const override;
-  bool isFormatCompressed(
-      const GrBackendFormat&, SkImage::CompressionType* compressionType = nullptr) const override;
+  SkImage::CompressionType compressionType(const GrBackendFormat&) const override;
 
   bool isFormatTexturableAndUploadable(GrColorType, const GrBackendFormat&) const override;
   bool isFormatTexturable(const GrBackendFormat&) const override;
@@ -84,8 +83,10 @@ class GrMtlCaps : public GrCaps {
     return fColorTypeToFormatTable[idx];
   }
 
-  GrSwizzle getTextureSwizzle(const GrBackendFormat&, GrColorType) const override;
+  GrSwizzle getReadSwizzle(const GrBackendFormat&, GrColorType) const override;
   GrSwizzle getOutputSwizzle(const GrBackendFormat&, GrColorType) const override;
+
+  uint64_t computeFormatKey(const GrBackendFormat&) const override;
 
   GrProgramDesc makeDesc(const GrRenderTarget*, const GrProgramInfo&) const override;
 
@@ -108,7 +109,6 @@ class GrMtlCaps : public GrCaps {
       const GrSurfaceProxy* dst, const GrSurfaceProxy* src, const SkIRect& srcRect,
       const SkIPoint& dstPoint) const override;
   GrBackendFormat onGetDefaultBackendFormat(GrColorType, GrRenderable) const override;
-  GrPixelConfig onGetConfigFromBackendFormat(const GrBackendFormat&, GrColorType) const override;
   bool onAreColorTypeAndFormatCompatible(GrColorType, const GrBackendFormat&) const override;
 
   SupportedRead onSupportedReadPixelsColorType(
@@ -125,7 +125,7 @@ class GrMtlCaps : public GrCaps {
     };
     uint32_t fFlags = 0;
 
-    GrSwizzle fTextureSwizzle;
+    GrSwizzle fReadSwizzle;
     GrSwizzle fOutputSwizzle;
   };
 
@@ -159,7 +159,7 @@ class GrMtlCaps : public GrCaps {
 #ifdef SK_BUILD_FOR_IOS
   static constexpr size_t kNumMtlFormats = 17;
 #else
-  static constexpr size_t kNumMtlFormats = 14;
+  static constexpr size_t kNumMtlFormats = 15;
 #endif
   static size_t GetFormatIndex(MTLPixelFormat);
   FormatInfo fFormatTable[kNumMtlFormats];

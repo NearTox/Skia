@@ -201,8 +201,8 @@ class ConvexLineOnlyPathsGM : public GM {
     const SkColor colors[2] = {SK_ColorBLACK, SK_ColorWHITE};
     const SkPathDirection dirs[2] = {SkPathDirection::kCW, SkPathDirection::kCCW};
     const float scales[] = {1.0f, 0.75f, 0.5f, 0.25f, 0.1f, 0.01f, 0.001f};
-    const SkPaint::Join joins[3] = {SkPaint::kRound_Join, SkPaint::kBevel_Join,
-                                    SkPaint::kMiter_Join};
+    const SkPaint::Join joins[3] = {
+        SkPaint::kRound_Join, SkPaint::kBevel_Join, SkPaint::kMiter_Join};
 
     SkPaint paint;
     paint.setAntiAlias(true);

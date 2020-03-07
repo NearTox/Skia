@@ -399,5 +399,7 @@
     <ClCompile Include="angle2\src\compiler\translator\glslang_lex_autogen.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\glslang_tab_autogen.cpp" />
     <ClCompile Include="angle2\src\libANGLE\validationESEXT.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\tree_ops\RemoveInactiveInterfaceVariables.cpp" />
+    <ClCompile Include="angle2\src\common\system_utils_win32.cpp" />
   </ItemGroup>
 </Project>

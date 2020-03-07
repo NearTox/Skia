@@ -134,8 +134,8 @@ class BlurIgnoreXformGM : public skiagm::GM {
   typedef skiagm::GM INHERITED;
 };
 
-const BlurIgnoreXformGM::BlurFlags BlurIgnoreXformGM::kBlurFlags[] = {{true, "none"},
-                                                                      {false, "IgnoreTransform"}};
+const BlurIgnoreXformGM::BlurFlags BlurIgnoreXformGM::kBlurFlags[] = {
+    {true, "none"}, {false, "IgnoreTransform"}};
 
 const BlurIgnoreXformGM::MatrixScale BlurIgnoreXformGM::kMatrixScales[] = {
     {1.0f, "Identity"}, {0.5f, "Scale = 0.5"}, {2.0f, "Scale = 2.0"}};

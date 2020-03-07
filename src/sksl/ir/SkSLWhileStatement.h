@@ -25,9 +25,11 @@ struct WhileStatement : public Statement {
         new WhileStatement(fOffset, fTest->clone(), fStatement->clone()));
   }
 
+#ifdef SK_DEBUG
   String description() const override {
     return "while (" + fTest->description() + ") " + fStatement->description();
   }
+#endif
 
   std::unique_ptr<Expression> fTest;
   std::unique_ptr<Statement> fStatement;

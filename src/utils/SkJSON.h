@@ -94,7 +94,7 @@ class alignas(8) Value {
    * @return    The record cast as facade type T*.
    */
   template <typename T>
-  operator const T *() const {
+  operator const T*() const {
     return this->is<T>() ? &this->as<T>() : nullptr;
   }
 

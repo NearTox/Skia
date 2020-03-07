@@ -10,6 +10,7 @@
 
 #include "include/core/SkFilterQuality.h"
 #include "include/core/SkMatrix.h"
+#include "include/private/SkM44.h"
 #include "include/private/SkNx.h"
 #include "src/core/SkPointPriv.h"
 
@@ -151,6 +152,16 @@ class SkMatrixPriv {
   // Returns the recommended filterquality, assuming the caller originally wanted kHigh (bicubic)
   static SkFilterQuality AdjustHighQualityFilterLevel(
       const SkMatrix&, bool matrixIsInverse = false);
+
+  static bool PostIDiv(SkMatrix* matrix, int divx, int divy) {
+    return matrix->postIDiv(divx, divy);
+  }
+
+  static bool CheapEqual(const SkMatrix& a, const SkMatrix& b) {
+    return &a == &b || 0 == memcmp(a.fMat, b.fMat, sizeof(a.fMat));
+  }
+
+  static const SkScalar* M44ColMajor(const SkM44& m) { return m.fMat; }
 };
 
 #endif

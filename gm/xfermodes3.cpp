@@ -190,8 +190,9 @@ class Xfermodes3GM : public GM {
     SkCanvas bmpCanvas(bmp);
 
     bmpCanvas.clear(SK_ColorTRANSPARENT);
-    SkRect rect = {SkIntToScalar(kSize) / 8, SkIntToScalar(kSize) / 8, 7 * SkIntToScalar(kSize) / 8,
-                   7 * SkIntToScalar(kSize) / 8};
+    SkRect rect = {
+        SkIntToScalar(kSize) / 8, SkIntToScalar(kSize) / 8, 7 * SkIntToScalar(kSize) / 8,
+        7 * SkIntToScalar(kSize) / 8};
     bmpCanvas.drawRect(rect, bmpPaint);
 
     fBmpShader = bmp.makeShader();

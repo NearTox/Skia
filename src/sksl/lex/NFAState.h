@@ -63,6 +63,7 @@ struct NFAState {
     }
   }
 
+#ifdef SK_DEBUG
   std::string description() const {
     switch (fKind) {
       case kAccept_Kind: return "Accept(" + std::to_string(fData[0]) + ")";
@@ -116,6 +117,7 @@ struct NFAState {
       default: ABORT("unreachable");
     }
   }
+#endif
 
   Kind fKind;
 

@@ -42,10 +42,13 @@ class SK_API SkPictureRecorder {
   /** Returns the canvas that records the drawing commands.
       @param bounds the cull rect used when recording this picture. Any drawing the falls outside
                     of this rect is undefined, and may be drawn or it may not.
-      @param bbhFactory factory to create desired acceleration structure
+      @param bbh         optional acceleration structure
       @param recordFlags optional flags that control recording.
       @return the canvas.
   */
+  SkCanvas* beginRecording(
+      const SkRect& bounds, sk_sp<SkBBoxHierarchy> bbh, uint32_t recordFlags = 0);
+
   SkCanvas* beginRecording(
       const SkRect& bounds, SkBBHFactory* bbhFactory = nullptr, uint32_t recordFlags = 0);
 

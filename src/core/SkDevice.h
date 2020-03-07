@@ -17,6 +17,7 @@
 
 class SkBitmap;
 struct SkDrawShadowRec;
+class SkCanvasMatrix;
 class SkGlyphRun;
 class SkGlyphRunList;
 class SkImageFilterCache;
@@ -91,7 +92,7 @@ class SkBaseDevice : public SkRefCnt {
   virtual void* getRasterHandle() const { return nullptr; }
 
   void save() { this->onSave(); }
-  void restore(const SkMatrix& ctm) {
+  void restore(const SkCanvasMatrix& ctm) {
     this->onRestore();
     this->setGlobalCTM(ctm);
   }
@@ -106,12 +107,14 @@ class SkBaseDevice : public SkRefCnt {
   void androidFramework_setDeviceClipRestriction(SkIRect* mutableClipRestriction) {
     this->onSetDeviceClipRestriction(mutableClipRestriction);
   }
-  bool clipIsWideOpen() const;
+  bool clipIsWideOpen() const { return this->onClipIsWideOpen(); }
 
   const SkMatrix& localToDevice() const { return fLocalToDevice; }
   void setLocalToDevice(const SkMatrix& localToDevice) { fLocalToDevice = localToDevice; }
-  void setGlobalCTM(const SkMatrix& ctm);
+  void setGlobalCTM(const SkCanvasMatrix& ctm);
   virtual void validateDevBounds(const SkIRect&) {}
+
+  virtual bool android_utils_clipWithStencil() { return false; }
 
  protected:
   enum TileUsage {
@@ -131,6 +134,7 @@ class SkBaseDevice : public SkRefCnt {
   virtual void onClipRegion(const SkRegion& deviceRgn, SkClipOp) {}
   virtual void onSetDeviceClipRestriction(SkIRect* mutableClipRestriction) {}
   virtual bool onClipIsAA() const = 0;
+  virtual bool onClipIsWideOpen() const = 0;
   virtual void onAsRgnClip(SkRegion*) const = 0;
   enum class ClipType { kEmpty, kRect, kComplex };
   virtual ClipType onGetClipType() const = 0;
@@ -382,6 +386,7 @@ class SkNoPixelsDevice : public SkBaseDevice {
   void onClipRegion(const SkRegion& deviceRgn, SkClipOp) override {}
   void onSetDeviceClipRestriction(SkIRect* mutableClipRestriction) override {}
   bool onClipIsAA() const override { return false; }
+  bool onClipIsWideOpen() const override { return true; }
   void onAsRgnClip(SkRegion* rgn) const override {
     rgn->setRect(SkIRect::MakeWH(this->width(), this->height()));
   }

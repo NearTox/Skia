@@ -212,48 +212,50 @@ class DegenerateSegmentsGM : public GM {
   }
 
   void onDraw(SkCanvas* canvas) override {
-    constexpr AddSegmentFunc gSegmentFunctions[] = {AddMove,
-                                                    AddMoveClose,
-                                                    AddDegenLine,
-                                                    AddMoveDegenLine,
-                                                    AddMoveDegenLineClose,
-                                                    AddDegenQuad,
-                                                    AddMoveDegenQuad,
-                                                    AddMoveDegenQuadClose,
-                                                    AddDegenCubic,
-                                                    AddMoveDegenCubic,
-                                                    AddMoveDegenCubicClose,
-                                                    AddClose,
-                                                    AddLine,
-                                                    AddMoveLine,
-                                                    AddMoveLineClose,
-                                                    AddQuad,
-                                                    AddMoveQuad,
-                                                    AddMoveQuadClose,
-                                                    AddCubic,
-                                                    AddMoveCubic,
-                                                    AddMoveCubicClose};
-    const char* gSegmentNames[] = {"Move",
-                                   "MoveClose",
-                                   "DegenLine",
-                                   "MoveDegenLine",
-                                   "MoveDegenLineClose",
-                                   "DegenQuad",
-                                   "MoveDegenQuad",
-                                   "MoveDegenQuadClose",
-                                   "DegenCubic",
-                                   "MoveDegenCubic",
-                                   "MoveDegenCubicClose",
-                                   "Close",
-                                   "Line",
-                                   "MoveLine",
-                                   "MoveLineClose",
-                                   "Quad",
-                                   "MoveQuad",
-                                   "MoveQuadClose",
-                                   "Cubic",
-                                   "MoveCubic",
-                                   "MoveCubicClose"};
+    constexpr AddSegmentFunc gSegmentFunctions[] = {
+        AddMove,
+        AddMoveClose,
+        AddDegenLine,
+        AddMoveDegenLine,
+        AddMoveDegenLineClose,
+        AddDegenQuad,
+        AddMoveDegenQuad,
+        AddMoveDegenQuadClose,
+        AddDegenCubic,
+        AddMoveDegenCubic,
+        AddMoveDegenCubicClose,
+        AddClose,
+        AddLine,
+        AddMoveLine,
+        AddMoveLineClose,
+        AddQuad,
+        AddMoveQuad,
+        AddMoveQuadClose,
+        AddCubic,
+        AddMoveCubic,
+        AddMoveCubicClose};
+    const char* gSegmentNames[] = {
+        "Move",
+        "MoveClose",
+        "DegenLine",
+        "MoveDegenLine",
+        "MoveDegenLineClose",
+        "DegenQuad",
+        "MoveDegenQuad",
+        "MoveDegenQuadClose",
+        "DegenCubic",
+        "MoveDegenCubic",
+        "MoveDegenCubicClose",
+        "Close",
+        "Line",
+        "MoveLine",
+        "MoveLineClose",
+        "Quad",
+        "MoveQuad",
+        "MoveQuadClose",
+        "Cubic",
+        "MoveCubic",
+        "MoveCubicClose"};
 
     struct FillAndName {
       SkPathFillType fFill;
@@ -268,17 +270,19 @@ class DegenerateSegmentsGM : public GM {
       SkPaint::Style fStyle;
       const char* fName;
     };
-    constexpr StyleAndName gStyles[] = {{SkPaint::kFill_Style, "Fill"},
-                                        {SkPaint::kStroke_Style, "Stroke 10"},
-                                        {SkPaint::kStrokeAndFill_Style, "Stroke 10 And Fill"}};
+    constexpr StyleAndName gStyles[] = {
+        {SkPaint::kFill_Style, "Fill"},
+        {SkPaint::kStroke_Style, "Stroke 10"},
+        {SkPaint::kStrokeAndFill_Style, "Stroke 10 And Fill"}};
     struct CapAndName {
       SkPaint::Cap fCap;
       SkPaint::Join fJoin;
       const char* fName;
     };
-    constexpr CapAndName gCaps[] = {{SkPaint::kButt_Cap, SkPaint::kBevel_Join, "Butt"},
-                                    {SkPaint::kRound_Cap, SkPaint::kRound_Join, "Round"},
-                                    {SkPaint::kSquare_Cap, SkPaint::kBevel_Join, "Square"}};
+    constexpr CapAndName gCaps[] = {
+        {SkPaint::kButt_Cap, SkPaint::kBevel_Join, "Butt"},
+        {SkPaint::kRound_Cap, SkPaint::kRound_Join, "Round"},
+        {SkPaint::kSquare_Cap, SkPaint::kBevel_Join, "Square"}};
 
     SkPaint titlePaint;
     titlePaint.setColor(SK_ColorBLACK);

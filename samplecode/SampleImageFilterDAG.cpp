@@ -270,8 +270,9 @@ static void draw_node(SkCanvas* canvas, const FilterNode& node) {
 
   SkPaint paint;
   static const SkColor kColors[2] = {SK_ColorGREEN, SK_ColorWHITE};
-  SkPoint points[2] = {{node.fContent.fLeft + 15.f, node.fContent.fTop + 15.f},
-                       {node.fContent.fRight - 15.f, node.fContent.fBottom - 15.f}};
+  SkPoint points[2] = {
+      {node.fContent.fLeft + 15.f, node.fContent.fTop + 15.f},
+      {node.fContent.fRight - 15.f, node.fContent.fBottom - 15.f}};
   paint.setShader(SkGradientShader::MakeLinear(
       points, kColors, nullptr, SK_ARRAY_COUNT(kColors), SkTileMode::kRepeat));
 

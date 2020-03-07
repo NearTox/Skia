@@ -83,9 +83,9 @@ class FontCacheGM : public skiagm::GpuGM {
   void drawText(SkCanvas* canvas) {
     static const int kSizes[] = {8, 9, 10, 11, 12, 13, 18, 20, 25};
 
-    static const SkString kTexts[] = {SkString("ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
-                                      SkString("abcdefghijklmnopqrstuvwxyz"),
-                                      SkString("0123456789"), SkString("!@#$%^&*()<>[]{}")};
+    static const SkString kTexts[] = {
+        SkString("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), SkString("abcdefghijklmnopqrstuvwxyz"),
+        SkString("0123456789"), SkString("!@#$%^&*()<>[]{}")};
     SkFont font;
     font.setEdging(SkFont::Edging::kAntiAlias);
     font.setSubpixel(true);

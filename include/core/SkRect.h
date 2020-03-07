@@ -543,15 +543,6 @@ struct SK_API SkIRect {
         SkMin32(fLeft, fRight), SkMin32(fTop, fBottom), SkMax32(fLeft, fRight),
         SkMax32(fTop, fBottom));
   }
-
-  /** Returns a reference to immutable empty SkIRect, set to (0, 0, 0, 0).
-
-      @return  global SkIRect set to all zeroes
-  */
-  static const SkIRect& SK_WARN_UNUSED_RESULT EmptyIRect() {
-    static const SkIRect gEmpty = {0, 0, 0, 0};
-    return gEmpty;
-  }
 };
 
 /** \struct SkRect

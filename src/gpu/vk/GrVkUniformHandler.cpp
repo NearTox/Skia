@@ -200,8 +200,8 @@ GrGLSLUniformHandler::UniformHandle GrVkUniformHandler::internalAddUniformArray(
 }
 
 GrGLSLUniformHandler::SamplerHandle GrVkUniformHandler::addSampler(
-    const GrSurfaceProxy* texture, const GrSamplerState& state, const GrSwizzle& swizzle,
-    const char* name, const GrShaderCaps* shaderCaps) {
+    const GrSurfaceProxy* texture, GrSamplerState state, const GrSwizzle& swizzle, const char* name,
+    const GrShaderCaps* shaderCaps) {
   SkASSERT(name && strlen(name));
   SkASSERT(texture->asTextureProxy());
 

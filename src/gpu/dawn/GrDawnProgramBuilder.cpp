@@ -422,7 +422,7 @@ void GrDawnProgram::setRenderTargetState(const GrRenderTarget* rt, GrSurfaceOrig
 }
 
 static void set_texture(
-    GrDawnGpu* gpu, const GrSamplerState& state, GrTexture* texture,
+    GrDawnGpu* gpu, GrSamplerState state, GrTexture* texture,
     std::vector<wgpu::BindGroupBinding>* bindings, int* binding) {
   // FIXME: could probably cache samplers in GrDawnProgram
   wgpu::Sampler sampler = gpu->getOrCreateSampler(state);
@@ -488,7 +488,7 @@ wgpu::BindGroup GrDawnProgram::setTextures(
   }
   SkIPoint offset;
   if (GrTexture* dstTexture = pipeline.peekDstTexture(&offset)) {
-    set_texture(gpu, GrSamplerState::ClampNearest(), dstTexture, &bindings, &binding);
+    set_texture(gpu, GrSamplerState::Filter::kNearest, dstTexture, &bindings, &binding);
   }
   wgpu::BindGroupDescriptor descriptor;
   descriptor.layout = fBindGroupLayouts[1];

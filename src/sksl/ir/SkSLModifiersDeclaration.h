@@ -26,7 +26,9 @@ struct ModifiersDeclaration : public ProgramElement {
     return std::unique_ptr<ProgramElement>(new ModifiersDeclaration(fModifiers));
   }
 
+#ifdef SK_DEBUG
   String description() const override { return fModifiers.description() + ";"; }
+#endif
 
   Modifiers fModifiers;
 

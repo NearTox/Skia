@@ -20,7 +20,6 @@
 #include "src/core/SkDraw.h"
 #include "src/core/SkFontPriv.h"
 #include "src/core/SkGlyph.h"
-#include "src/core/SkMakeUnique.h"
 #include "src/core/SkMaskGamma.h"
 #include "src/core/SkPaintPriv.h"
 #include "src/core/SkPathPriv.h"
@@ -916,7 +915,7 @@ std::unique_ptr<SkScalerContext> SkTypeface::createScalerContext(
     const SkScalerContextEffects& effects, const SkDescriptor* desc, bool allowFailure) const {
   std::unique_ptr<SkScalerContext> c(this->onCreateScalerContext(effects, desc));
   if (!c && !allowFailure) {
-    c = skstd::make_unique<SkScalerContext_Empty>(
+    c = std::make_unique<SkScalerContext_Empty>(
         sk_ref_sp(const_cast<SkTypeface*>(this)), effects, desc);
   }
 
@@ -1116,7 +1115,7 @@ void SkScalerContext::MakeRecAndEffects(
 
 SkDescriptor* SkScalerContext::MakeDescriptorForPaths(SkFontID typefaceID, SkAutoDescriptor* ad) {
   SkScalerContextRec rec;
-  memset(&rec, 0, sizeof(rec));
+  memset((void*)&rec, 0, sizeof(rec));
   rec.fFontID = typefaceID;
   rec.fTextSize = SkFontPriv::kCanonicalTextSizeForPaths;
   rec.fPreScaleX = rec.fPost2x2[0][0] = rec.fPost2x2[1][1] = SK_Scalar1;
@@ -1155,7 +1154,6 @@ static size_t calculate_size_and_flatten(
 
 static void generate_descriptor(
     const SkScalerContextRec& rec, const SkBinaryWriteBuffer& effectBuffer, SkDescriptor* desc) {
-  desc->init();
   desc->addEntry(kRec_SkDescriptorTag, sizeof(rec), &rec);
 
   if (effectBuffer.bytesWritten() > 0) {

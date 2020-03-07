@@ -49,8 +49,9 @@ static void save_layer_unclipped(SkCanvas* canvas, SkScalar l, SkScalar t, SkSca
   SkPaint paint;
   paint.setAlphaf(0.25f);
   SkRect rect = SkRect::MakeLTRB(l, t, r, b);
-  canvas->saveLayer({&rect, &paint, nullptr, nullptr, nullptr,
-                     (SkCanvas::SaveLayerFlags)SkCanvasPriv::kDontClipToLayer_SaveLayerFlag});
+  canvas->saveLayer(
+      {&rect, &paint, nullptr, nullptr, nullptr,
+       (SkCanvas::SaveLayerFlags)SkCanvasPriv::kDontClipToLayer_SaveLayerFlag});
 }
 
 static void do_draw(SkCanvas* canvas) {
@@ -147,8 +148,8 @@ static void draw_mask(SkCanvas* canvas, int size) {
 
 DEF_SIMPLE_GM(savelayer_clipmask, canvas, 1200, 1200) {
   static constexpr int kSize = 100;
-  static constexpr SkRect kLayerBounds = {kSize * 0.25f, kSize * 0.25f, kSize * 0.75f,
-                                          kSize * 0.75f};
+  static constexpr SkRect kLayerBounds = {
+      kSize * 0.25f, kSize * 0.25f, kSize * 0.75f, kSize * 0.75f};
   static constexpr struct {
     const SkRect* bounds;
     const SkScalar matrix[9];

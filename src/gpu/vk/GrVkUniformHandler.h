@@ -72,7 +72,7 @@ class GrVkUniformHandler : public GrGLSLUniformHandler {
   }
 
   SamplerHandle addSampler(
-      const GrSurfaceProxy*, const GrSamplerState&, const GrSwizzle&, const char* name,
+      const GrSurfaceProxy*, GrSamplerState, const GrSwizzle&, const char* name,
       const GrShaderCaps*) override;
 
   int numSamplers() const { return fSamplers.count(); }

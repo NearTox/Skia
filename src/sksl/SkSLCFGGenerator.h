@@ -51,6 +51,7 @@ struct BasicBlock {
       *fStatement = std::move(stmt);
     }
 
+#ifdef SK_DEBUG
     String description() const {
       if (fKind == kStatement_Kind) {
         return (*fStatement)->description();
@@ -59,6 +60,7 @@ struct BasicBlock {
         return (*fExpression)->description();
       }
     }
+#endif
 
     Kind fKind;
     // if false, this node should not be subject to constant propagation. This happens with

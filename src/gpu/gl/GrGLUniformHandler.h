@@ -39,7 +39,7 @@ class GrGLUniformHandler : public GrGLSLUniformHandler {
   }
 
   SamplerHandle addSampler(
-      const GrSurfaceProxy*, const GrSamplerState&, const GrSwizzle&, const char* name,
+      const GrSurfaceProxy*, GrSamplerState, const GrSwizzle&, const char* name,
       const GrShaderCaps*) override;
 
   const char* samplerVariable(SamplerHandle handle) const override {

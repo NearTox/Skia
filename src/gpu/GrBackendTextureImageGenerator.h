@@ -42,6 +42,7 @@ class GrBackendTextureImageGenerator : public SkImageGenerator {
   TexGenType onCanGenerateTexture() const override { return TexGenType::kCheap; }
   sk_sp<GrTextureProxy> onGenerateTexture(
       GrRecordingContext*, const SkImageInfo&, const SkIPoint&, bool willNeedMipMaps) override;
+  bool onTexturesAreCacheable() const override { return false; }
 
  private:
   GrBackendTextureImageGenerator(

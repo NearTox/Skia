@@ -41,21 +41,23 @@ static SkBitmap make_bmp(int w, int h) {
 
   SkScalar radius = 3 * SkMaxScalar(wScalar, hScalar);
 
-  SkColor colors[] = {SK_ColorDKGRAY,
-                      ToolUtils::color_to_565(0xFF222255),
-                      ToolUtils::color_to_565(0xFF331133),
-                      ToolUtils::color_to_565(0xFF884422),
-                      ToolUtils::color_to_565(0xFF000022),
-                      SK_ColorWHITE,
-                      ToolUtils::color_to_565(0xFFAABBCC)};
+  SkColor colors[] = {
+      SK_ColorDKGRAY,
+      ToolUtils::color_to_565(0xFF222255),
+      ToolUtils::color_to_565(0xFF331133),
+      ToolUtils::color_to_565(0xFF884422),
+      ToolUtils::color_to_565(0xFF000022),
+      SK_ColorWHITE,
+      ToolUtils::color_to_565(0xFFAABBCC)};
 
-  SkScalar pos[] = {0,
-                    SK_Scalar1 / 6,
-                    2 * SK_Scalar1 / 6,
-                    3 * SK_Scalar1 / 6,
-                    4 * SK_Scalar1 / 6,
-                    5 * SK_Scalar1 / 6,
-                    SK_Scalar1};
+  SkScalar pos[] = {
+      0,
+      SK_Scalar1 / 6,
+      2 * SK_Scalar1 / 6,
+      3 * SK_Scalar1 / 6,
+      4 * SK_Scalar1 / 6,
+      5 * SK_Scalar1 / 6,
+      SK_Scalar1};
 
   SkPaint paint;
   SkRect rect = SkRect::MakeWH(wScalar, hScalar);

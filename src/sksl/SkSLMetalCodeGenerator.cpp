@@ -63,47 +63,45 @@ void MetalCodeGenerator::writeExtension(const Extension& ext) {
   this->writeLine("#extension " + ext.fName + " : enable");
 }
 
-void MetalCodeGenerator::writeType(const Type& type) {
+String MetalCodeGenerator::typeName(const Type& type) {
   switch (type.kind()) {
-    case Type::kStruct_Kind:
-      for (const Type* search : fWrittenStructs) {
-        if (*search == type) {
-          // already written
-          this->write(type.name());
-          return;
-        }
-      }
-      fWrittenStructs.push_back(&type);
-      this->writeLine("struct " + type.name() + " {");
-      fIndentation++;
-      this->writeFields(type.fields(), type.fOffset);
-      fIndentation--;
-      this->write("}");
-      break;
     case Type::kVector_Kind:
-      this->writeType(type.componentType());
-      this->write(to_string(type.columns()));
-      break;
+      return this->typeName(type.componentType()) + to_string(type.columns());
     case Type::kMatrix_Kind:
-      this->writeType(type.componentType());
-      this->write(to_string(type.columns()));
-      this->write("x");
-      this->write(to_string(type.rows()));
-      break;
-    case Type::kSampler_Kind:
-      this->write("texture2d<float> ");  // FIXME - support other texture types;
-      break;
+      return this->typeName(type.componentType()) + to_string(type.columns()) + "x" +
+             to_string(type.rows());
+    case Type::kSampler_Kind: return "texture2d<float>";  // FIXME - support other texture types;
     default:
       if (type == *fContext.fHalf_Type) {
         // FIXME - Currently only supporting floats in MSL to avoid type coercion issues.
-        this->write(fContext.fFloat_Type->name());
+        return fContext.fFloat_Type->name();
       } else if (type == *fContext.fByte_Type) {
-        this->write("char");
+        return "char";
       } else if (type == *fContext.fUByte_Type) {
-        this->write("uchar");
+        return "uchar";
       } else {
-        this->write(type.name());
+        return type.name();
       }
+  }
+}
+
+void MetalCodeGenerator::writeType(const Type& type) {
+  if (type.kind() == Type::kStruct_Kind) {
+    for (const Type* search : fWrittenStructs) {
+      if (*search == type) {
+        // already written
+        this->write(type.name());
+        return;
+      }
+    }
+    fWrittenStructs.push_back(&type);
+    this->writeLine("struct " + type.name() + " {");
+    fIndentation++;
+    this->writeFields(type.fields(), type.fOffset);
+    fIndentation--;
+    this->write("}");
+  } else {
+    this->write(this->typeName(type));
   }
 }
 
@@ -135,7 +133,11 @@ void MetalCodeGenerator::writeExpression(const Expression& expr, Precedence pare
       this->writeTernaryExpression((TernaryExpression&)expr, parentPrecedence);
       break;
     case Expression::kIndex_Kind: this->writeIndexExpression((IndexExpression&)expr); break;
-    default: ABORT("unsupported expression: %s", expr.description().c_str());
+    default:
+#ifdef SK_DEBUG
+      ABORT("unsupported expression: %s", expr.description().c_str());
+#endif
+      break;
   }
 }
 
@@ -316,26 +318,33 @@ void MetalCodeGenerator::writeSpecialIntrinsic(const FunctionCall& c, SpecialInt
       this->writeExpression(*c.fArguments[0], kSequence_Precedence);
       this->write(SAMPLER_SUFFIX);
       this->write(", ");
-      this->writeExpression(*c.fArguments[1], kSequence_Precedence);
       if (c.fArguments[1]->fType == *fContext.fFloat3_Type) {
-        this->write(".xy)");  // FIXME - add projection functionality
+        // have to store the vector in a temp variable to avoid double evaluating it
+        String tmpVar = "tmpCoord" + to_string(fVarCount++);
+        this->fFunctionHeader +=
+            "    " + this->typeName(c.fArguments[1]->fType) + " " + tmpVar + ";\n";
+        this->write("(" + tmpVar + " = ");
+        this->writeExpression(*c.fArguments[1], kSequence_Precedence);
+        this->write(", " + tmpVar + ".xy / " + tmpVar + ".z))");
       } else {
         SkASSERT(c.fArguments[1]->fType == *fContext.fFloat2_Type);
+        this->writeExpression(*c.fArguments[1], kSequence_Precedence);
         this->write(")");
       }
       break;
-    case kMod_SpecialIntrinsic:
+    case kMod_SpecialIntrinsic: {
       // fmod(x, y) in metal calculates x - y * trunc(x / y) instead of x - y * floor(x / y)
-      this->write("((");
+      String tmpX = "tmpX" + to_string(fVarCount++);
+      String tmpY = "tmpY" + to_string(fVarCount++);
+      this->fFunctionHeader +=
+          "    " + this->typeName(c.fArguments[0]->fType) + " " + tmpX + ", " + tmpY + ";\n";
+      this->write("(" + tmpX + " = ");
       this->writeExpression(*c.fArguments[0], kSequence_Precedence);
-      this->write(") - (");
+      this->write(", " + tmpY + " = ");
       this->writeExpression(*c.fArguments[1], kSequence_Precedence);
-      this->write(") * floor((");
-      this->writeExpression(*c.fArguments[0], kSequence_Precedence);
-      this->write(") / (");
-      this->writeExpression(*c.fArguments[1], kSequence_Precedence);
-      this->write(")))");
+      this->write(", " + tmpX + " - " + tmpY + " * floor(" + tmpX + " / " + tmpY + "))");
       break;
+    }
     default: ABORT("unsupported special intrinsic kind");
   }
 }
@@ -867,37 +876,31 @@ void MetalCodeGenerator::writeFunction(const FunctionDefinition& f) {
 
   if ("main" == f.fDeclaration.fName) {
     if (fNeedsGlobalStructInit) {
-      this->writeLine("    Globals globalStruct;");
-      this->writeLine("    thread Globals* _globals = &globalStruct;");
+      this->writeLine("    Globals globalStruct{");
+      const char* separator = "";
       for (const auto& intf : fInterfaceBlockNameMap) {
         const auto& intfName = intf.second;
-        this->write("    _globals->");
+        this->write(separator);
+        separator = ", ";
+        this->write("&");
         this->writeName(intfName);
-        this->write(" = &");
-        this->writeName(intfName);
-        this->write(";\n");
       }
       for (const auto& var : fInitNonConstGlobalVars) {
-        this->write("    _globals->");
-        this->writeName(var->fVar->fName);
-        this->write(" = ");
+        this->write(separator);
+        separator = ", ";
         this->writeVarInitializer(*var->fVar, *var->fValue);
-        this->writeLine(";");
       }
       for (const auto& texture : fTextures) {
-        this->write("    _globals->");
+        this->write(separator);
+        separator = ", ";
         this->writeName(texture->fName);
-        this->write(" = ");
-        this->writeName(texture->fName);
-        this->write(";\n");
-        this->write("    _globals->");
+        this->write(separator);
         this->writeName(texture->fName);
         this->write(SAMPLER_SUFFIX);
-        this->write(" = ");
-        this->writeName(texture->fName);
-        this->write(SAMPLER_SUFFIX);
-        this->write(";\n");
       }
+      this->writeLine("};");
+      this->writeLine("    thread Globals* _globals = &globalStruct;");
+      this->writeLine("    (void)_globals;");
     }
     this->writeLine("    Outputs _outputStruct;");
     this->writeLine("    thread Outputs* _out = &_outputStruct;");
@@ -1080,9 +1083,9 @@ void MetalCodeGenerator::writeVarDeclarations(const VarDeclarations& decl, bool 
       this->writeVarInitializer(*var.fVar, *var.fValue);
     }
   }
-  if (wroteType) {
-    this->write(";");
-  }
+    if (wroteType) {
+      this->write(";");
+    }
 }
 
 void MetalCodeGenerator::writeStatement(const Statement& s) {
@@ -1105,7 +1108,11 @@ void MetalCodeGenerator::writeStatement(const Statement& s) {
     case Statement::kContinue_Kind: this->write("continue;"); break;
     case Statement::kDiscard_Kind: this->write("discard_fragment();"); break;
     case Statement::kNop_Kind: this->write(";"); break;
-    default: ABORT("unsupported statement: %s", s.description().c_str());
+    default:
+#ifdef SK_DEBUG
+      ABORT("unsupported statement: %s", s.description().c_str());
+#endif
+      break;
   }
 }
 
@@ -1148,12 +1155,12 @@ void MetalCodeGenerator::writeForStatement(const ForStatement& f) {
   if (f.fTest) {
     this->writeExpression(*f.fTest, kTopLevel_Precedence);
   }
-  this->write("; ");
-  if (f.fNext) {
-    this->writeExpression(*f.fNext, kTopLevel_Precedence);
-  }
-  this->write(") ");
-  this->writeStatement(*f.fStatement);
+    this->write("; ");
+    if (f.fNext) {
+      this->writeExpression(*f.fNext, kTopLevel_Precedence);
+    }
+    this->write(") ");
+    this->writeStatement(*f.fStatement);
 }
 
 void MetalCodeGenerator::writeWhileStatement(const WhileStatement& w) {
@@ -1191,8 +1198,8 @@ void MetalCodeGenerator::writeSwitchStatement(const SwitchStatement& s) {
     }
     fIndentation--;
   }
-  fIndentation--;
-  this->write("}");
+    fIndentation--;
+    this->write("}");
 }
 
 void MetalCodeGenerator::writeReturnStatement(const ReturnStatement& r) {
@@ -1424,7 +1431,11 @@ void MetalCodeGenerator::writeProgramElement(const ProgramElement& e) {
       this->writeModifiers(((ModifiersDeclaration&)e).fModifiers, true);
       this->writeLine(";");
       break;
-    default: printf("%s\n", e.description().c_str()); ABORT("unsupported program element");
+    default:
+#ifdef SK_DEBUG
+      ABORT("unsupported program element: %s\n", e.description().c_str());
+#endif
+      break;
   }
 }
 

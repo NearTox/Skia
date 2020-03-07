@@ -11,7 +11,6 @@
 #include "include/core/SkStream.h"
 #include "include/docs/SkPDFDocument.h"
 #include "include/private/SkTo.h"
-#include "src/core/SkMakeUnique.h"
 #include "src/pdf/SkPDFDevice.h"
 #include "src/pdf/SkPDFFont.h"
 #include "src/pdf/SkPDFGradientShader.h"
@@ -538,11 +537,11 @@ void SkPDFDocument::onClose(SkWStream* stream) {
     f->emitSubset(this);
   }
 
-  this->waitForJobs();
-  {
-    SkAutoMutexExclusive autoMutexAcquire(fMutex);
-    serialize_footer(fOffsetMap, this->getStream(), fInfoDict, docCatalogRef, fUUID);
-  }
+    this->waitForJobs();
+    {
+      SkAutoMutexExclusive autoMutexAcquire(fMutex);
+      serialize_footer(fOffsetMap, this->getStream(), fInfoDict, docCatalogRef, fUUID);
+    }
 }
 
 void SkPDFDocument::incrementJobCount() { fJobCount++; }

@@ -12,7 +12,7 @@ SkUnichar utf8_next(const char** ptr, const char* end) {
   SkUnichar val = SkUTF::NextUTF8(ptr, end);
   return val < 0 ? 0xFFFD : val;
 }
-}  // namespace
+}
 
 namespace skia {
 namespace textlayout {

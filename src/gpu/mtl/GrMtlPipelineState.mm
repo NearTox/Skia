@@ -25,7 +25,7 @@
 #endif
 
 GrMtlPipelineState::SamplerBindings::SamplerBindings(
-    const GrSamplerState& state, GrTexture* texture, GrMtlGpu* gpu)
+    GrSamplerState state, GrTexture* texture, GrMtlGpu* gpu)
     : fTexture(static_cast<GrMtlTexture*>(texture)->mtlTexture()) {
   fSampler = gpu->resourceProvider().findOrCreateCompatibleSampler(state);
 }
@@ -105,7 +105,7 @@ void GrMtlPipelineState::setTextures(
 
   if (GrTextureProxy* dstTextureProxy = programInfo.pipeline().dstProxyView().asTextureProxy()) {
     fSamplerBindings.emplace_back(
-        GrSamplerState::ClampNearest(), dstTextureProxy->peekTexture(), fGpu);
+        GrSamplerState::Filter::kNearest, dstTextureProxy->peekTexture(), fGpu);
   }
 
   SkASSERT(fNumSamplers == fSamplerBindings.count());

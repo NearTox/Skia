@@ -43,7 +43,7 @@ GrBackendFormat::GrBackendFormat(const GrBackendFormat& that)
 #ifdef SK_DAWN
     case GrBackendApi::kDawn: fDawnFormat = that.fDawnFormat; break;
 #endif
-    case GrBackendApi::kMock: fMockColorType = that.fMockColorType; break;
+    case GrBackendApi::kMock: fMock = that.fMock; break;
     default: SK_ABORT("Unknown GrBackend");
   }
 }
@@ -140,16 +140,34 @@ GrMTLPixelFormat GrBackendFormat::asMtlFormat() const {
 }
 #endif
 
-GrBackendFormat::GrBackendFormat(GrColorType colorType)
+GrBackendFormat::GrBackendFormat(GrColorType colorType, SkImage::CompressionType compression)
     : fBackend(GrBackendApi::kMock), fValid(true), fTextureType(GrTextureType::k2D) {
-  fMockColorType = colorType;
+  fMock.fColorType = colorType;
+  fMock.fCompressionType = compression;
 }
 
 GrColorType GrBackendFormat::asMockColorType() const {
   if (this->isValid() && GrBackendApi::kMock == fBackend) {
-    return fMockColorType;
+    SkASSERT(
+        fMock.fCompressionType == SkImage::CompressionType::kNone ||
+        fMock.fColorType == GrColorType::kUnknown);
+
+    return fMock.fColorType;
   }
+
   return GrColorType::kUnknown;
+}
+
+SkImage::CompressionType GrBackendFormat::asMockCompressionType() const {
+  if (this->isValid() && GrBackendApi::kMock == fBackend) {
+    SkASSERT(
+        fMock.fCompressionType == SkImage::CompressionType::kNone ||
+        fMock.fColorType == GrColorType::kUnknown);
+
+    return fMock.fCompressionType;
+  }
+
+  return SkImage::CompressionType::kNone;
 }
 
 GrBackendFormat GrBackendFormat::makeTexture2D() const {
@@ -165,6 +183,11 @@ GrBackendFormat GrBackendFormat::makeTexture2D() const {
   }
   copy.fTextureType = GrTextureType::k2D;
   return copy;
+}
+
+GrBackendFormat GrBackendFormat::MakeMock(
+    GrColorType colorType, SkImage::CompressionType compression) {
+  return GrBackendFormat(colorType, compression);
 }
 
 bool GrBackendFormat::operator==(const GrBackendFormat& that) const {
@@ -193,7 +216,9 @@ bool GrBackendFormat::operator==(const GrBackendFormat& that) const {
 #ifdef SK_DAWN
     case GrBackendApi::kDawn: return fDawnFormat == that.fDawnFormat; break;
 #endif
-    case GrBackendApi::kMock: return fMockColorType == that.fMockColorType;
+    case GrBackendApi::kMock:
+      return fMock.fColorType == that.fMock.fColorType &&
+             fMock.fCompressionType == that.fMock.fCompressionType;
     default: SK_ABORT("Unknown GrBackend");
   }
   return false;
@@ -241,16 +266,20 @@ SkString GrBackendFormat::toStr() const {
       str.append(GrDawnFormatToStr(fDawnFormat));
 #  endif
       break;
-    case GrBackendApi::kMock: str.append(GrColorTypeToStr(fMockColorType)); break;
+    case GrBackendApi::kMock:
+      str.append(GrColorTypeToStr(fMock.fColorType));
+      str.appendf("-");
+      str.append(GrCompressionTypeToStr(fMock.fCompressionType));
+      break;
   }
 
-  return str;
+    return str;
 }
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef SK_DAWN
-GrBackendTexture::GrBackendTexture(int width, int height, const GrDawnImageInfo& dawnInfo)
+GrBackendTexture::GrBackendTexture(int width, int height, const GrDawnTextureInfo& dawnInfo)
     : fIsValid(true),
       fWidth(width),
       fHeight(height),
@@ -380,7 +409,7 @@ GrBackendTexture& GrBackendTexture::operator=(const GrBackendTexture& that) {
 }
 
 #ifdef SK_DAWN
-bool GrBackendTexture::getDawnImageInfo(GrDawnImageInfo* outInfo) const {
+bool GrBackendTexture::getDawnTextureInfo(GrDawnTextureInfo* outInfo) const {
   if (this->isValid() && GrBackendApi::kDawn == fBackend) {
     *outInfo = fDawnInfo;
     return true;
@@ -435,7 +464,8 @@ bool GrBackendTexture::getGLTextureInfo(GrGLTextureInfo* outInfo) const {
     // Hack! This allows some blink unit tests to work when using the Mock GrContext.
     // Specifically, tests that rely on CanvasResourceProviderTextureGpuMemoryBuffer.
     // If that code ever goes away (or ideally becomes backend-agnostic), this can go away.
-    *outInfo = GrGLTextureInfo{GR_GL_TEXTURE_2D, static_cast<GrGLuint>(fMockInfo.fID), GR_GL_RGBA8};
+    *outInfo =
+        GrGLTextureInfo{GR_GL_TEXTURE_2D, static_cast<GrGLuint>(fMockInfo.id()), GR_GL_RGBA8};
     return true;
   }
 #endif
@@ -483,7 +513,7 @@ bool GrBackendTexture::isSameTexture(const GrBackendTexture& that) {
 #ifdef SK_METAL
     case GrBackendApi::kMetal: return this->fMtlInfo.fTexture == that.fMtlInfo.fTexture;
 #endif
-    case GrBackendApi::kMock: return fMockInfo.fID == that.fMockInfo.fID;
+    case GrBackendApi::kMock: return fMockInfo.id() == that.fMockInfo.id();
     default: return false;
   }
 }
@@ -558,8 +588,9 @@ bool GrBackendTexture::TestingOnly_Equals(const GrBackendTexture& t0, const GrBa
 
 #ifdef SK_DAWN
 GrBackendRenderTarget::GrBackendRenderTarget(
-    int width, int height, int sampleCnt, int stencilBits, const GrDawnImageInfo& dawnInfo)
+    int width, int height, int sampleCnt, int stencilBits, const GrDawnRenderTargetInfo& dawnInfo)
     : fIsValid(true),
+      fFramebufferOnly(true),
       fWidth(width),
       fHeight(height),
       fSampleCnt(sampleCnt),
@@ -605,6 +636,8 @@ GrBackendRenderTarget::GrBackendRenderTarget(
 GrBackendRenderTarget::GrBackendRenderTarget(
     int width, int height, int sampleCnt, const GrMtlTextureInfo& mtlInfo)
     : fIsValid(true),
+      fFramebufferOnly(false)  // TODO: set this from mtlInfo.fTexture->framebufferOnly
+      ,
       fWidth(width),
       fHeight(height),
       fSampleCnt(SkTMax(1, sampleCnt)),
@@ -685,7 +718,7 @@ GrBackendRenderTarget& GrBackendRenderTarget::operator=(const GrBackendRenderTar
 }
 
 #ifdef SK_DAWN
-bool GrBackendRenderTarget::getDawnImageInfo(GrDawnImageInfo* outInfo) const {
+bool GrBackendRenderTarget::getDawnRenderTargetInfo(GrDawnRenderTargetInfo* outInfo) const {
   if (this->isValid() && GrBackendApi::kDawn == fBackend) {
     *outInfo = fDawnInfo;
     return true;
@@ -764,6 +797,13 @@ GrBackendFormat GrBackendRenderTarget::getBackendFormat() const {
       GrMtlTextureInfo mtlInfo;
       SkAssertResult(this->getMtlTextureInfo(&mtlInfo));
       return GrBackendFormat::MakeMtl(GrGetMTLPixelFormatFromMtlTextureInfo(mtlInfo));
+    }
+#endif
+#ifdef SK_DAWN
+    case GrBackendApi::kDawn: {
+      GrDawnRenderTargetInfo dawnInfo;
+      SkAssertResult(this->getDawnRenderTargetInfo(&dawnInfo));
+      return GrBackendFormat::MakeDawn(dawnInfo.fFormat);
     }
 #endif
     case GrBackendApi::kMock: return fMockInfo.getBackendFormat();

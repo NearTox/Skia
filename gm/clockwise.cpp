@@ -62,8 +62,8 @@ class GrGLSLProgramDataManager;
 
 namespace {
 
-static constexpr GrGeometryProcessor::Attribute gVertex = {"position", kFloat2_GrVertexAttribType,
-                                                           kFloat2_GrSLType};
+static constexpr GrGeometryProcessor::Attribute gVertex = {
+    "position", kFloat2_GrVertexAttribType, kFloat2_GrSLType};
 
 /**
  * This is a GPU-backend specific test. It ensures that SkSL properly identifies clockwise-winding
@@ -236,9 +236,9 @@ void ClockwiseGM::onDraw(GrContext* ctx, GrRenderTargetContext* rtc, SkCanvas* c
 
   // Draw the test to an off-screen, top-down render target.
   GrColorType rtcColorType = rtc->colorInfo().colorType();
-  if (auto topLeftRTC = ctx->priv().makeDeferredRenderTargetContext(
-          SkBackingFit::kExact, 100, 200, rtcColorType, nullptr, 1, GrMipMapped::kNo,
-          kTopLeft_GrSurfaceOrigin, nullptr, SkBudgeted::kYes)) {
+  if (auto topLeftRTC = GrRenderTargetContext::Make(
+          ctx, rtcColorType, nullptr, SkBackingFit::kExact, {100, 200}, 1, GrMipMapped::kNo,
+          GrProtected::kNo, kTopLeft_GrSurfaceOrigin, SkBudgeted::kYes, nullptr)) {
     topLeftRTC->clear(
         nullptr, SK_PMColor4fTRANSPARENT, GrRenderTargetContext::CanClearFullscreen::kYes);
     topLeftRTC->priv().testingOnly_addDrawOp(ClockwiseTestOp::Make(ctx, false, 0));
@@ -251,9 +251,9 @@ void ClockwiseGM::onDraw(GrContext* ctx, GrRenderTargetContext* rtc, SkCanvas* c
   }
 
   // Draw the test to an off-screen, bottom-up render target.
-  if (auto topLeftRTC = ctx->priv().makeDeferredRenderTargetContext(
-          SkBackingFit::kExact, 100, 200, rtcColorType, nullptr, 1, GrMipMapped::kNo,
-          kBottomLeft_GrSurfaceOrigin, nullptr, SkBudgeted::kYes)) {
+  if (auto topLeftRTC = GrRenderTargetContext::Make(
+          ctx, rtcColorType, nullptr, SkBackingFit::kExact, {100, 200}, 1, GrMipMapped::kNo,
+          GrProtected::kNo, kBottomLeft_GrSurfaceOrigin, SkBudgeted::kYes, nullptr)) {
     topLeftRTC->clear(
         nullptr, SK_PMColor4fTRANSPARENT, GrRenderTargetContext::CanClearFullscreen::kYes);
     topLeftRTC->priv().testingOnly_addDrawOp(ClockwiseTestOp::Make(ctx, false, 0));

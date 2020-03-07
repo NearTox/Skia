@@ -23,9 +23,11 @@ struct FloatLiteral : public Expression {
   FloatLiteral(int offset, double value, const Type* type)
       : INHERITED(offset, kFloatLiteral_Kind, *type), fValue(value) {}
 
+#ifdef SK_DEBUG
   String description() const override { return to_string(fValue); }
+#endif
 
-  bool hasSideEffects() const override { return false; }
+  bool hasProperty(Property property) const override { return false; }
 
   bool isConstant() const override { return true; }
 

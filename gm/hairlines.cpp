@@ -150,11 +150,13 @@ class HairlinesGM : public GM {
       bug->addArc(circle, kStartAngle, kSweepAngle);
 
       // Now add the chord that should cap the circular arc
-      SkPoint p0 = {kRad * SkScalarCos(SkDegreesToRadians(kStartAngle)),
-                    kRad * SkScalarSin(SkDegreesToRadians(kStartAngle))};
+      SkPoint p0 = {
+          kRad * SkScalarCos(SkDegreesToRadians(kStartAngle)),
+          kRad * SkScalarSin(SkDegreesToRadians(kStartAngle))};
 
-      SkPoint p1 = {kRad * SkScalarCos(SkDegreesToRadians(kStartAngle + kSweepAngle)),
-                    kRad * SkScalarSin(SkDegreesToRadians(kStartAngle + kSweepAngle))};
+      SkPoint p1 = {
+          kRad * SkScalarCos(SkDegreesToRadians(kStartAngle + kSweepAngle)),
+          kRad * SkScalarSin(SkDegreesToRadians(kStartAngle + kSweepAngle))};
 
       bug->moveTo(p0);
       bug->lineTo(p1);

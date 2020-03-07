@@ -89,6 +89,9 @@ void GrGLConvolutionEffect::emitCode(EmitArgs& args) {
               bounds);
           break;
         }
+        // Deferring implementing kMirrorRepeat until we use DomainEffects as
+        // child processors. Fallback to Repeat.
+        case GrTextureDomain::kMirrorRepeat_Mode:
         case GrTextureDomain::kRepeat_Mode: {
           fragBuilder->codeAppendf(
               "coordSampled.%s = "
@@ -121,11 +124,12 @@ void GrGLConvolutionEffect::onSetData(
     const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& processor) {
   const GrGaussianConvolutionFragmentProcessor& conv =
       processor.cast<GrGaussianConvolutionFragmentProcessor>();
-  GrSurfaceProxy* proxy = conv.textureSampler(0).proxy();
+  const auto& view = conv.textureSampler(0).view();
+  GrSurfaceProxy* proxy = view.proxy();
   GrTexture& texture = *proxy->peekTexture();
 
   float imageIncrement[2] = {0};
-  float ySign = proxy->origin() != kTopLeft_GrSurfaceOrigin ? 1.0f : -1.0f;
+  float ySign = view.origin() != kTopLeft_GrSurfaceOrigin ? 1.0f : -1.0f;
   switch (conv.direction()) {
     case Direction::kX: imageIncrement[0] = 1.0f / texture.width(); break;
     case Direction::kY: imageIncrement[1] = ySign / texture.height(); break;
@@ -146,7 +150,7 @@ void GrGLConvolutionEffect::onSetData(
       bounds[1] *= inv;
     } else {
       SkScalar inv = SkScalarInvert(SkIntToScalar(texture.height()));
-      if (proxy->origin() != kTopLeft_GrSurfaceOrigin) {
+      if (view.origin() != kTopLeft_GrSurfaceOrigin) {
         float tmp = bounds[0];
         bounds[0] = 1.0f - (inv * bounds[1]);
         bounds[1] = 1.0f - (inv * tmp);
@@ -203,30 +207,61 @@ static void fill_in_1D_gaussian_kernel(float* kernel, int width, float gaussianS
   float scale = 1.0f / sum;
   for (int i = 0; i < width; ++i) {
     kernel[i] *= scale;
-  }
+    }
 }
 
 GrGaussianConvolutionFragmentProcessor::GrGaussianConvolutionFragmentProcessor(
-    sk_sp<GrSurfaceProxy> proxy, SkAlphaType alphaType, Direction direction, int radius,
+    GrSurfaceProxyView view, SkAlphaType alphaType, Direction direction, int radius,
     float gaussianSigma, GrTextureDomain::Mode mode, int bounds[2])
     : INHERITED(
           kGrGaussianConvolutionFragmentProcessor_ClassID,
           ModulateForSamplerOptFlags(alphaType, mode == GrTextureDomain::kDecal_Mode)),
-      fCoordTransform(proxy.get()),
-      fTextureSampler(std::move(proxy)),
+      fCoordTransform(view.proxy()),
+      fTextureSampler(std::move(view)),
       fRadius(radius),
       fDirection(direction),
       fMode(mode) {
-  // Make sure the sampler's ctor uses the clamp wrap mode
-  SkASSERT(
-      fTextureSampler.samplerState().wrapModeX() == GrSamplerState::WrapMode::kClamp &&
-      fTextureSampler.samplerState().wrapModeY() == GrSamplerState::WrapMode::kClamp);
   this->addCoordTransform(&fCoordTransform);
   this->setTextureSamplerCnt(1);
   SkASSERT(radius <= kMaxKernelRadius);
 
   fill_in_1D_gaussian_kernel(fKernel, this->width(), gaussianSigma, this->radius());
-
+  // SkGpuBlurUtils is not as aggressive as it once was about avoiding domains. So we check
+  // here if we can omit the domain. TODO: remove this when this effect uses a child to
+  // sample the texture.
+  auto samplerProxy = fTextureSampler.proxy();
+  if (!samplerProxy->isFullyLazy()) {
+    int wh = (fDirection == Direction::kX) ? samplerProxy->backingStoreDimensions().width()
+                                           : samplerProxy->backingStoreDimensions().height();
+    if (bounds[0] == 0 && bounds[1] == wh) {
+      bool useSampler = false;
+      GrSamplerState::WrapMode samplerMode = GrSamplerState::WrapMode::kClamp;
+      switch (fMode) {
+        case GrTextureDomain::kClamp_Mode:
+        case GrTextureDomain::kIgnore_Mode: useSampler = true; break;
+        case GrTextureDomain::kRepeat_Mode:
+          useSampler = true;
+          samplerMode = GrSamplerState::WrapMode::kRepeat;
+          break;
+        case GrTextureDomain::kMirrorRepeat_Mode:
+          useSampler = true;
+          samplerMode = GrSamplerState::WrapMode::kMirrorRepeat;
+          break;
+        case GrTextureDomain::kDecal_Mode:
+          // Not sure if we support this in HW without having GrCaps here.
+          // Just wait until we replace this with GrTextureEffect.
+          break;
+      }
+      if (useSampler) {
+        fMode = GrTextureDomain::kIgnore_Mode;
+        if (fDirection == Direction::kX) {
+          fTextureSampler.samplerState().setWrapModeX(samplerMode);
+        } else {
+          fTextureSampler.samplerState().setWrapModeY(samplerMode);
+        }
+      }
+    }
+  }
   memcpy(fBounds, bounds, sizeof(fBounds));
 }
 
@@ -269,9 +304,7 @@ GR_DEFINE_FRAGMENT_PROCESSOR_TEST(GrGaussianConvolutionFragmentProcessor);
 #if GR_TEST_UTILS
 std::unique_ptr<GrFragmentProcessor> GrGaussianConvolutionFragmentProcessor::TestCreate(
     GrProcessorTestData* d) {
-  int texIdx = d->fRandom->nextBool() ? GrProcessorUnitTest::kSkiaPMTextureIdx
-                                      : GrProcessorUnitTest::kAlphaTextureIdx;
-  sk_sp<GrTextureProxy> proxy = d->textureProxy(texIdx);
+  auto [proxy, ct, at] = d->randomProxy();
 
   int bounds[2];
   int modeIdx = d->fRandom->nextRangeU(0, GrTextureDomain::kModeCount - 1);
@@ -290,10 +323,11 @@ std::unique_ptr<GrFragmentProcessor> GrGaussianConvolutionFragmentProcessor::Tes
   int radius = d->fRandom->nextRangeU(1, kMaxKernelRadius);
   float sigma = radius / 3.f;
 
-  auto alphaType = static_cast<SkAlphaType>(
-      d->fRandom->nextRangeU(kUnknown_SkAlphaType + 1, kLastEnum_SkAlphaType));
+  GrSurfaceOrigin origin = proxy->origin();
+  GrSwizzle swizzle = proxy->textureSwizzle();
+  GrSurfaceProxyView view(std::move(proxy), origin, swizzle);
+
   return GrGaussianConvolutionFragmentProcessor::Make(
-      std::move(proxy), alphaType, dir, radius, sigma, static_cast<GrTextureDomain::Mode>(modeIdx),
-      bounds);
+      std::move(view), at, dir, radius, sigma, static_cast<GrTextureDomain::Mode>(modeIdx), bounds);
 }
 #endif

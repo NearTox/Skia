@@ -28,7 +28,7 @@ class GrFillRRectOp : public GrDrawOp {
   }
   GrProcessorSet::Analysis finalize(
       const GrCaps&, const GrAppliedClip*, bool hasMixedSampledCoverage, GrClampType) final;
-  CombineResult onCombineIfPossible(GrOp*, const GrCaps&) final;
+  CombineResult onCombineIfPossible(GrOp*, GrRecordingContext::Arenas*, const GrCaps&) final;
   void visitProxies(const VisitProxyFunc& fn) const override {
     if (fProgramInfo) {
       fProgramInfo->visitProxies(fn);

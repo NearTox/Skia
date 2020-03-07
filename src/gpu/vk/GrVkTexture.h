@@ -47,9 +47,9 @@ class GrVkTexture : public GrTexture, public virtual GrVkImage {
   // GrSamplerState, then a pointer to it is returned. The ref count is not incremented on the
   // returned pointer, thus the caller must call ref it if they wish to keep ownership of the
   // GrVkDescriptorSet.
-  const GrVkDescriptorSet* cachedSingleDescSet(const GrSamplerState&);
+  const GrVkDescriptorSet* cachedSingleDescSet(GrSamplerState);
 
-  void addDescriptorSetToCache(const GrVkDescriptorSet*, const GrSamplerState&);
+  void addDescriptorSetToCache(const GrVkDescriptorSet*, GrSamplerState);
 
  protected:
   GrVkTexture(
@@ -88,9 +88,7 @@ class GrVkTexture : public GrTexture, public virtual GrVkImage {
   const GrVkImageView* fTextureView;
 
   struct SamplerHash {
-    uint32_t operator()(const GrSamplerState& state) const {
-      return GrSamplerState::GenerateKey(state);
-    }
+    uint32_t operator()(GrSamplerState state) const { return GrSamplerState::GenerateKey(state); }
   };
   struct DescriptorCacheEntry;
   SkLRUCache<const GrSamplerState, std::unique_ptr<DescriptorCacheEntry>, SamplerHash>

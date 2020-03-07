@@ -16,7 +16,6 @@
 #include "src/gpu/GrImageInfo.h"
 #include "src/gpu/GrSurfaceContext.h"
 #include "src/gpu/GrSurfaceProxy.h"
-#include "src/gpu/GrTextureContext.h"
 #include "src/gpu/GrTextureProxy.h"
 #include "src/gpu/SkGr.h"
 
@@ -78,11 +77,14 @@ void TestCopyFromSurface(
     skiatest::Reporter* reporter, GrContext* context, GrSurfaceProxy* proxy, GrColorType colorType,
     uint32_t expectedPixelValues[], const char* testName) {
   sk_sp<GrTextureProxy> dstProxy = GrSurfaceProxy::Copy(
-      context, proxy, GrMipMapped::kNo, SkBackingFit::kExact, SkBudgeted::kYes);
+      context, proxy, colorType, GrMipMapped::kNo, SkBackingFit::kExact, SkBudgeted::kYes);
   SkASSERT(dstProxy);
 
-  auto dstContext = context->priv().makeWrappedSurfaceContext(
-      std::move(dstProxy), colorType, kPremul_SkAlphaType);
+  GrSurfaceOrigin origin = dstProxy->origin();
+  GrSwizzle swizzle = context->priv().caps()->getReadSwizzle(dstProxy->backendFormat(), colorType);
+  GrSurfaceProxyView view(std::move(dstProxy), origin, swizzle);
+  auto dstContext =
+      GrSurfaceContext::Make(context, std::move(view), colorType, kPremul_SkAlphaType, nullptr);
   SkASSERT(dstContext);
 
   TestReadPixels(reporter, dstContext.get(), expectedPixelValues, testName);

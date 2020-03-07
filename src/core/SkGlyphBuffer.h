@@ -112,7 +112,7 @@ class SkGlyphVariant {
 
   operator SkPackedGlyphID() const { return this->packedID(); }
   operator SkGlyph*() const { return this->glyph(); }
-  operator const SkPath *() const { return this->path(); }
+  operator const SkPath*() const { return this->path(); }
 
  private:
   union {
@@ -135,6 +135,9 @@ class SkDrawableGlyphBuffer {
 
   // Load the buffer with SkPackedGlyphIDs and positions in source space.
   void startSource(const SkZip<const SkGlyphID, const SkPoint>& source, SkPoint origin);
+
+  // Use the original glyphIDs and positions.
+  void startPaths(const SkZip<const SkGlyphID, const SkPoint>& source);
 
   // Load the buffer with SkPackedGlyphIDs and positions using the device transform.
   void startDevice(

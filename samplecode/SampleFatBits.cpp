@@ -216,8 +216,9 @@ void FatBits::drawFG(SkCanvas* canvas) {
     SkPaint p;
     p.setStyle(SkPaint::kStroke_Style);
     p.setColor(SK_ColorLTGRAY);
-    SkRect r = {fClipRect.fLeft * fZoom, fClipRect.fTop * fZoom, fClipRect.fRight * fZoom,
-                fClipRect.fBottom * fZoom};
+    SkRect r = {
+        fClipRect.fLeft * fZoom, fClipRect.fTop * fZoom, fClipRect.fRight * fZoom,
+        fClipRect.fBottom * fZoom};
     canvas->drawRect(r, p);
   }
 }

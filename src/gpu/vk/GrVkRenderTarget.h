@@ -148,7 +148,6 @@ class GrVkRenderTarget : public GrRenderTarget, public virtual GrVkImage {
   }
 
   void releaseInternalObjects();
-  void abandonInternalObjects();
 
   const GrVkImageView* fColorAttachmentView;
   std::unique_ptr<GrVkImage> fMSAAImage;

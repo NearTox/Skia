@@ -58,8 +58,8 @@ class GrAppliedClip;
  */
 namespace skiagm {
 
-static constexpr GrGeometryProcessor::Attribute gVertex = {"bboxcoord", kFloat2_GrVertexAttribType,
-                                                           kFloat2_GrSLType};
+static constexpr GrGeometryProcessor::Attribute gVertex = {
+    "bboxcoord", kFloat2_GrVertexAttribType, kFloat2_GrSLType};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // SkSL code.

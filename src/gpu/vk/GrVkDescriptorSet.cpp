@@ -23,4 +23,3 @@ void GrVkDescriptorSet::onRecycle(GrVkGpu* gpu) const {
   gpu->resourceProvider().recycleDescriptorSet(this, fHandle);
 }
 
-void GrVkDescriptorSet::abandonGPUData() const { fPool->unrefAndAbandon(); }

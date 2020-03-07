@@ -35,7 +35,7 @@ static int float_bits(float f) {
 
 static bool are_equal(skiatest::Reporter* reporter, const SkMatrix& a, const SkMatrix& b) {
   bool equal = a == b;
-  bool cheapEqual = a.cheapEqualTo(b);
+  bool cheapEqual = SkMatrixPriv::CheapEqual(a, b);
   if (equal != cheapEqual) {
     if (equal) {
       bool foundZeroSignDiff = false;
@@ -680,7 +680,7 @@ static void test_matrix_homogeneous(skiatest::Reporter* reporter) {
   }
 
   // doesn't crash with null dst, src, count == 0
-  { mats[0].mapHomogeneousPoints(nullptr, nullptr, 0); }
+  { mats[0].mapHomogeneousPoints(nullptr, (const SkPoint3*)nullptr, 0); }
 
   // uniform scale of point
   {

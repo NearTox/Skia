@@ -433,13 +433,13 @@ void GrGSCoverageProcessor::reset(PrimitiveType primitiveType, GrResourceProvide
 
   if (4 == this->numInputPoints() || this->hasInputWeight()) {
     fInputXOrYValues = {"x_or_y_values", kFloat4_GrVertexAttribType, kFloat4_GrSLType};
-    GR_STATIC_ASSERT(
+    static_assert(
         sizeof(QuadPointInstance) == 2 * GrVertexAttribTypeSize(kFloat4_GrVertexAttribType));
-    GR_STATIC_ASSERT(
+    static_assert(
         offsetof(QuadPointInstance, fY) == GrVertexAttribTypeSize(kFloat4_GrVertexAttribType));
   } else {
     fInputXOrYValues = {"x_or_y_values", kFloat3_GrVertexAttribType, kFloat3_GrSLType};
-    GR_STATIC_ASSERT(
+    static_assert(
         sizeof(TriPointInstance) == 2 * GrVertexAttribTypeSize(kFloat3_GrVertexAttribType));
   }
 

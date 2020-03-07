@@ -41,13 +41,14 @@ static sk_sp<SkImage> makebm(int w, int h) {
   constexpr SkColor colors[] = {SK_ColorRED,  SK_ColorYELLOW, SK_ColorGREEN, SK_ColorMAGENTA,
                                 SK_ColorBLUE, SK_ColorCYAN,   SK_ColorRED};
 
-  constexpr SkScalar pos[] = {0,
-                              SK_Scalar1 / 6,
-                              2 * SK_Scalar1 / 6,
-                              3 * SK_Scalar1 / 6,
-                              4 * SK_Scalar1 / 6,
-                              5 * SK_Scalar1 / 6,
-                              SK_Scalar1};
+  constexpr SkScalar pos[] = {
+      0,
+      SK_Scalar1 / 6,
+      2 * SK_Scalar1 / 6,
+      3 * SK_Scalar1 / 6,
+      4 * SK_Scalar1 / 6,
+      5 * SK_Scalar1 / 6,
+      SK_Scalar1};
 
   SkASSERT(SK_ARRAY_COUNT(colors) == SK_ARRAY_COUNT(pos));
   SkPaint paint;

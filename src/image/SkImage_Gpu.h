@@ -12,6 +12,7 @@
 #include "src/core/SkImagePriv.h"
 #include "src/gpu/GrGpuResourcePriv.h"
 #include "src/gpu/GrSurfaceProxyPriv.h"
+#include "src/gpu/GrSurfaceProxyView.h"
 #include "src/gpu/SkGr.h"
 #include "src/image/SkImage_GpuBase.h"
 
@@ -23,15 +24,28 @@ struct SkYUVAIndex;
 class SkImage_Gpu : public SkImage_GpuBase {
  public:
   SkImage_Gpu(
-      sk_sp<GrContext>, uint32_t uniqueID, SkAlphaType, sk_sp<GrTextureProxy>, sk_sp<SkColorSpace>);
+      sk_sp<GrContext>, uint32_t uniqueID, GrSurfaceProxyView, SkColorType, SkAlphaType,
+      sk_sp<SkColorSpace>);
   ~SkImage_Gpu() override;
 
   GrSemaphoresSubmitted onFlush(GrContext*, const GrFlushInfo&) override;
 
-  GrTextureProxy* peekProxy() const override { return fProxy.get(); }
-  sk_sp<GrTextureProxy> asTextureProxyRef(GrRecordingContext*) const override { return fProxy; }
+  GrTextureProxy* peekProxy() const override { return fView.asTextureProxy(); }
+  sk_sp<GrTextureProxy> asTextureProxyRef(GrRecordingContext*) const override {
+    return fView.asTextureProxyRef();
+  }
 
-  bool onIsTextureBacked() const override { return SkToBool(fProxy.get()); }
+  GrSurfaceProxyView asSurfaceProxyViewRef(GrRecordingContext* context) const override {
+    return fView;
+  }
+  const GrSurfaceProxyView& getSurfaceProxyView(GrRecordingContext* context) const override {
+    return fView;
+  }
+
+  bool onIsTextureBacked() const override {
+    SkASSERT(fView.proxy());
+    return true;
+  }
 
   sk_sp<SkImage> onMakeColorTypeAndColorSpace(
       GrRecordingContext*, SkColorType, sk_sp<SkColorSpace>) const final;
@@ -55,7 +69,7 @@ class SkImage_Gpu : public SkImage_GpuBase {
       GrRenderTargetContext*);
 
  private:
-  sk_sp<GrTextureProxy> fProxy;
+  GrSurfaceProxyView fView;
 
   typedef SkImage_GpuBase INHERITED;
 };

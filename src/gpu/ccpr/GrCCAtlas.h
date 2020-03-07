@@ -60,7 +60,7 @@ class GrCCAtlas {
   }
 
   using LazyInstantiateAtlasCallback = std::function<GrSurfaceProxy::LazyCallbackResult(
-      GrResourceProvider*, GrPixelConfig, const GrBackendFormat&, int sampleCount)>;
+      GrResourceProvider*, const GrBackendFormat&, int sampleCount)>;
 
   static sk_sp<GrTextureProxy> MakeLazyAtlasProxy(
       const LazyInstantiateAtlasCallback&, CoverageType, const GrCaps&,

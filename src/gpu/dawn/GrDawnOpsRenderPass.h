@@ -31,7 +31,6 @@ class GrDawnOpsRenderPass : public GrOpsRenderPass, private GrMesh::SendToGpuImp
   void end() override;
 
   wgpu::RenderPassEncoder beginRenderPass(wgpu::LoadOp colorOp, wgpu::LoadOp stencilOp);
-  void insertEventMarker(const char*) override;
 
   void inlineUpload(GrOpFlushState* state, GrDeferredTextureUploadFn& upload) override;
 
@@ -47,29 +46,21 @@ class GrDawnOpsRenderPass : public GrOpsRenderPass, private GrMesh::SendToGpuImp
       const GrProgramInfo& programInfo, const GrMesh mesh[], int meshCount,
       const SkRect& bounds) override;
 
-  void sendMeshToGpu(
-      GrPrimitiveType primType, const GrBuffer* vertexBuffer, int vertexCount,
-      int baseVertex) final {
-    this->sendInstancedMeshToGpu(primType, vertexBuffer, vertexCount, baseVertex, nullptr, 1, 0);
+  void sendArrayMeshToGpu(const GrMesh& mesh, int vertexCount, int baseVertex) final {
+    SkASSERT(!mesh.instanceBuffer());
+    this->sendInstancedMeshToGpu(mesh, vertexCount, baseVertex, 1, 0);
   }
-
   void sendIndexedMeshToGpu(
-      GrPrimitiveType primType, const GrBuffer* indexBuffer, int indexCount, int baseIndex,
-      uint16_t /*minIndexValue*/, uint16_t /*maxIndexValue*/, const GrBuffer* vertexBuffer,
-      int baseVertex, GrPrimitiveRestart restart) final {
-    this->sendIndexedInstancedMeshToGpu(
-        primType, indexBuffer, indexCount, baseIndex, vertexBuffer, baseVertex, nullptr, 1, 0,
-        restart);
+      const GrMesh& mesh, int indexCount, int baseIndex, uint16_t minIndexValue,
+      uint16_t maxIndexValue, int baseVertex) final {
+    SkASSERT(!mesh.instanceBuffer());
+    this->sendIndexedInstancedMeshToGpu(mesh, indexCount, baseIndex, baseVertex, 1, 0);
   }
-
   void sendInstancedMeshToGpu(
-      GrPrimitiveType, const GrBuffer* vertexBuffer, int vertexCount, int baseVertex,
-      const GrBuffer* instanceBuffer, int instanceCount, int baseInstance) final;
-
+      const GrMesh&, int vertexCount, int baseVertex, int instanceCount, int baseInstance) final;
   void sendIndexedInstancedMeshToGpu(
-      GrPrimitiveType, const GrBuffer* indexBuffer, int indexCount, int baseIndex,
-      const GrBuffer* vertexBuffer, int baseVertex, const GrBuffer* instanceBuffer,
-      int instanceCount, int baseInstance, GrPrimitiveRestart) final;
+      const GrMesh&, int indexCount, int baseIndex, int baseVertex, int instanceCount,
+      int baseInstance) final;
 
   void onClear(const GrFixedClip&, const SkPMColor4f& color) override;
 

@@ -34,8 +34,11 @@ class SkImage_GpuBase : public SkImage_Base {
     SkASSERT(false);
     return this->INHERITED::asTextureProxyRef(context);
   }
+
+  virtual const GrSurfaceProxyView& getSurfaceProxyView(GrRecordingContext* context) const = 0;
+
   sk_sp<GrTextureProxy> asTextureProxyRef(
-      GrRecordingContext*, const GrSamplerState&, SkScalar scaleAdjust[2]) const final;
+      GrRecordingContext*, GrSamplerState, SkScalar scaleAdjust[2]) const final;
 
   sk_sp<GrTextureProxy> refPinnedTextureProxy(
       GrRecordingContext* context, uint32_t* uniqueID) const final {
@@ -57,6 +60,8 @@ class SkImage_GpuBase : public SkImage_Base {
   static bool ValidateBackendTexture(
       const GrCaps*, const GrBackendTexture& tex, GrColorType grCT, SkColorType ct, SkAlphaType at,
       sk_sp<SkColorSpace> cs);
+  static bool ValidateCompressedBackendTexture(
+      const GrCaps*, const GrBackendTexture& tex, SkAlphaType);
   static bool MakeTempTextureProxies(
       GrContext* ctx, const GrBackendTexture yuvaTextures[], int numTextures, const SkYUVAIndex[4],
       GrSurfaceOrigin imageOrigin, sk_sp<GrTextureProxy> tempTextureProxies[4]);

@@ -137,6 +137,8 @@ class SK_API SkImageGenerator {
    */
   sk_sp<GrTextureProxy> generateTexture(
       GrRecordingContext*, const SkImageInfo& info, const SkIPoint& origin, bool willNeedMipMaps);
+
+  bool texturesAreCacheable() const { return this->onTexturesAreCacheable(); }
 #endif
 
   /**
@@ -183,6 +185,7 @@ class SK_API SkImageGenerator {
   virtual sk_sp<GrTextureProxy> onGenerateTexture(
       GrRecordingContext*, const SkImageInfo&, const SkIPoint&,
       bool willNeedMipMaps);  // returns nullptr
+  virtual bool onTexturesAreCacheable() const { return true; }
 #endif
 
  private:

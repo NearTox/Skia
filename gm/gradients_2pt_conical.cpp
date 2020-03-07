@@ -29,8 +29,8 @@ struct GradData {
   const SkScalar* fPos;
 };
 
-constexpr SkColor gColors[] = {SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorWHITE,
-                               SK_ColorBLACK};
+constexpr SkColor gColors[] = {
+    SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorWHITE, SK_ColorBLACK};
 constexpr SkScalar gPos0[] = {0, SK_Scalar1};
 constexpr SkScalar gPos1[] = {SK_Scalar1 / 4, SK_Scalar1 * 3 / 4};
 constexpr SkScalar gPos2[] = {0, SK_Scalar1 / 8, SK_Scalar1 / 2, SK_Scalar1 * 7 / 8, SK_Scalar1};
@@ -268,13 +268,14 @@ constexpr GradMaker gGradMakersOutside[] = {
     Make2ConicalOutside, Make2ConicalOutsideFlip, Make2ConicalZeroRadOutside,
     Make2ConicalZeroRadFlipOutside, Make2ConicalOutsideStrip};
 
-constexpr GradMaker gGradMakersInside[] = {Make2ConicalInside,
-                                           Make2ConicalInsideFlip,
-                                           Make2ConicalInsideCenter,
-                                           Make2ConicalZeroRad,
-                                           Make2ConicalZeroRadFlip,
-                                           Make2ConicalZeroRadCenter,
-                                           Make2ConicalInsideCenterReversed};
+constexpr GradMaker gGradMakersInside[] = {
+    Make2ConicalInside,
+    Make2ConicalInsideFlip,
+    Make2ConicalInsideCenter,
+    Make2ConicalZeroRad,
+    Make2ConicalZeroRadFlip,
+    Make2ConicalZeroRadCenter,
+    Make2ConicalInsideCenterReversed};
 
 constexpr GradMaker gGradMakersEdgeCases[] = {
     Make2ConicalEdgeX,  Make2ConicalEdgeY,  Make2ConicalZeroRadEdgeX,  Make2ConicalZeroRadEdgeY,

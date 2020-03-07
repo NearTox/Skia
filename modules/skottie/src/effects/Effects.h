@@ -8,6 +8,7 @@
 #ifndef SkottieEffects_DEFINED
 #define SkottieEffects_DEFINED
 
+#include "modules/skottie/src/Animator.h"
 #include "modules/skottie/src/SkottiePriv.h"
 
 class SkMaskFilter;
@@ -42,6 +43,8 @@ class EffectBuilder final : public SkNoncopyable {
       const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
   sk_sp<sksg::RenderNode> attachHueSaturationEffect(
       const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
+  sk_sp<sksg::RenderNode> attachInvertEffect(
+      const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
   sk_sp<sksg::RenderNode> attachLevelsEffect(
       const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
   sk_sp<sksg::RenderNode> attachLinearWipeEffect(
@@ -70,18 +73,14 @@ class EffectBuilder final : public SkNoncopyable {
 /**
  * Base class for mask-filter-related effects.
  */
-class MaskFilterEffectBase : public SkRefCnt {
+class MaskFilterEffectBase : public AnimatablePropertyContainer {
  public:
-  ~MaskFilterEffectBase() override;
-
-  const sk_sp<sksg::MaskFilterEffect>& root() const { return fMaskEffectNode; }
+  const sk_sp<sksg::MaskFilterEffect>& node() const { return fMaskEffectNode; }
 
  protected:
   MaskFilterEffectBase(sk_sp<sksg::RenderNode>, const SkSize&);
 
   const SkSize& layerSize() const { return fLayerSize; }
-
-  void apply() const;
 
   struct MaskInfo {
     sk_sp<SkMaskFilter> fMask;
@@ -90,6 +89,8 @@ class MaskFilterEffectBase : public SkRefCnt {
   virtual MaskInfo onMakeMask() const = 0;
 
  private:
+  void onSync() final;
+
   const sk_sp<sksg::MaskFilter> fMaskNode;
   const sk_sp<sksg::MaskFilterEffect> fMaskEffectNode;
   const SkSize fLayerSize;

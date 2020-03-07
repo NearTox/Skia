@@ -23,6 +23,7 @@ struct DFAState {
 
     bool operator!=(const Label& other) const { return !(*this == other); }
 
+#ifdef SK_DEBUG
     std::string description() const {
       std::string result = "<";
       const char* separator = "";
@@ -34,6 +35,7 @@ struct DFAState {
       result += ">";
       return result;
     }
+#endif
   };
 
   DFAState() : fId(INVALID), fLabel({}) {}

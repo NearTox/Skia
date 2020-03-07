@@ -248,10 +248,11 @@ static void inval_test2(skiatest::Reporter* reporter) {
   {
     // Update shared m1.
     m1->setMatrix(SkMatrix::MakeTrans(100, 100));
-    std::vector<SkRect> damage = {{0, 0, 200, 200},       // draw1 prev bounds
-                                  {100, 100, 300, 300},   // draw1 new bounds
-                                  {0, 0, 100, 100},       // draw2 prev bounds
-                                  {100, 100, 200, 200}};  // draw2 new bounds
+    std::vector<SkRect> damage = {
+        {0, 0, 200, 200},       // draw1 prev bounds
+        {100, 100, 300, 300},   // draw1 new bounds
+        {0, 0, 100, 100},       // draw2 prev bounds
+        {100, 100, 200, 200}};  // draw2 new bounds
     check_inval(
         reporter, root, SkRect::MakeLTRB(100, 100, 300, 300), SkRect::MakeLTRB(0, 0, 300, 300),
         &damage);
@@ -260,10 +261,11 @@ static void inval_test2(skiatest::Reporter* reporter) {
   {
     // Update shared rect.
     rect->setR(50);
-    std::vector<SkRect> damage = {{100, 100, 300, 300},   // draw1 prev bounds
-                                  {100, 100, 200, 300},   // draw1 new bounds
-                                  {100, 100, 200, 200},   // draw2 prev bounds
-                                  {100, 100, 150, 200}};  // draw2 new bounds
+    std::vector<SkRect> damage = {
+        {100, 100, 300, 300},   // draw1 prev bounds
+        {100, 100, 200, 300},   // draw1 new bounds
+        {100, 100, 200, 200},   // draw2 prev bounds
+        {100, 100, 150, 200}};  // draw2 new bounds
     check_inval(
         reporter, root, SkRect::MakeLTRB(100, 100, 200, 300), SkRect::MakeLTRB(100, 100, 300, 300),
         &damage);

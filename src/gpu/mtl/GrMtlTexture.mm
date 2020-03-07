@@ -18,10 +18,9 @@
 GrMtlTexture::GrMtlTexture(
     GrMtlGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc, id<MTLTexture> texture,
     GrMipMapsStatus mipMapsStatus)
-    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, GrProtected::kNo),
+    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, GrProtected::kNo),
       INHERITED(
-          gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, GrProtected::kNo, GrTextureType::k2D,
-          mipMapsStatus),
+          gpu, {desc.fWidth, desc.fHeight}, GrProtected::kNo, GrTextureType::k2D, mipMapsStatus),
       fTexture(texture) {
   SkASSERT((GrMipMapsStatus::kNotAllocated == mipMapsStatus) == (1 == texture.mipmapLevelCount));
   if (@available(macOS 10.11, iOS 9.0, *)) {
@@ -37,10 +36,9 @@ GrMtlTexture::GrMtlTexture(
 GrMtlTexture::GrMtlTexture(
     GrMtlGpu* gpu, Wrapped, const GrSurfaceDesc& desc, id<MTLTexture> texture,
     GrMipMapsStatus mipMapsStatus, GrWrapCacheable cacheable, GrIOType ioType)
-    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, GrProtected::kNo),
+    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, GrProtected::kNo),
       INHERITED(
-          gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, GrProtected::kNo, GrTextureType::k2D,
-          mipMapsStatus),
+          gpu, {desc.fWidth, desc.fHeight}, GrProtected::kNo, GrTextureType::k2D, mipMapsStatus),
       fTexture(texture) {
   SkASSERT((GrMipMapsStatus::kNotAllocated == mipMapsStatus) == (1 == texture.mipmapLevelCount));
   if (@available(macOS 10.11, iOS 9.0, *)) {
@@ -55,10 +53,9 @@ GrMtlTexture::GrMtlTexture(
 
 GrMtlTexture::GrMtlTexture(
     GrMtlGpu* gpu, const GrSurfaceDesc& desc, id<MTLTexture> texture, GrMipMapsStatus mipMapsStatus)
-    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, GrProtected::kNo),
+    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, GrProtected::kNo),
       INHERITED(
-          gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, GrProtected::kNo, GrTextureType::k2D,
-          mipMapsStatus),
+          gpu, {desc.fWidth, desc.fHeight}, GrProtected::kNo, GrTextureType::k2D, mipMapsStatus),
       fTexture(texture) {
   SkASSERT((GrMipMapsStatus::kNotAllocated == mipMapsStatus) == (1 == texture.mipmapLevelCount));
   if (@available(macOS 10.11, iOS 9.0, *)) {

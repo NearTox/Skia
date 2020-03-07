@@ -51,8 +51,7 @@ class GrRenderTarget : virtual public GrSurface {
 
  protected:
   GrRenderTarget(
-      GrGpu*, const SkISize&, GrPixelConfig, int sampleCount, GrProtected,
-      GrStencilAttachment* = nullptr);
+      GrGpu*, const SkISize&, int sampleCount, GrProtected, GrStencilAttachment* = nullptr);
   ~GrRenderTarget() override;
 
   // override of GrResource

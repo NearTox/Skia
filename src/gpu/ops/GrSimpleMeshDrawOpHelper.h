@@ -118,11 +118,17 @@ class GrSimpleMeshDrawOpHelper {
 
   void setAAType(GrAAType aaType) { fAAType = static_cast<unsigned>(aaType); }
 
-  void executeDrawsAndUploads(const GrOp*, GrOpFlushState*, const SkRect& chainBounds);
+  static const GrPipeline* CreatePipeline(
+      GrOpFlushState*, GrProcessorSet&&, GrPipeline::InputFlags fPipelineFlags,
+      const GrUserStencilSettings* = &GrUserStencilSettings::kUnused);
 
- protected:
+  GrProcessorSet detachProcessorSet() {
+    return fProcessors ? std::move(*fProcessors) : GrProcessorSet::MakeEmptySet();
+  }
+
   GrPipeline::InputFlags pipelineFlags() const { return fPipelineFlags; }
 
+ protected:
   GrProcessorSet::Analysis finalizeProcessors(
       const GrCaps& caps, const GrAppliedClip*, const GrUserStencilSettings*,
       bool hasMixedSampledCoverage, GrClampType, GrProcessorAnalysisCoverage geometryCoverage,
@@ -176,7 +182,9 @@ class GrSimpleMeshDrawOpHelperWithStencil : private GrSimpleMeshDrawOpHelper {
 
   using GrSimpleMeshDrawOpHelper::aaType;
   using GrSimpleMeshDrawOpHelper::compatibleWithCoverageAsAlpha;
+  using GrSimpleMeshDrawOpHelper::detachProcessorSet;
   using GrSimpleMeshDrawOpHelper::isTrivial;
+  using GrSimpleMeshDrawOpHelper::pipelineFlags;
   using GrSimpleMeshDrawOpHelper::setAAType;
   using GrSimpleMeshDrawOpHelper::usesLocalCoords;
 
@@ -184,11 +192,11 @@ class GrSimpleMeshDrawOpHelperWithStencil : private GrSimpleMeshDrawOpHelper {
       const GrSimpleMeshDrawOpHelperWithStencil& that, const GrCaps&, const SkRect& thisBounds,
       const SkRect& thatBounds, bool ignoreAAType = false) const;
 
-  void executeDrawsAndUploads(const GrOp*, GrOpFlushState*, const SkRect& chainBounds);
-
 #ifdef SK_DEBUG
   SkString dumpInfo() const;
 #endif
+
+  const GrUserStencilSettings* stencilSettings() const { return fStencilSettings; }
 
  private:
   const GrUserStencilSettings* fStencilSettings;

@@ -74,14 +74,16 @@ class PerspImages : public GM {
       for (const auto& m : matrices) {
         for (auto aa : {false, true}) {
           paint.setAntiAlias(aa);
-          for (auto filter : {kNone_SkFilterQuality, kLow_SkFilterQuality, kMedium_SkFilterQuality,
-                              kHigh_SkFilterQuality}) {
+          for (auto filter :
+               {kNone_SkFilterQuality, kLow_SkFilterQuality, kMedium_SkFilterQuality,
+                kHigh_SkFilterQuality}) {
             for (const auto& img : fImages) {
               paint.setFilterQuality(filter);
               canvas->save();
               canvas->concat(m);
-              SkRect src = {img->width() / 4.f, img->height() / 4.f, 3.f * img->width() / 4.f,
-                            3.f * img->height() / 4};
+              SkRect src = {
+                  img->width() / 4.f, img->height() / 4.f, 3.f * img->width() / 4.f,
+                  3.f * img->height() / 4};
               SkRect dst = {0, 0, 3.f / 4.f * img->width(), 3.f / 4.f * img->height()};
               switch (type) {
                 case DrawType::kDrawImage: canvas->drawImage(img, 0, 0, &paint); break;

@@ -119,10 +119,13 @@ static void run_test(
         {grColorType, kPremul_SkAlphaType, nullptr, DEV_W, DEV_H}, controlPixelData.begin(), 0);
     SkASSERT(proxy);
 
-    auto sContext = context->priv().makeWrappedSurfaceContext(
-        std::move(proxy), grColorType, kPremul_SkAlphaType);
+    GrSwizzle readSwizzle =
+        context->priv().caps()->getReadSwizzle(proxy->backendFormat(), grColorType);
 
-    if (!sContext->readPixels(dstInfo, readBuffer.begin(), 0, {0, 0})) {
+    GrSurfaceProxyView view(std::move(proxy), origin, readSwizzle);
+    GrSurfaceContext sContext(context, std::move(view), grColorType, kPremul_SkAlphaType, nullptr);
+
+    if (!sContext.readPixels(dstInfo, readBuffer.begin(), 0, {0, 0})) {
       // We only require this to succeed if the format is renderable.
       REPORTER_ASSERT(reporter, !context->colorTypeSupportedAsSurface(colorType));
       return;

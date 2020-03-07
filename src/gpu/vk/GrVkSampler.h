@@ -19,7 +19,7 @@ class GrVkGpu;
 
 class GrVkSampler : public GrVkResource {
  public:
-  static GrVkSampler* Create(GrVkGpu* gpu, const GrSamplerState&, const GrVkYcbcrConversionInfo&);
+  static GrVkSampler* Create(GrVkGpu* gpu, GrSamplerState, const GrVkYcbcrConversionInfo&);
 
   VkSampler sampler() const { return fSampler; }
   const VkSampler* samplerPtr() const { return &fSampler; }
@@ -41,7 +41,7 @@ class GrVkSampler : public GrVkResource {
   };
 
   // Helpers for hashing GrVkSampler
-  static Key GenerateKey(const GrSamplerState&, const GrVkYcbcrConversionInfo&);
+  static Key GenerateKey(GrSamplerState, const GrVkYcbcrConversionInfo&);
 
   static const Key& GetKey(const GrVkSampler& sampler) { return sampler.fKey; }
   static uint32_t Hash(const Key& key) {
@@ -65,7 +65,6 @@ class GrVkSampler : public GrVkResource {
         fUniqueID(GenID()) {}
 
   void freeGPUData(GrVkGpu* gpu) const override;
-  void abandonGPUData() const override;
 
   static uint32_t GenID() {
     static std::atomic<uint32_t> nextID{1};

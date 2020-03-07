@@ -60,7 +60,7 @@ static bool test_bounds_by_rasterizing(const SkPath& path, const SkRect& bounds)
   static constexpr int kRes = 2000;
   // This tolerance is in units of 1/kRes fractions of the bounds width/height.
   static constexpr int kTol = 2;
-  GR_STATIC_ASSERT(kRes % 4 == 0);
+  static_assert(kRes % 4 == 0);
   SkImageInfo info = SkImageInfo::MakeA8(kRes, kRes);
   sk_sp<SkSurface> surface = SkSurface::MakeRaster(info);
   surface->getCanvas()->clear(0x0);
@@ -143,8 +143,8 @@ static void check_equivalence(
     ignoreInversenessDifference = (canDropInverse1 != canDropInverse2);
   }
   bool ignoreWindingVsEvenOdd = false;
-  if (SkPathFillType_ConvertToNonInverse(pathA.getNewFillType()) !=
-      SkPathFillType_ConvertToNonInverse(pathB.getNewFillType())) {
+  if (SkPathFillType_ConvertToNonInverse(pathA.getFillType()) !=
+      SkPathFillType_ConvertToNonInverse(pathB.getFillType())) {
     bool aCanChange = can_interchange_winding_and_even_odd_fill(a);
     bool bCanChange = can_interchange_winding_and_even_odd_fill(b);
     if (aCanChange != bCanChange) {
@@ -161,8 +161,8 @@ static void check_equivalence(
     REPORTER_ASSERT(r, a.inverseFilled() == pA.isInverseFillType());
     REPORTER_ASSERT(r, b.inverseFilled() == pB.isInverseFillType());
     if (ignoreInversenessDifference) {
-      pA.setFillType(SkPathFillType_ConvertToNonInverse(pathA.getNewFillType()));
-      pB.setFillType(SkPathFillType_ConvertToNonInverse(pathB.getNewFillType()));
+      pA.setFillType(SkPathFillType_ConvertToNonInverse(pathA.getFillType()));
+      pB.setFillType(SkPathFillType_ConvertToNonInverse(pathB.getFillType()));
     }
     if (ignoreWindingVsEvenOdd) {
       pA.setFillType(
@@ -423,10 +423,10 @@ class PathGeo : public Geo {
   PathGeo(const SkPath& path, Invert invert) : fPath(path) {
     SkASSERT(!path.isInverseFillType());
     if (Invert::kYes == invert) {
-      if (fPath.getNewFillType() == SkPathFillType::kEvenOdd) {
+      if (fPath.getFillType() == SkPathFillType::kEvenOdd) {
         fPath.setFillType(SkPathFillType::kInverseEvenOdd);
       } else {
-        SkASSERT(fPath.getNewFillType() == SkPathFillType::kWinding);
+        SkASSERT(fPath.getFillType() == SkPathFillType::kWinding);
         fPath.setFillType(SkPathFillType::kInverseWinding);
       }
     }
@@ -565,7 +565,7 @@ class TestCase {
     }
     // The bounds API explicitly calls out that it does not consider inverseness.
     SkPath p = path;
-    p.setFillType(SkPathFillType_ConvertToNonInverse(path.getNewFillType()));
+    p.setFillType(SkPathFillType_ConvertToNonInverse(path.getFillType()));
     REPORTER_ASSERT(r, test_bounds_by_rasterizing(p, bounds));
   }
 

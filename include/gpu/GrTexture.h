@@ -69,7 +69,7 @@ class GrTexture : virtual public GrSurface {
   inline const GrTexturePriv texturePriv() const;
 
  protected:
-  GrTexture(GrGpu*, const SkISize&, GrPixelConfig, GrProtected, GrTextureType, GrMipMapsStatus);
+  GrTexture(GrGpu*, const SkISize&, GrProtected, GrTextureType, GrMipMapsStatus);
 
   virtual bool onStealBackendTexture(GrBackendTexture*, SkImage::BackendTextureReleaseProc*) = 0;
 

@@ -45,7 +45,8 @@ DEF_GPUTEST_FOR_METAL_CONTEXT(MtlCopySurfaceTest, reporter, ctxInfo) {
       backendRT, GrColorType::kBGRA_8888, kTopLeft_GrSurfaceOrigin);
 
   sk_sp<GrTextureProxy> dstProxy = GrSurfaceProxy::Copy(
-      context, srcProxy.get(), GrMipMapped::kNo, SkBackingFit::kExact, SkBudgeted::kYes);
+      context, srcProxy.get(), GrColorType::kBGRA_8888, GrMipMapped::kNo, SkBackingFit::kExact,
+      SkBudgeted::kYes);
 
   // TODO: GrSurfaceProxy::Copy doesn't check to see if the framebufferOnly bit is set yet.
   // Update this when it does -- it should fail.
@@ -58,7 +59,6 @@ DEF_GPUTEST_FOR_METAL_CONTEXT(MtlCopySurfaceTest, reporter, ctxInfo) {
   desc.fWidth = kWidth;
   desc.fHeight = kHeight;
   GrBackendFormat backendFormat = GrBackendFormat::MakeMtl(drawable.texture.pixelFormat);
-  desc.fConfig = gpu->caps()->getConfigFromBackendFormat(backendFormat, GrColorType::kBGRA_8888);
   GrSurface* src = srcProxy->peekSurface();
   sk_sp<GrTexture> dst = gpu->createTexture(
       desc, backendFormat, GrRenderable::kNo, 1, GrMipMapped::kNo, SkBudgeted::kNo,

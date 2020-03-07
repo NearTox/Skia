@@ -24,7 +24,7 @@ GrVkTextureRenderTarget::GrVkTextureRenderTarget(
     const GrVkImageInfo& msaaInfo, sk_sp<GrVkImageLayout> msaaLayout,
     const GrVkImageView* colorAttachmentView, const GrVkImageView* resolveAttachmentView,
     GrMipMapsStatus mipMapsStatus)
-    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, info.fProtected),
+    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, info.fProtected),
       GrVkImage(info, layout, GrBackendObjectOwnership::kOwned),
       GrVkTexture(
           gpu, desc, info, layout, texView, mipMapsStatus, GrBackendObjectOwnership::kOwned),
@@ -39,7 +39,7 @@ GrVkTextureRenderTarget::GrVkTextureRenderTarget(
     GrVkGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc, const GrVkImageInfo& info,
     sk_sp<GrVkImageLayout> layout, const GrVkImageView* texView,
     const GrVkImageView* colorAttachmentView, GrMipMapsStatus mipMapsStatus)
-    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, info.fProtected),
+    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, info.fProtected),
       GrVkImage(info, layout, GrBackendObjectOwnership::kOwned),
       GrVkTexture(
           gpu, desc, info, layout, texView, mipMapsStatus, GrBackendObjectOwnership::kOwned),
@@ -54,7 +54,7 @@ GrVkTextureRenderTarget::GrVkTextureRenderTarget(
     sk_sp<GrVkImageLayout> msaaLayout, const GrVkImageView* colorAttachmentView,
     const GrVkImageView* resolveAttachmentView, GrMipMapsStatus mipMapsStatus,
     GrBackendObjectOwnership ownership, GrWrapCacheable cacheable)
-    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, info.fProtected),
+    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, info.fProtected),
       GrVkImage(info, layout, ownership),
       GrVkTexture(gpu, desc, info, layout, texView, mipMapsStatus, ownership),
       GrVkRenderTarget(
@@ -69,7 +69,7 @@ GrVkTextureRenderTarget::GrVkTextureRenderTarget(
     sk_sp<GrVkImageLayout> layout, const GrVkImageView* texView,
     const GrVkImageView* colorAttachmentView, GrMipMapsStatus mipMapsStatus,
     GrBackendObjectOwnership ownership, GrWrapCacheable cacheable)
-    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, info.fProtected),
+    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, info.fProtected),
       GrVkImage(info, layout, ownership),
       GrVkTexture(gpu, desc, info, layout, texView, mipMapsStatus, ownership),
       GrVkRenderTarget(gpu, desc, info, layout, colorAttachmentView, ownership) {

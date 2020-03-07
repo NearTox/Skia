@@ -195,7 +195,7 @@ class SkTCopyOnFirstWrite {
 
   const T* operator->() const { return fObj; }
 
-  operator const T *() const { return fObj; }
+  operator const T*() const { return fObj; }
 
   const T& operator*() const { return *fObj; }
 

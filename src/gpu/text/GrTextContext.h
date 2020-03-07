@@ -46,12 +46,12 @@ class GrTextContext {
   static std::unique_ptr<GrTextContext> Make(const Options& options);
 
   void drawGlyphRunList(
-      GrRecordingContext*, GrTextTarget*, const GrClip&, const SkMatrix& viewMatrix,
+      GrRecordingContext*, GrTextTarget*, const GrClip&, const SkMatrix& drawMatrix,
       const SkSurfaceProps&, const SkGlyphRunList&);
 
   std::unique_ptr<GrDrawOp> createOp_TestingOnly(
       GrRecordingContext*, GrTextContext*, GrRenderTargetContext*, const SkPaint&, const SkFont&,
-      const SkMatrix& viewMatrix, const char* text, int x, int y);
+      const SkMatrix& drawMatrix, const char* text, int x, int y);
 
   static void SanitizeOptions(Options* options);
   static bool CanDrawAsDistanceFields(

@@ -27,8 +27,8 @@ class StrokeRectSample : public Sample {
 
     static const SkISize gSize[] = {{100, 50}, {100, 0}, {0, 50}, {0, 0}};
 
-    static const SkPaint::Join gJoin[] = {SkPaint::kMiter_Join, SkPaint::kRound_Join,
-                                          SkPaint::kBevel_Join};
+    static const SkPaint::Join gJoin[] = {
+        SkPaint::kMiter_Join, SkPaint::kRound_Join, SkPaint::kBevel_Join};
 
     canvas->translate(paint.getStrokeWidth(), paint.getStrokeWidth());
     for (size_t i = 0; i < SK_ARRAY_COUNT(gJoin); ++i) {

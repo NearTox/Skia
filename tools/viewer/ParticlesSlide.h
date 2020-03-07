@@ -41,7 +41,7 @@ class ParticlesSlide : public Slide {
   SkRandom fRandom;
   bool fAnimated = false;
   double fAnimationTime = 0;
-  SkPoint fPlayPosition;
+  SkPoint fMousePos = {0, 0};
 
   struct LoadedEffect {
     SkString fName;
@@ -50,7 +50,6 @@ class ParticlesSlide : public Slide {
   SkTArray<LoadedEffect> fLoaded;
 
   struct RunningEffect {
-    SkPoint fPosition;
     SkString fName;
     sk_sp<SkParticleEffect> fEffect;
     bool fTrackMouse;

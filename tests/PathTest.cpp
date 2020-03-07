@@ -2153,60 +2153,60 @@ static void test_isRect(skiatest::Reporter* reporter) {
     }
   }
 
-  // fail, close then line
-  SkPath path1;
-  path1.moveTo(r1[0].fX, r1[0].fY);
-  for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
-    path1.lineTo(r1[index].fX, r1[index].fY);
-  }
-  path1.close();
-  path1.lineTo(1, 0);
-  REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
-
-  // fail, move in the middle
-  path1.reset();
-  path1.moveTo(r1[0].fX, r1[0].fY);
-  for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
-    if (index == 2) {
-      path1.moveTo(1, .5f);
+    // fail, close then line
+    SkPath path1;
+    path1.moveTo(r1[0].fX, r1[0].fY);
+    for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
+      path1.lineTo(r1[index].fX, r1[index].fY);
     }
-    path1.lineTo(r1[index].fX, r1[index].fY);
-  }
-  path1.close();
-  REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
+    path1.close();
+    path1.lineTo(1, 0);
+    REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
 
-  // fail, move on the edge
-  path1.reset();
-  for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
-    path1.moveTo(r1[index - 1].fX, r1[index - 1].fY);
-    path1.lineTo(r1[index].fX, r1[index].fY);
-  }
-  path1.close();
-  REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
-
-  // fail, quad
-  path1.reset();
-  path1.moveTo(r1[0].fX, r1[0].fY);
-  for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
-    if (index == 2) {
-      path1.quadTo(1, .5f, 1, .5f);
+    // fail, move in the middle
+    path1.reset();
+    path1.moveTo(r1[0].fX, r1[0].fY);
+    for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
+      if (index == 2) {
+        path1.moveTo(1, .5f);
+      }
+      path1.lineTo(r1[index].fX, r1[index].fY);
     }
-    path1.lineTo(r1[index].fX, r1[index].fY);
-  }
-  path1.close();
-  REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
+    path1.close();
+    REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
 
-  // fail, cubic
-  path1.reset();
-  path1.moveTo(r1[0].fX, r1[0].fY);
-  for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
-    if (index == 2) {
-      path1.cubicTo(1, .5f, 1, .5f, 1, .5f);
+    // fail, move on the edge
+    path1.reset();
+    for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
+      path1.moveTo(r1[index - 1].fX, r1[index - 1].fY);
+      path1.lineTo(r1[index].fX, r1[index].fY);
     }
-    path1.lineTo(r1[index].fX, r1[index].fY);
-  }
-  path1.close();
-  REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
+    path1.close();
+    REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
+
+    // fail, quad
+    path1.reset();
+    path1.moveTo(r1[0].fX, r1[0].fY);
+    for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
+      if (index == 2) {
+        path1.quadTo(1, .5f, 1, .5f);
+      }
+      path1.lineTo(r1[index].fX, r1[index].fY);
+    }
+    path1.close();
+    REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
+
+    // fail, cubic
+    path1.reset();
+    path1.moveTo(r1[0].fX, r1[0].fY);
+    for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
+      if (index == 2) {
+        path1.cubicTo(1, .5f, 1, .5f, 1, .5f);
+      }
+      path1.lineTo(r1[index].fX, r1[index].fY);
+    }
+    path1.close();
+    REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
 }
 
 static void check_simple_closed_rect(
@@ -2714,9 +2714,9 @@ static void test_transform(skiatest::Reporter* reporter) {
     SkPath p1;
     p1.moveTo(SkPoint::Make(0, 0));
 
-    p.transform(matrix, &p1);
+    p.transform(matrix, &p1, SkApplyPerspectiveClip::kNo);
     REPORTER_ASSERT(reporter, matrix.invert(&matrix));
-    p1.transform(matrix, nullptr);
+    p1.transform(matrix, nullptr, SkApplyPerspectiveClip::kNo);
     SkRect pBounds = p.getBounds();
     SkRect p1Bounds = p1.getBounds();
     REPORTER_ASSERT(reporter, SkScalarNearlyEqual(pBounds.fLeft, p1Bounds.fLeft));
@@ -3600,7 +3600,7 @@ static void test_empty(skiatest::Reporter* reporter, const SkPath& p) {
   REPORTER_ASSERT(reporter, 0 == p.countVerbs());
   REPORTER_ASSERT(reporter, 0 == p.getSegmentMasks());
   REPORTER_ASSERT(reporter, p.isConvex());
-  REPORTER_ASSERT(reporter, p.getNewFillType() == SkPathFillType::kWinding);
+  REPORTER_ASSERT(reporter, p.getFillType() == SkPathFillType::kWinding);
   REPORTER_ASSERT(reporter, !p.isInverseFillType());
   REPORTER_ASSERT(reporter, p == empty);
   REPORTER_ASSERT(reporter, !(p != empty));

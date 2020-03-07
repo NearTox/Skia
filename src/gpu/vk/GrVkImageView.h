@@ -39,7 +39,6 @@ class GrVkImageView : public GrVkResource {
   GrVkImageView& operator=(const GrVkImageView&);
 
   void freeGPUData(GrVkGpu* gpu) const override;
-  void abandonGPUData() const override;
 
   VkImageView fImageView;
   GrVkSamplerYcbcrConversion* fYcbcrConversion;

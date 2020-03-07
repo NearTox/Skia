@@ -29,6 +29,7 @@ class GrRenderTarget;
 class GrRenderTargetContext;
 class GrResourceProvider;
 class GrShape;
+class GrSurfaceProxyView;
 class GrTexture;
 class GrTextureProxy;
 
@@ -121,8 +122,8 @@ class SkMaskFilterBase : public SkMaskFilter {
    * Implementations are free to get the GrContext from the src texture in order to create
    * additional textures and perform multiple passes.
    */
-  virtual sk_sp<GrTextureProxy> filterMaskGPU(
-      GrRecordingContext*, sk_sp<GrTextureProxy> srcProxy, GrColorType srcColorType,
+  virtual GrSurfaceProxyView filterMaskGPU(
+      GrRecordingContext*, GrSurfaceProxyView srcView, GrColorType srcColorType,
       SkAlphaType srcAlphaType, const SkMatrix& ctm, const SkIRect& maskRect) const;
 #endif
 

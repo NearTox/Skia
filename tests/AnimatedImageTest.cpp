@@ -39,38 +39,38 @@ DEF_TEST(AnimatedImage_scaled, r) {
   if (!data) {
     ERRORF(r, "Could not get %s", file);
     return;
-  }
-
-  auto codec = SkAndroidCodec::MakeFromCodec(SkCodec::MakeFromData(data));
-  if (!codec) {
-    ERRORF(r, "Could not create codec for %s", file);
-    return;
-  }
-
-  // Force the drawable follow its special case that requires scaling.
-  auto info = codec->getInfo();
-  info = info.makeWH(info.width() - 5, info.height() - 5);
-  auto rect = info.bounds();
-  auto image = SkAnimatedImage::Make(std::move(codec), info, rect, nullptr);
-  if (!image) {
-    ERRORF(r, "Failed to create animated image for %s", file);
-    return;
-  }
-
-  // Clear a bitmap to non-transparent and draw to it. pixels that are transparent
-  // in the image should not replace the original non-transparent color.
-  SkBitmap bm;
-  bm.allocPixels(SkImageInfo::MakeN32Premul(info.width(), info.height()));
-  bm.eraseColor(SK_ColorBLUE);
-  SkCanvas canvas(bm);
-  image->draw(&canvas);
-  for (int i = 0; i < info.width(); ++i)
-    for (int j = 0; j < info.height(); ++j) {
-      if (*bm.getAddr32(i, j) == SK_ColorTRANSPARENT) {
-        ERRORF(r, "Erased color underneath!");
-        return;
-      }
     }
+
+    auto codec = SkAndroidCodec::MakeFromCodec(SkCodec::MakeFromData(data));
+    if (!codec) {
+      ERRORF(r, "Could not create codec for %s", file);
+      return;
+    }
+
+    // Force the drawable follow its special case that requires scaling.
+    auto info = codec->getInfo();
+    info = info.makeWH(info.width() - 5, info.height() - 5);
+    auto rect = info.bounds();
+    auto image = SkAnimatedImage::Make(std::move(codec), info, rect, nullptr);
+    if (!image) {
+      ERRORF(r, "Failed to create animated image for %s", file);
+      return;
+    }
+
+    // Clear a bitmap to non-transparent and draw to it. pixels that are transparent
+    // in the image should not replace the original non-transparent color.
+    SkBitmap bm;
+    bm.allocPixels(SkImageInfo::MakeN32Premul(info.width(), info.height()));
+    bm.eraseColor(SK_ColorBLUE);
+    SkCanvas canvas(bm);
+    image->draw(&canvas);
+    for (int i = 0; i < info.width(); ++i)
+      for (int j = 0; j < info.height(); ++j) {
+        if (*bm.getAddr32(i, j) == SK_ColorTRANSPARENT) {
+          ERRORF(r, "Erased color underneath!");
+          return;
+        }
+      }
 }
 
 static bool compare_bitmaps(

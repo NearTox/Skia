@@ -459,9 +459,10 @@ DEF_SIMPLE_GM(longpathdash, canvas, 612, 612) {
   SkPath lines;
   for (int x = 32; x < 256; x += 16) {
     for (SkScalar a = 0; a < 3.141592f * 2; a += 0.03141592f) {
-      SkPoint pts[2] = {{256 + (float)sin(a) * x, 256 + (float)cos(a) * x},
-                        {256 + (float)sin(a + 3.141592 / 3) * (x + 64),
-                         256 + (float)cos(a + 3.141592 / 3) * (x + 64)}};
+      SkPoint pts[2] = {
+          {256 + (float)sin(a) * x, 256 + (float)cos(a) * x},
+          {256 + (float)sin(a + 3.141592 / 3) * (x + 64),
+           256 + (float)cos(a + 3.141592 / 3) * (x + 64)}};
       lines.moveTo(pts[0]);
       for (SkScalar i = 0; i < 1; i += 0.05f) {
         lines.lineTo(pts[0].fX * (1 - i) + pts[1].fX * i, pts[0].fY * (1 - i) + pts[1].fY * i);
@@ -531,10 +532,11 @@ DEF_SIMPLE_GM(dash_line_zero_off_interval, canvas, 160, 330) {
   dashPaint.setStrokeWidth(20.f);
   static constexpr struct {
     SkPoint fA, fB;
-  } kLines[] = {{{0.5f, 0.5f}, {30.5f, 0.5f}},    // horizontal
-                {{0.5f, 0.5f}, {0.5f, 30.5f}},    // vertical
-                {{0.5f, 0.5f}, {0.5f, 0.5f}},     // point
-                {{0.5f, 0.5f}, {25.5f, 25.5f}}};  // diagonal
+  } kLines[] = {
+      {{0.5f, 0.5f}, {30.5f, 0.5f}},    // horizontal
+      {{0.5f, 0.5f}, {0.5f, 30.5f}},    // vertical
+      {{0.5f, 0.5f}, {0.5f, 0.5f}},     // point
+      {{0.5f, 0.5f}, {25.5f, 25.5f}}};  // diagonal
   SkScalar pad = 5.f + dashPaint.getStrokeWidth();
   canvas->translate(pad / 2.f, pad / 2.f);
   canvas->save();

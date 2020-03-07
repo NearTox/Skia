@@ -103,7 +103,8 @@ sk_sp<SkImage> SkSurface_Gpu::onNewImageSnapshot(const SkIRect* subset) {
 
   if (subset) {
     srcProxy = GrSurfaceProxy::Copy(
-        ctx, rtc->asSurfaceProxy(), rtc->mipMapped(), *subset, SkBackingFit::kExact, budgeted);
+        ctx, rtc->asSurfaceProxy(), rtc->colorInfo().colorType(), rtc->mipMapped(), *subset,
+        SkBackingFit::kExact, budgeted);
   } else if (!srcProxy || rtc->priv().refsWrappedObjects()) {
     // If the original render target is a buffer originally created by the client, then we don't
     // want to ever retarget the SkSurface at another buffer we create. Force a copy now to avoid
@@ -111,7 +112,8 @@ sk_sp<SkImage> SkSurface_Gpu::onNewImageSnapshot(const SkIRect* subset) {
     SkASSERT(rtc->origin() == rtc->asSurfaceProxy()->origin());
 
     srcProxy = GrSurfaceProxy::Copy(
-        ctx, rtc->asSurfaceProxy(), rtc->mipMapped(), SkBackingFit::kExact, budgeted);
+        ctx, rtc->asSurfaceProxy(), rtc->colorInfo().colorType(), rtc->mipMapped(),
+        SkBackingFit::kExact, budgeted);
   }
 
   const SkImageInfo info = fDevice->imageInfo();
@@ -120,8 +122,9 @@ sk_sp<SkImage> SkSurface_Gpu::onNewImageSnapshot(const SkIRect* subset) {
     // The renderTargetContext coming out of SkGpuDevice should always be exact and the
     // above copy creates a kExact surfaceContext.
     SkASSERT(srcProxy->priv().isExact());
+    GrSurfaceProxyView view(std::move(srcProxy), rtc->origin(), rtc->readSwizzle());
     image = sk_make_sp<SkImage_Gpu>(
-        sk_ref_sp(ctx), kNeedNewImageUniqueID, info.alphaType(), std::move(srcProxy),
+        sk_ref_sp(ctx), kNeedNewImageUniqueID, std::move(view), info.colorType(), info.alphaType(),
         info.refColorSpace());
   }
   return image;
@@ -209,7 +212,7 @@ bool SkSurface_Gpu::onCharacterize(SkSurfaceCharacterization* characterization) 
       SkSurfaceCharacterization::MipMapped(mipmapped),
       SkSurfaceCharacterization::UsesGLFBO0(usesGLFBO0),
       SkSurfaceCharacterization::VulkanSecondaryCBCompatible(false),
-      GrProtected(rtc->asRenderTargetProxy()->isProtected()), this->props());
+      rtc->asRenderTargetProxy()->isProtected(), this->props());
   return true;
 }
 
@@ -238,10 +241,11 @@ void SkSurface_Gpu::onDraw(SkCanvas* canvas, SkScalar x, SkScalar y, const SkPai
     // Possibly we could skip making an image here if SkGpuDevice exposed a lower level way
     // of drawing a texture proxy.
     const SkImageInfo info = fDevice->imageInfo();
+    GrSurfaceProxyView view(std::move(srcProxy), rtc->origin(), rtc->readSwizzle());
     sk_sp<SkImage> image;
     image = sk_make_sp<SkImage_Gpu>(
-        sk_ref_sp(context), kNeedNewImageUniqueID, info.alphaType(), std::move(srcProxy),
-        info.refColorSpace());
+        sk_ref_sp(context), kNeedNewImageUniqueID, std::move(view), info.colorType(),
+        info.alphaType(), info.refColorSpace());
     canvas->drawImage(image, x, y, paint);
     return true;
   };
@@ -291,7 +295,7 @@ bool SkSurface_Gpu::onIsCompatible(const SkSurfaceCharacterization& characteriza
     return false;
   }
 
-  GrProtected isProtected = GrProtected(rtc->asSurfaceProxy()->isProtected());
+  GrProtected isProtected = rtc->asSurfaceProxy()->isProtected();
 
   return characterization.contextInfo() && characterization.contextInfo()->priv().matches(ctx) &&
          characterization.cacheMaxResourceBytes() <= maxResourceBytes &&
@@ -336,9 +340,10 @@ sk_sp<SkSurface> SkSurface::MakeRenderTarget(
 
   GrColorType grColorType = SkColorTypeToGrColorType(c.colorType());
 
-  auto rtc = context->priv().makeDeferredRenderTargetContext(
-      SkBackingFit::kExact, c.width(), c.height(), grColorType, c.refColorSpace(), c.sampleCount(),
-      GrMipMapped(c.isMipMapped()), c.origin(), &c.surfaceProps(), budgeted, c.isProtected());
+  auto rtc = GrRenderTargetContext::Make(
+      context, grColorType, c.refColorSpace(), SkBackingFit::kExact, {c.width(), c.height()},
+      c.sampleCount(), GrMipMapped(c.isMipMapped()), c.isProtected(), c.origin(), budgeted,
+      &c.surfaceProps());
   if (!rtc) {
     return nullptr;
   }
@@ -414,9 +419,9 @@ sk_sp<SkSurface> SkSurface::MakeFromBackendTexture(
     return nullptr;
   }
 
-  auto rtc = context->priv().makeBackendTextureRenderTargetContext(
-      backendTexture, c.origin(), c.sampleCount(), grCT, c.refColorSpace(), &c.surfaceProps(),
-      textureReleaseProc, releaseContext);
+  auto rtc = GrRenderTargetContext::MakeFromBackendTexture(
+      context, grCT, c.refColorSpace(), backendTexture, c.sampleCount(), c.origin(),
+      &c.surfaceProps(), textureReleaseProc, releaseContext);
   if (!rtc) {
     return nullptr;
   }
@@ -491,9 +496,9 @@ sk_sp<SkSurface> SkSurface::MakeFromBackendTexture(
     return nullptr;
   }
 
-  auto rtc = context->priv().makeBackendTextureRenderTargetContext(
-      tex, origin, sampleCnt, grColorType, std::move(colorSpace), props, textureReleaseProc,
-      releaseContext);
+  auto rtc = GrRenderTargetContext::MakeFromBackendTexture(
+      context, grColorType, std::move(colorSpace), tex, sampleCnt, origin, props,
+      textureReleaseProc, releaseContext);
   if (!rtc) {
     return nullptr;
   }
@@ -544,9 +549,9 @@ bool SkSurface_Gpu::onReplaceBackendTexture(
           context->priv().caps(), backendTexture, sampleCnt, grColorType, true)) {
     return false;
   }
-  auto rtc = context->priv().makeBackendTextureRenderTargetContext(
-      backendTexture, origin, sampleCnt, oldRTC->colorInfo().colorType(), std::move(colorSpace),
-      &this->props(), releaseProc, releaseContext);
+  auto rtc = GrRenderTargetContext::MakeFromBackendTexture(
+      context, oldRTC->colorInfo().colorType(), std::move(colorSpace), backendTexture, sampleCnt,
+      origin, &this->props(), releaseProc, releaseContext);
   if (!rtc) {
     return false;
   }
@@ -584,8 +589,8 @@ sk_sp<SkSurface> SkSurface::MakeFromBackendRenderTarget(
     return nullptr;
   }
 
-  auto rtc = context->priv().makeBackendRenderTargetRenderTargetContext(
-      rt, origin, grColorType, std::move(colorSpace), props, relProc, releaseContext);
+  auto rtc = GrRenderTargetContext::MakeFromBackendRenderTarget(
+      context, grColorType, std::move(colorSpace), rt, origin, props, relProc, releaseContext);
   if (!rtc) {
     return nullptr;
   }
@@ -615,8 +620,8 @@ sk_sp<SkSurface> SkSurface::MakeFromBackendTextureAsRenderTarget(
     return nullptr;
   }
 
-  auto rtc = context->priv().makeBackendTextureAsRenderTargetRenderTargetContext(
-      tex, origin, sampleCnt, grColorType, std::move(colorSpace), props);
+  auto rtc = GrRenderTargetContext::MakeFromBackendTextureAsRenderTarget(
+      context, grColorType, std::move(colorSpace), tex, sampleCnt, origin, props);
   if (!rtc) {
     return nullptr;
   }

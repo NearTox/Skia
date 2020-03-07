@@ -56,7 +56,7 @@ GrMtlDepthStencil* GrMtlResourceProvider::findOrCreateCompatibleDepthStencilStat
   return depthStencilState;
 }
 
-GrMtlSampler* GrMtlResourceProvider::findOrCreateCompatibleSampler(const GrSamplerState& params) {
+GrMtlSampler* GrMtlResourceProvider::findOrCreateCompatibleSampler(GrSamplerState params) {
   GrMtlSampler* sampler;
   sampler = fSamplers.find(GrMtlSampler::GenerateKey(params));
   if (!sampler) {
@@ -155,7 +155,7 @@ GrMtlPipelineState* GrMtlResourceProvider::PipelineStateCache::refPipelineState(
     entry = fMap.insert(desc, std::unique_ptr<Entry>(new Entry(fGpu, pipelineState)));
     return (*entry)->fPipelineState.get();
   }
-  return (*entry)->fPipelineState.get();
+    return (*entry)->fPipelineState.get();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -228,7 +228,7 @@ id<MTLBuffer> GrMtlResourceProvider::BufferSuballocator::getAllocation(
   *offset = modHead;
   // We're not sure what the usage of the next allocation will be --
   // to be safe we'll use 16 byte alignment.
-  fHead = GrSizeAlignUp(head + size, 16);
+  fHead = GrAlignTo(head + size, 16);
   return fBuffer;
 }
 
@@ -251,29 +251,29 @@ void GrMtlResourceProvider::BufferSuballocator::addCompletionHandler(
 id<MTLBuffer> GrMtlResourceProvider::getDynamicBuffer(size_t size, size_t* offset) {
 #ifdef SK_BUILD_FOR_MAC
   // Mac requires 4-byte alignment for didModifyRange:
-  size = GrSizeAlignUp(size, 4);
+  size = SkAlign4(size);
 #endif
-  id<MTLBuffer> buffer = fBufferSuballocator->getAllocation(size, offset);
-  if (buffer) {
-    return buffer;
-  }
-
-  // Try to grow allocation (old allocation will age out).
-  // We grow up to a maximum size, and only grow if the requested allocation will
-  // fit into half of the new buffer (to prevent very large transient buffers forcing
-  // growth when they'll never fit anyway).
-  if (fBufferSuballocator->size() < fBufferSuballocatorMaxSize &&
-      size <= fBufferSuballocator->size()) {
-    fBufferSuballocator.reset(
-        new BufferSuballocator(fGpu->device(), 2 * fBufferSuballocator->size()));
     id<MTLBuffer> buffer = fBufferSuballocator->getAllocation(size, offset);
     if (buffer) {
       return buffer;
     }
-  }
 
-  *offset = 0;
-  return alloc_dynamic_buffer(fGpu->device(), size);
+    // Try to grow allocation (old allocation will age out).
+    // We grow up to a maximum size, and only grow if the requested allocation will
+    // fit into half of the new buffer (to prevent very large transient buffers forcing
+    // growth when they'll never fit anyway).
+    if (fBufferSuballocator->size() < fBufferSuballocatorMaxSize &&
+        size <= fBufferSuballocator->size()) {
+      fBufferSuballocator.reset(
+          new BufferSuballocator(fGpu->device(), 2 * fBufferSuballocator->size()));
+      id<MTLBuffer> buffer = fBufferSuballocator->getAllocation(size, offset);
+      if (buffer) {
+        return buffer;
+      }
+    }
+
+    *offset = 0;
+    return alloc_dynamic_buffer(fGpu->device(), size);
 }
 
 void GrMtlResourceProvider::addBufferCompletionHandler(GrMtlCommandBuffer* cmdBuffer) {

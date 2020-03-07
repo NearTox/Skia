@@ -14,6 +14,7 @@
 
 class GrGLBitmapTextGeoProc;
 class GrInvariantOutput;
+class GrSurfaceProxyView;
 
 /**
  * The output color of this effect is a modulation of the input color and a sample from a texture.
@@ -26,10 +27,10 @@ class GrBitmapTextGeoProc : public GrGeometryProcessor {
 
   static GrGeometryProcessor* Make(
       SkArenaAlloc* arena, const GrShaderCaps& caps, const SkPMColor4f& color, bool wideColor,
-      const sk_sp<GrTextureProxy>* proxies, int numActiveProxies, const GrSamplerState& p,
-      GrMaskFormat format, const SkMatrix& localMatrix, bool usesW) {
+      const GrSurfaceProxyView* views, int numActiveViews, GrSamplerState p, GrMaskFormat format,
+      const SkMatrix& localMatrix, bool usesW) {
     return arena->make<GrBitmapTextGeoProc>(
-        caps, color, wideColor, proxies, numActiveProxies, p, format, localMatrix, usesW);
+        caps, color, wideColor, views, numActiveViews, p, format, localMatrix, usesW);
   }
 
   ~GrBitmapTextGeoProc() override {}
@@ -46,7 +47,7 @@ class GrBitmapTextGeoProc : public GrGeometryProcessor {
   bool usesW() const { return fUsesW; }
   const SkISize& atlasDimensions() const { return fAtlasDimensions; }
 
-  void addNewProxies(const sk_sp<GrTextureProxy>*, int numActiveProxies, const GrSamplerState&);
+  void addNewViews(const GrSurfaceProxyView*, int numActiveViews, GrSamplerState);
 
   void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
 
@@ -56,9 +57,9 @@ class GrBitmapTextGeoProc : public GrGeometryProcessor {
   friend class ::SkArenaAlloc;  // for access to ctor
 
   GrBitmapTextGeoProc(
-      const GrShaderCaps&, const SkPMColor4f&, bool wideColor, const sk_sp<GrTextureProxy>* proxies,
-      int numProxies, const GrSamplerState& params, GrMaskFormat format,
-      const SkMatrix& localMatrix, bool usesW);
+      const GrShaderCaps&, const SkPMColor4f&, bool wideColor, const GrSurfaceProxyView* views,
+      int numViews, GrSamplerState params, GrMaskFormat format, const SkMatrix& localMatrix,
+      bool usesW);
 
   const TextureSampler& onTextureSampler(int i) const override { return fTextureSamplers[i]; }
 

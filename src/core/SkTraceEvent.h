@@ -192,7 +192,7 @@ union TraceValueUnion {
 class TraceStringWithCopy {
  public:
   explicit TraceStringWithCopy(const char* str) : str_(str) {}
-  operator const char *() const { return str_; }
+  operator const char*() const { return str_; }
 
  private:
   const char* str_;

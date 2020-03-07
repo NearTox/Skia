@@ -193,10 +193,11 @@ class DrawQuadSetGM : public GM {
     // Perspective
     SkPoint src[4];
     SkRect::MakeWH(kColCount * kTileWidth, kRowCount * kTileHeight).toQuad(src);
-    SkPoint dst[4] = {{0, 0},
-                      {kColCount * kTileWidth + 10.f, 15.f},
-                      {kColCount * kTileWidth - 28.f, kRowCount * kTileHeight + 40.f},
-                      {25.f, kRowCount * kTileHeight - 15.f}};
+    SkPoint dst[4] = {
+        {0, 0},
+        {kColCount * kTileWidth + 10.f, 15.f},
+        {kColCount * kTileWidth - 28.f, kRowCount * kTileHeight + 40.f},
+        {25.f, kRowCount * kTileHeight - 15.f}};
     SkAssertResult(rowMatrices[4].setPolyToPoly(src, dst, 4));
     rowMatrices[4].preTranslate(0.f, +10.f);
     static const char* matrixNames[] = {"Identity", "T+S", "Rotate", "Skew", "Perspective"};

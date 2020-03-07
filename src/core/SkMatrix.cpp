@@ -16,31 +16,28 @@
 #include "include/private/SkTo.h"
 #include "src/core/SkMathPriv.h"
 #include "src/core/SkMatrixPriv.h"
+#include "src/core/SkPathPriv.h"
 
 #include <cstddef>
 #include <utility>
 
-static void normalize_perspective(SkScalar mat[9]) {
-  // If it was interesting to never store the last element, we could divide all 8 other
-  // elements here by the 9th, making it 1.0...
+void SkMatrix::doNormalizePerspective() {
+  // If the bottom row of the matrix is [0, 0, not_one], we will treat the matrix as if it
+  // is in perspective, even though it stills behaves like its affine. If we divide everything
+  // by the not_one value, then it will behave the same, but will be treated as affine,
+  // and therefore faster (e.g. clients can forward-difference calculations).
   //
-  // When SkScalar was SkFixed, we would sometimes rescale the entire matrix to keep its
-  // component values from getting too large. This is not a concern when using floats/doubles,
-  // so we do nothing now.
-
-  // Disable this for now, but it could be enabled.
-#if 0
-    if (0 == mat[SkMatrix::kMPersp0] && 0 == mat[SkMatrix::kMPersp1]) {
-        SkScalar p2 = mat[SkMatrix::kMPersp2];
-        if (p2 != 0 && p2 != 1) {
-            double inv = 1.0 / p2;
-            for (int i = 0; i < 6; ++i) {
-                mat[i] = SkDoubleToScalar(mat[i] * inv);
-            }
-            mat[SkMatrix::kMPersp2] = 1;
-        }
+  if (0 == fMat[SkMatrix::kMPersp0] && 0 == fMat[SkMatrix::kMPersp1]) {
+    SkScalar p2 = fMat[SkMatrix::kMPersp2];
+    if (p2 != 0 && p2 != 1) {
+      double inv = 1.0 / p2;
+      for (int i = 0; i < 6; ++i) {
+        fMat[i] = SkDoubleToScalar(fMat[i] * inv);
+      }
+      fMat[SkMatrix::kMPersp2] = 1;
     }
-#endif
+    this->setTypeMask(kUnknown_Mask);
+  }
 }
 
 // In a few places, we performed the following
@@ -70,7 +67,6 @@ SkMatrix& SkMatrix::reset() {
 
 SkMatrix& SkMatrix::set9(const SkScalar buffer[]) {
   memcpy(fMat, buffer, 9 * sizeof(SkScalar));
-  normalize_perspective(fMat);
   this->setTypeMask(kUnknown_Mask);
   return *this;
 }
@@ -632,7 +628,6 @@ SkMatrix& SkMatrix::setConcat(const SkMatrix& a, const SkMatrix& b) {
       tmp.fMat[kMPersp1] = rowcol3(&a.fMat[6], &b.fMat[1]);
       tmp.fMat[kMPersp2] = rowcol3(&a.fMat[6], &b.fMat[2]);
 
-      normalize_perspective(tmp.fMat);
       tmp.setTypeMask(kUnknown_Mask);
     } else {
       tmp.fMat[kMScaleX] =
@@ -1056,6 +1051,30 @@ void SkMatrix::mapHomogeneousPoints(SkPoint3 dst[], const SkPoint3 src[], int co
       *this, dst, sizeof(SkPoint3), src, sizeof(SkPoint3), count);
 }
 
+void SkMatrix::mapHomogeneousPoints(SkPoint3 dst[], const SkPoint src[], int count) const {
+  if (this->isIdentity()) {
+    for (int i = 0; i < count; ++i) {
+      dst[i] = {src[i].fX, src[i].fY, 1};
+    }
+  } else if (this->hasPerspective()) {
+    for (int i = 0; i < count; ++i) {
+      dst[i] = {
+          fMat[0] * src[i].fX + fMat[1] * src[i].fY + fMat[2],
+          fMat[3] * src[i].fX + fMat[4] * src[i].fY + fMat[5],
+          fMat[6] * src[i].fX + fMat[7] * src[i].fY + fMat[8],
+      };
+    }
+  } else {  // affine
+    for (int i = 0; i < count; ++i) {
+      dst[i] = {
+          fMat[0] * src[i].fX + fMat[1] * src[i].fY + fMat[2],
+          fMat[3] * src[i].fX + fMat[4] * src[i].fY + fMat[5],
+          1,
+      };
+    }
+  }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 void SkMatrix::mapVectors(SkPoint dst[], const SkPoint src[], int count) const {
@@ -1102,7 +1121,7 @@ void SkMatrix::mapRectScaleTranslate(SkRect* dst, const SkRect& src) const {
   sort_as_rect(Sk4f::Load(&src.fLeft) * scale + trans).store(&dst->fLeft);
 }
 
-bool SkMatrix::mapRect(SkRect* dst, const SkRect& src) const {
+bool SkMatrix::mapRect(SkRect* dst, const SkRect& src, SkApplyPerspectiveClip pc) const {
   SkASSERT(dst);
 
   if (this->getType() <= kTranslate_Mask) {
@@ -1115,6 +1134,12 @@ bool SkMatrix::mapRect(SkRect* dst, const SkRect& src) const {
   if (this->isScaleTranslate()) {
     this->mapRectScaleTranslate(dst, src);
     return true;
+  } else if (pc == SkApplyPerspectiveClip::kYes && this->hasPerspective()) {
+    SkPath path;
+    path.addRect(src);
+    path.transform(*this);
+    *dst = path.getBounds();
+    return false;
   } else {
     SkPoint quad[4];
 
@@ -1218,21 +1243,25 @@ const SkMatrix::MapXYProc SkMatrix::gMapXYProcs[] = {
     SkMatrix::Persp_xy, SkMatrix::Persp_xy, SkMatrix::Persp_xy, SkMatrix::Persp_xy};
 
 ///////////////////////////////////////////////////////////////////////////////
-
+#if 0
 // if its nearly zero (just made up 26, perhaps it should be bigger or smaller)
-#define PerspNearlyZero(x) SkScalarNearlyZero(x, (1.0f / (1 << 26)))
+#  define PerspNearlyZero(x) SkScalarNearlyZero(x, (1.0f / (1 << 26)))
 
-bool SkMatrix::isFixedStepInX() const { return PerspNearlyZero(fMat[kMPersp0]); }
+bool SkMatrix::isFixedStepInX() const {
+  return PerspNearlyZero(fMat[kMPersp0]);
+}
 
 SkVector SkMatrix::fixedStepInX(SkScalar y) const {
-  SkASSERT(PerspNearlyZero(fMat[kMPersp0]));
-  if (PerspNearlyZero(fMat[kMPersp1]) && PerspNearlyZero(fMat[kMPersp2] - 1)) {
-    return SkVector::Make(fMat[kMScaleX], fMat[kMSkewY]);
-  } else {
-    SkScalar z = y * fMat[kMPersp1] + fMat[kMPersp2];
-    return SkVector::Make(fMat[kMScaleX] / z, fMat[kMSkewY] / z);
-  }
+    SkASSERT(PerspNearlyZero(fMat[kMPersp0]));
+    if (PerspNearlyZero(fMat[kMPersp1]) &&
+        PerspNearlyZero(fMat[kMPersp2] - 1)) {
+        return SkVector::Make(fMat[kMScaleX], fMat[kMSkewY]);
+    } else {
+        SkScalar z = y * fMat[kMPersp1] + fMat[kMPersp2];
+        return SkVector::Make(fMat[kMScaleX] / z, fMat[kMSkewY] / z);
+    }
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 

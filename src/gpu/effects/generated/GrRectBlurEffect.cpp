@@ -112,8 +112,8 @@ class GrGLSLRectBlurEffect : public GrGLSLFragmentProcessor {
     (void)rectF;
     UniformHandle& rectH = rectHVar;
     (void)rectH;
-    GrSurfaceProxy& integralProxy = *_outer.textureSampler(0).proxy();
-    GrTexture& integral = *integralProxy.peekTexture();
+    const GrSurfaceProxyView& integralView = _outer.textureSampler(0).view();
+    GrTexture& integral = *integralView.proxy()->peekTexture();
     (void)integral;
     UniformHandle& invSixSigma = invSixSigmaVar;
     (void)invSixSigma;
@@ -169,6 +169,6 @@ std::unique_ptr<GrFragmentProcessor> GrRectBlurEffect::TestCreate(GrProcessorTes
   float width = data->fRandom->nextRangeF(200, 300);
   float height = data->fRandom->nextRangeF(200, 300);
   return GrRectBlurEffect::Make(
-      data->proxyProvider(), *data->caps()->shaderCaps(), SkRect::MakeWH(width, height), sigma);
+      data->context(), *data->caps()->shaderCaps(), SkRect::MakeWH(width, height), sigma);
 }
 #endif

@@ -11,21 +11,25 @@
 #ifndef GrRectBlurEffect_DEFINED
 #define GrRectBlurEffect_DEFINED
 #include "include/core/SkTypes.h"
+#include "include/private/SkM44.h"
 
 #include <cmath>
 #include "include/core/SkRect.h"
 #include "include/core/SkScalar.h"
+#include "include/gpu/GrContext.h"
+#include "include/private/GrRecordingContext.h"
 #include "src/core/SkBlurMask.h"
 #include "src/core/SkMathPriv.h"
+#include "src/gpu/GrBitmapTextureMaker.h"
 #include "src/gpu/GrProxyProvider.h"
+#include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrShaderCaps.h"
 
 #include "src/gpu/GrCoordTransform.h"
 #include "src/gpu/GrFragmentProcessor.h"
 class GrRectBlurEffect : public GrFragmentProcessor {
  public:
-  static sk_sp<GrTextureProxy> CreateIntegralTexture(
-      GrProxyProvider* proxyProvider, float sixSigma) {
+  static sk_sp<GrTextureProxy> CreateIntegralTexture(GrRecordingContext* context, float sixSigma) {
     // The texture we're producing represents the integral of a normal distribution over a
     // six-sigma range centered at zero. We want enough resolution so that the linear
     // interpolation done in texture lookup doesn't introduce noticeable artifacts. We
@@ -40,6 +44,7 @@ class GrRectBlurEffect : public GrFragmentProcessor {
     builder[0] = width;
     builder.finish();
 
+    GrProxyProvider* proxyProvider = context->priv().proxyProvider();
     sk_sp<GrTextureProxy> proxy(proxyProvider->findOrCreateProxyByUniqueKey(
         key, GrColorType::kAlpha_8, kTopLeft_GrSurfaceOrigin));
     if (!proxy) {
@@ -57,7 +62,9 @@ class GrRectBlurEffect : public GrFragmentProcessor {
       }
       *bitmap.getAddr8(width - 1, 0) = 0;
       bitmap.setImmutable();
-      proxy = proxyProvider->createProxyFromBitmap(bitmap, GrMipMapped::kNo);
+
+      GrBitmapTextureMaker maker(context, bitmap);
+      std::tie(proxy, std::ignore) = maker.refTextureProxy(GrMipMapped::kNo);
       if (!proxy) {
         return nullptr;
       }
@@ -68,7 +75,7 @@ class GrRectBlurEffect : public GrFragmentProcessor {
   }
 
   static std::unique_ptr<GrFragmentProcessor> Make(
-      GrProxyProvider* proxyProvider, const GrShaderCaps& caps, const SkRect& rect, float sigma) {
+      GrRecordingContext* context, const GrShaderCaps& caps, const SkRect& rect, float sigma) {
     SkASSERT(rect.isSorted());
     if (!caps.floatIs32Bits()) {
       // We promote the math that gets us into the Gaussian space to full float when the rect
@@ -81,7 +88,7 @@ class GrRectBlurEffect : public GrFragmentProcessor {
     }
 
     const float sixSigma = 6 * sigma;
-    auto integral = CreateIntegralTexture(proxyProvider, sixSigma);
+    auto integral = CreateIntegralTexture(context, sixSigma);
     if (!integral) {
       return nullptr;
     }
@@ -104,7 +111,7 @@ class GrRectBlurEffect : public GrFragmentProcessor {
     // normalized texture coords from frag coord distances.
     float invSixSigma = 1.f / sixSigma;
     return std::unique_ptr<GrFragmentProcessor>(new GrRectBlurEffect(
-        insetRect, std::move(integral), invSixSigma, isFast, GrSamplerState::ClampBilerp()));
+        insetRect, std::move(integral), invSixSigma, isFast, GrSamplerState::Filter::kBilerp));
   }
   GrRectBlurEffect(const GrRectBlurEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;

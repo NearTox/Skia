@@ -63,14 +63,6 @@ GrVkResourceProvider::PipelineStateCache::~PipelineStateCache() {
 #endif
 }
 
-void GrVkResourceProvider::PipelineStateCache::abandon() {
-  fMap.foreach ([](std::unique_ptr<Entry>* e) {
-    (*e)->fPipelineState->abandonGPUResources();
-    (*e)->fPipelineState = nullptr;
-  });
-  fMap.reset();
-}
-
 void GrVkResourceProvider::PipelineStateCache::release() { fMap.reset(); }
 
 GrVkPipelineState* GrVkResourceProvider::PipelineStateCache::refPipelineState(
@@ -106,5 +98,5 @@ GrVkPipelineState* GrVkResourceProvider::PipelineStateCache::refPipelineState(
     entry = fMap.insert(desc, std::unique_ptr<Entry>(new Entry(fGpu, pipelineState)));
     return (*entry)->fPipelineState.get();
   }
-  return (*entry)->fPipelineState.get();
+    return (*entry)->fPipelineState.get();
 }

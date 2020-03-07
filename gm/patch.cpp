@@ -153,13 +153,13 @@ static void dopatch(SkCanvas* canvas, const SkColor colors[], sk_sp<SkImage> img
 }
 
 DEF_SIMPLE_GM(patch_primitive, canvas, 1500, 1100) {
-  const SkColor colors[SkPatchUtils::kNumCorners] = {SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE,
-                                                     SK_ColorCYAN};
+  const SkColor colors[SkPatchUtils::kNumCorners] = {
+      SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorCYAN};
   dopatch(canvas, colors);
 }
 DEF_SIMPLE_GM(patch_image, canvas, 1500, 1100) {
-  const SkColor colors[SkPatchUtils::kNumCorners] = {SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE,
-                                                     SK_ColorCYAN};
+  const SkColor colors[SkPatchUtils::kNumCorners] = {
+      SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorCYAN};
   dopatch(canvas, colors, GetResourceAsImage("images/mandrill_128.png"));
 }
 DEF_SIMPLE_GM(patch_alpha, canvas, 1500, 1100) {

@@ -20,20 +20,19 @@
 // Because this class is virtually derived from GrSurface we must explicitly call its constructor.
 // Constructor for wrapped render targets.
 GrGLRenderTarget::GrGLRenderTarget(
-    GrGLGpu* gpu, const SkISize& dimensions, GrGLFormat format, GrPixelConfig config,
-    int sampleCount, const IDs& ids, GrGLStencilAttachment* stencil)
-    : GrSurface(gpu, dimensions, config, GrProtected::kNo),
-      INHERITED(gpu, dimensions, config, sampleCount, GrProtected::kNo, stencil) {
+    GrGLGpu* gpu, const SkISize& dimensions, GrGLFormat format, int sampleCount, const IDs& ids,
+    GrGLStencilAttachment* stencil)
+    : GrSurface(gpu, dimensions, GrProtected::kNo),
+      INHERITED(gpu, dimensions, sampleCount, GrProtected::kNo, stencil) {
   this->setFlags(gpu->glCaps(), ids);
   this->init(format, ids);
   this->registerWithCacheWrapped(GrWrapCacheable::kNo);
 }
 
 GrGLRenderTarget::GrGLRenderTarget(
-    GrGLGpu* gpu, const SkISize& dimensions, GrGLFormat format, GrPixelConfig config,
-    int sampleCount, const IDs& ids)
-    : GrSurface(gpu, dimensions, config, GrProtected::kNo),
-      INHERITED(gpu, dimensions, config, sampleCount, GrProtected::kNo) {
+    GrGLGpu* gpu, const SkISize& dimensions, GrGLFormat format, int sampleCount, const IDs& ids)
+    : GrSurface(gpu, dimensions, GrProtected::kNo),
+      INHERITED(gpu, dimensions, sampleCount, GrProtected::kNo) {
   this->setFlags(gpu->glCaps(), ids);
   this->init(format, ids);
 }
@@ -54,8 +53,8 @@ void GrGLRenderTarget::init(GrGLFormat format, const IDs& idDesc) {
 }
 
 sk_sp<GrGLRenderTarget> GrGLRenderTarget::MakeWrapped(
-    GrGLGpu* gpu, const SkISize& dimensions, GrGLFormat format, GrPixelConfig config,
-    int sampleCount, const IDs& idDesc, int stencilBits) {
+    GrGLGpu* gpu, const SkISize& dimensions, GrGLFormat format, int sampleCount, const IDs& idDesc,
+    int stencilBits) {
   GrGLStencilAttachment* sb = nullptr;
   if (stencilBits) {
     GrGLStencilAttachment::IDDesc sbDesc;
@@ -69,7 +68,7 @@ sk_sp<GrGLRenderTarget> GrGLRenderTarget::MakeWrapped(
         gpu, sbDesc, dimensions.width(), dimensions.height(), sampleCount, format);
   }
   return sk_sp<GrGLRenderTarget>(
-      new GrGLRenderTarget(gpu, dimensions, format, config, sampleCount, idDesc, sb));
+      new GrGLRenderTarget(gpu, dimensions, format, sampleCount, idDesc, sb));
 }
 
 GrBackendRenderTarget GrGLRenderTarget::getBackendRenderTarget() const {

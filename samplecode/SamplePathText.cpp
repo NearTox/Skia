@@ -261,13 +261,14 @@ class WavyPathText : public MovingPathText {
       const Glyph& glyph = fGlyphs[i];
       const SkMatrix& backMatrix = fBackMatrices[i];
 
-      const Sk2f matrix[3] = {Sk2f(backMatrix.getScaleX(), backMatrix.getSkewY()),
-                              Sk2f(backMatrix.getSkewX(), backMatrix.getScaleY()),
-                              Sk2f(backMatrix.getTranslateX(), backMatrix.getTranslateY())};
+      const Sk2f matrix[3] = {
+          Sk2f(backMatrix.getScaleX(), backMatrix.getSkewY()),
+          Sk2f(backMatrix.getSkewX(), backMatrix.getScaleY()),
+          Sk2f(backMatrix.getTranslateX(), backMatrix.getTranslateY())};
 
       SkPath* backpath = &fBackPaths[i];
       backpath->reset();
-      backpath->setFillType(SkPath::kEvenOdd_FillType);
+      backpath->setFillType(SkPathFillType::kEvenOdd);
 
       SkPath::RawIter iter(glyph.fPath);
       SkPath::Verb verb;

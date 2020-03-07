@@ -50,8 +50,8 @@ class PatchBench : public Benchmark {
   }
 
   virtual void setColors() {
-    const SkColor colors[SkPatchUtils::kNumCorners] = {SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE,
-                                                       SK_ColorCYAN};
+    const SkColor colors[SkPatchUtils::kNumCorners] = {
+        SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorCYAN};
     memcpy(fColors, colors, SkPatchUtils::kNumCorners * sizeof(SkColor));
   }
 

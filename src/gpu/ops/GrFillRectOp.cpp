@@ -269,10 +269,15 @@ class FillRectOp final : public GrMeshDrawOp {
   }
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
-    fHelper.executeDrawsAndUploads(this, flushState, chainBounds);
+    auto pipeline = GrSimpleMeshDrawOpHelper::CreatePipeline(
+        flushState, fHelper.detachProcessorSet(), fHelper.pipelineFlags(),
+        fHelper.stencilSettings());
+
+    flushState->executeDrawsAndUploadsForMeshDrawOp(this, chainBounds, pipeline);
   }
 
-  CombineResult onCombineIfPossible(GrOp* t, const GrCaps& caps) override {
+  CombineResult onCombineIfPossible(
+      GrOp* t, GrRecordingContext::Arenas*, const GrCaps& caps) override {
     TRACE_EVENT0("skia.gpu", TRACE_FUNC);
     const auto* that = t->cast<FillRectOp>();
 
@@ -479,12 +484,12 @@ GR_DRAW_OP_TEST_DEFINE(FillRectOp) {
           context, std::move(paint), aaType, aaFlags, GrQuad::MakeFromRect(rect, viewMatrix),
           GrQuad(localRect), stencil);
     }
-  } else {
-    // The simplest constructor
-    return GrFillRectOp::Make(
-        context, std::move(paint), aaType, aaFlags, GrQuad::MakeFromRect(rect, viewMatrix),
-        GrQuad(rect), stencil);
-  }
+    } else {
+      // The simplest constructor
+      return GrFillRectOp::Make(
+          context, std::move(paint), aaType, aaFlags, GrQuad::MakeFromRect(rect, viewMatrix),
+          GrQuad(rect), stencil);
+    }
 }
 
 #endif

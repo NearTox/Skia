@@ -16,6 +16,7 @@
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrDrawingManager.h"
 #include "src/gpu/GrMemoryPool.h"
+#include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/SkGr.h"
 #include "src/gpu/ops/GrAtlasTextOp.h"
 #include "src/gpu/text/GrTextContext.h"
@@ -84,9 +85,7 @@ class SkInternalAtlasTextTarget : public GrTextTarget, public SkAtlasTextTarget 
   SkInternalAtlasTextTarget(sk_sp<SkAtlasTextContext> context, int width, int height, void* handle)
       : GrTextTarget(width, height, kColorInfo),
         SkAtlasTextTarget(std::move(context), width, height, handle),
-        fGlyphPainter(kProps, kColorInfo) {
-    fOpMemoryPool = fContext->internal().grContext()->priv().refOpMemoryPool();
-  }
+        fGlyphPainter(kProps, kColorInfo) {}
 
   ~SkInternalAtlasTextTarget() override { this->deleteOps(); }
 
@@ -118,11 +117,14 @@ class SkInternalAtlasTextTarget : public GrTextTarget, public SkAtlasTextTarget 
  private:
   void deleteOps();
 
+  GrRecordingContext::Arenas arenas() {
+    return fContext->internal().grContext()->GrRecordingContext::priv().arenas();
+  }
+
   uint32_t fColor;
   using SkAtlasTextTarget::fHeight;
   using SkAtlasTextTarget::fWidth;
   SkTArray<std::unique_ptr<GrAtlasTextOp>, true> fOps;
-  sk_sp<GrOpMemoryPool> fOpMemoryPool;
   SkGlyphRunListPainter fGlyphPainter;
 };
 
@@ -168,10 +170,12 @@ void SkInternalAtlasTextTarget::addDrawOp(const GrClip& clip, std::unique_ptr<Gr
   const GrCaps& caps = *this->context()->internal().grContext()->priv().caps();
   op->finalizeForTextTarget(fColor, caps);
   int n = SkTMin(kMaxBatchLookBack, fOps.count());
+
+  GrRecordingContext::Arenas arenas = this->arenas();
   for (int i = 0; i < n; ++i) {
     GrAtlasTextOp* other = fOps.fromBack(i).get();
-    if (other->combineIfPossible(op.get(), caps) == GrOp::CombineResult::kMerged) {
-      fOpMemoryPool->release(std::move(op));
+    if (other->combineIfPossible(op.get(), &arenas, caps) == GrOp::CombineResult::kMerged) {
+      arenas.opMemoryPool()->release(std::move(op));
       return;
     }
     if (GrRectsOverlap(op->bounds(), other->bounds())) {
@@ -182,9 +186,10 @@ void SkInternalAtlasTextTarget::addDrawOp(const GrClip& clip, std::unique_ptr<Gr
 }
 
 void SkInternalAtlasTextTarget::deleteOps() {
+  GrOpMemoryPool* pool = this->arenas().opMemoryPool();
   for (int i = 0; i < fOps.count(); ++i) {
     if (fOps[i]) {
-      fOpMemoryPool->release(std::move(fOps[i]));
+      pool->release(std::move(fOps[i]));
     }
   }
   fOps.reset();
@@ -217,28 +222,29 @@ void GrAtlasTextOp::executeForTextTarget(SkAtlasTextTarget* target) {
   auto resourceProvider = context.grContext()->priv().resourceProvider();
 
   unsigned int numProxies;
-  if (!atlasManager->getProxies(kA8_GrMaskFormat, &numProxies)) {
+  if (!atlasManager->getViews(kA8_GrMaskFormat, &numProxies)) {
     return;
   }
 
   for (int i = 0; i < fGeoCount; ++i) {
+    auto subRun = fGeoData[i].fSubRunPtr;
     // TODO4F: Preserve float colors
+    subRun->updateVerticesColorIfNeeded(fGeoData[i].fColor.toBytes_RGBA());
+    subRun->translateVerticesIfNeeded(fGeoData[i].fDrawMatrix, fGeoData[i].fDrawOrigin);
     GrTextBlob::VertexRegenerator regenerator(
-        resourceProvider, fGeoData[i].fBlob, fGeoData[i].fSubRunPtr, fGeoData[i].fViewMatrix,
-        fGeoData[i].fX, fGeoData[i].fY, fGeoData[i].fColor.toBytes_RGBA(), &context, glyphCache,
-        atlasManager);
-    bool done = false;
-    while (!done) {
-      GrTextBlob::VertexRegenerator::Result result;
-      if (!regenerator.regenerate(&result)) {
+        resourceProvider, fGeoData[i].fSubRunPtr, &context, glyphCache, atlasManager);
+    int subRunEnd = subRun->fGlyphs.size();
+    for (int subRunIndex = 0; subRunIndex < subRunEnd;) {
+      auto [ok, glyphsRegenerated] = regenerator.regenerate(subRunIndex, subRunEnd);
+      if (!ok) {
         break;
       }
-      done = result.fFinished;
 
       context.recordDraw(
-          result.fFirstVertex, result.fGlyphsRegenerated, fGeoData[i].fViewMatrix,
+          subRun->quadStart(subRunIndex), glyphsRegenerated, fGeoData[i].fDrawMatrix,
           target->handle());
-      if (!result.fFinished) {
+      subRunIndex += glyphsRegenerated;
+      if (subRunIndex != subRunEnd) {
         // Make space in the atlas so we can continue generating vertices.
         context.flush();
       }

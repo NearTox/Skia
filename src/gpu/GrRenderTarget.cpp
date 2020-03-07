@@ -18,9 +18,9 @@
 #include "src/gpu/GrStencilSettings.h"
 
 GrRenderTarget::GrRenderTarget(
-    GrGpu* gpu, const SkISize& dimensions, GrPixelConfig config, int sampleCount,
-    GrProtected isProtected, GrStencilAttachment* stencil)
-    : INHERITED(gpu, dimensions, config, isProtected),
+    GrGpu* gpu, const SkISize& dimensions, int sampleCount, GrProtected isProtected,
+    GrStencilAttachment* stencil)
+    : INHERITED(gpu, dimensions, isProtected),
       fSampleCnt(sampleCount),
       fSamplePatternKey(GrSamplePatternDictionary::kInvalidSamplePatternKey),
       fStencilAttachment(stencil) {}

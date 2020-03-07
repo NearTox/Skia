@@ -80,8 +80,8 @@ static bool bridgeWinding(SkOpContourHead* contourList, SkPathWriter* writer) {
         break;
       }
     } while (true);
-  } while (true);
-  return true;
+    } while (true);
+    return true;
 }
 
 // returns true if all edges were processed

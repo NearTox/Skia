@@ -81,12 +81,9 @@ static SkString modifiers_desc(skui::ModifierKey m) {
       s.append(" {" #X "}");             \
     }
   M(Shift)
-  M(Control)
-  M(Option)
-  M(Command)
-  M(FirstPress)
+  M(Control) M(Option) M(Command) M(FirstPress)
 #  undef M
-  return s;
+      return s;
 }
 
 static void debug_on_char(SkUnichar c, skui::ModifierKey modifiers) {

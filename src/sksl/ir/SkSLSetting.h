@@ -32,9 +32,11 @@ struct Setting : public Expression {
     return std::unique_ptr<Expression>(new Setting(fOffset, fName, fValue->clone()));
   }
 
+#ifdef SK_DEBUG
   String description() const override { return fName; }
+#endif
 
-  bool hasSideEffects() const override { return false; }
+  bool hasProperty(Property property) const override { return false; }
 
   bool isConstant() const override { return true; }
 

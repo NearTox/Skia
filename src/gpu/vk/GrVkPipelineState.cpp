@@ -76,23 +76,6 @@ void GrVkPipelineState::freeGPUResources(GrVkGpu* gpu) {
   }
 }
 
-void GrVkPipelineState::abandonGPUResources() {
-  if (fPipeline) {
-    fPipeline->unrefAndAbandon();
-    fPipeline = nullptr;
-  }
-
-  if (fUniformBuffer) {
-    fUniformBuffer->abandon();
-    fUniformBuffer.reset();
-  }
-
-  if (fUniformDescriptorSet) {
-    fUniformDescriptorSet->unrefAndAbandon();
-    fUniformDescriptorSet = nullptr;
-  }
-}
-
 bool GrVkPipelineState::setAndBindUniforms(
     GrVkGpu* gpu, const GrRenderTarget* renderTarget, const GrProgramInfo& programInfo,
     GrVkCommandBuffer* commandBuffer) {
@@ -170,7 +153,7 @@ bool GrVkPipelineState::setAndBindTextures(
 
   if (GrTexture* dstTexture = pipeline.peekDstTexture()) {
     samplerBindings[currTextureBinding++] = {
-        GrSamplerState::ClampNearest(), static_cast<GrVkTexture*>(dstTexture)};
+        GrSamplerState::Filter::kNearest, static_cast<GrVkTexture*>(dstTexture)};
   }
 
   // Get new descriptor set
@@ -200,7 +183,7 @@ bool GrVkPipelineState::setAndBindTextures(
     }
 
     for (int i = 0; i < fNumSamplers; ++i) {
-      const GrSamplerState& state = samplerBindings[i].fState;
+      GrSamplerState state = samplerBindings[i].fState;
       GrVkTexture* texture = samplerBindings[i].fTexture;
 
       const GrVkImageView* textureView = texture->textureView();
@@ -242,7 +225,7 @@ bool GrVkPipelineState::setAndBindTextures(
       commandBuffer->addResource(samplerBindings[i].fTexture->resource());
     }
     if (fNumSamplers == 1) {
-      const GrSamplerState& state = samplerBindings[0].fState;
+      GrSamplerState state = samplerBindings[0].fState;
       GrVkTexture* texture = samplerBindings[0].fTexture;
       texture->addDescriptorSetToCache(descriptorSet, state);
     }

@@ -198,8 +198,9 @@ class FilterBitmapBench : public BitmapBench {
     if (fFlags & kBicubic_Flag) {
       index |= 2;
     }
-    static const SkFilterQuality gQualitys[] = {kNone_SkFilterQuality, kLow_SkFilterQuality,
-                                                kMedium_SkFilterQuality, kHigh_SkFilterQuality};
+    static const SkFilterQuality gQualitys[] = {
+        kNone_SkFilterQuality, kLow_SkFilterQuality, kMedium_SkFilterQuality,
+        kHigh_SkFilterQuality};
     paint->setFilterQuality(gQualitys[index]);
   }
 

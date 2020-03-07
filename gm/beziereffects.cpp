@@ -46,6 +46,7 @@
 #include "src/gpu/ops/GrDrawOp.h"
 #include "src/gpu/ops/GrMeshDrawOp.h"
 #include "src/gpu/ops/GrOp.h"
+#include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 
 #include <memory>
 #include <utility>
@@ -79,7 +80,10 @@ class BezierTestOp : public GrMeshDrawOp {
   }
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
-    flushState->executeDrawsAndUploadsForMeshDrawOp(this, chainBounds, std::move(fProcessorSet));
+    auto pipeline = GrSimpleMeshDrawOpHelper::CreatePipeline(
+        flushState, std::move(fProcessorSet), GrPipeline::InputFlags::kNone);
+
+    flushState->executeDrawsAndUploadsForMeshDrawOp(this, chainBounds, pipeline);
   }
 
   GrClipEdgeType edgeType() const { return fEdgeType; }
@@ -305,7 +309,7 @@ class BezierQuadTestOp : public BezierTestOp {
   const char* name() const override { return "BezierQuadTestOp"; }
 
   static std::unique_ptr<GrDrawOp> Make(
-      GrContext* context, GrClipEdgeType et, const SkRect& rect, const SkPMColor4f& color,
+      GrRecordingContext* context, GrClipEdgeType et, const SkRect& rect, const SkPMColor4f& color,
       const GrPathUtils::QuadUVMatrix& devToUV) {
     GrOpMemoryPool* pool = context->priv().opMemoryPool();
 

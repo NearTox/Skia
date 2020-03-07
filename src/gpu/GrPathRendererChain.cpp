@@ -23,11 +23,17 @@
 #include "src/gpu/ops/GrSmallPathRenderer.h"
 #include "src/gpu/ops/GrStencilAndCoverPathRenderer.h"
 #include "src/gpu/ops/GrTessellatingPathRenderer.h"
+#include "src/gpu/tessellate/GrGpuTessellationPathRenderer.h"
 
 GrPathRendererChain::GrPathRendererChain(GrRecordingContext* context, const Options& options) {
   const GrCaps& caps = *context->priv().caps();
   if (options.fGpuPathRenderers & GpuPathRenderers::kDashLine) {
     fChain.push_back(sk_make_sp<GrDashLinePathRenderer>());
+  }
+  if (options.fGpuPathRenderers & GpuPathRenderers::kGpuTessellation) {
+    if (caps.shaderCaps()->tessellationSupport()) {
+      fChain.push_back(sk_make_sp<GrGpuTessellationPathRenderer>());
+    }
   }
   if (options.fGpuPathRenderers & GpuPathRenderers::kAAConvex) {
     fChain.push_back(sk_make_sp<GrAAConvexPathRenderer>());
@@ -74,9 +80,9 @@ GrPathRendererChain::GrPathRendererChain(GrRecordingContext* context, const Opti
 GrPathRenderer* GrPathRendererChain::getPathRenderer(
     const GrPathRenderer::CanDrawPathArgs& args, DrawType drawType,
     GrPathRenderer::StencilSupport* stencilSupport) {
-  GR_STATIC_ASSERT(
+  static_assert(
       GrPathRenderer::kNoSupport_StencilSupport < GrPathRenderer::kStencilOnly_StencilSupport);
-  GR_STATIC_ASSERT(
+  static_assert(
       GrPathRenderer::kStencilOnly_StencilSupport < GrPathRenderer::kNoRestriction_StencilSupport);
   GrPathRenderer::StencilSupport minStencilSupport;
   if (DrawType::kStencil == drawType) {

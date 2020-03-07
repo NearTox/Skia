@@ -78,7 +78,9 @@ class ExternalValue : public Symbol {
    */
   virtual ExternalValue* getChild(const char* name) const { return nullptr; }
 
+#ifdef SK_DEBUG
   String description() const override { return String("external<") + fName + ">"; }
+#endif
 
  private:
   typedef Symbol INHERITED;

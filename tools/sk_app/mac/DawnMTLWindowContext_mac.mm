@@ -52,15 +52,15 @@ public:
 
     ~SwapChainImplMTL() {}
 
-    DawnSwapChainError Configure(DawnTextureFormat format, DawnTextureUsage,
-            uint32_t width, uint32_t height) {
-        if (format != DAWN_TEXTURE_FORMAT_RGBA8_UNORM) {
-            return "unsupported format";
-        }
-        SkASSERT(width > 0);
-        SkASSERT(height > 0);
+    DawnSwapChainError Configure(
+        WGPUTextureFormat format, WGPUTextureUsage, uint32_t width, uint32_t height) {
+      if (format != WGPUTextureFormat::WGPUTextureFormat_RGBA8Unorm) {
+        return "unsupported format";
+      }
+      SkASSERT(width > 0);
+      SkASSERT(height > 0);
 
-        return DAWN_SWAP_CHAIN_NO_ERROR;
+      return DAWN_SWAP_CHAIN_NO_ERROR;
     }
 
     DawnSwapChainError GetNextTexture(DawnSwapChainNextTexture* nextTexture) {

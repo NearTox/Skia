@@ -14,7 +14,7 @@
 #include "src/gpu/GrRecordingContextPriv.h"
 
 sk_sp<GrTextureProxy> GrTextureMaker::onRefTextureProxyForParams(
-    const GrSamplerState& params, bool willBeMipped, SkScalar scaleAdjust[2]) {
+    GrSamplerState params, bool willBeMipped, SkScalar scaleAdjust[2]) {
   if (this->width() > this->context()->priv().caps()->maxTextureSize() ||
       this->height() > this->context()->priv().caps()->maxTextureSize()) {
     return nullptr;

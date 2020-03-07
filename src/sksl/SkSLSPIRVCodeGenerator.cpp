@@ -543,7 +543,9 @@ SpvId SPIRVCodeGenerator::getType(const Type& rawType, const MemoryLayout& layou
         if (type == *fContext.fVoid_Type) {
           this->writeInstruction(SpvOpTypeVoid, result, fConstantBuffer);
         } else {
+#ifdef SK_DEBUG
           ABORT("invalid type: %s", type.description().c_str());
+#endif
         }
     }
     fTypeMap[key] = result;
@@ -561,12 +563,12 @@ SpvId SPIRVCodeGenerator::getImageType(const Type& type) {
 }
 
 SpvId SPIRVCodeGenerator::getFunctionType(const FunctionDeclaration& function) {
-  String key = function.fReturnType.description() + "(";
+  String key = function.fReturnType.displayName() + "(";
   String separator;
   for (size_t i = 0; i < function.fParameters.size(); i++) {
     key += separator;
     separator = ", ";
-    key += function.fParameters[i]->fType.description();
+    key += function.fParameters[i]->fType.displayName();
   }
   key += ")";
   auto entry = fTypeMap.find(key);
@@ -624,7 +626,7 @@ SpvId SPIRVCodeGenerator::getPointerType(const Type& type, SpvStorageClass_ stor
 SpvId SPIRVCodeGenerator::getPointerType(
     const Type& rawType, const MemoryLayout& layout, SpvStorageClass_ storageClass) {
   Type type = this->getActualType(rawType);
-  String key = type.description() + "*" + to_string(layout.fStd) + to_string(storageClass);
+  String key = type.displayName() + "*" + to_string(layout.fStd) + to_string(storageClass);
   auto entry = fTypeMap.find(key);
   if (entry == fTypeMap.end()) {
     SpvId result = this->nextId();
@@ -654,7 +656,11 @@ SpvId SPIRVCodeGenerator::writeExpression(const Expression& expr, OutputStream& 
     case Expression::kTernary_Kind:
       return this->writeTernaryExpression((TernaryExpression&)expr, out);
     case Expression::kIndex_Kind: return this->writeIndexExpression((IndexExpression&)expr, out);
-    default: ABORT("unsupported expression: %s", expr.description().c_str());
+    default:
+#ifdef SK_DEBUG
+      ABORT("unsupported expression: %s", expr.description().c_str());
+#endif
+      break;
   }
   return -1;
 }
@@ -1432,7 +1438,11 @@ SpvId SPIRVCodeGenerator::writeConstructor(const Constructor& c, OutputStream& o
     case Type::kVector_Kind: return this->writeVectorConstructor(c, out);
     case Type::kMatrix_Kind: return this->writeMatrixConstructor(c, out);
     case Type::kArray_Kind: return this->writeArrayConstructor(c, out);
-    default: ABORT("unsupported constructor: %s", c.description().c_str());
+    default:
+#ifdef SK_DEBUG
+      ABORT("unsupported constructor: %s", c.description().c_str());
+#endif
+      return -1;
   }
 }
 
@@ -1848,7 +1858,7 @@ SpvId SPIRVCodeGenerator::writeSwizzle(const Swizzle& swizzle, OutputStream& out
       }
     }
   }
-  return result;
+    return result;
 }
 
 SpvId SPIRVCodeGenerator::writeBinaryOperation(
@@ -1865,7 +1875,9 @@ SpvId SPIRVCodeGenerator::writeBinaryOperation(
     this->writeInstruction(ifBool, this->getType(resultType), result, lhs, rhs, out);
     return result;  // skip RelaxedPrecision check
   } else {
+#ifdef SK_DEBUG
     ABORT("invalid operandType: %s", operandType.description().c_str());
+#endif
   }
   if (getActualType(resultType) == operandType && !resultType.highPrecision()) {
     this->writeInstruction(SpvOpDecorate, result, SpvDecorationRelaxedPrecision, fDecorationBuffer);
@@ -2267,7 +2279,9 @@ SpvId SPIRVCodeGenerator::writePrefixExpression(const PrefixExpression& p, Outpu
     } else if (is_signed(fContext, p.fType)) {
       this->writeInstruction(SpvOpSNegate, typeId, result, expr, out);
     } else {
+#ifdef SK_DEBUG
       ABORT("unsupported prefix expression %s", p.description().c_str());
+#endif
     }
     this->writePrecisionModifier(p.fType, result);
     return result;
@@ -2305,7 +2319,11 @@ SpvId SPIRVCodeGenerator::writePrefixExpression(const PrefixExpression& p, Outpu
           this->writeExpression(*p.fOperand, out), out);
       return result;
     }
-    default: ABORT("unsupported prefix expression: %s", p.description().c_str());
+    default:
+#ifdef SK_DEBUG
+      ABORT("unsupported prefix expression: %s", p.description().c_str());
+#endif
+      return -1;
   }
 }
 
@@ -2326,7 +2344,11 @@ SpvId SPIRVCodeGenerator::writePostfixExpression(const PostfixExpression& p, Out
       lv->store(temp, out);
       return result;
     }
-    default: ABORT("unsupported postfix expression %s", p.description().c_str());
+    default:
+#ifdef SK_DEBUG
+      ABORT("unsupported postfix expression %s", p.description().c_str());
+#endif
+      return -1;
   }
 }
 
@@ -2348,28 +2370,28 @@ SpvId SPIRVCodeGenerator::writeBoolLiteral(const BoolLiteral& b) {
 }
 
 SpvId SPIRVCodeGenerator::writeIntLiteral(const IntLiteral& i) {
-  ConstantType type;
-  if (i.fType == *fContext.fInt_Type) {
-    type = ConstantType::kInt;
-  } else if (i.fType == *fContext.fUInt_Type) {
-    type = ConstantType::kUInt;
-  } else if (i.fType == *fContext.fShort_Type || i.fType == *fContext.fByte_Type) {
-    type = ConstantType::kShort;
-  } else if (i.fType == *fContext.fUShort_Type || i.fType == *fContext.fUByte_Type) {
-    type = ConstantType::kUShort;
-  } else {
-    SkASSERT(false);
-  }
-  std::pair<ConstantValue, ConstantType> key(i.fValue, type);
-  auto entry = fNumberConstants.find(key);
-  if (entry == fNumberConstants.end()) {
-    SpvId result = this->nextId();
-    this->writeInstruction(
-        SpvOpConstant, this->getType(i.fType), result, (SpvId)i.fValue, fConstantBuffer);
-    fNumberConstants[key] = result;
-    return result;
-  }
-  return entry->second;
+    ConstantType type;
+    if (i.fType == *fContext.fInt_Type) {
+      type = ConstantType::kInt;
+    } else if (i.fType == *fContext.fUInt_Type) {
+      type = ConstantType::kUInt;
+    } else if (i.fType == *fContext.fShort_Type || i.fType == *fContext.fByte_Type) {
+      type = ConstantType::kShort;
+    } else if (i.fType == *fContext.fUShort_Type || i.fType == *fContext.fUByte_Type) {
+      type = ConstantType::kUShort;
+    } else {
+      SkASSERT(false);
+    }
+    std::pair<ConstantValue, ConstantType> key(i.fValue, type);
+    auto entry = fNumberConstants.find(key);
+    if (entry == fNumberConstants.end()) {
+      SpvId result = this->nextId();
+      this->writeInstruction(
+          SpvOpConstant, this->getType(i.fType), result, (SpvId)i.fValue, fConstantBuffer);
+      fNumberConstants[key] = result;
+      return result;
+    }
+    return entry->second;
 }
 
 SpvId SPIRVCodeGenerator::writeFloatLiteral(const FloatLiteral& f) {
@@ -2716,7 +2738,11 @@ void SPIRVCodeGenerator::writeStatement(const Statement& s, OutputStream& out) {
       this->writeInstruction(SpvOpBranch, fContinueTarget.top(), out);
       break;
     case Statement::kDiscard_Kind: this->writeInstruction(SpvOpKill, out); break;
-    default: ABORT("unsupported statement: %s", s.description().c_str());
+    default:
+#ifdef SK_DEBUG
+      ABORT("unsupported statement: %s", s.description().c_str());
+#endif
+      break;
   }
 }
 

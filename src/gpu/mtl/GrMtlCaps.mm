@@ -268,7 +268,8 @@ void GrMtlCaps::initGrCaps(const id<MTLDevice> device) {
 
   fReuseScratchTextures = true;  // Assuming this okay
 
-  fTransferBufferSupport = true;
+  fTransferFromBufferToTextureSupport = true;
+  fTransferFromSurfaceToBufferSupport = true;
 
   fTextureBarrierSupport = false;  // Need to figure out if we can do this
 
@@ -309,22 +310,19 @@ bool GrMtlCaps::isFormatSRGB(const GrBackendFormat& format) const {
   return format_is_srgb(GrBackendFormatAsMTLPixelFormat(format));
 }
 
-bool GrMtlCaps::isFormatCompressed(
-    const GrBackendFormat& format, SkImage::CompressionType* compressionType) const {
-#ifdef SK_BUILD_FOR_MAC
-  return false;
-#else
-  SkImage::CompressionType dummyType;
-  SkImage::CompressionType* compressionTypePtr = compressionType ? compressionType : &dummyType;
-
+SkImage::CompressionType GrMtlCaps::compressionType(const GrBackendFormat& format) const {
   switch (GrBackendFormatAsMTLPixelFormat(format)) {
+#ifdef SK_BUILD_FOR_IOS
     case MTLPixelFormatETC2_RGB8:
       // ETC2 uses the same compression layout as ETC1
-      *compressionTypePtr = SkImage::kETC1_CompressionType;
-      return true;
-    default: return false;
-  }
+      return SkImage::CompressionType::kETC2_RGB8_UNORM;
+#else
+    case MTLPixelFormatBC1_RGBA: return SkImage::CompressionType::kBC1_RGBA8_UNORM;
 #endif
+    default: return SkImage::CompressionType::kNone;
+  }
+
+  SkUNREACHABLE;
 }
 
 bool GrMtlCaps::isFormatTexturableAndUploadable(
@@ -475,6 +473,8 @@ static constexpr MTLPixelFormat kMtlFormats[] = {
     MTLPixelFormatRG16Unorm,
 #ifdef SK_BUILD_FOR_IOS
     MTLPixelFormatETC2_RGB8,
+#else
+    MTLPixelFormatBC1_RGBA,
 #endif
     MTLPixelFormatRGBA16Unorm,
     MTLPixelFormatRG16Float,
@@ -540,7 +540,7 @@ void GrMtlCaps::initFormatTable() {
       auto& ctInfo = info->fColorTypeInfos[ctIdx++];
       ctInfo.fColorType = GrColorType::kAlpha_8;
       ctInfo.fFlags = ColorTypeInfo::kUploadData_Flag | ColorTypeInfo::kRenderable_Flag;
-      ctInfo.fTextureSwizzle = GrSwizzle::RRRR();
+      ctInfo.fReadSwizzle = GrSwizzle::RRRR();
       ctInfo.fOutputSwizzle = GrSwizzle::AAAA();
     }
     // Format: R8Unorm, Surface: kGray_8
@@ -548,42 +548,42 @@ void GrMtlCaps::initFormatTable() {
       auto& ctInfo = info->fColorTypeInfos[ctIdx++];
       ctInfo.fColorType = GrColorType::kGray_8;
       ctInfo.fFlags = ColorTypeInfo::kUploadData_Flag;
-      ctInfo.fTextureSwizzle = GrSwizzle("rrr1");
+      ctInfo.fReadSwizzle = GrSwizzle("rrr1");
     }
-  }
+    }
 
-  // Format: A8Unorm
-  {
-    info = &fFormatTable[GetFormatIndex(MTLPixelFormatA8Unorm)];
-    info->fFlags = FormatInfo::kTexturable_Flag;
-    info->fBytesPerPixel = 1;
-    info->fColorTypeInfoCount = 1;
-    info->fColorTypeInfos.reset(new ColorTypeInfo[info->fColorTypeInfoCount]());
-    int ctIdx = 0;
-    // Format: A8Unorm, Surface: kAlpha_8
+    // Format: A8Unorm
     {
-      auto& ctInfo = info->fColorTypeInfos[ctIdx++];
-      ctInfo.fColorType = GrColorType::kAlpha_8;
-      ctInfo.fFlags = ColorTypeInfo::kUploadData_Flag | ColorTypeInfo::kRenderable_Flag;
-      ctInfo.fTextureSwizzle = GrSwizzle::AAAA();
+      info = &fFormatTable[GetFormatIndex(MTLPixelFormatA8Unorm)];
+      info->fFlags = FormatInfo::kTexturable_Flag;
+      info->fBytesPerPixel = 1;
+      info->fColorTypeInfoCount = 1;
+      info->fColorTypeInfos.reset(new ColorTypeInfo[info->fColorTypeInfoCount]());
+      int ctIdx = 0;
+      // Format: A8Unorm, Surface: kAlpha_8
+      {
+        auto& ctInfo = info->fColorTypeInfos[ctIdx++];
+        ctInfo.fColorType = GrColorType::kAlpha_8;
+        ctInfo.fFlags = ColorTypeInfo::kUploadData_Flag | ColorTypeInfo::kRenderable_Flag;
+        ctInfo.fReadSwizzle = GrSwizzle::AAAA();
+      }
     }
-  }
 
 #ifdef SK_BUILD_FOR_IOS
-  // Format: B5G6R5Unorm
-  {
-    info = &fFormatTable[GetFormatIndex(MTLPixelFormatB5G6R5Unorm)];
-    info->fFlags = FormatInfo::kAllFlags;
-    info->fBytesPerPixel = 2;
-    info->fColorTypeInfoCount = 1;
-    info->fColorTypeInfos.reset(new ColorTypeInfo[info->fColorTypeInfoCount]());
-    int ctIdx = 0;
-    // Format: B5G6R5Unorm, Surface: kBGR_565
+    // Format: B5G6R5Unorm
     {
-      auto& ctInfo = info->fColorTypeInfos[ctIdx++];
-      ctInfo.fColorType = GrColorType::kBGR_565;
-      ctInfo.fFlags = ColorTypeInfo::kUploadData_Flag | ColorTypeInfo::kRenderable_Flag;
-    }
+      info = &fFormatTable[GetFormatIndex(MTLPixelFormatB5G6R5Unorm)];
+      info->fFlags = FormatInfo::kAllFlags;
+      info->fBytesPerPixel = 2;
+      info->fColorTypeInfoCount = 1;
+      info->fColorTypeInfos.reset(new ColorTypeInfo[info->fColorTypeInfoCount]());
+      int ctIdx = 0;
+      // Format: B5G6R5Unorm, Surface: kBGR_565
+      {
+        auto& ctInfo = info->fColorTypeInfos[ctIdx++];
+        ctInfo.fColorType = GrColorType::kBGR_565;
+        ctInfo.fFlags = ColorTypeInfo::kUploadData_Flag | ColorTypeInfo::kRenderable_Flag;
+      }
     }
 
     // Format: ABGR4Unorm
@@ -622,7 +622,7 @@ void GrMtlCaps::initFormatTable() {
         auto& ctInfo = info->fColorTypeInfos[ctIdx++];
         ctInfo.fColorType = GrColorType::kRGB_888x;
         ctInfo.fFlags = ColorTypeInfo::kUploadData_Flag;
-        ctInfo.fTextureSwizzle = GrSwizzle::RGB1();
+        ctInfo.fReadSwizzle = GrSwizzle::RGB1();
       }
     }
 
@@ -707,7 +707,7 @@ void GrMtlCaps::initFormatTable() {
         auto& ctInfo = info->fColorTypeInfos[ctIdx++];
         ctInfo.fColorType = GrColorType::kAlpha_F16;
         ctInfo.fFlags = ColorTypeInfo::kUploadData_Flag | ColorTypeInfo::kRenderable_Flag;
-        ctInfo.fTextureSwizzle = GrSwizzle::RRRR();
+        ctInfo.fReadSwizzle = GrSwizzle::RRRR();
         ctInfo.fOutputSwizzle = GrSwizzle::AAAA();
       }
     }
@@ -751,7 +751,7 @@ void GrMtlCaps::initFormatTable() {
         auto& ctInfo = info->fColorTypeInfos[ctIdx++];
         ctInfo.fColorType = GrColorType::kAlpha_16;
         ctInfo.fFlags = ColorTypeInfo::kUploadData_Flag | ColorTypeInfo::kRenderable_Flag;
-        ctInfo.fTextureSwizzle = GrSwizzle::RRRR();
+        ctInfo.fReadSwizzle = GrSwizzle::RRRR();
         ctInfo.fOutputSwizzle = GrSwizzle::AAAA();
       }
     }
@@ -779,6 +779,11 @@ void GrMtlCaps::initFormatTable() {
 #ifdef SK_BUILD_FOR_IOS
     // ETC2_RGB8
     info = &fFormatTable[GetFormatIndex(MTLPixelFormatETC2_RGB8)];
+    info->fFlags = FormatInfo::kTexturable_Flag;
+    // NO supported colorTypes
+#else
+    // BC1_RGBA
+    info = &fFormatTable[GetFormatIndex(MTLPixelFormatBC1_RGBA)];
     info->fFlags = FormatInfo::kTexturable_Flag;
     // NO supported colorTypes
 #endif
@@ -858,120 +863,6 @@ bool GrMtlCaps::onSurfaceSupportsWritePixels(const GrSurface* surface) const {
   return true;
 }
 
-static constexpr GrPixelConfig validate_sized_format(GrMTLPixelFormat grFormat, GrColorType ct) {
-  MTLPixelFormat format = static_cast<MTLPixelFormat>(grFormat);
-  switch (ct) {
-    case GrColorType::kUnknown: return kUnknown_GrPixelConfig;
-    case GrColorType::kAlpha_8:
-      if (MTLPixelFormatA8Unorm == format) {
-        return kAlpha_8_as_Alpha_GrPixelConfig;
-      } else if (MTLPixelFormatR8Unorm == format) {
-        return kAlpha_8_as_Red_GrPixelConfig;
-      }
-      break;
-#ifdef SK_BUILD_FOR_MAC
-    case GrColorType::kBGR_565:
-    case GrColorType::kABGR_4444: return kUnknown_GrPixelConfig;
-#else
-    case GrColorType::kBGR_565:
-      if (MTLPixelFormatB5G6R5Unorm == format) {
-        return kRGB_565_GrPixelConfig;
-      }
-      break;
-    case GrColorType::kABGR_4444:
-      if (MTLPixelFormatABGR4Unorm == format) {
-        return kRGBA_4444_GrPixelConfig;
-      }
-      break;
-#endif
-    case GrColorType::kRGBA_8888:
-      if (MTLPixelFormatRGBA8Unorm == format) {
-        return kRGBA_8888_GrPixelConfig;
-      }
-      break;
-    case GrColorType::kRGBA_8888_SRGB:
-      if (MTLPixelFormatRGBA8Unorm_sRGB == format) {
-        return kSRGBA_8888_GrPixelConfig;
-      }
-      break;
-    case GrColorType::kRGB_888x:
-      if (MTLPixelFormatRGBA8Unorm == format) {
-        return kRGB_888X_GrPixelConfig;
-      }
-#ifdef SK_BUILD_FOR_IOS
-      else if (MTLPixelFormatETC2_RGB8 == format) {
-        return kRGB_ETC1_GrPixelConfig;
-      }
-#endif
-      break;
-    case GrColorType::kRG_88:
-      if (MTLPixelFormatRG8Unorm == format) {
-        return kRG_88_GrPixelConfig;
-      }
-      break;
-    case GrColorType::kBGRA_8888:
-      if (MTLPixelFormatBGRA8Unorm == format) {
-        return kBGRA_8888_GrPixelConfig;
-      }
-      break;
-    case GrColorType::kRGBA_1010102:
-      if (MTLPixelFormatRGB10A2Unorm == format) {
-        return kRGBA_1010102_GrPixelConfig;
-      }
-      break;
-    case GrColorType::kGray_8:
-      if (MTLPixelFormatR8Unorm == format) {
-        return kGray_8_as_Red_GrPixelConfig;
-      }
-      break;
-    case GrColorType::kAlpha_F16:
-      if (MTLPixelFormatR16Float == format) {
-        return kAlpha_half_as_Red_GrPixelConfig;
-      }
-      break;
-    case GrColorType::kRGBA_F16:
-      if (MTLPixelFormatRGBA16Float == format) {
-        return kRGBA_half_GrPixelConfig;
-      }
-      break;
-    case GrColorType::kRGBA_F16_Clamped:
-      if (MTLPixelFormatRGBA16Float == format) {
-        return kRGBA_half_Clamped_GrPixelConfig;
-      }
-      break;
-    case GrColorType::kAlpha_16:
-      if (MTLPixelFormatR16Unorm == format) {
-        return kAlpha_16_GrPixelConfig;
-      }
-      break;
-    case GrColorType::kRG_1616:
-      if (MTLPixelFormatRG16Unorm == format) {
-        return kRG_1616_GrPixelConfig;
-      }
-      break;
-    case GrColorType::kRGBA_16161616:
-      if (MTLPixelFormatRGBA16Unorm == format) {
-        return kRGBA_16161616_GrPixelConfig;
-      }
-      break;
-    case GrColorType::kRG_F16:
-      if (MTLPixelFormatRG16Float == format) {
-        return kRG_half_GrPixelConfig;
-      }
-      break;
-    case GrColorType::kRGBA_F32:
-    case GrColorType::kAlpha_8xxx:
-    case GrColorType::kAlpha_F32xxx:
-    case GrColorType::kGray_8xxx:
-    case GrColorType::kRGB_888:
-    case GrColorType::kR_8:
-    case GrColorType::kR_16:
-    case GrColorType::kR_F16:
-    case GrColorType::kGray_F16: return kUnknown_GrPixelConfig;
-  }
-  SkUNREACHABLE;
-}
-
 bool GrMtlCaps::onAreColorTypeAndFormatCompatible(
     GrColorType ct, const GrBackendFormat& format) const {
   MTLPixelFormat mtlFormat = GrBackendFormatAsMTLPixelFormat(format);
@@ -982,11 +873,6 @@ bool GrMtlCaps::onAreColorTypeAndFormatCompatible(
     }
   }
   return false;
-}
-
-GrPixelConfig GrMtlCaps::onGetConfigFromBackendFormat(
-    const GrBackendFormat& format, GrColorType ct) const {
-  return validate_sized_format(GrBackendFormatAsMTLPixelFormat(format), ct);
 }
 
 GrColorType GrMtlCaps::getYUVAColorTypeFromBackendFormat(
@@ -1020,24 +906,34 @@ GrBackendFormat GrMtlCaps::onGetDefaultBackendFormat(
 GrBackendFormat GrMtlCaps::getBackendFormatFromCompressionType(
     SkImage::CompressionType compressionType) const {
   switch (compressionType) {
-    case SkImage::kETC1_CompressionType:
+    case SkImage::CompressionType::kNone: return {};
+    case SkImage::CompressionType::kETC2_RGB8_UNORM:
 #ifdef SK_BUILD_FOR_MAC
       return {};
 #else
       return GrBackendFormat::MakeMtl(MTLPixelFormatETC2_RGB8);
 #endif
+    case SkImage::CompressionType::kBC1_RGB8_UNORM:
+      // Metal only supports the RGBA BC1 variant (see following)
+      return {};
+    case SkImage::CompressionType::kBC1_RGBA8_UNORM:
+#ifdef SK_BUILD_FOR_MAC
+      return GrBackendFormat::MakeMtl(MTLPixelFormatBC1_RGBA);
+#else
+      return {};
+#endif
   }
   SK_ABORT("Invalid compression type");
 }
 
-GrSwizzle GrMtlCaps::getTextureSwizzle(const GrBackendFormat& format, GrColorType colorType) const {
+GrSwizzle GrMtlCaps::getReadSwizzle(const GrBackendFormat& format, GrColorType colorType) const {
   MTLPixelFormat mtlFormat = GrBackendFormatAsMTLPixelFormat(format);
   SkASSERT(mtlFormat != MTLPixelFormatInvalid);
   const auto& info = this->getFormatInfo(mtlFormat);
   for (int i = 0; i < info.fColorTypeInfoCount; ++i) {
     const auto& ctInfo = info.fColorTypeInfos[i];
     if (ctInfo.fColorType == colorType) {
-      return ctInfo.fTextureSwizzle;
+      return ctInfo.fReadSwizzle;
     }
   }
   return GrSwizzle::RGBA();
@@ -1053,6 +949,16 @@ GrSwizzle GrMtlCaps::getOutputSwizzle(const GrBackendFormat& format, GrColorType
     }
   }
   return GrSwizzle::RGBA();
+}
+
+uint64_t GrMtlCaps::computeFormatKey(const GrBackendFormat& format) const {
+  MTLPixelFormat mtlFormat = GrBackendFormatAsMTLPixelFormat(format);
+  SkASSERT(mtlFormat != MTLPixelFormatInvalid);
+  // A MTLPixelFormat is an NSUInteger type which is documented to be 32 bits in 32 bit
+  // applications and 64 bits in 64 bit applications. So it should fit in an uint64_t, but adding
+  // the assert heere to make sure.
+  static_assert(sizeof(MTLPixelFormat) <= sizeof(uint64_t));
+  return (uint64_t)mtlFormat;
 }
 
 GrCaps::SupportedWrite GrMtlCaps::supportedWritePixelsColorType(
@@ -1130,7 +1036,7 @@ GrProgramDesc GrMtlCaps::makeDesc(
 
   programInfo.pipeline().genKey(&b, *this);
 
-  b.add32((uint32_t)programInfo.primitiveType());
+  b.add32(programInfo.primitiveTypeKey());
 
   return desc;
 }
@@ -1149,6 +1055,8 @@ std::vector<GrCaps::TestFormatColorTypeCombination> GrMtlCaps::getTestingCombina
       {GrColorType::kRGB_888x, GrBackendFormat::MakeMtl(MTLPixelFormatRGBA8Unorm)},
 #  ifdef SK_BUILD_FOR_IOS
       {GrColorType::kRGB_888x, GrBackendFormat::MakeMtl(MTLPixelFormatETC2_RGB8)},
+#  else
+      {GrColorType::kRGBA_8888, GrBackendFormat::MakeMtl(MTLPixelFormatBC1_RGBA)},
 #  endif
       {GrColorType::kRG_88, GrBackendFormat::MakeMtl(MTLPixelFormatRG8Unorm)},
       {GrColorType::kBGRA_8888, GrBackendFormat::MakeMtl(MTLPixelFormatBGRA8Unorm)},

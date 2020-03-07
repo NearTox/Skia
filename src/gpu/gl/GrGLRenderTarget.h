@@ -32,8 +32,7 @@ class GrGLRenderTarget : public GrRenderTarget {
   };
 
   static sk_sp<GrGLRenderTarget> MakeWrapped(
-      GrGLGpu*, const SkISize&, GrGLFormat, GrPixelConfig, int sampleCount, const IDs&,
-      int stencilBits);
+      GrGLGpu*, const SkISize&, GrGLFormat, int sampleCount, const IDs&, int stencilBits);
 
   // The following two functions return the same ID when a texture/render target is not
   // multisampled, and different IDs when it is multisampled.
@@ -56,8 +55,7 @@ class GrGLRenderTarget : public GrRenderTarget {
 
  protected:
   // Constructor for subclasses.
-  GrGLRenderTarget(
-      GrGLGpu*, const SkISize&, GrGLFormat, GrPixelConfig, int sampleCount, const IDs&);
+  GrGLRenderTarget(GrGLGpu*, const SkISize&, GrGLFormat, int sampleCount, const IDs&);
 
   void init(GrGLFormat, const IDs&);
 
@@ -69,8 +67,7 @@ class GrGLRenderTarget : public GrRenderTarget {
  private:
   // Constructor for instances wrapping backend objects.
   GrGLRenderTarget(
-      GrGLGpu*, const SkISize&, GrGLFormat, GrPixelConfig, int sampleCount, const IDs&,
-      GrGLStencilAttachment*);
+      GrGLGpu*, const SkISize&, GrGLFormat, int sampleCount, const IDs&, GrGLStencilAttachment*);
 
   void setFlags(const GrGLCaps&, const IDs&);
 

@@ -14,6 +14,7 @@
 
 #if SK_SUPPORT_GPU
 #  include "include/private/SkTDArray.h"
+#  include "src/gpu/GrSurfaceProxyView.h"
 #  include "src/gpu/GrTextureProxy.h"
 
 class GrRecordingContext;
@@ -54,8 +55,15 @@ class SkImage_Base : public SkImage {
   // that single backing proxy will be returned.
   virtual GrTextureProxy* peekProxy() const { return nullptr; }
   virtual sk_sp<GrTextureProxy> asTextureProxyRef(GrRecordingContext*) const { return nullptr; }
+
+  // This returns a copy of the GrSurfaceProxyView which essentially refs the contained
+  // GrSurfaceProxy. Callers should check if the proxy of the returned view is null.
+  virtual GrSurfaceProxyView asSurfaceProxyViewRef(GrRecordingContext*) const {
+    return GrSurfaceProxyView();
+  }
+
   virtual sk_sp<GrTextureProxy> asTextureProxyRef(
-      GrRecordingContext*, const GrSamplerState&, SkScalar scaleAdjust[2]) const = 0;
+      GrRecordingContext*, GrSamplerState, SkScalar scaleAdjust[2]) const = 0;
   virtual sk_sp<GrTextureProxy> refPinnedTextureProxy(
       GrRecordingContext*, uint32_t* uniqueID) const {
     return nullptr;

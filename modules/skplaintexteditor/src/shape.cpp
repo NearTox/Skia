@@ -52,11 +52,13 @@ class RunHandler final : public SkShaper::RunHandler {
     if (0 == fMaxRunAscent || 0 == fMaxRunDescent) {
       SkFontMetrics metrics;
       font.getMetrics(&metrics);
-      return {fCurrentPosition.x(), fCurrentPosition.y(), fCurrentPosition.x() + font.getSize(),
-              fCurrentPosition.y() + metrics.fDescent - metrics.fAscent};
+      return {
+          fCurrentPosition.x(), fCurrentPosition.y(), fCurrentPosition.x() + font.getSize(),
+          fCurrentPosition.y() + metrics.fDescent - metrics.fAscent};
     } else {
-      return {fCurrentPosition.x(), fCurrentPosition.y() + fMaxRunAscent,
-              fCurrentPosition.x() + font.getSize(), fCurrentPosition.y() + fMaxRunDescent};
+      return {
+          fCurrentPosition.x(), fCurrentPosition.y() + fMaxRunAscent,
+          fCurrentPosition.x() + font.getSize(), fCurrentPosition.y() + fMaxRunDescent};
     }
   }
 

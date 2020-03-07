@@ -50,6 +50,7 @@ namespace SkSL {
 class ByteCode;
 class ExternalValue;
 class IRGenerator;
+struct PipelineStageArgs;
 
 /**
  * Main compiler entry point. This is a traditional compiler design which first parses the .sksl
@@ -137,9 +138,7 @@ class SK_API Compiler : public ErrorReporter {
   std::unique_ptr<ByteCode> toByteCode(Program& program);
 
 #if !defined(SKSL_STANDALONE) && SK_SUPPORT_GPU
-  bool toPipelineStage(
-      const Program& program, String* out, std::vector<FormatArg>* outFormatArgs,
-      std::vector<GLSLFunction>* outFunctions);
+  bool toPipelineStage(const Program& program, PipelineStageArgs* outArgs);
 #endif
 
   /**
@@ -198,8 +197,8 @@ class SK_API Compiler : public ErrorReporter {
 
   Position position(int offset);
 
-  std::map<StringFragment, std::pair<std::unique_ptr<ProgramElement>, bool>> fGPUIntrinsics;
-  std::map<StringFragment, std::pair<std::unique_ptr<ProgramElement>, bool>> fInterpreterIntrinsics;
+  std::map<String, std::pair<std::unique_ptr<ProgramElement>, bool>> fGPUIntrinsics;
+  std::map<String, std::pair<std::unique_ptr<ProgramElement>, bool>> fInterpreterIntrinsics;
   std::unique_ptr<ASTFile> fGpuIncludeSource;
   std::shared_ptr<SymbolTable> fGpuSymbolTable;
   std::vector<std::unique_ptr<ProgramElement>> fVertexInclude;
@@ -210,6 +209,7 @@ class SK_API Compiler : public ErrorReporter {
   std::shared_ptr<SymbolTable> fGeometrySymbolTable;
   std::vector<std::unique_ptr<ProgramElement>> fPipelineInclude;
   std::shared_ptr<SymbolTable> fPipelineSymbolTable;
+  std::unique_ptr<ASTFile> fInterpreterIncludeSource;
   std::vector<std::unique_ptr<ProgramElement>> fInterpreterInclude;
   std::shared_ptr<SymbolTable> fInterpreterSymbolTable;
 
@@ -222,6 +222,14 @@ class SK_API Compiler : public ErrorReporter {
   int fErrorCount;
   String fErrorText;
 };
+
+#if !defined(SKSL_STANDALONE) && SK_SUPPORT_GPU
+struct PipelineStageArgs {
+  String fCode;
+  std::vector<Compiler::FormatArg> fFormatArgs;
+  std::vector<Compiler::GLSLFunction> fFunctions;
+};
+#endif
 
 }  // namespace SkSL
 

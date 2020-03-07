@@ -16,10 +16,10 @@ struct Example {
   int fImageIndex;
   int fWidth;
   int fHeight;
+  double fAnimationDuration;
   bool fText;
   bool fSRGB;
   bool fF16;
-  bool fAnimation;
   bool fOffscreen;
 };
 }  // namespace fiddle
@@ -32,12 +32,14 @@ extern sk_sp<SkImage> image;
 extern double duration;  // The total duration of the animation in seconds.
 extern double frame;     // A value in [0, 1] of where we are in the animation.
 
-#define REG_FIDDLE(NAME, W, H, TEXT, I)                                                          \
-  namespace example_##NAME {                                                                     \
-    void draw(SkCanvas*);                                                                        \
-  }                                                                                              \
-  sk_tools::Registry<fiddle::Example> reg_##NAME(                                                \
-      fiddle::Example{&example_##NAME::draw, #NAME, I, W, H, TEXT, false, false, false, false}); \
+#define REG_FIDDLE_ANIMATED(NAME, W, H, TEXT, I, DURATION)                          \
+  namespace example_##NAME {                                                        \
+    void draw(SkCanvas*);                                                           \
+  }                                                                                 \
+  sk_tools::Registry<fiddle::Example> reg_##NAME(fiddle::Example{                   \
+      &example_##NAME::draw, #NAME, I, W, H, DURATION, TEXT, false, false, false}); \
   namespace example_##NAME
+
+#define REG_FIDDLE(NAME, W, H, TEXT, I) REG_FIDDLE_ANIMATED(NAME, W, H, TEXT, I, 0)
 
 #endif  // examples_DEFINED

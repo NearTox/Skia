@@ -275,7 +275,7 @@ DEF_TEST(RWBuffer, reporter) {
     REPORTER_ASSERT(reporter, (i + 1) * 26U == readers[i]->size());
     check_alphabet_buffer(reporter, readers[i].get());
     check_alphabet_stream(reporter, streams[i].get());
-  }
+    }
 }
 
 DEF_TEST(RWBuffer_threaded, reporter) {

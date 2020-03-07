@@ -25,7 +25,6 @@
 #  include "src/core/SkFontDescriptor.h"
 #  include "src/core/SkGlyph.h"
 #  include "src/core/SkLeanWindows.h"
-#  include "src/core/SkMakeUnique.h"
 #  include "src/core/SkMaskGamma.h"
 #  include "src/core/SkTypefaceCache.h"
 #  include "src/core/SkUtils.h"
@@ -106,17 +105,17 @@ static void dcfontname_to_skstring(HDC deviceContext, const LOGFONT& lf, SkStrin
     if (0 == (fontNameLen = GetTextFace(deviceContext, 0, nullptr))) {
       fontNameLen = 0;
     }
-  }
-
-  SkAutoSTArray<LF_FULLFACESIZE, TCHAR> fontName(fontNameLen + 1);
-  if (0 == GetTextFace(deviceContext, fontNameLen, fontName.get())) {
-    call_ensure_accessible(lf);
-    if (0 == GetTextFace(deviceContext, fontNameLen, fontName.get())) {
-      fontName[0] = 0;
     }
-  }
 
-  tchar_to_skstring(fontName.get(), familyName);
+    SkAutoSTArray<LF_FULLFACESIZE, TCHAR> fontName(fontNameLen + 1);
+    if (0 == GetTextFace(deviceContext, fontNameLen, fontName.get())) {
+      call_ensure_accessible(lf);
+      if (0 == GetTextFace(deviceContext, fontNameLen, fontName.get())) {
+        fontName[0] = 0;
+      }
+    }
+
+    tchar_to_skstring(fontName.get(), familyName);
 }
 
 static void make_canonical(LOGFONT* lf) {
@@ -1631,7 +1630,7 @@ std::unique_ptr<SkAdvancedTypefaceMetrics> LogFontTypeface::onGetAdvancedMetrics
     }
   }
 
-  return info;
+    return info;
 }
 
 // Dummy representation of a Base64 encoded GUID from create_unique_font_name.
@@ -1985,7 +1984,7 @@ sk_sp<SkData> LogFontTypeface::onCopyTableData(SkFontTableTag tag) const {
 
 SkScalerContext* LogFontTypeface::onCreateScalerContext(
     const SkScalerContextEffects& effects, const SkDescriptor* desc) const {
-  auto ctx = skstd::make_unique<SkScalerContext_GDI>(
+  auto ctx = std::make_unique<SkScalerContext_GDI>(
       sk_ref_sp(const_cast<LogFontTypeface*>(this)), effects, desc);
   if (!ctx->isValid()) {
     return nullptr;

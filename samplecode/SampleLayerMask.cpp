@@ -40,7 +40,7 @@ class LayerMaskView : public Sample {
     } else {
       SkPath p;
       p.addOval(r);
-      p.setFillType(SkPath::kInverseWinding_FillType);
+      p.setFillType(SkPathFillType::kInverseWinding);
       paint.setBlendMode(SkBlendMode::kDstOut);
       canvas->drawPath(p, paint);
     }

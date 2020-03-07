@@ -27,9 +27,12 @@ struct PrefixExpression : public Expression {
 
   bool isConstant() const override { return fOperator == Token::MINUS && fOperand->isConstant(); }
 
-  bool hasSideEffects() const override {
-    return fOperator == Token::PLUSPLUS || fOperator == Token::MINUSMINUS ||
-           fOperand->hasSideEffects();
+  bool hasProperty(Property property) const override {
+    if (property == Property::kSideEffects &&
+        (fOperator == Token::PLUSPLUS || fOperator == Token::MINUSMINUS)) {
+      return true;
+    }
+    return fOperand->hasProperty(property);
   }
 
   std::unique_ptr<Expression> constantPropagate(
@@ -60,9 +63,11 @@ struct PrefixExpression : public Expression {
     return std::unique_ptr<Expression>(new PrefixExpression(fOperator, fOperand->clone()));
   }
 
+#ifdef SK_DEBUG
   String description() const override {
     return Compiler::OperatorName(fOperator) + fOperand->description();
   }
+#endif
 
   std::unique_ptr<Expression> fOperand;
   const Token::Kind fOperator;

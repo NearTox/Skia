@@ -30,7 +30,7 @@ static void test_strokerect(SkCanvas* canvas) {
   SkScalar dy = 20;
 
   SkPath path;
-  path.addRect(0.0f, 0.0f, SkIntToScalar(width), SkIntToScalar(height), SkPath::kCW_Direction);
+  path.addRect(0.0f, 0.0f, SkIntToScalar(width), SkIntToScalar(height), SkPathDirection::kCW);
   SkRect r = SkRect::MakeWH(SkIntToScalar(width), SkIntToScalar(height));
 
   SkCanvas c(bitmap);
@@ -281,10 +281,11 @@ class RegionView : public Sample {
       SkColor fColor;
       const char* fName;
       SkRegion::Op fOp;
-    } gOps[] = {{SK_ColorBLACK, "Difference", SkRegion::kDifference_Op},
-                {SK_ColorRED, "Intersect", SkRegion::kIntersect_Op},
-                {0xFF008800, "Union", SkRegion::kUnion_Op},
-                {SK_ColorBLUE, "XOR", SkRegion::kXOR_Op}};
+    } gOps[] = {
+        {SK_ColorBLACK, "Difference", SkRegion::kDifference_Op},
+        {SK_ColorRED, "Intersect", SkRegion::kIntersect_Op},
+        {0xFF008800, "Union", SkRegion::kUnion_Op},
+        {SK_ColorBLUE, "XOR", SkRegion::kXOR_Op}};
 
     SkFont font;
     font.setSize(SK_Scalar1 * 24);

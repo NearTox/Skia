@@ -105,8 +105,8 @@ class GrGLSLRRectBlurEffect : public GrGLSLFragmentProcessor {
     (void)rect;
     UniformHandle& cornerRadius = cornerRadiusVar;
     (void)cornerRadius;
-    GrSurfaceProxy& ninePatchSamplerProxy = *_outer.textureSampler(0).proxy();
-    GrTexture& ninePatchSampler = *ninePatchSamplerProxy.peekTexture();
+    const GrSurfaceProxyView& ninePatchSamplerView = _outer.textureSampler(0).view();
+    GrTexture& ninePatchSampler = *ninePatchSamplerView.proxy()->peekTexture();
     (void)ninePatchSampler;
     UniformHandle& proxyRect = proxyRectVar;
     (void)proxyRect;

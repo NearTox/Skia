@@ -67,8 +67,8 @@ Style styles[]{
 
 SkScalar pathSizes[] = {40, 10, 0};
 SkScalar strokeWidths[] = {10, 0};
-SkPath (*paths[])(SkScalar, SkScalar, SkScalar) = {generate_square, generate_rect_line,
-                                                   generate_circle, generate_line};
+SkPath (*paths[])(SkScalar, SkScalar, SkScalar) = {
+    generate_square, generate_rect_line, generate_circle, generate_line};
 
 const SkScalar slideWidth = 90, slideHeight = 90;
 const SkScalar slideBoundary = 5;

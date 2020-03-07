@@ -74,6 +74,7 @@
   "third_party/externals/angle2/src/compiler/translator/tree_ops/RemoveArrayLengthMethod.cpp",
   "third_party/externals/angle2/src/compiler/translator/tree_ops/RemoveInvariantDeclaration.cpp",
   "third_party/externals/angle2/src/compiler/translator/tree_ops/RemovePow.cpp",
+  "third_party/externals/angle2/src/compiler/translator/tree_ops/RemoveInactiveInterfaceVariables.cpp",
   "third_party/externals/angle2/src/compiler/translator/tree_ops/RemoveUnreferencedVariables.cpp",
   "third_party/externals/angle2/src/compiler/translator/tree_ops/RewriteAtomicCounters.cpp",
   "third_party/externals/angle2/src/compiler/translator/tree_ops/RewriteAtomicFunctionExpressions.cpp",
@@ -304,6 +305,8 @@
   "third_party/externals/angle2/src/libANGLE/renderer/gl/VertexArrayGL.cpp",
   "third_party/externals/angle2/src/libANGLE/renderer/gl/formatutilsgl.cpp",
   "third_party/externals/angle2/src/libANGLE/renderer/gl/renderergl_utils.cpp",
+  "third_party/externals/angle2/src/common/system_utils_win.cpp",
+  "third_party/externals/angle2/src/common/system_utils_win32.cpp",
   "third_party/externals/angle2/src/libANGLE/FrameCapture_mock.cpp",
   "third_party/externals/angle2/src/libANGLE/renderer/gl/wgl/ContextWGL.cpp",
   "third_party/externals/angle2/src/libANGLE/renderer/gl/wgl/D3DTextureSurfaceWGL.cpp",
@@ -395,6 +398,5 @@
   "third_party/externals/angle2/src/libANGLE/renderer/d3d/d3d11/VertexBuffer11.cpp",
   "third_party/externals/angle2/src/libANGLE/renderer/d3d/d3d11/win32/NativeWindow11Win32.cpp",
   "third_party/externals/angle2/src/libANGLE/renderer/d3d/d3d11/converged/CompositorNativeWindow11.cpp",
-  "third_party/externals/angle2/src/third_party/systeminfo/SystemInfo.cpp",
-  "third_party/externals/angle2/src/common/system_utils_win.cpp"
+  "third_party/externals/angle2/src/third_party/systeminfo/SystemInfo.cpp"
 ]

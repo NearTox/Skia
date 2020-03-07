@@ -39,15 +39,10 @@ class GrTexturePriv {
   bool hasRestrictedSampling() const {
     return GrTextureTypeHasRestrictedSampling(this->textureType());
   }
-  /** Filtering is clamped to this value. */
-  GrSamplerState::Filter highestFilterMode() const {
-    return this->hasRestrictedSampling() ? GrSamplerState::Filter::kBilerp
-                                         : GrSamplerState::Filter::kMipMap;
-  }
 
   static void ComputeScratchKey(
-      GrPixelConfig config, SkISize dimensions, GrRenderable, int sampleCnt, GrMipMapped,
-      GrProtected, GrScratchKey* key);
+      const GrCaps& caps, const GrBackendFormat& format, SkISize dimensions, GrRenderable,
+      int sampleCnt, GrMipMapped, GrProtected, GrScratchKey* key);
 
  private:
   GrTexturePriv(GrTexture* texture) : fTexture(texture) {}

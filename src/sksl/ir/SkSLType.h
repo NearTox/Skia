@@ -30,7 +30,7 @@ class Type : public Symbol {
     Field(Modifiers modifiers, StringFragment name, const Type* type)
         : fModifiers(modifiers), fName(name), fType(std::move(type)) {}
 
-    const String description() const { return fType->description() + " " + fName + ";"; }
+    const String description() const { return fType->displayName() + " " + fName + ";"; }
 
     Modifiers fModifiers;
     StringFragment fName;
@@ -224,7 +224,7 @@ class Type : public Symbol {
 
   const String& name() const { return fNameString; }
 
-  String description() const override {
+  const String displayName() const {
     if (fNameString == "$floatLiteral") {
       return "float";
     }
@@ -233,6 +233,10 @@ class Type : public Symbol {
     }
     return fNameString;
   }
+
+#ifdef SK_DEBUG
+  String description() const override { return this->displayName(); }
+#endif
 
   bool operator==(const Type& other) const { return fName == other.fName; }
 

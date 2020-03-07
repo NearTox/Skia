@@ -76,22 +76,15 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
 
   // GrMesh::SendToGpuImpl methods. These issue the actual GL draw calls.
   // Marked final as a hint to the compiler to not use virtual dispatch.
-  void sendMeshToGpu(
-      GrPrimitiveType, const GrBuffer* vertexBuffer, int vertexCount, int baseVertex) final;
-
+  void sendArrayMeshToGpu(const GrMesh&, int vertexCount, int baseVertex) final;
   void sendIndexedMeshToGpu(
-      GrPrimitiveType, const GrBuffer* indexBuffer, int indexCount, int baseIndex,
-      uint16_t minIndexValue, uint16_t maxIndexValue, const GrBuffer* vertexBuffer, int baseVertex,
-      GrPrimitiveRestart) final;
-
+      const GrMesh&, int indexCount, int baseIndex, uint16_t minIndexValue, uint16_t maxIndexValue,
+      int baseVertex) final;
   void sendInstancedMeshToGpu(
-      GrPrimitiveType, const GrBuffer* vertexBuffer, int vertexCount, int baseVertex,
-      const GrBuffer* instanceBuffer, int instanceCount, int baseInstance) final;
-
+      const GrMesh&, int vertexCount, int baseVertex, int instanceCount, int baseInstance) final;
   void sendIndexedInstancedMeshToGpu(
-      GrPrimitiveType, const GrBuffer* indexBuffer, int indexCount, int baseIndex,
-      const GrBuffer* vertexBuffer, int baseVertex, const GrBuffer* instanceBuffer,
-      int instanceCount, int baseInstance, GrPrimitiveRestart) final;
+      const GrMesh&, int indexCount, int baseIndex, int baseVertex, int instanceCount,
+      int baseInstance) final;
 
   // The GrGLOpsRenderPass does not buffer up draws before submitting them to the gpu.
   // Thus this is the implementation of the clear call for the corresponding passthrough function
@@ -164,18 +157,22 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
 
   void deleteSync(GrGLsync) const;
 
-  void insertEventMarker(const char*);
-
   void bindFramebuffer(GrGLenum fboTarget, GrGLuint fboid);
   void deleteFramebuffer(GrGLuint fboid);
+
+  void insertManualFramebufferBarrier() override;
 
  private:
   GrGLGpu(std::unique_ptr<GrGLContext>, GrContext*);
 
   // GrGpu overrides
   GrBackendTexture onCreateBackendTexture(
-      SkISize, const GrBackendFormat&, GrRenderable, const BackendTextureData*, int numMipLevels,
-      GrProtected) override;
+      SkISize dimensions, const GrBackendFormat&, GrRenderable, GrMipMapped, GrProtected,
+      const BackendTextureData*) override;
+
+  GrBackendTexture onCreateCompressedBackendTexture(
+      SkISize dimensions, const GrBackendFormat&, GrMipMapped, GrProtected,
+      const BackendTextureData*) override;
 
   void onResetContext(uint32_t resetBits) override;
 
@@ -189,14 +186,16 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
       const GrSurfaceDesc&, const GrBackendFormat&, GrRenderable, int renderTargetSampleCnt,
       SkBudgeted, GrProtected, int mipLevelCount, uint32_t levelClearMask) override;
   sk_sp<GrTexture> onCreateCompressedTexture(
-      int width, int height, const GrBackendFormat&, SkImage::CompressionType compression,
-      SkBudgeted, const void* data) override;
+      SkISize dimensions, const GrBackendFormat&, SkBudgeted, GrMipMapped, GrProtected,
+      const void* data, size_t dataSize) override;
 
   sk_sp<GrGpuBuffer> onCreateBuffer(
       size_t size, GrGpuBufferType intendedType, GrAccessPattern, const void* data) override;
 
   sk_sp<GrTexture> onWrapBackendTexture(
       const GrBackendTexture&, GrColorType, GrWrapOwnership, GrWrapCacheable, GrIOType) override;
+  sk_sp<GrTexture> onWrapCompressedBackendTexture(
+      const GrBackendTexture&, GrWrapOwnership, GrWrapCacheable) override;
   sk_sp<GrTexture> onWrapRenderableBackendTexture(
       const GrBackendTexture&, int sampleCnt, GrColorType, GrWrapOwnership,
       GrWrapCacheable) override;
@@ -216,12 +215,12 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
   // The texture is populated with |texels|, if it is non-null.
   // The texture parameters are cached in |initialTexParams|.
   GrGLuint createTexture2D(
-      const SkISize& dimensions, GrGLFormat format, GrRenderable,
-      GrGLTextureParameters::SamplerOverriddenState* initialState, int mipLevelCount);
+      SkISize dimensions, GrGLFormat, GrRenderable, GrGLTextureParameters::SamplerOverriddenState*,
+      int mipLevelCount);
 
   GrGLuint createCompressedTexture2D(
-      const SkISize& dimensions, GrGLFormat format, SkImage::CompressionType compression,
-      GrGLTextureParameters::SamplerOverriddenState* initialState, const void* data);
+      SkISize dimensions, GrGLFormat, GrMipMapped, GrGLTextureParameters::SamplerOverriddenState*,
+      const void* data, size_t dataSize);
 
   bool onReadPixels(
       GrSurface*, int left, int top, int width, int height, GrColorType surfaceColorType,
@@ -313,6 +312,8 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
     GrGLGpu* fGpu;
   };
 
+  void flushPatchVertexCount(uint8_t count);
+
   void flushColorWrite(bool writeColor);
   void flushClearColor(const SkPMColor4f&);
 
@@ -351,6 +352,10 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
   // rt is used only if useHWAA is true.
   void flushHWAAState(GrRenderTarget* rt, bool useHWAA);
 
+  void flushConservativeRasterState(bool enable);
+
+  void flushWireframeState(bool enable);
+
   void flushFramebufferSRGB(bool enable);
 
   bool uploadTexData(
@@ -361,8 +366,8 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
   // Helper for onCreateCompressedTexture. Compressed textures are read-only so we only use this
   // to populate a new texture. Returns false if we failed to create and upload the texture.
   bool uploadCompressedTexData(
-      GrGLFormat, SkImage::CompressionType, const SkISize& dimensions, GrGLenum target,
-      const void* data);
+      GrGLFormat, SkISize dimensions, GrMipMapped, GrGLenum target, const void* data,
+      size_t dataSize);
 
   bool createRenderTargetObjects(const GrGLTexture::Desc&, int sampleCount, GrGLRenderTarget::IDs*);
 
@@ -517,6 +522,8 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
     GrGLVertexArray* fCoreProfileVertexArray;
   } fHWVertexArrayState;
 
+  uint8_t fHWPatchVertexCount;
+
   struct {
     GrGLenum fGLTarget;
     GrGpuResource::UniqueID fBoundBufferUniqueID;
@@ -552,6 +559,9 @@ class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
   } fHWBlendState;
 
   TriState fMSAAEnabled;
+  TriState fHWConservativeRasterEnabled;
+
+  TriState fHWWireframeEnabled;
 
   GrStencilSettings fHWStencilSettings;
   GrSurfaceOrigin fHWStencilOrigin;

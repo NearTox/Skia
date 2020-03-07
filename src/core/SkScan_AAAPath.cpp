@@ -1642,8 +1642,8 @@ static SK_ALWAYS_INLINE void aaa_fill_path(
     bool skipIntersect = path.countPoints() > (stop_y - start_y) * 2;
 
     aaa_walk_edges(
-        &headEdge, &tailEdge, path.getNewFillType(), blitter, start_y, stop_y, leftBound,
-        rightBound, isUsingMask, forceRLE, useDeferred, skipIntersect);
+        &headEdge, &tailEdge, path.getFillType(), blitter, start_y, stop_y, leftBound, rightBound,
+        isUsingMask, forceRLE, useDeferred, skipIntersect);
   }
 }
 

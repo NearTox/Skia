@@ -130,7 +130,7 @@ void SkPDFUtils::EmitPath(
   bool isClosed;  // Both closure and direction need to be checked.
   SkPathDirection direction;
   if (path.isRect(&rect, &isClosed, &direction) && isClosed &&
-      (SkPathDirection::kCW == direction || SkPathFillType::kEvenOdd == path.getNewFillType())) {
+      (SkPathDirection::kCW == direction || SkPathFillType::kEvenOdd == path.getFillType())) {
     SkPDFUtils::AppendRectangle(rect, content);
     return;
   }

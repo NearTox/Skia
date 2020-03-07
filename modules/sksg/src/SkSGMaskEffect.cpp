@@ -62,7 +62,7 @@ void MaskEffect::onRender(SkCanvas* canvas, const RenderContext* ctx) const {
 
       this->INHERITED::onRender(canvas, nullptr);
     }
-  }
+    }
 }
 
 const RenderNode* MaskEffect::onNodeAt(const SkPoint& p) const {

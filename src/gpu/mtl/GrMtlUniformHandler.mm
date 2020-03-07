@@ -188,8 +188,8 @@ GrGLSLUniformHandler::UniformHandle GrMtlUniformHandler::internalAddUniformArray
 }
 
 GrGLSLUniformHandler::SamplerHandle GrMtlUniformHandler::addSampler(
-    const GrSurfaceProxy* texture, const GrSamplerState&, const GrSwizzle& swizzle,
-    const char* name, const GrShaderCaps* caps) {
+    const GrSurfaceProxy* texture, GrSamplerState, const GrSwizzle& swizzle, const char* name,
+    const GrShaderCaps* caps) {
   SkASSERT(name && strlen(name));
   SkString mangleName;
   char prefix = 'u';

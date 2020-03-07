@@ -178,7 +178,7 @@ static void testWritePad(skiatest::Reporter* reporter, SkWriter32* writer) {
     while (readPtr < stop) {
       REPORTER_ASSERT(reporter, *readPtr++ == 0);
     }
-  }
+    }
 }
 
 static void testOverwriteT(skiatest::Reporter* reporter, SkWriter32* writer) {

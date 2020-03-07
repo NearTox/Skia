@@ -83,6 +83,11 @@ bool GrGLInterface::validate() const {
     }
   }
 
+  if ((GR_IS_GR_GL(fStandard) && ((glVer >= GR_GL_VER(4, 2)))) ||
+      (GR_IS_GR_GL_ES(fStandard) && ((glVer >= GR_GL_VER(3, 1))))) {
+    // all functions were marked optional or test_only
+  }
+
   if (GR_IS_GR_GL(fStandard) ||
       (GR_IS_GR_GL_ES(fStandard) &&
        ((glVer >= GR_GL_VER(3, 0)) || fExtensions.has("GL_OES_vertex_array_object"))) ||
@@ -93,6 +98,13 @@ bool GrGLInterface::validate() const {
         !fFunctions.fGenVertexArrays) {
       RETURN_FALSE_INTERFACE;
     }
+  }
+
+  if ((GR_IS_GR_GL(fStandard) &&
+       ((glVer >= GR_GL_VER(4, 0)) || fExtensions.has("GL_ARB_tessellation_shader"))) ||
+      (GR_IS_GR_GL_ES(fStandard) &&
+       ((glVer >= GR_GL_VER(3, 2)) || fExtensions.has("GL_OES_tessellation_shader")))) {
+    // all functions were marked optional or test_only
   }
 
   if ((GR_IS_GR_GL(fStandard) && ((glVer >= GR_GL_VER(3, 0)))) ||
@@ -227,9 +239,7 @@ bool GrGLInterface::validate() const {
   }
 
   if ((GR_IS_GR_GL_ES(fStandard) && (fExtensions.has("GL_QCOM_tiled_rendering")))) {
-    if (!fFunctions.fEndTiling || !fFunctions.fStartTiling) {
-      RETURN_FALSE_INTERFACE;
-    }
+    // all functions were marked optional or test_only
   }
 
   if ((GR_IS_GR_GL(fStandard) &&
@@ -517,6 +527,14 @@ bool GrGLInterface::validate() const {
        ((glVer >= GR_GL_VER(4, 3)) || fExtensions.has("GL_ARB_ES2_compatibility"))) ||
       GR_IS_GR_GL_ES(fStandard) || GR_IS_GR_WEBGL(fStandard)) {
     if (!fFunctions.fGetShaderPrecisionFormat) {
+      RETURN_FALSE_INTERFACE;
+    }
+  }
+
+  if ((GR_IS_GR_GL(fStandard) && (fExtensions.has("GL_NV_fence"))) ||
+      (GR_IS_GR_GL_ES(fStandard) && (fExtensions.has("GL_NV_fence")))) {
+    if (!fFunctions.fDeleteFences || !fFunctions.fFinishFence || !fFunctions.fGenFences ||
+        !fFunctions.fSetFence || !fFunctions.fTestFence) {
       RETURN_FALSE_INTERFACE;
     }
   }

@@ -107,8 +107,8 @@ class DrawImageSetGM : public GM {
   SkString onShortName() override { return SkString("draw_image_set"); }
   SkISize onISize() override { return {1000, 725}; }
   void onOnceBeforeDraw() override {
-    static constexpr SkColor kColors[] = {SK_ColorCYAN, SK_ColorBLACK, SK_ColorMAGENTA,
-                                          SK_ColorBLACK};
+    static constexpr SkColor kColors[] = {
+        SK_ColorCYAN, SK_ColorBLACK, SK_ColorMAGENTA, SK_ColorBLACK};
     make_image_tiles(kTileW, kTileH, kM, kN, kColors, fSet);
   }
 
@@ -121,10 +121,11 @@ class DrawImageSetGM : public GM {
     // perespective
     SkPoint src[4];
     SkRect::MakeWH(kM * kTileW, kN * kTileH).toQuad(src);
-    SkPoint dst[4] = {{0, 0},
-                      {kM * kTileW + 10.f, -5.f},
-                      {kM * kTileW - 28.f, kN * kTileH + 40.f},
-                      {45.f, kN * kTileH - 25.f}};
+    SkPoint dst[4] = {
+        {0, 0},
+        {kM * kTileW + 10.f, -5.f},
+        {kM * kTileW - 28.f, kN * kTileH + 40.f},
+        {45.f, kN * kTileH - 25.f}};
     SkAssertResult(matrices[1].setPolyToPoly(src, dst, 4));
     matrices[1].postTranslate(d, 50.f);
     // skew

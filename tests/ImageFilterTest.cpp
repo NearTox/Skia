@@ -388,41 +388,41 @@ DEF_TEST(ImageFilter, reporter) {
     }
   }
 
-  {
-    // Check that a color filter image filter with a crop rect cannot
-    // be expressed as a color filter.
-    SkIRect cropRect = SkIRect::MakeWH(100, 100);
-    sk_sp<SkImageFilter> grayWithCrop(make_grayscale(nullptr, &cropRect));
-    REPORTER_ASSERT(reporter, false == grayWithCrop->asColorFilter(nullptr));
-  }
+    {
+      // Check that a color filter image filter with a crop rect cannot
+      // be expressed as a color filter.
+      SkIRect cropRect = SkIRect::MakeWH(100, 100);
+      sk_sp<SkImageFilter> grayWithCrop(make_grayscale(nullptr, &cropRect));
+      REPORTER_ASSERT(reporter, false == grayWithCrop->asColorFilter(nullptr));
+    }
 
-  {
-    // Check that two non-commutative matrices are concatenated in
-    // the correct order.
-    float blueToRedMatrix[20] = {0};
-    blueToRedMatrix[2] = blueToRedMatrix[18] = 1;
-    float redToGreenMatrix[20] = {0};
-    redToGreenMatrix[5] = redToGreenMatrix[18] = 1;
-    sk_sp<SkColorFilter> blueToRed(SkColorFilters::Matrix(blueToRedMatrix));
-    sk_sp<SkImageFilter> filter1(SkImageFilters::ColorFilter(std::move(blueToRed), nullptr));
-    sk_sp<SkColorFilter> redToGreen(SkColorFilters::Matrix(redToGreenMatrix));
-    sk_sp<SkImageFilter> filter2(
-        SkImageFilters::ColorFilter(std::move(redToGreen), std::move(filter1)));
+    {
+      // Check that two non-commutative matrices are concatenated in
+      // the correct order.
+      float blueToRedMatrix[20] = {0};
+      blueToRedMatrix[2] = blueToRedMatrix[18] = 1;
+      float redToGreenMatrix[20] = {0};
+      redToGreenMatrix[5] = redToGreenMatrix[18] = 1;
+      sk_sp<SkColorFilter> blueToRed(SkColorFilters::Matrix(blueToRedMatrix));
+      sk_sp<SkImageFilter> filter1(SkImageFilters::ColorFilter(std::move(blueToRed), nullptr));
+      sk_sp<SkColorFilter> redToGreen(SkColorFilters::Matrix(redToGreenMatrix));
+      sk_sp<SkImageFilter> filter2(
+          SkImageFilters::ColorFilter(std::move(redToGreen), std::move(filter1)));
 
-    SkBitmap result;
-    result.allocN32Pixels(kBitmapSize, kBitmapSize);
+      SkBitmap result;
+      result.allocN32Pixels(kBitmapSize, kBitmapSize);
 
-    SkPaint paint;
-    paint.setColor(SK_ColorBLUE);
-    paint.setImageFilter(std::move(filter2));
-    SkCanvas canvas(result);
-    canvas.clear(0x0);
-    SkRect rect = SkRect::Make(SkIRect::MakeWH(kBitmapSize, kBitmapSize));
-    canvas.drawRect(rect, paint);
-    uint32_t pixel = *result.getAddr32(0, 0);
-    // The result here should be green, since we have effectively shifted blue to green.
-    REPORTER_ASSERT(reporter, pixel == SK_ColorGREEN);
-  }
+      SkPaint paint;
+      paint.setColor(SK_ColorBLUE);
+      paint.setImageFilter(std::move(filter2));
+      SkCanvas canvas(result);
+      canvas.clear(0x0);
+      SkRect rect = SkRect::Make(SkIRect::MakeWH(kBitmapSize, kBitmapSize));
+      canvas.drawRect(rect, paint);
+      uint32_t pixel = *result.getAddr32(0, 0);
+      // The result here should be green, since we have effectively shifted blue to green.
+      REPORTER_ASSERT(reporter, pixel == SK_ColorGREEN);
+    }
 
     {
       // Tests pass by not asserting
@@ -1466,6 +1466,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ComposedImageFilterBounds_Gpu, reporter, ctxI
 }
 
 DEF_TEST(ImageFilterCanComputeFastBounds, reporter) {
+
     {
       SkPoint3 location = SkPoint3::Make(0, 0, SK_Scalar1);
       sk_sp<SkImageFilter> lighting(

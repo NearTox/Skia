@@ -99,8 +99,9 @@ class ImageScaleAlignedGM : public skiagm::GM {
   void drawSets(SkCanvas* canvas) const {
     SkAutoCanvasRestore acr(canvas, true);
 
-    const SkFilterQuality filters[] = {kNone_SkFilterQuality, kLow_SkFilterQuality,
-                                       kMedium_SkFilterQuality, kHigh_SkFilterQuality};
+    const SkFilterQuality filters[] = {
+        kNone_SkFilterQuality, kLow_SkFilterQuality, kMedium_SkFilterQuality,
+        kHigh_SkFilterQuality};
     const bool AAs[] = {false, true};
 
     SkPaint paint;

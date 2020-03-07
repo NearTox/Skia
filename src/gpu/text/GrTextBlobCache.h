@@ -36,9 +36,7 @@ class GrTextBlobCache {
   sk_sp<GrTextBlob> makeBlob(
       const SkGlyphRunList& glyphRunList, GrStrikeCache* strikeCache, const SkMatrix& viewMatrix,
       GrColor color, bool forceW) {
-    return GrTextBlob::Make(
-        glyphRunList.totalGlyphCount(), strikeCache, viewMatrix, glyphRunList.origin(), color,
-        forceW);
+    return GrTextBlob::Make(glyphRunList, strikeCache, viewMatrix, color, forceW);
   }
 
   sk_sp<GrTextBlob> makeCachedBlob(
@@ -153,7 +151,7 @@ class GrTextBlobCache {
     uint32_t fID;
     // Current clients don't generate multiple GrAtlasTextBlobs per SkTextBlob, so an array w/
     // linear search is acceptable.  If usage changes, we should re-evaluate this structure.
-    SkSTArray<1, sk_sp<GrTextBlob>, true> fBlobs;
+    SkSTArray<1, sk_sp<GrTextBlob>> fBlobs;
   };
 
   void add(sk_sp<GrTextBlob> blob) {

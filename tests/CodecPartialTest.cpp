@@ -13,7 +13,6 @@
 #include "include/core/SkStream.h"
 #include "include/core/SkString.h"
 #include "include/core/SkTypes.h"
-#include "src/core/SkMakeUnique.h"
 #include "tests/CodecPriv.h"
 #include "tests/FakeStreams.h"
 #include "tests/Test.h"
@@ -262,7 +261,7 @@ DEF_TEST(Codec_partialAnim, r) {
   // This stream will be owned by fullCodec, but we hang on to the pointer
   // to determine frame offsets.
   std::unique_ptr<SkCodec> fullCodec(
-      SkCodec::MakeFromStream(skstd::make_unique<SkMemoryStream>(file)));
+      SkCodec::MakeFromStream(std::make_unique<SkMemoryStream>(file)));
   const auto info = standardize_info(fullCodec.get());
 
   // frameByteCounts stores the number of bytes to decode a particular frame.
@@ -364,7 +363,7 @@ static void test_interleaved(skiatest::Reporter* r, const char* name) {
   }
   const size_t halfSize = file->size() / 2;
   std::unique_ptr<SkCodec> partialCodec(
-      SkCodec::MakeFromStream(skstd::make_unique<HaltingStream>(std::move(file), halfSize)));
+      SkCodec::MakeFromStream(std::make_unique<HaltingStream>(std::move(file), halfSize)));
   if (!partialCodec) {
     ERRORF(r, "Failed to create codec for %s", name);
     return;
@@ -552,23 +551,23 @@ DEF_TEST(Codec_emptyIDAT, r) {
   sk_sp<SkData> file = GetResourceAsData(name);
   if (!file) {
     return;
-  }
+    }
 
-  // Truncate to the beginning of the IDAT, immediately after the IDAT tag.
-  file = SkData::MakeSubset(file.get(), 0, 80);
+    // Truncate to the beginning of the IDAT, immediately after the IDAT tag.
+    file = SkData::MakeSubset(file.get(), 0, 80);
 
-  std::unique_ptr<SkCodec> codec(SkCodec::MakeFromData(std::move(file)));
-  if (!codec) {
-    ERRORF(r, "Failed to create a codec for %s", name);
-    return;
-  }
+    std::unique_ptr<SkCodec> codec(SkCodec::MakeFromData(std::move(file)));
+    if (!codec) {
+      ERRORF(r, "Failed to create a codec for %s", name);
+      return;
+    }
 
-  SkBitmap bm;
-  const auto info = standardize_info(codec.get());
-  bm.allocPixels(info);
+    SkBitmap bm;
+    const auto info = standardize_info(codec.get());
+    bm.allocPixels(info);
 
-  const auto result = codec->getPixels(info, bm.getPixels(), bm.rowBytes());
-  REPORTER_ASSERT(r, SkCodec::kIncompleteInput == result);
+    const auto result = codec->getPixels(info, bm.getPixels(), bm.rowBytes());
+    REPORTER_ASSERT(r, SkCodec::kIncompleteInput == result);
 }
 
 DEF_TEST(Codec_incomplete, r) {
@@ -589,7 +588,7 @@ DEF_TEST(Codec_incomplete, r) {
     for (size_t len = 14; len <= file->size(); len += 5) {
       SkCodec::Result result;
       std::unique_ptr<SkCodec> codec(
-          SkCodec::MakeFromStream(skstd::make_unique<SkMemoryStream>(file->data(), len), &result));
+          SkCodec::MakeFromStream(std::make_unique<SkMemoryStream>(file->data(), len), &result));
       if (codec) {
         if (result != SkCodec::kSuccess) {
           ERRORF(

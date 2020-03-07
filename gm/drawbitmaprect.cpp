@@ -65,13 +65,14 @@ static sk_sp<SkImage> makebm(SkCanvas* origCanvas, SkBitmap* resultBM, int w, in
   SkColor colors[] = {SK_ColorRED,  SK_ColorYELLOW, SK_ColorGREEN, SK_ColorMAGENTA,
                       SK_ColorBLUE, SK_ColorCYAN,   SK_ColorRED};
 
-  SkScalar pos[] = {0,
-                    SK_Scalar1 / 6,
-                    2 * SK_Scalar1 / 6,
-                    3 * SK_Scalar1 / 6,
-                    4 * SK_Scalar1 / 6,
-                    5 * SK_Scalar1 / 6,
-                    SK_Scalar1};
+  SkScalar pos[] = {
+      0,
+      SK_Scalar1 / 6,
+      2 * SK_Scalar1 / 6,
+      3 * SK_Scalar1 / 6,
+      4 * SK_Scalar1 / 6,
+      5 * SK_Scalar1 / 6,
+      SK_Scalar1};
 
   SkPaint paint;
   SkRect rect = SkRect::MakeWH(wScalar, hScalar);

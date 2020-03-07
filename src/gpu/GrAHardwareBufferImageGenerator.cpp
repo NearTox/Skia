@@ -91,12 +91,6 @@ sk_sp<GrTextureProxy> GrAHardwareBufferImageGenerator::makeProxy(GrRecordingCont
       GrAHardwareBufferUtils::GetBackendFormat(direct, fHardwareBuffer, fBufferFormat, false);
 
   GrColorType grColorType = SkColorTypeToGrColorType(this->getInfo().colorType());
-  GrPixelConfig pixelConfig =
-      context->priv().caps()->getConfigFromBackendFormat(backendFormat, grColorType);
-
-  if (pixelConfig == kUnknown_GrPixelConfig) {
-    return nullptr;
-  }
 
   int width = this->getInfo().width();
   int height = this->getInfo().height();
@@ -104,7 +98,6 @@ sk_sp<GrTextureProxy> GrAHardwareBufferImageGenerator::makeProxy(GrRecordingCont
   GrSurfaceDesc desc;
   desc.fWidth = width;
   desc.fHeight = height;
-  desc.fConfig = pixelConfig;
 
   GrTextureType textureType = GrTextureType::k2D;
   if (context->backend() == GrBackendApi::kOpenGL) {
@@ -144,6 +137,8 @@ sk_sp<GrTextureProxy> GrAHardwareBufferImageGenerator::makeProxy(GrRecordingCont
     AHardwareBuffer* fAhb;
   };
 
+  GrSwizzle readSwizzle = context->priv().caps()->getReadSwizzle(backendFormat, grColorType);
+
   sk_sp<GrTextureProxy> texProxy = proxyProvider->createLazyProxy(
       [direct, buffer = AutoAHBRelease(hardwareBuffer), width, height, isProtectedContent,
        backendFormat,
@@ -177,7 +172,7 @@ sk_sp<GrTextureProxy> GrAHardwareBufferImageGenerator::makeProxy(GrRecordingCont
 
         return tex;
       },
-      backendFormat, desc, GrRenderable::kNo, 1, fSurfaceOrigin, GrMipMapped::kNo,
+      backendFormat, desc, readSwizzle, GrRenderable::kNo, 1, fSurfaceOrigin, GrMipMapped::kNo,
       GrMipMapsStatus::kNotAllocated, GrInternalSurfaceFlags::kReadOnly, SkBackingFit::kExact,
       SkBudgeted::kNo, GrProtected::kNo, GrSurfaceProxy::UseAllocator::kYes);
 
@@ -203,8 +198,10 @@ sk_sp<GrTextureProxy> GrAHardwareBufferImageGenerator::onGenerateTexture(
 
   GrMipMapped mipMapped = willNeedMipMaps ? GrMipMapped::kYes : GrMipMapped::kNo;
 
+  GrColorType grColorType = SkColorTypeToGrColorType(this->getInfo().colorType());
   return GrSurfaceProxy::Copy(
-      context, texProxy.get(), mipMapped, subset, SkBackingFit::kExact, SkBudgeted::kYes);
+      context, texProxy.get(), grColorType, mipMapped, subset, SkBackingFit::kExact,
+      SkBudgeted::kYes);
 }
 
 bool GrAHardwareBufferImageGenerator::onIsValid(GrContext* context) const {

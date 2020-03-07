@@ -78,8 +78,8 @@ class NonClosedPathsGM : public GM {
 
     constexpr SkPaint::Cap kCap[] = {SkPaint::kButt_Cap, SkPaint::kRound_Cap, SkPaint::kSquare_Cap};
 
-    constexpr SkPaint::Join kJoin[] = {SkPaint::kMiter_Join, SkPaint::kRound_Join,
-                                       SkPaint::kBevel_Join};
+    constexpr SkPaint::Join kJoin[] = {
+        SkPaint::kMiter_Join, SkPaint::kRound_Join, SkPaint::kBevel_Join};
 
     constexpr ClosureType kType[] = {TotallyNonClosed, FakeCloseCorner, FakeCloseMiddle};
 

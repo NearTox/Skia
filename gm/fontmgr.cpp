@@ -236,15 +236,17 @@ class FontMgrBoundsGM : public skiagm::GM {
     metricsPaint.setAlphaf(0.25f);
     if ((fm.fFlags & SkFontMetrics::kUnderlinePositionIsValid_Flag) &&
         (fm.fFlags & SkFontMetrics::kUnderlineThicknessIsValid_Flag)) {
-      SkRect underline{fontBounds.fLeft, fm.fUnderlinePosition + y, fontBounds.fRight,
-                       fm.fUnderlinePosition + y + fm.fUnderlineThickness};
+      SkRect underline{
+          fontBounds.fLeft, fm.fUnderlinePosition + y, fontBounds.fRight,
+          fm.fUnderlinePosition + y + fm.fUnderlineThickness};
       canvas->drawRect(underline, metricsPaint);
     }
 
     if ((fm.fFlags & SkFontMetrics::kStrikeoutPositionIsValid_Flag) &&
         (fm.fFlags & SkFontMetrics::kStrikeoutThicknessIsValid_Flag)) {
-      SkRect strikeout{fontBounds.fLeft, fm.fStrikeoutPosition + y - fm.fStrikeoutThickness,
-                       fontBounds.fRight, fm.fStrikeoutPosition + y};
+      SkRect strikeout{
+          fontBounds.fLeft, fm.fStrikeoutPosition + y - fm.fStrikeoutThickness, fontBounds.fRight,
+          fm.fStrikeoutPosition + y};
       canvas->drawRect(strikeout, metricsPaint);
     }
 
@@ -275,10 +277,11 @@ class FontMgrBoundsGM : public skiagm::GM {
       }
     }
     SkGlyphID str[] = {left, right, top, bottom};
-    SkPoint location[] = {{fontBounds.left(), fontBounds.centerY()},
-                          {fontBounds.right(), fontBounds.centerY()},
-                          {fontBounds.centerX(), fontBounds.top()},
-                          {fontBounds.centerX(), fontBounds.bottom()}};
+    SkPoint location[] = {
+        {fontBounds.left(), fontBounds.centerY()},
+        {fontBounds.right(), fontBounds.centerY()},
+        {fontBounds.centerX(), fontBounds.top()},
+        {fontBounds.centerX(), fontBounds.bottom()}};
 
     SkFont labelFont;
     labelFont.setEdging(SkFont::Edging::kAntiAlias);

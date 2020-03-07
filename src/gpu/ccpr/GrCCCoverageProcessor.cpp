@@ -7,7 +7,6 @@
 
 #include "src/gpu/ccpr/GrCCCoverageProcessor.h"
 
-#include "src/core/SkMakeUnique.h"
 #include "src/gpu/GrOpFlushState.h"
 #include "src/gpu/GrOpsRenderPass.h"
 #include "src/gpu/GrProgramInfo.h"
@@ -178,10 +177,10 @@ GrGLSLPrimitiveProcessor* GrCCCoverageProcessor::createGLSLInstance(const GrShad
   std::unique_ptr<Shader> shader;
   switch (fPrimitiveType) {
     case PrimitiveType::kTriangles:
-    case PrimitiveType::kWeightedTriangles: shader = skstd::make_unique<TriangleShader>(); break;
-    case PrimitiveType::kQuadratics: shader = skstd::make_unique<GrCCQuadraticShader>(); break;
-    case PrimitiveType::kCubics: shader = skstd::make_unique<GrCCCubicShader>(); break;
-    case PrimitiveType::kConics: shader = skstd::make_unique<GrCCConicShader>(); break;
+    case PrimitiveType::kWeightedTriangles: shader = std::make_unique<TriangleShader>(); break;
+    case PrimitiveType::kQuadratics: shader = std::make_unique<GrCCQuadraticShader>(); break;
+    case PrimitiveType::kCubics: shader = std::make_unique<GrCCCubicShader>(); break;
+    case PrimitiveType::kConics: shader = std::make_unique<GrCCConicShader>(); break;
   }
   return this->onCreateGLSLInstance(std::move(shader));
 }

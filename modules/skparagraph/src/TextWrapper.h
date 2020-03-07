@@ -68,6 +68,10 @@ class TextWrapper {
       stretch.clean();
     }
 
+    bool empty() {
+      return fStart.cluster() == fEnd.cluster() && fStart.position() == fEnd.position();
+    }
+
     void setMetrics(const InternalLineMetrics& metrics) { fMetrics = metrics; }
 
     void extend(Cluster* cluster) {
@@ -100,6 +104,11 @@ class TextWrapper {
     void saveBreak() {
       fWidthWithGhostSpaces = fWidth;
       fBreak = fEnd;
+    }
+
+    void restoreBreak() {
+      fWidth = fWidthWithGhostSpaces;
+      fEnd = fBreak;
     }
 
     void trim() {
@@ -181,7 +190,7 @@ class TextWrapper {
   }
 
   void lookAhead(SkScalar maxWidth, Cluster* endOfClusters);
-  void moveForward();
+  void moveForward(bool hasEllipsis);
   void trimEndSpaces(TextAlign align);
   std::tuple<Cluster*, size_t, SkScalar> trimStartSpaces(Cluster* endOfClusters);
   SkScalar getClustersTrimmedWidth();

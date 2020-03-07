@@ -10,6 +10,7 @@
 
 #include "include/private/SkTFitsIn.h"
 
+#include <array>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -227,16 +228,14 @@ class SkArenaAlloc {
 
 // Helper for defining allocators with inline/reserved storage.
 // For argument declarations, stick to the base type (SkArenaAlloc).
+// Note: Inheriting from the storage first means the storage will outlive the
+// SkArenaAlloc, letting ~SkArenaAlloc read it as it calls destructors.
+// (This is mostly only relevant for strict tools like MSAN.)
 template <size_t InlineStorageSize>
-class SkSTArenaAlloc : public SkArenaAlloc {
+class SkSTArenaAlloc : private std::array<char, InlineStorageSize>, public SkArenaAlloc {
  public:
   explicit SkSTArenaAlloc(size_t firstHeapAllocation = InlineStorageSize)
-      : INHERITED(fInlineStorage, InlineStorageSize, firstHeapAllocation) {}
-
- private:
-  char fInlineStorage[InlineStorageSize];
-
-  using INHERITED = SkArenaAlloc;
+      : SkArenaAlloc{this->data(), this->size(), firstHeapAllocation} {}
 };
 
 #endif  // SkArenaAlloc_DEFINED

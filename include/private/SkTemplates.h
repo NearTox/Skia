@@ -255,7 +255,7 @@ class SkAutoTMalloc {
 
   operator T*() { return fPtr.get(); }
 
-  operator const T *() const { return fPtr.get(); }
+  operator const T*() const { return fPtr.get(); }
 
   T& operator[](int index) { return fPtr.get()[index]; }
 
@@ -317,7 +317,7 @@ class SkAutoSTMalloc {
 
   operator T*() { return fPtr; }
 
-  operator const T *() const { return fPtr; }
+  operator const T*() const { return fPtr; }
 
   T& operator[](int index) { return fPtr[index]; }
 

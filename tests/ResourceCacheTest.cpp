@@ -92,7 +92,6 @@ static sk_sp<GrRenderTarget> create_RT_with_SB(
   GrSurfaceDesc desc;
   desc.fWidth = size;
   desc.fHeight = size;
-  desc.fConfig = kRGBA_8888_GrPixelConfig;
 
   auto format =
       provider->caps()->getDefaultBackendFormat(GrColorType::kRGBA_8888, GrRenderable::kYes);
@@ -1587,6 +1586,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ResourceMessagesAfterAbandon, reporter, ctxIn
   GrTextureFreedMessage msg{tex, context->priv().contextID()};
   SkMessageBus<GrTextureFreedMessage>::Post(msg);
 
+  // This doesn't actually do anything but it does trigger us to read messages
   context->purgeUnlockedResources(false);
 }
 
@@ -1596,7 +1596,6 @@ static sk_sp<GrTexture> make_normal_texture(
   GrSurfaceDesc desc;
   desc.fWidth = width;
   desc.fHeight = height;
-  desc.fConfig = kRGBA_8888_GrPixelConfig;
   auto format = provider->caps()->getDefaultBackendFormat(GrColorType::kRGBA_8888, renderable);
   return provider->createTexture(
       desc, format, renderable, sampleCnt, GrMipMapped::kNo, SkBudgeted::kYes, GrProtected::kNo);
@@ -1610,15 +1609,15 @@ static sk_sp<GrTextureProxy> make_mipmap_proxy(
   GrSurfaceDesc desc;
   desc.fWidth = width;
   desc.fHeight = height;
-  desc.fConfig = kRGBA_8888_GrPixelConfig;
 
   const GrBackendFormat format =
       caps->getDefaultBackendFormat(GrColorType::kRGBA_8888, GrRenderable::kNo);
   auto origin =
       renderable == GrRenderable::kYes ? kBottomLeft_GrSurfaceOrigin : kTopLeft_GrSurfaceOrigin;
+  GrSwizzle swizzle = caps->getReadSwizzle(format, GrColorType::kRGBA_8888);
 
   return proxyProvider->createProxy(
-      format, desc, renderable, sampleCnt, origin, GrMipMapped::kYes, SkBackingFit::kExact,
+      format, desc, swizzle, renderable, sampleCnt, origin, GrMipMapped::kYes, SkBackingFit::kExact,
       SkBudgeted::kYes, GrProtected::kNo);
 }
 

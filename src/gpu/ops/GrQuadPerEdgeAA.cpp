@@ -545,9 +545,8 @@ class QuadPerEdgeAAGeometryProcessor : public GrGeometryProcessor {
 
   static GrGeometryProcessor* Make(
       SkArenaAlloc* arena, const VertexSpec& vertexSpec, const GrShaderCaps& caps,
-      const GrBackendFormat& backendFormat, const GrSamplerState& samplerState,
-      const GrSwizzle& swizzle, sk_sp<GrColorSpaceXform> textureColorSpaceXform,
-      Saturate saturate) {
+      const GrBackendFormat& backendFormat, GrSamplerState samplerState, const GrSwizzle& swizzle,
+      sk_sp<GrColorSpaceXform> textureColorSpaceXform, Saturate saturate) {
     return arena->make<QuadPerEdgeAAGeometryProcessor>(
         vertexSpec, caps, backendFormat, samplerState, swizzle, std::move(textureColorSpaceXform),
         saturate);
@@ -668,8 +667,8 @@ class QuadPerEdgeAAGeometryProcessor : public GrGeometryProcessor {
 
           // Now modulate the starting output color by the texture lookup
           args.fFragBuilder->codeAppendf("%s = ", args.fOutputColor);
-          args.fFragBuilder->appendTextureLookupAndModulate(
-              args.fOutputColor, args.fTexSamplers[0], "texCoord", kFloat2_GrSLType,
+          args.fFragBuilder->appendTextureLookupAndBlend(
+              args.fOutputColor, SkBlendMode::kModulate, args.fTexSamplers[0], "texCoord",
               &fTextureColorSpaceXformHelper);
           args.fFragBuilder->codeAppend(";");
           if (gp.fSaturate == Saturate::kYes) {
@@ -740,7 +739,7 @@ class QuadPerEdgeAAGeometryProcessor : public GrGeometryProcessor {
 
   QuadPerEdgeAAGeometryProcessor(
       const VertexSpec& spec, const GrShaderCaps& caps, const GrBackendFormat& backendFormat,
-      const GrSamplerState& samplerState, const GrSwizzle& swizzle,
+      GrSamplerState samplerState, const GrSwizzle& swizzle,
       sk_sp<GrColorSpaceXform> textureColorSpaceXform, Saturate saturate)
       : INHERITED(kQuadPerEdgeAAGeometryProcessor_ClassID),
         fSaturate(saturate),
@@ -825,8 +824,8 @@ GrGeometryProcessor* MakeProcessor(SkArenaAlloc* arena, const VertexSpec& spec) 
 
 GrGeometryProcessor* MakeTexturedProcessor(
     SkArenaAlloc* arena, const VertexSpec& spec, const GrShaderCaps& caps,
-    const GrBackendFormat& backendFormat, const GrSamplerState& samplerState,
-    const GrSwizzle& swizzle, sk_sp<GrColorSpaceXform> textureColorSpaceXform, Saturate saturate) {
+    const GrBackendFormat& backendFormat, GrSamplerState samplerState, const GrSwizzle& swizzle,
+    sk_sp<GrColorSpaceXform> textureColorSpaceXform, Saturate saturate) {
   return QuadPerEdgeAAGeometryProcessor::Make(
       arena, spec, caps, backendFormat, samplerState, swizzle, std::move(textureColorSpaceXform),
       saturate);

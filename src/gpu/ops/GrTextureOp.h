@@ -45,11 +45,12 @@ class GrTextureOp {
       const GrQuad& deviceQuad, const GrQuad& localQuad, const SkRect* domain = nullptr);
 
   // Automatically falls back to using one GrFillRectOp per entry if dynamic states are not
-  // supported, or if the blend mode is not src-over.
+  // supported, or if the blend mode is not src-over. 'cnt' is the size of the entry array.
+  // 'proxyCnt' <= 'cnt' and represents the number of proxy switches within the array.
   static void AddTextureSetOps(
       GrRenderTargetContext*, const GrClip& clip, GrRecordingContext*,
-      GrRenderTargetContext::TextureSetEntry[], int cnt, GrSamplerState::Filter, Saturate,
-      SkBlendMode, GrAAType, SkCanvas::SrcRectConstraint, const SkMatrix& viewMatrix,
+      GrRenderTargetContext::TextureSetEntry[], int cnt, int proxyRunCnt, GrSamplerState::Filter,
+      Saturate, SkBlendMode, GrAAType, SkCanvas::SrcRectConstraint, const SkMatrix& viewMatrix,
       sk_sp<GrColorSpaceXform> textureXform);
 
 #if GR_TEST_UTILS

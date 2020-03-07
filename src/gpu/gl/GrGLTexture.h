@@ -22,7 +22,6 @@ class GrGLTexture : public GrTexture {
     GrGLenum fTarget = 0;
     GrGLuint fID = 0;
     GrGLFormat fFormat = GrGLFormat::kUnknown;
-    GrPixelConfig fConfig = kUnknown_GrPixelConfig;
     GrBackendObjectOwnership fOwnership = GrBackendObjectOwnership::kOwned;
   };
 

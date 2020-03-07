@@ -69,8 +69,8 @@ class StrokeRectGM : public skiagm::GM {
     paint.setStyle(SkPaint::kStroke_Style);
     paint.setStrokeWidth(STROKE_WIDTH);
 
-    constexpr SkPaint::Join gJoins[] = {SkPaint::kMiter_Join, SkPaint::kRound_Join,
-                                        SkPaint::kBevel_Join};
+    constexpr SkPaint::Join gJoins[] = {
+        SkPaint::kMiter_Join, SkPaint::kRound_Join, SkPaint::kBevel_Join};
 
     constexpr SkScalar W = 80;
     constexpr SkScalar H = 80;

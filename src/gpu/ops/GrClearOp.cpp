@@ -46,7 +46,7 @@ GrClearOp::GrClearOp(const GrFixedClip& clip, const SkPMColor4f& color, GrSurfac
       fClip = GrFixedClip(SkIRect::MakeEmpty());
     }
 
-    if (GrProxyProvider::IsFunctionallyExact(proxy) && fClip.scissorRect() == rtRect) {
+    if (proxy->isFunctionallyExact() && fClip.scissorRect() == rtRect) {
       fClip.disableScissor();
     }
   }

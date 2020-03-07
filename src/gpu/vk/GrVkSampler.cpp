@@ -22,7 +22,7 @@ static inline VkSamplerAddressMode wrap_mode_to_vk_sampler_address(
 }
 
 GrVkSampler* GrVkSampler::Create(
-    GrVkGpu* gpu, const GrSamplerState& samplerState, const GrVkYcbcrConversionInfo& ycbcrInfo) {
+    GrVkGpu* gpu, GrSamplerState samplerState, const GrVkYcbcrConversionInfo& ycbcrInfo) {
   static VkFilter vkMinFilterModes[] = {VK_FILTER_NEAREST, VK_FILTER_LINEAR, VK_FILTER_LINEAR};
   static VkFilter vkMagFilterModes[] = {VK_FILTER_NEAREST, VK_FILTER_LINEAR, VK_FILTER_LINEAR};
 
@@ -108,14 +108,8 @@ void GrVkSampler::freeGPUData(GrVkGpu* gpu) const {
   }
 }
 
-void GrVkSampler::abandonGPUData() const {
-  if (fYcbcrConversion) {
-    fYcbcrConversion->unrefAndAbandon();
-  }
-}
-
 GrVkSampler::Key GrVkSampler::GenerateKey(
-    const GrSamplerState& samplerState, const GrVkYcbcrConversionInfo& ycbcrInfo) {
+    GrSamplerState samplerState, const GrVkYcbcrConversionInfo& ycbcrInfo) {
   return {
       GrSamplerState::GenerateKey(samplerState),
       GrVkSamplerYcbcrConversion::GenerateKey(ycbcrInfo)};

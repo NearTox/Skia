@@ -67,10 +67,6 @@ class EffectsView : public Sample {
       gPaintProcs[i](&fPaint[i]);
     }
 
-    SkColorMatrix cm;
-    cm.setRotate(SkColorMatrix::kG_Axis, 180);
-    cm.setIdentity();
-
     this->setBGColor(0xFFDDDDDD);
   }
 

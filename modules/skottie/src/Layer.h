@@ -28,7 +28,8 @@ class LayerBuilder final {
   sk_sp<sksg::Transform> buildTransform(const AnimationBuilder&, CompositionBuilder*);
 
   // Attaches the actual layer content and finalizes its render tree.  Called once per layer.
-  sk_sp<sksg::RenderNode> buildRenderTree(const AnimationBuilder&, CompositionBuilder*);
+  sk_sp<sksg::RenderNode> buildRenderTree(
+      const AnimationBuilder&, CompositionBuilder*, const LayerBuilder* prev_layer);
 
  private:
   enum TransformType : uint8_t {
@@ -64,6 +65,8 @@ class LayerBuilder final {
 
   sk_sp<sksg::Transform> fLayerTransform;     // this layer's transform node.
   sk_sp<sksg::Transform> fTransformCache[2];  // cached 2D/3D chain for the local node
+  sk_sp<sksg::RenderNode> fContentTree;       // render tree for layer content,
+                                              // excluding mask/matte and blending
 
   AnimatorScope fLayerScope;           // layer-scoped animators
   size_t fTransformAnimatorCount = 0;  // transform-related animator count

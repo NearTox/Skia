@@ -20,7 +20,6 @@
 #include "include/private/SkTDArray.h"
 #include "include/private/SkTemplates.h"
 #include "src/core/SkFontDescriptor.h"
-#include "src/core/SkMakeUnique.h"
 #include "src/core/SkOSFile.h"
 #include "src/core/SkTSearch.h"
 #include "src/core/SkTypefaceCache.h"
@@ -67,7 +66,7 @@ class SkTypeface_AndroidSystem : public SkTypeface_Android {
   std::unique_ptr<SkStreamAsset> makeStream() const {
     if (fFile) {
       sk_sp<SkData> data(SkData::MakeFromFILE(fFile));
-      return data ? skstd::make_unique<SkMemoryStream>(std::move(data)) : nullptr;
+      return data ? std::make_unique<SkMemoryStream>(std::move(data)) : nullptr;
     }
     return SkStream::MakeFromFile(fPathName.c_str());
   }
@@ -84,7 +83,7 @@ class SkTypeface_AndroidSystem : public SkTypeface_Android {
     return this->makeStream();
   }
   std::unique_ptr<SkFontData> onMakeFontData() const override {
-    return skstd::make_unique<SkFontData>(this->makeStream(), fIndex, fAxes.begin(), fAxes.count());
+    return std::make_unique<SkFontData>(this->makeStream(), fIndex, fAxes.begin(), fAxes.count());
   }
   sk_sp<SkTypeface> onMakeClone(const SkFontArguments& args) const override {
     std::unique_ptr<SkFontData> data = this->cloneFontData(args);
@@ -126,7 +125,7 @@ class SkTypeface_AndroidStream : public SkTypeface_Android {
   }
 
   std::unique_ptr<SkFontData> onMakeFontData() const override {
-    return skstd::make_unique<SkFontData>(*fData);
+    return std::make_unique<SkFontData>(*fData);
   }
 
   sk_sp<SkTypeface> onMakeClone(const SkFontArguments& args) const override {
@@ -418,7 +417,7 @@ class SkFontMgr_Android : public SkFontMgr {
     if (!fScanner.scanFont(stream.get(), ttcIndex, &name, &style, &isFixedPitch, nullptr)) {
       return nullptr;
     }
-    auto data = skstd::make_unique<SkFontData>(std::move(stream), ttcIndex, nullptr, 0);
+    auto data = std::make_unique<SkFontData>(std::move(stream), ttcIndex, nullptr, 0);
     return sk_sp<SkTypeface>(
         new SkTypeface_AndroidStream(std::move(data), style, isFixedPitch, name));
   }
@@ -440,7 +439,7 @@ class SkFontMgr_Android : public SkFontMgr {
     Scanner::computeAxisValues(
         axisDefinitions, args.getVariationDesignPosition(), axisValues, name);
 
-    auto data = skstd::make_unique<SkFontData>(
+    auto data = std::make_unique<SkFontData>(
         std::move(stream), args.getCollectionIndex(), axisValues.get(), axisDefinitions.count());
     return sk_sp<SkTypeface>(
         new SkTypeface_AndroidStream(std::move(data), style, isFixedPitch, name));

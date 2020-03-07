@@ -35,8 +35,6 @@ class GrGLOpsRenderPass : public GrOpsRenderPass {
     fGpu->endCommandBuffer(fRenderTarget, fColorLoadAndStoreInfo, fStencilLoadAndStoreInfo);
   }
 
-  void insertEventMarker(const char* msg) override { fGpu->insertEventMarker(msg); }
-
   void inlineUpload(GrOpFlushState* state, GrDeferredTextureUploadFn& upload) override {
     state->doUpload(upload);
   }

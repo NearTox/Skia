@@ -71,8 +71,10 @@ void testing_only_texture_test(
   }
   REPORTER_ASSERT(reporter, wrappedProxy);
 
+  GrSwizzle swizzle = context->priv().caps()->getReadSwizzle(wrappedProxy->backendFormat(), grCT);
+  GrSurfaceProxyView view(std::move(wrappedProxy), kTopLeft_GrSurfaceOrigin, swizzle);
   auto surfaceContext =
-      context->priv().makeWrappedSurfaceContext(std::move(wrappedProxy), grCT, kPremul_SkAlphaType);
+      GrSurfaceContext::Make(context, std::move(view), grCT, kPremul_SkAlphaType, nullptr);
   REPORTER_ASSERT(reporter, surfaceContext);
 
   bool result = surfaceContext->readPixels(

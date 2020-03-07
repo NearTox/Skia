@@ -22,7 +22,7 @@
 #include "src/gpu/SkGr.h"
 #include "src/gpu/effects/GrBicubicEffect.h"
 #include "src/gpu/effects/GrTextureDomain.h"
-#include "src/gpu/effects/generated/GrSimpleTextureEffect.h"
+#include "src/gpu/effects/GrTextureEffect.h"
 #include "src/gpu/geometry/GrShape.h"
 #include "src/image/SkImage_Base.h"
 
@@ -188,8 +188,7 @@ static void draw_texture(
 
   // Must specify the strict constraint when the proxy is not functionally exact and the src
   // rect would access pixels outside the proxy's content area without the constraint.
-  if (constraint != SkCanvas::kStrict_SrcRectConstraint &&
-      !GrProxyProvider::IsFunctionallyExact(proxy.get())) {
+  if (constraint != SkCanvas::kStrict_SrcRectConstraint && !proxy->isFunctionallyExact()) {
     // Conservative estimate of how much a coord could be outset from src rect:
     // 1/2 pixel for AA and 1/2 pixel for bilerp
     float buffer = 0.5f * (aa == GrAA::kYes) + 0.5f * (filter == GrSamplerState::Filter::kBilerp);
@@ -234,14 +233,14 @@ static void draw_texture_producer(
   if (attemptDrawTexture && can_use_draw_texture(paint)) {
     // We've done enough checks above to allow us to pass ClampNearest() and not check for
     // scaling adjustments.
-    auto proxy = producer->refTextureProxyForParams(GrSamplerState::ClampNearest(), nullptr);
+    auto [proxy, ct] = producer->refTextureProxy(GrMipMapped::kNo);
     if (!proxy) {
       return;
     }
 
     draw_texture(
         rtc, clip, ctm, paint, src, dst, dstClip, aa, aaFlags, constraint, std::move(proxy),
-        producer->colorInfo());
+        {ct, producer->alphaType(), sk_ref_sp(producer->colorSpace())});
     return;
   }
 
@@ -400,7 +399,15 @@ void SkGpuDevice::drawImageQuad(
     SK_HISTOGRAM_BOOLEAN("DrawTiled", false);
     LogDrawScaleFactor(ctm, srcToDst, paint.getFilterQuality());
 
-    GrColorInfo colorInfo(image->imageInfo().colorInfo());
+    GrColorInfo colorInfo;
+    if (fContext->priv().caps()->isFormatSRGB(proxy->backendFormat())) {
+      SkASSERT(image->imageInfo().colorType() == kRGBA_8888_SkColorType);
+      colorInfo = GrColorInfo(
+          GrColorType::kRGBA_8888_SRGB, image->imageInfo().alphaType(),
+          image->imageInfo().refColorSpace());
+    } else {
+      colorInfo = GrColorInfo(image->imageInfo().colorInfo());
+    }
 
     if (attemptDrawTexture && can_use_draw_texture(paint)) {
       draw_texture(
@@ -442,7 +449,8 @@ void SkGpuDevice::drawImageQuad(
     return;
   }
   if (as_IB(image)->getROPixels(&bm)) {
-    GrBitmapTextureMaker maker(fContext.get(), bm, useDecal);
+    GrBitmapTextureMaker maker(
+        fContext.get(), bm, GrBitmapTextureMaker::Cached::kYes, SkBackingFit::kExact, useDecal);
     draw_texture_producer(
         fContext.get(), fRenderTargetContext.get(), this->clip(), ctm, paint, &maker, src, dst,
         dstClip, srcToDst, aa, aaFlags, constraint, attemptDrawTexture);
@@ -488,17 +496,21 @@ void SkGpuDevice::drawEdgeAAImageSet(
 
   SkAutoTArray<GrRenderTargetContext::TextureSetEntry> textures(count);
   // We accumulate compatible proxies until we find an an incompatible one or reach the end and
-  // issue the accumulated 'n' draws starting at 'base'.
-  int base = 0, n = 0;
-  auto draw = [&] {
+  // issue the accumulated 'n' draws starting at 'base'. 'p' represents the number of proxy
+  // switches that occur within the 'n' entries.
+  int base = 0, n = 0, p = 0;
+  auto draw = [&](int nextBase) {
     if (n > 0) {
       auto textureXform = GrColorSpaceXform::Make(
           set[base].fImage->colorSpace(), set[base].fImage->alphaType(),
           fRenderTargetContext->colorInfo().colorSpace(), kPremul_SkAlphaType);
       fRenderTargetContext->drawTextureSet(
-          this->clip(), textures.get() + base, n, filter, mode, GrAA::kYes, constraint,
+          this->clip(), textures.get() + base, n, p, filter, mode, GrAA::kYes, constraint,
           this->localToDevice(), std::move(textureXform));
     }
+    base = nextBase;
+    n = 0;
+    p = 0;
   };
   int dstClipIndex = 0;
   for (int i = 0; i < count; ++i) {
@@ -513,9 +525,7 @@ void SkGpuDevice::drawEdgeAAImageSet(
     // The default SkBaseDevice implementation is based on drawImageRect which does not allow
     // non-sorted src rects. TODO: Decide this is OK or make sure we handle it.
     if (!set[i].fSrcRect.isSorted()) {
-      draw();
-      base = i + 1;
-      n = 0;
+      draw(i + 1);
       continue;
     }
 
@@ -527,16 +537,14 @@ void SkGpuDevice::drawEdgeAAImageSet(
       uint32_t uniqueID;
       proxy = image->refPinnedTextureProxy(this->context(), &uniqueID);
       if (!proxy) {
-        proxy = image->asTextureProxyRef(this->context(), GrSamplerState::ClampBilerp(), nullptr);
+        proxy = image->asTextureProxyRef(this->context(), GrSamplerState::Filter::kBilerp, nullptr);
       }
     }
 
     if (!proxy) {
       // This image can't go through the texture op, send through general image pipeline
       // after flushing current batch.
-      draw();
-      base = i + 1;
-      n = 0;
+      draw(i + 1);
       SkTCopyOnFirstWrite<SkPaint> entryPaint(paint);
       if (set[i].fAlpha != 1.f) {
         auto paintAlpha = paint.getAlphaf();
@@ -566,16 +574,21 @@ void SkGpuDevice::drawEdgeAAImageSet(
     if (n > 0 &&
         (!GrTextureProxy::ProxiesAreCompatibleAsDynamicState(
              textures[i].fProxyView.proxy(), textures[base].fProxyView.proxy()) ||
+         textures[i].fProxyView.swizzle() != textures[base].fProxyView.swizzle() ||
          set[i].fImage->alphaType() != set[base].fImage->alphaType() ||
          !SkColorSpace::Equals(set[i].fImage->colorSpace(), set[base].fImage->colorSpace()))) {
-      draw();
-      base = i;
-      n = 1;
-    } else {
-      ++n;
+      draw(i);
+    }
+    // Whether or not we submitted a draw in the above if(), this ith entry is in the current
+    // set being accumulated so increment n, and increment p if proxies are different.
+    ++n;
+    if (n == 1 || textures[i - 1].fProxyView.proxy() != textures[i].fProxyView.proxy()) {
+      // First proxy or a different proxy (that is compatible, otherwise we'd have drawn up
+      // to i - 1).
+      ++p;
     }
   }
-  draw();
+  draw(count);
 }
 
 // TODO (michaelludwig) - to be removed when drawBitmapRect doesn't need it anymore

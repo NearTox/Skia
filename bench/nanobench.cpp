@@ -57,6 +57,8 @@
 #include <thread>
 
 extern bool gSkForceRasterPipelineBlitter;
+extern bool gUseSkVMBlitter;
+extern bool gSkVMJITViaDylib;
 
 #ifndef SK_BUILD_FOR_WIN
 #  include <unistd.h>
@@ -132,6 +134,7 @@ static DEFINE_string(
     "piping, playback, skcodec, etc.");
 
 static DEFINE_bool(forceRasterPipeline, false, "sets gSkForceRasterPipelineBlitter");
+static DEFINE_bool(skvm, false, "sets gUseSkVMBlitter and gSkVMJITViaDylib");
 
 static DEFINE_bool2(
     pre_log, p, false, "Log before running each test. May be incomprehensible when threading");
@@ -482,15 +485,16 @@ static void create_config(const SkCommandLineConfig* config, SkTArray<Config>* c
       return;
     }
 
-    Config target = {gpuConfig->getTag(),
-                     Benchmark::kGPU_Backend,
-                     colorType,
-                     kPremul_SkAlphaType,
-                     sk_ref_sp(colorSpace),
-                     sampleCount,
-                     ctxType,
-                     ctxOverrides,
-                     gpuConfig->getUseDIText()};
+    Config target = {
+        gpuConfig->getTag(),
+        Benchmark::kGPU_Backend,
+        colorType,
+        kPremul_SkAlphaType,
+        sk_ref_sp(colorSpace),
+        sampleCount,
+        ctxType,
+        ctxOverrides,
+        gpuConfig->getUseDIText()};
 
     configs->push_back(target);
     return;
@@ -1216,6 +1220,9 @@ int main(int argc, char** argv) {
 
   if (FLAGS_forceRasterPipeline) {
     gSkForceRasterPipelineBlitter = true;
+  }
+  if (FLAGS_skvm) {
+    gUseSkVMBlitter = gSkVMJITViaDylib = true;
   }
 
   int runs = 0;

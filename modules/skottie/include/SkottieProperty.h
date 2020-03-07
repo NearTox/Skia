@@ -37,6 +37,7 @@ struct TextPropertyValue {
   float fTextSize = 0, fStrokeWidth = 0, fLineHeight = 0, fAscent = 0;
   SkTextUtils::Align fHAlign = SkTextUtils::kLeft_Align;
   Shaper::VAlign fVAlign = Shaper::VAlign::kTop;
+  Shaper::ResizePolicy fResize = Shaper::ResizePolicy::kNone;
   SkRect fBox = SkRect::MakeEmpty();
   SkColor fFillColor = SK_ColorTRANSPARENT, fStrokeColor = SK_ColorTRANSPARENT;
   bool fHasFill = false, fHasStroke = false;
@@ -76,14 +77,17 @@ class SK_API PropertyHandle final {
 };
 
 namespace internal {
+
 class TextAdapter;
-}
 class TransformAdapter2D;
+
+}  // namespace internal
 
 using ColorPropertyHandle = PropertyHandle<ColorPropertyValue, sksg::Color>;
 using OpacityPropertyHandle = PropertyHandle<OpacityPropertyValue, sksg::OpacityEffect>;
 using TextPropertyHandle = PropertyHandle<TextPropertyValue, internal::TextAdapter>;
-using TransformPropertyHandle = PropertyHandle<TransformPropertyValue, TransformAdapter2D>;
+using TransformPropertyHandle =
+    PropertyHandle<TransformPropertyValue, internal::TransformAdapter2D>;
 
 /**
  * A PropertyObserver can be used to track and manipulate certain properties of "interesting"

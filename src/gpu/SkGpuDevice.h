@@ -129,6 +129,8 @@ class SkGpuDevice : public SkClipStackDevice {
 
   bool onAccessPixels(SkPixmap*) override;
 
+  bool android_utils_clipWithStencil() override;
+
  protected:
   bool onReadPixels(const SkPixmap&, int, int) override;
   bool onWritePixels(const SkPixmap&, int, int) override;
@@ -168,7 +170,7 @@ class SkGpuDevice : public SkClipStackDevice {
   // The tileSize and clippedSrcRect will be valid only if true is returned.
   bool shouldTileImageID(
       uint32_t imageID, const SkIRect& imageRect, const SkMatrix& viewMatrix,
-      const SkMatrix& srcToDstRectMatrix, const GrSamplerState& params, const SkRect* srcRectPtr,
+      const SkMatrix& srcToDstRectMatrix, GrSamplerState params, const SkRect* srcRectPtr,
       int maxTileSize, int* tileSize, SkIRect* clippedSubset) const;
   // Just returns the predicate, not the out-tileSize or out-clippedSubset, as they are not
   // needed at the moment.
@@ -182,14 +184,14 @@ class SkGpuDevice : public SkClipStackDevice {
   // Splits bitmap into tiles of tileSize and draws them using separate textures for each tile.
   void drawTiledBitmap(
       const SkBitmap& bitmap, const SkMatrix& viewMatrix, const SkMatrix& srcToDstMatrix,
-      const SkRect& srcRect, const SkIRect& clippedSrcRect, const GrSamplerState& params,
+      const SkRect& srcRect, const SkIRect& clippedSrcRect, GrSamplerState params,
       const SkPaint& paint, SkCanvas::SrcRectConstraint, int tileSize, bool bicubic);
 
   // Used by drawTiledBitmap to draw each tile.
   void drawBitmapTile(
       const SkBitmap&, const SkMatrix& viewMatrix, const SkRect& dstRect, const SkRect& srcRect,
-      const GrSamplerState& samplerState, const SkPaint& paint, SkCanvas::SrcRectConstraint,
-      bool bicubic, bool needsTextureDomain);
+      GrSamplerState samplerState, const SkPaint& paint, SkCanvas::SrcRectConstraint, bool bicubic,
+      bool needsTextureDomain);
 
   // If not null, dstClip must be contained inside dst and will also respect the edge AA flags.
   // If 'preViewMatrix' is not null, final CTM will be this->ctm() * preViewMatrix.

@@ -81,6 +81,8 @@ void GrGLSLProgramBuilder::emitAndInstallPrimProc(SkString* outputColor, SkStrin
   GrShaderFlags rtAdjustVisibility;
   if (proc.willUseGeoShader()) {
     rtAdjustVisibility = kGeometry_GrShaderFlag;
+  } else if (proc.willUseTessellationShaders()) {
+    rtAdjustVisibility = kTessEvaluation_GrShaderFlag;
   } else {
     rtAdjustVisibility = kVertex_GrShaderFlag;
   }
@@ -172,7 +174,7 @@ SkString GrGLSLProgramBuilder::emitAndInstallFragProc(
       name.printf("TextureSampler_%d", samplerIdx++);
       const auto& sampler = subFP.textureSampler(i);
       texSamplers.emplace_back(this->emitSampler(
-          sampler.proxy(), sampler.samplerState(), sampler.swizzle(), name.c_str()));
+          sampler.view().proxy(), sampler.samplerState(), sampler.view().swizzle(), name.c_str()));
     }
   }
   const GrGLSLPrimitiveProcessor::TransformVar* coordVars =
@@ -243,7 +245,7 @@ void GrGLSLProgramBuilder::emitAndInstallXferProc(
 }
 
 GrGLSLProgramBuilder::SamplerHandle GrGLSLProgramBuilder::emitSampler(
-    const GrSurfaceProxy* texture, const GrSamplerState& state, const GrSwizzle& swizzle,
+    const GrSurfaceProxy* texture, GrSamplerState state, const GrSwizzle& swizzle,
     const char* name) {
   ++fNumFragmentSamplers;
   return this->uniformHandler()->addSampler(texture, state, swizzle, name, this->shaderCaps());

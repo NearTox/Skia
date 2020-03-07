@@ -12,16 +12,14 @@
 #include "src/gpu/dawn/GrDawnUtil.h"
 
 GrDawnRenderTarget::GrDawnRenderTarget(
-    GrDawnGpu* gpu, const SkISize& dimensions, GrPixelConfig config, int sampleCnt,
-    const GrDawnImageInfo& info)
-    : GrSurface(gpu, dimensions, config, GrProtected::kNo),
-      GrRenderTarget(gpu, dimensions, config, sampleCnt, GrProtected::kNo),
+    GrDawnGpu* gpu, SkISize dimensions, int sampleCnt, const GrDawnRenderTargetInfo& info)
+    : GrSurface(gpu, dimensions, GrProtected::kNo),
+      GrRenderTarget(gpu, dimensions, sampleCnt, GrProtected::kNo),
       fInfo(info) {}
 
 sk_sp<GrDawnRenderTarget> GrDawnRenderTarget::MakeWrapped(
-    GrDawnGpu* gpu, const SkISize& dimensions, GrPixelConfig config, int sampleCnt,
-    const GrDawnImageInfo& info) {
-  sk_sp<GrDawnRenderTarget> rt(new GrDawnRenderTarget(gpu, dimensions, config, sampleCnt, info));
+    GrDawnGpu* gpu, SkISize dimensions, int sampleCnt, const GrDawnRenderTargetInfo& info) {
+  sk_sp<GrDawnRenderTarget> rt(new GrDawnRenderTarget(gpu, dimensions, sampleCnt, info));
   rt->registerWithCacheWrapped(GrWrapCacheable::kNo);
   return rt;
 }

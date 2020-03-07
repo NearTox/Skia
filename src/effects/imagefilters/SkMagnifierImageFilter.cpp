@@ -119,10 +119,10 @@ sk_sp<SkSpecialImage> SkMagnifierImageFilterImpl::onFilterImage(
   if (ctx.gpuBacked()) {
     auto context = ctx.getContext();
 
-    sk_sp<GrTextureProxy> inputProxy(input->asTextureProxyRef(context));
-    SkASSERT(inputProxy);
+    GrSurfaceProxyView inputView = input->asSurfaceProxyViewRef(context);
+    SkASSERT(inputView.asTextureProxy());
 
-    const auto isProtected = inputProxy->isProtected();
+    const auto isProtected = inputView.proxy()->isProtected();
 
     offset->fX = bounds.left();
     offset->fY = bounds.top();
@@ -134,8 +134,9 @@ sk_sp<SkSpecialImage> SkMagnifierImageFilterImpl::onFilterImage(
     SkRect srcRect = fSrcRect.makeOffset(
         (1.f - invXZoom) * input->subset().x(), (1.f - invYZoom) * input->subset().y());
 
+    // TODO: Update generated fp file Make functions to take views instead of proxies
     auto fp = GrMagnifierEffect::Make(
-        std::move(inputProxy), bounds, srcRect, invXZoom, invYZoom, bounds.width() * invInset,
+        inputView.detachProxy(), bounds, srcRect, invXZoom, invYZoom, bounds.width() * invInset,
         bounds.height() * invInset);
     fp = GrColorSpaceXformEffect::Make(
         std::move(fp), input->getColorSpace(), input->alphaType(), ctx.colorSpace());
@@ -144,8 +145,7 @@ sk_sp<SkSpecialImage> SkMagnifierImageFilterImpl::onFilterImage(
     }
 
     return DrawWithFP(
-        context, std::move(fp), bounds, ctx.colorType(), ctx.colorSpace(),
-        isProtected ? GrProtected::kYes : GrProtected::kNo);
+        context, std::move(fp), bounds, ctx.colorType(), ctx.colorSpace(), isProtected);
   }
 #endif
 

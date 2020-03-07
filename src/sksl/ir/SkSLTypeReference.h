@@ -21,9 +21,11 @@ struct TypeReference : public Expression {
   TypeReference(const Context& context, int offset, const Type& value)
       : INHERITED(offset, kTypeReference_Kind, *context.fInvalid_Type), fValue(value) {}
 
-  bool hasSideEffects() const override { return false; }
+  bool hasProperty(Property property) const override { return false; }
 
+#ifdef SK_DEBUG
   String description() const override { return String(fValue.fName); }
+#endif
 
   std::unique_ptr<Expression> clone() const override {
     return std::unique_ptr<Expression>(new TypeReference(fOffset, fValue, &fType));

@@ -73,6 +73,9 @@ struct FCLocker {
   }
 };
 
+using UniqueFCConfig =
+    std::unique_ptr<FcConfig, SkFunctionWrapper<decltype(FcConfigDestroy), FcConfigDestroy>>;
+
 }  // namespace
 
 size_t SkFontConfigInterface::FontIdentity::writeToMemory(void* addr) const {
@@ -498,10 +501,6 @@ const char* kFontFormatCFF = "CFF";
 #endif
 
 SkFontConfigInterfaceDirect::SkFontConfigInterfaceDirect() {
-  FCLocker lock;
-
-  FcInit();
-
   SkDEBUGCODE(fontconfiginterface_unittest();)
 }
 
@@ -528,7 +527,8 @@ bool SkFontConfigInterfaceDirect::isValidPattern(FcPattern* pattern) {
   if (!c_filename) {
     return false;
   }
-  const char* sysroot = (const char*)FcConfigGetSysRoot(nullptr);
+  UniqueFCConfig fcConfig(FcConfigReference(nullptr));
+  const char* sysroot = (const char*)FcConfigGetSysRoot(fcConfig.get());
   SkString resolvedFilename;
   if (sysroot) {
     resolvedFilename = sysroot;
@@ -582,7 +582,7 @@ bool SkFontConfigInterfaceDirect::matchFamilyName(
   }
 
   FCLocker lock;
-
+  UniqueFCConfig fcConfig(FcConfigReference(nullptr));
   FcPattern* pattern = FcPatternCreate();
 
   if (familyName) {
@@ -592,7 +592,7 @@ bool SkFontConfigInterfaceDirect::matchFamilyName(
 
   FcPatternAddBool(pattern, FC_SCALABLE, FcTrue);
 
-  FcConfigSubstitute(nullptr, pattern, FcMatchPattern);
+  FcConfigSubstitute(fcConfig.get(), pattern, FcMatchPattern);
   FcDefaultSubstitute(pattern);
 
   // Font matching:
@@ -631,7 +631,7 @@ bool SkFontConfigInterfaceDirect::matchFamilyName(
   }
 
   FcResult result;
-  FcFontSet* font_set = FcFontSort(nullptr, pattern, 0, nullptr, &result);
+  FcFontSet* font_set = FcFontSort(fcConfig.get(), pattern, 0, nullptr, &result);
   if (!font_set) {
     FcPatternDestroy(pattern);
     return false;
@@ -659,7 +659,7 @@ bool SkFontConfigInterfaceDirect::matchFamilyName(
     FcFontSetDestroy(font_set);
     return false;
   }
-  const char* sysroot = (const char*)FcConfigGetSysRoot(nullptr);
+  const char* sysroot = (const char*)FcConfigGetSysRoot(fcConfig.get());
   SkString resolvedFilename;
   if (sysroot) {
     resolvedFilename = sysroot;

@@ -11,6 +11,7 @@
 #ifndef GrTwoPointConicalGradientLayout_DEFINED
 #define GrTwoPointConicalGradientLayout_DEFINED
 #include "include/core/SkTypes.h"
+#include "include/private/SkM44.h"
 
 #include "src/gpu/gradients/GrGradientShader.h"
 #include "src/shaders/gradients/SkTwoPointConicalGradient.h"
@@ -27,7 +28,7 @@ class GrTwoPointConicalGradientLayout : public GrFragmentProcessor {
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "TwoPointConicalGradientLayout"; }
   GrCoordTransform fCoordTransform0;
-  SkMatrix44 gradientMatrix;
+  SkMatrix gradientMatrix;
   Type type;
   bool isRadiusIncreasing;
   bool isFocalOnCircle;
@@ -38,7 +39,7 @@ class GrTwoPointConicalGradientLayout : public GrFragmentProcessor {
 
  private:
   GrTwoPointConicalGradientLayout(
-      SkMatrix44 gradientMatrix, Type type, bool isRadiusIncreasing, bool isFocalOnCircle,
+      SkMatrix gradientMatrix, Type type, bool isRadiusIncreasing, bool isFocalOnCircle,
       bool isWellBehaved, bool isSwapped, bool isNativelyFocal, SkPoint focalParams)
       : INHERITED(
             kGrTwoPointConicalGradientLayout_ClassID, (OptimizationFlags)kNone_OptimizationFlags),

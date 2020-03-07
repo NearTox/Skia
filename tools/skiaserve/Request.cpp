@@ -71,7 +71,9 @@ SkCanvas* Request::getCanvas() {
 
 sk_sp<SkData> Request::drawToPng(int n, int m) {
     //fDebugCanvas->setOverdrawViz(true);
-    fDebugCanvas->drawTo(this->getCanvas(), n, m);
+    auto* canvas = this->getCanvas();
+    canvas->clear(SK_ColorTRANSPARENT);
+    fDebugCanvas->drawTo(canvas, n, m);
     //fDebugCanvas->setOverdrawViz(false);
     return writeCanvasToPng(this->getCanvas());
 }
@@ -213,32 +215,32 @@ bool Request::initPictureFromStream(SkStream* stream) {
     return true;
 }
 
-sk_sp<SkData> Request::getJsonOps(int n) {
-    SkCanvas* canvas = this->getCanvas();
-    SkDynamicMemoryWStream stream;
-    SkJSONWriter writer(&stream, SkJSONWriter::Mode::kFast);
-    writer.beginObject(); // root
+sk_sp<SkData> Request::getJsonOps() {
+  SkCanvas* canvas = this->getCanvas();
+  SkDynamicMemoryWStream stream;
+  SkJSONWriter writer(&stream, SkJSONWriter::Mode::kFast);
+  writer.beginObject();  // root
 
-    writer.appendString("mode", fGPUEnabled ? "gpu" : "cpu");
-    writer.appendBool("drawGpuOpBounds", fDebugCanvas->getDrawGpuOpBounds());
-    writer.appendS32("colorMode", fColorMode);
-    fDebugCanvas->toJSON(writer, fUrlDataManager, n, canvas);
+  writer.appendString("mode", fGPUEnabled ? "gpu" : "cpu");
+  writer.appendBool("drawGpuOpBounds", fDebugCanvas->getDrawGpuOpBounds());
+  writer.appendS32("colorMode", fColorMode);
+  fDebugCanvas->toJSON(writer, fUrlDataManager, canvas);
 
-    writer.endObject(); // root
-    writer.flush();
-    return stream.detachAsData();
+  writer.endObject();  // root
+  writer.flush();
+  return stream.detachAsData();
 }
 
-sk_sp<SkData> Request::getJsonOpsTask(int n) {
-    SkCanvas* canvas = this->getCanvas();
-    SkASSERT(fGPUEnabled);
-    SkDynamicMemoryWStream stream;
-    SkJSONWriter writer(&stream, SkJSONWriter::Mode::kFast);
+sk_sp<SkData> Request::getJsonOpsTask() {
+  SkCanvas* canvas = this->getCanvas();
+  SkASSERT(fGPUEnabled);
+  SkDynamicMemoryWStream stream;
+  SkJSONWriter writer(&stream, SkJSONWriter::Mode::kFast);
 
-    fDebugCanvas->toJSONOpsTask(writer, n, canvas);
+  fDebugCanvas->toJSONOpsTask(writer, canvas);
 
-    writer.flush();
-    return stream.detachAsData();
+  writer.flush();
+  return stream.detachAsData();
 }
 
 sk_sp<SkData> Request::getJsonInfo(int n) {

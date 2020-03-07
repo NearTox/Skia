@@ -95,8 +95,8 @@ class PolygonsGM : public GM {
     constexpr int kStrokeWidths[] = {0, 10, 40};
     SkASSERT(kNumStrokeWidths == SK_ARRAY_COUNT(kStrokeWidths));
 
-    constexpr SkPaint::Join kJoins[] = {SkPaint::kMiter_Join, SkPaint::kRound_Join,
-                                        SkPaint::kBevel_Join};
+    constexpr SkPaint::Join kJoins[] = {
+        SkPaint::kMiter_Join, SkPaint::kRound_Join, SkPaint::kBevel_Join};
     SkASSERT(kNumJoins == SK_ARRAY_COUNT(kJoins));
 
     int counter = 0;

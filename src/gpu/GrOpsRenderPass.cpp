@@ -45,8 +45,12 @@ bool GrOpsRenderPass::draw(
   SkASSERT(
       !programInfo.primProc().hasInstanceAttributes() ||
       this->gpu()->caps()->instanceAttribSupport());
+  SkASSERT(
+      !programInfo.pipeline().usesConservativeRaster() ||
+      this->gpu()->caps()->conservativeRasterSupport());
+  SkASSERT(!programInfo.pipeline().isWireframe() || this->gpu()->caps()->wireframeSupport());
 
-  programInfo.compatibleWithMeshes(meshes, meshCount);
+  programInfo.compatibleWithMeshes(meshes, meshCount, *this->gpu()->caps());
   programInfo.checkAllInstantiated();
   programInfo.checkMSAAAndMIPSAreResolved();
 #endif

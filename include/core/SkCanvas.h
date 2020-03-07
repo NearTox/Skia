@@ -26,10 +26,12 @@
 #include "include/core/SkSurfaceProps.h"
 #include "include/core/SkTypes.h"
 #include "include/core/SkVertices.h"
+#include "include/private/SkM44.h"
 #include "include/private/SkMacros.h"
 
 #include <cstring>
 #include <memory>
+#include <vector>
 
 class GrContext;
 class GrRenderTargetContext;
@@ -42,6 +44,7 @@ class SkFont;
 class SkGlyphRunBuilder;
 class SkImage;
 class SkImageFilter;
+class SkM44;
 class SkPaintFilterCanvas;
 class SkPath;
 class SkPicture;
@@ -743,6 +746,9 @@ class SK_API SkCanvas {
   */
   int saveLayer(const SaveLayerRec& layerRec);
 
+  int experimental_saveCamera(const SkM44& projection, const SkM44& camera);
+  int experimental_saveCamera(const SkScalar projection[16], const SkScalar camera[16]);
+
   /** Removes changes to SkMatrix and clip since SkCanvas state was
       last saved. The state is removed from the stack.
 
@@ -864,6 +870,9 @@ class SK_API SkCanvas {
       example: https://fiddle.skia.org/c/@Canvas_concat
   */
   void concat(const SkMatrix& matrix);
+
+  void experimental_concat44(const SkM44&);
+  void experimental_concat44(const SkScalar[]);  // column-major
 
   /** Replaces SkMatrix with matrix.
       Unlike concat(), any prior matrix state is overwritten.
@@ -999,11 +1008,6 @@ class SK_API SkCanvas {
   void clipPath(const SkPath& path, bool doAntiAlias = false) {
     this->clipPath(path, SkClipOp::kIntersect, doAntiAlias);
   }
-
-  /** Experimental. For testing only.
-      Set to simplify clip stack using PathOps.
-  */
-  void setAllowSimplifyClip(bool allow) { fAllowSimplifyClip = allow; }
 
   /** Replaces clip with the intersection or difference of clip and SkRegion deviceRgn.
       Resulting clip is aliased; pixels are fully contained by the clip.
@@ -2494,7 +2498,15 @@ class SK_API SkCanvas {
       example: https://fiddle.skia.org/c/@Canvas_getTotalMatrix
       example: https://fiddle.skia.org/c/@Clip
   */
-  const SkMatrix& getTotalMatrix() const;
+  SkMatrix getTotalMatrix() const;
+
+  SkM44 experimental_getLocalToDevice() const;  // entire matrix stack
+  SkM44 experimental_getLocalToWorld() const;   // up to but not including top-most camera
+  SkM44 experimental_getLocalToCamera() const;  // up to and including top-most camera
+
+  void experimental_getLocalToDevice(SkScalar colMajor[16]) const;
+  void experimental_getLocalToWorld(SkScalar colMajor[16]) const;
+  void experimental_getLocalToCamera(SkScalar colMajor[16]) const;
 
   ///////////////////////////////////////////////////////////////////////////
 
@@ -2546,11 +2558,12 @@ class SK_API SkCanvas {
   virtual bool onDoSaveBehind(const SkRect*) { return true; }
   virtual void willRestore() {}
   virtual void didRestore() {}
+
+  virtual void didConcat44(const SkScalar[]) {}  // colMajor
   virtual void didConcat(const SkMatrix&) {}
   virtual void didSetMatrix(const SkMatrix&) {}
-  virtual void didTranslate(SkScalar dx, SkScalar dy) {
-    this->didConcat(SkMatrix::MakeTrans(dx, dy));
-  }
+  virtual void didTranslate(SkScalar, SkScalar) {}
+  virtual void didScale(SkScalar, SkScalar) {}
 
   // NOTE: If you are adding a new onDraw virtual to SkCanvas, PLEASE add an override to
   // SkCanvasVirtualEnforcer (in SkCanvasVirtualEnforcer.h). This ensures that subclasses using
@@ -2708,6 +2721,15 @@ class SK_API SkCanvas {
   // points to top of stack
   MCRec* fMCRec;
 
+  struct CameraRec {
+    MCRec* fMCRec;         // the saveCamera rec that built us
+    SkM44 fCamera;         // just the user's camera
+    SkM44 fInvPostCamera;  // cache of ctm post camera
+
+    CameraRec(MCRec* owner, const SkM44& camera);
+  };
+  std::vector<CameraRec> fCameraStack;
+
   // the first N recs that can fit here mean we won't call malloc
   static constexpr int kMCRecSize = 128;     // most recent measurement
   static constexpr int kMCRecCount = 32;     // common depth for save/restores
@@ -2738,7 +2760,6 @@ class SK_API SkCanvas {
   friend class SkCanvasPriv;  // needs kDontClipToLayer_PrivateSaveLayerFlag
   friend class SkDrawIter;    // needs setupDrawForLayerDevice()
   friend class AutoLayerForImageFilter;
-  friend class DebugCanvas;       // needs experimental fAllowSimplifyClip
   friend class SkSurface_Raster;  // needs getDevice()
   friend class SkNoDrawCanvas;    // needs resetForNextPicture()
   friend class SkPictureRecord;   // predrawNotify (why does it need it? <reed>)
@@ -2831,9 +2852,6 @@ class SK_API SkCanvas {
    */
   bool fIsScaleTranslate;
   SkRect fDeviceClipBounds;
-
-  bool fAllowSoftClip;
-  bool fAllowSimplifyClip;
 
   class AutoValidateClip {
    public:

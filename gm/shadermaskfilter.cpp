@@ -191,7 +191,7 @@ DEF_SIMPLE_GM(combinemaskfilter, canvas, 560, 510) {
     canvas->restore();
     canvas->translate(r.width() + 10, 0);
   }
-  canvas->restore();
+    canvas->restore();
 }
 
 static sk_sp<SkImage> make_circle_image(SkCanvas* canvas, SkScalar radius, int margin) {

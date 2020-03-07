@@ -96,8 +96,9 @@ class ScaledTilingGM : public skiagm::GM {
 
     const char* gColorTypeNames[] = {"8888", "565", "4444"};
 
-    constexpr SkFilterQuality gFilterQualitys[] = {kNone_SkFilterQuality, kLow_SkFilterQuality,
-                                                   kMedium_SkFilterQuality, kHigh_SkFilterQuality};
+    constexpr SkFilterQuality gFilterQualitys[] = {
+        kNone_SkFilterQuality, kLow_SkFilterQuality, kMedium_SkFilterQuality,
+        kHigh_SkFilterQuality};
     const char* gFilterNames[] = {"None", "Low", "Medium", "High"};
 
     constexpr SkTileMode gModes[] = {SkTileMode::kClamp, SkTileMode::kRepeat, SkTileMode::kMirror};

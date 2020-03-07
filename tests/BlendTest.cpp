@@ -117,7 +117,6 @@ static sk_sp<SkSurface> create_gpu_surface_backend_texture_as_render_target(
   backingDesc.fWidth = width;
   backingDesc.fHeight = height;
   auto ct = SkColorTypeToGrColorType(colorType);
-  backingDesc.fConfig = GrColorTypeToPixelConfig(ct);
   auto format = context->priv().caps()->getDefaultBackendFormat(ct, GrRenderable::kYes);
 
   auto resourceProvider = context->priv().resourceProvider();
@@ -136,7 +135,7 @@ static sk_sp<SkSurface> create_gpu_surface_backend_texture_as_render_target(
 
   return surface;
 }
-}  // namespace
+}
 
 // Tests blending to a surface with no texture available.
 DEF_GPUTEST_FOR_GL_RENDERING_CONTEXTS(ES2BlendWithNoTexture, reporter, ctxInfo) {

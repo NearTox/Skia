@@ -22,11 +22,10 @@
 GrVkTexture::GrVkTexture(
     GrVkGpu* gpu, SkBudgeted budgeted, const GrSurfaceDesc& desc, const GrVkImageInfo& info,
     sk_sp<GrVkImageLayout> layout, const GrVkImageView* view, GrMipMapsStatus mipMapsStatus)
-    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, info.fProtected),
+    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, info.fProtected),
       GrVkImage(info, std::move(layout), GrBackendObjectOwnership::kOwned),
       INHERITED(
-          gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, info.fProtected, GrTextureType::k2D,
-          mipMapsStatus),
+          gpu, {desc.fWidth, desc.fHeight}, info.fProtected, GrTextureType::k2D, mipMapsStatus),
       fTextureView(view),
       fDescSetCache(kMaxCachedDescSets) {
   SkASSERT((GrMipMapsStatus::kNotAllocated == mipMapsStatus) == (1 == info.fLevelCount));
@@ -42,10 +41,10 @@ GrVkTexture::GrVkTexture(
     GrVkGpu* gpu, const GrSurfaceDesc& desc, const GrVkImageInfo& info,
     sk_sp<GrVkImageLayout> layout, const GrVkImageView* view, GrMipMapsStatus mipMapsStatus,
     GrBackendObjectOwnership ownership, GrWrapCacheable cacheable, GrIOType ioType, bool isExternal)
-    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, info.fProtected),
+    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, info.fProtected),
       GrVkImage(info, std::move(layout), ownership),
       INHERITED(
-          gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, info.fProtected,
+          gpu, {desc.fWidth, desc.fHeight}, info.fProtected,
           isExternal ? GrTextureType::kExternal : GrTextureType::k2D, mipMapsStatus),
       fTextureView(view),
       fDescSetCache(kMaxCachedDescSets) {
@@ -61,11 +60,10 @@ GrVkTexture::GrVkTexture(
     GrVkGpu* gpu, const GrSurfaceDesc& desc, const GrVkImageInfo& info,
     sk_sp<GrVkImageLayout> layout, const GrVkImageView* view, GrMipMapsStatus mipMapsStatus,
     GrBackendObjectOwnership ownership)
-    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, info.fProtected),
+    : GrSurface(gpu, {desc.fWidth, desc.fHeight}, info.fProtected),
       GrVkImage(info, layout, ownership),
       INHERITED(
-          gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, info.fProtected, GrTextureType::k2D,
-          mipMapsStatus),
+          gpu, {desc.fWidth, desc.fHeight}, info.fProtected, GrTextureType::k2D, mipMapsStatus),
       fTextureView(view),
       fDescSetCache(kMaxCachedDescSets) {
   SkASSERT((GrMipMapsStatus::kNotAllocated == mipMapsStatus) == (1 == info.fLevelCount));
@@ -175,17 +173,13 @@ void GrVkTexture::onAbandon() {
 
   // we create this and don't hand it off, so we should always destroy it
   if (fTextureView) {
-    fTextureView->unrefAndAbandon();
+    fTextureView->unref(this->getVkGpu());
     fTextureView = nullptr;
   }
 
-  fDescSetCache.foreach ([](std::unique_ptr<DescriptorCacheEntry>* entry) {
-    (*entry)->fDescriptorSet->unrefAndAbandon();
-    (*entry)->fDescriptorSet = nullptr;
-  });
   fDescSetCache.reset();
 
-  this->abandonImage();
+  this->releaseImage(this->getVkGpu());
   INHERITED::onAbandon();
 }
 
@@ -268,15 +262,14 @@ void GrVkTexture::removeFinishIdleProcs() {
   fIdleProcs = procsToKeep;
 }
 
-const GrVkDescriptorSet* GrVkTexture::cachedSingleDescSet(const GrSamplerState& state) {
+const GrVkDescriptorSet* GrVkTexture::cachedSingleDescSet(GrSamplerState state) {
   if (std::unique_ptr<DescriptorCacheEntry>* e = fDescSetCache.find(state)) {
     return (*e)->fDescriptorSet;
   }
   return nullptr;
 }
 
-void GrVkTexture::addDescriptorSetToCache(
-    const GrVkDescriptorSet* descSet, const GrSamplerState& state) {
+void GrVkTexture::addDescriptorSetToCache(const GrVkDescriptorSet* descSet, GrSamplerState state) {
   SkASSERT(!fDescSetCache.find(state));
   descSet->ref();
   fDescSetCache.insert(

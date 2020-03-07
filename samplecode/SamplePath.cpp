@@ -28,10 +28,11 @@
 
 // http://code.google.com/p/skia/issues/detail?id=32
 static void test_cubic() {
-  SkPoint src[4] = {{556.25000f, 523.03003f},
-                    {556.23999f, 522.96002f},
-                    {556.21997f, 522.89001f},
-                    {556.21997f, 522.82001f}};
+  SkPoint src[4] = {
+      {556.25000f, 523.03003f},
+      {556.23999f, 522.96002f},
+      {556.21997f, 522.89001f},
+      {556.21997f, 522.82001f}};
   SkPoint dst[11];
   dst[10].set(42, -42);  // one past the end, that we don't clobber these
   SkScalar tval[] = {0.33333334f, 0.99999994f};
@@ -158,8 +159,8 @@ class PathView : public Sample {
     this->init();
     canvas->translate(50, 50);
 
-    static const SkPaint::Join gJoins[] = {SkPaint::kBevel_Join, SkPaint::kMiter_Join,
-                                           SkPaint::kRound_Join};
+    static const SkPaint::Join gJoins[] = {
+        SkPaint::kBevel_Join, SkPaint::kMiter_Join, SkPaint::kRound_Join};
 
     for (size_t i = 0; i < SK_ARRAY_COUNT(gJoins); i++) {
       canvas->save();

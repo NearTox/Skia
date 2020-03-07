@@ -96,7 +96,7 @@ class GrGLPathProcessor : public GrGLSLPrimitiveProcessor {
       } else {
         m = GetTransformMatrix(transform, SkMatrix::I());
       }
-      if (fInstalledTransforms[t].fCurrentValue.cheapEqualTo(m)) {
+      if (SkMatrixPriv::CheapEqual(fInstalledTransforms[t].fCurrentValue, m)) {
         continue;
       }
       fInstalledTransforms[t].fCurrentValue = m;

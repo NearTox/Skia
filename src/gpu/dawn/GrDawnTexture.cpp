@@ -13,17 +13,16 @@
 #include "src/gpu/dawn/GrDawnUtil.h"
 
 GrDawnTexture::GrDawnTexture(
-    GrDawnGpu* gpu, const SkISize& dimensions, GrPixelConfig config, wgpu::TextureView textureView,
-    const GrDawnImageInfo& info, GrMipMapsStatus mipMapsStatus)
-    : GrSurface(gpu, dimensions, config, GrProtected::kNo),
-      GrTexture(gpu, dimensions, config, GrProtected::kNo, GrTextureType::k2D, mipMapsStatus),
+    GrDawnGpu* gpu, SkISize dimensions, wgpu::TextureView textureView,
+    const GrDawnTextureInfo& info, GrMipMapsStatus mipMapsStatus)
+    : GrSurface(gpu, dimensions, GrProtected::kNo),
+      GrTexture(gpu, dimensions, GrProtected::kNo, GrTextureType::k2D, mipMapsStatus),
       fInfo(info),
       fTextureView(textureView) {}
 
 sk_sp<GrDawnTexture> GrDawnTexture::Make(
-    GrDawnGpu* gpu, const SkISize& dimensions, GrPixelConfig config, wgpu::TextureFormat format,
-    GrRenderable renderable, int sampleCnt, SkBudgeted budgeted, int mipLevels,
-    GrMipMapsStatus status) {
+    GrDawnGpu* gpu, SkISize dimensions, wgpu::TextureFormat format, GrRenderable renderable,
+    int sampleCnt, SkBudgeted budgeted, int mipLevels, GrMipMapsStatus status) {
   bool renderTarget = renderable == GrRenderable::kYes;
   wgpu::TextureDescriptor textureDesc;
 
@@ -53,17 +52,16 @@ sk_sp<GrDawnTexture> GrDawnTexture::Make(
     return nullptr;
   }
 
-  GrDawnImageInfo info;
+  GrDawnTextureInfo info;
   info.fTexture = tex;
   info.fFormat = textureDesc.format;
   info.fLevelCount = mipLevels;
   sk_sp<GrDawnTexture> result;
   if (renderTarget) {
-    result = sk_sp<GrDawnTextureRenderTarget>(new GrDawnTextureRenderTarget(
-        gpu, dimensions, config, textureView, sampleCnt, info, status));
+    result = sk_sp<GrDawnTextureRenderTarget>(
+        new GrDawnTextureRenderTarget(gpu, dimensions, textureView, sampleCnt, info, status));
   } else {
-    result =
-        sk_sp<GrDawnTexture>(new GrDawnTexture(gpu, dimensions, config, textureView, info, status));
+    result = sk_sp<GrDawnTexture>(new GrDawnTexture(gpu, dimensions, textureView, info, status));
   }
   result->registerWithCache(budgeted);
   return result;
@@ -74,8 +72,8 @@ GrBackendFormat GrDawnTexture::backendFormat() const {
 }
 
 sk_sp<GrDawnTexture> GrDawnTexture::MakeWrapped(
-    GrDawnGpu* gpu, const SkISize& dimensions, GrPixelConfig config, GrRenderable renderable,
-    int sampleCnt, GrMipMapsStatus status, GrWrapCacheable cacheable, const GrDawnImageInfo& info) {
+    GrDawnGpu* gpu, SkISize dimensions, GrRenderable renderable, int sampleCnt,
+    GrMipMapsStatus status, GrWrapCacheable cacheable, const GrDawnTextureInfo& info) {
   wgpu::TextureView textureView = info.fTexture.CreateView();
   if (!textureView) {
     return nullptr;
@@ -83,11 +81,10 @@ sk_sp<GrDawnTexture> GrDawnTexture::MakeWrapped(
 
   sk_sp<GrDawnTexture> tex;
   if (GrRenderable::kYes == renderable) {
-    tex = sk_sp<GrDawnTexture>(new GrDawnTextureRenderTarget(
-        gpu, dimensions, config, textureView, sampleCnt, info, status));
+    tex = sk_sp<GrDawnTexture>(
+        new GrDawnTextureRenderTarget(gpu, dimensions, textureView, sampleCnt, info, status));
   } else {
-    tex =
-        sk_sp<GrDawnTexture>(new GrDawnTexture(gpu, dimensions, config, textureView, info, status));
+    tex = sk_sp<GrDawnTexture>(new GrDawnTexture(gpu, dimensions, textureView, info, status));
   }
   tex->registerWithCacheWrapped(cacheable);
   return tex;
@@ -109,12 +106,13 @@ GrBackendTexture GrDawnTexture::getBackendTexture() const {
 }
 
 void GrDawnTexture::upload(
-    const GrMipLevel texels[], int mipLevels, wgpu::CommandEncoder copyEncoder) {
-  this->upload(texels, mipLevels, SkIRect::MakeWH(width(), height()), copyEncoder);
+    GrColorType srcColorType, const GrMipLevel texels[], int mipLevels,
+    wgpu::CommandEncoder copyEncoder) {
+  this->upload(srcColorType, texels, mipLevels, SkIRect::MakeWH(width(), height()), copyEncoder);
 }
 
 void GrDawnTexture::upload(
-    const GrMipLevel texels[], int mipLevels, const SkIRect& rect,
+    GrColorType srcColorType, const GrMipLevel texels[], int mipLevels, const SkIRect& rect,
     wgpu::CommandEncoder copyEncoder) {
   wgpu::Device device = this->getDawnGpu()->device();
 
@@ -126,7 +124,7 @@ void GrDawnTexture::upload(
   for (int i = 0; i < mipLevels; i++) {
     const void* src = texels[i].fPixels;
     size_t srcRowBytes = texels[i].fRowBytes;
-    SkColorType colorType = GrColorTypeToSkColorType(GrPixelConfigToColorType(this->config()));
+    SkColorType colorType = GrColorTypeToSkColorType(srcColorType);
     size_t trimRowBytes = width * SkColorTypeBytesPerPixel(colorType);
     size_t dstRowBytes = GrDawnRoundRowBytes(trimRowBytes);
     size_t size = dstRowBytes * height;

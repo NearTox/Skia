@@ -126,9 +126,9 @@ class AtlasTextGM : public skiagm::GpuGM {
   SkBitmap drawText() {
     static const int kSizes[] = {8, 13, 18, 23, 30};
 
-    static const SkString kTexts[] = {SkString("ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
-                                      SkString("abcdefghijklmnopqrstuvwxyz"),
-                                      SkString("0123456789"), SkString("!@#$%^&*()<>[]{}")};
+    static const SkString kTexts[] = {
+        SkString("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), SkString("abcdefghijklmnopqrstuvwxyz"),
+        SkString("0123456789"), SkString("!@#$%^&*()<>[]{}")};
     SkScalar x = 0;
     SkScalar y = 10;
 

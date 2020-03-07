@@ -87,6 +87,16 @@ enum class PlaceholderAlignment {
   kMiddle,
 };
 
+struct FontFeature {
+  FontFeature(const SkString name, int value) : fName(name), fValue(value) {}
+  FontFeature(const FontFeature& other) : fName(other.fName), fValue(other.fValue) {}
+  bool operator==(const FontFeature& other) const {
+    return fName == other.fName && fValue == other.fValue;
+  }
+  SkString fName;
+  int fValue;
+};
+
 struct PlaceholderStyle {
   PlaceholderStyle() {}
   PlaceholderStyle(
@@ -97,6 +107,8 @@ struct PlaceholderStyle {
         fAlignment(alignment),
         fBaseline(baseline),
         fBaselineOffset(offset) {}
+
+  bool equals(const PlaceholderStyle& other) const;
 
   SkScalar fWidth = 0;
   SkScalar fHeight = 0;
@@ -123,6 +135,7 @@ class TextStyle {
   ~TextStyle() = default;
 
   bool equals(const TextStyle& other) const;
+  bool equalsByFonts(const TextStyle& that) const;
   bool matchOneAttribute(StyleType styleType, const TextStyle& other) const;
   bool operator==(const TextStyle& rhs) const { return this->equals(rhs); }
 
@@ -166,6 +179,14 @@ class TextStyle {
   std::vector<TextShadow> getShadows() const { return fTextShadows; }
   void addShadow(TextShadow shadow) { fTextShadows.emplace_back(shadow); }
   void resetShadows() { fTextShadows.clear(); }
+
+  // Font features
+  size_t getFontFeatureNumber() const { return fFontFeatures.size(); }
+  std::vector<FontFeature> getFontFeatures() const { return fFontFeatures; }
+  void addFontFeature(const SkString& fontFeature, int value) {
+    fFontFeatures.emplace_back(fontFeature, value);
+  }
+  void resetFontFeatures() { fFontFeatures.clear(); }
 
   SkScalar getFontSize() const { return fFontSize; }
   void setFontSize(SkScalar size) { fFontSize = size; }
@@ -225,6 +246,8 @@ class TextStyle {
 
   sk_sp<SkTypeface> fTypeface;
   bool fIsPlaceholder;
+
+  std::vector<FontFeature> fFontFeatures;
 };
 
 typedef size_t TextIndex;
@@ -236,15 +259,13 @@ struct Block {
   Block(size_t start, size_t end, const TextStyle& style) : fRange(start, end), fStyle(style) {}
   Block(TextRange textRange, const TextStyle& style) : fRange(textRange), fStyle(style) {}
 
-  Block(const Block& other) {
-    fRange = other.fRange;
-    fStyle = other.fStyle;
-  }
+  Block(const Block& other) : fRange(other.fRange), fStyle(other.fStyle) {}
 
   void add(TextRange tail) {
     SkASSERT(fRange.end == tail.start);
     fRange = TextRange(fRange.start, fRange.start + fRange.width() + tail.width());
   }
+
   TextRange fRange;
   TextStyle fStyle;
 };
@@ -266,13 +287,12 @@ struct Placeholder {
         fBlocksBefore(blocksBefore),
         fTextBefore(textBefore) {}
 
-  Placeholder(const Placeholder& other) {
-    fRange = other.fRange;
-    fStyle = other.fStyle;
-    fTextStyle = other.fTextStyle;
-    fBlocksBefore = other.fBlocksBefore;
-    fTextBefore = other.fTextBefore;
-  }
+  Placeholder(const Placeholder& other)
+      : fRange(other.fRange),
+        fStyle(other.fStyle),
+        fTextStyle(other.fTextStyle),
+        fBlocksBefore(other.fBlocksBefore),
+        fTextBefore(other.fTextBefore) {}
 
   TextRange fRange;
   PlaceholderStyle fStyle;

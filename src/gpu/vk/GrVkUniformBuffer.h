@@ -27,7 +27,6 @@ class GrVkUniformBuffer : public GrVkBuffer {
     return this->vkUpdateData(gpu, src, srcSizeInBytes, createdNewBuffer);
   }
   void release(const GrVkGpu* gpu) { this->vkRelease(gpu); }
-  void abandon() { this->vkAbandon(); }
 
  private:
   class Resource : public GrVkBuffer::Resource {

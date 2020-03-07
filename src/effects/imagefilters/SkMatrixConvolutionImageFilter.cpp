@@ -324,36 +324,12 @@ void SkMatrixConvolutionImageFilterImpl::filterBorderPixels(
   }
 }
 
-// FIXME:  This should be refactored to SkImageFilterUtils for
-// use by other filters.  For now, we assume the input is always
-// premultiplied and unpremultiply it
-static SkBitmap unpremultiply_bitmap(const SkBitmap& src) {
-  if (!src.getPixels()) {
-    return SkBitmap();
-  }
-
-  const SkImageInfo info = SkImageInfo::MakeN32(src.width(), src.height(), src.alphaType());
-  SkBitmap result;
-  if (!result.tryAllocPixels(info)) {
-    return SkBitmap();
-  }
-  for (int y = 0; y < src.height(); ++y) {
-    const uint32_t* srcRow = src.getAddr32(0, y);
-    uint32_t* dstRow = result.getAddr32(0, y);
-    for (int x = 0; x < src.width(); ++x) {
-      dstRow[x] = SkUnPreMultiply::PMColorToColor(srcRow[x]);
-    }
-  }
-  return result;
-}
-
 #if SK_SUPPORT_GPU
 
 static GrTextureDomain::Mode convert_tilemodes(SkTileMode tileMode) {
   switch (tileMode) {
     case SkTileMode::kClamp: return GrTextureDomain::kClamp_Mode;
-    case SkTileMode::kMirror:
-      // TODO (michaelludwig) - Implement mirror tiling, treat as repeat for now.
+    case SkTileMode::kMirror: return GrTextureDomain::kMirrorRepeat_Mode;
     case SkTileMode::kRepeat: return GrTextureDomain::kRepeat_Mode;
     case SkTileMode::kDecal: return GrTextureDomain::kDecal_Mode;
     default: SkASSERT(false);
@@ -401,10 +377,10 @@ sk_sp<SkSpecialImage> SkMatrixConvolutionImageFilterImpl::onFilterImage(
     // fall-back, which saves us from having to do the xform during the filter itself.
     input = ImageToColorSpace(input.get(), ctx.colorType(), ctx.colorSpace());
 
-    sk_sp<GrTextureProxy> inputProxy(input->asTextureProxyRef(context));
-    SkASSERT(inputProxy);
+    GrSurfaceProxyView inputView = input->asSurfaceProxyViewRef(context);
+    SkASSERT(inputView.asTextureProxy());
 
-    const auto isProtected = inputProxy->isProtected();
+    const auto isProtected = inputView.proxy()->isProtected();
 
     offset->fX = dstBounds.left();
     offset->fY = dstBounds.top();
@@ -414,7 +390,7 @@ sk_sp<SkSpecialImage> SkMatrixConvolutionImageFilterImpl::onFilterImage(
     srcBounds.offset(input->subset().x(), input->subset().y());
 
     auto fp = GrMatrixConvolutionEffect::Make(
-        std::move(inputProxy), srcBounds, fKernelSize, fKernel, fGain, fBias, fKernelOffset,
+        std::move(inputView), srcBounds, fKernelSize, fKernel, fGain, fBias, fKernelOffset,
         convert_tilemodes(fTileMode), fConvolveAlpha);
     if (!fp) {
       return nullptr;
@@ -428,8 +404,7 @@ sk_sp<SkSpecialImage> SkMatrixConvolutionImageFilterImpl::onFilterImage(
     // evaluating the FP, and the dst rect just uses the size of dstBounds.
     dstBounds.offset(input->subset().x(), input->subset().y());
     return DrawWithFP(
-        context, std::move(fp), dstBounds, ctx.colorType(), ctx.colorSpace(),
-        isProtected ? GrProtected::kYes : GrProtected::kNo);
+        context, std::move(fp), dstBounds, ctx.colorType(), ctx.colorSpace(), isProtected);
   }
 #endif
 
@@ -443,7 +418,11 @@ sk_sp<SkSpecialImage> SkMatrixConvolutionImageFilterImpl::onFilterImage(
   }
 
   if (!fConvolveAlpha && !inputBM.isOpaque()) {
-    inputBM = unpremultiply_bitmap(inputBM);
+    // This leaves the bitmap tagged as premul, which seems weird to me,
+    // but is consistent with old behavior.
+    inputBM.readPixels(
+        inputBM.info().makeAlphaType(kUnpremul_SkAlphaType), inputBM.getPixels(),
+        inputBM.rowBytes(), 0, 0);
   }
 
   if (!inputBM.getPixels()) {

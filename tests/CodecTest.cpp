@@ -38,7 +38,6 @@
 #include "src/core/SkAutoMalloc.h"
 #include "src/core/SkColorSpacePriv.h"
 #include "src/core/SkMD5.h"
-#include "src/core/SkMakeUnique.h"
 #include "src/core/SkStreamPriv.h"
 #include "tests/FakeStreams.h"
 #include "tests/Test.h"
@@ -542,9 +541,9 @@ DEF_TEST(Codec_raw, r) {
 static void test_invalid_stream(skiatest::Reporter* r, const void* stream, size_t len) {
   // Neither of these calls should return a codec. Bots should catch us if we leaked anything.
   REPORTER_ASSERT(
-      r, !SkCodec::MakeFromStream(skstd::make_unique<SkMemoryStream>(stream, len, false)));
+      r, !SkCodec::MakeFromStream(std::make_unique<SkMemoryStream>(stream, len, false)));
   REPORTER_ASSERT(
-      r, !SkAndroidCodec::MakeFromStream(skstd::make_unique<SkMemoryStream>(stream, len, false)));
+      r, !SkAndroidCodec::MakeFromStream(std::make_unique<SkMemoryStream>(stream, len, false)));
 }
 
 // Ensure that SkCodec::NewFromStream handles freeing the passed in SkStream,
@@ -861,7 +860,7 @@ DEF_TEST(Codec_raw_notseekable, r) {
   }
 
   std::unique_ptr<SkCodec> codec(
-      SkCodec::MakeFromStream(skstd::make_unique<NotAssetMemStream>(std::move(data))));
+      SkCodec::MakeFromStream(std::make_unique<NotAssetMemStream>(std::move(data))));
   REPORTER_ASSERT(r, codec);
 
   test_info(r, codec.get(), codec->getInfo(), SkCodec::kSuccess, nullptr);
@@ -880,13 +879,13 @@ DEF_TEST(Codec_webp_peek, r) {
 
   // The limit is less than webp needs to peek or read.
   std::unique_ptr<SkCodec> codec(
-      SkCodec::MakeFromStream(skstd::make_unique<LimitedPeekingMemStream>(data, 25)));
+      SkCodec::MakeFromStream(std::make_unique<LimitedPeekingMemStream>(data, 25)));
   REPORTER_ASSERT(r, codec);
 
   test_info(r, codec.get(), codec->getInfo(), SkCodec::kSuccess, nullptr);
 
   // Similarly, a stream which does not peek should still succeed.
-  codec = SkCodec::MakeFromStream(skstd::make_unique<LimitedPeekingMemStream>(data, 0));
+  codec = SkCodec::MakeFromStream(std::make_unique<LimitedPeekingMemStream>(data, 0));
   REPORTER_ASSERT(r, codec);
 
   test_info(r, codec.get(), codec->getInfo(), SkCodec::kSuccess, nullptr);
@@ -1096,7 +1095,7 @@ DEF_TEST(Codec_PngRoundTrip, r) {
   for (SkAlphaType alphaType : alphaTypes) {
     SkImageInfo newInfo = codec->getInfo().makeAlphaType(alphaType).makeColorSpace(nullptr);
     check_round_trip(r, codec.get(), newInfo);
-  }
+    }
 }
 
 static void test_conversion_possible(
@@ -1523,7 +1522,8 @@ static void test_encode_icc(skiatest::Reporter* r, SkEncodedImageFormat format) 
 
   // Test with P3 color space.
   SkDynamicMemoryWStream p3Buf;
-  sk_sp<SkColorSpace> p3 = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kDCIP3);
+  sk_sp<SkColorSpace> p3 =
+      SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kDisplayP3);
   pixmap.setColorSpace(p3);
   encode_format(&p3Buf, pixmap, format);
   sk_sp<SkData> p3Data = p3Buf.detachAsData();

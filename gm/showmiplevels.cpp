@@ -272,8 +272,8 @@ class ShowMipLevels2 : public skiagm::GM {
   }
 
   void drawSet(SkCanvas* canvas, const SkBitmap& orig) {
-    const SkColorType ctypes[] = {kN32_SkColorType, kRGB_565_SkColorType, kARGB_4444_SkColorType,
-                                  kGray_8_SkColorType};
+    const SkColorType ctypes[] = {
+        kN32_SkColorType, kRGB_565_SkColorType, kARGB_4444_SkColorType, kGray_8_SkColorType};
 
     SkAutoCanvasRestore acr(canvas, true);
 

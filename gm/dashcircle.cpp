@@ -29,10 +29,11 @@ int dash4[] = {1, 3, 2, 4};
 struct DashExample {
   int* pattern;
   int length;
-} dashExamples[] = {{dash1, SK_ARRAY_COUNT(dash1)},
-                    {dash2, SK_ARRAY_COUNT(dash2)},
-                    {dash3, SK_ARRAY_COUNT(dash3)},
-                    {dash4, SK_ARRAY_COUNT(dash4)}};
+} dashExamples[] = {
+    {dash1, SK_ARRAY_COUNT(dash1)},
+    {dash2, SK_ARRAY_COUNT(dash2)},
+    {dash3, SK_ARRAY_COUNT(dash3)},
+    {dash4, SK_ARRAY_COUNT(dash4)}};
 
 class DashCircleGM : public skiagm::GM {
  public:
@@ -150,8 +151,8 @@ class DashCircle2GM : public skiagm::GM {
     for (int i = 0; i < kN; ++i) {
       static constexpr SkScalar kTau = 2 * SK_ScalarPI;
       static constexpr SkScalar kCircumference = kRadius * kTau;
-      SkScalar scaledIntervals[2] = {kCircumference * kIntervals[i][0],
-                                     kCircumference * kIntervals[i][1]};
+      SkScalar scaledIntervals[2] = {
+          kCircumference * kIntervals[i][0], kCircumference * kIntervals[i][1]};
       deffects[i] =
           SkDashPathEffect::Make(scaledIntervals, 2, kCircumference * fPhaseDegrees * kTau / 360.f);
       static constexpr SkScalar kThinCircumference = kThinRadius * kTau;

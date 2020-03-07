@@ -62,8 +62,8 @@ class FontRegenGM : public skiagm::GpuGM {
 
     auto tf = ToolUtils::create_portable_typeface("sans-serif", SkFontStyle::Normal());
 
-    static const SkString kTexts[] = {SkString("abcdefghijklmnopqrstuvwxyz"), SkString("ABCDEFGHI"),
-                                      SkString("NOPQRSTUV")};
+    static const SkString kTexts[] = {
+        SkString("abcdefghijklmnopqrstuvwxyz"), SkString("ABCDEFGHI"), SkString("NOPQRSTUV")};
 
     SkFont font;
     font.setEdging(SkFont::Edging::kAntiAlias);

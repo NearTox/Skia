@@ -26,6 +26,7 @@
 #include "include/gpu/GrContext.h"
 #include "include/gpu/GrTypes.h"
 #include "include/private/SkTArray.h"
+#include "src/gpu/GrContextPriv.h"
 #include "src/image/SkImage_Base.h"
 #include "src/image/SkImage_Gpu.h"
 #include "tools/ToolUtils.h"
@@ -113,14 +114,19 @@ static sk_sp<SkImage> make_reference_image(
 
   auto origin = bottomLeftOrigin ? kBottomLeft_GrSurfaceOrigin : kTopLeft_GrSurfaceOrigin;
 
+  // TODO: make MakeTextureProxyFromData return a GrSurfaceProxyView
   auto proxy = sk_gpu_test::MakeTextureProxyFromData(
       context, GrRenderable::kNo, origin, bm.info(), bm.getPixels(), bm.rowBytes());
   if (!proxy) {
     return nullptr;
   }
 
+  GrSwizzle swizzle =
+      context->priv().caps()->getReadSwizzle(proxy->backendFormat(), GrColorType::kRGBA_8888);
+  GrSurfaceProxyView view(std::move(proxy), origin, swizzle);
   return sk_make_sp<SkImage_Gpu>(
-      sk_ref_sp(context), kNeedNewImageUniqueID, kOpaque_SkAlphaType, std::move(proxy), nullptr);
+      sk_ref_sp(context), kNeedNewImageUniqueID, std::move(view), ii.colorType(),
+      kOpaque_SkAlphaType, nullptr);
 }
 
 // Here we're converting from a matrix that is intended for UVs to a matrix that is intended
@@ -210,8 +216,8 @@ class FlippityGM : public skiagm::GpuGM {
 
     static const char* kLabelText[kNumLabels] = {"LL", "LR", "UL", "UR"};
 
-    static const SkColor kLabelColors[kNumLabels] = {SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE,
-                                                     SK_ColorCYAN};
+    static const SkColor kLabelColors[kNumLabels] = {
+        SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorCYAN};
 
     for (int i = 0; i < kNumLabels; ++i) {
       fLabels.push_back(make_text_image(context, kLabelText[i], kLabelColors[i]));

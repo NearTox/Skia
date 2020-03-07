@@ -30,10 +30,10 @@ class Path : public GeometryNode {
   // Temporarily inlined for SkPathFillType staging
   // SG_MAPPED_ATTRIBUTE(FillType, SkPathFillType, fPath)
 
-  SkPathFillType getFillType() const { return fPath.getNewFillType(); }
+  SkPathFillType getFillType() const { return fPath.getFillType(); }
 
   void setFillType(SkPathFillType fillType) {
-    if (fillType != fPath.getNewFillType()) {
+    if (fillType != fPath.getFillType()) {
       fPath.setFillType(fillType);
       this->invalidate();
     }

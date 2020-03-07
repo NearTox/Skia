@@ -36,9 +36,10 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachPrecompLayer(
     local_scope.init(this);
   }
 
-  auto precomp_layer = this->attachAssetRef(jlayer, [this](const skjson::ObjectValue& jcomp) {
-    return CompositionBuilder(*this, jcomp).build(*this);
-  });
+  auto precomp_layer =
+      this->attachAssetRef(jlayer, [this, layer_info](const skjson::ObjectValue& jcomp) {
+        return CompositionBuilder(*this, layer_info->fSize, jcomp).build(*this);
+      });
 
   // Applies a bias/scale/remap t-adjustment to child animators.
   class CompTimeMapper final : public sksg::GroupAnimator {

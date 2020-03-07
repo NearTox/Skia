@@ -45,7 +45,6 @@ sk_sp<SkImage> SkDeferredDisplayListRecorder::makeYUVAPromiseTexture(
 #  include "include/core/SkPromiseImageTexture.h"
 #  include "include/core/SkYUVASizeInfo.h"
 #  include "include/gpu/GrTexture.h"
-#  include "src/core/SkMakeUnique.h"
 #  include "src/gpu/GrContextPriv.h"
 #  include "src/gpu/GrProxyProvider.h"
 #  include "src/gpu/GrRenderTargetContext.h"
@@ -113,16 +112,9 @@ bool SkDeferredDisplayListRecorder::init() {
 
   GrColorType grColorType = SkColorTypeToGrColorType(fCharacterization.colorType());
 
-  GrPixelConfig config =
-      caps->getConfigFromBackendFormat(fCharacterization.backendFormat(), grColorType);
-  if (config == kUnknown_GrPixelConfig) {
-    return false;
-  }
-
   GrSurfaceDesc desc;
   desc.fWidth = fCharacterization.width();
   desc.fHeight = fCharacterization.height();
-  desc.fConfig = config;
 
   sk_sp<SkDeferredDisplayList::LazyProxyData> lazyProxyData = fLazyProxyData;
 
@@ -141,6 +133,8 @@ bool SkDeferredDisplayListRecorder::init() {
     optionalTextureInfo = &kTextureInfo;
   }
 
+  GrSwizzle readSwizzle = caps->getReadSwizzle(fCharacterization.backendFormat(), grColorType);
+
   sk_sp<GrRenderTargetProxy> proxy = proxyProvider->createLazyRenderTargetProxy(
       [lazyProxyData](GrResourceProvider* resourceProvider) {
         // The proxy backing the destination surface had better have been instantiated
@@ -149,7 +143,7 @@ bool SkDeferredDisplayListRecorder::init() {
         auto surface = sk_ref_sp<GrSurface>(lazyProxyData->fReplayDest->peekSurface());
         return GrSurfaceProxy::LazyCallbackResult(std::move(surface));
       },
-      fCharacterization.backendFormat(), desc, fCharacterization.sampleCount(),
+      fCharacterization.backendFormat(), desc, readSwizzle, fCharacterization.sampleCount(),
       fCharacterization.origin(), surfaceFlags, optionalTextureInfo, GrMipMapsStatus::kNotAllocated,
       SkBackingFit::kExact, SkBudgeted::kYes, fCharacterization.isProtected(),
       fCharacterization.vulkanSecondaryCBCompatible(), GrSurfaceProxy::UseAllocator::kYes);
@@ -158,11 +152,15 @@ bool SkDeferredDisplayListRecorder::init() {
     return false;
   }
 
-  auto c = fContext->priv().makeWrappedSurfaceContext(
-      std::move(proxy), grColorType, kPremul_SkAlphaType, fCharacterization.refColorSpace(),
-      &fCharacterization.surfaceProps());
-  SkASSERT(c->asRenderTargetContext());
-  std::unique_ptr<GrRenderTargetContext> rtc(c.release()->asRenderTargetContext());
+  GrSwizzle outputSwizzle = caps->getOutputSwizzle(fCharacterization.backendFormat(), grColorType);
+  SkASSERT(readSwizzle == proxy->textureSwizzle());
+
+  GrSurfaceProxyView readView(proxy, fCharacterization.origin(), readSwizzle);
+  GrSurfaceProxyView outputView(std::move(proxy), fCharacterization.origin(), outputSwizzle);
+
+  auto rtc = std::make_unique<GrRenderTargetContext>(
+      fContext.get(), std::move(readView), std::move(outputView), grColorType,
+      fCharacterization.refColorSpace(), &fCharacterization.surfaceProps());
   fSurface = SkSurface_Gpu::MakeWrappedRenderTarget(fContext.get(), std::move(rtc));
   return SkToBool(fSurface.get());
 }

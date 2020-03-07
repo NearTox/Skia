@@ -98,9 +98,9 @@ bool pf_less(const PixelFormat& a, const PixelFormat& b) {
   } else if (a.fChoosePixelFormatRank < b.fChoosePixelFormatRank) {
     return true;
   }
-  return false;
+    return false;
 }
-}  // namespace
+}
 
 int SkWGLExtensions::selectFormat(
     const int formats[], int formatCount, HDC dc, int desiredSampleCount) const {

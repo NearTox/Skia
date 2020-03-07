@@ -38,9 +38,9 @@ size_t GrTexture::onGpuMemorySize() const {
 
 /////////////////////////////////////////////////////////////////////////////
 GrTexture::GrTexture(
-    GrGpu* gpu, const SkISize& dimensions, GrPixelConfig config, GrProtected isProtected,
-    GrTextureType textureType, GrMipMapsStatus mipMapsStatus)
-    : INHERITED(gpu, dimensions, config, isProtected),
+    GrGpu* gpu, const SkISize& dimensions, GrProtected isProtected, GrTextureType textureType,
+    GrMipMapsStatus mipMapsStatus)
+    : INHERITED(gpu, dimensions, isProtected),
       fTextureType(textureType),
       fMipMapsStatus(mipMapsStatus) {
   if (GrMipMapsStatus::kNotAllocated == fMipMapsStatus) {
@@ -90,31 +90,31 @@ void GrTexture::computeScratchKey(GrScratchKey* key) const {
     }
     auto isProtected = this->isProtected() ? GrProtected::kYes : GrProtected::kNo;
     GrTexturePriv::ComputeScratchKey(
-        this->config(), this->dimensions(), renderable, sampleCount,
+        *this->getGpu()->caps(), this->backendFormat(), this->dimensions(), renderable, sampleCount,
         this->texturePriv().mipMapped(), isProtected, key);
   }
 }
 
 void GrTexturePriv::ComputeScratchKey(
-    GrPixelConfig config, SkISize dimensions, GrRenderable renderable, int sampleCnt,
-    GrMipMapped mipMapped, GrProtected isProtected, GrScratchKey* key) {
+    const GrCaps& caps, const GrBackendFormat& format, SkISize dimensions, GrRenderable renderable,
+    int sampleCnt, GrMipMapped mipMapped, GrProtected isProtected, GrScratchKey* key) {
   static const GrScratchKey::ResourceType kType = GrScratchKey::GenerateResourceType();
   SkASSERT(!dimensions.isEmpty());
   SkASSERT(sampleCnt > 0);
   SkASSERT(1 == sampleCnt || renderable == GrRenderable::kYes);
 
-  // make sure desc.fConfig fits in 5 bits
-  SkASSERT(sk_float_log2(kLast_GrPixelConfig) <= 5);
-  SkASSERT(static_cast<uint32_t>(config) < (1 << 5));
   SkASSERT(static_cast<uint32_t>(mipMapped) <= 1);
   SkASSERT(static_cast<uint32_t>(isProtected) <= 1);
   SkASSERT(static_cast<uint32_t>(renderable) <= 1);
-  SkASSERT(static_cast<uint32_t>(sampleCnt) < (1 << (32 - 8)));
+  SkASSERT(static_cast<uint32_t>(sampleCnt) < (1 << (32 - 3)));
 
-  GrScratchKey::Builder builder(key, kType, 3);
+  uint64_t formatKey = caps.computeFormatKey(format);
+
+  GrScratchKey::Builder builder(key, kType, 5);
   builder[0] = dimensions.width();
   builder[1] = dimensions.height();
-  builder[2] = (static_cast<uint32_t>(config) << 0) | (static_cast<uint32_t>(mipMapped) << 5) |
-               (static_cast<uint32_t>(isProtected) << 6) |
-               (static_cast<uint32_t>(renderable) << 7) | (static_cast<uint32_t>(sampleCnt) << 8);
+  builder[2] = formatKey & 0xFFFFFFFF;
+  builder[3] = (formatKey >> 32) & 0xFFFFFFFF;
+  builder[4] = (static_cast<uint32_t>(mipMapped) << 0) | (static_cast<uint32_t>(isProtected) << 1) |
+               (static_cast<uint32_t>(renderable) << 2) | (static_cast<uint32_t>(sampleCnt) << 3);
 }

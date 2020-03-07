@@ -376,8 +376,8 @@ DEF_SIMPLE_GM(scalepixels_unpremul, canvas, 1080, 280) {
   SkAutoPixmapStorage pm2;
   pm2.alloc(SkImageInfo::MakeN32(256, 256, kUnpremul_SkAlphaType));
 
-  const SkFilterQuality qualities[] = {kNone_SkFilterQuality, kLow_SkFilterQuality,
-                                       kMedium_SkFilterQuality, kHigh_SkFilterQuality};
+  const SkFilterQuality qualities[] = {
+      kNone_SkFilterQuality, kLow_SkFilterQuality, kMedium_SkFilterQuality, kHigh_SkFilterQuality};
 
   for (auto fq : qualities) {
     pm.scalePixels(pm2, fq);

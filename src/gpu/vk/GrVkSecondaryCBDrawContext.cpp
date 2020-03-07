@@ -29,7 +29,7 @@ sk_sp<GrVkSecondaryCBDrawContext> GrVkSecondaryCBDrawContext::Make(
     return nullptr;
   }
 
-  auto rtc = ctx->priv().makeVulkanSecondaryCBRenderTargetContext(imageInfo, vkInfo, props);
+  auto rtc = GrRenderTargetContext::MakeFromVulkanSecondaryCB(ctx, imageInfo, vkInfo, props);
   SkASSERT(rtc->asSurfaceProxy()->isInstantiated());
 
   sk_sp<SkGpuDevice> device(
@@ -94,7 +94,7 @@ bool GrVkSecondaryCBDrawContext::characterize(SkSurfaceCharacterization* charact
       SkSurfaceCharacterization::Textureable(false), SkSurfaceCharacterization::MipMapped(false),
       SkSurfaceCharacterization::UsesGLFBO0(false),
       SkSurfaceCharacterization::VulkanSecondaryCBCompatible(true),
-      GrProtected(rtc->asRenderTargetProxy()->isProtected()), this->props());
+      rtc->asRenderTargetProxy()->isProtected(), this->props());
 
   return true;
 }
@@ -132,7 +132,7 @@ bool GrVkSecondaryCBDrawContext::isCompatible(
   }
 
   GrBackendFormat rtcFormat = rtc->asRenderTargetProxy()->backendFormat();
-  GrProtected isProtected = GrProtected(rtc->asRenderTargetProxy()->isProtected());
+  GrProtected isProtected = rtc->asRenderTargetProxy()->isProtected();
 
   return characterization.contextInfo() && characterization.contextInfo()->priv().matches(ctx) &&
          characterization.cacheMaxResourceBytes() <= maxResourceBytes &&

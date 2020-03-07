@@ -77,8 +77,8 @@ Editor::TextPosition Editor::getPosition(SkIPoint xy) {
   this->reshapeAll();
   for (size_t j = 0; j < fLines.size(); ++j) {
     const TextLine& line = fLines[j];
-    SkIRect lineRect = {0, line.fOrigin.y(), fWidth,
-                        j + 1 < fLines.size() ? fLines[j + 1].fOrigin.y() : INT_MAX};
+    SkIRect lineRect = {
+        0, line.fOrigin.y(), fWidth, j + 1 < fLines.size() ? fLines[j + 1].fOrigin.y() : INT_MAX};
     if (const SkTextBlob* b = line.fBlob.get()) {
       SkIRect r = b->bounds().roundOut();
       r.offset(line.fOrigin);
@@ -174,7 +174,7 @@ Editor::TextPosition Editor::insert(TextPosition pos, const char* utf8Text, size
       (line++)->fText = remove_newline(str, l);
     });
   }
-  return pos;
+    return pos;
 }
 
 Editor::TextPosition Editor::remove(TextPosition pos1, TextPosition pos2) {
@@ -203,7 +203,7 @@ Editor::TextPosition Editor::remove(TextPosition pos1, TextPosition pos2) {
     fLines.erase(
         fLines.begin() + start.fParagraphIndex + 1, fLines.begin() + end.fParagraphIndex + 1);
   }
-  return start;
+    return start;
 }
 
 static void append(char** dst, size_t* count, const char* src, size_t n) {
@@ -242,9 +242,9 @@ size_t Editor::copy(TextPosition pos1, TextPosition pos2, char* dst) const {
     append(&dst, &size, "\n", 1);
     append(&dst, &size, line->fText.begin(), line->fText.size());
   }
-  append(&dst, &size, "\n", 1);
-  append(&dst, &size, last.begin(), end.fTextByteIndex);
-  return size;
+    append(&dst, &size, "\n", 1);
+    append(&dst, &size, last.begin(), end.fTextByteIndex);
+    return size;
 }
 
 static inline const char* begin(const StringSlice& s) { return s.begin(); }

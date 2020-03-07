@@ -28,13 +28,11 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
   static const int kVerticesPerGlyph = GrTextBlob::kVerticesPerGlyph;
   static const int kIndicesPerGlyph = 6;
 
-  typedef GrTextBlob Blob;
   struct Geometry {
-    SkMatrix fViewMatrix;
+    SkMatrix fDrawMatrix;
     SkIRect fClipRect;
-    Blob* fBlob;
-    SkScalar fX;
-    SkScalar fY;
+    GrTextBlob* fBlob;
+    SkPoint fDrawOrigin;
     GrTextBlob::SubRun* fSubRunPtr;
     SkPMColor4f fColor;
   };
@@ -99,8 +97,9 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
     sk_sp<const GrBuffer> fIndexBuffer;
     GrGeometryProcessor* fGeometryProcessor;
     GrPipeline::FixedDynamicState* fFixedDynamicState;
-    int fGlyphsToFlush;
-    int fVertexOffset;
+    int fGlyphsToFlush = 0;
+    int fVertexOffset = 0;
+    int fNumDraws = 0;
   };
 
   void onPrepareDraws(Target*) override;
@@ -139,11 +138,12 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
   bool usesLocalCoords() const { return fUsesLocalCoords; }
   int numGlyphs() const { return fNumGlyphs; }
 
-  CombineResult onCombineIfPossible(GrOp* t, const GrCaps& caps) override;
+  CombineResult onCombineIfPossible(
+      GrOp* t, GrRecordingContext::Arenas*, const GrCaps& caps) override;
 
   GrGeometryProcessor* setupDfProcessor(
-      SkArenaAlloc* arena, const GrShaderCaps& caps, const sk_sp<GrTextureProxy>* proxies,
-      unsigned int numActiveProxies) const;
+      SkArenaAlloc* arena, const GrShaderCaps& caps, const GrSurfaceProxyView* views,
+      unsigned int numActiveViews) const;
 
   SkAutoSTMalloc<kMinGeometryAllocated, Geometry> fGeoData;
   int fGeoDataAllocSize;

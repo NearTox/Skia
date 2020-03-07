@@ -30,7 +30,6 @@
 #include "src/core/SkGlyphRun.h"
 #include "src/core/SkImageFilterCache.h"
 #include "src/core/SkImageFilter_Base.h"
-#include "src/core/SkMakeUnique.h"
 #include "src/core/SkMaskFilterBase.h"
 #include "src/core/SkRasterClip.h"
 #include "src/core/SkScopeExit.h"
@@ -49,6 +48,7 @@
 #include "src/pdf/SkPDFShader.h"
 #include "src/pdf/SkPDFTypes.h"
 #include "src/pdf/SkPDFUtils.h"
+#include "src/utils/SkClipStackUtils.h"
 #include "src/utils/SkUTF.h"
 
 #include <vector>
@@ -312,7 +312,7 @@ void SkPDFDevice::drawAnnotation(const SkRect& rect, const char key[], SkData* v
   SkPath path = to_path(rect);
   path.transform(this->localToDevice(), &path);
   SkPath clip;
-  (void)this->cs().asPath(&clip);
+  SkClipStack_AsPath(this->cs(), &clip);
   Op(clip, path, kIntersect_SkPathOp, &path);
   // PDF wants a rectangle only.
   SkRect transformedRect =
@@ -487,7 +487,7 @@ void SkPDFDevice::internalDrawPathWithFilter(
           SkPDFGraphicState::kLuminosity_SMaskMode, fDocument),
       content.stream());
   SkPDFUtils::AppendRectangle(SkRect::Make(dstMaskBounds), content.stream());
-  SkPDFUtils::PaintPath(SkPaint::kFill_Style, path.getNewFillType(), content.stream());
+  SkPDFUtils::PaintPath(SkPaint::kFill_Style, path.getFillType(), content.stream());
   this->clearMaskOnGraphicState(content.stream());
 }
 
@@ -571,7 +571,7 @@ void SkPDFDevice::internalDrawPath(
                                                     paint->getStrokeCap() != SkPaint::kSquare_Cap);
   SkPDFUtils::EmitPath(
       *pathPtr, paint->getStyle(), consumeDegeratePathSegments, content.stream(), tolerance);
-  SkPDFUtils::PaintPath(paint->getStyle(), pathPtr->getNewFillType(), content.stream());
+  SkPDFUtils::PaintPath(paint->getStyle(), pathPtr->getFillType(), content.stream());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -979,7 +979,7 @@ std::unique_ptr<SkStreamAsset> SkPDFDevice::content() {
     fActiveStackState = SkPDFGraphicStackState();
   }
   if (fContent.bytesWritten() == 0) {
-    return skstd::make_unique<SkMemoryStream>();
+    return std::make_unique<SkMemoryStream>();
   }
   SkDynamicMemoryWStream buffer;
   if (fInitialTransform.getType() != SkMatrix::kIdentity_Mask) {

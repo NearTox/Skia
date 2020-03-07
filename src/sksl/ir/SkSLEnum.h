@@ -28,7 +28,7 @@ struct Enum : public ProgramElement {
     return std::unique_ptr<ProgramElement>(new Enum(fOffset, fTypeName, fSymbols));
   }
 
-  String description() const override {
+  String code() const {
     String result = "enum class " + fTypeName + " {\n";
     String separator;
     std::vector<const Symbol*> sortedSymbols;
@@ -39,13 +39,19 @@ struct Enum : public ProgramElement {
       return a->fName < b->fName;
     });
     for (const auto& s : sortedSymbols) {
+      const Expression& initialValue = *((Variable*)s)->fInitialValue;
+      SkASSERT(initialValue.fKind == Expression::kIntLiteral_Kind);
       result +=
-          separator + "    " + s->fName + " = " + ((Variable*)s)->fInitialValue->description();
+          separator + "    " + s->fName + " = " + to_string(((IntLiteral&)initialValue).fValue);
       separator = ",\n";
     }
     result += "\n};";
     return result;
   }
+
+#ifdef SK_DEBUG
+  String description() const override { return this->code(); }
+#endif
 
   bool fBuiltin = false;
   const StringFragment fTypeName;

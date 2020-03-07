@@ -92,8 +92,8 @@ class AAXfermodesGM : public skiagm::GM {
   }
 
   void draw_pass(SkCanvas* canvas, DrawingPass drawingPass) {
-    SkRect clipRect = {-kShapeSize * 11 / 16, -kShapeSize * 11 / 16, kShapeSize * 11 / 16,
-                       kShapeSize * 11 / 16};
+    SkRect clipRect = {
+        -kShapeSize * 11 / 16, -kShapeSize * 11 / 16, kShapeSize * 11 / 16, kShapeSize * 11 / 16};
 
     canvas->save();
     if (kCheckerboard_Pass == drawingPass) {

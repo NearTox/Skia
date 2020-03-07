@@ -24,13 +24,13 @@
 // NOTE: The positions define hardstops for the red and green borders. For the repeating degenerate
 // gradients, that means the red and green are never visible, so the average color used should only
 // be based off of the white, blue, black blend.
-static const SkColor COLORS[] = {SK_ColorRED, SK_ColorWHITE, SK_ColorBLUE, SK_ColorBLACK,
-                                 SK_ColorGREEN};
+static const SkColor COLORS[] = {
+    SK_ColorRED, SK_ColorWHITE, SK_ColorBLUE, SK_ColorBLACK, SK_ColorGREEN};
 static const SkScalar POS[] = {0.0, 0.0, 0.5, 1.0, 1.0};
 static const int COLOR_CT = SK_ARRAY_COUNT(COLORS);
 
-static const SkTileMode TILE_MODES[] = {SkTileMode::kDecal, SkTileMode::kRepeat,
-                                        SkTileMode::kMirror, SkTileMode::kClamp};
+static const SkTileMode TILE_MODES[] = {
+    SkTileMode::kDecal, SkTileMode::kRepeat, SkTileMode::kMirror, SkTileMode::kClamp};
 static const char* TILE_NAMES[] = {"decal", "repeat", "mirror", "clamp"};
 static const int TILE_MODE_CT = SK_ARRAY_COUNT(TILE_MODES);
 

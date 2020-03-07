@@ -91,8 +91,9 @@ static void draw_vector_logo(SkCanvas* canvas, const SkRect& viewBox) {
       SkGradientShader::MakeLinear(pts1, colors1, pos1, SK_ARRAY_COUNT(pos1), SkTileMode::kClamp));
   canvas->drawRect(underlineRect, paint);
 
-  const SkPoint pts2[] = {SkPoint::Make(iBox.x() - iBox.width() * kGradientPad, 0),
-                          SkPoint::Make(iBox.right() + iBox.width() * kGradientPad, 0)};
+  const SkPoint pts2[] = {
+      SkPoint::Make(iBox.x() - iBox.width() * kGradientPad, 0),
+      SkPoint::Make(iBox.right() + iBox.width() * kGradientPad, 0)};
   const SkScalar pos2[] = {0, .01f, 1.0f / 3, 1.0f / 3, 2.0f / 3, 2.0f / 3, .99f, 1};
   const SkColor colors2[] = {SK_ColorBLACK, 0xffca5139, 0xffca5139, 0xff8dbd53,
                              0xff8dbd53,    0xff5460a5, 0xff5460a5, SK_ColorBLACK};

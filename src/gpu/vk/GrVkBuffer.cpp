@@ -106,16 +106,6 @@ void GrVkBuffer::vkRelease(const GrVkGpu* gpu) {
   VALIDATE();
 }
 
-void GrVkBuffer::vkAbandon() {
-  fResource->unrefAndAbandon();
-  fResource = nullptr;
-  if (!fDesc.fDynamic) {
-    delete[](unsigned char*) fMapPtr;
-  }
-  fMapPtr = nullptr;
-  VALIDATE();
-}
-
 VkAccessFlags buffer_type_to_access_flags(GrVkBuffer::Type type) {
   switch (type) {
     case GrVkBuffer::kIndex_Type: return VK_ACCESS_INDEX_READ_BIT;
@@ -148,20 +138,20 @@ void GrVkBuffer::internalMap(GrVkGpu* gpu, size_t size, bool* createdNewBuffer) 
     }
   }
 
-  if (fDesc.fDynamic) {
-    const GrVkAlloc& alloc = this->alloc();
-    SkASSERT(alloc.fSize > 0);
-    SkASSERT(alloc.fSize >= size);
-    SkASSERT(0 == fOffset);
+    if (fDesc.fDynamic) {
+      const GrVkAlloc& alloc = this->alloc();
+      SkASSERT(alloc.fSize > 0);
+      SkASSERT(alloc.fSize >= size);
+      SkASSERT(0 == fOffset);
 
-    fMapPtr = GrVkMemory::MapAlloc(gpu, alloc);
-  } else {
-    if (!fMapPtr) {
-      fMapPtr = new unsigned char[this->size()];
+      fMapPtr = GrVkMemory::MapAlloc(gpu, alloc);
+    } else {
+      if (!fMapPtr) {
+        fMapPtr = new unsigned char[this->size()];
+      }
     }
-  }
 
-  VALIDATE();
+    VALIDATE();
 }
 
 void GrVkBuffer::copyCpuDataToGpuBuffer(GrVkGpu* gpu, const void* src, size_t size) {

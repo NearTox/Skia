@@ -80,17 +80,13 @@ struct SK_API SkPoint3 {
       a and b (i.e., a - b)
   */
   friend SkPoint3 operator-(const SkPoint3& a, const SkPoint3& b) {
-    SkPoint3 v;
-    v.set(a.fX - b.fX, a.fY - b.fY, a.fZ - b.fZ);
-    return v;
+    return {a.fX - b.fX, a.fY - b.fY, a.fZ - b.fZ};
   }
 
   /** Returns a new point whose coordinates are the sum of a and b (a + b)
    */
   friend SkPoint3 operator+(const SkPoint3& a, const SkPoint3& b) {
-    SkPoint3 v;
-    v.set(a.fX + b.fX, a.fY + b.fY, a.fZ + b.fZ);
-    return v;
+    return {a.fX + b.fX, a.fY + b.fY, a.fZ + b.fZ};
   }
 
   /** Add v's coordinates to the point's
@@ -108,6 +104,8 @@ struct SK_API SkPoint3 {
     fY -= v.fY;
     fZ -= v.fZ;
   }
+
+  friend SkPoint3 operator*(SkScalar t, SkPoint3 p) { return {t * p.fX, t * p.fY, t * p.fZ}; }
 
   /** Returns true if fX, fY, and fZ are measurable values.
 

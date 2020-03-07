@@ -27,7 +27,8 @@ class SkColorFilterShader : public SkShaderBase {
   bool onAppendStages(const SkStageRec&) const override;
 
   bool onProgram(
-      skvm::Builder*, SkColorSpace* dstCS, skvm::Uniforms* uniforms, skvm::F32 x, skvm::F32 y,
+      skvm::Builder*, const SkMatrix& ctm, const SkMatrix* localM, SkFilterQuality quality,
+      SkColorSpace* dstCS, skvm::Uniforms* uniforms, SkArenaAlloc*, skvm::F32 x, skvm::F32 y,
       skvm::F32* r, skvm::F32* g, skvm::F32* b, skvm::F32* a) const override;
 
   SK_FLATTENABLE_HOOKS(SkColorFilterShader)

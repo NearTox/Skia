@@ -36,8 +36,8 @@ struct GradData {
   const SkScalar* fPos;
 };
 
-constexpr SkColor gColors[] = {SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorWHITE,
-                               SK_ColorBLACK};
+constexpr SkColor gColors[] = {
+    SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorWHITE, SK_ColorBLACK};
 constexpr SkColor4f gColors4f[] = {
     {1.0f, 0.0f, 0.0f, 1.0f},  // Red
     {0.0f, 1.0f, 0.0f, 1.0f},  // Green
@@ -162,8 +162,8 @@ static sk_sp<SkShader> Make2Conical4f(
 typedef sk_sp<SkShader> (*GradMaker)(
     const SkPoint pts[2], const GradData& data, SkTileMode tm, const SkMatrix& localMatrix);
 constexpr GradMaker gGradMakers[] = {MakeLinear, MakeRadial, MakeSweep, Make2Radial, Make2Conical};
-constexpr GradMaker gGradMakers4f[] = {MakeLinear4f, MakeRadial4f, MakeSweep4f, Make2Radial4f,
-                                       Make2Conical4f};
+constexpr GradMaker gGradMakers4f[] = {
+    MakeLinear4f, MakeRadial4f, MakeSweep4f, Make2Radial4f, Make2Conical4f};
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -787,8 +787,8 @@ DEF_SIMPLE_GM(gradients_dup_color_stops, canvas, 704, 564) {
           4,
       },
   };
-  sk_sp<SkShader> (*factories[])(const GradRun&, SkTileMode){make_linear, make_radial, make_conical,
-                                                             make_sweep};
+  sk_sp<SkShader> (*factories[])(const GradRun&, SkTileMode){
+      make_linear, make_radial, make_conical, make_sweep};
 
   const SkRect rect = SkRect::MakeWH(SIZE, SIZE);
   const SkScalar dx = SIZE + 20;
@@ -931,8 +931,8 @@ DEF_SIMPLE_GM(sweep_tiling, canvas, 690, 512) {
   static constexpr SkScalar pos[] = {0, .25f, .50f};
   static_assert(SK_ARRAY_COUNT(colors) == SK_ARRAY_COUNT(pos), "size mismatch");
 
-  static constexpr SkTileMode modes[] = {SkTileMode::kClamp, SkTileMode::kRepeat,
-                                         SkTileMode::kMirror};
+  static constexpr SkTileMode modes[] = {
+      SkTileMode::kClamp, SkTileMode::kRepeat, SkTileMode::kMirror};
 
   static const struct {
     SkScalar start, end;

@@ -40,7 +40,7 @@ static uint32_t sampler_key(
     GrTextureType textureType, const GrSwizzle& swizzle, const GrCaps& caps) {
   int samplerTypeKey = texture_type_key(textureType);
 
-  GR_STATIC_ASSERT(2 == sizeof(swizzle.asKey()));
+  static_assert(2 == sizeof(swizzle.asKey()));
   uint16_t swizzleKey = 0;
   if (caps.shaderCaps()->textureSwizzleAppliedInShader()) {
     swizzleKey = swizzle.asKey();
@@ -56,9 +56,9 @@ static void add_fp_sampler_keys(
   }
   for (int i = 0; i < numTextureSamplers; ++i) {
     const GrFragmentProcessor::TextureSampler& sampler = fp.textureSampler(i);
-    const GrBackendFormat& backendFormat = sampler.proxy()->backendFormat();
+    const GrBackendFormat& backendFormat = sampler.view().proxy()->backendFormat();
 
-    uint32_t samplerKey = sampler_key(backendFormat.textureType(), sampler.swizzle(), caps);
+    uint32_t samplerKey = sampler_key(backendFormat.textureType(), sampler.view().swizzle(), caps);
     b->add32(samplerKey);
 
     caps.addExtraSamplerKey(b, sampler.samplerState(), backendFormat);
@@ -173,7 +173,7 @@ bool GrProgramDesc::Build(
   // bindings in use or other descriptor field settings) it should be set
   // to a canonical value to avoid duplicate programs with different keys.
 
-  GR_STATIC_ASSERT(0 == kProcessorKeysOffset % sizeof(uint32_t));
+  static_assert(0 == kProcessorKeysOffset % sizeof(uint32_t));
   // Make room for everything up to the effect keys.
   desc->key().reset();
   desc->key().push_back_n(kProcessorKeysOffset);

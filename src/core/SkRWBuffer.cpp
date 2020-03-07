@@ -10,7 +10,6 @@
 #include "include/core/SkStream.h"
 #include "include/private/SkMalloc.h"
 #include "include/private/SkTo.h"
-#include "src/core/SkMakeUnique.h"
 
 #include <atomic>
 #include <new>
@@ -346,5 +345,5 @@ class SkROBufferStreamAsset : public SkStreamAsset {
 };
 
 std::unique_ptr<SkStreamAsset> SkRWBuffer::makeStreamSnapshot() const {
-  return skstd::make_unique<SkROBufferStreamAsset>(this->makeROBufferSnapshot());
+  return std::make_unique<SkROBufferStreamAsset>(this->makeROBufferSnapshot());
 }

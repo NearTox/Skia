@@ -217,11 +217,9 @@ void GLComposeTwoFragmentProcessor::emitCode(EmitArgs& args) {
   }
 
   // declare outputColor and emit the code for each of the two children
-  SkString srcColor("xfer_src");
-  this->invokeChild(0, inputColor, &srcColor, args);
+  SkString srcColor = this->invokeChild(0, inputColor, args);
 
-  SkString dstColor("xfer_dst");
-  this->invokeChild(1, inputColor, &dstColor, args);
+  SkString dstColor = this->invokeChild(1, inputColor, args);
 
   // emit blend code
   SkBlendMode mode = cs.getMode();
@@ -371,7 +369,7 @@ class ComposeOneFragmentProcessor : public GrFragmentProcessor {
   }
 
   void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
-    GR_STATIC_ASSERT(((int)SkBlendMode::kLastMode & UINT16_MAX) == (int)SkBlendMode::kLastMode);
+    static_assert(((int)SkBlendMode::kLastMode & UINT16_MAX) == (int)SkBlendMode::kLastMode);
     b->add32((int)fMode | (fChild << 16));
   }
 
@@ -421,8 +419,7 @@ class GLComposeOneFragmentProcessor : public GrGLSLFragmentProcessor {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     SkBlendMode mode = args.fFp.cast<ComposeOneFragmentProcessor>().mode();
     ComposeOneFragmentProcessor::Child child = args.fFp.cast<ComposeOneFragmentProcessor>().child();
-    SkString childColor("child");
-    this->invokeChild(0, &childColor, args);
+    SkString childColor = this->invokeChild(0, args);
 
     // emit blend code
     fragBuilder->codeAppendf("// Compose Xfer Mode: %s\n", SkBlendMode_Name(mode));

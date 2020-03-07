@@ -15,6 +15,7 @@
     <ClCompile Include="..\angle2\debug2.cpp" />
     <ClCompile Include="..\angle2\PoolAlloc2.cpp" />
     <ClCompile Include="angle2\src\common\android_util.cpp" />
+    <ClCompile Include="angle2\src\common\system_utils_win32.cpp" />
     <ClCompile Include="angle2\src\common\third_party\xxhash\xxhash.c" />
     <ClCompile Include="angle2\src\compiler\preprocessor\DiagnosticsBase.cpp" />
     <ClCompile Include="angle2\src\compiler\preprocessor\DirectiveHandlerBase.cpp" />
@@ -67,6 +68,7 @@
     <ClCompile Include="angle2\src\compiler\translator\SymbolUniqueId.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\EmulateMultiDrawShaderBuiltins.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\NameNamelessUniformBuffers.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\tree_ops\RemoveInactiveInterfaceVariables.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteAtomicCounters.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteAtomicFunctionExpressions.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteCubeMapSamplersAs2DArray.cpp" />

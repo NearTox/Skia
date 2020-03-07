@@ -85,16 +85,15 @@ class GrResourceProvider {
    * need to get applied to the data before upload are applied.
    */
   sk_sp<GrTexture> createTexture(
-      const GrSurfaceDesc& desc, const GrBackendFormat& format, GrColorType srcColorType,
-      GrRenderable renderable, int renderTargetSampleCnt, SkBudgeted budgeted, SkBackingFit fit,
-      GrProtected isProtected, const GrMipLevel& mipLevel);
+      const GrSurfaceDesc&, const GrBackendFormat&, GrColorType srcColorType, GrRenderable,
+      int renderTargetSampleCnt, SkBudgeted, SkBackingFit, GrProtected, const GrMipLevel& mipLevel);
 
   /**
    * Creates a compressed texture. The GrGpu must support the SkImageImage::Compression type.
-   * This does not currently support MIP maps. It will not be renderable.
+   * It will not be renderable.
    */
   sk_sp<GrTexture> createCompressedTexture(
-      int width, int height, const GrBackendFormat&, SkImage::CompressionType, SkBudgeted,
+      SkISize dimensions, const GrBackendFormat&, SkBudgeted, GrMipMapped, GrProtected,
       SkData* data);
 
   ///////////////////////////////////////////////////////////////////////////
@@ -113,6 +112,9 @@ class GrResourceProvider {
    */
   sk_sp<GrTexture> wrapBackendTexture(
       const GrBackendTexture& tex, GrColorType, GrWrapOwnership, GrWrapCacheable, GrIOType);
+
+  sk_sp<GrTexture> wrapCompressedBackendTexture(
+      const GrBackendTexture& tex, GrWrapOwnership, GrWrapCacheable);
 
   /**
    * This makes the backend texture be renderable. If sampleCnt is > 1 and the underlying API

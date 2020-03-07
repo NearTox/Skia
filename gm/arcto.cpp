@@ -98,8 +98,9 @@ DEF_SIMPLE_GM(arcto, canvas, 500, 600) {
   const SkColor purple = 0xFF800080;
   const SkColor darkgreen = 0xFF008000;
   const SkColor colors[] = {SK_ColorRED, darkgreen, purple, SK_ColorBLUE};
-  const char* arcstrs[] = {"M250,400  A120,80 0 0,0 250,500", "M250,400  A120,80 0 1,1 250,500",
-                           "M250,400  A120,80 0 1,0 250,500", "M250,400  A120,80 0 0,1 250,500"};
+  const char* arcstrs[] = {
+      "M250,400  A120,80 0 0,0 250,500", "M250,400  A120,80 0 1,1 250,500",
+      "M250,400  A120,80 0 1,0 250,500", "M250,400  A120,80 0 0,1 250,500"};
   int cIndex = 0;
   for (const char* arcstr : arcstrs) {
     SkParsePath::FromSVGString(arcstr, &svgArc);

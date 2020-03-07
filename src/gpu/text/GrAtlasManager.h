@@ -23,7 +23,7 @@ class GrTextStrike;
  *  This implies that all of the advanced atlasManager functionality (i.e.,
  *  adding glyphs to the atlas) are only available at flush time.
  */
-class GrAtlasManager : public GrOnFlushCallbackObject {
+class GrAtlasManager : public GrOnFlushCallbackObject, public GrDrawOpAtlas::GenerationCounter {
  public:
   GrAtlasManager(
       GrProxyProvider*, GrStrikeCache*, size_t maxTextureBytes, GrDrawOpAtlas::AllowMultitexturing);
@@ -42,15 +42,15 @@ class GrAtlasManager : public GrOnFlushCallbackObject {
     return format;
   }
 
-  // if getProxies returns nullptr, the client must not try to use other functions on the
+  // if getViews returns nullptr, the client must not try to use other functions on the
   // GrStrikeCache which use the atlas.  This function *must* be called first, before other
   // functions which use the atlas. Note that we can have proxies available but none active
   // (i.e., none instantiated).
-  const sk_sp<GrTextureProxy>* getProxies(GrMaskFormat format, unsigned int* numActiveProxies) {
+  const GrSurfaceProxyView* getViews(GrMaskFormat format, unsigned int* numActiveProxies) {
     format = this->resolveMaskFormat(format);
     if (this->initAtlas(format)) {
       *numActiveProxies = this->getAtlas(format)->numActivePages();
-      return this->getAtlas(format)->getProxies();
+      return this->getAtlas(format)->getViews();
     }
     *numActiveProxies = 0;
     return nullptr;
@@ -76,7 +76,7 @@ class GrAtlasManager : public GrOnFlushCallbackObject {
 
   // add to texture atlas that matches this format
   GrDrawOpAtlas::ErrorCode addToAtlas(
-      GrResourceProvider*, GrStrikeCache*, GrTextStrike*, GrDrawOpAtlas::AtlasID*,
+      GrResourceProvider*, GrStrikeCache*, GrTextStrike*, GrDrawOpAtlas::PlotLocator*,
       GrDeferredUploadTarget*, GrMaskFormat, int width, int height, const void* image,
       SkIPoint16* loc);
 
@@ -136,6 +136,7 @@ class GrAtlasManager : public GrOnFlushCallbackObject {
 
   GrDrawOpAtlas::AllowMultitexturing fAllowMultitexturing;
   std::unique_ptr<GrDrawOpAtlas> fAtlases[kMaskFormatCount];
+  static_assert(kMaskFormatCount == 3);
   GrProxyProvider* fProxyProvider;
   sk_sp<const GrCaps> fCaps;
   GrStrikeCache* fGlyphCache;

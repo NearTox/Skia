@@ -9,12 +9,14 @@
 
 #include "include/private/GrRecordingContext.h"
 #include "src/core/SkRRectPriv.h"
+#include "src/gpu/GrBitmapTextureMaker.h"
 #include "src/gpu/GrDrawOpTest.h"
 #include "src/gpu/GrMemoryPool.h"
 #include "src/gpu/GrOpFlushState.h"
 #include "src/gpu/GrProxyProvider.h"
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/effects/GrShadowGeoProc.h"
+#include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Circle Data
@@ -183,8 +185,8 @@ class ShadowCircularRRectOp final : public GrMeshDrawOp {
   // An insetWidth > 1/2 rect width or height indicates a simple fill.
   ShadowCircularRRectOp(
       GrColor color, const SkRect& devRect, float devRadius, bool isCircle, float blurRadius,
-      float insetWidth, sk_sp<GrTextureProxy> falloffProxy)
-      : INHERITED(ClassID()), fFalloffProxy(falloffProxy) {
+      float insetWidth, GrSurfaceProxyView falloffView)
+      : INHERITED(ClassID()), fFalloffView(std::move(falloffView)) {
     SkRect bounds = devRect;
     SkASSERT(insetWidth > 0);
     SkScalar innerRadius = 0.0f;
@@ -529,7 +531,7 @@ class ShadowCircularRRectOp final : public GrMeshDrawOp {
 
   void onPrepareDraws(Target* target) override {
     // Setup geometry processor
-    GrGeometryProcessor* gp = GrRRectShadowGeoProc::Make(target->allocator(), fFalloffProxy.get());
+    GrGeometryProcessor* gp = GrRRectShadowGeoProc::Make(target->allocator(), fFalloffView);
 
     int instanceCount = fGeoData.count();
     SkASSERT(sizeof(CircleVertex) == gp->vertexStride());
@@ -581,7 +583,7 @@ class ShadowCircularRRectOp final : public GrMeshDrawOp {
     }
 
     auto fixedDynamicState = target->makeFixedDynamicState(1);
-    fixedDynamicState->fPrimitiveProcessorTextures[0] = fFalloffProxy.get();
+    fixedDynamicState->fPrimitiveProcessorTextures[0] = fFalloffView.proxy();
 
     GrMesh* mesh = target->allocMesh(GrPrimitiveType::kTriangles);
     mesh->setIndexed(
@@ -592,11 +594,14 @@ class ShadowCircularRRectOp final : public GrMeshDrawOp {
   }
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
-    flushState->executeDrawsAndUploadsForMeshDrawOp(
-        this, chainBounds, GrProcessorSet::MakeEmptySet());
+    auto pipeline = GrSimpleMeshDrawOpHelper::CreatePipeline(
+        flushState, GrProcessorSet::MakeEmptySet(), GrPipeline::InputFlags::kNone);
+
+    flushState->executeDrawsAndUploadsForMeshDrawOp(this, chainBounds, pipeline);
   }
 
-  CombineResult onCombineIfPossible(GrOp* t, const GrCaps& caps) override {
+  CombineResult onCombineIfPossible(
+      GrOp* t, GrRecordingContext::Arenas*, const GrCaps& caps) override {
     ShadowCircularRRectOp* that = t->cast<ShadowCircularRRectOp>();
     fGeoData.push_back_n(that->fGeoData.count(), that->fGeoData.begin());
     fVertCount += that->fVertCount;
@@ -605,13 +610,13 @@ class ShadowCircularRRectOp final : public GrMeshDrawOp {
   }
 
   void visitProxies(const VisitProxyFunc& func) const override {
-    func(fFalloffProxy.get(), GrMipMapped(false));
+    func(fFalloffView.proxy(), GrMipMapped(false));
   }
 
   SkSTArray<1, Geometry, true> fGeoData;
   int fVertCount;
   int fIndexCount;
-  sk_sp<GrTextureProxy> fFalloffProxy;
+  GrSurfaceProxyView fFalloffView;
 
   typedef GrMeshDrawOp INHERITED;
 };
@@ -622,11 +627,13 @@ class ShadowCircularRRectOp final : public GrMeshDrawOp {
 
 namespace GrShadowRRectOp {
 
-static sk_sp<GrTextureProxy> create_falloff_texture(GrProxyProvider* proxyProvider) {
+static sk_sp<GrTextureProxy> create_falloff_texture(GrRecordingContext* context) {
   static const GrUniqueKey::Domain kDomain = GrUniqueKey::GenerateDomain();
   GrUniqueKey key;
   GrUniqueKey::Builder builder(&key, kDomain, 0, "Shadow Gaussian Falloff");
   builder.finish();
+
+  GrProxyProvider* proxyProvider = context->priv().proxyProvider();
 
   sk_sp<GrTextureProxy> falloffTexture = proxyProvider->findOrCreateProxyByUniqueKey(
       key, GrColorType::kAlpha_8, kTopLeft_GrSurfaceOrigin);
@@ -635,23 +642,19 @@ static sk_sp<GrTextureProxy> create_falloff_texture(GrProxyProvider* proxyProvid
     static const size_t kRowBytes = kWidth * GrColorTypeBytesPerPixel(GrColorType::kAlpha_8);
     SkImageInfo ii = SkImageInfo::MakeA8(kWidth, 1);
 
-    sk_sp<SkData> data = SkData::MakeUninitialized(kRowBytes);
-    if (!data) {
-      return nullptr;
-    }
-    unsigned char* values = (unsigned char*)data->writable_data();
+    SkBitmap bitmap;
+    bitmap.allocPixels(ii, kRowBytes);
+
+    unsigned char* values = (unsigned char*)bitmap.getPixels();
     for (int i = 0; i < 128; ++i) {
       SkScalar d = SK_Scalar1 - i / SkIntToScalar(127);
       values[i] = SkScalarRoundToInt((SkScalarExp(-4 * d * d) - 0.018f) * 255);
     }
+    bitmap.setImmutable();
 
-    sk_sp<SkImage> img = SkImage::MakeRasterData(ii, std::move(data), kRowBytes);
-    if (!img) {
-      return nullptr;
-    }
+    GrBitmapTextureMaker maker(context, bitmap);
+    std::tie(falloffTexture, std::ignore) = maker.refTextureProxy(GrMipMapped::kNo);
 
-    falloffTexture = proxyProvider->createTextureProxy(
-        std::move(img), 1, SkBudgeted::kYes, SkBackingFit::kExact);
     if (!falloffTexture) {
       return nullptr;
     }
@@ -669,10 +672,14 @@ std::unique_ptr<GrDrawOp> Make(
   // Shadow rrect ops only handle simple circular rrects.
   SkASSERT(viewMatrix.isSimilarity() && SkRRectPriv::EqualRadii(rrect));
 
-  sk_sp<GrTextureProxy> falloffTexture = create_falloff_texture(context->priv().proxyProvider());
+  sk_sp<GrTextureProxy> falloffTexture = create_falloff_texture(context);
   if (!falloffTexture) {
     return nullptr;
   }
+  GrSwizzle swizzle = context->priv().caps()->getReadSwizzle(
+      falloffTexture->backendFormat(), GrColorType::kAlpha_8);
+
+  GrSurfaceProxyView falloffView(std::move(falloffTexture), kTopLeft_GrSurfaceOrigin, swizzle);
 
   // Do any matrix crunching before we reset the draw state for device coords.
   const SkRect& rrectBounds = rrect.getBounds();
@@ -693,7 +700,7 @@ std::unique_ptr<GrDrawOp> Make(
 
   return pool->allocate<ShadowCircularRRectOp>(
       color, bounds, scaledRadius, rrect.isOval(), blurWidth, scaledInsetWidth,
-      std::move(falloffTexture));
+      std::move(falloffView));
 }
 }
 

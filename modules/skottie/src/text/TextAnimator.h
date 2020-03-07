@@ -10,6 +10,7 @@
 
 #include "include/core/SkRefCnt.h"
 #include "modules/skottie/src/SkottiePriv.h"
+#include "modules/skottie/src/SkottieValue.h"
 #include "modules/sksg/include/SkSGScene.h"
 
 #include <memory>
@@ -18,21 +19,29 @@
 namespace skottie {
 namespace internal {
 
+class AnimatablePropertyContainer;
 class AnimationBuilder;
 class RangeSelector;
 
 class TextAnimator final : public SkNVRefCnt<TextAnimator> {
  public:
-  static sk_sp<TextAnimator> Make(const skjson::ObjectValue*, const AnimationBuilder*);
+  static sk_sp<TextAnimator> Make(
+      const skjson::ObjectValue*, const AnimationBuilder*, AnimatablePropertyContainer* acontainer);
 
+  // Direct mapping of AE properties.
   struct AnimatedProps {
+    VectorValue position, fill_color, stroke_color;
+    ScalarValue opacity = 100, scale = 100, rotation = 0, tracking = 0;
+  };
+
+  struct ResolvedProps {
     SkPoint position = {0, 0};
     float opacity = 1, scale = 1, rotation = 0, tracking = 0;
     SkColor fill_color = SK_ColorTRANSPARENT, stroke_color = SK_ColorTRANSPARENT;
   };
 
   struct AnimatedPropsModulator {
-    AnimatedProps props;  // accumulates properties across *all* animators
+    ResolvedProps props;  // accumulates properties across *all* animators
     float coverage;       // accumulates range selector coverage for a given animator
   };
   using ModulatorBuffer = std::vector<AnimatedPropsModulator>;
@@ -55,10 +64,10 @@ class TextAnimator final : public SkNVRefCnt<TextAnimator> {
 
  private:
   TextAnimator(
-      std::vector<sk_sp<RangeSelector>>&& selectors, const skjson::ObjectValue& jprops,
-      const AnimationBuilder* abuilder);
+      std::vector<sk_sp<RangeSelector>>&&, const skjson::ObjectValue&, const AnimationBuilder*,
+      AnimatablePropertyContainer*);
 
-  AnimatedProps modulateProps(const AnimatedProps&, float amount) const;
+  ResolvedProps modulateProps(const ResolvedProps&, float amount) const;
 
   const std::vector<sk_sp<RangeSelector>> fSelectors;
 

@@ -39,7 +39,13 @@ struct VariableReference : public Expression {
 
   void setRefKind(RefKind refKind);
 
-  bool hasSideEffects() const override { return false; }
+  bool hasProperty(Property property) const override {
+    switch (property) {
+      case Property::kSideEffects: return false;
+      case Property::kContainsRTAdjust: return fVariable.fName == "sk_RTAdjust";
+      default: SkASSERT(false); return false;
+    }
+  }
 
   bool isConstant() const override {
     return 0 != (fVariable.fModifiers.fFlags & Modifiers::kConst_Flag);
@@ -49,7 +55,9 @@ struct VariableReference : public Expression {
     return std::unique_ptr<Expression>(new VariableReference(fOffset, fVariable, fRefKind));
   }
 
+#ifdef SK_DEBUG
   String description() const override { return fVariable.fName; }
+#endif
 
   static std::unique_ptr<Expression> copy_constant(
       const IRGenerator& irGenerator, const Expression* expr);

@@ -158,7 +158,8 @@ void GrOpsTask::OpChain::deleteOps(GrOpMemoryPool* pool) {
 // Concatenates two op chains and attempts to merge ops across the chains. Assumes that we know that
 // the two chains are chainable. Returns the new chain.
 GrOpsTask::OpChain::List GrOpsTask::OpChain::DoConcat(
-    List chainA, List chainB, const GrCaps& caps, GrOpMemoryPool* pool, GrAuditTrail* auditTrail) {
+    List chainA, List chainB, const GrCaps& caps, GrRecordingContext::Arenas* arenas,
+    GrAuditTrail* auditTrail) {
   // We process ops in chain b from head to tail. We attempt to merge with nodes in a, starting
   // at chain a's tail and working toward the head. We produce one of the following outcomes:
   // 1) b's head is merged into an op in a.
@@ -182,7 +183,7 @@ GrOpsTask::OpChain::List GrOpsTask::OpChain::DoConcat(
     while (a) {
       bool canForwardMerge = (a == chainA.tail()) || can_reorder(a->bounds(), forwardMergeBounds);
       if (canForwardMerge || canBackwardMerge) {
-        auto result = a->combineIfPossible(chainB.head(), caps);
+        auto result = a->combineIfPossible(chainB.head(), arenas, caps);
         SkASSERT(result != GrOp::CombineResult::kCannotCombine);
         merged = (result == GrOp::CombineResult::kMerged);
         GrOP_INFO(
@@ -192,7 +193,7 @@ GrOpsTask::OpChain::List GrOpsTask::OpChain::DoConcat(
       if (merged) {
         GR_AUDIT_TRAIL_OPS_RESULT_COMBINED(auditTrail, a, chainB.head());
         if (canBackwardMerge) {
-          pool->release(chainB.popHead());
+          arenas->opMemoryPool()->release(chainB.popHead());
         } else {
           // We merged the contents of b's head into a. We will replace b's head with a in
           // chain b.
@@ -201,7 +202,7 @@ GrOpsTask::OpChain::List GrOpsTask::OpChain::DoConcat(
             origATail = a->prevInChain();
           }
           std::unique_ptr<GrOp> detachedA = chainA.removeOp(a);
-          pool->release(chainB.popHead());
+          arenas->opMemoryPool()->release(chainB.popHead());
           chainB.pushHead(std::move(detachedA));
           if (chainA.empty()) {
             // We merged all the nodes in chain a to chain b.
@@ -233,7 +234,7 @@ GrOpsTask::OpChain::List GrOpsTask::OpChain::DoConcat(
 bool GrOpsTask::OpChain::tryConcat(
     List* list, GrProcessorSet::Analysis processorAnalysis, const DstProxyView& dstProxyView,
     const GrAppliedClip* appliedClip, const SkRect& bounds, const GrCaps& caps,
-    GrOpMemoryPool* pool, GrAuditTrail* auditTrail) {
+    GrRecordingContext::Arenas* arenas, GrAuditTrail* auditTrail) {
   SkASSERT(!fList.empty());
   SkASSERT(!list->empty());
   SkASSERT(fProcessorAnalysis.requiresDstTexture() == SkToBool(fDstProxyView.proxy()));
@@ -255,7 +256,7 @@ bool GrOpsTask::OpChain::tryConcat(
   }
 
   SkDEBUGCODE(bool first = true;) do {
-    switch (fList.tail()->combineIfPossible(list->head(), caps)) {
+    switch (fList.tail()->combineIfPossible(list->head(), arenas, caps)) {
       case GrOp::CombineResult::kCannotCombine:
         // If an op supports chaining then it is required that chaining is transitive and
         // that if any two ops in two different chains can merge then the two chains
@@ -264,7 +265,8 @@ bool GrOpsTask::OpChain::tryConcat(
         SkASSERT(first);
         return false;
       case GrOp::CombineResult::kMayChain:
-        fList = DoConcat(std::move(fList), skstd::exchange(*list, List()), caps, pool, auditTrail);
+        fList =
+            DoConcat(std::move(fList), skstd::exchange(*list, List()), caps, arenas, auditTrail);
         // The above exchange cleared out 'list'. The list needs to be empty now for the
         // loop to terminate.
         SkASSERT(list->empty());
@@ -274,7 +276,7 @@ bool GrOpsTask::OpChain::tryConcat(
             "\t\t: (%s opID: %u) -> Combining with (%s, opID: %u)\n", list->tail()->name(),
             list->tail()->uniqueID(), list->head()->name(), list->head()->uniqueID());
         GR_AUDIT_TRAIL_OPS_RESULT_COMBINED(auditTrail, fList.tail(), list->head());
-        pool->release(list->popHead());
+        arenas->opMemoryPool()->release(list->popHead());
         break;
       }
     }
@@ -289,9 +291,10 @@ bool GrOpsTask::OpChain::tryConcat(
 }
 
 bool GrOpsTask::OpChain::prependChain(
-    OpChain* that, const GrCaps& caps, GrOpMemoryPool* pool, GrAuditTrail* auditTrail) {
+    OpChain* that, const GrCaps& caps, GrRecordingContext::Arenas* arenas,
+    GrAuditTrail* auditTrail) {
   if (!that->tryConcat(
-          &fList, fProcessorAnalysis, fDstProxyView, fAppliedClip, fBounds, caps, pool,
+          &fList, fProcessorAnalysis, fDstProxyView, fAppliedClip, fBounds, caps, arenas,
           auditTrail)) {
     this->validate();
     // append failed
@@ -316,7 +319,7 @@ bool GrOpsTask::OpChain::prependChain(
 std::unique_ptr<GrOp> GrOpsTask::OpChain::appendOp(
     std::unique_ptr<GrOp> op, GrProcessorSet::Analysis processorAnalysis,
     const DstProxyView* dstProxyView, const GrAppliedClip* appliedClip, const GrCaps& caps,
-    GrOpMemoryPool* pool, GrAuditTrail* auditTrail) {
+    GrRecordingContext::Arenas* arenas, GrAuditTrail* auditTrail) {
   const GrXferProcessor::DstProxyView noDstProxyView;
   if (!dstProxyView) {
     dstProxyView = &noDstProxyView;
@@ -325,7 +328,7 @@ std::unique_ptr<GrOp> GrOpsTask::OpChain::appendOp(
   SkRect opBounds = op->bounds();
   List chain(std::move(op));
   if (!this->tryConcat(
-          &chain, processorAnalysis, *dstProxyView, appliedClip, opBounds, caps, pool,
+          &chain, processorAnalysis, *dstProxyView, appliedClip, opBounds, caps, arenas,
           auditTrail)) {
     // append failed, give the op back to the caller.
     this->validate();
@@ -352,18 +355,17 @@ inline void GrOpsTask::OpChain::validate() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 GrOpsTask::GrOpsTask(
-    sk_sp<GrOpMemoryPool> opMemoryPool, GrSurfaceProxyView view, GrAuditTrail* auditTrail)
+    GrRecordingContext::Arenas arenas, GrSurfaceProxyView view, GrAuditTrail* auditTrail)
     : GrRenderTask(std::move(view)),
-      fOpMemoryPool(std::move(opMemoryPool)),
+      fArenas(arenas),
       fAuditTrail(auditTrail),
       fLastClipStackGenID(SK_InvalidUniqueID) SkDEBUGCODE(, fNumClips(0)) {
-  SkASSERT(fOpMemoryPool);
   fTargetView.proxy()->setLastRenderTask(this);
 }
 
 void GrOpsTask::deleteOps() {
   for (auto& chain : fOpChains) {
-    chain.deleteOps(fOpMemoryPool.get());
+    chain.deleteOps(fArenas.opMemoryPool());
   }
   fOpChains.reset();
 }
@@ -757,7 +759,7 @@ void GrOpsTask::recordOp(
   // A closed GrOpsTask should never receive new/more ops
   SkASSERT(!this->isClosed());
   if (!op->bounds().isFinite()) {
-    fOpMemoryPool->release(std::move(op));
+    fArenas.opMemoryPool()->release(std::move(op));
     return;
   }
 
@@ -783,8 +785,7 @@ void GrOpsTask::recordOp(
     while (true) {
       OpChain& candidate = fOpChains.fromBack(i);
       op = candidate.appendOp(
-          std::move(op), processorAnalysis, dstProxyView, clip, caps, fOpMemoryPool.get(),
-          fAuditTrail);
+          std::move(op), processorAnalysis, dstProxyView, clip, caps, &fArenas, fAuditTrail);
       if (!op) {
         return;
       }
@@ -820,7 +821,7 @@ void GrOpsTask::forwardCombine(const GrCaps& caps) {
     int j = i + 1;
     while (true) {
       OpChain& candidate = fOpChains[j];
-      if (candidate.prependChain(&chain, caps, fOpMemoryPool.get(), fAuditTrail)) {
+      if (candidate.prependChain(&chain, caps, &fArenas, fAuditTrail)) {
         break;
       }
       // Stop traversing if we would cause a painter's order violation.

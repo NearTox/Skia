@@ -396,7 +396,7 @@ sk_sp<SkImage> SkImage::makeNonTextureImage() const {
   return this->makeRasterImage();
 }
 
-sk_sp<SkImage> SkImage::makeRasterImage() const {
+sk_sp<SkImage> SkImage::makeRasterImage(CachingHint chint) const {
   SkPixmap pm;
   if (this->peekPixels(&pm)) {
     return sk_ref_sp(const_cast<SkImage*>(this));
@@ -410,7 +410,7 @@ sk_sp<SkImage> SkImage::makeRasterImage() const {
 
   sk_sp<SkData> data = SkData::MakeUninitialized(size);
   pm = {fInfo.makeColorSpace(nullptr), data->writable_data(), fInfo.minRowBytes()};
-  if (!this->readPixels(pm, 0, 0)) {
+  if (!this->readPixels(pm, 0, 0, chint)) {
     return nullptr;
   }
 
@@ -428,6 +428,12 @@ sk_sp<SkImage> SkImage::DecodeToTexture(GrContext*, const void*, size_t, const S
 sk_sp<SkImage> SkImage::MakeFromTexture(
     GrContext* ctx, const GrBackendTexture& tex, GrSurfaceOrigin origin, SkColorType ct,
     SkAlphaType at, sk_sp<SkColorSpace> cs, TextureReleaseProc releaseP, ReleaseContext releaseC) {
+  return nullptr;
+}
+
+sk_sp<SkImage> SkImage::MakeFromCompressedTexture(
+    GrContext* ctx, const GrBackendTexture& tex, GrSurfaceOrigin origin, SkAlphaType at,
+    sk_sp<SkColorSpace> cs, TextureReleaseProc releaseP, ReleaseContext releaseC) {
   return nullptr;
 }
 

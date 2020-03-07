@@ -75,9 +75,9 @@ static void test_path(
   ctx->setResourceCacheLimit(8000000);
   GrResourceCache* cache = ctx->priv().getResourceCache();
 
-  auto rtc = ctx->priv().makeDeferredRenderTargetContext(
-      SkBackingFit::kApprox, 800, 800, GrColorType::kRGBA_8888, nullptr, 1, GrMipMapped::kNo,
-      kTopLeft_GrSurfaceOrigin);
+  auto rtc = GrRenderTargetContext::Make(
+      ctx.get(), GrColorType::kRGBA_8888, nullptr, SkBackingFit::kApprox, {800, 800}, 1,
+      GrMipMapped::kNo, GrProtected::kNo, kTopLeft_GrSurfaceOrigin);
   if (!rtc) {
     return;
   }

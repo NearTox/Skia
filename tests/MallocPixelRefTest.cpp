@@ -35,14 +35,14 @@ DEF_TEST(MallocPixelRef, reporter) {
     REPORTER_ASSERT(reporter, nullptr == pr.get());
   }
   {
-    size_t rowBytes = info.minRowBytes() + 2;
+    size_t rowBytes = info.minRowBytes() + info.bytesPerPixel();
     size_t size = info.computeByteSize(rowBytes) - 1;
     sk_sp<SkData> data(SkData::MakeUninitialized(size));
     sk_sp<SkPixelRef> pr(SkMallocPixelRef::MakeWithData(info, rowBytes, data));
     // data too small.
     REPORTER_ASSERT(reporter, nullptr == pr.get());
   }
-  size_t rowBytes = info.minRowBytes() + 7;
+  size_t rowBytes = info.minRowBytes() + info.bytesPerPixel();
   size_t size = info.computeByteSize(rowBytes) + 9;
   {
     SkAutoMalloc memory(size);

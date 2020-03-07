@@ -72,9 +72,10 @@ class QuadPathGM : public GM {
       SkPaint::Join fJoin;
       const char* fName;
     };
-    constexpr CapAndName gCaps[] = {{SkPaint::kButt_Cap, SkPaint::kBevel_Join, "Butt"},
-                                    {SkPaint::kRound_Cap, SkPaint::kRound_Join, "Round"},
-                                    {SkPaint::kSquare_Cap, SkPaint::kBevel_Join, "Square"}};
+    constexpr CapAndName gCaps[] = {
+        {SkPaint::kButt_Cap, SkPaint::kBevel_Join, "Butt"},
+        {SkPaint::kRound_Cap, SkPaint::kRound_Join, "Round"},
+        {SkPaint::kSquare_Cap, SkPaint::kBevel_Join, "Square"}};
     struct PathAndName {
       SkPath fPath;
       const char* fName;
@@ -193,9 +194,10 @@ class QuadClosePathGM : public GM {
       SkPaint::Join fJoin;
       const char* fName;
     };
-    constexpr CapAndName gCaps[] = {{SkPaint::kButt_Cap, SkPaint::kBevel_Join, "Butt"},
-                                    {SkPaint::kRound_Cap, SkPaint::kRound_Join, "Round"},
-                                    {SkPaint::kSquare_Cap, SkPaint::kBevel_Join, "Square"}};
+    constexpr CapAndName gCaps[] = {
+        {SkPaint::kButt_Cap, SkPaint::kBevel_Join, "Butt"},
+        {SkPaint::kRound_Cap, SkPaint::kRound_Join, "Round"},
+        {SkPaint::kSquare_Cap, SkPaint::kBevel_Join, "Square"}};
     struct PathAndName {
       SkPath fPath;
       const char* fName;

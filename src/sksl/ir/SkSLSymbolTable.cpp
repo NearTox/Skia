@@ -109,9 +109,7 @@ void SymbolTable::markAllFunctionsBuiltin() {
         break;
       case Symbol::kUnresolvedFunction_Kind:
         for (auto& f : ((UnresolvedFunction&)*pair.second).fFunctions) {
-          if (!((FunctionDeclaration*)f)->fDefined) {
-            ((FunctionDeclaration*)f)->fBuiltin = true;
-          }
+          ((FunctionDeclaration*)f)->fBuiltin = true;
         }
         break;
       default: break;

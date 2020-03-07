@@ -68,11 +68,12 @@ class ComplexClip3GM : public GM {
     constexpr struct {
       SkClipOp fOp;
       const char* fName;
-    } gOps[] = {{kIntersect_SkClipOp, "I"},
-                {kDifference_SkClipOp, "D"},
-                {kUnion_SkClipOp, "U"},
-                {kXOR_SkClipOp, "X"},
-                {kReverseDifference_SkClipOp, "R"}};
+    } gOps[] = {
+        {kIntersect_SkClipOp, "I"},
+        {kDifference_SkClipOp, "D"},
+        {kUnion_SkClipOp, "U"},
+        {kXOR_SkClipOp, "X"},
+        {kReverseDifference_SkClipOp, "R"}};
 
     canvas->translate(SkIntToScalar(20), SkIntToScalar(20));
     canvas->scale(3 * SK_Scalar1 / 4, 3 * SK_Scalar1 / 4);

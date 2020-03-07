@@ -31,15 +31,17 @@ struct FieldAccess : public Expression {
         fFieldIndex(fieldIndex),
         fOwnerKind(ownerKind) {}
 
-  bool hasSideEffects() const override { return fBase->hasSideEffects(); }
+  bool hasProperty(Property property) const override { return fBase->hasProperty(property); }
 
   std::unique_ptr<Expression> clone() const override {
     return std::unique_ptr<Expression>(new FieldAccess(fBase->clone(), fFieldIndex, fOwnerKind));
   }
 
+#ifdef SK_DEBUG
   String description() const override {
     return fBase->description() + "." + fBase->fType.fields()[fFieldIndex].fName;
   }
+#endif
 
   std::unique_ptr<Expression> fBase;
   const int fFieldIndex;

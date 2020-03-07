@@ -97,9 +97,10 @@ class TileRenderNode final : public sksg::CustomRenderNode {
       static constexpr SkColor colors[] = {0xffffffff, 0x00000000};
       static constexpr SkScalar pos[] = {0.5f, 0.5f};
 
-      const SkPoint pts[] = {{tile.x(), tile.y()},
-                             {tile.x() + 2 * (tile.width() - phase_vec.fX),
-                              tile.y() + 2 * (tile.height() - phase_vec.fY)}};
+      const SkPoint pts[] = {
+          {tile.x(), tile.y()},
+          {tile.x() + 2 * (tile.width() - phase_vec.fX),
+           tile.y() + 2 * (tile.height() - phase_vec.fY)}};
 
       auto mask_shader = SkGradientShader::MakeLinear(
           pts, colors, pos, SK_ARRAY_COUNT(colors), SkTileMode::kRepeat);

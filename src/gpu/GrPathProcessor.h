@@ -28,8 +28,6 @@ class GrPathProcessor : public GrPrimitiveProcessor {
   const SkMatrix& viewMatrix() const { return fViewMatrix; }
   const SkMatrix& localMatrix() const { return fLocalMatrix; }
 
-  bool willUseGeoShader() const override { return false; }
-
   virtual void getGLSLProcessorKey(
       const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
 

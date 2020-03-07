@@ -159,7 +159,6 @@ DEF_SIMPLE_GM(aaclip, canvas, 240, 120) {
 #ifdef SK_BUILD_FOR_MAC
 
 #  include "include/utils/mac/SkCGUtils.h"
-#  include "src/core/SkMakeUnique.h"
 
 static std::unique_ptr<SkCanvas> make_canvas(const SkBitmap& bm) {
   const SkImageInfo& info = bm.info();
@@ -167,7 +166,7 @@ static std::unique_ptr<SkCanvas> make_canvas(const SkBitmap& bm) {
     return SkCanvas::MakeRasterDirectN32(
         info.width(), info.height(), (SkPMColor*)bm.getPixels(), bm.rowBytes());
   } else {
-    return skstd::make_unique<SkCanvas>(bm);
+    return std::make_unique<SkCanvas>(bm);
   }
 }
 

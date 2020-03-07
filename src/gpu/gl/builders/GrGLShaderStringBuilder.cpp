@@ -48,10 +48,12 @@ std::unique_ptr<SkSL::Program> GrSkSLtoGLSL(
   if (gPrintSKSL || gPrintGLSL) {
     print_shader_banner(programKind);
     if (gPrintSKSL) {
-      GrShaderUtils::PrintLineByLine("SKSL:", GrShaderUtils::PrettyPrint(sksl));
+      SkDebugf("SKSL:\n");
+      GrShaderUtils::PrintLineByLine(GrShaderUtils::PrettyPrint(sksl));
     }
     if (gPrintGLSL) {
-      GrShaderUtils::PrintLineByLine("GLSL:", GrShaderUtils::PrettyPrint(*glsl));
+      SkDebugf("GLSL:\n");
+      GrShaderUtils::PrintLineByLine(GrShaderUtils::PrettyPrint(*glsl));
     }
   }
 

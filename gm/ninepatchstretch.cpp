@@ -82,10 +82,11 @@ class NinePatchStretchGM : public skiagm::GM {
     // amount of bm that should not be stretched (unless we have to)
     const SkScalar fixed = SkIntToScalar(fBitmap.width() - fCenter.width());
 
-    const SkSize size[] = {{fixed * 4 / 5, fixed * 4 / 5},  // shrink in both axes
-                           {fixed * 4 / 5, fixed * 4},      // shrink in X
-                           {fixed * 4, fixed * 4 / 5},      // shrink in Y
-                           {fixed * 4, fixed * 4}};
+    const SkSize size[] = {
+        {fixed * 4 / 5, fixed * 4 / 5},  // shrink in both axes
+        {fixed * 4 / 5, fixed * 4},      // shrink in X
+        {fixed * 4, fixed * 4 / 5},      // shrink in Y
+        {fixed * 4, fixed * 4}};
 
     canvas->drawBitmap(fBitmap, 10, 10, nullptr);
 

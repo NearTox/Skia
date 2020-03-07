@@ -44,6 +44,7 @@ struct InterfaceBlock : public ProgramElement {
         fOffset, &fVariable, fTypeName, fInstanceName, std::move(sizesClone), fTypeOwner));
   }
 
+#ifdef SK_DEBUG
   String description() const override {
     String result = fVariable.fModifiers.description() + fTypeName + " {\n";
     const Type* structType = &fVariable.fType;
@@ -66,6 +67,7 @@ struct InterfaceBlock : public ProgramElement {
     }
     return result + ";";
   }
+#endif
 
   const Variable& fVariable;
   const String fTypeName;

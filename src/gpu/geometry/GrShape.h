@@ -251,7 +251,7 @@ class GrShape {
       return false;
     }
 
-    if (SkPathFillType::kWinding == this->path().getNewFillType() && dirs[0] == dirs[1]) {
+    if (SkPathFillType::kWinding == this->path().getFillType() && dirs[0] == dirs[1]) {
       // The two rects need to be wound opposite to each other
       return false;
     }

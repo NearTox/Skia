@@ -124,19 +124,24 @@ class GrMtlGpu : public GrGpu {
   void xferBarrier(GrRenderTarget*, GrXferBarrierType) override {}
 
   GrBackendTexture onCreateBackendTexture(
-      SkISize, const GrBackendFormat&, GrRenderable, const BackendTextureData*, int numMipLevels,
-      GrProtected) override;
+      SkISize dimensions, const GrBackendFormat&, GrRenderable, GrMipMapped, GrProtected,
+      const BackendTextureData*) override;
+
+  GrBackendTexture onCreateCompressedBackendTexture(
+      SkISize dimensions, const GrBackendFormat&, GrMipMapped, GrProtected,
+      const BackendTextureData*) override;
 
   sk_sp<GrTexture> onCreateTexture(
-      const GrSurfaceDesc& desc, const GrBackendFormat& format, GrRenderable,
-      int renderTargetSampleCnt, SkBudgeted budgeted, GrProtected, int mipLevelCount,
-      uint32_t levelClearMask) override;
+      const GrSurfaceDesc&, const GrBackendFormat&, GrRenderable, int renderTargetSampleCnt,
+      SkBudgeted, GrProtected, int mipLevelCount, uint32_t levelClearMask) override;
   sk_sp<GrTexture> onCreateCompressedTexture(
-      int width, int height, const GrBackendFormat&, SkImage::CompressionType, SkBudgeted,
-      const void* data) override;
+      SkISize dimensions, const GrBackendFormat&, SkBudgeted, GrMipMapped, GrProtected,
+      const void* data, size_t dataSize) override;
 
   sk_sp<GrTexture> onWrapBackendTexture(
       const GrBackendTexture&, GrColorType, GrWrapOwnership, GrWrapCacheable, GrIOType) override;
+  sk_sp<GrTexture> onWrapCompressedBackendTexture(
+      const GrBackendTexture&, GrWrapOwnership, GrWrapCacheable) override;
 
   sk_sp<GrTexture> onWrapRenderableBackendTexture(
       const GrBackendTexture&, int sampleCnt, GrColorType, GrWrapOwnership,
@@ -183,7 +188,7 @@ class GrMtlGpu : public GrGpu {
       GrMtlTexture* tex, int left, int top, int width, int height, GrColorType dataColorType,
       const GrMipLevel texels[], int mipLevels);
   // Function that fills texture levels with transparent black based on levelMask.
-  bool clearTexture(GrMtlTexture*, GrColorType, uint32_t levelMask);
+  bool clearTexture(GrMtlTexture*, size_t bbp, uint32_t levelMask);
   bool readOrTransferPixels(
       GrSurface* surface, int left, int top, int width, int height, GrColorType dstColorType,
       id<MTLBuffer> transferBuffer, size_t offset, size_t imageBytes, size_t rowBytes);
@@ -192,8 +197,8 @@ class GrMtlGpu : public GrGpu {
       const GrRenderTarget*, int width, int height, int numStencilSamples) override;
 
   bool createMtlTextureForBackendSurface(
-      MTLPixelFormat, SkISize, bool texturable, bool renderable, const BackendTextureData*,
-      int numMipLevels, GrMtlTextureInfo*);
+      MTLPixelFormat, SkISize dimensions, GrTexturable, GrRenderable, GrMipMapped,
+      GrMtlTextureInfo*, const BackendTextureData*);
 
 #if GR_TEST_UTILS
   void testingOnly_startCapture() override;

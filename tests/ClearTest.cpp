@@ -63,8 +63,8 @@ static bool check_rect(
 }
 
 std::unique_ptr<GrRenderTargetContext> newRTC(GrContext* context, int w, int h) {
-  return context->priv().makeDeferredRenderTargetContext(
-      SkBackingFit::kExact, w, h, GrColorType::kRGBA_8888, nullptr);
+  return GrRenderTargetContext::Make(
+      context, GrColorType::kRGBA_8888, nullptr, SkBackingFit::kExact, {w, h});
 }
 
 static void clear_op_test(skiatest::Reporter* reporter, GrContext* context) {

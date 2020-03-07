@@ -93,7 +93,7 @@ static void testPathOpsRectsMain(PathOpsThreadState* data) {
                   if (state.fReporter->verbose()) {
                     ++loopNo;
                     goto skipToNext;
-                  }
+                }
                 }
                 if (PathOpsDebug::gCheckForDuplicateNames) return;
               }

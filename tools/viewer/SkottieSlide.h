@@ -14,6 +14,8 @@
 #  include "modules/skottie/include/Skottie.h"
 #  include "modules/sksg/include/SkSGInvalidationController.h"
 
+#  include <vector>
+
 namespace sksg {
 class Scene;
 }
@@ -25,6 +27,7 @@ class SkottieSlide : public Slide {
 
   void load(SkScalar winWidth, SkScalar winHeight) override;
   void unload() override;
+  void resize(SkScalar, SkScalar) override;
 
   SkISize getDimensions() const override;
 
@@ -35,13 +38,21 @@ class SkottieSlide : public Slide {
   bool onMouse(SkScalar x, SkScalar y, skui::InputState, skui::ModifierKey modifiers) override;
 
  private:
-  SkString fPath;
+  SkRect UIArea() const;
+  void renderUI();
+
+  const SkString fPath;
+
   sk_sp<skottie::Animation> fAnimation;
   skottie::Animation::Builder::Stats fAnimationStats;
   sksg::InvalidationController fInvalController;
+  std::vector<float> fFrameTimes;
   SkSize fWinSize = SkSize::MakeEmpty();
-  SkMSec fTimeBase = 0;
-  bool fShowAnimationInval = false, fShowAnimationStats = false;
+  double fTimeBase = 0, fFrameRate = 0;
+  const char* fFrameRateLabel = nullptr;
+  float fCurrentFrame = 0;
+  bool fShowAnimationInval = false, fShowAnimationStats = false, fShowUI = false,
+       fDraggingProgress = false;
 
   typedef Slide INHERITED;
 };

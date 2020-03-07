@@ -25,9 +25,11 @@ struct DoStatement : public Statement {
         new DoStatement(fOffset, fStatement->clone(), fTest->clone()));
   }
 
+#ifdef SK_DEBUG
   String description() const override {
     return "do " + fStatement->description() + " while (" + fTest->description() + ");";
   }
+#endif
 
   std::unique_ptr<Statement> fStatement;
   std::unique_ptr<Expression> fTest;

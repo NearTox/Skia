@@ -34,8 +34,7 @@ class GrVkCaps : public GrCaps {
       GrProtected isProtected = GrProtected::kNo);
 
   bool isFormatSRGB(const GrBackendFormat&) const override;
-  bool isFormatCompressed(
-      const GrBackendFormat&, SkImage::CompressionType* compressionType = nullptr) const override;
+  SkImage::CompressionType compressionType(const GrBackendFormat&) const override;
 
   bool isFormatTexturableAndUploadable(GrColorType, const GrBackendFormat&) const override;
   bool isFormatTexturable(const GrBackendFormat&) const override;
@@ -171,14 +170,16 @@ class GrVkCaps : public GrCaps {
     return fColorTypeToFormatTable[idx];
   }
 
-  GrSwizzle getTextureSwizzle(const GrBackendFormat&, GrColorType) const override;
+  GrSwizzle getReadSwizzle(const GrBackendFormat&, GrColorType) const override;
   GrSwizzle getOutputSwizzle(const GrBackendFormat&, GrColorType) const override;
+
+  uint64_t computeFormatKey(const GrBackendFormat&) const override;
 
   int getFragmentUniformBinding() const;
   int getFragmentUniformSet() const;
 
   void addExtraSamplerKey(
-      GrProcessorKeyBuilder*, const GrSamplerState&, const GrBackendFormat&) const override;
+      GrProcessorKeyBuilder*, GrSamplerState, const GrBackendFormat&) const override;
 
   GrProgramDesc makeDesc(const GrRenderTarget*, const GrProgramInfo&) const override;
 
@@ -217,7 +218,6 @@ class GrVkCaps : public GrCaps {
       const SkIPoint& dstPoint) const override;
   GrBackendFormat onGetDefaultBackendFormat(GrColorType, GrRenderable) const override;
 
-  GrPixelConfig onGetConfigFromBackendFormat(const GrBackendFormat&, GrColorType) const override;
   bool onAreColorTypeAndFormatCompatible(GrColorType, const GrBackendFormat&) const override;
 
   SupportedRead onSupportedReadPixelsColorType(
@@ -237,7 +237,7 @@ class GrVkCaps : public GrCaps {
     };
     uint32_t fFlags = 0;
 
-    GrSwizzle fTextureSwizzle;
+    GrSwizzle fReadSwizzle;
     GrSwizzle fOutputSwizzle;
   };
 
@@ -273,7 +273,7 @@ class GrVkCaps : public GrCaps {
     std::unique_ptr<ColorTypeInfo[]> fColorTypeInfos;
     int fColorTypeInfoCount = 0;
   };
-  static const size_t kNumVkFormats = 19;
+  static const size_t kNumVkFormats = 21;
   FormatInfo fFormatTable[kNumVkFormats];
 
   FormatInfo& getFormatInfo(VkFormat);

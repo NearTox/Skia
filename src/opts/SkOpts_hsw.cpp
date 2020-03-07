@@ -35,4 +35,4 @@ void Init_hsw() {
   start_pipeline_lowp = SK_OPTS_NS::lowp::start_pipeline;
 #undef M
 }
-}  // namespace SkOpts
+}
